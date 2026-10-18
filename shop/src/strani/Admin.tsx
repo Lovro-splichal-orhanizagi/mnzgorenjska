@@ -1,22 +1,36 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Navigate } from 'react-router-dom'
-import { supabase, type NarociloAdmin } from '../baza'
+import { opisPersonalizacije, supabase, type NarociloAdmin, type PostavkaNarocila } from '../baza'
 import { cena, datum, t, type Kljuc } from '../besede'
 import { Nalaganje, useSeja } from '../seja'
+import { AdminBoni } from './AdminBoni'
 import { AdminIzdelki } from './AdminIzdelki'
+import { AdminTisk } from './AdminTisk'
 
 // /admin: pakiranje in odpošiljanje naročil, katalog. Pravice preveri baza
 // (trgovina.le_admin); kdor ni admin, dobi insufficient_privilege (42501).
 
-type Zavihek = 'pakiranje' | 'poslano' | 'izdelki'
+type Zavihek = 'pakiranje' | 'tisk' | 'poslano' | 'izdelki' | 'boni'
 type Tisk = { vrsta: 'nalepka' | 'dobavnica'; n: NarociloAdmin }
 
 const ZAVIHKI: [Zavihek, Kljuc][] = [
   ['pakiranje', 'admin.zavihek.pakiranje'],
+  ['tisk', 'admin.zavihek.tisk'],
   ['poslano', 'admin.zavihek.poslano'],
   ['izdelki', 'admin.zavihek.izdelki'],
+  ['boni', 'admin.zavihek.boni'],
 ]
+
+/** Postavke v paketu: brez darilnih bonov (e-pošta) in značk (svoj tok narocila_znack). */
+export const vPaketu = (n: NarociloAdmin): PostavkaNarocila[] =>
+  n.postavke.filter((p) => !p.digitalni && p.personalizacija?.vrsta !== 'znacka')
+
+/** Za pakiranje je naročilo, ko je v paketu kaj in je vse na zalogi ali natisnjeno. */
+export const zaPakiranje = (n: NarociloAdmin): boolean => {
+  const p = vPaketu(n)
+  return p.length > 0 && p.every((x) => x.stanje_tiska === null || x.stanje_tiska === 'natisnjeno')
+}
 
 /** Zasebna stran: iskalnik je ne indeksira (Caddy doda še X-Robots-Tag). */
 export function useNoindex() {
@@ -51,6 +65,8 @@ export function Admin() {
         ))}
       </nav>
       {zavihek === 'izdelki' ? <AdminIzdelki zavrnjen={zavrnjen} />
+        : zavihek === 'tisk' ? <AdminTisk zavrnjen={zavrnjen} />
+        : zavihek === 'boni' ? <AdminBoni zavrnjen={zavrnjen} token={seja.access_token} />
         : <Narocila key={zavihek} stanje={zavihek === 'pakiranje' ? 'placano' : 'poslano'} zavrnjen={zavrnjen} token={seja.access_token} />}
     </div>
   )
@@ -67,7 +83,7 @@ function Narocila({ stanje, zavrnjen, token }: { stanje: 'placano' | 'poslano'; 
     setNapaka(error ? error.message : null)
     const vsa = (data as unknown as NarociloAdmin[] | null) ?? []
     // Za pakiranje najstarejše najprej (tako vrne baza), poslana najnovejša najprej.
-    setNarocila(stanje === 'poslano' ? [...vsa].reverse() : vsa)
+    setNarocila(stanje === 'poslano' ? [...vsa].reverse() : vsa.filter(zaPakiranje))
   }, [stanje, zavrnjen])
 
   useEffect(() => void nalozi(), [nalozi])
@@ -87,6 +103,7 @@ function Narocila({ stanje, zavrnjen, token }: { stanje: 'placano' | 'poslano'; 
   return (
     <div className="space-y-4">
       {napaka && <p className="opozorilo">{napaka}</p>}
+      {stanje === 'placano' && <p className="text-sm text-slate-500">{t('admin.zaPakiranjeOpomba')}</p>}
       {narocila.length === 0 && <p className="kartica p-5 text-slate-400">{t('admin.prazno')}</p>}
       {narocila.map((n) => (
         <KarticaNarocila key={n.id} n={n} token={token} poslano={stanje === 'poslano'} natisni={(vrsta) => setTisk({ vrsta, n })} osvezi={nalozi} />
@@ -153,9 +170,12 @@ function KarticaNarocila({ n, token, poslano, natisni, osvezi }: {
         </div>
         <ul className="divide-y divide-white/5 text-sm">
           {n.postavke.map((p) => (
-            <li key={p.razlicica_id} className="flex justify-between gap-3 py-1">
-              <span><b>{p.kolicina} ×</b> {p.ime} <span className="text-slate-500">{p.sku}</span></span>
-              <span className="tabular-nums text-slate-400">{cena(p.cena * p.kolicina)}</span>
+            <li key={p.id} className="flex justify-between gap-3 py-1">
+              <span>
+                <b>{p.kolicina} ×</b> {p.ime} <span className="text-slate-500">{p.sku}</span>
+                {p.personalizacija && <span className="block text-xs font-semibold uppercase text-gnl-200">{opisPersonalizacije(p.personalizacija)}</span>}
+              </span>
+              <span className="tabular-nums text-slate-400">{cena((p.cena + p.doplacilo) * p.kolicina)}</span>
             </li>
           ))}
           {n.znesek_skupaj !== null && (
@@ -240,9 +260,10 @@ export function Dobavnica({ n }: { n: NarociloAdmin }) {
           </tr>
         </thead>
         <tbody>
-          {n.postavke.map((p) => (
-            <tr key={p.razlicica_id} style={{ borderBottom: '0.2mm solid #999' }}>
-              <td style={{ padding: '2mm 0' }}>{p.kolicina}</td><td>{p.ime}</td><td>{p.sku}</td>
+          {vPaketu(n).map((p) => (
+            <tr key={p.id} style={{ borderBottom: '0.2mm solid #999' }}>
+              <td style={{ padding: '2mm 0' }}>{p.kolicina}</td>
+              <td>{p.ime}{p.personalizacija && <div style={{ fontSize: '9pt' }}>{opisPersonalizacije(p.personalizacija)}</div>}</td><td>{p.sku}</td>
             </tr>
           ))}
         </tbody>

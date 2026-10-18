@@ -13,6 +13,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     racunUstvarjen:
       'Hesabın yaradıldı. E-poçtuna təsdiq keçidi göndərdik: onu aç və geri qayıt.',
     prijavljenKot: '{email} kimi daxil olmusan.',
+    posljiPotrditevZnova: 'Təsdiq məktubunu yenidən göndər',
+    potrditevPoslanaZnova:
+      'Yeni təsdiq məktubu göndərdik. Spam qovluğuna da bax.',
     zGooglom: 'Google ilə davam et',
     zApplom: 'Apple ilə davam et',
     aliZEposto: 'və ya e-poçt ilə',
@@ -246,7 +249,7 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Etiraz: götürülmüş profildə Məni Scout-dan gizlət düyməsinə klik et və ya oyunçu səhifəsinin keçidi ilə <eposta>info@slff.eu</eposta> ünvanına yaz. 14 gün ərzində oyunçunu həmin ölkədəki bütün liqalarımızda, gələcək idxallar daxil olmaqla, Scout-dan gizlədirik. Oyunçu fantasy oyununda qalır.',
     trgovinaNaslov: 'SLFF Mağaza (shop.slff.eu)',
     trgovinaKaj:
-      'Alış zamanı adını, e-poçtunu, çatdırılma ünvanını, alınan məhsulları və məbləğləri, daxil olmusansa SLFF hesabını da emal edirik. Ödənişi Stripe həyata keçirir: kart məlumatlarını görmürük və saxlamırıq. Ad və ünvan çatdırılma üçün Pošta Slovenije-yə verilir. Sui-istifadəni məhdudlaşdırmaq üçün tamamlanmamış alışda IP ünvanının geri qaytarılmaz heşini müvəqqəti saxlayırıq; ödəniş edildikdə və ya alışın müddəti bitdikdə silinir.',
+      'Alış zamanı adını, e-poçtunu, çatdırılma ünvanını, alınan məhsulları və məbləğləri, daxil olmusansa SLFF hesabını da emal edirik. Ödənişi Stripe həyata keçirir: kart məlumatlarını görmürük və saxlamırıq. Ad və ünvan çatdırılma üçün Pošta Slovenije-yə verilir. Sui-istifadəni məhdudlaşdırmaq üçün tamamlanmamış alışda IP ünvanının geri qaytarılmaz heşini müvəqqəti saxlayırıq; ödəniş edildikdə və ya alışın müddəti bitdikdə silinir. Fərdiləşdirmə mətni (ad, nömrə) və məhsul üzərindəki fantasy komandanın adı sifarişin bir hissəsidir; mətni məhsulu hazırlayan mətbəə də alır.',
     trgovinaPodlaga:
       'Hüquqi əsas müqavilənin icrası (GDPR maddə 6(1)(b)) və qanuni öhdəliklərdir (mühasibat, vergilər), IP ünvanının heşi üçün isə sui-istifadənin qarşısını almaqda qanuni maraqdır (GDPR maddə 6(1)(f)). Nəzarətçi SPACE GUARDIAN, računalniško programiranje, d.o.o. şirkətidir.',
     trgovinaHramba:

@@ -13,6 +13,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     racunUstvarjen:
       'Hesabın oluşturuldu. E-postana bir onay bağlantısı gönderdik. Bağlantıyı aç ve geri dön.',
     prijavljenKot: '{email} olarak giriş yaptın.',
+    posljiPotrditevZnova: 'Onay e-postasını yeniden gönder',
+    potrditevPoslanaZnova:
+      'Yeni bir onay e-postası gönderdik. Gereksiz (spam) klasörüne de bak.',
     zGooglom: 'Google ile devam et',
     zApplom: 'Apple ile devam et',
     aliZEposto: 'ya da e-posta ile',
@@ -240,7 +243,7 @@ export const racun: NonNullable<Prevod['racun']> = {
       'İtiraz: sahiplenilmiş bir profilde Beni Scout’tan gizle seçeneğine tıkla ya da oyuncu sayfasının bağlantısıyla birlikte <eposta>info@slff.eu</eposta> adresine yaz. 14 gün içinde oyuncuyu o ülkedeki tüm liglerimizde, gelecekteki aktarımlar dahil Scout’tan gizleriz. Oyuncu fantezi oyunda kalır.',
     trgovinaNaslov: 'SLFF Mağaza (shop.slff.eu)',
     trgovinaKaj:
-      'Satın alırken adını, e-postanı, teslimat adresini, satın alınan ürünleri ve tutarları, giriş yaptıysan SLFF hesabını da işleriz. Ödemeyi Stripe yapar: kart bilgilerini görmeyiz ve saklamayız. Ad ve adres teslimat için Pošta Slovenije ile paylaşılır. Kötüye kullanımı sınırlamak için tamamlanmamış bir satın almada IP adresinin geri döndürülemez bir özetini (hash) geçici olarak saklarız; ödeme yapıldığında veya satın alma süresi dolduğunda silinir.',
+      'Satın alırken adını, e-postanı, teslimat adresini, satın alınan ürünleri ve tutarları, giriş yaptıysan SLFF hesabını da işleriz. Ödemeyi Stripe yapar: kart bilgilerini görmeyiz ve saklamayız. Ad ve adres teslimat için Pošta Slovenije ile paylaşılır. Kötüye kullanımı sınırlamak için tamamlanmamış bir satın almada IP adresinin geri döndürülemez bir özetini (hash) geçici olarak saklarız; ödeme yapıldığında veya satın alma süresi dolduğunda silinir. Kişiselleştirme metni (isim, numara) ve üründeki fantasy takım adı siparişin parçasıdır; metin ürünü üreten matbaaya da iletilir.',
     trgovinaPodlaga:
       'Hukuki dayanak sözleşmenin ifası (GDPR madde 6(1)(b)) ve yasal yükümlülüklerdir (muhasebe, vergiler); IP adresi özeti için kötüye kullanımı önlemeye yönelik meşru menfaatimizdir (GDPR madde 6(1)(f)). Veri sorumlusu SPACE GUARDIAN, računalniško programiranje, d.o.o. şirketidir.',
     trgovinaHramba:
