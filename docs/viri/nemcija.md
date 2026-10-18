@@ -469,3 +469,38 @@ regionalni in Nordostovi zapisniki/nastopi so nespremenjeni; druge regionalne
 blokade ostanejo. To je dokaz kode in lokalne ponovitve, dejanska Actions
 ponovitev, svežina, pregledani manifest, uvoz, cene in vklop imajo še vedno
 ločena obstoječa varovala.
+
+## Dodatna preverjena Nord/West popravila (18. 10. 2026)
+
+Tri arhivske tekme dobijo šest omejenih popravkov vmesnega izida v
+`dfb-korekcije.json`: Nord `2405451` (Wegner 1:2, Ghawilu 2:2), Nord
+`2405547` (3:3, 4:3, 4:4) in West `2402204` (gostujoče izenačenje 1:1).
+Nespremenjeni primarni klubski dokumenti in izvirni zajemi imajo
+[SHA/URL/UTC provenienco](../../scripts/vzorci/de-dfb-nord-west-provenance.json).
+Preveri se celotno prvotno ali celotno že popravljeno zaporedje in obe
+izvorni razdelitvi golov. Spremenjen/manjkajoč dokaz, delni popravek ali
+nepregledan odmik se zavrne; vsi dokazni bajti so del regionalnega odtisa.
+
+VfB Lübeck pri `2405451` objavi Wegnerja 44 in Ghawiluja 45, DFB pa
+45/45+2. Potrjena sta vrstni red in izida; izvornih ur ne popravljamo.
+FSV Schöningen pri `2405547` potrdi tri zaključne oznake in ure, prva
+Lohnejeva strelca pa ostaneta pripisana po DFB. RWO pri `2402204` potrdi
+1:0, gostujoče izenačenje pred polčasom in končnih 3:1; izjava ne potrjuje
+samostojno imena Keita ali točne ure 36. Te omejitve ostanejo v opozorilih
+tudi po celotnem poznejšem izvirnem popravku oznak.
+
+Lokalna ponovitev shranjenih dokumentov brez HTTP po tej spremembi potrdi
+Nord 304/306 in West 298/306 arhivskih zapisnikov. Südwest ostane
+304/306 arhivskih in 105/105 zajetih tekočih zapisnikov. Vsi prej sprejeti
+zapisniki in nastopi ostanejo enaki, vključno z Bayernom in Nordostom.
+To ni nov Actions zajem in ne osveži prvotnih časov dokumentov.
+
+Nord ostane blokiran pri `2405268` (manjkajoče postave/dogodki) in
+`2405441` (polčas 0:0 proti golu pri 29); West pri osmih Wuppertalerjevih
+zapisnikih brez postav: `2402287`, `2402299`, `2402306`, `2402312`,
+`2402325`, `2402332`, `2402346`, `2402352`. Tekoča razporeda obeh lig še
+vedno vsebujeta po dva podvojena usmerjena para; njuna ohranjena zajema
+imata samo 18 klubskih strani, brez zapisnikov. Südwest `2402929`
+(12 začetnikov) in `2403004` (dva pripisana rumena brez izključitve) sta
+ostala enako neveljavna tudi v ciljnem običajnem svežem DFB zajemu
+18. 10. 2026. Noben od teh treh kandidatov še ni pripravljen za vklop.

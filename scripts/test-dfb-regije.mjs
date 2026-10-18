@@ -105,7 +105,7 @@ for(const [id,name,minuteOn,minuteOff,totalGoals]of[['2405443','Leon Tasov',45,8
  assert.equal(p.zacetnik,false);assert.equal(p.minutaOd,minuteOn);assert.equal(p.minutaDo,minuteOff);assert.equal(p.minute,minuteOff-minuteOn);assert.equal(p.goli,1)
  assert.equal(z.menjave.filter(m=>m.noter.ime===name).length,1)
 })
-for(const [id,reason]of[['2405268',/postava|klop/],['2405441',/polčas/],['2405451',/zaporedje izidov/],['2405547',/zaporedje izidov/]])test(`Nord captured ${id}: absent or contradictory official facts remain blocked`,()=>{
+for(const [id,reason]of[['2405268',/postava|klop/],['2405441',/polčas/]])test(`Nord captured ${id}: absent or contradictory official facts remain blocked`,()=>{
  assert.throws(()=>parseNord(nordHtml(id)),reason)
 })
 test('Nord captured duplicate support never merges differing person, profile or score segments',()=>{

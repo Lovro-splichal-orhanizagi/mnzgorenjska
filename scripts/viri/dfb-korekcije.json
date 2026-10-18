@@ -1420,6 +1420,511 @@
         }
       ],
       "warning": "Yasin Zor: DFB 90+8, uradni Walldorf 90+7; potrjena sta vrstni red strelcev in vmesni izid, izvorna ura DFB ostane nespremenjena."
+    },
+    {
+      "id": "2405451",
+      "sourceFixtureSha256": "be24a3435319a77083e39e3decc3c00bd4e58bb3f4ec9bacd4ec4674ec379936",
+      "evidence": [
+        "https://vfb-luebeck.de/spielbericht-fruehe-fuehrung-reicht-nicht-vfb-unterliegt-in-jeddeloh-mit-23/"
+      ],
+      "evidenceFiles": [
+        {
+          "retrievalUrl": "https://vfb-luebeck.de/spielbericht-fruehe-fuehrung-reicht-nicht-vfb-unterliegt-in-jeddeloh-mit-23/",
+          "articleUrl": "https://vfb-luebeck.de/spielbericht-fruehe-fuehrung-reicht-nicht-vfb-unterliegt-in-jeddeloh-mit-23/",
+          "at": "2026-10-18T12:32:12.420407+00:00",
+          "status": 200,
+          "file": "../vzorci/de-dfb-nord-west-proof-634b5356d1d6880dc00bd16a1a1402946e593972c5ec463c9aac24a9fef2f59d.html",
+          "sha256": "634b5356d1d6880dc00bd16a1a1402946e593972c5ec463c9aac24a9fef2f59d",
+          "bytes": 1780109,
+          "url": "https://vfb-luebeck.de/spielbericht-fruehe-fuehrung-reicht-nicht-vfb-unterliegt-in-jeddeloh-mit-23/"
+        }
+      ],
+      "checkedAt": "2026-10-18",
+      "metadata": {
+        "url": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/23-spieltag/ssv-jeddeloh-vfb-luebeck-2405451",
+        "season": "2025/26",
+        "round": 23,
+        "date": "2026-04-22",
+        "time": "19:00",
+        "teams": [
+          {
+            "id": "ssv-jeddeloh",
+            "name": "SSV Jeddeloh"
+          },
+          {
+            "id": "vfb-luebeck",
+            "name": "VfB Lübeck"
+          }
+        ],
+        "finalScore": [
+          3,
+          2
+        ],
+        "halfScore": [
+          2,
+          2
+        ]
+      },
+      "warning": "VfB Lübeck potrdi Wegner 1:2 nato Ghawilu 2:2, a objavi uri 44/45 proti DFB 45/45+2. Popravljeni sta samo oznaki izida; DFB uri ostaneta nespremenjeni.",
+      "goals": [
+        {
+          "side": 1,
+          "scorer": "Mikail Polat",
+          "clock": "2'",
+          "normalizedClock": [
+            2,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            0,
+            1
+          ],
+          "text": "0:1 Mikail Polat"
+        },
+        {
+          "side": 1,
+          "scorer": "Yusuf Wardak",
+          "clock": "4'",
+          "normalizedClock": [
+            4,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            0,
+            2
+          ],
+          "text": "0:2 Yusuf Wardak"
+        },
+        {
+          "side": 0,
+          "scorer": "Max Wegner",
+          "clock": "45'",
+          "normalizedClock": [
+            45,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            2
+          ],
+          "text": "Max Wegner 2:2"
+        },
+        {
+          "side": 0,
+          "scorer": "Kasra Ghawilu",
+          "clock": "45+2'",
+          "normalizedClock": [
+            45,
+            2
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            2
+          ],
+          "text": "Kasra Ghawilu 1:2"
+        },
+        {
+          "side": 0,
+          "scorer": "Kasra Ghawilu",
+          "clock": "90+2'",
+          "normalizedClock": [
+            90,
+            2
+          ],
+          "ownGoal": false,
+          "penalty": true,
+          "kind": "goal",
+          "score": [
+            3,
+            2
+          ],
+          "text": "Kasra Ghawilu (Elfmeter) 3:2"
+        }
+      ],
+      "corrections": [
+        {
+          "index": 2,
+          "from": [
+            2,
+            2
+          ],
+          "to": [
+            1,
+            2
+          ]
+        },
+        {
+          "index": 3,
+          "from": [
+            1,
+            2
+          ],
+          "to": [
+            2,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2405547",
+      "sourceFixtureSha256": "6fb012ae8e08346624c9902409b481fa04c213cd1e043846afe9703e5f9269c6",
+      "evidence": [
+        "https://www.fsv-schoeningen.com/spielbericht/106372/spektakulaeres-4-4-in-lohne"
+      ],
+      "evidenceFiles": [
+        {
+          "retrievalUrl": "https://www.fsv-schoeningen.com/spielbericht/106372/spektakulaeres-4-4-in-lohne",
+          "articleUrl": "https://www.fsv-schoeningen.com/spielbericht/106372/spektakulaeres-4-4-in-lohne",
+          "at": "2026-10-18T12:32:54.889886+00:00",
+          "status": 200,
+          "file": "../vzorci/de-dfb-nord-west-proof-ee60d390b21003d530bc6142a5c3b59bd974437976e49115a612dc3b7cd665b8.html",
+          "sha256": "ee60d390b21003d530bc6142a5c3b59bd974437976e49115a612dc3b7cd665b8",
+          "bytes": 102739,
+          "url": "https://www.fsv-schoeningen.com/spielbericht/106372/spektakulaeres-4-4-in-lohne"
+        }
+      ],
+      "checkedAt": "2026-10-18",
+      "metadata": {
+        "url": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/33-spieltag/blau-weiss-lohne-fsv-schoeningen-2405547",
+        "season": "2025/26",
+        "round": 33,
+        "date": "2026-05-09",
+        "time": "18:00",
+        "teams": [
+          {
+            "id": "blau-weiss-lohne",
+            "name": "Blau-Weiß Lohne"
+          },
+          {
+            "id": "fsv-schoeningen",
+            "name": "FSV Schöningen"
+          }
+        ],
+        "finalScore": [
+          4,
+          4
+        ],
+        "halfScore": [
+          0,
+          0
+        ]
+      },
+      "warning": "FSV Schöningen potrdi 3:3 pri 90, domačih 4:3 pri 90+2 in Klumpovih 4:4 pri 94. Prva domača strelca ostaneta pripisana po DFB, ne po klubski pripovedi; vsi izvorni časi ostanejo nespremenjeni.",
+      "goals": [
+        {
+          "side": 0,
+          "scorer": "Nico Thoben",
+          "clock": "48'",
+          "normalizedClock": [
+            48,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            0
+          ],
+          "text": "Nico Thoben 1:0"
+        },
+        {
+          "side": 1,
+          "scorer": "Ayhan Cankor",
+          "clock": "64'",
+          "normalizedClock": [
+            64,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            1
+          ],
+          "text": "1:1 Ayhan Cankor"
+        },
+        {
+          "side": 1,
+          "scorer": "Philipp Harant",
+          "clock": "69'",
+          "normalizedClock": [
+            69,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            2
+          ],
+          "text": "1:2 Philipp Harant"
+        },
+        {
+          "side": 1,
+          "scorer": "Christian Skoda",
+          "clock": "74'",
+          "normalizedClock": [
+            74,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            3
+          ],
+          "text": "1:3 Christian Skoda"
+        },
+        {
+          "side": 0,
+          "scorer": "Nico Thoben",
+          "clock": "83'",
+          "normalizedClock": [
+            83,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            3
+          ],
+          "text": "Nico Thoben 2:3"
+        },
+        {
+          "side": 0,
+          "scorer": "Leonard Bredol",
+          "clock": "90'",
+          "normalizedClock": [
+            90,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            4,
+            4
+          ],
+          "text": "Leonard Bredol 4:4"
+        },
+        {
+          "side": 0,
+          "scorer": "Rilind Neziri",
+          "clock": "90+2'",
+          "normalizedClock": [
+            90,
+            2
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            3,
+            3
+          ],
+          "text": "Rilind Neziri 3:3"
+        },
+        {
+          "side": 1,
+          "scorer": "Max Peter Klump",
+          "clock": "90+4'",
+          "normalizedClock": [
+            90,
+            4
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            3,
+            4
+          ],
+          "text": "3:4 Max Peter Klump"
+        }
+      ],
+      "corrections": [
+        {
+          "index": 5,
+          "from": [
+            4,
+            4
+          ],
+          "to": [
+            3,
+            3
+          ]
+        },
+        {
+          "index": 6,
+          "from": [
+            3,
+            3
+          ],
+          "to": [
+            4,
+            3
+          ]
+        },
+        {
+          "index": 7,
+          "from": [
+            3,
+            4
+          ],
+          "to": [
+            4,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2402204",
+      "sourceFixtureSha256": "d05dd67924c152ddf27647e22108c480b905512414f9dc6bee80b48aef678c9d",
+      "evidence": [
+        "https://www.rwo1904.de/nachrichten/profis/16724/die-stimmen-zum-heimsieg-gegen-den-bonner-sc"
+      ],
+      "evidenceFiles": [
+        {
+          "retrievalUrl": "https://www.rwo1904.de/nachrichten/profis/16724/die-stimmen-zum-heimsieg-gegen-den-bonner-sc",
+          "articleUrl": "https://www.rwo1904.de/nachrichten/profis/16724/die-stimmen-zum-heimsieg-gegen-den-bonner-sc",
+          "at": "2026-10-18T12:33:00.894882+00:00",
+          "status": 200,
+          "file": "../vzorci/de-dfb-nord-west-proof-256a0adb952a4d337694b84d3245d19e7bb1446c30f72cc922c36e1e91192986.html",
+          "sha256": "256a0adb952a4d337694b84d3245d19e7bb1446c30f72cc922c36e1e91192986",
+          "bytes": 154712,
+          "url": "https://www.rwo1904.de/nachrichten/profis/16724/die-stimmen-zum-heimsieg-gegen-den-bonner-sc"
+        }
+      ],
+      "checkedAt": "2026-10-18",
+      "metadata": {
+        "url": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/3-spieltag/rot-weiss-oberhausen-bonner-sc-2402204",
+        "season": "2025/26",
+        "round": 3,
+        "date": "2025-08-10",
+        "time": "14:00",
+        "teams": [
+          {
+            "id": "rot-weiss-oberhausen",
+            "name": "Rot-Weiß Oberhausen"
+          },
+          {
+            "id": "bonner-sc",
+            "name": "Bonner SC"
+          }
+        ],
+        "finalScore": [
+          3,
+          1
+        ],
+        "halfScore": [
+          1,
+          1
+        ]
+      },
+      "warning": "Uradni RWO potrdi domačih 1:0, gostujoče izenačenje pred polčasom in končnih 3:1. Klubska izjava ne potrjuje samostojno imena Keita ali točne ure 36; oba podatka ostaneta po DFB, popravljena je samo oznaka 1:1.",
+      "goals": [
+        {
+          "side": 0,
+          "scorer": "Nico Klaß",
+          "clock": "12'",
+          "normalizedClock": [
+            12,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            0
+          ],
+          "text": "Nico Klaß 1:0"
+        },
+        {
+          "side": 1,
+          "scorer": "Massaman Keita",
+          "clock": "36'",
+          "normalizedClock": [
+            36,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            0
+          ],
+          "text": "2:0 Massaman Keita"
+        },
+        {
+          "side": 0,
+          "scorer": "Moritz Stoppelkamp",
+          "clock": "51'",
+          "normalizedClock": [
+            51,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            1
+          ],
+          "text": "Moritz Stoppelkamp 2:1"
+        },
+        {
+          "side": 0,
+          "scorer": "Matona-Glody Ngyombo",
+          "clock": "58'",
+          "normalizedClock": [
+            58,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            3,
+            1
+          ],
+          "text": "Matona-Glody Ngyombo 3:1"
+        }
+      ],
+      "corrections": [
+        {
+          "index": 1,
+          "from": [
+            2,
+            0
+          ],
+          "to": [
+            1,
+            1
+          ]
+        }
+      ]
     }
   ]
 }
