@@ -216,6 +216,7 @@ test('reviewed replay code identity includes provenance, import and workflow fil
 for(const [commit,expected] of [
  ['a48fd89071aae0d2097603110c5442324fc59e3d','8da6531575cdea2fc740c87eb437a897f796d9c27649dc4dcd56aff5119e1431'],
  ['671643e4a50e6e50cc22628a157fb027e0b58deb','5aaa2067a4f152d62bc4df4bb49492d89e0852d04922fc8709fbf7fb1ea9ebd9'],
+ ['f3a09962fd2ea6a72f2b027efdb7eb16a034a052','cc32a4e542fa7e60e73678c6b7b05764de6d5ed6c14d1ebefc9ba7974fff90c7'],
 ]){
  let available=true;try{execFileSync('git',['cat-file','-e',commit],{stdio:'pipe'})}catch{available=false}
  test(`retained historical capture ${commit.slice(0,7)} keeps its original parser fingerprint`,{skip:!available},()=>{
@@ -230,6 +231,7 @@ test('new parser history binds codec bytes and cannot omit a declared codec depe
   for(const file of release.sourceFiles){const path=join(root,file);mkdirSync(join(path,'..'),{recursive:true});writeFileSync(path,file==='scripts/viri/dfb.mjs'?"import '../../src/lib/nepripisaniRumeni.mjs'\n":'reviewed bytes\n')}
   git('init','-q');const original=commit();process.chdir(root);const initial=replay.parserHashAt(original)
   writeFileSync('src/lib/nepripisaniRumeni.mjs','changed codec bytes\n');assert.notEqual(replay.parserHashAt(commit()),initial)
+  const policy='scripts/lib/historical-statistics-policy.mjs';rmSync(policy);assert.throws(()=>replay.parserHashAt(commit()),/historical-statistics-policy/);writeFileSync(policy,'reviewed bytes\n')
   rmSync('src/lib/nepripisaniRumeni.mjs');assert.throws(()=>replay.parserHashAt(commit()),/nepripisaniRumeni/)
  }finally{process.chdir(before);rmSync(root,{recursive:true,force:true})}
 })

@@ -14,19 +14,47 @@ export function workflowHash(commit,path){
  if(!original.equals(readFileSync(path)))throw Error('Capture/replay workflow differs from reviewed implementation')
  return sha256(original)
 }
-// These two immutable, reviewed capture implementations predate the warning
-// codec. Preserve their original ten-file fingerprint, never infer a smaller
-// dependency set from missing git objects. All other commits require the full
-// current sourceFiles list, including the codec, and fail closed if absent.
+// Exact reviewed captures keep their original declared closure and fingerprint.
+// Never shrink an unlisted commit's dependency set based on missing git objects.
 const historicalParserHashes={
  a48fd89071aae0d2097603110c5442324fc59e3d:'8da6531575cdea2fc740c87eb437a897f796d9c27649dc4dcd56aff5119e1431',
  '671643e4a50e6e50cc22628a157fb027e0b58deb':'5aaa2067a4f152d62bc4df4bb49492d89e0852d04922fc8709fbf7fb1ea9ebd9',
 }
 const historicalSourceFiles=['scripts/viri/dfb.mjs','scripts/viri/dfb-lige.json','scripts/viri/dfb-korekcije.json','scripts/viri/dfb-rezerve.json','scripts/viri/fussball.mjs','scripts/viri/fussball-pisava.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/viri/fss.mjs','scripts/klubi.mjs','scripts/preveri-vir-sezono.mjs']
+// f3 is the last reviewed pre-policy source closure (27 files, including pinned proof bytes).
+const prePolicyCapture={commit:"f3a09962fd2ea6a72f2b027efdb7eb16a034a052",sha256:"cc32a4e542fa7e60e73678c6b7b05764de6d5ed6c14d1ebefc9ba7974fff90c7",files:[
+ "src/lib/nepripisaniRumeni.mjs",
+ "scripts/viri/dfb.mjs",
+ "scripts/viri/dfb-lige.json",
+ "scripts/viri/dfb-korekcije.json",
+ "scripts/viri/dfb-kronologija.json",
+ "scripts/viri/dfb-rezerve.json",
+ "scripts/viri/dfb-aliasi.json",
+ "scripts/viri/fussball.mjs",
+ "scripts/viri/fussball-pisava.mjs",
+ "scripts/viri/fussball-datumski-glifi.json",
+ "scripts/viri/fss.mjs",
+ "scripts/klubi.mjs",
+ "scripts/preveri-vir-sezono.mjs",
+ "scripts/vzorci/de-dfb-bayern-proof-8cd5056e5494a22d509798d9f5b9c55c8b8c125601209414a92e922514183084.html",
+ "scripts/vzorci/de-dfb-bayern-proof-9b5a4b9be42d0870674cbbd01e79b565cce9378375b431b262c198e283c6ab7e.html",
+ "scripts/vzorci/de-dfb-bayern-proof-9b4e19546d738c344ff57e47ca04f399a59addeab3a1f0103c4bdd9b771d5013.html",
+ "scripts/vzorci/de-dfb-suedwest-proof-6b44dea55f3ea8a5b3f8f5fdedf85f8100e8692613b7f6ace17df0785985f226.html",
+ "scripts/vzorci/de-dfb-suedwest-proof-eb8a27d587bf9fc354f95da5d52682a92c6f9c189a01199f30b56b0b9f77561e.html",
+ "scripts/vzorci/de-dfb-bayern-proof-d64ad2f3ad4e83fdfea32813498adaa60c95a9981a713cef4f4c1583dac09cbb.html",
+ "scripts/vzorci/de-dfb-bayern-proof-fbc26f66ed4f79432151fe720a888a8c0b1038a58ca2392a3abf512ffd3e5a2a.html",
+ "scripts/vzorci/de-dfb-bayern-proof-313cddbd146aa4b3f90d2531317f4f2937c612ea88ffbf72d1423aadae8849c0.html",
+ "scripts/vzorci/de-dfb-suedwest-proof-6ce2a34f4f99193420ee63e4ac7b655ce4aecca8cacaeebdd953a41e12c5106d.html",
+ "scripts/vzorci/de-dfb-suedwest-proof-d617e70a340d7e90af5a46440c8cd0e2b1b0e30e830f91f02ed8bfd441ff068c.html",
+ "scripts/vzorci/de-dfb-suedwest-proof-5aeacee316b874eb667f5b4d08894445efd568f51b02a4fa5b3ab503548b624f.html",
+ "scripts/vzorci/de-dfb-nord-west-proof-634b5356d1d6880dc00bd16a1a1402946e593972c5ec463c9aac24a9fef2f59d.html",
+ "scripts/vzorci/de-dfb-nord-west-proof-ee60d390b21003d530bc6142a5c3b59bd974437976e49115a612dc3b7cd665b8.html",
+ "scripts/vzorci/de-dfb-nord-west-proof-256a0adb952a4d337694b84d3245d19e7bb1446c30f72cc922c36e1e91192986.html"
+]}
 export function parserHashAt(commit){
  if(!/^[a-f0-9]{40}$/.test(commit))throw Error('Invalid parser commit')
- const expected=historicalParserHashes[commit],files=expected?historicalSourceFiles:sourceFiles
- const hash=sha256(JSON.stringify(files.map(path=>[path,sha256(execFileSync('git',['show',`${commit}:${path}`]))])))
+ const prePolicy=commit===prePolicyCapture.commit,expected=prePolicy?prePolicyCapture.sha256:historicalParserHashes[commit],files=prePolicy?prePolicyCapture.files:expected?historicalSourceFiles:sourceFiles
+ const hash=sha256(JSON.stringify(files.map(path=>[path,sha256(execFileSync('git',['show',`${commit}:${path}`],{maxBuffer:16*1024*1024}))])))
  if(expected&&hash!==expected)throw Error('Historical parser fingerprint mismatch')
  return hash
 }
