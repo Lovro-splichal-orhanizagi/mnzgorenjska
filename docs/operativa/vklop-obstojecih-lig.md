@@ -50,8 +50,10 @@ Sveže preverbe za vsako ligo:
   vrstica razporeda. Datum tekme (sicer kroga) se primerja s koledarskim
   dnevom Europe/Ljubljana; prihodnji 0:0 ne blokira. To ni pregled svežine
   pri ponudniku in ne dokazuje, da novih objav še ni.
-- Vsota izidov uvoženih tekem brez kontumacij minus število golov mora biti
-  nič, kot obstoječi pregled RPC. Navadna opozorila o rumenih kartonih ne
+- Pri vsaki uvoženi tekmi brez kontumacije mora število golov ustrezati
+  njenemu izidu; nasprotni napaki se ne smeta izničiti v skupni vsoti.
+  HOLD navede ID-je tekem/zapisnikov in posamične razlike ter ohrani
+  skupno razliko iz pregleda RPC. Navadna opozorila o rumenih kartonih ne
   postanejo nova ovira. Posebne `source_policy`, politike rokov ali oznake
   `unavailable_historical` se predajo svojemu postopku.
 - Vklop znova preveri skupno varovalko v svoji transakciji in uporablja njene

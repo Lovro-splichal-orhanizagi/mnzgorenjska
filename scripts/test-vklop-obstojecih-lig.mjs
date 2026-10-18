@@ -67,7 +67,7 @@ test('transport pages database reads and permits only the native activation writ
     requests.push({url:String(url),options});const rows=new URL(url).searchParams.get('offset')==='0'?Array.from({length:500},(_,id)=>({id})): [{id:500}];return new Response(JSON.stringify(options.method==='POST'?{vklopljena:true}:rows),{status:200})
   }})
   assert.equal((await transport.rounds(candidate)).length,501);await transport.activate(candidate)
-  assert.match(requests[0].url,/rest\/v1\/rounds/);assert.equal(requests[0].options.method,'GET')
+  assert.match(requests[0].url,/rest\/v1\/rounds/);assert.equal(requests[0].options.method,'GET');assert.equal(requests[0].options.redirect,'error')
   assert.equal(new URL(requests[1].url).searchParams.get('offset'),'500')
   assert.match(requests[2].url,/rpc\/vklopi_ligo_sredi_sezone$/);assert.equal(requests[2].options.body,JSON.stringify({p_slug:candidate.slug}))
 })
@@ -83,4 +83,15 @@ test('persisted unexpected first round is HOLD with actual state attached',async
   const f=fixture({competition:async c=>({...c,active:++reads>1,source_policy:null,prvi_fantasy_krog:3})})
   const [r]=await runBatch({candidates:[candidate],transport:f.transport,now,apply:true})
   assert.equal(r.status,'HOLD');assert.equal(r.readback.prvi_fantasy_krog,3)
+})
+
+test('opposite per-match goal errors cannot cancel to accept a league; later candidate continues',async()=>{
+  const f=fixture();const original=f.transport.matches
+  f.transport.matches=async c=>c.slug===candidate.slug?[
+    {id:101,zapisnik_id:'report-101',round_id:1,home_goals:2,away_goals:0,imported_at:'2026-10-10',kontumacija:false,goals:[{count:1}],appearances:[{count:22}]},
+    {id:102,zapisnik_id:'report-102',round_id:1,home_goals:0,away_goals:0,imported_at:'2026-10-10',kontumacija:false,goals:[{count:1}],appearances:[{count:22}]},
+    ...(await original()).filter(m=>m.round_id===2),
+  ]:original(c)
+  const rows=await runBatch({candidates:[candidate,other],transport:f.transport,now,apply:true})
+  assert.deepEqual(rows.map(r=>r.status),['HOLD','ACTIVE']);assert.match(rows[0].reason,/101.*102/);assert.equal(rows[0].score_goal_difference,0);assert.deepEqual(rows[0].score_goal_mismatches.map(m=>m.report_id),['report-101','report-102']);assert.deepEqual(f.calls,[other.slug])
 })

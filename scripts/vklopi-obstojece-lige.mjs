@@ -67,11 +67,18 @@ function inspect(candidate,competition,state,season,rounds,matches,now) {
   if(pastUnimported.length)throw Error(`Past current fixtures without reports (publication unknown; review required): ${pastUnimported.map(m=>m.id).join(', ')}`)
   if(matches.some(m=>m.statistics_status==='unavailable_historical'))throw Error('Historical statistics policy requires its own reviewed route.')
   let difference=0
+  const mismatches=[]
   for(const m of matches)if(m.imported_at&&!m.kontumacija) {
     if(!Number.isFinite(m.home_goals)||!Number.isFinite(m.away_goals))throw Error('Imported match missing score.')
-    difference+=m.home_goals+m.away_goals-count(m,'goals')
+    const gap=m.home_goals+m.away_goals-count(m,'goals')
+    difference+=gap
+    if(gap!==0)mismatches.push({match_id:m.id,report_id:m.zapisnik_id??null,difference:gap})
   }
-  if(difference!==0)throw Error(`Score/goals difference: ${difference}`)
+  if(mismatches.length) {
+    const error=new Error(`Imported match score/goals mismatch (aggregate ${difference}): ${mismatches.map(m=>`${m.match_id}${m.report_id?`/${m.report_id}`:''} (${m.difference})`).join(', ')}`)
+    error.evidence={score_goal_difference:difference,score_goal_mismatches:mismatches}
+    throw error
+  }
   const played=new Set(currentMatches.filter(m=>count(m,'appearances')>0).map(m=>m.round_id))
   const future=current.filter(r=>Date.parse(r.deadline_at)>now.getTime()).sort((a,b)=>a.number-b.number)
   const gap=future.find(r=>!played.has(r.id))?.number
@@ -106,7 +113,7 @@ export async function runBatch({candidates,transport,apply=false,now=()=>new Dat
           result.status='ACTIVE'
         } else result.status='READY'
       }
-    } catch(error) {result.reason=error.message}
+    } catch(error) {result.reason=error.message;if(error.evidence)Object.assign(result,error.evidence)}
     results.push(result);await onResult(result)
   }
   return results
