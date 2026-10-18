@@ -288,6 +288,25 @@ kot uradnega kandidata zavrne. To ne odpravi ločenega neskladja Palafolls–
 Montessori4116215 in ne vklopi TerceraG2. Brez prevrednotenja ali spremembe
 pravil; morebitni enojni uvoz zapisnika izvede izključno Actions po pregledu.
 
+**FCF `--zapisnik` bere le izbrani dokument.** Izbirni ponudnikov hook
+`posamezniZapisnik(koda, { id, tekmovanje, sezona })` sinhrono preveri eno
+točno šifro `esID`, njen obseg v registriranem `source_league_code`, enakost
+podane in registrirane šifre lige, vir/slug in dejansko tekočo sezono iz
+`sezona_lige`. Uvoz ga pripravi pred čiščenjem ali pisanjem predpomnilnika;
+šele pozneje pokliče vrnjeni bralnik. Napačen cilj se zavrne brez prenosa.
+Drugih virov in običajnega polnega uvoza se ne dotika.
+
+Bralnik pregleda samo ciljno datoteko. Ohranita se `najvecStarost` s
+`svezi=true` in običajni prenos `fcfFetch`, glave/premori ter zavrnitve.
+Pot acta, tekmovanje, skupina, sezona in uradni identiteti klubov se preverijo
+tudi v predpomnilniku. Svež prenos uporablja obstoječo začasno datoteko;
+redna se zamenja šele po veljavnem običajnem razčlenjevanju, vključno s
+Calongejevim preverjanjem celotnih izvornih bajtov. Sosedov, semena lige ali
+polnega koledarja ne bere. Ovojnica vrne tudi `rawSha256` dejansko prebranega
+HTML za dokazovanje izvora; nobene politike zgodovinske nedostopnosti s tem
+ne uvaja. Ena uspešna sveža stran pomeni en navaden GET, veljaven predpomnilnik
+nič; obstoječe ponovitve transporta (npr. prazen HTTP200) ohranijo svoje meje.
+
 Ročni main-only tok `fcf-g13-predpomnjeni-dokazi.yml` obnovi vsak od točnih
 ključev `zapisniki-ES-k1od1-39053159080-1` in
 `zapisniki-ES-k1od1-39078000693-1` v ločenem poslu. Brez branja FCF,
