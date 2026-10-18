@@ -27,31 +27,41 @@ specifikacijo, načrtom in objavo:
 
 ## Stran
 
-Nov zavihek **Klub** (`/club`), prvi v meniju in nova privzeta stran po
-prijavi (iskanje ostane na `/`, ker ga povezave že uporabljajo; preusmeritev
-iz `/account` "Na iskanje" postane "Na pregled kluba").
+Nov zavihek **Klub** (`/club`), prvi v meniju; logotip v glavi vodi nanj,
+kadar ima klub dostop (sicer na `/`). Prisilne preusmeritve po prijavi ni:
+iskanje ostane na `/`, ker ga povezave že uporabljajo; gumb na `/account`
+"Na iskanje" postane "Na pregled kluba".
 
 1. **Glava** (kartica): ime kluba in lige, mesto na lestvici, oblika zadnjih
    5 tekem (Z/R/P), Elo letos in lani (Elo je v `scout.ekipe_elo` po letu,
    zato je "trend" primerjava let, ne krivulja čez sezono), moč lige znotraj
-   države (`scout.liga_kluba`).
+   države. **Liga kluba**: odrasla liga (ne `je_mladinski_slug`), v kateri ima
+   klub tekme v tekoči sezoni (`r.season = sezona_lige(...)`); pri več tisto z
+   največ tekmami, nato najmanjši id. Šele brez takih tekem
+   `scout.liga_kluba` (najmočnejša liga zadnjega leta z Elo). Elo se bere le
+   iz odraslih lig, najprej v ligi kluba.
 2. **Uspešnost ekipe** (tekoča sezona, poleg vsakega povprečje lige):
-   goli dani in prejeti na tekmo, doma proti v gosteh (točke na tekmo, goli),
+   goli dani in prejeti na tekmo, doma proti v gosteh (točke na tekmo, dani
+   in prejeti goli),
    čiste mreže (delež tekem), točke na tekmo, kartoni na tekmo. Le odigrane
    tekme (z izidom; kontumacije se štejejo kot v lestvici).
 3. **Moj kader** (tabela): vsak viden igralec kluba v tekoči sezoni —
-   pozicija, minute, delež minut ekipe, delež začetkov, goli/90, gol razlika
-   ekipe z njim proti brez njega (`onoff_ref_90`), kartoni/90, trend minut.
+   pozicija, nastopi (le z minutami > 0), minute, delež minut ekipe, delež
+   začetkov, goli (surovo število, ne goli/90), gol razlika ekipe z njim
+   proti brez njega (`onoff_ref_90`), kartoni/90, trend minut (sprememba
+   deleža minut proti lani v odstotnih točkah).
    Razvrščanje po stolpcu (privzeto minute), vrstica vodi na stran igralca.
    Igralci brez minut v tekoči sezoni se ne prikažejo.
 4. **Globina po poziciji**: za GK/DEF/MID/FWD število igralcev z vsaj 30 %
-   minut ekipe in delež minut, ki ga nosi najbolj obremenjen; če en igralec
-   nosi več kot 40 % golov ekipe, to pove (iz obstoječe vrzeli `odvisnost`).
+   minut ekipe in delež minut, ki ga nosi najbolj obremenjen. Izračuna jo
+   vmesnik iz `kader` (RPC ne vrne `globina[]`); odvisnost od strelca pove
+   obstoječa vrzel `odvisnost` v razdelku Vrzeli.
 5. **Vrzeli**: obstoječe vrzeli tega kluba (`scout.vrzeli_jedro`) se pokažejo
    na tej strani; zavihek Vrzeli ostane (del 3 ga združi).
 6. **Izbirnik kluba** (le za administratorje): iskalno polje nad glavo,
    klubi odprte države naročnine (`teams.country_id`), izbira v naslovu
-   (`/club?team=<id>`). Ne-administratorju se parameter prezre.
+   (`/club?team=<id>`). Ne-administratorju tuj klub v parametru vrne napako
+   (ne prezre se). Ob napaki administrator izbirnik obdrži.
 
 Nizi so v `scout/src/besede.ts` (sl in en), brez negativnih oznak: "kazalniki
 iz podatkov tekem", primerjava z ligo kot dejstvo ("1,2 prejeta gola na
@@ -69,15 +79,15 @@ tekmo, povprečje lige 1,6"), ne ocena.
     (ne tiho preklopi na svoj klub — napačen klub na zaslonu je huje kot
     napaka). Ne-administrator s `p_team_id` = svoj klub je dovoljen.
   - Vrne en dokument: `glava`, `ekipa` (z `liga` povprečji), `kader[]`,
-    `globina[]`, `vrzeli[]`. Kader gre skozi `scout.vidni(model, country)`, da
+    `vrzeli[]` (globino izračuna vmesnik). Kader gre skozi `scout.vidni(model, country)`, da
     veljajo pravila izločanja; kazalniki iz `scout.kazalniki` zadnjega modela
     za `team_id` in tekočo sezono lige.
   - Uspešnost ekipe iz javnih `matches` (tekoča sezona lige kluba, odigrane),
     lestvica iz obstoječega `lestvica_lige(p_competition_id)`.
 - Brez novih tabel. Nova migracija; tipi z `npm run tipi`.
 - **Meritev pred združitvijo**: `explain analyze` na produkciji v transakciji
-  z `rollback`, za največji klub; cilj pod 300 ms. Če ne, prestavi
-  počasni del (verjetno povprečja lige) v stroj — to je odločitev C.
+  z `rollback`, za največji klub; cilj pod 300 ms. Izmerjeno 13–38 ms, zato
+  brez novega indeksa.
 
 ## Vmesnik
 

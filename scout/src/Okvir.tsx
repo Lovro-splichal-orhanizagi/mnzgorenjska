@@ -20,7 +20,7 @@ export function Okvir({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
-          <Link to="/" aria-label={t('app.ime')} className="flex shrink-0 items-center gap-2 font-black">
+          <Link to={dostop ? '/club' : '/'} aria-label={t('app.ime')} className="flex shrink-0 items-center gap-2 font-black">
             <img src={grb} alt="" className="h-8 w-8" />
             <span className="naslov">SLFF</span>
             <span className="znacka bg-gnl-400/15 text-gnl-300 ring-1 ring-gnl-400/30">Scout</span>

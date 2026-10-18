@@ -291,8 +291,9 @@ ne v `src/i18n`. Poti: `/club`, `/`, `/player/:id`, `/gaps`, `/watchlist`,
 
 **Stran Klub** (`/club`, `scout_klub(p_team_id)`, migracija 20261018120000,
 spec `docs/superpowers/specs/2026-10-18-scout-klub-design.md`): pregled
-lastnega kluba — mesto, oblika zadnjih 5, Elo letos in lani, moč lige v
-državi, uspešnost ekipe proti povprečju lige (javne tekme tekoče sezone,
+lastnega kluba — liga je odrasla liga z največ tekmami kluba v tekoči
+sezoni (šele brez njih `scout.liga_kluba`) — mesto, oblika zadnjih 5, Elo
+letos in lani, moč lige v državi, uspešnost ekipe proti povprečju lige (javne tekme tekoče sezone,
 `sezona_lige`), kader iz `scout.kazalniki` (le `scout.vidni`), globina po
 poziciji (izračuna vmesnik) in vrzeli kluba. Klic gre skozi `scout.dostop`
 (`dnevnik.vrsta = 'klub'`). Administrator SLFF lahko z `?team=` odpre

@@ -11,7 +11,8 @@ import { Racun } from './src/strani/Racun'
 import { Iskanje, utemeljitev } from './src/strani/Iskanje'
 import { Igralec, idIzNaslova } from './src/strani/Igralec'
 import { Vrzeli, opisVrzeli } from './src/strani/Vrzeli'
-import { Klub, globina } from './src/strani/Klub'
+import { Klub, PregledKlubaView, globina } from './src/strani/Klub'
+import type { PregledKluba, StatEkipe } from './src/baza'
 import { Opazovani } from './src/strani/Opazovani'
 import { Pogoji } from './src/strani/Pogoji'
 import { EN, SL, type Kljuc } from './src/besede'
@@ -77,6 +78,35 @@ const gl = globina([...kaderPreizkus])
 preveri('klub: globina šteje igralce z vsaj 30 % minut in najde nosilca',
   gl.find((x) => x.skupina === 'FWD')?.stalnih === 1 && gl.find((x) => x.skupina === 'FWD')?.nosilec?.ime === 'A'
   && gl.find((x) => x.skupina === 'GK')?.nosilec === null)
+
+const stat = (x: number): StatEkipe => ({
+  tekme: 11, tocke: x, za: x, proti: x, ciste: 0.2, tocke_doma: x, tocke_gost: x,
+  za_doma: x, proti_doma: x, za_gost: x, proti_gost: x, kartoni: x,
+})
+const pregled: PregledKluba = {
+  team_id: 1, ime: 'Klub', country_id: 1, admin: false,
+  glava: { elo: 1508.1, lig: 16, liga: '2. SNL', forma: 'LWWDL', mesto: 9, tekme: 11, tocke: 17, klubov: 16, sezona: '2026/27', elo_lani: null, moc_mesto: 2, competition_id: 17 },
+  ekipa: { klub: stat(1.5), liga: stat(1.4) },
+  kader: [...kaderPreizkus],
+  vrzeli: [],
+}
+const primeri: [string, PregledKluba, string?][] = [
+  ['klub: izris pregleda', pregled, '2. SNL'],
+  ['klub: izris brez glave in ekipe', { ...pregled, glava: null, ekipa: null, kader: [], vrzeli: [] }],
+  ['klub: izris brez statistike kluba', { ...pregled, ekipa: { klub: null, liga: stat(1.4) } }],
+]
+for (const [opis, pr, vsebuje] of primeri) {
+  try {
+    const html = renderToString(
+      <StaticRouter location="/club">
+        <PregledKlubaView p={pr} razvrsti="minute" setRazvrsti={() => {}} onIzbira={() => {}} />
+      </StaticRouter>,
+    )
+    preveri(opis, !vsebuje || html.includes(vsebuje))
+  } catch (e) {
+    preveri(opis, false, String(e))
+  }
+}
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)

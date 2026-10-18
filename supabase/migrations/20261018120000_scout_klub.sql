@@ -20,8 +20,20 @@ declare
   v_ekipa jsonb;
   v_kader jsonb;
 begin
-  -- Liga kluba: najmočnejša odrasla liga zadnjega leta z Elo (kot drugod v Scoutu).
-  select l.competition_id, l.moc into v_liga, v_moc from scout.liga_kluba(p_model, p_team) l;
+  -- Liga kluba: odrasla liga, v kateri klub igra tekoče sezone (največ tekem, nato id);
+  -- šele brez tekem najmočnejša odrasla liga zadnjega leta z Elo (kot drugod v Scoutu).
+  select r.competition_id into v_liga
+    from matches m join rounds r on r.id = m.round_id join competitions c on c.id = r.competition_id
+   where p_team in (m.home_team_id, m.away_team_id)
+     and r.season = public.sezona_lige(r.competition_id)
+     and not je_mladinski_slug(c.slug)
+   group by r.competition_id
+   order by count(*) desc, r.competition_id
+   limit 1;
+  if v_liga is null then
+    select l.competition_id into v_liga from scout.liga_kluba(p_model, p_team) l;
+  end if;
+  select m.moc into v_moc from scout.lige_moc m where m.model_id = p_model and m.competition_id = v_liga;
 
   if v_liga is not null then
     -- Tekoča sezona lige (koledarska ali 2026/27), ne zadnja z odigrano tekmo.
@@ -40,19 +52,23 @@ begin
       from lt where lt.team_id = p_team;
 
     select max(e.leto) into v_leto
-      from scout.ekipe_elo e where e.model_id = p_model and e.team_id = p_team;
+      from scout.ekipe_elo e join competitions c on c.id = e.competition_id
+     where e.model_id = p_model and e.team_id = p_team and not je_mladinski_slug(c.slug);
     v_glava := coalesce(v_glava, jsonb_build_object('competition_id', v_liga, 'sezona', v_sezona,
                  'liga', (select c.name from competitions c where c.id = v_liga)))
       || jsonb_build_object(
-           'elo', (select e.elo from scout.ekipe_elo e
+           'elo', (select e.elo from scout.ekipe_elo e join competitions c on c.id = e.competition_id
                     where e.model_id = p_model and e.team_id = p_team and e.leto = v_leto
-                    order by (e.competition_id = v_liga) desc limit 1),
-           'elo_lani', (select e.elo from scout.ekipe_elo e
+                      and not je_mladinski_slug(c.slug)
+                    order by (e.competition_id = v_liga) desc, e.elo desc, e.competition_id limit 1),
+           'elo_lani', (select e.elo from scout.ekipe_elo e join competitions c on c.id = e.competition_id
                          where e.model_id = p_model and e.team_id = p_team and e.leto = v_leto - 1
-                         order by (e.competition_id = v_liga) desc limit 1),
-           'moc_mesto', 1 + (select count(*) from scout.lige_moc m join competitions c on c.id = m.competition_id
-                              where m.model_id = p_model and c.country_id = p_country
-                                and not je_mladinski_slug(c.slug) and m.moc > v_moc),
+                           and not je_mladinski_slug(c.slug)
+                         order by (e.competition_id = v_liga) desc, e.elo desc, e.competition_id limit 1),
+           'moc_mesto', case when v_moc is not null then
+                          1 + (select count(*) from scout.lige_moc m join competitions c on c.id = m.competition_id
+                                where m.model_id = p_model and c.country_id = p_country
+                                  and not je_mladinski_slug(c.slug) and m.moc > v_moc) end,
            'lig', (select count(*) from scout.lige_moc m join competitions c on c.id = m.competition_id
                     where m.model_id = p_model and c.country_id = p_country and not je_mladinski_slug(c.slug)));
   end if;
@@ -76,7 +92,11 @@ begin
              avg(proti) as proti,
              avg((proti = 0)::int) as ciste,
              avg(case when za > proti then 3 when za = proti then 1 else 0 end) filter (where doma) as tocke_doma,
-             avg(case when za > proti then 3 when za = proti then 1 else 0 end) filter (where not doma) as tocke_gost
+             avg(case when za > proti then 3 when za = proti then 1 else 0 end) filter (where not doma) as tocke_gost,
+             avg(za) filter (where doma) as za_doma,
+             avg(proti) filter (where doma) as proti_doma,
+             avg(za) filter (where not doma) as za_gost,
+             avg(proti) filter (where not doma) as proti_gost
         from izidi i group by i.team_id
     ),
     kartoni as (
@@ -89,6 +109,8 @@ begin
              'liga', (select jsonb_build_object(
                         'tekme', avg(v.tekme), 'tocke', avg(v.tocke), 'za', avg(v.za), 'proti', avg(v.proti),
                         'ciste', avg(v.ciste), 'tocke_doma', avg(v.tocke_doma), 'tocke_gost', avg(v.tocke_gost),
+                        'za_doma', avg(v.za_doma), 'proti_doma', avg(v.proti_doma),
+                        'za_gost', avg(v.za_gost), 'proti_gost', avg(v.proti_gost),
                         'kartoni', avg(v.kartoni))
                         from vse v))
       into v_ekipa;
@@ -106,7 +128,7 @@ begin
       join lateral (select true as ok from scout.vidni(p_model, p_country) v
                      where v.player_id = k.player_id offset 0) w on true
       left join lateral (
-        select count(*)::int as nastopi, sum(a.goals)::int as goli
+        select (count(*) filter (where a.minutes_played > 0))::int as nastopi, sum(a.goals)::int as goli
           from appearances a join matches m on m.id = a.match_id join rounds r on r.id = m.round_id
          where a.player_id = k.player_id and a.team_id = p_team
            and r.competition_id = v_liga and r.season = v_sezona) s on true

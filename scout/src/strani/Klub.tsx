@@ -23,7 +23,8 @@ const STOLPCI: [Kljuc, keyof IgralecKluba, (k: IgralecKluba) => string][] = [
   ['klub.st.goli', 'goli', (k) => String(k.goli)],
   ['igralec.st.onoff', 'onoff_ref_90', (k) => st(k.onoff_ref_90)],
   ['igralec.st.kartoni', 'kartoni_90', (k) => st(k.kartoni_90)],
-  ['klub.st.trend', 'trend_minut', (k) => odst(k.trend_minut)],
+  // Sprememba deleža minut ekipe proti lani, v odstotnih točkah.
+  ['klub.st.trend', 'trend_minut', ({ trend_minut: x }) => (x == null ? '–' : `${x > 0 ? '+' : ''}${Math.round(x * 100)}`)],
 ]
 
 const VRSTICE: [Kljuc, keyof StatEkipe, (x: number | null | undefined) => string][] = [
@@ -32,7 +33,11 @@ const VRSTICE: [Kljuc, keyof StatEkipe, (x: number | null | undefined) => string
   ['klub.v.proti', 'proti', (x) => st(x)],
   ['klub.v.ciste', 'ciste', (x) => odst(x)],
   ['klub.v.tockeDoma', 'tocke_doma', (x) => st(x)],
+  ['klub.v.zaDoma', 'za_doma', (x) => st(x)],
+  ['klub.v.protiDoma', 'proti_doma', (x) => st(x)],
   ['klub.v.tockeGost', 'tocke_gost', (x) => st(x)],
+  ['klub.v.zaGost', 'za_gost', (x) => st(x)],
+  ['klub.v.protiGost', 'proti_gost', (x) => st(x)],
   ['klub.v.kartoni', 'kartoni', (x) => st(x)],
 ]
 
@@ -49,6 +54,8 @@ export function Klub() {
   const [p, setP] = useState<PregledKluba | null>(null)
   const [napakaK, setNapakaK] = useState<string | null>(null)
   const [razvrsti, setRazvrsti] = useState<keyof IgralecKluba>('minute')
+  // Iz zadnjega uspešnega odgovora: administrator ob napaki obdrži izbiro kluba.
+  const [adm, setAdm] = useState<{ admin: boolean; country_id: number } | null>(null)
 
   useEffect(() => {
     let velja = true
@@ -57,20 +64,40 @@ export function Klub() {
     void supabase.rpc('scout_klub', izbran ? { p_team_id: izbran } : {}).then(({ data, error }) => {
       if (!velja) return
       if (error) setNapakaK(napaka(error))
-      else setP(data as unknown as PregledKluba)
+      else {
+        const r = data as unknown as PregledKluba
+        setP(r)
+        setAdm({ admin: r.admin, country_id: r.country_id })
+      }
     })
     return () => {
       velja = false
     }
   }, [izbran])
 
-  if (napakaK) return <p className="opozorilo">{napakaK}</p>
+  const onIzbira = (id: number) => setQ({ team: String(id) })
+  if (napakaK)
+    return (
+      <div className="space-y-6">
+        {adm?.admin && <IzbiraKluba drzava={adm.country_id} onIzbira={onIzbira} />}
+        <p className="opozorilo">{napakaK}</p>
+      </div>
+    )
   if (!p) return <Nalaganje />
+  return <PregledKlubaView p={p} razvrsti={razvrsti} setRazvrsti={setRazvrsti} onIzbira={onIzbira} />
+}
+
+export function PregledKlubaView({ p, razvrsti, setRazvrsti, onIzbira }: {
+  p: PregledKluba
+  razvrsti: keyof IgralecKluba
+  setRazvrsti: (polje: keyof IgralecKluba) => void
+  onIzbira: (id: number) => void
+}) {
   const g = p.glava
   const kader = [...p.kader].sort((a, b) => Number(b[razvrsti] ?? -Infinity) - Number(a[razvrsti] ?? -Infinity))
   return (
     <div className="space-y-6">
-      {p.admin && <IzbiraKluba drzava={p.country_id} onIzbira={(id) => setQ({ team: String(id) })} />}
+      {p.admin && <IzbiraKluba drzava={p.country_id} onIzbira={onIzbira} />}
 
       <header className="kartica space-y-3 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -104,7 +131,7 @@ export function Klub() {
                 {g.elo_lani != null && <span className="text-slate-400"> · {t('klub.eloLani', { elo: Math.round(g.elo_lani) })}</span>}
               </span>
             )}
-            <span className="text-slate-400">{t('klub.moc', { mesto: g.moc_mesto, n: g.lig })}</span>
+            {g.moc_mesto != null && <span className="text-slate-400">{t('klub.moc', { mesto: g.moc_mesto, n: g.lig })}</span>}
           </div>
         )}
       </header>
@@ -119,7 +146,7 @@ export function Klub() {
               <table className="w-full text-sm">
                 <thead className="border-b border-white/10 text-left text-xs text-slate-400">
                   <tr>
-                    <th className="px-3 py-2" />
+                    <th className="px-3 py-2"><span className="sr-only">{t('klub.ekipa')}</span></th>
                     <th className="px-3 py-2 text-right font-semibold">{t('klub.stKlub')}</th>
                     <th className="px-3 py-2 text-right font-semibold">{t('klub.stLiga')}</th>
                   </tr>
@@ -127,7 +154,7 @@ export function Klub() {
                 <tbody className="divide-y divide-white/5">
                   {VRSTICE.map(([k, polje, f]) => (
                     <tr key={k}>
-                      <td className="px-3 py-2 text-slate-300">{t(k)}</td>
+                      <th scope="row" className="px-3 py-2 text-left font-normal text-slate-300">{t(k)}</th>
                       <td className="px-3 py-2 text-right font-bold tabular-nums text-slate-100">{f(p.ekipa?.klub?.[polje])}</td>
                       <td className="px-3 py-2 text-right tabular-nums text-slate-400">{f(p.ekipa?.liga[polje])}</td>
                     </tr>
@@ -143,12 +170,13 @@ export function Klub() {
               <table className="min-w-full text-sm">
                 <thead className="border-b border-white/10 text-left text-xs text-slate-400">
                   <tr>
-                    <th className="sticky left-0 bg-slate-950 px-3 py-2 font-semibold">{t('klub.st.ime')}</th>
+                    <th className="sticky left-0 bg-slate-900 px-3 py-2 font-semibold">{t('klub.st.ime')}</th>
                     <th className="px-3 py-2 font-semibold">{t('klub.st.poz')}</th>
                     {STOLPCI.map(([k, polje]) => (
-                      <th key={k} className="whitespace-nowrap px-3 py-2 text-right font-semibold">
+                      <th key={k} aria-sort={razvrsti === polje ? 'descending' : 'none'} className="whitespace-nowrap px-3 py-2 text-right font-semibold">
                         <button type="button" onClick={() => setRazvrsti(polje)} className={razvrsti === polje ? 'text-gnl-300' : 'hover:text-slate-200'}>
                           {t(k)}
+                          {razvrsti === polje && <span aria-hidden="true"> ▼</span>}
                         </button>
                       </th>
                     ))}
@@ -156,8 +184,8 @@ export function Klub() {
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {kader.map((k) => (
-                    <tr key={k.player_id} className="hover:bg-white/5">
-                      <td className="sticky left-0 whitespace-nowrap bg-slate-950 px-3 py-2">
+                    <tr key={k.player_id} className="group hover:bg-slate-800">
+                      <td className="sticky left-0 whitespace-nowrap bg-slate-900 px-3 py-2 group-hover:bg-slate-800">
                         <Link to={`/player/${k.player_id}`} className="font-semibold text-slate-100 hover:text-gnl-300">{k.ime}</Link>
                       </td>
                       <td className="px-3 py-2">
@@ -223,7 +251,7 @@ function IzbiraKluba({ drzava, onIzbira }: { drzava: number; onIzbira: (id: numb
       .from('teams')
       .select('id, name')
       .eq('country_id', drzava)
-      .ilike('name', `%${q.replace(/[%_]/g, '')}%`)
+      .ilike('name', `%${q.replace(/[%_\\]/g, '')}%`)
       .order('name')
       .limit(8)
       .then(({ data }) => velja && setZadetki(data ?? []))
@@ -234,7 +262,7 @@ function IzbiraKluba({ drzava, onIzbira }: { drzava: number; onIzbira: (id: numb
 
   return (
     <div className="relative">
-      <input value={iskanje} onChange={(e) => setIskanje(e.target.value)} placeholder={t('klub.izberi')} className="polje w-full sm:w-80" />
+      <input value={iskanje} onChange={(e) => setIskanje(e.target.value)} placeholder={t('klub.izberi')} aria-label={t('klub.izberi')} className="polje w-full sm:w-80" />
       {zadetki.length > 0 && (
         <ul className="absolute z-10 mt-1 w-full rounded-xl border border-white/10 bg-slate-900 p-1 sm:w-80">
           {zadetki.map((z) => (

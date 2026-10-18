@@ -3600,17 +3600,34 @@ set local role authenticated;
 select pg_temp.zavrnjeno('scoutk: brez sedeza ni pregleda kluba', $$select scout_klub()$$);
 reset role;
 
+-- Liga kluba: najprej odrasla liga s tekmami tekoče sezone (K igra v testih vklopa, največ v -926002).
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('scoutk: liga kluba po tekmah tekoce sezone',
+  (scout_klub()->'glava'->>'competition_id')::bigint = -926002);
+reset role;
+-- Brez tekem tekoče sezone pride liga iz Elo (scout.liga_kluba).
+update rounds set season = '2099/00' where competition_id in (-926001, -926002, -926003);
+-- Skriti, mladinski in anonimizirani igralci naj bodo v kadru kluba K, da izločanje res velja.
+update scout.kazalniki set team_id = -913001, competition_id = -913001
+ where player_id in (-930001, -930002, -930003, -930004, -930008);
+update scout.kazalniki set sezona = public.sezona_lige(-913001) where player_id between -930008 and -930001;
 select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
 set local role authenticated;
 select pg_temp.preveri('scoutk: svoj klub, kader le vidni igralci',
   (select (j->>'team_id')::bigint = -913001
       and not (j->>'admin')::boolean
-      and (select array_agg((x->>'player_id')::bigint) from jsonb_array_elements(j->'kader') x) = array[-930007]::bigint[]
+      and (j->'glava'->>'competition_id')::bigint = -913001
+      and (select array_agg((x->>'player_id')::bigint order by (x->>'player_id')::bigint)
+             from jsonb_array_elements(j->'kader') x) = array[-930007, -930001]::bigint[]
       and jsonb_array_length(j->'vrzeli') = 2
      from scout_klub() j));
 select pg_temp.preveri('scoutk: svoj klub tudi z izrecnim id', (select (scout_klub(-913001)->>'team_id')::bigint = -913001));
 select pg_temp.zavrnjeno('scoutk: ne-admin ne vidi tujega kluba', $$select scout_klub(-913002)$$);
 reset role;
+update scout.kazalniki k set team_id = p.team_id, competition_id = p.competition_id, sezona = '2026/27'
+  from players p where p.id = k.player_id and k.player_id between -930008 and -930001;
+update rounds set season = sezona_lige(competition_id) where competition_id in (-926001, -926002, -926003);
 select pg_temp.preveri('scoutk: klic v dnevniku',
   exists (select 1 from scout.dnevnik where team_id = -913001 and vrsta = 'klub'
             and user_id = 'e5c30000-0000-4000-8000-000000000001'));

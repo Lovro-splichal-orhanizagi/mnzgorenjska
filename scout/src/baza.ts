@@ -83,6 +83,10 @@ export interface StatEkipe {
   ciste: number
   tocke_doma: number | null
   tocke_gost: number | null
+  za_doma: number | null
+  proti_doma: number | null
+  za_gost: number | null
+  proti_gost: number | null
   kartoni: number | null
 }
 export interface IgralecKluba {
@@ -114,7 +118,7 @@ export interface PregledKluba {
     forma?: string
     elo: number | null
     elo_lani: number | null
-    moc_mesto: number
+    moc_mesto: number | null
     lig: number
   } | null
   ekipa: { klub: StatEkipe | null; liga: StatEkipe } | null
