@@ -1,0 +1,64 @@
+name: FCF reviewed history release
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Read-only cache export for the reviewed three-group release
+        required: true
+        default: cache-export
+        type: choice
+        options:
+          - cache-export
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fcf-reviewed-history-main
+  cancel-in-progress: false
+
+jobs:
+  cache-export:
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'cache-export'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Restore only the reviewed exact cache
+        id: restore
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-ES-k1od1-39122610224-1
+          fail-on-cache-miss: true
+
+      - name: Export only the three fixed blocks with original lineage
+        id: export
+        if: always()
+        shell: bash
+        env:
+          FCF_EXPORT_KIND: history
+          FCF_CACHE_KEY: zapisniki-ES-k1od1-39122610224-1
+          FCF_CACHE_MATCHED_KEY: ${{ steps.restore.outputs.cache-matched-key }}
+          FCF_CACHE_HIT: ${{ steps.restore.outputs.cache-hit }}
+          FCF_RESTORE_OUTCOME: ${{ steps.restore.outcome }}
+        run: node scripts/izvozi-fcf-predpomnjene-dokaze.mjs
+
+      - name: Retain authenticated bounded cache evidence
+        if: always() && steps.export.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-history-cache-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-historical-cache
+          if-no-files-found: error
+          retention-days: 90
