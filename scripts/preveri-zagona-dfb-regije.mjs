@@ -42,7 +42,7 @@ export async function verifySeason({slug,season,id,commit,dir}){
  const actual=verifyReplayExecution(run,jobs,{runId:id,commit,historical}),downloaded=downloadArtifact({runId:id,commit,name:scope(slug,season).replayName,kind:'replay'})
  const record=JSON.parse(downloaded.files.get('replay.json')??'null'),lineage=verifyReplayRecord(record,{slug,season,actual,artifact:downloaded.artifact,workflowSha256:workflowHash(commit,replayWorkflow),parserSha256:parserSha256(),historical})
  // Re-fetch actual parent metadata/artifact independently; never trust artifact claims.
- const capture=obtainCapture({slug,season,runId:lineage.capture.runId,commit:lineage.capture.commit,dir,expected:lineage.capture})
+ const capture=obtainCapture({slug,season,runId:lineage.capture.runId,commit:lineage.capture.commit,dir,expected:lineage.capture,historical})
  const regenerated=await replaySnapshot({dir,slug,season,capture,statisticsPolicy:historical?record.statisticsPolicy:undefined})
  for(const [file,value]of[['razpored.json',regenerated.schedule],['zapisniki.json',regenerated.reports]]){
   if(JSON.stringify(JSON.parse(downloaded.files.get(file)??'null'))!==JSON.stringify(value))throw Error(`Replay artifact ${file} differs from full strict replay`)

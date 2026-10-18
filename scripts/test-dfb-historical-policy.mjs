@@ -116,6 +116,24 @@ test('version3 approval binds honest coverage, both actual replay modes, immutab
  ]){const bad=structuredClone(m);change(bad);assert.throws(()=>check(bad))}
 })
 
+test('normal manifest rows cannot erase played evidence or duplicate season identities',async()=>{
+ const {verifyDfbPolicySeason,dfbStatisticsCoverage}=await import('./dfb-historical-policy.mjs'),{preveriOdobritev}=await import('./vklopi-dfb-regijo.mjs'),m=await manifest3()
+ const changes=[
+  s=>{const f=s.fixtures.find(f=>f.statisticsStatus==='available');f.starters=[];f.appearances=[];f.goals=[]},
+  s=>{s.fixtures.find(f=>f.statisticsStatus==='available').played=false;s.statisticsCoverage=dfbStatisticsCoverage(s.fixtures)},
+  s=>{const indexes=s.fixtures.flatMap((f,i)=>f.statisticsStatus==='available'?[i]:[]);s.fixtures[indexes[1]]=structuredClone(s.fixtures[indexes[0]])},
+  s=>{s.fixtures.find(f=>f.statisticsStatus==='available').starters[0].proof='guessed'},
+  s=>{s.fixtures.find(f=>f.statisticsStatus==='available').appearances.pop()},
+  s=>{s.fixtures.find(f=>f.statisticsStatus==='available').homeGoals=1},
+ ]
+ for(const [i,change]of changes.entries()){
+  const bad=structuredClone(m);change(bad.seasons[0]);assert.throws(()=>verifyDfbPolicySeason(bad.seasons[0],bad.statisticsPolicy),undefined,`season mutation ${i}`)
+  const raw=JSON.stringify(bad);assert.throws(()=>preveriOdobritev(raw,sha(raw)),undefined,`manifest mutation ${i}`)
+ }
+ const bad=structuredClone(m);bad.seasons[1].lineage.capture.conclusion='failure';const raw=JSON.stringify(bad)
+ assert.throws(()=>preveriOdobritev(raw,sha(raw)),/current.*capture|capture.*current/)
+})
+
 test('policy replay artifact cannot be fabricated from a strict replay success',async()=>{
  const m=await manifest3(),s=m.seasons[0],{verifyReplayRecord}=await import('./preveri-zagona-dfb-regije.mjs')
  const record={version:2,slug:m.slug,season:s.season,statisticsPolicy:m.statisticsPolicy,capture:s.lineage.capture,replay:s.lineage.replay}

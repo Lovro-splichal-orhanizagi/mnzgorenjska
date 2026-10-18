@@ -58,14 +58,48 @@ export function dfbStatisticsCoverage(fixtures){
  const played=fixtures.filter(f=>f.played),unavailable=fixtures.filter(f=>f.statisticsStatus==='unavailable_historical')
  return {fixtureCount:fixtures.length,playedCount:played.length,availableStatisticsCount:played.length-unavailable.length,unavailableHistoricalCount:unavailable.length,strictStatisticsCoverage:unavailable.length===0,policyCoverage:true}
 }
+function verifyAvailableFixture(f){
+ if(!Array.isArray(f.starters)||!Array.isArray(f.appearances)||!Array.isArray(f.goals)||!Array.isArray(f.warnings)||['statisticsReason','statisticsPolicyId','statisticsPolicySha256','sourceRawSha256','sourceFixture'].some(k=>f[k]!=null))fail('normal fixture cannot carry unavailable evidence')
+ if(!f.played){
+  if(f.starters.length||f.appearances.length||f.goals.length||f.homeGoals!==null||f.awayGoals!==null)fail('future fixture cannot carry played statistics')
+  return
+ }
+ if(!Number.isSafeInteger(f.homeGoals)||f.homeGoals<0||!Number.isSafeInteger(f.awayGoals)||f.awayGoals<0||f.goals.length!==f.homeGoals+f.awayGoals)fail('normal played goals/score differ')
+ const key=p=>JSON.stringify([p.side,p.name,Boolean(p.keeper??p.is_goalkeeper)]),canonical=rows=>rows.map(key).sort()
+ if(f.starters.length!==22||f.starters.some(p=>![0,1].includes(p.side)||typeof p.name!=='string'||!p.name||typeof p.keeper!=='boolean'||p.proof!==(p.keeper?'oznaka-T':null)))fail('normal played starter/keeper proof missing')
+ for(const side of[0,1])if(f.starters.filter(p=>p.side===side).length!==11||f.starters.filter(p=>p.side===side&&p.keeper).length!==1)fail('normal played XI/keeper coverage missing')
+ if(f.appearances.some(p=>![0,1].includes(p.side)||typeof p.name!=='string'||!p.name||typeof p.started!=='boolean'||typeof p.is_goalkeeper!=='boolean'||typeof p.clean_sheet!=='boolean'||['minute_on','minute_off','minutes_played','goals','own_goals','penalties_scored','penalties_missed','yellow_cards','red_cards','goals_conceded'].some(k=>!Number.isSafeInteger(p[k])||p[k]<0))||JSON.stringify(canonical(f.starters))!==JSON.stringify(canonical(f.appearances.filter(p=>p.started))))fail('normal played appearances differ from verified starters')
+ const scores=[0,0]
+ for(const g of f.goals){
+  if(![0,1].includes(g.side)||!Number.isSafeInteger(g.minute)||g.minute<1||typeof g.is_own_goal!=='boolean'||typeof g.is_penalty!=='boolean'||!f.appearances.some(p=>p.side===g.side&&p.name===g.name))fail('normal played goal actor/side/minute missing')
+  scores[g.is_own_goal?1-g.side:g.side]++
+ }
+ if(scores[0]!==f.homeGoals||scores[1]!==f.awayGoals)fail('normal played goal sides differ from score')
+}
+function verifySeasonShape(s){
+ const ids=new Set(),pairs=new Set(),clubs=new Set(),keepers=new Set()
+ if(s.fixtures.length!==306)fail('manifest season fixture count differs')
+ for(const f of s.fixtures){
+  const pair=JSON.stringify([f.home,f.away])
+  if(!/^de-dfb-[1-9]\d{0,9}$/.test(f.id)||ids.has(f.id)||pairs.has(pair)||typeof f.home!=='string'||!f.home||typeof f.away!=='string'||!f.away||f.home===f.away||!Number.isSafeInteger(f.round)||f.round<1||f.round>34||typeof f.played!=='boolean'||s.season==='2025/26'&&!f.played)fail('manifest duplicate/invalid fixture or incomplete archive')
+  ids.add(f.id);pairs.add(pair);clubs.add(f.home);clubs.add(f.away)
+  if(f.statisticsStatus==='available'&&f.played)for(const p of f.starters??[])if(p.keeper&&p.proof==='oznaka-T')keepers.add(p.side===0?f.home:f.away)
+ }
+ if(clubs.size!==18||[...clubs].some(c=>!keepers.has(c)))fail('manifest club/verified keeper coverage differs')
+ for(let round=1;round<=34;round++){
+  const fixtures=s.fixtures.filter(f=>f.round===round)
+  if(fixtures.length!==9||new Set(fixtures.flatMap(f=>[f.home,f.away])).size!==18)fail('manifest round participation differs')
+ }
+}
 export function verifyDfbPolicySeason(s,binding){
  const competition={slug,source:'dfb',source_policy:DFB_HISTORICAL_POLICY,firstFantasyPlayedOn:binding?.firstFantasyPlayedOn},policy=dfbHistoricalPolicy(competition)
  if(JSON.stringify(binding)!==JSON.stringify(dfbPolicyBinding(competition))||!Array.isArray(s.fixtures)||!['2025/26','2026/27'].includes(s.season))fail('manifest policy binding differs')
+ verifySeasonShape(s)
  const unavailable=s.fixtures.filter(f=>f.statisticsStatus==='unavailable_historical'),expected=s.season==='2025/26'?ids:[]
  if(JSON.stringify(unavailable.map(f=>f.id.slice(7)).sort())!==JSON.stringify(expected)||JSON.stringify(s.statisticsCoverage)!==JSON.stringify(dfbStatisticsCoverage(s.fixtures)))fail('manifest historical IDs/coverage differ')
  for(const f of s.fixtures){
   if(f.statisticsStatus==='available'){
-   if(!Array.isArray(f.starters)||!Array.isArray(f.appearances)||!Array.isArray(f.goals)||f.statisticsReason!=null||f.statisticsPolicyId!=null||f.sourceRawSha256!=null)fail('normal fixture cannot carry unavailable evidence')
+   verifyAvailableFixture(f)
   }else if(f.statisticsStatus==='unavailable_historical'){
    if(f.starters!==null||f.appearances!==null||f.goals!==null||f.played!==true)fail('unavailable statistics must be null, never zero rows')
    const classification=classifyHistoricalStatistics({competition,fixture:f.sourceFixture,rawSha256:f.sourceRawSha256,policy}),e=classification.exception

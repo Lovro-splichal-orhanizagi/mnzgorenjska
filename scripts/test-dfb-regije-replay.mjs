@@ -235,3 +235,21 @@ test('new parser history binds codec bytes and cannot omit a declared codec depe
   rmSync('src/lib/nepripisaniRumeni.mjs');assert.throws(()=>replay.parserHashAt(commit()),/nepripisaniRumeni/)
  }finally{process.chdir(before);rmSync(root,{recursive:true,force:true})}
 })
+
+test('policy current capture requires successful actual execution and original strict-ready coverage',async()=>{
+ const season='2026/27',options={runId:'12345',commit,slug:'de-regionalliga-suedwest',season,historical:true},run={...parentRun,conclusion:'success'},job={...parentJob,conclusion:'success',steps:[{...step,name:proof.captureStep(season),conclusion:'success'},{...upload,name:proof.captureUpload(season)}]}
+ assert.equal(proof.verifyCaptureExecution(run,[job],options).conclusion,'success')
+ assert.throws(()=>proof.verifyCaptureExecution({...run,conclusion:'failure'},[{...job,conclusion:'failure',steps:[{...job.steps[0],conclusion:'failure'},job.steps[1]]}],options),/current.*capture|capture.*current/)
+ const dir=mkdtempSync(join(tmpdir(),'dfb-policy-current-ready-'))
+ try{
+  tinyCapture(dir)
+  const report={vir:'dfb',koda:'regionalliga-suedwest/2026-2027',sezona:season,prenesenih:1,krogov:34,klubov:18,odigranih:105,zapisnikov:105,postavPo11:210,pokritost:true,pripravljeno:true,napake:[],opozorila:[],cakajoci:[],klubiBrezVratarja:[]},save=x=>writeFileSync(join(dir,'porocilo.json'),JSON.stringify(x)),capture={conclusion:'success'}
+  save(report);assert.equal(replay.readClosedCapture(dir,options.slug,season,capture,{historical:true}).originalReport.pripravljeno,true)
+  for(const change of[x=>x.pripravljeno=false,x=>x.pokritost=false,x=>x.zapisnikov--,x=>x.postavPo11--,x=>x.napake=['bad'],x=>x.klubiBrezVratarja=['Missing keeper'],x=>x.cakajoci=[{}]]){
+   const bad=structuredClone(report);change(bad);save(bad);assert.throws(()=>replay.readClosedCapture(dir,options.slug,season,capture,{historical:true}))
+  }
+  save({...report,pripravljeno:false})
+  await assert.rejects(()=>replay.replaySnapshot({dir,slug:options.slug,season,capture,statisticsPolicy:{id:'de-dfb-suedwest-2025-historical-unavailable-v1'}}),/current.*capture|capture.*current/)
+  save(report);assert.throws(()=>replay.readClosedCapture(dir,options.slug,season,{conclusion:'failure'},{historical:true}),/current.*capture|capture.*current/)
+ }finally{rmSync(dir,{recursive:true,force:true})}
+})

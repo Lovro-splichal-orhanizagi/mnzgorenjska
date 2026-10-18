@@ -59,7 +59,9 @@ export function sestaviSezono({slug,sezona,razpored,zapisniki,nepopolni=[],captu
    homeGoals:r?.z.rezultat.domaci??null,awayGoals:r?.z.rezultat.gostje??null,url:r?.url??t.url,
    ...(historicalPolicy?{statisticsStatus:'available'}:{}),starters:canonical(starters),warnings:r?.z.opozorila??[],appearances:r?kanonicniNastopi(r.z):[],goals:r?kanonicniGoli(r.z):[]}
  }).sort((a,b)=>a.round-b.round||a.id.localeCompare(b.id))
- return {season:sezona,code:c.code,capturedAt,runId,jobId,documentsSha256,fixtures:out,...(historicalPolicy?{statisticsCoverage:dfbStatisticsCoverage(out)}:{})}
+ const result={season:sezona,code:c.code,capturedAt,runId,jobId,documentsSha256,fixtures:out,...(historicalPolicy?{statisticsCoverage:dfbStatisticsCoverage(out)}:{})}
+ if(historicalPolicy)verifyDfbPolicySeason(result,dfbPolicyBinding(historicalPolicy.competition))
+ return result
 }
 export function preveriOdobritev(raw,approvedSha,now=Date.now()){
  if(Buffer.byteLength(raw)>8*1024*1024||!/^[a-f0-9]{64}$/.test(approvedSha)||sha(raw)!==approvedSha)fail('approved manifest SHA/size mismatch')
@@ -90,7 +92,7 @@ export async function pripravi({slug,archiveDir,currentDir,sourceCommit,proof}){
   if(p?.season!==season||p.captureCommit!==sourceCommit||p.seasonJobPassed!==true)fail('season capture job mismatch')
   if(version===2||version===3){
    verifyLineage({...p,...(version===3?{evidenceMode:'policy-replay'}:{}),capturedAt:p.lineage?.capture.capturedAt,documentsSha256:p.lineage?.capture.documentsSha256},{version,slug,provenanceVersion:version===3?2:undefined,statisticsPolicy:proof.statisticsPolicy,sourceCommit,parserSha256:parserSha256()})
-   const {readClosedCapture}=await import('./ponovi-dfb-regijo.mjs');readClosedCapture(dir,slug,season,p.lineage.capture)
+   const {readClosedCapture}=await import('./ponovi-dfb-regijo.mjs');readClosedCapture(dir,slug,season,p.lineage.capture,{historical:version===3})
   }else if(p.lineage!=null)fail('Mixed direct/replay proof')
   const snapshot=preveriPosnetek(dir,JSON.parse(readFileSync(resolve(dir,'prenosi.json'),'utf8')))
   const read=async url=>{if(!snapshot.documents.has(url))fail(`missing captured URL ${url}`);return snapshot.documents.get(url)}

@@ -7,7 +7,7 @@ import vir from './viri/dfb.mjs'
 import {dfbPolicyBinding,DFB_HISTORICAL_POLICY} from './dfb-historical-policy.mjs'
 import {configuration,sourceFiles,parserSha256,preveriPosnetek,sestaviSezono} from './vklopi-dfb-regijo.mjs'
 import {sha256,githubJson,downloadArtifact,writeArtifact} from './dfb-artifacts.mjs'
-import {scope,verifyCaptureExecution,verifyRunningReplay,captureWorkflow,replayWorkflow} from './dfb-replay-proof.mjs'
+import {scope,assertStrictCurrentCapture,verifyCaptureExecution,verifyRunningReplay,captureWorkflow,replayWorkflow} from './dfb-replay-proof.mjs'
 export function workflowHash(commit,path){
  if(!/^[a-f0-9]{40}$/.test(commit)||![captureWorkflow,replayWorkflow].includes(path))throw Error('Invalid workflow identity')
  const original=execFileSync('git',['show',`${commit}:${path}`])
@@ -58,9 +58,10 @@ export function parserHashAt(commit){
  if(expected&&hash!==expected)throw Error('Historical parser fingerprint mismatch')
  return hash
 }
-export function readClosedCapture(dir,slug,season,expected={}){
+export function readClosedCapture(dir,slug,season,expected={},options={}){
  const conf=configuration(slug,season),index=readFileSync(resolve(dir,'prenosi.json')),records=JSON.parse(index),snapshot=preveriPosnetek(dir,records),report=JSON.parse(readFileSync(resolve(dir,'porocilo.json')))
  if(report.vir!=='dfb'||report.koda!==conf.code||report.sezona!==season||report.prenesenih!==records.length||report.krogov!==conf.rounds||report.klubov!==conf.teams||!Number.isSafeInteger(report.odigranih)||report.odigranih<1||typeof report.pripravljeno!=='boolean'||!Array.isArray(report.napake)||Object.hasOwn(report,'status')||Object.hasOwn(report,'zavrnitev')||report.opozorila?.length)throw Error('Refused/transport-incomplete capture parent')
+ if(options.historical&&season==='2026/27')assertStrictCurrentCapture(expected,report)
  const files=new Set(records.map(r=>r.file)),actual=readdirSync(dir)
  if(actual.some(p=>!['prenosi.json','porocilo.json','razpored.json','zapisniki.json'].includes(p)&&!files.has(p))||!['razpored.json','zapisniki.json'].every(p=>actual.includes(p)))throw Error('Incomplete/unindexed raw capture map')
  const binding={indexSha256:sha256(index),documentsSha256:snapshot.documentsSha256,capturedAt:snapshot.capturedAt}
@@ -77,7 +78,7 @@ export async function withNoNetwork(callback){
 export async function replaySnapshot({dir,slug,season,capture,statisticsPolicy}){
  if(Object.entries(process.env).some(([k,v])=>v&&(/SUPABASE.*(?:KEY|TOKEN)|DATABASE_URL|PGPASSWORD/.test(k))))throw Error('Replay must not receive database credentials')
  return withNoNetwork(async()=>{
-  const snapshot=readClosedCapture(dir,slug,season,capture),read=async url=>{if(!snapshot.documents.has(url))throw Error(`Replay missing captured URL ${url}`);return snapshot.documents.get(url)},code=configuration(slug,season).code
+  const snapshot=readClosedCapture(dir,slug,season,capture,{historical:Boolean(statisticsPolicy)}),read=async url=>{if(!snapshot.documents.has(url))throw Error(`Replay missing captured URL ${url}`);return snapshot.documents.get(url)},code=configuration(slug,season).code
   const schedule=await vir.razporedVseStrani(code,read),reports=await vir.zapisniki(code,read,{zberiNapake:true})
   const competition=statisticsPolicy?{slug,source:'dfb',source_policy:statisticsPolicy.id,firstFantasyPlayedOn:statisticsPolicy.firstFantasyPlayedOn}:null
   if(statisticsPolicy&&JSON.stringify(dfbPolicyBinding(competition))!==JSON.stringify(statisticsPolicy))throw Error('Unreviewed historical replay policy')
@@ -85,17 +86,17 @@ export async function replaySnapshot({dir,slug,season,capture,statisticsPolicy})
   return {schedule,reports,checked,binding:{indexSha256:snapshot.indexSha256,documentsSha256:snapshot.documentsSha256,capturedAt:snapshot.capturedAt}}
  })
 }
-export function obtainCapture({slug,season,runId,commit,dir,expected}){
+export function obtainCapture({slug,season,runId,commit,dir,expected,historical=false}){
  scope(slug,season)
  if(!/^[1-9]\d{0,19}$/.test(runId??'')||!/^[a-f0-9]{40}$/.test(commit??''))throw Error('Invalid original capture run/commit')
  const run=githubJson(`actions/runs/${runId}`),listing=githubJson(`actions/runs/${runId}/jobs?per_page=100`),jobs=listing.jobs
  if(listing.total_count!==jobs?.length)throw Error('Incomplete original job listing')
- const capture=verifyCaptureExecution(run,jobs,{runId,commit,slug,season})
+ const capture=verifyCaptureExecution(run,jobs,{runId,commit,slug,season,historical})
  capture.workflowSha256=workflowHash(commit,captureWorkflow);capture.parserSha256=parserHashAt(commit)
  const downloaded=downloadArtifact({runId,commit,name:scope(slug,season).name,kind:'capture',expectedId:expected?.artifactId,expectedDigest:expected?.artifactDigest})
  writeArtifact(downloaded.files,dir)
  Object.assign(capture,{artifactId:downloaded.artifact.id,artifactDigest:downloaded.artifact.digest})
- const snapshot=readClosedCapture(dir,slug,season,expected)
+ const snapshot=readClosedCapture(dir,slug,season,expected??capture,{historical})
  Object.assign(capture,{indexSha256:snapshot.indexSha256,documentsSha256:snapshot.documentsSha256,capturedAt:snapshot.capturedAt})
  if(expected&&JSON.stringify(capture)!==JSON.stringify(expected)){
   // Compare values, not caller JSON property order.
@@ -110,7 +111,7 @@ async function main(){
   if(process.env.GITHUB_ACTIONS!=='true'||process.env.GITHUB_REPOSITORY!=='Lovro-splichal-orhanizagi/mnzgorenjska'||!/^[1-9]\d{0,19}$/.test(replayRun??'')||!/^[a-f0-9]{40}$/.test(replayCommit??''))throw Error('Actual replay Actions identity required')
   const listing=githubJson(`actions/runs/${replayRun}/jobs?per_page=100`)
   if(listing.total_count!==listing.jobs?.length)throw Error('Incomplete replay job listing')
-  const replay=verifyRunningReplay(githubJson(`actions/runs/${replayRun}`),listing.jobs,{runId:replayRun,commit:replayCommit}),capture=obtainCapture({slug,season,runId,commit,dir})
+  const replay=verifyRunningReplay(githubJson(`actions/runs/${replayRun}`),listing.jobs,{runId:replayRun,commit:replayCommit}),capture=obtainCapture({slug,season,runId,commit,dir,historical:mode==='capture-policy'})
   const statisticsPolicy=mode==='capture-policy'?dfbPolicyBinding({slug,source:'dfb',source_policy:DFB_HISTORICAL_POLICY,firstFantasyPlayedOn}):null
   writeFileSync(file,JSON.stringify({version:statisticsPolicy?2:1,slug,season,capture,replay,...(statisticsPolicy?{statisticsPolicy}:{})})+'\n');return
  }
