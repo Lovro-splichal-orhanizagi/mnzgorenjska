@@ -80,3 +80,13 @@ Required negative tests cover wrong/extra/missing policy rows; archive/current/f
 ## Read-only checkpoint boundary
 
 The first implementation intentionally rejects manifest-v3 production import and database release before any database request. Those guards are removed only with the separately reviewed shared schema/import marker seam and DFB RPC checkpoint. It does not seed source_policy, install policies, persist unavailable rows, activate, or call providers. The existing strict source parser remains unchanged.
+
+## Writer checkpoint: atomic metadata bootstrap
+
+The canonical source_policy is `de-dfb-suedwest-2025-historical-unavailable-v1`, identical to the approved registry policy ID. No abbreviated policy spelling is accepted. The writer branch starts at reviewed merged mainf57d2359; its shared prerequisite is the reviewed historical availability schema, with unchanged DFB policy SHA.
+
+`prepare_dfb_historical_statistics(p_manifest text,p_sha256 text)` independently validates the complete approved v3 packet, original freshness, exact policy/lineage and306+306 fixture topology. It provisions only the three exact source club names, the two actual archive round metadata rows and the first actual future round metadata/config. It installs policy and BOTH unavailable headers atomically through the shared primitives. A failure on either entry rolls back the entire operation. This resolves an empty-DB dependency without inventing reports or consulting an incomplete installed getter. Ordinary304 archive reports, fullcurrent schedule/current reports, roles and verified-history prices follow afterwards.
+
+The future candidate is computed from the packet. Retained source currently identifies round13 firstday2026-10-23 at19:00 local, six-hour cutoff2026-10-23T11:00Z; this is a retained lead, not a replacement for fresh source confirmation. DiagnosticOct25 must not become an operational configuration.
+
+The separate v3 private gate checks the complete persisted612-fixture/68-round sets, exact normal canonical rows, installed immutable empty unavailable headers, keepers, active clubs, substitutes, prices, squad and six-hour future deadline. It then calls the owner-only shared transactional authorizer and changes only active=true in that same transaction. Its whole state snapshot and future-round readback remain binding. The original v1/v2 dispatcher bodies stay private and unchanged. Installed runtime markers are checked before DFB traversal; explicit installed single reports return before any fetch. V3 JS writer guards remain until the shared importer and Actions wrapper receive their separate review.

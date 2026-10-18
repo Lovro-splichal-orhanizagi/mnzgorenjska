@@ -23,7 +23,7 @@ export function verifyReplayRecord(record,{slug,season,actual,artifact,workflowS
  verifyLineage({season,runId:actual.runId,jobId:actual.jobId,capturedAt:record.capture?.capturedAt,documentsSha256:record.capture?.documentsSha256,lineage,...(historical?{evidenceMode:'policy-replay'}:{})},{sourceCommit:actual.commit,parserSha256,...(historical?{version:3,slug,provenanceVersion:2,statisticsPolicy:record.statisticsPolicy}:{})})
  return lineage
 }
-export const replayFiles=[...sourceFiles,'scripts/vklopi-nemcijo.mjs','scripts/dfb-artifacts.mjs','scripts/dfb-replay-proof.mjs','scripts/ponovi-dfb-regijo.mjs','scripts/preveri-zagona-dfb-regije.mjs','scripts/vklopi-dfb-regijo.mjs','scripts/dfb-offline.mjs','scripts/uvozi-dfb-regijo.mjs',replayWorkflow,'.github/workflows/uvoz-dfb-regije.yml','.github/workflows/vklop-dfb-regije.yml']
+export const replayFiles=[...sourceFiles,'scripts/viri/index.mjs','scripts/uvoz-zapisnikov.mjs','supabase/migrations/20261018180100_dfb_historical_statistics_v3.sql','scripts/vklopi-nemcijo.mjs','scripts/dfb-artifacts.mjs','scripts/dfb-replay-proof.mjs','scripts/ponovi-dfb-regijo.mjs','scripts/preveri-zagona-dfb-regije.mjs','scripts/vklopi-dfb-regijo.mjs','scripts/dfb-offline.mjs','scripts/uvozi-dfb-regijo.mjs',replayWorkflow,'.github/workflows/uvoz-dfb-regije.yml','.github/workflows/vklop-dfb-regije.yml']
 export function verifyCode(commit,version){
  if(!/^[a-f0-9]{40}$/.test(commit)||![1,2,3].includes(version))throw Error('Invalid reviewed code identity')
  execFileSync('git',['diff','--exit-code',commit,'--',...(version>=2?replayFiles:sourceFiles)],{stdio:'pipe'})
