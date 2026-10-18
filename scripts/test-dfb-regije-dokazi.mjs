@@ -35,6 +35,15 @@ test('offline loader verifies every raw SHA, URL and oldest capture time against
   const m={version:1,slug,sourceCommit:commit,parserSha256:parserSha256(),seasons:['2025/26','2026/27'].map((season,i)=>({season,code:`regionalliga-nord/${i?'2026-2027':'2025-2026'}`,capturedAt:old,runId:'12345',jobId:'6789',documentsSha256:digest,fixtures:Array(306).fill({})}))}
   const load=()=>{const raw=JSON.stringify(m);return offline.loadApprovedDocuments(raw,sha(raw),[dir,dir])}
   assert.equal(load().size,2)
+  // Exercise the actual Node preloader in a child. Only authenticated local
+  // documents can remove the live provider's courtesy delay.
+  const {spawnSync}=await import('node:child_process'),dfb=(await import('./viri/dfb.mjs')).default
+  assert.equal(dfb.premorMs,6000)
+  const manifestFile=join(dir,'approved.json'),raw=JSON.stringify(m);writeFileSync(manifestFile,raw)
+  const probe=`import assert from 'node:assert/strict';import dfb from ${JSON.stringify(new URL('./viri/dfb.mjs',import.meta.url).href)};assert.equal(dfb.premorMs,0);assert.equal(await(await fetch('https://datencenter.dfb.de/a')).text(),'${body}');await assert.rejects(()=>fetch('https://datencenter.dfb.de/not-captured'));assert.equal(await(await fetch('https://api.slff.eu/rest/v1/players')).text(),'db-sentinel');`
+  const child=spawnSync(process.execPath,['--import','data:text/javascript,'+encodeURIComponent("globalThis.fetch=async()=>new Response('db-sentinel')"),'--import',new URL('./dfb-offline.mjs',import.meta.url).href,'--input-type=module','-e',probe],{env:{...process.env,SLFF_DFB_MANIFEST:manifestFile,SLFF_DFB_APPROVED_SHA:sha(raw),SLFF_DFB_ARCHIVE:dir,SLFF_DFB_CURRENT:dir},encoding:'utf8',timeout:30000})
+  assert.equal(child.status,0,child.stderr)
+  assert.equal(dfb.premorMs,6000,'ordinary provider keeps the source pause outside the isolated preload')
   writeFileSync(join(dir,file),'changed');assert.throws(load,/SHA/);writeFileSync(join(dir,file),body)
   m.seasons[0].capturedAt=now;assert.throws(load,/changed/);m.seasons[0].capturedAt=old
   records[1].url='https://evil.example/b';writeFileSync(join(dir,'prenosi.json'),JSON.stringify(records));assert.throws(load,/uradn/)

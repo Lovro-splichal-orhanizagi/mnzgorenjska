@@ -1,6 +1,7 @@
 // Node --import preloader. It never falls back to live DFB. Database fetch is untouched.
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import dfb from './viri/dfb.mjs'
 import { preveriOdobritev, preveriPosnetek, sha } from './vklopi-dfb-regijo.mjs'
 export function offlineFetch(documents,network){
  return async(input,options={})=>{
@@ -27,4 +28,7 @@ export function loadApprovedDocuments(manifest,approvedSha,dirs){
 if(process.env.SLFF_DFB_MANIFEST){
  const raw=readFileSync(process.env.SLFF_DFB_MANIFEST,'utf8'),documents=loadApprovedDocuments(raw,process.env.SLFF_DFB_APPROVED_SHA,[process.env.SLFF_DFB_ARCHIVE,process.env.SLFF_DFB_CURRENT])
  globalThis.fetch=offlineFetch(documents,globalThis.fetch)
+ // Every DFB URL is now served only from verified local documents.
+ // Keep the six-second courtesy pause for every ordinary live import.
+ dfb.premorMs=0
 }
