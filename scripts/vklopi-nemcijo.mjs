@@ -9,7 +9,7 @@ import { preveriPokritost } from './preveri-vir-sezono.mjs'
 const sha=s=>createHash('sha256').update(s).digest('hex')
 const fail=s=>{throw Error(`Vklop Nemčije: ${s}`)}
 const scope={ '2025/26':'regionalliga-nordost/2025-2026', '2026/27':'regionalliga-nordost/2026-2027' }
-const fingerprintFiles=['dfb.mjs','dfb-korekcije.json','dfb-rezerve.json','fussball.mjs','fussball-pisava.mjs','fussball-datumski-glifi.json','fss.mjs']
+const fingerprintFiles=['dfb-calendar.mjs','dfb-calendar-receipts.json','dfb.mjs','dfb-korekcije.json','dfb-rezerve.json','fussball.mjs','fussball-pisava.mjs','fussball-datumski-glifi.json','fss.mjs']
 export function parserSha256(){
  return sha(JSON.stringify([...fingerprintFiles.map(p=>[`viri/${p}`,sha(readFileSync(new URL(`./viri/${p}`,import.meta.url)))]),...['klubi.mjs','preveri-vir-sezono.mjs'].map(p=>[p,sha(readFileSync(new URL(`./${p}`,import.meta.url)))])]))
 }

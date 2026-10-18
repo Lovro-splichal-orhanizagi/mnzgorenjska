@@ -4,7 +4,7 @@ import {resolve} from 'node:path'
 import {pathToFileURL} from 'node:url'
 import {execFileSync} from 'node:child_process'
 import vir from './viri/dfb.mjs'
-import {dfbPolicyBinding,DFB_HISTORICAL_POLICY} from './dfb-historical-policy.mjs'
+import {dfbPolicyBinding,dfbHistoricalScope} from './dfb-historical-policy.mjs'
 import {configuration,sourceFiles,parserSha256,preveriPosnetek,sestaviSezono} from './vklopi-dfb-regijo.mjs'
 import {sha256,githubJson,downloadArtifact,writeArtifact} from './dfb-artifacts.mjs'
 import {scope,assertStrictCurrentCapture,verifyCaptureExecution,verifyRunningReplay,captureWorkflow,replayWorkflow} from './dfb-replay-proof.mjs'
@@ -112,7 +112,7 @@ async function main(){
   const listing=githubJson(`actions/runs/${replayRun}/jobs?per_page=100`)
   if(listing.total_count!==listing.jobs?.length)throw Error('Incomplete replay job listing')
   const replay=verifyRunningReplay(githubJson(`actions/runs/${replayRun}`),listing.jobs,{runId:replayRun,commit:replayCommit}),capture=obtainCapture({slug,season,runId,commit,dir,historical:mode==='capture-policy'})
-  const statisticsPolicy=mode==='capture-policy'?dfbPolicyBinding({slug,source:'dfb',source_policy:DFB_HISTORICAL_POLICY,firstFantasyPlayedOn}):null
+  const statisticsPolicy=mode==='capture-policy'?dfbPolicyBinding({slug,source:'dfb',source_policy:dfbHistoricalScope(slug).policyId,firstFantasyPlayedOn}):null
   writeFileSync(file,JSON.stringify({version:statisticsPolicy?2:1,slug,season,capture,replay,...(statisticsPolicy?{statisticsPolicy}:{})})+'\n');return
  }
  if(['replay','replay-policy'].includes(mode)&&args.length===3){
