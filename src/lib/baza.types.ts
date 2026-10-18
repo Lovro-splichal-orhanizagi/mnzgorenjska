@@ -8793,6 +8793,7 @@ export type Database = {
         }
         Returns: string
       }
+      scout_klub: { Args: { p_team_id?: number }; Returns: Json }
       scout_moj_klub: { Args: Record<PropertyKey, never>; Returns: Json }
       scout_moj_profil: {
         Args: { p_player_id: number }

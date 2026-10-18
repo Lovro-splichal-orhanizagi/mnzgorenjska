@@ -11,6 +11,8 @@ import { Racun } from './src/strani/Racun'
 import { Iskanje, utemeljitev } from './src/strani/Iskanje'
 import { Igralec, idIzNaslova } from './src/strani/Igralec'
 import { Vrzeli, opisVrzeli } from './src/strani/Vrzeli'
+import { Klub, PregledKlubaView, globina } from './src/strani/Klub'
+import type { PregledKluba, StatEkipe } from './src/baza'
 import { Opazovani } from './src/strani/Opazovani'
 import { Pogoji } from './src/strani/Pogoji'
 import { EN, SL, type Kljuc } from './src/besede'
@@ -26,6 +28,7 @@ const strani: [string, string, ReactNode][] = [
   ['/account', '/account', <Racun />],
   ['/', '/', <Iskanje />],
   ['/player/123', '/player/:id', <Igralec />],
+  ['/club', '/club', <Klub />],
   ['/gaps', '/gaps', <Vrzeli />],
   ['/watchlist', '/watchlist', <Opazovani />],
   ['/terms', '/terms', <Pogoji />],
@@ -66,6 +69,44 @@ const slabiId = idji.filter(([v, pricakovano]) => idIzNaslova(v) !== pricakovano
 preveri('igralec: id iz naslova le varno pozitivno celo število', slabiId.length === 0, slabiId.join(', '))
 const v = opisVrzeli({ vrsta: 'odvisnost', skupina: 'FWD', ime: 'Ana Novak', vrednost: 0.45 })
 preveri('vrzeli: delež golov v odstotkih', v.includes('Ana Novak') && v.includes('45 %'), v)
+
+const kaderPreizkus = [
+  { player_id: 1, ime: 'A', skupina: 'FWD', nastopi: 9, minute: 800, delez_minut: 0.9, zacetki_delez: 1, goli: 5, onoff_ref_90: 0.3, kartoni_90: 0.1, trend_minut: 0 },
+  { player_id: 2, ime: 'B', skupina: 'FWD', nastopi: 4, minute: 200, delez_minut: 0.2, zacetki_delez: 0.2, goli: 1, onoff_ref_90: 0, kartoni_90: 0, trend_minut: null },
+] as const
+const gl = globina([...kaderPreizkus])
+preveri('klub: globina šteje igralce z vsaj 30 % minut in najde nosilca',
+  gl.find((x) => x.skupina === 'FWD')?.stalnih === 1 && gl.find((x) => x.skupina === 'FWD')?.nosilec?.ime === 'A'
+  && gl.find((x) => x.skupina === 'GK')?.nosilec === null)
+
+const stat = (x: number): StatEkipe => ({
+  tekme: 11, tocke: x, za: x, proti: x, ciste: 0.2, tocke_doma: x, tocke_gost: x,
+  za_doma: x, proti_doma: x, za_gost: x, proti_gost: x, kartoni: x,
+})
+const pregled: PregledKluba = {
+  team_id: 1, ime: 'Klub', country_id: 1, admin: false,
+  glava: { elo: 1508.1, lig: 16, liga: '2. SNL', forma: 'LWWDL', mesto: 9, tekme: 11, tocke: 17, klubov: 16, sezona: '2026/27', elo_lani: null, moc_mesto: 2, competition_id: 17 },
+  ekipa: { klub: stat(1.5), liga: stat(1.4) },
+  kader: [...kaderPreizkus],
+  vrzeli: [],
+}
+const primeri: [string, PregledKluba, string?][] = [
+  ['klub: izris pregleda', pregled, '2. SNL'],
+  ['klub: izris brez glave in ekipe', { ...pregled, glava: null, ekipa: null, kader: [], vrzeli: [] }],
+  ['klub: izris brez statistike kluba', { ...pregled, ekipa: { klub: null, liga: stat(1.4) } }],
+]
+for (const [opis, pr, vsebuje] of primeri) {
+  try {
+    const html = renderToString(
+      <StaticRouter location="/club">
+        <PregledKlubaView p={pr} razvrsti="minute" setRazvrsti={() => {}} onIzbira={() => {}} />
+      </StaticRouter>,
+    )
+    preveri(opis, !vsebuje || html.includes(vsebuje))
+  } catch (e) {
+    preveri(opis, false, String(e))
+  }
+}
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)

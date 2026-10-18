@@ -374,7 +374,8 @@ objava, testi): `docs/scout.md`. Bistvo:
 Plačljivo orodje za klube: ločena Vite aplikacija v `scout/`
 (`npm run dev:scout`, `build:scout` → `dist-scout/`, `smoke:scout`), ista
 baza in računi, seja svoja. Bere **le** RPC `scout_*`, nikoli sheme `scout`
-neposredno. Vsaka nova funkcija Scouta gre skozi `scout.dostop` in
+neposredno. Stran Klub (`/club`, `scout_klub`) je pregled lastnega kluba;
+administratorji izberejo katerikoli klub v državi naročnine. Vsaka nova funkcija Scouta gre skozi `scout.dostop` in
 `scout.vidni` in dobi test v `supabase/tests/varnost.sql`; vsako novo
 poizvedbo pred združitvijo izmeri na produkciji. Nizi so v
 `scout/src/besede.ts`: "kazalniki iz podatkov tekem", brez negativnih oznak. CI jo objavi le ob `SCOUT_OBJAVA=1`; DNS, Caddy blok,

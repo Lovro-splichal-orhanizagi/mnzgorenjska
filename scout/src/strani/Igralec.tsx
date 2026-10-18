@@ -4,8 +4,8 @@ import { supabase, type Podoben, type ProfilIgralca, type SezonaIgralca } from '
 import { napaka, stevilo, t, type Kljuc } from '../besede'
 import { Nalaganje } from '../seja'
 
-const st = (x: number | null | undefined, mest = 2) => (x == null ? '–' : stevilo(x, mest))
-const odst = (x: number | null | undefined) => (x == null ? '–' : `${Math.round(x * 100)} %`)
+export const st = (x: number | null | undefined, mest = 2) => (x == null ? '–' : stevilo(x, mest))
+export const odst = (x: number | null | undefined) => (x == null ? '–' : `${Math.round(x * 100)} %`)
 
 /** Id iz naslova: le varno pozitivno celo število (naslov lahko kdo prilepi). */
 export function idIzNaslova(id: string | undefined): number | null {

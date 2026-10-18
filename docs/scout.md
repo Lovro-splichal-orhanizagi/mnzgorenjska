@@ -285,8 +285,21 @@ slff.eu, seja je svoja (`storageKey` `slff-scout-seja`). Registracija,
 ponastavitev gesla in prošnja za klubski račun ostanejo na slff.eu; ob vsaki
 prijavi aplikacija pokliče `uveljavi_klubski_racun`. Bere le RPC `scout_*` in
 `federations` (regije države kluba). Nizi v `scout/src/besede.ts` (sl, en),
-ne v `src/i18n`. Poti: `/`, `/player/:id`, `/gaps`, `/watchlist`,
-`/account`, `/login`, `/terms`.
+ne v `src/i18n`. Poti: `/club`, `/`, `/player/:id`, `/gaps`, `/watchlist`,
+`/account`, `/login`, `/terms`. Videz je prepis slff.eu (tema iz korenskega
+`tailwind.config.js`, razredi v `scout/src/index.css`).
+
+**Stran Klub** (`/club`, `scout_klub(p_team_id)`, migracija 20261018120000,
+spec `docs/superpowers/specs/2026-10-18-scout-klub-design.md`): pregled
+lastnega kluba — liga je odrasla liga z največ tekmami kluba v tekoči
+sezoni (šele brez njih `scout.liga_kluba`) — mesto, oblika zadnjih 5, Elo
+letos in lani, moč lige v državi, uspešnost ekipe proti povprečju lige (javne tekme tekoče sezone,
+`sezona_lige`), kader iz `scout.kazalniki` (le `scout.vidni`), globina po
+poziciji (izračuna vmesnik) in vrzeli kluba. Klic gre skozi `scout.dostop`
+(`dnevnik.vrsta = 'klub'`). Administrator SLFF lahko z `?team=` odpre
+katerikoli klub države naročnine (preizkus na pravih klubih); drugim tuj klub
+vrne napako, nikoli tiho svojega. Izmerjeno na produkciji 18. 10. 2026:
+13–38 ms za klub z največ vrsticami.
 
 ### Objava aplikacije
 
