@@ -1,16 +1,16 @@
 name: Uvoz HNS zena
 run-name: Uvoz HNS zena hr-prva-hnlz
 
-# This workflow prepares/imports an inactive target only. The final database
-# readiness and transactional release guard are a separate review checkpoint.
+# Every mode verifies the closed source packet before database credentials.
+# Activation independently repeats every canonical gate in one locked transaction.
 on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'Inactive preparation or complete offline source import'
+        description: 'Prepare, import, check or guarded activation of this one league'
         required: true
         type: choice
-        options: [prepare, import]
+        options: [prepare, import, check, activate]
       reviewed_sha:
         description: 'Exact reviewed main commit, also recorded in the packet'
         required: true
@@ -124,7 +124,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/cakaj-na-uvoze.mjs --drzava HR
-      - name: Prepare or import the inactive league from the verified closed packet
+      - name: Run the selected guarded mode with the verified closed packet
         env:
           MODE: ${{ inputs.mode }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

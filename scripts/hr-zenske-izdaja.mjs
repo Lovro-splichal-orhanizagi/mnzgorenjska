@@ -1,11 +1,12 @@
 // Dedicated Actions writer. Every import replays one immutable closed packet;
-// this command has no live HNS capture mode and cannot activate a competition.
+// activation is possible only through the complete same-transaction SQL gate.
 import {createHash} from 'node:crypto'
 import {execFileSync} from 'node:child_process'
 import {readFileSync,writeFileSync,lstatSync,mkdirSync,appendFileSync} from 'node:fs'
 import {resolve,join} from 'node:path'
 import {fileURLToPath,pathToFileURL} from 'node:url'
 import {readHnsWomenPacket} from './hr-zenske-paket.mjs'
+import {vseVrstice} from './strani.mjs'
 const repository='Lovro-splichal-orhanizagi/mnzgorenjska',root=fileURLToPath(new URL('../',import.meta.url)),slug='hr-prva-hnlz'
 const fail=message=>{throw Error(`HNS women release: ${message}`)},sha=bytes=>createHash('sha256').update(bytes).digest('hex'),digest=value=>/^[a-f0-9]{64}$/.test(value??'')
 export function validateHnsWomenActionsContext(env,reviewedSha,checkoutSha) {
@@ -23,6 +24,21 @@ export function extractHnsWomenArchive(archive,destination) {
 export function runHnsWomenImports(packetDirectory,manifestSha256,{run=execFileSync}={}) {
  const env={...process.env,SLFF_HNS_WOMEN_PACKET_DIR:resolve(packetDirectory),SLFF_HNS_WOMEN_PACKET_SHA256:manifestSha256}
  for(const [script,...args]of [['uvoz-zapisnikov.mjs','--tekmovanje',slug,'--liga','108043476'],['uvoz-razporeda.mjs','--tekmovanje',slug,'--pisi'],['uvoz-zapisnikov.mjs','--tekmovanje',slug],['ugani-pozicije.mjs','--tekmovanje',slug,'--pisi'],['ovrednoti-igralce.mjs','--tekmovanje',slug,'--pisi']])run(process.execPath,['--import',join(root,'scripts/hr-zenske-offline.mjs'),`scripts/${script}`,...args],{cwd:root,env,stdio:'inherit'})
+}
+export async function refreshHnsWomenDerivedState(db,competitionId) {
+ if(!Number.isSafeInteger(competitionId)||competitionId<=0)fail('prepared competition identity required for scoped refresh')
+ const rounds=await vseVrstice((from,to)=>db.from('rounds').select('id').eq('competition_id',competitionId).order('id').range(from,to))
+ for(const round of rounds){const {error}=await db.rpc('recompute_round_scores',{p_round_id:round.id});if(error)fail(`round-score refresh: ${error.message}`)}
+ const people=await vseVrstice((from,to)=>db.from('players').select('id').eq('competition_id',competitionId).order('id').range(from,to))
+ const {error}=await db.rpc('osvezi_statistiko_igralcev',{p_igralci:people.map(p=>p.id)});if(error)fail(`season cache refresh: ${error.message}`)
+}
+export async function runHnsWomenReleaseGate(db,manifest,manifestSha256,{activate=false}={}) {
+ const {data,error}=await db.rpc('check_hns_women_release',{p_manifest:JSON.stringify(manifest),p_sha256:manifestSha256,p_activate:activate})
+ if(error)fail(`canonical readiness gate: ${error.message}`)
+ if(data?.verified!==true||data.active!==activate||data.manifestSha256!==manifestSha256||data.sourceCommit!==manifest.sourceCommit||data.parserSha256!==manifest.parserSha256||data.fixtures!==131||data.archiveFixtures!==75||data.currentFixtures!==56||data.unavailableHistorical!==3||data.normalComplete!==manifest.coverage.normalComplete||data.pending!==manifest.coverage.pending||data.eligibleCurrentClubs!==8||!Number.isSafeInteger(data.activePlayers)||data.activePlayers<15||data.firstFantasyRound!==manifest.firstFantasyRound||!Number.isFinite(Date.parse(data.deadlineAt))||Date.parse(data.deadlineAt)<=Date.now()||Date.parse(data.deadlineAt)>Date.parse(manifest.future.deadlineAt)||!Number.isFinite(data.defaultPricePercent)||data.defaultPricePercent>70||!Number.isFinite(data.maxPrice)||data.maxPrice<8||!Number.isFinite(data.cheapestLegal15)||data.cheapestLegal15>100)fail('canonical readiness gate returned incomplete/mismatched proof')
+ const captures=records=>records?.map(record=>({code:record.code,capturedAt:record.capturedAt,sha256:record.sha256}))
+ if(data.statisticsPolicyId!==manifest.statisticsPolicy.id||data.statisticsPolicySha256!==manifest.statisticsPolicy.sha256||data.firstFantasyPlayedOn!==manifest.statisticsPolicy.firstFantasyPlayedOn||!['fantasy_midnight_date_only','published_kickoff_offset'].includes(data.deadlineReason)||!Array.isArray(data.originalCaptures)||JSON.stringify(captures(data.originalCaptures))!==JSON.stringify(captures(manifest.schedules))||['hnsRequests','otherRequests','total','refusalObserved'].some(key=>data.sourceBudget?.[key]!==manifest.sourceBudget[key]))fail('canonical readiness gate policy/original receipt proof differs')
+ return data
 }
 function file(path,limit) {
  const stat=lstatSync(path);if(!stat.isFile()||stat.isSymbolicLink()||stat.size>limit)fail('unsafe/oversized evidence file')
@@ -63,17 +79,19 @@ async function main() {
   console.log(JSON.stringify({verified:true,active:false,coverage:manifest.coverage,originalCaptures:manifest.schedules.map(s=>({code:s.code,capturedAt:s.capturedAt,sha256:s.sha256})),future:manifest.future,manifestSha256}))
   outputs(manifestSha256,reviewedSha);return
  }
- if(!['prepare','import'].includes(mode))fail('mode must be stage, verify, prepare or import; activation is unavailable')
+ if(!['prepare','import','check','activate'].includes(mode))fail('mode must be stage, verify, prepare, import, check or activate')
  const packetDirectory=resolve(arg('packet-dir')),{manifest}=packet(packetDirectory,manifestSha256,reviewedSha)
  const service=process.env.SUPABASE_SERVICE_ROLE_KEY,base=process.env.SUPABASE_URL
  if(!service||!base)fail('Actions writer credentials required after packet proof')
  const {createClient}=await import('@supabase/supabase-js'),db=createClient(base,service,{auth:{persistSession:false}})
+ if(mode==='check'||mode==='activate'){console.log(JSON.stringify(await runHnsWomenReleaseGate(db,manifest,manifestSha256,{activate:mode==='activate'})));return}
  const {data,error}=await db.rpc('prepare_hns_women_release',{p_manifest:JSON.stringify(manifest),p_sha256:manifestSha256})
  if(error||data?.prepared!==true||data.active!==false)fail(error?.message??'atomic inactive preparation failed')
  console.log(JSON.stringify(data))
  if(mode==='import') {
   runHnsWomenImports(packetDirectory,manifestSha256)
-  console.log('HNS source import and ordinary valuation finished; league remains inactive. Dedicated readiness and activation remain required.')
+  await refreshHnsWomenDerivedState(db,data.competitionId)
+  console.log(JSON.stringify(await runHnsWomenReleaseGate(db,manifest,manifestSha256)))
  }
 }
 if(process.argv[1]&&pathToFileURL(resolve(process.argv[1])).href===import.meta.url)await main()

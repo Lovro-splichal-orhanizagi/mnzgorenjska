@@ -215,8 +215,25 @@ Razpored piše kroge samo prek varovanega RPC: prihodnji rok sme premakniti
 le prej, zaklenjenega ali pretečenega pa ne odpre ponovno. Poznejša tekoča
 faza zahteva ločen pregled objavljenega vira.
 
-Ta checkpoint še nima kanonične preverbe podatkov po uvozu in atomskega
-vklopa. Delovni tok zato ne ponuja vklopa; migracija `20261018180300` se do
-zaključka tega dela in neodvisnega pregleda ne združi ali namesti. Paket s
-trenutnimi blokiranimi dokazi ostane `releaseReady: false` in se zavrne pred
-prvo zahtevo pisnega posla v bazo.
+Po oceni cen način `import` ponovno izračuna točke vseh krogov te lige in
+njeno statistiko ter pokliče kanonično preverbo. Način `check` ponovi samo
+preverbo; `activate` v isti transakciji preveri podatke, podeli zasebno
+pooblastilo in vklopi samo ciljno ligo. Vsi štirje načini zahtevajo enak
+preverjen zaprt paket, preden pisni posel dobi dostop do baze.
+
+Servisni RPC `check_hns_women_release` zahteva izolacijo `READ COMMITTED`,
+zaklene ciljno ligo in tabele pred branjem celotnega stanja ter primerja
+vseh 131 shranjenih tekem, izvorne ID-je igralk in klubov, nastope in gole
+s pripravljenim paketom. Preveri natanko tri zgodovinske izjeme brez
+individualnih vrstic, izračunane točke in statistiko, trenutne izrecno
+dokazane vratarke, dejanske cene ter dosegljivo legalno ekipo 15 igralk
+za največ 100 z največ tremi iz posameznega kluba. Prvi fantazijski krog
+mora ostati popoln, prihodnji in nezaklenjen. Preverba ne spreminja rokov
+ali ključavnic; neuspeh ne pusti pooblastila za vklop.
+
+Migracija `20261018180300` ostane do neodvisnega pregleda nenamestljena.
+Trenutni vir še blokira izdajo: tudi ponovni zajem `114471645` ob 17:02 UTC
+ni objavil manjkajoče vloge vratarke. Skupaj je bilo prebranih 144 izvornih
+dokumentov; prvotni časi in bajti vseh zajemov se ohranijo. Paket s temi
+dokazi ostane `releaseReady: false` in se zavrne pred prvo zahtevo pisnega
+posla v bazo. Sintetični zeleni testi tega pogoja ne nadomestijo.

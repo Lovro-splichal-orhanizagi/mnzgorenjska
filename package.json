@@ -41,6 +41,8 @@
     "test:fussball": "node --test scripts/test-fussball-pisava.mjs scripts/test-fussball-datum.mjs scripts/test-fussball.mjs scripts/test-fussball-validation.mjs scripts/test-fussball-statistika.mjs",
     "test:dfb": "node --test scripts/test-dfb.mjs scripts/test-dfb-regije.mjs scripts/test-dfb-west-clock.mjs scripts/test-dfb-cakajoci.mjs scripts/test-predpomnjen-vratar.mjs scripts/test-dfb-unattributed-yellow.mjs scripts/test-dfb-bayern-repairs.mjs scripts/test-dfb-nord-west-repairs.mjs scripts/test-dfb-historical-policy.mjs",
     "test:hns-women-sql": "node scripts/test-hns-women-deadline-sql.mjs",
+    "test:hns-women-release": "node scripts/test-hns-women-release-sql.mjs",
+    "test:hns-women-release-race": "node scripts/test-hns-women-release-race.mjs",
     "test:hns-women-bootstrap": "node scripts/test-hns-women-bootstrap-sql.mjs",
     "test:hns-women-race": "node scripts/test-hns-women-deadline-race.mjs",
     "test:hns-women": "node --test scripts/hr-zenske-izdaja.test.mjs scripts/hr-zenske-runtime-context.test.mjs scripts/viri/hns-zenske-binding.test.mjs scripts/viri/hns-zenske.test.mjs scripts/viri/hns-zenske-quality.test.mjs scripts/hr-zenske-deadline.test.mjs scripts/hr-zenske-paket.test.mjs scripts/viri/hns-zenske-runtime.test.mjs scripts/hr-zenske-offline.test.mjs scripts/hr-zenske-dokazi.test.mjs",

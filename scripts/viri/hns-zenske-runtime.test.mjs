@@ -69,3 +69,10 @@ test('retained15:55publication result alone never supplies missing full report o
  assert.ok(fixture.izid);assert.equal(fixtures.find(f=>f.id==='114471642').izid,null)
  assert.throws(()=>parseHnsWomenReport(readFileSync(`${captureDir}/publication-1555-match-114471644.html`,'utf8'),{competition,fixture,sourceCompetitionId:'114471579'}),/full report required/)
 })
+
+test('retained17:05 keeper recheck still refuses the missing explicit86–90role',{skip:!process.env.SLFF_HNS_WOMEN_KEEPER_RECHECK_FILE||!process.env.SLFF_HNS_WOMEN_PUBLICATION_FILE},async()=>{
+ const {hnsWomenScheduleFixtures}=await import('../hr-zenske-paket.mjs'),{parseHnsWomenReport}=await import('./hns-zenske-quality.mjs'),{createHash}=await import('node:crypto')
+ const raw=readFileSync(process.env.SLFF_HNS_WOMEN_KEEPER_RECHECK_FILE,'utf8'),fixture=hnsWomenScheduleFixtures(readFileSync(process.env.SLFF_HNS_WOMEN_PUBLICATION_FILE,'utf8'),'114471579').find(f=>f.id==='114471645')
+ assert.equal(createHash('sha256').update(raw).digest('hex'),'6ad777920e12603f39218f07e0353e09fed121c15ee158ec37555725c127d6c9')
+ assert.throws(()=>parseHnsWomenReport(raw,{competition,fixture,sourceCompetitionId:'114471579'}),/explicit keeper coverage missing/)
+})
