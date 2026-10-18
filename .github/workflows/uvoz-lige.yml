@@ -88,6 +88,11 @@ jobs:
       DOVOLI_AKTIVNO: ${{ inputs.prepisi_aktivno && '--dovoli-aktivno' || '' }}
       DOVOLI_MANJ_KLUBOV: ${{ inputs.dovoli_manj_klubov && '--dovoli-manj-klubov' || '' }}
     steps:
+      - name: Require dedicated HNS women release workflow
+        if: inputs.liga == 'hr-prva-hnlz'
+        run: |
+          echo 'hr-prva-hnlz requires the reviewed closed-packet uvoz-hr-zenske workflow.'
+          exit 1
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:

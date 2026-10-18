@@ -2,12 +2,14 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {loadHistoricalStatisticsImportContext,assertHistoricalReportImportable} from './historical-statistics-import.mjs'
+import {HNS_WOMEN_CLUBS} from '../viri/hns-zenske-quality.mjs'
 import {historicalStatisticsPolicySha256} from './historical-statistics-policy.mjs'
 const policy=JSON.parse(readFileSync(new URL('../policies/historical-statistics-exclusions.json',import.meta.url))).policies[0]
-const competition={id:99,slug:policy.competitionSlug,source:policy.provider,source_policy:policy.sourcePolicy}
+const native={competitionId:99,sourceCompetitionId:'114471579',clubs:Object.entries(HNS_WOMEN_CLUBS).map(([sourceClubId,canonicalName],i)=>({sourceClubId,canonicalName,teamId:300+i,countryId:3}))}
+const competition={id:99,active:true,country_id:3,source_league_code:'114471579',date_only_deadline_policy:'midnight-local-v1',slug:policy.competitionSlug,source:policy.provider,source_policy:policy.sourcePolicy}
 const binding=()=>({installed:true,policyId:policy.id,policySha256:historicalStatisticsPolicySha256(policy),firstFantasyPlayedOn:'2026-10-25',markers:policy.entries.map((e,i)=>{
  const {rawSha256,reasonCode,...identity}=e
- return {sourceMatchId:e.sourceMatchId,reportId:e.sourceMatchId,fixture:{...identity,season:policy.season},rawSha256,matchId:100+i,roundId:200+i,homeTeamId:300+i*2,awayTeamId:301+i*2,policyId:policy.id,policySha256:historicalStatisticsPolicySha256(policy),statisticsStatus:'unavailable_historical',importedAt:null,individualRowCount:0}
+ return {sourceMatchId:e.sourceMatchId,reportId:e.sourceMatchId,fixture:{...identity,season:policy.season},rawSha256,matchId:100+i,roundId:200+i,homeTeamId:native.clubs.find(c=>c.sourceClubId===e.homeSourceClubId).teamId,awayTeamId:native.clubs.find(c=>c.sourceClubId===e.awaySourceClubId).teamId,policyId:policy.id,policySha256:historicalStatisticsPolicySha256(policy),statisticsStatus:'unavailable_historical',importedAt:null,individualRowCount:0}
 })})
 test('ordinary import keeps provider override and never calls marker RPC',async()=>{
  const original={id:1,slug:'ordinary',source:'mnzg',name:'Ordinary'}
@@ -16,8 +18,8 @@ test('ordinary import keeps provider override and never calls marker RPC',async(
 })
 test('complete service marker binding supplies source options and first fantasy date before traversal',async()=>{
  const calls=[],source=binding()
- const result=await loadHistoricalStatisticsImportContext({async rpc(...args){calls.push(args);return{data:source,error:null}}},competition)
- assert.deepEqual(calls,[['get_installed_historical_statistics_markers',{p_competition_id:99}]])
+ const result=await loadHistoricalStatisticsImportContext({async rpc(...args){calls.push(args);return{data:args[0]==='get_installed_historical_statistics_markers'?source:native,error:null}}},competition)
+ assert.deepEqual(calls,[['get_installed_historical_statistics_markers',{p_competition_id:99}],['get_hns_women_import_context',{p_competition_id:99}]])
  assert.equal(result.competition.firstFantasyPlayedOn,'2026-10-25')
  assert.deepEqual(result.installedHistoricalMarkers,source)
  assert.ok(Object.isFrozen(result.installedHistoricalMarkers))

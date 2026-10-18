@@ -272,3 +272,27 @@ test('fixed FCF source reader serializes both ES directions without becoming a D
   const diagnostic = await coordinate(['--tece'], { [workflow]: [run('FCF')] })
   assert.equal(diagnostic.code,0); assert.ok(!diagnostic.queried.includes(workflow))
 })
+
+test('dedicated HNS writer has explicit HR scope even before registration',()=>{
+ for(const country of ['HR','DE',null]){
+  const context=vm.createContext({mojaDrzava:country,mojaLiga:'candidate',mojaJeAktivna:false,mojaZveza:null,popravek:false,locenaHkrati,ligaPoSlugu:new Map(),drzavaPopravka:()=>({pise:true,drzava:country}),gh:()=>{throw Error('no remote jobs needed')}})
+  vm.runInContext(source.match(/const SKUPEN_VIR = [^\n]+/)[0]+'\n'+source.slice(source.indexOf('function seKrize('),source.indexOf('\nif (samoTece)')),context)
+  assert.equal(vm.runInContext("seKrize('uvoz-hr-zenske.yml','Uvoz HNS zena hr-prva-hnlz',123)",context),country!=='DE')
+ }
+ assert.equal((source.match(/'uvoz-hr-zenske.yml'/g)??[]).length>=3,true)
+})
+
+test('HNS workflow is visible to older-run coordination and both global shell writers',async()=>{
+ const title='Uvoz HNS zena hr-prva-hnlz'
+ assert.equal((await coordinate(['--drzava','HR'],{'uvoz-hr-zenske.yml':[run(title)]})).code,1)
+ assert.equal((await coordinate(['--drzava','DE'],{'uvoz-hr-zenske.yml':[run(title)]})).code,0)
+ const {spawnSync}=await import('node:child_process'),{mkdtempSync,writeFileSync,rmSync}=await import('node:fs'),{join}=await import('node:path'),{tmpdir}=await import('node:os'),dir=mkdtempSync(join(tmpdir(),'hns-global-waiter-'))
+ try{
+  writeFileSync(join(dir,'gh'),`#!${process.execPath}\nconst {execFileSync}=require('node:child_process'),a=process.argv.slice(2);const data=a[1]==='view'?{startedAt:'${startedAt}'}:(a[a.indexOf('--workflow')+1]==='uvoz-hr-zenske.yml'?JSON.parse(process.env.HNS_TEST_RUNS):[]);process.stdout.write(execFileSync('jq',['-r',a[a.indexOf('--jq')+1]],{input:JSON.stringify(data),encoding:'utf8'}));`,{mode:0o755})
+  writeFileSync(join(dir,'sleep'),'#!/bin/sh\nexit 79\n',{mode:0o755})
+  for(const wf of ['zdruzi-klube.yml','tedensko-cene.yml']){
+   const text=readFileSync(new URL(`../.github/workflows/${wf}`,import.meta.url),'utf8'),block=text.slice(text.indexOf('      - name: Pocakaj na starejse uvoze')).split('        run: |\n')[1].split('\n      - name:')[0],script=block.split('\n').filter(x=>x.startsWith('          ')).map(x=>x.slice(10)).join('\n')
+   for(const [patch,expected]of [[{},79],[{status:'completed'},0]]){const result=spawnSync('bash',['-c',script],{encoding:'utf8',timeout:10000,env:{...process.env,PATH:`${dir}:${process.env.PATH}`,GITHUB_RUN_ID:'20',GITHUB_REPOSITORY:'fixture/repo',HNS_TEST_RUNS:JSON.stringify([run(title,patch)])}});assert.equal(result.status,expected,`${wf}: ${result.stderr}`)}
+  }
+ }finally{rmSync(dir,{recursive:true,force:true})}
+})
