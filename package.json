@@ -49,7 +49,8 @@
     "test:hns-women-release-race": "node scripts/test-hns-women-release-race.mjs",
     "test:hns-women-bootstrap": "node scripts/test-hns-women-bootstrap-sql.mjs",
     "test:hns-women-race": "node scripts/test-hns-women-deadline-race.mjs",
-    "test:hns-women": "node --test scripts/hr-zenske-izdaja.test.mjs scripts/hr-zenske-runtime-context.test.mjs scripts/viri/hns-zenske-binding.test.mjs scripts/viri/hns-zenske.test.mjs scripts/viri/hns-zenske-quality.test.mjs scripts/hr-zenske-deadline.test.mjs scripts/hr-zenske-paket.test.mjs scripts/viri/hns-zenske-runtime.test.mjs scripts/hr-zenske-offline.test.mjs scripts/hr-zenske-dokazi.test.mjs"
+    "test:hns-women": "node --test scripts/hr-zenske-izdaja.test.mjs scripts/hr-zenske-runtime-context.test.mjs scripts/viri/hns-zenske-binding.test.mjs scripts/viri/hns-zenske.test.mjs scripts/viri/hns-zenske-quality.test.mjs scripts/hr-zenske-deadline.test.mjs scripts/hr-zenske-paket.test.mjs scripts/viri/hns-zenske-runtime.test.mjs scripts/hr-zenske-offline.test.mjs scripts/hr-zenske-dokazi.test.mjs scripts/lib/hns-disposable-test.test.mjs scripts/test-hns-women-ci.test.mjs",
+    "test:hns-women-ci": "node scripts/test-hns-women-ci.mjs"
   },
   "dependencies": {
     "@capacitor-firebase/messaging": "^8.5.2",

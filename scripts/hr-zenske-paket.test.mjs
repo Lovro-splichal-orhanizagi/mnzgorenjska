@@ -13,24 +13,27 @@ test('immutable document metadata validates original bytes/time/request identity
  assert.equal(result.capturedAt,d.capturedAt);assert.equal(result.sha256,sha(body))
 })
 
-test('latest17:37 retained packet uses original latest receipts and keeps both strict report holds',{skip:!captureDir||!pilotDir||!process.env.SLFF_HNS_WOMEN_LATEST_PUBLICATION_FILE},async()=>{
+test('latest retained packet preserves clean642publication and the sole explicit keeper hold',{skip:!captureDir||!pilotDir||!process.env.SLFF_HNS_WOMEN_LATEST_PUBLICATION_FILE},async()=>{
  const {parseHnsWomenReport}=await import('./viri/hns-zenske-quality.mjs'),{getHistoricalStatisticsPolicy}=await import('./lib/historical-statistics-policy.mjs')
  const currentFile=process.env.SLFF_HNS_WOMEN_LATEST_PUBLICATION_FILE.split('/').at(-1),captures=readHnsWomenCaptures({captureDir,pilotDir,currentFile}),byID=new Map(captures.documents.map(d=>[d.id,d]))
- assert.deepEqual(captures.sourceBudget,{hnsRequests:146,otherRequests:1,total:147,refusalObserved:false})
+ assert.deepEqual(captures.sourceBudget,{hnsRequests:148,otherRequests:1,total:149,refusalObserved:false})
  assert.equal(byID.get('114471579').capturedAt,'2026-10-18T17:37:28.026317+00:00')
  assert.equal(byID.get('114471644').sha256,'cdfb9eda353224058c70397a80c32dbc1d4f324e90e61dca5d64f812bd880e79')
  assert.equal(byID.get('114471644').capturedAt,'2026-10-18T17:37:43.673461+00:00')
- assert.equal(byID.get('114471642').capturedAt,'2026-10-18T17:38:16.802398+00:00')
- assert.equal(byID.get('114471645').sha256,'6ad777920e12603f39218f07e0353e09fed121c15ee158ec37555725c127d6c9')
+ assert.equal(byID.get('114471642').capturedAt,'2026-10-18T18:33:05.745237+00:00')
+ assert.equal(byID.get('114471645').sha256,'7ffe56ad4ac4da8ba404e9acd2f63d71de2b9b1b25e64a1e5ac2996aa65ea638')
  const policy=getHistoricalStatisticsPolicy('hr-prva-hnlz'),competition={slug:policy.competitionSlug,source:'hns',source_policy:policy.sourcePolicy,firstFantasyPlayedOn:'2026-10-25'},complete=[],unavailable=[],held=[]
  for(const code of ['108043476','114471579'])for(const fixture of hnsWomenScheduleFixtures(byID.get(code).body,code).filter(f=>f.izid)){
   try{const report=parseHnsWomenReport(byID.get(fixture.id).body,{competition,fixture,sourceCompetitionId:code});(report.statisticsStatus==='unavailable_historical'?unavailable:complete).push(report)}catch(error){held.push([fixture.id,error.message])}
  }
- assert.equal(complete.length,101);assert.deepEqual(unavailable.map(r=>r.id).sort(),['114471617','114471627','114471629'])
+ assert.equal(complete.length,102);assert.deepEqual(unavailable.map(r=>r.id).sort(),['114471617','114471627','114471629'])
  assert.equal(complete.find(r=>r.id==='114471644').appearances.length,27);assert.equal(complete.find(r=>r.id==='114471644').z.goli.length,2)
- assert.deepEqual(held.map(([id])=>id).sort(),['114471642','114471645'])
- assert.match(held.find(([id])=>id==='114471642')[1],/full report required/);assert.match(held.find(([id])=>id==='114471645')[1],/explicit keeper coverage missing/)
- assert.throws(()=>buildHnsWomenPacket({...captures,sourceCommit:'a'.repeat(40),now:Date.parse('2026-10-18T18:00:00Z')}),/full report required|explicit keeper coverage missing/)
+ assert.deepEqual(held.map(([id])=>id),['114471645'])
+ assert.equal(complete.find(r=>r.id==='114471642').appearances.length,30);assert.equal(complete.find(r=>r.id==='114471642').z.goli.length,7)
+ assert.match(held[0][1],/explicit keeper coverage missing/)
+ const oldFixture=hnsWomenScheduleFixtures(byID.get('114471579').body,'114471579').find(f=>f.id==='114471642')
+ assert.throws(()=>parseHnsWomenReport(readFileSync(resolve(captureDir,'publication-1740-match-114471642.html'),'utf8'),{competition,fixture:oldFixture,sourceCompetitionId:'114471579'}),/full report required/)
+ assert.throws(()=>buildHnsWomenPacket({...captures,sourceCommit:'a'.repeat(40),now:Date.parse('2026-10-18T19:00:00Z')}),/full report required|explicit keeper coverage missing/)
 })
 for(const patch of [{sha256:'0'.repeat(64)},{bytes:1},{status:403},{capturedAt:'unknown'},{url:'https://example.com/utakmice/114471616/x/'},{file:'../match.html'},{file:'/absolute.html'},{body:body+'changed'}])test(`capture packet refuses changed/unsafe metadata ${JSON.stringify(patch)}`,()=>assert.throws(()=>validateHnsWomenDocument({...document(),...patch}),/HNS women packet|capture|SHA|identity|path|bytes|status/i))
 // Full real reports remain private; this explicit offline replay is run in the implementation/review workspace.

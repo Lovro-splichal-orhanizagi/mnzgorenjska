@@ -225,7 +225,8 @@ in goli se zanje ne ustvarijo. Noben prihodnji zapisnik ne dobi te izjeme.
 Zajeti dokazi 18. oktobra 2026 še blokirajo izdajo: pri `114471645` vloga
 vratarke od 86. do 90. minute ni objavljena. Zajem ob 17:37 UTC je za
 `114471644` objavil popoln strog zapisnik (27 nastopov, dva gola),
-`114471642` pa ima rezultat 2:5 brez polnega zapisnika. Splošni seznam igralk ne
+`114471642` pa je ob 18:33 UTC objavil še poln zapisnik (30 nastopov, sedem
+golov). Edina preostala zapora je vloga vratarke pri `114471645`. Splošni seznam igralk ne
 zamenja podatka o vlogi na konkretni tekmi.
 
 Začetni uvoz vodi samo `uvoz-hr-zenske.yml`, z enako skupino hkratnosti kot
@@ -272,9 +273,8 @@ mora ostati popoln, prihodnji in nezaklenjen. Preverba ne spreminja rokov
 ali ključavnic; neuspeh ne pusti pooblastila za vklop.
 
 Migracija `20261018210100` ostane do neodvisnega pregleda nenamestljena.
-Trenutni vir še blokira izdajo: tudi ponovni zajem `114471645` ob 17:02 UTC
-ni objavil manjkajoče vloge vratarke; 642 po zajemu ob 17:38 UTC še nima
-polnega zapisnika. Skupaj je bilo prebranih 147 izvornih
+Trenutni vir še blokira izdajo: tudi ponovni zajem `114471645` ob 18:33 UTC
+ni objavil manjkajoče vloge vratarke. Skupaj je bilo prebranih 149 izvornih
 dokumentov; prvotni časi in bajti vseh zajemov se ohranijo. Iz teh dokazov
 ni mogoče sestaviti popolnega preverjenega paketa; izdaja ostane
 blokirana pred prvo zahtevo pisnega posla v bazo. Bralnik za objavljene tekme
