@@ -25,6 +25,7 @@ function assertAuditPlan(plan){
  if(selected.length!==plan.maximumSourceGETs||new Set(selected.map(x=>x.id)).size!==selected.length)fail('changed collector source budget')
  return selected
 }
+export const validateFcfFinalAuditPlan=plan=>assertAuditPlan(plan)
 export function buildFcfFinalAuditPlan({groups,sourceCommit,now=Date.now()}){
  if(!/^[a-f0-9]{40}$/.test(sourceCommit??'')||!Array.isArray(groups)||groups.length!==3||new Set(groups.map(g=>g.competition?.slug)).size!==3)fail('exact main and three-group inventory required')
  const planned=[]
