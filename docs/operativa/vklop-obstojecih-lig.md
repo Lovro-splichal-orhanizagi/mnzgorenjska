@@ -44,7 +44,8 @@ Sveže preverbe za vsako ligo:
   tekme, nezapadel rok, brez zaklepa, nastopov, uvoženega zapisnika ali
   znanega neničelnega izida. Izbira sledi sedanjemu RPC, tudi izjemi največ
   dveh vnaprej odigranih poznejših krogov.
-- Pretekle tekme tekoče sezone brez zapisnika in brez kontumacije so HOLD,
+- Pretekle tekme tekoče sezone brez zapisnika, brez kontumacije in brez
+  izrecne izvorne oznake `vir_brez_izida = true` so HOLD,
   z izpisom ID-jev za pregled. Ne trdimo, da je ponudnik zapisnik že objavil:
   `home_goals/away_goals` sta NOT NULL DEFAULT 0 in prihodnji 0:0 je običajna
   vrstica razporeda. Datum tekme (sicer kroga) se primerja s koledarskim

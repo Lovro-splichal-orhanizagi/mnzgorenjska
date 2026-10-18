@@ -63,7 +63,7 @@ function inspect(candidate,competition,state,season,rounds,matches,now) {
   // A past fixture without a report needs review even when its result is still unknown.
   const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Ljubljana',year:'numeric',month:'2-digit',day:'2-digit'}).format(now)
   const roundById=new Map(current.map(r=>[r.id,r]))
-  const pastUnimported=currentMatches.filter(m=>!m.imported_at&&!m.kontumacija&&((m.played_on??roundById.get(m.round_id)?.played_on)??'9999')<today)
+  const pastUnimported=currentMatches.filter(m=>!m.imported_at&&!m.kontumacija&&m.vir_brez_izida!==true&&((m.played_on??roundById.get(m.round_id)?.played_on)??'9999')<today)
   if(pastUnimported.length)throw Error(`Past current fixtures without reports (publication unknown; review required): ${pastUnimported.map(m=>m.id).join(', ')}`)
   if(matches.some(m=>m.statistics_status==='unavailable_historical'))throw Error('Historical statistics policy requires its own reviewed route.')
   let difference=0

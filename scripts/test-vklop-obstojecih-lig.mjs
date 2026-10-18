@@ -1,10 +1,20 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { approvalDigest, runBatch, createTransport, validateSelection } from './vklopi-obstojece-lige.mjs'
 const registry = JSON.parse(readFileSync(new URL('./policies/existing-league-candidates-20261018.json', import.meta.url)))
 const candidate = registry.candidates[0]
 const other = registry.candidates[1]
+test('workflow writes one actual selected slug per coordinator input line',()=>{
+  const workflow=readFileSync(new URL('../.github/workflows/vklop-obstojecih-lig.yml',import.meta.url),'utf8')
+  const source=workflow.match(/node --input-type=module <<'JS' > release\/obstojece-lige\/selected-slugs\.txt\n([\s\S]*?)\n          JS/)?.[1]
+  assert.ok(source,'actual selected-slugs heredoc is present')
+  const expected=[candidate.slug,other.slug].sort()
+  const output=execFileSync(process.execPath,['--input-type=module'],{input:source,encoding:'utf8',cwd:fileURLToPath(new URL('..',import.meta.url)),env:{...process.env,EXPECTED_SHA:'a'.repeat(40),GITHUB_SHA:'a'.repeat(40),LIGE:expected.join(',')}})
+  assert.deepEqual(output.trimEnd().split('\n'),expected)
+})
 const now = () => new Date('2026-10-18T20:00:00Z')
 const players = Array.from({ length: 6 }, (_, club) => ['GK','DEF','DEF','MID','FWD'].map((position,p) => ({ id:club*5+p,team_id:club,position,value:4 }))).flat()
 const state = { aktivnih:30,privzetih:0,klubov:6,najvisja_cena:12,po_pozicijah:{},nastopov_s_klopi:2,golov_brez_nastopa:0,krogov_tekoce:2,igralci:players }
@@ -60,6 +70,14 @@ test('past 0:0 without report is transparently held as unknown publication',asyn
   const f=fixture();const original=f.transport.matches
   f.transport.matches=async()=> (await original()).map(m=>m.id===11?{...m,played_on:'2026-10-10',home_goals:0,away_goals:0,imported_at:null}:m)
   const [r]=await runBatch({candidates:[candidate],transport:f.transport,now,apply:true});assert.equal(r.status,'HOLD');assert.match(r.reason,/publication unknown/);assert.deepEqual(f.calls,[])
+})
+test('source-confirmed past unplayed fixture is not a missing report; false and unknown remain HOLD',async()=>{
+  for(const [flag,expected] of [[true,'READY'],[false,'HOLD'],[null,'HOLD']]){
+    const f=fixture();const original=f.transport.matches
+    f.transport.matches=async()=> (await original()).map(m=>m.id===11?{...m,played_on:'2026-10-10',home_goals:0,away_goals:0,imported_at:null,vir_brez_izida:flag,goals:[{count:0}],appearances:[{count:0}]}:m)
+    const [r]=await runBatch({candidates:[candidate],transport:f.transport,now})
+    assert.equal(r.status,expected,`source no-result flag ${flag}: ${r.reason}`)
+  }
 })
 test('transport pages database reads and permits only the native activation write',async()=>{
   const requests=[]
