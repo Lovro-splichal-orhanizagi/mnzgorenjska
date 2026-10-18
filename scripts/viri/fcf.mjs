@@ -552,13 +552,20 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
  * Ključ kluba: brez diakritike in ločil, z obliko vred ("ROSES, A.E." in
  * "BASE ROSES, C.F." sta dva kluba).
  */
-export const kljucKlubaEs = (ime) =>
+export const poenostaviKlubEs = (ime) =>
   presledki(ime)
     .normalize('NFD')
     .replace(/\p{M}/gu, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
+
+// Same five acta IDs, 80 registration-linked appearances and the full G13
+// calendar establish this exact identity. Reserve/legal forms stay distinct.
+export const kljucKlubaEs = (ime) => {
+  const key = poenostaviKlubEs(ime)
+  return key === 'vilanova atletic' ? 'futbol club atletic vng pasifae' : key
+}
 
 const OBLIKE_ES = new Set(['futbol', 'fútbol', 'ae', 'cf', 'ce', 'ue', 'ud', 'fc', 'cd', 'club', 'ef', 'ad', 'cef', 'aec', 'sd', 'cfs', 'fs', 'uec', 'ue', 'ac', 'ufb', 'uff', 'cfb', 'cfu', 'ec'])
 /**
@@ -641,7 +648,7 @@ export function najvecStarost(g, danes = Date.now(), svezi = false) {
   return DAN // prestavljena tekma brez novega datuma
 }
 
-const klubPara = (g) => [kljucKlubaEs(g.domaci), kljucKlubaEs(g.gostje)]
+const klubPara = (g) => [poenostaviKlubEs(g.domaci), poenostaviKlubEs(g.gostje)]
 const kljucSkupine = (g) => `${g.tekmovanje}|${g.skupina}|${g.sezona}`
 const napakaKoledarja = (razlog) => new Error(`fcf: neskladen koledar — ${razlog}; uvoz ustavljen`)
 
@@ -653,7 +660,7 @@ function identitetaPara(html) {
   if (!stolpci) throw napakaKoledarja('manjka glava para')
   const deli = stolpci.otroci.filter(jeElement)
   return [deli[0], deli[2]].map((stran) => {
-    const ime = kljucKlubaEs(besedilo(stran))
+    const ime = poenostaviKlubEs(besedilo(stran))
     const povezave = new Set([...elementi(stran)].map((e) => e.props?.href)
       .filter((href) => /^\/ca\/clubs\/[1-9][0-9]*\/categories\/[1-9][0-9]*$/.test(href ?? '')))
     if (!ime || povezave.size !== 1) throw napakaKoledarja('nejasna uradna identiteta kluba')
@@ -864,7 +871,7 @@ const vir = {
 
   kljucKluba: kljucKlubaEs,
   kratkoIme: kratkoImeEs,
-  poenostavi: kljucKlubaEs,
+  poenostavi: poenostaviKlubEs,
 }
 
 export default vir

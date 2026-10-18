@@ -152,6 +152,12 @@ jobs:
       - run: npm run preizkus-zamrznitve
       # Objave: brez mladinskih lig, anonimiziranih igralcev in hišnih ekip.
       - run: npm run preizkus-objav
+      # Last: concurrency fixtures commit only into this disposable database.
+      - name: FCF G13 atomic repair and concurrent foreign keys
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          FCF_G13_DISPOSABLE_TEST: '1'
+        run: node scripts/test-fcf-g13-sql.mjs
       - if: always()
         run: npx --yes supabase@2.117.0 stop --no-backup
 

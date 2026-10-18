@@ -254,6 +254,23 @@ for (const [label, body] of [
   assert.equal(readdirSync('scripts/.predpomnilnik/fcf').length, 240)
 })
 
+// Canonical database aliases must not weaken exact source-header revalidation.
+for (const [cachedName, changedName] of [
+  ['VILANOVA ATLETIC', 'FUTBOL CLUB ATLETIC VNG PASIFAE'],
+  ['FUTBOL CLUB ATLETIC VNG PASIFAE', 'VILANOVA ATLETIC'],
+]) test(`canonical alias ${cachedName} still rejects a changed full source name with the same official link`, async t => {
+  const rename = (html, name) => variant(html, s => s === names[0] ? name : s)
+  const pages = new Map([...calendar()].map(([id, html]) => [id, rename(html, cachedName)]))
+  const f = setup(t, { pages, response: new Map([
+    [HOME, rename(newHome, changedName)], [AWAY, rename(syntheticNewAway, cachedName)],
+  ]) })
+  const before = readFileSync(f.cache(HOME), 'utf8')
+  await assert.rejects(f.read(), /fcf:.*koledar/i)
+  assert.deepEqual(f.calls, [HOME], 'changed source identity stops before the reciprocal read')
+  assert.equal(readFileSync(f.cache(HOME), 'utf8'), before)
+  assert.equal(readdirSync('scripts/.predpomnilnik/fcf').length, 240)
+})
+
 for (const [label, failure] of [
   ['403', Object.assign(Error('blocked'), { status: 403 })],
   ['429', Object.assign(Error('rate limited'), { status: 429 })],

@@ -1,0 +1,2769 @@
+{
+  "version": 1,
+  "competition": 801,
+  "slug": "es-ct-tercera-g13",
+  "source": "fcf",
+  "country": "ES",
+  "season": "2026/27",
+  "source_league_code": "4119076-4119315",
+  "drop_team": 10388,
+  "keep_team": 8371,
+  "teams": [
+    {
+      "id": 8371,
+      "name": "FUTBOL CLUB ATLETIC VNG PASIFAE"
+    },
+    {
+      "id": 8372,
+      "name": "CANYELLES ASSOC. ESP. CF."
+    },
+    {
+      "id": 8373,
+      "name": "SITGES, U.E."
+    },
+    {
+      "id": 8374,
+      "name": "FATIMA, F.C."
+    },
+    {
+      "id": 8375,
+      "name": "SANT ESTEVE SESROVIRES, F.C."
+    },
+    {
+      "id": 8376,
+      "name": "GELIDA, C.F."
+    },
+    {
+      "id": 8377,
+      "name": "ODENA, C.E."
+    },
+    {
+      "id": 8378,
+      "name": "Pª JOVE DE LES ROQUETES"
+    },
+    {
+      "id": 8379,
+      "name": "LA LLACUNA, C.F."
+    },
+    {
+      "id": 8380,
+      "name": "PUIGDÀLBER, F.C."
+    },
+    {
+      "id": 8381,
+      "name": "CUBELLES, C.F."
+    },
+    {
+      "id": 8382,
+      "name": "SANT PERE MOLANTA, C.F.P."
+    },
+    {
+      "id": 8383,
+      "name": "VILANOVA CAMI C.F."
+    },
+    {
+      "id": 8384,
+      "name": "SANT SADURNI, U.E."
+    },
+    {
+      "id": 8385,
+      "name": "BASE ESPIRALL-LES CLOTES,CF"
+    },
+    {
+      "id": 8386,
+      "name": "BEGUES, C.F."
+    },
+    {
+      "id": 10388,
+      "name": "VILANOVA ATLETIC"
+    }
+  ],
+  "rounds": [
+    {
+      "id": 27943,
+      "number": 1
+    },
+    {
+      "id": 27944,
+      "number": 2
+    },
+    {
+      "id": 27945,
+      "number": 3
+    },
+    {
+      "id": 27946,
+      "number": 4
+    },
+    {
+      "id": 27947,
+      "number": 5
+    },
+    {
+      "id": 27948,
+      "number": 6
+    },
+    {
+      "id": 27949,
+      "number": 7
+    },
+    {
+      "id": 27950,
+      "number": 8
+    },
+    {
+      "id": 27951,
+      "number": 9
+    },
+    {
+      "id": 27952,
+      "number": 10
+    },
+    {
+      "id": 27953,
+      "number": 11
+    },
+    {
+      "id": 27954,
+      "number": 12
+    },
+    {
+      "id": 27955,
+      "number": 13
+    },
+    {
+      "id": 27956,
+      "number": 14
+    },
+    {
+      "id": 27957,
+      "number": 15
+    },
+    {
+      "id": 27958,
+      "number": 16
+    },
+    {
+      "id": 27959,
+      "number": 17
+    },
+    {
+      "id": 27960,
+      "number": 18
+    },
+    {
+      "id": 27961,
+      "number": 19
+    },
+    {
+      "id": 27962,
+      "number": 20
+    },
+    {
+      "id": 27963,
+      "number": 21
+    },
+    {
+      "id": 27964,
+      "number": 22
+    },
+    {
+      "id": 27965,
+      "number": 23
+    },
+    {
+      "id": 27966,
+      "number": 24
+    },
+    {
+      "id": 27967,
+      "number": 25
+    },
+    {
+      "id": 27968,
+      "number": 26
+    },
+    {
+      "id": 27970,
+      "number": 27
+    },
+    {
+      "id": 27971,
+      "number": 28
+    },
+    {
+      "id": 27972,
+      "number": 29
+    },
+    {
+      "id": 27973,
+      "number": 30
+    }
+  ],
+  "players": [
+    {
+      "id": 313532,
+      "reg_st": 18555471,
+      "team_id": 8371
+    },
+    {
+      "id": 313534,
+      "reg_st": 637307,
+      "team_id": 8371
+    },
+    {
+      "id": 313535,
+      "reg_st": 729841,
+      "team_id": 10388
+    },
+    {
+      "id": 313536,
+      "reg_st": 744832,
+      "team_id": 10388
+    },
+    {
+      "id": 313537,
+      "reg_st": 15363826,
+      "team_id": 8371
+    },
+    {
+      "id": 313539,
+      "reg_st": 18489666,
+      "team_id": 10388
+    },
+    {
+      "id": 313541,
+      "reg_st": 26018040,
+      "team_id": 10388
+    },
+    {
+      "id": 313543,
+      "reg_st": 33061193,
+      "team_id": 10388
+    },
+    {
+      "id": 313545,
+      "reg_st": 36717898,
+      "team_id": 10388
+    },
+    {
+      "id": 313547,
+      "reg_st": 46983771,
+      "team_id": 10388
+    },
+    {
+      "id": 313549,
+      "reg_st": 46983905,
+      "team_id": 8371
+    },
+    {
+      "id": 313551,
+      "reg_st": 645322,
+      "team_id": 10388
+    },
+    {
+      "id": 313552,
+      "reg_st": 15587170,
+      "team_id": 8371
+    },
+    {
+      "id": 313553,
+      "reg_st": 18594017,
+      "team_id": 10388
+    },
+    {
+      "id": 313554,
+      "reg_st": 46983787,
+      "team_id": 10388
+    },
+    {
+      "id": 313556,
+      "reg_st": 57966291,
+      "team_id": 10388
+    },
+    {
+      "id": 313952,
+      "reg_st": 18554167,
+      "team_id": 10388
+    },
+    {
+      "id": 313953,
+      "reg_st": 44267550,
+      "team_id": 10388
+    },
+    {
+      "id": 313955,
+      "reg_st": 7002903,
+      "team_id": 10388
+    },
+    {
+      "id": 313987,
+      "reg_st": 59004010,
+      "team_id": 8371
+    },
+    {
+      "id": 314038,
+      "reg_st": 18586429,
+      "team_id": 10388
+    }
+  ],
+  "populated": [
+    309307,
+    309324,
+    309335,
+    309352,
+    427263
+  ],
+  "drop": [
+    {
+      "id": 309356,
+      "round_id": 27947,
+      "home_team_id": 8371,
+      "away_team_id": 8380,
+      "played_on": "2026-10-17",
+      "round": 5,
+      "keep": 427263
+    },
+    {
+      "id": 309381,
+      "round_id": 27950,
+      "home_team_id": 8378,
+      "away_team_id": 8385,
+      "played_on": "2026-11-07",
+      "round": 8,
+      "keep": 427267
+    },
+    {
+      "id": 309527,
+      "round_id": 27965,
+      "home_team_id": 8385,
+      "away_team_id": 8378,
+      "played_on": "2027-03-20",
+      "round": 23,
+      "keep": 427282
+    },
+    {
+      "id": 427258,
+      "round_id": 27943,
+      "home_team_id": 10388,
+      "away_team_id": 8372,
+      "played_on": "2026-09-19",
+      "round": 1,
+      "keep": 309307
+    },
+    {
+      "id": 427259,
+      "round_id": 27944,
+      "home_team_id": 8374,
+      "away_team_id": 10388,
+      "played_on": "2026-09-26",
+      "round": 2,
+      "keep": 309324
+    },
+    {
+      "id": 427261,
+      "round_id": 27945,
+      "home_team_id": 10388,
+      "away_team_id": 8376,
+      "played_on": "2026-10-03",
+      "round": 3,
+      "keep": 309335
+    },
+    {
+      "id": 427262,
+      "round_id": 27946,
+      "home_team_id": 10388,
+      "away_team_id": 8378,
+      "played_on": "2026-10-10",
+      "round": 4,
+      "keep": 309352
+    },
+    {
+      "id": 427264,
+      "round_id": 27948,
+      "home_team_id": 8382,
+      "away_team_id": 10388,
+      "played_on": "2026-10-25",
+      "round": 6,
+      "keep": 309364
+    },
+    {
+      "id": 427265,
+      "round_id": 27949,
+      "home_team_id": 10388,
+      "away_team_id": 8384,
+      "played_on": "2026-10-31",
+      "round": 7,
+      "keep": 309374
+    },
+    {
+      "id": 427266,
+      "round_id": 27950,
+      "home_team_id": 8386,
+      "away_team_id": 10388,
+      "played_on": "2026-11-07",
+      "round": 8,
+      "keep": 309385
+    },
+    {
+      "id": 427268,
+      "round_id": 27951,
+      "home_team_id": 10388,
+      "away_team_id": 8383,
+      "played_on": "2026-11-14",
+      "round": 9,
+      "keep": 309393
+    },
+    {
+      "id": 427269,
+      "round_id": 27952,
+      "home_team_id": 8381,
+      "away_team_id": 10388,
+      "played_on": "2026-11-21",
+      "round": 10,
+      "keep": 309407
+    },
+    {
+      "id": 427270,
+      "round_id": 27953,
+      "home_team_id": 10388,
+      "away_team_id": 8379,
+      "played_on": "2026-11-28",
+      "round": 11,
+      "keep": 309418
+    },
+    {
+      "id": 427271,
+      "round_id": 27954,
+      "home_team_id": 8377,
+      "away_team_id": 10388,
+      "played_on": "2026-12-12",
+      "round": 12,
+      "keep": 309429
+    },
+    {
+      "id": 427272,
+      "round_id": 27955,
+      "home_team_id": 10388,
+      "away_team_id": 8375,
+      "played_on": "2026-12-19",
+      "round": 13,
+      "keep": 309438
+    },
+    {
+      "id": 427273,
+      "round_id": 27956,
+      "home_team_id": 8373,
+      "away_team_id": 10388,
+      "played_on": "2027-01-09",
+      "round": 14,
+      "keep": 309450
+    },
+    {
+      "id": 427274,
+      "round_id": 27957,
+      "home_team_id": 10388,
+      "away_team_id": 8385,
+      "played_on": "2027-01-16",
+      "round": 15,
+      "keep": 309461
+    },
+    {
+      "id": 427275,
+      "round_id": 27958,
+      "home_team_id": 8372,
+      "away_team_id": 10388,
+      "played_on": "2027-01-23",
+      "round": 16,
+      "keep": 309463
+    },
+    {
+      "id": 427276,
+      "round_id": 27959,
+      "home_team_id": 10388,
+      "away_team_id": 8374,
+      "played_on": "2027-01-30",
+      "round": 17,
+      "keep": 309474
+    },
+    {
+      "id": 427277,
+      "round_id": 27960,
+      "home_team_id": 8376,
+      "away_team_id": 10388,
+      "played_on": "2027-02-13",
+      "round": 18,
+      "keep": 309482
+    },
+    {
+      "id": 427278,
+      "round_id": 27961,
+      "home_team_id": 8378,
+      "away_team_id": 10388,
+      "played_on": "2027-02-20",
+      "round": 19,
+      "keep": 309490
+    },
+    {
+      "id": 427279,
+      "round_id": 27962,
+      "home_team_id": 8380,
+      "away_team_id": 10388,
+      "played_on": "2027-02-27",
+      "round": 20,
+      "keep": 309502
+    },
+    {
+      "id": 427280,
+      "round_id": 27963,
+      "home_team_id": 10388,
+      "away_team_id": 8382,
+      "played_on": "2027-03-06",
+      "round": 21,
+      "keep": 309513
+    },
+    {
+      "id": 427281,
+      "round_id": 27964,
+      "home_team_id": 8384,
+      "away_team_id": 10388,
+      "played_on": "2027-03-13",
+      "round": 22,
+      "keep": 309522
+    },
+    {
+      "id": 427283,
+      "round_id": 27965,
+      "home_team_id": 10388,
+      "away_team_id": 8386,
+      "played_on": "2027-03-20",
+      "round": 23,
+      "keep": 309531
+    },
+    {
+      "id": 427284,
+      "round_id": 27966,
+      "home_team_id": 8383,
+      "away_team_id": 10388,
+      "played_on": "2027-04-03",
+      "round": 24,
+      "keep": 309541
+    },
+    {
+      "id": 427285,
+      "round_id": 27967,
+      "home_team_id": 10388,
+      "away_team_id": 8381,
+      "played_on": "2027-04-10",
+      "round": 25,
+      "keep": 309550
+    },
+    {
+      "id": 427286,
+      "round_id": 27968,
+      "home_team_id": 8379,
+      "away_team_id": 10388,
+      "played_on": "2027-04-18",
+      "round": 26,
+      "keep": 309559
+    },
+    {
+      "id": 427288,
+      "round_id": 27970,
+      "home_team_id": 10388,
+      "away_team_id": 8377,
+      "played_on": "2027-04-24",
+      "round": 27,
+      "keep": 309571
+    },
+    {
+      "id": 427289,
+      "round_id": 27971,
+      "home_team_id": 8375,
+      "away_team_id": 10388,
+      "played_on": "2027-05-01",
+      "round": 28,
+      "keep": 309579
+    },
+    {
+      "id": 427290,
+      "round_id": 27972,
+      "home_team_id": 10388,
+      "away_team_id": 8373,
+      "played_on": "2027-05-08",
+      "round": 29,
+      "keep": 309592
+    },
+    {
+      "id": 427291,
+      "round_id": 27973,
+      "home_team_id": 8385,
+      "away_team_id": 10388,
+      "played_on": "2027-05-15",
+      "round": 30,
+      "keep": 309601
+    }
+  ],
+  "retained": [
+    {
+      "id": 309307,
+      "round_id": 27943,
+      "home_team_id": 8371,
+      "away_team_id": 8372,
+      "played_on": "2026-09-19",
+      "round": 1,
+      "report": "es4119076"
+    },
+    {
+      "id": 309310,
+      "round_id": 27943,
+      "home_team_id": 8373,
+      "away_team_id": 8374,
+      "played_on": "2026-09-19",
+      "round": 1,
+      "report": "es4119077"
+    },
+    {
+      "id": 309311,
+      "round_id": 27943,
+      "home_team_id": 8375,
+      "away_team_id": 8376,
+      "played_on": "2026-09-19",
+      "round": 1,
+      "report": "es4119078"
+    },
+    {
+      "id": 309314,
+      "round_id": 27943,
+      "home_team_id": 8377,
+      "away_team_id": 8378,
+      "played_on": "2026-09-19",
+      "round": 1,
+      "report": "es4119079"
+    },
+    {
+      "id": 309316,
+      "round_id": 27943,
+      "home_team_id": 8379,
+      "away_team_id": 8380,
+      "played_on": "2026-09-20",
+      "round": 1,
+      "report": "es4119080"
+    },
+    {
+      "id": 309318,
+      "round_id": 27943,
+      "home_team_id": 8381,
+      "away_team_id": 8382,
+      "played_on": "2026-09-19",
+      "round": 1,
+      "report": "es4119081"
+    },
+    {
+      "id": 309320,
+      "round_id": 27943,
+      "home_team_id": 8383,
+      "away_team_id": 8384,
+      "played_on": "2026-09-19",
+      "round": 1,
+      "report": "es4119082"
+    },
+    {
+      "id": 309322,
+      "round_id": 27943,
+      "home_team_id": 8385,
+      "away_team_id": 8386,
+      "played_on": "2026-09-19",
+      "round": 1,
+      "report": "es4119083"
+    },
+    {
+      "id": 309323,
+      "round_id": 27944,
+      "home_team_id": 8372,
+      "away_team_id": 8385,
+      "played_on": "2026-09-26",
+      "round": 2,
+      "report": "es4119084"
+    },
+    {
+      "id": 309324,
+      "round_id": 27944,
+      "home_team_id": 8374,
+      "away_team_id": 8371,
+      "played_on": "2026-09-26",
+      "round": 2,
+      "report": "es4119085"
+    },
+    {
+      "id": 309325,
+      "round_id": 27944,
+      "home_team_id": 8376,
+      "away_team_id": 8373,
+      "played_on": "2026-09-26",
+      "round": 2,
+      "report": "es4119086"
+    },
+    {
+      "id": 309327,
+      "round_id": 27944,
+      "home_team_id": 8380,
+      "away_team_id": 8377,
+      "played_on": "2026-09-26",
+      "round": 2,
+      "report": "es4119088"
+    },
+    {
+      "id": 309328,
+      "round_id": 27944,
+      "home_team_id": 8382,
+      "away_team_id": 8379,
+      "played_on": "2026-09-27",
+      "round": 2,
+      "report": "es4119089"
+    },
+    {
+      "id": 309329,
+      "round_id": 27944,
+      "home_team_id": 8384,
+      "away_team_id": 8381,
+      "played_on": "2026-09-26",
+      "round": 2,
+      "report": "es4119090"
+    },
+    {
+      "id": 309330,
+      "round_id": 27944,
+      "home_team_id": 8386,
+      "away_team_id": 8383,
+      "played_on": "2026-09-26",
+      "round": 2,
+      "report": "es4119091"
+    },
+    {
+      "id": 309332,
+      "round_id": 27944,
+      "home_team_id": 8375,
+      "away_team_id": 8378,
+      "played_on": "2026-09-26",
+      "round": 2,
+      "report": "es4119207"
+    },
+    {
+      "id": 309334,
+      "round_id": 27945,
+      "home_team_id": 8372,
+      "away_team_id": 8374,
+      "played_on": "2026-10-03",
+      "round": 3,
+      "report": "es4119092"
+    },
+    {
+      "id": 309335,
+      "round_id": 27945,
+      "home_team_id": 8371,
+      "away_team_id": 8376,
+      "played_on": "2026-10-03",
+      "round": 3,
+      "report": "es4119093"
+    },
+    {
+      "id": 309336,
+      "round_id": 27945,
+      "home_team_id": 8373,
+      "away_team_id": 8378,
+      "played_on": "2026-10-03",
+      "round": 3,
+      "report": "es4119094"
+    },
+    {
+      "id": 309338,
+      "round_id": 27945,
+      "home_team_id": 8375,
+      "away_team_id": 8380,
+      "played_on": "2026-10-03",
+      "round": 3,
+      "report": "es4119095"
+    },
+    {
+      "id": 309339,
+      "round_id": 27945,
+      "home_team_id": 8377,
+      "away_team_id": 8382,
+      "played_on": "2026-10-03",
+      "round": 3,
+      "report": "es4119096"
+    },
+    {
+      "id": 309340,
+      "round_id": 27945,
+      "home_team_id": 8379,
+      "away_team_id": 8384,
+      "played_on": "2026-11-04",
+      "round": 3,
+      "report": "es4119097"
+    },
+    {
+      "id": 309341,
+      "round_id": 27945,
+      "home_team_id": 8381,
+      "away_team_id": 8386,
+      "played_on": "2026-10-03",
+      "round": 3,
+      "report": "es4119098"
+    },
+    {
+      "id": 309342,
+      "round_id": 27945,
+      "home_team_id": 8385,
+      "away_team_id": 8383,
+      "played_on": "2026-10-03",
+      "round": 3,
+      "report": "es4119099"
+    },
+    {
+      "id": 309344,
+      "round_id": 27946,
+      "home_team_id": 8374,
+      "away_team_id": 8385,
+      "played_on": "2026-10-10",
+      "round": 4,
+      "report": "es4119100"
+    },
+    {
+      "id": 309346,
+      "round_id": 27946,
+      "home_team_id": 8376,
+      "away_team_id": 8372,
+      "played_on": "2026-10-10",
+      "round": 4,
+      "report": "es4119101"
+    },
+    {
+      "id": 309347,
+      "round_id": 27946,
+      "home_team_id": 8380,
+      "away_team_id": 8373,
+      "played_on": "2026-10-10",
+      "round": 4,
+      "report": "es4119103"
+    },
+    {
+      "id": 309348,
+      "round_id": 27946,
+      "home_team_id": 8382,
+      "away_team_id": 8375,
+      "played_on": "2026-10-11",
+      "round": 4,
+      "report": "es4119104"
+    },
+    {
+      "id": 309349,
+      "round_id": 27946,
+      "home_team_id": 8384,
+      "away_team_id": 8377,
+      "played_on": "2026-10-10",
+      "round": 4,
+      "report": "es4119105"
+    },
+    {
+      "id": 309350,
+      "round_id": 27946,
+      "home_team_id": 8386,
+      "away_team_id": 8379,
+      "played_on": "2026-10-10",
+      "round": 4,
+      "report": "es4119106"
+    },
+    {
+      "id": 309351,
+      "round_id": 27946,
+      "home_team_id": 8383,
+      "away_team_id": 8381,
+      "played_on": "2026-10-09",
+      "round": 4,
+      "report": "es4119107"
+    },
+    {
+      "id": 309352,
+      "round_id": 27946,
+      "home_team_id": 8371,
+      "away_team_id": 8378,
+      "played_on": "2026-10-10",
+      "round": 4,
+      "report": "es4119222"
+    },
+    {
+      "id": 309354,
+      "round_id": 27947,
+      "home_team_id": 8374,
+      "away_team_id": 8376,
+      "played_on": "2026-10-17",
+      "round": 5,
+      "report": "es4119108"
+    },
+    {
+      "id": 309355,
+      "round_id": 27947,
+      "home_team_id": 8372,
+      "away_team_id": 8378,
+      "played_on": "2026-10-17",
+      "round": 5,
+      "report": "es4119109"
+    },
+    {
+      "id": 309357,
+      "round_id": 27947,
+      "home_team_id": 8373,
+      "away_team_id": 8382,
+      "played_on": "2026-10-17",
+      "round": 5,
+      "report": "es4119111"
+    },
+    {
+      "id": 309358,
+      "round_id": 27947,
+      "home_team_id": 8375,
+      "away_team_id": 8384,
+      "played_on": "2026-10-17",
+      "round": 5,
+      "report": "es4119112"
+    },
+    {
+      "id": 309359,
+      "round_id": 27947,
+      "home_team_id": 8377,
+      "away_team_id": 8386,
+      "played_on": "2026-10-17",
+      "round": 5,
+      "report": "es4119113"
+    },
+    {
+      "id": 309360,
+      "round_id": 27947,
+      "home_team_id": 8379,
+      "away_team_id": 8383,
+      "played_on": "2026-10-18",
+      "round": 5,
+      "report": "es4119114"
+    },
+    {
+      "id": 309361,
+      "round_id": 27947,
+      "home_team_id": 8385,
+      "away_team_id": 8381,
+      "played_on": "2026-10-18",
+      "round": 5,
+      "report": "es4119115"
+    },
+    {
+      "id": 309362,
+      "round_id": 27948,
+      "home_team_id": 8376,
+      "away_team_id": 8385,
+      "played_on": "2026-10-24",
+      "round": 6,
+      "report": "es4119116"
+    },
+    {
+      "id": 309363,
+      "round_id": 27948,
+      "home_team_id": 8380,
+      "away_team_id": 8372,
+      "played_on": "2026-10-24",
+      "round": 6,
+      "report": "es4119118"
+    },
+    {
+      "id": 309364,
+      "round_id": 27948,
+      "home_team_id": 8382,
+      "away_team_id": 8371,
+      "played_on": "2026-10-25",
+      "round": 6,
+      "report": "es4119119"
+    },
+    {
+      "id": 309366,
+      "round_id": 27948,
+      "home_team_id": 8384,
+      "away_team_id": 8373,
+      "played_on": "2026-10-24",
+      "round": 6,
+      "report": "es4119120"
+    },
+    {
+      "id": 309367,
+      "round_id": 27948,
+      "home_team_id": 8386,
+      "away_team_id": 8375,
+      "played_on": "2026-10-24",
+      "round": 6,
+      "report": "es4119121"
+    },
+    {
+      "id": 309368,
+      "round_id": 27948,
+      "home_team_id": 8383,
+      "away_team_id": 8377,
+      "played_on": "2026-10-24",
+      "round": 6,
+      "report": "es4119122"
+    },
+    {
+      "id": 309369,
+      "round_id": 27948,
+      "home_team_id": 8381,
+      "away_team_id": 8379,
+      "played_on": "2026-10-24",
+      "round": 6,
+      "report": "es4119123"
+    },
+    {
+      "id": 309370,
+      "round_id": 27948,
+      "home_team_id": 8374,
+      "away_team_id": 8378,
+      "played_on": "2026-10-24",
+      "round": 6,
+      "report": "es4119237"
+    },
+    {
+      "id": 309371,
+      "round_id": 27949,
+      "home_team_id": 8376,
+      "away_team_id": 8378,
+      "played_on": "2026-10-31",
+      "round": 7,
+      "report": "es4119124"
+    },
+    {
+      "id": 309372,
+      "round_id": 27949,
+      "home_team_id": 8374,
+      "away_team_id": 8380,
+      "played_on": "2026-10-31",
+      "round": 7,
+      "report": "es4119125"
+    },
+    {
+      "id": 309373,
+      "round_id": 27949,
+      "home_team_id": 8372,
+      "away_team_id": 8382,
+      "played_on": "2026-10-31",
+      "round": 7,
+      "report": "es4119126"
+    },
+    {
+      "id": 309374,
+      "round_id": 27949,
+      "home_team_id": 8371,
+      "away_team_id": 8384,
+      "played_on": "2026-10-31",
+      "round": 7,
+      "report": "es4119127"
+    },
+    {
+      "id": 309377,
+      "round_id": 27949,
+      "home_team_id": 8373,
+      "away_team_id": 8386,
+      "played_on": "2026-10-31",
+      "round": 7,
+      "report": "es4119128"
+    },
+    {
+      "id": 309378,
+      "round_id": 27949,
+      "home_team_id": 8375,
+      "away_team_id": 8383,
+      "played_on": "2026-10-31",
+      "round": 7,
+      "report": "es4119129"
+    },
+    {
+      "id": 309379,
+      "round_id": 27949,
+      "home_team_id": 8377,
+      "away_team_id": 8381,
+      "played_on": "2026-10-31",
+      "round": 7,
+      "report": "es4119130"
+    },
+    {
+      "id": 309380,
+      "round_id": 27949,
+      "home_team_id": 8385,
+      "away_team_id": 8379,
+      "played_on": "2026-10-31",
+      "round": 7,
+      "report": "es4119131"
+    },
+    {
+      "id": 309382,
+      "round_id": 27950,
+      "home_team_id": 8380,
+      "away_team_id": 8376,
+      "played_on": "2026-11-07",
+      "round": 8,
+      "report": "es4119133"
+    },
+    {
+      "id": 309383,
+      "round_id": 27950,
+      "home_team_id": 8382,
+      "away_team_id": 8374,
+      "played_on": "2026-11-08",
+      "round": 8,
+      "report": "es4119134"
+    },
+    {
+      "id": 309384,
+      "round_id": 27950,
+      "home_team_id": 8384,
+      "away_team_id": 8372,
+      "played_on": "2026-11-07",
+      "round": 8,
+      "report": "es4119135"
+    },
+    {
+      "id": 309385,
+      "round_id": 27950,
+      "home_team_id": 8386,
+      "away_team_id": 8371,
+      "played_on": "2026-11-07",
+      "round": 8,
+      "report": "es4119136"
+    },
+    {
+      "id": 309386,
+      "round_id": 27950,
+      "home_team_id": 8383,
+      "away_team_id": 8373,
+      "played_on": "2026-11-07",
+      "round": 8,
+      "report": "es4119137"
+    },
+    {
+      "id": 309388,
+      "round_id": 27950,
+      "home_team_id": 8381,
+      "away_team_id": 8375,
+      "played_on": "2026-11-07",
+      "round": 8,
+      "report": "es4119138"
+    },
+    {
+      "id": 309389,
+      "round_id": 27950,
+      "home_team_id": 8379,
+      "away_team_id": 8377,
+      "played_on": "2026-11-08",
+      "round": 8,
+      "report": "es4119139"
+    },
+    {
+      "id": 309390,
+      "round_id": 27951,
+      "home_team_id": 8378,
+      "away_team_id": 8380,
+      "played_on": "2026-11-14",
+      "round": 9,
+      "report": "es4119140"
+    },
+    {
+      "id": 309391,
+      "round_id": 27951,
+      "home_team_id": 8374,
+      "away_team_id": 8384,
+      "played_on": "2026-11-14",
+      "round": 9,
+      "report": "es4119142"
+    },
+    {
+      "id": 309392,
+      "round_id": 27951,
+      "home_team_id": 8372,
+      "away_team_id": 8386,
+      "played_on": "2026-11-14",
+      "round": 9,
+      "report": "es4119143"
+    },
+    {
+      "id": 309393,
+      "round_id": 27951,
+      "home_team_id": 8371,
+      "away_team_id": 8383,
+      "played_on": "2026-11-14",
+      "round": 9,
+      "report": "es4119144"
+    },
+    {
+      "id": 309394,
+      "round_id": 27951,
+      "home_team_id": 8373,
+      "away_team_id": 8381,
+      "played_on": "2026-11-14",
+      "round": 9,
+      "report": "es4119145"
+    },
+    {
+      "id": 309395,
+      "round_id": 27951,
+      "home_team_id": 8375,
+      "away_team_id": 8379,
+      "played_on": "2026-11-14",
+      "round": 9,
+      "report": "es4119146"
+    },
+    {
+      "id": 309396,
+      "round_id": 27951,
+      "home_team_id": 8385,
+      "away_team_id": 8377,
+      "played_on": "2026-11-14",
+      "round": 9,
+      "report": "es4119147"
+    },
+    {
+      "id": 309398,
+      "round_id": 27951,
+      "home_team_id": 8382,
+      "away_team_id": 8376,
+      "played_on": "2026-11-15",
+      "round": 9,
+      "report": "es4119261"
+    },
+    {
+      "id": 309401,
+      "round_id": 27952,
+      "home_team_id": 8380,
+      "away_team_id": 8385,
+      "played_on": "2026-11-21",
+      "round": 10,
+      "report": "es4119148"
+    },
+    {
+      "id": 309403,
+      "round_id": 27952,
+      "home_team_id": 8382,
+      "away_team_id": 8378,
+      "played_on": "2026-11-22",
+      "round": 10,
+      "report": "es4119149"
+    },
+    {
+      "id": 309404,
+      "round_id": 27952,
+      "home_team_id": 8384,
+      "away_team_id": 8376,
+      "played_on": "2026-11-21",
+      "round": 10,
+      "report": "es4119150"
+    },
+    {
+      "id": 309405,
+      "round_id": 27952,
+      "home_team_id": 8386,
+      "away_team_id": 8374,
+      "played_on": "2026-11-21",
+      "round": 10,
+      "report": "es4119151"
+    },
+    {
+      "id": 309406,
+      "round_id": 27952,
+      "home_team_id": 8383,
+      "away_team_id": 8372,
+      "played_on": "2026-11-21",
+      "round": 10,
+      "report": "es4119152"
+    },
+    {
+      "id": 309407,
+      "round_id": 27952,
+      "home_team_id": 8381,
+      "away_team_id": 8371,
+      "played_on": "2026-11-21",
+      "round": 10,
+      "report": "es4119153"
+    },
+    {
+      "id": 309409,
+      "round_id": 27952,
+      "home_team_id": 8379,
+      "away_team_id": 8373,
+      "played_on": "2026-11-22",
+      "round": 10,
+      "report": "es4119154"
+    },
+    {
+      "id": 309410,
+      "round_id": 27952,
+      "home_team_id": 8377,
+      "away_team_id": 8375,
+      "played_on": "2026-11-21",
+      "round": 10,
+      "report": "es4119155"
+    },
+    {
+      "id": 309411,
+      "round_id": 27953,
+      "home_team_id": 8380,
+      "away_team_id": 8382,
+      "played_on": "2026-11-28",
+      "round": 11,
+      "report": "es4119156"
+    },
+    {
+      "id": 309413,
+      "round_id": 27953,
+      "home_team_id": 8378,
+      "away_team_id": 8384,
+      "played_on": "2026-11-28",
+      "round": 11,
+      "report": "es4119157"
+    },
+    {
+      "id": 309414,
+      "round_id": 27953,
+      "home_team_id": 8376,
+      "away_team_id": 8386,
+      "played_on": "2026-11-28",
+      "round": 11,
+      "report": "es4119158"
+    },
+    {
+      "id": 309415,
+      "round_id": 27953,
+      "home_team_id": 8374,
+      "away_team_id": 8383,
+      "played_on": "2026-11-28",
+      "round": 11,
+      "report": "es4119159"
+    },
+    {
+      "id": 309417,
+      "round_id": 27953,
+      "home_team_id": 8372,
+      "away_team_id": 8381,
+      "played_on": "2026-11-28",
+      "round": 11,
+      "report": "es4119160"
+    },
+    {
+      "id": 309418,
+      "round_id": 27953,
+      "home_team_id": 8371,
+      "away_team_id": 8379,
+      "played_on": "2026-11-28",
+      "round": 11,
+      "report": "es4119161"
+    },
+    {
+      "id": 309420,
+      "round_id": 27953,
+      "home_team_id": 8373,
+      "away_team_id": 8377,
+      "played_on": "2026-11-28",
+      "round": 11,
+      "report": "es4119162"
+    },
+    {
+      "id": 309421,
+      "round_id": 27953,
+      "home_team_id": 8385,
+      "away_team_id": 8375,
+      "played_on": "2026-11-28",
+      "round": 11,
+      "report": "es4119163"
+    },
+    {
+      "id": 309423,
+      "round_id": 27954,
+      "home_team_id": 8382,
+      "away_team_id": 8385,
+      "played_on": "2026-12-13",
+      "round": 12,
+      "report": "es4119164"
+    },
+    {
+      "id": 309424,
+      "round_id": 27954,
+      "home_team_id": 8384,
+      "away_team_id": 8380,
+      "played_on": "2026-12-12",
+      "round": 12,
+      "report": "es4119165"
+    },
+    {
+      "id": 309425,
+      "round_id": 27954,
+      "home_team_id": 8386,
+      "away_team_id": 8378,
+      "played_on": "2026-12-12",
+      "round": 12,
+      "report": "es4119166"
+    },
+    {
+      "id": 309426,
+      "round_id": 27954,
+      "home_team_id": 8383,
+      "away_team_id": 8376,
+      "played_on": "2026-12-12",
+      "round": 12,
+      "report": "es4119167"
+    },
+    {
+      "id": 309427,
+      "round_id": 27954,
+      "home_team_id": 8381,
+      "away_team_id": 8374,
+      "played_on": "2026-12-12",
+      "round": 12,
+      "report": "es4119168"
+    },
+    {
+      "id": 309428,
+      "round_id": 27954,
+      "home_team_id": 8379,
+      "away_team_id": 8372,
+      "played_on": "2026-12-13",
+      "round": 12,
+      "report": "es4119169"
+    },
+    {
+      "id": 309429,
+      "round_id": 27954,
+      "home_team_id": 8377,
+      "away_team_id": 8371,
+      "played_on": "2026-12-12",
+      "round": 12,
+      "report": "es4119170"
+    },
+    {
+      "id": 309430,
+      "round_id": 27954,
+      "home_team_id": 8375,
+      "away_team_id": 8373,
+      "played_on": "2026-12-12",
+      "round": 12,
+      "report": "es4119171"
+    },
+    {
+      "id": 309431,
+      "round_id": 27955,
+      "home_team_id": 8382,
+      "away_team_id": 8384,
+      "played_on": "2026-12-20",
+      "round": 13,
+      "report": "es4119172"
+    },
+    {
+      "id": 309432,
+      "round_id": 27955,
+      "home_team_id": 8380,
+      "away_team_id": 8386,
+      "played_on": "2026-12-19",
+      "round": 13,
+      "report": "es4119173"
+    },
+    {
+      "id": 309433,
+      "round_id": 27955,
+      "home_team_id": 8378,
+      "away_team_id": 8383,
+      "played_on": "2026-12-19",
+      "round": 13,
+      "report": "es4119174"
+    },
+    {
+      "id": 309435,
+      "round_id": 27955,
+      "home_team_id": 8376,
+      "away_team_id": 8381,
+      "played_on": "2026-12-19",
+      "round": 13,
+      "report": "es4119175"
+    },
+    {
+      "id": 309436,
+      "round_id": 27955,
+      "home_team_id": 8374,
+      "away_team_id": 8379,
+      "played_on": "2026-12-19",
+      "round": 13,
+      "report": "es4119176"
+    },
+    {
+      "id": 309437,
+      "round_id": 27955,
+      "home_team_id": 8372,
+      "away_team_id": 8377,
+      "played_on": "2026-12-19",
+      "round": 13,
+      "report": "es4119177"
+    },
+    {
+      "id": 309438,
+      "round_id": 27955,
+      "home_team_id": 8371,
+      "away_team_id": 8375,
+      "played_on": "2026-12-19",
+      "round": 13,
+      "report": "es4119178"
+    },
+    {
+      "id": 309439,
+      "round_id": 27955,
+      "home_team_id": 8385,
+      "away_team_id": 8373,
+      "played_on": "2026-12-19",
+      "round": 13,
+      "report": "es4119179"
+    },
+    {
+      "id": 309441,
+      "round_id": 27956,
+      "home_team_id": 8385,
+      "away_team_id": 8384,
+      "played_on": "2027-01-09",
+      "round": 14,
+      "report": "es4119180"
+    },
+    {
+      "id": 309442,
+      "round_id": 27956,
+      "home_team_id": 8386,
+      "away_team_id": 8382,
+      "played_on": "2027-01-09",
+      "round": 14,
+      "report": "es4119181"
+    },
+    {
+      "id": 309443,
+      "round_id": 27956,
+      "home_team_id": 8383,
+      "away_team_id": 8380,
+      "played_on": "2027-01-09",
+      "round": 14,
+      "report": "es4119182"
+    },
+    {
+      "id": 309445,
+      "round_id": 27956,
+      "home_team_id": 8381,
+      "away_team_id": 8378,
+      "played_on": "2027-01-09",
+      "round": 14,
+      "report": "es4119183"
+    },
+    {
+      "id": 309446,
+      "round_id": 27956,
+      "home_team_id": 8379,
+      "away_team_id": 8376,
+      "played_on": "2027-01-10",
+      "round": 14,
+      "report": "es4119184"
+    },
+    {
+      "id": 309447,
+      "round_id": 27956,
+      "home_team_id": 8377,
+      "away_team_id": 8374,
+      "played_on": "2027-01-09",
+      "round": 14,
+      "report": "es4119185"
+    },
+    {
+      "id": 309449,
+      "round_id": 27956,
+      "home_team_id": 8375,
+      "away_team_id": 8372,
+      "played_on": "2027-01-09",
+      "round": 14,
+      "report": "es4119186"
+    },
+    {
+      "id": 309450,
+      "round_id": 27956,
+      "home_team_id": 8373,
+      "away_team_id": 8371,
+      "played_on": "2027-01-09",
+      "round": 14,
+      "report": "es4119187"
+    },
+    {
+      "id": 309451,
+      "round_id": 27957,
+      "home_team_id": 8384,
+      "away_team_id": 8386,
+      "played_on": "2027-01-16",
+      "round": 15,
+      "report": "es4119188"
+    },
+    {
+      "id": 309453,
+      "round_id": 27957,
+      "home_team_id": 8382,
+      "away_team_id": 8383,
+      "played_on": "2027-01-17",
+      "round": 15,
+      "report": "es4119189"
+    },
+    {
+      "id": 309455,
+      "round_id": 27957,
+      "home_team_id": 8380,
+      "away_team_id": 8381,
+      "played_on": "2027-01-16",
+      "round": 15,
+      "report": "es4119190"
+    },
+    {
+      "id": 309456,
+      "round_id": 27957,
+      "home_team_id": 8378,
+      "away_team_id": 8379,
+      "played_on": "2027-01-16",
+      "round": 15,
+      "report": "es4119191"
+    },
+    {
+      "id": 309457,
+      "round_id": 27957,
+      "home_team_id": 8376,
+      "away_team_id": 8377,
+      "played_on": "2027-01-16",
+      "round": 15,
+      "report": "es4119192"
+    },
+    {
+      "id": 309459,
+      "round_id": 27957,
+      "home_team_id": 8374,
+      "away_team_id": 8375,
+      "played_on": "2027-01-16",
+      "round": 15,
+      "report": "es4119193"
+    },
+    {
+      "id": 309460,
+      "round_id": 27957,
+      "home_team_id": 8372,
+      "away_team_id": 8373,
+      "played_on": "2027-01-16",
+      "round": 15,
+      "report": "es4119194"
+    },
+    {
+      "id": 309461,
+      "round_id": 27957,
+      "home_team_id": 8371,
+      "away_team_id": 8385,
+      "played_on": "2027-01-16",
+      "round": 15,
+      "report": "es4119195"
+    },
+    {
+      "id": 309463,
+      "round_id": 27958,
+      "home_team_id": 8372,
+      "away_team_id": 8371,
+      "played_on": "2027-01-23",
+      "round": 16,
+      "report": "es4119196"
+    },
+    {
+      "id": 309464,
+      "round_id": 27958,
+      "home_team_id": 8374,
+      "away_team_id": 8373,
+      "played_on": "2027-01-23",
+      "round": 16,
+      "report": "es4119197"
+    },
+    {
+      "id": 309465,
+      "round_id": 27958,
+      "home_team_id": 8376,
+      "away_team_id": 8375,
+      "played_on": "2027-01-23",
+      "round": 16,
+      "report": "es4119198"
+    },
+    {
+      "id": 309466,
+      "round_id": 27958,
+      "home_team_id": 8378,
+      "away_team_id": 8377,
+      "played_on": "2027-01-23",
+      "round": 16,
+      "report": "es4119199"
+    },
+    {
+      "id": 309467,
+      "round_id": 27958,
+      "home_team_id": 8380,
+      "away_team_id": 8379,
+      "played_on": "2027-01-23",
+      "round": 16,
+      "report": "es4119200"
+    },
+    {
+      "id": 309469,
+      "round_id": 27958,
+      "home_team_id": 8382,
+      "away_team_id": 8381,
+      "played_on": "2027-01-24",
+      "round": 16,
+      "report": "es4119201"
+    },
+    {
+      "id": 309470,
+      "round_id": 27958,
+      "home_team_id": 8384,
+      "away_team_id": 8383,
+      "played_on": "2027-01-23",
+      "round": 16,
+      "report": "es4119202"
+    },
+    {
+      "id": 309471,
+      "round_id": 27958,
+      "home_team_id": 8386,
+      "away_team_id": 8385,
+      "played_on": "2027-01-23",
+      "round": 16,
+      "report": "es4119203"
+    },
+    {
+      "id": 309472,
+      "round_id": 27959,
+      "home_team_id": 8378,
+      "away_team_id": 8375,
+      "played_on": "2027-01-30",
+      "round": 17,
+      "report": "es4119087"
+    },
+    {
+      "id": 309473,
+      "round_id": 27959,
+      "home_team_id": 8385,
+      "away_team_id": 8372,
+      "played_on": "2027-01-30",
+      "round": 17,
+      "report": "es4119204"
+    },
+    {
+      "id": 309474,
+      "round_id": 27959,
+      "home_team_id": 8371,
+      "away_team_id": 8374,
+      "played_on": "2027-01-30",
+      "round": 17,
+      "report": "es4119205"
+    },
+    {
+      "id": 309476,
+      "round_id": 27959,
+      "home_team_id": 8373,
+      "away_team_id": 8376,
+      "played_on": "2027-01-30",
+      "round": 17,
+      "report": "es4119206"
+    },
+    {
+      "id": 309477,
+      "round_id": 27959,
+      "home_team_id": 8377,
+      "away_team_id": 8380,
+      "played_on": "2027-01-30",
+      "round": 17,
+      "report": "es4119208"
+    },
+    {
+      "id": 309478,
+      "round_id": 27959,
+      "home_team_id": 8379,
+      "away_team_id": 8382,
+      "played_on": "2027-01-31",
+      "round": 17,
+      "report": "es4119209"
+    },
+    {
+      "id": 309479,
+      "round_id": 27959,
+      "home_team_id": 8381,
+      "away_team_id": 8384,
+      "played_on": "2027-01-30",
+      "round": 17,
+      "report": "es4119210"
+    },
+    {
+      "id": 309480,
+      "round_id": 27959,
+      "home_team_id": 8383,
+      "away_team_id": 8386,
+      "played_on": "2027-01-30",
+      "round": 17,
+      "report": "es4119211"
+    },
+    {
+      "id": 309481,
+      "round_id": 27960,
+      "home_team_id": 8374,
+      "away_team_id": 8372,
+      "played_on": "2027-02-13",
+      "round": 18,
+      "report": "es4119212"
+    },
+    {
+      "id": 309482,
+      "round_id": 27960,
+      "home_team_id": 8376,
+      "away_team_id": 8371,
+      "played_on": "2027-02-13",
+      "round": 18,
+      "report": "es4119213"
+    },
+    {
+      "id": 309483,
+      "round_id": 27960,
+      "home_team_id": 8378,
+      "away_team_id": 8373,
+      "played_on": "2027-02-13",
+      "round": 18,
+      "report": "es4119214"
+    },
+    {
+      "id": 309484,
+      "round_id": 27960,
+      "home_team_id": 8380,
+      "away_team_id": 8375,
+      "played_on": "2027-02-13",
+      "round": 18,
+      "report": "es4119215"
+    },
+    {
+      "id": 309486,
+      "round_id": 27960,
+      "home_team_id": 8382,
+      "away_team_id": 8377,
+      "played_on": "2027-02-14",
+      "round": 18,
+      "report": "es4119216"
+    },
+    {
+      "id": 309487,
+      "round_id": 27960,
+      "home_team_id": 8384,
+      "away_team_id": 8379,
+      "played_on": "2027-02-13",
+      "round": 18,
+      "report": "es4119217"
+    },
+    {
+      "id": 309488,
+      "round_id": 27960,
+      "home_team_id": 8386,
+      "away_team_id": 8381,
+      "played_on": "2027-02-13",
+      "round": 18,
+      "report": "es4119218"
+    },
+    {
+      "id": 309489,
+      "round_id": 27960,
+      "home_team_id": 8383,
+      "away_team_id": 8385,
+      "played_on": "2027-02-13",
+      "round": 18,
+      "report": "es4119219"
+    },
+    {
+      "id": 309490,
+      "round_id": 27961,
+      "home_team_id": 8378,
+      "away_team_id": 8371,
+      "played_on": "2027-02-20",
+      "round": 19,
+      "report": "es4119102"
+    },
+    {
+      "id": 309491,
+      "round_id": 27961,
+      "home_team_id": 8385,
+      "away_team_id": 8374,
+      "played_on": "2027-02-20",
+      "round": 19,
+      "report": "es4119220"
+    },
+    {
+      "id": 309492,
+      "round_id": 27961,
+      "home_team_id": 8372,
+      "away_team_id": 8376,
+      "played_on": "2027-02-20",
+      "round": 19,
+      "report": "es4119221"
+    },
+    {
+      "id": 309493,
+      "round_id": 27961,
+      "home_team_id": 8373,
+      "away_team_id": 8380,
+      "played_on": "2027-02-20",
+      "round": 19,
+      "report": "es4119223"
+    },
+    {
+      "id": 309494,
+      "round_id": 27961,
+      "home_team_id": 8375,
+      "away_team_id": 8382,
+      "played_on": "2027-02-20",
+      "round": 19,
+      "report": "es4119224"
+    },
+    {
+      "id": 309495,
+      "round_id": 27961,
+      "home_team_id": 8377,
+      "away_team_id": 8384,
+      "played_on": "2027-02-20",
+      "round": 19,
+      "report": "es4119225"
+    },
+    {
+      "id": 309496,
+      "round_id": 27961,
+      "home_team_id": 8379,
+      "away_team_id": 8386,
+      "played_on": "2027-02-21",
+      "round": 19,
+      "report": "es4119226"
+    },
+    {
+      "id": 309497,
+      "round_id": 27961,
+      "home_team_id": 8381,
+      "away_team_id": 8383,
+      "played_on": "2027-02-20",
+      "round": 19,
+      "report": "es4119227"
+    },
+    {
+      "id": 309500,
+      "round_id": 27962,
+      "home_team_id": 8376,
+      "away_team_id": 8374,
+      "played_on": "2027-02-27",
+      "round": 20,
+      "report": "es4119228"
+    },
+    {
+      "id": 309501,
+      "round_id": 27962,
+      "home_team_id": 8378,
+      "away_team_id": 8372,
+      "played_on": "2027-02-27",
+      "round": 20,
+      "report": "es4119229"
+    },
+    {
+      "id": 309502,
+      "round_id": 27962,
+      "home_team_id": 8380,
+      "away_team_id": 8371,
+      "played_on": "2027-02-27",
+      "round": 20,
+      "report": "es4119230"
+    },
+    {
+      "id": 309503,
+      "round_id": 27962,
+      "home_team_id": 8382,
+      "away_team_id": 8373,
+      "played_on": "2027-02-28",
+      "round": 20,
+      "report": "es4119231"
+    },
+    {
+      "id": 309504,
+      "round_id": 27962,
+      "home_team_id": 8384,
+      "away_team_id": 8375,
+      "played_on": "2027-02-27",
+      "round": 20,
+      "report": "es4119232"
+    },
+    {
+      "id": 309505,
+      "round_id": 27962,
+      "home_team_id": 8386,
+      "away_team_id": 8377,
+      "played_on": "2027-02-27",
+      "round": 20,
+      "report": "es4119233"
+    },
+    {
+      "id": 309506,
+      "round_id": 27962,
+      "home_team_id": 8383,
+      "away_team_id": 8379,
+      "played_on": "2027-02-27",
+      "round": 20,
+      "report": "es4119234"
+    },
+    {
+      "id": 309508,
+      "round_id": 27962,
+      "home_team_id": 8381,
+      "away_team_id": 8385,
+      "played_on": "2027-02-27",
+      "round": 20,
+      "report": "es4119235"
+    },
+    {
+      "id": 309509,
+      "round_id": 27963,
+      "home_team_id": 8378,
+      "away_team_id": 8374,
+      "played_on": "2027-03-06",
+      "round": 21,
+      "report": "es4119117"
+    },
+    {
+      "id": 309510,
+      "round_id": 27963,
+      "home_team_id": 8385,
+      "away_team_id": 8376,
+      "played_on": "2027-03-06",
+      "round": 21,
+      "report": "es4119236"
+    },
+    {
+      "id": 309511,
+      "round_id": 27963,
+      "home_team_id": 8372,
+      "away_team_id": 8380,
+      "played_on": "2027-03-06",
+      "round": 21,
+      "report": "es4119238"
+    },
+    {
+      "id": 309513,
+      "round_id": 27963,
+      "home_team_id": 8371,
+      "away_team_id": 8382,
+      "played_on": "2027-03-06",
+      "round": 21,
+      "report": "es4119239"
+    },
+    {
+      "id": 309514,
+      "round_id": 27963,
+      "home_team_id": 8373,
+      "away_team_id": 8384,
+      "played_on": "2027-03-06",
+      "round": 21,
+      "report": "es4119240"
+    },
+    {
+      "id": 309515,
+      "round_id": 27963,
+      "home_team_id": 8375,
+      "away_team_id": 8386,
+      "played_on": "2027-03-06",
+      "round": 21,
+      "report": "es4119241"
+    },
+    {
+      "id": 309516,
+      "round_id": 27963,
+      "home_team_id": 8377,
+      "away_team_id": 8383,
+      "played_on": "2027-03-06",
+      "round": 21,
+      "report": "es4119242"
+    },
+    {
+      "id": 309517,
+      "round_id": 27963,
+      "home_team_id": 8379,
+      "away_team_id": 8381,
+      "played_on": "2027-03-07",
+      "round": 21,
+      "report": "es4119243"
+    },
+    {
+      "id": 309518,
+      "round_id": 27964,
+      "home_team_id": 8378,
+      "away_team_id": 8376,
+      "played_on": "2027-03-13",
+      "round": 22,
+      "report": "es4119244"
+    },
+    {
+      "id": 309519,
+      "round_id": 27964,
+      "home_team_id": 8380,
+      "away_team_id": 8374,
+      "played_on": "2027-03-13",
+      "round": 22,
+      "report": "es4119245"
+    },
+    {
+      "id": 309520,
+      "round_id": 27964,
+      "home_team_id": 8382,
+      "away_team_id": 8372,
+      "played_on": "2027-03-14",
+      "round": 22,
+      "report": "es4119246"
+    },
+    {
+      "id": 309522,
+      "round_id": 27964,
+      "home_team_id": 8384,
+      "away_team_id": 8371,
+      "played_on": "2027-03-13",
+      "round": 22,
+      "report": "es4119247"
+    },
+    {
+      "id": 309523,
+      "round_id": 27964,
+      "home_team_id": 8386,
+      "away_team_id": 8373,
+      "played_on": "2027-03-13",
+      "round": 22,
+      "report": "es4119248"
+    },
+    {
+      "id": 309524,
+      "round_id": 27964,
+      "home_team_id": 8383,
+      "away_team_id": 8375,
+      "played_on": "2027-03-13",
+      "round": 22,
+      "report": "es4119249"
+    },
+    {
+      "id": 309525,
+      "round_id": 27964,
+      "home_team_id": 8381,
+      "away_team_id": 8377,
+      "played_on": "2027-03-13",
+      "round": 22,
+      "report": "es4119250"
+    },
+    {
+      "id": 309526,
+      "round_id": 27964,
+      "home_team_id": 8379,
+      "away_team_id": 8385,
+      "played_on": "2027-03-14",
+      "round": 22,
+      "report": "es4119251"
+    },
+    {
+      "id": 309528,
+      "round_id": 27965,
+      "home_team_id": 8376,
+      "away_team_id": 8380,
+      "played_on": "2027-03-20",
+      "round": 23,
+      "report": "es4119253"
+    },
+    {
+      "id": 309529,
+      "round_id": 27965,
+      "home_team_id": 8374,
+      "away_team_id": 8382,
+      "played_on": "2027-03-20",
+      "round": 23,
+      "report": "es4119254"
+    },
+    {
+      "id": 309530,
+      "round_id": 27965,
+      "home_team_id": 8372,
+      "away_team_id": 8384,
+      "played_on": "2027-03-20",
+      "round": 23,
+      "report": "es4119255"
+    },
+    {
+      "id": 309531,
+      "round_id": 27965,
+      "home_team_id": 8371,
+      "away_team_id": 8386,
+      "played_on": "2027-03-20",
+      "round": 23,
+      "report": "es4119256"
+    },
+    {
+      "id": 309532,
+      "round_id": 27965,
+      "home_team_id": 8373,
+      "away_team_id": 8383,
+      "played_on": "2027-03-20",
+      "round": 23,
+      "report": "es4119257"
+    },
+    {
+      "id": 309533,
+      "round_id": 27965,
+      "home_team_id": 8375,
+      "away_team_id": 8381,
+      "played_on": "2027-03-20",
+      "round": 23,
+      "report": "es4119258"
+    },
+    {
+      "id": 309534,
+      "round_id": 27965,
+      "home_team_id": 8377,
+      "away_team_id": 8379,
+      "played_on": "2027-03-20",
+      "round": 23,
+      "report": "es4119259"
+    },
+    {
+      "id": 309535,
+      "round_id": 27966,
+      "home_team_id": 8376,
+      "away_team_id": 8382,
+      "played_on": "2027-04-03",
+      "round": 24,
+      "report": "es4119141"
+    },
+    {
+      "id": 309536,
+      "round_id": 27966,
+      "home_team_id": 8380,
+      "away_team_id": 8378,
+      "played_on": "2027-04-03",
+      "round": 24,
+      "report": "es4119260"
+    },
+    {
+      "id": 309538,
+      "round_id": 27966,
+      "home_team_id": 8384,
+      "away_team_id": 8374,
+      "played_on": "2027-04-03",
+      "round": 24,
+      "report": "es4119262"
+    },
+    {
+      "id": 309539,
+      "round_id": 27966,
+      "home_team_id": 8386,
+      "away_team_id": 8372,
+      "played_on": "2027-04-03",
+      "round": 24,
+      "report": "es4119263"
+    },
+    {
+      "id": 309541,
+      "round_id": 27966,
+      "home_team_id": 8383,
+      "away_team_id": 8371,
+      "played_on": "2027-04-03",
+      "round": 24,
+      "report": "es4119264"
+    },
+    {
+      "id": 309542,
+      "round_id": 27966,
+      "home_team_id": 8381,
+      "away_team_id": 8373,
+      "played_on": "2027-04-03",
+      "round": 24,
+      "report": "es4119265"
+    },
+    {
+      "id": 309543,
+      "round_id": 27966,
+      "home_team_id": 8379,
+      "away_team_id": 8375,
+      "played_on": "2027-04-04",
+      "round": 24,
+      "report": "es4119266"
+    },
+    {
+      "id": 309544,
+      "round_id": 27966,
+      "home_team_id": 8377,
+      "away_team_id": 8385,
+      "played_on": "2027-04-03",
+      "round": 24,
+      "report": "es4119267"
+    },
+    {
+      "id": 309545,
+      "round_id": 27967,
+      "home_team_id": 8385,
+      "away_team_id": 8380,
+      "played_on": "2027-04-10",
+      "round": 25,
+      "report": "es4119268"
+    },
+    {
+      "id": 309546,
+      "round_id": 27967,
+      "home_team_id": 8378,
+      "away_team_id": 8382,
+      "played_on": "2027-04-10",
+      "round": 25,
+      "report": "es4119269"
+    },
+    {
+      "id": 309547,
+      "round_id": 27967,
+      "home_team_id": 8376,
+      "away_team_id": 8384,
+      "played_on": "2027-04-10",
+      "round": 25,
+      "report": "es4119270"
+    },
+    {
+      "id": 309548,
+      "round_id": 27967,
+      "home_team_id": 8374,
+      "away_team_id": 8386,
+      "played_on": "2027-04-10",
+      "round": 25,
+      "report": "es4119271"
+    },
+    {
+      "id": 309549,
+      "round_id": 27967,
+      "home_team_id": 8372,
+      "away_team_id": 8383,
+      "played_on": "2027-04-10",
+      "round": 25,
+      "report": "es4119272"
+    },
+    {
+      "id": 309550,
+      "round_id": 27967,
+      "home_team_id": 8371,
+      "away_team_id": 8381,
+      "played_on": "2027-04-10",
+      "round": 25,
+      "report": "es4119273"
+    },
+    {
+      "id": 309551,
+      "round_id": 27967,
+      "home_team_id": 8373,
+      "away_team_id": 8379,
+      "played_on": "2027-04-10",
+      "round": 25,
+      "report": "es4119274"
+    },
+    {
+      "id": 309552,
+      "round_id": 27967,
+      "home_team_id": 8375,
+      "away_team_id": 8377,
+      "played_on": "2027-04-10",
+      "round": 25,
+      "report": "es4119275"
+    },
+    {
+      "id": 309554,
+      "round_id": 27968,
+      "home_team_id": 8382,
+      "away_team_id": 8380,
+      "played_on": "2027-04-18",
+      "round": 26,
+      "report": "es4119276"
+    },
+    {
+      "id": 309555,
+      "round_id": 27968,
+      "home_team_id": 8384,
+      "away_team_id": 8378,
+      "played_on": "2027-04-17",
+      "round": 26,
+      "report": "es4119277"
+    },
+    {
+      "id": 309556,
+      "round_id": 27968,
+      "home_team_id": 8386,
+      "away_team_id": 8376,
+      "played_on": "2027-04-17",
+      "round": 26,
+      "report": "es4119278"
+    },
+    {
+      "id": 309557,
+      "round_id": 27968,
+      "home_team_id": 8383,
+      "away_team_id": 8374,
+      "played_on": "2027-04-17",
+      "round": 26,
+      "report": "es4119279"
+    },
+    {
+      "id": 309558,
+      "round_id": 27968,
+      "home_team_id": 8381,
+      "away_team_id": 8372,
+      "played_on": "2027-04-17",
+      "round": 26,
+      "report": "es4119280"
+    },
+    {
+      "id": 309559,
+      "round_id": 27968,
+      "home_team_id": 8379,
+      "away_team_id": 8371,
+      "played_on": "2027-04-18",
+      "round": 26,
+      "report": "es4119281"
+    },
+    {
+      "id": 309560,
+      "round_id": 27968,
+      "home_team_id": 8377,
+      "away_team_id": 8373,
+      "played_on": "2027-04-17",
+      "round": 26,
+      "report": "es4119282"
+    },
+    {
+      "id": 309561,
+      "round_id": 27968,
+      "home_team_id": 8375,
+      "away_team_id": 8385,
+      "played_on": "2027-04-17",
+      "round": 26,
+      "report": "es4119283"
+    },
+    {
+      "id": 309563,
+      "round_id": 27970,
+      "home_team_id": 8385,
+      "away_team_id": 8382,
+      "played_on": "2027-04-24",
+      "round": 27,
+      "report": "es4119284"
+    },
+    {
+      "id": 309564,
+      "round_id": 27970,
+      "home_team_id": 8380,
+      "away_team_id": 8384,
+      "played_on": "2027-04-24",
+      "round": 27,
+      "report": "es4119285"
+    },
+    {
+      "id": 309565,
+      "round_id": 27970,
+      "home_team_id": 8378,
+      "away_team_id": 8386,
+      "played_on": "2027-04-24",
+      "round": 27,
+      "report": "es4119286"
+    },
+    {
+      "id": 309566,
+      "round_id": 27970,
+      "home_team_id": 8376,
+      "away_team_id": 8383,
+      "played_on": "2027-04-24",
+      "round": 27,
+      "report": "es4119287"
+    },
+    {
+      "id": 309568,
+      "round_id": 27970,
+      "home_team_id": 8374,
+      "away_team_id": 8381,
+      "played_on": "2027-04-24",
+      "round": 27,
+      "report": "es4119288"
+    },
+    {
+      "id": 309570,
+      "round_id": 27970,
+      "home_team_id": 8372,
+      "away_team_id": 8379,
+      "played_on": "2027-04-24",
+      "round": 27,
+      "report": "es4119289"
+    },
+    {
+      "id": 309571,
+      "round_id": 27970,
+      "home_team_id": 8371,
+      "away_team_id": 8377,
+      "played_on": "2027-04-24",
+      "round": 27,
+      "report": "es4119290"
+    },
+    {
+      "id": 309572,
+      "round_id": 27970,
+      "home_team_id": 8373,
+      "away_team_id": 8375,
+      "played_on": "2027-04-24",
+      "round": 27,
+      "report": "es4119291"
+    },
+    {
+      "id": 309573,
+      "round_id": 27971,
+      "home_team_id": 8384,
+      "away_team_id": 8382,
+      "played_on": "2027-05-01",
+      "round": 28,
+      "report": "es4119292"
+    },
+    {
+      "id": 309574,
+      "round_id": 27971,
+      "home_team_id": 8386,
+      "away_team_id": 8380,
+      "played_on": "2027-05-01",
+      "round": 28,
+      "report": "es4119293"
+    },
+    {
+      "id": 309575,
+      "round_id": 27971,
+      "home_team_id": 8383,
+      "away_team_id": 8378,
+      "played_on": "2027-05-01",
+      "round": 28,
+      "report": "es4119294"
+    },
+    {
+      "id": 309576,
+      "round_id": 27971,
+      "home_team_id": 8381,
+      "away_team_id": 8376,
+      "played_on": "2027-05-01",
+      "round": 28,
+      "report": "es4119295"
+    },
+    {
+      "id": 309577,
+      "round_id": 27971,
+      "home_team_id": 8379,
+      "away_team_id": 8374,
+      "played_on": "2027-05-02",
+      "round": 28,
+      "report": "es4119296"
+    },
+    {
+      "id": 309578,
+      "round_id": 27971,
+      "home_team_id": 8377,
+      "away_team_id": 8372,
+      "played_on": "2027-05-01",
+      "round": 28,
+      "report": "es4119297"
+    },
+    {
+      "id": 309579,
+      "round_id": 27971,
+      "home_team_id": 8375,
+      "away_team_id": 8371,
+      "played_on": "2027-05-01",
+      "round": 28,
+      "report": "es4119298"
+    },
+    {
+      "id": 309582,
+      "round_id": 27971,
+      "home_team_id": 8373,
+      "away_team_id": 8385,
+      "played_on": "2027-05-01",
+      "round": 28,
+      "report": "es4119299"
+    },
+    {
+      "id": 309583,
+      "round_id": 27972,
+      "home_team_id": 8384,
+      "away_team_id": 8385,
+      "played_on": "2027-05-08",
+      "round": 29,
+      "report": "es4119300"
+    },
+    {
+      "id": 309584,
+      "round_id": 27972,
+      "home_team_id": 8382,
+      "away_team_id": 8386,
+      "played_on": "2027-05-09",
+      "round": 29,
+      "report": "es4119301"
+    },
+    {
+      "id": 309586,
+      "round_id": 27972,
+      "home_team_id": 8380,
+      "away_team_id": 8383,
+      "played_on": "2027-05-08",
+      "round": 29,
+      "report": "es4119302"
+    },
+    {
+      "id": 309587,
+      "round_id": 27972,
+      "home_team_id": 8378,
+      "away_team_id": 8381,
+      "played_on": "2027-05-08",
+      "round": 29,
+      "report": "es4119303"
+    },
+    {
+      "id": 309589,
+      "round_id": 27972,
+      "home_team_id": 8376,
+      "away_team_id": 8379,
+      "played_on": "2027-05-08",
+      "round": 29,
+      "report": "es4119304"
+    },
+    {
+      "id": 309590,
+      "round_id": 27972,
+      "home_team_id": 8374,
+      "away_team_id": 8377,
+      "played_on": "2027-05-08",
+      "round": 29,
+      "report": "es4119305"
+    },
+    {
+      "id": 309591,
+      "round_id": 27972,
+      "home_team_id": 8372,
+      "away_team_id": 8375,
+      "played_on": "2027-05-08",
+      "round": 29,
+      "report": "es4119306"
+    },
+    {
+      "id": 309592,
+      "round_id": 27972,
+      "home_team_id": 8371,
+      "away_team_id": 8373,
+      "played_on": "2027-05-08",
+      "round": 29,
+      "report": "es4119307"
+    },
+    {
+      "id": 309593,
+      "round_id": 27973,
+      "home_team_id": 8386,
+      "away_team_id": 8384,
+      "played_on": "2027-05-15",
+      "round": 30,
+      "report": "es4119308"
+    },
+    {
+      "id": 309594,
+      "round_id": 27973,
+      "home_team_id": 8383,
+      "away_team_id": 8382,
+      "played_on": "2027-05-15",
+      "round": 30,
+      "report": "es4119309"
+    },
+    {
+      "id": 309595,
+      "round_id": 27973,
+      "home_team_id": 8381,
+      "away_team_id": 8380,
+      "played_on": "2027-05-15",
+      "round": 30,
+      "report": "es4119310"
+    },
+    {
+      "id": 309596,
+      "round_id": 27973,
+      "home_team_id": 8379,
+      "away_team_id": 8378,
+      "played_on": "2027-05-16",
+      "round": 30,
+      "report": "es4119311"
+    },
+    {
+      "id": 309597,
+      "round_id": 27973,
+      "home_team_id": 8377,
+      "away_team_id": 8376,
+      "played_on": "2027-05-15",
+      "round": 30,
+      "report": "es4119312"
+    },
+    {
+      "id": 309598,
+      "round_id": 27973,
+      "home_team_id": 8375,
+      "away_team_id": 8374,
+      "played_on": "2027-05-15",
+      "round": 30,
+      "report": "es4119313"
+    },
+    {
+      "id": 309599,
+      "round_id": 27973,
+      "home_team_id": 8373,
+      "away_team_id": 8372,
+      "played_on": "2027-05-15",
+      "round": 30,
+      "report": "es4119314"
+    },
+    {
+      "id": 309601,
+      "round_id": 27973,
+      "home_team_id": 8385,
+      "away_team_id": 8371,
+      "played_on": "2027-05-15",
+      "round": 30,
+      "report": "es4119315"
+    },
+    {
+      "id": 427263,
+      "round_id": 27947,
+      "home_team_id": 10388,
+      "away_team_id": 8380,
+      "played_on": "2026-10-17",
+      "round": 5,
+      "report": "es4119110"
+    },
+    {
+      "id": 427267,
+      "round_id": 27950,
+      "home_team_id": 8385,
+      "away_team_id": 8378,
+      "played_on": "2026-11-07",
+      "round": 8,
+      "report": "es4119252"
+    },
+    {
+      "id": 427282,
+      "round_id": 27965,
+      "home_team_id": 8378,
+      "away_team_id": 8385,
+      "played_on": "2027-03-20",
+      "round": 23,
+      "report": "es4119132"
+    }
+  ]
+}

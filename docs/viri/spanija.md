@@ -527,3 +527,50 @@ brez baze; ves blok, ~690 strani po 3 s, 0 zavrnitev):
 
 Uvoz (ena za drugo, brez arhiva): `gh workflow run uvoz-lige.yml -f
 liga=es-as-tercera-g2 -f cene=true`.
+
+### FCF G13: dokazana enotna identiteta (18. 10. 2026)
+
+`VILANOVA ATLETIC` se z natančnim vzdevkom razreši v
+`FUTBOL CLUB ATLETIC VNG PASIFAE` (8371). Surovi `poenostaviKlubEs` ostane
+ločen zaradi natančnih imen, države in rezervnih selekcij. Podlaga je istih
+pet acta ID-jev, 80 nastopov z registrskimi številkami, 14 golov in popoln
+koledar 240 tekem; to ni trditev o datumu uradnega preimenovanja.
+
+Za enkratno podatkovno poravnavo ima obstoječi `zdruzi-klube.yml` način
+`nacin=fcf-g13`, izključno na `main`, `odvecni=10388`, `obdrzi=8371`.
+Privzeti `standard` in njegov globalni čakalnik ostaneta. Fiksni način
+počaka do 300 minut na starejše ES pisce, upošteva `MIGRACIJE_PREMOR`,
+preveri skrivnosti/tunel in ima omejitev 360 minut. Ne kliče vira.
+
+Najprej `pisi=false`, prazni `approved_sha256`: artefakt vsebuje javne
+identitete vseh 32 izbrisov/240 preživelih, števila in deterministični
+SHA256 zaklenjenega celotnega povezanega stanja. Predogled ne spreminja
+produkcijskih vrstic in se zaključi z ROLLBACK. Po pregledu istega
+artefakta se apply izvede z `pisi=true` in njegovim `approved_sha256`.
+Spremenjeno stanje zahteva nov pregled. Ponovitev po uspehu je zavrnjena.
+
+SQL je samo sejni pomočnik v `scripts/fcf-g13-repair.sql`, brez migracije
+ali trajnega RPC. Preveri dejanski katalog vseh 63 tujih ključev, odvisnosti
+izbrisov, natančne ID-je/koledar, 21 registracij in nič fantasy ekip.
+Prazna tekma mora imeti shranjeno 0:0, brez `zapisnik_id`, `imported_at`,
+opozoril, kontumacije, oznake brez izida ali odvisnih vrstic. Sam rezultat
+0:0 ne zadošča: uvožena ali z zapisnikom povezana tekma se vedno zavrne.
+Zavrne tudi klubske profile, račune, naročnine in znane Scout reference brez
+FK. Zaklepi vrstic varujejo nove/obstoječe FK zapise, kratki SUE zaklepi
+ščitijo katalog; za Scout reference brez FK uporabi SHARE na tabelah.
+`lock_timeout=10s`, `statement_timeout=90s`; napaka povrne celoten apply.
+
+Spreminjajo se le klubski FK: 15 igralcev, 1 preživela tekma, 15 nastopov,
+2 gola; izbriše se 32 dokazano praznih tekem in klub 10388. Ostanejo
+309307/309324/309335/309352/427263 ter pravilni orientaciji 427267/427282.
+Vse druge vrednosti, ID-ji, cene, pozicije, aktivnost, roki, glasovi in
+izpeljana statistika se primerjajo pred/po; dovoljena izključna izjema je
+čas preračuna `player_scores.computed_at`, nikoli točke. Običajni sprožilci
+ostanejo vključeni. Artefakt ne vsebuje uporabniških vrstic ali skrivnosti.
+
+`test:sources` preveri vzdevek, fiksni vhod/koledar in workflow. Zadnji korak
+CI `varnost` požene `scripts/test-fcf-g13-sql.mjs` na sveži migrirani bazi:
+resnični SQL, atomarnost, zaščitene vrednosti, napačen digest/odvisnosti in
+ločene sočasne FK insert/update seje. Podatki v SQL testu so označeni kot
+izmišljeni testni podatki. Produkcijski apply še vedno zahteva ločen pregled
+predogleda in nato celoten običajni FCF gate; ta popravek ga ne obide.
