@@ -8,6 +8,7 @@ import { loadApprovedDocuments } from './dfb-offline.mjs'
 async function main(){
  const [file,approvedSha,archiveDir,currentDir,proofFile]=process.argv.slice(2)
  const raw=readFileSync(file,'utf8'),m=preveriOdobritev(raw,approvedSha)
+ if(m.version===3)throw Error('Historical import requires the separately reviewed shared importer/RPC checkpoint')
  actionsOnly()
  const replay=await pripravi({slug:m.slug,archiveDir,currentDir,sourceCommit:m.sourceCommit,proof:JSON.parse(readFileSync(proofFile,'utf8'))})
  if(JSON.stringify(replay)+'\n'!==raw)throw Error('Approved manifest differs from full offline replay')
