@@ -9,7 +9,8 @@ const OUTPUT = 'fcf-predpomnjeni-dokazi'
 const MAX_BYTES = 2 * 1024 * 1024
 const HISTORY_BLOCKS = Object.freeze([['es-ct-segona-g1', 4109388, 4109627], ['es-ct-tercera-g2', 4116188, 4116427], ['es-ct-tercera-g9', 4118349, 4118588]])
 const LEGACY = { keys: KEYS, ids: IDS, output: OUTPUT, totalBytes: IDS.length * MAX_BYTES, requireAll: false }
-const HISTORY = { keys: ['zapisniki-ES-k1od1-39122610224-1'], ids: HISTORY_BLOCKS.flatMap(([, start, end]) => Array.from({ length: end - start + 1 }, (_, i) => String(start + i))), output: 'fcf-historical-cache', totalBytes: 192 * 1024 * 1024, requireAll: true }
+export const FCF_HISTORY_CACHE_KEYS = Object.freeze(['zapisniki-ES-k1od1-39053159080-1', 'zapisniki-ES-k1od1-39122610224-1', 'zapisniki-es-ct-tercera-g2-39130940424', 'zapisniki-es-ct-tercera-g4-39096381467'])
+const HISTORY = { keys: FCF_HISTORY_CACHE_KEYS, ids: HISTORY_BLOCKS.flatMap(([, start, end]) => Array.from({ length: end - start + 1 }, (_, i) => String(start + i))), output: 'fcf-historical-cache', totalBytes: 192 * 1024 * 1024, requireAll: true }
 const OPTION_NAMES = new Set(['root', 'output', 'requestedKey', 'matchedKey', 'cacheHit', 'restoreOutcome', 'extractionCommit', 'runId', 'runAttempt', 'cliValid'])
 const SHA = /^[a-f0-9]{40}$/
 const POSITIVE_ID = /^[1-9][0-9]{0,19}$/

@@ -34,7 +34,7 @@ test('exports only all three fixed blocks with byte hashes, original mtimes and 
  assert.equal(readdirSync(f.output).length,721);assert.equal(statSync(f.outside).mtimeMs,before)
  assert.ok(!m.files.some(x=>x.id==='4109628'));assert.equal(statSync(f.output).mode&0o777,0o700);assert.equal(statSync(join(f.output,'manifest.json')).mode&0o777,0o600)
 })
-for(const [name,patch]of [['fallback',{matchedKey:key+'-suffix',cacheHit:'false'}],['older exact key',{requestedKey:'zapisniki-ES-k1od1-39053159080-1',matchedKey:'zapisniki-ES-k1od1-39053159080-1'}],['restore failure',{restoreOutcome:'failure'}],['miss',{cacheHit:'false',matchedKey:''}],['arbitrary IDs',{ids:['1']}],['invalid commit',{extractionCommit:'bad'}]])test(`refuses ${name} before copying`,t=>{
+for(const [name,patch]of [['fallback',{matchedKey:key+'-suffix',cacheHit:'false'}],['unreviewed older exact key',{requestedKey:'zapisniki-ES-k1od1-39078000693-1',matchedKey:'zapisniki-ES-k1od1-39078000693-1'}],['restore failure',{restoreOutcome:'failure'}],['miss',{cacheHit:'false',matchedKey:''}],['arbitrary IDs',{ids:['1']}],['invalid commit',{extractionCommit:'bad'}]])test(`refuses ${name} before copying`,t=>{
  const f=fixture(t);assert.equal(run(f,patch),1);assert.deepEqual(readdirSync(f.output),['manifest.json']);assert.ok(manifest(f).files.every(x=>x.status==='not-inspected'))
 })
 for(const kind of ['leaf symlink','ancestor symlink','oversize','empty','missing'])test(`refuses ${kind} across the full snapshot without partial bodies`,t=>{
@@ -62,14 +62,14 @@ test('aggregate source-byte cap refuses before any bodies are copied',t=>{
 test('checked-in Actions restore metadata reaches the real cache-export CLI and refuses a fallback',t=>{
  const workflow=readFileSync(new URL('../.github/workflows/uvoz-fcf-zgodovina.yml',import.meta.url),'utf8')
  const steps=workflow.split(/^      - /m).slice(1),restore=steps.find(s=>s.includes('uses: actions/cache/restore@')),exportStep=steps.find(s=>s.includes('id: export'))
- assert.ok(restore);assert.match(restore,/key: zapisniki-ES-k1od1-39122610224-1/);assert.doesNotMatch(workflow,/restore-keys:|cache\/save|secrets\.|npm |curl |wget |schedule:/)
+ assert.ok(restore);assert.match(restore,/key: \$\{\{ inputs\.cache_key \}\}/);assert.doesNotMatch(workflow,/restore-keys:|cache\/save|secrets\.|npm |curl |wget |schedule:/)
  assert.match(workflow,/permissions:\n  contents: read/)
  const command=exportStep.match(/^        run: (.+)$/m)[1]
- for(const hit of [true,false]){
+ for(const candidate of ['zapisniki-ES-k1od1-39053159080-1','zapisniki-ES-k1od1-39122610224-1','zapisniki-es-ct-tercera-g2-39130940424','zapisniki-es-ct-tercera-g4-39096381467'])for(const hit of [true,false]){
   const f=fixture(t),output=join(f.root,'action-output');writeFileSync(output,'')
   // The workflow's exact env expressions are evaluated at the external restore boundary.
-  const restoreOutputs={'cache-matched-key':hit?key:key+'-fallback','cache-hit':String(hit)}
-  const env=Object.fromEntries([...exportStep.matchAll(/^          ([A-Z_]+): (.+)$/gm)].map(([,k,v])=>[k,v.replace(/\$\{\{ steps\.restore\.outputs\.([a-z-]+) \}\}/g,(_,name)=>restoreOutputs[name]).replace('${{ steps.restore.outcome }}','success')]))
+  const restoreOutputs={'cache-matched-key':hit?candidate:candidate+'-fallback','cache-hit':String(hit)}
+  const env=Object.fromEntries([...exportStep.matchAll(/^          ([A-Z_]+): (.+)$/gm)].map(([,k,v])=>[k,v.replace('${{ inputs.cache_key }}',candidate).replace(/\$\{\{ steps\.restore\.outputs\.([a-z-]+) \}\}/g,(_,name)=>restoreOutputs[name]).replace('${{ steps.restore.outcome }}','success')]))
   mkdirSync(join(f.root,'scripts'),{recursive:true});writeFileSync(join(f.root,'scripts/izvozi-fcf-predpomnjene-dokaze.mjs'),readFileSync(script))
   const result=spawnSync('bash',['-euo','pipefail','-c',command],{cwd:f.root,env:{PATH:process.env.PATH,GITHUB_ACTIONS:'true',GITHUB_REPOSITORY:'Lovro-splichal-orhanizagi/mnzgorenjska',GITHUB_REF:'refs/heads/main',GITHUB_SHA:sha,GITHUB_RUN_ID:'123',GITHUB_RUN_ATTEMPT:'2',GITHUB_OUTPUT:output,...env},encoding:'utf8',timeout:30000})
   assert.equal(result.status,hit?0:1,result.stderr);assert.equal(manifest(f).files.filter(x=>x.status==='found').length,hit?720:0)
@@ -87,4 +87,9 @@ test('same inode/size/mtime replacement between preflight and open is refused us
  };syncBuiltinESMExports()
  try{assert.equal(run(f),1);assert.deepEqual(readdirSync(f.output),['manifest.json']);assert.equal(manifest(f).files.find(x=>x.id==='4116314').reason,'source-changed')}
  finally{fs.openSync=open;syncBuiltinESMExports()}
+})
+
+for(const candidate of ['zapisniki-ES-k1od1-39053159080-1','zapisniki-es-ct-tercera-g2-39130940424','zapisniki-es-ct-tercera-g4-39096381467'])test(`only explicitly reviewed candidate restores can supply original three-block bodies: ${candidate}`,t=>{
+ const f=fixture(t);assert.equal(run(f,{requestedKey:candidate,matchedKey:candidate}),0)
+ assert.equal(manifest(f).cache.requestedKey,candidate);assert.equal(manifest(f).cache.matchedKey,candidate)
 })

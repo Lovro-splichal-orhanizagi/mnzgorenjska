@@ -1,10 +1,10 @@
 // Authenticated artifact consumer only. No source or database transport on import.
 import {createHash} from 'node:crypto'
+import {FCF_HISTORY_CACHE_KEYS} from './izvozi-fcf-predpomnjene-dokaze.mjs'
 import {buildFcfFinalAuditPlan} from './fcf-final-audit.mjs'
 import {glavaStrani,tokRsc,vrsticeRsc,jeIzziv} from './viri/fcf.mjs'
 const repository='Lovro-splichal-orhanizagi/mnzgorenjska'
 const workflow='.github/workflows/uvoz-fcf-zgodovina.yml'
-const cacheKey='zapisniki-ES-k1od1-39122610224-1'
 const scopes=[['es-ct-segona-g1',783,4109388,4109627],['es-ct-tercera-g2',790,4116188,4116427],['es-ct-tercera-g9',797,4118349,4118588]]
 const id=x=>typeof x==='string'&&/^[1-9]\d{0,19}$/.test(x)
 const sha=x=>typeof x==='string'&&/^[a-f0-9]{64}$/.test(x)
@@ -23,8 +23,9 @@ function execution(run,jobs,runId,commit){
  * which verifies the actual authenticated ZIP bytes before bounded extraction.
  * This boundary then independently binds the actual execution and every member.
  */
-export function readFcfHistoryCacheArtifact({files,artifact,run,jobs,runId,commit,now=Date.now()}){
- const job=execution(run,jobs,runId,commit)
+export function readFcfHistoryCacheArtifact({files,artifact,run,jobs,runId,commit,expectedCacheKey,now=Date.now()}){
+ if(!FCF_HISTORY_CACHE_KEYS.includes(expectedCacheKey)||run?.display_title!==`FCF history cache-export ${expectedCacheKey}`)fail('explicit reviewed dispatch cache key required')
+ const cacheKey=expectedCacheKey,job=execution(run,jobs,runId,commit)
  if(!artifact||!id(artifact.id)||!/^sha256:[a-f0-9]{64}$/.test(artifact.digest??'')||artifact.name!==`fcf-history-cache-${runId}-${run.run_attempt}`||!Number.isSafeInteger(artifact.size)||artifact.size<1||artifact.size>100*1024*1024||!(files instanceof Map)||files.size!==721||!Buffer.isBuffer(files.get('manifest.json'))||files.get('manifest.json').length>2*1024*1024)fail('exact verified cache artifact identity/member set required')
  let m
  try{m=JSON.parse(files.get('manifest.json').toString('utf8'))}catch{fail('invalid cache manifest')}

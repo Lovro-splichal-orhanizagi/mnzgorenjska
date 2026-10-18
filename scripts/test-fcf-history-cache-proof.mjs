@@ -19,7 +19,7 @@ function fixture(){
  files.set('manifest.json',Buffer.from(JSON.stringify(manifest)))
  const run={id:123,run_attempt:1,repository:{full_name:'Lovro-splichal-orhanizagi/mnzgorenjska'},path:'.github/workflows/uvoz-fcf-zgodovina.yml',event:'workflow_dispatch',head_branch:'main',head_sha:commit,status:'completed',conclusion:'success'}
  const jobs=[{id:456,run_id:123,run_attempt:1,head_sha:commit,name:'cache-export',status:'completed',conclusion:'success',steps:['Restore only the reviewed exact cache','Export only the three fixed blocks with original lineage','Retain authenticated bounded cache evidence'].map(name=>({name,status:'completed',conclusion:'success'}))}]
- return{files,manifest,run,jobs,runId,commit,artifact:{id:'789',digest,name:'fcf-history-cache-123-1',size:1234},now}
+ return{files,manifest,run:{...run,display_title:`FCF history cache-export ${key}`},jobs,runId,commit,expectedCacheKey:key,artifact:{id:'789',digest,name:'fcf-history-cache-123-1',size:1234},now}
 }
 function read(f){assert.equal(typeof proof.readFcfHistoryCacheArtifact,'function','authenticated cache proof reader must exist');return proof.readFcfHistoryCacheArtifact(f)}
 function edit(f,change){change(f.manifest);f.files.set('manifest.json',Buffer.from(JSON.stringify(f.manifest)))}
@@ -32,7 +32,7 @@ test('authenticated cache reader parses actual bytes with the existing FCF heade
  assert.equal(result.sourceFetchTime,null)
 })
 for(const[name,mutate]of[
- ['mixed attempt job',f=>f.jobs[0].run_attempt=2],['missing job attempt',f=>delete f.jobs[0].run_attempt],['wrong workflow',f=>f.run.path='.github/workflows/ci.yml'],['wrong ref',f=>f.run.head_branch='feature'],['wrong commit',f=>f.run.head_sha='b'.repeat(40)],['failed export',f=>f.jobs[0].steps[1].conclusion='failure'],['duplicate job',f=>f.jobs.push({...f.jobs[0]})],['wrong artifact attempt',f=>f.artifact.name='fcf-history-cache-123-2'],
+ ['wrong chosen input',f=>f.expectedCacheKey='zapisniki-ES-k1od1-39053159080-1'],['missing chosen input',f=>delete f.expectedCacheKey],['wrong actual dispatch key',f=>f.run.display_title='FCF history cache-export other-key'],['mixed attempt job',f=>f.jobs[0].run_attempt=2],['missing job attempt',f=>delete f.jobs[0].run_attempt],['wrong workflow',f=>f.run.path='.github/workflows/ci.yml'],['wrong ref',f=>f.run.head_branch='feature'],['wrong commit',f=>f.run.head_sha='b'.repeat(40)],['failed export',f=>f.jobs[0].steps[1].conclusion='failure'],['duplicate job',f=>f.jobs.push({...f.jobs[0]})],['wrong artifact attempt',f=>f.artifact.name='fcf-history-cache-123-2'],
  ['fallback cache',f=>edit(f,m=>m.cache.matchedKey=key+'-fallback')],['forged capture time',f=>edit(f,m=>m.sourceFetchTime='2026-10-18T14:00:00Z')],['changed extraction commit',f=>edit(f,m=>m.extraction.commit='b'.repeat(40))],
  ['missing raw',f=>f.files.delete('acta-4116314.html')],['extra file',f=>f.files.set('extra.json',Buffer.from('{}'))],['duplicate descriptor',f=>edit(f,m=>m.files[1]={...m.files[0]})],['missing descriptor',f=>edit(f,m=>m.files.pop())],['changed bytes',f=>f.files.set('acta-4116314.html',Buffer.from('changed'))],['future original mtime',f=>edit(f,m=>m.files[1].cachedMtime='2099-01-01T00:00:00Z')],['foreign raw route',f=>{const body=html(4116315,'es-ct-tercera-g2',16);f.files.set('acta-4116314.html',body);edit(f,m=>Object.assign(m.files.find(x=>x.id==='4116314'),{byteCount:body.length,sha256:createHash('sha256').update(body).digest('hex')}))}],
 ])test(`authenticated cache proof refuses ${name}`,()=>{const f=fixture();mutate(f);assert.throws(()=>read(f),/FCF_CACHE/)})
@@ -49,3 +49,10 @@ test('compiler binds actual DB native inventory to authenticated parsed headers 
 for(const[name,mutate]of[
  ['missing calendar flag',f=>delete f.databaseInventory.groups[0].sezona_koledarska],['wrong competition key',f=>f.databaseInventory.groups[0].id=999],['wrong actual source code',f=>f.databaseInventory.groups[0].sourceLeagueCode='4109387-4109626'],['stale DB inventory',f=>f.databaseInventory.capturedUTC='2026-10-17T00:00:00Z'],['wrong policy',f=>f.databaseInventory.groups[0].source_policy='other'],['partial DB inventory',f=>f.databaseInventory.groups.pop()],
 ])test(`compiler refuses ${name} without source access`,()=>{const f=inventoryFixture();mutate(f);assert.equal(typeof proof.compileFcfFinalAuditInventory,'function');assert.throws(()=>proof.compileFcfFinalAuditInventory(f),/FCF_CACHE/)})
+
+test('authenticated proof binds an explicitly selected reviewed candidate instead of a fixed active-only key',()=>{
+ const f=fixture(),candidate='zapisniki-ES-k1od1-39053159080-1'
+ f.expectedCacheKey=candidate;f.run.display_title=`FCF history cache-export ${candidate}`
+ edit(f,m=>{m.cache.requestedKey=candidate;m.cache.matchedKey=candidate})
+ assert.equal(read(f).groups[0].cache[0].lineage.cacheKey,candidate)
+})
