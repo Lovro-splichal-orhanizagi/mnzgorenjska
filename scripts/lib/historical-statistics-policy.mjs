@@ -79,7 +79,9 @@ const IDENTITY_FIELDS = [
  * firstFantasyPlayedOn is the verified first fantasy fixture date, never today's date.
  */
 export function classifyHistoricalStatistics({ competition, fixture, rawSha256, policy }) {
-  const candidate = policy ?? getHistoricalStatisticsPolicy(competition?.slug)
+  const identityPolicy = registry.policies.find(known => known.provider === competition?.source && known.entries.some(entry => entry.sourceMatchId === fixture?.sourceMatchId))
+  const candidate = policy ?? getHistoricalStatisticsPolicy(competition?.slug) ?? identityPolicy
+  if (identityPolicy && candidate?.id !== identityPolicy.id) throw new Error('historical policy: registered provider/match belongs to another competition policy')
   if (!candidate) {
     if (competition?.source_policy != null) throw new Error('historical policy: unknown competition/policy opt-in')
     return { kind: 'normal' }
