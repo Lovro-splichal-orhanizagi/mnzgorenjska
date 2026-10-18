@@ -19,8 +19,10 @@ const OSNOVNI = 'https://semafor.hns.family'
 const GLAVE = { 'User-Agent': 'SLFF fantasy (https://slff.eu)' }
 const SEZONA = '2026/2027'
 const ARHIV = '2025/2026'
+// "MŽNL" (međužupanijska liga) ni izpuščena: MŽNL Vinkovci-Osijek in MŽNL
+// SB-PŽ sta članski ligi; mladinske MŽNL ujame že kadet/pionir/U-.
 const IZPUSTI =
-  /pionir|kadet|junior|žen|hnlž|nlž|futsal|mal[io]m? nogomet|hmnl|žmnl|veteran|\bw?u\s*-?\s*\d|karlić|limać|^m?žnl? |mžnl|žml|kup\b|cup\b|superkup|limač|zagič|djevoj|početni|prednatjecat|ulaznih|pilot|prstić|zagić|tići|papalin|pilić|picek|pijetl|špiget|mladež|kvalifikac|popun|doigravanj|turnir|\bpio\b|^hnk|žnml|supersport/i
+  /pionir|kadet|junior|žen|hnlž|nlž|futsal|mal[io]m? nogomet|hmnl|žmnl|veteran|\bw?u\s*-?\s*\d|karlić|limać|žml|kup\b|cup\b|superkup|limač|zagič|djevoj|početni|prednatjecat|ulaznih|pilot|prstić|zagić|tići|papalin|pilić|picek|pijetl|špiget|mladež|kvalifikac|popun|doigravanj|turnir|\bpio\b|^hnk|žnml|supersport/i
 
 const arg = (ime) => {
   const i = process.argv.indexOf(`--${ime}`)
