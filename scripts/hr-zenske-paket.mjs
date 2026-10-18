@@ -8,6 +8,7 @@ import {parseHnsWomenReport,HNS_WOMEN_CLUBS} from './viri/hns-zenske-quality.mjs
 import {hnsWomenRoundCutoff} from './hr-zenske-deadline.mjs'
 import {getHistoricalStatisticsPolicy,historicalStatisticsPolicySha256} from './lib/historical-statistics-policy.mjs'
 import {zaprtje} from './odtis-kode.mjs'
+import {hnsWomenPersistedEvidence} from './hr-zenske-dokazi.mjs'
 export const HNS_WOMEN_SLUG='hr-prva-hnlz'
 const fail=message=>{throw Error(`HNS women packet: ${message}`)}
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex')
@@ -93,7 +94,7 @@ export function buildHnsWomenPacket({documents,sourceBudget,sourceCommit,firstFa
  const normal=reports.filter(r=>r.statisticsStatus==='available'),pending=current.fixtures.filter(f=>f.krog<firstFantasyRound&&!f.izid&&!f.postponed).map(f=>f.id).sort()
  const manifest={version:1,slug:HNS_WOMEN_SLUG,source:'hns',sourcePolicy:policy.sourcePolicy,dateOnlyDeadlinePolicy:'midnight-local-v1',sourceCommit,parserSha256:hnsWomenParserSha256(),
   statisticsPolicy:{id:policy.id,sha256:historicalStatisticsPolicySha256(policy),firstFantasyPlayedOn:future.playedOn},sourceBudget:{...sourceBudget},firstFantasyRound,future,
-  documents:checked.map(({body,kind,id,...record})=>record),schedules,reports,
+  documents:checked.map(({body,kind,id,...record})=>record),schedules,reports,persistedFixtures:hnsWomenPersistedEvidence({schedules,reports}),
   coverage:{fixtureCount:131,archiveComplete:75,currentPublishedPlayed:reports.length-75,normalComplete:normal.length,unavailableHistorical:3,pending:131-reports.length,explicitPostponed:current.fixtures.filter(f=>f.postponed).length,eligibleCurrentClubs:new Set(normal.filter(r=>r.fixture.sourceCompetitionId==='114471579').flatMap(r=>[r.fixture.homeSourceClubId,r.fixture.awaySourceClubId])).size},
   releaseBlockingPendingIds:pending,releaseReady:pending.length===0,currentPhase:'initial14rounds_only',laterPhaseHandover:'requires separate published-phase review',
   nativeReportIdentity:'capture request URL plus original-byte receipt; HNS raw report does not embed native match ID'}
