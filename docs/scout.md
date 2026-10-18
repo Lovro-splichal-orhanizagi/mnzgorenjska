@@ -294,7 +294,10 @@ spec `docs/superpowers/specs/2026-10-18-scout-klub-design.md`): pregled
 lastnega kluba — liga je odrasla liga z največ tekmami kluba v tekoči
 sezoni (šele brez njih `scout.liga_kluba`) — mesto, oblika zadnjih 5, Elo
 letos in lani, moč lige v državi, uspešnost ekipe proti povprečju lige (javne tekme tekoče sezone,
-`sezona_lige`), kader iz `scout.kazalniki` (le `scout.vidni`), globina po
+`sezona_lige`), kader iz `scout.kazalniki` (le `scout.vidni`; lastni klub —
+ne administrator pri tujem — vidi še svoje igralce z mladinsko vrstico z
+oznako U19, le javna dejstva iz `appearances`, brez ugovora, anonimiziranih
+in povezave na profil, migracija 20261018150000), globina po
 poziciji (izračuna vmesnik) in vrzeli kluba. Klic gre skozi `scout.dostop`
 (`dnevnik.vrsta = 'klub'`). Administrator SLFF lahko z `?team=` odpre
 katerikoli klub države naročnine (preizkus na pravih klubih); drugim tuj klub

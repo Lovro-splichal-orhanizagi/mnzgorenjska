@@ -186,10 +186,17 @@ export function PregledKlubaView({ p, razvrsti, setRazvrsti, onIzbira }: {
                   {kader.map((k) => (
                     <tr key={k.player_id} className="group hover:bg-slate-800">
                       <td className="sticky left-0 whitespace-nowrap bg-slate-900 px-3 py-2 group-hover:bg-slate-800">
-                        <Link to={`/player/${k.player_id}`} className="font-semibold text-slate-100 hover:text-gnl-300">{k.ime}</Link>
+                        {k.mladi ? (
+                          <span className="font-semibold text-slate-100">
+                            {k.ime}{' '}
+                            <span title={t('klub.mladiOpis')} className="znacka bg-slate-700 text-slate-200">{t('klub.mladi')}</span>
+                          </span>
+                        ) : (
+                          <Link to={`/player/${k.player_id}`} className="font-semibold text-slate-100 hover:text-gnl-300">{k.ime}</Link>
+                        )}
                       </td>
                       <td className="px-3 py-2">
-                        <span className={`znacka poz-${k.skupina}`}>{t(`poz.${k.skupina}` as Kljuc)}</span>
+                        {k.skupina && <span className={`znacka poz-${k.skupina}`}>{t(`poz.${k.skupina}` as Kljuc)}</span>}
                       </td>
                       {STOLPCI.map(([kl, , f]) => (
                         <td key={kl} className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-slate-300">{f(k)}</td>
@@ -199,6 +206,7 @@ export function PregledKlubaView({ p, razvrsti, setRazvrsti, onIzbira }: {
                 </tbody>
               </table>
             </div>
+            {p.kader.some((k) => k.mladi) && <p className="text-xs text-slate-500">{t('klub.mladi')}: {t('klub.mladiOpis')}</p>}
             <p className="text-xs text-slate-500">{t('iskanje.opomba')}</p>
           </section>
 
