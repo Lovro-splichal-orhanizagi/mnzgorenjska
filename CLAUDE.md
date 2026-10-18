@@ -387,6 +387,18 @@ poizvedbo pred združitvijo izmeri na produkciji. Nizi so v
 GoTrue, funkcije in Stripe so ročni. Vse: `docs/scout.md` (*Aplikacija
 scout.slff.eu*, *Objava aplikacije*).
 
+## SLFF Trgovina (shop.slff.eu)
+
+Spletna trgovina z izdelki SLFF (lastna zaloga, Pošta Slovenije, EU-27,
+prodajalec Space Guardian): aplikacija `shop/` (`dev:shop`, `build:shop`,
+`smoke:shop`), zaprta shema `trgovina` (brskalnik le `trgovina_katalog`,
+`trgovina_izdelek`, `trgovina_moja_narocila`; admin `trgovina_admin_*` z
+`is_admin()`), Stripe `metadata.app = slff-shop` (`trgovina-nakup`,
+`stripe-webhook/trgovina.ts`, `trgovina-posta`). Cene v centih **z DDV**;
+zaloga se odšteje le ob plačilu, rezervacija drži 35 min. CI jo objavi ob
+`SHOP_OBJAVA=1`; funkcije, Stripe tarife in živi ključ so ročni. Vse:
+`docs/trgovina.md`.
+
 ## Poti
 
 Poti so **angleške** (`/my-team`, `/players`, `/match/:id` …), ker jih vidi

@@ -238,6 +238,13 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Zawodnik z przejętym profilem może dodać, że jest otwarty na transfer, rok urodzenia, preferowane regiony i zgodę na kontakt. To zgoda (art. 6 ust. 1 lit. a RODO): widzą ją tylko kluby w Scout, można ją w każdej chwili wycofać na profilu, a po wycofaniu usuwamy dane. Klub pisze do zawodnika tylko przez Scout i nie widzi jego adresu e-mail.',
     scoutUgovor:
       'Sprzeciw: na przejętym profilu kliknij Ukryj mnie w Scout albo napisz na <eposta>info@slff.eu</eposta> z linkiem do strony zawodnika. W ciągu 14 dni ukryjemy zawodnika w Scout we wszystkich naszych ligach danego kraju, także przy późniejszych importach. W grze fantasy zostaje.',
+    trgovinaNaslov: 'Sklep SLFF (shop.slff.eu)',
+    trgovinaKaj:
+      'Przy zakupie przetwarzamy imię i nazwisko, e-mail, adres dostawy, kupione produkty i kwoty, a jeśli jesteś zalogowany, także twoje konto SLFF. Płatność obsługuje Stripe: danych karty nie widzimy i nie przechowujemy. Imię i nazwisko oraz adres otrzymuje Pošta Slovenije w celu doręczenia. Aby ograniczyć nadużycia, przy niedokończonym zakupie tymczasowo przechowujemy skrót (nieodwracalny) adresu IP; jest usuwany po zapłacie lub wygaśnięciu zakupu.',
+    trgovinaPodlaga:
+      'Podstawą prawną jest wykonanie umowy (art. 6 ust. 1 lit. b RODO) i obowiązki prawne (księgowość, podatki), a dla skrótu adresu IP prawnie uzasadniony interes w zapobieganiu nadużyciom (art. 6 ust. 1 lit. f RODO). Administratorem jest SPACE GUARDIAN, računalniško programiranje, d.o.o.',
+    trgovinaHramba:
+      'Dane o zamówieniach i fakturach przechowujemy tak długo, jak wymagają tego ustawa o VAT i przepisy rachunkowe (10 lat po roku wystawienia faktury). E-mail do powiadomień o zamówieniu wykorzystujemy tylko dla tego zamówienia. W sprawie dostępu, sprostowania lub sprzeciwu napisz na <eposta>info@slff.eu</eposta>.',
   },
   klubskiRacun: {
     naslov: 'Oficjalne konto klubu',

@@ -245,6 +245,13 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Hráč s převzatým profilem může přidat, že je otevřený přestupu, rok narození, preferované regiony a povolení ke kontaktu. Jde o souhlas (článek 6 odst. 1 písm. a) GDPR): vidí ho jen kluby ve Scoutu, lze ho kdykoli odvolat na profilu a po odvolání údaje smažeme. Klub píše hráči jen přes Scout a jeho e-mailovou adresu nevidí.',
     scoutUgovor:
       'Námitka: na převzatém profilu klikni Skryj mě ze Scoutu nebo napiš na <eposta>info@slff.eu</eposta> s odkazem na stránku hráče. Do 14 dnů hráče skryjeme ze Scoutu ve všech našich soutěžích dané země, i při pozdějších importech. Ve fantasy hře zůstává.',
+    trgovinaNaslov: 'SLFF Obchod (shop.slff.eu)',
+    trgovinaKaj:
+      'Při nákupu zpracováváme jméno, e-mail, doručovací adresu, zakoupené produkty a částky, a pokud jsi přihlášen, i tvůj účet SLFF. Platbu provádí Stripe: údaje o kartě nevidíme ani neukládáme. Jméno a adresu dostane k doručení Pošta Slovenije. Pro omezení zneužití u nedokončeného nákupu dočasně uchováváme hash (nevratný) IP adresy; smaže se po zaplacení nebo vypršení nákupu.',
+    trgovinaPodlaga:
+      'Právním základem je plnění smlouvy (článek 6 odst. 1 písm. b) GDPR) a zákonné povinnosti (účetnictví, daně), u hashe IP adresy oprávněný zájem na předcházení zneužití (článek 6 odst. 1 písm. f) GDPR). Správcem je SPACE GUARDIAN, računalniško programiranje, d.o.o.',
+    trgovinaHramba:
+      'Údaje o objednávkách a fakturách uchováváme, dokud to vyžaduje zákon o DPH a účetní předpisy (10 let po roce vystavení faktury). E-mail pro oznámení o objednávce použijeme jen pro tuto objednávku. O přístup, opravu nebo námitku požádej na <eposta>info@slff.eu</eposta>.',
   },
   klubskiRacun: {
     naslov: 'Oficiální účet klubu',

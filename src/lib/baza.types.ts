@@ -9054,6 +9054,63 @@ export type Database = {
             }
             Returns: number
           }
+      trgovina_admin_izdelki: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      trgovina_admin_narocila: { Args: { p_stanje?: string }; Returns: Json }
+      trgovina_admin_narocilo: { Args: { p_id: number }; Returns: Json }
+      trgovina_admin_poslano: {
+        Args: { p_narocilo: number; p_sledilna: string }
+        Returns: Json
+      }
+      trgovina_admin_shrani_izdelek: { Args: { p: Json }; Returns: number }
+      trgovina_admin_shrani_razlicico: { Args: { p: Json }; Returns: number }
+      trgovina_iz_placila: {
+        Args: {
+          p_checkout: string
+          p_ddv: number
+          p_dostava: number
+          p_dostava_kljuc: string
+          p_email: string
+          p_ime: string
+          p_naslov: Json
+          p_payment_intent: string
+          p_postavke: number
+          p_skupaj: number
+        }
+        Returns: string
+      }
+      trgovina_izdelek: { Args: { p_slug: string }; Returns: Json }
+      trgovina_katalog: { Args: Record<PropertyKey, never>; Returns: Json }
+      trgovina_moja_narocila: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      trgovina_narocilo_seje: {
+        Args: { p_checkout: string; p_odjemalec: string; p_user: string }
+        Returns: Json
+      }
+      trgovina_narocilo_za_posto: { Args: { p_id: number }; Returns: Json }
+      trgovina_potekla: { Args: { p_checkout: string }; Returns: string }
+      trgovina_pripravi_shrambo: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      trgovina_rezerviraj: {
+        Args: {
+          p_jezik: string
+          p_odjemalec: string
+          p_postavke: Json
+          p_user: string
+        }
+        Returns: Json
+      }
+      trgovina_sprosti: { Args: { p_narocilo: number }; Returns: string }
+      trgovina_vezi_sejo: {
+        Args: { p_checkout: string; p_narocilo: number }
+        Returns: undefined
+      }
       tuja_postava: {
         Args: { p_round: number; p_team: number }
         Returns: {

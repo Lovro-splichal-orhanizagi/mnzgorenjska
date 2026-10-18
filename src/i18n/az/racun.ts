@@ -244,6 +244,13 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Profili götürülmüş oyunçu transferə açıq olduğunu, doğum ilini, üstünlük verdiyi regionları və onunla əlaqə saxlamağa icazəni əlavə edə bilər. Bu, razılıqdır (GDPR, maddə 6(1)(a)): onu yalnız Scout-dakı klublar görür, profildə istənilən vaxt geri götürmək olar və geri götürüləndə məlumatları silirik. Klub oyunçuya yalnız Scout vasitəsilə yazır və onun e-poçt ünvanını görmür.',
     scoutUgovor:
       'Etiraz: götürülmüş profildə Məni Scout-dan gizlət düyməsinə klik et və ya oyunçu səhifəsinin keçidi ilə <eposta>info@slff.eu</eposta> ünvanına yaz. 14 gün ərzində oyunçunu həmin ölkədəki bütün liqalarımızda, gələcək idxallar daxil olmaqla, Scout-dan gizlədirik. Oyunçu fantasy oyununda qalır.',
+    trgovinaNaslov: 'SLFF Mağaza (shop.slff.eu)',
+    trgovinaKaj:
+      'Alış zamanı adını, e-poçtunu, çatdırılma ünvanını, alınan məhsulları və məbləğləri, daxil olmusansa SLFF hesabını da emal edirik. Ödənişi Stripe həyata keçirir: kart məlumatlarını görmürük və saxlamırıq. Ad və ünvan çatdırılma üçün Pošta Slovenije-yə verilir. Sui-istifadəni məhdudlaşdırmaq üçün tamamlanmamış alışda IP ünvanının geri qaytarılmaz heşini müvəqqəti saxlayırıq; ödəniş edildikdə və ya alışın müddəti bitdikdə silinir.',
+    trgovinaPodlaga:
+      'Hüquqi əsas müqavilənin icrası (GDPR maddə 6(1)(b)) və qanuni öhdəliklərdir (mühasibat, vergilər), IP ünvanının heşi üçün isə sui-istifadənin qarşısını almaqda qanuni maraqdır (GDPR maddə 6(1)(f)). Nəzarətçi SPACE GUARDIAN, računalniško programiranje, d.o.o. şirkətidir.',
+    trgovinaHramba:
+      'Sifariş və hesab-faktura məlumatlarını ƏDV qanunu və mühasibat qaydalarının tələb etdiyi müddətdə saxlayırıq (hesab-fakturanın verildiyi ildən sonra 10 il). Sifariş bildirişləri üçün e-poçt yalnız həmin sifariş üçün istifadə olunur. Giriş, düzəliş və ya etiraz üçün <eposta>info@slff.eu</eposta> ünvanına yaz.',
   },
   klubskiRacun: {
     naslov: 'Rəsmi klub hesabı',

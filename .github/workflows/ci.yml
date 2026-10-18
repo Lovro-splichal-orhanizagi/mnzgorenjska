@@ -121,6 +121,13 @@ jobs:
           VITE_SUPABASE_URL: https://primer.supabase.co
           VITE_SUPABASE_ANON_KEY: sb_publishable_ci_ni_pravi_kljuc
 
+      # SLFF Trgovina (shop/): sveženj in izris strani brez baze.
+      - name: Trgovina
+        run: npm run build:shop && npm run smoke:shop
+        env:
+          VITE_SUPABASE_URL: https://primer.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_ci_ni_pravi_kljuc
+
   varnost:
     if: ${{ !inputs.diagnostika }}
     name: Pravice in roki v svezi bazi
@@ -444,4 +451,59 @@ jobs:
             sleep 15
           done
           echo "NAPAKA: scout.slff.eu po 5 minutah ne streže $GITHUB_SHA (Caddy blok, DNS, /srv/slff-scout?)."
+          exit 1
+
+  # SLFF Trgovina (shop.slff.eu): isti tok kot objavi-vm, svoja mapa
+  # /srv/slff-shop. Teče šele, ko je strežnik pripravljen in lastnik nastavi
+  # spremenljivko repozitorija SHOP_OBJAVA=1 (docs/trgovina.md, Objava).
+  objavi-shop:
+    name: Objava Trgovine na Hetzner VM
+    needs: [preveri, varnost, migracije]
+    if: inputs.diagnostika != true && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && vars.SHOP_OBJAVA == '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency: objava-shop
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+
+      - name: Build
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_ANON_KEY"
+          npm run build:shop
+
+      - name: Prenos in preklop
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          CILJ=/srv/slff-shop/releases/$GITHUB_SHA
+          rsync -a --delete dist-shop/ "deploy@2.31.6.53:$CILJ/"
+          # mv -T je atomaren; obdrži zadnjih 5 izdaj. Trgovina je en sveženj brez
+          # kosov, zato sredstev starih izdaj ne prenašamo (kot pri slff.eu).
+          ssh deploy@2.31.6.53 "ln -sfn $CILJ /srv/slff-shop/current.nov && mv -Tf /srv/slff-shop/current.nov /srv/slff-shop/current \
+            && cd /srv/slff-shop/releases && ls -1t | tail -n +6 | xargs -r rm -rf"
+
+      - name: Je nova različica v zraku?
+        run: |
+          for i in $(seq 1 20); do
+            NAJDEN=$(curl -sS -m 20 -H 'Cache-Control: no-cache' "https://shop.slff.eu/?ci=$(date +%s)" \
+              | grep -o 'name="slff-commit" content="[a-f0-9]*"' | grep -o '[a-f0-9]\{40\}' || true)
+            if [ "$NAJDEN" = "$GITHUB_SHA" ]; then echo "OK — shop.slff.eu streže $NAJDEN"; exit 0; fi
+            echo "  poskus $i/20: v zraku je ${NAJDEN:-<brez znamke>}"
+            sleep 15
+          done
+          echo "NAPAKA: shop.slff.eu po 5 minutah ne streže $GITHUB_SHA (Caddy blok, DNS, /srv/slff-shop?)."
           exit 1

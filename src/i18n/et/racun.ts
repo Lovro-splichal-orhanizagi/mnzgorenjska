@@ -242,6 +242,13 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Ülevõetud profiiliga mängija saab lisada, et ta on valmis üleminekuks, oma sünniaasta, soovitud piirkonnad ja loa temaga ühendust võtta. See on nõusolek (GDPR artikli 6 lõike 1 punkt a): seda näevad ainult Scouti klubid, selle saab igal ajal profiilil tagasi võtta ja tagasivõtmisel kustutame andmed. Klubi kirjutab mängijale ainult Scouti kaudu ega näe tema e-posti aadressi.',
     scoutUgovor:
       'Vastuväide: klõpsa ülevõetud profiilil Peida mind Scoutist või kirjuta aadressile <eposta>info@slff.eu</eposta> ja lisa link mängija lehele. 14 päeva jooksul peidame mängija Scoutist kõigis meie selle riigi liigades, ka hilisematel importidel. Fantaasiamängus jääb ta alles.',
+    trgovinaNaslov: 'SLFF pood (shop.slff.eu)',
+    trgovinaKaj:
+      'Ostu korral töötleme nime, e-posti, tarneaadressi, ostetud tooteid ja summasid ning sisselogimisel ka sinu SLFF-i kontot. Makset töötleb Stripe: kaardiandmeid me ei näe ega säilita. Nime ja aadressi saab kohaletoimetamiseks Pošta Slovenije. Kuritarvituste piiramiseks säilitame lõpetamata ostu korral ajutiselt IP-aadressi räsi (pöördumatu); see kustutatakse makse või ostu aegumise korral.',
+    trgovinaPodlaga:
+      'Õiguslik alus on lepingu täitmine (GDPR artikli 6 lõike 1 punkt b) ja seadusest tulenevad kohustused (raamatupidamine, maksud), IP-aadressi räsi puhul õigustatud huvi kuritarvituste ennetamiseks (GDPR artikli 6 lõike 1 punkt f). Vastutav töötleja on SPACE GUARDIAN, računalniško programiranje, d.o.o.',
+    trgovinaHramba:
+      'Tellimuste ja arvete andmeid säilitame nii kaua, kui käibemaksuseadus ja raamatupidamisnõuded nõuavad (10 aastat pärast arve väljastamise aastat). Tellimuse teavituste e-posti kasutame ainult selle tellimuse jaoks. Juurdepääsuks, parandamiseks või vastuväiteks kirjuta <eposta>info@slff.eu</eposta>.',
   },
   klubskiRacun: {
     naslov: 'Klubi ametlik konto',
