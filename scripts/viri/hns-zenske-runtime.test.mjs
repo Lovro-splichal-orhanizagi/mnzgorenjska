@@ -43,11 +43,11 @@ test('actual main102 replay uses strict99normal appearances and skips3installed 
  for(const code of ['108043476','114471579']){
   const reports=await p.zapisniki(code,read)
   assert.equal(reports.length,code==='108043476'?75:24)
-  for(const r of reports)assert.deepEqual(p.nastopi(r.z),byID.get(r.id).n)
+  for(const r of reports){assert.deepEqual(p.nastopi(r.z),byID.get(r.id).n);assert.deepEqual(p.matchSourceFields(r.z),{source_round:r.z.sourceRound,source_phase:r.z.sourcePhase})}
  }
  assert.equal(calls.length,101);assert.ok(binding().markers.every(m=>!calls.some(c=>c.url.includes(`/utakmice/${m.reportId}/`))))
  const rounds=await p.razporedVseStrani('114471579',read)
- assert.equal(rounds.length,14);assert.equal(rounds.reduce((n,r)=>n+r.tekme.length,0),56)
+ assert.equal(rounds.length,14);assert.equal(rounds[0].hnsWomenSource.rawSha256,(await import('node:crypto')).createHash('sha256').update(documents.get('https://semafor.hns.family/natjecanja/114471579/x/')).digest('hex'));assert.equal(rounds[0].hnsWomenSource.fixtures.length,4);assert.equal(rounds.reduce((n,r)=>n+r.tekme.length,0),56)
  assert.equal(rounds.flatMap(r=>r.tekme).filter(t=>t.historicalMarker).length,3)
  assert.equal(calls.length,102) // schedule only, no 3:0 report guessing
  const selected=await p.posamezniZapisnik('114471579',{id:'114471616'})(read)
@@ -62,4 +62,10 @@ test('retained15:15R8 delta preserves published keeper-role blocker and clean ne
  assert.throws(()=>parse('114471645'),/explicit keeper coverage missing/)
  const clean=parse('114471643');assert.equal(clean.appearances.length,30);assert.equal(clean.z.goli.length,4)
  assert.deepEqual(fixtures.filter(f=>f.krog<9&&!f.izid&&!f.postponed).map(f=>f.id).sort(),['114471642','114471644'])
+})
+
+test('retained15:55publication result alone never supplies missing full report or keeper facts',{skip:!captureDir||!process.env.SLFF_HNS_WOMEN_PUBLICATION_FILE},async()=>{
+ const {hnsWomenScheduleFixtures}=await import('../hr-zenske-paket.mjs'),{parseHnsWomenReport}=await import('./hns-zenske-quality.mjs'),fixtures=hnsWomenScheduleFixtures(readFileSync(process.env.SLFF_HNS_WOMEN_PUBLICATION_FILE,'utf8'),'114471579'),fixture=fixtures.find(f=>f.id==='114471644')
+ assert.ok(fixture.izid);assert.equal(fixtures.find(f=>f.id==='114471642').izid,null)
+ assert.throws(()=>parseHnsWomenReport(readFileSync(`${captureDir}/publication-1555-match-114471644.html`,'utf8'),{competition,fixture,sourceCompetitionId:'114471579'}),/full report required/)
 })

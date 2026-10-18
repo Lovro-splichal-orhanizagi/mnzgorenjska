@@ -170,3 +170,53 @@ najprej brez `pisi`, po želji `tekmovanje`. Klub brez grba ima na Semaforju
 `logo nologo` brez slike in ostane pri grbu iz začetnic. Načrt (brez
 `--pisi`) dela tudi z javnim anon ključem. Po uvozu nove hrvaške lige ga
 poženi znova.
+
+## Prva HNLŽ: zaprt začetni uvoz
+
+`hr-prva-hnlz` uporablja ločen, strog adapter `hr-hnlz-v1`: tekoči vir
+`114471579`, arhiv `108043476` (vseh 75 tekem) in prvih 14 tekočih krogov.
+Arhivske faze se preslikajo brez izgube izvornega kroga ali faze. Osem
+izvornih klubskih ID-jev se pred uvozom preveri prek servisnega konteksta;
+sprememba prikaznega imena ne ustvari novega kluba. Organizacija `1274` ostane
+natančno tista organizacija, ki jo navaja preverjeni vir.
+
+Samo zgodovinski zapisniki `114471617`, `114471627` in `114471629` imajo
+izrecno nedostopno individualno statistiko. Uradni rezultat ostane, nastopi
+in goli se zanje ne ustvarijo. Noben prihodnji zapisnik ne dobi te izjeme.
+Zajeti dokazi 18. oktobra 2026 še blokirajo izdajo: pri `114471645` vloga
+vratarke od 86. do 90. minute ni objavljena, `114471644` ima le rezultat brez
+polnega zapisnika, `114471642` pa še nima rezultata. Splošni seznam igralk ne
+zamenja podatka o vlogi na konkretni tekmi.
+
+Začetni uvoz vodi samo `uvoz-hr-zenske.yml`, z enako skupino hkratnosti kot
+ročni uvoz te lige. Običajni `uvoz-lige.yml` ta slug zavrne. Bralni posel
+brez ključa baze preveri natančen pregledani commit na `main`, draft izdajo
+v tem repozitoriju, ID sredstva, SHA arhiva in manifesta ter vse izvorne
+bajte. Arhiv sme vsebovati le `manifest.json` in imenovane HTML dokumente v
+`documents/`; poti navzgor, povezave, podvojene in prevelike datoteke odpadejo.
+Ime sredstva je `hns-women-<pregledani SHA>.tar.gz`; arhiv se naredi iz korena
+že preverjenega paketa, na primer:
+
+```bash
+tar -czf hns-women-<pregledani-SHA>.tar.gz -C <paket> manifest.json documents
+```
+
+Pisni posel ponovno preveri shranjeni arhiv, nato atomsko pripravi neaktivno
+ligo, 40 objavljenih krogov in tri oznake nedostopne statistike. Način `import`
+uvozi arhiv, tekoči razpored in stroge tekoče zapisnike ter zažene običajno
+oceno pozicij in cen. Vsak otrok teče z zaprtim prednalagalnikom:
+neznana HNS zahteva se zavrne, nikoli ne pade nazaj na živi vir. Izvorni časi
+zajema ostanejo nespremenjeni. Tudi neaktivni neposredni CLI zahteva tak
+preverjen paket z `releaseReady: true`.
+
+Neobjavljena ura začetka ostane `NULL`. Fantazijski rok za tak datum je
+00:00 v `Europe/Zagreb`, pri objavljeni uri pa velja šesturni odmik.
+Razpored piše kroge samo prek varovanega RPC: prihodnji rok sme premakniti
+le prej, zaklenjenega ali pretečenega pa ne odpre ponovno. Poznejša tekoča
+faza zahteva ločen pregled objavljenega vira.
+
+Ta checkpoint še nima kanonične preverbe podatkov po uvozu in atomskega
+vklopa. Delovni tok zato ne ponuja vklopa; migracija `20261018180300` se do
+zaključka tega dela in neodvisnega pregleda ne združi ali namesti. Paket s
+trenutnimi blokiranimi dokazi ostane `releaseReady: false` in se zavrne pred
+prvo zahtevo pisnega posla v bazo.

@@ -54,7 +54,7 @@ export function hnsWomenScheduleFixtures(html,code) {
  })
 }
 export function hnsWomenParserSha256() {
- const files=[...new Set(['scripts/hr-zenske-paket.mjs','scripts/uvoz-zapisnikov.mjs','scripts/uvoz-razporeda.mjs','scripts/viri/index.mjs','scripts/tekmovanje.mjs',
+ const files=[...new Set(['scripts/hr-zenske-paket.mjs','scripts/uvoz-zapisnikov.mjs','scripts/uvoz-razporeda.mjs','scripts/viri/index.mjs','scripts/tekmovanje.mjs','scripts/hr-zenske-import.mjs','scripts/klubi.mjs','scripts/hr-zenske-izdaja.mjs','scripts/hr-zenske-stage.py','.github/workflows/uvoz-hr-zenske.yml',
  ...zaprtje('scripts/viri/hns-zenske-runtime.mjs'),...zaprtje('scripts/hr-zenske-offline.mjs'),...zaprtje('scripts/viri/hns-zenske-quality.mjs'),...zaprtje('scripts/hr-zenske-deadline.mjs'),...zaprtje('scripts/lib/historical-statistics-import.mjs'),
  'scripts/policies/historical-statistics-exclusions.json','scripts/vzorci/hns-zenske-archive-phase-fixtures.json','scripts/vzorci/hns-zenske-current-fixtures.json'])].sort()
  const hash=createHash('sha256');for(const file of files)hash.update(file).update(readFileSync(file));return hash.digest('hex')

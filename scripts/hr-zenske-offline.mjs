@@ -17,6 +17,12 @@ export function createHnsWomenOfflineFetch(documents,originalFetch) {
  }
 }
 let active=null
+export function assertHnsWomenOfflineAuthority(competition) {
+ if(!active)fail('inactive HNS import requires a verified ready offline packet')
+ const m=active.manifest
+ if(competition.slug!==m.slug||competition.source!==m.source||competition.source_policy!==m.sourcePolicy||competition.source_league_code!=='114471579'||competition.date_only_deadline_policy!==m.dateOnlyDeadlinePolicy||competition.prvi_fantasy_krog!==m.firstFantasyRound||competition.firstFantasyPlayedOn!==m.statisticsPolicy.firstFantasyPlayedOn)fail('offline packet and prepared competition differ')
+ return m
+}
 export function hnsWomenOfflineDocument(url) {
  if(!active)return null
  const d=active.documents.find(d=>d.url===url||d.canonicalUrl===url)

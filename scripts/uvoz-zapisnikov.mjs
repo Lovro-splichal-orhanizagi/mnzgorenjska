@@ -802,6 +802,7 @@ for (const { id, z, url } of zapisniki) {
           played_on: z.datum,
           zapisnik_id: id,
           source_url: url,
+          ...(vir.matchSourceFields?.(z)??{}),
           // Tudi pri ponovnem uvozu mora stari zig izginiti PRED zamenjavo
           // nastopov, sicer spodletelo vstavljanje ostane videti uspesno.
           imported_at: null,

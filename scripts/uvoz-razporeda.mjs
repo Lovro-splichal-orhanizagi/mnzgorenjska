@@ -23,6 +23,7 @@ import { mapaKlubov } from './klubi.mjs'
 import { sifra } from './viri/zapisniki.mjs'
 import { razcleniRazpored, sezonaIz, oznakaBrezIzida, tekmaDrugegaKroga, odvecneVrsticePara, preberiKontumacije } from './razpored.mjs'
 import { rokKroga } from './razporedi.mjs'
+import {persistHnsWomenRound} from './hr-zenske-import.mjs'
 import { vseVrstice } from './strani.mjs'
 import { prenesiSPonovitvami, fetchZaBazo } from './prenos.mjs'
 import { preberiRezervo } from './viri/rezervni-predpomnilnik.mjs'
@@ -346,14 +347,17 @@ for (const k of veljavni) {
     .filter((t) => t.datum === datumKroga && t.ura)
     .map((t) => t.ura)
     .sort()[0]
-  const rok = rokKroga(datumKroga, uraKroga, pomakUr)
+  const rok = tekmovanje.source_policy==='hr-hnlz-v1'?null:rokKroga(datumKroga, uraKroga, pomakUr)
   // Vir brez datumov neodigranih krogov (fssid) krog z oceno označi; oznako
   // vidita rok in admin. Ostali viri stolpca ne pišejo.
   const ocena = vir.ocenjeniDatumi ? { datum_ocenjen: !!k.ocenjen } : {}
 
   const obstoj = obstojeciKrogi.get(k.stevilka)
   let krogId = obstoj?.id
-  if (!krogId) {
+  if(tekmovanje.source_policy==='hr-hnlz-v1') {
+    krogId=await persistHnsWomenRound(db,tekmovanje,k,pomakUr)
+    if(!obstoj)novihKrogov++
+  } else if (!krogId) {
     const { data, error } = await db
       .from('rounds')
       .insert({
@@ -498,6 +502,7 @@ for (const k of veljavni) {
         away_team_id: gostjeId,
         played_on: t.datum,
         source_url: url,
+        ...(vir.scheduleMatchSourceFields?.(t)??{}),
         kontumacija: !!t.kontumacija,
         vir_brez_izida: brezIzidaPriViru(t) === true,
         ...(t.kontumacija && t.izid ? { home_goals: t.izid.domaci, away_goals: t.izid.gostje } : {}),
