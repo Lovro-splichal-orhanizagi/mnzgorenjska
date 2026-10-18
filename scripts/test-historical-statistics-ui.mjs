@@ -6,7 +6,9 @@ import { createServer } from 'vite'
 import { chromium } from 'playwright'
 process.env.VITE_SUPABASE_URL = 'http://127.0.0.1:54329'
 process.env.VITE_SUPABASE_ANON_KEY = 'offline-ui-test'
-const server = await createServer({ optimizeDeps: { noDiscovery: true }, server: { host: '127.0.0.1', port: 5193, strictPort: true } })
+// Keep Vite's normal dependency discovery: a clean checkout must also bundle
+// CommonJS dependencies imported by React Router, without a prewarmed cache.
+const server = await createServer({ server: { host: '127.0.0.1', port: 5193, strictPort: true } })
 await server.listen()
 const browser = await chromium.launch({ headless: true, channel: process.env.UI_BROWSER_CHANNEL })
 const artifactDir = process.env.UI_ARTIFACT_DIR
