@@ -17,15 +17,19 @@ export function verifyArtifact(a,{runId,commit,name}){
 }
 export function unpackVerifiedArchive(bytes,digest,kind){
  if(bytes.length>maxArchive||!/^sha256:[a-f0-9]{64}$/.test(digest??'')||`sha256:${sha256(bytes)}`!==digest)throw Error('Artifact ZIP digest mismatch')
+ const cleanup=kind==='fcf-cleanup-prepared'||kind==='fcf-cleanup-applied',fcf=kind==='fcf-history'||cleanup
+ const cleanupName=name=>name==='manifest.json'||kind==='fcf-cleanup-prepared'&&(name==='before-image.json'||['4109388','4116215','4118352','4118358'].some(id=>name===`acta-${id}.html`))
+ const fcfName=name=>cleanup?cleanupName(name):fcfHistoryName(name)
+ const memberLimit=kind==='fcf-cleanup-prepared'?6:kind==='fcf-cleanup-applied'?1:kind==='fcf-history'?721:1505
  const dir=mkdtempSync(join(tmpdir(),'slff-dfb-artifact-'))
  try{
   const zip=join(dir,'source.zip');writeFileSync(zip,bytes)
   const names=execFileSync('unzip',['-Z1',zip],{encoding:'utf8',maxBuffer:500000}).trim().split('\n'),files=new Map()
-  if(!['capture','replay','fcf-history'].includes(kind)||names.length>(kind==='fcf-history'?721:1505)||new Set(names).size!==names.length)throw Error('Invalid artifact entry set')
-  if(kind==='fcf-history'){
+  if(!['capture','replay','fcf-history','fcf-cleanup-prepared','fcf-cleanup-applied'].includes(kind)||names.length>memberLimit||new Set(names).size!==names.length)throw Error('Invalid artifact entry set')
+  if(fcf){
    const details=execFileSync('unzip',['-Z','-l',zip],{encoding:'utf8',maxBuffer:500000}).split('\n')
    for(const name of names){
-    if(!fcfHistoryName(name))throw Error(`Invalid artifact entry ${name}`)
+    if(!fcfName(name))throw Error(`Invalid artifact entry ${name}`)
     const entries=details.filter(line=>line.endsWith(` ${name}`))
     if(entries.length!==1||!(/^[?-][rwxstST-]{9}\s/).test(entries[0]))throw Error('FCF artifact entry must be regular, never a symlink')
    }
@@ -33,10 +37,11 @@ export function unpackVerifiedArchive(bytes,digest,kind){
   let total=0
   for(const name of names){
    const allowed=kind==='capture'?/^(?:[a-f0-9]{64}\.html|prenosi\.json|porocilo\.json|razpored\.json|zapisniki\.json)$/:/^(?:replay|summary|razpored|zapisniki|porocilo)\.json$/
-   if(kind==='fcf-history'?!fcfHistoryName(name):!allowed.test(name))throw Error(`Invalid artifact entry ${name}`)
-   const body=execFileSync('unzip',['-p',zip,name],{maxBuffer:kind==='fcf-history'?2*1024*1024+1:name.endsWith('.html')?5000001:16*1024*1024})
-   if(kind==='fcf-history'&&body.length>2*1024*1024)throw Error('FCF artifact member size exceeded')
-   total+=body.length;if(total>(kind==='fcf-history'?192:250)*1024*1024)throw Error('Artifact expanded size exceeded')
+   if(fcf?!fcfName(name):!allowed.test(name))throw Error(`Invalid artifact entry ${name}`)
+   const bound=cleanup?(name.endsWith('.html')?2:8)*1024*1024:kind==='fcf-history'?2*1024*1024:null
+   const body=execFileSync('unzip',['-p',zip,name],{maxBuffer:bound===null?(name.endsWith('.html')?5000001:16*1024*1024):bound+1})
+   if(bound!==null&&body.length>bound)throw Error('FCF artifact member size exceeded')
+   total+=body.length;if(total>(fcf?192:250)*1024*1024)throw Error('Artifact expanded size exceeded')
    files.set(name,body)
   }
   return files
