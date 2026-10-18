@@ -12,7 +12,7 @@ const fail=message=>{throw Error(`FCF_CACHE: ${message}`)}
 function execution(run,jobs,runId,commit){
  if(!id(runId)||!/^[a-f0-9]{40}$/.test(commit??'')||String(run?.id)!==runId||run.repository?.full_name!==repository||run.path!==workflow||run.event!=='workflow_dispatch'||run.head_branch!=='main'||run.head_sha!==commit||run.status!=='completed'||run.conclusion!=='success'||!Number.isSafeInteger(run.run_attempt)||run.run_attempt<1||!Array.isArray(jobs))fail('successful exact main cache-export run required')
  const matches=jobs.filter(j=>j.name==='cache-export'),job=matches[0]
- if(matches.length!==1||!Number.isSafeInteger(job.id)||job.id<1||String(job.run_id)!==runId||job.head_sha!==commit||job.status!=='completed'||job.conclusion!=='success'||!Array.isArray(job.steps))fail('exact successful cache-export job required')
+ if(matches.length!==1||!Number.isSafeInteger(job.id)||job.id<1||String(job.run_id)!==runId||job.run_attempt!==run.run_attempt||job.head_sha!==commit||job.status!=='completed'||job.conclusion!=='success'||!Array.isArray(job.steps))fail('exact successful cache-export job required')
  for(const name of ['Restore only the reviewed exact cache','Export only the three fixed blocks with original lineage','Retain authenticated bounded cache evidence']){
   const steps=job.steps.filter(s=>s.name===name)
   if(steps.length!==1||steps[0].status!=='completed'||steps[0].conclusion!=='success')fail('exact successful restore/export/upload steps required')

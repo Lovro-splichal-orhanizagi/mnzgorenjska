@@ -35,24 +35,24 @@ for(const [name,mutate]of[
 ])test(`plan holds before requests for ${name}`,()=>{const f=fixture();mutate(f);assert.throws(()=>buildFcfFinalAuditPlan(f),/FCF_AUDIT/)})
 for(const status of[401,403,429])test(`collector stops at HTTP${status} without fallback or another ID`,async()=>{
  const plan=buildFcfFinalAuditPlan(fixture());let calls=0
- await assert.rejects(()=>collectFcfFinalAudit({plan,request:async()=>{calls++;return new Response('blocked',{status})},pause:async()=>{},parse:()=>({})}),/FCF_AUDIT/)
+ await assert.rejects(()=>collectFcfFinalAudit({onCapture:()=>{},plan,request:async()=>{calls++;return new Response('blocked',{status})},pause:async()=>{},parse:()=>({})}),/FCF_AUDIT/)
  assert.equal(calls,1)
 })
 test('collector stops a challenge before another ID and never invokes strict normal parser',async()=>{
  const plan=buildFcfFinalAuditPlan(fixture());let calls=0,parsed=0
- await assert.rejects(()=>collectFcfFinalAudit({plan,request:async()=>{calls++;return new Response('<title>Just a moment</title>cf_chl_opt',{status:200})},pause:async()=>{},parse:()=>{parsed++;return{}}}),/FCF_AUDIT/)
+ await assert.rejects(()=>collectFcfFinalAudit({onCapture:()=>{},plan,request:async()=>{calls++;return new Response('<title>Just a moment</title>cf_chl_opt',{status:200})},pause:async()=>{},parse:()=>{parsed++;return{}}}),/FCF_AUDIT/)
  assert.equal(calls,1);assert.equal(parsed,0)
 })
 test('collector uses existing3second source pause, only planned IDs, and preserves capture receipts',async()=>{
  const plan=buildFcfFinalAuditPlan(fixture()),urls=[],delays=[]
- const result=await collectFcfFinalAudit({plan,request:async url=>{urls.push(url);return new Response('normal source bytes',{status:200})},pause:async ms=>delays.push(ms),parse:({id})=>({id}),clock:()=>now})
+ const result=await collectFcfFinalAudit({onCapture:()=>{},plan,request:async url=>{urls.push(url);return new Response('normal source bytes',{status:200})},pause:async ms=>delays.push(ms),parse:({id})=>({id}),clock:()=>now})
  assert.equal(urls.length,61);assert.equal(new Set(urls).size,61)
  assert.deepEqual(delays,Array(60).fill(3000))
  assert.equal(result.actualSourceGETs,61)
  assert.ok(result.captures.every(r=>r.capturedUTC==='2026-10-18T14:00:00.000Z'&&r.bytes===19&&r.rawSha256.length===64))
 })
 test('newly published malformed normal report stops without becoming an exception',async()=>{
- let calls=0;await assert.rejects(()=>collectFcfFinalAudit({plan:buildFcfFinalAuditPlan(fixture()),request:async()=>{calls++;return new Response('normal source bytes')},pause:async()=>{},parse:()=>{throw Error('strict new report defect')}}),/strict new report defect/);assert.equal(calls,1)
+ let calls=0;await assert.rejects(()=>collectFcfFinalAudit({onCapture:()=>{},plan:buildFcfFinalAuditPlan(fixture()),request:async()=>{calls++;return new Response('normal source bytes')},pause:async()=>{},parse:()=>{throw Error('strict new report defect')}}),/strict new report defect/);assert.equal(calls,1)
 })
 
 test('actual calendar round governs nonsequential imported G2 report4116314 and R6 IDs',()=>{
@@ -80,14 +80,14 @@ for(const [name,mutate]of[
 for(const kind of ['redirect','invalid UTF8'])test(`native FCF transport refuses ${kind} before metadata/body normalization`,async()=>{
  const plan=buildFcfFinalAuditPlan(fixture());let calls=0
  const network=async()=>{calls++;const r=new Response(kind==='invalid UTF8'?Buffer.from([255]):'redirected source');if(kind==='redirect')Object.defineProperty(r,'redirected',{value:true});return r}
- await assert.rejects(()=>withBoundedFcfTransport(plan,request=>collectFcfFinalAudit({plan,request,pause:async()=>{},parse:()=>({})}),{network}),/FCF_AUDIT/)
+ await assert.rejects(()=>withBoundedFcfTransport(plan,request=>collectFcfFinalAudit({onCapture:()=>{},plan,request,pause:async()=>{},parse:()=>({})}),{network}),/FCF_AUDIT/)
  assert.equal(calls,1)
 })
 test('native request blocks automatic redirects and empty-response retry before another GET',async()=>{
  const plan=buildFcfFinalAuditPlan(fixture());let calls=0;const delays=[],timer=globalThis.setTimeout
  globalThis.setTimeout=(f,ms,...args)=>{delays.push(ms);return timer(f,0,...args)}
  try{
-  await assert.rejects(()=>withBoundedFcfTransport(plan,request=>collectFcfFinalAudit({plan,request,pause:async()=>{},parse:()=>({})}),{network:async(_url,options)=>{calls++;assert.equal(options.redirect,'manual');return new Response('')}}),/FCF_AUDIT/)
+  await assert.rejects(()=>withBoundedFcfTransport(plan,request=>collectFcfFinalAudit({onCapture:()=>{},plan,request,pause:async()=>{},parse:()=>({})}),{network:async(_url,options)=>{calls++;assert.equal(options.redirect,'manual');return new Response('')}}),/FCF_AUDIT/)
   assert.equal(calls,1);assert.deepEqual(delays,[])
  }finally{globalThis.setTimeout=timer}
 })
@@ -96,11 +96,22 @@ test('collector refuses a rehashed foreign source block before any request',asyn
  const plan=buildFcfFinalAuditPlan(fixture());plan.groups[0].fetchIds[0]='9999999'
  const{planSha256,...body}=plan;plan.planSha256=historicalStatisticsPolicySha256(body)
  let calls=0
- await assert.rejects(()=>collectFcfFinalAudit({plan,request:async()=>{calls++;return new Response('normal bytes')},parse:()=>({}),pause:async()=>{}}),/FCF_AUDIT/)
+ await assert.rejects(()=>collectFcfFinalAudit({onCapture:()=>{},plan,request:async()=>{calls++;return new Response('normal bytes')},parse:()=>({}),pause:async()=>{}}),/FCF_AUDIT/)
  assert.equal(calls,0)
 })
 test('native transport refuses UTF8 BOM instead of silently changing the retained actual-byte hash',async()=>{
  const plan=buildFcfFinalAuditPlan(fixture());let calls=0
- await assert.rejects(()=>withBoundedFcfTransport(plan,request=>collectFcfFinalAudit({plan,request,pause:async()=>{},parse:()=>({})}),{network:async()=>{calls++;return new Response(Buffer.from([239,187,191,65]))}}),/FCF_AUDIT/)
+ await assert.rejects(()=>withBoundedFcfTransport(plan,request=>collectFcfFinalAudit({onCapture:()=>{},plan,request,pause:async()=>{},parse:()=>({})}),{network:async()=>{calls++;return new Response(Buffer.from([239,187,191,65]))}}),/FCF_AUDIT/)
  assert.equal(calls,1)
+})
+
+test('collector requires an explicit raw-evidence retention callback before any request',async()=>{
+ let calls=0
+ await assert.rejects(()=>collectFcfFinalAudit({plan:buildFcfFinalAuditPlan(fixture()),request:async()=>{calls++;return new Response('normal bytes')},parse:()=>({}),pause:async()=>{}}),/FCF_AUDIT/)
+ assert.equal(calls,0)
+})
+test('failed asynchronous raw-evidence retention stops before parsing or another source request',async()=>{
+ let calls=0,parsed=0
+ await assert.rejects(()=>collectFcfFinalAudit({plan:buildFcfFinalAuditPlan(fixture()),request:async()=>{calls++;return new Response('normal bytes')},parse:()=>{parsed++;return{}},pause:async()=>{},onCapture:async()=>{throw Error('evidence storage unavailable')}}),/evidence storage unavailable/)
+ assert.equal(calls,1);assert.equal(parsed,0)
 })
