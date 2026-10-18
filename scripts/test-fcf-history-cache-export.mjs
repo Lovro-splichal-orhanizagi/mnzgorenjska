@@ -4,6 +4,8 @@ import {mkdtempSync,realpathSync,mkdirSync,writeFileSync,readFileSync,readdirSyn
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {createHash} from 'node:crypto'
+import fs from 'node:fs'
+import {syncBuiltinESMExports} from 'node:module'
 import {spawnSync} from 'node:child_process'
 const helper=await import('./izvozi-fcf-predpomnjene-dokaze.mjs')
 const script=new URL('./izvozi-fcf-predpomnjene-dokaze.mjs',import.meta.url).pathname
@@ -46,7 +48,7 @@ for(const kind of ['leaf symlink','ancestor symlink','oversize','empty','missing
 })
 test('real Actions CLI exports history profile without database credentials, dependencies or transport',t=>{
  const f=fixture(t),actionOutput=join(f.root,'action-output');writeFileSync(actionOutput,'')
- const p=spawnSync(process.execPath,[script],{cwd:f.root,env:{PATH:process.env.PATH,GITHUB_ACTIONS:'true',GITHUB_REPOSITORY:'Lovro-splichal-orhanizagi/mnzgorenjska',GITHUB_REF:'refs/heads/main',GITHUB_SHA:sha,GITHUB_RUN_ID:'123',GITHUB_RUN_ATTEMPT:'2',GITHUB_OUTPUT:actionOutput,FCF_EXPORT_KIND:'history',FCF_CACHE_KEY:key,FCF_CACHE_MATCHED_KEY:key,FCF_CACHE_HIT:'true',FCF_RESTORE_OUTCOME:'success'},encoding:'utf8',timeout:10000})
+ const p=spawnSync(process.execPath,[script],{cwd:f.root,env:{PATH:process.env.PATH,GITHUB_ACTIONS:'true',GITHUB_REPOSITORY:'Lovro-splichal-orhanizagi/mnzgorenjska',GITHUB_REF:'refs/heads/main',GITHUB_SHA:sha,GITHUB_RUN_ID:'123',GITHUB_RUN_ATTEMPT:'2',GITHUB_OUTPUT:actionOutput,FCF_EXPORT_KIND:'history',FCF_CACHE_KEY:key,FCF_CACHE_MATCHED_KEY:key,FCF_CACHE_HIT:'true',FCF_RESTORE_OUTCOME:'success'},encoding:'utf8',timeout:30000})
  assert.equal(p.status,0,p.stderr);assert.equal(manifest(f).files.length,720);assert.equal(readFileSync(actionOutput,'utf8'),'evidence_ready=true\n')
 })
 
@@ -69,8 +71,20 @@ test('checked-in Actions restore metadata reaches the real cache-export CLI and 
   const restoreOutputs={'cache-matched-key':hit?key:key+'-fallback','cache-hit':String(hit)}
   const env=Object.fromEntries([...exportStep.matchAll(/^          ([A-Z_]+): (.+)$/gm)].map(([,k,v])=>[k,v.replace(/\$\{\{ steps\.restore\.outputs\.([a-z-]+) \}\}/g,(_,name)=>restoreOutputs[name]).replace('${{ steps.restore.outcome }}','success')]))
   mkdirSync(join(f.root,'scripts'),{recursive:true});writeFileSync(join(f.root,'scripts/izvozi-fcf-predpomnjene-dokaze.mjs'),readFileSync(script))
-  const result=spawnSync('bash',['-euo','pipefail','-c',command],{cwd:f.root,env:{PATH:process.env.PATH,GITHUB_ACTIONS:'true',GITHUB_REPOSITORY:'Lovro-splichal-orhanizagi/mnzgorenjska',GITHUB_REF:'refs/heads/main',GITHUB_SHA:sha,GITHUB_RUN_ID:'123',GITHUB_RUN_ATTEMPT:'2',GITHUB_OUTPUT:output,...env},encoding:'utf8',timeout:10000})
+  const result=spawnSync('bash',['-euo','pipefail','-c',command],{cwd:f.root,env:{PATH:process.env.PATH,GITHUB_ACTIONS:'true',GITHUB_REPOSITORY:'Lovro-splichal-orhanizagi/mnzgorenjska',GITHUB_REF:'refs/heads/main',GITHUB_SHA:sha,GITHUB_RUN_ID:'123',GITHUB_RUN_ATTEMPT:'2',GITHUB_OUTPUT:output,...env},encoding:'utf8',timeout:30000})
   assert.equal(result.status,hit?0:1,result.stderr);assert.equal(manifest(f).files.filter(x=>x.status==='found').length,hit?720:0)
   assert.equal(readFileSync(output,'utf8'),'evidence_ready=true\n')
  }
+})
+
+test('same inode/size/mtime replacement between preflight and open is refused using original ctime',async t=>{
+ const f=fixture(t),p=join(f.cache,'acta-4116314.html'),open=fs.openSync,original=readFileSync(p)
+ await new Promise(resolve=>setTimeout(resolve,10))
+ let replaced=false
+ fs.openSync=(path,...args)=>{
+  if(path===p&&!replaced){replaced=true;writeFileSync(p,Buffer.alloc(original.length,65));utimesSync(p,mtime,mtime)}
+  return open(path,...args)
+ };syncBuiltinESMExports()
+ try{assert.equal(run(f),1);assert.deepEqual(readdirSync(f.output),['manifest.json']);assert.equal(manifest(f).files.find(x=>x.id==='4116314').reason,'source-changed')}
+ finally{fs.openSync=open;syncBuiltinESMExports()}
 })
