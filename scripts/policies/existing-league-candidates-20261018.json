@@ -1,0 +1,290 @@
+{
+  "version": 1,
+  "purpose": "Candidate inventory only; neither readiness nor source permission approval. Exact explicit selection and fresh checks required. No source GETs.",
+  "source_contracts": {
+    "ncefl": {
+      "document": "docs/viri/anglija.md",
+      "permission": "Owner has league permission. Stop on withdrawal or technical denial."
+    },
+    "pzpn": {
+      "document": "docs/viri/poljska.md",
+      "permission": "Existing public federation proxy contract; permission requests pending. No private PZPN API or reCAPTCHA access."
+    },
+    "wmzpn": {
+      "document": "docs/viri/poljska.md",
+      "permission": "Existing public site contract; no recorded permission, robots 404/no terms found. Stop on request or technical denial. Klasa B substitution/minutes limitations remain."
+    },
+    "eps": {
+      "document": "docs/viri/grcija.md",
+      "permission": "Athens/Evbeja: Lovro written permission October 2026, stop on withdrawal. Other EPS domains: existing public contract, robots 404/no terms found, no recorded permission. Stop on request or technical denial."
+    },
+    "sportnet": {
+      "document": "docs/viri/slovaska.md",
+      "permission": "Existing public API contract, no explicit SFZ/Sportnet permission. Stop on request or technical denial."
+    },
+    "dbu": {
+      "document": "docs/viri/danska.md",
+      "permission": "Lovro written permission October 2026; copy not yet in info archive. No protected/robots-disallowed access. Stop on request or technical denial."
+    }
+  },
+  "candidates": [
+    {
+      "id": 854,
+      "slug": "gb-ncel-division-one",
+      "source": "ncefl",
+      "source_league_code": "nceldivisionone/2026"
+    },
+    {
+      "id": 853,
+      "slug": "gb-ncel-premier",
+      "source": "ncefl",
+      "source_league_code": "ncelpremierdivision/2026"
+    },
+    {
+      "id": 577,
+      "slug": "pl-sk-4-liga",
+      "source": "pzpn",
+      "source_league_code": "swietokrzyski/0e86c2b3-75d3-483b-80a0-4f086352afc5"
+    },
+    {
+      "id": 949,
+      "slug": "pl-wm-4-liga",
+      "source": "wmzpn",
+      "source_league_code": "c164ca31-22e4-43fc-9e30-4f3bcc2b7d72/2820e642-1475-40f8-9489-13c742fbc63a/3c77d143-8010-4073-9842-d6b63365ffce"
+    },
+    {
+      "id": 950,
+      "slug": "pl-wm-okregowa-1",
+      "source": "wmzpn",
+      "source_league_code": "c5afdf4b-b449-4ef3-acf5-dded47fc5f58/33dde60f-37d8-4592-a080-6795cc040465/3c77d143-8010-4073-9842-d6b63365ffce"
+    },
+    {
+      "id": 951,
+      "slug": "pl-wm-okregowa-2",
+      "source": "wmzpn",
+      "source_league_code": "c5afdf4b-b449-4ef3-acf5-dded47fc5f58/add51c43-5c34-4d4a-82a6-7ee821ec1638/3c77d143-8010-4073-9842-d6b63365ffce"
+    },
+    {
+      "id": 578,
+      "slug": "pl-sk-okregowa",
+      "source": "pzpn",
+      "source_league_code": "swietokrzyski/1681c4a3-9391-4990-b155-7f2c06535441"
+    },
+    {
+      "id": 907,
+      "slug": "gr-ana-a",
+      "source": "eps",
+      "source_league_code": "epsana.gr:747"
+    },
+    {
+      "id": 930,
+      "slug": "gr-ev-a",
+      "source": "eps",
+      "source_league_code": "epsevias.gr:272"
+    },
+    {
+      "id": 906,
+      "slug": "gr-ana-b",
+      "source": "eps",
+      "source_league_code": "epsana.gr:749"
+    },
+    {
+      "id": 955,
+      "slug": "pl-wm-a-4",
+      "source": "wmzpn",
+      "source_league_code": "63d04023-727a-4c0c-a8c6-4154fe1104b7/711ae517-02ca-4e5a-90a3-f0cbc75e7986/3c77d143-8010-4073-9842-d6b63365ffce"
+    },
+    {
+      "id": 953,
+      "slug": "pl-wm-a-2",
+      "source": "wmzpn",
+      "source_league_code": "63d04023-727a-4c0c-a8c6-4154fe1104b7/a18e856f-d73b-4ff8-b44f-77ae417c83c9/3c77d143-8010-4073-9842-d6b63365ffce"
+    },
+    {
+      "id": 913,
+      "slug": "gr-dod-a",
+      "source": "eps",
+      "source_league_code": "epsdod.gr:495"
+    },
+    {
+      "id": 954,
+      "slug": "pl-wm-a-3",
+      "source": "wmzpn",
+      "source_league_code": "63d04023-727a-4c0c-a8c6-4154fe1104b7/d0d84a85-7816-4ca0-8f6a-de8e3d3f5965/3c77d143-8010-4073-9842-d6b63365ffce"
+    },
+    {
+      "id": 952,
+      "slug": "pl-wm-a-1",
+      "source": "wmzpn",
+      "source_league_code": "63d04023-727a-4c0c-a8c6-4154fe1104b7/0aace3bb-4a47-4117-a614-a0a54e2085e8/3c77d143-8010-4073-9842-d6b63365ffce"
+    },
+    {
+      "id": 580,
+      "slug": "pl-sk-a-kielce-2",
+      "source": "pzpn",
+      "source_league_code": "swietokrzyski/3f6b628a-737c-47be-8f56-15445e1bd347"
+    },
+    {
+      "id": 905,
+      "slug": "gr-ana-g",
+      "source": "eps",
+      "source_league_code": "epsana.gr:748"
+    },
+    {
+      "id": 581,
+      "slug": "pl-sk-a-sandomierz",
+      "source": "pzpn",
+      "source_league_code": "swietokrzyski/64ee2db0-9540-4372-9928-dfe268fc963e"
+    },
+    {
+      "id": 928,
+      "slug": "gr-ev-b-2",
+      "source": "eps",
+      "source_league_code": "epsevias.gr:279"
+    },
+    {
+      "id": 579,
+      "slug": "pl-sk-a-kielce-1",
+      "source": "pzpn",
+      "source_league_code": "swietokrzyski/a6cd6f08-26ed-4cc6-8504-80d0e43c0882"
+    },
+    {
+      "id": 584,
+      "slug": "pl-sk-b-sandomierz",
+      "source": "pzpn",
+      "source_league_code": "swietokrzyski/740e1d89-139f-4fdd-a431-23a7da11b23c"
+    },
+    {
+      "id": 582,
+      "slug": "pl-sk-b-kielce-1",
+      "source": "pzpn",
+      "source_league_code": "swietokrzyski/ed980a22-e851-4b47-bf75-5dfbee9f60cc"
+    },
+    {
+      "id": 929,
+      "slug": "gr-ev-b-1",
+      "source": "eps",
+      "source_league_code": "epsevias.gr:273"
+    },
+    {
+      "id": 912,
+      "slug": "gr-ip-a",
+      "source": "eps",
+      "source_league_code": "epsip.gr:328"
+    },
+    {
+      "id": 957,
+      "slug": "pl-wm-b-2",
+      "source": "wmzpn",
+      "source_league_code": "b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/4885750d-c754-45b9-be62-622caac0ceb2/3c77d143-8010-4073-9842-d6b63365ffce"
+    },
+    {
+      "id": 959,
+      "slug": "pl-wm-b-4",
+      "source": "wmzpn",
+      "source_league_code": "b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/34438712-87a8-4300-a5ad-2df29ecb415d/3c77d143-8010-4073-9842-d6b63365ffce"
+    },
+    {
+      "id": 914,
+      "slug": "gr-arg-a1",
+      "source": "eps",
+      "source_league_code": "epsarg.gr:1042"
+    },
+    {
+      "id": 958,
+      "slug": "pl-wm-b-3",
+      "source": "wmzpn",
+      "source_league_code": "b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/b7ee2253-ab8b-46ff-93af-c94500e196c1/3c77d143-8010-4073-9842-d6b63365ffce"
+    },
+    {
+      "id": 759,
+      "slug": "sk-pb-u19",
+      "source": "sportnet",
+      "source_league_code": "obfz-povazska-bystrica.futbalnet.sk/6a0ea8575736165c0ead9c38"
+    },
+    {
+      "id": 911,
+      "slug": "gr-ip-b",
+      "source": "eps",
+      "source_league_code": "epsip.gr:329"
+    },
+    {
+      "id": 956,
+      "slug": "pl-wm-b-1",
+      "source": "wmzpn",
+      "source_league_code": "b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/2b6f4e61-f6fe-48fc-9637-0270ed5c3607/3c77d143-8010-4073-9842-d6b63365ffce"
+    },
+    {
+      "id": 1054,
+      "slug": "dk-danmarksserien-3",
+      "source": "dbu",
+      "source_league_code": "499768"
+    },
+    {
+      "id": 1053,
+      "slug": "dk-danmarksserien-2",
+      "source": "dbu",
+      "source_league_code": "499767"
+    },
+    {
+      "id": 1052,
+      "slug": "dk-danmarksserien-1",
+      "source": "dbu",
+      "source_league_code": "499766"
+    },
+    {
+      "id": 1055,
+      "slug": "dk-danmarksserien-4",
+      "source": "dbu",
+      "source_league_code": "499769"
+    },
+    {
+      "id": 927,
+      "slug": "gr-ev-g-1",
+      "source": "eps",
+      "source_league_code": "epsevias.gr:275"
+    },
+    {
+      "id": 583,
+      "slug": "pl-sk-b-kielce-2",
+      "source": "pzpn",
+      "source_league_code": "swietokrzyski/9c6fbee7-a9e5-4abd-84da-13bcf42c2d60"
+    },
+    {
+      "id": 925,
+      "slug": "gr-ev-g-3",
+      "source": "eps",
+      "source_league_code": "epsevias.gr:277"
+    },
+    {
+      "id": 915,
+      "slug": "gr-ark-a",
+      "source": "eps",
+      "source_league_code": "epsarkadias.gr:222"
+    },
+    {
+      "id": 926,
+      "slug": "gr-ev-g-2",
+      "source": "eps",
+      "source_league_code": "epsevias.gr:276"
+    },
+    {
+      "id": 909,
+      "slug": "gr-ip-g-b",
+      "source": "eps",
+      "source_league_code": "epsip.gr:332"
+    },
+    {
+      "id": 910,
+      "slug": "gr-ip-g-a",
+      "source": "eps",
+      "source_league_code": "epsip.gr:331"
+    },
+    {
+      "id": 771,
+      "slug": "sk-sk-u19",
+      "source": "sportnet",
+      "source_league_code": "ondavsky-futbalovy-zvaz.futbalnet.sk/6a1d3d3a44ff24612e4977db"
+    }
+  ]
+}
