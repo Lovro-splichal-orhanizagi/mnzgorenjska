@@ -79,6 +79,9 @@ jobs:
       - name: FCF missing inventory and authenticated target admission (source-free)
         run: node --test scripts/test-fcf-missing-inventory-plan.mjs scripts/test-fcf-missing-inventory-claim.mjs scripts/test-fcf-missing-inventory-capture.mjs scripts/test-fcf-missing-inventory-evidence.mjs scripts/test-fcf-missing-inventory-actions.mjs scripts/test-fcf-missing-inventory-workflow.mjs scripts/test-fcf-inventory-source-coordination.mjs scripts/test-fcf-missing-inventory-admission.mjs scripts/test-cakaj-na-uvoze.mjs scripts/test-fcf-history-cache-export.mjs scripts/test-fcf-target-evidence.mjs scripts/test-fcf-target-release.mjs
 
+      - name: FCF native target offline planning (source-free)
+        run: node --test scripts/test-fcf-target-native-plan.mjs scripts/test-fcf-target-native-adapter.mjs scripts/test-fcf-target-offline.mjs
+
       - name: Tipi
         run: npx tsc --noEmit
 
