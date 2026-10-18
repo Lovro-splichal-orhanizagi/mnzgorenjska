@@ -6,7 +6,7 @@ danes poslali"). Za to imajo omejen bralni dostop do produkcijske baze.
 
 ## Kaj smejo
 
-- Vloga `agent_bralec` (migracija `20261019090000_agent_bralec.sql`):
+- Vloga `agent_bralec` (migracija `20261019120000_agent_bralec.sql`):
   le `SELECT`, največ 3 povezave, `bypassrls` (sicer tabele z RLS tiho
   vrnejo 0 vrstic).
 - **Meja varnosti je ovoj** `scripts/hetzner/agent-sql.sh`, ne nastavitve
