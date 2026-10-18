@@ -16,14 +16,16 @@ const classify = (policy = hr, entry = policy.entries[0], overrides = {}) => cla
   competition: competitionFor(policy), fixture: fixtureFor(policy, entry), rawSha256: entry.rawSha256, policy, ...overrides,
 })
 
-test('registry contains exactly reviewed HNS3 and DFB2 historical identities', () => {
+test('registry contains exactly reviewed HNS3, DFB2 and FCF4 historical identities', () => {
   assert.equal(validateHistoricalStatisticsRegistry(registry), true)
   assert.deepEqual(hr.entries.map(x => x.sourceMatchId).sort(), ['114471617', '114471627', '114471629'])
   assert.deepEqual(de.entries.map(x => x.sourceMatchId).sort(), ['2402929', '2403004'])
+  assert.deepEqual(registry.policies.filter(p=>p.provider==='fcf').flatMap(p=>p.entries.map(e=>e.sourceMatchId)).sort(), ['4109388','4116215','4118352','4118358'])
+  assert.equal(registry.policies.length,5)
   assert.ok(!hr.entries.some(x => x.sourceMatchId === '100511758'))
 })
 
-for (const policy of [hr, de]) for (const entry of policy.entries) {
+for (const policy of registry.policies) for (const entry of policy.entries) {
   test(`classifies exact reviewed report ${entry.sourceMatchId} without supplying individual statistics`, () => {
     const result = classify(policy, entry)
     assert.equal(result.kind, 'unavailable_historical')
@@ -130,5 +132,18 @@ test('migration-pinned canonical policy bodies and hashes match the single revie
     assert.ok(seed,`missing DB policy ${policy.id}`)
     assert.equal(seed[2],historicalStatisticsPolicySha256(policy))
     assert.deepEqual(JSON.parse(seed[3].replaceAll("''","'")),policy)
+  }
+})
+
+for (const policy of registry.policies.filter(p=>p.provider==='fcf')) for (const entry of policy.entries) for (const field of ['homeSourceCategoryId','awaySourceCategoryId']) {
+  test(`FCF native category binding cannot drift ${entry.sourceMatchId} ${field}`, () => {
+    assert.throws(()=>classify(policy,entry,{fixture:{...fixtureFor(policy,entry),[field]:'unreviewed-category'}}),/identity|category|fixture/i)
+  })
+}
+
+test('FCF registry requires both native category identities',()=>{
+  for(const field of ['homeSourceCategoryId','awaySourceCategoryId']) {
+    const copy=clone(registry);delete copy.policies.find(p=>p.provider==='fcf').entries[0][field]
+    assert.throws(()=>validateHistoricalStatisticsRegistry(copy),/category|entry/i)
   }
 })
