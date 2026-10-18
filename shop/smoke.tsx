@@ -19,7 +19,8 @@ import { Pogoji } from './src/strani/Pogoji'
 import { Odstop, mailOdstopa } from './src/strani/Odstop'
 import { Prijava, varnaPot } from './src/strani/Prijava'
 import { Admin, Dobavnica, Nalepka, zaPakiranje } from './src/strani/Admin'
-import { csvSerije, datotekeTiska, PogledSerije, ROB, s300dpi, svgDtf, svgZaTisk } from './src/strani/AdminTisk'
+import { csvSerije, datotekeTiska, PogledSerije, prenesiVse, ROB, s300dpi, svgDtf, svgZaTisk } from './src/strani/AdminTisk'
+import { doplaciloIz, KarticaMotiva, type MotivAdmin } from './src/strani/AdminMotivi'
 import { zahtevaBona } from './src/strani/AdminBoni'
 import { vCente, varnoIme } from './src/strani/AdminIzdelki'
 import { EN, SL, TELEFON, cena, type Kljuc } from './src/besede'
@@ -291,6 +292,12 @@ preveri('admin: pogled serije s predogledi', pogledSerije.includes('Serija 3') &
     datotekeTiska(tuj).length === 0 && pogledTuj.includes('ni-predloge') && pogledTuj.includes('IJ90KL12-prsi-dtf-13')
     && csvSerije({ ...serija, postavke: [tuj] }).split('\r\n')[1]!.endsWith('"";"";"ni-predloge";"dtf";"";"";""'))
   preveri('tisk motiva: pogled serije pokaže cone', renderToString(<PogledSerije s={{ ...serija, postavke: [motivna] }} />).includes('IJ90KL12-prsi-dtf-13 · 260 × 120 mm'))
+  // V Node ni <canvas>: vsak PNG pade, kot v iOS Safariju PNG hrbta. Ostale datoteke gredo naprej.
+  const shranjene: string[] = []
+  const neuspele = await prenesiVse({ ...serija, postavke: [motivna, serija.postavke[0]!] }, (ime) => { shranjene.push(ime) })
+  preveri('tisk: neuspela datoteka ne ustavi serije, neuspele so naštete',
+    shranjene.join() === 'IJ90KL12-hrbet-dtf-13.svg,IJ90KL12-prsi-dtf-13.svg,AB12CD34-11.svg'
+    && neuspele.join() === 'IJ90KL12-hrbet-dtf-13.png,IJ90KL12-hrbet-dtf-13-dtf.png,IJ90KL12-prsi-dtf-13.png,IJ90KL12-prsi-dtf-13-dtf.png', `${shranjene.join()} | ${neuspele.join()}`)
 }
 const pn = (x: Partial<PostavkaNarocila>): PostavkaNarocila => ({ ...narocilo.postavke[0], ...x })
 const nar = (postavke: PostavkaNarocila[]): NarociloAdmin => ({ ...narocilo, postavke })
@@ -494,6 +501,26 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
   preveri('neznan ali umaknjen motiv v košarici: brez mockupa, z opozorilom, plačilo onemogočeno', kos({ ...nosilec, motivi: [retro, neznan] }) !== null
     && !(kos({ ...nosilec, motivi: [retro, neznan] }) ?? '').includes('feImage') && motivaNi({ ...nosilec, motivi: [retro, neznan] }, vrsticaN)
     && motivaNi(nosilec, vrsticaN) && !motivaNi(nosilec, kmp.postavke[0]!) && !motivaNi(nosilec, { razlicica_id: 1, slug: 'x', kolicina: 1 }))
+  // Admin sme primere izprazniti: vitrina, pas v katalogu in konfigurator vzamejo privzete vrednosti.
+  const brezPrimerov: MotivKataloga = { ...katalogMotivov[0]!, primeri: [] }
+  const vitrinaBp = brezNapake(() => renderToString(<StaticRouter location="/personalised"><MrezaMotivov motivi={[brezPrimerov]} /></StaticRouter>))
+  const konfBp = zNeznanim([{ ...retro, primeri: [] }], '/p/majica-po-meri')
+  preveri('brez primerov: vitrina, pahljača in konfigurator ne padejo, predogled s privzetimi vrednostmi',
+    (vitrinaBp ?? '').includes('>9</text>') && brezNapake(() => renderToString(<StaticRouter location="/"><Pahljaca motivi={[brezPrimerov]} majhna /></StaticRouter>)) !== null
+    && (konfBp ?? '').includes('>9</text>') && !(konfBp ?? '').includes(SL['motiv.primeri']))
+  const kmalu = (i: TIzdelek) => renderToString(<StaticRouter location={`/p/${i.slug}`}><SejaProvider><IzdelekView i={i} /></SejaProvider></StaticRouter>)
+  const kmaluVsi = [kmalu({ ...nosilec, motivi: [] }), kmalu({ ...nosilec, motivi: [neznan] }), kmalu({ ...nosilec, cone: [] })]
+  preveri('nosilec brez uporabnega motiva: "Motivi prihajajo kmalu", brez gumba za nakup',
+    kmaluVsi.every((x) => x.includes(SL['izdelek.motiviKmalu']) && !x.includes(SL['izdelek.dodaj']) && !x.includes(SL['izdelek.izberi']))
+    && !konf('/p/majica-po-meri').includes(SL['izdelek.motiviKmalu']))
+  const motivAdmin: MotivAdmin = { ...brezPrimerov, id: 1, aktiven: false, vrstni_red: 10, doplacila: [{ izdelek_id: 5, slug: 'majica-po-meri', doplacilo: 800 }] }
+  const nosilecAdmin = { id: 5, slug: 'majica-po-meri', ime_sl: 'Majica po meri', ime_en: 'Custom T-shirt', opis_sl: '', opis_en: '', kategorija: 'oblacila' as const, slike: [], tax_code: 'x',
+    pismo: false, po_narocilu: true, digitalni: false, postopek: 'dtf', aktiven: true, vrstni_red: 100, razlicice: [] }
+  const kartica = brezNapake(() => renderToString(<KarticaMotiva m={motivAdmin} nosilci={[nosilecAdmin, { ...nosilecAdmin, id: 6, slug: 'pulover-po-meri' }]} osvezi={async () => {}} />)) ?? ''
+  preveri('admin motivi: kartica z mini predogledom, doplačilo po nosilcu, primeri kot JSON',
+    kartica.includes('data:image/svg+xml') && kartica.includes('value="8"') && kartica.includes('pulover-po-meri') && kartica.includes('[]') && kartica.includes(SL['admin.neaktiven']))
+  preveri('admin motivi: doplačilo iz vnosa', doplaciloIz('8') === 800 && doplaciloIz('8,5') === 850 && doplaciloIz('0') === 0 && doplaciloIz(' ') === null
+    && doplaciloIz('-1') === undefined && doplaciloIz('8.123') === undefined && doplaciloIz('abc') === undefined)
   preveri('konfigurator: predolgo ime ekipe ni izbirno', ekipaPrevelika('A'.repeat(25)) && !ekipaPrevelika('A'.repeat(24)) && ekipaPrevelika('Žan Novak', 8))
   const varna = new VarnaStran({ children: null })
   varna.state = VarnaStran.getDerivedStateFromError()

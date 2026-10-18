@@ -212,7 +212,27 @@ export function NakupnaVrstica({ kolicina, setKolicina, najvec, dodano, onemogoc
 export function IzdelekView({ i }: { i: TIzdelek }) {
   const motivi = i.motivi?.filter((m) => imaPredlogo(m.slug)) ?? []
   if (motivi.length && i.cone?.length) return <Konfigurator i={{ ...i, motivi }} />
+  // Nosilec motivov brez motiva, ki ga ta izdaja zna narisati: baza ga brez motiva ne proda.
+  if (i.postopek && !i.digitalni) return <MotiviKmalu i={i} />
   return <Navaden i={i} />
+}
+
+function MotiviKmalu({ i }: { i: TIzdelek }) {
+  const ime = po(i.ime_sl, i.ime_en)
+  useNaslov(ime, po(i.opis_sl, i.opis_en).slice(0, 160) || undefined)
+  return (
+    <div className="space-y-6">
+      <Link to="/" className="povezava text-sm">← {t('izdelek.nazaj')}</Link>
+      <div className="grid gap-6 md:grid-cols-2 md:gap-10">
+        <Slika src={i.slike[0]} alt={ime} />
+        <div className="space-y-4">
+          <h1 className="text-3xl font-black naslov sm:text-4xl">{ime}</h1>
+          <p className="kartica p-5 text-lg font-bold text-gnl-200">{t('izdelek.motiviKmalu')}</p>
+          <p className="text-slate-400">{t('izdelek.motiviKmaluOpis')}</p>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function Navaden({ i }: { i: TIzdelek }) {

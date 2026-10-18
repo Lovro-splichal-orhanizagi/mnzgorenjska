@@ -179,7 +179,12 @@ pomnoži s svetlostjo fotografije.
    Smoke bere seme iz migracije motivov; motiv v novi migraciji dodaj tudi v
    branje semena v `shop/smoke.tsx`.
 4. `npm run smoke:shop` (predloga ↔ seme: polja po conah, barve, ubežanje,
-   dolge/kratke vrednosti), `npm run test:varnost`, nato v adminu `aktiven`.
+   dolge/kratke vrednosti), `npm run test:varnost`, nato admin → **Motivi**
+   (`AdminMotivi.tsx`): `aktiven`, vrstni red, doplačilo po nosilcu (prazno = motiva
+   ni na izdelku) in primeri kot JSON (preveri jih `trgovina_admin_shrani_motiv`;
+   prazen seznam je dovoljen, vitrina tedaj pokaže privzete vrednosti polj).
+   Nosilec (izdelek s `postopek`) brez motiva, ki ga izdaja zna narisati, pokaže
+   "Motivi prihajajo kmalu" brez gumba za nakup, zato ga lahko vklopiš pred motivi.
 
 **Nova fotografija nosilca / cona:**
 
@@ -195,6 +200,8 @@ pomnoži s svetlostjo fotografije.
 velikosti cone (mm na korenu), 3 mm prireza in rezilne oznake, ter PNG 300 dpi
 (z vgrajeno pisavo, zanesljiva datoteka za tiskarno); ime
 `<oznaka>-<cona>-<postopek>-<postavka>`; CSV ima stolpce `motiv`, `postopek`, `cona`.
+PNG hrbta (≈ 19 MP) je večji od meje platna v iOS Safariju: datoteka, ki ne uspe,
+ne ustavi serije, admin dobi seznam neuspelih. Izvažaj na računalniku.
 
 **Slike s prizori** (`scripts/trgovina-hero.mjs`): na izvirne fotografije prizorov
 (`scripts/trgovina-hero/*.jpg`: igrišče, gostilna, slačilnica; prazni nosilci)
@@ -234,7 +241,7 @@ Ostalo (enkrat):
    obvezna potrditev pogojev le ob `STRIPE_TOS=1` (skupno s preverjenimi; zahteva
    Settings → Public details → Terms of service URL), sicer besedilo nad gumbom.
 5. `select trgovina_pripravi_shrambo();` (vedro za slike).
-6. V adminu: cene, zaloga, slike, nato `aktiven`.
+6. V adminu: cene, zaloga, slike, nato `aktiven`; motive vklopi zavihek **Motivi**.
 
 ## Pred živo prodajo
 

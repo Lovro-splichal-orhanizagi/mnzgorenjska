@@ -290,6 +290,9 @@ export interface IzdelekAdmin {
   slike: string[]
   tax_code: string
   pismo: boolean
+  po_narocilu: boolean
+  digitalni: boolean
+  postopek: string | null
   aktiven: boolean
   vrstni_red: number
   razlicice: RazlicicaAdmin[]

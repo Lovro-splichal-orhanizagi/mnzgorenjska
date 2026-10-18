@@ -10,6 +10,13 @@ import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
 import { imaPredlogo, svgCone } from './Konfigurator'
 
+/** Primeri motiva; brez njih (admin jih sme izprazniti) en primer iz privzetih vrednosti polj. */
+export const primeriMotiva = (m: Pick<MotivKataloga, 'primeri' | 'polja' | 'sheme'>, izdelek = '', barva = 'Črna'): PrimerMotiva[] =>
+  m.primeri.length ? m.primeri : [{
+    polja: Object.fromEntries(m.polja.flatMap((p) => (p.privzeto === undefined ? [] : [[p.kljuc, p.privzeto]]))),
+    shema: m.sheme[0]?.kljuc ?? '', izdelek, barva,
+  }]
+
 /** Motiv brez aktivnega nosilca ali brez predloge v tej izdaji trgovine se ne pokaže. */
 export const vProdaji = (motivi: MotivKataloga[]): MotivKataloga[] =>
   motivi.filter((m) => imaPredlogo(m.slug) && m.izdelki.some((i) => i.cone.length > 0))
@@ -52,7 +59,7 @@ function KarticaMotiva({ m, zamik }: { m: MotivKataloga; zamik: number }) {
   const [miska, setMiska] = useState(false)
   const [fokus, setFokus] = useState(false)
   const [zaklenjeno, setZaklenjeno] = useState(false)
-  const primeri = m.primeri.slice(0, 4)
+  const primeri = primeriMotiva(m, m.izdelki[0]?.slug, m.izdelki[0]?.cone[0]?.barva ?? undefined).slice(0, 4)
   const naslednji = (n + 1) % primeri.length
   const ustavljeno = miska || fokus || zaklenjeno
   useEffect(() => {
@@ -118,7 +125,7 @@ export function MrezaMotivov({ motivi }: { motivi: MotivKataloga[] }) {
 
 /** Trije primeri v pahljači (naslovnica vitrine in pas v katalogu). */
 export function Pahljaca({ motivi, majhna = false }: { motivi: MotivKataloga[]; majhna?: boolean }) {
-  const izbor = motivi.flatMap((m) => m.primeri.slice(0, 1).map((p) => ({ m, p }))).slice(0, 3)
+  const izbor = motivi.flatMap((m) => primeriMotiva(m, m.izdelki[0]?.slug, m.izdelki[0]?.cone[0]?.barva ?? undefined).slice(0, 1).map((p) => ({ m, p }))).slice(0, 3)
   const polozaj = ['-rotate-[8deg] -translate-x-[58%] translate-y-4', 'z-10 scale-105', 'rotate-[8deg] translate-x-[58%] translate-y-4']
   return (
     <div className={`relative mx-auto grid place-items-center ${majhna ? 'h-48 w-full max-w-sm' : 'aspect-[5/4] w-full max-w-xl'}`} aria-hidden="true">

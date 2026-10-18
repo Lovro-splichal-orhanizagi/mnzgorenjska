@@ -144,24 +144,31 @@ function prenesi(ime: string, vsebina: BlobPart, tip: string) {
 
 const premor = () => new Promise((r) => setTimeout(r, 300))
 
-/** Vse datoteke serije, ena za drugo (brskalnik sicer več hkratnih prenosov zavrne). */
-async function prenesiVse(s: Serija) {
-  for (const p of s.postavke) {
-    const datoteke = datotekeTiska(p)
-    if (!p.personalizacija?.motiv) {
-      prenesi(imeSvg(p), svgPostavke(p), 'image/svg+xml')
+/**
+ * Vse datoteke serije, ena za drugo (brskalnik sicer več hkratnih prenosov zavrne).
+ * Datoteka, ki ne uspe (PNG hrbta je večji od meje platna v iOS Safariju), ne ustavi
+ * ostalih; vrne imena neuspelih.
+ */
+export async function prenesiVse(s: Serija, shrani = prenesi): Promise<string[]> {
+  const neuspele: string[] = []
+  const datoteka = async (ime: string, vsebina: () => BlobPart | Promise<BlobPart>, tip: string) => {
+    try {
+      shrani(ime, await vsebina(), tip)
       await premor()
-    }
-    for (const d of datoteke) {
-      const svg = await zVgrajenoPisavo(svgZaTisk(p, d))
-      prenesi(`${d.ime}.svg`, svg, 'image/svg+xml')
-      await premor()
-      prenesi(`${d.ime}.png`, await pngIzSvg(svg, d.mm.sirina + 2 * ROB, d.mm.visina + 2 * ROB), 'image/png')
-      await premor()
-      prenesi(`${d.ime}-dtf.png`, await pngIzSvg(await zVgrajenoPisavo(svgDtf(p, d)), d.mm.sirina, d.mm.visina), 'image/png')
-      await premor()
+    } catch {
+      neuspele.push(ime)
     }
   }
+  for (const p of s.postavke) {
+    if (!p.personalizacija?.motiv) await datoteka(imeSvg(p), () => svgPostavke(p), 'image/svg+xml')
+    for (const d of datotekeTiska(p)) {
+      const list = () => zVgrajenoPisavo(svgZaTisk(p, d))
+      await datoteka(`${d.ime}.svg`, list, 'image/svg+xml')
+      await datoteka(`${d.ime}.png`, async () => pngIzSvg(await list(), d.mm.sirina + 2 * ROB, d.mm.visina + 2 * ROB), 'image/png')
+      await datoteka(`${d.ime}-dtf.png`, async () => pngIzSvg(await zVgrajenoPisavo(svgDtf(p, d)), d.mm.sirina, d.mm.visina), 'image/png')
+    }
+  }
+  return neuspele
 }
 
 export function AdminTisk({ zavrnjen }: { zavrnjen: () => void }) {
@@ -205,7 +212,10 @@ export function AdminTisk({ zavrnjen }: { zavrnjen: () => void }) {
           <button type="button" className="gumb-tih" disabled={poteka}
             onClick={() => {
               setPoteka(true)
-              prenesiVse(serija).catch((e: unknown) => setNapaka(String(e))).finally(() => setPoteka(false))
+              setNapaka(null)
+              prenesiVse(serija)
+                .then((n) => setNapaka(n.length ? t('admin.tisk.neuspeleDatoteke', { datoteke: n.join(', ') }) : null))
+                .catch((e: unknown) => setNapaka(String(e))).finally(() => setPoteka(false))
             }}>
             {t('admin.tisk.vsiSvg')}
           </button>
