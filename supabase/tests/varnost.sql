@@ -3629,7 +3629,10 @@ reset role;
 -- Igralci z mladinsko vrstico (20261018150000): stroj jih izloči, svoj klub jih
 -- vidi z javnimi dejstvi tekem. -930011 viden (GK), -930012 ugovor, -930015
 -- anonimiziran po ključu, -930017 pri drugem klubu (-913002). Vsak ima
--- soimenjaka v mladinski ligi -930100.
+-- soimenjaka v mladinski ligi -930100. -930019 brez mladinske vrstice in brez
+-- kazalnikov (ga ni), -930020 povezan le po šifri (viden), -930022 z
+-- anonimiziran_at (ga ni), -930001 ima kazalnike in mladinskega soimenjaka -930024
+-- (ena vrstica, mladi = false).
 insert into players(id, team_id, competition_id, first_name, last_name, full_name, position, position_source, value, value_start, active) overriding system value
 values (-930011, -913001, -913001, 'Scout', 'Mladinec', 'Scout Mladinec', 'GK', 'admin', 5, 5, true),
        (-930013, -913001, -930100, 'Scout', 'Mladinec', 'Scout Mladinec', 'GK', 'admin', 5, 5, true),
@@ -3638,7 +3641,15 @@ values (-930011, -913001, -913001, 'Scout', 'Mladinec', 'Scout Mladinec', 'GK', 
        (-930015, -913001, -913001, 'Scout', 'Mladanon', 'Scout Mladanon', 'MID', 'admin', 5, 5, true),
        (-930016, -913001, -930100, 'Scout', 'Mladanon', 'Scout Mladanon', 'MID', 'admin', 5, 5, true),
        (-930017, -913002, -913001, 'Scout', 'Mladtuj', 'Scout Mladtuj', 'MID', 'admin', 5, 5, true),
-       (-930018, -913002, -930100, 'Scout', 'Mladtuj', 'Scout Mladtuj', 'MID', 'admin', 5, 5, true);
+       (-930018, -913002, -930100, 'Scout', 'Mladtuj', 'Scout Mladtuj', 'MID', 'admin', 5, 5, true),
+       (-930019, -913001, -913001, 'Scout', 'Brezmlad', 'Scout Brezmlad', 'MID', 'admin', 5, 5, true),
+       (-930022, -913001, -913001, 'Scout', 'Mladanonat', 'Scout Mladanonat', 'MID', 'admin', 5, 5, true),
+       (-930023, -913001, -930100, 'Scout', 'Mladanonat', 'Scout Mladanonat', 'MID', 'admin', 5, 5, true),
+       (-930024, -913001, -930100, 'Scout', 'Vidni', 'Scout Vidni', 'FWD', 'admin', 5, 5, true);
+insert into players(id, team_id, competition_id, first_name, last_name, full_name, reg_st, position, position_source, value, value_start, active) overriding system value
+values (-930020, -913001, -913001, 'Scout', 'Sifra', 'Scout Sifra', 930020, 'DEF', 'admin', 5, 5, true),
+       (-930021, -913001, -930100, 'Scout', 'Drugoime', 'Scout Drugoime', 930020, 'DEF', 'admin', 5, 5, true);
+update players set anonimiziran_at = now() where id = -930022;
 insert into scout.ugovori (player_id, kljuc) select * from scout.kljuci_vrstic(array[-930012]::bigint[]);
 insert into anonimizirani_igralci (player_id, kljuc) select * from scout.kljuci_vrstic(array[-930015]::bigint[]);
 insert into rounds(id, season, number, deadline_at, competition_id) overriding system value
@@ -3650,14 +3661,21 @@ insert into appearances(match_id, player_id, team_id, started, minutes_played)
 select m, p, t, true, mi
   from (values (-930301, -930011, -913001, 90), (-930302, -930011, -913001, 45),
                (-930301, -930012, -913001, 90), (-930301, -930015, -913001, 90),
-               (-930301, -930017, -913002, 90)) v(m, p, t, mi);
+               (-930301, -930017, -913002, 90), (-930301, -930019, -913001, 90),
+               (-930301, -930020, -913001, 90), (-930301, -930022, -913001, 90),
+               (-930301, -930001, -913001, 90)) v(m, p, t, mi);
 select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
 set local role authenticated;
 select pg_temp.preveri('scoutk: svoj klub vidi igralca z mladinsko vrstico, brez ugovora in anonimiziranih',
-  (select array_agg((x->>'player_id')::bigint) = array[-930011]::bigint[]
-          and bool_and((x->>'nastopi')::int = 2 and (x->>'minute')::int = 135 and x->>'skupina' = 'GK'
-                       and x->'onoff_ref_90' = 'null'::jsonb)
+  (select array_agg((x->>'player_id')::bigint order by (x->>'player_id')::bigint) = array[-930020, -930011]::bigint[]
+          and bool_and((x->>'player_id')::bigint <> -930011
+                       or ((x->>'nastopi')::int = 2 and (x->>'minute')::int = 135 and x->>'skupina' = 'GK'
+                           and (x->>'zacetki_delez')::float = 1 and x->'kartoni_90' = 'null'::jsonb
+                           and x->'onoff_ref_90' = 'null'::jsonb))
      from scout_klub() j, jsonb_array_elements(j->'kader') x where (x->>'mladi')::boolean));
+select pg_temp.preveri('scoutk: igralec s kazalniki in mladinsko vrstico le enkrat, mladi = false',
+  (select count(*) = 1 and bool_and(not (x->>'mladi')::boolean)
+     from scout_klub() j, jsonb_array_elements(j->'kader') x where (x->>'player_id')::bigint = -930001));
 reset role;
 select pg_temp.preveri('scoutk: drug klub ima igralca z mladinsko vrstico (kontrola)',
   (select bool_or((x->>'player_id')::bigint = -930017)
@@ -3676,7 +3694,7 @@ delete from matches where id in (-930301, -930302);
 delete from rounds where id in (-930301, -930302);
 delete from scout.ugovori where player_id = -930012;
 delete from anonimizirani_igralci where player_id = -930015;
-delete from players where id between -930018 and -930011;
+delete from players where id between -930024 and -930011;
 update scout.kazalniki k set team_id = p.team_id, competition_id = p.competition_id, sezona = '2026/27'
   from players p where p.id = k.player_id and k.player_id between -930008 and -930001;
 update rounds set season = sezona_lige(competition_id) where competition_id in (-926001, -926002, -926003);

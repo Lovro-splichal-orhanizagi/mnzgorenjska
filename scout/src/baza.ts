@@ -95,7 +95,7 @@ export interface IgralecKluba {
   skupina: Skupina | null
   nastopi: number
   minute: number
-  delez_minut: number
+  delez_minut: number | null
   zacetki_delez: number
   goli: number
   onoff_ref_90: number | null

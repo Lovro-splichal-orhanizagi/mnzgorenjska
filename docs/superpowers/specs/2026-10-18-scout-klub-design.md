@@ -21,9 +21,9 @@ specifikacijo, načrtom in objavo:
 | tema | odločitev |
 |---|---|
 | pristop | živi RPC v bazi (`scout_klub`), brez sprememb Python stroja; počasne dele se v stroj prestavi šele, če meritev na produkciji to zahteva |
-| kdo se šteje | ista pravila kot drugje v Scoutu: mladinske lige, ugovor (`scout.ugovori`) in anonimizirani ne vstopijo, tudi v pogled lastnega kluba ne |
+| kdo se šteje | ista pravila kot drugje v Scoutu: mladinske lige, ugovor (`scout.ugovori`) in anonimizirani ne vstopijo, tudi v pogled lastnega kluba ne; edina izjema so igralci z mladinsko vrstico na strani lastnega kluba (spodaj, 18. 10. 2026) |
 | obdobje | tekoča sezona, primerjava s prejšnjo |
-| igralci z mladinsko vrstico (18. 10. 2026, dopolnitev) | Šenčur je na produkciji videl 6 od 22 igralcev. Le na strani **lastnega** kluba (ne pri administratorjevem pogledu tujega) so v kadru tudi igralci kluba z mladinsko vrstico, z oznako U19 (`mladi: true`), samo z javnimi dejstvi tekem lige in sezone kluba (nastopi, minute, delež začetkov in minut, goli, kartoni/90; brez on/off in trenda). Brez ugovora in anonimiziranih (tudi po ključu), brez povezave na profil, nikjer drugje v Scoutu. Migracija 20261018150000 |
+| igralci z mladinsko vrstico (18. 10. 2026, dopolnitev) | Šenčur je na produkciji videl 6 od 22 igralcev. Le na strani **lastnega** kluba (ne pri administratorjevem pogledu tujega) so v kadru tudi igralci kluba z mladinsko vrstico, z oznako U19 (`mladi: true`), samo z javnimi dejstvi tekem lige in sezone kluba (nastopi, minute, delež začetkov in minut, goli, kartoni/90; brez on/off in trenda; delež začetkov na nastop in kartoni (rumeni + 3 × rdeči)/90 od 270 minut kot v stroju; v globini po poziciji se ne štejejo, pokažejo se le kot "+ n U19"). Brez ugovora in anonimiziranih (tudi po ključu), brez povezave na profil, nikjer drugje v Scoutu. Migracija 20261018150000 |
 | preizkus | administratorji SLFF (`is_admin()`) s sedežem in veljavno naročnino lahko izberejo kateri koli klub v odprti državi svoje naročnine; klub sam vidi le sebe |
 
 ## Stran
@@ -103,8 +103,8 @@ tekmo, povprečje lige 1,6"), ne ocena.
   - brez sedeža → napaka; potekla naročnina → napaka;
   - ne-administrator s tujim `p_team_id` → napaka;
   - administrator s klubom druge države → napaka;
-  - igralec z ugovorom, mladinec in anonimiziran niso v `kader`;
-  - lastni klub vidi igralca z mladinsko vrstico (`mladi`), ne pa takega z ugovorom ali anonimiziranega; administrator pri tujem klubu ga ne vidi;
+  - igralec z ugovorom, mladinec in anonimiziran niso v `kader` (razen igralca z mladinsko vrstico pri lastnem klubu, spodaj);
+  - lastni klub vidi igralca z mladinsko vrstico (`mladi`, tudi povezanega le po šifri), ne pa takega z ugovorom ali anonimiziranega (po ključu ali `anonimiziran_at`) in ne igralca brez mladinske vrstice brez kazalnikov; igralec s kazalniki je v kadru enkrat (`mladi = false`); administrator pri tujem klubu ga ne vidi;
   - klic se zapiše v `scout.dnevnik` in šteje v mejo.
 - `npm run smoke:scout`: izris `/club` in nizi (sl/en, brez negativnih oznak).
 - `npm run test:varnost`, `npm run typecheck`, `build:scout`.

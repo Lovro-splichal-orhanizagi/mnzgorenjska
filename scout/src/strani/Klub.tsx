@@ -6,12 +6,17 @@ import { Nalaganje } from '../seja'
 import { odst, st } from './Igralec'
 import { opisVrzeli } from './Vrzeli'
 
-/** Globina po poziciji iz kadra: koliko igralcev nosi vsaj 30 % minut in kdo največ. */
-export function globina(kader: IgralecKluba[]): { skupina: Skupina; stalnih: number; nosilec: IgralecKluba | null }[] {
+/** Globina po poziciji iz kadra: koliko igralcev nosi vsaj 30 % minut in kdo največ (brez U19, kot stroj), in koliko je U19. */
+export function globina(kader: IgralecKluba[]): { skupina: Skupina; stalnih: number; nosilec: IgralecKluba | null; mladih: number }[] {
   return SKUPINE.map((s) => {
-    const v = kader.filter((k) => k.skupina === s)
-    const nosilec = v.reduce<IgralecKluba | null>((a, b) => (!a || b.delez_minut > a.delez_minut ? b : a), null)
-    return { skupina: s, stalnih: v.filter((k) => k.delez_minut >= 0.3).length, nosilec }
+    const v = kader.filter((k) => k.skupina === s && !k.mladi)
+    const nosilec = v.reduce<IgralecKluba | null>((a, b) => (!a || (b.delez_minut ?? 0) > (a.delez_minut ?? 0) ? b : a), null)
+    return {
+      skupina: s,
+      stalnih: v.filter((k) => (k.delez_minut ?? 0) >= 0.3).length,
+      nosilec,
+      mladih: kader.filter((k) => k.skupina === s && k.mladi).length,
+    }
   })
 }
 
@@ -219,9 +224,10 @@ export function PregledKlubaView({ p, razvrsti, setRazvrsti, onIzbira }: {
                   <p className="text-sm text-slate-200">{t('klub.stalnih', { n: x.stalnih })}</p>
                   {x.nosilec && (
                     <p className="text-xs text-slate-400">
-                      {t('klub.nosilec', { ime: x.nosilec.ime, delez: Math.round(x.nosilec.delez_minut * 100) })}
+                      {t('klub.nosilec', { ime: x.nosilec.ime, delez: Math.round((x.nosilec.delez_minut ?? 0) * 100) })}
                     </p>
                   )}
+                  {x.mladih > 0 && <p className="text-xs text-slate-400">{t('klub.mladiVPoziciji', { n: x.mladih })}</p>}
                 </div>
               ))}
             </div>

@@ -146,18 +146,26 @@ begin
        and p_team in (m.home_team_id, m.away_team_id)
        and m.imported_at is not null and not m.kontumacija;
 
+    -- Mladinska imena in šifre države enkrat (hash), ne po vrstici.
+    with mladinski as materialized (
+      select y.full_name, y.reg_st from players y join competitions yc on yc.id = y.competition_id
+       where yc.country_id = p_country and je_mladinski_slug(yc.slug)
+    )
     select coalesce(jsonb_agg(jsonb_build_object(
              'player_id', s.player_id, 'ime', p.full_name, 'skupina', p.position,
              'nastopi', s.nastopi, 'minute', s.minute,
              'delez_minut', s.minute::float / nullif(v_odigrane * 90, 0),
-             'zacetki_delez', s.zacetki::float / nullif(v_odigrane, 0), 'goli', s.goli,
-             'onoff_ref_90', null, 'kartoni_90', s.kartoni * 90.0 / s.minute, 'trend_minut', null,
+             -- kot stroj (kazalniki.py): začetki na nastop, kartoni rumeni + 3 × rdeči
+             'zacetki_delez', s.zacetki::float / nullif(s.nastopi, 0), 'goli', s.goli,
+             'onoff_ref_90', null,
+             'kartoni_90', case when s.minute >= 270 then s.kartoni * 90.0 / s.minute end,
+             'trend_minut', null,
              'mladi', true)
              order by s.minute desc, s.player_id), '[]'::jsonb)
       into v_mladi
       from (select a.player_id, count(*)::int as nastopi, sum(a.minutes_played)::int as minute,
                    sum(a.started::int)::int as zacetki, sum(a.goals)::int as goli,
-                   sum(a.yellow_cards + a.red_cards)::int as kartoni
+                   sum(a.yellow_cards + 3 * a.red_cards)::int as kartoni
               from appearances a join matches m on m.id = a.match_id join rounds r on r.id = m.round_id
              where a.team_id = p_team and r.competition_id = v_liga and r.season = v_sezona
                and a.minutes_played > 0
@@ -167,9 +175,8 @@ begin
        and not exists (select 1 from jsonb_array_elements(v_kader) x
                         where (x->>'player_id')::bigint = s.player_id)
        -- mladinska vrstica z istim imenom ali šifro v državi (kot stroj)
-       and exists (select 1 from players y join competitions yc on yc.id = y.competition_id
-                    where yc.country_id = p_country and je_mladinski_slug(yc.slug)
-                      and (y.full_name = p.full_name or y.reg_st = p.reg_st))
+       and (p.full_name in (select full_name from mladinski)
+            or p.reg_st in (select reg_st from mladinski where reg_st is not null))
        and not exists (select 1 from scout.kljuci_vrstic(array[s.player_id]) k
                         join anonimizirani_igralci a on a.kljuc = k.kljuc)
        and not scout.je_skrit(array[s.player_id]);
