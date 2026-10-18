@@ -10,6 +10,17 @@ name: Zdruzi podvojena kluba
 on:
   workflow_dispatch:
     inputs:
+      nacin:
+        description: 'Standardna zdruzitev ali enkratno dokazano popravilo FCF G13'
+        required: false
+        type: choice
+        options: [standard, fcf-g13]
+        default: standard
+      approved_sha256:
+        description: 'FCF G13 apply: pregledani SHA256 iz predogleda (sicer prazno)'
+        required: false
+        type: string
+        default: ''
       odvecni:
         description: 'id kluba, ki se izbrise'
         required: true
@@ -38,6 +49,7 @@ concurrency:
 
 jobs:
   zdruzi:
+    if: inputs.nacin != 'fcf-g13'
     runs-on: ubuntu-latest
     # 15 minut dela + do 120 minut cakanja na starejsi uvoz.
     timeout-minutes: 140
@@ -96,3 +108,76 @@ jobs:
           else
             node scripts/zdruzi-klube.mjs --odvecni "$ODVECNI" --obdrzi "$OBDRZI"
           fi
+
+  fcf-g13:
+    if: inputs.nacin == 'fcf-g13'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+      actions: read
+    env:
+      ODVECNI: ${{ inputs.odvecni }}
+      OBDRZI: ${{ inputs.obdrzi }}
+      PISI: ${{ inputs.pisi }}
+      APPROVED_SHA256: ${{ inputs.approved_sha256 }}
+      MIGRACIJE_PREMOR: ${{ vars.MIGRACIJE_PREMOR }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # Runner rejects any ref except refs/heads/main before credentials/SQL.
+      - name: Fiksni vhod in veja main
+        run: node scripts/fcf-g13-repair.mjs --check
+      - name: Predpogoji baze
+        id: baza
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          [ "$MIGRACIJE_PREMOR" != "1" ] || { echo "::error::MIGRACIJE_PREMOR=1"; exit 1; }
+          test -n "$SUPABASE_DB_URL" || { echo "::error::Manjka povezava baze"; exit 1; }
+          test -n "$SUPABASE_URL" && test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "::error::Manjka predpogoj cakanja"; exit 1; }
+          command -v psql >/dev/null || { echo "::error::Manjka psql"; exit 1; }
+          case "$SUPABASE_DB_URL" in *@127.0.0.1*)
+            test -n "$KLJUC" && test -n "$ZNANI" || { echo "::error::Manjka predpogoj tunela"; exit 1; }
+            echo "tunel=da" >> "$GITHUB_OUTPUT";; esac
+      - name: Pocakaj na starejse ES uvoze
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --drzava ES --najvec 300
+      - name: Tunel do baze na VM
+        if: steps.baza.outputs.tunel == 'da'
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Atomski FCF G13 predogled ali apply
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: node scripts/fcf-g13-repair.mjs
+      - name: Dokaz popravila
+        if: always() && hashFiles('fcf-g13-repair/result.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-g13-repair-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-g13-repair/result.json
+          if-no-files-found: error
+          retention-days: 14

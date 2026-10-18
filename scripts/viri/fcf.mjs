@@ -551,13 +551,20 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
  * Ključ kluba: brez diakritike in ločil, z obliko vred ("ROSES, A.E." in
  * "BASE ROSES, C.F." sta dva kluba).
  */
-export const kljucKlubaEs = (ime) =>
+export const poenostaviKlubEs = (ime) =>
   presledki(ime)
     .normalize('NFD')
     .replace(/\p{M}/gu, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
+
+// Same five acta IDs, 80 registration-linked appearances and the full G13
+// calendar establish this exact identity. Reserve/legal forms stay distinct.
+export const kljucKlubaEs = (ime) => {
+  const key = poenostaviKlubEs(ime)
+  return key === 'vilanova atletic' ? 'futbol club atletic vng pasifae' : key
+}
 
 const OBLIKE_ES = new Set(['futbol', 'fútbol', 'ae', 'cf', 'ce', 'ue', 'ud', 'fc', 'cd', 'club', 'ef', 'ad', 'cef', 'aec', 'sd', 'cfs', 'fs', 'uec', 'ue', 'ac', 'ufb', 'uff', 'cfb', 'cfu', 'ec'])
 /**
@@ -761,7 +768,7 @@ const vir = {
 
   kljucKluba: kljucKlubaEs,
   kratkoIme: kratkoImeEs,
-  poenostavi: kljucKlubaEs,
+  poenostavi: poenostaviKlubEs,
 }
 
 export default vir
