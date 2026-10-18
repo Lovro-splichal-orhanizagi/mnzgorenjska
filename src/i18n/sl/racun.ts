@@ -12,6 +12,9 @@ export const racun = {
     racunUstvarjen:
       'Račun je ustvarjen. Na e-pošto smo poslali potrditveno povezavo — odpri jo in se vrni.',
     prijavljenKot: 'Prijavljen si kot {email}.',
+    posljiPotrditevZnova: 'Pošlji potrditveni e-mail znova',
+    potrditevPoslanaZnova:
+      'Poslali smo nov potrditveni e-mail. Poglej tudi v vsiljeno pošto.',
     zGooglom: 'Nadaljuj z Googlom',
     zApplom: 'Nadaljuj z Applom',
     aliZEposto: 'ali z e-pošto',
@@ -247,7 +250,7 @@ export const racun = {
       'Ugovor: na prevzetem profilu klikni Skrij me iz Scouta ali piši na <eposta>info@slff.eu</eposta> s povezavo na stran igralca. V 14 dneh igralca skrijemo iz Scouta v vseh naših ligah te države, tudi ob poznejših uvozih. V fantasy igri ostane.',
     trgovinaNaslov: 'SLFF Trgovina (shop.slff.eu)',
     trgovinaKaj:
-      'Ob nakupu obdelujemo ime, e-pošto, naslov za dostavo, kupljene izdelke in zneske, ob prijavi tudi tvoj račun SLFF. Plačilo izvede Stripe: podatkov kartice ne vidimo in jih ne hranimo. Ime in naslov dobi Pošta Slovenije za dostavo. Za omejitev zlorab ob nedokončanem nakupu začasno hranimo zgoščen (nepovraten) IP naslov; izbriše se ob plačilu ali poteku nakupa.',
+      'Ob nakupu obdelujemo ime, e-pošto, naslov za dostavo, kupljene izdelke in zneske, ob prijavi tudi tvoj račun SLFF. Plačilo izvede Stripe: podatkov kartice ne vidimo in jih ne hranimo. Ime in naslov dobi Pošta Slovenije za dostavo. Za omejitev zlorab ob nedokončanem nakupu začasno hranimo zgoščen (nepovraten) IP naslov; izbriše se ob plačilu ali poteku nakupa. Besedilo personalizacije (ime, številka) in ime fantasy ekipe na izdelku sta del naročila; besedilo dobi tudi tiskarna, ki izdelek izdela.',
     trgovinaPodlaga:
       'Pravna podlaga je izpolnitev pogodbe (člen 6(1)(b) GDPR) in zakonske obveznosti (računovodstvo, davki), za zgoščen IP naslov pa zakoniti interes preprečevanja zlorab (člen 6(1)(f) GDPR). Upravljavec je SPACE GUARDIAN, računalniško programiranje, d.o.o.',
     trgovinaHramba:

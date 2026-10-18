@@ -12,7 +12,7 @@ const fixed = ['4119076','4119085','4119093','4119222','4119110']
 const script = new URL('./izvozi-fcf-g13-predpomnjene-dokaze.mjs', import.meta.url).pathname
 const workflow = new URL('../.github/workflows/fcf-g13-predpomnjeni-dokazi.yml', import.meta.url)
 const hash = bytes => createHash('sha256').update(bytes).digest('hex')
-const oldExporterHash = '6ac187ff382556f9d3490e281fdbc6486b3e3afc8f87dcb5b256d260297a6cf2'
+const oldExporterHash = 'a5271b8585a6c0e4e49b54b850bfdc855e10a78096f288a15e271ecd566db56b'
 const e = (type, children, props={}) => ['$',type,null,{...props,children}]
 // Tiny constructed RSC test data, never represented as an original source capture.
 function page(id, p={}) {

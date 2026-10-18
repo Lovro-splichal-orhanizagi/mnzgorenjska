@@ -32,7 +32,12 @@ export default function Prijava() {
   // Glava ima na /login "Začni brezplačno" in "Prijava": klik na drugo na isti
   // strani zamenja le poizvedbo, zato način sledi naslovu.
   const nacinVNaslovu = params.get('nacin') === 'registracija' ? 'registracija' : 'prijava'
-  useEffect(() => setNacin(nacinVNaslovu), [nacinVNaslovu])
+  useEffect(() => {
+    setNacin(nacinVNaslovu)
+    setNapaka(null)
+    setSporocilo(null)
+    setPotrditevZnova(false)
+  }, [nacinVNaslovu])
   const [email, setEmail] = useState('')
   // Predlog domene ("gmail.con" → "gmail.com") se pokaže, ko uporabnik zapusti
   // polje, da med tipkanjem ne utripa. Oddaje ne ustavi.
@@ -43,6 +48,10 @@ export default function Prijava() {
   const [napaka, setNapaka] = useState<string | null>(null)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
   const [posiljam, setPosiljam] = useState(false)
+  // Nepotrjen e-naslov: gumb za nov potrditveni mail (7.–8. 10. 2026 so šli
+  // ven prazni). Po kliku 60 s premora, ker GoTrue omeji maile na uro.
+  const [potrditevZnova, setPotrditevZnova] = useState(false)
+  const [premor, setPremor] = useState(false)
   const naslov =
     nacin === 'registracija'
       ? t('racun.prijava.naslovRegistracija')
@@ -77,10 +86,31 @@ export default function Prijava() {
     if (nativno && data.url) await Browser.open({ url: data.url })
   }
 
+  // GoTrue ne pošlje istemu naslovu dveh mailov v 60 s, zato premor teče tudi
+  // takoj po registraciji (prvi mail je pravkar odšel).
+  function zacniPremor() {
+    setPremor(true)
+    setTimeout(() => setPremor(false), 60_000)
+  }
+
+  async function posljiPotrditevZnova() {
+    zacniPremor()
+    setNapaka(null)
+    setSporocilo(null)
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: `${izvor()}${nazaj}` },
+    })
+    if (error) return setNapaka(napakaPrijave(error.message))
+    setSporocilo(t('racun.prijava.potrditevPoslanaZnova'))
+  }
+
   async function poslji(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setNapaka(null)
     setSporocilo(null)
+    setPotrditevZnova(false)
     setPosiljam(true)
 
     // Ponastavitev gesla pošlje povezavo na e-pošto; uporabnik se vrne na
@@ -111,9 +141,14 @@ export default function Prijava() {
         : await supabase.auth.signInWithPassword({ email, password: geslo })
 
     setPosiljam(false)
-    if (error) return setNapaka(napakaPrijave(error.message))
+    if (error) {
+      setPotrditevZnova(/email not confirmed/i.test(error.message))
+      return setNapaka(napakaPrijave(error.message))
+    }
     if (nacin === 'registracija') {
       dogodek('registracija', { nacin: 'eposta' })
+      setPotrditevZnova(true)
+      zacniPremor()
       return setSporocilo(t('racun.prijava.racunUstvarjen'))
     }
     navigate(nazaj)
@@ -240,6 +275,17 @@ export default function Prijava() {
         </button>
         {napaka && <p className="text-sm text-rose-400">{napaka}</p>}
         {sporocilo && <p className="text-sm text-gnl-300">{sporocilo}</p>}
+        {/* Preklop načina pobriše napako in sporočilo, s tem skrije tudi gumb. */}
+        {potrditevZnova && (napaka || sporocilo) && (
+          <button
+            type="button"
+            onClick={posljiPotrditevZnova}
+            disabled={premor}
+            className="gumb-tih min-h-11 w-full py-3 text-sm text-gnl-300 disabled:opacity-50"
+          >
+            {t('racun.prijava.posljiPotrditevZnova')}
+          </button>
+        )}
       </form>
 
       <div className="flex flex-col gap-1">

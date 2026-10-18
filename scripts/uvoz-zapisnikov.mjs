@@ -253,8 +253,11 @@ function vrnjenoIme(p, polnoIme, regSt) {
 // naslednji uvoz igralca še najti.
 async function posodobiIgralca(id, popravek, vrnjeno) {
   if (!Object.keys(popravek).length) return
-  const { error } = await db.from('players').update(popravek).eq('id', id)
+  const { error, count } = await db.from('players').update(popravek, { count: 'exact' }).eq('id', id)
   if (error) throw new Error(`igralec ${id}: ${error.message}`)
+  // HTTP uspeh brez popravljene vrstice še ni vrnjena identiteta. Dokler
+  // zapis ni potrjen, mora zgoščeni ključ ostati za naslednji poskus.
+  if (vrnjeno && count !== 1) throw new Error(`igralec ${id}: vrnitev identitete ni potrjena`)
   if (vrnjeno) await db.from('anonimizirani_igralci').delete().eq('player_id', id)
 }
 
@@ -459,7 +462,7 @@ async function igralecId(
 
   let poizvedba = db
     .from('players')
-    .select('id, position, position_source')
+    .select(POLJA_IGRALCA)
     .eq('competition_id', tekmovanje.id)
     .eq('team_id', teamId)
     .eq('full_name', polnoIme)
@@ -477,7 +480,7 @@ async function igralecId(
   if (!dvoumno && (zadetki?.length ?? 0) > 1 && st != null) {
     const { data: poDresu } = await db
       .from('players')
-      .select('id, position, position_source')
+      .select(POLJA_IGRALCA)
       .eq('competition_id', tekmovanje.id)
       .eq('team_id', teamId)
       .eq('full_name', polnoIme)
@@ -507,7 +510,7 @@ async function igralecId(
   if (!obstoj && dvoumno && zasedeni) {
     const { data: vsi } = await db
       .from('players')
-      .select('id, position, position_source')
+      .select(POLJA_IGRALCA)
       .eq('competition_id', tekmovanje.id)
       .eq('team_id', teamId)
       .eq('full_name', polnoIme)
@@ -531,7 +534,7 @@ async function igralecId(
     // po imenu ga ne posvojimo (šifra je identiteta, ime ni).
     const { data: drugje } = await db
       .from('players')
-      .select('id, position, position_source, team_id, teams(name)')
+      .select(`${POLJA_IGRALCA}, teams(name)`)
       .eq('competition_id', tekmovanje.id)
       .eq('full_name', polnoIme)
       .is('reg_st', null)
@@ -550,7 +553,10 @@ async function igralecId(
         datum: tekma?.datum ?? datum,
       })
       if (skladen) {
-        await db.from('players').update({ team_id: teamId, shirt_number: st }).eq('id', p.id)
+        const { error, count } = await db.from('players')
+          .update({ team_id: teamId, shirt_number: st }, { count: 'exact' }).eq('id', p.id)
+        if (error) throw new Error(`igralec ${polnoIme}: ${error.message}`)
+        if (count !== 1) throw new Error(`prestop ${polnoIme}: pričakovan natanko en igralec`)
         console.log(
           `  prestop: ${polnoIme} ${p.teams?.name ?? '?'} -> klub ${teamId}`,
         )
@@ -568,13 +574,33 @@ async function igralecId(
   if (!obstoj && !dvoumno) {
     const anon = await anonimiziranVLigi(imeHash(tekmovanje.country_id, polnoIme))
     if (anon) {
-      obstoj = anon
       const vrnjeno = vrnjenoIme(anon, polnoIme, null)
       await posodobiIgralca(anon.id, { team_id: teamId, shirt_number: st, ...vrnjeno }, vrnjeno)
+      // Odziv iskanja je ločen posnetek. Šele potrjen zapis po vrnitvi imena
+      // sme odločiti o aktivaciji; ugovor se pri tem nikoli ne izbriše.
+      const { data, error } = await db.from('players').select(`${POLJA_IGRALCA}, full_name`)
+        .eq('id', anon.id).eq('competition_id', tekmovanje.id).eq('team_id', teamId).limit(2)
+      if (error) throw new Error(`igralec ${polnoIme}: ${error.message}`)
+      if (data?.length !== 1 || (vrnjeno &&
+          (data[0].full_name !== polnoIme || data[0].anonimiziran_razlog != null)))
+        throw new Error(`igralec ${polnoIme}: vrnitev identitete ni potrjena`)
+      obstoj = data[0]
     }
   }
 
   if (obstoj) {
+    // Razpored lahko izklopi igralca lanskega kluba, preden letošnji zapisnik
+    // potrdi prestop (tudi preimenovan klub). Brez šifre velja ista vrnitev
+    // kot pri registrskem ključu; ponoven uvoz mora popraviti tudi že prestopljenega.
+    if (tekocaSezona && obstoj.active === false && !obstoj.odsel_at &&
+        !obstoj.izstopil_at && !obstoj.anonimiziran_razlog) {
+      const { error, count } = await db.from('players').update({ active: true }, { count: 'exact' })
+        .eq('id', obstoj.id).eq('competition_id', tekmovanje.id).eq('team_id', teamId)
+        .eq('active', false).is('odsel_at', null).is('izstopil_at', null)
+        .is('anonimiziran_razlog', null)
+      if (error) throw new Error(`igralec ${polnoIme}: ${error.message}`)
+      if (count !== 1) throw new Error(`reaktivacija ${polnoIme}: pričakovan popravek natanko enega igralca`)
+    }
     igralci.set(kljuc, obstoj.id)
     javiVratarjaIzPolja(obstoj)
     // vratar iz zapisnika povozi ugibanje
