@@ -80,7 +80,10 @@ const IDENTITY_FIELDS = [
  */
 export function classifyHistoricalStatistics({ competition, fixture, rawSha256, policy }) {
   const candidate = policy ?? getHistoricalStatisticsPolicy(competition?.slug)
-  if (!candidate) return { kind: 'normal' }
+  if (!candidate) {
+    if (competition?.source_policy != null) throw new Error('historical policy: unknown competition/policy opt-in')
+    return { kind: 'normal' }
+  }
   const reviewed = registry.policies.find(known => known.id === candidate.id)
   if (!reviewed || historicalStatisticsPolicySha256(candidate) !== historicalStatisticsPolicySha256(reviewed)) throw new Error('historical policy: unreviewed policy')
   if (competition?.slug !== reviewed.competitionSlug || competition?.source !== reviewed.provider || competition?.source_policy !== reviewed.sourcePolicy) throw new Error('historical policy: competition/provider/policy binding differs')
