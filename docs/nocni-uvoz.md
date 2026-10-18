@@ -55,4 +55,6 @@ Kako zdaj:
 - **Rezervni cron** `47 6 * * 1-4`: GitHub jutranji zagon kdaj tiho izpusti
   (13. 10. 2026); posel `zacni` rezervo preskoči, če je današnji zagon že tekel.
 - Ime posla je `uvoz HU` pri enem košu in `uvoz HU 2/3` pri več;
-  `cakaj-na-uvoze.mjs` pri skupnem viru gleda vse posle države.
+  `cakaj-na-uvoze.mjs` pri skupnem viru in popravku z znano državo gleda
+  vse posle te države. Vsak koš mora biti prisoten in končan; neznan obseg
+  popravka ali manjkajoči posli še vedno čakajo na celoten zagon.

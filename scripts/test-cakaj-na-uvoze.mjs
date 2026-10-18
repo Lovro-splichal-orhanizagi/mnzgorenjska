@@ -59,6 +59,9 @@ const regional = [
 ]
 const fixtures = [
   { slug: 'de-regionalliga-nord', active: false, source: 'dfb', countries: { code: 'DE' }, federations: { code: 'nfv-nord' } },
+  { slug: 'dk-example', active: false, source: 'dbu', countries: { code: 'DK' }, federations: { code: 'dbu' } },
+  { slug: 'pl-example', active: false, source: 'pzpn', countries: { code: 'PL' }, federations: { code: 'pzpn' } },
+  { slug: 'gr-example', active: false, source: 'eps', countries: { code: 'GR' }, federations: { code: 'eps-athens' } },
   { slug: 'si-example', active: false, source: 'nzs', countries: { code: 'SI' }, federations: { code: 'mnzg' } },
   { slug: 'at-one', active: false, source: 'oefb', countries: { code: 'AT' }, federations: { code: 'wfv' } },
   { slug: 'at-two', active: false, source: 'oefb', countries: { code: 'AT' }, federations: { code: 'wfv' } },
@@ -352,4 +355,50 @@ test('existing-league batch is a global writer in both crossing loops; preview s
   assert.equal((await coordinate(['--popravek','--tekmovanje','at-one'],{'uvoz-lige.yml':[run('Uvoz lige at-two')]})).code,1)
   assert.equal((await coordinate(['--popravek','--tekmovanje','at-one'],{'uvoz-zapisnikov.yml':[run('Nightly import')]})).code,1)
   for(const name of ['zdruzi-klube.yml','tedensko-cene.yml']) assert.match(readFileSync(new URL(`../.github/workflows/${name}`,import.meta.url),'utf8'),/for wf in [^\n]*vklop-obstojecih-lig\.yml/)
+})
+
+
+const olderNightly = { 'uvoz-zapisnikov.yml': [run('Nightly import')] }
+const greekJobs = [1, 2, 3, 4, 5, 6].map(i => ({ name: `uvoz GR ${i}/6`, status: 'completed' }))
+
+test('country-scoped corrections proceed after their nightly jobs finish while Austria still runs', async () => {
+  for (const [country, source] of [['DK', 'dbu'], ['PL', 'pzpn'], ['GR', 'eps']]) {
+    const jobs = country === 'GR' ? greekJobs : [{ name: `uvoz ${country}`, status: 'completed' }]
+    for (const scope of [['--tekmovanje', `${country.toLowerCase()}-example`], ['--vir', source]]) {
+      const result = await coordinate(['--popravek', ...scope], olderNightly,
+        [...jobs, { name: 'uvoz AT 1/4', status: 'in_progress' }])
+      assert.equal(result.code, 0, `${country}: ${result.logs.join('; ')}`)
+    }
+  }
+})
+
+test('corrections wait for every Greek bucket including queued buckets', async () => {
+  for (const status of ['queued', 'in_progress']) for (let i = 0; i < 6; i++) {
+    const jobs = greekJobs.map((j, n) => n === i ? { ...j, status } : j)
+    assert.equal((await coordinate(['--popravek', '--tekmovanje', 'gr-example'], olderNightly, jobs)).code, 1)
+  }
+})
+
+test('unknown correction scopes and missing or incomplete nightly job lists keep waiting', async () => {
+  for (const args of [['--popravek'], ['--popravek', '--vir', 'unknown'], ['--popravek', '--tekmovanje', 'unknown']]) {
+    assert.equal((await coordinate(args, olderNightly, [{ name: 'uvoz DK', status: 'completed' }])).code, 1)
+  }
+  for (const jobs of [null, [], [{ name: 'uvoz AT 1/4', status: 'completed' }]]) {
+    assert.equal((await coordinate(['--popravek', '--tekmovanje', 'dk-example'], olderNightly, jobs)).code, 1)
+  }
+  for (const jobs of [greekJobs.slice(0, 5), [...greekJobs.slice(0, 5), greekJobs[0]],
+    [...greekJobs.slice(0, 5), { name: 'uvoz GR unknown', status: 'completed' }]]) {
+    assert.equal((await coordinate(['--popravek', '--tekmovanje', 'gr-example'], olderNightly, jobs)).code, 1)
+  }
+})
+
+test('nightly country scoping preserves global maintenance and same-country writer waits', async () => {
+  for (const [workflow, title] of [
+    ['zdruzi-klube.yml', 'Zdruzi podvojena kluba'], ['tedensko-cene.yml', 'Tedensko prevrednotenje'],
+    ['cene-lig.yml', 'Cene lig'], ['uvoz-lige.yml', 'Uvoz lige dk-example'],
+    ['razdeli-zlite-igralce.yml', 'Razdeli zlite igralce dbu (pisi)'],
+  ]) {
+    assert.equal((await coordinate(['--popravek', '--tekmovanje', 'dk-example'],
+      { ...olderNightly, [workflow]: [run(title)] }, [{ name: 'uvoz DK', status: 'completed' }])).code, 1, workflow)
+  }
 })
