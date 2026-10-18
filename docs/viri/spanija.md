@@ -637,3 +637,12 @@ ne odobri cen, vklopa, prejšnje sezone ali legal15. Dejanski zajem/produkcija
 ostajata ločena pregledana koraka. CI ima izrecen Node korak za novi protokol,
 sprejem in v2 target teste; zasebni pozitivni testi se v javnem CI preskočijo
 samo, kadar manjkajo pristni izvirni markerji.
+
+Zasebni draft transport ima ločeno izključno source-free mejo: le seed staging
+in approval staging dobita `contents:write` zaradi vidnosti drafta; GitHub
+odjemalec še vedno izvaja samo GET. Consume/zajem/audit/račun ostanejo
+`contents:read/actions:read` in berejo dejanski nespremenljivi approval artefakt
+istega zagona, overjen z job/step/run/attempt/ZIP podatki ter ločenim root SHA
+izvirnega JSON. Zaščiten enkratni claim in odločitev root pred GET ostaneta
+obvezna. Podrobnosti in omejitev dejanskega Actions preverjanja so v
+[transportni meji](fcf-missing-inventory-admission.md#private-draft-transport-boundary-18-october-2026).
