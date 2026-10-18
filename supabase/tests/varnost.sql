@@ -3967,6 +3967,25 @@ select pg_temp.zavrnjeno('pot: stikov s klubi ne pise navaden uporabnik (RLS)',
   $$insert into klub_stik(klub, drzava, stanje) values ('Vsiljen klub', 'SI', 'nov')$$);
 reset role;
 
+-- Novi nemski stiki in vsi doslej podprti drzavni kodi morajo ostati veljavni.
+insert into klub_stik(id, klub, drzava, stanje) overriding system value
+select -915000-n, 'Test drzave '||drzava, drzava, 'nov'
+from unnest(array['SI','SK','HR','CZ','HU','AT','RS','RO','EE','PL','ES','LV','MK',
+                  'GR','TR','UA','AM','AZ','DK','GB','MT','ME','BA','MD','DE'])
+     with ordinality as kode(drzava,n);
+select pg_temp.preveri('stiki: Nemcija in vse obstojece drzave so dovoljene',
+  (select count(*)=25 from klub_stik where id between -915025 and -915001));
+do $$
+declare v_zavrnjeno boolean := false;
+begin
+  begin
+    insert into klub_stik(klub, drzava, stanje) values ('Test neznane drzave', 'ZZ', 'nov');
+  exception when check_violation then v_zavrnjeno := true;
+  end;
+  perform pg_temp.preveri('stiki: neznana drzava ostane zavrnjena', v_zavrnjeno);
+end;
+$$;
+
 do $$
 declare v_napak int;
 begin

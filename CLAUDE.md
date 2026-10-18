@@ -331,6 +331,9 @@ Samodejno pošiljanje iz luka@slff.eu (vrsta, delavec `slff-posta` na
 strežniku, okna, polnjenje po državah, objava): `docs/posta-klubom.md`.
 CI ga ne objavi (`scripts/hetzner/objavi-posto.sh`).
 
+`klub_stik.drzava` sprejme tudi `DE` (migracija `20261018120600_stiki_nemcija`);
+pravila predhodnega preverjanja in beleženja veljajo enako za nemške klube.
+
 ## Samodejne objave (Instagram, Facebook)
 
 Delavec `slff-objave` (`scripts/objave.mjs`) pripravi **vsak dan** osnutek
