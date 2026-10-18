@@ -10,6 +10,29 @@ insert into private_historical_statistics.policies values('es-fcf-segona-g1-hist
 insert into private_historical_statistics.policies values('es-fcf-tercera-g2-history-2026-10-18-v1','252cff1a96fd32f683c6909337dbbd00a685399964c3d2561188698f6182ad70','{"id":"es-fcf-tercera-g2-history-2026-10-18-v1","provider":"fcf","sourcePolicy":"es-fcf-reviewed-history-v1","competitionSlug":"es-ct-tercera-g2","season":"2026/27","recordedAt":"2026-10-18T13:47:13Z","approvalReference":"user replies0 and1 to call_84764278412542b2ab37d9bb6e61eb67; recordedAt is implementation recording time, user send time unavailable","entries":[{"sourceMatchId":"4116215","sourceCompetitionId":"58161875","sourcePhase":null,"sourceRound":4,"playedOn":"2026-10-10","homeSourceClubId":"1107","awaySourceClubId":"5114","homeSourceCategoryId":"37659","awaySourceCategoryId":"34913","sourceUrl":"https://www.fcf.cat/ca/competicio/acta/4116215","rawSha256":"5dd7e401c7929dd1f2b59d35d1f6e203e6306f2479238adcd8755180b9671a49","observedHomeScore":5,"observedAwayScore":0,"reasonCode":"published_score_exceeds_recorded_goal_events"}]}'::jsonb);
 insert into private_historical_statistics.policies values('es-fcf-tercera-g9-history-2026-10-18-v1','beee75c5722e10dbb76e6caee7605d6f1ffdc590f39109cd2f01259720ff677b','{"id":"es-fcf-tercera-g9-history-2026-10-18-v1","provider":"fcf","sourcePolicy":"es-fcf-reviewed-history-v1","competitionSlug":"es-ct-tercera-g9","season":"2026/27","recordedAt":"2026-10-18T13:47:13Z","approvalReference":"user replies0 and1 to call_84764278412542b2ab37d9bb6e61eb67; recordedAt is implementation recording time, user send time unavailable","entries":[{"sourceMatchId":"4118352","sourceCompetitionId":"58161880","sourcePhase":null,"sourceRound":1,"playedOn":"2026-09-19","homeSourceClubId":"1252","awaySourceClubId":"6136","homeSourceCategoryId":"35781","awaySourceCategoryId":"33049","sourceUrl":"https://www.fcf.cat/ca/competicio/acta/4118352","rawSha256":"1e8d50d487be699cac45c3c2dc4658d3a9b16983fd5203b5845dc1339fe7351c","observedHomeScore":3,"observedAwayScore":0,"reasonCode":"published_score_conflicts_with_recorded_goal_events"},{"sourceMatchId":"4118358","sourceCompetitionId":"58161880","sourcePhase":null,"sourceRound":2,"playedOn":"2026-09-26","homeSourceClubId":"44143644","awaySourceClubId":"1400","homeSourceCategoryId":"44510647","awaySourceCategoryId":"47272626","sourceUrl":"https://www.fcf.cat/ca/competicio/acta/4118358","rawSha256":"e69af6b2765dbed7ebe3b57535beb1ce259c7d77ed9cb7f90d9cb4998afd153a","observedHomeScore":0,"observedAwayScore":3,"reasonCode":"published_score_conflicts_with_recorded_goal_events"}]}'::jsonb);
 
+
+-- Exact reviewed native-club identities, separate from immutable match approval hashes.
+create table private_historical_statistics.source_club_bindings(
+ provider text not null,source_club_id text not null,source_category_id text not null default '',
+ country_code text not null,canonical_names text[] not null,proofs jsonb not null,
+ bound_team_id bigint references public.teams(id),primary key(provider,source_club_id,source_category_id));
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('hns','1274','','HR',array['HNK Gorica s.d.d.'],'[{"sourceMatchId":"114471617","sourceUrl":"https://semafor.hns.family/utakmice/114471617/x/","rawSha256":"2dc781b523945db96f2a1ab2d216aaf19760c1c98e1aca3bade2c98fae09c53b"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('hns','107347','','HR',array['ŽNK Donat'],'[{"sourceMatchId":"114471617","sourceUrl":"https://semafor.hns.family/utakmice/114471617/x/","rawSha256":"2dc781b523945db96f2a1ab2d216aaf19760c1c98e1aca3bade2c98fae09c53b"},{"sourceMatchId":"114471627","sourceUrl":"https://semafor.hns.family/utakmice/114471627/x/","rawSha256":"c6a292c409c20a6b71c7b0d2089245325b7361356fb0637ef77feb52772db04c"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('hns','108341','','HR',array['ŽNK Dinamo'],'[{"sourceMatchId":"114471627","sourceUrl":"https://semafor.hns.family/utakmice/114471627/x/","rawSha256":"c6a292c409c20a6b71c7b0d2089245325b7361356fb0637ef77feb52772db04c"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('hns','175835','','HR',array['ŽNK Međimurje Čakovec'],'[{"sourceMatchId":"114471629","sourceUrl":"https://semafor.hns.family/utakmice/114471629/x/","rawSha256":"382a9be268301534f8e085587e994ac3ecb093288f08e38126a1bbcfe012db14"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('hns','649','','HR',array['ŽNK Agram'],'[{"sourceMatchId":"114471629","sourceUrl":"https://semafor.hns.family/utakmice/114471629/x/","rawSha256":"382a9be268301534f8e085587e994ac3ecb093288f08e38126a1bbcfe012db14"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('dfb','tsg-balingen','','DE',array['TSG Balingen'],'[{"sourceMatchId":"2402929","sourceUrl":"https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/11-spieltag/tsg-balingen-kickers-offenbach-2402929","rawSha256":"cda4f2b1cdd971e85cc34feab5c570e5388c733d69c474b02ca16a50f3d52296"},{"sourceMatchId":"2403004","sourceUrl":"https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/19-spieltag/tsv-steinbach-haiger-tsg-balingen-2403004","rawSha256":"3fd9c5a0cf2d21a0ee76c06cef5e07f5fa836f725651ebc3cdc8e5daa0a3dfff"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('dfb','kickers-offenbach','','DE',array['Kickers Offenbach'],'[{"sourceMatchId":"2402929","sourceUrl":"https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/11-spieltag/tsg-balingen-kickers-offenbach-2402929","rawSha256":"cda4f2b1cdd971e85cc34feab5c570e5388c733d69c474b02ca16a50f3d52296"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('dfb','tsv-steinbach-haiger','','DE',array['TSV Steinbach Haiger'],'[{"sourceMatchId":"2403004","sourceUrl":"https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/19-spieltag/tsv-steinbach-haiger-tsg-balingen-2403004","rawSha256":"3fd9c5a0cf2d21a0ee76c06cef5e07f5fa836f725651ebc3cdc8e5daa0a3dfff"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('fcf','5042','33356','ES',array['SANT JAUME OLOT B, C.F'],'[{"sourceMatchId":"4109388","sourceUrl":"https://www.fcf.cat/ca/competicio/acta/4109388","rawSha256":"eb3b14de3d6077f4fb896cb4a4d2b96d76eb85db8853889e9871b7f74e73e770"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('fcf','5057','35522','ES',array['BEGUR, C.F.'],'[{"sourceMatchId":"4109388","sourceUrl":"https://www.fcf.cat/ca/competicio/acta/4109388","rawSha256":"eb3b14de3d6077f4fb896cb4a4d2b96d76eb85db8853889e9871b7f74e73e770"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('fcf','1107','37659','ES',array['PALAFOLLS, C.D.'],'[{"sourceMatchId":"4116215","sourceUrl":"https://www.fcf.cat/ca/competicio/acta/4116215","rawSha256":"5dd7e401c7929dd1f2b59d35d1f6e203e6306f2479238adcd8755180b9671a49"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('fcf','5114','34913','ES',array['MONTESSORI-PALAU, C.C.E.'],'[{"sourceMatchId":"4116215","sourceUrl":"https://www.fcf.cat/ca/competicio/acta/4116215","rawSha256":"5dd7e401c7929dd1f2b59d35d1f6e203e6306f2479238adcd8755180b9671a49"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('fcf','1252','35781','ES',array['Pª BARC. ANGUERA'],'[{"sourceMatchId":"4118352","sourceUrl":"https://www.fcf.cat/ca/competicio/acta/4118352","rawSha256":"1e8d50d487be699cac45c3c2dc4658d3a9b16983fd5203b5845dc1339fe7351c"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('fcf','6136','33049','ES',array['LA SALUT PERE GOL AE.'],'[{"sourceMatchId":"4118352","sourceUrl":"https://www.fcf.cat/ca/competicio/acta/4118352","rawSha256":"1e8d50d487be699cac45c3c2dc4658d3a9b16983fd5203b5845dc1339fe7351c"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('fcf','44143644','44510647','ES',array['DEPORTIVO PARAGUAY, F.C.'],'[{"sourceMatchId":"4118358","sourceUrl":"https://www.fcf.cat/ca/competicio/acta/4118358","rawSha256":"e69af6b2765dbed7ebe3b57535beb1ce259c7d77ed9cb7f90d9cb4998afd153a"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('fcf','1400','47272626','ES',array['TRINIDAD, C.D.'],'[{"sourceMatchId":"4118358","sourceUrl":"https://www.fcf.cat/ca/competicio/acta/4118358","rawSha256":"e69af6b2765dbed7ebe3b57535beb1ce259c7d77ed9cb7f90d9cb4998afd153a"}]'::jsonb);
+
 alter table public.competitions add column source_policy text;
 alter table public.competitions add column date_only_deadline_policy text;
 alter table public.matches add column statistics_status text not null default 'available'
@@ -19,7 +42,7 @@ alter table public.matches add column source_phase text;
 alter table public.matches add column source_round int check(source_round>0);
 alter table public.matches add constraint historical_statistics_missingness check(
  (statistics_status='available' and statistics_reason is null)
- or (statistics_status='unavailable_historical' and statistics_reason is not null and imported_at is null));
+ or (statistics_status='unavailable_historical' and statistics_reason is not null and imported_at is null and not kontumacija and not vir_brez_izida));
 
 create table private_historical_statistics.installed_policies(
  competition_id bigint primary key references public.competitions(id),
@@ -45,6 +68,7 @@ begin
  if c.id is null or p.id is null or c.active or c.slug is distinct from p.document->>'competitionSlug' or c.source is distinct from p.document->>'provider'
  or c.source_policy is distinct from p.document->>'sourcePolicy' or p_policy_sha256 is distinct from p.policy_sha256 or p_entries is distinct from p.document->'entries'
  then raise exception 'HISTORICAL_POLICY: target/canonical policy/hash differs or active';end if;
+ if not exists(select 1 from public.countries where id=c.country_id and code=case p.document->>'provider'when 'hns'then 'HR'when 'dfb'then 'DE'when 'fcf'then 'ES'end)then raise exception 'HISTORICAL_POLICY: source country differs';end if;
  lock table public.fantasy_teams in share mode;
  if exists(select 1 from public.fantasy_teams where competition_id=c.id) then raise exception 'HISTORICAL_POLICY: user-owned activity';end if;
  select min(r.played_on) into first_day from public.rounds r where r.competition_id=c.id and r.season=public.sezona_lige(c.id) and r.number=c.prvi_fantasy_krog and r.deadline_at>now();
@@ -57,6 +81,22 @@ begin
   insert into private_historical_statistics.installed_policies values(c.id,p.id,p.policy_sha256,first_day,now());
  end if;
  return jsonb_build_object('policyId',p.id,'policySha256',p.policy_sha256,'firstFantasyPlayedOn',first_day);
+end $$;
+
+
+create function private_historical_statistics.bind_source_club(p_provider text,p_source_club_id text,p_source_category_id text,p_country_id bigint,p_team_id bigint)
+returns void language plpgsql security definer set search_path=public,pg_temp as $$
+declare b private_historical_statistics.source_club_bindings%rowtype;candidates bigint[];
+begin
+ select * into b from private_historical_statistics.source_club_bindings where provider=p_provider and source_club_id=p_source_club_id and source_category_id=coalesce(p_source_category_id,'')for update;
+ if b.provider is null or not exists(select 1 from public.countries c join public.teams t on t.country_id=c.id where c.id=p_country_id and c.code=b.country_code and t.id=p_team_id)then raise exception 'HISTORICAL_POLICY: unreviewed source club/category/country';end if;
+ if b.bound_team_id is not null then
+  if b.bound_team_id<>p_team_id then raise exception 'HISTORICAL_POLICY: immutable native club to DB team binding differs';end if;
+ else
+  select array_agg(t.id order by t.id)into candidates from public.teams t where t.country_id=p_country_id and t.name=any(b.canonical_names);
+  if coalesce(array_length(candidates,1),0)<>1 or candidates[1]<>p_team_id then raise exception 'HISTORICAL_POLICY: canonical native club identity differs or ambiguous';end if;
+  update private_historical_statistics.source_club_bindings set bound_team_id=p_team_id where provider=b.provider and source_club_id=b.source_club_id and source_category_id=b.source_category_id;
+ end if;
 end $$;
 
 create function public.upsert_unavailable_historical_match(p_competition_id bigint,p_source_match_id text,p_policy_id text,p_policy_sha256 text,p_raw_sha256 text,p_header jsonb)
@@ -79,15 +119,26 @@ begin
  or (e->>'playedOn')::date>=i.first_fantasy_played_on or home_id=away_id
  or (select count(*)from public.teams where id in(home_id,away_id)and country_id=c.country_id)<>2
  then raise exception 'HISTORICAL_POLICY: invalid DB fixture binding';end if;
- lock table public.fantasy_teams,public.appearances,public.goals in share mode;
+ lock table public.teams,public.rounds,public.fantasy_teams,public.appearances,public.goals in share mode;
  lock table public.matches in share row exclusive mode;
  if exists(select 1 from public.fantasy_teams where competition_id=c.id)then raise exception 'HISTORICAL_POLICY: user-owned activity';end if;
+ perform private_historical_statistics.bind_source_club(p.document->>'provider',e->>'homeSourceClubId',e->>'homeSourceCategoryId',c.country_id,home_id);
+ perform private_historical_statistics.bind_source_club(p.document->>'provider',e->>'awaySourceClubId',e->>'awaySourceCategoryId',c.country_id,away_id);
  report_id:=case p.document->>'provider' when 'dfb' then 'de-dfb-'||p_source_match_id when 'hns' then p_source_match_id when 'fcf' then 'es'||p_source_match_id else null end;
  if report_id is null then raise exception 'HISTORICAL_POLICY: unknown report identity namespace';end if;
  if(select count(*)from public.matches where zapisnik_id=report_id or(round_id=r.id and home_team_id=home_id and away_team_id=away_id))>1 then raise exception 'HISTORICAL_POLICY: conflicting existing fixture';end if;
  select * into m from public.matches where zapisnik_id=report_id or(round_id=r.id and home_team_id=home_id and away_team_id=away_id)for update;
  if m.id is not null and(m.round_id<>r.id or m.home_team_id<>home_id or m.away_team_id<>away_id or m.imported_at is not null or(m.zapisnik_id is not null and m.zapisnik_id<>report_id)
  or exists(select 1 from public.appearances where match_id=m.id)or exists(select 1 from public.goals where match_id=m.id))then raise exception 'HISTORICAL_POLICY: existing populated/foreign fixture; no cleanup allowed';end if;
+ if m.id is not null and(
+ m.kontumacija or m.vir_brez_izida
+ or(m.played_on is not null and m.played_on is distinct from(e->>'playedOn')::date)
+ or(m.source_url is not null and m.source_url is distinct from e->>'sourceUrl')
+ or(m.source_phase is not null and m.source_phase is distinct from e->>'sourcePhase')
+ or(m.source_round is not null and m.source_round is distinct from(e->>'sourceRound')::int)
+ or((m.home_goals is distinct from(e->>'observedHomeScore')::int or m.away_goals is distinct from(e->>'observedAwayScore')::int)
+    and not(m.zapisnik_id is null and m.source_url is null and m.home_goals=0 and m.away_goals=0 and m.statistics_status='available'))
+ )then raise exception 'HISTORICAL_POLICY: existing known fixture header conflicts; only empty schedule placeholders may be filled';end if;
  select * into mk from private_historical_statistics.markers where competition_id=c.id and source_match_id=p_source_match_id;
  if mk.competition_id is not null then
   if mk.fixture is distinct from f or mk.round_id<>r.id or mk.home_team_id<>home_id or mk.away_team_id<>away_id or mk.raw_sha256<>p_raw_sha256 then raise exception 'HISTORICAL_POLICY: immutable installed fixture differs';end if;
@@ -113,7 +164,7 @@ begin
  if new.statistics_status='unavailable_historical'then
   select k.* into mk from private_historical_statistics.markers k where k.round_id=new.round_id and k.home_team_id=new.home_team_id and k.away_team_id=new.away_team_id and k.source_report_id=new.zapisnik_id;
   select value into e from private_historical_statistics.installed_policies i join private_historical_statistics.policies p on p.id=i.policy_id cross join lateral jsonb_array_elements(p.document->'entries')where i.competition_id=mk.competition_id and value->>'sourceMatchId'=mk.source_match_id;
-  if mk.source_match_id is null or new.imported_at is not null or new.played_on is distinct from(mk.fixture->>'playedOn')::date or new.home_goals is distinct from(mk.fixture->>'observedHomeScore')::int
+  if mk.source_match_id is null or new.imported_at is not null or new.kontumacija or new.vir_brez_izida or new.played_on is distinct from(mk.fixture->>'playedOn')::date or new.home_goals is distinct from(mk.fixture->>'observedHomeScore')::int
   or new.away_goals is distinct from(mk.fixture->>'observedAwayScore')::int or new.source_url is distinct from mk.fixture->>'sourceUrl' or new.statistics_reason is distinct from e->>'reasonCode'
   or new.source_phase is distinct from mk.fixture->>'sourcePhase' or new.source_round is distinct from(mk.fixture->>'sourceRound')::int
   or exists(select 1 from public.appearances where match_id=new.id)or exists(select 1 from public.goals where match_id=new.id)
@@ -128,6 +179,17 @@ end $$;
 create trigger protect_historical_statistics_appearances before insert or update on public.appearances for each row execute function private_historical_statistics.protect_individual_rows();
 create trigger protect_historical_statistics_goals before insert or update on public.goals for each row execute function private_historical_statistics.protect_individual_rows();
 
+
+create function private_historical_statistics.protect_round_identity()returns trigger language plpgsql security definer set search_path=public,pg_temp as $$
+begin
+ if exists(select 1 from private_historical_statistics.markers where round_id=old.id)then
+  if tg_op='DELETE'then raise exception 'HISTORICAL_POLICY: referenced historical round immutable';end if;
+  if row(new.competition_id,new.season,new.number)is distinct from row(old.competition_id,old.season,old.number)then raise exception 'HISTORICAL_POLICY: referenced historical round identity immutable';end if;
+ end if;
+ if tg_op='DELETE'then return old;end if;return new;
+end $$;
+create trigger historical_policy_round_identity_guard before update or delete on public.rounds for each row execute function private_historical_statistics.protect_round_identity();
+
 create function public.get_installed_historical_statistics_markers(p_competition_id bigint)returns jsonb language plpgsql stable security definer set search_path=public,pg_temp as $$
 declare i private_historical_statistics.installed_policies%rowtype;p private_historical_statistics.policies%rowtype;markers jsonb;
 begin
@@ -136,7 +198,15 @@ begin
  select * into p from private_historical_statistics.policies where id=i.policy_id;
  if not exists(select 1 from public.competitions c where c.id=i.competition_id and c.slug=p.document->>'competitionSlug'and c.source=p.document->>'provider'and c.source_policy=p.document->>'sourcePolicy')or i.policy_sha256<>p.policy_sha256 then raise exception 'HISTORICAL_POLICY: installed competition/policy binding drift';end if;
  select jsonb_agg(jsonb_build_object('sourceMatchId',k.source_match_id,'reportId',k.source_report_id,'fixture',k.fixture,'rawSha256',k.raw_sha256,'matchId',m.id,'roundId',k.round_id,'homeTeamId',k.home_team_id,'awayTeamId',k.away_team_id,'policyId',i.policy_id,'policySha256',i.policy_sha256,'statisticsStatus',m.statistics_status,'importedAt',m.imported_at,'individualRowCount',(select count(*)from public.appearances where match_id=m.id)+(select count(*)from public.goals where match_id=m.id))order by k.source_match_id)into markers
- from private_historical_statistics.markers k join public.matches m on m.round_id=k.round_id and m.home_team_id=k.home_team_id and m.away_team_id=k.away_team_id and m.zapisnik_id=k.source_report_id and m.statistics_status='unavailable_historical'and m.imported_at is null and m.source_url=k.fixture->>'sourceUrl'and m.played_on=(k.fixture->>'playedOn')::date and m.home_goals=(k.fixture->>'observedHomeScore')::int and m.away_goals=(k.fixture->>'observedAwayScore')::int where k.competition_id=i.competition_id;
+ from private_historical_statistics.markers k
+ join public.rounds r on r.id=k.round_id and r.competition_id=k.competition_id and r.season=k.fixture->>'season'and r.number=(k.fixture->>'sourceRound')::int
+ join public.competitions c on c.id=k.competition_id
+ join private_historical_statistics.source_club_bindings hb on hb.provider=p.document->>'provider'and hb.source_club_id=k.fixture->>'homeSourceClubId'and hb.source_category_id=coalesce(k.fixture->>'homeSourceCategoryId','')and hb.bound_team_id=k.home_team_id
+ join private_historical_statistics.source_club_bindings ab on ab.provider=p.document->>'provider'and ab.source_club_id=k.fixture->>'awaySourceClubId'and ab.source_category_id=coalesce(k.fixture->>'awaySourceCategoryId','')and ab.bound_team_id=k.away_team_id
+ join public.teams ht on ht.id=k.home_team_id and ht.country_id=c.country_id
+ join public.teams at on at.id=k.away_team_id and at.country_id=c.country_id
+ join public.countries country on country.id=c.country_id and country.code=hb.country_code and country.code=ab.country_code
+ join public.matches m on m.round_id=k.round_id and m.home_team_id=k.home_team_id and m.away_team_id=k.away_team_id and m.zapisnik_id=k.source_report_id and m.statistics_status='unavailable_historical'and m.imported_at is null and m.source_url=k.fixture->>'sourceUrl'and m.played_on=(k.fixture->>'playedOn')::date and m.home_goals=(k.fixture->>'observedHomeScore')::int and m.away_goals=(k.fixture->>'observedAwayScore')::int and not m.kontumacija and not m.vir_brez_izida and m.source_phase is not distinct from k.fixture->>'sourcePhase'and m.source_round=(k.fixture->>'sourceRound')::int where k.competition_id=i.competition_id;
  if coalesce(jsonb_array_length(markers),0)<>jsonb_array_length(p.document->'entries')or exists(select 1 from jsonb_array_elements(markers)x where(x->>'individualRowCount')::int<>0)then raise exception 'HISTORICAL_POLICY: incomplete/changed installed markers';end if;
  return jsonb_build_object('installed',true,'policyId',i.policy_id,'policySha256',i.policy_sha256,'firstFantasyPlayedOn',i.first_fantasy_played_on,'markers',markers);
 end $$;

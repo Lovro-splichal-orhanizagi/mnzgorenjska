@@ -17,7 +17,7 @@ select pg_temp.hs_assert(not has_function_privilege('authenticated','public.upse
 select pg_temp.hs_assert(not has_function_privilege('service_role','private_historical_statistics.authorize_release(bigint,text,text,text)','EXECUTE'),'service cannot authorize generic activation directly');
 
 do $$
-declare c bigint; home_id bigint; away_id bigint; rid bigint; pid text; sha text; doc jsonb; e jsonb; f jsonb; h jsonb; result jsonb; mid bigint; normal_mid bigint; v_player_id bigint; n int;
+declare c bigint; home_id bigint; away_id bigint; rid bigint; pid text; sha text; doc jsonb; e jsonb; f jsonb; h jsonb; result jsonb; mid bigint; normal_mid bigint; v_player_id bigint; wrong_team_id bigint; team_name text; patch text; n int;
 begin
  select id,policy_sha256,document into pid,sha,doc from private_historical_statistics.policies where id='hr-hnlz-history-2026-10-18-v1';
  perform pg_temp.hs_assert(jsonb_array_length(doc->'entries')=3,'exact3 HNS entries');
@@ -27,19 +27,42 @@ begin
  perform pg_temp.hs_refuses(format('select public.apply_historical_statistics_policy(%s,%L,%L,%L::jsonb)',c,pid,repeat('0',64),(doc->'entries')::text),'wrong policy hash');
  perform public.apply_historical_statistics_policy(c,pid,sha,doc->'entries');
  perform public.apply_historical_statistics_policy(c,pid,sha,doc->'entries');
- insert into teams(name,short_name,country_id) values('HISTORICAL HOME','HH',(select id from countries where code='HR')) returning id into home_id;
- insert into teams(name,short_name,country_id) values('HISTORICAL AWAY','HA',(select id from countries where code='HR')) returning id into away_id;
+ insert into teams(name,short_name,country_id) values('HISTORICAL WRONG CLUB','HW',(select id from countries where code='HR'))returning id into wrong_team_id;
  for e in select value from jsonb_array_elements(doc->'entries') loop
   select id into rid from rounds where competition_id=c and season=doc->>'season' and number=(e->>'sourceRound')::int;
   if rid is null then insert into rounds(competition_id,season,number,played_on) values(c,doc->>'season',(e->>'sourceRound')::int,(e->>'playedOn')::date) returning id into rid; end if;
-  -- R4 has two different real fixtures: use distinct test teams for the second.
-  if exists(select 1 from matches where round_id=rid and home_team_id=home_id and away_team_id=away_id) then
-   insert into teams(name,short_name,country_id) values('HISTORICAL HOME2','H2',(select id from countries where code='HR')) returning id into home_id;
-  end if;
+  select canonical_names[1]into team_name from private_historical_statistics.source_club_bindings where provider='hns'and source_club_id=e->>'homeSourceClubId'and source_category_id='';
+  select id into home_id from teams where name=team_name and country_id=(select id from countries where code='HR');
+  if home_id is null then insert into teams(name,short_name,country_id)values(team_name,'HH',(select id from countries where code='HR'))returning id into home_id;end if;
+  select canonical_names[1]into team_name from private_historical_statistics.source_club_bindings where provider='hns'and source_club_id=e->>'awaySourceClubId'and source_category_id='';
+  select id into away_id from teams where name=team_name and country_id=(select id from countries where code='HR');
+  if away_id is null then insert into teams(name,short_name,country_id)values(team_name,'HA',(select id from countries where code='HR'))returning id into away_id;end if;
   f:=(e-array['rawSha256','reasonCode'])||jsonb_build_object('season',doc->>'season');
   h:=jsonb_build_object('roundId',rid,'homeTeamId',home_id,'awayTeamId',away_id,'fixture',f);
+  perform pg_temp.hs_refuses(format('select public.upsert_unavailable_historical_match(%s,%L,%L,%L,%L,%L::jsonb)',c,e->>'sourceMatchId',pid,sha,e->>'rawSha256',jsonb_set(h,'{homeTeamId}',to_jsonb(wrong_team_id))::text),'unrelated same-country club');
   perform pg_temp.hs_refuses(format('select public.upsert_unavailable_historical_match(%s,%L,%L,%L,%L,%L::jsonb)',c,e->>'sourceMatchId',pid,sha,repeat('0',64),h::text),'different raw bytes');
   perform pg_temp.hs_refuses(format('select public.upsert_unavailable_historical_match(%s,%L,%L,%L,%L,%L::jsonb)',c,e->>'sourceMatchId',pid,sha,e->>'rawSha256',jsonb_set(h,'{fixture,observedHomeScore}','99')::text),'changed official score');
+  -- HEADER_CONFLICT_BEGIN
+  if e->>'sourceMatchId'='114471617' then
+   foreach patch in array array[
+    'home_goals=9,away_goals=8',
+    'played_on=played_on+1',
+    'source_url=''https://example.invalid/wrong''',
+    'source_phase=''wrong phase''',
+    'source_round=99',
+    'kontumacija=true',
+    'vir_brez_izida=true'
+   ]loop
+    insert into matches(round_id,home_team_id,away_team_id,played_on,zapisnik_id,source_url,home_goals,away_goals,source_round)
+    values(rid,home_id,away_id,(e->>'playedOn')::date,e->>'sourceMatchId',e->>'sourceUrl',(e->>'observedHomeScore')::int,(e->>'observedAwayScore')::int,(e->>'sourceRound')::int)returning id into mid;
+    execute format('update matches set %s where id=%s',patch,mid);
+    perform pg_temp.hs_refuses(format('select public.upsert_unavailable_historical_match(%s,%L,%L,%L,%L,%L::jsonb)',c,e->>'sourceMatchId',pid,sha,e->>'rawSha256',h::text),'existing known header conflict: '||patch);
+    delete from matches where id=mid;
+   end loop;
+   -- A genuine empty schedule row has no asserted result/report identity.
+   insert into matches(round_id,home_team_id,away_team_id)values(rid,home_id,away_id);
+  end if;
+  -- HEADER_CONFLICT_END
   result:=public.upsert_unavailable_historical_match(c,e->>'sourceMatchId',pid,sha,e->>'rawSha256',h);
   mid:=(result->>'matchId')::bigint;
   perform pg_temp.hs_assert(mid=(public.upsert_unavailable_historical_match(c,e->>'sourceMatchId',pid,sha,e->>'rawSha256',h)->>'matchId')::bigint,'identical marker idempotent');
@@ -49,8 +72,26 @@ begin
   perform pg_temp.hs_refuses(format('update matches set imported_at=now() where id=%s',mid),'no fake successful import');
   perform pg_temp.hs_refuses(format('update matches set statistics_status=''available'',statistics_reason=null where id=%s',mid),'cannot clear installed marker');
  end loop;
+ perform pg_temp.hs_refuses(format('update rounds set season=''2024/25'' where id=%s',rid),'referenced round season cannot drift');
+ perform pg_temp.hs_refuses(format('update rounds set number=99 where id=%s',rid),'referenced source round cannot drift');
+ perform pg_temp.hs_refuses(format('update rounds set competition_id=1 where id=%s',rid),'referenced competition cannot drift');
+ begin
+  alter table public.rounds disable trigger historical_policy_round_identity_guard;
+  update public.rounds set season='2024/25'where id=rid;
+  perform pg_temp.hs_refuses(format('select public.get_installed_historical_statistics_markers(%s)',c),'getter independently rejects privileged round corruption');
+  raise exception using errcode='PT001',message='rollback controlled corruption';
+ exception when sqlstate 'PT001'then null;end;
+
  result:=public.get_installed_historical_statistics_markers(c);
  perform pg_temp.hs_assert(jsonb_array_length(result->'markers')=3,'all3 bound DB markers exposed to service loader');
+ update teams set name='Same bound club renamed for display'where id=home_id;
+ perform pg_temp.hs_assert((public.get_installed_historical_statistics_markers(c)->>'installed')::boolean,'display rename retains immutable native-club DB identity');
+ begin
+  update public.teams set country_id=(select id from public.countries where code='SI')where id=home_id;
+  perform pg_temp.hs_refuses(format('select public.get_installed_historical_statistics_markers(%s)',c),'getter rejects changed club country');
+  raise exception using errcode='PT001',message='rollback controlled corruption';
+ exception when sqlstate 'PT001'then null;end;
+
  perform pg_temp.hs_assert((select odigranih=3 and statistics_complete_matches=0 and statistics_unavailable_matches=3 from sezone where competition_id=c and season=doc->>'season'),'played versus complete coverage separate');
  insert into players(competition_id,team_id,first_name,last_name,position) values(c,home_id,'Verified','Player','GK') returning id into v_player_id;
  perform pg_temp.hs_refuses(format('insert into appearances(match_id,player_id,team_id) values(%s,%s,%s)',mid,v_player_id,home_id),'no invented individual appearance');
@@ -79,6 +120,33 @@ do $$begin
  begin perform 1 from private_historical_statistics.policies;raise exception 'HISTORICAL TEST: private approval registry leaked';exception when insufficient_privilege then null;end;
 end $$;
 reset role;
+-- Cross-provider archive/current positives exercise the same immutable club/category primitive.
+do $$
+declare p record;c bigint;rid bigint;e jsonb;h jsonb;side text;team_id bigint;home_id bigint;away_id bigint;country bigint;native_name text;f jsonb;
+begin
+ for p in select * from private_historical_statistics.policies where document->>'provider'<>'hns'loop
+  select id into country from public.countries where code=case p.document->>'provider'when 'dfb'then 'DE'else 'ES'end;
+  insert into public.competitions(slug,name,short_name,source,source_policy,country_id,prvi_fantasy_krog,active)
+  values(p.document->>'competitionSlug','Cross-provider test','Cross',p.document->>'provider',p.document->>'sourcePolicy',country,30,false)on conflict(slug)do update set source=excluded.source,source_policy=excluded.source_policy,country_id=excluded.country_id,prvi_fantasy_krog=excluded.prvi_fantasy_krog,active=false returning id into c;
+  insert into public.rounds(competition_id,season,number,played_on,deadline_at)values(c,public.sezona_lige(c),30,current_date+7,now()+interval '7 days');
+  perform public.apply_historical_statistics_policy(c,p.id,p.policy_sha256,p.document->'entries');
+  for e in select value from jsonb_array_elements(p.document->'entries')loop
+   insert into public.rounds(competition_id,season,number,played_on)values(c,p.document->>'season',(e->>'sourceRound')::int,(e->>'playedOn')::date)on conflict(competition_id,season,number)do update set played_on=excluded.played_on returning id into rid;
+   foreach side in array array['home','away']loop
+    select canonical_names[1]into native_name from private_historical_statistics.source_club_bindings where provider=p.document->>'provider'and source_club_id=e->>(side||'SourceClubId')and source_category_id=coalesce(e->>(side||'SourceCategoryId'),'');
+    select t.id into team_id from public.teams t where t.name=native_name and t.country_id=country;
+    if team_id is null then insert into public.teams(name,short_name,country_id)values(native_name,'X',country)returning id into team_id;end if;
+    if side='home'then home_id:=team_id;else away_id:=team_id;end if;
+   end loop;
+   f:=(e-array['rawSha256','reasonCode'])||jsonb_build_object('season',p.document->>'season');
+   h:=jsonb_build_object('roundId',rid,'homeTeamId',home_id,'awayTeamId',away_id,'fixture',f);
+   if p.document->>'provider'='fcf'then perform pg_temp.hs_refuses(format('select public.upsert_unavailable_historical_match(%s,%L,%L,%L,%L,%L::jsonb)',c,e->>'sourceMatchId',p.id,p.policy_sha256,e->>'rawSha256',jsonb_set(h,'{fixture,homeSourceCategoryId}','"wrong-category"')::text),'FCF category identity drift');end if;
+   perform public.upsert_unavailable_historical_match(c,e->>'sourceMatchId',p.id,p.policy_sha256,e->>'rawSha256',h);
+  end loop;
+  perform pg_temp.hs_assert(jsonb_array_length(public.get_installed_historical_statistics_markers(c)->'markers')=jsonb_array_length(p.document->'entries'),'cross-provider exact marker coverage '||p.id);
+ end loop;
+end $$;
+
 set local role service_role;
 select public.get_installed_historical_statistics_markers((select id from public.competitions where slug='hr-prva-hnlz'))->>'installed' as service_marker_binding;
 reset role;
