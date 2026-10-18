@@ -82,6 +82,11 @@ services:
       # 1 = Checkout requires accepting the terms; set only after the ToS URL is in Stripe Public details
       STRIPE_TOS: ${STRIPE_TOS:-}
       SITE_URL: ${SITE_URL:-https://slff.eu}
+      # trgovina-nakup (shop.slff.eu): pepper for the hashed-IP open-order limit (required),
+      # optional shipping-rate ids {kljuc: shr_...} instead of a Stripe lookup.
+      TRGOVINA_PEPPER: ${TRGOVINA_PEPPER:-}
+      SHOP_URL: ${SHOP_URL:-https://shop.slff.eu}
+      TRGOVINA_TARIFE: ${TRGOVINA_TARIFE:-}
       EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
   db:
     image: supabase/postgres:17.6.1.166

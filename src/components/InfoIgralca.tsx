@@ -11,6 +11,7 @@ import { formatirajCeno, formatirajTocke, prikazniIme } from '../lib/pomozno'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../lib/gibanjeCene'
 import type { SpremembaCene } from '../lib/gibanjeCene'
 import Grb from './Grb'
+import { PokritostStatistike, usePokritostStatistike, brezPreverjenihNastopov } from './PokritostStatistike'
 import FotoIgralca from './FotoIgralca'
 import PredstavitevIgralca, { usePredstavitev } from './PredstavitevIgralca'
 import { t } from '../i18n'
@@ -61,6 +62,8 @@ export default function InfoIgralca({
   dejanja?: React.ReactNode
 }) {
   const [sezona, setSezona] = useState<Sezona | null>(null)
+  const pokritost = usePokritostStatistike(tekmovanjeId)
+  const brezOpazovanj = brezPreverjenihNastopov(pokritost, sezona?.matches)
   const [spremembe, setSpremembe] = useState<SpremembaCene[]>([])
   const [zacetna, setZacetna] = useState<number | null>(null)
   const [cena, setCena] = useState<number | null>(null)
@@ -231,16 +234,17 @@ export default function InfoIgralca({
           <p className="py-6 text-center text-slate-400">{t('skupno.nalaganje')}</p>
         ) : (
           <div className="space-y-3">
+            <PokritostStatistike podatki={pokritost} />
             <div className="grid grid-cols-4 gap-1.5">
-              <Polje oznaka={t('igralci.info.tocke')} vrednost={formatirajTocke(sezona?.points)} />
-              <Polje oznaka={t('igralci.info.forma')} vrednost={formatirajTocke(sezona?.form)} />
-              <Polje oznaka={t('igralci.info.golov')} vrednost={sezona?.goals ?? 0} />
-              <Polje oznaka={t('igralci.info.asist')} vrednost={sezona?.assists ?? 0} />
-              <Polje oznaka={t('igralci.info.tekem')} vrednost={sezona?.matches ?? 0} />
-              <Polje oznaka={t('igralci.info.minut')} vrednost={sezona?.minutes ?? 0} />
+              <Polje oznaka={t('igralci.info.tocke')} vrednost={brezOpazovanj ? '—' : formatirajTocke(sezona?.points)} />
+              <Polje oznaka={t('igralci.info.forma')} vrednost={brezOpazovanj ? '—' : formatirajTocke(sezona?.form)} />
+              <Polje oznaka={t('igralci.info.golov')} vrednost={brezOpazovanj ? '—' : sezona?.goals ?? 0} />
+              <Polje oznaka={t('igralci.info.asist')} vrednost={brezOpazovanj ? '—' : sezona?.assists ?? 0} />
+              <Polje oznaka={t('igralci.info.tekem')} vrednost={brezOpazovanj ? '—' : sezona?.matches ?? 0} />
+              <Polje oznaka={t('igralci.info.minut')} vrednost={brezOpazovanj ? '—' : sezona?.minutes ?? 0} />
               <Polje
                 oznaka={t('igralci.info.naTekmo')}
-                vrednost={formatirajTocke(sezona?.points_per_match)}
+                vrednost={brezOpazovanj ? '—' : formatirajTocke(sezona?.points_per_match)}
               />
               <Polje
                 oznaka={t('igralci.info.izbran')}

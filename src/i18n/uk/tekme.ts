@@ -3,6 +3,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const tekme: NonNullable<Prevod['tekme']> = {
+  statistika: {
+    brezStrelcev: "Немає перевірених авторів голів.",
+    nedosegljivo: "Статистика гравців для цього історичного матчу недоступна. Офіційний результат збережено.",
+    kratko: "Статистика недоступна",
+    postaveTocke: "Склади та очки",
+    kartoni: "Картки",
+    delno: "Часткова статистика сезону {sezona}: повні дані для {popolnih} із {odigranih} зіграних матчів ліги. Статистика гравців для {nedosegljivih} історичних матчів недоступна. Підсумки та середні значення включають лише перевірені виходи на поле.",
+    brezOpazovanj: "Немає перевірених виходів на поле",
+  },
+
   krog: '{n}-й тур',
   moraPrijava: 'Щоб голосувати, потрібно <prijava>увійти</prijava>.',
 
