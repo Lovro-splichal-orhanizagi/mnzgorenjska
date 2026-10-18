@@ -20,7 +20,7 @@ with zipfile.ZipFile(out,'w',compression=zipfile.ZIP_DEFLATED) as z:
  for e in json.load(sys.stdin):
   i=zipfile.ZipInfo(e['name']);i.create_system=3;i.compress_type=zipfile.ZIP_DEFLATED;i.external_attr=((stat.S_IFLNK if e.get('symlink') else stat.S_IFREG)|0o600)<<16
   z.writestr(i,base64.b64decode(e['base64']) if 'base64' in e else b'x'*e['size'] if 'size' in e else e.get('text','{}').encode())
-sys.stdout.buffer.write(out.getvalue())`],{input:JSON.stringify(entries.map(e=>e.body?{...e,body:undefined,base64:e.body.toString('base64')}:e)),maxBuffer:101*1024*1024,stdio:['pipe','pipe','pipe']})
+sys.stdout.buffer.write(out.getvalue())`],{input:JSON.stringify(entries.map(e=>e.body?{...e,body:undefined,base64:e.body.toString('base64')}:e)),timeout:15000,maxBuffer:101*1024*1024,stdio:['pipe','pipe','pipe']})
 }
 export function execution(){return{repository,workflow,ref:'refs/heads/main',sourceCommit:commit,runId,runAttempt:'1'}}
 export function metadata({bytes,name,jobName,steps,run='completed',runAttempt='1',jobId='456',artifactId='789'}={}){
