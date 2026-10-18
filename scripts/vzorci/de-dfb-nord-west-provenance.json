@@ -1,0 +1,58 @@
+{
+  "documents": [
+    {
+      "url": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/23-spieltag/ssv-jeddeloh-vfb-luebeck-2405451",
+      "ime": "match-2405451.html",
+      "file": "de-dfb-2405451.html",
+      "sha256": "be24a3435319a77083e39e3decc3c00bd4e58bb3f4ec9bacd4ec4674ec379936",
+      "at": "2026-10-17T11:54:24.488Z",
+      "captureRun": "39028219473"
+    },
+    {
+      "retrievalUrl": "https://vfb-luebeck.de/spielbericht-fruehe-fuehrung-reicht-nicht-vfb-unterliegt-in-jeddeloh-mit-23/",
+      "articleUrl": "https://vfb-luebeck.de/spielbericht-fruehe-fuehrung-reicht-nicht-vfb-unterliegt-in-jeddeloh-mit-23/",
+      "at": "2026-10-18T12:32:12.420407+00:00",
+      "status": 200,
+      "file": "de-dfb-nord-west-proof-634b5356d1d6880dc00bd16a1a1402946e593972c5ec463c9aac24a9fef2f59d.html",
+      "sha256": "634b5356d1d6880dc00bd16a1a1402946e593972c5ec463c9aac24a9fef2f59d",
+      "bytes": 1780109,
+      "url": "https://vfb-luebeck.de/spielbericht-fruehe-fuehrung-reicht-nicht-vfb-unterliegt-in-jeddeloh-mit-23/"
+    },
+    {
+      "url": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/33-spieltag/blau-weiss-lohne-fsv-schoeningen-2405547",
+      "ime": "match-2405547.html",
+      "file": "de-dfb-2405547.html",
+      "sha256": "6fb012ae8e08346624c9902409b481fa04c213cd1e043846afe9703e5f9269c6",
+      "at": "2026-10-17T12:07:45.447Z",
+      "captureRun": "39028219473"
+    },
+    {
+      "retrievalUrl": "https://www.fsv-schoeningen.com/spielbericht/106372/spektakulaeres-4-4-in-lohne",
+      "articleUrl": "https://www.fsv-schoeningen.com/spielbericht/106372/spektakulaeres-4-4-in-lohne",
+      "at": "2026-10-18T12:32:54.889886+00:00",
+      "status": 200,
+      "file": "de-dfb-nord-west-proof-ee60d390b21003d530bc6142a5c3b59bd974437976e49115a612dc3b7cd665b8.html",
+      "sha256": "ee60d390b21003d530bc6142a5c3b59bd974437976e49115a612dc3b7cd665b8",
+      "bytes": 102739,
+      "url": "https://www.fsv-schoeningen.com/spielbericht/106372/spektakulaeres-4-4-in-lohne"
+    },
+    {
+      "url": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/3-spieltag/rot-weiss-oberhausen-bonner-sc-2402204",
+      "ime": "match-2402204.html",
+      "file": "de-dfb-2402204.html",
+      "sha256": "d05dd67924c152ddf27647e22108c480b905512414f9dc6bee80b48aef678c9d",
+      "at": "2026-10-17T12:27:15.557Z",
+      "captureRun": "39032122832"
+    },
+    {
+      "retrievalUrl": "https://www.rwo1904.de/nachrichten/profis/16724/die-stimmen-zum-heimsieg-gegen-den-bonner-sc",
+      "articleUrl": "https://www.rwo1904.de/nachrichten/profis/16724/die-stimmen-zum-heimsieg-gegen-den-bonner-sc",
+      "at": "2026-10-18T12:33:00.894882+00:00",
+      "status": 200,
+      "file": "de-dfb-nord-west-proof-256a0adb952a4d337694b84d3245d19e7bb1446c30f72cc922c36e1e91192986.html",
+      "sha256": "256a0adb952a4d337694b84d3245d19e7bb1446c30f72cc922c36e1e91192986",
+      "bytes": 154712,
+      "url": "https://www.rwo1904.de/nachrichten/profis/16724/die-stimmen-zum-heimsieg-gegen-den-bonner-sc"
+    }
+  ]
+}
