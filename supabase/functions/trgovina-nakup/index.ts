@@ -18,8 +18,9 @@
 // Odjemalec = sha256(IP + TRGOVINA_PEPPER): največ 5 odprtih naročil na
 // uporabnika, gost na odjemalca; brez IP-ja je odjemalec naključen (brez
 // meje). Država (EU-27) je izbrana pred plačilom: Checkout sprejme le
-// naslov v njej in ponudi le njene tarife (tarife.ts). Le kartica, da je
-// plačilo takoj. Seja nosi metadata app=slff-shop, narocilo_id in
+// naslov v njej in ponudi le njene tarife (tarife.ts). Načine plačila
+// določa Stripe Dashboard (API od 2026-09 ne sprejme payment_method_types):
+// tam naj ostanejo le kartica in denarnice, da je plačilo takoj. Seja nosi metadata app=slff-shop, narocilo_id in
 // oznaka; plačilo zapiše šele stripe-webhook. Če seje ni, se rezervacija
 // sprosti (trgovina_sprosti). Cene z DDV (tax_behavior inclusive), DDV po
 // državi kupca izračuna Stripe Tax. Tarife dostave so v Stripe (metadata
@@ -151,7 +152,6 @@ Deno.serve(async (req) => {
     const meta = { app: 'slff-shop', narocilo_id: String(r.narocilo_id), oznaka: r.javna_oznaka }
     const polja: Polja = {
       mode: 'payment',
-      'payment_method_types[0]': 'card',
       'shipping_address_collection[allowed_countries][0]': drzava,
       'automatic_tax[enabled]': true,
       customer_creation: 'if_required',

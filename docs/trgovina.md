@@ -26,8 +26,10 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   "Na plačilo" najprej zapre prejšnjo sejo (`prejsnja`). Plačilo odšteje zalogo
   enkrat (idempotentno po seji); česar ni bilo, zapiše v `manjka` (admin vidi).
 - **Plačilo**: `trgovina-nakup` (Edge) ustvari Stripe Checkout:
-  `metadata.app = slff-shop`, le kartica, `automatic_tax`, cene z DDV,
-  država dostave izbrana v košarici (`allowed_countries`), tarife po državi
+  `metadata.app = slff-shop`, `automatic_tax`, cene z DDV,
+  načini plačila iz Stripe Dashboarda
+  (API ne sprejme več `payment_method_types`; pustimo le kartico in denarnice,
+  ker webhook zapiše le takojšnje plačilo), država dostave izbrana v košarici (`allowed_countries`), tarife po državi
   (`pismo_si` le nalepke v SI, `paket_si`, `paket_eu`). `stripe-webhook` veja
   `slff-shop` (`stripe-webhook/trgovina.ts`): plačano → naročilo + mail +
   Discord; poteklo → sprosti.
