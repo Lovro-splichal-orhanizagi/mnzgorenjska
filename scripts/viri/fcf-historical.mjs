@@ -21,6 +21,15 @@ export function withFcfHistoricalStatistics(base,competition,{installedHistorica
   }
   return binding
  }
+ const name=(fixture,side)=>{
+  const b=clubBindings.find(b=>b.provider==='fcf'&&b.sourceClubId===fixture[`${side}SourceClubId`]&&b.sourceCategoryId===fixture[`${side}SourceCategoryId`])
+  if(!b||b.canonicalNames.length!==1)fail('reviewed source club/category name missing')
+  return b.canonicalNames[0]
+ }
+ const calendarFixtures=binding=>binding.markers.map(marker=>{
+  const f=marker.fixture
+  return{id:Number(marker.sourceMatchId),historicalMarker:marker,g:{domaci:name(f,'home'),gostje:name(f,'away'),datum:f.playedOn,ura:null,izid:{domaci:f.observedHomeScore,gostje:f.observedAwayScore},krog:f.sourceRound,sezona:f.season,tekmovanje:expectedCompetition,skupina:expectedGroup}}
+ })
  const provider={...base,
   // Ordinary schedule entrypoint must not fetch the block's first excluded raw page.
   razporedBrezUvodnegaPrenosa:true,
@@ -28,7 +37,7 @@ export function withFcfHistoricalStatistics(base,competition,{installedHistorica
    const binding=context(code),preskoci=new Set(options.preskoci??[])
    for(const marker of binding.markers)preskoci.add(marker.reportId)
    if(options.samoZapisnik&&preskoci.has(String(options.samoZapisnik)))return []
-   const reports=await base.zapisniki(code,read,{...options,preskoci,installedHistoricalMarkers:binding})
+   const reports=await base.zapisniki(code,read,{...options,preskoci,historicalFixtures:calendarFixtures(binding),installedHistoricalMarkers:binding})
    for(const report of reports)checkGroup(report.z)
    return reports
   },
@@ -39,21 +48,9 @@ export function withFcfHistoricalStatistics(base,competition,{installedHistorica
   },
   async razporedVseStrani(code,read) {
    const binding=context(code),preskoci=new Set(binding.markers.map(m=>m.reportId))
-   const block=await readBlock(code,read,{preskoci})
+   const block=await readBlock(code,read,{preskoci,historicalFixtures:calendarFixtures(binding)})
    if(block.skupina!==`${expectedCompetition}|${expectedGroup}|${policy.season}`)fail('schedule source competition/group/season differs')
    const rounds=razporedBloka(block)
-   const name=(fixture,side)=>{
-    const b=clubBindings.find(b=>b.provider==='fcf'&&b.sourceClubId===fixture[`${side}SourceClubId`]&&b.sourceCategoryId===fixture[`${side}SourceCategoryId`])
-    if(!b||b.canonicalNames.length!==1)fail('reviewed source club/category name missing')
-    return b.canonicalNames[0]
-   }
-   for(const marker of binding.markers) {
-    const f=marker.fixture
-    let round=rounds.find(r=>r.stevilka===f.sourceRound)
-    if(!round){round={stevilka:f.sourceRound,tekme:[]};rounds.push(round)}
-    // Known official fixture/result only. Unknown source kickoff stays null.
-    round.tekme.push({domaci:name(f,'home'),gostje:name(f,'away'),datum:f.playedOn,ura:null,odigrana:true,kontumacija:false,izid:{domaci:f.observedHomeScore,gostje:f.observedAwayScore},historicalMarker:marker})
-   }
    return rounds.sort((a,b)=>a.stevilka-b.stevilka)
   },
  }
