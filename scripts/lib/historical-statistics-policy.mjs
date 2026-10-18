@@ -36,6 +36,7 @@ export function validateHistoricalStatisticsRegistry(registry) {
     if (!Array.isArray(policy.entries) || !policy.entries.length) fail('empty policy entries')
     for (const entry of policy.entries) {
       for (const field of ['sourceMatchId', 'sourceCompetitionId', 'homeSourceClubId', 'awaySourceClubId', 'sourceUrl', 'reasonCode']) if (!text(entry?.[field])) fail(`invalid entry ${field}`)
+      if (policy.provider === 'fcf') for (const field of ['homeSourceCategoryId', 'awaySourceCategoryId']) if (!text(entry[field])) fail(`invalid entry ${field}`)
       if (entry.sourcePhase !== null && !text(entry.sourcePhase)) fail('invalid entry sourcePhase')
       if (!Number.isInteger(entry.sourceRound) || entry.sourceRound < 1) fail('invalid entry sourceRound')
       if (!dateOnly(entry.playedOn)) fail('invalid entry playedOn')
@@ -91,7 +92,8 @@ export function classifyHistoricalStatistics({ competition, fixture, rawSha256, 
   if (competition?.slug !== reviewed.competitionSlug || competition?.source !== reviewed.provider || competition?.source_policy !== reviewed.sourcePolicy) throw new Error('historical policy: competition/provider/policy binding differs')
   const exception = reviewed.entries.find(entry => entry.sourceMatchId === fixture?.sourceMatchId)
   if (!exception) return { kind: 'normal' }
-  for (const field of IDENTITY_FIELDS) if (fixture[field] !== exception[field]) throw new Error(`historical fixture identity differs: ${field}`)
+  const identityFields = reviewed.provider === 'fcf' ? [...IDENTITY_FIELDS, 'homeSourceCategoryId', 'awaySourceCategoryId'] : IDENTITY_FIELDS
+  for (const field of identityFields) if (fixture[field] !== exception[field]) throw new Error(`historical fixture identity differs: ${field}`)
   if (fixture.season !== reviewed.season) throw new Error('historical fixture identity differs: season')
   if (!SHA256.test(rawSha256 ?? '') || rawSha256 !== exception.rawSha256) throw new Error('historical raw SHA256 differs from approved packet')
   if (!dateOnly(competition.firstFantasyPlayedOn) || exception.playedOn >= competition.firstFantasyPlayedOn) throw new Error('historical policy: exception must be strictly prelaunch; valid first fantasy date required')
