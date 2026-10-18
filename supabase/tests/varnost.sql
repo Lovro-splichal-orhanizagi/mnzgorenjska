@@ -4852,6 +4852,157 @@ select pg_temp.preveri('trgovina2: vrnjena postavka ni vec za tisk, natisnjena o
      and narocilo_id = (current_setting('test.trg2_m')::jsonb->>'narocilo_id')::bigint)
   and (select stanje_tiska = 'natisnjeno' from trgovina.postavke where id = current_setting('test.trg2_ep')::bigint));
 
+-- --- trgovina3: motivi (20261018230000) -------------------------------------
+-- Polja motiva preveri baza: vrsta, dolžina, filter, številka, leto, izbira,
+-- shema, lastništvo ekipe, prvak; doplačilo iz motivi_izdelki.
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+insert into trgovina.izdelki(id, slug, ime_sl, ime_en, kategorija, aktiven, po_narocilu, postopek) overriding system value values
+  (-927201, 'test-trg3-majica', 'Majica po meri', 'Custom shirt', 'oblacila', true, true, 'dtf'),
+  (-927202, 'test-trg3-drugo', 'Drug nosilec', 'Other carrier', 'oblacila', true, true, 'dtf');
+insert into trgovina.razlicice(id, izdelek_id, oznaka_sl, oznaka_en, sku, cena, zaloga) overriding system value values
+  (-927201, -927201, 'Črna / M', 'Black / M', 'TEST-TRG3-1', 2700, 0),
+  (-927202, -927202, 'Črna / M', 'Black / M', 'TEST-TRG3-2', 2700, 0);
+insert into trgovina.cone(izdelek_id, kljuc, barva, slika, koti, sirina_mm, visina_mm) values
+  (-927201, 'hrbet', 'Črna', 'test.png', '[[0,0],[10,0],[10,10],[0,10]]', 300, 400);
+insert into trgovina.motivi(id, slug, ime_sl, ime_en, cona, polja, sheme, aktiven) overriding system value values
+  (-927201, 'test-motiv', 'Test motiv', 'Test design', 'hrbet',
+   '[{"kljuc":"ime","vrsta":"besedilo","oznaka_sl":"Ime","oznaka_en":"Name","max":12,"obvezno":true},
+     {"kljuc":"st","vrsta":"stevilka","oznaka_sl":"Št.","oznaka_en":"No.","obvezno":false},
+     {"kljuc":"leto","vrsta":"leto","oznaka_sl":"Leto","oznaka_en":"Year","obvezno":false},
+     {"kljuc":"slogan","vrsta":"izbira","oznaka_sl":"Slogan","oznaka_en":"Slogan","obvezno":false,"moznosti":["Samo še eno","Tretji polčas"]},
+     {"kljuc":"ekipa","vrsta":"ekipa","oznaka_sl":"Ekipa","oznaka_en":"Team","max":24,"obvezno":false}]',
+   '[{"kljuc":"klasika","ime_sl":"Klasika","ime_en":"Classic","barve":["#1E8C45","#F4F4F0"]}]', true),
+  (-927202, 'test-motiv-prvak', 'Test prvak', 'Test champion', 'hrbet',
+   '[{"kljuc":"prvak","vrsta":"prvak","oznaka_sl":"Prvak","oznaka_en":"Champion","obvezno":true}]',
+   '[{"kljuc":"klasika","ime_sl":"Klasika","ime_en":"Classic","barve":["#1E8C45","#F4F4F0"]}]', true),
+  (-927203, 'test-motiv-skrit', 'Skrit motiv', 'Hidden design', 'hrbet',
+   '[{"kljuc":"ime","vrsta":"besedilo","oznaka_sl":"Ime","oznaka_en":"Name","max":12,"obvezno":true}]',
+   '[{"kljuc":"klasika","ime_sl":"Klasika","ime_en":"Classic","barve":["#1E8C45","#F4F4F0"]}]', false);
+insert into trgovina.motivi_izdelki(motiv_id, izdelek_id, doplacilo) values
+  (-927201, -927201, 800), (-927202, -927201, 800), (-927203, -927201, 800);
+
+select pg_temp.napaka('trgovina3: neznano polje motiva',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","barva":"x"},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: neznan kljuc vhoda',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana"},"shema":"klasika","doplacilo":0}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: obvezno polje manjka',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"st":9},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: predolgo besedilo',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Abcdefghijklm"},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: zaljivka',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Kurac"},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: nedovoljen znak',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"A<b>"},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: stevilka 100',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","st":100},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: stevilka kot niz',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","st":"9"},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: leto 1900',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","leto":1900},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: leto v prihodnosti',
+  format($q$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","leto":%s},"shema":"klasika"}', null, 'sl')$q$,
+         extract(year from now())::int + 1),
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: izbira ni na seznamu',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","slogan":"Samo eno"},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: napacna shema',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana"},"shema":"nocna"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: neaktiven motiv',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv-skrit","polja":{"ime":"Ana"},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: motiv ne velja za izdelek',
+  $$select trgovina.personaliziraj(-927202, '{"motiv":"test-motiv","polja":{"ime":"Ana"},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: tuja ekipa',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","ekipa":-927002},"shema":"klasika"}',
+    'f7a20000-0000-4000-8000-000000000001', 'sl')$$, 'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: hisna ekipa',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","ekipa":-927005},"shema":"klasika"}',
+    'f7a20000-0000-4000-8000-000000000005', 'sl')$$, 'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: ekipa zahteva prijavo',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","ekipa":-927001},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-prijava');
+select pg_temp.napaka('trgovina3: prvak le za prvaka',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv-prvak","polja":{"prvak":{"mini_liga_id":-927001,"sezona":"2025/26"}},"shema":"klasika"}',
+    'f7a20000-0000-4000-8000-000000000002', 'sl')$$, 'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: nosilec motivov brez motiva se ne proda',
+  $$select trgovina.personaliziraj(-927201, null, null, 'sl')$$, 'trgovina-personalizacija');
+select pg_temp.preveri('trgovina3: prvak dobi besedilo strezniku',
+  (select p.personalizacija @> '{"motiv":"test-motiv-prvak","polja":{"prvak":"Prvak mini lige Prvaki 2025/26"},
+                                 "mini_liga_id":-927001,"sezona":"2025/26","fantasy_team_id":-927001}'
+     from trgovina.personaliziraj(-927201, '{"motiv":"test-motiv-prvak","polja":{"prvak":{"mini_liga_id":-927001,"sezona":"2025/26"}},"shema":"klasika"}',
+       'f7a20000-0000-4000-8000-000000000001', 'sl') p));
+select pg_temp.preveri('trgovina3: stara oblika personalizacije ostane',
+  (select p.personalizacija = '{"vrsta":"poljubno_ime","ime":"Ana"}' and p.doplacilo = 500
+     from trgovina.personaliziraj(-927102, '{"poljubno_ime":"Ana"}', null, 'sl') p));
+
+-- Veljaven motiv skozi rezervacijo: doplačilo iz baze, ne iz vhoda.
+set local role service_role;
+select set_config('test.trg3_r', trgovina_rezerviraj(
+  '[{"razlicica_id":-927201,"kolicina":1,"cena":1,"doplacilo":1,
+     "personalizacija":{"motiv":"test-motiv","polja":{"ime":"  Žan  Novak ","st":9,"leto":1998,"slogan":"Tretji polčas","ekipa":-927001},"shema":"klasika"}}]',
+  'f7a20000-0000-4000-8000-000000000001', 'sl', encode(sha256('t3a'), 'hex'))::text, true);
+reset role;
+select pg_temp.preveri('trgovina3: veljaven motiv, doplacilo iz baze',
+  current_setting('test.trg3_r')::jsonb @> '{"personalizirano":true,"postavke":[{"cena":2700,"doplacilo":800,
+     "opis":"Test motiv · Žan Novak · 9 · 1998 · Tretji polčas · Kranjski Tigri",
+     "personalizacija":{"motiv":"test-motiv","shema":"klasika","fantasy_team_id":-927001,
+       "polja":{"ime":"Žan Novak","st":9,"leto":1998,"slogan":"Tretji polčas","ekipa":"Kranjski Tigri"}}}]}');
+delete from trgovina.narocila where odjemalec = encode(sha256('t3a'), 'hex');
+
+set local role anon;
+select pg_temp.zavrnjeno('trgovina3: anon ne bere motivov', $$select * from trgovina.motivi$$);
+select pg_temp.zavrnjeno('trgovina3: anon ne bere con', $$select * from trgovina.cone$$);
+select pg_temp.zavrnjeno('trgovina3: anon ne klice preverjanja motiva',
+  $$select trgovina.personaliziraj_motiv(-927201, '{}', null, 'sl')$$);
+select pg_temp.zavrnjeno('trgovina3: anon ne vidi admin motivov', $$select trgovina_admin_motivi()$$);
+select pg_temp.zavrnjeno('trgovina3: anon ne ureja motivov', $$select trgovina_admin_shrani_motiv('{"id":-927203,"aktiven":true}')$$);
+select pg_temp.preveri('trgovina3: javni motivi le aktivni, z izdelki, doplacili in conami',
+  trgovina_motivi() @> '[{"slug":"test-motiv","izdelki":[{"slug":"test-trg3-majica","doplacilo":800,"postopek":"dtf",
+     "cena_od":2700,"cone":[{"kljuc":"hrbet","barva":"Črna","sirina_mm":300}]}]}]'
+  and not trgovina_motivi() @> '[{"slug":"test-motiv-skrit"}]'
+  and not trgovina_motivi() @> '[{"slug":"retro-dres"}]');
+select pg_temp.preveri('trgovina3: izdelek pove aktivne motive in cone',
+  trgovina_izdelek('test-trg3-majica') @> '{"postopek":"dtf","motivi":[{"slug":"test-motiv","doplacilo":800}],
+     "cone":[{"kljuc":"hrbet","barva":"Črna"}]}'
+  and not trgovina_izdelek('test-trg3-majica') @> '{"motivi":[{"slug":"test-motiv-skrit"}]}');
+reset role;
+
+select set_config('request.jwt.claim.sub','f7a20000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('trgovina3: uporabnik ne vidi admin motivov', $$select trgovina_admin_motivi()$$);
+select pg_temp.zavrnjeno('trgovina3: uporabnik ne ureja motivov', $$select trgovina_admin_shrani_motiv('{"id":-927203,"aktiven":true}')$$);
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select trgovina_admin_shrani_motiv('{"id":-927201,"doplacila":[{"izdelek_id":-927201,"doplacilo":900},{"izdelek_id":-927202,"doplacilo":300}]}');
+select pg_temp.preveri('trgovina3: admin spremeni doplacila motiva',
+  trgovina_admin_motivi() @> '[{"id":-927201,"doplacila":[{"izdelek_id":-927201,"doplacilo":900},{"izdelek_id":-927202,"doplacilo":300}]}]'
+  and trgovina_admin_motivi() @> '[{"slug":"retro-dres","aktiven":false}]');
+select trgovina_admin_shrani_motiv('{"id":-927201,"aktiven":false,"doplacila":[{"izdelek_id":-927202,"doplacilo":null}]}');
+select pg_temp.preveri('trgovina3: admin izklopi motiv in ga odstrani z izdelka',
+  not trgovina_motivi() @> '[{"slug":"test-motiv"}]'
+  and trgovina_admin_motivi() @> '[{"id":-927201,"aktiven":false,"doplacila":[{"izdelek_id":-927201,"doplacilo":900}]}]'
+  and not trgovina_admin_motivi() @> '[{"id":-927201,"doplacila":[{"izdelek_id":-927202}]}]');
+select pg_temp.napaka('trgovina3: admin ne nastavi negativnega doplacila',
+  $$select trgovina_admin_shrani_motiv('{"id":-927201,"doplacila":[{"izdelek_id":-927201,"doplacilo":-1}]}')$$, 'trgovina-vnos');
+select pg_temp.napaka('trgovina3: admin ne spremeni polj motiva',
+  $$select trgovina_admin_shrani_motiv('{"id":-927201,"polja":[]}')$$, 'trgovina-vnos');
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+
 do $$
 declare v_napak int;
 begin

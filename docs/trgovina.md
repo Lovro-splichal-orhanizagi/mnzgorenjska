@@ -40,6 +40,16 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   `trgovina_vracilo`; admin: `_za_tisk`,
   `_nova_serija`, `_serija`, `_serije`, `_serija_stanje`, `_boni`,
   `_shrani_personalizacijo`.
+- **Motivi** (migracija `20261018230000_trgovina_motivi.sql`, spec
+  `docs/superpowers/specs/2026-10-18-trgovina-motivi-design.md`): `izdelki.postopek`,
+  `cone` (fotografija nosilca, koti, mm), `motivi` (polja, sheme, primeri),
+  `motivi_izdelki` (doplačilo). Vhod `{motiv, polja, shema}` preveri
+  `trgovina.personaliziraj_motiv` (vrsta polja, dolžina, znaki, filter,
+  0–99, 1950–letos, izbira, kupčeva nehišna ekipa, prvak kot zgoraj, shema;
+  neznana polja zavrne); shrani `{motiv, polja, shema, ime}` (+ `fantasy_team_id`,
+  pri prvaku `mini_liga_id`, `sezona`). Nosilec motivov brez motiva ni prodan.
+  Javno `trgovina_motivi()`, `trgovina_izdelek().motivi/cone`; admin
+  `trgovina_admin_motivi`, `_shrani_motiv` (aktiven, vrstni red, primeri, doplačila).
 - **Rezervacija**: naročilo `caka_placilo` drži zalogo 35 min
   (`rezervirano_do`), Stripe seja poteče v 31 min. Na voljo = zaloga −
   rezervirano. Največ 5 odprtih naročil na prijavljenega uporabnika ali (gost)
