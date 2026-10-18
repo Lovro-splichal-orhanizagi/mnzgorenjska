@@ -16,7 +16,7 @@ export function withDfbHistoricalStatistics(base,competition){
   }
   if(policy.entries.some(e=>!seen.has(e.sourceMatchId)))throw Error('DFB historical provider: incomplete installed set')
   // An explicit installed report must not even discover the source schedule.
-  if(options.samoZapisnik&&binding.markers.some(m=>m.reportId===String(options.samoZapisnik)))return []
+  if(options.samoZapisnik&&binding.markers.some(m=>m.reportId===String(options.samoZapisnik))){base.nepopolni=[];return []}
   return base.zapisniki(code,fetchFn,{...options,preskoci:skip})
  }}
  Object.defineProperty(provider,'nepopolni',{enumerable:true,get:()=>base.nepopolni})

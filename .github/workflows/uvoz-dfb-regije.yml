@@ -68,7 +68,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/cakaj-na-uvoze.mjs --liga "$LIGA"
-      - name: Uvoz samo iz odobrenih zajemov in preverba brez vklopa
+      - name: Odobren bootstrap in uvoz samo iz zaprtih zajemov — brez vklopa
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

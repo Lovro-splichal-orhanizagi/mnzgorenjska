@@ -33,3 +33,11 @@ test('ordinary new report remains on strict parser and existing diagnostics are 
  await assert.rejects(()=>provider.zapisniki('regionalliga-suedwest/2026-2027',null,{samoZapisnik:'de-dfb-9999999',installedHistoricalMarkers:installed()}),/new report invalid/)
  assert.equal(provider.nepopolni,base.nepopolni)
 })
+test('installed single-report skip clears a reused provider previous strict diagnostics',async()=>{
+ const base={...dfb,nepopolni:[],async zapisniki(){this.nepopolni=[{id:'de-dfb-9999999',razlog:'previous strict failure'}];throw Error('previous strict failure')}}
+ const provider=api.withDfbHistoricalStatistics(base,competition),options={installedHistoricalMarkers:installed()}
+ await assert.rejects(()=>provider.zapisniki('regionalliga-suedwest/2026-2027',null,options),/previous strict failure/)
+ assert.equal(provider.nepopolni.length,1)
+ assert.deepEqual(await provider.zapisniki('regionalliga-suedwest/2025-2026',()=>{throw Error('fetch forbidden')},{...options,samoZapisnik:'de-dfb-2402929'}),[])
+ assert.deepEqual(provider.nepopolni,[]);assert.deepEqual(base.nepopolni,[])
+})
