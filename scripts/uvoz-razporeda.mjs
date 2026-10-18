@@ -18,6 +18,7 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
+import {loadHistoricalStatisticsImportContext} from './lib/historical-statistics-import.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { sifra } from './viri/zapisniki.mjs'
 import { razcleniRazpored, sezonaIz, oznakaBrezIzida, tekmaDrugegaKroga, odvecneVrsticePara, preberiKontumacije } from './razpored.mjs'
@@ -72,8 +73,9 @@ const pisi = process.argv.includes('--pisi')
 const dovoliManjKlubov = process.argv.includes('--dovoli-manj-klubov')
 const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: fetchZaBazo() } })
 
-const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
-const vir = viraZa(tekmovanje)
+const originalCompetition = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
+const {competition:tekmovanje,installedHistoricalMarkers}=await loadHistoricalStatisticsImportContext(db,originalCompetition)
+const vir = viraZa(tekmovanje,{installedHistoricalMarkers})
 const liga = arg('liga', sifraLige(tekmovanje, '1601'))
 // Isti pomak kot pri delegiranju: mladinci igrajo zgodaj, zato imajo krajsega.
 const pomakUr = Number(arg('pomak', null) ?? tekmovanje.rok_pomak_ur ?? 6)
@@ -132,8 +134,8 @@ console.log(`Berem razpored: ${url}`)
 const imeRazporeda = `razpored-${sifra(liga)}.html`
 // Zadnji razpored, ki se je dal razbrati — preden ga `prenesi` prepiše.
 const potRezerve = `${PREDPOMNILNIK}/${vir.ime}/${imeRazporeda}`
-const rezerva = existsSync(potRezerve) ? readFileSync(potRezerve, 'utf8') : null
-const html = await prenesi(url, imeRazporeda)
+const rezerva = !vir.razporedBrezUvodnegaPrenosa && existsSync(potRezerve) ? readFileSync(potRezerve, 'utf8') : null
+const html = vir.razporedBrezUvodnegaPrenosa ? null : await prenesi(url, imeRazporeda)
 
 // Stari CMS (Kranj, Ljubljana, Celje) postavi stran kot eno veliko tabelo:
 // naslov kroga ("1. krog  29.08.26"), pod njim pa vrstice "datum" in
@@ -390,8 +392,8 @@ for (const k of veljavni) {
   }
 
   for (const t of k.tekme) {
-    const domaciId = await klubId(t.domaci)
-    const gostjeId = await klubId(t.gostje)
+    const domaciId = t.historicalMarker?.homeTeamId ?? await klubId(t.domaci)
+    const gostjeId = t.historicalMarker?.awayTeamId ?? await klubId(t.gostje)
     letosnjiKlubi.add(domaciId)
     letosnjiKlubi.add(gostjeId)
     if (t.datum && t.datum < danes) {
@@ -421,6 +423,10 @@ for (const k of veljavni) {
       // borza pa je zaradi nje zadrzala cel krog. Datum popravimo SAMO, dokler
       // tekma ni uvozena: odigrana tekma ima pravi datum iz zapisnika.
       const obstojeca = obstojTekme[0]
+      if(t.historicalMarker) {
+        if(obstojeca.id!==t.historicalMarker.matchId || krogId!==t.historicalMarker.roundId)throw Error('historical schedule: installed DB fixture identity differs')
+        continue // Retain the exact immutable official header; never convert it to a forfeit/pending report.
+      }
       // Kontumacija, označena pred izidom (askf: napovedan izostanek, izstop
       // kluba; v bazi 0:0), dobi izid, ko ga vir objavi.
       const izidKontumacije = t.kontumacija && obstojeca.kontumacija && !!t.izid &&
@@ -457,6 +463,7 @@ for (const k of veljavni) {
       continue
     }
 
+    if(t.historicalMarker)throw Error('historical schedule: installed match disappeared; no replacement placeholder allowed')
     if (vir.krogiPoTednih) {
       const { odigrana, prestavljena } = tekmaDrugegaKroga(tekmePara.get(`${domaciId}:${gostjeId}`), krogId)
       // Odigrana tekma para v drugem krogu: razpored jo kaže drugje, kot jo je
