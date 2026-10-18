@@ -32,7 +32,12 @@ export default function Prijava() {
   // Glava ima na /login "Začni brezplačno" in "Prijava": klik na drugo na isti
   // strani zamenja le poizvedbo, zato način sledi naslovu.
   const nacinVNaslovu = params.get('nacin') === 'registracija' ? 'registracija' : 'prijava'
-  useEffect(() => setNacin(nacinVNaslovu), [nacinVNaslovu])
+  useEffect(() => {
+    setNacin(nacinVNaslovu)
+    setNapaka(null)
+    setSporocilo(null)
+    setPotrditevZnova(false)
+  }, [nacinVNaslovu])
   const [email, setEmail] = useState('')
   // Predlog domene ("gmail.con" → "gmail.com") se pokaže, ko uporabnik zapusti
   // polje, da med tipkanjem ne utripa. Oddaje ne ustavi.
@@ -81,9 +86,15 @@ export default function Prijava() {
     if (nativno && data.url) await Browser.open({ url: data.url })
   }
 
-  async function posljiPotrditevZnova() {
+  // GoTrue ne pošlje istemu naslovu dveh mailov v 60 s, zato premor teče tudi
+  // takoj po registraciji (prvi mail je pravkar odšel).
+  function zacniPremor() {
     setPremor(true)
     setTimeout(() => setPremor(false), 60_000)
+  }
+
+  async function posljiPotrditevZnova() {
+    zacniPremor()
     setNapaka(null)
     setSporocilo(null)
     const { error } = await supabase.auth.resend({
@@ -137,6 +148,7 @@ export default function Prijava() {
     if (nacin === 'registracija') {
       dogodek('registracija', { nacin: 'eposta' })
       setPotrditevZnova(true)
+      zacniPremor()
       return setSporocilo(t('racun.prijava.racunUstvarjen'))
     }
     navigate(nazaj)
