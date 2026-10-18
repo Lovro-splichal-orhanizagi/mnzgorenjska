@@ -92,6 +92,103 @@
       ],
       "sourcePolicy": "de-dfb-suedwest-2025-historical-unavailable-v1",
       "recordedAt": "2026-10-18T13:03:55.270673+00:00"
+    },
+    {
+      "id": "es-fcf-segona-g1-history-2026-10-18-v1",
+      "provider": "fcf",
+      "sourcePolicy": "es-fcf-reviewed-history-v1",
+      "competitionSlug": "es-ct-segona-g1",
+      "season": "2026/27",
+      "recordedAt": "2026-10-18T13:47:13Z",
+      "approvalReference": "user replies0 and1 to call_84764278412542b2ab37d9bb6e61eb67; recordedAt is implementation recording time, user send time unavailable",
+      "entries": [
+        {
+          "sourceMatchId": "4109388",
+          "sourceCompetitionId": "58161863",
+          "sourcePhase": null,
+          "sourceRound": 1,
+          "playedOn": "2026-09-20",
+          "homeSourceClubId": "5042",
+          "awaySourceClubId": "5057",
+          "homeSourceCategoryId": "33356",
+          "awaySourceCategoryId": "35522",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4109388",
+          "rawSha256": "eb3b14de3d6077f4fb896cb4a4d2b96d76eb85db8853889e9871b7f74e73e770",
+          "observedHomeScore": 0,
+          "observedAwayScore": 3,
+          "reasonCode": "published_score_conflicts_with_recorded_goal_events"
+        }
+      ]
+    },
+    {
+      "id": "es-fcf-tercera-g2-history-2026-10-18-v1",
+      "provider": "fcf",
+      "sourcePolicy": "es-fcf-reviewed-history-v1",
+      "competitionSlug": "es-ct-tercera-g2",
+      "season": "2026/27",
+      "recordedAt": "2026-10-18T13:47:13Z",
+      "approvalReference": "user replies0 and1 to call_84764278412542b2ab37d9bb6e61eb67; recordedAt is implementation recording time, user send time unavailable",
+      "entries": [
+        {
+          "sourceMatchId": "4116215",
+          "sourceCompetitionId": "58161875",
+          "sourcePhase": null,
+          "sourceRound": 4,
+          "playedOn": "2026-10-10",
+          "homeSourceClubId": "1107",
+          "awaySourceClubId": "5114",
+          "homeSourceCategoryId": "37659",
+          "awaySourceCategoryId": "34913",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4116215",
+          "rawSha256": "5dd7e401c7929dd1f2b59d35d1f6e203e6306f2479238adcd8755180b9671a49",
+          "observedHomeScore": 5,
+          "observedAwayScore": 0,
+          "reasonCode": "published_score_exceeds_recorded_goal_events"
+        }
+      ]
+    },
+    {
+      "id": "es-fcf-tercera-g9-history-2026-10-18-v1",
+      "provider": "fcf",
+      "sourcePolicy": "es-fcf-reviewed-history-v1",
+      "competitionSlug": "es-ct-tercera-g9",
+      "season": "2026/27",
+      "recordedAt": "2026-10-18T13:47:13Z",
+      "approvalReference": "user replies0 and1 to call_84764278412542b2ab37d9bb6e61eb67; recordedAt is implementation recording time, user send time unavailable",
+      "entries": [
+        {
+          "sourceMatchId": "4118352",
+          "sourceCompetitionId": "58161880",
+          "sourcePhase": null,
+          "sourceRound": 1,
+          "playedOn": "2026-09-19",
+          "homeSourceClubId": "1252",
+          "awaySourceClubId": "6136",
+          "homeSourceCategoryId": "35781",
+          "awaySourceCategoryId": "33049",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4118352",
+          "rawSha256": "1e8d50d487be699cac45c3c2dc4658d3a9b16983fd5203b5845dc1339fe7351c",
+          "observedHomeScore": 3,
+          "observedAwayScore": 0,
+          "reasonCode": "published_score_conflicts_with_recorded_goal_events"
+        },
+        {
+          "sourceMatchId": "4118358",
+          "sourceCompetitionId": "58161880",
+          "sourcePhase": null,
+          "sourceRound": 2,
+          "playedOn": "2026-09-26",
+          "homeSourceClubId": "44143644",
+          "awaySourceClubId": "1400",
+          "homeSourceCategoryId": "44510647",
+          "awaySourceCategoryId": "47272626",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4118358",
+          "rawSha256": "e69af6b2765dbed7ebe3b57535beb1ce259c7d77ed9cb7f90d9cb4998afd153a",
+          "observedHomeScore": 0,
+          "observedAwayScore": 3,
+          "reasonCode": "published_score_conflicts_with_recorded_goal_events"
+        }
+      ]
     }
   ]
 }
