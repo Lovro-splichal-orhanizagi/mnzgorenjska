@@ -253,8 +253,11 @@ function vrnjenoIme(p, polnoIme, regSt) {
 // naslednji uvoz igralca še najti.
 async function posodobiIgralca(id, popravek, vrnjeno) {
   if (!Object.keys(popravek).length) return
-  const { error } = await db.from('players').update(popravek).eq('id', id)
+  const { error, count } = await db.from('players').update(popravek, { count: 'exact' }).eq('id', id)
   if (error) throw new Error(`igralec ${id}: ${error.message}`)
+  // HTTP uspeh brez popravljene vrstice še ni vrnjena identiteta. Dokler
+  // zapis ni potrjen, mora zgoščeni ključ ostati za naslednji poskus.
+  if (vrnjeno && count !== 1) throw new Error(`igralec ${id}: vrnitev identitete ni potrjena`)
   if (vrnjeno) await db.from('anonimizirani_igralci').delete().eq('player_id', id)
 }
 

@@ -22,11 +22,15 @@ function importer({ team = 10404, current = true, overrides = {}, extraRows = []
   let transferFails = transferOnlyFailure
   let refuseActive = zeroActiveRows
   let refuseIdentity = zeroIdentityRows
+  let anonymousMappingExists = true
   const db = createClient('https://database.invalid', 'test-service-key', {
     auth: { persistSession: false },
     global: { fetch: async (input, init) => {
       const url = new URL(input)
-      if (url.pathname === '/rest/v1/anonimizirani_igralci' && init.method === 'DELETE') return new Response(null, { status: 204 })
+      if (url.pathname === '/rest/v1/anonimizirani_igralci' && init.method === 'DELETE') {
+        anonymousMappingExists = false
+        return new Response(null, { status: 204 })
+      }
       assert.equal(url.pathname, '/rest/v1/players')
       let matching = rows.filter(p => [...url.searchParams].every(([field, value]) => {
         if (['select', 'order', 'limit'].includes(field)) return true
@@ -59,7 +63,7 @@ function importer({ team = 10404, current = true, overrides = {}, extraRows = []
     tekmovanje: { id: 1114, country_id: 44 }, POLJA_IGRALCA: fields,
     VRATAR_IZ_POLJA: 'v vratih, a vodimo ga v polju', prestopSkladen,
     nastopiIgralca: async () => history ?? [{ klub: 10404, tekma: 123, sezona: '2025/26', krog: 34, datum: '2026-05-16' }],
-    anonimiziranVLigi: async () => anonymous ? { ...row } : null,
+    anonimiziranVLigi: async () => anonymous && anonymousMappingExists ? { ...row } : null,
     imeHash: () => 'verified-anonymous-key',
     razdeliIme: () => ({ priimek: 'Grawe', ime: 'Benedikt' }),
     preveriUgovor: async () => {}, console: { log() {} },
@@ -197,7 +201,7 @@ test('failed identity restoration cannot clear privacy state or cache an active 
   assert.equal(row.active, true)
 })
 
-test('an unconfirmed identity-restoration PATCH refuses without caching and supports a later retry', async () => {
+test('an unconfirmed identity-restoration PATCH retains anonymous identity keys so retry cannot invent a duplicate', async () => {
   const { row, resolve, refuseIdentity } = importer({ anonymous: true, zeroIdentityRows: true, overrides: {
     full_name: '#383528', anonimiziran_razlog: 'neaktiven' } })
   await assert.rejects(resolve(), /vrnitev identitete ni potrjena/)
