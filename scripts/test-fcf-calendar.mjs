@@ -119,6 +119,36 @@ test('mixed authentic R20 pair refreshes only two reused cache members and retur
   assert.deepEqual(readdirSync('scripts/.predpomnilnik/fcf').sort(), [...calendar().keys()].map(id => `acta-${id}.html`).sort())
 })
 
+// A restored cache timestamp may be ahead of the local clock. Negative cache
+// age must never satisfy the forced targeted read's -1 sentinel.
+for (const future of [[HOME], [AWAY], [HOME, AWAY]]) test(`future cache mtime for ${future.join('/')} cannot skip targeted source reads`, async t => {
+  const f = setup(t), timestamp = new Date(Date.now() + DAY)
+  for (const id of future) utimesSync(f.cache(id), timestamp, timestamp)
+  const b = await f.read()
+  assert.deepEqual(f.calls, [HOME, AWAY], 'both cache-reused targets require source revalidation even with future mtime')
+  assertComplete(b)
+  assert.equal(f.filenames.every(name => name.startsWith('.paired-')), true)
+  assert.equal(readdirSync('scripts/.predpomnilnik/fcf').length, 240)
+})
+
+test('future cache mtime cannot bypass refreshed route identity validation', async t => {
+  const invalid = variant(newHome, s => s === String(HOME) ? String(AWAY) : s)
+  const f = setup(t, { response: new Map([[HOME, invalid], [AWAY, syntheticNewAway]]) })
+  const timestamp = new Date(Date.now() + DAY)
+  utimesSync(f.cache(HOME), timestamp, timestamp)
+  await assert.rejects(f.read(), /fcf:.*koledar/i)
+  assert.deepEqual(f.calls, [HOME], 'invalid first target must stop before reading the reciprocal')
+  assert.equal(readFileSync(f.cache(HOME), 'utf8'), newHome)
+  assert.equal(readdirSync('scripts/.predpomnilnik/fcf').length, 240)
+})
+
+test('future cache mtime in a healthy calendar retains ordinary cached behavior', async t => {
+  const pages = calendar(); pages.set(HOME, oldHome)
+  const f = setup(t, { pages }), timestamp = new Date(Date.now() + DAY)
+  for (const id of [HOME, AWAY]) utimesSync(f.cache(id), timestamp, timestamp)
+  assertComplete(await f.read()); assert.deepEqual(f.calls, [])
+})
+
 for (const fresh of [[HOME], [AWAY]]) test(`already provider-fresh member ${fresh[0]} is not read again`, async t => {
   const response = new Map([[HOME, newHome], [AWAY, oldAway]])
   // The one targeted cached member supplies a coherent source correction.

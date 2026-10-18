@@ -599,7 +599,7 @@ export class FcfZavrnitev extends Error {
 async function beri(prenesi, id, najvec, preveri = null) {
   const ime = imeStrani(id)
   const c = izPredpomnilnika(ime)
-  if (c && c.starost <= najvec) return c.html
+  if (!preveri && c && c.starost <= najvec) return c.html
   // Običajna klicatelja prenosa pišeta že pred vrnitvijo iz prenesi. Pri
   // ciljni obnovi zato najprej pišeta v začasno datoteko, brez stare rezerve.
   const imePrenosa = preveri ? `.paired-${id}-${randomUUID()}.html` : ime

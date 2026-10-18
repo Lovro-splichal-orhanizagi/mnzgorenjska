@@ -100,3 +100,21 @@ Smoke warnings were expected existing Node experimental API notices for MockTime
 ## Residual source uncertainty and handoff
 
 This completes the requested code/test/docs work, not primary-source repair or production readiness. No live source counterpart was fetched and no score, round/date/time, player or price was invented. The exact reciprocal primary gap remains unchanged. Per the controller's existing workflow, root must independently review, perform exact CI/merge/deploy, then run the one ordinary serialized active Tercera G4 import with `tekoca=true`, `cene=false`, and no FCF override. Only actual source coherence at that operation can establish repair; otherwise keep the group held. No activation or cache override was added here.
+
+## Review fix round 1 — I1 forced reads with future cache timestamps
+
+Task base: `9bb4003fd17fe6a92a843dbca0fb1462a10a28bc`. Review: `/private/tmp/slff-go-live-evidence/overnight/fcf-paired-calendar-task-review.md`. Follow-up commit: `fix(fcf): always fetch targeted validation reads` (this commit, parent `9bb4003`; exact resulting hash is supplied in the handoff).
+
+Applied the receiving-code-review and TDD workflow: read the complete review, verified the early cache return and the meaning of `Date.now() - mtimeMs`, added regression cases before modifying product code, and observed the reported failure. With mtime one day ahead, cache age is negative and the previous `<= -1` check could return the canonical cached body before invoking the targeted download or identity validator.
+
+The product change is exactly one cache-return condition: `beri` can take its cache fast path only when no validation hook is present. A targeted validated read therefore always reaches the existing UUID staging / paced callback / source-identity checks regardless of cache timestamp. Ordinary calls without a validator keep their previous age behavior. This does not change request ceilings, source policy, normal callback semantics, calendar signature scope, or transport.
+
+Added five focused cases: future home mtime, future away mtime, both future mtimes, wrong embedded route in a future-dated target, and a healthy calendar with future-dated members. The first three require both cache-reused target IDs to be read through staging and the complete calendar to pass; the invalid-route case proves validation still runs, canonical bytes survive, the reciprocal is not read after failure, and staging is cleaned. The healthy case proves ordinary cached behavior remains unchanged.
+
+Verification used only the covering suite, as requested:
+
+- **Genuine RED before product edit:** `/Users/jernejjankocica/.nvm/versions/node/v22.23.1/bin/node --test scripts/test-fcf-calendar.mjs` exited 1 with **37 cases, 33 pass, 4 fail**. Log: `/private/tmp/fcf-calendar-i1-red.log`. The one-future-home assertion recorded actual targeted IDs `[4115382]`, expected `[4115262,4115382]`; the existing global calendar still returned coherent fixtures. The wrong-route future-home case also failed with a missing expected rejection. The healthy future-cache case already passed.
+- **GREEN after the one-condition fix:** the same command exited 0 with **37/37 pass**, zero failures, cancellations or skips. Log: `/private/tmp/fcf-calendar-i1-green.log`.
+- `git diff --check` passed. Self-review found only `scripts/viri/fcf.mjs`, `scripts/test-fcf-calendar.mjs` and this appended report changed relative to the fix task base.
+
+No unchanged broad suite, smoke, canonical comparison, remote, provider or database operation was repeated. Existing M1 experimental API and M2 fake-public-environment warnings remain recorded above and were explicitly deferred by the controller. No new warning appeared in the covering suite. The historical primary source gap remains unchanged: this fix does not establish the actual reciprocal's new round/date/time or production readiness.
