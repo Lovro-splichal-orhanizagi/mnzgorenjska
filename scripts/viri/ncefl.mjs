@@ -390,8 +390,9 @@ export function vZapisnik(html, { id = null, url = null, leto = null, danes = Da
     else if (e.postava.length !== 11) opozorila.push(`${imeni[idx]}: v postavi je ${e.postava.length} igralcev namesto 11`)
   })
 
-  // Goli: minute in vrsta (11 m, avtogol) iz glave po imenu, število pri
-  // igralcu iz ikon. Strelec glave, ki ga ni v postavi, je gol ekipe brez strelca.
+  // Goli: popolna glava po izidu je seznam dogodkov, ikone jo preverijo.
+  // Pri nepopolni glavi ikone dopolnijo le enolično določene igralce. Neznan
+  // ali dvoumen strelec ostane brez pripisa igralcu.
   const goli = []
   const poImenu = (idx, ime) => ekipe[idx].igralci.filter((i) => kljucImena(i.imeVira) === kljucImena(ime))
   const popolneGlave = strelci.map((ss, idx) => ss.reduce((n, st) => n + st.goli.length, 0) === (idx ? rezultat.gostje : rezultat.domaci))
