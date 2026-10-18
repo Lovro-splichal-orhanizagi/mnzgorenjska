@@ -46,6 +46,7 @@ if (!BASE || !KLJUC) {
 
 const db = createClient(BASE, KLJUC, { auth: { persistSession: false } })
 const tezave = []
+const opozorila = []
 
 // --- preverbe v bazi --------------------------------------------------------
 const { data: izBaze, error } = await db.rpc('preveri_podatke')
@@ -119,6 +120,7 @@ const { data: zamujene, error: napakaZamud } = await db
   .from('matches')
   .select('id, played_on, imported_at, vir_brez_izida, import_warnings, rounds!inner(competition_id, competitions!inner(slug, active))')
   .is('imported_at', null)
+  .eq('statistics_status', 'available')
   // Kontumacija nima zapisnika in ga ne bo (20260927220000).
   .eq('kontumacija', false)
   .lt('played_on', doDne(PRAG_DNI))
@@ -179,6 +181,30 @@ if (napakaZamud) {
       koliko: brezIzida.length,
       primer: brezIzida.slice(0, 3).map((m) => `${m.slug}: ${m.played_on} (tekma ${m.id})`).join('; '),
     })
+}
+
+// Exact approved omissions remain visible as coverage limits, separately from overdue normal reports.
+const {data:historicalCoverage,error:historicalCoverageError}=await db
+  .from('matches')
+  .select('id, played_on, statistics_reason, rounds!inner(competitions!inner(slug, active))')
+  .eq('statistics_status','unavailable_historical')
+  .eq('rounds.competitions.active',true)
+  .order('played_on')
+  .limit(200)
+if(historicalCoverageError)tezave.push({kljuc:'zgodovinska-pokritost-neznana',opis:'Pokritosti zgodovinske statistike ni mogoče preveriti',koliko:1,primer:historicalCoverageError.message})
+else {
+  const byLeague=new Map()
+  for(const match of historicalCoverage??[]) {
+    const league=match.rounds?.competitions
+    if(!league?.active)continue
+    const rows=byLeague.get(league.slug)??[];rows.push(match);byLeague.set(league.slug,rows)
+  }
+  for(const [slug,rows]of byLeague)opozorila.push({
+    kljuc:'zgodovinska-statistika-nedosegljiva',
+    opis:'Individualna statistika izrecno odobrenih zgodovinskih tekem ni na voljo; uradni izidi so ohranjeni, nastopi in goli niso vključeni',
+    koliko:rows.length,
+    primer:rows.slice(0,3).map(m=>`${slug}: ${m.played_on} (tekma ${m.id}) ${m.statistics_reason}`).join('; '),
+  })
 }
 
 // --- vratar, ki zabija ------------------------------------------------------
@@ -255,8 +281,10 @@ else {
 }
 
 // --- izpis ------------------------------------------------------------------
+for(const o of opozorila)console.log(`  • [${o.kljuc}] ${o.opis}\n    ${o.koliko}× — npr. ${o.primer}`)
 if (!tezave.length) {
-  console.log(`Vse v redu — ${(lige ?? []).length} vklopljenih lig, nobene težave.`)
+  if(opozorila.length)console.log(`Preverbe brez napak — ${(lige ?? []).length} vklopljenih lig; omejitve pokritosti so navedene zgoraj.`)
+  else console.log(`Vse v redu — ${(lige ?? []).length} vklopljenih lig, nobene težave.`)
   process.exit(0)
 }
 

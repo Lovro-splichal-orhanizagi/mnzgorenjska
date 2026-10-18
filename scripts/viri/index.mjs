@@ -39,6 +39,11 @@ import askf from './askf.mjs'
 import ffa from './ffa.mjs'
 import novanet from './novanet.mjs'
 import dfb from './dfb.mjs'
+import {withDfbHistoricalStatistics} from './dfb-historical.mjs'
+import {withFcfHistoricalStatistics} from './fcf-historical.mjs'
+import {verifyFcfInstalledHistoricalMarker} from '../fcf-historical-policy.mjs'
+import {getHistoricalStatisticsPolicy} from '../lib/historical-statistics-policy.mjs'
+import {zaprtje} from '../odtis-kode.mjs'
 import mascot from './mascot.mjs'
 import lowland from './lowland.mjs'
 import eps from './eps.mjs'
@@ -204,7 +209,7 @@ const VIRI = {
  *
  * @param {{ source?: string, slug?: string }} tekmovanje vrstica iz `competitions`
  */
-export function viraZa(tekmovanje) {
+export function viraZa(tekmovanje, {installedHistoricalMarkers=null}={}) {
   const ime = tekmovanje?.source ?? 'mnzg'
   const vir = VIRI[ime]
   if (!vir) {
@@ -213,7 +218,21 @@ export function viraZa(tekmovanje) {
       `Tekmovanje "${tekmovanje?.slug ?? '?'}" navaja vir "${ime}", ki ga ne poznam. Znani viri: ${znani}.`,
     )
   }
-  return vir
+  const policy=getHistoricalStatisticsPolicy(tekmovanje?.slug)
+  if(!policy && tekmovanje?.source_policy==null)return vir
+  if(!policy || tekmovanje.source!==policy.provider || tekmovanje.source_policy!==policy.sourcePolicy)throw Error('historical provider: invalid competition/provider/policy tuple')
+  let wrapped,files
+  if(ime==='dfb') {
+    const adapter=withDfbHistoricalStatistics(vir,tekmovanje)
+    wrapped={...adapter,zapisniki:(code,read,options={})=>adapter.zapisniki(code,read,{...options,installedHistoricalMarkers})}
+    Object.defineProperty(wrapped,'nepopolni',{enumerable:true,get:()=>adapter.nepopolni})
+    files=zaprtje('scripts/viri/dfb-historical.mjs')
+  }else if(ime==='fcf') {
+    wrapped=withFcfHistoricalStatistics(vir,tekmovanje,{installedHistoricalMarkers,verifyInstalledMarker:verifyFcfInstalledHistoricalMarker})
+    files=[...zaprtje('scripts/viri/fcf-historical.mjs'),...zaprtje('scripts/fcf-historical-policy.mjs')]
+  }else throw Error('historical provider: reviewed runtime adapter is not available for this policy')
+  wrapped.historicalSourceFiles=[...new Set(files)]
+  return wrapped
 }
 
 /** Vsi znani viri — za izpise in preverjanje. */

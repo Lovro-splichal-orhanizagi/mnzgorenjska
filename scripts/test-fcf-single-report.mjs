@@ -6,6 +6,7 @@ import { runInNewContext } from 'node:vm'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import vir from './viri/fcf.mjs'
+import {assertHistoricalReportImportable} from './lib/historical-statistics-import.mjs'
 import { prenesiSPonovitvami } from './prenos.mjs'
 
 const html = readFileSync(new URL('./vzorci/es-fcf-acta-rdeci-4139542.html', import.meta.url), 'utf8')
@@ -219,7 +220,7 @@ function importerWiring({ provider = vir, selected = 'es4139542', season = '2026
     from() { calls.push(['write']); throw Error('simulated cleanup write boundary reached') },
   }
   return { calls, result: runInNewContext(script, {
-    arg: name => name === 'zapisnik' ? selected : null, db, pocisti: cleanup,
+    assertHistoricalReportImportable, arg: name => name === 'zapisnik' ? selected : null, db, pocisti: cleanup,
     vir: provider, tekmovanje: { ...competition(), id: 123 }, liga: competition().source_league_code,
     prenesi: transfer ?? (() => { throw Error('unexpected source traversal') }),
     preskoci: new Set(['old']), sveziZapisniki: new Set(['changed']), console: { log() {} },
@@ -255,7 +256,7 @@ for (const [name, opts] of [
 })
 
 test('actual importer normal mode preserves ordinary stream and does not read new metadata', async () => {
-  const streamCalls = [], reports = [{ id: 'one' }, { id: 'two' }]
+  const streamCalls = [], reports = [{ id: 'one', z:{} }, { id: 'two', z:{} }]
   const { result, calls } = importerWiring({ selected: null, provider: {
     ime: 'fcf', posamezniZapisnik() { throw Error('single hook must not run') },
     zapisniki(...args) { streamCalls.push(args); return reports },
@@ -269,7 +270,7 @@ test('actual importer normal mode preserves ordinary stream and does not read ne
 for (const name of ['fas', 'dfb']) test(`actual importer ${name} fallback retains its stream/options and final ID filter`, async () => {
   const streamCalls = [], selected = name + '1'
   const { result, calls } = importerWiring({ selected, provider: {
-    ime: name, zapisniki(...args) { streamCalls.push(args); return [{ id: selected }, { id: name + '2' }] },
+    ime: name, zapisniki(...args) { streamCalls.push(args); return [{ id: selected, z:{} }, { id: name + '2', z:{} }] },
   } })
   assert.deepEqual(Array.from(await result, r => r.id), [selected])
   assert.equal(calls.length, 0)

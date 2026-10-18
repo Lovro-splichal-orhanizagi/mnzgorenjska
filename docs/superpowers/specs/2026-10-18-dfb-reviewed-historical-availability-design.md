@@ -80,3 +80,21 @@ Required negative tests cover wrong/extra/missing policy rows; archive/current/f
 ## Read-only checkpoint boundary
 
 The first implementation intentionally rejects manifest-v3 production import and database release before any database request. Those guards are removed only with the separately reviewed shared schema/import marker seam and DFB RPC checkpoint. It does not seed source_policy, install policies, persist unavailable rows, activate, or call providers. The existing strict source parser remains unchanged.
+
+## Writer checkpoint: atomic metadata bootstrap
+
+The canonical source_policy is `de-dfb-suedwest-2025-historical-unavailable-v1`, identical to the approved registry policy ID. No abbreviated policy spelling is accepted. The writer branch starts at reviewed merged mainf57d2359; its shared prerequisite is the reviewed historical availability schema, with unchanged DFB policy SHA.
+
+`prepare_dfb_historical_statistics(p_manifest text,p_sha256 text)` independently validates the complete approved v3 packet, original freshness, exact policy/lineage and306+306 fixture topology. It provisions only the three exact source club names, the two actual archive round metadata rows and the first actual future round metadata/config. It installs policy and BOTH unavailable headers atomically through the shared primitives. A failure on either entry rolls back the entire operation. This resolves an empty-DB dependency without inventing reports or consulting an incomplete installed getter. Ordinary304 archive reports, fullcurrent schedule/current reports, roles and verified-history prices follow afterwards.
+
+The future candidate is computed from the packet. Retained source currently identifies round13 firstday2026-10-23 at19:00 local, six-hour cutoff2026-10-23T11:00Z; this is a retained lead, not a replacement for fresh source confirmation. DiagnosticOct25 must not become an operational configuration.
+
+The separate v3 private gate checks the complete persisted612-fixture/68-round sets, exact normal canonical rows, installed immutable empty unavailable headers, keepers, active clubs, substitutes, prices, squad and six-hour future deadline. It then calls the owner-only shared transactional authorizer and changes only active=true in that same transaction. Its whole state snapshot and future-round readback remain binding. The original v1/v2 dispatcher bodies stay private and unchanged. Installed runtime markers are checked before DFB traversal; explicit installed single reports return before any fetch. V3 JS writer guards remain until the shared importer and Actions wrapper receive their separate review.
+
+## Final writer runtime checkpoint
+
+The combined writer now removes the temporary v3 JS disable guards. It first validates the exact approved manifest bytes and complete closed replay, then calls the atomic prepare RPC before ordinary archive import, current schedule/report import and role/price calculation. The complete installed binding is obtained through the shared runtime before provider traversal, including selected-report requests. An installed selected report also clears stale diagnostics on a reused provider. Full database preflight remains a separate final request; import does not activate the league.
+
+The database receives the original manifest as text, preserving its SHA across whitespace and numeric spellings such as8.10. The reviewed source fingerprint includes ordinary import/schedule/role/price dependencies. A synthetic, explicitly test-only closed packet proves ordering/refusals through the real replay/provider/shared-loader code; it is never release execution evidence. Actual service-role SQL tests cover transactional bootstrap, persisted canonical data, activation, rollback, access boundaries and independent locks.
+
+Root's fresh strict current capture39135160991 at pinned f3 succeeded with105/105 source-published reports. Fresh R13 schedule confirms Friday2026-10-23 first kickoff19:00 local and the six-hour cutoff11:00UTC. Today's two unpublished fixtures2426395/2426400 remain ordinary pending fixtures, with no historical exemption or verified-statistics claim. Real archive/current policy Actions replays at final reviewed code, reviewed manifest approval, fresh-chain CI, deployed availability UI and guarded production import/preflight/activation remain operational prerequisites.

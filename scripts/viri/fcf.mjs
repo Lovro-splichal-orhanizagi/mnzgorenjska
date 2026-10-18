@@ -795,12 +795,28 @@ async function obnoviPar(prave, glavna, ponovnoUporabljeni, prenesi) {
 /**
  * Prebere blok zapisnikov: { tekme: [{ id, html, g }], tujih, ni }.
  * Tekma druge skupine (ali sezone) v bloku se izpusti z opozorilom.
+ * Vezane zgodovinske tekme ohranijo samo glavo (html:null) za celoten koledar;
+ * njihovih surovih strani in individualnih podatkov ne beremo.
  */
-export async function preberiBlok(koda, prenesi, { danes = Date.now(), svezi = false } = {}) {
+export async function preberiBlok(koda, prenesi, { danes = Date.now(), svezi = false, preskoci = new Set(), historicalFixtures = [] } = {}) {
   const { od, do: do_ } = razberiKodo(koda)
+  const historical=new Map()
+  for(const t of historicalFixtures) {
+    const id=t?.id,g=t?.g,m=t?.historicalMarker,f=m?.fixture
+    if(!Number.isSafeInteger(id)||id<od||id>do_||historical.has(id)||!preskoci.has(sifraZapisnika(id))||m?.sourceMatchId!==String(id)||m?.reportId!==sifraZapisnika(id)
+      ||f?.sourceMatchId!==String(id)||g?.krog!==f?.sourceRound||g?.datum!==f?.playedOn||g?.sezona!==f?.season
+      ||!g?.domaci||!g?.gostje||!g?.tekmovanje||!g?.skupina||!g?.izid||g.izid.domaci!==f?.observedHomeScore||g.izid.gostje!==f?.observedAwayScore)
+      throw napakaKoledarja('neveljavna vezana zgodovinska identiteta tekme')
+    historical.set(id,{id,g:{...g},historicalMarker:m,html:null})
+  }
+  for(const reportId of preskoci) {
+    const match=/^es([1-9]\d*)$/.exec(String(reportId)),id=match?Number(match[1]):null
+    if(id>=od&&id<=do_&&!historical.has(id))throw napakaKoledarja('preskok zapisnika zahteva vezano identiteto za celoten koledar')
+  }
   const strani = []
   const ponovnoUporabljeni = new Set()
   for (let id = od; id <= do_; id++) {
+    if (historical.has(id)) { strani.push(historical.get(id)); continue }
     const c = izPredpomnilnika(imeStrani(id))
     const g = c ? glavaStrani(c.html) : null
     const uporabi = c && c.starost <= najvecStarost(g, danes, svezi)
@@ -811,7 +827,7 @@ export async function preberiBlok(koda, prenesi, { danes = Date.now(), svezi = f
   const tekme = []
   const ni = []
   for (const s of strani) {
-    const g = glavaStrani(s.html)
+    const g = s.g ?? glavaStrani(s.html)
     if (!g) { ni.push(s.id); continue }
     tekme.push({ ...s, g })
   }
@@ -837,7 +853,7 @@ export function razporedBloka(b, { danes = Date.now() } = {}) {
     if (!krogi.has(g.krog)) krogi.set(g.krog, { stevilka: g.krog, tekme: [] })
     // Izid brez postav obeh ekip, starejši od tedna, je kontumacija.
     let kontumacija = false
-    if (g.izid && starostDni(g.datum, danes) > 7) {
+    if (!t.historicalMarker && g.izid && starostDni(g.datum, danes) > 7) {
       const z = vZapisnik(t.html)
       kontumacija = !!z?.prazen
     }
@@ -848,7 +864,8 @@ export function razporedBloka(b, { danes = Date.now() } = {}) {
       ura: g.ura,
       odigrana: !!g.izid,
       kontumacija,
-      ...(kontumacija ? { izid: g.izid } : {}),
+      ...(kontumacija || t.historicalMarker ? { izid: g.izid } : {}),
+      ...(t.historicalMarker ? {historicalMarker:t.historicalMarker} : {}),
     })
   }
   return [...krogi.values()].filter((k) => k.tekme.some((t) => t.datum)).sort((a, b) => a.stevilka - b.stevilka)
@@ -908,10 +925,11 @@ const vir = {
     return razporedBloka(await preberiBlok(koda, prenesi))
   },
 
-  async zapisniki(koda, prenesi) {
-    const b = await preberiBlok(koda, prenesi, { svezi: true })
+  async zapisniki(koda, prenesi, { preskoci = new Set(), historicalFixtures = [] } = {}) {
+    const b = await preberiBlok(koda, prenesi, { svezi: true, preskoci, historicalFixtures })
     const out = []
     for (const t of b.tekme) {
+      if (t.historicalMarker) continue // Calendar identity is retained; individual observations remain unavailable.
       if (!t.g.izid) continue
       const url = naslovZapisnika(t.id)
       const z = vZapisnik(t.html, { id: sifraZapisnika(t.id), url })

@@ -13,7 +13,7 @@ export function preveriPosnetek(dir,records){
  if(records.some(r=>Date.parse(r.at)>Date.now()+300000))throw Error('DFB capture timestamp is in the future')
  return snapshot
 }
-export const sourceFiles=['scripts/dfb-historical-policy.mjs','scripts/lib/historical-statistics-policy.mjs','scripts/policies/historical-statistics-exclusions.json','src/lib/nepripisaniRumeni.mjs','scripts/viri/dfb.mjs','scripts/viri/dfb-lige.json','scripts/viri/dfb-korekcije.json','scripts/viri/dfb-kronologija.json','scripts/viri/dfb-rezerve.json','scripts/viri/dfb-aliasi.json','scripts/viri/fussball.mjs','scripts/viri/fussball-pisava.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/viri/fss.mjs','scripts/klubi.mjs','scripts/preveri-vir-sezono.mjs',
+export const sourceFiles=['scripts/viri/dfb-historical.mjs','scripts/dfb-historical-policy.mjs','scripts/lib/historical-statistics-policy.mjs','scripts/policies/historical-statistics-exclusions.json','src/lib/nepripisaniRumeni.mjs','scripts/viri/dfb.mjs','scripts/viri/dfb-lige.json','scripts/viri/dfb-korekcije.json','scripts/viri/dfb-kronologija.json','scripts/viri/dfb-rezerve.json','scripts/viri/dfb-aliasi.json','scripts/viri/fussball.mjs','scripts/viri/fussball-pisava.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/viri/fss.mjs','scripts/klubi.mjs','scripts/preveri-vir-sezono.mjs',
  ...Object.values(JSON.parse(readFileSync(new URL('./viri/dfb-aliasi.json',import.meta.url))).matches.flatMap(e=>Object.values(e.files))).map(f=>`scripts/${f.file.replace('../','')}`),
  ...JSON.parse(readFileSync(new URL('./viri/dfb-kronologija.json',import.meta.url))).matches.flatMap(e=>e.evidenceFiles).map(f=>`scripts/${f.file.replace('../','')}`),
  ...JSON.parse(readFileSync(new URL('./viri/dfb-korekcije.json',import.meta.url))).matches.flatMap(e=>e.evidenceFiles??[]).map(f=>`scripts/${f.file.replace('../','')}`)]
@@ -106,12 +106,12 @@ export async function pripravi({slug,archiveDir,currentDir,sourceCommit,proof}){
  const m={version,...(version===3?{provenanceVersion:2,statisticsPolicy:proof.statisticsPolicy}:{}),slug,sourceCommit,parserSha256:parserSha256(),seasons};const raw=JSON.stringify(m)+'\n';preveriOdobritev(raw,sha(raw));return m
 }
 export function actionsOnly(){if(process.env.GITHUB_ACTIONS!=='true'||process.env.GITHUB_REPOSITORY!=='Lovro-splichal-orhanizagi/mnzgorenjska')fail('database operations require repository Actions')}
-export async function databaseCheck(raw,approvedSha,activate=false){
- const m=preveriOdobritev(raw,approvedSha);if(m.version===3)fail('historical database release requires the separately reviewed shared schema/RPC checkpoint');actionsOnly()
+export async function databaseCheck(raw,approvedSha,activate=false,{fetchFn=globalThis.fetch}={}){
+ const m=preveriOdobritev(raw,approvedSha);actionsOnly()
  if(activate&&process.env.SERVER_READY!=='true')fail('verified German server deployment required')
  const base=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY
  if(!key||!base||new URL(base).protocol!=='https:')fail('Actions database configuration required')
- const response=await fetch(new URL('/rest/v1/rpc/varen_vklop_dfb_regije',base),{method:'POST',headers:{apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({p_manifest:raw,p_sha256:approvedSha,p_aktiviraj:activate}),signal:AbortSignal.timeout(120000)})
+ const response=await fetchFn(new URL('/rest/v1/rpc/varen_vklop_dfb_regije',base),{method:'POST',headers:{apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({p_manifest:raw,p_sha256:approvedSha,p_aktiviraj:activate}),signal:AbortSignal.timeout(120000)})
  const data=await response.json();if(!response.ok||data.preverjeno!==true||data.slug!==m.slug||data.vklopljena!==activate)fail(`database check refused: ${data.message??response.status}`)
  return data
 }

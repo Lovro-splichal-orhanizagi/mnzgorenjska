@@ -162,12 +162,9 @@ test('complete offline replay prepares version2 from original bytes and import l
   assert.throws(()=>loadApprovedDocuments(tamperedRaw,hash(raw),dirs),/SHA/)
   // Run the real Actions wrapper through its pre-write replay comparison. Even
   // supplying a new approval SHA cannot make altered warnings match raw HTML.
-  const wrapper=readFileSync(new URL('./uvozi-dfb-regijo.mjs',import.meta.url),'utf8')
-  const main=wrapper.slice(wrapper.indexOf('async function main(){'),wrapper.indexOf('\nif(process.argv[1]'))
-  await assert.rejects(()=>runInNewContext(`(async()=>{${main};await main()})()`,{
-   process:{argv:['node','wrapper','manifest',hash(tamperedRaw),...dirs,'proof'],env:{}},
-   readFileSync:file=>file==='manifest'?tamperedRaw:JSON.stringify(proof),preveriOdobritev:release.preveriOdobritev,pripravi:release.pripravi,actionsOnly(){},
-  }),/differs from full offline replay/)
+  const {importApprovedDfbRegion}=await import('./uvozi-dfb-regijo.mjs'),file=join(root,'TEST-ONLY-TAMPER.json'),proofFile=join(root,'TEST-ONLY-PROOF.json'),before=process.env.GITHUB_ACTIONS,beforeRepo=process.env.GITHUB_REPOSITORY
+  writeFileSync(file,tamperedRaw);writeFileSync(proofFile,JSON.stringify(proof));process.env.GITHUB_ACTIONS='true';process.env.GITHUB_REPOSITORY='Lovro-splichal-orhanizagi/mnzgorenjska'
+  try{await assert.rejects(()=>importApprovedDfbRegion({file,approvedSha:hash(tamperedRaw),archiveDir:dirs[0],currentDir:dirs[1],proofFile},{fetchFn(){throw Error('database request forbidden')}}),/differs from full offline replay/)}finally{if(before===undefined)delete process.env.GITHUB_ACTIONS;else process.env.GITHUB_ACTIONS=before;if(beforeRepo===undefined)delete process.env.GITHUB_REPOSITORY;else process.env.GITHUB_REPOSITORY=beforeRepo}
   assert.equal(prepared.seasons[0].capturedAt,proof.proof[0].lineage.capture.capturedAt)
   const index=readFileSync(join(dirs[0],'prenosi.json'))
   writeFileSync(join(dirs[0],'prenosi.json'),index.toString()+' ')
@@ -208,7 +205,7 @@ test('reviewed replay code identity includes provenance, import and workflow fil
   execFileSync('git',['-C',root,'-c','user.name=Test','-c','user.email=test@example.invalid','commit','-qm','fixture'])
   const commit=execFileSync('git',['-C',root,'rev-parse','HEAD'],{encoding:'utf8'}).trim();process.chdir(root)
   verifier.verifyCode(commit,2)
-  for(const file of ['scripts/viri/dfb.mjs','scripts/vklopi-nemcijo.mjs','scripts/preveri-zagona-dfb-regije.mjs','scripts/uvozi-dfb-regijo.mjs','.github/workflows/ponovi-dfb-regijo.yml']){
+  for(const file of ['scripts/viri/dfb.mjs','scripts/lib/historical-statistics-import.mjs','scripts/uvoz-razporeda.mjs','scripts/ovrednoti-igralce.mjs','scripts/vklopi-nemcijo.mjs','scripts/preveri-zagona-dfb-regije.mjs','scripts/uvozi-dfb-regijo.mjs','.github/workflows/ponovi-dfb-regijo.yml']){
    writeFileSync(file,'changed bytes\n');assert.throws(()=>verifier.verifyCode(commit,2));writeFileSync(file,'reviewed bytes\n')
   }
  }finally{process.chdir(before);rmSync(root,{recursive:true,force:true})}

@@ -322,3 +322,38 @@ test('real source-supplied score is accepted through the normal parser during ta
   assert.equal(vZapisnik(target.html).prazen, true, 'header score cannot invent lineups')
   assert.equal(vir.fetch.name, 'fcfFetch')
 })
+
+// TEST-ONLY header projections exercise complete calendar invariants, not policy approval.
+// The runtime wrapper supplies the equivalent identities only from validated installed DB markers.
+function historicalCalendarOptions(pages,ids) {
+ return {preskoci:new Set(ids.map(id=>`es${id}`)),historicalFixtures:ids.map(id=>{
+  const g={...glavaStrani(pages.get(id)),datum:'2026-09-20',izid:{domaci:0,gostje:0}}
+  const historicalMarker={sourceMatchId:String(id),reportId:`es${id}`,fixture:{sourceMatchId:String(id),sourceRound:g.krog,playedOn:g.datum,season:g.sezona,observedHomeScore:0,observedAwayScore:0}}
+  return{id,g,historicalMarker}
+ })}
+}
+for(const ids of [[FIRST],[FIRST,FIRST+1]])test(`header-only historical${ids.length} preserves all240 calendar identities and ordinary two-read return-pair recovery`,async t=>{
+ const pages=calendar(),options=historicalCalendarOptions(pages,ids),f=setup(t,{pages})
+ // Excluded cached content must never be read/parsed to fill calendar identities.
+ for(const id of ids)writeFileSync(f.cache(id),'excluded raw must stay unread')
+ const block=await f.read(CODE,options)
+ assertComplete(block);assert.deepEqual(f.calls,[HOME,AWAY]);assert.equal(block.tekme.filter(t=>t.historicalMarker).length,ids.length)
+ for(const id of ids){assert.equal(block.tekme.find(t=>t.id===id).html,null);assert.equal(readFileSync(f.cache(id),'utf8'),'excluded raw must stay unread')}
+})
+test('header-only history preserves bounded refusal when unrelated future return-pair source stays inconsistent',async t=>{
+ const pages=calendar(),f=setup(t,{pages,response:new Map([[HOME,newHome],[AWAY,oldAway]])})
+ await assert.rejects(f.read(CODE,historicalCalendarOptions(pages,[FIRST])),/fcf:.*koledar/i)
+ assert.deepEqual(f.calls,[HOME,AWAY])
+})
+test('header-only history preserves refusal for additional unrelated future calendar corruption before any repair reads',async t=>{
+ const pages=calendar(),options=historicalCalendarOptions(pages,[FIRST])
+ const [id,html]=[...pages].find(([id])=>![FIRST,HOME,AWAY].includes(id))
+ pages.set(id,variant(html,s=>/^Jornada /.test(s)?'Jornada 30':s))
+ const f=setup(t,{pages})
+ await assert.rejects(f.read(CODE,options),/fcf:.*koledar/i);assert.deepEqual(f.calls,[])
+})
+test('historical skip without a matching authoritative calendar identity fails rather than reducing239fixtures',async t=>{
+ const f=setup(t)
+ await assert.rejects(f.read(CODE,{preskoci:new Set([`es${FIRST}`])}),/fcf:.*koledar/i)
+ assert.deepEqual(f.calls,[])
+})
