@@ -8,6 +8,9 @@ import { SejaProvider } from './src/seja'
 import { Okvir } from './src/Okvir'
 import { Katalog, MrezaIzdelkov } from './src/strani/Katalog'
 import { Izdelek, IzdelekView, Predogled } from './src/strani/Izdelek'
+import { izPrimera } from './src/strani/Konfigurator'
+import { MrezaMotivov, Personalizirano, vProdaji } from './src/strani/Personalizirano'
+import { homografija, matrika } from './src/mockup'
 import { cenaKosa, Kosarica, ociscena, stripeNaslov } from './src/strani/Kosarica'
 import { Hvala } from './src/strani/Hvala'
 import { Narocila } from './src/strani/Narocila'
@@ -20,11 +23,11 @@ import { zahtevaBona } from './src/strani/AdminBoni'
 import { vCente, varnoIme } from './src/strani/AdminIzdelki'
 import { EN, SL, TELEFON, cena, type Kljuc } from './src/besede'
 import { dodaj, kljuc, kosov, nastavi, odstrani, postnina, preberi, PRAZNA, skupaj } from './src/kosarica'
-import { celicaCsv, doplacilo, napakaImena, oblikaSvg, stabilno, stevilka, veljavnaOblika } from './src/personalizacija'
+import { celicaCsv, doplacilo, napakaImena, napakaPolja, oblikaSvg, stabilno, stevilka, veljavnaOblika } from './src/personalizacija'
 import { coneMotiva, narisiMotiv, poljaCone, praznaCona, velikostMm, zVgrajenoPisavo } from './src/risba'
 import { MOTIVI } from './src/motivi'
 import { readFileSync } from 'node:fs'
-import type { Izdelek as TIzdelek, IzdelekKataloga, NarociloAdmin, PostavkaNarocila, Serija } from './src/baza'
+import type { Cona, Izdelek as TIzdelek, IzdelekKataloga, MotivIzdelka, MotivKataloga, NarociloAdmin, PostavkaNarocila, Serija } from './src/baza'
 
 let napak = 0
 const preveri = (opis: string, ok: boolean, dodatno = '') => {
@@ -48,6 +51,7 @@ const izris = (pot: string, vzorec: string, stran: ReactNode): string =>
 const strani: [string, string, ReactNode][] = [
   ['/', '/', <Katalog />],
   ['/p/majica', '/p/:slug', <Izdelek />],
+  ['/personalised', '/personalised', <Personalizirano />],
   ['/cart', '/cart', <Kosarica />],
   ['/thanks?n=AB12CD34', '/thanks', <Hvala />],
   ['/orders', '/orders', <Narocila />],
@@ -322,6 +326,96 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
     && [a, b].every((x) => sklici(x).length > 0 && sklici(x).every((r) => ids(x).includes(r))))
   preveri('motivi: prepovedani znaki XML izpuščeni', urejenXml(narisiMotiv('kapetan', { ime: 'A\u0000B\uFFFE\uD800C', stevilka: 1 }, ['#111', '#eee', '#000']))
     && narisiMotiv('kapetan', { ime: 'A\u0000B\uFFFE\uD800C', stevilka: 1 }, ['#111', '#eee', '#000']).includes('>ABC</text>'))
+}
+
+// Motivi: konfigurator, vitrina, oblika vnosa
+{
+  const cone: Cona[] = [
+    { kljuc: 'hrbet', barva: 'Črna', slika: '/nosilci/majica-crna-hrbet.webp', koti: [[530, 330], [1070, 330], [1070, 1050], [530, 1050]], sirina_mm: 300, visina_mm: 400 },
+    { kljuc: 'hrbet', barva: 'Bela', slika: '/nosilci/majica-bela-hrbet.webp', koti: [[525, 320], [1065, 320], [1065, 1040], [525, 1040]], sirina_mm: 300, visina_mm: 400 },
+    { kljuc: 'prsi', barva: 'Črna', slika: '/nosilci/majica-crna-spredaj.webp', koti: [[566, 430], [1034, 430], [1034, 646], [566, 646]], sirina_mm: 260, visina_mm: 120 },
+    { kljuc: 'prsi', barva: 'Bela', slika: '/nosilci/majica-bela-spredaj.webp', koti: [[561, 410], [1029, 410], [1029, 626], [561, 626]], sirina_mm: 260, visina_mm: 120 },
+  ]
+  const sheme = [{ kljuc: 'klasika', ime_sl: 'Klasika', ime_en: 'Classic', barve: ['#1E8C45', '#F4F4F0', '#0B3B1E'] }, { kljuc: 'retro', ime_sl: 'Retro', ime_en: 'Retro', barve: ['#C8102E', '#F6C700', '#3A0A0F'] }]
+  const retro: MotivIzdelka = {
+    slug: 'retro-dres', ime_sl: 'Retro dres', ime_en: 'Retro kit', opis_sl: 'Kot dres iz devetdesetih.', opis_en: 'Like a nineties kit.', cona: 'hrbet', doplacilo: 800, sheme,
+    polja: [
+      { kljuc: 'ime', vrsta: 'besedilo', oznaka_sl: 'Ime na hrbtu', oznaka_en: 'Name on the back', max: 12, obvezno: true, privzeto: 'NOVAK' },
+      { kljuc: 'stevilka', vrsta: 'stevilka', oznaka_sl: 'Številka', oznaka_en: 'Number', obvezno: true, privzeto: 9 },
+      { kljuc: 'sponzor', vrsta: 'besedilo', oznaka_sl: 'Sponzor na prsih', oznaka_en: 'Chest sponsor', max: 20, obvezno: false, privzeto: 'Bife Zadnji Žvižg', cona: 'prsi' },
+      { kljuc: 'leto', vrsta: 'leto', oznaka_sl: 'Ustanovljeno', oznaka_en: 'Established', obvezno: false, privzeto: 1998 },
+    ],
+    primeri: [
+      { polja: { ime: 'KOVAČ', stevilka: 7, sponzor: 'Bar Offside', leto: 2004 }, shema: 'retro', izdelek: 'majica-po-meri', barva: 'Črna' },
+      { polja: { ime: 'ZUPAN', stevilka: 10 }, shema: 'klasika', izdelek: 'majica-po-meri', barva: 'Bela' },
+    ],
+  }
+  const hangover: MotivIzdelka = {
+    slug: 'hangover-xi', ime_sl: 'Hangover XI', ime_en: 'Hangover XI', opis_sl: 'Za ekipo ob desetih.', opis_en: 'For the ten o’clock team.', cona: 'hrbet', doplacilo: 800,
+    sheme: [{ kljuc: 'pivska', ime_sl: 'Pivska', ime_en: 'Lager', barve: ['#E8A317', '#FFF4D6', '#5A3A0A'] }],
+    polja: [
+      { kljuc: 'ekipa', vrsta: 'ekipa', oznaka_sl: 'Tvoja ekipa', oznaka_en: 'Your team', max: 24, obvezno: true },
+      { kljuc: 'stevilka', vrsta: 'stevilka', oznaka_sl: 'Številka', oznaka_en: 'Number', obvezno: true, privzeto: 11 },
+    ],
+    primeri: [{ polja: { ekipa: 'FC Ponedeljek Zjutraj', stevilka: 11 }, shema: 'pivska', izdelek: 'majica-po-meri', barva: 'Črna' }],
+  }
+  const nosilec: TIzdelek = {
+    ...izdelek, slug: 'majica-po-meri', ime_sl: 'Majica po meri', ime_en: 'Custom T-shirt', po_narocilu: true, postopek: 'dtf', motivi: [retro, hangover], cone,
+    razlicice: [
+      { id: 21, oznaka_sl: 'Črna / S', oznaka_en: 'Black / S', cena: 2700, na_voljo: 'da' },
+      { id: 22, oznaka_sl: 'Črna / M', oznaka_en: 'Black / M', cena: 2700, na_voljo: 'da' },
+      { id: 23, oznaka_sl: 'Bela / M', oznaka_en: 'White / M', cena: 2700, na_voljo: 'da' },
+    ],
+  }
+  const konf = (pot: string) => renderToString(<StaticRouter location={pot}><SejaProvider><IzdelekView i={nosilec} /></SejaProvider></StaticRouter>)
+  const k1 = konf('/p/majica-po-meri')
+  const manjkaK = ['Retro dres', 'Hangover XI', 'Ime na hrbtu', 'Sponzor na prsih', SL['motiv.vZivo'], SL['motiv.cona.hrbet'], SL['motiv.cona.prsi'], SL['izdelek.brezOdstopa'],
+    SL['izdelek.poNarocilu'], SL['motiv.primeri'], SL['motiv.zacni'], '35,00', '/nosilci/majica-crna-hrbet.webp', '>9</text>', 'feImage', SL['motiv.izberiVelikost'], 'Bela']
+    .filter((v) => !k1.includes(v))
+  preveri('konfigurator: motivi, polja, živ mockup (privzete vrednosti), pogled, cena z doplačilom, primeri, brez odstopa', manjkaK.length === 0, manjkaK.join(' / '))
+  preveri('konfigurator: brez velikosti gumb onemogočen', /disabled=""[^>]*>Izberi velikost/.test(k1))
+  const k2 = konf('/p/majica-po-meri?motiv=hangover-xi')
+  preveri('konfigurator: ?motiv= izbere motiv, ekipa brez prijave zahteva prijavo, predogled z izmišljeno ekipo',
+    /aria-checked="true"[^>]*>(?:(?!<\/button>).)*Hangover XI/s.test(k2) && k2.includes(SL['pers.prijava']) && k2.includes('>11</text>') && k2.includes(SL['motiv.ekipaPredogled']))
+  preveri('konfigurator: neznan ?motiv= vzame prvega', /aria-checked="true"[^>]*>(?:(?!<\/button>).)*Retro dres/s.test(konf('/p/majica-po-meri?motiv=ni')))
+  const iz = izPrimera(retro, { ime: 'NOVAK', stevilka: '9', sponzor: 'Bife', leto: '1998' }, retro.primeri[1]!)
+  preveri('konfigurator: "Začni s tem" vpiše polja primera, manjkajoča izprazni, ekipe ne prepiše',
+    JSON.stringify(iz) === '{"ime":"ZUPAN","stevilka":"10","sponzor":"","leto":""}'
+    && JSON.stringify(izPrimera(hangover, { ekipa: '5', stevilka: '1' }, hangover.primeri[0]!)) === '{"ekipa":"5","stevilka":"11"}')
+  preveri('konfigurator: napake polj zrcalijo bazo', napakaPolja('besedilo', 'Žan 9') === null && napakaPolja('besedilo', '') === null
+    && napakaPolja('besedilo', 'A'.repeat(13)) === 'motiv.napaka.dolgo' && napakaPolja('besedilo', 'A'.repeat(20), 20) === null
+    && napakaPolja('besedilo', '99') === 'motiv.napaka.znaki' && napakaPolja('besedilo', 'A<b>') === 'motiv.napaka.znaki' && napakaPolja('besedilo', "Bar & Co!") === null
+    && napakaPolja('stevilka', '100') === 'pers.napaka.stevilka' && napakaPolja('stevilka', '7') === null
+    && napakaPolja('leto', '1949', 12, 2026) === 'motiv.napaka.leto' && napakaPolja('leto', '2027', 12, 2026) === 'motiv.napaka.leto' && napakaPolja('leto', '1998', 12, 2026) === null)
+
+  const vnos = { motiv: 'retro-dres', polja: { ime: 'Novak', stevilka: 9 }, shema: 'retro' }
+  preveri('pers: oblika motiva iz shrambe', veljavnaOblika(vnos) !== null && veljavnaOblika({ motiv: 'hangover-xi', polja: { ekipa: 3, stevilka: 1 }, shema: 'x' }) !== null
+    && veljavnaOblika({ motiv: 'prvak-mini-lige', polja: { prvak: { mini_liga_id: 1, sezona: '2025/26' } }, shema: 'zlata' }) !== null
+    && [{ motiv: 'X Y', shema: 'a' }, { motiv: 'a' }, { motiv: 'a', shema: 'b', ime_ekipe: 1 }, { motiv: 'a', shema: 'b', polja: [] }, { motiv: 'a', shema: 'b', polja: { x: [1] } },
+      { motiv: 'a', shema: 'b', polja: { x: { mini_liga_id: '1', sezona: 'x' } } }, { motiv: 'a', shema: 'b', polja: { x: 1.5 } }].every((v) => veljavnaOblika(v) === null))
+  preveri('pers: doplačilo motiva iz izdelka', doplacilo([], vnos, [{ slug: 'retro-dres', doplacilo: 800 }]) === 800 && doplacilo([], vnos, []) === 0
+    && doplacilo(moznosti, { poljubno_ime: 'Ana' }, [{ slug: 'retro-dres', doplacilo: 800 }]) === 500)
+  const km = dodaj(PRAZNA, 22, 1, 'majica-po-meri', vnos, 'Retro dres · Novak · 9', 20, { ime: 'Novak', stevilka: 9 })
+  const kmp = preberi(JSON.stringify(km))
+  preveri('kosarica: motiv in prikaz preživita shrambo, cena z doplačilom motiva', kmp.postavke[0]?.personalizacija?.motiv === 'retro-dres' && kmp.postavke[0]?.prikaz?.ime === 'Novak'
+    && cenaKosa({ 'majica-po-meri': nosilec }, kmp.postavke[0]!) === 3500
+    && preberi(JSON.stringify({ postavke: [{ ...km.postavke[0], prikaz: { x: 'a'.repeat(61) } }] })).postavke[0]?.prikaz === undefined)
+
+  const h = homografija([[0.1, 0.2], [0.6, 0.2], [0.6, 0.7], [0.1, 0.7]])
+  const pr = (u: number, v: number, k: [number, number][]) => { const q = homografija(k); const w = q.g * u + q.h * v + 1; return [(q.a * u + q.b * v + q.c) / w, (q.d * u + q.e * v + q.f) / w] }
+  const trapez: [number, number][] = [[0.3, 0.2], [0.7, 0.25], [0.75, 0.8], [0.25, 0.75]]
+  preveri('mockup: homografija preslika vogale enotskega kvadrata v štirikotnik', Math.abs(h.g) < 1e-9 && Math.abs(h.h) < 1e-9 && Math.abs(h.a - 0.5) < 1e-9 && Math.abs(h.e - 0.5) < 1e-9
+    && [[0, 0], [1, 0], [1, 1], [0, 1]].every(([u, v], i) => pr(u!, v!, trapez).every((x, j) => Math.abs(x - trapez[i]![j]!) < 1e-9))
+    && matrika(trapez, 1000).startsWith('matrix3d(') && matrika(trapez, 1000).split(',').length === 16)
+
+  const katalogMotivov: MotivKataloga[] = [retro, hangover].map(({ doplacilo: _d, ...m }) => ({
+    ...m, izdelki: [{ slug: 'majica-po-meri', ime_sl: 'Majica po meri', ime_en: 'Custom T-shirt', postopek: 'dtf', doplacilo: 800, cena_od: 2700, cone }],
+  }))
+  const brez: MotivKataloga = { ...katalogMotivov[0]!, slug: 'legenda', izdelki: [] }
+  preveri('vitrina: motiv brez aktivnega nosilca skrit', vProdaji([...katalogMotivov, brez]).map((m) => m.slug).join() === 'retro-dres,hangover-xi')
+  const vitrina = renderToString(<StaticRouter location="/personalised"><MrezaMotivov motivi={katalogMotivov} /></StaticRouter>)
+  preveri('vitrina: motivi s primeri na mockupu in povezavo na nosilec z izbranim motivom', vitrina.includes('/p/majica-po-meri?motiv=retro-dres') && vitrina.includes('/p/majica-po-meri?motiv=hangover-xi')
+    && vitrina.includes('>7</text>') && vitrina.includes('>10</text>') && vitrina.includes('/nosilci/majica-bela-hrbet.webp') && vitrina.includes('35,00') && vitrina.includes(SL['osebno.cta']))
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

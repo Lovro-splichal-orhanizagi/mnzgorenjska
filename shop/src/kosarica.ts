@@ -13,6 +13,8 @@ export interface Postavka {
   personalizacija?: Personalizacija
   /** Besedilo za prikaz v košarici (ime ekipe, prvak); baza ga sestavi sama. */
   opis?: string
+  /** Motiv: natisnjene vrednosti polj (ime ekipe namesto id) za mockup v košarici. */
+  prikaz?: Record<string, string | number>
 }
 export interface Kosarica {
   postavke: Postavka[]
@@ -39,8 +41,8 @@ export function nastavi(k: Kosarica, vrstica: string, kolicina: number, najvec =
   return { ...k, postavke }
 }
 
-export function dodaj(k: Kosarica, razlicica_id: number, kolicina: number, slug: string, personalizacija?: Personalizacija, opis?: string, najvec = NAJVEC): Kosarica {
-  const nova: Postavka = { razlicica_id, slug, kolicina: omeji(kolicina, najvec), ...(personalizacija && { personalizacija }), ...(opis && { opis }) }
+export function dodaj(k: Kosarica, razlicica_id: number, kolicina: number, slug: string, personalizacija?: Personalizacija, opis?: string, najvec = NAJVEC, prikaz?: Postavka['prikaz']): Kosarica {
+  const nova: Postavka = { razlicica_id, slug, kolicina: omeji(kolicina, najvec), ...(personalizacija && { personalizacija }), ...(opis && { opis }), ...(prikaz && { prikaz }) }
   const obstaja = k.postavke.find((p) => kljuc(p) === kljuc(nova))
   if (obstaja) return nastavi(k, kljuc(nova), obstaja.kolicina + kolicina, najvec)
   if (nova.kolicina === 0 || k.postavke.length >= NAJVEC) return k
@@ -58,6 +60,10 @@ export const kosov = (k: Kosarica): number => k.postavke.reduce((s, p) => s + p.
 /** Privzete tarife (spec Dostava); prave so v Stripe, zato jih kažemo z "od". */
 export const postnina = (drzava: string, pismo: boolean): number => (drzava === 'SI' ? (pismo ? 150 : 390) : 990)
 
+const prikazOk = (v: unknown): v is Record<string, string | number> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v) && Object.keys(v).length <= 10
+  && Object.values(v).every((x) => (typeof x === 'string' && x.length <= 60) || (typeof x === 'number' && Number.isFinite(x)))
+
 /** Shranjena vrednost je od brskalnika: vzamemo le, kar ima pravo obliko. */
 export function preberi(surovo: string | null): Kosarica {
   try {
@@ -71,6 +77,7 @@ export function preberi(surovo: string | null): Kosarica {
         razlicica_id: p.razlicica_id, slug: p.slug, kolicina: omeji(p.kolicina),
         ...(p.personalizacija && { personalizacija: p.personalizacija }),
         ...(typeof p.opis === 'string' && p.opis && { opis: p.opis.slice(0, 120) }),
+        ...(prikazOk(p.prikaz) && { prikaz: p.prikaz }),
       }))
     const drzava = typeof v?.drzava === 'string' && EU27.includes(v.drzava) ? v.drzava : 'SI'
     return { postavke, drzava }

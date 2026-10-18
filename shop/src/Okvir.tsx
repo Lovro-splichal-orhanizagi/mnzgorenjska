@@ -44,6 +44,7 @@ export function Okvir({ children }: { children: ReactNode }) {
           <span className="flex-1" />
           <nav className="hidden gap-1 text-sm sm:flex">
             <NavLink to="/" end className={povezava}>{t('nav.trgovina')}</NavLink>
+            <NavLink to="/personalised" className={povezava}>{t('nav.poMeri')}</NavLink>
             {seja && <NavLink to="/orders" className={povezava}>{t('nav.narocila')}</NavLink>}
           </nav>
           <div className="flex items-center gap-1 text-sm">
@@ -74,6 +75,7 @@ export function Okvir({ children }: { children: ReactNode }) {
         {seja && (
           <nav className="mx-auto flex max-w-6xl gap-1 px-3 pb-2 text-sm sm:hidden">
             <NavLink to="/" end className={povezava}>{t('nav.trgovina')}</NavLink>
+            <NavLink to="/personalised" className={povezava}>{t('nav.poMeri')}</NavLink>
             <NavLink to="/orders" className={povezava}>{t('nav.narocila')}</NavLink>
             <span className="flex-1" />
             <button type="button" onClick={() => void supabase.auth.signOut({ scope: 'local' })} className={tiho}>

@@ -8,6 +8,8 @@ import { doplacilo } from '../personalizacija'
 import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
 import { Slika, ZnackaVoljo } from './Katalog'
+import { svgCone } from './Konfigurator'
+import { barvaRazlicice, conaZa, Mockup } from '../mockup'
 
 type Izdelki = Record<string, Izdelek | null>
 
@@ -21,12 +23,22 @@ export function stripeNaslov(url: string): boolean {
   }
 }
 
+/** Mockup motiva v košarici: natisnjene vrednosti (prikaz) na barvi različice. */
+function SlikaMotiva({ iz, p, oznaka, alt }: { iz: Izdelek; p: Postavka; oznaka: string; alt: string }) {
+  const m = iz.motivi?.find((x) => x.slug === p.personalizacija?.motiv)
+  const barva = barvaRazlicice(oznaka)
+  const cona = m && conaZa(iz.cone ?? [], m.cona, barva)
+  if (!m || !cona) return <Slika src={iz.slike[0]} alt={alt} majhna />
+  const barve = (m.sheme.find((s) => s.kljuc === p.personalizacija?.shema) ?? m.sheme[0]!).barve
+  return <Mockup cona={cona} svg={svgCone(m.slug, p.prikaz ?? {}, barve, m.cona)} barva={barva} povecava={1.6} alt={alt} className="rounded-xl" />
+}
+
 const razlicica = (izdelki: Izdelki, slug: string, id: number) => izdelki[slug]?.razlicice.find((r) => r.id === id) ?? null
 
 /** Cena kosa z doplačilom personalizacije (prikaz; pravo izračuna baza), null če različice ni. */
 export const cenaKosa = (izdelki: Izdelki, p: Postavka): number | null => {
   const r = razlicica(izdelki, p.slug, p.razlicica_id)
-  return r ? r.cena + doplacilo(izdelki[p.slug]?.personalizacije ?? [], p.personalizacija) : null
+  return r ? r.cena + doplacilo(izdelki[p.slug]?.personalizacije ?? [], p.personalizacija, izdelki[p.slug]?.motivi) : null
 }
 
 /** Največ kosov v vrstici: značka 1, darilni bon 5 (v bazi skupaj), sicer 20. */
@@ -171,8 +183,8 @@ export function Kosarica() {
             const najvec = najvecKosov(iz)
             return (
               <li key={vrstica} className="kartica flex gap-3 p-3 sm:gap-4">
-                <Link to={`/p/${p.slug}`} className="w-20 shrink-0 sm:w-24">
-                  <Slika src={iz?.slike[0]} alt={ime} majhna />
+                <Link to={`/p/${p.slug}${p.personalizacija?.motiv ? `?motiv=${p.personalizacija.motiv}` : ''}`} className="w-20 shrink-0 sm:w-24">
+                  {iz && r && p.personalizacija?.motiv ? <SlikaMotiva iz={iz} p={p} oznaka={r.oznaka_sl} alt={ime} /> : <Slika src={iz?.slike[0]} alt={ime} majhna />}
                 </Link>
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex items-start justify-between gap-2">

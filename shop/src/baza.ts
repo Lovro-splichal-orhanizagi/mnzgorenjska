@@ -52,6 +52,72 @@ export interface Izdelek {
   digitalni: boolean
   personalizacije: Moznost[]
   razlicice: Razlicica[]
+  /** Postopek tiska (dtf …) pri nosilcih motivov. */
+  postopek?: string | null
+  /** Aktivni motivi, ki veljajo za ta izdelek (nosilec). */
+  motivi?: MotivIzdelka[]
+  cone?: Cona[]
+}
+
+/** Polje motiva (trgovina.motivi.polja). */
+export interface PoljeMotiva {
+  kljuc: string
+  vrsta: 'besedilo' | 'stevilka' | 'leto' | 'ekipa' | 'prvak' | 'izbira'
+  oznaka_sl: string
+  oznaka_en: string
+  max?: number
+  obvezno: boolean
+  privzeto?: string | number
+  moznosti?: string[]
+  /** Cona, če ni glavna cona motiva (sponzor retro dresa → prsi). */
+  cona?: string
+}
+
+export interface ShemaMotiva {
+  kljuc: string
+  ime_sl: string
+  ime_en: string
+  barve: string[]
+}
+
+/** Izmišljen primer: ekipa in prvak sta natisnjeno besedilo. */
+export interface PrimerMotiva {
+  polja: Record<string, string | number>
+  shema: string
+  izdelek: string
+  barva: string
+}
+
+interface MotivOsnova {
+  slug: string
+  ime_sl: string
+  ime_en: string
+  opis_sl: string
+  opis_en: string
+  cona: string
+  polja: PoljeMotiva[]
+  sheme: ShemaMotiva[]
+  primeri: PrimerMotiva[]
+}
+
+/** Motiv v trgovina_izdelek(slug).motivi. */
+export interface MotivIzdelka extends MotivOsnova {
+  doplacilo: number
+}
+
+/** Cona tiska na fotografiji nosilca (koti TL, TR, BR, BL v px fotografije 1600×1600). */
+export interface Cona {
+  kljuc: string
+  barva: string | null
+  slika: string
+  koti: [number, number][]
+  sirina_mm: number
+  visina_mm: number
+}
+
+/** Element trgovina_motivi(): le aktivni izdelki (lahko prazno). */
+export interface MotivKataloga extends MotivOsnova {
+  izdelki: { slug: string; ime_sl: string; ime_en: string; postopek: string | null; doplacilo: number; cena_od: number; cone: Cona[] }[]
 }
 
 /** Shranjena personalizacija postavke (trgovina.personaliziraj). */

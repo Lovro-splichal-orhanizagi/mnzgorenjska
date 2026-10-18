@@ -6,8 +6,17 @@ import type { Kljuc } from './besede'
 
 export type Vrsta = 'ime_ekipe' | 'poljubno_ime' | 'stevilka' | 'prvak' | 'znacka'
 
-/** Vnos ene postavke; ključi le izmed možnosti izdelka. */
+/** Vrednost polja motiva, kot jo pošlje brskalnik: besedilo, število, id ekipe ali prvak. */
+export type VrednostVnosa = string | number | { mini_liga_id: number; sezona: string }
+
+/**
+ * Vnos ene postavke. Stara oblika: ključi le izmed možnosti izdelka. Motiv:
+ * le {motiv, polja, shema}; baza preveri vsako polje po vrsti.
+ */
 export interface Personalizacija {
+  motiv?: string
+  polja?: Record<string, VrednostVnosa>
+  shema?: string
   ime_ekipe?: number
   poljubno_ime?: string
   stevilka?: number
@@ -40,9 +49,33 @@ export function napakaImena(s: string): Kljuc | null {
 /** "7" → 7; vse, kar ni celo število 0–99, → null. */
 export const stevilka = (s: string): number | null => (/^\d{1,2}$/.test(s.trim()) ? Number(s.trim()) : null)
 
-/** Doplačilo na kos za izbrane možnosti (prikaz; pravo izračuna baza). */
-export const doplacilo = (moznosti: Moznost[], p: Personalizacija | undefined): number =>
-  p ? moznosti.filter((m) => m.vrsta in p).reduce((s, m) => s + m.doplacilo, 0) : 0
+/** Doplačilo na kos za izbrane možnosti ali motiv (prikaz; pravo izračuna baza). */
+export const doplacilo = (moznosti: Moznost[], p: Personalizacija | undefined, motivi: { slug: string; doplacilo: number }[] = []): number =>
+  !p ? 0 : p.motiv !== undefined ? (motivi.find((m) => m.slug === p.motiv)?.doplacilo ?? 0)
+    : moznosti.filter((m) => m.vrsta in p).reduce((s, m) => s + m.doplacilo, 0)
+
+const ZNAKI_MOTIVA = /^[A-Za-zÀ-ÖØ-öø-ž0-9 .'&!?-]+$/
+
+/**
+ * Napaka vnosa polja motiva (zrcali trgovina.vrednost_polja) ali null. Prazno
+ * polje tu ni napaka: obveznost preveri gumb, žaljivke baza ob plačilu.
+ */
+export function napakaPolja(vrsta: string, surovo: string, max = 12, letos = new Date().getFullYear()): Kljuc | null {
+  const v = normaliziraj(surovo)
+  if (!v) return null
+  if (vrsta === 'besedilo') {
+    if ([...v].length > max) return 'motiv.napaka.dolgo'
+    if (!ZNAKI_MOTIVA.test(v) || !CRKA.test(v)) return 'motiv.napaka.znaki'
+  }
+  if (vrsta === 'stevilka' && stevilka(v) === null) return 'pers.napaka.stevilka'
+  if (vrsta === 'leto' && !(/^\d{4}$/.test(v) && Number(v) >= 1950 && Number(v) <= letos)) return 'motiv.napaka.leto'
+  return null
+}
+
+const vrednostOk = (v: unknown): boolean =>
+  typeof v === 'string' || (typeof v === 'number' && Number.isSafeInteger(v))
+  || (typeof v === 'object' && v !== null && !Array.isArray(v) && Number.isSafeInteger((v as { mini_liga_id?: unknown }).mini_liga_id)
+    && typeof (v as { sezona?: unknown }).sezona === 'string' && Object.keys(v).length === 2)
 
 const VRSTE: Vrsta[] = ['ime_ekipe', 'poljubno_ime', 'stevilka', 'prvak', 'znacka']
 
@@ -50,6 +83,13 @@ const VRSTE: Vrsta[] = ['ime_ekipe', 'poljubno_ime', 'stevilka', 'prvak', 'znack
 export function veljavnaOblika(v: unknown): Personalizacija | null {
   if (!v || typeof v !== 'object' || Array.isArray(v)) return null
   const o = v as Record<string, unknown>
+  if ('motiv' in o) {
+    const p = o.polja as Record<string, unknown> | undefined
+    return typeof o.motiv === 'string' && /^[a-z0-9-]+$/.test(o.motiv) && typeof o.shema === 'string'
+      && Object.keys(o).every((k) => ['motiv', 'polja', 'shema'].includes(k))
+      && (p === undefined || (typeof p === 'object' && p !== null && !Array.isArray(p) && Object.values(p).every(vrednostOk)))
+      ? (o as Personalizacija) : null
+  }
   if (!Object.keys(o).every((k) => VRSTE.includes(k as Vrsta)) || Object.keys(o).length === 0) return null
   if ('ime_ekipe' in o && !Number.isSafeInteger(o.ime_ekipe)) return null
   if ('poljubno_ime' in o && typeof o.poljubno_ime !== 'string') return null

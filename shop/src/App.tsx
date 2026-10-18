@@ -8,6 +8,7 @@ import { Katalog } from './strani/Katalog'
 import { Kosarica } from './strani/Kosarica'
 import { Narocila } from './strani/Narocila'
 import { Odstop } from './strani/Odstop'
+import { Personalizirano } from './strani/Personalizirano'
 import { Pogoji } from './strani/Pogoji'
 import { Prijava } from './strani/Prijava'
 
@@ -18,6 +19,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<Katalog />} />
           <Route path="/p/:slug" element={<Izdelek />} />
+          <Route path="/personalised" element={<Personalizirano />} />
           <Route path="/cart" element={<Kosarica />} />
           <Route path="/thanks" element={<Hvala />} />
           <Route path="/orders" element={<Narocila />} />
