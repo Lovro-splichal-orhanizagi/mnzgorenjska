@@ -610,8 +610,11 @@ async function beri(prenesi, id, najvec, preveri = null) {
     if (jeIzziv(html)) throw new FcfZavrnitev(`fcf: ${naslovZapisnika(id)} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
     if (vrstaStrani(html) === 'neznano') throw new Error(`fcf: ${naslovZapisnika(id)} ni zapisnik (${html.length} B) — uvoz ustavljen`)
     preveri?.(html)
-    mkdirSync(MAPA, { recursive: true })
-    writeFileSync(pot(ime), html)
+    // Ciljni odgovor ostane v pomnilniku do preverbe CELOTNEGA koledarja.
+    if (!preveri) {
+      mkdirSync(MAPA, { recursive: true })
+      writeFileSync(pot(ime), html)
+    }
   } catch (e) {
     if (e.zavrnitev || e.status === 403 || e.status === 429) throw new FcfZavrnitev(`fcf: ${naslovZapisnika(id)} → ${e.status ?? e.message} — uvoz ustavljen, ne obhajamo`, e.status)
     throw e
@@ -722,6 +725,8 @@ async function obnoviPar(prave, glavna, ponovnoUporabljeni, prenesi) {
     if (ts.length !== 8 || new Set(ts.flatMap((t) => klubPara(t.g))).size !== 16)
       throw napakaKoledarja('po obnovi vsak krog potrebuje osem disjunktnih tekem')
   }
+  // Noben zavrnjen par ne sme z delnim zapisom izbrisati svojega sprožilca.
+  for (const t of zaBranje) writeFileSync(pot(imeStrani(t.id)), t.html)
 }
 
 /**

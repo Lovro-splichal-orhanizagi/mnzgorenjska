@@ -116,6 +116,10 @@ test('mixed authentic R20 pair refreshes only two reused cache members and retur
   assert.equal(b.tekme.find(x => x.id === AWAY).g.krog, 5, 'SYNTHETIC response only; actual new reciprocal round remains unknown')
   assert.deepEqual(Object.keys(b).sort(), ['ni', 'skupina', 'tekme', 'tujih'])
   assert.deepEqual(Object.keys(b.tekme[0]).sort(), ['g', 'html', 'id'])
+  assert.equal(readFileSync(f.cache(HOME), 'utf8'), newHome)
+  assert.equal(readFileSync(f.cache(AWAY), 'utf8'), syntheticNewAway)
+  assertComplete(await f.read())
+  assert.deepEqual(f.calls, [HOME, AWAY], 'a successful recovery persists the coherent pair')
   assert.deepEqual(readdirSync('scripts/.predpomnilnik/fcf').sort(), [...calendar().keys()].map(id => `acta-${id}.html`).sort())
 })
 
@@ -199,6 +203,38 @@ for (const [label, body] of [
 ]) test(`${label} fails after bounded recovery`, async t => {
   const f = setup(t, { response: new Map([[HOME, newHome], [AWAY, body]]) })
   await assert.rejects(f.read(), /fcf:.*koledar/i); assert.deepEqual(f.calls, [HOME, AWAY])
+})
+
+test('two successive globally rejected recoveries preserve the original pair and cannot erase their own trigger', async t => {
+  const overfull = variant(oldAway, s => s === '20' ? '6' : s)
+  const f = setup(t, { response: new Map([[HOME, newHome], [AWAY, overfull]]) })
+  for (let attempt = 0; attempt < 2; attempt++) await assert.rejects(f.read(), /fcf:.*koledar/i)
+  assert.deepEqual(f.calls, [HOME, AWAY, HOME, AWAY], 'each rejected attempt must still require the two original cached targets')
+  assert.equal(readFileSync(f.cache(HOME), 'utf8'), newHome)
+  assert.equal(readFileSync(f.cache(AWAY), 'utf8'), oldAway)
+  assert.equal(readdirSync('scripts/.predpomnilnik/fcf').length, 240)
+})
+
+for (const [label, failure] of [
+  ['wrong embedded route', variant(syntheticNewAway, s => s === String(AWAY) ? String(HOME) : s)],
+  ['403', Object.assign(Error('blocked'), { status: 403 })],
+  ['429', Object.assign(Error('rate limited'), { status: 429 })],
+  ['timeout', new DOMException('source timeout', 'TimeoutError')],
+  ['empty response', ''], ['unknown response', '<title>Maintenance</title>'],
+  ['challenge', '<title>Just a moment</title>cf_chl_opt'],
+  ['missing report', '<title>Acta no trobada</title>'],
+]) test(`accepted first response followed by second-member ${label} preserves both original targets`, async t => {
+  const acceptedHome = variant(newHome, s => s === '27.02.2027' ? '28.02.2027' : s)
+  const f = setup(t, { response: new Map([[HOME, acceptedHome], [AWAY, failure]]) })
+  await assert.rejects(f.read(), e => {
+    if (['403', '429', 'challenge'].includes(label)) assert.ok(e instanceof FcfZavrnitev)
+    if (label === 'timeout') assert.equal(e.name, 'TimeoutError')
+    return true
+  })
+  assert.deepEqual(f.calls, [HOME, AWAY])
+  assert.equal(readFileSync(f.cache(HOME), 'utf8'), newHome, 'accepted first body must remain private until full success')
+  assert.equal(readFileSync(f.cache(AWAY), 'utf8'), oldAway)
+  assert.equal(readdirSync('scripts/.predpomnilnik/fcf').length, 240)
 })
 
 for (const [label, body] of [
