@@ -26,7 +26,7 @@ begin
     from matches m join rounds r on r.id = m.round_id join competitions c on c.id = r.competition_id
    where p_team in (m.home_team_id, m.away_team_id)
      and r.season = public.sezona_lige(r.competition_id)
-     and not je_mladinski_slug(c.slug)
+     and not je_mladinski_slug(c.slug) and c.country_id = p_country
    group by r.competition_id
    order by count(*) desc, r.competition_id
    limit 1;
