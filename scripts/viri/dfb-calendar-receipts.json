@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "description": "Factual published calendar orientations; offline parser support only, no release or statistics authority.",
+  "observedAt": "2026-10-18T15:33:12.673Z",
+  "seasons": [
+    {
+      "code": "regionalliga-nord/2026-2027",
+      "teams": 18,
+      "rounds": 34,
+      "pairs": [
+        {
+          "fixtures": [
+            {
+              "id": "2423139",
+              "round": 7,
+              "home": "SV Werder Bremen II",
+              "away": "1. FC Phönix Lübeck",
+              "homeSourceClubId": "sv-werder-bremen-ii",
+              "awaySourceClubId": "1-fc-phoenix-luebeck",
+              "witnesses": [
+                {
+                  "club": "sv-werder-bremen-ii",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/sv-werder-bremen-ii",
+                  "sha256": "2f44342efb48a26bfa9d04b25f1bd2fdc010aa8635915a9e88e166c659961229",
+                  "capturedAt": "2026-10-17T17:12:49.547Z"
+                },
+                {
+                  "club": "1-fc-phoenix-luebeck",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/1-fc-phoenix-luebeck",
+                  "sha256": "45cfed1eebd29ac0d3e2b3e16f9a08317645832c78d27399229a51c3fdcf7359",
+                  "capturedAt": "2026-10-17T17:14:18.538Z"
+                }
+              ]
+            },
+            {
+              "id": "2423378",
+              "round": 33,
+              "home": "SV Werder Bremen II",
+              "away": "1. FC Phönix Lübeck",
+              "homeSourceClubId": "sv-werder-bremen-ii",
+              "awaySourceClubId": "1-fc-phoenix-luebeck",
+              "witnesses": [
+                {
+                  "club": "sv-werder-bremen-ii",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/sv-werder-bremen-ii",
+                  "sha256": "2f44342efb48a26bfa9d04b25f1bd2fdc010aa8635915a9e88e166c659961229",
+                  "capturedAt": "2026-10-17T17:12:49.547Z"
+                },
+                {
+                  "club": "1-fc-phoenix-luebeck",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/1-fc-phoenix-luebeck",
+                  "sha256": "45cfed1eebd29ac0d3e2b3e16f9a08317645832c78d27399229a51c3fdcf7359",
+                  "capturedAt": "2026-10-17T17:14:18.538Z"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "fixtures": [
+            {
+              "id": "2423173",
+              "round": 11,
+              "home": "VfB Lübeck",
+              "away": "SV Todesfelde",
+              "homeSourceClubId": "vfb-luebeck",
+              "awaySourceClubId": "SV-Todesfelde",
+              "witnesses": [
+                {
+                  "club": "vfb-luebeck",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/vfb-luebeck",
+                  "sha256": "5f89260b11ce5ae1d31e50dbac8d2fa272cd38732f7ce77bc9d33a0fee47f7fa",
+                  "capturedAt": "2026-10-17T17:13:08.035Z"
+                },
+                {
+                  "club": "SV-Todesfelde",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/SV-Todesfelde",
+                  "sha256": "687aa36eb4be3887faf75bbf6f3028f50785594e3541f11f56457022a57f807c",
+                  "capturedAt": "2026-10-17T17:13:26.713Z"
+                }
+              ]
+            },
+            {
+              "id": "2423342",
+              "round": 29,
+              "home": "VfB Lübeck",
+              "away": "SV Todesfelde",
+              "homeSourceClubId": "vfb-luebeck",
+              "awaySourceClubId": "SV-Todesfelde",
+              "witnesses": [
+                {
+                  "club": "vfb-luebeck",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/vfb-luebeck",
+                  "sha256": "5f89260b11ce5ae1d31e50dbac8d2fa272cd38732f7ce77bc9d33a0fee47f7fa",
+                  "capturedAt": "2026-10-17T17:13:08.035Z"
+                },
+                {
+                  "club": "SV-Todesfelde",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/SV-Todesfelde",
+                  "sha256": "687aa36eb4be3887faf75bbf6f3028f50785594e3541f11f56457022a57f807c",
+                  "capturedAt": "2026-10-17T17:13:26.713Z"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "regionalliga-west/2026-2027",
+      "teams": 18,
+      "rounds": 34,
+      "pairs": [
+        {
+          "fixtures": [
+            {
+              "id": "2425450",
+              "round": 9,
+              "home": "Rot-Weiß Oberhausen",
+              "away": "Borussia Mönchengladbach II",
+              "homeSourceClubId": "rot-weiss-oberhausen",
+              "awaySourceClubId": "borussia-moenchengladbach-ii",
+              "witnesses": [
+                {
+                  "club": "rot-weiss-oberhausen",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2026-2027/teams/rot-weiss-oberhausen",
+                  "sha256": "460bec4f80b518d52225e03ff55217bd8ceb9e3b046c9d81b64032ecfab91b90",
+                  "capturedAt": "2026-10-17T13:10:58.213Z"
+                },
+                {
+                  "club": "borussia-moenchengladbach-ii",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2026-2027/teams/borussia-moenchengladbach-ii",
+                  "sha256": "42c4b9c0458eb9c6ee35dbdc82a95cc1a02e0237e6bc570269f97aeab6f79d1c",
+                  "capturedAt": "2026-10-17T13:12:19.500Z"
+                }
+              ]
+            },
+            {
+              "id": "2425603",
+              "round": 26,
+              "home": "Rot-Weiß Oberhausen",
+              "away": "Borussia Mönchengladbach II",
+              "homeSourceClubId": "rot-weiss-oberhausen",
+              "awaySourceClubId": "borussia-moenchengladbach-ii",
+              "witnesses": [
+                {
+                  "club": "rot-weiss-oberhausen",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2026-2027/teams/rot-weiss-oberhausen",
+                  "sha256": "460bec4f80b518d52225e03ff55217bd8ceb9e3b046c9d81b64032ecfab91b90",
+                  "capturedAt": "2026-10-17T13:10:58.213Z"
+                },
+                {
+                  "club": "borussia-moenchengladbach-ii",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2026-2027/teams/borussia-moenchengladbach-ii",
+                  "sha256": "42c4b9c0458eb9c6ee35dbdc82a95cc1a02e0237e6bc570269f97aeab6f79d1c",
+                  "capturedAt": "2026-10-17T13:12:19.500Z"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "fixtures": [
+            {
+              "id": "2425470",
+              "round": 11,
+              "home": "Rot-Weiß Oberhausen",
+              "away": "SC Paderborn 07 II",
+              "homeSourceClubId": "rot-weiss-oberhausen",
+              "awaySourceClubId": "sc-paderborn-07-ii",
+              "witnesses": [
+                {
+                  "club": "rot-weiss-oberhausen",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2026-2027/teams/rot-weiss-oberhausen",
+                  "sha256": "460bec4f80b518d52225e03ff55217bd8ceb9e3b046c9d81b64032ecfab91b90",
+                  "capturedAt": "2026-10-17T13:10:58.213Z"
+                },
+                {
+                  "club": "sc-paderborn-07-ii",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2026-2027/teams/sc-paderborn-07-ii",
+                  "sha256": "a660cc612b49a2d6ea690e3ae78747eb99b05513dc494d7ff72507426cadf055",
+                  "capturedAt": "2026-10-17T13:12:37.370Z"
+                }
+              ]
+            },
+            {
+              "id": "2425622",
+              "round": 28,
+              "home": "Rot-Weiß Oberhausen",
+              "away": "SC Paderborn 07 II",
+              "homeSourceClubId": "rot-weiss-oberhausen",
+              "awaySourceClubId": "sc-paderborn-07-ii",
+              "witnesses": [
+                {
+                  "club": "rot-weiss-oberhausen",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2026-2027/teams/rot-weiss-oberhausen",
+                  "sha256": "460bec4f80b518d52225e03ff55217bd8ceb9e3b046c9d81b64032ecfab91b90",
+                  "capturedAt": "2026-10-17T13:10:58.213Z"
+                },
+                {
+                  "club": "sc-paderborn-07-ii",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2026-2027/teams/sc-paderborn-07-ii",
+                  "sha256": "a660cc612b49a2d6ea690e3ae78747eb99b05513dc494d7ff72507426cadf055",
+                  "capturedAt": "2026-10-17T13:12:37.370Z"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
