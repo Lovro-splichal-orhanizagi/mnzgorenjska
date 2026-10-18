@@ -83,7 +83,7 @@ tekem (21 klubov), 153 zapisnikov, goli = izid 153/153, postav po 11 306/306,
 990 minut 303/306, 1109 menjav. Odstopanja so napake vira: rezerva z vstopom
 brez para (Selby Town) in strelec s klopi brez vstopa (dobi nastop od gola).
 Arhiv 2025/26 (vzorec vsake 8. tekme): Premier 48/48 goli = izid, 96/96 po
-11 in 990 minut; Division One 57/58 (56246: v glavi 4 goli gostov, izid 1:3).
+11 in 990 minut; Division One 57/58 (56246: v glavi 3 goli gostov, v postavi 4 ikone golov; izid 1:3).
 
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=gb-ncel-premier
 -f arhiv=ncelpremierdivision/2025 -f cene=true`. Arhiv 380 zapisnikov po 3 s

@@ -390,25 +390,41 @@ export function vZapisnik(html, { id = null, url = null, leto = null, danes = Da
     else if (e.postava.length !== 11) opozorila.push(`${imeni[idx]}: v postavi je ${e.postava.length} igralcev namesto 11`)
   })
 
-  // Goli: minute in vrsta (11 m, avtogol) iz glave po imenu, število pri
-  // igralcu iz ikon. Strelec glave, ki ga ni v postavi, je gol ekipe brez strelca.
+  // Goli: popolna glava po izidu je seznam dogodkov, ikone jo preverijo.
+  // Pri nepopolni glavi ikone dopolnijo le enolično določene igralce. Neznan
+  // ali dvoumen strelec ostane brez pripisa igralcu.
   const goli = []
-  const najdi = (idx, ime) => ekipe[idx].igralci.find((i) => kljucImena(i.imeVira) === kljucImena(ime)) ?? null
+  const poImenu = (idx, ime) => ekipe[idx].igralci.filter((i) => kljucImena(i.imeVira) === kljucImena(ime))
+  const popolneGlave = strelci.map((ss, idx) => ss.reduce((n, st) => n + st.goli.length, 0) === (idx ? rezultat.gostje : rezultat.domaci))
+  let dvoumnoNepopolno = false
   const kdo = (idx, i) => ({ ekipaIdx: idx, st: i?.st ?? null, ime: i?.ime ?? null })
   ;[0, 1].forEach((idx) => {
     const izGlave = new Map() // igralec → goli glave
+    const opozorjeneDvoumnosti = new Set()
+    const dvoumno = (team, ime) => {
+      if (!popolneGlave[idx]) dvoumnoNepopolno = true
+      const key = `${team}|${kljucImena(ime)}`
+      if (opozorjeneDvoumnosti.has(key)) return
+      opozorjeneDvoumnosti.add(key)
+      opozorila.push(`${popolneGlave[idx] ? '' : NEPOPOLN + ': '}${imeni[team]}: dvoumen strelec ${ime} v več vrsticah postave — brez pripisa igralcu`)
+    }
+    const najdi = (team, ime) => {
+      const kandidati = poImenu(team, ime)
+      if (kandidati.length > 1) dvoumno(team, ime)
+      return kandidati.length === 1 ? kandidati[0] : null
+    }
     for (const st of strelci[idx]) {
       for (const g of st.goli) {
         if (g.avtogol) {
           // Avtogol: ime je igralec NASPROTNE ekipe, gol šteje tej.
           const i = /^unknown$/i.test(st.ime) ? null : najdi(1 - idx, st.ime)
-          if (!i && !/^unknown$/i.test(st.ime)) opozorila.push(`avtogol: ${st.ime} ni v postavi ${imeni[1 - idx]}`)
+          if (!i && !/^unknown$/i.test(st.ime) && !poImenu(1 - idx, st.ime).length) opozorila.push(`avtogol: ${st.ime} ni v postavi ${imeni[1 - idx]}`)
           goli.push({ ...kdo(1 - idx, i), minuta: g.minuta, avtogol: true, enajstmetrovka: false })
           continue
         }
         const i = /^unknown$/i.test(st.ime) ? null : najdi(idx, st.ime)
         if (!i) {
-          if (!/^unknown$/i.test(st.ime)) opozorila.push(`strelec ${st.ime} (${imeni[idx]}) ni v postavi`)
+          if (!/^unknown$/i.test(st.ime) && !poImenu(idx, st.ime).length) opozorila.push(`strelec ${st.ime} (${imeni[idx]}) ni v postavi`)
           goli.push({ ...kdo(idx, null), minuta: g.minuta, avtogol: false, enajstmetrovka: g.enajstmetrovka })
           continue
         }
@@ -419,7 +435,15 @@ export function vZapisnik(html, { id = null, url = null, leto = null, danes = Da
       const g = izGlave.get(i) ?? []
       if (g.length && i.goliIkon && g.length !== i.goliIkon)
         opozorila.push(`${imeni[idx]}: ${i.imeVira} ima v glavi ${g.length} golov, pri igralcu ${i.goliIkon}`)
-      const stevilo = g.length || i.goliIkon
+      // Popolna glava je seznam dogodkov, ikone pa le navzkrižna preverba.
+      // Nepopolna glava ohrani običajno dopolnitev le pri enoličnem igralcu.
+      if (!popolneGlave[idx] && i.goliIkon && poImenu(idx, i.imeVira).length > 1) {
+        dvoumno(idx, i.imeVira)
+        continue
+      }
+      if (popolneGlave[idx] && i.goliIkon && !g.length)
+        opozorila.push(`${imeni[idx]}: ikona gola pri ${i.imeVira} ni dodaten dogodek ob popolni glavi strelcev`)
+      const stevilo = g.length || (popolneGlave[idx] ? 0 : i.goliIkon)
       for (let n = 0; n < stevilo; n++)
         goli.push({ ...kdo(idx, i), minuta: g[n]?.minuta ?? null, avtogol: false, enajstmetrovka: !!g[n]?.enajstmetrovka })
     }
@@ -497,7 +521,7 @@ export function vZapisnik(html, { id = null, url = null, leto = null, danes = Da
     rumeni,
     rdeci,
     menjave,
-    nepopoln: !znana[0] || !znana[1] || dopolnjuje,
+    nepopoln: !znana[0] || !znana[1] || dopolnjuje || dvoumnoNepopolno,
     prazen: !ekipe[0].postava.length && !ekipe[1].postava.length,
     opozorila,
   }
