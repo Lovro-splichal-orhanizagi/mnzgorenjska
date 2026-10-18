@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { imeZveze } from '../components/VirPodatkov'
 import Grb from '../components/Grb'
+import { PokritostStatistike, usePokritostStatistike } from '../components/PokritostStatistike'
 import { useNaslov, zDrzavo } from '../lib/naslov'
 import { t } from '../i18n'
 import { NalaganjeZaBralnik, Skelet } from '../components/Skelet'
@@ -78,6 +79,7 @@ export default function Tabela() {
 
   const liga = `?t=${encodeURIComponent(slug)}`
   const sezona = vrstice[0]?.sezona ?? ''
+  const pokritost = usePokritostStatistike(tekmovanjeId, sezona)
   const odigrano = vrstice.some((v) => v.tekme > 0)
   const th = 'px-1.5 py-2 text-center font-semibold'
   const td = 'px-1.5 py-2 text-center tabular-nums'
@@ -167,8 +169,9 @@ export default function Tabela() {
       {!nalaganje && odigrano && (
         <section className="space-y-3">
           <h2 className="text-xl font-black naslov">{t('tekme.tabela.strelci')}</h2>
+          <PokritostStatistike podatki={pokritost} />
           {strelci.length === 0 ? (
-            <p className="text-sm text-slate-400">{t('tekme.tabela.niStrelcev')}</p>
+            <p className="text-sm text-slate-400">{t(pokritost?.statistics_unavailable_matches ? 'tekme.statistika.brezStrelcev' : 'tekme.tabela.niStrelcev')}</p>
           ) : (
             <div className="kartica overflow-x-auto">
               <table className="w-full text-sm">

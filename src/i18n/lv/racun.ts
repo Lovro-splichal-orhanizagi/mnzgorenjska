@@ -238,6 +238,13 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Spēlētājs ar pārņemtu profilu var pievienot, ka ir atvērts pārejai, savu dzimšanas gadu, vēlamos reģionus un atļauju sazināties. Tā ir piekrišana (VDAR 6. panta 1. punkta a) apakšpunkts): to redz tikai klubi Scout, to var jebkurā laikā atsaukt profilā, un pēc atsaukšanas mēs dzēšam datus. Klubs spēlētājam raksta tikai caur Scout un neredz viņa e-pasta adresi.',
     scoutUgovor:
       'Iebildums: pārņemtajā profilā noklikšķini Paslēpt mani no Scout vai raksti uz <eposta>info@slff.eu</eposta> ar saiti uz spēlētāja lapu. 14 dienu laikā mēs paslēpjam spēlētāju no Scout visās mūsu šīs valsts līgās, arī turpmākajos importos. Fantāzijas spēlē viņš paliek.',
+    trgovinaNaslov: 'SLFF veikals (shop.slff.eu)',
+    trgovinaKaj:
+      'Pirkuma laikā apstrādājam vārdu, e-pastu, piegādes adresi, nopirktos produktus un summas, bet, ja esi pieteicies, arī tavu SLFF kontu. Maksājumu apstrādā Stripe: kartes datus mēs neredzam un neglabājam. Vārdu un adresi piegādei saņem Pošta Slovenije. Lai ierobežotu ļaunprātīgu izmantošanu, nepabeigta pirkuma gadījumā īslaicīgi glabājam IP adreses jaucējvērtību (neatgriezenisku); tā tiek dzēsta pēc samaksas vai pirkuma termiņa beigām.',
+    trgovinaPodlaga:
+      'Juridiskais pamats ir līguma izpilde (VDAR 6. panta 1. punkta b) apakšpunkts) un juridiski pienākumi (grāmatvedība, nodokļi), bet IP adreses jaucējvērtībai leģitīmās intereses novērst ļaunprātīgu izmantošanu (VDAR 6. panta 1. punkta f) apakšpunkts). Pārzinis ir SPACE GUARDIAN, računalniško programiranje, d.o.o.',
+    trgovinaHramba:
+      'Pasūtījumu un rēķinu datus glabājam tik ilgi, cik prasa PVN likums un grāmatvedības noteikumi (10 gadus pēc rēķina izrakstīšanas gada). E-pastu pasūtījuma paziņojumiem izmantojam tikai šim pasūtījumam. Piekļuvei, labošanai vai iebildumiem raksti uz <eposta>info@slff.eu</eposta>.',
   },
   klubskiRacun: {
     naslov: 'Kluba oficiālais konts',

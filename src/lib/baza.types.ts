@@ -477,6 +477,7 @@ export type Database = {
         Row: {
           active: boolean
           country_id: number
+          date_only_deadline_policy: string | null
           federation_id: number | null
           id: number
           mnzg_liga: string | null
@@ -488,6 +489,7 @@ export type Database = {
           slug: string
           sort_order: number
           source: string
+          source_policy: string | null
           source_league_code: string | null
           vir_ime: string | null
           vir_url: string | null
@@ -496,6 +498,7 @@ export type Database = {
         Insert: {
           active?: boolean
           country_id: number
+          date_only_deadline_policy?: string | null
           federation_id?: number | null
           id?: never
           mnzg_liga?: string | null
@@ -507,6 +510,7 @@ export type Database = {
           slug: string
           sort_order?: number
           source: string
+          source_policy?: string | null
           source_league_code?: string | null
           vir_ime?: string | null
           vir_url?: string | null
@@ -514,6 +518,7 @@ export type Database = {
         Update: {
           active?: boolean
           country_id?: number
+          date_only_deadline_policy?: string | null
           federation_id?: number | null
           id?: never
           mnzg_liga?: string | null
@@ -525,6 +530,7 @@ export type Database = {
           slug?: string
           sort_order?: number
           source?: string
+          source_policy?: string | null
           source_league_code?: string | null
           vir_ime?: string | null
           vir_url?: string | null
@@ -1941,6 +1947,10 @@ export type Database = {
           kontumacija: boolean
           played_on: string | null
           round_id: number
+          source_phase: string | null
+          source_round: number | null
+          statistics_status: string
+          statistics_reason: string | null
           source_url: string | null
           vir_brez_izida: boolean
           zapisnik_id: string | null
@@ -1957,6 +1967,10 @@ export type Database = {
           kontumacija?: boolean
           played_on?: string | null
           round_id: number
+          source_phase?: string | null
+          source_round?: number | null
+          statistics_status?: string
+          statistics_reason?: string | null
           source_url?: string | null
           vir_brez_izida?: boolean
           zapisnik_id?: string | null
@@ -1972,6 +1986,10 @@ export type Database = {
           kontumacija?: boolean
           played_on?: string | null
           round_id?: number
+          source_phase?: string | null
+          source_round?: number | null
+          statistics_status?: string
+          statistics_reason?: string | null
           source_url?: string | null
           vir_brez_izida?: boolean
           zapisnik_id?: string | null
@@ -6083,6 +6101,8 @@ export type Database = {
           played_on: string | null
           round_id: number | null
           round_number: number | null
+          statistics_status: string | null
+          statistics_reason: string | null
           season: string | null
         }
         ComputedFields: never
@@ -7296,6 +7316,8 @@ export type Database = {
           krogov: number | null
           odigranih: number | null
           season: string | null
+          statistics_complete_matches: number | null
+          statistics_unavailable_matches: number | null
           tekoca: boolean | null
           zadnji_dan: string | null
         }
@@ -7566,6 +7588,19 @@ export type Database = {
       }
     }
     Functions: {
+      apply_historical_statistics_policy: {
+        Args: { p_competition_id: number; p_policy_id: string; p_policy_sha256: string; p_entries: Json }
+        Returns: Json
+      }
+      upsert_unavailable_historical_match: {
+        Args: { p_competition_id: number; p_source_match_id: string; p_policy_id: string; p_policy_sha256: string; p_raw_sha256: string; p_header: Json }
+        Returns: Json
+      }
+      get_installed_historical_statistics_markers: {
+        Args: { p_competition_id: number }
+        Returns: Json
+      }
+
       adaptivni_prag: {
         Args: { p_player_id: number; p_position: string }
         Returns: number
@@ -9058,6 +9093,63 @@ export type Database = {
             }
             Returns: number
           }
+      trgovina_admin_izdelki: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      trgovina_admin_narocila: { Args: { p_stanje?: string }; Returns: Json }
+      trgovina_admin_narocilo: { Args: { p_id: number }; Returns: Json }
+      trgovina_admin_poslano: {
+        Args: { p_narocilo: number; p_sledilna: string }
+        Returns: Json
+      }
+      trgovina_admin_shrani_izdelek: { Args: { p: Json }; Returns: number }
+      trgovina_admin_shrani_razlicico: { Args: { p: Json }; Returns: number }
+      trgovina_iz_placila: {
+        Args: {
+          p_checkout: string
+          p_ddv: number
+          p_dostava: number
+          p_dostava_kljuc: string
+          p_email: string
+          p_ime: string
+          p_naslov: Json
+          p_payment_intent: string
+          p_postavke: number
+          p_skupaj: number
+        }
+        Returns: string
+      }
+      trgovina_izdelek: { Args: { p_slug: string }; Returns: Json }
+      trgovina_katalog: { Args: Record<PropertyKey, never>; Returns: Json }
+      trgovina_moja_narocila: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      trgovina_narocilo_seje: {
+        Args: { p_checkout: string; p_odjemalec: string; p_user: string }
+        Returns: Json
+      }
+      trgovina_narocilo_za_posto: { Args: { p_id: number }; Returns: Json }
+      trgovina_potekla: { Args: { p_checkout: string }; Returns: string }
+      trgovina_pripravi_shrambo: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      trgovina_rezerviraj: {
+        Args: {
+          p_jezik: string
+          p_odjemalec: string
+          p_postavke: Json
+          p_user: string
+        }
+        Returns: Json
+      }
+      trgovina_sprosti: { Args: { p_narocilo: number }; Returns: string }
+      trgovina_vezi_sejo: {
+        Args: { p_checkout: string; p_narocilo: number }
+        Returns: undefined
+      }
       tuja_postava: {
         Args: { p_round: number; p_team: number }
         Returns: {

@@ -242,6 +242,13 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Ein Spieler mit übernommenem Profil kann angeben, dass er offen für einen Wechsel ist, sein Geburtsjahr, gewünschte Regionen und die Erlaubnis zur Kontaktaufnahme. Das ist eine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO): Sie sehen nur Vereine in Scout, sie kann jederzeit im Profil widerrufen werden, und beim Widerruf löschen wir die Daten. Ein Verein schreibt dem Spieler nur über Scout und sieht seine E-Mail-Adresse nicht.',
     scoutUgovor:
       'Widerspruch: Klicke im übernommenen Profil auf Mich in Scout verbergen oder schreibe an <eposta>info@slff.eu</eposta> mit einem Link zur Spielerseite. Innerhalb von 14 Tagen verbergen wir den Spieler in Scout in allen unseren Ligen dieses Landes, auch bei späteren Importen. Im Fantasy-Spiel bleibt er.',
+    trgovinaNaslov: 'SLFF Shop (shop.slff.eu)',
+    trgovinaKaj:
+      'Beim Kauf verarbeiten wir Name, E-Mail, Lieferadresse, gekaufte Produkte und Beträge, bei Anmeldung auch dein SLFF-Konto. Die Zahlung wickelt Stripe ab: Kartendaten sehen und speichern wir nicht. Name und Adresse erhält die Pošta Slovenije für die Zustellung. Um Missbrauch zu begrenzen, speichern wir bei einem nicht abgeschlossenen Kauf vorübergehend einen gehashten (nicht umkehrbaren) Wert der IP-Adresse; er wird bei Zahlung oder Ablauf des Kaufs gelöscht.',
+    trgovinaPodlaga:
+      'Rechtsgrundlage sind die Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO) und gesetzliche Pflichten (Buchhaltung, Steuern), für die gehashte IP-Adresse unser berechtigtes Interesse an der Missbrauchsverhinderung (Art. 6 Abs. 1 lit. f DSGVO). Verantwortlicher ist SPACE GUARDIAN, računalniško programiranje, d.o.o.',
+    trgovinaHramba:
+      'Bestell- und Rechnungsdaten bewahren wir so lange auf, wie Umsatzsteuergesetz und Buchhaltungsvorschriften es verlangen (10 Jahre nach dem Jahr der Rechnungsstellung). Die E-Mail für Bestellbenachrichtigungen verwenden wir nur für diese Bestellung. Für Auskunft, Berichtigung oder Widerspruch schreibe an <eposta>info@slff.eu</eposta>.',
   },
   klubskiRacun: {
     naslov: 'Offizielles Vereinskonto',

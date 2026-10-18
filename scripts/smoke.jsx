@@ -13,6 +13,7 @@ import Rezultati from '../src/pages/Rezultati'
 import Tabela from '../src/pages/Tabela'
 import Tekma, { OpozoriloRumenih } from '../src/pages/Tekma'
 import IgrisceTocke from '../src/components/IgrisceTocke'
+import { NedosegljivaStatistika, PokritostStatistike, brezPreverjenihNastopov } from '../src/components/PokritostStatistike'
 import { encodeUnattributedYellow } from '../src/lib/nepripisaniRumeni.mjs'
 import Prijava from '../src/pages/Prijava'
 import MojaEkipa from '../src/pages/MojaEkipa'
@@ -57,6 +58,10 @@ import {
 import { tockeZaNastop, razloziTocke } from '../src/lib/tockovanje'
 import { veljavenPodpis } from '../supabase/functions/stripe-webhook/podpis.ts'
 import { scoutPostavkeVeljajo, scoutCeneNarocnine } from '../supabase/functions/stripe-webhook/scout.ts'
+import { trgovinaIzSeje, napacnaTarifa } from '../supabase/functions/stripe-webhook/trgovina.ts'
+import { sestaviMail as trgovinaMail, TELEFON as trgovinaTelefonMail, POGOJI_VERZIJA as trgovinaVerzijaMail } from '../supabase/functions/trgovina-posta/sporocila.ts'
+import { SL as trgovinaSL, EN as trgovinaEN, TELEFON as trgovinaTelefon, POGOJI_VERZIJA as trgovinaVerzija } from '../shop/src/besede.ts'
+import { EU27 as trgovinaEU27, tarifeZa } from '../supabase/functions/trgovina-nakup/tarife.ts'
 import { createHmac } from 'node:crypto'
 import { sestejOdKroga } from '../src/lib/lestvica'
 import { zdruziNavijace } from '../src/lib/navijaci'
@@ -204,6 +209,24 @@ for (const [ime, Komponenta, pot] of strani) {
   preveri('tekma: napaka neobveznih podatkov ne skrije znane statistike',
     nedosegljivo.includes('Podatek o pripisanosti rumenih kartonov trenutno ni na voljo.') &&
     nedosegljivo.includes('/player/42') && nedosegljivo.includes('⚽') && nedosegljivo.includes('🟨'))
+}
+
+// The browser regression exercises the real loaded pages; this keeps their shared
+// historical unavailable/coverage boundary in the ordinary offline CI smoke too.
+{
+  const podatki = { season: '2026/27', odigranih: 3, statistics_complete_matches: 2, statistics_unavailable_matches: 1 }
+  const izris = renderToString(<NedosegljivaStatistika />).replace(/<!-- -->/g, '')
+  preveri('zgodovinska statistika: izrecno nedosegljivo s štirimi pomišljaji namesto ničel',
+    izris.includes('Statistika igralcev za to zgodovinsko tekmo ni na voljo.') &&
+    (izris.match(/<dd /g) ?? []).length === 4 && (izris.match(/>—<\/dd>/g) ?? []).length === 4)
+  const delno = renderToString(<PokritostStatistike podatki={podatki} />)
+  preveri('zgodovinska statistika: delni seštevki imajo sezono in preverjeno pokritost',
+    delno.includes('2026/27') && delno.includes('2 od 3') && delno.includes('le preverjene nastope'))
+  preveri('zgodovinska statistika: popolna sezona nima opozorila o delni pokritosti',
+    renderToString(<PokritostStatistike podatki={{ ...podatki, statistics_unavailable_matches: 0 }} />) === '')
+  preveri('zgodovinska statistika: manjkajoče opazovanje se loči od preverjenega ničelnega dosežka',
+    brezPreverjenihNastopov(podatki, 0) && !brezPreverjenihNastopov(podatki, 1) &&
+    !brezPreverjenihNastopov({ ...podatki, statistics_unavailable_matches: 0 }, 0))
 }
 
 preveri('pravno: razdelek Scout s sidrom #scout (povezava za ugovor)',
@@ -12956,6 +12979,49 @@ preveri(
   preveri('scout stripe: naročnina Scouta gre', scoutCeneNarocnine({ items: { data: [p('slff_scout_klub_sezona')] } }))
   preveri('scout stripe: tuja cena v naročnini pade', !scoutCeneNarocnine({ items: { data: [p('slff_preverjen_letna')] } }))
   preveri('scout stripe: naročnina brez postavk pade', !scoutCeneNarocnine({ items: { data: [] } }))
+}
+
+{
+  // Trgovina (stripe-webhook/trgovina.ts): zneski in naslov iz seje, tarifa SI za tujino.
+  const seja = {
+    id: 'cs_1', payment_intent: 'pi_1', amount_subtotal: 5000, amount_total: 5390,
+    total_details: { amount_shipping: 390, amount_tax: 972 },
+    customer_details: { email: 'kupec@example.com', name: 'Plačnik' },
+    collected_information: { shipping_details: { name: 'Prejemnik', address: { line1: 'Cesta 1', postal_code: '4000', city: 'Kranj', country: 'SI' } } },
+    shipping_cost: { shipping_rate: 'shr_1' },
+  }
+  const { args, tarifa, drzava } = trgovinaIzSeje(seja)
+  preveri('trgovina stripe: zneski seje', args.p_postavke === 5000 && args.p_dostava === 390 && args.p_ddv === 972 && args.p_skupaj === 5390)
+  preveri('trgovina stripe: prejemnik in naslov iz dostave', args.p_ime === 'Prejemnik' && args.p_naslov?.city === 'Kranj' && args.p_email === 'kupec@example.com')
+  preveri('trgovina stripe: tarifa in država', tarifa === 'shr_1' && drzava === 'SI' && args.p_payment_intent === 'pi_1')
+  const star = trgovinaIzSeje({ id: 'cs_2', shipping_details: { name: 'X', address: { country: 'AT' } }, shipping_cost: { shipping_rate: { id: 'shr_2' } } })
+  preveri('trgovina stripe: stari shipping_details in tarifa kot objekt', star.drzava === 'AT' && star.tarifa === 'shr_2' && star.args.p_skupaj === 0)
+  preveri('trgovina tarife: SI paket, pismo le za same nalepke',
+    tarifeZa('SI', false).join() === 'paket_si' && tarifeZa('SI', true).join() === 'pismo_si,paket_si')
+  preveri('trgovina tarife: EU le paket_eu', tarifeZa('AT', false).join() === 'paket_eu' && tarifeZa('HR', true).join() === 'paket_eu')
+  preveri('trgovina tarife: EU-27', trgovinaEU27.length === 27 && trgovinaEU27.includes('SI') && !trgovinaEU27.includes('GB'))
+  preveri('trgovina stripe: paket_si v Avstrijo je napaka', napacnaTarifa('paket_si', 'AT') && !napacnaTarifa('paket_si', 'SI') && !napacnaTarifa('paket_eu', 'AT'))
+
+  // Maili trgovine (trgovina-posta/sporocila.ts): sl/en, zneski, sledilna, ubežni znaki.
+  const n = {
+    javna_oznaka: 'AB12CD34', stanje: 'placano', email: 'k@example.com', ime: 'Ana', jezik: 'sl',
+    naslov: { name: 'Ana <b>', line1: 'Cesta 1', postal_code: '4000', city: 'Kranj', country: 'SI' },
+    znesek_postavke: 5000, znesek_dostava: 390, znesek_ddv: 972, znesek_skupaj: 5390, sledilna: 'RR123456789SI',
+    postavke: [{ ime: 'Majica (Črna / M)', cena: 2500, kolicina: 2 }],
+  }
+  const sl = trgovinaMail('potrditev', n, 'https://shop.slff.eu')
+  preveri('trgovina mail: potrditev sl', sl.naslov.includes('AB12CD34') && sl.besedilo.includes('2 × Majica (Črna / M) — 50,00 €') && sl.besedilo.includes('53,90 €') && sl.besedilo.includes('https://shop.slff.eu/withdrawal'))
+  preveri('trgovina mail: html brez surovih oznak', sl.html.includes('Ana &lt;b&gt;') && !sl.html.includes('<b>'))
+  const en = trgovinaMail('poslano', { ...n, jezik: 'en', stanje: 'poslano' }, 'https://shop.slff.eu')
+  preveri('trgovina mail: poslano en s sledilno', en.naslov.includes('on its way') && en.besedilo.includes('RR123456789SI') && en.besedilo.includes('posta.si') && !/Pozdravljeni|naročilo/.test(en.besedilo))
+  preveri('trgovina mail: en zneski', trgovinaMail('potrditev', { ...n, jezik: 'en' }, 'x').besedilo.includes('€53.90'))
+  preveri('trgovina mail: telefon in različica pogojev kot v trgovini', trgovinaTelefonMail === trgovinaTelefon && trgovinaVerzijaMail === trgovinaVerzija)
+  // Trajni nosilec: potrditev nosi celoten pouk o odstopu in vzorčni obrazec v jeziku naročila.
+  const enP = trgovinaMail('potrditev', { ...n, jezik: 'en' }, 'https://shop.slff.eu')
+  preveri('trgovina mail: pouk o odstopu, obrazec, pogoji z dne, telefon (sl, en)',
+    [[sl, trgovinaSL, 'Pogoji z dne'], [enP, trgovinaEN, 'Terms dated']].every(([m, B, z]) =>
+      B['pogoji.s6.besedilo'].split('\n\n').every((o) => m.besedilo.includes(o)) &&
+      m.besedilo.includes(B['odstop.vzorec']) && m.besedilo.includes(`${z} ${trgovinaVerzija}`) && m.besedilo.includes(trgovinaTelefon)))
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

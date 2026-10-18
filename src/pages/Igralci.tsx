@@ -18,6 +18,7 @@ import { Link } from '../components/Povezava'
 import { POZICIJE } from '../lib/pravila'
 import { useTekmovanje } from '../lib/tekmovanje'
 import Grb from '../components/Grb'
+import { PokritostStatistike, brezPreverjenihNastopov, type Pokritost } from '../components/PokritostStatistike'
 import FotoIgralca from '../components/FotoIgralca'
 import ZnakPreverjen from '../components/ZnakPreverjen'
 import { t, tx, lokale } from '../i18n'
@@ -63,7 +64,7 @@ interface KrogIgralec {
 }
 
 /** Vrstica pogleda `sezone`. */
-interface SezonaVrstica {
+interface SezonaVrstica extends Pokritost {
   season: string
   odigranih: number
   tekoca: boolean
@@ -285,7 +286,7 @@ export default function Igralci() {
       const [{ data: vse, error }, { count }] = await Promise.all([
         supabase
           .from('sezone')
-          .select('season, odigranih, tekoca')
+          .select('season, odigranih, tekoca, statistics_complete_matches, statistics_unavailable_matches')
           .eq('competition_id', ligaId)
           .order('season', { ascending: false }),
         // Šteje tabelo, ne pogleda lestvice: ta za vsako ekipo sešteje točke
@@ -437,6 +438,7 @@ export default function Igralci() {
 
       {/* Vrh lige: kratke lestvice v eni vrstici (vrtiljak), cela tabela je
           spodaj. Igralec kroga le, če je zadnji krog iz izbrane sezone. */}
+      <PokritostStatistike podatki={sezonaPodatki} />
       {/* Igralec sezone: največ točk v ligi, poudarjen nad vrtiljakom. */}
       {vrh.tocke[0] && <PrviIgralec igralec={vrh.tocke[0]} sezona={sezona} />}
 
@@ -608,34 +610,34 @@ export default function Igralci() {
                         <span className={`mr-1 rounded px-1 text-[10px] font-bold ${razredPozicije(i.position)}`}>
                           {(i.position && KRATKA_POZICIJA[i.position]) ?? '?'}
                         </span>
-                        {i.team_short} · {mnozina(Number(i.matches ?? 0), TEKME)}
+                        {i.team_short} · {brezPreverjenihNastopov(sezonaPodatki, i.matches) ? t('tekme.statistika.brezOpazovanj') : mnozina(Number(i.matches ?? 0), TEKME)}
                       </div>
                     </div>
                   </div>
                 </td>
                 <td className="px-2 py-2 text-right font-black tabular-nums">
-                  {formatirajTocke(i.points)}
+                  {brezPreverjenihNastopov(sezonaPodatki, i.matches) ? '—' : formatirajTocke(i.points)}
                 </td>
                 <td className="px-2 py-2 text-right tabular-nums text-slate-300">
-                  {formatirajTocke(i.form)}
+                  {brezPreverjenihNastopov(sezonaPodatki, i.matches) ? '—' : formatirajTocke(i.form)}
                 </td>
                 <td className="hidden px-2 py-2 text-right tabular-nums text-slate-300 sm:table-cell">
-                  {formatirajTocke(i.last_round)}
+                  {brezPreverjenihNastopov(sezonaPodatki, i.matches) ? '—' : formatirajTocke(i.last_round)}
                 </td>
                 <td className="px-2 py-2 text-right tabular-nums text-slate-400">
-                  {formatirajTocke(i.points_per_match)}
+                  {brezPreverjenihNastopov(sezonaPodatki, i.matches) ? '—' : formatirajTocke(i.points_per_match)}
                 </td>
                 <td className="hidden px-2 py-2 text-right tabular-nums text-slate-400 sm:table-cell">
-                  {formatirajTocke(i.points_per_value)}
+                  {brezPreverjenihNastopov(sezonaPodatki, i.matches) ? '—' : formatirajTocke(i.points_per_value)}
                 </td>
                 <td className="px-2 py-2 text-right font-bold tabular-nums text-gnl-300">
                   {formatirajCeno(i.value)}
                 </td>
                 <td className="px-2 py-2 text-right tabular-nums text-slate-400">
-                  {i.goals}
+                  {brezPreverjenihNastopov(sezonaPodatki, i.matches) ? '—' : i.goals}
                 </td>
                 <td className="hidden px-2 py-2 text-right tabular-nums text-slate-400 sm:table-cell">
-                  {i.minutes}
+                  {brezPreverjenihNastopov(sezonaPodatki, i.matches) ? '—' : i.minutes}
                 </td>
                 <td className="px-2 py-2 text-right tabular-nums text-slate-400">
                   {i.owners === null ? (
