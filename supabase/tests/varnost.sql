@@ -5091,6 +5091,41 @@ select pg_temp.napaka('trgovina3: admin ne spremeni polj motiva',
 reset role;
 select set_config('request.jwt.claim.sub','',true);
 
+-- Bralni dostop agentov (agent_bralec): bere podatke, ne skrivnosti in ne piše.
+select pg_temp.preveri('agent: bere poslano pošto klubom', has_table_privilege('agent_bralec', 'public.klub_stik_posta', 'select'));
+select pg_temp.preveri('agent: bere registracije brez e-pošte', has_table_privilege('agent_bralec', 'agent.registracije', 'select'));
+select pg_temp.preveri('agent: ne bere ključa stikov', not has_table_privilege('agent_bralec', 'public.stiki_kljuc', 'select'));
+select pg_temp.preveri('agent: ne bere žetonov push', not has_table_privilege('agent_bralec', 'public.push_tokens', 'select'));
+select pg_temp.preveri('agent: ne bere sheme auth', not has_schema_privilege('agent_bralec', 'auth', 'usage'));
+select pg_temp.preveri('agent: ne bere sheme scout', not has_schema_privilege('agent_bralec', 'scout', 'usage'));
+select pg_temp.preveri('agent: ne bere e-pošte kupca', not has_column_privilege('agent_bralec', 'trgovina.narocila', 'email', 'select'));
+select pg_temp.preveri('agent: bere stanje naročila', has_column_privilege('agent_bralec', 'trgovina.narocila', 'stanje', 'select'));
+select pg_temp.preveri('agent: ne bere e-pošte v email_log', not has_column_privilege('agent_bralec', 'public.email_log', 'email', 'select'));
+select pg_temp.preveri('agent: ne piše', not has_table_privilege('agent_bralec', 'public.fantasy_teams', 'insert,update,delete'));
+-- Brez superuporabnika (sveža CI baza) migracija sheme net ne more zapreti in to
+-- izrecno zapiše; produkcijo preveri docs/agenti-baza.md.
+select pg_temp.preveri('agent: ne dostopa do pg_net (URL-ji kljuk Discorda) ali je zapisano opozorilo',
+  to_regnamespace('net') is null or not has_schema_privilege('agent_bralec', 'net', 'usage')
+  or exists (select 1 from agent.opozorila where kljuc = 'net'));
+select pg_temp.preveri('agent: aplikacija ohrani pg_net',
+  to_regnamespace('net') is null or (has_schema_privilege('authenticated', 'net', 'usage')
+    and has_table_privilege('postgres', 'net.http_request_queue', 'insert')));
+select pg_temp.preveri('agent: največ 3 povezave',
+  (select rolconnlimit from pg_roles where rolname = 'agent_bralec') = 3);
+select pg_temp.preveri('agent: poizvedba le za agenta',
+  has_function_privilege('agent_bralec', 'agent.poizvedba(text)', 'execute')
+  and not has_function_privilege('anon', 'agent.poizvedba(text)', 'execute'));
+select pg_temp.preveri('agent: obcutljiv stolpec po imenu je zaprt',
+  agent.obcutljiv_stolpec('kontakt_email') and agent.obcutljiv_stolpec('koda_hash')
+  and not agent.obcutljiv_stolpec('poslano_at'));
+select pg_temp.preveri('agent: bere naslove klubov (izjema lastnika)',
+  has_column_privilege('agent_bralec', 'public.klub_stik', 'email', 'select'));
+select pg_temp.preveri('agent: ne bere imena kupca',
+  not has_column_privilege('agent_bralec', 'trgovina.narocila', 'ime', 'select'));
+select pg_temp.preveri('agent: privzeto le branje',
+  exists (select 1 from pg_db_role_setting s join pg_roles r on r.oid = s.setrole
+          where r.rolname = 'agent_bralec' and 'default_transaction_read_only=on' = any(s.setconfig)));
+
 do $$
 declare v_napak int;
 begin
