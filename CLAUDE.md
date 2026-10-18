@@ -710,6 +710,9 @@ celotno zgodovino in ujemanje vseh uvoženih nastopov/golov. Postopek je v
 `SUPABASE_DB_CONTAINER`.
 
 Manifest DFB v4 podpira samo pregledane koledarske dokaze Nord/West in
-izrecno neposredno/replay provenienco; zgodovinskih izjem ne dovoljuje.
+izrecno neposredno/replay provenienco. Sestavljeni policy replay v4
+(`20261018231000`) dovoli samo točni arhivski množici Nord2/West8; sam
+koledarski dokaz ne dovoli manjkajočih statistik. Tekoči zapisniki ostanejo
+popolni, arhivske neznane statistike pa NULL.
 Zasebna SQL vrata ohranijo popolnost statistik, cene, kader in prihodnji rok.
 Preverba `test-dfb-calendar-release-sql.mjs` zahteva izrecno odstranljivo bazo.

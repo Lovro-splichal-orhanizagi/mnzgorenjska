@@ -14,7 +14,7 @@ export function preveriPosnetek(dir,records){
  if(records.some(r=>Date.parse(r.at)>Date.now()+300000))throw Error('DFB capture timestamp is in the future')
  return snapshot
 }
-export const sourceFiles=['scripts/viri/dfb-calendar.mjs','scripts/viri/dfb-calendar-receipts.json','scripts/viri/dfb-historical.mjs','scripts/dfb-historical-policy.mjs','scripts/lib/historical-statistics-policy.mjs','scripts/policies/historical-statistics-exclusions.json','src/lib/nepripisaniRumeni.mjs','scripts/viri/dfb.mjs','scripts/viri/dfb-lige.json','scripts/viri/dfb-korekcije.json','scripts/viri/dfb-kronologija.json','scripts/viri/dfb-rezerve.json','scripts/viri/dfb-aliasi.json','scripts/viri/fussball.mjs','scripts/viri/fussball-pisava.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/viri/fss.mjs','scripts/klubi.mjs','scripts/preveri-vir-sezono.mjs',
+export const sourceFiles=['scripts/viri/dfb-historical-receipts.json','scripts/viri/dfb-calendar.mjs','scripts/viri/dfb-calendar-receipts.json','scripts/viri/dfb-historical.mjs','scripts/dfb-historical-policy.mjs','scripts/lib/historical-statistics-policy.mjs','scripts/policies/historical-statistics-exclusions.json','src/lib/nepripisaniRumeni.mjs','scripts/viri/dfb.mjs','scripts/viri/dfb-lige.json','scripts/viri/dfb-korekcije.json','scripts/viri/dfb-kronologija.json','scripts/viri/dfb-rezerve.json','scripts/viri/dfb-aliasi.json','scripts/viri/fussball.mjs','scripts/viri/fussball-pisava.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/viri/fss.mjs','scripts/klubi.mjs','scripts/preveri-vir-sezono.mjs',
  ...Object.values(JSON.parse(readFileSync(new URL('./viri/dfb-aliasi.json',import.meta.url))).matches.flatMap(e=>Object.values(e.files))).map(f=>`scripts/${f.file.replace('../','')}`),
  ...JSON.parse(readFileSync(new URL('./viri/dfb-kronologija.json',import.meta.url))).matches.flatMap(e=>e.evidenceFiles).map(f=>`scripts/${f.file.replace('../','')}`),
  ...JSON.parse(readFileSync(new URL('./viri/dfb-korekcije.json',import.meta.url))).matches.flatMap(e=>e.evidenceFiles??[]).map(f=>`scripts/${f.file.replace('../','')}`)]
@@ -64,18 +64,19 @@ export function sestaviSezono({slug,sezona,razpored,zapisniki,nepopolni=[],captu
 export function preveriOdobritev(raw,approvedSha,now=Date.now()){
  if(Buffer.byteLength(raw)>8*1024*1024||!/^[a-f0-9]{64}$/.test(approvedSha)||sha(raw)!==approvedSha)fail('approved manifest SHA/size mismatch')
  const m=JSON.parse(raw);configuration(m.slug)
+ const policyAware=m.version===3||m.version===4&&Object.hasOwn(m,'statisticsPolicy')
  if(m.version!==4&&m.seasons?.some(s=>s.fixtures?.some(f=>Object.hasOwn(f,'calendarEvidence'))))fail('calendar evidence requires manifest version4')
  if(![1,2,3,4].includes(m.version)||!/^[a-f0-9]{40}$/.test(m.sourceCommit)||m.parserSha256!==parserSha256()||m.seasons?.length!==2)fail('scope/parser provenance mismatch')
  if(m.version===4){
-  if(!/^de-regionalliga-(nord|west)$/.test(m.slug)||![1,2].includes(m.provenanceVersion)||m.calendarReceiptSha256!==receiptSha256||Object.hasOwn(m,'statisticsPolicy'))fail('calendar scope/provenance differs')
+  if(!/^de-regionalliga-(nord|west)$/.test(m.slug)||![1,2].includes(m.provenanceVersion)||m.calendarReceiptSha256!==receiptSha256||policyAware&&m.provenanceVersion!==2)fail('calendar scope/provenance differs')
  }else if(m.version===3){
   if(m.slug!=='de-regionalliga-suedwest'||m.provenanceVersion!==2)fail('historical manifest scope/provenance')
  }else if(m.statisticsPolicy!=null||m.provenanceVersion!=null)fail('historical policy requires manifest version3')
- if(m.version===3&&!m.seasons[1].fixtures?.some(f=>f.date===m.statisticsPolicy?.firstFantasyPlayedOn&&f.played===false))fail('planned fantasy date lacks a real current future fixture')
+ if(policyAware&&!m.seasons[1].fixtures?.some(f=>f.date===m.statisticsPolicy?.firstFantasyPlayedOn&&f.played===false))fail('planned fantasy date lacks a real current future fixture')
  for(const [i,season]of['2025/26','2026/27'].entries()){
   const s=m.seasons[i],c=configuration(m.slug,season),age=now-Date.parse(s.capturedAt)
   if(s.season!==season||s.code!==c.code||!Number.isFinite(age)||age< -300000||age>(i?12:168)*3600000||!/^\d{1,20}$/.test(s.runId)||!/^\d{1,20}$/.test(s.jobId)||!/^[a-f0-9]{64}$/.test(s.documentsSha256)||s.fixtures?.length!==c.teams*(c.teams-1))fail('invalid/stale capture provenance')
-  if(m.version===3){
+  if(policyAware){
    if(s.evidenceMode!=='policy-replay')fail('historical proof requires real policy-aware replay')
    verifyDfbPolicySeason(s,m.statisticsPolicy);verifyLineage(s,m)
   }else if(m.version===2||m.version===4&&m.provenanceVersion===2)verifyLineage(s,m)
@@ -87,26 +88,27 @@ export function preveriOdobritev(raw,approvedSha,now=Date.now()){
 export async function pripravi({slug,archiveDir,currentDir,sourceCommit,proof}){
  configuration(slug)
  if(!/^[a-f0-9]{40}$/.test(sourceCommit)||proof?.sourceCommit!==sourceCommit||proof.slug!==slug||proof.sourceFilesIdentical!==true)fail('verified job provenance required')
- const seasons=[],version=proof.version??1
- if(![1,2,3].includes(version))fail('Unknown provenance version')
+ const seasons=[],version=proof.version??1,policyAware=version===3||version===4
+ if(![1,2,3,4].includes(version))fail('Unknown provenance version')
  for(const [i,dir]of[archiveDir,currentDir].entries()){
   const season=['2025/26','2026/27'][i],p=proof.proof?.[i]
   if(p?.season!==season||p.captureCommit!==sourceCommit||p.seasonJobPassed!==true)fail('season capture job mismatch')
-  if(version===2||version===3){
-   verifyLineage({...p,...(version===3?{evidenceMode:'policy-replay'}:{}),capturedAt:p.lineage?.capture.capturedAt,documentsSha256:p.lineage?.capture.documentsSha256},{version,slug,provenanceVersion:version===3?2:undefined,statisticsPolicy:proof.statisticsPolicy,sourceCommit,parserSha256:parserSha256()})
-   const {readClosedCapture}=await import('./ponovi-dfb-regijo.mjs');readClosedCapture(dir,slug,season,p.lineage.capture,{historical:version===3})
+  if(version>=2){
+   verifyLineage({...p,...(policyAware?{evidenceMode:'policy-replay'}:{}),capturedAt:p.lineage?.capture.capturedAt,documentsSha256:p.lineage?.capture.documentsSha256},{version,slug,provenanceVersion:policyAware?2:undefined,calendarReceiptSha256:version===4?receiptSha256:undefined,statisticsPolicy:proof.statisticsPolicy,sourceCommit,parserSha256:parserSha256()})
+   const {readClosedCapture}=await import('./ponovi-dfb-regijo.mjs');readClosedCapture(dir,slug,season,p.lineage.capture,{historical:policyAware})
   }else if(p.lineage!=null)fail('Mixed direct/replay proof')
   const snapshot=preveriPosnetek(dir,JSON.parse(readFileSync(resolve(dir,'prenosi.json'),'utf8')))
   const read=async url=>{if(!snapshot.documents.has(url))fail(`missing captured URL ${url}`);return snapshot.documents.get(url)}
   const code=configuration(slug,season).code,razpored=await vir.razporedVseStrani(code,read),zapisniki=await vir.zapisniki(code,read,{zberiNapake:true})
-  const historicalPolicy=version===3?{competition:{slug,source:'dfb',source_policy:proof.statisticsPolicy?.id,firstFantasyPlayedOn:proof.statisticsPolicy?.firstFantasyPlayedOn},documents:snapshot.documents}:undefined
+  const historicalPolicy=policyAware?{competition:{slug,source:'dfb',source_policy:proof.statisticsPolicy?.id,firstFantasyPlayedOn:proof.statisticsPolicy?.firstFantasyPlayedOn},documents:snapshot.documents}:undefined
   const built=sestaviSezono({slug,sezona:season,razpored,zapisniki,nepopolni:vir.nepopolni??[],...snapshot,runId:p.runId,jobId:p.jobId,historicalPolicy})
-  if(version===2||version===3)built.lineage=p.lineage
-  if(version===3)built.evidenceMode='policy-replay'
+  if(version>=2)built.lineage=p.lineage
+  if(policyAware)built.evidenceMode='policy-replay'
   seasons.push(built)
  }
  const calendar=/^de-regionalliga-(nord|west)$/.test(slug)&&seasons.some(s=>s.fixtures.some(f=>Object.hasOwn(f,'calendarEvidence')))
- const m={version:calendar?4:version,...(calendar?{provenanceVersion:version,calendarReceiptSha256:receiptSha256}:{}),...(version===3?{provenanceVersion:2,statisticsPolicy:proof.statisticsPolicy}:{}),slug,sourceCommit,parserSha256:parserSha256(),seasons};const raw=JSON.stringify(m)+'\n';preveriOdobritev(raw,sha(raw));return m
+ const manifestVersion=version===4||calendar?4:version
+ const m={version:manifestVersion,...(manifestVersion===4?{provenanceVersion:policyAware?2:version,calendarReceiptSha256:receiptSha256}:{}),...(policyAware?{provenanceVersion:2,statisticsPolicy:proof.statisticsPolicy}:{}),slug,sourceCommit,parserSha256:parserSha256(),seasons};const raw=JSON.stringify(m)+'\n';preveriOdobritev(raw,sha(raw));return m
 }
 export function actionsOnly(){if(process.env.GITHUB_ACTIONS!=='true'||process.env.GITHUB_REPOSITORY!=='Lovro-splichal-orhanizagi/mnzgorenjska')fail('database operations require repository Actions')}
 export async function databaseCheck(raw,approvedSha,activate=false,{fetchFn=globalThis.fetch}={}){

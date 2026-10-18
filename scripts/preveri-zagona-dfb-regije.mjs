@@ -6,6 +6,7 @@ import { configuration, sourceFiles, parserSha256 } from './vklopi-dfb-regijo.mj
 import {githubJson,downloadArtifact,writeArtifact} from './dfb-artifacts.mjs'
 import {scope,captureWorkflow,replayWorkflow,policyReplayStep,verifyReplayExecution,verifyLineage} from './dfb-replay-proof.mjs'
 import {dfbPolicyBinding} from './dfb-historical-policy.mjs'
+import {receiptSha256} from './viri/dfb-calendar.mjs'
 import {zaprtje} from './odtis-kode.mjs'
 import {obtainCapture,replaySnapshot,workflowHash} from './ponovi-dfb-regijo.mjs'
 const repo='Lovro-splichal-orhanizagi/mnzgorenjska'
@@ -21,13 +22,13 @@ export function verifyReplayRecord(record,{slug,season,actual,artifact,workflowS
  const policyFields=historical?{statisticsPolicyId:record.statisticsPolicy.id,statisticsPolicySha256:record.statisticsPolicy.sha256,firstFantasyPlayedOn:record.statisticsPolicy.firstFantasyPlayedOn}:{}
  if(historical&&Object.entries(policyFields).some(([k,v])=>record.replay[k]!==v)||record.replay.step!=null&&record.replay.step!==actual.step)throw Error('Replay policy execution binding differs')
  const lineage={capture:record.capture,replay:{...actual,...policyFields,workflowSha256,parserSha256,artifactId:artifact.id,artifactDigest:artifact.digest,generatedAt:record.replay.generatedAt}}
- verifyLineage({season,runId:actual.runId,jobId:actual.jobId,capturedAt:record.capture?.capturedAt,documentsSha256:record.capture?.documentsSha256,lineage,...(historical?{evidenceMode:'policy-replay'}:{})},{sourceCommit:actual.commit,parserSha256,...(historical?{version:3,slug,provenanceVersion:2,statisticsPolicy:record.statisticsPolicy}:{})})
+ verifyLineage({season,runId:actual.runId,jobId:actual.jobId,capturedAt:record.capture?.capturedAt,documentsSha256:record.capture?.documentsSha256,lineage,...(historical?{evidenceMode:'policy-replay'}:{})},{sourceCommit:actual.commit,parserSha256,...(historical?{version:slug==='de-regionalliga-suedwest'?3:4,slug,provenanceVersion:2,calendarReceiptSha256:receiptSha256,statisticsPolicy:record.statisticsPolicy}:{})})
  return lineage
 }
 const writerFiles=['uvoz-zapisnikov','uvoz-razporeda','lazni-vratarji','ugani-pozicije','ovrednoti-igralce'].flatMap(name=>zaprtje(`scripts/${name}.mjs`))
-export const replayFiles=[...new Set([...writerFiles,...sourceFiles,'scripts/viri/index.mjs','scripts/uvoz-zapisnikov.mjs','supabase/migrations/20261018180100_dfb_historical_statistics_v3.sql','supabase/migrations/20261018223000_dfb_reviewed_calendar_v4.sql','scripts/vklopi-nemcijo.mjs','scripts/dfb-artifacts.mjs','scripts/dfb-replay-proof.mjs','scripts/ponovi-dfb-regijo.mjs','scripts/preveri-zagona-dfb-regije.mjs','scripts/vklopi-dfb-regijo.mjs','scripts/dfb-offline.mjs','scripts/uvozi-dfb-regijo.mjs','scripts/dfb-current-reactivation.mjs','scripts/reconcile-dfb-current-players.mjs','scripts/policies/dfb-current-reactivation-20261018.json','supabase/migrations/20261018210000_dfb_current_player_reactivation.sql',replayWorkflow,'.github/workflows/uvoz-dfb-regije.yml','.github/workflows/vklop-dfb-regije.yml'])]
+export const replayFiles=[...new Set([...writerFiles,...sourceFiles,'scripts/viri/index.mjs','scripts/uvoz-zapisnikov.mjs','supabase/migrations/20261018180100_dfb_historical_statistics_v3.sql','supabase/migrations/20261018223000_dfb_reviewed_calendar_v4.sql','supabase/migrations/20261018231000_dfb_nord_west_historical_policy.sql','scripts/vklopi-nemcijo.mjs','scripts/dfb-artifacts.mjs','scripts/dfb-replay-proof.mjs','scripts/ponovi-dfb-regijo.mjs','scripts/preveri-zagona-dfb-regije.mjs','scripts/vklopi-dfb-regijo.mjs','scripts/dfb-offline.mjs','scripts/uvozi-dfb-regijo.mjs','scripts/dfb-current-reactivation.mjs','scripts/reconcile-dfb-current-players.mjs','scripts/policies/dfb-current-reactivation-20261018.json','supabase/migrations/20261018210000_dfb_current_player_reactivation.sql',replayWorkflow,'.github/workflows/uvoz-dfb-regije.yml','.github/workflows/vklop-dfb-regije.yml'])]
 export function verifyCode(commit,version){
- if(!/^[a-f0-9]{40}$/.test(commit)||![1,2,3].includes(version))throw Error('Invalid reviewed code identity')
+ if(!/^[a-f0-9]{40}$/.test(commit)||![1,2,3,4].includes(version))throw Error('Invalid reviewed code identity')
  execFileSync('git',['diff','--exit-code',commit,'--',...(version>=2?replayFiles:sourceFiles)],{stdio:'pipe'})
 }
 export async function verifySeason({slug,season,id,commit,dir}){
@@ -51,7 +52,7 @@ export async function verifySeason({slug,season,id,commit,dir}){
  }
  const summary=JSON.parse(downloaded.files.get('summary.json')??'null')
  if(summary?.slug!==slug||summary.season!==season||summary.generatedAt!==lineage.replay.generatedAt||(historical?(summary.strictCoverage!=null||summary.policyCoverage!==true||summary.strictStatisticsCoverage!==regenerated.checked.statisticsCoverage.strictStatisticsCoverage||JSON.stringify(summary.statisticsPolicy)!==JSON.stringify(record.statisticsPolicy)||JSON.stringify(summary.statisticsCoverage)!==JSON.stringify(regenerated.checked.statisticsCoverage)):summary.strictCoverage!==true)||summary.fixtures!==regenerated.checked.fixtures.length||summary.reports!==regenerated.reports.length||Object.entries(regenerated.binding).some(([k,v])=>summary[k]!==v))throw Error('Replay coverage summary mismatch')
- return {version:historical?3:2,...(historical?{statisticsPolicy:record.statisticsPolicy}:{}),proof:{season,runId:id,jobId:actual.jobId,captureCommit:commit,seasonJobPassed:true,lineage}}
+ return {version:historical?(slug==='de-regionalliga-suedwest'?3:4):2,...(historical?{statisticsPolicy:record.statisticsPolicy}:{}),proof:{season,runId:id,jobId:actual.jobId,captureCommit:commit,seasonJobPassed:true,lineage}}
 }
 async function main(){
  const [slug,commit,archive,current,out,archiveDir,currentDir]=process.argv.slice(2)
@@ -61,8 +62,8 @@ async function main(){
  for(const [season,id,dir]of[['2025/26',archive,archiveDir],['2026/27',current,currentDir]])results.push(await verifySeason({slug,season,id,commit,dir}))
  if(results[0].version!==results[1].version)throw Error('Mixed direct and replay executions are not supported')
  const version=results[0].version
- if(version===3&&JSON.stringify(results[0].statisticsPolicy)!==JSON.stringify(results[1].statisticsPolicy))throw Error('Mixed historical policies are not supported')
+ if(version>=3&&JSON.stringify(results[0].statisticsPolicy)!==JSON.stringify(results[1].statisticsPolicy))throw Error('Mixed historical policies are not supported')
  verifyCode(commit,/^de-regionalliga-(nord|west)$/.test(slug)?2:version)
- writeFileSync(out,JSON.stringify({version,...(version===3?{statisticsPolicy:results[0].statisticsPolicy}:{}),slug,sourceCommit:commit,sourceFilesIdentical:true,proof:results.map(r=>r.proof)})+'\n')
+ writeFileSync(out,JSON.stringify({version,...(version>=3?{statisticsPolicy:results[0].statisticsPolicy}:{}),slug,sourceCommit:commit,sourceFilesIdentical:true,proof:results.map(r=>r.proof)})+'\n')
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href)main().catch(e=>{console.error(e.message);process.exitCode=1})

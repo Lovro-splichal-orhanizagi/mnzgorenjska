@@ -556,13 +556,64 @@ kadra 2/5/5/3 in resničnega prihodnjega uradnega roka. V1/v2/v3 tudi v
 SQL zavrnejo vsak koledarski dokaz. Nordost in Südwestova pot v3 ostaneta
 ločena. Javnih podpisov RPC ni sprememb; pravica ostane samo servisna.
 
-V4 ne podpira `statisticsPolicy` in ne odpusti nobenega arhivskega ali
-tekočega zapisnika. Nord/West zato še potrebujeta točne pregledane
-zgodovinske izjeme ter sveže celotne tekoče zajeme. Noben lokalni test ali
-prejšnji zajem ne osveži izvornih časov in ne vklopi lige.
+Sam koledarski V4 ne odpusti nobenega arhivskega ali tekočega zapisnika.
+Ločena sestavljena zgodovinska pot spodaj podpira samo točno pregledani
+`statisticsPolicy`; sveži celotni tekoči zajemi ostanejo obvezni. Noben
+lokalni test ali prejšnji zajem ne osveži izvornih časov in ne vklopi lige.
 
 `node scripts/test-dfb-calendar-release-sql.mjs` zahteva izrecna
 `SUPABASE_DB_CONTAINER` in `SUPABASE_TEST_DB` odstranljive baze; vse
 fixture in mutacije razveljavi. Preveri obe množici identitet/dokazov in
 celotno shranjeno sezono s ponovljenimi pregledanimi usmerjenimi pari ter
 dosedanje regresije statistike, cen in rokov.
+
+## Točne zgodovinske izjeme Nord/West v sestavljenem v4
+
+Migracija `20261018231000` registrira samo spodnjih deset arhivskih izjem
+2025/26. Prvotni shranjeni zajem je po vseh že pregledanih popravkih dal
+Nord 304/306 in West 298/306 popolnih zapisnikov. Razlog, točni izvorni
+identiteti klubov, objavljeni datum/izid, URL in SHA ostanejo vezani na
+[skupni register](../../scripts/policies/historical-statistics-exclusions.json);
+[DFB dejstveni zapis](../../scripts/viri/dfb-historical-receipts.json) doda
+prvotni UTC, točno uro začetka, arhivsko prikazno ime kluba in nespremenjeno
+strogo diagnostiko. Nobena statistika igralca se ne rekonstruira.
+
+| liga | ID arhiva | preostala izvorna napaka |
+| --- | --- | --- |
+| Nord | 2405268 | manjkajoča postava/klop |
+| Nord | 2405441 | polčas v nasprotju s časovno označenim golom |
+| West | 2402287, 2402299, 2402306, 2402312, 2402325, 2402332, 2402346, 2402352 | manjkajoča postava/klop |
+
+Nordova vira objavita uri 19:30 in 16:00; Westovi 18:00, 19:30 ali 14:00.
+Ure se preverijo po točni tekmi. Nordov arhiv za izvorni
+`sv-werder-bremen-ii` objavi ime `Werder Bremen`; to ostane arhivsko ime,
+brez samodejne zamenjave s prikaznim imenom tekoče sezone.
+
+Manifest ostane **v4** in `provenanceVersion = 2`. Neobvezni
+`statisticsPolicy` je dovoljen samo za točno ligo, nespremenljivi SHA
+registrirane politike in datum resnične prihodnje prve fantasy tekme. Obe
+sezoni zahtevata dejanski uspešen policy replay; izvirni tekoči zajem mora
+biti strogo popoln in uspešen. Skupni SQL preverjevalnik koledarske oblike
+je isti za običajni in zgodovinski v4. Nobena različica manifesta, izvirna
+lineage ali ničelna statistika se ne prepiše za obhod drugih vrat.
+
+Ista servisna `prepare_dfb_historical_statistics` pred navadnim uvozom
+atomarno namesti samo resnične klube/kroge, točnih 2 oziroma 8 naslovov
+tekem in zaprte označbe. Liga mora biti neaktivna in brez uporabniških
+ekip. `starters`, `appearances` in `goals` ostanejo `null`;
+`imported_at` ostane NULL. Nameščeni označevalci se pred vsakim runtime
+uvozom v celoti preverijo in ti zapisniki se preskočijo pred zahtevkom.
+Nova ali drugače pokvarjena tekma nikoli ne dobi te izjeme.
+
+Isti javni servisni release RPC nato neodvisno primerja vse znane
+nastope/gole in vse nameščene naslove, preveri resnične trenutne vratarje,
+cene, veljaven kader 2/5/5/3 in prihodnji uradni rok. Südwestova različica
+v3 in Nordostov ločeni RPC ostaneta nespremenjena.
+
+`test-dfb-nord-west-historical.mjs` preveri izvirne bajte, identitete,
+nameščene označbe ter sestavljeni manifest.
+`test-dfb-nord-west-historical-sql.mjs` zahteva izrecno odstranljivo bazo,
+regiji poganja zaporedoma in vse spremembe razveljavi. Njegove posamezne
+postave/nastopi/goli so jasno označeni **TEST ONLY**; resnični so koledarski
+naslovi in točna nedosegljiva dokazila, testne individualne vrstice nikoli
+niso izvorni dokaz ali produkcijski paket.

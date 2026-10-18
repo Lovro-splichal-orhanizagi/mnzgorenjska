@@ -394,3 +394,7 @@ Servisni RPC `varen_vklop_dfb_regije` privzeto samo preveri stanje;
 Pregledani koledarji Nord/West uporabljajo ločen manifest DFB v4 in zasebna
 SQL vrata (`20261018223000`); vse statistike, cene in prihodnji rok ostanejo
 obvezni. Koledarski dokaz ne dovoljuje manjkajočih zgodovinskih statistik.
+
+Sestavljeni DFB v4 podpira točni zgodovinski politiki Nord2/West8
+(`20261018231000`), atomarno namestitev označb pred uvozom in ločeno
+preverjanje vseh znanih statistik. Tekoča sezona ostane strogo popolna.

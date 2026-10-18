@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { execFileSync } from 'node:child_process'
 import { pripravi, preveriOdobritev, actionsOnly, databaseCheck } from './vklopi-dfb-regijo.mjs'
+import { getHistoricalStatisticsPolicy } from './lib/historical-statistics-policy.mjs'
 import { loadApprovedDocuments } from './dfb-offline.mjs'
 export async function importApprovedDfbRegion({file,approvedSha,archiveDir,currentDir,proofFile},{run=execFileSync,fetchFn=globalThis.fetch}={}){
  const raw=readFileSync(file,'utf8'),m=preveriOdobritev(raw,approvedSha)
@@ -20,12 +21,12 @@ export async function importApprovedDfbRegion({file,approvedSha,archiveDir,curre
  const url=new URL('/rest/v1/competitions',base);url.search=new URLSearchParams({slug:`eq.${m.slug}`,select:'id,slug,active,source,source_policy,source_league_code,rok_pomak_ur'})
  const response=await fetchFn(url,{headers,signal:AbortSignal.timeout(30000)}),rows=await response.json(),c=rows?.[0]
  if(!response.ok||rows.length!==1||c.slug!==m.slug||c.active!==false||c.source!=='dfb'||c.source_league_code!==m.seasons[1].code||c.rok_pomak_ur!==6)throw Error('Refusing unknown/active/changed regional import target')
- if(m.version===3){
+ if(m.version===3||m.version===4&&m.statisticsPolicy!=null){
   if(c.source_policy!=null&&c.source_policy!==m.statisticsPolicy.id)throw Error('Refusing changed historical source policy')
   // The dedicated RPC validates this exact text again and installs metadata+
   // BOTH immutable headers atomically. Generic import never bootstraps partial sets.
   const response=await fetchFn(new URL('/rest/v1/rpc/prepare_dfb_historical_statistics',base),{method:'POST',headers,body:JSON.stringify({p_manifest:raw,p_sha256:approvedSha}),signal:AbortSignal.timeout(120000)}),prepared=await response.json()
-  if(!response.ok||prepared.prepared!==true||prepared.unavailableHistoricalCount!==2||prepared.manifestSha256!==approvedSha||prepared.firstFantasyPlayedOn!==m.statisticsPolicy.firstFantasyPlayedOn||!Number.isSafeInteger(prepared.prvi_krog)||!m.seasons[1].fixtures.some(f=>f.round===prepared.prvi_krog&&f.date===prepared.firstFantasyPlayedOn&&f.played===false))throw Error(`Historical bootstrap refused: ${prepared.message??response.status}`)
+  if(!response.ok||prepared.prepared!==true||prepared.unavailableHistoricalCount!==getHistoricalStatisticsPolicy(m.slug).entries.length||prepared.manifestSha256!==approvedSha||prepared.firstFantasyPlayedOn!==m.statisticsPolicy.firstFantasyPlayedOn||!Number.isSafeInteger(prepared.prvi_krog)||!m.seasons[1].fixtures.some(f=>f.round===prepared.prvi_krog&&f.date===prepared.firstFantasyPlayedOn&&f.played===false))throw Error(`Historical bootstrap refused: ${prepared.message??response.status}`)
  }
  const env={...process.env,SLFF_DFB_MANIFEST:resolve(file),SLFF_DFB_APPROVED_SHA:approvedSha,SLFF_DFB_ARCHIVE:resolve(archiveDir),SLFF_DFB_CURRENT:resolve(currentDir)}
  const step=(script,args=[])=>run(process.execPath,['--import',resolve('scripts/dfb-offline.mjs'),`scripts/${script}.mjs`,'--tekmovanje',m.slug,...args],{env,stdio:'inherit'})

@@ -189,6 +189,168 @@
           "reasonCode": "published_score_conflicts_with_recorded_goal_events"
         }
       ]
+    },
+    {
+      "id": "de-dfb-nord-2025-historical-unavailable-v1",
+      "provider": "dfb",
+      "sourcePolicy": "de-dfb-nord-2025-historical-unavailable-v1",
+      "competitionSlug": "de-regionalliga-nord",
+      "season": "2025/26",
+      "recordedAt": "2026-10-18T19:43:41.829454Z",
+      "approvalReference": "User authorized reviewed German historical exclusions; root task relay 2026-10-18. Recording time is not an unavailable user approval send time.",
+      "entries": [
+        {
+          "sourceMatchId": "2405268",
+          "sourceCompetitionId": "regionalliga-nord/2025-2026",
+          "sourcePhase": null,
+          "sourceRound": 4,
+          "playedOn": "2025-11-12",
+          "homeSourceClubId": "sv-werder-bremen-ii",
+          "awaySourceClubId": "altona-93",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/4-spieltag/sv-werder-bremen-ii-altona-93-2405268",
+          "rawSha256": "546a0578a0623346e3295397b98cb999550d8fa715ee07a5ed221b768ec24c19",
+          "observedHomeScore": 5,
+          "observedAwayScore": 1,
+          "reasonCode": "missing_lineups_and_individual_statistics"
+        },
+        {
+          "sourceMatchId": "2405441",
+          "sourceCompetitionId": "regionalliga-nord/2025-2026",
+          "sourcePhase": null,
+          "sourceRound": 22,
+          "playedOn": "2025-12-06",
+          "homeSourceClubId": "kickers-emden",
+          "awaySourceClubId": "hsc-hannover",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/22-spieltag/kickers-emden-hsc-hannover-2405441",
+          "rawSha256": "34a9f0090f190ebe15d54e40ab60225b92bd0cd4e91ad522bb8b69014dd6dbba",
+          "observedHomeScore": 1,
+          "observedAwayScore": 1,
+          "reasonCode": "contradictory_goal_timing"
+        }
+      ]
+    },
+    {
+      "id": "de-dfb-west-2025-historical-unavailable-v1",
+      "provider": "dfb",
+      "sourcePolicy": "de-dfb-west-2025-historical-unavailable-v1",
+      "competitionSlug": "de-regionalliga-west",
+      "season": "2025/26",
+      "recordedAt": "2026-10-18T19:43:41.831407Z",
+      "approvalReference": "User authorized reviewed German historical exclusions; root task relay 2026-10-18. Recording time is not an unavailable user approval send time.",
+      "entries": [
+        {
+          "sourceMatchId": "2402287",
+          "sourceCompetitionId": "regionalliga-west/2025-2026",
+          "sourcePhase": null,
+          "sourceRound": 12,
+          "playedOn": "2025-10-18",
+          "homeSourceClubId": "wuppertaler-sv",
+          "awaySourceClubId": "vfl-bochum-ii",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/12-spieltag/wuppertaler-sv-vfl-bochum-ii-2402287",
+          "rawSha256": "d5d18cbcb8b76e2a01151050abc6b57124426cf108883336a3a2bde6e80d60ff",
+          "observedHomeScore": 2,
+          "observedAwayScore": 2,
+          "reasonCode": "missing_lineups_and_individual_statistics"
+        },
+        {
+          "sourceMatchId": "2402299",
+          "sourceCompetitionId": "regionalliga-west/2025-2026",
+          "sourcePhase": null,
+          "sourceRound": 13,
+          "playedOn": "2025-10-25",
+          "homeSourceClubId": "borussia-moenchengladbach-ii",
+          "awaySourceClubId": "wuppertaler-sv",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/13-spieltag/borussia-moenchengladbach-ii-wuppertaler-sv-2402299",
+          "rawSha256": "dabf8ebd5c2026b1849ffa477b96fa5b25f95ecf90ffd2f810f8502f4d6fa87d",
+          "observedHomeScore": 2,
+          "observedAwayScore": 1,
+          "reasonCode": "missing_lineups_and_individual_statistics"
+        },
+        {
+          "sourceMatchId": "2402306",
+          "sourceCompetitionId": "regionalliga-west/2025-2026",
+          "sourcePhase": null,
+          "sourceRound": 14,
+          "playedOn": "2025-10-31",
+          "homeSourceClubId": "wuppertaler-sv",
+          "awaySourceClubId": "rot-weiss-oberhausen",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/14-spieltag/wuppertaler-sv-rot-weiss-oberhausen-2402306",
+          "rawSha256": "b3a3648ce1bc8e7bb7017c13b6a040e42167635b60f567acea3422b640eeb71b",
+          "observedHomeScore": 2,
+          "observedAwayScore": 3,
+          "reasonCode": "missing_lineups_and_individual_statistics"
+        },
+        {
+          "sourceMatchId": "2402312",
+          "sourceCompetitionId": "regionalliga-west/2025-2026",
+          "sourcePhase": null,
+          "sourceRound": 15,
+          "playedOn": "2025-11-09",
+          "homeSourceClubId": "fc-guetersloh",
+          "awaySourceClubId": "wuppertaler-sv",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/15-spieltag/fc-guetersloh-wuppertaler-sv-2402312",
+          "rawSha256": "930bc43649fb0dd1e92e5e2ed00b4e9138bca3a817455857635aa7069b0ed4df",
+          "observedHomeScore": 0,
+          "observedAwayScore": 0,
+          "reasonCode": "missing_lineups_and_individual_statistics"
+        },
+        {
+          "sourceMatchId": "2402325",
+          "sourceCompetitionId": "regionalliga-west/2025-2026",
+          "sourcePhase": null,
+          "sourceRound": 16,
+          "playedOn": "2025-11-22",
+          "homeSourceClubId": "wuppertaler-sv",
+          "awaySourceClubId": "fortuna-duesseldorf-ii",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/16-spieltag/wuppertaler-sv-fortuna-duesseldorf-ii-2402325",
+          "rawSha256": "cc878f107741ab43573a0e978375c114d4880db909cddab1e7270ff263e6a79e",
+          "observedHomeScore": 2,
+          "observedAwayScore": 4,
+          "reasonCode": "missing_lineups_and_individual_statistics"
+        },
+        {
+          "sourceMatchId": "2402332",
+          "sourceCompetitionId": "regionalliga-west/2025-2026",
+          "sourcePhase": null,
+          "sourceRound": 17,
+          "playedOn": "2025-11-29",
+          "homeSourceClubId": "bonner-sc",
+          "awaySourceClubId": "wuppertaler-sv",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/17-spieltag/bonner-sc-wuppertaler-sv-2402332",
+          "rawSha256": "4ec2d592f0fcfec7bb0a81116c3de1b818930d826e134c606005ec9a29f7ea45",
+          "observedHomeScore": 1,
+          "observedAwayScore": 1,
+          "reasonCode": "missing_lineups_and_individual_statistics"
+        },
+        {
+          "sourceMatchId": "2402346",
+          "sourceCompetitionId": "regionalliga-west/2025-2026",
+          "sourcePhase": null,
+          "sourceRound": 18,
+          "playedOn": "2025-12-05",
+          "homeSourceClubId": "fortuna-koeln",
+          "awaySourceClubId": "wuppertaler-sv",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/18-spieltag/fortuna-koeln-wuppertaler-sv-2402346",
+          "rawSha256": "282a2b0eae2f1b51353a55106677728b3daafee4947c06236c0db7c007b54b6f",
+          "observedHomeScore": 3,
+          "observedAwayScore": 0,
+          "reasonCode": "missing_lineups_and_individual_statistics"
+        },
+        {
+          "sourceMatchId": "2402352",
+          "sourceCompetitionId": "regionalliga-west/2025-2026",
+          "sourcePhase": null,
+          "sourceRound": 19,
+          "playedOn": "2026-01-24",
+          "homeSourceClubId": "wuppertaler-sv",
+          "awaySourceClubId": "ssvg-velbert",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/19-spieltag/wuppertaler-sv-ssvg-velbert-2402352",
+          "rawSha256": "123d7023ff8442359d925630eab0b89f6556306e13af08eccbe9886a94659b9b",
+          "observedHomeScore": 0,
+          "observedAwayScore": 1,
+          "reasonCode": "missing_lineups_and_individual_statistics"
+        }
+      ]
     }
   ]
 }
