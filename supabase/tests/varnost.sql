@@ -3589,6 +3589,42 @@ reset role;
 update klubski_racuni set preklican_at = null where user_id = 'e5c30000-0000-4000-8000-000000000001';
 select set_config('request.jwt.claim.sub','',true);
 
+-- Scout, stran Klub (20261018120000). Klub K = -913001; uporabnik ...0001 ima sedež.
+select pg_temp.preveri('scoutk: anon ne klice, notranje ne iz brskalnika',
+  not has_function_privilege('anon', 'public.scout_klub(bigint)', 'EXECUTE')
+  and has_function_privilege('authenticated', 'public.scout_klub(bigint)', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'scout.klub_jedro(bigint, bigint, bigint)', 'EXECUTE'));
+
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000005',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('scoutk: brez sedeza ni pregleda kluba', $$select scout_klub()$$);
+reset role;
+
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('scoutk: svoj klub, kader le vidni igralci',
+  (select (j->>'team_id')::bigint = -913001
+      and not (j->>'admin')::boolean
+      and (select array_agg((x->>'player_id')::bigint) from jsonb_array_elements(j->'kader') x) = array[-930007]::bigint[]
+      and jsonb_array_length(j->'vrzeli') = 2
+     from scout_klub() j));
+select pg_temp.preveri('scoutk: svoj klub tudi z izrecnim id', (select (scout_klub(-913001)->>'team_id')::bigint = -913001));
+select pg_temp.zavrnjeno('scoutk: ne-admin ne vidi tujega kluba', $$select scout_klub(-913002)$$);
+reset role;
+select pg_temp.preveri('scoutk: klic v dnevniku',
+  exists (select 1 from scout.dnevnik where team_id = -913001 and vrsta = 'klub'
+            and user_id = 'e5c30000-0000-4000-8000-000000000001'));
+
+update profiles set is_admin = true where id = 'e5c30000-0000-4000-8000-000000000001';
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('scoutk: admin vidi drug klub iste drzave',
+  (select (j->>'team_id')::bigint = -913002 and (j->>'admin')::boolean from scout_klub(-913002) j));
+select pg_temp.zavrnjeno('scoutk: admin ne vidi kluba druge drzave', $$select scout_klub(-930201)$$);
+reset role;
+update profiles set is_admin = false where id = 'e5c30000-0000-4000-8000-000000000001';
+select set_config('request.jwt.claim.sub','',true);
+
 -- Scout 3, opazovalni seznam (klub -913001, do 30).
 select pg_temp.preveri('scout3: anon nima seznama',
   not has_function_privilege('anon', 'public.scout_opazuj(bigint, boolean)', 'EXECUTE')
