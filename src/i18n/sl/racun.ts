@@ -12,6 +12,9 @@ export const racun = {
     racunUstvarjen:
       'Račun je ustvarjen. Na e-pošto smo poslali potrditveno povezavo — odpri jo in se vrni.',
     prijavljenKot: 'Prijavljen si kot {email}.',
+    posljiPotrditevZnova: 'Pošlji potrditveni e-mail znova',
+    potrditevPoslanaZnova:
+      'Poslali smo nov potrditveni e-mail. Poglej tudi v vsiljeno pošto.',
     zGooglom: 'Nadaljuj z Googlom',
     zApplom: 'Nadaljuj z Applom',
     aliZEposto: 'ali z e-pošto',

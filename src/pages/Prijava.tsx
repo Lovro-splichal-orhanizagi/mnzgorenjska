@@ -43,6 +43,10 @@ export default function Prijava() {
   const [napaka, setNapaka] = useState<string | null>(null)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
   const [posiljam, setPosiljam] = useState(false)
+  // Nepotrjen e-naslov: gumb za nov potrditveni mail (7.–8. 10. 2026 so šli
+  // ven prazni). Po kliku 60 s premora, ker GoTrue omeji maile na uro.
+  const [potrditevZnova, setPotrditevZnova] = useState(false)
+  const [premor, setPremor] = useState(false)
   const naslov =
     nacin === 'registracija'
       ? t('racun.prijava.naslovRegistracija')
@@ -77,10 +81,25 @@ export default function Prijava() {
     if (nativno && data.url) await Browser.open({ url: data.url })
   }
 
+  async function posljiPotrditevZnova() {
+    setPremor(true)
+    setTimeout(() => setPremor(false), 60_000)
+    setNapaka(null)
+    setSporocilo(null)
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: `${izvor()}${nazaj}` },
+    })
+    if (error) return setNapaka(napakaPrijave(error.message))
+    setSporocilo(t('racun.prijava.potrditevPoslanaZnova'))
+  }
+
   async function poslji(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setNapaka(null)
     setSporocilo(null)
+    setPotrditevZnova(false)
     setPosiljam(true)
 
     // Ponastavitev gesla pošlje povezavo na e-pošto; uporabnik se vrne na
@@ -111,9 +130,13 @@ export default function Prijava() {
         : await supabase.auth.signInWithPassword({ email, password: geslo })
 
     setPosiljam(false)
-    if (error) return setNapaka(napakaPrijave(error.message))
+    if (error) {
+      setPotrditevZnova(/email not confirmed/i.test(error.message))
+      return setNapaka(napakaPrijave(error.message))
+    }
     if (nacin === 'registracija') {
       dogodek('registracija', { nacin: 'eposta' })
+      setPotrditevZnova(true)
       return setSporocilo(t('racun.prijava.racunUstvarjen'))
     }
     navigate(nazaj)
@@ -240,6 +263,17 @@ export default function Prijava() {
         </button>
         {napaka && <p className="text-sm text-rose-400">{napaka}</p>}
         {sporocilo && <p className="text-sm text-gnl-300">{sporocilo}</p>}
+        {/* Preklop načina pobriše napako in sporočilo, s tem skrije tudi gumb. */}
+        {potrditevZnova && (napaka || sporocilo) && (
+          <button
+            type="button"
+            onClick={posljiPotrditevZnova}
+            disabled={premor}
+            className="gumb-tih min-h-11 w-full py-3 text-sm text-gnl-300 disabled:opacity-50"
+          >
+            {t('racun.prijava.posljiPotrditevZnova')}
+          </button>
+        )}
       </form>
 
       <div className="flex flex-col gap-1">

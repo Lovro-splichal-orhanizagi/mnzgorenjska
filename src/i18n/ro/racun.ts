@@ -13,6 +13,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     racunUstvarjen:
       'Contul a fost creat. Ți-am trimis pe e-mail un link de confirmare: deschide-l și revino aici.',
     prijavljenKot: 'Ești autentificat ca {email}.',
+    posljiPotrditevZnova: 'Retrimite e-mailul de confirmare',
+    potrditevPoslanaZnova:
+      'Ți-am trimis un nou e-mail de confirmare. Verifică și folderul de spam.',
     zGooglom: 'Continuă cu Google',
     zApplom: 'Continuă cu Apple',
     aliZEposto: 'sau cu e-mail',

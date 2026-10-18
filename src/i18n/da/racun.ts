@@ -13,6 +13,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     racunUstvarjen:
       'Din konto er oprettet. Vi har sendt et bekræftelseslink til din e-mail. Åbn det, og kom tilbage.',
     prijavljenKot: 'Du er logget ind som {email}.',
+    posljiPotrditevZnova: 'Send bekræftelsesmailen igen',
+    potrditevPoslanaZnova:
+      'Vi har sendt en ny bekræftelsesmail. Kig også i spam-mappen.',
     zGooglom: 'Fortsæt med Google',
     zApplom: 'Fortsæt med Apple',
     aliZEposto: 'eller med e-mail',

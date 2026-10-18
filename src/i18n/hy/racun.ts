@@ -14,6 +14,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     racunUstvarjen:
       'Հաշիվդ ստեղծված է։ Էլ. փոստիդ ուղարկեցինք հաստատման հղում. բաց արա այն և վերադարձիր։',
     prijavljenKot: 'Մուտք ես գործել որպես {email}։',
+    posljiPotrditevZnova: 'Կրկին ուղարկել հաստատման նամակը',
+    potrditevPoslanaZnova:
+      'Ուղարկեցինք նոր հաստատման նամակ։ Նայիր նաև սպամի թղթապանակում։',
     zGooglom: 'Շարունակել Google-ով',
     zApplom: 'Շարունակել Apple-ով',
     aliZEposto: 'կամ էլ. փոստով',

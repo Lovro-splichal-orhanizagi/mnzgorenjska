@@ -13,6 +13,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     racunUstvarjen:
       'Konts ir izveidots. Uz e-pastu nosūtījām apstiprinājuma saiti: atver to un atgriezies.',
     prijavljenKot: 'Tu esi pieteicies kā {email}.',
+    posljiPotrditevZnova: 'Nosūtīt apstiprinājuma e-pastu vēlreiz',
+    potrditevPoslanaZnova:
+      'Nosūtījām jaunu apstiprinājuma e-pastu. Paskaties arī mēstuļu mapē.',
     zGooglom: 'Turpināt ar Google',
     zApplom: 'Turpināt ar Apple',
     aliZEposto: 'vai ar e-pastu',
