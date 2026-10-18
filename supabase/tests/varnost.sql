@@ -4881,19 +4881,41 @@ insert into trgovina.motivi(id, slug, ime_sl, ime_en, cona, polja, sheme, aktive
    '[{"kljuc":"klasika","ime_sl":"Klasika","ime_en":"Classic","barve":["#1E8C45","#F4F4F0"]}]', false);
 insert into trgovina.motivi_izdelki(motiv_id, izdelek_id, doplacilo) values
   (-927201, -927201, 800), (-927202, -927201, 800), (-927203, -927201, 800);
+insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
+values (-927201, 'test-trg3-mladinci', 'Test mladinci', 'TTRG3M', false, (select id from countries where code='SI'), 'mnzg');
+insert into fantasy_teams(id,owner_id,name,competition_id,hisna,created_at) overriding system value
+values (-927211,'f7a20000-0000-4000-8000-000000000001','Mladi Tigri',-927201,false,now());
+-- Napaka z namigom in besedilom (da test ne uspe zaradi druge napake z istim namigom).
+create function pg_temp.napaka_sporocilo(p_opis text, p_sql text, p_hint text, p_vzorec text) returns void
+language plpgsql as $$
+declare v_hint text; v_msg text; v_ok boolean := false;
+begin
+  begin
+    execute p_sql;
+    raise exception using errcode = 'P9998', message = 'Napad je uspel';
+  exception
+    when sqlstate 'P9998' then null;
+    when others then
+      get stacked diagnostics v_hint = pg_exception_hint, v_msg = message_text;
+      v_ok := v_hint = p_hint and v_msg like p_vzorec;
+  end;
+  perform pg_temp.preveri(p_opis, v_ok);
+end;
+$$;
+grant execute on function pg_temp.napaka_sporocilo(text, text, text, text) to authenticated;
 
-select pg_temp.napaka('trgovina3: neznano polje motiva',
+select pg_temp.napaka_sporocilo('trgovina3: neznano polje motiva',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","barva":"x"},"shema":"klasika"}', null, 'sl')$$,
-  'trgovina-personalizacija');
+  'trgovina-personalizacija', '%neznano polje%');
 select pg_temp.napaka('trgovina3: neznan kljuc vhoda',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana"},"shema":"klasika","doplacilo":0}', null, 'sl')$$,
   'trgovina-personalizacija');
-select pg_temp.napaka('trgovina3: obvezno polje manjka',
+select pg_temp.napaka_sporocilo('trgovina3: obvezno polje manjka',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"st":9},"shema":"klasika"}', null, 'sl')$$,
-  'trgovina-personalizacija');
-select pg_temp.napaka('trgovina3: predolgo besedilo',
+  'trgovina-personalizacija', '%polje ime je obvezno%');
+select pg_temp.napaka_sporocilo('trgovina3: predolgo besedilo',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Abcdefghijklm"},"shema":"klasika"}', null, 'sl')$$,
-  'trgovina-personalizacija');
+  'trgovina-personalizacija', '%polju ime ni dovoljeno%');
 select pg_temp.napaka('trgovina3: zaljivka',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Kurac"},"shema":"klasika"}', null, 'sl')$$,
   'trgovina-personalizacija');
@@ -4909,9 +4931,9 @@ select pg_temp.napaka('trgovina3: stevke ne odprejo drugih znakov',
 select pg_temp.napaka('trgovina3: same stevke niso besedilo',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"22"},"shema":"klasika"}', null, 'sl')$$,
   'trgovina-personalizacija');
-select pg_temp.napaka('trgovina3: stevilka 100',
+select pg_temp.napaka_sporocilo('trgovina3: stevilka 100',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","st":100},"shema":"klasika"}', null, 'sl')$$,
-  'trgovina-personalizacija');
+  'trgovina-personalizacija', '%številka v polju st%');
 select pg_temp.napaka('trgovina3: stevilka kot niz',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","st":"9"},"shema":"klasika"}', null, 'sl')$$,
   'trgovina-personalizacija');
@@ -4922,30 +4944,40 @@ select pg_temp.napaka('trgovina3: leto v prihodnosti',
   format($q$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","leto":%s},"shema":"klasika"}', null, 'sl')$q$,
          extract(year from now())::int + 1),
   'trgovina-personalizacija');
-select pg_temp.napaka('trgovina3: izbira ni na seznamu',
+select pg_temp.napaka_sporocilo('trgovina3: izbira ni na seznamu',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","slogan":"Samo eno"},"shema":"klasika"}', null, 'sl')$$,
-  'trgovina-personalizacija');
-select pg_temp.napaka('trgovina3: napacna shema',
+  'trgovina-personalizacija', '%ni na seznamu%');
+select pg_temp.napaka_sporocilo('trgovina3: napacna shema',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana"},"shema":"nocna"}', null, 'sl')$$,
-  'trgovina-personalizacija');
+  'trgovina-personalizacija', '%barvna shema%');
 select pg_temp.napaka('trgovina3: neaktiven motiv',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv-skrit","polja":{"ime":"Ana"},"shema":"klasika"}', null, 'sl')$$,
   'trgovina-personalizacija');
-select pg_temp.napaka('trgovina3: motiv ne velja za izdelek',
+select pg_temp.napaka_sporocilo('trgovina3: motiv ne velja za izdelek',
   $$select trgovina.personaliziraj(-927202, '{"motiv":"test-motiv","polja":{"ime":"Ana"},"shema":"klasika"}', null, 'sl')$$,
-  'trgovina-personalizacija');
-select pg_temp.napaka('trgovina3: tuja ekipa',
+  'trgovina-personalizacija', '%ni na voljo za ta izdelek%');
+select pg_temp.napaka_sporocilo('trgovina3: tuja ekipa',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","ekipa":-927002},"shema":"klasika"}',
-    'f7a20000-0000-4000-8000-000000000001', 'sl')$$, 'trgovina-personalizacija');
-select pg_temp.napaka('trgovina3: hisna ekipa',
+    'f7a20000-0000-4000-8000-000000000001', 'sl')$$, 'trgovina-personalizacija', '%ni tvoja%');
+select pg_temp.napaka_sporocilo('trgovina3: hisna ekipa',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","ekipa":-927005},"shema":"klasika"}',
-    'f7a20000-0000-4000-8000-000000000005', 'sl')$$, 'trgovina-personalizacija');
+    'f7a20000-0000-4000-8000-000000000005', 'sl')$$, 'trgovina-personalizacija', '%ni tvoja%');
+select pg_temp.napaka_sporocilo('trgovina3: ekipa mladinske lige ni za motiv',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","ekipa":-927211},"shema":"klasika"}',
+    'f7a20000-0000-4000-8000-000000000001', 'sl')$$, 'trgovina-personalizacija', '%mladinske lige%');
+select pg_temp.preveri('trgovina3: neobvezno polje iz presledkov je prazno',
+  (select p.personalizacija->'polja' = '{"ime":"Ana"}'
+     from trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","slogan":"   "},"shema":"klasika"}', null, 'sl') p));
+select pg_temp.pade('trgovina3: koti cone so 4 pari stevil',
+  $$insert into trgovina.cone(izdelek_id, kljuc, slika, koti, sirina_mm, visina_mm) values (-927202, 'prsi', '', '[1,2,3,4]', 90, 90)$$);
+select pg_temp.pade('trgovina3: kot cone je par stevil',
+  $$insert into trgovina.cone(izdelek_id, kljuc, slika, koti, sirina_mm, visina_mm) values (-927202, 'prsi', '', '[[0,0],[1,0],[1,"x"],[0,1]]', 90, 90)$$);
 select pg_temp.napaka('trgovina3: ekipa zahteva prijavo',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","ekipa":-927001},"shema":"klasika"}', null, 'sl')$$,
   'trgovina-prijava');
-select pg_temp.napaka('trgovina3: prvak le za prvaka',
+select pg_temp.napaka_sporocilo('trgovina3: prvak le za prvaka',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv-prvak","polja":{"prvak":{"mini_liga_id":-927001,"sezona":"2025/26"}},"shema":"klasika"}',
-    'f7a20000-0000-4000-8000-000000000002', 'sl')$$, 'trgovina-personalizacija');
+    'f7a20000-0000-4000-8000-000000000002', 'sl')$$, 'trgovina-personalizacija', '%nisi prvak%');
 select pg_temp.napaka('trgovina3: nosilec motivov brez motiva se ne proda',
   $$select trgovina.personaliziraj(-927201, null, null, 'sl')$$, 'trgovina-personalizacija');
 select pg_temp.preveri('trgovina3: prvak dobi besedilo strezniku',
@@ -5007,6 +5039,29 @@ select pg_temp.preveri('trgovina3: admin izklopi motiv in ga odstrani z izdelka'
   and not trgovina_admin_motivi() @> '[{"id":-927201,"doplacila":[{"izdelek_id":-927202}]}]');
 select pg_temp.napaka('trgovina3: admin ne nastavi negativnega doplacila',
   $$select trgovina_admin_shrani_motiv('{"id":-927201,"doplacila":[{"izdelek_id":-927201,"doplacilo":-1}]}')$$, 'trgovina-vnos');
+select pg_temp.napaka_sporocilo('trgovina3: motiv le na nosilec s postopkom tiska',
+  $$select trgovina_admin_shrani_motiv('{"id":-927201,"doplacila":[{"izdelek_id":-927102,"doplacilo":100}]}')$$,
+  'trgovina-vnos', '%doplačilo motiva%');
+select pg_temp.napaka_sporocilo('trgovina3: vrstni red je celo stevilo',
+  $$select trgovina_admin_shrani_motiv('{"id":-927201,"vrstni_red":1.5}')$$, 'trgovina-vnos', '%neveljaven motiv%');
+select pg_temp.napaka_sporocilo('trgovina3: primer z neznano shemo',
+  $$select trgovina_admin_shrani_motiv('{"id":-927201,"primeri":[{"polja":{"ime":"Ana"},"shema":"nocna","izdelek":"test-trg3-majica","barva":"Črna"}]}')$$,
+  'trgovina-vnos', 'Primer 1:%');
+select pg_temp.napaka_sporocilo('trgovina3: primer z zaljivko',
+  $$select trgovina_admin_shrani_motiv('{"id":-927201,"primeri":[{"polja":{"ime":"Ana"},"shema":"klasika","izdelek":"test-trg3-majica","barva":"Črna"},
+     {"polja":{"ime":"Kurac"},"shema":"klasika","izdelek":"test-trg3-majica","barva":"Črna"}]}')$$,
+  'trgovina-vnos', 'Primer 2:%ni dovoljeno%');
+select pg_temp.napaka_sporocilo('trgovina3: primer za izdelek brez motiva',
+  $$select trgovina_admin_shrani_motiv('{"id":-927201,"primeri":[{"polja":{"ime":"Ana"},"shema":"klasika","izdelek":"test-trg3-drugo","barva":"Črna"}]}')$$,
+  'trgovina-vnos', 'Primer 1:%');
+select trgovina_admin_shrani_motiv('{"id":-927201,"primeri":[{"polja":{"ime":"FC 1. maj","st":9,"slogan":"Tretji polčas","ekipa":"FC Ponedeljek Zjutraj"},
+  "shema":"klasika","izdelek":"test-trg3-majica","barva":"Črna"}]}');
+select pg_temp.preveri('trgovina3: veljaven primer se shrani',
+  trgovina_admin_motivi() @> '[{"id":-927201,"primeri":[{"polja":{"ime":"FC 1. maj"}}]}]');
+select pg_temp.preveri('trgovina3: vsi zacetni primeri prestanejo preverjanje',
+  (select count(trgovina_admin_shrani_motiv(jsonb_build_object('id', e->'id', 'primeri', e->'primeri'))) = 6
+     from jsonb_array_elements(trgovina_admin_motivi()) e
+    where e->>'slug' in ('retro-dres', 'legenda', 'hangover-xi', 'kapetan', 'kralj-kafane', 'prvak-mini-lige')));
 select pg_temp.napaka('trgovina3: admin ne spremeni polj motiva',
   $$select trgovina_admin_shrani_motiv('{"id":-927201,"polja":[]}')$$, 'trgovina-vnos');
 reset role;

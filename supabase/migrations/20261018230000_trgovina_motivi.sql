@@ -17,7 +17,9 @@ create table trgovina.cone (
   kljuc       text not null check (kljuc ~ '^[a-z]+$'),
   barva       text,
   slika       text not null default '',
-  koti        jsonb not null check (jsonb_typeof(koti) = 'array' and jsonb_array_length(koti) = 4),
+  koti        jsonb not null check (jsonb_typeof(koti) = 'array' and jsonb_array_length(koti) = 4
+                and not jsonb_path_exists(koti, 'strict $[*] ? (@.type() != "array" || @.size() != 2)')
+                and not jsonb_path_exists(koti, 'strict $[*][*] ? (@.type() != "number")')),
   sirina_mm   int not null check (sirina_mm > 0),
   visina_mm   int not null check (visina_mm > 0),
   unique nulls not distinct (izdelek_id, kljuc, barva)
@@ -64,10 +66,53 @@ revoke all on trgovina.cone, trgovina.motivi, trgovina.motivi_izdelki from publi
 -- --------------------------------------------------------------------------
 -- Preverjanje motiva
 -- --------------------------------------------------------------------------
+-- Vrednost polja vrste besedilo, izbira, stevilka ali leto; vrne očiščeno
+-- vrednost ali sproži napako. Isto preverjanje velja za naročila in primere.
+create function trgovina.vrednost_polja(f jsonb, v jsonb) returns jsonb
+language plpgsql stable
+as $$
+declare
+  v_txt text;
+  v_st numeric;
+begin
+  case f->>'vrsta'
+  when 'besedilo' then
+    v_txt := case when jsonb_typeof(v) = 'string' then btrim(regexp_replace(v #>> '{}', '\s+', ' ', 'g')) end;
+    if v_txt is null or char_length(v_txt) not between 1 and coalesce((f->>'max')::int, 12)
+       or v_txt !~ '^[A-Za-zÀ-ÖØ-öø-ž0-9 .''&!?-]+$' or v_txt !~ '[A-Za-zÀ-ÖØ-öø-ž]'
+       or public.prepovedano_besedilo(v_txt) is not null then
+      raise exception 'Trgovina: besedilo v polju % ni dovoljeno.', f->>'kljuc' using hint = 'trgovina-personalizacija';
+    end if;
+    return to_jsonb(v_txt);
+  when 'izbira' then
+    if jsonb_typeof(v) <> 'string' or not coalesce(f->'moznosti', '[]'::jsonb) @> jsonb_build_array(v) then
+      raise exception 'Trgovina: izbira v polju % ni na seznamu.', f->>'kljuc' using hint = 'trgovina-personalizacija';
+    end if;
+    return v;
+  when 'stevilka', 'leto' then
+    v_st := case when jsonb_typeof(v) = 'number' then (v::text)::numeric end;
+    if v_st is null or v_st <> trunc(v_st)
+       or (f->>'vrsta' = 'stevilka' and v_st not between 0 and 99)
+       or (f->>'vrsta' = 'leto' and v_st not between 1950 and extract(year from now())) then
+      raise exception 'Trgovina: neveljavna številka v polju %.', f->>'kljuc' using hint = 'trgovina-personalizacija';
+    end if;
+    return to_jsonb(v_st::int);
+  else
+    raise exception 'Trgovina: neznana vrsta polja.' using hint = 'trgovina-personalizacija';
+  end case;
+end;
+$$;
+
+-- Prazno: manjka, null ali niz iz samih presledkov.
+create function trgovina.prazno_polje(v jsonb) returns boolean
+language sql immutable
+as $$ select v is null or v = 'null'::jsonb or (jsonb_typeof(v) = 'string' and btrim(v #>> '{}') = '') $$;
+
 -- Vhod {motiv: slug, polja: {kljuc: vrednost}, shema: kljuc}. Vrednosti:
 -- besedilo (črke, števke, presledek, .'&!?-) in izbira niz, stevilka/leto celo število, ekipa id kupčeve nehišne
--- fantasy ekipe, prvak {mini_liga_id, sezona}. Neobvezno polje sme manjkati
--- (null ali "" = manjka). Shrani {motiv, polja, shema, ime} — polja z
+-- fantasy ekipe, ne v mladinski ligi (pivski motivi), prvak {mini_liga_id, sezona}.
+-- Neobvezno polje sme manjkati (null ali samo presledki = manjka). Motiv ima
+-- največ eno polje ekipa ali prvak (fantasy_team_id je eden). Shrani {motiv, polja, shema, ime} — polja z
 -- natisnjenim besedilom (ekipa = ime ekipe, prvak = vrstica strežnika), ime =
 -- opis za pošto in admin; ekipa in prvak še fantasy_team_id (prvak tudi
 -- mini_liga_id, sezona).
@@ -121,7 +166,7 @@ begin
   for f in select x from jsonb_array_elements(m.polja) x loop
     v_kljuc := f->>'kljuc';
     v := v_polja->v_kljuc;
-    if v is null or v = 'null'::jsonb or v = '""'::jsonb then
+    if trgovina.prazno_polje(v) then
       if (f->>'obvezno')::boolean then
         raise exception 'Trgovina: polje % je obvezno.', v_kljuc using hint = 'trgovina-personalizacija';
       end if;
@@ -129,30 +174,9 @@ begin
     end if;
 
     case f->>'vrsta'
-    when 'besedilo' then
-      v_txt := case when jsonb_typeof(v) = 'string' then btrim(regexp_replace(v #>> '{}', '\s+', ' ', 'g')) end;
-      if v_txt is null or char_length(v_txt) not between 1 and coalesce((f->>'max')::int, 12)
-         or v_txt !~ '^[A-Za-zÀ-ÖØ-öø-ž0-9 .''&!?-]+$' or v_txt !~ '[A-Za-zÀ-ÖØ-öø-ž]'
-         or public.prepovedano_besedilo(v_txt) is not null then
-        raise exception 'Trgovina: besedilo v polju % ni dovoljeno.', v_kljuc using hint = 'trgovina-personalizacija';
-      end if;
-      v := to_jsonb(v_txt);
-
-    when 'izbira' then
-      if jsonb_typeof(v) <> 'string' or not coalesce(f->'moznosti', '[]'::jsonb) @> jsonb_build_array(v) then
-        raise exception 'Trgovina: izbira v polju % ni na seznamu.', v_kljuc using hint = 'trgovina-personalizacija';
-      end if;
+    when 'besedilo', 'izbira', 'stevilka', 'leto' then
+      v := trgovina.vrednost_polja(f, v);
       v_txt := v #>> '{}';
-
-    when 'stevilka', 'leto' then
-      v_st := case when jsonb_typeof(v) = 'number' then (v::text)::numeric end;
-      if v_st is null or v_st <> trunc(v_st)
-         or (f->>'vrsta' = 'stevilka' and v_st not between 0 and 99)
-         or (f->>'vrsta' = 'leto' and v_st not between 1950 and extract(year from now())) then
-        raise exception 'Trgovina: neveljavna številka v polju %.', v_kljuc using hint = 'trgovina-personalizacija';
-      end if;
-      v := to_jsonb(v_st::int);
-      v_txt := v_st::int::text;
 
     when 'ekipa' then
       if p_user is null then
@@ -166,6 +190,9 @@ begin
       end if;
       if v_id is null then
         raise exception 'Trgovina: ekipa ni tvoja.' using hint = 'trgovina-personalizacija';
+      end if;
+      if public.je_mladinska_liga((select ft.competition_id from public.fantasy_teams ft where ft.id = v_id)) then
+        raise exception 'Trgovina: ekipa mladinske lige ni za ta motiv.' using hint = 'trgovina-personalizacija';
       end if;
       if char_length(v_txt) > coalesce((f->>'max')::int, 24) or public.prepovedano_besedilo(v_txt) is not null then
         raise exception 'Trgovina: tega imena ekipe ne natisnemo.' using hint = 'trgovina-vnos';
@@ -334,7 +361,8 @@ begin
 end;
 $$;
 
-revoke all on function trgovina.personaliziraj_motiv(bigint, jsonb, uuid, text),
+revoke all on function trgovina.vrednost_polja(jsonb, jsonb), trgovina.prazno_polje(jsonb),
+  trgovina.personaliziraj_motiv(bigint, jsonb, uuid, text),
   trgovina.personaliziraj(bigint, jsonb, uuid, text) from public, anon, authenticated;
 
 -- --------------------------------------------------------------------------
@@ -425,19 +453,30 @@ end;
 $$;
 
 -- {id, aktiven?, vrstni_red?, primeri?, doplacila?: [{izdelek_id, doplacilo}]}; doplacilo null
--- motiv z izdelka odstrani. Polja in sheme ureja migracija (predloga mora imeti njihova mesta).
+-- motiv z izdelka odstrani; nosilec mora biti po naročilu s postopkom tiska. Primeri
+-- gredo skozi isto preverjanje polj kot naročila (ekipa in prvak kot natisnjeno
+-- besedilo), shema iz sheme, izdelek je nosilec motiva. Polja in sheme ureja
+-- migracija (predloga mora imeti njihova mesta).
 create function public.trgovina_admin_shrani_motiv(p jsonb) returns bigint
 language plpgsql security definer set search_path = public
 as $$
 declare
   v_id bigint;
   d jsonb;
+  m trgovina.motivi;
+  e jsonb;
+  f jsonb;
+  v jsonb;
+  v_n int := 0;
+  v_sporocilo text;
 begin
   perform trgovina.le_admin();
   if jsonb_typeof(p) is distinct from 'object' or jsonb_typeof(p->'id') is distinct from 'number'
      or exists (select 1 from jsonb_object_keys(p) k where k not in ('id', 'aktiven', 'vrstni_red', 'primeri', 'doplacila'))
      or (p ? 'aktiven' and jsonb_typeof(p->'aktiven') <> 'boolean')
-     or (p ? 'vrstni_red' and jsonb_typeof(p->'vrstni_red') <> 'number')
+     or (p ? 'vrstni_red' and (jsonb_typeof(p->'vrstni_red') <> 'number'
+                               or (p->>'vrstni_red')::numeric <> trunc((p->>'vrstni_red')::numeric)
+                               or (p->>'vrstni_red')::numeric not between -2147483648 and 2147483647))
      or (p ? 'primeri' and jsonb_typeof(p->'primeri') <> 'array')
      or (p ? 'doplacila' and jsonb_typeof(p->'doplacila') <> 'array') then
     raise exception 'Trgovina: neveljaven motiv.' using hint = 'trgovina-vnos';
@@ -456,7 +495,8 @@ begin
     if jsonb_typeof(d->'izdelek_id') is distinct from 'number'
        or coalesce(jsonb_typeof(d->'doplacilo'), 'null') not in ('number', 'null')
        or (d->>'doplacilo')::numeric < 0 or (d->>'doplacilo')::numeric <> trunc((d->>'doplacilo')::numeric)
-       or not exists (select 1 from trgovina.izdelki i where i.id = (d->>'izdelek_id')::bigint and not i.digitalni) then
+       or not exists (select 1 from trgovina.izdelki i where i.id = (d->>'izdelek_id')::bigint
+                         and i.po_narocilu and i.postopek is not null and not i.digitalni) then
       raise exception 'Trgovina: neveljavno doplačilo motiva.' using hint = 'trgovina-vnos';
     end if;
     if d->>'doplacilo' is null then
@@ -466,6 +506,45 @@ begin
       values (v_id, (d->>'izdelek_id')::bigint, (d->>'doplacilo')::int)
       on conflict (motiv_id, izdelek_id) do update set doplacilo = excluded.doplacilo;
     end if;
+  end loop;
+
+  select * into m from trgovina.motivi where id = v_id;
+  for e in select x from jsonb_array_elements(m.primeri) x loop
+    v_n := v_n + 1;
+    begin
+      if jsonb_typeof(e) <> 'object'
+         or exists (select 1 from jsonb_object_keys(e) k where k not in ('polja', 'shema', 'izdelek', 'barva'))
+         or jsonb_typeof(e->'polja') is distinct from 'object'
+         or jsonb_typeof(e->'barva') is distinct from 'string'
+         or not exists (select 1 from jsonb_array_elements(m.sheme) x where x->>'kljuc' = e->>'shema')
+         or not exists (select 1 from trgovina.motivi_izdelki mi join trgovina.izdelki i on i.id = mi.izdelek_id
+                         where mi.motiv_id = v_id and i.slug = e->>'izdelek')
+         or exists (select 1 from jsonb_object_keys(e->'polja') k
+                     where not exists (select 1 from jsonb_array_elements(m.polja) x where x->>'kljuc' = k)) then
+        raise exception 'Trgovina: neveljaven primer.';
+      end if;
+      for f in select x from jsonb_array_elements(m.polja) x loop
+        v := e->'polja'->(f->>'kljuc');
+        if trgovina.prazno_polje(v) then
+          if (f->>'obvezno')::boolean then
+            raise exception 'Trgovina: polje % je obvezno.', f->>'kljuc';
+          end if;
+        elsif f->>'vrsta' = 'ekipa' then
+          perform trgovina.vrednost_polja(f || jsonb_build_object('vrsta', 'besedilo', 'max', coalesce((f->>'max')::int, 24)), v);
+        elsif f->>'vrsta' = 'prvak' then
+          -- Kot besedilo_prvaka: "<uvod> <liga> 2025/26", največ 40 znakov, filter za ime lige.
+          if jsonb_typeof(v) <> 'string' or char_length(v #>> '{}') > 40 or v #>> '{}' !~ ' [0-9]{4}/[0-9]{2}$'
+             or public.prepovedano_besedilo(regexp_replace(v #>> '{}', ' [0-9]{4}/[0-9]{2}$', '')) is not null then
+            raise exception 'Trgovina: besedilo v polju % ni dovoljeno.', f->>'kljuc';
+          end if;
+        else
+          perform trgovina.vrednost_polja(f, v);
+        end if;
+      end loop;
+    exception when others then
+      get stacked diagnostics v_sporocilo = message_text;
+      raise exception 'Primer %: %', v_n, v_sporocilo using hint = 'trgovina-vnos';
+    end;
   end loop;
   return v_id;
 end;
@@ -518,15 +597,15 @@ insert into trgovina.motivi (slug, ime_sl, ime_en, opis_sl, opis_en, cona, polja
  'hrbet',
  '[{"kljuc":"ime","vrsta":"besedilo","oznaka_sl":"Ime na hrbtu","oznaka_en":"Name on the back","max":12,"obvezno":true,"privzeto":"NOVAK"},
    {"kljuc":"stevilka","vrsta":"stevilka","oznaka_sl":"Številka","oznaka_en":"Number","obvezno":true,"privzeto":9},
-   {"kljuc":"sponzor","vrsta":"besedilo","oznaka_sl":"Sponzor na prsih (gostilna, firma)","oznaka_en":"Chest sponsor (pub, company)","max":20,"obvezno":false,"privzeto":"Gostilna Pri Mici","cona":"prsi"},
+   {"kljuc":"sponzor","vrsta":"besedilo","oznaka_sl":"Sponzor na prsih (gostilna, firma)","oznaka_en":"Chest sponsor (pub, company)","max":20,"obvezno":false,"privzeto":"Bife Zadnji Žvižg","cona":"prsi"},
    {"kljuc":"leto","vrsta":"leto","oznaka_sl":"Ustanovljeno","oznaka_en":"Established","obvezno":false,"privzeto":1998}]',
  '[{"kljuc":"klasika","ime_sl":"Klasika zelena-bela","ime_en":"Classic green and white","barve":["#1E8C45","#F4F4F0","#0B3B1E"]},
    {"kljuc":"retro","ime_sl":"Retro rdeča-rumena","ime_en":"Retro red and yellow","barve":["#C8102E","#F6C700","#3A0A0F"]},
    {"kljuc":"nocna","ime_sl":"Nočna črna-zlata","ime_en":"Night black and gold","barve":["#D4A62A","#1A1A1A","#F3E3B0"]}]',
- '[{"polja":{"ime":"NOVAK","stevilka":9,"sponzor":"Gostilna Pri Mici","leto":1998},"shema":"klasika","izdelek":"majica-po-meri","barva":"Bela"},
-   {"polja":{"ime":"KOVAČ","stevilka":7,"sponzor":"Avtoservis Jože","leto":2004},"shema":"retro","izdelek":"majica-po-meri","barva":"Črna"},
-   {"polja":{"ime":"ZUPAN","stevilka":10,"sponzor":"Pizzerija Ciao Bella"},"shema":"nocna","izdelek":"pulover-po-meri","barva":"Črna"},
-   {"polja":{"ime":"HORVAT","stevilka":4,"sponzor":"Bar Pod Lipo","leto":1987},"shema":"retro","izdelek":"majica-po-meri","barva":"Bela"}]',
+ '[{"polja":{"ime":"NOVAK","stevilka":9,"sponzor":"Bife Zadnji Žvižg","leto":1998},"shema":"klasika","izdelek":"majica-po-meri","barva":"Bela"},
+   {"polja":{"ime":"KOVAČ","stevilka":7,"sponzor":"Bar Offside","leto":2004},"shema":"retro","izdelek":"majica-po-meri","barva":"Črna"},
+   {"polja":{"ime":"ZUPAN","stevilka":10,"sponzor":"Pizzerija Podaljšek"},"shema":"nocna","izdelek":"pulover-po-meri","barva":"Črna"},
+   {"polja":{"ime":"HORVAT","stevilka":4,"sponzor":"Bife Rumeni Karton","leto":1987},"shema":"retro","izdelek":"majica-po-meri","barva":"Bela"}]',
  10),
 ('legenda', 'Legenda nedeljske lige', 'Sunday League Legend',
  'Za tistega, ki igra že od nekdaj in še vedno prvi pride na igrišče. Ime, vzdevek, ki ga pozna vsa vas, in leto, ko se je vse začelo.',
@@ -551,7 +630,7 @@ insert into trgovina.motivi (slug, ime_sl, ime_en, opis_sl, opis_en, cona, polja
  '[{"kljuc":"jutro-po","ime_sl":"Jutro po","ime_en":"Morning after","barve":["#7FB77E","#F2B5C4","#2B3A2B"]},
    {"kljuc":"pivska","ime_sl":"Pivska jantarna","ime_en":"Lager amber","barve":["#E8A317","#FFF4D6","#5A3A0A"]},
    {"kljuc":"nocna","ime_sl":"Nočna črna-zlata","ime_en":"Night black and gold","barve":["#D4A62A","#1A1A1A","#F3E3B0"]}]',
- '[{"polja":{"ekipa":"FC Pivo Kranj","stevilka":11},"shema":"pivska","izdelek":"majica-po-meri","barva":"Črna"},
+ '[{"polja":{"ekipa":"FC Ponedeljek Zjutraj","stevilka":11},"shema":"pivska","izdelek":"majica-po-meri","barva":"Črna"},
    {"polja":{"ekipa":"Dinamo Kavč","stevilka":3},"shema":"jutro-po","izdelek":"majica-po-meri","barva":"Bela"},
    {"polja":{"ekipa":"Atletico Golaž","stevilka":8},"shema":"nocna","izdelek":"pulover-po-meri","barva":"Črna"},
    {"polja":{"ekipa":"Sporting Čevapčiči","stevilka":99},"shema":"pivska","izdelek":"majica-po-meri","barva":"Bela"}]',
@@ -593,7 +672,7 @@ insert into trgovina.motivi (slug, ime_sl, ime_en, opis_sl, opis_en, cona, polja
    {"kljuc":"zelena","ime_sl":"Igrišče zelena","ime_en":"Pitch green","barve":["#2E9E4F","#E9F6EC","#0B3B1E"]}]',
  '[{"polja":{"prvak":"Prvak mini lige Liga pri Šanku 2025/26"},"shema":"zlata","izdelek":"majica-po-meri","barva":"Črna"},
    {"polja":{"prvak":"Prvak mini lige Pisarna United 2024/25"},"shema":"srebrna","izdelek":"majica-po-meri","barva":"Bela"},
-   {"polja":{"prvak":"Mini league champion The Sofa Cup 2025/26"},"shema":"zelena","izdelek":"pulover-po-meri","barva":"Črna"}]',
+   {"polja":{"prvak":"Mini league champion Sofa Cup 2025/26"},"shema":"zelena","izdelek":"pulover-po-meri","barva":"Črna"}]',
  60)
 on conflict (slug) do nothing;
 
