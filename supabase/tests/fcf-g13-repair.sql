@@ -80,7 +80,9 @@ select pg_temp.g13_reject('changed price digest', 'update players set value=valu
 select pg_temp.g13_reject('changed opponent appearance digest', 'update appearances set yellow_cards=yellow_cards+1 where id=(select min(id) from appearances where team_id=8372)',null,'drift');
 select pg_temp.g13_reject('changed derived statistics digest','update statistika_igralcev set points=points+1 where player_id=313535',null,'drift');
 select pg_temp.g13_reject('changed fixture date', $$update matches set played_on=played_on+1 where id=427267$$);
-select pg_temp.g13_reject('invalid calendar direction', 'update matches set home_team_id=8378,away_team_id=8385 where id=427267');
+-- This wrong opponent is FK-valid, non-self and unique within R8. Reversing
+-- the pair would collide with the still-present surplus match309381.
+select pg_temp.g13_reject('invalid calendar opponent', 'update matches set home_team_id=8372 where id=427267');
 select pg_temp.g13_reject('unrecognized foreign key', 'create table public.g13_unknown_dependency(id int, team_id bigint references teams)');
 select pg_temp.g13_reject('Scout non-FK dependency', $$insert into scout.dnevnik(team_id,vrsta) values(10388,'isci')$$);
 -- A trigger is allowed to run, but not silently corrupt a protected field.

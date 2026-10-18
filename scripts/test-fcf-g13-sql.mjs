@@ -32,7 +32,7 @@ try {
       ['new match dependency','insert into goals(match_id,team_id,scorer_id) values(427258,10388,313535)'],
       ['new club dependency',"insert into klub_predstavitev(team_id,opis) values(10388,'TEST')"],
       ['FK retarget existing child','update klub_predstavitev set team_id=10388 where team_id=8372'],
-      ['existing appearance statistics','update appearances set yellow_cards=yellow_cards+1 where id=(select min(id) from appearances)'],
+      ['existing appearance statistics','update appearances set yellow_cards=yellow_cards+1 where id=(select min(id) from appearances where match_id=427263)'],
       ['new fantasy team',"insert into fantasy_teams(owner_id,name,competition_id) values('00000000-0000-4000-8000-000000000013','TEST',801)"],
       ['new Scout non-FK reference',"insert into scout.dnevnik(team_id,vrsta) values(10388,'isci')"],
       ['new FK DDL','create table public.g13_concurrent_fk(team_id bigint references teams)'],
