@@ -32,6 +32,13 @@ import { createClient } from '@supabase/supabase-js'
 import { locenaHkrati } from './hkratnost.mjs'
 import { vseVrstice } from './strani.mjs'
 
+if (process.argv.includes('--fcf-inventory-source-only')) {
+  try {
+    const { runFcfInventorySourceCoordinatorCLI } = await import('./fcf-inventory-source-coordination.mjs')
+    process.exit(await runFcfInventorySourceCoordinatorCLI({ args: process.argv.slice(2), env: process.env }))
+  } catch { console.error('FCF source-only coordination failed closed.'); process.exit(1) }
+}
+
 const arg = (ime) => {
   const i = process.argv.indexOf(ime)
   return i > -1 ? process.argv[i + 1] : null
@@ -122,6 +129,10 @@ const mojId = Number(GITHUB_RUN_ID)
 
 // Ali zagon drugega toka piše v iste vrstice kot ta?
 function seKrize(tok, naslov, id) {
+  if (tok === 'uvoz-fcf-zgodovina.yml') {
+    if (/^FCF history (cache-export|seed-stage) /.test(naslov ?? '')) return false
+    return !mojaDrzava || mojaDrzava === 'ES'
+  }
   // Catalan activation and the fixed public FCF reader always share ES scope.
   if (['vklop-katalonije.yml', 'fcf-javni-dokazi.yml'].includes(tok)) return !mojaDrzava || mojaDrzava === 'ES'
   if (['uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml'].includes(tok)) {
@@ -200,12 +211,41 @@ function obsegVzdrzevanja(tok, naslov) {
   return { pise: m[2] === 'pisi', drzava: ligaPoSlugu.get(m[1])?.drzava ?? drzavaVira.get(m[1]) ?? null }
 }
 
+// History inventory may remain active behind arbitrarily many newer exports.
+// Read the complete bounded REST enumeration in both directions, never latest50.
+function readFcfHistoryRuns() {
+  try {
+    if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(GITHUB_REPOSITORY)) throw Error('repository')
+    const result = [], seen = new Set()
+    let count = null
+    for (let page = 1; page <= 100; page++) {
+      const data = JSON.parse(execFileSync('gh', ['api', '--method', 'GET', `repos/${GITHUB_REPOSITORY}/actions/workflows/uvoz-fcf-zgodovina.yml/runs?per_page=100&page=${page}`], {
+        encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, timeout: 30000, stdio: ['ignore', 'pipe', 'pipe'],
+      }))
+      if (!Number.isSafeInteger(data.total_count) || data.total_count < 0 || data.total_count > 10000 || count !== null && count !== data.total_count || !Array.isArray(data.workflow_runs) || data.workflow_runs.length > 100) throw Error('pagination')
+      count = data.total_count
+      for (const row of data.workflow_runs) {
+        if (!Number.isSafeInteger(row.id) || row.id <= 0 || seen.has(row.id) || row.repository?.full_name !== GITHUB_REPOSITORY || row.path !== '.github/workflows/uvoz-fcf-zgodovina.yml' || row.event !== 'workflow_dispatch' || !Number.isSafeInteger(row.run_attempt) || row.run_attempt < 1 || !/^[a-f0-9]{40}$/.test(row.head_sha ?? '') || !['queued','in_progress','waiting','pending','requested','completed'].includes(row.status)) throw Error('run identity')
+        seen.add(row.id)
+        if (row.status === 'completed') continue
+        const startedAt = row.run_started_at ?? row.created_at
+        if (typeof startedAt !== 'string' || !startedAt.endsWith('Z') || !Number.isFinite(Date.parse(startedAt)) || startedAt < '2000') throw Error('ordering')
+        result.push({ databaseId: row.id, status: row.status, displayTitle: typeof row.display_title === 'string' ? row.display_title : '', startedAt })
+      }
+      if (seen.size === count) return result
+      if (seen.size > count || data.workflow_runs.length < 100) throw Error('missing page')
+    }
+    throw Error('page bound')
+  } catch { throw Error('FCF history run discovery incomplete; source held') }
+}
+
 if (samoTece) {
   const tecejo = []
-  for (const tok of ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']) {
-    const zagoni = JSON.parse(gh('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,status,displayTitle'))
+  for (const tok of ['uvoz-fcf-zgodovina.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']) {
+    const zagoni = tok === 'uvoz-fcf-zgodovina.yml' ? readFcfHistoryRuns() : JSON.parse(gh('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,status,displayTitle'))
     for (const z of zagoni) {
       if (z.status === 'completed') continue
+      if (tok === 'uvoz-fcf-zgodovina.yml' && !seKrize(tok, z.displayTitle, z.databaseId)) continue
       // Ročni uvoz nevklopljene lige ne piše v nič, kar preverba gleda.
       const slug = ligaZagona(tok, z.displayTitle)
       // Vklop lahko še neaktivno ligo med preverbo vključi: nanj čakamo.
@@ -221,11 +261,11 @@ if (samoTece) {
 
 for (let min = KORAK_MIN; min <= NAJVEC_MIN; min += KORAK_MIN) {
   const pred = []
-  const tokovi = ['fcf-javni-dokazi.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']
+  const tokovi = ['uvoz-fcf-zgodovina.yml', 'fcf-javni-dokazi.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']
   if (SKUPEN_VIR[mojaDrzava]) tokovi.push('grbi.yml')
   for (const tok of tokovi) {
     // Brez --status: tudi čakajoči (queued) starejši zagon mora priti prvi.
-    const zagoni = JSON.parse(
+    const zagoni = tok === 'uvoz-fcf-zgodovina.yml' ? readFcfHistoryRuns() : JSON.parse(
       await ghPocakaj('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,startedAt,status,displayTitle'),
     )
     for (const z of zagoni) {

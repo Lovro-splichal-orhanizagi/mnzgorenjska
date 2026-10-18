@@ -13,6 +13,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     racunUstvarjen:
       'Dein Konto ist angelegt. Wir haben dir einen Bestätigungslink per E-Mail geschickt: öffne ihn und komm zurück.',
     prijavljenKot: 'Du bist angemeldet als {email}.',
+    posljiPotrditevZnova: 'Bestätigungs-E-Mail erneut senden',
+    potrditevPoslanaZnova:
+      'Wir haben dir eine neue Bestätigungs-E-Mail geschickt. Schau auch im Spam-Ordner nach.',
     zGooglom: 'Weiter mit Google',
     zApplom: 'Weiter mit Apple',
     aliZEposto: 'oder mit E-Mail',
@@ -244,7 +247,7 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Widerspruch: Klicke im übernommenen Profil auf Mich in Scout verbergen oder schreibe an <eposta>info@slff.eu</eposta> mit einem Link zur Spielerseite. Innerhalb von 14 Tagen verbergen wir den Spieler in Scout in allen unseren Ligen dieses Landes, auch bei späteren Importen. Im Fantasy-Spiel bleibt er.',
     trgovinaNaslov: 'SLFF Shop (shop.slff.eu)',
     trgovinaKaj:
-      'Beim Kauf verarbeiten wir Name, E-Mail, Lieferadresse, gekaufte Produkte und Beträge, bei Anmeldung auch dein SLFF-Konto. Die Zahlung wickelt Stripe ab: Kartendaten sehen und speichern wir nicht. Name und Adresse erhält die Pošta Slovenije für die Zustellung. Um Missbrauch zu begrenzen, speichern wir bei einem nicht abgeschlossenen Kauf vorübergehend einen gehashten (nicht umkehrbaren) Wert der IP-Adresse; er wird bei Zahlung oder Ablauf des Kaufs gelöscht.',
+      'Beim Kauf verarbeiten wir Name, E-Mail, Lieferadresse, gekaufte Produkte und Beträge, bei Anmeldung auch dein SLFF-Konto. Die Zahlung wickelt Stripe ab: Kartendaten sehen und speichern wir nicht. Name und Adresse erhält die Pošta Slovenije für die Zustellung. Um Missbrauch zu begrenzen, speichern wir bei einem nicht abgeschlossenen Kauf vorübergehend einen gehashten (nicht umkehrbaren) Wert der IP-Adresse; er wird bei Zahlung oder Ablauf des Kaufs gelöscht. Der Personalisierungstext (Name, Nummer) und der Name des Fantasy-Teams auf dem Produkt sind Teil der Bestellung; den Text erhält auch die Druckerei, die das Produkt herstellt.',
     trgovinaPodlaga:
       'Rechtsgrundlage sind die Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO) und gesetzliche Pflichten (Buchhaltung, Steuern), für die gehashte IP-Adresse unser berechtigtes Interesse an der Missbrauchsverhinderung (Art. 6 Abs. 1 lit. f DSGVO). Verantwortlicher ist SPACE GUARDIAN, računalniško programiranje, d.o.o.',
     trgovinaHramba:

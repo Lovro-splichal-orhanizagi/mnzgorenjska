@@ -28,9 +28,10 @@ export function jeMladinska(slug) {
 
 // Hrvaške regijske lige: raven znotraj zveze po imenu. 4. NL (Rijeka, Sisak)
 // je ista raven kot Elitna ŽNL drugod, ena nad tamkajšnjo 1. ŽNL; vrstni red
-// preverjanja je pomemben (III pred II pred I).
+// preverjanja je pomemben (III pred II pred I). MŽNL (međužupanijska, npr.
+// Vinkovci-Osijek) je nad 1. ŽNL obeh županij, kakor Elitna ŽNL drugod.
 const HR_REGIJSKE = [
-  [/\b4\. NL\b|Elitna|Premier|Premijer/i, 1],
+  [/\b4\. NL\b|Elitna|Premier|Premijer|(^|\s)MŽNL\s/i, 1],
   [/(^|\s)(III\.?|3\.|Treća)\s/, 4],
   [/(^|\s)(II\.?|2\.|Druga)\s/, 3],
   [/(^|\s)(I\.|1\.|Prva|Jedinstvena prva)\s/, 2],

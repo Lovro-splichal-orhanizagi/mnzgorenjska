@@ -3,11 +3,16 @@
 // trgovina_izdelek(slug), plačilo pa jih vzame iz baze. Meje so iste kot v
 // trgovina_rezerviraj (20 vrstic, 20 kosov na vrstico); 50 skupaj preveri baza.
 import { useSyncExternalStore } from 'react'
+import { stabilno, veljavnaOblika, type Personalizacija } from './personalizacija'
 
 export interface Postavka {
   razlicica_id: number
   slug: string
   kolicina: number
+  /** Ista različica z drugačno personalizacijo je druga vrstica. */
+  personalizacija?: Personalizacija
+  /** Besedilo za prikaz v košarici (ime ekipe, prvak); baza ga sestavi sama. */
+  opis?: string
 }
 export interface Kosarica {
   postavke: Postavka[]
@@ -19,29 +24,34 @@ export const NAJVEC = 20
 export const EU27 = 'AT BE BG CY CZ DE DK EE ES FI FR GR HR HU IE IT LT LU LV MT NL PL PT RO SE SI SK'.split(' ')
 export const PRAZNA: Kosarica = { postavke: [], drzava: 'SI' }
 
-const omeji = (n: number): number => Math.max(0, Math.min(NAJVEC, Math.floor(n)))
+const omeji = (n: number, najvec = NAJVEC): number => Math.max(0, Math.min(najvec, Math.floor(n)))
 
-export function nastavi(k: Kosarica, razlicica_id: number, kolicina: number): Kosarica {
-  const n = omeji(kolicina)
+/** Istovetnost vrstice: različica in personalizacija. */
+export const kljuc = (p: { razlicica_id: number; personalizacija?: Personalizacija }): string =>
+  `${p.razlicica_id}|${p.personalizacija ? stabilno(p.personalizacija) : ''}`
+
+/** `najvec`: meja izdelka (značka 1, darilni bon 5), sicer 20. */
+export function nastavi(k: Kosarica, vrstica: string, kolicina: number, najvec = NAJVEC): Kosarica {
+  const n = omeji(kolicina, najvec)
   const postavke = n === 0
-    ? k.postavke.filter((p) => p.razlicica_id !== razlicica_id)
-    : k.postavke.map((p) => (p.razlicica_id === razlicica_id ? { ...p, kolicina: n } : p))
+    ? k.postavke.filter((p) => kljuc(p) !== vrstica)
+    : k.postavke.map((p) => (kljuc(p) === vrstica ? { ...p, kolicina: n } : p))
   return { ...k, postavke }
 }
 
-export function dodaj(k: Kosarica, razlicica_id: number, kolicina: number, slug: string): Kosarica {
-  const obstaja = k.postavke.find((p) => p.razlicica_id === razlicica_id)
-  if (obstaja) return nastavi(k, razlicica_id, obstaja.kolicina + kolicina)
-  const n = omeji(kolicina)
-  if (n === 0 || k.postavke.length >= NAJVEC) return k
-  return { ...k, postavke: [...k.postavke, { razlicica_id, slug, kolicina: n }] }
+export function dodaj(k: Kosarica, razlicica_id: number, kolicina: number, slug: string, personalizacija?: Personalizacija, opis?: string, najvec = NAJVEC): Kosarica {
+  const nova: Postavka = { razlicica_id, slug, kolicina: omeji(kolicina, najvec), ...(personalizacija && { personalizacija }), ...(opis && { opis }) }
+  const obstaja = k.postavke.find((p) => kljuc(p) === kljuc(nova))
+  if (obstaja) return nastavi(k, kljuc(nova), obstaja.kolicina + kolicina, najvec)
+  if (nova.kolicina === 0 || k.postavke.length >= NAJVEC) return k
+  return { ...k, postavke: [...k.postavke, nova] }
 }
 
-export const odstrani = (k: Kosarica, razlicica_id: number): Kosarica => nastavi(k, razlicica_id, 0)
+export const odstrani = (k: Kosarica, vrstica: string): Kosarica => nastavi(k, vrstica, 0)
 
-/** Seštevek v centih; postavke brez znane cene ne štejejo. */
-export const skupaj = (k: Kosarica, cene: Record<number, number>): number =>
-  k.postavke.reduce((s, p) => s + (cene[p.razlicica_id] ?? 0) * p.kolicina, 0)
+/** Seštevek v centih (cene po ključu vrstice, z doplačilom); postavke brez znane cene ne štejejo. */
+export const skupaj = (k: Kosarica, cene: Record<string, number>): number =>
+  k.postavke.reduce((s, p) => s + (cene[kljuc(p)] ?? 0) * p.kolicina, 0)
 
 export const kosov = (k: Kosarica): number => k.postavke.reduce((s, p) => s + p.kolicina, 0)
 
@@ -53,10 +63,15 @@ export function preberi(surovo: string | null): Kosarica {
   try {
     const v = JSON.parse(surovo ?? 'null') as Partial<Kosarica> | null
     const postavke = (Array.isArray(v?.postavke) ? v.postavke : [])
-      .filter((p): p is Postavka => Number.isSafeInteger(p?.razlicica_id) && p.razlicica_id > 0 && typeof p.slug === 'string' && omeji(p.kolicina) > 0)
-      .filter((p, n, vse) => vse.findIndex((q) => q.razlicica_id === p.razlicica_id) === n)
+      .filter((p): p is Postavka => Number.isSafeInteger(p?.razlicica_id) && p.razlicica_id > 0 && typeof p.slug === 'string' && omeji(p.kolicina) > 0
+        && (p.personalizacija === undefined || veljavnaOblika(p.personalizacija) !== null))
+      .filter((p, n, vse) => vse.findIndex((q) => kljuc(q) === kljuc(p)) === n)
       .slice(0, NAJVEC)
-      .map((p) => ({ razlicica_id: p.razlicica_id, slug: p.slug, kolicina: omeji(p.kolicina) }))
+      .map((p) => ({
+        razlicica_id: p.razlicica_id, slug: p.slug, kolicina: omeji(p.kolicina),
+        ...(p.personalizacija && { personalizacija: p.personalizacija }),
+        ...(typeof p.opis === 'string' && p.opis && { opis: p.opis.slice(0, 120) }),
+      }))
     const drzava = typeof v?.drzava === 'string' && EU27.includes(v.drzava) ? v.drzava : 'SI'
     return { postavke, drzava }
   } catch {
