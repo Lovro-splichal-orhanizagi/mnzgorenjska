@@ -489,8 +489,11 @@ slff.eu {
 			rewrite * /index.html
 			file_server
 		}
+		# no-store: the week-long Cache-Control of @staticne_slike stays on the response, and
+		# Cloudflare then kept a 404 for a crest requested before it was deployed (18. 10. 2026).
 		handle {
 			header Content-Type "text/plain; charset=utf-8"
+			header Cache-Control "no-store"
 			respond "{err.status_code} {err.status_text}" {err.status_code}
 		}
 	}
