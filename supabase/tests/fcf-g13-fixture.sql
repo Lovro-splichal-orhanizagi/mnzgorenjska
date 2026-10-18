@@ -18,8 +18,8 @@ insert into players(id,team_id,competition_id,first_name,last_name,full_name,pos
 select -600000-t.id*100-i,t.id,801,'Test',i::text,'TEST ONLY opponent '||t.id||' '||i,case when i=1 then 'GK' else 'DEF' end,6,4.5 from teams t cross join generate_series(1,20)i where t.id between 8372 and 8386;
 insert into matches(id,round_id,home_team_id,away_team_id,played_on,home_goals,away_goals,zapisnik_id,imported_at) overriding system value
 select (j->>'id')::bigint,(j->>'round_id')::bigint,(j->>'home_team_id')::bigint,(j->>'away_team_id')::bigint,(j->>'played_on')::date,
- case (j->>'id')::bigint when 309307 then 0 when 309324 then 2 when 309335 then 4 when 309352 then 7 when 427263 then 2 end,
- case (j->>'id')::bigint when 309307 then 2 when 309324 then 1 when 309335 then 0 when 309352 then 0 when 427263 then 1 end,
+ case (j->>'id')::bigint when 309307 then 0 when 309324 then 2 when 309335 then 4 when 309352 then 7 when 427263 then 2 else 0 end,
+ case (j->>'id')::bigint when 309307 then 2 when 309324 then 1 when 309335 then 0 when 309352 then 0 when 427263 then 1 else 0 end,
  case when (j->>'id')::bigint in(309307,309324,309335,309352,427263) then j->>'report' end,
  case when (j->>'id')::bigint in(309307,309324,309335,309352,427263) then '2026-10-18T00:00Z'::timestamptz end
 from g13_input,jsonb_array_elements((plan->'retained')||(plan->'drop'))j;

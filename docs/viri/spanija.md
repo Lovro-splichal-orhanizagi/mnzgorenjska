@@ -552,6 +552,9 @@ Spremenjeno stanje zahteva nov pregled. Ponovitev po uspehu je zavrnjena.
 SQL je samo sejni pomočnik v `scripts/fcf-g13-repair.sql`, brez migracije
 ali trajnega RPC. Preveri dejanski katalog vseh 63 tujih ključev, odvisnosti
 izbrisov, natančne ID-je/koledar, 21 registracij in nič fantasy ekip.
+Prazna tekma mora imeti shranjeno 0:0, brez `zapisnik_id`, `imported_at`,
+opozoril, kontumacije, oznake brez izida ali odvisnih vrstic. Sam rezultat
+0:0 ne zadošča: uvožena ali z zapisnikom povezana tekma se vedno zavrne.
 Zavrne tudi klubske profile, račune, naročnine in znane Scout reference brez
 FK. Zaklepi vrstic varujejo nove/obstoječe FK zapise, kratki SUE zaklepi
 ščitijo katalog; za Scout reference brez FK uporabi SHARE na tabelah.

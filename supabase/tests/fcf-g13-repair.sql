@@ -52,7 +52,9 @@ do $$ declare old jsonb; a jsonb; b jsonb; begin
  raise notice 'PASS deterministic preview without production DML';
 end $$;
 select pg_temp.g13_reject('wrong digest','select 1',repeat('0',64));
-select pg_temp.g13_reject('new score on drop','update matches set home_goals=0 where id=427258');
+select pg_temp.g13_reject('nonzero home score on drop','update matches set home_goals=1 where id=427258');
+select pg_temp.g13_reject('nonzero away score on drop','update matches set away_goals=1 where id=427258');
+select pg_temp.g13_reject('imported reported 0:0 on drop', $$update matches set home_goals=0,away_goals=0,zapisnik_id='es999999998',imported_at=now() where id=427258$$);
 select pg_temp.g13_reject('warning on drop', $$update matches set import_warnings=array['test warning'] where id=427258$$);
 select pg_temp.g13_reject('awarded drop','update matches set kontumacija=true where id=427258');
 select pg_temp.g13_reject('new report on drop', $$update matches set zapisnik_id='es999999999' where id=427258$$);
