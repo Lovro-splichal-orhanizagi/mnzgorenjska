@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {nativePlanFixture,nativeMatchFixture} from './fcf-native-plan-test-fixture.mjs'
+import {imeHash,regHash} from './anonimizacija.mjs'
 const api=await import('./fcf-target-native-plan.mjs').catch(()=>({}))
 const map=f=>{assert.equal(typeof api.planFcfNativeMapping,'function','pure native mapping planner exists');return api.planFcfNativeMapping(f)}
 const rows=f=>{assert.equal(typeof api.planFcfNativeMatchRows,'function','native-ID statistic row planner exists');return api.planFcfNativeMatchRows(f)}
@@ -17,6 +18,12 @@ for(const [slug,missing]of[['es-ct-segona-g1',14],['es-ct-tercera-g9',12]])test(
 test('full mapping accepts honest missing pending native IDs without ordinal guesses',()=>{
  const f=nativePlanFixture();f.databaseInventory.matches.forEach(m=>m.zapisnik_id=null)
  assert.equal(JSON.parse(map(f).proposalText).fixtures.length,240)
+})
+for(const slug of['es-ct-segona-g1','es-ct-tercera-g9'])test(`native fixture sides anchor ordinary ${slug} club after harmless display rename`,()=>{
+ const f=nativePlanFixture(slug),before=JSON.parse(map(f).proposalText),team=f.databaseInventory.teams.find(t=>!before.mappings.find(m=>m.teamId===t.id).existingExceptionAnchor)
+ team.name+=' renamed display'
+ const after=JSON.parse(map(f).proposalText)
+ assert.equal(after.mappings.find(m=>m.teamId===team.id).canonicalTeamName,team.name);assert.deepEqual(after.fixtures,before.fixtures)
 })
 test('later G9 mapping permits active G1 with users after applied cleanup',()=>{
  const f=nativePlanFixture('es-ct-tercera-g9');for(const c of f.databaseInventory.groups)c.source_policy='es-fcf-reviewed-history-v1'
@@ -44,8 +51,8 @@ test('reviewed mapping replay preserves original audit time while fresh current 
 for(const[name,mutate]of[
  ['changed fixture side',f=>{const m=f.databaseInventory.matches[20];[m.home_team_id,m.away_team_id]=[m.away_team_id,m.home_team_id]}],
  ['wrong actual native fixture',f=>f.databaseInventory.matches[0].zapisnik_id='es9999999'],
- ['duplicate canonical team name',f=>f.databaseInventory.teams[3].name=f.databaseInventory.teams[2].name],
- ['fuzzy name only',f=>f.databaseInventory.teams[4].name=f.databaseInventory.teams[4].name.toLowerCase()],
+ ['unanchored duplicate canonical team name',f=>{f.databaseInventory.matches.forEach(m=>m.zapisnik_id=null);f.databaseInventory.teams[3].name=f.databaseInventory.teams[2].name}],
+ ['unanchored fuzzy name only',f=>{f.databaseInventory.matches.forEach(m=>m.zapisnik_id=null);f.databaseInventory.teams[4].name=f.databaseInventory.teams[4].name.toLowerCase()}],
  ['missing fixture',f=>f.databaseInventory.matches.pop()],['foreign target team',f=>f.databaseInventory.teams[4].competition_id=790],
  ['duplicate native round',f=>f.sourceData.fixtures[30].round=1],
  ['category collision',f=>{const a=f.sourceData.clubs[0],b=f.sourceData.clubs[1];b.sourceCategoryId=a.sourceCategoryId}],
@@ -92,6 +99,27 @@ for(const[name,mutate]of[
  ['goal score discrepancy',f=>f.sourceData.fixtures.find(m=>m.id===f.sourceMatchId).homeGoals=2],
  ['goal event boolean missing',f=>delete f.sourceData.fixtures.find(m=>m.id===f.sourceMatchId).goals[0].avtogol],
 ])test(`native row plan refuses ${name}`,()=>{const f=nativeMatchFixture();mutate(f);assert.throws(()=>rows(f),/FCF_NATIVE_PLAN/)})
+for(const [name,competition_id,reason,useName]of[
+ ['same-league cleared registration tombstone',783,'ugovor',false],['same-country cross-league objection',790,'ugovor',false],['same-country name objection',790,'ugovor',true],['same-league ordinary inactivity needs permitted restoration',783,'neaktiven',false],
+])test(`native row plan preserves ${name}`,()=>{
+ const f=nativeMatchFixture(),p=f.databaseInventory.players[2],original={...p};Object.assign(p,{reg_st:null,full_name:'#'+p.id,anonimiziran_at:'2026-10-17T00:00:00Z',anonimiziran_razlog:reason})
+ if(competition_id!==783)f.databaseInventory.players.splice(2,1)
+ f.databaseInventory.identityPrivacy.matches.push({player_id:p.id,competition_id,country_id:34,kljuc:useName?imeHash(34,original.full_name):regHash(34,original.reg_st),anonimiziran_razlog:reason,anonimiziran_at:p.anonimiziran_at})
+ assert.throws(()=>rows(f),/FCF_NATIVE_PLAN.*privacy|FCF_NATIVE_PLAN.*protected|FCF_NATIVE_PLAN.*restoration/)
+})
+for(const [name,mutate]of[
+ ['missing projection',f=>delete f.databaseInventory.identityPrivacy],['incomplete query',f=>f.databaseInventory.identityPrivacy.complete=false],['unchecked native key',f=>f.databaseInventory.identityPrivacy.checkedKeys.splice(0,1)],['wrong country scope',f=>f.databaseInventory.identityPrivacy.countryId=999],
+])test(`native identity refuses ${name}`,()=>{const f=nativeMatchFixture();mutate(f);assert.throws(()=>rows(f),/FCF_NATIVE_PLAN/)})
+test('unrelated anonymized legacy row and other-league inactivity do not hold a genuine new native player',()=>{
+ const f=nativeMatchFixture();f.databaseInventory.players.push({id:700001,competition_id:783,reg_st:null,full_name:'#700001',anonimiziran_at:'2026-10-17T00:00:00Z',anonimiziran_razlog:'ugovor'})
+ f.databaseInventory.identityPrivacy.matches.push({player_id:700001,competition_id:783,country_id:34,kljuc:regHash(34,99999999),anonimiziran_at:'2026-10-17T00:00:00Z',anonimiziran_razlog:'ugovor'},{player_id:700002,competition_id:790,country_id:34,kljuc:regHash(34,10200),anonimiziran_at:'2026-10-17T00:00:00Z',anonimiziran_razlog:'neaktiven'})
+ assert.equal(rows(f).players.find(p=>p.reg_st===10200).player_id,null)
+})
+test('ambiguous same-country protected matches never become a newly identified player',()=>{
+ const f=nativeMatchFixture()
+ f.databaseInventory.identityPrivacy.matches=[700001,700002].map(player_id=>({player_id,competition_id:783,country_id:34,kljuc:regHash(34,10200),anonimiziran_at:'2026-10-17T00:00:00Z',anonimiziran_razlog:'ugovor'}))
+ assert.throws(()=>rows(f),/FCF_NATIVE_PLAN.*protected|FCF_NATIVE_PLAN.*privacy/)
+})
 test('pending and historical fixtures project zero individual rows without inventing statistics',()=>{
  const f=nativeMatchFixture()
  for(const status of['pending','unavailable_historical']){

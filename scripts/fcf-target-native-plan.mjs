@@ -5,6 +5,7 @@
 import {readFileSync} from 'node:fs'
 import {createHash} from 'node:crypto'
 import {razpakiraj} from './klubi.mjs'
+import {imeHash,regHash} from './anonimizacija.mjs'
 import {getHistoricalStatisticsPolicy,historicalStatisticsPolicySha256 as fingerprint} from './lib/historical-statistics-policy.mjs'
 import {validateFcfCurrentReleaseCalendar} from './fcf-historical-release.mjs'
 import {validateFcfTargetReleaseInventory} from './fcf-target-release.mjs'
@@ -18,7 +19,7 @@ function context(input){
  const {targetSlug,sourceData:s,databaseInventory:d,now=Date.now(),writerCommit}=input
  if(!Object.hasOwn(targets,targetSlug)||!s||s.targetSlug!==targetSlug||s.competition?.id!==targets[targetSlug]||s.competition?.slug!==targetSlug||!Number.isFinite(now)||!/^[a-f0-9]{40}$/.test(writerCommit??'')||!/^[a-f0-9]{40}$/.test(s.binding?.sourceCommit??'')||!/^[a-f0-9]{64}$/.test(s.binding?.sourceFingerprintSha256??'')||s.binding.sourceClaimState!=='consumed')fail('exact selected target, original consumed source binding and writer commit required')
  try{validateFcfTargetReleaseInventory({targetSlug,databaseInventory:d,cleanupPhase:d?.groups?.every(g=>g.source_policy===null)?'prepared':'applied',now})}catch(e){fail(e.message)}
- if(!Array.isArray(d.teams)||d.teams.length!==16||d.teams.some(t=>!id(t.id)||t.competition_id!==targets[targetSlug]||typeof t.name!=='string'||!t.name)||new Set(d.teams.map(t=>t.id)).size!==16||new Set(d.teams.map(t=>razpakiraj(t.name))).size!==16)fail('sixteen unique canonical selected-target teams required')
+ if(!Array.isArray(d.teams)||d.teams.length!==16||d.teams.some(t=>!id(t.id)||t.competition_id!==targets[targetSlug]||typeof t.name!=='string'||!t.name)||new Set(d.teams.map(t=>t.id)).size!==16)fail('sixteen unique canonical selected-target teams required')
  if(!Array.isArray(d.rounds)||d.rounds.length!==30||d.rounds.some(r=>!id(r.id)||r.competition_id!==targets[targetSlug]||r.season!=='2026/27'||!Number.isInteger(r.number)||r.number<1||r.number>30)||new Set(d.rounds.map(r=>r.id)).size!==30||new Set(d.rounds.map(r=>r.number)).size!==30)fail('exact current thirty-round inventory required')
  if(!Array.isArray(d.matches)||d.matches.length!==240||d.matches.some(m=>!id(m.id)||!d.rounds.some(r=>r.id===m.round_id)||!d.teams.some(t=>t.id===m.home_team_id)||!d.teams.some(t=>t.id===m.away_team_id)||m.home_team_id===m.away_team_id||!Object.hasOwn(m,'zapisnik_id'))||new Set(d.matches.map(m=>m.id)).size!==240)fail('exact current240 fixture inventory required')
  if(!Array.isArray(s.fixtures)||s.fixtures.length!==240||!Array.isArray(s.clubs)||s.clubs.length!==16)fail('full native240/16 source projection required')
@@ -49,15 +50,29 @@ function exceptionAnchors(bindings){
  return anchors
 }
 function mapping(input={},auditedUTC){
- const {targetSlug,s,d,now,writerCommit,policy,calendar}=context(input),anchors=exceptionAnchors(input.existingExceptionBindings),usedTeams=new Set()
+ const {targetSlug,s,d,now,writerCommit,policy,calendar}=context(input),exceptions=exceptionAnchors(input.existingExceptionBindings),anchors=new Map(exceptions),usedTeams=new Set()
  auditedUTC??=new Date(now).toISOString()
  const stamp=Date.parse(auditedUTC)
  if(!Number.isFinite(stamp)||stamp>now||now-stamp>24*3600000)fail('original proposal audit clock is stale/future')
+ // Actual report IDs/rounds/sides anchor ordinary native clubs before any name
+ // bootstrap. Display changes cannot erase a proven native team identity.
+ const nativeFixtures=new Map(s.fixtures.map(f=>[f.id,f])),seenNative=new Set()
+ for(const m of d.matches){
+  if(m.zapisnik_id===null)continue
+  const f=nativeFixtures.get(m.zapisnik_id),round=d.rounds.find(r=>r.id===m.round_id)
+  if(!f||round.number!==f.round||seenNative.has(m.zapisnik_id))fail('persisted native fixture/round anchor differs or duplicates')
+  seenNative.add(m.zapisnik_id)
+  f.clubs.forEach((c,side)=>{
+   const k=key(c),team=side?m.away_team_id:m.home_team_id
+   if(anchors.has(k)&&anchors.get(k)!==team)fail('conflicting native fixture/exception side anchors')
+   anchors.set(k,team)
+  })
+ }
  const mappings=calendar.clubs.map(c=>{
   const anchored=anchors.get(key(c)),candidates=anchored?d.teams.filter(t=>t.id===anchored):d.teams.filter(t=>razpakiraj(t.name)===razpakiraj(c.name))
   if(candidates.length!==1||usedTeams.has(candidates[0].id))fail('native team has no unique canonical target resolution')
   const team=candidates[0];usedTeams.add(team.id)
-  return{nativeClubId:c.sourceClubId,nativeCategoryId:c.sourceCategoryId,sourceName:c.name,teamId:team.id,canonicalTeamName:team.name,existingExceptionAnchor:anchored!=null,evidenceFixtureIds:s.fixtures.filter(f=>f.clubs.some(x=>key(x)===key(c))).map(f=>f.id).sort()}
+  return{nativeClubId:c.sourceClubId,nativeCategoryId:c.sourceCategoryId,sourceName:c.name,teamId:team.id,canonicalTeamName:team.name,existingExceptionAnchor:exceptions.has(key(c)),evidenceFixtureIds:s.fixtures.filter(f=>f.clubs.some(x=>key(x)===key(c))).map(f=>f.id).sort()}
  })
  const byNative=new Map(mappings.map(m=>[`${m.nativeClubId}/${m.nativeCategoryId}`,m])),usedMatches=new Set(),fixtures=[]
  for(const f of s.fixtures){
@@ -91,6 +106,18 @@ export function verifyFcfNativeMappingProposal(input={}){
  if(rebuilt.proposalText!==text||rebuilt.proposalSha256!==hash)fail('proposal differs from current native identity derivation')
  return rebuilt
 }
+function privacyProjection(d,f,targetSlug){
+ const p=d.identityPrivacy,c=d.groups.find(g=>g.slug===targetSlug)
+ if(!p||p.schemaVersion!==1||p.kind!=='fcf-native-privacy-projection'||p.countryCode!=='ES'||!id(p.countryId)||p.countryId!==c.country_id||p.targetCompetitionId!==c.id||p.method!=='explicitBEGIN_READ_ONLY_ROLLBACK'||p.capturedUTC!==d.capturedUTC||p.complete!==true||!Array.isArray(p.checkedKeys)||new Set(p.checkedKeys).size!==p.checkedKeys.length||p.checkedKeys.some(k=>!/^[a-f0-9]{64}$/.test(k))||!Array.isArray(p.matches))fail('complete fresh country-scoped identity privacy projection required')
+ for(const a of f.appearances)if(!p.checkedKeys.includes(regHash(p.countryId,a.regSt))||!p.checkedKeys.includes(imeHash(p.countryId,a.ime)))fail('privacy projection did not check every native registration/name key')
+ const seen=new Set()
+ for(const m of p.matches){
+  const k=`${m.player_id}/${m.kljuc}`
+  if(!id(m.player_id)||!id(m.competition_id)||m.country_id!==p.countryId||!/^[a-f0-9]{64}$/.test(m.kljuc??'')||!['ugovor','neaktiven'].includes(m.anonimiziran_razlog)||!Number.isFinite(Date.parse(m.anonimiziran_at))||seen.has(k))fail('privacy match projection is ambiguous/incomplete')
+  seen.add(k)
+ }
+ return p
+}
 /** One-match native-ID rows for a future atomic importer, never a DB write. */
 export function planFcfNativeMatchRows(input={}){
  const mapping=JSON.parse(planFcfNativeMapping(input).proposalText),{sourceData:s,databaseInventory:d,sourceMatchId}=input,f=s.fixtures.find(f=>f.id===sourceMatchId),m=mapping.fixtures.find(m=>m.sourceMatchId===sourceMatchId)
@@ -98,13 +125,16 @@ export function planFcfNativeMatchRows(input={}){
  if(!Array.isArray(d.players)||d.players.some(p=>!id(p.id)||p.competition_id!==targets[input.targetSlug])||new Set(d.players.map(p=>p.id)).size!==d.players.length)fail('selected current player inventory required')
  if(['pending','unavailable_historical'].includes(f.statisticsStatus))return freeze({sourceMatchId,matchId:m.matchId,statisticsStatus:f.statisticsStatus,players:[],appearances:[],goals:[]})
  if(f.statisticsStatus!=='available'||!Array.isArray(f.appearances)||!Array.isArray(f.goals))fail('strict complete native match facts required')
+ const privacy=privacyProjection(d,f,input.targetSlug)
  const byReg=new Map(),players=[],appearances=[],seen=new Set()
  for(const a of f.appearances){
   if(!id(a.regSt)||![0,1].includes(a.ekipaIdx)||seen.has(a.regSt)||typeof a.ime!=='string'||!a.ime.trim()||typeof a.zacetnik!=='boolean'||typeof a.vratar!=='boolean'||![a.minutaOd,a.minutaDo,a.minute].every(Number.isInteger)||a.minutaOd<0||a.minutaDo>90||a.minute!==a.minutaDo-a.minutaOd||a.minute<0)fail('native appearance identity/interval differs; no name or shirt fallback')
   if(!['goli','avtogoli','goliIzEnajstmetrovke','zgreseneEnajstmetrovke','rumeni','rdeci','prejetiGoli'].every(k=>Number.isInteger(a[k])&&a[k]>=0)||typeof a.cleanSheet!=='boolean')fail('complete native appearance statistic fields required')
   seen.add(a.regSt)
   const found=d.players.filter(p=>p.reg_st===a.regSt)
-  if(found.length>1||found.some(p=>p.anonimiziran_at!=null)||!found.length&&d.players.some(p=>p.reg_st==null&&p.full_name===a.ime))fail('ambiguous/unregistered/anonymized native player identity')
+  const keys=[regHash(privacy.countryId,a.regSt),imeHash(privacy.countryId,a.ime)],protectedMatches=privacy.matches.filter(p=>keys.includes(p.kljuc)&&(p.competition_id===targets[input.targetSlug]||p.anonimiziran_razlog==='ugovor'))
+  if(protectedMatches.length)fail(protectedMatches.every(p=>p.anonimiziran_razlog==='neaktiven')?'privacy inactivity restoration requires the separately reviewed normal route':'protected privacy identity cannot be emitted as a named player')
+  if(found.length>1||found.some(p=>p.anonimiziran_at!=null||p.anonimiziran_razlog!=null)||!found.length&&d.players.some(p=>p.reg_st==null&&p.full_name===a.ime))fail('ambiguous/unregistered/anonymized native player identity')
   const p=found[0],teamId=a.ekipaIdx===0?m.homeTeamId:m.awayTeamId
   const officialGK=a.vratar&&(!p||p.position_source!=='admin'&&(p.position==null||['neznano','ugibanje'].includes(p.position_source)))
   const player={reg_st:a.regSt,player_id:p?.id??null,team_id:teamId,full_name:a.ime,position:officialGK?'GK':p?.position??null,position_source:officialGK?'zapisnik':p?.position_source??'neznano'}

@@ -2,7 +2,11 @@
 import {readFileSync} from 'node:fs'
 import {calendarFixture,packetFixture} from './fcf-release-test-fixture.mjs'
 import {getHistoricalStatisticsPolicy} from './lib/historical-statistics-policy.mjs'
+import {imeHash,regHash} from './anonimizacija.mjs'
 export const now=Date.parse('2026-10-18T14:00:00Z'),writerCommit='b'.repeat(40)
+export function privacyProjection(competitionId,appearances,capturedUTC){
+ return{schemaVersion:1,kind:'fcf-native-privacy-projection',countryCode:'ES',countryId:34,targetCompetitionId:competitionId,method:'explicitBEGIN_READ_ONLY_ROLLBACK',capturedUTC,complete:true,checkedKeys:[...new Set(appearances.flatMap(a=>[regHash(34,a.regSt),imeHash(34,a.ime)]))].sort(),matches:[]}
+}
 const anchors={'4109388':[321646,28706,8574,8575],'4116215':[297199,27227,8195,8188],'4118352':[306164,27616,8304,8305],'4118358':[306171,27617,8301,8298]}
 export function nativePlanFixture(targetSlug='es-ct-segona-g1'){
  const id=targetSlug==='es-ct-segona-g1'?783:797,start=id===783?4109388:4118349,policy=getHistoricalStatisticsPolicy(targetSlug)
@@ -46,5 +50,7 @@ export function nativeMatchFixture(){
  appearances.push({...appearances[3],regSt:10200,ime:'SYNTHETIC SUBSTITUTE',st:12,zacetnik:false,minutaOd:61,minutaDo:90,minute:29})
  Object.assign(match,{appearances,goals:[{regSt:10002,ekipaIdx:0,ime:'SYNTHETIC PLAYER 10002',st:3,minuta:35,avtogol:false,enajstmetrovka:false,rezultat:[1,0]}]})
  f.databaseInventory.players=players
+ f.databaseInventory.groups.find(g=>g.slug===f.targetSlug).country_id=34
+ f.databaseInventory.identityPrivacy=privacyProjection(783,appearances,f.databaseInventory.capturedUTC)
  return{...f,sourceMatchId:match.id}
 }
