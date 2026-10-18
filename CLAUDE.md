@@ -352,6 +352,15 @@ kontejnerja `posta-klubom.mjs` le s `--suho`; objava izven okna pošiljanja.
 `klub_stik.drzava` sprejme tudi `DE` (migracija `20261018120600_stiki_nemcija`);
 pravila predhodnega preverjanja in beleženja veljajo enako za nemške klube.
 
+## Agenti in baza
+
+Agenti (Pivko, SRE v Paperclipu) berejo produkcijsko bazo prek omejenega SSH
+ukaza `agent@` na VM kot `agent_bralec` (le branje, 15 s, brez sheme auth in
+scout, ključev, žetonov in e-pošte uporabnikov). **Nova tabela ali stolpec s
+skrivnostjo ali osebnimi podatki gre v isti migraciji v
+`agent.zaprte_tabele`/`agent.zaprti_stolpci`** — ostalo dobi bralne pravice
+ob objavi. Vse: `docs/agenti-baza.md`.
+
 ## Samodejne objave (Instagram, Facebook)
 
 Delavec `slff-objave` (`scripts/objave.mjs`) pripravi **vsak dan** osnutek

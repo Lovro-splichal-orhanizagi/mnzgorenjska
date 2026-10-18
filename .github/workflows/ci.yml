@@ -278,6 +278,14 @@ jobs:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: npx --yes supabase@2.117.0 db push --db-url "$SUPABASE_DB_URL" --yes
 
+      # Nove tabele dobijo bralne pravice za agente (agent_bralec), zaprte
+      # tabele in stolpci ostanejo zaprti (docs/agenti-baza.md).
+      - name: Pravice agentov
+        if: steps.baza.outputs.gremo == 'da'
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -c 'select agent.uskladi_pravice()'
+
   objavi:
     name: Objava na Vercel
     needs: [preveri, varnost, migracije]
