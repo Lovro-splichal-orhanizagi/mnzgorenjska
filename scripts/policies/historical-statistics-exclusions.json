@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "policies": [
+    {
+      "id": "hr-hnlz-history-2026-10-18-v1",
+      "provider": "hns",
+      "sourcePolicy": "hr-hnlz-v1",
+      "competitionSlug": "hr-prva-hnlz",
+      "season": "2026/27",
+      "recordedAt": "2026-10-18T13:09:11.816212+00:00",
+      "approvalReference": "user replies to call_c9caa54a31964c46bfee20ad68d6f385 (114471617,114471629) and call_e16cdac88b2b47ad877e5b7335d57f65 (114471627); ROOT relayed final approval at12:52UTC2026-10-18; recordedAt is recording time, user send time unavailable",
+      "entries": [
+        {
+          "sourceMatchId": "114471617",
+          "sourceCompetitionId": "114471579",
+          "sourcePhase": null,
+          "sourceRound": 1,
+          "playedOn": "2026-08-23",
+          "homeSourceClubId": "1274",
+          "awaySourceClubId": "107347",
+          "sourceUrl": "https://semafor.hns.family/utakmice/114471617/x/",
+          "rawSha256": "2dc781b523945db96f2a1ab2d216aaf19760c1c98e1aca3bade2c98fae09c53b",
+          "observedHomeScore": 2,
+          "observedAwayScore": 2,
+          "reasonCode": "missing_dismissal_clock_and_goalkeeper"
+        },
+        {
+          "sourceMatchId": "114471627",
+          "sourceCompetitionId": "114471579",
+          "sourcePhase": null,
+          "sourceRound": 4,
+          "playedOn": "2026-09-13",
+          "homeSourceClubId": "108341",
+          "awaySourceClubId": "107347",
+          "sourceUrl": "https://semafor.hns.family/utakmice/114471627/x/",
+          "rawSha256": "c6a292c409c20a6b71c7b0d2089245325b7361356fb0637ef77feb52772db04c",
+          "observedHomeScore": 4,
+          "observedAwayScore": 1,
+          "reasonCode": "missing_goalkeeper_after_dismissal"
+        },
+        {
+          "sourceMatchId": "114471629",
+          "sourceCompetitionId": "114471579",
+          "sourcePhase": null,
+          "sourceRound": 4,
+          "playedOn": "2026-09-13",
+          "homeSourceClubId": "175835",
+          "awaySourceClubId": "649",
+          "sourceUrl": "https://semafor.hns.family/utakmice/114471629/x/",
+          "rawSha256": "382a9be268301534f8e085587e994ac3ecb093288f08e38126a1bbcfe012db14",
+          "observedHomeScore": 3,
+          "observedAwayScore": 0,
+          "reasonCode": "awarded_result_conflicts_with_field_events"
+        }
+      ]
+    },
+    {
+      "id": "de-dfb-suedwest-2025-historical-unavailable-v1",
+      "provider": "dfb",
+      "competitionSlug": "de-regionalliga-suedwest",
+      "season": "2025/26",
+      "approvalReference": "user reply to call_e8c944e47b7c42a38afa4f08fda48c23",
+      "entries": [
+        {
+          "sourceMatchId": "2402929",
+          "sourceCompetitionId": "regionalliga-suedwest/2025-2026",
+          "sourcePhase": null,
+          "sourceRound": 11,
+          "playedOn": "2025-10-04",
+          "homeSourceClubId": "tsg-balingen",
+          "awaySourceClubId": "kickers-offenbach",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/11-spieltag/tsg-balingen-kickers-offenbach-2402929",
+          "rawSha256": "cda4f2b1cdd971e85cc34feab5c570e5388c733d69c474b02ca16a50f3d52296",
+          "observedHomeScore": 1,
+          "observedAwayScore": 1,
+          "reasonCode": "contradictory_starting_xi"
+        },
+        {
+          "sourceMatchId": "2403004",
+          "sourceCompetitionId": "regionalliga-suedwest/2025-2026",
+          "sourcePhase": null,
+          "sourceRound": 19,
+          "playedOn": "2025-11-29",
+          "homeSourceClubId": "tsv-steinbach-haiger",
+          "awaySourceClubId": "tsg-balingen",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/19-spieltag/tsv-steinbach-haiger-tsg-balingen-2403004",
+          "rawSha256": "3fd9c5a0cf2d21a0ee76c06cef5e07f5fa836f725651ebc3cdc8e5daa0a3dfff",
+          "observedHomeScore": 0,
+          "observedAwayScore": 0,
+          "reasonCode": "contradictory_discipline"
+        }
+      ],
+      "sourcePolicy": "de-dfb-suedwest-2025-historical-unavailable-v1",
+      "recordedAt": "2026-10-18T13:03:55.270673+00:00"
+    }
+  ]
+}
