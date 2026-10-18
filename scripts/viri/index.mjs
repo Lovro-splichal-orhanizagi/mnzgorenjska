@@ -17,6 +17,8 @@ import mnzng from './mnzng.mjs'
 import nzs from './nzs.mjs'
 import sportnet from './sportnet.mjs'
 import hns from './hns.mjs'
+import {withHnsWomenStatistics} from './hns-zenske-runtime.mjs'
+import {validateHnsWomenClubBindings} from './hns-zenske-binding.mjs'
 import facr from './facr.mjs'
 import mlsz from './mlsz.mjs'
 import oefb from './oefb.mjs'
@@ -230,6 +232,10 @@ export function viraZa(tekmovanje, {installedHistoricalMarkers=null}={}) {
   }else if(ime==='fcf') {
     wrapped=withFcfHistoricalStatistics(vir,tekmovanje,{installedHistoricalMarkers,verifyInstalledMarker:verifyFcfInstalledHistoricalMarker})
     files=[...zaprtje('scripts/viri/fcf-historical.mjs'),...zaprtje('scripts/fcf-historical-policy.mjs')]
+  }else if(ime==='hns') {
+    const reviewedClubBindings=validateHnsWomenClubBindings(tekmovanje,{competitionId:tekmovanje.id,sourceCompetitionId:tekmovanje.source_league_code,clubs:tekmovanje.reviewedClubBindings},installedHistoricalMarkers?.markers??[])
+    wrapped={...withHnsWomenStatistics(vir,tekmovanje,{installedHistoricalMarkers}),reviewedClubBindings}
+    files=[...zaprtje('scripts/viri/hns-zenske-runtime.mjs'),...zaprtje('scripts/viri/hns-zenske-binding.mjs')]
   }else throw Error('historical provider: reviewed runtime adapter is not available for this policy')
   wrapped.historicalSourceFiles=[...new Set(files)]
   return wrapped

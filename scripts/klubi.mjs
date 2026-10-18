@@ -133,6 +133,14 @@ export async function mapaKlubov(db, vir) {
   // ključem "nk tomislav" in uvoz je vanj vpisal še NK Tomislav iz Drnja.
   const natancno = vir.poenostavi ?? poenostavi
   const mapa = new Map()
+  // Opt-in native identities were verified by the service context before any
+  // traversal. A display rename must not create a second organization.
+  for(const binding of vir.reviewedClubBindings??[]) {
+    if(!vsi.some(t=>t.id===binding.teamId))throw Error('reviewed club binding: DB team absent from source country')
+    const key=vir.kljucKluba(binding.canonicalName)
+    if(mapa.has(key)&&mapa.get(key)!==binding.teamId)throw Error('reviewed club binding: conflicting source key')
+    mapa.set(key,binding.teamId)
+  }
   for (const k of vsi) {
     const kljuc = natancno(k.name)
     if (!mapa.has(kljuc)) mapa.set(kljuc, k.id)

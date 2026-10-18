@@ -8037,7 +8037,15 @@ export type Database = {
       }
       asistenca_odprta: { Args: { p_goal_id: number }; Returns: boolean }
       asistence_odprte_do: { Args: { p_match_id: number }; Returns: string }
+      check_hns_women_release: {
+        Args: { p_activate?: boolean; p_manifest: string; p_sha256: string }
+        Returns: Json
+      }
       dan_kroga: { Args: { p_round_id: number }; Returns: string }
+      get_hns_women_import_context: {
+        Args: { p_competition_id: number }
+        Returns: Json
+      }
       get_installed_historical_statistics_markers: {
         Args: { p_competition_id: number }
         Returns: Json
@@ -8527,6 +8535,10 @@ export type Database = {
       }
       prepare_fcf_historical_cleanup: {
         Args: { p_main_sha: string; p_policy_hashes: Json }
+        Returns: Json
+      }
+      prepare_hns_women_release: {
+        Args: { p_manifest: string; p_sha256: string }
         Returns: Json
       }
       prepovedane_besede: { Args: { p_besedilo: string }; Returns: string }
@@ -9234,6 +9246,17 @@ export type Database = {
           mnozitelj: number
           player_id: number
         }[]
+      }
+      update_hns_women_round: {
+        Args: {
+          p_captured_at: string
+          p_competition_id: number
+          p_fixtures: Json
+          p_round: number
+          p_source_competition_id: string
+          p_source_sha256: string
+        }
+        Returns: Json
       }
       upsert_unavailable_historical_match: {
         Args: {
