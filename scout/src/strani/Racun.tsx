@@ -9,12 +9,12 @@ type Odziv = { error: { hint?: string | null; code?: string | null } | null }
 type Stripe = { akcija: 'checkout'; obdobje: 'mesec' | 'sezona' } | { akcija: 'portal' }
 
 function Okno({ children }: { children: ReactNode }) {
-  return <section className="space-y-3 rounded border border-slate-200 bg-white p-4">{children}</section>
+  return <section className="kartica space-y-3 p-5 text-slate-300">{children}</section>
 }
 
 function Gumb({ children, onClick, disabled }: { children: ReactNode; onClick: () => void; disabled?: boolean }) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">
+    <button type="button" onClick={onClick} disabled={disabled} className="gumb-glavni">
       {children}
     </button>
   )
@@ -92,18 +92,18 @@ export function Racun() {
   const jaz = seja.user.id
   return (
     <div className="max-w-2xl space-y-6">
-      <h1 className="text-xl font-semibold">{t('racun.naslov')}</h1>
-      {placilo === 'uspeh' && <p className="rounded bg-emerald-50 p-3 text-emerald-900">{t('racun.placiloUspeh')}</p>}
-      {placilo === 'preklic' && <p className="rounded bg-slate-100 p-3">{t('racun.placiloPreklic')}</p>}
-      {sporocilo && <p className="text-red-700">{sporocilo}</p>}
+      <h1 className="text-2xl font-black naslov sm:text-3xl">{t('racun.naslov')}</h1>
+      {placilo === 'uspeh' && <p className="rounded-xl border border-gnl-400/30 bg-gnl-400/10 px-3 py-2 text-sm text-gnl-200">{t('racun.placiloUspeh')}</p>}
+      {placilo === 'preklic' && <p className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300">{t('racun.placiloPreklic')}</p>}
+      {sporocilo && <p className="opozorilo">{sporocilo}</p>}
       {napakaKluba ? (
         <Okno>
-          <p className="text-red-700">{t('napaka.splosna')}</p>
+          <p className="opozorilo">{t('napaka.splosna')}</p>
         </Okno>
       ) : !klub ? (
         <Okno>
           <p>{t('racun.niKlub')}</p>
-          <a className="underline" href="https://slff.eu/account">{t('racun.slffRacun')}</a>
+          <a className="povezava" href="https://slff.eu/account">{t('racun.slffRacun')}</a>
         </Okno>
       ) : !n && !klub.drzava_odprta ? (
         <Okno>
@@ -111,12 +111,12 @@ export function Racun() {
         </Okno>
       ) : !n ? (
         <Okno>
-          <h2 className="font-semibold">{t('racun.preizkusNaslov')}</h2>
+          <h2 className="text-lg font-bold text-slate-100">{t('racun.preizkusNaslov')}</h2>
           <p>{t('racun.preizkusOpis')}</p>
           <label className="flex items-start gap-2">
-            <input type="checkbox" checked={sprejmem} onChange={(e) => setSprejmem(e.target.checked)} className="mt-1" />
+            <input type="checkbox" checked={sprejmem} onChange={(e) => setSprejmem(e.target.checked)} className="mt-1 accent-gnl-400" />
             <span>
-              {t('racun.sprejmem')} <Link to="/terms" className="underline">{t('noga.pogoji')}</Link>
+              {t('racun.sprejmem')} <Link to="/terms" className="povezava">{t('noga.pogoji')}</Link>
             </span>
           </label>
           <Gumb disabled={!sprejmem || poteka} onClick={() => void klic(() => supabase.rpc('scout_zacni_preizkus', { p_sprejmem_pogoje: sprejmem }))}>
@@ -126,9 +126,9 @@ export function Racun() {
       ) : (
         <>
           <Okno>
-            <p className="font-medium">{t('racun.veljaDo', { paket: t(`racun.paket.${n.paket}` as Kljuc), datum: datum(n.velja_do) })}</p>
+            <p className="text-lg font-bold text-slate-100">{t('racun.veljaDo', { paket: t(`racun.paket.${n.paket}` as Kljuc), datum: datum(n.velja_do) })}</p>
             {!n.velja && <p>{t('racun.potekla')}</p>}
-            {klub.sedez && n.velja && <Link to="/" className="underline">{t('racun.naprej')}</Link>}
+            {klub.sedez && n.velja && <Link to="/" className="gumb-glavni inline-block">{t('racun.naprej')} →</Link>}
             {!klub.sedez && (
               <>
                 <p>{t('racun.niSedeza')}</p>
@@ -137,15 +137,15 @@ export function Racun() {
             )}
           </Okno>
           <Okno>
-            <h2 className="font-semibold">{t('racun.sedezi', { n: klub.sedezi.length })}</h2>
-            <ul className="divide-y divide-slate-200">
+            <h2 className="font-bold text-slate-100">{t('racun.sedezi', { n: klub.sedezi.length })}</h2>
+            <ul className="divide-y divide-white/5">
               {klub.sedezi.map((s) => (
                 <li key={s.user_id} className="flex items-center justify-between gap-2 py-2">
-                  <span>
-                    {s.ime ?? '?'} {s.user_id === jaz && t('racun.ti')}
+                  <span className="text-slate-200">
+                    {s.ime ?? '?'} {s.user_id === jaz && <span className="text-slate-400">{t('racun.ti')}</span>}
                   </span>
                   {(klub.sedez || s.user_id === jaz) && (
-                    <button type="button" disabled={poteka} className="text-sm underline" onClick={() => void klic(() => supabase.rpc('scout_sprosti_sedez', { p_user: s.user_id }))}>
+                    <button type="button" disabled={poteka} className="gumb-tih px-3 py-1 text-sm" onClick={() => void klic(() => supabase.rpc('scout_sprosti_sedez', { p_user: s.user_id }))}>
                       {t('racun.sprosti')}
                     </button>
                   )}
@@ -155,19 +155,19 @@ export function Racun() {
           </Okno>
           {klub.sedez && (n.paket !== 'klub' || !n.velja) && (
             <Okno>
-              <h2 className="font-semibold">{t('racun.placiNaslov')}</h2>
+              <h2 className="text-lg font-bold text-slate-100">{t('racun.placiNaslov')}</h2>
               <p>{t('racun.placiOpis')}</p>
               <div className="flex flex-wrap gap-2">
-                <Gumb disabled={poteka} onClick={() => void stripe({ akcija: 'checkout', obdobje: 'mesec' })}>{t('racun.mesec')}</Gumb>
+                <button type="button" disabled={poteka} className="gumb-tih" onClick={() => void stripe({ akcija: 'checkout', obdobje: 'mesec' })}>{t('racun.mesec')}</button>
                 <Gumb disabled={poteka} onClick={() => void stripe({ akcija: 'checkout', obdobje: 'sezona' })}>{t('racun.sezona')}</Gumb>
               </div>
-              <p className="text-xs text-slate-500">{t('racun.ddv')}</p>
+              <p className="text-xs text-slate-400">{t('racun.ddv')}</p>
             </Okno>
           )}
         </>
       )}
       {portal && (
-        <button type="button" disabled={poteka} className="text-sm underline" onClick={() => void stripe({ akcija: 'portal' })}>
+        <button type="button" disabled={poteka} className="gumb-tih text-sm" onClick={() => void stripe({ akcija: 'portal' })}>
           {t('racun.upravljaj')}
         </button>
       )}
