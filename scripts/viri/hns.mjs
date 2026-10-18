@@ -73,7 +73,7 @@ export const IME_KLUBA = {
   209: 'NK Dragovoljac (Poličnik)', // "NK Dragovoljac" ostane Bočkovec (943)
   178362: 'NK Borac (Novo Selo)', // "NK Borac" ostane Imbriovec (955)
   40074: 'NK Podravac (Sesvete Ludbreške)', // "NK Podravac" ostane Virje (917)
-  40262: 'NK Otok (Vukovar)', // "NK Otok" ostane Međimurje (347); trk z juniorji VS, migracija 20261018183100
+  40262: 'NK Otok (Vukovar)', // "NK Otok" ostane Međimurje (347); trk z juniorji VS, migracija 20261018195100
 }
 
 /** Ime kluba za bazo: trk imen razreši šifra kluba na Semaforju. */
