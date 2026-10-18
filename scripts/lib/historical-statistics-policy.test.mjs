@@ -124,7 +124,7 @@ test('unregistered ordinary provider identity still follows strict normal parsin
 })
 
 test('migration-pinned canonical policy bodies and hashes match the single reviewed JSON registry', () => {
-  const sql = readFileSync(new URL('../../supabase/migrations/20261018133000_historical_statistical_availability.sql',import.meta.url),'utf8')
+  const sql = readFileSync(new URL('../../supabase/migrations/20261018180000_historical_statistical_availability.sql',import.meta.url),'utf8')
   const seeds = [...sql.matchAll(/insert into private_historical_statistics\.policies values\('([^']+)','([a-f0-9]{64})','((?:''|[^'])*)'::jsonb\);/g)]
   assert.equal(seeds.length,registry.policies.length)
   for (const policy of registry.policies) {
@@ -150,7 +150,7 @@ test('FCF registry requires both native category identities',()=>{
 
 test('reviewed club bindings cover every approved source club/category and retain exact receipt proofs',()=>{
   const bindings=JSON.parse(readFileSync(new URL('../policies/historical-statistics-club-bindings.json',import.meta.url))).bindings
-  const sql=readFileSync(new URL('../../supabase/migrations/20261018133000_historical_statistical_availability.sql',import.meta.url),'utf8')
+  const sql=readFileSync(new URL('../../supabase/migrations/20261018180000_historical_statistical_availability.sql',import.meta.url),'utf8')
   const keys=new Set()
   for(const binding of bindings) {
     const key=[binding.provider,binding.sourceClubId,binding.sourceCategoryId??''].join(':')

@@ -24,6 +24,7 @@ import {
 // funkcijo uvozimo pod drugim imenom.
 import { serijaCen, premik as premikSerije, crta } from '../lib/gibanjeCene'
 import Grb from '../components/Grb'
+import { PokritostStatistike, usePokritostStatistike, usePokritostZgodovine, brezPreverjenihNastopov } from '../components/PokritostStatistike'
 import FotoIgralca from '../components/FotoIgralca'
 import ZnakPreverjen from '../components/ZnakPreverjen'
 import PrevzemIgralca from '../components/PrevzemIgralca'
@@ -86,6 +87,9 @@ export default function Igralec() {
   const fotoProfila = useFotografija(igralec?.id ?? null)
   // Številke tekoče sezone; `igralec` (player_overview) je seštevek vseh sezon.
   const [sezonsko, setSezonsko] = useState<Sezonsko | null>(null)
+  const pokritost = usePokritostStatistike(igralec?.competition_id, sezonsko?.season)
+  const zgodovina = usePokritostZgodovine(igralec?.competition_id)
+  const brezOpazovanj = brezPreverjenihNastopov(pokritost, (sezonsko ?? igralec)?.matches)
   const [razlage, setRazlage] = useState<Razlaga[]>([])
   const [odprtRazlaga, setOdprtRazlaga] = useState<number | null>(null)
   const [cene, setCene] = useState<any[]>([])
@@ -528,16 +532,20 @@ export default function Igralec() {
             {t('igralci.profil.sezona', { sezona: sezonsko.season })}
           </h2>
         )}
+        <PokritostStatistike podatki={pokritost} />
+        {zgodovina.filter(s => s.season !== sezonsko?.season).map(s => (
+          <PokritostStatistike key={s.season} podatki={s} />
+        ))}
         <div className="kartica grid grid-cols-4 divide-x divide-white/10">
           <Stevilka
             oznaka={t('igralci.profil.stevilke.tocke')}
-            vrednost={formatirajTocke((sezonsko ?? igralec).points)}
+            vrednost={brezOpazovanj ? '—' : formatirajTocke((sezonsko ?? igralec).points)}
           />
-          <Stevilka oznaka={t('igralci.profil.stevilke.tekem')} vrednost={(sezonsko ?? igralec).matches ?? 0} />
-          <Stevilka oznaka={t('igralci.profil.stevilke.golov')} vrednost={(sezonsko ?? igralec).goals ?? 0} />
-          <Stevilka oznaka={t('igralci.profil.stevilke.minut')} vrednost={(sezonsko ?? igralec).minutes ?? 0} />
+          <Stevilka oznaka={t('igralci.profil.stevilke.tekem')} vrednost={brezOpazovanj ? '—' : (sezonsko ?? igralec).matches ?? 0} />
+          <Stevilka oznaka={t('igralci.profil.stevilke.golov')} vrednost={brezOpazovanj ? '—' : (sezonsko ?? igralec).goals ?? 0} />
+          <Stevilka oznaka={t('igralci.profil.stevilke.minut')} vrednost={brezOpazovanj ? '—' : (sezonsko ?? igralec).minutes ?? 0} />
         </div>
-        {sezonsko && (
+        {sezonsko && !zgodovina.some(s => brezPreverjenihNastopov(s, igralec.matches)) && (
           <p className="text-xs text-slate-500">
             {t('igralci.profil.skupajVseSezone', {
               tocke: formatirajTocke(igralec.points),

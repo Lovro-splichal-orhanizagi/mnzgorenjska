@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const tekme: NonNullable<Prevod['tekme']> = {
+  statistika: {
+    brezStrelcev: "Kontrollitud väravalööjaid pole.",
+    nedosegljivo: "Selle varasema mängu mängijate statistika pole saadaval. Ametlik tulemus säilib.",
+    kratko: "Statistika pole saadaval",
+    postaveTocke: "Koosseisud ja punktid",
+    kartoni: "Kaardid",
+    delno: "Hooaja {sezona} osaline statistika: täielikud andmed {popolnih} mängu kohta {odigranih} peetud liigamängust. {nedosegljivih} varasema mängu mängijate statistika pole saadaval. Summad ja keskmised hõlmavad ainult kontrollitud osalemisi.",
+    brezOpazovanj: "Kontrollitud osalemisi pole",
+  },
+
   krog: '{n}. voor',
   moraPrijava: 'Hääletamiseks pead <prijava>sisse logima</prijava>.',
 

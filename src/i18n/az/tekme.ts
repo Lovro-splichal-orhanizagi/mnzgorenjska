@@ -3,6 +3,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const tekme: NonNullable<Prevod['tekme']> = {
+  statistika: {
+    brezStrelcev: "Təsdiqlənmiş qolçu yoxdur.",
+    nedosegljivo: "Bu tarixi matç üçün oyunçu statistikası mövcud deyil. Rəsmi nəticə saxlanılır.",
+    kratko: "Statistika mövcud deyil",
+    postaveTocke: "Heyətlər və xallar",
+    kartoni: "Vərəqələr",
+    delno: "{sezona} mövsümü üçün qismən statistika: oynanılmış {odigranih} liqa matçından {popolnih} matç üçün tam məlumat var. {nedosegljivih} tarixi matç üçün oyunçu statistikası mövcud deyil. Cəmlər və ortalamalar yalnız təsdiqlənmiş çıxışları əhatə edir.",
+    brezOpazovanj: "Təsdiqlənmiş çıxış yoxdur",
+  },
+
   krog: 'Tur {n}',
   moraPrijava: 'Səs vermək üçün <prijava>daxil olmalısan</prijava>.',
 

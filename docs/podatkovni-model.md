@@ -55,6 +55,18 @@
   sodnika in postav na strani zapisnikov kroga (`vir.kontumacije`). Pri Novi
   Gorici in NZS primera še nismo videli — tam admin z
   `update matches set kontumacija = true where id = …`
+- `matches.statistics_status` → `available` za običajne zapise;
+  `unavailable_historical` samo za izrecno odobrene identitete iz
+  `scripts/policies/historical-statistics-exclusions.json`. Uradni izid
+  ostane, `imported_at` je NULL, nastopi in goli so prepovedani.
+  `statistics_reason` opiše pregledano vrzel. Zasebna shema
+  `private_historical_statistics` veže politiko, SHA izvornega dokumenta,
+  domači/gostujoči klub in krog; servisne namestitve zahtevajo READ COMMITTED
+  in zaklenejo preverjene identitete. Neposredna aktivacija ne more obiti
+  zasebne odobritve. `match_assist_status` za te tekme vrne neznane
+  posamezne števce kot NULL in onemogoči glasovanje o asistencah.
+  `sezone.statistics_complete_matches` / `statistics_unavailable_matches`
+  razkrijeta pokritost; cene in točke ostanejo izračunane iz nastopov.
 - `matches.vir_brez_izida` → vir ob zadnjem uvozu razporeda za to minulo,
   neuvoženo tekmo ni kazal izida: zveza jo je prestavila brez novega datuma
   (Bled Bohinj : Sava Kranj, 4. 10. 2026). Piše jo uvoz razporeda iz

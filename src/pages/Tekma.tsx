@@ -12,6 +12,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import type { Pozicija } from '../lib/tipi'
 import Grb from '../components/Grb'
+import { NedosegljivaStatistika } from '../components/PokritostStatistike'
 import IgrisceTocke from '../components/IgrisceTocke'
 import GolZaGlasovanje, { caka } from '../components/GolZaGlasovanje'
 import type { Gol, Glas, Kandidat } from '../components/GolZaGlasovanje'
@@ -195,7 +196,7 @@ export default function Tekma() {
 
       // Glasovi o asistencah — na tej strani se da tudi glasovati.
       const idji = (g ?? []).map((x: any) => x.id as number)
-      if (idji.length) osveziGlasove(idji)
+      if (t?.statistics_status !== 'unavailable_historical' && idji.length) osveziGlasove(idji)
     }
     async function osveziGlasove(idji: number[]) {
       const { data: st } = await supabase
@@ -234,7 +235,7 @@ export default function Tekma() {
   }, [tekmaId, uporabnikId])
 
   async function glasuj(golId: number, playerId: number | null) {
-    if (!session) return
+    if (!session || tekma?.statistics_status === 'unavailable_historical') return
     setNapaka(null)
 
     const { error } = await supabase.from('assist_votes').upsert(
@@ -296,6 +297,7 @@ export default function Tekma() {
 
   // Koliko golov te tekme še čaka na odločitev skupnosti. Enajstmetrovke,
   // avtogoli in goli, pri katerih je zmagalo »brez asistence«, ne čakajo.
+  const nedosegljivo = tekma.statistics_status === 'unavailable_historical'
   const cakajocih = goli.filter((g) => caka(g, glasovi[String(g.id)] ?? [], pragAsistence)).length
 
   // Nastopi so v isti tabeli za obe ekipi; razdelimo jih po klubu.
@@ -327,14 +329,14 @@ export default function Tekma() {
         <Klub ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} id={tekma.away_team_id} liga={slugLige} />
       </h1>
 
-      {opozorilaRumenih?.tekmaId === tekmaId && (
+      {!nedosegljivo && opozorilaRumenih?.tekmaId === tekmaId && (
         <OpozoriloRumenih
           opozorila={opozorilaRumenih.opozorila}
           nedosegljivo={opozorilaRumenih.nedosegljivo}
         />
       )}
 
-      {nastopi.length === 0 ? (
+      {nedosegljivo ? <NedosegljivaStatistika /> : nastopi.length === 0 ? (
         <p className="text-sm text-slate-400">
           {t('tekme.tekma.brezPostav')}
         </p>
@@ -364,13 +366,13 @@ export default function Tekma() {
         </>
       )}
 
-      {cakajocih > 0 && (
+      {!nedosegljivo && cakajocih > 0 && (
         <p className="text-sm text-amber-200">
           {t('tekme.tekma.cakajo', { n: cakajocih })}
         </p>
       )}
 
-      {goli.length > 0 && (
+      {!nedosegljivo && goli.length > 0 && (
         <section className="space-y-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-lg font-bold">{t('tekme.tekma.goliInAsistence')}</h2>
