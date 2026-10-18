@@ -1,16 +1,18 @@
 name: FCF reviewed history release
-run-name: FCF history ${{ inputs.mode }} ${{ inputs.cache_key }}
+run-name: FCF history ${{ inputs.mode }} ${{ inputs.mode == 'cache-export' && inputs.cache_key || inputs.preset }}
 
 on:
   workflow_dispatch:
     inputs:
       mode:
-        description: Read-only cache export for the reviewed three-group release
+        description: Explicit reviewed evidence stage
         required: true
         default: cache-export
         type: choice
         options:
           - cache-export
+          - seed-stage
+          - missing-inventory
       cache_key:
         description: Exact reviewed cache snapshot, with no fallback
         required: true
@@ -22,8 +24,29 @@ on:
           - zapisniki-es-ct-tercera-g2-39130940424
           - zapisniki-es-ct-tercera-g4-39096381467
 
+      preset:
+        description: Fixed reviewed missing-target scope
+        required: true
+        default: g1-then-g9-missing-v1
+        type: choice
+        options:
+          - g1-then-g9-missing-v1
+      asset_id:
+        description: Actual uploaded root draft release asset ID
+        type: string
+      asset_sha256:
+        description: Reviewed root draft asset SHA256
+        type: string
+      asset_manifest_sha256:
+        description: Seed-stage only exact seed manifest SHA256
+        type: string
+      original_manifest_sha256:
+        description: Seed-stage only exact original receipt manifest SHA256
+        type: string
+
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: fcf-reviewed-history-main
@@ -72,4 +95,300 @@ jobs:
           name: fcf-history-cache-${{ github.run_id }}-${{ github.run_attempt }}
           path: fcf-historical-cache
           if-no-files-found: error
+          retention-days: 90
+
+  # All new stages use GitHub evidence only; no database credentials are available.
+  missing-inventory-seed:
+    name: missing-inventory-seed
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'seed-stage'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FCF_INVENTORY_PRESET: ${{ inputs.preset }}
+      FCF_INVENTORY_ASSET_ID: ${{ inputs.asset_id }}
+      FCF_INVENTORY_ASSET_SHA: ${{ inputs.asset_sha256 }}
+      FCF_INVENTORY_ASSET_MANIFEST_SHA: ${{ inputs.asset_manifest_sha256 }}
+      FCF_INVENTORY_ORIGINAL_MANIFEST_SHA: ${{ inputs.original_manifest_sha256 }}
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate retained FCF inventory originals
+        id: seed
+        run: node scripts/fcf-missing-inventory-actions.mjs seed-stage
+      - name: Retain reviewed FCF inventory seed
+        id: retain
+        if: success() && steps.seed.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-inventory-seed-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-inventory-seed
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 90
+
+  missing-inventory-consume:
+    name: missing-inventory-consume
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory'
+    runs-on: ubuntu-latest
+    timeout-minutes: 310
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FCF_INVENTORY_PRESET: ${{ inputs.preset }}
+      FCF_INVENTORY_ASSET_ID: ${{ inputs.asset_id }}
+      FCF_INVENTORY_ASSET_SHA: ${{ inputs.asset_sha256 }}
+    outputs:
+      artifact_id: ${{ steps.retain.outputs.artifact-id }}
+      artifact_digest: ${{ steps.retain.outputs.artifact-digest }}
+      manifest_sha: ${{ steps.consume.outputs.manifest_sha }}
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify one-shot FCF inventory claim
+        id: consume
+        run: node scripts/fcf-missing-inventory-actions.mjs consume
+      - name: Retain one-shot FCF inventory consumption
+        id: retain
+        if: success() && steps.consume.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-inventory-consumption-${{ github.run_id }}-1
+          path: fcf-inventory-consumption
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 90
+
+  missing-inventory-g1:
+    name: missing-inventory-g1
+    needs: [missing-inventory-consume]
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FCF_INVENTORY_PRESET: ${{ inputs.preset }}
+      FCF_INVENTORY_ASSET_ID: ${{ inputs.asset_id }}
+      FCF_INVENTORY_ASSET_SHA: ${{ inputs.asset_sha256 }}
+      FCF_CONSUMPTION_ID: ${{ needs.missing-inventory-consume.outputs.artifact_id }}
+      FCF_CONSUMPTION_DIGEST: ${{ needs.missing-inventory-consume.outputs.artifact_digest }}
+      FCF_CONSUMPTION_MANIFEST_SHA: ${{ needs.missing-inventory-consume.outputs.manifest_sha }}
+      FCF_INVENTORY_TARGET: es-ct-segona-g1
+    outputs:
+      inventory_id: ${{ steps.inventory.outputs.artifact-id }}
+      inventory_digest: ${{ steps.inventory.outputs.artifact-digest }}
+      diagnostic_id: ${{ steps.diagnostic.outputs.artifact-id }}
+      diagnostic_digest: ${{ steps.diagnostic.outputs.artifact-digest }}
+      manifest_sha: ${{ steps.capture.outputs.manifest_sha }}
+      audit_id: ${{ steps.audit-retain.outputs.artifact-id }}
+      audit_digest: ${{ steps.audit-retain.outputs.artifact-digest }}
+      audit_manifest_sha: ${{ steps.audit.outputs.manifest_sha }}
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture missing target inventory
+        id: capture
+        run: node scripts/fcf-missing-inventory-actions.mjs capture
+      - name: Retain complete target inventory
+        id: inventory
+        if: success() && steps.capture.outputs.status == 'inventory-complete' && steps.capture.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-missing-inventory-es-ct-segona-g1-${{ github.run_id }}-1
+          path: fcf-missing-es-ct-segona-g1
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 90
+      - name: Retain failed target inventory diagnostic
+        id: diagnostic
+        if: always() && steps.capture.outputs.status == 'failed' && steps.capture.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-missing-inventory-diagnostic-es-ct-segona-g1-${{ github.run_id }}-1
+          path: fcf-missing-es-ct-segona-g1
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 90
+      - name: Audit retained target inventory offline
+        id: audit
+        if: success() && steps.inventory.outcome == 'success'
+        env:
+          FCF_CURRENT_INVENTORY_ID: ${{ steps.inventory.outputs.artifact-id }}
+          FCF_CURRENT_INVENTORY_DIGEST: ${{ steps.inventory.outputs.artifact-digest }}
+          FCF_CURRENT_MANIFEST_SHA: ${{ steps.capture.outputs.manifest_sha }}
+        run: node scripts/fcf-missing-inventory-actions.mjs audit
+      - name: Retain target inventory offline audit
+        id: audit-retain
+        if: success() && steps.audit.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-missing-inventory-audit-es-ct-segona-g1-${{ github.run_id }}-1
+          path: fcf-inventory-audit-es-ct-segona-g1
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 90
+
+  missing-inventory-g9:
+    name: missing-inventory-g9
+    needs: [missing-inventory-consume, missing-inventory-g1]
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FCF_INVENTORY_PRESET: ${{ inputs.preset }}
+      FCF_INVENTORY_ASSET_ID: ${{ inputs.asset_id }}
+      FCF_INVENTORY_ASSET_SHA: ${{ inputs.asset_sha256 }}
+      FCF_CONSUMPTION_ID: ${{ needs.missing-inventory-consume.outputs.artifact_id }}
+      FCF_CONSUMPTION_DIGEST: ${{ needs.missing-inventory-consume.outputs.artifact_digest }}
+      FCF_CONSUMPTION_MANIFEST_SHA: ${{ needs.missing-inventory-consume.outputs.manifest_sha }}
+      FCF_INVENTORY_TARGET: es-ct-tercera-g9
+      FCF_G1_INVENTORY_ID: ${{ needs.missing-inventory-g1.outputs.inventory_id }}
+      FCF_G1_INVENTORY_DIGEST: ${{ needs.missing-inventory-g1.outputs.inventory_digest }}
+      FCF_G1_DIAGNOSTIC_ID: ${{ needs.missing-inventory-g1.outputs.diagnostic_id }}
+      FCF_G1_DIAGNOSTIC_DIGEST: ${{ needs.missing-inventory-g1.outputs.diagnostic_digest }}
+      FCF_G1_MANIFEST_SHA: ${{ needs.missing-inventory-g1.outputs.manifest_sha }}
+      FCF_G1_AUDIT_ID: ${{ needs.missing-inventory-g1.outputs.audit_id }}
+      FCF_G1_AUDIT_DIGEST: ${{ needs.missing-inventory-g1.outputs.audit_digest }}
+      FCF_G1_AUDIT_MANIFEST_SHA: ${{ needs.missing-inventory-g1.outputs.audit_manifest_sha }}
+    outputs:
+      inventory_id: ${{ steps.inventory.outputs.artifact-id }}
+      inventory_digest: ${{ steps.inventory.outputs.artifact-digest }}
+      diagnostic_id: ${{ steps.diagnostic.outputs.artifact-id }}
+      diagnostic_digest: ${{ steps.diagnostic.outputs.artifact-digest }}
+      manifest_sha: ${{ steps.capture.outputs.manifest_sha }}
+      audit_id: ${{ steps.audit-retain.outputs.artifact-id }}
+      audit_digest: ${{ steps.audit-retain.outputs.artifact-digest }}
+      audit_manifest_sha: ${{ steps.audit.outputs.manifest_sha }}
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture missing target inventory
+        id: capture
+        run: node scripts/fcf-missing-inventory-actions.mjs capture
+      - name: Retain complete target inventory
+        id: inventory
+        if: success() && steps.capture.outputs.status == 'inventory-complete' && steps.capture.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-missing-inventory-es-ct-tercera-g9-${{ github.run_id }}-1
+          path: fcf-missing-es-ct-tercera-g9
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 90
+      - name: Retain failed target inventory diagnostic
+        id: diagnostic
+        if: always() && steps.capture.outputs.status == 'failed' && steps.capture.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-missing-inventory-diagnostic-es-ct-tercera-g9-${{ github.run_id }}-1
+          path: fcf-missing-es-ct-tercera-g9
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 90
+      - name: Audit retained target inventory offline
+        id: audit
+        if: success() && steps.inventory.outcome == 'success'
+        env:
+          FCF_CURRENT_INVENTORY_ID: ${{ steps.inventory.outputs.artifact-id }}
+          FCF_CURRENT_INVENTORY_DIGEST: ${{ steps.inventory.outputs.artifact-digest }}
+          FCF_CURRENT_MANIFEST_SHA: ${{ steps.capture.outputs.manifest_sha }}
+        run: node scripts/fcf-missing-inventory-actions.mjs audit
+      - name: Retain target inventory offline audit
+        id: audit-retain
+        if: success() && steps.audit.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-missing-inventory-audit-es-ct-tercera-g9-${{ github.run_id }}-1
+          path: fcf-inventory-audit-es-ct-tercera-g9
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 90
+
+  missing-inventory-receipt:
+    name: missing-inventory-receipt
+    needs: [missing-inventory-consume, missing-inventory-g1, missing-inventory-g9]
+    if: always() && github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FCF_INVENTORY_PRESET: ${{ inputs.preset }}
+      FCF_INVENTORY_ASSET_ID: ${{ inputs.asset_id }}
+      FCF_INVENTORY_ASSET_SHA: ${{ inputs.asset_sha256 }}
+      FCF_CONSUMPTION_ID: ${{ needs.missing-inventory-consume.outputs.artifact_id }}
+      FCF_CONSUMPTION_DIGEST: ${{ needs.missing-inventory-consume.outputs.artifact_digest }}
+      FCF_CONSUMPTION_MANIFEST_SHA: ${{ needs.missing-inventory-consume.outputs.manifest_sha }}
+      FCF_G1_INVENTORY_ID: ${{ needs.missing-inventory-g1.outputs.inventory_id }}
+      FCF_G1_INVENTORY_DIGEST: ${{ needs.missing-inventory-g1.outputs.inventory_digest }}
+      FCF_G1_DIAGNOSTIC_ID: ${{ needs.missing-inventory-g1.outputs.diagnostic_id }}
+      FCF_G1_DIAGNOSTIC_DIGEST: ${{ needs.missing-inventory-g1.outputs.diagnostic_digest }}
+      FCF_G1_MANIFEST_SHA: ${{ needs.missing-inventory-g1.outputs.manifest_sha }}
+      FCF_G1_AUDIT_ID: ${{ needs.missing-inventory-g1.outputs.audit_id }}
+      FCF_G1_AUDIT_DIGEST: ${{ needs.missing-inventory-g1.outputs.audit_digest }}
+      FCF_G1_AUDIT_MANIFEST_SHA: ${{ needs.missing-inventory-g1.outputs.audit_manifest_sha }}
+      FCF_G9_INVENTORY_ID: ${{ needs.missing-inventory-g9.outputs.inventory_id }}
+      FCF_G9_INVENTORY_DIGEST: ${{ needs.missing-inventory-g9.outputs.inventory_digest }}
+      FCF_G9_DIAGNOSTIC_ID: ${{ needs.missing-inventory-g9.outputs.diagnostic_id }}
+      FCF_G9_DIAGNOSTIC_DIGEST: ${{ needs.missing-inventory-g9.outputs.diagnostic_digest }}
+      FCF_G9_MANIFEST_SHA: ${{ needs.missing-inventory-g9.outputs.manifest_sha }}
+      FCF_G9_AUDIT_ID: ${{ needs.missing-inventory-g9.outputs.audit_id }}
+      FCF_G9_AUDIT_DIGEST: ${{ needs.missing-inventory-g9.outputs.audit_digest }}
+      FCF_G9_AUDIT_MANIFEST_SHA: ${{ needs.missing-inventory-g9.outputs.audit_manifest_sha }}
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Authenticate bounded parent accounting
+        id: receipt
+        run: node scripts/fcf-missing-inventory-actions.mjs receipt
+      - name: Retain final FCF inventory receipt
+        id: retain
+        if: success() && steps.receipt.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-missing-inventory-final-${{ github.run_id }}-1
+          path: fcf-inventory-final
+          if-no-files-found: error
+          overwrite: false
           retention-days: 90

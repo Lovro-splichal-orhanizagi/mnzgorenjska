@@ -67,9 +67,9 @@ const fixtures = [
 ]
 const startedAt = '2026-10-17T10:00:00Z'
 const run = (title, patch = {}) => ({ databaseId: 10, startedAt, status: 'in_progress', displayTitle: title, ...patch })
-async function coordinate(args, runs = {}, jobs = [{ name: 'uvoz DE', status: 'completed' }]) {
+async function coordinate(args, runs = {}, jobs = [{ name: 'uvoz DE', status: 'completed' }], historyControl = {}) {
   class Exit extends Error { constructor(code) { super(); this.code = code } }
-  const queried = [], logs = []
+  const queried = [], logs = [], historyPages = []
   const context = {
     process: { argv: ['node', 'coordinator', '--najvec', '3', ...args], env: { GITHUB_RUN_ID: '20', GITHUB_REPOSITORY: 'fixture/repo' }, exit: code => { throw new Exit(code) } },
     console: { log: x => logs.push(x), error: x => logs.push(x) },
@@ -77,13 +77,22 @@ async function coordinate(args, runs = {}, jobs = [{ name: 'uvoz DE', status: 'c
     setTimeout: callback => { callback() },
     execFileSync: (command, a) => {
       assert.equal(command, 'gh')
+      if (a[0] === 'api') {
+        const path = a.find(x => typeof x === 'string' && x.startsWith('repos/'))
+        assert.match(path, /^repos\/fixture\/repo\/actions\/workflows\/uvoz-fcf-zgodovina\.yml\/runs\?per_page=100&page=[1-9]\d*$/)
+        const page = Number(new URL('https://test.invalid/' + path).searchParams.get('page')); historyPages.push(page); queried.push('uvoz-fcf-zgodovina.yml')
+        if (historyControl.error) throw Error('mock GitHub unavailable')
+        if (historyControl.response) return JSON.stringify(historyControl.response(page))
+        const all = (runs['uvoz-fcf-zgodovina.yml'] ?? []).map(z => ({id:z.databaseId,status:z.status,display_title:z.displayTitle,created_at:z.startedAt,run_started_at:z.startedAt,run_attempt:1,path:'.github/workflows/uvoz-fcf-zgodovina.yml',repository:{full_name:'fixture/repo'},head_sha:'a'.repeat(40),head_branch:'main',event:'workflow_dispatch'}))
+        return JSON.stringify({total_count:all.length,workflow_runs:all.slice((page-1)*100,page*100)})
+      }
       if (a[1] === 'view') return JSON.stringify(a.includes('jobs') ? { jobs } : { startedAt })
       const workflow = a[a.indexOf('--workflow') + 1]; queried.push(workflow)
-      return JSON.stringify(runs[workflow] ?? [])
+      return JSON.stringify((runs[workflow] ?? []).slice(0, Number(a[a.indexOf('--limit') + 1]) || 50))
     },
   }
   try { await vm.runInNewContext(`(async () => { ${source.replace(/^import .*$/gm, '')} })()`, context); assert.fail('coordinator must exit') }
-  catch (e) { if (!(e instanceof Exit)) throw e; return { code: e.code, queried, logs } }
+  catch (e) { if (!(e instanceof Exit)) throw e; return { code: e.code, queried, logs, historyPages } }
 }
 
 test('newer German/global player splits wait for each regional writer; independent countries do not', async () => {
@@ -272,6 +281,38 @@ test('fixed FCF source reader serializes both ES directions without becoming a D
   const diagnostic = await coordinate(['--tece'], { [workflow]: [run('FCF')] })
   assert.equal(diagnostic.code,0); assert.ok(!diagnostic.queried.includes(workflow))
 })
+
+test('newer ES/global operations wait for the older one-shot inventory; unrelated countries remain independent', async () => {
+  const workflow = 'uvoz-fcf-zgodovina.yml', title = 'FCF history missing-inventory g1-then-g9-missing-v1'
+  for (const args of [['--drzava', 'ES'], ['--popravek'], ['--tece']]) {
+    assert.equal((await coordinate(args, { [workflow]: [run(title)] })).code, args.includes('--tece') ? 3 : 1)
+  }
+  assert.equal((await coordinate(['--drzava', 'DE'], { [workflow]: [run(title)] })).code, 0)
+})
+test('both legacy coordination loops classify history cache-export and seed-stage as source-free', async () => {
+  const workflow = 'uvoz-fcf-zgodovina.yml'
+  for (const mode of ['cache-export', 'seed-stage']) for (const args of [['--drzava', 'ES'], ['--tece']]) {
+    const result = await coordinate(args, { [workflow]: [run(`FCF history ${mode} fixed`)] })
+    assert.equal(result.code, 0); assert.ok(result.queried.includes(workflow))
+  }
+})
+
+const historyWire = (id, patch = {}) => ({id,status:'completed',display_title:'FCF history seed-stage fixed',created_at:startedAt,run_started_at:startedAt,run_attempt:1,path:'.github/workflows/uvoz-fcf-zgodovina.yml',repository:{full_name:'fixture/repo'},head_sha:'a'.repeat(40),head_branch:'main',event:'workflow_dispatch',...patch})
+
+for (const args of [['--drzava', 'ES'], ['--tece']]) test(`history discovery sees older active inventory after100 completed runs in ${args.join(' ')}`, async () => {
+  const completed = Array.from({length:100}, (_, i) => run('FCF history seed-stage fixed', {databaseId:1000+i,status:'completed'})), active = run('FCF history missing-inventory g1-then-g9-missing-v1')
+  const result = await coordinate(args, {'uvoz-fcf-zgodovina.yml':[...completed,active]})
+  assert.equal(result.code,args.includes('--tece')?3:1);assert.deepEqual(result.historyPages,[1,2])
+})
+for (const args of [['--drzava', 'ES'], ['--tece']]) for (const [name,historyControl] of [
+  ['API failure',{error:true}],
+  ['duplicate run identities',{response:()=>({total_count:2,workflow_runs:[historyWire(10),historyWire(10)]})}],
+  ['changing page count',{response:page=>({total_count:page===1?101:102,workflow_runs:page===1?Array.from({length:100},(_,i)=>historyWire(i+100)): [historyWire(10)]})}],
+  ['unknown active ordering',{response:()=>({total_count:1,workflow_runs:[historyWire(10,{status:'queued',run_started_at:null,created_at:null})]})}],
+  ['enumeration bound exceeded',{response:()=>({total_count:10001,workflow_runs:[]})}],
+  ['incomplete response',{response:()=>({total_count:101,workflow_runs:[]})}],
+  ['foreign repository',{response:()=>({total_count:1,workflow_runs:[{id:10,status:'in_progress',path:'.github/workflows/uvoz-fcf-zgodovina.yml',repository:{full_name:'foreign/repo'}}]})}],
+]) test(`history ${name} fails closed in ${args.join(' ')}`, async()=>{await assert.rejects(()=>coordinate(args,{},undefined,historyControl),/FCF history|mock GitHub/)})
 
 test('dedicated HNS writer has explicit HR scope even before registration',()=>{
  for(const country of ['HR','DE',null]){
