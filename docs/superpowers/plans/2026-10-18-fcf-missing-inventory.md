@@ -120,3 +120,16 @@ Modify `scripts/cakaj-na-uvoze.mjs` only for early source-only delegation and bi
 ## Plan self-review
 
 Spec-to-task coverage: fixed quota/seed/headers Task1; native accounting/retention/limits/stop/early ordinary strict checks Task2; separate staging/continuation/final authentication/partial rejection/full offline strictness/child isolation Task3; pure one-shot claim/consumption authentication Task1; protected claim workflow consumption, source coordination/Actions parent lifecycle Task4; current-only target bridge/age/regressions Task5. All five Review Focus conditions have owning adversarial tests. Input/output names and protocol kinds are shared above; no task extends the old61/41 compiler. No code, source GET, DB access, workflow dispatch or default npm test belongs to this documentation checkpoint.
+
+## Bounded transport repair checkpoint
+
+The root-approved private-draft fix is limited to job-level write permission
+for the two source-free staging jobs and an authenticated same-run manifest-only
+approval artifact bridge. Focused TDD covers exact raw root SHA, main/attempt/job
+and named-step metadata, actual artifact and ZIP hashes, failed/foreign staging
+and the no-draft/no-source read-only route. The existing genuine-originals
+command-chain fixture supplies the unchanged seed and claim and exercises a
+single retained refusal. This checkpoint performs no source GET, dispatch,
+claim reservation/reset, database change or draft publishing. Root must verify
+actual Actions visibility in a source-free seed run after integration; the
+broader combined CI remains the coordinator's check.

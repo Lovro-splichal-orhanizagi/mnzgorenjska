@@ -182,3 +182,21 @@ The staging/continuation/final proof readers remain distinct. Inventory seal is
 separately reviewed Task5 adapter consumes terminal reader-issued inventory,
 offline audit, final receipt and consumption evidence. No actual staging asset,
 claim, run or source response is asserted by these implementation tests.
+
+## Root transport ruling after actual private draft failures
+
+Root approved the narrow private-draft permission split on 18 October 2026:
+source-free seed staging and approval staging alone have job-level
+`contents:write/actions:read`, while consume, capture, audit and receipt keep
+`contents:read/actions:read`. This is needed for GitHub draft visibility and
+never authorizes GitHub mutation from Actions. The only draft reader is in the
+source-free stages. Approval staging verifies actual running main/attempt1 and
+closed root approval, then uploads the byte-exact JSON as the sole
+`manifest.json` member of `fcf-inventory-approval-<runId>-1` via the exact named
+stage/upload steps. Read-only jobs require its actual same-run successful
+metadata, artifact ID/digest, ZIP/member SHA and the independent original root
+approval input SHA before the existing approval validator. No stage creates,
+updates or deletes the protected claim. All source, continuation, audit,
+receipt and Task5 provenance checks retain their original scope. A source-free
+actual Actions run after merge must still verify token visibility; synthetic
+metadata tests cannot establish that platform fact.
