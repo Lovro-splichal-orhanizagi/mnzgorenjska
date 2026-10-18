@@ -74,7 +74,7 @@ function readOriginal(path, expected) {
     const stat = fstatSync(fd)
     if (!stat.isFile()) fail('not-regular')
     if (stat.size > MAX_BYTES) fail('oversized')
-    if (stat.dev !== expected.dev || stat.ino !== expected.ino || stat.size !== expected.size || stat.mtimeMs !== expected.mtimeMs) fail('source-changed')
+    if (stat.dev !== expected.dev || stat.ino !== expected.ino || stat.size !== expected.size || stat.mtimeMs !== expected.mtimeMs || stat.ctimeMs !== expected.ctimeMs) fail('source-changed')
     const buffer = Buffer.alloc(MAX_BYTES + 1)
     let length = 0, count
     while (length < buffer.length && (count = readSync(fd, buffer, length, buffer.length - length, null)) > 0) length += count
