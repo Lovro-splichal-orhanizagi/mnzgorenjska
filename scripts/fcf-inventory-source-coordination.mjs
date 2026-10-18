@@ -1,6 +1,8 @@
 // Conservative GitHub-only ES source coordinator. No Supabase dependency.
 import {execFileSync} from 'node:child_process'
 import {inventoryFail as fail,nativeId,validUTC,commitId,frozenJSON} from './fcf-missing-inventory-artifact.mjs'
+const clearedSlots=new WeakSet()
+export function requireFcfInventorySourceSlot(proof){if(!clearedSlots.has(proof))fail('authenticated actual source clearance required');return proof}
 export const FCF_INVENTORY_COORDINATION_FAMILY=Object.freeze(['fcf-javni-dokazi.yml','uvoz-fcf-zgodovina.yml','uvoz-zapisnikov.yml','uvoz-lige.yml','uvoz-dfb-regije.yml','vklop-dfb-regije.yml','vklop-katalonije.yml','vklop-obstojecih-lig.yml','uskladi-pozicije.yml','izstop-kluba.yml','cene-lig.yml','zdruzi-klube.yml','tedensko-cene.yml','razdeli-zlite-igralce.yml','grbi.yml'])
 async function pages(read,key){const items=[];let count=null;for(let page=1;page<=100;page++){const response=await read(page);if(!response||!Number.isSafeInteger(response.total_count)||response.total_count<0||response.total_count>10000||!Array.isArray(response[key])||response[key].length>100||count!==null&&count!==response.total_count)fail('incomplete GitHub coordination pagination');count=response.total_count;items.push(...response[key]);if(items.length===count)return items;if(items.length>count||response[key].length<100)fail('incomplete GitHub coordination page')}fail('GitHub coordination page bound exceeded')}
 function older(run,execution){if(!nativeId(String(run.id))||typeof run.status!=='string')fail('unknown coordination execution');if(String(run.id)===execution.runId||run.status==='completed')return false;const stamp=run.run_started_at??run.created_at;if(!validUTC(stamp))fail('unknown source run ordering');return Date.parse(stamp)<Date.parse(execution.startedUTC)||Date.parse(stamp)===Date.parse(execution.startedUTC)&&BigInt(run.id)<BigInt(execution.runId)}
@@ -22,7 +24,7 @@ export async function waitForFcfInventorySourceSlot({execution,listRuns,listJobs
    if(workflow==='uvoz-zapisnikov.yml'){const jobs=await pages(page=>listJobs(String(run.id),page),'jobs'),esComplete=completeNightlyES(jobs);if(esComplete)continue}
    held=true
   }}}catch{fail('GitHub source coordination unknown; source held')}
-  if(!held)return frozenJSON({kind:'fcf-inventory-source-slot',status:'clear',runId:execution.runId,runAttempt:'1',sourceCommit:execution.sourceCommit,clearedUTC:new Date(clock()).toISOString()})
+  if(!held){const proof=frozenJSON({kind:'fcf-inventory-source-slot',status:'clear',runId:execution.runId,runAttempt:'1',sourceCommit:execution.sourceCommit,clearedUTC:new Date(clock()).toISOString()});clearedSlots.add(proof);return proof}
   const elapsed=clock()-start;if(!Number.isFinite(elapsed)||elapsed<0||elapsed>=maximumWaitMinutes*60000)fail('older ES source/writer remains; source held')
   await pause(Math.min(180000,maximumWaitMinutes*60000-elapsed))
  }

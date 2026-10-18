@@ -191,3 +191,112 @@ create-once tag reservation and explicit source execution decision remain
 separate. Fixture tests verify the boundary offline; actual Actions token
 visibility still requires a source-free staging run after merge. Passing local
 tests does not assert that GitHub has exposed the draft to the job token.
+
+## Independent G9 after the held parent (new protocol)
+
+`g9-only-after-held-parent-v1` is an explicit separate protocol. The old
+`g1-then-g9-missing-v1` wire and failed-final-receipt refusal remain unchanged.
+The old run `39170648473` can supply **accounting only**, never target readiness
+or G1 continuation. G1 stays held on report4109404; there is no fifth exclusion.
+
+`scripts/fcf-held-parent-accounting.mjs` reauthenticates the exact old protected
+claim, consumption ZIP, G1 diagnostic ZIP, skipped G9 job and inadmissible final
+receipt against fixed reviewed run/job/commit/artifact/manifest identities. It
+rebuilds the false receipt independently. Historical replay uses the immutable
+old completion clock solely to prove actual spent16 and unstarted0. Retention
+expiry or source age never refunds those16: already retained root-digest-pinned
+ZIPs can still prove accounting, even when their original artifact metadata says
+expired. They cannot enter any original source-admission reader.
+
+A separate invisible eligibility capability requires exactly the reviewed content
+defect:16 complete HTTP200 nonredirect bodies, last4109404 rawSHA
+`1a42a49bd0b55d0bd3a654a6e15b65f430a2c132e28813899205d394f05244dc`.
+No different failed parent, refusal, challenge, redirect, partial body or unknown
+attempt count can authorize this route. Copies/serialized capability objects
+have no authority.
+
+The new fixed plan binds the complete old accounting, original final receipt
+SHA/digest, policy/ruleset snapshot, new reviewed capture commit, prior16,
+cumulative477, new240 and planned cumulative256. It includes every ID4118349–
+4118588 ascending exactly once, including4118352/4118358, and no reused seed.
+New plan creation and every later use retain strict24h plan/current-source age
+and future-clock checks independently of timeless spent accounting.
+
+The schema3 execution claim binds that new plan and one actual new main run,
+attempt1. Its flat protected create-once ref is **keyed by the old parent**:
+
+```text
+refs/tags/fcf-inventory-claim/g9-after-e0e902944cec4a3fc479b52bc11243bfeb7ab4dcbe115ee831299456b4d2a28c
+```
+
+Changing new plan timestamps, source commits or plan hashes never grants another
+reservation. Root creates this ref once using the unchanged active no-update,
+no-delete, no-bypass ruleset. The code only prepares a local template and reads
+GitHub; it cannot create/reset/retry the claim or dispatch/upload anything.
+
+Source-free root preparation is `prepare-g9-approval --accounting-source <old
+source-reference JSON> --source-commit <new reviewed main> --ruleset-id <ID>
+--output <new JSON>`, followed by the existing `claim-template` command. The new
+approval has exactly `{schemaVersion:2,kind:'fcf-g9-held-parent-approval',sourceCommit,
+plan,accounting,rulesetId,rulesetSnapshot}`. `accounting` is the original six-field
+source-reference shape (plan/claim/consumption/children/finalReceipt); it carries
+both honest old children. Approval staging independently downloads and verifies
+that old evidence, and retains the original root-pinned approval JSON bytes.
+Only source-free staging keeps `contents:write`; capture has no DB secrets.
+
+The new workflow preset skips G1 and starts G9 only after its own authenticated
+approval and consumption. The collector requires the coordinator-issued branded
+actual source clearance and anchors45min to its `clearedUTC`, including any
+subsequent claim recheck delay. Every complete GET is followed by at least3s,
+including the last. Only exact ordered acta GETs use manual redirects; there is
+no retry, fallback, HEAD, club/category request or unlisted read. First refusal
+or defect stops and retains honest diagnostics. Both freshly fetched historical
+markers must still match the original approved raw hashes and exact identities;
+dynamic-byte differences hold rather than substituting old source bytes.
+
+The closed writer source-reference union is:
+
+```js
+{
+  protocol:'g9-only-after-held-parent-v1', accounting:oldSourceReferences,
+  plan, claim:{execution,expected}, consumption:expected,
+  child:{targetSlug:'es-ct-tercera-g9',inventory:expected,audit:expected},
+  finalReceipt:expected,
+}
+```
+
+`readFcfTargetSourceWire` downloads actual metadata/ZIPs and expands references to
+this closed reader transport (plus selected `targetSlug` and current `now`):
+
+```js
+{
+  protocol:'g9-only-after-held-parent-v1', accounting:oldRawWire,
+  plan, claim:actualClaimWire, consumption:actualArtifactBundle,
+  child:{targetSlug:'es-ct-tercera-g9',inventory:actualBundle,audit:actualBundle},
+  finalReceipt:actualBundle, targetSlug:'es-ct-tercera-g9', now,
+}
+```
+
+The explicit new branch of `readFcfCapturedTargetEvidence` reauthenticates old
+accounting and new claim/consumption/full240 inventory/audit/final receipt. Missing,
+failed, partial or unaudited new G9 holds. The full native16-club calendar and
+explicit keeper coverage are independently rederived. Only then does it issue
+the existing branded target capability. SQL's generic admission kind remains
+`fcf-missing-target-admission`; its fingerprint additionally binds this protocol,
+`priorSourceGETs:16`, `newSourceGETs:240`, `actualSourceGETs:256` and old accounting.
+This never represents256 GETs as having run in the new capture.
+
+All-four genuine cleanup originals remain separate original authorization proof,
+with their old exact bytes, receipts and timestamps. Fresh marker bodies must be
+byte-identical to those originals, while their new actual source receipts remain
+new. The compiler selects this behavior only from authenticated new target data.
+CaptureA and writerB remain separate; native mapping/import, full ordinary
+pricing, legal15, future R6, locked activation and rollback gates stay unchanged.
+The child price preloader reauthenticates the same explicit raw union.
+
+Focused tests label new successful calendars/Actions controls synthetic. Genuine
+old accounting and marker validation uses only explicit local
+`FCF_HELD_PARENT_WIRE` (V8 serialized raw actual wire) and
+`FCF_HISTORICAL_RETAINED_DIR` inputs; public CI skips those private-byte tests.
+Passing code tests establishes no actual new G9 availability or production
+readiness. Root owns independent review, full CI and any later execution decision.
