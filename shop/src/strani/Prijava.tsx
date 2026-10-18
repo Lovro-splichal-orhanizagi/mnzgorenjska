@@ -10,7 +10,8 @@ export function varnaPot(p: string | null): string | null {
   if (!p?.startsWith('/')) return null
   try {
     const u = new URL(p, 'https://shop.invalid')
-    return u.origin === 'https://shop.invalid' ? u.pathname + u.search + u.hash : null
+    // "/..//drug.si" se razreši v "//drug.si": tudi to zavrni. Brez #, ker ga uporabi prijava (OAuth).
+    return u.origin === 'https://shop.invalid' && !u.pathname.startsWith('//') ? u.pathname + u.search : null
   } catch {
     return null
   }

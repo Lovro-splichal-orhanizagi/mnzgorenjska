@@ -108,7 +108,7 @@ preveri('admin: evri v cente', vCente('25') === 2500 && vCente('25,00') === 2500
   && vCente('0,99') === 99 && vCente('12 €') === 1200
   && [ '', '0', '0,00', '-5', '25,001', '1.234,00', 'abc', '25,', ',5', '1e3'].every((v) => vCente(v) === null))
 preveri('admin: next le pot na istem izvoru', varnaPot('/admin') === '/admin' && varnaPot('/admin?x=1') === '/admin?x=1'
-  && [null, '', 'admin', '//evil.eu', '/\\evil.eu', 'https://evil.eu/x', 'javascript:alert(1)'].every((v) => varnaPot(v) === null))
+  && [null, '', 'admin', '//evil.eu', '/\\evil.eu', 'https://evil.eu/x', 'javascript:alert(1)', '/..//evil.eu', '/.//evil.eu'].every((v) => varnaPot(v) === null))
 preveri('admin: varno ime datoteke', varnoIme('Majica Črna (1).JPG') === 'majica-crna-1-.jpg' && varnoIme('../../x.png') === 'x.png' && varnoIme('čšž') === 'csz')
 const narocilo: NarociloAdmin = {
   id: 1, javna_oznaka: 'AB12CD34', stanje: 'placano', email: 'a@b.si', ime: 'Ana Novak', jezik: 'sl',

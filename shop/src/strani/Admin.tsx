@@ -125,7 +125,10 @@ function KarticaNarocila({ n, token, poslano, natisni, osvezi }: {
     })
     setPoteka(false)
     if (posta.error) {
-      setSporocilo(t('admin.mailNi', { napaka: posta.error.message }))
+      // Razlog je v telesu odgovora (FunctionsHttpError.context), sporočilo je vedno splošno.
+      const ctx = (posta.error as { context?: Response }).context
+      const telo = (await ctx?.json?.().catch(() => null)) as { error?: string } | null
+      setSporocilo(t('admin.mailNi', { napaka: telo?.error ?? posta.error.message }))
       return
     }
     await osvezi()
@@ -168,7 +171,7 @@ function KarticaNarocila({ n, token, poslano, natisni, osvezi }: {
         <button type="button" className="gumb-tih" onClick={() => natisni('dobavnica')}>{t('admin.natisniDobavnico')}</button>
         <span className="flex-1" />
         <input value={sledilna} onChange={(e) => setSledilna(e.target.value)} placeholder={t('admin.sledilna')} aria-label={t('admin.sledilna')} className="polje w-48" />
-        <button type="button" className="gumb-glavni" disabled={poteka || !sledilna.trim()} onClick={() => void poslji()}>
+        <button type="button" className="gumb-glavni" disabled={poteka || !sledilna.trim() || (poslano && sledilna.trim() === (n.sledilna ?? ''))} onClick={() => void poslji()}>
           {poslano ? t('admin.popraviSledilno') : t('admin.poslano')}
         </button>
       </div>
