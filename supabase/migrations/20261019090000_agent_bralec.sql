@@ -31,9 +31,13 @@ end $$;
 -- omejitvah, ki jih seja ne more preklopiti (connection limit, temp_file_limit).
 alter role agent_bralec connection limit 3;
 alter role agent_bralec set default_transaction_read_only = on;
-alter role agent_bralec set statement_timeout = '15s';
+alter role agent_bralec set statement_timeout = '5s';
 alter role agent_bralec set idle_in_transaction_session_timeout = '30s';
-alter role agent_bralec set temp_file_limit = '256MB';
+do $$ begin
+  alter role agent_bralec set temp_file_limit = '256MB';
+exception when insufficient_privilege then
+  raise notice 'agent_bralec: temp_file_limit nastavi ročno (docs/agenti-baza.md)';
+end $$;
 
 create schema if not exists agent;
 revoke all on schema agent from public;
@@ -68,6 +72,12 @@ on conflict (tabela, stolpec) do nothing;
 create or replace function agent.obcutljiv_stolpec(p text) returns boolean
 language sql immutable set search_path = pg_catalog
 as $f$ select p ~* '(e_?mail|naslov|telefon|geslo|password|token|zeton|kljuc|secret|hash|stripe_customer|dokaz|odjemalec|ip_?naslov|^ip$)' $f$;
+
+-- Izjeme od vzorca, ki jih je lastnik izrecno dovolil (naslovi klubov, 19. 10. 2026).
+create table if not exists agent.odprti_stolpci (tabela text, stolpec text, zakaj text not null, primary key (tabela, stolpec));
+insert into agent.odprti_stolpci (tabela, stolpec, zakaj) values
+  ('public.klub_stik', 'email', 'naslov kluba; ekipa z njim dela')
+on conflict (tabela, stolpec) do nothing;
 
 -- Registracije in prijave po dnevih brez e-pošte (pogled teče kot lastnik).
 create or replace view agent.registracije as
@@ -104,11 +114,15 @@ begin
     end if;
     if exists (select 1 from agent.zaprti_stolpci z where z.tabela = r.nspname || '.' || r.relname)
        or exists (select 1 from pg_attribute a where a.attrelid = r.oid and a.attnum > 0
-                  and not a.attisdropped and agent.obcutljiv_stolpec(a.attname)) then
+                  and not a.attisdropped and agent.obcutljiv_stolpec(a.attname)
+                  and not exists (select 1 from agent.odprti_stolpci o
+                                  where o.tabela = r.nspname || '.' || r.relname and o.stolpec = a.attname)) then
       select string_agg(quote_ident(a.attname), ', ' order by a.attnum) into v_stolpci
       from pg_attribute a
       where a.attrelid = r.oid and a.attnum > 0 and not a.attisdropped
-        and not agent.obcutljiv_stolpec(a.attname)
+        and (not agent.obcutljiv_stolpec(a.attname)
+             or exists (select 1 from agent.odprti_stolpci o
+                        where o.tabela = r.nspname || '.' || r.relname and o.stolpec = a.attname))
         and not exists (select 1 from agent.zaprti_stolpci z
                         where z.tabela = r.nspname || '.' || r.relname and z.stolpec = a.attname);
       if v_stolpci is not null then
@@ -135,6 +149,14 @@ begin
   if not current_setting('transaction_read_only')::boolean then
     raise exception 'agent.poizvedba teče le v transakciji za branje';
   end if;
+  -- En sam stavek (EXECUTE bi sicer pognal več stavkov, meja vrstic velja le za zadnjega).
+  if position(';' in p_sql) > 0 then
+    raise exception 'agent.poizvedba: le en stavek, brez ;';
+  end if;
+  -- Zaklepi in čakanje bi zadrževali shranjevanje ekip (shrani_ekipo).
+  if p_sql ~* '(pg_advisory|pg_sleep|pg_try_advisory)' then
+    raise exception 'agent.poizvedba: zaklepi in čakanje niso dovoljeni';
+  end if;
   return query execute format('select to_json(t) from (%s) t limit 1000', p_sql);
 end $f$;
 revoke all on function agent.poizvedba(text) from public;
@@ -159,6 +181,14 @@ begin
   end loop;
   revoke usage on schema net from public;
   revoke all on net.http_request_queue, net._http_response from public;
+  if to_regclass('net.http_request_queue_id_seq') is not null then
+    revoke all on sequence net.http_request_queue_id_seq from public;
+    foreach v_v in array array['anon','authenticated','service_role','postgres','supabase_functions_admin'] loop
+      if exists (select 1 from pg_roles where rolname = v_v) then
+        execute format('grant usage, select on sequence net.http_request_queue_id_seq to %I', v_v);
+      end if;
+    end loop;
+  end if;
 exception when insufficient_privilege then
   raise warning 'net: pravice PUBLIC odvzemi ročno (docs/agenti-baza.md)';
 end $$;

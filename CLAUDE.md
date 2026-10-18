@@ -355,7 +355,7 @@ pravila predhodnega preverjanja in beleženja veljajo enako za nemške klube.
 ## Agenti in baza
 
 Agenti (Pivko, SRE v Paperclipu) berejo produkcijsko bazo prek omejenega SSH
-ukaza `agent@` na VM kot `agent_bralec` (le branje, 15 s, brez sheme auth in
+ukaza `agent@` na VM kot `agent_bralec` (le branje, 5 s, brez sheme auth in
 scout, ključev, žetonov in e-pošte uporabnikov). **Nova tabela ali stolpec s
 skrivnostjo ali osebnimi podatki gre v isti migraciji v
 `agent.zaprte_tabele`/`agent.zaprti_stolpci`** — ostalo dobi bralne pravice

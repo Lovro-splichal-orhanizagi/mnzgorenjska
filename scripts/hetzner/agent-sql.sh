@@ -7,7 +7,7 @@
 # transakcijo odpre ovoj kot READ ONLY, besedilo agenta gre v agent.poizvedba
 # kot dolar-citat z naključno oznako in se izvede kot en sam podizraz, zato ne
 # more končati transakcije, pisati ali pognati drugega ukaza. Vrstice so JSON
-# (največ 1000). Psql ubije `timeout` po 30 s; vloga ima connection limit 3.
+# (največ 1000), le en stavek brez `;`. Psql ubije `timeout` po 30 s; vloga ima connection limit 3.
 # Vsaka poizvedba gre v journal (journalctl -t agent-sql). Docs: docs/agenti-baza.md.
 #
 #   ssh agent@<vm> "select poslal, count(*) from klub_stik_posta group by 1"
@@ -37,7 +37,8 @@ export PGPASSWORD=$AGENT_GESLO
 exec timeout 30 psql -X -q -A -t -v ON_ERROR_STOP=1 \
   "host=127.0.0.1 port=5432 dbname=postgres user=agent_bralec application_name=agent-sql" \
   -c "begin transaction read only;
-set local statement_timeout = 15000;
+set local statement_timeout = 5000;
+set local work_mem = '16MB';
 set local lock_timeout = 2000;
 select * from agent.poizvedba(\$$oznaka\$$sql\$$oznaka\$);
 rollback;"

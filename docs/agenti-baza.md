@@ -12,7 +12,7 @@ danes poslali"). Za to imajo omejen bralni dostop do produkcijske baze.
 - **Meja varnosti je ovoj** `scripts/hetzner/agent-sql.sh`, ne nastavitve
   vloge (seja jih lahko spremeni): transakcijo odpre kot READ ONLY,
   poizvedba gre v `agent.poizvedba()` in se izvede kot en sam podizraz
-  (ne more končati transakcije, pisati ali pognati drugega ukaza), 15 s v
+  (ne more končati transakcije, pisati ali pognati drugega ukaza), 5 s v
   bazi, `timeout 30` za psql, največ 1000 vrstic kot JSON. Le en `SELECT`
   ali `WITH … SELECT`, brez `\`.
 - pg_net (`net`) agentu ni dostopen (čakalna vrsta nosi URL-je kljuk
