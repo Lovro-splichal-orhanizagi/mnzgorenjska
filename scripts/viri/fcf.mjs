@@ -399,6 +399,16 @@ export function igralciEkipe(vozel) {
   return igralci
 }
 
+/** Vrsta je samostojna oznaka ob igralcu: ["GOL…", " (", klub, ")"]. */
+function vrstaGola(vrstica, igralec) {
+  const vsebina = prvi(vrstica, (e) => e.otroci.includes(igralec))
+  const oznaka = vsebina?.otroci.find((e) => e?.tip === 'span' &&
+    e.otroci[1] === ' (' && e.otroci[3] === ')')
+  // Beri samo oznako, nikoli imena igralca, kluba ali besedila legende.
+  const tip = presledki(oznaka?.otroci[0]).toUpperCase()
+  return /^GOL EN PR[ÒO]PIA$/.test(tip) ? 'avtogol' : tip === 'GOL PENAL' ? 'enajstmetrovka' : 'gol'
+}
+
 /** Goli iz razdelka "Gols": [{ regSt, ime, minuta, stanje: [d, g], vrsta }]. */
 export function goliZapisnika(koreni) {
   const razdelek = prvi(koreni, (e) => e.tip === 'div' && e.otroci.some((o) => jeElement(o) && o.otroci.some((h) => h?.tip === 'h3' && besedilo(h) === 'Gols')))
@@ -419,7 +429,7 @@ export function goliZapisnika(koreni) {
       ime: imeIgralca(p.nombre),
       minuta: minuta(t.match(/\((\d+)(?:\s*\+\s*\d+)?\s*'\)/)?.[1]),
       stanje: [Number(stanje[1]), Number(stanje[2])],
-      vrsta: /PR[ÒO]PIA/i.test(t) ? 'avtogol' : /PENAL/i.test(t) ? 'enajstmetrovka' : 'gol',
+      vrsta: vrstaGola(e, igralci[0]),
     })
   }
   return out
