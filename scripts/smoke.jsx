@@ -13055,7 +13055,8 @@ preveri(
     shipping_cost: { shipping_rate: 'shr_1' },
   }
   const { args, tarifa, drzava } = trgovinaIzSeje(seja)
-  preveri('trgovina stripe: zneski seje', args.p_postavke === 5000 && args.p_dostava === 390 && args.p_ddv === 972 && args.p_skupaj === 5390)
+  preveri('trgovina stripe: zneski seje', args.p_postavke === 5000 && args.p_dostava === 390 && args.p_ddv === 972 && args.p_skupaj === 5390 && args.p_popust === 0)
+  preveri('trgovina stripe: popust iz seje', trgovinaIzSeje({ ...seja, total_details: { ...seja.total_details, amount_discount: 2000 } }).args.p_popust === 2000)
   preveri('trgovina stripe: prejemnik in naslov iz dostave', args.p_ime === 'Prejemnik' && args.p_naslov?.city === 'Kranj' && args.p_email === 'kupec@example.com')
   preveri('trgovina stripe: tarifa in država', tarifa === 'shr_1' && drzava === 'SI' && args.p_payment_intent === 'pi_1')
   const star = trgovinaIzSeje({ id: 'cs_2', shipping_details: { name: 'X', address: { country: 'AT' } }, shipping_cost: { shipping_rate: { id: 'shr_2' } } })
@@ -13079,6 +13080,10 @@ preveri(
   const en = trgovinaMail('poslano', { ...n, jezik: 'en', stanje: 'poslano' }, 'https://shop.slff.eu')
   preveri('trgovina mail: poslano en s sledilno', en.naslov.includes('on its way') && en.besedilo.includes('RR123456789SI') && en.besedilo.includes('posta.si') && !/Pozdravljeni|naročilo/.test(en.besedilo))
   preveri('trgovina mail: en zneski', trgovinaMail('potrditev', { ...n, jezik: 'en' }, 'x').besedilo.includes('€53.90'))
+  preveri('trgovina mail: popust le, ko je bil (sl, en)',
+    !sl.besedilo.includes('Popust') &&
+    trgovinaMail('potrditev', { ...n, znesek_skupaj: 3390 }, 'x').besedilo.includes('Popust: −20,00 €') &&
+    trgovinaMail('potrditev', { ...n, jezik: 'en', znesek_skupaj: 3390 }, 'x').besedilo.includes('Discount: −€20.00'))
   preveri('trgovina mail: telefon in različica pogojev kot v trgovini', trgovinaTelefonMail === trgovinaTelefon && trgovinaVerzijaMail === trgovinaVerzija)
   // Trajni nosilec: potrditev nosi celoten pouk o odstopu in vzorčni obrazec v jeziku naročila.
   const enP = trgovinaMail('potrditev', { ...n, jezik: 'en' }, 'https://shop.slff.eu')

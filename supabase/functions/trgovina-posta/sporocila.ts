@@ -52,6 +52,7 @@ const BESEDILA = {
     sledenje: 'Pošiljki lahko sledite na spletni strani Pošte Slovenije: https://www.posta.si/',
     postavke: 'Naročeno:',
     dostava: 'Dostava',
+    popust: 'Popust',
     skupaj: 'Skupaj (z DDV)',
     ddv: 'od tega DDV',
     naslov: 'Naslov za dostavo:',
@@ -81,6 +82,7 @@ const BESEDILA = {
     sledenje: 'You can track the parcel on the Pošta Slovenije website: https://www.posta.si/',
     postavke: 'Ordered:',
     dostava: 'Shipping',
+    popust: 'Discount',
     skupaj: 'Total (incl. VAT)',
     ddv: 'of which VAT',
     naslov: 'Shipping address:',
@@ -121,6 +123,8 @@ export function sestaviMail(vrsta: 'potrditev' | 'poslano' | 'bon', n: Narocilo,
   const b = BESEDILA[j]
   const v = (t: string) => t.replaceAll('{o}', n.javna_oznaka).replaceAll('{s}', n.sledilna ?? '').replaceAll('{u}', shop).replaceAll('{v}', POGOJI_VERZIJA).replaceAll('{t}', TELEFON)
   const e = (c: number | null) => evri(c ?? 0, j)
+  // Postavke so pred popustom kode ali bona: razlika do skupaj je popust.
+  const popust = (n.znesek_postavke ?? 0) + (n.znesek_dostava ?? 0) - (n.znesek_skupaj ?? 0)
   const a = n.naslov ?? {}
   const naslov = [a.name ?? n.ime, a.line1, a.line2, [a.postal_code, a.city].filter(Boolean).join(' '), a.country].filter(Boolean) as string[]
   const opis = (p: Narocilo['postavke'][number]) =>
@@ -146,7 +150,8 @@ export function sestaviMail(vrsta: 'potrditev' | 'poslano' | 'bon', n: Narocilo,
       ? [[b.pozdrav, v(b.na_poti)], [v(b.sledilna), b.sledenje], [b.naslov, ...naslov]]
       : [
           [b.pozdrav, v(b.hvala)],
-          [b.postavke, ...vrstice, `${b.dostava}: ${e(n.znesek_dostava)}`, `${b.skupaj}: ${e(n.znesek_skupaj)} (${b.ddv} ${e(n.znesek_ddv)})`],
+          [b.postavke, ...vrstice, `${b.dostava}: ${e(n.znesek_dostava)}`,
+            ...(popust > 0 ? [`${b.popust}: −${e(popust)}`] : []), `${b.skupaj}: ${e(n.znesek_skupaj)} (${b.ddv} ${e(n.znesek_ddv)})`],
           ...(opombe.length ? [opombe] : []),
           ...(n.naslov ? [[b.naslov, ...naslov]] : []),
           [b.odstopNaslov],

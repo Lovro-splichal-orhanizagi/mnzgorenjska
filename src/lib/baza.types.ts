@@ -9143,6 +9143,7 @@ export type Database = {
         Returns: Json
       }
       trgovina_bon_porabljen: { Args: { p_promocija: string }; Returns: string }
+      trgovina_bon_poslan: { Args: { p_narocilo: number }; Returns: undefined }
       trgovina_iz_placila: {
         Args: {
           p_checkout: string
@@ -9153,6 +9154,7 @@ export type Database = {
           p_ime: string
           p_naslov: Json
           p_payment_intent: string
+          p_popust?: number
           p_postavke: number
           p_skupaj: number
         }
@@ -9190,6 +9192,7 @@ export type Database = {
         Args: { p_checkout: string; p_narocilo: number }
         Returns: undefined
       }
+      trgovina_vracilo: { Args: { p_payment_intent: string }; Returns: Json }
       trgovina_zabelezi_bon: {
         Args: {
           p_koda_hash: string

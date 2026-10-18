@@ -244,7 +244,7 @@ async function obdelaj(tip: string, o: Obj): Promise<string> {
     case 'checkout.session.completed':
     case 'checkout.session.async_payment_succeeded': {
       const m = o.metadata ?? {}
-      if (['slff', 'slff-scout', 'slff-shop'].includes(m.app) && o.payment_status === 'paid') await oznaciBone(o)
+      if (['slff', 'slff-scout', 'slff-shop'].includes(m.app) && ['paid', 'no_payment_required'].includes(o.payment_status)) await oznaciBone(o)
       if (m.app === 'slff-scout') return await scoutSeja(o)
       if (m.app === 'slff-shop') return await trgovinaSeja(o)
       if (m.app !== 'slff') return 'ignored'
@@ -437,7 +437,8 @@ async function scoutNarocnina(tip: string, o: Obj): Promise<string> {
 const evri = (c: number) => (c / 100).toFixed(2).replace('.', ',')
 
 async function trgovinaSeja(o: Obj): Promise<string> {
-  if (o.payment_status !== 'paid') return 'unpaid'
+  // no_payment_required: bon ali koda je pokrila ves znesek.
+  if (!['paid', 'no_payment_required'].includes(o.payment_status)) return 'unpaid'
   const oznaka = o.metadata?.oznaka ?? o.id
   const { args, tarifa, drzava } = trgovinaIzSeje(o)
   const kljuc = tarifa ? ((await beri(`shipping_rates/${tarifa}`)).metadata?.kljuc ?? tarifa) : null
@@ -460,8 +461,8 @@ async function trgovinaSeja(o: Obj): Promise<string> {
   return izid
 }
 
-/** Pošlje mail trgovine; napaka gre na Discord, dogodka ne ponovi. */
-async function postaTrgovine(telo: Obj, oznaka: string, kaj: string): Promise<void> {
+/** Pošlje mail trgovine; napaka gre na Discord, dogodka ne ponovi. Vrne, ali je mail potrjeno odšel. */
+async function postaTrgovine(telo: Obj, oznaka: string, kaj: string): Promise<boolean> {
   try {
     const r = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/trgovina-posta`, {
       method: 'POST',
@@ -470,12 +471,14 @@ async function postaTrgovine(telo: Obj, oznaka: string, kaj: string): Promise<vo
       signal: AbortSignal.timeout(8000),
     })
     if (!r.ok) throw new Error(`trgovina-posta ${r.status}`)
+    return true
   } catch (e) {
     console.error('stripe-webhook: trgovina-posta', String(e))
     // Ob časovni omejitvi je mail morda vseeno odšel.
     await discord((e as Error)?.name === 'TimeoutError'
       ? `⚠️ Trgovina: mail (${kaj}) naročila ${oznaka} ni potrjen — preveri email_log.`
       : `⚠️ Trgovina: mail (${kaj}) naročila ${oznaka} ni odšel po pošti.`)
+    return false
   }
 }
 
@@ -513,7 +516,8 @@ async function bonEnote(oznaka: string, narocilo: number, postavka: number, enot
   let pc: Obj | undefined = obstojeca.j.data?.[0]
   if (!pc) {
     const n = await stripe('promotion_codes', 'POST', {
-      coupon: kid, code: novaKoda(), max_redemptions: 1, expires_at: k.j.redeem_by, ...meta,
+      // Koda poteče minuto pred kuponom (Stripe zavrne kodo, ki živi dlje od kupona).
+      coupon: kid, code: novaKoda(), max_redemptions: 1, expires_at: k.j.redeem_by - 60, ...meta,
     }, RAZLICICA_BONOV)
     if (!n.ok) throw new Error(`koda ${kid}: ${n.j?.error?.message ?? n.status}`)
     pc = n.j
@@ -521,36 +525,72 @@ async function bonEnote(oznaka: string, narocilo: number, postavka: number, enot
   return { koda: String(pc!.code), promocija: String(pc!.id), velja_do: iso(pc!.expires_at ?? k.j.redeem_by)! }
 }
 
-/** Darilni boni plačanega naročila: izda manjkajoče, nove pošlje kupcu. Napaka = ponovitev dogodka. */
+/** Darilni boni plačanega naročila; napaka gre na Discord (brez kode) in ponovi dogodek. */
 async function boniNarocila(o: Obj, oznaka: string): Promise<void> {
-  const id_ = Number(o.metadata?.narocilo_id)
-  const { data, error } = await baza.rpc('trgovina_narocilo_za_posto', { p_id: id_ })
-  if (error) throw new Error(`trgovina_narocilo_za_posto: ${error.message}`)
-  const enote = enoteBonov((data as Obj | null)?.postavke ?? [])
-  if (!enote.length) return
-  let izdelki: Promise<string[]> | null = null
-  const zaBon = () => (izdelki ??= izdelkiZaBon().then((x) => (x.length ? x : Promise.reject(new Error('ni izdelkov trgovine v Stripe')))))
-  const nove: { koda: string; znesek: number; velja_do: string }[] = []
-  for (const [postavka, enota, znesek] of enote) {
-    const b = await bonEnote(oznaka, id_, postavka, enota, znesek, zaBon)
-    const izid = await rpc('trgovina_zabelezi_bon', {
-      p_postavka: postavka, p_zaporedje: enota, p_koda_hash: await zgostiKodo(b.koda),
-      p_koda_konec: b.koda.slice(-4), p_velja_do: b.velja_do, p_stripe_promocija: b.promocija,
-    })
-    if (izid === 'zabelezeno') nove.push({ koda: b.koda, znesek, velja_do: b.velja_do })
+  try {
+    await izdajBone(o, oznaka)
+  } catch (e) {
+    await discord(`🛒 Trgovina: bon za ${oznaka} ni izdan — preveri`)
+    throw e
   }
-  if (nove.length) await postaTrgovine({ vrsta: 'bon', narocilo_id: id_, kode: nove }, oznaka, 'darilni bon')
 }
 
 /**
- * Vračilo plačila trgovine (metadata app=slff-shop na payment_intent): baza še
- * nima servisnega RPC za vrnjeno naročilo, zato le Discord (značka in tisk ročno).
+ * Izda manjkajoče bone in kupcu pošlje vse kode, dokler mail ni zabeležen
+ * (bon_mail_at): ponovitev po padcu med zapisom in mailom mail še pošlje.
+ */
+async function izdajBone(o: Obj, oznaka: string): Promise<void> {
+  const id_ = Number(o.metadata?.narocilo_id)
+  const { data, error } = await baza.rpc('trgovina_narocilo_za_posto', { p_id: id_ })
+  if (error) throw new Error(`trgovina_narocilo_za_posto: ${error.message}`)
+  const narocilo = data as Obj | null
+  // Mail gre šele po izdaji vseh enot: zabeležen mail pomeni, da je vse izdano.
+  if (narocilo?.bon_mail_at) return
+  const enote = enoteBonov(narocilo?.postavke ?? [])
+  if (!enote.length) return
+  let izdelki: Promise<string[]> | null = null
+  const zaBon = () => (izdelki ??= izdelkiZaBon().then((x) => (x.length ? x : Promise.reject(new Error('ni izdelkov trgovine v Stripe')))))
+  const kode: { koda: string; znesek: number; velja_do: string }[] = []
+  for (const [postavka, enota, znesek] of enote) {
+    const b = await bonEnote(oznaka, id_, postavka, enota, znesek, zaBon)
+    await rpc('trgovina_zabelezi_bon', {
+      p_postavka: postavka, p_zaporedje: enota, p_koda_hash: await zgostiKodo(b.koda),
+      p_koda_konec: b.koda.slice(-4), p_velja_do: b.velja_do, p_stripe_promocija: b.promocija,
+    })
+    kode.push({ koda: b.koda, znesek, velja_do: b.velja_do })
+  }
+  if (await postaTrgovine({ vrsta: 'bon', narocilo_id: id_, kode }, oznaka, 'darilni bon'))
+    await rpc('trgovina_bon_poslan', { p_narocilo: id_ })
+}
+
+/**
+ * Vračilo plačila trgovine (metadata app=slff-shop na payment_intent). Celotno:
+ * trgovina_vracilo (naročilo vrnjeno, značka preklicana, tisk sproščen) in
+ * izklop promocijskih kod bonov naročila. Delno: le Discord (uredi ročno).
  */
 async function vraciloTrgovine(placilo: Obj): Promise<boolean> {
   const pi = id(placilo.payment_intent)
-  const meta = placilo.metadata?.app ? placilo.metadata : pi ? ((await stripe(`payment_intents/${pi}`)).j?.metadata ?? {}) : {}
+  let meta: Obj = placilo.metadata?.app ? placilo.metadata : {}
+  if (!meta.app && pi) {
+    const r = await stripe(`payment_intents/${pi}`)
+    // Brez plačila ne vemo, čigavo je: napaka, Stripe dogodek ponovi.
+    if (!r.ok) throw new Error(`payment_intents/${pi}: ${r.j?.error?.message ?? r.status}`)
+    meta = r.j?.metadata ?? {}
+  }
   if (meta.app !== 'slff-shop') return false
-  await discord(`↩️ Trgovina: vračilo ${meta.oznaka ?? pi} (${evri(placilo.amount_refunded ?? 0)} €) — preveri značko/tisk in bone v Stripe.`)
+  const vrnjeno = placilo.amount_refunded ?? 0
+  if (!(placilo.refunded === true || vrnjeno >= (placilo.amount ?? Infinity))) {
+    await discord(`↩️ Trgovina: delno vračilo ${meta.oznaka ?? pi} (${evri(vrnjeno)} €) — uredi značko/tisk in bone ročno.`)
+    return true
+  }
+  const { data, error } = await baza.rpc('trgovina_vracilo', { p_payment_intent: pi ?? '' })
+  if (error) throw new Error(`trgovina_vracilo: ${error.message}`)
+  const v = data as { oznaka: string; promocije: string[] } | null
+  for (const pc of v?.promocije ?? []) {
+    const r = await stripe(`promotion_codes/${pc}`, 'POST', { active: 'false' }, RAZLICICA_BONOV)
+    if (!r.ok) throw new Error(`izklop kode ${pc}: ${r.j?.error?.message ?? r.status}`)
+  }
+  await discord(`↩️ Trgovina: vračilo ${v?.oznaka ?? meta.oznaka ?? pi}`)
   return true
 }
 

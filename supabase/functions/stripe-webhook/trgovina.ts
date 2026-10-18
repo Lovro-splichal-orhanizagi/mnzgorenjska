@@ -15,6 +15,7 @@ export interface PlaciloTrgovine {
   p_dostava: number
   p_ddv: number
   p_skupaj: number
+  p_popust: number
 }
 
 /**
@@ -40,6 +41,7 @@ export function trgovinaIzSeje(o: Obj): { args: PlaciloTrgovine; tarifa: string 
       p_dostava: o.total_details?.amount_shipping ?? o.shipping_cost?.amount_total ?? 0,
       p_ddv: o.total_details?.amount_tax ?? 0,
       p_skupaj: o.amount_total ?? 0,
+      p_popust: o.total_details?.amount_discount ?? 0,
     },
     tarifa: id(o.shipping_cost?.shipping_rate),
     drzava: a?.country ?? null,

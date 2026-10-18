@@ -132,27 +132,42 @@ async function izdelkiTrgovine(service: Servis): Promise<Map<string, IzdelekStri
       const id = idIzdelka(i.slug, jezik)
       if (m.has(id)) continue
       const polja = { id, name: imeV(i, jezik), 'metadata[app]': 'slff-shop', 'metadata[slug]': i.slug, 'metadata[jezik]': jezik, 'metadata[digitalni]': i.digitalni ? '1' : '0' }
-      m.set(id, await stripe<IzdelekStripe>('products', polja).catch(() => stripe<IzdelekStripe>(`products/${id}`)))
+      try {
+        m.set(id, await stripe<IzdelekStripe>('products', polja).catch(() => stripe<IzdelekStripe>(`products/${id}`)))
+      } catch (e) {
+        // Brez izdelka gre postavka s product_data (bon zanjo ne velja); nakup ne pade.
+        console.error(`trgovina-nakup: izdelek ${id}`, String(e))
+      }
     }
   return (izdelki = m)
 }
 
-/** Id izdelka v Stripe za postavko (ime in tax_code popravi, če sta se spremenila); null = brez ujemanja. */
+/**
+ * Id izdelka v Stripe za postavko (ime, tax_code in digitalni popravi, če so se
+ * spremenili); null = brez ujemanja ali napaka v Stripe (postavka gre s product_data).
+ */
 async function izdelekZa(service: Servis, p: Rezervacija['postavke'][number], jezik: string): Promise<string | null> {
-  let i = izdelekPostavke(p.ime, jezik, katalog)
-  if (!i && izdelki) {
-    izdelki = null // nov izdelek v katalogu
-    await izdelkiTrgovine(service)
-    i = izdelekPostavke(p.ime, jezik, katalog)
+  try {
+    let i = izdelekPostavke(p.ime, jezik, katalog)
+    if (!i && izdelki) {
+      izdelki = null // nov izdelek v katalogu
+      await izdelkiTrgovine(service)
+      i = izdelekPostavke(p.ime, jezik, katalog)
+    }
+    if (!i) return null
+    const id = idIzdelka(i.slug, jezik)
+    const s = izdelki?.get(id)
+    if (!s) return null
+    const tax = typeof s.tax_code === 'string' ? s.tax_code : (s.tax_code?.id ?? null)
+    const digitalni = i.digitalni ? '1' : '0'
+    if (s.name !== imeV(i, jezik) || tax !== p.tax_code || s.metadata?.digitalni !== digitalni) {
+      izdelki?.set(id, await stripe<IzdelekStripe>(`products/${id}`, { name: imeV(i, jezik), tax_code: p.tax_code, 'metadata[digitalni]': digitalni }))
+    }
+    return id
+  } catch (e) {
+    console.error('trgovina-nakup: izdelek postavke', String(e))
+    return null
   }
-  if (!i) return null
-  const id = idIzdelka(i.slug, jezik)
-  const s = izdelki?.get(id)
-  const tax = typeof s?.tax_code === 'string' ? s.tax_code : (s?.tax_code?.id ?? null)
-  if (s && (s.name !== imeV(i, jezik) || tax !== p.tax_code)) {
-    izdelki!.set(id, await stripe<IzdelekStripe>(`products/${id}`, { name: imeV(i, jezik), tax_code: p.tax_code }))
-  }
-  return id
 }
 
 Deno.serve(async (req) => {
@@ -222,7 +237,7 @@ Deno.serve(async (req) => {
   try {
     const t: Record<string, string> = r.digitalno ? {} : await tarifeTrgovine()
     const ponudba = drzava && !r.digitalno ? tarifeZa(drzava, r.pismo).map((k) => t[k]).filter((id): id is string => !!id) : []
-    await izdelkiTrgovine(service)
+    await izdelkiTrgovine(service).catch((e) => console.error('trgovina-nakup: izdelki', String(e)))
 
     const meta = { app: 'slff-shop', narocilo_id: String(r.narocilo_id), oznaka: r.javna_oznaka }
     const polja: Polja = {

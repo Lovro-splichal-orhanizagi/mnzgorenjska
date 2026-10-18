@@ -24,11 +24,15 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   `izdelki.po_narocilu` / `digitalni` (brez zaloge), `personalizacije`
   (možnosti in doplačila), `postavke.personalizacija` / `doplacilo` /
   `stanje_tiska`, `serije`, `boni` (koda le sha256 + zadnji 4 znaki).
-  `rezerviraj` preveri personalizacijo (ime ekipe, poljubno ime s filtrom
-  `prepovedano_besedilo`, številka 0–99, prvak `trgovina.prvaki_uporabnika`,
-  značka `trgovina.znacka_uporabnika`); plačilo značke vpiše `narocila_znack`.
+  `rezerviraj` preveri personalizacijo (ime ekipe do 24 znakov in poljubno
+  ime s filtrom `prepovedano_besedilo`, številka 0–99, prvak
+  `trgovina.prvaki_uporabnika`: liga nastala vsaj 60 dni in ekipa v njej vsaj
+  30 dni pred zadnjim rokom sezone; značka `trgovina.znacka_uporabnika` po
+  stikalu `preverjeni_racuni` za kupca, ne v dveh odprtih naročilih); plačilo
+  značke vpiše `narocila_znack`.
   Kupec: `trgovina_moji_prvaki()`, `trgovina_moja_znacka()`; servis:
-  `trgovina_zabelezi_bon`, `trgovina_bon_porabljen`; admin: `_za_tisk`,
+  `trgovina_zabelezi_bon`, `trgovina_bon_porabljen`, `trgovina_bon_poslan`,
+  `trgovina_vracilo`; admin: `_za_tisk`,
   `_nova_serija`, `_serija`, `_serije`, `_serija_stanje`, `_boni`,
   `_shrani_personalizacijo`.
 - **Rezervacija**: naročilo `caka_placilo` drži zalogo 35 min
@@ -68,9 +72,17 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   izdelki trgovine brez digitalnih) in kodo `SLFF-XXXX-XXXX`; ponovitev
   dogodka najde kupon in njegovo aktivno kodo in druge ne ustvari. Zapis
   `trgovina_zabelezi_bon` (sha256 + zadnji 4), kode gredo kupcu v mailu
-  `bon`. Klici bonov imajo zapisano različico API `2025-03-31.basil`.
-  Plačana seja s popustom (vse tri aplikacije) → `trgovina_bon_porabljen`.
-  Vračilo plačila trgovine (`charge.refunded`) je zaenkrat le Discord.
+  `bon`, dokler `narocila.bon_mail_at` ni zapisan (`trgovina_bon_poslan`), zato
+  ponovitev po padcu mail še pošlje. Največ 5 bonov na naročilo. Napaka izdaje
+  gre na Discord (brez kode). Klici bonov imajo zapisano različico API
+  `2025-03-31.basil`. Plačana seja s popustom (vse tri aplikacije) →
+  `trgovina_bon_porabljen`; popust seje se shrani v `narocila.znesek_popust`
+  in je v potrditvi ("Popust"). Seja `no_payment_required` (bon pokrije vse)
+  šteje za plačano.
+- **Vračilo** (`charge.refunded`, celotno): `trgovina_vracilo` (naročilo →
+  `vrnjeno`, nenatisnjena značka preklicana, nenatisnjene postavke iz tiska)
+  in izklop promocijskih kod bonov naročila v Stripe, nato Discord. Delno
+  vračilo je le Discord (uredi ročno).
 - **Admin** `/admin`: naročila za pakiranje (nalepka 100×150 mm, dobavnica),
   sledilna številka → poslano + mail; izdelki, različice, cene, zaloga kot
   sprememba (`zaloga_dodaj`), slike v Storage (vedro `trgovina`).

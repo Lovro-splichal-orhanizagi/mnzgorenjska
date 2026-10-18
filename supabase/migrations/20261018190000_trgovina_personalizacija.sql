@@ -48,6 +48,12 @@ comment on column trgovina.postavke.doplacilo is 'Doplačilo personalizacije na 
 create index on trgovina.postavke (stanje_tiska) where stanje_tiska is not null;
 create index on trgovina.postavke (serija_id);
 
+alter table trgovina.narocila
+  add column bon_mail_at timestamptz,
+  add column znesek_popust int not null default 0;
+comment on column trgovina.narocila.znesek_popust is 'Popust promocijske kode ali bona (total_details.amount_discount), centi.';
+comment on column trgovina.narocila.bon_mail_at is 'Kdaj je odšel mail z darilnimi boni (webhook ga ponovi, dokler je prazno).';
+
 create table trgovina.boni (
   id               bigint generated always as identity primary key,
   narocilo_id      bigint not null references trgovina.narocila on delete cascade,
@@ -77,6 +83,9 @@ revoke all on trgovina.personalizacije, trgovina.serije, trgovina.boni from publ
 -- Prvak = največ točk v mini ligi za sezono S (vsota krogov sezone, kot
 -- tedenski pregled), sezona S je za vsa tekmovanja ekip pretekla
 -- (`sezona_lige`), v sezoni je igralo vsaj 4 človeških ekip, ekipa je kupčeva.
+-- Konec sezone = zadnji rok kroga S v tekmovanjih človeških članic. Liga šteje
+-- le, če je nastala vsaj 60 dni pred koncem, in ekipa le, če se je pridružila
+-- vsaj 30 dni pred koncem (sicer bi si ligo po sezoni sestavil kdorkoli).
 create function trgovina.prvaki_uporabnika(p_user uuid)
 returns table (mini_liga_id bigint, ime text, sezona text, fantasy_team_id bigint, ekipa text)
 language sql stable
@@ -87,13 +96,22 @@ as $$
       join public.fantasy_teams ft on ft.id = c.fantasy_team_id
      where ft.owner_id = p_user and not ft.hisna
   ),
-  tocke as (
-    select c.mini_liga_id, ft.id as fantasy_team_id, ft.name, ft.owner_id, ft.competition_id,
-           frp.season, sum(frp.points) as tocke
+  konci as (
+    select l.mini_liga_id, r.season, max(r.deadline_at) as konec
       from lige l
       join public.mini_liga_clani c on c.mini_liga_id = l.mini_liga_id
       join public.fantasy_teams ft on ft.id = c.fantasy_team_id and not ft.hisna
-      join public.fantasy_round_points frp on frp.fantasy_team_id = ft.id
+      join public.rounds r on r.competition_id = ft.competition_id
+     group by 1, 2
+  ),
+  tocke as (
+    select c.mini_liga_id, ft.id as fantasy_team_id, ft.name, ft.owner_id, ft.competition_id,
+           frp.season, sum(frp.points) as tocke
+      from konci k
+      join public.mini_lige ml on ml.id = k.mini_liga_id and ml.created_at <= k.konec - interval '60 days'
+      join public.mini_liga_clani c on c.mini_liga_id = k.mini_liga_id and c.joined_at <= k.konec - interval '30 days'
+      join public.fantasy_teams ft on ft.id = c.fantasy_team_id and not ft.hisna
+      join public.fantasy_round_points frp on frp.fantasy_team_id = ft.id and frp.season = k.season
      group by 1, 2, 3, 4, 5, 6
   ),
   koncane as (
@@ -113,7 +131,9 @@ as $$
 $$;
 
 -- Doživljenjska aktivna pravica na kupčevem potrjenem profilu, brez
--- nepreklicanega naročila značke. ponytail: več takih profilov → prvi po id.
+-- nepreklicanega naročila značke, in stikalo preverjeni_racuni za kupca
+-- (2 vsi, 1 admin in preizkuševalci; kot vidi_preverjene, a za p_user).
+-- ponytail: več takih profilov → prvi po id.
 create function trgovina.znacka_uporabnika(p_user uuid)
 returns table (preverjeni_racun_id bigint, player_id bigint, ime text)
 language sql stable
@@ -123,6 +143,12 @@ as $$
     join public.zahtevki_igralca z on z.id = public.prevzem_zahtevek_igralca(r.player_id) and z.user_id = p_user
     join public.players p on p.id = r.player_id and p.anonimiziran_at is null
    where r.user_id = p_user and r.vir = 'dozivljenjska' and r.status = 'aktiven'
+     and case coalesce(public.nastavitev_int('preverjeni_racuni', 0), 0)
+           when 2 then true
+           when 1 then exists (select 1 from public.profiles pr where pr.id = p_user and pr.is_admin)
+                    or exists (select 1 from public.testerji t where t.user_id = p_user)
+           else false
+         end
      and not exists (select 1 from public.narocila_znack n
                       where n.preverjeni_racun_id = r.id and n.status <> 'preklicano')
    order by r.id
@@ -188,6 +214,10 @@ begin
     if v_id is null then
       raise exception 'Trgovina: ekipa ni tvoja.' using hint = 'trgovina-personalizacija';
     end if;
+    -- Ime ekipe ne gre skozi varuj_prikazno_ime: na izdelek gre le čisto in kratko.
+    if char_length(v_ime) > 24 or public.prepovedano_besedilo(v_ime) is not null then
+      raise exception 'Trgovina: tega imena ekipe ne natisnemo.' using hint = 'trgovina-vnos';
+    end if;
     personalizacija := jsonb_build_object('vrsta', 'ime_ekipe', 'ime', v_ime, 'fantasy_team_id', v_id);
   end if;
 
@@ -195,7 +225,8 @@ begin
     v := p_vhod->'poljubno_ime';
     v_ime := case when jsonb_typeof(v) = 'string' then btrim(regexp_replace(v #>> '{}', '\s+', ' ', 'g')) end;
     if v_ime is null or char_length(v_ime) not between 1 and 12
-       or v_ime !~ '^[A-Za-zÀ-ÖØ-öø-ž .-]+$' or public.prepovedano_besedilo(v_ime) is not null then
+       or v_ime !~ '^[A-Za-zÀ-ÖØ-öø-ž .-]+$' or v_ime !~ '[A-Za-zÀ-ÖØ-öø-ž]'
+       or public.prepovedano_besedilo(v_ime) is not null then
       raise exception 'Trgovina: to besedilo ni dovoljeno.' using hint = 'trgovina-personalizacija';
     end if;
     personalizacija := jsonb_build_object('vrsta', 'poljubno_ime', 'ime', v_ime);
@@ -286,7 +317,7 @@ begin
   end if;
 
   if (select sum(kolicina) from jsonb_to_recordset(p_postavke) k(razlicica_id bigint, kolicina int)) > 50
-     or (select count(distinct ((e->>'razlicica_id')::bigint, coalesce(e->'personalizacija', 'null'::jsonb)))
+     or (select count(distinct ((e->>'razlicica_id')::bigint, coalesce(nullif(e->'personalizacija', '{}'::jsonb), 'null'::jsonb)))
            from jsonb_array_elements(p_postavke) e) <> jsonb_array_length(p_postavke)
   then
     raise exception 'Trgovina: neveljavna košarica.' using hint = 'trgovina-vnos';
@@ -326,6 +357,14 @@ begin
     raise exception 'Trgovina: ni dovolj zaloge.' using hint = 'trgovina-zaloga';
   end if;
 
+  -- Največ 5 darilnih bonov na naročilo (vsak je svoj kupon in koda v Stripe).
+  if (select coalesce(sum(k.kolicina), 0)
+        from jsonb_to_recordset(p_postavke) k(razlicica_id bigint, kolicina int)
+        join trgovina.razlicice r on r.id = k.razlicica_id
+        join trgovina.izdelki i on i.id = r.izdelek_id and i.digitalni) > 5 then
+    raise exception 'Trgovina: največ 5 darilnih bonov na naročilo.' using hint = 'trgovina-vnos';
+  end if;
+
   insert into trgovina.narocila (user_id, jezik, odjemalec) values (p_user, p_jezik, p_odjemalec)
   returning * into v_narocilo;
 
@@ -346,6 +385,15 @@ begin
         raise exception 'Trgovina: značka je ena.' using hint = 'trgovina-personalizacija';
       end if;
       v_znacka := true;
+      -- Ista pravica v drugem odprtem naročilu: hkratni rezervaciji se vrstita.
+      perform 1 from public.preverjeni_racuni where id = (v_pers->>'preverjeni_racun_id')::bigint for update;
+      if exists (select 1 from trgovina.postavke p
+                   join trgovina.narocila n on n.id = p.narocilo_id
+                  where n.id <> v_narocilo.id and n.stanje = 'caka_placilo' and n.rezervirano_do > now()
+                    and p.personalizacija->>'vrsta' = 'znacka'
+                    and p.personalizacija->>'preverjeni_racun_id' = v_pers->>'preverjeni_racun_id') then
+        raise exception 'Trgovina: značka že čaka na plačilo.' using hint = 'trgovina-personalizacija';
+      end if;
     end if;
     insert into trgovina.postavke (narocilo_id, razlicica_id, ime, cena, kolicina, personalizacija, doplacilo)
     values (v_narocilo.id, vr.razlicica_id, vr.ime, vr.cena, vr.kolicina, v_pers, v_dopl)
@@ -380,9 +428,12 @@ $$;
 -- značke) gredo v za_tisk. Značka gre v narocila_znack (stripe_checkout_id =
 -- seja trgovine, postnina = dostava_kljuc); če pravica medtem ni več aktivna
 -- ali je značka že naročena, se šteje v manjka (vrne 'premalo': uredi s kupcem).
-create or replace function trgovina.iz_placila(
+-- Nov zadnji parameter p_popust (popust kode, privzeto 0) zamenja podpis dela 1.
+drop function if exists public.trgovina_iz_placila(text, text, text, text, jsonb, int, int, int, int, text);
+drop function if exists trgovina.iz_placila(text, text, text, text, jsonb, int, int, int, int, text);
+create function trgovina.iz_placila(
   p_checkout text, p_payment_intent text, p_email text, p_ime text, p_naslov jsonb,
-  p_postavke int, p_dostava int, p_ddv int, p_skupaj int, p_dostava_kljuc text
+  p_postavke int, p_dostava int, p_ddv int, p_skupaj int, p_dostava_kljuc text, p_popust int default 0
 ) returns text
 language plpgsql
 as $$
@@ -445,12 +496,25 @@ begin
     stanje = 'placano', placano_at = now(), stripe_payment_intent = p_payment_intent,
     email = p_email, ime = p_ime, naslov = p_naslov,
     znesek_postavke = p_postavke, znesek_dostava = p_dostava, znesek_ddv = p_ddv,
-    znesek_skupaj = p_skupaj, dostava_kljuc = p_dostava_kljuc, manjka = v_manjka, odjemalec = null
+    znesek_skupaj = p_skupaj, dostava_kljuc = p_dostava_kljuc, manjka = v_manjka, odjemalec = null,
+    znesek_popust = greatest(coalesce(p_popust, 0), 0)
    where id = v_narocilo.id;
 
   return case when v_manjka > 0 then 'premalo' else 'placano' end;
 end;
 $$;
+
+create function public.trgovina_iz_placila(
+  p_checkout text, p_payment_intent text, p_email text, p_ime text, p_naslov jsonb,
+  p_postavke int, p_dostava int, p_ddv int, p_skupaj int, p_dostava_kljuc text, p_popust int default 0
+) returns text
+language sql security definer set search_path = public
+as $$ select trgovina.iz_placila(p_checkout, p_payment_intent, p_email, p_ime, p_naslov,
+                                 p_postavke, p_dostava, p_ddv, p_skupaj, p_dostava_kljuc, p_popust) $$;
+
+revoke all on function trgovina.iz_placila(text, text, text, text, jsonb, int, int, int, int, text, int),
+  public.trgovina_iz_placila(text, text, text, text, jsonb, int, int, int, int, text, int) from public, anon, authenticated;
+grant execute on function public.trgovina_iz_placila(text, text, text, text, jsonb, int, int, int, int, text, int) to service_role;
 
 -- --------------------------------------------------------------------------
 -- JSON naročila, tisk, serije
@@ -462,9 +526,10 @@ as $$
     'id', n.id, 'javna_oznaka', n.javna_oznaka, 'stanje', n.stanje, 'user_id', n.user_id,
     'email', n.email, 'ime', n.ime, 'naslov', n.naslov, 'jezik', n.jezik,
     'znesek_postavke', n.znesek_postavke, 'znesek_dostava', n.znesek_dostava,
-    'znesek_ddv', n.znesek_ddv, 'znesek_skupaj', n.znesek_skupaj, 'dostava_kljuc', n.dostava_kljuc,
+    'znesek_ddv', n.znesek_ddv, 'znesek_skupaj', n.znesek_skupaj, 'znesek_popust', n.znesek_popust,
+    'dostava_kljuc', n.dostava_kljuc,
     'sledilna', n.sledilna, 'manjka', n.manjka, 'placano_at', n.placano_at, 'poslano_at', n.poslano_at,
-    'created_at', n.created_at,
+    'created_at', n.created_at, 'bon_mail_at', n.bon_mail_at,
     'postavke', coalesce((
       select jsonb_agg(jsonb_build_object('id', p.id, 'razlicica_id', p.razlicica_id, 'sku', r.sku, 'ime', p.ime,
                                           'cena', p.cena, 'doplacilo', p.doplacilo, 'kolicina', p.kolicina,
@@ -531,7 +596,7 @@ begin
   end if;
   insert into trgovina.boni (narocilo_id, postavka_id, zaporedje, koda_hash, koda_konec, znesek, velja_do, stripe_promocija)
   values (v.narocilo_id, p_postavka, p_zaporedje, p_koda_hash, p_koda_konec, v.cena, p_velja_do, p_stripe_promocija)
-  on conflict do nothing;
+  on conflict (postavka_id, zaporedje) do nothing;
   return case when found then 'zabelezeno' else 'ze' end;
 end;
 $$;
@@ -553,9 +618,42 @@ begin
 end;
 $$;
 
+-- Mail z boni je odšel (webhook ga pošilja, dokler je bon_mail_at prazen).
+create function trgovina.bon_poslan(p_narocilo bigint) returns void
+language sql
+as $$ update trgovina.narocila set bon_mail_at = coalesce(bon_mail_at, now()) where id = p_narocilo $$;
+
+-- Celotno vračilo plačila (charge.refunded): naročilo → vrnjeno, nenatisnjena
+-- značka preklicana, nenatisnjene postavke iz tiska. Vrne {oznaka, promocije}
+-- (promocijske kode bonov naročila, webhook jih izklopi v Stripe) ali null (ni
+-- naše plačilo). Ponovljen dogodek vrne isto in v bazi ne spremeni ničesar več.
+create function trgovina.vracilo(p_payment_intent text) returns jsonb
+language plpgsql
+as $$
+declare v trgovina.narocila;
+begin
+  select * into v from trgovina.narocila
+   where stripe_payment_intent = p_payment_intent and stanje in ('placano', 'poslano', 'vrnjeno')
+   for update;
+  if not found or nullif(p_payment_intent, '') is null then
+    return null;
+  end if;
+  if v.stanje <> 'vrnjeno' then
+    update trgovina.narocila set stanje = 'vrnjeno' where id = v.id;
+    update public.narocila_znack set status = 'preklicano', opomba = coalesce(opomba || ' · ', '') || 'vračilo trgovine'
+     where stripe_checkout_id = v.stripe_checkout_id and status in ('za_tisk', 'natisnjeno');
+    update trgovina.postavke set stanje_tiska = null, serija_id = null
+     where narocilo_id = v.id and stanje_tiska in ('za_tisk', 'v_seriji');
+  end if;
+  return jsonb_build_object('oznaka', v.javna_oznaka,
+    'promocije', coalesce((select jsonb_agg(b.stripe_promocija order by b.id) from trgovina.boni b where b.narocilo_id = v.id), '[]'::jsonb));
+end;
+$$;
+
 revoke all on function trgovina.prvaki_uporabnika(uuid), trgovina.znacka_uporabnika(uuid),
   trgovina.personaliziraj(bigint, jsonb, uuid, text), trgovina.serija_json(bigint),
-  trgovina.zabelezi_bon(bigint, int, text, text, timestamptz, text), trgovina.bon_porabljen(text)
+  trgovina.zabelezi_bon(bigint, int, text, text, timestamptz, text), trgovina.bon_porabljen(text),
+  trgovina.bon_poslan(bigint), trgovina.vracilo(text)
   from public, anon, authenticated;
 
 create function public.trgovina_zabelezi_bon(
@@ -569,10 +667,20 @@ create function public.trgovina_bon_porabljen(p_promocija text) returns text
 language sql security definer set search_path = public
 as $$ select trgovina.bon_porabljen(p_promocija) $$;
 
+create function public.trgovina_bon_poslan(p_narocilo bigint) returns void
+language sql security definer set search_path = public
+as $$ select trgovina.bon_poslan(p_narocilo) $$;
+
+create function public.trgovina_vracilo(p_payment_intent text) returns jsonb
+language sql security definer set search_path = public
+as $$ select trgovina.vracilo(p_payment_intent) $$;
+
 revoke all on function public.trgovina_zabelezi_bon(bigint, int, text, text, timestamptz, text),
-  public.trgovina_bon_porabljen(text) from public, anon, authenticated;
+  public.trgovina_bon_porabljen(text), public.trgovina_bon_poslan(bigint), public.trgovina_vracilo(text)
+  from public, anon, authenticated;
 grant execute on function public.trgovina_zabelezi_bon(bigint, int, text, text, timestamptz, text),
-  public.trgovina_bon_porabljen(text) to service_role;
+  public.trgovina_bon_porabljen(text), public.trgovina_bon_poslan(bigint), public.trgovina_vracilo(text)
+  to service_role;
 
 -- --------------------------------------------------------------------------
 -- Javni katalog: po naročilu in digitalno sta vedno na voljo
@@ -758,7 +866,7 @@ begin
   perform trgovina.le_admin();
   return (select coalesce(jsonb_agg(jsonb_build_object('id', s.id, 'created_at', s.created_at, 'poslana_at', s.poslana_at,
                                                        'natisnjena_at', s.natisnjena_at,
-                                                       'postavk', (select count(*) from trgovina.postavke p where p.serija_id = s.id))
+                                                       'postavk', (select count(*) from trgovina.tisk t where t.serija_id = s.id))
                                     order by s.id desc), '[]'::jsonb)
             from trgovina.serije s);
 end;
