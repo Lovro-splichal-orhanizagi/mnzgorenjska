@@ -55,3 +55,11 @@ test('actual main102 replay uses strict99normal appearances and skips3installed 
  const schedule=documents.get('https://semafor.hns.family/natjecanja/114471579/x/')
  await assert.rejects(()=>p.zapisniki('114471579',async()=>schedule.replace('data-match="114471617"','data-match="999999999"')),/fixture|identity/i)
 })
+test('retained15:15R8 delta preserves published keeper-role blocker and clean new report',{skip:!captureDir||!process.env.SLFF_HNS_WOMEN_DELTA_FILE},async()=>{
+ const {hnsWomenScheduleFixtures}=await import('../hr-zenske-paket.mjs'),{parseHnsWomenReport}=await import('./hns-zenske-quality.mjs'),{createHash}=await import('node:crypto')
+ const fixtures=hnsWomenScheduleFixtures(readFileSync(process.env.SLFF_HNS_WOMEN_DELTA_FILE,'utf8'),'114471579')
+ const parse=id=>{const raw=readFileSync(`${captureDir}/delta-1515-match-${id}.html`,'utf8');if(id==='114471645')assert.equal(createHash('sha256').update(raw).digest('hex'),'5a8b97b305a1031e5c3992d44beb87ee9cfecf9c8fe36d3aa71a5f16e6ecd9e0');return parseHnsWomenReport(raw,{competition,fixture:fixtures.find(f=>f.id===id),sourceCompetitionId:'114471579'})}
+ assert.throws(()=>parse('114471645'),/explicit keeper coverage missing/)
+ const clean=parse('114471643');assert.equal(clean.appearances.length,30);assert.equal(clean.z.goli.length,4)
+ assert.deepEqual(fixtures.filter(f=>f.krog<9&&!f.izid&&!f.postponed).map(f=>f.id).sort(),['114471642','114471644'])
+})
