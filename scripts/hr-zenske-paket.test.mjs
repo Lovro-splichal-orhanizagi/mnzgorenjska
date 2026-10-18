@@ -3,16 +3,36 @@ import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import {readFileSync} from 'node:fs'
 import {resolve} from 'node:path'
-import {validateHnsWomenDocument,buildHnsWomenPacket,readHnsWomenCaptures,validateHnsWomenPacket} from './hr-zenske-paket.mjs'
+import {validateHnsWomenDocument,buildHnsWomenPacket,readHnsWomenCaptures,validateHnsWomenPacket,hnsWomenScheduleFixtures} from './hr-zenske-paket.mjs'
 const body='<html>TEST-ONLY metadata bytes</html>',sha=x=>createHash('sha256').update(x).digest('hex')
 const document=()=>({url:'https://semafor.hns.family/utakmice/114471616/znk-agram-znk-split/',file:'documents/match-114471616.html',capturedAt:'2026-10-18T12:03:15.379Z',status:200,bytes:Buffer.byteLength(body),sha256:sha(body),body})
+const captureDir=process.env.SLFF_HNS_WOMEN_CAPTURE_DIR,pilotDir=process.env.SLFF_HNS_WOMEN_PILOT_DIR
 test('immutable document metadata validates original bytes/time/request identity without a source call',()=>{
  const d=document(),result=validateHnsWomenDocument(d)
  assert.equal(result.canonicalUrl,'https://semafor.hns.family/utakmice/114471616/x/')
  assert.equal(result.capturedAt,d.capturedAt);assert.equal(result.sha256,sha(body))
 })
+
+test('latest17:37 retained packet uses original latest receipts and keeps both strict report holds',{skip:!captureDir||!pilotDir||!process.env.SLFF_HNS_WOMEN_LATEST_PUBLICATION_FILE},async()=>{
+ const {parseHnsWomenReport}=await import('./viri/hns-zenske-quality.mjs'),{getHistoricalStatisticsPolicy}=await import('./lib/historical-statistics-policy.mjs')
+ const currentFile=process.env.SLFF_HNS_WOMEN_LATEST_PUBLICATION_FILE.split('/').at(-1),captures=readHnsWomenCaptures({captureDir,pilotDir,currentFile}),byID=new Map(captures.documents.map(d=>[d.id,d]))
+ assert.deepEqual(captures.sourceBudget,{hnsRequests:146,otherRequests:1,total:147,refusalObserved:false})
+ assert.equal(byID.get('114471579').capturedAt,'2026-10-18T17:37:28.026317+00:00')
+ assert.equal(byID.get('114471644').sha256,'cdfb9eda353224058c70397a80c32dbc1d4f324e90e61dca5d64f812bd880e79')
+ assert.equal(byID.get('114471644').capturedAt,'2026-10-18T17:37:43.673461+00:00')
+ assert.equal(byID.get('114471642').capturedAt,'2026-10-18T17:38:16.802398+00:00')
+ assert.equal(byID.get('114471645').sha256,'6ad777920e12603f39218f07e0353e09fed121c15ee158ec37555725c127d6c9')
+ const policy=getHistoricalStatisticsPolicy('hr-prva-hnlz'),competition={slug:policy.competitionSlug,source:'hns',source_policy:policy.sourcePolicy,firstFantasyPlayedOn:'2026-10-25'},complete=[],unavailable=[],held=[]
+ for(const code of ['108043476','114471579'])for(const fixture of hnsWomenScheduleFixtures(byID.get(code).body,code).filter(f=>f.izid)){
+  try{const report=parseHnsWomenReport(byID.get(fixture.id).body,{competition,fixture,sourceCompetitionId:code});(report.statisticsStatus==='unavailable_historical'?unavailable:complete).push(report)}catch(error){held.push([fixture.id,error.message])}
+ }
+ assert.equal(complete.length,101);assert.deepEqual(unavailable.map(r=>r.id).sort(),['114471617','114471627','114471629'])
+ assert.equal(complete.find(r=>r.id==='114471644').appearances.length,27);assert.equal(complete.find(r=>r.id==='114471644').z.goli.length,2)
+ assert.deepEqual(held.map(([id])=>id).sort(),['114471642','114471645'])
+ assert.match(held.find(([id])=>id==='114471642')[1],/full report required/);assert.match(held.find(([id])=>id==='114471645')[1],/explicit keeper coverage missing/)
+ assert.throws(()=>buildHnsWomenPacket({...captures,sourceCommit:'a'.repeat(40),now:Date.parse('2026-10-18T18:00:00Z')}),/full report required|explicit keeper coverage missing/)
+})
 for(const patch of [{sha256:'0'.repeat(64)},{bytes:1},{status:403},{capturedAt:'unknown'},{url:'https://example.com/utakmice/114471616/x/'},{file:'../match.html'},{file:'/absolute.html'},{body:body+'changed'}])test(`capture packet refuses changed/unsafe metadata ${JSON.stringify(patch)}`,()=>assert.throws(()=>validateHnsWomenDocument({...document(),...patch}),/HNS women packet|capture|SHA|identity|path|bytes|status/i))
-const captureDir=process.env.SLFF_HNS_WOMEN_CAPTURE_DIR,pilotDir=process.env.SLFF_HNS_WOMEN_PILOT_DIR
 // Full real reports remain private; this explicit offline replay is run in the implementation/review workspace.
 test('retained real75archive+27current replay yields99unchanged complete reports and exact3unavailable',{skip:!captureDir||!pilotDir},()=>{
  const docs=readHnsWomenCaptures({captureDir,pilotDir,currentFile:'current-refresh-20261018-final.html'})

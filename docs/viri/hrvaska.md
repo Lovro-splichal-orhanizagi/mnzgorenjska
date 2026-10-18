@@ -223,8 +223,9 @@ Samo zgodovinski zapisniki `114471617`, `114471627` in `114471629` imajo
 izrecno nedostopno individualno statistiko. Uradni rezultat ostane, nastopi
 in goli se zanje ne ustvarijo. Noben prihodnji zapisnik ne dobi te izjeme.
 Zajeti dokazi 18. oktobra 2026 še blokirajo izdajo: pri `114471645` vloga
-vratarke od 86. do 90. minute ni objavljena, `114471644` ima le rezultat brez
-polnega zapisnika, `114471642` pa še nima rezultata. Splošni seznam igralk ne
+vratarke od 86. do 90. minute ni objavljena. Zajem ob 17:37 UTC je za
+`114471644` objavil popoln strog zapisnik (27 nastopov, dva gola),
+`114471642` pa ima rezultat 2:5 brez polnega zapisnika. Splošni seznam igralk ne
 zamenja podatka o vlogi na konkretni tekmi.
 
 Začetni uvoz vodi samo `uvoz-hr-zenske.yml`, z enako skupino hkratnosti kot
@@ -270,9 +271,12 @@ za največ 100 z največ tremi iz posameznega kluba. Prvi fantazijski krog
 mora ostati popoln, prihodnji in nezaklenjen. Preverba ne spreminja rokov
 ali ključavnic; neuspeh ne pusti pooblastila za vklop.
 
-Migracija `20261018190200` ostane do neodvisnega pregleda nenamestljena.
+Migracija `20261018210100` ostane do neodvisnega pregleda nenamestljena.
 Trenutni vir še blokira izdajo: tudi ponovni zajem `114471645` ob 17:02 UTC
-ni objavil manjkajoče vloge vratarke. Skupaj je bilo prebranih 144 izvornih
-dokumentov; prvotni časi in bajti vseh zajemov se ohranijo. Paket s temi
-dokazi ostane `releaseReady: false` in se zavrne pred prvo zahtevo pisnega
-posla v bazo. Sintetični zeleni testi tega pogoja ne nadomestijo.
+ni objavil manjkajoče vloge vratarke; 642 po zajemu ob 17:38 UTC še nima
+polnega zapisnika. Skupaj je bilo prebranih 147 izvornih
+dokumentov; prvotni časi in bajti vseh zajemov se ohranijo. Iz teh dokazov
+ni mogoče sestaviti popolnega preverjenega paketa; izdaja ostane
+blokirana pred prvo zahtevo pisnega posla v bazo. Bralnik za objavljene tekme
+izbere najnovejši izvirni prejemek in ohrani njegove bajte ter čas, brez
+osveževanja starejših dokazov. Sintetični zeleni testi teh pogojev ne nadomestijo.

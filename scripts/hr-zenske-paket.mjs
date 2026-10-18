@@ -54,7 +54,7 @@ export function hnsWomenScheduleFixtures(html,code) {
  })
 }
 export function hnsWomenParserSha256() {
- const files=[...new Set(['scripts/hr-zenske-paket.mjs','scripts/uvoz-zapisnikov.mjs','scripts/uvoz-razporeda.mjs','scripts/viri/index.mjs','scripts/tekmovanje.mjs','scripts/hr-zenske-import.mjs','scripts/klubi.mjs','scripts/hr-zenske-izdaja.mjs','scripts/hr-zenske-stage.py','.github/workflows/uvoz-hr-zenske.yml','supabase/migrations/20261018190200_hns_women_reviewed_release.sql',
+ const files=[...new Set(['scripts/hr-zenske-paket.mjs','scripts/uvoz-zapisnikov.mjs','scripts/uvoz-razporeda.mjs','scripts/viri/index.mjs','scripts/tekmovanje.mjs','scripts/hr-zenske-import.mjs','scripts/klubi.mjs','scripts/hr-zenske-izdaja.mjs','scripts/hr-zenske-stage.py','.github/workflows/uvoz-hr-zenske.yml','supabase/migrations/20261018210100_hns_women_reviewed_release.sql',
  ...zaprtje('scripts/viri/hns-zenske-runtime.mjs'),...zaprtje('scripts/hr-zenske-offline.mjs'),...zaprtje('scripts/viri/hns-zenske-quality.mjs'),...zaprtje('scripts/hr-zenske-deadline.mjs'),...zaprtje('scripts/lib/historical-statistics-import.mjs'),
  'scripts/policies/historical-statistics-exclusions.json','scripts/vzorci/hns-zenske-archive-phase-fixtures.json','scripts/vzorci/hns-zenske-current-fixtures.json'])].sort()
  const hash=createHash('sha256');for(const file of files)hash.update(file).update(readFileSync(file));return hash.digest('hex')
@@ -122,7 +122,11 @@ export function readHnsWomenCaptures({captureDir,pilotDir,currentFile}) {
  if(current.id!=='114471579'||archive.id!=='108043476')fail('wrong main source containers')
  const documents=[archive,current]
  for(const [d,code]of [[archive,'108043476'],[current,'114471579']])for(const f of hnsWomenScheduleFixtures(d.body,code).filter(f=>f.izid)) {
-  const r=records.find(r=>/^https:\/\/semafor\.hns\.family\/utakmice\//.test(r.url)&&canonicalURL(r.url).id===f.id)
+  // Rechecks never replace the original receipt or manufacture freshness.
+  // Select the most recent captured bytes for each currently published report.
+  const candidates=records.filter(r=>/^https:\/\/semafor\.hns\.family\/utakmice\//.test(r.url)&&canonicalURL(r.url).id===f.id)
+  if(candidates.some(r=>!iso(r.capturedUTC??r.captureUTC)))fail('invalid original report capture time')
+  const r=candidates.sort((a,b)=>Date.parse(b.capturedUTC??b.captureUTC)-Date.parse(a.capturedUTC??a.captureUTC))[0]
   documents.push(load(r))
  }
  return{documents,sourceBudget:{hnsRequests:records.length,otherRequests:1,total:records.length+1,refusalObserved:existsSync(resolve(captureDir,'STOP'))||records.some(r=>[401,403,429].includes(r.status??r.httpStatus))}}
