@@ -10,7 +10,7 @@ const captureDir=process.env.SLFF_HNS_WOMEN_CAPTURE_DIR,pilotDir=process.env.SLF
 test('closed HNS fetch never falls through to live source or foreign HNS paths',async()=>{
  const doc={url:'https://semafor.hns.family/utakmice/123/x/',canonicalUrl:'https://semafor.hns.family/utakmice/123/x/',body:'TEST ONLY'},calls=[],fetch=createHnsWomenOfflineFetch([doc],async(...a)=>{calls.push(a);return new Response('db')})
  assert.equal(await(await fetch(doc.url)).text(),doc.body)
- for(const url of ['https://semafor.hns.family/utakmice/124/x/','https://hns.family/anything','http://semafor.hns.family/utakmice/123/x/'])await assert.rejects(()=>fetch(url),/closed|packet|source/i)
+ for(const url of ['https://semafor.hns.family/utakmice/124/x/','https://hns.family/anything','https://semafor.hns.family./utakmice/123/x/','https://semafor.hns.family%2e/utakmice/123/x/','http://semafor.hns.family/utakmice/123/x/'])await assert.rejects(()=>fetch(url),/closed|packet|source/i)
  await assert.rejects(()=>fetch(new Request(doc.url,{method:'POST'})),/closed|packet|source/i)
  assert.equal(await(await fetch('https://example.invalid/rest/v1/rounds')).text(),'db');assert.equal(calls.length,1)
 })

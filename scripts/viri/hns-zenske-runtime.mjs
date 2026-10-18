@@ -50,6 +50,7 @@ export function withHnsWomenStatistics(base,competition,{installedHistoricalMark
    return !doc||createHash('sha256').update(html).digest('hex')===doc.sha256
   },
   async fetch(url,init={}) {
+   if((init.method??url?.method??'GET')!=='GET')fail('only GET source requests are permitted')
    if(!/^https:\/\/semafor\.hns\.family\/(?:natjecanja\/(?:114471579|108043476)|utakmice\/[1-9]\d*)\/[a-z0-9-]+\/$/.test(String(url)))fail('foreign source request')
    let response;try{response=await globalThis.fetch(url,{...init,redirect:'error'})}catch(e){throw Error(`HNS women source request failed: ${e.message}`)}
    if([401,403,429].includes(response.status))throw refusal(`HTTP${response.status}`,response.status)

@@ -7,7 +7,8 @@ export function createHnsWomenOfflineFetch(documents,originalFetch) {
  for(const d of documents)for(const url of [d.url,d.canonicalUrl])if(url){if(byURL.has(url)&&byURL.get(url)!==d)fail('duplicate source URL');byURL.set(url,d)}
  return async(input,init={})=>{
   const raw=typeof input==='string'?input:input instanceof URL?input.href:input.url,url=new URL(raw)
-  if(url.hostname==='hns.family'||url.hostname.endsWith('.hns.family')) {
+  const host=url.hostname.replace(/\.+$/,'')
+  if(host==='hns.family'||host.endsWith('.hns.family')) {
    const d=byURL.get(raw)
    if(!d||url.protocol!=='https:'||(init.method??input?.method??'GET')!=='GET')fail(`source request absent from approved packet: ${raw}`)
    return new Response(d.body,{status:200,headers:{'content-type':'text/html; charset=utf-8'}})

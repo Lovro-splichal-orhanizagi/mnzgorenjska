@@ -29,6 +29,8 @@ test('HNS source refusal and redirect are final without a shared retry or fallba
    await assert.rejects(()=>p.fetch('https://semafor.hns.family/natjecanja/114471579/x/'),e=>e.status===status&&([401,403,429].includes(status)?e.zavrnitev:true))
   }
   assert.equal(calls,5)
+  await assert.rejects(()=>p.fetch('https://semafor.hns.family/natjecanja/114471579/x/',{method:'POST'}),/GET|method|request/i)
+  assert.equal(calls,5)
   globalThis.fetch=async()=>new Response('<title>Just a moment...</title>')
   await assert.rejects(()=>p.fetch('https://semafor.hns.family/natjecanja/114471579/x/'),e=>e.zavrnitev===true)
  }finally{globalThis.fetch=original}
