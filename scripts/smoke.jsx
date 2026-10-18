@@ -12582,6 +12582,17 @@ preveri(
     preveri('pošta klubom: en stik na klub (drug naslov istega kluba)', izb.length === 0)
     const sam = kandidati([a], [], new Set(['at-a']), zdaj, [a, b])
     preveri('pošta klubom: klub brez pošte dobi prvi mail', sam.length === 1)
+    // Parkirana vrstica "poslano…" (mail je šel, vpisa ni) blokira klub: po team_id in po imenu v državi.
+    for (const opomba of ['poslano (prvi, 2026-10-12, lovro@slff.eu), a vpis v klub_stik_posta ni uspel — vpiši ročno', 'Poslano? preveri ročno (prvi): SMTP konec DATA']) {
+      const park = { ...b, stanje: 'nov', opomba }
+      preveri(`pošta klubom: parkirana "${opomba.slice(0, 8)}" blokira klub (team_id)`, kandidati([a], [], new Set(['at-a']), zdaj, [a, park]).length === 0)
+      const poImenu = { ...park, team_id: null, klub: 'sv a' }
+      preveri(`pošta klubom: parkirana "${opomba.slice(0, 8)}" blokira klub (ime)`, kandidati([a], [], new Set(['at-a']), zdaj, [a, poImenu]).length === 0)
+    }
+    const drugaOpomba = { ...b, stanje: 'nov', opomba: 'odboj v luka@slff.eu (2026-10-12)' }
+    const drugKlub = { ...b, stanje: 'nov', team_id: 9, klub: 'SV B', opomba: 'poslano? preveri ročno' }
+    preveri('pošta klubom: druga opomba ali drug klub ne blokira', kandidati([a], [], new Set(['at-a']), zdaj, [a, drugaOpomba]).length === 1 &&
+      kandidati([a], [], new Set(['at-a']), zdaj, [a, drugKlub]).length === 1)
   }
   {
     // Stare vrstice za opomnik: le brez pošiljatelja, poslano, brez opombe "poslano…", vsa pošta Lukova.
@@ -12645,6 +12656,8 @@ preveri(
         HU: ['Az SLFF csapata vagyunk.', 'Az SLFF csapata'], RS: ['mi smo tim SLFF-a', 'SLFF tim'] }[drzava]
       preveri(`pošta klubom: ${drzava} ${vrsta} besedilo ekipe`, (vrsta === 'opomnik' || be.includes(ekipa[0])) && be.includes(`\n${ekipa[1]}\nslff.eu`) &&
         !/Luka|Ekipa SLFF|undefined/.test(be) && !/\b(ich bin|Olen |ja sam|vagyok az)/.test(be))
+      if (drzava === 'HU') preveri(`pošta klubom: HU ${vrsta} pozdrav ekipe v množini`, be.startsWith('Jó napot kívánunk!\n') && bl.startsWith('Jó napot kívánok!\n'))
+      if (drzava === 'EE' && vrsta === 'prvi') preveri('pošta klubom: EE ekipa "SLFF on tasuta"', be.includes('Oleme SLFF-i meeskond. SLFF on tasuta') && bl.includes('SLFF-ist. See on tasuta'))
     }
   }
   {

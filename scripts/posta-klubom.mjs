@@ -165,7 +165,7 @@ function estonsko(k, p, vrsta, url, po) {
       zadeva: `Klubi ${klub} mängijad fantaasiajalgpallis (${liga})`,
       telo: `Tere!
 
-${ekipa ? 'Oleme SLFF-i meeskond.' : `Olen ${po.ime} SLFF-ist.`} See on tasuta fantaasiajalgpalli mäng amatöörliigadele. Nüüd on mängus ka uus liiga: ${liga}. Fännid panevad oma meeskonna kokku liiga päris mängijatest ja punktid tulevad ametlikest mänguprotokollidest lehel jalgpall.ee. Mängus on juba ${p.igralcev} ${p.igralcev === 1 ? 'mängija' : 'mängijat'} klubist ${klub}:
+${ekipa ? 'Oleme SLFF-i meeskond. SLFF on' : `Olen ${po.ime} SLFF-ist. See on`} tasuta fantaasiajalgpalli mäng amatöörliigadele. Nüüd on mängus ka uus liiga: ${liga}. Fännid panevad oma meeskonna kokku liiga päris mängijatest ja punktid tulevad ametlikest mänguprotokollidest lehel jalgpall.ee. Mängus on juba ${p.igralcev} ${p.igralcev === 1 ? 'mängija' : 'mängijat'} klubist ${klub}:
 ${url}
 ${naj ? `
 Seni parim mängija: ${naj}.
@@ -319,7 +319,7 @@ function madzarsko(k, p, vrsta, url, po) {
   if (vrsta === 'prvi') {
     return {
       zadeva: `${klub} játékosai a fantasy fociban (${liga})`,
-      telo: `Jó napot kívánok!
+      telo: `${ekipa ? 'Jó napot kívánunk!' : 'Jó napot kívánok!'}
 
 ${ekipa ? 'Az SLFF csapata vagyunk. Az SLFF' : `${po.ime} vagyok az SLFF-től, amely`} egy ingyenes fantasy futballjáték amatőr bajnokságoknak. Nemrég bekerült a játékba ez a bajnokság is: ${liga}. A szurkolók a bajnokság valódi játékosaiból állítják össze a csapatukat, a pontok pedig a hivatalos mérkőzés-jegyzőkönyvekből származnak (adatbank.mlsz.hu). ${klub} játékosai közül már ${p.igralcev} szerepel a játékban:
 ${url}
@@ -339,7 +339,7 @@ slff.eu
   const ekip = p.ekip ?? 0
   return {
     zadeva: ekip >= 5 ? `${klub} játékosai már ${ekip} fantasy csapatban szerepelnek` : `${klub} a fantasy játékban: így állnak a játékosok`,
-    telo: `Jó napot kívánok!
+    telo: `${ekipa ? 'Jó napot kívánunk!' : 'Jó napot kívánok!'}
 
 Néhány napja ${ekipa ? 'írtunk' : 'írtam'} Önöknek az SLFF-ről, az ingyenes fantasy játékról (bajnokság: ${liga}). Röviden: ${klub} játékosai a játékban vannak és pontokat gyűjtenek${ekip >= 5 ? `, és már ${ekip} fantasy csapatban szerepelnek` : ''}.${naj ? ` Eddig a legjobb: ${naj}.` : ''}
 
@@ -564,10 +564,13 @@ export function istiKlub(s, vsi) {
  * Pošta istega kluba blokira: v zadnjih 3 dneh kdorkoli, v zadnjih 7 dneh drug
  * pošiljatelj kot `poslal` (pri prvem mailu ga še ne poznamo: null, blokira
  * vsakdo). Prvi mail pa le, če klub (na katerikoli naslov) še ni dobil
- * nobenega prvega maila ali opomnika — en stik na klub.
+ * nobenega prvega maila ali opomnika — en stik na klub. Parkirana vrstica z
+ * opombo "poslano…" (mail je šel ali morda šel, v klub_stik_posta ga ni)
+ * blokira klub, dokler je človek ne razreši.
  */
 function klubBlokiran(s, vsi, poStiku, zdaj, prviMail, poslal) {
   for (const o of istiKlub(s, vsi)) {
+    if (/^poslano/i.test(o.opomba ?? '')) return true
     for (const r of poStiku.get(o.id) ?? []) {
       const starost = zdaj.getTime() - Date.parse(r.poslano_at)
       if (starost < 3 * DAN) return true
@@ -681,7 +684,7 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
   const poSlugu = new Map(lige.map((l) => [l.slug, l]))
   const aktivne = new Set(lige.filter((l) => l.active).map((l) => l.slug))
   const vsi = await vseVrstice((od, do_) =>
-    db.from('klub_stik').select('id, team_id, klub, drzava, liga_slug, email, stanje, v_vrsti, poslji_od').order('id').range(od, do_),
+    db.from('klub_stik').select('id, team_id, klub, drzava, liga_slug, email, stanje, v_vrsti, poslji_od, opomba').order('id').range(od, do_),
   )
   const vrsta = vsi.filter((s) => s.v_vrsti && ['nov', 'poslano'].includes(s.stanje))
   const posta = await vseVrstice((od, do_) =>
@@ -791,7 +794,7 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
     let sveze
     try {
       const vrsticeDrzave = await vseVrstice((od, do_) =>
-        db.from('klub_stik').select('id, team_id, klub, drzava').eq('drzava', s.drzava).order('id').range(od, do_))
+        db.from('klub_stik').select('id, team_id, klub, drzava, opomba').eq('drzava', s.drzava).order('id').range(od, do_))
       const idji = istiKlub(s, vrsticeDrzave).map((o) => o.id)
       const postaKluba = preveri(await db.from('klub_stik_posta').select('id, stik_id, vrsta, poslal, poslano_at').in('stik_id', idji).order('id'))
       sveze = kandidati([s], postaKluba, aktivne, new Date(), vrsticeDrzave).length > 0
@@ -823,7 +826,9 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
         continue
       }
       if (e.poDATA) {
-        // Mail je morda šel: nikoli samodejno znova.
+        // Mail je morda šel: nikoli samodejno znova, in šteje v mejo pošiljatelja.
+        pr.dan--
+        pr.krog--
         await parkiraj(s, `poslano? preveri ročno (${vrstaMaila}, ${danDunaj(new Date())}, ${po.od}): ${e.message}`)
         log(`NEZNANO, ali je šel: ${oznaka(s)} — zunaj vrste, preveri Sent (${e.message})`)
         opozorilo = true

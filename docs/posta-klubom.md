@@ -10,7 +10,9 @@ node:22-alpine, omrežje gostitelja kot `slff-html`) poganja
 `scripts/posta-klubom.mjs --zanka`. Vsakih 10 minut pošlje vsak dejaven
 pošiljatelj največ dva maila (med vsemi maili 60–150 s), le v oknu države
 prejemnika (08–18, pon–sob; krajevni čas: AT, EE, HR, HU, RS — `OKNA`) in
-vsak do svoje dnevne meje.
+vsak do svoje dnevne meje. **Dejanski pretok:** razmik 60–150 s je skupen
+vsem pošiljateljem, zato gre največ okoli 34 mailov na uro oziroma okoli 340 na
+dan (10-urno okno) skupaj, tudi ko so vsi štirje ogreti na 100.
 
 **Pošiljatelji** (`POSILJATELJI` v skripti, nabiralniki na Mailcowu):
 
@@ -43,12 +45,20 @@ citirana povezava na stran kluba → `odgovor`, odboj ali SMTP zavrnitev →
 `napacen_mail`. Pred SMTP vrstico prevzame (`v_vrsti = false`) in jo vrne šele
 po vpisu v `klub_stik_posta` (`poslal` pošiljatelja); napaka po začetku
 DATA ali neuspel vpis jo pusti zunaj vrste z opombo "poslano? preveri ročno" —
-**nikoli samodejno znova** (in šteje v dnevno mejo). Polnjenje vrne v vrsto le
+**nikoli samodejno znova** (in šteje v dnevno mejo, tudi v istem krogu). Taka
+vrstica z opombo "poslano…" blokira **ves klub** (vsak naslov z istim
+`team_id` ali imenom v državi), dokler človek ne preveri Sent, mail vpiše
+(`stiki-klubov.mjs zabelezi`) in opombe ne pobriše — sicer bi drug naslov
+istega kluba dobil še en prvi mail. Polnjenje vrne v vrsto le
 stare avstrijske vrstice pred vrsto (brez `posiljatelj`, `poslano`, brez opombe
 "poslano…") in jim ob tem vpiše pošiljatelja. Kopija gre v Sent nabiralnika, ki je poslal.
 **Odgovori klubov pristanejo v nabiralniku pošiljatelja**: info@ in luka@ sta
 povezana s HelpStackom, lovro@, nejc@ in klubi@ **niso** — te berejo lastniki
-(ali Mailcow SOGo) sami. Številke v mailu so sveže;
+(ali Mailcow SOGo) sami. **Lastnik lovro@, nejc@ in klubi@ vsak odgovor
+kluba v 3 dneh zabeleži** z `node scripts/stiki-klubov.mjs zabelezi --za
+<naslov> --vrsta odgovor --poslal <ime> --opomba "…"`: pregled pred opomnikom
+gleda le INBOX in Junk, zato odgovor, premaknjen v drugo mapo ali arhiviran,
+ne ustavi opomnika. Številke v mailu so sveže;
 besedila (nemška, estonska, hrvaška, madžarska, srbska v latinici) so v
 skripti in ne trdijo, da imamo dovoljenje zveze. Prehodne napake delavec le zabeleži; zavrnjena prijava: ura premora,
 nato izhod (Docker ga znova zažene).
@@ -57,7 +67,11 @@ nato izhod (Docker ga znova zažene).
 klub; naslovi zakriti v `k***@domena`). **Objava:**
 `scripts/hetzner/objavi-posto.sh` iz main (skripte, ki jih pošta rabi, in le
 `@supabase/supabase-js`); **CI je ne objavi** — po vsaki spremembi pošte jo
-poženi ročno. **Enkratna nastavitev** (lastnik, skrivnosti niso v gitu): na
+poženi ročno, **izven okna pošiljanja** (08–18 pon–sob po državah): objava
+sredi pošiljanja lahko ubije delavca med SMTP in vpisom in pusti vrstico zunaj
+vrste brez opombe. **Med tekom kontejnerja `posta-klubom.mjs` nikoli ne
+zaganjaj brez `--suho`** (dva zagona hkrati obideta skupni razmik in meje,
+ker vsak šteje le svoje). **Enkratna nastavitev** (lastnik, skrivnosti niso v gitu): na
 strežniku `/opt/slff-posta/.env` s `SUPABASE_SERVICE_ROLE_KEY=` (servisni
 ključ iz `/opt/supabase/.env`) in gesla nabiralnikov `LUKA_SMTP_GESLO=`,
 `LOVRO_SMTP_GESLO=`, `NEJC_SMTP_GESLO=`, `KLUBI_SMTP_GESLO=` (le tista, ki naj
