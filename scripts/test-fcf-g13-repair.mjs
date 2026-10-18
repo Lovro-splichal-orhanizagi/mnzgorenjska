@@ -87,28 +87,39 @@ test('CLI commits only explicit apply, rolls back preview and never exposes data
 const fs=require('node:fs');
 fs.writeFileSync('received.sql',fs.readFileSync(0,'utf8'));
 fs.writeFileSync('received-args.json',JSON.stringify(process.argv));
-if(process.env.STUB_FAIL){console.error('ERROR: private credential SECRET-password user row PRIVATE-user');process.exit(1)}
+if(process.env.STUB_FAIL){console.error(process.env.STUB_FAIL==='timeout'?'psql:<stdin>:1: ERROR:  canceling statement due to statement timeout\\nDETAIL: SECRET-password PRIVATE-user':'ERROR: private credential SECRET-password user row PRIVATE-user\\nDETAIL: canceling statement due to statement timeout');process.exit(1)}
 console.log(JSON.stringify({sha256:'a'.repeat(64),mode:process.env.PISI==='true'?'apply':'preview'}));
 `
  writeFileSync(join(bin,'psql'),stub,{mode:0o700})
- for(const mode of ['preview','apply','failure','wrong-ref','wrong-id','missing-hash','extra-argument','paused']) {
+ const preload=join(root,'timeout.cjs')
+ writeFileSync(preload,`const fs=require('node:fs');require('node:child_process').execFileSync=(cmd,args,options)=>{if(cmd!=='psql')throw Error('Unexpected command');fs.writeFileSync('timeout.json',JSON.stringify({timeout:options.timeout}));throw Object.assign(Error('SECRET-password PRIVATE-user'),{code:'ETIMEDOUT',stderr:Buffer.from('SECRET-password PRIVATE-user')})};require('node:module').syncBuiltinESMExports();`)
+ for(const mode of ['preview','apply','failure','statement-timeout','process-timeout','wrong-ref','wrong-id','missing-hash','extra-argument','paused']) {
   const cwd=join(root,mode);mkdirSync(cwd)
   const env={PATH:bin,GITHUB_ACTIONS:'true',GITHUB_REF:'refs/heads/main',ODVECNI:'10388',OBDRZI:'8371',PISI:mode==='apply'||mode==='missing-hash'?'true':'false',APPROVED_SHA256:mode==='apply'?'a'.repeat(64):'',SUPABASE_DB_URL:'postgresql://fake:SECRET-password@localhost/postgres'}
   if(mode==='failure')env.STUB_FAIL='1'
+  if(mode==='statement-timeout')env.STUB_FAIL='timeout'
   if(mode==='wrong-ref')env.GITHUB_REF='refs/heads/other'
   if(mode==='wrong-id')env.ODVECNI='8372'
   if(mode==='paused')env.MIGRACIJE_PREMOR='1'
-  const result=spawnSync(process.execPath,[script,...(mode==='extra-argument'?['--sql=select 1']:[])],{cwd,env,encoding:'utf8'})
+  const result=spawnSync(process.execPath,[...(mode==='process-timeout'?['--require',preload]:[]),script,...(mode==='extra-argument'?['--sql=select 1']:[])],{cwd,env,encoding:'utf8'})
   assert.equal(result.status,['preview','apply'].includes(mode)?0:1,mode+result.stderr)
   assert.doesNotMatch(result.stdout+result.stderr,/SECRET-password|PRIVATE-user/)
-  if(['preview','apply','failure'].includes(mode)) {
+  if(['preview','apply','failure','statement-timeout'].includes(mode)) {
    const sql=readFileSync(join(cwd,'received.sql'),'utf8')
    assert.match(sql,/begin isolation level read committed/)
    assert.match(sql,/set local lock_timeout='10s'/)
-   assert.match(sql,/set local statement_timeout='90s'/)
+   assert.match(sql,/set local idle_in_transaction_session_timeout='120s'/)
+   assert.match(sql,/set local statement_timeout='180s'/)
    assert.ok(sql.endsWith(mode==='apply'?'commit;\n':'rollback;\n'))
    assert.doesNotMatch(readFileSync(join(cwd,'received-args.json'),'utf8'),/postgresql|SECRET/)
    assert.doesNotMatch(readFileSync(join(cwd,'fcf-g13-repair/result.json'),'utf8'),/SECRET|PRIVATE/)
   } else assert.equal(existsSync(join(cwd,'received.sql')),false,mode)
+  if(['statement-timeout','process-timeout'].includes(mode)) {
+   const evidence=JSON.parse(readFileSync(join(cwd,'fcf-g13-repair/result.json'),'utf8'))
+   assert.deepEqual(evidence,{version:1,status:'failed-or-unknown',reason:`database ${mode==='process-timeout'?'process':'statement'} timeout; inspect state before retry`})
+   assert.doesNotMatch(JSON.stringify(evidence),/SECRET|PRIVATE/)
+  }
+  if(mode==='failure') assert.equal(JSON.parse(readFileSync(join(cwd,'fcf-g13-repair/result.json'),'utf8')).reason,'database execution failed; inspect state before retry')
+  if(mode==='process-timeout') assert.deepEqual(JSON.parse(readFileSync(join(cwd,'timeout.json'),'utf8')),{timeout:300000})
  }
 })
