@@ -659,8 +659,8 @@ const klubPara = (g) => [poenostaviKlubEs(g.domaci), poenostaviKlubEs(g.gostje)]
 const kljucSkupine = (g) => `${g.tekmovanje}|${g.skupina}|${g.sezona}`
 const napakaKoledarja = (razlog) => new Error(`fcf: neskladen koledar — ${razlog}; uvoz ustavljen`)
 
-/** Validate synchronously before importer writes; returned reader touches only this acta. */
-export function posamezniZapisnik(koda, { id, tekmovanje: c, sezona, danes = Date.now() } = {}) {
+/** Pure source context shared by the audit and existing selected-report reader. */
+function singleReportSourceContext(koda, { id, tekmovanje: c, sezona, danes = Date.now() } = {}) {
   const fail = reason => { throw new Error(`fcf: posamezni zapisnik — ${reason}; uvoz ustavljen`) }
   const group = /^es-ct-(elit|primera|segona|tercera|quarta)(?:-g([1-9]\d*))?$/.exec(c?.slug ?? '')
   if (c?.source !== 'fcf' || c.sezona_koledarska !== false || !group ||
@@ -694,6 +694,18 @@ export function posamezniZapisnik(koda, { id, tekmovanje: c, sezona, danes = Dat
     if (clubs[0] === clubs[1]) fail('neveljavna identiteta klubov')
     return g
   }
+  return { numericId, url, validate }
+}
+
+/** Pure version of the exact existing single-report identity validation. */
+export function validateFcfSingleReportSource(html, koda, options = {}) {
+  return singleReportSourceContext(koda, options).validate(html)
+}
+
+/** Validate synchronously before importer writes; returned reader touches only this acta. */
+export function posamezniZapisnik(koda, options = {}) {
+  const { danes = Date.now() } = options
+  const { numericId, url, validate } = singleReportSourceContext(koda, { ...options, danes })
   return async prenesi => {
     const cached = izPredpomnilnika(imeStrani(numericId))
     const header = cached ? glavaStrani(cached.html) : null
