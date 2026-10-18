@@ -8,7 +8,7 @@
 **Spec:** docs/superpowers/specs/2026-10-18-fcf-g13-cache-evidence-design.md
 
 ## Global Constraints
-- Exactly two immutable cache keys and fixed240-ID block in spec; <=9 raw bodies/key, <=2MiB/body.
+- Exactly two immutable cache keys and two fixed240-ID blocks in spec; <=13 raw bodies/key, <=2MiB/body.
 - Never provider GET/DB keys/write or importer/cache modification. Keep seven-audit helpers/workflows byte-identical.
 - Unknown historical freshness/provenance remains unknown; exact restore hit required.
 - Main-only15minute read-only jobs; controller owns actual one dispatch after code review/CI/merge.
@@ -23,7 +23,7 @@
 ### Task 1: Bounded G13 cache diagnostic
 
 **Files:** Create scripts/izvozi-fcf-g13-predpomnjene-dokaze.mjs, scripts/test-fcf-g13-predpomnjene-dokaze.mjs, .github/workflows/fcf-g13-predpomnjeni-dokazi.yml; modify docs/viri/spanija.md and test:sources package.json wiring only. Any proposed shared safety extraction requires controller ruling first.
-**Interfaces:** Reuse pure FCF glavaStrani/drevoRsc with fetch forbidden. Produce separate fixed g13 diagnostic output directory containing manifest.json, derived heads.json and <=9selectedacta rawfiles. Export a testable safe extraction function and CLI with artifact-ready report. Do not change existing audit interfaces.
+**Interfaces:** Reuse pure FCF glavaStrani/drevoRsc with fetch forbidden. Produce separate fixed g13 diagnostic output directory containing manifest.json, derived heads.json and <=13selectedacta rawfiles. Export a testable safe extraction function and CLI with artifact-ready report. Do not change existing audit interfaces.
 
 - [ ] Step1: Read spec, CLAUDE source rules, existing safe seven-cache exporter and fixed-cache workflow. Write focused tests for all spec failure/selection/provenance/workflow cases; source fixtures may be tiny constructed RSC, explicitly testdata. No pretend original raw proof.
 - [ ] Step2: Run focused tests RED before helper implementation; record expected failure.
