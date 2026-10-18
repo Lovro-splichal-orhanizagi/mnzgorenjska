@@ -40,6 +40,14 @@
 // Vračil in sporov Scouta ne obdelujemo samodejno: admin naročnino prekliče v
 // Stripe, kar pride kot subscription.deleted.
 //
+// SLFF Trgovina (metadata app=slff-shop, trgovina.ts): plačana seja
+// (completed s payment_status paid ali async_payment_succeeded) →
+// trgovina_iz_placila; 'placano'/'premalo' → mail potrditve (trgovina-posta)
+// in Discord ('premalo' z opozorilom o zalogi); 'neznano' (poteklo ali
+// preklicano naročilo) se ne označi samo: Discord "ročno potrdi ali vrni
+// denar" in 200. checkout.session.expired in async_payment_failed →
+// trgovina_potekla (sprosti rezervacijo).
+//
 // Oblike objektov se med različicami API razlikujejo (basil: obdobje na
 // postavkah, naročnina računa pod `parent`, račun plačila prek
 // invoice_payments); beremo obe.
@@ -52,6 +60,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import { veljavenPodpis } from './podpis.ts'
 import { scoutCeneNarocnine, scoutPostavkeVeljajo } from './scout.ts'
+import { napacnaTarifa, trgovinaIzSeje } from './trgovina.ts'
 
 // deno-lint-ignore no-explicit-any
 type Obj = Record<string, any>
@@ -220,6 +229,7 @@ async function obdelaj(tip: string, o: Obj): Promise<string> {
     case 'checkout.session.async_payment_succeeded': {
       const m = o.metadata ?? {}
       if (m.app === 'slff-scout') return await scoutSeja(o)
+      if (m.app === 'slff-shop') return await trgovinaSeja(o)
       if (m.app !== 'slff') return 'ignored'
       if (!['paid', 'no_payment_required'].includes(o.payment_status)) return 'unpaid'
       const vir = m.vir
@@ -266,6 +276,10 @@ async function obdelaj(tip: string, o: Obj): Promise<string> {
       if (izid === 'preklican' && sub) await prekliciNarocnino(sub)
       return izid
     }
+    case 'checkout.session.expired':
+    case 'checkout.session.async_payment_failed':
+      if (o.metadata?.app !== 'slff-shop') return 'ignored'
+      return await rpc('trgovina_potekla', { p_checkout: o.id })
     case 'invoice.paid': {
       const podrobno = o.parent?.subscription_details ?? o.subscription_details ?? {}
       const sub = id(o.subscription) ?? id(podrobno.subscription)
@@ -398,4 +412,41 @@ async function scoutNarocnina(tip: string, o: Obj): Promise<string> {
   const konec = konecObdobja(o)
   if (!konec || !['active', 'trialing'].includes(o.status)) return 'unchanged'
   return await scoutPodaljsaj(o, konec)
+}
+
+// --- SLFF Trgovina (metadata app=slff-shop) ---------------------------------
+
+const evri = (c: number) => (c / 100).toFixed(2).replace('.', ',')
+
+async function trgovinaSeja(o: Obj): Promise<string> {
+  if (o.payment_status !== 'paid') return 'unpaid'
+  const oznaka = o.metadata?.oznaka ?? o.id
+  const { args, tarifa, drzava } = trgovinaIzSeje(o)
+  const kljuc = tarifa ? ((await beri(`shipping_rates/${tarifa}`)).metadata?.kljuc ?? tarifa) : null
+  const izid = await rpc('trgovina_iz_placila', { ...args, p_dostava_kljuc: kljuc })
+  if (izid === 'neznano') {
+    await discord(`🛒 Trgovina: plačilo za poteklo naročilo ${oznaka} — preveri zalogo in ročno potrdi ali vrni denar`)
+    return izid
+  }
+  if (izid !== 'placano' && izid !== 'premalo') return izid
+  await discord(`🛒 Trgovina: naročilo ${oznaka}, ${evri(args.p_skupaj)} €`)
+  if (izid === 'premalo') await discord(`⚠️ Trgovina: naročilo ${oznaka} je plačano, zaloge ni bilo dovolj (manjka > 0 v naročilu; uredi s kupcem).`)
+  if (napacnaTarifa(kljuc, drzava)) await discord(`⚠️ Trgovina: naročilo ${oznaka} ima tarifo ${kljuc} za državo ${drzava} (doplačilo ali vračilo).`)
+  // Mail ne sme ponoviti dogodka: ponovitev bi dobila 'ze' in maila spet ne bi poslala.
+  try {
+    const r = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/trgovina-posta`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vrsta: 'potrditev', narocilo_id: Number(o.metadata?.narocilo_id) }),
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!r.ok) throw new Error(`trgovina-posta ${r.status}`)
+  } catch (e) {
+    console.error('stripe-webhook: trgovina-posta', String(e))
+    // Ob časovni omejitvi je mail morda vseeno odšel.
+    await discord((e as Error)?.name === 'TimeoutError'
+      ? `⚠️ Trgovina: potrditev naročila ${oznaka} ni potrjena — preveri email_log.`
+      : `⚠️ Trgovina: potrditev naročila ${oznaka} ni odšla po pošti.`)
+  }
+  return izid
 }

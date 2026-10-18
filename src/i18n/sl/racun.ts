@@ -245,6 +245,13 @@ export const racun = {
       'Igralec s prevzetim profilom lahko doda, da je odprt za prestop, letnico rojstva, želene regije in dovoljenje za stik. To je privolitev (člen 6(1)(a) GDPR): vidijo jo le klubi v Scoutu, prekliče jo kadarkoli na profilu in ob preklicu podatke izbrišemo. Klub igralcu piše le prek Scouta in njegovega e-naslova ne vidi.',
     scoutUgovor:
       'Ugovor: na prevzetem profilu klikni Skrij me iz Scouta ali piši na <eposta>info@slff.eu</eposta> s povezavo na stran igralca. V 14 dneh igralca skrijemo iz Scouta v vseh naših ligah te države, tudi ob poznejših uvozih. V fantasy igri ostane.',
+    trgovinaNaslov: 'SLFF Trgovina (shop.slff.eu)',
+    trgovinaKaj:
+      'Ob nakupu obdelujemo ime, e-pošto, naslov za dostavo, kupljene izdelke in zneske, ob prijavi tudi tvoj račun SLFF. Plačilo izvede Stripe: podatkov kartice ne vidimo in jih ne hranimo. Ime in naslov dobi Pošta Slovenije za dostavo. Za omejitev zlorab ob nedokončanem nakupu začasno hranimo zgoščen (nepovraten) IP naslov; izbriše se ob plačilu ali poteku nakupa.',
+    trgovinaPodlaga:
+      'Pravna podlaga je izpolnitev pogodbe (člen 6(1)(b) GDPR) in zakonske obveznosti (računovodstvo, davki), za zgoščen IP naslov pa zakoniti interes preprečevanja zlorab (člen 6(1)(f) GDPR). Upravljavec je SPACE GUARDIAN, računalniško programiranje, d.o.o.',
+    trgovinaHramba:
+      'Podatke o naročilih in računih hranimo, kolikor zahtevata zakon o davku na dodano vrednost in računovodski predpisi (10 let po letu izdaje računa). E-pošto za obvestila o naročilu uporabimo le za to naročilo. Za dostop, popravek ali ugovor piši na <eposta>info@slff.eu</eposta>.',
   },
   // Komponenta KlubskiRacun na strani Račun.
   klubskiRacun: {

@@ -4056,6 +4056,259 @@ begin
 end;
 $$;
 
+-- --- Trgovina (20261018170000) ---------------------------------------------
+-- Shema ni v API; anon bere le katalog brez zaloge v številkah, servis
+-- rezervira in plača, admin RPC le admin. Odjemalci: sha256 hex.
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+select set_config('test.odj', encode(sha256('test-odjemalec'), 'hex'), true);
+insert into trgovina.izdelki(id, slug, ime_sl, ime_en, kategorija, aktiven) overriding system value values
+  (-916001, 'test-trgovina', 'Test', 'Test', 'dodatki', true),
+  (-916002, 'test-trgovina-skrit', 'Skrit', 'Hidden', 'dodatki', false);
+insert into trgovina.razlicice(id, izdelek_id, oznaka_sl, oznaka_en, sku, cena, zaloga) overriding system value values
+  (-916001, -916001, 'Ena', 'One', 'TEST-TRG-1', 1000, 2),
+  (-916002, -916002, 'Ena', 'One', 'TEST-TRG-2', 1000, 5),
+  (-916003, -916001, 'Dva', 'Two', 'TEST-TRG-3', 1000, 20);
+
+set local role anon;
+select pg_temp.zavrnjeno('trgovina: anon ne bere izdelkov', $$select * from trgovina.izdelki$$);
+select pg_temp.zavrnjeno('trgovina: anon ne bere razlicic', $$select * from trgovina.razlicice$$);
+select pg_temp.zavrnjeno('trgovina: anon ne bere narocil', $$select * from trgovina.narocila$$);
+select pg_temp.zavrnjeno('trgovina: anon ne rezervira (shema)',
+  $$select trgovina.rezerviraj('[{"razlicica_id":-916001,"kolicina":1}]', null, 'sl', current_setting('test.odj'))$$);
+select pg_temp.zavrnjeno('trgovina: anon ne placa (shema)',
+  $$select trgovina.iz_placila('x', null, null, null, null, 0, 0, 0, 0, null)$$);
+select pg_temp.zavrnjeno('trgovina: anon ne izteka (shema)', $$select trgovina.potekla('x')$$);
+select pg_temp.zavrnjeno('trgovina: anon ne veze seje (shema)', $$select trgovina.vezi_sejo(1, 'x')$$);
+select pg_temp.zavrnjeno('trgovina: anon ne sprosti (shema)', $$select trgovina.sprosti(1)$$);
+select pg_temp.zavrnjeno('trgovina: anon ne rezervira',
+  $$select trgovina_rezerviraj('[{"razlicica_id":-916001,"kolicina":1}]', null, 'sl', current_setting('test.odj'))$$);
+select pg_temp.zavrnjeno('trgovina: anon ne veze seje', $$select trgovina_vezi_sejo(1, 'x')$$);
+select pg_temp.zavrnjeno('trgovina: anon ne sprosti', $$select trgovina_sprosti(1)$$);
+select pg_temp.zavrnjeno('trgovina: anon ne placa',
+  $$select trgovina_iz_placila('x', null, null, null, null, 0, 0, 0, 0, null)$$);
+select pg_temp.zavrnjeno('trgovina: anon ne izteka', $$select trgovina_potekla('x')$$);
+select pg_temp.zavrnjeno('trgovina: anon ne bere narocila za posto', $$select trgovina_narocilo_za_posto(1)$$);
+select pg_temp.zavrnjeno('trgovina: anon ne isce narocila seje', $$select trgovina_narocilo_seje('x', null, 'x')$$);
+select pg_temp.zavrnjeno('trgovina: anon ne pocisti', $$select trgovina.pocisti()$$);
+select set_config('test.trgovina_katalog', trgovina_katalog()::text, true);
+select pg_temp.preveri('trgovina: katalog pokaze aktiven izdelek z oceno zaloge',
+  current_setting('test.trgovina_katalog')::jsonb @> '[{"slug":"test-trgovina","na_voljo":"da","cena_od":1000}]');
+select pg_temp.preveri('trgovina: izdelek brez stevil zaloge',
+  trgovina_izdelek('test-trgovina')->'razlicice' @> '[{"oznaka_sl":"Ena","na_voljo":"malo"}]'
+  and trgovina_izdelek('test-trgovina')::text not like '%zaloga%');
+select pg_temp.preveri('trgovina: neaktiven izdelek je skrit', trgovina_izdelek('test-trgovina-skrit') is null);
+reset role;
+select pg_temp.preveri('trgovina: katalog le aktivni izdelki in brez kljuca zaloga',
+  current_setting('test.trgovina_katalog') not like '%zaloga%'
+  and not exists (select 1 from jsonb_array_elements(current_setting('test.trgovina_katalog')::jsonb) e
+                   left join trgovina.izdelki i on i.slug = e->>'slug'
+                   where i.aktiven is not true));
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('trgovina: uporabnik ne rezervira mimo servisa',
+  $$select trgovina_rezerviraj('[{"razlicica_id":-916001,"kolicina":1}]', auth.uid(), 'sl', current_setting('test.odj'))$$);
+select pg_temp.zavrnjeno('trgovina: uporabnik ne sprosti mimo servisa', $$select trgovina_sprosti(1)$$);
+select pg_temp.zavrnjeno('trgovina: uporabnik ne placa mimo servisa',
+  $$select trgovina_iz_placila('x', null, null, null, null, 0, 0, 0, 0, null)$$);
+select pg_temp.zavrnjeno('trgovina: uporabnik ne bere narocila za posto', $$select trgovina_narocilo_za_posto(1)$$);
+select pg_temp.zavrnjeno('trgovina: uporabnik ne vidi narocil za pakiranje', $$select trgovina_admin_narocila()$$);
+select pg_temp.zavrnjeno('trgovina: uporabnik ne oznaci poslano', $$select trgovina_admin_poslano(1, 'RR1SI')$$);
+select pg_temp.zavrnjeno('trgovina: uporabnik ne ureja izdelkov',
+  $$select trgovina_admin_shrani_izdelek('{"id":-916001,"aktiven":false}')$$);
+select pg_temp.zavrnjeno('trgovina: uporabnik ne ureja razlicic',
+  $$select trgovina_admin_shrani_razlicico('{"id":-916001,"zaloga_dodaj":99}')$$);
+reset role;
+
+-- Servis: rezervacija ne preseže zaloge, potekla jo sprosti.
+grant select, insert on izidi to service_role;
+grant execute on function pg_temp.preveri(text, boolean), pg_temp.napaka(text, text, text) to service_role;
+set local role service_role;
+select set_config('test.trg1r', trgovina_rezerviraj('[{"razlicica_id":-916001,"kolicina":2}]',
+  'b8a06635-2322-4444-8c42-44e419f912ab', 'sl', current_setting('test.odj'))::text, true);
+select set_config('test.trg1', current_setting('test.trg1r')::jsonb->>'narocilo_id', true);
+select pg_temp.preveri('trgovina: rezervacija drzi 35 minut in to pove',
+  (current_setting('test.trg1r')::jsonb->>'rezervirano_do')::timestamptz = now() + interval '35 minutes');
+select trgovina_vezi_sejo(current_setting('test.trg1')::bigint, 'cs_test_trgovina_1');
+select pg_temp.napaka('trgovina: seja se ne veze dvakrat',
+  format('select trgovina_vezi_sejo(%s, %L)', current_setting('test.trg1'), 'cs_test_trgovina_1b'), 'trgovina-stanje');
+select pg_temp.napaka('trgovina: rezervacija ne preseze zaloge',
+  $$select trgovina_rezerviraj('[{"razlicica_id":-916001,"kolicina":1}]', null, 'sl', current_setting('test.odj'))$$, 'trgovina-zaloga');
+select pg_temp.napaka('trgovina: kolicina 0 je neveljavna',
+  $$select trgovina_rezerviraj('[{"razlicica_id":-916001,"kolicina":0}]', null, 'sl', current_setting('test.odj'))$$, 'trgovina-vnos');
+select pg_temp.napaka('trgovina: id izven bigint je neveljaven',
+  $$select trgovina_rezerviraj('[{"razlicica_id":1e20,"kolicina":1}]', null, 'sl', current_setting('test.odj'))$$, 'trgovina-vnos');
+select pg_temp.napaka('trgovina: odjemalec mora biti sha256',
+  $$select trgovina_rezerviraj('[{"razlicica_id":-916001,"kolicina":1}]', null, 'sl', '1.2.3.4')$$, 'trgovina-vnos');
+select pg_temp.napaka('trgovina: podvojena vrstica je neveljavna',
+  $$select trgovina_rezerviraj('[{"razlicica_id":-916001,"kolicina":1},{"razlicica_id":-916001,"kolicina":1}]', null, 'sl', current_setting('test.odj'))$$,
+  'trgovina-vnos');
+select pg_temp.napaka('trgovina: neaktiven izdelek se ne proda',
+  $$select trgovina_rezerviraj('[{"razlicica_id":-916002,"kolicina":1}]', null, 'sl', current_setting('test.odj'))$$, 'trgovina-vnos');
+select pg_temp.preveri('trgovina: potekla seja sprosti rezervacijo', trgovina_potekla('cs_test_trgovina_1') = 'poteklo');
+select pg_temp.napaka('trgovina: poteklo narocilo ne dobi seje',
+  format('select trgovina_vezi_sejo(%s, %L)', current_setting('test.trg1'), 'cs_test_trgovina_1c'), 'trgovina-stanje');
+select set_config('test.trg2', (trgovina_rezerviraj('[{"razlicica_id":-916001,"kolicina":1}]',
+  'b8a06635-2322-4444-8c42-44e419f912ab', 'en', current_setting('test.odj'))->>'narocilo_id'), true);
+select pg_temp.preveri('trgovina: po sprostitvi je rezervacija spet mogoca', current_setting('test.trg2') <> '');
+select trgovina_vezi_sejo(current_setting('test.trg2')::bigint, 'cs_test_trgovina_2');
+select pg_temp.preveri('trgovina: placilo oznaci placano',
+  trgovina_iz_placila('cs_test_trgovina_2', 'pi_test', 'kupec@example.invalid', 'Kupec', '{"country":"SI"}',
+                      1000, 390, 250, 1390, 'paket_si') = 'placano');
+select pg_temp.preveri('trgovina: ponovljen dogodek placila je ze',
+  trgovina_iz_placila('cs_test_trgovina_2', 'pi_test', 'kupec@example.invalid', 'Kupec', '{"country":"SI"}',
+                      1000, 390, 250, 1390, 'paket_si') = 'ze');
+select pg_temp.preveri('trgovina: neznana seja', trgovina_iz_placila('cs_ni', null, null, null, null, 0, 0, 0, 0, null) = 'neznano');
+reset role;
+select pg_temp.preveri('trgovina: zaloga odsteta enkrat', (select zaloga = 1 from trgovina.razlicice where id = -916001));
+select pg_temp.preveri('trgovina: placilo pobrise odjemalca',
+  (select odjemalec is null and manjka = 0 from trgovina.narocila where id = current_setting('test.trg2')::bigint));
+
+-- Rezervacija poteče po času: zaloga je spet na voljo, pozno plačilo še velja.
+set local role service_role;
+select set_config('test.trg3', (trgovina_rezerviraj('[{"razlicica_id":-916001,"kolicina":1}]', null, 'sl',
+  current_setting('test.odj'))->>'narocilo_id'), true);
+select trgovina_vezi_sejo(current_setting('test.trg3')::bigint, 'cs_test_trgovina_3');
+reset role;
+select pg_temp.preveri('trgovina: rezervacija drzi zadnji kos',
+  (select na_voljo = 0 from trgovina.razpolozljivo where razlicica_id = -916001));
+update trgovina.narocila set rezervirano_do = now() - interval '1 minute' where id = current_setting('test.trg3')::bigint;
+select pg_temp.preveri('trgovina: potekla rezervacija sprosti zalogo',
+  (select na_voljo = 1 from trgovina.razpolozljivo where razlicica_id = -916001));
+set local role service_role;
+select pg_temp.preveri('trgovina: pozno placilo potekle rezervacije velja',
+  trgovina_iz_placila('cs_test_trgovina_3', 'pi_test3', 'tretji@example.invalid', 'Tretji', '{}', 1000, 390, 250, 1390, 'paket_si') = 'placano');
+reset role;
+select pg_temp.preveri('trgovina: pozno placilo odsteje zalogo',
+  (select zaloga = 0 from trgovina.razlicice where id = -916001));
+
+-- Zaloga medtem pade: plačilo velja, a 'premalo' in manjka se zapiše.
+update trgovina.razlicice set zaloga = 1 where id = -916001;
+set local role service_role;
+select set_config('test.trg4', (trgovina_rezerviraj('[{"razlicica_id":-916001,"kolicina":1}]', null, 'sl',
+  current_setting('test.odj'))->>'narocilo_id'), true);
+select trgovina_vezi_sejo(current_setting('test.trg4')::bigint, 'cs_test_trgovina_4');
+reset role;
+update trgovina.razlicice set zaloga = 0 where id = -916001;
+set local role service_role;
+select pg_temp.preveri('trgovina: placilo brez zaloge je premalo',
+  trgovina_iz_placila('cs_test_trgovina_4', 'pi_test4', 'drugi@example.invalid', 'Drugi', '{}', 1000, 390, 250, 1390, 'paket_si') = 'premalo');
+select pg_temp.preveri('trgovina: servis bere narocilo za posto',
+  trgovina_narocilo_za_posto(current_setting('test.trg2')::bigint)->>'jezik' = 'en');
+reset role;
+select pg_temp.preveri('trgovina: zaloga ne gre pod nic', (select zaloga = 0 from trgovina.razlicice where id = -916001));
+
+-- Omejitev: največ 5 odprtih naročil na gosta (odjemalec) ali uporabnika.
+set local role service_role;
+select set_config('test.odj_m', encode(sha256('test-odjemalec-m'), 'hex'), true);
+select set_config('test.trg_m', (trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', null, 'sl',
+  current_setting('test.odj_m'))->>'narocilo_id'), true);
+select trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', null, 'sl', current_setting('test.odj_m'))
+  from generate_series(1, 4);
+select pg_temp.napaka('trgovina: sesto odprto narocilo gosta je zavrnjeno',
+  $$select trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', null, 'sl', current_setting('test.odj_m'))$$,
+  'trgovina-omejitev');
+select pg_temp.preveri('trgovina: prijavljen z istim IP ni omejen z gosti',
+  trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', 'b8a06635-2322-4444-8c42-44e419f912ad', 'sl',
+    current_setting('test.odj_m')) ? 'narocilo_id');
+select pg_temp.preveri('trgovina: sprosti odpre narocilo', trgovina_sprosti(current_setting('test.trg_m')::bigint) = 'poteklo');
+select pg_temp.preveri('trgovina: sprosti dvakrat je ze', trgovina_sprosti(current_setting('test.trg_m')::bigint) = 'ze');
+select pg_temp.preveri('trgovina: po sprostitvi odjemalec spet narocuje',
+  trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', null, 'sl', current_setting('test.odj_m')) ? 'narocilo_id');
+select set_config('test.trg_u', (trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]',
+  'b8a06635-2322-4444-8c42-44e419f912ab', 'sl', encode(sha256('u1'), 'hex'))->>'narocilo_id'), true);
+select trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]',
+  'b8a06635-2322-4444-8c42-44e419f912ab', 'sl', encode(sha256(('u' || g)::bytea), 'hex')) from generate_series(2, 5) g;
+select pg_temp.napaka('trgovina: sesto odprto narocilo uporabnika je zavrnjeno',
+  $$select trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', 'b8a06635-2322-4444-8c42-44e419f912ab', 'sl', encode(sha256('u6'), 'hex'))$$,
+  'trgovina-omejitev');
+select trgovina_vezi_sejo(current_setting('test.trg_u')::bigint, 'cs_test_trgovina_u');
+select pg_temp.preveri('trgovina: lastnik najde svojo prejsnjo sejo',
+  trgovina_narocilo_seje('cs_test_trgovina_u', 'b8a06635-2322-4444-8c42-44e419f912ab', encode(sha256('drug'), 'hex'))
+    = jsonb_build_object('id', current_setting('test.trg_u')::bigint, 'stanje', 'caka_placilo'));
+select pg_temp.preveri('trgovina: tujec ne najde tuje seje',
+  trgovina_narocilo_seje('cs_test_trgovina_u', 'b8a06635-2322-4444-8c42-44e419f912ac', encode(sha256('u1'), 'hex')) is null
+  and trgovina_narocilo_seje('cs_test_trgovina_u', null, encode(sha256('drug'), 'hex')) is null);
+reset role;
+update trgovina.narocila set rezervirano_do = now() - interval '1 minute' where id = current_setting('test.trg_u')::bigint;
+set local role service_role;
+select pg_temp.preveri('trgovina: potekla rezervacija ne steje v omejitev',
+  trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', 'b8a06635-2322-4444-8c42-44e419f912ab', 'sl',
+    encode(sha256('u6'), 'hex')) ? 'narocilo_id');
+reset role;
+select pg_temp.preveri('trgovina: sveze poteklo narocilo pocisti se ne dotakne',
+  (select stanje = 'caka_placilo' from trgovina.narocila where id = current_setting('test.trg_u')::bigint));
+update trgovina.narocila set rezervirano_do = now() - interval '61 minutes' where id = current_setting('test.trg_u')::bigint;
+set local role service_role;
+select trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', null, 'sl', encode(sha256('pocisti'), 'hex'));
+reset role;
+select pg_temp.preveri('trgovina: rezervacija pocisti zastarela narocila',
+  (select stanje = 'poteklo' and odjemalec is null from trgovina.narocila where id = current_setting('test.trg_u')::bigint));
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.preveri('trgovina: kupec vidi svoje placano narocilo, ne poteklega',
+  (select count(*) = 1 and bool_and((e->>'id')::bigint = current_setting('test.trg2')::bigint and not e ? 'manjka')
+     from jsonb_array_elements(trgovina_moja_narocila()) e));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select pg_temp.preveri('trgovina: tujec ne vidi tujih narocil', trgovina_moja_narocila() = '[]'::jsonb);
+reset role;
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('trgovina: admin vidi narocila za pakiranje',
+  trgovina_admin_narocila() @> jsonb_build_array(jsonb_build_object('id', current_setting('test.trg2')::bigint, 'manjka', 0)));
+select pg_temp.preveri('trgovina: admin vidi, koliko manjka',
+  trgovina_admin_narocilo(current_setting('test.trg4')::bigint)->>'manjka' = '1');
+select pg_temp.preveri('trgovina: admin bere narocilo s postavkami',
+  jsonb_array_length(trgovina_admin_narocilo(current_setting('test.trg2')::bigint)->'postavke') = 1);
+select pg_temp.preveri('trgovina: admin bere narocilo za posto',
+  trgovina_narocilo_za_posto(current_setting('test.trg2')::bigint)->>'email' = 'kupec@example.invalid');
+select pg_temp.preveri('trgovina: admin oznaci poslano',
+  trgovina_admin_poslano(current_setting('test.trg2')::bigint, ' RR123SI ')->>'sledilna' = 'RR123SI');
+select pg_temp.napaka('trgovina: poteklo narocilo ni za posiljanje',
+  format('select trgovina_admin_poslano(%s, %L)', current_setting('test.trg1'), 'RR1SI'), 'trgovina-stanje');
+select pg_temp.preveri('trgovina: admin vidi zalogo',
+  trgovina_admin_izdelki() @> '[{"id":-916001,"razlicice":[{"id":-916001,"zaloga":0}]}]');
+select set_config('test.trg_izd', trgovina_admin_shrani_izdelek(
+  '{"slug":"test-trgovina-nov","ime_sl":"Nov","ime_en":"New","kategorija":"dom"}')::text, true);
+select trgovina_admin_shrani_izdelek(jsonb_build_object('id', current_setting('test.trg_izd')::bigint, 'ime_en', 'New 2'));
+select pg_temp.preveri('trgovina: admin doda in delno popravi izdelek',
+  trgovina_admin_izdelki() @> jsonb_build_array(jsonb_build_object('slug', 'test-trgovina-nov', 'ime_sl', 'Nov',
+    'ime_en', 'New 2', 'aktiven', false, 'opis_sl', '')));
+select set_config('test.trg_raz', trgovina_admin_shrani_razlicico(jsonb_build_object('izdelek_id', current_setting('test.trg_izd')::bigint,
+  'oznaka_sl', 'Ena', 'oznaka_en', 'One', 'sku', 'TEST-TRG-NOV', 'cena', 500, 'zaloga', 7))::text, true);
+select pg_temp.preveri('trgovina: admin doda razlicico',
+  trgovina_admin_izdelki() @> '[{"slug":"test-trgovina-nov","razlicice":[{"sku":"TEST-TRG-NOV","zaloga":7,"na_voljo":7,"aktivna":true}]}]');
+select trgovina_admin_shrani_razlicico(jsonb_build_object('id', current_setting('test.trg_raz')::bigint, 'zaloga_dodaj', -3, 'cena', 600));
+select pg_temp.preveri('trgovina: admin zalogo spremeni za razliko',
+  trgovina_admin_izdelki() @> '[{"slug":"test-trgovina-nov","razlicice":[{"sku":"TEST-TRG-NOV","zaloga":4,"cena":600}]}]');
+select pg_temp.napaka('trgovina: zaloga_dodaj ne gre pod nic',
+  format('select trgovina_admin_shrani_razlicico(%L)', jsonb_build_object('id', current_setting('test.trg_raz')::bigint, 'zaloga_dodaj', -5)),
+  'trgovina-zaloga');
+select pg_temp.napaka('trgovina: absolutna zaloga obstojece razlicice je zavrnjena',
+  format('select trgovina_admin_shrani_razlicico(%L)', jsonb_build_object('id', current_setting('test.trg_raz')::bigint, 'zaloga', 99)),
+  'trgovina-vnos');
+select pg_temp.napaka('trgovina: zaloga_dodaj mora biti celo stevilo',
+  format('select trgovina_admin_shrani_razlicico(%L)', jsonb_build_object('id', current_setting('test.trg_raz')::bigint, 'zaloga_dodaj', 1.5)),
+  'trgovina-vnos');
+select pg_temp.preveri('trgovina: zavrnjene spremembe zaloge ne pustijo sledi',
+  trgovina_admin_izdelki() @> '[{"slug":"test-trgovina-nov","razlicice":[{"sku":"TEST-TRG-NOV","zaloga":4}]}]');
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+
+-- Pozno plačilo za poteklo naročilo (webhook po izpadu) se zapiše; manjkajoče gre v manjka.
+set local role service_role;
+select pg_temp.preveri('trgovina: placilo za poteklo narocilo se zapise',
+  trgovina_iz_placila('cs_test_trgovina_1', 'pi_test_1', 'pozni@example.invalid', 'Pozni', '{"country":"SI"}',
+                      1000, 390, 250, 1390, 'paket_si') in ('placano', 'premalo'));
+reset role;
+select pg_temp.preveri('trgovina: pozno placano narocilo je placano',
+  (select stanje = 'placano' from trgovina.narocila where stripe_checkout_id = 'cs_test_trgovina_1'));
+
 do $$
 declare v_napak int;
 begin
