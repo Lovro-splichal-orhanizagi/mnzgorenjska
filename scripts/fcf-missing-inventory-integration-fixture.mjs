@@ -3,7 +3,7 @@ import {mkdtempSync,realpathSync,readFileSync,readdirSync,rmSync} from 'node:fs'
 import {join} from 'node:path'
 import {tmpdir} from 'node:os'
 import {packetFixture} from './fcf-release-test-fixture.mjs'
-import {seedFixture,claimFixture,consumptionFixture,execution,metadata,now,zip,sha} from './fcf-missing-inventory-test-fixture.mjs'
+import {rulesetSnapshot,rulesetSnapshotSha256,seedFixture,claimFixture,consumptionFixture,execution,metadata,now,zip,sha} from './fcf-missing-inventory-test-fixture.mjs'
 import {readFcfMissingInventorySeed,buildFcfMissingInventoryPlan,fcfMissingInventoryPolicyHashes,validateFcfMissingInventoryPlan} from './fcf-missing-inventory-plan.mjs'
 import {readFcfInventoryExecutionClaim,readFcfInventoryConsumptionArtifact} from './fcf-missing-inventory-claim.mjs'
 import {collectFcfMissingInventoryChild} from './fcf-missing-inventory-capture.mjs'
@@ -13,7 +13,7 @@ function copy(f){return{...f,artifact:structuredClone(f.artifact),run:structured
 export async function inventoryFixture(t,{targetSlug='es-ct-segona-g1',previous,source,fresh=false,nativePlayers=false}={}){
  if(cached&&!fresh&&!source&&!nativePlayers&&targetSlug==='es-ct-segona-g1')return copy(cached)
  if(!shared)shared={seed:readFcfMissingInventorySeed(seedFixture(retained)),groups:packetFixture(retained).groups}
- const plan=previous?.plan??buildFcfMissingInventoryPlan({sourceCommit:execution().sourceCommit,seedEvidence:shared.seed,policyHashes:fcfMissingInventoryPolicyHashes(),now:now-3600000+(++n)}),claimProof=previous?.claimProof??readFcfInventoryExecutionClaim(claimFixture(plan)),consumptionProof=previous?.consumptionProof??readFcfInventoryConsumptionArtifact(consumptionFixture(claimProof)),root=realpathSync(mkdtempSync(join(tmpdir(),'fcf-inventory-integration-')))
+ const plan=previous?.plan??buildFcfMissingInventoryPlan({rulesetSnapshotSha256,sourceCommit:execution().sourceCommit,seedEvidence:shared.seed,policyHashes:fcfMissingInventoryPolicyHashes(),now:now-3600000+(++n)}),claimProof=previous?.claimProof??readFcfInventoryExecutionClaim(claimFixture(plan)),consumptionProof=previous?.consumptionProof??readFcfInventoryConsumptionArtifact(consumptionFixture(claimProof)),root=realpathSync(mkdtempSync(join(tmpdir(),'fcf-inventory-integration-')))
  t.after(()=>rmSync(root,{recursive:true,force:true}));let time=previous?.now??now,calls=0
  const group=(nativePlayers?packetFixture(retained,{nativePlayers:true}).groups:shared.groups).find(g=>g.competition.slug===targetSlug),exec={...execution(),jobId:targetSlug.endsWith('-g1')?'555':'556'},input={plan,targetSlug,seedEvidence:shared.seed,execution:exec,consumptionProof,batchState:previous?.continuation,root,clock:()=>time,pause:async ms=>{time+=ms},request:async(url,init)=>{calls++;time+=5;return source?source(url,init):new Response(group.documents.find(d=>url.endsWith('/'+d.id)).html)}}
  const result=await collectFcfMissingInventoryChild(input),entries=readdirSync(result.outputDirectory).map(name=>({name,body:readFileSync(join(result.outputDirectory,name))})),manifest=JSON.parse(entries.find(e=>e.name==='manifest.json').body),bytes=zip(entries),m=metadata({bytes,name:`fcf-missing-inventory-${targetSlug}-123-1`,jobName:`missing-inventory-${targetSlug.endsWith('-g1')?'g1':'g9'}`,steps:['Capture missing target inventory','Retain complete target inventory'],run:'in_progress',jobId:exec.jobId,artifactId:targetSlug.endsWith('-g1')?'888':'898'})

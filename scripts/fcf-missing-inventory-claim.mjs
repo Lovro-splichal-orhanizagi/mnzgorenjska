@@ -5,6 +5,18 @@ import {validateFcfMissingInventoryPlan} from './fcf-missing-inventory-plan.mjs'
 import {FCF_INVENTORY_REPOSITORY as repository,FCF_INVENTORY_WORKFLOW as workflow,inventoryFail as fail,exactKeys,frozenJSON,rawSha256,nativeId,commitId,sha256Id,validUTC,jsonBytes,verifyInventoryExecution,readInventoryZip} from './fcf-missing-inventory-artifact.mjs'
 const claims=new WeakSet(),consumptions=new WeakSet()
 const equal=(a,b)=>hash(a)===hash(b)
+const visibleRuleKeys=['id','source','source_type','target','enforcement','conditions','rules','updated_at']
+function rulesetUTC(value){
+ if(typeof value!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,3})?(?:Z|[+-]\d\d:\d\d)$/.test(value)||!Number.isFinite(Date.parse(value)))fail('actual ruleset updated_at instant required')
+ const local=value.slice(0,19),parts=local.match(/\d+/g).map(Number),d=new Date(Date.UTC(parts[0],parts[1]-1,parts[2],parts[3],parts[4],parts[5]));if(d.toISOString().slice(0,19)!==local)fail('invalid ruleset updated_at calendar')
+ return new Date(value).toISOString()
+}
+const visibleRule=r=>Object.fromEntries(visibleRuleKeys.map(k=>[k,k==='updated_at'?rulesetUTC(r[k]):r[k]]))
+/** Root-only claim preparation: omitted bypass metadata cannot attest no bypass. */
+export function snapshotFcfInventoryRuleset({ruleset:r,checkedUTC,now=Date.now()}){
+ if(!r||!Number.isSafeInteger(r.id)||r.id<1||r.source!==repository||r.source_type!=='Repository'||r.target!=='tag'||r.enforcement!=='active'||!Array.isArray(r.bypass_actors)||r.bypass_actors.length||!equal(r.conditions,{ref_name:{include:['refs/tags/fcf-inventory-claim/*'],exclude:[]}})||!Array.isArray(r.rules)||!['update','deletion'].every(type=>r.rules.some(x=>x.type===type))||!validUTC(checkedUTC)||!Number.isFinite(now)||Date.parse(rulesetUTC(r.updated_at))>Date.parse(checkedUTC)||Date.parse(checkedUTC)>now)fail('actual owner-visible no-bypass ruleset and original check clock required')
+ return frozenJSON({checkedUTC,ruleset:structuredClone({...visibleRule(r),bypass_actors:[]})})
+}
 export function readFcfInventoryExecutionClaim({plan,execution,ref,claimCommit,claimBytes,rulesets,expected,now=Date.now()}){
  exactKeys(execution,['repository','workflow','ref','sourceCommit','runId','runAttempt'],'execution')
  if(!expected||!commitId(expected.claimCommit)||!sha256Id(expected.claimJsonSha256)||!nativeId(expected.rulesetId)||expected.runAttempt!=='1'||execution.runAttempt!=='1'||execution.repository!==repository||execution.workflow!==workflow||execution.ref!=='refs/heads/main'||!nativeId(execution.runId)||execution.runId!==expected.runId||execution.sourceCommit!==expected.sourceCommit||plan?.sourceCommit!==execution.sourceCommit)fail('exact reserved execution/attempt1 required')
@@ -16,11 +28,13 @@ export function readFcfInventoryExecutionClaim({plan,execution,ref,claimCommit,c
  const entries=tree.tree.filter(row=>row.path==='.fcf-inventory-claim.json'),entry=entries[0]
  if(entries.length!==1||entry.type!=='blob'||entry.mode!=='100644'||!commitId(entry.sha)||blob?.sha!==entry.sha||blob.encoding!=='base64'||!Buffer.isBuffer(claimBytes)||blob.size!==claimBytes.length||typeof blob.content!=='string'||!Buffer.from(blob.content.replace(/\n/g,''),'base64').equals(claimBytes)||createHash('sha1').update(`blob ${claimBytes.length}\0`).update(claimBytes).digest('hex')!==entry.sha||rawSha256(claimBytes)!==expected.claimJsonSha256)fail('actual claim blob/JSON hash differs')
  const claim=jsonBytes(claimBytes,'execution claim',64*1024)
- exactKeys(claim,['schemaVersion','kind','repository','workflow','planSha256','sourceCommit','runId','runAttempt','preset','maximumSourceGETs','claimedUTC'],'claim')
- if(claim.schemaVersion!==1||claim.kind!=='fcf-missing-inventory-execution-claim'||claim.repository!==repository||claim.workflow!==workflow||claim.planSha256!==plan.planSha256||claim.sourceCommit!==execution.sourceCommit||claim.runId!==execution.runId||claim.runAttempt!=='1'||claim.preset!==plan.preset||claim.maximumSourceGETs!==477||!validUTC(claim.claimedUTC)||Date.parse(claim.claimedUTC)<Date.parse(plan.createdUTC)||Date.parse(claim.claimedUTC)>now)fail('claim plan/execution/time differs')
+ exactKeys(claim,['schemaVersion','kind','repository','workflow','planSha256','sourceCommit','runId','runAttempt','preset','maximumSourceGETs','claimedUTC','rulesetSnapshot'],'claim')
+ if(claim.schemaVersion!==2||claim.kind!=='fcf-missing-inventory-execution-claim'||claim.repository!==repository||claim.workflow!==workflow||claim.planSha256!==plan.planSha256||claim.sourceCommit!==execution.sourceCommit||claim.runId!==execution.runId||claim.runAttempt!=='1'||claim.preset!==plan.preset||claim.maximumSourceGETs!==477||!validUTC(claim.claimedUTC)||Date.parse(claim.claimedUTC)<Date.parse(plan.createdUTC)||Date.parse(claim.claimedUTC)>now)fail('claim plan/execution/time differs')
  if(!Array.isArray(rulesets))fail('actual protected tag ruleset required')
  const matches=rulesets.filter(r=>String(r.id)===expected.rulesetId),rule=matches[0]
- if(matches.length!==1||rule.target!=='tag'||rule.enforcement!=='active'||!Array.isArray(rule.bypass_actors)||rule.bypass_actors.length||!equal(rule.conditions?.ref_name,{include:['refs/tags/fcf-inventory-claim/*'],exclude:[]})||!Array.isArray(rule.rules)||!['update','deletion'].every(type=>rule.rules.some(r=>r.type===type)))fail('claim ref lacks no-update/no-delete/no-bypass protection')
+ const s=claim.rulesetSnapshot;exactKeys(s,['checkedUTC','ruleset'],'claim ruleset snapshot');exactKeys(s.ruleset,[...visibleRuleKeys,'bypass_actors'],'claim full ruleset')
+ const root=snapshotFcfInventoryRuleset({ruleset:s.ruleset,checkedUTC:s.checkedUTC,now})
+ if(!equal(s,root)||hash(s)!==plan.rulesetSnapshotSha256||String(root.ruleset.id)!==expected.rulesetId||Date.parse(s.checkedUTC)>Date.parse(claim.claimedUTC)||matches.length!==1||Object.hasOwn(rule,'bypass_actors')&&(!Array.isArray(rule.bypass_actors)||rule.bypass_actors.length)||!equal(visibleRule(rule),visibleRule(root.ruleset)))fail('claim ref differs from root-attested current no-update/no-delete/no-bypass protection')
  const proof=frozenJSON({kind:'fcf-missing-inventory-execution-claim-proof',planSha256:plan.planSha256,sourceCommit:execution.sourceCommit,runId:execution.runId,runAttempt:'1',claimRef,claimCommit:expected.claimCommit,claimJsonSha256:expected.claimJsonSha256,rulesetId:expected.rulesetId,claimedUTC:claim.claimedUTC,maximumSourceGETs:477,seedBinding:structuredClone(plan.seedBinding)})
  claims.add(proof);return proof
 }

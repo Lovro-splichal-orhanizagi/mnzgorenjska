@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {mkdtempSync,realpathSync,readFileSync,readdirSync,rmSync,symlinkSync,mkdirSync,writeFileSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
-import {claimFixture,consumptionFixture,seedFixture,now,execution,headerBytes} from './fcf-missing-inventory-test-fixture.mjs'
+import {rulesetSnapshot,rulesetSnapshotSha256,claimFixture,consumptionFixture,seedFixture,now,execution,headerBytes} from './fcf-missing-inventory-test-fixture.mjs'
 import {packetFixture} from './fcf-release-test-fixture.mjs'
 import {readFcfMissingInventorySeed,buildFcfMissingInventoryPlan,fcfMissingInventoryPolicyHashes} from './fcf-missing-inventory-plan.mjs'
 import {readFcfInventoryExecutionClaim,readFcfInventoryConsumptionArtifact} from './fcf-missing-inventory-claim.mjs'
@@ -11,7 +11,7 @@ const api=await import('./fcf-missing-inventory-capture.mjs').catch(()=>({}))
 const retained=process.env.FCF_HISTORICAL_RETAINED_DIR
 let shared,fixtureNumber=0
 function authentic(){if(!shared){shared={seed:readFcfMissingInventorySeed(seedFixture(retained)),documents:packetFixture(retained).groups[0].documents}}return shared}
-function fixture(t){const {seed,documents}=authentic(),plan=buildFcfMissingInventoryPlan({sourceCommit:execution().sourceCommit,seedEvidence:seed,policyHashes:fcfMissingInventoryPolicyHashes(),now:now-3600000+(++fixtureNumber)}),claim=readFcfInventoryExecutionClaim(claimFixture(plan)),consumption=readFcfInventoryConsumptionArtifact(consumptionFixture(claim)),root=realpathSync(mkdtempSync(join(tmpdir(),'fcf-inventory-capture-')));t.after(()=>rmSync(root,{recursive:true,force:true}));let time=now,calls=0;const pauses=[]
+function fixture(t){const {seed,documents}=authentic(),plan=buildFcfMissingInventoryPlan({rulesetSnapshotSha256,sourceCommit:execution().sourceCommit,seedEvidence:seed,policyHashes:fcfMissingInventoryPolicyHashes(),now:now-3600000+(++fixtureNumber)}),claim=readFcfInventoryExecutionClaim(claimFixture(plan)),consumption=readFcfInventoryConsumptionArtifact(consumptionFixture(claim)),root=realpathSync(mkdtempSync(join(tmpdir(),'fcf-inventory-capture-')));t.after(()=>rmSync(root,{recursive:true,force:true}));let time=now,calls=0;const pauses=[]
  const f={root,plan,seedEvidence:seed,consumptionProof:consumption,execution:{...execution(),jobId:'555'},targetSlug:'es-ct-segona-g1',clock:()=>time,pause:async ms=>{pauses.push(ms);time+=ms},request:async(url,init)=>{calls++;assert.equal(init.method,'GET');assert.equal(init.redirect,'manual');assert.equal(init.headers['User-Agent'],'SLFF fantasy (slff.eu; splih.94@gmail.com)');assert.ok(init.signal instanceof AbortSignal);time+=7;return new Response(documents.find(d=>url.endsWith('/'+d.id)).html,{status:200,headers:{'content-type':'text/html; charset=utf-8'}})}}
  return Object.assign(f,{calls:()=>calls,pauses,advance:ms=>time+=ms})
 }
