@@ -1,6 +1,6 @@
 # Croatian women: bounded historical availability and launch design
 
-Status: **design for ROOT review; no implementation or activation authorized by this document alone**.
+Status: **ROOT approved implementation with the binding builder amendments below; production deployment and activation remain separately guarded**.
 Base inspected: `f7efba26c31f76372b5aab1e976061631fbaebda`. Source collection is stopped. The dirty user checkout is untouched.
 
 ## Approved scope and evidence
@@ -33,7 +33,7 @@ Canonical file: `scripts/policies/historical-statistics-exclusions.json`. Shape:
 
 ```text
 {schemaVersion:1, policies:[{id, provider, competitionSlug, season,
- approvedAt, approvalReference, entries:[{sourceMatchId, sourceCompetitionId,
+ recordedAt, approvalReference, entries:[{sourceMatchId, sourceCompetitionId,
  sourcePhase, sourceRound, playedOn, homeSourceClubId, awaySourceClubId,
  sourceUrl, rawSha256, observedHomeScore, observedAwayScore, reasonCode}]}]}
 ```
@@ -55,9 +55,9 @@ Database proposal: `matches.statistics_status` defaults to `available`, with the
 Service-only primitives:
 
 ```text
-apply_historical_statistics_policy(p_competition_id uuid, p_policy_id text,
+apply_historical_statistics_policy(p_competition_id bigint, p_policy_id text,
                                   p_policy_sha256 text, p_entries jsonb)
-upsert_unavailable_historical_match(p_competition_id uuid, p_source_match_id text,
+upsert_unavailable_historical_match(p_competition_id bigint, p_source_match_id text,
                                    p_policy_id text, p_policy_sha256 text,
                                    p_raw_sha256 text, p_header jsonb)
 ```
@@ -107,3 +107,10 @@ ROOT reviews this design and the accompanying plan before product code. All thre
 ## Final source delta during design
 
 ROOT allowed one114471579refresh plus at most5newly played unseen reports. The single refresh at 2026-10-18T12:59:19.368774+00:00 returned HTTP200,56fixtures,27published results,0new played reports. No report GET followed;99/102and all verified pool counts remain unchanged. R9still has four date-only fixtures on25October. The release gate must resolve any elapsed/pending R8 reports through normal complete reporting before activation; the refresh does not establish that unpublished results are complete. Source collection is stopped again. Evidence:`final-source-delta.json`, raw SHA`86bba7696772942d336a0e6b5a4d993bc0e00fe7386dc9eb3b40918018e506fb`.
+
+## Binding ROOT builder amendments (2026-10-18)
+
+- Competition keys and both shared RPC p_competition_id arguments are bigint. Approval metadata uses recordedAt plus the actual user-conversation/root-relay reference; recordedAt is the time evidence was recorded, not an invented user approval timestamp.
+- Initial exception replay requires the verified immutable packet. Ongoing ingestion validates installed immutable DB policy+source ID+fixture binding and skips exact historical markers BEFORE provider fetch/strict parsing, including single-report entrypoints. All new reports remain strict. Historical source correction requires separate review.
+- Database activation guard covers public.vklopi_ligo_sredi_sezone and direct competitions.active changes through preveri_vklop_lige/varovalo_vklopa_lige. Use a private immutable release authorization bound to exact verified quality state; a caller-spoofable GUC is insufficient. Ordinary leagues retain their path.
+- Audit actual dependency graph; appearances already exclude nonobservations in several sums. Keep changes minimal. match_assist_status must expose official unavailable results; distinguish sezone played fixtures from complete reports. Prove existing market-window behavior unchanged for these bounded prelaunch exclusions rather than introducing a general absence/pricing model.

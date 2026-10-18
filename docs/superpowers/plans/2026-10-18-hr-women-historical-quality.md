@@ -103,3 +103,10 @@ Files: private release evidence under ROOT's execution directory; final source/o
 - [ ] Report expected/complete/unavailable/pending separately, original/fresh capture timestamps, active sourcephase, actual future fantasycutoff, identity/GK checks and real pricing/roster metrics. State exact3historic unavailable IDs visibly.
 - [ ] If any gate fails, leave inactive and report smallest factual repair; do not widen exceptions or claim launch-ready. If activation succeeds, verify official results/stat-unavailable views and no player crosscompetition contamination read-only.
 - [ ] Document owner/reminder for published current-phase handover before round14 ends and normal strict handling of all future reports. Do not imply a full later-phase schedule was already sourced.
+
+## Binding ROOT builder amendments (2026-10-18)
+
+- Competition keys and both shared RPC p_competition_id arguments are bigint. Approval metadata uses recordedAt plus the actual user-conversation/root-relay reference; recordedAt is the time evidence was recorded, not an invented user approval timestamp.
+- Initial exception replay requires the verified immutable packet. Ongoing ingestion validates installed immutable DB policy+source ID+fixture binding and skips exact historical markers BEFORE provider fetch/strict parsing, including single-report entrypoints. All new reports remain strict. Historical source correction requires separate review.
+- Database activation guard covers public.vklopi_ligo_sredi_sezone and direct competitions.active changes through preveri_vklop_lige/varovalo_vklopa_lige. Use a private immutable release authorization bound to exact verified quality state; a caller-spoofable GUC is insufficient. Ordinary leagues retain their path.
+- Audit actual dependency graph; appearances already exclude nonobservations in several sums. Keep changes minimal. match_assist_status must expose official unavailable results; distinguish sezone played fixtures from complete reports. Prove existing market-window behavior unchanged for these bounded prelaunch exclusions rather than introducing a general absence/pricing model.
