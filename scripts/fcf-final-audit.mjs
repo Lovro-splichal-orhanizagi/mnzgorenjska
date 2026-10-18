@@ -61,13 +61,14 @@ export function buildFcfFinalAuditPlan({groups,sourceCommit,now=Date.now()}){
  const plan={schemaVersion:1,kind:'fcf-final-current-audit',sourceCommit,createdUTC:new Date(now).toISOString(),maximumSourceGETs,stopOnRefusal:true,groups:planned}
  return {...plan,planSha256:historicalStatisticsPolicySha256(plan)}
 }
-export async function collectFcfFinalAudit({plan,request,parse,pause=ms=>new Promise(r=>setTimeout(r,ms)),clock=Date.now,onCapture}){
+export async function collectFcfFinalAudit({plan,request,parse,pause=ms=>new Promise(r=>setTimeout(r,ms)),clock=Date.now,onCapture,onAttempt}){
  const ids=assertAuditPlan(plan),planSha256=plan.planSha256
- if(typeof request!=='function'||typeof parse!=='function'||typeof onCapture!=='function')fail('explicit transport/parser/raw retention callback required')
+ if(typeof request!=='function'||typeof parse!=='function'||typeof onCapture!=='function'||typeof onAttempt!=='function')fail('explicit transport/parser/raw retention and attempted-GET callbacks required')
  const captures=[];let actualSourceGETs=0
  for(const {id,competitionSlug,expectedSourceRound}of ids){
   if(actualSourceGETs)await pause(fcf.premorMs)
   const url=`https://www.fcf.cat/ca/competicio/acta/${id}`,startedUTC=new Date(clock()).toISOString()
+  await onAttempt({id,competitionSlug,expectedSourceRound,sourceUrl:url,startedUTC})
   actualSourceGETs++
   const response=await request(url)
   if(response.status!==200||response.redirected)fail(`source refused HTTP${response.status}; stop without fallback`)

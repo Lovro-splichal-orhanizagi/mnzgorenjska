@@ -12,14 +12,14 @@ function fixture(t){const root=realpathSync(mkdtempSync(join(tmpdir(),'fcf-evide
 function create(f){assert.equal(typeof helper.createFcfAuditRetention,'function','actual raw retention sink must exist');return helper.createFcfAuditRetention(f)}
 test('actual collector bytes are retained before parser failure and diagnostic cannot claim completion',async t=>{
  const f=fixture(t),sink=create(f),bytes=Buffer.from('original\r\nč bytes');let calls=0
- await assert.rejects(()=>collectFcfFinalAudit({plan:f.plan,onCapture:sink.capture,clock:()=>now,request:async()=>{calls++;return new Response(bytes)},pause:async()=>{},parse:()=>{assert.deepEqual(readFileSync(join(sink.directory,'acta-4109417.html')),bytes);throw Error('strict source defect')}}),/strict source defect/)
+ await assert.rejects(()=>collectFcfFinalAudit({plan:f.plan,onAttempt:sink.attempt,onCapture:sink.capture,clock:()=>now,request:async()=>{calls++;return new Response(bytes)},pause:async()=>{},parse:()=>{assert.deepEqual(readFileSync(join(sink.directory,'acta-4109417.html')),bytes);throw Error('strict source defect')}}),/strict source defect/)
  sink.abort();const m=JSON.parse(readFileSync(join(sink.directory,'manifest.json')))
  assert.equal(calls,1);assert.equal(m.status,'failed');assert.equal(m.captures.length,1);assert.equal(m.planSha256,f.plan.planSha256);assert.equal(m.captures[0].rawSha256,createHash('sha256').update(bytes).digest('hex'));assert.equal(m.captures[0].capturedUTC,'2026-10-18T14:00:00.000Z')
  assert.equal(statSync(sink.directory).mode&0o777,0o700);assert.equal(statSync(join(sink.directory,'acta-4109417.html')).mode&0o777,0o600)
  assert.throws(()=>sink.abort(),/FCF_EVIDENCE/)
 })
 test('complete collector output binds retained bytes, exact plan and Actions attempt',async t=>{
- const f=fixture(t),sink=create(f),result=await collectFcfFinalAudit({plan:f.plan,onCapture:sink.capture,clock:()=>now,request:async()=>new Response('normal bytes'),pause:async()=>{},parse:({id})=>({id})})
+ const f=fixture(t),sink=create(f),result=await collectFcfFinalAudit({plan:f.plan,onAttempt:sink.attempt,onCapture:sink.capture,clock:()=>now,request:async()=>new Response('normal bytes'),pause:async()=>{},parse:({id})=>({id})})
  sink.finish(result);const m=JSON.parse(readFileSync(join(sink.directory,'manifest.json')))
  assert.equal(m.status,'complete');assert.equal(m.actualSourceGETs,61);assert.deepEqual(m.execution,f.execution);assert.equal(m.captures.length,61)
 })
@@ -31,5 +31,13 @@ test('pre-existing output and ancestor symlink refuse without overwriting eviden
 })
 test('unplanned and repeated raw identities never produce another file',async t=>{
  const f=fixture(t),sink=create(f),bytes=Buffer.from('normal bytes'),receipt={id:'4109417',competitionSlug:'es-ct-segona-g1',expectedSourceRound:4,sourceUrl:'https://www.fcf.cat/ca/competicio/acta/4109417',startedUTC:'2026-10-18T14:00:00Z',capturedUTC:'2026-10-18T14:00:00Z',bytes:bytes.length,rawSha256:createHash('sha256').update(bytes).digest('hex')}
- assert.throws(()=>sink.capture({...receipt,id:'4109388'},bytes),/FCF_EVIDENCE/);sink.capture(receipt,bytes);assert.throws(()=>sink.capture(receipt,bytes),/FCF_EVIDENCE/);sink.abort()
+ assert.throws(()=>sink.capture({...receipt,id:'4109388'},bytes),/FCF_EVIDENCE/);const{id,competitionSlug,expectedSourceRound,sourceUrl,startedUTC}=receipt;sink.attempt({id,competitionSlug,expectedSourceRound,sourceUrl,startedUTC});sink.capture(receipt,bytes);assert.throws(()=>sink.capture(receipt,bytes),/FCF_EVIDENCE/);sink.abort()
+})
+
+test('failed HTTP403 diagnostic counts its actual attempted GET separately from retained captures',async t=>{
+ const f=fixture(t),sink=create(f);let calls=0
+ await assert.rejects(()=>collectFcfFinalAudit({plan:f.plan,onAttempt:sink.attempt,onCapture:sink.capture,clock:()=>now,request:async()=>{calls++;return new Response('refused',{status:403})},pause:async()=>{},parse:()=>{throw Error('must not parse refusal')}}),/FCF_AUDIT/)
+ sink.abort();const m=JSON.parse(readFileSync(join(sink.directory,'manifest.json')))
+ assert.equal(calls,1);assert.equal(m.status,'failed');assert.equal(m.actualSourceGETs,1);assert.equal(m.captures.length,0)
+ assert.equal(m.attempts.length,1);assert.equal(m.attempts[0].sourceUrl,'https://www.fcf.cat/ca/competicio/acta/4109417')
 })
