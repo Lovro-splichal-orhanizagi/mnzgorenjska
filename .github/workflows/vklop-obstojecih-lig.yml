@@ -1,0 +1,84 @@
+name: Vklop obstojecih uvozenih lig
+run-name: Obstojece lige ${{ inputs.activate && 'vklop' || 'predogled' }} ${{ inputs.lige }}
+on:
+  workflow_dispatch:
+    inputs:
+      lige:
+        description: Izrecen seznam slugov iz fiksnega registra, locen z vejicami
+        type: string
+        required: true
+      expected_sha:
+        description: Celotni pregledani SHA commita main (predogled in vklop)
+        type: string
+        required: true
+      activate:
+        description: Vklopi le lige, ki opravijo sveze skupne preverbe
+        type: boolean
+        default: false
+      approved_sha256:
+        description: SHA256 izrecnega seznama in virov iz predogleda na istem commitu
+        type: string
+        required: false
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: vklop-obstojecih-lig
+  cancel-in-progress: false
+jobs:
+  existing:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      LIGE: ${{ inputs.lige }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      ACTIVATE: ${{ inputs.activate }}
+      APPROVED_SHA: ${{ inputs.approved_sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Ciljni preizkusi brez omrezja
+        run: node --test scripts/test-vklop-obstojecih-lig.mjs
+      - name: Pred vklopom pocakaj na starejse pisce vsake izbrane lige
+        if: inputs.activate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p release/obstojece-lige
+          node --input-type=module <<'JS' > release/obstojece-lige/selected-slugs.txt
+          import { readFileSync } from 'node:fs'
+          import { validateSelection } from './scripts/vklopi-obstojece-lige.mjs'
+          if (process.env.EXPECTED_SHA !== process.env.GITHUB_SHA) throw Error('Expected exact main commit.')
+          const registry = JSON.parse(readFileSync('scripts/policies/existing-league-candidates-20261018.json'))
+          console.log(validateSelection(registry, process.env.LIGE.split(',').map(s => s.trim()).filter(Boolean)).map(c => c.slug).join('\n'))
+          JS
+          while IFS= read -r slug; do
+            node scripts/cakaj-na-uvoze.mjs --popravek --tekmovanje "$slug" --najvec 120
+          done < release/obstojece-lige/selected-slugs.txt
+      - name: Sveze preverbe, opcijski servisni vklop in ponovno branje
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          mode=preview
+          if [ "$ACTIVATE" = true ]; then mode=apply; fi
+          args=("$mode" --lige "$LIGE" --expected-sha "$EXPECTED_SHA" --output release/obstojece-lige)
+          if [ -n "$APPROVED_SHA" ]; then args+=(--approved-sha256 "$APPROVED_SHA"); fi
+          node scripts/vklopi-obstojece-lige.mjs "${args[@]}"
+      - name: Obseg, blokade in delni rezultati
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: obstojece-lige-${{ github.run_id }}
+          path: release/obstojece-lige/
+          if-no-files-found: ignore
+          retention-days: 90

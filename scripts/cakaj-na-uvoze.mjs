@@ -129,6 +129,8 @@ const mojId = Number(GITHUB_RUN_ID)
 
 // Ali zagon drugega toka piše v iste vrstice kot ta?
 function seKrize(tok, naslov, id) {
+  // Bounded multi-country activation is a global database writer; preview only reads.
+  if (tok === 'vklop-obstojecih-lig.yml') return !/^Obstojece lige predogled /.test(naslov ?? '')
   if (tok === 'uvoz-fcf-zgodovina.yml') {
     if (/^FCF history (cache-export|seed-stage) /.test(naslov ?? '')) return false
     return !mojaDrzava || mojaDrzava === 'ES'
@@ -242,11 +244,11 @@ function readFcfHistoryRuns() {
 
 if (samoTece) {
   const tecejo = []
-  for (const tok of ['uvoz-hr-zenske.yml', 'uvoz-fcf-zgodovina.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']) {
+  for (const tok of ['uvoz-hr-zenske.yml', 'uvoz-fcf-zgodovina.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'vklop-obstojecih-lig.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']) {
     const zagoni = tok === 'uvoz-fcf-zgodovina.yml' ? readFcfHistoryRuns() : JSON.parse(gh('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,status,displayTitle'))
     for (const z of zagoni) {
       if (z.status === 'completed') continue
-      if (tok === 'uvoz-fcf-zgodovina.yml' && !seKrize(tok, z.displayTitle, z.databaseId)) continue
+      if (['uvoz-fcf-zgodovina.yml', 'vklop-obstojecih-lig.yml'].includes(tok) && !seKrize(tok, z.displayTitle, z.databaseId)) continue
       // Ročni uvoz nevklopljene lige ne piše v nič, kar preverba gleda.
       const slug = ligaZagona(tok, z.displayTitle)
       // Vklop lahko še neaktivno ligo med preverbo vključi: nanj čakamo.
@@ -262,7 +264,7 @@ if (samoTece) {
 
 for (let min = KORAK_MIN; min <= NAJVEC_MIN; min += KORAK_MIN) {
   const pred = []
-  const tokovi = ['uvoz-hr-zenske.yml', 'uvoz-fcf-zgodovina.yml', 'fcf-javni-dokazi.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']
+  const tokovi = ['uvoz-hr-zenske.yml', 'uvoz-fcf-zgodovina.yml', 'fcf-javni-dokazi.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'vklop-obstojecih-lig.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']
   if (SKUPEN_VIR[mojaDrzava]) tokovi.push('grbi.yml')
   for (const tok of tokovi) {
     // Brez --status: tudi čakajoči (queued) starejši zagon mora priti prvi.

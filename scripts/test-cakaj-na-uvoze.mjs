@@ -337,3 +337,19 @@ test('HNS workflow is visible to older-run coordination and both global shell wr
   }
  }finally{rmSync(dir,{recursive:true,force:true})}
 })
+
+
+test('existing-league batch is a global writer in both crossing loops; preview stays read-only', async () => {
+  const workflow='vklop-obstojecih-lig.yml'
+  for(const args of [['--liga','si-example'],['--drzava','DE'],['--popravek','--vir','nzs']]) {
+    assert.equal((await coordinate(args,{[workflow]:[run('Obstojece lige vklop pl-sk-4-liga')]})).code,1)
+    assert.equal((await coordinate(args,{[workflow]:[run('Obstojece lige predogled pl-sk-4-liga')]})).code,0)
+  }
+  assert.equal((await coordinate(['--tece'],{[workflow]:[run('Obstojece lige vklop pl-sk-4-liga')]})).code,3)
+  assert.equal((await coordinate(['--tece'],{[workflow]:[run('Obstojece lige predogled pl-sk-4-liga')]})).code,0)
+  // Batch coordination uses correction scope, so even inactive/parallel source
+  // imports and the nightly writer must clear before its fresh prechecks.
+  assert.equal((await coordinate(['--popravek','--tekmovanje','at-one'],{'uvoz-lige.yml':[run('Uvoz lige at-two')]})).code,1)
+  assert.equal((await coordinate(['--popravek','--tekmovanje','at-one'],{'uvoz-zapisnikov.yml':[run('Nightly import')]})).code,1)
+  for(const name of ['zdruzi-klube.yml','tedensko-cene.yml']) assert.match(readFileSync(new URL(`../.github/workflows/${name}`,import.meta.url),'utf8'),/for wf in [^\n]*vklop-obstojecih-lig\.yml/)
+})
