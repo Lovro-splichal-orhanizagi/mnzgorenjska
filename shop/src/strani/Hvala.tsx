@@ -2,16 +2,27 @@ import { useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import grb from '../../../public/logo/slff-grb.png'
 import { t } from '../besede'
-import { izprazni } from '../kosarica'
+import { izprazni, shraniPlacilo, zadnjePlacilo } from '../kosarica'
+import { useNaslov } from '../Okvir'
 import { useSeja } from '../seja'
 
-/** Stripe se po plačilu vrne sem (?n=<javna oznaka>); košarica se izprazni, država ostane. */
+/**
+ * Stripe se po plačilu vrne sem (?n=<javna oznaka>). Košarica se izprazni le,
+ * če oznaka ustreza zadnjemu plačilu tega zavihka (država ostane).
+ */
 export function Hvala() {
   const [q] = useSearchParams()
   const oznaka = (q.get('n') ?? '').replace(/[^A-Z0-9]/gi, '').slice(0, 16)
   const { seja } = useSeja()
 
-  useEffect(izprazni, [])
+  useNaslov(t('hvala.naslov'))
+
+  useEffect(() => {
+    if (oznaka && zadnjePlacilo()?.oznaka === oznaka) {
+      izprazni()
+      shraniPlacilo(null)
+    }
+  }, [oznaka])
 
   return (
     <div className="mx-auto max-w-xl space-y-6 text-center">

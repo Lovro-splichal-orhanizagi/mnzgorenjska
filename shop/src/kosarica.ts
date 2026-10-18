@@ -54,6 +54,7 @@ export function preberi(surovo: string | null): Kosarica {
     const v = JSON.parse(surovo ?? 'null') as Partial<Kosarica> | null
     const postavke = (Array.isArray(v?.postavke) ? v.postavke : [])
       .filter((p): p is Postavka => Number.isSafeInteger(p?.razlicica_id) && p.razlicica_id > 0 && typeof p.slug === 'string' && omeji(p.kolicina) > 0)
+      .filter((p, n, vse) => vse.findIndex((q) => q.razlicica_id === p.razlicica_id) === n)
       .slice(0, NAJVEC)
       .map((p) => ({ razlicica_id: p.razlicica_id, slug: p.slug, kolicina: omeji(p.kolicina) }))
     const drzava = typeof v?.drzava === 'string' && EU27.includes(v.drzava) ? v.drzava : 'SI'
@@ -90,9 +91,42 @@ export function shrani(k: Kosarica): void {
 /** Po plačilu: postavke proč, država ostane. */
 export const izprazni = (): void => shrani({ ...PRAZNA, drzava: trenutna().drzava })
 
+// Drug zavihek je spremenil košarico.
+if (typeof window !== 'undefined') {
+  addEventListener('storage', (e) => {
+    if (e.key !== SHRAMBA && e.key !== null) return
+    stanje = preberi(e.newValue)
+    prebrano = true
+    poslusalci.forEach((f) => f())
+  })
+}
+
 function narocise(f: () => void) {
   poslusalci.add(f)
   return () => void poslusalci.delete(f)
+}
+
+/** Zadnje plačilo tega zavihka (trgovina-nakup vrne sejo in oznako). */
+export interface Placilo {
+  seja: string
+  oznaka: string
+}
+const PLACILO = 'slff-shop-placilo'
+
+export function zadnjePlacilo(): Placilo | null {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(PLACILO) ?? 'null') as Partial<Placilo> | null
+    return typeof v?.seja === 'string' && typeof v.oznaka === 'string' ? { seja: v.seja, oznaka: v.oznaka } : null
+  } catch {
+    return null
+  }
+}
+
+export function shraniPlacilo(p: Placilo | null): void {
+  try {
+    if (p) sessionStorage.setItem(PLACILO, JSON.stringify(p))
+    else sessionStorage.removeItem(PLACILO)
+  } catch {}
 }
 
 export const useKosarica = (): Kosarica => useSyncExternalStore(narocise, trenutna, () => PRAZNA)

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { datum, t, type Kljuc } from '../besede'
+import { useNaslov } from '../Okvir'
 
 // Brez zaledja: obrazec pripravi e-sporočilo za info@slff.eu (mailto).
 const POLJA = ['oznaka', 'ime', 'naslov', 'eposta', 'izdelki', 'naroceno', 'prejeto'] as const
@@ -22,6 +23,7 @@ export function mailOdstopa(v: Record<Polje, string>, danes: string): string {
 }
 
 export function Odstop() {
+  useNaslov(t('odstop.naslov'))
   const [v, setV] = useState<Record<Polje, string>>(() => Object.fromEntries(POLJA.map((p) => [p, ''])) as Record<Polje, string>)
 
   return (

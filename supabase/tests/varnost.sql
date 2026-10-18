@@ -4089,6 +4089,8 @@ select pg_temp.zavrnjeno('trgovina: anon ne placa',
   $$select trgovina_iz_placila('x', null, null, null, null, 0, 0, 0, 0, null)$$);
 select pg_temp.zavrnjeno('trgovina: anon ne izteka', $$select trgovina_potekla('x')$$);
 select pg_temp.zavrnjeno('trgovina: anon ne bere narocila za posto', $$select trgovina_narocilo_za_posto(1)$$);
+select pg_temp.zavrnjeno('trgovina: anon ne isce narocila seje', $$select trgovina_narocilo_seje('x', null, 'x')$$);
+select pg_temp.zavrnjeno('trgovina: anon ne pocisti', $$select trgovina.pocisti()$$);
 select set_config('test.trgovina_katalog', trgovina_katalog()::text, true);
 select pg_temp.preveri('trgovina: katalog pokaze aktiven izdelek z oceno zaloge',
   current_setting('test.trgovina_katalog')::jsonb @> '[{"slug":"test-trgovina","na_voljo":"da","cena_od":1000}]');
@@ -4197,16 +4199,19 @@ select pg_temp.preveri('trgovina: servis bere narocilo za posto',
 reset role;
 select pg_temp.preveri('trgovina: zaloga ne gre pod nic', (select zaloga = 0 from trgovina.razlicice where id = -916001));
 
--- Omejitev: največ 3 odprta naročila na odjemalca ali uporabnika.
+-- Omejitev: največ 5 odprtih naročil na gosta (odjemalec) ali uporabnika.
 set local role service_role;
 select set_config('test.odj_m', encode(sha256('test-odjemalec-m'), 'hex'), true);
 select set_config('test.trg_m', (trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', null, 'sl',
   current_setting('test.odj_m'))->>'narocilo_id'), true);
-select trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', null, 'sl', current_setting('test.odj_m'));
-select trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', null, 'sl', current_setting('test.odj_m'));
-select pg_temp.napaka('trgovina: cetrto odprto narocilo odjemalca je zavrnjeno',
+select trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', null, 'sl', current_setting('test.odj_m'))
+  from generate_series(1, 4);
+select pg_temp.napaka('trgovina: sesto odprto narocilo gosta je zavrnjeno',
   $$select trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', null, 'sl', current_setting('test.odj_m'))$$,
   'trgovina-omejitev');
+select pg_temp.preveri('trgovina: prijavljen z istim IP ni omejen z gosti',
+  trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', 'b8a06635-2322-4444-8c42-44e419f912ad', 'sl',
+    current_setting('test.odj_m')) ? 'narocilo_id');
 select pg_temp.preveri('trgovina: sprosti odpre narocilo', trgovina_sprosti(current_setting('test.trg_m')::bigint) = 'poteklo');
 select pg_temp.preveri('trgovina: sprosti dvakrat je ze', trgovina_sprosti(current_setting('test.trg_m')::bigint) = 'ze');
 select pg_temp.preveri('trgovina: po sprostitvi odjemalec spet narocuje',
@@ -4214,19 +4219,32 @@ select pg_temp.preveri('trgovina: po sprostitvi odjemalec spet narocuje',
 select set_config('test.trg_u', (trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]',
   'b8a06635-2322-4444-8c42-44e419f912ab', 'sl', encode(sha256('u1'), 'hex'))->>'narocilo_id'), true);
 select trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]',
-  'b8a06635-2322-4444-8c42-44e419f912ab', 'sl', encode(sha256('u2'), 'hex'));
-select trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]',
-  'b8a06635-2322-4444-8c42-44e419f912ab', 'sl', encode(sha256('u3'), 'hex'));
-select pg_temp.napaka('trgovina: cetrto odprto narocilo uporabnika je zavrnjeno',
-  $$select trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', 'b8a06635-2322-4444-8c42-44e419f912ab', 'sl', encode(sha256('u4'), 'hex'))$$,
+  'b8a06635-2322-4444-8c42-44e419f912ab', 'sl', encode(sha256(('u' || g)::bytea), 'hex')) from generate_series(2, 5) g;
+select pg_temp.napaka('trgovina: sesto odprto narocilo uporabnika je zavrnjeno',
+  $$select trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', 'b8a06635-2322-4444-8c42-44e419f912ab', 'sl', encode(sha256('u6'), 'hex'))$$,
   'trgovina-omejitev');
+select trgovina_vezi_sejo(current_setting('test.trg_u')::bigint, 'cs_test_trgovina_u');
+select pg_temp.preveri('trgovina: lastnik najde svojo prejsnjo sejo',
+  trgovina_narocilo_seje('cs_test_trgovina_u', 'b8a06635-2322-4444-8c42-44e419f912ab', encode(sha256('drug'), 'hex'))
+    = jsonb_build_object('id', current_setting('test.trg_u')::bigint, 'stanje', 'caka_placilo'));
+select pg_temp.preveri('trgovina: tujec ne najde tuje seje',
+  trgovina_narocilo_seje('cs_test_trgovina_u', 'b8a06635-2322-4444-8c42-44e419f912ac', encode(sha256('u1'), 'hex')) is null
+  and trgovina_narocilo_seje('cs_test_trgovina_u', null, encode(sha256('drug'), 'hex')) is null);
 reset role;
 update trgovina.narocila set rezervirano_do = now() - interval '1 minute' where id = current_setting('test.trg_u')::bigint;
 set local role service_role;
 select pg_temp.preveri('trgovina: potekla rezervacija ne steje v omejitev',
   trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', 'b8a06635-2322-4444-8c42-44e419f912ab', 'sl',
-    encode(sha256('u4'), 'hex')) ? 'narocilo_id');
+    encode(sha256('u6'), 'hex')) ? 'narocilo_id');
 reset role;
+select pg_temp.preveri('trgovina: sveze poteklo narocilo pocisti se ne dotakne',
+  (select stanje = 'caka_placilo' from trgovina.narocila where id = current_setting('test.trg_u')::bigint));
+update trgovina.narocila set rezervirano_do = now() - interval '61 minutes' where id = current_setting('test.trg_u')::bigint;
+set local role service_role;
+select trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', null, 'sl', encode(sha256('pocisti'), 'hex'));
+reset role;
+select pg_temp.preveri('trgovina: rezervacija pocisti zastarela narocila',
+  (select stanje = 'poteklo' and odjemalec is null from trgovina.narocila where id = current_setting('test.trg_u')::bigint));
 
 select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
 set local role authenticated;

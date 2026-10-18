@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import grb from '../../../public/logo/slff-grb.png'
 import { supabase, type IzdelekKataloga, type Voljo } from '../baza'
 import { cena, po, t } from '../besede'
+import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
 
 /** Slika izdelka ali grb SLFF na temni podlagi, dokler slike ni. */
@@ -13,7 +14,7 @@ export function Slika({ src, alt, majhna = false }: { src?: string; alt: string;
         <img src={src} alt={alt} loading="lazy" className="h-full w-full object-cover" />
       ) : (
         <div className="grid h-full w-full place-items-center">
-          <img src={grb} alt={alt} className={`${majhna ? 'w-1/2' : 'w-2/5'} opacity-90 drop-shadow-2xl`} />
+          <img src={grb} alt="" className={`${majhna ? 'w-1/2' : 'w-2/5'} opacity-90 drop-shadow-2xl`} />
         </div>
       )}
     </div>
@@ -40,7 +41,7 @@ export function KarticaIzdelka({ i }: { i: IzdelekKataloga }) {
       <div className="space-y-1 px-1 pb-1 pt-3">
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t(`kategorija.${i.kategorija}`)}</p>
         <h2 className="text-lg font-bold leading-tight text-slate-100">{ime}</h2>
-        <p className="text-base font-black text-gnl-300">{t('katalog.od', { cena: cena(i.cena_od) })}</p>
+        <p className="text-base font-black text-gnl-300">{i.cena_do > i.cena_od ? t('katalog.od', { cena: cena(i.cena_od) }) : cena(i.cena_od)}</p>
       </div>
     </Link>
   )
@@ -58,6 +59,7 @@ export function MrezaIzdelkov({ izdelki }: { izdelki: IzdelekKataloga[] }) {
 export function Katalog() {
   const [izdelki, setIzdelki] = useState<IzdelekKataloga[] | null>(null)
   const [napaka, setNapaka] = useState(false)
+  useNaslov(t('katalog.naslov'))
 
   useEffect(() => {
     void supabase.rpc('trgovina_katalog').then(({ data, error }) => {
@@ -77,7 +79,7 @@ export function Katalog() {
           ))}
         </ul>
       </section>
-      {napaka && <p className="opozorilo">{t('napaka.nalaganje')}</p>}
+      <div aria-live="polite">{napaka && <p className="opozorilo">{t('napaka.nalaganje')}</p>}</div>
       {izdelki === null ? <Nalaganje /> : !napaka && <MrezaIzdelkov izdelki={izdelki} />}
     </div>
   )

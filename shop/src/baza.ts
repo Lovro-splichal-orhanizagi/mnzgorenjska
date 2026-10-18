@@ -21,6 +21,7 @@ export interface IzdelekKataloga {
   kategorija: Kategorija
   slike: string[]
   cena_od: number
+  cena_do: number
   na_voljo: Voljo
 }
 

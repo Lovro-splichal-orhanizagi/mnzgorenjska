@@ -443,7 +443,10 @@ async function trgovinaSeja(o: Obj): Promise<string> {
     if (!r.ok) throw new Error(`trgovina-posta ${r.status}`)
   } catch (e) {
     console.error('stripe-webhook: trgovina-posta', String(e))
-    await discord(`⚠️ Trgovina: potrditev naročila ${oznaka} ni odšla po pošti.`)
+    // Ob časovni omejitvi je mail morda vseeno odšel.
+    await discord((e as Error)?.name === 'TimeoutError'
+      ? `⚠️ Trgovina: potrditev naročila ${oznaka} ni potrjena — preveri email_log.`
+      : `⚠️ Trgovina: potrditev naročila ${oznaka} ni odšla po pošti.`)
   }
   return izid
 }

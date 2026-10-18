@@ -58,7 +58,8 @@ import { tockeZaNastop, razloziTocke } from '../src/lib/tockovanje'
 import { veljavenPodpis } from '../supabase/functions/stripe-webhook/podpis.ts'
 import { scoutPostavkeVeljajo, scoutCeneNarocnine } from '../supabase/functions/stripe-webhook/scout.ts'
 import { trgovinaIzSeje, napacnaTarifa } from '../supabase/functions/stripe-webhook/trgovina.ts'
-import { sestaviMail as trgovinaMail } from '../supabase/functions/trgovina-posta/sporocila.ts'
+import { sestaviMail as trgovinaMail, TELEFON as trgovinaTelefonMail, POGOJI_VERZIJA as trgovinaVerzijaMail } from '../supabase/functions/trgovina-posta/sporocila.ts'
+import { SL as trgovinaSL, EN as trgovinaEN, TELEFON as trgovinaTelefon, POGOJI_VERZIJA as trgovinaVerzija } from '../shop/src/besede.ts'
 import { EU27 as trgovinaEU27, tarifeZa } from '../supabase/functions/trgovina-nakup/tarife.ts'
 import { createHmac } from 'node:crypto'
 import { sestejOdKroga } from '../src/lib/lestvica'
@@ -12995,6 +12996,13 @@ preveri(
   const en = trgovinaMail('poslano', { ...n, jezik: 'en', stanje: 'poslano' }, 'https://shop.slff.eu')
   preveri('trgovina mail: poslano en s sledilno', en.naslov.includes('on its way') && en.besedilo.includes('RR123456789SI') && en.besedilo.includes('posta.si') && !/Pozdravljeni|naročilo/.test(en.besedilo))
   preveri('trgovina mail: en zneski', trgovinaMail('potrditev', { ...n, jezik: 'en' }, 'x').besedilo.includes('€53.90'))
+  preveri('trgovina mail: telefon in različica pogojev kot v trgovini', trgovinaTelefonMail === trgovinaTelefon && trgovinaVerzijaMail === trgovinaVerzija)
+  // Trajni nosilec: potrditev nosi celoten pouk o odstopu in vzorčni obrazec v jeziku naročila.
+  const enP = trgovinaMail('potrditev', { ...n, jezik: 'en' }, 'https://shop.slff.eu')
+  preveri('trgovina mail: pouk o odstopu, obrazec, pogoji z dne, telefon (sl, en)',
+    [[sl, trgovinaSL, 'Pogoji z dne'], [enP, trgovinaEN, 'Terms dated']].every(([m, B, z]) =>
+      B['pogoji.s6.besedilo'].split('\n\n').every((o) => m.besedilo.includes(o)) &&
+      m.besedilo.includes(B['odstop.vzorec']) && m.besedilo.includes(`${z} ${trgovinaVerzija}`) && m.besedilo.includes(trgovinaTelefon)))
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

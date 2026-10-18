@@ -32,6 +32,10 @@ const smtp = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: { user: Deno.env.get('SMTP_USER') ?? 'noreply@slff.eu', pass: Deno.env.get('SMTP_PASS') },
+  // Webhook čaka 8 s: mail ne sme viseti dlje.
+  connectionTimeout: 6000,
+  greetingTimeout: 6000,
+  socketTimeout: 6000,
 })
 
 function json(obj: unknown, status = 200) {
@@ -83,7 +87,9 @@ Deno.serve(async (req) => {
     })
     id = r.messageId
   } catch (e) {
-    napaka = String(e)
+    // Le koda: besedilo napake SMTP lahko vsebuje naslov prejemnika.
+    const x = e as { responseCode?: number; code?: string }
+    napaka = `smtp ${x.responseCode ?? ''} ${x.code ?? ''}`.trim()
   }
   await service.from('email_log').insert({ user_id: n.user_id, email: n.email, vrsta: `trgovina-${vrsta}`, resend_id: id, napaka })
   if (napaka) {

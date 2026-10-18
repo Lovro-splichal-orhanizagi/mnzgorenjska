@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { supabase, type Izdelek as TIzdelek } from '../baza'
 import { cena, po, t } from '../besede'
 import { dodaj, NAJVEC, shrani, useKosarica } from '../kosarica'
+import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
 import { Slika, ZnackaVoljo } from './Katalog'
 
@@ -14,15 +15,19 @@ export function IzdelekView({ i }: { i: TIzdelek }) {
   const [izbrana, setIzbrana] = useState<number | null>(i.razlicice.length === 1 && prodajne.length === 1 ? prodajne[0].id : null)
   const [kolicina, setKolicina] = useState(1)
   const [slika, setSlika] = useState(0)
-  const [dodano, setDodano] = useState(false)
+  /** Koliko kosov je zadnji klik res dodal (null = še ni klika). */
+  const [dodano, setDodano] = useState<number | null>(null)
+  useNaslov(ime, po(i.opis_sl, i.opis_en).slice(0, 160) || undefined)
   const r = i.razlicice.find((x) => x.id === izbrana) ?? null
   const cenaOd = Math.min(...i.razlicice.map((x) => x.cena))
   const enaCena = i.razlicice.every((x) => x.cena === cenaOd)
 
   function vKosarico() {
     if (!r) return
-    shrani(dodaj(kosarica, r.id, kolicina, i.slug))
-    setDodano(true)
+    const imam = (k: typeof kosarica) => k.postavke.find((p) => p.razlicica_id === r.id)?.kolicina ?? 0
+    const nova = dodaj(kosarica, r.id, kolicina, i.slug)
+    shrani(nova)
+    setDodano(imam(nova) - imam(kosarica))
   }
 
   return (
@@ -58,7 +63,7 @@ export function IzdelekView({ i }: { i: TIzdelek }) {
               <legend className="text-sm font-semibold text-slate-300">{t('izdelek.izberi')}</legend>
               <div className="flex flex-wrap gap-2">
                 {i.razlicice.map((x) => (
-                  <button key={x.id} type="button" disabled={x.na_voljo === 'ne'} onClick={() => { setIzbrana(x.id); setDodano(false) }}
+                  <button key={x.id} type="button" disabled={x.na_voljo === 'ne'} onClick={() => { setIzbrana(x.id); setDodano(null) }}
                     aria-pressed={x.id === izbrana}
                     className={`rounded-xl border px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:line-through disabled:opacity-40 ${
                       x.id === izbrana ? 'border-gnl-400 bg-gnl-400/15 text-gnl-200' : 'border-white/15 bg-white/5 text-slate-200 hover:border-white/30'
@@ -79,11 +84,14 @@ export function IzdelekView({ i }: { i: TIzdelek }) {
             <li>✓ {t('izdelek.odstop')}</li>
           </ul>
 
-          {dodano && (
-            <p className="uspeh flex items-center justify-between gap-3">
-              {t('izdelek.dodano')} <Link to="/cart" className="povezava">{t('izdelek.vKosarico')} →</Link>
-            </p>
-          )}
+          <div aria-live="polite">
+            {dodano !== null && (
+              <p className={`${dodano > 0 ? 'uspeh' : 'opozorilo'} flex items-center justify-between gap-3`}>
+                {dodano === 0 ? t('izdelek.polno') : dodano < kolicina ? t('izdelek.delno', { n: dodano }) : t('izdelek.dodano')}
+                <Link to="/cart" className="povezava">{t('izdelek.vKosarico')} →</Link>
+              </p>
+            )}
+          </div>
 
           {/* Na telefonu je gumb vedno na dnu zaslona. */}
           <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-slate-950/95 px-4 py-3 backdrop-blur md:static md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
@@ -108,6 +116,7 @@ export function Izdelek() {
   const { slug = '' } = useParams()
   const [i, setI] = useState<TIzdelek | null | undefined>(undefined)
   const [napaka, setNapaka] = useState(false)
+  useNaslov(i === null || napaka ? t('izdelek.ni') : null)
 
   useEffect(() => {
     void supabase.rpc('trgovina_izdelek', { p_slug: slug }).then(({ data, error }) => {
@@ -117,7 +126,7 @@ export function Izdelek() {
   }, [slug])
 
   if (i === undefined) return <Nalaganje />
-  if (napaka) return <p className="opozorilo">{t('napaka.nalaganje')}</p>
+  if (napaka) return <p className="opozorilo" role="alert">{t('napaka.nalaganje')}</p>
   if (!i || i.razlicice.length === 0) {
     return (
       <div className="space-y-4">

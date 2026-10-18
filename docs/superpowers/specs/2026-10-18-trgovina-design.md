@@ -71,12 +71,25 @@ zneski (lastnik jih spremeni): pismo SI 1,50 €, paket SI 3,90 €, paket EU
 
 ## Pravno
 
-`/terms`: prodajalec, cene z DDV, dostava in roki, plačilo, **odstop v 14
-dneh** brez razloga (kupec krije vračilo, vračilo denarja v 14 dneh po
-prejemu), obrazec za odstop (`/withdrawal`, pošlje mail na info@slff.eu),
-stvarna napaka in garancija po ZVPot-1, reševanje sporov (Ljubljana, spletna
-platforma EU za reševanje sporov), varstvo podatkov (slff.eu/legal, nov
-razdelek "Trgovina"). Personalizirani izdelki (del 3) odstopa nimajo.
+`/terms` (različica `POGOJI_VERZIJA` v `shop/src/besede.ts`, kopija v
+`trgovina-posta/sporocila.ts`): prodajalec z vpisom v sodni register
+(Okrožno sodišče v Ljubljani), e-pošta in **telefon** (obvezen, `TELEFON`;
+smoke zavrne prazen), cene z DDV, plačilo s kartico (tudi prek denarnic),
+oddaja na pošto v 2 delovnih dneh, dostava in roki, **odstop v 14 dneh**
+brez razloga (kupec krije vračilo; vračilo denarja v 14 dneh od prejema
+obvestila o odstopu), obrazec za odstop (`/withdrawal`, mail na
+info@slff.eu), skladnost blaga po ZVPot-1 (odgovor na zahtevek v 8 dneh,
+popravilo ali zamenjava v razumnem roku do 30 dni), varstvo podatkov
+(slff.eu/legal, razdelek "Trgovina"). Personalizirani izdelki (del 3)
+odstopa nimajo.
+
+Spori (odločitev lastnika): Space Guardian **ne pristaja** na izvensodno
+reševanje potrošniških sporov (IRPS) in nobenega izvajalca ne priznava za
+pristojnega; pogoji to povedo in dodajo, da seznam izvajalcev IRPS objavlja
+pristojno ministrstvo (gov.si). Povezave na platformo ODR ni (ukinjena).
+Sodišče: stvarno in krajevno pristojno po zakonu, potrošnik lahko toži tudi
+doma. Velja jezik, izbran ob nakupu (sl ali en). Potrditev naročila (trajni
+nosilec) vsebuje celoten pouk o odstopu, vzorčni obrazec in datum pogojev.
 
 ## Tehnično
 
@@ -88,7 +101,16 @@ razdelek "Trgovina"). Personalizirani izdelki (del 3) odstopa nimajo.
 - Funkcija `trgovina-nakup` (Edge): preveri košarico, rezervira, ustvari
   Stripe Checkout (`metadata.app = slff-shop`, `automatic_tax`, tarife,
   države, `customer_creation=if_required`, jezik), vrne URL. `stripe-webhook`
-  dobi vejo `slff-shop` (`stripe-webhook/trgovina.ts`). Funkcija
+  dobi vejo `slff-shop` (`stripe-webhook/trgovina.ts`).
+- Ponovni poskus plačila: funkcija vrne `{url, seja, oznaka}`, brskalnik ju
+  hrani v `sessionStorage` in naslednjič pošlje `prejsnja`. Če je ta seja od
+  istega uporabnika ali gosta in naročilo še čaka plačila, jo funkcija
+  zapre v Stripe (`expire`) in rezervacijo sprosti; plačana seja vrne 409
+  `trgovina-placano` (košarica se izprazni). `/thanks` izprazni košarico le,
+  če `?n=` ustreza shranjeni oznaki. Omejitev: 5 odprtih naročil na
+  uporabnika, gost na odjemalca (sha256 IP); brez IP-ja ni meje.
+  Zastarela naročila (`rezervirano_do` starejši od ure) zapre
+  `trgovina.pocisti()` ob vsaki rezervaciji, brez crona. Funkcija
   `trgovina-posta` pošlje maile (sproži webhook in admin ob odpošiljanju).
 - Objava kot Scout: DNS `shop` (Cloudflare), Caddy blok, `/srv/slff-shop`,
   CI posel ob `SHOP_OBJAVA=1`; funkcije ročno (`objavi-funkcije.sh`).

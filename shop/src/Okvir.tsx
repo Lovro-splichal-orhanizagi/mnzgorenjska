@@ -1,10 +1,25 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import grb from '../../public/logo/slff-grb.png'
 import { supabase } from './baza'
-import { izberiJezik, jezik, t } from './besede'
+import { izberiJezik, jezik, t, TELEFON, TELEFON_POVEZAVA } from './besede'
 import { kosov, useKosarica } from './kosarica'
 import { useSeja } from './seja'
+
+/** Naslov zavihka (in opis za iskalnike) strani; ob odhodu se vrne privzeti. */
+export function useNaslov(naslov: string | null, opis?: string) {
+  useEffect(() => {
+    if (!naslov) return
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="description"]')
+    const prej = { naslov: document.title, opis: meta?.content }
+    document.title = `${naslov} · ${t('app.ime')}`
+    if (meta && opis) meta.content = opis
+    return () => {
+      document.title = prej.naslov
+      if (meta && prej.opis !== undefined) meta.content = prej.opis
+    }
+  }, [naslov, opis])
+}
 
 // Glava in noga kot na slff.eu in v Scoutu.
 const povezava = ({ isActive }: { isActive: boolean }) =>
@@ -39,7 +54,8 @@ export function Okvir({ children }: { children: ReactNode }) {
             ) : (
               <NavLink to="/login" className={povezava}>{t('nav.prijava')}</NavLink>
             )}
-            <button type="button" onClick={() => izberiJezik(jezik === 'sl' ? 'en' : 'sl')} className={`${tiho} font-semibold`}>
+            <button type="button" onClick={() => izberiJezik(jezik === 'sl' ? 'en' : 'sl')} className={`${tiho} font-semibold`}
+              lang={jezik === 'sl' ? 'en' : 'sl'} aria-label={jezik === 'sl' ? 'English' : 'Slovenščina'}>
               {jezik === 'sl' ? 'EN' : 'SL'}
             </button>
             <Link to="/cart" aria-label={t('nav.kosarica', { n })} className="relative rounded-lg p-2 text-slate-200 hover:bg-white/5">
@@ -75,7 +91,9 @@ export function Okvir({ children }: { children: ReactNode }) {
             <a href="https://slff.eu/legal" className="hover:text-slate-200">{t('noga.zasebnost')}</a>
             <a href="https://slff.eu" className="hover:text-slate-200">{t('noga.slff')}</a>
           </div>
-          <p className="text-slate-500">{t('noga.prodajalec')}</p>
+          <p className="text-slate-500">
+            {t('noga.prodajalec')} <a href={TELEFON_POVEZAVA} className="hover:text-slate-200">{TELEFON}</a>
+          </p>
         </div>
       </footer>
     </div>

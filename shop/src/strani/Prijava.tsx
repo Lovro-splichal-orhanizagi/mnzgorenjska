@@ -65,7 +65,7 @@ export function Prijava() {
             {t('prijava.geslo')}
             <input type="password" required autoComplete="current-password" value={geslo} onChange={(e) => setGeslo(e.target.value)} className="polje mt-1 w-full" />
           </label>
-          {neuspeh && <p className="opozorilo">{t('prijava.napaka')}</p>}
+          <div aria-live="polite">{neuspeh && <p className="opozorilo">{t('prijava.napaka')}</p>}</div>
           <button disabled={poteka} className="gumb-glavni w-full">{t('prijava.gumb')}</button>
         </form>
       </div>

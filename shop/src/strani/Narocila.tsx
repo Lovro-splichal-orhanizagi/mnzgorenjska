@@ -30,7 +30,7 @@ export function Narocila() {
   return (
     <div className="max-w-3xl space-y-6">
       <h1 className="text-3xl font-black naslov">{t('narocila.naslov')}</h1>
-      {napaka && <p className="opozorilo">{t('napaka.nalaganje')}</p>}
+      <div aria-live="polite">{napaka && <p className="opozorilo">{t('napaka.nalaganje')}</p>}</div>
       {narocila === null ? <Nalaganje /> : !napaka && narocila.length === 0 ? (
         <p className="kartica p-5 text-slate-400">{t('narocila.prazno')}</p>
       ) : (

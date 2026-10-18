@@ -9087,6 +9087,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      trgovina_narocilo_seje: {
+        Args: { p_checkout: string; p_odjemalec: string; p_user: string }
+        Returns: Json
+      }
       trgovina_narocilo_za_posto: { Args: { p_id: number }; Returns: Json }
       trgovina_potekla: { Args: { p_checkout: string }; Returns: string }
       trgovina_pripravi_shrambo: {

@@ -137,11 +137,11 @@ language sql stable security definer set search_path = public
 as $$
   select coalesce(jsonb_agg(jsonb_build_object(
            'slug', i.slug, 'ime_sl', i.ime_sl, 'ime_en', i.ime_en, 'kategorija', i.kategorija,
-           'slike', to_jsonb(i.slike), 'cena_od', v.cena_od, 'na_voljo', trgovina.oznaka_voljo(v.kosov))
+           'slike', to_jsonb(i.slike), 'cena_od', v.cena_od, 'cena_do', v.cena_do, 'na_voljo', trgovina.oznaka_voljo(v.kosov))
          order by i.vrstni_red, i.id), '[]'::jsonb)
   from trgovina.izdelki i
   join lateral (
-    select min(r.cena) as cena_od, sum(greatest(z.na_voljo, 0)) as kosov
+    select min(r.cena) as cena_od, max(r.cena) as cena_do, sum(greatest(z.na_voljo, 0)) as kosov
       from trgovina.razlicice r join trgovina.razpolozljivo z on z.razlicica_id = r.id
      where r.izdelek_id = i.id and r.aktivna
   ) v on v.cena_od is not null
@@ -168,8 +168,19 @@ $$;
 -- Servisne funkcije (Edge Functions trgovina-nakup in stripe-webhook).
 -- --------------------------------------------------------------------------
 
+-- Zastarela naročila caka_placilo (seja Stripe je potekla vsaj pred pol ure,
+-- webhook expired pa ni prišel): stanje poteklo, odjemalec proč. Namesto
+-- crona jo kliče vsaka rezervacija (indeks stanje, rezervirano_do).
+create function trgovina.pocisti() returns void
+language sql
+as $$
+  update trgovina.narocila set stanje = 'poteklo', odjemalec = null
+   where stanje = 'caka_placilo' and rezervirano_do < now() - interval '1 hour'
+$$;
+
 -- Rezervira košarico in ustvari naročilo caka_placilo. Vhod [{razlicica_id, kolicina}].
--- p_odjemalec = sha256 hex (IP + poper): največ 3 odprta naročila na odjemalca ali uporabnika.
+-- p_odjemalec = sha256 hex (IP + poper): največ 5 odprtih naročil na uporabnika,
+-- gost (p_user null) pa na odjemalca. Brez IP-ja funkcija pošlje naključen odjemalec.
 create function trgovina.rezerviraj(p_postavke jsonb, p_user uuid, p_jezik text, p_odjemalec text) returns jsonb
 language plpgsql
 as $$
@@ -200,10 +211,12 @@ begin
     raise exception 'Trgovina: neveljavna košarica.' using hint = 'trgovina-vnos';
   end if;
 
-  -- ponytail: brez zaklepa sta hkratni četrti zahtevi lahko obe sprejeti; meja je le zavora.
+  perform trgovina.pocisti();
+
+  -- ponytail: brez zaklepa sta hkratni šesti zahtevi lahko obe sprejeti; meja je le zavora.
   if (select count(*) from trgovina.narocila n
        where n.stanje = 'caka_placilo' and n.rezervirano_do > now()
-         and (n.odjemalec = p_odjemalec or n.user_id = p_user)) >= 3
+         and (n.user_id = p_user or (p_user is null and n.user_id is null and n.odjemalec = p_odjemalec))) >= 5
   then
     raise exception 'Trgovina: preveč odprtih naročil.' using hint = 'trgovina-omejitev';
   end if;
@@ -345,6 +358,18 @@ begin
 end;
 $$;
 
+-- Prejšnja seja istega brskalnika (trgovina-nakup, prejsnja): naročilo le,
+-- če je od tega uporabnika ali (odprto) od tega odjemalca. null, če ni.
+create function trgovina.narocilo_seje(p_checkout text, p_user uuid, p_odjemalec text) returns jsonb
+language sql stable
+as $$
+  select jsonb_build_object('id', n.id, 'stanje', n.stanje)
+    from trgovina.narocila n
+   where n.stripe_checkout_id = p_checkout
+     and (n.user_id = p_user or (n.user_id is null and n.stanje = 'caka_placilo' and n.odjemalec = p_odjemalec))
+$$;
+
+revoke all on function trgovina.pocisti(), trgovina.narocilo_seje(text, uuid, text) from public, anon, authenticated;
 revoke all on function trgovina.oznaka_voljo(bigint), trgovina.narocilo_json(bigint),
   trgovina.rezerviraj(jsonb, uuid, text, text), trgovina.vezi_sejo(bigint, text), trgovina.sprosti(bigint),
   trgovina.iz_placila(text, text, text, text, jsonb, int, int, int, int, text),
@@ -374,6 +399,12 @@ as $$ select trgovina.iz_placila(p_checkout, p_payment_intent, p_email, p_ime, p
 create function public.trgovina_potekla(p_checkout text) returns text
 language sql security definer set search_path = public
 as $$ select trgovina.potekla(p_checkout) $$;
+
+create function public.trgovina_narocilo_seje(p_checkout text, p_user uuid, p_odjemalec text) returns jsonb
+language sql stable security definer set search_path = public
+as $$ select trgovina.narocilo_seje(p_checkout, p_user, p_odjemalec) $$;
+revoke all on function public.trgovina_narocilo_seje(text, uuid, text) from public, anon, authenticated;
+grant execute on function public.trgovina_narocilo_seje(text, uuid, text) to service_role;
 
 revoke all on function public.trgovina_rezerviraj(jsonb, uuid, text, text), public.trgovina_vezi_sejo(bigint, text),
   public.trgovina_sprosti(bigint),

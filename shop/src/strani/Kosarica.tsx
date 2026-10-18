@@ -3,7 +3,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase, type Izdelek } from '../baza'
 import { cena, imeDrzave, jezik, po, t, type Kljuc } from '../besede'
-import { EU27, nastavi, NAJVEC, odstrani, postnina, shrani, skupaj, useKosarica, type Kosarica as TKosarica } from '../kosarica'
+import { EU27, izprazni, nastavi, NAJVEC, odstrani, postnina, shrani, shraniPlacilo, skupaj, useKosarica, zadnjePlacilo, type Kosarica as TKosarica } from '../kosarica'
+import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
 import { Slika, ZnackaVoljo } from './Katalog'
 
@@ -42,6 +43,9 @@ export function Kosarica() {
   const [napakaBranja, setNapakaBranja] = useState(false)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
   const [poteka, setPoteka] = useState(false)
+  // Po zavrnitvi zaradi zaloge: označimo vrstice z več kosi, kot jih je morda na voljo.
+  const [premalo, setPremalo] = useState(false)
+  useNaslov(t('kosarica.naslov'))
   const slugi = useMemo(() => [...new Set(k.postavke.map((p) => p.slug))].sort(), [k.postavke])
   const kljucSlugov = slugi.join(',')
 
@@ -66,26 +70,44 @@ export function Kosarica() {
   async function placaj() {
     setPoteka(true)
     setSporocilo(null)
-    const { data, error } = await supabase.functions.invoke<{ url?: string }>('trgovina-nakup', {
-      body: { postavke: k.postavke.map(({ razlicica_id, kolicina }) => ({ razlicica_id, kolicina })), jezik, drzava: k.drzava },
+    setPremalo(false)
+    const { data, error } = await supabase.functions.invoke<{ url?: string; seja?: string; oznaka?: string }>('trgovina-nakup', {
+      body: {
+        postavke: k.postavke.map(({ razlicica_id, kolicina }) => ({ razlicica_id, kolicina })),
+        jezik,
+        drzava: k.drzava,
+        prejsnja: zadnjePlacilo()?.seja,
+      },
     })
     const url = data?.url
     if (!error && url && stripeNaslov(url)) {
+      if (data.seja && data.oznaka) shraniPlacilo({ seja: data.seja, oznaka: data.oznaka })
       location.assign(url)
       return
     }
-    let kljuc: Kljuc = 'napaka.splosna'
+    let besedilo = t('napaka.splosna')
     if (error instanceof FunctionsHttpError) {
       const odziv = error.context as Response
       const telo = (await odziv.json().catch(() => null)) as { hint?: string } | null
-      if (odziv.status === 429) kljuc = 'napaka.prevec'
-      else if (telo?.hint === 'trgovina-zaloga' || telo?.hint === 'trgovina-vnos') {
-        kljuc = `napaka.${telo.hint}`
+      if (odziv.status === 429) besedilo = t('napaka.prevec')
+      else if (telo?.hint === 'trgovina-placano') {
+        shraniPlacilo(null)
+        izprazni()
+        besedilo = t('kosarica.placano')
+      } else if (telo?.hint === 'trgovina-zaloga' || telo?.hint === 'trgovina-vnos') {
+        besedilo = t(`napaka.${telo.hint}` as Kljuc)
         const m = await nalozi()
-        if (m) shrani(ociscena(k, m))
+        if (m) {
+          const nova = ociscena(k, m)
+          if (nova.postavke.length !== k.postavke.length) {
+            shrani(nova)
+            besedilo = `${besedilo} ${t('kosarica.posodobljena')}`
+          }
+        }
+        setPremalo(telo.hint === 'trgovina-zaloga')
       }
     }
-    setSporocilo(t(kljuc))
+    setSporocilo(besedilo)
     setPoteka(false)
   }
 
@@ -93,7 +115,7 @@ export function Kosarica() {
     return (
       <div className="mx-auto max-w-xl space-y-4 text-center">
         <h1 className="text-3xl font-black naslov">{t('kosarica.naslov')}</h1>
-        {sporocilo && <p className="opozorilo">{sporocilo}</p>}
+        <div aria-live="polite">{sporocilo && <p className="opozorilo">{sporocilo}</p>}</div>
         <p className="text-slate-400">{t('kosarica.prazna')}</p>
         <Link to="/" className="gumb-glavni inline-block">{t('kosarica.nakupuj')}</Link>
       </div>
@@ -110,8 +132,10 @@ export function Kosarica() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-black naslov">{t('kosarica.naslov')}</h1>
-      {sporocilo && <p className="opozorilo">{sporocilo}</p>}
-      {napakaBranja && <p className="opozorilo">{t('napaka.nalaganje')}</p>}
+      <div aria-live="polite" className="space-y-2">
+        {sporocilo && <p className="opozorilo">{sporocilo}</p>}
+        {napakaBranja && <p className="opozorilo">{t('napaka.nalaganje')}</p>}
+      </div>
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <ul className="space-y-3">
           {k.postavke.map((p) => {
@@ -133,7 +157,9 @@ export function Kosarica() {
                   </div>
                   {!r ? <p className="text-sm text-rose-300">{t('kosarica.niVec')}</p>
                     : r.na_voljo === 'ne' ? <p className="text-sm text-rose-300">{t('kosarica.razprodano')}</p>
-                    : r.na_voljo === 'malo' && <ZnackaVoljo v="malo" />}
+                    : r.na_voljo === 'malo' && (premalo && p.kolicina > 1
+                      ? <p className="text-sm text-amber-200">{t('kosarica.zmanjsaj')}</p>
+                      : <ZnackaVoljo v="malo" />)}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center rounded-lg border border-white/15 bg-white/5 text-sm" role="group" aria-label={t('izdelek.kolicina')}>
                       <button type="button" aria-label={t('izdelek.manj')} disabled={!r || p.kolicina <= 1} onClick={() => shrani(nastavi(k, p.razlicica_id, p.kolicina - 1))} className="px-2.5 py-1 font-bold disabled:opacity-30">−</button>

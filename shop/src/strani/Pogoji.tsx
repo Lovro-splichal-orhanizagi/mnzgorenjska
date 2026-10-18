@@ -1,16 +1,18 @@
 import { Link } from 'react-router-dom'
-import { t, type Kljuc } from '../besede'
+import { POGOJI_VERZIJA, t, type Kljuc } from '../besede'
+import { useNaslov } from '../Okvir'
 
 const RAZDELKI = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10'] as const
 
 export const odstavki = (k: Kljuc) => t(k).split('\n\n')
 
 export function Pogoji() {
+  useNaslov(t('pogoji.naslov'))
   return (
     <article className="max-w-3xl space-y-8">
       <header className="space-y-2">
         <h1 className="text-3xl font-black naslov sm:text-4xl">{t('pogoji.naslov')}</h1>
-        <p className="text-sm text-slate-400">{t('pogoji.velja')}</p>
+        <p className="text-sm text-slate-400">{t('pogoji.velja', { verzija: POGOJI_VERZIJA })}</p>
       </header>
       {RAZDELKI.map((s) => (
         <section key={s} className="space-y-3">

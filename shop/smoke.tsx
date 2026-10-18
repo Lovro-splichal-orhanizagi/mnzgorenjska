@@ -16,7 +16,7 @@ import { Odstop, mailOdstopa } from './src/strani/Odstop'
 import { Prijava, varnaPot } from './src/strani/Prijava'
 import { Admin, Dobavnica, Nalepka } from './src/strani/Admin'
 import { vCente, varnoIme } from './src/strani/AdminIzdelki'
-import { EN, SL, cena, type Kljuc } from './src/besede'
+import { EN, SL, TELEFON, cena, type Kljuc } from './src/besede'
 import { dodaj, kosov, nastavi, odstrani, postnina, preberi, PRAZNA, skupaj } from './src/kosarica'
 import type { Izdelek as TIzdelek, IzdelekKataloga, NarociloAdmin } from './src/baza'
 
@@ -60,15 +60,19 @@ for (const [pot, vzorec, stran] of strani) {
 }
 
 const pogoji = izris('/terms', '/terms', <Pogoji />)
-preveri('pogoji: prodajalec, ID za DDV, 14 dni, ZVPot-1, Ljubljana, brez ODR',
-  ['SPACE GUARDIAN', 'SI42765153', '9850538000', '14 dneh', 'ZVPot-1', 'Ljubljani', 'izvensodnega'].every((s) => pogoji.includes(s))
-  && !/ec\.europa\.eu\/consumers\/odr/.test(pogoji))
+preveri('pogoji: prodajalec, register, telefon, ID za DDV, 14 dni, ZVPot-1, IRPS zavrnjen, brez ODR',
+  ['SPACE GUARDIAN', 'SI42765153', '9850538000', 'Okrožnem sodišču v Ljubljani', TELEFON, '14 dneh', 'ZVPot-1', 'ne pristaja', 'gov.si', 'Pogoji z dne 18. 10. 2026']
+    .every((s) => pogoji.includes(s))
+  && !/ec\.europa\.eu\/consumers\/odr/.test(pogoji) && !pogoji.includes('sodišče v Ljubljani'))
+preveri('pogoji: telefon prodajalca (pred živo prodajo)', /^\+386 [\d ]{6,}$/.test(TELEFON), 'manjka telefon prodajalca (pred živo prodajo)')
+preveri('noga: telefon s povezavo tel:', pogoji.includes('href="tel:+38640773385"'))
 
 const katalog: IzdelekKataloga[] = [
-  { slug: 'majica', ime_sl: 'Majica', ime_en: 'T-shirt', kategorija: 'oblacila', slike: [], cena_od: 2500, na_voljo: 'malo' },
-  { slug: 'sal', ime_sl: 'Šal', ime_en: 'Scarf', kategorija: 'dodatki', slike: ['https://api.slff.eu/storage/v1/object/public/trgovina/sal/1.jpg'], cena_od: 2000, na_voljo: 'ne' },
+  { slug: 'majica', ime_sl: 'Majica', ime_en: 'T-shirt', kategorija: 'oblacila', slike: [], cena_od: 2500, cena_do: 2500, na_voljo: 'malo' },
+  { slug: 'sal', ime_sl: 'Šal', ime_en: 'Scarf', kategorija: 'dodatki', slike: ['https://api.slff.eu/storage/v1/object/public/trgovina/sal/1.jpg'], cena_od: 2000, cena_do: 2400, na_voljo: 'ne' },
 ]
 const mreza = renderToString(<StaticRouter location="/"><MrezaIzdelkov izdelki={katalog} /></StaticRouter>)
+preveri('katalog: "od" le pri različnih cenah', mreza.includes('od 20,00') && !mreza.includes('od 25,00'))
 preveri('katalog: kartice s ceno, sliko ali grbom in značko', mreza.includes('Majica') && mreza.includes('25,00') && mreza.includes('/p/sal')
   && mreza.includes('sal/1.jpg') && mreza.includes('slff-grb') && mreza.includes(SL['voljo.malo']) && mreza.includes(SL['voljo.ne']), mreza.slice(0, 300))
 preveri('katalog: prazen pokaže sporočilo', renderToString(<StaticRouter location="/"><MrezaIzdelkov izdelki={[]} /></StaticRouter>).includes(SL['katalog.prazno']))
@@ -132,6 +136,7 @@ preveri('kosarica: skupaj v centih, brez neznane cene', skupaj(k, { 1: 2500 }) =
 preveri('kosarica: preberi zavrne smeti', preberi('{"postavke":[{"razlicica_id":"1","slug":"a","kolicina":1},{"razlicica_id":2,"slug":"b","kolicina":99}],"drzava":"US"}').postavke.length === 1
   && preberi('{"postavke":[{"razlicica_id":2,"slug":"b","kolicina":99}]}').postavke[0].kolicina === 20
   && preberi('{"drzava":"US"}').drzava === 'SI' && preberi('{"drzava":"HR"}').drzava === 'HR'
+  && preberi('{"postavke":[{"razlicica_id":3,"slug":"c","kolicina":1},{"razlicica_id":3,"slug":"c","kolicina":5}]}').postavke.length === 1
   && preberi('ni json').postavke.length === 0 && preberi(null).drzava === 'SI' && preberi('[1]').postavke.length === 0)
 preveri('kosarica: poštnina (pismo le v SI)', postnina('SI', true) === 150 && postnina('SI', false) === 390 && postnina('HR', true) === 990)
 const cista = ociscena({ postavke: [{ razlicica_id: 1, slug: 'majica', kolicina: 1 }, { razlicica_id: 2, slug: 'majica', kolicina: 1 }, { razlicica_id: 9, slug: 'ni', kolicina: 1 }], drzava: 'AT' }, { majica: izdelek, ni: null })
