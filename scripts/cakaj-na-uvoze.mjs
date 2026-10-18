@@ -174,17 +174,27 @@ function seKrize(tok, naslov, id) {
   // Nočni uvoz piše le v vklopljene lige. Ročni uvoz nevklopljene ga ne moti;
   // med seboj pa nočne zagone vrsti že skupina `uvoz-zapisnikov`.
   // Nočni zagon nosi vse države; pri skupnem viru se nanj čaka vedno.
-  // Popravek lahko piše v vklopljene lige, zato čaka tudi na nočni uvoz.
+  // Popravek lahko piše v vklopljene lige: čaka na vse posle svoje države.
   // Pri skupnem viru se čaka le na posel te države ("uvoz EE"): zagon kot
   // celota teče, dokler ne konča najdaljši posel (AT ure), EE je gotov v
   // minutah (ee-premium-liiga je 11. 10. 2026 čakal 120 minut in padel).
   if (tok === 'uvoz-zapisnikov.yml') {
-    if (popravek) return true
-    if (!SKUPEN_VIR[mojaDrzava]) return mojaLiga ? mojaJeAktivna : false
+    if (popravek && !mojaDrzava) return true
+    if (!popravek && !SKUPEN_VIR[mojaDrzava]) return mojaLiga ? mojaJeAktivna : false
     // Država ima lahko več košev ("uvoz HU 1/3" …, scripts/nocni-kosi.mjs).
-    const posli = JSON.parse(gh('run', 'view', String(id), '--json', 'jobs')).jobs
-      .filter((j) => j.name === `uvoz ${mojaDrzava}` || j.name.startsWith(`uvoz ${mojaDrzava} `))
-    return !posli.length || posli.some((j) => j.status !== 'completed')
+    const jobs = JSON.parse(gh('run', 'view', String(id), '--json', 'jobs')).jobs
+    if (!Array.isArray(jobs)) return true
+    const ime = `uvoz ${mojaDrzava}`
+    const posli = jobs.filter((j) => j.name === ime || j.name?.startsWith(`${ime} `))
+    if (!posli.length || posli.some((j) => j.status !== 'completed')) return true
+    if (posli.length === 1 && posli[0].name === ime) return false
+    // Preveri tudi manjkajoče koše v delnem odgovoru API. Število nosi ime
+    // dejanskega starejšega zagona; matrika se je medtem lahko spremenila.
+    const kosi = posli.map((j) => /^ (\d+)\/(\d+)$/.exec(j.name.slice(ime.length)))
+    const kosov = Number(kosi[0]?.[2])
+    return !(kosov > 1) || posli.length !== kosov ||
+      kosi.some((m) => !m || Number(m[2]) !== kosov || Number(m[1]) < 1 || Number(m[1]) > kosov) ||
+      new Set(kosi.map((m) => Number(m?.[1]))).size !== kosov
   }
   if (tok === 'grbi.yml') return !!SKUPEN_VIR[mojaDrzava] && naslov === `Grbi klubov ${SKUPEN_VIR[mojaDrzava]}`
   return true
