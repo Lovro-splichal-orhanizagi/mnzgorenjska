@@ -12,7 +12,7 @@ create function pg_temp.fcf_refuses(command text, message text) returns void lan
  raise exception 'FCF TEST: expected refusal: %',message;
 end$$;
 select pg_temp.fcf_assert(to_regprocedure('public.prepare_fcf_historical_cleanup(text,jsonb)') is not null,'bounded prepare primitive exists');
-select pg_temp.fcf_assert(to_regprocedure('public.apply_fcf_historical_cleanup(text,jsonb,text,jsonb)') is not null,'bounded apply primitive exists');
+select pg_temp.fcf_assert(to_regprocedure('public.apply_fcf_historical_cleanup(text,jsonb,text,text)') is not null,'bounded apply primitive exists');
 select pg_temp.fcf_assert(not has_function_privilege('authenticated','public.prepare_fcf_historical_cleanup(text,jsonb)','EXECUTE'),'user cannot read restricted beforeimage');
 select pg_temp.fcf_assert(not has_function_privilege('service_role','private_fcf_history.cleanup_targets()','EXECUTE'),'service cannot access private cleanup internals');
 
@@ -102,7 +102,7 @@ begin
  begin
   execute command;
   mutated:=private_fcf_history.capture();
-  perform pg_temp.fcf_refuses(format('select public.apply_fcf_historical_cleanup(%L,%L::jsonb,%L,%L::jsonb)',p.main_sha,p.hashes::text,p.prepared->>'beforeSha256',(p.prepared->'beforeImage')::text),message);
+  perform pg_temp.fcf_refuses(format('select public.apply_fcf_historical_cleanup(%L,%L::jsonb,%L,%L)',p.main_sha,p.hashes::text,p.prepared->>'beforeSha256',p.prepared->>'beforeImageText'),message);
   perform pg_temp.fcf_assert(private_fcf_history.capture()=mutated,'failed cleanup preserves every current football row: '||message);
   perform pg_temp.fcf_assert(not exists(select 1 from private_historical_statistics.installed_policies where competition_id in(783,790,797)),'no partial policy install: '||message);
   raise exception using errcode='ZX001',message='roll back only this mutation';
@@ -155,10 +155,10 @@ select pg_temp.fcf_mutant('create table scout.fcf_unreviewed_dependency(appearan
 -- Wrong commit/hash/image cannot be promoted by the service-only writer.
 do $$declare p fcf_proof%rowtype;begin
  select *into p from fcf_proof;
- perform pg_temp.fcf_refuses(format('select public.apply_fcf_historical_cleanup(%L,%L::jsonb,%L,%L::jsonb)',repeat('b',40),p.hashes::text,p.prepared->>'beforeSha256',(p.prepared->'beforeImage')::text),'different reviewed commit');
- perform pg_temp.fcf_refuses(format('select public.apply_fcf_historical_cleanup(%L,%L::jsonb,%L,%L::jsonb)',p.main_sha,(p.hashes||jsonb_build_object('foreign',repeat('0',64)))::text,p.prepared->>'beforeSha256',(p.prepared->'beforeImage')::text),'foreign policy hash');
- perform pg_temp.fcf_refuses(format('select public.apply_fcf_historical_cleanup(%L,%L::jsonb,%L,%L::jsonb)',p.main_sha,p.hashes::text,repeat('0',64),(p.prepared->'beforeImage')::text),'unapproved beforeimage hash');
- perform pg_temp.fcf_refuses(format('select public.apply_fcf_historical_cleanup(%L,%L::jsonb,%L,%L::jsonb)',p.main_sha,p.hashes::text,p.prepared->>'beforeSha256',jsonb_set(p.prepared->'beforeImage','{appearances}','[]')::text),'truncated backup');
+ perform pg_temp.fcf_refuses(format('select public.apply_fcf_historical_cleanup(%L,%L::jsonb,%L,%L)',repeat('b',40),p.hashes::text,p.prepared->>'beforeSha256',p.prepared->>'beforeImageText'),'different reviewed commit');
+ perform pg_temp.fcf_refuses(format('select public.apply_fcf_historical_cleanup(%L,%L::jsonb,%L,%L)',p.main_sha,(p.hashes||jsonb_build_object('foreign',repeat('0',64)))::text,p.prepared->>'beforeSha256',p.prepared->>'beforeImageText'),'foreign policy hash');
+ perform pg_temp.fcf_refuses(format('select public.apply_fcf_historical_cleanup(%L,%L::jsonb,%L,%L)',p.main_sha,p.hashes::text,repeat('0',64),p.prepared->>'beforeImageText'),'unapproved beforeimage hash');
+ perform pg_temp.fcf_refuses(format('select public.apply_fcf_historical_cleanup(%L,%L::jsonb,%L,%L)',p.main_sha,p.hashes::text,p.prepared->>'beforeSha256',jsonb_set(p.prepared->'beforeImage','{appearances}','[]')::text),'truncated backup');
 end$$;
 
 -- Reconstruct the deleted rows from the actual full beforeimage, preserving all
@@ -174,7 +174,7 @@ rollback to fcf_restore_rehearsal;
 
 -- Successful apply is then rolled back for restoration rehearsal.
 savepoint fcf_before_apply;
-select public.apply_fcf_historical_cleanup(main_sha,hashes,prepared->>'beforeSha256',prepared->'beforeImage')from fcf_proof;
+select public.apply_fcf_historical_cleanup(main_sha,hashes,prepared->>'beforeSha256',prepared->>'beforeImageText')from fcf_proof;
 select pg_temp.fcf_assert(not exists(select 1 from appearances where match_id in(select mid from fcf_fixture)),'exact target appearances removed');
 select pg_temp.fcf_assert(not exists(select 1 from goals where match_id in(select mid from fcf_fixture)),'exact target goals removed');
 select pg_temp.fcf_assert((select count(*)from matches m join fcf_fixture f on f.mid=m.id where m.statistics_status='unavailable_historical' and m.imported_at is null and m.home_goals=f.hg and m.away_goals=f.ag)=4,'exact IDs/results retained with unavailable markers');

@@ -99,12 +99,14 @@ declare image jsonb;
 begin
  perform private_fcf_history.check_and_lock(p_main_sha,p_policy_hashes);
  image:=private_fcf_history.capture()||jsonb_build_object('schemaVersion',1,'mainCommit',p_main_sha,'policyHashes',p_policy_hashes);
- return jsonb_build_object('beforeImage',image,'beforeSha256',encode(sha256(convert_to(image::text,'UTF8')),'hex'));
+ return jsonb_build_object('beforeImage',image,'beforeImageText',image::text,'beforeSha256',encode(sha256(convert_to(image::text,'UTF8')),'hex'));
 end$$;
 
-create function public.apply_fcf_historical_cleanup(p_main_sha text,p_policy_hashes jsonb,p_before_sha text,p_before_image jsonb)returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
-declare prepared jsonb;target record;policy record;e jsonb;fixture jsonb;pid bigint;rid bigint;n integer;preserved jsonb;
+create function public.apply_fcf_historical_cleanup(p_main_sha text,p_policy_hashes jsonb,p_before_sha text,p_before_image_text text)returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
+declare prepared jsonb;target record;policy record;e jsonb;fixture jsonb;pid bigint;rid bigint;n integer;preserved jsonb;p_before_image jsonb;
 begin
+ begin p_before_image:=p_before_image_text::jsonb;exception when invalid_text_representation then raise exception 'FCF_HISTORY: beforeimage must be SQL-produced JSON text';end;
+ perform private_fcf_history.require(jsonb_typeof(p_before_image)='object','complete beforeimage object required');
  perform private_fcf_history.require(p_before_sha~'^[a-f0-9]{64}$'and p_before_image is not null and encode(sha256(convert_to(p_before_image::text,'UTF8')),'hex')=p_before_sha,'reviewed complete beforeimage SHA required');
  prepared:=public.prepare_fcf_historical_cleanup(p_main_sha,p_policy_hashes);
  perform private_fcf_history.require(prepared->>'beforeSha256'=p_before_sha and prepared->'beforeImage'=p_before_image,'canonical beforeimage drift');
@@ -137,5 +139,5 @@ begin
 end$$;
 
 revoke all on all functions in schema private_fcf_history from public,anon,authenticated,service_role;
-revoke all on function public.prepare_fcf_historical_cleanup(text,jsonb),public.apply_fcf_historical_cleanup(text,jsonb,text,jsonb)from public,anon,authenticated;
-grant execute on function public.prepare_fcf_historical_cleanup(text,jsonb),public.apply_fcf_historical_cleanup(text,jsonb,text,jsonb)to service_role;
+revoke all on function public.prepare_fcf_historical_cleanup(text,jsonb),public.apply_fcf_historical_cleanup(text,jsonb,text,text)from public,anon,authenticated;
+grant execute on function public.prepare_fcf_historical_cleanup(text,jsonb),public.apply_fcf_historical_cleanup(text,jsonb,text,text)to service_role;
