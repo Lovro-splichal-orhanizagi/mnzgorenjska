@@ -25,7 +25,7 @@ export function verifyReplayRecord(record,{slug,season,actual,artifact,workflowS
  return lineage
 }
 const writerFiles=['uvoz-zapisnikov','uvoz-razporeda','lazni-vratarji','ugani-pozicije','ovrednoti-igralce'].flatMap(name=>zaprtje(`scripts/${name}.mjs`))
-export const replayFiles=[...new Set([...writerFiles,...sourceFiles,'scripts/viri/index.mjs','scripts/uvoz-zapisnikov.mjs','supabase/migrations/20261018180100_dfb_historical_statistics_v3.sql','scripts/vklopi-nemcijo.mjs','scripts/dfb-artifacts.mjs','scripts/dfb-replay-proof.mjs','scripts/ponovi-dfb-regijo.mjs','scripts/preveri-zagona-dfb-regije.mjs','scripts/vklopi-dfb-regijo.mjs','scripts/dfb-offline.mjs','scripts/uvozi-dfb-regijo.mjs','scripts/dfb-current-reactivation.mjs','scripts/reconcile-dfb-current-players.mjs','scripts/policies/dfb-current-reactivation-20261018.json','supabase/migrations/20261018210000_dfb_current_player_reactivation.sql',replayWorkflow,'.github/workflows/uvoz-dfb-regije.yml','.github/workflows/vklop-dfb-regije.yml'])]
+export const replayFiles=[...new Set([...writerFiles,...sourceFiles,'scripts/viri/index.mjs','scripts/uvoz-zapisnikov.mjs','supabase/migrations/20261018180100_dfb_historical_statistics_v3.sql','supabase/migrations/20261018223000_dfb_reviewed_calendar_v4.sql','scripts/vklopi-nemcijo.mjs','scripts/dfb-artifacts.mjs','scripts/dfb-replay-proof.mjs','scripts/ponovi-dfb-regijo.mjs','scripts/preveri-zagona-dfb-regije.mjs','scripts/vklopi-dfb-regijo.mjs','scripts/dfb-offline.mjs','scripts/uvozi-dfb-regijo.mjs','scripts/dfb-current-reactivation.mjs','scripts/reconcile-dfb-current-players.mjs','scripts/policies/dfb-current-reactivation-20261018.json','supabase/migrations/20261018210000_dfb_current_player_reactivation.sql',replayWorkflow,'.github/workflows/uvoz-dfb-regije.yml','.github/workflows/vklop-dfb-regije.yml'])]
 export function verifyCode(commit,version){
  if(!/^[a-f0-9]{40}$/.test(commit)||![1,2,3].includes(version))throw Error('Invalid reviewed code identity')
  execFileSync('git',['diff','--exit-code',commit,'--',...(version>=2?replayFiles:sourceFiles)],{stdio:'pipe'})
@@ -62,7 +62,7 @@ async function main(){
  if(results[0].version!==results[1].version)throw Error('Mixed direct and replay executions are not supported')
  const version=results[0].version
  if(version===3&&JSON.stringify(results[0].statisticsPolicy)!==JSON.stringify(results[1].statisticsPolicy))throw Error('Mixed historical policies are not supported')
- verifyCode(commit,version)
+ verifyCode(commit,/^de-regionalliga-(nord|west)$/.test(slug)?2:version)
  writeFileSync(out,JSON.stringify({version,...(version===3?{statisticsPolicy:results[0].statisticsPolicy}:{}),slug,sourceCommit:commit,sourceFilesIdentical:true,proof:results.map(r=>r.proof)})+'\n')
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href)main().catch(e=>{console.error(e.message);process.exitCode=1})

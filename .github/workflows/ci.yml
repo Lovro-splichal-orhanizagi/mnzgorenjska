@@ -165,6 +165,7 @@ jobs:
         run: |
           node scripts/test-vklop-dfb-regije-sql.mjs
           node scripts/test-dfb-regije-locks.mjs
+          node scripts/test-dfb-calendar-release-sql.mjs
           node scripts/test-dfb-historical-release-sql.mjs
           node scripts/test-dfb-historical-locks.mjs
           node scripts/test-dfb-current-reactivation-sql.mjs

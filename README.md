@@ -390,3 +390,7 @@ Osebni/skupnostni projekt. Dodaj licenco po želji (npr. MIT).
 odobrenih DFB zajemov (`uvoz-dfb-regije.yml`, `vklop-dfb-regije.yml`).
 Servisni RPC `varen_vklop_dfb_regije` privzeto samo preveri stanje;
 [postopek in dokazi](docs/viri/nemcija.md#varovan-regionalni-uvoz-in-vklop).
+
+Pregledani koledarji Nord/West uporabljajo ločen manifest DFB v4 in zasebna
+SQL vrata (`20261018223000`); vse statistike, cene in prihodnji rok ostanejo
+obvezni. Koledarski dokaz ne dovoljuje manjkajočih zgodovinskih statistik.

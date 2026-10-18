@@ -708,3 +708,8 @@ odobrene zajeme v `uvoz-dfb-regije.yml` / `vklop-dfb-regije.yml`;
 celotno zgodovino in ujemanje vseh uvoženih nastopov/golov. Postopek je v
 `docs/viri/nemcija.md`; testi zahtevajo izrecno odstranljivo bazo prek
 `SUPABASE_DB_CONTAINER`.
+
+Manifest DFB v4 podpira samo pregledane koledarske dokaze Nord/West in
+izrecno neposredno/replay provenienco; zgodovinskih izjem ne dovoljuje.
+Zasebna SQL vrata ohranijo popolnost statistik, cene, kader in prihodnji rok.
+Preverba `test-dfb-calendar-release-sql.mjs` zahteva izrecno odstranljivo bazo.

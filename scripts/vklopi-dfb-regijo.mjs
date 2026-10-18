@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url'
 import { createHash } from 'node:crypto'
 import {collectDfbHistorical,unavailableDfbFixture,dfbStatisticsCoverage,dfbPolicyBinding,verifyDfbPolicySeason} from './dfb-historical-policy.mjs'
 import { verifyLineage } from './dfb-replay-proof.mjs'
-import {verifyDfbCalendar} from './viri/dfb-calendar.mjs'
+import {verifyDfbCalendar,receiptSha256} from './viri/dfb-calendar.mjs'
 import vir, { konfiguracijaDfb } from './viri/dfb.mjs'
 import { preveriPokritost } from './preveri-vir-sezono.mjs'
 import { preveriPosnetek as preveriSuroviPosnetek } from './vklopi-nemcijo.mjs'
@@ -64,9 +64,11 @@ export function sestaviSezono({slug,sezona,razpored,zapisniki,nepopolni=[],captu
 export function preveriOdobritev(raw,approvedSha,now=Date.now()){
  if(Buffer.byteLength(raw)>8*1024*1024||!/^[a-f0-9]{64}$/.test(approvedSha)||sha(raw)!==approvedSha)fail('approved manifest SHA/size mismatch')
  const m=JSON.parse(raw);configuration(m.slug)
- if(m.seasons?.some(s=>s.fixtures?.some(f=>Object.hasOwn(f,'calendarEvidence'))))fail('calendar evidence unsupported for release; future versioned provenance/SQL gate required')
- if(![1,2,3].includes(m.version)||!/^[a-f0-9]{40}$/.test(m.sourceCommit)||m.parserSha256!==parserSha256()||m.seasons?.length!==2)fail('scope/parser provenance mismatch')
- if(m.version===3){
+ if(m.version!==4&&m.seasons?.some(s=>s.fixtures?.some(f=>Object.hasOwn(f,'calendarEvidence'))))fail('calendar evidence requires manifest version4')
+ if(![1,2,3,4].includes(m.version)||!/^[a-f0-9]{40}$/.test(m.sourceCommit)||m.parserSha256!==parserSha256()||m.seasons?.length!==2)fail('scope/parser provenance mismatch')
+ if(m.version===4){
+  if(!/^de-regionalliga-(nord|west)$/.test(m.slug)||![1,2].includes(m.provenanceVersion)||m.calendarReceiptSha256!==receiptSha256||Object.hasOwn(m,'statisticsPolicy'))fail('calendar scope/provenance differs')
+ }else if(m.version===3){
   if(m.slug!=='de-regionalliga-suedwest'||m.provenanceVersion!==2)fail('historical manifest scope/provenance')
  }else if(m.statisticsPolicy!=null||m.provenanceVersion!=null)fail('historical policy requires manifest version3')
  if(m.version===3&&!m.seasons[1].fixtures?.some(f=>f.date===m.statisticsPolicy?.firstFantasyPlayedOn&&f.played===false))fail('planned fantasy date lacks a real current future fixture')
@@ -76,8 +78,9 @@ export function preveriOdobritev(raw,approvedSha,now=Date.now()){
   if(m.version===3){
    if(s.evidenceMode!=='policy-replay')fail('historical proof requires real policy-aware replay')
    verifyDfbPolicySeason(s,m.statisticsPolicy);verifyLineage(s,m)
-  }else if(m.version===2)verifyLineage(s,m)
+  }else if(m.version===2||m.version===4&&m.provenanceVersion===2)verifyLineage(s,m)
   else if(s.lineage!=null)fail('Replay lineage requires version2')
+  if(m.version===4)verifyDfbCalendar({code:s.code,teams:c.teams,rounds:c.rounds,fixtures:s.fixtures})
  }
  return m
 }
@@ -102,7 +105,8 @@ export async function pripravi({slug,archiveDir,currentDir,sourceCommit,proof}){
   if(version===3)built.evidenceMode='policy-replay'
   seasons.push(built)
  }
- const m={version,...(version===3?{provenanceVersion:2,statisticsPolicy:proof.statisticsPolicy}:{}),slug,sourceCommit,parserSha256:parserSha256(),seasons};const raw=JSON.stringify(m)+'\n';preveriOdobritev(raw,sha(raw));return m
+ const calendar=/^de-regionalliga-(nord|west)$/.test(slug)&&seasons.some(s=>s.fixtures.some(f=>Object.hasOwn(f,'calendarEvidence')))
+ const m={version:calendar?4:version,...(calendar?{provenanceVersion:version,calendarReceiptSha256:receiptSha256}:{}),...(version===3?{provenanceVersion:2,statisticsPolicy:proof.statisticsPolicy}:{}),slug,sourceCommit,parserSha256:parserSha256(),seasons};const raw=JSON.stringify(m)+'\n';preveriOdobritev(raw,sha(raw));return m
 }
 export function actionsOnly(){if(process.env.GITHUB_ACTIONS!=='true'||process.env.GITHUB_REPOSITORY!=='Lovro-splichal-orhanizagi/mnzgorenjska')fail('database operations require repository Actions')}
 export async function databaseCheck(raw,approvedSha,activate=false,{fetchFn=globalThis.fetch}={}){

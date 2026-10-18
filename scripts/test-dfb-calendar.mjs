@@ -5,43 +5,10 @@ import {tmpdir} from 'node:os'
 import {join,dirname} from 'node:path'
 import {pathToFileURL} from 'node:url'
 const api=await import('./viri/dfb-calendar.mjs').catch(()=>({}))
-// Independently transcribed fixture identities from the reviewed original pages.
-const reviewed={
- nord:[
-  {home:'SV Werder Bremen II',away:'1. FC Phönix Lübeck',homeSourceClubId:'sv-werder-bremen-ii',awaySourceClubId:'1-fc-phoenix-luebeck',games:[['2423139',7],['2423378',33]]},
-  {home:'VfB Lübeck',away:'SV Todesfelde',homeSourceClubId:'vfb-luebeck',awaySourceClubId:'SV-Todesfelde',games:[['2423173',11],['2423342',29]]}],
- west:[
-  {home:'Rot-Weiß Oberhausen',away:'Borussia Mönchengladbach II',homeSourceClubId:'rot-weiss-oberhausen',awaySourceClubId:'borussia-moenchengladbach-ii',games:[['2425450',9],['2425603',26]]},
-  {home:'Rot-Weiß Oberhausen',away:'SC Paderborn 07 II',homeSourceClubId:'rot-weiss-oberhausen',awaySourceClubId:'sc-paderborn-07-ii',games:[['2425470',11],['2425622',28]]}]
-}
+import {reviewed,calendar} from './dfb-calendar-test-fixture.mjs'
 const code=region=>`regionalliga-${region}/2026-2027`
 const identity=(p,[id,round])=>{const {games,...rest}=p;return {id,round,...rest}}
 const witnesses=(region,f)=>[f.homeSourceClubId,f.awaySourceClubId].map((club,i)=>({club,url:`https://datencenter.dfb.de/competitions/regionalliga-${region}/seasons/2026-2027/teams/${club}`,sha256:(i?'b':'a').repeat(64)}))
-function calendar(region='nord',evidence=true){
- const known=reviewed[region],native=new Map(known.flatMap(p=>[[p.home,p.homeSourceClubId],[p.away,p.awaySourceClubId]])),names=[...native.keys()]
- if(region==='nord'){names.push('VfB Oldenburg');native.set('VfB Oldenburg','vfb-oldenburg')}
- while(names.length<18){const name=`Club ${names.length}`;names.push(name);native.set(name,`club-${names.length}`)}
- const ring=[...names],fixtures=[]
- for(let r=0;r<17;r++){
-  for(let i=0;i<9;i++)for(let leg=0;leg<2;leg++){
-   const [home,away]=leg?[ring[17-i],ring[i]]:[ring[i],ring[17-i]]
-   fixtures.push({id:String(9000000+fixtures.length),round:r+1+17*leg,home,away,homeSourceClubId:native.get(home),awaySourceClubId:native.get(away)})
-  }
-  ring.splice(1,0,ring.pop())
- }
- const rounds=new Map()
- for(const p of known){
-  const games=fixtures.filter(f=>[p.home,p.away].includes(f.home)&&[p.home,p.away].includes(f.away))
-  assert.equal(games.length,2)
-  games.sort((a,b)=>a.round-b.round).forEach((f,i)=>{assert(!rounds.has(f.round));rounds.set(f.round,p.games[i][1]);Object.assign(f,identity(p,p.games[i]))})
- }
- const spare=Array.from({length:34},(_,i)=>i+1).filter(r=>![...rounds.values()].includes(r))
- for(let r=1;r<=34;r++)if(!rounds.has(r))rounds.set(r,spare.shift())
- // Reviewed fixtures already have their target round; map all other rounds.
- for(const f of fixtures)if(!known.some(p=>p.games.some(([id])=>id===f.id)))f.round=rounds.get(f.round)
- if(evidence)for(const p of known)for(const game of p.games){const f=fixtures.find(f=>f.id===game[0]);f.calendarEvidence=api.dfbCalendarEvidence(code(region),f,witnesses(region,f))}
- return {code:code(region),teams:18,rounds:34,fixtures}
-}
 const verify=s=>api.verifyDfbCalendar(s)
 const reverse=f=>{[f.home,f.away]=[f.away,f.home];[f.homeSourceClubId,f.awaySourceClubId]=[f.awaySourceClubId,f.homeSourceClubId];delete f.calendarEvidence}
 test('calendar support exports shared proof and shape validation',()=>{
@@ -187,4 +154,14 @@ test('builder source IDs cannot be mistaken for prefixed canonical IDs',async()=
  const {sestaviSezono}=await import('./vklopi-dfb-regijo.mjs'),s=builderInput('nord',true),t=s.razpored[0].tekme[0],r=s.zapisniki.find(r=>r.id==='de-dfb-'+t.id)
  t.id='de-dfb-'+t.id;r.id='de-dfb-'+t.id;r.z.zapisnikId=r.id
  assert.throws(()=>sestaviSezono(s),/fixture.*ID|fixture\/pair/)
+})
+test('v4 releases exact reviewed calendars with explicit direct provenance and rejects mutations',async()=>{
+ const {sestaviSezono,preveriOdobritev,sha,parserSha256}=await import('./vklopi-dfb-regijo.mjs')
+ for(const region of ['nord','west']){
+  const current=sestaviSezono(builderInput(region)),archive=sestaviSezono(builderInput(region,true))
+  archive.season='2025/26';archive.code=`regionalliga-${region}/2025-2026`
+  const m={version:4,provenanceVersion:1,calendarReceiptSha256:current.fixtures.find(f=>f.calendarEvidence).calendarEvidence.receiptSha256,slug:`de-regionalliga-${region}`,sourceCommit:'a'.repeat(40),parserSha256:parserSha256(),seasons:[archive,current]},check=m=>{const raw=JSON.stringify(m);return preveriOdobritev(raw,sha(raw))}
+  assert.equal(check(m).version,4)
+  for(const change of [x=>x.calendarReceiptSha256='0'.repeat(64),x=>x.provenanceVersion=3,x=>x.statisticsPolicy={},x=>x.statisticsPolicy=null,x=>delete x.seasons[1].fixtures.find(f=>f.calendarEvidence).calendarEvidence,x=>x.seasons[1].fixtures.find(f=>f.calendarEvidence).calendarEvidence.witnesses[0].sha256='bad',x=>x.seasons[0].fixtures[0].calendarEvidence={},x=>x.seasons[1].lineage={},x=>x.slug='de-regionalliga-suedwest']){const bad=structuredClone(m);change(bad);assert.throws(()=>check(bad))}
+ }
 })

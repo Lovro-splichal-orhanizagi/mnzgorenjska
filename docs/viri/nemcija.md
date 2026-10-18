@@ -525,12 +525,11 @@ spremenjen dokaz se zavrne. Če vir popravi par v običajni doma/gostje,
 uporabi strogo običajno preverjanje brez dokaza; to velja tudi, če drugi
 pregledani par še ostaja podvojen. Nobena tekma se samodejno ne obrne.
 
-To je samo priprava parserja in kanonične oblike. Obstoječe različice
+Prvotna priprava je pokrivala parser in kanonično obliko. Stare različice
 regionalnega manifesta v1/v2/v3 izrecno zavrnejo vsak `calendarEvidence`;
-za prihodnji vklop je potrebna nova različica provenience in samostojno
-SQL preverjanje. Nobena migracija, dovoljenje vklopa ali zgodovinska
-izjema ni dodana. Zgodovinska politika ostane omejena na dve obstoječi
-Südwestovi arhivski tekmi. Popolnost tekočih zapisnikov, začetnih postav in
+za koledarske dokaze je zdaj na voljo spodnja različica v4. Prvotna priprava
+ni dodala migracije, dovoljenja vklopa ali zgodovinske izjeme. Zgodovinska
+politika ostane omejena na dve obstoječi Südwestovi arhivski tekmi. Popolnost tekočih zapisnikov, začetnih postav in
 izrecnih vratarjev ostane obvezna. Lokalna ponovitev starih zajemov ne
 osveži zajema ali potrdi pripravljenosti Norda/West za vklop.
 
@@ -538,3 +537,32 @@ osveži zajema ali potrdi pripravljenosti Norda/West za vklop.
 strani, popravljene pare, sezonsko obliko, kanonične statistike in zavrnitev
 vklopa. Modul in register sta vključena v regionalni in Nordostov izvorni
 odtis; Nordostova kanonična oblika in ločeni pogoji vklopa se ne spreminjajo.
+
+## Regionalni manifest v4 za pregledane koledarje
+
+Migracija `20261018223000` doda ločeno zasebno SQL preverjanje samo za
+Nord/West. Manifest v4 veže `calendarReceiptSha256` in izrecni
+`provenanceVersion` 1 (preverjen neposredni zajem) ali 2 (preverjena
+ponovitev). Priprava ga izbere samodejno, ko resnične kanonične tekme
+vsebujejo pregledani `calendarEvidence`. Izvorni commit neposrednih
+Nord/West zajemov zdaj veže tudi celotno izvedbeno kodo in SQL vrata.
+
+SQL neodvisno preveri točnih osem identitet, izvorne klubske šifre, kroge,
+nespremenljivi SHA registra in URL/SHA dveh različnih sodelujočih strani.
+Vsak neusmerjeni par ostane natanko dvakrat; običajna tekma ne sme nositi
+izjeme. Razpored ostane 306/18/34 z izvirnimi stranmi. Preostanek vrat
+ohrani vsa dosedanja preverjanja uvoženih nastopov/golov, vratarjev, cen,
+kadra 2/5/5/3 in resničnega prihodnjega uradnega roka. V1/v2/v3 tudi v
+SQL zavrnejo vsak koledarski dokaz. Nordost in Südwestova pot v3 ostaneta
+ločena. Javnih podpisov RPC ni sprememb; pravica ostane samo servisna.
+
+V4 ne podpira `statisticsPolicy` in ne odpusti nobenega arhivskega ali
+tekočega zapisnika. Nord/West zato še potrebujeta točne pregledane
+zgodovinske izjeme ter sveže celotne tekoče zajeme. Noben lokalni test ali
+prejšnji zajem ne osveži izvornih časov in ne vklopi lige.
+
+`node scripts/test-dfb-calendar-release-sql.mjs` zahteva izrecna
+`SUPABASE_DB_CONTAINER` in `SUPABASE_TEST_DB` odstranljive baze; vse
+fixture in mutacije razveljavi. Preveri obe množici identitet/dokazov in
+celotno shranjeno sezono s ponovljenimi pregledanimi usmerjenimi pari ter
+dosedanje regresije statistike, cen in rokov.
