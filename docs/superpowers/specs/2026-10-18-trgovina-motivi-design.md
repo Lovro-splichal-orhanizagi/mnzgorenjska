@@ -45,7 +45,7 @@ izmišljenimi primeri.
 ## Preverjanje (baza, `rezerviraj`)
 
 Vsako polje po vrsti: `besedilo` 1–`max` znakov, dovoljene črke (tudi
-šumniki), presledek, `.-'&!?` in `besedilo_dovoljeno()`; `stevilka` 0–99;
+šumniki), števke ("Bar 22", "FC 1. maj"; vsaj ena črka), presledek, `.-'&!?` in `besedilo_dovoljeno()`; `stevilka` 0–99;
 `leto` 1950–tekoče; `izbira` le iz seznama; `ekipa` = ena od kupčevih
 nehišnih ekip (prijava obvezna); `prvak` kot doslej (`trgovina_moji_prvaki`);
 `shema` iz `sheme`. Motiv mora biti aktiven in veljati za izdelek. Neznana

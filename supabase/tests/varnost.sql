@@ -4900,6 +4900,15 @@ select pg_temp.napaka('trgovina3: zaljivka',
 select pg_temp.napaka('trgovina3: nedovoljen znak',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"A<b>"},"shema":"klasika"}', null, 'sl')$$,
   'trgovina-personalizacija');
+select pg_temp.preveri('trgovina3: besedilo sprejme stevke',
+  (select p.personalizacija->'polja'->>'ime' = 'FC 1. maj'
+     from trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"FC 1. maj"},"shema":"klasika"}', null, 'sl') p));
+select pg_temp.napaka('trgovina3: stevke ne odprejo drugih znakov',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Bar #22"},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka('trgovina3: same stevke niso besedilo',
+  $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"22"},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija');
 select pg_temp.napaka('trgovina3: stevilka 100',
   $$select trgovina.personaliziraj(-927201, '{"motiv":"test-motiv","polja":{"ime":"Ana","st":100},"shema":"klasika"}', null, 'sl')$$,
   'trgovina-personalizacija');

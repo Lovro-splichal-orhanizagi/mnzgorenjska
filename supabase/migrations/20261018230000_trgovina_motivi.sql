@@ -65,7 +65,7 @@ revoke all on trgovina.cone, trgovina.motivi, trgovina.motivi_izdelki from publi
 -- Preverjanje motiva
 -- --------------------------------------------------------------------------
 -- Vhod {motiv: slug, polja: {kljuc: vrednost}, shema: kljuc}. Vrednosti:
--- besedilo/izbira niz, stevilka/leto celo število, ekipa id kupčeve nehišne
+-- besedilo (črke, števke, presledek, .'&!?-) in izbira niz, stevilka/leto celo število, ekipa id kupčeve nehišne
 -- fantasy ekipe, prvak {mini_liga_id, sezona}. Neobvezno polje sme manjkati
 -- (null ali "" = manjka). Shrani {motiv, polja, shema, ime} — polja z
 -- natisnjenim besedilom (ekipa = ime ekipe, prvak = vrstica strežnika), ime =
@@ -132,7 +132,7 @@ begin
     when 'besedilo' then
       v_txt := case when jsonb_typeof(v) = 'string' then btrim(regexp_replace(v #>> '{}', '\s+', ' ', 'g')) end;
       if v_txt is null or char_length(v_txt) not between 1 and coalesce((f->>'max')::int, 12)
-         or v_txt !~ '^[A-Za-zÀ-ÖØ-öø-ž .''&!?-]+$' or v_txt !~ '[A-Za-zÀ-ÖØ-öø-ž]'
+         or v_txt !~ '^[A-Za-zÀ-ÖØ-öø-ž0-9 .''&!?-]+$' or v_txt !~ '[A-Za-zÀ-ÖØ-öø-ž]'
          or public.prepovedano_besedilo(v_txt) is not null then
         raise exception 'Trgovina: besedilo v polju % ni dovoljeno.', v_kljuc using hint = 'trgovina-personalizacija';
       end if;
