@@ -685,11 +685,31 @@ export function razporedBloka(b, { danes = Date.now() } = {}) {
  * padec uvoza med branjem `text()`.
  */
 export async function fcfFetch(url, moznosti = {}) {
+  // Beremo ob klicu: uvoz modula (tudi za neodvisni audit) ne preverja okolja.
+  const faktor = process.env.SLFF_PREMOR_FAKTOR === undefined ? 1 : Number(process.env.SLFF_PREMOR_FAKTOR)
+  const premor = Math.ceil(15000 * faktor)
+  if (!Number.isFinite(faktor) || faktor < 1 || premor > 2147483647)
+    throw new Error('fcf: neveljaven SLFF_PREMOR_FAKTOR (končen >= 1, premor <= 2147483647 ms)')
+
+  // Preverimo izvirni niz, ne normaliziranega URL (vrata, presledki, ../ …).
+  const zapisnik = typeof url === 'string' && /^https:\/\/www\.fcf\.cat\/ca\/competicio\/acta\/[1-9][0-9]*$/.test(url) && !/\s/.test(url)
   const { signal: _s, ...ostalo } = moznosti
-  const signal = AbortSignal.timeout(90000)
-  const o = await fetch(url, { ...ostalo, signal })
-  const telo = await o.text()
-  return new Response(telo, { status: o.status, statusText: o.statusText, headers: o.headers })
+  for (let poskus = 0; poskus < 2; poskus++) {
+    const signal = AbortSignal.timeout(90000)
+    const o = await fetch(url, { ...ostalo, signal })
+    if (o.status === 403 || o.status === 429) {
+      // Zavrnitev ima prednost tudi pred visečim ali pokvarjenim preklicem.
+      try { void o.body?.cancel().catch(() => {}) } catch { /* Najboljši trud. */ }
+      throw new FcfZavrnitev(`fcf: ${url} → ${o.status} — uvoz ustavljen, ne obhajamo`, o.status)
+    }
+    const telo = await o.text()
+    if (zapisnik && o.status === 200 && telo.length === 0 && (poskus === 1 || !o.redirected)) {
+      if (poskus === 1) throw new Error(`fcf: ${url} → prazno telo HTTP 200 tudi po ponovitvi — uvoz ustavljen`)
+      await new Promise((r) => setTimeout(r, premor))
+      continue
+    }
+    return new Response(telo, { status: o.status, statusText: o.statusText, headers: o.headers })
+  }
 }
 
 const vir = {
