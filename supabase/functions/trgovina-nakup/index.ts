@@ -24,10 +24,10 @@
 // sprosti (trgovina_sprosti). Cene z DDV (tax_behavior inclusive), DDV po
 // državi kupca izračuna Stripe Tax. Tarife dostave so v Stripe (metadata
 // app=slff-shop in kljuc, scripts/stripe-trgovina.sh) ali v TRGOVINA_TARIFE.
-// Pogoji (consent_collection) potrebujejo naslov pogojev v Stripe → Settings
-// → Public details.
+// Pogoji: STRIPE_TOS=1 doda obvezno potrditev (consent_collection, potrebuje
+// naslov pogojev v Stripe → Settings → Public details), sicer besedilo nad gumbom.
 //
-// Env: STRIPE_SECRET_KEY, TRGOVINA_PEPPER, SUPABASE_URL,
+// Env: STRIPE_SECRET_KEY, STRIPE_TOS (neobvezno, 1), TRGOVINA_PEPPER, SUPABASE_URL,
 // SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, SHOP_URL (neobvezno, privzeto
 // https://shop.slff.eu), TRGOVINA_TARIFE (neobvezno, JSON {kljuc: shr_…},
 // sicer se tarife enkrat na proces preberejo iz Stripe).
@@ -162,9 +162,15 @@ Deno.serve(async (req) => {
       expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
       success_url: `${SHOP}/thanks?n=${encodeURIComponent(r.javna_oznaka)}`,
       cancel_url: `${SHOP}/cart`,
-      'consent_collection[terms_of_service]': 'required',
-      'custom_text[terms_of_service_acceptance][message]':
-        jezik === 'en' ? `I agree to the [terms of sale](${SHOP}/terms).` : `Strinjam se s [pogoji prodaje](${SHOP}/terms).`,
+    }
+    // Potrditev pogojev zahteva naslov pogojev v Stripe → Public details (STRIPE_TOS=1,
+    // kot pri preverjenih); sicer le besedilo nad gumbom, pogoji so povezani že v košarici.
+    const pogoji = jezik === 'en' ? `[terms of sale](${SHOP}/terms)` : `[pogoji prodaje](${SHOP}/terms)`
+    if (Deno.env.get('STRIPE_TOS') === '1') {
+      polja['consent_collection[terms_of_service]'] = 'required'
+      polja['custom_text[terms_of_service_acceptance][message]'] = jezik === 'en' ? `I agree to the ${pogoji}.` : `Strinjam se s ${pogoji}.`
+    } else {
+      polja['custom_text[submit][message]'] = jezik === 'en' ? `By paying you accept the ${pogoji}.` : `S plačilom sprejmete ${pogoji}.`
     }
     r.postavke.forEach((p, i) => {
       polja[`line_items[${i}][price_data][currency]`] = 'eur'

@@ -56,7 +56,8 @@ Ostalo (enkrat):
 4. Stripe: `STRIPE_SECRET_KEY=… scripts/stripe-trgovina.sh` (tarife; po
    spremembi tarif ponovni zagon funkcij), endpoint webhooka dobi dogodka
    `checkout.session.expired` in `checkout.session.async_payment_failed`,
-   Settings → Public details: pogoji `https://shop.slff.eu/terms`.
+   obvezna potrditev pogojev le ob `STRIPE_TOS=1` (skupno s preverjenimi; zahteva
+   Settings → Public details → Terms of service URL), sicer besedilo nad gumbom.
 5. `select trgovina_pripravi_shrambo();` (vedro za slike).
 6. V adminu: cene, zaloga, slike, nato `aktiven`.
 
