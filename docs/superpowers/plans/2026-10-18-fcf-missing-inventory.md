@@ -35,11 +35,11 @@
 
 ## File map and dependencies
 
-Create `scripts/fcf-missing-inventory-plan.mjs` for fixed scope, original pins, seed/plan validation and pure header/calendar inventory validation; `scripts/fcf-missing-inventory-capture.mjs` for attempt/byte retention and bounded one-attempt transport; `scripts/fcf-missing-inventory-evidence.mjs` for authenticated ZIP readers, strict offline audit and target bridge; `scripts/fcf-inventory-source-coordination.mjs` for the no-DB Actions-only wait path; `scripts/fcf-missing-inventory-claim.mjs` for read-only protected-ref/claim/consumption authentication. Add `scripts/test-fcf-missing-inventory-claim.mjs` for that protocol. Add one corresponding `scripts/test-*.mjs` per module plus `scripts/test-fcf-missing-inventory-workflow.mjs`.
+Create `scripts/fcf-missing-inventory-plan.mjs` for fixed scope, original pins, seed/plan validation and pure header/calendar inventory validation; `scripts/fcf-missing-inventory-capture.mjs` for attempt/byte retention and bounded one-attempt transport; `scripts/fcf-missing-inventory-evidence.mjs` for authenticated ZIP readers, strict offline audit and target bridge; `scripts/fcf-inventory-source-coordination.mjs` for the no-DB Actions-only wait path; `scripts/fcf-missing-inventory-claim.mjs` for read-only protected-ref/claim/consumption authentication. Add `scripts/test-fcf-missing-inventory-claim.mjs` for that protocol. Create shared pure `scripts/fcf-missing-inventory-artifact.mjs` for closed-field/UTF8/authenticated execution/bounded ZIP checks, and synthetic-only `scripts/fcf-missing-inventory-test-fixture.mjs` for offline controls. Add one corresponding `scripts/test-*.mjs` per primary module plus `scripts/test-fcf-missing-inventory-workflow.mjs`.
 
 Modify `scripts/cakaj-na-uvoze.mjs` only for early source-only delegation and bidirectional enumeration/crossing; `.github/workflows/uvoz-fcf-zgodovina.yml` only for explicit new mode/sequential jobs; `scripts/dfb-artifacts.mjs` only for a separate fixed inventory ZIP kind if needed by the new reader; `scripts/fcf-target-evidence.mjs` only for an explicit new composition input branch once root's target checkpoint is integrated. Register tests in `package.json`/relevant existing CI source checks and document the actual new stage in `docs/viri/spanija.md`. Do not edit another author's worktree or port unmerged implementations ad hoc. Root must first reconcile the approved target-packet checkpoint; this plan is based on main e9192fc9, which does not contain that implementation.
 
-### Task1: Fixed parent plan, genuine seed binding and header-only closure
+### Task 1: Fixed parent plan, genuine seed binding and header-only closure
 
 **Files:** Create `scripts/fcf-missing-inventory-plan.mjs`, `scripts/test-fcf-missing-inventory-plan.mjs`, `scripts/fcf-missing-inventory-claim.mjs`, `scripts/test-fcf-missing-inventory-claim.mjs`. Claim/consumption readers here are pure metadata/ZIP validators; the Task4 workflow supplies actual transport later.
 
@@ -52,15 +52,15 @@ Modify `scripts/cakaj-na-uvoze.mjs` only for early source-only delegation and bi
 - `deriveFcfInventoryHeader({targetSlug,id,bytes}) -> InventoryHeader`: exact route/header/side identity and known status/date validation, no individual parser. InventoryHeader fields `id,targetSlug,round,playedOn,kickoff,status,homeGoals,awayGoals,home,away`; side fields `sourceClubId,sourceCategoryId,name,href`.
 - `validateFcfInventoryHeaders({targetSlug,headers,complete}) -> HeaderCalendar`: incremental contradictions always fail; complete=true additionally requires240/30/8/16/directed-pair closure.
 
-- [ ] Write failing claim/consumption tests for a valid atomic reservation, two simultaneous creation proposals (one creator only), same-plan second run, reserved runAttempt2, cancelled/interrupted first run, missing/changed/unprotected/deleted/recreated ref, bypass-capable claim identity, wrong root-pinned claim SHA, missing consumption artifact, duplicate child executions or unknown attempt evidence. All source calls remain zero. Capture token must have no write capability. Mock GitHub control-plane responses only; no real claim/ruleset writes in tests.
-- [ ] Write failing tests asserting child fetch lengths239/238, parent477, exact source blocks and marker exclusion; SHA changes for any target/policy/seed/execution pin mutation; no user-provided round for a fetch; no G2/budget input/unknown property/invalid plan hash.
-- [ ] Add seed tests for each spec SHA/length/original timestamp, wrong upload/capture-commit substitution, absent original manifest, invalid exact marker classification, expired/foreign artifact and metadata that only says verifiedtrue. Synthetic artifact metadata remains explicitly test-only.
-- [ ] Add raw header tests for wrong/conflicting embedded route, old season/foreign group, missing/conflicting header-side links, club17, repeated club/round or directed pair, native name drift; assert actual reordered rounds are preserved and240/30/8/16 closure succeeds only on a complete test calendar. Header test bodies are labeled synthetic, never production provenance.
-- [ ] Run `node --test scripts/test-fcf-missing-inventory-plan.mjs scripts/test-fcf-missing-inventory-claim.mjs` and confirm intended missing-module/assertion failures.
-- [ ] Implement the named pure interfaces using existing RSC/header/policy helpers; no request-capable import side effects. Keep individual statistics out of InventoryHeader.
-- [ ] Run the same focused test command; require all pass; commit only this unit.
+- [x] Write failing claim/consumption tests for a valid atomic reservation, two simultaneous creation proposals (one creator only), same-plan second run, reserved runAttempt2, cancelled/interrupted first run, missing/changed/unprotected/deleted/recreated ref, bypass-capable claim identity, wrong root-pinned claim SHA, missing consumption artifact, duplicate child executions or unknown attempt evidence. All source calls remain zero. Capture token must have no write capability. Mock GitHub control-plane responses only; no real claim/ruleset writes in tests.
+- [x] Write failing tests asserting child fetch lengths239/238, parent477, exact source blocks and marker exclusion; SHA changes for any target/policy/seed/execution pin mutation; no user-provided round for a fetch; no G2/budget input/unknown property/invalid plan hash.
+- [x] Add seed tests for each spec SHA/length/original timestamp, wrong upload/capture-commit substitution, absent original manifest, invalid exact marker classification, expired/foreign artifact and metadata that only says verifiedtrue. Synthetic artifact metadata remains explicitly test-only.
+- [x] Add raw header tests for wrong/conflicting embedded route, old season/foreign group, missing/conflicting header-side links, club17, repeated club/round or directed pair, native name drift; assert actual reordered rounds are preserved and240/30/8/16 closure succeeds only on a complete test calendar. Header test bodies are labeled synthetic, never production provenance.
+- [x] Run `node --test scripts/test-fcf-missing-inventory-plan.mjs scripts/test-fcf-missing-inventory-claim.mjs` and confirm intended missing-module/assertion failures.
+- [x] Implement the named pure interfaces using existing RSC/header/policy helpers; no request-capable import side effects. Keep individual statistics out of InventoryHeader.
+- [x] Run the same focused test command; require all pass; commit only this unit.
 
-### Task2: Durable byte-first capture and stop semantics
+### Task 2: Durable byte-first capture and stop semantics
 
 **Files:** Create `scripts/fcf-missing-inventory-capture.mjs`, `scripts/test-fcf-missing-inventory-capture.mjs`.
 
@@ -74,7 +74,7 @@ Modify `scripts/cakaj-na-uvoze.mjs` only for early source-only delegation and bi
 - [ ] Run `node --test scripts/test-fcf-missing-inventory-capture.mjs`; confirm intended failure; implement named interfaces with owned exclusive files, durable attempt/receipt recording, bounded raw streams and one native request per ID. Run unchanged `parseFcfCurrentAuditDocument` after retention/header checks on ordinary published bodies, discarding canonical output and latching all failures. Do not wrap `fcfFetch` or generic retry transport.
 - [ ] Run Task1/Task2 tests together; require all pass; commit capture unit.
 
-### Task3: Authenticated replay, separate offline audit and failed-parent isolation
+### Task 3: Authenticated replay, separate offline audit and failed-parent isolation
 
 **Files:** Create `scripts/fcf-missing-inventory-evidence.mjs`, `scripts/test-fcf-missing-inventory-evidence.mjs`. Modify `scripts/dfb-artifacts.mjs` with separately named fixed inventory member/bounds handling only if sharing its extractor; retain older kinds byte-equivalent.
 
@@ -90,7 +90,7 @@ Modify `scripts/cakaj-na-uvoze.mjs` only for early source-only delegation and bi
 - [ ] Implement separate staging/continuation/final reader and audit interfaces without network clients; pin source/inventory workflows and exact step names from the spec; independently rebuild audit from raw. A successful child is authenticated independently of later target outcome.
 - [ ] Run Task1–3 suites and existing artifact/source-proof/current-release tests; require all pass; commit this unit.
 
-### Task4: No-DB ES coordination and explicit sequential Actions stage
+### Task 4: No-DB ES coordination and explicit sequential Actions stage
 
 **Files:** Create `scripts/fcf-inventory-source-coordination.mjs`, `scripts/test-fcf-inventory-source-coordination.mjs`, `scripts/test-fcf-missing-inventory-workflow.mjs`. Modify `scripts/cakaj-na-uvoze.mjs`, `.github/workflows/uvoz-fcf-zgodovina.yml`, `scripts/test-cakaj-na-uvoze.mjs`.
 
@@ -103,7 +103,7 @@ Modify `scripts/cakaj-na-uvoze.mjs` only for early source-only delegation and bi
 - [ ] Implement parent receipt generation with actual claim/consumption identities, successes/failures/skipped children and total attempts. Build final receipt from authenticated child metadata/bytes directly, with no final-reader/self-artifact circular dependency. It reports diagnostic failure honestly; it never admits a partial child. Do not run the workflow. Missing authenticated seed transport remains a pre-GET hold requiring root staging, not an implementation fallback.
 - [ ] Run Task1–4 tests plus existing coordinator/cache-export suites; require all pass; commit workflow/coordinator unit.
 
-### Task5: Explicit bridge to target evidence, regression and execution handoff
+### Task 5: Explicit bridge to target evidence, regression and execution handoff
 
 **Files:** Extend `scripts/fcf-missing-inventory-evidence.mjs` and its tests; modify the integrated `scripts/fcf-target-evidence.mjs` and target evidence tests only through an explicit new inventory composition branch; `package.json`, relevant source-test list in `.github/workflows/ci.yml`, `docs/viri/spanija.md`.
 
