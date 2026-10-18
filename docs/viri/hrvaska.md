@@ -41,7 +41,7 @@ vrh ni bil vpisan. Zapisnik je isti kot pri Treći NL.
 | hr-1nl | `114348034` (16) | `100413651` |
 | hr-2nl | `114348039` (16) | `100418001` |
 
-**MŽNL Vinkovci-Osijek** (migracija 20261018183100, **neaktivna**): pregled
+**MŽNL Vinkovci-Osijek** (migracija 20261018195100, **neaktivna**): pregled
 18. 10. 2026 po prošnji s podpore. `hrvaske-lige.mjs` jo je izpuščal, ker je
 `IZPUSTI` imel "mžnl" (zdaj ne; mladinske MŽNL ujame kadet/pionir/U-). Letos jo
 objavlja ŽNS vukovarsko-srijemski (oid 32), lani HNS (oid 1, "MŽNL Os-Vk
@@ -62,7 +62,7 @@ Pregled je našel trk **NK Otok**: Međimurje (Semafor 347, II. MNL, zapis 738
 z grbom) in Otok pri Vinkovcih (40262, MŽNL in juniori VS). Ker
 `hrvaske-lige.mjs` trkov v mladinskih ligah ne išče, je uvoz `hr-vs-u19` oba
 vpisal v zapis 738. `IME_KLUBA` da 40262 ime "NK Otok (Vukovar)", migracija
-20261018183100 mu preseli igralce, nastope, gole in tekme `hr-vs-u19`. Po
+20261018195100 mu preseli igralce, nastope, gole in tekme `hr-vs-u19`. Po
 uvozu poženi *Grbi klubov* z `vir = hns` (nov zapis je brez grba).
 
 **Veteranske lige imena ne povedo** (pregled 15. 10. 2026): ZNS Zagreb ima
