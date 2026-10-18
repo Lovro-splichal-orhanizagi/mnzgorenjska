@@ -16,14 +16,16 @@ const classify = (policy = hr, entry = policy.entries[0], overrides = {}) => cla
   competition: competitionFor(policy), fixture: fixtureFor(policy, entry), rawSha256: entry.rawSha256, policy, ...overrides,
 })
 
-test('registry contains exactly reviewed HNS3 and DFB2 historical identities', () => {
+test('registry contains exactly reviewed HNS3, DFB2 and FCF4 historical identities', () => {
   assert.equal(validateHistoricalStatisticsRegistry(registry), true)
   assert.deepEqual(hr.entries.map(x => x.sourceMatchId).sort(), ['114471617', '114471627', '114471629'])
   assert.deepEqual(de.entries.map(x => x.sourceMatchId).sort(), ['2402929', '2403004'])
+  assert.deepEqual(registry.policies.filter(p=>p.provider==='fcf').flatMap(p=>p.entries.map(e=>e.sourceMatchId)).sort(), ['4109388','4116215','4118352','4118358'])
+  assert.equal(registry.policies.length,5)
   assert.ok(!hr.entries.some(x => x.sourceMatchId === '100511758'))
 })
 
-for (const policy of [hr, de]) for (const entry of policy.entries) {
+for (const policy of registry.policies) for (const entry of policy.entries) {
   test(`classifies exact reviewed report ${entry.sourceMatchId} without supplying individual statistics`, () => {
     const result = classify(policy, entry)
     assert.equal(result.kind, 'unavailable_historical')
@@ -119,4 +121,49 @@ for (const competition of [
 
 test('unregistered ordinary provider identity still follows strict normal parsing', () => {
   assert.deepEqual(classifyHistoricalStatistics({competition:{slug:'hr-hnl',source:'hns',source_policy:null},fixture:{sourceMatchId:'unregistered'}}), {kind:'normal'})
+})
+
+test('migration-pinned canonical policy bodies and hashes match the single reviewed JSON registry', () => {
+  const sql = readFileSync(new URL('../../supabase/migrations/20261018133000_historical_statistical_availability.sql',import.meta.url),'utf8')
+  const seeds = [...sql.matchAll(/insert into private_historical_statistics\.policies values\('([^']+)','([a-f0-9]{64})','((?:''|[^'])*)'::jsonb\);/g)]
+  assert.equal(seeds.length,registry.policies.length)
+  for (const policy of registry.policies) {
+    const seed=seeds.find(m=>m[1]===policy.id)
+    assert.ok(seed,`missing DB policy ${policy.id}`)
+    assert.equal(seed[2],historicalStatisticsPolicySha256(policy))
+    assert.deepEqual(JSON.parse(seed[3].replaceAll("''","'")),policy)
+  }
+})
+
+for (const policy of registry.policies.filter(p=>p.provider==='fcf')) for (const entry of policy.entries) for (const field of ['homeSourceCategoryId','awaySourceCategoryId']) {
+  test(`FCF native category binding cannot drift ${entry.sourceMatchId} ${field}`, () => {
+    assert.throws(()=>classify(policy,entry,{fixture:{...fixtureFor(policy,entry),[field]:'unreviewed-category'}}),/identity|category|fixture/i)
+  })
+}
+
+test('FCF registry requires both native category identities',()=>{
+  for(const field of ['homeSourceCategoryId','awaySourceCategoryId']) {
+    const copy=clone(registry);delete copy.policies.find(p=>p.provider==='fcf').entries[0][field]
+    assert.throws(()=>validateHistoricalStatisticsRegistry(copy),/category|entry/i)
+  }
+})
+
+test('reviewed club bindings cover every approved source club/category and retain exact receipt proofs',()=>{
+  const bindings=JSON.parse(readFileSync(new URL('../policies/historical-statistics-club-bindings.json',import.meta.url))).bindings
+  const sql=readFileSync(new URL('../../supabase/migrations/20261018133000_historical_statistical_availability.sql',import.meta.url),'utf8')
+  const keys=new Set()
+  for(const binding of bindings) {
+    const key=[binding.provider,binding.sourceClubId,binding.sourceCategoryId??''].join(':')
+    assert.ok(!keys.has(key),`duplicate ${key}`);keys.add(key)
+    assert.ok(binding.canonicalNames.length && binding.canonicalNames.every(n=>typeof n==='string'&&n.trim()))
+    assert.ok(binding.proofs.length)
+    for(const proof of binding.proofs) {
+      const entry=registry.policies.filter(p=>p.provider===binding.provider).flatMap(p=>p.entries).find(e=>e.sourceMatchId===proof.sourceMatchId)
+      assert.ok(entry);assert.equal(proof.sourceUrl,entry.sourceUrl);assert.equal(proof.rawSha256,entry.rawSha256)
+    }
+    const q=s=>"'"+s.replaceAll("'","''")+"'"
+    const values=[binding.provider,binding.sourceClubId,binding.sourceCategoryId??'',binding.countryCode].map(q).join(',')+`,array[${binding.canonicalNames.map(q).join(',')}],${q(JSON.stringify(binding.proofs))}::jsonb)`
+    assert.ok(sql.includes(values),`missing exact SQL binding ${key}`)
+  }
+  for(const policy of registry.policies)for(const entry of policy.entries)for(const side of ['home','away'])assert.ok(keys.has([policy.provider,entry[`${side}SourceClubId`],entry[`${side}SourceCategoryId`]??''].join(':')))
 })
