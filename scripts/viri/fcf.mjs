@@ -659,6 +659,55 @@ const klubPara = (g) => [poenostaviKlubEs(g.domaci), poenostaviKlubEs(g.gostje)]
 const kljucSkupine = (g) => `${g.tekmovanje}|${g.skupina}|${g.sezona}`
 const napakaKoledarja = (razlog) => new Error(`fcf: neskladen koledar — ${razlog}; uvoz ustavljen`)
 
+/** Validate synchronously before importer writes; returned reader touches only this acta. */
+export function posamezniZapisnik(koda, { id, tekmovanje: c, sezona, danes = Date.now() } = {}) {
+  const fail = reason => { throw new Error(`fcf: posamezni zapisnik — ${reason}; uvoz ustavljen`) }
+  const group = /^es-ct-(elit|primera|segona|tercera|quarta)(?:-g([1-9]\d*))?$/.exec(c?.slug ?? '')
+  if (c?.source !== 'fcf' || c.sezona_koledarska !== false || !group ||
+      (group[1] === 'elit' ? Boolean(group[2]) : !group[2])) fail('neveljavno registrirano tekmovanje')
+  if (typeof koda !== 'string' || koda !== c.source_league_code || !/^[1-9]\d*-[1-9]\d*$/.test(koda))
+    fail('zahtevan je točen registrirani blok tekoče lige')
+  const { od, do: do_ } = razberiKodo(koda)
+  if (![od, do_].every(Number.isSafeInteger) || koda !== `${od}-${do_}`) fail('neveljaven blok')
+  if (typeof id !== 'string' || !/^es[1-9]\d*$/.test(id)) fail('zahtevana je ena točna šifra esID')
+  const numericId = Number(id.slice(2))
+  if (!Number.isSafeInteger(numericId) || id !== `es${numericId}` || numericId < od || numericId > do_)
+    fail('šifra je zunaj registriranega bloka')
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit',
+  }).formatToParts(danes).map(p => [p.type, p.value]))
+  const year = Number(parts.year) - (Number(parts.month) < 7 ? 1 : 0)
+  if (sezona !== `${year}/${String(year + 1).slice(-2)}`) fail('neveljavna tekoča sezona')
+  const expectedCompetition = group[1] === 'elit' ? 'LLIGA ELIT' : `${group[1].toUpperCase()} CATALANA`
+  const expectedGroup = `GRUP ${group[2] ?? '1'}`
+  const url = naslovZapisnika(numericId)
+  const validate = html => {
+    if (jeIzziv(html)) throw new FcfZavrnitev(`fcf: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
+    const route = vrsticeRsc(tokRsc(html)).get('0')?.c
+    const g = glavaStrani(html)
+    if (!Array.isArray(route) || JSON.stringify(route) !== JSON.stringify(['', 'ca', 'competicio', 'acta', String(numericId)]) ||
+        !g || g.sezona !== sezona || g.tekmovanje !== expectedCompetition ||
+        g.skupina !== expectedGroup || !g.domaci || !g.gostje ||
+        /^undefined$/i.test(g.domaci) || /^undefined$/i.test(g.gostje) ||
+        !Number.isInteger(g.krog) || g.krog < 1) fail('stran ne pripada zahtevani šifri/skupini/sezoni')
+    const clubs = identitetaPara(html)
+    if (clubs[0] === clubs[1]) fail('neveljavna identiteta klubov')
+    return g
+  }
+  return async prenesi => {
+    const cached = izPredpomnilnika(imeStrani(numericId))
+    const header = cached ? glavaStrani(cached.html) : null
+    const useCache = cached && cached.starost <= najvecStarost(header, danes, true)
+    const html = useCache ? cached.html : await beri(prenesi, numericId, -1, validate)
+    validate(html)
+    // Preserve the ordinary parser's exact source corrections and drift guards.
+    const z = vZapisnik(html, { id, url })
+    if (!useCache) writeFileSync(pot(imeStrani(numericId)), html)
+    if (!z || (z.prazen && starostDni(z.datum, danes) > 7)) return []
+    return [{ id: z.zapisnikId, z, url, rawSha256: createHash('sha256').update(html).digest('hex') }]
+  }
+}
+
 /** Natančni imeni in uradni povezavi na straneh glave, brez vzdevkov klubov. */
 function identitetaPara(html) {
   const ovoj = prvi(drevoRsc(html), (e) => e.props?.title === 'Acta del partit')
@@ -872,6 +921,8 @@ const vir = {
     }
     return out
   },
+
+  posamezniZapisnik,
 
   nastopi,
   vBesedilo: (s) => String(s ?? '').split('\n'),
