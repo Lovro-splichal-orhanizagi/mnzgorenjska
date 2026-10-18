@@ -694,7 +694,7 @@ function singleReportSourceContext(koda, { id, tekmovanje: c, sezona, danes = Da
     if (clubs[0] === clubs[1]) fail('neveljavna identiteta klubov')
     return g
   }
-  return { numericId, url, validate }
+  return { id, numericId, url, validate }
 }
 
 /** Pure version of the exact existing single-report identity validation. */
@@ -705,7 +705,7 @@ export function validateFcfSingleReportSource(html, koda, options = {}) {
 /** Validate synchronously before importer writes; returned reader touches only this acta. */
 export function posamezniZapisnik(koda, options = {}) {
   const { danes = Date.now() } = options
-  const { numericId, url, validate } = singleReportSourceContext(koda, { ...options, danes })
+  const { id, numericId, url, validate } = singleReportSourceContext(koda, { ...options, danes })
   return async prenesi => {
     const cached = izPredpomnilnika(imeStrani(numericId))
     const header = cached ? glavaStrani(cached.html) : null
