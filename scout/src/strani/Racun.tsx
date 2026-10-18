@@ -142,7 +142,7 @@ export function Racun() {
               {klub.sedezi.map((s) => (
                 <li key={s.user_id} className="flex items-center justify-between gap-2 py-2">
                   <span className="text-slate-200">
-                    {s.ime ?? '?'} {s.user_id === jaz && <span className="text-slate-500">{t('racun.ti')}</span>}
+                    {s.ime ?? '?'} {s.user_id === jaz && <span className="text-slate-400">{t('racun.ti')}</span>}
                   </span>
                   {(klub.sedez || s.user_id === jaz) && (
                     <button type="button" disabled={poteka} className="gumb-tih px-3 py-1 text-sm" onClick={() => void klic(() => supabase.rpc('scout_sprosti_sedez', { p_user: s.user_id }))}>

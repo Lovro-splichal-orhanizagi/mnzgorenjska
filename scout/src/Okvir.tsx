@@ -25,9 +25,10 @@ export function Okvir({ children }: { children: ReactNode }) {
             <span className="naslov">SLFF</span>
             <span className="znacka bg-gnl-400/15 text-gnl-300 ring-1 ring-gnl-400/30">Scout</span>
           </Link>
-          {klub && <span className="hidden truncate text-sm text-slate-400 sm:inline">{klub.klub}</span>}
+          {klub && <span className="min-w-0 max-w-[40vw] truncate text-sm text-slate-400 sm:max-w-xs">{klub.klub}</span>}
+          <span className="flex-1" />
           {seja && (
-            <nav className="order-last -mx-1 flex w-full gap-1 overflow-x-auto text-sm sm:order-none sm:mx-0 sm:ml-auto sm:w-auto">
+            <nav className="order-last -mx-1 flex w-full gap-1 overflow-x-auto text-sm sm:order-none sm:mx-0 sm:w-auto">
               {dostop && (
                 <>
                   <NavLink to="/" end className={povezava}>{t('nav.iskanje')}</NavLink>
@@ -38,7 +39,7 @@ export function Okvir({ children }: { children: ReactNode }) {
               <NavLink to="/account" className={povezava}>{t('nav.racun')}</NavLink>
             </nav>
           )}
-          <div className="ml-auto flex items-center gap-1 text-sm sm:ml-0">
+          <div className="flex items-center gap-1 text-sm">
             {seja && (
               <button type="button" onClick={() => void supabase.auth.signOut({ scope: 'local' })} className={tiho}>
                 {t('nav.odjava')}

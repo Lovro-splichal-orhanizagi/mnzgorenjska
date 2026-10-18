@@ -170,7 +170,7 @@ function Rezultati({ iskanje }: { iskanje: string }) {
               </span>
               <span className="shrink-0 text-right">
                 <span className="block text-2xl font-black tabular-nums text-gnl-300">{Math.round(z.percentil)}</span>
-                <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-500">{t('iskanje.percentil')}</span>
+                <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-400">{t('iskanje.percentil')}</span>
               </span>
             </Link>
           </li>

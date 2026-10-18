@@ -13,6 +13,8 @@ const sha = process.env.GITHUB_SHA ?? ''
 
 export default defineConfig({
   root: pot('.'),
+  // Grb in ikona sta ista kot na slff.eu.
+  publicDir: pot('../public/logo'),
   envDir: pot('..'),
   plugins: [
     react(),

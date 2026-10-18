@@ -98,7 +98,7 @@ export function Igralec() {
           </div>
           <div className="text-right">
             <p className="text-4xl font-black tabular-nums text-gnl-300">{Math.round(p.percentil)}</p>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{t('iskanje.percentil')}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{t('iskanje.percentil')}</p>
           </div>
         </div>
         <p className="text-sm text-slate-300">
