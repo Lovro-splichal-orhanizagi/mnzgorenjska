@@ -7,6 +7,7 @@ const scopes=Object.freeze({
  'es-ct-tercera-g2':{code:'4116188-4116427',maximum:20},
  'es-ct-tercera-g9':{code:'4118349-4118588',maximum:22},
 })
+export const fcfFinalAuditScope=slug=>scopes[slug]?{...scopes[slug]}:null
 const SHA=/^[a-f0-9]{64}$/,ID=/^[1-9]\d{0,19}$/
 const fail=message=>{throw Error(`FCF_AUDIT: ${message}`)}
 function assertAuditPlan(plan){
@@ -24,6 +25,7 @@ function assertAuditPlan(plan){
  if(selected.length!==plan.maximumSourceGETs||new Set(selected.map(x=>x.id)).size!==selected.length)fail('changed collector source budget')
  return selected
 }
+export const validateFcfFinalAuditPlan=plan=>assertAuditPlan(plan)
 export function buildFcfFinalAuditPlan({groups,sourceCommit,now=Date.now()}){
  if(!/^[a-f0-9]{40}$/.test(sourceCommit??'')||!Array.isArray(groups)||groups.length!==3||new Set(groups.map(g=>g.competition?.slug)).size!==3)fail('exact main and three-group inventory required')
  const planned=[]
@@ -59,13 +61,14 @@ export function buildFcfFinalAuditPlan({groups,sourceCommit,now=Date.now()}){
  const plan={schemaVersion:1,kind:'fcf-final-current-audit',sourceCommit,createdUTC:new Date(now).toISOString(),maximumSourceGETs,stopOnRefusal:true,groups:planned}
  return {...plan,planSha256:historicalStatisticsPolicySha256(plan)}
 }
-export async function collectFcfFinalAudit({plan,request,parse,pause=ms=>new Promise(r=>setTimeout(r,ms)),clock=Date.now,onCapture}){
+export async function collectFcfFinalAudit({plan,request,parse,pause=ms=>new Promise(r=>setTimeout(r,ms)),clock=Date.now,onCapture,onAttempt}){
  const ids=assertAuditPlan(plan),planSha256=plan.planSha256
- if(typeof request!=='function'||typeof parse!=='function'||typeof onCapture!=='function')fail('explicit transport/parser/raw retention callback required')
+ if(typeof request!=='function'||typeof parse!=='function'||typeof onCapture!=='function'||typeof onAttempt!=='function')fail('explicit transport/parser/raw retention and attempted-GET callbacks required')
  const captures=[];let actualSourceGETs=0
  for(const {id,competitionSlug,expectedSourceRound}of ids){
   if(actualSourceGETs)await pause(fcf.premorMs)
   const url=`https://www.fcf.cat/ca/competicio/acta/${id}`,startedUTC=new Date(clock()).toISOString()
+  await onAttempt({id,competitionSlug,expectedSourceRound,sourceUrl:url,startedUTC})
   actualSourceGETs++
   const response=await request(url)
   if(response.status!==200||response.redirected)fail(`source refused HTTP${response.status}; stop without fallback`)
