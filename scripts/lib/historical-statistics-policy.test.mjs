@@ -147,3 +147,23 @@ test('FCF registry requires both native category identities',()=>{
     assert.throws(()=>validateHistoricalStatisticsRegistry(copy),/category|entry/i)
   }
 })
+
+test('reviewed club bindings cover every approved source club/category and retain exact receipt proofs',()=>{
+  const bindings=JSON.parse(readFileSync(new URL('../policies/historical-statistics-club-bindings.json',import.meta.url))).bindings
+  const sql=readFileSync(new URL('../../supabase/migrations/20261018133000_historical_statistical_availability.sql',import.meta.url),'utf8')
+  const keys=new Set()
+  for(const binding of bindings) {
+    const key=[binding.provider,binding.sourceClubId,binding.sourceCategoryId??''].join(':')
+    assert.ok(!keys.has(key),`duplicate ${key}`);keys.add(key)
+    assert.ok(binding.canonicalNames.length && binding.canonicalNames.every(n=>typeof n==='string'&&n.trim()))
+    assert.ok(binding.proofs.length)
+    for(const proof of binding.proofs) {
+      const entry=registry.policies.filter(p=>p.provider===binding.provider).flatMap(p=>p.entries).find(e=>e.sourceMatchId===proof.sourceMatchId)
+      assert.ok(entry);assert.equal(proof.sourceUrl,entry.sourceUrl);assert.equal(proof.rawSha256,entry.rawSha256)
+    }
+    const q=s=>"'"+s.replaceAll("'","''")+"'"
+    const values=[binding.provider,binding.sourceClubId,binding.sourceCategoryId??'',binding.countryCode].map(q).join(',')+`,array[${binding.canonicalNames.map(q).join(',')}],${q(JSON.stringify(binding.proofs))}::jsonb)`
+    assert.ok(sql.includes(values),`missing exact SQL binding ${key}`)
+  }
+  for(const policy of registry.policies)for(const entry of policy.entries)for(const side of ['home','away'])assert.ok(keys.has([policy.provider,entry[`${side}SourceClubId`],entry[`${side}SourceCategoryId`]??''].join(':')))
+})

@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 1,
+  "note": "Reviewed exact source identities for initial DB team binding; display names may change after immutable team ID binding. This file does not add match exceptions.",
+  "bindings": [
+    {
+      "provider": "hns",
+      "sourceClubId": "1274",
+      "sourceCategoryId": null,
+      "countryCode": "HR",
+      "canonicalNames": [
+        "HNK Gorica s.d.d."
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "114471617",
+          "sourceUrl": "https://semafor.hns.family/utakmice/114471617/x/",
+          "rawSha256": "2dc781b523945db96f2a1ab2d216aaf19760c1c98e1aca3bade2c98fae09c53b"
+        }
+      ]
+    },
+    {
+      "provider": "hns",
+      "sourceClubId": "107347",
+      "sourceCategoryId": null,
+      "countryCode": "HR",
+      "canonicalNames": [
+        "ŽNK Donat"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "114471617",
+          "sourceUrl": "https://semafor.hns.family/utakmice/114471617/x/",
+          "rawSha256": "2dc781b523945db96f2a1ab2d216aaf19760c1c98e1aca3bade2c98fae09c53b"
+        },
+        {
+          "sourceMatchId": "114471627",
+          "sourceUrl": "https://semafor.hns.family/utakmice/114471627/x/",
+          "rawSha256": "c6a292c409c20a6b71c7b0d2089245325b7361356fb0637ef77feb52772db04c"
+        }
+      ]
+    },
+    {
+      "provider": "hns",
+      "sourceClubId": "108341",
+      "sourceCategoryId": null,
+      "countryCode": "HR",
+      "canonicalNames": [
+        "ŽNK Dinamo"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "114471627",
+          "sourceUrl": "https://semafor.hns.family/utakmice/114471627/x/",
+          "rawSha256": "c6a292c409c20a6b71c7b0d2089245325b7361356fb0637ef77feb52772db04c"
+        }
+      ]
+    },
+    {
+      "provider": "hns",
+      "sourceClubId": "175835",
+      "sourceCategoryId": null,
+      "countryCode": "HR",
+      "canonicalNames": [
+        "ŽNK Međimurje Čakovec"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "114471629",
+          "sourceUrl": "https://semafor.hns.family/utakmice/114471629/x/",
+          "rawSha256": "382a9be268301534f8e085587e994ac3ecb093288f08e38126a1bbcfe012db14"
+        }
+      ]
+    },
+    {
+      "provider": "hns",
+      "sourceClubId": "649",
+      "sourceCategoryId": null,
+      "countryCode": "HR",
+      "canonicalNames": [
+        "ŽNK Agram"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "114471629",
+          "sourceUrl": "https://semafor.hns.family/utakmice/114471629/x/",
+          "rawSha256": "382a9be268301534f8e085587e994ac3ecb093288f08e38126a1bbcfe012db14"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "tsg-balingen",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "TSG Balingen"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2402929",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/11-spieltag/tsg-balingen-kickers-offenbach-2402929",
+          "rawSha256": "cda4f2b1cdd971e85cc34feab5c570e5388c733d69c474b02ca16a50f3d52296"
+        },
+        {
+          "sourceMatchId": "2403004",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/19-spieltag/tsv-steinbach-haiger-tsg-balingen-2403004",
+          "rawSha256": "3fd9c5a0cf2d21a0ee76c06cef5e07f5fa836f725651ebc3cdc8e5daa0a3dfff"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "kickers-offenbach",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "Kickers Offenbach"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2402929",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/11-spieltag/tsg-balingen-kickers-offenbach-2402929",
+          "rawSha256": "cda4f2b1cdd971e85cc34feab5c570e5388c733d69c474b02ca16a50f3d52296"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "tsv-steinbach-haiger",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "TSV Steinbach Haiger"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2403004",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/19-spieltag/tsv-steinbach-haiger-tsg-balingen-2403004",
+          "rawSha256": "3fd9c5a0cf2d21a0ee76c06cef5e07f5fa836f725651ebc3cdc8e5daa0a3dfff"
+        }
+      ]
+    },
+    {
+      "provider": "fcf",
+      "sourceClubId": "5042",
+      "sourceCategoryId": "33356",
+      "countryCode": "ES",
+      "canonicalNames": [
+        "SANT JAUME OLOT B, C.F"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "4109388",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4109388",
+          "rawSha256": "eb3b14de3d6077f4fb896cb4a4d2b96d76eb85db8853889e9871b7f74e73e770"
+        }
+      ]
+    },
+    {
+      "provider": "fcf",
+      "sourceClubId": "5057",
+      "sourceCategoryId": "35522",
+      "countryCode": "ES",
+      "canonicalNames": [
+        "BEGUR, C.F."
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "4109388",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4109388",
+          "rawSha256": "eb3b14de3d6077f4fb896cb4a4d2b96d76eb85db8853889e9871b7f74e73e770"
+        }
+      ]
+    },
+    {
+      "provider": "fcf",
+      "sourceClubId": "1107",
+      "sourceCategoryId": "37659",
+      "countryCode": "ES",
+      "canonicalNames": [
+        "PALAFOLLS, C.D."
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "4116215",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4116215",
+          "rawSha256": "5dd7e401c7929dd1f2b59d35d1f6e203e6306f2479238adcd8755180b9671a49"
+        }
+      ]
+    },
+    {
+      "provider": "fcf",
+      "sourceClubId": "5114",
+      "sourceCategoryId": "34913",
+      "countryCode": "ES",
+      "canonicalNames": [
+        "MONTESSORI-PALAU, C.C.E."
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "4116215",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4116215",
+          "rawSha256": "5dd7e401c7929dd1f2b59d35d1f6e203e6306f2479238adcd8755180b9671a49"
+        }
+      ]
+    },
+    {
+      "provider": "fcf",
+      "sourceClubId": "1252",
+      "sourceCategoryId": "35781",
+      "countryCode": "ES",
+      "canonicalNames": [
+        "Pª BARC. ANGUERA"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "4118352",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4118352",
+          "rawSha256": "1e8d50d487be699cac45c3c2dc4658d3a9b16983fd5203b5845dc1339fe7351c"
+        }
+      ]
+    },
+    {
+      "provider": "fcf",
+      "sourceClubId": "6136",
+      "sourceCategoryId": "33049",
+      "countryCode": "ES",
+      "canonicalNames": [
+        "LA SALUT PERE GOL AE."
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "4118352",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4118352",
+          "rawSha256": "1e8d50d487be699cac45c3c2dc4658d3a9b16983fd5203b5845dc1339fe7351c"
+        }
+      ]
+    },
+    {
+      "provider": "fcf",
+      "sourceClubId": "44143644",
+      "sourceCategoryId": "44510647",
+      "countryCode": "ES",
+      "canonicalNames": [
+        "DEPORTIVO PARAGUAY, F.C."
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "4118358",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4118358",
+          "rawSha256": "e69af6b2765dbed7ebe3b57535beb1ce259c7d77ed9cb7f90d9cb4998afd153a"
+        }
+      ]
+    },
+    {
+      "provider": "fcf",
+      "sourceClubId": "1400",
+      "sourceCategoryId": "47272626",
+      "countryCode": "ES",
+      "canonicalNames": [
+        "TRINIDAD, C.D."
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "4118358",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4118358",
+          "rawSha256": "e69af6b2765dbed7ebe3b57535beb1ce259c7d77ed9cb7f90d9cb4998afd153a"
+        }
+      ]
+    }
+  ]
+}
