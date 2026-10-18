@@ -29,5 +29,17 @@ export function parseFcfCurrentAuditDocument({id,competitionSlug,expectedSourceR
  if(players.some(p=>!Number.isSafeInteger(p.regSt)||p.regSt<1||typeof p.ime!=='string'||!p.ime.trim())||new Set(players.map(p=>p.regSt)).size!==players.length)fail('ambiguous full source player identities')
  if(report.opozorila.length||report.goli.length!==header.izid.domaci+header.izid.gostje)fail('unresolved normal source warning/goal mismatch; no new exception')
  if(appearances.some(a=>!Number.isInteger(a.minutaOd)||!Number.isInteger(a.minutaDo)||!Number.isInteger(a.minute)||a.minutaOd<0||a.minutaDo>90||a.minutaOd>a.minutaDo||a.minute!==a.minutaDo-a.minutaOd)||report.goli.some(g=>!Number.isInteger(g.minuta)||g.minuta<0||g.minuta>90||!appearances.some(a=>a.regSt===g.regSt&&a.ekipaIdx===g.ekipaIdx&&g.minuta>=a.minutaOd&&g.minuta<=a.minutaDo)))fail('normal minute/event canonical proof differs')
+ // Official role flags must cover every regulation minute on each side.
+ // Shared substitution endpoints are contiguous; a bench player/zero-minute
+ // appearance supplies no coverage and an outfield role is never inferred.
+ for(const side of[0,1]){
+  const intervals=appearances.filter(a=>a.ekipaIdx===side&&a.vratar===true&&a.minute>0).sort((a,b)=>a.minutaOd-b.minutaOd||a.minutaDo-b.minutaDo)
+  let until=0
+  for(const a of intervals){
+   if(a.minutaOd!==until)fail('continuous exactly one explicit goalkeeper per side over minutes0–90 required')
+   until=a.minutaDo
+  }
+  if(until!==90)fail('continuous exactly one explicit goalkeeper per side over minutes0–90 required')
+ }
  return{status:'complete',header,report,appearances}
 }
