@@ -59,9 +59,9 @@ export function buildFcfFinalAuditPlan({groups,sourceCommit,now=Date.now()}){
  const plan={schemaVersion:1,kind:'fcf-final-current-audit',sourceCommit,createdUTC:new Date(now).toISOString(),maximumSourceGETs,stopOnRefusal:true,groups:planned}
  return {...plan,planSha256:historicalStatisticsPolicySha256(plan)}
 }
-export async function collectFcfFinalAudit({plan,request,parse,pause=ms=>new Promise(r=>setTimeout(r,ms)),clock=Date.now,onCapture=()=>{}}){
+export async function collectFcfFinalAudit({plan,request,parse,pause=ms=>new Promise(r=>setTimeout(r,ms)),clock=Date.now,onCapture}){
  const ids=assertAuditPlan(plan),planSha256=plan.planSha256
- if(typeof request!=='function'||typeof parse!=='function')fail('explicit transport/parser required')
+ if(typeof request!=='function'||typeof parse!=='function'||typeof onCapture!=='function')fail('explicit transport/parser/raw retention callback required')
  const captures=[];let actualSourceGETs=0
  for(const {id,competitionSlug,expectedSourceRound}of ids){
   if(actualSourceGETs)await pause(fcf.premorMs)
