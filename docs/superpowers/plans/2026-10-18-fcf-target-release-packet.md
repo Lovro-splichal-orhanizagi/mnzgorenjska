@@ -40,11 +40,11 @@
 
 **Consumes:** actual ZIP Buffer, GitHub artifact/run/jobs metadata, explicit expected run/attempt/commit/artifact ID/digest and exact four original documents. **Produces:** `readFcfCleanupEvidence({prepareZipBytes,prepareMetadata,appliedZipBytes,appliedMetadata,expected,originals,now}) -> CleanupEvidence`, with immutable phase derived from validated artifacts, exact opaque backup text/SHA and all-four classified descriptors/receipts.
 
-- [ ] Write tests `cleanup evidence binds all four originals for any target`, `cleanup preserves SQL8.10 exact text`, `prepared/applied artifact binds same before SHA and policies`, and `fake applied phase cannot relax prepared inactivity`. Assert deleting4116215 fails, altered raw SHA/timestamp fails, exact prepared bytes pass, and applied receipt requires result126/14/four markers plus exact prepare artifact binding.
-- [ ] Run `node --test scripts/test-fcf-target-evidence.mjs`; observe RED for absent reader/protocols.
-- [ ] Add the two distinct bounded cleanup ZIP kinds using the spec's exact members/names/bounds; validate all required successful workflow/job/step/attempt identities within each artifact's own explicitly expected run (prepare/apply may be distinct linked dispatch runs) and migration180200 backup field/target/policy identities. Use existing classifier and installed-marker verifier. Never reserialize `before-image.json`.
-- [ ] Verify tests include digest/size drift, duplicate/symlink/path traversal/unknown member, missing backup array, foreign main/policy/target row and altered genuine receipt. Run new evidence tests plus existing FCF artifact tests; require zero failures and report private skips explicitly.
-- [ ] Commit the independently testable cleanup-evidence boundary. This commit adds no writer and proves no actual cleanup has occurred.
+- [x] Write tests `cleanup evidence binds all four originals for any target`, `cleanup preserves SQL8.10 exact text`, `prepared/applied artifact binds same before SHA and policies`, and `fake applied phase cannot relax prepared inactivity`. Assert deleting4116215 fails, altered raw SHA/timestamp fails, exact prepared bytes pass, and applied receipt requires result126/14/four markers plus exact prepare artifact binding.
+- [x] Run `node --test scripts/test-fcf-target-evidence.mjs`; observe RED for absent reader/protocols.
+- [x] Add the two distinct bounded cleanup ZIP kinds using the spec's exact members/names/bounds; validate all required successful workflow/job/step/attempt identities within each artifact's own explicitly expected run (prepare/apply may be distinct linked dispatch runs) and migration180200 backup field/target/policy identities. Use existing classifier and installed-marker verifier. Never reserialize `before-image.json`.
+- [x] Verify tests include digest/size drift, duplicate/symlink/path traversal/unknown member, missing backup array, foreign main/policy/target row and altered genuine receipt. Run new evidence tests plus existing FCF artifact tests; require zero failures and report private skips explicitly.
+- [x] Commit the independently testable cleanup-evidence boundary. This commit adds no writer and proves no actual cleanup has occurred.
 
 ### Task2: Versioned single-target packet compiler and replay
 
@@ -85,3 +85,15 @@ A new target audit plan builder/collector must be separately specified/reviewed 
 ## Self-review record
 
 Spec coverage maps to Tasks1 shared cleanup/lifecycle,2 target proof/isolation/replay,3 authenticated raw closure,4 regression/limits. All five Review Focus cases have named tests above. Interfaces and manifest kind/version are consistent. Builder clarification: run/attempt equality is per artifact, not across prepare/apply/audit dispatches; source refusal stops the whole future batch while preserving already sealed child evidence. No product code, dependency install, source request or production mutation belongs to this design-only checkpoint. Fresh builder review and root approval remain the next action.
+
+
+## Task1 execution ledger
+
+- Builder green at72feba9d (`rollout/spain/target-packet-design-review.md`), then author merged reviewed origin/main e9192fc9 as c4dfe7c7. Only package test-order conflict; kept main's order. No user checkout changes.
+- Implemented only shared cleanup reader/ZIP contracts/test factory. No target packet/cache/audit composition, source collector/CLI, workflow or SQL stage added.
+- Reader requires actual ZIP bytes, exact expected IDs/digests and successful main run/job/step/attempt metadata per artifact. All4 historical original bodies/descriptors/receipts and complete migration180200 backup field set bind to opaque SQL TEXT/SHA. Separate apply run links prepare identity/commit and exact126/14/four-marker result. Output is frozen and reader-issued (copying verified/phase flags is not a proof).
+- Reserved artifact protocols are synthetic test fixtures; no real successful cleanup artifact or current DB readiness is claimed. Zero-user locks and complete actual DB preimage equality remain the existing SQL authority at later execution.
+- New cleanup ZIP kinds do not widen existing capture/replay/FCF-history names or bounds. Existing DFB artifact identity/extraction checks2/2 passed; FCF legacy artifact and exact-policy regressions included in focused verification.
+- Source-test registration moved into this checkpoint so CI covers the new reader immediately; Task4 will add the later target packet test when it exists.
+- Missing target240 raw-cache proof remains an explicit source hold. No federation source request, DB/prod/cache write, email, workflow/180400/HNS/ordinary-provider edit.
+- Final Task1 verification: new reader plus affected legacy FCF archive/policy tests **100/100 passed,zero skipped** with the genuine four originals enabled; ordinary CI reader configuration **22 passed,7 explicit private-original skips**,zero failures. Shared existing DFB artifact identity/extraction controls **2/2 passed**. Syntax/diff checks passed. Logs retained under rollout/spain/target-cleanup-reader-final-{focused,ci}.log and target-cleanup-reader-shared-artifact.log.
