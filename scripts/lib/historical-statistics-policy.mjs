@@ -99,3 +99,36 @@ export function classifyHistoricalStatistics({ competition, fixture, rawSha256, 
   if (!dateOnly(competition.firstFantasyPlayedOn) || exception.playedOn >= competition.firstFantasyPlayedOn) throw new Error('historical policy: exception must be strictly prelaunch; valid first fantasy date required')
   return { kind: 'unavailable_historical', exception, policySha256: historicalStatisticsPolicySha256(reviewed) }
 }
+
+/** Runtime skip authority comes only from the complete service getter, never partial setup. */
+export function validateInstalledHistoricalStatisticsMarkers({competition,binding}) {
+  const fail=message=>{throw new Error(`historical installed markers: ${message}`)}
+  const policy=getHistoricalStatisticsPolicy(competition?.slug)
+  if(!policy) {
+    if(competition?.source_policy!=null || binding?.installed)fail('unknown policy tuple')
+    return null
+  }
+  if(competition.source!==policy.provider || competition.source_policy!==policy.sourcePolicy)fail('competition/provider/policy binding differs')
+  const sha=historicalStatisticsPolicySha256(policy)
+  if(binding?.installed!==true || binding.policyId!==policy.id || binding.policySha256!==sha)fail('complete installed policy binding required before provider traversal')
+  if(!dateOnly(binding.firstFantasyPlayedOn) || (competition.firstFantasyPlayedOn!=null && competition.firstFantasyPlayedOn!==binding.firstFantasyPlayedOn))fail('first fantasy date binding differs')
+  if(!Array.isArray(binding.markers)||binding.markers.length!==policy.entries.length)fail('incomplete or additional marker set')
+  const nativeIDs=new Set(),matchIDs=new Set()
+  const dbID=value=>Number.isSafeInteger(value)&&value>0
+  for(const marker of binding.markers) {
+    const entry=policy.entries.find(e=>e.sourceMatchId===marker?.sourceMatchId)
+    if(!entry || nativeIDs.has(marker.sourceMatchId))fail('unknown or duplicate source identity')
+    nativeIDs.add(marker.sourceMatchId)
+    const expectedReportID=policy.provider==='dfb'?`de-dfb-${entry.sourceMatchId}`:policy.provider==='fcf'?`es${entry.sourceMatchId}`:entry.sourceMatchId
+    if(marker.reportId!==expectedReportID || marker.policyId!==policy.id || marker.policySha256!==sha || marker.rawSha256!==entry.rawSha256)fail('marker report/policy/raw binding differs')
+    const {rawSha256,reasonCode,...identity}=entry
+    const fixture={...identity,season:policy.season}
+    if(historicalStatisticsPolicySha256(marker.fixture)!==historicalStatisticsPolicySha256(fixture))fail('fixture binding differs')
+    if(entry.playedOn>=binding.firstFantasyPlayedOn)fail('marker is not strictly prelaunch')
+    if(marker.statisticsStatus!=='unavailable_historical'||marker.importedAt!==null||marker.individualRowCount!==0)fail('unavailable marker contains individual/imported statistics')
+    for(const field of ['matchId','roundId','homeTeamId','awayTeamId'])if(!dbID(marker[field]))fail(`invalid DB fixture binding ${field}`)
+    if(marker.homeTeamId===marker.awayTeamId || matchIDs.has(marker.matchId))fail('duplicate DB match or same home/away club')
+    matchIDs.add(marker.matchId)
+  }
+  return freeze(structuredClone(binding))
+}
