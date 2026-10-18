@@ -1,5 +1,7 @@
 # Croatian women historical quality rollout Implementation Plan
 
+Migration reservation: undeployed HNS release migration is `20261018190200_hns_women_reviewed_release.sql`, after merged shop `20261018190000` and ROOT-owned DE repair `20261018190100`. Original `20261018180300` was never deployed; no include-all or out-of-order deployment.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add an inactive Croatian women's league using 75 archive and 27 captured current played matches, mark exactly three approved historical reports unavailable, and activate only after strict data, pricing, future-cutoff and production gates pass.

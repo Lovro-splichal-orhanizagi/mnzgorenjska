@@ -231,7 +231,7 @@ za največ 100 z največ tremi iz posameznega kluba. Prvi fantazijski krog
 mora ostati popoln, prihodnji in nezaklenjen. Preverba ne spreminja rokov
 ali ključavnic; neuspeh ne pusti pooblastila za vklop.
 
-Migracija `20261018180300` ostane do neodvisnega pregleda nenamestljena.
+Migracija `20261018190200` ostane do neodvisnega pregleda nenamestljena.
 Trenutni vir še blokira izdajo: tudi ponovni zajem `114471645` ob 17:02 UTC
 ni objavil manjkajoče vloge vratarke. Skupaj je bilo prebranih 144 izvornih
 dokumentov; prvotni časi in bajti vseh zajemov se ohranijo. Paket s temi
