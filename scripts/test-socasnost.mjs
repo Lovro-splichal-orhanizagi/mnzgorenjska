@@ -204,3 +204,68 @@ try {
     }
   }
 }
+
+// Trgovina: dve hkratni rezervaciji zadnjega kosa. Druga mora pocakati na
+// zaklep razlicice in nato videti prvo rezervacijo (hint trgovina-zaloga).
+const trgovinaId = -randomInt(1_000_000, 2_000_000_000)
+const trgovinaSlug = `test-socasnost${trgovinaId}`
+let trgovinaUstvarjeno = false
+const rezerviraj = `select trgovina_rezerviraj('[{"razlicica_id":${trgovinaId},"kolicina":1}]', null, 'sl');`
+try {
+  sql(`
+    begin;
+    insert into trgovina.izdelki(id, slug, ime_sl, ime_en, kategorija, aktiven) overriding system value
+      values (${trgovinaId}, ${niz(trgovinaSlug)}, 'Test', 'Test', 'dodatki', true);
+    insert into trgovina.razlicice(id, izdelek_id, oznaka_sl, oznaka_en, sku, cena, zaloga) overriding system value
+      values (${trgovinaId}, ${trgovinaId}, 'Ena', 'One', ${niz(trgovinaSlug)}, 1000, 1);
+    commit;
+  `)
+  trgovinaUstvarjeno = true
+  const a = povezava('shop-a')
+  a.otrok.stdin.write(`
+    begin;
+    set local role service_role;
+    ${rezerviraj}
+    \\echo ZAKLEP_PRIDOBLJEN
+  `)
+  await zaklepJePridobljen(a)
+  const b = povezava('shop-b')
+  b.otrok.stdin.end(`
+    begin;
+    set local role service_role;
+    ${rezerviraj}
+    commit;
+  `)
+  await doPogoja(() => sql(`
+    select count(*) from pg_stat_activity
+    where application_name = ${niz(b.ime)} and wait_event_type = 'Lock';
+  `) === '1', 'Druga rezervacija mora cakati na zaklep razlicice', b)
+  await koncaj(a, 'commit;\n')
+  await doPogoja(() => b.koncana, 'Druga rezervacija', null, 18_000)
+  assert.notEqual(b.koda, 0, 'Druga rezervacija zadnjega kosa mora pasti')
+  assert.match(b.napaka, /ni dovolj zaloge/, b.napaka)
+  assert.equal(sql(`select count(*) from trgovina.postavke where razlicica_id = ${trgovinaId};`), '1',
+    'Rezerviran mora biti en sam kos')
+  console.log('PASS socasni rezervaciji zadnjega kosa: uspe le prva')
+} catch (e) {
+  console.error(`FAIL socasnost trgovine: ${e.message}`)
+  process.exitCode = 1
+} finally {
+  try {
+    sql(`select pg_terminate_backend(pid) from pg_stat_activity
+         where application_name like ${niz(`${oznaka}-shop-%`)} and pid <> pg_backend_pid();`)
+    if (trgovinaUstvarjeno) {
+      sql(`
+        begin;
+        delete from trgovina.narocila where id in
+          (select narocilo_id from trgovina.postavke where razlicica_id = ${trgovinaId});
+        delete from trgovina.izdelki where id = ${trgovinaId} and slug = ${niz(trgovinaSlug)};
+        commit;
+      `)
+      console.log('PASS ciscenje trgovine: testni izdelek in narocila odstranjeni')
+    }
+  } catch (e) {
+    console.error(`FAIL ciscenje trgovine (ID ${trgovinaId}): ${e.message}`)
+    process.exitCode = 1
+  }
+}
