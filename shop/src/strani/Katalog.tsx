@@ -63,7 +63,9 @@ function PasPoMeri() {
   if (!motivi?.length) return null
   return (
     <Link to="/personalised" className="group relative block overflow-hidden rounded-3xl border border-gnl-400/25 bg-gradient-to-br from-gnl-900/80 via-slate-900 to-slate-950 p-6 transition hover:border-gnl-400/50 sm:p-8">
-      <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-gnl-400/20 blur-3xl" />
+      <img src="/nosilci/hero-gostilna-1000.webp" alt="" loading="lazy" decoding="async" width={1000} height={667}
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-50 transition duration-700 group-hover:scale-[1.02] motion-reduce:transition-none" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-slate-950/30" />
       <div className="relative grid items-center gap-6 md:grid-cols-[1fr_minmax(0,22rem)]">
         <div className="space-y-3">
           <p className="znacka bg-gnl-400/15 text-gnl-300 ring-1 ring-gnl-400/30">{t('osebno.nadnaslov')}</p>

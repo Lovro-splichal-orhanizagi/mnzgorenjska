@@ -131,6 +131,36 @@ export function Pahljaca({ motivi, majhna = false }: { motivi: MotivKataloga[]; 
   )
 }
 
+/** Prizori iz nedeljske lige (scripts/trgovina-hero.mjs): pravi motivi na nosilcih, menjajo se sami. */
+const PRIZORI = ['igrisce', 'gostilna', 'slacilnica'] as const
+const prizor = (ime: string) => ({ src: `/nosilci/hero-${ime}-1000.webp`, srcSet: `/nosilci/hero-${ime}-1000.webp 1000w, /nosilci/hero-${ime}.webp 2000w` })
+
+export function Prizori() {
+  const [n, setN] = useState(0)
+  useEffect(() => {
+    if (mirno()) return
+    const iv = setInterval(() => setN((x) => (x + 1) % PRIZORI.length), 5200)
+    return () => clearInterval(iv)
+  }, [])
+  return (
+    <div className="relative aspect-[3/2] w-full overflow-hidden rounded-3xl shadow-2xl shadow-black/60 ring-1 ring-white/10">
+      {PRIZORI.map((ime, i) => (
+        // Prvi je LCP: takoj in z vso prednostjo (React 18 pozna le `fetchpriority` z malo); ostala dva lazy.
+        <img key={ime} {...prizor(ime)} sizes="(min-width: 768px) 50vw, 100vw" width={2000} height={1333}
+          alt={t(`osebno.prizor.${ime}`)} aria-hidden={i !== n} loading={i === 0 ? 'eager' : 'lazy'} decoding="async"
+          {...(i === 0 ? ({ fetchpriority: 'high' } as Record<string, string>) : {})}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 motion-reduce:transition-none ${i === n ? 'opacity-100' : 'opacity-0'}`} />
+      ))}
+      <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-black/40 px-2.5 py-1.5 backdrop-blur" role="group" aria-label={t('osebno.prizori')}>
+        {PRIZORI.map((ime, i) => (
+          <button key={ime} type="button" aria-label={t(`osebno.prizor.${ime}`)} aria-pressed={i === n} onClick={() => setN(i)}
+            className={`h-2 rounded-full transition-all ${i === n ? 'w-5 bg-gnl-400' : 'w-2 bg-white/40 hover:bg-white/70'}`} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function Personalizirano() {
   const { motivi, napaka } = useMotivi()
   useNaslov(t('osebno.nadnaslov'), motivi?.length ? t('osebno.uvod', { n: motivi.length }) : undefined)
@@ -150,7 +180,7 @@ export function Personalizirano() {
             <a href="#motivi" className="gumb-glavni inline-block px-6 py-3">{t('osebno.cta')} ↓</a>
           )}
         </div>
-        <div className="order-first min-h-[14rem] md:order-none">{motivi && motivi.length > 0 && <Pahljaca motivi={motivi} />}</div>
+        <div className="order-first md:order-none"><Prizori /></div>
       </section>
       <div aria-live="polite">{napaka && <p className="opozorilo">{t('napaka.nalaganje')}</p>}</div>
       {motivi === null ? <Nalaganje /> : motivi.length === 0 ? (
