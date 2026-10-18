@@ -796,11 +796,12 @@ async function obnoviPar(prave, glavna, ponovnoUporabljeni, prenesi) {
  * Prebere blok zapisnikov: { tekme: [{ id, html, g }], tujih, ni }.
  * Tekma druge skupine (ali sezone) v bloku se izpusti z opozorilom.
  */
-export async function preberiBlok(koda, prenesi, { danes = Date.now(), svezi = false } = {}) {
+export async function preberiBlok(koda, prenesi, { danes = Date.now(), svezi = false, preskoci = new Set() } = {}) {
   const { od, do: do_ } = razberiKodo(koda)
   const strani = []
   const ponovnoUporabljeni = new Set()
   for (let id = od; id <= do_; id++) {
+    if (preskoci.has(sifraZapisnika(id))) continue
     const c = izPredpomnilnika(imeStrani(id))
     const g = c ? glavaStrani(c.html) : null
     const uporabi = c && c.starost <= najvecStarost(g, danes, svezi)
@@ -908,8 +909,8 @@ const vir = {
     return razporedBloka(await preberiBlok(koda, prenesi))
   },
 
-  async zapisniki(koda, prenesi) {
-    const b = await preberiBlok(koda, prenesi, { svezi: true })
+  async zapisniki(koda, prenesi, { preskoci = new Set() } = {}) {
+    const b = await preberiBlok(koda, prenesi, { svezi: true, preskoci })
     const out = []
     for (const t of b.tekme) {
       if (!t.g.izid) continue
