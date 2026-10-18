@@ -249,6 +249,35 @@ Uvoz (ena za drugo; dovoljenje FCF potrjeno 17. 10. 2026): `gh workflow run uvoz
 -f liga=es-ct-quarta-g1 -f cene=true` (z arhivom: `-f arhiv=<blok 2025/26>`).
 Prvi uvoz bloka je ~240 strani — ob počasnem strežniku do ene ure.
 
+## Omejena diagnostika zgodovinskega predpomnilnika G13 in Tercera G4
+
+Ročni main-only tok `fcf-g13-predpomnjeni-dokazi.yml` obnovi vsak od točnih
+ključev `zapisniki-ES-k1od1-39053159080-1` in
+`zapisniki-ES-k1od1-39078000693-1` v ločenem poslu. Brez branja FCF,
+pisanja v bazo, shranjevanja predpomnilnika ali rezervnih ključev pregleda
+samo bloka Tercera Catalana 2026/27 `4119076–4119315` (G13) in
+`4115228–4115467` (G4). To ni neaktivna Segona G4.
+
+Pomočnik `scripts/izvozi-fcf-g13-predpomnjene-dokaze.mjs` zahteva svež izhod
+`fcf-g13-predpomnjeni-dokazi`, točen zadetek in ujemanje vgrajene šifre poti,
+glave, skupine in sezone. V `heads.json` so izpeljane glave ter povezave
+klub/kategorija iz dejanskih stranic glave; manjkajoča ali nasprotujoča
+identiteta je izrecno neveljavna. `manifest.json` beleži tudi manjkajoče in
+neveljavne strani, bajte, SHA256 in mtime predpomnilnika. Mtime in commit
+izvoza **nista čas oziroma commit izvirnega zajema**: `sourceFetchTime` in
+`sourceCaptureCommit` ostaneta null, svežina `unverified-historical-cache`.
+
+Meje na ključ: 480 datotek po največ 2 MiB, zaporedno branje (največ 960 MiB),
+13 izvirnih teles (največ 26 MiB). G13 ohrani veljavne fiksne šifre
+4119076, 4119085, 4119093, 4119222, 4119110 ter največ štiri strani dejanskega
+para BASE ESPIRALL-LES CLOTES,CF / Pª JOVE DE LES ROQUETES v krogih 8 in 23;
+G4 največ štiri strani CALLDETENES, C.F. / SANT QUIRZE BESORA, U.D. v krogih
+5 in 20. Dvojnik istega kroga/smeri je dvoumnost, ne samodejna izbira.
+Izpeljani seznam ne vsebuje osebja. Popoln diagnostični manifest lahko
+pojasni manjkajoč vir; nevaren, star ali nepopoln izhod se ne naloži.
+Obstoječa audita sedmih zapisnikov ostajata ločena in nespremenjena.
+Pred popravkom identitet ali koledarja je potreben pregled dejanskih teles.
+
 ## Nadzorovana osvežitev popravljenih FCF zapisnikov
 
 Za javno preverjen popravek, ki ga sedemdnevni predpomnilnik še drži kot
