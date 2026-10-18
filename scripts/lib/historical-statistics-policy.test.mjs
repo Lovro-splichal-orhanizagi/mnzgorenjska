@@ -120,3 +120,15 @@ for (const competition of [
 test('unregistered ordinary provider identity still follows strict normal parsing', () => {
   assert.deepEqual(classifyHistoricalStatistics({competition:{slug:'hr-hnl',source:'hns',source_policy:null},fixture:{sourceMatchId:'unregistered'}}), {kind:'normal'})
 })
+
+test('migration-pinned canonical policy bodies and hashes match the single reviewed JSON registry', () => {
+  const sql = readFileSync(new URL('../../supabase/migrations/20261018133000_historical_statistical_availability.sql',import.meta.url),'utf8')
+  const seeds = [...sql.matchAll(/insert into private_historical_statistics\.policies values\('([^']+)','([a-f0-9]{64})','((?:''|[^'])*)'::jsonb\);/g)]
+  assert.equal(seeds.length,registry.policies.length)
+  for (const policy of registry.policies) {
+    const seed=seeds.find(m=>m[1]===policy.id)
+    assert.ok(seed,`missing DB policy ${policy.id}`)
+    assert.equal(seed[2],historicalStatisticsPolicySha256(policy))
+    assert.deepEqual(JSON.parse(seed[3].replaceAll("''","'")),policy)
+  }
+})
