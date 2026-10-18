@@ -430,7 +430,7 @@ async function trgovinaSeja(o: Obj): Promise<string> {
   }
   if (izid !== 'placano' && izid !== 'premalo') return izid
   await discord(`🛒 Trgovina: naročilo ${oznaka}, ${evri(args.p_skupaj)} €`)
-  if (izid === 'premalo') await discord(`⚠️ Trgovina: naročilo ${oznaka} je plačano, zaloge ni bilo dovolj (preveri in uredi s kupcem).`)
+  if (izid === 'premalo') await discord(`⚠️ Trgovina: naročilo ${oznaka} je plačano, zaloge ni bilo dovolj (manjka > 0 v naročilu; uredi s kupcem).`)
   if (napacnaTarifa(kljuc, drzava)) await discord(`⚠️ Trgovina: naročilo ${oznaka} ima tarifo ${kljuc} za državo ${drzava} (doplačilo ali vračilo).`)
   // Mail ne sme ponoviti dogodka: ponovitev bi dobila 'ze' in maila spet ne bi poslala.
   try {
@@ -438,10 +438,11 @@ async function trgovinaSeja(o: Obj): Promise<string> {
       method: 'POST',
       headers: { Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ vrsta: 'potrditev', narocilo_id: Number(o.metadata?.narocilo_id) }),
+      signal: AbortSignal.timeout(8000),
     })
-    if (!r.ok) throw new Error(`${r.status} ${await r.text()}`)
+    if (!r.ok) throw new Error(`trgovina-posta ${r.status}`)
   } catch (e) {
-    console.error('stripe-webhook: trgovina-posta', e)
+    console.error('stripe-webhook: trgovina-posta', String(e))
     await discord(`⚠️ Trgovina: potrditev naročila ${oznaka} ni odšla po pošti.`)
   }
   return izid

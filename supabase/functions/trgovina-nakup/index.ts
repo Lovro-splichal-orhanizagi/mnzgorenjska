@@ -3,23 +3,30 @@
 // Začetek plačila v trgovini (shop.slff.eu). Kliče brskalnik, kot gost ali
 // prijavljen (Bearer <access_token>; neveljaven žeton = gost):
 //
-//   {"postavke": [{"razlicica_id": 1, "kolicina": 2}], "jezik": "sl"|"en"} → {"url": "<Checkout>"}
-//   400 {"error", "hint": "trgovina-vnos"|"trgovina-zaloga"}
+//   {"postavke": [{"razlicica_id": 1, "kolicina": 2}], "jezik": "sl"|"en", "drzava": "SI"} → {"url": "<Checkout>"}
+//   400 {"error", "hint": "trgovina-vnos"|"trgovina-zaloga"}, 429 {"hint": "trgovina-omejitev"}
 //
 // Košarico preveri in zalogo rezervira baza (trgovina_rezerviraj, servis:
-// cene in imena iz baze, ne iz brskalnika; rezervacija 30 min). Seja nosi
-// metadata app=slff-shop, narocilo_id in oznaka; plačilo zapiše šele
-// stripe-webhook. Cene z DDV (tax_behavior inclusive), DDV po državi kupca
-// izračuna Stripe Tax. Tarife dostave so v Stripe (metadata app=slff-shop in
-// kljuc, scripts/stripe-trgovina.sh): pismo_si le, če so vse postavke pismo.
+// cene in imena iz baze, ne iz brskalnika; rezervacija 35 min, seja 31 min).
+// Odjemalec = sha256(IP + TRGOVINA_PEPPER): največ 3 odprta naročila na
+// odjemalca ali uporabnika. Država (EU-27) je izbrana pred plačilom: Checkout
+// sprejme le naslov v njej in ponudi le njene tarife (tarife.ts). Le kartica,
+// da je plačilo takoj. Seja nosi metadata app=slff-shop, narocilo_id in
+// oznaka; plačilo zapiše šele stripe-webhook. Če seje ni, se rezervacija
+// sprosti (trgovina_sprosti). Cene z DDV (tax_behavior inclusive), DDV po
+// državi kupca izračuna Stripe Tax. Tarife dostave so v Stripe (metadata
+// app=slff-shop in kljuc, scripts/stripe-trgovina.sh) ali v TRGOVINA_TARIFE.
 // Pogoji (consent_collection) potrebujejo naslov pogojev v Stripe → Settings
 // → Public details.
 //
-// Env: STRIPE_SECRET_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
-// SUPABASE_ANON_KEY, SHOP_URL (neobvezno, privzeto https://shop.slff.eu).
+// Env: STRIPE_SECRET_KEY, TRGOVINA_PEPPER, SUPABASE_URL,
+// SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, SHOP_URL (neobvezno, privzeto
+// https://shop.slff.eu), TRGOVINA_TARIFE (neobvezno, JSON {kljuc: shr_…},
+// sicer se tarife enkrat na proces preberejo iz Stripe).
 // Objava: scripts/hetzner/objavi-funkcije.sh trgovina-nakup
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
+import { EU27, tarifeZa } from './tarife.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -27,7 +34,6 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 const NAPAKA = 'Plačila ni bilo mogoče začeti.'
-const EU27 = 'AT BE BG CY CZ DE DK EE ES FI FR GR HR HU IE IT LT LU LV MT NL PL PT RO SE SI SK'.split(' ')
 
 type Polja = Record<string, string | number | boolean | undefined | null>
 
@@ -49,6 +55,26 @@ function json(obj: unknown, status = 200) {
   return new Response(JSON.stringify(obj), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
 }
 
+let tarife: Record<string, string> | null = null
+
+async function tarifeTrgovine(): Promise<Record<string, string>> {
+  if (tarife) return tarife
+  const env = Deno.env.get('TRGOVINA_TARIFE')
+  const t: Record<string, string> = env ? JSON.parse(env) : {}
+  if (!env) {
+    const s = await stripe<{ data: { id: string; metadata: Record<string, string> }[] }>('shipping_rates?active=true&limit=100')
+    for (const r of s.data) if (r.metadata?.app === 'slff-shop' && r.metadata.kljuc) t[r.metadata.kljuc] = r.id
+  }
+  if (!t.paket_si || !t.paket_eu) throw new Error('Tarife trgovine (paket_si, paket_eu) ne obstajajo.')
+  return (tarife = t)
+}
+
+async function odjemalec(req: Request, poper: string): Promise<string> {
+  const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || req.headers.get('cf-connecting-ip') || ''
+  const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${ip}|${poper}`))
+  return Array.from(new Uint8Array(h), (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
 interface Rezervacija {
   narocilo_id: number
   javna_oznaka: string
@@ -59,7 +85,8 @@ interface Rezervacija {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })
   if (req.method !== 'POST') return json({ error: 'Samo POST.' }, 405)
-  if (!Deno.env.get('STRIPE_SECRET_KEY')) return json({ error: NAPAKA }, 503)
+  const poper = Deno.env.get('TRGOVINA_PEPPER')
+  if (!Deno.env.get('STRIPE_SECRET_KEY') || !poper) return json({ error: NAPAKA }, 503)
   const SHOP = (Deno.env.get('SHOP_URL') ?? 'https://shop.slff.eu').replace(/\/$/, '')
   const URL_ = Deno.env.get('SUPABASE_URL')!
 
@@ -69,15 +96,19 @@ Deno.serve(async (req) => {
     : { data: null }
   const user = u?.user ?? null
 
-  const vhod = (await req.json().catch(() => ({}))) as { postavke?: unknown; jezik?: string }
+  const vhod = ((await req.json().catch(() => null)) ?? {}) as { postavke?: unknown; jezik?: string; drzava?: unknown }
   const jezik = vhod.jezik === 'en' ? 'en' : 'sl'
+  const drzava = vhod.drzava
+  if (typeof drzava !== 'string' || !EU27.includes(drzava)) return json({ error: 'Dostava le v EU.', hint: 'trgovina-vnos' }, 400)
   const service = createClient(URL_, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
   const { data, error } = await service.rpc('trgovina_rezerviraj', {
     p_postavke: vhod.postavke ?? null,
     p_user: user?.id ?? null,
     p_jezik: jezik,
+    p_odjemalec: await odjemalec(req, poper),
   })
   if (error) {
+    if (error.hint === 'trgovina-omejitev') return json({ error: error.message, hint: error.hint }, 429)
     if (error.hint === 'trgovina-vnos' || error.hint === 'trgovina-zaloga') return json({ error: error.message, hint: error.hint }, 400)
     console.error('trgovina-nakup: rezerviraj', error)
     return json({ error: NAPAKA }, 500)
@@ -85,15 +116,14 @@ Deno.serve(async (req) => {
   const r = data as Rezervacija
 
   try {
-    const tarife = await stripe<{ data: { id: string; metadata: Record<string, string> }[] }>('shipping_rates?active=true&limit=100')
-    const tarifa = (k: string) => tarife.data.find((t) => t.metadata?.app === 'slff-shop' && t.metadata?.kljuc === k)?.id
-    const kljuci = r.pismo ? ['pismo_si', 'paket_si', 'paket_eu'] : ['paket_si', 'paket_eu']
-    const ponudba = kljuci.map(tarifa).filter((t): t is string => !!t)
-    if (!tarifa('paket_si') || !tarifa('paket_eu')) throw new Error('Tarife trgovine (paket_si, paket_eu) v Stripe ne obstajajo.')
+    const t = await tarifeTrgovine()
+    const ponudba = tarifeZa(drzava, r.pismo).map((k) => t[k]).filter((id): id is string => !!id)
 
     const meta = { app: 'slff-shop', narocilo_id: String(r.narocilo_id), oznaka: r.javna_oznaka }
     const polja: Polja = {
       mode: 'payment',
+      'payment_method_types[0]': 'card',
+      'shipping_address_collection[allowed_countries][0]': drzava,
       'automatic_tax[enabled]': true,
       customer_creation: 'if_required',
       customer_email: user?.email,
@@ -101,7 +131,7 @@ Deno.serve(async (req) => {
       locale: jezik,
       // Stripe zahteva vsaj 30 min od nastanka seje; minuta rezerve za pot zahteve.
       expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
-      success_url: `${SHOP}/thanks?n=${r.javna_oznaka}`,
+      success_url: `${SHOP}/thanks?n=${encodeURIComponent(r.javna_oznaka)}`,
       cancel_url: `${SHOP}/cart`,
       'consent_collection[terms_of_service]': 'required',
       'custom_text[terms_of_service_acceptance][message]':
@@ -115,8 +145,7 @@ Deno.serve(async (req) => {
       polja[`line_items[${i}][price_data][product_data][tax_code]`] = p.tax_code
       polja[`line_items[${i}][quantity]`] = p.kolicina
     })
-    EU27.forEach((d, i) => (polja[`shipping_address_collection[allowed_countries][${i}]`] = d))
-    ponudba.forEach((t, i) => (polja[`shipping_options[${i}][shipping_rate]`] = t))
+    ponudba.forEach((id, i) => (polja[`shipping_options[${i}][shipping_rate]`] = id))
     for (const [k, v] of Object.entries(meta)) {
       polja[`metadata[${k}]`] = v
       polja[`payment_intent_data[metadata][${k}]`] = v
@@ -131,8 +160,9 @@ Deno.serve(async (req) => {
     }
     return json({ url: s.url })
   } catch (e) {
-    // ponytail: rezervacija neuspele seje drži zalogo do svojega roka (30 min); sprostitev po id naročila, če bo motilo.
     console.error('trgovina-nakup:', e)
+    const sp = await service.rpc('trgovina_sprosti', { p_narocilo: r.narocilo_id })
+    if (sp.error) console.error('trgovina-nakup: sprosti', sp.error)
     return json({ error: NAPAKA }, 502)
   }
 })

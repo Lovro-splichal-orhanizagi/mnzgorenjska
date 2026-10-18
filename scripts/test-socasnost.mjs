@@ -210,7 +210,7 @@ try {
 const trgovinaId = -randomInt(1_000_000, 2_000_000_000)
 const trgovinaSlug = `test-socasnost${trgovinaId}`
 let trgovinaUstvarjeno = false
-const rezerviraj = `select trgovina_rezerviraj('[{"razlicica_id":${trgovinaId},"kolicina":1}]', null, 'sl');`
+const rezerviraj = `select trgovina_rezerviraj('[{"razlicica_id":${trgovinaId},"kolicina":1}]', null, 'sl', encode(sha256('socasnost'), 'hex'));`
 try {
   sql(`
     begin;

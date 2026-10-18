@@ -63,13 +63,20 @@ create table trgovina.narocila (
   stripe_checkout_id    text unique,
   stripe_payment_intent text,
   sledilna              text,
-  rezervirano_do        timestamptz not null default now() + interval '30 minutes',
+  rezervirano_do        timestamptz not null default now() + interval '35 minutes',
+  odjemalec             text,
+  manjka                int not null default 0,
   placano_at            timestamptz,
   poslano_at            timestamptz,
   created_at            timestamptz not null default now()
 );
 create index on trgovina.narocila (stanje, rezervirano_do);
 create index on trgovina.narocila (user_id);
+create index on trgovina.narocila (odjemalec) where stanje = 'caka_placilo';
+comment on column trgovina.narocila.odjemalec is
+  'sha256(IP + poper) iz trgovina-nakup, le za omejitev odprtih naročil; ob plačilu ali poteku se pobriše.';
+comment on column trgovina.narocila.manjka is
+  'Kosov, ki jih ob plačilu ni bilo na zalogi (zaloga se ustavi pri 0): uredi s kupcem.';
 
 create table trgovina.postavke (
   id           bigint generated always as identity primary key,
@@ -112,7 +119,7 @@ as $$
     'email', n.email, 'ime', n.ime, 'naslov', n.naslov, 'jezik', n.jezik,
     'znesek_postavke', n.znesek_postavke, 'znesek_dostava', n.znesek_dostava,
     'znesek_ddv', n.znesek_ddv, 'znesek_skupaj', n.znesek_skupaj, 'dostava_kljuc', n.dostava_kljuc,
-    'sledilna', n.sledilna, 'placano_at', n.placano_at, 'poslano_at', n.poslano_at,
+    'sledilna', n.sledilna, 'manjka', n.manjka, 'placano_at', n.placano_at, 'poslano_at', n.poslano_at,
     'created_at', n.created_at,
     'postavke', coalesce((
       select jsonb_agg(jsonb_build_object('razlicica_id', p.razlicica_id, 'sku', r.sku, 'ime', p.ime,
@@ -162,7 +169,8 @@ $$;
 -- --------------------------------------------------------------------------
 
 -- Rezervira košarico in ustvari naročilo caka_placilo. Vhod [{razlicica_id, kolicina}].
-create function trgovina.rezerviraj(p_postavke jsonb, p_user uuid, p_jezik text) returns jsonb
+-- p_odjemalec = sha256 hex (IP + poper): največ 3 odprta naročila na odjemalca ali uporabnika.
+create function trgovina.rezerviraj(p_postavke jsonb, p_user uuid, p_jezik text, p_odjemalec text) returns jsonb
 language plpgsql
 as $$
 declare
@@ -173,12 +181,14 @@ begin
   if jsonb_typeof(p_postavke) is distinct from 'array'
      or jsonb_array_length(p_postavke) not between 1 and 20
      or p_jezik is null or p_jezik not in ('sl', 'en')
+     or p_odjemalec is null or p_odjemalec !~ '^[0-9a-f]{64}$'
      or exists (select 1 from jsonb_array_elements(p_postavke) e
                  where jsonb_typeof(e) <> 'object'
                     or jsonb_typeof(e->'razlicica_id') is distinct from 'number'
                     or jsonb_typeof(e->'kolicina') is distinct from 'number'
                     or (e->>'kolicina')::numeric not between 1 and 20
                     or (e->>'kolicina')::numeric <> trunc((e->>'kolicina')::numeric)
+                    or (e->>'razlicica_id')::numeric not between -9223372036854775808 and 9223372036854775807
                     or (e->>'razlicica_id')::numeric <> trunc((e->>'razlicica_id')::numeric))
   then
     raise exception 'Trgovina: neveljavna košarica.' using hint = 'trgovina-vnos';
@@ -188,6 +198,14 @@ begin
      or (select count(distinct razlicica_id) from jsonb_to_recordset(p_postavke) k(razlicica_id bigint, kolicina int)) <> jsonb_array_length(p_postavke)
   then
     raise exception 'Trgovina: neveljavna košarica.' using hint = 'trgovina-vnos';
+  end if;
+
+  -- ponytail: brez zaklepa sta hkratni četrti zahtevi lahko obe sprejeti; meja je le zavora.
+  if (select count(*) from trgovina.narocila n
+       where n.stanje = 'caka_placilo' and n.rezervirano_do > now()
+         and (n.odjemalec = p_odjemalec or n.user_id = p_user)) >= 3
+  then
+    raise exception 'Trgovina: preveč odprtih naročil.' using hint = 'trgovina-omejitev';
   end if;
 
   -- Zaklep v stalnem vrstnem redu: hkratni nakupi istih različic čakajo drug
@@ -210,7 +228,8 @@ begin
     raise exception 'Trgovina: ni dovolj zaloge.' using hint = 'trgovina-zaloga';
   end if;
 
-  insert into trgovina.narocila (user_id, jezik) values (p_user, p_jezik) returning * into v_narocilo;
+  insert into trgovina.narocila (user_id, jezik, odjemalec) values (p_user, p_jezik, p_odjemalec)
+  returning * into v_narocilo;
 
   with nove as (
     insert into trgovina.postavke (narocilo_id, razlicica_id, ime, cena, kolicina)
@@ -231,6 +250,7 @@ begin
   return jsonb_build_object(
     'narocilo_id', v_narocilo.id,
     'javna_oznaka', v_narocilo.javna_oznaka,
+    'rezervirano_do', v_narocilo.rezervirano_do,
     'postavke', v_postavke,
     'pismo', not exists (select 1 from jsonb_to_recordset(p_postavke) k(razlicica_id bigint, kolicina int)
                            join trgovina.razlicice r on r.id = k.razlicica_id
@@ -244,15 +264,15 @@ language plpgsql
 as $$
 begin
   update trgovina.narocila set stripe_checkout_id = p_checkout
-   where id = p_narocilo and stanje = 'caka_placilo';
+   where id = p_narocilo and stanje = 'caka_placilo' and stripe_checkout_id is null;
   if not found then
-    raise exception 'Trgovina: naročilo ne čaka plačila.' using hint = 'trgovina-vnos';
+    raise exception 'Trgovina: naročilo ne čaka plačila ali že ima sejo.' using hint = 'trgovina-stanje';
   end if;
 end;
 $$;
 
 -- checkout.session.completed (paid). Idempotentno po stripe_checkout_id.
--- 'placano' | 'premalo' (plačano, a zaloga bi šla pod 0: obvesti Discord) | 'ze' | 'neznano'.
+-- 'placano' | 'premalo' (plačano, a zaloga bi šla pod 0: narocila.manjka > 0, obvesti Discord) | 'ze' | 'neznano'.
 create function trgovina.iz_placila(
   p_checkout text, p_payment_intent text, p_email text, p_ime text, p_naslov jsonb,
   p_postavke int, p_dostava int, p_ddv int, p_skupaj int, p_dostava_kljuc text
@@ -261,7 +281,7 @@ language plpgsql
 as $$
 declare
   v_narocilo trgovina.narocila;
-  v_premalo boolean;
+  v_manjka int;
 begin
   select * into v_narocilo from trgovina.narocila where stripe_checkout_id = p_checkout for update;
   if not found then
@@ -276,7 +296,7 @@ begin
    where r.id in (select razlicica_id from trgovina.postavke where narocilo_id = v_narocilo.id)
    order by r.id for update;
 
-  select bool_or(r.zaloga < k.kolicina) into v_premalo
+  select coalesce(sum(greatest(k.kolicina - r.zaloga, 0)), 0) into v_manjka
     from (select razlicica_id, sum(kolicina) as kolicina from trgovina.postavke
            where narocilo_id = v_narocilo.id group by razlicica_id) k
     join trgovina.razlicice r on r.id = k.razlicica_id;
@@ -290,10 +310,10 @@ begin
     stanje = 'placano', placano_at = now(), stripe_payment_intent = p_payment_intent,
     email = p_email, ime = p_ime, naslov = p_naslov,
     znesek_postavke = p_postavke, znesek_dostava = p_dostava, znesek_ddv = p_ddv,
-    znesek_skupaj = p_skupaj, dostava_kljuc = p_dostava_kljuc
+    znesek_skupaj = p_skupaj, dostava_kljuc = p_dostava_kljuc, manjka = v_manjka, odjemalec = null
    where id = v_narocilo.id;
 
-  return case when coalesce(v_premalo, false) then 'premalo' else 'placano' end;
+  return case when v_manjka > 0 then 'premalo' else 'placano' end;
 end;
 $$;
 
@@ -309,20 +329,35 @@ begin
   elsif v_stanje <> 'caka_placilo' then
     return 'ze';
   end if;
-  update trgovina.narocila set stanje = 'poteklo' where stripe_checkout_id = p_checkout;
+  update trgovina.narocila set stanje = 'poteklo', odjemalec = null where stripe_checkout_id = p_checkout;
   return 'poteklo';
 end;
 $$;
 
+-- Seje Stripe ni bilo mogoče ustvariti ali vezati: rezervacija se sprosti takoj. 'poteklo' | 'ze'.
+create function trgovina.sprosti(p_narocilo bigint) returns text
+language plpgsql
+as $$
+begin
+  update trgovina.narocila set stanje = 'poteklo', odjemalec = null
+   where id = p_narocilo and stanje = 'caka_placilo';
+  return case when found then 'poteklo' else 'ze' end;
+end;
+$$;
+
 revoke all on function trgovina.oznaka_voljo(bigint), trgovina.narocilo_json(bigint),
-  trgovina.rezerviraj(jsonb, uuid, text), trgovina.vezi_sejo(bigint, text),
+  trgovina.rezerviraj(jsonb, uuid, text, text), trgovina.vezi_sejo(bigint, text), trgovina.sprosti(bigint),
   trgovina.iz_placila(text, text, text, text, jsonb, int, int, int, int, text),
   trgovina.potekla(text) from public, anon, authenticated;
 
 -- Shema ni v PostgREST: servis kliče te ovoje (le service_role).
-create function public.trgovina_rezerviraj(p_postavke jsonb, p_user uuid, p_jezik text) returns jsonb
+create function public.trgovina_rezerviraj(p_postavke jsonb, p_user uuid, p_jezik text, p_odjemalec text) returns jsonb
 language sql security definer set search_path = public
-as $$ select trgovina.rezerviraj(p_postavke, p_user, p_jezik) $$;
+as $$ select trgovina.rezerviraj(p_postavke, p_user, p_jezik, p_odjemalec) $$;
+
+create function public.trgovina_sprosti(p_narocilo bigint) returns text
+language sql security definer set search_path = public
+as $$ select trgovina.sprosti(p_narocilo) $$;
 
 create function public.trgovina_vezi_sejo(p_narocilo bigint, p_checkout text) returns void
 language sql security definer set search_path = public
@@ -340,10 +375,12 @@ create function public.trgovina_potekla(p_checkout text) returns text
 language sql security definer set search_path = public
 as $$ select trgovina.potekla(p_checkout) $$;
 
-revoke all on function public.trgovina_rezerviraj(jsonb, uuid, text), public.trgovina_vezi_sejo(bigint, text),
+revoke all on function public.trgovina_rezerviraj(jsonb, uuid, text, text), public.trgovina_vezi_sejo(bigint, text),
+  public.trgovina_sprosti(bigint),
   public.trgovina_iz_placila(text, text, text, text, jsonb, int, int, int, int, text),
   public.trgovina_potekla(text) from public, anon, authenticated;
-grant execute on function public.trgovina_rezerviraj(jsonb, uuid, text), public.trgovina_vezi_sejo(bigint, text),
+grant execute on function public.trgovina_rezerviraj(jsonb, uuid, text, text), public.trgovina_vezi_sejo(bigint, text),
+  public.trgovina_sprosti(bigint),
   public.trgovina_iz_placila(text, text, text, text, jsonb, int, int, int, int, text),
   public.trgovina_potekla(text) to service_role;
 
@@ -367,7 +404,7 @@ grant execute on function public.trgovina_narocilo_za_posto(bigint) to authentic
 create function public.trgovina_moja_narocila() returns jsonb
 language sql stable security definer set search_path = public
 as $$
-  select coalesce(jsonb_agg(trgovina.narocilo_json(n.id) - 'user_id' order by n.created_at desc), '[]'::jsonb)
+  select coalesce(jsonb_agg(trgovina.narocilo_json(n.id) - 'user_id' - 'manjka' order by n.created_at desc), '[]'::jsonb)
   from trgovina.narocila n
   where n.user_id = auth.uid() and n.stanje not in ('caka_placilo', 'poteklo')
 $$;
@@ -474,26 +511,43 @@ begin
 end;
 $$;
 
+-- Obstoječi različici se zaloga spremeni le za zaloga_dodaj (lahko negativno),
+-- da hkratna prodaja med urejanjem ne izgine; nova dobi začetno zalogo.
 create function public.trgovina_admin_shrani_razlicico(p jsonb) returns bigint
 language plpgsql security definer set search_path = public
 as $$
-declare r trgovina.razlicice;
+declare
+  r trgovina.razlicice;
+  v_dodaj int;
 begin
   perform trgovina.le_admin();
+  if p ? 'zaloga_dodaj' and (jsonb_typeof(p->'zaloga_dodaj') <> 'number'
+                             or (p->>'zaloga_dodaj')::numeric not between -1000000 and 1000000
+                             or (p->>'zaloga_dodaj')::numeric <> trunc((p->>'zaloga_dodaj')::numeric)) then
+    raise exception 'Trgovina: zaloga_dodaj mora biti celo število.' using hint = 'trgovina-vnos';
+  end if;
+  v_dodaj := coalesce((p->>'zaloga_dodaj')::int, 0);
   if p ? 'id' and p->>'id' is not null then
+    if p ? 'zaloga' then
+      raise exception 'Trgovina: zalogo obstoječe različice spremeni z zaloga_dodaj.' using hint = 'trgovina-vnos';
+    end if;
     select * into r from trgovina.razlicice where id = (p->>'id')::bigint for update;
     if not found then
       raise exception 'Trgovina: ni različice.' using hint = 'trgovina-vnos';
     end if;
-    r := jsonb_populate_record(r, p - 'id');
+    if r.zaloga + v_dodaj < 0 then
+      raise exception 'Trgovina: zaloga bi šla pod 0.' using hint = 'trgovina-zaloga';
+    end if;
+    r := jsonb_populate_record(r, p - 'id' - 'zaloga_dodaj');
     update trgovina.razlicice set izdelek_id = r.izdelek_id, oznaka_sl = r.oznaka_sl, oznaka_en = r.oznaka_en,
-      sku = r.sku, cena = r.cena, zaloga = r.zaloga, teza_g = r.teza_g, aktivna = r.aktivna,
+      sku = r.sku, cena = r.cena, zaloga = zaloga + v_dodaj, teza_g = r.teza_g, aktivna = r.aktivna,
       vrstni_red = r.vrstni_red
      where id = r.id;
     return r.id;
   end if;
   r := jsonb_populate_record(null::trgovina.razlicice,
-         '{"zaloga":0,"teza_g":0,"aktivna":true,"vrstni_red":0}'::jsonb || (p - 'id'));
+         '{"zaloga":0,"teza_g":0,"aktivna":true,"vrstni_red":0}'::jsonb || (p - 'id' - 'zaloga_dodaj'));
+  r.zaloga := r.zaloga + v_dodaj;
   insert into trgovina.razlicice (izdelek_id, oznaka_sl, oznaka_en, sku, cena, zaloga, teza_g, aktivna, vrstni_red)
   values (r.izdelek_id, r.oznaka_sl, r.oznaka_en, r.sku, r.cena, r.zaloga, r.teza_g, r.aktivna, r.vrstni_red)
   returning id into r.id;

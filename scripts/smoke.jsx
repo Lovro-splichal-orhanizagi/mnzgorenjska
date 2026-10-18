@@ -59,6 +59,7 @@ import { veljavenPodpis } from '../supabase/functions/stripe-webhook/podpis.ts'
 import { scoutPostavkeVeljajo, scoutCeneNarocnine } from '../supabase/functions/stripe-webhook/scout.ts'
 import { trgovinaIzSeje, napacnaTarifa } from '../supabase/functions/stripe-webhook/trgovina.ts'
 import { sestaviMail as trgovinaMail } from '../supabase/functions/trgovina-posta/sporocila.ts'
+import { EU27 as trgovinaEU27, tarifeZa } from '../supabase/functions/trgovina-nakup/tarife.ts'
 import { createHmac } from 'node:crypto'
 import { sestejOdKroga } from '../src/lib/lestvica'
 import { zdruziNavijace } from '../src/lib/navijaci'
@@ -12975,6 +12976,10 @@ preveri(
   preveri('trgovina stripe: tarifa in država', tarifa === 'shr_1' && drzava === 'SI' && args.p_payment_intent === 'pi_1')
   const star = trgovinaIzSeje({ id: 'cs_2', shipping_details: { name: 'X', address: { country: 'AT' } }, shipping_cost: { shipping_rate: { id: 'shr_2' } } })
   preveri('trgovina stripe: stari shipping_details in tarifa kot objekt', star.drzava === 'AT' && star.tarifa === 'shr_2' && star.args.p_skupaj === 0)
+  preveri('trgovina tarife: SI paket, pismo le za same nalepke',
+    tarifeZa('SI', false).join() === 'paket_si' && tarifeZa('SI', true).join() === 'pismo_si,paket_si')
+  preveri('trgovina tarife: EU le paket_eu', tarifeZa('AT', false).join() === 'paket_eu' && tarifeZa('HR', true).join() === 'paket_eu')
+  preveri('trgovina tarife: EU-27', trgovinaEU27.length === 27 && trgovinaEU27.includes('SI') && !trgovinaEU27.includes('GB'))
   preveri('trgovina stripe: paket_si v Avstrijo je napaka', napacnaTarifa('paket_si', 'AT') && !napacnaTarifa('paket_si', 'SI') && !napacnaTarifa('paket_eu', 'AT'))
 
   // Maili trgovine (trgovina-posta/sporocila.ts): sl/en, zneski, sledilna, ubežni znaki.

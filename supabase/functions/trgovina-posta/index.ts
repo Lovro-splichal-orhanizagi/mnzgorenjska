@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     if (admin !== true) return json({ error: 'Samo administrator.' }, 403)
   }
 
-  const vhod = (await req.json().catch(() => ({}))) as { vrsta?: string; narocilo_id?: number }
+  const vhod = ((await req.json().catch(() => null)) ?? {}) as { vrsta?: string; narocilo_id?: number }
   const vrsta = vhod.vrsta
   if (vrsta !== 'potrditev' && vrsta !== 'poslano') return json({ error: 'vrsta: potrditev ali poslano.' }, 400)
   if (!Number.isInteger(vhod.narocilo_id)) return json({ error: 'narocilo_id: številka naročila.' }, 400)
@@ -60,7 +60,10 @@ Deno.serve(async (req) => {
 
   const service = createClient(URL_, SERVICE_KEY)
   const { data, error } = await service.rpc('trgovina_narocilo_za_posto', { p_id: vhod.narocilo_id })
-  if (error) return json({ error: error.message }, 500)
+  if (error) {
+    console.error('trgovina-posta: naročilo', error)
+    return json({ error: 'Naročila ni bilo mogoče prebrati.' }, 500)
+  }
   const n = data as (Narocilo & { user_id: string | null }) | null
   if (!n?.email) return json({ error: 'Naročila ni ali nima e-naslova.' }, 400)
   const sme = vrsta === 'poslano' ? n.stanje === 'poslano' && !!n.sledilna : ['placano', 'poslano'].includes(n.stanje)
@@ -83,6 +86,9 @@ Deno.serve(async (req) => {
     napaka = String(e)
   }
   await service.from('email_log').insert({ user_id: n.user_id, email: n.email, vrsta: `trgovina-${vrsta}`, resend_id: id, napaka })
-  if (napaka) return json({ error: `Mail ni odšel: ${napaka}` }, 502)
+  if (napaka) {
+    console.error('trgovina-posta: smtp', napaka)
+    return json({ error: 'Mail ni odšel.' }, 502)
+  }
   return json({ poslano: 1 })
 })

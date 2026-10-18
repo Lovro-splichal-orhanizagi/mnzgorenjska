@@ -9094,9 +9094,15 @@ export type Database = {
         Returns: undefined
       }
       trgovina_rezerviraj: {
-        Args: { p_jezik: string; p_postavke: Json; p_user: string }
+        Args: {
+          p_jezik: string
+          p_odjemalec: string
+          p_postavke: Json
+          p_user: string
+        }
         Returns: Json
       }
+      trgovina_sprosti: { Args: { p_narocilo: number }; Returns: string }
       trgovina_vezi_sejo: {
         Args: { p_checkout: string; p_narocilo: number }
         Returns: undefined

@@ -14,7 +14,7 @@ API=https://api.stripe.com/v1
 obstojece=$(curl -sfS -u "$STRIPE_SECRET_KEY:" "$API/shipping_rates?active=true&limit=100" |
   jq -r '.data[] | select(.metadata.app == "slff-shop") | .metadata.kljuc')
 
-# kljuc znesek ime najmanj najvec (delovni dnevi)
+# kljuc znesek(centi) najmanj najvec(delovni dnevi) ime
 while read -r kljuc znesek najmanj najvec ime; do
   if grep -qx "$kljuc" <<<"$obstojece"; then
     echo "$kljuc: že obstaja"
