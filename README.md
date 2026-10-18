@@ -175,6 +175,9 @@ Funkcija `lestvica_lige(liga, sezona)` vrne pravo lestvico lige iz izidov tekem
 poišče igralce vseh aktivnih lig po imenu, brez šumnikov in z dopuščeno tipkarsko
 napako (izbirnik lige, stran Igralci).
 
+Skupni stiki s klubi (`klub_stik`) sprejmejo tudi Nemčijo (`DE`); pred vsakim
+mailom je obvezno preverjanje zgodovine kluba in naslova s `scripts/stiki-klubov.mjs`.
+
 ### Varnost (RLS)
 
 - Klubi, igralci, krogi, točke in lestvica so **javno berljivi**.
