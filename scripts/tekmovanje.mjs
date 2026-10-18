@@ -14,7 +14,7 @@ export function slugTekmovanja(privzeto = 'clani') {
   return v && !v.startsWith('--') ? v : privzeto
 }
 
-const STOLPCI = 'id, slug, name, short_name, mnzg_liga, prvi_fantasy_krog, rok_pomak_ur, active, source, source_league_code, country_id'
+const STOLPCI = 'id, slug, name, short_name, mnzg_liga, prvi_fantasy_krog, rok_pomak_ur, active, source, source_league_code, country_id, source_policy, date_only_deadline_policy'
 
 /**
  * Vrne vrstico iz `competitions` za dani slug; brez nje se ne da uvažati.
