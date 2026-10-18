@@ -106,6 +106,16 @@ const liga = arg('liga', sifraLige(tekmovanje, '1502'))
 const tekocaSezona = liga === sifraLige(tekmovanje, '1502')
 console.log(`Tekmovanje: ${tekmovanje.name} (liga ${liga})`)
 
+// Optional provider preflight runs before cleanup/cache writes or source traversal.
+const samoZapisnik = arg('zapisnik')
+let preberiPosamezniZapisnik = null
+if (samoZapisnik && typeof vir.posamezniZapisnik === 'function') {
+  const { data: sezona, error } = await db.rpc('sezona_lige', { p_competition_id: tekmovanje.id })
+  if (error) throw new Error(`sezone posameznega zapisnika ni mogoče prebrati: ${error.message}`)
+  preberiPosamezniZapisnik = vir.posamezniZapisnik(liga, { id: samoZapisnik, tekmovanje, sezona })
+  if (typeof preberiPosamezniZapisnik !== 'function') throw new Error('Vir ni pripravil bralnika posameznega zapisnika.')
+}
+
 // --- prenos s predpomnilnikom ---------------------------------------------
 // Predpomnilnik je ločen po viru. Šifra zapisnika je last SPLETIŠČA, ne
 // sistema, in obe zvezi štejeta v istem razponu — če bi se kje ujeli, bi
@@ -639,7 +649,6 @@ if (pocisti) {
 // svoje naslove — zato zapisnike vrne vir sam, ze razclenjene.
 // Determine bounded repairs BEFORE source traversal: stale cached HTML cannot
 // reveal that its missing attribution has since been corrected at the source.
-const samoZapisnik = arg('zapisnik')
 const svezeDni = arg('sveze') ? Number(arg('sveze')) : null
 const preskoci = new Set(), sveziZapisniki = new Set()
 if (svezeDni != null && !samoZapisnik) {
@@ -661,9 +670,11 @@ if (vir.ime === 'dfb' && !samoZapisnik) {
     sveziZapisniki.add(String(m.zapisnik_id))
 }
 console.log(`Berem zapisnike vira ${vir.ime} (liga ${liga})`)
-let zapisniki = vir.ime === 'dfb'
-  ? await vir.zapisniki(liga, prenesi, { samoZapisnik, preskoci, sveziZapisniki })
-  : await vir.zapisniki(liga, prenesi)
+let zapisniki = preberiPosamezniZapisnik
+  ? await preberiPosamezniZapisnik(prenesi)
+  : vir.ime === 'dfb'
+    ? await vir.zapisniki(liga, prenesi, { samoZapisnik, preskoci, sveziZapisniki })
+    : await vir.zapisniki(liga, prenesi)
 // Sources that do not implement traversal filtering retain the generic filter.
 if (samoZapisnik) zapisniki = zapisniki.filter((x) => String(x.id) === String(samoZapisnik))
 if (omeji) zapisniki = zapisniki.slice(0, omeji)
