@@ -1188,6 +1188,10 @@ preveri(
   preveri('višja liga: nižja liga ni višja', koliko(brod2, brod1) === 0 && koliko(brod1, hnl3) === 0)
   preveri('višja liga: 4. NL nad 1. ŽNL iste zveze',
     koliko(r('hr-ri-4nl', '4. NL — NS Rijeka', 'zns-rijeka'), r('hr-ri-1-znl', '1. ŽNL — Rijeka', 'zns-rijeka')) === 1)
+  preveri('višja liga: MŽNL Vinkovci-Osijek nad Prvo ŽNL Vukovar, pod 3. NL',
+    koliko(r('hr-vs-mznl-vinkovci-osijek', 'MŽNL Vinkovci-Osijek', 'zns-vukovar'), r('hr-vs-prva-znl', 'Prva ŽNL — Vukovar', 'zns-vukovar')) === 1 &&
+    koliko(r('hr-3nl-istok', 'Treća NL Istok', 'hns'), r('hr-vs-mznl-vinkovci-osijek', 'MŽNL Vinkovci-Osijek', 'zns-vukovar')) === 1 &&
+    koliko(r('hr-vs-mznl-vinkovci-osijek', 'MŽNL Vinkovci-Osijek', 'zns-vukovar'), r('hr-3nl-istok', 'Treća NL Istok', 'hns')) === 0)
   preveri('višja liga: II pred I (rimske številke)', r('hr-bm-ii-znl-beli-manastir', 'II ŽNL Beli Manastir', 'ns-beli-manastir').raven === 3)
   preveri('višja liga: mladinska in članska se ne primerjata', koliko(hnl3, r('hr-zg-u19-1znl', '1. ZNL juniori', 'zns-zagreb')) === 0)
   preveri('višja liga: slovaška piramida je državna',
