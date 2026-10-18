@@ -150,9 +150,12 @@ jobs:
       - name: Regional DFB gate and concurrent writes
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          SUPABASE_TEST_DB: postgres
         run: |
           node scripts/test-vklop-dfb-regije-sql.mjs
           node scripts/test-dfb-regije-locks.mjs
+          node scripts/test-dfb-historical-release-sql.mjs
+          node scripts/test-dfb-historical-locks.mjs
       - name: Reviewed historical statistics and concurrent fixture identities
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska

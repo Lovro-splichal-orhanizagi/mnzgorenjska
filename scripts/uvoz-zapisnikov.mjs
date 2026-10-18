@@ -18,6 +18,7 @@ import { readFileSync, existsSync, mkdirSync, writeFileSync, readdirSync } from 
 import { createHash } from 'node:crypto'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
+import {loadHistoricalStatisticsImportContext,assertHistoricalReportImportable} from './lib/historical-statistics-import.mjs'
 import { zaprtje } from './odtis-kode.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { vseVrstice } from './strani.mjs'
@@ -93,13 +94,19 @@ if (pocisti) {
 
 const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: fetchZaBazo() } })
 
-const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
+const originalCompetition = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
 // Brez `--liga` vzamemo tekočo sezono tekmovanja; arhiv se navede izrecno.
 // Ista liga je lahko objavljena pri dveh zvezah: Pomurska liga ima tekočo
 // sezono pri Lendavi, arhiv pa pri Murski Soboti. `--vir mnzms` pove, od kod
 // brati, ne da bi se liga preselila.
 const virIme = arg('vir')
-const vir = viraZa(virIme ? { source: virIme, slug: tekmovanje.slug } : tekmovanje)
+const {competition:tekmovanje,installedHistoricalMarkers}=await loadHistoricalStatisticsImportContext(db,originalCompetition,{sourceOverride:virIme})
+if(installedHistoricalMarkers && pocisti)throw Error('historical import: cleanup requires a separately reviewed atomic writer')
+if(installedHistoricalMarkers?.markers.some(m=>m.reportId===String(arg('zapisnik')))) {
+  console.log('Historical report has explicit unavailable statistics; immutable installed marker retained without source reads or writes.')
+  process.exit(0)
+}
+const vir = viraZa(tekmovanje,{installedHistoricalMarkers})
 if (virIme) console.log(`Vir povožen: ${virIme}`)
 const liga = arg('liga', sifraLige(tekmovanje, '1502'))
 // Arhiv (prejšnja sezona) igralca ne vrača med aktivne; nastop v tekoči sezoni ga.
@@ -675,6 +682,8 @@ let zapisniki = preberiPosamezniZapisnik
   : vir.ime === 'dfb'
     ? await vir.zapisniki(liga, prenesi, { samoZapisnik, preskoci, sveziZapisniki })
     : await vir.zapisniki(liga, prenesi)
+// Validate the complete loaded batch before deriving or writing any individual rows.
+for(const report of zapisniki)assertHistoricalReportImportable({competition:tekmovanje,report})
 // Sources that do not implement traversal filtering retain the generic filter.
 if (samoZapisnik) zapisniki = zapisniki.filter((x) => String(x.id) === String(samoZapisnik))
 if (omeji) zapisniki = zapisniki.slice(0, omeji)
@@ -698,6 +707,8 @@ const odtisKode = (() => {
   const h = createHash('sha256')
   const datoteke = [
     'scripts/uvoz-zapisnikov.mjs',
+    ...zaprtje('scripts/lib/historical-statistics-import.mjs'),
+    ...(vir.historicalSourceFiles??[]),
     'src/lib/nepripisaniRumeni.mjs',
     'scripts/prestop.mjs',
     'scripts/klubi.mjs',
