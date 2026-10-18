@@ -26,9 +26,14 @@ exception when insufficient_privilege then
   raise notice 'agent_bralec: bypassrls nastavi ročno (docs/agenti-baza.md)';
 end $$;
 
+-- Varnost ne sloni na teh privzetih (seja jih lahko spremeni), ampak na
+-- agent.poizvedba (transakcija le za branje, en sam podizraz), pravicah in
+-- omejitvah, ki jih seja ne more preklopiti (connection limit, temp_file_limit).
+alter role agent_bralec connection limit 3;
 alter role agent_bralec set default_transaction_read_only = on;
 alter role agent_bralec set statement_timeout = '15s';
 alter role agent_bralec set idle_in_transaction_session_timeout = '30s';
+alter role agent_bralec set temp_file_limit = '256MB';
 
 create schema if not exists agent;
 revoke all on schema agent from public;
@@ -52,8 +57,17 @@ insert into agent.zaprti_stolpci (tabela, stolpec, zakaj) values
   ('public.narocila_znack', 'naslov', 'naslov kupca'),
   ('trgovina.narocila', 'email', 'e-pošta kupca'),
   ('trgovina.narocila', 'naslov', 'naslov kupca'),
-  ('trgovina.narocila', 'odjemalec', 'zgoščen IP')
+  ('trgovina.narocila', 'odjemalec', 'zgoščen IP'),
+  ('trgovina.narocila', 'ime', 'ime kupca'),
+  ('trgovina.narocila', 'sledilna', 'sledilna številka kupca'),
+  ('public.email_log', 'napaka', 'odbitja vsebujejo e-pošto')
 on conflict (tabela, stolpec) do nothing;
+
+-- Stolpci, ki po imenu verjetno nosijo skrivnost ali osebni podatek, so zaprti
+-- tudi brez vpisa (nova tabela tako ne odpre e-pošte ali žetona po pomoti).
+create or replace function agent.obcutljiv_stolpec(p text) returns boolean
+language sql immutable set search_path = pg_catalog
+as $f$ select p ~* '(e_?mail|naslov|telefon|geslo|password|token|zeton|kljuc|secret|hash|stripe_customer|dokaz|odjemalec|ip_?naslov|^ip$)' $f$;
 
 -- Registracije in prijave po dnevih brez e-pošte (pogled teče kot lastnik).
 create or replace view agent.registracije as
@@ -88,10 +102,13 @@ begin
     if exists (select 1 from agent.zaprte_tabele z where z.tabela = r.nspname || '.' || r.relname) then
       continue;
     end if;
-    if exists (select 1 from agent.zaprti_stolpci z where z.tabela = r.nspname || '.' || r.relname) then
+    if exists (select 1 from agent.zaprti_stolpci z where z.tabela = r.nspname || '.' || r.relname)
+       or exists (select 1 from pg_attribute a where a.attrelid = r.oid and a.attnum > 0
+                  and not a.attisdropped and agent.obcutljiv_stolpec(a.attname)) then
       select string_agg(quote_ident(a.attname), ', ' order by a.attnum) into v_stolpci
       from pg_attribute a
       where a.attrelid = r.oid and a.attnum > 0 and not a.attisdropped
+        and not agent.obcutljiv_stolpec(a.attname)
         and not exists (select 1 from agent.zaprti_stolpci z
                         where z.tabela = r.nspname || '.' || r.relname and z.stolpec = a.attname);
       if v_stolpci is not null then
@@ -106,6 +123,45 @@ begin
 end $$;
 
 revoke all on function agent.uskladi_pravice() from public;
+
+-- Edina pot za poizvedbe agenta (scripts/hetzner/agent-sql.sh): ovoj odpre
+-- transakcijo le za branje in pokliče to funkcijo; besedilo se izvede kot en
+-- sam podizraz (EXECUTE ne sprejme več ukazov), zato ne more končati
+-- transakcije, preklopiti v pisanje ali pognati drugega ukaza. Vrstice kot JSON.
+create or replace function agent.poizvedba(p_sql text) returns setof json
+language plpgsql security invoker set search_path = public, trgovina, agent, pg_catalog
+as $f$
+begin
+  if not current_setting('transaction_read_only')::boolean then
+    raise exception 'agent.poizvedba teče le v transakciji za branje';
+  end if;
+  return query execute format('select to_json(t) from (%s) t limit 1000', p_sql);
+end $f$;
+revoke all on function agent.poizvedba(text) from public;
+grant execute on function agent.poizvedba(text) to agent_bralec;
+
+-- pg_net: tabele čakalne vrste in odgovorov so bile odprte vsem (PUBLIC), kar bi
+-- agentu dalo URL-je spletnih kljuk Discorda. Pravice ostanejo vsem obstoječim
+-- vlogam, PUBLIC (in s tem agent_bralec) jih izgubi. Zahteva lastnika sheme net.
+do $$
+declare v_t text; v_v text;
+begin
+  if to_regnamespace('net') is null then return; end if;
+  foreach v_v in array array['anon','authenticated','service_role','postgres','supabase_functions_admin'] loop
+    if exists (select 1 from pg_roles where rolname = v_v) then
+      execute format('grant usage on schema net to %I', v_v);
+      foreach v_t in array array['http_request_queue','_http_response'] loop
+        if to_regclass('net.' || v_t) is not null then
+          execute format('grant all on net.%I to %I', v_t, v_v);
+        end if;
+      end loop;
+    end if;
+  end loop;
+  revoke usage on schema net from public;
+  revoke all on net.http_request_queue, net._http_response from public;
+exception when insufficient_privilege then
+  raise warning 'net: pravice PUBLIC odvzemi ročno (docs/agenti-baza.md)';
+end $$;
 
 grant usage on schema public, trgovina to agent_bralec;
 grant select on agent.registracije to agent_bralec;

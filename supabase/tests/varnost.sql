@@ -5102,6 +5102,21 @@ select pg_temp.preveri('agent: ne bere e-pošte kupca', not has_column_privilege
 select pg_temp.preveri('agent: bere stanje naročila', has_column_privilege('agent_bralec', 'trgovina.narocila', 'stanje', 'select'));
 select pg_temp.preveri('agent: ne bere e-pošte v email_log', not has_column_privilege('agent_bralec', 'public.email_log', 'email', 'select'));
 select pg_temp.preveri('agent: ne piše', not has_table_privilege('agent_bralec', 'public.fantasy_teams', 'insert,update,delete'));
+select pg_temp.preveri('agent: ne dostopa do pg_net (URL-ji kljuk Discorda)',
+  to_regnamespace('net') is null or not has_schema_privilege('agent_bralec', 'net', 'usage'));
+select pg_temp.preveri('agent: aplikacija ohrani pg_net',
+  to_regnamespace('net') is null or (has_schema_privilege('authenticated', 'net', 'usage')
+    and has_table_privilege('postgres', 'net.http_request_queue', 'insert')));
+select pg_temp.preveri('agent: največ 3 povezave',
+  (select rolconnlimit from pg_roles where rolname = 'agent_bralec') = 3);
+select pg_temp.preveri('agent: poizvedba le za agenta',
+  has_function_privilege('agent_bralec', 'agent.poizvedba(text)', 'execute')
+  and not has_function_privilege('anon', 'agent.poizvedba(text)', 'execute'));
+select pg_temp.preveri('agent: obcutljiv stolpec po imenu je zaprt',
+  agent.obcutljiv_stolpec('kontakt_email') and agent.obcutljiv_stolpec('koda_hash')
+  and not agent.obcutljiv_stolpec('poslano_at'));
+select pg_temp.preveri('agent: ne bere imena kupca',
+  not has_column_privilege('agent_bralec', 'trgovina.narocila', 'ime', 'select'));
 select pg_temp.preveri('agent: privzeto le branje',
   exists (select 1 from pg_db_role_setting s join pg_roles r on r.oid = s.setrole
           where r.rolname = 'agent_bralec' and 'default_transaction_read_only=on' = any(s.setconfig)));
