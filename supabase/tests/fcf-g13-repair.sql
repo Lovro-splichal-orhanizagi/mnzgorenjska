@@ -86,6 +86,8 @@ select pg_temp.g13_reject('invalid calendar opponent', 'update matches set home_
 select pg_temp.g13_reject('unrecognized foreign key', 'create table public.g13_unknown_dependency(id int, team_id bigint references teams)');
 select pg_temp.g13_reject('installed historical policy', $$insert into private_historical_statistics.installed_policies(competition_id,policy_id,policy_sha256,first_fantasy_played_on) select 801,id,policy_sha256,current_date+7 from private_historical_statistics.policies where id='es-fcf-segona-g1-history-2026-10-18-v1'$$);
 select pg_temp.g13_reject('bound historical club', $$update private_historical_statistics.source_club_bindings set bound_team_id=8371 where provider='fcf' and source_club_id='5042'$$);
+select pg_temp.g13_reject('target release receipt', $$insert into private_fcf_target_release.receipts(competition_id,inventory_key,packet_sha256,packet_text,rollout_text,rollout_sha256,source_fingerprint,cleanup_before_sha256,imported_state_sha256,stage)values(801,'test','test','{}','{}','test','test','test','test','imported')$$);
+select pg_temp.g13_reject('target native club binding', $$insert into private_fcf_target_release.club_bindings(competition_id,club_id,category_id,team_id,country_id,source_fingerprint)values(801,'test','test',8371,(select country_id from competitions where id=801),'test')$$);
 select pg_temp.g13_reject('Scout non-FK dependency', $$insert into scout.dnevnik(team_id,vrsta) values(10388,'isci')$$);
 -- A trigger is allowed to run, but not silently corrupt a protected field.
 create function pg_temp.g13_corrupt_test() returns trigger language plpgsql as $$

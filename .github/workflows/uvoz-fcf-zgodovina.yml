@@ -13,6 +13,16 @@ on:
           - cache-export
           - seed-stage
           - missing-inventory
+          - target-approval-stage
+          - cleanup-originals
+          - target-mapping
+          - cleanup-prepare
+          - cleanup-apply
+          - target-import
+          - target-price
+          - target-check
+          - target-activate
+          - target-recover
       cache_key:
         description: Exact reviewed cache snapshot, with no fallback
         required: true
@@ -42,6 +52,22 @@ on:
         type: string
       original_manifest_sha256:
         description: Seed-stage only exact original receipt manifest SHA256
+        type: string
+
+      target_approval_id:
+        description: Actual immutable writer approval artifact ID
+        type: string
+      target_approval_run_id:
+        description: Actual writer approval staging run ID
+        type: string
+      target_approval_attempt:
+        description: Actual writer approval staging run attempt
+        type: string
+      target_approval_digest:
+        description: Independently reviewed writer approval artifact SHA256 digest
+        type: string
+      target_approval_sha256:
+        description: Independently reviewed raw root writer approval SHA256
         type: string
 
 permissions:
@@ -446,3 +472,515 @@ jobs:
           if-no-files-found: error
           overwrite: false
           retention-days: 90
+
+  target-approval:
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'target-approval-stage'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Stage reviewed FCF target approval
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FCF_TARGET_ASSET_ID: ${{ inputs.asset_id }}
+          FCF_TARGET_ASSET_SHA256: ${{ inputs.asset_sha256 }}
+        run: node scripts/uvozi-fcf-cilj.mjs --mode approval-stage
+      - name: Retain reviewed FCF target approval
+        if: steps.operation.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-target-approval-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-target-approval/
+          if-no-files-found: error
+          retention-days: 30
+
+  cleanup-originals:
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'cleanup-originals'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Stage genuine four FCF originals
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FCF_TARGET_ASSET_ID: ${{ inputs.asset_id }}
+          FCF_TARGET_ASSET_SHA256: ${{ inputs.asset_sha256 }}
+        run: node scripts/uvozi-fcf-cilj.mjs --mode originals-stage
+      - name: Retain genuine four FCF originals
+        if: steps.operation.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-history-cleanup-originals-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-cleanup-originals/
+          if-no-files-found: error
+          retention-days: 30
+
+  target-mapping:
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'target-mapping'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Existing database tunnel decision
+        id: database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          test -n "$SUPABASE_DB_URL"
+          case "$SUPABASE_DB_URL" in *@127.0.0.1*) echo "tunel=da" >> "$GITHUB_OUTPUT";; *) exit 1;; esac
+      - name: Tunel do baze na VM
+        if: steps.database.outputs.tunel == 'da'
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Derive exact FCF native mapping
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          FCF_TARGET_APPROVAL_ID: ${{ inputs.target_approval_id }}
+          FCF_TARGET_APPROVAL_RUN_ID: ${{ inputs.target_approval_run_id }}
+          FCF_TARGET_APPROVAL_ATTEMPT: ${{ inputs.target_approval_attempt }}
+          FCF_TARGET_APPROVAL_DIGEST: ${{ inputs.target_approval_digest }}
+          FCF_TARGET_APPROVAL_SHA256: ${{ inputs.target_approval_sha256 }}
+        run: node scripts/uvozi-fcf-cilj.mjs --mode mapping
+      - name: Retain exact FCF native mapping
+        if: steps.operation.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-target-mapping-${{ steps.operation.outputs.target_slug }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-target-mapping/
+          if-no-files-found: error
+          retention-days: 30
+
+  cleanup-prepare:
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'cleanup-prepare'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Existing database tunnel decision
+        id: database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          test -n "$SUPABASE_DB_URL"
+          case "$SUPABASE_DB_URL" in *@127.0.0.1*) echo "tunel=da" >> "$GITHUB_OUTPUT";; *) exit 1;; esac
+      - name: Tunel do baze na VM
+        if: steps.database.outputs.tunel == 'da'
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Prepare exact four FCF cleanup before-image
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FCF_TARGET_APPROVAL_ID: ${{ inputs.target_approval_id }}
+          FCF_TARGET_APPROVAL_RUN_ID: ${{ inputs.target_approval_run_id }}
+          FCF_TARGET_APPROVAL_ATTEMPT: ${{ inputs.target_approval_attempt }}
+          FCF_TARGET_APPROVAL_DIGEST: ${{ inputs.target_approval_digest }}
+          FCF_TARGET_APPROVAL_SHA256: ${{ inputs.target_approval_sha256 }}
+        run: node scripts/uvozi-fcf-cilj.mjs --mode cleanup-prepare
+      - name: Retain exact FCF cleanup before-image
+        if: steps.operation.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-history-cleanup-prepared-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-cleanup-prepared/
+          if-no-files-found: error
+          retention-days: 30
+
+  cleanup-apply:
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'cleanup-apply'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Existing database tunnel decision
+        id: database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          test -n "$SUPABASE_DB_URL"
+          case "$SUPABASE_DB_URL" in *@127.0.0.1*) echo "tunel=da" >> "$GITHUB_OUTPUT";; *) exit 1;; esac
+      - name: Tunel do baze na VM
+        if: steps.database.outputs.tunel == 'da'
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Apply exact four FCF cleanup
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FCF_TARGET_APPROVAL_ID: ${{ inputs.target_approval_id }}
+          FCF_TARGET_APPROVAL_RUN_ID: ${{ inputs.target_approval_run_id }}
+          FCF_TARGET_APPROVAL_ATTEMPT: ${{ inputs.target_approval_attempt }}
+          FCF_TARGET_APPROVAL_DIGEST: ${{ inputs.target_approval_digest }}
+          FCF_TARGET_APPROVAL_SHA256: ${{ inputs.target_approval_sha256 }}
+        run: node scripts/uvozi-fcf-cilj.mjs --mode cleanup-apply
+      - name: Retain exact FCF cleanup receipt
+        if: steps.operation.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-history-cleanup-applied-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-cleanup-applied/
+          if-no-files-found: error
+          retention-days: 30
+
+  target-import:
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'target-import'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Existing database tunnel decision
+        id: database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          test -n "$SUPABASE_DB_URL"
+          case "$SUPABASE_DB_URL" in *@127.0.0.1*) echo "tunel=da" >> "$GITHUB_OUTPUT";; *) exit 1;; esac
+      - name: Tunel do baze na VM
+        if: steps.database.outputs.tunel == 'da'
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Import exact FCF target offline
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FCF_TARGET_APPROVAL_ID: ${{ inputs.target_approval_id }}
+          FCF_TARGET_APPROVAL_RUN_ID: ${{ inputs.target_approval_run_id }}
+          FCF_TARGET_APPROVAL_ATTEMPT: ${{ inputs.target_approval_attempt }}
+          FCF_TARGET_APPROVAL_DIGEST: ${{ inputs.target_approval_digest }}
+          FCF_TARGET_APPROVAL_SHA256: ${{ inputs.target_approval_sha256 }}
+        run: node scripts/uvozi-fcf-cilj.mjs --mode import
+      - name: Retain exact FCF target import
+        if: steps.operation.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-target-import-${{ steps.operation.outputs.target_slug }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-target-import/
+          if-no-files-found: error
+          retention-days: 30
+
+  target-price:
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'target-price'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Existing database tunnel decision
+        id: database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          test -n "$SUPABASE_DB_URL"
+          case "$SUPABASE_DB_URL" in *@127.0.0.1*) echo "tunel=da" >> "$GITHUB_OUTPUT";; *) exit 1;; esac
+      - name: Tunel do baze na VM
+        if: steps.database.outputs.tunel == 'da'
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Price exact FCF target
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FCF_TARGET_APPROVAL_ID: ${{ inputs.target_approval_id }}
+          FCF_TARGET_APPROVAL_RUN_ID: ${{ inputs.target_approval_run_id }}
+          FCF_TARGET_APPROVAL_ATTEMPT: ${{ inputs.target_approval_attempt }}
+          FCF_TARGET_APPROVAL_DIGEST: ${{ inputs.target_approval_digest }}
+          FCF_TARGET_APPROVAL_SHA256: ${{ inputs.target_approval_sha256 }}
+        run: node scripts/uvozi-fcf-cilj.mjs --mode price
+      - name: Retain exact FCF target pricing
+        if: steps.operation.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-target-price-${{ steps.operation.outputs.target_slug }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-target-price/
+          if-no-files-found: error
+          retention-days: 30
+
+  target-check:
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'target-check'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Existing database tunnel decision
+        id: database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          test -n "$SUPABASE_DB_URL"
+          case "$SUPABASE_DB_URL" in *@127.0.0.1*) echo "tunel=da" >> "$GITHUB_OUTPUT";; *) exit 1;; esac
+      - name: Tunel do baze na VM
+        if: steps.database.outputs.tunel == 'da'
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Check exact FCF target release
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FCF_TARGET_APPROVAL_ID: ${{ inputs.target_approval_id }}
+          FCF_TARGET_APPROVAL_RUN_ID: ${{ inputs.target_approval_run_id }}
+          FCF_TARGET_APPROVAL_ATTEMPT: ${{ inputs.target_approval_attempt }}
+          FCF_TARGET_APPROVAL_DIGEST: ${{ inputs.target_approval_digest }}
+          FCF_TARGET_APPROVAL_SHA256: ${{ inputs.target_approval_sha256 }}
+        run: node scripts/uvozi-fcf-cilj.mjs --mode check
+      - name: Retain exact FCF target check
+        if: steps.operation.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-target-check-${{ steps.operation.outputs.target_slug }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-target-check/
+          if-no-files-found: error
+          retention-days: 30
+
+  target-activate:
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'target-activate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Existing database tunnel decision
+        id: database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          test -n "$SUPABASE_DB_URL"
+          case "$SUPABASE_DB_URL" in *@127.0.0.1*) echo "tunel=da" >> "$GITHUB_OUTPUT";; *) exit 1;; esac
+      - name: Tunel do baze na VM
+        if: steps.database.outputs.tunel == 'da'
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Activate exact FCF target
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FCF_TARGET_APPROVAL_ID: ${{ inputs.target_approval_id }}
+          FCF_TARGET_APPROVAL_RUN_ID: ${{ inputs.target_approval_run_id }}
+          FCF_TARGET_APPROVAL_ATTEMPT: ${{ inputs.target_approval_attempt }}
+          FCF_TARGET_APPROVAL_DIGEST: ${{ inputs.target_approval_digest }}
+          FCF_TARGET_APPROVAL_SHA256: ${{ inputs.target_approval_sha256 }}
+        run: node scripts/uvozi-fcf-cilj.mjs --mode activate
+      - name: Retain exact FCF target activation
+        if: steps.operation.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-target-activate-${{ steps.operation.outputs.target_slug }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-target-activate/
+          if-no-files-found: error
+          retention-days: 30
+
+  target-recover:
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'target-recover'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Existing database tunnel decision
+        id: database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          test -n "$SUPABASE_DB_URL"
+          case "$SUPABASE_DB_URL" in *@127.0.0.1*) echo "tunel=da" >> "$GITHUB_OUTPUT";; *) exit 1;; esac
+      - name: Tunel do baze na VM
+        if: steps.database.outputs.tunel == 'da'
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Read back exact FCF target receipt
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          FCF_TARGET_APPROVAL_ID: ${{ inputs.target_approval_id }}
+          FCF_TARGET_APPROVAL_RUN_ID: ${{ inputs.target_approval_run_id }}
+          FCF_TARGET_APPROVAL_ATTEMPT: ${{ inputs.target_approval_attempt }}
+          FCF_TARGET_APPROVAL_DIGEST: ${{ inputs.target_approval_digest }}
+          FCF_TARGET_APPROVAL_SHA256: ${{ inputs.target_approval_sha256 }}
+        run: node scripts/uvozi-fcf-cilj.mjs --mode recover
+      - name: Retain exact FCF target recovery
+        if: steps.operation.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-target-recover-${{ steps.operation.outputs.target_slug }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-target-recover/
+          if-no-files-found: error
+          retention-days: 30

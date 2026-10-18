@@ -61,8 +61,12 @@ test('aggregate source-byte cap refuses before any bodies are copied',t=>{
 })
 test('checked-in Actions restore metadata reaches the real cache-export CLI and refuses a fallback',t=>{
  const workflow=readFileSync(new URL('../.github/workflows/uvoz-fcf-zgodovina.yml',import.meta.url),'utf8')
- const steps=workflow.split(/^      - /m).slice(1),restore=steps.find(s=>s.includes('uses: actions/cache/restore@')),exportStep=steps.find(s=>s.includes('id: export'))
- assert.ok(restore);assert.match(restore,/key: \$\{\{ inputs\.cache_key \}\}/);assert.doesNotMatch(workflow,/restore-keys:|cache\/save|secrets\.|npm |curl |wget |schedule:/)
+ const cacheJob=workflow.match(/^  cache-export:\n([\s\S]*?)(?=^  [\w-]+:\n|(?![\s\S]))/m)?.[0]
+ assert.ok(cacheJob,'the source-free cache-export job must remain present')
+ const steps=cacheJob.split(/^      - /m).slice(1),restore=steps.find(s=>s.includes('uses: actions/cache/restore@')),exportStep=steps.find(s=>s.includes('id: export'))
+ assert.ok(restore);assert.match(restore,/key: \$\{\{ inputs\.cache_key \}\}/)
+ assert.doesNotMatch(workflow,/restore-keys:|cache\/save|schedule:/)
+ assert.doesNotMatch(cacheJob,/secrets\.|npm |curl |wget /)
  assert.match(workflow,/permissions:\n  contents: read/)
  const command=exportStep.match(/^        run: (.+)$/m)[1]
  for(const candidate of ['zapisniki-ES-k1od1-39053159080-1','zapisniki-ES-k1od1-39122610224-1','zapisniki-es-ct-tercera-g2-39130940424','zapisniki-es-ct-tercera-g4-39096381467'])for(const hit of [true,false]){
