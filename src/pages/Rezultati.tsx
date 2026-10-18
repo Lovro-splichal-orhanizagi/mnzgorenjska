@@ -199,23 +199,26 @@ export default function Rezultati() {
             <p className="text-sm text-slate-400">{t('tekme.rezultati.prazenKrog')}</p>
           ) : (
             <ul className="kartica divide-y divide-white/10 overflow-hidden">
-              {vKrogu.map((t) => (
+              {vKrogu.map((tekma) => (
                 // Vrstica vodi na tekmo (izid razpne povezavo čez vrstico),
                 // imeni klubov pa na stran kluba.
                 <li
-                  key={t.match_id}
-                  className="relative flex min-h-[52px] items-center gap-2 px-3 py-2 text-sm transition hover:bg-white/5"
+                  key={tekma.match_id}
+                  className="relative flex min-h-[52px] flex-wrap items-center gap-2 px-3 py-2 text-sm transition hover:bg-white/5"
                 >
-                  <ImeKluba id={t.home_team_id} ime={t.home_name} className="text-right" />
-                  <Grb ime={t.home_name} kratko={t.home_short} logo={t.home_logo} velikost={22} />
+                  <ImeKluba id={tekma.home_team_id} ime={tekma.home_name} className="text-right" />
+                  <Grb ime={tekma.home_name} kratko={tekma.home_short} logo={tekma.home_logo} velikost={22} />
                   <Link
-                    to={`/match/${t.match_id}`}
+                    to={`/match/${tekma.match_id}`}
                     className="w-12 shrink-0 text-center font-black tabular-nums after:absolute after:inset-0 after:content-['']"
                   >
-                    {t.home_goals}:{t.away_goals}
+                    {tekma.home_goals}:{tekma.away_goals}
                   </Link>
-                  <Grb ime={t.away_name} kratko={t.away_short} logo={t.away_logo} velikost={22} />
-                  <ImeKluba id={t.away_team_id} ime={t.away_name} />
+                  <Grb ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} velikost={22} />
+                  <ImeKluba id={tekma.away_team_id} ime={tekma.away_name} />
+                  {tekma.statistics_status === 'unavailable_historical' && (
+                    <span className="w-full text-center text-xs text-amber-200">{t('tekme.statistika.kratko')}</span>
+                  )}
                 </li>
               ))}
             </ul>

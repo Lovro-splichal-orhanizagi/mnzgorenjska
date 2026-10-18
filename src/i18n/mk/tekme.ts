@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const tekme: NonNullable<Prevod['tekme']> = {
+  statistika: {
+    brezStrelcev: "Нема проверени стрелци.",
+    nedosegljivo: "Статистиката на играчите за овој историски натпревар не е достапна. Официјалниот резултат е зачуван.",
+    kratko: "Статистиката не е достапна",
+    postaveTocke: "Состави и поени",
+    kartoni: "Картони",
+    delno: "Делумна статистика за сезоната {sezona}: целосни податоци за {popolnih} од {odigranih} одиграни лигашки натпревари. За {nedosegljivih} историски натпревари статистиката на играчите не е достапна. Збировите и просеците вклучуваат само проверени настапи.",
+    brezOpazovanj: "Нема проверени настапи",
+  },
+
   krog: '{n}. коло',
   moraPrijava: 'За гласање мора да се <prijava>најавиш</prijava>.',
 

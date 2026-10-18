@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const tekme: NonNullable<Prevod['tekme']> = {
+  statistika: {
+    brezStrelcev: "Nav pārbaudītu vārtu guvēju.",
+    nedosegljivo: "Spēlētāju statistika par šo vēsturisko spēli nav pieejama. Oficiālais rezultāts ir saglabāts.",
+    kratko: "Statistika nav pieejama",
+    postaveTocke: "Sastāvi un punkti",
+    kartoni: "Kartītes",
+    delno: "Daļēja statistika sezonai {sezona}: pilnīgi dati par {popolnih} no {odigranih} aizvadītajām līgas spēlēm. Spēlētāju statistika par {nedosegljivih} vēsturiskajām spēlēm nav pieejama. Kopsummas un vidējie rādītāji ietver tikai pārbaudītas dalības.",
+    brezOpazovanj: "Nav pārbaudītu dalību",
+  },
+
   krog: '{n}. kārta',
   moraPrijava: 'Lai balsotu, tev <prijava>jāpiesakās</prijava>.',
 

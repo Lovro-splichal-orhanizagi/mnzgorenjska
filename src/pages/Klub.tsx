@@ -21,6 +21,7 @@ import { useNaslov, useNoindex } from '../lib/naslov'
 import { VRSTNI_RED } from '../lib/pravila'
 import type { Pozicija } from '../lib/tipi'
 import Grb from '../components/Grb'
+import { PokritostStatistike, usePokritostStatistike } from '../components/PokritostStatistike'
 import Plakat from '../components/Plakat'
 import { najboljsiTrije, navijacev, ligaVTozilniku } from '../lib/plakat'
 import { NavijaciKluba } from '../components/NavijaciKlubov'
@@ -51,6 +52,7 @@ export default function Klub() {
   const [liga, setLiga] = useState<{ slug: string; name: string; short_name: string | null } | null>(null)
   // Liga, katere navijače kaže stran — ista, iz katere so igralci.
   const [ligaId, setLigaId] = useState<number | null>(null)
+  const pokritost = usePokritostStatistike(ligaId)
   // "1. liga MNZ Ljubljana" za plakat: ime lige v bazi je "1. liga — člani",
   // kar na plakatu brez zveze ne pove, KJE je ta liga.
   const [ligaZaPlakat, setLigaZaPlakat] = useState<string>('')
@@ -219,6 +221,8 @@ export default function Klub() {
           </p>
         </div>
       </header>
+
+      <PokritostStatistike podatki={pokritost} />
 
       {id && <KlubPredstavitev klubId={Number(id)} osvezi={osvezi} />}
 

@@ -13,6 +13,7 @@ import Rezultati from '../src/pages/Rezultati'
 import Tabela from '../src/pages/Tabela'
 import Tekma, { OpozoriloRumenih } from '../src/pages/Tekma'
 import IgrisceTocke from '../src/components/IgrisceTocke'
+import { NedosegljivaStatistika, PokritostStatistike, brezPreverjenihNastopov } from '../src/components/PokritostStatistike'
 import { encodeUnattributedYellow } from '../src/lib/nepripisaniRumeni.mjs'
 import Prijava from '../src/pages/Prijava'
 import MojaEkipa from '../src/pages/MojaEkipa'
@@ -204,6 +205,24 @@ for (const [ime, Komponenta, pot] of strani) {
   preveri('tekma: napaka neobveznih podatkov ne skrije znane statistike',
     nedosegljivo.includes('Podatek o pripisanosti rumenih kartonov trenutno ni na voljo.') &&
     nedosegljivo.includes('/player/42') && nedosegljivo.includes('⚽') && nedosegljivo.includes('🟨'))
+}
+
+// The browser regression exercises the real loaded pages; this keeps their shared
+// historical unavailable/coverage boundary in the ordinary offline CI smoke too.
+{
+  const podatki = { season: '2026/27', odigranih: 3, statistics_complete_matches: 2, statistics_unavailable_matches: 1 }
+  const izris = renderToString(<NedosegljivaStatistika />).replace(/<!-- -->/g, '')
+  preveri('zgodovinska statistika: izrecno nedosegljivo s štirimi pomišljaji namesto ničel',
+    izris.includes('Statistika igralcev za to zgodovinsko tekmo ni na voljo.') &&
+    (izris.match(/<dd /g) ?? []).length === 4 && (izris.match(/>—<\/dd>/g) ?? []).length === 4)
+  const delno = renderToString(<PokritostStatistike podatki={podatki} />)
+  preveri('zgodovinska statistika: delni seštevki imajo sezono in preverjeno pokritost',
+    delno.includes('2026/27') && delno.includes('2 od 3') && delno.includes('le preverjene nastope'))
+  preveri('zgodovinska statistika: popolna sezona nima opozorila o delni pokritosti',
+    renderToString(<PokritostStatistike podatki={{ ...podatki, statistics_unavailable_matches: 0 }} />) === '')
+  preveri('zgodovinska statistika: manjkajoče opazovanje se loči od preverjenega ničelnega dosežka',
+    brezPreverjenihNastopov(podatki, 0) && !brezPreverjenihNastopov(podatki, 1) &&
+    !brezPreverjenihNastopov({ ...podatki, statistics_unavailable_matches: 0 }, 0))
 }
 
 preveri('pravno: razdelek Scout s sidrom #scout (povezava za ugovor)',
