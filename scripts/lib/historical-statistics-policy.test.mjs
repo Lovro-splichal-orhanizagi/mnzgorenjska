@@ -7,6 +7,7 @@ import {
 } from './historical-statistics-policy.mjs'
 
 const registry = JSON.parse(readFileSync(new URL('../policies/historical-statistics-exclusions.json', import.meta.url)))
+const seedSql=['20261018180000_historical_statistical_availability.sql','20261018231000_dfb_nord_west_historical_policy.sql'].map(file=>readFileSync(new URL(`../../supabase/migrations/${file}`,import.meta.url),'utf8')).join('\n')
 const clone = value => structuredClone(value)
 const hr = registry.policies.find(p => p.provider === 'hns')
 const de = registry.policies.find(p => p.provider === 'dfb')
@@ -16,12 +17,13 @@ const classify = (policy = hr, entry = policy.entries[0], overrides = {}) => cla
   competition: competitionFor(policy), fixture: fixtureFor(policy, entry), rawSha256: entry.rawSha256, policy, ...overrides,
 })
 
-test('registry contains exactly reviewed HNS3, DFB2 and FCF4 historical identities', () => {
+test('registry contains exactly reviewed HNS3, DFB12 and FCF4 historical identities', () => {
   assert.equal(validateHistoricalStatisticsRegistry(registry), true)
   assert.deepEqual(hr.entries.map(x => x.sourceMatchId).sort(), ['114471617', '114471627', '114471629'])
   assert.deepEqual(de.entries.map(x => x.sourceMatchId).sort(), ['2402929', '2403004'])
+  assert.deepEqual(registry.policies.filter(p=>p.provider==='dfb').flatMap(p=>p.entries.map(e=>e.sourceMatchId)).sort(),['2402287','2402299','2402306','2402312','2402325','2402332','2402346','2402352','2402929','2403004','2405268','2405441'])
   assert.deepEqual(registry.policies.filter(p=>p.provider==='fcf').flatMap(p=>p.entries.map(e=>e.sourceMatchId)).sort(), ['4109388','4116215','4118352','4118358'])
-  assert.equal(registry.policies.length,5)
+  assert.equal(registry.policies.length,7)
   assert.ok(!hr.entries.some(x => x.sourceMatchId === '100511758'))
 })
 
@@ -124,7 +126,7 @@ test('unregistered ordinary provider identity still follows strict normal parsin
 })
 
 test('migration-pinned canonical policy bodies and hashes match the single reviewed JSON registry', () => {
-  const sql = readFileSync(new URL('../../supabase/migrations/20261018180000_historical_statistical_availability.sql',import.meta.url),'utf8')
+  const sql = seedSql
   const seeds = [...sql.matchAll(/insert into private_historical_statistics\.policies values\('([^']+)','([a-f0-9]{64})','((?:''|[^'])*)'::jsonb\);/g)]
   assert.equal(seeds.length,registry.policies.length)
   for (const policy of registry.policies) {
@@ -150,7 +152,7 @@ test('FCF registry requires both native category identities',()=>{
 
 test('reviewed club bindings cover every approved source club/category and retain exact receipt proofs',()=>{
   const bindings=JSON.parse(readFileSync(new URL('../policies/historical-statistics-club-bindings.json',import.meta.url))).bindings
-  const sql=readFileSync(new URL('../../supabase/migrations/20261018180000_historical_statistical_availability.sql',import.meta.url),'utf8')
+  const sql=seedSql
   const keys=new Set()
   for(const binding of bindings) {
     const key=[binding.provider,binding.sourceClubId,binding.sourceCategoryId??''].join(':')
