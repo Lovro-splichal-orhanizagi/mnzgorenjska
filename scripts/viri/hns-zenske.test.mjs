@@ -9,7 +9,7 @@ const phases = [
   ['playoff', 'Magenta liga 25/26 Play off'],
   ['playout', 'Magenta liga 25/26 Play out'],
 ]
-const rowHtml = t => `<li class="row" data-round="${t.krog}" data-match="${t.id}"><div class="date">${t.datum.slice(8)}.${t.datum.slice(5,7)}.${t.datum.slice(0,4)}. ${t.ura ?? ''}</div><div class="club1" data-id="${t.domaciId}"><a>${t.domaci}</a></div><div class="res1">${t.izid?.domaci ?? '-'}</div><div class="res2">${t.izid?.gostje ?? '-'}</div><div class="club2" data-id="${t.gostjeId}"><a>${t.gostje}</a></div><div class="link"></div></li>`
+const rowHtml = t => `<li class="row" data-round="${t.krog}" data-match="${t.id}"><div class="date">${t.datum ? `${t.datum.slice(8)}.${t.datum.slice(5,7)}.${t.datum.slice(0,4)}. ${t.ura ?? ''}` : 'Odgođeno'}</div><div class="club1" data-id="${t.domaciId}"><a>${t.domaci}</a></div><div class="res1">${t.izid?.domaci ?? '-'}</div><div class="res2">${t.izid?.gostje ?? '-'}</div><div class="club2" data-id="${t.gostjeId}"><a>${t.gostje}</a></div><div class="link"></div></li>`
 const archiveHtml = () => `<div class="current_results_tabs"><div class="tabs">${phases.map(([, label], i) => `<li data-content="tabContent_10001_${i+1}"><span>${label}</span></li>`).join('')}</div>${phases.map(([phase], i) => `<div id="tabContent_10001_${i+1}"><div class="current_results">${captured.fixtures.filter(t => t.publishedPhase === phase).map(rowHtml).join('')}</div></div>`).join('')}</div>`
 
 test('published archive phase mapping retains75unique fixtures and removes all3round/club overwrite pairs', () => {
@@ -70,4 +70,14 @@ test('report normalization preserves source round and refuses source/report disa
 test('published tab boundary excludes repeated match lists later in source page', () => {
   const html = archiveHtml() + `<div class="current_results">${captured.fixtures.map(rowHtml).join('')}</div>`
   assert.equal(normalizeHnsWomenFixtures(html,'108043476').length,75)
+})
+
+const retainedCurrent = JSON.parse(readFileSync(new URL('../vzorci/hns-zenske-current-fixtures.json', import.meta.url)))
+test('retained current56fixture facts coexist with scorer/card/minute tabs without a phase handover', () => {
+  const html = `<div class="current_results">${retainedCurrent.fixtures.map(rowHtml).join('')}</div><aside>${retainedCurrent.laterStatisticsTabLabels.map((label,i) => `<li data-content="tabContent_10001_${i+1}"><span>${label}</span></li><div id="tabContent_10001_${i+1}">${label}</div>`).join('')}</aside>`
+  const fixtures = normalizeHnsWomenFixtures(html,'114471579')
+  assert.equal(fixtures.length,56)
+  assert.equal(fixtures.filter(t => t.izid).length,27)
+  assert.equal(fixtures.filter(t => t.krog === 9 && t.ura === null).length,4)
+  assert.ok(fixtures.every(t => t.sourcePhase === null && t.sourceRound === t.krog))
 })

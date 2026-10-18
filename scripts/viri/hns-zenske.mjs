@@ -23,6 +23,10 @@ function tabFragment(html, start) {
 
 /** Source phase/round remain explicit; internal krog alone receives the reviewed offset. */
 export function normalizeHnsWomenFixtures(html, sourceCompetitionId) {
+  if (!['114471579', '108043476'].includes(sourceCompetitionId)) fail('unreviewed source competition/container')
+  const results = /<div\b[^>]*\bclass="[^"]*\bcurrent_results(?:_tabs)?\b[^"]*"[^>]*>/.exec(html)
+  if (!results) fail('missing fixture results container')
+  html = tabFragment(html, results.index)
   if (sourceCompetitionId === '114471579') {
     if (/tabContent_10001_/.test(html)) fail('current phase handover requires review')
     const fixtures = vrsticeRazporeda(html)
