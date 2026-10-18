@@ -70,11 +70,11 @@ export function Iskanje() {
   const iskanje = q.toString()
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold">{t('iskanje.naslov')}</h1>
-      <form key={`filtri?${iskanje}`} onSubmit={isci} className="grid gap-4 rounded border border-slate-200 bg-white p-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+      <h1 className="text-2xl font-black naslov sm:text-3xl">{t('iskanje.naslov')}</h1>
+      <form key={`filtri?${iskanje}`} onSubmit={isci} className="kartica grid gap-4 p-5 text-sm text-slate-400 sm:grid-cols-2 lg:grid-cols-4">
         <label className="flex flex-col gap-1">
           {t('iskanje.pozicija')}
-          <select name="skupina" defaultValue={f.skupina ?? ''} className="rounded border border-slate-300 px-2 py-1">
+          <select name="skupina" defaultValue={f.skupina ?? ''} className="polje">
             <option value="">{t('iskanje.vse')}</option>
             {SKUPINE.map((s) => (
               <option key={s} value={s}>{t(`skupina.${s}` as Kljuc)}</option>
@@ -83,7 +83,7 @@ export function Iskanje() {
         </label>
         <label className="flex flex-col gap-1">
           {t('iskanje.raven')}
-          <select name="raven" defaultValue={f.raven} className="rounded border border-slate-300 px-2 py-1">
+          <select name="raven" defaultValue={f.raven} className="polje">
             {RAVNI.map((r) => (
               <option key={r} value={r}>{t(`iskanje.raven.${r}` as Kljuc)}</option>
             ))}
@@ -91,24 +91,24 @@ export function Iskanje() {
         </label>
         <label className="flex flex-col gap-1">
           {t('iskanje.minMinut')}
-          <input name="min" type="number" min={0} defaultValue={f.min} className="rounded border border-slate-300 px-2 py-1" />
+          <input name="min" type="number" min={0} defaultValue={f.min} className="polje" />
         </label>
-        <label className="flex items-center gap-2 self-end">
-          <input type="checkbox" name="odprti" defaultChecked={f.odprti} />
+        <label className="flex items-center gap-2 self-end py-2 text-slate-200">
+          <input type="checkbox" name="odprti" defaultChecked={f.odprti} className="accent-gnl-400" />
           {t('iskanje.odprti')}
         </label>
         {zveze.length > 1 && (
           <fieldset className="flex flex-wrap gap-3 sm:col-span-2 lg:col-span-4">
             <legend className="mb-1">{t('iskanje.regije')}</legend>
             {zveze.map((z) => (
-              <label key={z.id} className="flex items-center gap-1">
-                <input type="checkbox" name="regije" value={z.id} defaultChecked={f.regije.includes(z.id)} />
+              <label key={z.id} className="flex items-center gap-1.5 text-slate-200">
+                <input type="checkbox" name="regije" value={z.id} defaultChecked={f.regije.includes(z.id)} className="accent-gnl-400" />
                 {z.name}
               </label>
             ))}
           </fieldset>
         )}
-        <button className="justify-self-start rounded bg-slate-900 px-4 py-2 text-white sm:col-span-2 lg:col-span-4">{t('iskanje.isci')}</button>
+        <button className="gumb-glavni justify-self-start sm:col-span-2 lg:col-span-4">{t('iskanje.isci')}</button>
       </form>
       <p className="text-xs text-slate-500">{t('iskanje.opomba')}</p>
       <Rezultati key={iskanje} iskanje={iskanje} />
@@ -151,24 +151,35 @@ function Rezultati({ iskanje }: { iskanje: string }) {
     }
   }, [iskanje, od])
 
-  if (napakaI && vrstice.length === 0) return <p className="text-red-700">{napakaI}</p>
-  if (stanje !== 'nalaga' && vrstice.length === 0) return <p className="text-slate-500">{t('iskanje.prazno')}</p>
+  if (napakaI && vrstice.length === 0) return <p className="opozorilo">{napakaI}</p>
+  if (stanje !== 'nalaga' && vrstice.length === 0) return <p className="kartica p-5 text-center text-slate-400">{t('iskanje.prazno')}</p>
   return (
     <div className="space-y-3">
-      <ul className="divide-y divide-slate-200 rounded border border-slate-200 bg-white">
+      <ul className="kartica divide-y divide-white/5 overflow-hidden">
         {vrstice.map((z) => (
-          <li key={z.player_id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 p-3">
-            <Link to={`/player/${z.player_id}`} className="font-medium hover:underline">{z.ime}</Link>
-            <span className="text-sm text-slate-600">{z.klub} · {z.liga}</span>
-            {z.odprt_za_prestop && <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800">{t('iskanje.odprt')}</span>}
-            <span className="w-full text-sm text-slate-700">{utemeljitev(z)}</span>
+          <li key={z.player_id}>
+            <Link to={`/player/${z.player_id}`} className="flex items-center gap-4 px-4 py-3 transition hover:bg-white/5">
+              <span className="min-w-0 flex-1 space-y-1">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-slate-100">{z.ime}</span>
+                  <span className={`znacka poz-${z.skupina}`} title={t(`skupina.${z.skupina}` as Kljuc)}>{t(`poz.${z.skupina}` as Kljuc)}</span>
+                  {z.odprt_za_prestop && <span className="znacka-odprt">{t('iskanje.odprt')}</span>}
+                </span>
+                <span className="block text-xs text-slate-400">{z.klub} · {z.liga}</span>
+                <span className="block text-sm text-slate-300">{utemeljitev(z)}</span>
+              </span>
+              <span className="shrink-0 text-right">
+                <span className="block text-2xl font-black tabular-nums text-gnl-300">{Math.round(z.percentil)}</span>
+                <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-500">{t('iskanje.percentil')}</span>
+              </span>
+            </Link>
           </li>
         ))}
       </ul>
       {stanje === 'nalaga' && <Nalaganje />}
-      {napakaI && <p className="text-red-700">{napakaI}</p>}
+      {napakaI && <p className="opozorilo">{napakaI}</p>}
       {stanje === 'ok' && (
-        <button type="button" onClick={() => setOd(od + STRAN)} className="rounded border border-slate-300 px-3 py-1 text-sm">
+        <button type="button" onClick={() => setOd(od + STRAN)} className="gumb-tih text-sm">
           {t('iskanje.vec')}
         </button>
       )}

@@ -30,23 +30,27 @@ export function Vrzeli() {
     }
   }, [])
 
-  if (napakaV) return <p className="text-red-700">{napakaV}</p>
+  if (napakaV) return <p className="opozorilo">{napakaV}</p>
   if (!vrzeli) return <Nalaganje />
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">{t('vrzeli.naslov')}</h1>
-      <p className="text-sm text-slate-600">{t('vrzeli.opis')}</p>
+      <h1 className="text-2xl font-black naslov sm:text-3xl">{t('vrzeli.naslov')}</h1>
+      <p className="text-sm text-slate-400">{t('vrzeli.opis')}</p>
       {vrzeli.length === 0 ? (
-        <p className="text-slate-500">{t('vrzeli.prazno')}</p>
+        <p className="kartica p-5 text-center text-slate-400">{t('vrzeli.prazno')}</p>
       ) : (
-        <ul className="divide-y divide-slate-200 rounded border border-slate-200 bg-white">
+        <ul className="kartica divide-y divide-white/5 overflow-hidden">
           {vrzeli.map((v, i) => (
-            <li key={`${v.liga}-${v.vrsta}-${v.skupina}-${v.player_id ?? i}`} className="flex flex-wrap items-baseline justify-between gap-2 p-3">
-              <span>
-                {opisVrzeli(v)} <span className="text-xs text-slate-500">{v.liga}</span>
+            <li key={`${v.liga}-${v.vrsta}-${v.skupina}-${v.player_id ?? i}`} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+              <span className="min-w-0 flex-1 space-y-1">
+                <span className="flex flex-wrap items-center gap-2 text-slate-100">
+                  {v.skupina && <span className={`znacka poz-${v.skupina}`}>{t(`poz.${v.skupina}` as Kljuc)}</span>}
+                  {opisVrzeli(v)}
+                </span>
+                <span className="block text-xs text-slate-400">{v.liga}</span>
               </span>
               {v.skupina && (
-                <Link to={`/?skupina=${v.skupina}&raven=ista_ali_nizja`} className="text-sm underline">{t('vrzeli.isci')}</Link>
+                <Link to={`/?skupina=${v.skupina}&raven=ista_ali_nizja`} className="gumb-tih px-3 py-1 text-sm">{t('vrzeli.isci')} →</Link>
               )}
             </li>
           ))}

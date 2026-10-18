@@ -6,15 +6,15 @@ const RAZDELKI = ['kaj', 'kdo', 'raba', 'meje', 'dnevnik', 'cene', 'odpoved', 'k
 export function Pogoji() {
   return (
     <article className="max-w-2xl space-y-4">
-      <h1 className="text-xl font-semibold">{t('pogoji.naslov')}</h1>
-      <p className="text-sm text-slate-500">{t('pogoji.zadnja')}</p>
+      <h1 className="text-2xl font-black naslov sm:text-3xl">{t('pogoji.naslov')}</h1>
+      <p className="text-sm text-slate-400">{t('pogoji.zadnja')}</p>
       {RAZDELKI.map((r) => (
-        <section key={r} id={r} className="space-y-1">
-          <h2 className="font-semibold">{t(`pogoji.h.${r}` as Kljuc)}</h2>
-          <p className="text-slate-700">{t(`pogoji.${r}` as Kljuc)}</p>
+        <section key={r} id={r} className="kartica space-y-1 p-4">
+          <h2 className="font-bold text-slate-100">{t(`pogoji.h.${r}` as Kljuc)}</h2>
+          <p className="text-sm leading-relaxed text-slate-300">{t(`pogoji.${r}` as Kljuc)}</p>
         </section>
       ))}
-      <a href="https://slff.eu/legal#scout" className="underline">{t('pogoji.igralci')}</a>
+      <a href="https://slff.eu/legal#scout" className="povezava text-sm">{t('pogoji.igralci')}</a>
     </article>
   )
 }

@@ -68,7 +68,7 @@ export function SejaProvider({ children }: { children: ReactNode }) {
 export const useSeja = (): Seja => useContext(Kontekst)
 
 export function Nalaganje() {
-  return <p className="text-slate-500">{t('app.nalaganje')}</p>
+  return <p className="animate-pulse text-sm text-slate-400">{t('app.nalaganje')}</p>
 }
 
 /** Strani s podatki igralcev: sedež kluba z veljavno naročnino (baza to preveri še enkrat). */
@@ -80,7 +80,7 @@ export function ZahtevaSedez({ children }: { children: ReactNode }) {
     return (
       <>
         <Nalaganje />
-        <p className="text-red-700">{t('napaka.splosna')}</p>
+        <p className="opozorilo">{t('napaka.splosna')}</p>
       </>
     )
   if (!klub?.sedez || !klub.narocnina?.velja) return <Navigate to="/account" replace />

@@ -32,23 +32,28 @@ export function Opazovani() {
     else setSeznam((s) => (s ?? []).filter((x) => x.player_id !== id))
   }
 
-  if (napakaS) return <p className="text-red-700">{napakaS}</p>
+  if (napakaS) return <p className="opozorilo">{napakaS}</p>
   if (!seznam) return <Nalaganje />
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">{t('seznam.naslov')}</h1>
-      <p className="text-sm text-slate-600">{t('seznam.opis')}</p>
-      {napakaA && <p className="text-sm text-red-700">{napakaA}</p>}
+      <h1 className="text-2xl font-black naslov sm:text-3xl">{t('seznam.naslov')}</h1>
+      <p className="text-sm text-slate-400">{t('seznam.opis')}</p>
+      {napakaA && <p className="opozorilo">{napakaA}</p>}
       {seznam.length === 0 ? (
-        <p className="text-slate-500">{t('seznam.prazno')}</p>
+        <p className="kartica p-5 text-center text-slate-400">{t('seznam.prazno')}</p>
       ) : (
-        <ul className="divide-y divide-slate-200 rounded border border-slate-200 bg-white">
+        <ul className="kartica divide-y divide-white/5 overflow-hidden">
           {seznam.map((o) => (
-            <li key={o.player_id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 p-3 text-sm">
-              <Link to={`/player/${o.player_id}`} className="font-medium hover:underline">{o.ime}</Link>
-              <span className="text-slate-600">{o.klub} · {o.liga} · {t(`skupina.${o.skupina}` as Kljuc)}</span>
-              {o.odprt_za_prestop && <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800">{t('iskanje.odprt')}</span>}
-              <button type="button" disabled={dela} onClick={() => void odstrani(o.player_id)} className="ml-auto underline disabled:opacity-50">{t('seznam.odstrani')}</button>
+            <li key={o.player_id} className="flex items-center gap-3 px-4 py-3">
+              <Link to={`/player/${o.player_id}`} className="group min-w-0 flex-1 space-y-1">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-slate-100 group-hover:text-gnl-300">{o.ime}</span>
+                  <span className={`znacka poz-${o.skupina}`} title={t(`skupina.${o.skupina}` as Kljuc)}>{t(`poz.${o.skupina}` as Kljuc)}</span>
+                  {o.odprt_za_prestop && <span className="znacka-odprt">{t('iskanje.odprt')}</span>}
+                </span>
+                <span className="block text-xs text-slate-400">{o.klub} · {o.liga}</span>
+              </Link>
+              <button type="button" disabled={dela} onClick={() => void odstrani(o.player_id)} className="gumb-tih shrink-0 px-3 py-1 text-sm">{t('seznam.odstrani')}</button>
             </li>
           ))}
         </ul>

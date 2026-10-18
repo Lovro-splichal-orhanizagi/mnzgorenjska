@@ -80,44 +80,55 @@ export function Igralec() {
     else setPodobni(data ?? [])
   }
 
-  if (pid == null) return <p>{t('igralec.ni')}</p>
-  if (napakaI) return <p className="text-red-700">{napakaI}</p>
+  if (pid == null) return <p className="kartica p-5 text-slate-400">{t('igralec.ni')}</p>
+  if (napakaI) return <p className="opozorilo">{napakaI}</p>
   if (profil === undefined) return <Nalaganje />
-  if (profil === null) return <p>{t('igralec.ni')}</p>
+  if (profil === null) return <p className="kartica p-5 text-slate-400">{t('igralec.ni')}</p>
   const p = profil
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-xl font-semibold">{p.ime}</h1>
-        <p className="text-slate-600">{p.klub} · {p.liga} · {t(`skupina.${p.skupina}` as Kljuc)}</p>
-        <p className="text-sm text-slate-700">
+      <header className="kartica space-y-3 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-black naslov sm:text-3xl">{p.ime}</h1>
+            <p className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
+              <span className={`znacka poz-${p.skupina}`}>{t(`skupina.${p.skupina}` as Kljuc)}</span>
+              {p.klub} · {p.liga}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-4xl font-black tabular-nums text-gnl-300">{Math.round(p.percentil)}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{t('iskanje.percentil')}</p>
+          </div>
+        </div>
+        <p className="text-sm text-slate-300">
           {t('igralec.povzetek', { percentil: Math.round(p.percentil), skupina: t(`skupinaMed.${p.skupina}` as Kljuc), zaupanje: Math.round(p.zaupanje * 100) })}
         </p>
-        <button type="button" disabled={dela} onClick={() => void opazuj(p)} className="rounded border border-slate-300 px-3 py-1 text-sm disabled:opacity-50">
+        <button type="button" disabled={dela} onClick={() => void opazuj(p)} className={`${p.opazujem ? 'gumb-tih' : 'gumb-glavni'} text-sm`}>
           {p.opazujem ? t('igralec.neOpazuj') : t('igralec.opazuj')}
         </button>
-        {napakaA && <p className="text-sm text-red-700">{napakaA}</p>}
+        {napakaA && <p className="opozorilo">{napakaA}</p>}
       </header>
 
       {p.privolitev && (
-        <section className="space-y-1 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm">
-          <p className="font-medium text-emerald-900">{t('igralec.odprt')}</p>
+        <section className="space-y-1 rounded-2xl border border-gnl-400/30 bg-gnl-400/10 p-4 text-sm text-slate-200">
+          <p className="font-bold text-gnl-300">{t('igralec.odprt')}</p>
           <p>{t('igralec.letnik', { letnik: p.privolitev.letnik })}</p>
           {p.privolitev.regije.length > 0 && <p>{t('igralec.regije', { regije: p.privolitev.regije.join(', ') })}</p>}
         </section>
       )}
 
       <section className="space-y-2">
-        <h2 className="font-semibold">{t('igralec.sezone')}</h2>
-        <div className="overflow-x-auto rounded border border-slate-200 bg-white">
+        <h2 className="text-lg font-bold text-slate-100">{t('igralec.sezone')}</h2>
+        <div className="kartica overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-100 text-left">
-              <tr>{STOLPCI.map(([k]) => <th key={k} className="whitespace-nowrap px-2 py-1 font-medium">{t(k)}</th>)}</tr>
+            <thead className="border-b border-white/10 text-left text-xs text-slate-400">
+              <tr>{STOLPCI.map(([k]) => <th key={k} className="whitespace-nowrap px-3 py-2 font-semibold">{t(k)}</th>)}</tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-white/5">
               {(p.sezone ?? []).map((s, i) => (
-                <tr key={`${s.sezona}-${s.liga}-${s.klub}-${i}`} className="border-t border-slate-200">
-                  {STOLPCI.map(([k, f]) => <td key={k} className="whitespace-nowrap px-2 py-1">{f(s)}</td>)}
+                <tr key={`${s.sezona}-${s.liga}-${s.klub}-${i}`} className="hover:bg-white/5">
+                  {STOLPCI.map(([k, f]) => <td key={k} className="whitespace-nowrap px-3 py-2 tabular-nums text-slate-300">{f(s)}</td>)}
                 </tr>
               ))}
             </tbody>
@@ -127,21 +138,27 @@ export function Igralec() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="font-semibold">{t('igralec.podobni')}</h2>
+        <h2 className="text-lg font-bold text-slate-100">{t('igralec.podobni')}</h2>
         {podobni === null ? (
-          <button type="button" disabled={dela} onClick={() => void naloziPodobne(p.player_id)} className="rounded border border-slate-300 px-3 py-1 text-sm disabled:opacity-50">
+          <button type="button" disabled={dela} onClick={() => void naloziPodobne(p.player_id)} className="gumb-tih text-sm">
             {t('igralec.pokaziPodobne')}
           </button>
         ) : podobni.length === 0 ? (
-          <p className="text-slate-500">{t('igralec.niPodobnih')}</p>
+          <p className="text-sm text-slate-400">{t('igralec.niPodobnih')}</p>
         ) : (
-          <ul className="divide-y divide-slate-200 rounded border border-slate-200 bg-white">
+          <ul className="kartica divide-y divide-white/5 overflow-hidden">
             {podobni.map((o) => (
-              <li key={o.player_id} className="flex flex-wrap items-baseline gap-x-3 p-3 text-sm">
-                <Link to={`/player/${o.player_id}`} className="font-medium hover:underline">{o.ime}</Link>
-                <span className="text-slate-600">{o.klub} · {o.liga}</span>
-                <span className="text-slate-500">{t('igralec.podobnost', { p: Math.round(o.podobnost * 100) })}</span>
-                {o.odprt_za_prestop && <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800">{t('iskanje.odprt')}</span>}
+              <li key={o.player_id}>
+                <Link to={`/player/${o.player_id}`} className="flex items-center gap-3 px-4 py-3 text-sm transition hover:bg-white/5">
+                  <span className="min-w-0 flex-1 space-y-1">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-slate-100">{o.ime}</span>
+                      {o.odprt_za_prestop && <span className="znacka-odprt">{t('iskanje.odprt')}</span>}
+                    </span>
+                    <span className="block text-xs text-slate-400">{o.klub} · {o.liga}</span>
+                  </span>
+                  <span className="shrink-0 text-slate-400">{t('igralec.podobnost', { p: Math.round(o.podobnost * 100) })}</span>
+                </Link>
               </li>
             ))}
           </ul>
