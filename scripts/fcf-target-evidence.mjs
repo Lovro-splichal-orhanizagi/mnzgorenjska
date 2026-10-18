@@ -110,7 +110,7 @@ export function readFcfCleanupEvidence(input){
   }
   appliedReceipt={artifact:applied.identity,result:r,markers:a.markers}
  }
- const proof=freeze({phase:appliedReceipt?'applied':'prepared',sourceCommit:m.sourceCommit,beforeImageText,beforeSha256:m.beforeSha256,policyHashes:{...policyHashes},originals:sourceOriginals,prepareArtifact:prepared.identity,appliedReceipt})
+ const proof=freeze({phase:appliedReceipt?'applied':'prepared',sourceCommit:m.sourceCommit,preparedUTC:m.capturedUTC,beforeImageText,beforeSha256:m.beforeSha256,policyHashes:{...policyHashes},originals:sourceOriginals,prepareArtifact:prepared.identity,appliedReceipt})
  verifiedCleanup.add(proof);return proof
 }
 /** Consumers must receive the reader's object, never an asserted verified/phase flag. */
