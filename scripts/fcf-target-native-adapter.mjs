@@ -4,7 +4,7 @@
 import {createHash} from 'node:crypto'
 import {getFcfCapturedTargetData} from './fcf-target-evidence.mjs'
 import {historicalStatisticsPolicySha256 as fingerprint} from './lib/historical-statistics-policy.mjs'
-import {planFcfNativeMapping,planFcfNativeMatchRows} from './fcf-target-native-plan.mjs'
+import {planFcfNativeMapping,planFcfNativeMatchRows,planFcfNativeTargetRows} from './fcf-target-native-plan.mjs'
 const fail=message=>{throw Error(`FCF_NATIVE_ADAPTER: ${message}`)}
 function native(input){return getFcfCapturedTargetData({targetEvidence:input.inventoryAdmission,targetSlug:input.targetSlug,now:input.now??Date.now()})}
 function planInput(input,sourceData){
@@ -17,6 +17,10 @@ export function deriveFcfTargetNativeMapping(input={}){
 export function planFcfNativeMatchImport(input={}){
  const sourceData=native(input)
  return planFcfNativeMatchRows({...planInput(input,sourceData),sourceMatchId:input.sourceMatchId})
+}
+export function planFcfNativeTargetImport(input={}){
+ const sourceData=native(input)
+ return planFcfNativeTargetRows(planInput(input,sourceData))
 }
 /** Source-closed canonical provider; a source view is not cleanup/DB readiness. */
 export function loadFcfTargetOfflineProvider(input={}){

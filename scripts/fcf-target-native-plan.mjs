@@ -120,7 +120,10 @@ function privacyProjection(d,f,targetSlug){
 }
 /** One-match native-ID rows for a future atomic importer, never a DB write. */
 export function planFcfNativeMatchRows(input={}){
- const mapping=JSON.parse(planFcfNativeMapping(input).proposalText),{sourceData:s,databaseInventory:d,sourceMatchId}=input,f=s.fixtures.find(f=>f.id===sourceMatchId),m=mapping.fixtures.find(m=>m.sourceMatchId===sourceMatchId)
+ return matchRows(input,JSON.parse(planFcfNativeMapping(input).proposalText))
+}
+function matchRows(input,mapping){
+ const{sourceData:s,databaseInventory:d,sourceMatchId}=input,f=s.fixtures.find(f=>f.id===sourceMatchId),m=mapping.fixtures.find(m=>m.sourceMatchId===sourceMatchId)
  if(!f||!m)fail('exact selected native match required')
  if(!Array.isArray(d.players)||d.players.some(p=>!id(p.id)||p.competition_id!==targets[input.targetSlug])||new Set(d.players.map(p=>p.id)).size!==d.players.length)fail('selected current player inventory required')
  if(['pending','unavailable_historical'].includes(f.statisticsStatus))return freeze({sourceMatchId,matchId:m.matchId,statisticsStatus:f.statisticsStatus,players:[],appearances:[],goals:[]})
@@ -156,4 +159,17 @@ export function planFcfNativeMatchRows(input={}){
  for(const g of f.goals)score[g.avtogol?1-g.ekipaIdx:g.ekipaIdx]++
  if(score[0]!==f.homeGoals||score[1]!==f.awayGoals)fail('official score and native goal events differ')
  return freeze({sourceMatchId,matchId:m.matchId,statisticsStatus:f.statisticsStatus,players,appearances,goals})
+}
+/** Full target projection. One identity derivation, no transport or authority. */
+export function planFcfNativeTargetRows(input={}){
+ const proposal=planFcfNativeMapping(input),mapping=JSON.parse(proposal.proposalText),players=new Map(),matches=[]
+ for(const f of input.sourceData.fixtures){
+  const rows=matchRows({...input,sourceMatchId:f.id},mapping);matches.push(rows)
+  for(const p of rows.players){
+   const old=players.get(p.reg_st)
+   if(old&&old.date===f.date&&old.player.team_id!==p.team_id)fail('same-date conflicting current native clubs')
+   if(!old||old.date<f.date)players.set(p.reg_st,{date:f.date,player:p})
+  }
+ }
+ return freeze({...proposal,matches,players:[...players.values()].map(v=>v.player).sort((a,b)=>a.reg_st-b.reg_st)})
 }

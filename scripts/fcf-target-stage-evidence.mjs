@@ -49,3 +49,10 @@ export function readFcfTargetStageArtifact(input={}){
  return freeze({...m,artifact:identity})
 }
 export const fcfTargetStageContract=stage=>stages[stage]?{job:`target-${stage}`,kind:stages[stage][0],steps:stages[stage].slice(1)}:null
+export function readFcfTargetApprovalArtifact(input={}){
+ const e=input.expected,{files,identity}=authenticate(input,'target-approval',['Stage reviewed FCF target approval','Retain reviewed FCF target approval'],`fcf-target-approval-${e?.runId}-${e?.runAttempt}`,'fcf-cleanup-applied')
+ if(files.size!==1||!files.has('manifest.json')||sha256(files.get('manifest.json'))!==e.rawSha256)fail('exact root approval bytes required')
+ const approval=parse(files.get('manifest.json'))
+ if(approval.schemaVersion!==1||approval.kind!=='fcf-current-target-rollout-approval'||approval.sourceCommit!==e.commit||!['es-ct-segona-g1','es-ct-tercera-g9'].includes(approval.targetSlug))fail('closed current target approval required')
+ return freeze({approval,artifact:identity})
+}

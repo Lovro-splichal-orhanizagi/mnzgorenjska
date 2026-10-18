@@ -26,7 +26,8 @@
 // iz cene v višji ligi (`scripts/visja-liga.mjs`). Na vklopljeni ligi pride do
 // nje le tedenski zagon, največ za `--najvec` na teden.
 import { createClient } from '@supabase/supabase-js'
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { fcfTargetPricingModelSha256 } from './fcf-target-pricing-model.mjs'
 import { tekmovanje as najdiTekmovanje } from './tekmovanje.mjs'
 import { vseVrstice, vrsticeIgralcevLige } from './strani.mjs'
 import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
@@ -128,6 +129,14 @@ const dovoliAktivno = process.argv.includes('--dovoli-aktivno')
 // samo hočemo, da vsakič novi rekruti dobijo pravo sidro.
 const samoNove = process.argv.includes('--samo-nove')
 const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
+// Exact inactive FCF replay uses the ordinary calculation below. No writes,
+// weekly movement, active override or partial/new-player mode is admitted.
+const releasePlan = arg('release-plan')
+if (releasePlan && (typeof releasePlan !== 'string' || pisi || tedensko || samoNove || dovoliAktivno || znova || tekmovanje.active || tekmovanje.source !== 'fcf' || !['es-ct-segona-g1','es-ct-tercera-g9'].includes(tekmovanje.slug) || sezona !== '2026/27')) {
+  console.error('FCF_PRICE: exact inactive full-season read-only replay required')
+  process.exit(1)
+}
+const releaseVector = []
 console.log(`Tekmovanje: ${tekmovanje.name}${samoNove ? ' — samo novi' : ''}`)
 if (pisi && tekmovanje.active && !tedensko && !samoNove && !dovoliAktivno) {
   console.error(
@@ -142,7 +151,7 @@ const igralci = await vseVrstice((od, do_) =>
   db
     .from('players')
     .select(
-      'id, full_name, position, value, value_start, value_locked, nzs_top_league, nzs_top_league_minutes, repriced_week, reg_st',
+      'id, full_name, position, position_source, value, value_start, value_locked, nzs_top_league, nzs_top_league_minutes, repriced_week, reg_st',
     )
     .eq('competition_id', tekmovanje.id)
     .order('id')
@@ -246,7 +255,7 @@ console.log(`Igralcev z dovolj minutami (>=${prag}): ${ocene.size}`)
 
 if (ocene.size === 0) {
   console.log('Ni dovolj podatkov za vrednotenje.')
-  process.exit(0)
+  process.exit(releasePlan ? 1 : 0)
 }
 
 // --- novinci iz višjih lig ----------------------------------------------------
@@ -394,6 +403,7 @@ const razpored = new Map()
 
 for (const p of igralci ?? []) {
   if (p.value_locked) {
+    if (releasePlan) releaseVector.push({id:p.id,value:Number(p.value),value_start:p.value_start==null?null:Number(p.value_start),position:p.position,position_source:p.position_source})
     zaklenjenih++
     continue
   }
@@ -471,6 +481,7 @@ for (const p of igralci ?? []) {
   }
 
   if ((p.value_start == null || brezBorze) && (ocena != null || prenos)) popravek.value_start = vrednost
+  if (releasePlan) releaseVector.push({id:p.id,value:popravek.value,value_start:popravek.value_start??(p.value_start==null?null:Number(p.value_start)),position:p.position,position_source:p.position_source})
   if (prenos && vrednost !== Number(p.value))
     novinci.push({ ime: p.full_name, iz: Number(p.value), v: vrednost, ...prenos })
   razpored.set(vrednost, (razpored.get(vrednost) ?? 0) + 1)
@@ -485,6 +496,8 @@ for (const p of igralci ?? []) {
     console.error(`  ${p.full_name}: ${eUpd.message}`)
   } else posodobljenih++
 }
+
+if (releasePlan) writeFileSync(releasePlan,JSON.stringify({schemaVersion:1,kind:'fcf-target-price-replay',targetSlug:tekmovanje.slug,competitionId:tekmovanje.id,season:sezona,modelSha256:fcfTargetPricingModelSha256(),computedCount:ocene.size,threshold:prag,players:releaseVector.sort((a,b)=>a.id-b.id)}),{flag:'wx',mode:0o600})
 
 if (pisi)
   console.log(`\nPosodobljenih: ${posodobljenih}, zaklenjenih (ročno): ${zaklenjenih}`)

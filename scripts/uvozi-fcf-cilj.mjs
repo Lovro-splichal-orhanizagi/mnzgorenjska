@@ -1,0 +1,3 @@
+import {runFcfTargetActions,packFcfTargetOriginals} from './fcf-target-actions.mjs'
+const args=process.argv.slice(2)
+try{if(args.length===3&&args[0]==='--pack-originals')process.stdout.write(JSON.stringify(packFcfTargetOriginals({originalsDir:args[1],output:args[2]}))+'\n');else{if(args.length!==2||args[0]!=='--mode')throw Error('closed mode required');const result=await runFcfTargetActions({mode:args[1]});process.exitCode=result.code}}catch(error){process.stderr.write(error?.ambiguous?'FCF_WRITER: ambiguous commit; read back the private target receipt before retry.\n':'FCF_WRITER: stage held; no success receipt.\n');process.exitCode=1}

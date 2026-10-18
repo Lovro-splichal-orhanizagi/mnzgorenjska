@@ -1,10 +1,25 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {nativePlanFixture,nativeMatchFixture} from './fcf-native-plan-test-fixture.mjs'
+import {nativePlanFixture,nativeMatchFixture,fullNativeMatchFixture,privacyProjection} from './fcf-native-plan-test-fixture.mjs'
 import {imeHash,regHash} from './anonimizacija.mjs'
 const api=await import('./fcf-target-native-plan.mjs').catch(()=>({}))
 const map=f=>{assert.equal(typeof api.planFcfNativeMapping,'function','pure native mapping planner exists');return api.planFcfNativeMapping(f)}
 const rows=f=>{assert.equal(typeof api.planFcfNativeMatchRows,'function','native-ID statistic row planner exists');return api.planFcfNativeMatchRows(f)}
+test('full native target projects all240 without recomputing identity for each match',()=>{
+ const f=fullNativeMatchFixture()
+ assert.equal(typeof api.planFcfNativeTargetRows,'function')
+ const r=api.planFcfNativeTargetRows(f)
+ assert.equal(r.matches.length,240);assert.equal(r.players.length,184)
+ assert.equal(r.matches.find(m=>m.sourceMatchId===f.sourceMatchId).appearances.length,23)
+ assert.equal(Object.isFrozen(r.players),true)
+})
+test('full target holds one native identity appearing for different clubs on the latest date',()=>{
+ const f=fullNativeMatchFixture(),source=f.sourceData.fixtures.find(m=>m.id===f.sourceMatchId)
+ const other=f.sourceData.fixtures.find(m=>m.round===3&&m.id!==source.id)
+ Object.assign(other,{statisticsStatus:'available',appearances:structuredClone(source.appearances),goals:structuredClone(source.goals),homeGoals:1,awayGoals:0})
+ f.databaseInventory.identityPrivacy=privacyProjection(783,f.sourceData.fixtures.flatMap(m=>m.appearances??[]),f.databaseInventory.capturedUTC)
+ assert.equal(typeof api.planFcfNativeTargetRows,'function');assert.throws(()=>api.planFcfNativeTargetRows(f),/same-date conflicting/)
+})
 for(const [slug,missing]of[['es-ct-segona-g1',14],['es-ct-tercera-g9',12]])test(`${slug} bootstraps ${missing} missing tuples using existing exception anchors and full240 bijection`,()=>{
  const f=nativePlanFixture(slug),before=JSON.stringify(f),r=map(f),p=JSON.parse(r.proposalText)
  assert.equal(p.kind,'fcf-native-target-mapping');assert.equal(p.mappings.length,16);assert.equal(p.fixtures.length,240)

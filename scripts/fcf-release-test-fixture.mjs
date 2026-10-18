@@ -24,7 +24,7 @@ function rounds(){
  }
  return [...out,...out.map(xs=>xs.map(([a,b])=>[b,a]))]
 }
-function raw({id,slug,round,home,away,played}){
+function raw({id,slug,round,home,away,played,nativePlayers=false}){
  const day=round<=5?'20.09.2026':round===6?'24.10.2026':'01.05.2027'
  const headers=[e('section',e('div',[e('a',home.name,{href:home.href}),e('div',[e('span',played?'Acta Tancada':'Pendent'),e('span',played?'1 - 2':'- - -')]),e('a',away.name,{href:away.href})]),{title:'Acta del partit'}),e('div',['COMPETICIÓ','/',slug.includes('segona')?'SEGONA CATALANA':'TERCERA CATALANA','/',`GRUP ${slug.split('-g')[1]}`,'/',`Jornada ${round}`].map(x=>e('span',x))),e('span',['Temporada',': ','2026 / 27']),e('span',['Data',': ',day]),e('span',['Hora',': ','16.00 H'])]
  let roots
@@ -32,10 +32,11 @@ function raw({id,slug,round,home,away,played}){
   roots=walk([...vrsticeRsc(tokRsc(base))],x=>typeof x==='string'?x==='PRIMERA CATALANA'?(slug.includes('segona')?'SEGONA CATALANA':'TERCERA CATALANA'):x==='GRUP 1'?`GRUP ${slug.split('-g')[1]}`:x==='2025 / 26'?'2026 / 27':x==='2025/26'?'2026/27':x==='30'?String(round):x==='Jornada 30'?`Jornada ${round}`:/^\d{2}\.\d{2}\.2026$/.test(x)?day:x==='BANYOLES, C.E.'?home.name:x==='TORROELLA, U.E.'?away.name:x:x)
   roots=walk(roots,x=>Array.isArray(x)&&x[0]==='$'&&x[3]?.title==='Acta del partit'?headers[0]:x)
   roots.find(([key])=>key==='0')[1].c=['','ca','competicio','acta',id]
+  if(nativePlayers)roots=walk(roots,x=>x&&typeof x==='object'&&!Array.isArray(x)&&Object.hasOwn(x,'nombre')&&/^\d+$/.test(String(x.id??''))?{...x,id:String(Number(x.id)+(Number(id)%1000+1)*1000000000)}:x)
  }else roots=[['0',{c:['','ca','competicio','acta',id],headers}]]
  return `<!doctype html><title>Acta: SYNTHETIC packet control | FCF</title><script>self.__next_f.push([1,${JSON.stringify(roots.map(([k,v])=>k+':'+JSON.stringify(v)).join('\n')+'\n')}])</script>`
 }
-export function packetFixture(retained=process.env.FCF_HISTORICAL_RETAINED_DIR){
+export function packetFixture(retained=process.env.FCF_HISTORICAL_RETAINED_DIR,{nativePlayers=false}={}){
  const groups=scopes.map(([slug,id,start])=>{
   const policy=getHistoricalStatisticsPolicy(slug),schedule=rounds(),labels=new Map(),occupied=new Set(),assigned=new Map()
   for(const entry of policy.entries){
@@ -57,7 +58,7 @@ export function packetFixture(retained=process.env.FCF_HISTORICAL_RETAINED_DIR){
     receipt={id:sourceId,competitionSlug:slug,sourceUrl:entry.sourceUrl,bytes:Buffer.byteLength(html),rawSha256:digest(html),startedUTC,capturedUTC,cacheMtimeUTC:null}
     lineage={kind:'reviewed-original',sourceCommit:'f7efba26c31f76372b5aab1e976061631fbaebda'}
    }else{
-    html=raw({id:sourceId,slug,round:fixture.round,home:labels.get(fixture.pair[0]),away:labels.get(fixture.pair[1]),played:fixture.round===3})
+    html=raw({id:sourceId,slug,round:fixture.round,home:labels.get(fixture.pair[0]),away:labels.get(fixture.pair[1]),played:fixture.round===3,nativePlayers})
     receipt={id:sourceId,competitionSlug:slug,sourceUrl:`https://www.fcf.cat/ca/competicio/acta/${sourceId}`,bytes:Buffer.byteLength(html),rawSha256:digest(html),startedUTC:fixture.round<=6&&fixture.round!==3?'2026-10-18T13:00:00Z':null,capturedUTC:fixture.round<=6&&fixture.round!==3?'2026-10-18T13:00:01Z':null,cacheMtimeUTC:fixture.round<=6&&fixture.round!==3?null:'2026-10-18T13:00:00Z'}
     lineage={kind:'actions-artifact',verified:true,repository:'Lovro-splichal-orhanizagi/mnzgorenjska',workflow:'.github/workflows/uvoz-fcf-zgodovina.yml',runId:'123',artifactId:'456',artifactDigest:'sha256:'+'b'.repeat(64),commit:'a'.repeat(40)}
    }

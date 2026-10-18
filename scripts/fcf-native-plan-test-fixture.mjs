@@ -38,19 +38,30 @@ export function nativePlanFixture(targetSlug='es-ct-segona-g1'){
  const databaseInventory={...packetFixture(null).databaseInventory,teams,rounds,matches,players:[]}
  return{targetSlug,sourceData,databaseInventory,existingExceptionBindings,writerCommit,now}
 }
-export function nativeMatchFixture(){
- const f=nativePlanFixture(),match=f.sourceData.fixtures.find(m=>m.round===3),players=[]
+export function nativeMatchFixture(targetSlug='es-ct-segona-g1'){
+ const f=nativePlanFixture(targetSlug),match=f.sourceData.fixtures.find(m=>m.round===3),players=[]
  const appearances=[]
  for(const side of[0,1])for(let i=0;i<11;i++){
   const regSt=10000+side*100+i
   appearances.push({regSt,ime:`SYNTHETIC PLAYER ${regSt}`,ekipaIdx:side,st:i+1,zacetnik:true,vratar:i===0,minutaOd:0,minutaDo:90,minute:90,goli:side===0&&i===2?1:0,avtogoli:0,goliIzEnajstmetrovke:0,zgreseneEnajstmetrovke:0,rumeni:i===5?1:0,rdeci:0,prejetiGoli:side,cleanSheet:side===0})
-  players.push({id:50000+regSt,competition_id:783,reg_st:regSt,full_name:`SYNTHETIC PLAYER ${regSt}`,position:i===0?'GK':'DEF',position_source:i===0?'zapisnik':'ugibanje',anonimiziran_at:null})
+  players.push({id:50000+regSt,competition_id:f.sourceData.competition.id,reg_st:regSt,full_name:`SYNTHETIC PLAYER ${regSt}`,position:i===0?'GK':'DEF',position_source:i===0?'zapisnik':'ugibanje',anonimiziran_at:null})
  }
  appearances[3].minutaDo=61;appearances[3].minute=61
  appearances.push({...appearances[3],regSt:10200,ime:'SYNTHETIC SUBSTITUTE',st:12,zacetnik:false,minutaOd:61,minutaDo:90,minute:29})
  Object.assign(match,{appearances,goals:[{regSt:10002,ekipaIdx:0,ime:'SYNTHETIC PLAYER 10002',st:3,minuta:35,avtogol:false,enajstmetrovka:false,rezultat:[1,0]}]})
  f.databaseInventory.players=players
  f.databaseInventory.groups.find(g=>g.slug===f.targetSlug).country_id=34
- f.databaseInventory.identityPrivacy=privacyProjection(783,appearances,f.databaseInventory.capturedUTC)
+ f.databaseInventory.identityPrivacy=privacyProjection(f.sourceData.competition.id,appearances,f.databaseInventory.capturedUTC)
  return{...f,sourceMatchId:match.id}
+}
+export function fullNativeMatchFixture(targetSlug){
+ const f=nativeMatchFixture(targetSlug),template=structuredClone(f.sourceData.fixtures.find(m=>m.id===f.sourceMatchId))
+ for(const m of f.sourceData.fixtures.filter(m=>m.statisticsStatus==='available')){
+  const transform=a=>{const index=f.sourceData.clubs.findIndex(c=>c.sourceClubId===m.clubs[a.ekipaIdx].sourceClubId);return 100000+index*1000+(a.regSt-(a.ekipaIdx?10100:10000))}
+  m.appearances=template.appearances.map(a=>({...a,regSt:transform(a),ime:'SYNTHETIC PLAYER '+transform(a)}))
+  m.goals=template.goals.map(g=>({...g,regSt:transform(g),ime:'SYNTHETIC PLAYER '+transform(g)}));m.homeGoals=1;m.awayGoals=0
+ }
+ f.databaseInventory.players=[]
+ f.databaseInventory.identityPrivacy=privacyProjection(f.sourceData.competition.id,f.sourceData.fixtures.flatMap(m=>m.appearances??[]),f.databaseInventory.capturedUTC)
+ return f
 }

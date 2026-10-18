@@ -190,6 +190,11 @@ jobs:
         run: |
           node scripts/test-fcf-historical-sql.mjs
           node scripts/test-fcf-historical-race.mjs
+      - name: FCF native target import, pricing gate and independent activation
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          FCF_HISTORY_DISPOSABLE_TEST: '1'
+        run: node --test scripts/test-fcf-target-sql.mjs
       - run: npm run test:varnost
       - run: npm run test:socasnost
       # Zamrznitev cene ob poškodbi: borza in kazen na sestavljenih krogih.
