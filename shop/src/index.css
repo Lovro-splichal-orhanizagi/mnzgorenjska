@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Pisava motivov (shop/src/motivi, OFL), gostovana pri nas: brez Google Fonts.
+   Za tisk in <img> jo v SVG vgradi zVgrajenoPisavo() iz risba.ts. */
+@font-face {
+  font-family: Anton;
+  src: url('./motivi/anton.ttf') format('truetype');
+  font-display: swap;
+}
+
 /* Videz je prepis slff.eu (src/index.css) in Scouta: ozadje, kartica, gumbi.
    Ob spremembi tam popravi tudi tu. */
 @layer base {

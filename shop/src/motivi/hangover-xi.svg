@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300mm" height="400mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="hrbet">
+  <!-- ime ekipe po loku -->
+  <text data-polje="ekipa" data-velike data-luk="150 400 330" data-sirina="280" font-size="46" letter-spacing="1.5" data-barva="3" data-crta="3" stroke-width="9">FC PIVO KRANJ</text>
+  <text data-polje="ekipa" data-velike data-luk="150 400 330" data-sirina="280" font-size="46" letter-spacing="1.5" data-barva="1" data-crta="2" stroke-width="3.5" paint-order="stroke">FC PIVO KRANJ</text>
+  <!-- vrček: ročaj, steklo, pena, mehurčki -->
+  <g transform="translate(0 12) rotate(-4 150 230) translate(150 230) scale(.92) translate(-150 -230)">
+    <path d="M212 160 H234 Q258 160 258 186 V250 Q258 276 234 276 H212" fill="none" data-crta="3" stroke-width="16"/>
+    <path d="M212 160 H234 Q258 160 258 186 V250 Q258 276 234 276 H212" fill="none" data-crta="1" stroke-width="7"/>
+    <path d="M84 136 H216 L208 300 Q207 312 195 312 H105 Q93 312 92 300 Z" fill="none" data-crta="3" stroke-width="12"/>
+    <path d="M84 136 H216 L208 300 Q207 312 195 312 H105 Q93 312 92 300 Z" fill="none" data-crta="1" stroke-width="5"/>
+    <path d="M100 160 V290 M200 160 V290" fill="none" data-crta="1" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="3 9"/>
+    <path d="M76 138 Q70 116 92 112 Q96 92 120 98 Q132 80 154 92 Q172 80 186 98 Q210 92 212 112 Q232 116 224 138 Q214 150 198 142 Q186 156 170 146 Q154 158 140 146 Q124 156 112 144 Q96 152 86 142 Z" data-barva="1" data-crta="3" stroke-width="7" paint-order="stroke"/>
+    <path d="M76 138 Q70 116 92 112 Q96 92 120 98 Q132 80 154 92 Q172 80 186 98 Q210 92 212 112 Q232 116 224 138 Q214 150 198 142 Q186 156 170 146 Q154 158 140 146 Q124 156 112 144 Q96 152 86 142 Z" fill="none" data-crta="1" stroke-width="3"/>
+    <g data-barva="2"><circle cx="104" cy="122" r="5"/><circle cx="128" cy="110" r="3.5"/><circle cx="160" cy="116" r="6"/><circle cx="190" cy="108" r="3"/><circle cx="206" cy="126" r="4"/><circle cx="140" cy="132" r="2.5"/><circle cx="182" cy="134" r="2.5"/></g>
+    <text x="150" y="282" font-size="118" data-polje="stevilka" data-sirina="104" data-barva="3" data-crta="3" stroke-width="12">11</text>
+    <text x="150" y="282" font-size="118" data-polje="stevilka" data-sirina="104" data-barva="1" data-crta="2" stroke-width="5" paint-order="stroke">11</text>
+  </g>
+  <g data-barva="1">
+    <circle cx="48" cy="200" r="6"/><circle cx="36" cy="172" r="4"/><circle cx="52" cy="150" r="3"/>
+    <circle cx="270" cy="128" r="5"/><circle cx="284" cy="104" r="3.5"/><circle cx="262" cy="96" r="2.5"/>
+  </g>
+  <!-- žig -->
+  <g transform="rotate(-4 150 352)">
+    <rect x="46" y="326" width="208" height="50" rx="6" data-barva="3" data-crta="1" stroke-width="3"/>
+    <rect x="52" y="332" width="196" height="38" rx="3" fill="none" data-crta="2" stroke-width="1.2"/>
+    <text x="150" y="366" font-size="31" letter-spacing="2.5" data-barva="2">HANGOVER XI</text>
+  </g>
+  <text x="150" y="396" font-size="8" letter-spacing="3" data-barva="1">SLFF · NEDELJA OB 10:00</text>
+</svg>

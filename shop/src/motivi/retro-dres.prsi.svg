@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 100" width="240mm" height="100mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="prsi">
+  <!-- sponzor kot na dresu iz devetdesetih: poševno, dvojna obroba, črte hitrosti -->
+  <g transform="skewX(-10) translate(12 0)">
+    <text x="120" y="70" font-size="60" letter-spacing="1" data-polje="sponzor" data-velike data-sirina="212" data-sredina data-barva="3" data-crta="3" stroke-width="8">GOSTILNA PRI MICI</text>
+    <text x="120" y="70" font-size="60" letter-spacing="1" data-polje="sponzor" data-velike data-sirina="212" data-sredina data-barva="1" data-crta="2" stroke-width="3" paint-order="stroke">GOSTILNA PRI MICI</text>
+    <path d="M70 84 H170 L166 90 H66 Z" data-barva="1" data-crta="3" stroke-width="1.5"/>
+    <path d="M50 84 H62 L58 90 H46 Z M178 84 H190 L186 90 H174 Z" data-barva="1"/>
+  </g>
+</svg>

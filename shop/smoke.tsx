@@ -21,6 +21,9 @@ import { vCente, varnoIme } from './src/strani/AdminIzdelki'
 import { EN, SL, TELEFON, cena, type Kljuc } from './src/besede'
 import { dodaj, kljuc, kosov, nastavi, odstrani, postnina, preberi, PRAZNA, skupaj } from './src/kosarica'
 import { celicaCsv, doplacilo, napakaImena, oblikaSvg, stabilno, stevilka, veljavnaOblika } from './src/personalizacija'
+import { coneMotiva, narisiMotiv, poljaCone, praznaCona, velikostMm, zVgrajenoPisavo } from './src/risba'
+import { MOTIVI } from './src/motivi'
+import { readFileSync } from 'node:fs'
 import type { Izdelek as TIzdelek, IzdelekKataloga, NarociloAdmin, PostavkaNarocila, Serija } from './src/baza'
 
 let napak = 0
@@ -241,6 +244,59 @@ preveri('admin: zahteva bona (odstotek ali znesek, uporab, rok)',
     ['odstotek', '20', '1001', '2026-12-31'], ['odstotek', '20', '1', '']].every(([v, a, b, c]) => zahtevaBona('scout', v as 'odstotek', a, b, c) === null))
 preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnosti',
   ['1–2 tednih', 'Darilni bon je koda', 'ostanek ne ostane', 'gotovino', 'promocijskimi kodami', 'besedilo personalizacije'].every((v) => pogoji.includes(v)))
+
+// Motivi: predloge ↔ seme v migraciji (polja po conah, barve shem), ubežanje, dolge in kratke vrednosti
+{
+  const sql = readFileSync(new URL('../supabase/migrations/20261018230000_trgovina_motivi.sql', import.meta.url), 'utf8')
+  const seme = sql.slice(sql.indexOf('insert into trgovina.motivi (slug'))
+  type PoljeSemena = { kljuc: string; vrsta: string; max?: number; cona?: string }
+  const semena = [...seme.matchAll(/^\('([a-z0-9-]+)',[\s\S]*?\n '([a-z]+)',\n '(\[[\s\S]*?\])',\n '(\[[\s\S]*?\])',/gm)]
+    .map((m) => ({ slug: m[1]!, cona: m[2]!, polja: JSON.parse(m[3]!) as PoljeSemena[], sheme: JSON.parse(m[4]!) as { barve: string[] }[] }))
+  preveri('motivi: seme prebrano, vsak motiv ima predlogo', semena.length === 6 && semena.every((x) => MOTIVI.some((m) => m.slug === x.slug))
+    && MOTIVI.length === semena.length, semena.map((x) => x.slug).join(','))
+  for (const sm of semena) {
+    const m = MOTIVI.find((x) => x.slug === sm.slug)
+    if (!m) continue
+    const cone = [...new Set(sm.polja.map((p) => p.cona ?? sm.cona))]
+    preveri(`motiv ${sm.slug}: cone in polja po conah`, m.cona === sm.cona && coneMotiva(sm.slug)[0] === sm.cona
+      && JSON.stringify([...coneMotiva(sm.slug)].sort()) === JSON.stringify([...cone].sort())
+      && JSON.stringify(m.polja) === JSON.stringify(sm.polja.map((p) => p.kljuc))
+      && cone.every((c) => JSON.stringify(poljaCone(sm.slug, c).sort()) === JSON.stringify(sm.polja.filter((p) => (p.cona ?? sm.cona) === c).map((p) => p.kljuc).sort())),
+      cone.map((c) => `${c}: ${poljaCone(sm.slug, c).join(',')}`).join(' | '))
+    const barve = sm.sheme[0]!.barve
+    const n = Math.max(...sm.sheme.map((s) => s.barve.length))
+    preveri(`motiv ${sm.slug}: vse barve sheme (${n}) imajo mesto`, m.barve === n
+      && Array.from({ length: n }, (_, i) => i + 1).every((i) => coneMotiva(sm.slug).some((c) => new RegExp(`data-(barva|crta)="${i}"`).test(m.predloge[c]!))))
+    const vrednost = (p: PoljeSemena, dolgo: boolean): string | number =>
+      p.vrsta === 'stevilka' ? (dolgo ? 88 : 1) : p.vrsta === 'leto' ? 1998
+        : p.vrsta === 'prvak' ? (dolgo ? 'Prvak mini lige Pisarna United Kran… 2025/26' : 'Mini league champion ABC 2025/26')
+          : dolgo ? 'Ž<script>&W'.padEnd(p.max ?? 12, 'W') : 'Kos'
+    for (const dolgo of [true, false]) {
+      const polja = Object.fromEntries(sm.polja.map((p) => [p.kljuc, vrednost(p, dolgo)]))
+      for (const c of coneMotiva(sm.slug)) {
+        const out = narisiMotiv(sm.slug, polja, barve, c)
+        const { sirina, visina } = velikostMm(sm.slug, c)
+        const velikosti = [...out.matchAll(/font-size="([\d.]+)"/g)].map((x) => Number(x[1]))
+        preveri(`motiv ${sm.slug}/${c} ${dolgo ? 'dolgo' : 'kratko'}: izris, barve, ubežano, brez oznak predloge`,
+          out.startsWith('<svg') && out.includes(`viewBox="0 0 ${sirina} ${visina}"`) && out.includes(`fill="${barve[0]}"`)
+          && !/<script/i.test(out) && (!dolgo || out.includes('&lt;SCRIPT&gt;&amp;') || out.includes('&lt;') || sm.slug === 'prvak-mini-lige')
+          && !/data-(polje|sirina|luk|oblika|velike|vrstice)/.test(out) && velikosti.every((v) => v > 4)
+          && (dolgo || !out.includes('>W<')), out.slice(0, 200))
+      }
+    }
+  }
+  const rd = narisiMotiv('retro-dres', { ime: 'Novak', stevilka: 9, sponzor: '', leto: null }, ['#111', '#eee', '#000'])
+  preveri('motivi: prazno neobvezno polje skrije svoj del, prazna cona', /data-ce="leto"[^>]*display="none"|display="none"[^>]*data-ce="leto"/.test(rd)
+    && praznaCona('retro-dres', { sponzor: '' }, 'prsi') && !praznaCona('retro-dres', { sponzor: 'Bar' }, 'prsi'))
+  preveri('motivi: neveljavna barva ne pride v atribut', narisiMotiv('kapetan', { ime: 'A', stevilka: 1 }, ['red" onload="x', '#fff', '#000']).includes('fill="#000000"')
+    && !narisiMotiv('kapetan', { ime: 'A', stevilka: 1 }, ['red" onload="x', '#fff', '#000']).includes('onload'))
+  const mm = narisiMotiv('retro-dres', { sponzor: 'Bar' }, ['#111', '#eee', '#000'], 'prsi', { sirina: 260, visina: 120 })
+  preveri('motivi: mere cone nosilca v mm, sezona, dve vrstici, pisava', /^<svg[^>]*width="260mm"[^>]*height="120mm"|^<svg[^>]*height="120mm"[^>]*width="260mm"/.test(mm)
+    && JSON.stringify(velikostMm('retro-dres')) === '{"sirina":300,"visina":400}'
+    && narisiMotiv('kralj-kafane', { ime: 'A', goli: 3, sezona: 2025 }, ['#111', '#eee', '#000']).includes('>2025/26</text>')
+    && (narisiMotiv('prvak-mini-lige', { prvak: 'Prvak mini lige Pisarna United Kran… 2025/26' }, ['#111', '#eee', '#000']).match(/>PISARNA<\/text>/g) ?? []).length === 2
+    && zVgrajenoPisavo(mm).includes('@font-face{font-family:Anton;src:url(data:font/ttf;base64,'), zVgrajenoPisavo(mm).slice(0, 300))
+}
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)
