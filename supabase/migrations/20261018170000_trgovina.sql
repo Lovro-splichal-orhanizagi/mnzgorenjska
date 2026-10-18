@@ -301,7 +301,9 @@ begin
     return 'neznano';
   elsif v_narocilo.stanje in ('placano', 'poslano') then
     return 'ze';
-  elsif v_narocilo.stanje <> 'caka_placilo' then
+  -- Poteklo (pocisti, sprosti) se še plača: Stripe pošlje plačano le za
+  -- zaključeno sejo, zaprte seje ni mogoče plačati. Česar ni več na zalogi, gre v manjka.
+  elsif v_narocilo.stanje not in ('caka_placilo', 'poteklo') then
     return 'neznano';
   end if;
 

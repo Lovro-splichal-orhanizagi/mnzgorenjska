@@ -4300,6 +4300,15 @@ select pg_temp.preveri('trgovina: zavrnjene spremembe zaloge ne pustijo sledi',
 reset role;
 select set_config('request.jwt.claim.sub','',true);
 
+-- Pozno plačilo za poteklo naročilo (webhook po izpadu) se zapiše; manjkajoče gre v manjka.
+set local role service_role;
+select pg_temp.preveri('trgovina: placilo za poteklo narocilo se zapise',
+  trgovina_iz_placila('cs_test_trgovina_1', 'pi_test_1', 'pozni@example.invalid', 'Pozni', '{"country":"SI"}',
+                      1000, 390, 250, 1390, 'paket_si') in ('placano', 'premalo'));
+reset role;
+select pg_temp.preveri('trgovina: pozno placano narocilo je placano',
+  (select stanje = 'placano' from trgovina.narocila where stripe_checkout_id = 'cs_test_trgovina_1'));
+
 do $$
 declare v_napak int;
 begin
