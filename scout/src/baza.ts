@@ -73,3 +73,51 @@ export interface ProfilIgralca {
   privolitev: { letnik: number; regije: string[] } | null
   sezone: SezonaIgralca[] | null
 }
+
+/** scout_klub(): statistika na tekmo; ciste je delež 0..1. */
+export interface StatEkipe {
+  tekme: number
+  tocke: number
+  za: number
+  proti: number
+  ciste: number
+  tocke_doma: number | null
+  tocke_gost: number | null
+  kartoni: number | null
+}
+export interface IgralecKluba {
+  player_id: number
+  ime: string
+  skupina: Skupina
+  nastopi: number
+  minute: number
+  delez_minut: number
+  zacetki_delez: number
+  goli: number
+  onoff_ref_90: number
+  kartoni_90: number
+  trend_minut: number | null
+}
+export interface PregledKluba {
+  team_id: number
+  ime: string
+  country_id: number
+  admin: boolean
+  glava: {
+    competition_id: number
+    liga: string
+    sezona?: string
+    mesto?: number
+    klubov?: number
+    tekme?: number
+    tocke?: number
+    forma?: string
+    elo: number | null
+    elo_lani: number | null
+    moc_mesto: number
+    lig: number
+  } | null
+  ekipa: { klub: StatEkipe | null; liga: StatEkipe } | null
+  kader: IgralecKluba[]
+  vrzeli: Vrzel[]
+}

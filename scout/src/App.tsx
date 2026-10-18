@@ -3,6 +3,7 @@ import { Okvir } from './Okvir'
 import { SejaProvider, ZahtevaSedez } from './seja'
 import { Igralec } from './strani/Igralec'
 import { Iskanje } from './strani/Iskanje'
+import { Klub } from './strani/Klub'
 import { Opazovani } from './strani/Opazovani'
 import { Pogoji } from './strani/Pogoji'
 import { Prijava } from './strani/Prijava'
@@ -16,6 +17,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<ZahtevaSedez><Iskanje /></ZahtevaSedez>} />
           <Route path="/player/:id" element={<ZahtevaSedez><Igralec /></ZahtevaSedez>} />
+          <Route path="/club" element={<ZahtevaSedez><Klub /></ZahtevaSedez>} />
           <Route path="/gaps" element={<ZahtevaSedez><Vrzeli /></ZahtevaSedez>} />
           <Route path="/watchlist" element={<ZahtevaSedez><Opazovani /></ZahtevaSedez>} />
           <Route path="/account" element={<Racun />} />

@@ -128,7 +128,7 @@ export function Racun() {
           <Okno>
             <p className="text-lg font-bold text-slate-100">{t('racun.veljaDo', { paket: t(`racun.paket.${n.paket}` as Kljuc), datum: datum(n.velja_do) })}</p>
             {!n.velja && <p>{t('racun.potekla')}</p>}
-            {klub.sedez && n.velja && <Link to="/" className="gumb-glavni inline-block">{t('racun.naprej')} →</Link>}
+            {klub.sedez && n.velja && <Link to="/club" className="gumb-glavni inline-block">{t('racun.naprej')} →</Link>}
             {!klub.sedez && (
               <>
                 <p>{t('racun.niSedeza')}</p>
