@@ -19,7 +19,7 @@ const match = {
   season: '2026/27', played_on: '2026-09-13', home_team_id: 10, away_team_id: 11,
   home_name: 'Home Club', home_short: 'HOME', home_logo: null,
   away_name: 'Away Club', away_short: 'AWAY', away_logo: null,
-  home_goals: null, away_goals: null, golov: null, brez_asistence: null,
+  home_goals: 2, away_goals: 2, golov: null, brez_asistence: null,
   glasovanje_do: null, glasovanje_odprto: false,
   statistics_status: 'unavailable_historical', statistics_reason: 'private-registry-hash-should-not-render',
 }
@@ -32,7 +32,7 @@ const league = { id: 1, slug: 'clani', name: 'Test League', short_name: 'Test Le
   active: true, country_code: 'SI', country_name: 'Slovenija', federation_code: 'mnzg',
   federation_name: 'Test Federation', federation_short: 'TF', federation_url: null,
   federation_sort: 1, prvi_fantasy_krog: 1, sezona_koledarska: false }
-async function app(path, { status = 'unavailable_historical', score = [null, null], zeroGoals = false, lang = 'sl', observations = true, width = 390, unavailable = 1, historicalUnavailable = 0 } = {}) {
+async function app(path, { status = 'unavailable_historical', score = [2, 2], zeroGoals = false, lang = 'sl', observations = true, width = 390, unavailable = 1, historicalUnavailable = 0 } = {}) {
   const context = await browser.newContext({ viewport: { width, height: 844 }, locale: 'sl-SI' })
   await context.addInitScript(({ lang, league }) => {
     localStorage.setItem('slff-jezik-izbran', lang)
@@ -90,7 +90,7 @@ async function check(name, fn) { if (process.env.UI_TEST_FILTER && !name.include
 try {
   // Catches a missing historical score entering ordinary empty-lineup/zero-stat rendering.
   for (const width of [390, 1280]) await check(`historical match marks unknown score and statistics unavailable (${width}px)`, async () => {
-    const { page, context } = await app('/match/400', { width })
+    const { page, context } = await app('/match/400', { width, score: [null, null] })
     try {
       const main = page.locator('main')
       assert.match(await main.locator('h1').innerText(), /Home Club[\s\S]*—[\s\S]*Away Club/)
@@ -106,15 +106,15 @@ try {
     } finally { await context.close() }
   })
   await check('results link shows unknown score without claiming official result retained', async () => {
-    const { page, context } = await app('/results')
+    const { page, context } = await app('/results', { score: [null, null] })
     try { const row = page.locator('main li').filter({ hasText: 'Home Club' }); assert.match(await row.innerText(), /Home Club[\s\S]*—[\s\S]*Away Club/); assert.doesNotMatch(await row.innerText(), /:/); assert.match(await row.innerText(), /Statistika ni na voljo/); assert.equal(await row.locator('a[href*="/match/400"]').count(), 1) } finally { await context.close() }
   })
   for (const score of [[0, 0], [3, 1]]) await check(`known ${score.join(':')} result stays visible`, async () => {
     const { page, context } = await app('/match/400', { score })
-    try { assert.match(await page.locator('main h1').innerText(), new RegExp(`${score[0]}:${score[1]}`)); assert.doesNotMatch(await page.locator('main h1').innerText(), /—/) } finally { await context.close() }
+    try { assert.match(await page.locator('main h1').innerText(), new RegExp(`${score[0]}:${score[1]}`)); assert.doesNotMatch(await page.locator('main h1').innerText(), /—/); assert.match(await page.locator('main').innerText(), /Uradni izid je ohranjen/) } finally { await context.close() }
   })
   await check('assist page never declares unknown events confirmed or absent', async () => {
-    const { page, context } = await app('/assists')
+    const { page, context } = await app('/assists', { score: [null, null] })
     try { const text = await page.locator('main').innerText(); assert.match(text, /Statistika ni na voljo/); assert.doesNotMatch(text, /Uradni izid je ohranjen|Vse potrjeno|Vse asistence.*potrjene|Na tej tekmi ni bilo golov/); assert.equal(await page.locator('[aria-label="Vse potrjeno"]').count(), 0) } finally { await context.close() }
   })
   await check('complete match still shows verified appearance and points', async () => {
@@ -158,5 +158,11 @@ try {
     const { page, context } = await app('/match/400', { lang })
     try { const main = page.locator('main'); await main.locator('dl dd').first().waitFor(); assert.equal(await main.locator('dl dd').count(), 4); const notice = await main.locator('[role="status"]').innerText(); assert.doesNotMatch(notice, /tekme\.statistika|private-registry/); if (lang !== 'sl') assert.doesNotMatch(notice, /Statistika igralcev za to zgodovinsko tekmo/); if (artifactDir && ['hr', 'de', 'es', 'en'].includes(lang)) await page.screenshot({ path: `${artifactDir}/unavailable-${lang}.png`, fullPage: true }) } finally { await context.close() }
   })
-} finally { await browser.close(); await server.close() }
+} finally {
+  await browser.close()
+  // Intercepted browser requests can leave Vite's keep-alive sockets open.
+  // Close this test server's connections before waiting for its shutdown.
+  server.httpServer?.closeAllConnections()
+  await server.close()
+}
 if (failures) process.exitCode = 1
