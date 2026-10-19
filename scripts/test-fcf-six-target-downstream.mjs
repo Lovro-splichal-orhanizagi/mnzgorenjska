@@ -30,3 +30,28 @@ test('six mapping refuses caller changes to new exception identity and missing c
  const g=sixG9();g.existingExceptionBindings.splice(2,1)
  assert.throws(()=>planFcfNativeMapping(g),/exception bindings/)
 })
+import {sixAdmissionFixture} from './fcf-six-test-fixture.mjs'
+import {sixCleanupFixture} from './fcf-six-cleanup-test-fixture.mjs'
+import {readFcfSixCleanupEvidence} from './fcf-six-cleanup-evidence.mjs'
+import {compileFcfTargetReleasePacket,verifyFcfTargetReleasePacket} from './fcf-target-release.mjs'
+import {buildFcfTargetRollout,replayFcfTargetRollout} from './fcf-target-rollout.mjs'
+import {privacyProjection} from './fcf-native-plan-test-fixture.mjs'
+const actualOpts={skip:!process.env.FCF_SIX_ACCOUNTING_WIRE||!process.env.FCF_SIX_ORIGINAL_AUTHORIZATION_WIRE||!process.env.FCF_HISTORICAL_RETAINED_DIR}
+test('genuine six originals and complete authenticated G9 compile schema3 and replay schema2 rollout offline',actualOpts,async t=>{
+ const admission=await sixAdmissionFixture(t),cleanup=sixCleanupFixture(t),cleanupEvidence=readFcfSixCleanupEvidence({...cleanup.input,now:admission.now}),f=sixG9(),data=admission.data,d=f.databaseInventory
+ const fixed={'1252/35781':8304,'6136/33049':8305,'1372/19610692':7566,'54319880/54709553':8308,'44143644/44510647':8301,'1400/47272626':8298},key=c=>c.sourceClubId+'/'+c.sourceCategoryId,team=c=>fixed[key(c)]??900000+data.clubs.findIndex(x=>key(x)===key(c))
+ d.teams=data.clubs.map(c=>({id:team(c),competition_id:797,name:c.name}));d.rounds=Array.from({length:30},(_,i)=>({id:i<2?27616+i:700000+i,competition_id:797,season:'2026/27',number:i+1}));d.matches=data.fixtures.map((m,i)=>({id:{es4118352:306164,es4118354:306166,es4118358:306171}[m.id]??800000+i,round_id:d.rounds.find(r=>r.number===m.round).id,home_team_id:team(m.clubs[0]),away_team_id:team(m.clubs[1]),zapisnik_id:m.id}));d.capturedUTC=new Date(admission.now).toISOString();for(const c of d.groups){c.source_policy=policy;c.nativeImportedIDs=[];c.country_id=34}d.identityPrivacy=privacyProjection(797,data.fixtures.flatMap(m=>m.appearances??[]),d.capturedUTC)
+ const base={targetSlug:data.targetSlug,inventoryAdmission:admission.inventoryAdmission,sourceCommit:admission.sourceCommit,cleanupEvidence,databaseInventory:d,existingExceptionBindings:f.existingExceptionBindings,now:admission.now,execution:{repository:'Lovro-splichal-orhanizagi/mnzgorenjska',ref:'refs/heads/main',commit:admission.sourceCommit,runId:'123',runAttempt:'1'}}
+ const mapping=planFcfNativeMapping({targetSlug:data.targetSlug,sourceData:data,databaseInventory:d,existingExceptionBindings:f.existingExceptionBindings,now:admission.now,writerCommit:admission.sourceCommit}),packetInput={...base,targetEvidence:base.inventoryAdmission},packet=compileFcfTargetReleasePacket(packetInput),p=JSON.parse(packet.manifestText)
+ assert.equal(p.schemaVersion,3);assert.equal(p.kind,'fcf-six-current-target-release');assert.equal(p.target.fixtures.length,240);assert.equal(p.target.fixtures.filter(m=>m.statisticsStatus==='unavailable_historical').length,3);assert.equal(p.target.sourceEvidence.actualSourceGETs,255)
+ assert.deepEqual(verifyFcfTargetReleasePacket({...packetInput,...packet}),packet)
+ const rollout=buildFcfTargetRollout({...base,mappingText:mapping.proposalText,mappingSha256:mapping.proposalSha256}),r=JSON.parse(rollout.rolloutText)
+ assert.equal(r.schemaVersion,2);assert.equal(r.kind,'fcf-six-current-target-rollout');assert.deepEqual(replayFcfTargetRollout({...base,...rollout}),rollout)
+ const old={...p,schemaVersion:2,kind:'fcf-current-target-release'},manifestText=JSON.stringify(old)
+ await assert.rejects(async()=>verifyFcfTargetReleasePacket({...packetInput,manifestText,manifestSha256:(await import('node:crypto')).createHash('sha256').update(manifestText).digest('hex')}),/protocol/)
+})
+test('six compiler refuses unbranded cache documents even with authenticated six cleanup',actualOpts,t=>{
+ const cleanup=sixCleanupFixture(t),f=sixG9(),now=Date.parse('2026-10-19T08:00:00Z');f.databaseInventory.capturedUTC=new Date(now).toISOString();for(const c of f.databaseInventory.groups)c.source_policy=policy
+ const targetEvidence={evidenceKind:'fcf-target-cache-audit',targetSlug:f.targetSlug,competition:{id:797,slug:f.targetSlug,source:'fcf',source_league_code:'4118349-4118588',source_policy:policy,active:false,sezona_koledarska:false,firstFantasyPlayedOn:'2026-10-24'},documents:Array.from({length:240},(_,i)=>({id:String(4118349+i)}))}
+ assert.throws(()=>compileFcfTargetReleasePacket({targetSlug:f.targetSlug,sourceCommit:'a'.repeat(40),targetEvidence,cleanupEvidence:cleanup.evidence,databaseInventory:f.databaseInventory,now}),/authenticated six continuation admission/)
+})

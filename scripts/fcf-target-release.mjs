@@ -62,6 +62,7 @@ function compile(input={},auditedUTC){
  const c=targetEvidence.competition,scope=fcfFinalAuditScope(targetSlug),policy=(six?getFcfSixPolicy:getHistoricalStatisticsPolicy)(targetSlug)
  if(!c||c.id!==target.id||c.slug!==targetSlug||c.source!=='fcf'||c.source_league_code!==scope.code||c.source_policy!==policy.sourcePolicy||c.active!==false||c.sezona_koledarska!==false||c.firstFantasyPlayedOn!=='2026-10-24')fail('exact inactive target source/policy/current competition required')
  const admitted=targetEvidence.evidenceKind==='fcf-missing-target-inventory'?getFcfCapturedTargetData({targetEvidence,targetSlug,now}):null,freshG9=admitted?.binding.protocol==='g9-only-after-held-parent-v1'
+ if(six&&admitted?.binding.protocol!=='six-reviewed-continuation-v1')fail('six release requires authenticated six continuation admission')
  const[start,end]=scope.code.split('-').map(Number),fixtures=[];let bytes=0
  for(let numeric=start;numeric<=end;numeric++){
   const id=String(numeric),document=documents.get(id),historical=cleanupEvidence.originals.find(o=>o.sourceMatchId===id)
