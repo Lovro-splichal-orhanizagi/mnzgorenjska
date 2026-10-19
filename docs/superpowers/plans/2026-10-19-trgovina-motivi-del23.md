@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Branch `feat/trgovina-motivi-del23` in `/Users/lukazlatecan/Work/SLFF/mnzgorenjska`. Shared local Supabase; never `db reset`, `testno-okolje`, `--linked`; no production writes.
-- **One new migration** `20261019150000_trgovina_motivi_del23.sql` (edit in place until merged). **Before merge the controller re-checks that its timestamp sorts after the newest migration on `origin/main`** (teammates push migrations often; CI refuses earlier or duplicate versions).
+- **One new migration** `20261019160000_trgovina_motivi_del23.sql` (edit in place until merged). **Before merge the controller re-checks that its timestamp sorts after the newest migration on `origin/main`** (teammates push migrations often; CI refuses earlier or duplicate versions).
 - All validation and prices in the DB, as part 1. Old shapes and part-1 designs keep working unchanged.
 - Everything seeded **inactive**; the controller activates after deploy.
 - Prices (cents, VAT incl.) from the spec: kozarec 1200 + 600, vrč 1800 + 600, podstavki ×6 1500 (design included, surcharge 0), odpirač 900 + 400, plakat A3 1900 / A2 2900 (surcharge 0), kartica igralca 900 (0), zastavica 1500 (0), satenast šal 2500 (0), kapa 2400 + 600, kapetanski trak 1200 (0).

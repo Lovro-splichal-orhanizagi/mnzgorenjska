@@ -409,7 +409,7 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
   // Motivi dela 2–3: predloge ↔ seme, mere con, laser (ena barva), vezenje (≤ 4 barve, črte ≥ 1 mm, črke ≥ 5 mm),
   // postava iz posnetka, dres v vseh vzorcih, podstavki po kosih in na listu, datum.
   {
-    const sql23 = readFileSync(new URL('../supabase/migrations/20261019150000_trgovina_motivi_del23.sql', import.meta.url), 'utf8')
+    const sql23 = readFileSync(new URL('../supabase/migrations/20261019160000_trgovina_motivi_del23.sql', import.meta.url), 'utf8')
     const seme23 = sql23.slice(sql23.indexOf('insert into trgovina.motivi (slug'))
     type Polje23 = { kljuc: string; vrsta: string; max?: number; cona?: string; moznosti?: unknown[] }
     const semena23 = [...seme23.matchAll(/^\('([a-z0-9-]+)',[\s\S]*?\n '([a-z]+)',\n '(\[[\s\S]*?\])',\n '(\[[\s\S]*?\])',/gm)]
@@ -699,7 +699,7 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
 // Motivi dela 2–3 v trgovini: konfigurator (postava, ocene, datum, paleta dresa, format, velikost),
 // mockup (valj, gravura, vezenje, okvir, podstavki, obris dresa), vitrina po skupinah, katalog.
 {
-  const sql = readFileSync(new URL('../supabase/migrations/20261019150000_trgovina_motivi_del23.sql', import.meta.url), 'utf8')
+  const sql = readFileSync(new URL('../supabase/migrations/20261019160000_trgovina_motivi_del23.sql', import.meta.url), 'utf8')
   const niz = String.raw`'((?:[^']|'')*)'`
   const besedilo = (x: string) => x.replace(/''/g, "'")
   const vrstice = [...sql.slice(sql.indexOf('insert into trgovina.motivi (slug')).matchAll(new RegExp(String.raw`^\('([a-z0-9-]+)', ${niz}, ${niz},\n ${niz},\n ${niz},\n '([a-z]+)',\n ${niz},\n ${niz},\n ${niz},`, 'gm'))]

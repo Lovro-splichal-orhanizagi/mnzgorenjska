@@ -50,7 +50,7 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   pri prvaku `mini_liga_id`, `sezona`). Nosilec motivov brez motiva ni prodan.
   Javno `trgovina_motivi()`, `trgovina_izdelek().motivi/cone`; admin
   `trgovina_admin_motivi`, `_shrani_motiv` (aktiven, vrstni red, primeri, doplačila).
-- **Motivi, dela 2 in 3** (migracija `20261019150000_trgovina_motivi_del23.sql`):
+- **Motivi, dela 2 in 3** (migracija `20261019160000_trgovina_motivi_del23.sql`):
   pub, stena in dodatki (kozarec, vrč, podstavki ×6, odpirač, plakat A3/A2,
   kartica, zastavica, šal, kapa, trak) in **dres po meri** (ves dres v
   sublimaciji, cone `spredaj` in `hrbet` 600×750), vse neaktivno. Plakat ima
@@ -176,7 +176,7 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
 
 Motivi nedeljske lige na nosilcih po meri. Del 1 (migracija `20261019080000`):
 Retro dres, Legenda, Hangover XI, Kapetan, Kralj kafane, Prvak mini lige na
-majici in puloverju. Dela 2–3 (migracija `20261019150000`): pub in tekma, stena
+majici in puloverju. Dela 2–3 (migracija `20261019160000`): pub in tekma, stena
 in darila, dodatki in dres po meri (tabela spodaj). Vse preverjanje in vse cene
 so v bazi (`trgovina.personaliziraj_motiv`); brskalnik le riše predogled. Vse je
 sejano z `aktiven = false`, vklopi admin; cene in doplačila v tabeli so seme, admin
