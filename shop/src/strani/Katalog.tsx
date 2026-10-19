@@ -55,7 +55,10 @@ export function KarticaIzdelka({ i, motivi = null }: { i: IzdelekKataloga; motiv
       <div className="space-y-1 px-1 pb-1 pt-3">
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t(`kategorija.${i.kategorija}`)}</p>
         <h2 className="text-lg font-bold leading-tight text-slate-100">{ime}</h2>
-        <p className="text-base font-black text-gnl-300">{i.cena_do > i.cena_od ? t('katalog.od', { cena: cena(i.cena_od) }) : cena(i.cena_od)}</p>
+        <p className="text-base font-black text-gnl-300">
+          {i.cena_z_motivom != null ? t('katalog.od', { cena: cena(i.cena_z_motivom) })
+            : i.cena_do > i.cena_od ? t('katalog.od', { cena: cena(i.cena_od) }) : cena(i.cena_od)}
+        </p>
       </div>
     </Link>
   )

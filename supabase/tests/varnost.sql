@@ -5292,6 +5292,23 @@ select pg_temp.napaka_sporocilo('trgovina4: postava brez zaklenjenega kroga',
     '{"motiv":"moja-postava","polja":{"postava":-927001},"shema":"igrisce"}', 'f7a20000-0000-4000-8000-000000000001', 'sl')$$,
   'trgovina-personalizacija', '%končanega kroga s točkami%');
 reset role;
+select pg_temp.napaka_sporocilo('trgovina4: predogled postave brez kroga ima svoj namig',
+  $$select trgovina.postava_ekipe(-927001, 'f7a20000-0000-4000-8000-000000000001')$$,
+  'trgovina-postava-krog', '%končanega kroga s točkami%');
+-- Katalog: nosilec motivov pove ceno z najnižjim doplačilom aktivnega motiva (stanje se povrne).
+create temp table trg4_aktivni on commit drop as
+  select 'i' as k, id, aktiven from trgovina.izdelki where slug = 'kozarec-po-meri'
+  union all select 'm', id, aktiven from trgovina.motivi where slug in ('tretji-polcas', 'ekipni-kozarec');
+update trgovina.izdelki set aktiven = true where slug = 'kozarec-po-meri';
+update trgovina.motivi set aktiven = false where slug in ('tretji-polcas', 'ekipni-kozarec');
+select pg_temp.preveri('trgovina4: katalog brez aktivnega motiva nima cene z motivom',
+  (select e->'cena_z_motivom' from jsonb_array_elements(trgovina_katalog()) e where e->>'slug' = 'kozarec-po-meri') = 'null'::jsonb);
+update trgovina.motivi set aktiven = true where slug = 'tretji-polcas';
+select pg_temp.preveri('trgovina4: katalog da ceno nosilca z doplačilom motiva',
+  (select (e->>'cena_z_motivom')::int from jsonb_array_elements(trgovina_katalog()) e where e->>'slug' = 'kozarec-po-meri') = 2100
+  and (select (e->>'cena_od')::int from jsonb_array_elements(trgovina_katalog()) e where e->>'slug' = 'kozarec-po-meri') = 1200);
+update trgovina.izdelki i set aktiven = a.aktiven from trg4_aktivni a where a.k = 'i' and a.id = i.id;
+update trgovina.motivi m set aktiven = a.aktiven from trg4_aktivni a where a.k = 'm' and a.id = m.id;
 
 insert into fantasy_lineups(round_id, fantasy_team_id, player_id, is_starter, is_captain, is_vice, bench_order, position)
 select r, -927001, -927400-n, n <= 11, n = case when r = -927002 then 10 else 2 end, n = 6,

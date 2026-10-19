@@ -26,6 +26,8 @@ export interface IzdelekKataloga {
   na_voljo: Voljo
   po_narocilu?: boolean
   digitalni?: boolean
+  /** Nosilec motivov: najnižja cena z doplačilom aktivnega motiva (kupi se le z motivom); sicer null. */
+  cena_z_motivom?: number | null
 }
 
 export interface Razlicica {

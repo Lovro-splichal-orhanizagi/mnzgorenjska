@@ -9,7 +9,7 @@ import { cena, jezik, po, SL, t, type Kljuc } from '../besede'
 import { dodaj, kljuc, NAJVEC, shrani, useKosarica } from '../kosarica'
 import { barvaRazlicice, conaZa, Mockup, velikostRazlicice } from '../mockup'
 import { useNaslov } from '../Okvir'
-import { napakaPolja, normaliziraj, type Personalizacija, type VrednostVnosa } from '../personalizacija'
+import { letoNaprej, napakaPolja, normaliziraj, type Personalizacija, type VrednostVnosa } from '../personalizacija'
 import { MOTIVI } from '../motivi'
 import { barveIzPolj, coneMotiva, narisiMotiv, praznaCona, type VrednostiPolj } from '../risba'
 import { Nalaganje, useSeja } from '../seja'
@@ -109,7 +109,11 @@ function Korak({ n, naslov, children, dodatno }: { n: number; naslov: string; ch
 interface MojaEkipa { id: number; name: string; mladinska: boolean }
 
 /** Živi posnetek postave za izbrano ekipo (trgovina_moja_postava). */
-type StanjePostave = Postava | 'nalagam' | 'brezKroga' | 'napaka'
+export type StanjePostave = Postava | 'nalagam' | 'brezKroga' | 'napaka'
+
+/** Stanje iz odgovora trgovina_moja_postava: brez končanega kroga ima baza svoj namig. */
+export const stanjePostave = (data: unknown, error: { hint?: string } | null): StanjePostave =>
+  error ? (error.hint === 'trgovina-postava-krog' ? 'brezKroga' : 'napaka') : (data as Postava)
 
 export function Konfigurator({ i }: { i: Izdelek }) {
   const motivi = i.motivi ?? []
@@ -189,22 +193,20 @@ export function Konfigurator({ i }: { i: Izdelek }) {
 
   // Postava: ob izbiri ekipe preberemo zadnji končani krog (isti posnetek kot ob nakupu).
   const poljePostave = m.polja.find((p) => p.vrsta === 'postava')
+  // Predpomnjeno po računu in ekipi; odgovor se zapiše pod svoj ključ tudi po menjavi ekipe,
+  // zato se nalaganje nikoli ne zatakne. Napaka se ne hrani: "Poskusi znova" bere ponovno.
   const izbranaZaPostavo = poljePostave ? vrednosti[poljePostave.kljuc] ?? '' : ''
+  const kljucPostave = (ekipa: string) => `${uid ?? ''}:${ekipa}`
   const [postave, setPostave] = useState<Record<string, StanjePostave>>({})
+  const [poskus, setPoskus] = useState(0)
   useEffect(() => {
-    if (!uid || !izbranaZaPostavo || postave[izbranaZaPostavo]) return
-    let ziv = true
-    setPostave((o) => ({ ...o, [izbranaZaPostavo]: 'nalagam' }))
-    void supabase.rpc('trgovina_moja_postava', { p_team_id: Number(izbranaZaPostavo) }).then(({ data, error }) => {
-      if (!ziv) return
-      const stanje: StanjePostave = error ? (/kroga/.test(error.message) ? 'brezKroga' : 'napaka') : (data as unknown as Postava)
-      setPostave((o) => ({ ...o, [izbranaZaPostavo]: stanje }))
-    })
-    return () => { ziv = false }
-    // Branje enkrat na ekipo; postave so predpomnjene v stanju.
+    const k = kljucPostave(izbranaZaPostavo)
+    if (!uid || !izbranaZaPostavo || (postave[k] && postave[k] !== 'napaka')) return
+    setPostave((o) => ({ ...o, [k]: 'nalagam' }))
+    void supabase.rpc('trgovina_moja_postava', { p_team_id: Number(izbranaZaPostavo) })
+      .then(({ data, error }) => setPostave((o) => ({ ...o, [k]: stanjePostave(data, error) })))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uid, izbranaZaPostavo])
-  useEffect(() => { setPostave({}) }, [uid])
+  }, [uid, izbranaZaPostavo, poskus])
 
   // Preloži fotografije, da je preklop barve in pogleda takojšen.
   useEffect(() => {
@@ -261,7 +263,7 @@ export function Konfigurator({ i }: { i: Izdelek }) {
       if (x) [polja[p.kljuc], tisk] = [{ mini_liga_id: x.mini_liga_id, sezona: x.sezona }, besediloPrvaka(x)]
     } else if (p.vrsta === 'postava') {
       const e = izbranaEkipa(p)
-      const s = e && postave[String(e.id)]
+      const s = e && postave[kljucPostave(String(e.id))]
       if (e && s && typeof s === 'object') [polja[p.kljuc], tisk, predlog] = [e.id, s.ekipa, s]
     } else if (surovo && !napake[p.kljuc]) {
       const v = p.vrsta === 'stevilka' || p.vrsta === 'leto' ? Number(surovo) : surovo
@@ -410,7 +412,7 @@ export function Konfigurator({ i }: { i: Izdelek }) {
                   <PoljeVnosa key={`${m.slug}-${p.kljuc}`} p={p} vrednost={vrednosti[p.kljuc] ?? ''} napaka={napake[p.kljuc] ?? null}
                     manjka={dotaknjeno && manjka.includes(p.kljuc)} nastavi={(v) => { setVrednosti((o) => ({ ...o, [p.kljuc]: v })); setDodano(null) }}
                     uid={uid} ekipe={ekipe} prvaki={prvaki} slug={i.slug} besediloPrvaka={besediloPrvaka}
-                    drugo={p.razlicna_od ? vrednosti[p.razlicna_od] : undefined} postava={postave[vrednosti[p.kljuc] ?? '']} slicice={p.kljuc === 'vzorec' ? sliciceVzorca : undefined} />
+                    drugo={p.razlicna_od ? vrednosti[p.razlicna_od] : undefined} postava={postave[kljucPostave(vrednosti[p.kljuc] ?? '')]} znova={() => setPoskus((n) => n + 1)} slicice={p.kljuc === 'vzorec' ? sliciceVzorca : undefined} />
                 ))}
                 <p className="text-xs text-slate-500 sm:col-span-2">{t('pers.preverimo')}</p>
               </div>
@@ -550,7 +552,7 @@ const izbranGumb = 'border-gnl-400 bg-gnl-400/15 text-gnl-200'
 const prostGumb = 'border-white/15 bg-white/5 text-slate-200 hover:border-white/30'
 
 /** Eno polje motiva po vrsti: besedilo, številka (ocena z drsnikom), leto, datum, izbira, barva, ekipa, prvak, postava. */
-function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, prvaki, slug, besediloPrvaka, drugo, postava, slicice }: {
+export function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, prvaki, slug, besediloPrvaka, drugo, postava, znova, slicice }: {
   p: PoljeMotiva
   vrednost: string
   napaka: Kljuc | null
@@ -565,6 +567,8 @@ function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, prvaki, 
   drugo?: string
   /** Stanje posnetka postave za izbrano ekipo. */
   postava?: StanjePostave
+  /** Ponovno branje postave po napaki. */
+  znova?: () => void
   /** Sličice možnosti izbire (vzorec dresa) kot data URL. */
   slicice?: Record<string, string>
 }) {
@@ -613,7 +617,9 @@ function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, prvaki, 
           )}
         {uid && vrednost && postava === 'nalagam' && <Nalaganje />}
         {uid && vrednost && postava === 'brezKroga' && <p className="opozorilo" role="status">{t('motiv.postava.niKroga')}</p>}
-        {uid && vrednost && postava === 'napaka' && <p className="opozorilo" role="status">{t('napaka.nalaganje')}</p>}
+        {uid && vrednost && postava === 'napaka' && (
+          <p className="opozorilo" role="status">{t('napaka.nalaganje')} {znova && <button type="button" onClick={znova} className="povezava">{t('motiv.postava.znova')}</button>}</p>
+        )}
         {uid && vrednost && postava && typeof postava === 'object' && (
           <p className="text-xs text-slate-400">{t('motiv.postava.krog', { krog: postava.krog ?? '–', liga: postava.liga ?? '' })}</p>
         )}
@@ -676,11 +682,14 @@ function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, prvaki, 
             </button>
           )}
           {paleta.map((x) => {
+            // Zasedena barva ostane v vrstnem redu tipkovnice in pove, zakaj je ni mogoče izbrati.
             const zasedena = drugo === x.kljuc
+            const ime = po(x.ime_sl, x.ime_en)
             return (
-              <button key={x.kljuc} type="button" role="radio" aria-checked={vrednost === x.kljuc} disabled={zasedena}
-                aria-label={po(x.ime_sl, x.ime_en)} title={zasedena ? t('motiv.napaka.razlicni') : po(x.ime_sl, x.ime_en)} onClick={() => nastavi(x.kljuc)}
-                className={`h-9 w-9 rounded-full border border-white/25 transition disabled:cursor-not-allowed disabled:opacity-25 ${vrednost === x.kljuc ? 'ring-2 ring-gnl-400 ring-offset-2 ring-offset-slate-950' : 'hover:scale-105'} ${manjka ? 'ring-1 ring-rose-400/60' : ''}`}
+              <button key={x.kljuc} type="button" role="radio" aria-checked={vrednost === x.kljuc} aria-disabled={zasedena || undefined}
+                aria-label={zasedena ? `${ime}: ${t('motiv.napaka.razlicni')}` : ime} title={zasedena ? t('motiv.napaka.razlicni') : ime}
+                onClick={() => { if (!zasedena) nastavi(x.kljuc) }}
+                className={`h-9 w-9 rounded-full border border-white/25 transition aria-disabled:cursor-not-allowed aria-disabled:opacity-25 ${vrednost === x.kljuc ? 'ring-2 ring-gnl-400 ring-offset-2 ring-offset-slate-950' : 'hover:scale-105'} ${manjka ? 'ring-1 ring-rose-400/60' : ''}`}
                 style={{ background: x.hex ?? '#64748b' }} />
             )
           })}
@@ -743,8 +752,8 @@ function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, prvaki, 
       <label className="block space-y-1" htmlFor={id}>
         <span className="flex items-baseline justify-between gap-2">{oznaka}</span>
         <span className="flex items-center gap-3">
-          <input type="range" min={p.min} max={99} value={Number.isFinite(n) && vrednost !== '' ? n : p.min} onChange={(e) => nastavi(e.target.value)}
-            aria-label={po(p.oznaka_sl, p.oznaka_en)} className="h-2 w-full cursor-pointer accent-gnl-400" />
+          <input type="range" min={p.min} max={99} value={Number.isFinite(n) && vrednost !== '' ? n : Number(p.privzeto ?? p.min)} onChange={(e) => nastavi(e.target.value)}
+            aria-label={po(p.oznaka_sl, p.oznaka_en)} className={`h-2 w-full cursor-pointer accent-gnl-400 ${vrednost === '' ? 'opacity-40' : ''}`} />
           <input id={id} value={vrednost} onChange={(e) => nastavi(e.target.value)} inputMode="numeric" maxLength={2} autoComplete="off"
             aria-invalid={Boolean(napaka) || manjka} aria-required={p.obvezno} aria-describedby={`${id}-namig`}
             className={`polje w-16 text-center tabular-nums ${napaka || manjka ? 'border-rose-400/60' : ''}`} />
@@ -755,12 +764,10 @@ function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, prvaki, 
   }
 
   if (p.vrsta === 'datum') {
-    const meja = new Date()
-    meja.setFullYear(meja.getFullYear() + 1)
     return (
       <label className="block space-y-1" htmlFor={id}>
         {oznaka}
-        <input id={id} type="date" value={vrednost} min="1950-01-01" max={meja.toISOString().slice(0, 10)} onChange={(e) => nastavi(e.target.value)}
+        <input id={id} type="date" value={vrednost} min="1950-01-01" max={letoNaprej()} onChange={(e) => nastavi(e.target.value)}
           aria-invalid={Boolean(napaka) || manjka} aria-required={p.obvezno} aria-describedby={`${id}-namig`}
           className={`polje w-full [color-scheme:dark] ${napaka || manjka ? 'border-rose-400/60' : ''}`} />
         {besediloNapake ? namig(besediloNapake, true) : namig(t('motiv.namig.datum'), manjka)}

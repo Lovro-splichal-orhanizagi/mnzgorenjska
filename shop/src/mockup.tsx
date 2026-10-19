@@ -19,8 +19,12 @@ export const FOTO = 1600
 type Tocka = [number, number]
 type Videz = 'steklo' | 'kovina' | 'vezenje' | 'okvir' | 'dres'
 
-/** Posebnosti fotografije nosilca: svetlost pod cono (meritev), valj v mm, videz, kosi kompleta. */
-interface Nosilec { svetlost?: number; valj?: number; videz?: Videz; kosi?: Tocka[][] }
+/**
+ * Posebnosti fotografije nosilca: svetlost pod cono (meritev), valj v mm, videz, kosi kompleta.
+ * `blizje`: povečava sličic in kartic (povecava > 1), ko je cona majhna v fotografiji
+ * (odpirač) ali predolga za kvadrat (šal: levi konec z imenom in slogan); `sredina` v % fotografije.
+ */
+interface Nosilec { svetlost?: number; valj?: number; videz?: Videz; kosi?: Tocka[][]; blizje?: { povecava: number; sredina: string } }
 
 /** Pravokotnik [x0,y0]–[x1,y1] kot štirje koti TL, TR, BR, BL. */
 const kvadrat = (x0: number, y0: number, x1: number, y1: number): Tocka[] => [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]
@@ -28,19 +32,20 @@ const kvadrat = (x0: number, y0: number, x1: number, y1: number): Tocka[] => [[x
 export const NOSILCI: Record<string, Nosilec> = {
   '/nosilci/kozarec.webp': { valj: 37.6, videz: 'steklo' },
   '/nosilci/vrc.webp': { valj: 45, videz: 'steklo' },
-  '/nosilci/odpirac.webp': { videz: 'kovina' },
+  '/nosilci/odpirac.webp': { videz: 'kovina', blizje: { povecava: 1.9, sredina: '49% 49%' } },
   '/nosilci/kapa-crna.webp': { svetlost: 0.1, videz: 'vezenje' },
   '/nosilci/kapa-bela-crna.webp': { svetlost: 0.85, videz: 'vezenje' },
   '/nosilci/plakat.webp': { svetlost: 0.95, videz: 'okvir' },
   '/nosilci/kartica.webp': { svetlost: 0.93 },
   '/nosilci/zastavica.webp': { svetlost: 0.85 },
-  '/nosilci/sal.webp': { svetlost: 0.86 },
+  '/nosilci/sal.webp': { svetlost: 0.86, blizje: { povecava: 2.1, sredina: '20% 49%' } },
   '/nosilci/trak.webp': { svetlost: 0.88 },
   '/nosilci/dres-spredaj.webp': { svetlost: 0.9, videz: 'dres' },
   '/nosilci/dres-hrbet.webp': { svetlost: 0.88, videz: 'dres' },
   // Šest podstavkov (3×2), kos 1–6 po vrsti; cona je kos 2.
   '/nosilci/podstavki.webp': {
     svetlost: 0.85,
+    blizje: { povecava: 1.08, sredina: '50% 49%' },
     kosi: [kvadrat(63, 303, 522, 762), kvadrat(568, 302, 1028, 761), kvadrat(1075, 303, 1534, 762),
       kvadrat(63, 802, 524, 1265), kvadrat(567, 802, 1028, 1266), kvadrat(1071, 802, 1533, 1266)],
   },
@@ -288,7 +293,8 @@ export function Mockup({ cona, svg, barva, podlaga, alt, povecava = 1, className
 
   return (
     <div ref={okvir} {...(alt ? { role: 'img', 'aria-label': alt } : { 'aria-hidden': true })} className={`relative aspect-square overflow-hidden ${className}`}>
-      <div className="absolute inset-0" style={povecava !== 1 ? { transform: `scale(${povecava})`, transformOrigin: sredina } : undefined}>
+      <div className="absolute inset-0" style={povecava > 1 && nosilec.blizje ? { transform: `scale(${nosilec.blizje.povecava})`, transformOrigin: nosilec.blizje.sredina }
+        : povecava !== 1 ? { transform: `scale(${povecava})`, transformOrigin: sredina } : undefined}>
         <img src={cona.slika} alt="" draggable={false} className="absolute inset-0 h-full w-full select-none object-cover" />
         {nosilec.videz === 'dres' && kosi[0]
           ? <PlastDresa id={id} cona={cona} svg={kosi[0]} podlaga={podlaga ?? '#ffffff'} />

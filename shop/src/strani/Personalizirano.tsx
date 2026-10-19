@@ -115,9 +115,9 @@ function KarticaMotiva({ m, zamik }: { m: MotivKataloga; zamik: number }) {
   )
 }
 
-export function MrezaMotivov({ motivi, id = 'motivi', zamik = 0 }: { motivi: MotivKataloga[]; id?: string; zamik?: number }) {
+export function MrezaMotivov({ motivi, id = 'motivi', zamik = 0 }: { motivi: MotivKataloga[]; id?: string | null; zamik?: number }) {
   return (
-    <div id={id} className="grid scroll-mt-20 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div id={id ?? undefined} className="grid scroll-mt-20 gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {motivi.map((m, i) => <KarticaMotiva key={m.slug} m={m} zamik={(zamik + i) * 600} />)}
     </div>
   )
@@ -158,9 +158,9 @@ export function SkupineMotivov({ motivi }: { motivi: MotivKataloga[] }) {
         const z = zamik
         zamik += ms.length
         return (
-          <section key={k} aria-labelledby={`naslov-${k}`} className="space-y-5">
+          <section key={k} id={k} aria-labelledby={`naslov-${k}`} className="scroll-mt-32 space-y-5">
             <h2 id={`naslov-${k}`} className="text-2xl font-black naslov sm:text-3xl">{t(`osebno.skupina.${k}`)}</h2>
-            <MrezaMotivov motivi={ms} id={k} zamik={z} />
+            <MrezaMotivov motivi={ms} id={null} zamik={z} />
           </section>
         )
       })}

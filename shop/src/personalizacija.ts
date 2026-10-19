@@ -74,14 +74,20 @@ export function napakaPolja(vrsta: string, surovo: string, max = 12, letos = new
   return null
 }
 
+/** Isti dan čez leto (krajevni datum) kot current_date + interval '1 year': 29. 2. → 28. 2. */
+export function letoNaprej(danes = new Date()): string {
+  const [l, m] = [danes.getFullYear() + 1, danes.getMonth()]
+  const d = Math.min(danes.getDate(), new Date(Date.UTC(l, m + 1, 0)).getUTCDate())
+  return `${l}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+}
+
 /** "YYYY-MM-DD" (pravi dan) od 1950-01-01 do leta naprej, kot trgovina.vrednost_polja. */
 export function veljavenDatum(v: string, danes = new Date()): boolean {
   const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v)
   if (!d) return false
   const t = new Date(Date.UTC(Number(d[1]), Number(d[2]) - 1, Number(d[3])))
   if (t.toISOString().slice(0, 10) !== v) return false
-  const meja = new Date(Date.UTC(danes.getFullYear() + 1, danes.getMonth(), danes.getDate()))
-  return v >= '1950-01-01' && t <= meja
+  return v >= '1950-01-01' && v <= letoNaprej(danes)
 }
 
 const vrednostOk = (v: unknown): boolean =>

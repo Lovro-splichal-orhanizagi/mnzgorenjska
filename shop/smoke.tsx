@@ -8,7 +8,7 @@ import { SejaProvider } from './src/seja'
 import { Okvir } from './src/Okvir'
 import { Katalog, KarticaIzdelka, MrezaIzdelkov } from './src/strani/Katalog'
 import { Izdelek, IzdelekView, Predogled } from './src/strani/Izdelek'
-import { barveMotiva, ekipaPrevelika, izPrimera, moznost, prikazVrednosti } from './src/strani/Konfigurator'
+import { barveMotiva, ekipaPrevelika, izPrimera, moznost, PoljeVnosa, prikazVrednosti, stanjePostave, type StanjePostave } from './src/strani/Konfigurator'
 import { MrezaMotivov, Pahljaca, Personalizirano, SkupineMotivov, skupinaMotiva, vProdaji } from './src/strani/Personalizirano'
 import { VarnaStran } from './src/App'
 import { homografija, matrika, trakoviValja } from './src/mockup'
@@ -26,11 +26,11 @@ import { PREHODI, povzetekPostavk, stripePovezava, ZnackaStanja } from './src/st
 import { vCente, varnoIme } from './src/strani/AdminIzdelki'
 import { EN, SL, TELEFON, cena, type Kljuc } from './src/besede'
 import { dodaj, kljuc, kosov, nastavi, odstrani, postnina, preberi, PRAZNA, skupaj } from './src/kosarica'
-import { celicaCsv, doplacilo, napakaImena, napakaPolja, oblikaSvg, stabilno, stevilka, veljavnaOblika } from './src/personalizacija'
+import { celicaCsv, doplacilo, letoNaprej, napakaImena, napakaPolja, oblikaSvg, stabilno, stevilka, veljavnaOblika } from './src/personalizacija'
 import { barveIzPolj, coneMotiva, kontrast, narisiKose, narisiMotiv, oblikujDatum, poljaCone, praznaCona, sirinaBesedila, velikostMm, zVgrajenoPisavo } from './src/risba'
 import { MOTIVI } from './src/motivi'
 import { readFileSync } from 'node:fs'
-import type { Cona, Izdelek as TIzdelek, IzdelekKataloga, MotivIzdelka, MotivKataloga, NarociloAdmin, PoljeMotiva, PostavkaNarocila, PostavkaTiska, PrimerMotiva, Serija, ShemaMotiva } from './src/baza'
+import type { Cona, Izdelek as TIzdelek, IzdelekKataloga, MotivIzdelka, MotivKataloga, NarociloAdmin, PoljeMotiva, Postava, PostavkaNarocila, PostavkaTiska, PrimerMotiva, Serija, ShemaMotiva } from './src/baza'
 
 let napak = 0
 const preveri = (opis: string, ok: boolean, dodatno = '') => {
@@ -731,7 +731,7 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
     .filter((v) => !dres.includes(v))
   preveri('d23 dres: paleta, vzorci s sličicami, ovratnik, velikosti z doplačilom, obris majice, oba pogleda', manjkaD.length === 0, manjkaD.join(' / '))
   preveri('d23 dres: 13 barv na polje, druga barva ne sme biti enaka prvi, brez koraka barv sheme', (dres.match(/background:#/g) ?? []).length >= 39
-    && /aria-label="Zelena"[^>]*disabled=""|disabled=""[^>]*aria-label="Zelena"/.test(dres) && !dres.includes(SL['motiv.korak.shema']))
+    && /aria-disabled="true"[^>]*aria-label="Zelena: [^"]+"/.test(dres) && !/aria-label="Zelena"[^>]*disabled=""/.test(dres) && !dres.includes(SL['motiv.korak.shema']))
   preveri('d23 dres: rokavi v glavni barvi (podlaga obrisa)', /<rect width="1600" height="1600" fill="#[0-9A-Fa-f]{6}"/.test(dres))
 
   // Plakat: postava brez prijave (izmišljena postava, poziv k prijavi), format A3/A2 s ceno, shema.
@@ -788,6 +788,31 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
     && skupinaMotiva(motiv('navijaski-sal') as unknown as MotivKataloga) === 'dodatki' && skupinaMotiva({ izdelki: [] }) === 'dodatki')
   const karticaNosilca = renderToString(<StaticRouter location="/"><KarticaIzdelka i={{ slug: 'kozarec-po-meri', ime_sl: 'Kozarec', ime_en: 'Glass', kategorija: 'dom', slike: [], cena_od: 1200, cena_do: 1200, na_voljo: 'da' }} motivi={kat} /></StaticRouter>)
   preveri('d23 katalog: nosilec brez slike pokaže motiv na fotografiji nosilca', karticaNosilca.includes('/nosilci/kozarec.webp') && karticaNosilca.includes('clipPath id="trak-') && !karticaNosilca.includes('slff-grb'))
+
+  // Postava: stanja predogleda (nalaganje, brez kroga z namigom baze, napaka s ponovitvijo, posnetek), mladinska ekipa onemogočena.
+  const poljePostave = motiv('moja-postava').polja[0]!
+  const ekipeP = [{ id: 1, name: 'Dinamo Kavč', mladinska: false }, { id: 2, name: 'Mladi Tigri', mladinska: true }]
+  const stanje = (postava?: StanjePostave) => renderToString(<StaticRouter location="/p/plakat-po-meri"><PoljeVnosa p={poljePostave} vrednost="1" napaka={null} manjka={false}
+    nastavi={() => {}} uid="u" ekipe={ekipeP} prvaki={null} slug="plakat-po-meri" besediloPrvaka={() => ''} postava={postava} znova={() => {}} /></StaticRouter>)
+  const posnetek = primeriPostave[1]!.polja.postava as Postava
+  preveri('d23 postava: nalaganje, brez kroga, napaka s ponovitvijo, posnetek kroga, mladinska onemogočena',
+    stanje('nalagam').includes(SL['app.nalaganje']) && stanje('brezKroga').includes(SL['motiv.postava.niKroga'])
+    && stanje('napaka').includes(SL['motiv.postava.znova']) && stanje(posnetek).includes(`${posnetek.krog}. krog`)
+    && !stanje(posnetek).includes(SL['motiv.postava.predogled']) && stanje('nalagam').includes(SL['motiv.postava.mladinska'])
+    && /disabled=""[^>]*>(?:(?!<\/button>).)*Mladi Tigri/s.test(stanje('nalagam')))
+  preveri('d23 postava: brez kroga po namigu baze, ne po besedilu', stanjePostave(null, { hint: 'trgovina-postava-krog' }) === 'brezKroga'
+    && stanjePostave(null, { hint: 'trgovina-personalizacija' }) === 'napaka' && stanjePostave(posnetek, null) === posnetek)
+  preveri('d23 datum: leto naprej kot v bazi (29. 2. → 28. 2.)', letoNaprej(new Date(2028, 1, 29)) === '2029-02-28' && letoNaprej(new Date(2026, 9, 19)) === '2027-10-19')
+
+  // Košarica: sličica plakata postave ima igralce (primer) in ime kupčeve ekipe; katalog: cena z doplačilom motiva.
+  const plakatIz = nosilec('plakat-po-meri', [['A3', 'A3', 2900], ['A2', 'A2', 4500]])
+  const vrsticaP = { razlicica_id: 900, slug: 'plakat-po-meri', kolicina: 1, personalizacija: { motiv: 'moja-postava', polja: { postava: 1 }, shema: 'igrisce' }, prikaz: { postava: 'Moji Kavčarji' } }
+  const kosP = renderToString(<StaticRouter location="/cart"><SlikaMotiva iz={plakatIz} p={vrsticaP} oznaka="A3" alt="x" /></StaticRouter>)
+  preveri('d23 košarica: plakat postave z igralci in imenom ekipe', kosP.includes('MOJI KAVČARJI') && kosP.includes('KOS'), kosP.slice(0, 200))
+  const karticaCena = renderToString(<StaticRouter location="/"><KarticaIzdelka i={{ slug: 'kozarec-po-meri', ime_sl: 'Kozarec', ime_en: 'Glass', kategorija: 'dom', slike: [], cena_od: 1200, cena_do: 1200, na_voljo: 'da', cena_z_motivom: 2100 }} /></StaticRouter>)
+  preveri('d23 katalog: nosilec pove ceno z motivom ("od 21,00")', karticaCena.includes('od 21,00') && !karticaCena.includes('>12,00'))
+  const vitrinaOdp = renderToString(<StaticRouter location="/personalised"><MrezaMotivov motivi={kat.filter((m) => m.slug === 'ime-in-stevilka' || m.slug === 'navijaski-sal')} /></StaticRouter>)
+  preveri('d23 vitrina: odpirač in šal povečana bližje', vitrinaOdp.includes('scale(1.9)') && vitrinaOdp.includes('scale(2.1)'))
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

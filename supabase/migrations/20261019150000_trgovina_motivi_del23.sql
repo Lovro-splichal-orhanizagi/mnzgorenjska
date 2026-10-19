@@ -138,7 +138,8 @@ begin
    order by r.deadline_at desc nulls last, r.id desc
    limit 1;
   if v_krog.id is null then
-    raise exception 'Trgovina: ekipa še nima končanega kroga s točkami.' using hint = 'trgovina-personalizacija';
+    -- Svoj namig, da predogled (trgovina_moja_postava) pove pravi razlog; nakup ga preslika v trgovina-personalizacija.
+    raise exception 'Trgovina: ekipa še nima končanega kroga s točkami.' using hint = 'trgovina-postava-krog';
   end if;
   select c.country_id into v_drzava from public.competitions c where c.id = ft.competition_id;
 
@@ -333,7 +334,15 @@ begin
       if v_st is null or v_st <> trunc(v_st) or v_st not between -9223372036854775808 and 9223372036854775807 then
         raise exception 'Trgovina: ekipa ni tvoja.' using hint = 'trgovina-personalizacija';
       end if;
-      v := trgovina.postava_ekipe(v_st::bigint, p_user);
+      begin
+        v := trgovina.postava_ekipe(v_st::bigint, p_user);
+      exception when raise_exception then
+        get stacked diagnostics v_txt = pg_exception_hint;
+        if v_txt = 'trgovina-postava-krog' then
+          raise exception 'Trgovina: ekipa še nima končanega kroga s točkami.' using hint = 'trgovina-personalizacija';
+        end if;
+        raise;
+      end;
       v_txt := v->>'ekipa';
       v_dodatno := v_dodatno || jsonb_build_object('fantasy_team_id', v->'fantasy_team_id', 'round_id', v->'round_id');
 
@@ -568,6 +577,31 @@ select p.id as postavka_id, p.serija_id, p.stanje_tiska, n.id as narocilo_id, n.
   join trgovina.izdelki i on i.id = r.izdelek_id
  where p.stanje_tiska is not null and trgovina.je_placano_aktivno(n.stanje);
 revoke all on trgovina.tisk from public, anon, authenticated;
+
+-- --------------------------------------------------------------------------
+-- Katalog: nosilec motivov se kupi le z motivom, zato kartica pove ceno z
+-- najnižjim doplačilom aktivnega motiva (cena_z_motivom; null brez motivov).
+-- --------------------------------------------------------------------------
+create or replace function public.trgovina_katalog() returns jsonb
+language sql stable security definer set search_path = public
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'slug', i.slug, 'ime_sl', i.ime_sl, 'ime_en', i.ime_en, 'kategorija', i.kategorija,
+           'slike', to_jsonb(i.slike), 'cena_od', v.cena_od, 'cena_do', v.cena_do,
+           'na_voljo', case when i.po_narocilu or i.digitalni then 'da' else trgovina.oznaka_voljo(v.kosov) end,
+           'po_narocilu', i.po_narocilu, 'digitalni', i.digitalni,
+           'cena_z_motivom', v.cena_od + (select min(mi.doplacilo) from trgovina.motivi_izdelki mi
+                                           join trgovina.motivi m on m.id = mi.motiv_id
+                                          where mi.izdelek_id = i.id and m.aktiven))
+         order by i.vrstni_red, i.id), '[]'::jsonb)
+  from trgovina.izdelki i
+  join lateral (
+    select min(r.cena) as cena_od, max(r.cena) as cena_do, sum(greatest(z.na_voljo, 0)) as kosov
+      from trgovina.razlicice r join trgovina.razpolozljivo z on z.razlicica_id = r.id
+     where r.izdelek_id = i.id and r.aktivna
+  ) v on v.cena_od is not null
+  where i.aktiven
+$$;
 
 -- --------------------------------------------------------------------------
 -- Nosilci (neaktivni)
