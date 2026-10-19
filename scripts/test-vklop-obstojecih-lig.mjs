@@ -113,3 +113,20 @@ test('opposite per-match goal errors cannot cancel to accept a league; later can
   const rows=await runBatch({candidates:[candidate,other],transport:f.transport,now,apply:true})
   assert.deepEqual(rows.map(r=>r.status),['HOLD','ACTIVE']);assert.match(rows[0].reason,/101.*102/);assert.equal(rows[0].score_goal_difference,0);assert.deepEqual(rows[0].score_goal_mismatches.map(m=>m.report_id),['report-101','report-102']);assert.deepEqual(f.calls,[other.slug])
 })
+test('allowGaps records past unimported and score/goal gaps instead of holding, and binds the digest',async()=>{
+  const gaps=[{id:11,round_id:1,played_on:'2026-10-10',home_goals:0,away_goals:0,imported_at:null,kontumacija:false,goals:[{count:0}],appearances:[{count:0}]},
+    {id:13,round_id:1,home_goals:0,away_goals:4,imported_at:'2026-10-10',kontumacija:false,goals:[{count:0}],appearances:[{count:22}]},
+    {id:12,round_id:2,home_goals:0,away_goals:0,imported_at:null,kontumacija:false,goals:[{count:0}],appearances:[{count:0}]}]
+  const held=fixture({matches:async()=>gaps});assert.equal((await runBatch({candidates:[candidate],transport:held.transport,now}))[0].status,'HOLD')
+  const f=fixture({matches:async()=>gaps,activate:async c=>({vklopljena:true,prvi_krog:2,razlika:4})})
+  const [r]=await runBatch({candidates:[candidate],transport:f.transport,now,allowGaps:true})
+  assert.equal(r.status,'READY');assert.deepEqual(r.accepted_gaps.past_current_unimported,[11]);assert.equal(r.accepted_gaps.score_goal_difference,4)
+  assert.notEqual(approvalDigest('a'.repeat(40),[candidate],{},true),approvalDigest('a'.repeat(40),[candidate],{}))
+  assert.equal(approvalDigest('a'.repeat(40),[candidate],{},false),approvalDigest('a'.repeat(40),[candidate],{}))
+})
+test('registry admits reviewed lowland, mascot, mlsz and hlf candidates with source contracts',()=>{
+  for(const source of ['lowland','mascot','mlsz','hlf']) {
+    const c=registry.candidates.find(c=>c.source===source);assert.ok(c,source);assert.ok(registry.source_contracts[source]?.permission)
+    assert.equal(validateSelection(registry,[c.slug])[0].slug,c.slug)
+  }
+})

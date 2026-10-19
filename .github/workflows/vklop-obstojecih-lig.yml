@@ -19,6 +19,10 @@ on:
         description: Osvezi razpored in samo manjkajoce zapisnike 1–5 neaktivnih EPS lig; nato predogled brez vklopa
         type: boolean
         default: false
+      dovoli_vrzeli:
+        description: Pretekle tekme brez zapisnika in neujemanje golov z izidom zapisi kot sprejete vrzeli, ne HOLD (predogled in vklop z isto izbiro)
+        type: boolean
+        default: false
       approved_sha256:
         description: SHA256 izrecnega seznama in virov iz predogleda na istem commitu
         type: string
@@ -40,6 +44,7 @@ jobs:
       ACTIVATE: ${{ inputs.activate }}
       REFRESH: ${{ inputs.refresh }}
       APPROVED_SHA: ${{ inputs.approved_sha256 }}
+      DOVOLI_VRZELI: ${{ inputs.dovoli_vrzeli }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -94,6 +99,7 @@ jobs:
           if [ "$REFRESH" = true ]; then mode=refresh; fi
           args=("$mode" --lige "$LIGE" --expected-sha "$EXPECTED_SHA" --output release/obstojece-lige)
           if [ -n "$APPROVED_SHA" ]; then args+=(--approved-sha256 "$APPROVED_SHA"); fi
+          if [ "$DOVOLI_VRZELI" = true ]; then args+=(--dovoli-vrzeli); fi
           node scripts/vklopi-obstojece-lige.mjs "${args[@]}"
       - name: Shrani predpomnilnik EPS tudi ob delnem izidu
         if: always() && inputs.refresh
