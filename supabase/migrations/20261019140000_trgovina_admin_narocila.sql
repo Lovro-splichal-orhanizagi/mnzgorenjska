@@ -18,6 +18,8 @@ create function trgovina.je_placano_aktivno(p_stanje text) returns boolean
 language sql immutable
 as $$ select p_stanje in ('placano', 'v_izdelavi', 'poslano', 'dostavljeno') $$;
 revoke all on function trgovina.je_placano_aktivno(text) from public, anon, authenticated;
+-- Pogled trgovina.tisk ga kliče s pravicami bralca; agent ga bere.
+grant execute on function trgovina.je_placano_aktivno(text) to agent_bralec;
 
 create table trgovina.zgodovina_stanj (
   id          bigint generated always as identity primary key,

@@ -17,7 +17,7 @@ fi
 CILJ=/opt/supabase/volumes/functions/$IME
 CAS=$(date +%Y%m%d-%H%M%S)
 # Nova funkcija še nima mape: varnostne kopije ni, mapo ustvarimo.
-ssh SLFF "mkdir -p /opt/slff/backup-funkcije && if [ -d $CILJ ]; then cp -a $CILJ /opt/slff/backup-funkcije/$IME-$CAS; else mkdir -p $CILJ; fi"
+ssh SLFF "mkdir -p /opt/slff/backup-funkcije && if [ -d $CILJ ]; then cp -a $CILJ /opt/slff/backup-funkcije/$IME-$CAS; else mkdir -p $CILJ; fi; if [ -d /opt/supabase/volumes/functions/_shared ]; then cp -a /opt/supabase/volumes/functions/_shared /opt/slff/backup-funkcije/_shared-$CAS; fi"
 rsync -a --delete "supabase/functions/$IME/" "SLFF:$CILJ/"
 # Skupna koda (../_shared/*.ts) gre zraven vsake funkcije, da uvoz ne pade.
 rsync -a --delete supabase/functions/_shared/ SLFF:/opt/supabase/volumes/functions/_shared/
