@@ -27,7 +27,7 @@ import { vCente, varnoIme } from './src/strani/AdminIzdelki'
 import { EN, SL, TELEFON, cena, type Kljuc } from './src/besede'
 import { dodaj, kljuc, kosov, nastavi, odstrani, postnina, preberi, PRAZNA, skupaj } from './src/kosarica'
 import { celicaCsv, doplacilo, napakaImena, napakaPolja, oblikaSvg, stabilno, stevilka, veljavnaOblika } from './src/personalizacija'
-import { barveIzPolj, coneMotiva, narisiKose, narisiMotiv, oblikujDatum, poljaCone, praznaCona, sirinaBesedila, velikostMm, zVgrajenoPisavo } from './src/risba'
+import { barveIzPolj, coneMotiva, kontrast, narisiKose, narisiMotiv, oblikujDatum, poljaCone, praznaCona, sirinaBesedila, velikostMm, zVgrajenoPisavo } from './src/risba'
 import { MOTIVI } from './src/motivi'
 import { readFileSync } from 'node:fs'
 import type { Cona, Izdelek as TIzdelek, IzdelekKataloga, MotivIzdelka, MotivKataloga, NarociloAdmin, PostavkaNarocila, PostavkaTiska, Serija } from './src/baza'
@@ -523,6 +523,25 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
         && spredaj.includes('BIFE &lt;ZADNJI&gt;') && spredaj.includes('#0F5A36') && hrbet.includes('>NOVAK</text>') && hrbet.includes('>9</text>') && !hrbet.includes('BIFE'),
       spredaj.slice(0, 200))
     }
+    // Napisi dresa berljivi pri vsakem vzorcu in paru barv iz palete: polnilo ali obroba ima kontrast ≥ 3 do vsake barve pod napisom.
+    const paleta = (dres.polja.find((p) => p.kljuc === 'barva1')!.moznosti as { hex: string }[]).map((o) => o.hex)
+    const neberljivi: string[] = []
+    for (const vzorec of vzorci) for (const b1 of paleta) for (const b2 of paleta) for (const b3 of b1 === b2 ? [] : [null, '#FFD100']) {
+      const barve = b3 ? [b1, b2, b3] : [b1, b2]
+      const out = narisiMotiv('dres-po-meri', { vzorec, ovratnik: 'okrogel', ime: 'Novak', stevilka: 9 }, barve, 'hrbet')
+      const oznaka = /<text\b[^>]*data-ce="ime"[^>]*>/.exec(out)?.[0] ?? ''
+      const fill = /\sfill="(#[0-9A-Fa-f]+)"/.exec(oznaka)?.[1] ?? ''
+      const stroke = /\sstroke="(#[0-9A-Fa-f]+)"/.exec(oznaka)?.[1]
+      const pod = vzorec === 'enobarven' || vzorec === 'tanke-crte' ? [b1] : [b1, b2]
+      const loci = (b: string): boolean => !!fill && Math.max(kontrast(fill, b), stroke ? kontrast(stroke, b) : 0) >= 3
+      if (!pod.every(loci) || (pod.length === 1 && kontrast(fill || b1, b1) < 3)) neberljivi.push(`${vzorec} ${barve.join('/')}`)
+    }
+    preveri('dres: napisi berljivi pri vseh vzorcih in parih barv (kontrast ≥ 3)', neberljivi.length === 0, neberljivi.slice(0, 8).join(', '))
+    const tankeBC = ['#FFFFFF,#111111', '#111111,#FFFFFF'].map((p) => narisiMotiv('dres-po-meri', { vzorec: 'tanke-crte', ovratnik: 'v', sponzor: 'Bar', ime: 'Novak', stevilka: 9 }, p.split(','), 'hrbet'))
+    preveri('dres: tanke črte bela/črna in črna/bela imajo vidne napise', tankeBC.every((x, n) => {
+      const o = /<text\b[^>]*data-ce="ime"[^>]*>/.exec(x)?.[0] ?? ''
+      return kontrast(/\sfill="(#[0-9A-Fa-f]+)"/.exec(o)?.[1] ?? '#FFFFFF', n === 0 ? '#FFFFFF' : '#111111') >= 3
+    }))
     const brez = narisiMotiv('dres-po-meri', { vzorec: 'enobarven', barva1: 'bela', barva2: 'crna', ovratnik: 'v', sponzor: '', ime: '', stevilka: null }, ['#FFFFFF', '#111111'], 'hrbet')
     preveri('dres: prazni napisi skriti, hrbet se vseeno tiska; na beli napis temen', /display="none"/.test(brez) && !praznaCona('dres-po-meri', { barva1: 'bela', ime: '' }, 'hrbet')
       && /data-ce="ime"[^>]*fill="#111111"|fill="#111111"[^>]*data-ce="ime"/.test(brez))

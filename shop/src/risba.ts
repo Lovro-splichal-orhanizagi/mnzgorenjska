@@ -406,10 +406,9 @@ function narisiDres(oznaka: string, vr: VrednostiPolj, barve: string[]): string 
     deli.push(`<path d="M${st(cx - 2)} 62 L${st(cx - 74)} 4 L${st(cx - 94)} 44 L${st(cx - 40)} 100 Z M${st(cx + 2)} 62 L${st(cx + 74)} 4 L${st(cx + 94)} 44 L${st(cx + 40)} 100 Z" fill="${obroba}" stroke="${izberiBarvo([BELA, CRNA], [obroba])}" stroke-width="2" stroke-opacity=".35"/>`)
   } else deli.push(crta(`M${st(cx - 82)} 0 Q${st(cx)} 116 ${st(cx + 82)} 0`, 18))
   // Napisi v barvi, ki izstopa iz vzorca; na dvobarvnem vzorcu še obroba.
-  // Tanke črte: napis ne v barvi črt (sicer se zlije z njimi), obroba v osnovni barvi.
+  // Tanke črte: napis izstopa iz osnove (b1), obroba v osnovni barvi ga loči od črt.
   const tanke = vzorec === 'tanke-crte'
-  const kandidati = [b3, ozadje.length === 1 && !tanke ? b2 : null, BELA, CRNA].filter((b) => !tanke || b !== b2)
-  const napis = izberiBarvo(kandidati.length ? kandidati : [BELA, CRNA], ozadje)
+  const napis = izberiBarvo([b3, ozadje.length === 1 ? b2 : null, BELA, CRNA], ozadje)
   const rob = tanke ? ` stroke="${b1}" paint-order="stroke"`
     : ozadje.length > 1 || najmanjsiKontrast(napis, ozadje) < 3
       ? ` stroke="${kontrast(napis, BELA) > kontrast(napis, CRNA) ? BELA : CRNA}" paint-order="stroke"`
