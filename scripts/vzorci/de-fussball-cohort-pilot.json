@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "leagues": [
+    {
+      "key": "de-kreisliga-mannheim",
+      "staffel": "031EKNM2HG00000LVS5489BUVUR5FS5A-G",
+      "season": "2026/27",
+      "rounds": [
+        {
+          "page": {
+            "file": "de-fussball-krog8.html",
+            "sha256": "2e2f17ec74aabe6b6fc6f6a01e40bdbb7674f921e99fd61c33349ecd84335914"
+          },
+          "fonts": {
+            "file": "de-fussball-zapisnik.json",
+            "sha256": "167aaf58e070b175877aa3c02f5143509206d8b7f0ce0b62d7ce6fcf0f8c2451"
+          }
+        }
+      ],
+      "reports": [
+        {
+          "id": "031EQBPLF4000000VS5489BTVUS470OH",
+          "main": {
+            "file": "de-fussball-ilvesheim-main.html",
+            "sha256": "40ddfc149977bcd0f245a5a43d5865775ee8c363f67d36c883b9733fe188d1a3"
+          },
+          "lineup": {
+            "file": "de-fussball-ilvesheim-lineup.html",
+            "sha256": "f7a16d5aefb32d6c13b801bf89646b60acafc02ad7a72563ef33ef4bb39ab8cf"
+          },
+          "fonts": {
+            "file": "de-fussball-zapisnik.json",
+            "sha256": "167aaf58e070b175877aa3c02f5143509206d8b7f0ce0b62d7ce6fcf0f8c2451"
+          }
+        }
+      ]
+    }
+  ]
+}
