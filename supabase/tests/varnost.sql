@@ -5259,8 +5259,15 @@ select pg_temp.preveri('trgovina4: plakat ima cono po velikosti',
   (select jsonb_object_agg(c.barva, jsonb_build_array(c.sirina_mm, c.visina_mm)) from trgovina.cone c
      join trgovina.izdelki i on i.id = c.izdelek_id where i.slug = 'plakat-po-meri') = '{"A3":[297,420],"A2":[420,594]}');
 
-update trgovina.motivi set aktiven = true where vrstni_red between 110 and 210 and slug not like 'test-%';
-update trgovina.izdelki set aktiven = true where vrstni_red between 200 and 250 and slug like '%-po-meri';
+select pg_temp.preveri('trgovina4: dres po meri je neaktiven, 4900 + 1000, cone spredaj in hrbet',
+  (select not i.aktiven and not m.aktiven and mi.doplacilo = 1000 and i.postopek = 'sublimacija'
+     from trgovina.izdelki i join trgovina.motivi_izdelki mi on mi.izdelek_id = i.id join trgovina.motivi m on m.id = mi.motiv_id
+    where i.slug = 'dres-po-meri' and m.slug = 'dres-po-meri')
+  and (select count(*) = 6 and bool_and(cena = 4900) from trgovina.razlicice r join trgovina.izdelki i on i.id = r.izdelek_id where i.slug = 'dres-po-meri')
+  and (select jsonb_object_agg(c.kljuc, jsonb_build_array(c.sirina_mm, c.visina_mm)) from trgovina.cone c
+         join trgovina.izdelki i on i.id = c.izdelek_id where i.slug = 'dres-po-meri') = '{"spredaj":[600,750],"hrbet":[600,750]}');
+update trgovina.motivi set aktiven = true where (vrstni_red between 110 and 210 or slug = 'dres-po-meri') and slug not like 'test-%';
+update trgovina.izdelki set aktiven = true where (vrstni_red between 200 and 250 or slug = 'dres-po-meri') and slug like '%-po-meri';
 
 -- Postava ekipe -927001 (Kranjski Tigri, K1): 4-4-2 + 4 na klopi, en anonimiziran.
 insert into teams(id, name, short_name, country_id) overriding system value
@@ -5347,18 +5354,50 @@ select pg_temp.napaka_sporocilo('trgovina4: pozicija na kartici iz seznama',
   $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='kartica-igralca'),
     '{"motiv":"kartica-legende","polja":{"ime":"KRAJNC","pozicija":"ST","hitrost":9,"strel":50,"podaje":50,"obramba":50},"shema":"zlata"}',
     null, 'sl')$$, 'trgovina-personalizacija', '%ni na seznamu%');
+select pg_temp.napaka_sporocilo('trgovina4: dres z neznanim vzorcem',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='dres-po-meri'),
+    '{"motiv":"dres-po-meri","polja":{"vzorec":"karo","barva1":"zelena","barva2":"bela","ovratnik":"v"},"shema":"dres"}', null, 'sl')$$,
+  'trgovina-personalizacija', '%izbira v polju vzorec%');
+select pg_temp.napaka_sporocilo('trgovina4: dres z neznano barvo',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='dres-po-meri'),
+    '{"motiv":"dres-po-meri","polja":{"vzorec":"crte","barva1":"zelena","barva2":"#FF00FF","ovratnik":"v"},"shema":"dres"}', null, 'sl')$$,
+  'trgovina-personalizacija', '%barva v polju barva2%');
+select pg_temp.napaka('trgovina4: dres z barvo kot objekt',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='dres-po-meri'),
+    '{"motiv":"dres-po-meri","polja":{"vzorec":"crte","barva1":{"kljuc":"zelena"},"barva2":"bela","ovratnik":"v"},"shema":"dres"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka_sporocilo('trgovina4: dres z isto barvo dvakrat',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='dres-po-meri'),
+    '{"motiv":"dres-po-meri","polja":{"vzorec":"crte","barva1":"zelena","barva2":"zelena","ovratnik":"v"},"shema":"dres"}', null, 'sl')$$,
+  'trgovina-personalizacija', '%morata biti različni%');
+select pg_temp.napaka_sporocilo('trgovina4: dres z neznanim ovratnikom',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='dres-po-meri'),
+    '{"motiv":"dres-po-meri","polja":{"vzorec":"crte","barva1":"zelena","barva2":"bela","ovratnik":"rolka"},"shema":"dres"}', null, 'sl')$$,
+  'trgovina-personalizacija', '%izbira v polju ovratnik%');
 
 -- Nakup: kozarec z doplačilom 900 in plakat A3 s posnetkom postave.
 select set_config('test.trg4_kzm', (select id::text from trgovina.razlicice where sku = 'KZM-1'), true),
-       set_config('test.trg4_plm', (select id::text from trgovina.razlicice where sku = 'PLM-A3'), true);
+       set_config('test.trg4_plm', (select id::text from trgovina.razlicice where sku = 'PLM-A3'), true),
+       set_config('test.trg4_drm', (select id::text from trgovina.razlicice where sku = 'DRM-M'), true);
 set local role service_role;
 select set_config('test.trg4_r', trgovina_rezerviraj(jsonb_build_array(
   jsonb_build_object('razlicica_id', current_setting('test.trg4_kzm')::bigint, 'kolicina', 1, 'cena', 1, 'doplacilo', 0,
     'personalizacija', '{"motiv":"tretji-polcas","polja":{"ime":"Novak","slogan":"Samo še eno"},"shema":"gravura"}'::jsonb),
   jsonb_build_object('razlicica_id', current_setting('test.trg4_plm')::bigint, 'kolicina', 1, 'cena', 1, 'doplacilo', 5,
-    'personalizacija', '{"motiv":"moja-postava","polja":{"postava":-927001},"shema":"nocna"}'::jsonb)),
+    'personalizacija', '{"motiv":"moja-postava","polja":{"postava":-927001},"shema":"nocna"}'::jsonb),
+  jsonb_build_object('razlicica_id', current_setting('test.trg4_drm')::bigint, 'kolicina', 1, 'cena', 1, 'doplacilo', 0,
+    'personalizacija', '{"motiv":"dres-po-meri","polja":{"vzorec":"obroci","barva1":"rdeca","barva2":"bela","barva3":"crna",
+      "ovratnik":"polo","sponzor":"Bife Zadnji Žvižg","ime":"Novak","stevilka":9},"shema":"dres"}'::jsonb)),
   'f7a20000-0000-4000-8000-000000000001', 'sl', encode(sha256('t4a'), 'hex'))::text, true);
 reset role;
+select pg_temp.preveri('trgovina4: veljaven dres, doplacilo 1000 iz baze, barve dresa in obe coni v posnetku',
+  current_setting('test.trg4_r')::jsonb @> '{"postavke":[{"cena":4900,"doplacilo":1000,
+     "opis":"Dres po meri · Obroči · Rdeča · Bela · Črna · Polo · Bife Zadnji Žvižg · Novak · 9"}]}'
+  and (select p.personalizacija @> '{"motiv":"dres-po-meri","barve":["#C8102E","#FFFFFF","#111111"],
+         "polja":{"vzorec":"obroci","barva1":"rdeca","barva2":"bela","barva3":"crna","ovratnik":"polo","sponzor":"Bife Zadnji Žvižg","ime":"Novak","stevilka":9},
+         "cone":{"spredaj":{"sirina_mm":600,"visina_mm":750},"hrbet":{"sirina_mm":600,"visina_mm":750}}}'
+         from trgovina.postavke p join trgovina.narocila n on n.id = p.narocilo_id
+        where n.odjemalec = encode(sha256('t4a'), 'hex') and p.razlicica_id = current_setting('test.trg4_drm')::bigint));
 select pg_temp.preveri('trgovina4: doplacila nosilcev iz baze',
   current_setting('test.trg4_r')::jsonb @> '{"postavke":[{"cena":1200,"doplacilo":900},{"cena":2900,"doplacilo":0}]}');
 select set_config('test.trg4_p', (select p.personalizacija::text from trgovina.postavke p join trgovina.narocila n on n.id = p.narocilo_id
@@ -5408,12 +5447,19 @@ select pg_temp.napaka_sporocilo('trgovina4: drug uporabnik ne vidi postave',
 reset role;
 
 -- Primeri: vsi začetni prestanejo preverjanje, napačna postava ne.
-select set_config('test.trg4_mp', (select id::text from trgovina.motivi where slug = 'moja-postava'), true);
+select set_config('test.trg4_mp', (select id::text from trgovina.motivi where slug = 'moja-postava'), true),
+       set_config('test.trg4_dres', (select id::text from trgovina.motivi where slug = 'dres-po-meri'), true);
 select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
 set local role authenticated;
 select pg_temp.preveri('trgovina4: vsi zacetni primeri prestanejo preverjanje',
   (select count(trgovina_admin_shrani_motiv(jsonb_build_object('id', e->'id', 'primeri', e->'primeri'))) = 11
-     from jsonb_array_elements(trgovina_admin_motivi()) e where (e->>'vrstni_red')::int between 110 and 210));
+     from jsonb_array_elements(trgovina_admin_motivi()) e where (e->>'vrstni_red')::int between 110 and 210)
+  and trgovina_admin_shrani_motiv(jsonb_build_object('id', current_setting('test.trg4_dres')::bigint,
+        'primeri', (select m->'primeri' from jsonb_array_elements(trgovina_admin_motivi()) m where m->>'slug' = 'dres-po-meri'))) is not null);
+select pg_temp.napaka_sporocilo('trgovina4: primer dresa z isto barvo dvakrat',
+  $$select trgovina_admin_shrani_motiv(jsonb_build_object('id', current_setting('test.trg4_dres')::bigint,
+    'primeri', '[{"polja":{"vzorec":"crte","barva1":"bela","barva2":"bela","ovratnik":"v"},"shema":"dres","izdelek":"dres-po-meri","barva":"M"}]'::jsonb))$$,
+  'trgovina-vnos', 'Primer 1:%različni%');
 select pg_temp.napaka_sporocilo('trgovina4: primer postave z 10 igralci',
   $$select trgovina_admin_shrani_motiv(jsonb_build_object('id', current_setting('test.trg4_mp')::bigint,
     'primeri', jsonb_build_array(jsonb_build_object('polja', jsonb_build_object('postava', jsonb_build_object('ekipa', 'Dinamo Kavč',

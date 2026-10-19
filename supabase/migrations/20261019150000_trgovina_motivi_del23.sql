@@ -15,6 +15,10 @@
 --   `stevilka` (ocene na kartici 1–99).
 -- * cona po različici: plakat A3/A2 uporabi obstoječi stolpec cone.barva
 --   (prvi del oznake različice, kot "Črna" pri majici), nov stolpec ni potreben.
+-- * dres po meri (ves dres v sublimaciji): vrsta polja `barva` (ključ iz
+--   palete v moznosti), izbira sprejme tudi moznosti {kljuc, ime_sl, ime_en},
+--   `razlicna_od` pri polju zahteva drugo vrednost kot navedeno polje; barve
+--   dresa nadomestijo barve sheme v posnetku, polje barva zajame vse cone.
 -- Vse je neaktivno; vklopi admin, ko so predloge in fotografije.
 
 -- --------------------------------------------------------------------------
@@ -37,8 +41,16 @@ begin
     end if;
     return to_jsonb(v_txt);
   when 'izbira' then
-    if jsonb_typeof(v) <> 'string' or not coalesce(f->'moznosti', '[]'::jsonb) @> jsonb_build_array(v) then
+    -- moznosti: nizi ali {kljuc, ime_sl, ime_en}; shrani se niz oz. kljuc.
+    if jsonb_typeof(v) <> 'string' or not (coalesce(f->'moznosti', '[]'::jsonb) @> jsonb_build_array(v)
+                                          or coalesce(f->'moznosti', '[]'::jsonb) @> jsonb_build_array(jsonb_build_object('kljuc', v))) then
       raise exception 'Trgovina: izbira v polju % ni na seznamu.', f->>'kljuc' using hint = 'trgovina-personalizacija';
+    end if;
+    return v;
+  when 'barva' then
+    -- moznosti: [{kljuc, hex, ime_sl, ime_en}]; shrani se kljuc.
+    if jsonb_typeof(v) <> 'string' or not coalesce(f->'moznosti', '[]'::jsonb) @> jsonb_build_array(jsonb_build_object('kljuc', v)) then
+      raise exception 'Trgovina: barva v polju % ni na seznamu.', f->>'kljuc' using hint = 'trgovina-personalizacija';
     end if;
     return v;
   when 'stevilka', 'leto' then
@@ -178,6 +190,7 @@ declare
   v_st numeric;
   v_id bigint;
   v_opisi text[] := '{}';
+  v_barve jsonb := '[]'::jsonb;
   v_liga bigint;
   v_sezona text;
 begin
@@ -221,6 +234,16 @@ begin
     when 'besedilo', 'izbira', 'stevilka', 'leto', 'datum' then
       v := trgovina.vrednost_polja(f, v);
       v_txt := v #>> '{}';
+      -- izbira z oznakami: v opis gre oznaka v jeziku kupca, ne ključ.
+      v_txt := coalesce((select case when p_jezik = 'en' then o->>'ime_en' else o->>'ime_sl' end
+                           from jsonb_array_elements(coalesce(f->'moznosti', '[]'::jsonb)) o
+                          where f->>'vrsta' = 'izbira' and jsonb_typeof(o) = 'object' and o->>'kljuc' = v_txt limit 1), v_txt);
+
+    when 'barva' then
+      v := trgovina.vrednost_polja(f, v);
+      select case when p_jezik = 'en' then o->>'ime_en' else o->>'ime_sl' end, v_barve || jsonb_build_array(o->'hex')
+        into v_txt, v_barve
+        from jsonb_array_elements(f->'moznosti') o where o->>'kljuc' = v #>> '{}' limit 1;
 
     when 'ekipa' then
       if p_user is null then
@@ -284,10 +307,17 @@ begin
     v_opisi := v_opisi || v_txt;
   end loop;
 
+  if exists (select 1 from jsonb_array_elements(m.polja) x
+              where x ? 'razlicna_od' and v_izhod ? (x->>'kljuc') and v_izhod->(x->>'kljuc') = v_izhod->(x->>'razlicna_od')) then
+    raise exception 'Trgovina: barvi dresa morata biti različni.' using hint = 'trgovina-personalizacija';
+  end if;
+
   opis := concat_ws(' · ', case when p_jezik = 'en' then m.ime_en else m.ime_sl end,
                     nullif(array_to_string(v_opisi, ' · '), ''));
+  -- barve: barve dresa (polja barva, po vrsti) ali barve sheme.
   personalizacija := jsonb_build_object('motiv', m.slug, 'polja', v_izhod, 'shema', p_vhod->>'shema', 'ime', opis,
-                       'barve', (select s->'barve' from jsonb_array_elements(m.sheme) s where s->>'kljuc' = p_vhod->>'shema'))
+                       'barve', case when v_barve <> '[]'::jsonb then v_barve
+                                     else (select s->'barve' from jsonb_array_elements(m.sheme) s where s->>'kljuc' = p_vhod->>'shema') end)
                      || v_dodatno;
 end;
 $$;
@@ -393,6 +423,9 @@ begin
         else
           perform trgovina.vrednost_polja(f, v);
         end if;
+        if f ? 'razlicna_od' and not trgovina.prazno_polje(v) and v = e->'polja'->(f->>'razlicna_od') then
+          raise exception 'Trgovina: barvi dresa morata biti različni.';
+        end if;
       end loop;
     exception when others then
       get stacked diagnostics v_sporocilo = message_text;
@@ -404,6 +437,33 @@ end;
 $$;
 revoke all on function public.trgovina_admin_shrani_motiv(jsonb) from public, anon;
 grant execute on function public.trgovina_admin_shrani_motiv(jsonb) to authenticated;
+
+-- Posnetek con (del 1): polje barva (barve dresa) zajame vse cone nosilca,
+-- ker se ves dres tiska v barvah; ostala polja kot prej svojo cono.
+create or replace function trgovina.posnetek_con() returns trigger
+language plpgsql
+as $$
+begin
+  if new.personalizacija ? 'motiv' then
+    new.personalizacija := new.personalizacija || jsonb_build_object('cone', (
+      select coalesce(jsonb_object_agg(c.kljuc, jsonb_build_object('sirina_mm', c.sirina_mm, 'visina_mm', c.visina_mm)), '{}'::jsonb)
+        from trgovina.razlicice r
+        cross join lateral (
+          select distinct case when f->>'vrsta' = 'barva' then null else coalesce(f->>'cona', m.cona) end as cona
+            from trgovina.motivi m, jsonb_array_elements(m.polja) f
+           where m.slug = new.personalizacija->>'motiv'
+             and coalesce(new.personalizacija->'polja', '{}'::jsonb) ? (f->>'kljuc')) k
+        cross join lateral (
+          select distinct on (c.kljuc) c.kljuc, c.sirina_mm, c.visina_mm from trgovina.cone c
+           where c.izdelek_id = r.izdelek_id and (k.cona is null or c.kljuc = k.cona)
+             and (c.barva is null or c.barva = split_part(r.oznaka_sl, ' / ', 1))
+           order by c.kljuc, c.barva nulls last) c
+       where r.id = new.razlicica_id));
+  end if;
+  return new;
+end;
+$$;
+revoke all on function trgovina.posnetek_con() from public, anon, authenticated;
 
 -- --------------------------------------------------------------------------
 -- Nosilci (neaktivni)
@@ -451,8 +511,18 @@ insert into trgovina.izdelki (slug, ime_sl, ime_en, opis_sl, opis_en, kategorija
   ('trak-po-meri', 'Kapetanski trak po meri', 'Custom captain''s armband',
    'Kapetanski trak z napisom po meri in ježkom. Za tistega, ki pobere denar za igrišče.',
    'A captain''s armband with your own text and a velcro strap. For the one who collects the pitch money.',
-   'dodatki', 'txcd_99999999', false, true, false, 'sublimacija', 250)
+   'dodatki', 'txcd_99999999', false, true, false, 'sublimacija', 250),
+  ('dres-po-meri', 'Dres po meri', 'Custom football shirt',
+   'Pravi tekmovalni dres iz poliestra, ves potiskan s sublimacijo: vzorec, barve, ovratnik, sponzor, ime in številka po tvoje.',
+   'A proper polyester match shirt, sublimated all over: pattern, colours, collar, sponsor, name and number your way.',
+   'oblacila', 'txcd_30011000', false, true, false, 'sublimacija', 102)
 on conflict (slug) do nothing;
+
+insert into trgovina.razlicice (izdelek_id, oznaka_sl, oznaka_en, sku, cena, teza_g, vrstni_red)
+select i.id, v.v, v.v, 'DRM-' || v.v, 4900, 170, v.n
+from trgovina.izdelki i
+cross join (values ('S', 1), ('M', 2), ('L', 3), ('XL', 4), ('XXL', 5), ('3XL', 6)) v(v, n)
+where i.slug = 'dres-po-meri' and not exists (select 1 from trgovina.razlicice r where r.izdelek_id = i.id);
 
 insert into trgovina.razlicice (izdelek_id, oznaka_sl, oznaka_en, sku, cena, teza_g, vrstni_red)
 select i.id, x.sl, x.en, x.sku, x.cena, x.teza, x.n
@@ -491,7 +561,9 @@ join (values
   ('sal-po-meri',       'sal',       null,        '/nosilci/sal.webp',            '[[100,700],[1500,700],[1500,880],[100,880]]', 1400, 180),
   ('kapa-po-meri',      'spredaj',   'Črna',      '/nosilci/kapa-crna.webp',      '[[600,600],[1000,600],[1000,800],[600,800]]', 100, 50),
   ('kapa-po-meri',      'spredaj',   'Bela-črna', '/nosilci/kapa-bela-crna.webp', '[[600,600],[1000,600],[1000,800],[600,800]]', 100, 50),
-  ('trak-po-meri',      'trak',      null,        '/nosilci/trak.webp',           '[[400,700],[1200,700],[1200,913],[400,913]]', 300, 80)
+  ('trak-po-meri',      'trak',      null,        '/nosilci/trak.webp',           '[[400,700],[1200,700],[1200,913],[400,913]]', 300, 80),
+  ('dres-po-meri',      'spredaj',   null,        '/nosilci/dres-spredaj.webp',   '[[480,300],[1120,300],[1120,1100],[480,1100]]', 600, 750),
+  ('dres-po-meri',      'hrbet',     null,        '/nosilci/dres-hrbet.webp',     '[[480,300],[1120,300],[1120,1100],[480,1100]]', 600, 750)
 ) c(slug, kljuc, barva, slika, koti, s, v) on c.slug = i.slug
 on conflict do nothing;
 
@@ -649,7 +721,29 @@ insert into trgovina.motivi (slug, ime_sl, ime_en, opis_sl, opis_en, cona, polja
  '[{"polja":{"ime":"MLAKAR"},"shema":"kapetanska","izdelek":"trak-po-meri","barva":"Ena velikost"},
    {"polja":{"ime":"GOLOB"},"shema":"klasika","izdelek":"trak-po-meri","barva":"Ena velikost"},
    {"polja":{"ime":"ŽAGAR"},"shema":"nocna","izdelek":"trak-po-meri","barva":"Ena velikost"}]',
- 210)
+ 210),
+('dres-po-meri', 'Dres po meri', 'Custom kit',
+ 'Sestavi dres svoje ekipe: vzorec, do tri barve, ovratnik, sponzor na prsih ter ime in številka na hrbtu. Ves dres je potiskan, barve ne zbledijo.',
+ 'Build your team''s kit: pattern, up to three colours, collar, a chest sponsor and a name and number on the back. Printed all over, the colours never fade.',
+ 'spredaj',
+ '[{"kljuc":"vzorec","vrsta":"izbira","oznaka_sl":"Vzorec","oznaka_en":"Pattern","obvezno":true,"privzeto":"crte",
+    "moznosti":[{"kljuc":"enobarven","ime_sl":"Enobarven","ime_en":"Plain"},{"kljuc":"crte","ime_sl":"Črte","ime_en":"Stripes"},
+                {"kljuc":"tanke-crte","ime_sl":"Tanke črte","ime_en":"Pinstripes"},{"kljuc":"obroci","ime_sl":"Obroči","ime_en":"Hoops"},
+                {"kljuc":"serpa","ime_sl":"Šerpa","ime_en":"Sash"},{"kljuc":"polovice","ime_sl":"Polovice","ime_en":"Halves"}]},
+   {"kljuc":"barva1","vrsta":"barva","oznaka_sl":"Glavna barva","oznaka_en":"Main colour","obvezno":true,"privzeto":"zelena","moznosti":[{"kljuc":"bela","hex":"#FFFFFF","ime_sl":"Bela","ime_en":"White"},{"kljuc":"crna","hex":"#111111","ime_sl":"Črna","ime_en":"Black"},{"kljuc":"zelena","hex":"#0B6B3A","ime_sl":"Zelena","ime_en":"Green"},{"kljuc":"svetlo-zelena","hex":"#2BB673","ime_sl":"Svetlo zelena","ime_en":"Light green"},{"kljuc":"rdeca","hex":"#C8102E","ime_sl":"Rdeča","ime_en":"Red"},{"kljuc":"bordo","hex":"#7A1F2B","ime_sl":"Bordo","ime_en":"Claret"},{"kljuc":"modra","hex":"#1D4ED8","ime_sl":"Modra","ime_en":"Blue"},{"kljuc":"temno-modra","hex":"#0B1F4B","ime_sl":"Temno modra","ime_en":"Navy"},{"kljuc":"nebesno-modra","hex":"#6CACE4","ime_sl":"Nebesno modra","ime_en":"Sky blue"},{"kljuc":"rumena","hex":"#FFD100","ime_sl":"Rumena","ime_en":"Yellow"},{"kljuc":"oranzna","hex":"#F26B1D","ime_sl":"Oranžna","ime_en":"Orange"},{"kljuc":"vijolicna","hex":"#5B2A86","ime_sl":"Vijolična","ime_en":"Purple"},{"kljuc":"siva","hex":"#8A8D91","ime_sl":"Siva","ime_en":"Grey"}]},
+   {"kljuc":"barva2","vrsta":"barva","oznaka_sl":"Druga barva","oznaka_en":"Second colour","obvezno":true,"privzeto":"bela","razlicna_od":"barva1","moznosti":[{"kljuc":"bela","hex":"#FFFFFF","ime_sl":"Bela","ime_en":"White"},{"kljuc":"crna","hex":"#111111","ime_sl":"Črna","ime_en":"Black"},{"kljuc":"zelena","hex":"#0B6B3A","ime_sl":"Zelena","ime_en":"Green"},{"kljuc":"svetlo-zelena","hex":"#2BB673","ime_sl":"Svetlo zelena","ime_en":"Light green"},{"kljuc":"rdeca","hex":"#C8102E","ime_sl":"Rdeča","ime_en":"Red"},{"kljuc":"bordo","hex":"#7A1F2B","ime_sl":"Bordo","ime_en":"Claret"},{"kljuc":"modra","hex":"#1D4ED8","ime_sl":"Modra","ime_en":"Blue"},{"kljuc":"temno-modra","hex":"#0B1F4B","ime_sl":"Temno modra","ime_en":"Navy"},{"kljuc":"nebesno-modra","hex":"#6CACE4","ime_sl":"Nebesno modra","ime_en":"Sky blue"},{"kljuc":"rumena","hex":"#FFD100","ime_sl":"Rumena","ime_en":"Yellow"},{"kljuc":"oranzna","hex":"#F26B1D","ime_sl":"Oranžna","ime_en":"Orange"},{"kljuc":"vijolicna","hex":"#5B2A86","ime_sl":"Vijolična","ime_en":"Purple"},{"kljuc":"siva","hex":"#8A8D91","ime_sl":"Siva","ime_en":"Grey"}]},
+   {"kljuc":"barva3","vrsta":"barva","oznaka_sl":"Barva obrob","oznaka_en":"Trim colour","obvezno":false,"moznosti":[{"kljuc":"bela","hex":"#FFFFFF","ime_sl":"Bela","ime_en":"White"},{"kljuc":"crna","hex":"#111111","ime_sl":"Črna","ime_en":"Black"},{"kljuc":"zelena","hex":"#0B6B3A","ime_sl":"Zelena","ime_en":"Green"},{"kljuc":"svetlo-zelena","hex":"#2BB673","ime_sl":"Svetlo zelena","ime_en":"Light green"},{"kljuc":"rdeca","hex":"#C8102E","ime_sl":"Rdeča","ime_en":"Red"},{"kljuc":"bordo","hex":"#7A1F2B","ime_sl":"Bordo","ime_en":"Claret"},{"kljuc":"modra","hex":"#1D4ED8","ime_sl":"Modra","ime_en":"Blue"},{"kljuc":"temno-modra","hex":"#0B1F4B","ime_sl":"Temno modra","ime_en":"Navy"},{"kljuc":"nebesno-modra","hex":"#6CACE4","ime_sl":"Nebesno modra","ime_en":"Sky blue"},{"kljuc":"rumena","hex":"#FFD100","ime_sl":"Rumena","ime_en":"Yellow"},{"kljuc":"oranzna","hex":"#F26B1D","ime_sl":"Oranžna","ime_en":"Orange"},{"kljuc":"vijolicna","hex":"#5B2A86","ime_sl":"Vijolična","ime_en":"Purple"},{"kljuc":"siva","hex":"#8A8D91","ime_sl":"Siva","ime_en":"Grey"}]},
+   {"kljuc":"ovratnik","vrsta":"izbira","oznaka_sl":"Ovratnik","oznaka_en":"Collar","obvezno":true,"privzeto":"okrogel",
+    "moznosti":[{"kljuc":"okrogel","ime_sl":"Okrogel","ime_en":"Round"},{"kljuc":"v","ime_sl":"V","ime_en":"V-neck"},{"kljuc":"polo","ime_sl":"Polo","ime_en":"Polo"}]},
+   {"kljuc":"sponzor","vrsta":"besedilo","oznaka_sl":"Sponzor na prsih","oznaka_en":"Chest sponsor","max":20,"obvezno":false,"privzeto":"Bife Zadnji Žvižg","cona":"spredaj"},
+   {"kljuc":"ime","vrsta":"besedilo","oznaka_sl":"Ime na hrbtu","oznaka_en":"Name on the back","max":12,"obvezno":false,"privzeto":"NOVAK","cona":"hrbet"},
+   {"kljuc":"stevilka","vrsta":"stevilka","oznaka_sl":"Številka","oznaka_en":"Number","obvezno":false,"privzeto":9,"cona":"hrbet"}]',
+ '[{"kljuc":"dres","ime_sl":"Barve dresa","ime_en":"Kit colours","barve":["#FFFFFF","#111111"]}]',
+ '[{"polja":{"vzorec":"crte","barva1":"zelena","barva2":"bela","ovratnik":"okrogel","sponzor":"Bife Zadnji Žvižg","ime":"NOVAK","stevilka":9},"shema":"dres","izdelek":"dres-po-meri","barva":"M"},
+   {"polja":{"vzorec":"obroci","barva1":"rdeca","barva2":"bela","barva3":"crna","ovratnik":"polo","sponzor":"Pizzerija Podaljšek","ime":"KOVAČ","stevilka":7},"shema":"dres","izdelek":"dres-po-meri","barva":"L"},
+   {"polja":{"vzorec":"serpa","barva1":"crna","barva2":"rumena","ovratnik":"v","sponzor":"Bar Offside","ime":"ZUPAN","stevilka":10},"shema":"dres","izdelek":"dres-po-meri","barva":"M"},
+   {"polja":{"vzorec":"polovice","barva1":"modra","barva2":"bela","ovratnik":"okrogel","ime":"HORVAT","stevilka":4},"shema":"dres","izdelek":"dres-po-meri","barva":"XL"}]',
+ 70)
 on conflict (slug) do nothing;
 
 -- Izmišljene postave za vitrino plakata (ekipe, igralci in klubi niso resnični).
@@ -671,7 +765,8 @@ from (values
   ('klubska-zastavica', 'zastavica-po-meri', 0),
   ('navijaski-sal', 'sal-po-meri', 0),
   ('vezena-ekipa', 'kapa-po-meri', 1000),
-  ('kapetanski-trak', 'trak-po-meri', 0)
+  ('kapetanski-trak', 'trak-po-meri', 0),
+  ('dres-po-meri', 'dres-po-meri', 1000)
 ) x(motiv, izdelek, doplacilo)
 join trgovina.motivi m on m.slug = x.motiv
 join trgovina.izdelki i on i.slug = x.izdelek
