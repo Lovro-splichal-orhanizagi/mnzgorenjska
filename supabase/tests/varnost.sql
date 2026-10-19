@@ -4309,6 +4309,118 @@ reset role;
 select pg_temp.preveri('trgovina: pozno placano narocilo je placano',
   (select stanje = 'placano' from trgovina.narocila where stripe_checkout_id = 'cs_test_trgovina_1'));
 
+-- --- Trgovina: vsa naročila in ročna stanja (20261019140000) -----------------
+-- trg2 poslano, trg3 in trg4 plačano (pi_test3, pi_test4); trg5 čaka plačila.
+set local role service_role;
+select set_config('test.trg5', (trgovina_rezerviraj('[{"razlicica_id":-916003,"kolicina":1}]', null, 'sl',
+  encode(sha256('trg5'), 'hex'))->>'narocilo_id'), true);
+reset role;
+select set_config('test.trg3_oznaka', (select javna_oznaka from trgovina.narocila where id = current_setting('test.trg3')::bigint), true);
+select set_config('test.trg_najnovejse', (select id::text from trgovina.narocila order by created_at desc, id desc limit 1), true);
+select set_config('test.trg5_voljo', (select na_voljo::text from trgovina.razpolozljivo where razlicica_id = -916003), true);
+set local role anon;
+select pg_temp.zavrnjeno('trgovina4: anon ne vidi vseh narocil', $$select trgovina_admin_vsa_narocila()$$);
+select pg_temp.zavrnjeno('trgovina4: anon ne spreminja stanja', $$select trgovina_admin_nastavi_stanje(1, 'preklicano')$$);
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('trgovina4: uporabnik ne vidi vseh narocil', $$select trgovina_admin_vsa_narocila()$$);
+select pg_temp.zavrnjeno('trgovina4: uporabnik ne spreminja stanja',
+  format('select trgovina_admin_nastavi_stanje(%s, %L)', current_setting('test.trg3'), 'v_izdelavi'));
+reset role;
+select pg_temp.preveri('trgovina4: zgodovina ni v API',
+  not has_table_privilege('authenticated', 'trgovina.zgodovina_stanj', 'select')
+  and not has_table_privilege('anon', 'trgovina.zgodovina_stanj', 'select'));
+do $$
+declare v_zavrnjeno boolean := false;
+begin
+  begin
+    update trgovina.narocila set stanje = 'izgubljeno' where id = current_setting('test.trg3')::bigint;
+  exception when check_violation then v_zavrnjeno := true;
+  end;
+  perform pg_temp.preveri('trgovina4: neznano stanje zavrne preverjanje', v_zavrnjeno);
+end;
+$$;
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('trgovina4: placano -> v_izdelavi z opombo',
+  trgovina_admin_nastavi_stanje(current_setting('test.trg3')::bigint, 'v_izdelavi', ' Tisk v torek ') @>
+    '{"stanje":"v_izdelavi","vracilo_potrebno":false}');
+select pg_temp.preveri('trgovina4: zgodovina zapise admina in opombo',
+  trgovina_admin_narocilo(current_setting('test.trg3')::bigint)->'zgodovina' @>
+    '[{"v":"placano"},{"iz":"placano","v":"v_izdelavi","admin_id":"b8a06635-2322-4444-8c42-44e419f912ad","opomba":"Tisk v torek"}]');
+select pg_temp.preveri('trgovina4: podrobnosti s Stripe placilom',
+  trgovina_admin_narocilo(current_setting('test.trg3')::bigint) @>
+    '{"stripe_payment_intent":"pi_test3","stripe_checkout_id":"cs_test_trgovina_3"}');
+select pg_temp.preveri('trgovina4: v_izdelavi -> placano (razveljavi)',
+  trgovina_admin_nastavi_stanje(current_setting('test.trg3')::bigint, 'placano')->>'stanje' = 'placano');
+select trgovina_admin_nastavi_stanje(current_setting('test.trg3')::bigint, 'v_izdelavi');
+select pg_temp.napaka('trgovina4: poslano le s sledilno stevilko',
+  format('select trgovina_admin_nastavi_stanje(%s, %L)', current_setting('test.trg3'), 'poslano'), 'trgovina-sledilna');
+select pg_temp.napaka('trgovina4: v_izdelavi -> dostavljeno ni dovoljeno',
+  format('select trgovina_admin_nastavi_stanje(%s, %L)', current_setting('test.trg3'), 'dostavljeno'), 'trgovina-prehod');
+select pg_temp.napaka('trgovina4: poslano -> preklicano ni dovoljeno',
+  format('select trgovina_admin_nastavi_stanje(%s, %L)', current_setting('test.trg2'), 'preklicano'), 'trgovina-prehod');
+select pg_temp.napaka('trgovina4: prazno stanje ni dovoljeno',
+  format('select trgovina_admin_nastavi_stanje(%s, null)', current_setting('test.trg3')), 'trgovina-prehod');
+select pg_temp.preveri('trgovina4: v_izdelavi -> poslano s sledilno',
+  trgovina_admin_poslano(current_setting('test.trg3')::bigint, 'RR9SI')->>'sledilna' = 'RR9SI');
+select pg_temp.preveri('trgovina4: poslano -> dostavljeno',
+  trgovina_admin_nastavi_stanje(current_setting('test.trg3')::bigint, 'dostavljeno')->>'stanje' = 'dostavljeno');
+select pg_temp.napaka('trgovina4: dostavljeno -> placano ni dovoljeno',
+  format('select trgovina_admin_nastavi_stanje(%s, %L)', current_setting('test.trg3'), 'placano'), 'trgovina-prehod');
+select pg_temp.preveri('trgovina4: zgodovina vseh prehodov',
+  (select jsonb_agg(e->>'v') from jsonb_array_elements(trgovina_admin_narocilo(current_setting('test.trg3')::bigint)->'zgodovina') e)
+    = '["poteklo","placano","v_izdelavi","placano","v_izdelavi","poslano","dostavljeno"]'
+  or (select jsonb_agg(e->>'v') from jsonb_array_elements(trgovina_admin_narocilo(current_setting('test.trg3')::bigint)->'zgodovina') e)
+    = '["placano","v_izdelavi","placano","v_izdelavi","poslano","dostavljeno"]');
+select pg_temp.preveri('trgovina4: preklic placanega zahteva vracilo',
+  trgovina_admin_nastavi_stanje(current_setting('test.trg4')::bigint, 'preklicano', 'kupec si je premislil') @>
+    '{"stanje":"preklicano","vracilo_potrebno":true}');
+select pg_temp.preveri('trgovina4: preklic cakajocega brez vracila',
+  trgovina_admin_nastavi_stanje(current_setting('test.trg5')::bigint, 'preklicano') @>
+    '{"stanje":"preklicano","vracilo_potrebno":false}');
+select pg_temp.napaka('trgovina4: preklicano -> placano ni dovoljeno',
+  format('select trgovina_admin_nastavi_stanje(%s, %L)', current_setting('test.trg4'), 'placano'), 'trgovina-prehod');
+select pg_temp.preveri('trgovina4: iskanje po oznaki',
+  trgovina_admin_vsa_narocila(null, lower(current_setting('test.trg3_oznaka'))) @>
+    jsonb_build_object('narocila', jsonb_build_array(jsonb_build_object('id', current_setting('test.trg3')::bigint)),
+                       'stanja', jsonb_build_object('dostavljeno', 1)));
+select pg_temp.preveri('trgovina4: iskanje po e-posti in filter stanja',
+  (trgovina_admin_vsa_narocila('dostavljeno', 'TRETJI@example') ->> 'skupaj')::int = 1
+  and (trgovina_admin_vsa_narocila('placano', 'tretji@example') ->> 'skupaj')::int = 0);
+select pg_temp.preveri('trgovina4: % in _ v iskanju sta navadna znaka',
+  (trgovina_admin_vsa_narocila(null, '%%_%') ->> 'skupaj')::int = 0);
+select pg_temp.preveri('trgovina4: stran in najnovejse najprej',
+  jsonb_array_length(trgovina_admin_vsa_narocila(null, null, 0, 2)->'narocila') = 2
+  and (trgovina_admin_vsa_narocila(null, null, 0, 1)->'narocila'->0->>'id')::bigint
+      = current_setting('test.trg_najnovejse')::bigint);
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+select pg_temp.preveri('trgovina4: preklic sprosti rezervacijo',
+  (select na_voljo = current_setting('test.trg5_voljo')::int + 1 from trgovina.razpolozljivo where razlicica_id = -916003));
+set local role service_role;
+select pg_temp.preveri('trgovina4: ponovljeno placilo dostavljenega je ze',
+  trgovina_iz_placila('cs_test_trgovina_3', 'pi_test3', 'tretji@example.invalid', 'Tretji', '{}', 1000, 390, 250, 1390, 'paket_si') = 'ze');
+select pg_temp.preveri('trgovina4: vracilo preklicanega placanega',
+  trgovina_vracilo('pi_test4')->>'oznaka' is not null);
+select pg_temp.preveri('trgovina4: vracilo dostavljenega',
+  trgovina_vracilo('pi_test3')->>'oznaka' = current_setting('test.trg3_oznaka'));
+reset role;
+select pg_temp.preveri('trgovina4: vracilo premakne v vrnjeno',
+  (select count(*) = 2 from trgovina.narocila where id in (current_setting('test.trg3')::bigint, current_setting('test.trg4')::bigint)
+     and stanje = 'vrnjeno'));
+select pg_temp.preveri('trgovina4: placilo in vracilo (servis) zapiseta zgodovino brez admina',
+  exists (select 1 from trgovina.zgodovina_stanj where narocilo_id = current_setting('test.trg2')::bigint
+            and iz = 'caka_placilo' and v = 'placano')
+  and exists (select 1 from trgovina.zgodovina_stanj where narocilo_id = current_setting('test.trg4')::bigint
+                and iz = 'preklicano' and v = 'vrnjeno' and admin_id is null));
+select agent.uskladi_pravice();
+select pg_temp.preveri('agent: ne bere opombe v zgodovini stanj, bere stanja',
+  not has_column_privilege('agent_bralec', 'trgovina.zgodovina_stanj', 'opomba', 'select')
+  and has_column_privilege('agent_bralec', 'trgovina.zgodovina_stanj', 'v', 'select'));
+
 -- --- trgovina2: personalizacija, tisk, boni (20261018190000) ----------------
 -- Vse preverjanje je v bazi: lastništvo ekipe, prvak, značka, filter
 -- besedila, številka, doplačila. Po naročilu in digitalno ne štejeta zaloge.

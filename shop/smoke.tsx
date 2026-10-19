@@ -22,6 +22,7 @@ import { Admin, Dobavnica, Nalepka, zaPakiranje } from './src/strani/Admin'
 import { csvSerije, datotekeTiska, PogledSerije, prenesiVse, ROB, s300dpi, svgDtf, svgZaTisk } from './src/strani/AdminTisk'
 import { doplaciloIz, KarticaMotiva, type MotivAdmin } from './src/strani/AdminMotivi'
 import { zahtevaBona } from './src/strani/AdminBoni'
+import { PREHODI, povzetekPostavk, stripePovezava, ZnackaStanja } from './src/strani/AdminVsaNarocila'
 import { vCente, varnoIme } from './src/strani/AdminIzdelki'
 import { EN, SL, TELEFON, cena, type Kljuc } from './src/besede'
 import { dodaj, kljuc, kosov, nastavi, odstrani, postnina, preberi, PRAZNA, skupaj } from './src/kosarica'
@@ -308,6 +309,16 @@ preveri('admin: za pakiranje le, ko je vse v paketu na zalogi ali natisnjeno',
   && zaPakiranje(nar([pn({}), pn({ id: 2, digitalni: true }), pn({ id: 3, personalizacija: { vrsta: 'znacka', ime: 'Ana' } })])))
 const dobavnicaMesana = renderToString(<Dobavnica n={nar([pn({ personalizacija: { vrsta: 'poljubno_ime', ime: 'Ana', stevilka: 7 }, stanje_tiska: 'natisnjeno' }), pn({ id: 2, ime: 'Darilni bon (20 €)', digitalni: true })])} />)
 preveri('admin: dobavnica brez bonov, s personalizacijo', dobavnicaMesana.includes('Ana · 7') && !dobavnicaMesana.includes('Darilni bon'))
+preveri('admin vsa: Stripe povezava po nacinu seje',
+  stripePovezava('pi_1', 'cs_test_a').url === 'https://dashboard.stripe.com/test/payments/pi_1' && stripePovezava('pi_1', 'cs_test_a').znanNacin
+  && stripePovezava('pi_1', 'cs_live_a').url === 'https://dashboard.stripe.com/payments/pi_1'
+  && !stripePovezava('pi_1', null).znanNacin && stripePovezava('pi_1', null).url === 'https://dashboard.stripe.com/payments/pi_1')
+preveri('admin vsa: prehodi kot v bazi (poslano le iz placano/v_izdelavi, konec brez dejanj)',
+  JSON.stringify(PREHODI) === JSON.stringify({ caka_placilo: ['preklicano'], placano: ['v_izdelavi', 'poslano', 'preklicano'],
+    v_izdelavi: ['placano', 'poslano', 'preklicano'], poslano: ['dostavljeno'] }))
+preveri('admin vsa: znacka stanja in povzetek postavk',
+  renderToString(<ZnackaStanja stanje="v_izdelavi" />).includes(SL['admin.stanje.v_izdelavi'])
+  && povzetekPostavk(nar([pn({}), pn({ id: 2, kolicina: 2, ime: 'Nalepka' })])) === '1 × Majica (Črna / S), 2 × Nalepka')
 preveri('admin: zahteva bona (odstotek ali znesek, uporab, rok)',
   JSON.stringify(zahtevaBona('scout', 'odstotek', '20', '10', '2026-12-31')) === '{"za":"scout","odstotek":20,"uporab":10,"do":"2026-12-31"}'
   && zahtevaBona('preverjen', 'znesek', '5,50', '1', '2026-12-31')?.znesek === 550
