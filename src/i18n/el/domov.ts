@@ -182,6 +182,6 @@ export const domov: NonNullable<Prevod['domov']> = {
     majica: 'Μπλουζάκι',
     pulover: 'Φούτερ',
     sal: 'Κασκόλ',
-    kapa: 'Καπέλο jockey',
+    kapa: 'Καπέλο τζόκεϊ',
   },
 }

@@ -214,6 +214,7 @@ export default function Navbar() {
                 (grščina se prelije čez rob), zato je zgoraj šele od xl, prej v "Več". */}
             <a {...povezavaTrgovine()} className={`${slog({ isActive: false })} hidden xl:inline`}>
               {t('aplikacija.meni.trgovina')}
+              {' '}
               {novo}
             </a>
 
@@ -263,6 +264,7 @@ export default function Navbar() {
                     onClick={() => setVecOdprt(false)}
                   >
                     {t('aplikacija.meni.trgovina')}
+                    {' '}
                     {novo}
                   </a>
                 </div>
@@ -408,6 +410,7 @@ export default function Navbar() {
               ))}
               <a {...povezavaTrgovine()} className={slogMobilni({ isActive: false })} onClick={() => setOdprt(false)}>
                 {t('aplikacija.meni.trgovina')}
+                {' '}
                 {novo}
               </a>
               {session ? (

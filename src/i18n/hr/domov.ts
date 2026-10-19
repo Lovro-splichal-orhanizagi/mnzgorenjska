@@ -178,10 +178,10 @@ export const domov: NonNullable<Prevod['domov']> = {
   trgovina: {
     oznaka: 'Novo · SLFF Trgovina',
     naslov: 'Službena SLFF oprema',
-    opis: 'Majice, hudice, šalovi, kape sa šiltom i šalice za prave nedjeljne nogometaše. Dostava diljem EU-a.',
+    opis: 'Majice, dukserice, šalovi, kape sa šiltom i šalice za prave nedjeljne nogometaše. Dostava diljem EU-a.',
     gumb: 'U trgovinu →',
     majica: 'Majica',
-    pulover: 'Hudica',
+    pulover: 'Dukserica',
     sal: 'Šal',
     kapa: 'Kapa sa šiltom',
   },
