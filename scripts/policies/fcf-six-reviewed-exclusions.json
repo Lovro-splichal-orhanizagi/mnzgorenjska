@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "policies": [
+    {
+      "id": "es-ct-segona-g1-six-reviewed-2026-10-19-v1",
+      "provider": "fcf",
+      "sourcePolicy": "es-fcf-six-reviewed-history-v1",
+      "competitionSlug": "es-ct-segona-g1",
+      "season": "2026/27",
+      "recordedAt": "2026-10-19T07:22:00Z",
+      "approvalReference": "Explicit user approval of exactly six Spanish prelaunch exclusions relayed by root 2026-10-19; recording time is not approval send time.",
+      "entries": [
+        {
+          "sourceMatchId": "4109388",
+          "sourceCompetitionId": "58161863",
+          "sourcePhase": null,
+          "sourceRound": 1,
+          "playedOn": "2026-09-20",
+          "homeSourceClubId": "5042",
+          "awaySourceClubId": "5057",
+          "homeSourceCategoryId": "33356",
+          "awaySourceCategoryId": "35522",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4109388",
+          "rawSha256": "eb3b14de3d6077f4fb896cb4a4d2b96d76eb85db8853889e9871b7f74e73e770",
+          "observedHomeScore": 0,
+          "observedAwayScore": 3,
+          "reasonCode": "published_score_conflicts_with_recorded_goal_events"
+        },
+        {
+          "sourceMatchId": "4109404",
+          "sourceCompetitionId": null,
+          "sourcePhase": null,
+          "sourceRound": 3,
+          "playedOn": "2026-10-04",
+          "homeSourceClubId": "5057",
+          "awaySourceClubId": "5029",
+          "homeSourceCategoryId": "35522",
+          "awaySourceCategoryId": "33592",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4109404",
+          "rawSha256": "1a42a49bd0b55d0bd3a654a6e15b65f430a2c132e28813899205d394f05244dc",
+          "observedHomeScore": null,
+          "observedAwayScore": null,
+          "reasonCode": "closed_official_result_and_individual_statistics_unavailable"
+        }
+      ]
+    },
+    {
+      "id": "es-ct-tercera-g2-six-reviewed-2026-10-19-v1",
+      "provider": "fcf",
+      "sourcePolicy": "es-fcf-six-reviewed-history-v1",
+      "competitionSlug": "es-ct-tercera-g2",
+      "season": "2026/27",
+      "recordedAt": "2026-10-19T07:22:00Z",
+      "approvalReference": "Explicit user approval of exactly six Spanish prelaunch exclusions relayed by root 2026-10-19; recording time is not approval send time.",
+      "entries": [
+        {
+          "sourceMatchId": "4116215",
+          "sourceCompetitionId": "58161875",
+          "sourcePhase": null,
+          "sourceRound": 4,
+          "playedOn": "2026-10-10",
+          "homeSourceClubId": "1107",
+          "awaySourceClubId": "5114",
+          "homeSourceCategoryId": "37659",
+          "awaySourceCategoryId": "34913",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4116215",
+          "rawSha256": "5dd7e401c7929dd1f2b59d35d1f6e203e6306f2479238adcd8755180b9671a49",
+          "observedHomeScore": 5,
+          "observedAwayScore": 0,
+          "reasonCode": "published_score_exceeds_recorded_goal_events"
+        }
+      ]
+    },
+    {
+      "id": "es-ct-tercera-g9-six-reviewed-2026-10-19-v1",
+      "provider": "fcf",
+      "sourcePolicy": "es-fcf-six-reviewed-history-v1",
+      "competitionSlug": "es-ct-tercera-g9",
+      "season": "2026/27",
+      "recordedAt": "2026-10-19T07:22:00Z",
+      "approvalReference": "Explicit user approval of exactly six Spanish prelaunch exclusions relayed by root 2026-10-19; recording time is not approval send time.",
+      "entries": [
+        {
+          "sourceMatchId": "4118352",
+          "sourceCompetitionId": "58161880",
+          "sourcePhase": null,
+          "sourceRound": 1,
+          "playedOn": "2026-09-19",
+          "homeSourceClubId": "1252",
+          "awaySourceClubId": "6136",
+          "homeSourceCategoryId": "35781",
+          "awaySourceCategoryId": "33049",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4118352",
+          "rawSha256": "1e8d50d487be699cac45c3c2dc4658d3a9b16983fd5203b5845dc1339fe7351c",
+          "observedHomeScore": 3,
+          "observedAwayScore": 0,
+          "reasonCode": "published_score_conflicts_with_recorded_goal_events"
+        },
+        {
+          "sourceMatchId": "4118354",
+          "sourceCompetitionId": "58161880",
+          "sourcePhase": null,
+          "sourceRound": 1,
+          "playedOn": "2026-09-19",
+          "homeSourceClubId": "1372",
+          "awaySourceClubId": "54319880",
+          "homeSourceCategoryId": "19610692",
+          "awaySourceCategoryId": "54709553",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4118354",
+          "rawSha256": "f3789fc4103d36d2878a573b9574442d32ad491236f3b4d6fd380ea4aaa07556",
+          "observedHomeScore": 3,
+          "observedAwayScore": 1,
+          "reasonCode": "second_half_goalkeeper_unidentified"
+        },
+        {
+          "sourceMatchId": "4118358",
+          "sourceCompetitionId": "58161880",
+          "sourcePhase": null,
+          "sourceRound": 2,
+          "playedOn": "2026-09-26",
+          "homeSourceClubId": "44143644",
+          "awaySourceClubId": "1400",
+          "homeSourceCategoryId": "44510647",
+          "awaySourceCategoryId": "47272626",
+          "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4118358",
+          "rawSha256": "e69af6b2765dbed7ebe3b57535beb1ce259c7d77ed9cb7f90d9cb4998afd153a",
+          "observedHomeScore": 0,
+          "observedAwayScore": 3,
+          "reasonCode": "published_score_conflicts_with_recorded_goal_events"
+        }
+      ]
+    }
+  ]
+}

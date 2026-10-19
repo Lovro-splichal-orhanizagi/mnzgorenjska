@@ -63,11 +63,11 @@ export function brezPreverjenihNastopov(podatki: Pokritost | null | undefined, m
   return Number(podatki?.statistics_unavailable_matches ?? 0) > 0 && !matches
 }
 
-export function NedosegljivaStatistika() {
+export function NedosegljivaStatistika({ resultKnown = true }: { resultKnown?: boolean }) {
   return (
     <section className="space-y-3">
       <p role="status" className="rounded-lg border border-amber-300/20 bg-amber-300/5 px-3 py-2 text-sm text-amber-200">
-        {t('tekme.statistika.nedosegljivo')}
+        {t(resultKnown ? 'tekme.statistika.nedosegljivo' : 'tekme.statistika.kratko')}
       </p>
       <dl className="kartica grid grid-cols-2 gap-4 p-4 text-sm sm:grid-cols-4">
         {[t('tekme.statistika.postaveTocke'), t('tekme.tockovanje.pravila.igralniCas'),

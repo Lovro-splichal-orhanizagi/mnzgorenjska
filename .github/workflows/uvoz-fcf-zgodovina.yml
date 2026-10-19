@@ -42,6 +42,7 @@ on:
         options:
           - g1-then-g9-missing-v1
           - g9-only-after-held-parent-v1
+          - six-reviewed-continuation-v1
       asset_id:
         description: Actual uploaded root draft release asset ID
         type: string
@@ -249,9 +250,9 @@ jobs:
           retention-days: 90
 
   missing-inventory-g1:
-    name: missing-inventory-g1
+    name: ${{ inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g9' || 'missing-inventory-g1' }}
     needs: [missing-inventory-approval, missing-inventory-consume]
-    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && inputs.preset == 'g1-then-g9-missing-v1' && github.run_attempt == 1
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && (inputs.preset == 'g1-then-g9-missing-v1' || inputs.preset == 'six-reviewed-continuation-v1') && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
@@ -267,7 +268,7 @@ jobs:
       FCF_CONSUMPTION_ID: ${{ needs.missing-inventory-consume.outputs.artifact_id }}
       FCF_CONSUMPTION_DIGEST: ${{ needs.missing-inventory-consume.outputs.artifact_digest }}
       FCF_CONSUMPTION_MANIFEST_SHA: ${{ needs.missing-inventory-consume.outputs.manifest_sha }}
-      FCF_INVENTORY_TARGET: es-ct-segona-g1
+      FCF_INVENTORY_TARGET: ${{ inputs.preset == 'six-reviewed-continuation-v1' && 'es-ct-tercera-g9' || 'es-ct-segona-g1' }}
     outputs:
       inventory_id: ${{ steps.inventory.outputs.artifact-id }}
       inventory_digest: ${{ steps.inventory.outputs.artifact-digest }}
@@ -294,8 +295,8 @@ jobs:
         if: success() && steps.capture.outputs.status == 'inventory-complete' && steps.capture.outputs.evidence_ready == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: fcf-missing-inventory-es-ct-segona-g1-${{ github.run_id }}-1
-          path: fcf-missing-es-ct-segona-g1
+          name: fcf-missing-inventory-${{ env.FCF_INVENTORY_TARGET }}-${{ github.run_id }}-1
+          path: fcf-missing-${{ env.FCF_INVENTORY_TARGET }}
           if-no-files-found: error
           overwrite: false
           retention-days: 90
@@ -304,8 +305,8 @@ jobs:
         if: always() && steps.capture.outputs.status == 'failed' && steps.capture.outputs.evidence_ready == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: fcf-missing-inventory-diagnostic-es-ct-segona-g1-${{ github.run_id }}-1
-          path: fcf-missing-es-ct-segona-g1
+          name: fcf-missing-inventory-diagnostic-${{ env.FCF_INVENTORY_TARGET }}-${{ github.run_id }}-1
+          path: fcf-missing-${{ env.FCF_INVENTORY_TARGET }}
           if-no-files-found: error
           overwrite: false
           retention-days: 90
@@ -322,16 +323,16 @@ jobs:
         if: success() && steps.audit.outputs.evidence_ready == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: fcf-missing-inventory-audit-es-ct-segona-g1-${{ github.run_id }}-1
-          path: fcf-inventory-audit-es-ct-segona-g1
+          name: fcf-missing-inventory-audit-${{ env.FCF_INVENTORY_TARGET }}-${{ github.run_id }}-1
+          path: fcf-inventory-audit-${{ env.FCF_INVENTORY_TARGET }}
           if-no-files-found: error
           overwrite: false
           retention-days: 90
 
   missing-inventory-g9:
-    name: missing-inventory-g9
+    name: ${{ inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g1' || 'missing-inventory-g9' }}
     needs: [missing-inventory-approval, missing-inventory-consume, missing-inventory-g1]
-    if: always() && !cancelled() && github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && github.run_attempt == 1 && needs.missing-inventory-approval.result == 'success' && needs.missing-inventory-consume.result == 'success' && (inputs.preset == 'g9-only-after-held-parent-v1' || needs.missing-inventory-g1.result == 'success')
+    if: always() && !cancelled() && github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && github.run_attempt == 1 && needs.missing-inventory-approval.result == 'success' && needs.missing-inventory-consume.result == 'success' && (inputs.preset == 'six-reviewed-continuation-v1' || inputs.preset == 'g9-only-after-held-parent-v1' || needs.missing-inventory-g1.result == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
@@ -347,7 +348,7 @@ jobs:
       FCF_CONSUMPTION_ID: ${{ needs.missing-inventory-consume.outputs.artifact_id }}
       FCF_CONSUMPTION_DIGEST: ${{ needs.missing-inventory-consume.outputs.artifact_digest }}
       FCF_CONSUMPTION_MANIFEST_SHA: ${{ needs.missing-inventory-consume.outputs.manifest_sha }}
-      FCF_INVENTORY_TARGET: es-ct-tercera-g9
+      FCF_INVENTORY_TARGET: ${{ inputs.preset == 'six-reviewed-continuation-v1' && 'es-ct-segona-g1' || 'es-ct-tercera-g9' }}
       FCF_G1_INVENTORY_ID: ${{ needs.missing-inventory-g1.outputs.inventory_id }}
       FCF_G1_INVENTORY_DIGEST: ${{ needs.missing-inventory-g1.outputs.inventory_digest }}
       FCF_G1_DIAGNOSTIC_ID: ${{ needs.missing-inventory-g1.outputs.diagnostic_id }}
@@ -356,6 +357,14 @@ jobs:
       FCF_G1_AUDIT_ID: ${{ needs.missing-inventory-g1.outputs.audit_id }}
       FCF_G1_AUDIT_DIGEST: ${{ needs.missing-inventory-g1.outputs.audit_digest }}
       FCF_G1_AUDIT_MANIFEST_SHA: ${{ needs.missing-inventory-g1.outputs.audit_manifest_sha }}
+      FCF_G9_INVENTORY_ID: ${{ needs.missing-inventory-g1.outputs.inventory_id }}
+      FCF_G9_INVENTORY_DIGEST: ${{ needs.missing-inventory-g1.outputs.inventory_digest }}
+      FCF_G9_DIAGNOSTIC_ID: ${{ needs.missing-inventory-g1.outputs.diagnostic_id }}
+      FCF_G9_DIAGNOSTIC_DIGEST: ${{ needs.missing-inventory-g1.outputs.diagnostic_digest }}
+      FCF_G9_MANIFEST_SHA: ${{ needs.missing-inventory-g1.outputs.manifest_sha }}
+      FCF_G9_AUDIT_ID: ${{ needs.missing-inventory-g1.outputs.audit_id }}
+      FCF_G9_AUDIT_DIGEST: ${{ needs.missing-inventory-g1.outputs.audit_digest }}
+      FCF_G9_AUDIT_MANIFEST_SHA: ${{ needs.missing-inventory-g1.outputs.audit_manifest_sha }}
     outputs:
       inventory_id: ${{ steps.inventory.outputs.artifact-id }}
       inventory_digest: ${{ steps.inventory.outputs.artifact-digest }}
@@ -382,8 +391,8 @@ jobs:
         if: success() && steps.capture.outputs.status == 'inventory-complete' && steps.capture.outputs.evidence_ready == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: fcf-missing-inventory-es-ct-tercera-g9-${{ github.run_id }}-1
-          path: fcf-missing-es-ct-tercera-g9
+          name: fcf-missing-inventory-${{ env.FCF_INVENTORY_TARGET }}-${{ github.run_id }}-1
+          path: fcf-missing-${{ env.FCF_INVENTORY_TARGET }}
           if-no-files-found: error
           overwrite: false
           retention-days: 90
@@ -392,8 +401,8 @@ jobs:
         if: always() && steps.capture.outputs.status == 'failed' && steps.capture.outputs.evidence_ready == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: fcf-missing-inventory-diagnostic-es-ct-tercera-g9-${{ github.run_id }}-1
-          path: fcf-missing-es-ct-tercera-g9
+          name: fcf-missing-inventory-diagnostic-${{ env.FCF_INVENTORY_TARGET }}-${{ github.run_id }}-1
+          path: fcf-missing-${{ env.FCF_INVENTORY_TARGET }}
           if-no-files-found: error
           overwrite: false
           retention-days: 90
@@ -410,8 +419,8 @@ jobs:
         if: success() && steps.audit.outputs.evidence_ready == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: fcf-missing-inventory-audit-es-ct-tercera-g9-${{ github.run_id }}-1
-          path: fcf-inventory-audit-es-ct-tercera-g9
+          name: fcf-missing-inventory-audit-${{ env.FCF_INVENTORY_TARGET }}-${{ github.run_id }}-1
+          path: fcf-inventory-audit-${{ env.FCF_INVENTORY_TARGET }}
           if-no-files-found: error
           overwrite: false
           retention-days: 90
@@ -435,22 +444,22 @@ jobs:
       FCF_CONSUMPTION_ID: ${{ needs.missing-inventory-consume.outputs.artifact_id }}
       FCF_CONSUMPTION_DIGEST: ${{ needs.missing-inventory-consume.outputs.artifact_digest }}
       FCF_CONSUMPTION_MANIFEST_SHA: ${{ needs.missing-inventory-consume.outputs.manifest_sha }}
-      FCF_G1_INVENTORY_ID: ${{ needs.missing-inventory-g1.outputs.inventory_id }}
-      FCF_G1_INVENTORY_DIGEST: ${{ needs.missing-inventory-g1.outputs.inventory_digest }}
-      FCF_G1_DIAGNOSTIC_ID: ${{ needs.missing-inventory-g1.outputs.diagnostic_id }}
-      FCF_G1_DIAGNOSTIC_DIGEST: ${{ needs.missing-inventory-g1.outputs.diagnostic_digest }}
-      FCF_G1_MANIFEST_SHA: ${{ needs.missing-inventory-g1.outputs.manifest_sha }}
-      FCF_G1_AUDIT_ID: ${{ needs.missing-inventory-g1.outputs.audit_id }}
-      FCF_G1_AUDIT_DIGEST: ${{ needs.missing-inventory-g1.outputs.audit_digest }}
-      FCF_G1_AUDIT_MANIFEST_SHA: ${{ needs.missing-inventory-g1.outputs.audit_manifest_sha }}
-      FCF_G9_INVENTORY_ID: ${{ needs.missing-inventory-g9.outputs.inventory_id }}
-      FCF_G9_INVENTORY_DIGEST: ${{ needs.missing-inventory-g9.outputs.inventory_digest }}
-      FCF_G9_DIAGNOSTIC_ID: ${{ needs.missing-inventory-g9.outputs.diagnostic_id }}
-      FCF_G9_DIAGNOSTIC_DIGEST: ${{ needs.missing-inventory-g9.outputs.diagnostic_digest }}
-      FCF_G9_MANIFEST_SHA: ${{ needs.missing-inventory-g9.outputs.manifest_sha }}
-      FCF_G9_AUDIT_ID: ${{ needs.missing-inventory-g9.outputs.audit_id }}
-      FCF_G9_AUDIT_DIGEST: ${{ needs.missing-inventory-g9.outputs.audit_digest }}
-      FCF_G9_AUDIT_MANIFEST_SHA: ${{ needs.missing-inventory-g9.outputs.audit_manifest_sha }}
+      FCF_G1_INVENTORY_ID: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g9' || 'missing-inventory-g1'].outputs.inventory_id }}
+      FCF_G1_INVENTORY_DIGEST: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g9' || 'missing-inventory-g1'].outputs.inventory_digest }}
+      FCF_G1_DIAGNOSTIC_ID: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g9' || 'missing-inventory-g1'].outputs.diagnostic_id }}
+      FCF_G1_DIAGNOSTIC_DIGEST: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g9' || 'missing-inventory-g1'].outputs.diagnostic_digest }}
+      FCF_G1_MANIFEST_SHA: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g9' || 'missing-inventory-g1'].outputs.manifest_sha }}
+      FCF_G1_AUDIT_ID: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g9' || 'missing-inventory-g1'].outputs.audit_id }}
+      FCF_G1_AUDIT_DIGEST: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g9' || 'missing-inventory-g1'].outputs.audit_digest }}
+      FCF_G1_AUDIT_MANIFEST_SHA: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g9' || 'missing-inventory-g1'].outputs.audit_manifest_sha }}
+      FCF_G9_INVENTORY_ID: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g1' || 'missing-inventory-g9'].outputs.inventory_id }}
+      FCF_G9_INVENTORY_DIGEST: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g1' || 'missing-inventory-g9'].outputs.inventory_digest }}
+      FCF_G9_DIAGNOSTIC_ID: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g1' || 'missing-inventory-g9'].outputs.diagnostic_id }}
+      FCF_G9_DIAGNOSTIC_DIGEST: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g1' || 'missing-inventory-g9'].outputs.diagnostic_digest }}
+      FCF_G9_MANIFEST_SHA: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g1' || 'missing-inventory-g9'].outputs.manifest_sha }}
+      FCF_G9_AUDIT_ID: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g1' || 'missing-inventory-g9'].outputs.audit_id }}
+      FCF_G9_AUDIT_DIGEST: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g1' || 'missing-inventory-g9'].outputs.audit_digest }}
+      FCF_G9_AUDIT_MANIFEST_SHA: ${{ needs[inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g1' || 'missing-inventory-g9'].outputs.audit_manifest_sha }}
     steps:
       - name: Checkout exact main
         uses: actions/checkout@v4
@@ -629,7 +638,7 @@ jobs:
           printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
           ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
-      - name: Prepare exact four FCF cleanup before-image
+      - name: ${{ inputs.preset == 'six-reviewed-continuation-v1' && 'Prepare exact six FCF cleanup before-image' || 'Prepare exact four FCF cleanup before-image' }}
         id: operation
         env:
           GH_TOKEN: ${{ github.token }}
@@ -685,7 +694,7 @@ jobs:
           printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
           ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
-      - name: Apply exact four FCF cleanup
+      - name: ${{ inputs.preset == 'six-reviewed-continuation-v1' && 'Apply exact six FCF cleanup' || 'Apply exact four FCF cleanup' }}
         id: operation
         env:
           GH_TOKEN: ${{ github.token }}

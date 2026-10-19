@@ -324,7 +324,9 @@ export default function Tekma() {
       <h1 className="flex items-start justify-center gap-3 text-center sm:gap-6">
         <Klub ime={tekma.home_name} kratko={tekma.home_short} logo={tekma.home_logo} id={tekma.home_team_id} liga={slugLige} />
         <span className="pt-1 text-3xl font-black tabular-nums sm:text-4xl">
-          {tekma.home_goals}:{tekma.away_goals}
+          {tekma.home_goals == null || tekma.away_goals == null
+            ? '—'
+            : `${tekma.home_goals}:${tekma.away_goals}`}
         </span>
         <Klub ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} id={tekma.away_team_id} liga={slugLige} />
       </h1>
@@ -336,7 +338,7 @@ export default function Tekma() {
         />
       )}
 
-      {nedosegljivo ? <NedosegljivaStatistika /> : nastopi.length === 0 ? (
+      {nedosegljivo ? <NedosegljivaStatistika resultKnown={tekma.home_goals != null && tekma.away_goals != null} /> : nastopi.length === 0 ? (
         <p className="text-sm text-slate-400">
           {t('tekme.tekma.brezPostav')}
         </p>

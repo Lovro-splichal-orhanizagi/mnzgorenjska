@@ -1,3 +1,4 @@
+import {isFcfSixUnknownResultMarker} from '../fcf-six-historical-policy.mjs'
 // Vir: Federació Catalana de Futbol — fcf.cat (Katalonija, Španija).
 //
 // fcf.cat je aplikacija Next.js. Strani tekmovanj (`/ca/competicio?…`),
@@ -817,7 +818,7 @@ export async function preberiBlok(koda, prenesi, { danes = Date.now(), svezi = f
     const id=t?.id,g=t?.g,m=t?.historicalMarker,f=m?.fixture
     if(!Number.isSafeInteger(id)||id<od||id>do_||historical.has(id)||!preskoci.has(sifraZapisnika(id))||m?.sourceMatchId!==String(id)||m?.reportId!==sifraZapisnika(id)
       ||f?.sourceMatchId!==String(id)||g?.krog!==f?.sourceRound||g?.datum!==f?.playedOn||g?.sezona!==f?.season
-      ||!g?.domaci||!g?.gostje||!g?.tekmovanje||!g?.skupina||!g?.izid||g.izid.domaci!==f?.observedHomeScore||g.izid.gostje!==f?.observedAwayScore)
+      ||!g?.domaci||!g?.gostje||!g?.tekmovanje||!g?.skupina||(isFcfSixUnknownResultMarker(m)?g.izid!==null:!g?.izid||g.izid.domaci!==f?.observedHomeScore||g.izid.gostje!==f?.observedAwayScore))
       throw napakaKoledarja('neveljavna vezana zgodovinska identiteta tekme')
     historical.set(id,{id,g:{...g},historicalMarker:m,html:null})
   }

@@ -1,3 +1,4 @@
+import {FCF_SIX_SOURCE_POLICY,getFcfSixPolicy,validateFcfSixInstalledMarkers} from './fcf-six-historical-policy.mjs'
 // Pure proposal/row projections only. No admission, reader brand, transport, SQL
 // or executable writer. A caller-written sourceData object confers no authority;
 // the future reviewed adapter must obtain it directly from the Task5 getter and
@@ -10,15 +11,16 @@ import {getHistoricalStatisticsPolicy,historicalStatisticsPolicySha256 as finger
 import {validateFcfCurrentReleaseCalendar} from './fcf-historical-release.mjs'
 import {validateFcfTargetReleaseInventory} from './fcf-target-release.mjs'
 const targets={'es-ct-segona-g1':783,'es-ct-tercera-g9':797}
-const historical={'4109388':[321646,8574,8575],'4116215':[297199,8195,8188],'4118352':[306164,8304,8305],'4118358':[306171,8301,8298]}
+const historical={'4109388':[321646,8574,8575],'4116215':[297199,8195,8188],'4118352':[306164,8304,8305],'4118358':[306171,8301,8298],'4118354':[306166,7566,8308]}
 const reviewed=JSON.parse(readFileSync(new URL('./policies/historical-statistics-club-bindings.json',import.meta.url))).bindings.filter(b=>b.provider==='fcf')
+const sixReviewed=[...reviewed,{provider:'fcf',sourceClubId:'5029',sourceCategoryId:'33592',countryCode:'ES',canonicalNames:['BESCANO, C.D.'],proofs:[{sourceMatchId:'4109389',sourceUrl:'https://www.fcf.cat/ca/competicio/acta/4109389',rawSha256:'5f102da312280ff3f4ff5f65bf067e8f71e9f0301c5bae5b578d81ed02f93e97',side:'away',round:1,playedOn:'2026-09-19'}]},...[[ '1372','19610692','CAN VIDALET, C.F.'],['54319880','54709553','ONA SANT ADRIA, F.C.']].map(([sourceClubId,sourceCategoryId,name])=>({provider:'fcf',sourceClubId,sourceCategoryId,countryCode:'ES',canonicalNames:[name],proofs:[{sourceMatchId:'4118354',sourceUrl:'https://www.fcf.cat/ca/competicio/acta/4118354',rawSha256:'f3789fc4103d36d2878a573b9574442d32ad491236f3b4d6fd380ea4aaa07556'}]}))]
 const sha=text=>createHash('sha256').update(text).digest('hex'),key=c=>`${c.sourceClubId}/${c.sourceCategoryId}`
 const fail=message=>{throw Error(`FCF_NATIVE_PLAN: ${message}`)},id=n=>Number.isSafeInteger(n)&&n>0
 const freeze=x=>{if(x&&typeof x==='object'){Object.values(x).forEach(freeze);Object.freeze(x)}return x}
 function context(input){
  const {targetSlug,sourceData:s,databaseInventory:d,now=Date.now(),writerCommit}=input
  if(!Object.hasOwn(targets,targetSlug)||!s||s.targetSlug!==targetSlug||s.competition?.id!==targets[targetSlug]||s.competition?.slug!==targetSlug||!Number.isFinite(now)||!/^[a-f0-9]{40}$/.test(writerCommit??'')||!/^[a-f0-9]{40}$/.test(s.binding?.sourceCommit??'')||!/^[a-f0-9]{64}$/.test(s.binding?.sourceFingerprintSha256??'')||s.binding.sourceClaimState!=='consumed')fail('exact selected target, original consumed source binding and writer commit required')
- try{validateFcfTargetReleaseInventory({targetSlug,databaseInventory:d,cleanupPhase:d?.groups?.every(g=>g.source_policy===null)?'prepared':'applied',now})}catch(e){fail(e.message)}
+ try{validateFcfTargetReleaseInventory({targetSlug,databaseInventory:d,cleanupPhase:d?.groups?.every(g=>g.source_policy===null)?'prepared':'applied',sourcePolicy:s.competition.source_policy,now})}catch(e){fail(e.message)}
  if(!Array.isArray(d.teams)||d.teams.length!==16||d.teams.some(t=>!id(t.id)||t.competition_id!==targets[targetSlug]||typeof t.name!=='string'||!t.name)||new Set(d.teams.map(t=>t.id)).size!==16)fail('sixteen unique canonical selected-target teams required')
  if(!Array.isArray(d.rounds)||d.rounds.length!==30||d.rounds.some(r=>!id(r.id)||r.competition_id!==targets[targetSlug]||r.season!=='2026/27'||!Number.isInteger(r.number)||r.number<1||r.number>30)||new Set(d.rounds.map(r=>r.id)).size!==30||new Set(d.rounds.map(r=>r.number)).size!==30)fail('exact current thirty-round inventory required')
  if(!Array.isArray(d.matches)||d.matches.length!==240||d.matches.some(m=>!id(m.id)||!d.rounds.some(r=>r.id===m.round_id)||!d.teams.some(t=>t.id===m.home_team_id)||!d.teams.some(t=>t.id===m.away_team_id)||m.home_team_id===m.away_team_id||!Object.hasOwn(m,'zapisnik_id'))||new Set(d.matches.map(m=>m.id)).size!==240)fail('exact current240 fixture inventory required')
@@ -26,7 +28,7 @@ function context(input){
  let calendar
  try{calendar=validateFcfCurrentReleaseCalendar(s.fixtures)}catch(e){fail(e.message)}
  if(fingerprint([...s.clubs].sort((a,b)=>key(a).localeCompare(key(b))))!==fingerprint(calendar.clubs))fail('native clubs disagree with full source calendar')
- const policy=getHistoricalStatisticsPolicy(targetSlug)
+ const policy=(s.competition.source_policy===FCF_SIX_SOURCE_POLICY?getFcfSixPolicy:getHistoricalStatisticsPolicy)(targetSlug)
  // Native report blocks come from the already checked immutable DB source tuple.
  const code=d.groups.find(g=>g.slug===targetSlug).sourceLeagueCode,[first,last]=code.split('-').map(Number),seen=new Set()
  for(const f of s.fixtures){
@@ -36,13 +38,15 @@ function context(input){
  }
  return{targetSlug,s,d,now,writerCommit,policy,calendar}
 }
-function exceptionAnchors(bindings){
- if(!Array.isArray(bindings)||bindings.length!==reviewed.length||new Set(bindings.map(b=>`${b?.source_club_id}/${b?.source_category_id}`)).size!==reviewed.length)fail('all eight immutable FCF exception bindings required')
+function exceptionAnchors(bindings,six){
+ const descriptors=six?sixReviewed:reviewed
+ if(!Array.isArray(bindings)||bindings.length!==descriptors.length||new Set(bindings.map(b=>`${b?.source_club_id}/${b?.source_category_id}`)).size!==descriptors.length)fail('all eight immutable FCF exception bindings required')
  const anchors=new Map()
- for(const b of reviewed){
+ for(const b of descriptors){
   const a=bindings.find(a=>a.source_club_id===b.sourceClubId&&a.source_category_id===b.sourceCategoryId)
   if(!a||a.provider!=='fcf'||a.country_code!=='ES'||fingerprint(a.canonical_names)!==fingerprint(b.canonicalNames)||fingerprint(a.proofs)!==fingerprint(b.proofs)||!Object.hasOwn(a,'bound_team_id'))fail('immutable exception descriptor differs')
-  const report=b.proofs[0].sourceMatchId,policy=['es-ct-segona-g1','es-ct-tercera-g2','es-ct-tercera-g9'].map(getHistoricalStatisticsPolicy).find(p=>p.entries.some(e=>e.sourceMatchId===report)),entry=policy.entries.find(e=>e.sourceMatchId===report),side=entry.homeSourceClubId===b.sourceClubId&&entry.homeSourceCategoryId===b.sourceCategoryId?0:1
+  if(six&&b.sourceClubId==='5029'){if(a.bound_team_id!==null&&a.bound_team_id!==8576)fail('existing bound exception team conflicts');anchors.set(key(b),8576);continue}
+  const report=b.proofs[0].sourceMatchId,policy=['es-ct-segona-g1','es-ct-tercera-g2','es-ct-tercera-g9'].map(six?getFcfSixPolicy:getHistoricalStatisticsPolicy).find(p=>p.entries.some(e=>e.sourceMatchId===report)),entry=policy.entries.find(e=>e.sourceMatchId===report),side=entry.homeSourceClubId===b.sourceClubId&&entry.homeSourceCategoryId===b.sourceCategoryId?0:1
   const teamId=historical[report][side+1]
   if(a.bound_team_id!==null&&a.bound_team_id!==teamId)fail('existing bound exception team conflicts')
   anchors.set(key(b),teamId)
@@ -50,7 +54,7 @@ function exceptionAnchors(bindings){
  return anchors
 }
 function mapping(input={},auditedUTC){
- const {targetSlug,s,d,now,writerCommit,policy,calendar}=context(input),exceptions=exceptionAnchors(input.existingExceptionBindings),anchors=new Map(exceptions),usedTeams=new Set()
+ const {targetSlug,s,d,now,writerCommit,policy,calendar}=context(input),exceptions=exceptionAnchors(input.existingExceptionBindings,s.competition.source_policy===FCF_SIX_SOURCE_POLICY),anchors=new Map(exceptions),usedTeams=new Set()
  auditedUTC??=new Date(now).toISOString()
  const stamp=Date.parse(auditedUTC)
  if(!Number.isFinite(stamp)||stamp>now||now-stamp>24*3600000)fail('original proposal audit clock is stale/future')
@@ -81,7 +85,19 @@ function mapping(input={},auditedUTC){
   if(matches.length!==1||usedMatches.has(matches[0].id)||matches[0].zapisnik_id!==null&&matches[0].zapisnik_id!==f.id)fail('native round/fixture sides do not resolve uniquely to actual DB fixture')
   const match=matches[0];usedMatches.add(match.id)
   const marker=policy.entries.find(e=>`es${e.sourceMatchId}`===f.id)
-  if(marker&&(match.id!==historical[marker.sourceMatchId][0]||home!==historical[marker.sourceMatchId][1]||away!==historical[marker.sourceMatchId][2]))fail('exact historical match/side identity differs')
+  if(marker?.sourceMatchId==='4109404'){
+   if(f.homeGoals!==null||f.awayGoals!==null)fail('unknown historical source score must remain NULL')
+   if(d.groups.every(g=>g.source_policy===null)){
+    // The exact existing empty fixture can anchor a descriptive proposal before
+    // cleanup. SQL independently locks/rechecks its identity and zero rows;
+    // this projection neither installs a marker nor authorizes a mutation.
+    const expected={id:321663,round_id:28708,home_team_id:8575,away_team_id:8576,played_on:'2026-10-04',imported_at:null,zapisnik_id:null,source_url:'https://www.fcf.cat/ca/competicio/acta/4109388',home_goals:0,away_goals:0,vir_brez_izida:true,kontumacija:false,statistics_status:'available',statistics_reason:null,source_phase:null,source_round:null}
+    if(round.id!==28708||round.number!==3||home!==8575||away!==8576||Object.entries(expected).some(([k,v])=>match[k]!==v)||!Array.isArray(match.import_warnings)||match.import_warnings.length!==0)fail('exact empty unknown-score native placeholder required before cleanup')
+   }else{
+    const installed=d.installedMarkers?.find(b=>b.policyId===policy.id);try{validateFcfSixInstalledMarkers({competition:s.competition,binding:installed})}catch(e){fail(e.message)};const exact=installed.markers.find(m=>m.sourceMatchId==='4109404');if(match.id!==exact.matchId||round.id!==exact.roundId||home!==8575||away!==8576)fail('unknown-score installed marker/native sides differ')
+   }
+  }
+  else if(marker&&(match.id!==historical[marker.sourceMatchId][0]||home!==historical[marker.sourceMatchId][1]||away!==historical[marker.sourceMatchId][2]))fail('exact historical match/side identity differs')
   fixtures.push({sourceMatchId:f.id,sourceRound:f.round,matchId:match.id,roundId:round.id,homeTeamId:home,awayTeamId:away})
  }
  // Only identity fields belong to mapping approval: cleanup legitimately changes
@@ -90,7 +106,7 @@ function mapping(input={},auditedUTC){
  // A null stored native ID may materialize the exact already-proven source ID;
  // every conflicting non-null ID was refused before this projection.
  const projection={teams:d.teams.map(t=>({id:t.id,competition_id:t.competition_id,name:t.name})).sort((a,b)=>a.id-b.id),rounds:d.rounds.map(r=>({id:r.id,competition_id:r.competition_id,season:r.season,number:r.number})).sort((a,b)=>a.id-b.id),matches:fixtures.map(f=>({id:f.matchId,round_id:f.roundId,home_team_id:f.homeTeamId,away_team_id:f.awayTeamId,zapisnik_id:f.sourceMatchId})).sort((a,b)=>a.id-b.id)}
- const proposal={schemaVersion:1,kind:'fcf-native-target-mapping',targetSlug,sourceCommit:writerCommit,captureSourceCommit:s.binding.sourceCommit,auditedUTC,sourceFingerprintSha256:s.binding.sourceFingerprintSha256,databaseSha256:fingerprint(projection),existingExceptionBindingsSha256:fingerprint(reviewed),mappings,fixtures:fixtures.sort((a,b)=>a.sourceMatchId.localeCompare(b.sourceMatchId))}
+ const proposal={schemaVersion:1,kind:'fcf-native-target-mapping',targetSlug,sourceCommit:writerCommit,captureSourceCommit:s.binding.sourceCommit,auditedUTC,sourceFingerprintSha256:s.binding.sourceFingerprintSha256,databaseSha256:fingerprint(projection),existingExceptionBindingsSha256:fingerprint(s.competition.source_policy===FCF_SIX_SOURCE_POLICY?sixReviewed:reviewed),mappings,fixtures:fixtures.sort((a,b)=>a.sourceMatchId.localeCompare(b.sourceMatchId))}
  const proposalText=JSON.stringify(proposal)
  return freeze({proposalText,proposalSha256:sha(proposalText)})
 }
