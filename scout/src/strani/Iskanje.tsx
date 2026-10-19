@@ -34,6 +34,23 @@ export function utemeljitev(z: Pick<Zadetek, 'percentil' | 'skupina' | 'minute' 
   return deli.join(' · ')
 }
 
+/** Pod tem zaupanjem (malo minut ali delni zapisniki) pokaži nevtralno opombo o količini podatkov. */
+export const MALO_PODATKOV = 0.5
+
+/** CSV iz naloženih vrstic, prenos v brskalniku. Celica, ki se začne z =+-@, dobi ' (vbrizg formul v Excel). */
+export function prenesiCsv(ime: string, vrstice: (string | number)[][]): void {
+  const celica = (x: string | number) => {
+    const v = typeof x === 'string' && /^[=+\-@]/.test(x) ? `'${x}` : String(x)
+    return /[",;\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v
+  }
+  const csv = '\ufeff' + vrstice.map((r) => r.map(celica).join(',')).join('\r\n')
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+  a.download = ime
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+}
+
 export function Iskanje() {
   const { klub } = useSeja()
   const [q, setQ] = useSearchParams()
@@ -183,11 +200,12 @@ function Rezultati({ iskanje }: { iskanje: string }) {
                   <span className="font-semibold text-slate-100">{z.ime}</span>
                   <span className={`znacka poz-${z.skupina}`} title={t(`skupina.${z.skupina}` as Kljuc)}>{t(`poz.${z.skupina}` as Kljuc)}</span>
                   {z.odprt_za_prestop && <span className="znacka-odprt">{t('iskanje.odprt')}</span>}
+                  {z.zaupanje < MALO_PODATKOV && <span className="znacka bg-white/10 text-slate-300" title={t('iskanje.maloPodatkovOpis')}>{t('iskanje.maloPodatkov')}</span>}
                 </span>
                 <span className="block text-xs text-slate-400">{z.klub} · {z.liga}</span>
-                <span className="block text-sm text-slate-300">{utemeljitev(z)}</span>
+                <span className="block text-sm text-slate-300" title={z.goli_90_pri_nas ? t('iskanje.goliOpis') : undefined}>{utemeljitev(z)}</span>
               </span>
-              <span className="shrink-0 text-right">
+              <span className="shrink-0 cursor-help text-right" title={t('iskanje.percentilOpis')}>
                 <span className="block text-2xl font-black tabular-nums text-gnl-300">{Math.round(z.percentil)}</span>
                 <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-400">{t('iskanje.percentil')}</span>
               </span>
@@ -197,11 +215,25 @@ function Rezultati({ iskanje }: { iskanje: string }) {
       </ul>
       {stanje === 'nalaga' && <Nalaganje />}
       {napakaI && <p className="opozorilo">{napakaI}</p>}
-      {stanje === 'ok' && (
-        <button type="button" onClick={() => (napakaI ? setPoskus(poskus + 1) : setOd(od + STRAN))} className="gumb-tih text-sm">
-          {napakaI ? t('napaka.znova') : t('iskanje.vec')}
+      <div className="flex flex-wrap gap-2">
+        {stanje === 'ok' && (
+          <button type="button" onClick={() => (napakaI ? setPoskus(poskus + 1) : setOd(od + STRAN))} className="gumb-tih text-sm">
+            {napakaI ? t('napaka.znova') : t('iskanje.vec')}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() =>
+            prenesiCsv('scout-iskanje.csv', [
+              [t('klub.st.ime'), t('klub.st.poz'), t('igralec.st.klub'), t('igralec.st.liga'), t('iskanje.percentil'), t('igralec.st.minute'), t('igralec.st.delez'), t('igralec.st.goliPriNas'), t('iskanje.odprt')],
+              ...vrstice.map((z) => [z.ime, t(`poz.${z.skupina}` as Kljuc), z.klub, z.liga, Math.round(z.percentil), z.minute, Math.round(z.delez_minut * 100), z.goli_90_pri_nas == null ? '' : Number(z.goli_90_pri_nas.toFixed(2)), z.odprt_za_prestop ? 1 : 0]),
+            ])
+          }
+          className="gumb-tih text-sm"
+        >
+          {t('iskanje.csv')}
         </button>
-      )}
+      </div>
     </div>
   )
 }

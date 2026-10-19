@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { supabase, type Podoben, type ProfilIgralca, type SezonaIgralca } from '../baza'
+import { supabase, type Podoben, type ProfilIgralca, type SezonaIgralca, type Skupina } from '../baza'
 import { napaka, odstotek, stevilo, t, type Kljuc } from '../besede'
 import { Nalaganje } from '../seja'
+import { MALO_PODATKOV } from './Iskanje'
 
 export const st = (x: number | null | undefined, mest = 2) => (x == null ? '–' : stevilo(x, mest))
 export const odst = (x: number | null | undefined) => (x == null ? '–' : odstotek(Math.round(x * 100)))
@@ -26,8 +27,13 @@ const STOLPCI: [Kljuc, (s: SezonaIgralca) => string][] = [
   ['igralec.st.onoff', (s) => st(s.onoff_ref_90)],
   ['igralec.st.prejeti', (s) => st(s.prejeti_ref_90)],
   ['igralec.st.ciste', (s) => odst(s.ciste_delez)],
+  ['igralec.st.vratar', (s) => st(s.vratar_ref_90)],
   ['igralec.st.kartoni', (s) => st(s.kartoni_90)],
 ]
+/** Vratar: brez golov, z vratarskim kazalnikom; ostali brez vratarskega (stroj ga piše le za GK). */
+const stolpci = (sk: Skupina) =>
+  STOLPCI.filter(([k]) => (sk === 'GK' ? k !== 'igralec.st.goli' && k !== 'igralec.st.goliPriNas' : k !== 'igralec.st.vratar'))
+const OPIS: Partial<Record<Kljuc, Kljuc>> = { 'igralec.st.goliPriNas': 'iskanje.goliOpis', 'igralec.st.vratar': 'igralec.st.vratarOpis' }
 
 export function Igralec() {
   const pid = idIzNaslova(useParams().id)
@@ -96,7 +102,7 @@ export function Igralec() {
               {p.klub} · {p.liga}
             </p>
           </div>
-          <div className="text-right">
+          <div className="cursor-help text-right" title={t('iskanje.percentilOpis')}>
             <p className="text-4xl font-black tabular-nums text-gnl-300">{Math.round(p.percentil)}</p>
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{t('iskanje.percentil')}</p>
           </div>
@@ -123,12 +129,24 @@ export function Igralec() {
         <div className="kartica overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="border-b border-white/10 text-left text-xs text-slate-400">
-              <tr>{STOLPCI.map(([k]) => <th key={k} className="whitespace-nowrap px-3 py-2 font-semibold">{t(k)}</th>)}</tr>
+              <tr>
+                {stolpci(p.skupina).map(([k]) => {
+                  const o = OPIS[k]
+                  return <th key={k} title={o && t(o)} className={`whitespace-nowrap px-3 py-2 font-semibold${o ? ' cursor-help' : ''}`}>{t(k)}</th>
+                })}
+              </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {(p.sezone ?? []).map((s, i) => (
                 <tr key={`${s.sezona}-${s.liga}-${s.klub}-${i}`} className="hover:bg-white/5">
-                  {STOLPCI.map(([k, f]) => <td key={k} className="whitespace-nowrap px-3 py-2 tabular-nums text-slate-300">{f(s)}</td>)}
+                  {stolpci(p.skupina).map(([k, f]) => (
+                    <td key={k} className="whitespace-nowrap px-3 py-2 tabular-nums text-slate-300">
+                      {f(s)}
+                      {k === 'igralec.st.sezona' && s.zaupanje < MALO_PODATKOV && (
+                        <span className="znacka ml-2 bg-white/10 text-slate-300" title={t('iskanje.maloPodatkovOpis')}>{t('iskanje.maloPodatkov')}</span>
+                      )}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
