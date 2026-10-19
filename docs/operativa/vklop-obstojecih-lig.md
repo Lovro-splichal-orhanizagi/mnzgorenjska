@@ -69,6 +69,14 @@ Sveže preverbe za vsako ligo:
   paket, vendar ga izrecno izpusti, ker fiksni obseg izključuje ES in
   paket nikoli ne bere ponudnika.
 
+Izbira `dovoli_vrzeli` (odločitev lastnika 19. 10. 2026): pretekle tekme
+tekoče sezone brez zapisnika in neujemanje golov z izidom se zapišejo v
+`accepted_gaps` namesto HOLD; po vklopu jih dopolni nočni uvoz. Izbira je
+vezana v SHA256 obsega, zato jo morata imeti predogled in vklop. Varovalke
+baze (`preveri_vklop_lige`: kader do 100, največ 70 % privzetih cen,
+menjave, gol brez nastopa) ostanejo. Register od 19. 10. vsebuje tudi vire
+`lowland`, `mascot`, `mlsz` in `hlf`.
+
 Ponovni zagon ne poskuša vklopiti že aktivnih lig (`ALREADY_ACTIVE`). Po
 omrežni napaki pisanja se RPC ne ponavlja; skripta poskusi ponovno branje in
 shrani HOLD z dejanskim stanjem, kjer je dostopno. Ponovni ročni zagon

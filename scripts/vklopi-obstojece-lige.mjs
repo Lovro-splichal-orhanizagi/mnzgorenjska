@@ -12,11 +12,12 @@ export function validateSelection(registry, slugs) {
   if (!slugs.length || new Set(slugs).size !== slugs.length) throw Error('Provide a nonempty explicit list without duplicates.')
   return slugs.map(slug => {
     const candidate = registry.candidates.find(c => c.slug === slug)
-    if (!candidate || !['ncefl','pzpn','wmzpn','eps','sportnet','dbu'].includes(candidate.source) || /^(de|es|hr)-/.test(slug)) throw Error(`Outside fixed existing-league scope: ${slug}`)
+    if (!candidate || !['ncefl','pzpn','wmzpn','eps','sportnet','dbu','lowland','mascot','mlsz','hlf'].includes(candidate.source) || /^(de|es|hr)-/.test(slug)) throw Error(`Outside fixed existing-league scope: ${slug}`)
     return candidate
   }).sort((a,b) => a.slug.localeCompare(b.slug))
 }
-export const approvalDigest = (sha, candidates, sourceContracts = {}) => createHash('sha256').update(JSON.stringify({sha,candidates,sourceContracts})).digest('hex')
+// allowGaps is bound into the approval only when set, so earlier digests stay valid.
+export const approvalDigest = (sha, candidates, sourceContracts = {}, allowGaps = false) => createHash('sha256').update(JSON.stringify({sha,candidates,sourceContracts,...(allowGaps?{allow_gaps:true}:{})})).digest('hex')
 
 export function createTransport({url,key,fetch:request=globalThis.fetch}) {
   const base = new URL('/rest/v1/', url)
@@ -50,7 +51,11 @@ const count = (match,key) => {
   if (!Number.isSafeInteger(value) || value<0) throw Error(`Missing ${key} count for match ${match.id}`)
   return value
 }
-function inspect(candidate,competition,state,season,rounds,matches,now) {
+// allowGaps (owner decision 19. 10. 2026): past reports the source has not
+// published and score/goal mismatches are recorded as accepted_gaps instead
+// of HOLD; the nightly import fills reports in once the league is active.
+function inspect(candidate,competition,state,season,rounds,matches,now,allowGaps=false) {
+  const accepted_gaps={}
   for(const key of ['id','slug','source','source_league_code'])if(competition[key]!==candidate[key])throw Error(`Candidate ${key} changed.`)
   if(competition.source_policy || competition.date_only_deadline_policy)throw Error('Custom or pending source/deadline policy requires its own reviewed route.')
   for(const key of ['aktivnih','privzetih','klubov','najvisja_cena','nastopov_s_klopi','golov_brez_nastopa','krogov_tekoce'])if(!Number.isFinite(Number(state?.[key]))||state[key]==null)throw Error(`Incomplete readiness state: ${key}`)
@@ -65,7 +70,8 @@ function inspect(candidate,competition,state,season,rounds,matches,now) {
   const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Ljubljana',year:'numeric',month:'2-digit',day:'2-digit'}).format(now)
   const roundById=new Map(current.map(r=>[r.id,r]))
   const pastUnimported=currentMatches.filter(m=>!m.imported_at&&!m.kontumacija&&m.vir_brez_izida!==true&&((m.played_on??roundById.get(m.round_id)?.played_on)??'9999')<today)
-  if(pastUnimported.length)throw Error(`Past current fixtures without reports (publication unknown; review required): ${pastUnimported.map(m=>m.id).join(', ')}`)
+  if(pastUnimported.length&&allowGaps)accepted_gaps.past_current_unimported=pastUnimported.map(m=>m.id)
+  else if(pastUnimported.length)throw Error(`Past current fixtures without reports (publication unknown; review required): ${pastUnimported.map(m=>m.id).join(', ')}`)
   if(matches.some(m=>m.statistics_status==='unavailable_historical'))throw Error('Historical statistics policy requires its own reviewed route.')
   let difference=0
   const mismatches=[]
@@ -75,7 +81,8 @@ function inspect(candidate,competition,state,season,rounds,matches,now) {
     difference+=gap
     if(gap!==0)mismatches.push({match_id:m.id,report_id:m.zapisnik_id??null,difference:gap})
   }
-  if(mismatches.length) {
+  if(mismatches.length&&allowGaps)Object.assign(accepted_gaps,{score_goal_difference:difference,score_goal_mismatches:mismatches})
+  else if(mismatches.length) {
     const error=new Error(`Imported match score/goals mismatch (aggregate ${difference}): ${mismatches.map(m=>`${m.match_id}${m.report_id?`/${m.report_id}`:''} (${m.difference})`).join(', ')}`)
     error.evidence={score_goal_difference:difference,score_goal_mismatches:mismatches}
     throw error
@@ -88,9 +95,9 @@ function inspect(candidate,competition,state,season,rounds,matches,now) {
   const first=future.find(r=>r.number>last)
   if(!first || !first.played_on || first.played_on.slice(0,10)<today || first.lineups_locked_at || played.has(first.id) || !currentMatches.some(m=>m.round_id===first.id))throw Error('No unlocked future first round with fixtures and no appearances.')
   if(currentMatches.some(m=>m.round_id===first.id&&(m.imported_at||m.home_goals>0||m.away_goals>0)))throw Error('First future round already has a report/result.')
-  return {season,state_summary:Object.fromEntries(Object.entries(state).filter(([key])=>key!=='igralci')),first_round:first,cheapest_squad:najcenejsiKader(state.igralci),score_goal_difference:difference,past_current_unimported:0,assessment}
+  return {season,state_summary:Object.fromEntries(Object.entries(state).filter(([key])=>key!=='igralci')),first_round:first,cheapest_squad:najcenejsiKader(state.igralci),score_goal_difference:difference,past_current_unimported:pastUnimported.length,...(Object.keys(accepted_gaps).length?{accepted_gaps}:{}),assessment}
 }
-export async function runBatch({candidates,transport,apply=false,now=()=>new Date(),onResult=()=>{}}) {
+export async function runBatch({candidates,transport,apply=false,allowGaps=false,now=()=>new Date(),onResult=()=>{}}) {
   const results=[]
   for(const candidate of candidates) {
     const result={slug:candidate.slug,checked_at:now().toISOString(),status:'HOLD'}
@@ -102,14 +109,14 @@ export async function runBatch({candidates,transport,apply=false,now=()=>new Dat
         const season=await transport.season(candidate)
         const rounds=await transport.rounds(candidate)
         const matches=await transport.matches(candidate)
-        Object.assign(result,inspect(candidate,competition,state,season,rounds,matches,now()))
+        Object.assign(result,inspect(candidate,competition,state,season,rounds,matches,now(),allowGaps))
         if(apply) {
           // The native service RPC and trigger recheck/lock database data in its transaction.
           // Never retry a write after an ambiguous network response; readback is recorded below.
           try {result.activation=await transport.activate(candidate)}
           finally {result.readback=await transport.competition(candidate)}
           if(!result.activation?.vklopljena)throw Error(result.activation?.razlog??'Native activation refused.')
-          if(result.activation.razlika!==0)throw Error('Native activation observed score/goals difference; review persisted state.')
+          if(result.activation.razlika!==(allowGaps?result.score_goal_difference:0))throw Error('Native activation observed score/goals difference; review persisted state.')
           if(!result.readback.active || result.readback.prvi_fantasy_krog!==result.first_round.number || result.activation.prvi_krog!==result.first_round.number)throw Error('Activation readback/start differs; review persisted state.')
           result.status='ACTIVE'
         } else result.status='READY'
@@ -121,18 +128,20 @@ export async function runBatch({candidates,transport,apply=false,now=()=>new Dat
 }
 async function main() {
   const args=process.argv.slice(2);const mode=args.shift()
-  if(!['preview','apply','refresh'].includes(mode))throw Error('Use preview|apply|refresh --lige <explicit,candidates> --expected-sha <40hex> [--approved-sha256 <digest>] [--output <directory>]')
+  if(!['preview','apply','refresh'].includes(mode))throw Error('Use preview|apply|refresh --lige <explicit,candidates> --expected-sha <40hex> [--approved-sha256 <digest>] [--dovoli-vrzeli] [--output <directory>]')
   const options={}
-  while(args.length) {const flag=args.shift();if(!['--lige','--expected-sha','--approved-sha256','--output'].includes(flag)||!args.length)throw Error(`Invalid option: ${flag}`);options[flag]=args.shift()}
+  while(args.length) {const flag=args.shift();if(flag==='--dovoli-vrzeli'){options[flag]=true;continue};if(!['--lige','--expected-sha','--approved-sha256','--output'].includes(flag)||!args.length)throw Error(`Invalid option: ${flag}`);options[flag]=args.shift()}
   const registry=JSON.parse(readFileSync(registryPath,'utf8'))
   const candidates=validateSelection(registry,(options['--lige']??'').split(',').map(s=>s.trim()).filter(Boolean))
+  const allowGaps=options['--dovoli-vrzeli']===true
+  if(allowGaps&&mode==='refresh')throw Error('--dovoli-vrzeli applies to preview/apply only.')
   if(mode==='refresh')validateRefreshSelection(candidates)
   const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()
   if(!/^[a-f0-9]{40}$/.test(options['--expected-sha']??'')||options['--expected-sha']!==sha)throw Error('Exact checked-out --expected-sha is required.')
   const sourceContracts=Object.fromEntries([...new Set(candidates.map(c=>c.source))].sort().map(s=>[s,registry.source_contracts[s]]))
-  const digest=approvalDigest(sha,candidates,sourceContracts)
+  const digest=approvalDigest(sha,candidates,sourceContracts,allowGaps)
   const output=resolve(options['--output']??'release/obstojece-lige');mkdirSync(output,{recursive:true})
-  writeFileSync(resolve(output,'scope.json'),JSON.stringify({sha,approval_sha256:digest,candidates,source_contracts:sourceContracts},null,2)+'\n')
+  writeFileSync(resolve(output,'scope.json'),JSON.stringify({sha,approval_sha256:digest,allow_gaps:allowGaps,candidates,source_contracts:sourceContracts},null,2)+'\n')
   console.log(`Scope approval SHA256: ${digest}`)
   if(process.env.GITHUB_ACTIONS!=='true'||process.env.GITHUB_REF!=='refs/heads/main'||process.env.GITHUB_SHA!==sha)throw Error('Preview/apply require GitHub Actions on exact main commit.')
   if(mode!=='preview') {
@@ -148,7 +157,7 @@ async function main() {
     const progressPath=resolve(output,'refresh-progress.jsonl');writeFileSync(progressPath,'')
     refresh=await runRefreshBatch({candidates,transport,onProgress:r=>appendFileSync(progressPath,JSON.stringify(r)+'\n'),onResult:r=>{appendFileSync(path,JSON.stringify(r)+'\n');console.log(`${r.status}: ${r.slug}${r.reason?` — ${r.reason}`:''}`)}})
   }
-  const results=await runBatch({candidates,transport,apply:mode==='apply',onResult:result=>{
+  const results=await runBatch({candidates,transport,apply:mode==='apply',allowGaps,onResult:result=>{
     const r=refresh.find(r=>r.slug===result.slug)
     if(r) {
       result.refresh=r

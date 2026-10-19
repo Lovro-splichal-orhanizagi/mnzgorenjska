@@ -25,6 +25,22 @@
     "dbu": {
       "document": "docs/viri/danska.md",
       "permission": "Lovro written permission October 2026; copy not yet in info archive. No protected/robots-disallowed access. Stop on request or technical denial."
+    },
+    "lowland": {
+      "document": "docs/viri/skotska.md",
+      "permission": "Lovro written permission October 2026. Permission does not cover technical protection: stop on 401/403/429 or challenge."
+    },
+    "mascot": {
+      "document": "docs/viri/grcija.md",
+      "permission": "Lovro written permission October 2026 (Mascotnet). Stop on 401/403/429, challenge or withdrawal."
+    },
+    "mlsz": {
+      "document": "docs/viri/madzarska.md",
+      "permission": "Existing public adatbank contract, robots allows reading, no recorded explicit permission. Stop on challenge or CAPTCHA."
+    },
+    "hlf": {
+      "document": "docs/viri/romunija.md",
+      "permission": "Owner approved source 10 October 2026, no robots.txt. Stop on challenge, CAPTCHA, 401/403/429 or login."
     }
   },
   "candidates": [
@@ -285,6 +301,468 @@
       "slug": "sk-sk-u19",
       "source": "sportnet",
       "source_league_code": "ondavsky-futbalovy-zvaz.futbalnet.sk/6a1d3d3a44ff24612e4977db"
+    },
+    {
+      "id": 502,
+      "slug": "ro-ab-l4-s1",
+      "source": "hlf",
+      "source_league_code": "judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-1"
+    },
+    {
+      "id": 501,
+      "slug": "ro-ab-l4-s2",
+      "source": "hlf",
+      "source_league_code": "judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2"
+    },
+    {
+      "id": 500,
+      "slug": "ro-ab-l5-s1",
+      "source": "hlf",
+      "source_league_code": "judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-1"
+    },
+    {
+      "id": 499,
+      "slug": "ro-ab-l5-s2",
+      "source": "hlf",
+      "source_league_code": "judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-2"
+    },
+    {
+      "id": 503,
+      "slug": "ro-ab-superliga",
+      "source": "hlf",
+      "source_league_code": "judetean/alba/fotbal/2026-2027/superliga-ajf-alba/sezon-regular/1"
+    },
+    {
+      "id": 504,
+      "slug": "ro-bh-l4",
+      "source": "hlf",
+      "source_league_code": "judetean/bihor/fotbal/2026-2027/liga-4/sezon-regular/tur-preliminar"
+    },
+    {
+      "id": 510,
+      "slug": "ro-cj-l4",
+      "source": "hlf",
+      "source_league_code": "judetean/cluj/fotbal/2026-2027/liga-4-cluj/sezon-regular/grupa-a"
+    },
+    {
+      "id": 505,
+      "slug": "ro-cj-l5-campia-turzii",
+      "source": "hlf",
+      "source_league_code": "judetean/cluj/fotbal/2026-2027/liga-5-campia-turzii/sezon-regular/grupa-a"
+    },
+    {
+      "id": 506,
+      "slug": "ro-cj-l5-dej",
+      "source": "hlf",
+      "source_league_code": "judetean/cluj/fotbal/2026-2027/liga-5-dej/sezon-regular/grupa-a"
+    },
+    {
+      "id": 509,
+      "slug": "ro-cj-l5-g1",
+      "source": "hlf",
+      "source_league_code": "judetean/cluj/fotbal/2026-2027/liga-5-cluj---grupa-1/sezon-regular/grupa-1"
+    },
+    {
+      "id": 508,
+      "slug": "ro-cj-l5-g2",
+      "source": "hlf",
+      "source_league_code": "judetean/cluj/fotbal/2026-2027/liga-5-cluj---grupa-2/sezon-regular/grupa-2"
+    },
+    {
+      "id": 507,
+      "slug": "ro-cj-l5-gherla",
+      "source": "hlf",
+      "source_league_code": "judetean/cluj/fotbal/2026-2027/liga-5-gherla/sezon-regular/grupa-a"
+    },
+    {
+      "id": 512,
+      "slug": "ro-hd-l4",
+      "source": "hlf",
+      "source_league_code": "judetean/hunedoara/fotbal/2026-2027/liga-4/sezon-regular/serie-1"
+    },
+    {
+      "id": 511,
+      "slug": "ro-hd-l5",
+      "source": "hlf",
+      "source_league_code": "judetean/hunedoara/fotbal/2026-2027/liga-5/campionat/serie-1"
+    },
+    {
+      "id": 498,
+      "slug": "ro-liga2",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/liga-2-casa-pariurilor/sezon-regular/seria-1"
+    },
+    {
+      "id": 497,
+      "slug": "ro-liga3-s1",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1"
+    },
+    {
+      "id": 496,
+      "slug": "ro-liga3-s2",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-2"
+    },
+    {
+      "id": 495,
+      "slug": "ro-liga3-s3",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-3"
+    },
+    {
+      "id": 494,
+      "slug": "ro-liga3-s4",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-4"
+    },
+    {
+      "id": 493,
+      "slug": "ro-liga3-s5",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-5"
+    },
+    {
+      "id": 492,
+      "slug": "ro-liga3-s6",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-6"
+    },
+    {
+      "id": 491,
+      "slug": "ro-liga3-s7",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-7"
+    },
+    {
+      "id": 490,
+      "slug": "ro-liga3-s8",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-8"
+    },
+    {
+      "id": 513,
+      "slug": "ro-ph-l4",
+      "source": "hlf",
+      "source_league_code": "judetean/prahova/fotbal/2026-2027/liga-a-4-a-prahova/sezon-regular/serie-1"
+    },
+    {
+      "id": 488,
+      "slug": "ro-sb-superliga",
+      "source": "hlf",
+      "source_league_code": "judetean/sibiu/fotbal/2026-2027/superliga/sezon-regular/serie-1"
+    },
+    {
+      "id": 489,
+      "slug": "ro-superliga",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superliga/sezon-regular/serie-1"
+    },
+    {
+      "id": 897,
+      "slug": "gb-lowland-east",
+      "source": "lowland",
+      "source_league_code": "slfl/2026-2027/54193157"
+    },
+    {
+      "id": 898,
+      "slug": "gb-lowland-west",
+      "source": "lowland",
+      "source_league_code": "slfl/2026-2027/54193424"
+    },
+    {
+      "id": 882,
+      "slug": "gr-ach-a-1",
+      "source": "mascot",
+      "source_league_code": "epsachaias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 881,
+      "slug": "gr-ach-a-2",
+      "source": "mascot",
+      "source_league_code": "epsachaias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 880,
+      "slug": "gr-ach-b-1",
+      "source": "mascot",
+      "source_league_code": "epsachaias.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 879,
+      "slug": "gr-ach-b-2",
+      "source": "mascot",
+      "source_league_code": "epsachaias.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 887,
+      "slug": "gr-dra-a",
+      "source": "mascot",
+      "source_league_code": "epsdramas.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)"
+    },
+    {
+      "id": 886,
+      "slug": "gr-dra-b-a",
+      "source": "mascot",
+      "source_league_code": "epsdramas.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - Α ΟΜΙΛΟΣ (ΠΡΩΤΑΘΛΗΜΑ)"
+    },
+    {
+      "id": 885,
+      "slug": "gr-dra-b-b",
+      "source": "mascot",
+      "source_league_code": "epsdramas.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - Β ΟΜΙΛΟΣ (ΠΡΩΤΑΘΛΗΜΑ)"
+    },
+    {
+      "id": 896,
+      "slug": "gr-ima-a",
+      "source": "mascot",
+      "source_league_code": "eps-imathias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ ΚΑΤΗΓΟΡΙΑ ΚΑΝΟΝΙΚΗ ΠΕΡΙΟΔΟΣ"
+    },
+    {
+      "id": 895,
+      "slug": "gr-ima-b",
+      "source": "mascot",
+      "source_league_code": "eps-imathias.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ ΚΑΤΗΓΟΡΙΑ ΚΑΝΟΝΙΚΗ ΠΕΡΙΟΔΟΣ"
+    },
+    {
+      "id": 891,
+      "slug": "gr-ker-a",
+      "source": "mascot",
+      "source_league_code": "epskerkyras.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ"
+    },
+    {
+      "id": 890,
+      "slug": "gr-ker-b",
+      "source": "mascot",
+      "source_league_code": "epskerkyras.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ"
+    },
+    {
+      "id": 889,
+      "slug": "gr-koz-a",
+      "source": "mascot",
+      "source_league_code": "epskozanis.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)"
+    },
+    {
+      "id": 888,
+      "slug": "gr-koz-b",
+      "source": "mascot",
+      "source_league_code": "epskozanis.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)"
+    },
+    {
+      "id": 894,
+      "slug": "gr-les-a-lesvos",
+      "source": "mascot",
+      "source_league_code": "epsl.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΟΜΙΛΟΣ ΛΕΣΒΟΥ)"
+    },
+    {
+      "id": 893,
+      "slug": "gr-les-a-limnos",
+      "source": "mascot",
+      "source_league_code": "epsl.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΟΜΙΛΟΣ ΛΗΜΝΟΥ)"
+    },
+    {
+      "id": 892,
+      "slug": "gr-les-b",
+      "source": "mascot",
+      "source_league_code": "epsl.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ ΛΕΣΒΟΥ"
+    },
+    {
+      "id": 877,
+      "slug": "gr-mak-a-1",
+      "source": "mascot",
+      "source_league_code": "epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 876,
+      "slug": "gr-mak-a-2",
+      "source": "mascot",
+      "source_league_code": "epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 875,
+      "slug": "gr-mak-a-3",
+      "source": "mascot",
+      "source_league_code": "epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 3ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 878,
+      "slug": "gr-mak-a1",
+      "source": "mascot",
+      "source_league_code": "epsm.gr:Α1 ΕΡΑΣΙΤΕΧΝΙΚΗ"
+    },
+    {
+      "id": 874,
+      "slug": "gr-mak-b-1",
+      "source": "mascot",
+      "source_league_code": "epsm.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 873,
+      "slug": "gr-mak-b-2",
+      "source": "mascot",
+      "source_league_code": "epsm.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 872,
+      "slug": "gr-mak-b-3",
+      "source": "mascot",
+      "source_league_code": "epsm.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 3ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 871,
+      "slug": "gr-mak-b-4",
+      "source": "mascot",
+      "source_league_code": "epsm.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 4ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 870,
+      "slug": "gr-mak-g-1",
+      "source": "mascot",
+      "source_league_code": "epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 869,
+      "slug": "gr-mak-g-2",
+      "source": "mascot",
+      "source_league_code": "epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 868,
+      "slug": "gr-mak-g-3",
+      "source": "mascot",
+      "source_league_code": "epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 3ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 867,
+      "slug": "gr-mak-g-4",
+      "source": "mascot",
+      "source_league_code": "epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 4ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 866,
+      "slug": "gr-mak-g-5",
+      "source": "mascot",
+      "source_league_code": "epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 5ος ΟΜΙΛΟΣ"
+    },
+    {
+      "id": 883,
+      "slug": "gr-pel-a",
+      "source": "mascot",
+      "source_league_code": "epspellas.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ"
+    },
+    {
+      "id": 884,
+      "slug": "gr-pel-a1",
+      "source": "mascot",
+      "source_league_code": "epspellas.gr:Α1 ΕΡΑΣΙΤΕΧΝΙΚΗ"
+    },
+    {
+      "id": 615,
+      "slug": "hu-ba-u19-2",
+      "source": "mlsz",
+      "source_league_code": "67/2/33847"
+    },
+    {
+      "id": 619,
+      "slug": "hu-baz-u19-2-kozep",
+      "source": "mlsz",
+      "source_league_code": "67/4/34094"
+    },
+    {
+      "id": 614,
+      "slug": "hu-bk-u19-del",
+      "source": "mlsz",
+      "source_league_code": "67/1/33679"
+    },
+    {
+      "id": 613,
+      "slug": "hu-bk-u19-eszak",
+      "source": "mlsz",
+      "source_league_code": "67/1/33680"
+    },
+    {
+      "id": 612,
+      "slug": "hu-bk-u19-kozep",
+      "source": "mlsz",
+      "source_league_code": "67/1/33681"
+    },
+    {
+      "id": 624,
+      "slug": "hu-bp-u19-1",
+      "source": "mlsz",
+      "source_league_code": "67/5/33817"
+    },
+    {
+      "id": 623,
+      "slug": "hu-bp-u19-2",
+      "source": "mlsz",
+      "source_league_code": "67/5/34361"
+    },
+    {
+      "id": 626,
+      "slug": "hu-cs-u19-szalai",
+      "source": "mlsz",
+      "source_league_code": "67/6/33880"
+    },
+    {
+      "id": 625,
+      "slug": "hu-cs-u19-toth",
+      "source": "mlsz",
+      "source_league_code": "67/6/34102"
+    },
+    {
+      "id": 639,
+      "slug": "hu-pe-u19-a",
+      "source": "mlsz",
+      "source_league_code": "67/14/34248"
+    },
+    {
+      "id": 637,
+      "slug": "hu-pe-u19-c",
+      "source": "mlsz",
+      "source_league_code": "67/14/34250"
+    },
+    {
+      "id": 636,
+      "slug": "hu-pe-u19-d",
+      "source": "mlsz",
+      "source_league_code": "67/14/34387"
+    },
+    {
+      "id": 635,
+      "slug": "hu-pe-u19-e",
+      "source": "mlsz",
+      "source_league_code": "67/14/34252"
+    },
+    {
+      "id": 463,
+      "slug": "hu-to-3-nyugat",
+      "source": "mlsz",
+      "source_league_code": "67/17/34465"
+    },
+    {
+      "id": 657,
+      "slug": "hu-u19-orszagos-alap",
+      "source": "mlsz",
+      "source_league_code": "67/0/33758"
+    },
+    {
+      "id": 658,
+      "slug": "hu-u19-orszagos-kiemelt",
+      "source": "mlsz",
+      "source_league_code": "67/0/34125"
+    },
+    {
+      "id": 470,
+      "slug": "hu-ve-3-del",
+      "source": "mlsz",
+      "source_league_code": "67/19/34246"
+    },
+    {
+      "id": 475,
+      "slug": "hu-za-3-kozep",
+      "source": "mlsz",
+      "source_league_code": "67/20/34240"
     }
   ]
 }
