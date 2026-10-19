@@ -11438,7 +11438,7 @@ preveri(
   const zEnE = E.sestaviOpomnikBrezEkipe('en', { display_name: 'Ana', liga: null, rok: null })
   preveri('e-pošta: brez ekipe brez lige ne imenuje lige',
     zEnE.naslov === 'SLFF: your team is still waiting' && zEnE.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
-      !zEnE.html.includes('t=') && !slovensko.test(zEnE.html), zEnE.naslov)
+      !/[?&;]t=/.test(zEnE.html) && !slovensko.test(zEnE.html), zEnE.naslov)
   const tujiE = ['sk', 'hr', 'cs', 'hu', 'de', 'sr', 'ro', 'et', 'pl', 'es', 'lv', 'mk', 'el', 'tr', 'uk', 'hy', 'az', 'da', 'en']
     .map((j) => [j, E.sestaviOpomnikBrezEkipe(j, { display_name: null, liga: sk, rok })])
   preveri('e-pošta: brez ekipe v vseh jezikih brez slovenščine',
@@ -13115,6 +13115,12 @@ preveri(
     !sl.besedilo.includes('Popust') &&
     trgovinaMail('potrditev', { ...n, znesek_skupaj: 3390 }, 'x').besedilo.includes('Popust: −20,00 €') &&
     trgovinaMail('potrditev', { ...n, jezik: 'en', znesek_skupaj: 3390 }, 'x').besedilo.includes('Discount: −€20.00'))
+  preveri('trgovina mail: html v skupni obliki (logo, skupaj, SHOP, brez nezamenjanih {})',
+    [sl, en].every((m) => m.html.includes('https://slff.eu/logo/slff-ikona-180.png') && m.html.includes('SHOP') && !m.html.includes('{')) &&
+      sl.html.includes('53,90 €') && en.html.includes('RR123456789SI'))
+  preveri('trgovina mail: en obrazec za odstop v angleščini',
+    trgovinaMail('potrditev', { ...n, jezik: 'en' }, 'x').besedilo.includes('Withdrawal form: x/withdrawal') &&
+      !trgovinaMail('potrditev', { ...n, jezik: 'en' }, 'x').besedilo.includes('Obrazec'))
   preveri('trgovina mail: telefon in različica pogojev kot v trgovini', trgovinaTelefonMail === trgovinaTelefon && trgovinaVerzijaMail === trgovinaVerzija)
   // Trajni nosilec: potrditev nosi celoten pouk o odstopu in vzorčni obrazec v jeziku naročila.
   const enP = trgovinaMail('potrditev', { ...n, jezik: 'en' }, 'https://shop.slff.eu')
