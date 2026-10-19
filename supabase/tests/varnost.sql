@@ -4316,7 +4316,6 @@ select set_config('test.trg5', (trgovina_rezerviraj('[{"razlicica_id":-916003,"k
   encode(sha256('trg5'), 'hex'))->>'narocilo_id'), true);
 reset role;
 select set_config('test.trg3_oznaka', (select javna_oznaka from trgovina.narocila where id = current_setting('test.trg3')::bigint), true);
-select set_config('test.trg_najnovejse', (select id::text from trgovina.narocila order by created_at desc, id desc limit 1), true);
 select set_config('test.trg5_voljo', (select na_voljo::text from trgovina.razpolozljivo where razlicica_id = -916003), true);
 set local role anon;
 select pg_temp.zavrnjeno('trgovina4: anon ne vidi vseh narocil', $$select trgovina_admin_vsa_narocila()$$);
@@ -4392,10 +4391,15 @@ select pg_temp.preveri('trgovina4: iskanje po e-posti in filter stanja',
   and (trgovina_admin_vsa_narocila('placano', 'tretji@example') ->> 'skupaj')::int = 0);
 select pg_temp.preveri('trgovina4: % in _ v iskanju sta navadna znaka',
   (trgovina_admin_vsa_narocila(null, '%%_%') ->> 'skupaj')::int = 0);
+-- Neodvisno od drugih naročil v bazi: velikost strani, odmik in padajoč vrstni red.
 select pg_temp.preveri('trgovina4: stran in najnovejse najprej',
-  jsonb_array_length(trgovina_admin_vsa_narocila(null, null, 0, 2)->'narocila') = 2
-  and (trgovina_admin_vsa_narocila(null, null, 0, 1)->'narocila'->0->>'id')::bigint
-      = current_setting('test.trg_najnovejse')::bigint);
+  (with v as (select trgovina_admin_vsa_narocila(null, null, 0, 3)->'narocila' as a)
+   select jsonb_array_length(a) = 3
+      and (a->0->>'created_at')::timestamptz >= (a->1->>'created_at')::timestamptz
+      and (a->1->>'created_at')::timestamptz >= (a->2->>'created_at')::timestamptz
+      and trgovina_admin_vsa_narocila(null, null, 0, 1)->'narocila'->0->'id' = a->0->'id'
+      and trgovina_admin_vsa_narocila(null, null, 1, 1)->'narocila'->0->'id' = a->1->'id'
+     from v));
 reset role;
 select set_config('request.jwt.claim.sub','',true);
 select pg_temp.preveri('trgovina4: cakajoce narocilo drzi rezervacijo',
