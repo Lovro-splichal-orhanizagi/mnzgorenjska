@@ -30,10 +30,12 @@ import { unattributedYellowEvents } from '../src/lib/nepripisaniRumeni.mjs'
 import { prestopSkladen, posvojiBrezSifre } from './prestop.mjs'
 
 // Vir je zavrnil (jalgpall: 403, 429, izziv): izhod 4, da nočna zanka države
-// ne bere naprej (uvoz-zapisnikov.yml). Ostale napake ostanejo izhod 1.
+// ne bere naprej (uvoz-zapisnikov.yml). Izhod 5: vir je nedosegljiv (HTTP 5xx,
+// npr. 522 pri fss.rs, tudi po ponovitvah) — to ni napaka uvoza, nocni-uvoz.sh
+// ga javi kot "vir ne dela". Ostale napake ostanejo izhod 1.
 process.on('uncaughtException', (e) => {
   console.error(e)
-  process.exit(e?.zavrnitev ? 4 : 1)
+  process.exit(e?.zavrnitev ? 4 : e?.status >= 500 && e.status <= 599 ? 5 : 1)
 })
 
 /** Nepopolna tekma: prvo opozorilo se začne z `NEPOPOLN` (glej viri/frf.mjs). */

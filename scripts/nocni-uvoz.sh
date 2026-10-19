@@ -17,6 +17,10 @@
 #     poskus, če je čas.
 #   - Izhod 4 = vir je zavrnil (403, 429, izziv): tega vira ne beremo naprej,
 #     drugih virov koša pa.
+#   - Izhod 5 = vir je nedosegljiv (HTTP 5xx/522 tudi po ponovitvah): to ni
+#     napaka naše kode. Koš ga javi kot opozorilo "vir ne dela", ne pade, lige
+#     tega vira ta zagon preskoči; liga ni zabeležena kot osvežena, zato je
+#     naslednji zagon spet prvi na vrsti.
 #   - Izhod 3 uvoza razporeda = razpored ima klub manj kot baza (izstop ali
 #     okrnjena stran): uvoz je uspel, liga ni padla, koš izpiše opozorilo.
 set -uo pipefail
@@ -37,26 +41,34 @@ zacetek=$(date +%s)
 minut() { echo $(( ($(date +%s) - zacetek) / 60 )); }
 
 zavrnjeni=" "   # viri, ki so ta zagon vrnili 403/429/izziv
+nedosegljivi=" " # viri, ki so ta zagon vrnili 5xx (vir je dol)
 zadnji_izhod=0
 teci() { "$@" </dev/null; zadnji_izhod=$?; return "$zadnji_izhod"; }
 
-# uvozi <liga> <faktor> <vir> → 0 v redu, 1 napaka, 4 vir je zavrnil
+# uvozi <liga> <faktor> <vir> → 0 v redu, 1 napaka, 4 vir je zavrnil, 5 vir je dol
 uvozi() {
-  local liga=$1 ok=1 zavrnil=0
+  local liga=$1 ok=1 zavrnil=0 dol=0
   export SLFF_PREMOR_FAKTOR=$2
   # Izhod 3: klub manjka v razporedu (izstop?) — odloči človek, liga ni padla.
   teci node scripts/uvoz-razporeda.mjs --tekmovanje "$liga" --pisi || case $zadnji_izhod in
     3) odlocitve="$odlocitve $liga" ;;
     4) ok=0; zavrnil=1 ;;
+    5) dol=1 ;;
     *) ok=0 ;;
   esac
   node scripts/uvoz-delegiranja.mjs --tekmovanje "$liga" --pisi </dev/null || ok=0
   rm -f /tmp/uvozenih
   local dodatno=""
   [ "$URNI" = 1 ] && dodatno="--samo-dotaknjene"
-  if [ "$zavrnil" = 0 ]; then
-    teci node scripts/uvoz-zapisnikov.mjs --tekmovanje "$liga" --sveze 21 --porocilo /tmp/uvozenih $dodatno || { ok=0; [ "$zadnji_izhod" = 4 ] && zavrnil=1; }
+  if [ "$zavrnil" = 0 ] && [ "$dol" = 0 ]; then
+    teci node scripts/uvoz-zapisnikov.mjs --tekmovanje "$liga" --sveze 21 --porocilo /tmp/uvozenih $dodatno || case $zadnji_izhod in
+      4) ok=0; zavrnil=1 ;;
+      5) dol=1 ;;
+      *) ok=0 ;;
+    esac
   fi
+  # Vir je dol: ostali koraki bi bili brez zapisnikov, liga ni uvožena.
+  [ "$dol" = 1 ] && return 5
   # Prestopi so poročilo; vir, ki jih ne objavlja, se konča z 0.
   node scripts/uvoz-registracij.mjs --tekmovanje "$liga" </dev/null || ok=0
   # Novi igralci pridejo le z novimi zapisniki. Brez poročila (uvoz je padel
@@ -75,12 +87,17 @@ uvozi() {
 }
 
 padle=""
+vir_dol=""     # vir vrača 5xx: povzetek na koncu, koš zaradi tega ne pade
 odlocitve=""   # razpored ima klub manj kot baza: izstop kluba ali --dovoli-manj-klubov
 zacasno=""      # padle v prvem krogu, za ponovni poskus: "liga faktor vir"
 preskocene=""
 while read -r liga faktor vir; do
   [ -n "$liga" ] || continue
   if [ "$(minut)" -ge "$ROK_MIN" ]; then preskocene="$preskocene $liga"; continue; fi
+  if [[ "$nedosegljivi" == *" $vir "* ]]; then
+    echo "::warning title=Vir ne dela::$liga preskočena — vir $vir je ta zagon vrnil 5xx"
+    vir_dol="$vir_dol $liga"; continue
+  fi
   if [[ "$zavrnjeni" == *" $vir "* ]]; then
     echo "::warning title=Vir je zavrnil::$liga preskočena — vir $vir je ta zagon že zavrnil"
     padle="$padle $liga"; continue
@@ -89,6 +106,8 @@ while read -r liga faktor vir; do
   uvozi "$liga" "$faktor" "$vir"; izid=$?
   echo "::endgroup::"
   case $izid in
+    5) echo "::warning title=Vir ne dela::$liga — vir $vir vrača 5xx (nedosegljiv); ostale lige tega vira preskočene, ni napaka uvoza"
+       nedosegljivi="$nedosegljivi$vir "; vir_dol="$vir_dol $liga" ;;
     0) echo "$liga: v redu"; node scripts/nocni-kosi.mjs --zabelezi "$liga" --stanje "$STANJE" ;;
     4) echo "::error title=Vir je zavrnil::$liga — vir $vir je vrnil 403/429 ali izziv; ostale lige tega vira preskočene, ne obhajamo"
        zavrnjeni="$zavrnjeni$vir "; padle="$padle $liga" ;;
@@ -116,6 +135,11 @@ done <<< "$zacasno"
 if [ -n "$preskocene" ]; then
   # Ni napaka: naslednji zagon začne prav pri njih (najdlje neosvežene prve).
   echo "::warning title=Zmanjkalo časa::po $ROK_MIN min niso prišle na vrsto:$preskocene"
+fi
+if [ -n "$vir_dol" ]; then
+  # Ni padec: vir je dol, ne mi. Ostane viden v povzetku zagona.
+  echo "::warning title=Viri ne delajo::lige brez uvoza, ker vir vrača 5xx:$vir_dol"
+  [ -n "${GITHUB_STEP_SUMMARY:-}" ] && echo "### Viri ne delajo (5xx) — koš $DRZAVA $KOS/$KOSOV"$'\n'"Lige brez uvoza:$vir_dol" >> "$GITHUB_STEP_SUMMARY"
 fi
 if [ -n "$odlocitve" ]; then
   echo "::warning title=Klub manjka v razporedu::$(echo $odlocitve | tr ' ' '\n' | sort -u | tr '\n' ' ')— izstop kluba (delovni tok Izstop kluba), uvoz z --dovoli-manj-klubov ali le okrnjena stran vira (naslednji zagon jo prebere znova)"

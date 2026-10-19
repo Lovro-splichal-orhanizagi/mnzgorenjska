@@ -319,4 +319,7 @@ if (process.argv.includes('--discord') && env.DISCORD_WEBHOOK) {
   }
 }
 
-process.exit(1)
+// Najdene težave niso padec preverbe: gredo v povzetek (Discord), izhod je 0.
+// Izhod 1 ostane za prave padce (baza, manjkajoč ključ), da rdeč zagon pomeni
+// "preverba sama ne dela", ne "podatki imajo težave".
+process.exit(0)
