@@ -105,11 +105,11 @@ Izvoz serije (obstoječi admin "Za tisk") za vsako postavko izriše predlogo
 s polji v **mm in z obrobo za rez**, SVG + PNG 300 dpi, ime datoteke z
 oznako naročila, cono in postopkom; CSV dobi stolpca motiv in postopek.
 
-## Cene (predlog; lastnik spremeni v adminu)
+## Cene (premium, lastnik 19. 10. 2026; spremeni v adminu)
 
-Majica 27 + motiv 8, pulover 55 + 8, kozarec 12 + 6, vrč 18 + 6, podstavki
-×6 15 (motiv v ceni), odpirač 9 + 4, plakat A3 19 / A2 29, zastavica 15,
-satenast šal 25, kapa 24 + 6, trak 12.
+Majica 27 + motiv 15, pulover 55 + 15, kozarec 12 + 9, vrč 18 + 9, podstavki
+×6 22 (motiv v ceni), odpirač 9 + 6, plakat A3 29 / A2 45 (motiv v ceni),
+kartica igralca 15, zastavica 22, satenast šal 35, kapa 24 + 10, trak 18.
 
 ## Testi
 

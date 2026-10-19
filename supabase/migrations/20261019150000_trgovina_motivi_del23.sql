@@ -8,7 +8,9 @@
 -- * vrsta polja `postava`: vrednost je id kupčeve nehišne ekipe (ne mladinske
 --   lige); postavka shrani posnetek zadnjega zaklenjenega kroga (fantasy_lineups),
 --   da tisk ne zavisi od kasnejših sprememb. Isti posnetek za živi predogled
---   vrne public.trgovina_moja_postava(p_team_id).
+--   vrne public.trgovina_moja_postava(p_team_id). Ime ekipe na kozarcu,
+--   podstavkih, zastavici in šalu je prosto besedilo (pravo ime kluba iz
+--   nedeljske lige); pravilo mladinskih lig zato velja za polje postava.
 -- * vrsta polja `datum` (ISO "YYYY-MM-DD", 1950 do leto naprej) in `min` pri
 --   `stevilka` (ocene na kartici 1–99).
 -- * cona po različici: plakat A3/A2 uporabi obstoječi stolpec cone.barva
@@ -64,8 +66,9 @@ $$;
 -- --------------------------------------------------------------------------
 -- Posnetek postave
 -- --------------------------------------------------------------------------
--- Zadnji zaklenjen krog ekipe (rounds.lineups_locked_at, posnetek v
--- fantasy_lineups), le za lastnika, ne hišne, ne mladinske lige. Oblika:
+-- Zadnji zaklenjen krog ekipe s točkami (rounds.lineups_locked_at, posnetek v
+-- fantasy_lineups, vsaj en igralec postave ima player_scores; zaklenjen, a še
+-- neodigran krog se preskoči), le za lastnika, ne hišne, ne mladinske lige. Oblika:
 -- {fantasy_team_id, round_id, ekipa, liga, sezona, krog, formacija "4-4-2",
 --  tocke (krog ekipe iz tocke_krogov, null dokler ni izračunan),
 --  zacetni: [{ime, priimek, pozicija, klub, tocke, kapetan, podkapetan}] (GK, DEF, MID, FWD),
@@ -97,11 +100,13 @@ begin
   select r.* into v_krog
     from public.rounds r
    where r.competition_id = ft.competition_id and r.lineups_locked_at is not null
-     and exists (select 1 from public.fantasy_lineups l where l.round_id = r.id and l.fantasy_team_id = ft.id)
+     and exists (select 1 from public.fantasy_lineups l
+                   join public.player_scores s on s.round_id = l.round_id and s.player_id = l.player_id
+                  where l.round_id = r.id and l.fantasy_team_id = ft.id)
    order by r.deadline_at desc nulls last, r.id desc
    limit 1;
   if v_krog.id is null then
-    raise exception 'Trgovina: ekipa še nima zaklenjenega kroga.' using hint = 'trgovina-personalizacija';
+    raise exception 'Trgovina: ekipa še nima zaklenjenega kroga s točkami.' using hint = 'trgovina-personalizacija';
   end if;
 
   with igralci as (
@@ -455,16 +460,16 @@ from trgovina.izdelki i
 join (values
   ('kozarec-po-meri',   '0,5 l',        '0.5 l',       'KZM-1',   1200, 450, 1),
   ('vrc-po-meri',       '0,5 l',        '0.5 l',       'VRM-1',   1800, 700, 1),
-  ('podstavki-po-meri', 'Komplet 6',    'Set of 6',    'PDS-6',   1500, 120, 1),
+  ('podstavki-po-meri', 'Komplet 6',    'Set of 6',    'PDS-6',   2200, 120, 1),
   ('odpirac-po-meri',   'Ena velikost', 'One size',    'ODM-1',    900,  60, 1),
-  ('plakat-po-meri',    'A3',           'A3',          'PLM-A3',  1900, 250, 1),
-  ('plakat-po-meri',    'A2',           'A2',          'PLM-A2',  2900, 350, 2),
-  ('kartica-igralca',   'A5',           'A5',          'KIG-A5',   900,  40, 1),
-  ('zastavica-po-meri', 'Ena velikost', 'One size',    'ZSM-1',   1500,  80, 1),
-  ('sal-po-meri',       'Ena velikost', 'One size',    'SLM-1',   2500, 150, 1),
+  ('plakat-po-meri',    'A3',           'A3',          'PLM-A3',  2900, 250, 1),
+  ('plakat-po-meri',    'A2',           'A2',          'PLM-A2',  4500, 350, 2),
+  ('kartica-igralca',   'A5',           'A5',          'KIG-A5',  1500,  40, 1),
+  ('zastavica-po-meri', 'Ena velikost', 'One size',    'ZSM-1',   2200,  80, 1),
+  ('sal-po-meri',       'Ena velikost', 'One size',    'SLM-1',   3500, 150, 1),
   ('kapa-po-meri',      'Črna',         'Black',       'KPM-CRN', 2400, 120, 1),
   ('kapa-po-meri',      'Bela-črna',    'White-black', 'KPM-BCR', 2400, 120, 2),
-  ('trak-po-meri',      'Ena velikost', 'One size',    'TRM-1',   1200,  30, 1)
+  ('trak-po-meri',      'Ena velikost', 'One size',    'TRM-1',   1800,  30, 1)
 ) x(slug, sl, en, sku, cena, teza, n) on x.slug = i.slug
 where not exists (select 1 from trgovina.razlicice r where r.izdelek_id = i.id);
 
@@ -511,7 +516,7 @@ insert into trgovina.motivi (slug, ime_sl, ime_en, opis_sl, opis_en, cona, polja
  'Ime tvoje ekipe in leto ustanovitve, kot na grbu starega kluba. Za vitrino ali za vsako nedeljo.',
  'Your team name and the year it was founded, like the crest of an old club. For the cabinet or for every Sunday.',
  'ovoj',
- '[{"kljuc":"ekipa","vrsta":"ekipa","oznaka_sl":"Tvoja ekipa","oznaka_en":"Your team","max":24,"obvezno":true},
+ '[{"kljuc":"ekipa","vrsta":"besedilo","oznaka_sl":"Ime ekipe","oznaka_en":"Team name","max":24,"obvezno":true,"privzeto":"FC Ponedeljek Zjutraj"},
    {"kljuc":"leto","vrsta":"leto","oznaka_sl":"Ustanovljeno","oznaka_en":"Founded","obvezno":false,"privzeto":2019}]',
  '[{"kljuc":"gravura","ime_sl":"Gravura","ime_en":"Engraving","barve":["#FFFFFF"]}]',
  '[{"polja":{"ekipa":"FC Ponedeljek Zjutraj","leto":2019},"shema":"gravura","izdelek":"kozarec-po-meri","barva":"0,5 l"},
@@ -522,7 +527,7 @@ insert into trgovina.motivi (slug, ime_sl, ime_en, opis_sl, opis_en, cona, polja
  'Šest podstavkov z imenom ekipe in šestimi slogani, za vsako rundo svoj. Kdor dobi "Rundo plača kapetan", ve, kaj sledi.',
  'Six mats with your team name and six slogans, one for every round. Whoever gets "Captain buys the round" knows what comes next.',
  'podstavek',
- '[{"kljuc":"ekipa","vrsta":"ekipa","oznaka_sl":"Tvoja ekipa","oznaka_en":"Your team","max":24,"obvezno":true},
+ '[{"kljuc":"ekipa","vrsta":"besedilo","oznaka_sl":"Ime ekipe","oznaka_en":"Team name","max":24,"obvezno":true,"privzeto":"FC Ponedeljek Zjutraj"},
    {"kljuc":"slogan1","vrsta":"izbira","oznaka_sl":"Slogan 1","oznaka_en":"Slogan 1","obvezno":true,"privzeto":"Tretji polčas","moznosti":["Tretji polčas","Samo še eno","Trener je rekel ena","Rundo plača kapetan","Ofsajd je bil","Na pivu smo prvi","Podaljšek v gostilni","Nedelja ob desetih","Third half","Captain buys the round"]},
    {"kljuc":"slogan2","vrsta":"izbira","oznaka_sl":"Slogan 2","oznaka_en":"Slogan 2","obvezno":true,"privzeto":"Samo še eno","moznosti":["Tretji polčas","Samo še eno","Trener je rekel ena","Rundo plača kapetan","Ofsajd je bil","Na pivu smo prvi","Podaljšek v gostilni","Nedelja ob desetih","Third half","Captain buys the round"]},
    {"kljuc":"slogan3","vrsta":"izbira","oznaka_sl":"Slogan 3","oznaka_en":"Slogan 3","obvezno":true,"privzeto":"Trener je rekel ena","moznosti":["Tretji polčas","Samo še eno","Trener je rekel ena","Rundo plača kapetan","Ofsajd je bil","Na pivu smo prvi","Podaljšek v gostilni","Nedelja ob desetih","Third half","Captain buys the round"]},
@@ -597,7 +602,7 @@ insert into trgovina.motivi (slug, ime_sl, ime_en, opis_sl, opis_en, cona, polja
  'Zastavica z imenom ekipe in letom ustanovitve. Kapetana si jih izmenjata pred tekmo, tvoja pa visi v garderobi.',
  'A pennant with your team name and the year it was founded. Captains swap them before kick-off; yours hangs in the dressing room.',
  'zastavica',
- '[{"kljuc":"ekipa","vrsta":"ekipa","oznaka_sl":"Tvoja ekipa","oznaka_en":"Your team","max":24,"obvezno":true},
+ '[{"kljuc":"ekipa","vrsta":"besedilo","oznaka_sl":"Ime ekipe","oznaka_en":"Team name","max":24,"obvezno":true,"privzeto":"FC Ponedeljek Zjutraj"},
    {"kljuc":"leto","vrsta":"leto","oznaka_sl":"Ustanovljeno","oznaka_en":"Founded","obvezno":false,"privzeto":2019}]',
  '[{"kljuc":"klasika","ime_sl":"Klasika zelena-bela","ime_en":"Classic green and white","barve":["#1E8C45","#F4F4F0","#0B3B1E"]},
    {"kljuc":"retro","ime_sl":"Retro rdeča-rumena","ime_en":"Retro red and yellow","barve":["#C8102E","#F6C700","#3A0A0F"]},
@@ -610,7 +615,7 @@ insert into trgovina.motivi (slug, ime_sl, ime_en, opis_sl, opis_en, cona, polja
  'Satenast šal z imenom ekipe na obeh koncih in sloganom na sredini. Za tribuno, ki je včasih le klop ob igrišču.',
  'A satin scarf with your team name on both ends and a slogan in the middle. For the stand, even when the stand is a bench by the pitch.',
  'sal',
- '[{"kljuc":"ekipa","vrsta":"ekipa","oznaka_sl":"Tvoja ekipa","oznaka_en":"Your team","max":24,"obvezno":true},
+ '[{"kljuc":"ekipa","vrsta":"besedilo","oznaka_sl":"Ime ekipe","oznaka_en":"Team name","max":24,"obvezno":true,"privzeto":"FC Ponedeljek Zjutraj"},
    {"kljuc":"slogan","vrsta":"izbira","oznaka_sl":"Slogan","oznaka_en":"Slogan","obvezno":true,"privzeto":"Do konca!",
     "moznosti":["Do konca!","Naprej naši!","Nedelja je naša","Srce na igrišču","Vedno zraven","Till the end!","Sunday is ours"]}]',
  '[{"kljuc":"klasika","ime_sl":"Klasika zelena-bela","ime_en":"Classic green and white","barve":["#1E8C45","#F4F4F0","#0B3B1E"]},
@@ -656,16 +661,16 @@ update trgovina.motivi set primeri = '[{"polja":{"postava":{"ekipa":"FC Ponedelj
 insert into trgovina.motivi_izdelki (motiv_id, izdelek_id, doplacilo)
 select m.id, i.id, x.doplacilo
 from (values
-  ('tretji-polcas', 'kozarec-po-meri', 600), ('tretji-polcas', 'vrc-po-meri', 600),
-  ('ekipni-kozarec', 'kozarec-po-meri', 600), ('ekipni-kozarec', 'vrc-po-meri', 600),
+  ('tretji-polcas', 'kozarec-po-meri', 900), ('tretji-polcas', 'vrc-po-meri', 900),
+  ('ekipni-kozarec', 'kozarec-po-meri', 900), ('ekipni-kozarec', 'vrc-po-meri', 900),
   ('kafanski-komplet', 'podstavki-po-meri', 0),
-  ('ime-in-stevilka', 'odpirac-po-meri', 400),
+  ('ime-in-stevilka', 'odpirac-po-meri', 600),
   ('moja-postava', 'plakat-po-meri', 0),
   ('retro-plakat-tekme', 'plakat-po-meri', 0),
   ('kartica-legende', 'kartica-igralca', 0),
   ('klubska-zastavica', 'zastavica-po-meri', 0),
   ('navijaski-sal', 'sal-po-meri', 0),
-  ('vezena-ekipa', 'kapa-po-meri', 600),
+  ('vezena-ekipa', 'kapa-po-meri', 1000),
   ('kapetanski-trak', 'trak-po-meri', 0)
 ) x(motiv, izdelek, doplacilo)
 join trgovina.motivi m on m.slug = x.motiv
