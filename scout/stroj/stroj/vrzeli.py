@@ -9,24 +9,29 @@ MIN_DISCIPLINA = 10  # igralcev v (liga, pozicija), da je percentil kartonov smi
 MIN_KARTONOV = 0.2  # spodnja meja praga na 90 min, da p90 = 0 ne označi vsakega kartona
 
 
+def _po(*stolpci: np.ndarray) -> dict[tuple, np.ndarray]:
+    """Indeksi vrstic po ključu iz stolpcev: en prehod, ne maska čez vse vrstice na ključ
+    (ta je bila O(ekip × vrstic), pri vseh državah ~100 s)."""
+    izid: dict[tuple, list[int]] = {}
+    for i, k in enumerate(zip(*(s.tolist() for s in stolpci))):
+        izid.setdefault(k, []).append(i)
+    return {k: np.array(v) for k, v in izid.items()}
+
+
 def vrzeli(t: Tabela) -> list[tuple[int, int, str | None, str, int | None, float]]:
     izid: list[tuple[int, int, str | None, str, int | None, float]] = []
     # prag po ligi in poziciji: lige in države imajo različne norme kartonov
-    meja_kartonov: dict[tuple[int, str], float] = {}
-    for liga in set(t["competition_id"].tolist()):
-        for g in NORMA:
-            k = t["kartoni_90"][(t["competition_id"] == liga) & (t["skupina"] == g)]
-            if len(k) >= MIN_DISCIPLINA:
-                meja_kartonov[(liga, g)] = max(float(np.percentile(k, 90)), MIN_KARTONOV)
-    ekipe = sorted(set(zip(t["team_id"].tolist(), t["competition_id"].tolist())))
-    for ekipa, liga in ekipe:
-        m = (t["team_id"] == ekipa) & (t["competition_id"] == liga)
-        redni = m & (t["delez_minut"] >= REDNI)
+    meja_kartonov = {(liga, g): max(float(np.percentile(t["kartoni_90"][m], 90)), MIN_KARTONOV)
+                     for (liga, g), m in _po(t["competition_id"], t["skupina"]).items()
+                     if g in NORMA and len(m) >= MIN_DISCIPLINA}
+    for (ekipa, liga), m in sorted(_po(t["team_id"], t["competition_id"]).items()):
+        redni = m[t["delez_minut"][m] >= REDNI]
+        skupina_rednih = t["skupina"][redni]
         for g, n in NORMA.items():
-            stevilo = int((redni & (t["skupina"] == g)).sum())
+            stevilo = int((skupina_rednih == g).sum())
             if stevilo < n:
                 izid.append((ekipa, liga, g, "tanka", None, float(stevilo)))
-        for i in np.flatnonzero(m):
+        for i in m.tolist():
             pid, g = int(t["player_id"][i]), t["skupina"][i]
             if t["delez_golov"][i] >= 0.4 and t["ekipa_goli"][i] >= 5:
                 izid.append((ekipa, liga, g, "odvisnost", pid, float(t["delez_golov"][i])))
@@ -35,8 +40,8 @@ def vrzeli(t: Tabela) -> list[tuple[int, int, str | None, str, int | None, float
                 izid.append((ekipa, liga, g, "padajoce_minute", pid, float(t["trend_minut"][i])))
             if (liga, g) in meja_kartonov and t["kartoni_90"][i] > meja_kartonov[(liga, g)]:
                 izid.append((ekipa, liga, g, "disciplina", pid, float(t["kartoni_90"][i])))
-        prejeti = {g: float(t["prejeti_ref_90"][redni & (t["skupina"] == g)].mean())
-                   for g in ("DEF", "MID", "FWD") if (redni & (t["skupina"] == g)).any()}
+        prejeti = {g: float(t["prejeti_ref_90"][redni[skupina_rednih == g]].mean())
+                   for g in ("DEF", "MID", "FWD") if (skupina_rednih == g).any()}
         if prejeti:
             g = max(prejeti, key=prejeti.get)
             izid.append((ekipa, liga, g, "prejeti", None, prejeti[g]))

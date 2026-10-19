@@ -49,8 +49,14 @@ def _stalnost(k: Tabela) -> np.ndarray:
     for o, y, d in zip(k["oseba"].tolist(), k["leto"].tolist(), k["delez_minut"].tolist()):
         sezone = redna.setdefault(o, {})
         sezone[y] = sezone.get(y, False) or d >= REDNI
-    return np.array([np.mean([r for yy, r in redna[o].items() if yy <= y])
-                     for o, y in zip(k["oseba"].tolist(), k["leto"].tolist())])
+    # tekoči delež po letih osebe: en prehod na osebo, ne np.mean na vrstico
+    delez: dict = {}
+    for o, sezone in redna.items():
+        rednih = 0
+        for n, y in enumerate(sorted(sezone), 1):
+            rednih += sezone[y]
+            delez[(o, y)] = rednih / n
+    return np.array([delez[ky] for ky in zip(k["oseba"].tolist(), k["leto"].tolist())], dtype=float)
 
 
 def izracunaj(s: Tabela, moc: dict[int, tuple[float, str, int]], elo: dict[tuple[int, int, int], float], elo_koef: float) -> Tabela:

@@ -9,6 +9,7 @@ import argparse
 import os
 import time
 import traceback
+from collections.abc import Iterator
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -22,7 +23,7 @@ from stroj.indeks import UTEZI, indeks, z_vrednosti
 from stroj.kazalniki import izracunaj
 from stroj.moc_lig import prilagodi
 from stroj.nalaganje import nalozi
-from stroj.pisanje import STOLPCI, zapisi
+from stroj.pisanje import STOLPCI, vrstice, zapisi
 from stroj.podobnost import najblizji
 from stroj.vrzeli import vrzeli
 
@@ -53,6 +54,19 @@ def _pregled(conn: psycopg.Connection, t: Tabela, idx: np.ndarray) -> None:
         prvi = m[np.argsort(-idx[m])][:10]
         print(f"liga {liga}: " + ", ".join(
             f"{imena.get(int(t['player_id'][i]), '?')} ({t['skupina'][i]} {idx[i]:.2f})" for i in prvi))
+
+
+def _vektorji(t: Tabela, Z: np.ndarray) -> Iterator[tuple]:
+    """Z-vektor in najbližji po (država, skupina); sosedi le ene skupine naenkrat."""
+    ima_vektor = np.any(Z != 0, axis=1)  # ničelni vektor (skupina < 2) ima poljubne sosede
+    for d in sorted(set(t["country_id"].tolist())):
+        for g in UTEZI:
+            m = np.flatnonzero((t["country_id"] == d) & (t["skupina"] == g) & ima_vektor)
+            if len(m) < 2:
+                continue
+            sosedi, podobnost = najblizji(Z[m])
+            for i, s_i, p_i in zip(m.tolist(), sosedi, podobnost):
+                yield int(t["player_id"][i]), g, Z[i].tolist(), t["player_id"][m[s_i]].tolist(), p_i.tolist()
 
 
 def zagon(conn: psycopg.Connection, pisi: bool, sili_moc: bool) -> int | None:
@@ -89,23 +103,14 @@ def zagon(conn: psycopg.Connection, pisi: bool, sili_moc: bool) -> int | None:
     t = izberi(k, izbrani)
     Z = z_vrednosti(t)
     idx, pct = indeks(t, Z)
-    vektorji = []
-    ima_vektor = np.any(Z != 0, axis=1)  # ničelni vektor (skupina < 2) ima poljubne sosede
-    for d in set(t["country_id"].tolist()):
-        for g in UTEZI:
-            m = np.flatnonzero((t["country_id"] == d) & (t["skupina"] == g) & ima_vektor)
-            if len(m) < 2:
-                continue
-            sosedi, podobnost = najblizji(Z[m])
-            for i, s_i, p_i in zip(m.tolist(), sosedi, podobnost):
-                vektorji.append((int(t["player_id"][i]), g, Z[i].tolist(), t["player_id"][m[s_i]].tolist(), p_i.tolist()))
-    kk = izberi(k, v_odprti)
-    vrstice = {
+    # generatorji: COPY jih bere vrstico za vrstico, Pythonovi objekti živijo le za en kos
+    # (seznami vseh vrstic so pri vseh državah presegli mem_limit 1g)
+    izhod = {
         "lige_moc": [(l, m, v, n, izracunano) for l, (m, v, n) in moc.items()],
         "ekipe_elo": [(e, l, y, r) for (l, y, e), r in elo_lig.items() if l in aktivne and y == tekoca.get(l)],
-        "kazalniki": list(zip(*(kk[c].tolist() for c in STOLPCI["kazalniki"]))),
-        "indeks": list(zip(t["player_id"].tolist(), t["skupina"].tolist(), idx.tolist(), pct.tolist(), t["zaupanje"].tolist())),
-        "vektorji": vektorji,
+        "kazalniki": vrstice(k, STOLPCI["kazalniki"], np.flatnonzero(v_odprti)),
+        "indeks": vrstice(t | {"indeks": idx, "percentil": pct}, STOLPCI["indeks"]),
+        "vektorji": _vektorji(t, Z),
         "vrzeli": vrzeli(t),
     }
     print(f"Stroj: {len(sezone['player_id'])} vrstic, {len(t['player_id'])} izbranih, backtest {bt}", flush=True)
@@ -113,7 +118,7 @@ def zagon(conn: psycopg.Connection, pisi: bool, sili_moc: bool) -> int | None:
         _pregled(conn, t, idx)
         return None
     model_id = zapisi(conn, {"leto": int(sezone["leto"].max()), "backtest": bt,
-                             "parametri": {"elo_koef": elo_koef}, "objavljen": objavljen}, vrstice)
+                             "parametri": {"elo_koef": elo_koef}, "objavljen": objavljen}, izhod)
     print(f"Stroj: zapisan model {model_id} (objavljen: {objavljen})", flush=True)
     return model_id
 

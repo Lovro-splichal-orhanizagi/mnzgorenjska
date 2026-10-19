@@ -367,14 +367,21 @@ scout.slff.eu streže ta commit — a le ob spremenljivki repozitorija
 
 | odprte države | trajanje | vrh RSS |
 |---|---|---|
-| le SI (zdaj) | 64 s | 472 MB |
-| vse | 113–158 s | 1,19–1,22 GB |
+| le SI (produkcija, pred 10/2026 popravki) | 64 s | 472 MB |
+| vse (produkcija, pred popravki) | 113–158 s | 1,19–1,22 GB |
 
-**Delavec ima `mem_limit: 1g`. Preden odpreš drugo državo v `scout.drzave`,
-mora pisanje teči pretočno** (generatorji v COPY namesto seznamov `vrstice` v
-`__main__.py`) ali pa je treba dvigniti `mem_limit` — sicer delavca ubije OOM.
-Največ spomina pojedo seznami za `kazalniki` in `vektorji`; `vrzeli` je
-O(ekip × vrstic) in pri vseh državah traja ~100 s.
+Pisanje teče **pretočno**: `zagon` da `zapisi` generatorje (`pisanje.vrstice`
+po kosih 20 000 vrstic, vektorji po (država, skupina)), ne seznamov vseh
+vrstic; nalaganje (`v_stolpce`) vsak kos kazalca takoj pretvori v numpy.
+`vrzeli` gre čez vrstice enkrat (prej maska čez vse vrstice na ekipo,
+O(ekip × vrstic)). Sintetični preizkus v velikosti produkcije (450 000
+vrstic, 32 držav, 900 lig, `zagon` brez baze): vse države odprte **825 s →
+58 s, vrh 1128 MB → 215 MB**; izid vseh šestih tabel je enak do vrstice.
+Nalaganje iz baze v preizkusu ni zajeto.
+
+Delavec ima `mem_limit: 1g`. **Ob odprtju druge države** takoj poženi suhi
+tek `docker compose run --rm scout python -m stroj --moc-lig` (brez `--pisi`,
+pred 11:00 naslednjega dne) in med njim glej vrh v `docker stats`.
 
 ## Ukazi (lokalno)
 

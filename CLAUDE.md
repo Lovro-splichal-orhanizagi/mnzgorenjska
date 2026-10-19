@@ -395,8 +395,8 @@ objava, testi): `docs/scout.md`. Bistvo:
   lig) in model je objavljen. Vmesnik bere le zadnji objavljeni model.
 - Shema `scout` ni dostopna `anon`/`authenticated`; delavec se prijavi kot
   `scout_stroj` z geslom (nastavi ga lastnik ročno na strežniku, nikoli v
-  git). Država se odpre v `scout.drzave` — **pred drugo državo mora pisanje teči pretočno**, sicer
-  delavec preseže `mem_limit: 1g`.
+  git). Država se odpre v `scout.drzave`; pisanje teče pretočno, a pred drugo
+  državo izmeri vrh pomnilnika s suhim tekom (`mem_limit: 1g`, `docs/scout.md` *Spomin*).
 - `ravenLige` ima prepis v `scout/stroj/stroj/ravni.py` (test enakosti).
   CI ga ne objavi (`scripts/hetzner/objavi-scout.sh`); Pythonove teste
   (`cd scout/stroj && .venv/bin/pytest -q`) in `deno check`/`lint` robnih

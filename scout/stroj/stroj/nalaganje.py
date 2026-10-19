@@ -160,18 +160,24 @@ def v_stolpce(conn: psycopg.Connection, sql: str) -> Tabela:
         # beremo vse vrstice: privzeti 0.1 da kazalcu načrt za prve vrstice (na
         # produkciji gnezdena zanka players × sezone, > 10 min namesto 25 s)
         conn.execute("set local cursor_tuple_fraction = 1")
-        cur.itersize = KOS
         cur.execute(sql)
         imena = [d.name for d in cur.description]
-        stolpci: list[list] = [[] for _ in imena]
-        for vrstica in cur:
-            for stolpec, x in zip(stolpci, vrstica):
-                stolpec.append(x)
-    izid: Tabela = {}
-    for ime, stolpec in zip(imena, stolpci):
-        stevilsko = all(isinstance(x, (int, float)) for x in stolpec)
-        izid[ime] = np.array(stolpec) if stevilsko else np.array(stolpec, dtype=object)
-    return izid
+        # vsak kos takoj v numpy: Pythonovi objekti živijo le za en kos, ne za vse vrstice
+        kosi: list[list[np.ndarray]] = [[] for _ in imena]
+        while vrstice := cur.fetchmany(KOS):
+            for kos, stolpec in zip(kosi, zip(*vrstice)):
+                kos.append(_v_polje(stolpec))
+    if not kosi or not kosi[0]:
+        return {ime: np.array([]) for ime in imena}
+    # številski kos ob besedilnem ali NULL kosu postane object, kot bi bil ves stolpec
+    return {ime: np.concatenate([k.astype(object) for k in kos] if any(k.dtype == object for k in kos) else kos)
+            for ime, kos in zip(imena, kosi)}
+
+
+def _v_polje(stolpec: tuple) -> np.ndarray:
+    """Besedilo in NULL ostaneta object."""
+    stevilsko = all(isinstance(x, (int, float)) for x in stolpec)
+    return np.array(stolpec) if stevilsko else np.array(stolpec, dtype=object)
 
 
 def nalozi(conn: psycopg.Connection) -> tuple[Tabela, Tabela, Tabela]:

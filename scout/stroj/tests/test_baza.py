@@ -2,10 +2,12 @@
 import os
 from datetime import datetime, timezone
 
+import numpy as np
 import psycopg
 import pytest
 
-from stroj.nalaganje import SQL_IZKLJUCENI, nalozi
+from stroj import nalaganje
+from stroj.nalaganje import SQL_IZKLJUCENI, nalozi, v_stolpce
 from stroj.pisanje import zapisi
 
 URL = os.environ.get("SCOUT_TEST_DB", "postgresql://postgres:postgres@127.0.0.1:54322/postgres")
@@ -52,6 +54,19 @@ def conn():
     yield c
     c.rollback()
     c.close()
+
+
+def test_v_stolpce_po_kosih(conn, monkeypatch):
+    # NULL ali besedilo v poznejšem kosu naredi object ves stolpec, int in float v kosih da float
+    monkeypatch.setattr(nalaganje, "KOS", 2)
+    t = v_stolpce(conn, "select * from (values (1, 1, 'a'), (2, 2, 'b'), (3, null, 'c'), (4, 4.5::float8, 'd'), (5, 5, 'e')) v(i, n, s)")
+    assert t["i"].dtype == np.int64 and t["i"].tolist() == [1, 2, 3, 4, 5]
+    assert t["n"].dtype == object and t["n"].tolist()[:3] == [1, 2, None] and float(t["n"][3]) == 4.5
+    assert all(type(x) is not np.int64 for x in t["n"].tolist())  # object ostane Pythonov int, kot prej
+    assert t["s"].dtype == object
+    assert v_stolpce(conn, "select 1 as i where false")["i"].tolist() == []
+    t = v_stolpce(conn, "select * from (values (1, 1), (2, 2.5::float8), (3, 3)) v(i, f)")
+    assert t["f"].dtype == np.float64
 
 
 def test_nalozi(conn):
