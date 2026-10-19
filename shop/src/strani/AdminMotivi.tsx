@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase, type IzdelekAdmin, type MotivKataloga } from '../baza'
 import { t } from '../besede'
 import { Nalaganje } from '../seja'
-import { imaPredlogo, svgCone } from './Konfigurator'
+import { barveMotiva, imaPredlogo, svgCone } from './Konfigurator'
 import { primeriMotiva } from './Personalizirano'
 
 // Zavihek "Motivi": vklop, vrstni red, doplačilo po nosilcu in primeri
@@ -64,7 +64,8 @@ export function KarticaMotiva({ m, nosilci, osvezi }: { m: MotivAdmin; nosilci: 
   const [sporocilo, setSporocilo] = useState<{ ok: boolean; s: string } | null>(null)
 
   const p = primeriMotiva(m, m.doplacila[0]?.slug)[0]!
-  const svg = svgCone(m.slug, p.polja, (m.sheme.find((s) => s.kljuc === p.shema) ?? m.sheme[0])?.barve ?? [], m.cona)
+  const risba = svgCone(m.slug, p.polja, barveMotiva(m, p.polja, p.shema), m.cona)
+  const svg = Array.isArray(risba) ? risba[0] : risba
 
   async function shrani() {
     if (!/^[+-]?\d{1,7}$/.test(red.trim())) return setSporocilo({ ok: false, s: t('admin.napacnoStevilo') })

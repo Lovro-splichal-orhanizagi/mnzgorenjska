@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import grb from '../../../public/logo/slff-grb.png'
-import { supabase, type IzdelekKataloga, type Voljo } from '../baza'
+import { supabase, type IzdelekKataloga, type MotivKataloga, type Voljo } from '../baza'
 import { cena, po, t } from '../besede'
 import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
-import { Pahljaca, useMotivi } from './Personalizirano'
+import { Pahljaca, PrimerNaMockupu, primeriMotiva, useMotivi } from './Personalizirano'
 
 /** Slika izdelka ali grb SLFF na temni podlagi, dokler slike ni. */
 export function Slika({ src, alt, majhna = false }: { src?: string; alt: string; majhna?: boolean }) {
@@ -29,13 +29,26 @@ export function ZnackaVoljo({ v }: { v: Voljo }) {
     : <span className="znacka bg-slate-400/15 text-slate-300 ring-1 ring-slate-400/30">{t('voljo.ne')}</span>
 }
 
-export function KarticaIzdelka({ i }: { i: IzdelekKataloga }) {
+/** Nosilec motivov brez kataloške slike: prvi primer prvega motiva na njem, živ mockup. */
+function MotivNaNosilcu({ slug, motivi, alt }: { slug: string; motivi: MotivKataloga[] | null; alt: string }) {
+  const m = motivi?.find((x) => x.izdelki.some((i) => i.slug === slug))
+  const p = m && (primeriMotiva(m, slug).find((x) => x.izdelek === slug) ?? primeriMotiva(m, slug)[0])
+  if (!m || !p) return null
+  return (
+    <div className="slika-izdelka overflow-hidden">
+      <PrimerNaMockupu m={m} p={{ ...p, izdelek: slug }} povecava={1.15} alt={alt} />
+    </div>
+  )
+}
+
+export function KarticaIzdelka({ i, motivi = null }: { i: IzdelekKataloga; motivi?: MotivKataloga[] | null }) {
   const ime = po(i.ime_sl, i.ime_en)
+  const mockup = !i.slike[0] && motivi?.some((m) => m.izdelki.some((x) => x.slug === i.slug)) && <MotivNaNosilcu slug={i.slug} motivi={motivi} alt={ime} />
   return (
     <Link to={`/p/${i.slug}`} className="group kartica block p-3 transition hover:-translate-y-0.5 hover:border-gnl-400/40 hover:bg-white/[0.06]">
       <div className="relative">
         <div className={`transition duration-300 group-hover:scale-[1.02] ${i.na_voljo === 'ne' ? 'opacity-60' : ''}`}>
-          <Slika src={i.slike[0]} alt={ime} />
+          {mockup || <Slika src={i.slike[0]} alt={ime} />}
         </div>
         <div className="absolute left-2 top-2"><ZnackaVoljo v={i.na_voljo} /></div>
       </div>
@@ -49,10 +62,11 @@ export function KarticaIzdelka({ i }: { i: IzdelekKataloga }) {
 }
 
 export function MrezaIzdelkov({ izdelki }: { izdelki: IzdelekKataloga[] }) {
+  const { motivi } = useMotivi()
   if (izdelki.length === 0) return <p className="kartica p-6 text-center text-slate-400">{t('katalog.prazno')}</p>
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
-      {izdelki.map((i) => <KarticaIzdelka key={i.slug} i={i} />)}
+      {izdelki.map((i) => <KarticaIzdelka key={i.slug} i={i} motivi={motivi} />)}
     </div>
   )
 }

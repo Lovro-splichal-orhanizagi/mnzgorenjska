@@ -8,7 +8,7 @@ import { doplacilo } from '../personalizacija'
 import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
 import { Slika, ZnackaVoljo } from './Katalog'
-import { imaPredlogo, svgCone } from './Konfigurator'
+import { barveMotiva, imaPredlogo, svgCone } from './Konfigurator'
 import { barvaRazlicice, conaZa, Mockup } from '../mockup'
 
 type Izdelki = Record<string, Izdelek | null>
@@ -33,8 +33,11 @@ export function SlikaMotiva({ iz, p, oznaka, alt }: { iz: Izdelek; p: Postavka; 
   const barva = barvaRazlicice(oznaka)
   const cona = m && conaZa(iz.cone ?? [], m.cona, barva)
   if (!m || !cona || !imaPredlogo(m.slug)) return <Slika src={iz.slike[0]} alt={alt} majhna />
-  const barve = (m.sheme.find((s) => s.kljuc === p.personalizacija?.shema) ?? m.sheme[0]!).barve
-  return <Mockup cona={cona} svg={svgCone(m.slug, p.prikaz ?? {}, barve, m.cona)} barva={barva} povecava={1.6} alt={alt} className="rounded-xl" />
+  // Postava je v prikazu le ime ekipe (posnetek shrani baza ob nakupu).
+  const polja = Object.fromEntries(Object.entries(p.prikaz ?? {}).map(([k, v]) =>
+    [k, m.polja.find((x) => x.kljuc === k)?.vrsta === 'postava' ? { ekipa: v, zacetni: [] } : v]))
+  const barve = barveMotiva(m, polja, p.personalizacija?.shema)
+  return <Mockup cona={cona} svg={svgCone(m.slug, polja, barve, m.cona)} barva={barva} podlaga={barve[0]} povecava={1.6} alt={alt} className="rounded-xl" />
 }
 
 const razlicica = (izdelki: Izdelki, slug: string, id: number) => izdelki[slug]?.razlicice.find((r) => r.id === id) ?? null

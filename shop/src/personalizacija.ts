@@ -60,16 +60,28 @@ const ZNAKI_MOTIVA = /^[A-Za-zÀ-ÖØ-öø-ž0-9 .'&!?-]+$/
  * Napaka vnosa polja motiva (zrcali trgovina.vrednost_polja) ali null. Prazno
  * polje tu ni napaka: obveznost preveri gumb, žaljivke baza ob plačilu.
  */
-export function napakaPolja(vrsta: string, surovo: string, max = 12, letos = new Date().getFullYear()): Kljuc | null {
+export function napakaPolja(vrsta: string, surovo: string, max = 12, letos = new Date().getFullYear(), min = 0, danes = new Date()): Kljuc | null {
   const v = normaliziraj(surovo)
   if (!v) return null
   if (vrsta === 'besedilo') {
     if ([...v].length > max) return 'motiv.napaka.dolgo'
     if (!ZNAKI_MOTIVA.test(v) || !CRKA.test(v)) return 'motiv.napaka.znaki'
   }
+  if (vrsta === 'stevilka' && min > 0 && (stevilka(v) ?? 0) < min) return 'motiv.napaka.ocena'
   if (vrsta === 'stevilka' && stevilka(v) === null) return 'pers.napaka.stevilka'
+  if (vrsta === 'datum' && !veljavenDatum(v, danes)) return 'motiv.napaka.datum'
   if (vrsta === 'leto' && !(/^\d{4}$/.test(v) && Number(v) >= 1950 && Number(v) <= letos)) return 'motiv.napaka.leto'
   return null
+}
+
+/** "YYYY-MM-DD" (pravi dan) od 1950-01-01 do leta naprej, kot trgovina.vrednost_polja. */
+export function veljavenDatum(v: string, danes = new Date()): boolean {
+  const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v)
+  if (!d) return false
+  const t = new Date(Date.UTC(Number(d[1]), Number(d[2]) - 1, Number(d[3])))
+  if (t.toISOString().slice(0, 10) !== v) return false
+  const meja = new Date(Date.UTC(danes.getFullYear() + 1, danes.getMonth(), danes.getDate()))
+  return v >= '1950-01-01' && t <= meja
 }
 
 const vrednostOk = (v: unknown): boolean =>

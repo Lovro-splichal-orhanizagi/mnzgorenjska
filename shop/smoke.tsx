@@ -6,12 +6,12 @@ import { Route, Routes } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { SejaProvider } from './src/seja'
 import { Okvir } from './src/Okvir'
-import { Katalog, MrezaIzdelkov } from './src/strani/Katalog'
+import { Katalog, KarticaIzdelka, MrezaIzdelkov } from './src/strani/Katalog'
 import { Izdelek, IzdelekView, Predogled } from './src/strani/Izdelek'
-import { ekipaPrevelika, izPrimera } from './src/strani/Konfigurator'
-import { MrezaMotivov, Pahljaca, Personalizirano, vProdaji } from './src/strani/Personalizirano'
+import { barveMotiva, ekipaPrevelika, izPrimera, moznost, prikazVrednosti } from './src/strani/Konfigurator'
+import { MrezaMotivov, Pahljaca, Personalizirano, SkupineMotivov, skupinaMotiva, vProdaji } from './src/strani/Personalizirano'
 import { VarnaStran } from './src/App'
-import { homografija, matrika } from './src/mockup'
+import { homografija, matrika, trakoviValja } from './src/mockup'
 import { cenaKosa, Kosarica, motivaNi, ociscena, SlikaMotiva, stripeNaslov } from './src/strani/Kosarica'
 import { Hvala } from './src/strani/Hvala'
 import { Narocila } from './src/strani/Narocila'
@@ -30,7 +30,7 @@ import { celicaCsv, doplacilo, napakaImena, napakaPolja, oblikaSvg, stabilno, st
 import { barveIzPolj, coneMotiva, kontrast, narisiKose, narisiMotiv, oblikujDatum, poljaCone, praznaCona, sirinaBesedila, velikostMm, zVgrajenoPisavo } from './src/risba'
 import { MOTIVI } from './src/motivi'
 import { readFileSync } from 'node:fs'
-import type { Cona, Izdelek as TIzdelek, IzdelekKataloga, MotivIzdelka, MotivKataloga, NarociloAdmin, PostavkaNarocila, PostavkaTiska, Serija } from './src/baza'
+import type { Cona, Izdelek as TIzdelek, IzdelekKataloga, MotivIzdelka, MotivKataloga, NarociloAdmin, PoljeMotiva, PostavkaNarocila, PostavkaTiska, PrimerMotiva, Serija, ShemaMotiva } from './src/baza'
 
 let napak = 0
 const preveri = (opis: string, ok: boolean, dodatno = '') => {
@@ -693,6 +693,101 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
   varna.state = VarnaStran.getDerivedStateFromError()
   const nadomestna = renderToString(<>{varna.render()}</>)
   preveri('napaka pri izrisu: sporočilo in ponovno nalaganje namesto prazne strani', nadomestna.includes(SL['napaka.stran']) && nadomestna.includes(SL['napaka.osvezi']))
+}
+
+// Motivi dela 2–3 v trgovini: konfigurator (postava, ocene, datum, paleta dresa, format, velikost),
+// mockup (valj, gravura, vezenje, okvir, podstavki, obris dresa), vitrina po skupinah, katalog.
+{
+  const sql = readFileSync(new URL('../supabase/migrations/20261019150000_trgovina_motivi_del23.sql', import.meta.url), 'utf8')
+  const niz = String.raw`'((?:[^']|'')*)'`
+  const besedilo = (x: string) => x.replace(/''/g, "'")
+  const vrstice = [...sql.slice(sql.indexOf('insert into trgovina.motivi (slug')).matchAll(new RegExp(String.raw`^\('([a-z0-9-]+)', ${niz}, ${niz},\n ${niz},\n ${niz},\n '([a-z]+)',\n ${niz},\n ${niz},\n ${niz},`, 'gm'))]
+  const doplacila = [...sql.matchAll(/\('([a-z-]+)', '([a-z-]+)', (\d+)\)/g)].map((m) => ({ motiv: m[1]!, izdelek: m[2]!, doplacilo: Number(m[3]) }))
+  const primeriPostave = JSON.parse(besedilo(/set primeri = '([\s\S]*?)'\n where slug = 'moja-postava'/.exec(sql)![1]!)) as PrimerMotiva[]
+  const motivi23: (MotivIzdelka & { izdelki: string[] })[] = vrstice.map((m) => ({
+    slug: m[1]!, ime_sl: besedilo(m[2]!), ime_en: besedilo(m[3]!), opis_sl: besedilo(m[4]!), opis_en: besedilo(m[5]!), cona: m[6]!,
+    polja: JSON.parse(besedilo(m[7]!)) as PoljeMotiva[], sheme: JSON.parse(besedilo(m[8]!)) as ShemaMotiva[],
+    primeri: m[1] === 'moja-postava' ? primeriPostave : JSON.parse(besedilo(m[9]!)) as PrimerMotiva[],
+    doplacilo: doplacila.find((d) => d.motiv === m[1])?.doplacilo ?? 0, izdelki: doplacila.filter((d) => d.motiv === m[1]).map((d) => d.izdelek),
+  }))
+  const cone23: (Cona & { izdelek: string })[] = [...sql.matchAll(/\('([a-z-]+)',\s+'([a-z]+)',\s+(null|'[^']*'),\s+'([^']*)',\s+'([^']*)', (\d+), (\d+)\)/g)].map((m) => ({
+    izdelek: m[1]!, kljuc: m[2]!, barva: m[3] === 'null' ? null : m[3]!.slice(1, -1), slika: m[4]!, koti: JSON.parse(m[5]!) as [number, number][], sirina_mm: Number(m[6]), visina_mm: Number(m[7]),
+  }))
+  const motiv = (slug: string) => motivi23.find((m) => m.slug === slug)!
+  preveri('d23 trgovina: seme 12 motivov s primeri, postava ima tri postave, 14 con', motivi23.length === 12 && motivi23.every((m) => m.primeri.length >= 3)
+    && primeriPostave.length === 3 && cone23.length === 14, `${motivi23.length} ${cone23.length}`)
+
+  const nosilec = (slug: string, razlicice: [string, string, number][]): TIzdelek => ({
+    ...izdelek, slug, ime_sl: slug, ime_en: slug, po_narocilu: true, postopek: 'laser', cone: cone23.filter((c) => c.izdelek === slug),
+    motivi: motivi23.filter((m) => m.izdelki.includes(slug)).map(({ izdelki: _i, ...m }) => ({ ...m, doplacilo: doplacila.find((d) => d.motiv === m.slug && d.izdelek === slug)!.doplacilo })),
+    razlicice: razlicice.map(([sl, en, c], n) => ({ id: 900 + n, oznaka_sl: sl, oznaka_en: en, cena: c, na_voljo: 'da' as const })),
+  })
+  const konf = (i: TIzdelek, q = '') => renderToString(<StaticRouter location={`/p/${i.slug}${q}`}><SejaProvider><IzdelekView i={i} /></SejaProvider></StaticRouter>)
+
+  // Dres: paleta, vzorci s sličicami, ovratnik, velikosti z doplačilom, brez sheme, sprednji in zadnji pogled.
+  const dres = konf(nosilec('dres-po-meri', [['S', 'S', 4900], ['M', 'M', 4900], ['3XL', '3XL', 5400]]))
+  const manjkaD = ['Glavna barva', 'Druga barva', 'Barva obrob', 'Ovratnik', 'Polo', 'Šerpa', SL['motiv.brezBarve'], SL['motiv.cona.spredaj'], SL['motiv.cona.hrbet'],
+    '59,00', '+5,00', SL['motiv.velikost'], 'maska-', 'obris-', '/nosilci/dres-spredaj.webp', '/nosilci/dres-hrbet.webp', 'data:image/svg+xml', SL['motiv.izberiVelikost']]
+    .filter((v) => !dres.includes(v))
+  preveri('d23 dres: paleta, vzorci s sličicami, ovratnik, velikosti z doplačilom, obris majice, oba pogleda', manjkaD.length === 0, manjkaD.join(' / '))
+  preveri('d23 dres: 13 barv na polje, druga barva ne sme biti enaka prvi, brez koraka barv sheme', (dres.match(/background:#/g) ?? []).length >= 39
+    && /aria-label="Zelena"[^>]*disabled=""|disabled=""[^>]*aria-label="Zelena"/.test(dres) && !dres.includes(SL['motiv.korak.shema']))
+  preveri('d23 dres: rokavi v glavni barvi (podlaga obrisa)', /<rect width="1600" height="1600" fill="#[0-9A-Fa-f]{6}"/.test(dres))
+
+  // Plakat: postava brez prijave (izmišljena postava, poziv k prijavi), format A3/A2 s ceno, shema.
+  const plakat = konf(nosilec('plakat-po-meri', [['A3', 'A3', 2900], ['A2', 'A2', 4500]]), '?motiv=moja-postava')
+  const manjkaP = [SL['motiv.postava.prijava'], SL['motiv.postava.predogled'], 'FC PONEDELJEK ZJUTRAJ', SL['motiv.format'], '29,00', '45,00', SL['motiv.korak.shema'], 'steklo-', 'Retro plakat tekme']
+    .filter((v) => !plakat.includes(v))
+  preveri('d23 plakat: postava brez prijave z izmišljeno postavo, A3/A2 s ceno, steklo okvirja', manjkaP.length === 0, manjkaP.join(' / '))
+  preveri('d23 plakat: A3 je izbran, gumb za nakup ni onemogočen zaradi velikosti', /aria-pressed="true"[^>]*>A3/.test(plakat) && !plakat.includes(SL['motiv.izberiVelikost']))
+  const retro = konf(nosilec('plakat-po-meri', [['A3', 'A3', 2900], ['A2', 'A2', 4500]]), '?motiv=retro-plakat-tekme')
+  preveri('d23 retro plakat: datum kot vnos datuma', /type="date"[^>]*value="2026-05-17"|value="2026-05-17"[^>]*type="date"/.test(retro) && retro.includes('min="1950-01-01"'))
+
+  // Kartica: ocene z drsnikom; podstavki: šest sloganov v menijih, šest kosov na fotografiji.
+  const kartica = konf(nosilec('kartica-igralca', [['A5', 'A5', 1500]]))
+  preveri('d23 kartica: štiri ocene z drsnikom od 1, brez koraka različice', (kartica.match(/type="range"/g) ?? []).length === 4 && kartica.includes('min="1"')
+    && !kartica.includes(SL['motiv.velikost']) && kartica.includes('>76</text>'))
+  const podstavki = konf(nosilec('podstavki-po-meri', [['Komplet 6', 'Set of 6', 2200]]))
+  preveri('d23 podstavki: šest sloganov v menijih, šest kosov na fotografiji', (podstavki.match(/<select/g) ?? []).length === 6
+    && (podstavki.match(/<svg viewBox="0 0 95 95"/g) ?? []).length >= 6 && podstavki.includes('22,00'))
+
+  // Kozarec, odpirač, kapa: gravura na valju, temna gravura, vezenje; barva kape s krogi.
+  const kozarec = konf(nosilec('kozarec-po-meri', [['0,5 l', '0.5 l', 1200]]))
+  preveri('d23 kozarec: valj (40 trakov), gravura brez senčenja fotografije, 21 €', (kozarec.match(/clipPath id="trak-/g) ?? []).length >= 40
+    && kozarec.includes('<use href="#motiv-') && kozarec.includes('21,00') && kozarec.includes(SL['motiv.postopek.laser']))
+  const odpirac = konf({ ...nosilec('odpirac-po-meri', [['Ena velikost', 'One size', 900]]) })
+  preveri('d23 odpirač: temna gravura z robom svetlobe', odpirac.includes('feOffset') && !odpirac.includes('clipPath id="trak-'))
+  const kapa = konf(nosilec('kapa-po-meri', [['Črna', 'Black', 2400], ['Bela-črna', 'White-black', 2400]]))
+  preveri('d23 kapa: vezenje (nit, senca), barva kape s krogoma, cena 34 €', kapa.includes('feTurbulence') && kapa.includes('feDropShadow')
+    && kapa.includes('linear-gradient(135deg') && kapa.includes('34,00') && kapa.includes(SL['motiv.barva']))
+
+  // Mockup: valj stisne motiv na vidni del (2R·sin(s/2R)), trakovi se stikajo, sredina ostane.
+  const tr = trakoviValja(70, 37.6)
+  const vidno = tr.at(-1)!.x0v + (tr.at(-1)!.x1 - tr.at(-1)!.x0) * tr.at(-1)!.k - tr[0]!.x0v
+  preveri('d23 mockup: valj', Math.abs(vidno - 2 * 37.6 * Math.sin(35 / 37.6)) < 1e-6 && tr.every((t, n) => n === 0 || Math.abs(tr[n - 1]!.x0v + (tr[n - 1]!.x1 - tr[n - 1]!.x0) * tr[n - 1]!.k - t.x0v) < 1e-9)
+    && Math.abs(tr[20]!.k - 1) < 0.01 && tr[0]!.k < 0.7, String(vidno))
+
+  // Vrednosti, barve in napake: ime možnosti v jeziku, ekipa iz postave, barve dresa, datum in ocene kot v bazi.
+  const dresM = motiv('dres-po-meri')
+  preveri('d23 prikaz: ime možnosti, ekipa postave, barve dresa iz polj, sicer shema', prikazVrednosti(dresM.polja[0]!, 'serpa') === 'Šerpa'
+    && prikazVrednosti(dresM.polja[1]!, 'rdeca') === 'Rdeča' && prikazVrednosti(motiv('moja-postava').polja[0]!, primeriPostave[0]!.polja.postava) === 'FC Ponedeljek Zjutraj'
+    && barveMotiva(dresM, { barva1: 'rdeca', barva2: 'bela' }).length === 2 && barveMotiva(motiv('moja-postava'), {}, 'retro')[0] === '#C8102E'
+    && moznost('GK').ime_en === 'GK')
+  const d = new Date(2026, 9, 19)
+  preveri('d23 napake: datum in ocena zrcalita bazo', napakaPolja('datum', '2026-02-30', 12, 2026, 0, d) === 'motiv.napaka.datum'
+    && napakaPolja('datum', '1949-12-31', 12, 2026, 0, d) === 'motiv.napaka.datum' && napakaPolja('datum', '2027-10-20', 12, 2026, 0, d) === 'motiv.napaka.datum'
+    && napakaPolja('datum', '2027-10-19', 12, 2026, 0, d) === null && napakaPolja('datum', '2026-05-17', 12, 2026, 0, d) === null
+    && napakaPolja('stevilka', '0', 12, 2026, 1) === 'motiv.napaka.ocena' && napakaPolja('stevilka', '1', 12, 2026, 1) === null && napakaPolja('stevilka', '0') === null)
+
+  // Vitrina po skupinah s sidri; kartica nosilca brez slike pokaže motiv na nosilcu.
+  const kat: MotivKataloga[] = motivi23.map(({ izdelki, doplacilo: _d, ...m }) => ({ ...m, izdelki: izdelki.map((s) => ({ slug: s, ime_sl: s, ime_en: s, postopek: 'laser', doplacilo: 0, cena_od: 1000, cone: cone23.filter((c) => c.izdelek === s) })) }))
+  const majice: MotivKataloga = { ...kat[0]!, slug: 'retro-dres', izdelki: [{ ...kat[0]!.izdelki[0]!, slug: 'majica-po-meri' }] }
+  const skupine = renderToString(<StaticRouter location="/personalised"><SkupineMotivov motivi={[majice, ...kat]} /></StaticRouter>)
+  preveri('d23 vitrina: skupine s sidri v pravem vrstnem redu', ['majice', 'dresi', 'pub', 'stena', 'dodatki'].every((k) => skupine.includes(`href="#${k}"`) && skupine.includes(`id="${k}"`))
+    && ['majice', 'dresi', 'pub', 'stena', 'dodatki'].map((k) => skupine.indexOf(`id="naslov-${k}"`)).every((x, n, a) => x > 0 && (n === 0 || x > a[n - 1]!))
+    && skupinaMotiva(motiv('navijaski-sal') as unknown as MotivKataloga) === 'dodatki' && skupinaMotiva({ izdelki: [] }) === 'dodatki')
+  const karticaNosilca = renderToString(<StaticRouter location="/"><KarticaIzdelka i={{ slug: 'kozarec-po-meri', ime_sl: 'Kozarec', ime_en: 'Glass', kategorija: 'dom', slike: [], cena_od: 1200, cena_do: 1200, na_voljo: 'da' }} motivi={kat} /></StaticRouter>)
+  preveri('d23 katalog: nosilec brez slike pokaže motiv na fotografiji nosilca', karticaNosilca.includes('/nosilci/kozarec.webp') && karticaNosilca.includes('clipPath id="trak-') && !karticaNosilca.includes('slff-grb'))
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
