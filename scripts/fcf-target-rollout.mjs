@@ -17,7 +17,7 @@ function data(input){
 }
 function nativeInput(input,sourceData){return{targetSlug:input.targetSlug,sourceData,databaseInventory:input.databaseInventory,existingExceptionBindings:input.existingExceptionBindings,writerCommit:input.sourceCommit,now:input.now??Date.now()}}
 function envelope(input,packet,sourceData,identityPlan){
- const p=JSON.parse(packet.manifestText),rollout={schemaVersion:1,kind:'fcf-current-target-rollout',targetSlug:input.targetSlug,sourceCommit:input.sourceCommit,execution:execution(input.execution,input.sourceCommit),targetPacketText:packet.manifestText,targetPacketSha256:packet.manifestSha256,inventoryBinding:sourceData.binding,cleanupBinding:p.cleanupBinding,identityPlan:{mappingText:identityPlan.proposalText,mappingSha256:identityPlan.proposalSha256},readiness:input.readiness??null}
+ const p=JSON.parse(packet.manifestText),rollout={schemaVersion:sourceData.binding.protocol==='six-reviewed-continuation-v1'?2:1,kind:sourceData.binding.protocol==='six-reviewed-continuation-v1'?'fcf-six-current-target-rollout':'fcf-current-target-rollout',targetSlug:input.targetSlug,sourceCommit:input.sourceCommit,execution:execution(input.execution,input.sourceCommit),targetPacketText:packet.manifestText,targetPacketSha256:packet.manifestSha256,inventoryBinding:sourceData.binding,cleanupBinding:p.cleanupBinding,identityPlan:{mappingText:identityPlan.proposalText,mappingSha256:identityPlan.proposalSha256},readiness:input.readiness??null}
  const rolloutText=JSON.stringify(rollout)
  if(Buffer.byteLength(rolloutText)>8*1024*1024)fail('bounded rollout exceeded')
  return Object.freeze({rolloutText,rolloutSha256:sha(rolloutText)})
@@ -36,7 +36,8 @@ export function replayFcfTargetRollout(input={}){
  if(typeof text!=='string'||Buffer.byteLength(text)>8*1024*1024||text.charCodeAt(0)===0xfeff||!/^[a-f0-9]{64}$/.test(hash??'')||sha(text)!==hash)fail('exact bounded rollout TEXT/SHA required')
  let r,p
  try{r=JSON.parse(text);p=JSON.parse(r.targetPacketText)}catch{fail('invalid rollout/packet JSON')}
- if(Object.keys(r??{}).sort().join(',')!==keys||r.schemaVersion!==1||r.kind!=='fcf-current-target-rollout'||r.targetSlug!==input.targetSlug||r.sourceCommit!==input.sourceCommit)fail('closed new-inventory rollout schema/identity required')
+ const six=data(input).binding.protocol==='six-reviewed-continuation-v1'
+ if(Object.keys(r??{}).sort().join(',')!==keys||r.schemaVersion!==(six?2:1)||r.kind!==(six?'fcf-six-current-target-rollout':'fcf-current-target-rollout')||r.targetSlug!==input.targetSlug||r.sourceCommit!==input.sourceCommit)fail('closed new-inventory rollout schema/identity required')
  const sourceData=data(input),base=nativeInput(input,sourceData)
  execution(r.execution,r.sourceCommit)
  const packet=verifyFcfTargetReleasePacket({targetSlug:input.targetSlug,sourceCommit:input.sourceCommit,targetEvidence:input.inventoryAdmission,cleanupEvidence:input.cleanupEvidence,databaseInventory:p.databaseInventory,manifestText:r.targetPacketText,manifestSha256:r.targetPacketSha256,now:input.now??Date.now()})
