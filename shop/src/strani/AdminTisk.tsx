@@ -129,8 +129,9 @@ export function svgZaTisk(p: PostavkaTiska, d: DatotekaTiska): string {
 /**
  * Ozadje do roba prireza: pravokotnik, ki se dotika roba motiva, in krog, ki ga zapolni
  * (podstavek), se razširita za PRIREZ, da po rezu ni belega roba. Le kadar je predloga
- * v mm cone (viewBox = mm); <defs> in zasukani deli ostanejo.
- * ponytail: le <rect> in <circle> na korenu predloge; trikotnik zastavice ostane brez prireza.
+ * v mm cone (viewBox = mm); <defs> in zasukani deli ostanejo. Lik z data-prirez="cx cy r"
+ * (trikotnik zastavice, tudi njegov clipPath) se poveča okoli središča včrtanega kroga za
+ * (r + PRIREZ) / r: odmik vsake stranice trikotnika za PRIREZ je natanko ta raztezek.
  */
 export function vPrirez(svg: string, W: number, H: number): string {
   const vb = /^<svg\b[^>]*\sviewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(svg)
@@ -147,7 +148,9 @@ export function vPrirez(svg: string, W: number, H: number): string {
     const [a, b] = [z <= e && z > -PRIREZ ? -PRIREZ : z, z + d >= meja - e && z + d < meja + PRIREZ ? meja + PRIREZ : z + d]
     return [a, b - a]
   }
-  return svg.replace(/<defs\b[\s\S]*?<\/defs>|<(?:rect|circle)\b[^>]*>/g, (o) => {
+  return svg.replace(/<[\w:-]+\b[^>]*\sdata-prirez="([\d.]+) ([\d.]+) ([\d.]+)"[^>]*>/g, (o, cx: string, cy: string, r: string) =>
+    o.replace(/^<[\w:-]+/, `$& transform="translate(${cx} ${cy}) scale(${((Number(r) + PRIREZ) / Number(r)).toFixed(4)}) translate(-${cx} -${cy})"`))
+    .replace(/<defs\b[\s\S]*?<\/defs>|<(?:rect|circle)\b[^>]*>/g, (o) => {
     if (o.startsWith('<defs') || o.includes(' transform=')) return o
     if (o.startsWith('<circle')) {
       const [cx, cy, r] = [atr(o, 'cx', 0), atr(o, 'cy', 0), atr(o, 'r')]

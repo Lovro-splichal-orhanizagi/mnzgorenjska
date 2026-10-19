@@ -216,11 +216,15 @@ nehišne ekipe; baza ob nakupu shrani **posnetek** (oblika v2) v `polja.postava`
 `{ekipa, liga, sezona, krog, formacija, tocke_skupaj, kazen, zacetni[11], klop[]}`,
 igralec `{ime, priimek, pozicija, klub, tocke, kapetan, podkapetan, mnozitelj,
 zamenjava, zamenjan, steje}` (podrobno v glavi `trgovina.postava_ekipe`). Krog je
-**zadnji končani**: zaklenjen, vsaj en igralec s točkami in glasovanje o
-asistencah zaprto; odprt ali neodigran krog se preskoči. Brez takega kroga baza
+**zadnji končani tekoče sezone lige** (`sezona_lige`): zaklenjen, vsaj en igralec
+s točkami in glasovanje o asistencah zaprto; odprt ali neodigran krog in krogi
+pretekle sezone se preskočijo. Brez takega kroga baza
 javi namig `trgovina-postava-krog` (konfigurator: "na voljo po prvem odigranem
-krogu"). Točke so tiste, ki so štele (menjave s klopi, množitelj kapetana), vsota
-minus kazen je `tocke_skupaj`. Živi predogled bere isti posnetek
+krogu"). Točke so tiste, ki so štele (menjave s klopi, množitelj kapetana);
+`tocke_skupaj` = njihova vsota minus kazen (`fantasy_transfers.penalty`), izračunana
+v funkciji, ne prebrana iz `tocke_krogov`, ki lahko zaostaja. Opis postavke
+(košarica po nakupu, potrdilo, e-pošta) pove krog posnetka ("Kranjski Tigri ·
+9. krog"), ker je predogled lahko starejši krog. Živi predogled bere isti posnetek
 (`trgovina_moja_postava`). **Tisk riše le posnetek iz postavke**, nikoli živih
 podatkov: kasnejša sprememba postave ali imena igralca plakata ne spremeni.
 
@@ -311,7 +315,8 @@ pomnoži s svetlostjo fotografije.
 3. Nova migracija z vrstico `trgovina.cone` (`slika`, `koti`, `sirina_mm`, `visina_mm`).
 4. Preveri predogled na izdelku z vsemi motivi (svetla in temna barva).
 
-**Tisk** (admin → Tisk, `AdminTisk.tsx`): datoteke za vsako neprazno cono,
+**Tisk** (admin → Tisk, `AdminTisk.tsx`; agent bere `trgovina.tisk` v celoti,
+`cone.kljuc` je v `agent.odprti_stolpci`): datoteke za vsako neprazno cono,
 ime `<oznaka>-<cona>-<postopek>-<postavka>`, vse z vgrajeno pisavo Anton. Mere
 so iz posnetka postavke, barve iz posnetka (dres) ali sheme, stalni napisi in
 datum v **jeziku naročila** (`trgovina.narocila.jezik`, sl|en s check; pogled
@@ -327,7 +332,7 @@ datum v **jeziku naročila** (`trgovina.narocila.jezik`, sl|en s check; pogled
 - **Komplet** (podstavki): datoteka na kos `-k1` … `-k6` (vsak svoj slogan) in
   `-list` (vseh 6 na listu 295 × 195 mm). Krog podstavka dobi 3 mm prireza.
 - **Šal**: ves trak 1400 × 180 mm v eni datoteki. **Plakat**: A3 ali A2 po
-  različici. **Zastavica**: trikotnik brez prireza zunaj trikotnika (ponytail).
+  različici. **Zastavica**: trikotnik (in njegov clipPath) se poveča okoli središča včrtanega kroga, da zraste za 3 mm na vsaki stranici (kavelj `data-prirez="cx cy r"`).
 - **DPI**: 300, razen sublimacije s stranico ≥ 600 mm (dres, šal) v **150 dpi**,
   kar je za tekstil dovolj: dres s prirezom 620 × 770 mm = 3661 × 4547 px
   (16,6 M px, pod mejo platna 16,7 M px v iOS Safariju; v 300 dpi bi bil

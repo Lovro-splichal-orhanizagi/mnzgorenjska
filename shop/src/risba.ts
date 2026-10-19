@@ -20,6 +20,8 @@
 //   <g data-postava="postava" data-igrisce="x y w h" data-klop="x y w h"/>  postava iz posnetka
 //   <g data-dres="spredaj|hrbet" data-polja="…"/>  ves panel dresa (vzorec, ovratnik, napisi)
 //   data-polja="a b"     polja, ki jih cona riše, ne da bi imela svoj <text data-polje>
+//   data-prirez="cx cy r" lik brez pravokotnega roba (trikotnik): izvoz ga poveča okoli središča
+//                        včrtanega kroga (r) za prirez; trikotnik tako zraste točno za 3 mm na vsaki stranici
 import { MOTIVI, type Motiv } from './motivi'
 
 /** Vrednosti polj: besedilo, število ali predmet (posnetek postave). */

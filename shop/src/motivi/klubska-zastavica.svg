@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450" width="300mm" height="450mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="zastavica">
-  <defs><clipPath id="zast"><path d="M0 0 H300 L150 450 Z"/></clipPath></defs>
-  <path d="M0 0 H300 L150 450 Z" data-barva="1"/>
+  <defs><clipPath id="zast"><path d="M0 0 H300 L150 450 Z" data-prirez="150 108.1 108.1"/></clipPath></defs>
+  <path d="M0 0 H300 L150 450 Z" data-barva="1" data-prirez="150 108.1 108.1"/>
   <g clip-path="url(#zast)">
     <rect width="300" height="40" data-barva="t"/>
     <path d="M0 300 L150 450 L300 300" fill="none" data-crta="s" stroke-width="12"/>

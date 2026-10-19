@@ -469,21 +469,21 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
       ({ ime: priimek, priimek, pozicija, klub: 'Lipa', tocke, kapetan: false, podkapetan: false, mnozitelj: 1, steje: true, ...dodatno })
     const posnetek = {
       ekipa: 'Sporting <b>Čevapčiči</b> Kranj', liga: 'Liga Gorjanci', sezona: '2026/27', krog: 9, formacija: '3-5-2', tocke_skupaj: 57, kazen: 4,
-      zacetni: [igr('Kos', 'GK', 6, { ime: 'Tine Kos' }), igr('Igralec', 'DEF', 2), igr('Podbrežnik-Zakrajšek', 'DEF', 1), igr('Zupan', 'DEF', null),
-        igr('Turk', 'MID', 36, { kapetan: true, mnozitelj: 3 }), igr('Vidic', 'MID', 2, { podkapetan: true }), igr('Bizjak', 'MID', 5), igr('Kralj', 'MID', 3),
-        igr('Pirc', 'MID', 2, { zamenjava: true }), igr('Hribar', 'FWD', 9), igr('Kokalj', 'FWD', 2)],
-      klop: [igr('Kos', 'GK', 0, { ime: 'Lan Kos', steje: false }), igr('Leban', 'DEF', 1, { steje: true }), igr('Kern', 'MID', null, { steje: false }), igr('Golob', 'FWD', null, { zamenjan: true, steje: false })],
+      zacetni: [igr('Žogec', 'GK', 6, { ime: 'Tine Žogec' }), igr('Igralec', 'DEF', 2), igr('Podajač-Presingar', 'DEF', 1), igr('Golgeter', 'DEF', null),
+        igr('Bombardir', 'MID', 36, { kapetan: true, mnozitelj: 3 }), igr('Volejček', 'MID', 2, { podkapetan: true }), igr('Drsalec', 'MID', 5), igr('Ofsajdnik', 'MID', 3),
+        igr('Klopčič', 'MID', 2, { zamenjava: true }), igr('Škarjevec', 'FWD', 9), igr('Penalček', 'FWD', 2)],
+      klop: [igr('Žogec', 'GK', 0, { ime: 'Lovec Žogec', steje: false }), igr('Bidončič', 'DEF', 1, { steje: true }), igr('Copatar', 'MID', null, { steje: false }), igr('Prečkar', 'FWD', null, { zamenjan: true, steje: false })],
     }
     const plakat = narisiMotiv('moja-postava', { postava: posnetek }, ['#2E9E4F', '#E9F6EC', '#0B3B1E'])
     const plakatEn = narisiMotiv('moja-postava', { postava: posnetek }, ['#2E9E4F', '#E9F6EC', '#0B3B1E'], undefined, { sirina: 420, visina: 594 }, { jezik: 'en' })
     preveri('postava: 11 + 4 dresov, imena, Igralec, kapetan, podkapetan, točke, skupaj, kazen, ubežano',
       (plakat.match(/M-6 -14 Q0 -10 6 -14/g) ?? []).length === 15 && urejenXml(plakat) && plakat.includes('>IGRALEC</text>')
-      && plakat.includes('>PODBREŽNIK-ZAKRAJŠEK</text>') && plakat.includes('>C</text>') && plakat.includes('>V</text>') && plakat.includes('>36</text>')
+      && plakat.includes('>PODAJAČ-PRESINGAR</text>') && plakat.includes('>C</text>') && plakat.includes('>V</text>') && plakat.includes('>36</text>')
       && plakat.includes('>–</text>') && plakat.includes('>57</text>') && plakat.includes('>3-5-2</text>') && plakat.includes('LIGA GORJANCI · SEZONA 2026/27')
       && plakat.includes('VKLJ. −4 ZA PRESTOPE') && plakat.includes('&lt;B&gt;ČEVAPČIČI&lt;/B&gt;') && !plakat.includes('<b>')
       && (plakat.match(/opacity="\.55"/g) ?? []).length === 1 && (plakat.match(/l4 -6 l4 6 z/g) ?? []).length === 1
       && plakat.includes('>(0)</text>') && !plakat.includes('>(1)</text>') && (plakat.match(/l1\.6 1\.7/g) ?? []).length === 1
-      && plakat.includes('>T. KOS</text>') && plakat.includes('>L. KOS</text>'), plakat.slice(0, 200))
+      && plakat.includes('>T. ŽOGEC</text>') && plakat.includes('>L. ŽOGEC</text>'), plakat.slice(0, 200))
     preveri('postava: brez skupnih točk "–", ne prazna celica', /font-size="10\.5"[^>]*>–<\/text>/.test(narisiMotiv('moja-postava', { postava: { ...posnetek, tocke_skupaj: null } }, ['#111', '#eee', '#000'])))
     // Geometrija: 5 v vrsti vsaj 42 mm narazen; ime na traku med obročem C (180,75) in zvezdo (282,7).
     const vrsta5 = narisiMotiv('moja-postava', { postava: { ...posnetek, zacetni: posnetek.zacetni.map((x, n) => ({ ...x, pozicija: n === 0 ? 'GK' : n < 6 ? 'MID' : 'DEF' })) } }, ['#111', '#eee', '#000'])
@@ -809,7 +809,7 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
   const plakatIz = nosilec('plakat-po-meri', [['A3', 'A3', 2900], ['A2', 'A2', 4500]])
   const vrsticaP = { razlicica_id: 900, slug: 'plakat-po-meri', kolicina: 1, personalizacija: { motiv: 'moja-postava', polja: { postava: 1 }, shema: 'igrisce' }, prikaz: { postava: 'Moji Kavčarji' } }
   const kosP = renderToString(<StaticRouter location="/cart"><SlikaMotiva iz={plakatIz} p={vrsticaP} oznaka="A3" alt="x" /></StaticRouter>)
-  preveri('d23 košarica: plakat postave z igralci in imenom ekipe', kosP.includes('MOJI KAVČARJI') && kosP.includes('KOS'), kosP.slice(0, 200))
+  preveri('d23 košarica: plakat postave z igralci in imenom ekipe', kosP.includes('MOJI KAVČARJI') && kosP.includes('ŽOGEC'), kosP.slice(0, 200))
   const karticaCena = renderToString(<StaticRouter location="/"><KarticaIzdelka i={{ slug: 'kozarec-po-meri', ime_sl: 'Kozarec', ime_en: 'Glass', kategorija: 'dom', slike: [], cena_od: 1200, cena_do: 1200, na_voljo: 'da', cena_z_motivom: 2100 }} /></StaticRouter>)
   preveri('d23 katalog: nosilec pove ceno z motivom ("od 21,00")', karticaCena.includes('od 21,00') && !karticaCena.includes('>12,00'))
   const vitrinaOdp = renderToString(<StaticRouter location="/personalised"><MrezaMotivov motivi={kat.filter((m) => m.slug === 'ime-in-stevilka' || m.slug === 'navijaski-sal')} /></StaticRouter>)
@@ -886,6 +886,12 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
     const [ds] = datotekeTiska(sal)
     preveri('izvoz d23: šal ves trak 1400 × 180 mm v 150 dpi', ds!.mm.sirina === 1400 && ds!.mm.visina === 180 && dpiZa(sal, ds!) === 150
       && svgZaTisk(sal, ds!).includes(`width="${1400 + 2 * ROB}mm"`))
+    const zast = postavka('klubska-zastavica', 'zastavica-po-meri', 'sublimacija')
+    const [dz] = datotekeTiska(zast)
+    const listZ = svgZaTisk(zast, dz!)
+    preveri('izvoz d23: zastavica s prirezom 3 mm okoli trikotnika (ozadje in clipPath)',
+      (listZ.match(/transform="translate\(150 108\.1\) scale\(1\.0278\) translate\(-150 -108\.1\)"/g) ?? []).length === 2
+      && /<clipPath[^>]*><path transform="translate\(150 108\.1\)/.test(listZ) && !svgMotiva(zast, dz!).includes('scale(1.0278)'), listZ.slice(0, 500))
     const shranjene: string[] = []
     const neuspele = await prenesiVse({ ...serija, postavke: [laser, kapa, mat] }, (ime) => { shranjene.push(ime) })
     preveri('izvoz d23: prenos po postopku (laser SVG+PNG, vezenje le SVG, podstavki 7 listov)',
