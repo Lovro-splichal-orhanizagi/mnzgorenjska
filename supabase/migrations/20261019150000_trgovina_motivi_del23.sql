@@ -647,27 +647,31 @@ join (values
 ) x(slug, sl, en, sku, cena, teza, n) on x.slug = i.slug
 where not exists (select 1 from trgovina.razlicice r where r.izdelek_id = i.id);
 
--- Cone: začasne fotografije in koti (Task 3 jih zamenja; 1600×1600 px), mere
--- tiska v mm so prave. Kozarec in vrč: vidna sprednja ploskev ovoja; podstavek
--- Ø95 (×6 na listu ob izvozu); plakat po različici (barva = "A3"/"A2").
+-- Cone: fotografija praznega nosilca (shop/nosilci/, 1600×1600 px) in koti
+-- TL, TR, BR, BL na njej; mere tiska v mm so prave. Kozarec in vrč: koti so
+-- razvita cona v merilu osi valja (polmer ~37,6 mm oz. 45 mm, vrč sega čez rob
+-- fotografije, ker je 200 mm ovoja več kot vidna polovica); mockup jo ukrivi
+-- okoli navpične osi. Podstavki: cona je zgornji srednji od šestih. Plakat A3 in
+-- A2 delita fotografijo (oba 1:√2, barva = "A3"/"A2"). Kartica z belim robom
+-- (spodaj jo drži stojalo). Dres: cona od ramen do roba, rokavi zunaj cone.
 insert into trgovina.cone (izdelek_id, kljuc, barva, slika, koti, sirina_mm, visina_mm)
 select i.id, c.kljuc, c.barva, c.slika, c.koti::jsonb, c.s, c.v
 from trgovina.izdelki i
 join (values
-  ('kozarec-po-meri',   'ovoj',      null,        '/nosilci/kozarec.webp',        '[[565,500],[1035,500],[1035,1100],[565,1100]]', 70, 90),
-  ('vrc-po-meri',       'ovoj',      null,        '/nosilci/vrc.webp',            '[[500,560],[1100,560],[1100,1040],[500,1040]]', 200, 90),
-  ('podstavki-po-meri', 'podstavek', null,        '/nosilci/podstavki.webp',      '[[500,500],[1100,500],[1100,1100],[500,1100]]', 95, 95),
-  ('odpirac-po-meri',   'rocaj',     null,        '/nosilci/odpirac.webp',        '[[500,740],[1100,740],[1100,920],[500,920]]', 50, 15),
-  ('plakat-po-meri',    'plakat',    'A3',        '/nosilci/plakat-a3.webp',      '[[517,300],[1083,300],[1083,1100],[517,1100]]', 297, 420),
-  ('plakat-po-meri',    'plakat',    'A2',        '/nosilci/plakat-a2.webp',      '[[517,300],[1083,300],[1083,1100],[517,1100]]', 420, 594),
-  ('kartica-igralca',   'kartica',   null,        '/nosilci/kartica.webp',        '[[536,350],[1064,350],[1064,1100],[536,1100]]', 148, 210),
-  ('zastavica-po-meri', 'zastavica', null,        '/nosilci/zastavica.webp',      '[[600,300],[1000,300],[1000,900],[600,900]]', 300, 450),
-  ('sal-po-meri',       'sal',       null,        '/nosilci/sal.webp',            '[[100,700],[1500,700],[1500,880],[100,880]]', 1400, 180),
-  ('kapa-po-meri',      'spredaj',   'Črna',      '/nosilci/kapa-crna.webp',      '[[600,600],[1000,600],[1000,800],[600,800]]', 100, 50),
-  ('kapa-po-meri',      'spredaj',   'Bela-črna', '/nosilci/kapa-bela-crna.webp', '[[600,600],[1000,600],[1000,800],[600,800]]', 100, 50),
-  ('trak-po-meri',      'trak',      null,        '/nosilci/trak.webp',           '[[400,700],[1200,700],[1200,913],[400,913]]', 300, 80),
-  ('dres-po-meri',      'spredaj',   null,        '/nosilci/dres-spredaj.webp',   '[[480,300],[1120,300],[1120,1100],[480,1100]]', 600, 750),
-  ('dres-po-meri',      'hrbet',     null,        '/nosilci/dres-hrbet.webp',     '[[480,300],[1120,300],[1120,1100],[480,1100]]', 600, 750)
+  ('kozarec-po-meri',   'ovoj',      null,        '/nosilci/kozarec.webp',        '[[494,370],[1101,370],[1080,1128],[511,1128]]', 70, 90),
+  ('vrc-po-meri',       'ovoj',      null,        '/nosilci/vrc.webp',            '[[-157,310],[1611,310],[1611,1106],[-157,1106]]', 200, 90),
+  ('podstavki-po-meri', 'podstavek', null,        '/nosilci/podstavki.webp',      '[[568,302],[1028,302],[1028,761],[568,761]]', 95, 95),
+  ('odpirac-po-meri',   'rocaj',     null,        '/nosilci/odpirac.webp',        '[[597,730],[967,730],[967,841],[597,841]]', 50, 15),
+  ('plakat-po-meri',    'plakat',    'A3',        '/nosilci/plakat.webp',         '[[384,209],[1216,209],[1216,1386],[384,1386]]', 297, 420),
+  ('plakat-po-meri',    'plakat',    'A2',        '/nosilci/plakat.webp',         '[[384,209],[1216,209],[1216,1386],[384,1386]]', 420, 594),
+  ('kartica-igralca',   'kartica',   null,        '/nosilci/kartica.webp',        '[[471,258],[1133,258],[1157,1196],[486,1206]]', 148, 210),
+  ('zastavica-po-meri', 'zastavica', null,        '/nosilci/zastavica.webp',      '[[381,279],[1214,279],[1214,1502],[381,1502]]', 300, 450),
+  ('sal-po-meri',       'sal',       null,        '/nosilci/sal.webp',            '[[117,706],[1482,706],[1482,874],[117,874]]', 1400, 180),
+  ('kapa-po-meri',      'spredaj',   'Črna',      '/nosilci/kapa-crna.webp',      '[[455,478],[1145,478],[1145,823],[455,823]]', 100, 50),
+  ('kapa-po-meri',      'spredaj',   'Bela-črna', '/nosilci/kapa-bela-crna.webp', '[[455,478],[1145,478],[1145,823],[455,823]]', 100, 50),
+  ('trak-po-meri',      'trak',      null,        '/nosilci/trak.webp',           '[[124,619],[1477,619],[1477,975],[124,975]]', 300, 80),
+  ('dres-po-meri',      'spredaj',   null,        '/nosilci/dres-spredaj.webp',   '[[238,90],[1358,90],[1358,1490],[238,1490]]', 600, 750),
+  ('dres-po-meri',      'hrbet',     null,        '/nosilci/dres-hrbet.webp',     '[[265,128],[1329,128],[1329,1458],[265,1458]]', 600, 750)
 ) c(slug, kljuc, barva, slika, koti, s, v) on c.slug = i.slug
 on conflict do nothing;
 
