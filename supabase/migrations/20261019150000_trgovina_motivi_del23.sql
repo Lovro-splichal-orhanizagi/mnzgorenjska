@@ -566,7 +566,7 @@ select p.id as postavka_id, p.serija_id, p.stanje_tiska, n.id as narocilo_id, n.
   join trgovina.narocila n on n.id = p.narocilo_id
   join trgovina.razlicice r on r.id = p.razlicica_id
   join trgovina.izdelki i on i.id = r.izdelek_id
- where p.stanje_tiska is not null and n.stanje in ('placano', 'poslano');
+ where p.stanje_tiska is not null and trgovina.je_placano_aktivno(n.stanje);
 revoke all on trgovina.tisk from public, anon, authenticated;
 
 -- --------------------------------------------------------------------------
