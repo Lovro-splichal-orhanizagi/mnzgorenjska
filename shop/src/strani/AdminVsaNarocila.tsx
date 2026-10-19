@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { opisPersonalizacije, STANJA_NAROCILA, supabase, type NarociloAdmin, type NarociloPodrobno, type StanjeNarocila, type VsaNarocila } from '../baza'
 import { cena, datum, t } from '../besede'
 import { Nalaganje } from '../seja'
-import { Naslovnik, oznaciPoslano } from './Admin'
+import { Naslovnik, oznaciPoslano } from './narocilo'
 
 // Zavihek "Vsa naročila": filter po stanju s števci, iskanje, strani, podrobnosti
 // z zgodovino in ročnimi prehodi. Dovoljene prehode preveri baza
@@ -14,7 +14,6 @@ type Cilj = 'placano' | 'v_izdelavi' | 'poslano' | 'dostavljeno' | 'preklicano'
 
 /** Prehodi, ki jih vmesnik ponudi (zrcalo baze). */
 export const PREHODI: Partial<Record<StanjeNarocila, Cilj[]>> = {
-  caka_placilo: ['preklicano'],
   placano: ['v_izdelavi', 'poslano', 'preklicano'],
   v_izdelavi: ['placano', 'poslano', 'preklicano'],
   poslano: ['dostavljeno'],
@@ -298,7 +297,7 @@ function Dejanja({ n, token, spremeni }: { n: NarociloPodrobno; token: string; s
       {izbira && (
         <div className="space-y-2 rounded-lg bg-white/5 p-3">
           {izbira === 'preklicano' && (
-            <p className="text-amber-200">{n.stanje === 'caka_placilo' ? t('admin.vsa.cakaOpozorilo') : t('admin.vsa.vraciloOpozorilo')}</p>
+            <p className="text-amber-200">{t('admin.vsa.vraciloOpozorilo')}</p>
           )}
           {izbira === 'poslano' ? (
             <input value={sledilna} onChange={(e) => setSledilna(e.target.value)} placeholder={t('admin.sledilna')} aria-label={t('admin.sledilna')} className="polje w-full" />

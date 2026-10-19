@@ -4370,17 +4370,17 @@ select pg_temp.preveri('trgovina4: poslano -> dostavljeno',
   trgovina_admin_nastavi_stanje(current_setting('test.trg3')::bigint, 'dostavljeno')->>'stanje' = 'dostavljeno');
 select pg_temp.napaka('trgovina4: dostavljeno -> placano ni dovoljeno',
   format('select trgovina_admin_nastavi_stanje(%s, %L)', current_setting('test.trg3'), 'placano'), 'trgovina-prehod');
+-- Rep od prvega 'placano' (ali je trg3 prej potekel, je stvar starejših testov).
 select pg_temp.preveri('trgovina4: zgodovina vseh prehodov',
-  (select jsonb_agg(e->>'v') from jsonb_array_elements(trgovina_admin_narocilo(current_setting('test.trg3')::bigint)->'zgodovina') e)
-    = '["poteklo","placano","v_izdelavi","placano","v_izdelavi","poslano","dostavljeno"]'
-  or (select jsonb_agg(e->>'v') from jsonb_array_elements(trgovina_admin_narocilo(current_setting('test.trg3')::bigint)->'zgodovina') e)
+  (with z as (select e->>'v' as v, i from jsonb_array_elements(trgovina_admin_narocilo(current_setting('test.trg3')::bigint)->'zgodovina')
+                with ordinality x(e, i))
+   select jsonb_agg(v order by i) from z where i >= (select min(i) from z where v = 'placano'))
     = '["placano","v_izdelavi","placano","v_izdelavi","poslano","dostavljeno"]');
 select pg_temp.preveri('trgovina4: preklic placanega zahteva vracilo',
   trgovina_admin_nastavi_stanje(current_setting('test.trg4')::bigint, 'preklicano', 'kupec si je premislil') @>
     '{"stanje":"preklicano","vracilo_potrebno":true}');
-select pg_temp.preveri('trgovina4: preklic cakajocega brez vracila',
-  trgovina_admin_nastavi_stanje(current_setting('test.trg5')::bigint, 'preklicano') @>
-    '{"stanje":"preklicano","vracilo_potrebno":false}');
+select pg_temp.napaka('trgovina4: cakajocega ni mogoce preklicati (rezervacija poteče sama)',
+  format('select trgovina_admin_nastavi_stanje(%s, %L)', current_setting('test.trg5'), 'preklicano'), 'trgovina-prehod');
 select pg_temp.napaka('trgovina4: preklicano -> placano ni dovoljeno',
   format('select trgovina_admin_nastavi_stanje(%s, %L)', current_setting('test.trg4'), 'placano'), 'trgovina-prehod');
 select pg_temp.preveri('trgovina4: iskanje po oznaki',
@@ -4398,8 +4398,31 @@ select pg_temp.preveri('trgovina4: stran in najnovejse najprej',
       = current_setting('test.trg_najnovejse')::bigint);
 reset role;
 select set_config('request.jwt.claim.sub','',true);
-select pg_temp.preveri('trgovina4: preklic sprosti rezervacijo',
-  (select na_voljo = current_setting('test.trg5_voljo')::int + 1 from trgovina.razpolozljivo where razlicica_id = -916003));
+select pg_temp.preveri('trgovina4: cakajoce narocilo drzi rezervacijo',
+  (select stanje = 'caka_placilo' from trgovina.narocila where id = current_setting('test.trg5')::bigint)
+  and (select na_voljo = current_setting('test.trg5_voljo')::int from trgovina.razpolozljivo where razlicica_id = -916003));
+
+-- Mešano naročilo (blago + darilni bon), ki ga admin premakne v izdelavo ali je
+-- že dostavljeno, preden webhook izda kode: bon se zabeleži, bon_poslan stanja ne spremeni.
+insert into trgovina.izdelki(id, slug, ime_sl, ime_en, kategorija, aktiven, digitalni) overriding system value values
+  (-916101, 'test-trg4-bon', 'Bon', 'Gift card', 'dodatki', true, true);
+insert into trgovina.razlicice(id, izdelek_id, oznaka_sl, oznaka_en, sku, cena, zaloga) overriding system value values
+  (-916101, -916101, '20 €', '€20', 'TEST-TRG4-BON', 2000, 0);
+insert into trgovina.narocila(id, stanje, placano_at, stripe_checkout_id) overriding system value values
+  (-916201, 'v_izdelavi', now(), 'cs_test_trg4_mesano1'), (-916202, 'dostavljeno', now(), 'cs_test_trg4_mesano2');
+insert into trgovina.postavke(id, narocilo_id, razlicica_id, ime, cena, kolicina) overriding system value values
+  (-916201, -916201, -916101, 'Bon', 2000, 1), (-916202, -916201, -916001, 'Test', 1000, 1),
+  (-916203, -916202, -916101, 'Bon', 2000, 1), (-916204, -916202, -916001, 'Test', 1000, 1);
+set local role service_role;
+select pg_temp.preveri('trgovina4: bon za narocilo v izdelavi in dostavljeno se zabelezi',
+  trgovina_zabelezi_bon(-916201, 1, repeat('a', 64), 'AAAA', now() + interval '1 year', 'promo_trg4_1') = 'zabelezeno'
+  and trgovina_zabelezi_bon(-916203, 1, repeat('b', 64), 'BBBB', now() + interval '1 year', 'promo_trg4_2') = 'zabelezeno');
+select trgovina_bon_poslan(-916201);
+select trgovina_bon_poslan(-916202);
+reset role;
+select pg_temp.preveri('trgovina4: bon_poslan ohrani v_izdelavi in dostavljeno',
+  (select bool_and(bon_mail_at is not null) and string_agg(stanje, ',' order by id) = 'dostavljeno,v_izdelavi'
+     from trgovina.narocila where id in (-916201, -916202)));
 set local role service_role;
 select pg_temp.preveri('trgovina4: ponovljeno placilo dostavljenega je ze',
   trgovina_iz_placila('cs_test_trgovina_3', 'pi_test3', 'tretji@example.invalid', 'Tretji', '{}', 1000, 390, 250, 1390, 'paket_si') = 'ze');

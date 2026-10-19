@@ -13076,6 +13076,23 @@ preveri(
   preveri('trgovina tarife: EU-27', trgovinaEU27.length === 27 && trgovinaEU27.includes('SI') && !trgovinaEU27.includes('GB'))
   preveri('trgovina stripe: paket_si v Avstrijo je napaka', napacnaTarifa('paket_si', 'AT') && !napacnaTarifa('paket_si', 'SI') && !napacnaTarifa('paket_eu', 'AT'))
 
+  // Plačana stanja naročila: en nabor v SQL (trgovina.je_placano_aktivno) in en v
+  // funkcijah (_shared/trgovina-stanja.ts); nobena funkcija ga ne piše na roko.
+  {
+    const { readdirSync } = await import('node:fs')
+    const { PLACANA_AKTIVNA, jePlacanoAktivno } = await import('../supabase/functions/_shared/trgovina-stanja.ts')
+    const sql = readFileSync(new URL('../supabase/migrations/20261019140000_trgovina_admin_narocila.sql', import.meta.url), 'utf8')
+    const vSql = sql.match(/je_placano_aktivno\(p_stanje text\)[\s\S]*?p_stanje in \(([^)]*)\)/)?.[1].match(/'[a-z_]+'/g)?.map((x) => x.slice(1, -1))
+    preveri('trgovina stanja: plačana v funkcijah = plačana v SQL', JSON.stringify(vSql) === JSON.stringify(PLACANA_AKTIVNA), JSON.stringify(vSql))
+    preveri('trgovina stanja: v_izdelavi in dostavljeno sta plačana, preklicano ne',
+      jePlacanoAktivno('v_izdelavi') && jePlacanoAktivno('dostavljeno') && !jePlacanoAktivno('preklicano') && !jePlacanoAktivno(null))
+    const mapa = new URL('../supabase/functions/', import.meta.url)
+    const roke = readdirSync(mapa, { recursive: true })
+      .filter((d) => d.endsWith('.ts') && !d.startsWith('_shared'))
+      .filter((d) => /\[\s*'placano'\s*,\s*'poslano'\s*\]|stanje === 'placano' \|\||'placano' \|\| [^\n]*stanje === 'poslano'/.test(readFileSync(new URL(d, mapa), 'utf8')))
+    preveri('trgovina stanja: nobena funkcija ne piše placano/poslano na roko', roke.length === 0, roke.join(', '))
+  }
+
   // Maili trgovine (trgovina-posta/sporocila.ts): sl/en, zneski, sledilna, ubežni znaki.
   const n = {
     javna_oznaka: 'AB12CD34', stanje: 'placano', email: 'k@example.com', ime: 'Ana', jezik: 'sl',

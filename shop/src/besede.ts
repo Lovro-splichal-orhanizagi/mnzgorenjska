@@ -388,8 +388,7 @@ export const SL = {
   'admin.vsa.opomba': 'Opomba (neobvezno, vidi jo le admin)',
   'admin.vsa.potrdi': 'Potrdi: {stanje}',
   'admin.vsa.nazaj': 'Nazaj',
-  'admin.vsa.vraciloOpozorilo': 'Naročilo je plačano: preklic denarja ne vrne. Vrni ga v Stripe; vračilo naročilo nato premakne v Vrnjeno.',
-  'admin.vsa.cakaOpozorilo': 'Odprto sejo Stripe lahko kupec še plača. Tako plačilo pride na Discord in ga vrneš ročno.',
+  'admin.vsa.vraciloOpozorilo': 'Naročilo je plačano: preklic denarja ne vrne. Vrni ga v Stripe; vračilo naročilo nato premakne v Vrnjeno. Kode darilnih bonov veljajo do vračila.',
   'admin.vsa.vraciloPotrebno': 'Naročilo je preklicano. Denar vrni v Stripe:',
 }
 
@@ -774,8 +773,7 @@ export const EN: Record<Kljuc, string> = {
   'admin.vsa.opomba': 'Note (optional, admins only)',
   'admin.vsa.potrdi': 'Confirm: {stanje}',
   'admin.vsa.nazaj': 'Back',
-  'admin.vsa.vraciloOpozorilo': 'The order is paid: cancelling does not refund it. Refund it in Stripe; the refund then moves the order to Refunded.',
-  'admin.vsa.cakaOpozorilo': 'The customer can still pay an open Stripe session. Such a payment is posted to Discord for a manual refund.',
+  'admin.vsa.vraciloOpozorilo': 'The order is paid: cancelling does not refund it. Refund it in Stripe; the refund then moves the order to Refunded. Gift card codes stay valid until the refund.',
   'admin.vsa.vraciloPotrebno': 'The order is cancelled. Refund the payment in Stripe:',
 }
 

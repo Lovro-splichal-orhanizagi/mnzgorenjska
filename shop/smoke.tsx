@@ -314,7 +314,7 @@ preveri('admin vsa: Stripe povezava po nacinu seje',
   && stripePovezava('pi_1', 'cs_live_a').url === 'https://dashboard.stripe.com/payments/pi_1'
   && !stripePovezava('pi_1', null).znanNacin && stripePovezava('pi_1', null).url === 'https://dashboard.stripe.com/payments/pi_1')
 preveri('admin vsa: prehodi kot v bazi (poslano le iz placano/v_izdelavi, konec brez dejanj)',
-  JSON.stringify(PREHODI) === JSON.stringify({ caka_placilo: ['preklicano'], placano: ['v_izdelavi', 'poslano', 'preklicano'],
+  JSON.stringify(PREHODI) === JSON.stringify({ placano: ['v_izdelavi', 'poslano', 'preklicano'],
     v_izdelavi: ['placano', 'poslano', 'preklicano'], poslano: ['dostavljeno'] }))
 preveri('admin vsa: znacka stanja in povzetek postavk',
   renderToString(<ZnackaStanja stanje="v_izdelavi" />).includes(SL['admin.stanje.v_izdelavi'])

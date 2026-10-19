@@ -5,11 +5,19 @@
 -- trgovina_admin_poslano (sledilna številka + mail). Vsaka sprememba stanja gre v
 -- trgovina.zgodovina_stanj (sprožilec; admin_id iz auth.uid(), opomba iz RPC).
 -- Kjer so doslej veljala "plačana" stanja (placano, poslano), zdaj veljajo tudi
--- v_izdelavi in dostavljeno: tisk, vračilo, ponovljen webhook plačila, poslano.
+-- v_izdelavi in dostavljeno (trgovina.je_placano_aktivno): tisk, vračilo, boni,
+-- ponovljen webhook plačila. Funkcije imajo isti nabor v
+-- supabase/functions/_shared/trgovina-stanja.ts (smoke ju primerja).
 
 alter table trgovina.narocila drop constraint if exists narocila_stanje_check;
 alter table trgovina.narocila add constraint narocila_stanje_check
   check (stanje in ('caka_placilo', 'placano', 'v_izdelavi', 'poslano', 'dostavljeno', 'preklicano', 'vrnjeno', 'poteklo'));
+
+-- Plačano in ne preklicano/vrnjeno: edini nabor "plačanih" stanj.
+create function trgovina.je_placano_aktivno(p_stanje text) returns boolean
+language sql immutable
+as $$ select p_stanje in ('placano', 'v_izdelavi', 'poslano', 'dostavljeno') $$;
+revoke all on function trgovina.je_placano_aktivno(text) from public, anon, authenticated;
 
 create table trgovina.zgodovina_stanj (
   id          bigint generated always as identity primary key,
@@ -30,12 +38,13 @@ insert into agent.zaprti_stolpci (tabela, stolpec, zakaj) values
 on conflict (tabela, stolpec) do nothing;
 
 -- Opombo poda trgovina_admin_nastavi_stanje prek trgovina.opomba (lokalno v transakciji).
+-- admin_id le za admina (servis in morebitni klic kupca sta "samodejno").
 create function trgovina.zabelezi_stanje() returns trigger
 language plpgsql security definer set search_path = ''
 as $$
 begin
   insert into trgovina.zgodovina_stanj (narocilo_id, iz, v, admin_id, opomba)
-  values (new.id, old.stanje, new.stanje, auth.uid(), nullif(current_setting('trgovina.opomba', true), ''));
+  values (new.id, old.stanje, new.stanje, case when public.is_admin() then auth.uid() end, nullif(current_setting('trgovina.opomba', true), ''));
   return null;
 end;
 $$;
@@ -67,7 +76,7 @@ declare v trgovina.narocila;
 begin
   select * into v from trgovina.narocila
    where stripe_payment_intent = p_payment_intent
-     and stanje in ('placano', 'v_izdelavi', 'poslano', 'dostavljeno', 'preklicano', 'vrnjeno')
+     and (trgovina.je_placano_aktivno(stanje) or stanje in ('preklicano', 'vrnjeno'))
    for update;
   if not found or nullif(p_payment_intent, '') is null then
     return null;
@@ -100,7 +109,7 @@ begin
   select * into v_narocilo from trgovina.narocila where stripe_checkout_id = p_checkout for update;
   if not found then
     return 'neznano';
-  elsif v_narocilo.stanje in ('placano', 'v_izdelavi', 'poslano', 'dostavljeno')
+  elsif trgovina.je_placano_aktivno(v_narocilo.stanje)
         or (v_narocilo.stanje in ('preklicano', 'vrnjeno') and v_narocilo.placano_at is not null) then
     return 'ze';
   -- Poteklo (pocisti, sprosti) se še plača: Stripe pošlje plačano le za
@@ -166,6 +175,36 @@ begin
 end;
 $$;
 
+-- Bon se izda tudi za naročilo v izdelavi ali dostavljeno (mešano naročilo, ki ga
+-- admin premakne, preden webhook izda kode). Spremenjen je le pogoj stanja.
+create or replace function trgovina.zabelezi_bon(
+  p_postavka bigint, p_zaporedje int, p_koda_hash text, p_koda_konec text,
+  p_velja_do timestamptz, p_stripe_promocija text
+) returns text
+language plpgsql
+as $$
+declare
+  v record;
+begin
+  if exists (select 1 from trgovina.boni where postavka_id = p_postavka and zaporedje = p_zaporedje) then
+    return 'ze';
+  end if;
+  select p.narocilo_id, p.cena into v
+    from trgovina.postavke p
+    join trgovina.narocila n on n.id = p.narocilo_id and trgovina.je_placano_aktivno(n.stanje)
+    join trgovina.razlicice r on r.id = p.razlicica_id
+    join trgovina.izdelki i on i.id = r.izdelek_id and i.digitalni
+   where p.id = p_postavka and p_zaporedje between 1 and p.kolicina;
+  if not found or p_velja_do is null or nullif(p_stripe_promocija, '') is null then
+    raise exception 'Trgovina: bon ne spada k tej postavki.' using hint = 'trgovina-vnos';
+  end if;
+  insert into trgovina.boni (narocilo_id, postavka_id, zaporedje, koda_hash, koda_konec, znesek, velja_do, stripe_promocija)
+  values (v.narocilo_id, p_postavka, p_zaporedje, p_koda_hash, p_koda_konec, v.cena, p_velja_do, p_stripe_promocija)
+  on conflict (postavka_id, zaporedje) do nothing;
+  return case when found then 'zabelezeno' else 'ze' end;
+end;
+$$;
+
 -- Tisk vidi tudi naročila v izdelavi in dostavljena (stolpci kot v motivih).
 create or replace view trgovina.tisk as
 select p.id as postavka_id, p.serija_id, p.stanje_tiska, n.id as narocilo_id, n.javna_oznaka, n.placano_at,
@@ -178,7 +217,7 @@ select p.id as postavka_id, p.serija_id, p.stanje_tiska, n.id as narocilo_id, n.
   join trgovina.narocila n on n.id = p.narocilo_id
   join trgovina.razlicice r on r.id = p.razlicica_id
   join trgovina.izdelki i on i.id = r.izdelek_id
- where p.stanje_tiska is not null and n.stanje in ('placano', 'v_izdelavi', 'poslano', 'dostavljeno');
+ where p.stanje_tiska is not null and trgovina.je_placano_aktivno(n.stanje);
 revoke all on trgovina.tisk from public, anon, authenticated;
 
 -- Poslano tudi iz v_izdelavi (popravek sledilne še vedno na poslanem).
@@ -257,7 +296,9 @@ $$;
 -- Dovoljeni ročni prehodi; poslano le prek trgovina_admin_poslano (sledilna, mail).
 -- Preklic plačanega naročila denarja ne vrne: vrne vracilo_potrebno = true
 -- (vračilo v Stripe, charge.refunded ga nato premakne v vrnjeno). Zaloge ne vrne
--- (kot vračilo): kos, ki ostane, admin doda v zavihku Izdelki.
+-- (kot vračilo): kos, ki ostane, admin doda v zavihku Izdelki. Kode darilnih bonov
+-- ostanejo veljavne do vračila. caka_placilo se ne prekliče ročno: odprto sejo
+-- Stripe bi kupec še lahko plačal, rezervacija pa poteče sama (35 min, pocisti).
 create function public.trgovina_admin_nastavi_stanje(p_id bigint, p_stanje text, p_opomba text default null) returns jsonb
 language plpgsql security definer set search_path = public
 as $$
@@ -279,21 +320,21 @@ begin
   end if;
   if p_stanje is null
      or (v.stanje, p_stanje) not in (('placano', 'v_izdelavi'), ('v_izdelavi', 'placano'), ('poslano', 'dostavljeno'),
-                                     ('caka_placilo', 'preklicano'), ('placano', 'preklicano'), ('v_izdelavi', 'preklicano')) then
+                                     ('placano', 'preklicano'), ('v_izdelavi', 'preklicano')) then
     raise exception 'Trgovina: iz stanja % v % ni mogoče.', v.stanje, coalesce(p_stanje, '(prazno)')
       using hint = 'trgovina-prehod';
   end if;
 
   perform set_config('trgovina.opomba', coalesce(v_opomba, ''), true);
   update trgovina.narocila
-     set stanje = p_stanje, odjemalec = case when p_stanje = 'preklicano' then null else odjemalec end
+     set stanje = p_stanje
    where id = p_id;
   perform set_config('trgovina.opomba', '', true);
   if p_stanje = 'preklicano' then
     perform trgovina.sprosti_izdelavo(p_id, 'preklic trgovine');
   end if;
   return trgovina_admin_narocilo(p_id)
-      || jsonb_build_object('vracilo_potrebno', p_stanje = 'preklicano' and v.stanje <> 'caka_placilo');
+      || jsonb_build_object('vracilo_potrebno', p_stanje = 'preklicano');
 end;
 $$;
 

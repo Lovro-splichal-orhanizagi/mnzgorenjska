@@ -75,6 +75,7 @@
 // Naslov: https://api.slff.eu/functions/v1/stripe-webhook (brez JWT!)
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
+import { jePlacanoAktivno } from '../_shared/trgovina-stanja.ts'
 import { veljavenPodpis } from './podpis.ts'
 import { scoutCeneNarocnine, scoutPostavkeVeljajo } from './scout.ts'
 import { enoteBonov, idKupona, IZDELEK_TRGOVINE, kodeSeje, napacnaTarifa, novaKoda, trgovinaIzSeje, zgostiKodo } from './trgovina.ts'
@@ -560,7 +561,7 @@ async function izdajBone(id_: number, oznaka: string, znova: boolean): Promise<n
   const { data, error } = await baza.rpc('trgovina_narocilo_za_posto', { p_id: id_ })
   if (error) throw new Error(`trgovina_narocilo_za_posto: ${error.message}`)
   const narocilo = data as Obj | null
-  if (!narocilo || !['placano', 'poslano'].includes(narocilo.stanje)) return 0
+  if (!narocilo || !jePlacanoAktivno(narocilo.stanje)) return 0
   // Mail gre šele po izdaji vseh enot: zabeležen mail pomeni, da je vse izdano.
   if (narocilo.bon_mail_at && !znova) return 0
   const enote = enoteBonov(narocilo.postavke ?? [])
