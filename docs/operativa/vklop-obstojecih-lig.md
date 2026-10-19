@@ -4,9 +4,9 @@ Delovni tok **Vklop obstojecih uvozenih lig** (`vklop-obstojecih-lig.yml`)
 uporabi obstoječi servisni `vklopi_ligo_sredi_sezone` in skupno podatkovno
 varovalko `preveri_vklop_lige`. Predogled in vklop ne uvažata, ne bereta ponudnikov in ne spreminjata cen,
 pozicij, urnikov ali zgodovinske politike. Ločeni `refresh=true` uporabi
-omejeno EPS dohitevanje, opisano spodaj. Noben način ne pošilja sporočil. Nemčija, Španija in Hrvaška imajo svoje postopke.
+omejeno EPS/HLF dohitevanje, opisano spodaj. Noben način ne pošilja sporočil. Nemčija, Španija in Hrvaška imajo svoje postopke.
 
-Obseg je 43 že uvoženih kandidatov iz branja produkcije 18. 10. 2026,
+Obseg je 50 že uvoženih kandidatov iz branja produkcije 18.–19. 10. 2026,
 izrecno naštetih v
 `scripts/policies/existing-league-candidates-20261018.json`. Register je
 inventar kandidatov, ne odobritev pripravljenosti. Vsaka vrstica veže ID,
@@ -78,9 +78,9 @@ samodejno; obstoječi nočni postopki in ločeni delovni tokovi ostanejo.
 Preizkus brez baze ali ponudnikov:
 `node --test scripts/test-vklop-obstojecih-lig.mjs`.
 
-## Paketno dohitevanje neaktivnih EPS lig
+## Paketno dohitevanje neaktivnih EPS ali HLF lig
 
-`refresh=true` osveži **1–5 izrecno izbranih EPS kandidatov** iz istega
+`refresh=true` osveži **1–5 izrecno izbranih kandidatov istega vira EPS ali HLF** iz istega
 registra. To je pisalni način: zahteva `expected_sha` in
 `approved_sha256` iz predogleda na istem commitu, čaka na starejše pisce
 ter ob začetku preveri vse izbrane ID-je, sluge, vire in šifre lig.
@@ -94,9 +94,9 @@ node scripts/uvoz-razporeda.mjs --tekmovanje <slug> --pisi
 node scripts/uvoz-zapisnikov.mjs --tekmovanje <slug> --samo-manjkajoce
 ```
 
-Drugi ukaz je opt-in samo za tekočo sezono neaktivnega EPS tekmovanja.
+Drugi ukaz je opt-in samo za tekočo sezono neaktivnega EPS ali HLF tekmovanja.
 V preskočni seznam sodijo le vrstice z dejanskim `imported_at` in
-`zapisnik_id`. EPS jih izpusti pred branjem strani zapisnika; nepopolni
+`zapisnik_id`. Oba vira jih izpustita pred branjem strani zapisnika; nepopolni
 zapisniki z `imported_at = null` ostanejo upravičeni do dopolnitve. Običajni
 nočni uvoz aktivnih lig ohrani svoj režim svežine. EPS zdaj upošteva tudi
 obstoječi izbor posameznega `--zapisnik` pred branjem drugih zapisnikov.
@@ -109,7 +109,7 @@ HOLD. Osvežitev ne spreminja pravil, ne dopolnjuje statistike, ne prepisuje
 cen in ne vklopi lige.
 
 Opozorilo razporeda o manjkajočih klubih zadrži to ligo. Zavrnitev, nedosegljivost ali drug nepojasnjen padec podukaza
-zadrži še preostale izbrane lige iste EPS domene; neodvisne domene se
+zadrži še preostale izbrane lige iste domene vira; neodvisne domene se
 nadaljujejo. Noben padli podukaz se samodejno ne ponovi. Ob prekinitvi ali
 nejasnem izidu preveri dejansko bazo in artefakte pred novim zagonom.
 Premori, predpomnilnik in ustavitev ob izzivu ostanejo v običajnem viru.
@@ -118,8 +118,19 @@ Vsak podukaz ima največ 30 minut, paket največ pet lig.
 Artefakt vsebuje `refresh-progress.jsonl` z zapisom pred/po vsakem podukazu,
 `refresh.jsonl` s koraki/izhodi vsake lige in svež
 `results.jsonl` z nespremenjenimi preverbi pripravljenosti po osvežitvi.
-Predpomnilnik EPS se shrani tudi ob delnem neuspehu. Ligo, ki opravi
+Predpomnilnik izbranega vira se shrani tudi ob delnem neuspehu. Ligo, ki opravi
 osvežitev, a še nima podatkov za vklop, izhod jasno označi HOLD.
 `refresh=true` in `activate=true` se izključujeta. Po pregledu uporabi
 obstoječi ločen `activate=true` za pripravljen izbor na istem commitu;
 ob vklopu se stanje in prihodnji rok spet prebereta in preverita v bazi.
+
+HLF obseg je omejen na `ro-liga3-s2` do `ro-liga3-s8`. Vseh sedem uporablja
+isto domeno `hailafotbal.ro`; nepojasnjen padec ustavi preostali HLF paket,
+tudi kadar imajo lige različne poti. Uporabi se izključno obstoječi javni
+brskalniški adapter z njegovimi premori in ustavitvijo ob izzivu. Neposredni
+klici Datalake API ali poverilnice iz kode strani niso dovoljeni.
+
+HLF nima arhiva; velja že dokumentirana pot cen iz minut tekoče sezone
+v `docs/viri/romunija.md`. Ta razširitev ne odobrava novih zgodovinskih
+izključitev, ne spreminja cen in ne izpušča preverjanja vratarjev,
+zakonitega kadra ali prihodnjega roka.
