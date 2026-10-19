@@ -174,4 +174,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaWildcard: 'Wildcard: ξαναφτιάξε την ομάδα σου δωρεάν',
     pravilaKlopPlus: 'Πάγκος+: μετράει και ο πάγκος σου',
   },
+  trgovina: {
+    oznaka: 'Νέο · Κατάστημα SLFF',
+    naslov: 'Επίσημος εξοπλισμός SLFF',
+    opis: 'Μπλουζάκια, φούτερ, κασκόλ, καπέλα jockey και κούπες για αληθινούς ποδοσφαιριστές της Κυριακής. Αποστολή σε όλη την ΕΕ.',
+    gumb: 'Στο κατάστημα →',
+    majica: 'Μπλουζάκι',
+    pulover: 'Φούτερ',
+    sal: 'Κασκόλ',
+    kapa: 'Καπέλο τζόκεϊ',
+  },
 }

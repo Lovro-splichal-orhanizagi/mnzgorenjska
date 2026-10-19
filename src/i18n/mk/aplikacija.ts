@@ -70,6 +70,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     povabi: 'Покани пријател',
     pomoc: 'Помош',
     trgovina: 'Продавница',
+    novo: 'Ново',
     odjava: 'Одјава',
     prijava: 'Најава',
     zacni: 'Започни бесплатно',

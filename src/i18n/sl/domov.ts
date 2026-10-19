@@ -176,4 +176,15 @@ export const domov = {
     pravilaWildcard: 'Wildcard: ekipo sestaviš na novo brez kazni',
     pravilaKlopPlus: 'Klop+: točke šteje tudi klop',
   },
+  // Kartica trgovine na naslovnici (shop.slff.eu), le standardni izdelki.
+  trgovina: {
+    oznaka: 'Novo · SLFF Trgovina',
+    naslov: 'Uradna oprema SLFF',
+    opis: 'Majice, puloverji, šali, kape s šiltom in skodelice za prave nedeljske nogometaše. Dostava po EU.',
+    gumb: 'V trgovino →',
+    majica: 'Majica',
+    pulover: 'Pulover',
+    sal: 'Šal',
+    kapa: 'Kapa s šiltom',
+  },
 }

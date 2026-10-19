@@ -183,6 +183,13 @@ export default function Navbar() {
       </span>
     )
 
+  // Trgovina je nova; oznaka se bere kot del povezave ("Trgovina Novo").
+  const novo = (
+    <span className="ml-1.5 rounded-full bg-amber-400/25 px-1.5 py-0.5 align-middle text-[10px] font-black uppercase text-amber-200">
+      {t('aplikacija.meni.novo')}
+    </span>
+  )
+
   const vrsticaMenija =
     'block whitespace-nowrap rounded-lg px-3 py-2 text-left text-slate-300 hover:bg-white/5 hover:text-slate-100'
 
@@ -203,6 +210,13 @@ export default function Navbar() {
                 {p.naslov}
               </NavLink>
             ))}
+            {/* Pri 1024 px bi trgovina izbirniku lige vzela skoraj ves prostor
+                (grščina se prelije čez rob), zato je zgoraj šele od xl, prej v "Več". */}
+            <a {...povezavaTrgovine()} className={`${slog({ isActive: false })} hidden xl:inline`}>
+              {t('aplikacija.meni.trgovina')}
+              {' '}
+              {novo}
+            </a>
 
             {/* "Več": vse, kar ni tedensko. Pika za asistence se prenese na
                 gumb, da opomnik ne izgine v meniju; število je ob povezavi. */}
@@ -243,8 +257,15 @@ export default function Navbar() {
                       {p.pot === '/assists' && znacka(cakaGlasov)}
                     </NavLink>
                   ))}
-                  <a {...povezavaTrgovine()} role="menuitem" className={vrsticaMenija} onClick={() => setVecOdprt(false)}>
+                  <a
+                    {...povezavaTrgovine()}
+                    role="menuitem"
+                    className={`${vrsticaMenija} xl:hidden`}
+                    onClick={() => setVecOdprt(false)}
+                  >
                     {t('aplikacija.meni.trgovina')}
+                    {' '}
+                    {novo}
                   </a>
                 </div>
               )}
@@ -389,6 +410,8 @@ export default function Navbar() {
               ))}
               <a {...povezavaTrgovine()} className={slogMobilni({ isActive: false })} onClick={() => setOdprt(false)}>
                 {t('aplikacija.meni.trgovina')}
+                {' '}
+                {novo}
               </a>
               {session ? (
                 <NavLink to="/reminders" className={slogMobilni} onClick={() => setOdprt(false)}>

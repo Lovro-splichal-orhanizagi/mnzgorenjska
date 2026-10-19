@@ -174,4 +174,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaWildcard: 'Wildcard: վերակազմիր թիմդ անվճար',
     pravilaKlopPlus: 'Նստարան+: նստարանն էլ է միավորներ վաստակում',
   },
+  trgovina: {
+    oznaka: 'Նոր · SLFF խանութ',
+    naslov: 'SLFF-ի պաշտոնական հանդերձանք',
+    opis: 'Շապիկներ, հուդիներ, շարֆեր, կեպիներ և գավաթներ՝ կիրակնօրյա իսկական ֆուտբոլիստների համար։ Առաքում ամբողջ ԵՄ-ում։',
+    gumb: 'Դեպի խանութ →',
+    majica: 'Շապիկ',
+    pulover: 'Հուդի',
+    sal: 'Շարֆ',
+    kapa: 'Կեպի',
+  },
 }
