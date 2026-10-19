@@ -32,10 +32,16 @@ test('selection is explicit and rejects bespoke routes, unknown leagues and dupl
   assert.equal(validateSelection(registry,[candidate.slug]).length,1)
   for(const slugs of [[],['de-regionalliga-nord'],['es-foo'],['hr-foo'],['unknown'],[candidate.slug,candidate.slug]]) assert.throws(()=>validateSelection(registry,slugs))
 })
-test('HLF registry binds only the seven reviewed production tuples and its public-browser contract',()=>{
+test('HLF registry binds only the reviewed production tuples and its public-browser contract',()=>{
   const hlf=registry.candidates.filter(c=>c.source==='hlf')
-  assert.deepEqual(hlf.map(c=>[c.id,c.slug,c.source_league_code]),Array.from({length:7},(_,i)=>[496-i,`ro-liga3-s${i+2}`,`national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-${i+2}`]))
-  assert.equal(validateSelection(registry,hlf.map(c=>c.slug)).length,7)
+  const expected=[...Array.from({length:7},(_,i)=>[496-i,`ro-liga3-s${i+2}`,`national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-${i+2}`]),
+    [503,'ro-ab-superliga','judetean/alba/fotbal/2026-2027/superliga-ajf-alba/sezon-regular/1'],
+    [510,'ro-cj-l4','judetean/cluj/fotbal/2026-2027/liga-4-cluj/sezon-regular/grupa-a'],
+    [512,'ro-hd-l4','judetean/hunedoara/fotbal/2026-2027/liga-4/sezon-regular/serie-1'],
+    [498,'ro-liga2','national/fotbal/2026-2027/liga-2-casa-pariurilor/sezon-regular/seria-1'],
+    [488,'ro-sb-superliga','judetean/sibiu/fotbal/2026-2027/superliga/sezon-regular/serie-1']]
+  assert.deepEqual(hlf.map(c=>[c.id,c.slug,c.source_league_code]),expected)
+  assert.equal(validateSelection(registry,hlf.map(c=>c.slug)).length,12)
   assert.throws(()=>validateSelection(registry,['ro-liga3-s1']))
   assert.equal(registry.source_contracts.hlf.document,'docs/viri/romunija.md')
 })
