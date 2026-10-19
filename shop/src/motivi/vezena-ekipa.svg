@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 50" width="100mm" height="50mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="spredaj">
+  <text x="50" y="27" font-size="22" letter-spacing=".8" data-polje="ime" data-velike data-sirina="92" data-sredina data-barva="1">DINAMO KAVČ</text>
+  <path d="M14 33 H38 M62 33 H86" fill="none" data-crta="2" stroke-width="1.4" stroke-linecap="round"/>
+  <text x="50" y="45.5" font-size="13" data-polje="stevilka" data-ce="stevilka" data-barva="2">10</text>
+  <g data-ce="!stevilka"><path d="M50.00 34.90 L48.86 37.94 L45.63 38.08 L48.16 40.10 L47.30 43.22 L50.00 41.43 L52.70 43.22 L51.84 40.10 L54.37 38.08 L51.14 37.94Z" data-barva="2"/></g>
+  <path d="M28.00 37.10 L27.16 39.34 L24.77 39.45 L26.64 40.94 L26.00 43.25 L28.00 41.93 L30.00 43.25 L29.36 40.94 L31.23 39.45 L28.84 39.34Z" data-barva="2"/><path d="M72.00 37.10 L71.16 39.34 L68.77 39.45 L70.64 40.94 L70.00 43.25 L72.00 41.93 L74.00 43.25 L73.36 40.94 L75.23 39.45 L72.84 39.34Z" data-barva="2"/>
+</svg>

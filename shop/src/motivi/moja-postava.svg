@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 297 420" width="297mm" height="420mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="plakat">
+  <rect width="297" height="420" data-barva="t"/>
+  <rect x="8" y="8" width="281" height="404" fill="none" data-crta="1" stroke-width="1.4"/>
+  <rect x="11.5" y="11.5" width="274" height="397" fill="none" data-crta="1" stroke-width=".4"/>
+  <path d="M60 25.5 H104 M193 25.5 H237" fill="none" data-crta="1" stroke-width=".6"/>
+  <text x="148.5" y="28.6" font-size="8" letter-spacing="3.2" data-barva="1" data-en="MY LINE-UP">MOJA POSTAVA</text>
+  <path d="M54.00 23.50 L53.51 24.82 L52.10 24.88 L53.20 25.76 L52.82 27.12 L54.00 26.34 L55.18 27.12 L54.80 25.76 L55.90 24.88 L54.49 24.82Z" data-barva="1"/><path d="M243.00 23.50 L242.51 24.82 L241.10 24.88 L242.20 25.76 L241.82 27.12 L243.00 26.34 L244.18 27.12 L243.80 25.76 L244.90 24.88 L243.49 24.82Z" data-barva="1"/>
+  <text x="148.5" y="62" font-size="32" letter-spacing=".8" data-polje="postava.ekipa" data-velike data-sirina="250" data-vrstice="2" data-sredina data-barva="s">FC PONEDELJEK ZJUTRAJ</text>
+  <text x="148.5" y="76" font-size="7" letter-spacing="2" data-polje="postava" data-vzorec="{liga} · SEZONA {sezona}" data-vzorec-en="{liga} · SEASON {sezona}" data-velike data-sirina="240" data-barva="1">LIGA</text>
+  <rect x="22" y="82" width="80" height="22" rx="1.5" fill="none" data-crta="1" stroke-width=".6"/>
+  <text x="62" y="88.6" font-size="4.6" letter-spacing="1.4" data-barva="1" data-en="FORMATION">FORMACIJA</text>
+  <text x="62" y="100.6" font-size="10.5" letter-spacing=".6" data-polje="postava.formacija" data-sirina="74" data-barva="s">0</text>
+  <rect x="108.5" y="82" width="80" height="22" rx="1.5" fill="none" data-crta="1" stroke-width=".6"/>
+  <text x="148.5" y="88.6" font-size="4.6" letter-spacing="1.4" data-barva="1" data-en="ROUND">KROG</text>
+  <text x="148.5" y="100.6" font-size="10.5" letter-spacing=".6" data-polje="postava.krog" data-sirina="74" data-barva="s">0</text>
+  <rect x="195" y="82" width="80" height="22" rx="1.5" fill="none" data-crta="1" stroke-width=".6"/>
+  <text x="235" y="88.6" font-size="4.6" letter-spacing="1.4" data-barva="1" data-en="ROUND POINTS">TOČKE KROGA</text>
+  <text x="235" y="100.6" font-size="10.5" letter-spacing=".6" data-polje="postava.tocke_skupaj" data-prazno="–" data-sirina="74" data-barva="s">0</text>
+  <rect x="195" y="82" width="80" height="22" rx="1.5" data-barva="1" opacity=".16"/>
+  <rect x="20" y="114" width="257" height="226" rx="2" data-barva="1" opacity=".13"/>
+  <rect x="20" y="114.0" width="257" height="28.2" data-barva="s" opacity=".035"/>
+  <rect x="20" y="170.5" width="257" height="28.2" data-barva="s" opacity=".035"/>
+  <rect x="20" y="227.0" width="257" height="28.2" data-barva="s" opacity=".035"/>
+  <rect x="20" y="283.5" width="257" height="28.2" data-barva="s" opacity=".035"/>
+  <rect x="26" y="120" width="245" height="214" fill="none" data-crta="s" stroke-width=".6" opacity=".32"/>
+  <path d="M126.5 120 A22 22 0 0 0 170.5 120" fill="none" data-crta="s" stroke-width=".6" opacity=".32"/>
+  <path d="M78.5 334 V292 H218.5 V334 M116.5 334 V319 H180.5 V334 M126.5 292 A24 24 0 0 1 170.5 292" fill="none" data-crta="s" stroke-width=".6" opacity=".32"/>
+  <circle cx="148.5" cy="120" r="1.4" data-barva="s" opacity=".32"/><circle cx="148.5" cy="305" r="1" data-barva="s" opacity=".32"/>
+  <rect x="20" y="348" width="257" height="48" rx="2" fill="none" data-crta="1" stroke-width=".5" stroke-dasharray="2 1.6"/>
+  <rect x="133.5" y="344.5" width="30" height="7" data-barva="t"/>
+  <text x="148.5" y="350.4" font-size="5.2" letter-spacing="2.4" data-barva="1" data-en="BENCH">KLOP</text>
+  <g data-postava="postava" data-igrisce="20 120 257 220" data-klop="20 354 257 42" data-kazen="235 109.6"></g>
+  <text x="148.5" y="405.4" font-size="4.8" letter-spacing="2.6" data-barva="1" data-en="SLFF · SUNDAY LEAGUE FANTASY · SLFF.EU">SLFF · NEDELJSKA LIGA · SLFF.EU</text>
+</svg>

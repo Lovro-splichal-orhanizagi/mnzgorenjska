@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450" width="300mm" height="450mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="zastavica">
+  <defs><clipPath id="zast"><path d="M0 0 H300 L150 450 Z" data-prirez="150 108.1 108.1"/></clipPath></defs>
+  <path d="M0 0 H300 L150 450 Z" data-barva="1" data-prirez="150 108.1 108.1"/>
+  <g clip-path="url(#zast)">
+    <rect width="300" height="40" data-barva="t"/>
+    <path d="M0 300 L150 450 L300 300" fill="none" data-crta="s" stroke-width="12"/>
+    <path d="M0 326 L150 476 L300 326" fill="none" data-crta="t" stroke-width="6"/>
+    <path d="M0 352 L150 502 L300 352" fill="none" data-crta="s" stroke-width="12"/>
+  </g>
+  <path d="M13 13 H287 L150 424 Z" fill="none" data-crta="s" stroke-width="3"/>
+  <path d="M20 18 H280 L150 408 Z" fill="none" data-crta="t" stroke-width="1"/>
+  <path d="M110.00 21.00 L108.52 24.96 L104.29 25.15 L107.60 27.78 L106.47 31.85 L110.00 29.52 L113.53 31.85 L112.40 27.78 L115.71 25.15 L111.48 24.96Z" data-barva="s"/><path d="M130.00 21.00 L128.52 24.96 L124.29 25.15 L127.60 27.78 L126.47 31.85 L130.00 29.52 L133.53 31.85 L132.40 27.78 L135.71 25.15 L131.48 24.96Z" data-barva="s"/><path d="M150.00 21.00 L148.52 24.96 L144.29 25.15 L147.60 27.78 L146.47 31.85 L150.00 29.52 L153.53 31.85 L152.40 27.78 L155.71 25.15 L151.48 24.96Z" data-barva="s"/><path d="M170.00 21.00 L168.52 24.96 L164.29 25.15 L167.60 27.78 L166.47 31.85 L170.00 29.52 L173.53 31.85 L172.40 27.78 L175.71 25.15 L171.48 24.96Z" data-barva="s"/><path d="M190.00 21.00 L188.52 24.96 L184.29 25.15 L187.60 27.78 L186.47 31.85 L190.00 29.52 L193.53 31.85 L192.40 27.78 L195.71 25.15 L191.48 24.96Z" data-barva="s"/>
+  <text x="150" y="104" font-size="50" letter-spacing="1" data-polje="ekipa" data-velike data-sirina="210" data-vrstice="2" data-sredina data-barva="t" data-crta="t" stroke-width="7">FC PONEDELJEK ZJUTRAJ</text>
+  <text x="150" y="104" font-size="50" letter-spacing="1" data-polje="ekipa" data-velike data-sirina="210" data-vrstice="2" data-sredina data-barva="s" data-crta="t" stroke-width="2.6" paint-order="stroke">FC PONEDELJEK ZJUTRAJ</text>
+  <circle cx="150" cy="200" r="50" data-barva="t" data-crta="s" stroke-width="4"/>
+  <circle cx="150" cy="200" r="42" fill="none" data-crta="1" stroke-width="1.4"/>
+  <g data-ce="leto"><text x="150" y="186" font-size="13" letter-spacing="3" data-barva="1">EST.</text><text x="150" y="222" font-size="30" letter-spacing="1" data-polje="leto" data-barva="s">2019</text></g>
+  <g data-ce="!leto"><circle cx="150" cy="200" r="28" data-barva="s"/><path d="M150.0 189.0 L160.5 196.6 L156.5 208.9 L143.5 208.9 L139.5 196.6Z" data-barva="t"/><path d="M150.0 189.0 L150.0 172.0 M160.5 196.6 L176.6 191.3 M156.5 208.9 L166.5 222.7 M143.5 208.9 L133.5 222.7 M139.5 196.6 L123.4 191.3" fill="none" data-crta="t" stroke-width="2"/></g>
+  <text x="150" y="286" font-size="12" letter-spacing="3" data-barva="s">SLFF</text>
+</svg>

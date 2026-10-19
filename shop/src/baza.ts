@@ -26,6 +26,8 @@ export interface IzdelekKataloga {
   na_voljo: Voljo
   po_narocilu?: boolean
   digitalni?: boolean
+  /** Nosilec motivov: najnižja cena z doplačilom aktivnega motiva (kupi se le z motivom); sicer null. */
+  cena_z_motivom?: number | null
 }
 
 export interface Razlicica {
@@ -62,15 +64,28 @@ export interface Izdelek {
 /** Polje motiva (trgovina.motivi.polja). */
 export interface PoljeMotiva {
   kljuc: string
-  vrsta: 'besedilo' | 'stevilka' | 'leto' | 'ekipa' | 'prvak' | 'izbira'
+  vrsta: 'besedilo' | 'stevilka' | 'leto' | 'datum' | 'ekipa' | 'prvak' | 'postava' | 'izbira' | 'barva'
   oznaka_sl: string
   oznaka_en: string
   max?: number
+  /** Najmanjša številka (ocene na kartici: 1). */
+  min?: number
   obvezno: boolean
   privzeto?: string | number
-  moznosti?: string[]
+  /** izbira: nizi ali {kljuc, ime_sl, ime_en}; barva: paleta {kljuc, hex, ime_sl, ime_en}. */
+  moznosti?: (string | MoznostPolja)[]
+  /** Vrednost mora biti drugačna kot v tem polju (barvi dresa). */
+  razlicna_od?: string
   /** Cona, če ni glavna cona motiva (sponzor retro dresa → prsi). */
   cona?: string
+}
+
+/** Možnost izbire ali barve: shrani se ključ, kupec vidi ime v svojem jeziku. */
+export interface MoznostPolja {
+  kljuc: string
+  ime_sl: string
+  ime_en: string
+  hex?: string
 }
 
 export interface ShemaMotiva {
@@ -80,9 +95,9 @@ export interface ShemaMotiva {
   barve: string[]
 }
 
-/** Izmišljen primer: ekipa in prvak sta natisnjeno besedilo. */
+/** Izmišljen primer: ekipa in prvak sta natisnjeno besedilo, postava posnetek (Postava). */
 export interface PrimerMotiva {
-  polja: Record<string, string | number>
+  polja: Record<string, string | number | Postava>
   shema: string
   izdelek: string
   barva: string
@@ -128,7 +143,7 @@ export interface PersonalizacijaPostavke {
   /** Motiv: natisnjene vrednosti polj (ekipa in prvak kot besedilo). */
   motiv?: string
   shema?: string
-  polja?: Record<string, string | number | null>
+  polja?: Record<string, string | number | Postava | null>
   /** Posnetek ob nakupu: barve sheme in mere vsake neprazne cone nosilca te barve. */
   barve?: string[]
   cone?: Record<string, { sirina_mm: number; visina_mm: number }>
@@ -152,6 +167,31 @@ export interface PostavkaNarocila {
 /** Besedilo personalizacije za prikaz: "Kranjski Tigri · 10". */
 export const opisPersonalizacije = (p: PersonalizacijaPostavke | null | undefined): string =>
   p ? [p.ime, p.stevilka].filter((x) => x !== undefined && x !== null && x !== '').join(' · ') : ''
+
+/** Igralec v posnetku postave (trgovina.postava_ekipe). */
+export interface IgralecPostave {
+  ime: string
+  priimek: string
+  pozicija: 'GK' | 'DEF' | 'MID' | 'FWD'
+  klub: string
+  tocke: number | null
+  kapetan: boolean
+  podkapetan: boolean
+  steje?: boolean
+}
+
+/** Posnetek postave: trgovina_moja_postava(p_team_id) in polja.postava na postavki. */
+export interface Postava {
+  ekipa: string
+  liga?: string
+  sezona?: string
+  krog?: number
+  formacija?: string
+  tocke_skupaj?: number | null
+  kazen?: number
+  zacetni: IgralecPostave[]
+  klop?: IgralecPostave[]
+}
 
 /** Element trgovina_moji_prvaki(). */
 export interface Prvak {
@@ -183,6 +223,8 @@ export interface PostavkaTiska {
   barve?: string[] | null
   /** Cone nosilca (mere v mm); null pri stari obliki. */
   cone?: Cona[] | null
+  /** Jezik naročila: stalni napisi in datum motiva. */
+  jezik?: 'sl' | 'en'
 }
 
 /** trgovina_admin_serija(id) */

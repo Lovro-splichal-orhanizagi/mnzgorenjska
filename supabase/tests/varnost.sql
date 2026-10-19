@@ -5230,6 +5230,325 @@ select pg_temp.napaka('trgovina3: admin ne spremeni polj motiva',
 reset role;
 select set_config('request.jwt.claim.sub','',true);
 
+-- --- trgovina4: motivi, dela 2 in 3 (20261019150000) -------------------------
+-- Pub, stena in dodatki: vse neaktivno, doplačila iz baze, postava iz zadnjega
+-- zaklenjenega kroga (le lastnik, ne hišna, ne mladinska), posnetek v postavki.
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+select pg_temp.preveri('trgovina4: novi nosilci in motivi so neaktivni',
+  (select count(*) = 10 and not bool_or(aktiven) from trgovina.izdelki
+    where slug in ('kozarec-po-meri','vrc-po-meri','podstavki-po-meri','odpirac-po-meri','plakat-po-meri',
+                   'kartica-igralca','zastavica-po-meri','sal-po-meri','kapa-po-meri','trak-po-meri'))
+  and (select count(*) = 11 and not bool_or(aktiven) from trgovina.motivi
+        where slug in ('tretji-polcas','ekipni-kozarec','kafanski-komplet','ime-in-stevilka','moja-postava',
+                       'retro-plakat-tekme','kartica-legende','klubska-zastavica','navijaski-sal','vezena-ekipa','kapetanski-trak')));
+select pg_temp.preveri('trgovina4: cene in doplacila iz specifikacije',
+  (select jsonb_object_agg(i.slug || ' ' || r.oznaka_sl, r.cena) from trgovina.razlicice r join trgovina.izdelki i on i.id = r.izdelek_id
+    where i.vrstni_red between 200 and 250)
+  = '{"kozarec-po-meri 0,5 l":1200,"vrc-po-meri 0,5 l":1800,"podstavki-po-meri Komplet 6":2200,"odpirac-po-meri Ena velikost":900,
+      "plakat-po-meri A3":2900,"plakat-po-meri A2":4500,"kartica-igralca A5":1500,"zastavica-po-meri Ena velikost":2200,
+      "sal-po-meri Ena velikost":3500,"kapa-po-meri Črna":2400,"kapa-po-meri Bela-črna":2400,"trak-po-meri Ena velikost":1800}'
+  and (select jsonb_object_agg(m.slug || ' ' || i.slug, mi.doplacilo) from trgovina.motivi_izdelki mi
+         join trgovina.motivi m on m.id = mi.motiv_id join trgovina.izdelki i on i.id = mi.izdelek_id where m.vrstni_red between 110 and 210)
+  = '{"tretji-polcas kozarec-po-meri":900,"tretji-polcas vrc-po-meri":900,"ekipni-kozarec kozarec-po-meri":900,
+      "ekipni-kozarec vrc-po-meri":900,"kafanski-komplet podstavki-po-meri":0,"ime-in-stevilka odpirac-po-meri":600,
+      "moja-postava plakat-po-meri":0,"retro-plakat-tekme plakat-po-meri":0,"kartica-legende kartica-igralca":0,
+      "klubska-zastavica zastavica-po-meri":0,"navijaski-sal sal-po-meri":0,"vezena-ekipa kapa-po-meri":1000,
+      "kapetanski-trak trak-po-meri":0}');
+select pg_temp.preveri('trgovina4: plakat ima cono po velikosti',
+  (select jsonb_object_agg(c.barva, jsonb_build_array(c.sirina_mm, c.visina_mm)) from trgovina.cone c
+     join trgovina.izdelki i on i.id = c.izdelek_id where i.slug = 'plakat-po-meri') = '{"A3":[297,420],"A2":[420,594]}');
+
+select pg_temp.preveri('trgovina4: dres po meri je neaktiven, 4900 + 1000, cone spredaj in hrbet',
+  (select not i.aktiven and not m.aktiven and mi.doplacilo = 1000 and i.postopek = 'sublimacija'
+     from trgovina.izdelki i join trgovina.motivi_izdelki mi on mi.izdelek_id = i.id join trgovina.motivi m on m.id = mi.motiv_id
+    where i.slug = 'dres-po-meri' and m.slug = 'dres-po-meri')
+  and (select count(*) = 6 and bool_and(cena = 4900) from trgovina.razlicice r join trgovina.izdelki i on i.id = r.izdelek_id where i.slug = 'dres-po-meri')
+  and (select jsonb_object_agg(c.kljuc, jsonb_build_array(c.sirina_mm, c.visina_mm)) from trgovina.cone c
+         join trgovina.izdelki i on i.id = c.izdelek_id where i.slug = 'dres-po-meri') = '{"spredaj":[600,750],"hrbet":[600,750]}');
+update trgovina.motivi set aktiven = true where (vrstni_red between 110 and 210 or slug = 'dres-po-meri') and slug not like 'test-%';
+update trgovina.izdelki set aktiven = true where (vrstni_red between 200 and 250 or slug = 'dres-po-meri') and slug like '%-po-meri';
+
+-- Postava ekipe -927001 (Kranjski Tigri, K1): 4-4-2 + 4 na klopi, en anonimiziran,
+-- en z vrstico v mladinski ligi (ista šifra). Trg3 (DEF) ne igra, s klopi vstopi Trg13.
+insert into teams(id, name, short_name, country_id) overriding system value
+values (-927401, 'Trgovina klub', 'TRK', (select id from countries where code='SI')),
+       (-927402, 'Trgovina gostje', 'TRG', (select id from countries where code='SI'));
+insert into players(id, team_id, competition_id, first_name, last_name, full_name, position,
+                    position_source, value, value_start, active) overriding system value
+select -927400-n, -927401, -927001, 'Igr', 'Trg' || n, 'Igr Trg' || n,
+       case when n in (1,12) then 'GK' when n <= 5 or n = 13 then 'DEF' when n <= 9 or n = 14 then 'MID' else 'FWD' end,
+       'admin', 5, 5, true
+  from generate_series(1,15) n;
+update players set anonimiziran_at = now(), full_name = '#-927407', last_name = '#-927407' where id = -927407;
+update players set reg_st = 999927405 where id = -927405;
+insert into players(id, team_id, competition_id, first_name, last_name, full_name, reg_st, position,
+                    position_source, value, value_start, active) overriding system value
+values (-927420, -927401, -927201, 'Mladi', 'Isti', 'Mladi Isti', 999927405, 'DEF', 'admin', 5, 5, true);
+update rounds set lineups_locked_at = deadline_at where id in (-927001, -927002);
+
+select pg_temp.napaka_sporocilo('trgovina4: postava brez zaklenjenega kroga',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='plakat-po-meri'),
+    '{"motiv":"moja-postava","polja":{"postava":-927001},"shema":"igrisce"}', 'f7a20000-0000-4000-8000-000000000001', 'sl')$$,
+  'trgovina-personalizacija', '%končanega kroga s točkami%');
+reset role;
+select pg_temp.napaka_sporocilo('trgovina4: predogled postave brez kroga ima svoj namig',
+  $$select trgovina.postava_ekipe(-927001, 'f7a20000-0000-4000-8000-000000000001')$$,
+  'trgovina-postava-krog', '%končanega kroga s točkami%');
+-- Katalog: nosilec motivov pove ceno z najnižjim doplačilom aktivnega motiva (stanje se povrne).
+create temp table trg4_aktivni on commit drop as
+  select 'i' as k, id, aktiven from trgovina.izdelki where slug = 'kozarec-po-meri'
+  union all select 'm', id, aktiven from trgovina.motivi where slug in ('tretji-polcas', 'ekipni-kozarec');
+update trgovina.izdelki set aktiven = true where slug = 'kozarec-po-meri';
+update trgovina.motivi set aktiven = false where slug in ('tretji-polcas', 'ekipni-kozarec');
+select pg_temp.preveri('trgovina4: katalog brez aktivnega motiva nima cene z motivom',
+  (select e->'cena_z_motivom' from jsonb_array_elements(trgovina_katalog()) e where e->>'slug' = 'kozarec-po-meri') = 'null'::jsonb);
+update trgovina.motivi set aktiven = true where slug = 'tretji-polcas';
+select pg_temp.preveri('trgovina4: katalog da ceno nosilca z doplačilom motiva',
+  (select (e->>'cena_z_motivom')::int from jsonb_array_elements(trgovina_katalog()) e where e->>'slug' = 'kozarec-po-meri') = 2100
+  and (select (e->>'cena_od')::int from jsonb_array_elements(trgovina_katalog()) e where e->>'slug' = 'kozarec-po-meri') = 1200);
+update trgovina.izdelki i set aktiven = a.aktiven from trg4_aktivni a where a.k = 'i' and a.id = i.id;
+update trgovina.motivi m set aktiven = a.aktiven from trg4_aktivni a where a.k = 'm' and a.id = m.id;
+
+insert into fantasy_lineups(round_id, fantasy_team_id, player_id, is_starter, is_captain, is_vice, bench_order, position)
+select r, -927001, -927400-n, n <= 11, n = case when r = -927002 then 10 else 2 end, n = 6,
+       case when n > 11 then n - 11 end, null
+  from (values (-927001), (-927002)) k(r) cross join generate_series(1,15) n;
+select pg_temp.napaka_sporocilo('trgovina4: zaklenjen krog brez tock ne steje',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='plakat-po-meri'),
+    '{"motiv":"moja-postava","polja":{"postava":-927001},"shema":"igrisce"}', 'f7a20000-0000-4000-8000-000000000001', 'sl')$$,
+  'trgovina-personalizacija', '%končanega kroga s točkami%');
+insert into matches(id, round_id, home_team_id, away_team_id, played_on, zapisnik_id) overriding system value
+values (-927401, -927002, -927401, -927402, current_date - 2, 'test-trg4-1');
+insert into appearances(match_id, player_id, team_id, started, minutes_played)
+select -927401, -927400-n, -927401, n <= 11, case when n = 13 then 30 else 90 end
+  from generate_series(1,13) n where n not in (3, 12);
+insert into player_scores(round_id, player_id, points)
+select -927002, -927400-n, n from generate_series(1,13) n where n not in (3, 12);
+-- Novejši zaklenjen in točkovan krog z odprtim glasovanjem se preskoči.
+insert into rounds(id,season,number,deadline_at,lineups_locked_at,voting_closes_at,competition_id) overriding system value
+values (-927403,'2026/27',2,now()-interval '1 hour',now()-interval '1 hour',now()+interval '1 day',-927001);
+insert into fantasy_lineups(round_id, fantasy_team_id, player_id, is_starter, is_captain, is_vice, bench_order, position)
+select -927403, -927001, -927400-n, n <= 11, n = 3, n = 4, case when n > 11 then n - 11 end, null
+  from generate_series(1,15) n;
+insert into player_scores(round_id, player_id, points)
+select -927403, -927400-n, 50 from generate_series(1,11) n;
+select pg_temp.preveri('trgovina4: krog z odprtim glasovanjem se preskoci',
+  (trgovina.postava_ekipe(-927001, 'f7a20000-0000-4000-8000-000000000001')->>'round_id')::bigint = -927002);
+-- Krog pretekle sezone se ne vzame, tudi če je novejši (le tekoča sezona lige).
+insert into rounds(id,season,number,deadline_at,lineups_locked_at,voting_closes_at,competition_id) overriding system value
+values (-927404,'2025/26',33,now()-interval '1 day',now()-interval '1 day',now()-interval '1 hour',-927001);
+insert into fantasy_lineups(round_id, fantasy_team_id, player_id, is_starter, is_captain, is_vice, bench_order, position)
+select -927404, -927001, -927400-n, n <= 11, n = 3, n = 4, case when n > 11 then n - 11 end, null
+  from generate_series(1,15) n;
+insert into player_scores(round_id, player_id, points)
+select -927404, -927400-n, 50 from generate_series(1,11) n;
+select pg_temp.preveri('trgovina4: krog pretekle sezone se preskoci',
+  (trgovina.postava_ekipe(-927001, 'f7a20000-0000-4000-8000-000000000001')->>'round_id')::bigint = -927002);
+-- Seštevek posnetka je iz učinkovite postave, ne iz tocke_krogov (ta lahko zaostaja).
+update tocke_krogov set points = 1 where fantasy_team_id = -927001 and round_id = -927002;
+
+select pg_temp.napaka_sporocilo('trgovina4: postava tuje ekipe',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='plakat-po-meri'),
+    '{"motiv":"moja-postava","polja":{"postava":-927001},"shema":"igrisce"}', 'f7a20000-0000-4000-8000-000000000002', 'sl')$$,
+  'trgovina-personalizacija', '%ni tvoja%');
+select pg_temp.napaka_sporocilo('trgovina4: postava hisne ekipe',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='plakat-po-meri'),
+    '{"motiv":"moja-postava","polja":{"postava":-927005},"shema":"igrisce"}', 'f7a20000-0000-4000-8000-000000000005', 'sl')$$,
+  'trgovina-personalizacija', '%ni tvoja%');
+select pg_temp.napaka_sporocilo('trgovina4: postava mladinske lige',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='plakat-po-meri'),
+    '{"motiv":"moja-postava","polja":{"postava":-927211},"shema":"igrisce"}', 'f7a20000-0000-4000-8000-000000000001', 'sl')$$,
+  'trgovina-personalizacija', '%mladinske lige%');
+select pg_temp.napaka('trgovina4: postava zahteva prijavo',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='plakat-po-meri'),
+    '{"motiv":"moja-postava","polja":{"postava":-927001},"shema":"igrisce"}', null, 'sl')$$, 'trgovina-prijava');
+select pg_temp.preveri('trgovina4: ime ekipe na podstavkih je prosto besedilo brez prijave',
+  (select p.personalizacija->'polja'->>'ekipa' = 'NK Zgornja Vas 1. maj' and not p.personalizacija ? 'fantasy_team_id'
+     from trgovina.personaliziraj((select id from trgovina.izdelki where slug='podstavki-po-meri'),
+       '{"motiv":"kafanski-komplet","polja":{"ekipa":" NK Zgornja Vas  1. maj ","slogan1":"Tretji polčas","slogan2":"Samo še eno",
+         "slogan3":"Trener je rekel ena","slogan4":"Rundo plača kapetan","slogan5":"Ofsajd je bil","slogan6":"Na pivu smo prvi"},"shema":"pivska"}',
+       null, 'sl') p));
+select pg_temp.napaka_sporocilo('trgovina4: ime ekipe na salu gre skozi filter',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='sal-po-meri'),
+    '{"motiv":"navijaski-sal","polja":{"ekipa":"Kurac United","slogan":"Do konca!"},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija', '%polju ekipa ni dovoljeno%');
+select pg_temp.napaka('trgovina4: ime ekipe na zastavici najvec 24 znakov',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='zastavica-po-meri'),
+    '{"motiv":"klubska-zastavica","polja":{"ekipa":"Nogometni klub Zgornja Vas"},"shema":"klasika"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka_sporocilo('trgovina4: neveljaven datum',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='plakat-po-meri'),
+    '{"motiv":"retro-plakat-tekme","polja":{"domaci":"Brdo","gostje":"Lipa","goli_domaci":1,"goli_gostje":0,"datum":"2026-02-30"},"shema":"retro"}',
+    null, 'sl')$$, 'trgovina-personalizacija', '%datum v polju datum%');
+select pg_temp.napaka('trgovina4: datum ni prevec v prihodnosti',
+  format($q$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='plakat-po-meri'),
+    '{"motiv":"retro-plakat-tekme","polja":{"domaci":"Brdo","gostje":"Lipa","goli_domaci":1,"goli_gostje":0,"datum":"%s"},"shema":"retro"}',
+    null, 'sl')$q$, (current_date + 400)::text), 'trgovina-personalizacija');
+select pg_temp.preveri('trgovina4: retro plakat z datumom',
+  (select p.personalizacija->'polja' @> '{"datum":"2026-05-17","goli_domaci":3}' and p.doplacilo = 0
+     from trgovina.personaliziraj((select id from trgovina.izdelki where slug='plakat-po-meri'),
+       '{"motiv":"retro-plakat-tekme","polja":{"domaci":"NK Zgornja Vas","gostje":"Lipa","goli_domaci":3,"goli_gostje":2,"datum":"2026-05-17"},"shema":"retro"}',
+       null, 'sl') p));
+select pg_temp.napaka_sporocilo('trgovina4: ocena na kartici je vsaj 1',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='kartica-igralca'),
+    '{"motiv":"kartica-legende","polja":{"ime":"KRAJNC","pozicija":"MID","hitrost":0,"strel":50,"podaje":50,"obramba":50},"shema":"zlata"}',
+    null, 'sl')$$, 'trgovina-personalizacija', '%številka v polju hitrost%');
+select pg_temp.napaka_sporocilo('trgovina4: pozicija na kartici iz seznama',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='kartica-igralca'),
+    '{"motiv":"kartica-legende","polja":{"ime":"KRAJNC","pozicija":"ST","hitrost":9,"strel":50,"podaje":50,"obramba":50},"shema":"zlata"}',
+    null, 'sl')$$, 'trgovina-personalizacija', '%ni na seznamu%');
+select pg_temp.napaka_sporocilo('trgovina4: dres z neznanim vzorcem',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='dres-po-meri'),
+    '{"motiv":"dres-po-meri","polja":{"vzorec":"karo","barva1":"zelena","barva2":"bela","ovratnik":"v"},"shema":"dres"}', null, 'sl')$$,
+  'trgovina-personalizacija', '%izbira v polju vzorec%');
+select pg_temp.napaka_sporocilo('trgovina4: dres z neznano barvo',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='dres-po-meri'),
+    '{"motiv":"dres-po-meri","polja":{"vzorec":"crte","barva1":"zelena","barva2":"#FF00FF","ovratnik":"v"},"shema":"dres"}', null, 'sl')$$,
+  'trgovina-personalizacija', '%barva v polju barva2%');
+select pg_temp.napaka('trgovina4: dres z barvo kot objekt',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='dres-po-meri'),
+    '{"motiv":"dres-po-meri","polja":{"vzorec":"crte","barva1":{"kljuc":"zelena"},"barva2":"bela","ovratnik":"v"},"shema":"dres"}', null, 'sl')$$,
+  'trgovina-personalizacija');
+select pg_temp.napaka_sporocilo('trgovina4: dres z isto barvo dvakrat',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='dres-po-meri'),
+    '{"motiv":"dres-po-meri","polja":{"vzorec":"crte","barva1":"zelena","barva2":"zelena","ovratnik":"v"},"shema":"dres"}', null, 'sl')$$,
+  'trgovina-personalizacija', '%morata biti različni%');
+select pg_temp.napaka_sporocilo('trgovina4: dres z neznanim ovratnikom',
+  $$select trgovina.personaliziraj((select id from trgovina.izdelki where slug='dres-po-meri'),
+    '{"motiv":"dres-po-meri","polja":{"vzorec":"crte","barva1":"zelena","barva2":"bela","ovratnik":"rolka"},"shema":"dres"}', null, 'sl')$$,
+  'trgovina-personalizacija', '%izbira v polju ovratnik%');
+
+-- Nakup: kozarec z doplačilom 900 in plakat A3 s posnetkom postave.
+select set_config('test.trg4_kzm', (select id::text from trgovina.razlicice where sku = 'KZM-1'), true),
+       set_config('test.trg4_plm', (select id::text from trgovina.razlicice where sku = 'PLM-A3'), true),
+       set_config('test.trg4_drm', (select id::text from trgovina.razlicice where sku = 'DRM-M'), true);
+set local role service_role;
+select set_config('test.trg4_r', trgovina_rezerviraj(jsonb_build_array(
+  jsonb_build_object('razlicica_id', current_setting('test.trg4_kzm')::bigint, 'kolicina', 1, 'cena', 1, 'doplacilo', 0,
+    'personalizacija', '{"motiv":"tretji-polcas","polja":{"ime":"Novak","slogan":"Samo še eno"},"shema":"gravura"}'::jsonb),
+  jsonb_build_object('razlicica_id', current_setting('test.trg4_plm')::bigint, 'kolicina', 1, 'cena', 1, 'doplacilo', 5,
+    'personalizacija', '{"motiv":"moja-postava","polja":{"postava":-927001},"shema":"nocna"}'::jsonb),
+  jsonb_build_object('razlicica_id', current_setting('test.trg4_drm')::bigint, 'kolicina', 1, 'cena', 1, 'doplacilo', 0,
+    'personalizacija', '{"motiv":"dres-po-meri","polja":{"vzorec":"obroci","barva1":"rdeca","barva2":"bela","barva3":"crna",
+      "ovratnik":"polo","sponzor":"Bife Zadnji Žvižg","ime":"Novak","stevilka":9},"shema":"dres"}'::jsonb)),
+  'f7a20000-0000-4000-8000-000000000001', 'sl', encode(sha256('t4a'), 'hex'))::text, true);
+reset role;
+select pg_temp.preveri('trgovina4: veljaven dres, doplacilo 1000 iz baze, barve dresa in obe coni v posnetku',
+  current_setting('test.trg4_r')::jsonb @> '{"postavke":[{"cena":4900,"doplacilo":1000,
+     "opis":"Dres po meri · Obroči · Rdeča · Bela · Črna · Polo · Bife Zadnji Žvižg · Novak · 9"}]}'
+  and (select p.personalizacija @> '{"motiv":"dres-po-meri","barve":["#C8102E","#FFFFFF","#111111"],
+         "polja":{"vzorec":"obroci","barva1":"rdeca","barva2":"bela","barva3":"crna","ovratnik":"polo","sponzor":"Bife Zadnji Žvižg","ime":"Novak","stevilka":9},
+         "cone":{"spredaj":{"sirina_mm":600,"visina_mm":750},"hrbet":{"sirina_mm":600,"visina_mm":750}}}'
+         from trgovina.postavke p join trgovina.narocila n on n.id = p.narocilo_id
+        where n.odjemalec = encode(sha256('t4a'), 'hex') and p.razlicica_id = current_setting('test.trg4_drm')::bigint));
+select pg_temp.preveri('trgovina4: doplacila nosilcev iz baze',
+  current_setting('test.trg4_r')::jsonb @> '{"postavke":[{"cena":1200,"doplacilo":900},{"cena":2900,"doplacilo":0}]}');
+select pg_temp.preveri('trgovina4: opis plakata postave pove krog posnetka',
+  current_setting('test.trg4_r')::jsonb @> '{"postavke":[{"cena":2900,"opis":"Moja postava · Kranjski Tigri · 1. krog"}]}');
+select set_config('test.trg4_p', (select p.personalizacija::text from trgovina.postavke p join trgovina.narocila n on n.id = p.narocilo_id
+   join trgovina.razlicice r on r.id = p.razlicica_id where n.odjemalec = encode(sha256('t4a'), 'hex') and r.sku = 'PLM-A3'), true);
+select pg_temp.preveri('trgovina4: postavka shrani posnetek zadnjega zaklenjenega kroga s tockami',
+  current_setting('test.trg4_p')::jsonb @> '{"motiv":"moja-postava","fantasy_team_id":-927001,"round_id":-927002,
+     "cone":{"plakat":{"sirina_mm":297,"visina_mm":420}},
+     "polja":{"postava":{"ekipa":"Kranjski Tigri","liga":"Test trgovine 2","sezona":"2026/27","krog":1,"formacija":"4-4-2",
+       "zacetni":[{"ime":"Igr Trg1","pozicija":"GK","klub":"TRK","tocke":1,"steje":true,"mnozitelj":1},
+                  {"ime":"Igr Trg13","pozicija":"DEF","tocke":13,"zamenjava":true,"steje":true}],
+       "klop":[{"ime":"Igr Trg12","pozicija":"GK","tocke":null,"steje":false,"mnozitelj":0},
+               {"ime":"Igr Trg3","pozicija":"DEF","tocke":null,"zamenjan":true,"steje":false}]}}}'
+  and jsonb_array_length(current_setting('test.trg4_p')::jsonb #> '{polja,postava,zacetni}') = 11
+  and jsonb_array_length(current_setting('test.trg4_p')::jsonb #> '{polja,postava,klop}') = 4
+  and not exists (select 1 from jsonb_array_elements(current_setting('test.trg4_p')::jsonb #> '{polja,postava,zacetni}') x
+                   where x->>'ime' = 'Igr Trg3'));
+select pg_temp.preveri('trgovina4: stete tocke igralcev minus kazen so tocke ekipe',
+  (select sum((x->>'tocke')::numeric) filter (where (x->>'steje')::boolean)
+          - (current_setting('test.trg4_p')::jsonb #>> '{polja,postava,kazen}')::numeric
+          = (current_setting('test.trg4_p')::jsonb #>> '{polja,postava,tocke_skupaj}')::numeric
+     from jsonb_array_elements(current_setting('test.trg4_p')::jsonb #> '{polja,postava,zacetni}'
+                               || (current_setting('test.trg4_p')::jsonb #> '{polja,postava,klop}')) x)
+  and (current_setting('test.trg4_p')::jsonb #>> '{polja,postava,tocke_skupaj}')::numeric = 96);
+select pg_temp.preveri('trgovina4: igralec z vrstico v mladinski ligi je Igralec',
+  strpos(current_setting('test.trg4_p'), '"Igr Trg5"') = 0
+  and (select count(*) = 2 from jsonb_array_elements(current_setting('test.trg4_p')::jsonb #> '{polja,postava,zacetni}') x
+        where x->>'ime' = 'Igralec'));
+select pg_temp.preveri('trgovina4: kapetan in podkapetan v posnetku',
+  current_setting('test.trg4_p')::jsonb #> '{polja,postava,zacetni}' @> '[{"ime":"Igr Trg10","kapetan":true,"mnozitelj":3,"tocke":30},{"priimek":"Trg6","podkapetan":true,"tocke":6}]'
+  and (select count(*) = 1 from jsonb_array_elements(current_setting('test.trg4_p')::jsonb #> '{polja,postava,zacetni}') x where (x->>'kapetan')::boolean));
+select pg_temp.preveri('trgovina4: anonimiziran igralec je Igralec',
+  current_setting('test.trg4_p')::jsonb #> '{polja,postava,zacetni}' @> '[{"ime":"Igralec","priimek":"Igralec","tocke":7}]'
+  and strpos(current_setting('test.trg4_p'), '927407') = 0);
+update fantasy_lineups set is_captain = (player_id = -927401) where round_id = -927002 and fantasy_team_id = -927001;
+update players set full_name = 'Preimenovan' where id = -927401;
+select pg_temp.preveri('trgovina4: posnetek ostane, ko se postava kasneje spremeni',
+  (select p.personalizacija::text = current_setting('test.trg4_p') from trgovina.postavke p join trgovina.narocila n on n.id = p.narocilo_id
+     join trgovina.razlicice r on r.id = p.razlicica_id where n.odjemalec = encode(sha256('t4a'), 'hex') and r.sku = 'PLM-A3'));
+update trgovina.narocila set stanje = 'placano', placano_at = now() where odjemalec = encode(sha256('t4a'), 'hex');
+update trgovina.postavke set stanje_tiska = 'za_tisk'
+ where narocilo_id = (select id from trgovina.narocila where odjemalec = encode(sha256('t4a'), 'hex'));
+select pg_temp.preveri('trgovina4: izvoz za tisk da barve dresa, ne barv sheme, in jezik naročila',
+  (select t.barve = '["#C8102E","#FFFFFF","#111111"]' from trgovina.tisk t
+    where t.narocilo_id = (select id from trgovina.narocila where odjemalec = encode(sha256('t4a'), 'hex')) and t.sku = 'DRM-M')
+  and (select t.barve = '["#FFFFFF"]' from trgovina.tisk t
+    where t.narocilo_id = (select id from trgovina.narocila where odjemalec = encode(sha256('t4a'), 'hex')) and t.sku = 'KZM-1')
+  and (select bool_and(t.jezik = 'sl') from trgovina.tisk t
+    where t.narocilo_id = (select id from trgovina.narocila where odjemalec = encode(sha256('t4a'), 'hex'))));
+-- Agent bere ves pogled (select *): funkcije pogleda tečejo s pravicami bralca (cone_json bere cone).
+select pg_temp.preveri('trgovina4: agent bere select * iz trgovina.tisk s conami',
+  has_table_privilege('agent_bralec', 'trgovina.tisk', 'select')
+  and has_function_privilege('agent_bralec', 'trgovina.cone_json(bigint)', 'execute')
+  and has_function_privilege('agent_bralec', 'trgovina.je_placano_aktivno(text)', 'execute')
+  and has_table_privilege('agent_bralec', 'trgovina.cone', 'select'));
+delete from trgovina.narocila where odjemalec = encode(sha256('t4a'), 'hex');
+
+-- Živi predogled: le lastnik, anon nima dostopa.
+set local role anon;
+select pg_temp.zavrnjeno('trgovina4: anon ne vidi postave', $$select trgovina_moja_postava(-927001)$$);
+select pg_temp.zavrnjeno('trgovina4: anon ne klice posnetka postave', $$select trgovina.postava_ekipe(-927001, null)$$);
+reset role;
+select set_config('request.jwt.claim.sub','f7a20000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('trgovina4: lastnik vidi svojo postavo',
+  trgovina_moja_postava(-927001) @> '{"ekipa":"Kranjski Tigri","round_id":-927002,"formacija":"4-4-2"}'
+  and trgovina_moja_postava(-927001) #> '{zacetni}' @> '[{"priimek":"Trg1","kapetan":true}]');
+select pg_temp.napaka_sporocilo('trgovina4: predogled tuje postave',
+  $$select trgovina_moja_postava(-927002)$$, 'trgovina-personalizacija', '%ni tvoja%');
+select pg_temp.napaka_sporocilo('trgovina4: predogled mladinske postave',
+  $$select trgovina_moja_postava(-927211)$$, 'trgovina-personalizacija', '%mladinske lige%');
+reset role;
+select set_config('request.jwt.claim.sub','f7a20000-0000-4000-8000-000000000002',true);
+set local role authenticated;
+select pg_temp.napaka_sporocilo('trgovina4: drug uporabnik ne vidi postave',
+  $$select trgovina_moja_postava(-927001)$$, 'trgovina-personalizacija', '%ni tvoja%');
+reset role;
+
+-- Primeri: vsi začetni prestanejo preverjanje, napačna postava ne.
+select set_config('test.trg4_mp', (select id::text from trgovina.motivi where slug = 'moja-postava'), true),
+       set_config('test.trg4_dres', (select id::text from trgovina.motivi where slug = 'dres-po-meri'), true);
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('trgovina4: vsi zacetni primeri prestanejo preverjanje',
+  (select count(trgovina_admin_shrani_motiv(jsonb_build_object('id', e->'id', 'primeri', e->'primeri'))) = 11
+     from jsonb_array_elements(trgovina_admin_motivi()) e where (e->>'vrstni_red')::int between 110 and 210)
+  and trgovina_admin_shrani_motiv(jsonb_build_object('id', current_setting('test.trg4_dres')::bigint,
+        'primeri', (select m->'primeri' from jsonb_array_elements(trgovina_admin_motivi()) m where m->>'slug' = 'dres-po-meri'))) is not null);
+select pg_temp.napaka_sporocilo('trgovina4: primer dresa z isto barvo dvakrat',
+  $$select trgovina_admin_shrani_motiv(jsonb_build_object('id', current_setting('test.trg4_dres')::bigint,
+    'primeri', '[{"polja":{"vzorec":"crte","barva1":"bela","barva2":"bela","ovratnik":"v"},"shema":"dres","izdelek":"dres-po-meri","barva":"M"}]'::jsonb))$$,
+  'trgovina-vnos', 'Primer 1:%različni%');
+select pg_temp.napaka_sporocilo('trgovina4: primer postave z 10 igralci',
+  $$select trgovina_admin_shrani_motiv(jsonb_build_object('id', current_setting('test.trg4_mp')::bigint,
+    'primeri', jsonb_build_array(jsonb_build_object('polja', jsonb_build_object('postava', jsonb_build_object('ekipa', 'Dinamo Kavč',
+      'zacetni', (select jsonb_agg(jsonb_build_object('ime', 'Žogi Žogec', 'pozicija', 'MID')) from generate_series(1,10)))),
+      'shema', 'nocna', 'izdelek', 'plakat-po-meri', 'barva', 'A3'))))$$, 'trgovina-vnos', 'Primer 1:%postava%');
+select pg_temp.napaka_sporocilo('trgovina4: primer postave z zaljivko',
+  $$select trgovina_admin_shrani_motiv(jsonb_build_object('id', current_setting('test.trg4_mp')::bigint,
+    'primeri', jsonb_build_array(jsonb_build_object('polja', jsonb_build_object('postava', jsonb_build_object('ekipa', 'Dinamo Kavč',
+      'zacetni', (select jsonb_agg(jsonb_build_object('ime', case when n = 5 then 'Kurac' else 'Žogi Žogec' end, 'pozicija', 'MID'))
+                    from generate_series(1,11) n))),
+      'shema', 'nocna', 'izdelek', 'plakat-po-meri', 'barva', 'A3'))))$$, 'trgovina-vnos', 'Primer 1:%ni dovoljeno%');
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+
 -- Bralni dostop agentov (agent_bralec): bere podatke, ne skrivnosti in ne piše.
 select pg_temp.preveri('agent: bere poslano pošto klubom', has_table_privilege('agent_bralec', 'public.klub_stik_posta', 'select'));
 select pg_temp.preveri('agent: bere registracije brez e-pošte', has_table_privilege('agent_bralec', 'agent.registracije', 'select'));

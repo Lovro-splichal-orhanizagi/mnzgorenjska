@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 148 210" width="148mm" height="210mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="kartica">
+  <rect width="148" height="210" data-barva="t"/>
+  <defs><clipPath id="karta"><path d="M30 10 H118 L136 22 V160 Q136 176 122 182 L74 200 L26 182 Q12 176 12 160 V22 Z"/></clipPath></defs>
+  <path d="M30 10 H118 L136 22 V160 Q136 176 122 182 L74 200 L26 182 Q12 176 12 160 V22 Z" data-barva="1"/>
+  <g clip-path="url(#karta)" data-barva="s"><path d="M70 0 L110 0 L20 210 L-20 210 Z" opacity=".22"/><path d="M118 0 L132 0 L42 210 L28 210 Z" opacity=".16"/><path d="M150 40 L160 40 L80 230 L70 230 Z" opacity=".12"/></g>
+  <path d="M31.5 14.5 H116.5 L131.5 24.5 V159.5 Q131.5 173 119.8 178 L74 195.2 L28.2 178 Q16.5 173 16.5 159.5 V24.5 Z" fill="none" data-crta="t" stroke-width=".7"/>
+  <g data-barva="t" opacity=".9"><ellipse cx="90" cy="49" rx="15" ry="17.5"/><path d="M75 44 Q76 29 90 29 Q105 29 105 44 Q101 36 90 36 Q79 36 75 44 Z"/><path d="M50 113 Q51 87 72 80 Q81 77 82.5 64 H97.5 Q99 77 108 80 Q129 87 130 113 Z"/></g>
+  <path d="M77 79.5 L90 89 L103 79.5" fill="none" data-crta="1" stroke-width="2.4" stroke-linecap="round"/>
+  <text x="35" y="50" font-size="30" data-izracun="povprecje hitrost strel podaje obramba" data-barva="t">88</text>
+  <text x="35" y="64" font-size="11" letter-spacing="1" data-polje="pozicija" data-barva="t">MID</text>
+  <path d="M25 70 H45" fill="none" data-crta="t" stroke-width=".7"/>
+  <path d="M35.00 75.00 L34.01 77.64 L31.20 77.76 L33.40 79.52 L32.65 82.24 L35.00 80.68 L37.35 82.24 L36.60 79.52 L38.80 77.76 L35.99 77.64Z" data-barva="t"/>
+  <rect x="16.5" y="113" width="115" height="22" data-barva="t" opacity=".1"/>
+  <text x="74" y="131" font-size="19" letter-spacing=".8" data-polje="ime" data-velike data-sirina="108" data-sredina data-barva="t">KRAJNC</text>
+  <path d="M26 139.5 H122 M74 143 V170" fill="none" data-crta="t" stroke-width=".6"/>
+  <text x="47" y="152.5" font-size="12" text-anchor="end" data-polje="hitrost" data-barva="t">88</text>
+  <text x="50" y="152.5" font-size="8.4" letter-spacing=".8" text-anchor="start" data-barva="t" data-en="PAC">HIT</text>
+  <text x="47" y="167" font-size="12" text-anchor="end" data-polje="strel" data-barva="t">88</text>
+  <text x="50" y="167" font-size="8.4" letter-spacing=".8" text-anchor="start" data-barva="t" data-en="SHO">STR</text>
+  <text x="111" y="152.5" font-size="12" text-anchor="end" data-polje="podaje" data-barva="t">88</text>
+  <text x="114" y="152.5" font-size="8.4" letter-spacing=".8" text-anchor="start" data-barva="t" data-en="PAS">POD</text>
+  <text x="111" y="167" font-size="12" text-anchor="end" data-polje="obramba" data-barva="t">88</text>
+  <text x="114" y="167" font-size="8.4" letter-spacing=".8" text-anchor="start" data-barva="t" data-en="DEF">OBR</text>
+  <text x="74" y="181" font-size="6" letter-spacing="1.6" data-polje="klub" data-velike data-sirina="80" data-ce="klub" data-barva="t">NK ZGORNJA VAS</text>
+  <text x="74" y="190.5" font-size="4.4" letter-spacing="1.4" data-barva="t" opacity=".8">SLFF</text>
+</svg>

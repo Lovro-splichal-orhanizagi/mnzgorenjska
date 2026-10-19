@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80" width="300mm" height="80mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="trak">
+  <rect width="300" height="80" data-barva="1"/>
+  <rect width="300" height="9" data-barva="t"/><rect y="71" width="300" height="9" data-barva="t"/>
+  <path d="M0 12.5 H300 M0 67.5 H300" fill="none" data-crta="k" stroke-width="1.2"/>
+  <text x="60" y="49.5" font-size="24" letter-spacing="4" data-sirina="68" data-sredina data-barva="k" data-en="CAPTAIN">KAPETAN</text>
+  <circle cx="150" cy="40" r="29" data-barva="s" data-crta="t" stroke-width="3.5"/>
+  <circle cx="150" cy="40" r="23.5" fill="none" data-crta="1" stroke-width="1.4"/>
+  <text x="150" y="58.5" font-size="43" data-barva="t">C</text>
+  <text x="231" y="52" font-size="30" letter-spacing="2" data-polje="ime" data-velike data-sirina="86" data-sredina data-barva="k">MLAKAR</text>
+  <path d="M13.00 35.50 L11.89 38.47 L8.72 38.61 L11.20 40.58 L10.35 43.64 L13.00 41.89 L15.65 43.64 L14.80 40.58 L17.28 38.61 L14.11 38.47Z" data-barva="k"/><path d="M287.00 35.50 L285.89 38.47 L282.72 38.61 L285.20 40.58 L284.35 43.64 L287.00 41.89 L289.65 43.64 L288.80 40.58 L291.28 38.61 L288.11 38.47Z" data-barva="k"/>
+</svg>

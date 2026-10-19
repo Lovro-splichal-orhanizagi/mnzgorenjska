@@ -6,12 +6,12 @@ import { Route, Routes } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { SejaProvider } from './src/seja'
 import { Okvir } from './src/Okvir'
-import { Katalog, MrezaIzdelkov } from './src/strani/Katalog'
+import { Katalog, KarticaIzdelka, MrezaIzdelkov } from './src/strani/Katalog'
 import { Izdelek, IzdelekView, Predogled } from './src/strani/Izdelek'
-import { ekipaPrevelika, izPrimera } from './src/strani/Konfigurator'
-import { MrezaMotivov, Pahljaca, Personalizirano, vProdaji } from './src/strani/Personalizirano'
+import { barveMotiva, ekipaPrevelika, izPrimera, moznost, PoljeVnosa, prikazVrednosti, stanjePostave, type StanjePostave } from './src/strani/Konfigurator'
+import { MrezaMotivov, Pahljaca, Personalizirano, SkupineMotivov, skupinaMotiva, vProdaji } from './src/strani/Personalizirano'
 import { VarnaStran } from './src/App'
-import { homografija, matrika } from './src/mockup'
+import { homografija, matrika, trakoviValja } from './src/mockup'
 import { cenaKosa, Kosarica, motivaNi, ociscena, SlikaMotiva, stripeNaslov } from './src/strani/Kosarica'
 import { Hvala } from './src/strani/Hvala'
 import { Narocila } from './src/strani/Narocila'
@@ -19,18 +19,18 @@ import { Pogoji } from './src/strani/Pogoji'
 import { Odstop, mailOdstopa } from './src/strani/Odstop'
 import { Prijava, varnaPot } from './src/strani/Prijava'
 import { Admin, Dobavnica, Nalepka, zaPakiranje } from './src/strani/Admin'
-import { csvSerije, datotekeTiska, PogledSerije, prenesiVse, ROB, s300dpi, svgDtf, svgZaTisk } from './src/strani/AdminTisk'
+import { barveNiti, csvSerije, datotekeTiska, dpiZa, PogledSerije, prenesiVse, ROB, sDpi, svgDatoteke, svgMotiva, svgZaTisk } from './src/strani/AdminTisk'
 import { doplaciloIz, KarticaMotiva, type MotivAdmin } from './src/strani/AdminMotivi'
 import { zahtevaBona } from './src/strani/AdminBoni'
 import { PREHODI, povzetekPostavk, stripePovezava, ZnackaStanja } from './src/strani/AdminVsaNarocila'
 import { vCente, varnoIme } from './src/strani/AdminIzdelki'
 import { EN, SL, TELEFON, cena, type Kljuc } from './src/besede'
 import { dodaj, kljuc, kosov, nastavi, odstrani, postnina, preberi, PRAZNA, skupaj } from './src/kosarica'
-import { celicaCsv, doplacilo, napakaImena, napakaPolja, oblikaSvg, stabilno, stevilka, veljavnaOblika } from './src/personalizacija'
-import { coneMotiva, narisiMotiv, poljaCone, praznaCona, velikostMm, zVgrajenoPisavo } from './src/risba'
+import { celicaCsv, doplacilo, letoNaprej, napakaImena, napakaPolja, oblikaSvg, stabilno, stevilka, veljavnaOblika } from './src/personalizacija'
+import { barveIzPolj, coneMotiva, kontrast, narisiKose, narisiMotiv, oblikujDatum, poljaCone, praznaCona, sirinaBesedila, velikostMm, zVgrajenoPisavo } from './src/risba'
 import { MOTIVI } from './src/motivi'
 import { readFileSync } from 'node:fs'
-import type { Cona, Izdelek as TIzdelek, IzdelekKataloga, MotivIzdelka, MotivKataloga, NarociloAdmin, PostavkaNarocila, PostavkaTiska, Serija } from './src/baza'
+import type { Cona, Izdelek as TIzdelek, IzdelekKataloga, MotivIzdelka, MotivKataloga, NarociloAdmin, PoljeMotiva, Postava, PostavkaNarocila, PostavkaTiska, PrimerMotiva, Serija, ShemaMotiva } from './src/baza'
 
 let napak = 0
 const preveri = (opis: string, ok: boolean, dodatno = '') => {
@@ -231,7 +231,7 @@ const serija: Serija = {
 const csv = csvSerije(serija)
 const vrsticeCsv = csv.split('\r\n')
 preveri('tisk: CSV serije (BOM, glava, ubežano, ime SVG)', csv.startsWith('﻿"Naročilo";"Postavka";"Šifra"') && vrsticeCsv.length === 4
-  && vrsticeCsv[1] === '"AB12CD34";"11";"MIS-CRN-M";"Majica (Črna / M)";"2";"Žan ""Z""";"7";"AB12CD34-11.svg";"";"";"";"";""'
+  && vrsticeCsv[1] === '"AB12CD34";"11";"MIS-CRN-M";"Majica (Črna / M)";"2";"Žan ""Z""";"7";"AB12CD34-11.svg";"";"";"";"";"";"";"";"";""'
   && vrsticeCsv[2].includes(`"'=Tigri";""`), vrsticeCsv.slice(0, 3).join(' | '))
 const pogledSerije = renderToString(<PogledSerije s={serija} />)
 preveri('admin: pogled serije s predogledi', pogledSerije.includes('Serija 3') && pogledSerije.includes('AB12CD34') && pogledSerije.includes('data:image/svg+xml') && pogledSerije.includes('EF56GH78'))
@@ -269,29 +269,30 @@ preveri('admin: pogled serije s predogledi', pogledSerije.includes('Serija 3') &
   preveri('tisk motiva: SVG ima vgrajeno pisavo Anton', /^<\?xml[^>]*>\n<svg [^>]*><style>@font-face\{font-family:Anton;src:url\(data:font\/ttf;base64,/.test(sPisavo))
   const csvM = csvSerije({ ...serija, postavke: [motivna] }).split('\r\n')
   preveri('tisk motiva: CSV vrstica na cono s stolpci motiv, postopek, cona',
-    csvM[0]!.endsWith('"SVG";"Motiv";"Postopek";"Cona";"PNG";"PNG DTF"') && csvM.length === 4
-    && csvM[1]!.endsWith('"IJ90KL12-hrbet-dtf-13.svg";"retro-dres";"dtf";"hrbet";"IJ90KL12-hrbet-dtf-13.png";"IJ90KL12-hrbet-dtf-13-dtf.png"') && csvM[2]!.includes('"prsi"'), csvM.join(' | '))
+    csvM[0]!.endsWith('"SVG";"Motiv";"Postopek";"Cona";"PNG";"PNG DTF";"Kos";"Mere (mm)";"DPI";"Barve niti"') && csvM.length === 4
+    && csvM[1]!.endsWith('"IJ90KL12-hrbet-dtf-13.svg";"retro-dres";"dtf";"hrbet";"IJ90KL12-hrbet-dtf-13.png";"IJ90KL12-hrbet-dtf-13-dtf.png";"";"300 × 400";"300";""') && csvM[2]!.includes('"prsi"'), csvM.join(' | '))
   const { crc32 } = await import('node:zlib')
   const lazni = new Uint8Array(45)
   lazni.set([0x89, 0x50, 0x4e, 0x47], 0)
-  const png = new Uint8Array(await s300dpi(lazni).arrayBuffer())
+  const png = new Uint8Array(await sDpi(lazni).arrayBuffer())
   const dv = new DataView(png.buffer)
   preveri('tisk motiva: PNG dobi pHYs 300 dpi za IHDR', png.length === 66 && String.fromCharCode(...png.subarray(37, 41)) === 'pHYs'
     && dv.getUint32(41) === 11811 && dv.getUint32(45) === 11811 && png[49] === 1 && dv.getUint32(50) === crc32(png.subarray(37, 50))
-    && (await s300dpi(png).arrayBuffer()).byteLength === 66)
+    && (await sDpi(png).arrayBuffer()).byteLength === 66)
+  preveri('tisk motiva: pHYs 150 dpi (velika sublimacija)', new DataView(await sDpi(lazni, 150).arrayBuffer()).getUint32(41) === 5906)
   const posnetek: PostavkaTiska = { ...motivna, personalizacija: { ...motivna.personalizacija, barve: ['#123456', '#ABCDEF', '#000000'], cone: { hrbet: { sirina_mm: 280, visina_mm: 380 } } } }
   const datP = datotekeTiska(posnetek)
   preveri('tisk motiva: posnetek ob nakupu ima prednost pred živimi conami in barvami',
     datP.map((d) => `${d.cona}:${d.mm.sirina}x${d.mm.visina}`).join() === 'hrbet:280x380,prsi:260x120'
     && svgZaTisk(posnetek, datP[0]!).includes('#123456') && !svgZaTisk(posnetek, datP[0]!).includes('#C8102E'))
-  const dtf = svgDtf(motivna, dat[1]!)
+  const dtf = svgMotiva(motivna, dat[1]!)
   preveri('tisk motiva: DTF le motiv v pravi velikosti, brez prireza in oznak',
     /^<svg\b[^>]*\swidth="260mm"/.test(dtf) && /^<svg\b[^>]*\sheight="120mm"/.test(dtf) && !dtf.includes('data-oznake') && dtf.includes('BAR OFFSIDE'))
   const tuj: PostavkaTiska = { ...motivna, postavka_id: 14, personalizacija: { ...motivna.personalizacija, motiv: 'ni-predloge' } }
   const pogledTuj = renderToString(<PogledSerije s={{ ...serija, postavke: [tuj, motivna] }} />)
   preveri('tisk motiva: motiv brez predloge ne podre pogleda in nima datotek',
     datotekeTiska(tuj).length === 0 && pogledTuj.includes('ni-predloge') && pogledTuj.includes('IJ90KL12-prsi-dtf-13')
-    && csvSerije({ ...serija, postavke: [tuj] }).split('\r\n')[1]!.endsWith('"";"";"ni-predloge";"dtf";"";"";""'))
+    && csvSerije({ ...serija, postavke: [tuj] }).split('\r\n')[1]!.endsWith('"";"";"ni-predloge";"dtf";"";"";"";"";"";"";""'))
   preveri('tisk motiva: pogled serije pokaže cone', renderToString(<PogledSerije s={{ ...serija, postavke: [motivna] }} />).includes('IJ90KL12-prsi-dtf-13 · 260 × 120 mm'))
   // V Node ni <canvas>: vsak PNG pade, kot v iOS Safariju PNG hrbta. Ostale datoteke gredo naprej.
   const shranjene: string[] = []
@@ -352,8 +353,8 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
   type PoljeSemena = { kljuc: string; vrsta: string; max?: number; cona?: string }
   const semena = [...seme.matchAll(/^\('([a-z0-9-]+)',[\s\S]*?\n '([a-z]+)',\n '(\[[\s\S]*?\])',\n '(\[[\s\S]*?\])',/gm)]
     .map((m) => ({ slug: m[1]!, cona: m[2]!, polja: JSON.parse(m[3]!) as PoljeSemena[], sheme: JSON.parse(m[4]!) as { barve: string[] }[] }))
-  preveri('motivi: seme prebrano, vsak motiv ima predlogo', semena.length === 6 && semena.every((x) => MOTIVI.some((m) => m.slug === x.slug))
-    && MOTIVI.length === semena.length, semena.map((x) => x.slug).join(','))
+  preveri('motivi: seme prebrano, vsak motiv ima predlogo', semena.length === 6 && semena.every((x) => MOTIVI.some((m) => m.slug === x.slug)),
+    semena.map((x) => x.slug).join(','))
   for (const sm of semena) {
     const m = MOTIVI.find((x) => x.slug === sm.slug)
     if (!m) continue
@@ -404,6 +405,162 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
     && [a, b].every((x) => sklici(x).length > 0 && sklici(x).every((r) => ids(x).includes(r))))
   preveri('motivi: prepovedani znaki XML izpuščeni', urejenXml(narisiMotiv('kapetan', { ime: 'A\u0000B\uFFFE\uD800C', stevilka: 1 }, ['#111', '#eee', '#000']))
     && narisiMotiv('kapetan', { ime: 'A\u0000B\uFFFE\uD800C', stevilka: 1 }, ['#111', '#eee', '#000']).includes('>ABC</text>'))
+
+  // Motivi dela 2–3: predloge ↔ seme, mere con, laser (ena barva), vezenje (≤ 4 barve, črte ≥ 1 mm, črke ≥ 5 mm),
+  // postava iz posnetka, dres v vseh vzorcih, podstavki po kosih in na listu, datum.
+  {
+    const sql23 = readFileSync(new URL('../supabase/migrations/20261019150000_trgovina_motivi_del23.sql', import.meta.url), 'utf8')
+    const seme23 = sql23.slice(sql23.indexOf('insert into trgovina.motivi (slug'))
+    type Polje23 = { kljuc: string; vrsta: string; max?: number; cona?: string; moznosti?: unknown[] }
+    const semena23 = [...seme23.matchAll(/^\('([a-z0-9-]+)',[\s\S]*?\n '([a-z]+)',\n '(\[[\s\S]*?\])',\n '(\[[\s\S]*?\])',/gm)]
+      .map((m) => ({ slug: m[1]!, cona: m[2]!, polja: JSON.parse(m[3]!) as Polje23[], sheme: JSON.parse(m[4]!) as { barve: string[] }[] }))
+    const coneSeme = [...sql23.matchAll(/\('([a-z-]+)',\s+'([a-z]+)',\s+(?:null|'[^']*'),\s+'[^']*',\s+'[^']*', (\d+), (\d+)\)/g)]
+      .map((m) => ({ izdelek: m[1]!, cona: m[2]!, s: Number(m[3]), v: Number(m[4]) }))
+    const vezi = [...sql23.matchAll(/\('([a-z-]+)', '([a-z-]+)', \d+\)/g)].map((m) => ({ motiv: m[1]!, izdelek: m[2]! }))
+    const LASER = ['tretji-polcas', 'ekipni-kozarec', 'ime-in-stevilka']
+    preveri('motivi d23: seme prebrano, vsak motiv ima predlogo', semena23.length === 12 && semena23.every((x) => MOTIVI.some((m) => m.slug === x.slug))
+      && coneSeme.length === 14 && vezi.length === 14 && MOTIVI.length === 6 + semena23.length, `${semena23.length} ${coneSeme.length} ${vezi.length}`)
+    const barveIzhoda = (out: string): string[] => [...new Set([...out.matchAll(/\s(?:fill|stroke)="(#[0-9a-fA-F]+)"/g)].map((m) => m[1]!.toUpperCase()))]
+    const st = (out: string, a: string): number[] => [...out.matchAll(new RegExp(`\\s${a}="([\\d.]+)"`, 'g'))].map((m) => Number(m[1]))
+    for (const sm of semena23) {
+      const m = MOTIVI.find((x) => x.slug === sm.slug)
+      if (!m) continue
+      // Dres: vzorec, barve in ovratnik riše vsaka cona (ves dres je potiskan).
+      const vsePovsod = sm.slug === 'dres-po-meri' ? sm.polja.filter((p) => !p.cona).map((p) => p.kljuc) : []
+      const cone = [...new Set(sm.polja.map((p) => p.cona ?? sm.cona))]
+      preveri(`motiv ${sm.slug}: cone in polja po conah`, m.cona === sm.cona && JSON.stringify(m.polja) === JSON.stringify(sm.polja.map((p) => p.kljuc))
+        && JSON.stringify([...coneMotiva(sm.slug)].sort()) === JSON.stringify([...cone].sort())
+        && cone.every((c) => JSON.stringify(poljaCone(sm.slug, c).sort())
+          === JSON.stringify([...new Set([...vsePovsod, ...sm.polja.filter((p) => (p.cona ?? sm.cona) === c).map((p) => p.kljuc)])].sort())),
+      cone.map((c) => `${c}: ${poljaCone(sm.slug, c).join(',')}`).join(' | '))
+      // Mere: predloga je cona nosilca v mm; vrč ima isto višino (motiv na sprednji strani), A2 isto razmerje kot A3.
+      const zone = coneSeme.filter((z) => vezi.some((v) => v.motiv === sm.slug && v.izdelek === z.izdelek))
+      preveri(`motiv ${sm.slug}: mere predloge ustrezajo conam nosilcev`, zone.length > 0 && coneMotiva(sm.slug).every((c) => {
+        const { sirina, visina } = velikostMm(sm.slug, c)
+        return zone.filter((z) => z.cona === c).every((z) => (z.s === sirina && z.v === visina) || Math.abs(z.s / z.v - sirina / visina) < 0.01 || (z.v === visina && z.s >= sirina))
+      }), zone.map((z) => `${z.izdelek}/${z.cona} ${z.s}×${z.v}`).join(', '))
+      const vrednost = (p: Polje23, dolgo: boolean): unknown =>
+        p.vrsta === 'stevilka' ? (dolgo ? 88 : 1) : p.vrsta === 'leto' ? (dolgo ? 1998 : null) : p.vrsta === 'datum' ? '2026-05-17'
+          : p.vrsta === 'postava' ? {}
+            : p.vrsta === 'izbira' || p.vrsta === 'barva'
+              ? (() => { const o = p.moznosti?.[dolgo ? p.moznosti.length - 1 : 0]; return typeof o === 'string' ? o : (o as { kljuc: string }).kljuc })()
+              : dolgo ? (p.max ?? 12) > 16 ? 'Ž<script>&\u0001"W WWW'.padEnd(p.max!, 'W') : 'Ž<script>&\u0001"W'.padEnd(p.max ?? 12, 'W') : 'Kos'
+      for (const [i, shema] of sm.sheme.entries()) for (const dolgo of [true, false]) {
+        const polja = Object.fromEntries(sm.polja.map((p) => [p.kljuc, vrednost(p, dolgo)]))
+        const barve = sm.slug === 'dres-po-meri' ? barveIzPolj(sm.polja, polja) : shema.barve
+        for (const c of coneMotiva(sm.slug)) for (const jezik of ['sl', 'en'] as const) {
+          const out = narisiMotiv(sm.slug, polja, barve, c, undefined, { jezik })
+          const { sirina, visina } = velikostMm(sm.slug, c)
+          const ok = out.startsWith('<svg') && out.includes(`viewBox="0 0 ${sirina} ${visina}"`) && !/<script/i.test(out) && urejenXml(out)
+            && !out.includes('\u0001') && !/data-(polje|polja|sirina|luk|oblika|velike|vrstice|en|vzorec|izracun|postava|dres)=/.test(out)
+            && !out.includes('{n}') && !out.includes('[object') && st(out, 'font-size').every((v) => v > 4)
+          const laser = !LASER.includes(sm.slug) || (barveIzhoda(out).join() === barve[0]!.toUpperCase() && !/opacity|gradient/i.test(out)
+            && st(out, 'stroke-width').every((w) => w >= 0.3))
+          const vezenje = sm.slug !== 'vezena-ekipa' || (barveIzhoda(out).length <= 4 && !/opacity|gradient/i.test(out)
+            && st(out, 'stroke-width').every((w) => w >= 1) && st(out, 'font-size').every((f) => f * 0.859 >= 5))
+          if (i === 0 || !ok || !laser || !vezenje) preveri(`motiv ${sm.slug}/${c} ${dolgo ? 'dolgo' : 'kratko'} ${jezik} shema ${i}: izris, ubežano, brez oznak predloge${LASER.includes(sm.slug) ? ', laser ena barva' : ''}${sm.slug === 'vezena-ekipa' ? ', vezenje' : ''}`,
+            ok && laser && vezenje, out.slice(0, 160))
+        }
+      }
+    }
+
+    // Postava iz posnetka (oblika v2): anonimiziran "Igralec", dolgo ime, brez točk, zamenjave, kazen.
+    const igr = (priimek: string, pozicija: string, tocke: number | null, dodatno: Record<string, unknown> = {}) =>
+      ({ ime: priimek, priimek, pozicija, klub: 'Lipa', tocke, kapetan: false, podkapetan: false, mnozitelj: 1, steje: true, ...dodatno })
+    const posnetek = {
+      ekipa: 'Sporting <b>Čevapčiči</b> Kranj', liga: 'Liga Gorjanci', sezona: '2026/27', krog: 9, formacija: '3-5-2', tocke_skupaj: 57, kazen: 4,
+      zacetni: [igr('Žogec', 'GK', 6, { ime: 'Tine Žogec' }), igr('Igralec', 'DEF', 2), igr('Podajač-Presingar', 'DEF', 1), igr('Golgeter', 'DEF', null),
+        igr('Bombardir', 'MID', 36, { kapetan: true, mnozitelj: 3 }), igr('Volejček', 'MID', 2, { podkapetan: true }), igr('Drsalec', 'MID', 5), igr('Ofsajdnik', 'MID', 3),
+        igr('Klopčič', 'MID', 2, { zamenjava: true }), igr('Škarjevec', 'FWD', 9), igr('Penalček', 'FWD', 2)],
+      klop: [igr('Žogec', 'GK', 0, { ime: 'Lovec Žogec', steje: false }), igr('Bidončič', 'DEF', 1, { steje: true }), igr('Copatar', 'MID', null, { steje: false }), igr('Prečkar', 'FWD', null, { zamenjan: true, steje: false })],
+    }
+    const plakat = narisiMotiv('moja-postava', { postava: posnetek }, ['#2E9E4F', '#E9F6EC', '#0B3B1E'])
+    const plakatEn = narisiMotiv('moja-postava', { postava: posnetek }, ['#2E9E4F', '#E9F6EC', '#0B3B1E'], undefined, { sirina: 420, visina: 594 }, { jezik: 'en' })
+    preveri('postava: 11 + 4 dresov, imena, Igralec, kapetan, podkapetan, točke, skupaj, kazen, ubežano',
+      (plakat.match(/M-6 -14 Q0 -10 6 -14/g) ?? []).length === 15 && urejenXml(plakat) && plakat.includes('>IGRALEC</text>')
+      && plakat.includes('>PODAJAČ-PRESINGAR</text>') && plakat.includes('>C</text>') && plakat.includes('>V</text>') && plakat.includes('>36</text>')
+      && plakat.includes('>–</text>') && plakat.includes('>57</text>') && plakat.includes('>3-5-2</text>') && plakat.includes('LIGA GORJANCI · SEZONA 2026/27')
+      && plakat.includes('VKLJ. −4 ZA PRESTOPE') && plakat.includes('&lt;B&gt;ČEVAPČIČI&lt;/B&gt;') && !plakat.includes('<b>')
+      && (plakat.match(/opacity="\.55"/g) ?? []).length === 1 && (plakat.match(/l4 -6 l4 6 z/g) ?? []).length === 1
+      && plakat.includes('>(0)</text>') && !plakat.includes('>(1)</text>') && (plakat.match(/l1\.6 1\.7/g) ?? []).length === 1
+      && plakat.includes('>T. ŽOGEC</text>') && plakat.includes('>L. ŽOGEC</text>'), plakat.slice(0, 200))
+    preveri('postava: brez skupnih točk "–", ne prazna celica', /font-size="10\.5"[^>]*>–<\/text>/.test(narisiMotiv('moja-postava', { postava: { ...posnetek, tocke_skupaj: null } }, ['#111', '#eee', '#000'])))
+    // Geometrija: 5 v vrsti vsaj 42 mm narazen; ime na traku med obročem C (180,75) in zvezdo (282,7).
+    const vrsta5 = narisiMotiv('moja-postava', { postava: { ...posnetek, zacetni: posnetek.zacetni.map((x, n) => ({ ...x, pozicija: n === 0 ? 'GK' : n < 6 ? 'MID' : 'DEF' })) } }, ['#111', '#eee', '#000'])
+    const xi = [...vrsta5.matchAll(/translate\(([\d.]+) ([\d.]+)\) scale\(1\)/g)].filter((m) => m[2] === [...vrsta5.matchAll(/translate\(([\d.]+) ([\d.]+)\) scale\(1\)/g)][0]![2])
+      .map((m) => Number(m[1]))
+    preveri('postava: 5 igralcev v vrsti vsaj 42 mm narazen', xi.length === 5 && xi.slice(1).every((x, n) => x - xi[n]! >= 42), xi.join(','))
+    const trak = narisiMotiv('kapetanski-trak', { ime: 'WWWWWWWWWWWW' }, ['#1D4ED8', '#FACC15', '#0A1A4A'])
+    const imeTraku = /<text[^>]*>WWWWWWWWWWWW<\/text>/.exec(trak)?.[0] ?? ''
+    const atr = (a: string): number => Number(new RegExp(`\\s${a}="([\\d.]+)"`).exec(imeTraku)?.[1] ?? NaN)
+    const sirinaImena = sirinaBesedila('WWWWWWWWWWWW', atr('font-size'), atr('letter-spacing'))
+    preveri('trak: dolgo ime ne seže na obroč C ne na zvezdo', atr('x') - sirinaImena / 2 > 182 && atr('x') + sirinaImena / 2 < 280, imeTraku)
+    // Vsi slogani iz semena na podstavku in kozarcu ostanejo berljivi (≥ 9 mm pisave).
+    for (const [slug, kljuc] of [['kafanski-komplet', 'slogan1'], ['tretji-polcas', 'slogan']] as const) {
+      const moznosti = semena23.find((x) => x.slug === slug)!.polja.find((p) => p.kljuc === kljuc)!.moznosti as string[]
+      const male = moznosti.filter((m) => {
+        const out = narisiMotiv(slug, { ekipa: 'Q', ime: 'Q', [kljuc]: m }, ['#E8A317', '#FFF4D6', '#5A3A0A'])
+        return [...out.matchAll(/font-size="([\d.]+)"[^>]*>([^<]+)<\/text>/g)].filter((x) => m.toUpperCase().includes(x[2]!)).some((x) => Number(x[1]) < 9)
+      })
+      preveri(`${slug}: vsi slogani ≥ 9 mm pisave`, moznosti.length > 5 && male.length === 0, male.join(', '))
+    }
+    preveri('postava: angleški napisi, A2 v mm, brez kazni ni vrstice', plakatEn.includes('MY LINE-UP') && plakatEn.includes('SEASON 2026/27') && plakatEn.includes('INCL. −4')
+      && /width="420mm"/.test(plakatEn) && !narisiMotiv('moja-postava', { postava: { ...posnetek, kazen: 0 } }, ['#111', '#eee', '#000']).includes('ZA PRESTOPE'))
+    const prazen = narisiMotiv('moja-postava', { postava: {} }, ['#111', '#eee', '#000'])
+    preveri('postava: prazen ali pokvarjen posnetek se izriše brez dresov', urejenXml(prazen) && !prazen.includes('M-6 -14 Q0 -10')
+      && urejenXml(narisiMotiv('moja-postava', { postava: { zacetni: [null, 5, { pozicija: 'XX', priimek: 7 }], klop: 'x' } }, ['#111', '#eee', '#000']))
+      && praznaCona('moja-postava', { postava: {} }) && !praznaCona('moja-postava', { postava: posnetek }))
+
+    // Dres: vseh 6 vzorcev, obe strani, barve dresa, napisi v kontrastni barvi.
+    const dres = semena23.find((x) => x.slug === 'dres-po-meri')!
+    const vzorci = (dres.polja.find((p) => p.kljuc === 'vzorec')!.moznosti as { kljuc: string }[]).map((o) => o.kljuc)
+    const pd = { barva1: 'zelena', barva2: 'bela', ovratnik: 'polo', sponzor: 'Bife <Zadnji>', ime: 'Novak', stevilka: 9 }
+    preveri('dres: barve iz polj (le izpolnjene, po vrsti)', JSON.stringify(barveIzPolj(dres.polja, { ...pd, barva3: 'rdeca' })) === '["#0B6B3A","#FFFFFF","#C8102E"]'
+      && JSON.stringify(barveIzPolj(dres.polja, pd)) === '["#0B6B3A","#FFFFFF"]' && vzorci.length === 6)
+    for (const vzorec of vzorci) {
+      const spredaj = narisiMotiv('dres-po-meri', { ...pd, vzorec }, ['#0B6B3A', '#FFFFFF'], 'spredaj', { sirina: 600, visina: 750 })
+      const hrbet = narisiMotiv('dres-po-meri', { ...pd, vzorec }, ['#0B6B3A', '#FFFFFF'], 'hrbet')
+      preveri(`dres ${vzorec}: ves panel, grb, sponzor spredaj, ime in številka zadaj`, [spredaj, hrbet].every((x) => urejenXml(x) && x.includes('fill="#0B6B3A"') && x.includes('<rect x="0" y="0"'))
+        && spredaj.includes('BIFE &lt;ZADNJI&gt;') && spredaj.includes('#0F5A36') && hrbet.includes('>NOVAK</text>') && hrbet.includes('>9</text>') && !hrbet.includes('BIFE'),
+      spredaj.slice(0, 200))
+    }
+    // Napisi dresa berljivi pri vsakem vzorcu in paru barv iz palete: polnilo ali obroba ima kontrast ≥ 3 do vsake barve pod napisom.
+    const paleta = (dres.polja.find((p) => p.kljuc === 'barva1')!.moznosti as { hex: string }[]).map((o) => o.hex)
+    const neberljivi: string[] = []
+    for (const vzorec of vzorci) for (const b1 of paleta) for (const b2 of paleta) for (const b3 of b1 === b2 ? [] : [null, '#FFD100']) {
+      const barve = b3 ? [b1, b2, b3] : [b1, b2]
+      const out = narisiMotiv('dres-po-meri', { vzorec, ovratnik: 'okrogel', ime: 'Novak', stevilka: 9 }, barve, 'hrbet')
+      const oznaka = /<text\b[^>]*data-ce="ime"[^>]*>/.exec(out)?.[0] ?? ''
+      const fill = /\sfill="(#[0-9A-Fa-f]+)"/.exec(oznaka)?.[1] ?? ''
+      const stroke = /\sstroke="(#[0-9A-Fa-f]+)"/.exec(oznaka)?.[1]
+      const pod = vzorec === 'enobarven' || vzorec === 'tanke-crte' ? [b1] : [b1, b2]
+      const loci = (b: string): boolean => !!fill && Math.max(kontrast(fill, b), stroke ? kontrast(stroke, b) : 0) >= 3
+      if (!pod.every(loci) || (pod.length === 1 && kontrast(fill || b1, b1) < 3)) neberljivi.push(`${vzorec} ${barve.join('/')}`)
+    }
+    preveri('dres: napisi berljivi pri vseh vzorcih in parih barv (kontrast ≥ 3)', neberljivi.length === 0, neberljivi.slice(0, 8).join(', '))
+    const tankeBC = ['#FFFFFF,#111111', '#111111,#FFFFFF'].map((p) => narisiMotiv('dres-po-meri', { vzorec: 'tanke-crte', ovratnik: 'v', sponzor: 'Bar', ime: 'Novak', stevilka: 9 }, p.split(','), 'hrbet'))
+    preveri('dres: tanke črte bela/črna in črna/bela imajo vidne napise', tankeBC.every((x, n) => {
+      const o = /<text\b[^>]*data-ce="ime"[^>]*>/.exec(x)?.[0] ?? ''
+      return kontrast(/\sfill="(#[0-9A-Fa-f]+)"/.exec(o)?.[1] ?? '#FFFFFF', n === 0 ? '#FFFFFF' : '#111111') >= 3
+    }))
+    const brez = narisiMotiv('dres-po-meri', { vzorec: 'enobarven', barva1: 'bela', barva2: 'crna', ovratnik: 'v', sponzor: '', ime: '', stevilka: null }, ['#FFFFFF', '#111111'], 'hrbet')
+    preveri('dres: prazni napisi skriti, hrbet se vseeno tiska; na beli napis temen', /display="none"/.test(brez) && !praznaCona('dres-po-meri', { barva1: 'bela', ime: '' }, 'hrbet')
+      && /data-ce="ime"[^>]*fill="#111111"|fill="#111111"[^>]*data-ce="ime"/.test(brez))
+
+    // Podstavki: kos {n} izbere slogan, list ima vseh šest.
+    const pod = { ekipa: 'FC Ponedeljek', slogan1: 'Tretji polčas', slogan2: 'Samo še eno', slogan3: 'Ofsajd je bil', slogan4: 'Rundo plača kapetan', slogan5: 'Third half', slogan6: 'Na pivu smo prvi' }
+    const tretji = narisiMotiv('kafanski-komplet', pod, ['#E8A317', '#FFF4D6', '#5A3A0A'], undefined, undefined, { kos: 3 })
+    const list = narisiKose('kafanski-komplet', pod, ['#E8A317', '#FFF4D6', '#5A3A0A'])
+    const besedilo = (x: string): string => x.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
+    preveri('podstavki: kos 3 ima tretji slogan in RUNDA 3, list 6 kosov 295×195 mm', besedilo(tretji).includes('OFSAJD JE BIL') && !besedilo(tretji).includes('TRETJI POLČAS')
+      && tretji.includes('>3</text>') && urejenXml(list) && (list.match(/<svg\b/g) ?? []).length === 7 && list.includes('width="295mm" height="195mm"')
+      && ['TRETJI POLČAS', 'SAMO ŠE ENO', 'OFSAJD JE BIL', 'THIRD HALF', 'NA PIVU SMO PRVI'].every((s) => besedilo(list).includes(s)), besedilo(tretji).slice(0, 200))
+
+    preveri('datum sl/en in ocena kartice', oblikujDatum('2026-05-17') === '17. maja 2026' && oblikujDatum('2026-05-17', 'en', true) === 'Sunday, 17 May 2026'
+      && oblikujDatum('2026-05-17', 'sl', true) === 'nedelja, 17. maja 2026' && oblikujDatum('x') === 'x'
+      && narisiMotiv('kartica-legende', { ime: 'A', pozicija: 'MID', hitrost: 88, strel: 91, podaje: 79, obramba: 45 }, ['#D4A62A', '#FFF3C4', '#4A3410']).includes('>76</text>')
+      && narisiMotiv('retro-plakat-tekme', { domaci: 'A', gostje: 'B', goli_domaci: 3, goli_gostje: 2, datum: '2026-05-17' }, ['#C8102E', '#F5EBD7', '#3A0A0F'], undefined, undefined, { jezik: 'en' }).includes('SUNDAY, 17 MAY 2026'))
+  }
 }
 
 // Motivi: konfigurator, vitrina, oblika vnosa
@@ -537,6 +694,209 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
   varna.state = VarnaStran.getDerivedStateFromError()
   const nadomestna = renderToString(<>{varna.render()}</>)
   preveri('napaka pri izrisu: sporočilo in ponovno nalaganje namesto prazne strani', nadomestna.includes(SL['napaka.stran']) && nadomestna.includes(SL['napaka.osvezi']))
+}
+
+// Motivi dela 2–3 v trgovini: konfigurator (postava, ocene, datum, paleta dresa, format, velikost),
+// mockup (valj, gravura, vezenje, okvir, podstavki, obris dresa), vitrina po skupinah, katalog.
+{
+  const sql = readFileSync(new URL('../supabase/migrations/20261019150000_trgovina_motivi_del23.sql', import.meta.url), 'utf8')
+  const niz = String.raw`'((?:[^']|'')*)'`
+  const besedilo = (x: string) => x.replace(/''/g, "'")
+  const vrstice = [...sql.slice(sql.indexOf('insert into trgovina.motivi (slug')).matchAll(new RegExp(String.raw`^\('([a-z0-9-]+)', ${niz}, ${niz},\n ${niz},\n ${niz},\n '([a-z]+)',\n ${niz},\n ${niz},\n ${niz},`, 'gm'))]
+  const doplacila = [...sql.matchAll(/\('([a-z-]+)', '([a-z-]+)', (\d+)\)/g)].map((m) => ({ motiv: m[1]!, izdelek: m[2]!, doplacilo: Number(m[3]) }))
+  const primeriPostave = JSON.parse(besedilo(/set primeri = '([\s\S]*?)'\n where slug = 'moja-postava'/.exec(sql)![1]!)) as PrimerMotiva[]
+  const motivi23: (MotivIzdelka & { izdelki: string[] })[] = vrstice.map((m) => ({
+    slug: m[1]!, ime_sl: besedilo(m[2]!), ime_en: besedilo(m[3]!), opis_sl: besedilo(m[4]!), opis_en: besedilo(m[5]!), cona: m[6]!,
+    polja: JSON.parse(besedilo(m[7]!)) as PoljeMotiva[], sheme: JSON.parse(besedilo(m[8]!)) as ShemaMotiva[],
+    primeri: m[1] === 'moja-postava' ? primeriPostave : JSON.parse(besedilo(m[9]!)) as PrimerMotiva[],
+    doplacilo: doplacila.find((d) => d.motiv === m[1])?.doplacilo ?? 0, izdelki: doplacila.filter((d) => d.motiv === m[1]).map((d) => d.izdelek),
+  }))
+  const cone23: (Cona & { izdelek: string })[] = [...sql.matchAll(/\('([a-z-]+)',\s+'([a-z]+)',\s+(null|'[^']*'),\s+'([^']*)',\s+'([^']*)', (\d+), (\d+)\)/g)].map((m) => ({
+    izdelek: m[1]!, kljuc: m[2]!, barva: m[3] === 'null' ? null : m[3]!.slice(1, -1), slika: m[4]!, koti: JSON.parse(m[5]!) as [number, number][], sirina_mm: Number(m[6]), visina_mm: Number(m[7]),
+  }))
+  const motiv = (slug: string) => motivi23.find((m) => m.slug === slug)!
+  preveri('d23 trgovina: seme 12 motivov s primeri, postava ima tri postave, 14 con', motivi23.length === 12 && motivi23.every((m) => m.primeri.length >= 3)
+    && primeriPostave.length === 3 && cone23.length === 14, `${motivi23.length} ${cone23.length}`)
+
+  const nosilec = (slug: string, razlicice: [string, string, number][]): TIzdelek => ({
+    ...izdelek, slug, ime_sl: slug, ime_en: slug, po_narocilu: true, postopek: 'laser', cone: cone23.filter((c) => c.izdelek === slug),
+    motivi: motivi23.filter((m) => m.izdelki.includes(slug)).map(({ izdelki: _i, ...m }) => ({ ...m, doplacilo: doplacila.find((d) => d.motiv === m.slug && d.izdelek === slug)!.doplacilo })),
+    razlicice: razlicice.map(([sl, en, c], n) => ({ id: 900 + n, oznaka_sl: sl, oznaka_en: en, cena: c, na_voljo: 'da' as const })),
+  })
+  const konf = (i: TIzdelek, q = '') => renderToString(<StaticRouter location={`/p/${i.slug}${q}`}><SejaProvider><IzdelekView i={i} /></SejaProvider></StaticRouter>)
+
+  // Dres: paleta, vzorci s sličicami, ovratnik, velikosti z doplačilom, brez sheme, sprednji in zadnji pogled.
+  const dres = konf(nosilec('dres-po-meri', [['S', 'S', 4900], ['M', 'M', 4900], ['3XL', '3XL', 5400]]))
+  const manjkaD = ['Glavna barva', 'Druga barva', 'Barva obrob', 'Ovratnik', 'Polo', 'Šerpa', SL['motiv.brezBarve'], SL['motiv.cona.spredaj'], SL['motiv.cona.hrbet'],
+    '59,00', '+5,00', SL['motiv.velikost'], 'maska-', 'obris-', '/nosilci/dres-spredaj.webp', '/nosilci/dres-hrbet.webp', 'data:image/svg+xml', SL['motiv.izberiVelikost']]
+    .filter((v) => !dres.includes(v))
+  preveri('d23 dres: paleta, vzorci s sličicami, ovratnik, velikosti z doplačilom, obris majice, oba pogleda', manjkaD.length === 0, manjkaD.join(' / '))
+  preveri('d23 dres: 13 barv na polje, druga barva ne sme biti enaka prvi, brez koraka barv sheme', (dres.match(/background:#/g) ?? []).length >= 39
+    && /aria-disabled="true"[^>]*aria-label="Zelena: [^"]+"/.test(dres) && !/aria-label="Zelena"[^>]*disabled=""/.test(dres) && !dres.includes(SL['motiv.korak.shema']))
+  preveri('d23 dres: rokavi v glavni barvi (podlaga obrisa)', /<rect width="1600" height="1600" fill="#[0-9A-Fa-f]{6}"/.test(dres))
+
+  // Plakat: postava brez prijave (izmišljena postava, poziv k prijavi), format A3/A2 s ceno, shema.
+  const plakat = konf(nosilec('plakat-po-meri', [['A3', 'A3', 2900], ['A2', 'A2', 4500]]), '?motiv=moja-postava')
+  const manjkaP = [SL['motiv.postava.prijava'], SL['motiv.postava.predogled'], 'FC PONEDELJEK ZJUTRAJ', SL['motiv.format'], '29,00', '45,00', SL['motiv.korak.shema'], 'steklo-', 'Retro plakat tekme']
+    .filter((v) => !plakat.includes(v))
+  preveri('d23 plakat: postava brez prijave z izmišljeno postavo, A3/A2 s ceno, steklo okvirja', manjkaP.length === 0, manjkaP.join(' / '))
+  preveri('d23 plakat: A3 je izbran, gumb za nakup ni onemogočen zaradi velikosti', /aria-pressed="true"[^>]*>A3/.test(plakat) && !plakat.includes(SL['motiv.izberiVelikost']))
+  const retro = konf(nosilec('plakat-po-meri', [['A3', 'A3', 2900], ['A2', 'A2', 4500]]), '?motiv=retro-plakat-tekme')
+  preveri('d23 retro plakat: datum kot vnos datuma', /type="date"[^>]*value="2026-05-17"|value="2026-05-17"[^>]*type="date"/.test(retro) && retro.includes('min="1950-01-01"'))
+
+  // Kartica: ocene z drsnikom; podstavki: šest sloganov v menijih, šest kosov na fotografiji.
+  const kartica = konf(nosilec('kartica-igralca', [['A5', 'A5', 1500]]))
+  preveri('d23 kartica: štiri ocene z drsnikom od 1, brez koraka različice', (kartica.match(/type="range"/g) ?? []).length === 4 && kartica.includes('min="1"')
+    && !kartica.includes(SL['motiv.velikost']) && kartica.includes('>76</text>'))
+  const podstavki = konf(nosilec('podstavki-po-meri', [['Komplet 6', 'Set of 6', 2200]]))
+  preveri('d23 podstavki: šest sloganov v menijih, šest kosov na fotografiji', (podstavki.match(/<select/g) ?? []).length === 6
+    && (podstavki.match(/<svg viewBox="0 0 95 95"/g) ?? []).length >= 6 && podstavki.includes('22,00'))
+
+  // Kozarec, odpirač, kapa: gravura na valju, temna gravura, vezenje; barva kape s krogi.
+  const kozarec = konf(nosilec('kozarec-po-meri', [['0,5 l', '0.5 l', 1200]]))
+  preveri('d23 kozarec: valj (40 trakov), gravura brez senčenja fotografije, 21 €', (kozarec.match(/clipPath id="trak-/g) ?? []).length >= 40
+    && kozarec.includes('<use href="#motiv-') && kozarec.includes('21,00') && kozarec.includes(SL['motiv.postopek.laser']))
+  const odpirac = konf({ ...nosilec('odpirac-po-meri', [['Ena velikost', 'One size', 900]]) })
+  preveri('d23 odpirač: temna gravura z robom svetlobe', odpirac.includes('feOffset') && !odpirac.includes('clipPath id="trak-'))
+  const kapa = konf(nosilec('kapa-po-meri', [['Črna', 'Black', 2400], ['Bela-črna', 'White-black', 2400]]))
+  preveri('d23 kapa: vezenje (nit, senca), barva kape s krogoma, cena 34 €', kapa.includes('feTurbulence') && kapa.includes('feDropShadow')
+    && kapa.includes('linear-gradient(135deg') && kapa.includes('34,00') && kapa.includes(SL['motiv.barva']))
+
+  // Mockup: valj stisne motiv na vidni del (2R·sin(s/2R)), trakovi se stikajo, sredina ostane.
+  const tr = trakoviValja(70, 37.6)
+  const vidno = tr.at(-1)!.x0v + (tr.at(-1)!.x1 - tr.at(-1)!.x0) * tr.at(-1)!.k - tr[0]!.x0v
+  preveri('d23 mockup: valj', Math.abs(vidno - 2 * 37.6 * Math.sin(35 / 37.6)) < 1e-6 && tr.every((t, n) => n === 0 || Math.abs(tr[n - 1]!.x0v + (tr[n - 1]!.x1 - tr[n - 1]!.x0) * tr[n - 1]!.k - t.x0v) < 1e-9)
+    && Math.abs(tr[20]!.k - 1) < 0.01 && tr[0]!.k < 0.7, String(vidno))
+
+  // Vrednosti, barve in napake: ime možnosti v jeziku, ekipa iz postave, barve dresa, datum in ocene kot v bazi.
+  const dresM = motiv('dres-po-meri')
+  preveri('d23 prikaz: ime možnosti, ekipa postave, barve dresa iz polj, sicer shema', prikazVrednosti(dresM.polja[0]!, 'serpa') === 'Šerpa'
+    && prikazVrednosti(dresM.polja[1]!, 'rdeca') === 'Rdeča' && prikazVrednosti(motiv('moja-postava').polja[0]!, primeriPostave[0]!.polja.postava) === 'FC Ponedeljek Zjutraj'
+    && barveMotiva(dresM, { barva1: 'rdeca', barva2: 'bela' }).length === 2 && barveMotiva(motiv('moja-postava'), {}, 'retro')[0] === '#C8102E'
+    && moznost('GK').ime_en === 'GK')
+  const d = new Date(2026, 9, 19)
+  preveri('d23 napake: datum in ocena zrcalita bazo', napakaPolja('datum', '2026-02-30', 12, 2026, 0, d) === 'motiv.napaka.datum'
+    && napakaPolja('datum', '1949-12-31', 12, 2026, 0, d) === 'motiv.napaka.datum' && napakaPolja('datum', '2027-10-20', 12, 2026, 0, d) === 'motiv.napaka.datum'
+    && napakaPolja('datum', '2027-10-19', 12, 2026, 0, d) === null && napakaPolja('datum', '2026-05-17', 12, 2026, 0, d) === null
+    && napakaPolja('stevilka', '0', 12, 2026, 1) === 'motiv.napaka.ocena' && napakaPolja('stevilka', '1', 12, 2026, 1) === null && napakaPolja('stevilka', '0') === null)
+
+  // Vitrina po skupinah s sidri; kartica nosilca brez slike pokaže motiv na nosilcu.
+  const kat: MotivKataloga[] = motivi23.map(({ izdelki, doplacilo: _d, ...m }) => ({ ...m, izdelki: izdelki.map((s) => ({ slug: s, ime_sl: s, ime_en: s, postopek: 'laser', doplacilo: 0, cena_od: 1000, cone: cone23.filter((c) => c.izdelek === s) })) }))
+  const majice: MotivKataloga = { ...kat[0]!, slug: 'retro-dres', izdelki: [{ ...kat[0]!.izdelki[0]!, slug: 'majica-po-meri' }] }
+  const skupine = renderToString(<StaticRouter location="/personalised"><SkupineMotivov motivi={[majice, ...kat]} /></StaticRouter>)
+  preveri('d23 vitrina: skupine s sidri v pravem vrstnem redu', ['majice', 'dresi', 'pub', 'stena', 'dodatki'].every((k) => skupine.includes(`href="#${k}"`) && skupine.includes(`id="${k}"`))
+    && ['majice', 'dresi', 'pub', 'stena', 'dodatki'].map((k) => skupine.indexOf(`id="naslov-${k}"`)).every((x, n, a) => x > 0 && (n === 0 || x > a[n - 1]!))
+    && skupinaMotiva(motiv('navijaski-sal') as unknown as MotivKataloga) === 'dodatki' && skupinaMotiva({ izdelki: [] }) === 'dodatki')
+  const karticaNosilca = renderToString(<StaticRouter location="/"><KarticaIzdelka i={{ slug: 'kozarec-po-meri', ime_sl: 'Kozarec', ime_en: 'Glass', kategorija: 'dom', slike: [], cena_od: 1200, cena_do: 1200, na_voljo: 'da' }} motivi={kat} /></StaticRouter>)
+  preveri('d23 katalog: nosilec brez slike pokaže motiv na fotografiji nosilca', karticaNosilca.includes('/nosilci/kozarec.webp') && karticaNosilca.includes('clipPath id="trak-') && !karticaNosilca.includes('slff-grb'))
+
+  // Postava: stanja predogleda (nalaganje, brez kroga z namigom baze, napaka s ponovitvijo, posnetek), mladinska ekipa onemogočena.
+  const poljePostave = motiv('moja-postava').polja[0]!
+  const ekipeP = [{ id: 1, name: 'Dinamo Kavč', mladinska: false }, { id: 2, name: 'Mladi Tigri', mladinska: true }]
+  const stanje = (postava?: StanjePostave) => renderToString(<StaticRouter location="/p/plakat-po-meri"><PoljeVnosa p={poljePostave} vrednost="1" napaka={null} manjka={false}
+    nastavi={() => {}} uid="u" ekipe={ekipeP} prvaki={null} slug="plakat-po-meri" besediloPrvaka={() => ''} postava={postava} znova={() => {}} /></StaticRouter>)
+  const posnetek = primeriPostave[1]!.polja.postava as Postava
+  preveri('d23 postava: nalaganje, brez kroga, napaka s ponovitvijo, posnetek kroga, mladinska onemogočena',
+    stanje('nalagam').includes(SL['app.nalaganje']) && stanje('brezKroga').includes(SL['motiv.postava.niKroga'])
+    && stanje('napaka').includes(SL['motiv.postava.znova']) && stanje(posnetek).includes(`${posnetek.krog}. krog`)
+    && !stanje(posnetek).includes(SL['motiv.postava.predogled']) && stanje('nalagam').includes(SL['motiv.postava.mladinska'])
+    && /disabled=""[^>]*>(?:(?!<\/button>).)*Mladi Tigri/s.test(stanje('nalagam')))
+  preveri('d23 postava: brez kroga po namigu baze, ne po besedilu', stanjePostave(null, { hint: 'trgovina-postava-krog' }) === 'brezKroga'
+    && stanjePostave(null, { hint: 'trgovina-personalizacija' }) === 'napaka' && stanjePostave(posnetek, null) === posnetek)
+  preveri('d23 datum: leto naprej kot v bazi (29. 2. → 28. 2.)', letoNaprej(new Date(2028, 1, 29)) === '2029-02-28' && letoNaprej(new Date(2026, 9, 19)) === '2027-10-19')
+
+  // Košarica: sličica plakata postave ima igralce (primer) in ime kupčeve ekipe; katalog: cena z doplačilom motiva.
+  const plakatIz = nosilec('plakat-po-meri', [['A3', 'A3', 2900], ['A2', 'A2', 4500]])
+  const vrsticaP = { razlicica_id: 900, slug: 'plakat-po-meri', kolicina: 1, personalizacija: { motiv: 'moja-postava', polja: { postava: 1 }, shema: 'igrisce' }, prikaz: { postava: 'Moji Kavčarji' } }
+  const kosP = renderToString(<StaticRouter location="/cart"><SlikaMotiva iz={plakatIz} p={vrsticaP} oznaka="A3" alt="x" /></StaticRouter>)
+  preveri('d23 košarica: plakat postave z igralci in imenom ekipe', kosP.includes('MOJI KAVČARJI') && kosP.includes('ŽOGEC'), kosP.slice(0, 200))
+  const karticaCena = renderToString(<StaticRouter location="/"><KarticaIzdelka i={{ slug: 'kozarec-po-meri', ime_sl: 'Kozarec', ime_en: 'Glass', kategorija: 'dom', slike: [], cena_od: 1200, cena_do: 1200, na_voljo: 'da', cena_z_motivom: 2100 }} /></StaticRouter>)
+  preveri('d23 katalog: nosilec pove ceno z motivom ("od 21,00")', karticaCena.includes('od 21,00') && !karticaCena.includes('>12,00'))
+  const vitrinaOdp = renderToString(<StaticRouter location="/personalised"><MrezaMotivov motivi={kat.filter((m) => m.slug === 'ime-in-stevilka' || m.slug === 'navijaski-sal')} /></StaticRouter>)
+  preveri('d23 vitrina: odpirač in šal povečana bližje', vitrinaOdp.includes('scale(1.9)') && vitrinaOdp.includes('scale(2.1)'))
+
+  // Izvoz za tisk po postopku (AdminTisk): laser ena barva brez oznak, vezenje ≤ 4 barve niti,
+  // dres 600 × 750 mm s prirezom v barvah kupca in 150 dpi, podstavki 6 + list, plakat iz posnetka v jeziku naročila.
+  {
+    const postavka = (slug: string, izdelek: string, postopek: string, primer = 0, dodatno: Partial<PostavkaTiska> = {}): PostavkaTiska => {
+      const m = motiv(slug)
+      const pr = m.primeri[primer]!
+      return {
+        postavka_id: 70, stanje_tiska: 'v_seriji', narocilo_id: 7, javna_oznaka: 'ZZ00TT11', placano_at: null, sku: 'X', ime: izdelek, kolicina: 1,
+        personalizacija: { motiv: slug, shema: pr.shema, polja: pr.polja },
+        razlicica: pr.barva ?? undefined, postopek, barve: (m.sheme.find((x) => x.kljuc === pr.shema) ?? m.sheme[0]!).barve,
+        cone: cone23.filter((c) => c.izdelek === izdelek), ...dodatno,
+      }
+    }
+    // Besedilo se lahko prelomi v dve vrstici: vsaka beseda mora biti na listu.
+    const vsebuje = (x: string, b: string) => b.toUpperCase().split(/\s+/).filter(Boolean).every((w) => x.toUpperCase().includes(w))
+    const pravokotnik = (x: string, a: Record<string, string>) => [...x.matchAll(/<rect\b[^>]*>/g)].some(([r]) => Object.entries(a).every(([k, v]) => r.includes(` ${k}="${v}"`)))
+    const barveSvg = (x: string) => new Set([...x.replace(/<path [^>]*data-oznake="rez"[^>]*>/, '').matchAll(/\s(?:fill|stroke)="([^"]+)"/g)].map((m) => m[1]!).filter((b) => b !== 'none'))
+    const laser = postavka('tretji-polcas', 'kozarec-po-meri', 'laser')
+    const [dl] = datotekeTiska(laser)
+    const svgL = svgDatoteke(laser, dl!)
+    const csvL = csvSerije({ ...serija, postavke: [laser] }).split('\r\n')[1]!
+    preveri('izvoz d23: laser je ena barva (črna), prava velikost, brez prireza in oznak, SVG + PNG 300 dpi',
+      [...barveSvg(svgL)].join() === '#000' && svgL.startsWith('<?xml') && /^<svg\b[^>]*\swidth="70mm"/m.test(svgL.split('\n')[1]!)
+      && !svgL.includes('data-oznake') && !/opacity|Gradient/.test(svgL) && csvL.endsWith(`"${dl!.ime}.png";"";"";"70 × 90";"300";""`), `${[...barveSvg(svgL)].join()} | ${csvL}`)
+    const kapa = postavka('vezena-ekipa', 'kapa-po-meri', 'vezenje')
+    const [dk] = datotekeTiska(kapa)
+    const niti = barveNiti(svgMotiva(kapa, dk!))
+    const csvK = csvSerije({ ...serija, postavke: [kapa] }).split('\r\n')[1]!
+    preveri('izvoz d23: vezenje ≤ 4 ploske barve, seznam niti v CSV, brez PNG in oznak',
+      niti.length >= 1 && niti.length <= 4 && barveSvg(svgDatoteke(kapa, dk!)).size <= 4 && !svgDatoteke(kapa, dk!).includes('data-oznake')
+      && csvK.endsWith(`"";"";"";"100 × 50";"";"${niti.join(' ')}"`), csvK)
+
+    const kupec = ['#0A7E3C', '#F2F2F2', '#E8B22E']
+    const dresP = postavka('dres-po-meri', 'dres-po-meri', 'sublimacija', 0, { razlicica: 'M' })
+    dresP.personalizacija = { ...dresP.personalizacija, polja: { ...dresP.personalizacija!.polja, vzorec: 'obroci', ime: 'Novak', stevilka: 9, sponzor: 'Bar Offside' }, barve: kupec }
+    const datD = datotekeTiska(dresP)
+    const listD = svgZaTisk(dresP, datD[0]!)
+    const S = 600 + 2 * ROB
+    const px = (mm: number) => Math.round((mm / 25.4) * dpiZa(dresP, datD[0]!))
+    preveri('izvoz d23: dres spredaj in hrbet 600 × 750 mm, prirez z ozadjem do roba, oznake, barve kupca, 150 dpi (3661 × 4547 px)',
+      datD.map((d) => `${d.cona}:${d.mm.sirina}x${d.mm.visina}`).join() === 'spredaj:600x750,hrbet:600x750'
+      && listD.includes(`width="${S}mm" height="${750 + 2 * ROB}mm"`) && listD.includes('data-oznake="rez"')
+      && pravokotnik(listD, { x: '-3', y: '-3', width: '606', height: '756', fill: '#F2F2F2' }) && pravokotnik(listD, { x: '-3', y: '40', width: '606', height: '80', fill: '#0A7E3C' })
+      && svgZaTisk(dresP, datD[1]!).includes('NOVAK') && !listD.includes('NOVAK') && listD.includes('BAR OFFSIDE')
+      && dpiZa(dresP, datD[0]!) === 150 && px(S) === 3661 && px(750 + 2 * ROB) === 4547 && px(S) * px(750 + 2 * ROB) < 16777216,
+      listD.slice(0, 600))
+
+    const mat = postavka('kafanski-komplet', 'podstavki-po-meri', 'sublimacija')
+    const datM = datotekeTiska(mat)
+    const slogani = [1, 2, 3, 4, 5, 6].map((n) => String(mat.personalizacija!.polja![`slogan${n}`] ?? ''))
+    const listM = svgZaTisk(mat, datM[6]!)
+    preveri('izvoz d23: podstavki 6 datotek (vsaka svoj slogan, prirez kroga) + list vseh',
+      datM.length === 7 && datM.slice(0, 6).every((d, i) => d.ime.endsWith(`-k${i + 1}`) && d.mm.sirina === 95 && d.kos === i + 1)
+      && datM[6]!.ime.endsWith('-list') && datM[6]!.mm.sirina === 295 && datM[6]!.mm.visina === 195
+      && datM.slice(0, 6).every((d, i) => { const x = svgZaTisk(mat, d); return x.includes('r="50.5"') && vsebuje(x, slogani[i]!) })
+      && new Set(datM.slice(0, 6).map((d) => svgMotiva(mat, d).replace(/-m\d+/g, ''))).size === 6
+      && (listM.match(/<svg\b/g) ?? []).length === 8 && listM.includes(`width="${295 + 2 * ROB}mm"`), datM.map((d) => d.ime).join())
+
+    const plakatT = postavka('moja-postava', 'plakat-po-meri', 'uv', 0, { jezik: 'en' })
+    const [dpl] = datotekeTiska(plakatT)
+    const svgPl = svgDatoteke(plakatT, dpl!)
+    const posnetek = plakatT.personalizacija!.polja!.postava as { ekipa: string; zacetni: { priimek: string }[] }
+    preveri('izvoz d23: plakat postave iz posnetka naročila v jeziku naročila, A3 s prirezom in oznakami, 300 dpi',
+      dpl!.mm.sirina === 297 && svgPl.includes(`width="${297 + 2 * ROB}mm"`) && svgPl.includes('data-oznake="rez"')
+      && vsebuje(svgPl, posnetek.ekipa) && posnetek.zacetni.every((z) => vsebuje(svgPl, z.priimek))
+      && svgPl.includes('MY LINE-UP') && !svgPl.includes('MOJA POSTAVA') && dpiZa(plakatT, dpl!) === 300
+      && pravokotnik(svgPl, { x: '-3', y: '-3', width: '303', height: '426' }), svgPl.slice(0, 300))
+    const sal = postavka('navijaski-sal', 'sal-po-meri', 'sublimacija')
+    const [ds] = datotekeTiska(sal)
+    preveri('izvoz d23: šal ves trak 1400 × 180 mm v 150 dpi', ds!.mm.sirina === 1400 && ds!.mm.visina === 180 && dpiZa(sal, ds!) === 150
+      && svgZaTisk(sal, ds!).includes(`width="${1400 + 2 * ROB}mm"`))
+    const zast = postavka('klubska-zastavica', 'zastavica-po-meri', 'sublimacija')
+    const [dz] = datotekeTiska(zast)
+    const listZ = svgZaTisk(zast, dz!)
+    preveri('izvoz d23: zastavica s prirezom 3 mm okoli trikotnika (ozadje in clipPath)',
+      (listZ.match(/transform="translate\(150 108\.1\) scale\(1\.0278\) translate\(-150 -108\.1\)"/g) ?? []).length === 2
+      && /<clipPath[^>]*><path transform="translate\(150 108\.1\)/.test(listZ) && !svgMotiva(zast, dz!).includes('scale(1.0278)'), listZ.slice(0, 500))
+    const shranjene: string[] = []
+    const neuspele = await prenesiVse({ ...serija, postavke: [laser, kapa, mat] }, (ime) => { shranjene.push(ime) })
+    preveri('izvoz d23: prenos po postopku (laser SVG+PNG, vezenje le SVG, podstavki 7 listov)',
+      shranjene.length === 1 + 1 + 7 && neuspele.length === 1 + 7 && !neuspele.some((n) => n.includes('vezenje')) && !neuspele.some((n) => n.endsWith('-dtf.png')), `${shranjene.join()} | ${neuspele.join()}`)
+  }
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

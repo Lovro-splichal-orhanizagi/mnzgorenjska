@@ -8,7 +8,7 @@ import { cena, po, t } from '../besede'
 import { conaZa, Mockup } from '../mockup'
 import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
-import { imaPredlogo, svgCone } from './Konfigurator'
+import { barveMotiva, imaPredlogo, svgCone } from './Konfigurator'
 
 /** Primeri motiva; brez njih (admin jih sme izprazniti) en primer iz privzetih vrednosti polj. */
 export const primeriMotiva = (m: Pick<MotivKataloga, 'primeri' | 'polja' | 'sheme'>, izdelek = '', barva = 'Črna'): PrimerMotiva[] =>
@@ -45,8 +45,8 @@ export function PrimerNaMockupu({ m, p, povecava = 1, className = '', alt }: { m
   const iz = m.izdelki.find((x) => x.slug === p.izdelek) ?? m.izdelki[0]!
   const cona = conaZa(iz.cone, m.cona, p.barva)
   if (!cona) return null
-  const barve = (m.sheme.find((s) => s.kljuc === p.shema) ?? m.sheme[0]!).barve
-  return <Mockup cona={cona} svg={svgCone(m.slug, p.polja, barve, m.cona)} barva={cona.barva ?? p.barva} povecava={povecava} className={className} alt={alt} />
+  const barve = barveMotiva(m, p.polja, p.shema)
+  return <Mockup cona={cona} svg={svgCone(m.slug, p.polja, barve, m.cona)} barva={cona.barva ?? p.barva} podlaga={barve[0]} povecava={povecava} className={className} alt={alt} />
 }
 
 const mirno = (): boolean => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -115,10 +115,55 @@ function KarticaMotiva({ m, zamik }: { m: MotivKataloga; zamik: number }) {
   )
 }
 
-export function MrezaMotivov({ motivi }: { motivi: MotivKataloga[] }) {
+export function MrezaMotivov({ motivi, id = 'motivi', zamik = 0 }: { motivi: MotivKataloga[]; id?: string | null; zamik?: number }) {
   return (
-    <div id="motivi" className="grid scroll-mt-20 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {motivi.map((m, i) => <KarticaMotiva key={m.slug} m={m} zamik={i * 600} />)}
+    <div id={id ?? undefined} className="grid scroll-mt-20 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {motivi.map((m, i) => <KarticaMotiva key={m.slug} m={m} zamik={(zamik + i) * 600} />)}
+    </div>
+  )
+}
+
+/** Skupine vitrine po nosilcu motiva (prvi aktivni nosilec); neznan nosilec gre med dodatke. */
+const SKUPINE = [
+  ['majice', ['majica-po-meri', 'pulover-po-meri']],
+  ['dresi', ['dres-po-meri']],
+  ['pub', ['kozarec-po-meri', 'vrc-po-meri', 'podstavki-po-meri', 'odpirac-po-meri']],
+  ['stena', ['plakat-po-meri', 'kartica-igralca', 'zastavica-po-meri']],
+  ['dodatki', ['sal-po-meri', 'kapa-po-meri', 'trak-po-meri']],
+] as const
+export type Skupina = (typeof SKUPINE)[number][0]
+
+export const skupinaMotiva = (m: Pick<MotivKataloga, 'izdelki'>): Skupina =>
+  SKUPINE.find(([, slugi]) => m.izdelki.some((i) => (slugi as readonly string[]).includes(i.slug)))?.[0] ?? 'dodatki'
+
+/** Motivi po skupinah s sidri (/personalised#pub); prazne skupine se ne pokažejo. */
+export function SkupineMotivov({ motivi }: { motivi: MotivKataloga[] }) {
+  const skupine = SKUPINE.map(([k]) => ({ k, motivi: motivi.filter((m) => skupinaMotiva(m) === k) })).filter((x) => x.motivi.length > 0)
+  if (skupine.length < 2) return <MrezaMotivov motivi={motivi} />
+  let zamik = 0
+  return (
+    <div id="motivi" className="scroll-mt-20 space-y-12">
+      <nav aria-label={t('osebno.skupine')} className="sticky top-16 z-20 -mx-4 overflow-x-auto bg-slate-950/85 px-4 py-2 backdrop-blur [scrollbar-width:none] sm:mx-0 sm:rounded-full sm:px-2">
+        <ul className="flex gap-2 whitespace-nowrap text-sm font-semibold">
+          {skupine.map(({ k, motivi: ms }) => (
+            <li key={k}>
+              <a href={`#${k}`} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-slate-200 transition hover:border-gnl-400/50 hover:text-gnl-200">
+                {t(`osebno.skupina.${k}`)}<span className="text-xs font-bold text-slate-500">{ms.length}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      {skupine.map(({ k, motivi: ms }) => {
+        const z = zamik
+        zamik += ms.length
+        return (
+          <section key={k} id={k} aria-labelledby={`naslov-${k}`} className="scroll-mt-32 space-y-5">
+            <h2 id={`naslov-${k}`} className="text-2xl font-black naslov sm:text-3xl">{t(`osebno.skupina.${k}`)}</h2>
+            <MrezaMotivov motivi={ms} id={null} zamik={z} />
+          </section>
+        )
+      })}
     </div>
   )
 }
@@ -193,7 +238,7 @@ export function Personalizirano() {
       {motivi === null ? <Nalaganje /> : motivi.length === 0 ? (
         !napaka && <p className="kartica p-6 text-center text-slate-400">{t('osebno.prazno')}</p>
       ) : (
-        <MrezaMotivov motivi={motivi} />
+        <SkupineMotivov motivi={motivi} />
       )}
     </div>
   )
