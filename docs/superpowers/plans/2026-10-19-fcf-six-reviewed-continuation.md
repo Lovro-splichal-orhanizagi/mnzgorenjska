@@ -46,8 +46,8 @@ Interface: reader-issued accounting/reuse capability with22 actual GETs and seve
 ### Task3: Native six cleanup and nullable result
 
 Files: `supabase/migrations/20261019130000_fcf_six_reviewed_exclusions.sql`, native binding/cleanup staging/evidence/adapters and targeted SQL tests.
-Interface: exact six cleanup receipt and absent4109404 before-image, independent of full G1 source calendar; versioned native release packet/API.
-- [ ] RED tests for exact locked before-images (157apps18goals only with observed row identities), absent fixture/alias conflict, nullable-result getter/standings and no-user/active/dependency safeguards.
+Interface: exact six cleanup receipt and exact existing empty321663 placeholder before-image, independent of full G1 source calendar; versioned native release packet/API.
+- [ ] RED tests for exact locked before-images (157apps18goals only with observed row identities), exact placeholder/alias conflict, nullable-result getter/standings and no-user/active/dependency safeguards.
 - [ ] Implement six-only policy install/atomic cleanup/rollback with exact native anchors; preserve oldfour API unchanged. Narrow paired-null storage invariant for reviewed4109404 only.
 - [ ] Implement new packet validation/import/pricer/check/activate APIs preserving normal/native16club/GK/legal15/futureR6/deadline/privacy gates. G9 requires six cleanup receipt but no fullG1 audit.
 - [ ] GREEN focused disposable local native checks; no production secrets.
@@ -60,3 +60,5 @@ Interface: generic `fcf-missing-target-admission` kind with new explicit protoco
 - [ ] Integrate explicit union and separate writer closure/new trusted modules/policy hashes; normal nightly installed markers skip exact six before provider reads.
 - [ ] Run focused Node/native suites, record actual failures and final closure; root review/full CI before any source/external operations.
 - [ ] Commit coherent candidate with exact modified-file/test/gap handoff. No push/merge.
+
+Actual native correction (root read-only proof): report4109404 is unbound, while exact fixture321663 exists in round28708 with teams8575/8576,date2026-10-04,stored0:0,importedNULL,zapisnikNULL,old generic source URL4109388,vir_brez_izidaTRUE. Those zeros are placeholder values, not an official result. Convert this same row to pairedNULL/unavailable; retain240 fixtures. Before-image flags missing4109404 (report absence only) and empty4109404Placeholder:true; restore exact original row on rollback. No insertion or whole-fixture absence assertion. Root proof4109404-existing-placeholder-root-verification.json supersedes earlier absent-fixture assumptions.
