@@ -118,3 +118,13 @@ The old G1-first packet is never reclassified as admissible. The unchanged nativ
 SQL admission kind carries explicit prior/new/cumulative counts and old accounting
 inside its independently rebuilt source fingerprint. Cleanup originals, captureA,
 writerB and every later pricing/legal15/future-R6/activation gate stay separate.
+
+## Six reviewed policy and native release
+
+The separate `es-fcf-six-reviewed-history-v1` namespace contains exactly4109388,4109404,4116215,4118352,4118354,4118358. Legacy four-entry registry bytes/hashes and APIs stay strict.4118354 keeps official3:1, with every individual statistic unavailable.4109404 has no observed official numeric result or player-derived group ID: both scores and that unobserved group ID remain NULL; every individual statistic is unavailable.
+
+Actual read-only native verification found the unbound4109404 report already has exact empty schedule fixture321663 in round28708, date2026-10-04, home8575/away8576. Its stored0:0/importedNULL/zapisnikNULL/vir_brez_izidaTRUE and generic old4109388 source URL are placeholder state, not an official result. The versioned six cleanup authenticates that complete original row and zero individual rows, converts the same ID in place to pairedNULL/unavailable with the correct URL, and preserves240 fixtures. Rollback restores the exact original placeholder. Before-image flags are `missing4109404:true` for report-ID/URL absence and `empty4109404Placeholder:true`; whole-fixture absence or insertion is refused.
+
+The six atomic cleanup removes exactly157 appearances/18 goals only after locked native identities/row sets match. Its historical authorization reauthenticates unchanged original-four artifact12152536127 and the two actual consumed diagnostic bodies; source clocks are never replaced. G9 can map/import/price/check/activate using its own complete source admission and this shared six cleanup receipt, without a complete G1 source calendar or successful G1 audit. G1/G2 stay inactive until their own gates pass. Native club/GK coverage, privacy/no-user/dependency locks, pricer, legal15, futureR6/deadline and root Actions gates remain mandatory.
+
+The new migration is `20261019150000_fcf_six_reviewed_native.sql`. CaptureA and writerB are separately authenticated closures. Only source-free approval staging has contents-write permission; actual capture has no DB authority. Root creates claims/uploads/dispatches and authorizes native operations only after review and full CI.

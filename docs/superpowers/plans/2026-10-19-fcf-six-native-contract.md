@@ -22,6 +22,6 @@ SQL interfaces:
 - public.fcf_six_current_target_receipt(text)
 - public.get_installed_fcf_six_statistics_markers(bigint)
 
-Six cleanup exact locked157 appearances18goals, unavailable6 including conversion of existing empty placeholder321663 to unknown-result4109404. Oldfour functions untouched and rejecting new packets. Native implementer owns migration20261019130000, native tests, generated types. JS implementer owns source/policy/nightly adapter/runtime closure. Root UI worker owns frontend/SSR.
+Six cleanup exact locked157 appearances18goals, unavailable6 including conversion of existing empty placeholder321663 to unknown-result4109404. Oldfour functions untouched and rejecting new packets. Native implementer owns migration20261019150000, native tests, generated types. JS implementer owns source/policy/nightly adapter/runtime closure. Root UI worker owns frontend/SSR.
 
 Actual native correction (root read-only proof): report4109404 is unbound, while exact fixture321663 exists in round28708 with teams8575/8576,date2026-10-04,stored0:0,importedNULL,zapisnikNULL,old generic source URL4109388,vir_brez_izidaTRUE. Those zeros are placeholder values, not an official result. Convert this same row to pairedNULL/unavailable; retain240 fixtures. Before-image flags missing4109404 (report absence only) and empty4109404Placeholder:true; restore exact original row on rollback. No insertion or whole-fixture absence assertion. Root proof4109404-existing-placeholder-root-verification.json supersedes earlier absent-fixture assumptions.

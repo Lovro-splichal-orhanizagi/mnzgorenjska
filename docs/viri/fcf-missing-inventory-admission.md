@@ -300,3 +300,22 @@ old accounting and marker validation uses only explicit local
 `FCF_HISTORICAL_RETAINED_DIR` inputs; public CI skips those private-byte tests.
 Passing code tests establishes no actual new G9 availability or production
 readiness. Root owns independent review, full CI and any later execution decision.
+
+## Six reviewed continuation (separate protocol)
+
+`six-reviewed-continuation-v1` is an explicit new union variant. It reauthenticates consumed runs39170648473 (16 GETs) and39178021024 (6 GETs) as accounting only; neither false final receipt becomes target evidence. The user explicitly increased only this continuation's cumulative cap to478. Legacy477 protocols, claims and four-entry policy hashes remain unchanged.
+
+The new fixed batch captures G9 first: seven unique retained documents plus233 ascending unattempted IDs. G1 then uses17 retained plus223 ascending unattempted IDs. Prior22 plus456 new GETs equals478, including the previously duplicated4118352 GET. There is no refund or automatic refetch allowance. Each target requires its own complete240/16-native-club/GK audit; a complete G9 can admit at255 when G1 is authentically unstarted. A provider refusal, challenge, redirect, partial/unknown attempt prevents sibling source permission and final admission. The shared45-minute window starts at actual first ES source clearance and cannot restart for G1. Original source clocks remain unchanged and normal freshness applies at every reader/writer stage.
+
+Root source-free preparation:
+
+```
+node scripts/fcf-missing-inventory-actions.mjs prepare-six-approval \
+  --history-source /absolute/six-history-references.json \
+  --source-commit REVIEWED_MAIN_40_HEX --ruleset-id 25355545 \
+  --output /absolute/new-six-approval.json
+```
+
+History references contain exactly `accounting` (original legacy references), `g9` (`plan`, `claim:{execution,expected}`, `consumption`, `diagnostic`, `finalReceipt` expected pins), and `seed` expected pins. Actual GitHub bytes/metadata are GET-only reauthenticated. Approval schema3 binds the strict new plan and owner-visible no-bypass ruleset. Existing `claim-template --approval ... --run-id ... --output ...` emits schema4 claim. Root alone creates its flat protected `refs/tags/fcf-inventory-claim/six-after-HISTORY_SHA256` ref atomically, once per consumed history forever. Alternate new plans/commits/clocks cannot reserve independent claims; no reset/retry or source operation is part of preparation.
+
+Closed target wire keys are `protocol,history,plan,claim,consumption,children,finalReceipt,targetSlug` plus optional audit `now`; children are exactly ordered G9 thenG1 with inventory/audit or authenticated unstarted records. The new reader alone issues generic `fcf-missing-target-admission` with protocol, prior22, global actual new spend, cumulative actual spend and distinct fingerprint. The downstream new native packet is schema3 `fcf-six-current-target-release`; rollout schema2 `fcf-six-current-target-rollout`. Caller readiness booleans, serialized capabilities and legacy cache fallbacks cannot substitute for these readers.

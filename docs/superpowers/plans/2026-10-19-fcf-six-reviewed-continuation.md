@@ -45,7 +45,7 @@ Interface: reader-issued accounting/reuse capability with22 actual GETs and seve
 
 ### Task3: Native six cleanup and nullable result
 
-Files: `supabase/migrations/20261019130000_fcf_six_reviewed_exclusions.sql`, native binding/cleanup staging/evidence/adapters and targeted SQL tests.
+Files: `supabase/migrations/20261019150000_fcf_six_reviewed_exclusions.sql`, native binding/cleanup staging/evidence/adapters and targeted SQL tests.
 Interface: exact six cleanup receipt and exact existing empty321663 placeholder before-image, independent of full G1 source calendar; versioned native release packet/API.
 - [ ] RED tests for exact locked before-images (157apps18goals only with observed row identities), exact placeholder/alias conflict, nullable-result getter/standings and no-user/active/dependency safeguards.
 - [ ] Implement six-only policy install/atomic cleanup/rollback with exact native anchors; preserve oldfour API unchanged. Narrow paired-null storage invariant for reviewed4109404 only.
