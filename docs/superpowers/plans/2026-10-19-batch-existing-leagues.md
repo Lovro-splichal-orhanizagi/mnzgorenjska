@@ -41,3 +41,5 @@
 Baseline: clean e010bfc6, existing activation tests pass. Read-only inventory confirms 14 EPS candidates with missing reports; source publication remains unverified. Normal nightly imports select active leagues only. EPS currently ignores traversal skip options, causing complete league traversal for a single report repair.
 
 Review: one cheaper-model branch review; fixed schedule exit1/timeout domain-stop and added before/after progress journal. Core focused 29/29. Existing full coordinator suite local result63/65: two unchanged shell-waiter subprocess checks exceeded their10s local deadlines; exact batch/coordinator tests and Ubuntu CI remain required. No source requests or production league mutations during implementation.
+
+Importer regression harness: real traversal slice now receives the missing-only flag and completed-ID helper as external dependencies; mock selected DB rows include imported_at. No production DFB/NCEL behavior change. Targeted batch coordination2/2 and core29/29 passed.

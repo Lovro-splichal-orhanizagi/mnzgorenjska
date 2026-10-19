@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {createHash} from 'node:crypto'
 import {assertHistoricalReportImportable} from './lib/historical-statistics-import.mjs'
+import {completedReportIds} from './missing-report-import.mjs'
 import {vZapisnik,nastopi} from './viri/dfb.mjs'
 const provenance=JSON.parse(readFileSync(new URL('./vzorci/de-dfb-unattributed-provenance.json',import.meta.url)))
 const html=id=>readFileSync(new URL(`./vzorci/de-dfb-unattributed-${id}.html`,import.meta.url),'utf8')
@@ -126,9 +127,9 @@ for(const [days,expectedCutoff] of [['21','2026-09-26'],[null,'2026-10-10']])tes
  const body=source.slice(source.indexOf('// --- seznam zapisnikov'),source.indexOf('// --- nespremenjeni zapisniki'))
  const warning=parse('2402201').opozorila.find(w=>w.startsWith('SLFF_')),options=[];let cutoff
  const FixedDate=class extends Date{static now(){return Date.parse('2026-10-17T12:00:00Z')}}
- const db={from(table){assert.equal(table,'matches');let old=false;const q={select(){return q},eq(k,v){assert.equal(k,'rounds.competition_id');assert.equal(v,99);return q},lt(){old=true;return q},gte(key,value){assert.equal(key,'rounds.played_on');cutoff=value;return q},not(){return q},order(){return q},range(){return q},then(resolve){resolve({data:old?[{zapisnik_id:'de-dfb-old'}]:[{zapisnik_id:'de-dfb-2402201',import_warnings:[warning]},{zapisnik_id:'de-dfb-complete',import_warnings:[]}]})}};return q}}
+ const db={from(table){assert.equal(table,'matches');let old=false;const q={select(){return q},eq(k,v){assert.equal(k,'rounds.competition_id');assert.equal(v,99);return q},lt(){old=true;return q},gte(key,value){assert.equal(key,'rounds.played_on');cutoff=value;return q},not(){return q},order(){return q},range(){return q},then(resolve){resolve({data:old?[{zapisnik_id:'de-dfb-old',imported_at:'2026-09-01T00:00:00Z'}]:[{zapisnik_id:'de-dfb-2402201',import_warnings:[warning]},{zapisnik_id:'de-dfb-complete',import_warnings:[]}]})}};return q}}
  const args={sveze:days}
- await runInNewContext(`(async()=>{${body}})()`,{db,tekmovanje:{id:99},vir:{ime:'dfb',async zapisniki(liga,read,o){options.push(o);return []}},liga:'regionalliga-west/2025-2026',prenesi(){},arg:k=>args[k]??null,samoZapisnik:null,preberiPosamezniZapisnik:null,omeji:null,console:{log(){}},Date:FixedDate,Set,unattributedYellowEvents,vseVrstice:async build=>(await build(0,999)).data})
+ await runInNewContext(`(async()=>{${body}})()`,{samoManjkajoce:false,completedReportIds,db,tekmovanje:{id:99},vir:{ime:'dfb',async zapisniki(liga,read,o){options.push(o);return []}},liga:'regionalliga-west/2025-2026',prenesi(){},arg:k=>args[k]??null,samoZapisnik:null,preberiPosamezniZapisnik:null,omeji:null,console:{log(){}},Date:FixedDate,Set,unattributedYellowEvents,vseVrstice:async build=>(await build(0,999)).data})
  assert.ok(options[0]?.sveziZapisniki.has('de-dfb-2402201'))
  assert.ok(!options[0].sveziZapisniki.has('de-dfb-complete'))
  assert.equal(options[0].preskoci.has('de-dfb-old'),days!==null)
@@ -148,7 +149,7 @@ test('actual importer persists warnings, replaces a corrected deduction once, an
  };return q},async rpc(name,p){assert.equal(name,'zamenjaj_nastope_tekme');assert.equal(p.p_match_id,7);appearances=structuredClone(p.p_nastopi);replacements++;return {error:null}}}
  const ids=new Map(),idFor=key=>{if(!ids.has(key))ids.set(key,ids.size+1);return ids.get(key)}
  const run=async()=>runInNewContext(`(async()=>{${body};if(napak)throw Error('import failed')})()`,{
-  assertHistoricalReportImportable,db,tekmovanje:{id:99,slug:'test',source:'dfb'},vir:{ime:'dfb',nastopi,async zapisniki(){return [{id:z.zapisnikId,url:z.url,z:structuredClone(z)}]}},liga:'regionalliga-west/2025-2026',prenesi(){},arg:k=>k==='zapisnik'?'de-dfb-2402201':null,samoZapisnik:'de-dfb-2402201',preberiPosamezniZapisnik:null,omeji:null,tekocaSezona:false,virIme:null,unattributedYellowEvents,
+  samoManjkajoce:false,completedReportIds,assertHistoricalReportImportable,db,tekmovanje:{id:99,slug:'test',source:'dfb'},vir:{ime:'dfb',nastopi,async zapisniki(){return [{id:z.zapisnikId,url:z.url,z:structuredClone(z)}]}},liga:'regionalliga-west/2025-2026',prenesi(){},arg:k=>k==='zapisnik'?'de-dfb-2402201':null,samoZapisnik:'de-dfb-2402201',preberiPosamezniZapisnik:null,omeji:null,tekocaSezona:false,virIme:null,unattributedYellowEvents,
   console:{log(){},warn(){},error(...args){throw Error(args.join(' '))}},process:{stdout:{write(){}}},Date,Set,Map,createHash,readdirSync,zaprtje,dodajStrelceSKlopi,MAPA:'memory',
   readFileSync:(path,...args)=>String(path)==='memory/odtisi-test.json'?fingerprint:readFileSync(path,...args),writeFileSync:(path,data)=>{assert.equal(path,'memory/odtisi-test.json');fingerprint=data},
   vseVrstice:async build=>(await build(0,999)).data,klubId:async name=>idFor(name),krogId:async()=>5,igralecId:async(team,name)=>idFor(`${team}|${name}`),
@@ -191,7 +192,7 @@ test('importer preserves the NCEL numeric clock default and fresh reads for a re
   reads.push(fresh);throw Error('observed report freshness; stop before report parse')
  }
  await assert.rejects(()=>runInNewContext(`(async()=>{${body}})()`,{
-  vir:ncel,liga:'nceldivisionone/2026',prenesi,arg:()=>null,samoZapisnik:null,preberiPosamezniZapisnik:null,omeji:null,console:{log(){}},Date,Set,
+  samoManjkajoce:false,completedReportIds,vir:ncel,liga:'nceldivisionone/2026',prenesi,arg:()=>null,samoZapisnik:null,preberiPosamezniZapisnik:null,omeji:null,console:{log(){}},Date,Set,
  }),/observed report freshness/)
  assert.deepEqual(reads,[true],'recent NCEL report must bypass the stale cache')
 })
