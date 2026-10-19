@@ -1,3 +1,4 @@
+import {getFcfSixPolicy,classifyFcfSixHistoricalStatistics,FCF_SIX_SOURCE_POLICY} from './fcf-six-historical-policy.mjs'
 // Pure closed current-season packet. No source/DB transport or mutation on import.
 import {createHash} from 'node:crypto'
 import {getHistoricalStatisticsPolicy,historicalStatisticsPolicySha256} from './lib/historical-statistics-policy.mjs'
@@ -73,16 +74,17 @@ export function validateFcfCurrentReleaseCalendar(fixtures){
  return{clubs:[...clubs.values()].sort((a,b)=>`${a.sourceClubId}/${a.sourceCategoryId}`.localeCompare(`${b.sourceClubId}/${b.sourceCategoryId}`)),verifiedKeeperClubs:[...keepers].sort()}
 }
 /** Pure single-document proof for the closed packet and later offline consumers. */
-function proveCurrentDocument({competition:c,document:d,now=Date.now()},freshG9Markers=false){
- const scope=fcfFinalAuditScope(c?.slug),policy=getHistoricalStatisticsPolicy(c?.slug),id=d?.id
- if(!scope||!policy||c.id!==competitionIds[c.slug]||c.source!=='fcf'||c.source_policy!=='es-fcf-reviewed-history-v1'||c.source_league_code!==scope.code||c.active!==false||c.sezona_koledarska!==false||c.firstFantasyPlayedOn!=='2026-10-24'||typeof id!=='string'||!ID.test(id)||!Number.isInteger(d.expectedSourceRound)||d.expectedSourceRound<1||d.expectedSourceRound>30||!Number.isFinite(now))fail('exact approved scope and actual source round required')
+function proveCurrentDocument({competition:c,document:d,now=Date.now()},freshG9Markers=false,six=false){
+ const scope=fcfFinalAuditScope(c?.slug),policy=six?getFcfSixPolicy(c?.slug):getHistoricalStatisticsPolicy(c?.slug),id=d?.id
+ if(!scope||!policy||c.id!==competitionIds[c.slug]||c.source!=='fcf'||c.source_policy!==(six?FCF_SIX_SOURCE_POLICY:'es-fcf-reviewed-history-v1')||c.source_league_code!==scope.code||c.active!==false||c.sezona_koledarska!==false||c.firstFantasyPlayedOn!=='2026-10-24'||typeof id!=='string'||!ID.test(id)||!Number.isInteger(d.expectedSourceRound)||d.expectedSourceRound<1||d.expectedSourceRound>30||!Number.isFinite(now))fail('exact approved scope and actual source round required')
  const entry=policy.entries.find(e=>e.sourceMatchId===id)
  const header=validateFcfSingleReportSource(d.html,scope.code,{id:`es${id}`,tekmovanje:c,sezona:'2026/27',danes:now})
  if(header.krog!==d.expectedSourceRound)fail('actual source round differs from inventory')
- const source=provenance(d,c,header,now,!!entry&&!freshG9Markers),clubs=sourceClubs(d.html)
+ const source=provenance(d,c,header,now,!!entry&&(!freshG9Markers||six&&d.lineage?.kind==='reviewed-original')),clubs=sourceClubs(d.html)
+ if(six){const stamp=Date.parse(d.receipt.capturedUTC);if(!Number.isFinite(stamp)||stamp>now||now-stamp>86400000)fail('six retained source stale/future')}
  let canonical
  if(entry){
-  const classified=classifyFcfHistoricalStatistics({competition:c,id,html:d.html})
+  const classified=(six?classifyFcfSixHistoricalStatistics:classifyFcfHistoricalStatistics)({competition:c,id,html:d.html})
   canonical={statisticsStatus:'unavailable_historical',statisticsReason:entry.reasonCode,policyId:policy.id,policySha256:historicalStatisticsPolicySha256(policy),sourceFixture:classified.fixture,report:null,appearances:null,goals:null}
  }else{
   const parsed=parseFcfCurrentAuditDocument({id,competitionSlug:c.slug,expectedSourceRound:d.expectedSourceRound,html:d.html,receipt:d.receipt,now})
@@ -146,3 +148,6 @@ export function verifyFcfCurrentReleasePacket(input){
  if(rebuilt.manifestText!==manifestText||rebuilt.manifestSha256!==manifestSha256)fail('packet differs from independently reparsed raw canonicals')
  return rebuilt
 }
+
+/** Selected only by authenticated six continuation admission. */
+export function proveFcfSixReleaseDocument(input){return proveCurrentDocument(input,true,true)}

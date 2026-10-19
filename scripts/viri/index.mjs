@@ -1,3 +1,5 @@
+import {FCF_SIX_SOURCE_POLICY} from '../fcf-six-historical-policy.mjs'
+import {withFcfSixHistoricalStatistics} from './fcf-six-historical.mjs'
 // Izbira vira podatkov po `competitions.source`.
 //
 // En vir = ena datoteka v tej mapi. Nov vir (druga zveza, druga država)
@@ -220,6 +222,7 @@ export function viraZa(tekmovanje, {installedHistoricalMarkers=null}={}) {
       `Tekmovanje "${tekmovanje?.slug ?? '?'}" navaja vir "${ime}", ki ga ne poznam. Znani viri: ${znani}.`,
     )
   }
+  if(tekmovanje?.source_policy===FCF_SIX_SOURCE_POLICY){const wrapped=withFcfSixHistoricalStatistics(vir,tekmovanje,{installedHistoricalMarkers});wrapped.historicalSourceFiles=[...new Set([...zaprtje('scripts/viri/fcf-six-historical.mjs'),...zaprtje('scripts/fcf-six-historical-policy.mjs')])];return wrapped}
   const policy=getHistoricalStatisticsPolicy(tekmovanje?.slug)
   if(!policy && tekmovanje?.source_policy==null)return vir
   if(!policy || tekmovanje.source!==policy.provider || tekmovanje.source_policy!==policy.sourcePolicy)throw Error('historical provider: invalid competition/provider/policy tuple')

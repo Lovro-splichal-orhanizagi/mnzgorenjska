@@ -74,3 +74,5 @@ export function packetFixture(retained=process.env.FCF_HISTORICAL_RETAINED_DIR,{
 export function calendarFixture(){
  return rounds().flatMap((rows,r)=>rows.map(pair=>({round:r+1,clubs:pair.map(i=>({sourceClubId:String(i+1),sourceCategoryId:String(100+i),name:`SYNTHETIC CLUB ${i}`})),statisticsStatus:r===2?'available':'pending',appearances:r===2?[{ekipaIdx:0,zacetnik:true,vratar:true},{ekipaIdx:1,zacetnik:true,vratar:true}]:null})))
 }
+// Shared synthetic-only raw control builder; never source readiness.
+export const syntheticFcfRaw=raw

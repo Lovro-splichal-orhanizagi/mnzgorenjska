@@ -1,3 +1,4 @@
+import {FCF_SIX_SOURCE_POLICY,getFcfSixPolicy,validateFcfSixInstalledMarkers,classifyFcfSixHistoricalStatistics} from '../fcf-six-historical-policy.mjs'
 import {validateHnsWomenClubBindings} from '../viri/hns-zenske-binding.mjs'
 import {assertHnsWomenOfflineAuthority} from '../hr-zenske-offline.mjs'
 import {getHistoricalStatisticsPolicy,validateInstalledHistoricalStatisticsMarkers,classifyHistoricalStatistics} from './historical-statistics-policy.mjs'
@@ -5,6 +6,7 @@ import {getHistoricalStatisticsPolicy,validateInstalledHistoricalStatisticsMarke
 /** Normal CLI cannot bootstrap or recover partial policies; dedicated packet writers do that atomically. */
 export async function loadHistoricalStatisticsImportContext(db,original,{sourceOverride=null}={}) {
   const competition={...original,...(sourceOverride?{source:sourceOverride}:{})}
+  if(competition.source_policy===FCF_SIX_SOURCE_POLICY){const {data,error}=await db.rpc('get_installed_fcf_six_statistics_markers',{p_competition_id:competition.id});if(error)throw Error(`six historical import: ${error.message}`);const installedHistoricalMarkers=validateFcfSixInstalledMarkers({competition,binding:data});return{competition:{...competition,firstFantasyPlayedOn:installedHistoricalMarkers.firstFantasyPlayedOn},installedHistoricalMarkers}}
   const policy=getHistoricalStatisticsPolicy(competition.slug)
   if(!policy && competition.source_policy==null)return {competition,installedHistoricalMarkers:null}
   if(!policy || competition.source!==policy.provider || competition.source_policy!==policy.sourcePolicy)throw Error('historical import: invalid competition/provider/policy tuple')
@@ -28,5 +30,5 @@ export function assertHistoricalReportImportable({competition,report}) {
   const id=String(report.id)
   const sourceMatchId=competition.source==='dfb'?id.replace(/^de-dfb-/,''):competition.source==='fcf'?id.replace(/^es/,''):id
   // An accidentally leaked installed ID or wrong competition must fail before any appearances/prices.
-  classifyHistoricalStatistics({competition,fixture:{sourceMatchId}})
+  if(competition.source_policy===FCF_SIX_SOURCE_POLICY){if(getFcfSixPolicy(competition.slug)?.entries.some(e=>e.sourceMatchId===sourceMatchId))throw Error('six historical import: installed unavailable report cannot derive rows');classifyFcfSixHistoricalStatistics({competition,id:sourceMatchId,html:null})}else classifyHistoricalStatistics({competition,fixture:{sourceMatchId}})
 }

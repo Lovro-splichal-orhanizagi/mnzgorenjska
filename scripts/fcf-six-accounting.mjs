@@ -1,0 +1,38 @@
+// Fixed spent history and retained bytes. No claim/source/admission capability.
+import {readFcfHeldParentAccounting,requireFcfHeldParentContinuationEligibility} from './fcf-held-parent-accounting.mjs'
+import {validateFcfG9HeldParentPlan} from './fcf-g9-held-parent-plan.mjs'
+import {readFcfInventoryExecutionClaim,readFcfInventoryConsumptionArtifact} from './fcf-missing-inventory-claim.mjs'
+import {readFcfMissingInventoryDiagnosticArtifact,buildFcfMissingInventoryFinalReceipt} from './fcf-missing-inventory-evidence.mjs'
+import {readFcfMissingInventorySeed,getFcfMissingInventorySeedOriginals} from './fcf-missing-inventory-plan.mjs'
+import {historicalStatisticsPolicySha256 as hash} from './lib/historical-statistics-policy.mjs'
+import {exactKeys,inventoryFail as fail,frozenJSON,readInventoryZip,jsonBytes,verifyInventoryExecution} from './fcf-missing-inventory-artifact.mjs'
+const proofs=new WeakMap(),clock=Date.parse('2026-10-18T23:51:58.545Z'),same=(a,b)=>hash(a)===hash(b)
+export const FCF_SIX_PROTOCOL='six-reviewed-continuation-v1'
+const latest={runId:'39178021024',runAttempt:'1',sourceCommit:'15bde29fecf5a2f110e140a0a728f2e5558e12e9',planSha256:'83c7d0b555f8bc4edce26bea85020cf66b1bea7ad8f35271ec0e1f668bbf8443',claimCommit:'0246f2afc7ff1e703be60ed7863191b7ca6d5447',claimJsonSha256:'5423366a7b6e02f45c9e13ac3d7f289cb021beafa9204aa8e65f5558e65a600b',rulesetId:'25355545'}
+const pins={consumption:['12155480417','117824700265','sha256:d9d70cd358829e194737947d8840aba488070e53068f98994ac32ff2bd4765f5','6d3378ff580c69a168b8a92019537706d59cd69b011b0a6dde1924c93b66dd2c'],diagnostic:['12155740077','117824969338','sha256:01e03020c38a7f7591e3359a71302610c59f722eb69edc31b3e1a543d8d22337','57411963e5d0a98f8451a3c4c6f3ed1bdbc3d1a7bd05188f9f77f06a8aed4167'],finalReceipt:['12155247162','117825300234','sha256:571bc8e76b6472c724f77da4e1196314b07bf75ad80e3c0f29f540300f59c981','18701a9b732865afc02f494a53b29af9fa446ffaf27e19d3e1b6b49d1c4846cc']}
+const archival=(v,kind)=>{exactKeys(v,['zipBytes','artifact','run','jobs','expected'],kind);const [artifactId,jobId,artifactDigest,manifestSha256]=pins[kind];if(!same(Object.fromEntries(['runId','runAttempt','sourceCommit'].map(k=>[k,v.expected[k]])),Object.fromEntries(['runId','runAttempt','sourceCommit'].map(k=>[k,latest[k]])))||v.expected.artifactId!==artifactId||v.expected.jobId!==jobId||v.expected.artifactDigest!==artifactDigest||v.expected.manifestSha256!==manifestSha256||v.run.status!=='completed'||v.run.conclusion!=='failure')fail('exact consumed second parent required');return{...v,artifact:{...v.artifact,expired:false}}}
+function docsFrom(bundle,binding){const files=readInventoryZip({...bundle,allowMissing:true,members:{'manifest.json':8388608,...Object.fromEntries(Array.from({length:240},(_,i)=>[`acta-${(binding.targetSlug==='es-ct-segona-g1'?4109388:4118349)+i}.html`,2097152]))}}),m=jsonBytes(files.get('manifest.json'),'retained history');return{m,files}}
+export function readFcfSixAccounting(input){
+ exactKeys(input,['accounting','g9','seed',...(Object.hasOwn(input??{},'now')?['now']:[])],'six spent history')
+ const now=input.now??Date.now();if(!Number.isFinite(now)||now<clock)fail('nonfuture spent history required')
+ const old=readFcfHeldParentAccounting({...input.accounting,now});requireFcfHeldParentContinuationEligibility(old)
+ const g=input.g9;exactKeys(g,['plan','claim','consumption','diagnostic','finalReceipt'],'second consumed parent')
+ validateFcfG9HeldParentPlan({plan:g.plan,accountingProof:old,expectedPlanSha256:latest.planSha256,now:clock})
+ if(!same(g.claim.expected,latest))fail('second claim pins differ')
+ const claim=readFcfInventoryExecutionClaim({...g.claim,plan:g.plan,now:clock}),c=archival(g.consumption,'consumption'),consumption=readFcfInventoryConsumptionArtifact({...c,claimProof:claim,now:clock}),d=archival(g.diagnostic,'diagnostic'),diagnostic=readFcfMissingInventoryDiagnosticArtifact({...d,plan:g.plan,targetSlug:'es-ct-tercera-g9',consumptionProof:consumption,now:clock}),f=archival(g.finalReceipt,'finalReceipt'),binding=verifyInventoryExecution({...f,jobName:'missing-inventory-receipt',stepNames:['Retain final FCF inventory receipt'],artifactName:`fcf-missing-inventory-final-${latest.runId}-1`,runPhase:'inventory-record'}),files=readInventoryZip({...f,members:{'manifest.json':8388608}}),manifest=jsonBytes(files.get('manifest.json'),'second failed final'),rebuilt=buildFcfMissingInventoryFinalReceipt({plan:g.plan,claimProof:claim,consumptionProof:consumption,childRecords:[diagnostic],execution:manifest.execution,now:clock})
+ if(!same(manifest,rebuilt)||manifest.admissible!==false||manifest.actualSourceGETs!==22||diagnostic.actualSourceGETs!==6)fail('second final spend differs')
+ const raw=docsFrom(d,{targetSlug:'es-ct-tercera-g9'}),captured=raw.m.documents.filter(d=>d.kind==='captured')
+ if(raw.m.stopReason!=='strict-normal-defect'||captured.length!==6||raw.m.attempts.length!==6||captured.some((d,i)=>d.id!==String(4118349+i)||d.receipt.httpStatus!==200||d.receipt.bodyState!=='complete'||d.receipt.redirected!==false||d.receipt.responseURL!==d.receipt.sourceUrl)||captured.at(-1).rawSha256!=='f3789fc4103d36d2878a573b9574442d32ad491236f3b4d6fd380ea4aaa07556')fail('only exact complete200 reviewed second content defect eligible')
+ const seed=readFcfMissingInventorySeed({...input.seed,now}),sb=input.accounting.plan.seedBinding
+ if(!same(seed.binding,sb))fail('same authenticated original seed required')
+ const initial=docsFrom({...input.accounting.children[0].inventory,artifact:{...input.accounting.children[0].inventory.artifact,expired:false}},{targetSlug:'es-ct-segona-g1'}),rows=[]
+ const add=(b,doc,bytes)=>{const r=doc.receipt;rows.push({id:doc.id,targetSlug:b.targetSlug,artifactFile:`acta-${doc.id}.html`,bytes:bytes.length,rawSha256:doc.rawSha256,receipt:structuredClone(r),lineage:{kind:'actions-artifact',verified:true,repository:'Lovro-splichal-orhanizagi/mnzgorenjska',workflow:'.github/workflows/uvoz-fcf-zgodovina.yml',runId:b.runId,artifactId:b.artifactId,artifactDigest:b.artifactDigest,commit:b.retentionCommit},body:Buffer.from(bytes)})}
+ for(const doc of captured)add({...diagnostic.inventoryBinding,targetSlug:'es-ct-tercera-g9'},doc,raw.files.get(doc.artifactFile))
+ for(const doc of initial.m.documents.filter(d=>d.kind==='captured'))add({...old.diagnosticBinding,runId:old.runId,retentionCommit:old.sourceCommit,targetSlug:'es-ct-segona-g1'},doc,initial.files.get(doc.artifactFile))
+ for(const id of ['4109388','4118358']){const descriptor=seed.originals.find(d=>d.id===id),bytes=getFcfMissingInventorySeedOriginals(seed).find(d=>d.id===id).bytes;rows.push({...structuredClone(descriptor),targetSlug:id==='4109388'?'es-ct-segona-g1':'es-ct-tercera-g9',lineage:{kind:'reviewed-original',sourceCommit:seed.binding.sourceCaptureCommit},body:bytes})}
+ if(rows.length!==24||new Set(rows.map(d=>d.id)).size!==24)fail('exact24 retained unique target documents required')
+ const proof=frozenJSON({kind:'fcf-six-accounting-only',protocol:FCF_SIX_PROTOCOL,priorSourceGETs:22,maximumCumulativeSourceGETs:478,admissible:false,oldAccounting:old,latest:{...latest,consumptionBinding:consumption,diagnosticBinding:diagnostic.inventoryBinding,finalReceiptBinding:binding},seedBinding:seed.binding,retained:rows.map(({body,...d})=>d)})
+ proofs.set(proof,rows);return proof
+}
+export function requireFcfSixAccounting(proof){if(!proofs.has(proof))fail('reader-issued six accounting required');return proof}
+export function getFcfSixRetainedDocuments(proof){requireFcfSixAccounting(proof);return proofs.get(proof).map(({body,...d})=>({...structuredClone(d),bytesBuffer:Buffer.from(body)}))}
