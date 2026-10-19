@@ -85,7 +85,18 @@ function mapping(input={},auditedUTC){
   if(matches.length!==1||usedMatches.has(matches[0].id)||matches[0].zapisnik_id!==null&&matches[0].zapisnik_id!==f.id)fail('native round/fixture sides do not resolve uniquely to actual DB fixture')
   const match=matches[0];usedMatches.add(match.id)
   const marker=policy.entries.find(e=>`es${e.sourceMatchId}`===f.id)
-  if(marker?.sourceMatchId==='4109404'){const installed=d.installedMarkers?.find(b=>b.policyId===policy.id);try{validateFcfSixInstalledMarkers({competition:s.competition,binding:installed})}catch(e){fail(e.message)};const exact=installed.markers.find(m=>m.sourceMatchId==='4109404');if(match.id!==exact.matchId||round.id!==exact.roundId||home!==8575||away!==8576)fail('unknown-score installed marker/native sides differ')}
+  if(marker?.sourceMatchId==='4109404'){
+   if(f.homeGoals!==null||f.awayGoals!==null)fail('unknown historical source score must remain NULL')
+   if(d.groups.every(g=>g.source_policy===null)){
+    // The exact existing empty fixture can anchor a descriptive proposal before
+    // cleanup. SQL independently locks/rechecks its identity and zero rows;
+    // this projection neither installs a marker nor authorizes a mutation.
+    const expected={id:321663,round_id:28708,home_team_id:8575,away_team_id:8576,played_on:'2026-10-04',imported_at:null,zapisnik_id:null,source_url:'https://www.fcf.cat/ca/competicio/acta/4109388',home_goals:0,away_goals:0,vir_brez_izida:true,kontumacija:false,statistics_status:'available',statistics_reason:null,source_phase:null,source_round:null}
+    if(round.id!==28708||round.number!==3||home!==8575||away!==8576||Object.entries(expected).some(([k,v])=>match[k]!==v)||!Array.isArray(match.import_warnings)||match.import_warnings.length!==0)fail('exact empty unknown-score native placeholder required before cleanup')
+   }else{
+    const installed=d.installedMarkers?.find(b=>b.policyId===policy.id);try{validateFcfSixInstalledMarkers({competition:s.competition,binding:installed})}catch(e){fail(e.message)};const exact=installed.markers.find(m=>m.sourceMatchId==='4109404');if(match.id!==exact.matchId||round.id!==exact.roundId||home!==8575||away!==8576)fail('unknown-score installed marker/native sides differ')
+   }
+  }
   else if(marker&&(match.id!==historical[marker.sourceMatchId][0]||home!==historical[marker.sourceMatchId][1]||away!==historical[marker.sourceMatchId][2]))fail('exact historical match/side identity differs')
   fixtures.push({sourceMatchId:f.id,sourceRound:f.round,matchId:match.id,roundId:round.id,homeTeamId:home,awayTeamId:away})
  }

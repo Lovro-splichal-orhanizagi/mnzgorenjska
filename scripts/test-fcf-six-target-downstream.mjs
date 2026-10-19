@@ -55,3 +55,39 @@ test('six compiler refuses unbranded cache documents even with authenticated six
  const targetEvidence={evidenceKind:'fcf-target-cache-audit',targetSlug:f.targetSlug,competition:{id:797,slug:f.targetSlug,source:'fcf',source_league_code:'4118349-4118588',source_policy:policy,active:false,sezona_koledarska:false,firstFantasyPlayedOn:'2026-10-24'},documents:Array.from({length:240},(_,i)=>({id:String(4118349+i)}))}
  assert.throws(()=>compileFcfTargetReleasePacket({targetSlug:f.targetSlug,sourceCommit:'a'.repeat(40),targetEvidence,cleanupEvidence:cleanup.evidence,databaseInventory:f.databaseInventory,now}),/authenticated six continuation admission/)
 })
+import {nativePlanFixture as legacyNativePlanFixture} from './fcf-native-plan-test-fixture.mjs'
+function sixG1Prepared(){
+ const f=legacyNativePlanFixture('es-ct-segona-g1'),s=f.sourceData,d=f.databaseInventory,key=c=>c.sourceClubId+'/'+c.sourceCategoryId
+ s.competition.source_policy=policy;f.existingExceptionBindings.push(...structuredClone(newBindings))
+ const keeperTemplate=s.fixtures.find(m=>m.statisticsStatus==='available').appearances;for(const m of s.fixtures.filter(m=>m.round===4)){m.statisticsStatus='available';m.appearances=structuredClone(keeperTemplate)}
+ const target=s.fixtures.find(m=>m.round===3&&key(m.clubs[0])==='5057/35522'),oldAway=key(target.clubs[1]),newClub={sourceClubId:'5029',sourceCategoryId:'33592',name:'BESCANO, C.D.'},oldTeam=d.matches.find(m=>m.zapisnik_id===target.id).away_team_id,oldID=target.id,displaced=s.fixtures.find(m=>m.id==='es4109404'),oldRound=d.rounds.find(r=>r.number===3).id
+ displaced.id=oldID;target.id='es4109404';target.date='2026-10-04';target.statisticsStatus='unavailable_historical';target.homeGoals=null;target.awayGoals=null;target.appearances=null;target.goals=null
+ for(const m of s.fixtures)m.clubs=m.clubs.map(c=>key(c)===oldAway?{...newClub}:c)
+ s.clubs=[...new Map(s.fixtures.flatMap(m=>m.clubs).map(c=>[key(c),c])).values()]
+ for(const team of d.teams)if(team.id===oldTeam){team.id=8576;team.name=newClub.name}
+ d.rounds.find(r=>r.number===3).id=28708
+ for(const m of d.matches){if(m.zapisnik_id===oldID)m.zapisnik_id='es4109404';else if(m.zapisnik_id==='es4109404')m.zapisnik_id=oldID;if(m.home_team_id===oldTeam)m.home_team_id=8576;if(m.away_team_id===oldTeam)m.away_team_id=8576;if(m.round_id===oldRound)m.round_id=28708}
+ const placeholder=d.matches.find(m=>m.zapisnik_id==='es4109404')
+ Object.assign(placeholder,{id:321663,round_id:28708,home_team_id:8575,away_team_id:8576,played_on:'2026-10-04',imported_at:null,zapisnik_id:null,source_url:'https://www.fcf.cat/ca/competicio/acta/4109388',home_goals:0,away_goals:0,vir_brez_izida:true,kontumacija:false,statistics_status:'available',statistics_reason:null,source_phase:null,source_round:null,import_warnings:[]})
+ return f
+}
+test('prepared G1 exact empty321663 placeholder yields mapping before shared cleanup and keeps source score NULL',()=>{
+ const f=sixG1Prepared(),before=JSON.stringify(f),p=JSON.parse(planFcfNativeMapping(f).proposalText),unknown=f.sourceData.fixtures.find(m=>m.id==='es4109404')
+ assert.equal(p.fixtures.length,240);assert.equal(p.mappings.length,16);assert.deepEqual(p.fixtures.find(m=>m.sourceMatchId==='es4109404'),{sourceMatchId:'es4109404',sourceRound:3,matchId:321663,roundId:28708,homeTeamId:8575,awayTeamId:8576});assert.equal(unknown.homeGoals,null);assert.equal(unknown.awayGoals,null);assert.equal(JSON.stringify(f),before)
+})
+for(const[field,value]of[['id',null],['id',321664],['round_id',700002],['home_team_id',8574],['played_on','2026-10-05'],['imported_at','2026-10-18T12:00:00Z'],['zapisnik_id','es4109404'],['source_url','https://www.fcf.cat/ca/competicio/acta/4109404'],['home_goals',null],['away_goals',1],['vir_brez_izida',false],['kontumacija',true],['statistics_status','unavailable_historical'],['statistics_reason','caller'],['source_phase','1'],['source_round',3],['import_warnings',['caller']]])test(`prepared G1 refuses changed empty placeholder ${field}=${JSON.stringify(value)}`,()=>{
+ const f=sixG1Prepared();f.databaseInventory.matches.find(m=>m.id===321663)[field]=value;assert.throws(()=>planFcfNativeMapping(f),/FCF_NATIVE_PLAN/)
+})
+import {getFcfSixPolicy,fcfSixPolicyHashes} from './fcf-six-historical-policy.mjs'
+function installG1Markers(f){
+ const p=getFcfSixPolicy(f.targetSlug),d=f.databaseInventory;f.sourceData.competition.source='fcf';for(const g of d.groups)g.source_policy=policy
+ d.installedMarkers=[{installed:true,policyId:p.id,policySha256:fcfSixPolicyHashes()[f.targetSlug],firstFantasyPlayedOn:'2026-10-24',markers:p.entries.map(e=>{const{rawSha256,reasonCode,...fixture}=e,m=d.matches.find(m=>m.id===(e.sourceMatchId==='4109404'?321663:321646));return{sourceMatchId:e.sourceMatchId,reportId:'es'+e.sourceMatchId,policyId:p.id,policySha256:fcfSixPolicyHashes()[f.targetSlug],rawSha256,fixture:{...fixture,season:p.season},statisticsStatus:'unavailable_historical',importedAt:null,individualRowCount:0,matchId:m.id,roundId:m.round_id,homeTeamId:m.home_team_id,awayTeamId:m.away_team_id}})}]
+ d.matches.find(m=>m.id===321663).zapisnik_id='es4109404'
+}
+test('prepared G1 proposal survives exact installed marker and applied G1 still requires that marker',()=>{
+ const f=sixG1Prepared(),before=planFcfNativeMapping(f);installG1Markers(f);assert.deepEqual(planFcfNativeMapping(f),before)
+ f.databaseInventory.installedMarkers=[];assert.throws(()=>planFcfNativeMapping(f),/installed six binding/)
+})
+test('prepared G1 refuses inventing an official score from the empty native placeholder',()=>{
+ const f=sixG1Prepared();f.sourceData.fixtures.find(m=>m.id==='es4109404').homeGoals=0;assert.throws(()=>planFcfNativeMapping(f),/source score must remain NULL/)
+})
