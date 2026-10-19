@@ -331,6 +331,36 @@
       "slug": "ro-liga3-s8",
       "source": "hlf",
       "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-8"
+    },
+    {
+      "id": 503,
+      "slug": "ro-ab-superliga",
+      "source": "hlf",
+      "source_league_code": "judetean/alba/fotbal/2026-2027/superliga-ajf-alba/sezon-regular/1"
+    },
+    {
+      "id": 510,
+      "slug": "ro-cj-l4",
+      "source": "hlf",
+      "source_league_code": "judetean/cluj/fotbal/2026-2027/liga-4-cluj/sezon-regular/grupa-a"
+    },
+    {
+      "id": 512,
+      "slug": "ro-hd-l4",
+      "source": "hlf",
+      "source_league_code": "judetean/hunedoara/fotbal/2026-2027/liga-4/sezon-regular/serie-1"
+    },
+    {
+      "id": 498,
+      "slug": "ro-liga2",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/liga-2-casa-pariurilor/sezon-regular/seria-1"
+    },
+    {
+      "id": 488,
+      "slug": "ro-sb-superliga",
+      "source": "hlf",
+      "source_league_code": "judetean/sibiu/fotbal/2026-2027/superliga/sezon-regular/serie-1"
     }
   ]
 }

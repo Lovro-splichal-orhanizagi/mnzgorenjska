@@ -6,7 +6,7 @@ varovalko `preveri_vklop_lige`. Predogled in vklop ne uvažata, ne bereta ponudn
 pozicij, urnikov ali zgodovinske politike. Ločeni `refresh=true` uporabi
 omejeno EPS/HLF dohitevanje, opisano spodaj. Noben način ne pošilja sporočil. Nemčija, Španija in Hrvaška imajo svoje postopke.
 
-Obseg je 50 že uvoženih kandidatov iz branja produkcije 18.–19. 10. 2026,
+Obseg je 55 že uvoženih kandidatov iz branja produkcije 18.–19. 10. 2026,
 izrecno naštetih v
 `scripts/policies/existing-league-candidates-20261018.json`. Register je
 inventar kandidatov, ne odobritev pripravljenosti. Vsaka vrstica veže ID,
@@ -124,7 +124,8 @@ osvežitev, a še nima podatkov za vklop, izhod jasno označi HOLD.
 obstoječi ločen `activate=true` za pripravljen izbor na istem commitu;
 ob vklopu se stanje in prihodnji rok spet prebereta in preverita v bazi.
 
-HLF obseg je omejen na `ro-liga3-s2` do `ro-liga3-s8`. Vseh sedem uporablja
+HLF obseg je omejen na `ro-liga3-s2` do `ro-liga3-s8`, `ro-liga2`,
+`ro-ab-superliga`, `ro-hd-l4`, `ro-cj-l4` in `ro-sb-superliga`. Vsi uporabljajo
 isto domeno `hailafotbal.ro`; nepojasnjen padec ustavi preostali HLF paket,
 tudi kadar imajo lige različne poti. Uporabi se izključno obstoječi javni
 brskalniški adapter z njegovimi premori in ustavitvijo ob izzivu. Neposredni
