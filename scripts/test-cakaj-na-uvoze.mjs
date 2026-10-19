@@ -402,3 +402,9 @@ test('nightly country scoping preserves global maintenance and same-country writ
       { ...olderNightly, [workflow]: [run(title)] }, [{ name: 'uvoz DK', status: 'completed' }])).code, 1, workflow)
   }
 })
+
+test('EPS batch refresh is a writer for both imports and health checks',async()=>{
+ const runs={'vklop-obstojecih-lig.yml':[run('Obstojece lige osvezitev gr-ip-a,gr-ip-b')]}
+ assert.equal((await coordinate(['--liga','si-example'],runs)).code,1)
+ assert.equal((await coordinate(['--tece'],runs)).code,3)
+})

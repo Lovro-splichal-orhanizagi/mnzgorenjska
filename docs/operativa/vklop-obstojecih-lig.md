@@ -2,9 +2,9 @@
 
 Delovni tok **Vklop obstojecih uvozenih lig** (`vklop-obstojecih-lig.yml`)
 uporabi obstoječi servisni `vklopi_ligo_sredi_sezone` in skupno podatkovno
-varovalko `preveri_vklop_lige`. Ne uvaža, ne bere strani ponudnikov, ne
-spreminja cen, pozicij, urnikov ali zgodovinske politike in ne pošilja
-sporočil. Nemčija, Španija in Hrvaška imajo svoje postopke.
+varovalko `preveri_vklop_lige`. Predogled in vklop ne uvažata, ne bereta ponudnikov in ne spreminjata cen,
+pozicij, urnikov ali zgodovinske politike. Ločeni `refresh=true` uporabi
+omejeno EPS dohitevanje, opisano spodaj. Noben način ne pošilja sporočil. Nemčija, Španija in Hrvaška imajo svoje postopke.
 
 Obseg je 43 že uvoženih kandidatov iz branja produkcije 18. 10. 2026,
 izrecno naštetih v
@@ -77,3 +77,49 @@ samodejno; obstoječi nočni postopki in ločeni delovni tokovi ostanejo.
 
 Preizkus brez baze ali ponudnikov:
 `node --test scripts/test-vklop-obstojecih-lig.mjs`.
+
+## Paketno dohitevanje neaktivnih EPS lig
+
+`refresh=true` osveži **1–5 izrecno izbranih EPS kandidatov** iz istega
+registra. To je pisalni način: zahteva `expected_sha` in
+`approved_sha256` iz predogleda na istem commitu, čaka na starejše pisce
+ter ob začetku preveri vse izbrane ID-je, sluge, vire in šifre lig.
+Vsak korak znova zahteva neaktivno ligo brez posebne politike. Z aktivno
+ligo, arhivom, drugim virom ali spremenjeno šifro se ne začne.
+
+Za vsako ligo zaporedoma uporabi običajna ukaza:
+
+```sh
+node scripts/uvoz-razporeda.mjs --tekmovanje <slug> --pisi
+node scripts/uvoz-zapisnikov.mjs --tekmovanje <slug> --samo-manjkajoce
+```
+
+Drugi ukaz je opt-in samo za tekočo sezono neaktivnega EPS tekmovanja.
+V preskočni seznam sodijo le vrstice z dejanskim `imported_at` in
+`zapisnik_id`. EPS jih izpusti pred branjem strani zapisnika; nepopolni
+zapisniki z `imported_at = null` ostanejo upravičeni do dopolnitve. Običajni
+nočni uvoz aktivnih lig ohrani svoj režim svežine. EPS zdaj upošteva tudi
+obstoječi izbor posameznega `--zapisnik` pred branjem drugih zapisnikov.
+
+Razpored se bere sveže po obstoječem postopku. Oznaka `vir_brez_izida`
+uporablja obstoječe preverbe razporeda; pretekli datum ali rezultat 0:0
+sam zase nikoli ne dokazuje, da tekma nima objavljenega zapisnika.
+Neobjavljeni/nepopolni podatki, neujemanje golov in druge težave ostanejo
+HOLD. Osvežitev ne spreminja pravil, ne dopolnjuje statistike, ne prepisuje
+cen in ne vklopi lige.
+
+Opozorilo razporeda o manjkajočih klubih zadrži to ligo. Zavrnitev, nedosegljivost ali drug nepojasnjen padec podukaza
+zadrži še preostale izbrane lige iste EPS domene; neodvisne domene se
+nadaljujejo. Noben padli podukaz se samodejno ne ponovi. Ob prekinitvi ali
+nejasnem izidu preveri dejansko bazo in artefakte pred novim zagonom.
+Premori, predpomnilnik in ustavitev ob izzivu ostanejo v običajnem viru.
+Vsak podukaz ima največ 30 minut, paket največ pet lig.
+
+Artefakt vsebuje `refresh-progress.jsonl` z zapisom pred/po vsakem podukazu,
+`refresh.jsonl` s koraki/izhodi vsake lige in svež
+`results.jsonl` z nespremenjenimi preverbi pripravljenosti po osvežitvi.
+Predpomnilnik EPS se shrani tudi ob delnem neuspehu. Ligo, ki opravi
+osvežitev, a še nima podatkov za vklop, izhod jasno označi HOLD.
+`refresh=true` in `activate=true` se izključujeta. Po pregledu uporabi
+obstoječi ločen `activate=true` za pripravljen izbor na istem commitu;
+ob vklopu se stanje in prihodnji rok spet prebereta in preverita v bazi.
