@@ -36,6 +36,8 @@ try {
       ['new fantasy team',"insert into fantasy_teams(owner_id,name,competition_id) values('00000000-0000-4000-8000-000000000013','TEST',801)"],
       ['new historical policy',"insert into private_historical_statistics.installed_policies(competition_id,policy_id,policy_sha256,first_fantasy_played_on) select 801,id,policy_sha256,current_date+7 from private_historical_statistics.policies where id='es-fcf-segona-g1-history-2026-10-18-v1'"],
       ['historical club binding',"update private_historical_statistics.source_club_bindings set bound_team_id=10388 where provider='fcf' and source_club_id='5042'"],
+      ['six target release receipt',"insert into private_fcf_six_target_release.receipts(competition_id,inventory_key,packet_sha256,packet_text,rollout_text,rollout_sha256,source_fingerprint,cleanup_before_sha256,imported_state_sha256,stage)values(801,'concurrent','test','{}','{}','test','test','test','test','imported')"],
+      ['six foreign target club binding',"insert into private_fcf_six_target_release.club_bindings(competition_id,club_id,category_id,team_id,country_id,source_fingerprint)values((select min(id)from competitions where id<>801),'concurrent','test',10388,(select country_id from competitions where id=801),'test')"],
       ['new Scout non-FK reference',"insert into scout.dnevnik(team_id,vrsta) values(10388,'isci')"],
       ['new FK DDL','create table public.g13_concurrent_fk(team_id bigint references teams)'],
     ]
