@@ -1,9 +1,31 @@
+<!doctype html>
 <!-- Ponastavitev gesla. Po potrditvi povezave stran odpre /novo-geslo.
      Jezik izbere `jezik` v metapodatkih uporabnika; brez njega slovenščina.
      Vsebino prilepi v Supabase → Auth → Email Templates → Reset Password.
      Povezava vodi naravnost na slff.eu/auth/confirm (PotrditevPovezave.tsx),
-     ne prek supabase.co: le tako jo telefon odpre v mobilni aplikaciji. -->
-<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #0f172a;">
+     ne prek supabase.co: le tako jo telefon odpre v mobilni aplikaciji.
+     Glava in noga sta kopija ovoj() iz supabase/functions/_shared/mail.ts. -->
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>SLFF</title>
+</head>
+<body style="margin: 0; padding: 0; background: #f1f5f9;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9" style="background: #f1f5f9;">
+<tr><td align="center" style="padding: 24px 8px;">
+<!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 600px;">
+<tr><td bgcolor="#020617" style="background: #020617; padding: 16px 24px; border-radius: 12px 12px 0 0;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+<td style="vertical-align: middle;"><a href="https://slff.eu" style="text-decoration: none;"><img src="https://slff.eu/logo/slff-ikona-180.png" width="36" height="36" alt="SLFF" style="display: block; border: 0; width: 36px; height: 36px;"></a></td>
+<td style="padding-left: 10px; vertical-align: middle; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px;">SLFF</td>
+</tr></table>
+</td></tr>
+<tr><td bgcolor="#22c55e" height="3" style="background: #22c55e; height: 3px; line-height: 3px; font-size: 0;">&nbsp;</td></tr>
+<tr><td bgcolor="#ffffff" style="background: #ffffff; padding: 28px 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #0f172a;">
 {{ if eq (printf "%v" .Data.jezik) "sk" }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Obnovenie hesla</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Niekto (dúfame, že ty) požiadal o nové heslo do SLFF. Klikni na tlačidlo a zadaj nové heslo.</p>
@@ -145,5 +167,13 @@
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Če novega gesla nisi zahteval/a ti, ta mail prezri — staro geslo ostane veljavno.</p>
 {{ end }}
-  <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">SLFF — Sunday League Fantasy Football · slff.eu</p>
-</div>
+</td></tr>
+<tr><td bgcolor="#020617" style="background: #020617; padding: 18px 24px; border-radius: 0 0 12px 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #94a3b8;">
+Sunday League Fantasy Football · <a href="https://slff.eu" style="color: #94a3b8;">slff.eu</a> · <a href="mailto:info@slff.eu" style="color: #94a3b8;">info@slff.eu</a>
+</td></tr>
+</table>
+<!--[if mso]></td></tr></table><![endif]-->
+</td></tr>
+</table>
+</body>
+</html>

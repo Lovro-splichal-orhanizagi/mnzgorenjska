@@ -97,7 +97,10 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
 - **Pošta**: `trgovina-posta` (Mailcow) — potrditev (z besedilom odstopa in
   obrazcem, trajni nosilec) in "poslano" s sledilno številko. Kliče jo webhook
   (servisni ključ) ali admin. Potrditev navede personalizacijo in rok izdelave (1–2 tedna);
-  vrsta `bon` (le servis) pošlje kode darilnih bonov.
+  vrsta `bon` (le servis) pošlje kode darilnih bonov. HTML je v skupni obliki
+  SLFF z značko SHOP (`_shared/mail.ts`): tabela postavk, sledilna številka
+  in koda bona v okvirju, pravno besedilo drobneje spodaj, prodajalec v nogi;
+  `besedilo` (čistopis) ima isto vsebino.
 - **Personaliziran nakup**: `trgovina-nakup` pošlje personalizacijo v
   `rezerviraj`; cena v Stripe = cena + doplačilo. Personalizirana košarica
   zahteva `brez_odstopa: true` (sicer 400 `trgovina-odstop`); samo digitalna

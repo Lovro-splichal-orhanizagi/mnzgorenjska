@@ -512,6 +512,11 @@ kanonični `?t=` po svoji ligi.
   jezik po `jezik` v metapodatkih uporabnika (vpiše ga registracija);
   v gostujočem projektu predloge **niso** iz config.toml — prilepi jih v
   Auth → Email Templates.
+- **Oblika maila** (temna glava z logom, zelena črta, bela kartica, temna
+  noga, tabele in slogi v vrstici) je ena: `ovoj()` in `gumb()` v
+  `supabase/functions/_shared/mail.ts` (opomniki, prevzem, trgovina).
+  `supabase/templates/*.html` imajo statično kopijo iste glave in noge; po
+  spremembi jih je treba na strežniku znova uveljaviti ročno.
 - `index.html` je slovenski; `main.tsx` za drug jezik zamenja le `lang` in
   opis strani, naslov nastavi `useNaslov`. Kartica ob deljenju (og:) mora biti
   v statičnem HTML, ker je Facebook/WhatsApp bereta brez JS: build zato zapiše
