@@ -11,6 +11,8 @@
 // vmesnik, ko odpre povezavo `?t=sk-…`. Kdor ima ekipi v obeh državah, dobi
 // dva ločena maila, vsakega v jeziku svoje lige.
 
+import { GUMB, ovoj as skupniOvoj } from '../_shared/mail.ts'
+
 export type Jezik = 'sl' | 'sk' | 'hr' | 'cs' | 'hu' | 'de' | 'sr' | 'ro' | 'et' | 'pl' | 'es' | 'lv' | 'mk' | 'el' | 'tr' | 'uk' | 'hy' | 'az' | 'da' | 'en'
 
 /**
@@ -135,19 +137,8 @@ const pozdrav = (j: Jezik, ime: string | null | undefined) => {
   return prvo ? `Živjo, ${esc(prvo)}!` : 'Živjo!'
 }
 
-const GUMB =
-  'display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;'
-
-function ovoj(vsebina: string, noga: string): string {
-  return `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #0f172a;">
-      ${vsebina}
-      <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">
-        SLFF — Sunday League Fantasy Football · slff.eu${noga}
-      </p>
-    </div>
-  `
-}
+// Skupna oblika (glava z logom, noga); `noga` je odjava ali prazno.
+const ovoj = (vsebina: string, noga: string) => skupniOvoj({ vsebina, noga })
 
 const ODJAVA: Record<Jezik, string> = {
   sl: 'Ne želim več opomnikov',
