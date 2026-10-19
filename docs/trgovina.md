@@ -50,6 +50,15 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   pri prvaku `mini_liga_id`, `sezona`). Nosilec motivov brez motiva ni prodan.
   Javno `trgovina_motivi()`, `trgovina_izdelek().motivi/cone`; admin
   `trgovina_admin_motivi`, `_shrani_motiv` (aktiven, vrstni red, primeri, doplačila).
+- **Motivi, dela 2 in 3** (migracija `20261019150000_trgovina_motivi_del23.sql`):
+  pub, stena in dodatki (kozarec, vrč, podstavki ×6, odpirač, plakat A3/A2,
+  kartica, zastavica, šal, kapa, trak), vse neaktivno. Plakat ima cono po
+  različici (`cone.barva` = "A3"/"A2"). Novi vrsti polja: `datum` (ISO) in
+  `postava` (id kupčeve nehišne ekipe, ne mladinske lige): postavka shrani
+  posnetek zadnjega zaklenjenega kroga (`trgovina.postava_ekipe`; ekipa, liga,
+  krog, formacija, 11 + klop s točkami, kapetan, anonimiziran = "Igralec") v
+  `polja.postava` (+ `fantasy_team_id`, `round_id`). Isti posnetek za predogled
+  vrne `trgovina_moja_postava(p_team_id)` (le lastnik). `stevilka` sprejme `min`.
 - **Fotografije nosilcev** so v repozitoriju, `shop/nosilci/*.webp` (1600×1600,
   prazna majica/pulover spredaj in zadaj). `publicDir` trgovine je `public/logo`,
   zato jih vtičnik `slff-nosilci` v `shop/vite.config.js` streže v razvoju in ob
