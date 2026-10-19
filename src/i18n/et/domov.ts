@@ -174,4 +174,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaWildcard: 'Wildcard: rebuild your team for free',
     pravilaKlopPlus: 'Bench+: your bench scores too',
   },
+  trgovina: {
+    oznaka: 'Uus · SLFF Pood',
+    naslov: 'Ametlik SLFF-i varustus',
+    opis: 'T-särgid, pusad, sallid, nokamütsid ja kruusid tõelistele pühapäevajalgpalluritele. Tarne üle kogu EL-i.',
+    gumb: 'Poodi →',
+    majica: 'T-särk',
+    pulover: 'Pusa',
+    sal: 'Sall',
+    kapa: 'Nokamüts',
+  },
 }

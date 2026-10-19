@@ -173,4 +173,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaWildcard: 'Wildcard: rebuild your team for free',
     pravilaKlopPlus: 'Bench+: your bench scores too',
   },
+  trgovina: {
+    oznaka: 'Új · SLFF Bolt',
+    naslov: 'Hivatalos SLFF felszerelés',
+    opis: 'Pólók, pulóverek, sálak, baseballsapkák és bögrék igazi vasárnapi focistáknak. Szállítás az egész EU-ba.',
+    gumb: 'Irány a bolt →',
+    majica: 'Póló',
+    pulover: 'Pulóver',
+    sal: 'Sál',
+    kapa: 'Baseballsapka',
+  },
 }

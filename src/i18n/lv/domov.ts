@@ -175,4 +175,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaWildcard: 'Wildcard: rebuild your team for free',
     pravilaKlopPlus: 'Bench+: your bench scores too',
   },
+  trgovina: {
+    oznaka: 'Jaunums · SLFF veikals',
+    naslov: 'Oficiālais SLFF ekipējums',
+    opis: 'T-krekli, džemperi, šalles, cepures ar nagu un krūzes īstiem svētdienas futbolistiem. Piegāde visā ES.',
+    gumb: 'Uz veikalu →',
+    majica: 'T-krekls',
+    pulover: 'Džemperis',
+    sal: 'Šalle',
+    kapa: 'Cepure ar nagu',
+  },
 }

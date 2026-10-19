@@ -174,4 +174,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaWildcard: 'Joker: takımını ücretsiz baştan kur',
     pravilaKlopPlus: 'Yedek+: yedeklerin de puan alır',
   },
+  trgovina: {
+    oznaka: 'Yeni · SLFF Mağaza',
+    naslov: 'Resmî SLFF ürünleri',
+    opis: 'Gerçek pazar futbolcuları için tişörtler, kapüşonlular, atkılar, şapkalar ve kupalar. Tüm AB’ye teslimat.',
+    gumb: 'Mağazaya git →',
+    majica: 'Tişört',
+    pulover: 'Kapüşonlu',
+    sal: 'Atkı',
+    kapa: 'Şapka',
+  },
 }

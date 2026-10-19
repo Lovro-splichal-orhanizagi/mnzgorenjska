@@ -178,4 +178,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaWildcard: 'Wildcard: rebuild your team for free',
     pravilaKlopPlus: 'Bench+: your bench scores too',
   },
+  trgovina: {
+    oznaka: 'Nowość · Sklep SLFF',
+    naslov: 'Oficjalny sprzęt SLFF',
+    opis: 'Koszulki, bluzy, szaliki, czapki z daszkiem i kubki dla prawdziwych niedzielnych piłkarzy. Dostawa na terenie całej UE.',
+    gumb: 'Do sklepu →',
+    majica: 'Koszulka',
+    pulover: 'Bluza',
+    sal: 'Szalik',
+    kapa: 'Czapka z daszkiem',
+  },
 }

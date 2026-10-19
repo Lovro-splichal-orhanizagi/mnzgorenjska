@@ -174,4 +174,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaWildcard: 'Wildcard: rebuild your team for free',
     pravilaKlopPlus: 'Bench+: your bench scores too',
   },
+  trgovina: {
+    oznaka: 'New · SLFF Shop',
+    naslov: 'Official SLFF gear',
+    opis: 'T-shirts, hoodies, scarves, caps and mugs for true Sunday-league footballers. Delivery across the EU.',
+    gumb: 'Go to the shop →',
+    majica: 'T-shirt',
+    pulover: 'Hoodie',
+    sal: 'Scarf',
+    kapa: 'Cap',
+  },
 }
