@@ -6,8 +6,10 @@
 --
 -- Isti stroj kot del 1 (20261019080000). Novo:
 -- * vrsta polja `postava`: vrednost je id kupčeve nehišne ekipe (ne mladinske
---   lige); postavka shrani posnetek zadnjega zaklenjenega kroga (fantasy_lineups),
---   da tisk ne zavisi od kasnejših sprememb. Isti posnetek za živi predogled
+--   lige); postavka shrani posnetek zadnjega zaklenjenega, točkovanega in
+--   končanega kroga s točkami, ki so štele (trgovina.postava_ekipe), da tisk ne
+--   zavisi od kasnejših sprememb. Motiv ima največ eno polje ekipa, prvak ali
+--   postava (fantasy_team_id je eden). Isti posnetek za živi predogled
 --   vrne public.trgovina_moja_postava(p_team_id). Ime ekipe na kozarcu,
 --   podstavkih, zastavici in šalu je prosto besedilo (pravo ime kluba iz
 --   nedeljske lige); pravilo mladinskih lig zato velja za polje postava.
@@ -19,7 +21,13 @@
 --   palete v moznosti), izbira sprejme tudi moznosti {kljuc, ime_sl, ime_en},
 --   `razlicna_od` pri polju zahteva drugo vrednost kot navedeno polje; barve
 --   dresa nadomestijo barve sheme v posnetku, polje barva zajame vse cone.
+-- * trgovina.tisk.barve ima raje posnetek postavke (barve dresa) kot barve sheme.
 -- Vse je neaktivno; vklopi admin, ko so predloge in fotografije.
+
+comment on column trgovina.motivi.polja is
+  '[{kljuc, vrsta besedilo|stevilka|leto|datum|izbira|barva|ekipa|prvak|postava, oznaka_sl, oznaka_en, max?, min? (stevilka), '
+  'obvezno, privzeto?, moznosti? (izbira: nizi ali {kljuc, ime_sl, ime_en}; barva: {kljuc, hex, ime_sl, ime_en}), '
+  'razlicna_od? (ključ polja z drugo vrednostjo), cona?}]';
 
 -- --------------------------------------------------------------------------
 -- Preverjanje polj: datum in najmanjša številka
@@ -78,21 +86,32 @@ $$;
 -- --------------------------------------------------------------------------
 -- Posnetek postave
 -- --------------------------------------------------------------------------
--- Zadnji zaklenjen krog ekipe s točkami (rounds.lineups_locked_at, posnetek v
--- fantasy_lineups, vsaj en igralec postave ima player_scores; zaklenjen, a še
--- neodigran krog se preskoči), le za lastnika, ne hišne, ne mladinske lige. Oblika:
+-- Krog: zadnji zaklenjen (rounds.lineups_locked_at, posnetek v fantasy_lineups)
+-- in končan krog ekipe — vsaj en igralec postave ima player_scores in
+-- glasovanje o asistencah je zaprto (voting_closes_at null ali mimo); zaklenjen,
+-- neodigran ali še odprt krog se preskoči. Le lastnik, ne hišne, ne mladinske lige.
+-- Točke so tiste, ki so štele (ista logika kot tocke_krogov: ucinkovita_postava
+-- z menjavami s klopi in množiteljem kapetana). Oblika:
 -- {fantasy_team_id, round_id, ekipa, liga, sezona, krog, formacija "4-4-2",
---  tocke (krog ekipe iz tocke_krogov, null dokler ni izračunan),
---  zacetni: [{ime, priimek, pozicija, klub, tocke, kapetan, podkapetan}] (GK, DEF, MID, FWD),
---  klop: [isto] (po vrstnem redu klopi)}.
--- Točke igralca so iz player_scores brez množitelja kapetana (null = še ni točk).
--- Anonimiziran igralec je "Igralec". Igralci so javni podatki uradnih zapisnikov.
+--  tocke_skupaj (tocke_krogov.points, po kazni), kazen (tocke_krogov.penalty),
+--  zacetni: učinkovita enajsterica [igralec] (GK, DEF, MID, FWD),
+--  klop: ostali [igralec] (klop po vrstnem redu, nato zamenjani začetni)}
+-- igralec = {ime, priimek, pozicija, klub, tocke, kapetan, podkapetan,
+--  mnozitelj, zamenjava, zamenjan, steje}: tocke = točke × množitelj, če je
+-- igralec štel (steje), sicer surove točke kroga (null = brez točk); kapetan =
+-- kdor je dobil množitelj (tudi podkapetan, ko kapetan ni igral); zamenjava =
+-- vstopil s klopi namesto začetnega, ki ni igral (ta je zamenjan, na klopi).
+-- Velja: vsota tocke, kjer steje, minus kazen = tocke_skupaj.
+-- "Igralec" namesto imena: anonimiziran igralec in kdorkoli ima vrstico v
+-- mladinski ligi iste države (ista šifra pri istem viru ali isto ime, kot Scout).
+-- Igralci so javni podatki uradnih zapisnikov.
 create function trgovina.postava_ekipe(p_team bigint, p_user uuid) returns jsonb
 language plpgsql stable
 as $$
 declare
   ft public.fantasy_teams;
   v_krog public.rounds;
+  v_drzava bigint;
   v jsonb;
 begin
   if p_user is null then
@@ -112,47 +131,86 @@ begin
   select r.* into v_krog
     from public.rounds r
    where r.competition_id = ft.competition_id and r.lineups_locked_at is not null
+     and (r.voting_closes_at is null or r.voting_closes_at < now())
      and exists (select 1 from public.fantasy_lineups l
                    join public.player_scores s on s.round_id = l.round_id and s.player_id = l.player_id
                   where l.round_id = r.id and l.fantasy_team_id = ft.id)
    order by r.deadline_at desc nulls last, r.id desc
    limit 1;
   if v_krog.id is null then
-    raise exception 'Trgovina: ekipa še nima zaklenjenega kroga s točkami.' using hint = 'trgovina-personalizacija';
+    raise exception 'Trgovina: ekipa še nima končanega kroga s točkami.' using hint = 'trgovina-personalizacija';
   end if;
+  select c.country_id into v_drzava from public.competitions c where c.id = ft.competition_id;
 
-  with igralci as (
-    select l.is_starter, l.bench_order, p.id,
-           coalesce(l.position, p.position) as pozicija,
+  with pk as (
+    select * from public.postava_kroga(ft.id, v_krog.id)
+  ), up as (
+    select * from public.ucinkovita_postava(ft.id, v_krog.id)
+  ), mk as (
+    select m.player_id, m.minutes from public.minute_kroga m where m.round_id = v_krog.id
+  ),
+  -- Kdo je vstopil: ucinkovita_postava vsakemu zamenjanemu začetnemu da prvega
+  -- neporabljenega s klopi iste pozicije, ki je igral (po bench_order, id).
+  zamenjani as (
+    select pk.poz, count(*) as n from pk
+     where pk.is_starter and not exists (select 1 from up where up.player_id = pk.player_id)
+     group by pk.poz
+  ), vstopili as (
+    select k.player_id from (
+      select pk.player_id, pk.poz,
+             row_number() over (partition by pk.poz order by coalesce(pk.bench_order, 99), pk.player_id) as rn
+        from pk join mk on mk.player_id = pk.player_id and mk.minutes > 0
+       where not pk.is_starter) k
+    join zamenjani z on z.poz = k.poz and k.rn <= z.n
+  ), mladi as materialized (
+    select p2.reg_st, c2.source, lower(btrim(p2.full_name)) as ime
+      from public.competitions c2 join public.players p2 on p2.competition_id = c2.id
+     where c2.country_id = v_drzava and public.je_mladinski_slug(c2.slug)
+  ), igralci as (
+    select pk.player_id, pk.bench_order, pk.is_starter, pk.poz,
+           pk.is_starter and up.player_id is not null or vs.player_id is not null as v_postavi,
            jsonb_build_object(
-             'ime', case when p.anonimiziran_at is not null then 'Igralec'
+             'ime', case when skrit then 'Igralec'
                          else coalesce(nullif(btrim(p.full_name), ''), btrim(concat_ws(' ', p.first_name, p.last_name))) end,
-             'priimek', case when p.anonimiziran_at is not null then 'Igralec'
+             'priimek', case when skrit then 'Igralec'
                              else coalesce(nullif(btrim(p.last_name), ''), btrim(p.full_name)) end,
-             'pozicija', coalesce(l.position, p.position),
+             'pozicija', pk.poz,
              'klub', coalesce(nullif(btrim(t.short_name), ''), t.name),
-             'tocke', trim_scale(s.points),
-             'kapetan', l.is_captain,
-             'podkapetan', l.is_vice) as igralec
-      from public.fantasy_lineups l
-      join public.players p on p.id = l.player_id
+             'tocke', case when up.player_id is not null then trim_scale(coalesce(s.points, 0) * up.mnozitelj)
+                           else trim_scale(s.points) end,
+             'kapetan', coalesce(up.mnozitelj > 1, false),
+             'podkapetan', pk.is_vice and not coalesce(up.mnozitelj > 1, false),
+             'mnozitelj', coalesce(up.mnozitelj, 0),
+             'zamenjava', vs.player_id is not null,
+             'zamenjan', pk.is_starter and up.player_id is null,
+             'steje', up.player_id is not null) as igralec
+      from pk
+      join public.players p on p.id = pk.player_id
+      join public.competitions c on c.id = p.competition_id
       left join public.teams t on t.id = p.team_id
-      left join public.player_scores s on s.round_id = l.round_id and s.player_id = l.player_id
-     where l.round_id = v_krog.id and l.fantasy_team_id = ft.id
+      left join up on up.player_id = pk.player_id
+      left join vstopili vs on vs.player_id = pk.player_id
+      left join public.player_scores s on s.round_id = v_krog.id and s.player_id = pk.player_id
+      cross join lateral (select p.anonimiziran_at is not null
+                                 or exists (select 1 from mladi ml
+                                             where (p.reg_st is not null and ml.reg_st = p.reg_st and ml.source is not distinct from c.source)
+                                                or ml.ime = lower(btrim(p.full_name))) as skrit) x
   )
   select jsonb_build_object(
            'fantasy_team_id', ft.id, 'round_id', v_krog.id, 'ekipa', ft.name,
            'liga', (select c.name from public.competitions c where c.id = ft.competition_id),
            'sezona', v_krog.season, 'krog', v_krog.number,
-           'formacija', format('%s-%s-%s', count(*) filter (where i.is_starter and i.pozicija = 'DEF'),
-                               count(*) filter (where i.is_starter and i.pozicija = 'MID'),
-                               count(*) filter (where i.is_starter and i.pozicija = 'FWD')),
-           'tocke', (select trim_scale(tk.points) from public.tocke_krogov tk
-                      where tk.fantasy_team_id = ft.id and tk.round_id = v_krog.id),
-           'zacetni', coalesce(jsonb_agg(i.igralec order by array_position(array['GK', 'DEF', 'MID', 'FWD'], i.pozicija), i.id)
-                                 filter (where i.is_starter), '[]'::jsonb),
-           'klop', coalesce(jsonb_agg(i.igralec order by i.bench_order nulls last, i.id)
-                              filter (where not i.is_starter), '[]'::jsonb))
+           'formacija', format('%s-%s-%s', count(*) filter (where i.v_postavi and i.poz = 'DEF'),
+                               count(*) filter (where i.v_postavi and i.poz = 'MID'),
+                               count(*) filter (where i.v_postavi and i.poz = 'FWD')),
+           'tocke_skupaj', (select trim_scale(tk.points) from public.tocke_krogov tk
+                             where tk.fantasy_team_id = ft.id and tk.round_id = v_krog.id),
+           'kazen', coalesce((select tk.penalty from public.tocke_krogov tk
+                               where tk.fantasy_team_id = ft.id and tk.round_id = v_krog.id), 0),
+           'zacetni', coalesce(jsonb_agg(i.igralec order by array_position(array['GK', 'DEF', 'MID', 'FWD'], i.poz), i.player_id)
+                                 filter (where i.v_postavi), '[]'::jsonb),
+           'klop', coalesce(jsonb_agg(i.igralec order by i.is_starter, i.bench_order nulls last, i.player_id)
+                              filter (where not i.v_postavi), '[]'::jsonb))
     into v
     from igralci i;
   return v;
@@ -307,9 +365,12 @@ begin
     v_opisi := v_opisi || v_txt;
   end loop;
 
-  if exists (select 1 from jsonb_array_elements(m.polja) x
-              where x ? 'razlicna_od' and v_izhod ? (x->>'kljuc') and v_izhod->(x->>'kljuc') = v_izhod->(x->>'razlicna_od')) then
-    raise exception 'Trgovina: barvi dresa morata biti različni.' using hint = 'trgovina-personalizacija';
+  select x->>'kljuc', x->>'razlicna_od' into v_kljuc, v_txt
+    from jsonb_array_elements(m.polja) x
+   where x ? 'razlicna_od' and v_izhod ? (x->>'kljuc') and v_izhod->(x->>'kljuc') = v_izhod->(x->>'razlicna_od')
+   limit 1;
+  if found then
+    raise exception 'Trgovina: polji % in % morata biti različni.', v_txt, v_kljuc using hint = 'trgovina-personalizacija';
   end if;
 
   opis := concat_ws(' · ', case when p_jezik = 'en' then m.ime_en else m.ime_sl end,
@@ -413,18 +474,44 @@ begin
              or jsonb_array_length(v->'zacetni') <> 11 or coalesce(jsonb_typeof(v->'klop'), 'array') <> 'array' then
             raise exception 'Trgovina: postava v polju % ni veljavna.', f->>'kljuc';
           end if;
+          -- Le ključi posnetka (trgovina.postava_ekipe); besedila skozi filter,
+          -- števila so števila (ali null), zastavice logične.
+          if exists (select 1 from jsonb_object_keys(v) k where k not in
+                       ('ekipa', 'liga', 'sezona', 'krog', 'formacija', 'tocke_skupaj', 'kazen', 'zacetni', 'klop'))
+             or coalesce(jsonb_typeof(v->'krog'), 'null') not in ('number', 'null')
+             or coalesce(jsonb_typeof(v->'tocke_skupaj'), 'null') not in ('number', 'null')
+             or coalesce(jsonb_typeof(v->'kazen'), 'null') not in ('number', 'null')
+             or coalesce(v->>'formacija', '0-0-0') !~ '^[0-9]-[0-9]-[0-9]$'
+             or coalesce(v->>'sezona', '2000/01') !~ '^[0-9]{4}(/[0-9]{2})?$' then
+            raise exception 'Trgovina: postava v polju % ni veljavna.', f->>'kljuc';
+          end if;
           perform trgovina.vrednost_polja(jsonb_build_object('kljuc', f->>'kljuc', 'vrsta', 'besedilo', 'max', 24), v->'ekipa');
+          if not trgovina.prazno_polje(v->'liga') then
+            perform trgovina.vrednost_polja(jsonb_build_object('kljuc', f->>'kljuc', 'vrsta', 'besedilo', 'max', 40), v->'liga');
+          end if;
           for g in select x from jsonb_array_elements(v->'zacetni' || coalesce(v->'klop', '[]'::jsonb)) x loop
-            if jsonb_typeof(g) <> 'object' or coalesce(g->>'pozicija', '') not in ('GK', 'DEF', 'MID', 'FWD') then
+            if jsonb_typeof(g) <> 'object' or coalesce(g->>'pozicija', '') not in ('GK', 'DEF', 'MID', 'FWD')
+               or exists (select 1 from jsonb_object_keys(g) k where k not in
+                            ('ime', 'priimek', 'pozicija', 'klub', 'tocke', 'kapetan', 'podkapetan', 'mnozitelj', 'zamenjava', 'zamenjan', 'steje'))
+               or coalesce(jsonb_typeof(g->'tocke'), 'null') not in ('number', 'null')
+               or coalesce(jsonb_typeof(g->'mnozitelj'), 'number') <> 'number'
+               or exists (select 1 from unnest(array['kapetan', 'podkapetan', 'zamenjava', 'zamenjan', 'steje']) b
+                           where coalesce(jsonb_typeof(g->b), 'boolean') <> 'boolean') then
               raise exception 'Trgovina: postava v polju % ni veljavna.', f->>'kljuc';
             end if;
             perform trgovina.vrednost_polja(jsonb_build_object('kljuc', f->>'kljuc', 'vrsta', 'besedilo', 'max', 24), g->'ime');
+            if not trgovina.prazno_polje(g->'priimek') then
+              perform trgovina.vrednost_polja(jsonb_build_object('kljuc', f->>'kljuc', 'vrsta', 'besedilo', 'max', 24), g->'priimek');
+            end if;
+            if not trgovina.prazno_polje(g->'klub') then
+              perform trgovina.vrednost_polja(jsonb_build_object('kljuc', f->>'kljuc', 'vrsta', 'besedilo', 'max', 24), g->'klub');
+            end if;
           end loop;
         else
           perform trgovina.vrednost_polja(f, v);
         end if;
         if f ? 'razlicna_od' and not trgovina.prazno_polje(v) and v = e->'polja'->(f->>'razlicna_od') then
-          raise exception 'Trgovina: barvi dresa morata biti različni.';
+          raise exception 'Trgovina: polji % in % morata biti različni.', f->>'razlicna_od', f->>'kljuc';
         end if;
       end loop;
     exception when others then
@@ -464,6 +551,23 @@ begin
 end;
 $$;
 revoke all on function trgovina.posnetek_con() from public, anon, authenticated;
+
+-- Izvoz za tisk: barve iz posnetka postavke (pri dresu barve dresa), za
+-- starejše postavke barve sheme. Isti stolpci v istem vrstnem redu kot del 1.
+create or replace view trgovina.tisk as
+select p.id as postavka_id, p.serija_id, p.stanje_tiska, n.id as narocilo_id, n.javna_oznaka, n.placano_at,
+       r.sku, p.ime, p.kolicina, p.personalizacija,
+       r.oznaka_sl as razlicica, i.postopek,
+       coalesce(p.personalizacija -> 'barve',
+                (select s -> 'barve' from trgovina.motivi m, jsonb_array_elements(m.sheme) s
+                  where m.slug = p.personalizacija ->> 'motiv' and s ->> 'kljuc' = p.personalizacija ->> 'shema')) as barve,
+       case when p.personalizacija ? 'motiv' then trgovina.cone_json(i.id) end as cone
+  from trgovina.postavke p
+  join trgovina.narocila n on n.id = p.narocilo_id
+  join trgovina.razlicice r on r.id = p.razlicica_id
+  join trgovina.izdelki i on i.id = r.izdelek_id
+ where p.stanje_tiska is not null and n.stanje in ('placano', 'poslano');
+revoke all on trgovina.tisk from public, anon, authenticated;
 
 -- --------------------------------------------------------------------------
 -- Nosilci (neaktivni)
@@ -747,9 +851,9 @@ insert into trgovina.motivi (slug, ime_sl, ime_en, opis_sl, opis_en, cona, polja
 on conflict (slug) do nothing;
 
 -- Izmišljene postave za vitrino plakata (ekipe, igralci in klubi niso resnični).
-update trgovina.motivi set primeri = '[{"polja":{"postava":{"ekipa":"FC Ponedeljek Zjutraj","liga":"Liga Gorjanci","sezona":"2026/27","krog":9,"formacija":"4-4-2","tocke":63,"zacetni":[{"ime":"Tine Kos","priimek":"Kos","pozicija":"GK","klub":"Brdo","tocke":6,"kapetan":false,"podkapetan":false},{"ime":"Rok Zupan","priimek":"Zupan","pozicija":"DEF","klub":"Lipa","tocke":2,"kapetan":false,"podkapetan":false},{"ime":"Gal Mlakar","priimek":"Mlakar","pozicija":"DEF","klub":"Brdo","tocke":7,"kapetan":false,"podkapetan":false},{"ime":"Nik Rozman","priimek":"Rozman","pozicija":"DEF","klub":"Vrba","tocke":1,"kapetan":false,"podkapetan":false},{"ime":"Jure Golob","priimek":"Golob","pozicija":"DEF","klub":"Lipa","tocke":2,"kapetan":false,"podkapetan":false},{"ime":"Mark Kralj","priimek":"Kralj","pozicija":"MID","klub":"Podgorje","tocke":3,"kapetan":false,"podkapetan":false},{"ime":"Žan Turk","priimek":"Turk","pozicija":"MID","klub":"Brdo","tocke":12,"kapetan":true,"podkapetan":false},{"ime":"Ožbej Vidic","priimek":"Vidic","pozicija":"MID","klub":"Vrba","tocke":2,"kapetan":false,"podkapetan":false},{"ime":"Matic Bizjak","priimek":"Bizjak","pozicija":"MID","klub":"Lipa","tocke":5,"kapetan":false,"podkapetan":false},{"ime":"Blaž Hribar","priimek":"Hribar","pozicija":"FWD","klub":"Podgorje","tocke":9,"kapetan":false,"podkapetan":true},{"ime":"Anže Kokalj","priimek":"Kokalj","pozicija":"FWD","klub":"Vrba","tocke":2,"kapetan":false,"podkapetan":false}],"klop":[{"ime":"Lan Pirc","priimek":"Pirc","pozicija":"GK","klub":"Vrba","tocke":0,"kapetan":false,"podkapetan":false},{"ime":"Tim Leban","priimek":"Leban","pozicija":"DEF","klub":"Podgorje","tocke":1,"kapetan":false,"podkapetan":false},{"ime":"Vid Kern","priimek":"Kern","pozicija":"MID","klub":"Brdo","tocke":2,"kapetan":false,"podkapetan":false},{"ime":"Bor Jereb","priimek":"Jereb","pozicija":"FWD","klub":"Lipa","tocke":0,"kapetan":false,"podkapetan":false}]}},"shema":"igrisce","izdelek":"plakat-po-meri","barva":"A3"},
-    {"polja":{"postava":{"ekipa":"Dinamo Kavč","liga":"Liga Gorjanci","sezona":"2026/27","krog":14,"formacija":"3-5-2","tocke":57,"zacetni":[{"ime":"Aljaž Rupnik","priimek":"Rupnik","pozicija":"GK","klub":"Lipa","tocke":2,"kapetan":false,"podkapetan":false},{"ime":"Gašper Košir","priimek":"Košir","pozicija":"DEF","klub":"Vrba","tocke":6,"kapetan":false,"podkapetan":false},{"ime":"Urban Pečnik","priimek":"Pečnik","pozicija":"DEF","klub":"Brdo","tocke":2,"kapetan":false,"podkapetan":false},{"ime":"Filip Zorman","priimek":"Zorman","pozicija":"DEF","klub":"Podgorje","tocke":1,"kapetan":false,"podkapetan":false},{"ime":"Jaka Kavčič","priimek":"Kavčič","pozicija":"MID","klub":"Brdo","tocke":3,"kapetan":false,"podkapetan":false},{"ime":"Lovro Ferjan","priimek":"Ferjan","pozicija":"MID","klub":"Lipa","tocke":8,"kapetan":false,"podkapetan":true},{"ime":"Tadej Jamnik","priimek":"Jamnik","pozicija":"MID","klub":"Vrba","tocke":2,"kapetan":false,"podkapetan":false},{"ime":"Miha Primc","priimek":"Primc","pozicija":"MID","klub":"Podgorje","tocke":4,"kapetan":false,"podkapetan":false},{"ime":"Erik Bergant","priimek":"Bergant","pozicija":"MID","klub":"Brdo","tocke":1,"kapetan":false,"podkapetan":false},{"ime":"Aleks Kumer","priimek":"Kumer","pozicija":"FWD","klub":"Lipa","tocke":13,"kapetan":true,"podkapetan":false},{"ime":"Jan Vrhovnik","priimek":"Vrhovnik","pozicija":"FWD","klub":"Vrba","tocke":2,"kapetan":false,"podkapetan":false}],"klop":[{"ime":"Domen Kunc","priimek":"Kunc","pozicija":"GK","klub":"Brdo","tocke":0,"kapetan":false,"podkapetan":false},{"ime":"Val Grošelj","priimek":"Grošelj","pozicija":"DEF","klub":"Lipa","tocke":2,"kapetan":false,"podkapetan":false},{"ime":"Svit Pavlin","priimek":"Pavlin","pozicija":"MID","klub":"Vrba","tocke":1,"kapetan":false,"podkapetan":false},{"ime":"Izak Markič","priimek":"Markič","pozicija":"FWD","klub":"Podgorje","tocke":0,"kapetan":false,"podkapetan":false}]}},"shema":"nocna","izdelek":"plakat-po-meri","barva":"A2"},
-    {"polja":{"postava":{"ekipa":"Atletico Golaž","liga":"Liga Gorjanci","sezona":"2026/27","krog":21,"formacija":"4-3-3","tocke":58,"zacetni":[{"ime":"Rene Petek","priimek":"Petek","pozicija":"GK","klub":"Podgorje","tocke":9,"kapetan":false,"podkapetan":true},{"ime":"Jon Dolenc","priimek":"Dolenc","pozicija":"DEF","klub":"Brdo","tocke":2,"kapetan":false,"podkapetan":false},{"ime":"Maks Žnidar","priimek":"Žnidar","pozicija":"DEF","klub":"Lipa","tocke":6,"kapetan":false,"podkapetan":false},{"ime":"Leon Sever","priimek":"Sever","pozicija":"DEF","klub":"Vrba","tocke":2,"kapetan":false,"podkapetan":false},{"ime":"Taj Debeljak","priimek":"Debeljak","pozicija":"DEF","klub":"Podgorje","tocke":1,"kapetan":false,"podkapetan":false},{"ime":"Kristjan Erjavec","priimek":"Erjavec","pozicija":"MID","klub":"Lipa","tocke":4,"kapetan":false,"podkapetan":false},{"ime":"Lenart Babnik","priimek":"Babnik","pozicija":"MID","klub":"Brdo","tocke":2,"kapetan":false,"podkapetan":false},{"ime":"Patrik Gorenc","priimek":"Gorenc","pozicija":"MID","klub":"Vrba","tocke":7,"kapetan":false,"podkapetan":false},{"ime":"Nejc Ribič","priimek":"Ribič","pozicija":"FWD","klub":"Brdo","tocke":2,"kapetan":false,"podkapetan":false},{"ime":"David Kogovšek","priimek":"Kogovšek","pozicija":"FWD","klub":"Lipa","tocke":10,"kapetan":true,"podkapetan":false},{"ime":"Tilen Bajželj","priimek":"Bajželj","pozicija":"FWD","klub":"Podgorje","tocke":3,"kapetan":false,"podkapetan":false}],"klop":[{"ime":"Oskar Mrak","priimek":"Mrak","pozicija":"GK","klub":"Lipa","tocke":0,"kapetan":false,"podkapetan":false},{"ime":"Jošt Zakrajšek","priimek":"Zakrajšek","pozicija":"DEF","klub":"Vrba","tocke":1,"kapetan":false,"podkapetan":false},{"ime":"Sven Oblak","priimek":"Oblak","pozicija":"MID","klub":"Podgorje","tocke":2,"kapetan":false,"podkapetan":false},{"ime":"Emil Vovk","priimek":"Vovk","pozicija":"FWD","klub":"Brdo","tocke":1,"kapetan":false,"podkapetan":false}]}},"shema":"retro","izdelek":"plakat-po-meri","barva":"A3"}]'
+update trgovina.motivi set primeri = '[{"polja":{"postava":{"ekipa":"FC Ponedeljek Zjutraj","liga":"Liga Gorjanci","sezona":"2026/27","krog":9,"formacija":"4-4-2","tocke_skupaj":75,"kazen":0,"zacetni":[{"ime":"Tine Kos","priimek":"Kos","pozicija":"GK","klub":"Brdo","tocke":6,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Rok Zupan","priimek":"Zupan","pozicija":"DEF","klub":"Lipa","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Gal Mlakar","priimek":"Mlakar","pozicija":"DEF","klub":"Brdo","tocke":7,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Nik Rozman","priimek":"Rozman","pozicija":"DEF","klub":"Vrba","tocke":1,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Jure Golob","priimek":"Golob","pozicija":"DEF","klub":"Lipa","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Mark Kralj","priimek":"Kralj","pozicija":"MID","klub":"Podgorje","tocke":3,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Žan Turk","priimek":"Turk","pozicija":"MID","klub":"Brdo","tocke":36,"kapetan":true,"podkapetan":false,"mnozitelj":3,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Ožbej Vidic","priimek":"Vidic","pozicija":"MID","klub":"Vrba","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Matic Bizjak","priimek":"Bizjak","pozicija":"MID","klub":"Lipa","tocke":5,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Blaž Hribar","priimek":"Hribar","pozicija":"FWD","klub":"Podgorje","tocke":9,"kapetan":false,"podkapetan":true,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Anže Kokalj","priimek":"Kokalj","pozicija":"FWD","klub":"Vrba","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true}],"klop":[{"ime":"Lan Pirc","priimek":"Pirc","pozicija":"GK","klub":"Vrba","tocke":0,"kapetan":false,"podkapetan":false,"mnozitelj":0,"zamenjava":false,"zamenjan":false,"steje":false},{"ime":"Tim Leban","priimek":"Leban","pozicija":"DEF","klub":"Podgorje","tocke":1,"kapetan":false,"podkapetan":false,"mnozitelj":0,"zamenjava":false,"zamenjan":false,"steje":false},{"ime":"Vid Kern","priimek":"Kern","pozicija":"MID","klub":"Brdo","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":0,"zamenjava":false,"zamenjan":false,"steje":false},{"ime":"Bor Jereb","priimek":"Jereb","pozicija":"FWD","klub":"Lipa","tocke":0,"kapetan":false,"podkapetan":false,"mnozitelj":0,"zamenjava":false,"zamenjan":false,"steje":false}]}},"shema":"igrisce","izdelek":"plakat-po-meri","barva":"A3"},
+    {"polja":{"postava":{"ekipa":"Dinamo Kavč","liga":"Liga Gorjanci","sezona":"2026/27","krog":14,"formacija":"3-5-2","tocke_skupaj":71,"kazen":0,"zacetni":[{"ime":"Aljaž Rupnik","priimek":"Rupnik","pozicija":"GK","klub":"Lipa","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Gašper Košir","priimek":"Košir","pozicija":"DEF","klub":"Vrba","tocke":6,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Urban Pečnik","priimek":"Pečnik","pozicija":"DEF","klub":"Brdo","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Val Grošelj","priimek":"Grošelj","pozicija":"DEF","klub":"Lipa","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":true,"zamenjan":false,"steje":true},{"ime":"Jaka Kavčič","priimek":"Kavčič","pozicija":"MID","klub":"Brdo","tocke":3,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Lovro Ferjan","priimek":"Ferjan","pozicija":"MID","klub":"Lipa","tocke":8,"kapetan":false,"podkapetan":true,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Tadej Jamnik","priimek":"Jamnik","pozicija":"MID","klub":"Vrba","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Miha Primc","priimek":"Primc","pozicija":"MID","klub":"Podgorje","tocke":4,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Erik Bergant","priimek":"Bergant","pozicija":"MID","klub":"Brdo","tocke":1,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Aleks Kumer","priimek":"Kumer","pozicija":"FWD","klub":"Lipa","tocke":39,"kapetan":true,"podkapetan":false,"mnozitelj":3,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Jan Vrhovnik","priimek":"Vrhovnik","pozicija":"FWD","klub":"Vrba","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true}],"klop":[{"ime":"Domen Kunc","priimek":"Kunc","pozicija":"GK","klub":"Brdo","tocke":0,"kapetan":false,"podkapetan":false,"mnozitelj":0,"zamenjava":false,"zamenjan":false,"steje":false},{"ime":"Svit Pavlin","priimek":"Pavlin","pozicija":"MID","klub":"Vrba","tocke":1,"kapetan":false,"podkapetan":false,"mnozitelj":0,"zamenjava":false,"zamenjan":false,"steje":false},{"ime":"Izak Markič","priimek":"Markič","pozicija":"FWD","klub":"Podgorje","tocke":0,"kapetan":false,"podkapetan":false,"mnozitelj":0,"zamenjava":false,"zamenjan":false,"steje":false},{"ime":"Filip Zorman","priimek":"Zorman","pozicija":"DEF","klub":"Podgorje","tocke":0,"kapetan":false,"podkapetan":false,"mnozitelj":0,"zamenjava":false,"zamenjan":true,"steje":false}]}},"shema":"nocna","izdelek":"plakat-po-meri","barva":"A2"},
+    {"polja":{"postava":{"ekipa":"Atletico Golaž","liga":"Liga Gorjanci","sezona":"2026/27","krog":21,"formacija":"4-3-3","tocke_skupaj":68,"kazen":0,"zacetni":[{"ime":"Rene Petek","priimek":"Petek","pozicija":"GK","klub":"Podgorje","tocke":9,"kapetan":false,"podkapetan":true,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Jon Dolenc","priimek":"Dolenc","pozicija":"DEF","klub":"Brdo","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Maks Žnidar","priimek":"Žnidar","pozicija":"DEF","klub":"Lipa","tocke":6,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Leon Sever","priimek":"Sever","pozicija":"DEF","klub":"Vrba","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Taj Debeljak","priimek":"Debeljak","pozicija":"DEF","klub":"Podgorje","tocke":1,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Kristjan Erjavec","priimek":"Erjavec","pozicija":"MID","klub":"Lipa","tocke":4,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Lenart Babnik","priimek":"Babnik","pozicija":"MID","klub":"Brdo","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Patrik Gorenc","priimek":"Gorenc","pozicija":"MID","klub":"Vrba","tocke":7,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Nejc Ribič","priimek":"Ribič","pozicija":"FWD","klub":"Brdo","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"David Kogovšek","priimek":"Kogovšek","pozicija":"FWD","klub":"Lipa","tocke":30,"kapetan":true,"podkapetan":false,"mnozitelj":3,"zamenjava":false,"zamenjan":false,"steje":true},{"ime":"Tilen Bajželj","priimek":"Bajželj","pozicija":"FWD","klub":"Podgorje","tocke":3,"kapetan":false,"podkapetan":false,"mnozitelj":1,"zamenjava":false,"zamenjan":false,"steje":true}],"klop":[{"ime":"Oskar Mrak","priimek":"Mrak","pozicija":"GK","klub":"Lipa","tocke":0,"kapetan":false,"podkapetan":false,"mnozitelj":0,"zamenjava":false,"zamenjan":false,"steje":false},{"ime":"Jošt Zakrajšek","priimek":"Zakrajšek","pozicija":"DEF","klub":"Vrba","tocke":1,"kapetan":false,"podkapetan":false,"mnozitelj":0,"zamenjava":false,"zamenjan":false,"steje":false},{"ime":"Sven Oblak","priimek":"Oblak","pozicija":"MID","klub":"Podgorje","tocke":2,"kapetan":false,"podkapetan":false,"mnozitelj":0,"zamenjava":false,"zamenjan":false,"steje":false},{"ime":"Emil Vovk","priimek":"Vovk","pozicija":"FWD","klub":"Brdo","tocke":1,"kapetan":false,"podkapetan":false,"mnozitelj":0,"zamenjava":false,"zamenjan":false,"steje":false}]}},"shema":"retro","izdelek":"plakat-po-meri","barva":"A3"}]'
  where slug = 'moja-postava' and primeri = '[]';
 
 insert into trgovina.motivi_izdelki (motiv_id, izdelek_id, doplacilo)

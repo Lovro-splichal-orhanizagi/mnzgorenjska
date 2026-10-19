@@ -52,13 +52,27 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   `trgovina_admin_motivi`, `_shrani_motiv` (aktiven, vrstni red, primeri, doplačila).
 - **Motivi, dela 2 in 3** (migracija `20261019150000_trgovina_motivi_del23.sql`):
   pub, stena in dodatki (kozarec, vrč, podstavki ×6, odpirač, plakat A3/A2,
-  kartica, zastavica, šal, kapa, trak), vse neaktivno. Plakat ima cono po
-  različici (`cone.barva` = "A3"/"A2"). Novi vrsti polja: `datum` (ISO) in
-  `postava` (id kupčeve nehišne ekipe, ne mladinske lige): postavka shrani
-  posnetek zadnjega zaklenjenega kroga (`trgovina.postava_ekipe`; ekipa, liga,
-  krog, formacija, 11 + klop s točkami, kapetan, anonimiziran = "Igralec") v
-  `polja.postava` (+ `fantasy_team_id`, `round_id`). Isti posnetek za predogled
-  vrne `trgovina_moja_postava(p_team_id)` (le lastnik). `stevilka` sprejme `min`.
+  kartica, zastavica, šal, kapa, trak) in **dres po meri** (ves dres v
+  sublimaciji, cone `spredaj` in `hrbet` 600×750), vse neaktivno. Plakat ima
+  cono po različici (`cone.barva` = "A3"/"A2"). Ime ekipe na kozarcu,
+  podstavkih, zastavici in šalu je prosto besedilo (pravo ime kluba).
+  - Nove vrste polj: `datum` (ISO), `barva` (ključ iz palete v `moznosti`
+    `{kljuc, hex, ime_sl, ime_en}`), `postava`; `stevilka` sprejme `min`;
+    `izbira` sprejme tudi `moznosti` kot `{kljuc, ime_sl, ime_en}` (shrani se
+    ključ, v opis gre oznaka); `razlicna_od` pri polju zahteva drugo vrednost
+    kot navedeno polje (dres: barva1 ≠ barva2).
+  - Dres: barve dresa (polja `barva`, po vrsti) nadomestijo barve sheme v
+    `personalizacija.barve` (shema `dres` je le nevtralna), polje `barva`
+    zajame vse cone nosilca v posnetku con, `trgovina.tisk.barve` ima raje
+    posnetek postavke kot barve sheme.
+  - `postava` (id kupčeve nehišne ekipe, ne mladinske lige): postavka shrani
+    posnetek (`trgovina.postava_ekipe`) v `polja.postava` (+ `fantasy_team_id`,
+    `round_id`) iz **zadnjega zaklenjenega kroga s točkami in zaprtim
+    glasovanjem**. Točke so tiste, ki so štele (`ucinkovita_postava`: menjave s
+    klopi, množitelj kapetana), `tocke_skupaj` = `tocke_krogov.points`, `kazen`.
+    Anonimiziran igralec in kdorkoli z vrstico v mladinski ligi iste države
+    (šifra pri istem viru ali ime, kot Scout) je "Igralec". Isti posnetek za
+    predogled vrne `trgovina_moja_postava(p_team_id)` (le lastnik).
 - **Fotografije nosilcev** so v repozitoriju, `shop/nosilci/*.webp` (1600×1600,
   prazna majica/pulover spredaj in zadaj). `publicDir` trgovine je `public/logo`,
   zato jih vtičnik `slff-nosilci` v `shop/vite.config.js` streže v razvoju in ob
