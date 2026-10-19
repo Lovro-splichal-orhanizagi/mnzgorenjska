@@ -38,6 +38,7 @@ export function Iskanje() {
   const { klub } = useSeja()
   const [q, setQ] = useSearchParams()
   const [zveze, setZveze] = useState<{ id: number; name: string }[]>([])
+  const [napakaZ, setNapakaZ] = useState<string | null>(null)
   const drzava = klub?.country_id
   const f = filtri(q)
 
@@ -48,7 +49,10 @@ export function Iskanje() {
       .select('id, name')
       .eq('country_id', drzava)
       .order('name')
-      .then(({ data }) => setZveze(data ?? []))
+      .then(({ data, error }) => {
+        setZveze(data ?? [])
+        setNapakaZ(error ? napaka(error) : null)
+      })
   }, [drzava])
 
   function isci(e: FormEvent<HTMLFormElement>) {
@@ -108,6 +112,7 @@ export function Iskanje() {
             ))}
           </fieldset>
         )}
+        {napakaZ && <p className="opozorilo sm:col-span-2 lg:col-span-4">{napakaZ}</p>}
         <button className="gumb-glavni justify-self-start sm:col-span-2 lg:col-span-4">{t('iskanje.isci')}</button>
       </form>
       <p className="text-xs text-slate-500">{t('iskanje.opomba')}</p>
@@ -121,11 +126,14 @@ function Rezultati({ iskanje }: { iskanje: string }) {
   const [vrstice, setVrstice] = useState<Zadetek[]>([])
   const [stanje, setStanje] = useState<'nalaga' | 'ok' | 'konec'>('nalaga')
   const [napakaI, setNapakaI] = useState<string | null>(null)
+  // Ponovni poskus iste strani po napaki: od ostane, poskus sproži nov klic.
+  const [poskus, setPoskus] = useState(0)
 
   useEffect(() => {
     const f = filtri(new URLSearchParams(iskanje))
     let velja = true
     setStanje('nalaga')
+    setNapakaI(null)
     void supabase
       .rpc('scout_isci', {
         p_skupina: f.skupina,
@@ -139,19 +147,30 @@ function Rezultati({ iskanje }: { iskanje: string }) {
         if (!velja) return
         if (error) {
           setNapakaI(napaka(error))
-          setStanje('konec')
+          setStanje('ok')
           return
         }
         const nove = data ?? []
-        setVrstice((prej) => (od === 0 ? nove : [...prej, ...nove]))
+        // Nov model med stranema premakne vrstni red: istega igralca ne pokaži dvakrat.
+        setVrstice((prej) => {
+          if (od === 0) return nove
+          const ze = new Set(prej.map((z) => z.player_id))
+          return [...prej, ...nove.filter((z) => !ze.has(z.player_id))]
+        })
         setStanje(nove.length < STRAN || od + STRAN >= NAJVEC ? 'konec' : 'ok')
       })
     return () => {
       velja = false
     }
-  }, [iskanje, od])
+  }, [iskanje, od, poskus])
 
-  if (napakaI && vrstice.length === 0) return <p className="opozorilo">{napakaI}</p>
+  if (napakaI && vrstice.length === 0)
+    return (
+      <div className="space-y-3">
+        <p className="opozorilo">{napakaI}</p>
+        <button type="button" onClick={() => setPoskus(poskus + 1)} className="gumb-tih text-sm">{t('napaka.znova')}</button>
+      </div>
+    )
   if (stanje !== 'nalaga' && vrstice.length === 0) return <p className="kartica p-5 text-center text-slate-400">{t('iskanje.prazno')}</p>
   return (
     <div className="space-y-3">
@@ -179,8 +198,8 @@ function Rezultati({ iskanje }: { iskanje: string }) {
       {stanje === 'nalaga' && <Nalaganje />}
       {napakaI && <p className="opozorilo">{napakaI}</p>}
       {stanje === 'ok' && (
-        <button type="button" onClick={() => setOd(od + STRAN)} className="gumb-tih text-sm">
-          {t('iskanje.vec')}
+        <button type="button" onClick={() => (napakaI ? setPoskus(poskus + 1) : setOd(od + STRAN))} className="gumb-tih text-sm">
+          {napakaI ? t('napaka.znova') : t('iskanje.vec')}
         </button>
       )}
     </div>
