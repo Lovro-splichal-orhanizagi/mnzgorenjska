@@ -17,15 +17,15 @@ export function verifyArtifact(a,{runId,commit,name}){
 }
 export function unpackVerifiedArchive(bytes,digest,kind){
  if(bytes.length>maxArchive||!/^sha256:[a-f0-9]{64}$/.test(digest??'')||`sha256:${sha256(bytes)}`!==digest)throw Error('Artifact ZIP digest mismatch')
- const cleanup=kind==='fcf-cleanup-prepared'||kind==='fcf-cleanup-applied',fcf=kind==='fcf-history'||cleanup
- const cleanupName=name=>name==='manifest.json'||kind==='fcf-cleanup-prepared'&&(name==='before-image.json'||['4109388','4116215','4118352','4118358'].some(id=>name===`acta-${id}.html`))
+ const sixCleanup=kind==='fcf-six-cleanup-prepared'||kind==='fcf-six-cleanup-applied',cleanup=sixCleanup||kind==='fcf-cleanup-prepared'||kind==='fcf-cleanup-applied',fcf=kind==='fcf-history'||cleanup
+ const cleanupName=name=>name==='manifest.json'||['fcf-cleanup-prepared','fcf-six-cleanup-prepared'].includes(kind)&&(name==='before-image.json'||(sixCleanup?['4109388','4109404','4116215','4118352','4118354','4118358']:['4109388','4116215','4118352','4118358']).some(id=>name===`acta-${id}.html`))
  const fcfName=name=>cleanup?cleanupName(name):fcfHistoryName(name)
- const memberLimit=kind==='fcf-cleanup-prepared'?6:kind==='fcf-cleanup-applied'?1:kind==='fcf-history'?721:1505
+ const memberLimit=kind==='fcf-six-cleanup-prepared'?8:kind==='fcf-six-cleanup-applied'?1:kind==='fcf-cleanup-prepared'?6:kind==='fcf-cleanup-applied'?1:kind==='fcf-history'?721:1505
  const dir=mkdtempSync(join(tmpdir(),'slff-dfb-artifact-'))
  try{
   const zip=join(dir,'source.zip');writeFileSync(zip,bytes)
   const names=execFileSync('unzip',['-Z1',zip],{encoding:'utf8',maxBuffer:500000}).trim().split('\n'),files=new Map()
-  if(!['capture','replay','fcf-history','fcf-cleanup-prepared','fcf-cleanup-applied'].includes(kind)||names.length>memberLimit||new Set(names).size!==names.length)throw Error('Invalid artifact entry set')
+  if(!['capture','replay','fcf-history','fcf-cleanup-prepared','fcf-cleanup-applied','fcf-six-cleanup-prepared','fcf-six-cleanup-applied'].includes(kind)||names.length>memberLimit||new Set(names).size!==names.length)throw Error('Invalid artifact entry set')
   if(fcf){
    const details=execFileSync('unzip',['-Z','-l',zip],{encoding:'utf8',maxBuffer:500000}).split('\n')
    for(const name of names){
