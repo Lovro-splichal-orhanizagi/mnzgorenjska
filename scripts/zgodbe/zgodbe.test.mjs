@@ -276,3 +276,61 @@ test('končna kartica pokaže stanje po platformah', () => {
   assert.match(rez, /Instagram Story: ✅ published/)
   assert.match(rez, /Facebook Story: ⚠️ unknown.*1\/3/)
 })
+
+test('kartica iz live CLI na dry_run strežniku: nič poslano Meti, razlog na kartici', async () => {
+  const o = await okolje('live')
+  delete o.env.ZGODBE_NACIN
+  const { meta } = await poslji(o, klik(o.z))
+  assert.equal(metaKlici(meta).length, 0)
+  const z = await o.shramba.beri(o.z.id)
+  assert.equal(z.stanje, 'suho')
+  assert.match(z.objava.ig.opomba, /server is in dry run/)
+  // Tudi ročno spremenjen `nacin` v stanju ne obide strežnika.
+  const o2 = await okolje()
+  await new Shramba(o2.env.ZGODBE_STANJE).spremeni((s) => { s.zgodbe[o2.z.id].nacin = 'live' })
+  const { meta: m2 } = await poslji(o2, klik(o2.z))
+  assert.equal(metaKlici(m2).length, 0)
+})
+
+test('CLI piše stanje med klikom (drug proces): objava le enkrat', async () => {
+  const o = await okolje('live')
+  const meta = lazniFetch()
+  // Druga Shramba = drug proces. Prebere staro stanje, drži ga 50 ms, nato zapiše.
+  const cli = new Shramba(o.env.ZGODBE_STANJE).spremeni(async (s) => { await new Promise((r) => setTimeout(r, 50)); s.zgodbe[o.z.id].sporocilo_id = 'msg1' })
+  await new Promise((r) => setTimeout(r, 5))
+  await Promise.all([cli, poslji(o, klik(o.z), { meta })])
+  const { r } = await poslji(o, klik(o.z), { meta })
+  assert.match(r.json.data.content, /Already decided/)
+  assert.equal(metaKlici(meta).filter((k) => k.url.endsWith('/media_publish')).length, 3)
+  const z = await o.shramba.beri(o.z.id)
+  assert.equal(z.sporocilo_id, 'msg1')
+  assert.equal(z.stanje, 'objavljeno')
+})
+
+test('isti okvirji znova: po Reject nova kartica s prejšnjim stanjem, po objavi ne', async () => {
+  const o = await okolje('live')
+  await poslji(o, klik(o.z, { dejanje: 'zavrni' }))
+  const { z, sporocilo } = await predlozi({ poti: o.poti, avtor: 'x', env: o.env, shramba: o.shramba })
+  assert.notEqual(z.id, o.z.id)
+  assert.equal(z.verzija, o.z.verzija)
+  assert.match(sporocilo.embeds[0].fields.find((f) => f.name.startsWith('Earlier card')).value, /zavrnjeno/)
+  await poslji(o, klik(z))
+  await assert.rejects(predlozi({ poti: o.poti, avtor: 'x', env: o.env, shramba: o.shramba }), /že ima kartico .*objavljeno/)
+})
+
+test('obešena Meta: rok, nato neznano (ne večno "publishing…")', async () => {
+  const o = await okolje('live')
+  o.env.META_CAS_MS = '30'
+  const osnova = lazniFetch()
+  const brezRoka = []
+  const f = (url, opt = {}) => (String(url).includes('graph.facebook.com') && !opt.signal && brezRoka.push(url), 0) || String(url).endsWith('/photo_stories')
+    ? new Promise((_, ne) => opt.signal.addEventListener('abort', () => ne(opt.signal.reason)))
+    : osnova.f(url, opt)
+  const drzi = setInterval(() => {}, 1e3) // AbortSignal.timeout ne drži zanke; na strežniku jo drži poslušanje
+  await poslji(o, klik(o.z), { meta: { f, klici: osnova.klici } }).finally(() => clearInterval(drzi))
+  const z = await o.shramba.beri(o.z.id)
+  assert.equal(z.objava.ig.stanje, 'ok')
+  assert.equal(z.objava.fb.stanje, 'neznano')
+  assert.equal(z.stanje, 'delno')
+  assert.deepEqual(brezRoka, [])
+})

@@ -19,7 +19,7 @@
 //   node scripts/zgodbe/zgodbe.mjs streznik [--vrata 8787]     (POST /discord/zgodbe)
 
 import { createHash, createPublicKey, verify as preveriPodpis, randomBytes } from 'node:crypto'
-import { readFile, writeFile, rename, mkdir, copyFile, chmod } from 'node:fs/promises'
+import { readFile, writeFile, rename, mkdir, chmod, open, stat, unlink } from 'node:fs/promises'
 import { createServer } from 'node:http'
 import { join, basename } from 'node:path'
 
@@ -42,6 +42,7 @@ const ZASEBNO = 64 // ephemeral
 const BARVE = { caka: 0xf1c40f, objavljanje: 0x3498db, objavljeno: 0x2ecc71, suho: 0x95a5a6, delno: 0xe67e22, zavrnjeno: 0xe74c3c, zaklenjeno: 0xe74c3c }
 
 const sha256 = (b) => createHash('sha256').update(b).digest('hex')
+const cakaj = (ms) => new Promise((r) => setTimeout(r, ms))
 const log = (...a) => console.log(new Date().toISOString(), '[zgodbe]', ...a)
 
 /** Žeton nikoli v Discord ali dnevnik. */
@@ -89,9 +90,24 @@ export function verzija(okvirji, platforme) {
 
 // --- stanje ------------------------------------------------------------------------
 
-/** JSON v eni datoteki, en proces; zapis prek začasne datoteke (atomično). Spremembe zaporedno. */
+const ZAKLEP_STAR_MS = 30e3 // zaklep, starejši od tega, je ostal po sesutju
+
+/**
+ * JSON v eni datoteki; zapis prek začasne datoteke (atomično). Spremembe zaporedno v procesu in
+ * pod zaklepom `<pot>.lock` (O_EXCL) med procesi, ker CLI `predlozi` piše med tekom strežnika.
+ */
 export class Shramba {
   constructor(pot) { this.pot = pot; this.vrsta = Promise.resolve() }
+  async #zakleni() {
+    const zaklep = `${this.pot}.lock`
+    for (let i = 0; ; i++) {
+      try { await (await open(zaklep, 'wx', 0o600)).close(); return () => unlink(zaklep).catch(() => {}) } catch (e) { if (e.code !== 'EEXIST') throw e }
+      const st = await stat(zaklep).catch(() => null)
+      if (st && Date.now() - st.mtimeMs > ZAKLEP_STAR_MS) { await unlink(zaklep).catch(() => {}); continue }
+      if (i > 500) throw new Error(`stanje zaklenjeno: ${zaklep}`)
+      await cakaj(20)
+    }
+  }
   async #beri() {
     try { return JSON.parse(await readFile(this.pot, 'utf8')) } catch (e) { if (e.code === 'ENOENT') return { zgodbe: {}, interakcije: [] }; throw e }
   }
@@ -102,7 +118,10 @@ export class Shramba {
   }
   /** fn(stanje) spremeni stanje in vrne rezultat; zaporedno, zato je to compare-and-set. */
   spremeni(fn) {
-    const p = this.vrsta.then(async () => { const s = await this.#beri(); const r = await fn(s); await this.#pisi(s); return r })
+    const p = this.vrsta.then(async () => {
+      const odkleni = await this.#zakleni()
+      try { const s = await this.#beri(); const r = await fn(s); await this.#pisi(s); return r } finally { await odkleni() }
+    })
     this.vrsta = p.catch(() => {})
     return p
   }
@@ -139,6 +158,10 @@ export function kartica(z, slike = z.okvirji.map((_, i) => `attachment://${i + 1
     { name: 'Submitted by', value: z.avtor, inline: true },
     { name: 'Frames (in order)', value: z.okvirji.map((o, i) => `${i + 1}/3 ${VLOGE[i]} · \`${o.sha256.slice(0, 10)}\``).join('\n') },
   ]
+  if (z.prejsnja) {
+    const neznano = Object.entries(z.prejsnja.objava ?? {}).filter(([, r]) => r.stanje === 'neznano').map(([p]) => PLATFORME[p])
+    polja.push({ name: 'Earlier card for these frames', value: `${z.prejsnja.stanje}${neznano.length ? ` · ⚠️ unknown on ${neznano.join(' + ')}: check the account before approving` : ''}` })
+  }
   if (z.odlocil) polja.push({ name: z.stanje === 'zavrnjeno' ? 'Rejected by' : 'Approved by', value: `<@${z.odlocil}> · ${casLj(z.odloceno_ob)}` })
   if (z.objava) {
     polja.push({
@@ -194,13 +217,12 @@ const grafOsnova = (env) => `https://graph.facebook.com/${env.META_GRAPH_VERSION
 async function graf(f, pot, parametri, env, metoda = 'POST') {
   const telo = new URLSearchParams({ ...parametri, access_token: env.META_PAGE_TOKEN })
   const url = `${grafOsnova(env)}/${pot}`
-  const r = metoda === 'GET' ? await f(`${url}?${telo}`) : await f(url, { method: 'POST', body: telo })
+  const signal = AbortSignal.timeout(Number(env.META_CAS_MS) || 60e3) // obešena Meta → napaka/neznano, ne večno "publishing…"
+  const r = metoda === 'GET' ? await f(`${url}?${telo}`, { signal }) : await f(url, { method: 'POST', body: telo, signal })
   const o = await r.json().catch(() => ({}))
   if (!r.ok || o.error) throw new Error(zakrij(`Meta ${pot}: ${o.error?.message ?? r.status}`))
   return o
 }
-
-const cakaj = (ms) => new Promise((r) => setTimeout(r, ms))
 
 async function pripravljen(f, id, env, cakajMs, krat = 30) {
   for (let i = 0; i < krat; i++) {
@@ -246,11 +268,18 @@ async function objaviPlatformo(p, urlji, env, f, cakajMs) {
   }
 }
 
-/** Objavi vse platforme zgodbe; v dry_run ne pokliče ničesar. */
+/**
+ * Objavi vse platforme zgodbe. Le če sta v live strežnik (ZGODBE_NACIN) in kartica (z.nacin);
+ * sicer ne pokliče ničesar (kartica iz live CLI na dry_run strežniku ne objavi).
+ */
 export async function objavi(z, { env, f = fetch, cakajMs = cakaj }) {
   const rezultat = {}
+  const neskladje = z.nacin === 'live' && env.ZGODBE_NACIN !== 'live'
   for (const p of z.platforme) {
-    if (z.nacin !== 'live') { rezultat[p] = { stanje: 'suho' }; continue }
+    if (z.nacin !== 'live' || env.ZGODBE_NACIN !== 'live') {
+      rezultat[p] = neskladje ? { stanje: 'suho', opomba: 'card was made for live, server is in dry run' } : { stanje: 'suho' }
+      continue
+    }
     const urlji = z.okvirji.map((_, i) => `${env.ZGODBE_MEDIJI_URL.replace(/\/$/, '')}/${z.verzija}/${i + 1}.jpg`)
     rezultat[p] = await objaviPlatformo(p, urlji, env, f, cakajMs)
   }
@@ -361,7 +390,11 @@ export async function predlozi({ poti, platforme = ['ig', 'fb'], avtor, env, shr
     if (!obstaja) { await writeFile(cilj, o.bajti); await chmod(cilj, 0o444) }
   }
   const z = await shramba.spremeni((s) => {
-    if (Object.values(s.zgodbe).some((x) => x.verzija === ver)) throw new Error(`različica ${ver} že ima kartico`)
+    // Nova kartica za iste sličice le, ko prejšnja ni odprta in ni nič objavila (ponovitev je nov Lukov klik).
+    const prejsnje = Object.values(s.zgodbe).filter((x) => x.verzija === ver)
+    const ovira = prejsnje.find((x) => ['caka', 'objavljanje', 'objavljeno'].includes(x.stanje) || Object.values(x.objava ?? {}).some((r) => r.stanje === 'ok'))
+    if (ovira) throw new Error(`različica ${ver} že ima kartico ${ovira.id} (${ovira.stanje})`)
+    const prejsnja = prejsnje.at(-1)
     const z = {
       id: `z${zdaj.toISOString().slice(0, 10).replaceAll('-', '')}${randomBytes(3).toString('hex')}`,
       dan: zdaj.toLocaleDateString('sv-SE', { timeZone: 'Europe/Ljubljana' }),
@@ -372,6 +405,7 @@ export async function predlozi({ poti, platforme = ['ig', 'fb'], avtor, env, shr
       okvirji: okvirji.map(({ ime, sha256: h }) => ({ ime, sha256: h })),
       stanje: 'caka',
       ustvarjeno_ob: zdaj.toISOString(),
+      ...(prejsnja && { prejsnja: { id: prejsnja.id, stanje: prejsnja.stanje, objava: prejsnja.objava } }),
     }
     s.zgodbe[z.id] = z
     return z

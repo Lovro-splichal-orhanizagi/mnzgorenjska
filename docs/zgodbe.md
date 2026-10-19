@@ -24,8 +24,15 @@ vetu same, **zgodbe gredo le po Lukovem kliku**.
   `/{stran}/photos` `published=false` → `/{stran}/photo_stories`. Sličice po
   vrsti 1 → 3. Stanje po platformah na isti kartici: `ok`, `suho`, `napaka`
   (pred klicem objave, varno ponoviti), `neznano` (med ali po njem, preveri
-  račun). **Nikoli samodejne ponovitve**; ponovitev je nova kartica.
-- Stanje: JSON `ZGODBE_STANJE` (en proces, zapis prek preimenovanja). Žetoni
+  račun). **Nikoli samodejne ponovitve**; ponovitev je nova kartica (`predlozi`
+  z istimi sličicami gre, ko prejšnja kartica ni odprta in ni nič objavila; nova
+  kartica pokaže prejšnje stanje). Klic Mete ima rok (`META_CAS_MS`, 60 s).
+- Objavi le, če sta v `live` **strežnik in kartica**; kartica iz live CLI na
+  dry_run strežniku ne pošlje ničesar.
+- Meta sličice prenese z `ZGODBE_MEDIJI_URL`, preverjene pa so v
+  `ZGODBE_MEDIJI`: Caddy mora streči **isto mapo** (samo za branje).
+- Stanje: JSON `ZGODBE_STANJE` (zapis prek preimenovanja, med procesi pod
+  zaklepom `ZGODBE_STANJE.lock`, ker `predlozi` piše med tekom strežnika). Žetoni
   le v `.env`, napake brez `access_token` (`zakrij`).
 - Preizkus: `npm run test:zgodbe` (brez omrežja; Discord podpisan lokalno,
   Meta lažna). Živa objava še ni preizkušena od konca do konca.
