@@ -196,16 +196,16 @@ export function sestaviMail(vrsta: 'potrditev' | 'poslano' | 'bon', n: Narocilo,
       odst(esc(b.pozdrav)), odst(esc(b.bonUvod)),
       // bonKoda je "{k} — vrednost {z}, velja do {d}": koda gre v okvir, ostalo pod njo.
       ...kode.map((k) => skatla(`${koda(k.koda)}<br><span style="font-size: 14px; color: #166534;">${
-        esc(b.bonKoda.split(' — ')[1].replace('{z}', e(k.znesek)).replace('{d}', datumBona(k.velja_do, j)))}</span>`)),
+        esc((b.bonKoda.split(' — ')[1] ?? b.bonKoda).replace('{z}', e(k.znesek)).replace('{d}', datumBona(k.velja_do, j)))}</span>`)),
       odst(esc(b.bonPravila), 'margin: 0 0 12px; font-size: 14px; color: #334155;'),
       gumb(esc(shop), esc(b.vTrgovino)),
     ]
   } else if (vrsta === 'poslano') {
-    predogled = v(b.sledilna)
+    predogled = n.sledilna ? v(b.sledilna) : v(b.na_poti)
     glavno = [
       odst(esc(b.pozdrav)), odst(esc(v(b.na_poti))),
-      skatla(`<span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #166534;">${
-        esc(b.sledilna.replace(/:.*$/, ''))}</span><br>${koda(n.sledilna ?? '')}`),
+      ...(n.sledilna ? [skatla(`<span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #166534;">${
+        esc(b.sledilna.replace(/:.*$/, ''))}</span><br>${koda(n.sledilna)}`)] : []),
       gumb('https://www.posta.si/', esc(b.sledi)),
       odst(povezi(b.sledenje), 'margin: 0 0 12px; font-size: 13px; color: #64748b;'),
       naslovHtml,
