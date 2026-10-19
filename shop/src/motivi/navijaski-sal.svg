@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 180" width="1400mm" height="180mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="sal">
+  <rect width="1400" height="180" data-barva="1"/>
+  <rect width="1400" height="14" data-barva="s"/><rect y="14" width="1400" height="5" data-barva="t"/>
+  <rect y="166" width="1400" height="14" data-barva="s"/><rect y="161" width="1400" height="5" data-barva="t"/>
+  <rect x="0" width="18" height="180" data-barva="t"/>
+  <rect x="18" width="18" height="180" data-barva="s"/>
+  <rect x="36" width="18" height="180" data-barva="t"/>
+  <rect x="54" width="18" height="180" data-barva="s"/>
+  <rect x="72" width="18" height="180" data-barva="t"/>
+  <rect x="1382" width="18" height="180" data-barva="t"/>
+  <rect x="1364" width="18" height="180" data-barva="s"/>
+  <rect x="1346" width="18" height="180" data-barva="t"/>
+  <rect x="1328" width="18" height="180" data-barva="s"/>
+  <rect x="1310" width="18" height="180" data-barva="t"/>
+  <path d="M100 30 H1300 M100 150 H1300" fill="none" data-crta="s" stroke-width="1.2" stroke-dasharray="10 6"/>
+  <text x="310" y="118" font-size="92" letter-spacing="3" data-polje="ekipa" data-velike data-sirina="370" data-vrstice="2" data-sredina data-barva="t" data-crta="t" stroke-width="10">FC PONEDELJEK ZJUTRAJ</text>
+  <text x="310" y="118" font-size="92" letter-spacing="3" data-polje="ekipa" data-velike data-sirina="370" data-vrstice="2" data-sredina data-barva="s" data-crta="t" stroke-width="4" paint-order="stroke">FC PONEDELJEK ZJUTRAJ</text>
+  <text x="1090" y="118" font-size="92" letter-spacing="3" data-polje="ekipa" data-velike data-sirina="370" data-vrstice="2" data-sredina data-barva="t" data-crta="t" stroke-width="10">FC PONEDELJEK ZJUTRAJ</text>
+  <text x="1090" y="118" font-size="92" letter-spacing="3" data-polje="ekipa" data-velike data-sirina="370" data-vrstice="2" data-sredina data-barva="s" data-crta="t" stroke-width="4" paint-order="stroke">FC PONEDELJEK ZJUTRAJ</text>
+  <rect x="545" y="44" width="310" height="92" rx="46" data-barva="t" data-crta="s" stroke-width="3"/>
+  <text x="700" y="108" font-size="44" letter-spacing="2" data-polje="slogan" data-velike data-sirina="260" data-vrstice="2" data-sredina data-barva="s">DO KONCA!</text>
+  <path d="M527.00 79.00 L524.28 86.26 L516.54 86.60 L522.61 91.43 L520.53 98.90 L527.00 94.62 L533.47 98.90 L531.39 91.43 L537.46 86.60 L529.72 86.26Z" data-barva="s"/><path d="M873.00 79.00 L870.28 86.26 L862.54 86.60 L868.61 91.43 L866.53 98.90 L873.00 94.62 L879.47 98.90 L877.39 91.43 L883.46 86.60 L875.72 86.26Z" data-barva="s"/>
+</svg>
