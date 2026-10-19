@@ -1937,9 +1937,9 @@ export type Database = {
       }
       matches: {
         Row: {
-          away_goals: number
+          away_goals: number | null
           away_team_id: number
-          home_goals: number
+          home_goals: number | null
           home_team_id: number
           id: number
           import_warnings: string[]
@@ -1957,9 +1957,9 @@ export type Database = {
         }
         ComputedFields: never
         Insert: {
-          away_goals?: number
+          away_goals?: number | null
           away_team_id: number
-          home_goals?: number
+          home_goals?: number | null
           home_team_id: number
           id?: never
           import_warnings?: string[]
@@ -1976,9 +1976,9 @@ export type Database = {
           zapisnik_id?: string | null
         }
         Update: {
-          away_goals?: number
+          away_goals?: number | null
           away_team_id?: number
-          home_goals?: number
+          home_goals?: number | null
           home_team_id?: number
           id?: never
           import_warnings?: string[]
@@ -8055,6 +8055,43 @@ export type Database = {
         Returns: Json
       }
       dan_kroga: { Args: { p_round_id: number }; Returns: string }
+      fcf_historical_six_apply: {
+        Args: {
+          p_before_image_text: string
+          p_before_sha: string
+          p_main_sha: string
+          p_policy_hashes: Json
+        }
+        Returns: Json
+      }
+      fcf_historical_six_prepare: {
+        Args: { p_main_sha: string; p_policy_hashes: Json }
+        Returns: Json
+      }
+      fcf_historical_six_restore: {
+        Args: { p_before_sha: string }
+        Returns: Json
+      }
+      fcf_six_current_target_check: {
+        Args: { p_activate?: boolean; p_rollout_text: string; p_sha256: string }
+        Returns: Json
+      }
+      fcf_six_current_target_import: {
+        Args: { p_rollout_text: string; p_sha256: string }
+        Returns: Json
+      }
+      fcf_six_current_target_inventory: {
+        Args: { p_privacy_keys: string[]; p_slug: string }
+        Returns: Json
+      }
+      fcf_six_current_target_pricing: {
+        Args: { p_slug: string }
+        Returns: Json
+      }
+      fcf_six_current_target_receipt: {
+        Args: { p_slug: string }
+        Returns: Json
+      }
       get_fcf_current_target_inventory: {
         Args: { p_privacy_keys: string[]; p_slug: string }
         Returns: Json
@@ -8064,6 +8101,10 @@ export type Database = {
         Returns: Json
       }
       get_hns_women_import_context: {
+        Args: { p_competition_id: number }
+        Returns: Json
+      }
+      get_installed_fcf_six_statistics_markers: {
         Args: { p_competition_id: number }
         Returns: Json
       }
