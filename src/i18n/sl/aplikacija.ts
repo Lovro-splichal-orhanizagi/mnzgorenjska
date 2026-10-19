@@ -76,6 +76,7 @@ export const aplikacija = {
     mojProfil: 'Moj profil',
     povabi: 'Povabi prijatelja',
     pomoc: 'Pomoč',
+    trgovina: 'Trgovina',
     odjava: 'Odjava',
     prijava: 'Prijava',
     zacni: 'Začni brezplačno',
