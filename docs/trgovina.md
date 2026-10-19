@@ -399,12 +399,12 @@ MB WAY, Satispay izklopljeni), javni podatki (slff.eu, info@slff.eu, pogoji
 koncu obdobja, brez menjave paketa) in webhook `slff-stripe-webhook` na
 `api.slff.eu/functions/v1/stripe-webhook` (10 dogodkov kot v testnem).
 
-Preklop na živo (lastnik, ključev ne vidi nihče drug):
+Preklop na živo (lastnik, ključev ne vidi nihče drug; narejeno 19. 10. 2026):
 
 1. Dashboard → Developers → API keys: živi `sk_live_…` v `/opt/supabase/.env`
    kot `STRIPE_SECRET_KEY`; Workbench → Webhooks → `slff-stripe-webhook` →
    Signing secret v `STRIPE_WEBHOOK_SECRET`.
-2. `cd /opt/supabase && docker compose restart functions`.
+2. `cd /opt/supabase && docker compose up -d functions` (ključ se prebere ob ustvarjanju kontejnerja; `restart` ga ne).
 3. Katalog: `ssh slff 'set -a; . /opt/supabase/.env; bash -s' < scripts/stripe-trgovina.sh`.
 4. En pravi nakup v vsaki aplikaciji; testne naročnine in kupci (`cus_…` iz
    testnega načina) v živem ne obstajajo.
