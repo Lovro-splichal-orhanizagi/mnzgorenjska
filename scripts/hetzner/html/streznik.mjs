@@ -247,7 +247,10 @@ async function tekma(id, { rest, lige, b }) {
   if (!liga) return ni(b().t('tekme.tekma.naslov'))
   const j = b(liga)
   const url = kanonicni(`/match/${id}`, brezPrivzete(liga))
-  const izid = `${m.home_name} ${m.home_goals} : ${m.away_goals} ${m.away_name}`
+  const rezultatPoznan = m.home_goals != null && m.away_goals != null
+  const izid = rezultatPoznan
+    ? `${m.home_name} ${m.home_goals} : ${m.away_goals} ${m.away_name}`
+    : `${m.home_name} — ${m.away_name}`
   // "Bor Repič 12', 45'": strelec enkrat, minute po vrsti.
   const poStrelcu = new Map()
   for (const g of goli.filter((g) => g.scorer)) {
@@ -282,7 +285,7 @@ async function tekma(id, { rest, lige, b }) {
       drobtine(liga, [{ ime: j.t('tekme.rezultati.naslov'), url: kanonicni('/results', brezPrivzete(liga)) }, { ime: `${m.home_name} : ${m.away_name}`, url }]),
     ],
     vsebina: ovij(
-      `<h1>${povezava(zLigo(`/club/${m.home_team_id}`, liga), m.home_name)} ${esc(m.home_goals)} : ${esc(m.away_goals)} ${povezava(zLigo(`/club/${m.away_team_id}`, liga), m.away_name)}</h1>` +
+      `<h1>${povezava(zLigo(`/club/${m.home_team_id}`, liga), m.home_name)} ${rezultatPoznan ? `${esc(m.home_goals)} : ${esc(m.away_goals)}` : '—'} ${povezava(zLigo(`/club/${m.away_team_id}`, liga), m.away_name)}</h1>` +
         `<p>${[povezava(zLigo('/results', liga), liga.name), dan && esc(dan)].filter(Boolean).join(' · ')}</p>` +
         (strelci.length ? `<p>${esc(j.t('tekme.tabela.strelci'))}: ${esc(strelci.join(', '))}</p>` : ''),
     ),
@@ -316,7 +319,10 @@ async function tabela(liga, { rest, j, url }) {
 
 async function rezultati(liga, { rest, j, url }) {
   const tekme = await rest(`match_assist_status?competition_id=eq.${liga.id}&order=played_on.desc,match_id&limit=30&select=match_id,season,played_on,home_name,away_name,home_goals,away_goals`)
-  const zadnje = tekme.slice(0, 3).map((m) => `${m.home_name} ${m.home_goals} : ${m.away_goals} ${m.away_name}`)
+  const izidTekme = (m) => m.home_goals == null || m.away_goals == null
+    ? `${m.home_name} — ${m.away_name}`
+    : `${m.home_name} ${m.home_goals} : ${m.away_goals} ${m.away_name}`
+  const zadnje = tekme.slice(0, 3).map(izidTekme)
   return {
     naslov: `${zDrzavo(liga)} · ${j.t('tekme.rezultati.naslov')}`,
     opis: zadnje.length
@@ -325,7 +331,7 @@ async function rezultati(liga, { rest, j, url }) {
     drobtina: { ime: j.t('tekme.rezultati.naslov'), url },
     vsebina:
       `<h1>${esc(j.t('tekme.rezultati.naslov'))} — ${esc(liga.name)}</h1><ul>` +
-      tekme.map((m) => `<li>${m.played_on ? `${esc(j.datum(m.played_on))} · ` : ''}${povezava(zLigo(`/match/${m.match_id}`, liga), `${m.home_name} ${m.home_goals} : ${m.away_goals} ${m.away_name}`)}</li>`).join('') +
+      tekme.map((m) => `<li>${m.played_on ? `${esc(j.datum(m.played_on))} · ` : ''}${povezava(zLigo(`/match/${m.match_id}`, liga), izidTekme(m))}</li>`).join('') +
       '</ul>',
   }
 }

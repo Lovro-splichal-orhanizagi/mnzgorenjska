@@ -163,6 +163,32 @@ for (const pot of ['/player/9', '/player/abc']) {
   assert.match(html, /Strelci: Janez Novak 12&#39;/)
 }
 
+// Unknown results stay unknown in match and results SSR, while scoreless and
+// ordinary known results retain their numeric zeroes and values.
+{
+  const matchKey = 'match_assist_status?match_id=eq.5'
+  const resultsKey = 'match_assist_status?competition_id=eq.1'
+  const originalMatch = PODATKI[matchKey][0]
+  const originalResults = PODATKI[resultsKey][0]
+  try {
+    for (const [home, away, expected] of [[null, null, '—'], [0, 0, '0 : 0'], [3, 1, '3 : 1']]) {
+      PODATKI[matchKey] = [{ ...originalMatch, home_goals: home, away_goals: away }]
+      PODATKI[resultsKey] = [{ ...originalResults, home_goals: home, away_goals: away }]
+      const { s: matchPage, html } = await izris('/match/5', null)
+      assert.match(matchPage.opis, home == null ? /Šenčur — Bled/ : new RegExp(`Šenčur ${home} : ${away} Bled`))
+      assert.match(html, home == null ? /Šenčur<\/a> — <a/ : new RegExp(`Šenčur<\\/a> ${home} : ${away} <a`))
+      assert.doesNotMatch(html, /null\s*:/)
+      const resultsPage = await stran('/results', null, { rest, lige: LIGE, besede: BESEDE })
+      assert.ok(resultsPage.vsebina.includes(home == null ? 'Šenčur — Bled' : `Šenčur ${home} : ${away} Bled`))
+      assert.ok(resultsPage.opis.includes(home == null ? 'Šenčur — Bled' : `Šenčur ${home} : ${away} Bled`))
+      assert.ok(resultsPage.vsebina.includes(expected))
+    }
+  } finally {
+    PODATKI[matchKey] = [originalMatch]
+    PODATKI[resultsKey] = [originalResults]
+  }
+}
+
 // Lestvica: vmesnik ?t=clani iz naslova zbriše, zato ga kanonični nima; druga liga ga ima.
 {
   const { s, html } = await izris('/table', 'clani')

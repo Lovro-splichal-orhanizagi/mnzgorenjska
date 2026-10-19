@@ -406,7 +406,9 @@ export default function Glasovanje() {
                   {tk.home_name} – {tk.away_name}
                 </span>
                 <span className="text-sm font-black tabular-nums">
-                  {tk.home_goals}:{tk.away_goals}
+                  {tk.home_goals == null || tk.away_goals == null
+                    ? '—'
+                    : `${tk.home_goals}:${tk.away_goals}`}
                 </span>
                 {tk.statistics_status === 'unavailable_historical' ? (
                   <span className="text-xs text-amber-200">{t('tekme.statistika.kratko')}</span>
@@ -433,7 +435,9 @@ export default function Glasovanje() {
             </span>
             <Grb ime={tekma.home_name} kratko={tekma.home_short} logo={tekma.home_logo} velikost={28} />
             <span className="text-2xl font-black tabular-nums">
-              {tekma.home_goals}:{tekma.away_goals}
+              {tekma.home_goals == null || tekma.away_goals == null
+                ? '—'
+                : `${tekma.home_goals}:${tekma.away_goals}`}
             </span>
             <Grb ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} velikost={28} />
             <span className="min-w-0 flex-1 text-left text-sm font-semibold sm:text-base">
@@ -449,7 +453,7 @@ export default function Glasovanje() {
         </div>
       )}
 
-      {tekma?.statistics_status === 'unavailable_historical' ? <NedosegljivaStatistika /> : goli.length === 0 ? (
+      {tekma?.statistics_status === 'unavailable_historical' ? <NedosegljivaStatistika resultKnown={tekma.home_goals != null && tekma.away_goals != null} /> : goli.length === 0 ? (
         <p className="text-sm text-slate-400">{t('tekme.glasovanje.niGolov')}</p>
       ) : (
         <>

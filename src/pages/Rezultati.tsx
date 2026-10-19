@@ -212,7 +212,9 @@ export default function Rezultati() {
                     to={`/match/${tekma.match_id}`}
                     className="w-12 shrink-0 text-center font-black tabular-nums after:absolute after:inset-0 after:content-['']"
                   >
-                    {tekma.home_goals}:{tekma.away_goals}
+                    {tekma.home_goals == null || tekma.away_goals == null
+                      ? '—'
+                      : `${tekma.home_goals}:${tekma.away_goals}`}
                   </Link>
                   <Grb ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} velikost={22} />
                   <ImeKluba id={tekma.away_team_id} ime={tekma.away_name} />
