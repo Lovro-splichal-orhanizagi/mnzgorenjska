@@ -1,10 +1,11 @@
-// Bounded existing-data activation. No source requests, imports, repricing or SQL.
+// Existing-data preview/activation, with an explicit bounded EPS catch-up mode.
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { readFileSync, mkdirSync, writeFileSync, appendFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost.ts'
+import { runRefreshBatch, validateRefreshSelection } from './refresh-existing-leagues.mjs'
 
 const registryPath = new URL('./policies/existing-league-candidates-20261018.json', import.meta.url)
 export function validateSelection(registry, slugs) {
@@ -120,11 +121,12 @@ export async function runBatch({candidates,transport,apply=false,now=()=>new Dat
 }
 async function main() {
   const args=process.argv.slice(2);const mode=args.shift()
-  if(!['preview','apply'].includes(mode))throw Error('Use preview|apply --lige <explicit,candidates> --expected-sha <40hex> [--approved-sha256 <digest>] [--output <directory>]')
+  if(!['preview','apply','refresh'].includes(mode))throw Error('Use preview|apply|refresh --lige <explicit,candidates> --expected-sha <40hex> [--approved-sha256 <digest>] [--output <directory>]')
   const options={}
   while(args.length) {const flag=args.shift();if(!['--lige','--expected-sha','--approved-sha256','--output'].includes(flag)||!args.length)throw Error(`Invalid option: ${flag}`);options[flag]=args.shift()}
   const registry=JSON.parse(readFileSync(registryPath,'utf8'))
   const candidates=validateSelection(registry,(options['--lige']??'').split(',').map(s=>s.trim()).filter(Boolean))
+  if(mode==='refresh')validateRefreshSelection(candidates)
   const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()
   if(!/^[a-f0-9]{40}$/.test(options['--expected-sha']??'')||options['--expected-sha']!==sha)throw Error('Exact checked-out --expected-sha is required.')
   const sourceContracts=Object.fromEntries([...new Set(candidates.map(c=>c.source))].sort().map(s=>[s,registry.source_contracts[s]]))
@@ -133,13 +135,27 @@ async function main() {
   writeFileSync(resolve(output,'scope.json'),JSON.stringify({sha,approval_sha256:digest,candidates,source_contracts:sourceContracts},null,2)+'\n')
   console.log(`Scope approval SHA256: ${digest}`)
   if(process.env.GITHUB_ACTIONS!=='true'||process.env.GITHUB_REF!=='refs/heads/main'||process.env.GITHUB_SHA!==sha)throw Error('Preview/apply require GitHub Actions on exact main commit.')
-  if(mode==='apply') {
+  if(mode!=='preview') {
     if(options['--approved-sha256']!==digest)throw Error('Apply requires exact reviewed scope SHA256 from preview on this commit.')
   }
   const url=process.env.SUPABASE_URL;const key=process.env.SUPABASE_SERVICE_ROLE_KEY
   if(!url||!key)throw Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required; no local .env loading.')
   const reportPath=resolve(output,'results.jsonl');writeFileSync(reportPath,'')
-  const results=await runBatch({candidates,transport:createTransport({url,key}),apply:mode==='apply',onResult:r=>{appendFileSync(reportPath,JSON.stringify(r)+'\n');console.log(`${r.status}: ${r.slug}${r.reason?` — ${r.reason}`:''}`)}})
+  const transport=createTransport({url,key})
+  let refresh=[]
+  if(mode==='refresh') {
+    const path=resolve(output,'refresh.jsonl');writeFileSync(path,'')
+    const progressPath=resolve(output,'refresh-progress.jsonl');writeFileSync(progressPath,'')
+    refresh=await runRefreshBatch({candidates,transport,onProgress:r=>appendFileSync(progressPath,JSON.stringify(r)+'\n'),onResult:r=>{appendFileSync(path,JSON.stringify(r)+'\n');console.log(`${r.status}: ${r.slug}${r.reason?` — ${r.reason}`:''}`)}})
+  }
+  const results=await runBatch({candidates,transport,apply:mode==='apply',onResult:result=>{
+    const r=refresh.find(r=>r.slug===result.slug)
+    if(r) {
+      result.refresh=r
+      if(r.status!=='REFRESHED') {result.readiness_status=result.status;result.status='HOLD';result.reason=r.reason}
+    }
+    appendFileSync(reportPath,JSON.stringify(result)+'\n');console.log(`${result.status}: ${result.slug}${result.reason?` — ${result.reason}`:''}`)
+  }})
   writeFileSync(resolve(output,'summary.json'),JSON.stringify({sha,approval_sha256:digest,mode,counts:results.reduce((a,r)=>(a[r.status]=(a[r.status]??0)+1,a),{})},null,2)+'\n')
   if(results.some(r=>r.status==='HOLD'))process.exitCode=1
 }

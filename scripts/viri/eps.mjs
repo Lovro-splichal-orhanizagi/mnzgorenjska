@@ -668,7 +668,7 @@ const vir = {
     return razporedVUvoz(razporedStrani(html), razberiKodo(koda).domena)
   },
 
-  async zapisniki(koda, prenesi) {
+  async zapisniki(koda, prenesi, { preskoci = new Set(), samoZapisnik = null } = {}) {
     const { domena } = razberiKodo(koda)
     const razpored = razporedStrani(await beri(prenesi, naslovRazporeda(koda), imeRazporeda(koda), true))
     const mreza = tekmeMreze(await beri(prenesi, naslovMreze(koda), imeMreze(koda), true))
@@ -679,6 +679,8 @@ const vir = {
     for (const t of [...tekme.values()].sort((a, b) => a.gameId - b.gameId)) {
       // Mreža ima povezavo tudi na neodigrano tekmo (brez izida) — ta še nima zapisnika.
       if (t.kontumacija || !t.izid) continue
+      const id = sifraZapisnika(domena, t.gameId)
+      if (preskoci.has(id) || (samoZapisnik && id !== String(samoZapisnik))) continue
       const url = naslovTekme(domena, t.gameId)
       const ime = imeTekme(domena, t.gameId)
       // Shranjena stran velja, če je tekma starejša od tedna in zapisnik poln.

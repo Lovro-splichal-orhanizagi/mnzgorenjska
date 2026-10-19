@@ -22,6 +22,7 @@ import {loadHistoricalStatisticsImportContext,assertHistoricalReportImportable} 
 import { zaprtje } from './odtis-kode.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { vseVrstice } from './strani.mjs'
+import { requireMissingReportImportScope, completedReportIds } from './missing-report-import.mjs'
 import { prenesiSPonovitvami, fetchZaBazo } from './prenos.mjs'
 import { dodajStrelceSKlopi } from './zapisnik.mjs'
 import { imeHash, regHash } from './anonimizacija.mjs'
@@ -113,6 +114,8 @@ if (virIme) console.log(`Vir povožen: ${virIme}`)
 const liga = arg('liga', sifraLige(tekmovanje, '1502'))
 // Arhiv (prejšnja sezona) igralca ne vrača med aktivne; nastop v tekoči sezoni ga.
 const tekocaSezona = liga === sifraLige(tekmovanje, '1502')
+const samoManjkajoce = Boolean(arg('samo-manjkajoce'))
+if (samoManjkajoce) requireMissingReportImportScope({competition:tekmovanje,leagueCode:liga,sourceOverride:virIme,singleReport:arg('zapisnik')})
 console.log(`Tekmovanje: ${tekmovanje.name} (liga ${liga})`)
 
 // Optional provider preflight runs before cleanup/cache writes or source traversal.
@@ -686,14 +689,17 @@ if (pocisti) {
 // reveal that its missing attribution has since been corrected at the source.
 const svezeDni = arg('sveze') ? Number(arg('sveze')) : null
 const preskoci = new Set(), sveziZapisniki = new Set()
-if (svezeDni != null && !samoZapisnik) {
+if ((samoManjkajoce || svezeDni != null) && !samoZapisnik) {
   const meja = new Date(Date.now() - svezeDni * 86400000).toISOString().slice(0, 10)
-  const stare = await vseVrstice((od, do_) => db.from('matches')
-    .select('zapisnik_id, rounds!inner(competition_id, played_on)')
-    .eq('rounds.competition_id', tekmovanje.id).lt('rounds.played_on', meja)
+  const stare = await vseVrstice((od, do_) => {
+    let query = db.from('matches')
+    .select('zapisnik_id, imported_at, rounds!inner(competition_id, played_on)')
+    .eq('rounds.competition_id', tekmovanje.id)
     .not('imported_at', 'is', null).not('zapisnik_id', 'is', null)
-    .order('id').range(od, do_))
-  for (const m of stare) preskoci.add(String(m.zapisnik_id))
+    if (!samoManjkajoce) query = query.lt('rounds.played_on', meja)
+    return query.order('id').range(od, do_)
+  })
+  for (const id of completedReportIds(stare)) preskoci.add(id)
 }
 if (vir.ime === 'dfb' && !samoZapisnik) {
   const meja = new Date(Date.now() - (svezeDni ?? 7) * 86400000).toISOString().slice(0, 10)
@@ -707,7 +713,7 @@ if (vir.ime === 'dfb' && !samoZapisnik) {
 console.log(`Berem zapisnike vira ${vir.ime} (liga ${liga})`)
 let zapisniki = preberiPosamezniZapisnik
   ? await preberiPosamezniZapisnik(prenesi)
-  : vir.ime === 'dfb'
+  : ['dfb','eps'].includes(vir.ime)
     ? await vir.zapisniki(liga, prenesi, { samoZapisnik, preskoci, sveziZapisniki })
     : await vir.zapisniki(liga, prenesi)
 // Validate the complete loaded batch before deriving or writing any individual rows.
@@ -715,10 +721,10 @@ for(const report of zapisniki)assertHistoricalReportImportable({competition:tekm
 // Sources that do not implement traversal filtering retain the generic filter.
 if (samoZapisnik) zapisniki = zapisniki.filter((x) => String(x.id) === String(samoZapisnik))
 if (omeji) zapisniki = zapisniki.slice(0, omeji)
-if (svezeDni != null && !samoZapisnik) {
+if ((samoManjkajoce || svezeDni != null) && !samoZapisnik) {
   const prej = zapisniki.length
   zapisniki = zapisniki.filter((x) => !preskoci.has(String(x.id)))
-  console.log(`Sveže (${svezeDni} dni): ${zapisniki.length} od ${prej} zapisnikov; ${prej - zapisniki.length} starejših že uvoženih.`)
+  console.log(`${samoManjkajoce ? 'Samo manjkajoči' : `Sveže (${svezeDni} dni)`}: ${zapisniki.length} od ${prej} zapisnikov; ${prej - zapisniki.length} že uvoženih.`)
 }
 console.log(`Najdenih zapisnikov: ${zapisniki.length}`)
 

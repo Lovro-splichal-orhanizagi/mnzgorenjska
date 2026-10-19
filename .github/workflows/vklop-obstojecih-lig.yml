@@ -1,5 +1,5 @@
 name: Vklop obstojecih uvozenih lig
-run-name: Obstojece lige ${{ inputs.activate && 'vklop' || 'predogled' }} ${{ inputs.lige }}
+run-name: Obstojece lige ${{ inputs.refresh && 'osvezitev' || inputs.activate && 'vklop' || 'predogled' }} ${{ inputs.lige }}
 on:
   workflow_dispatch:
     inputs:
@@ -13,6 +13,10 @@ on:
         required: true
       activate:
         description: Vklopi le lige, ki opravijo sveze skupne preverbe
+        type: boolean
+        default: false
+      refresh:
+        description: Osvezi razpored in samo manjkajoce zapisnike 1–5 neaktivnih EPS lig; nato predogled brez vklopa
         type: boolean
         default: false
       approved_sha256:
@@ -29,11 +33,12 @@ jobs:
   existing:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: ${{ inputs.refresh && 360 || 180 }}
     env:
       LIGE: ${{ inputs.lige }}
       EXPECTED_SHA: ${{ inputs.expected_sha }}
       ACTIVATE: ${{ inputs.activate }}
+      REFRESH: ${{ inputs.refresh }}
       APPROVED_SHA: ${{ inputs.approved_sha256 }}
     steps:
       - uses: actions/checkout@v4
@@ -42,10 +47,15 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
+      - name: Preveri nacin
+        run: |
+          if [ "$ACTIVATE" = true ] && [ "$REFRESH" = true ]; then
+            echo 'Refresh and activation are separate operations.'; exit 1
+          fi
       - name: Ciljni preizkusi brez omrezja
-        run: node --test scripts/test-vklop-obstojecih-lig.mjs
+        run: node --test scripts/test-vklop-obstojecih-lig.mjs scripts/test-refresh-existing-leagues.mjs scripts/test-missing-report-import.mjs scripts/test-eps-missing-reports.mjs
       - name: Pred vklopom pocakaj na starejse pisce vsake izbrane lige
-        if: inputs.activate
+        if: inputs.activate || inputs.refresh
         env:
           GH_TOKEN: ${{ github.token }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -63,6 +73,16 @@ jobs:
           while IFS= read -r slug; do
             node scripts/cakaj-na-uvoze.mjs --popravek --tekmovanje "$slug" --najvec 120
           done < release/obstojece-lige/selected-slugs.txt
+      - name: Obnovi predpomnilnik EPS
+        if: inputs.refresh
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-GR-kandidati-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            zapisniki-GR-kandidati-
+            zapisniki-GR-
+            zapisniki-gr-
       - name: Sveze preverbe, opcijski servisni vklop in ponovno branje
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -71,9 +91,16 @@ jobs:
           set -euo pipefail
           mode=preview
           if [ "$ACTIVATE" = true ]; then mode=apply; fi
+          if [ "$REFRESH" = true ]; then mode=refresh; fi
           args=("$mode" --lige "$LIGE" --expected-sha "$EXPECTED_SHA" --output release/obstojece-lige)
           if [ -n "$APPROVED_SHA" ]; then args+=(--approved-sha256 "$APPROVED_SHA"); fi
           node scripts/vklopi-obstojece-lige.mjs "${args[@]}"
+      - name: Shrani predpomnilnik EPS tudi ob delnem izidu
+        if: always() && inputs.refresh
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-GR-kandidati-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Obseg, blokade in delni rezultati
         if: always()
         uses: actions/upload-artifact@v4
