@@ -1,10 +1,10 @@
-// Bounded catch-up of existing inactive EPS leagues; never activates or reprices.
+// Bounded catch-up of existing inactive EPS or HLF leagues; never activates or reprices.
 import {spawn} from 'node:child_process'
 import {requireMissingReportImportScope} from './missing-report-import.mjs'
 
 export function validateRefreshSelection(candidates) {
- if(!Array.isArray(candidates)||candidates.length<1||candidates.length>5||new Set(candidates.map(c=>c.slug)).size!==candidates.length||candidates.some(c=>c.source!=='eps'))
-  throw Error('Refresh requires one to five distinct existing EPS candidates.')
+ if(!Array.isArray(candidates)||candidates.length<1||candidates.length>5||new Set(candidates.map(c=>c.slug)).size!==candidates.length||candidates.some(c=>!['eps','hlf'].includes(c.source))||new Set(candidates.map(c=>c.source)).size!==1)
+  throw Error('Refresh requires one to five distinct existing EPS or HLF candidates from one source.')
  return candidates
 }
 function requireCandidate(candidate,actual) {
@@ -24,7 +24,7 @@ export async function runRefreshBatch({candidates,transport,runCommand=runImport
  for(const candidate of candidates)requireCandidate(candidate,await transport.competition(candidate))
  const stopped=new Set(),results=[]
  for(const candidate of candidates) {
-  const domain=candidate.source_league_code.split(':')[0]
+  const domain=candidate.source==='hlf'?'hailafotbal.ro':candidate.source_league_code.split(':')[0]
   const result={slug:candidate.slug,checked_at:now().toISOString(),status:'HOLD',steps:[]}
   if(stopped.has(domain)) {result.status='SKIPPED_SOURCE_STOP';result.reason='Provider domain stopped earlier in this batch.'}
   else try {

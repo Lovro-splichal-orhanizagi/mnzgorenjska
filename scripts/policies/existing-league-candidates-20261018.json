@@ -25,6 +25,10 @@
     "dbu": {
       "document": "docs/viri/danska.md",
       "permission": "Lovro written permission October 2026; copy not yet in info archive. No protected/robots-disallowed access. Stop on request or technical denial."
+    },
+    "hlf": {
+      "document": "docs/viri/romunija.md",
+      "permission": "Owner-approved public browser visitor route (10 October 2026). Use only the existing hailafotbal.ro adapter; no bundled credentials or direct Datalake API. Stop on withdrawal, login, challenge, CAPTCHA or HTTP 401/403/429. Current-season-only pricing route; no archive exists."
     }
   },
   "candidates": [
@@ -285,6 +289,48 @@
       "slug": "sk-sk-u19",
       "source": "sportnet",
       "source_league_code": "ondavsky-futbalovy-zvaz.futbalnet.sk/6a1d3d3a44ff24612e4977db"
+    },
+    {
+      "id": 496,
+      "slug": "ro-liga3-s2",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-2"
+    },
+    {
+      "id": 495,
+      "slug": "ro-liga3-s3",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-3"
+    },
+    {
+      "id": 494,
+      "slug": "ro-liga3-s4",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-4"
+    },
+    {
+      "id": 493,
+      "slug": "ro-liga3-s5",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-5"
+    },
+    {
+      "id": 492,
+      "slug": "ro-liga3-s6",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-6"
+    },
+    {
+      "id": 491,
+      "slug": "ro-liga3-s7",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-7"
+    },
+    {
+      "id": 490,
+      "slug": "ro-liga3-s8",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-8"
     }
   ]
 }

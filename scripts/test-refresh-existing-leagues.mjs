@@ -6,6 +6,25 @@ const registry=JSON.parse(readFileSync(new URL('./policies/existing-league-candi
 const candidates=registry.candidates.filter(c=>c.source==='eps')
 const one=candidates[0],same=candidates.find(c=>c.slug!==one.slug&&c.source_league_code.split(':')[0]===one.source_league_code.split(':')[0]),different=candidates.find(c=>c.source_league_code.split(':')[0]!==one.source_league_code.split(':')[0])
 const competition=async c=>({...c,active:false,source_policy:null,date_only_deadline_policy:null})
+const ro={id:496,slug:'ro-liga3-s2',source:'hlf',source_league_code:'national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-2'}
+const roOther={...ro,id:495,slug:'ro-liga3-s3',source_league_code:'national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-3'}
+test('HLF is bounded to five leagues and never mixes providers with EPS in one refresh',()=>{
+ assert.equal(validateRefreshSelection([ro,roOther]).length,2)
+ assert.throws(()=>validateRefreshSelection([one,ro]))
+ assert.throws(()=>validateRefreshSelection(Array.from({length:6},(_,i)=>({...ro,id:i,slug:`ro-test-${i}`}))))
+})
+test('HLF catch-up runs ordinary schedule then missing reports for each selected league',async()=>{
+ const calls=[]
+ const results=await runRefreshBatch({candidates:[ro,roOther],transport:{competition},runCommand:async(file,args)=>{calls.push([file,args]);return 0}})
+ assert.deepEqual(results.map(r=>r.status),['REFRESHED','REFRESHED'])
+ assert.deepEqual(calls,[ro,roOther].flatMap(c=>[['scripts/uvoz-razporeda.mjs',['--tekmovanje',c.slug,'--pisi']],['scripts/uvoz-zapisnikov.mjs',['--tekmovanje',c.slug,'--samo-manjkajoce']]]))
+})
+test('one HLF refusal stops the common provider across distinct league paths without retry',async()=>{
+ let calls=0
+ const results=await runRefreshBatch({candidates:[ro,roOther],transport:{competition},runCommand:async()=>{calls++;return 4}})
+ assert.equal(calls,1)
+ assert.deepEqual(results.map(r=>r.status),['HOLD','SKIPPED_SOURCE_STOP'])
+})
 test('refresh selection is bounded to one to five exact existing EPS candidates',()=>{
  assert.equal(validateRefreshSelection([one]).length,1)
  for(const selection of [[],candidates.slice(0,6),[one,one],[{...one,source:'pzpn'}]])assert.throws(()=>validateRefreshSelection(selection))

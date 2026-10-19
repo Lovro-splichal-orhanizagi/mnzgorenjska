@@ -32,6 +32,13 @@ test('selection is explicit and rejects bespoke routes, unknown leagues and dupl
   assert.equal(validateSelection(registry,[candidate.slug]).length,1)
   for(const slugs of [[],['de-regionalliga-nord'],['es-foo'],['hr-foo'],['unknown'],[candidate.slug,candidate.slug]]) assert.throws(()=>validateSelection(registry,slugs))
 })
+test('HLF registry binds only the seven reviewed production tuples and its public-browser contract',()=>{
+  const hlf=registry.candidates.filter(c=>c.source==='hlf')
+  assert.deepEqual(hlf.map(c=>[c.id,c.slug,c.source_league_code]),Array.from({length:7},(_,i)=>[496-i,`ro-liga3-s${i+2}`,`national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-${i+2}`]))
+  assert.equal(validateSelection(registry,hlf.map(c=>c.slug)).length,7)
+  assert.throws(()=>validateSelection(registry,['ro-liga3-s1']))
+  assert.equal(registry.source_contracts.hlf.document,'docs/viri/romunija.md')
+})
 test('scope digest binds exact commit and selected candidate tuple',()=>{
   const a=approvalDigest('a'.repeat(40),[candidate]);assert.match(a,/^[a-f0-9]{64}$/)
   assert.notEqual(a,approvalDigest('b'.repeat(40),[candidate]))

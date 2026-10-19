@@ -12,6 +12,12 @@ test('missing-only import is limited to inactive current-season EPS without over
 test('incomplete or missing reports are never included in the completed skip set',()=>{
  assert.deepEqual([...completedReportIds([{zapisnik_id:'gr2-1',imported_at:'2026-10-10'},{zapisnik_id:'gr2-2',imported_at:null},{zapisnik_id:null,imported_at:'2026-10-10'},{zapisnik_id:'gr2-1',imported_at:'2026-10-10'}])],['gr2-1'])
 })
+test('inactive current HLF catch-up uses the same no-override and no-custom-policy boundary',()=>{
+ const ro={...competition,source:'hlf',source_league_code:'national/fotbal/2026-2027/liga-3/regular/seria-2'}
+ assert.doesNotThrow(()=>requireMissingReportImportScope({competition:ro,leagueCode:ro.source_league_code}))
+ for(const patch of [{competition:{...ro,active:true}},{competition:{...ro,source_policy:'pending'}},{competition:{...ro,date_only_deadline_policy:'custom'}},{leagueCode:'archive'},{sourceOverride:'hlf'},{singleReport:'one'}])
+  assert.throws(()=>requireMissingReportImportScope({competition:ro,leagueCode:ro.source_league_code,...patch}))
+})
 
 test('actual importer passes every completed ID to EPS before traversal while incomplete IDs remain eligible',async()=>{
  const {readFileSync}=await import('node:fs'),{runInNewContext}=await import('node:vm')

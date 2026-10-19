@@ -774,7 +774,7 @@ const vir = {
   },
 
   /** Zapisniki vseh odigranih tekem. */
-  async zapisniki(koda) {
+  async zapisniki(koda, _prenesi, { preskoci = new Set(), samoZapisnik = null } = {}) {
     const { judet } = razbijKodo(koda)
     const sezona = sezonaIzKode(koda)
     const danes = Date.now()
@@ -783,6 +783,8 @@ const vir = {
       for (const { stevilka, odgovor } of await vsiKrogi(seja, { danes, samoOdigrani: true })) {
         for (const t of tekmeKroga(odgovor)) {
           if (!izid(t)) continue
+          const id = String(t.matchId)
+          if (preskoci.has(id) || (samoZapisnik && id !== String(samoZapisnik))) continue
           const datum = casTekme(t.startDate).datum
           const star = starostDni(datum, danes)
           let list = beriJson(imeLista(t.matchId))

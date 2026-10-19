@@ -16,7 +16,7 @@ on:
         type: boolean
         default: false
       refresh:
-        description: Osvezi razpored in samo manjkajoce zapisnike 1–5 neaktivnih EPS lig; nato predogled brez vklopa
+        description: Osvezi razpored in samo manjkajoce zapisnike 1–5 neaktivnih EPS ali HLF lig istega vira; nato predogled brez vklopa
         type: boolean
         default: false
       approved_sha256:
@@ -35,6 +35,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.refresh && 360 || 180 }}
     env:
+      CACHE_COUNTRY: ${{ contains(inputs.lige, 'ro-') && 'RO' || 'GR' }}
+      CACHE_COUNTRY_LOWER: ${{ contains(inputs.lige, 'ro-') && 'ro' || 'gr' }}
       LIGE: ${{ inputs.lige }}
       EXPECTED_SHA: ${{ inputs.expected_sha }}
       ACTIVATE: ${{ inputs.activate }}
@@ -53,7 +55,7 @@ jobs:
             echo 'Refresh and activation are separate operations.'; exit 1
           fi
       - name: Ciljni preizkusi brez omrezja
-        run: node --test scripts/test-vklop-obstojecih-lig.mjs scripts/test-refresh-existing-leagues.mjs scripts/test-missing-report-import.mjs scripts/test-eps-missing-reports.mjs
+        run: node --test scripts/test-vklop-obstojecih-lig.mjs scripts/test-refresh-existing-leagues.mjs scripts/test-missing-report-import.mjs scripts/test-eps-missing-reports.mjs scripts/test-hlf-missing-reports.mjs
       - name: Pred vklopom pocakaj na starejse pisce vsake izbrane lige
         if: inputs.activate || inputs.refresh
         env:
@@ -73,16 +75,19 @@ jobs:
           while IFS= read -r slug; do
             node scripts/cakaj-na-uvoze.mjs --popravek --tekmovanje "$slug" --najvec 120
           done < release/obstojece-lige/selected-slugs.txt
-      - name: Obnovi predpomnilnik EPS
+      - name: Namesti Chromium za javni HLF obisk
+        if: inputs.refresh && contains(inputs.lige, 'ro-')
+        run: npx playwright install chromium --only-shell --with-deps
+      - name: Obnovi predpomnilnik vira
         if: inputs.refresh
         uses: actions/cache/restore@v4
         with:
           path: scripts/.predpomnilnik
-          key: zapisniki-GR-kandidati-${{ github.run_id }}-${{ github.run_attempt }}
+          key: zapisniki-${{ env.CACHE_COUNTRY }}-kandidati-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            zapisniki-GR-kandidati-
-            zapisniki-GR-
-            zapisniki-gr-
+            zapisniki-${{ env.CACHE_COUNTRY }}-kandidati-
+            zapisniki-${{ env.CACHE_COUNTRY }}-
+            zapisniki-${{ env.CACHE_COUNTRY_LOWER }}-
       - name: Sveze preverbe, opcijski servisni vklop in ponovno branje
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -95,12 +100,12 @@ jobs:
           args=("$mode" --lige "$LIGE" --expected-sha "$EXPECTED_SHA" --output release/obstojece-lige)
           if [ -n "$APPROVED_SHA" ]; then args+=(--approved-sha256 "$APPROVED_SHA"); fi
           node scripts/vklopi-obstojece-lige.mjs "${args[@]}"
-      - name: Shrani predpomnilnik EPS tudi ob delnem izidu
+      - name: Shrani predpomnilnik vira tudi ob delnem izidu
         if: always() && inputs.refresh
         uses: actions/cache/save@v4
         with:
           path: scripts/.predpomnilnik
-          key: zapisniki-GR-kandidati-${{ github.run_id }}-${{ github.run_attempt }}
+          key: zapisniki-${{ env.CACHE_COUNTRY }}-kandidati-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Obseg, blokade in delni rezultati
         if: always()
         uses: actions/upload-artifact@v4
