@@ -5230,7 +5230,7 @@ select pg_temp.napaka('trgovina3: admin ne spremeni polj motiva',
 reset role;
 select set_config('request.jwt.claim.sub','',true);
 
--- --- trgovina4: motivi, dela 2 in 3 (20261019150000) -------------------------
+-- --- trgovina4: motivi, dela 2 in 3 (20261019160000) -------------------------
 -- Pub, stena in dodatki: vse neaktivno, doplačila iz baze, postava iz zadnjega
 -- zaklenjenega kroga (le lastnik, ne hišna, ne mladinska), posnetek v postavki.
 reset role;

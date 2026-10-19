@@ -45,7 +45,7 @@ export const MOTIVI: Motiv[] = [
   { slug: 'kapetan', cona: 'hrbet', polja: ['ime', 'stevilka'], barve: 3, predloge: { hrbet: kapetan } },
   { slug: 'kralj-kafane', cona: 'hrbet', polja: ['ime', 'goli', 'sezona'], barve: 3, predloge: { hrbet: kraljKafane } },
   { slug: 'prvak-mini-lige', cona: 'hrbet', polja: ['prvak'], barve: 3, predloge: { hrbet: prvakMiniLige } },
-  // Dela 2 in 3 (migracija 20261019150000). Laser: ena barva; vezenje: največ 4 barve.
+  // Dela 2 in 3 (migracija 20261019160000). Laser: ena barva; vezenje: največ 4 barve.
   { slug: 'tretji-polcas', cona: 'ovoj', polja: ['ime', 'slogan'], barve: 1, predloge: { ovoj: tretjiPolcas } },
   { slug: 'ekipni-kozarec', cona: 'ovoj', polja: ['ekipa', 'leto'], barve: 1, predloge: { ovoj: ekipniKozarec } },
   { slug: 'kafanski-komplet', cona: 'podstavek', polja: ['ekipa', 'slogan1', 'slogan2', 'slogan3', 'slogan4', 'slogan5', 'slogan6'], barve: 3, kosov: 6, predloge: { podstavek: kafanskiKomplet } },
