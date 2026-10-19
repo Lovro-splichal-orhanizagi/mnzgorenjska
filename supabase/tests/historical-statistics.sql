@@ -124,7 +124,7 @@ reset role;
 do $$
 declare p record;c bigint;rid bigint;e jsonb;h jsonb;side text;team_id bigint;home_id bigint;away_id bigint;country bigint;native_name text;f jsonb;
 begin
- for p in select * from private_historical_statistics.policies where document->>'provider'<>'hns'loop
+ for p in select * from private_historical_statistics.policies where document->>'provider'<>'hns'and(document->>'provider'<>'fcf'or document->>'sourcePolicy'='es-fcf-reviewed-history-v1')loop
   select id into country from public.countries where code=case p.document->>'provider'when 'dfb'then 'DE'else 'ES'end;
   insert into public.competitions(slug,name,short_name,source,source_policy,country_id,prvi_fantasy_krog,active)
   values(p.document->>'competitionSlug','Cross-provider test','Cross',p.document->>'provider',p.document->>'sourcePolicy',country,30,false)on conflict(slug)do update set source=excluded.source,source_policy=excluded.source_policy,country_id=excluded.country_id,prvi_fantasy_krog=excluded.prvi_fantasy_krog,active=false returning id into c;

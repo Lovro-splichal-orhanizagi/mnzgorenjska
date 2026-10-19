@@ -2,7 +2,7 @@
 import {readFileSync} from 'node:fs'
 import {calendarFixture,packetFixture} from './fcf-release-test-fixture.mjs'
 import {createHash} from 'node:crypto'
-const policyRows=[...readFileSync(new URL('../supabase/migrations/20261019130000_fcf_six_reviewed_native.sql',import.meta.url),'utf8').matchAll(/insert into private_historical_statistics\.policies values\('([^']+)','([^']+)','((?:[^']|'')+)'::jsonb\);/g)].map(x=>({policy:JSON.parse(x[3].replaceAll("''","'")),hash:x[2]}))
+const policyRows=[...readFileSync(new URL('../supabase/migrations/20261019150000_fcf_six_reviewed_native.sql',import.meta.url),'utf8').matchAll(/insert into private_historical_statistics\.policies values\('([^']+)','([^']+)','((?:[^']|'')+)'::jsonb\);/g)].map(x=>({policy:JSON.parse(x[3].replaceAll("''","'")),hash:x[2]}))
 export const getSixPolicy=slug=>policyRows.find(x=>x.policy.competitionSlug===slug).policy
 const getHistoricalStatisticsPolicy=getSixPolicy
 export const sixPolicyHash=slug=>policyRows.find(x=>x.policy.competitionSlug===slug).hash

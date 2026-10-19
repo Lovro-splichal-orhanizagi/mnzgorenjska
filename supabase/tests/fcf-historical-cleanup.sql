@@ -87,7 +87,7 @@ do $$declare pid bigint;i int;team bigint;begin
 end$$;
 create temporary table fcf_private_before as select jsonb_agg(to_jsonb(b)order by provider,source_club_id,source_category_id)bindings from private_historical_statistics.source_club_bindings b;
 create temporary table fcf_proof as select repeat('a',40) as main_sha,
- (select jsonb_object_agg(id,policy_sha256)from private_historical_statistics.policies where document->>'provider'='fcf')hashes,
+ (select jsonb_object_agg(id,policy_sha256)from private_historical_statistics.policies where document->>'provider'='fcf'and document->>'sourcePolicy'='es-fcf-reviewed-history-v1')hashes,
  null::jsonb prepared;
 update fcf_proof set prepared=public.prepare_fcf_historical_cleanup(main_sha,hashes);
 select pg_temp.fcf_assert((select jsonb_agg(to_jsonb(b)order by provider,source_club_id,source_category_id)from private_historical_statistics.source_club_bindings b)=(select bindings from fcf_private_before),'prepare does not bind or mutate private source identities');

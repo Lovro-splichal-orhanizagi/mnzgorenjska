@@ -26,8 +26,10 @@ end $$;
 
 create schema private_fcf_six_history;
 revoke all on schema private_fcf_six_history from public,anon,authenticated,service_role;
-create function private_fcf_six_history.unknown_result_allowed(rid bigint,h bigint,a bigint,report text,url text,day date,status text,reason text,phase text,rn int)returns boolean language sql stable security definer set search_path=public,pg_temp as $$
- select rid is not null and h=8575 and a=8576 and report='es4109404' and url='https://www.fcf.cat/ca/competicio/acta/4109404' and day='2026-10-04'::date and status='unavailable_historical'and reason='closed_official_result_and_individual_statistics_unavailable'and phase is null and rn=3 and exists(select 1 from private_historical_statistics.markers k join private_historical_statistics.installed_policies i using(competition_id)join public.rounds r on r.id=k.round_id where k.competition_id=783 and k.round_id=rid and k.home_team_id=h and k.away_team_id=a and k.source_match_id='4109404'and k.source_report_id=report and k.raw_sha256='1a42a49bd0b55d0bd3a654a6e15b65f430a2c132e28813899205d394f05244dc'and i.policy_id='es-ct-segona-g1-six-reviewed-2026-10-19-v1'and i.policy_sha256='fbe3dbba425837b28a5fd7f99fa170a249e169a2f84d6c17921f202f7b25c6d9'and r.competition_id=783 and r.season='2026/27'and r.number=3);
+-- Pure row constraint: backup COPY order must not depend on private marker data.
+-- The protect_match trigger independently requires the exact installed policy/marker.
+create function private_fcf_six_history.unknown_result_allowed(rid bigint,h bigint,a bigint,report text,url text,day date,status text,reason text,phase text,rn int)returns boolean language sql immutable set search_path=public,pg_temp as $$
+ select rid=28708 and h=8575 and a=8576 and report='es4109404'and url='https://www.fcf.cat/ca/competicio/acta/4109404'and day='2026-10-04'::date and status='unavailable_historical'and reason='closed_official_result_and_individual_statistics_unavailable'and phase is null and rn=3;
 $$;
 alter table public.matches alter column home_goals drop not null,alter column away_goals drop not null;
 alter table public.matches add constraint paired_result_availability check((home_goals is not null and away_goals is not null)or(home_goals is null and away_goals is null and private_fcf_six_history.unknown_result_allowed(round_id,home_team_id,away_team_id,zapisnik_id,source_url,played_on,statistics_status,statistics_reason,source_phase,source_round)is true));
@@ -75,7 +77,7 @@ begin
   execute 'select coalesce(jsonb_agg(to_jsonb(t)order by to_jsonb(t)::text collate "C"),''[]''::jsonb)from('||q.query||')t'into rows;
   result:=result||jsonb_build_object(q.key,rows);
  end loop;
- return result||jsonb_build_object('missing4109404',not exists(select 1 from matches where zapisnik_id='es4109404' or source_url='https://www.fcf.cat/ca/competicio/acta/4109404' or(home_team_id=8575 and away_team_id=8576 and round_id in(select id from rounds where competition_id=783 and season='2026/27'and number=3))),'installedPolicies',(select coalesce(jsonb_agg(to_jsonb(i)order by competition_id),'[]')from private_historical_statistics.installed_policies i where competition_id in(783,790,797)),'markers',(select coalesce(jsonb_agg(to_jsonb(i)order by competition_id,source_match_id),'[]')from private_historical_statistics.markers i where competition_id in(783,790,797)),'bindings',(select coalesce(jsonb_agg(to_jsonb(i)order by provider,source_club_id,source_category_id),'[]')from private_historical_statistics.source_club_bindings i where provider='fcf'));
+ return result||jsonb_build_object('missing4109404',not exists(select 1 from matches where zapisnik_id='es4109404' or source_url='https://www.fcf.cat/ca/competicio/acta/4109404'),'empty4109404Placeholder',exists(select 1 from matches m join rounds r on r.id=m.round_id where m.id=321663 and m.round_id=28708 and m.home_team_id=8575 and m.away_team_id=8576 and m.played_on='2026-10-04'and m.home_goals=0 and m.away_goals=0 and m.imported_at is null and m.zapisnik_id is null and m.source_url='https://www.fcf.cat/ca/competicio/acta/4109388'and not m.kontumacija and m.vir_brez_izida and m.source_phase is null and m.source_round is null and m.import_warnings=array[]::text[]and m.statistics_status='available'and m.statistics_reason is null and r.competition_id=783 and r.season='2026/27'and r.number=3 and not exists(select 1 from appearances where match_id=m.id)and not exists(select 1 from goals where match_id=m.id)),'installedPolicies',(select coalesce(jsonb_agg(to_jsonb(i)order by competition_id),'[]')from private_historical_statistics.installed_policies i where competition_id in(783,790,797)),'markers',(select coalesce(jsonb_agg(to_jsonb(i)order by competition_id,source_match_id),'[]')from private_historical_statistics.markers i where competition_id in(783,790,797)),'bindings',(select coalesce(jsonb_agg(to_jsonb(i)order by provider,source_club_id,source_category_id),'[]')from private_historical_statistics.source_club_bindings i where provider='fcf'));
 end$$;
 
 create function private_fcf_six_history.check_and_lock(p_main_sha text,p_policy_hashes jsonb)returns void language plpgsql security definer set search_path=public,pg_temp as $$
@@ -133,8 +135,12 @@ insert into private_historical_statistics.source_club_bindings values
 ('fcf','5029','33592','ES',array['BESCANO, C.D.'],'[{"sourceMatchId":"4109389","sourceUrl":"https://www.fcf.cat/ca/competicio/acta/4109389","rawSha256":"5f102da312280ff3f4ff5f65bf067e8f71e9f0301c5bae5b578d81ed02f93e97","side":"away","round":1,"playedOn":"2026-09-19"}]',null),
 ('fcf','1372','19610692','ES',array['CAN VIDALET, C.F.'],'[{"sourceMatchId":"4118354","sourceUrl":"https://www.fcf.cat/ca/competicio/acta/4118354","rawSha256":"f3789fc4103d36d2878a573b9574442d32ad491236f3b4d6fd380ea4aaa07556"}]',null),
 ('fcf','54319880','54709553','ES',array['ONA SANT ADRIA, F.C.'],'[{"sourceMatchId":"4118354","sourceUrl":"https://www.fcf.cat/ca/competicio/acta/4118354","rawSha256":"f3789fc4103d36d2878a573b9574442d32ad491236f3b4d6fd380ea4aaa07556"}]',null);
+-- Report absence is distinct from native fixture absence:321663 already exists.
+-- Its original0:0 and vir_brez_izida flag are schedule defaults, never result evidence.
 create function private_fcf_six_history.missing_binding()returns void language plpgsql security definer set search_path=public,pg_temp as $$begin
- perform private_fcf_six_history.require(not exists(select 1 from matches where zapisnik_id='es4109404' or source_url='https://www.fcf.cat/ca/competicio/acta/4109404' or(home_team_id=8575 and away_team_id=8576 and round_id in(select id from rounds where competition_id=783 and season='2026/27'and number=3))),'exact unknown fixture absence required');
+ perform private_fcf_six_history.require(not exists(select 1 from matches where zapisnik_id='es4109404' or source_url='https://www.fcf.cat/ca/competicio/acta/4109404'),'exact unknown report absence required');
+ perform private_fcf_six_history.require(exists(select 1 from matches m join rounds r on r.id=m.round_id where m.id=321663 and m.round_id=28708 and m.home_team_id=8575 and m.away_team_id=8576 and m.played_on='2026-10-04'and m.home_goals=0 and m.away_goals=0 and m.imported_at is null and m.zapisnik_id is null and m.source_url='https://www.fcf.cat/ca/competicio/acta/4109388'and not m.kontumacija and m.vir_brez_izida and m.source_phase is null and m.source_round is null and m.import_warnings=array[]::text[]and m.statistics_status='available'and m.statistics_reason is null and r.competition_id=783 and r.season='2026/27'and r.number=3 and not exists(select 1 from appearances where match_id=m.id)and not exists(select 1 from goals where match_id=m.id)),'exact empty native321663 placeholder required');
+ perform private_fcf_six_history.require((select count(*)from matches where round_id=28708 and home_team_id=8575 and away_team_id=8576)=1,'single exact native fixture required');
  perform private_fcf_six_history.require((select count(*)from rounds where competition_id=783 and season='2026/27'and number=3)=1,'unique native round3 required');
  perform private_fcf_six_history.require((select count(*)from matches m join rounds r on r.id=m.round_id where m.zapisnik_id='es4109396'and m.source_url='https://www.fcf.cat/ca/competicio/acta/4109396'and m.home_team_id=8575 and m.played_on='2026-09-27'and r.competition_id=783 and r.season='2026/27'and r.number=2)=1,'home club exact retained report/header-side native provenance');
  perform private_fcf_six_history.require((select count(*)from matches m join rounds r on r.id=m.round_id where m.zapisnik_id='es4109389'and m.source_url='https://www.fcf.cat/ca/competicio/acta/4109389'and m.away_team_id=8576 and m.played_on='2026-09-19'and r.competition_id=783 and r.season='2026/27'and r.number=1)=1,'away club exact retained report/header-side native provenance');
@@ -159,6 +165,10 @@ begin
  perform private_fcf_six_history.require(p_before_sha~'^[a-f0-9]{64}$'and p_before_image is not null and encode(sha256(convert_to(p_before_image::text,'UTF8')),'hex')=p_before_sha,'reviewed complete beforeimage SHA required');
  prepared:=public.fcf_historical_six_prepare(p_main_sha,p_policy_hashes);
  perform private_fcf_six_history.require(prepared->>'beforeSha256'=p_before_sha and prepared->'beforeImage'=p_before_image,'canonical beforeimage drift');
+ -- The schedule reused the first report URL and vir_brez_izida flag. Only the
+ -- locked exact empty321663 before-image permits clearing those placeholder fields.
+ update public.matches set vir_brez_izida=false,source_url=null where id=321663;
+ get diagnostics n=row_count;perform private_fcf_six_history.require(n=1,'exact placeholder normalization count');
  -- All individual removals, cache corrections, policy installs and six markers
  -- commit together. No generic importer can observe an intermediate empty row.
  delete from public.goals where match_id in(321646,297199,306164,306166,306171);
@@ -186,8 +196,9 @@ begin
  perform private_fcf_six_history.require(not exists(select 1 from public.player_scores ps where ps.round_id in(28706,27227,27616,27617)and not exists(select 1 from public.appearance_points ap where ap.round_id=ps.round_id and ap.player_id=ps.player_id)),'stale derived individual scores');
  for pid in select unnest(array[783,790,797]::bigint[])loop perform public.get_installed_historical_statistics_markers(pid);end loop;
  preserved:=private_fcf_six_history.capture();
+ perform private_fcf_six_history.require(jsonb_array_length(preserved->'matches')=jsonb_array_length(p_before_image->'matches')and exists(select 1 from matches where id=321663 and zapisnik_id='es4109404'and home_goals is null and away_goals is null and not vir_brez_izida),'same native fixture count and exact converted321663 readback');
  perform private_fcf_six_history.require(preserved->'otherAppearances'=p_before_image->'otherAppearances'and preserved->'otherGoals'=p_before_image->'otherGoals'and preserved->'otherScores'=p_before_image->'otherScores'and preserved->'players'=p_before_image->'players'and preserved->'teams'=p_before_image->'teams'and preserved->'rounds'=p_before_image->'rounds'and preserved->'uradne_odsotnosti'=p_before_image->'uradne_odsotnosti'and preserved->'profil_igralca_plus'=p_before_image->'profil_igralca_plus','protected players/teams/rounds/profile references changed');
- perform private_fcf_six_history.require(not exists(select 1 from jsonb_array_elements(p_before_image->'matches')b where(b->>'id')::bigint not in(321646,297199,306164,306166,306171)and not exists(select 1 from jsonb_array_elements(preserved->'matches')a where a=b)),'unrelated match changed');
+ perform private_fcf_six_history.require(not exists(select 1 from jsonb_array_elements(p_before_image->'matches')b where(b->>'id')::bigint not in(321646,297199,306164,306166,306171,321663)and not exists(select 1 from jsonb_array_elements(preserved->'matches')a where a=b)),'unrelated match changed');
  return jsonb_build_object('schemaVersion',2,'mainCommit',p_main_sha,'beforeSha256',p_before_sha,'removedAppearances',157,'removedGoals',18,'unavailableMatches',6,'afterSha256',encode(sha256(convert_to(preserved::text,'UTF8')),'hex'));
 end$$;
 
@@ -511,7 +522,7 @@ declare r private_fcf_six_target_release.cleanup_receipt%rowtype;image jsonb;tab
  perform private_fcf_six_target_release.require(private_fcf_six_history.capture()=r.after_image,'rollback exact post-cleanup beforeimage drift');
  image:=r.before_image_text::jsonb;
  insert into private_fcf_six_history.restore_authorizations values(txid_current(),p_before_sha);
- delete from matches where zapisnik_id='es4109404';
+ -- Preserve321663: the complete original empty placeholder is restored below.
  delete from private_historical_statistics.markers where competition_id in(783,790,797);
  delete from private_historical_statistics.installed_policies where competition_id in(783,790,797);
  -- Restore complete original rows including IDs; exact after-state comparison above
@@ -531,7 +542,7 @@ declare r private_fcf_six_target_release.cleanup_receipt%rowtype;image jsonb;tab
  perform private_fcf_six_target_release.require(private_fcf_six_history.capture()=image-array['schemaVersion','mainCommit','policyHashes'],'rollback exact native readback differs');
  delete from private_fcf_six_history.restore_authorizations where authorized_xid=txid_current();
  update private_fcf_six_target_release.cleanup_receipt set restored=true where singleton;
- return jsonb_build_object('restored',true,'beforeSha256',p_before_sha,'missing4109404',true);
+ return jsonb_build_object('restored',true,'beforeSha256',p_before_sha,'missing4109404',true,'restoredPlaceholderId',321663);
 end$$;
 create table private_fcf_six_history.restore_authorizations(authorized_xid bigint primary key,before_sha text not null);
 revoke all on private_fcf_six_history.restore_authorizations from public,anon,authenticated,service_role;
@@ -749,3 +760,35 @@ declare cid bigint;c competitions%rowtype;stamp timestamptz:=clock_timestamp();r
  select jsonb_build_object('capturedUTC',stamp,'method','explicitBEGIN_READ_ONLY_ROLLBACK','groups',(select jsonb_agg(jsonb_build_object('id',co.id,'slug',co.slug,'country_id',co.country_id,'active',co.active,'source',co.source,'sourceLeagueCode',co.source_league_code,'sezona_koledarska',co.sezona_koledarska,'source_policy',co.source_policy,'nativeImportedIDs',coalesce((select jsonb_agg(substring(m.zapisnik_id from 3)order by m.zapisnik_id)from matches m join rounds r on r.id=m.round_id where r.competition_id=co.id and m.imported_at is not null and m.zapisnik_id is not null),'[]')))from competitions co where co.id in(783,790,797)),'teams',(select jsonb_agg(to_jsonb(t)||jsonb_build_object('competition_id',cid)order by t.id)from teams t where t.id in(select m.home_team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=cid union select m.away_team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=cid)),'rounds',(select jsonb_agg(to_jsonb(r)order by number)from rounds r where competition_id=cid),'matches',(select jsonb_agg(to_jsonb(m)order by m.id)from matches m join rounds r on r.id=m.round_id where r.competition_id=cid),'players',(select coalesce(jsonb_agg(to_jsonb(p)order by id),'[]')from players p where competition_id=cid),'installedMarkers',(select jsonb_agg(public.get_installed_historical_statistics_markers(co.id)order by co.id)from competitions co where co.id in(783,790,797)),'existingExceptionBindings',(select jsonb_agg(to_jsonb(b)order by source_club_id,source_category_id)from private_historical_statistics.source_club_bindings b where provider='fcf'and(source_club_id,source_category_id)in(('5042','33356'),('5057','35522'),('1107','37659'),('5114','34913'),('1252','35781'),('6136','33049'),('44143644','44510647'),('1400','47272626'))),'identityPrivacy',jsonb_build_object('schemaVersion',1,'kind','fcf-native-privacy-projection','countryCode','ES','countryId',c.country_id,'targetCompetitionId',cid,'method','explicitBEGIN_READ_ONLY_ROLLBACK','capturedUTC',stamp,'complete',true,'checkedKeys',to_jsonb(p_privacy_keys),'matches',(select coalesce(jsonb_agg(jsonb_build_object('player_id',p.id,'competition_id',p.competition_id,'country_id',co.country_id,'kljuc',k.kljuc,'anonimiziran_at',p.anonimiziran_at,'anonimiziran_razlog',p.anonimiziran_razlog)order by p.id,k.kljuc),'[]')from anonimizirani_igralci k join players p on p.id=k.player_id join competitions co on co.id=p.competition_id where co.country_id=c.country_id and k.kljuc=any(p_privacy_keys)and p.anonimiziran_at is not null)))into result;
  return result;
 end$$;
+
+-- Installed policy identity is authoritative when registries share a slug.
+-- Preserve the existing strict Nord/West route when no policy is opted in.
+create or replace function private_historical_statistics.guard_activation()returns trigger language plpgsql security definer set search_path=public,pg_temp as $$
+declare p private_historical_statistics.policies%rowtype;i private_historical_statistics.installed_policies%rowtype;
+begin
+ select * into i from private_historical_statistics.installed_policies where competition_id=new.id;
+ select * into p from private_historical_statistics.policies where id=i.policy_id or(i.competition_id is null and document->>'competitionSlug'=new.slug)order by id limit 1;
+ if p.id is null and new.source_policy is null then return new;end if;
+ if not new.active then return new;end if;
+ -- Nord/West were ordinary strict v1/v2 targets before their optional policy
+ -- catalog entries existed. Preserve only that exact unopted tuple. Installing
+ -- any historical state, or clearing an old opt-in, still requires the policy
+ -- authorization path below. The canonical regional RPC remains unchanged.
+ if tg_op='UPDATE' and new.slug in('de-regionalliga-nord','de-regionalliga-west')
+    and new.slug=old.slug and new.source='dfb' and old.source='dfb'
+    and new.source_policy is null and old.source_policy is null
+    and new.source_league_code=substring(new.slug from 4)||'/2026-2027'
+    and exists(select 1 from public.countries where id=new.country_id and code='DE')
+    and i.competition_id is null
+    and not exists(select 1 from private_historical_statistics.markers where competition_id=new.id)
+    and not exists(select 1 from public.matches m join public.rounds r on r.id=m.round_id where r.competition_id=new.id and m.statistics_status='unavailable_historical')
+ then return new;end if;
+ if p.id is null or new.slug is distinct from p.document->>'competitionSlug'or new.source is distinct from p.document->>'provider'or new.source_policy is distinct from p.document->>'sourcePolicy'then raise exception 'HISTORICAL_POLICY: invalid activation tuple';end if;
+ if tg_op='UPDATE'and old.active then
+  if row(new.slug,new.source,new.source_policy,new.source_league_code,new.country_id,new.prvi_fantasy_krog,new.date_only_deadline_policy)is distinct from row(old.slug,old.source,old.source_policy,old.source_league_code,old.country_id,old.prvi_fantasy_krog,old.date_only_deadline_policy)then raise exception 'HISTORICAL_POLICY: active opt-in source/launch configuration immutable';end if;
+  return new;
+ end if;
+ if tg_op='UPDATE'and(to_jsonb(new)-'active')is distinct from(to_jsonb(old)-'active')then raise exception 'HISTORICAL_POLICY: configure first round/policy before transactional release authorization';end if;
+ if not exists(select 1 from private_historical_statistics.release_authorizations a where a.competition_id=new.id and a.authorized_xid=txid_current()and a.policy_id=p.id and a.state_sha256=private_historical_statistics.state_sha256(new.id))then raise exception 'HISTORICAL_POLICY: dedicated verified transactional release authorization required';end if;
+ return new;
+end $$;

@@ -28,7 +28,7 @@ try{
  run(fixture+'\ncommit;')
  run("insert into auth.users(id,email)values('fa000000-0000-4000-8000-000000000003','fcf-race@example.invalid');insert into profiles(id,display_name)values('fa000000-0000-4000-8000-000000000003','FCF race')on conflict(id)do nothing;")
  const main='a'.repeat(40)
- const hashes=JSON.parse(run("select jsonb_object_agg(id,policy_sha256)from private_historical_statistics.policies where document->>'provider'='fcf';").trim())
+ const hashes=JSON.parse(run("select jsonb_object_agg(id,policy_sha256)from private_historical_statistics.policies where document->>'provider'='fcf'and document->>'sourcePolicy'='es-fcf-reviewed-history-v1';").trim())
  const text=value=>`'${value.replaceAll("'","''")}'`
  const literal=value=>text(JSON.stringify(value))+'::jsonb'
  for(const scenario of[

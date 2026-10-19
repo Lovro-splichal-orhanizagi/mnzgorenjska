@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs'
 import {execFileSync} from 'node:child_process'
 import {sixG9ReleaseFixture} from './fcf-six-native-test-fixture.mjs'
 import {assertFcfDisposableTest} from './lib/fcf-disposable-test.mjs'
-const migration=new URL('../supabase/migrations/20261019130000_fcf_six_reviewed_native.sql',import.meta.url)
+const migration=new URL('../supabase/migrations/20261019150000_fcf_six_reviewed_native.sql',import.meta.url)
 const migrate=()=>"begin;\nselect to_regnamespace('private_fcf_six_history')is null as six_missing \\gset\n\\if :six_missing\n"+readFileSync(migration,'utf8')+"\n\\endif\n"
 test('six native protocol remains separate and guards unknown results',()=>{
  const s=readFileSync(migration,'utf8')
