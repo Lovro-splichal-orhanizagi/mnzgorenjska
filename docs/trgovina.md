@@ -112,6 +112,24 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
 - **Admin** `/admin`: naročila za pakiranje (nalepka 100×150 mm, dobavnica),
   sledilna številka → poslano + mail; izdelki, različice, cene, zaloga kot
   sprememba (`zaloga_dodaj`), slike v Storage (vedro `trgovina`).
+- **Vsa naročila** (admin, prvi zavihek, `AdminVsaNarocila.tsx`; migracija
+  `20261019140000_trgovina_admin_narocila.sql`): `trgovina_admin_vsa_narocila(stanje,
+  iskanje, od, koliko)` (števci po stanju, iskanje po oznaki, e-pošti, imenu;
+  najnovejša najprej), `trgovina_admin_narocilo` še s Stripe plačilom (povezava v
+  testni Dashboard, ko je seja `cs_test_`) in zgodovino `trgovina.zgodovina_stanj`
+  (sprožilec ob vsaki spremembi stanja: plačilo, poslano, vračilo, admin;
+  `opomba` je agentom zaprta). Ročni prehodi `trgovina_admin_nastavi_stanje`:
+  placano ↔ `v_izdelavi`, poslano → `dostavljeno`, placano/v_izdelavi →
+  preklicano (vrne `vracilo_potrebno`: denar vrni v Stripe, vračilo ga premakne v
+  vrnjeno; zaloga se ne vrne, značka in tisk se sprostita kot pri vračilu;
+  **kode darilnih bonov ostanejo veljavne do celotnega vračila**). caka_placilo
+  se ne prekliče: odprto sejo Stripe bi kupec še plačal, rezervacija poteče sama.
+  Poslano le prek sledilne (`trgovina_admin_poslano`, tudi iz `v_izdelavi`).
+  Pakiranje in tisk vidita tudi `v_izdelavi`. "Plačano" je povsod isti nabor
+  (placano, v_izdelavi, poslano, dostavljeno): SQL `trgovina.je_placano_aktivno`,
+  funkcije `supabase/functions/_shared/trgovina-stanja.ts` (smoke ju primerja in
+  zavrne nabor, napisan na roko). `objavi-funkcije.sh` ob vsaki funkciji prenese
+  še `_shared`.
 - **Stran izdelka in košarica**: obrazec po možnostih izdelka (ekipe kupca iz
   `fantasy_teams` brez hišnih, prvaki `trgovina_moji_prvaki`, značka
   `trgovina_moja_znacka`; brez prijave povezava na prijavo), predogled kot SVG

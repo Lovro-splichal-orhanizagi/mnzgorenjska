@@ -48,6 +48,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import { EU27, tarifeZa } from './tarife.ts'
 import { IZDELEK_TRGOVINE, seznamPostavk } from './izdelki.ts'
+import { jePlacanoAktivno } from '../_shared/trgovina-stanja.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -152,7 +153,7 @@ Deno.serve(async (req) => {
   if (prejsnja) {
     const { data: staro } = await service.rpc('trgovina_narocilo_seje', { p_checkout: prejsnja, p_user: user?.id ?? null, p_odjemalec })
     const n = staro as { id: number; stanje: string } | null
-    if (n && (n.stanje === 'placano' || n.stanje === 'poslano')) return json({ error: 'Naročilo je že plačano.', hint: 'trgovina-placano' }, 409)
+    if (n && jePlacanoAktivno(n.stanje)) return json({ error: 'Naročilo je že plačano.', hint: 'trgovina-placano' }, 409)
     if (n?.stanje === 'caka_placilo') {
       // Zapri v Stripe; če ne gre (že potekla ali plačana), preberi stanje seje.
       const status = await stripe<{ status: string }>(`checkout/sessions/${prejsnja}/expire`, {})

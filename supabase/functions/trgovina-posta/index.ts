@@ -10,7 +10,7 @@
 //
 // Kliče le servis (Bearer servisni ključ) ali admin (Bearer <access_token>,
 // preveri `is_admin`); anonimni klic dobi 403. Naročilo da
-// `trgovina_narocilo_za_posto` (servis). Potrditev le za placano/poslano,
+// `trgovina_narocilo_za_posto` (servis). Potrditev in boni le za plačana (jePlacanoAktivno),
 // odposlano le za poslano s sledilno številko. Mail gre v `email_log`
 // (vrsta trgovina-potrditev, trgovina-poslano, trgovina-bon).
 //
@@ -22,6 +22,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import nodemailer from 'npm:nodemailer@6.9.16'
 import { type Bon, type Narocilo, sestaviMail } from './sporocila.ts'
+import { jePlacanoAktivno } from '../_shared/trgovina-stanja.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -78,7 +79,7 @@ Deno.serve(async (req) => {
   }
   const n = data as (Narocilo & { user_id: string | null }) | null
   if (!n?.email) return json({ error: 'Naročila ni ali nima e-naslova.' }, 400)
-  const sme = vrsta === 'poslano' ? n.stanje === 'poslano' && !!n.sledilna : ['placano', 'poslano'].includes(n.stanje)
+  const sme = vrsta === 'poslano' ? n.stanje === 'poslano' && !!n.sledilna : jePlacanoAktivno(n.stanje)
   if (!sme) return json({ error: `Naročilo je v stanju ${n.stanje}.`, hint: 'trgovina-stanje' }, 400)
 
   const s = sestaviMail(vrsta, n, (Deno.env.get('SHOP_URL') ?? 'https://shop.slff.eu').replace(/\/$/, ''), kode)

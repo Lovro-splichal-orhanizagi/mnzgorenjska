@@ -220,7 +220,7 @@ export interface Bon {
 export interface Narocilo {
   id: number
   javna_oznaka: string
-  stanje: 'placano' | 'poslano' | 'preklicano' | 'vrnjeno'
+  stanje: 'placano' | 'v_izdelavi' | 'poslano' | 'dostavljeno' | 'preklicano' | 'vrnjeno'
   znesek_postavke: number | null
   znesek_dostava: number | null
   znesek_skupaj: number | null
@@ -254,6 +254,7 @@ export interface NarociloAdmin {
   znesek_dostava: number | null
   znesek_ddv: number | null
   znesek_skupaj: number | null
+  znesek_popust?: number | null
   dostava_kljuc: string | null
   sledilna: string | null
   manjka: number
@@ -261,6 +262,25 @@ export interface NarociloAdmin {
   poslano_at: string | null
   created_at: string
   postavke: PostavkaNarocila[]
+}
+
+export const STANJA_NAROCILA = ['caka_placilo', 'placano', 'v_izdelavi', 'poslano', 'dostavljeno', 'preklicano', 'vrnjeno', 'poteklo'] as const
+export type StanjeNarocila = (typeof STANJA_NAROCILA)[number]
+
+/** trgovina_admin_vsa_narocila(): stanja = število po stanju za isto iskanje. */
+export interface VsaNarocila {
+  skupaj: number
+  stanja: Partial<Record<StanjeNarocila, number>>
+  narocila: NarociloAdmin[]
+}
+
+/** trgovina_admin_narocilo(): še Stripe in zgodovina stanj. */
+export interface NarociloPodrobno extends NarociloAdmin {
+  stripe_payment_intent: string | null
+  stripe_checkout_id: string | null
+  zgodovina: { iz: string | null; v: string; admin_id: string | null; admin: string | null; opomba: string | null; created_at: string }[]
+  /** Le v odgovoru trgovina_admin_nastavi_stanje. */
+  vracilo_potrebno?: boolean
 }
 
 /** Različica v trgovina_admin_izdelki(); na_voljo = zaloga − rezervirano. */

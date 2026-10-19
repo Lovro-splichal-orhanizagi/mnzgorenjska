@@ -8,14 +8,17 @@ import { AdminBoni } from './AdminBoni'
 import { AdminIzdelki } from './AdminIzdelki'
 import { AdminMotivi } from './AdminMotivi'
 import { AdminTisk } from './AdminTisk'
+import { AdminVsaNarocila } from './AdminVsaNarocila'
+import { Naslovnik, oznaciPoslano } from './narocilo'
 
 // /admin: pakiranje in odpošiljanje naročil, katalog. Pravice preveri baza
 // (trgovina.le_admin); kdor ni admin, dobi insufficient_privilege (42501).
 
-type Zavihek = 'pakiranje' | 'tisk' | 'poslano' | 'izdelki' | 'motivi' | 'boni'
+type Zavihek = 'vsa' | 'pakiranje' | 'tisk' | 'poslano' | 'izdelki' | 'motivi' | 'boni'
 type Tisk = { vrsta: 'nalepka' | 'dobavnica'; n: NarociloAdmin }
 
 const ZAVIHKI: [Zavihek, Kljuc][] = [
+  ['vsa', 'admin.zavihek.vsa'],
   ['pakiranje', 'admin.zavihek.pakiranje'],
   ['tisk', 'admin.zavihek.tisk'],
   ['poslano', 'admin.zavihek.poslano'],
@@ -47,7 +50,7 @@ export function useNoindex() {
 
 export function Admin() {
   const { seja, nalaga } = useSeja()
-  const [zavihek, setZavihek] = useState<Zavihek>('pakiranje')
+  const [zavihek, setZavihek] = useState<Zavihek>('vsa')
   const [ni, setNi] = useState(false)
   const zavrnjen = useCallback(() => setNi(true), [])
   useNoindex()
@@ -66,7 +69,8 @@ export function Admin() {
           </button>
         ))}
       </nav>
-      {zavihek === 'izdelki' ? <AdminIzdelki zavrnjen={zavrnjen} />
+      {zavihek === 'vsa' ? <AdminVsaNarocila zavrnjen={zavrnjen} token={seja.access_token} />
+        : zavihek === 'izdelki' ? <AdminIzdelki zavrnjen={zavrnjen} />
         : zavihek === 'motivi' ? <AdminMotivi zavrnjen={zavrnjen} />
         : zavihek === 'tisk' ? <AdminTisk zavrnjen={zavrnjen} />
         : zavihek === 'boni' ? <AdminBoni zavrnjen={zavrnjen} token={seja.access_token} />
@@ -81,12 +85,15 @@ function Narocila({ stanje, zavrnjen, token }: { stanje: 'placano' | 'poslano'; 
   const [tisk, setTisk] = useState<Tisk | null>(null)
 
   const nalozi = useCallback(async () => {
-    const { data, error } = await supabase.rpc('trgovina_admin_narocila', { p_stanje: stanje })
+    // Za pakiranje so plačana in tista v izdelavi, najstarejša najprej; poslana najnovejša najprej.
+    const odgovori = await Promise.all((stanje === 'poslano' ? ['poslano'] : ['placano', 'v_izdelavi'])
+      .map((p_stanje) => supabase.rpc('trgovina_admin_narocila', { p_stanje })))
+    const error = odgovori.find((o) => o.error)?.error
     if (error?.code === '42501') return zavrnjen()
     setNapaka(error ? error.message : null)
-    const vsa = (data as unknown as NarociloAdmin[] | null) ?? []
-    // Za pakiranje najstarejše najprej (tako vrne baza), poslana najnovejša najprej.
-    setNarocila(stanje === 'poslano' ? [...vsa].reverse() : vsa.filter(zaPakiranje))
+    const vsa = odgovori.flatMap((o) => (o.data as unknown as NarociloAdmin[] | null) ?? [])
+    const cas = (n: NarociloAdmin) => n.placano_at ?? n.created_at
+    setNarocila(stanje === 'poslano' ? [...vsa].reverse() : vsa.filter(zaPakiranje).sort((a, b) => cas(a).localeCompare(cas(b))))
   }, [stanje, zavrnjen])
 
   useEffect(() => void nalozi(), [nalozi])
@@ -133,24 +140,9 @@ function KarticaNarocila({ n, token, poslano, natisni, osvezi }: {
   async function poslji() {
     setPoteka(true)
     setSporocilo(null)
-    const { error } = await supabase.rpc('trgovina_admin_poslano', { p_narocilo: n.id, p_sledilna: sledilna })
-    if (error) {
-      setSporocilo(error.message)
-      setPoteka(false)
-      return
-    }
-    const posta = await supabase.functions.invoke('trgovina-posta', {
-      body: { vrsta: 'poslano', narocilo_id: n.id },
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const napaka = await oznaciPoslano(n.id, sledilna, token)
     setPoteka(false)
-    if (posta.error) {
-      // Razlog je v telesu odgovora (FunctionsHttpError.context), sporočilo je vedno splošno.
-      const ctx = (posta.error as { context?: Response }).context
-      const telo = (await ctx?.json?.().catch(() => null)) as { error?: string } | null
-      setSporocilo(t('admin.mailNi', { napaka: telo?.error ?? posta.error.message }))
-      return
-    }
+    if (napaka) return setSporocilo(napaka)
     await osvezi()
   }
 
@@ -202,22 +194,6 @@ function KarticaNarocila({ n, token, poslano, natisni, osvezi }: {
   )
 }
 
-function Naslovnik({ n }: { n: NarociloAdmin }) {
-  const a = n.naslov
-  return (
-    <div>
-      <p className="font-bold">{a?.name ?? n.ime}</p>
-      {a?.line1 && <p>{a.line1}</p>}
-      {a?.line2 && <p>{a.line2}</p>}
-      <p>{[a?.postal_code, a?.city].filter(Boolean).join(' ')}</p>
-      {a?.country && a.country !== 'SI' && <p className="font-bold uppercase">{drzavaZaPosto(a.country)}</p>}
-    </div>
-  )
-}
-
-// Država na pošiljki v tujino po angleško, kot jo bere vsaka pošta.
-const POSTA_DRZAVE = new Intl.DisplayNames(['en'], { type: 'region' })
-const drzavaZaPosto = (koda: string): string => POSTA_DRZAVE.of(koda) ?? koda
 
 const posiljatelj = (): string[] => t('admin.tisk.naslovPosiljatelja').split('\n')
 

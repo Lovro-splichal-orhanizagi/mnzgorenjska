@@ -9164,6 +9164,10 @@ export type Database = {
       trgovina_admin_motivi: { Args: Record<PropertyKey, never>; Returns: Json }
       trgovina_admin_narocila: { Args: { p_stanje?: string }; Returns: Json }
       trgovina_admin_narocilo: { Args: { p_id: number }; Returns: Json }
+      trgovina_admin_nastavi_stanje: {
+        Args: { p_id: number; p_opomba?: string; p_stanje: string }
+        Returns: Json
+      }
       trgovina_admin_nova_serija: {
         Args: { p_postavke: number[] }
         Returns: Json
@@ -9190,6 +9194,15 @@ export type Database = {
         Returns: undefined
       }
       trgovina_admin_shrani_razlicico: { Args: { p: Json }; Returns: number }
+      trgovina_admin_vsa_narocila: {
+        Args: {
+          p_iskanje?: string
+          p_koliko?: number
+          p_od?: number
+          p_stanje?: string
+        }
+        Returns: Json
+      }
       trgovina_admin_za_tisk: {
         Args: Record<PropertyKey, never>
         Returns: Json

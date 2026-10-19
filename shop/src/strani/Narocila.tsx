@@ -6,7 +6,9 @@ import { Nalaganje, useSeja } from '../seja'
 
 const BARVA: Record<Narocilo['stanje'], string> = {
   placano: 'bg-amber-400/15 text-amber-200 ring-amber-400/30',
+  v_izdelavi: 'bg-sky-400/15 text-sky-200 ring-sky-400/30',
   poslano: 'bg-gnl-400/15 text-gnl-300 ring-gnl-400/30',
+  dostavljeno: 'bg-emerald-400/20 text-emerald-200 ring-emerald-400/40',
   preklicano: 'bg-slate-400/15 text-slate-300 ring-slate-400/30',
   vrnjeno: 'bg-slate-400/15 text-slate-300 ring-slate-400/30',
 }
