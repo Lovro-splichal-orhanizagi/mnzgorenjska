@@ -378,7 +378,8 @@ Ostalo (enkrat):
    `TRGOVINA_TARIFE` (neobvezno, JSON id tarif), SMTP kot `posli-opomnik`.
 3. Funkcije: `scripts/hetzner/objavi-funkcije.sh trgovina-nakup`, nato
    `trgovina-posta`, `stripe-webhook` in `trgovina-boni` (ena na klic).
-4. Stripe: `STRIPE_SECRET_KEY=… scripts/stripe-trgovina.sh` (tarife; po
+4. Stripe: `STRIPE_SECRET_KEY=… scripts/stripe-trgovina.sh` (celoten katalog:
+   tarife trgovine in preverjenih, cene po lookup_key, portal Scouta; po
    spremembi tarif ponovni zagon funkcij), endpoint webhooka dobi dogodka
    `checkout.session.expired` in `checkout.session.async_payment_failed`,
    obvezna potrditev pogojev le ob `STRIPE_TOS=1` (skupno s preverjenimi; zahteva
@@ -388,11 +389,28 @@ Ostalo (enkrat):
 
 ## Pred živo prodajo
 
-- Živi `STRIPE_SECRET_KEY` postavi lastnik (velja tudi za preverjene in Scout).
+Račun SLFF (`acct_1UPj8XAyq9b6ncJ0`) je aktiviran 19. 10. 2026 (podatki in
+banka Space Guardian, Radar Lite, opis na izpisku `SLFF.EU`). V živem načinu so
+že: Stripe Tax registracija **SI** (domača, prodaja v EU pod 10.000 € → povsod
+slovenski DDV; OSS šele, ko podjetje preseže prag ali se registrira), načini
+plačila kartice + Apple Pay + Google Pay + Link (Klarna, EPS, Bancontact,
+MB WAY, Satispay izklopljeni), javni podatki (slff.eu, info@slff.eu, pogoji
+`shop.slff.eu/terms`, zasebnost `slff.eu/legal`), privzeti portal (preklic ob
+koncu obdobja, brez menjave paketa) in webhook `slff-stripe-webhook` na
+`api.slff.eu/functions/v1/stripe-webhook` (10 dogodkov kot v testnem).
+
+Preklop na živo (lastnik, ključev ne vidi nihče drug):
+
+1. Dashboard → Developers → API keys: živi `sk_live_…` v `/opt/supabase/.env`
+   kot `STRIPE_SECRET_KEY`; Workbench → Webhooks → `slff-stripe-webhook` →
+   Signing secret v `STRIPE_WEBHOOK_SECRET`.
+2. `cd /opt/supabase && docker compose restart functions`.
+3. Katalog: `ssh slff 'set -a; . /opt/supabase/.env; bash -s' < scripts/stripe-trgovina.sh`.
+4. En pravi nakup v vsaki aplikaciji; testne naročnine in kupci (`cus_…` iz
+   testnega načina) v živem ne obstajajo.
+
 - Računovodja potrdi izdajo računov (ZDavPR, davčno potrjevanje pri plačilu s
   kartico); če je potrebno, ločena naloga (ponudnik e-računov).
-- Stripe Tax: registraciji **SI** in **EU OSS** (sicer kupec iz AT plača 0 %
-  DDV), naslov izvora.
 - En pravi nakup (test kartica v testnem načinu, nato ena prava v živem):
   potrditveni mail, nalepka, poslano, mail s sledilno.
 - Preveri `has_function_privilege('anon', 'public.trgovina_rezerviraj(...)')`
