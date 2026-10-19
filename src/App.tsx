@@ -24,7 +24,7 @@ import PotisnaObvestila from './components/PotisnaObvestila'
 import { BeleziPovabilo } from './lib/povabilo'
 import { jeZasebna, useKanonicni, useNaslov, useNoindex } from './lib/naslov'
 import { useObisk } from './lib/obiski'
-import { jeNativno } from './lib/platforma'
+import { jeNativno, povezavaTrgovine } from './lib/platforma'
 
 // Strani razen naslovnice so svoji kosi: obiskovalec naslovnice ne prenaša
 // administracije in Moje ekipe. Kos pride ob prvem obisku strani.
@@ -212,6 +212,12 @@ export default function App() {
                 </Link>
               </div>
             )}
+            <div className="mb-3">
+              <a {...povezavaTrgovine()} className="underline hover:text-slate-200">
+                <span aria-hidden>🛍️ </span>
+                {t('aplikacija.meni.trgovina')}
+              </a>
+            </div>
             <Link to="/legal" className="underline hover:text-slate-200">
               {t('aplikacija.noga.zasebnost')}
             </Link>

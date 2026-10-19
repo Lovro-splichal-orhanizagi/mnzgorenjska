@@ -7,7 +7,7 @@ import { useTekmovanje } from '../lib/tekmovanje'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { supabase } from '../lib/supabase'
 import { potrdiZapustitev } from '../lib/neshranjeno'
-import { jeNativno } from '../lib/platforma'
+import { jeNativno, povezavaTrgovine } from '../lib/platforma'
 import IzbirnikLige from './IzbirnikLige'
 import { odpriPodporo } from './Podpora'
 import { t } from '../i18n'
@@ -243,6 +243,9 @@ export default function Navbar() {
                       {p.pot === '/assists' && znacka(cakaGlasov)}
                     </NavLink>
                   ))}
+                  <a {...povezavaTrgovine()} role="menuitem" className={vrsticaMenija} onClick={() => setVecOdprt(false)}>
+                    {t('aplikacija.meni.trgovina')}
+                  </a>
                 </div>
               )}
             </div>
@@ -384,6 +387,9 @@ export default function Navbar() {
                   {p.pot === '/assists' && znacka(cakaGlasov)}
                 </NavLink>
               ))}
+              <a {...povezavaTrgovine()} className={slogMobilni({ isActive: false })} onClick={() => setOdprt(false)}>
+                {t('aplikacija.meni.trgovina')}
+              </a>
               {session ? (
                 <NavLink to="/reminders" className={slogMobilni} onClick={() => setOdprt(false)}>
                   {t('aplikacija.meni.opomniki')}

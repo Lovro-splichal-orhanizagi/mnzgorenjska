@@ -14,6 +14,16 @@ export const SHEMA = 'eu.slff.app'
 /** Ali stran teče v mobilni aplikaciji (iOS, Android), ne v brskalniku. */
 export const jeNativno = (): boolean => Capacitor.isNativePlatform()
 
+/**
+ * Povezava na trgovino SLFF (meni in noga). Na spletu v istem zavihku (naša
+ * stran), v aplikaciji v sistemskem brskalniku kot Facebook v nogi, da
+ * WebView ne zapusti aplikacije. Fizično blago trgovini dovolita mimo IAP.
+ */
+export const povezavaTrgovine = () =>
+  jeNativno()
+    ? { href: 'https://shop.slff.eu', target: '_blank', rel: 'noopener noreferrer' }
+    : { href: 'https://shop.slff.eu' }
+
 /** Enkrat ob zagonu: vrstica stanja in Androidov gumb nazaj. */
 export function pripraviNativno(): void {
   if (!jeNativno()) return
