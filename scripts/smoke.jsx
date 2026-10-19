@@ -1603,7 +1603,12 @@ preveri(
       ['kader nad proračunom', igralci.map((i) => ({ ...i, value: 7 })), 1],
     ]) {
       const izid = cli(skripta, [...kandidati, ...vrhCenika])
-      preveri(`${skripta}: ${ime}`, izid.status === status, izid.stderr || izid.stdout.trim())
+      // preveri-podatke najdene težave javi v izpisu (izhod 0); pripravljenost-lige
+      // jih še vedno kaže z izhodom 1.
+      const pricakovan = skripta === 'preveri-podatke.mjs' && status === 1
+        ? izid.status === 0 && izid.stdout.includes('NAJDENE TEŽAVE')
+        : izid.status === status
+      preveri(`${skripta}: ${ime}`, pricakovan, izid.stderr || izid.stdout.trim())
     }
   }
   // Tekma, ki bi morala biti ze uvozena, je tezava — uvoz je lahko padel,
@@ -1615,7 +1620,7 @@ preveri(
     }]
     const izid = cli('preveri-podatke.mjs', [...igralci, ...vrhCenika], { zamude: zamuda })
     preveri('preverba javi tekmo, ki bi ze morala biti uvozena',
-      izid.status === 1 && izid.stdout.includes('se ni uvozena'),
+      izid.status === 0 && izid.stdout.includes('NAJDENE TEŽAVE') && izid.stdout.includes('se ni uvozena'),
       izid.stdout.trim().split('\n').slice(-1)[0])
   }
   // Vratar z goli je skoraj gotovo igralec iz polja (Labaška: 49 golov kot GK).
@@ -1623,7 +1628,7 @@ preveri(
     const strelci = [{ id: 22641, full_name: 'Labaška Martin', goals: 49, competition_id: 1 }]
     const izid = cli('preveri-podatke.mjs', [...igralci, ...vrhCenika], { strelci })
     preveri('preverba javi vratarja z goli',
-      izid.status === 1 && izid.stdout.includes('vratar-strelec') && izid.stdout.includes('Labaška'),
+      izid.status === 0 && izid.stdout.includes('vratar-strelec') && izid.stdout.includes('Labaška'),
       izid.stdout.trim().split('\n').slice(-1)[0])
   }
   // Igralec iz polja v vratih (Debeljak): uvoz ga ne prekrsti, preverba javi.
@@ -1635,7 +1640,7 @@ preveri(
     }]
     const izid = cli('preveri-podatke.mjs', [...igralci, ...vrhCenika], { zamude })
     preveri('preverba javi igralca iz polja v vratih',
-      izid.status === 1 && izid.stdout.includes('v-vratih-iz-polja') && izid.stdout.includes('Debeljak Matic (MID)'),
+      izid.status === 0 && izid.stdout.includes('v-vratih-iz-polja') && izid.stdout.includes('Debeljak Matic (MID)'),
       izid.stdout.trim().split('\n').slice(-1)[0])
   }
 
