@@ -223,6 +223,8 @@ export interface PostavkaTiska {
   barve?: string[] | null
   /** Cone nosilca (mere v mm); null pri stari obliki. */
   cone?: Cona[] | null
+  /** Jezik naročila: stalni napisi in datum motiva. */
+  jezik?: 'sl' | 'en'
 }
 
 /** trgovina_admin_serija(id) */

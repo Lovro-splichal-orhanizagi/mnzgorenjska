@@ -174,24 +174,85 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
 
 ## Motivi
 
-Motivi nedeljske lige (Retro dres, Legenda, Hangover XI, Kapetan, Kralj kafane,
-Prvak mini lige) na majici in puloverju po meri. Vse preverjanje in vse cene so
-v bazi (`trgovina.personaliziraj_motiv`); brskalnik le riše predogled.
+Motivi nedeljske lige na nosilcih po meri. Del 1 (migracija `20261019080000`):
+Retro dres, Legenda, Hangover XI, Kapetan, Kralj kafane, Prvak mini lige na
+majici in puloverju. Dela 2–3 (migracija `20261019150000`): pub in tekma, stena
+in darila, dodatki in dres po meri (tabela spodaj). Vse preverjanje in vse cene
+so v bazi (`trgovina.personaliziraj_motiv`); brskalnik le riše predogled. Vse je
+sejano z `aktiven = false`, vklopi admin; cene in doplačila v tabeli so seme, admin
+jih spreminja.
+
+| nosilec (`slug`) | postopek | motiv | cona (mm) | seme: cena + doplačilo (€) |
+|---|---|---|---|---|
+| `kozarec-po-meri` (0,5 l) | laser | Tretji polčas, Ekipni kozarec | ovoj 70 × 90 | 12 + 9 |
+| `vrc-po-meri` (0,5 l) | laser | isti kot kozarec | ovoj 200 × 90 (motiv 70 mm na sredini) | 18 + 9 |
+| `podstavki-po-meri` (×6) | sublimacija | Kafanski komplet (6 sloganov) | podstavek Ø 95, ×6 | 22 + 0 |
+| `odpirac-po-meri` | laser | Ime in številka | ročaj 50 × 15 | 9 + 6 |
+| `plakat-po-meri` (A3, A2) | uv | Moja postava, Retro plakat tekme | A3 297 × 420, A2 420 × 594 (cona po `barva` = različica) | 29 / 45 + 0 |
+| `kartica-igralca` (A5) | uv | Kartica legende (4 ocene) | 148 × 210 | 15 + 0 |
+| `zastavica-po-meri` | sublimacija | Klubska zastavica | trikotnik 300 × 450 | 22 + 0 |
+| `sal-po-meri` | sublimacija | Navijaški šal | ves trak 1400 × 180 | 35 + 0 |
+| `kapa-po-meri` (Črna, Bela-črna) | vezenje | Vezena ekipa | spredaj 100 × 50 | 24 + 10 |
+| `trak-po-meri` | sublimacija | Kapetanski trak | 300 × 80 | 18 + 0 |
+| `dres-po-meri` (S–3XL) | sublimacija | Dres po meri | spredaj, hrbet 600 × 750 | 49 + 10 |
+
+**Pravila postopka** (preveri jih smoke na vsaki predlogi):
+
+- **laser** (steklo, kovina): ena barva, brez prosojnosti in prelivov, le črte in
+  polne ploskve, črte ≥ 0,3 mm. Gravura je ena sama; barva sheme je le za predogled.
+- **vezenje** (kapa): največ 4 ploske barve niti, brez prosojnosti, črte ≥ 1 mm,
+  črke ≥ 5 mm visoke tudi pri najdaljšem imenu.
+- **sublimacija**, **uv**: polne barve; ozadje sega do roba cone.
+
+**Mladinske lige.** Pivski motivi (kozarec, vrč, podstavki, odpirač) imajo ime
+ekipe kot prosto besedilo (klub nedeljske lige), brez povezave z ligo. Polji, ki
+se vežeta na fantasy ekipo (`ekipa`, `postava`), ekipo mladinske lige zavrneta
+(`je_mladinska_liga`), zato plakata postave za mladinsko ligo ni. Na plakatu je
+"Igralec" namesto imena anonimiziranega igralca in vsakogar z vrstico v mladinski
+ligi iste države.
+
+**Plakat moje postave** (polje `postava`). Vrednost v košarici je id kupčeve
+nehišne ekipe; baza ob nakupu shrani **posnetek** (oblika v2) v `polja.postava`:
+`{ekipa, liga, sezona, krog, formacija, tocke_skupaj, kazen, zacetni[11], klop[]}`,
+igralec `{ime, priimek, pozicija, klub, tocke, kapetan, podkapetan, mnozitelj,
+zamenjava, zamenjan, steje}` (podrobno v glavi `trgovina.postava_ekipe`). Krog je
+**zadnji končani**: zaklenjen, vsaj en igralec s točkami in glasovanje o
+asistencah zaprto; odprt ali neodigran krog se preskoči. Brez takega kroga baza
+javi namig `trgovina-postava-krog` (konfigurator: "na voljo po prvem odigranem
+krogu"). Točke so tiste, ki so štele (menjave s klopi, množitelj kapetana), vsota
+minus kazen je `tocke_skupaj`. Živi predogled bere isti posnetek
+(`trgovina_moja_postava`). **Tisk riše le posnetek iz postavke**, nikoli živih
+podatkov: kasnejša sprememba postave ali imena igralca plakata ne spremeni.
+
+**Dres po meri.** Vzorec (`enobarven`, `crte`, `tanke-crte`, `obroci`, `serpa`,
+`polovice`), tri barve iz palete (polja `barva`, druga ≠ prva), ovratnik,
+sponzor, ime in številka. Barve dresa nadomestijo barve sheme in se ob nakupu
+shranijo v `personalizacija.barve`; `trgovina.tisk.barve` ima raje posnetek kot
+shemo. Ves panel riše generator `data-dres` v `risba.ts` (sprednji in zadnji
+panel, grb SLFF v vektorju).
+
+**Katalog** pokaže pri nosilcu motivov ceno "od" z najnižjim doplačilom
+aktivnega motiva (`trgovina_katalog.cena_z_motivom`, null brez motivov), ne gole
+cene nosilca.
 
 **Model** (migracija `20261019080000_trgovina_motivi.sql`):
 
-- **Nosilec** je izdelek z `postopek` (`dtf`, …), `po_narocilu` in povezavo v
-  `motivi_izdelki` (`doplacilo` v centih). Danes `majica-po-meri` (Črna/Bela)
-  in `pulover-po-meri` (Črna).
+- **Nosilec** je izdelek z `postopek` (`dtf`, `sublimacija`, `laser`, `uv`,
+  `vezenje`), `po_narocilu` in povezavo v `motivi_izdelki` (`doplacilo` v centih):
+  `majica-po-meri` (Črna/Bela), `pulover-po-meri` (Črna) in nosilci iz tabele zgoraj.
 - **Cona** (`trgovina.cone`): mesto tiska na nosilcu: `kljuc` (`hrbet`, `prsi`),
   `barva` (različica, NULL = vse), `slika` (prazen nosilec, `/nosilci/<ime>.webp`),
   `koti` (TL, TR, BR, BL v px te slike) in prava velikost `sirina_mm` × `visina_mm`.
 - **Motiv** (`trgovina.motivi`): `slug`, imena in opisi sl/en, glavna `cona`,
   `polja`, `sheme`, `primeri`, `aktiven`, `vrstni_red`.
   - `polja`: `{kljuc, vrsta, oznaka_sl, oznaka_en, max, obvezno, privzeto, moznosti, cona?}`;
-    vrste `besedilo` (znaki in filter žaljivk), `stevilka` (0–99), `leto`
-    (1950–letos), `ekipa` (lastna, ne hišna fantasy ekipa), `prvak`
-    (`trgovina.prvaki_uporabnika`, besedilo sestavi baza), `izbira` (`moznosti`).
+    vrste `besedilo` (znaki in filter žaljivk), `stevilka` (0–99, `min` za ocene
+    1–99), `leto` (1950–letos), `datum` (ISO, 1950 do leto naprej), `ekipa`
+    (lastna, ne hišna fantasy ekipa), `prvak` (`trgovina.prvaki_uporabnika`,
+    besedilo sestavi baza), `postava` (posnetek, glej zgoraj), `izbira`
+    (`moznosti`: nizi ali `{kljuc, ime_sl, ime_en}`) in `barva` (`{kljuc, hex,
+    ime_sl, ime_en}`, `razlicna_od`). Motiv ima največ eno polje `ekipa`, `prvak`
+    ali `postava`.
     Polje z lastno `cona` se natisne drugje (sponzor Retro dresa na prsih).
   - `sheme`: `{kljuc, ime_sl, ime_en, barve: [3 × #hex]}`; barva 1 je srednji ton,
     2 in 3 sta svetla/temna nasprotja, zato vsaka shema bere na črnem in belem.
@@ -227,6 +288,19 @@ pomnoži s svetlostjo fotografije.
    Nosilec (izdelek s `postopek`) brez motiva, ki ga izdaja zna narisati, pokaže
    "Motivi prihajajo kmalu" brez gumba za nakup, zato ga lahko vklopiš pred motivi.
 
+**Nov nosilec:**
+
+1. Nova migracija: `trgovina.izdelki` (`postopek`, `po_narocilu = true`, `tax_code`,
+   `aktiven = false`), `razlicice` (cena, teža; plakat: različica = format), cone
+   (spodaj) in `motivi_izdelki` (doplačilo). Mere cone = mere predloge v mm;
+   vrč pokaže, kako širši ovoj uporabi ožjo predlogo na sredini.
+2. Predloga ali obstoječi motiv, ki ustreza pravilom postopka; motiv s kompletom
+   ima v manifestu `kosov` (podstavki 6, `{n}` v ključih).
+3. Posebnosti fotografije (svetlost, polmer valja, videz gravure/vezenja, kosi
+   kompleta, približanje vitrine) gredo v `NOSILCI` v `shop/src/mockup.tsx`,
+   ključ je ime slike.
+4. Smoke: seme in cone se berejo iz migracije (`shop/smoke.tsx`, blok d23).
+
 **Nova fotografija nosilca / cona:**
 
 1. Prazen nosilec (brez napisov), raven, od spredaj, kvadrat; WebP 1600 px v
@@ -237,19 +311,42 @@ pomnoži s svetlostjo fotografije.
 3. Nova migracija z vrstico `trgovina.cone` (`slika`, `koti`, `sirina_mm`, `visina_mm`).
 4. Preveri predogled na izdelku z vsemi motivi (svetla in temna barva).
 
-**Tisk** (admin → Tisk, `AdminTisk.tsx`): za postavko z motivom SVG v pravi
-velikosti cone (mm na korenu), 3 mm prireza in rezilne oznake, ter PNG 300 dpi
-(z vgrajeno pisavo, zanesljiva datoteka za tiskarno); ime
-`<oznaka>-<cona>-<postopek>-<postavka>`; CSV ima stolpce `motiv`, `postopek`, `cona`.
-PNG hrbta (≈ 19 MP) je večji od meje platna v iOS Safariju: datoteka, ki ne uspe,
-ne ustavi serije, admin dobi seznam neuspelih. Izvažaj na računalniku.
+**Tisk** (admin → Tisk, `AdminTisk.tsx`): datoteke za vsako neprazno cono,
+ime `<oznaka>-<cona>-<postopek>-<postavka>`, vse z vgrajeno pisavo Anton. Mere
+so iz posnetka postavke, barve iz posnetka (dres) ali sheme, stalni napisi in
+datum v **jeziku naročila** (`trgovina.narocila.jezik`, sl|en s check; pogled
+`trgovina.tisk.jezik`). Po postopku:
+
+| postopek | datoteke |
+|---|---|
+| `dtf` (majice) | list SVG + PNG 300 dpi (3 mm prireza, rezilne oznake) in `-dtf.png` (le motiv) |
+| `sublimacija`, `uv` | list SVG + PNG s prirezom in oznakami; ozadje (pravokotnik ali krog do roba) se razširi v prirez |
+| `laser` | SVG v pravi velikosti, vse polnilo in črte črno, brez oznak (vžgale bi se) + PNG 300 dpi |
+| `vezenje` | SVG v pravi velikosti, ≤ 4 ploske barve, brez oznak; barve niti v CSV (`Barve niti`), brez PNG |
+
+- **Komplet** (podstavki): datoteka na kos `-k1` … `-k6` (vsak svoj slogan) in
+  `-list` (vseh 6 na listu 295 × 195 mm). Krog podstavka dobi 3 mm prireza.
+- **Šal**: ves trak 1400 × 180 mm v eni datoteki. **Plakat**: A3 ali A2 po
+  različici. **Zastavica**: trikotnik brez prireza zunaj trikotnika (ponytail).
+- **DPI**: 300, razen sublimacije s stranico ≥ 600 mm (dres, šal) v **150 dpi**,
+  kar je za tekstil dovolj: dres s prirezom 620 × 770 mm = 3661 × 4547 px
+  (16,6 M px, pod mejo platna 16,7 M px v iOS Safariju; v 300 dpi bi bil
+  7323 × 9094 = 67 M px), šal 8386 × 1181 px. PNG nosi pHYs z izbranim dpi.
+- **CSV** ima stolpce `Motiv`, `Postopek`, `Cona`, `PNG`, `PNG DTF`, `Kos`,
+  `Mere (mm)`, `DPI`, `Barve niti`.
+
+PNG A2 plakata v 300 dpi (≈ 38 M px) je večji od meje platna v iOS Safariju:
+datoteka, ki ne uspe, ne ustavi serije, admin dobi seznam neuspelih. Izvažaj
+na računalniku.
 
 **Slike s prizori** (`scripts/trgovina-hero.mjs`): na izvirne fotografije prizorov
 (`scripts/trgovina-hero/*.jpg`: igrišče, gostilna, slačilnica; prazni nosilci)
 nalepi pravi motiv s perspektivo (4 koti) in senčenjem fotografije ter zapiše
 `shop/nosilci/hero-<scena>.webp` (2000 px in `-1000`) za `/personalised` in pas
 v katalogu ter `katalog-majica.webp` / `katalog-pulover.webp` (kataloški sliki
-nosilcev). Primeri in sheme pridejo iz semena v migraciji.
+nosilcev). Primeri in sheme pridejo iz semena v migraciji. Nosilci delov 2–3
+prizorov še nimajo (miza v gostilni s kozarcem in podstavki, stena z uokvirjenim
+plakatom): kartica v katalogu pokaže živi mockup prvega primera.
 
 ```bash
 npx vite-node scripts/trgovina-hero.mjs                  # vse

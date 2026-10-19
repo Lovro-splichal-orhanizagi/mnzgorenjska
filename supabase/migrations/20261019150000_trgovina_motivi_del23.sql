@@ -570,7 +570,9 @@ select p.id as postavka_id, p.serija_id, p.stanje_tiska, n.id as narocilo_id, n.
        coalesce(p.personalizacija -> 'barve',
                 (select s -> 'barve' from trgovina.motivi m, jsonb_array_elements(m.sheme) s
                   where m.slug = p.personalizacija ->> 'motiv' and s ->> 'kljuc' = p.personalizacija ->> 'shema')) as barve,
-       case when p.personalizacija ? 'motiv' then trgovina.cone_json(i.id) end as cone
+       case when p.personalizacija ? 'motiv' then trgovina.cone_json(i.id) end as cone,
+       -- Jezik naročila (sl|en, check na narocila): v njem so stalni napisi in datum motiva, kot jih je kupec videl.
+       n.jezik
   from trgovina.postavke p
   join trgovina.narocila n on n.id = p.narocilo_id
   join trgovina.razlicice r on r.id = p.razlicica_id

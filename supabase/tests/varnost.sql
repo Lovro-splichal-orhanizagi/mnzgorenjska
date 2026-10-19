@@ -5473,11 +5473,13 @@ select pg_temp.preveri('trgovina4: posnetek ostane, ko se postava kasneje spreme
 update trgovina.narocila set stanje = 'placano', placano_at = now() where odjemalec = encode(sha256('t4a'), 'hex');
 update trgovina.postavke set stanje_tiska = 'za_tisk'
  where narocilo_id = (select id from trgovina.narocila where odjemalec = encode(sha256('t4a'), 'hex'));
-select pg_temp.preveri('trgovina4: izvoz za tisk da barve dresa, ne barv sheme',
+select pg_temp.preveri('trgovina4: izvoz za tisk da barve dresa, ne barv sheme, in jezik naročila',
   (select t.barve = '["#C8102E","#FFFFFF","#111111"]' from trgovina.tisk t
     where t.narocilo_id = (select id from trgovina.narocila where odjemalec = encode(sha256('t4a'), 'hex')) and t.sku = 'DRM-M')
   and (select t.barve = '["#FFFFFF"]' from trgovina.tisk t
-    where t.narocilo_id = (select id from trgovina.narocila where odjemalec = encode(sha256('t4a'), 'hex')) and t.sku = 'KZM-1'));
+    where t.narocilo_id = (select id from trgovina.narocila where odjemalec = encode(sha256('t4a'), 'hex')) and t.sku = 'KZM-1')
+  and (select bool_and(t.jezik = 'sl') from trgovina.tisk t
+    where t.narocilo_id = (select id from trgovina.narocila where odjemalec = encode(sha256('t4a'), 'hex'))));
 delete from trgovina.narocila where odjemalec = encode(sha256('t4a'), 'hex');
 
 -- Živi predogled: le lastnik, anon nima dostopa.

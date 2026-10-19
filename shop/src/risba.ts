@@ -474,12 +474,20 @@ export function narisiMotiv(
   return svg
 }
 
+/** Mere lista kosov v mm (3 v vrsti, 5 mm razmika). */
+export function velikostKosov(slug: string): { sirina: number; visina: number } {
+  const kosov = motiv(slug).kosov ?? 1
+  const { sirina, visina } = velikostMm(slug)
+  const vVrsti = Math.min(3, kosov)
+  return { sirina: vVrsti * sirina + (vVrsti - 1) * 5, visina: Math.ceil(kosov / vVrsti) * (visina + 5) - 5 }
+}
+
 /** Vsi kosi kompleta (podstavki) na enem listu, 3 v vrsti, 5 mm razmika: list za tisk. */
 export function narisiKose(slug: string, polja: VrednostiPolj, barve: string[], jezik: Jezik = 'sl'): string {
   const kosov = motiv(slug).kosov ?? 1
   const { sirina, visina } = velikostMm(slug)
   const vVrsti = Math.min(3, kosov)
-  const [W, H] = [vVrsti * sirina + (vVrsti - 1) * 5, Math.ceil(kosov / vVrsti) * (visina + 5) - 5]
+  const { sirina: W, visina: H } = velikostKosov(slug)
   const kosi = Array.from({ length: kosov }, (_, i) =>
     narisiMotiv(slug, polja, barve, undefined, undefined, { kos: i + 1, jezik })
       .replace(/^<svg\b[^>]*>/, (o) => nastavi(nastavi(nastavi(nastavi(o, 'width', st(sirina)), 'height', st(visina)),

@@ -19,7 +19,7 @@ import { Pogoji } from './src/strani/Pogoji'
 import { Odstop, mailOdstopa } from './src/strani/Odstop'
 import { Prijava, varnaPot } from './src/strani/Prijava'
 import { Admin, Dobavnica, Nalepka, zaPakiranje } from './src/strani/Admin'
-import { csvSerije, datotekeTiska, PogledSerije, prenesiVse, ROB, s300dpi, svgDtf, svgZaTisk } from './src/strani/AdminTisk'
+import { barveNiti, csvSerije, datotekeTiska, dpiZa, PogledSerije, prenesiVse, ROB, sDpi, svgDatoteke, svgMotiva, svgZaTisk } from './src/strani/AdminTisk'
 import { doplaciloIz, KarticaMotiva, type MotivAdmin } from './src/strani/AdminMotivi'
 import { zahtevaBona } from './src/strani/AdminBoni'
 import { PREHODI, povzetekPostavk, stripePovezava, ZnackaStanja } from './src/strani/AdminVsaNarocila'
@@ -231,7 +231,7 @@ const serija: Serija = {
 const csv = csvSerije(serija)
 const vrsticeCsv = csv.split('\r\n')
 preveri('tisk: CSV serije (BOM, glava, ubežano, ime SVG)', csv.startsWith('﻿"Naročilo";"Postavka";"Šifra"') && vrsticeCsv.length === 4
-  && vrsticeCsv[1] === '"AB12CD34";"11";"MIS-CRN-M";"Majica (Črna / M)";"2";"Žan ""Z""";"7";"AB12CD34-11.svg";"";"";"";"";""'
+  && vrsticeCsv[1] === '"AB12CD34";"11";"MIS-CRN-M";"Majica (Črna / M)";"2";"Žan ""Z""";"7";"AB12CD34-11.svg";"";"";"";"";"";"";"";"";""'
   && vrsticeCsv[2].includes(`"'=Tigri";""`), vrsticeCsv.slice(0, 3).join(' | '))
 const pogledSerije = renderToString(<PogledSerije s={serija} />)
 preveri('admin: pogled serije s predogledi', pogledSerije.includes('Serija 3') && pogledSerije.includes('AB12CD34') && pogledSerije.includes('data:image/svg+xml') && pogledSerije.includes('EF56GH78'))
@@ -269,29 +269,30 @@ preveri('admin: pogled serije s predogledi', pogledSerije.includes('Serija 3') &
   preveri('tisk motiva: SVG ima vgrajeno pisavo Anton', /^<\?xml[^>]*>\n<svg [^>]*><style>@font-face\{font-family:Anton;src:url\(data:font\/ttf;base64,/.test(sPisavo))
   const csvM = csvSerije({ ...serija, postavke: [motivna] }).split('\r\n')
   preveri('tisk motiva: CSV vrstica na cono s stolpci motiv, postopek, cona',
-    csvM[0]!.endsWith('"SVG";"Motiv";"Postopek";"Cona";"PNG";"PNG DTF"') && csvM.length === 4
-    && csvM[1]!.endsWith('"IJ90KL12-hrbet-dtf-13.svg";"retro-dres";"dtf";"hrbet";"IJ90KL12-hrbet-dtf-13.png";"IJ90KL12-hrbet-dtf-13-dtf.png"') && csvM[2]!.includes('"prsi"'), csvM.join(' | '))
+    csvM[0]!.endsWith('"SVG";"Motiv";"Postopek";"Cona";"PNG";"PNG DTF";"Kos";"Mere (mm)";"DPI";"Barve niti"') && csvM.length === 4
+    && csvM[1]!.endsWith('"IJ90KL12-hrbet-dtf-13.svg";"retro-dres";"dtf";"hrbet";"IJ90KL12-hrbet-dtf-13.png";"IJ90KL12-hrbet-dtf-13-dtf.png";"";"300 × 400";"300";""') && csvM[2]!.includes('"prsi"'), csvM.join(' | '))
   const { crc32 } = await import('node:zlib')
   const lazni = new Uint8Array(45)
   lazni.set([0x89, 0x50, 0x4e, 0x47], 0)
-  const png = new Uint8Array(await s300dpi(lazni).arrayBuffer())
+  const png = new Uint8Array(await sDpi(lazni).arrayBuffer())
   const dv = new DataView(png.buffer)
   preveri('tisk motiva: PNG dobi pHYs 300 dpi za IHDR', png.length === 66 && String.fromCharCode(...png.subarray(37, 41)) === 'pHYs'
     && dv.getUint32(41) === 11811 && dv.getUint32(45) === 11811 && png[49] === 1 && dv.getUint32(50) === crc32(png.subarray(37, 50))
-    && (await s300dpi(png).arrayBuffer()).byteLength === 66)
+    && (await sDpi(png).arrayBuffer()).byteLength === 66)
+  preveri('tisk motiva: pHYs 150 dpi (velika sublimacija)', new DataView(await sDpi(lazni, 150).arrayBuffer()).getUint32(41) === 5906)
   const posnetek: PostavkaTiska = { ...motivna, personalizacija: { ...motivna.personalizacija, barve: ['#123456', '#ABCDEF', '#000000'], cone: { hrbet: { sirina_mm: 280, visina_mm: 380 } } } }
   const datP = datotekeTiska(posnetek)
   preveri('tisk motiva: posnetek ob nakupu ima prednost pred živimi conami in barvami',
     datP.map((d) => `${d.cona}:${d.mm.sirina}x${d.mm.visina}`).join() === 'hrbet:280x380,prsi:260x120'
     && svgZaTisk(posnetek, datP[0]!).includes('#123456') && !svgZaTisk(posnetek, datP[0]!).includes('#C8102E'))
-  const dtf = svgDtf(motivna, dat[1]!)
+  const dtf = svgMotiva(motivna, dat[1]!)
   preveri('tisk motiva: DTF le motiv v pravi velikosti, brez prireza in oznak',
     /^<svg\b[^>]*\swidth="260mm"/.test(dtf) && /^<svg\b[^>]*\sheight="120mm"/.test(dtf) && !dtf.includes('data-oznake') && dtf.includes('BAR OFFSIDE'))
   const tuj: PostavkaTiska = { ...motivna, postavka_id: 14, personalizacija: { ...motivna.personalizacija, motiv: 'ni-predloge' } }
   const pogledTuj = renderToString(<PogledSerije s={{ ...serija, postavke: [tuj, motivna] }} />)
   preveri('tisk motiva: motiv brez predloge ne podre pogleda in nima datotek',
     datotekeTiska(tuj).length === 0 && pogledTuj.includes('ni-predloge') && pogledTuj.includes('IJ90KL12-prsi-dtf-13')
-    && csvSerije({ ...serija, postavke: [tuj] }).split('\r\n')[1]!.endsWith('"";"";"ni-predloge";"dtf";"";"";""'))
+    && csvSerije({ ...serija, postavke: [tuj] }).split('\r\n')[1]!.endsWith('"";"";"ni-predloge";"dtf";"";"";"";"";"";"";""'))
   preveri('tisk motiva: pogled serije pokaže cone', renderToString(<PogledSerije s={{ ...serija, postavke: [motivna] }} />).includes('IJ90KL12-prsi-dtf-13 · 260 × 120 mm'))
   // V Node ni <canvas>: vsak PNG pade, kot v iOS Safariju PNG hrbta. Ostale datoteke gredo naprej.
   const shranjene: string[] = []
@@ -813,6 +814,83 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
   preveri('d23 katalog: nosilec pove ceno z motivom ("od 21,00")', karticaCena.includes('od 21,00') && !karticaCena.includes('>12,00'))
   const vitrinaOdp = renderToString(<StaticRouter location="/personalised"><MrezaMotivov motivi={kat.filter((m) => m.slug === 'ime-in-stevilka' || m.slug === 'navijaski-sal')} /></StaticRouter>)
   preveri('d23 vitrina: odpirač in šal povečana bližje', vitrinaOdp.includes('scale(1.9)') && vitrinaOdp.includes('scale(2.1)'))
+
+  // Izvoz za tisk po postopku (AdminTisk): laser ena barva brez oznak, vezenje ≤ 4 barve niti,
+  // dres 600 × 750 mm s prirezom v barvah kupca in 150 dpi, podstavki 6 + list, plakat iz posnetka v jeziku naročila.
+  {
+    const postavka = (slug: string, izdelek: string, postopek: string, primer = 0, dodatno: Partial<PostavkaTiska> = {}): PostavkaTiska => {
+      const m = motiv(slug)
+      const pr = m.primeri[primer]!
+      return {
+        postavka_id: 70, stanje_tiska: 'v_seriji', narocilo_id: 7, javna_oznaka: 'ZZ00TT11', placano_at: null, sku: 'X', ime: izdelek, kolicina: 1,
+        personalizacija: { motiv: slug, shema: pr.shema, polja: pr.polja },
+        razlicica: pr.barva ?? undefined, postopek, barve: (m.sheme.find((x) => x.kljuc === pr.shema) ?? m.sheme[0]!).barve,
+        cone: cone23.filter((c) => c.izdelek === izdelek), ...dodatno,
+      }
+    }
+    // Besedilo se lahko prelomi v dve vrstici: vsaka beseda mora biti na listu.
+    const vsebuje = (x: string, b: string) => b.toUpperCase().split(/\s+/).filter(Boolean).every((w) => x.toUpperCase().includes(w))
+    const pravokotnik = (x: string, a: Record<string, string>) => [...x.matchAll(/<rect\b[^>]*>/g)].some(([r]) => Object.entries(a).every(([k, v]) => r.includes(` ${k}="${v}"`)))
+    const barveSvg = (x: string) => new Set([...x.replace(/<path [^>]*data-oznake="rez"[^>]*>/, '').matchAll(/\s(?:fill|stroke)="([^"]+)"/g)].map((m) => m[1]!).filter((b) => b !== 'none'))
+    const laser = postavka('tretji-polcas', 'kozarec-po-meri', 'laser')
+    const [dl] = datotekeTiska(laser)
+    const svgL = svgDatoteke(laser, dl!)
+    const csvL = csvSerije({ ...serija, postavke: [laser] }).split('\r\n')[1]!
+    preveri('izvoz d23: laser je ena barva (črna), prava velikost, brez prireza in oznak, SVG + PNG 300 dpi',
+      [...barveSvg(svgL)].join() === '#000' && svgL.startsWith('<?xml') && /^<svg\b[^>]*\swidth="70mm"/m.test(svgL.split('\n')[1]!)
+      && !svgL.includes('data-oznake') && !/opacity|Gradient/.test(svgL) && csvL.endsWith(`"${dl!.ime}.png";"";"";"70 × 90";"300";""`), `${[...barveSvg(svgL)].join()} | ${csvL}`)
+    const kapa = postavka('vezena-ekipa', 'kapa-po-meri', 'vezenje')
+    const [dk] = datotekeTiska(kapa)
+    const niti = barveNiti(svgMotiva(kapa, dk!))
+    const csvK = csvSerije({ ...serija, postavke: [kapa] }).split('\r\n')[1]!
+    preveri('izvoz d23: vezenje ≤ 4 ploske barve, seznam niti v CSV, brez PNG in oznak',
+      niti.length >= 1 && niti.length <= 4 && barveSvg(svgDatoteke(kapa, dk!)).size <= 4 && !svgDatoteke(kapa, dk!).includes('data-oznake')
+      && csvK.endsWith(`"";"";"";"100 × 50";"";"${niti.join(' ')}"`), csvK)
+
+    const kupec = ['#0A7E3C', '#F2F2F2', '#E8B22E']
+    const dresP = postavka('dres-po-meri', 'dres-po-meri', 'sublimacija', 0, { razlicica: 'M' })
+    dresP.personalizacija = { ...dresP.personalizacija, polja: { ...dresP.personalizacija!.polja, vzorec: 'obroci', ime: 'Novak', stevilka: 9, sponzor: 'Bar Offside' }, barve: kupec }
+    const datD = datotekeTiska(dresP)
+    const listD = svgZaTisk(dresP, datD[0]!)
+    const S = 600 + 2 * ROB
+    const px = (mm: number) => Math.round((mm / 25.4) * dpiZa(dresP, datD[0]!))
+    preveri('izvoz d23: dres spredaj in hrbet 600 × 750 mm, prirez z ozadjem do roba, oznake, barve kupca, 150 dpi (3661 × 4547 px)',
+      datD.map((d) => `${d.cona}:${d.mm.sirina}x${d.mm.visina}`).join() === 'spredaj:600x750,hrbet:600x750'
+      && listD.includes(`width="${S}mm" height="${750 + 2 * ROB}mm"`) && listD.includes('data-oznake="rez"')
+      && pravokotnik(listD, { x: '-3', y: '-3', width: '606', height: '756', fill: '#F2F2F2' }) && pravokotnik(listD, { x: '-3', y: '40', width: '606', height: '80', fill: '#0A7E3C' })
+      && svgZaTisk(dresP, datD[1]!).includes('NOVAK') && !listD.includes('NOVAK') && listD.includes('BAR OFFSIDE')
+      && dpiZa(dresP, datD[0]!) === 150 && px(S) === 3661 && px(750 + 2 * ROB) === 4547 && px(S) * px(750 + 2 * ROB) < 16777216,
+      listD.slice(0, 600))
+
+    const mat = postavka('kafanski-komplet', 'podstavki-po-meri', 'sublimacija')
+    const datM = datotekeTiska(mat)
+    const slogani = [1, 2, 3, 4, 5, 6].map((n) => String(mat.personalizacija!.polja![`slogan${n}`] ?? ''))
+    const listM = svgZaTisk(mat, datM[6]!)
+    preveri('izvoz d23: podstavki 6 datotek (vsaka svoj slogan, prirez kroga) + list vseh',
+      datM.length === 7 && datM.slice(0, 6).every((d, i) => d.ime.endsWith(`-k${i + 1}`) && d.mm.sirina === 95 && d.kos === i + 1)
+      && datM[6]!.ime.endsWith('-list') && datM[6]!.mm.sirina === 295 && datM[6]!.mm.visina === 195
+      && datM.slice(0, 6).every((d, i) => { const x = svgZaTisk(mat, d); return x.includes('r="50.5"') && vsebuje(x, slogani[i]!) })
+      && new Set(datM.slice(0, 6).map((d) => svgMotiva(mat, d).replace(/-m\d+/g, ''))).size === 6
+      && (listM.match(/<svg\b/g) ?? []).length === 8 && listM.includes(`width="${295 + 2 * ROB}mm"`), datM.map((d) => d.ime).join())
+
+    const plakatT = postavka('moja-postava', 'plakat-po-meri', 'uv', 0, { jezik: 'en' })
+    const [dpl] = datotekeTiska(plakatT)
+    const svgPl = svgDatoteke(plakatT, dpl!)
+    const posnetek = plakatT.personalizacija!.polja!.postava as { ekipa: string; zacetni: { priimek: string }[] }
+    preveri('izvoz d23: plakat postave iz posnetka naročila v jeziku naročila, A3 s prirezom in oznakami, 300 dpi',
+      dpl!.mm.sirina === 297 && svgPl.includes(`width="${297 + 2 * ROB}mm"`) && svgPl.includes('data-oznake="rez"')
+      && vsebuje(svgPl, posnetek.ekipa) && posnetek.zacetni.every((z) => vsebuje(svgPl, z.priimek))
+      && svgPl.includes('MY LINE-UP') && !svgPl.includes('MOJA POSTAVA') && dpiZa(plakatT, dpl!) === 300
+      && pravokotnik(svgPl, { x: '-3', y: '-3', width: '303', height: '426' }), svgPl.slice(0, 300))
+    const sal = postavka('navijaski-sal', 'sal-po-meri', 'sublimacija')
+    const [ds] = datotekeTiska(sal)
+    preveri('izvoz d23: šal ves trak 1400 × 180 mm v 150 dpi', ds!.mm.sirina === 1400 && ds!.mm.visina === 180 && dpiZa(sal, ds!) === 150
+      && svgZaTisk(sal, ds!).includes(`width="${1400 + 2 * ROB}mm"`))
+    const shranjene: string[] = []
+    const neuspele = await prenesiVse({ ...serija, postavke: [laser, kapa, mat] }, (ime) => { shranjene.push(ime) })
+    preveri('izvoz d23: prenos po postopku (laser SVG+PNG, vezenje le SVG, podstavki 7 listov)',
+      shranjene.length === 1 + 1 + 7 && neuspele.length === 1 + 7 && !neuspele.some((n) => n.includes('vezenje')) && !neuspele.some((n) => n.endsWith('-dtf.png')), `${shranjene.join()} | ${neuspele.join()}`)
+  }
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
