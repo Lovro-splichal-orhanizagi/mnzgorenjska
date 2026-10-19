@@ -187,6 +187,27 @@ const izidIz = (s) => {
 
 // --- stran divizije ---------------------------------------------------------------------
 
+/**
+ * Pot izbrane sezone iz izbirnika (`<option ... SELECTED>`). Vrstni red
+ * atributov, narekovaji, `selected="selected"` in absolutni naslov ne smejo
+ * vplivati; brez izbrane možnosti vrne null (sezone ne ugibamo).
+ */
+export function izbranaSezona(s) {
+  for (const [, atributi] of String(s ?? '').matchAll(/<option\b([^>]*)>/gi)) {
+    if (!/(^|\s)selected(\s|=|\/|$)/i.test(atributi)) continue
+    const v = atributi.match(/\bvalue\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/i)
+    const vrednost = (v?.[1] ?? v?.[2] ?? v?.[3] ?? '').trim()
+    if (!vrednost) continue
+    try {
+      const u = new URL(vrednost, OSNOVNI)
+      return u.pathname.endsWith('/') ? u.pathname : `${u.pathname}/`
+    } catch {
+      return vrednost
+    }
+  }
+  return null
+}
+
 const KONTUMACIJA = /awarded|unable to field|walk-?over|w\/o\b|conceded/i
 
 /**
@@ -197,8 +218,13 @@ const KONTUMACIJA = /awarded|unable to field|walk-?over|w\/o\b|conceded/i
 export function tekmeLige(koda, html, danes = Date.now()) {
   const s = brezSkript(html)
   const pot = potLige(koda)
-  const izbrana = s.match(/<option[^>]*value="([^"]+)"[^>]*\bSELECTED\b/i)?.[1]
-  if (izbrana !== pot) throw new Error(`ncefl: stran ${pot} kaže sezono ${izbrana ?? '?'} — uvoz ustavljen`)
+  const izbrana = izbranaSezona(s)
+  if (izbrana !== pot) {
+    throw new Error(
+      `ncefl: stran ${pot} kaže sezono ${izbrana ?? '?'} — uvoz ustavljen` +
+        (izbrana ? '' : ` (${s.length} B: ${besedilo(s).slice(0, 120)})`),
+    )
+  }
   if (!/class="mdborder"/.test(s)) throw new Error(`ncefl: stran ${pot} nima tekem (${s.length} B) — uvoz ustavljen`)
   const { leto } = razbijKodo(koda)
   const out = []
@@ -567,6 +593,11 @@ export function kratkoImeNcel(polno) {
 // --- vir --------------------------------------------------------------------------------
 
 async function stranLige(koda, prenesi) {
+  const html = await beri(prenesi, naslovLige(koda), imeLige(koda), true)
+  // Preobremenjen strežnik kdaj vrne okrnjeno stran brez izbirnika sezon
+  // (nočni uvoz GB, 19. 10. 2026); en ponoven prenos, nato odloči varovalka.
+  if (izbranaSezona(brezSkript(html)) !== null) return html
+  await new Promise((r) => setTimeout(r, 5000))
   return beri(prenesi, naslovLige(koda), imeLige(koda), true)
 }
 
