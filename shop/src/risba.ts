@@ -197,7 +197,7 @@ function poLoku(oznaka: string, besedilo: string, velikost: number, razmik: numb
 }
 
 // Oznake predloge, ki jih izris porabi (v izhodu jih ni).
-const POMOZNE = ['data-polje', 'data-sirina', 'data-velike', 'data-oblika', 'data-sredina', 'data-vrstice', 'data-en', 'data-vzorec', 'data-vzorec-en', 'data-izracun']
+const POMOZNE = ['data-polje', 'data-sirina', 'data-velike', 'data-oblika', 'data-sredina', 'data-vrstice', 'data-vrstice-najvec', 'data-prazno', 'data-en', 'data-vzorec', 'data-vzorec-en', 'data-izracun']
 
 // Najboljša delitev v dve vrstici (ob presledku, najožja daljša vrstica) ali null.
 function dveVrstici(v: string, velikost: number, razmik: number): [string, string] | null {
@@ -232,12 +232,15 @@ function besedilo(oznaka: string, vsebina: string, vrednosti: VrednostiPolj, jez
   const prilega = (s: string): number => Math.min(1, sirina / Math.max(sirinaBesedila(s, velikost0, razmik), 1e-9))
 
   // Ena vrstica, pomanjšana do širine; pri data-vrstice="2" dolgo besedilo raje v dve.
+  // data-vrstice-najvec: največja velikost dveh vrstic (privzeto 0,55 polne); predloga z več prostora jo dvigne.
+  if (!v && atribut(oznaka, 'data-prazno')) v = atribut(oznaka, 'data-prazno')!
+  const najvec = Number(atribut(oznaka, 'data-vrstice-najvec') ?? 0.55)
   let vrstice = [v]
   let f = prilega(v)
-  const deli = atribut(oznaka, 'data-vrstice') === '2' && f < 0.55 ? dveVrstici(v, velikost0, razmik) : null
+  const deli = atribut(oznaka, 'data-vrstice') === '2' && f < najvec ? dveVrstici(v, velikost0, razmik) : null
   if (deli) {
     vrstice = deli
-    f = Math.min(0.55, prilega(deli[0]), prilega(deli[1]))
+    f = Math.min(najvec, prilega(deli[0]), prilega(deli[1]))
   }
   const velikost = velikost0 * f
   let o = oznaka
@@ -272,10 +275,19 @@ function besedilo(oznaka: string, vsebina: string, vrednosti: VrednostiPolj, jez
 const SRAJCA = 'M-6 -14 Q0 -10 6 -14 L15 -9 L12 -1 L8.5 -3 V13 H-8.5 V-3 L-12 -1 L-15 -9 Z'
 const VRSTE = ['FWD', 'MID', 'DEF', 'GK'] as const
 
-function zeton(pot: string, i: Record<string, unknown>, x: number, y: number, s: number): string {
+// Na klopi: točke, ki niso štele, v oklepaju in bledo; igralec s klopi, ki je štel (klop plus), dobi kljukico.
+function zeton(pot: string, i: Record<string, unknown>, x: number, y: number, s: number, klop: boolean, zZacetnico: boolean): string {
   const gk = i.pozicija === 'GK'
   const ime = prazno(i.priimek) ? 'ime' : 'priimek'
-  const tocke = typeof i.tocke === 'number' && Number.isFinite(i.tocke) ? String(i.tocke) : '–'
+  const surove = typeof i.tocke === 'number' && Number.isFinite(i.tocke) ? String(i.tocke) : '–'
+  const nestete = klop && i.steje !== true
+  const tocke = nestete && surove !== '–' ? `(${surove})` : surove
+  // Isti priimek dvakrat: začetnica imena pred priimkom (ime je "Ime Priimek" ali "Igralec").
+  const zacetnica = zZacetnico && typeof i.ime === 'string' && i.ime.trim() && i.ime !== i.priimek ? `${[...i.ime.trim()][0]}. ` : ''
+  const napis = zacetnica
+    ? `<text y="22.7" font-size="6.2" letter-spacing=".3" data-velike data-sirina="38" data-barva="t">${xml(zacetnica + kotBesedilo(i.priimek))}</text>`
+    : `<text y="22.7" font-size="6.2" letter-spacing=".3" data-polje="${pot}.${ime}" data-velike data-sirina="38" data-barva="t">I</text>`
+  const kljukica = klop && i.steje === true ? '<circle cx="-12.5" cy="-12.5" r="4.2" data-barva="1" data-crta="t" stroke-width=".8"/><path d="M-14.6 -12.6 l1.6 1.7 l3.1 -3.4" fill="none" data-crta="t" stroke-width="1.1" stroke-linecap="round"/>' : ''
   const znak = i.kapetan === true
     ? '<circle cx="12.5" cy="-12.5" r="4.8" data-barva="t" data-crta="1" stroke-width="1"/><text x="12.5" y="-9.9" font-size="6.6" data-barva="1">C</text>'
     : i.podkapetan === true
@@ -287,11 +299,11 @@ function zeton(pot: string, i: Record<string, unknown>, x: number, y: number, s:
   return `<g transform="translate(${st(x)} ${st(y)}) scale(${s})"${i.zamenjan === true ? ' opacity=".55"' : ''}>`
     + `<path d="${SRAJCA}" data-barva="${gk ? 's' : '1'}" data-crta="t" stroke-width=".7"/>`
     + `<path d="M-6 -14 Q0 -8.5 6 -14" fill="none" data-crta="${gk ? '1' : 't'}" stroke-width="1.3"/>`
-    + `<text y="7.4" font-size="10.5" data-barva="${gk ? 't' : 's'}"${gk ? '' : ' data-crta="t" stroke-width="1.8" paint-order="stroke"'}>${xml(tocke)}</text>`
+    + `<text y="7.4" font-size="${nestete && tocke.length > 2 ? 8.5 : 10.5}" data-barva="${gk ? 't' : 's'}"${gk ? '' : ' data-crta="t" stroke-width="1.8" paint-order="stroke"'}${nestete ? ' opacity=".6"' : ''}>${xml(tocke)}</text>`
     + '<rect x="-21" y="16" width="42" height="8.6" rx="1.3" data-barva="s"/>'
-    + `<text y="22.7" font-size="6.2" letter-spacing=".3" data-polje="${pot}.${ime}" data-velike data-sirina="38" data-barva="t">I</text>`
+    + napis
     + `<text y="30.8" font-size="4.6" letter-spacing=".5" data-polje="${pot}.klub" data-velike data-sirina="40" data-barva="s" opacity=".72">K</text>`
-    + znak + zamenjava + '</g>'
+    + znak + zamenjava + kljukica + '</g>'
 }
 
 function narisiPostavo(oznaka: string, vr: VrednostiPolj): string {
@@ -304,16 +316,18 @@ function narisiPostavo(oznaka: string, vr: VrednostiPolj): string {
   const [ix, iy, iw, ih] = okvir('data-igrisce') as [number, number, number, number]
   const [kx, ky, kw, kh] = okvir('data-klop') as [number, number, number, number]
   const zacetni = seznam('zacetni')
+  const klop = seznam('klop')
+  const priimki = [...zacetni, ...klop].map((i) => kotBesedilo(i.priimek).toLowerCase()).filter((p) => p && p !== 'igralec')
+  const podvojen = (i: Record<string, unknown>): boolean => priimki.filter((p) => p === kotBesedilo(i.priimek).toLowerCase()).length > 1
   const deli: string[] = []
   VRSTE.forEach((vrsta, r) => {
     const v = zacetni.map((i, n) => [i, n] as const).filter(([i]) => (VRSTE.includes(i.pozicija as never) ? i.pozicija : 'MID') === vrsta)
     const razmik = Math.min(iw / Math.max(v.length, 1), 58)
     const y = iy + (ih * (r + 0.5)) / VRSTE.length - 8.5
-    v.forEach(([i, n], j) => deli.push(zeton(`${kljuc}.zacetni.${n}`, i, ix + iw / 2 + (j - (v.length - 1) / 2) * razmik, y, 1)))
+    v.forEach(([i, n], j) => deli.push(zeton(`${kljuc}.zacetni.${n}`, i, ix + iw / 2 + (j - (v.length - 1) / 2) * razmik, y, 1, false, podvojen(i))))
   })
-  const klop = seznam('klop')
   const razmik = Math.min(kw / Math.max(klop.length, 1), 62)
-  klop.forEach((i, n) => deli.push(zeton(`${kljuc}.klop.${n}`, i, kx + kw / 2 + (n - (klop.length - 1) / 2) * razmik, ky + kh / 2 - 6, 0.8)))
+  klop.forEach((i, n) => deli.push(zeton(`${kljuc}.klop.${n}`, i, kx + kw / 2 + (n - (klop.length - 1) / 2) * razmik, ky + kh / 2 - 6, 0.8, true, podvojen(i))))
   // Kazen za prestope (≥ 0) le, če je bila: pod skupnimi točkami.
   const kazen = Number(posnetek.kazen)
   const [zx, zy] = (atribut(oznaka, 'data-kazen') ?? '').split(/\s+/).map(Number)
@@ -392,10 +406,14 @@ function narisiDres(oznaka: string, vr: VrednostiPolj, barve: string[]): string 
     deli.push(`<path d="M${st(cx - 2)} 62 L${st(cx - 74)} 4 L${st(cx - 94)} 44 L${st(cx - 40)} 100 Z M${st(cx + 2)} 62 L${st(cx + 74)} 4 L${st(cx + 94)} 44 L${st(cx + 40)} 100 Z" fill="${obroba}" stroke="${izberiBarvo([BELA, CRNA], [obroba])}" stroke-width="2" stroke-opacity=".35"/>`)
   } else deli.push(crta(`M${st(cx - 82)} 0 Q${st(cx)} 116 ${st(cx + 82)} 0`, 18))
   // Napisi v barvi, ki izstopa iz vzorca; na dvobarvnem vzorcu še obroba.
-  const napis = izberiBarvo([b3, ozadje.length === 1 ? b2 : null, BELA, CRNA], ozadje)
-  const rob = ozadje.length > 1 || najmanjsiKontrast(napis, ozadje) < 3
-    ? ` stroke="${kontrast(napis, BELA) > kontrast(napis, CRNA) ? BELA : CRNA}" paint-order="stroke"`
-    : ''
+  // Tanke črte: napis ne v barvi črt (sicer se zlije z njimi), obroba v osnovni barvi.
+  const tanke = vzorec === 'tanke-crte'
+  const kandidati = [b3, ozadje.length === 1 && !tanke ? b2 : null, BELA, CRNA].filter((b) => !tanke || b !== b2)
+  const napis = izberiBarvo(kandidati.length ? kandidati : [BELA, CRNA], ozadje)
+  const rob = tanke ? ` stroke="${b1}" paint-order="stroke"`
+    : ozadje.length > 1 || najmanjsiKontrast(napis, ozadje) < 3
+      ? ` stroke="${kontrast(napis, BELA) > kontrast(napis, CRNA) ? BELA : CRNA}" paint-order="stroke"`
+      : ''
   const tekst = (polje: string, y: number, velikost: number, sirina: number, razmik: number, debelina: number): string =>
     `<text x="${st(cx)}" y="${st(y)}" font-size="${velikost}" letter-spacing="${razmik}" data-polje="${polje}" data-velike data-sirina="${sirina}" data-sredina data-ce="${polje}" fill="${napis}"${rob ? `${rob} stroke-width="${debelina}"` : ''}>X</text>`
   if (hrbet) {
@@ -441,7 +459,7 @@ export function narisiMotiv(
   svg = svg.replace(/<g\b[^>]*\sdata-postava="[^"]*"[^>]*?(?:\/>|><\/g>)/g, (o) => narisiPostavo(o, polja))
   svg = svg.replace(/<g\b[^>]*\sdata-dres="[^"]*"[^>]*?(?:\/>|><\/g>)/g, (o) => narisiDres(o, polja, barve))
   // Besedila (polja in stalni napisi po loku): vsebina je navaden tekst brez gnezdenja.
-  svg = svg.replace(/(<text\b[^>]*\sdata-(?:polje|luk|en|izracun)="[^"]+"[^>]*>)([^<]*)<\/text>/g, (_, oznaka: string, vsebina: string) =>
+  svg = svg.replace(/(<text\b[^>]*\sdata-(?:polje|luk|en|izracun|sirina)="[^"]+"[^>]*>)([^<]*)<\/text>/g, (_, oznaka: string, vsebina: string) =>
     besedilo(oznaka, vsebina, polja, jezik))
   svg = svg.replace(/<[\w:-]+\b[^>]*>/g, (oznaka) => {
     if (oznaka.startsWith('</')) return oznaka

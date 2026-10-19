@@ -15,7 +15,7 @@
   <text x="148.5" y="100.6" font-size="10.5" letter-spacing=".6" data-polje="postava.krog" data-sirina="74" data-barva="s">0</text>
   <rect x="195" y="82" width="80" height="22" rx="1.5" fill="none" data-crta="1" stroke-width=".6"/>
   <text x="235" y="88.6" font-size="4.6" letter-spacing="1.4" data-barva="1" data-en="ROUND POINTS">TOČKE KROGA</text>
-  <text x="235" y="100.6" font-size="10.5" letter-spacing=".6" data-polje="postava.tocke_skupaj" data-sirina="74" data-barva="s">0</text>
+  <text x="235" y="100.6" font-size="10.5" letter-spacing=".6" data-polje="postava.tocke_skupaj" data-prazno="–" data-sirina="74" data-barva="s">0</text>
   <rect x="195" y="82" width="80" height="22" rx="1.5" data-barva="1" opacity=".16"/>
   <rect x="20" y="114" width="257" height="226" rx="2" data-barva="1" opacity=".13"/>
   <rect x="20" y="114.0" width="257" height="28.2" data-barva="s" opacity=".035"/>

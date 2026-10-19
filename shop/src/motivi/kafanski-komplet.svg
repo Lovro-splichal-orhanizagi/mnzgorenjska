@@ -7,6 +7,6 @@
   <text data-luk="47.5 47.5 -37.6" font-size="5.6" letter-spacing="1.6" data-barva="1" data-en="ROUND {n}">RUNDA {n}</text>
   <g transform="translate(47.5 34) scale(.62)"><path d="M8 -5 H10.5 Q13 -5 13 -2 V4 Q13 7 10.5 7 H7.5" fill="none" data-crta="1" stroke-width="2.2" stroke-linecap="round"/><path d="M-8 -9 H8 L7 10 Q7 12 5 12 H-5 Q-7 12 -7 10 Z" data-barva="1"/><path d="M-9.5 -8.5 Q-10.5 -13 -6.5 -13 Q-5 -16.5 -1.5 -14.5 Q1 -17.5 4.5 -14.5 Q8.5 -16 8.8 -12.5 Q11 -11 9.5 -8.5 Z" data-barva="s"/><path d="M-3.5 -5 V8 M2 -5 V8" fill="none" data-crta="t" stroke-width="1" stroke-linecap="round" opacity=".45"/></g>
   <path d="M26.00 33.80 L25.46 35.25 L23.91 35.32 L25.12 36.29 L24.71 37.78 L26.00 36.92 L27.29 37.78 L26.88 36.29 L28.09 35.32 L26.54 35.25Z" data-barva="1"/><path d="M69.00 33.80 L68.46 35.25 L66.91 35.32 L68.12 36.29 L67.71 37.78 L69.00 36.92 L70.29 37.78 L69.88 36.29 L71.09 35.32 L69.54 35.25Z" data-barva="1"/>
-  <text x="47.5" y="62" font-size="13.5" letter-spacing=".3" data-polje="slogan{n}" data-velike data-sirina="60" data-vrstice="2" data-sredina data-barva="s">TRETJI POLČAS</text>
+  <text x="47.5" y="62" font-size="13.5" letter-spacing=".3" data-polje="slogan{n}" data-velike data-sirina="60" data-vrstice="2" data-vrstice-najvec=".75" data-sredina data-barva="s">TRETJI POLČAS</text>
   <path d="M33 73.5 H62" fill="none" data-crta="1" stroke-width=".7" stroke-linecap="round"/>
 </svg>

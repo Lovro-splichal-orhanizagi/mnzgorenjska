@@ -27,7 +27,7 @@ import { vCente, varnoIme } from './src/strani/AdminIzdelki'
 import { EN, SL, TELEFON, cena, type Kljuc } from './src/besede'
 import { dodaj, kljuc, kosov, nastavi, odstrani, postnina, preberi, PRAZNA, skupaj } from './src/kosarica'
 import { celicaCsv, doplacilo, napakaImena, napakaPolja, oblikaSvg, stabilno, stevilka, veljavnaOblika } from './src/personalizacija'
-import { barveIzPolj, coneMotiva, narisiKose, narisiMotiv, oblikujDatum, poljaCone, praznaCona, velikostMm, zVgrajenoPisavo } from './src/risba'
+import { barveIzPolj, coneMotiva, narisiKose, narisiMotiv, oblikujDatum, poljaCone, praznaCona, sirinaBesedila, velikostMm, zVgrajenoPisavo } from './src/risba'
 import { MOTIVI } from './src/motivi'
 import { readFileSync } from 'node:fs'
 import type { Cona, Izdelek as TIzdelek, IzdelekKataloga, MotivIzdelka, MotivKataloga, NarociloAdmin, PostavkaNarocila, PostavkaTiska, Serija } from './src/baza'
@@ -443,7 +443,7 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
           : p.vrsta === 'postava' ? {}
             : p.vrsta === 'izbira' || p.vrsta === 'barva'
               ? (() => { const o = p.moznosti?.[dolgo ? p.moznosti.length - 1 : 0]; return typeof o === 'string' ? o : (o as { kljuc: string }).kljuc })()
-              : dolgo ? 'Ž<script>&\u0001"W'.padEnd(p.max ?? 12, 'W') : 'Kos'
+              : dolgo ? (p.max ?? 12) > 16 ? 'Ž<script>&\u0001"W WWW'.padEnd(p.max!, 'W') : 'Ž<script>&\u0001"W'.padEnd(p.max ?? 12, 'W') : 'Kos'
       for (const [i, shema] of sm.sheme.entries()) for (const dolgo of [true, false]) {
         const polja = Object.fromEntries(sm.polja.map((p) => [p.kljuc, vrednost(p, dolgo)]))
         const barve = sm.slug === 'dres-po-meri' ? barveIzPolj(sm.polja, polja) : shema.barve
@@ -452,7 +452,7 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
           const { sirina, visina } = velikostMm(sm.slug, c)
           const ok = out.startsWith('<svg') && out.includes(`viewBox="0 0 ${sirina} ${visina}"`) && !/<script/i.test(out) && urejenXml(out)
             && !out.includes('\u0001') && !/data-(polje|polja|sirina|luk|oblika|velike|vrstice|en|vzorec|izracun|postava|dres)=/.test(out)
-            && !out.includes('{n}') && !out.includes('[object') && st(out, 'font-size').every((v) => v > 3)
+            && !out.includes('{n}') && !out.includes('[object') && st(out, 'font-size').every((v) => v > 4)
           const laser = !LASER.includes(sm.slug) || (barveIzhoda(out).join() === barve[0]!.toUpperCase() && !/opacity|gradient/i.test(out)
             && st(out, 'stroke-width').every((w) => w >= 0.3))
           const vezenje = sm.slug !== 'vezena-ekipa' || (barveIzhoda(out).length <= 4 && !/opacity|gradient/i.test(out)
@@ -468,10 +468,10 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
       ({ ime: priimek, priimek, pozicija, klub: 'Lipa', tocke, kapetan: false, podkapetan: false, mnozitelj: 1, steje: true, ...dodatno })
     const posnetek = {
       ekipa: 'Sporting <b>Čevapčiči</b> Kranj', liga: 'Liga Gorjanci', sezona: '2026/27', krog: 9, formacija: '3-5-2', tocke_skupaj: 57, kazen: 4,
-      zacetni: [igr('Kos', 'GK', 6), igr('Igralec', 'DEF', 2), igr('Podbrežnik-Zakrajšek', 'DEF', 1), igr('Zupan', 'DEF', null),
+      zacetni: [igr('Kos', 'GK', 6, { ime: 'Tine Kos' }), igr('Igralec', 'DEF', 2), igr('Podbrežnik-Zakrajšek', 'DEF', 1), igr('Zupan', 'DEF', null),
         igr('Turk', 'MID', 36, { kapetan: true, mnozitelj: 3 }), igr('Vidic', 'MID', 2, { podkapetan: true }), igr('Bizjak', 'MID', 5), igr('Kralj', 'MID', 3),
         igr('Pirc', 'MID', 2, { zamenjava: true }), igr('Hribar', 'FWD', 9), igr('Kokalj', 'FWD', 2)],
-      klop: [igr('Mrak', 'GK', 0, { steje: false }), igr('Leban', 'DEF', 1, { steje: false }), igr('Kern', 'MID', null, { steje: false }), igr('Golob', 'FWD', null, { zamenjan: true, steje: false })],
+      klop: [igr('Kos', 'GK', 0, { ime: 'Lan Kos', steje: false }), igr('Leban', 'DEF', 1, { steje: true }), igr('Kern', 'MID', null, { steje: false }), igr('Golob', 'FWD', null, { zamenjan: true, steje: false })],
     }
     const plakat = narisiMotiv('moja-postava', { postava: posnetek }, ['#2E9E4F', '#E9F6EC', '#0B3B1E'])
     const plakatEn = narisiMotiv('moja-postava', { postava: posnetek }, ['#2E9E4F', '#E9F6EC', '#0B3B1E'], undefined, { sirina: 420, visina: 594 }, { jezik: 'en' })
@@ -480,7 +480,29 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
       && plakat.includes('>PODBREŽNIK-ZAKRAJŠEK</text>') && plakat.includes('>C</text>') && plakat.includes('>V</text>') && plakat.includes('>36</text>')
       && plakat.includes('>–</text>') && plakat.includes('>57</text>') && plakat.includes('>3-5-2</text>') && plakat.includes('LIGA GORJANCI · SEZONA 2026/27')
       && plakat.includes('VKLJ. −4 ZA PRESTOPE') && plakat.includes('&lt;B&gt;ČEVAPČIČI&lt;/B&gt;') && !plakat.includes('<b>')
-      && (plakat.match(/opacity="\.55"/g) ?? []).length === 1 && (plakat.match(/l4 -6 l4 6 z/g) ?? []).length === 1, plakat.slice(0, 200))
+      && (plakat.match(/opacity="\.55"/g) ?? []).length === 1 && (plakat.match(/l4 -6 l4 6 z/g) ?? []).length === 1
+      && plakat.includes('>(0)</text>') && !plakat.includes('>(1)</text>') && (plakat.match(/l1\.6 1\.7/g) ?? []).length === 1
+      && plakat.includes('>T. KOS</text>') && plakat.includes('>L. KOS</text>'), plakat.slice(0, 200))
+    preveri('postava: brez skupnih točk "–", ne prazna celica', /font-size="10\.5"[^>]*>–<\/text>/.test(narisiMotiv('moja-postava', { postava: { ...posnetek, tocke_skupaj: null } }, ['#111', '#eee', '#000'])))
+    // Geometrija: 5 v vrsti vsaj 42 mm narazen; ime na traku med obročem C (180,75) in zvezdo (282,7).
+    const vrsta5 = narisiMotiv('moja-postava', { postava: { ...posnetek, zacetni: posnetek.zacetni.map((x, n) => ({ ...x, pozicija: n === 0 ? 'GK' : n < 6 ? 'MID' : 'DEF' })) } }, ['#111', '#eee', '#000'])
+    const xi = [...vrsta5.matchAll(/translate\(([\d.]+) ([\d.]+)\) scale\(1\)/g)].filter((m) => m[2] === [...vrsta5.matchAll(/translate\(([\d.]+) ([\d.]+)\) scale\(1\)/g)][0]![2])
+      .map((m) => Number(m[1]))
+    preveri('postava: 5 igralcev v vrsti vsaj 42 mm narazen', xi.length === 5 && xi.slice(1).every((x, n) => x - xi[n]! >= 42), xi.join(','))
+    const trak = narisiMotiv('kapetanski-trak', { ime: 'WWWWWWWWWWWW' }, ['#1D4ED8', '#FACC15', '#0A1A4A'])
+    const imeTraku = /<text[^>]*>WWWWWWWWWWWW<\/text>/.exec(trak)?.[0] ?? ''
+    const atr = (a: string): number => Number(new RegExp(`\\s${a}="([\\d.]+)"`).exec(imeTraku)?.[1] ?? NaN)
+    const sirinaImena = sirinaBesedila('WWWWWWWWWWWW', atr('font-size'), atr('letter-spacing'))
+    preveri('trak: dolgo ime ne seže na obroč C ne na zvezdo', atr('x') - sirinaImena / 2 > 182 && atr('x') + sirinaImena / 2 < 280, imeTraku)
+    // Vsi slogani iz semena na podstavku in kozarcu ostanejo berljivi (≥ 9 mm pisave).
+    for (const [slug, kljuc] of [['kafanski-komplet', 'slogan1'], ['tretji-polcas', 'slogan']] as const) {
+      const moznosti = semena23.find((x) => x.slug === slug)!.polja.find((p) => p.kljuc === kljuc)!.moznosti as string[]
+      const male = moznosti.filter((m) => {
+        const out = narisiMotiv(slug, { ekipa: 'Q', ime: 'Q', [kljuc]: m }, ['#E8A317', '#FFF4D6', '#5A3A0A'])
+        return [...out.matchAll(/font-size="([\d.]+)"[^>]*>([^<]+)<\/text>/g)].filter((x) => m.toUpperCase().includes(x[2]!)).some((x) => Number(x[1]) < 9)
+      })
+      preveri(`${slug}: vsi slogani ≥ 9 mm pisave`, moznosti.length > 5 && male.length === 0, male.join(', '))
+    }
     preveri('postava: angleški napisi, A2 v mm, brez kazni ni vrstice', plakatEn.includes('MY LINE-UP') && plakatEn.includes('SEASON 2026/27') && plakatEn.includes('INCL. −4')
       && /width="420mm"/.test(plakatEn) && !narisiMotiv('moja-postava', { postava: { ...posnetek, kazen: 0 } }, ['#111', '#eee', '#000']).includes('ZA PRESTOPE'))
     const prazen = narisiMotiv('moja-postava', { postava: {} }, ['#111', '#eee', '#000'])
@@ -509,9 +531,10 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
     const pod = { ekipa: 'FC Ponedeljek', slogan1: 'Tretji polčas', slogan2: 'Samo še eno', slogan3: 'Ofsajd je bil', slogan4: 'Rundo plača kapetan', slogan5: 'Third half', slogan6: 'Na pivu smo prvi' }
     const tretji = narisiMotiv('kafanski-komplet', pod, ['#E8A317', '#FFF4D6', '#5A3A0A'], undefined, undefined, { kos: 3 })
     const list = narisiKose('kafanski-komplet', pod, ['#E8A317', '#FFF4D6', '#5A3A0A'])
-    preveri('podstavki: kos 3 ima tretji slogan in RUNDA 3, list 6 kosov 295×195 mm', tretji.includes('>OFSAJD JE BIL</text>') && !tretji.includes('TRETJI POLČAS')
+    const besedilo = (x: string): string => x.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
+    preveri('podstavki: kos 3 ima tretji slogan in RUNDA 3, list 6 kosov 295×195 mm', besedilo(tretji).includes('OFSAJD JE BIL') && !besedilo(tretji).includes('TRETJI POLČAS')
       && tretji.includes('>3</text>') && urejenXml(list) && (list.match(/<svg\b/g) ?? []).length === 7 && list.includes('width="295mm" height="195mm"')
-      && ['TRETJI POLČAS', 'SAMO ŠE ENO', 'OFSAJD JE BIL', 'THIRD HALF', 'NA PIVU SMO PRVI'].every((s) => list.includes(`>${s}</text>`)))
+      && ['TRETJI POLČAS', 'SAMO ŠE ENO', 'OFSAJD JE BIL', 'THIRD HALF', 'NA PIVU SMO PRVI'].every((s) => besedilo(list).includes(s)), besedilo(tretji).slice(0, 200))
 
     preveri('datum sl/en in ocena kartice', oblikujDatum('2026-05-17') === '17. maja 2026' && oblikujDatum('2026-05-17', 'en', true) === 'Sunday, 17 May 2026'
       && oblikujDatum('2026-05-17', 'sl', true) === 'nedelja, 17. maja 2026' && oblikujDatum('x') === 'x'

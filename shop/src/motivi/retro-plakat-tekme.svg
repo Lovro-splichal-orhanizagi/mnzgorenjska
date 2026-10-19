@@ -22,6 +22,6 @@
   <rect x="0" y="334" width="297" height="7" data-barva="1"/><rect x="0" y="343.5" width="297" height="3.5" data-barva="t"/><rect x="0" y="349.5" width="297" height="7" data-barva="1"/>
   <text x="148.5" y="377" font-size="15" letter-spacing="1.4" data-polje="datum" data-oblika="datum-dan" data-velike data-sirina="262" data-barva="t">NEDELJA, 17. MAJA 2026</text>
   <text x="148.5" y="392" font-size="9" letter-spacing="2.2" data-polje="igrisce" data-velike data-sirina="262" data-ce="igrisce" data-barva="1">IGRIŠČE ZA GASILSKIM</text>
-  <text x="148.5" y="405" font-size="6" letter-spacing="2.6" data-barva="t" data-en="FREE ENTRY · COLD BEER · SLFF">VSTOP PROST · PIVO HLADNO · SLFF</text>
+  <text x="148.5" y="405" font-size="6" letter-spacing="2.6" data-barva="t" data-en="FREE ENTRY · CHEER LOUD · SLFF">VSTOP PROST · NAVIJAJ GLASNO · SLFF</text>
   <rect x="5" y="5" width="287" height="410" fill="none" data-crta="t" stroke-width="1.6"/>
 </svg>
