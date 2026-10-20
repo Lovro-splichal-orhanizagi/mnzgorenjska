@@ -31,11 +31,11 @@ insert into matches(id,round_id,home_team_id,away_team_id,played_on,home_goals,a
 -- player/fixture rows below are explicit synthetic test data, never a source replay.
 insert into matches(id,round_id,home_team_id,away_team_id,played_on)overriding system value values
 (517142,34820,10679,10680,'2026-10-21'),(517143,34820,10689,10690,'2026-10-21'),(517144,34820,10684,10685,'2026-10-21'),(517145,34820,10688,10691,'2026-10-21'),(517146,34820,10681,10683,'2026-10-22'),(517147,34820,10686,10687,'2026-10-22');
-insert into matches(round_id,home_team_id,away_team_id,played_on)select 34821,10679,10680,'2026-10-30'from generate_series(1,6);
+insert into matches(round_id,home_team_id,away_team_id,played_on)select 34821,v.home,v.away,'2026-10-30'from(values(10679,10680),(10681,10683),(10684,10685),(10686,10687),(10688,10691),(10689,10690))v(home,away);
 do $$declare t record;i int;pid bigint;tid bigint;home bigint;away bigint;mid bigint;n int;team_ids bigint[]:=array[10679,10680,10681,10683,10684,10685,10686,10687,10688,10691,10689,10690];begin
  for tid in select id from teams where id between 10678 and 10691 loop
   for i in 1..16 loop
-   insert into players(competition_id,team_id,reg_st,first_name,last_name,full_name,position,position_source,value,value_start,active)values(971,tid,(tid*100+i)::text,'Fixture',tid||'-'||i,'Fixture '||tid||'-'||i,case when i=1 then'GK'when i<=5 then'DEF'when i<=10 then'MID'else'FWD'end,case when i=1 then'zapisnik'else'ugibanje'end,case when i=2 then 12 else 4 end,case when i=2 then 12 else 4 end,true)returning id into pid;
+   insert into players(competition_id,team_id,reg_st,first_name,last_name,full_name,position,position_source,value,value_start,active)values(971,tid,tid*100+i,'Fixture',tid||'-'||i,'Fixture '||tid||'-'||i,case when i=1 then'GK'when i<=5 then'DEF'when i<=10 then'MID'else'FWD'end,case when i=1 then'zapisnik'else'ugibanje'end,case when i=2 then 12 else 4 end,case when i=2 then 12 else 4 end,true)returning id into pid;
   end loop;
  end loop;
  for t in select *from private_mfa_history.targets()loop
@@ -45,7 +45,7 @@ do $$declare t record;i int;pid bigint;tid bigint;home bigint;away bigint;mid bi
  end loop;
  for n in 1..238 loop
   i:=(n-1)%6+1;home:=team_ids[2*i-1];away:=team_ids[2*i];
-  insert into matches(round_id,home_team_id,away_team_id,played_on,home_goals,away_goals,zapisnik_id,source_url,imported_at)values(case when n<=191 then 100001+(n-1)%32 else 34812+(n-192)%8 end,home,away,case when n<=191 then'2026-04-11'::date else'2026-08-17'::date end,0,0,'mt'||(70000000+n),'https://matchcentre.mfa.com.mt/match/'||(70000000+n),now())returning id into mid;
+  insert into matches(round_id,home_team_id,away_team_id,played_on,home_goals,away_goals,zapisnik_id,source_url,imported_at)values(case when n<=191 then 100001+(n-1)/6 else 34812+(n-192)/6 end,home,away,case when n<=191 then'2026-04-11'::date else'2026-08-17'::date end,0,0,'mt'||(70000000+n),'https://matchcentre.mfa.com.mt/match/'||(70000000+n),now())returning id into mid;
   for tid in select home union all select away loop
    for pid in select id from players where competition_id=971 and team_id=tid order by id limit 11 loop insert into appearances(match_id,player_id,team_id,started,minutes_played,minute_on,minute_off,is_goalkeeper)select mid,pid,tid,true,90,0,90,position='GK'from players where id=pid;end loop;
   end loop;

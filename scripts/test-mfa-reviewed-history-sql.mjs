@@ -25,3 +25,19 @@ test('shared generic SQL positives explicitly exclude dedicated MFA installer',(
  const dedicated=readFileSync(new URL('../supabase/tests/mfa-reviewed-history.sql',import.meta.url),'utf8')
  assert.match(dedicated,/generic MFA policy installer unexpectedly accepted/)
 })
+test('synthetic retained and future fixture tuples satisfy the real round/home/away uniqueness constraint',()=>{
+ const fixture=readFileSync(new URL('../supabase/tests/mfa-reviewed-history.sql',import.meta.url),'utf8')
+ const formula=fixture.match(/values\(case when n<=191 then ([^ ]+) else ([^ ]+) end,home,away/)
+ assert.ok(formula,'actual synthetic SQL round expressions required')
+ const round=formula.slice(1).map(expression=>n=>Math.trunc(Function('n',`return ${expression}`)(n)))
+ const ids=JSON.parse(fixture.match(/team_ids bigint\[\]:=array(\[[^;]+\])/)[1])
+ const keys=[]
+ for(let n=1;n<=238;n++){const i=(n-1)%6;keys.push(`${round[n<=191?0:1](n)}:${ids[2*i]}:${ids[2*i+1]}`)}
+ keys.push('100028:10678:10689','34812:10681:10687')
+ const future=fixture.match(/select 34821,v\.home,v\.away,'2026-10-30'from\(values([^;]+)\)v\(home,away\)/)
+ assert.ok(future,'six explicit distinct future pairs required')
+ for(const m of future[1].matchAll(/\((\d+),(\d+)\)/g))keys.push(`34821:${m[1]}:${m[2]}`)
+ for(const m of fixture.matchAll(/\(51714[2-7],34820,(\d+),(\d+),'2026-10-2[12]'\)/g))keys.push(`34820:${m[1]}:${m[2]}`)
+ assert.equal(keys.length,252);assert.equal(new Set(keys).size,252,'no duplicate fixture tuple')
+ assert.doesNotMatch(fixture,/\(tid\*100\+i\)::text/,'native bigint identity stays numeric')
+})
