@@ -39,9 +39,18 @@ test('HLF registry binds only the reviewed production tuples and its public-brow
     [510,'ro-cj-l4','judetean/cluj/fotbal/2026-2027/liga-4-cluj/sezon-regular/grupa-a'],
     [512,'ro-hd-l4','judetean/hunedoara/fotbal/2026-2027/liga-4/sezon-regular/serie-1'],
     [498,'ro-liga2','national/fotbal/2026-2027/liga-2-casa-pariurilor/sezon-regular/seria-1'],
-    [488,'ro-sb-superliga','judetean/sibiu/fotbal/2026-2027/superliga/sezon-regular/serie-1']]
+    [488,'ro-sb-superliga','judetean/sibiu/fotbal/2026-2027/superliga/sezon-regular/serie-1'],
+    [502,"ro-ab-l4-s1","judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-1"],
+    [501,"ro-ab-l4-s2","judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2"],
+    [500,"ro-ab-l5-s1","judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-1"],
+    [499,"ro-ab-l5-s2","judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-2"],
+    [506,"ro-cj-l5-dej","judetean/cluj/fotbal/2026-2027/liga-5-dej/sezon-regular/grupa-a"],
+    [509,"ro-cj-l5-g1","judetean/cluj/fotbal/2026-2027/liga-5-cluj---grupa-1/sezon-regular/grupa-1"],
+    [508,"ro-cj-l5-g2","judetean/cluj/fotbal/2026-2027/liga-5-cluj---grupa-2/sezon-regular/grupa-2"],
+    [507,"ro-cj-l5-gherla","judetean/cluj/fotbal/2026-2027/liga-5-gherla/sezon-regular/grupa-a"],
+    [511,"ro-hd-l5","judetean/hunedoara/fotbal/2026-2027/liga-5/campionat/serie-1"]]
   assert.deepEqual(hlf.map(c=>[c.id,c.slug,c.source_league_code]),expected)
-  assert.equal(validateSelection(registry,hlf.map(c=>c.slug)).length,12)
+  assert.equal(validateSelection(registry,hlf.map(c=>c.slug)).length,21)
   assert.throws(()=>validateSelection(registry,['ro-liga3-s1']))
   assert.equal(registry.source_contracts.hlf.document,'docs/viri/romunija.md')
 })

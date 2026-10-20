@@ -361,6 +361,60 @@
       "slug": "ro-sb-superliga",
       "source": "hlf",
       "source_league_code": "judetean/sibiu/fotbal/2026-2027/superliga/sezon-regular/serie-1"
+    },
+    {
+      "id": 502,
+      "slug": "ro-ab-l4-s1",
+      "source": "hlf",
+      "source_league_code": "judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-1"
+    },
+    {
+      "id": 501,
+      "slug": "ro-ab-l4-s2",
+      "source": "hlf",
+      "source_league_code": "judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2"
+    },
+    {
+      "id": 500,
+      "slug": "ro-ab-l5-s1",
+      "source": "hlf",
+      "source_league_code": "judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-1"
+    },
+    {
+      "id": 499,
+      "slug": "ro-ab-l5-s2",
+      "source": "hlf",
+      "source_league_code": "judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-2"
+    },
+    {
+      "id": 506,
+      "slug": "ro-cj-l5-dej",
+      "source": "hlf",
+      "source_league_code": "judetean/cluj/fotbal/2026-2027/liga-5-dej/sezon-regular/grupa-a"
+    },
+    {
+      "id": 509,
+      "slug": "ro-cj-l5-g1",
+      "source": "hlf",
+      "source_league_code": "judetean/cluj/fotbal/2026-2027/liga-5-cluj---grupa-1/sezon-regular/grupa-1"
+    },
+    {
+      "id": 508,
+      "slug": "ro-cj-l5-g2",
+      "source": "hlf",
+      "source_league_code": "judetean/cluj/fotbal/2026-2027/liga-5-cluj---grupa-2/sezon-regular/grupa-2"
+    },
+    {
+      "id": 507,
+      "slug": "ro-cj-l5-gherla",
+      "source": "hlf",
+      "source_league_code": "judetean/cluj/fotbal/2026-2027/liga-5-gherla/sezon-regular/grupa-a"
+    },
+    {
+      "id": 511,
+      "slug": "ro-hd-l5",
+      "source": "hlf",
+      "source_league_code": "judetean/hunedoara/fotbal/2026-2027/liga-5/campionat/serie-1"
     }
   ]
 }
