@@ -415,6 +415,12 @@
       "slug": "ro-hd-l5",
       "source": "hlf",
       "source_league_code": "judetean/hunedoara/fotbal/2026-2027/liga-5/campionat/serie-1"
+    },
+    {
+      "id": 1051,
+      "slug": "dk-3-division",
+      "source": "dbu",
+      "source_league_code": "508657"
     }
   ]
 }
