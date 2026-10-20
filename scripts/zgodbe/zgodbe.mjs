@@ -448,7 +448,7 @@ function streznik(env, vrata) {
       log(`napaka: ${zakrij(e.message)}`)
       res.writeHead(500).end()
     }
-  }).listen(vrata, () => log(`posluša :${vrata}, način ${env.ZGODBE_NACIN === 'live' ? 'live' : 'dry_run'}`))
+  }).listen(vrata, '127.0.0.1', () => log(`posluša 127.0.0.1:${vrata}, način ${env.ZGODBE_NACIN === 'live' ? 'live' : 'dry_run'}`))
 }
 
 async function main() {

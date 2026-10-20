@@ -12,6 +12,10 @@
 # Objava: scripts/hetzner/objavi-objave.sh. CI tega ne objavi.
 # Dnevnik: docker logs slff-objave. Preizkus brez pisanja:
 #   docker compose run --rm objave node scripts/objave.mjs --slot pon --suho --mapa /mediji/suho
+# Zgodbe (SLF-38, scripts/zgodbe/, docs/zgodbe.md): storitev zgodbe teče le s
+# COMPOSE_PROFILES=zgodbe v .env (skupaj z DISCORD_ZGODBE_*, DISCORD_KAFANA_ID, ZGODBE_ODOBRITELJI).
+# Kartica v #kafana:
+#   docker compose run --rm zgodbe node scripts/zgodbe/zgodbe.mjs predlozi 1.jpg 2.jpg 3.jpg
 services:
   objave:
     # Chromium, Node in ffmpeg (reeli): Dockerfile ob tej datoteki, osnova = playwright iz package.json.
@@ -38,3 +42,30 @@ services:
     shm_size: 512m
     mem_limit: 1536m
     cpus: 1.0
+
+  zgodbe:
+    # Ista slika kot objave (zgradi jo `docker compose build`); Caddy /discord/zgodbe → 127.0.0.1:8787.
+    image: slff-objave:v1.64.0
+    pull_policy: never
+    profiles: [zgodbe]
+    container_name: slff-zgodbe
+    restart: unless-stopped
+    init: true
+    network_mode: host
+    user: pwuser
+    working_dir: /app
+    command: ["node", "scripts/zgodbe/zgodbe.mjs", "streznik", "--vrata", "8787"]
+    environment:
+      # Privzeto dry_run: Mete ne kliče. live le po odločitvi Luke, Lovra ali Nejca (ZGODBE_NACIN v .env).
+      ZGODBE_MEDIJI: /mediji/zgodbe
+      ZGODBE_MEDIJI_URL: https://slff.eu/objave-mediji/zgodbe
+      # Stanje ni pod /mediji (to je javno prek Caddyja).
+      ZGODBE_STANJE: /stanje/zgodbe.json
+      TZ: Europe/Ljubljana
+    env_file: .env
+    volumes:
+      - ./app:/app:ro
+      - ./mediji:/mediji
+      - ./stanje:/stanje
+    mem_limit: 256m
+    cpus: 0.5

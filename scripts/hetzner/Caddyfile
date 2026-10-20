@@ -238,6 +238,17 @@ slff.eu {
 		file_server
 	}
 
+	# Discord Interactions Endpoint for the daily Story approval card (SLF-38, scripts/zgodbe/,
+	# container slff-zgodbe, only with COMPOSE_PROFILES=zgodbe in /opt/slff-objave/.env). The
+	# listener checks Discord's Ed25519 signature and the approver ids itself; POST only.
+	@zgodbe {
+		path /discord/zgodbe
+		method POST
+	}
+	handle @zgodbe {
+		reverse_proxy 127.0.0.1:8787
+	}
+
 	# Slides of automated social posts (scripts/objave.mjs, container slff-objave): Instagram and
 	# Facebook fetch them by URL when publishing. Read-only, no listing (file_server without
 	# browse), never indexed. Each draft directory has a random suffix, so drafts are not guessable.

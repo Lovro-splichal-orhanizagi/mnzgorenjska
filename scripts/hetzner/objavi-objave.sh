@@ -9,11 +9,12 @@
 # skripta ga ne piše in ne bere.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
-DATOTEKE=(scripts/objave.mjs scripts/objave-glasba)
+DATOTEKE=(scripts/objave.mjs scripts/objave-glasba scripts/zgodbe/zgodbe.mjs)
 if [[ -n $(git status --porcelain -- "${DATOTEKE[@]}" scripts/hetzner/objave) ]]; then
   echo "Uncommitted changes in the posts script; publish only what is on main."; exit 1
 fi
 node --check scripts/objave.mjs
+node --check scripts/zgodbe/zgodbe.mjs
 SUPABASE_JS=$(node -p "require('./package-lock.json').packages['node_modules/@supabase/supabase-js'].version")
 PLAYWRIGHT=$(node -p "require('./package-lock.json').packages['node_modules/playwright'].version")
 SLIKA=mcr.microsoft.com/playwright:v$PLAYWRIGHT-noble
@@ -21,7 +22,8 @@ SLIKA=mcr.microsoft.com/playwright:v$PLAYWRIGHT-noble
 grep -qx "FROM $SLIKA" scripts/hetzner/objave/Dockerfile \
   || { echo "Dockerfile naj ima FROM $SLIKA (playwright iz package-lock.json)"; exit 1; }
 grep -q "image: slff-objave:v$PLAYWRIGHT\$" scripts/hetzner/objave/docker-compose.yml \
-  || { echo "docker-compose.yml naj ima image: slff-objave:v$PLAYWRIGHT"; exit 1; }
+  && ! grep "image: slff-objave:" scripts/hetzner/objave/docker-compose.yml | grep -vq "image: slff-objave:v$PLAYWRIGHT\$" \
+  || { echo "docker-compose.yml naj ima povsod image: slff-objave:v$PLAYWRIGHT"; exit 1; }
 CILJ=/opt/slff-objave
 CAS=$(date +%Y%m%d-%H%M%S)
 ssh SLFF "test -f $CILJ/.env || { echo 'Manjka $CILJ/.env (ustvari ga lastnik, glej docs/objave.md)'; exit 1; }; \
@@ -30,10 +32,12 @@ ssh SLFF "test -f $CILJ/.env || { echo 'Manjka $CILJ/.env (ustvari ga lastnik, g
 rsync -aR "${DATOTEKE[@]}" "SLFF:$CILJ/app.novo/"
 rsync -a scripts/hetzner/objave/docker-compose.yml scripts/hetzner/objave/Dockerfile "SLFF:$CILJ/"
 ssh SLFF "cd $CILJ && docker pull -q $SLIKA >/dev/null \
-  && mkdir -p mediji && chmod 755 . mediji && chown \$(docker run --rm $SLIKA id -u pwuser):\$(docker run --rm $SLIKA id -g pwuser) mediji \
+  && mkdir -p mediji stanje && chmod 755 . mediji && chmod 700 stanje \
+  && chown \$(docker run --rm $SLIKA id -u pwuser):\$(docker run --rm $SLIKA id -g pwuser) mediji stanje \
   && chmod -R a+rX app.novo \
   && docker run --rm -v $CILJ/app.novo:/app -w /app $SLIKA \
        sh -c 'npm install --no-save --no-package-lock --omit=dev --ignore-scripts --loglevel=error @supabase/supabase-js@$SUPABASE_JS playwright@$PLAYWRIGHT && chmod -R a+rX node_modules' \
   && rm -rf app.staro && { [ -d app ] && mv app app.staro || true; } && mv app.novo app \
   && docker compose build -q && docker compose run --rm --no-deps --entrypoint ffmpeg objave -version >/dev/null \
-  && docker compose up -d --force-recreate >/dev/null && sleep 3 && docker logs --tail 5 slff-objave"
+  && docker compose up -d --force-recreate >/dev/null && sleep 3 && docker logs --tail 5 slff-objave \
+  && { docker compose ps --services | grep -qx zgodbe && docker logs --tail 3 slff-zgodbe || true; }"

@@ -36,3 +36,28 @@ vetu same, **zgodbe gredo le po Lukovem kliku**.
   le v `.env`, napake brez `access_token` (`zakrij`).
 - Preizkus: `npm run test:zgodbe` (brez omrežja; Discord podpisan lokalno,
   Meta lažna). Živa objava še ni preizkušena od konca do konca.
+
+## Namestitev (dry_run)
+
+Enkrat, lastnik strežnika (agenti tega ne morejo: skrivnosti in root):
+
+1. Discord Developer Portal: aplikacija z botom, bot v strežniku SLFF s
+   pravico pisati v #kafana. Zapiši **Public Key** in **Bot Token**.
+2. V `/opt/slff-objave/.env` (chmod 600) dodaj:
+   `COMPOSE_PROFILES=zgodbe`, `DISCORD_ZGODBE_PUBLIC_KEY`,
+   `DISCORD_ZGODBE_BOT_TOKEN`, `DISCORD_KAFANA_ID`,
+   `ZGODBE_ODOBRITELJI=<Luka>,<Lovro>,<Nejc>` (id-ji uporabnikov Discord),
+   `ZGODBE_NACIN=dry_run`.
+3. Blok `@zgodbe` iz `scripts/hetzner/Caddyfile` prenesi v
+   `/etc/caddy/Caddyfile`, `caddy validate` in `systemctl reload caddy`.
+4. `scripts/hetzner/objavi-objave.sh` (ali `ssh slff-ops deploy objave`)
+   zažene `slff-zgodbe` na `127.0.0.1:8787`; brez `COMPOSE_PROFILES=zgodbe`
+   ostane ugasnjen.
+5. Portal → General Information → **Interactions Endpoint URL**
+   `https://slff.eu/discord/zgodbe`. Discord ob shranjevanju pošlje podpisan
+   PING; shrani se le, če strežnik odgovori.
+
+Preizkus: tri sličice v mapo na strežniku, nato
+`docker compose run --rm -v /pot/do/slik:/vhod:ro zgodbe node scripts/zgodbe/zgodbe.mjs predlozi /vhod/1.jpg /vhod/2.jpg /vhod/3.jpg`
+v `/opt/slff-objave`. Kartica pride v #kafana; klik enega od treh mora
+pokazati "dry run, nothing sent", klik kogarkoli drugega nič.
