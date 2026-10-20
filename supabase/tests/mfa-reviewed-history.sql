@@ -49,16 +49,48 @@ do $$declare t record;i int;pid bigint;tid bigint;home bigint;away bigint;mid bi
   for tid in select home union all select away loop
    for pid in select id from players where competition_id=971 and team_id=tid order by id limit 11 loop insert into appearances(match_id,player_id,team_id,started,minutes_played,minute_on,minute_off,is_goalkeeper)select mid,pid,tid,true,90,0,90,position='GK'from players where id=pid;end loop;
   end loop;
+  if n=192 then
+   -- Retained current report: one outfield starter leaves at60 and a reserve
+   -- enters for30. Both sides still have11 starters and990 total minutes.
+   select id into pid from players where competition_id=971 and team_id=home order by id offset 10 limit 1;
+   update appearances set minutes_played=60,minute_off=60 where match_id=mid and player_id=pid;
+   select id into pid from players where competition_id=971 and team_id=home order by id offset 11 limit 1;
+   insert into appearances(match_id,player_id,team_id,started,minutes_played,minute_on,minute_off,is_goalkeeper)values(mid,pid,home,false,30,60,90,false);
+  end if;
  end loop;
  for i in select distinct round_id from matches m join rounds r on r.id=m.round_id where r.competition_id=971 loop perform recompute_round_scores(i);end loop;
 end$$;
 -- Tarxien is archive-only and must not enter the current selectable-club check.
 update players set active=false where competition_id=971 and team_id=10678;
+-- Exercise preview's own bench gate, not just the final generic activation
+-- trigger. Capture/cleanup the no-bench variant canonically, then roll it back.
+savepoint no_retained_bench;
+delete from appearances a using matches m where m.id=a.match_id and m.zapisnik_id='mt70000192'and not a.started;
+update appearances a set minutes_played=90,minute_off=90 from matches m where m.id=a.match_id and m.zapisnik_id='mt70000192'and a.started and a.minute_off=60;
+do $$declare sha text;proof jsonb;begin
+ select policy_sha256 into sha from private_historical_statistics.policies where id='mt-premier-reviewed-history-2026-10-20-v1';
+ proof:=private_mfa_history.prepare_core(repeat('a',40),sha,'2026-10-20T22:00Z');
+ perform private_mfa_history.apply_core(repeat('a',40),sha,proof->>'beforeSha256',proof->>'beforeImageText','2026-10-20T22:00Z');
+ perform public.record_mfa_reviewed_prices(repeat('a',40));
+ begin
+  perform private_mfa_history.release_core(repeat('a',40),null,false,'2026-10-20T22:00Z');
+ exception when others then
+  if sqlerrm='MFA_HISTORY: retained substitute appearance required before preview or activation'then return;end if;
+  raise;
+ end;
+ raise exception 'MFA TEST: no-bench preview unexpectedly passed';
+end$$;
+rollback to no_retained_bench;
+select pg_temp.mfa_assert((select count(*)from appearances a join matches m on m.id=a.match_id where m.zapisnik_id='mt70000192'and not a.started and a.minute_on=60 and a.minute_off=90 and a.minutes_played=30)=1,'retained current substitute fixture');
+select pg_temp.mfa_assert(not exists(select a.team_id from appearances a join matches m on m.id=a.match_id where m.zapisnik_id='mt70000192'group by a.team_id having sum(a.minutes_played)<>990 or count(*)filter(where a.started)<>11),'retained substitution preserves both11/990 sides');
 create temporary table mfa_proof as select repeat('a',40)main_sha,policy_sha256 policy_sha,private_mfa_history.prepare_core(repeat('a',40),policy_sha256,'2026-10-20T22:00Z')prepared from private_historical_statistics.policies where id='mt-premier-reviewed-history-2026-10-20-v1';
 select pg_temp.mfa_assert(not exists(select 1 from private_historical_statistics.source_club_bindings where provider='mfa'and bound_team_id is not null),'prepare has no binding mutation');
 create function pg_temp.mfa_mutant(command text,message text)returns void language plpgsql as $$declare p mfa_proof%rowtype;image jsonb;begin select *into p from mfa_proof;begin execute command;image:=private_mfa_history.capture();perform pg_temp.mfa_refuses(format('select private_mfa_history.apply_core(%L,%L,%L,%L,%L::timestamptz)',p.main_sha,p.policy_sha,p.prepared->>'beforeSha256',p.prepared->>'beforeImageText','2026-10-20T22:00Z'),message);perform pg_temp.mfa_assert(private_mfa_history.capture()=image,'failed cleanup rolls back all effects');raise exception using errcode='ZX001',message='rollback mutant';exception when sqlstate'ZX001'then null;end;end$$;
 insert into auth.users(id,email)values('fb000000-0000-4000-8000-000000000001','mfa-fixture@example.invalid');
 insert into profiles(id,display_name)values('fb000000-0000-4000-8000-000000000001','MFA fixture')on conflict(id)do nothing;
+-- DB-owner insert has no inactive-league trigger: existing team triggers only
+-- protect house-owner/name consistency and referral qualification. This reaches
+-- the MFA lock_scope no-user-activity refusal without disabling any trigger.
 select pg_temp.mfa_mutant('insert into fantasy_teams(owner_id,name,competition_id)values(''fb000000-0000-4000-8000-000000000001'',''MFA target'',971)','new fantasy team');
 select pg_temp.mfa_mutant('update appearances set minutes_played=89 where id=(select min(id)from appearances where match_id=517066)','individual drift');
 select pg_temp.mfa_mutant('update matches set home_goals=7 where id=517066','official score drift');

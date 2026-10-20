@@ -16,3 +16,6 @@ test('MFA actual SQL rollback contract',{skip:process.env.MFA_HISTORY_DISPOSABLE
  assert.ok(container&&/^supabase_db_[a-zA-Z0-9_-]+$/.test(container),'explicit owned disposable database required')
  execFileSync('docker',['exec','-i',container,'psql','-U',process.env.SUPABASE_DB_USER??'supabase_admin','-d',process.env.SUPABASE_TEST_DB??'postgres','-X','-v','ON_ERROR_STOP=1'],{input:readFileSync(new URL('../supabase/tests/mfa-reviewed-history.sql',import.meta.url),'utf8'),timeout:180000,maxBuffer:8*1024*1024,stdio:['pipe','inherit','inherit']})
 })
+test('MFA preview checks retained substitute appearances before authorizing activation',()=>{
+ assert.match(sql(),/prices->>'nastopov_s_klopi'\)::int>0/)
+})
