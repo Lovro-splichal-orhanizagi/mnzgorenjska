@@ -213,6 +213,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     razvrsti: 'Kārtot',
   },
   profil: {
+    leZaRegistrirane:
+      'Spēlētāja statistiku redz tikai reģistrēti lietotāji. <prijava>Pieslēdzies vai izveido kontu</prijava> — bez maksas.',
     naslov: 'Spēlētājs',
     hvalaGlas: 'Paldies, ziņa ir saglabāta. Kad sakrāsies pietiekami daudz vienādu balsu, pozīcija tiks izlabota.',
     niIgralca: 'Spēlētājs nav atrasts.',

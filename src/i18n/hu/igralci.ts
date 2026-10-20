@@ -208,6 +208,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     razvrsti: 'Rendezés',
   },
   profil: {
+    leZaRegistrirane:
+      'A játékos statisztikáit csak regisztrált felhasználók látják. <prijava>Jelentkezz be vagy hozz létre fiókot</prijava> — ingyenes.',
     naslov: 'Játékos',
     hvalaGlas: 'Köszönjük, a jelzésedet rögzítettük. Ha elég egyező szavazat gyűlik össze, a poszt kijavításra kerül.',
     niIgralca: 'Nincs ilyen játékos.',

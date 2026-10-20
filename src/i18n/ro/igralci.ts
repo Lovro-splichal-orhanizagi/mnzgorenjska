@@ -210,6 +210,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     razvrsti: 'Sortează',
   },
   profil: {
+    leZaRegistrirane:
+      'Statisticile jucătorului sunt vizibile doar utilizatorilor înregistrați. <prijava>Conectează-te sau creează un cont</prijava> — gratuit.',
     naslov: 'Jucător',
     hvalaGlas: 'Mulțumim, votul a fost înregistrat. Când se adună destule voturi la fel, poziția se corectează.',
     niIgralca: 'Jucătorul nu există.',

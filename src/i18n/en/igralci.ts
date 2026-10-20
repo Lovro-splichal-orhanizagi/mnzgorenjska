@@ -208,6 +208,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     razvrsti: 'Sort',
   },
   profil: {
+    leZaRegistrirane:
+      'Player statistics are for registered users only. <prijava>Log in or create an account</prijava> — it is free.',
     naslov: 'Player',
     hvalaGlas: 'Thanks — your report has been recorded. Once enough matching votes come in, the position is corrected.',
     niIgralca: 'Player not found.',

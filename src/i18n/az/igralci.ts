@@ -208,6 +208,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     razvrsti: 'Sırala',
   },
   profil: {
+    leZaRegistrirane:
+      'Oyunçu statistikasını yalnız qeydiyyatdan keçmiş istifadəçilər görür. <prijava>Daxil ol və ya hesab yarat</prijava> — pulsuz.',
     naslov: 'Oyunçu',
     hvalaGlas: 'Təşəkkürlər, bildirişin qeydə alındı. Kifayət qədər uyğun səs toplananda mövqe düzəldiləcək.',
     niIgralca: 'Oyunçu tapılmadı.',

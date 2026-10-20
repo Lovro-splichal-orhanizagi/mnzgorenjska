@@ -47,6 +47,7 @@ import { naTrgu } from '../lib/osnutek'
 import { zabeleziKorak } from '../lib/lijak'
 import { prevediNapako } from '../lib/napake'
 import { NalaganjeZaBralnik, Skelet } from '../components/Skelet'
+import GumbGoogle from '../components/GumbGoogle'
 
 /** Vrstica pogleda `player_overview` — profil igralca. */
 type Profil = Record<string, any> & {
@@ -77,10 +78,13 @@ export default function Igralec() {
   const { id } = useParams()
   // Iz naslova pride niz; stolpci so stevilcni.
   const igralecId = Number(id)
-  const { session } = useAuth()
+  const { session, loading: nalaganjeSeje } = useAuth()
   const uporabnikId = session?.user.id ?? null
   const lokacija = useLocation()
   const prijava = povezavaNaPrijavo(lokacija.pathname + lokacija.search)
+  // Statistika igralca je le za prijavljene (kot seznam igralcev, 20. 10. 2026):
+  // gost vidi ime, klub in gumb "v ekipo", namesto številk pa povabilo k registraciji.
+  const gost = !nalaganjeSeje && !session
   const { vsaTekmovanja } = useTekmovanje()
   const [igralec, setIgralec] = useState<Profil | null>(null)
   // Fotografija s profila potrjenega igralca je privzeta slika na kartici za deljenje.
@@ -488,6 +492,7 @@ export default function Igralec() {
             {igralec.shirt_number != null && t('igralci.profil.stevilkaDresa', { st: igralec.shirt_number })}
           </p>
         </div>
+        {!gost && (
         <div className="text-right">
           <div className="text-xl font-black tabular-nums text-gnl-300 sm:text-2xl">
             {formatirajCeno(igralec.value)}
@@ -503,6 +508,7 @@ export default function Igralec() {
           </div>
           <RazlagaCene cena={igralec.value} izhodisce={izhodisce} />
         </div>
+        )}
       </div>
 
       {/* Deljena povezava na igralca vodi v igro: dodaj ga v svojo ekipo (tudi brez računa). */}
@@ -510,13 +516,32 @@ export default function Igralec() {
         <Link
           to={zLigo(`/my-team?dodaj=${igralec.id}`, slugLige)}
           onClick={() => zabeleziKorak('igralec_cta')}
-          className="gumb-glavni w-full flex-col"
+          className="gumb-glavni flex w-full flex-col items-center"
         >
           <span>{t('igralci.profil.vEkipo')}</span>
           <span className="text-xs font-normal opacity-80">{t('igralci.profil.vEkipoBrezplacno')}</span>
         </Link>
       )}
 
+      {gost ? (
+        <div className="kartica max-w-sm space-y-3 p-4 text-sm text-slate-300">
+          <p>
+            {tx(
+              'igralci.profil.leZaRegistrirane',
+              {},
+              {
+                prijava: (b) => (
+                  <Link to={prijava} className="font-semibold text-gnl-300 underline">
+                    {b}
+                  </Link>
+                ),
+              },
+            )}
+          </p>
+          <GumbGoogle nazaj={lokacija.pathname + lokacija.search} />
+        </div>
+      ) : nalaganjeSeje ? null : (
+        <>
       {/* prevzem profila: značka in predstavitev potrjenega igralca, "To sem jaz" */}
       <PrevzemIgralca
         igralecId={igralec.id}
@@ -937,6 +962,9 @@ export default function Igralec() {
             })}
           </ul>
         </section>
+      )}
+
+        </>
       )}
 
       {/* ugovor proti SLFF Scout: na vsaki javni strani igralca (spec, razdelek 2) */}
