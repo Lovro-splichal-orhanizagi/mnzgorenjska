@@ -1,0 +1,99 @@
+name: Scout stroj in robne funkcije
+
+# Pythonovi testi Scout stroja (scout/stroj/) in Deno preverba robnih funkcij
+# (supabase/functions/) — do zdaj sta tekla le na razvijalčevem računalniku.
+# Tečeta le, ko se spremeni njuna mapa (ali ta datoteka). Zaradi filtra poti
+# ju NE nastavi kot obvezni preverbi v zaščiti veje: PR brez sprememb v teh
+# mapah bi čakal na preverbo, ki se nikoli ne zažene.
+
+on:
+  pull_request:
+    paths:
+      - 'scout/stroj/**'
+      - 'scripts/visja-liga.mjs'
+      - 'supabase/migrations/**'
+      - 'supabase/functions/**'
+      - '.github/workflows/scout-in-funkcije.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scout-in-funkcije-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  spremembe:
+    name: Kaj se je spremenilo
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      stroj: ${{ steps.poti.outputs.stroj }}
+      funkcije: ${{ steps.poti.outputs.funkcije }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Ročni zagon preveri oboje; PR le tisto, česar mapa se je spremenila.
+      # test_baza.py teče proti migracijam, test_ravni.py proti visja-liga.mjs.
+      - id: poti
+        env:
+          BAZA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -z "$BAZA" ]; then
+            echo "stroj=da" >> "$GITHUB_OUTPUT"; echo "funkcije=da" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          git diff --name-only "$BAZA" HEAD > /tmp/spremembe.txt
+          cat /tmp/spremembe.txt
+          grep -qE '^(scout/stroj/|scripts/visja-liga\.mjs$|supabase/migrations/|\.github/workflows/scout-in-funkcije\.yml$)' /tmp/spremembe.txt \
+            && echo "stroj=da" >> "$GITHUB_OUTPUT" || echo "stroj=ne" >> "$GITHUB_OUTPUT"
+          grep -qE '^(supabase/functions/|\.github/workflows/scout-in-funkcije\.yml$)' /tmp/spremembe.txt \
+            && echo "funkcije=da" >> "$GITHUB_OUTPUT" || echo "funkcije=ne" >> "$GITHUB_OUTPUT"
+
+  stroj:
+    name: Scout stroj (pytest)
+    needs: spremembe
+    if: needs.spremembe.outputs.stroj == 'da'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: scout/stroj/pyproject.toml
+      # test_ravni.py kliče node (scripts/visja-liga.mjs, brez odvisnosti).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: pip install -e 'scout/stroj[test]'
+      # test_baza.py piše v lokalni Supabase (127.0.0.1:54322) z uveljavljenimi
+      # migracijami in vse razveljavi; db start uveljavi celo verigo migracij.
+      - run: npx --yes supabase@2.117.0 db start
+      - name: pytest
+        working-directory: scout/stroj
+        run: pytest -q
+      - if: always()
+        run: npx --yes supabase@2.117.0 stop --no-backup
+
+  funkcije:
+    name: Robne funkcije (deno check, lint)
+    needs: spremembe
+    if: needs.spremembe.outputs.funkcije == 'da'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # --node-modules-dir=none: korenski package.json bi Deno sicer prisilil
+      # iskati npm: pakete v node_modules/, funkcije pa jih na Supabase
+      # dobijo neposredno. no-import-prefix izklopljen, ker funkcije
+      # namenoma uvažajo z vgrajeno različico (npm:paket@x.y.z), brez deno.json.
+      - name: deno check
+        run: npx --yes deno@2.7.14 check --no-lock --node-modules-dir=none supabase/functions/*/index.ts
+      - name: deno lint
+        run: npx --yes deno@2.7.14 lint --rules-exclude=no-import-prefix supabase/functions
