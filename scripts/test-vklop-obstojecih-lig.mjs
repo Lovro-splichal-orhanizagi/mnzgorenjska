@@ -18,6 +18,8 @@ test('workflow writes one actual selected slug per coordinator input line',()=>{
 const now = () => new Date('2026-10-18T20:00:00Z')
 const calendarCentral={id:983,slug:'gb-sfl-d1-central',source:'isthmian',source_league_code:'sfl/69d0be24b616bafb97331d42/2026-27'}
 const calendarSouth={id:984,slug:'gb-sfl-d1-south',source:'isthmian',source_league_code:'sfl/69d0bdf9b616bafb97331d41/2026-27'}
+const calendarNplEast={id:981,slug:'gb-npl-east',source:'isthmian',source_league_code:'npl/67d7c7bb74247876e6dae40b/2026-27'}
+const calendarSouthCentral={id:976,slug:'gb-isthmian-south-central',source:'isthmian',source_league_code:'isthmian/67d7d11a749090308acc1022/2026-27'}
 const players = Array.from({ length: 6 }, (_, club) => ['GK','DEF','DEF','MID','FWD'].map((position,p) => ({ id:club*5+p,team_id:club,position,value:4 }))).flat()
 const state = { aktivnih:30,privzetih:0,klubov:6,najvisja_cena:12,po_pozicijah:{},nastopov_s_klopi:2,golov_brez_nastopa:0,krogov_tekoce:2,igralci:players }
 function fixture(patch={}) {
@@ -113,6 +115,46 @@ test('SFL D1 calendar exception selects first clean official Match N with exact 
     const rounds=Array.from({length:41},(_,i)=>({id:i+1,number:i+1,season:'2026/27',played_on:'2026-10-24',deadline_at:[14,32].includes(i+1)?'2026-10-24T10:00:00Z':i+1===41?'2026-10-27T10:00:00Z':'2026-09-10T10:00:00Z',lineups_locked_at:null}))
     const f=fixture({competition:async()=>({...altered,active:false,source_policy:null,date_only_deadline_policy:null}),rounds:async()=>rounds,matches:async()=>[...rounds.filter(r=>[1,2,22,28,31].includes(r.number)).map(r=>({id:r.id,round_id:r.id,home_goals:1,away_goals:0,imported_at:'2026-09-10',kontumacija:false,goals:[{count:1}],appearances:[{count:22}]})),... [14,32].map(n=>({id:999+n,round_id:n,home_goals:0,away_goals:0,imported_at:null,kontumacija:false,goals:[{count:0}],appearances:[{count:0}]}))]})
     const [result]=await runBatch({candidates:[altered],transport:f.transport,now});assert.equal(result.status,'READY');assert.equal(result.first_round.number,32)
+  }
+})
+test('NPL East exact tuple selects clean Match 16 while mismatches retain legacy Match 29',async()=>{
+  const rounds=[16,17,22,23,29].map(number=>({id:number,number,season:'2026/27',played_on:number===16?'2026-10-24':number===29?'2027-01-23':'2026-10-10',deadline_at:[16,29].includes(number)?(number===16?'2026-10-24T10:00:00Z':'2027-01-23T10:00:00Z'):'2026-10-10T10:00:00Z',lineups_locked_at:null}))
+  const matches=[17,22,23].map((number,index)=>({id:100+index,round_id:number,home_goals:1,away_goals:0,imported_at:'2026-10-10',kontumacija:false,goals:[{count:1}],appearances:[{count:22}]}))
+  for(const candidate of [calendarNplEast,{...calendarNplEast,source_league_code:'npl/wrong'},{...calendarNplEast,source:'dbu'},{...calendarNplEast,slug:'gb-other'}]) {
+    const f=fixture({competition:async()=>({...candidate,active:false,source_policy:null,date_only_deadline_policy:null}),rounds:async()=>rounds,matches:async()=>[...matches,...[16,29].map((number,index)=>({id:200+index,round_id:number,home_goals:0,away_goals:0,imported_at:null,kontumacija:false,goals:[{count:0}],appearances:[{count:0}]}))],fantasyData:async()=>({teams:[],lineups:[]})})
+    const [result]=await runBatch({candidates:[candidate],transport:f.transport,now})
+    assert.equal(result.status,'READY',result.reason)
+    assert.equal(result.first_round.number,candidate.slug==='gb-npl-east'&&candidate.source==='isthmian'&&candidate.source_league_code===calendarNplEast.source_league_code?16:29,candidate.slug)
+  }
+})
+test('NPL East calendar exception requires clean fantasy state and safe first-round evidence',async()=>{
+  const rounds=[16,17,22,23,29].map(number=>({id:number,number,season:'2026/27',played_on:number===16?'2026-10-24':number===29?'2027-01-23':'2026-10-10',deadline_at:[16,29].includes(number)?(number===16?'2026-10-24T10:00:00Z':'2027-01-23T10:00:00Z'):'2026-10-10T10:00:00Z',lineups_locked_at:null}))
+  const matches=[17,22,23].map((number,index)=>({id:100+index,round_id:number,home_goals:1,away_goals:0,imported_at:'2026-10-10',kontumacija:false,goals:[{count:1}],appearances:[{count:22}]}))
+  const cleanFixtures=[16,29].map((number,index)=>({id:200+index,round_id:number,home_goals:0,away_goals:0,imported_at:null,kontumacija:false,goals:[{count:0}],appearances:[{count:0}]}))
+  for(const patch of [
+    {fantasyData:undefined},
+    {fantasyData:async()=>({teams:[{id:1}],lineups:[]})},
+    {fantasyData:async()=>({teams:[],lineups:[{round_id:16}]})},
+    {rounds:async()=>rounds.map(r=>r.number===22?{...r,deadline_at:'2026-10-25T10:00:00Z'}:r)},
+    {rounds:async()=>rounds.map(r=>r.number===22?{...r,deadline_at:null}:r)},
+    {rounds:async()=>rounds.map(r=>r.number===16?{...r,lineups_locked_at:'2026-10-17T00:00:00Z'}:r)},
+    {matches:async()=>[...matches,...cleanFixtures.filter(m=>m.round_id!==16)]},
+    {matches:async()=>[...matches,...cleanFixtures.map(m=>m.id===200?{...m,home_goals:1}:m)]},
+    {matches:async()=>[...matches,...cleanFixtures.map(m=>m.id===200?{...m,imported_at:'2026-10-10'}:m)]},
+  ]) {
+    const f=fixture({competition:async()=>({...calendarNplEast,active:false,source_policy:null,date_only_deadline_policy:null}),rounds:async()=>rounds,matches:async()=>[...matches,...cleanFixtures],fantasyData:async()=>({teams:[],lineups:[]}),...patch})
+    const [result]=await runBatch({candidates:[calendarNplEast],transport:f.transport,now})
+    assert.equal(result.status,'HOLD',result.reason)
+  }
+})
+test('Isthmian South Central exact tuple selects clean Match 15 while mismatches retain legacy Match 39',async()=>{
+  const rounds=[15,16,30,38,39].map(number=>({id:number,number,season:'2026/27',played_on:number===15?'2026-10-24':number===39?'2027-03-29':'2026-10-10',deadline_at:[15,39].includes(number)?(number===15?'2026-10-24T10:00:00Z':'2027-03-29T10:00:00Z'):'2026-10-10T10:00:00Z',lineups_locked_at:null}))
+  const matches=[16,30,38].map((number,index)=>({id:300+index,round_id:number,home_goals:1,away_goals:0,imported_at:'2026-10-10',kontumacija:false,goals:[{count:1}],appearances:[{count:22}]}))
+  for(const candidate of [calendarSouthCentral,{...calendarSouthCentral,source_league_code:'isthmian/wrong'},{...calendarSouthCentral,source:'dbu'},{...calendarSouthCentral,slug:'gb-other'}]) {
+    const f=fixture({competition:async()=>({...candidate,active:false,source_policy:null,date_only_deadline_policy:null}),rounds:async()=>rounds,matches:async()=>[...matches,...[15,39].map((number,index)=>({id:400+index,round_id:number,home_goals:0,away_goals:0,imported_at:null,kontumacija:false,goals:[{count:0}],appearances:[{count:0}]}))],fantasyData:async()=>({teams:[],lineups:[]})})
+    const [result]=await runBatch({candidates:[candidate],transport:f.transport,now})
+    assert.equal(result.status,'READY',result.reason)
+    assert.equal(result.first_round.number,candidate.slug==='gb-isthmian-south-central'&&candidate.source==='isthmian'&&candidate.source_league_code===calendarSouthCentral.source_league_code?15:39,candidate.slug)
   }
 })
 test('SFL D1 preview holds teams, lineups, missing fantasy read, and invalid/future higher deadlines',async()=>{
