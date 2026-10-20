@@ -45,9 +45,7 @@ Enkrat, lastnik strežnika (agenti tega ne morejo: skrivnosti in root):
    pravico pisati v #kafana. Zapiši **Public Key** in **Bot Token**.
 2. V `/opt/slff-objave/.env` (chmod 600) dodaj:
    `COMPOSE_PROFILES=zgodbe`, `DISCORD_ZGODBE_PUBLIC_KEY`,
-   `DISCORD_ZGODBE_BOT_TOKEN`, `DISCORD_KAFANA_ID`,
-   `ZGODBE_ODOBRITELJI=<Luka>,<Lovro>,<Nejc>` (id-ji uporabnikov Discord),
-   `ZGODBE_NACIN=dry_run`.
+   `DISCORD_ZGODBE_BOT_TOKEN`, `DISCORD_KAFANA_ID`, `ZGODBE_NACIN=dry_run`.
 3. Blok `@zgodbe` iz `scripts/hetzner/Caddyfile` prenesi v
    `/etc/caddy/Caddyfile`, `caddy validate` in `systemctl reload caddy`.
 4. `scripts/hetzner/objavi-objave.sh` (ali `ssh slff-ops deploy objave`)

@@ -13,7 +13,7 @@
 # Dnevnik: docker logs slff-objave. Preizkus brez pisanja:
 #   docker compose run --rm objave node scripts/objave.mjs --slot pon --suho --mapa /mediji/suho
 # Zgodbe (SLF-38, scripts/zgodbe/, docs/zgodbe.md): storitev zgodbe teče le s
-# COMPOSE_PROFILES=zgodbe v .env (skupaj z DISCORD_ZGODBE_*, DISCORD_KAFANA_ID, ZGODBE_ODOBRITELJI).
+# COMPOSE_PROFILES=zgodbe v .env (skupaj z DISCORD_ZGODBE_*, DISCORD_KAFANA_ID).
 # Kartica v #kafana:
 #   docker compose run --rm zgodbe node scripts/zgodbe/zgodbe.mjs predlozi 1.jpg 2.jpg 3.jpg
 services:
