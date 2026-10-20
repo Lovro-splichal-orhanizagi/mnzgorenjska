@@ -53,7 +53,7 @@ export function Opazovani() {
                   {o.odprt_za_prestop && <span className="znacka-odprt">{t('iskanje.odprt')}</span>}
                 </span>
                 <span className="block text-xs text-slate-400">{o.klub} · {o.liga}</span>
-                <span className="block text-xs text-slate-400">{t('seznam.podrobno', { minute: o.minute, datum: datum(o.dodano) })}</span>
+                <span className="block text-xs text-slate-400">{t('seznam.podrobno', { minute: o.minute ?? '–', datum: datum(o.dodano) })}</span>
               </Link>
               <span className="shrink-0 cursor-help text-right" title={t('iskanje.percentilOpis')}>
                 <span className="block text-xl font-black tabular-nums text-gnl-300">{Math.round(o.percentil)}</span>
@@ -70,7 +70,7 @@ export function Opazovani() {
           onClick={() =>
             prenesiCsv('scout-opazovani.csv', [
               [t('klub.st.ime'), t('klub.st.poz'), t('igralec.st.klub'), t('igralec.st.liga'), t('iskanje.percentil'), t('igralec.st.minute'), t('iskanje.odprt'), t('seznam.dodano')],
-              ...seznam.map((o) => [o.ime, t(`poz.${o.skupina}` as Kljuc), o.klub, o.liga, Math.round(o.percentil), o.minute, o.odprt_za_prestop ? 1 : 0, o.dodano.slice(0, 10)]),
+              ...seznam.map((o) => [o.ime, t(`poz.${o.skupina}` as Kljuc), o.klub, o.liga, Math.round(o.percentil), o.minute ?? '', o.odprt_za_prestop ? 1 : 0, o.dodano.slice(0, 10)]),
             ])
           }
           className="gumb-tih text-sm"
