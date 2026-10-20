@@ -187,3 +187,43 @@ Uvoz (ena za drugo, **šele po vljudnostnem mailu ligam**): `gh workflow run
 uvoz-lige.yml -f liga=gb-isthmian-premier -f
 arhiv=isthmian/67d7d01f749090308acc101e/2025-26 -f cene=true`; SFL brez
 `arhiv`. Liga je ~10 zahtevkov po 3 s.
+
+### Kandidati za obstoječi uvoz (20. 10. 2026)
+
+Vsem trem ligam so bili 20. 10. poslani vljudnostni dopisi; ponudniki pošte
+so jih sprejeli. To izpolni dokumentirani pogoj pred uvozom, **ne pomeni
+dovoljenja lige**. Kandidati so samo trenutne sezone 2026/27; vir ostaja
+javen in brez prijave, z obstoječim `isthmian` adapterjem, glavo tenant,
+3-sekundnim premorom ter ustavitvijo ob umiku, prijavi, izzivu/CAPTCHA ali
+HTTP 401/403/429. Brez ponavljanja ali obhoda.
+
+Omejen pregled virskih seznamov vseh 12 divizij (60 zahtevkov, vsi 200,
+brez baze; 20. 10. 2026) je našel naslednje odigrane tekme in zapisnike:
+
+| divizija | tekme v sezoni | odigrane tekme / razčlenjeni zapisniki |
+|---|---:|---:|
+| Isthmian North | 463 | 126 / 126 |
+| Isthmian Premier | 462 | 127 / 127 |
+| Isthmian South Central | 462 | 119 / 119 |
+| Isthmian South East | 462 | 119 / 119 |
+| NPL East | 464 | 150 / 150 |
+| NPL Midlands | 462 | 145 / 145 |
+| NPL Premier | 463 | 150 / 150 |
+| NPL West | 462 | 147 / 147 |
+| SFL Division One Central | 462 | 117 / 117 |
+| SFL Division One South | 462 | 126 / 126 |
+| SFL Premier Central | 462 | 127 / 127 |
+| SFL Premier South | 462 | 125 / 125 |
+
+V vseh razčlenjenih zapisnikih so se identifikatorji in sezona ujemali,
+število golov z izidom, postave so imele po 11 začetnikov in po enega GK,
+menjave pa minute. V tem vzorcu ni bilo avtogolov. Edino opozorilo je v
+NPL Midlands, zapisnik `gb6a590670ce9ef452b61f386d`: menjava Grantham Town v
+76. minuti navaja igralca, ki ga ni v postavi.
+
+Krogi `Match N` imajo pomembno omejitev roka: vseh 12 divizij ima kroge,
+kjer je zadnja tekma več kot tri dni po prvi; največji razponi so od 66 dni
+(SFL Premier South) do 217 dni (SFL Division One South). Rok, vezan na
+najzgodnejšo tekmo kroga, lahko zato zaklene poznejše tekme prezgodaj.
+Pred vklopom je treba roke preveriti posebej za vsako ligo; ta pregled ni
+vklop ali uvoz in sam ne potrjuje pripravljenosti.

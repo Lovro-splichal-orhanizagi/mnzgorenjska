@@ -29,6 +29,10 @@
     "hlf": {
       "document": "docs/viri/romunija.md",
       "permission": "Owner-approved public browser visitor route (10 October 2026). Use only the existing hailafotbal.ro adapter; no bundled credentials or direct Datalake API. Stop on withdrawal, login, challenge, CAPTCHA or HTTP 401/403/429. Current-season-only pricing route; no archive exists."
+    },
+    "isthmian": {
+      "document": "docs/viri/anglija.md",
+      "permission": "Existing public, uncredentialed Streamline JSON adapter; no explicit league permission recorded. Courtesy notices to all three leagues were remotely accepted on 20 October 2026; courtesy is not permission. Use the existing adapter with its tenant header, 3-second pacing and stop on withdrawal, login, challenge/CAPTCHA or HTTP 401/403/429. No retries or alternate access after refusal."
     }
   },
   "candidates": [
@@ -421,6 +425,78 @@
       "slug": "dk-3-division",
       "source": "dbu",
       "source_league_code": "508657"
+    },
+    {
+      "id": 977,
+      "slug": "gb-isthmian-north",
+      "source": "isthmian",
+      "source_league_code": "isthmian/67d7d0c1749090308acc1021/2026-27"
+    },
+    {
+      "id": 978,
+      "slug": "gb-isthmian-premier",
+      "source": "isthmian",
+      "source_league_code": "isthmian/67d7d01f749090308acc101e/2026-27"
+    },
+    {
+      "id": 976,
+      "slug": "gb-isthmian-south-central",
+      "source": "isthmian",
+      "source_league_code": "isthmian/67d7d11a749090308acc1022/2026-27"
+    },
+    {
+      "id": 975,
+      "slug": "gb-isthmian-south-east",
+      "source": "isthmian",
+      "source_league_code": "isthmian/67d7d187749090308acc1023/2026-27"
+    },
+    {
+      "id": 981,
+      "slug": "gb-npl-east",
+      "source": "isthmian",
+      "source_league_code": "npl/67d7c7bb74247876e6dae40b/2026-27"
+    },
+    {
+      "id": 979,
+      "slug": "gb-npl-midlands",
+      "source": "isthmian",
+      "source_league_code": "npl/67d7c7bb74247876e6dae40c/2026-27"
+    },
+    {
+      "id": 982,
+      "slug": "gb-npl-premier",
+      "source": "isthmian",
+      "source_league_code": "npl/67d7c7bb74247876e6dae40a/2026-27"
+    },
+    {
+      "id": 980,
+      "slug": "gb-npl-west",
+      "source": "isthmian",
+      "source_league_code": "npl/67d7c7bb74247876e6dae40d/2026-27"
+    },
+    {
+      "id": 983,
+      "slug": "gb-sfl-d1-central",
+      "source": "isthmian",
+      "source_league_code": "sfl/69d0be24b616bafb97331d42/2026-27"
+    },
+    {
+      "id": 984,
+      "slug": "gb-sfl-d1-south",
+      "source": "isthmian",
+      "source_league_code": "sfl/69d0bdf9b616bafb97331d41/2026-27"
+    },
+    {
+      "id": 985,
+      "slug": "gb-sfl-premier-central",
+      "source": "isthmian",
+      "source_league_code": "sfl/69d0bdbab616bafb97331d40/2026-27"
+    },
+    {
+      "id": 986,
+      "slug": "gb-sfl-premier-south",
+      "source": "isthmian",
+      "source_league_code": "sfl/69d0bd99b616bafb97331d3f/2026-27"
     }
   ]
 }
