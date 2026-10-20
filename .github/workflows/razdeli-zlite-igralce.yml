@@ -28,8 +28,23 @@ on:
         required: false
         type: string
         default: ''
+      ohrani_klub:
+        description: 'Izrecno potrjen klub, ki obdrži id (zahteva tekmovanje in igralca)'
+        required: false
+        type: string
+        default: ''
+      expected_sha:
+        description: 'Pri izrecnem ohrani_klub: 40-mestni SHA pregledane različice main'
+        required: false
+        type: string
+        default: ''
       pisi:
         description: 'Zapisi (brez tega je samo nacrt)'
+        required: false
+        type: boolean
+        default: false
+      fscg_cache_audit:
+        description: 'Samo lokalna analiza dveh že shranjenih zapisnikov FSCG; brez uvoza'
         required: false
         type: boolean
         default: false
@@ -37,7 +52,7 @@ on:
 permissions:
   contents: read
 
-run-name: Razdeli zlite igralce ${{ inputs.tekmovanje || inputs.vir || 'vse' }}${{ inputs.pisi && ' (pisi)' || '' }}
+run-name: ${{ inputs.fscg_cache_audit && 'FSCG cached-report audit' || format('Razdeli zlite igralce {0}{1}', inputs.tekmovanje || inputs.vir || 'vse', inputs.pisi && ' (pisi)' || '') }}
 
 # Uvoz in razdelitev pisejo iste nastope: uvoz tekmo zamenja v celoti, zato
 # ne smeta teci hkrati. Kot zdruzi-klube: svoja skupina, prvi korak pocaka na
@@ -48,6 +63,7 @@ concurrency:
 
 jobs:
   razdeli:
+    if: ${{ !inputs.fscg_cache_audit }}
     runs-on: ubuntu-latest
     # 15 minut dela + do 120 minut cakanja na starejsi uvoz.
     timeout-minutes: 140
@@ -58,6 +74,7 @@ jobs:
       VIR: ${{ inputs.vir }}
       TEKMOVANJE: ${{ inputs.tekmovanje }}
       IGRALEC: ${{ inputs.igralec }}
+      OHRANI_KLUB: ${{ inputs.ohrani_klub }}
       PISI: ${{ inputs.pisi }}
     steps:
       - uses: actions/checkout@v4
@@ -68,6 +85,16 @@ jobs:
       # Nobena odvisnost ne potrebuje namestitvenih skript; brez njih tuja
       # koda ob namestitvi ne tece.
       - run: npm ci --ignore-scripts
+
+      - name: Preveri pregledani main za izrecni popravek
+        if: ${{ inputs.ohrani_klub != '' }}
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+        run: |
+          set -euo pipefail
+          [ "$GITHUB_REF" = "refs/heads/main" ] || { echo "izrecni ohrani_klub je dovoljen samo na main"; exit 1; }
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "expected_sha mora biti 40 malih hex znakov"; exit 1; }
+          [ "$EXPECTED_SHA" = "$GITHUB_SHA" ] || { echo "expected_sha se ne ujema z GITHUB_SHA"; exit 1; }
 
       - name: Pocakaj na starejse uvoze
         if: ${{ inputs.pisi }}
@@ -99,5 +126,39 @@ jobs:
             [[ "$IGRALEC" =~ ^[0-9]+$ ]] || { echo "igralec: id je stevilo"; exit 1; }
             args+=(--igralec "$IGRALEC")
           fi
+          if [ -n "$OHRANI_KLUB" ]; then
+            [[ "$OHRANI_KLUB" =~ ^[0-9]+$ ]] || { echo "ohrani_klub: id je stevilo"; exit 1; }
+            [ -n "$IGRALEC" ] && [ -n "$TEKMOVANJE" ] || { echo "ohrani_klub zahteva igralec in tekmovanje"; exit 1; }
+            args+=(--ohrani-klub "$OHRANI_KLUB")
+          fi
           [ "$PISI" = "true" ] && args+=(--pisi)
           node scripts/razdeli-zlite-igralce.mjs "${args[@]}"
+
+  fscg-cache-audit:
+    if: ${{ inputs.fscg_cache_audit }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Restore exact ME1 report cache without fallback
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-me-1-cfl-39491238079
+          fail-on-cache-miss: true
+      - name: Parse only the two fixed cached reports
+        run: node scripts/analiziraj-fscg-me1-cache.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fscg-me1-cached-report-audit-${{ github.run_id }}
+          path: fscg-me1-cache-audit-output/
+          if-no-files-found: error
+          retention-days: 7
