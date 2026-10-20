@@ -1,0 +1,3 @@
+# Dnevno poročilo o poslani pošti (scripts/dnevno-porocilo-poste.mjs) na #reports.
+# Namesti objavi-posto.sh v /etc/cron.d/. Ura je UTC: 7:00 poleti, 6:00 pozimi.
+0 5 * * * root cd /opt/slff-posta && docker compose run --rm -T posta node scripts/dnevno-porocilo-poste.mjs --discord >> /var/log/slff-porocilo-poste.log 2>&1

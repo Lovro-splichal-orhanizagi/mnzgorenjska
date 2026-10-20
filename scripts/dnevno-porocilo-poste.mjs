@@ -1,4 +1,5 @@
 // Dnevno poročilo o poslani pošti za včeraj — na Discord (#reports).
+// Teče na VM iz cron (scripts/hetzner/posta/slff-porocilo-poste) v slikah slff-posta.
 //
 // Dva vira: pošta klubom (`klub_stik_posta`, prvi mail in opomnik; pošiljatelj
 // je `poslal`, država `klub_stik.drzava`) in sistemska pošta uporabnikom
@@ -73,7 +74,7 @@ try {
   console.error(e.message)
   if (discord && webhook) await fetch(webhook, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content: `🔴 **Poročila o pošti za ${dan} ni bilo mogoče sestaviti**\n\`${e.message}\``.slice(0, 1900) }),
+    body: JSON.stringify({ username: 'SLFF pošta', content: `🔴 **Poročila o pošti za ${dan} ni bilo mogoče sestaviti**\n\`${e.message}\``.slice(0, 1900) }),
   }).catch(() => {})
   process.exit(1)
 }
@@ -103,7 +104,7 @@ if (discord) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     // Discord zavrne sporočilo, daljše od 2000 znakov.
-    body: JSON.stringify({ content: besedilo.slice(0, 1900) }),
+    body: JSON.stringify({ username: 'SLFF pošta', content: besedilo.slice(0, 1900) }),
   })
   console.log(odgovor.ok ? '\nPoslano na Discord.' : `\nDiscord: HTTP ${odgovor.status}`)
   if (!odgovor.ok) process.exit(1)
