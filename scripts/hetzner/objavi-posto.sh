@@ -11,7 +11,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 # Skripte, ki jih uvozita posta-klubom.mjs in vrsta-poste-klubom.mjs.
 DATOTEKE=(
-  scripts/posta-klubom.mjs scripts/vrsta-poste-klubom.mjs
+  scripts/posta-klubom.mjs scripts/vrsta-poste-klubom.mjs scripts/dnevno-porocilo-poste.mjs
   scripts/strani.mjs scripts/prenos.mjs scripts/klubi.mjs scripts/zapisnik.mjs
   scripts/viri/oefb.mjs scripts/viri/facr.mjs scripts/viri/jalgpall.mjs scripts/viri/sportnet.mjs
   scripts/viri/frf.mjs scripts/viri/zapisniki.mjs scripts/viri/mlsz.mjs
@@ -28,6 +28,8 @@ ssh SLFF "test -f $CILJ/.env || { echo 'Manjka $CILJ/.env (ustvari ga lastnik, g
   && rm -rf $CILJ/app.novo && mkdir -p $CILJ/app.novo"
 rsync -aR "${DATOTEKE[@]}" "SLFF:$CILJ/app.novo/"
 rsync -a scripts/hetzner/posta/docker-compose.yml "SLFF:$CILJ/"
+rsync -a --chmod=644 scripts/hetzner/posta/slff-porocilo-poste "SLFF:/etc/cron.d/"
+rsync -a --chmod=644 scripts/hetzner/posta/slff-porocilo-poste "SLFF:/etc/cron.d/"
 ssh SLFF "cd $CILJ && { [ -d app/node_modules ] && cp -a app/node_modules app.novo/ || true; } \
   && chmod -R a+rX app.novo \
   && docker run --rm -v $CILJ/app.novo:/app -w /app node:22-alpine \

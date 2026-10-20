@@ -63,6 +63,12 @@ besedila (nemška, estonska, hrvaška, madžarska, srbska v latinici) so v
 skripti in ne trdijo, da imamo dovoljenje zveze. Prehodne napake delavec le zabeleži; zavrnjena prijava: ura premora,
 nato izhod (Docker ga znova zažene).
 
+**Dnevno poročilo** (koliko je včeraj odšlo, po pošiljatelju, državi in
+vrsti, klubom in uporabnikom) gre vsak dan ob 7:00 (pozimi 6:00) na Discord
+#reports: `scripts/dnevno-porocilo-poste.mjs`, cron
+`scripts/hetzner/posta/slff-porocilo-poste` v sliki slff-posta,
+`DISCORD_WEBHOOK_REPORTS` v `/opt/slff-posta/.env`.
+
 **Dnevnik:** `ssh slff docker logs slff-posta` — brez naslovov (stik #id,
 klub; naslovi zakriti v `k***@domena`). **Objava:**
 `scripts/hetzner/objavi-posto.sh` iz main (skripte, ki jih pošta rabi, in le
