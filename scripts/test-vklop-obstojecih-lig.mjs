@@ -58,6 +58,27 @@ test('Danish third division registration binds the reviewed production tuple',()
   const dk=validateSelection(registry,['dk-3-division'])
   assert.deepEqual(dk,[{id:1051,slug:'dk-3-division',source:'dbu',source_league_code:'508657'}])
 })
+test('English Streamline candidates bind all reviewed tuples and reject unknown leagues',()=>{
+  const expected=[
+    [977,'gb-isthmian-north','isthmian','isthmian/67d7d0c1749090308acc1021/2026-27'],
+    [978,'gb-isthmian-premier','isthmian','isthmian/67d7d01f749090308acc101e/2026-27'],
+    [976,'gb-isthmian-south-central','isthmian','isthmian/67d7d11a749090308acc1022/2026-27'],
+    [975,'gb-isthmian-south-east','isthmian','isthmian/67d7d187749090308acc1023/2026-27'],
+    [981,'gb-npl-east','isthmian','npl/67d7c7bb74247876e6dae40b/2026-27'],
+    [979,'gb-npl-midlands','isthmian','npl/67d7c7bb74247876e6dae40c/2026-27'],
+    [982,'gb-npl-premier','isthmian','npl/67d7c7bb74247876e6dae40a/2026-27'],
+    [980,'gb-npl-west','isthmian','npl/67d7c7bb74247876e6dae40d/2026-27'],
+    [983,'gb-sfl-d1-central','isthmian','sfl/69d0be24b616bafb97331d42/2026-27'],
+    [984,'gb-sfl-d1-south','isthmian','sfl/69d0bdf9b616bafb97331d41/2026-27'],
+    [985,'gb-sfl-premier-central','isthmian','sfl/69d0bdbab616bafb97331d40/2026-27'],
+    [986,'gb-sfl-premier-south','isthmian','sfl/69d0bd99b616bafb97331d3f/2026-27'],
+  ]
+  const selected=validateSelection(registry,expected.map(([,slug])=>slug))
+  assert.deepEqual(selected.map(({id,slug,source,source_league_code})=>[id,slug,source,source_league_code]),expected)
+  assert.equal(registry.candidates.length,65+12)
+  assert.equal(registry.source_contracts.isthmian.document,'docs/viri/anglija.md')
+  assert.throws(()=>validateSelection(registry,['gb-isthmian-unknown']))
+})
 test('scope digest binds exact commit and selected candidate tuple',()=>{
   const a=approvalDigest('a'.repeat(40),[candidate]);assert.match(a,/^[a-f0-9]{64}$/)
   assert.notEqual(a,approvalDigest('b'.repeat(40),[candidate]))

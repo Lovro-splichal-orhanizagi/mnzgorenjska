@@ -12,7 +12,7 @@ export function validateSelection(registry, slugs) {
   if (!slugs.length || new Set(slugs).size !== slugs.length) throw Error('Provide a nonempty explicit list without duplicates.')
   return slugs.map(slug => {
     const candidate = registry.candidates.find(c => c.slug === slug)
-    if (!candidate || !['ncefl','pzpn','wmzpn','eps','sportnet','dbu','hlf'].includes(candidate.source) || /^(de|es|hr)-/.test(slug)) throw Error(`Outside fixed existing-league scope: ${slug}`)
+    if (!candidate || !['ncefl','pzpn','wmzpn','eps','sportnet','dbu','hlf','isthmian'].includes(candidate.source) || /^(de|es|hr)-/.test(slug)) throw Error(`Outside fixed existing-league scope: ${slug}`)
     return candidate
   }).sort((a,b) => a.slug.localeCompare(b.slug))
 }
