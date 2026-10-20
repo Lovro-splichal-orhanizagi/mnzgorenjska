@@ -33,6 +33,11 @@ on:
         required: false
         type: boolean
         default: false
+      fscg_cache_audit:
+        description: 'Samo lokalna analiza šestih že shranjenih zapisnikov ME2; brez uvoza'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -48,6 +53,7 @@ concurrency:
 
 jobs:
   razdeli:
+    if: ${{ !inputs.fscg_cache_audit }}
     runs-on: ubuntu-latest
     # 15 minut dela + do 120 minut cakanja na starejsi uvoz.
     timeout-minutes: 140
@@ -101,3 +107,32 @@ jobs:
           fi
           [ "$PISI" = "true" ] && args+=(--pisi)
           node scripts/razdeli-zlite-igralce.mjs "${args[@]}"
+
+  fscg-cache-audit:
+    if: ${{ inputs.fscg_cache_audit }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Restore exact ME2 report cache without fallback
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-me-2-cfl-39495297622
+          fail-on-cache-miss: true
+      - name: Parse only the six fixed cached reports
+        run: node scripts/analiziraj-fscg-me2-cache.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fscg-me2-cached-report-audit-${{ github.run_id }}
+          path: fscg-me2-cache-audit-output/
+          if-no-files-found: error
+          retention-days: 7
