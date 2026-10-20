@@ -163,6 +163,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
   },
   seznam: {
+    leZaRegistrirane:
+      'Списокот на играчи го гледаат само регистрираните. <prijava>Најави се или отвори сметка</prijava> — бесплатно.',
     naslov: 'Играчи',
     naslovZLigo: 'Играчи: {liga}',
     stolpci: {

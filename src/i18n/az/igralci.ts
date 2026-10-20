@@ -163,6 +163,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
   },
   seznam: {
+    leZaRegistrirane:
+      'Oyunçu siyahısını yalnız qeydiyyatdan keçmiş istifadəçilər görür. <prijava>Daxil ol və ya hesab yarat</prijava> — pulsuz.',
     naslov: 'Oyunçular',
     naslovZLigo: 'Oyunçular: {liga}',
     stolpci: {

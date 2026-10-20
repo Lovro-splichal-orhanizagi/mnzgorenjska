@@ -163,6 +163,8 @@ export const igralci = {
     },
   },
   seznam: {
+    leZaRegistrirane:
+      'Seznam igralcev vidijo le registrirani. <prijava>Prijavi se ali ustvari račun</prijava> — brezplačno.',
     naslov: 'Igralci',
     naslovZLigo: 'Igralci — {liga}',
     stolpci: {

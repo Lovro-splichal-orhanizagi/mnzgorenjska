@@ -163,6 +163,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
   },
   seznam: {
+    leZaRegistrirane:
+      'Τη λίστα παικτών βλέπουν μόνο οι εγγεγραμμένοι χρήστες. <prijava>Συνδέσου ή δημιούργησε λογαριασμό</prijava> — δωρεάν.',
     naslov: 'Παίκτες',
     naslovZLigo: 'Παίκτες: {liga}',
     stolpci: {

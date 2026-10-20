@@ -163,6 +163,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
   },
   seznam: {
+    leZaRegistrirane:
+      'A játékoslistát csak regisztrált felhasználók látják. <prijava>Jelentkezz be vagy hozz létre fiókot</prijava> — ingyenes.',
     naslov: 'Játékosok',
     naslovZLigo: 'Játékosok: {liga}',
     stolpci: {
