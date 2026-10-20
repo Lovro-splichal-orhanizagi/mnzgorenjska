@@ -87,15 +87,23 @@ select pg_temp.zlite_assert('dry run selects requested club without writes',
 select pg_temp.zlite_assert('legacy two-argument route still chooses players.team_id',
  (razdeli_zlitega_igralca(-917001,false)->'ohrani'->>'klub')='-917002'
  and (select count(*)=2 from appearances where player_id=-917001));
-select pg_temp.zlite_assert('apply reuses sole existing peer and preserves target club id',
- (razdeli_zlitega_igralca(-917001,true,-917001)->>'stanje')='razdeljen'
- and (select count(*)=1 from appearances where player_id=-917001 and team_id=-917001)
- and (select count(*)=2 from appearances where player_id=-917002 and team_id=-917002)
- and (select scorer_id=-917002 from goals where id=-917001)
- and (select count(*)=3 from appearances)
- and (select count(*)=1 from goals));
-select pg_temp.zlite_assert('statistics remain split by club',
- (select count(*)=1 from statistika_igralcev where player_id=-917001 and matches=1)
- and (select count(*)=1 from statistika_igralcev where player_id=-917002 and matches=2));
+create temporary table zlite_apply_result(result jsonb);
+insert into zlite_apply_result select razdeli_zlitega_igralca(-917001,true,-917001);
+select result from zlite_apply_result;
+select pg_temp.zlite_assert('apply RPC returned a completed split',
+ (select result->>'stanje'='razdeljen' and result->'ohrani'->>'klub'='-917001' from zlite_apply_result));
+select pg_temp.zlite_assert('target id retains only the selected club appearances',
+ (select count(*)=1 from appearances where player_id=-917001 and team_id=-917001)
+ and not exists(select 1 from appearances where player_id=-917001 and team_id=-917002));
+select pg_temp.zlite_assert('existing Bokelj peer receives both its old and moved appearances',
+ (select count(*)=2 from appearances where player_id=-917002 and team_id=-917002));
+select pg_temp.zlite_assert('Bokelj scorer goal follows its appearance to the existing peer',
+ (select scorer_id=-917002 from goals where id=-917001));
+select pg_temp.zlite_assert('total appearances and goals remain unchanged',
+ (select count(*)=3 from appearances) and (select count(*)=1 from goals));
+select pg_temp.zlite_assert('stat row remains for retained Dečić player',
+ (select count(*)=1 from statistika_igralcev where player_id=-917001 and matches=1));
+select pg_temp.zlite_assert('stat row remains for existing Bokelj peer',
+ (select count(*)=1 from statistika_igralcev where player_id=-917002 and matches=2));
 
 rollback;
