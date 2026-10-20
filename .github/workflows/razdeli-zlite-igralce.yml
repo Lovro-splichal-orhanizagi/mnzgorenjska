@@ -48,11 +48,16 @@ on:
         required: false
         type: boolean
         default: false
+      mfa_challenge_cache_audit:
+        description: 'Samo lokalna analiza že shranjenih zapisnikov MFA Challenge; brez uvoza ali omrežja'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
-run-name: ${{ inputs.fscg_cache_audit && 'FSCG cached-report audit' || format('Razdeli zlite igralce {0}{1}', inputs.tekmovanje || inputs.vir || 'vse', inputs.pisi && ' (pisi)' || '') }}
+run-name: ${{ inputs.fscg_cache_audit && 'FSCG cached-report audit' || inputs.mfa_challenge_cache_audit && 'MFA Challenge cached-report audit' || format('Razdeli zlite igralce {0}{1}', inputs.tekmovanje || inputs.vir || 'vse', inputs.pisi && ' (pisi)' || '') }}
 
 # Uvoz in razdelitev pisejo iste nastope: uvoz tekmo zamenja v celoti, zato
 # ne smeta teci hkrati. Kot zdruzi-klube: svoja skupina, prvi korak pocaka na
@@ -63,7 +68,7 @@ concurrency:
 
 jobs:
   razdeli:
-    if: ${{ !inputs.fscg_cache_audit }}
+    if: ${{ !inputs.fscg_cache_audit && !inputs.mfa_challenge_cache_audit }}
     runs-on: ubuntu-latest
     # 15 minut dela + do 120 minut cakanja na starejsi uvoz.
     timeout-minutes: 140
@@ -160,5 +165,36 @@ jobs:
         with:
           name: fscg-me1-cached-report-audit-${{ github.run_id }}
           path: fscg-me1-cache-audit-output/
+          if-no-files-found: error
+          retention-days: 7
+
+  mfa-challenge-cache-audit:
+    if: ${{ inputs.mfa_challenge_cache_audit }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Restore exact Challenge import cache without fallback
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-mt-challenge-39500662013
+          fail-on-cache-miss: true
+      - name: Test offline cache reader
+        run: node scripts/test-mfa-challenge-cache-audit.mjs
+      - name: Parse cached Challenge fixtures and reports only
+        run: node scripts/analiziraj-mfa-challenge-cache.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mfa-challenge-cached-report-audit-${{ github.run_id }}
+          path: mfa-challenge-cache-audit-output/
           if-no-files-found: error
           retention-days: 7
