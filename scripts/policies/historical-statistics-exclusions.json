@@ -351,6 +351,47 @@
           "reasonCode": "missing_lineups_and_individual_statistics"
         }
       ]
+    },
+    {
+      "id": "mt-premier-reviewed-history-2026-10-20-v1",
+      "provider": "mfa",
+      "sourcePolicy": "mt-mfa-reviewed-history-v1",
+      "competitionSlug": "mt-premier",
+      "season": "2026/27",
+      "recordedAt": "2026-10-20T21:51:20.686509+00:00",
+      "approvalReference": "user reply Allow both reviewed exclusions to call_ef96603eabce40598063979c62d0a2dd",
+      "entries": [
+        {
+          "sourceMatchId": "52581524",
+          "sourceCompetitionId": "52561747",
+          "sourcePhase": null,
+          "sourceRound": 28,
+          "season": "2025/26",
+          "playedOn": "2026-04-11",
+          "homeSourceClubId": "39611",
+          "awaySourceClubId": "39606",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/52581524",
+          "rawSha256": "a81da11a4fdad7c6cca90acc28e02248566ae044653b905435acb2f0fbbaa949",
+          "observedHomeScore": 2,
+          "observedAwayScore": 2,
+          "reasonCode": "missing_dismissal_clock"
+        },
+        {
+          "sourceMatchId": "53142122",
+          "sourceCompetitionId": "53109748",
+          "sourcePhase": null,
+          "sourceRound": 1,
+          "season": "2026/27",
+          "playedOn": "2026-08-17",
+          "homeSourceClubId": "39636",
+          "awaySourceClubId": "39615",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/53142122",
+          "rawSha256": "dc0d717b5be05389e72f081df04bac8ee93fe93384ff31f51817d6faaf0b5399",
+          "observedHomeScore": 4,
+          "observedAwayScore": 0,
+          "reasonCode": "missing_dismissal_clock"
+        }
+      ]
     }
   ]
 }

@@ -20,6 +20,7 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
+import {loadHistoricalStatisticsImportContext} from './lib/historical-statistics-import.mjs'
 import { sifra } from './viri/zapisniki.mjs'
 import { isoLjubljana } from './cas.mjs'
 import { prenesiSPonovitvami, fetchZaBazo } from './prenos.mjs'
@@ -63,8 +64,9 @@ const sezonaArg = arg('sezona', null)
 const pisi = process.argv.includes('--pisi')
 const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: fetchZaBazo() } })
 
-const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
-const vir = viraZa(tekmovanje)
+const originalCompetition = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
+const {competition:tekmovanje,installedHistoricalMarkers}=await loadHistoricalStatisticsImportContext(db,originalCompetition)
+const vir = viraZa(tekmovanje,{installedHistoricalMarkers})
 
 // Delegacijsko stran objavljajo samo zveze na starem CMS-u (Kranj, Ljubljana,
 // Celje). Ostale dajo uro tekme le v razporedu, kar je za rok kroga dovolj.

@@ -122,6 +122,7 @@ async function main() {
   const { vseVrstice, vrsticeIgralcevLige } = await import('./strani.mjs')
   const { tekmovanje: najdiTekmovanje, slugTekmovanja } = await import('./tekmovanje.mjs')
   const { viraZa } = await import('./viri/index.mjs')
+  const {loadHistoricalStatisticsImportContext}=await import('./lib/historical-statistics-import.mjs')
   const { fetchZaBazo } = await import('./prenos.mjs')
 
   const pisi = process.argv.includes('--pisi')
@@ -133,7 +134,8 @@ async function main() {
   }
   const db = createClient(BASE, KLJUC, { auth: { persistSession: false }, global: { fetch: fetchZaBazo() } })
   const liga = await najdiTekmovanje(db, slugTekmovanja(null))
-  if (!viraZa(liga).vratarPoVecini) {
+  const {competition,installedHistoricalMarkers}=await loadHistoricalStatisticsImportContext(db,liga)
+  if (!viraZa(competition,{installedHistoricalMarkers}).vratarPoVecini) {
     console.log(`${liga.slug}: vir ${liga.source} ni med viri z vratarjem po večini — preskočeno`)
     return
   }

@@ -132,3 +132,57 @@ Uvoz (ena za drugo, **šele po vklopu države MT v nočni uvoz in vmesnik**):
 `gh workflow run uvoz-lige.yml -f liga=mt-nl2 -f arhiv=6234492/2026 -f
 cene=true`. Zapisnik sta dva zahtevka (izid in postava) po 3 s; arhiv 130–190
 tekem je ~15–20 minut na ligo.
+
+## Premier: pregledani zgodovinski izjemi (20. 10. 2026)
+
+Uporabnik je odobril **samo `mt52581524` (2025/26, krog 28, 2:2) in
+`mt53142122` (2026/27, krog 1, 4:0)**: manjkajo minute izključitev igralcev,
+ki so nastopili. Uradni datum, par klubov, povezava in izid ostanejo, individualna
+statistika teh dveh tekem pa je `unavailable_historical` v obstoječem skupnem
+prikazu. To sta 2 od 240 odigranih zapisnikov (1/192 arhiv, 1/48 tekoča sezona),
+ne splošna izjema za opozorila MFA. Politika in izvirni hashi so v
+`scripts/policies/historical-statistics-exclusions.json`; `rawSha256` je hash
+**dejanskih izvirnih bajtov postave**, hash rezultata je ločeno pripet v zaprti
+pripravi. Izvirne datoteke ostanejo v artefaktu `12301385790` uspešnega zagona
+`39501309242`; pot jih nikoli ne prenaša znova z MFA.
+
+Zaprta pot `.github/workflows/mfa-reviewed-history.yml` teče samo na `main`,
+na izrecnem trenutnem `expected_sha`, po standardnem čakanju na starejše uvoze
+iste države (tudi Challenge) in globalne pisce. Ločeni načini:
+
+1. `prepare`: zaklenjen celoten posnetek pred spremembo, njegov SQL SHA256 in
+   štiri izvirne datoteke v omejenem artefaktu. Ne spreminja podatkov ali vezav.
+2. Po zunanjem pregledu celotnega posnetka `cleanup`: zahteva dejanski ID zagona,
+   ID in ZIP digest artefakta priprave ter pregledani `before_sha256` z istega
+   commita. Ena transakcija preveri fiksni ligo/tekmi, 64 nastopov/8 golov,
+   odsotnost ekip/kadrov/postav/glasov in nove odvisnosti; odstrani samo te
+   individualne vrstice, popravi izpeljano statistiko, namesti skupni oznaki in
+   nastavi prvi fantasy krog 9. Vsak odmik zavrne celotno transakcijo.
+3. `reprice`: obstoječi DB-only vrstni red `lazni-vratarji` → `ugani-pozicije` →
+   `ovrednoti-igralce`, nato native potrdilo dejanskega stanja cen. Če se `main`
+   po čiščenju premakne, je dovolj nov pregledan `expected_sha` in nova cenitev;
+   izvirno potrdilo čiščenja in njegov SHA ostaneta nespremenjena.
+4. `preview`: samostojno preveri oznaki, 191 arhivskih + 47 tekočih popolnih
+   zapisnikov, gole/nastope/identitete, aktualnega zaupanja vrednega vratarja
+   vsakega kluba, raznolik cenik, veljaven kader 15 do 100 in točnih šest še
+   neodigranih tekem kroga 9. Vrne `previewSha256` za zunanji pregled.
+5. `activate`: zahteva pregledani `preview_sha256`, ponovi vse preverbe in
+   uporabi obstoječe transakcijsko dovoljenje sprožilca. Rok **21. 10. 2026 ob
+   10:00 UTC mora biti še v prihodnosti**; po njem ta omejena pot zavrne vklop.
+   Nov začetek potrebuje ločen pregled in spremembo kode.
+6. `receipt`: servisno branje trajnega potrdila za obnovitev po nejasnem
+   odgovoru ali napaki shranjevanja artefakta; čiščenja se ne ponavlja na slepo.
+
+Po namestitvi normalni uvozi preverijo celoten skupni native komplet oznak in
+obe šifri preskočijo **pred branjem rezultata ali postave**, tudi iz predpomnilnika.
+Razpored ohrani nameščeno glavo prek obstoječega `historicalMarker`. Manjkajoča,
+delna ali napačno vezana namestitev ustavi uvoz. Nov, neodobren zapisnik z
+izključitvijo nastopajočega igralca brez minute se ustavi pred pisanjem nastopov;
+navadni rumeni karton brez minute ali izključitev nikoli uporabljene rezerve
+sama po sebi ne ustvari izjeme. Splošna SQL upsert/aktivacijska pot ni razširjena.
+
+Offline preverbe: `node --test scripts/test-mfa-reviewed-history*.mjs`.
+Rollback SQL v `supabase/tests/mfa-reviewed-history.sql` teče v sveži CI bazi;
+izrecna lokalna izbira zahteva `MFA_HISTORY_DISPOSABLE_TEST=1` in lasten
+`SUPABASE_DB_CONTAINER`. Testni čas je samo zaseben, preklican DB-owner helper;
+javni RPC nikoli ne sprejme ure od klicatelja.

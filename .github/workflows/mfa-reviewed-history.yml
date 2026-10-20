@@ -1,0 +1,84 @@
+name: MFA reviewed historical release
+run-name: MFA reviewed history ${{ inputs.mode }} mt-premier
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Fixed reviewed stage; separate external review between stages
+        type: choice
+        required: true
+        options: [prepare, cleanup, reprice, preview, activate, receipt]
+      expected_sha:
+        description: Exact reviewed current main commit
+        type: string
+        required: true
+      prepare_run_id:
+        description: Cleanup only - successful prepare run ID
+        type: string
+      prepare_artifact_id:
+        description: Cleanup only - actual prepare artifact ID
+        type: string
+      prepare_artifact_digest:
+        description: Cleanup only - reviewed sha256 ZIP digest
+        type: string
+      before_sha256:
+        description: Cleanup only - externally reviewed SQL beforeimage SHA256
+        type: string
+      preview_sha256:
+        description: Activate only - externally reviewed native preview SHA256
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mfa-reviewed-history
+  cancel-in-progress: false
+jobs:
+  route:
+    if: github.ref == 'refs/heads/main'
+    name: MFA reviewed history
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify pinned main before any operation
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+        run: |
+          test "$GITHUB_SHA" = "$EXPECTED_SHA"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$(git rev-parse origin/main)" = "$EXPECTED_SHA"
+          test "$GITHUB_RUN_ATTEMPT" = 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts
+      - name: Wait for older country and global writers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --liga mt-premier --popravek --tekmovanje mt-premier
+      - name: Run fixed MFA operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          MFA_MODE: ${{ inputs.mode }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PREPARE_RUN_ID: ${{ inputs.prepare_run_id }}
+          PREPARE_ARTIFACT_ID: ${{ inputs.prepare_artifact_id }}
+          PREPARE_ARTIFACT_DIGEST: ${{ inputs.prepare_artifact_digest }}
+          BEFORE_SHA256: ${{ inputs.before_sha256 }}
+          PREVIEW_SHA256: ${{ inputs.preview_sha256 }}
+        run: node scripts/mfa-reviewed-history.mjs "$MFA_MODE"
+      - name: Retain fixed MFA evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: mfa-reviewed-${{ inputs.mode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: mfa-reviewed-${{ inputs.mode }}/
+          if-no-files-found: error
+          retention-days: 30

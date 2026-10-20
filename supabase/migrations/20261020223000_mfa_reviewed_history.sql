@@ -1,0 +1,174 @@
+-- Closed user-approved two-report Malta protocol. Existing policy documents/APIs keep their meaning.
+insert into private_historical_statistics.policies values('mt-premier-reviewed-history-2026-10-20-v1','393fc635d4160510198d206571730287b3a7b0d4e1c3a6556d5ce61c5964e863','{"id":"mt-premier-reviewed-history-2026-10-20-v1","provider":"mfa","sourcePolicy":"mt-mfa-reviewed-history-v1","competitionSlug":"mt-premier","season":"2026/27","recordedAt":"2026-10-20T21:51:20.686509+00:00","approvalReference":"user reply Allow both reviewed exclusions to call_ef96603eabce40598063979c62d0a2dd","entries":[{"sourceMatchId":"52581524","sourceCompetitionId":"52561747","sourcePhase":null,"sourceRound":28,"season":"2025/26","playedOn":"2026-04-11","homeSourceClubId":"39611","awaySourceClubId":"39606","sourceUrl":"https://matchcentre.mfa.com.mt/match/52581524","rawSha256":"a81da11a4fdad7c6cca90acc28e02248566ae044653b905435acb2f0fbbaa949","observedHomeScore":2,"observedAwayScore":2,"reasonCode":"missing_dismissal_clock"},{"sourceMatchId":"53142122","sourceCompetitionId":"53109748","sourcePhase":null,"sourceRound":1,"season":"2026/27","playedOn":"2026-08-17","homeSourceClubId":"39636","awaySourceClubId":"39615","sourceUrl":"https://matchcentre.mfa.com.mt/match/53142122","rawSha256":"dc0d717b5be05389e72f081df04bac8ee93fe93384ff31f51817d6faaf0b5399","observedHomeScore":4,"observedAwayScore":0,"reasonCode":"missing_dismissal_clock"}]}'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('mfa','39611','','MT',array['Tarxien Rainbows'],'[{"sourceMatchId":"52581524","sourceUrl":"https://matchcentre.mfa.com.mt/match/52581524","rawSha256":"a81da11a4fdad7c6cca90acc28e02248566ae044653b905435acb2f0fbbaa949"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('mfa','39606','','MT',array['Mosta'],'[{"sourceMatchId":"52581524","sourceUrl":"https://matchcentre.mfa.com.mt/match/52581524","rawSha256":"a81da11a4fdad7c6cca90acc28e02248566ae044653b905435acb2f0fbbaa949"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('mfa','39636','','MT',array['Birkirkara'],'[{"sourceMatchId":"53142122","sourceUrl":"https://matchcentre.mfa.com.mt/match/53142122","rawSha256":"dc0d717b5be05389e72f081df04bac8ee93fe93384ff31f51817d6faaf0b5399"}]'::jsonb);
+insert into private_historical_statistics.source_club_bindings(provider,source_club_id,source_category_id,country_code,canonical_names,proofs) values('mfa','39615','','MT',array['Gzira United'],'[{"sourceMatchId":"53142122","sourceUrl":"https://matchcentre.mfa.com.mt/match/53142122","rawSha256":"dc0d717b5be05389e72f081df04bac8ee93fe93384ff31f51817d6faaf0b5399"}]'::jsonb);
+create schema private_mfa_history;
+revoke all on schema private_mfa_history from public,anon,authenticated,service_role;
+create table private_mfa_history.cleanup_receipt(singleton boolean primary key default true check(singleton),main_sha text not null,before_sha text not null,before_image_text text not null,result jsonb not null,cleaned_at timestamptz not null default clock_timestamp());
+create table private_mfa_history.price_receipt(singleton boolean primary key default true check(singleton),main_sha text not null,cleanup_sha text not null,state_sha text not null,recorded_at timestamptz not null default clock_timestamp());
+revoke all on all tables in schema private_mfa_history from public,anon,authenticated,service_role;
+create function private_mfa_history.require(ok boolean,message text)returns void language plpgsql as $$begin if ok is distinct from true then raise exception 'MFA_HISTORY: %',message;end if;end$$;
+create function private_mfa_history.targets()returns table(match_id bigint,season text,round_number int,home_id bigint,away_id bigint,native_id text,result_sha text)language sql immutable as $$values
+ (517066::bigint,'2025/26',28,10678::bigint,10689::bigint,'52581524','612c36ce1e05b642871a333ec36635a6d823176b8b7001ccbc322d39a46adc2d'),
+ (517098::bigint,'2026/27',1,10681::bigint,10687::bigint,'53142122','432804af0383c7370eecdd9370034f90f133dc67c418b7959d481303136fbaa8');$$;
+create function private_mfa_history.lock_scope(p_main_sha text)returns void language plpgsql security definer set search_path=public,pg_temp as $$begin
+ perform private_mfa_history.require(current_setting('transaction_isolation')='read committed'and p_main_sha~'^[a-f0-9]{40}$','READ COMMITTED and reviewed main commit required');
+ -- Includes user/deleted-vote and cache dependencies before first identity read;
+ -- SHARE ROW EXCLUSIVE prevents phantoms and new FK dependencies during cleanup.
+ lock table countries,federations,competitions,rounds,teams,players,matches,appearances,goals,fantasy_teams,fantasy_roster,fantasy_lineups,fantasy_transfers,fantasy_chips,position_votes,position_votes_deleted,assist_votes,assist_votes_deleted,player_scores,statistika_igralcev,tocke_krogov,uradne_odsotnosti,profil_igralca_plus,anonimizirani_igralci in share row exclusive mode;
+ lock table private_historical_statistics.policies,private_historical_statistics.installed_policies,private_historical_statistics.markers,private_historical_statistics.source_club_bindings,private_mfa_history.cleanup_receipt,private_mfa_history.price_receipt in share row exclusive mode;
+ perform 1 from competitions where id=971 for update;
+ perform private_mfa_history.require(exists(select 1 from competitions c join countries d on d.id=c.country_id join federations f on f.id=c.federation_id where c.id=971 and c.slug='mt-premier'and c.source='mfa'and c.source_league_code='58539/2027'and not c.sezona_koledarska and not c.active and c.date_only_deadline_policy is null and d.code='MT'and f.code='mfa'),'exact inactive native Malta tuple required');
+ perform private_mfa_history.require(not exists(select 1 from fantasy_teams where competition_id=971)and not exists(select 1 from fantasy_roster fr join players p on p.id=fr.player_id where p.competition_id=971),'fantasy team/roster activity');
+ perform private_mfa_history.require(not exists(select 1 from fantasy_lineups l join rounds r on r.id=l.round_id join players p on p.id=l.player_id where r.competition_id=971 or p.competition_id=971)and not exists(select 1 from fantasy_transfers t join rounds r on r.id=t.round_id where r.competition_id=971)and not exists(select 1 from fantasy_chips t join rounds r on r.id=t.round_id where r.competition_id=971),'fantasy lineup/round activity');
+ perform private_mfa_history.require(not exists(select 1 from position_votes v join players p on p.id=v.player_id where p.competition_id=971)and not exists(select 1 from position_votes_deleted v join players p on p.id=v.player_id where p.competition_id=971),'position vote activity');
+end$$;
+create function private_mfa_history.capture()returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
+declare result jsonb:='{}';q record;rows jsonb;begin
+ for q in select *from(values
+ ('competitions','select *from competitions where id=971'),
+ ('rounds','select *from rounds where competition_id=971'),
+ ('matches','select m.*from matches m join rounds r on r.id=m.round_id where r.competition_id=971'),
+ ('teams','select t.*from teams t where t.id in(select m.home_team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=971 union select m.away_team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=971)'),
+ ('players','select *from players where competition_id=971'),
+ ('appearances','select *from appearances where match_id in(517066,517098)'),
+ ('goals','select *from goals where match_id in(517066,517098)'),
+ ('otherAppearances','select a.*from appearances a join matches m on m.id=a.match_id join rounds r on r.id=m.round_id where r.competition_id=971 and m.id not in(517066,517098)'),
+ ('otherGoals','select g.*from goals g join matches m on m.id=g.match_id join rounds r on r.id=m.round_id where r.competition_id=971 and m.id not in(517066,517098)'),
+ ('otherScores','select ps.*from player_scores ps join rounds r on r.id=ps.round_id where r.competition_id=971 and r.id not in(select round_id from matches where id in(517066,517098))'),
+ ('player_scores','select ps.*from player_scores ps where ps.round_id in(select round_id from matches where id in(517066,517098))'),
+ ('statistika_igralcev','select s.*from statistika_igralcev s where s.player_id in(select id from players where competition_id=971)'),
+ ('tocke_krogov','select t.*from tocke_krogov t where t.round_id in(select round_id from matches where id in(517066,517098))'),
+ ('uradne_odsotnosti','select *from uradne_odsotnosti where ni_drzalo_match_id in(517066,517098)'),
+ ('profil_igralca_plus','select *from profil_igralca_plus where tekma_id in(517066,517098)'),
+ ('installedPolicies','select *from private_historical_statistics.installed_policies where competition_id=971'),
+ ('markers','select *from private_historical_statistics.markers where competition_id=971'),
+ ('bindings','select *from private_historical_statistics.source_club_bindings where provider=''mfa''')
+ )v(key,query)loop
+ execute 'select coalesce(jsonb_agg(to_jsonb(t)order by to_jsonb(t)::text collate "C"),''[]''::jsonb)from('||q.query||')t'into rows;result:=result||jsonb_build_object(q.key,rows);
+ end loop;return result;
+end$$;
+create function private_mfa_history.opening(p_clock timestamptz)returns void language plpgsql security definer set search_path=public,pg_temp as $$begin
+ perform private_mfa_history.require(exists(select 1 from rounds where id=34820 and competition_id=971 and season='2026/27'and number=9 and played_on='2026-10-21'and deadline_at='2026-10-21T10:00:00Z'and deadline_at>p_clock and lineups_locked_at is null),'exact future unlocked round9 required');
+ perform private_mfa_history.require((select count(*)from matches where round_id=34820)=6 and not exists(select 1 from(values(517142::bigint,'Birzebbuga St.Peter''s','Marsaxlokk','2026-10-21'::date),(517143,'Mosta','Valletta','2026-10-21'),(517144,'Hamrun Spartans','Balzan','2026-10-21'),(517145,'Zabbar St.Patrick','Sliema Wanderers','2026-10-21'),(517146,'Birkirkara','Floriana','2026-10-22'),(517147,'Hibernians','Gzira United','2026-10-22'))v(id,home,away,day)where not exists(select 1 from matches m join teams h on h.id=m.home_team_id join teams a on a.id=m.away_team_id where m.id=v.id and m.round_id=34820 and h.name=v.home and a.name=v.away and m.played_on=v.day and m.zapisnik_id is null and m.imported_at is null and m.statistics_status='available'and m.home_goals=0 and m.away_goals=0 and not m.kontumacija and not m.vir_brez_izida and not exists(select 1 from appearances where match_id=m.id)and not exists(select 1 from goals where match_id=m.id))),'exact six unplayed opening fixtures required');
+ perform private_mfa_history.require(not exists(select 1 from fantasy_lineups where round_id=34820),'opening lineup activity');
+end$$;
+create function private_mfa_history.check_originals(p_main_sha text,p_policy_sha text,p_clock timestamptz)returns void language plpgsql security definer set search_path=public,pg_temp as $$
+declare t record;p private_historical_statistics.policies%rowtype;e jsonb;catalog jsonb;begin
+ perform private_mfa_history.lock_scope(p_main_sha);
+ select *into p from private_historical_statistics.policies where id='mt-premier-reviewed-history-2026-10-20-v1';
+ perform private_mfa_history.require(p.policy_sha256=p_policy_sha and jsonb_array_length(p.document->'entries')=2,'exact immutable policy hash required');
+ perform private_mfa_history.require(not exists(select 1 from private_mfa_history.cleanup_receipt)and not exists(select 1 from private_historical_statistics.installed_policies where competition_id=971)and not exists(select 1 from private_historical_statistics.markers where competition_id=971),'one-use clean initial policy required');
+ perform private_mfa_history.require(exists(select 1 from competitions where id=971 and source_policy is null and prvi_fantasy_krog=1),'original launch configuration changed');
+ perform private_mfa_history.opening(p_clock);
+ perform private_mfa_history.require(exists(select 1 from rounds where id=34820 and competition_id=971 and season='2026/27'and number=9 and played_on='2026-10-21'and deadline_at='2026-10-21T10:00:00Z'and deadline_at>p_clock and lineups_locked_at is null),'exact future round9 opening required');
+ for t in select *from private_mfa_history.targets()loop
+ select value into e from jsonb_array_elements(p.document->'entries')where value->>'sourceMatchId'=t.native_id;
+ perform private_mfa_history.require(e->>'season'=t.season and(e->>'sourceRound')::int=t.round_number and exists(select 1 from matches m join rounds r on r.id=m.round_id where m.id=t.match_id and r.competition_id=971 and r.season=t.season and r.number=t.round_number and m.home_team_id=t.home_id and m.away_team_id=t.away_id and m.zapisnik_id='mt'||t.native_id and m.source_url=e->>'sourceUrl'and m.played_on=(e->>'playedOn')::date and m.home_goals=(e->>'observedHomeScore')::int and m.away_goals=(e->>'observedAwayScore')::int and m.imported_at is not null and m.statistics_status='available'and m.statistics_reason is null and not m.kontumacija and not m.vir_brez_izida and m.source_phase is null and(m.source_round is null or m.source_round=t.round_number)),'exact original native fixture/result/source identity required');
+ perform private_mfa_history.require((select count(*)from appearances where match_id=t.match_id)=32 and(select count(*)from goals where match_id=t.match_id)=4,'exact approved64 appearances/8 goals required');
+ perform private_mfa_history.require(not exists(select 1 from assist_votes v join goals g on g.id=v.goal_id where g.match_id=t.match_id)and not exists(select 1 from assist_votes_deleted v join goals g on g.id=v.goal_id where g.match_id=t.match_id)and not exists(select 1 from goals where match_id=t.match_id and(assist_player_id is not null or assist_confirmed_at is not null or assist_none_confirmed_at is not null)),'assist vote/confirmed activity');
+ perform private_mfa_history.require(not exists(select 1 from(values(e->>'homeSourceClubId',t.home_id),(e->>'awaySourceClubId',t.away_id))v(club,team)left join private_historical_statistics.source_club_bindings b on b.provider='mfa'and b.source_club_id=v.club and b.source_category_id=''where b.provider is null or b.country_code<>'MT'or not exists(select 1 from teams tt join countries d on d.id=tt.country_id where tt.id=v.team and d.code='MT')or(b.bound_team_id is not null and b.bound_team_id<>v.team)or(b.bound_team_id is null and((select count(*)from teams tt join countries d on d.id=tt.country_id where d.code='MT'and tt.name=any(b.canonical_names))<>1 or not exists(select 1 from teams tt where tt.id=v.team and tt.name=any(b.canonical_names))))),'exact unambiguous native club binding required');
+ end loop;
+ -- Only the existing reviewed goal-vote cascade is allowed; any new dependency
+ -- aborts even when empty so future schema changes cannot silently widen cleanup.
+ select coalesce(jsonb_agg(jsonb_build_object('schema',ns.nspname,'table',rel.relname,'target',parent.relname,'definition',pg_get_constraintdef(c.oid))order by ns.nspname,rel.relname,c.conname),'[]')into catalog from pg_constraint c join pg_class rel on rel.oid=c.conrelid join pg_namespace ns on ns.oid=rel.relnamespace join pg_class parent on parent.oid=c.confrelid where c.contype='f'and c.confrelid in('public.appearances'::regclass,'public.goals'::regclass,'public.player_scores'::regclass,'public.statistika_igralcev'::regclass,'public.tocke_krogov'::regclass);
+ perform private_mfa_history.require(catalog='[{"schema":"public","table":"assist_votes","target":"goals","definition":"FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE CASCADE"}]'::jsonb,'unexpected individual-row FK dependency');
+ perform private_mfa_history.require(not exists(select 1 from pg_attribute a join pg_class rel on rel.oid=a.attrelid join pg_namespace ns on ns.oid=rel.relnamespace where ns.nspname in('public','scout')and rel.relkind in('r','p')and a.attnum>0 and not a.attisdropped and a.attname in('appearance_id','goal_id')and not(ns.nspname='public'and rel.relname in('assist_votes','assist_votes_deleted')and a.attname='goal_id')),'unexpected individual-row reference column');
+end$$;
+create function private_mfa_history.prepare_core(p_main_sha text,p_policy_sha text,p_clock timestamptz)returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
+declare image jsonb;begin
+ perform private_mfa_history.check_originals(p_main_sha,p_policy_sha,p_clock);
+ image:=private_mfa_history.capture()||jsonb_build_object('schemaVersion',1,'mainCommit',p_main_sha,'policySha256',p_policy_sha,'sourceHashes',(select jsonb_object_agg(t.native_id,jsonb_build_object('resultSha256',t.result_sha,'lineupSha256',e->>'rawSha256'))from private_mfa_history.targets()t cross join private_historical_statistics.policies p cross join lateral jsonb_array_elements(p.document->'entries')e where p.id='mt-premier-reviewed-history-2026-10-20-v1'and e->>'sourceMatchId'=t.native_id));
+ return jsonb_build_object('beforeImageText',image::text,'beforeSha256',encode(sha256(convert_to(image::text,'UTF8')),'hex'));
+end$$;
+create function private_mfa_history.apply_core(p_main_sha text,p_policy_sha text,p_before_sha text,p_before_image_text text,p_clock timestamptz)returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
+declare prepared jsonb;image jsonb;after_image jsonb;result jsonb;t record;p private_historical_statistics.policies%rowtype;e jsonb;rid bigint;n int;begin
+ image:=p_before_image_text::jsonb;
+ perform private_mfa_history.require(p_before_sha~'^[a-f0-9]{64}$'and encode(sha256(convert_to(image::text,'UTF8')),'hex')=p_before_sha,'exact reviewed beforeimage SHA required');
+ prepared:=private_mfa_history.prepare_core(p_main_sha,p_policy_sha,p_clock);
+ perform private_mfa_history.require(prepared->>'beforeSha256'=p_before_sha and prepared->>'beforeImageText'=p_before_image_text,'complete canonical beforeimage drift');
+ delete from goals where match_id in(517066,517098);get diagnostics n=row_count;perform private_mfa_history.require(n=8,'goal delete count differs');
+ delete from appearances where match_id in(517066,517098);get diagnostics n=row_count;perform private_mfa_history.require(n=64,'appearance delete count differs');
+ update competitions set source_policy='mt-mfa-reviewed-history-v1',prvi_fantasy_krog=9 where id=971;
+ select *into p from private_historical_statistics.policies where id='mt-premier-reviewed-history-2026-10-20-v1';
+ -- Direct closed install intentionally leaves common bootstrap/upsert APIs
+ -- unable to accept MFA. Existing generic triggers/getter/UI protect these rows.
+ insert into private_historical_statistics.installed_policies values(971,p.id,p.policy_sha256,'2026-10-21',now());
+ for t in select *from private_mfa_history.targets()loop
+ select value into e from jsonb_array_elements(p.document->'entries')where value->>'sourceMatchId'=t.native_id;
+ perform private_historical_statistics.bind_source_club('mfa',e->>'homeSourceClubId',null,(select country_id from competitions where id=971),t.home_id);
+ perform private_historical_statistics.bind_source_club('mfa',e->>'awaySourceClubId',null,(select country_id from competitions where id=971),t.away_id);
+ select round_id into rid from matches where id=t.match_id;
+ insert into private_historical_statistics.markers values(971,t.native_id,'mt'||t.native_id,e-array['rawSha256','reasonCode'],e->>'rawSha256',rid,t.home_id,t.away_id);
+ update matches set imported_at=null,statistics_status='unavailable_historical',statistics_reason=e->>'reasonCode',source_round=t.round_number where id=t.match_id;
+ end loop;
+ for rid in select distinct round_id from matches where id in(517066,517098)loop perform public.recompute_round_scores(rid);end loop;
+ perform public.osvezi_statistiko_igralcev(array(select id from players where competition_id=971));
+ perform public.osvezi_tocke_krogov(array(select distinct round_id from matches where id in(517066,517098)));
+ perform private_mfa_history.require(not exists(select 1 from player_scores ps where ps.round_id in(select round_id from matches where id in(517066,517098))and not exists(select 1 from appearance_points ap where ap.round_id=ps.round_id and ap.player_id=ps.player_id)),'stale individual scores');
+ perform public.get_installed_historical_statistics_markers(971);
+ after_image:=private_mfa_history.capture();
+ perform private_mfa_history.require(after_image->'otherAppearances'=image->'otherAppearances'and after_image->'otherGoals'=image->'otherGoals'and after_image->'otherScores'=image->'otherScores'and after_image->'players'=image->'players'and after_image->'teams'=image->'teams'and after_image->'rounds'=image->'rounds'and after_image->'uradne_odsotnosti'=image->'uradne_odsotnosti'and after_image->'profil_igralca_plus'=image->'profil_igralca_plus','protected statistics/player/team/round/profile data changed');
+ perform private_mfa_history.require(not exists(select 1 from jsonb_array_elements(image->'matches')b where(b->>'id')::bigint not in(517066,517098)and not exists(select 1 from jsonb_array_elements(after_image->'matches')a where a=b)),'unrelated match changed');
+ result:=jsonb_build_object('schemaVersion',1,'mainCommit',p_main_sha,'beforeSha256',p_before_sha,'removedAppearances',64,'removedGoals',8,'unavailableMatches',2,'afterSha256',encode(sha256(convert_to(after_image::text,'UTF8')),'hex'));
+ insert into private_mfa_history.cleanup_receipt(singleton,main_sha,before_sha,before_image_text,result)values(true,p_main_sha,p_before_sha,p_before_image_text,result);
+ return result;
+end$$;
+-- Public wrappers have no test clock input. Private cores are revoked below;
+-- DB-owner rollback fixtures can exercise the same fixed launch after its date.
+create function public.prepare_mfa_reviewed_cleanup(p_main_sha text,p_policy_sha text)returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$declare result jsonb;begin result:=private_mfa_history.prepare_core(p_main_sha,p_policy_sha,clock_timestamp());perform private_mfa_history.opening(clock_timestamp());return result;end$$;
+create function public.apply_mfa_reviewed_cleanup(p_main_sha text,p_policy_sha text,p_before_sha text,p_before_image_text text)returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$declare result jsonb;begin result:=private_mfa_history.apply_core(p_main_sha,p_policy_sha,p_before_sha,p_before_image_text,clock_timestamp());perform private_mfa_history.opening(clock_timestamp());return result;end$$;
+-- Repricing may change players, never bless a different set of source reports.
+create function private_mfa_history.require_original_football()returns void language plpgsql security definer set search_path=public,pg_temp as $$
+declare original jsonb;actual jsonb;begin
+ select before_image_text::jsonb into original from private_mfa_history.cleanup_receipt;
+ perform private_mfa_history.require(original is not null,'committed canonical cleanup receipt required');
+ actual:=private_mfa_history.capture();
+ perform private_mfa_history.require(actual->'otherAppearances'=original->'otherAppearances'and actual->'otherGoals'=original->'otherGoals'and actual->'rounds'=original->'rounds'and actual->'teams'=original->'teams'and not exists(select 1 from jsonb_array_elements(original->'matches')b where(b->>'id')::bigint not in(517066,517098)and not exists(select 1 from jsonb_array_elements(actual->'matches')a where a=b))and jsonb_array_length(actual->'matches')=jsonb_array_length(original->'matches'),'original238 reports, fixture headers, rounds and clubs changed; repricing cannot replace reviewed source scope');
+end$$;
+create function public.record_mfa_reviewed_prices(p_main_sha text)returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
+declare sha text;before_sha text;begin
+ perform private_mfa_history.lock_scope(p_main_sha);perform public.get_installed_historical_statistics_markers(971);perform private_mfa_history.require_original_football();
+ select r.before_sha into before_sha from private_mfa_history.cleanup_receipt r;
+ perform private_mfa_history.require(before_sha is not null and exists(select 1 from competitions where id=971 and source_policy='mt-mfa-reviewed-history-v1'and prvi_fantasy_krog=9),'canonical installed cleanup receipt required before repricing');
+ sha:=private_historical_statistics.state_sha256(971);
+ insert into private_mfa_history.price_receipt(singleton,main_sha,cleanup_sha,state_sha)values(true,p_main_sha,before_sha,sha)on conflict(singleton)do update set main_sha=excluded.main_sha,cleanup_sha=excluded.cleanup_sha,state_sha=excluded.state_sha,recorded_at=clock_timestamp();
+ return jsonb_build_object('mainCommit',p_main_sha,'cleanupBeforeSha256',before_sha,'pricedStateSha256',sha);
+end$$;
+create function private_mfa_history.release_core(p_main_sha text,p_expected_preview_sha text,p_activate boolean,p_clock timestamptz)returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
+declare binding jsonb;p private_historical_statistics.policies%rowtype;prices jsonb;cost numeric;snapshot jsonb;preview_sha text;priced private_mfa_history.price_receipt%rowtype;begin
+ perform private_mfa_history.lock_scope(p_main_sha);
+ select *into p from private_historical_statistics.policies where id='mt-premier-reviewed-history-2026-10-20-v1';binding:=public.get_installed_historical_statistics_markers(971);
+ perform private_mfa_history.require(binding->>'policyId'=p.id and binding->>'policySha256'=p.policy_sha256 and jsonb_array_length(binding->'markers')=2 and exists(select 1 from competitions where id=971 and source_policy=p.document->>'sourcePolicy'and prvi_fantasy_krog=9),'exact installed MFA release binding required');
+ select *into priced from private_mfa_history.price_receipt where main_sha=p_main_sha;
+ perform private_mfa_history.require(priced.singleton and exists(select 1 from private_mfa_history.cleanup_receipt c where c.before_sha=priced.cleanup_sha and priced.recorded_at>=c.cleaned_at)and priced.state_sha=private_historical_statistics.state_sha256(971),'fresh same-commit prices required; native state changed since repricing');
+ perform private_mfa_history.opening(p_clock);
+ perform private_mfa_history.require_original_football();
+ -- 240 official played headers, 238 available individual reports. The two
+ -- unavailable matches remain official fixtures and contribute no individual rows.
+ perform private_mfa_history.require((select count(*)from matches m join rounds r on r.id=m.round_id where r.competition_id=971 and r.season='2025/26')=192 and(select count(*)from matches m join rounds r on r.id=m.round_id where r.competition_id=971 and r.season='2026/27')=60 and(select count(*)from matches m join rounds r on r.id=m.round_id where r.competition_id=971 and r.season='2025/26'and m.imported_at is not null and m.statistics_status='available')=191 and(select count(*)from matches m join rounds r on r.id=m.round_id where r.competition_id=971 and r.season='2026/27'and m.imported_at is not null and m.statistics_status='available')=47,'exact source240 coverage (191archive/47current available plus2markers) required');
+ perform private_mfa_history.require(not exists(select 1 from matches m join rounds r on r.id=m.round_id where r.competition_id=971 and((m.statistics_status='unavailable_historical'and m.id not in(517066,517098))or(m.played_on<'2026-10-21'and m.id not in(517066,517098)and(m.imported_at is null or m.zapisnik_id!~'^mt[1-9][0-9]+$'or m.source_url is distinct from 'https://matchcentre.mfa.com.mt/match/'||substring(m.zapisnik_id from 3))))),'no additional unavailable/missing/foreign report');
+ perform private_mfa_history.require(not exists(select 1 from matches m join rounds r on r.id=m.round_id where r.competition_id=971 and m.imported_at is not null and(m.home_goals is distinct from(select count(*)::int from goals g where g.match_id=m.id and((g.team_id=m.home_team_id and not g.is_own_goal)or(g.team_id=m.away_team_id and g.is_own_goal)))or m.away_goals is distinct from(select count(*)::int from goals g where g.match_id=m.id and((g.team_id=m.away_team_id and not g.is_own_goal)or(g.team_id=m.home_team_id and g.is_own_goal)))or exists(select 1 from(values(m.home_team_id),(m.away_team_id))t(id)where(select count(*)from appearances a where a.match_id=m.id and a.team_id=t.id and a.started)<>11))),'all other238 official scores and both XIs must agree');
+ perform private_mfa_history.require(not exists(select 1 from goals g join matches m on m.id=g.match_id join rounds r on r.id=m.round_id where r.competition_id=971 and(g.minute is null or g.minute<0 or g.minute>90 or not exists(select 1 from appearances a where a.match_id=g.match_id and a.player_id=g.scorer_id and a.team_id=g.team_id)))and not exists(select 1 from appearances a join matches m on m.id=a.match_id join rounds r on r.id=m.round_id where r.competition_id=971 and(a.team_id not in(m.home_team_id,m.away_team_id)or a.minutes_played is null or a.minute_on is null or a.minute_off is null or a.minute_on<0 or a.minute_off>90 or a.minute_on>a.minute_off or a.minutes_played<>a.minute_off-a.minute_on)),'native goal/appearance identity and minute consistency');
+ perform private_mfa_history.require(not exists(select 1 from public.zliti_igralci('mt-premier','mfa')where preskok is null),'unresolved player identity collision');
+ prices:=public.stanje_lige(971);cost:=public.najcenejsi_kader(prices->'igralci');
+ perform private_mfa_history.require((prices->>'klubov')::int=12 and cost is not null and cost<=100 and(prices->>'najvisja_cena')::numeric>=8 and coalesce((prices->>'privzetih')::numeric/nullif((prices->>'aktivnih')::numeric,0),1)<=0.7 and(prices->>'golov_brez_nastopa')::int=0,'varied actual prices and affordable legal15 required');
+ perform private_mfa_history.require(not exists(select distinct p.team_id from players p where p.competition_id=971 and p.active except select distinct p.team_id from players p join appearances a on a.player_id=p.id and a.team_id=p.team_id join matches m on m.id=a.match_id join rounds r on r.id=m.round_id where p.competition_id=971 and r.competition_id=971 and r.season='2026/27'and p.active and p.position='GK'and p.position_source in('zapisnik','admin','klub')and a.is_goalkeeper and a.started and m.statistics_status='available'and m.imported_at is not null),'current trusted goalkeeper for every selectable club required');
+ snapshot:=jsonb_build_object('schemaVersion',1,'mainCommit',p_main_sha,'slug','mt-premier','sourceFixtureCount',240,'availableArchiveReports',191,'availableCurrentReports',47,'unavailableReports',2,'policySha256',p.policy_sha256,'cleanupBeforeSha256',priced.cleanup_sha,'cleanupMainCommit',(select main_sha from private_mfa_history.cleanup_receipt),'pricedStateSha256',priced.state_sha,'priceRecordedAt',priced.recorded_at,'markers',binding,'cheapestLegal15',cost,'firstFantasyRound',9,'deadlineAt','2026-10-21T10:00:00Z');
+ preview_sha:=encode(sha256(convert_to(snapshot::text,'UTF8')),'hex');
+ if p_activate then
+ perform private_mfa_history.require(p_expected_preview_sha=preview_sha,'reviewed preview digest changed');
+ perform private_historical_statistics.authorize_release(971,p.id,p.policy_sha256,preview_sha);
+ update competitions set active=true where id=971 and not active;
+ perform private_mfa_history.require(found,'inactive activation row changed');
+ end if;
+ return jsonb_build_object('preview',snapshot,'previewSha256',preview_sha,'active',p_activate);
+end$$;
+create function public.check_mfa_reviewed_release(p_main_sha text,p_expected_preview_sha text default null,p_activate boolean default false)returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$declare result jsonb;begin result:=private_mfa_history.release_core(p_main_sha,p_expected_preview_sha,p_activate,clock_timestamp());perform private_mfa_history.opening(clock_timestamp());return result;end$$;
+-- Read-only recovery after an ambiguous response. Never reapply cleanup blindly.
+create function public.get_mfa_reviewed_receipt()returns jsonb language sql stable security definer set search_path=public,pg_temp as $$select jsonb_build_object('cleanup',(select to_jsonb(c)from private_mfa_history.cleanup_receipt c),'prices',(select to_jsonb(p)from private_mfa_history.price_receipt p),'installed',public.get_installed_historical_statistics_markers(971),'active',(select active from competitions where id=971));$$;
+revoke all on all functions in schema private_mfa_history from public,anon,authenticated,service_role;
+revoke all on function public.prepare_mfa_reviewed_cleanup(text,text),public.apply_mfa_reviewed_cleanup(text,text,text,text),public.record_mfa_reviewed_prices(text),public.check_mfa_reviewed_release(text,text,boolean),public.get_mfa_reviewed_receipt()from public,anon,authenticated;
+grant execute on function public.prepare_mfa_reviewed_cleanup(text,text),public.apply_mfa_reviewed_cleanup(text,text,text,text),public.record_mfa_reviewed_prices(text),public.check_mfa_reviewed_release(text,text,boolean),public.get_mfa_reviewed_receipt()to service_role;
