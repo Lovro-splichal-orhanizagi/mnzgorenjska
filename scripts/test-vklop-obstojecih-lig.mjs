@@ -16,6 +16,8 @@ test('workflow writes one actual selected slug per coordinator input line',()=>{
   assert.deepEqual(output.trimEnd().split('\n'),expected)
 })
 const now = () => new Date('2026-10-18T20:00:00Z')
+const calendarCentral={id:983,slug:'gb-sfl-d1-central',source:'isthmian',source_league_code:'sfl/69d0be24b616bafb97331d42/2026-27'}
+const calendarSouth={id:984,slug:'gb-sfl-d1-south',source:'isthmian',source_league_code:'sfl/69d0bdf9b616bafb97331d41/2026-27'}
 const players = Array.from({ length: 6 }, (_, club) => ['GK','DEF','DEF','MID','FWD'].map((position,p) => ({ id:club*5+p,team_id:club,position,value:4 }))).flat()
 const state = { aktivnih:30,privzetih:0,klubov:6,najvisja_cena:12,po_pozicijah:{},nastopov_s_klopi:2,golov_brez_nastopa:0,krogov_tekoce:2,igralci:players }
 function fixture(patch={}) {
@@ -99,6 +101,35 @@ test('preview fresh-checks cheapest legal squad and actual future start without 
   const {transport,calls}=fixture();const [r]=await runBatch({candidates:[candidate],transport,now})
   assert.equal(r.status,'READY');assert.equal(r.first_round.number,2);assert.ok(r.cheapest_squad<=100);assert.deepEqual(calls,[])
 })
+test('SFL D1 calendar exception selects first clean official Match N with exact tuple only',async()=>{
+  for(const [candidate,advanced,expected] of [[calendarCentral,[31,22,28],14],[calendarSouth,[31,36,40,22],15]]) {
+    const playedNumbers=[...advanced,...(expected===15?[14]:[])]
+    const rounds=Array.from(new Set([1,2,14,15,...playedNumbers])).sort((a,b)=>a-b).map(n=>({id:n,number:n,season:'2026/27',played_on:`2026-10-${String(n===14&&expected===15?10:n===14?24:n===15?27:10).padStart(2,'0')}`,deadline_at:n===14?(expected===14?'2026-10-24T10:00:00Z':'2026-10-10T10:00:00Z'):n===15?'2026-10-27T10:00:00Z':`2026-09-${String(n%28+1).padStart(2,'0')}T10:00:00Z`,lineups_locked_at:null}))
+    const f=fixture({competition:async()=>({...candidate,active:false,source_policy:null,date_only_deadline_policy:null}),fantasyData:async()=>({teams:[],lineups:[]}),rounds:async()=>rounds,matches:async()=>[...playedNumbers.map((n,i)=>({id:100+i,round_id:n,home_goals:1,away_goals:0,imported_at:'2026-09-10',kontumacija:false,goals:[{count:1}],appearances:[{count:22}]})),{id:999,round_id:expected,home_goals:0,away_goals:0,imported_at:null,kontumacija:false,goals:[{count:0}],appearances:[{count:0}]}]})
+    const [result]=await runBatch({candidates:[candidate],transport:f.transport,now})
+    assert.equal(result.status,'READY',result.reason);assert.equal(result.first_round.number,expected)
+  }
+  for(const altered of [{...calendarCentral,source_league_code:'sfl/wrong'},{...calendarCentral,source:'dbu'},{...calendarCentral,slug:'gb-other'}]) {
+    const rounds=Array.from({length:41},(_,i)=>({id:i+1,number:i+1,season:'2026/27',played_on:'2026-10-24',deadline_at:[14,32].includes(i+1)?'2026-10-24T10:00:00Z':i+1===41?'2026-10-27T10:00:00Z':'2026-09-10T10:00:00Z',lineups_locked_at:null}))
+    const f=fixture({competition:async()=>({...altered,active:false,source_policy:null,date_only_deadline_policy:null}),rounds:async()=>rounds,matches:async()=>[...rounds.filter(r=>[1,2,22,28,31].includes(r.number)).map(r=>({id:r.id,round_id:r.id,home_goals:1,away_goals:0,imported_at:'2026-09-10',kontumacija:false,goals:[{count:1}],appearances:[{count:22}]})),... [14,32].map(n=>({id:999+n,round_id:n,home_goals:0,away_goals:0,imported_at:null,kontumacija:false,goals:[{count:0}],appearances:[{count:0}]}))]})
+    const [result]=await runBatch({candidates:[altered],transport:f.transport,now});assert.equal(result.status,'READY');assert.equal(result.first_round.number,32)
+  }
+})
+test('SFL D1 preview holds teams, lineups, missing fantasy read, and invalid/future higher deadlines',async()=>{
+  const calendarOnly=deadline=>({rounds:async()=>[{id:1,number:1,season:'2026/27',deadline_at:'2026-09-10T10:00:00Z'},{id:14,number:14,season:'2026/27',deadline_at:'2026-10-24T10:00:00Z'},{id:31,number:31,season:'2026/27',deadline_at:deadline}],matches:async()=>[{id:31,round_id:31,home_goals:1,away_goals:0,imported_at:'2026-09-10',kontumacija:false,goals:[{count:1}],appearances:[{count:22}]},{id:14,round_id:14,home_goals:0,away_goals:0,imported_at:null,kontumacija:false,goals:[{count:0}],appearances:[{count:0}]}]})
+  for(const patch of [{fantasyData:async()=>({teams:[{id:1}],lineups:[]})},{fantasyData:async()=>({teams:[],lineups:[{round_id:14}]})},{fantasyData:undefined},{...calendarOnly('2026-10-25T10:00:00Z')},{...calendarOnly(null)}]) {
+    const f=fixture({competition:async()=>({...calendarCentral,active:false,source_policy:null,date_only_deadline_policy:null}),fantasyData:async()=>({teams:[],lineups:[]}),...patch});const [result]=await runBatch({candidates:[calendarCentral],transport:f.transport,now});assert.equal(result.status,'HOLD')
+  }
+})
+test('SFL D1 preview rejects unknown or nonzero opening scores like the native RPC',async()=>{
+  for(const candidate of [calendarCentral,calendarSouth])for(const scores of [[null,0],[0,null],[-1,0],[0,-1]]) {
+    const f=fixture({fantasyData:async()=>({teams:[],lineups:[]})});const original=f.transport.matches
+    f.transport.matches=async()=> (await original()).map(m=>m.id===12?{...m,home_goals:scores[0],away_goals:scores[1]}:m)
+    const [r]=await runBatch({candidates:[candidate],transport:f.transport,now})
+    assert.equal(r.status,'HOLD',`${candidate.slug}: ${JSON.stringify(scores)}`)
+    assert.match(r.reason,/First future round/)
+  }
+})
 test('apply refreshes state and reads back persisted activation',async()=>{
   const {transport,calls}=fixture();const [r]=await runBatch({candidates:[candidate],transport,now,apply:true})
   assert.equal(r.status,'ACTIVE');assert.equal(r.readback.prvi_fantasy_krog,2);assert.deepEqual(calls,[candidate.slug])
@@ -146,6 +177,14 @@ test('transport pages database reads and permits only the native activation writ
   assert.match(requests[0].url,/rest\/v1\/rounds/);assert.equal(requests[0].options.method,'GET');assert.equal(requests[0].options.redirect,'error')
   assert.equal(new URL(requests[1].url).searchParams.get('offset'),'500')
   assert.match(requests[2].url,/rpc\/vklopi_ligo_sredi_sezone$/);assert.equal(requests[2].options.body,JSON.stringify({p_slug:candidate.slug}))
+})
+
+test('SFL fantasy preview transport selects valid read-only lineup columns',async()=>{
+  const requests=[];const transport=createTransport({url:'https://db.example',key:'test',fetch:async(url,options)=>{requests.push({url:String(url),options});return new Response('[]',{status:200})}})
+  await transport.fantasyData(calendarCentral)
+  assert.equal(requests.length,2);assert.ok(requests.every(r=>r.options.method==='GET'))
+  assert.match(new URL(requests[1].url).searchParams.get('select'),/round_id,rounds!inner\(competition_id\)/)
+  assert.doesNotMatch(requests[1].url,/select=id/)
 })
 
 test('ambiguous activation failure records persisted readback without retrying write',async()=>{
