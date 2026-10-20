@@ -182,6 +182,17 @@ Vpisanih je 10 lig (migracija 20261016091300), **neaktivnih**:
 | me-3-liga-sjever | 9 | `sjever/seniorska-liga/9344268` | `sjever/arhiva/8327709`, `sjever/arhiva/7390107` | `fscg-sjever` |
 | me-3-liga-jug | 7 | `jug/seniorska-liga/9391667` | `jug/arhiva/8373775`, `jug/arhiva/7487412` | `fscg-jug` |
 
+**Dodatna kandidata za predogled obstoječih lig** (20. 10. 2026; še nista
+uvožena ali pripravljena za vklop): `me-1-cfl` (`fscg/meridianbet-1-cfl/9278739`,
+arhiv `fscg/arhiva/8208775`) in `me-2-cfl`
+(`fscg/druga-liga/9279699`, arhiv `fscg/arhiva/8208777`). Predhodni pregled
+12 zahtevkov je potrdil razporeda in vzorčne zapisnike brez zavrnitve; to ni
+celoten uvoz. Pred vklopom je treba z obstoječim adapterjem uvoziti in
+pregledati vse razpoložljive zapisnike obeh sezon, minute, identitete,
+menjave, gole, cene in vratarje. Izrecnega dovoljenja FSCG nimamo. Javno pot
+in 3-sekundni premor ohrani; ob umiku, prijavi, izzivu ali 401/403/429 ustavi
+uvoz, brez ponovitev ali obhodov.
+
 **Ni vpisano**: KAFF-MAFF III lyga 2026 (`23832343`, 8 klubov) — zapisnike
 razčleni, a 24 od 40 ekip v preizkusu ni vpisalo nobene menjave (začetniki
 bi imeli po 90 minut, rezerve nič). Jug ima le 7 klubov (spodnja meja).

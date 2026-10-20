@@ -85,7 +85,7 @@ je glava strani same); vljudnostni mail MFA je predlagan (raziskava
 2026-10-15), dovoljenja še nimamo. Beremo odkrito (`User-Agent: SLFF fantasy
 (https://slff.eu)`, **3 s** med zahtevki, zapisnikov, starejših od tedna, ne
 beremo znova). Sodnikov, trenerjev in fotografij ne beremo; vzorci
-`scripts/vzorci/mt-mfa-*` so brez njih. **Ob 403, 429 ali izzivu se uvoz
+`scripts/vzorci/mt-mfa-*` so brez njih. **Ob 401/403/429, prijavi ali izzivu se uvoz
 ustavi — ne obhajaj** (`MfaZavrnitev`, izhod 4). Odgovor, ki ni JSON (stran
 vzdrževanja, prazen, odrezan), ustavi uvoz lige z navadno napako (izhod 1) in
 ne gre v predpomnilnik (`vir.zaPredpomnilnik`), zato ga naslednji uvoz
@@ -116,6 +116,17 @@ Vpisane so 4 lige (migracija 20261016091500), **neaktivne**, zveza `mfa`:
 | mt-challenge | `2601248/2027` | `2601248/2026` |
 | mt-nl1 | `2601267/2027` | `2601267/2026` |
 | mt-nl2 | `6234492/2027` | `6234492/2026` |
+
+**Kandidata za predogled obstoječih lig** (20. 10. 2026; še nista uvožena ali
+pripravljena za vklop): `mt-premier` (`58539/2027`, arhiv `58539/2026`) in
+`mt-challenge` (`2601248/2027`, arhiv `2601248/2026`). Predhodni pregled je
+zajel 20 zahtevkov, šest vzorčnih zapisnikov in prihodnje tekme
+brez zavrnitve; to ni celoten uvoz. Pred vklopom je treba po obstoječem
+adapterju uvoziti in pregledati vse razpoložljive zapisnike obeh sezon,
+identitete, menjave, gole, cene in vratarje. Izrecnega dovoljenja MFA nimamo;
+vljudnostni stik je priporočljiv, ne pogoj za ta obseg. Ohranimo javno pot in
+3-sekundni premor ter se ustavimo ob umiku, prijavi, izzivu ali 401/403/429,
+brez ponovitev ali obhodov.
 
 Uvoz (ena za drugo, **šele po vklopu države MT v nočni uvoz in vmesnik**):
 `gh workflow run uvoz-lige.yml -f liga=mt-nl2 -f arhiv=6234492/2026 -f

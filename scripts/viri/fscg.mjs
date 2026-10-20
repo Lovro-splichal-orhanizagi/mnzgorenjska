@@ -41,6 +41,13 @@ import {
 /** Poddomene; `fscg` je fscg.me sam (državne lige). */
 export const REGIJE = ['fscg', 'centar', 'sjever', 'jug']
 
+/** Clear login forms stop the same-host batch; fixture/match markup wins. */
+export const jePrijava = (html) => {
+  const s = String(html ?? '')
+  if (zaPredpomnilnik(s)) return false
+  return /<!doctype\s+html|<html\b/i.test(s) && /<form\b/i.test(s) && /<input\b[^>]*type\s*=\s*["']?password\b/i.test(s)
+}
+
 export function razbijKodo(koda) {
   const m = String(koda ?? '').trim().match(/^([a-z]+)\/([a-z0-9-]+)\/(\d+)$/)
   if (!m || !REGIJE.includes(m[1]))
@@ -82,6 +89,18 @@ const skupno = delVira({
 })
 export const sifraZapisnika = skupno.sifraZapisnika
 
+export async function fscgFetch(url, init) {
+  const response = await fetch(url, init)
+  if ([401, 403, 429].includes(response.status)) {
+    try { await response.body?.cancel() } catch { /* refusal remains final */ }
+    throw vir.zavrnitev(`HTTP ${response.status}`, response.status)
+  }
+  let html = ''
+  try { html = await response.clone().text() } catch { /* preserve normal response for its reader */ }
+  if (jePrijava(html)) throw vir.zavrnitev(`200 vrača prijavo (${url})`)
+  return response
+}
+
 const vir = {
   ime: 'fscg',
   polnoIme: 'Fudbalski savez Crne Gore (fscg.me, regije centar/sjever/jug.fscg.me)',
@@ -97,6 +116,7 @@ const vir = {
   // Stran vzdrževanja ali napake (200) ne gre v predpomnilnik — glej comet-auris.
   zaPredpomnilnik,
   zavrnitev: (sporocilo, status = null) => new CometZavrnitev(`fscg: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
+  fetch: fscgFetch,
 
   async razporedVseStrani(koda, prenesi) {
     return razcleniRazpored(koda, await beri('fscg', prenesi, naslovLige(koda), skupno.imeLige(koda), true))

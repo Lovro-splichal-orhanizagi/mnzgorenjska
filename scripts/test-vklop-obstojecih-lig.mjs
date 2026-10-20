@@ -252,3 +252,21 @@ test('opposite per-match goal errors cannot cancel to accept a league; later can
   const rows=await runBatch({candidates:[candidate,other],transport:f.transport,now,apply:true})
   assert.deepEqual(rows.map(r=>r.status),['HOLD','ACTIVE']);assert.match(rows[0].reason,/101.*102/);assert.equal(rows[0].score_goal_difference,0);assert.deepEqual(rows[0].score_goal_mismatches.map(m=>m.report_id),['report-101','report-102']);assert.deepEqual(f.calls,[other.slug])
 })
+test('Montenegro and Malta candidates bind only reviewed tuples with public-source contracts',()=>{
+  const expected=[
+    {id:967,slug:'me-1-cfl',source:'fscg',source_league_code:'fscg/meridianbet-1-cfl/9278739'},
+    {id:966,slug:'me-2-cfl',source:'fscg',source_league_code:'fscg/druga-liga/9279699'},
+    {id:972,slug:'mt-challenge',source:'mfa',source_league_code:'2601248/2027'},
+    {id:971,slug:'mt-premier',source:'mfa',source_league_code:'58539/2027'},
+  ]
+  const selected=validateSelection(registry,expected.map(c=>c.slug))
+  assert.deepEqual(selected,expected)
+  assert.deepEqual(registry.candidates.filter(c=>['fscg','mfa'].includes(c.source)),[expected[0],expected[1],expected[3],expected[2]])
+  assert.equal(registry.source_contracts.fscg.document,'docs/viri/litva-crna-gora.md')
+  assert.match(registry.source_contracts.fscg.permission,/no explicit permission/i)
+  assert.equal(registry.source_contracts.mfa.document,'docs/viri/malta.md')
+  assert.match(registry.source_contracts.mfa.permission,/no explicit (?:MFA )?permission/i)
+  assert.match(registry.source_contracts.mfa.permission,/stop/i)
+  for(const slug of ['me-3-liga-centar','me-3-liga-sjever','me-3-liga-jug','mt-nl1','mt-nl2','me-unknown','mt-unknown'])
+    assert.throws(()=>validateSelection(registry,[slug]))
+})
