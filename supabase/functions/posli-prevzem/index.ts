@@ -23,7 +23,7 @@
 // (`prevzem_neobvesceni`, nato `prevzem_obvescen`) — vsak zahtevek enkrat,
 // zato je klic brez prijave neškodljiv. Vmesnik ga sproži po potrditvi.
 
-import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
+import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.45.4'
 import nodemailer from 'npm:nodemailer@6.9.16'
 import { gumb, ovoj } from '../_shared/mail.ts'
 
@@ -242,7 +242,7 @@ function sestaviPotrjen(v: Neobvescen): { naslov: string; html: string; besedilo
   return { naslov: b.naslov, besedilo, html: ovoj({ vsebina: odstavki.join('') + '<p>Jernej, SLFF</p>' }) }
 }
 
-async function obvestiPotrjene(service: ReturnType<typeof createClient>): Promise<Response> {
+async function obvestiPotrjene(service: SupabaseClient): Promise<Response> {
   const { data, error } = await service.rpc('prevzem_neobvesceni')
   if (error) return json({ error: error.message }, 500)
   let poslano = 0
