@@ -154,7 +154,7 @@ jobs:
           path: scripts/.predpomnilnik
           key: zapisniki-mt-premier-39491243015
           fail-on-cache-miss: true
-      - name: Export only the four fixed cached MFA JSON files
+      - name: Export only the fourteen fixed cached MFA JSON files
         run: node scripts/export-mfa-premier-cached-cases.mjs
       - uses: actions/upload-artifact@v4
         with:
