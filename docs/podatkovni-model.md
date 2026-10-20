@@ -18,7 +18,17 @@
   ostane klubu, ki ga imajo lastniki (pozicija ob nakupu, sicer klub zadnjega
   kroga pred prvim posnetkom postave), sicer trenutnemu klubu; drugi klubi
   dobijo svojega igralca z nastopi, goli in asistencami, točke krogov se
-  preračunajo. Najprej brez `pisi`, najprej neaktivne lige; ponoven zagon nič ne spremeni
+  preračunajo. Najprej brez `pisi`, najprej neaktivne lige; ponoven zagon nič ne spremeni.
+  Za izjemen, dokazano določen klub brez lastniških ekip ali posnetkov postav
+  lahko delovni tok sprejme `ohrani_klub` kot `teams.id`. Ta način zahteva tudi
+  enega `tekmovanje`, `igralec` in `expected_sha`, enak SHA pregledanega commita
+  na `main`; brez tega se delo ne začne. Za primer me-1-cfl mora predogled
+  uporabiti `tekmovanje=me-1-cfl`, `igralec=394740`, `ohrani_klub=10669`
+  (Dečić). Najprej preveri predogled z `pisi=false`; zapis sproži ločeno z
+  `pisi=true` na istem SHA, šele po pregledu predogleda. Zapis zavrne aktivno
+  ligo, fantasy ekipo ali postavo, napačen klub ter manjkajoč, dvoumen ali
+  prekrivajoči se soimenjak za drugi sporni klub. Običajna raba workflowa
+  `ohrani_klub` in `expected_sha` ne potrebuje.
 - `fantasy_teams` → ekipe uporabnikov, `fantasy_roster` → izbrani igralci
   (`is_starter`, `is_captain`, `is_vice`, `bench_order`)
 - `fantasy_teams.hisna` → **hišna ekipa**: sistemska ekipa SLFF, da slovaške

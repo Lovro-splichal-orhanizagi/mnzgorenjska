@@ -54,8 +54,17 @@ const pisi = process.argv.includes('--pisi')
 const liga = arg('tekmovanje')
 const vir = arg('vir')
 const igralec = arg('igralec')
+const ohraniKlub = arg('ohrani-klub')
 if (igralec && !/^\d+$/.test(igralec)) {
   console.error(`--igralec mora biti število (${igralec})`)
+  process.exit(1)
+}
+if (ohraniKlub && !/^\d+$/.test(ohraniKlub)) {
+  console.error(`--ohrani-klub mora biti število (${ohraniKlub})`)
+  process.exit(1)
+}
+if (ohraniKlub && (!igralec || !liga)) {
+  console.error('--ohrani-klub zahteva --igralec in --tekmovanje')
   process.exit(1)
 }
 const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
@@ -107,7 +116,9 @@ let razdeljenih = 0
 let novih = 0
 let napak = 0
 for (const k of zaDelitev) {
-  const { data: r, error } = await db.rpc('razdeli_zlitega_igralca', { p_igralec: k.player_id, p_pisi: pisi })
+  const rpcArgs = { p_igralec: k.player_id, p_pisi: pisi }
+  if (ohraniKlub) rpcArgs.p_ohrani_klub = ohraniKlub
+  const { data: r, error } = await db.rpc('razdeli_zlitega_igralca', rpcArgs)
   if (error) {
     console.error(`\n✗ ${k.player_id} ${k.ime} (${k.liga}): ${error.message}`)
     napak++
