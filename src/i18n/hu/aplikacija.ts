@@ -161,6 +161,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zaklenjenoPred: 'lezárva ennyi ideje: {cas}',
     se: 'még {cas}',
   },
+  pokaziMi: {
+    neshranjeno: 'Előbb mentsd el a csapatod (vagy vesd el a módosításokat), aztán koppints újra.',
+    niVidno: 'Ez ezen az oldalon nem látható. Lehet, hogy előbb be kell jelentkezned vagy csapatot kell összeállítanod.',
+    neznano: 'Sajnos ezt nem tudom megmutatni.',
+  },
   klepet: {
     gost: 'Vendég',
     zdaj: 'most',

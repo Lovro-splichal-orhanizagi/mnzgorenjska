@@ -162,6 +162,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zaklenjenoPred: 'փակվել է {cas} առաջ',
     se: 'մնաց {cas}',
   },
+  pokaziMi: {
+    neshranjeno: 'Նախ պահպանիր թիմը (կամ չեղարկիր փոփոխությունները), ապա կրկին հպիր։',
+    niVidno: 'Սա այս էջում չի երևում։ Միգուցե նախ պետք է մուտք գործես կամ թիմ կազմես։',
+    neznano: 'Ցավոք, չեմ կարող դա ցույց տալ։',
+  },
   klepet: {
     gost: 'Հյուր',
     zdaj: 'հիմա',

@@ -160,6 +160,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zaklenjenoPred: 'blocat acum {cas}',
     se: 'încă {cas}',
   },
+  pokaziMi: {
+    neshranjeno: 'Salvează mai întâi echipa (sau renunță la modificări), apoi atinge din nou.',
+    niVidno: 'Asta nu se vede pe această pagină. Poate trebuie mai întâi să te autentifici sau să-ți faci o echipă.',
+    neznano: 'Îmi pare rău, nu îți pot arăta asta.',
+  },
   klepet: {
     gost: 'Vizitator',
     zdaj: 'acum',

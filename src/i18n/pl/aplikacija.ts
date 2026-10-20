@@ -159,6 +159,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zaklenjenoPred: 'zamknięto {cas} temu',
     se: 'jeszcze {cas}',
   },
+  pokaziMi: {
+    neshranjeno: 'Najpierw zapisz drużynę (albo odrzuć zmiany), potem dotknij ponownie.',
+    niVidno: 'Tego nie widać na tej stronie. Może musisz się najpierw zalogować albo złożyć drużynę.',
+    neznano: 'Niestety nie umiem ci tego pokazać.',
+  },
   klepet: {
     gost: 'Gość',
     zdaj: 'teraz',

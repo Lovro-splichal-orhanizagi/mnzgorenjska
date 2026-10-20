@@ -16,8 +16,16 @@
 // Neshranjen kader na Moji ekipi: orodji strani ne zapustita. Shranjevanje
 // namesto obiskovalca ne pride v poštev — dodatni prestopi stanejo točke in
 // kader je lahko še nepopoln. Osvetlita gumb Shrani in agentu povesta zakaj.
+//
+// Gumb »Pokaži mi« (HelpStack CLIENT_ACTION): `odpri_stran` in `pokazi` sta
+// prijavljena dvakrat, kot orodje in kot dejanje. Katero dobi agent, določa
+// tip orodja v HelpStacku. Kot orodje teče, ko agent piše odgovor — na
+// telefonu pokrije stran klepet in obiskovalec ne vidi nič. Kot dejanje
+// teče šele, ko obiskovalec tapne gumb; klepet se takrat umakne, neuspeh pa
+// vrne `{ ok: false, message }`, ki ga obiskovalec vidi v klepetu.
 import { supabase } from './supabase'
 import { jeNeshranjeno } from './neshranjeno'
+import { t } from '../i18n/jedro.ts'
 
 /** Strani, na katere sme agent peljati — ključ je to, kar pošlje agent. */
 export const STRANI: Record<string, string> = {
@@ -82,10 +90,23 @@ export function osvetliCilj(cilj: string): boolean {
   return Boolean(el)
 }
 
-function osvetli(el: HTMLElement) {
+function osvetli(el: HTMLElement, trajanje = 4500) {
   el.scrollIntoView({ behavior: 'smooth', block: 'center' })
   el.classList.add(RAZRED)
-  window.setTimeout(() => el.classList.remove(RAZRED), 4500)
+  window.setTimeout(() => el.classList.remove(RAZRED), trajanje)
+}
+
+/** Po tapu na »Pokaži mi« obiskovalec stran šele zagleda — osvetlitev traja dlje. */
+const TRAJANJE_DEJANJA = 8000
+
+type Rezultat = Record<string, unknown>
+
+/** Rezultat orodja kot rezultat dejanja: neuspeh z obvestilom za obiskovalca. */
+function kotDejanje(r: Rezultat) {
+  if (r.razlog === 'neshranjene_spremembe') return { ok: false, message: t('aplikacija.pokaziMi.neshranjeno') }
+  if (r.razlog === 'neznana stran' || r.razlog === 'neznan cilj') return { ok: false, message: t('aplikacija.pokaziMi.neznano') }
+  if (r.odprto === false || r.najdeno === false) return { ok: false, message: t('aplikacija.pokaziMi.niVidno') }
+  return { ok: true }
 }
 
 /**
@@ -93,7 +114,7 @@ function osvetli(el: HTMLElement) {
  * vsakem klicu orodja, zato je vedno sveže); `pojdi` je navigate routerja.
  */
 export function prijaviOrodja(
-  helpstack: (ukaz: 'registerTool', ime: string, fn: (p: Record<string, unknown>) => Promise<unknown>) => void,
+  helpstack: (ukaz: 'registerTool' | 'registerAction', ime: string, fn: (p: Record<string, unknown>) => Promise<unknown>) => void,
   stanje: () => StanjeStrani,
   pojdi: (pot: string) => void,
 ) {
@@ -123,16 +144,16 @@ export function prijaviOrodja(
     }
   })
 
-  helpstack('registerTool', 'odpri_stran', async (p) => {
+  const odpriStran = async (p: Record<string, unknown>): Promise<Rezultat> => {
     const kam = STRANI[String(p.stran ?? '')]
     if (!kam) return { odprto: false, razlog: 'neznana stran', mozne: Object.keys(STRANI) }
     if (stanje().pot === kam) return { odprto: true, stran: p.stran, ze_tam: true }
     if (jeNeshranjeno()) return zadrzi()
     pojdi(kam)
     return { odprto: true, stran: p.stran }
-  })
+  }
 
-  helpstack('registerTool', 'pokazi', async (p) => {
+  const pokazi = async (p: Record<string, unknown>, trajanje?: number): Promise<Rezultat> => {
     const cilj = String(p.cilj ?? '')
     if (!(cilj in CILJI)) return { najdeno: false, razlog: 'neznan cilj', mozni: Object.keys(CILJI) }
     const stran = CILJI[cilj]
@@ -144,7 +165,12 @@ export function prijaviOrodja(
     }
     const el = najdi(cilj)
     if (!el) return { najdeno: false, cilj, namig: 'element ni viden (morda ni prijavljen ali nima ekipe)' }
-    osvetli(el)
+    osvetli(el, trajanje)
     return { najdeno: true, cilj }
-  })
+  }
+
+  helpstack('registerTool', 'odpri_stran', odpriStran)
+  helpstack('registerTool', 'pokazi', (p) => pokazi(p))
+  helpstack('registerAction', 'odpri_stran', async (p) => kotDejanje(await odpriStran(p)))
+  helpstack('registerAction', 'pokazi', async (p) => kotDejanje(await pokazi(p, TRAJANJE_DEJANJA)))
 }

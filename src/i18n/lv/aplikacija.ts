@@ -159,6 +159,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zaklenjenoPred: 'slēgts pirms {cas}',
     se: 'vēl {cas}',
   },
+  pokaziMi: {
+    neshranjeno: 'Vispirms saglabā komandu (vai atmet izmaiņas), tad pieskaries vēlreiz.',
+    niVidno: 'Šajā lapā tas nav redzams. Iespējams, vispirms jāpiesakās vai jāizveido komanda.',
+    neznano: 'Diemžēl to nevaru tev parādīt.',
+  },
   klepet: {
     gost: 'Viesis',
     zdaj: 'tikko',

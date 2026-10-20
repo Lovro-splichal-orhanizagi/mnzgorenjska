@@ -162,6 +162,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zaklenjenoPred: 'låst for {cas} siden',
     se: '{cas} tilbage',
   },
+  pokaziMi: {
+    neshranjeno: 'Gem først dit hold (eller kassér ændringerne), og tryk så igen.',
+    niVidno: 'Det kan ikke ses på denne side. Måske skal du først logge ind eller sætte et hold.',
+    neznano: 'Det kan jeg desværre ikke vise dig.',
+  },
   klepet: {
     gost: 'Gæst',
     zdaj: 'nu',

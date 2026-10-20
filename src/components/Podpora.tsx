@@ -22,7 +22,8 @@ import { prijaviOrodja, type StanjeStrani } from '../lib/podporaOrodja'
  * odgovor po posti, jo napise sam.
  *
  * Agent ima orodja v brskalniku (`lib/podporaOrodja.ts`): pogleda, kje je
- * obiskovalec, ga pelje na stran in mu na njej pokaže, kam klikniti.
+ * obiskovalec, ga pelje na stran in mu na njej pokaže, kam klikniti (kot
+ * gumb »Pokaži mi«, ki teče šele ob tapu).
  */
 // Vsak jezik ima svoj kanal v HelpStacku: slovaški ima slovaško bazo znanja
 // (pravila brez glasovanja o pozicijah — te pridejo iz zapisnika), hrvaški
@@ -154,7 +155,7 @@ export function odpriPodporo(): Promise<void> {
   })
 }
 
-type UkazHelpStack = ((ukaz: 'registerTool', ime: string, fn: (p: Record<string, unknown>) => Promise<unknown>) => void) & {
+type UkazHelpStack = ((ukaz: 'registerTool' | 'registerAction', ime: string, fn: (p: Record<string, unknown>) => Promise<unknown>) => void) & {
   q?: unknown[]
 }
 

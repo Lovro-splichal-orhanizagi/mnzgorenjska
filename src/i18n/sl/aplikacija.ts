@@ -180,6 +180,12 @@ export const aplikacija = {
     zaklenjenoPred: 'zaklenjeno pred {cas}',
     se: 'še {cas}',
   },
+  /** Gumb »Pokaži mi« v klepetu za pomoč, ko dejanja ni mogoče izvesti. */
+  pokaziMi: {
+    neshranjeno: 'Najprej shrani ekipo (ali zavrzi spremembe), nato tapni še enkrat.',
+    niVidno: 'Tega na tej strani ni videti. Morda se moraš najprej prijaviti ali sestaviti ekipo.',
+    neznano: 'Tega ti žal ne znam pokazati.',
+  },
   klepet: {
     gost: 'Gost',
     zdaj: 'zdaj',
