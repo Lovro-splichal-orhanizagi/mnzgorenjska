@@ -54,8 +54,7 @@
     "test:dfb-nord-west-historical-sql": "node scripts/test-dfb-nord-west-historical-sql.mjs",
     "test:dfb-calendar-sql": "node scripts/test-dfb-calendar-release-sql.mjs",
     "test:fcf-six": "node --test scripts/test-fcf-six-historical-policy.mjs scripts/test-fcf-six-continuation.mjs scripts/test-fcf-six-capture.mjs scripts/test-fcf-six-cleanup-evidence.mjs scripts/test-fcf-six-target-downstream.mjs",
-    "test:fcf-six-native": "node --test scripts/test-fcf-six-native-sql.mjs",
-    "test:zgodbe": "node --test scripts/zgodbe/zgodbe.test.mjs"
+    "test:fcf-six-native": "node --test scripts/test-fcf-six-native-sql.mjs"
   },
   "dependencies": {
     "@capacitor-firebase/messaging": "^8.5.2",
