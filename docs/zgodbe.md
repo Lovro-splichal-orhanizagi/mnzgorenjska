@@ -14,7 +14,7 @@ vetu same, **zgodbe gredo le po Lukovem kliku**.
   kartico. `--suho --izhod mapa` le zapiše `kartica.json`, nič ne pošlje.
 - `zgodbe.mjs streznik` posluša `POST /discord/zgodbe` (Interactions Endpoint
   aplikacije). Vsak zahtevek: Ed25519 podpis Discorda, čas največ 5 minut
-  (`PODPIS_STAROST_S`), kanal `DISCORD_KAFANA_ID`, uporabnik `ZGODBE_LUKA_ID`;
+  (`PODPIS_STAROST_S`), kanal `DISCORD_KAFANA_ID`, odobritelji `ZGODBE_ODOBRITELJI` (id-ji Discord Luke, Lovra in Nejca, z vejico);
   sicer zasebno sporočilo in nič. Id interakcije se zapomni (ponovitev nič ne
   naredi), gumb nosi različico (stara kartica nič ne naredi), `caka →
   objavljanje` je en zaporeden zapis (dvojni klik objavi enkrat). Pred objavo
