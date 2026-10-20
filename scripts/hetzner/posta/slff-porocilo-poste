@@ -1,3 +1,4 @@
 # Dnevno poročilo o poslani pošti (scripts/dnevno-porocilo-poste.mjs) na #reports.
 # Namesti objavi-posto.sh v /etc/cron.d/. Ura je UTC: 7:00 poleti, 6:00 pozimi.
-0 5 * * * root cd /opt/slff-posta && docker compose run --rm -T posta node scripts/dnevno-porocilo-poste.mjs --discord >> /var/log/slff-porocilo-poste.log 2>&1
+# Ob padcu javi na isti kanal (javi-napako.mjs), sicer tišina izgleda kot dan brez pošte.
+0 5 * * * root cd /opt/slff-posta && { docker compose run --rm -T posta node scripts/dnevno-porocilo-poste.mjs --discord || docker compose run --rm -T posta sh -c 'DISCORD_WEBHOOK=$DISCORD_WEBHOOK_REPORTS node scripts/javi-napako.mjs "Dnevno porocilo poste"'; } >> /var/log/slff-porocilo-poste.log 2>&1
