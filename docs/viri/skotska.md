@@ -89,5 +89,23 @@ baze):
 0 opozoril, 0 nepopolnih; 12 avtogolov, 61 golov z 11 m, 41 izključitev.
 Vratar (prvi začetnik) v vseh 330 postavah.
 
+Pregled obstoječih uvoženih zapisov (20. 10. 2026; samo baza, brez novih
+zahtevkov viru): opozorili `soimenjaka McDonald M. (dres 21) ni bilo mogoče
+ločiti — ustvarjen nov zapis` pri `sc54381829` in `soimenjaka Hunter L.
+(dres 5) ni bilo mogoče ločiti — ustvarjen nov zapis` pri `sc54381851` sta
+zaščita pred združitvijo soimenjakov. V prvem zapisniku sta McDonald M. #8
+pri Johnstone Burgh in #21 pri Troon shranjena kot različna igralca; v drugem
+sta Hunter L. #4 pri Caledonian Braves in #5 pri Clydebank prav tako ločena.
+Postavi kažeta začetnico in priimek; to je predvidena oblika vira in polno ime
+ni zahtevano. Opozorili ohranimo; iz teh podatkov ne sklepamo polnih imen in
+igralcev ne združujemo. V West pet tekem z datumom 17. 10. še nima zapisnika
+in potrebuje običajen uvoz oziroma pregled objave. Ločen pregled East
+(20. 10. 2026; samo baza, brez novih zahtevkov viru) je našel 238 tekem
+tekoče sezone, od tega 77 uvoženih in 8 tekem z dne 17. 10. brez zapisnika;
+zgodovinski uvoženi izidi so skladni in brez opozoril. Tudi East uporablja
+tekočo sezono za cene, saj arhiva ni. Naslednji odprti krog je 13., z datumom
+27. 10. 2026. Ta pregleda vrstic nista preskus živega vira ali pripravljenosti
+lige.
+
 Uvoz (ena za drugo, **brez arhiva**): `gh workflow run uvoz-lige.yml -f
 liga=gb-lowland-east -f cene=true`. Liga je ~80–90 strani tekem po 3 s.
