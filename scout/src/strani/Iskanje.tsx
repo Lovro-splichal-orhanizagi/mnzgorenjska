@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { SKUPINE, supabase, type Zadetek } from '../baza'
-import { napaka, stevilo, t, type Kljuc } from '../besede'
+import { jezik, napaka, stevilo, t, type Kljuc } from '../besede'
 import { Nalaganje, useSeja } from '../seja'
 
 const RAVNI = ['vse', 'ista_ali_nizja', 'nizja'] as const
@@ -39,11 +39,13 @@ export const MALO_PODATKOV = 0.5
 
 /** CSV iz naloženih vrstic, prenos v brskalniku. Celica, ki se začne z =+-@, dobi ' (vbrizg formul v Excel). */
 export function prenesiCsv(ime: string, vrstice: (string | number)[][]): void {
+  // slovenski Excel bere ; in decimalno vejico, angleški , in piko
+  const sl = jezik === 'sl'
   const celica = (x: string | number) => {
-    const v = typeof x === 'string' && /^[=+\-@]/.test(x) ? `'${x}` : String(x)
+    const v = typeof x === 'number' ? (sl ? String(x).replace('.', ',') : String(x)) : /^[=+\-@\t\r]/.test(x) ? `'${x}` : x
     return /[",;\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v
   }
-  const csv = '\ufeff' + vrstice.map((r) => r.map(celica).join(',')).join('\r\n')
+  const csv = '\ufeff' + vrstice.map((r) => r.map(celica).join(sl ? ';' : ',')).join('\r\n')
   const a = document.createElement('a')
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
   a.download = ime
