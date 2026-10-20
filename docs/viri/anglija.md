@@ -134,6 +134,13 @@ gostitelju API-ja (`vir.fetch` → `isthmianFetch`).
   preveri roke krogov.** Prekinjena tekma (`Abandoned`) s ponovitvijo v
   istem krogu se izpusti; brez ponovitve ostane neodigrana. `Postponed` je
   neodigrana (datum lahko ostane star).
+  Za SFL Division One Central/South se pri neaktivni ligi lahko kot prvi
+  fantasy krog izbere prva prihodnja prazna reža `Match N` kljub odigranim
+  višjim številkam, ker gre za prestavljene tekme v njihovih izvornih režah.
+  Ta omejena izjema velja samo brez obstoječih fantasy ekip/postav in brez
+  odigrane višje reže z rokom v prihodnosti; vsaka tekma in rok ostaneta v
+  izvorni reži. Pred vklopom še vedno preveri, da prvi izbrani krog ni
+  zaklenjen ali že odigran.
 - **Čas**: `date` in `time` sta londonska (`dateTime` z "Z" je isti čas,
   napačno označen); Ljubljana = London + 1 h. Sezona avgust–maj.
 - Šifra zapisnika v bazi je `gb<id>`. Identiteta igralca je šifra osebe;
