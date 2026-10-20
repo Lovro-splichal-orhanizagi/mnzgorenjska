@@ -3701,6 +3701,11 @@ update rounds set season = sezona_lige(competition_id) where competition_id in (
 select pg_temp.preveri('scoutk: klic v dnevniku',
   exists (select 1 from scout.dnevnik where team_id = -913001 and vrsta = 'klub'
             and user_id = 'e5c30000-0000-4000-8000-000000000001'));
+select pg_temp.preveri('scoutk: dnevnik hrani vrnjene igralce kadra, skritih ne',
+  exists (select 1 from scout.dnevnik where team_id = -913001 and vrsta = 'klub'
+             and parametri->'igralci' @> '[-930007, -930001]'::jsonb)
+  and not exists (select 1 from scout.dnevnik where team_id = -913001 and vrsta = 'klub'
+                     and parametri->'igralci' @> '[-930002]'::jsonb));
 
 update profiles set is_admin = true where id = 'e5c30000-0000-4000-8000-000000000001';
 select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
@@ -3740,11 +3745,28 @@ select pg_temp.preveri('scout3: dodajanje in branje seznama v dnevniku',
   and exists (select 1 from scout.dnevnik where team_id = -913001 and vrsta = 'opazovani')
   and exists (select 1 from scout.opazovani where team_id = -913001 and player_id = -930001));
 delete from scout.ugovori where player_id = -930001;
+-- 29 vidnih polnil (različna imena: ugovor je po imenu) + -930001 = 30 vidnih
+insert into players(id, team_id, competition_id, first_name, last_name, full_name, position, position_source, value, value_start, active) overriding system value
+select -940000 - n, -913002, -913001, 'Polnilo', n::text, 'Polnilo ' || n, 'FWD', 'admin', 6, 6, true from generate_series(1, 29) n;
+insert into scout.indeks (model_id, player_id, skupina, indeks, percentil, zaupanje)
+select s3.model, -940000 - n, 'FWD', 0, 50, 1 from s3, generate_series(1, 29) n;
 insert into scout.opazovani (team_id, player_id) select -913001, -940000 - n from generate_series(1, 29) n;
 select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
 set local role authenticated;
 select pg_temp.napaka('scout3: seznam ima najvec 30', $$select scout_opazuj(-930007, true)$$, 'scout-seznam-poln');
 reset role;
+-- igralec, ki ga klub ne vidi več, ne zaseda mesta (pred pocisti)
+insert into scout.ugovori (player_id, kljuc) select * from scout.kljuci_vrstic(array[-940001]::bigint[]);
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select scout_opazuj(-930007, true);
+select pg_temp.preveri('scout3: nevidni ne zasedajo mesta na seznamu',
+  exists (select 1 from scout_opazovani() where player_id = -930007));
+reset role;
+select pg_temp.preveri('scout3: seznam v dnevniku hrani vrnjene igralce',
+  (select parametri->'igralci' @> '[-930007, -930001]'::jsonb and not parametri->'igralci' @> '[-940001]'::jsonb
+     from scout.dnevnik where team_id = -913001 and vrsta = 'opazovani' order by id desc limit 1));
+delete from scout.opazovani where team_id = -913001 and (player_id between -940029 and -940002 or player_id = -930007);
 insert into scout.opazovani (team_id, player_id) values (-913001, -930002);
 select scout.pocisti();
 select pg_temp.preveri('scout3: ciscenje odstrani skrite in neobstojece s seznama',

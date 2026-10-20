@@ -214,8 +214,10 @@ plačila) in `…-faza3b-aplikacija.md` (scout.slff.eu). Migracije
   aktiven klubski račun, `velja_do > now()`, `zaprt_at is null`, država ni
   zaprta, dnevna meja (500 profilov in 300 drugih klicev na klub na ljubljanski
   dan; med drugimi so tudi `scout_opazuj`, dodajanje in odstranjevanje, in
-  `scout_opazovani`) in vrstica v `scout.dnevnik` (pri iskanju in podobnih še
-  id-ji vrnjenih igralcev v `parametri.igralci`). Zavrnjen klic se ne zapiše.
+  `scout_opazovani`) in vrstica v `scout.dnevnik` (pri iskanju, podobnih,
+  strani Klub in opazovalnem seznamu še id-ji vrnjenih igralcev v
+  `parametri.igralci`). Meja 30 na seznamu šteje le igralce, ki jih klub danes
+  vidi (`scout.vidni`, migracija 20261019180000). Zavrnjen klic se ne zapiše.
 - **Kaj klub vidi.** Le zadnji **objavljeni** model (`scout.zadnji_model()`).
   `scout.vidni(model, država)` ob branju znova izloči skrite (ključi
   `scout.ugovori`), anonimizirane (ključi `anonimizirani_igralci`, tudi druge
