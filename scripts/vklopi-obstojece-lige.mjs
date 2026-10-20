@@ -8,6 +8,13 @@ import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost.
 import { runRefreshBatch, validateRefreshSelection } from './refresh-existing-leagues.mjs'
 
 const registryPath = new URL('./policies/existing-league-candidates-20261018.json', import.meta.url)
+const reviewedCalendarStarts = new Set([
+  'gb-sfl-d1-central|isthmian|sfl/69d0be24b616bafb97331d42/2026-27',
+  'gb-sfl-d1-south|isthmian|sfl/69d0bdf9b616bafb97331d41/2026-27',
+  'gb-npl-east|isthmian|npl/67d7c7bb74247876e6dae40b/2026-27',
+  'gb-isthmian-south-central|isthmian|isthmian/67d7d11a749090308acc1022/2026-27',
+])
+const usesReviewedCalendarStart = competition => reviewedCalendarStarts.has(`${competition.slug}|${competition.source}|${competition.source_league_code}`)
 export function validateSelection(registry, slugs) {
   if (!slugs.length || new Set(slugs).size !== slugs.length) throw Error('Provide a nonempty explicit list without duplicates.')
   return slugs.map(slug => {
@@ -85,14 +92,14 @@ function inspect(candidate,competition,state,season,rounds,matches,now,fantasyDa
   const future=current.filter(r=>Date.parse(r.deadline_at)>now.getTime()).sort((a,b)=>a.number-b.number)
   const gap=future.find(r=>!played.has(r.id))?.number
   const playedNumbers=current.filter(r=>played.has(r.id)).map(r=>r.number)
-  const sflD1=competition.slug==='gb-sfl-d1-central'&&competition.source==='isthmian'&&competition.source_league_code==='sfl/69d0be24b616bafb97331d42/2026-27'||competition.slug==='gb-sfl-d1-south'&&competition.source==='isthmian'&&competition.source_league_code==='sfl/69d0bdf9b616bafb97331d41/2026-27'
-  if(sflD1&&(!fantasyData||!Array.isArray(fantasyData.teams)||!Array.isArray(fantasyData.lineups)))throw Error('Incomplete fantasy-data check for source-calendar start selection.')
-  if(sflD1&&(fantasyData.teams.length||fantasyData.lineups.length))throw Error('Existing fantasy data prevents source-calendar start selection.')
-  if(sflD1&&gap!=null&&current.some(r=>r.number>gap&&played.has(r.id)&&(!Number.isFinite(Date.parse(r.deadline_at))||Date.parse(r.deadline_at)>now.getTime())))throw Error('Played higher round has an invalid or future deadline.')
-  const last=sflD1?Math.max(0,...playedNumbers.filter(n=>gap==null||n<gap)):Math.max(0,...playedNumbers.filter(n=>gap==null||n<gap||playedNumbers.filter(x=>x>gap).length>2))
+  const reviewedCalendar=usesReviewedCalendarStart(competition)
+  if(reviewedCalendar&&(!fantasyData||!Array.isArray(fantasyData.teams)||!Array.isArray(fantasyData.lineups)))throw Error('Incomplete fantasy-data check for reviewed calendar start selection.')
+  if(reviewedCalendar&&(fantasyData.teams.length||fantasyData.lineups.length))throw Error('Existing fantasy data prevents reviewed calendar start selection.')
+  if(reviewedCalendar&&gap!=null&&current.some(r=>r.number>gap&&played.has(r.id)&&(!Number.isFinite(Date.parse(r.deadline_at))||Date.parse(r.deadline_at)>now.getTime())))throw Error('Played higher round has an invalid or future deadline.')
+  const last=reviewedCalendar?Math.max(0,...playedNumbers.filter(n=>gap==null||n<gap)):Math.max(0,...playedNumbers.filter(n=>gap==null||n<gap||playedNumbers.filter(x=>x>gap).length>2))
   const first=future.find(r=>r.number>last)
   if(!first || !first.played_on || first.played_on.slice(0,10)<today || first.lineups_locked_at || played.has(first.id) || !currentMatches.some(m=>m.round_id===first.id))throw Error('No unlocked future first round with fixtures and no appearances.')
-  if(currentMatches.some(m=>m.round_id===first.id&&(m.imported_at||m.home_goals>0||m.away_goals>0||(sflD1&&(m.home_goals!==0||m.away_goals!==0)))))throw Error('First future round already has a report/result or unknown SFL score.')
+  if(currentMatches.some(m=>m.round_id===first.id&&(m.imported_at||m.home_goals>0||m.away_goals>0||(reviewedCalendar&&(m.home_goals!==0||m.away_goals!==0)))))throw Error('First future round already has a report/result or unknown reviewed-calendar score.')
   return {season,state_summary:Object.fromEntries(Object.entries(state).filter(([key])=>key!=='igralci')),first_round:first,cheapest_squad:najcenejsiKader(state.igralci),score_goal_difference:difference,past_current_unimported:0,assessment}
 }
 export async function runBatch({candidates,transport,apply=false,now=()=>new Date(),onResult=()=>{}}) {
@@ -107,8 +114,7 @@ export async function runBatch({candidates,transport,apply=false,now=()=>new Dat
         const season=await transport.season(candidate)
         const rounds=await transport.rounds(candidate)
         const matches=await transport.matches(candidate)
-        const isSflD1=(candidate.slug==='gb-sfl-d1-central'&&candidate.source==='isthmian'&&candidate.source_league_code==='sfl/69d0be24b616bafb97331d42/2026-27')||(candidate.slug==='gb-sfl-d1-south'&&candidate.source==='isthmian'&&candidate.source_league_code==='sfl/69d0bdf9b616bafb97331d41/2026-27')
-        const fantasyData=isSflD1?(transport.fantasyData?await transport.fantasyData(candidate):null):{teams:[],lineups:[]}
+        const fantasyData=usesReviewedCalendarStart(competition)?(transport.fantasyData?await transport.fantasyData(candidate):null):{teams:[],lineups:[]}
         Object.assign(result,inspect(candidate,competition,state,season,rounds,matches,now(),fantasyData))
         if(apply) {
           // The native service RPC and trigger recheck/lock database data in its transaction.

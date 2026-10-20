@@ -141,6 +141,17 @@ gostitelju API-ja (`vir.fetch` → `isthmianFetch`).
   odigrane višje reže z rokom v prihodnosti; vsaka tekma in rok ostaneta v
   izvorni reži. Pred vklopom še vedno preveri, da prvi izbrani krog ni
   zaklenjen ali že odigran.
+  Za NPL East (`gb-npl-east`, `npl/67d7c7bb74247876e6dae40b/2026-27`) velja
+  ista ozka izjema: jeseni 2026 je Match 16 prva čista prihodnja reža kljub
+  trem že odigranim višjim krogom; generično pravilo bi začelo pri Match 29.
+  Vklop še vedno zahteva prazen fantasy kontekst, brez odigranega višjega
+  kroga z nepretečenim ali neznanim rokom, ter odklenjeno prihodnjo prvo režo
+  s tekmami, brez zapisnika ali rezultata. Vse tekme ostanejo v izvornih
+  režah. To ne pomeni, da je liga uvožena ali pripravljena za objavo.
+  Za Isthmian South Central (`gb-isthmian-south-central`,
+  `isthmian/67d7d11a749090308acc1022/2026-27`) velja enako: jeseni 2026 je
+  Match 15 prva čista prihodnja reža kljub trem že odigranim višjim krogom;
+  generično pravilo bi izbralo Match 39.
 - **Čas**: `date` in `time` sta londonska (`dateTime` z "Z" je isti čas,
   napačno označen); Ljubljana = London + 1 h. Sezona avgust–maj.
 - Šifra zapisnika v bazi je `gb<id>`. Identiteta igralca je šifra osebe;
