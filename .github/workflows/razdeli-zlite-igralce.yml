@@ -148,17 +148,17 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
-      - name: Restore exact ME1 report cache without fallback
+      - name: Restore exact MFA Premier cache without fallback
         uses: actions/cache/restore@v4
         with:
           path: scripts/.predpomnilnik
-          key: zapisniki-me-1-cfl-39491238079
+          key: zapisniki-mt-premier-39491243015
           fail-on-cache-miss: true
-      - name: Parse only the two fixed cached reports
-        run: node scripts/analiziraj-fscg-me1-cache.mjs
+      - name: Export only the four fixed cached MFA JSON files
+        run: node scripts/export-mfa-premier-cached-cases.mjs
       - uses: actions/upload-artifact@v4
         with:
-          name: fscg-me1-cached-report-audit-${{ github.run_id }}
-          path: fscg-me1-cache-audit-output/
+          name: mfa-premier-card-cases-${{ github.run_id }}
+          path: mfa-premier-cache-audit-output/
           if-no-files-found: error
           retention-days: 7
