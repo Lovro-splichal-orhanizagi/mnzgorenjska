@@ -28,8 +28,8 @@ ssh SLFF "test -f $CILJ/.env || { echo 'Manjka $CILJ/.env (ustvari ga lastnik, g
   && rm -rf $CILJ/app.novo && mkdir -p $CILJ/app.novo"
 rsync -aR "${DATOTEKE[@]}" "SLFF:$CILJ/app.novo/"
 rsync -a scripts/hetzner/posta/docker-compose.yml "SLFF:$CILJ/"
-# cron.d zahteva lastnika root in 644, sicer datoteko tiho preskoči.
-ssh SLFF "install -m 644 -o root -g root /dev/stdin /etc/cron.d/slff-porocilo-poste" < scripts/hetzner/posta/slff-porocilo-poste
+# cron.d zahteva lastnika root (ssh je root) in 644, sicer datoteko tiho preskoči.
+ssh SLFF "umask 022 && cat > /etc/cron.d/slff-porocilo-poste" < scripts/hetzner/posta/slff-porocilo-poste
 ssh SLFF "cd $CILJ && { [ -d app/node_modules ] && cp -a app/node_modules app.novo/ || true; } \
   && chmod -R a+rX app.novo \
   && docker run --rm -v $CILJ/app.novo:/app -w /app node:22-alpine \
