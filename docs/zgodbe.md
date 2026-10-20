@@ -1,7 +1,7 @@
-# Dnevne zgodbe (IG + FB Story) z Lukovo odobritvijo na Discordu
+# Dnevne zgodbe (IG + FB Story) z odobritvijo na Discordu
 
 SLF-38. Ločeno od samodejnih objav (`docs/objave.md`): objave v vir gredo po
-vetu same, **zgodbe gredo le po Lukovem kliku**.
+vetu same, **zgodbe gredo le po kliku v #kafana**.
 
 - Vsak dan **natanko tri** sličice po vrsti (1 kavelj, 2 vsebina, 3 poziv),
   1080 × 1920 **JPEG**, do 8 MB, vse različne (`preveriOkvirje`). Nalepk
