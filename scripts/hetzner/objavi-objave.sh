@@ -32,12 +32,16 @@ ssh SLFF "test -f $CILJ/.env || { echo 'Manjka $CILJ/.env (ustvari ga lastnik, g
 rsync -aR "${DATOTEKE[@]}" "SLFF:$CILJ/app.novo/"
 rsync -a scripts/hetzner/objave/docker-compose.yml scripts/hetzner/objave/Dockerfile "SLFF:$CILJ/"
 ssh SLFF "cd $CILJ && docker pull -q $SLIKA >/dev/null \
-  && mkdir -p mediji stanje && chmod 755 . mediji && chmod 700 stanje \
-  && chown \$(docker run --rm $SLIKA id -u pwuser):\$(docker run --rm $SLIKA id -g pwuser) mediji stanje \
+  && mkdir -p mediji/zgodbe stanje && chmod 755 . mediji mediji/zgodbe && chmod 700 stanje \
+  && chown \$(docker run --rm $SLIKA id -u pwuser):\$(docker run --rm $SLIKA id -g pwuser) mediji mediji/zgodbe stanje \
   && chmod -R a+rX app.novo \
   && docker run --rm -v $CILJ/app.novo:/app -w /app $SLIKA \
        sh -c 'npm install --no-save --no-package-lock --omit=dev --ignore-scripts --loglevel=error @supabase/supabase-js@$SUPABASE_JS playwright@$PLAYWRIGHT && chmod -R a+rX node_modules' \
   && rm -rf app.staro && { [ -d app ] && mv app app.staro || true; } && mv app.novo app \
   && docker compose build -q && docker compose run --rm --no-deps --entrypoint ffmpeg objave -version >/dev/null \
   && docker compose up -d --force-recreate >/dev/null && sleep 3 && docker logs --tail 5 slff-objave \
-  && { docker compose ps --services | grep -qx zgodbe && docker logs --tail 3 slff-zgodbe || true; }"
+  && if docker compose config --services | grep -qx zgodbe; then \
+       docker logs --tail 3 slff-zgodbe; \
+       [ \"\$(docker inspect -f '{{.State.Status}}/{{.RestartCount}}' slff-zgodbe)\" = running/0 ] \
+         || { echo 'slff-zgodbe does not run (docker logs slff-zgodbe)'; exit 1; }; \
+     fi"

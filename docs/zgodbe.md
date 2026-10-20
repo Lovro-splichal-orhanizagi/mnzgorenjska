@@ -57,6 +57,10 @@ Enkrat, lastnik strežnika (agenti tega ne morejo: skrivnosti in root):
    `https://slff.eu/discord/zgodbe`. Discord ob shranjevanju pošlje podpisan
    PING; shrani se le, če strežnik odgovori.
 
+Izklop: odstrani `COMPOSE_PROFILES=zgodbe` iz `.env`, nato v `/opt/slff-objave`
+`docker compose stop zgodbe && docker compose rm -f zgodbe`. Sam ponovni
+deploy brez profila tekočega `slff-zgodbe` **ne** ustavi.
+
 Preizkus: tri sličice v mapo na strežniku, nato
 `docker compose run --rm -v /pot/do/slik:/vhod:ro zgodbe node scripts/zgodbe/zgodbe.mjs predlozi /vhod/1.jpg /vhod/2.jpg /vhod/3.jpg`
 v `/opt/slff-objave`. Kartica pride v #kafana; klik enega od treh mora

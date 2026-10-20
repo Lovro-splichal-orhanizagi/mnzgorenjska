@@ -65,7 +65,8 @@ services:
     env_file: .env
     volumes:
       - ./app:/app:ro
-      - ./mediji:/mediji
+      # Le mapa zgodb, ne vsi mediji objav.
+      - ./mediji/zgodbe:/mediji/zgodbe
       - ./stanje:/stanje
     mem_limit: 256m
     cpus: 0.5
