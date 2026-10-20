@@ -100,7 +100,8 @@ select pg_temp.zlite_assert('existing Bokelj peer receives both its old and move
 select pg_temp.zlite_assert('Bokelj scorer goal follows its appearance to the existing peer',
  (select scorer_id=-917002 from goals where id=-917001));
 select pg_temp.zlite_assert('total appearances and goals remain unchanged',
- (select count(*)=3 from appearances) and (select count(*)=1 from goals));
+ (select count(*)=3 from appearances where match_id in(-917011,-917012,-917013))
+ and (select count(*)=1 from goals where match_id in(-917011,-917012,-917013)));
 select pg_temp.zlite_assert('stat row remains for retained Dečić player',
  (select count(*)=1 from statistika_igralcev where player_id=-917001 and matches=1));
 select pg_temp.zlite_assert('stat row remains for existing Bokelj peer',
