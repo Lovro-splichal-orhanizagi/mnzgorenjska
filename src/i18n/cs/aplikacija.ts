@@ -161,6 +161,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zaklenjenoPred: 'uzavřeno před {cas}',
     se: 'ještě {cas}',
   },
+  pokaziMi: {
+    neshranjeno: 'Nejdřív ulož tým (nebo zahoď změny) a pak klepni znovu.',
+    niVidno: 'Na této stránce to není vidět. Možná se musíš nejdřív přihlásit nebo sestavit tým.',
+    neznano: 'Promiň, tohle ti neumím ukázat.',
+  },
   klepet: {
     gost: 'Host',
     zdaj: 'teď',

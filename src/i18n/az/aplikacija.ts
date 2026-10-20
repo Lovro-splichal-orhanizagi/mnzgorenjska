@@ -161,6 +161,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zaklenjenoPred: '{cas} əvvəl bağlanıb',
     se: 'qalıb: {cas}',
   },
+  pokaziMi: {
+    neshranjeno: 'Əvvəlcə komandanı yadda saxla (və ya dəyişiklikləri ləğv et), sonra yenidən toxun.',
+    niVidno: 'Bu, bu səhifədə görünmür. Bəlkə əvvəlcə daxil olmalı və ya komanda qurmalısan.',
+    neznano: 'Təəssüf ki, bunu sənə göstərə bilmirəm.',
+  },
   klepet: {
     gost: 'Qonaq',
     zdaj: 'indi',

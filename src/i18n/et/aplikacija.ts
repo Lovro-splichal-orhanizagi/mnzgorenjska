@@ -161,6 +161,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zaklenjenoPred: 'lukus {cas} tagasi',
     se: 'veel {cas}',
   },
+  pokaziMi: {
+    neshranjeno: 'Salvesta kõigepealt oma meeskond (või loobu muudatustest) ja puuduta siis uuesti.',
+    niVidno: 'Seda pole sellel lehel näha. Võib-olla pead esmalt sisse logima või meeskonna kokku panema.',
+    neznano: 'Vabandust, seda ma sulle näidata ei oska.',
+  },
   klepet: {
     gost: 'Külaline',
     zdaj: 'nüüd',
