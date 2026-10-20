@@ -37,6 +37,14 @@
     "lowland": {
       "document": "docs/viri/skotska.md",
       "permission": "Lovro obtained written permission for capture in October 2026. Use only the existing public Lowland Match Centre adapter with its 3-second pacing. Stop on withdrawal, login, challenge/CAPTCHA or HTTP 401/403/429; do not retry or bypass refusal."
+    },
+    "fscg": {
+      "document": "docs/viri/litva-crna-gora.md",
+      "permission": "Existing public FSCG/COMET route; no explicit permission recorded. Use the existing 3-second paced adapter. Stop on withdrawal, login, challenge/CAPTCHA or HTTP 401/403/429; do not retry or bypass."
+    },
+    "mfa": {
+      "document": "docs/viri/malta.md",
+      "permission": "Existing public Match Centre API route; no explicit MFA permission recorded. Courtesy contact is recommended, not a prerequisite. Use the existing 3-second paced adapter and stop on withdrawal, login, challenge/CAPTCHA or HTTP 401/403/429; do not retry or bypass."
     }
   },
   "candidates": [
@@ -513,6 +521,30 @@
       "slug": "gb-lowland-east",
       "source": "lowland",
       "source_league_code": "slfl/2026-2027/54193157"
+    },
+    {
+      "id": 967,
+      "slug": "me-1-cfl",
+      "source": "fscg",
+      "source_league_code": "fscg/meridianbet-1-cfl/9278739"
+    },
+    {
+      "id": 966,
+      "slug": "me-2-cfl",
+      "source": "fscg",
+      "source_league_code": "fscg/druga-liga/9279699"
+    },
+    {
+      "id": 971,
+      "slug": "mt-premier",
+      "source": "mfa",
+      "source_league_code": "58539/2027"
+    },
+    {
+      "id": 972,
+      "slug": "mt-challenge",
+      "source": "mfa",
+      "source_league_code": "2601248/2027"
     }
   ]
 }

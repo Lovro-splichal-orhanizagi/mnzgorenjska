@@ -77,7 +77,7 @@ const imeLestvice = (koda) => `standings-${String(koda).replace(/[/+]/g, '-')}.j
 const imeIzida = (id) => `tekma-${id}-izid.json`
 const imePostave = (id) => `tekma-${id}-postava.json`
 
-/** Zavrnitev (403, 429) ali izziv: uvoz se ustavi in ne vzame shranjene strani. */
+/** Zavrnitev (401, 403, 429), prijava ali izziv: uvoz se ustavi brez fallbacka. */
 export class MfaZavrnitev extends Error {
   constructor(sporocilo, status = null) {
     super(sporocilo)
@@ -86,10 +86,23 @@ export class MfaZavrnitev extends Error {
     this.zavrnitev = true
   }
 }
-export const jeZavrnitev = (status) => status === 403 || status === 429
+export const jeZavrnitev = (status) => status === 401 || status === 403 || status === 429
 // API vrača JSON; HTML (izziv Cloudflare, CAPTCHA, prijava) je zavrnitev.
 export const jeIzziv = (besedilo) =>
   /<title>\s*(Just a moment|Attention Required)|cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha|captcha/i.test(String(besedilo ?? ''))
+
+// Prepoznamo le nedvoumen prijavni obrazec ali strukturiran auth odgovor;
+// besed, kot sta "login" ali "unauthorized", ne iščemo po celotnem JSON-u.
+export function jePrijava(besedilo) {
+  const s = String(besedilo ?? '')
+  if (/<!doctype\s+html|<html\b/i.test(s) && /<form\b/i.test(s) && /<input\b[^>]*type\s*=\s*["']?password\b/i.test(s)) return true
+  let d
+  try { d = JSON.parse(s) } catch { return false }
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return false
+  if (['status', 'statusCode', 'code'].some(k => [401, 403, 429].includes(Number(d[k])))) return true
+  const auth = new Set(['unauthorized', 'unauthenticated', 'authentication required', 'login required', 'access denied', 'invalid credentials', 'token expired'])
+  return ['error', 'message', 'detail'].some(k => typeof d[k] === 'string' && auth.has(d[k].trim().toLowerCase()))
+}
 
 /** "64'" → 64, "45+2'" → 45, "90+1'" → 90. */
 export function minuta(s) {
@@ -408,6 +421,7 @@ async function beriJson(prenesi, url, ime, sveze) {
     throw e
   }
   if (jeIzziv(besedilo)) throw new MfaZavrnitev(`mfa: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo ga`)
+  if (jePrijava(besedilo)) throw new MfaZavrnitev(`mfa: ${url} vrne prijavo ali auth napako — uvoz ustavljen, ne obhajamo ga`)
   try {
     return JSON.parse(besedilo)
   } catch {
@@ -509,6 +523,15 @@ export async function dopolniZacetek(tekme, preteklih, prenesi, { mapa = MAPA } 
   return out
 }
 
+export async function mfaFetch(url, init) {
+  const response = await fetch(url, init)
+  if (jeZavrnitev(response.status)) {
+    try { await response.body?.cancel() } catch { /* refusal remains final */ }
+    throw vir.zavrnitev(`HTTP ${response.status}`, response.status)
+  }
+  return response
+}
+
 const vir = {
   ime: 'mfa',
   polnoIme: 'Malta Football Association (matchcentre.mfa.com.mt)',
@@ -522,13 +545,15 @@ const vir = {
   naslovRazporeda: naslovLestvice,
   naslovZapisnika: (_koda, id) => naslovPostave(id),
   jeIzziv,
+  fetch: mfaFetch,
   zavrnitev: (sporocilo, status = null) => new MfaZavrnitev(`mfa: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
   // V predpomnilnik gostitelja le JSON: stran vzdrževanja, prazen ali odrezan
   // odgovor (200) bi sicer obveljal za vselej (zapisnik, starejši od tedna, se
   // bere iz predpomnilnika) in vsak nočni uvoz bi padel na `beriJson`.
   zaPredpomnilnik: (besedilo) => {
-    try { JSON.parse(besedilo); return true } catch { return false }
+    try { JSON.parse(besedilo); return !jePrijava(besedilo) } catch { return false }
   },
+  jePrijava,
 
   async razporedVseStrani(koda, prenesi) {
     return razcleniRazpored(await vseTekme(koda, prenesi))
