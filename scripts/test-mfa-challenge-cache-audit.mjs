@@ -2,7 +2,11 @@ import assert from 'node:assert/strict'
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { createCacheReader, copyVerifiedCacheFile } from './analiziraj-mfa-challenge-cache.mjs'
+import { createCacheReader, copyVerifiedCacheFile, soZakljuceneStrani } from './analiziraj-mfa-challenge-cache.mjs'
+
+assert.equal(soZakljuceneStrani([50, 38]), true, 'full 50+38 pagination is complete')
+assert.equal(soZakljuceneStrani([50]), false, 'a full first page without a captured short final page is incomplete')
+assert.equal(soZakljuceneStrani([]), false, 'missing pages cannot prove completeness')
 
 const root = mkdtempSync(join(tmpdir(), 'mfa-cache-audit-test-'))
 try {

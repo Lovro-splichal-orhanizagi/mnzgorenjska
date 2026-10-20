@@ -15,6 +15,10 @@ const MAX_FILES = 650
 const MAX_BYTES = 16 * 1024 * 1024
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex')
 
+export function soZakljuceneStrani(itemCounts) {
+  return Array.isArray(itemCounts) && itemCounts.length > 0 && itemCounts.at(-1) < 50 && itemCounts.slice(0, -1).every(n => n === 50)
+}
+
 function safeName(name) {
   if (typeof name !== 'string' || !/^[a-zA-Z0-9._-]+\.json$/.test(name) || name === '.' || name === '..') throw new Error(`unsafe cache filename: ${name}`)
   return name
@@ -63,17 +67,22 @@ export function createCacheReader({ cacheRoot = CACHE, outputRoot = OUTPUT, maxF
 }
 
 function normalizedReport(id, match, resultRaw, lineupRaw) {
-  const z = vZapisnik(JSON.parse(resultRaw), JSON.parse(lineupRaw), { id: sifraZapisnika(id), tekma: match })
+  const result = JSON.parse(resultRaw)
+  const lineup = JSON.parse(lineupRaw)
+  const z = vZapisnik(result, lineup, { id: sifraZapisnika(id), tekma: match })
   if (!z) throw new Error(`${id}: cached result/lineup did not parse as PLAYED`)
-  const players = mfa.nastopi(z).map(({ ekipa, ime, st, pozicija, zacetnik, minutaOd, minutaDo, minute, goli, rumeni, rdeci, zgreseneEnajstmetrovke }) => ({
-    team: ekipa, name: ime, shirt: st, position: pozicija, started: zacetnik,
+  const players = mfa.nastopi(z).map(({ ekipa, ime, st, regSt, pozicija, zacetnik, minutaOd, minutaDo, minute, goli, rumeni, rdeci, zgreseneEnajstmetrovke }) => ({
+    team: ekipa, name: ime, shirt: st, sourcePlayerId: regSt, regSt, position: pozicija, started: zacetnik,
     minuteOn: minutaOd, minuteOff: minutaDo, minutes: minute, goals: goli,
     yellows: rumeni, reds: rdeci, missedPenalties: zgreseneEnajstmetrovke,
   }))
+  const eventRows = (typeSet) => ['homeTeam', 'awayTeam'].flatMap((side, ekipaIdx) => (lineup?.[side]?.players ?? []).flatMap(p => (p.events ?? []).filter(e => typeSet.has(e.type)).map(e => ({ team: ekipaIdx === 0 ? z.domaci.ime : z.gostje.ime, type: e.type, eventId: e.id, sourcePlayerId: e.playerId, player: e.playerName ?? p.name, minute: e.time ?? null }))))
   return {
     id: z.zapisnikId, sourceId: String(id), fixture: { date: z.datum, home: match.homeTeam.name, away: match.awayTeam.name, status: match.status, competitionId: String(match.competitionId), startDate: match.startDate },
     sourceUrl: z.url, score: z.rezultat, goalCount: z.goli.length,
-    goals: z.goli.map(({ ekipaIdx, ime, st, minuta, avtogol, enajstmetrovka }) => ({ team: ekipaIdx === 0 ? z.domaci.ime : z.gostje.ime, player: ime, shirt: st, minute: minuta, ownGoal: avtogol, penalty: enajstmetrovka })),
+    goals: z.goli.map(({ ekipaIdx, ime, st, regSt, minuta, avtogol, enajstmetrovka }) => ({ team: ekipaIdx === 0 ? z.domaci.ime : z.gostje.ime, player: ime, shirt: st, sourcePlayerId: regSt, regSt, minute: minuta, ownGoal: avtogol, penalty: enajstmetrovka })),
+    goalEvents: eventRows(new Set(['GOAL', 'PENALTY', 'OWN_GOAL'])),
+    redEvents: eventRows(new Set(['RED', 'SECOND_YELLOW'])),
     appearances: players.length, players,
     lineups: [z.domaci, z.gostje].map(t => ({ team: t.ime, starters: t.postava.length, goalkeepers: t.postava.filter(p => p.pozicija === 'GK').length })),
     substitutions: z.menjave.map(({ ekipaIdx, minuta, noter, ven }) => ({ team: ekipaIdx === 0 ? z.domaci.ime : z.gostje.ime, minute: minuta, on: noter.ime, off: ven.ime })),
@@ -90,18 +99,17 @@ export async function audit({ cacheRoot = CACHE, outputRoot = OUTPUT, maxFiles =
   for (const job of JOBS) {
     const matches = await vseTekme(job.code, prenesi, { mapa: cacheRoot })
     const rounds = razcleniRazpored(matches)
-    const pages = prenesi.requests.filter(r => r.url.includes(`/competitions/2601248/`) && r.url.includes(`season=${job.code.split('/')[1]}`)).map(r => ({ url: r.url, file: r.file, bytes: r.bytes, sha256: r.sha256, itemCount: JSON.parse(readFileSync(join(cacheRoot, r.file), 'utf8')).length }))
+    const pages = prenesi.requests.filter(r => r.url.includes(`/competitions/2601248/`) && r.url.includes(`season=${job.code.split('/')[1]}`)).map(r => ({ url: r.url, file: r.file, bytes: r.bytes, sha256: r.sha256, itemCount: JSON.parse(readFileSync(join(outputRoot, 'cache', r.file), 'utf8')).length }))
     for (const kind of ['pastMatches', 'upcomingMatches']) {
       const group = pages.filter(p => p.url.includes(`/${kind}?`))
-      if (!group.length || group.at(-1).itemCount >= 50 || group.slice(0, -1).some(p => p.itemCount !== 50)) throw new Error(`${job.kind}: ${kind} pagination is incomplete or inconsistent`)
+      if (!soZakljuceneStrani(group.map(p => p.itemCount))) throw new Error(`${job.kind}: ${kind} pagination is incomplete or inconsistent`)
     }
     const played = matches.filter(t => t.status === 'PLAYED')
     if (played.length !== job.played) throw new Error(`${job.kind}: expected ${job.played} PLAYED fixtures, found ${played.length}`)
     const upcoming = matches.filter(t => t.status !== 'PLAYED' && Date.parse(t.startDate) > Date.now())
     if (job.kind === 'current') {
       const upcomingPages = pages.filter(r => r.url.includes('/upcomingMatches?'))
-      if (upcomingPages.length !== 1 || upcomingPages[0].itemCount >= 50)
-        throw new Error('current upcoming pagination was not proven complete by a short first page')
+      if (!soZakljuceneStrani(upcomingPages.map(p => p.itemCount))) throw new Error('current upcoming pagination is incomplete')
       if (!upcoming.length) throw new Error('current season has no future fixture to establish a current schedule')
       const futureIds = new Set(upcoming.map(t => String(t.id)))
       const futureRounds = rounds.filter(r => r.tekme.some(t => futureIds.has(String(t.mfaId)))).map(r => r.stevilka)
@@ -127,9 +135,10 @@ export async function audit({ cacheRoot = CACHE, outputRoot = OUTPUT, maxFiles =
   for (const id of reportIds) {
     const file = `po-sifri-${id}.json`
     try {
-      const raw = readFileSync(join(cacheRoot, file))
-      const st = lstatSync(join(cacheRoot, file))
+      const path = join(cacheRoot, file)
+      const st = lstatSync(path)
       if (!st.isFile() || st.isSymbolicLink()) throw new Error(`invalid metadata cache item ${file}`)
+      const raw = readFileSync(path)
       const d = JSON.parse(raw)
       metadata.push({ file, bytes: raw.length, sha256: sha(raw), metadata: Object.fromEntries(['id', 'ni', 'competitionId', 'competitionTypeId', 'status'].filter(k => Object.hasOwn(d, k)).map(k => [k, d[k]])) })
       const copied = copyVerifiedCacheFile({ cacheRoot, outputRoot, file, maxFiles, maxBytes, totals: prenesi.totals })
