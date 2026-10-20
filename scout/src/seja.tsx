@@ -73,15 +73,15 @@ export function Nalaganje() {
 
 /** Strani s podatki igralcev: sedež kluba z veljavno naročnino (baza to preveri še enkrat). */
 export function ZahtevaSedez({ children }: { children: ReactNode }) {
-  const { seja, nalaga, klub, napakaKluba } = useSeja()
+  const { seja, nalaga, klub, napakaKluba, osvezi } = useSeja()
   if (nalaga) return <Nalaganje />
   if (!seja) return <Navigate to="/login" replace />
   if (napakaKluba)
     return (
-      <>
-        <Nalaganje />
+      <div className="space-y-3">
         <p className="opozorilo">{t('napaka.splosna')}</p>
-      </>
+        <button type="button" onClick={() => void osvezi()} className="gumb-tih text-sm">{t('napaka.znova')}</button>
+      </div>
     )
   if (!klub?.sedez || !klub.narocnina?.velja) return <Navigate to="/account" replace />
   return <>{children}</>

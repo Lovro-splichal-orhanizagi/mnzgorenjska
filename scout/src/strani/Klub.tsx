@@ -242,7 +242,10 @@ export function PregledKlubaView({ p, razvrsti, setRazvrsti, onIzbira }: {
             {p.vrzeli.map((v, i) => (
               <li key={`${v.vrsta}-${v.skupina}-${v.player_id ?? i}`} className="flex flex-wrap items-center gap-2 px-4 py-3 text-slate-100">
                 {v.skupina && <span className={`znacka poz-${v.skupina}`}>{t(`poz.${v.skupina}` as Kljuc)}</span>}
-                {opisVrzeli(v)}
+                <span className="min-w-0 flex-1">{opisVrzeli(v)}</span>
+                {v.skupina && (
+                  <Link to={`/?skupina=${v.skupina}&raven=ista_ali_nizja`} className="gumb-tih px-3 py-1 text-sm">{t('vrzeli.isci')} →</Link>
+                )}
               </li>
             ))}
           </ul>

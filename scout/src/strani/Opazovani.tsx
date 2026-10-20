@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase, type Opazovan } from '../baza'
-import { napaka, t, type Kljuc } from '../besede'
+import { datum, napaka, t, type Kljuc } from '../besede'
 import { Nalaganje } from '../seja'
+import { prenesiCsv } from './Iskanje'
 
 export function Opazovani() {
   const [seznam, setSeznam] = useState<Opazovan[] | null>(null)
@@ -52,11 +53,30 @@ export function Opazovani() {
                   {o.odprt_za_prestop && <span className="znacka-odprt">{t('iskanje.odprt')}</span>}
                 </span>
                 <span className="block text-xs text-slate-400">{o.klub} · {o.liga}</span>
+                <span className="block text-xs text-slate-400">{t('seznam.podrobno', { minute: o.minute ?? '–', datum: datum(o.dodano) })}</span>
               </Link>
+              <span className="shrink-0 cursor-help text-right" title={t('iskanje.percentilOpis')}>
+                <span className="block text-xl font-black tabular-nums text-gnl-300">{Math.round(o.percentil)}</span>
+                <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-400">{t('iskanje.percentil')}</span>
+              </span>
               <button type="button" disabled={dela} onClick={() => void odstrani(o.player_id)} className="gumb-tih shrink-0 px-3 py-1 text-sm">{t('seznam.odstrani')}</button>
             </li>
           ))}
         </ul>
+      )}
+      {seznam.length > 0 && (
+        <button
+          type="button"
+          onClick={() =>
+            prenesiCsv('scout-opazovani.csv', [
+              [t('klub.st.ime'), t('klub.st.poz'), t('igralec.st.klub'), t('igralec.st.liga'), t('iskanje.percentil'), t('igralec.st.minute'), t('iskanje.odprt'), t('seznam.dodano')],
+              ...seznam.map((o) => [o.ime, t(`poz.${o.skupina}` as Kljuc), o.klub, o.liga, Math.round(o.percentil), o.minute ?? '', o.odprt_za_prestop ? 1 : 0, o.dodano.slice(0, 10)]),
+            ])
+          }
+          className="gumb-tih text-sm"
+        >
+          {t('iskanje.csv')}
+        </button>
       )}
     </div>
   )

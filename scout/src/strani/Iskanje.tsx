@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { SKUPINE, supabase, type Zadetek } from '../baza'
-import { napaka, stevilo, t, type Kljuc } from '../besede'
+import { jezik, napaka, stevilo, t, type Kljuc } from '../besede'
 import { Nalaganje, useSeja } from '../seja'
 
 const RAVNI = ['vse', 'ista_ali_nizja', 'nizja'] as const
@@ -34,10 +34,30 @@ export function utemeljitev(z: Pick<Zadetek, 'percentil' | 'skupina' | 'minute' 
   return deli.join(' · ')
 }
 
+/** Pod tem zaupanjem (malo minut ali delni zapisniki) pokaži nevtralno opombo o količini podatkov. */
+export const MALO_PODATKOV = 0.5
+
+/** CSV iz naloženih vrstic, prenos v brskalniku. Celica, ki se začne z =+-@, dobi ' (vbrizg formul v Excel). */
+export function prenesiCsv(ime: string, vrstice: (string | number)[][]): void {
+  // slovenski Excel bere ; in decimalno vejico, angleški , in piko
+  const sl = jezik === 'sl'
+  const celica = (x: string | number) => {
+    const v = typeof x === 'number' ? (sl ? String(x).replace('.', ',') : String(x)) : /^[=+\-@\t\r]/.test(x) ? `'${x}` : x
+    return /[",;\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v
+  }
+  const csv = '\ufeff' + vrstice.map((r) => r.map(celica).join(sl ? ';' : ',')).join('\r\n')
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+  a.download = ime
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+}
+
 export function Iskanje() {
   const { klub } = useSeja()
   const [q, setQ] = useSearchParams()
   const [zveze, setZveze] = useState<{ id: number; name: string }[]>([])
+  const [napakaZ, setNapakaZ] = useState<string | null>(null)
   const drzava = klub?.country_id
   const f = filtri(q)
 
@@ -48,7 +68,10 @@ export function Iskanje() {
       .select('id, name')
       .eq('country_id', drzava)
       .order('name')
-      .then(({ data }) => setZveze(data ?? []))
+      .then(({ data, error }) => {
+        setZveze(data ?? [])
+        setNapakaZ(error ? napaka(error) : null)
+      })
   }, [drzava])
 
   function isci(e: FormEvent<HTMLFormElement>) {
@@ -108,6 +131,7 @@ export function Iskanje() {
             ))}
           </fieldset>
         )}
+        {napakaZ && <p className="opozorilo sm:col-span-2 lg:col-span-4">{napakaZ}</p>}
         <button className="gumb-glavni justify-self-start sm:col-span-2 lg:col-span-4">{t('iskanje.isci')}</button>
       </form>
       <p className="text-xs text-slate-500">{t('iskanje.opomba')}</p>
@@ -121,11 +145,14 @@ function Rezultati({ iskanje }: { iskanje: string }) {
   const [vrstice, setVrstice] = useState<Zadetek[]>([])
   const [stanje, setStanje] = useState<'nalaga' | 'ok' | 'konec'>('nalaga')
   const [napakaI, setNapakaI] = useState<string | null>(null)
+  // Ponovni poskus iste strani po napaki: od ostane, poskus sproži nov klic.
+  const [poskus, setPoskus] = useState(0)
 
   useEffect(() => {
     const f = filtri(new URLSearchParams(iskanje))
     let velja = true
     setStanje('nalaga')
+    setNapakaI(null)
     void supabase
       .rpc('scout_isci', {
         p_skupina: f.skupina,
@@ -139,19 +166,30 @@ function Rezultati({ iskanje }: { iskanje: string }) {
         if (!velja) return
         if (error) {
           setNapakaI(napaka(error))
-          setStanje('konec')
+          setStanje('ok')
           return
         }
         const nove = data ?? []
-        setVrstice((prej) => (od === 0 ? nove : [...prej, ...nove]))
+        // Nov model med stranema premakne vrstni red: istega igralca ne pokaži dvakrat.
+        setVrstice((prej) => {
+          if (od === 0) return nove
+          const ze = new Set(prej.map((z) => z.player_id))
+          return [...prej, ...nove.filter((z) => !ze.has(z.player_id))]
+        })
         setStanje(nove.length < STRAN || od + STRAN >= NAJVEC ? 'konec' : 'ok')
       })
     return () => {
       velja = false
     }
-  }, [iskanje, od])
+  }, [iskanje, od, poskus])
 
-  if (napakaI && vrstice.length === 0) return <p className="opozorilo">{napakaI}</p>
+  if (napakaI && vrstice.length === 0)
+    return (
+      <div className="space-y-3">
+        <p className="opozorilo">{napakaI}</p>
+        <button type="button" onClick={() => setPoskus(poskus + 1)} className="gumb-tih text-sm">{t('napaka.znova')}</button>
+      </div>
+    )
   if (stanje !== 'nalaga' && vrstice.length === 0) return <p className="kartica p-5 text-center text-slate-400">{t('iskanje.prazno')}</p>
   return (
     <div className="space-y-3">
@@ -164,11 +202,12 @@ function Rezultati({ iskanje }: { iskanje: string }) {
                   <span className="font-semibold text-slate-100">{z.ime}</span>
                   <span className={`znacka poz-${z.skupina}`} title={t(`skupina.${z.skupina}` as Kljuc)}>{t(`poz.${z.skupina}` as Kljuc)}</span>
                   {z.odprt_za_prestop && <span className="znacka-odprt">{t('iskanje.odprt')}</span>}
+                  {z.zaupanje < MALO_PODATKOV && <span className="znacka bg-white/10 text-slate-300" title={t('iskanje.maloPodatkovOpis')}>{t('iskanje.maloPodatkov')}</span>}
                 </span>
                 <span className="block text-xs text-slate-400">{z.klub} · {z.liga}</span>
-                <span className="block text-sm text-slate-300">{utemeljitev(z)}</span>
+                <span className="block text-sm text-slate-300" title={z.goli_90_pri_nas ? t('iskanje.goliOpis') : undefined}>{utemeljitev(z)}</span>
               </span>
-              <span className="shrink-0 text-right">
+              <span className="shrink-0 cursor-help text-right" title={t('iskanje.percentilOpis')}>
                 <span className="block text-2xl font-black tabular-nums text-gnl-300">{Math.round(z.percentil)}</span>
                 <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-400">{t('iskanje.percentil')}</span>
               </span>
@@ -178,11 +217,25 @@ function Rezultati({ iskanje }: { iskanje: string }) {
       </ul>
       {stanje === 'nalaga' && <Nalaganje />}
       {napakaI && <p className="opozorilo">{napakaI}</p>}
-      {stanje === 'ok' && (
-        <button type="button" onClick={() => setOd(od + STRAN)} className="gumb-tih text-sm">
-          {t('iskanje.vec')}
+      <div className="flex flex-wrap gap-2">
+        {stanje === 'ok' && (
+          <button type="button" onClick={() => (napakaI ? setPoskus(poskus + 1) : setOd(od + STRAN))} className="gumb-tih text-sm">
+            {napakaI ? t('napaka.znova') : t('iskanje.vec')}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() =>
+            prenesiCsv('scout-iskanje.csv', [
+              [t('klub.st.ime'), t('klub.st.poz'), t('igralec.st.klub'), t('igralec.st.liga'), t('iskanje.percentil'), t('igralec.st.minute'), t('igralec.st.delez'), t('igralec.st.goliPriNas'), t('iskanje.odprt')],
+              ...vrstice.map((z) => [z.ime, t(`poz.${z.skupina}` as Kljuc), z.klub, z.liga, Math.round(z.percentil), z.minute, Math.round(z.delez_minut * 100), z.goli_90_pri_nas == null ? '' : Number(z.goli_90_pri_nas.toFixed(2)), z.odprt_za_prestop ? 1 : 0]),
+            ])
+          }
+          className="gumb-tih text-sm"
+        >
+          {t('iskanje.csv')}
         </button>
-      )}
+      </div>
     </div>
   )
 }
