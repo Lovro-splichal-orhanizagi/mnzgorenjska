@@ -164,7 +164,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   },
   seznam: {
     leZaRegistrirane:
-      'Oyuncu listesini yalnızca kayıtlı kullanıcılar görebilir. <prijava>Giriş yap veya hesap oluştur</prijava> — ücretsiz.',
+      'Oyuncu listesini yalnızca kayıtlı kullanıcılar görebilir. <prijava>Giriş yap veya hesap oluştur</prijava>, ücretsiz.',
     naslov: 'Oyuncular',
     naslovZLigo: 'Oyuncular: {liga}',
     stolpci: {
@@ -209,7 +209,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   },
   profil: {
     leZaRegistrirane:
-      'Oyuncu istatistiklerini yalnızca kayıtlı kullanıcılar görebilir. <prijava>Giriş yap veya hesap oluştur</prijava> — ücretsiz.',
+      'Oyuncu istatistiklerini yalnızca kayıtlı kullanıcılar görebilir. <prijava>Giriş yap veya hesap oluştur</prijava>, ücretsiz.',
     naslov: 'Oyuncu',
     hvalaGlas: 'Teşekkürler, bildirimin kaydedildi. Yeterince aynı yönde oy gelince mevki düzeltilir.',
     niIgralca: 'Oyuncu bulunamadı.',

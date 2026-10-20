@@ -164,7 +164,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   },
   seznam: {
     leZaRegistrirane:
-      'A játékoslistát csak regisztrált felhasználók látják. <prijava>Jelentkezz be vagy hozz létre fiókot</prijava> — ingyenes.',
+      'A játékoslistát csak regisztrált felhasználók látják. <prijava>Jelentkezz be vagy hozz létre fiókot</prijava>, ingyenes.',
     naslov: 'Játékosok',
     naslovZLigo: 'Játékosok: {liga}',
     stolpci: {
@@ -209,7 +209,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   },
   profil: {
     leZaRegistrirane:
-      'A játékos statisztikáit csak regisztrált felhasználók látják. <prijava>Jelentkezz be vagy hozz létre fiókot</prijava> — ingyenes.',
+      'A játékos statisztikáit csak regisztrált felhasználók látják. <prijava>Jelentkezz be vagy hozz létre fiókot</prijava>, ingyenes.',
     naslov: 'Játékos',
     hvalaGlas: 'Köszönjük, a jelzésedet rögzítettük. Ha elég egyező szavazat gyűlik össze, a poszt kijavításra kerül.',
     niIgralca: 'Nincs ilyen játékos.',

@@ -165,7 +165,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   },
   seznam: {
     leZaRegistrirane:
-      'Lista jucătorilor este vizibilă doar utilizatorilor înregistrați. <prijava>Conectează-te sau creează un cont</prijava> — gratuit.',
+      'Lista jucătorilor este vizibilă doar utilizatorilor înregistrați. <prijava>Conectează-te sau creează un cont</prijava>, gratuit.',
     naslov: 'Jucători',
     naslovZLigo: 'Jucători: {liga}',
     stolpci: {
@@ -211,7 +211,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   },
   profil: {
     leZaRegistrirane:
-      'Statisticile jucătorului sunt vizibile doar utilizatorilor înregistrați. <prijava>Conectează-te sau creează un cont</prijava> — gratuit.',
+      'Statisticile jucătorului sunt vizibile doar utilizatorilor înregistrați. <prijava>Conectează-te sau creează un cont</prijava>, gratuit.',
     naslov: 'Jucător',
     hvalaGlas: 'Mulțumim, votul a fost înregistrat. Când se adună destule voturi la fel, poziția se corectează.',
     niIgralca: 'Jucătorul nu există.',

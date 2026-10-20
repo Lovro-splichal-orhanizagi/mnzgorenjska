@@ -164,7 +164,7 @@ export const igralci = {
   },
   seznam: {
     leZaRegistrirane:
-      'Seznam igralcev vidijo le registrirani. <prijava>Prijavi se ali ustvari račun</prijava> — brezplačno.',
+      'Seznam igralcev vidijo le registrirani. <prijava>Prijavi se ali ustvari račun</prijava>, brezplačno.',
     naslov: 'Igralci',
     naslovZLigo: 'Igralci — {liga}',
     stolpci: {
@@ -211,7 +211,7 @@ export const igralci = {
   },
   profil: {
     leZaRegistrirane:
-      'Statistiko igralca vidijo le registrirani. <prijava>Prijavi se ali ustvari račun</prijava> — brezplačno.',
+      'Statistiko igralca vidijo le registrirani. <prijava>Prijavi se ali ustvari račun</prijava>, brezplačno.',
     naslov: 'Igralec',
     hvalaGlas: 'Hvala — sporočilo je zabeleženo. Ko se zbere dovolj enakih, se pozicija popravi.',
     niIgralca: 'Igralca ni.',

@@ -165,7 +165,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   },
   seznam: {
     leZaRegistrirane:
-      'La lista de jugadores solo la ven los usuarios registrados. <prijava>Inicia sesión o crea una cuenta</prijava> — es gratis.',
+      'La lista de jugadores solo la ven los usuarios registrados. <prijava>Inicia sesión o crea una cuenta</prijava>, es gratis.',
     naslov: 'Jugadores',
     naslovZLigo: 'Jugadores: {liga}',
     stolpci: {
@@ -211,7 +211,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   },
   profil: {
     leZaRegistrirane:
-      'Las estadísticas del jugador solo las ven los usuarios registrados. <prijava>Inicia sesión o crea una cuenta</prijava> — es gratis.',
+      'Las estadísticas del jugador solo las ven los usuarios registrados. <prijava>Inicia sesión o crea una cuenta</prijava>, es gratis.',
     naslov: 'Jugador',
     hvalaGlas: 'Gracias, tu voto queda registrado. Cuando haya suficientes iguales, se corregirá la posición.',
     niIgralca: 'Este jugador no existe.',
