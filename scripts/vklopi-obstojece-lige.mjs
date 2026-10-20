@@ -92,7 +92,7 @@ function inspect(candidate,competition,state,season,rounds,matches,now,fantasyDa
   const last=sflD1?Math.max(0,...playedNumbers.filter(n=>gap==null||n<gap)):Math.max(0,...playedNumbers.filter(n=>gap==null||n<gap||playedNumbers.filter(x=>x>gap).length>2))
   const first=future.find(r=>r.number>last)
   if(!first || !first.played_on || first.played_on.slice(0,10)<today || first.lineups_locked_at || played.has(first.id) || !currentMatches.some(m=>m.round_id===first.id))throw Error('No unlocked future first round with fixtures and no appearances.')
-  if(currentMatches.some(m=>m.round_id===first.id&&(m.imported_at||m.home_goals>0||m.away_goals>0)))throw Error('First future round already has a report/result.')
+  if(currentMatches.some(m=>m.round_id===first.id&&(m.imported_at||m.home_goals>0||m.away_goals>0||(sflD1&&(m.home_goals!==0||m.away_goals!==0)))))throw Error('First future round already has a report/result or unknown SFL score.')
   return {season,state_summary:Object.fromEntries(Object.entries(state).filter(([key])=>key!=='igralci')),first_round:first,cheapest_squad:najcenejsiKader(state.igralci),score_goal_difference:difference,past_current_unimported:0,assessment}
 }
 export async function runBatch({candidates,transport,apply=false,now=()=>new Date(),onResult=()=>{}}) {

@@ -121,6 +121,15 @@ test('SFL D1 preview holds teams, lineups, missing fantasy read, and invalid/fut
     const f=fixture({competition:async()=>({...calendarCentral,active:false,source_policy:null,date_only_deadline_policy:null}),fantasyData:async()=>({teams:[],lineups:[]}),...patch});const [result]=await runBatch({candidates:[calendarCentral],transport:f.transport,now});assert.equal(result.status,'HOLD')
   }
 })
+test('SFL D1 preview rejects unknown or nonzero opening scores like the native RPC',async()=>{
+  for(const candidate of [calendarCentral,calendarSouth])for(const scores of [[null,0],[0,null],[-1,0],[0,-1]]) {
+    const f=fixture({fantasyData:async()=>({teams:[],lineups:[]})});const original=f.transport.matches
+    f.transport.matches=async()=> (await original()).map(m=>m.id===12?{...m,home_goals:scores[0],away_goals:scores[1]}:m)
+    const [r]=await runBatch({candidates:[candidate],transport:f.transport,now})
+    assert.equal(r.status,'HOLD',`${candidate.slug}: ${JSON.stringify(scores)}`)
+    assert.match(r.reason,/First future round/)
+  }
+})
 test('apply refreshes state and reads back persisted activation',async()=>{
   const {transport,calls}=fixture();const [r]=await runBatch({candidates:[candidate],transport,now,apply:true})
   assert.equal(r.status,'ACTIVE');assert.equal(r.readback.prvi_fantasy_krog,2);assert.deepEqual(calls,[candidate.slug])
