@@ -1,7 +1,7 @@
-# Dnevne zgodbe (IG + FB Story) z Lukovo odobritvijo na Discordu
+# Dnevne zgodbe (IG + FB Story) z odobritvijo na Discordu
 
 SLF-38. Ločeno od samodejnih objav (`docs/objave.md`): objave v vir gredo po
-vetu same, **zgodbe gredo le po Lukovem kliku**.
+vetu same, **zgodbe gredo le po kliku v #kafana**.
 
 - Vsak dan **natanko tri** sličice po vrsti (1 kavelj, 2 vsebina, 3 poziv),
   1080 × 1920 **JPEG**, do 8 MB, vse različne (`preveriOkvirje`). Nalepk
@@ -14,7 +14,7 @@ vetu same, **zgodbe gredo le po Lukovem kliku**.
   kartico. `--suho --izhod mapa` le zapiše `kartica.json`, nič ne pošlje.
 - `zgodbe.mjs streznik` posluša `POST /discord/zgodbe` (Interactions Endpoint
   aplikacije). Vsak zahtevek: Ed25519 podpis Discorda, čas največ 5 minut
-  (`PODPIS_STAROST_S`), kanal `DISCORD_KAFANA_ID`, odobritelji `ZGODBE_ODOBRITELJI` (id-ji Discord Luke, Lovra in Nejca, z vejico);
+  (`PODPIS_STAROST_S`), kanal `DISCORD_KAFANA_ID` (odobri ali zavrne kdorkoli v #kafana; kdo, se zapiše);
   sicer zasebno sporočilo in nič. Id interakcije se zapomni (ponovitev nič ne
   naredi), gumb nosi različico (stara kartica nič ne naredi), `caka →
   objavljanje` je en zaporeden zapis (dvojni klik objavi enkrat). Pred objavo

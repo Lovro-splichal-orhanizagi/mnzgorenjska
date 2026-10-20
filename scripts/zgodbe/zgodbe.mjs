@@ -10,7 +10,7 @@
 // Ločeno od slff-objave (objave.mjs, objave v vir z vetom): svoje stanje, svoj ukaz.
 //
 // Okolje (strežnik, /opt/slff-objave/.env):
-//   DISCORD_ZGODBE_BOT_TOKEN, DISCORD_ZGODBE_PUBLIC_KEY (hex), DISCORD_KAFANA_ID, ZGODBE_ODOBRITELJI (id-ji Discord, z vejico: Luka, Lovro, Nejc),
+//   DISCORD_ZGODBE_BOT_TOKEN, DISCORD_ZGODBE_PUBLIC_KEY (hex), DISCORD_KAFANA_ID,
 //   ZGODBE_NACIN=dry_run|live (privzeto dry_run), ZGODBE_STANJE (JSON), ZGODBE_MEDIJI (mapa),
 //   ZGODBE_MEDIJI_URL (javni naslov mape), za live še META_PAGE_TOKEN, META_PAGE_ID, META_IG_USER_ID.
 //
@@ -131,7 +131,7 @@ export class Shramba {
 // --- kartica -----------------------------------------------------------------------
 
 const STATUS = {
-  caka: '🟡 **Pending approval**: Luka, Lovro or Nejc can approve',
+  caka: '🟡 **Pending approval**: anyone in #kafana can approve',
   objavljanje: '🔵 **Approved, publishing…**',
   objavljeno: '🟢 **Published**',
   suho: '⚪ **Approved (dry run)**: nothing was sent to Meta',
@@ -315,11 +315,8 @@ export async function obdelaj({ telo, glave, env, shramba, kljuc, zdaj = Date.no
   if (ns !== 'zgodba' || !['odobri', 'zavrni'].includes(dejanje)) return zasebno('Unknown button.')
   const uporabnik = i.member?.user?.id ?? i.user?.id
   if (i.channel_id !== env.DISCORD_KAFANA_ID) return zasebno('This card only works in #kafana.')
-  // Luka, Lovro in Nejc odločajo enako (Luka, 20. 10. 2026)
-  if (!(env.ZGODBE_ODOBRITELJI ?? '').split(',').map((x) => x.trim()).filter(Boolean).includes(uporabnik)) {
-    log(`klik zavrnjen: uporabnik ${uporabnik} ni med odobritelji (${dejanje} ${id})`)
-    return zasebno('Only Luka, Lovro or Nejc can approve or reject this Story. Nothing changed.')
-  }
+  // odloči kdorkoli v #kafana na strežniku SLFF (Luka, 20. 10. 2026); kdo, se zapiše v odlocil
+  if (!uporabnik) return zasebno('Not supported.')
 
   // Ena sprememba stanja: ponovljen id interakcije, napačna različica, že odločeno → nič.
   const izid = await shramba.spremeni(async (s) => {
@@ -429,7 +426,7 @@ export async function poslji({ sporocilo, datoteke, env, f = fetch }) {
 // --- ukazna vrstica -------------------------------------------------------------------
 
 function streznik(env, vrata) {
-  for (const k of ['DISCORD_ZGODBE_PUBLIC_KEY', 'DISCORD_ZGODBE_BOT_TOKEN', 'DISCORD_KAFANA_ID', 'ZGODBE_ODOBRITELJI', 'ZGODBE_STANJE', 'ZGODBE_MEDIJI']) {
+  for (const k of ['DISCORD_ZGODBE_PUBLIC_KEY', 'DISCORD_ZGODBE_BOT_TOKEN', 'DISCORD_KAFANA_ID', 'ZGODBE_STANJE', 'ZGODBE_MEDIJI']) {
     if (!env[k]) throw new Error(`manjka ${k}`)
   }
   if (env.ZGODBE_NACIN === 'live' && !(env.META_PAGE_TOKEN && env.META_PAGE_ID && env.META_IG_USER_ID && env.ZGODBE_MEDIJI_URL)) throw new Error('live brez META_* ali ZGODBE_MEDIJI_URL')
