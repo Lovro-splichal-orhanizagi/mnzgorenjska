@@ -27,7 +27,9 @@ on:
     # Ponedeljek do četrtek — enkrat, ob 5:17 UTC (7:17 po naše)
     - cron: '17 5 * * 1-4'
     # Rezerva: GitHub zagon ob obremenitvi tiho izpusti (13. 10. 2026 ga ni
-    # bilo). Posel `zacni` jo preskoči, če je današnji jutranji zagon že tekel.
+    # bilo). Posel `zacni` jo preskoči le, če je današnji zagon uspel ali še
+    # teče; padel ali preklican jutranji zagon rezerva ponovi (19. 10. 2026
+    # je jutranji padel, rezerva pa se je preskočila in cel dan ni bilo uvoza).
     - cron: '47 6 * * 1-4'
   workflow_dispatch:
 
@@ -53,7 +55,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Rezervni cron (06:47) teče le, če jutranjega (05:17) danes ni bilo.
+  # Rezervni cron (06:47) teče le, če danes ni bilo zagona, ki je uspel ali še
+  # čaka/teče (status != completed ali conclusion == success).
   zacni:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -71,7 +74,8 @@ jobs:
           if [ "$URNIK" = '47 6 * * 1-4' ]; then
             danes=$(date -u +%Y-%m-%dT04:00:00Z)
             prej=$(gh run list -R "$GITHUB_REPOSITORY" --workflow uvoz-zapisnikov.yml --limit 20 \
-              --json databaseId,createdAt --jq "[.[]|select(.databaseId != ${GITHUB_RUN_ID} and .createdAt >= \"$danes\")]|length")
+              --json databaseId,createdAt,status,conclusion \
+              --jq "[.[]|select(.databaseId != ${GITHUB_RUN_ID} and .createdAt >= \"$danes\" and (.status != \"completed\" or .conclusion == \"success\"))]|length")
             [ "$prej" -gt 0 ] && teci=false
           fi
           echo "Rezervni zagon potreben: $teci"
