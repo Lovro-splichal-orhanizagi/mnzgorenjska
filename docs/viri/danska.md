@@ -167,3 +167,16 @@ privzeto ceno 4.5, dokler ne naberejo minut.
 Uvoz (ena za drugo, brez baze ni bil pognan): `gh workflow run uvoz-lige.yml
 -f liga=dk-2-division -f arhiv=474114+498951+498952 -f cene=true`. Liga je
 ~70 strani tekem po 3 s, arhiv ~190.
+
+### Brønshøj: potrjeni vratar z dresom 20 (20. 10. 2026)
+
+DBU-jevo pravilo dresa 1 ne prepozna Lucasa Chang-Andersena, ki nastopa z 20.
+[Klubski intervju 27. 3. 2026](https://www.bronshojboldklub.dk/nyheder/jubilaeum-100-kampe-for-broenshoej-boldklub/)
+ga izrecno imenuje vratar; [starejši intervju](https://www.bronshojboldklub.dk/nyheder/divisionsholdet/optakt-pausen-er-slut/)
+potrdi celo ime. Migracija `20261020110000` popravi samo edinega igralca
+`Chang-Andersen Lucas` pri `Brønshøj` v še neaktivni `dk-3-division`
+(`dbu`, `508657`) iz ugibanja v `GK` / `klub`. Zaščitenih odločitev ne
+prepiše, igralcev ne aktivira in statistik tekem ne spreminja. To ni
+splošno pravilo za dres 20. Po uvozu novih zapisnikov preveri aktivnega
+vratarja vsakega trenutnega kluba in na neaktivni ligi znova izračunaj cene.
+Registracija kandidata v običajnem paketu sama lige ne vklopi.

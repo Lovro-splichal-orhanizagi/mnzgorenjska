@@ -54,6 +54,10 @@ test('HLF registry binds only the reviewed production tuples and its public-brow
   assert.throws(()=>validateSelection(registry,['ro-liga3-s1']))
   assert.equal(registry.source_contracts.hlf.document,'docs/viri/romunija.md')
 })
+test('Danish third division registration binds the reviewed production tuple',()=>{
+  const dk=validateSelection(registry,['dk-3-division'])
+  assert.deepEqual(dk,[{id:1051,slug:'dk-3-division',source:'dbu',source_league_code:'508657'}])
+})
 test('scope digest binds exact commit and selected candidate tuple',()=>{
   const a=approvalDigest('a'.repeat(40),[candidate]);assert.match(a,/^[a-f0-9]{64}$/)
   assert.notEqual(a,approvalDigest('b'.repeat(40),[candidate]))
