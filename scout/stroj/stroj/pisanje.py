@@ -2,7 +2,9 @@
 vidi napol izračunanih števil (spec 4)."""
 import json
 import math
+from collections.abc import Iterable, Iterator
 
+import numpy as np
 import psycopg
 from psycopg.types.json import Jsonb
 
@@ -18,6 +20,7 @@ STOLPCI = {
     "vrzeli": ["team_id", "competition_id", "skupina", "vrsta", "player_id", "vrednost"],
 }
 OHRANI_OBJAVLJENIH = 3
+KOS = 20_000  # vrstic, ki jih vrstice() naenkrat pretvori v Pythonove objekte
 
 
 def _vrednost(v):
@@ -36,7 +39,16 @@ def _json(v) -> Jsonb:
     return Jsonb(_vrednost(v), dumps=lambda o: json.dumps(o, allow_nan=False))
 
 
-def zapisi(conn: psycopg.Connection, model: dict, vrstice: dict[str, list[tuple]]) -> int:
+def vrstice(t: dict[str, np.ndarray], stolpci: list[str], izbor: np.ndarray | None = None) -> Iterator[tuple]:
+    """Vrstice tabele stolpcev (le `izbor` indeksov, če je dan), po kosih: v pomnilniku
+    je naenkrat le en kos Pythonovih objektov, ne vse vrstice."""
+    izbor = np.arange(len(t[stolpci[0]])) if izbor is None else izbor
+    for z in range(0, len(izbor), KOS):
+        i = izbor[z:z + KOS]
+        yield from zip(*(t[c][i].tolist() for c in stolpci))
+
+
+def zapisi(conn: psycopg.Connection, model: dict, izhod: dict[str, Iterable[tuple]]) -> int:
     with conn.transaction():
         model_id = conn.execute(
             "insert into scout.modeli (leto, backtest, parametri, objavljen) values (%s, %s, %s, %s) returning id",
@@ -49,7 +61,7 @@ def zapisi(conn: psycopg.Connection, model: dict, vrstice: dict[str, list[tuple]
                 s = ", ".join(["model_id", *stolpci])
                 cur.execute(f"create temp table _nova (like scout.{tabela}) on commit drop")
                 with cur.copy(f"copy _nova ({s}) from stdin") as cp:
-                    for r in vrstice.get(tabela, []):
+                    for r in izhod.get(tabela, []):
                         cp.write_row((model_id, *map(_vrednost, r)))
                 cur.execute(f"insert into scout.{tabela} ({s}) select {s} from _nova")
                 cur.execute("drop table _nova")
