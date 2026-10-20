@@ -9,6 +9,7 @@ import argparse
 import os
 import time
 import traceback
+from collections import deque
 from collections.abc import Iterator
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -115,6 +116,9 @@ def zagon(conn: psycopg.Connection, pisi: bool, sili_moc: bool) -> int | None:
     }
     print(f"Stroj: {len(sezone['player_id'])} vrstic, {len(t['player_id'])} izbranih, backtest {bt}", flush=True)
     if not pisi:
+        # izračunaj vse kot pri pisanju (tudi podobne), da suhi tek pokaže pravi vrh pomnilnika
+        for vrstice_tabele in izhod.values():
+            deque(vrstice_tabele, maxlen=0)
         _pregled(conn, t, idx)
         return None
     model_id = zapisi(conn, {"leto": int(sezone["leto"].max()), "backtest": bt,
