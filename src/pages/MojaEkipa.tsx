@@ -57,6 +57,7 @@ import FotoIgralca from '../components/FotoIgralca'
 import Odstevanje from '../components/Odstevanje'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
 import InfoIgralca from '../components/InfoIgralca'
+import Namig from '../components/Namig'
 import { dopolniKader, predlagajKader } from '../lib/predlogKadra'
 import {
   namigiZaPrestope,
@@ -2134,8 +2135,11 @@ export default function MojaEkipa() {
               {/* Pripomočki (Klop+ in Wildcard) — enkratni bonusi. */}
               <div className="space-y-1.5 py-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="min-w-0 flex-1 font-semibold text-slate-200">
+                  <h3 className="flex min-w-0 flex-1 items-center gap-2 font-semibold text-slate-200">
                     {t('mojaEkipa.pripomocki.klopPlusNaslov')}
+                    <Namig naslov={t('mojaEkipa.pripomocki.klopPlusNaslov')}>
+                      {t('mojaEkipa.pripomocki.klopPlusOpis')}
+                    </Namig>
                   </h3>
                   {klopPlus &&
                     (!lahkoUrejasPripomocek(krogPripomocka, tekmovanjeId, zdaj) ? (
@@ -2197,13 +2201,15 @@ export default function MojaEkipa() {
                     </button>
                   </div>
                 )}
-                <p className="text-xs text-slate-500">{t('mojaEkipa.pripomocki.klopPlusOpis')}</p>
               </div>
 
               <div className="space-y-1.5 py-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="min-w-0 flex-1 font-semibold text-slate-200">
+                  <h3 className="flex min-w-0 flex-1 items-center gap-2 font-semibold text-slate-200">
                     {t('mojaEkipa.pripomocki.wildcardNaslov')}
+                    <Namig naslov={t('mojaEkipa.pripomocki.wildcardNaslov')}>
+                      {t('mojaEkipa.pripomocki.wildcardOpis')}
+                    </Namig>
                   </h3>
                   {wildcard ? (
                     !lahkoUrejasPripomocek(krogWildcard, tekmovanjeId, zdaj) ? (
@@ -2260,36 +2266,41 @@ export default function MojaEkipa() {
                     )}
                   </>
                 )}
-                <p className="text-xs text-slate-500">{t('mojaEkipa.pripomocki.wildcardOpis')}</p>
               </div>
 
-              {/* Pravilo samodejnih menjav — na igrišču ostane le napis "Klop". */}
-              <p className="py-3 text-xs text-slate-500">
-                <strong className="text-slate-300">{t('mojaEkipa.igrisce.klop')}:</strong>{' '}
-                {t('mojaEkipa.igrisce.klopOpis')}
-              </p>
-
-              {/* Kaj se pravzaprav zgodi ob shranjevanju. */}
-              <p className="py-3 text-xs leading-snug text-slate-500">
-                {tx(
-                  naslednjiKrog?.deadline_at ? 'mojaEkipa.status.kajPomeniRok' : 'mojaEkipa.status.kajPomeni',
-                  {
-                    krog: naslednjiKrog?.number,
-                    rok: naslednjiKrog?.deadline_at ? izpisRoka(naslednjiKrog.deadline_at) : null,
-                  },
-                  { krepko: (b) => <strong className="text-slate-300">{b}</strong> },
+              {/* Pravila (menjave s klopi, kaj pomeni Shrani, ločena liga) — na strani
+                  le beseda z "i", besedilo se odpre v oknu. */}
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-3 text-xs text-slate-400">
+                <span className="inline-flex items-center gap-1.5">
+                  {t('mojaEkipa.igrisce.klop')}
+                  <Namig naslov={t('mojaEkipa.igrisce.klop')}>{t('mojaEkipa.igrisce.klopOpis')}</Namig>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  {t('mojaEkipa.povzetek.shraniEkipo')}
+                  <Namig naslov={t('mojaEkipa.povzetek.shraniEkipo')}>
+                    {tx(
+                      naslednjiKrog?.deadline_at ? 'mojaEkipa.status.kajPomeniRok' : 'mojaEkipa.status.kajPomeni',
+                      {
+                        krog: naslednjiKrog?.number,
+                        rok: naslednjiKrog?.deadline_at ? izpisRoka(naslednjiKrog.deadline_at) : null,
+                      },
+                      { krepko: (b) => <strong className="text-slate-100">{b}</strong> },
+                    )}
+                  </Namig>
+                </span>
+                {tekmovanje?.prvi_fantasy_krog != null && tekmovanje.prvi_fantasy_krog > 1 && (
+                  <span className="inline-flex items-center gap-1.5">
+                    {tekmovanje.short_name ?? tekmovanje.name}
+                    <Namig naslov={tekmovanje.short_name ?? tekmovanje.name}>
+                      {tx(
+                        'mojaEkipa.locenaLiga',
+                        { liga: tekmovanje.short_name, krog: tekmovanje.prvi_fantasy_krog },
+                        { liga: (b) => <strong className="text-slate-100">{b}</strong> },
+                      )}
+                    </Namig>
+                  </span>
                 )}
-              </p>
-
-              {tekmovanje?.prvi_fantasy_krog != null && tekmovanje.prvi_fantasy_krog > 1 && (
-                <p className="py-3 text-xs text-slate-500">
-                  {tx(
-                    'mojaEkipa.locenaLiga',
-                    { liga: tekmovanje.short_name, krog: tekmovanje.prvi_fantasy_krog },
-                    { liga: (b) => <strong className="text-slate-300">{b}</strong> },
-                  )}
-                </p>
-              )}
+              </div>
 
               {/* Zgodovina postav — pregled preteklih krogov. */}
               {posnetkiPoKrogih.length > 0 && (

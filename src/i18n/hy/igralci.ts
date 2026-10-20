@@ -164,6 +164,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
   },
   seznam: {
+    leZaRegistrirane:
+      'Խաղացողների ցանկը տեսնում են միայն գրանցված օգտատերերը։ <prijava>Մուտք գործիր կամ ստեղծիր հաշիվ</prijava>, անվճար։',
     naslov: 'Խաղացողներ',
     naslovZLigo: 'Խաղացողներ · {liga}',
     stolpci: {
@@ -207,6 +209,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     razvrsti: 'Դասավորել',
   },
   profil: {
+    leZaRegistrirane:
+      'Խաղացողի վիճակագրությունը տեսնում են միայն գրանցված օգտատերերը։ <prijava>Մուտք գործիր կամ ստեղծիր հաշիվ</prijava>, անվճար։',
     naslov: 'Խաղացող',
     hvalaGlas: 'Շնորհակալություն, քո հաղորդումը գրանցված է։ Երբ բավականաչափ համընկնող ձայներ հավաքվեն, դիրքը կուղղվի։',
     niIgralca: 'Խաղացողը չի գտնվել։',

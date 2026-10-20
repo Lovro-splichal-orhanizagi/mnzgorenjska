@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
+import { useAuth } from '../lib/useAuth'
+import { povezavaNaPrijavo } from '../lib/prijava'
+import GumbGoogle from '../components/GumbGoogle'
 import { imeZveze } from '../components/VirPodatkov'
 import { supabase } from '../lib/supabase'
 import { useOdsotni, opisOdsotnosti } from '../lib/odsotni'
@@ -207,6 +211,11 @@ async function naloziSezono(
 export default function Igralci() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
   useNaslov(zDrzavo(tekmovanje), t('igralci.seznam.naslov'))
+  // Seznam igralcev je le za prijavljene (odločitev lastnika 20. 10. 2026):
+  // gost vidi naslov in povabilo k registraciji, ki ga po prijavi vrne sem.
+  const { session, loading: nalaganjeSeje } = useAuth()
+  const lokacija = useLocation()
+  const gost = !nalaganjeSeje && !session
   const odsotni = useOdsotni(tekmovanjeId)
   const zveza = imeZveze(tekmovanje)
   const [igralci, setIgralci] = useState<IgralecSezone[]>([])
@@ -436,9 +445,31 @@ export default function Igralci() {
         </p>
       </div>
 
-      {/* Vrh lige: kratke lestvice v eni vrstici (vrtiljak), cela tabela je
-          spodaj. Igralec kroga le, če je zadnji krog iz izbrane sezone. */}
-      <PokritostStatistike podatki={sezonaPodatki} />
+      {gost ? (
+        <div className="kartica max-w-sm space-y-3 p-4 text-sm text-slate-300">
+          <p>
+            {tx(
+              'igralci.seznam.leZaRegistrirane',
+              {},
+              {
+                prijava: (b) => (
+                  <Link
+                    to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
+                    className="font-semibold text-gnl-300 underline"
+                  >
+                    {b}
+                  </Link>
+                ),
+              },
+            )}
+          </p>
+          <GumbGoogle nazaj={lokacija.pathname + lokacija.search} />
+        </div>
+      ) : nalaganjeSeje ? null : (
+        <>
+          {/* Vrh lige: kratke lestvice v eni vrstici (vrtiljak), cela tabela je
+              spodaj. Igralec kroga le, če je zadnji krog iz izbrane sezone. */}
+          <PokritostStatistike podatki={sezonaPodatki} />
       {/* Igralec sezone: največ točk v ligi, poudarjen nad vrtiljakom. */}
       {vrh.tocke[0] && <PrviIgralec igralec={vrh.tocke[0]} sezona={sezona} />}
 
@@ -701,6 +732,8 @@ export default function Igralci() {
         <p className="text-center text-xs text-slate-500">
           {t('igralci.seznam.prikazaniVsi', { igralci: mnozina(vidni.length, IGRALCI) })}
         </p>
+      )}
+        </>
       )}
 
       <Sponzor kje="igralci" />

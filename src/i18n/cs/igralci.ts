@@ -165,6 +165,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
   },
   seznam: {
+    leZaRegistrirane:
+      'Seznam hráčů vidí jen registrovaní. <prijava>Přihlas se nebo si vytvoř účet</prijava>, zdarma.',
     naslov: 'Hráči',
     naslovZLigo: 'Hráči: {liga}',
     stolpci: {
@@ -210,6 +212,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     razvrsti: 'Seřadit',
   },
   profil: {
+    leZaRegistrirane:
+      'Statistiky hráče vidí jen registrovaní. <prijava>Přihlas se nebo si vytvoř účet</prijava>, zdarma.',
     naslov: 'Hráč',
     hvalaGlas: 'Díky, hlas je zaznamenaný. Jakmile se sejde dost stejných, pozice se opraví.',
     niIgralca: 'Hráč neexistuje.',
