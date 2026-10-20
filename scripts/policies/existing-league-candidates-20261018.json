@@ -33,6 +33,10 @@
     "isthmian": {
       "document": "docs/viri/anglija.md",
       "permission": "Existing public, uncredentialed Streamline JSON adapter; no explicit league permission recorded. Courtesy notices to all three leagues were remotely accepted on 20 October 2026; courtesy is not permission. Use the existing adapter with its tenant header, 3-second pacing and stop on withdrawal, login, challenge/CAPTCHA or HTTP 401/403/429. No retries or alternate access after refusal."
+    },
+    "lowland": {
+      "document": "docs/viri/skotska.md",
+      "permission": "Lovro obtained written permission for capture in October 2026. Use only the existing public Lowland Match Centre adapter with its 3-second pacing. Stop on withdrawal, login, challenge/CAPTCHA or HTTP 401/403/429; do not retry or bypass refusal."
     }
   },
   "candidates": [
@@ -497,6 +501,18 @@
       "slug": "gb-sfl-premier-south",
       "source": "isthmian",
       "source_league_code": "sfl/69d0bd99b616bafb97331d3f/2026-27"
+    },
+    {
+      "id": 898,
+      "slug": "gb-lowland-west",
+      "source": "lowland",
+      "source_league_code": "slfl/2026-2027/54193424"
+    },
+    {
+      "id": 897,
+      "slug": "gb-lowland-east",
+      "source": "lowland",
+      "source_league_code": "slfl/2026-2027/54193157"
     }
   ]
 }

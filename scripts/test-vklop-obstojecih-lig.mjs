@@ -75,9 +75,20 @@ test('English Streamline candidates bind all reviewed tuples and reject unknown 
   ]
   const selected=validateSelection(registry,expected.map(([,slug])=>slug))
   assert.deepEqual(selected.map(({id,slug,source,source_league_code})=>[id,slug,source,source_league_code]),expected)
-  assert.equal(registry.candidates.length,65+12)
+  assert.equal(registry.candidates.filter(c=>c.source==='isthmian').length,12)
   assert.equal(registry.source_contracts.isthmian.document,'docs/viri/anglija.md')
   assert.throws(()=>validateSelection(registry,['gb-isthmian-unknown']))
+})
+test('Lowland registrations bind both reviewed production tuples and reject unknown leagues',()=>{
+  const expected=[
+    {id:898,slug:'gb-lowland-west',source:'lowland',source_league_code:'slfl/2026-2027/54193424'},
+    {id:897,slug:'gb-lowland-east',source:'lowland',source_league_code:'slfl/2026-2027/54193157'},
+  ]
+  const lowland=validateSelection(registry,['gb-lowland-west','gb-lowland-east'])
+  assert.deepEqual(lowland,[expected[1],expected[0]])
+  assert.deepEqual(registry.candidates.filter(c=>c.source==='lowland'),expected)
+  assert.equal(registry.source_contracts.lowland.document,'docs/viri/skotska.md')
+  assert.throws(()=>validateSelection(registry,['gb-lowland-unknown']))
 })
 test('scope digest binds exact commit and selected candidate tuple',()=>{
   const a=approvalDigest('a'.repeat(40),[candidate]);assert.match(a,/^[a-f0-9]{64}$/)

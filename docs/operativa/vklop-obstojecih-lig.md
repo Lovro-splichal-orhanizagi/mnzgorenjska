@@ -6,13 +6,12 @@ varovalko `preveri_vklop_lige`. Predogled in vklop ne uvažata, ne bereta ponudn
 pozicij, urnikov ali zgodovinske politike. Ločeni `refresh=true` uporabi
 omejeno EPS/HLF dohitevanje, opisano spodaj. Noben način ne pošilja sporočil. Nemčija, Španija in Hrvaška imajo svoje postopke.
 
-Obseg je 64 že uvoženih kandidatov iz branja produkcije 18.–20. 10. 2026,
-izrecno naštetih v
+Obseg sestavljajo izrecno pregledani že uvoženi kandidati, našteti v
 `scripts/policies/existing-league-candidates-20261018.json`. Register je
 inventar kandidatov, ne odobritev pripravljenosti. Vsaka vrstica veže ID,
 slug, vir in šifro tekoče lige; sprememba teh podatkov zahteva pregled.
 Opombe o pravicah navajajo dejansko obstoječe pogodbe virov, tudi čakajoča
-soglasja in omejitve podatkov. Zapisano dovoljenje za NCEL, DBU ter
+soglasja in omejitve podatkov. Zapisano dovoljenje za NCEL, DBU, Lowland ter
 Atene/Evbejo ne dovoljuje obhajanja zaščit. Pri drugih navedenih virih
 ostane veljavna obstoječa javna pot brez zabeleženega izrecnega dovoljenja.
 Znana prepoved ali umik dovoljenja izključi zadevne sluge iz predloga;
