@@ -8,7 +8,6 @@ import { join } from 'node:path'
 import { velikostJpeg, preveriOkvirje, verzija, kartica, predlozi, obdelaj, Shramba, zakrij, PODPIS_STAROST_S } from './zgodbe.mjs'
 
 const LUKA = '111111111111111111'
-const LOVRO = '222222222222222222'
 const KAFANA = '333333333333333333'
 
 /** Najmanjši JPEG z glavo SOF0 (dovolj za preverbo velikosti); `seme` da različno vsebino. */
@@ -56,7 +55,7 @@ async function okolje(nacin = 'dry_run') {
   for (const i of [1, 2, 3]) { const p = join(mapa, `f${i}.jpg`); await writeFile(p, jpeg(1080, 1920, i)); poti.push(p) }
   const env = {
     ZGODBE_MEDIJI: join(mapa, 'mediji'), ZGODBE_STANJE: join(mapa, 'stanje.json'), ZGODBE_NACIN: nacin,
-    ZGODBE_ODOBRITELJI: `${LUKA}, ${LOVRO}`, DISCORD_KAFANA_ID: KAFANA, DISCORD_ZGODBE_BOT_TOKEN: 'BOTZETON',
+    DISCORD_KAFANA_ID: KAFANA, DISCORD_ZGODBE_BOT_TOKEN: 'BOTZETON',
     ZGODBE_MEDIJI_URL: 'https://slff.eu/objave-mediji/zgodbe', META_PAGE_TOKEN: 'SKRIVNO', META_PAGE_ID: '900', META_IG_USER_ID: '800',
   }
   const shramba = new Shramba(env.ZGODBE_STANJE)
@@ -141,31 +140,12 @@ test('PING dobi PONG', async () => {
   assert.deepEqual(r.json, { type: 1 })
 })
 
-test('Lovro (odobritelj) odobri kot Luka', async () => {
+test('kdorkoli v #kafana odobri; zapiše se, kdo', async () => {
   const o = await okolje()
-  await poslji(o, klik(o.z, { uporabnik: LOVRO }))
+  await poslji(o, klik(o.z, { uporabnik: '333333333333333333' }))
   const z = await o.shramba.beri(o.z.id)
   assert.equal(z.stanje, 'suho')  // dry_run: odobreno, ne objavljeno
-  assert.equal(z.odlocil, LOVRO)
-})
-
-test('kdorkoli zunaj odobriteljev: zasebno sporočilo, nič se ne spremeni', async () => {
-  const o = await okolje()
-  for (const d of ['odobri', 'zavrni']) {
-    const { r, meta } = await poslji(o, klik(o.z, { uporabnik: '333333333333333333', dejanje: d }))
-    assert.equal(r.json.type, 4)
-    assert.equal(r.json.data.flags, 64)
-    assert.match(r.json.data.content, /Only Luka, Lovro or Nejc/)
-    assert.equal(meta.klici.length, 0)
-  }
-  assert.equal((await o.shramba.beri(o.z.id)).stanje, 'caka')
-})
-
-test('brez nastavljenih ZGODBE_ODOBRITELJI nihče ne odobri', async () => {
-  const o = await okolje()
-  delete o.env.ZGODBE_ODOBRITELJI
-  const { r } = await poslji(o, klik(o.z))
-  assert.match(r.json.data.content, /Only Luka, Lovro or Nejc/)
+  assert.equal(z.odlocil, '333333333333333333')
 })
 
 test('drug kanal: nič', async () => {
