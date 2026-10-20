@@ -19,3 +19,9 @@ test('MFA actual SQL rollback contract',{skip:process.env.MFA_HISTORY_DISPOSABLE
 test('MFA preview checks retained substitute appearances before authorizing activation',()=>{
  assert.match(sql(),/prices->>'nastopov_s_klopi'\)::int>0/)
 })
+test('shared generic SQL positives explicitly exclude dedicated MFA installer',()=>{
+ const shared=readFileSync(new URL('../supabase/tests/historical-statistics.sql',import.meta.url),'utf8')
+ assert.match(shared,/for p in select \* from private_historical_statistics\.policies where document->>'provider'in\('dfb','fcf'\)/)
+ const dedicated=readFileSync(new URL('../supabase/tests/mfa-reviewed-history.sql',import.meta.url),'utf8')
+ assert.match(dedicated,/generic MFA policy installer unexpectedly accepted/)
+})

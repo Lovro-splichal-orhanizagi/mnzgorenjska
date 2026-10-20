@@ -165,6 +165,11 @@ jobs:
       - run: npm ci --ignore-scripts
       # Zagon same baze preveri celotno verigo migracij na praznem Postgresu.
       - run: npx --yes supabase@2.117.0 db start
+      - name: MFA reviewed two-report cleanup and release rollback regression
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          MFA_HISTORY_DISPOSABLE_TEST: '1'
+        run: node --test scripts/test-mfa-reviewed-history-sql.mjs
       - name: Ordinary match writes under the real importer role
         run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/match-result-check-acl.sql
       - name: Guarded cross-club identity correction
@@ -214,11 +219,6 @@ jobs:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
           FCF_HISTORY_DISPOSABLE_TEST: '1'
         run: node --test scripts/test-fcf-six-native-sql.mjs
-      - name: MFA reviewed two-report cleanup and release rollback regression
-        env:
-          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
-          MFA_HISTORY_DISPOSABLE_TEST: '1'
-        run: node --test scripts/test-mfa-reviewed-history-sql.mjs
       - name: Reviewed English source-calendar native regression
         run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/sfl-d1-calendar.sql
       - run: npm run test:varnost

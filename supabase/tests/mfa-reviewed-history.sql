@@ -62,6 +62,23 @@ do $$declare t record;i int;pid bigint;tid bigint;home bigint;away bigint;mid bi
 end$$;
 -- Tarxien is archive-only and must not enter the current selectable-club check.
 update players set active=false where competition_id=971 and team_id=10678;
+-- The shared marker reader/triggers support MFA, but its generic installer
+-- remains intentionally closed. The dedicated native cleanup is the only writer.
+savepoint generic_mfa_refusal;
+update competitions set source_policy='mt-mfa-reviewed-history-v1',prvi_fantasy_krog=9 where id=971;
+do $$declare p record;begin
+ select *into p from private_historical_statistics.policies where id='mt-premier-reviewed-history-2026-10-20-v1';
+ begin
+  perform public.apply_historical_statistics_policy(971,p.id,p.policy_sha256,p.document->'entries');
+ exception when others then
+  if sqlerrm='HISTORICAL_POLICY: source country differs'then return;end if;
+  raise;
+ end;
+ raise exception 'MFA TEST: generic MFA policy installer unexpectedly accepted';
+end$$;
+select pg_temp.mfa_assert(not exists(select 1 from private_historical_statistics.installed_policies where competition_id=971)and not exists(select 1 from private_historical_statistics.markers where competition_id=971),'generic refusal left no partial MFA binding');
+rollback to generic_mfa_refusal;
+
 -- Exercise preview's own bench gate, not just the final generic activation
 -- trigger. Capture/cleanup the no-bench variant canonically, then roll it back.
 savepoint no_retained_bench;
