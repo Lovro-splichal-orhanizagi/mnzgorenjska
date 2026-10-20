@@ -2,6 +2,9 @@
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 
+const MFA_POLICY_ID = 'mt-premier-reviewed-history-2026-10-20-v1'
+const mfaEntrySeason = (policy,entry) => policy.id === MFA_POLICY_ID ? entry.season : policy.season
+const exactMfaTuple = competition => competition?.id===971 && competition?.source_league_code==='58539/2027'
 const SHA256 = /^[a-f0-9]{64}$/
 const text = value => typeof value === 'string' && value.trim().length > 0
 const dateOnly = value => {
@@ -35,6 +38,8 @@ export function validateHistoricalStatisticsRegistry(registry) {
     if ('approvedAt' in policy) fail('policy must record evidence time, not an unknown approval send time')
     if (!Array.isArray(policy.entries) || !policy.entries.length) fail('empty policy entries')
     for (const entry of policy.entries) {
+      if ('season' in entry && !(policy.id === MFA_POLICY_ID && policy.provider === 'mfa' && policy.competitionSlug === 'mt-premier' && policy.sourcePolicy === 'mt-mfa-reviewed-history-v1' && /^\d{4}\/\d{2}$/.test(entry.season))) fail('unsupported entry season override')
+      if (policy.provider === 'mfa' && (policy.id !== MFA_POLICY_ID || !['2025/26','2026/27'].includes(entry.season))) fail('unsupported MFA entry season')
       for (const field of ['sourceMatchId', 'sourceCompetitionId', 'homeSourceClubId', 'awaySourceClubId', 'sourceUrl', 'reasonCode']) if (!text(entry?.[field])) fail(`invalid entry ${field}`)
       if (policy.provider === 'fcf') for (const field of ['homeSourceCategoryId', 'awaySourceCategoryId']) if (!text(entry[field])) fail(`invalid entry ${field}`)
       if (entry.sourcePhase !== null && !text(entry.sourcePhase)) fail('invalid entry sourcePhase')
@@ -90,11 +95,12 @@ export function classifyHistoricalStatistics({ competition, fixture, rawSha256, 
   const reviewed = registry.policies.find(known => known.id === candidate.id)
   if (!reviewed || historicalStatisticsPolicySha256(candidate) !== historicalStatisticsPolicySha256(reviewed)) throw new Error('historical policy: unreviewed policy')
   if (competition?.slug !== reviewed.competitionSlug || competition?.source !== reviewed.provider || competition?.source_policy !== reviewed.sourcePolicy) throw new Error('historical policy: competition/provider/policy binding differs')
+  if(reviewed.provider==='mfa'&&!exactMfaTuple(competition))throw new Error('historical policy: exact MFA native competition/code binding differs')
   const exception = reviewed.entries.find(entry => entry.sourceMatchId === fixture?.sourceMatchId)
   if (!exception) return { kind: 'normal' }
   const identityFields = reviewed.provider === 'fcf' ? [...IDENTITY_FIELDS, 'homeSourceCategoryId', 'awaySourceCategoryId'] : IDENTITY_FIELDS
   for (const field of identityFields) if (fixture[field] !== exception[field]) throw new Error(`historical fixture identity differs: ${field}`)
-  if (fixture.season !== reviewed.season) throw new Error('historical fixture identity differs: season')
+  if (fixture.season !== mfaEntrySeason(reviewed,exception)) throw new Error('historical fixture identity differs: season')
   if (!SHA256.test(rawSha256 ?? '') || rawSha256 !== exception.rawSha256) throw new Error('historical raw SHA256 differs from approved packet')
   if (!dateOnly(competition.firstFantasyPlayedOn) || exception.playedOn >= competition.firstFantasyPlayedOn) throw new Error('historical policy: exception must be strictly prelaunch; valid first fantasy date required')
   return { kind: 'unavailable_historical', exception, policySha256: historicalStatisticsPolicySha256(reviewed) }
@@ -109,6 +115,7 @@ export function validateInstalledHistoricalStatisticsMarkers({competition,bindin
     return null
   }
   if(competition.source!==policy.provider || competition.source_policy!==policy.sourcePolicy)fail('competition/provider/policy binding differs')
+  if(policy.provider==='mfa'&&!exactMfaTuple(competition))fail('exact MFA native competition/code binding differs')
   const sha=historicalStatisticsPolicySha256(policy)
   if(binding?.installed!==true || binding.policyId!==policy.id || binding.policySha256!==sha)fail('complete installed policy binding required before provider traversal')
   if(!dateOnly(binding.firstFantasyPlayedOn) || (competition.firstFantasyPlayedOn!=null && competition.firstFantasyPlayedOn!==binding.firstFantasyPlayedOn))fail('first fantasy date binding differs')
@@ -119,10 +126,10 @@ export function validateInstalledHistoricalStatisticsMarkers({competition,bindin
     const entry=policy.entries.find(e=>e.sourceMatchId===marker?.sourceMatchId)
     if(!entry || nativeIDs.has(marker.sourceMatchId))fail('unknown or duplicate source identity')
     nativeIDs.add(marker.sourceMatchId)
-    const expectedReportID=policy.provider==='dfb'?`de-dfb-${entry.sourceMatchId}`:policy.provider==='fcf'?`es${entry.sourceMatchId}`:entry.sourceMatchId
+    const expectedReportID=policy.provider==='dfb'?`de-dfb-${entry.sourceMatchId}`:policy.provider==='fcf'?`es${entry.sourceMatchId}`:policy.provider==='mfa'?`mt${entry.sourceMatchId}`:entry.sourceMatchId
     if(marker.reportId!==expectedReportID || marker.policyId!==policy.id || marker.policySha256!==sha || marker.rawSha256!==entry.rawSha256)fail('marker report/policy/raw binding differs')
     const {rawSha256,reasonCode,...identity}=entry
-    const fixture={...identity,season:policy.season}
+    const fixture={...identity,season:mfaEntrySeason(policy,entry)}
     if(historicalStatisticsPolicySha256(marker.fixture)!==historicalStatisticsPolicySha256(fixture))fail('fixture binding differs')
     if(entry.playedOn>=binding.firstFantasyPlayedOn)fail('marker is not strictly prelaunch')
     if(marker.statisticsStatus!=='unavailable_historical'||marker.importedAt!==null||marker.individualRowCount!==0)fail('unavailable marker contains individual/imported statistics')

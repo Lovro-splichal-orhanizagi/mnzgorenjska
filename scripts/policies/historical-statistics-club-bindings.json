@@ -510,6 +510,70 @@
           "rawSha256": "123d7023ff8442359d925630eab0b89f6556306e13af08eccbe9886a94659b9b"
         }
       ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39611",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Tarxien Rainbows"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "52581524",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/52581524",
+          "rawSha256": "a81da11a4fdad7c6cca90acc28e02248566ae044653b905435acb2f0fbbaa949"
+        }
+      ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39606",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Mosta"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "52581524",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/52581524",
+          "rawSha256": "a81da11a4fdad7c6cca90acc28e02248566ae044653b905435acb2f0fbbaa949"
+        }
+      ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39636",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Birkirkara"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "53142122",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/53142122",
+          "rawSha256": "dc0d717b5be05389e72f081df04bac8ee93fe93384ff31f51817d6faaf0b5399"
+        }
+      ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39615",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Gzira United"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "53142122",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/53142122",
+          "rawSha256": "dc0d717b5be05389e72f081df04bac8ee93fe93384ff31f51817d6faaf0b5399"
+        }
+      ]
     }
   ]
 }

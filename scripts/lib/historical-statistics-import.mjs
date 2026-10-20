@@ -1,3 +1,4 @@
+import {assertMfaReportTiming} from '../viri/mfa-report-validation.mjs'
 import {FCF_SIX_SOURCE_POLICY,getFcfSixPolicy,validateFcfSixInstalledMarkers,classifyFcfSixHistoricalStatistics} from '../fcf-six-historical-policy.mjs'
 import {validateHnsWomenClubBindings} from '../viri/hns-zenske-binding.mjs'
 import {assertHnsWomenOfflineAuthority} from '../hr-zenske-offline.mjs'
@@ -27,8 +28,9 @@ export async function loadHistoricalStatisticsImportContext(db,original,{sourceO
 export function assertHistoricalReportImportable({competition,report}) {
   if(report?.statisticsStatus!=null && report.statisticsStatus!=='available')throw Error('historical import: unavailable/unknown statistics status cannot derive individual rows')
   if(report?.historicalStatistics!=null || !report?.z || typeof report.z!=='object')throw Error('historical import: unavailable or missing normal report body')
+  if(competition.source==='mfa')assertMfaReportTiming(report.z)
   const id=String(report.id)
-  const sourceMatchId=competition.source==='dfb'?id.replace(/^de-dfb-/,''):competition.source==='fcf'?id.replace(/^es/,''):id
+  const sourceMatchId=competition.source==='dfb'?id.replace(/^de-dfb-/,''):competition.source==='fcf'?id.replace(/^es/,''):competition.source==='mfa'?id.replace(/^mt/,''):id
   // An accidentally leaked installed ID or wrong competition must fail before any appearances/prices.
   if(competition.source_policy===FCF_SIX_SOURCE_POLICY){if(getFcfSixPolicy(competition.slug)?.entries.some(e=>e.sourceMatchId===sourceMatchId))throw Error('six historical import: installed unavailable report cannot derive rows');classifyFcfSixHistoricalStatistics({competition,id:sourceMatchId,html:null})}else classifyHistoricalStatistics({competition,fixture:{sourceMatchId}})
 }

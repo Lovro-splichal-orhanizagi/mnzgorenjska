@@ -4,11 +4,11 @@ import {readFileSync} from 'node:fs'
 import {validateInstalledHistoricalStatisticsMarkers} from './historical-statistics-policy.mjs'
 import {historicalStatisticsPolicySha256} from './historical-statistics-policy.mjs'
 const policies=JSON.parse(readFileSync(new URL('../policies/historical-statistics-exclusions.json',import.meta.url))).policies
-const reportId=(p,e)=>p.provider==='dfb'?`de-dfb-${e.sourceMatchId}`:p.provider==='fcf'?`es${e.sourceMatchId}`:e.sourceMatchId
-const competition=p=>({slug:p.competitionSlug,source:p.provider,source_policy:p.sourcePolicy})
+const reportId=(p,e)=>p.provider==='dfb'?`de-dfb-${e.sourceMatchId}`:p.provider==='fcf'?`es${e.sourceMatchId}`:p.provider==='mfa'?`mt${e.sourceMatchId}`:e.sourceMatchId
+const competition=p=>({...(p.provider==='mfa'?{id:971,source_league_code:'58539/2027'}:{}),slug:p.competitionSlug,source:p.provider,source_policy:p.sourcePolicy})
 const binding=p=>({installed:true,policyId:p.id,policySha256:historicalStatisticsPolicySha256(p),firstFantasyPlayedOn:'2026-10-25',markers:p.entries.map((e,i)=>{
  const {rawSha256,reasonCode,...identity}=e
- return {sourceMatchId:e.sourceMatchId,reportId:reportId(p,e),fixture:{...identity,season:p.season},rawSha256,matchId:100+i,roundId:200+i,homeTeamId:300+i*2,awayTeamId:301+i*2,policyId:p.id,policySha256:historicalStatisticsPolicySha256(p),statisticsStatus:'unavailable_historical',importedAt:null,individualRowCount:0}
+ return {sourceMatchId:e.sourceMatchId,reportId:reportId(p,e),fixture:{...identity,season:e.season??p.season},rawSha256,matchId:100+i,roundId:200+i,homeTeamId:300+i*2,awayTeamId:301+i*2,policyId:p.id,policySha256:historicalStatisticsPolicySha256(p),statisticsStatus:'unavailable_historical',importedAt:null,individualRowCount:0}
 })})
 for(const p of policies)test(`complete installed marker binding validates without raw source reads ${p.id}`,()=>{
  const source=binding(p),result=validateInstalledHistoricalStatisticsMarkers({competition:competition(p),binding:source})

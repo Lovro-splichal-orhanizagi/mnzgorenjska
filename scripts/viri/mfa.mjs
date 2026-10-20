@@ -559,11 +559,14 @@ const vir = {
     return razcleniRazpored(await vseTekme(koda, prenesi))
   },
 
-  async zapisniki(koda, prenesi, { zdaj = Date.now(), mapa } = {}) {
+  async zapisniki(koda, prenesi, { zdaj = Date.now(), mapa, preskoci = new Set() } = {}) {
     const { sezona } = razbijKodo(koda)
     const out = []
     for (const { krog, t } of krogiSezone(await vseTekme(koda, prenesi, { mapa }))) {
       if (t.status !== 'PLAYED') continue
+      // Complete installed policy authority is supplied by the MFA wrapper.
+      // Skip before either result or lineup fetch (including cache reads).
+      if (preskoci.has(sifraZapisnika(t.id))) continue
       const { datum } = lokalniCas(t.startDate)
       const starost = starostDni(datum, zdaj)
       // Zapisnik zadnjega tedna se lahko še popravlja; starejšega ne beremo
