@@ -8,7 +8,9 @@ import { rokKroga } from './razporedi.mjs'
 const fail = message => { throw Error(`MFA NL source model: ${message}`) }
 const require = (ok, message) => { if (!ok) fail(message) }
 const tuples = { 'mt-nl1': [973, '2601267'], 'mt-nl2': [974, '6234492'] }
-const order = rows => [...rows].sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
+// JSONB transports object keys in a different order from the source parser.
+// Sort by each row's canonical content, never its insertion-order JSON text.
+const order = rows => rows.map(row => ({ row, key: historicalStatisticsPolicySha256(row) })).sort((a, b) => a.key.localeCompare(b.key)).map(item => item.row)
 const equalSet = (a, b) => historicalStatisticsPolicySha256(order(a)) === historicalStatisticsPolicySha256(order(b))
 const cached = (cache, name) => { const body = cache.get(name); require(body, `missing required cached body ${name}`); return body }
 
