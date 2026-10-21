@@ -27,17 +27,16 @@ select p.competition_id*10000+1,p.id,p.team_id,true,90,0,90,p.position='GK'from 
 analyze appearances;
 insert into private_historical_statistics.source_club_bindings(provider,source_club_id,country_code,canonical_names,proofs)
 values('mfa','98001','MT',array['NLI bootstrap home'],'[]'),('mfa','98002','MT',array['NLI bootstrap away'],'[]'),
-('mfa','98003','MT',array['NLI archive-only club'],'[]'),('mfa','39633','MT',array['Msida St.Joseph'],'[]'),('mfa','39613','MT',array['Dingli Swallows'],'[]')on conflict(provider,source_club_id,source_category_id)do nothing;
--- Kept in a temporary table until the test explicitly authorizes synthetic policy seed.
+('mfa','98003','MT',array['NLI archive-only club'],'[]')on conflict(provider,source_club_id,source_category_id)do nothing;
+-- Only NLI retains a synthetic fallback. NLII must use the exact migration-pinned3-entry policy.
 create temporary table nl_test_policies as
-select 'mt-nl'||n||'-reviewed-history-2026-10-21-v1' as id,repeat(case n when 1 then'a'else'b'end,64) as sha,
-jsonb_build_object('id','mt-nl'||n||'-reviewed-history-2026-10-21-v1','provider','mfa','sourcePolicy','mt-mfa-nl'||n||'-reviewed-history-v1','competitionSlug','mt-nl'||n,'season','2026/27','approvalReference','SYNTHETIC rollback test only','recordedAt','2026-10-21T12:00:00Z',
-'entries',case n when 1 then jsonb_build_array(
+select 'mt-nl1-reviewed-history-2026-10-21-v1'as id,repeat('a',64)as sha,
+jsonb_build_object('id','mt-nl1-reviewed-history-2026-10-21-v1','provider','mfa','sourcePolicy','mt-mfa-nl1-reviewed-history-v1','competitionSlug','mt-nl1','season','2026/27','approvalReference','SYNTHETIC rollback test only','recordedAt','2026-10-21T12:00:00Z',
+'entries',jsonb_build_array(
  jsonb_build_object('sourceMatchId','90000973','sourceCompetitionId','50921000','sourcePhase',null,'sourceRound',3,'season','2025/26','playedOn','2025-11-01','homeSourceClubId','98001','awaySourceClubId','98002','sourceUrl','https://matchcentre.mfa.com.mt/match/90000973','rawSha256',repeat('c',64),'observedHomeScore',2,'observedAwayScore',1,'reasonCode','synthetic_clock_missing'),
- jsonb_build_object('sourceMatchId','90001973','sourceCompetitionId','50921000','sourcePhase',null,'sourceRound',4,'season','2025/26','playedOn','2025-11-08','homeSourceClubId','98003','awaySourceClubId','98002','sourceUrl','https://matchcentre.mfa.com.mt/match/90001973','rawSha256',repeat('d',64),'observedHomeScore',0,'observedAwayScore',0,'reasonCode','synthetic_clock_missing'))
-else jsonb_build_array(jsonb_build_object('sourceMatchId','51962893','sourceCompetitionId','50920420','sourcePhase',null,'sourceRound',4,'season','2025/26','playedOn','2026-01-13','homeSourceClubId','39633','awaySourceClubId','39613','sourceUrl','https://matchcentre.mfa.com.mt/match/51962893','rawSha256','87bae2121282e371e0784cfde1c96fdfd03148e9c5849fa57bc5ef3770ac3338','observedHomeScore',1,'observedAwayScore',1,'reasonCode','unresolved_continuation_lineup'))end) as document
-from generate_series(1,2)n;
-
--- Adopt a real reviewed policy when a later migration has already seeded it.
+ jsonb_build_object('sourceMatchId','90001973','sourceCompetitionId','50921000','sourcePhase',null,'sourceRound',4,'season','2025/26','playedOn','2025-11-08','homeSourceClubId','98003','awaySourceClubId','98002','sourceUrl','https://matchcentre.mfa.com.mt/match/90001973','rawSha256',repeat('d',64),'observedHomeScore',0,'observedAwayScore',0,'reasonCode','synthetic_clock_missing')))as document;
+insert into nl_test_policies select id,policy_sha256,document from private_historical_statistics.policies where id='mt-nl2-reviewed-history-2026-10-21-v1';
+do $$begin if not exists(select 1 from nl_test_policies where id='mt-nl2-reviewed-history-2026-10-21-v1'and jsonb_array_length(document->'entries')=3)then raise exception 'MFA NL TEST: exact reviewed NLII3-entry migration required';end if;end$$;
+-- Adopt the actual reviewed NLI policy too; neither approval/catalog row is mutated.
 update nl_test_policies n set sha=p.policy_sha256,document=p.document from private_historical_statistics.policies p where p.id=n.id;
 create function pg_temp.nl_sha(p_cid bigint)returns text language sql as $$select sha from pg_temp.nl_test_policies where id='mt-nl'||(p_cid-972)||'-reviewed-history-2026-10-21-v1'$$;

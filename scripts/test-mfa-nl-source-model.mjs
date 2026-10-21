@@ -52,9 +52,9 @@ test('native semantic comparison catches scorer identity, minute and fantasy cou
   }
 })
 
-test('full NL II source derivation stays closed while its historical policy is unregistered',async()=>{
+test('registered NL II full source derivation still requires the entire retained archive inventory',async()=>{
  const {deriveNlSourceModel}=await import(moduleURL)
- await assert.rejects(deriveNlSourceModel({league:'mt-nl2',cache:cache(),currentOnly:false}),/complete registered archive policy/)
+ await assert.rejects(deriveNlSourceModel({league:'mt-nl2',cache:cache(),currentOnly:false}),/missing required cached body/)
 })
 
 test('source contract comparison ignores PostgreSQL JSONB object-key order and array order',async()=>{
@@ -68,4 +68,29 @@ test('source contract comparison ignores PostgreSQL JSONB object-key order and a
  assert.equal(verifyNlSourceContract(model,contract),true)
  contract.reports[0].homeGoals=1
  assert.throws(()=>verifyNlSourceContract(model,contract),/differs/)
+})
+
+function nl2Contract(){
+ const sql=readFileSync(new URL('../supabase/migrations/20261021203100_mfa_nl2_source_contract.sql',import.meta.url),'utf8'),match=sql.match(/values\(974,'([a-f0-9]{64})',\$contract\$(.*?)\$contract\$::jsonb\)/s)
+ assert.ok(match,'exact reviewed NLII contract seed');return{sha:match[1],document:JSON.parse(match[2])}
+}
+test('NL II source contract pins all167 headers, exact3 unavailable fixtures and actual future opening',async()=>{
+ const{historicalStatisticsPolicySha256:sha,getHistoricalStatisticsPolicy:policy}=await import('./lib/historical-statistics-policy.mjs'),{NL_REVIEWED_SOURCES}=await import('./mfa-nl-reviewed-evidence.mjs'),contract=nl2Contract(),doc=contract.document
+ assert.equal(sha(doc),contract.sha);assert.equal(doc.policySha256,sha(policy('mt-nl2')));assert.deepEqual(doc.sourceArtifact,NL_REVIEWED_SOURCES['mt-nl2'].artifact)
+ assert.equal(doc.competitionId,974);assert.equal(doc.reports.length,167);assert.equal(doc.reports.filter(r=>r.season==='2025/26').length,132);assert.equal(doc.reports.filter(r=>r.season==='2026/27').length,35)
+ assert.deepEqual(doc.reports.filter(r=>r.statisticsStatus==='unavailable_historical').map(r=>r.reportId).sort(),['mt50920572','mt50920621','mt51962893']);assert.ok(!doc.reports.some(r=>r.reportId==='mt50920555'))
+ assert.equal(doc.expectedArchiveRounds,22);assert.equal(doc.expectedCurrentFixtureCount,77);assert.equal(doc.currentFixtures.length,77);assert.equal(doc.expectedCurrentClubCount,14)
+ assert.deepEqual(doc.opening,{deadlineAt:'2026-11-14T12:00:00.000Z',playedOn:'2026-11-14',round:6})
+})
+const retainedRoot=process.env.MFA_NL_RETAINED_ROOT
+test('actual retained NLII source derives129 complete archive reports+3 empty markers and exact35 current reports',{skip:!retainedRoot},async()=>{
+ const{readdirSync}=await import('node:fs'),{join}=await import('node:path'),{deriveNlSourceModel,verifyNlSourceContract,verifyNlNativeFootball,verifyNlOpening}=await import(moduleURL)
+ const dir=join(retainedRoot,'nl2-public-capture-39655969899/files/audit/cache'),cache=new Map(readdirSync(dir).map(n=>[n,readFileSync(join(dir,n))])),before=[...cache].map(([n,b])=>[n,b.toString()]),model=await deriveNlSourceModel({league:'mt-nl2',cache,firstFantasyPlayedOn:'2026-11-14'}),contract=nl2Contract().document
+ assert.equal(verifyNlSourceContract(model,contract),true)
+ const unavailable=model.reports.filter(r=>r.header.statisticsStatus==='unavailable_historical');assert.equal(unavailable.length,3);assert.ok(unavailable.every(r=>r.players.length===0&&r.goals.length===0))
+ assert.equal(model.reports.filter(r=>r.header.season==='2025/26'&&r.header.statisticsStatus==='available').length,129)
+ const native=JSON.parse(readFileSync(join(retainedRoot,'mt-nl2-native-football.json'))),parity=verifyNlNativeFootball(model,native,{currentOnly:true})
+ assert.deepEqual(parity,{reports:35,appearances:1080,goals:132,currentFixtures:77,exactParity:true})
+ const round=native.rounds.find(r=>r.number===6&&r.season==='2026/27');assert.deepEqual(verifyNlOpening(model,{round,fixtures:native.matches.filter(m=>m.round_id===round.id)},native.competition),{round:6,playedOn:'2026-11-14',deadlineAt:'2026-11-14T12:00:00.000Z'})
+ assert.deepEqual([...cache].map(([n,b])=>[n,b.toString()]),before)
 })

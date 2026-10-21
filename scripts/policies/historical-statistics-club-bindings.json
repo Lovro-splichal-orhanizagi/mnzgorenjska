@@ -723,6 +723,69 @@
           "rawSha256": "24a68ce636ecee7127b389ef320f5fe5475c3f7fbf4330344f618652787f83f4"
         }
       ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39633",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Msida St.Joseph"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "51962893",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/51962893",
+          "rawSha256": "87bae2121282e371e0784cfde1c96fdfd03148e9c5849fa57bc5ef3770ac3338"
+        },
+        {
+          "sourceMatchId": "50920621",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50920621",
+          "rawSha256": "0cf0ecc1687c9bd2220576fd9da705b33cfbcdd3fa2bdf7475a5b40bad6572ea"
+        }
+      ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39613",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Dingli Swallows"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "51962893",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/51962893",
+          "rawSha256": "87bae2121282e371e0784cfde1c96fdfd03148e9c5849fa57bc5ef3770ac3338"
+        },
+        {
+          "sourceMatchId": "50920572",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50920572",
+          "rawSha256": "a3f0eac8e8c513484e983921671d8f2e1359e8d1cd397d1edb4371b5aa5169fe"
+        },
+        {
+          "sourceMatchId": "50920621",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50920621",
+          "rawSha256": "0cf0ecc1687c9bd2220576fd9da705b33cfbcdd3fa2bdf7475a5b40bad6572ea"
+        }
+      ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39645",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Rabat Ajax"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "50920572",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50920572",
+          "rawSha256": "a3f0eac8e8c513484e983921671d8f2e1359e8d1cd397d1edb4371b5aa5169fe"
+        }
+      ]
     }
   ]
 }
