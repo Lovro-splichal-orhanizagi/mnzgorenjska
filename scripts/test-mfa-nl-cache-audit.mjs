@@ -70,8 +70,8 @@ test('missing inventory or report bytes fail clearly', async t => {
 })
 test('audit workflow isolates mutating jobs and verifies metadata before an exact cache restore', () => {
   const yaml = readFileSync(new URL('../.github/workflows/razdeli-zlite-igralce.yml', import.meta.url), 'utf8')
-  assert.match(yaml, /if: \$\{\{ !inputs.fscg_cache_audit && !inputs.mfa_nl_cache_audit \}\}/)
-  const job = yaml.split('\n  mfa-nl-cache-audit:')[1]; assert.ok(job)
+  assert.match(yaml, /if: \$\{\{ !inputs.fscg_cache_audit && !inputs.mfa_nl_cache_audit && inputs.vir != 'mfa-nl2-public-capture' \}\}/)
+  const job = yaml.split('\n  mfa-nl-cache-audit:')[1].split('\n  mfa-nl2-public-capture:')[0]; assert.ok(job)
   assert.doesNotMatch(job, /secrets\.|SUPABASE|restore-keys/)
   assert.ok(job.indexOf('Verify source import run') < job.indexOf('actions/cache/restore'))
   assert.match(job, /cache-hit != 'true'/); assert.match(job, /source_run_id/); assert.match(job, /github.run_attempt/)
