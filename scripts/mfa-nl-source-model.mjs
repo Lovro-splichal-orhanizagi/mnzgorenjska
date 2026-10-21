@@ -66,6 +66,7 @@ export function verifyNlNativeFootball(model, image, { currentOnly = false } = {
   const expected = model.reports.filter(r => !currentOnly || r.header.season === '2026/27')
   const actualReports = matches.filter(m => m.zapisnik_id != null)
   require(new Set(actualReports.map(m => m.zapisnik_id)).size === actualReports.length && equalSet(actualReports.map(m => m.zapisnik_id), expected.map(r => r.header.reportId)), 'native/source report set differs')
+  require(currentOnly || matches.length === expected.length + model.currentFixtures.filter(f => !f.played).length, 'native match coverage differs from source reports and pending fixtures')
   const byReport = new Map(actualReports.map(m => [m.zapisnik_id, m]))
   let appearances = 0, goals = 0
   for (const report of expected) {

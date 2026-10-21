@@ -47,9 +47,10 @@ v prostem besedilu) ni vpisana.
   krog zaporedje šifer (`krogiPoSifrah`): nov krog, ko bi klub igral drugič ali
   je krog poln (N/2). Izbrisana tekma pusti luknjo (NL I 2026/27: 53185946,
   krog 3 s 5 tekmami); na novo vpisana tekma z visoko šifro gre v luknjo, kjer
-  ne igra nobeden od klubov. Ponovljena tekma (isti par še enkrat, NL II
-  2025/26: Msida : Dingli 50920555 in 51962893, obe PLAYED) mesta nima in ostane
-  svoj krog na koncu (opozorilo).
+  ne igra nobeden od klubov. NL II
+  2025/26 ima pregledano prekinitev/nadaljevanje Msida : Dingli
+  (`50920555` + `51962893`): ena končna glava se razvrsti po prvotni šifri,
+  individualnih dogodkov obeh segmentov pa ne združujemo (glej spodaj).
 - **Zapisnik** = `/matches/<id>/result` (`homeScore`, `awayScore`, `status`
   PLAYED) + `/matches/<id>/lineup` (`homeTeam.players`, `awayTeam.players`):
   `id` igralca je **stalna šifra osebe COMET → `reg_st`**, `number`,
@@ -126,13 +127,22 @@ pregledanih zgodovinskih poti. Vpis kandidata ne odobri zgodovinskih statistik
 ali vklopa: ostanejo preverbe časov dogodkov, izidov, identitet, menjav,
 vratarjev, cen, kadra in dejanskega prihodnjega prvega fantasy kroga.
 
-**NL II ostaja HELD**: `50920555` in `51962893` sta segmenta iste tekme
-Msida : Dingli, prekinjene pri 69 minutah in nadaljevane do končnih 1:1.
-Manjkajoče domače menjave ni mogoče rekonstruirati, zato točnih minut ni
-mogoče zanesljivo izpeljati. Zgodovinska obravnava potrebuje izrecno pregledano
-odobritev; ta vpis kandidata ne izključi nobene šifre in ne dovoljuje uvoza NL II.
-Adapter trenutno oba segmenta še prikaže ločeno; pregledna inventura to
-razliko ohrani, ne ugiba združitve ali individualnih statistik.
+**Pregledane izjeme NL (21. 10. 2026).** Uporabnik je odobril samo
+NL I `mt50921445` (Mellieha : Victoria Hotspurs, 18. 4. 2026, 1:0,
+manjkajoča časa dveh izključitev; 1/181 arhivskih poročil) in NL II
+skupno tekmo `50920555` + `51962893` (končni 1:1, 1/132 logičnih
+arhivskih tekem; manjkajoča povezovalna menjava). Uradni rezultati ostanejo,
+individualne statistike so nedostopne. Nespremenljivi politiki in natančni
+izvorni hashi sta v registru in pregledanih migracijah; samo njun vpis
+ne namesti oznak, ne uvozi arhiva in ne vklopi lig.
+
+Celotni zadržani audit NL I pokrije 181 arhivskih in 20 tekočih poročil;
+NL II 133 surovih arhivskih segmentov, 132 logičnih tekem in 35 tekočih
+poročil. Dokaz NL II potrjuje 22 krogov, 12 klubov s po 22 tekmami,
+nadaljevanje v krogu 4 in nespremenjeno razvrstitev vseh drugih parov.
+NL II ima še dva **neodobrena** arhivska zadržka `50920572` in `50920621`
+(izključitvi brez minute). Zaprta pot ju ne sme uvoziti kot običajno statistiko
+ali sama razširiti izjem. Tekoča poročila ohranijo vse običajne preverbe.
 
 Za pregled **že shranjenih bajtov** je v `razdeli-zlite-igralce.yml` način
 `mfa_nl_cache_audit=true`, `mfa_nl_league=mt-nl1|mt-nl2` in numerični
@@ -185,8 +195,8 @@ servisne RPC-je; ne vpiše nobene odobritve v SQL ali JS register. Natančni
 native dvojici sta `973/mt-nl1/2601267/2027` in `974/mt-nl2/6234492/2027`.
 Podprta ID-ja politike sta `mt-nl1-reviewed-history-2026-10-21-v1` in
 `mt-nl2-reviewed-history-2026-10-21-v1`; brez poznejšega pregledanega vpisa
-politike in vezav izvornih klubov prepare zavrne. To ne pomeni, da so
-arhivske izjeme NL I že odobrene.
+politike in vezav izvornih klubov prepare zavrne. Odobrene so samo zgoraj navedene točne izjeme; vklop še vedno potrebuje
+popolno pogodbo vira in vse nadaljnje preverbe.
 
 Najprej se na navadni poti uvozi **samo tekoča sezona**, še pred registracijo
 politike. Izvorno potrjene popravke razporeda je treba namestiti pred prepare.
@@ -362,7 +372,7 @@ uporablja te preslikave.
 
 Končna glava zahteva zgodovinsko oznako: navaden uvoz se ustavi **pred
 branjem izida ali postave**, če je popolna nameščena vezava ne preskoči.
-Ta sprememba še ne namesti politike ali odobri uvoza arhiva. Pred sprostitvijo
-mora polna izvirna inventura potrditi 132 logičnih tekem, 22 krogov in prvotno
+Ta sprememba ne namesti oznake ali vklopi lige. Polna izvirna inventura zadržanega
+paketa `39655969899` je potrdila 132 logičnih tekem, 22 krogov in prvotno
 mesto nadaljevanja v krogu 4; API nima polja za krog. Tekoča sezona 2026/27
 in obstoječi pregledani poti Premier/Challenge ostanejo nespremenjene.

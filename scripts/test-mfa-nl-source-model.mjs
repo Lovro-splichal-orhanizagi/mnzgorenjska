@@ -46,7 +46,7 @@ test('native semantic comparison catches scorer identity, minute and fantasy cou
   image.appearances = report.players.map(({ regSt, side, ...a }) => ({ ...a, player_id: image.players.find(p => p.reg_st === regSt).id, team_id: 10 + side, match_id: 20 }))
   image.goals = report.goals.map(({ regSt, side, ...g }) => ({ ...g, scorer_id: image.players.find(p => p.reg_st === regSt).id, team_id: 10 + side, match_id: 20 }))
   assert.equal(verifyNlNativeFootball(m, image).exactParity, true)
-  for (const mutate of [x => x.appearances[0].penalties_missed++, x => x.appearances[0].minute_off--, x => x.appearances[0].player_id = x.appearances[1].player_id, x => x.goals[0].scorer_id = x.appearances[0].player_id, x => x.matches[0].home_goals++]) {
+  for (const mutate of [x => { x.rounds.push({id:2,competition_id:974,season:'2025/26',number:1}); x.matches.push({...x.matches[0],id:21,round_id:2,zapisnik_id:null,imported_at:null}) }, x => x.appearances[0].penalties_missed++, x => x.appearances[0].minute_off--, x => x.appearances[0].player_id = x.appearances[1].player_id, x => x.goals[0].scorer_id = x.appearances[0].player_id, x => x.matches[0].home_goals++]) {
     const wrong = structuredClone(image); mutate(wrong)
     assert.throws(() => verifyNlNativeFootball(m, wrong), /native.*differs/)
   }
