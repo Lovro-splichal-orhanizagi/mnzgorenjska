@@ -1,5 +1,8 @@
 -- Owned disposable database only. No production clock input is exposed.
 begin;
+-- Synthetic bulk fixture: avoid JIT startup and stale cardinality estimates
+-- while keeping every production trigger and constraint enabled.
+set local jit=off;
 create function pg_temp.mfa_assert(ok boolean,message text)returns void language plpgsql as $$begin if ok is distinct from true then raise exception 'MFA TEST: %',message;end if;end$$;
 create function pg_temp.mfa_refuses(command text,message text)returns void language plpgsql as $$begin begin execute command;exception when others then if sqlerrm not like 'MFA_HISTORY:%'and sqlerrm not like 'HISTORICAL_POLICY:%'then raise exception 'MFA TEST: wrong refusal %: %',message,sqlerrm;end if;return;end;raise exception 'MFA TEST: expected refusal %',message;end$$;
 select pg_temp.mfa_assert(not has_function_privilege('anon','public.prepare_mfa_reviewed_cleanup(text,text)','EXECUTE')and not has_function_privilege('authenticated','public.apply_mfa_reviewed_cleanup(text,text,text,text)','EXECUTE'),'public cannot read/write restricted originals');
@@ -38,11 +41,13 @@ do $$declare t record;i int;pid bigint;tid bigint;home bigint;away bigint;mid bi
    insert into players(competition_id,team_id,reg_st,first_name,last_name,full_name,position,position_source,value,value_start,active)values(971,tid,tid*100+i,'Fixture',tid||'-'||i,'Fixture '||tid||'-'||i,case when i=1 then'GK'when i<=5 then'DEF'when i<=10 then'MID'else'FWD'end,case when i=1 then'zapisnik'else'ugibanje'end,case when i=2 then 12 else 4 end,case when i=2 then 12 else 4 end,true)returning id into pid;
   end loop;
  end loop;
+ analyze players;analyze rounds;analyze matches;
  for t in select *from private_mfa_history.targets()loop
   for tid in select t.home_id union all select t.away_id loop
    i:=0;for pid in select id from players where competition_id=971 and team_id=tid order by id limit 16 loop i:=i+1;insert into appearances(match_id,player_id,team_id,started,minutes_played,minute_on,minute_off,is_goalkeeper)values(t.match_id,pid,tid,i<=11,case when i<=11 then 90 else 0 end,0,case when i<=11 then 90 else 0 end,i=1);if tid=t.home_id and i<=4 then insert into goals(match_id,scorer_id,team_id,minute)values(t.match_id,pid,tid,i*10);end if;end loop;
   end loop;
  end loop;
+ analyze appearances;analyze goals;
  for n in 1..238 loop
   i:=(n-1)%6+1;home:=team_ids[2*i-1];away:=team_ids[2*i];
   insert into matches(round_id,home_team_id,away_team_id,played_on,home_goals,away_goals,zapisnik_id,source_url,imported_at)values(case when n<=191 then 100001+(n-1)/6 else 34812+(n-192)/6 end,home,away,case when n<=191 then'2026-04-11'::date else'2026-08-17'::date end,0,0,'mt'||(70000000+n),'https://matchcentre.mfa.com.mt/match/'||(70000000+n),now())returning id into mid;
@@ -58,6 +63,7 @@ do $$declare t record;i int;pid bigint;tid bigint;home bigint;away bigint;mid bi
    insert into appearances(match_id,player_id,team_id,started,minutes_played,minute_on,minute_off,is_goalkeeper)values(mid,pid,home,false,30,60,90,false);
   end if;
  end loop;
+ analyze appearances;analyze goals;analyze matches;
  for i in select distinct round_id from matches m join rounds r on r.id=m.round_id where r.competition_id=971 loop perform recompute_round_scores(i);end loop;
 end$$;
 -- Tarxien is archive-only and must not enter the current selectable-club check.
