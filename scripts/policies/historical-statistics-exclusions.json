@@ -463,6 +463,52 @@
           "reasonCode": "missing_dismissal_clock"
         }
       ]
+    },
+    {
+      "id": "mt-nl2-reviewed-history-2026-10-21-v1",
+      "provider": "mfa",
+      "sourcePolicy": "mt-mfa-nl2-reviewed-history-v1",
+      "competitionSlug": "mt-nl2",
+      "season": "2026/27",
+      "recordedAt": "2026-10-21T18:08:45.898106+00:00",
+      "approvalReference": "User reply Allow this reviewed historical exclusion to call_8704b229964d4d00af0aea857b11fbf8; recording time, original user send time unavailable",
+      "entries": [
+        {
+          "sourceMatchId": "51962893",
+          "sourceCompetitionId": "50920420",
+          "sourcePhase": null,
+          "sourceRound": 4,
+          "season": "2025/26",
+          "playedOn": "2026-01-13",
+          "homeSourceClubId": "39633",
+          "awaySourceClubId": "39613",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/51962893",
+          "rawSha256": "87bae2121282e371e0784cfde1c96fdfd03148e9c5849fa57bc5ef3770ac3338",
+          "observedHomeScore": 1,
+          "observedAwayScore": 1,
+          "reasonCode": "unresolved_continuation_lineup"
+        }
+      ],
+      "reconciliation": {
+        "sourceMatchIds": [
+          "50920555",
+          "51962893"
+        ],
+        "orderingAnchorSourceMatchId": "50920555",
+        "metadataSha256": {
+          "50920555": "18f7d96530e3e674ec019d52e409b41d72322fa169d89a62b7663f2797f36ecc",
+          "51962893": "f683323b9e69208d49be8fc2c3f93e68cbfb35430b0d3dee63de9df2bc805bcd"
+        },
+        "resultSha256": {
+          "50920555": "dae890a4e691d4e8f3a4805bcac66ba2a49e9427803cf02874028d06207e85f5",
+          "51962893": "282ddd39f09fb92a66d060d418331bc92c68474570cbbc364302ee4b6c576b39"
+        },
+        "lineupSha256": {
+          "50920555": "1298413083d3ec71886ebb5f56894319a311ca7fa4c6987449e0d355cc91a83a",
+          "51962893": "87bae2121282e371e0784cfde1c96fdfd03148e9c5849fa57bc5ef3770ac3338"
+        },
+        "reason": "Unrecorded home substitution between abandoned and resumed segments; individual timelines must never be merged."
+      }
     }
   ]
 }

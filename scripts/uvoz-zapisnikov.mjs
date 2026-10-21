@@ -105,7 +105,10 @@ const originalCompetition = await najdiTekmovanje(db, arg('tekmovanje', 'clani')
 const virIme = arg('vir')
 const {competition:tekmovanje,installedHistoricalMarkers}=await loadHistoricalStatisticsImportContext(db,originalCompetition,{sourceOverride:virIme})
 if(installedHistoricalMarkers && pocisti)throw Error('historical import: cleanup requires a separately reviewed atomic writer')
-if(installedHistoricalMarkers?.markers.some(m=>m.reportId===String(arg('zapisnik')))) {
+if(installedHistoricalMarkers?.markers.some(m=>m.reportId===String(arg('zapisnik')))
+  || (tekmovanje.id===974&&tekmovanje.slug==='mt-nl2'&&tekmovanje.source==='mfa'
+    &&tekmovanje.source_policy==='mt-mfa-nl2-reviewed-history-v1'&&tekmovanje.source_league_code==='6234492/2027'
+    &&installedHistoricalMarkers?.markers.some(m=>m.reportId==='mt51962893')&&String(arg('zapisnik'))==='mt50920555')) {
   console.log('Historical report has explicit unavailable statistics; immutable installed marker retained without source reads or writes.')
   process.exit(0)
 }

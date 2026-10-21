@@ -26,6 +26,7 @@ export async function loadHistoricalStatisticsImportContext(db,original,{sourceO
 
 /** Before per-match derivation/writes: approved unavailable reports belong only to the atomic packet writer. */
 export function assertHistoricalReportImportable({competition,report}) {
+  if(competition.source==='mfa'&&['mt50920555','mt51962893'].includes(String(report?.id)))throw Error('historical import: neither continuation segment may derive individual statistics')
   if(report?.statisticsStatus!=null && report.statisticsStatus!=='available')throw Error('historical import: unavailable/unknown statistics status cannot derive individual rows')
   if(report?.historicalStatistics!=null || !report?.z || typeof report.z!=='object')throw Error('historical import: unavailable or missing normal report body')
   if(competition.source==='mfa')assertMfaReportTiming(report.z)

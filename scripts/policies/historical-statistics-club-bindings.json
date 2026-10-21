@@ -691,6 +691,38 @@
           "rawSha256": "16479747a46715412892ca6e5c437d7e96c511caf378584b23873e67622950b0"
         }
       ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39633",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Msida St.Joseph"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "51962893",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/51962893",
+          "rawSha256": "87bae2121282e371e0784cfde1c96fdfd03148e9c5849fa57bc5ef3770ac3338"
+        }
+      ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39613",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Dingli Swallows"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "51962893",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/51962893",
+          "rawSha256": "87bae2121282e371e0784cfde1c96fdfd03148e9c5849fa57bc5ef3770ac3338"
+        }
+      ]
     }
   ]
 }
