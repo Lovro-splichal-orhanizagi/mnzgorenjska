@@ -723,6 +723,38 @@
           "rawSha256": "87bae2121282e371e0784cfde1c96fdfd03148e9c5849fa57bc5ef3770ac3338"
         }
       ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39642",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Mellieha"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "50921445",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50921445",
+          "rawSha256": "24a68ce636ecee7127b389ef320f5fe5475c3f7fbf4330344f618652787f83f4"
+        }
+      ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "40409",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Victoria Hotspurs"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "50921445",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50921445",
+          "rawSha256": "24a68ce636ecee7127b389ef320f5fe5475c3f7fbf4330344f618652787f83f4"
+        }
+      ]
     }
   ]
 }

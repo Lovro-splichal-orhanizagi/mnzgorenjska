@@ -3,10 +3,10 @@ import {assertMfaReportTiming} from './mfa-report-validation.mjs'
 import {validateInstalledHistoricalStatisticsMarkers} from '../lib/historical-statistics-policy.mjs'
 export function withMfaHistoricalStatistics(base,competition,{installedHistoricalMarkers}={}) {
  const fail=message=>{throw Error(`MFA historical runtime: ${message}`)}
- if(base.ime!=='mfa'||competition.source!=='mfa'||!((competition.id===971&&competition.slug==='mt-premier'&&competition.source_league_code==='58539/2027')||(competition.id===972&&competition.slug==='mt-challenge'&&competition.source_league_code==='2601248/2027')||(competition.id===974&&competition.slug==='mt-nl2'&&competition.source_league_code==='6234492/2027')))fail('exact native competition binding required')
+ if(base.ime!=='mfa'||competition.source!=='mfa'||!((competition.id===971&&competition.slug==='mt-premier'&&competition.source_league_code==='58539/2027')||(competition.id===972&&competition.slug==='mt-challenge'&&competition.source_league_code==='2601248/2027')||(competition.id===973&&competition.slug==='mt-nl1'&&competition.source_league_code==='2601267/2027')||(competition.id===974&&competition.slug==='mt-nl2'&&competition.source_league_code==='6234492/2027')))fail('exact native competition binding required')
  const binding=validateInstalledHistoricalStatisticsMarkers({competition,binding:installedHistoricalMarkers})
  if(!binding)fail('complete installed markers required')
- const context=code=>{if(!(competition.id===971?['58539/2027','58539/2026']:competition.id===972?['2601248/2027','2601248/2026']:['6234492/2027','6234492/2026']).includes(code))fail('foreign source season/code');return binding}
+ const context=code=>{if(!(competition.id===971?['58539/2027','58539/2026']:competition.id===972?['2601248/2027','2601248/2026']:competition.id===973?['2601267/2027','2601267/2026']:['6234492/2027','6234492/2026']).includes(code))fail('foreign source season/code');return binding}
  return{...base,
   async zapisniki(code,read,options={}){
    const b=context(code),preskoci=new Set(options.preskoci??[])

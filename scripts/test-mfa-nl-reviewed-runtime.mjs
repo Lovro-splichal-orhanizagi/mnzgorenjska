@@ -17,6 +17,14 @@ function installed() {
   }) }
 }
 
+test('NL I policy contains only the newly approved archive dismissal-clock exclusion', () => {
+  const p = getHistoricalStatisticsPolicy('mt-nl1'); assert.ok(p)
+  assert.equal(p.sourcePolicy, 'mt-mfa-nl1-reviewed-history-v1')
+  assert.equal(p.entries.length, 1)
+  assert.deepEqual(p.entries.map(e => [e.sourceMatchId, e.season, e.sourceRound, e.playedOn, e.observedHomeScore, e.observedAwayScore, e.rawSha256]), [['50921445', '2025/26', 24, '2026-04-18', 1, 0, '24a68ce636ecee7127b389ef320f5fe5475c3f7fbf4330344f618652787f83f4']])
+  assert.match(p.approvalReference, /call_ad3388b13b7b446781a593b0bf1a49d8/)
+})
+
 test('NL II policy records one approved final fixture and immutable segment provenance', () => {
   const p = policy(); assert.ok(p)
   assert.equal(p.entries.length, 1)
