@@ -46,31 +46,41 @@ async function boundedBody(response) {
   } catch (e) { error = e } finally { reader.releaseLock() }
   return { raw: Buffer.concat(chunks), truncated, error }
 }
-export function createCaptureReader({ cacheRoot = 'scripts/.predpomnilnik/mfa', outputRoot = 'mfa-nl2-public-capture-output', now = Date.now, sleep = ms => new Promise(r => setTimeout(r, ms)), fetchFn = globalThis.fetch, maxRequests = MAX_REQUESTS } = {}) {
+export function createCaptureReader({ cacheRoot = 'scripts/.predpomnilnik/mfa', outputRoot = 'mfa-nl2-public-capture-output', now = Date.now, sleep = ms => new Promise(r => setTimeout(r, ms)), fetchFn = globalThis.fetch, maxRequests = MAX_REQUESTS, maxBytes = MAX_BYTES } = {}) {
   if (!Number.isInteger(maxRequests) || maxRequests < 1 || maxRequests > MAX_REQUESTS) throw Error('Capture request budget must be at most 550')
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 1) throw Error('Capture total byte budget must be a positive integer')
+  maxBytes = Math.min(maxBytes, MAX_BYTES)
   mkdirSync(cacheRoot, { recursive: true }); mkdirSync(outputRoot, { recursive: true })
   mkdirSync(join(outputRoot, 'cache'), { recursive: true }); mkdirSync(join(outputRoot, 'responses'), { recursive: true })
-  const state = { league: 'mt-nl2', codes: ['6234492/2026', '6234492/2027'], complete: false, denied: false, maxRequests, cacheHits: 0, requests: [], reads: [] }
+  const state = { league: 'mt-nl2', codes: ['6234492/2026', '6234492/2027'], complete: false, denied: false, maxRequests, maxBytes, cacheHits: 0, requests: [], reads: [] }
   const catalog = new Map(), matches = new Map()
   let stopped = null, exportedBytes = 0
   const receipt = join(cacheRoot, 'capture-status.json')
+  const persist = (writeReceipt = true) => {
+    const status = { ...state, requests: undefined, reads: undefined, actualRequests: state.requests.length, files: catalog.size, bytes: exportedBytes }
+    save(join(outputRoot, 'capture-status.json'), status)
+    if (writeReceipt) save(receipt, status)
+    save(join(outputRoot, 'capture-ledger.json'), state)
+    save(join(outputRoot, 'cache-manifest.json'), { files: [...catalog.values()], maxFiles: MAX_FILES, maxBytes, exportedBytes, maxBodyBytes: MAX_BODY })
+  }
   let receiptStat = null
   try { receiptStat = lstatSync(receipt) } catch (e) { if (e.code !== 'ENOENT') throw e }
   if (receiptStat) {
     if (!receiptStat.isFile() || receiptStat.isSymbolicLink() || receiptStat.size > MAX_BODY) throw Error('Unsafe capture receipt')
     const prior = JSON.parse(readFileSync(receipt))
-    if (prior.denied === true) throw Error('Prior capture was refused; no automatic resume or further source access')
+    if (prior.denied === true) {
+      state.denied = true; state.error = 'Prior capture was refused; no automatic resume or further source access'
+      persist(false)
+      throw Error(state.error)
+    }
   }
-  const persist = () => {
-    const status = { ...state, requests: undefined, reads: undefined, actualRequests: state.requests.length, files: catalog.size, bytes: exportedBytes }
-    save(join(outputRoot, 'capture-status.json'), status)
-    save(receipt, status)
-    save(join(outputRoot, 'capture-ledger.json'), state)
-    save(join(outputRoot, 'cache-manifest.json'), { files: [...catalog.values()], maxFiles: MAX_FILES, maxBytes: MAX_BYTES, maxBodyBytes: MAX_BODY })
+  function assertByteBudget(bytes) {
+    if (exportedBytes + bytes > maxBytes) throw Error('Capture total export byte bound exceeded; response body may not be retained')
   }
   function copy(file, raw, mtime, generated = false) {
     if (!catalog.has(file)) {
-      if (catalog.size >= MAX_FILES || exportedBytes + raw.length > MAX_BYTES) throw Error('Capture export file/byte bound exceeded')
+      if (catalog.size >= MAX_FILES) throw Error('Capture export file bound exceeded')
+      assertByteBudget(raw.length)
       writeFileSync(join(outputRoot, 'cache', file), raw)
       utimesSync(join(outputRoot, 'cache', file), mtime, mtime)
       catalog.set(file, { file, bytes: raw.length, sha256: sha(raw), mtime: new Date(mtime).toISOString(), generated }); exportedBytes += raw.length
@@ -98,9 +108,10 @@ export function createCaptureReader({ cacheRoot = 'scripts/.predpomnilnik/mfa', 
           return raw.toString('utf8')
         }
       }
+      if (exportedBytes >= maxBytes) throw Error('Capture total export byte bound exhausted before next request')
       if (state.requests.length >= maxRequests) throw Error(`Capture request budget ${maxRequests} exhausted`)
       await sleep(3000)
-      const row = { index: state.requests.length + 1, url, requestedFile, file, method: 'GET', cacheHit: false, startedAt: new Date(now()).toISOString(), status: null, bodySha256: null, bodyBytes: 0, completeBody: false, refusal: false }
+      const row = { index: state.requests.length + 1, url, requestedFile, file, method: 'GET', cacheHit: false, startedAt: new Date(now()).toISOString(), status: null, bodySha256: null, bodyBytes: 0, completeBody: false, bodyRetained: false, refusal: false }
       state.requests.push(row); persist()
       let response
       try {
@@ -108,23 +119,34 @@ export function createCaptureReader({ cacheRoot = 'scripts/.predpomnilnik/mfa', 
         row.status = response.status
         const { raw, truncated, error: bodyError } = await boundedBody(response)
         row.bodySha256 = sha(raw); row.bodyBytes = raw.length; row.completeBody = !truncated && !bodyError
-        const failBody = () => { writeFileSync(join(outputRoot, 'responses', `${row.index}.bin`), raw); row.bodyFile = `responses/${row.index}.bin` }
+        const failBody = () => {
+          assertByteBudget(raw.length)
+          writeFileSync(join(outputRoot, 'responses', `${row.index}.bin`), raw)
+          exportedBytes += raw.length; row.bodyRetained = true; row.bodyFile = `responses/${row.index}.bin`
+        }
         const body = raw.toString('utf8')
-        if (jeZavrnitev(response.status) || mfa.jeIzziv(body) || mfa.jePrijava(body)) { failBody(); throw mfa.zavrnitev(`capture response refused at ${url}`, response.status) }
+        if (jeZavrnitev(response.status) || mfa.jeIzziv(body) || mfa.jePrijava(body)) {
+          const refusal = mfa.zavrnitev(`capture response refused at ${url}`, response.status)
+          try { failBody() } catch (e) { refusal.message += `; ${e.message}` }
+          throw refusal
+        }
         if (truncated) { failBody(); throw Error('Source body exceeds byte bound; retained prefix only') }
         if (bodyError) { failBody(); throw bodyError }
         if (!response.ok) {
           failBody()
           if (metadata && [400, 404].includes(response.status)) {
             const sentinel = Buffer.from(JSON.stringify({ ni: response.status }))
-            writeFileSync(path, sentinel); copy(file, sentinel, new Date(now()), true)
+            assertByteBudget(sentinel.length)
+            writeFileSync(path, sentinel); copy(file, sentinel, lstatSync(path).mtime, true)
             row.absentMetadata = true
             const error = Error(`Expected metadata absence HTTP${response.status}`); error.status = response.status; error.expectedMetadataAbsence = true; throw error
           }
           const error = Error(`Capture HTTP${response.status}`); error.status = response.status; throw error
         }
         try { JSON.parse(body) } catch { failBody(); throw Error('Source response is not JSON') }
+        assertByteBudget(raw.length)
         writeFileSync(path, raw); copy(file, raw, lstatSync(path).mtime)
+        row.bodyRetained = true
         row.bodyFile = `cache/${file}`
         state.reads.push({ url, requestedFile, file, cacheHit: false, sha256: sha(raw) })
         return body

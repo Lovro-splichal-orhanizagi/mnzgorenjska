@@ -114,3 +114,48 @@ test('a broken symlink in a resumed cache cannot redirect a source write', async
  const receipt=dirs(t);symlinkSync(join(receipt.root,'outside-status.json'),join(receipt.cacheRoot,'capture-status.json'))
  assert.throws(()=>createCaptureReader(receipt),/Unsafe capture receipt/)
 })
+test('one total export budget covers cache bytes and metadata404 sidecars and latches on an unretained body', async t => {
+ let calls=0
+ const f=reader(t,{maxBytes:25,fetchFn:async()=>{calls++;return calls===1?new Response('{}'):new Response('0123456789',{status:404})}})
+ await f.read(BASE+'/matches/1','tekma-1.json')
+ await assert.rejects(f.read(BASE+'/matches/2','tekma-2.json'),e=>e.status===404)
+ await assert.rejects(f.read(BASE+'/matches/3','tekma-3.json'),/total export byte bound/)
+ await assert.rejects(f.read(BASE+'/matches/4','tekma-4.json'),/Capture stopped/)
+ assert.equal(calls,3)
+ const ledger=JSON.parse(readFileSync(join(f.outputRoot,'capture-ledger.json'))),status=JSON.parse(readFileSync(join(f.outputRoot,'capture-status.json')))
+ assert.equal(ledger.requests[2].bodyRetained,false);assert.equal(ledger.requests[2].bodyBytes,10);assert.match(ledger.requests[2].error,/total export byte bound/)
+ assert.equal(status.bytes,22);assert.equal(status.maxBytes,25);assert.equal(status.complete,false)
+ assert.throws(()=>readFileSync(join(f.outputRoot,'responses','3.bin')),/ENOENT/)
+})
+test('response sidecars also consume the remaining cache-copy budget and configured totals clamp to64MiB', async t => {
+ let calls=0
+ const f=reader(t,{maxBytes:25,fetchFn:async()=>{calls++;return calls===1?new Response('0123456789',{status:404}):new Response('{"x":1}')}})
+ await assert.rejects(f.read(BASE+'/matches/1','tekma-1.json'),e=>e.status===404)
+ await assert.rejects(f.read(BASE+'/matches/2','tekma-2.json'),/total export byte bound/)
+ assert.equal(f.read.state.requests[1].bodyRetained,false)
+ assert.equal(JSON.parse(readFileSync(join(f.outputRoot,'capture-status.json'))).bytes,20)
+ assert.equal(createCaptureReader({...dirs(t),maxBytes:65*1024*1024}).state.maxBytes,64*1024*1024)
+})
+test('a refused resume writes an uploadable diagnostic without overwriting the prior refusal receipt', t => {
+ const d=dirs(t),prior='{"denied":true,"runId":"123"}\n'
+ writeFileSync(join(d.cacheRoot,'capture-status.json'),prior)
+ assert.throws(()=>createCaptureReader(d),/Prior capture was refused/)
+ assert.equal(readFileSync(join(d.cacheRoot,'capture-status.json'),'utf8'),prior)
+ const status=JSON.parse(readFileSync(join(d.outputRoot,'capture-status.json')))
+ assert.equal(status.denied,true);assert.equal(status.actualRequests,0);assert.match(status.error,/Prior capture was refused/)
+ assert.equal(JSON.parse(readFileSync(join(d.outputRoot,'capture-ledger.json'))).requests.length,0)
+})
+test('an unretainable refusal still preserves typed denial and blocks all later requests', async t => {
+ const f=reader(t,{maxBytes:1,fetchFn:async()=>new Response('denied',{status:403})})
+ await assert.rejects(f.read(BASE+'/matches/1','tekma-1.json'),e=>e instanceof MfaZavrnitev && /total export byte bound/.test(e.message))
+ assert.equal(f.read.state.denied,true);assert.equal(f.read.state.requests[0].refusal,true);assert.equal(f.read.state.requests[0].bodyRetained,false)
+ await assert.rejects(f.read(BASE+'/matches/2','tekma-2.json'),/Capture stopped/)
+ assert.equal(f.read.state.requests.length,1)
+})
+test('an exactly exhausted export budget stops before another provider GET', async t => {
+ let calls=0
+ const f=reader(t,{maxBytes:20,fetchFn:async()=>{calls++;return new Response('0123456789',{status:404})}})
+ await assert.rejects(f.read(BASE+'/matches/1','tekma-1.json'),e=>e.status===404)
+ await assert.rejects(f.read(BASE+'/matches/2','tekma-2.json'),/total export byte bound/)
+ assert.equal(calls,1);assert.equal(f.read.state.requests.length,1)
+})
