@@ -112,6 +112,14 @@ export function prepareNlReplayCache(source,{cacheRoot=resolve('scripts/.predpom
  }}
 }
 
+// Parent RPCs straddle long synchronous CLI children; never retain their idle sockets.
+export async function callNlReviewedRpc(endpoint,serviceKey,name,args){
+  let response
+  try{response=await fetch(new URL(`/rest/v1/rpc/${name}`,endpoint),{method:'POST',redirect:'manual',headers:{apikey:serviceKey,Authorization:`Bearer ${serviceKey}`,'Content-Type':'application/json',Connection:'close'},body:JSON.stringify(args),signal:AbortSignal.timeout(200000)})}catch(cause){throw Error(`MFA NL route: RPC ${name} transport ambiguous; read receipt before retrying writes`,{cause})}
+  requireNl(response.ok,`native RPC ${name} HTTP${response.status}; read receipt before retrying writes`)
+  const bytes=Buffer.from(await response.arrayBuffer());requireNl(bytes.length<=64*1024*1024,'native RPC response too large');return JSON.parse(bytes)
+ }
+
 async function cli(){
  const env=process.env,mode=process.argv[2],league=env.MFA_NL_LEAGUE,commit=env.EXPECTED_SHA
  // Validate local authority before even contacting GitHub or parsing credentials.
@@ -124,12 +132,7 @@ async function cli(){
  requireNl(endpoint.protocol==='https:'&&!endpoint.username&&!endpoint.password&&!endpoint.port&&!endpoint.search&&!endpoint.hash&&endpoint.pathname==='/'&&Boolean(env.SUPABASE_SERVICE_ROLE_KEY),'fixed database HTTPS/service key required')
  const dir=`mfa-nl-reviewed-${mode}`;requireNl(!existsSync(dir),'fresh artifact output required');mkdirSync(dir)
  const write=(name,body)=>writeFileSync(join(dir,name),body)
- const rpc=async(name,args)=>{
-  let response
-  try{response=await fetch(new URL(`/rest/v1/rpc/${name}`,endpoint),{method:'POST',redirect:'manual',headers:{apikey:env.SUPABASE_SERVICE_ROLE_KEY,Authorization:`Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(args),signal:AbortSignal.timeout(200000)})}catch{throw Error(`MFA NL route: RPC ${name} transport ambiguous; read receipt before retrying writes`)}
-  requireNl(response.ok,`native RPC ${name} HTTP${response.status}; read receipt before retrying writes`)
-  const bytes=Buffer.from(await response.arrayBuffer());requireNl(bytes.length<=64*1024*1024,'native RPC response too large');return JSON.parse(bytes)
- }
+ const rpc=(name,args)=>callNlReviewedRpc(endpoint,env.SUPABASE_SERVICE_ROLE_KEY,name,args)
  const model=await import('./mfa-nl-source-model.mjs')
  let replayCache
  const runCommands=async(commands,source)=>{

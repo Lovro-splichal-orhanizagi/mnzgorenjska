@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {execFileSync} from 'node:child_process'
+import {execFileSync,spawn} from 'node:child_process'
 import {readFileSync,mkdtempSync,writeFileSync,rmSync,mkdirSync,statSync,existsSync,chmodSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
@@ -8,7 +8,7 @@ import vm from 'node:vm'
 import {repository,sha256} from './dfb-artifacts.mjs'
 import {historicalStatisticsPolicySha256 as canonicalSha} from './lib/historical-statistics-policy.mjs'
 import {NL_REVIEWED_SOURCES,NL_REVIEWED_PRIOR,NL_REVIEWED_WORKFLOW,assertNlActionsExecution,verifyNlReviewedContract,readNlPreparedArchive,verifyNlPreparedFiles,verifyNlPreparedArtifactIdentity} from './mfa-nl-reviewed-evidence.mjs'
-import {runNlReviewedStage,nlReplayCommands,nlPricingCommands,prepareNlReplayCache,authenticateNlSource} from './mfa-nl-reviewed-history.mjs'
+import {runNlReviewedStage,nlReplayCommands,nlPricingCommands,prepareNlReplayCache,authenticateNlSource,callNlReviewedRpc} from './mfa-nl-reviewed-history.mjs'
 
 const commit='a'.repeat(40),runId='555'
 const env=()=>({GITHUB_ACTIONS:'true',CI:'true',GITHUB_REPOSITORY:repository,GITHUB_REF:'refs/heads/main',GITHUB_SHA:commit,EXPECTED_SHA:commit,GITHUB_RUN_ID:runId,GITHUB_RUN_ATTEMPT:'1',GITHUB_EVENT_NAME:'workflow_dispatch',GITHUB_WORKFLOW_REF:`${repository}/${NL_REVIEWED_WORKFLOW}@refs/heads/main`})
@@ -155,4 +155,43 @@ test('actual fixed NLI/NLII ZIPs and sole prior chain authenticate without any n
  const dirs={'39654281589':'mt-nl1-cache-audit-39654281589','39655969899':'nl2-public-capture-39655969899','39654307070':'nl2-failed-capture-39654307070'},artifacts=new Map(Object.entries(dirs).map(([id,dir])=>[id,JSON.parse(readFileSync(join(retainedRoot,dir,'artifact.json')))]))
  const transport={json:path=>{const id=path.split('/').at(-1);if(path.startsWith('actions/runs/'))return JSON.parse(readFileSync(join(retainedRoot,dirs[id],'run.json')));const [run]=[...artifacts].find(([,a])=>String(a.id)===id)??[];assert.ok(run,'only compiled artifact IDs');return artifacts.get(run)},binary:path=>{const id=path.split('/').at(-2),[run]=[...artifacts].find(([,a])=>String(a.id)===id)??[];assert.ok(run,'only compiled ZIP IDs');return readFileSync(join(retainedRoot,dirs[run],'artifact.zip'))}}
  for(const league of ['mt-nl1','mt-nl2']){const source=await authenticateNlSource(league,transport);assert.ok(source.cache.size>0);assert.equal(source.proof.sourceArtifact,NL_REVIEWED_SOURCES[league].artifact);if(league==='mt-nl2'){assert.equal(source.proof.priorArtifact,NL_REVIEWED_PRIOR);assert.ok(source.proof.ledger.priorRequests>0)}}
+})
+
+
+async function localRpcServer(run){
+ const dir=mkdtempSync(join(tmpdir(),'slff-nl-rpc-')),log=join(dir,'requests.jsonl')
+ const server=spawn(process.execPath,['--input-type=module','-e',`
+  import{createServer}from'node:http';import{appendFileSync}from'node:fs';const sockets=new Set();
+  const server=createServer((req,res)=>{
+   if(req.url==='/expire'){setTimeout(()=>{for(const socket of sockets)if(!socket.destroyed)socket.resetAndDestroy();res.setHeader('Connection','close');res.end('expired')},75);return}
+   sockets.add(req.socket);
+   appendFileSync(${JSON.stringify(log)},JSON.stringify({path:req.url,connection:req.headers.connection,port:req.socket.remotePort})+'\\n');
+   if(req.url.endsWith('/drop')){req.socket.destroy();return}
+   req.resume();req.on('end',()=>{
+    res.setHeader('Content-Type','application/json');res.setHeader('Keep-Alive','timeout=600');res.end('{"ok":true}');
+   });
+  });server.keepAliveTimeout=300000;server.listen(0,'127.0.0.1',()=>console.log(server.address().port));
+ `],{stdio:['ignore','pipe','pipe']})
+ let stderr='';server.stderr.on('data',x=>stderr+=x)
+ try{
+  const port=await new Promise((resolve,reject)=>{server.once('error',reject);server.once('exit',code=>reject(Error('local RPC server exited '+code+': '+stderr)));server.stdout.once('data',x=>resolve(Number(String(x).trim())))})
+  await run({endpoint:new URL('http://127.0.0.1:'+port),log})
+ }finally{const done=new Promise(resolve=>server.once('close',resolve));server.kill();await done;rmSync(dir,{recursive:true,force:true})}
+}
+test('parent RPC remains usable after a synchronous child crosses stale keepalive reset',{timeout:10000},async()=>{
+ await localRpcServer(async({endpoint,log})=>{
+  for(let i=0;i<4;i++){assert.deepEqual(await callNlReviewedRpc(endpoint,'local-test-key','read',{}),{ok:true});await new Promise(resolve=>setTimeout(resolve,10))}
+  // The server resets idle RPC sockets only after the synchronous child starts.
+  // Its control response is sent after reset, so this boundary has no timing race.
+  execFileSync(process.execPath,['--input-type=module','-e',`import{get}from'node:http';get(${JSON.stringify(new URL('/expire',endpoint).href)},{agent:false},res=>{res.resume();res.on('end',()=>{if(res.statusCode!==200)process.exitCode=1})}).on('error',()=>{process.exitCode=1})`],{timeout:5000})
+  assert.deepEqual(await callNlReviewedRpc(endpoint,'local-test-key','after_child',{}),{ok:true})
+  const requests=readFileSync(log,'utf8').trim().split('\n').map(JSON.parse)
+  assert.equal(requests.length,5);assert.ok(requests.every(r=>r.connection==='close'));assert.equal(new Set(requests.map(r=>r.port)).size,5)
+ })
+})
+test('parent RPC never retries an ambiguous write transport failure',{timeout:10000},async()=>{
+ await localRpcServer(async({endpoint,log})=>{
+  await assert.rejects(callNlReviewedRpc(endpoint,'local-test-key','drop',{write:true}),error=>{assert.match(error.message,/RPC drop transport ambiguous; read receipt before retrying writes/);assert.ok(error.cause instanceof TypeError);return true})
+  assert.equal(readFileSync(log,'utf8').trim().split('\n').length,1)
+ })
 })
