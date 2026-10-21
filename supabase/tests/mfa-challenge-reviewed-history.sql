@@ -1,5 +1,7 @@
 -- Owned disposable database only. No production clock input is exposed.
 begin;
+-- Repeated small fixture statements do not benefit from JIT compilation.
+set local jit=off;
 create function pg_temp.mfa_assert(ok boolean,message text)returns void language plpgsql as $$begin if ok is distinct from true then raise exception 'MFA TEST: %',message;end if;end$$;
 create function pg_temp.mfa_refuses(command text,message text)returns void language plpgsql as $$begin begin execute command;exception when others then if sqlerrm not like 'MFA_CHALLENGE_HISTORY:%'and sqlerrm not like 'HISTORICAL_POLICY:%'then raise exception 'MFA TEST: wrong refusal %: %',message,sqlerrm;end if;return;end;raise exception 'MFA TEST: expected refusal %',message;end$$;
 select pg_temp.mfa_assert(not has_function_privilege('anon','public.prepare_mfa_challenge_reviewed_cleanup(text,text)','EXECUTE')and not has_function_privilege('authenticated','public.apply_mfa_challenge_reviewed_cleanup(text,text,text,text)','EXECUTE'),'public cannot read/write restricted originals');
@@ -45,17 +47,18 @@ insert into matches(id,round_id,home_team_id,away_team_id,played_on)overriding s
 (517750,34903,10712,10682,'2026-10-24');
 insert into matches(round_id,home_team_id,away_team_id,played_on)select 34898+n,v.home,v.away,'2026-10-30'from generate_series(6,11)n cross join(values(10707,10710),(10714,10716),(10717,10703),(10718,10706),(10711,10678),(10704,10709),(10715,10705),(10712,10682))v(home,away);
 do $$declare t record;i int;pid bigint;tid bigint;home bigint;away bigint;mid bigint;n int;rn int;side_count int;begin
- for tid in select id from teams where id in(10678,10682,10691,10703,10704,10705,10706,10707,10708,10709,10710,10711,10712,10714,10715,10716,10717,10718)loop
-  for i in 1..16 loop
-   insert into players(competition_id,team_id,reg_st,first_name,last_name,full_name,position,position_source,value,value_start,active)values(972,tid,tid*100+i,'Fixture',tid||'-'||i,'Fixture '||tid||'-'||i,case when i=1 then'GK'when i<=5 then'DEF'when i<=10 then'MID'else'FWD'end,case when i=1 then'zapisnik'else'ugibanje'end,case when i=2 then 12 else 4 end,case when i=2 then 12 else 4 end,tid in(10678,10682,10703,10704,10705,10706,10707,10709,10710,10711,10712,10714,10715,10716,10717,10718))returning id into pid;
-  end loop;
- end loop;
- for t in select *from private_mfa_challenge_history.targets()loop
-  for tid in select t.home_id union all select t.away_id loop
-   side_count:=case when tid=t.home_id then 16 else t.appearance_count-16 end;
-   i:=0;for pid in select id from players where competition_id=972 and team_id=tid order by id limit side_count loop i:=i+1;insert into appearances(match_id,player_id,team_id,started,minutes_played,minute_on,minute_off,is_goalkeeper)values(t.match_id,pid,tid,i<=11,case when i<=11 then 90 else 0 end,0,case when i<=11 then 90 else 0 end,i=1);if tid=t.home_id and i<=t.goal_count then insert into goals(match_id,scorer_id,team_id,minute)values(t.match_id,pid,tid,i*10);end if;end loop;
-  end loop;
- end loop;
+ insert into players(competition_id,team_id,reg_st,first_name,last_name,full_name,position,position_source,value,value_start,active)
+ select 972,tt.id,tt.id*100+g.i,'Fixture',tt.id||'-'||g.i,'Fixture '||tt.id||'-'||g.i,case when g.i=1 then'GK'when g.i<=5 then'DEF'when g.i<=10 then'MID'else'FWD'end,case when g.i=1 then'zapisnik'else'ugibanje'end,case when g.i=2 then 12 else 4 end,case when g.i=2 then 12 else 4 end,tt.id in(10678,10682,10703,10704,10705,10706,10707,10709,10710,10711,10712,10714,10715,10716,10717,10718)
+ from teams tt cross join generate_series(1,16)g(i)where tt.id in(10678,10682,10691,10703,10704,10705,10706,10707,10708,10709,10710,10711,10712,10714,10715,10716,10717,10718);
+ analyze players;analyze rounds;analyze matches;
+ raise notice 'MFA Challenge fixture: players ready';
+ insert into appearances(match_id,player_id,team_id,started,minutes_played,minute_on,minute_off,is_goalkeeper)
+ select tg.match_id,pl.id,pl.team_id,pl.reg_st%100<=11,case when pl.reg_st%100<=11 then 90 else 0 end,0,case when pl.reg_st%100<=11 then 90 else 0 end,pl.reg_st%100=1
+ from private_mfa_challenge_history.targets()tg join players pl on pl.competition_id=972 and(pl.team_id=tg.home_id and pl.reg_st%100<=16 or pl.team_id=tg.away_id and pl.reg_st%100<=tg.appearance_count-16);
+ insert into goals(match_id,scorer_id,team_id,minute)
+ select tg.match_id,pl.id,pl.team_id,(pl.reg_st%100)::int*10 from private_mfa_challenge_history.targets()tg join players pl on pl.competition_id=972 and pl.team_id=tg.home_id and pl.reg_st%100<=tg.goal_count;
+ analyze appearances;analyze goals;
+ raise notice 'MFA Challenge fixture: target118/14 ready';
  n:=0;
  for rn in 1..26 loop
   for home,away in select v.home,v.away from(values(10707::bigint,10710::bigint),(10714::bigint,10716::bigint),(10717::bigint,10703::bigint),(10718::bigint,10706::bigint),(10711::bigint,10678::bigint),(10704::bigint,10709::bigint),(10715::bigint,10705::bigint),(10712::bigint,10682::bigint))v(home,away)loop
@@ -63,18 +66,27 @@ do $$declare t record;i int;pid bigint;tid bigint;home bigint;away bigint;mid bi
    if rn<=22 and(select count(*)from matches where round_id=34876+rn)>=8 then continue;end if;
    n:=n+1;
    insert into matches(round_id,home_team_id,away_team_id,played_on,home_goals,away_goals,zapisnik_id,source_url,imported_at)values(case when rn<=22 then 34876+rn else 34898+rn-22 end,home,away,case when rn<=22 then'2026-04-06'::date else'2026-09-01'::date end,0,0,'mt'||(70000000+n),'https://matchcentre.mfa.com.mt/match/'||(70000000+n),now())returning id into mid;
-   for tid in select home union all select away loop
-    for pid in select id from players where competition_id=972 and team_id=tid order by id limit 11 loop insert into appearances(match_id,player_id,team_id,started,minutes_played,minute_on,minute_off,is_goalkeeper)select mid,pid,tid,true,90,0,90,position='GK'from players where id=pid;end loop;
-   end loop;
-   if n=173 then
-    select id into pid from players where competition_id=972 and team_id=home order by id offset 10 limit 1;
-    update appearances set minutes_played=60,minute_off=60 where match_id=mid and player_id=pid;
-    select id into pid from players where competition_id=972 and team_id=home order by id offset 11 limit 1;
-    insert into appearances(match_id,player_id,team_id,started,minutes_played,minute_on,minute_off,is_goalkeeper)values(mid,pid,home,false,30,60,90,false);
-   end if;
   end loop;
  end loop;
+ analyze matches;
+ raise notice 'MFA Challenge fixture: matches ready';
+ -- Bulk insert ordinary football appearances once so statement triggers see a
+ -- complete consistent fixture, as they do for the real importer's batch insert.
+ insert into appearances(match_id,player_id,team_id,started,minutes_played,minute_on,minute_off,is_goalkeeper)
+ select m.id,pl.id,pl.team_id,true,90,0,90,pl.position='GK'
+ from matches m join rounds rr on rr.id=m.round_id
+ cross join lateral(select p.*from players p where p.competition_id=972 and p.team_id in(m.home_team_id,m.away_team_id)and p.reg_st%100<=11)pl
+ where rr.competition_id=972 and m.zapisnik_id like'mt70000%';
+ analyze appearances;
+ raise notice 'MFA Challenge fixture: all report XIs ready';
+ select id,home_team_id into mid,home from matches where zapisnik_id='mt70000173';
+ select id into pid from players where competition_id=972 and team_id=home order by id offset 10 limit 1;
+ update appearances set minutes_played=60,minute_off=60 where match_id=mid and player_id=pid;
+ select id into pid from players where competition_id=972 and team_id=home order by id offset 11 limit 1;
+ insert into appearances(match_id,player_id,team_id,started,minutes_played,minute_on,minute_off,is_goalkeeper)values(mid,pid,home,false,30,60,90,false);
+ raise notice 'MFA Challenge fixture: retained substitute ready';
  for i in select distinct round_id from matches m join rounds r on r.id=m.round_id where r.competition_id=972 loop perform recompute_round_scores(i);end loop;
+raise notice 'MFA Challenge fixture: scores ready';
 end$$;
 -- The shared marker reader/triggers support MFA, but its generic installer
 -- remains intentionally closed. The dedicated native cleanup is the only writer.

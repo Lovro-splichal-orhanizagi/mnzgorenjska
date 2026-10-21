@@ -1,14 +1,15 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync,existsSync} from 'node:fs'
+import {dirname,join} from 'node:path'
 import {sha256} from './dfb-artifacts.mjs'
 const moduleURL=new URL('./mfa-challenge-reviewed-history-evidence.mjs',import.meta.url)
 test('Challenge retained archive proof verifies full ZIP before selecting eight exact bodies',async()=>{
  assert.ok(existsSync(moduleURL),'closed Challenge evidence reader exists')
- const {readChallengeArchive,MFA_CHALLENGE_ORIGINAL,MFA_CHALLENGE_SOURCE_HASHES}=await import(moduleURL)
+ const {readChallengeArchive,MFA_CHALLENGE_ORIGINAL,MFA_CHALLENGE_SOURCE_HASHES,verifyMfaArtifactIdentity}=await import(moduleURL)
  assert.throws(()=>readChallengeArchive(Buffer.from('changed'),MFA_CHALLENGE_ORIGINAL.digest),/digest/)
  const path=process.env.MFA_CHALLENGE_RETAINED_ZIP
- if(path){const files=readChallengeArchive(readFileSync(path),MFA_CHALLENGE_ORIGINAL.digest);assert.equal(files.size,8);for(const[name,hash]of Object.entries(MFA_CHALLENGE_SOURCE_HASHES))assert.equal(sha256(files.get(name)),hash)}
+ if(path){const dir=dirname(path),artifact=JSON.parse(readFileSync(join(dir,'artifact.json'))),run=JSON.parse(readFileSync(join(dir,'run.json'))),bytes=readFileSync(path);verifyMfaArtifactIdentity({artifact,run,expected:MFA_CHALLENGE_ORIGINAL});assert.equal(bytes.length,artifact.size_in_bytes);const files=readChallengeArchive(bytes,MFA_CHALLENGE_ORIGINAL.digest);assert.equal(files.size,8);for(const[name,hash]of Object.entries(MFA_CHALLENGE_SOURCE_HASHES))assert.equal(sha256(files.get(name)),hash)}
 })
 
 test('Challenge preparation transport binds exact118/14 beforeimage and all eight original hashes',async()=>{

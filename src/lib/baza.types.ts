@@ -8044,6 +8044,24 @@ export type Database = {
         }
         Returns: Json
       }
+      apply_mfa_challenge_reviewed_cleanup: {
+        Args: {
+          p_before_image_text: string
+          p_before_sha: string
+          p_main_sha: string
+          p_policy_sha: string
+        }
+        Returns: Json
+      }
+      apply_mfa_reviewed_cleanup: {
+        Args: {
+          p_before_image_text: string
+          p_before_sha: string
+          p_main_sha: string
+          p_policy_sha: string
+        }
+        Returns: Json
+      }
       asistenca_odprta: { Args: { p_goal_id: number }; Returns: boolean }
       asistence_odprte_do: { Args: { p_match_id: number }; Returns: string }
       check_fcf_current_target: {
@@ -8052,6 +8070,22 @@ export type Database = {
       }
       check_hns_women_release: {
         Args: { p_activate?: boolean; p_manifest: string; p_sha256: string }
+        Returns: Json
+      }
+      check_mfa_challenge_reviewed_release: {
+        Args: {
+          p_activate?: boolean
+          p_expected_preview_sha?: string
+          p_main_sha: string
+        }
+        Returns: Json
+      }
+      check_mfa_reviewed_release: {
+        Args: {
+          p_activate?: boolean
+          p_expected_preview_sha?: string
+          p_main_sha: string
+        }
         Returns: Json
       }
       dan_kroga: { Args: { p_round_id: number }; Returns: string }
@@ -8110,6 +8144,14 @@ export type Database = {
       }
       get_installed_historical_statistics_markers: {
         Args: { p_competition_id: number }
+        Returns: Json
+      }
+      get_mfa_challenge_reviewed_receipt: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_mfa_reviewed_receipt: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       ima_klubski_racun: { Args: { p_team_id: number }; Returns: boolean }
@@ -8607,6 +8649,14 @@ export type Database = {
         Args: { p_manifest: string; p_sha256: string }
         Returns: Json
       }
+      prepare_mfa_challenge_reviewed_cleanup: {
+        Args: { p_main_sha: string; p_policy_sha: string }
+        Returns: Json
+      }
+      prepare_mfa_reviewed_cleanup: {
+        Args: { p_main_sha: string; p_policy_sha: string }
+        Returns: Json
+      }
       prepovedane_besede: { Args: { p_besedilo: string }; Returns: string }
       prepovedano_besedilo: { Args: { p_besedilo: string }; Returns: string }
       preracunaj_cene: {
@@ -8878,10 +8928,12 @@ export type Database = {
         Args: { p_round_id: number }
         Returns: number
       }
-      razdeli_zlitega_igralca: {
-        Args: { p_igralec: number; p_pisi?: boolean }
-        Returns: Json
-      }
+      razdeli_zlitega_igralca:
+        | { Args: { p_igralec: number; p_pisi?: boolean }; Returns: Json }
+        | {
+            Args: { p_igralec: number; p_ohrani_klub: number; p_pisi: boolean }
+            Returns: Json
+          }
       razlog_neveljavne_ekipe: { Args: { p_team_id: number }; Returns: string }
       read_fcf_current_target_receipt: {
         Args: { p_slug: string }
@@ -8898,6 +8950,14 @@ export type Database = {
           p_plan_sha256: string
           p_sha256: string
         }
+        Returns: Json
+      }
+      record_mfa_challenge_reviewed_prices: {
+        Args: { p_main_sha: string }
+        Returns: Json
+      }
+      record_mfa_reviewed_prices: {
+        Args: { p_main_sha: string }
         Returns: Json
       }
       roster_je_veljaven: { Args: { p_team_id: number }; Returns: boolean }
@@ -9543,12 +9603,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -9572,11 +9632,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -9597,11 +9657,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -9622,11 +9682,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -9639,11 +9699,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never) = never,
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

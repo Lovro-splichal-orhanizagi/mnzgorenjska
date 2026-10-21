@@ -4,6 +4,7 @@ import {mkdirSync,writeFileSync,readdirSync} from 'node:fs'
 import {getHistoricalStatisticsPolicy,historicalStatisticsPolicySha256} from './lib/historical-statistics-policy.mjs'
 import {github,githubJson,sha256,repository} from './dfb-artifacts.mjs'
 import {MFA_CHALLENGE_ORIGINAL as MFA_ORIGINAL,readChallengeArchive as readMfaArchive,verifyMfaArtifactIdentity,verifyChallengePreparedFiles as verifyMfaPreparedFiles} from './mfa-challenge-reviewed-history-evidence.mjs'
+import {runMfaRegistrationSmoke} from './mfa-registration-smoke.mjs'
 const env=process.env,mode=process.argv[2],commit=env.EXPECTED_SHA
 const fail=message=>{throw Error(`MFA route: ${message}`)}
 if(!['prepare','cleanup','reprice','preview','activate','receipt'].includes(mode)||env.GITHUB_REPOSITORY!==repository||env.GITHUB_REF!=='refs/heads/main'||env.GITHUB_SHA!==commit||!/^[a-f0-9]{40}$/.test(commit??'')||env.GITHUB_RUN_ATTEMPT!=='1'||!/^[1-9]\d*$/.test(env.GITHUB_RUN_ID??''))fail('first-attempt pinned main Actions execution required')
@@ -40,6 +41,7 @@ if(mode==='prepare'){
  manifest.result=await rpc('record_mfa_challenge_reviewed_prices',{p_main_sha:commit})
 }else if(mode==='preview'||mode==='activate'){
  if(mode==='activate'&&!/^[a-f0-9]{64}$/.test(env.PREVIEW_SHA256??''))fail('externally reviewed preview SHA required')
+ if(mode==='preview')manifest.normalRegistrationSmoke=runMfaRegistrationSmoke(endpoint,env)
  manifest.result=await rpc('check_mfa_challenge_reviewed_release',{p_main_sha:commit,p_expected_preview_sha:mode==='activate'?env.PREVIEW_SHA256:null,p_activate:mode==='activate'})
 }else manifest.result=await rpc('get_mfa_challenge_reviewed_receipt')
 writeFileSync(`${dir}/manifest.json`,JSON.stringify(manifest,null,2)+'\n')
