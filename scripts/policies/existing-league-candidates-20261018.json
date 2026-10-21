@@ -545,6 +545,18 @@
       "slug": "mt-challenge",
       "source": "mfa",
       "source_league_code": "2601248/2027"
+    },
+    {
+      "id": 973,
+      "slug": "mt-nl1",
+      "source": "mfa",
+      "source_league_code": "2601267/2027"
+    },
+    {
+      "id": 974,
+      "slug": "mt-nl2",
+      "source": "mfa",
+      "source_league_code": "6234492/2027"
     }
   ]
 }

@@ -257,16 +257,28 @@ test('Montenegro and Malta candidates bind only reviewed tuples with public-sour
     {id:967,slug:'me-1-cfl',source:'fscg',source_league_code:'fscg/meridianbet-1-cfl/9278739'},
     {id:966,slug:'me-2-cfl',source:'fscg',source_league_code:'fscg/druga-liga/9279699'},
     {id:972,slug:'mt-challenge',source:'mfa',source_league_code:'2601248/2027'},
+    {id:973,slug:'mt-nl1',source:'mfa',source_league_code:'2601267/2027'},
+    {id:974,slug:'mt-nl2',source:'mfa',source_league_code:'6234492/2027'},
     {id:971,slug:'mt-premier',source:'mfa',source_league_code:'58539/2027'},
   ]
   const selected=validateSelection(registry,expected.map(c=>c.slug))
   assert.deepEqual(selected,expected)
-  assert.deepEqual(registry.candidates.filter(c=>['fscg','mfa'].includes(c.source)),[expected[0],expected[1],expected[3],expected[2]])
+  assert.deepEqual(registry.candidates.filter(c=>['fscg','mfa'].includes(c.source)),[expected[0],expected[1],expected[5],expected[2],expected[3],expected[4]])
   assert.equal(registry.source_contracts.fscg.document,'docs/viri/litva-crna-gora.md')
   assert.match(registry.source_contracts.fscg.permission,/no explicit permission/i)
   assert.equal(registry.source_contracts.mfa.document,'docs/viri/malta.md')
   assert.match(registry.source_contracts.mfa.permission,/no explicit (?:MFA )?permission/i)
   assert.match(registry.source_contracts.mfa.permission,/stop/i)
-  for(const slug of ['me-3-liga-centar','me-3-liga-sjever','me-3-liga-jug','mt-nl1','mt-nl2','me-unknown','mt-unknown'])
+  for(const slug of ['me-3-liga-centar','me-3-liga-sjever','me-3-liga-jug','me-unknown','mt-unknown'])
     assert.throws(()=>validateSelection(registry,[slug]))
+})
+
+test('ordinary NL admission preserves tuple mismatches and source-policy historical holds', async () => {
+  const candidates=validateSelection(registry,['mt-nl1','mt-nl2'])
+  for (const c of candidates) for (const patch of [{id:c.id+100},{source_league_code:c.source_league_code.replace('2027','2026')},{source_policy:'unapproved-historical-policy'}]) {
+    const f=fixture();const original=f.transport.competition
+    f.transport.competition=async candidate=>({...await original(candidate),...patch})
+    const [row]=await runBatch({candidates:[c],transport:f.transport,now,apply:true})
+    assert.equal(row.status,'HOLD');assert.equal(f.calls.length,0)
+  }
 })
