@@ -94,3 +94,16 @@ test('actual retained NLII source derives129 complete archive reports+3 empty ma
  const round=native.rounds.find(r=>r.number===6&&r.season==='2026/27');assert.deepEqual(verifyNlOpening(model,{round,fixtures:native.matches.filter(m=>m.round_id===round.id)},native.competition),{round:6,playedOn:'2026-11-14',deadlineAt:'2026-11-14T12:00:00.000Z'})
  assert.deepEqual([...cache].map(([n,b])=>[n,b.toString()]),before)
 })
+
+test('source contract comparison ignores PostgreSQL JSONB object-key order and array order',async()=>{
+ const {verifyNlSourceContract}=await import(moduleURL)
+ const jsonb=value=>Array.isArray(value)?value.map(jsonb):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort((a,b)=>Buffer.byteLength(a)-Buffer.byteLength(b)||a.localeCompare(b)).map(k=>[k,jsonb(value[k])])):value
+ // Synthetic two-row contract isolates JSONB transport semantics; these are not launch fixtures.
+ const reports=[{reportId:'mt900',season:'2025/26',round:1,playedOn:'2025-10-01',homeName:'A',awayName:'B',homeGoals:0,awayGoals:0,statisticsStatus:'available'},{reportId:'mt100',season:'2025/26',round:2,playedOn:'2025-10-02',homeName:'B',awayName:'A',homeGoals:0,awayGoals:0,statisticsStatus:'available'}]
+ const fixtures=[{sourceMatchId:'900',round:1,playedOn:'2026-11-01',homeName:'A',awayName:'B',played:false},{sourceMatchId:'100',round:2,playedOn:'2026-11-02',homeName:'B',awayName:'A',played:false}]
+ const model={competitionId:973,policySha256:'f'.repeat(64),currentOnly:false,reports:reports.map(header=>({header})),currentFixtures:fixtures,schedules:[{season:'2025/26',rounds:[{},{}]}]}
+ const contract=jsonb({schemaVersion:1,competitionId:973,policySha256:model.policySha256,reports:[...reports].reverse(),currentFixtures:[...fixtures].reverse(),expectedArchiveRounds:2,expectedCurrentFixtureCount:2,expectedCurrentClubCount:2})
+ assert.equal(verifyNlSourceContract(model,contract),true)
+ contract.reports[0].homeGoals=1
+ assert.throws(()=>verifyNlSourceContract(model,contract),/differs/)
+})
