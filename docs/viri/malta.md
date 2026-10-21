@@ -262,3 +262,20 @@ Preverbe: `node --test scripts/test-mfa-challenge-reviewed-history*.mjs`;
 SQL rollback v sveži CI bazi teče zgodaj. Lokalni zagon zahteva lastno
 odstranljivo bazo, `SUPABASE_DB_CONTAINER` in
 `MFA_CHALLENGE_HISTORY_DISPOSABLE_TEST=1`.
+
+## NL II: ena tekma, prekinitev in nadaljevanje
+
+Za točno `6234492/2026` adapter po celotnem odkritju preveri `50920555`
+(Msida : Dingli, 8. 11. 2025) in `51962893` (13. 1. 2026). Vrne eno
+logično glavo s končno šifro/datumom ter obema izvirnima šiframa kot
+provenienco. Pred določitvijo krogov jo razvrsti po prvotni šifri `50920555`.
+Surovih zapisov in individualnih statistik ne združuje. Manjkajoči ali
+nasprotujoči segment ustavi obravnavo. Druga sezona ali šifra lige ne
+uporablja te preslikave.
+
+Končna glava zahteva zgodovinsko oznako: navaden uvoz se ustavi **pred
+branjem izida ali postave**, če je popolna nameščena vezava ne preskoči.
+Ta sprememba še ne namesti politike ali odobri uvoza arhiva. Pred sprostitvijo
+mora polna izvirna inventura potrditi 132 logičnih tekem, 22 krogov in prvotno
+mesto nadaljevanja v krogu 4; API nima polja za krog. Tekoča sezona 2026/27
+in obstoječi pregledani poti Premier/Challenge ostanejo nespremenjene.

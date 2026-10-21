@@ -42,6 +42,7 @@
 // postavi ni in ne šteje.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { nastopi as nastopiPoSifri } from './oefb.mjs'
+import {normalizeMfaNl2Continuation,mfaFixtureOrder} from './mfa-nl2-continuation.mjs'
 
 const API = 'https://api.mfa.com.mt/api'
 const OSNOVNI = 'https://matchcentre.mfa.com.mt'
@@ -157,7 +158,7 @@ export function krogiPoSifrah(tekme) {
   let krog = 0
   let v = new Set()
   let st = naKrog
-  for (const t of [...tekme].sort((a, b) => a.id - b.id)) {
+  for (const t of [...tekme].sort((a, b) => mfaFixtureOrder(a) - mfaFixtureOrder(b))) {
     const h = t.homeTeam?.id
     const g = t.awayTeam?.id
     if (st >= naKrog || v.has(h) || v.has(g)) { krog++; v = new Set(); st = 0; po.set(krog, []) }
@@ -176,8 +177,8 @@ export function krogiPoSifrah(tekme) {
     }
   }
   const ostali = [...po.keys()].filter((s) => po.get(s).length)
-  // Ponovljena tekma (isti par še enkrat, NL II 2025/26: Msida : Dingli 50920555
-  // in 51962893) nima prostega mesta in ostane svoj krog na koncu.
+  // Neznana dodatna tekma brez prostega mesta ostane svoj krog na koncu.
+  // Pregledano nadaljevanje NL II je normalizirano že pred razvrščanjem.
   const zadnji = po.get(ostali.at(-1)) ?? []
   if (ostali.length > 1 && zadnji.length < naKrog && zadnji.every((t) => t.id - (po.get(ostali.at(-2)).at(-1)?.id ?? 0) > 100000))
     console.warn(`mfa: tekme ${zadnji.map((t) => t.id).join(', ')} nimajo mesta v krogih bloka (ponovljene?) — svoj krog ${ostali.length}`)
@@ -257,6 +258,7 @@ export function razcleniRazpored(tekme) {
       kontumacija: false,
       odigrana: t.status === 'PLAYED',
       mfaId: t.id,
+      ...(t.requiresHistoricalMarker ? {requiresHistoricalMarker:true,sourceMatchIds:t.sourceMatchIds,sourceUrl:t.sourceUrl} : {}),
     })
   }
   return [...krogi.values()].sort((a, b) => a.stevilka - b.stevilka)
@@ -458,7 +460,8 @@ export async function vseTekme(koda, prenesi, opcije = {}) {
     }
   }
   const tekme = tekmeLige(koda, seznami, skupine)
-  return dopolniZacetek(tekme, preteklih, prenesi, { mapa: opcije.mapa })
+  const vse = await dopolniZacetek(tekme, preteklih, prenesi, { mapa: opcije.mapa })
+  return normalizeMfaNl2Continuation(koda, vse)
 }
 
 // Seznam preteklih tekem vrne največ 100 zadnjih tekem tekmovanja (tudi s
@@ -578,6 +581,7 @@ const vir = {
       // Complete installed policy authority is supplied by the MFA wrapper.
       // Skip before either result or lineup fetch (including cache reads).
       if (preskoci.has(sifraZapisnika(t.id))) continue
+      if (t.requiresHistoricalMarker) throw Error(`mfa: continuation ${t.id} requires an installed historical marker before report reads`)
       const { datum } = lokalniCas(t.startDate)
       const starost = starostDni(datum, zdaj)
       // Zapisnik zadnjega tedna se lahko še popravlja; starejšega ne beremo
