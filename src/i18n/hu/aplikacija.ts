@@ -28,6 +28,13 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     gumb: 'Hívj meg minket egy sörre',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Sörfal',
+    /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
+    okno: {
+      naslov: 'Pszt… a kabalafigura szomjas 🍺',
+      besedilo: 'Az SLFF ingyenes: nincs reklám, nincs fogadás, nincs előfizetés. A szerver sajnos nem lelkesedésből megy. Egy sör segít fizetni a szervert és a levelezést, a neved pedig felkerül a sörfalra.',
+      kasneje: 'Talán legközelebb',
+      zeSem: 'Már meghívtalak 🍻',
+    },
     lestvicaDomov: 'Sörtoplista',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {

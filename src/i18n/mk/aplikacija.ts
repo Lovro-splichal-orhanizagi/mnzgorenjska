@@ -28,6 +28,13 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     gumb: 'Частете нè со пиво',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Ѕид на пива',
+    /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
+    okno: {
+      naslov: 'Пссст… маскотата е жедна 🍺',
+      besedilo: 'SLFF е бесплатен: без реклами, без обложување, без претплати. За жал, серверот не работи на ентузијазам. Едно пиво помага да ги платиме серверот и поштата, а твоето име завршува на ѕидот на пива.',
+      kasneje: 'Можеби следниот пат',
+      zeSem: 'Веќе частив 🍻',
+    },
     lestvicaDomov: 'Табела на пива',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {

@@ -34,6 +34,13 @@ export const aplikacija = {
     gumb: 'Časti pivo',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Pivski zid',
+    /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
+    okno: {
+      naslov: 'Pssst… maskota je žejna 🍺',
+      besedilo: 'SLFF je brezplačen: brez oglasov, brez stav, brez naročnin. Strežnik pa žal ne teče na navdušenje. Eno pivo pomaga plačati strežnik in pošto, tvoje ime pa pristane na pivskem zidu.',
+      kasneje: 'Mogoče naslednjič',
+      zeSem: 'Sem že častil 🍻',
+    },
     lestvicaDomov: 'Pivska lestvica',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {

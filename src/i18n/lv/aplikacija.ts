@@ -27,6 +27,13 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     gumb: 'Uzsauc mums alu',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Alus siena',
+    /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
+    okno: {
+      naslov: 'Psst… talismans ir izslāpis 🍺',
+      besedilo: 'SLFF ir bez maksas: bez reklāmām, derībām un abonementiem. Diemžēl serveris nedarbojas ar entuziasmu. Viens alus palīdz samaksāt par serveri un e-pastu, un tavs vārds nonāk uz alus sienas.',
+      kasneje: 'Varbūt nākamreiz',
+      zeSem: 'Jau izdarīju 🍻',
+    },
     lestvicaDomov: 'Alus tabula',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {

@@ -714,7 +714,11 @@
   `admin_dodaj_pivo`, `admin_izbrisi_pivo` (le ročni). Stran združi
   podpornike po imenu (`src/lib/piva.ts`). Če zapis v bazo ne uspe, gre
   Discord vseeno ven, BMC pa dobi 500 in ponovi. Stran in povezave so le na
-  spletu (kot gumb `Pivo.tsx`)
+  spletu (kot gumb `Pivo.tsx`). Okno `PivoOkno.tsx` povabi prijavljenega na spletu
+  (račun star vsaj 3 dni, ne mladinska liga) največ vsakih 14 dni; kdo je
+  kupil, ne vemo, zato le naprava: klik na pivo utiša okno za 60 dni, "Sem že
+  častil" za 120 (`slff-pivo-okno-do`). Prikaz šteje korak `pivo_okno`, klik
+  iz okna je `pivo` z `utm_medium=okno`
 - **Klubski računi** (migracija 20261013201100, spec
   `docs/superpowers/specs/2026-10-13-klubski-racuni-design.md`): klub dobi
   račun, ko se prijavi s **potrjenim** uradnim naslovom iz `klub_stik`
