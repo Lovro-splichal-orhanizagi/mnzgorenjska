@@ -1,0 +1,120 @@
+name: MFA NL reviewed historical release
+run-name: MFA NL reviewed history ${{ inputs.mode }} ${{ inputs.league }}
+on:
+  workflow_dispatch:
+    inputs:
+      league:
+        description: Fixed native Malta competition
+        type: choice
+        required: true
+        options: [mt-nl1, mt-nl2]
+      mode:
+        description: Reviewed stage; inspect retained evidence between writes
+        type: choice
+        required: true
+        options: [prepare, bootstrap, import, reprice, preview, activate, receipt]
+      expected_sha:
+        description: Exact reviewed current main commit (first attempt only)
+        type: string
+        required: true
+      contract_sha256:
+        description: Exact migration-seeded reviewed source contract SHA256
+        type: string
+        required: true
+      prepare_run_id:
+        description: Bootstrap only - successful same-main prepare run ID
+        type: string
+      prepare_artifact_id:
+        description: Bootstrap only - actual prepare artifact ID
+        type: string
+      prepare_artifact_digest:
+        description: Bootstrap only - reviewed sha256 ZIP digest
+        type: string
+      before_sha256:
+        description: Bootstrap only - reviewed exact native beforeimage SHA256
+        type: string
+      preview_sha256:
+        description: Activate only - reviewed preview SHA256 from same commit/prices
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mfa-nl-reviewed-history
+  cancel-in-progress: false
+jobs:
+  route:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify pinned main before any operation
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+        run: |
+          test "$GITHUB_SHA" = "$EXPECTED_SHA"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$(git rev-parse origin/main)" = "$EXPECTED_SHA"
+          test "$GITHUB_RUN_ATTEMPT" = 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts
+      - name: Wait for older Malta and global writers
+        env:
+          MFA_NL_LEAGUE: ${{ inputs.league }}
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --drzava MT --popravek --tekmovanje "$MFA_NL_LEAGUE" --najvec 120
+      # Restore only to preserve other Malta leagues. The runner moves this aside
+      # and seeds a fresh replay directory from authenticated source bytes.
+      - name: Preserve latest main Malta country cache
+        if: inputs.mode == 'import'
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: mfa-nl-reviewed-restore-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            zapisniki-MT-k1od1-
+            zapisniki-MT-
+      - name: Run fixed retained-source stage
+        id: stage
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          MFA_NL_MODE: ${{ inputs.mode }}
+          MFA_NL_LEAGUE: ${{ inputs.league }}
+          CONTRACT_SHA256: ${{ inputs.contract_sha256 }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PREPARE_RUN_ID: ${{ inputs.prepare_run_id }}
+          PREPARE_ARTIFACT_ID: ${{ inputs.prepare_artifact_id }}
+          PREPARE_ARTIFACT_DIGEST: ${{ inputs.prepare_artifact_digest }}
+          BEFORE_SHA256: ${{ inputs.before_sha256 }}
+          PREVIEW_SHA256: ${{ inputs.preview_sha256 }}
+        run: node scripts/mfa-nl-reviewed-history.mjs "$MFA_NL_MODE"
+      - name: Save verified main cache for Malta nightly imports
+        if: success() && inputs.mode == 'import' && steps.stage.outcome == 'success' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-MT-k1od1-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Save verified main cache for ordinary league imports
+        if: success() && inputs.mode == 'import' && steps.stage.outcome == 'success' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-${{ inputs.league }}-${{ github.run_id }}
+      - name: Retain reviewed evidence and partial failure receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mfa-nl-reviewed-${{ inputs.mode }}-${{ inputs.league }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: mfa-nl-reviewed-${{ inputs.mode }}/
+          if-no-files-found: warn
+          retention-days: 30

@@ -463,6 +463,32 @@
           "reasonCode": "missing_dismissal_clock"
         }
       ]
+    },
+    {
+      "id": "mt-nl1-reviewed-history-2026-10-21-v1",
+      "provider": "mfa",
+      "sourcePolicy": "mt-mfa-nl1-reviewed-history-v1",
+      "competitionSlug": "mt-nl1",
+      "season": "2026/27",
+      "recordedAt": "2026-10-21T19:16:06.523574+00:00",
+      "approvalReference": "User reply Allow this reviewed historical exclusion to call_ad3388b13b7b446781a593b0bf1a49d8; recording time, original user send time unavailable",
+      "entries": [
+        {
+          "sourceMatchId": "50921445",
+          "sourceCompetitionId": "50919376",
+          "sourcePhase": null,
+          "sourceRound": 24,
+          "season": "2025/26",
+          "playedOn": "2026-04-18",
+          "homeSourceClubId": "39642",
+          "awaySourceClubId": "40409",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50921445",
+          "rawSha256": "24a68ce636ecee7127b389ef320f5fe5475c3f7fbf4330344f618652787f83f4",
+          "observedHomeScore": 1,
+          "observedAwayScore": 0,
+          "reasonCode": "missing_dismissal_clocks"
+        }
+      ]
     }
   ]
 }

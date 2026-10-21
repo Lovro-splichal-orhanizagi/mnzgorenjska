@@ -165,6 +165,16 @@ jobs:
       - run: npm ci --ignore-scripts
       # Zagon same baze preveri celotno verigo migracij na praznem Postgresu.
       - run: npx --yes supabase@2.117.0 db start
+      - name: MFA NL closed archive bootstrap rollback regression
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          MFA_NL_BOOTSTRAP_DISPOSABLE_TEST: '1'
+        run: node --test scripts/test-mfa-nl-bootstrap-sql.mjs
+      - name: MFA NL closed source/import/prices/release rollback regression
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          MFA_NL_RELEASE_DISPOSABLE_TEST: '1'
+        run: node --test scripts/test-mfa-nl-release-sql.mjs
       - name: MFA Challenge four-report cleanup and release rollback regression
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska

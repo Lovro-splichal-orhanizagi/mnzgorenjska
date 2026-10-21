@@ -47,9 +47,10 @@ v prostem besedilu) ni vpisana.
   krog zaporedje šifer (`krogiPoSifrah`): nov krog, ko bi klub igral drugič ali
   je krog poln (N/2). Izbrisana tekma pusti luknjo (NL I 2026/27: 53185946,
   krog 3 s 5 tekmami); na novo vpisana tekma z visoko šifro gre v luknjo, kjer
-  ne igra nobeden od klubov. Ponovljena tekma (isti par še enkrat, NL II
-  2025/26: Msida : Dingli 50920555 in 51962893, obe PLAYED) mesta nima in ostane
-  svoj krog na koncu (opozorilo).
+  ne igra nobeden od klubov. NL II
+  2025/26 ima pregledano prekinitev/nadaljevanje Msida : Dingli
+  (`50920555` + `51962893`): ena končna glava se razvrsti po prvotni šifri,
+  individualnih dogodkov obeh segmentov pa ne združujemo (glej spodaj).
 - **Zapisnik** = `/matches/<id>/result` (`homeScore`, `awayScore`, `status`
   PLAYED) + `/matches/<id>/lineup` (`homeTeam.players`, `awayTeam.players`):
   `id` igralca je **stalna šifra osebe COMET → `reg_st`**, `number`,
@@ -126,13 +127,24 @@ pregledanih zgodovinskih poti. Vpis kandidata ne odobri zgodovinskih statistik
 ali vklopa: ostanejo preverbe časov dogodkov, izidov, identitet, menjav,
 vratarjev, cen, kadra in dejanskega prihodnjega prvega fantasy kroga.
 
-**NL II ostaja HELD**: `50920555` in `51962893` sta segmenta iste tekme
-Msida : Dingli, prekinjene pri 69 minutah in nadaljevane do končnih 1:1.
-Manjkajoče domače menjave ni mogoče rekonstruirati, zato točnih minut ni
-mogoče zanesljivo izpeljati. Zgodovinska obravnava potrebuje izrecno pregledano
-odobritev; ta vpis kandidata ne izključi nobene šifre in ne dovoljuje uvoza NL II.
-Adapter trenutno oba segmenta še prikaže ločeno; pregledna inventura to
-razliko ohrani, ne ugiba združitve ali individualnih statistik.
+**Pregledane izjeme NL (21. 10. 2026).** Uporabnik je odobril samo
+NL I `mt50921445` (Mellieha : Victoria Hotspurs, 18. 4. 2026, 1:0,
+manjkajoča časa dveh izključitev; 1/181 arhivskih poročil) in NL II
+skupno tekmo `50920555` + `51962893` (končni 1:1, 1/132 logičnih
+arhivskih tekem; manjkajoča povezovalna menjava). Uradni rezultati ostanejo,
+individualne statistike so nedostopne. Nespremenljiva politika NL I in natančni izvorni hashi so v registru in
+pregledanih migracijah; sam vpis ne namesti oznak, ne uvozi arhiva in ne
+vklopi lige. Odobritev nadaljevanja NL II je zadržana v dokaznem paketu;
+politika te lige še ni registrirana ali vstavljena v SQL, dokler ni
+razrešen celoten pregled zgodovine.
+
+Celotni zadržani audit NL I pokrije 181 arhivskih in 20 tekočih poročil;
+NL II 133 surovih arhivskih segmentov, 132 logičnih tekem in 35 tekočih
+poročil. Dokaz NL II potrjuje 22 krogov, 12 klubov s po 22 tekmami,
+nadaljevanje v krogu 4 in nespremenjeno razvrstitev vseh drugih parov.
+NL II ima še dva **neodobrena** arhivska zadržka `50920572` in `50920621`
+(izključitvi brez minute). Zaprta pot ju ne sme uvoziti kot običajno statistiko
+ali sama razširiti izjem. Tekoča poročila ohranijo vse običajne preverbe.
 
 Za pregled **že shranjenih bajtov** je v `razdeli-zlite-igralce.yml` način
 `mfa_nl_cache_audit=true`, `mfa_nl_league=mt-nl1|mt-nl2` in numerični
@@ -149,7 +161,7 @@ mtime je čas datoteke, ne čas potrjenega odziva vira, status/čas prvotnega za
 pa iz predpomnilnika nista dokazljiva. Opozoril, zavrnitev in izzivov ta pregled
 ne odpravlja ali odobrava ponovnega branja.
 
-Poln uvoz obeh sezon ene lige je približno 20–25 minut; arhiv 130–190 tekem
+Prvotni poln omrežni uvoz obeh sezon ene lige je približno 20–25 minut; arhiv 130–190 tekem
 je ~15–20 minut (dva zahtevka na zapisnik in dodatni seznami/dopolnitev).
 Oba NL skupaj bi potrebovala približno 840–890 zahtevkov in 40–50 minut;
 NL II šele po ločeni odobritvi obravnave nadaljevanja. Izrecnega dovoljenja MFA
@@ -177,6 +189,93 @@ obstoječe neodigrane Mtarfine tekme odstrani po običajni preverjeni poti.
 Pred tem se preveri, da nobena nima uvoženih statistik ali uporabniških
 fantasy ekip. Prihodnji prvi fantasy krog se pregleda po popravku. Sam
 popravek ne vklopi lige in ne odobri nobene zgodovinske izjeme.
+
+## NL I / NL II: zaprto ogrodje namestitve arhivskih oznak
+
+`20261021183000_mfa_nl_archive_bootstrap.sql` doda samo zasebno ogrodje in
+servisne RPC-je; ne vpiše nobene odobritve v SQL ali JS register. Natančni
+native dvojici sta `973/mt-nl1/2601267/2027` in `974/mt-nl2/6234492/2027`.
+Podprta ID-ja politike sta `mt-nl1-reviewed-history-2026-10-21-v1` in
+`mt-nl2-reviewed-history-2026-10-21-v1`; brez poznejšega pregledanega vpisa
+politike in vezav izvornih klubov prepare zavrne. Odobrene so samo zgoraj navedene točne izjeme; vklop še vedno potrebuje
+popolno pogodbo vira in vse nadaljnje preverbe.
+
+Najprej se na navadni poti uvozi **samo tekoča sezona**, še pred registracijo
+politike. Izvorno potrjene popravke razporeda je treba namestiti pred prepare.
+`prepare_mfa_nl_reviewed_bootstrap(competition_id, main_sha, policy_sha)`
+zaklene relevantni obseg, zahteva neaktivno ligo brez arhiva, uporabniških
+ekip ali sedanjih/izbrisanih glasov ter vrne celotni `beforeImageText` in
+`beforeSha256`. Prihodnji odklenjeni začetni krog izbere iz dejanskih
+tekočih vrstic po navadnem pravilu vrzeli/odigranih krogov. Preverba polne
+pokritosti vira in njegovih izvirnih hashov ostaja naloga poznejše zaprte
+priprave; domnevno prestavljenih tekočih tekem ta SQL ne razglasi za odigrane.
+
+Po zunanjem pregledu apply sprejme še `before_sha` in `before_image_text`,
+v isti transakciji ponovno preveri celoten posnetek in ustvari samo
+politiki pripadajoče prazne arhivske glave, kroge ter natančne vezave klubov.
+Ne briše ali rekonstruira nastopov/golov. Tekoče tekme, igralci, krogi in
+izpeljani podatki ostanejo enaki. NL II dovoli samo končni `mt51962893`,
+krog 4, 13. 1. 2026, 1:1; `mt50920555` je prepovedana glava.
+`get_mfa_nl_reviewed_bootstrap_receipt(competition_id)` obnovi potrdilo po
+nejasnem odgovoru; apply se ne ponavlja na slepo. Zasebni deli niso odprti
+niti servisu; javna ovoja uporabljata dejansko uro tudi ob koncu transakcije.
+Dokaz celotnega uvoza, cenitev in vklop zahtevajo še ločeno pogodbo vira spodaj.
+
+Rollback preizkus in dve povezavi tečeta samo na izrecno lastni sveži
+bazi `supabase_db_slff_mfa_nl_bootstrap_20261021` z oznako tega projekta.
+`MFA_NL_BOOTSTRAP_DISPOSABLE_TEST=1` omogoči SQL pogodbo;
+`MFA_NL_BOOTSTRAP_RACE_TEST=1` omogoči tekmovalni preizkus, ki potrebuje
+novo prazno testno bazo in za seboj pusti le sintetične testne vrstice.
+Rollback SQL je vključen tudi v točno CI opravilo `varnost` na njegovi sveži
+bazi; izven tega opravila običajna razvijalčeva baza ni dovoljena.
+Ukaz je `npm run test:mfa-nl-bootstrap`; brez zastavic sta native preizkusa
+preskočena. Ne uporabljaj razvijalčeve običajne baze.
+
+## NL I / NL II: zaprta pogodba vira in vklop
+
+`20261021200000_mfa_nl_source_release.sql` ne odobri nobenega novega poročila,
+števila tekem ali paketa. Nespremenljiva zasebna tabela `source_contract`
+potrebuje poznejšo pregledano migracijo. Dokument in njegov kanonični UTF-8
+SHA vključujeta celotno provenienco `sourceArtifact` (runId, artifactId, digest,
+commit, workflow, branch, name), natančne glave vseh arhivskih/tekočih poročil,
+celoten tekoči razpored, število klubov in arhivskih krogov ter
+`opening:{round,playedOn,deadlineAt}`. Deadline mora biti neodvisno izračunan
+iz vira in enak izvirnemu bootstrap posnetku. Sintetični preizkusi niso odobritev.
+
+Vsi novi RPC-ji so samo servisni in omejeni na 973/974:
+
+- `get_mfa_nl_reviewed_source_contract(competition_id, contract_sha)` omogoča
+  preverbo pogodbe in izvornega paketa že pred bootstrap; ne zahteva oznak.
+- `get_mfa_nl_reviewed_source_state(competition_id, main_sha, contract_sha)`
+  po bootstrap preveri celotno pokritost in vrne `footballImageText` ter
+  `footballSha256`. Zunanji preverjevalnik primerja vsako izvorno vrstico in
+  zgoščuje **iste bajte besedila**, brez ponovne serializacije. Posnetek vsebuje
+  polne vrstice ekip/krogov/tekem/nastopov/golov in identiteto igralcev
+  (id, competition_id, team_id, reg_st, first_name, last_name, full_name,
+  shirt_number, nzs_birth_year). Cen, pozicij in active igralca ne zamrzne.
+- `record_mfa_nl_reviewed_import(competition_id, main_sha, contract_sha,
+  football_sha)` zabeleži zunanje potrjeni posnetek; isti commit ga ne more
+  zamenjati. `record_mfa_nl_reviewed_prices(competition_id, main_sha,
+  contract_sha)` po cenitvi zamrzne polno stanje ob nespremenjenem nogometu.
+- `check_mfa_nl_reviewed_release(competition_id, main_sha, contract_sha,
+  expected_preview_sha default null, activate default false)` preveri isti
+  commit, pogodbo, bootstrap, posnetek, sveže cene, bodoči izvirni začetek,
+  gole/XI/minute/identitete, trenutne zanesljive vratarje, klop, raznolikost
+  cen in legalnih 15 do 100. Vklop zahteva pregledani digest in pod istimi
+  ključavnicami izda zasebno dovoljenje ter vklopi ligo. Javni ovoj ob koncu
+  ponovno preveri dejansko uro. `get_mfa_nl_reviewed_release_receipt(id)`
+  obnovi potrdila po nejasnem odgovoru.
+
+Čakajoče tekme nimajo shranjenega izvornega ID-ja: `fixtureBindings.indirect`
+je zato true in vezava uporablja točen krog/datum/par klubov ter celotno
+množico. Odigrana poročila imajo neposredno vezavo na `mtID`.
+
+`npm run test:mfa-nl-release` uporablja samo izrecno lastno bazo
+`supabase_db_slff_mfa_nl_release_20261021` ali točno sveže CI opravilo
+`varnost`. `MFA_NL_RELEASE_DISPOSABLE_TEST=1` omogoči rollback pogodbo;
+`MFA_NL_RELEASE_RACE_TEST=1` na prazni lastni bazi preveri dve povezavi in
+za seboj pusti sintetične vrstice. Običajni CI registrira samo rollback test.
+Pogodba brez zastavic nima dostopa do baze. Premier/Challenge ostajata ločena.
 
 ## Premier: pregledani zgodovinski izjemi (20. 10. 2026)
 
@@ -262,3 +361,39 @@ Preverbe: `node --test scripts/test-mfa-challenge-reviewed-history*.mjs`;
 SQL rollback v sveži CI bazi teče zgodaj. Lokalni zagon zahteva lastno
 odstranljivo bazo, `SUPABASE_DB_CONTAINER` in
 `MFA_CHALLENGE_HISTORY_DISPOSABLE_TEST=1`.
+
+## NL II: ena tekma, prekinitev in nadaljevanje
+
+Za točno `6234492/2026` adapter po celotnem odkritju preveri `50920555`
+(Msida : Dingli, 8. 11. 2025) in `51962893` (13. 1. 2026). Vrne eno
+logično glavo s končno šifro/datumom ter obema izvirnima šiframa kot
+provenienco. Pred določitvijo krogov jo razvrsti po prvotni šifri `50920555`.
+Surovih zapisov in individualnih statistik ne združuje. Manjkajoči ali
+nasprotujoči segment ustavi obravnavo. Druga sezona ali šifra lige ne
+uporablja te preslikave.
+
+Končna glava zahteva zgodovinsko oznako: navaden uvoz se ustavi **pred
+branjem izida ali postave**, če je popolna nameščena vezava ne preskoči.
+Ta sprememba ne namesti oznake ali vklopi lige. Polna izvirna inventura zadržanega
+paketa `39655969899` je potrdila 132 logičnih tekem, 22 krogov in prvotno
+mesto nadaljevanja v krogu 4; API nima polja za krog. Tekoča sezona 2026/27
+in obstoječi pregledani poti Premier/Challenge ostanejo nespremenjene.
+
+## NL I: pregledani vir za prvo objavo
+
+Celotni zadržani vir je vezan na uspešen audit `39654281589`, artefakt
+`12369359893`, digest `sha256:a758e66fa050cfefb5897018e9b71eb9595fb3a7c3947627c90fc58a71a662e2`.
+Pogodba `9b25cae2297d920720d152d135799d109468642144e12202d8265cedd8343815`
+vključuje vseh 201 odigranih poročil (180 popolnih arhivskih, eno označeno
+arhivsko in 20 popolnih tekočih), 50 tekočih tekem in 11 tekočih klubov.
+Običajni uvoz `39661344819` je odstranil šest neodigranih tekem Mtarfe;
+poznejše branje baze potrjuje natančnih 611 tekočih nastopov in 67 golov
+z vsemi neposrednimi fantazijskimi števci. Začetek je dejanski krog 5,
+13. 11. 2026, rok `2026-11-13T13:30:00.000Z`, ne domnevni naslednji krog.
+
+Zaprta pot `mfa-nl-reviewed-history.yml` uporablja pripravo, pregled natančnih
+bajtov posnetka, bootstrap, zapečateno predvajanje običajnega uvoza iz
+avtenticiranega predpomnilnika, cenitev, pregled in vklop. Noben od teh
+korakov sam ne preskoči drugih preverjanj. Arhiva se ne prenaša znova z MFA.
+NL II ostane izven registra politik in brez pogodbe vira do ločene
+razrešitve dveh dodatnih zgodovinskih poročil.

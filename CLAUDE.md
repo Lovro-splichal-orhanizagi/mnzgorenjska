@@ -262,6 +262,16 @@ preveri vezave na klube/kroge; označba ni dovoljenje za ugibanje statistik.
 `match_assist_status` vrne NULL za neznane posamezne podatke in zapre
 glasovanje, `sezone` pa ločeno šteje popolne in nedosegljive zapisnike.
 
+Malteški NL bootstrap uporablja ločene servisne `prepare_mfa_nl_reviewed_bootstrap`,
+`apply_mfa_nl_reviewed_bootstrap` in `get_mfa_nl_reviewed_bootstrap_receipt`.
+Pred registracijo politike mora obstajati navaden uvoz samo tekoče sezone;
+namestitev ustvari le odobrene prazne arhivske glave in ohrani tekoče podatke.
+Zasebna `source_contract` in servisni source/import/prices/release RPC-ji ostanejo
+zaprti brez poznejše pregledane pogodbe vira; ogrodje ne vsebuje odobritev.
+Posnetek nogometa se preverja po nespremenjenih bajtih `footballImageText`;
+cene/pozicije/active igralcev so ločeni izhodi cenitve.
+Podrobnosti in omejitve so v `docs/viri/malta.md`.
+
 ## Mobilna aplikacija
 
 Capacitor zapakira `dist/` (`ios/`, `android/`; načrt in gradnja v

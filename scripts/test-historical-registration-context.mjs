@@ -57,7 +57,7 @@ for(const [label,options]of[
  assert.doesNotMatch(result.stderr,/external provider fetch/)
 })
 test('ordinary MFA registration CLI needs no historical marker RPC',async()=>{
- const result=await registration({row:{...competition,id:973,slug:'mt-nl1',source_policy:null,source_league_code:'2601267/2027'}})
+ const result=await registration({row:{...competition,id:975,slug:'mt-fixture-ordinary',source_policy:null,source_league_code:'999999/2027'}})
  assert.equal(result.code,0,result.stderr)
  assert.match(result.stdout,/zapisnikov o prestopih ne objavlja/)
  assert.equal(result.calls.filter(x=>x.method==='POST').length,0)

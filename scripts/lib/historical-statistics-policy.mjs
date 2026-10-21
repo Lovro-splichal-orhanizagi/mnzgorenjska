@@ -2,9 +2,9 @@
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 
-const MFA_POLICY_IDS = ['mt-premier-reviewed-history-2026-10-20-v1','mt-challenge-reviewed-history-2026-10-21-v1']
+const MFA_POLICY_IDS = ['mt-premier-reviewed-history-2026-10-20-v1','mt-challenge-reviewed-history-2026-10-21-v1','mt-nl2-reviewed-history-2026-10-21-v1','mt-nl1-reviewed-history-2026-10-21-v1']
 const mfaEntrySeason = (policy,entry) => MFA_POLICY_IDS.includes(policy.id) ? entry.season : policy.season
-const exactMfaTuple = competition => (competition?.id===971 && competition?.slug==='mt-premier' && competition?.source_league_code==='58539/2027') || (competition?.id===972 && competition?.slug==='mt-challenge' && competition?.source_league_code==='2601248/2027')
+const exactMfaTuple = competition => (competition?.id===971 && competition?.slug==='mt-premier' && competition?.source_league_code==='58539/2027') || (competition?.id===972 && competition?.slug==='mt-challenge' && competition?.source_league_code==='2601248/2027') || (competition?.id===973 && competition?.slug==='mt-nl1' && competition?.source_league_code==='2601267/2027') || (competition?.id===974 && competition?.slug==='mt-nl2' && competition?.source_league_code==='6234492/2027')
 const SHA256 = /^[a-f0-9]{64}$/
 const text = value => typeof value === 'string' && value.trim().length > 0
 const dateOnly = value => {
@@ -38,7 +38,7 @@ export function validateHistoricalStatisticsRegistry(registry) {
     if ('approvedAt' in policy) fail('policy must record evidence time, not an unknown approval send time')
     if (!Array.isArray(policy.entries) || !policy.entries.length) fail('empty policy entries')
     for (const entry of policy.entries) {
-      if ('season' in entry && !(MFA_POLICY_IDS.includes(policy.id) && policy.provider === 'mfa' && ((policy.competitionSlug === 'mt-premier' && policy.sourcePolicy === 'mt-mfa-reviewed-history-v1') || (policy.competitionSlug === 'mt-challenge' && policy.sourcePolicy === 'mt-mfa-challenge-reviewed-history-v1')) && /^\d{4}\/\d{2}$/.test(entry.season))) fail('unsupported entry season override')
+      if ('season' in entry && !(MFA_POLICY_IDS.includes(policy.id) && policy.provider === 'mfa' && ((policy.competitionSlug === 'mt-premier' && policy.sourcePolicy === 'mt-mfa-reviewed-history-v1') || (policy.competitionSlug === 'mt-challenge' && policy.sourcePolicy === 'mt-mfa-challenge-reviewed-history-v1') || (policy.competitionSlug === 'mt-nl1' && policy.sourcePolicy === 'mt-mfa-nl1-reviewed-history-v1') || (policy.competitionSlug === 'mt-nl2' && policy.sourcePolicy === 'mt-mfa-nl2-reviewed-history-v1')) && /^\d{4}\/\d{2}$/.test(entry.season))) fail('unsupported entry season override')
       if (policy.provider === 'mfa' && (!MFA_POLICY_IDS.includes(policy.id) || !['2025/26','2026/27'].includes(entry.season))) fail('unsupported MFA entry season')
       for (const field of ['sourceMatchId', 'sourceCompetitionId', 'homeSourceClubId', 'awaySourceClubId', 'sourceUrl', 'reasonCode']) if (!text(entry?.[field])) fail(`invalid entry ${field}`)
       if (policy.provider === 'fcf') for (const field of ['homeSourceCategoryId', 'awaySourceCategoryId']) if (!text(entry[field])) fail(`invalid entry ${field}`)
