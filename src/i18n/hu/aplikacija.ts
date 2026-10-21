@@ -30,7 +30,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zid: 'Sörfal',
     /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
     okno: {
-      naslov: 'Pszt… a kabalafigura szomjas 🍺',
+      naslov: 'Pszt… Pivko szomjas 🍺',
       besedilo: 'Az SLFF ingyenes: nincs reklám, nincs fogadás, nincs előfizetés. A szerver sajnos nem lelkesedésből megy. Egy sör segít fizetni a szervert és a levelezést, a neved pedig felkerül a sörfalra.',
       kasneje: 'Talán legközelebb',
       zeSem: 'Már meghívtalak 🍻',

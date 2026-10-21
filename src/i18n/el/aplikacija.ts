@@ -30,7 +30,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zid: 'Τοίχος της μπίρας',
     /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
     okno: {
-      naslov: 'Ψιτ… η μασκότ διψάει 🍺',
+      naslov: 'Ψιτ… ο Pivko διψάει 🍺',
       besedilo: 'Το SLFF είναι δωρεάν: χωρίς διαφημίσεις, χωρίς στοιχήματα, χωρίς συνδρομές. Δυστυχώς, ο διακομιστής δεν λειτουργεί με ενθουσιασμό. Μια μπίρα βοηθά να πληρώσουμε διακομιστή και email, και το όνομά σου μπαίνει στον τοίχο της μπίρας.',
       kasneje: 'Ίσως την επόμενη φορά',
       zeSem: 'Το έκανα ήδη 🍻',
