@@ -1,3 +1,7 @@
+-- Owner-only fixture, always inside the exact disposable wrapper's transaction.
+-- Rollback suite restores live contracts; the owned race DB is discarded afterward.
+do $$begin if current_setting('slff.mfa_nl_owned_fixture',true)is distinct from 'transaction'then raise exception 'MFA NL TEST: explicit owned fixture transaction required';end if;end$$;
+truncate table private_mfa_nl_history.source_contract,private_mfa_nl_history.import_receipt,private_mfa_nl_history.price_receipt,private_mfa_nl_history.release_receipt,private_mfa_nl_history.bootstrap_receipt cascade;
 -- Synthetic six-club launch contracts only; never live fixture/count approvals.
 \ir mfa-nl-bootstrap-fixture.sql
 insert into private_historical_statistics.policies select id,sha,document from nl_test_policies on conflict(id)do nothing;

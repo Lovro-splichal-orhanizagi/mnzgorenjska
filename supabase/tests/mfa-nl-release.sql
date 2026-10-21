@@ -1,5 +1,6 @@
 begin;
 set local jit=off;
+set local slff.mfa_nl_owned_fixture='transaction';
 create function pg_temp.nl_assert(ok boolean,message text)returns void language plpgsql as $$begin if ok is distinct from true then raise exception 'MFA NL RELEASE TEST: %',message;end if;end$$;
 create function pg_temp.nl_refuses(q text,expected text default 'MFA_NL_RELEASE:|MFA_NL_BOOTSTRAP:|HISTORICAL_POLICY:')returns void language plpgsql as $$begin begin execute q;exception when others then if sqlerrm !~ expected then raise exception 'MFA NL RELEASE TEST: wrong refusal %',sqlerrm;end if;return;end;raise exception 'MFA NL RELEASE TEST: expected refusal';end$$;
 select pg_temp.nl_assert(to_regprocedure('public.get_mfa_nl_reviewed_source_state(bigint,text,text)')is not null,'closed source-state API missing');
