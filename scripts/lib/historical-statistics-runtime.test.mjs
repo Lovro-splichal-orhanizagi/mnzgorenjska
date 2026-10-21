@@ -48,3 +48,14 @@ test('actual schedule branch preserves installed official header without match w
  assert.deepEqual(writes,[])
  for(const patch of [{obstojeca:{id:12},krogId:22},{obstojeca:{id:11},krogId:23}])assert.throws(()=>runInNewContext(`for(const t of fixtures){${body};write()}`,{fixtures:[{historicalMarker:marker}],...patch,write(){throw Error('write reached')}}),/historical schedule.*identity/i)
 })
+
+test('actual registrations CLI loads the installed historical context before the factory',async()=>{
+ const p=policies.find(p=>p.provider==='fcf'),c=competition(p),b=binding(p),calls=[],stop=Error('STOP')
+ const source=readFileSync(new URL('../uvoz-registracij.mjs',import.meta.url),'utf8')
+ const body=source.slice(source.indexOf('const originalCompetition'),source.indexOf('console.log(`Tekmovanje:'))
+ await assert.rejects(()=>runInNewContext(`(async()=>{${body}})()`,{
+  najdiTekmovanje:async()=>c,slugTekmovanja:()=>c.slug,db:{async rpc(name,args){calls.push([name,args]);return{data:b,error:null}}},
+  loadHistoricalStatisticsImportContext,viraZa(competition,{installedHistoricalMarkers}={}){assert.ok(installedHistoricalMarkers?.markers?.length);throw stop},
+ }),e=>e===stop)
+ assert.deepEqual(calls,[['get_installed_historical_statistics_markers',{p_competition_id:99}]])
+})

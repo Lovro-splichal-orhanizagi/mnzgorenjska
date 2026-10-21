@@ -28,6 +28,7 @@ import {
   tekmovanje as najdiTekmovanje,
 } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
+import { loadHistoricalStatisticsImportContext } from './lib/historical-statistics-import.mjs'
 import { prenesiSPonovitvami, fetchZaBazo } from './prenos.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
@@ -92,8 +93,9 @@ const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global
 
 // Tekmovanje razrešimo takoj: iz njega dobimo vir, ta pa naslove — potrebni
 // so že pri seznamu zapisnikov niže.
-const tekmovanje = await najdiTekmovanje(db, slugTekmovanja())
-const vir = viraZa(tekmovanje)
+const originalCompetition = await najdiTekmovanje(db, slugTekmovanja())
+const { competition: tekmovanje, installedHistoricalMarkers } = await loadHistoricalStatisticsImportContext(db, originalCompetition)
+const vir = viraZa(tekmovanje, { installedHistoricalMarkers })
 console.log(`Tekmovanje: ${tekmovanje.name}`)
 
 const poenostavi = (ime) =>
