@@ -574,6 +574,123 @@
           "rawSha256": "dc0d717b5be05389e72f081df04bac8ee93fe93384ff31f51817d6faaf0b5399"
         }
       ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39647",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "St. Andrews"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "50903309",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50903309",
+          "rawSha256": "6d3e76c052422a1f17568214e71250e24fa917a3a06998e66ad5c6639083ad4e"
+        }
+      ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39626",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Fgura United"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "50903309",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50903309",
+          "rawSha256": "6d3e76c052422a1f17568214e71250e24fa917a3a06998e66ad5c6639083ad4e"
+        }
+      ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39641",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Marsa"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "50903328",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50903328",
+          "rawSha256": "59f9a7f7e4825acb00feaa31b16aadc2ea257991121a19e85b1f007dca17429a"
+        },
+        {
+          "sourceMatchId": "50903358",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50903358",
+          "rawSha256": "2a79857b3d37fdb4476e07b59969e8ab49c3a5d3d723d9bc3d10393951d63ada"
+        }
+      ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39632",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Mgarr United"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "50903328",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50903328",
+          "rawSha256": "59f9a7f7e4825acb00feaa31b16aadc2ea257991121a19e85b1f007dca17429a"
+        }
+      ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39631",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Melita"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "50903358",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50903358",
+          "rawSha256": "2a79857b3d37fdb4476e07b59969e8ab49c3a5d3d723d9bc3d10393951d63ada"
+        }
+      ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "40411",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Sirens"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "52353213",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/52353213",
+          "rawSha256": "16479747a46715412892ca6e5c437d7e96c511caf378584b23873e67622950b0"
+        }
+      ]
+    },
+    {
+      "provider": "mfa",
+      "sourceClubId": "39612",
+      "sourceCategoryId": null,
+      "countryCode": "MT",
+      "canonicalNames": [
+        "Balzan"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "52353213",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/52353213",
+          "rawSha256": "16479747a46715412892ca6e5c437d7e96c511caf378584b23873e67622950b0"
+        }
+      ]
     }
   ]
 }

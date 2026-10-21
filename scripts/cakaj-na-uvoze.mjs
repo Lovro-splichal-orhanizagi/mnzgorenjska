@@ -135,6 +135,7 @@ function seKrize(tok, naslov, id) {
     if (/^FCF history (cache-export|seed-stage) /.test(naslov ?? '')) return false
     return !mojaDrzava || mojaDrzava === 'ES'
   }
+  if(tok==='mfa-challenge-reviewed-history.yml'){if(/^MFA Challenge reviewed history (prepare|preview|receipt) mt-challenge$/.test(naslov??''))return false;return !mojaDrzava||mojaDrzava==='MT'}
   if(tok==='mfa-reviewed-history.yml'){if(/^MFA reviewed history (prepare|preview|receipt) mt-premier$/.test(naslov??''))return false;return !mojaDrzava||mojaDrzava==='MT'}
   if(tok==='uvoz-hr-zenske.yml')return !mojaDrzava||mojaDrzava==='HR'
   // Catalan activation and the fixed public FCF reader always share ES scope.
@@ -255,11 +256,11 @@ function readFcfHistoryRuns() {
 
 if (samoTece) {
   const tecejo = []
-  for (const tok of ['mfa-reviewed-history.yml', 'uvoz-hr-zenske.yml', 'uvoz-fcf-zgodovina.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'vklop-obstojecih-lig.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']) {
+  for (const tok of ['mfa-challenge-reviewed-history.yml', 'mfa-reviewed-history.yml', 'uvoz-hr-zenske.yml', 'uvoz-fcf-zgodovina.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'vklop-obstojecih-lig.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']) {
     const zagoni = tok === 'uvoz-fcf-zgodovina.yml' ? readFcfHistoryRuns() : JSON.parse(gh('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,status,displayTitle'))
     for (const z of zagoni) {
       if (z.status === 'completed') continue
-      if (['mfa-reviewed-history.yml','uvoz-fcf-zgodovina.yml', 'vklop-obstojecih-lig.yml'].includes(tok) && !seKrize(tok, z.displayTitle, z.databaseId)) continue
+      if (['mfa-challenge-reviewed-history.yml', 'mfa-reviewed-history.yml','uvoz-fcf-zgodovina.yml', 'vklop-obstojecih-lig.yml'].includes(tok) && !seKrize(tok, z.displayTitle, z.databaseId)) continue
       // Ročni uvoz nevklopljene lige ne piše v nič, kar preverba gleda.
       const slug = ligaZagona(tok, z.displayTitle)
       // Vklop lahko še neaktivno ligo med preverbo vključi: nanj čakamo.
@@ -275,7 +276,7 @@ if (samoTece) {
 
 for (let min = KORAK_MIN; min <= NAJVEC_MIN; min += KORAK_MIN) {
   const pred = []
-  const tokovi = ['mfa-reviewed-history.yml', 'uvoz-hr-zenske.yml', 'uvoz-fcf-zgodovina.yml', 'fcf-javni-dokazi.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'vklop-obstojecih-lig.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']
+  const tokovi = ['mfa-challenge-reviewed-history.yml', 'mfa-reviewed-history.yml', 'uvoz-hr-zenske.yml', 'uvoz-fcf-zgodovina.yml', 'fcf-javni-dokazi.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'vklop-obstojecih-lig.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']
   if (SKUPEN_VIR[mojaDrzava]) tokovi.push('grbi.yml')
   for (const tok of tokovi) {
     // Brez --status: tudi čakajoči (queued) starejši zagon mora priti prvi.

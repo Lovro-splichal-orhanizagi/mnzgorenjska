@@ -40,7 +40,7 @@ test('MFA real adapter skips installed IDs before per-report reads, still parses
  // A tiny retained-style list is sufficient: Premier has fewer than100 current reports.
  assert.deepEqual(await vir.zapisniki('58539/2027',read),[])
  assert.ok(!reads.some(url=>url.includes('/matches/')))
- assert.equal(viraZa({slug:'mt-challenge',source:'mfa'}),mfa)
+ assert.equal(viraZa({slug:'mt-nl1',source:'mfa'}),mfa)
  for(const e of policy().entries)assert.throws(()=>assertHistoricalReportImportable({competition:competition(),report:{id:`mt${e.sourceMatchId}`,z:{}}}),/fixture|historical|identity/)
  assert.doesNotThrow(()=>assertHistoricalReportImportable({competition:competition(),report:{id:'mt99999999',z:{}}}))
 })
