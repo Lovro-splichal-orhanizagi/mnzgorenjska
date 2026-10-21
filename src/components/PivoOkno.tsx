@@ -98,7 +98,7 @@ export default function PivoOkno() {
           <span aria-hidden>✕</span>
         </button>
 
-        {/* Mehurčki se dvigajo pred maskoto, ki prileti in nazdravlja. */}
+        {/* Mehurčki se dvigajo pred maskoto Pivkom, ki prileti in nazdravlja. */}
         <div aria-hidden className="relative mx-auto -mt-2 h-52 w-52">
           {[12, 30, 52, 70, 86].map((x, i) => (
             <span

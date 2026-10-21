@@ -30,7 +30,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zid: 'Ѕид на пива',
     /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
     okno: {
-      naslov: 'Пссст… маскотата е жедна 🍺',
+      naslov: 'Пссст… Пивко е жеден 🍺',
       besedilo: 'SLFF е бесплатен: без реклами, без обложување, без претплати. За жал, серверот не работи на ентузијазам. Едно пиво помага да ги платиме серверот и поштата, а твоето име завршува на ѕидот на пива.',
       kasneje: 'Можеби следниот пат',
       zeSem: 'Веќе частив 🍻',

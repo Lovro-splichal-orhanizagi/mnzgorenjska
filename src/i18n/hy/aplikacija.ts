@@ -30,7 +30,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zid: 'Գարեջրի պատ',
     /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
     okno: {
-      naslov: 'Պսս… թալիսմանը ծարավ է 🍺',
+      naslov: 'Պսս… Գարեջրիկը ծարավ է 🍺',
       besedilo: 'SLFF-ն անվճար է՝ առանց գովազդի, խաղադրույքների և բաժանորդագրության։ Ցավոք, սերվերը ոգևորությամբ չի աշխատում։ Մեկ գարեջուրն օգնում է վճարել սերվերի և փոստի համար, իսկ քո անունը կհայտնվի գարեջրի պատին։',
       kasneje: 'Գուցե հաջորդ անգամ',
       zeSem: 'Արդեն հյուրասիրել եմ 🍻',

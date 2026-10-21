@@ -34,7 +34,7 @@ export const aplikacija = {
     gumb: 'Časti pivo',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Pivski zid',
-    /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
+    /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). Maskota je Pivko, v vsakem jeziku s svojim pivskim imenom. */
     okno: {
       naslov: 'No, pa še nam lahko plačaš eno pivo 🍺',
       besedilo: 'Lej, kako zabavno igrico smo naredili. Če bi nas srečal po tekmi, bi nam sigurno dal za pivo. SLFF ostaja brezplačen, brez oglasov in stav, tvoje ime pa pristane na pivskem zidu.',
