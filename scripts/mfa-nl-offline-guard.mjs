@@ -27,9 +27,14 @@ export function installMfaSealedGuard({ league, cacheRoot, logPath, databaseURL 
     if (u.origin === database.origin) return original(input, options)
     const method = String(options.method ?? input?.method ?? 'GET').toUpperCase()
     if (method !== 'GET') fail('source mutation forbidden')
-    const file = mfaCacheFileForURL(u, league), path = join(dir, file)
-    let stat
-    try { stat = lstatSync(path) } catch { fail(`missing authenticated cached body ${file}`) }
+    let file = mfaCacheFileForURL(u, league), path = join(dir, file), stat
+    try { stat = lstatSync(path) } catch (error) {
+      // Scheduled metadata may only have the ordinary downloader's retained name.
+      // Existing canonical bodies, including unsafe/corrupt ones, never fall back.
+      if (error.code !== 'ENOENT' || !/^po-sifri-[1-9]\d*[.]json$/.test(file)) fail(`missing authenticated cached body ${file}`)
+      file = file.replace('po-sifri-', 'tekma-'); path = join(dir, file)
+      try { stat = lstatSync(path) } catch { fail(`missing authenticated cached body ${file}`) }
+    }
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 2 * 1024 * 1024) fail('unsafe cached body')
     const body = readFileSync(path)
     try { JSON.parse(body) } catch { fail('invalid cached JSON') }

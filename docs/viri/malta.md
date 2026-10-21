@@ -247,6 +247,10 @@ commit, workflow, branch, name), natančne glave vseh arhivskih/tekočih poroči
 celoten tekoči razpored, število klubov in arhivskih krogov ter
 `opening:{round,playedOn,deadlineAt}`. Deadline mora biti neodvisno izračunan
 iz vira in enak izvirnemu bootstrap posnetku. Sintetični preizkusi niso odobritev.
+Neodigrana tekoča tekma sme obdržati `source_url = NULL` ali natančni
+uradni URL tekoče lestvice svojega fiksnega tekmovanja; tuj URL, druga liga,
+sezona ali dodatni parametri ne prestanejo pokritosti. Migracija
+`20261021203200` ohrani ta izvorni podatek običajnega uvoza razporeda.
 
 Vsi novi RPC-ji so samo servisni in omejeni na 973/974:
 
@@ -417,5 +421,9 @@ vežeta 167 logičnih poročil: 129 popolnih arhivskih, tri označena in
 Izvirni paket je zagon `39655969899`, artefakt `12374320002`, digest
 `sha256:76ff29ffe701b057190fdd5860afd592b018db60dbc1ee56e74f6f9bdeecc793`.
 Pogodba vsebuje vseh sedem polj provenience ter natančno identiteto vsakega
-poročila in tekoče tekme. Zapečateno predvajanje obnovi preverjene bajte;
-vsi nadaljnji koraki priprave, bootstrap, cenitve in vklopa ostanejo obvezni.
+poročila in tekoče tekme. Zapečateno predvajanje obnovi preverjene bajte. Za golo metapodatkovno pot
+`/matches/<id>` ima prednost `po-sifri-<id>.json`; samo če datoteke ni,
+dovoli ohranjeni `tekma-<id>.json`. Pokvarjenega ali nevarnega kanoničnega
+zapisa ne nadomesti in nikoli ne opravi omrežnega zahtevka.
+
+Vsi nadaljnji koraki priprave, bootstrap, cenitve in vklopa ostanejo obvezni.

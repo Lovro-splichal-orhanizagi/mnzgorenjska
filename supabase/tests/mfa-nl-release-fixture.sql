@@ -47,6 +47,8 @@ do $$declare doc jsonb;sha text;begin
   raise exception using errcode='P9001',message='rollback prebootstrap synthetic contract';
  exception when sqlstate 'P9001'then null;end;
 end$$;
+-- Ordinary schedule imports preserve their exact official standings provenance.
+update matches m set source_url='https://api.mfa.com.mt/api/competitions/'||split_part(c.source_league_code,'/',1)||'/standings?season=2027'from rounds r join competitions c on c.id=r.competition_id where m.round_id=r.id and c.id in(973,974)and m.zapisnik_id is null;
 create temporary table nl_release_bootstrap as select cid,public.prepare_mfa_nl_reviewed_bootstrap(cid,repeat('e',40),pg_temp.nl_sha(cid))as image from(values(973),(974))v(cid);
 select public.apply_mfa_nl_reviewed_bootstrap(cid,repeat('e',40),pg_temp.nl_sha(cid),image->>'beforeSha256',image->>'beforeImageText')from nl_release_bootstrap;
 -- The contract deliberately describes a small synthetic archive, not real NL totals.

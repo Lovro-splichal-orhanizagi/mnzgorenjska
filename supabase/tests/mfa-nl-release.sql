@@ -15,6 +15,21 @@ select pg_temp.nl_refuses('select public.record_mfa_nl_reviewed_import(974,repea
 select pg_temp.nl_refuses('select public.record_mfa_nl_reviewed_prices(974,repeat(''e'',40),repeat(''f'',64))');
 select pg_temp.nl_refuses('select public.check_mfa_nl_reviewed_release(974,repeat(''e'',40),repeat(''f'',64))');
 select pg_temp.nl_refuses('select public.get_mfa_nl_reviewed_release_receipt(974)');
+-- A later pending round isolates provenance from immutable opening-image checks.
+savepoint pending_schedule_provenance;
+insert into rounds(id,competition_id,season,number,played_on,deadline_at)overriding system value values(9740003,974,'2026/27',3,'2026-11-08','2026-11-08T10:00Z');
+insert into matches(id,round_id,home_team_id,away_team_id,played_on,source_url)overriding system value values(9740099,9740003,9909741,9909742,'2026-11-08','https://api.mfa.com.mt/api/competitions/6234492/standings?season=2027');
+do $$declare d jsonb;u text;begin
+ select jsonb_set(jsonb_set(document,'{currentFixtures}',(document->'currentFixtures')||jsonb_build_array(jsonb_build_object('sourceMatchId','94009999','round',3,'playedOn','2026-11-08','homeName',(select name from teams where id=9909741),'awayName',(select name from teams where id=9909742),'played',false))),'{expectedCurrentFixtureCount}','7')into d from nl_release_contracts where cid=974;
+ perform private_mfa_nl_history.coverage(974,d,clock_timestamp());
+ update matches set source_url=null where id=9740099;
+ perform private_mfa_nl_history.coverage(974,d,clock_timestamp());
+ foreach u in array array['https://foreign.example/standings','https://api.mfa.com.mt/api/competitions/2601267/standings?season=2027','https://api.mfa.com.mt/api/competitions/6234492/standings?season=2026','https://api.mfa.com.mt/api/competitions/6234492/standings?season=2027&extra=1']loop
+  update matches set source_url=u where id=9740099;
+  perform pg_temp.nl_refuses(format('select private_mfa_nl_history.coverage(974,%L::jsonb,clock_timestamp())',d),'exact current source/native fixture set differs');
+ end loop;
+end$$;
+rollback to savepoint pending_schedule_provenance;
 -- Every altered authoritative header/count/artifact/hash must hold before import.
 do $$declare changed jsonb;begin
  for changed in select jsonb_set(document,path,value)from nl_release_contracts cross join(values
