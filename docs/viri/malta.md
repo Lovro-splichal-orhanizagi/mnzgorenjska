@@ -3,8 +3,9 @@
 Vir `mfa` (`scripts/viri/mfa.mjs`) bere **javni JSON API Match Centra MFA**
 (`api.mfa.com.mt/api`, podatki iz COMET), ki ga bere tudi
 matchcentre.mfa.com.mt — brez ključa in prijave, z glavo `x-version: 2` (jo
-pošlje stran sama). Država `MT` ("Malta", vpiše jo migracija lig); lige so
-neaktivne, uvoz ni bil pognan. Malta dobi angleški vmesnik
+pošlje stran sama). Država `MT` ("Malta", vpiše jo migracija lig).
+Premier in Challenge sta po pregledanih izjemah vklopljena (21. 10. 2026);
+NL I in NL II ostajata neaktivni. Malta dobi angleški vmesnik
 (`JEZIK_DRZAVE.MT = 'en'`), vstop `slff.eu/mt`, kartico ob deljenju `mt.html` (Caddy jo vrne za `/mt` in `?t=mt-…`, tudi rezerva `:3201`, `vercel.json`), angleško vejo pošte (rok po malteško, kot
 Ljubljana), malteška imena lastnikov hišnih ekip in `klub_stik.drzava`
 (migracija 20261016213700), `IMENA_MT` v *Hisne ekipe* (malteško in angleško) in `MT`
@@ -108,7 +109,7 @@ tekmi zadnjega kroga): Premier 32 krogov / 192 tekem (6 faz), Challenge 22 /
 100 s seznama + 82 po šifri), NL II 22 / 132 + ponovljena tekma kot 23. krog;
 vzorčeni zapisniki vsi 11 + 11, vratar, goli = izid.
 
-Vpisane so 4 lige (migracija 20261016091500), **neaktivne**, zveza `mfa`:
+Vpisane so 4 lige (migracija 20261016091500), zveza `mfa`:
 
 | liga | tekoča 2026/27 | arhiv 2025/26 |
 |---|---|---|
@@ -117,21 +118,43 @@ Vpisane so 4 lige (migracija 20261016091500), **neaktivne**, zveza `mfa`:
 | mt-nl1 | `2601267/2027` | `2601267/2026` |
 | mt-nl2 | `6234492/2027` | `6234492/2026` |
 
-**Kandidata za predogled obstoječih lig** (20. 10. 2026; še nista uvožena ali
-pripravljena za vklop): `mt-premier` (`58539/2027`, arhiv `58539/2026`) in
-`mt-challenge` (`2601248/2027`, arhiv `2601248/2026`). Predhodni pregled je
-zajel 20 zahtevkov, šest vzorčnih zapisnikov in prihodnje tekme
-brez zavrnitve; to ni celoten uvoz. Pred vklopom je treba po obstoječem
-adapterju uvoziti in pregledati vse razpoložljive zapisnike obeh sezon,
-identitete, menjave, gole, cene in vratarje. Izrecnega dovoljenja MFA nimamo;
-vljudnostni stik je priporočljiv, ne pogoj za ta obseg. Ohranimo javno pot in
-3-sekundni premor ter se ustavimo ob umiku, prijavi, izzivu ali 401/403/429,
-brez ponovitev ali obhodov.
+**Kandidata za navadni predogled obstoječih lig** (21. 10. 2026):
+`973/mt-nl1/mfa/2601267/2027` (arhiv `2601267/2026`) in
+`974/mt-nl2/mfa/6234492/2027` (arhiv `6234492/2026`), oba s
+`source_policy = NULL`. Premier in Challenge sta že vklopljena prek svojih
+pregledanih zgodovinskih poti. Vpis kandidata ne odobri zgodovinskih statistik
+ali vklopa: ostanejo preverbe časov dogodkov, izidov, identitet, menjav,
+vratarjev, cen, kadra in dejanskega prihodnjega prvega fantasy kroga.
 
-Uvoz (ena za drugo, **šele po vklopu države MT v nočni uvoz in vmesnik**):
-`gh workflow run uvoz-lige.yml -f liga=mt-nl2 -f arhiv=6234492/2026 -f
-cene=true`. Zapisnik sta dva zahtevka (izid in postava) po 3 s; arhiv 130–190
-tekem je ~15–20 minut na ligo.
+**NL II ostaja HELD**: `50920555` in `51962893` sta segmenta iste tekme
+Msida : Dingli, prekinjene pri 69 minutah in nadaljevane do končnih 1:1.
+Manjkajoče domače menjave ni mogoče rekonstruirati, zato točnih minut ni
+mogoče zanesljivo izpeljati. Zgodovinska obravnava potrebuje izrecno pregledano
+odobritev; ta vpis kandidata ne izključi nobene šifre in ne dovoljuje uvoza NL II.
+Adapter trenutno oba segmenta še prikaže ločeno; pregledna inventura to
+razliko ohrani, ne ugiba združitve ali individualnih statistik.
+
+Za pregled **že shranjenih bajtov** je v `razdeli-zlite-igralce.yml` način
+`mfa_nl_cache_audit=true`, `mfa_nl_league=mt-nl1|mt-nl2` in numerični
+`source_run_id`. Pred obnovo preveri končan prvi poskus zagona `uvoz-lige.yml`
+z veje `main` (tudi neuspešen zagon lahko nosi dokaz težave). Obnovi samo
+natančni ključ `zapisniki-<liga>-<source_run_id>`, brez rezervnega ključa.
+Zagon ne bere MFA ali baze, ne vsebuje servisnega ključa in ne požene
+razdeljevanja igralcev. Arhiv in tekočo sezono razčleni z obstoječim adapterjem;
+artefakt vsebuje `fixture-inventory.json`, `report-analysis.json`, manifest
+imen/SHA256/mtime in vse uporabljene izvirne JSON bajte, tudi dopolnitev po šifri.
+Napake zapisnikov so pri točni šifri z `issues=true`; manjkajoč predpomnilnik,
+inventura ali telo zapisnika ustavi pregled. To ni dnevnik prvotnih HTTP zahtevkov:
+mtime je čas datoteke, ne čas potrjenega odziva vira, status/čas prvotnega zahtevka
+pa iz predpomnilnika nista dokazljiva. Opozoril, zavrnitev in izzivov ta pregled
+ne odpravlja ali odobrava ponovnega branja.
+
+Poln uvoz obeh sezon ene lige je približno 20–25 minut; arhiv 130–190 tekem
+je ~15–20 minut (dva zahtevka na zapisnik in dodatni seznami/dopolnitev).
+Oba NL skupaj bi potrebovala približno 840–890 zahtevkov in 40–50 minut;
+NL II šele po ločeni odobritvi obravnave nadaljevanja. Izrecnega dovoljenja MFA
+nimamo; ohranimo javno pot, zaporedno branje in 3-sekundni premor ter se
+ustavimo ob umiku, prijavi, izzivu ali 401/403/429, brez obhodov.
 
 ## Premier: pregledani zgodovinski izjemi (20. 10. 2026)
 

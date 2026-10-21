@@ -48,11 +48,29 @@ on:
         required: false
         type: boolean
         default: false
+      mfa_nl_cache_audit:
+        description: 'Read-only retained MFA NL cache evidence; no imports or source calls'
+        required: false
+        type: boolean
+        default: false
+      mfa_nl_league:
+        description: 'Exact league for retained-cache audit'
+        required: false
+        type: choice
+        options:
+          - mt-nl1
+          - mt-nl2
+        default: mt-nl1
+      source_run_id:
+        description: 'Completed first-attempt main uvoz-lige.yml run owning the exact cache'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
 
-run-name: ${{ inputs.fscg_cache_audit && 'FSCG cached-report audit' || format('Razdeli zlite igralce {0}{1}', inputs.tekmovanje || inputs.vir || 'vse', inputs.pisi && ' (pisi)' || '') }}
+run-name: ${{ inputs.mfa_nl_cache_audit && format('MFA NL cache audit {0} source {1}', inputs.mfa_nl_league, inputs.source_run_id) || inputs.fscg_cache_audit && 'FSCG cached-report audit' || format('Razdeli zlite igralce {0}{1}', inputs.tekmovanje || inputs.vir || 'vse', inputs.pisi && ' (pisi)' || '') }}
 
 # Uvoz in razdelitev pisejo iste nastope: uvoz tekmo zamenja v celoti, zato
 # ne smeta teci hkrati. Kot zdruzi-klube: svoja skupina, prvi korak pocaka na
@@ -63,7 +81,7 @@ concurrency:
 
 jobs:
   razdeli:
-    if: ${{ !inputs.fscg_cache_audit }}
+    if: ${{ !inputs.fscg_cache_audit && !inputs.mfa_nl_cache_audit }}
     runs-on: ubuntu-latest
     # 15 minut dela + do 120 minut cakanja na starejsi uvoz.
     timeout-minutes: 140
@@ -135,7 +153,7 @@ jobs:
           node scripts/razdeli-zlite-igralce.mjs "${args[@]}"
 
   fscg-cache-audit:
-    if: ${{ inputs.fscg_cache_audit }}
+    if: ${{ inputs.fscg_cache_audit && !inputs.mfa_nl_cache_audit }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -160,5 +178,50 @@ jobs:
         with:
           name: fscg-me1-cached-report-audit-${{ github.run_id }}
           path: fscg-me1-cache-audit-output/
+          if-no-files-found: error
+          retention-days: 7
+
+  mfa-nl-cache-audit:
+    if: ${{ inputs.mfa_nl_cache_audit }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    env:
+      AUDIT_LEAGUE: ${{ inputs.mfa_nl_league }}
+      SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify source import run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]{0,19}$ ]] || { echo 'source_run_id must be numeric'; exit 1; }
+          [[ "$AUDIT_LEAGUE" = mt-nl1 || "$AUDIT_LEAGUE" = mt-nl2 ]] || { echo 'unsupported league'; exit 1; }
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID" > source-run.json
+          node scripts/analiziraj-mfa-nl-cache.mjs --verify-run source-run.json
+      - name: Restore exact retained NL cache without fallback
+        id: nl-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-${{ inputs.mfa_nl_league }}-${{ inputs.source_run_id }}
+          fail-on-cache-miss: true
+      - name: Require exact cache hit
+        if: ${{ steps.nl-cache.outputs.cache-hit != 'true' }}
+        run: echo 'Exact source-run cache missing; wait for terminal import/cache save. No fallback or provider fetch.' && exit 1
+      - name: Analyze retained bytes offline
+        run: |
+          node scripts/analiziraj-mfa-nl-cache.mjs
+          cp source-run.json mfa-nl-cache-audit-output/source-run.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mfa-nl-cache-${{ inputs.mfa_nl_league }}-${{ inputs.source_run_id }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: mfa-nl-cache-audit-output/
           if-no-files-found: error
           retention-days: 7
