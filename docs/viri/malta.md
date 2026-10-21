@@ -156,6 +156,28 @@ NL II šele po ločeni odobritvi obravnave nadaljevanja. Izrecnega dovoljenja MF
 nimamo; ohranimo javno pot, zaporedno branje in 3-sekundni premor ter se
 ustavimo ob umiku, prijavi, izzivu ali 401/403/429, brez obhodov.
 
+## NL I: dokončni izstop Mtarfe (21. 10. 2026)
+
+[Končna izjava MFA](https://www.mfa.com.mt/news/competitions/malta-fa-statement-mtarfa-fc-suspended-from-bov-national-league-1/)
+potrjuje izključitev Mtarfe po dveh izostankih; rok za pritožbo 19. oktobra
+je potekel. Prvi tekmi sta razveljavljeni, preostale odpovedane. API še vedno
+vrača šest prihodnjih tekem kluba. To ni manjkajoča postava ali dovoljenje
+za izmišljanje kontumacij, minut ali vratarja.
+
+Adapter samo pri točnem `competitionId=53109939`, `competitionTypeId=2601267`
+in klubu `40412` izpusti Mtarfine tekme iz igralnega razporeda in pred branjem
+zapisnikov. Surova inventura ostane nespremenjena; izpuščanje se zgodi šele
+po določitvi krogov, zato se drugi pari ne preštevilčijo. Shranjeni vzorec
+56 vrstic tako da 50 tekem v istih desetih krogih, po pet v vsakem.
+Arhivi in druge lige ostanejo nespremenjeni.
+
+Po objavi popravek zahteva navaden uvoz razporeda NL I z izrecnim
+`--dovoli-manj-klubov` (v `uvoz-lige.yml`: `dovoli_manj_klubov=true`), da
+obstoječe neodigrane Mtarfine tekme odstrani po običajni preverjeni poti.
+Pred tem se preveri, da nobena nima uvoženih statistik ali uporabniških
+fantasy ekip. Prihodnji prvi fantasy krog se pregleda po popravku. Sam
+popravek ne vklopi lige in ne odobri nobene zgodovinske izjeme.
+
 ## Premier: pregledani zgodovinski izjemi (20. 10. 2026)
 
 Uporabnik je odobril **samo `mt52581524` (2025/26, krog 28, 2:2) in
