@@ -423,3 +423,14 @@ test('new MFA route still waits for older same-country Challenge importer',async
  fixtures.push({slug:'mt-premier',active:false,source:'mfa',countries:{code:'MT'},federations:{code:'mfa'}},{slug:'mt-challenge',active:false,source:'mfa',countries:{code:'MT'},federations:{code:'mfa'}})
  try{assert.equal((await coordinate(['--liga','mt-premier','--popravek','--tekmovanje','mt-premier'],{'uvoz-lige.yml':[run('Uvoz lige mt-challenge')]})).code,1)}finally{fixtures.splice(-2)}
 })
+
+test('Challenge reviewed writes share Malta and global writer coordination',async()=>{
+ const workflow='mfa-challenge-reviewed-history.yml'
+ for(const stage of ['cleanup','reprice','activate']){
+  const title=`MFA Challenge reviewed history ${stage} mt-challenge`
+  assert.equal((await coordinate(['--drzava','MT'],{[workflow]:[run(title)]})).code,1)
+  assert.equal((await coordinate(['--drzava','DE'],{[workflow]:[run(title)]})).code,0)
+ }
+ for(const stage of ['prepare','preview','receipt'])assert.equal((await coordinate(['--drzava','MT'],{[workflow]:[run(`MFA Challenge reviewed history ${stage} mt-challenge`)]})).code,0)
+ for(const name of ['zdruzi-klube.yml','tedensko-cene.yml'])assert.match(readFileSync(new URL(`../.github/workflows/${name}`,import.meta.url),'utf8'),/for wf in[^\n]*mfa-challenge-reviewed-history\.yml/)
+})

@@ -186,3 +186,34 @@ Rollback SQL v `supabase/tests/mfa-reviewed-history.sql` teče v sveži CI bazi;
 izrecna lokalna izbira zahteva `MFA_HISTORY_DISPOSABLE_TEST=1` in lasten
 `SUPABASE_DB_CONTAINER`. Testni čas je samo zaseben, preklican DB-owner helper;
 javni RPC nikoli ne sprejme ure od klicatelja.
+
+## Challenge: štiri pregledane arhivske izjeme (21. 10. 2026)
+
+Uporabnik je odobril samo `mt50903309`, `mt50903328`, `mt50903358` in
+`mt52353213`, vse iz 2025/26, zaradi manjkajoče minute izključitve
+nastopajočega igralca. Zaprta pot `mfa-challenge-reviewed-history.yml` uporablja
+isti vrstni red `prepare` → zunanji pregled → `cleanup` → `reprice` → `preview`
+→ zunanji pregled → `activate` kot Premier, z ločenimi RPC-ji in potrdili.
+Premierjeva politika, hashi in RPC-ji ostanejo nespremenjeni.
+
+Izvirni celotni ZIP artefakta `12303812226` uspešnega zagona `39507147003`
+(`e4d1654151c9ecaf76b736581c20bfed12f4f56d9ea72f7afa62ee0b45eaac5c`)
+se preveri pred izbiro osmih znanih teles: 448 datotek, od tega 446 v
+`cache/`, omejitve velikosti, poti, povezav in CRC vseh teles. Vir se ne bere
+znova. Čiščenje odstrani točno 118 nastopov in 14 golov; vsi štirje uradni
+izidi ostanejo. Ostalih 204 popolnih zapisnikov, glave tekem, krogi, klubi in
+igralci se preverijo proti celotnemu posnetku pred spremembo.
+
+Po čiščenju ostane 172 razpoložljivih arhivskih zapisnikov in štiri oznake;
+vseh 32 tekočih zapisnikov ostane popolnih. Vklop zahteva 16 klubov z
+aktualnimi zaupanja vrednimi vratarji, raznolike sveže cene, veljaven kader 15
+do 100, ohranjen nastop s klopi in točnih osem neodigranih tekem kroga 5
+(`34903`). Rok `2026-10-23T10:15:00Z` mora biti še v prihodnosti. Normalni
+MFA runtime sprejme samo pregledani native dvojici `971/58539/2027` in
+`972/2601248/2027`, preveri celoten komplet nameščenih oznak pred branjem
+in ohrani strogo preverjanje ur pri vseh drugih zapisnikih.
+
+Preverbe: `node --test scripts/test-mfa-challenge-reviewed-history*.mjs`;
+SQL rollback v sveži CI bazi teče zgodaj. Lokalni zagon zahteva lastno
+odstranljivo bazo, `SUPABASE_DB_CONTAINER` in
+`MFA_CHALLENGE_HISTORY_DISPOSABLE_TEST=1`.

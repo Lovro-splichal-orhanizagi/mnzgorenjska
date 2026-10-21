@@ -392,6 +392,77 @@
           "reasonCode": "missing_dismissal_clock"
         }
       ]
+    },
+    {
+      "id": "mt-challenge-reviewed-history-2026-10-21-v1",
+      "provider": "mfa",
+      "sourcePolicy": "mt-mfa-challenge-reviewed-history-v1",
+      "competitionSlug": "mt-challenge",
+      "season": "2026/27",
+      "recordedAt": "2026-10-21T08:10:55.012494+00:00",
+      "approvalReference": "User said ok go for it after explicit proposal to implement four Challenge exclusions, reprice, validate and activate; also assess National League I/II together",
+      "entries": [
+        {
+          "sourceMatchId": "50903309",
+          "sourceCompetitionId": "50899495",
+          "sourcePhase": null,
+          "sourceRound": 5,
+          "season": "2025/26",
+          "playedOn": "2025-11-02",
+          "homeSourceClubId": "39647",
+          "awaySourceClubId": "39626",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50903309",
+          "rawSha256": "6d3e76c052422a1f17568214e71250e24fa917a3a06998e66ad5c6639083ad4e",
+          "observedHomeScore": 1,
+          "observedAwayScore": 2,
+          "reasonCode": "missing_dismissal_clock"
+        },
+        {
+          "sourceMatchId": "50903328",
+          "sourceCompetitionId": "50899495",
+          "sourcePhase": null,
+          "sourceRound": 7,
+          "season": "2025/26",
+          "playedOn": "2025-11-29",
+          "homeSourceClubId": "39641",
+          "awaySourceClubId": "39632",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50903328",
+          "rawSha256": "59f9a7f7e4825acb00feaa31b16aadc2ea257991121a19e85b1f007dca17429a",
+          "observedHomeScore": 2,
+          "observedAwayScore": 3,
+          "reasonCode": "missing_dismissal_clock"
+        },
+        {
+          "sourceMatchId": "50903358",
+          "sourceCompetitionId": "50899495",
+          "sourcePhase": null,
+          "sourceRound": 11,
+          "season": "2025/26",
+          "playedOn": "2026-01-11",
+          "homeSourceClubId": "39631",
+          "awaySourceClubId": "39641",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50903358",
+          "rawSha256": "2a79857b3d37fdb4476e07b59969e8ab49c3a5d3d723d9bc3d10393951d63ada",
+          "observedHomeScore": 3,
+          "observedAwayScore": 2,
+          "reasonCode": "missing_dismissal_clock"
+        },
+        {
+          "sourceMatchId": "52353213",
+          "sourceCompetitionId": "52330724",
+          "sourcePhase": null,
+          "sourceRound": 20,
+          "season": "2025/26",
+          "playedOn": "2026-04-06",
+          "homeSourceClubId": "40411",
+          "awaySourceClubId": "39612",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/52353213",
+          "rawSha256": "16479747a46715412892ca6e5c437d7e96c511caf378584b23873e67622950b0",
+          "observedHomeScore": 0,
+          "observedAwayScore": 1,
+          "reasonCode": "missing_dismissal_clock"
+        }
+      ]
     }
   ]
 }
