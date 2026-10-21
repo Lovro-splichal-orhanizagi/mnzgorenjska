@@ -70,18 +70,24 @@ savepoint no_current_reports;
 update matches set imported_at=null where id=9740001;
 select pg_temp.nl_refuses('select public.prepare_mfa_nl_reviewed_bootstrap(974,repeat(''e'',40),pg_temp.nl_sha(974))');
 rollback to savepoint no_current_reports;
-savepoint missing_binding;
-delete from private_historical_statistics.source_club_bindings where provider='mfa'and source_club_id='98001';
-select pg_temp.nl_refuses('select public.prepare_mfa_nl_reviewed_bootstrap(973,repeat(''e'',40),pg_temp.nl_sha(973))');
-rollback to savepoint missing_binding;
-savepoint ambiguous_binding;
-update private_historical_statistics.source_club_bindings set canonical_names=array['NLI bootstrap home','NLI bootstrap away']where provider='mfa'and source_club_id='98001';
-select pg_temp.nl_refuses('select public.prepare_mfa_nl_reviewed_bootstrap(973,repeat(''e'',40),pg_temp.nl_sha(973))');
-rollback to savepoint ambiguous_binding;
-savepoint wrong_binding_country;
-update private_historical_statistics.source_club_bindings set country_code='SI'where provider='mfa'and source_club_id='98001';
-select pg_temp.nl_refuses('select public.prepare_mfa_nl_reviewed_bootstrap(973,repeat(''e'',40),pg_temp.nl_sha(973))');
-rollback to savepoint wrong_binding_country;
+-- Binding mutations exercise synthetic approval data only. Real reviewed rows stay intact.
+do $$begin if exists(select 1 from nl_test_policies where id='mt-nl1-reviewed-history-2026-10-21-v1'and document->>'approvalReference'='SYNTHETIC rollback test only')then
+ begin
+  delete from private_historical_statistics.source_club_bindings where provider='mfa'and source_club_id='98001';
+  perform pg_temp.nl_refuses('select public.prepare_mfa_nl_reviewed_bootstrap(973,repeat(''e'',40),pg_temp.nl_sha(973))');
+  raise exception using errcode='P9001',message='rollback synthetic missing binding';
+ exception when sqlstate 'P9001'then null;end;
+ begin
+  update private_historical_statistics.source_club_bindings set canonical_names=array['NLI bootstrap home','NLI bootstrap away']where provider='mfa'and source_club_id='98001';
+  perform pg_temp.nl_refuses('select public.prepare_mfa_nl_reviewed_bootstrap(973,repeat(''e'',40),pg_temp.nl_sha(973))');
+  raise exception using errcode='P9001',message='rollback synthetic ambiguous binding';
+ exception when sqlstate 'P9001'then null;end;
+ begin
+  update private_historical_statistics.source_club_bindings set country_code='SI'where provider='mfa'and source_club_id='98001';
+  perform pg_temp.nl_refuses('select public.prepare_mfa_nl_reviewed_bootstrap(973,repeat(''e'',40),pg_temp.nl_sha(973))');
+  raise exception using errcode='P9001',message='rollback synthetic wrong country';
+ exception when sqlstate 'P9001'then null;end;
+end if;end$$;
 savepoint archive_not_empty;
 insert into rounds(competition_id,season,number)values(974,'2025/26',1);
 select pg_temp.nl_refuses('select public.prepare_mfa_nl_reviewed_bootstrap(974,repeat(''e'',40),pg_temp.nl_sha(974))');
@@ -106,8 +112,8 @@ select pg_temp.nl_refuses(format('select public.apply_mfa_nl_reviewed_bootstrap(
 drop trigger nl_test_late_failure on private_historical_statistics.markers;
 select pg_temp.nl_assert(not exists(select 1 from private_historical_statistics.installed_policies where competition_id=974)and not exists(select 1 from rounds where competition_id=974 and season='2025/26')and(select source_policy is null from competitions where id=974),'late failure left partial binding/header');
 create temporary table nl_installed as select cid,public.apply_mfa_nl_reviewed_bootstrap(cid,repeat('e',40),pg_temp.nl_sha(cid),body->>'beforeSha256',body->>'beforeImageText')as result from nl_prepared;
-select pg_temp.nl_assert(jsonb_array_length(public.get_installed_historical_statistics_markers(973)->'markers')=2 and jsonb_array_length(public.get_installed_historical_statistics_markers(974)->'markers')=1,'exact complete marker sets required');
-select pg_temp.nl_assert((select count(*)from matches m join rounds r on r.id=m.round_id where r.competition_id in(973,974)and r.season='2025/26'and m.statistics_status='unavailable_historical'and m.imported_at is null)=3,'exact unavailable archive headers required');
+select pg_temp.nl_assert(not exists(select 1 from(values(973),(974))v(cid)where jsonb_array_length(public.get_installed_historical_statistics_markers(cid)->'markers')<>(select jsonb_array_length(document->'entries')from nl_test_policies where id='mt-nl'||(cid-972)||'-reviewed-history-2026-10-21-v1')),'exact complete marker sets required');
+select pg_temp.nl_assert((select count(*)from matches m join rounds r on r.id=m.round_id where r.competition_id in(973,974)and r.season='2025/26'and m.statistics_status='unavailable_historical'and m.imported_at is null)=(select sum(jsonb_array_length(document->'entries'))from nl_test_policies),'exact unavailable archive headers required');
 select pg_temp.nl_assert(not exists(select 1 from appearances a join matches m on m.id=a.match_id join rounds r on r.id=m.round_id where r.competition_id in(973,974)and r.season='2025/26'),'bad individual rows must never be bootstrapped');
 select pg_temp.nl_assert(not exists(select 1 from matches where zapisnik_id='mt50920555'),'abandoned header forbidden');
 select pg_temp.nl_assert(exists(select 1 from matches m join rounds r on r.id=m.round_id where r.competition_id=974 and r.number=4 and r.season='2025/26'and m.zapisnik_id='mt51962893'and m.played_on='2026-01-13'and m.home_goals=1 and m.away_goals=1),'canonical final archive fixture required');

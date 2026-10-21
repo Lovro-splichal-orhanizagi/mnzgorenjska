@@ -18,7 +18,7 @@ select pg_temp.nl_refuses('select public.get_mfa_nl_reviewed_release_receipt(974
 do $$declare changed jsonb;begin
  for changed in select jsonb_set(document,path,value)from nl_release_contracts cross join(values
  ('{reports,0,homeGoals}'::text[],'9'::jsonb),('{reports,0,reportId}','"mt999999999"'),('{reports,0,homeName}','"Wrong club"'),
- ('{currentFixtures,0,round}','99'),('{expectedArchiveRounds}','5'),('{expectedCurrentFixtureCount}','7'),('{expectedCurrentClubCount}','7'),('{sourceArtifact,commit}','"wrong"'),('{opening,deadlineAt}','"2026-11-01T11:00:00Z"'),('{opening,round}','3'))v(path,value)where cid=974 loop
+ ('{currentFixtures,0,round}','99'),('{expectedArchiveRounds}','999'),('{expectedCurrentFixtureCount}','7'),('{expectedCurrentClubCount}','7'),('{sourceArtifact,commit}','"wrong"'),('{opening,deadlineAt}','"2026-11-01T11:00:00Z"'),('{opening,round}','3'))v(path,value)where cid=974 loop
   begin
    insert into private_mfa_nl_history.source_contract values(974,encode(sha256(convert_to(private_mfa_nl_history.canonical_json(changed),'UTF8')),'hex'),changed);
    perform pg_temp.nl_refuses(format('select public.get_mfa_nl_reviewed_source_state(974,%L,%L)',repeat('e',40),encode(sha256(convert_to(private_mfa_nl_history.canonical_json(changed),'UTF8')),'hex')));
