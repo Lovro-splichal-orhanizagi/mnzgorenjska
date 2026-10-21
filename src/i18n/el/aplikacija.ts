@@ -28,6 +28,13 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     gumb: 'Κέρασέ μας μια μπίρα',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Τοίχος της μπίρας',
+    /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
+    okno: {
+      naslov: 'Ψιτ… η μασκότ διψάει 🍺',
+      besedilo: 'Το SLFF είναι δωρεάν: χωρίς διαφημίσεις, χωρίς στοιχήματα, χωρίς συνδρομές. Δυστυχώς, ο διακομιστής δεν λειτουργεί με ενθουσιασμό. Μια μπίρα βοηθά να πληρώσουμε διακομιστή και email, και το όνομά σου μπαίνει στον τοίχο της μπίρας.',
+      kasneje: 'Ίσως την επόμενη φορά',
+      zeSem: 'Το έκανα ήδη 🍻',
+    },
     lestvicaDomov: 'Κατάταξη μπίρας',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {

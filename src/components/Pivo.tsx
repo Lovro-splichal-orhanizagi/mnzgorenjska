@@ -11,6 +11,7 @@
 import { jeNativno } from '../lib/platforma'
 import { zabeleziKorak } from '../lib/lijak'
 import { t } from '../i18n'
+import { utisajPivoOkno } from './PivoOkno'
 
 export default function Pivo({ src }: { src: string }) {
   if (jeNativno()) return null
@@ -19,7 +20,10 @@ export default function Pivo({ src }: { src: string }) {
       href={`/pivo?src=${encodeURIComponent(src)}`}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={() => zabeleziKorak('pivo')}
+      onClick={() => {
+        zabeleziKorak('pivo')
+        utisajPivoOkno(60)
+      }}
       className="group inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 px-4 py-2 text-sm font-bold text-amber-950 shadow-lg shadow-amber-500/25 ring-1 ring-amber-200/60 transition hover:from-amber-200 hover:to-amber-400 hover:shadow-amber-400/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gnl-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
     >
       <span aria-hidden className="animiraj-pivo inline-block text-base group-hover:[animation-duration:0.8s]">🍺</span>

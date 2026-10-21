@@ -5,6 +5,7 @@ import { AuthProvider } from './lib/useAuth'
 import { TekmovanjeProvider } from './lib/tekmovanje'
 import Navbar from './components/Navbar'
 import PrviObisk from './components/PrviObisk'
+import PivoOkno from './components/PivoOkno'
 import VirPodatkov from './components/VirPodatkov'
 import RokKroga from './components/RokKroga'
 import OpozoriloEkipe from './components/OpozoriloEkipe'
@@ -115,6 +116,7 @@ export default function App() {
           <PotisnaObvestila />
           <BeleziPovabilo />
           <PrviObisk />
+          <PivoOkno />
           <RokKroga />
           <Navbar />
           <OpozoriloEkipe />

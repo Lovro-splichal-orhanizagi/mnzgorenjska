@@ -28,6 +28,13 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     gumb: 'Osta meile õlu',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Õllesein',
+    /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
+    okno: {
+      naslov: 'Psst… maskott on janune 🍺',
+      besedilo: 'SLFF on tasuta: ilma reklaamide, kihlvedude ja tellimusteta. Kahjuks ei tööta server entusiasmi peal. Üks õlu aitab maksta serveri ja e-posti eest ning sinu nimi jõuab õllemüürile.',
+      kasneje: 'Võib-olla järgmine kord',
+      zeSem: 'Juba tegin 🍻',
+    },
     lestvicaDomov: 'Õlle edetabel',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
