@@ -95,3 +95,27 @@ test('source contract comparison ignores PostgreSQL JSONB object-key order and a
  contract.reports[0].homeGoals=1
  assert.throws(()=>verifyNlSourceContract(model,contract),/differs/)
 })
+
+function savesFixture(){
+ const source=[{regSt:1,side:0,is_goalkeeper:false,minutes_played:90,penalties_missed:2},{regSt:2,side:1,is_goalkeeper:true,minutes_played:60,penalties_missed:0},{regSt:3,side:1,is_goalkeeper:true,minutes_played:30,penalties_missed:0}]
+ const model={competitionId:973,currentOnly:false,reports:[{header:{reportId:'mt123',statisticsStatus:'available'},players:source}]}
+ const image={players:source.map(p=>({id:p.regSt,reg_st:p.regSt})),matches:[{id:10,zapisnik_id:'mt123',round_id:20,home_team_id:30,away_team_id:31}],appearances:source.map(p=>({id:100+p.regSt,match_id:10,player_id:p.regSt,team_id:30+p.side,penalties_saved:p.regSt===2?2:0}))}
+ return{model,image}
+}
+test('derived saves require the unique source goalkeeper with greatest played minutes',async()=>{
+ const{verifyDerivedSaves}=await import('./lib/mfa-nl-derived-saves.mjs'),{model,image}=savesFixture(),before=JSON.stringify({model,image}),proof=verifyDerivedSaves(model,image)
+ assert.equal(proof.reports,1);assert.equal(proof.expectedSaves,2);assert.equal(proof.assignments.length,1);assert.equal(proof.assignments[0].regSt,2);assert.equal(proof.exactParity,true);assert.equal(JSON.stringify({model,image}),before)
+})
+test('derived saves reject missing reports, tied/missing keepers and missing or extra native saves',async()=>{
+ const{verifyDerivedSaves}=await import('./lib/mfa-nl-derived-saves.mjs')
+ for(const change of[
+  (m,i)=>{i.matches=[]},(m,i)=>{m.reports[0].players[2].minutes_played=60},(m,i)=>{m.reports[0].players.forEach(p=>p.is_goalkeeper=false)},
+  (m,i)=>{i.appearances[1].penalties_saved=0},(m,i)=>{i.appearances[2].penalties_saved=2},(m,i)=>{i.appearances[0].penalties_saved=1},(m,i)=>{i.appearances.pop()},
+ ]){const{model,image}=savesFixture();change(model,image);assert.throws(()=>verifyDerivedSaves(model,image),/MFA NL derived saves/)}
+})
+test('actual complete retained NLI source proves all existing derived saves without repair',{skip:!retainedRoot},async()=>{
+ const{readdirSync}=await import('node:fs'),{join}=await import('node:path'),{deriveNlSourceModel,verifyNlNativeFootball}=await import(moduleURL),{verifyDerivedSaves}=await import('./lib/mfa-nl-derived-saves.mjs')
+ const dir=join(retainedRoot,'mt-nl1-cache-audit-39654281589/files/cache'),cache=new Map(readdirSync(dir).map(n=>[n,readFileSync(join(dir,n))])),model=await deriveNlSourceModel({league:'mt-nl1',cache,firstFantasyPlayedOn:'2026-11-13'}),image=JSON.parse(readFileSync(join(retainedRoot,'nli-import-failure-39680698879/root-native-football.json')))
+ assert.deepEqual(verifyNlNativeFootball(model,image),{reports:201,appearances:5891,goals:626,currentFixtures:50,exactParity:true})
+ const proof=verifyDerivedSaves(model,image);assert.equal(proof.reports,201);assert.equal(proof.expectedSaves,19);assert.equal(proof.exactParity,true)
+})

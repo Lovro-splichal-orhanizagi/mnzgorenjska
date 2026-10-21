@@ -7,6 +7,7 @@ import {pathToFileURL,fileURLToPath} from 'node:url'
 import {github,githubJson,sha256,repository} from './dfb-artifacts.mjs'
 import {getHistoricalStatisticsPolicy,historicalStatisticsPolicySha256 as canonicalSha} from './lib/historical-statistics-policy.mjs'
 import {runMfaRegistrationSmoke} from './mfa-registration-smoke.mjs'
+import {verifyDerivedSaves} from './lib/mfa-nl-derived-saves.mjs'
 import {NL_REVIEWED_SOURCES,NL_REVIEWED_PRIOR,NL_REVIEWED_WORKFLOW,requireNl,nlTarget,assertNlActionsExecution,verifyNlReviewedContract,verifyNlPreparedArtifactIdentity,readNlPreparedArchive,verifyNlPreparedFiles} from './mfa-nl-reviewed-evidence.mjs'
 
 export function nlReplayCommands(league){const t=nlTarget(league);return[
@@ -15,17 +16,20 @@ export function nlReplayCommands(league){const t=nlTarget(league);return[
  ['scripts/uvoz-zapisnikov.mjs','--tekmovanje',league,'--liga',`${t.type}/2027`],
 ]}
 export function nlPricingCommands(league){nlTarget(league);return['lazni-vratarji','ugani-pozicije','ovrednoti-igralce'].map(n=>[`scripts/${n}.mjs`,'--tekmovanje',league,'--pisi'])}
+export function parseNlRecoveryExisting(value){requireNl(value===undefined||value==='true'||value==='false','recovery_existing must be boolean');return value==='true'}
 function sameOpening(actual,expected){requireNl(actual?.round===expected?.round&&actual.playedOn===expected.playedOn&&Number.isFinite(Date.parse(actual.deadlineAt))&&Date.parse(actual.deadlineAt)===Date.parse(expected.deadlineAt),'reviewed source opening differs')}
 
 /** Dependency boundaries make stage ordering testable without credentials or network. */
 export async function runNlReviewedStage(options,deps){
  const{mode,league,commit,contractSha,runId}=options,t=nlTarget(league)
+ requireNl(options.recoveryExisting===undefined||typeof options.recoveryExisting==='boolean','recovery_existing must be boolean')
+ const recoveryExisting=options.recoveryExisting===true;requireNl(!recoveryExisting||mode==='import','recovery_existing is restricted to import')
  requireNl(['prepare','bootstrap','import','reprice','preview','activate','receipt'].includes(mode)&&/^[a-f0-9]{40}$/.test(commit??'')&&/^[a-f0-9]{64}$/.test(contractSha??'')&&/^[1-9]\d*$/.test(runId??''),'fixed stage, main and contract pins required')
  if(mode==='activate')requireNl(/^[a-f0-9]{64}$/.test(options.previewSha??''),'externally reviewed preview SHA required')
  await deps.assertMain()
  const policy=deps.policy(league),response=await deps.rpc('get_mfa_nl_reviewed_source_contract',{p_competition_id:t.competitionId,p_contract_sha:contractSha})
  const contract=verifyNlReviewedContract(response,{league,contractSha,policy}),policySha=canonicalSha(policy)
- const manifest={schemaVersion:1,kind:`mfa-nl-reviewed-${mode}`,league,competitionId:t.competitionId,mainCommit:commit,runId,runAttempt:'1',contractSha256:contractSha,policySha256:policySha,sourceArtifact:t.artifact}
+ const manifest={schemaVersion:1,recoveryExisting,kind:`mfa-nl-reviewed-${mode}`,league,competitionId:t.competitionId,mainCommit:commit,runId,runAttempt:'1',contractSha256:contractSha,policySha256:policySha,sourceArtifact:t.artifact}
  const params={p_competition_id:t.competitionId,p_main_sha:commit,p_contract_sha:contractSha}
  const writeRpc=async(name,args)=>{await deps.assertMain();return deps.rpc(name,args)}
  if(mode==='receipt')manifest.result=await deps.rpc('get_mfa_nl_reviewed_release_receipt',{p_competition_id:t.competitionId})
@@ -59,8 +63,20 @@ export async function runNlReviewedStage(options,deps){
    const installed=await deps.rpc('get_mfa_nl_reviewed_bootstrap_receipt',{p_competition_id:t.competitionId})
    requireNl(installed.bootstrap?.competition_id===t.competitionId&&installed.bootstrap.policy_sha===policySha&&installed.installed?.installed===true&&installed.installed.policyId===policy.id&&installed.installed.policySha256===policySha,'complete installed bootstrap required before ordinary archive replay')
    manifest.bootstrapCurrentProof=beforeProof(installed.bootstrap.before_image_text)
-   await deps.assertMain();await deps.importSource(league,source)
-   const state=await native()
+   let state
+   if(recoveryExisting){
+    const before=await native(),image=JSON.parse(before.footballImageText),derivedSaves=deps.verifyDerivedSaves(model,image)
+    const rounds=[...image.rounds],sourceRounds=model.schedules.flatMap(s=>s.rounds.map(r=>`${s.season}/${r.stevilka}`)),nativeRounds=rounds.map(r=>`${r.season}/${r.number}`)
+    requireNl(rounds.length>0&&new Set(rounds.map(r=>r.id)).size===rounds.length&&new Set(nativeRounds).size===rounds.length&&JSON.stringify(nativeRounds.sort())===JSON.stringify(sourceRounds.sort())&&rounds.every(r=>Number.isSafeInteger(r.id)&&r.id>0&&r.competition_id===t.competitionId&&['2025/26','2026/27'].includes(r.season)&&Number.isSafeInteger(r.number)&&r.number>0),'exact source-bound native recovery rounds required')
+    rounds.sort((a,b)=>a.season.localeCompare(b.season)||a.number-b.number||a.id-b.id)
+    manifest.recoveryProof={beforeFootballSha256:before.footballSha256,beforeNativeProof:manifest.nativeProof,beforeDerivedSaves:derivedSaves,roundIds:rounds.map(r=>r.id)}
+    deps.write('manifest.json',JSON.stringify({...manifest,complete:false},null,2)+'\n')
+    for(const r of rounds)await writeRpc('recompute_round_scores',{p_round_id:r.id})
+    state=await native()
+    requireNl(state.footballSha256===before.footballSha256&&state.footballImageText===before.footballImageText,'football changed during existing-data score recompute')
+    Object.assign(manifest.recoveryProof,{afterFootballSha256:state.footballSha256,afterNativeProof:manifest.nativeProof,afterDerivedSaves:deps.verifyDerivedSaves(model,JSON.parse(state.footballImageText))})
+    await deps.prepareCache(source)
+   }else{await deps.assertMain();await deps.importSource(league,source);state=await native()}
    manifest.result=await writeRpc('record_mfa_nl_reviewed_import',{...params,p_football_sha:state.footballSha256})
    await deps.promoteCache()
   }else if(mode==='reprice'){
@@ -117,11 +133,11 @@ export async function callNlReviewedRpc(endpoint,serviceKey,name,args){
   let response
   try{response=await fetch(new URL(`/rest/v1/rpc/${name}`,endpoint),{method:'POST',redirect:'manual',headers:{apikey:serviceKey,Authorization:`Bearer ${serviceKey}`,'Content-Type':'application/json',Connection:'close'},body:JSON.stringify(args),signal:AbortSignal.timeout(200000)})}catch(cause){throw Error(`MFA NL route: RPC ${name} transport ambiguous; read receipt before retrying writes`,{cause})}
   requireNl(response.ok,`native RPC ${name} HTTP${response.status}; read receipt before retrying writes`)
-  const bytes=Buffer.from(await response.arrayBuffer());requireNl(bytes.length<=64*1024*1024,'native RPC response too large');return JSON.parse(bytes)
+  const bytes=Buffer.from(await response.arrayBuffer());requireNl(bytes.length<=64*1024*1024,'native RPC response too large');if(name==='recompute_round_scores'&&response.status===204&&bytes.length===0)return null;return JSON.parse(bytes)
  }
 
 async function cli(){
- const env=process.env,mode=process.argv[2],league=env.MFA_NL_LEAGUE,commit=env.EXPECTED_SHA
+ const env=process.env,mode=process.argv[2],league=env.MFA_NL_LEAGUE,commit=env.EXPECTED_SHA,recoveryExisting=parseNlRecoveryExisting(env.RECOVERY_EXISTING)
  // Validate local authority before even contacting GitHub or parsing credentials.
  const local={head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),originMain:execFileSync('git',['rev-parse','origin/main'],{encoding:'utf8'}).trim(),liveMain:commit}
  assertNlActionsExecution(env,local);nlTarget(league)
@@ -135,19 +151,19 @@ async function cli(){
  const rpc=(name,args)=>callNlReviewedRpc(endpoint,env.SUPABASE_SERVICE_ROLE_KEY,name,args)
  const model=await import('./mfa-nl-source-model.mjs')
  let replayCache
+ const prepareCache=source=>{requireNl(!replayCache,'one fixed replay/pricing sequence per job required');replayCache=prepareNlReplayCache(source)}
  const runCommands=async(commands,source)=>{
-  requireNl(!replayCache,'one fixed replay/pricing sequence per job required')
-  replayCache=prepareNlReplayCache(source)
+  prepareCache(source)
   const childEnv={...env,NODE_OPTIONS:'',MFA_NL_SEALED_CACHE:replayCache.sealed,MFA_NL_LEAGUE:league,MFA_NL_READ_LOG:resolve(dir,'sealed-reads.jsonl')}
   for(const command of commands){await assertMain();execFileSync(process.execPath,['--import',fileURLToPath(new URL('./mfa-nl-offline-guard.mjs',import.meta.url)),...command],{env:childEnv,stdio:'inherit',timeout:45*60*1000})}
  }
 
- const deps={assertMain,policy:getHistoricalStatisticsPolicy,rpc,write,source:authenticateNlSource,derive:model.deriveNlSourceModel,verifyContract:model.verifyNlSourceContract,verifyFootball:model.verifyNlNativeFootball,verifyOpening:model.verifyNlOpening,
+ const deps={assertMain,policy:getHistoricalStatisticsPolicy,rpc,write,source:authenticateNlSource,derive:model.deriveNlSourceModel,verifyContract:model.verifyNlSourceContract,verifyFootball:model.verifyNlNativeFootball,verifyOpening:model.verifyNlOpening,verifyDerivedSaves,prepareCache,
   prepared:async expected=>{const artifact=githubJson(`actions/artifacts/${expected.artifactId}`),run=githubJson(`actions/runs/${expected.runId}`);verifyNlPreparedArtifactIdentity({expected,artifact,run});const bytes=github(`actions/artifacts/${expected.artifactId}/zip`,true);requireNl(bytes.length===artifact.size_in_bytes,'actual prepare ZIP size differs');return readNlPreparedArchive(bytes,expected.digest)},
-  promoteCache:async()=>{requireNl(replayCache,'verified ordinary replay required');replayCache.promote()},importSource:(slug,source)=>runCommands(nlReplayCommands(slug),source),price:(slug,source)=>runCommands(nlPricingCommands(slug),source),smoke:options=>runMfaRegistrationSmoke(endpoint,env,options)}
+  promoteCache:async()=>{requireNl(replayCache,'verified import cache required');replayCache.promote()},importSource:(slug,source)=>runCommands(nlReplayCommands(slug),source),price:(slug,source)=>runCommands(nlPricingCommands(slug),source),smoke:options=>runMfaRegistrationSmoke(endpoint,env,options)}
  try{
-  const manifest=await runNlReviewedStage({mode,league,commit,runId:env.GITHUB_RUN_ID,contractSha:env.CONTRACT_SHA256,beforeSha:env.BEFORE_SHA256,previewSha:env.PREVIEW_SHA256,prepareArtifact:{runId:env.PREPARE_RUN_ID,artifactId:env.PREPARE_ARTIFACT_ID,digest:env.PREPARE_ARTIFACT_DIGEST}},deps)
-  console.log(JSON.stringify({mode,league,mainCommit:commit,contractSha256:manifest.contractSha256,beforeSha256:manifest.beforeSha256,previewSha256:manifest.result?.previewSha256,active:manifest.result?.active??false}))
- }catch(error){write('failure.json',JSON.stringify({complete:false,mode,league,mainCommit:commit,runId:env.GITHUB_RUN_ID,error:String(error.message),readReceiptBeforeRetry:true},null,2)+'\n');throw error}
+  const manifest=await runNlReviewedStage({mode,league,commit,recoveryExisting,runId:env.GITHUB_RUN_ID,contractSha:env.CONTRACT_SHA256,beforeSha:env.BEFORE_SHA256,previewSha:env.PREVIEW_SHA256,prepareArtifact:{runId:env.PREPARE_RUN_ID,artifactId:env.PREPARE_ARTIFACT_ID,digest:env.PREPARE_ARTIFACT_DIGEST}},deps)
+  console.log(JSON.stringify({mode,league,recoveryExisting,mainCommit:commit,contractSha256:manifest.contractSha256,beforeSha256:manifest.beforeSha256,previewSha256:manifest.result?.previewSha256,active:manifest.result?.active??false}))
+ }catch(error){write('failure.json',JSON.stringify({complete:false,mode,league,recoveryExisting,mainCommit:commit,runId:env.GITHUB_RUN_ID,error:String(error.message),readReceiptBeforeRetry:true},null,2)+'\n');throw error}
 }
 if(process.argv[1]&&pathToFileURL(resolve(process.argv[1])).href===import.meta.url)await cli()

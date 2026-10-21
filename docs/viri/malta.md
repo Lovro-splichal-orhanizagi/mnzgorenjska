@@ -406,6 +406,14 @@ bajtov posnetka, bootstrap, zapečateno predvajanje običajnega uvoza iz
 avtenticiranega predpomnilnika, cenitev, pregled in vklop. Noben od teh
 korakov sam ne preskoči drugih preverjanj. Arhiva se ne prenaša znova z MFA.
 
+`recovery_existing=true` je dovoljen samo v koraku `import` za že popolno
+obstoječo bazo po prekinjenem uvozu. Pred pisanjem preveri celoten izvorni
+paket, popolno ujemanje baze in vse že pripisane obranjene enajstmetrovke,
+nato preračuna samo točke natančno izvorno vezanih native krogov, brez
+ponovnega uvoza poročil ali popravljanja pripisov obramb. Izvirni bootstrap
+ostane vezan, ponovna polna preverba po preračunu, potrdilo uvoza in
+objava preverjenega predpomnilnika pa ostanejo obvezni.
+
 ## NL II: pregledani vir za prvo objavo
 
 Migraciji `20261021203000` in `20261021203100` vpišeta samo odobreno
