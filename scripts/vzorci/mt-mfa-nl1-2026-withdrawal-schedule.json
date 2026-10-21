@@ -1,0 +1,842 @@
+[
+  {
+    "id": 53185952,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-10-17T17:00:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39664,
+      "name": "Qrendi"
+    },
+    "awayTeam": {
+      "id": 39613,
+      "name": "Dingli Swallows"
+    }
+  },
+  {
+    "id": 53185948,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-10-17T16:30:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39642,
+      "name": "Mellieha"
+    },
+    "awayTeam": {
+      "id": 39608,
+      "name": "Senglea Athletic"
+    }
+  },
+  {
+    "id": 53185951,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-10-17T14:00:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 40418,
+      "name": "Kalkara United"
+    },
+    "awayTeam": {
+      "id": 39650,
+      "name": "Pembroke Athleta"
+    }
+  },
+  {
+    "id": 53185949,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-10-16T18:45:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39629,
+      "name": "Lija Athletic"
+    },
+    "awayTeam": {
+      "id": 39641,
+      "name": "Marsa"
+    }
+  },
+  {
+    "id": 53185950,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-10-16T16:15:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39618,
+      "name": "Qormi"
+    },
+    "awayTeam": {
+      "id": 39634,
+      "name": "San Gwann"
+    }
+  },
+  {
+    "id": 53185944,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-10-10T17:00:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39608,
+      "name": "Senglea Athletic"
+    },
+    "awayTeam": {
+      "id": 40418,
+      "name": "Kalkara United"
+    }
+  },
+  {
+    "id": 53185942,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-10-10T16:30:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39641,
+      "name": "Marsa"
+    },
+    "awayTeam": {
+      "id": 39642,
+      "name": "Mellieha"
+    }
+  },
+  {
+    "id": 53185945,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-10-10T14:30:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39613,
+      "name": "Dingli Swallows"
+    },
+    "awayTeam": {
+      "id": 39618,
+      "name": "Qormi"
+    }
+  },
+  {
+    "id": 53185947,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-10-10T14:00:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39643,
+      "name": "Mqabba"
+    },
+    "awayTeam": {
+      "id": 39664,
+      "name": "Qrendi"
+    }
+  },
+  {
+    "id": 53185943,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-10-10T12:00:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39634,
+      "name": "San Gwann"
+    },
+    "awayTeam": {
+      "id": 39629,
+      "name": "Lija Athletic"
+    }
+  },
+  {
+    "id": 53185936,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-09-27T14:30:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 40418,
+      "name": "Kalkara United"
+    },
+    "awayTeam": {
+      "id": 39642,
+      "name": "Mellieha"
+    }
+  },
+  {
+    "id": 53185937,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-09-27T14:30:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39634,
+      "name": "San Gwann"
+    },
+    "awayTeam": {
+      "id": 39641,
+      "name": "Marsa"
+    }
+  },
+  {
+    "id": 53185941,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-09-27T14:30:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39664,
+      "name": "Qrendi"
+    },
+    "awayTeam": {
+      "id": 39650,
+      "name": "Pembroke Athleta"
+    }
+  },
+  {
+    "id": 53185938,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-09-27T12:00:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39629,
+      "name": "Lija Athletic"
+    },
+    "awayTeam": {
+      "id": 39613,
+      "name": "Dingli Swallows"
+    }
+  },
+  {
+    "id": 53185940,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-09-27T12:00:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39618,
+      "name": "Qormi"
+    },
+    "awayTeam": {
+      "id": 39643,
+      "name": "Mqabba"
+    }
+  },
+  {
+    "id": 53185935,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-09-20T16:00:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39650,
+      "name": "Pembroke Athleta"
+    },
+    "awayTeam": {
+      "id": 39618,
+      "name": "Qormi"
+    }
+  },
+  {
+    "id": 53185930,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-09-19T18:30:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39641,
+      "name": "Marsa"
+    },
+    "awayTeam": {
+      "id": 40418,
+      "name": "Kalkara United"
+    }
+  },
+  {
+    "id": 53185931,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-09-19T16:00:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39613,
+      "name": "Dingli Swallows"
+    },
+    "awayTeam": {
+      "id": 39634,
+      "name": "San Gwann"
+    }
+  },
+  {
+    "id": 53185934,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-09-19T16:00:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39608,
+      "name": "Senglea Athletic"
+    },
+    "awayTeam": {
+      "id": 39664,
+      "name": "Qrendi"
+    }
+  },
+  {
+    "id": 53185933,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-09-18T18:30:00.0000000Z",
+    "status": "PLAYED",
+    "homeTeam": {
+      "id": 39643,
+      "name": "Mqabba"
+    },
+    "awayTeam": {
+      "id": 39629,
+      "name": "Lija Athletic"
+    }
+  },
+  {
+    "id": 53185955,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-13T19:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39629,
+      "name": "Lija Athletic"
+    },
+    "awayTeam": {
+      "id": 39618,
+      "name": "Qormi"
+    }
+  },
+  {
+    "id": 53185954,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-14T13:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39641,
+      "name": "Marsa"
+    },
+    "awayTeam": {
+      "id": 39608,
+      "name": "Senglea Athletic"
+    }
+  },
+  {
+    "id": 53185957,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-14T15:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39634,
+      "name": "San Gwann"
+    },
+    "awayTeam": {
+      "id": 39664,
+      "name": "Qrendi"
+    }
+  },
+  {
+    "id": 53185958,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-14T15:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39643,
+      "name": "Mqabba"
+    },
+    "awayTeam": {
+      "id": 40418,
+      "name": "Kalkara United"
+    }
+  },
+  {
+    "id": 53185959,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-14T17:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39613,
+      "name": "Dingli Swallows"
+    },
+    "awayTeam": {
+      "id": 40412,
+      "name": "Mtarfa"
+    }
+  },
+  {
+    "id": 53185956,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-14T18:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39650,
+      "name": "Pembroke Athleta"
+    },
+    "awayTeam": {
+      "id": 39642,
+      "name": "Mellieha"
+    }
+  },
+  {
+    "id": 53185962,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-22T13:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39664,
+      "name": "Qrendi"
+    },
+    "awayTeam": {
+      "id": 39629,
+      "name": "Lija Athletic"
+    }
+  },
+  {
+    "id": 53185965,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-22T13:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 40418,
+      "name": "Kalkara United"
+    },
+    "awayTeam": {
+      "id": 39613,
+      "name": "Dingli Swallows"
+    }
+  },
+  {
+    "id": 53185960,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-22T15:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39608,
+      "name": "Senglea Athletic"
+    },
+    "awayTeam": {
+      "id": 39650,
+      "name": "Pembroke Athleta"
+    }
+  },
+  {
+    "id": 53185961,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-22T15:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39618,
+      "name": "Qormi"
+    },
+    "awayTeam": {
+      "id": 39641,
+      "name": "Marsa"
+    }
+  },
+  {
+    "id": 53185964,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-22T15:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 40412,
+      "name": "Mtarfa"
+    },
+    "awayTeam": {
+      "id": 39634,
+      "name": "San Gwann"
+    }
+  },
+  {
+    "id": 53185963,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-22T18:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39642,
+      "name": "Mellieha"
+    },
+    "awayTeam": {
+      "id": 39643,
+      "name": "Mqabba"
+    }
+  },
+  {
+    "id": 53185966,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-29T10:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39641,
+      "name": "Marsa"
+    },
+    "awayTeam": {
+      "id": 39650,
+      "name": "Pembroke Athleta"
+    }
+  },
+  {
+    "id": 53185968,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-29T13:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39643,
+      "name": "Mqabba"
+    },
+    "awayTeam": {
+      "id": 39608,
+      "name": "Senglea Athletic"
+    }
+  },
+  {
+    "id": 53185971,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-29T13:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39634,
+      "name": "San Gwann"
+    },
+    "awayTeam": {
+      "id": 40418,
+      "name": "Kalkara United"
+    }
+  },
+  {
+    "id": 53185967,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-29T14:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39618,
+      "name": "Qormi"
+    },
+    "awayTeam": {
+      "id": 39664,
+      "name": "Qrendi"
+    }
+  },
+  {
+    "id": 53185969,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-29T15:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39629,
+      "name": "Lija Athletic"
+    },
+    "awayTeam": {
+      "id": 40412,
+      "name": "Mtarfa"
+    }
+  },
+  {
+    "id": 53185970,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-11-29T16:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39613,
+      "name": "Dingli Swallows"
+    },
+    "awayTeam": {
+      "id": 39642,
+      "name": "Mellieha"
+    }
+  },
+  {
+    "id": 53185975,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-04T17:15:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39608,
+      "name": "Senglea Athletic"
+    },
+    "awayTeam": {
+      "id": 39613,
+      "name": "Dingli Swallows"
+    }
+  },
+  {
+    "id": 53185976,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-04T19:45:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 40418,
+      "name": "Kalkara United"
+    },
+    "awayTeam": {
+      "id": 39629,
+      "name": "Lija Athletic"
+    }
+  },
+  {
+    "id": 53185973,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-05T13:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39664,
+      "name": "Qrendi"
+    },
+    "awayTeam": {
+      "id": 39641,
+      "name": "Marsa"
+    }
+  },
+  {
+    "id": 53185974,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-05T15:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 40412,
+      "name": "Mtarfa"
+    },
+    "awayTeam": {
+      "id": 39618,
+      "name": "Qormi"
+    }
+  },
+  {
+    "id": 53185977,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-05T15:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39642,
+      "name": "Mellieha"
+    },
+    "awayTeam": {
+      "id": 39634,
+      "name": "San Gwann"
+    }
+  },
+  {
+    "id": 53185972,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-05T17:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39650,
+      "name": "Pembroke Athleta"
+    },
+    "awayTeam": {
+      "id": 39643,
+      "name": "Mqabba"
+    }
+  },
+  {
+    "id": 53185981,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-13T13:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39618,
+      "name": "Qormi"
+    },
+    "awayTeam": {
+      "id": 40418,
+      "name": "Kalkara United"
+    }
+  },
+  {
+    "id": 53185983,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-13T14:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39629,
+      "name": "Lija Athletic"
+    },
+    "awayTeam": {
+      "id": 39642,
+      "name": "Mellieha"
+    }
+  },
+  {
+    "id": 53185979,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-13T15:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39664,
+      "name": "Qrendi"
+    },
+    "awayTeam": {
+      "id": 40412,
+      "name": "Mtarfa"
+    }
+  },
+  {
+    "id": 53185982,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-13T15:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39634,
+      "name": "San Gwann"
+    },
+    "awayTeam": {
+      "id": 39608,
+      "name": "Senglea Athletic"
+    }
+  },
+  {
+    "id": 53185978,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-13T16:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39641,
+      "name": "Marsa"
+    },
+    "awayTeam": {
+      "id": 39643,
+      "name": "Mqabba"
+    }
+  },
+  {
+    "id": 53185980,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-13T18:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39613,
+      "name": "Dingli Swallows"
+    },
+    "awayTeam": {
+      "id": 39650,
+      "name": "Pembroke Athleta"
+    }
+  },
+  {
+    "id": 53185985,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-19T13:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 40412,
+      "name": "Mtarfa"
+    },
+    "awayTeam": {
+      "id": 39641,
+      "name": "Marsa"
+    }
+  },
+  {
+    "id": 53185988,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-19T13:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39642,
+      "name": "Mellieha"
+    },
+    "awayTeam": {
+      "id": 39618,
+      "name": "Qormi"
+    }
+  },
+  {
+    "id": 53185987,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-19T15:00:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39650,
+      "name": "Pembroke Athleta"
+    },
+    "awayTeam": {
+      "id": 39634,
+      "name": "San Gwann"
+    }
+  },
+  {
+    "id": 53185984,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-19T15:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39643,
+      "name": "Mqabba"
+    },
+    "awayTeam": {
+      "id": 39613,
+      "name": "Dingli Swallows"
+    }
+  },
+  {
+    "id": 53185986,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-19T15:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 40418,
+      "name": "Kalkara United"
+    },
+    "awayTeam": {
+      "id": 39664,
+      "name": "Qrendi"
+    }
+  },
+  {
+    "id": 53185989,
+    "competitionId": "53109939",
+    "competitionTypeId": 2601267,
+    "startDate": "2026-12-19T17:30:00.0000000Z",
+    "status": "SCHEDULED",
+    "homeTeam": {
+      "id": 39608,
+      "name": "Senglea Athletic"
+    },
+    "awayTeam": {
+      "id": 39629,
+      "name": "Lija Athletic"
+    }
+  }
+]

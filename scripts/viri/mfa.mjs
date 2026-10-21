@@ -233,10 +233,20 @@ export function krogiSezone(tekme) {
   return out
 }
 
+// MFA's final 21 October 2026 decision voids Mtarfa's 2026/27 NL I
+// matches and cancels its remaining fixtures. The API still lists them.
+// https://www.mfa.com.mt/news/competitions/malta-fa-statement-mtarfa-fc-suspended-from-bov-national-league-1/
+// Keep raw discovery and round grouping intact: removing a club first would
+// change the round-size heuristic and could move other clubs' fixtures.
+const cancelledMtarfaFixture = t => String(t.competitionId) === '53109939'
+  && String(t.competitionTypeId) === '2601267'
+  && [t.homeTeam?.id, t.awayTeam?.id].some(id => String(id) === '40412')
+
 /** Razpored v obliko uvoza razporeda. Odigrana je tekma s stanjem PLAYED. */
 export function razcleniRazpored(tekme) {
   const krogi = new Map()
   for (const { krog, t } of krogiSezone(tekme)) {
+    if (cancelledMtarfaFixture(t)) continue
     const { datum, ura } = lokalniCas(t.startDate)
     if (!krogi.has(krog)) krogi.set(krog, { stevilka: krog, tekme: [] })
     krogi.get(krog).tekme.push({
@@ -563,6 +573,7 @@ const vir = {
     const { sezona } = razbijKodo(koda)
     const out = []
     for (const { krog, t } of krogiSezone(await vseTekme(koda, prenesi, { mapa }))) {
+      if (cancelledMtarfaFixture(t)) continue
       if (t.status !== 'PLAYED') continue
       // Complete installed policy authority is supplied by the MFA wrapper.
       // Skip before either result or lineup fetch (including cache reads).
