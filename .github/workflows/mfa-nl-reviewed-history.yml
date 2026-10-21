@@ -13,6 +13,10 @@ on:
         type: choice
         required: true
         options: [prepare, bootstrap, import, reprice, preview, activate, receipt]
+      recovery_existing:
+        description: Import only - verify complete existing source data and saved penalties; recompute scores without report replay
+        type: boolean
+        default: false
       expected_sha:
         description: Exact reviewed current main commit (first attempt only)
         type: string
@@ -90,6 +94,7 @@ jobs:
           MFA_NL_MODE: ${{ inputs.mode }}
           MFA_NL_LEAGUE: ${{ inputs.league }}
           CONTRACT_SHA256: ${{ inputs.contract_sha256 }}
+          RECOVERY_EXISTING: ${{ inputs.recovery_existing }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           PREPARE_RUN_ID: ${{ inputs.prepare_run_id }}

@@ -8,7 +8,7 @@ import vm from 'node:vm'
 import {repository,sha256} from './dfb-artifacts.mjs'
 import {historicalStatisticsPolicySha256 as canonicalSha} from './lib/historical-statistics-policy.mjs'
 import {NL_REVIEWED_SOURCES,NL_REVIEWED_PRIOR,NL_REVIEWED_WORKFLOW,assertNlActionsExecution,verifyNlReviewedContract,readNlPreparedArchive,verifyNlPreparedFiles,verifyNlPreparedArtifactIdentity} from './mfa-nl-reviewed-evidence.mjs'
-import {runNlReviewedStage,nlReplayCommands,nlPricingCommands,prepareNlReplayCache,authenticateNlSource,callNlReviewedRpc} from './mfa-nl-reviewed-history.mjs'
+import {runNlReviewedStage,nlReplayCommands,nlPricingCommands,prepareNlReplayCache,authenticateNlSource,callNlReviewedRpc,parseNlRecoveryExisting} from './mfa-nl-reviewed-history.mjs'
 
 const commit='a'.repeat(40),runId='555'
 const env=()=>({GITHUB_ACTIONS:'true',CI:'true',GITHUB_REPOSITORY:repository,GITHUB_REF:'refs/heads/main',GITHUB_SHA:commit,EXPECTED_SHA:commit,GITHUB_RUN_ID:runId,GITHUB_RUN_ATTEMPT:'1',GITHUB_EVENT_NAME:'workflow_dispatch',GITHUB_WORKFLOW_REF:`${repository}/${NL_REVIEWED_WORKFLOW}@refs/heads/main`})
@@ -194,4 +194,67 @@ test('parent RPC never retries an ambiguous write transport failure',{timeout:10
   await assert.rejects(callNlReviewedRpc(endpoint,'local-test-key','drop',{write:true}),error=>{assert.match(error.message,/RPC drop transport ambiguous; read receipt before retrying writes/);assert.ok(error.cause instanceof TypeError);return true})
   assert.equal(readFileSync(log,'utf8').trim().split('\n').length,1)
  })
+})
+
+function recoveryFixture(){
+ const f=fixture();f.options={...f.options,mode:'import',recoveryExisting:true};const image=JSON.parse(f.sourceState.footballImageText)
+ image.rounds=[{id:200,competition_id:973,season:'2026/27',number:1},{id:100,competition_id:973,season:'2025/26',number:1}]
+ f.sourceState.footballImageText=JSON.stringify(image);f.sourceState.footballSha256=sha256(Buffer.from(f.sourceState.footballImageText))
+ f.deps.derive=async()=>{f.calls.push(['derive']);return{reports:[],currentFixtures:[],schedules:[{season:'2025/26',rounds:[{stevilka:1}]},{season:'2026/27',rounds:[{stevilka:1}]}]}}
+ f.deps.verifyDerivedSaves=()=>{f.calls.push(['saves']);return{expectedSaves:19,exactParity:true}}
+ f.deps.prepareCache=async()=>f.calls.push(['cache-seeded']);return f
+}
+test('recovery existing is literal boolean restricted to the import stage',async()=>{
+ for(const value of['true',1,null]){const f=recoveryFixture();f.options.recoveryExisting=value;await assert.rejects(runNlReviewedStage(f.options,f.deps),/boolean/);assert.equal(f.calls.length,0)}
+ for(const mode of['prepare','bootstrap','reprice','preview','activate','receipt']){const f=recoveryFixture();f.options.mode=mode;await assert.rejects(runNlReviewedStage(f.options,f.deps),/import/);assert.equal(f.calls.length,0)}
+})
+test('verified existing import never replays reports or attributes saves; recomputes bounded native rounds once',async()=>{
+ const f=recoveryFixture(),result=await runNlReviewedStage(f.options,f.deps),names=f.calls.map(c=>c[0])
+ assert.equal(result.recoveryExisting,true);assert.ok(!names.includes('replay'));assert.ok(!names.includes('pripisi_obranjene_enajstmetrovke'))
+ assert.deepEqual(f.calls.filter(c=>c[0]==='recompute_round_scores').map(c=>c[1]),[{p_round_id:100},{p_round_id:200}])
+ assert.ok(names.indexOf('parity')<names.indexOf('recompute_round_scores'));assert.ok(names.indexOf('saves')<names.indexOf('recompute_round_scores'))
+ assert.equal(names.filter(n=>n==='saves').length,2);assert.ok(names.lastIndexOf('saves')<names.indexOf('record_mfa_nl_reviewed_import'));assert.ok(names.indexOf('record_mfa_nl_reviewed_import')<names.indexOf('cache-promoted'))
+ assert.deepEqual(result.recoveryProof.roundIds,[100,200]);assert.equal(result.recoveryProof.afterDerivedSaves.expectedSaves,19)
+ assert.equal(result.recoveryProof.beforeNativeProof.exactParity,true);assert.equal(result.recoveryProof.afterNativeProof.exactParity,true);assert.equal(result.recoveryProof.beforeFootballSha256,result.recoveryProof.afterFootballSha256);assert.deepEqual([...f.written.keys()],['manifest.json'])
+})
+test('missing native reports, bad saves, ties and foreign round IDs hold recovery before any writes',async()=>{
+ for(const failure of['parity','saves','tie','round']){
+  const f=recoveryFixture();if(failure==='parity')f.deps.verifyFootball=()=>{throw Error('missing report')};else if(failure==='round'){const image=JSON.parse(f.sourceState.footballImageText);image.rounds[0].competition_id=974;f.sourceState.footballImageText=JSON.stringify(image);f.sourceState.footballSha256=sha256(Buffer.from(f.sourceState.footballImageText))}else f.deps.verifyDerivedSaves=()=>{throw Error('bad saves or tie')}
+  await assert.rejects(runNlReviewedStage(f.options,f.deps));assert.ok(!f.calls.some(c=>/recompute|record_|replay|cache-promoted/.test(c[0])))
+ }
+})
+test('recovery never retries ambiguous writes or promotes cache after recompute or record failure',async()=>{
+ for(const failed of['recompute_round_scores','record_mfa_nl_reviewed_import']){
+  const f=recoveryFixture(),rpc=f.deps.rpc;f.deps.rpc=async(name,args)=>{if(name===failed){f.calls.push([name,args]);throw Error('transport ambiguous')}return rpc(name,args)}
+  await assert.rejects(runNlReviewedStage(f.options,f.deps),/transport ambiguous/);assert.equal(f.calls.filter(c=>c[0]===failed).length,1);assert.ok(!f.calls.some(c=>c[0]==='cache-promoted'))
+ }
+})
+
+test('workflow recovery flag uses exact boolean env encoding without another stage',()=>{
+ assert.equal(parseNlRecoveryExisting(undefined),false);assert.equal(parseNlRecoveryExisting('false'),false);assert.equal(parseNlRecoveryExisting('true'),true)
+ for(const value of['',true,'1','yes'])assert.throws(()=>parseNlRecoveryExisting(value),/boolean/)
+ const w=readFileSync(new URL('../.github/workflows/mfa-nl-reviewed-history.yml',import.meta.url),'utf8')
+ assert.match(w,/recovery_existing:[\s\S]*?type: boolean\n        default: false/);assert.match(w,/RECOVERY_EXISTING: \$\{\{ inputs.recovery_existing \}\}/)
+})
+test('source football drift during existing recovery stops receipt and cache promotion',async()=>{
+ const f=recoveryFixture(),rpc=f.deps.rpc;let reads=0
+ f.deps.rpc=async(name,args)=>{if(name==='get_mfa_nl_reviewed_source_state'&&++reads===2){const image=JSON.parse(f.sourceState.footballImageText);image.unexpected=true;return{...f.sourceState,footballImageText:JSON.stringify(image),footballSha256:sha256(Buffer.from(JSON.stringify(image)))}}return rpc(name,args)}
+ await assert.rejects(runNlReviewedStage(f.options,f.deps),/football changed/);assert.ok(!f.calls.some(c=>/record_|cache-promoted/.test(c[0])))
+})
+
+test('recovery round IDs must exactly match all source season/round identities before writing',async()=>{
+ for(const mutate of[rounds=>rounds.push({...rounds[0],id:300,number:2}),rounds=>rounds.pop(),rounds=>rounds.push({...rounds[0],id:300})]){
+  const f=recoveryFixture(),image=JSON.parse(f.sourceState.footballImageText);mutate(image.rounds);f.sourceState.footballImageText=JSON.stringify(image);f.sourceState.footballSha256=sha256(Buffer.from(f.sourceState.footballImageText))
+  await assert.rejects(runNlReviewedStage(f.options,f.deps),/source-bound native recovery rounds/);assert.ok(!f.calls.some(c=>/recompute|record_|cache-promoted/.test(c[0])))
+ }
+})
+
+test('score recompute accepts only its void204; admission RPCs still require JSON',async()=>{
+ const original=globalThis.fetch;let calls=0
+ globalThis.fetch=async()=>{calls++;return new Response(null,{status:204})}
+ try{
+  assert.equal(await callNlReviewedRpc(new URL('https://db.example'),'local-test-key','recompute_round_scores',{p_round_id:123}),null)
+  await assert.rejects(callNlReviewedRpc(new URL('https://db.example'),'local-test-key','get_mfa_nl_reviewed_source_state',{}),SyntaxError)
+  assert.equal(calls,2)
+ }finally{globalThis.fetch=original}
 })
