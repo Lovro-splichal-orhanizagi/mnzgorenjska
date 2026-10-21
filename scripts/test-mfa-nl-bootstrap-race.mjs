@@ -45,6 +45,8 @@ test('MFA NL concurrent installs and current writers cannot bypass the reviewed 
  const denied=await second.done;assert.notEqual(denied.code,0);assert.match(denied.stderr,/MFA_NL_BOOTSTRAP:/)
  assert.equal(sql('select count(*)from private_mfa_nl_history.bootstrap_receipt where competition_id=974;'),'1')
  assert.equal(sql("select count(*)from matches where zapisnik_id='mt51962893'and statistics_status='unavailable_historical'and imported_at is null;"),'1')
+ assert.equal(sql("select count(*)from matches m join rounds r on r.id=m.round_id where r.competition_id=974 and m.zapisnik_id in('mt51962893','mt50920572','mt50920621')and m.statistics_status='unavailable_historical'and m.imported_at is null;"),'3')
+ assert.equal(sql("select exists(select 1 from matches where zapisnik_id='mt50920555');"),'f')
  const current=JSON.parse(sql('select private_mfa_nl_history.protected_current(974);'))
  assert.deepEqual(current,JSON.parse(prepared.get(974).beforeImageText).current)
  // A current writer commits first: the blocked install must then reject drift.

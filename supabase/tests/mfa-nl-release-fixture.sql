@@ -1,9 +1,20 @@
 -- Owner-only fixture, always inside the exact disposable wrapper's transaction.
 -- Rollback suite restores live contracts; the owned race DB is discarded afterward.
 do $$begin if current_setting('slff.mfa_nl_owned_fixture',true)is distinct from 'transaction'then raise exception 'MFA NL TEST: explicit owned fixture transaction required';end if;end$$;
+create temporary table nl_original_source_contracts as select *from private_mfa_nl_history.source_contract;
 truncate table private_mfa_nl_history.source_contract,private_mfa_nl_history.import_receipt,private_mfa_nl_history.price_receipt,private_mfa_nl_history.release_receipt,private_mfa_nl_history.bootstrap_receipt cascade;
 -- Synthetic six-club launch contracts only; never live fixture/count approvals.
 \ir mfa-nl-bootstrap-fixture.sql
+-- Authenticate the actual immutable JSONB documents after establishing only test native tuples.
+-- Each temporary insert is rolled back; real contracts are restored by the outer suite rollback.
+do $$declare c record;got jsonb;begin for c in select *from nl_original_source_contracts loop
+ begin
+  insert into private_mfa_nl_history.source_contract values(c.competition_id,c.contract_sha256,c.document);
+  got:=public.get_mfa_nl_reviewed_source_contract(c.competition_id,c.contract_sha256);
+  if got->'contractDocument'<>c.document or got->>'contractSha256'<>c.contract_sha256 then raise exception 'MFA NL TEST: original source-contract JSONB accessor roundtrip differs';end if;
+  raise exception using errcode='P9001',message='rollback original contract accessor probe';
+ exception when sqlstate 'P9001'then null;end;
+end loop;end$$;
 insert into private_historical_statistics.policies select id,sha,document from nl_test_policies on conflict(id)do nothing;
 insert into teams(id,name,country_id)overriding system value
 select 9900000+cid*10+n,'Release fixture '||cid||' club '||n,(select id from countries where code='MT')from(values(973),(974))v(cid)cross join generate_series(3,6)n;
@@ -36,6 +47,8 @@ do $$declare doc jsonb;sha text;begin
   raise exception using errcode='P9001',message='rollback prebootstrap synthetic contract';
  exception when sqlstate 'P9001'then null;end;
 end$$;
+-- Ordinary schedule imports preserve their exact official standings provenance.
+update matches m set source_url='https://api.mfa.com.mt/api/competitions/'||split_part(c.source_league_code,'/',1)||'/standings?season=2027'from rounds r join competitions c on c.id=r.competition_id where m.round_id=r.id and c.id in(973,974)and m.zapisnik_id is null;
 create temporary table nl_release_bootstrap as select cid,public.prepare_mfa_nl_reviewed_bootstrap(cid,repeat('e',40),pg_temp.nl_sha(cid))as image from(values(973),(974))v(cid);
 select public.apply_mfa_nl_reviewed_bootstrap(cid,repeat('e',40),pg_temp.nl_sha(cid),image->>'beforeSha256',image->>'beforeImageText')from nl_release_bootstrap;
 -- The contract deliberately describes a small synthetic archive, not real NL totals.

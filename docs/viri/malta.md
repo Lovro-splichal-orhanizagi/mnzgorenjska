@@ -107,7 +107,7 @@ Opozorilo vira: v NL I (Senglea : Kalkara, mt53185944) rumeni karton brez
 minute. Arhivi 2025/26 (seznami z dopolnitvijo po šifri, po ena ali dve
 tekmi zadnjega kroga): Premier 32 krogov / 192 tekem (6 faz), Challenge 22 /
 176 (Phase 1 + Top 8 in Play-Out po 4 tekme), NL I 26 / 182 (181 odigranih;
-100 s seznama + 82 po šifri), NL II 22 / 132 + ponovljena tekma kot 23. krog;
+100 s seznama + 82 po šifri), NL II 22 / 132 (nadaljevanje je ista logična tekma v krogu 4);
 vzorčeni zapisniki vsi 11 + 11, vratar, goli = izid.
 
 Vpisane so 4 lige (migracija 20261016091500), zveza `mfa`:
@@ -127,24 +127,29 @@ pregledanih zgodovinskih poti. Vpis kandidata ne odobri zgodovinskih statistik
 ali vklopa: ostanejo preverbe časov dogodkov, izidov, identitet, menjav,
 vratarjev, cen, kadra in dejanskega prihodnjega prvega fantasy kroga.
 
-**Pregledane izjeme NL (21. 10. 2026).** Uporabnik je odobril samo
+**Pregledane izjeme NL (21. 10. 2026).** Uporabnik je odobril
 NL I `mt50921445` (Mellieha : Victoria Hotspurs, 18. 4. 2026, 1:0,
-manjkajoča časa dveh izključitev; 1/181 arhivskih poročil) in NL II
-skupno tekmo `50920555` + `51962893` (končni 1:1, 1/132 logičnih
-arhivskih tekem; manjkajoča povezovalna menjava). Uradni rezultati ostanejo,
-individualne statistike so nedostopne. Nespremenljiva politika NL I in natančni izvorni hashi so v registru in
-pregledanih migracijah; sam vpis ne namesti oznak, ne uvozi arhiva in ne
-vklopi lige. Odobritev nadaljevanja NL II je zadržana v dokaznem paketu;
-politika te lige še ni registrirana ali vstavljena v SQL, dokler ni
-razrešen celoten pregled zgodovine.
+manjkajoča časa dveh izključitev; 1/181 arhivskih poročil) in tri logične
+tekme NL II (3/132 oziroma 2,27 %):
+
+- `50920555` + `51962893`, Msida : Dingli, končni 1:1, krog 4,
+  13. 1. 2026; manjkajoča povezovalna menjava;
+- `50920572`, Dingli : Rabat, 0:0, krog 7, 14. 12. 2025;
+- `50920621`, Dingli : Msida, 2:1, krog 15, 14. 2. 2026.
+
+Zadnji dve poročili nimata minute izključitve. Uradni rezultati ostanejo,
+individualne statistike teh tekem so nedostopne. Nespremenljivi politiki,
+izvorni hashi in dokazila klubov so v registru in pregledanih migracijah;
+sam vpis ne namesti oznak, ne uvozi arhiva in ne vklopi lige. Dodatna
+odobritev NL II je vezana na `call_4fd7f0aef4cc49e4bae88528b45fd483`;
+prvotno nadaljevanje na `call_8704b229964d4d00af0aea857b11fbf8`.
 
 Celotni zadržani audit NL I pokrije 181 arhivskih in 20 tekočih poročil;
 NL II 133 surovih arhivskih segmentov, 132 logičnih tekem in 35 tekočih
 poročil. Dokaz NL II potrjuje 22 krogov, 12 klubov s po 22 tekmami,
 nadaljevanje v krogu 4 in nespremenjeno razvrstitev vseh drugih parov.
-NL II ima še dva **neodobrena** arhivska zadržka `50920572` in `50920621`
-(izključitvi brez minute). Zaprta pot ju ne sme uvoziti kot običajno statistiko
-ali sama razširiti izjem. Tekoča poročila ohranijo vse običajne preverbe.
+Vseh 129 drugih arhivskih in vseh 35 tekočih poročil NL II ohrani
+običajne stroge preverbe.
 
 Za pregled **že shranjenih bajtov** je v `razdeli-zlite-igralce.yml` način
 `mfa_nl_cache_audit=true`, `mfa_nl_league=mt-nl1|mt-nl2` in numerični
@@ -164,7 +169,7 @@ ne odpravlja ali odobrava ponovnega branja.
 Prvotni poln omrežni uvoz obeh sezon ene lige je približno 20–25 minut; arhiv 130–190 tekem
 je ~15–20 minut (dva zahtevka na zapisnik in dodatni seznami/dopolnitev).
 Oba NL skupaj bi potrebovala približno 840–890 zahtevkov in 40–50 minut;
-NL II šele po ločeni odobritvi obravnave nadaljevanja. Izrecnega dovoljenja MFA
+Zaprta pot spodaj uporablja zadržani preverjeni predpomnilnik. Izrecnega dovoljenja MFA
 nimamo; ohranimo javno pot, zaporedno branje in 3-sekundni premor ter se
 ustavimo ob umiku, prijavi, izzivu ali 401/403/429, brez obhodov.
 
@@ -214,8 +219,9 @@ Po zunanjem pregledu apply sprejme še `before_sha` in `before_image_text`,
 v isti transakciji ponovno preveri celoten posnetek in ustvari samo
 politiki pripadajoče prazne arhivske glave, kroge ter natančne vezave klubov.
 Ne briše ali rekonstruira nastopov/golov. Tekoče tekme, igralci, krogi in
-izpeljani podatki ostanejo enaki. NL II dovoli samo končni `mt51962893`,
-krog 4, 13. 1. 2026, 1:1; `mt50920555` je prepovedana glava.
+izpeljani podatki ostanejo enaki. Migracija `20261021203000` priveže NL II
+na celotni hash treh odobrenih tekem. Za nadaljevanje dovoli samo končni
+`mt51962893`, krog 4, 13. 1. 2026, 1:1; `mt50920555` je prepovedana glava.
 `get_mfa_nl_reviewed_bootstrap_receipt(competition_id)` obnovi potrdilo po
 nejasnem odgovoru; apply se ne ponavlja na slepo. Zasebni deli niso odprti
 niti servisu; javna ovoja uporabljata dejansko uro tudi ob koncu transakcije.
@@ -241,6 +247,10 @@ commit, workflow, branch, name), natančne glave vseh arhivskih/tekočih poroči
 celoten tekoči razpored, število klubov in arhivskih krogov ter
 `opening:{round,playedOn,deadlineAt}`. Deadline mora biti neodvisno izračunan
 iz vira in enak izvirnemu bootstrap posnetku. Sintetični preizkusi niso odobritev.
+Neodigrana tekoča tekma sme obdržati `source_url = NULL` ali natančni
+uradni URL tekoče lestvice svojega fiksnega tekmovanja; tuj URL, druga liga,
+sezona ali dodatni parametri ne prestanejo pokritosti. Migracija
+`20261021203200` ohrani ta izvorni podatek običajnega uvoza razporeda.
 
 Vsi novi RPC-ji so samo servisni in omejeni na 973/974:
 
@@ -395,5 +405,25 @@ Zaprta pot `mfa-nl-reviewed-history.yml` uporablja pripravo, pregled natančnih
 bajtov posnetka, bootstrap, zapečateno predvajanje običajnega uvoza iz
 avtenticiranega predpomnilnika, cenitev, pregled in vklop. Noben od teh
 korakov sam ne preskoči drugih preverjanj. Arhiva se ne prenaša znova z MFA.
-NL II ostane izven registra politik in brez pogodbe vira do ločene
-razrešitve dveh dodatnih zgodovinskih poročil.
+
+## NL II: pregledani vir za prvo objavo
+
+Migraciji `20261021203000` in `20261021203100` vpišeta samo odobreno
+politiko ter nespremenljivo pogodbo vira; ne izvedeta uvoza ali vklopa.
+Politika `91b657b699865da70ac797730b1aa902ea58e54fe7b0be691e445c58e21c69fe`
+in pogodba `60c20346c32895157e39c1f80a20d7ae563d77c3302d5931b0592cd188ac0d02`
+vežeta 167 logičnih poročil: 129 popolnih arhivskih, tri označena in
+35 popolnih tekočih. Arhiv ima 22 krogov; tekoči razpored 77 tekem in
+14 klubov. Natančna primerjava trenutnega vira in baze potrjuje
+1080 nastopov ter 132 golov. Prvi fantasy krog je dejanski krog 6,
+14. 11. 2026, rok `2026-11-14T12:00:00.000Z`.
+
+Izvirni paket je zagon `39655969899`, artefakt `12374320002`, digest
+`sha256:76ff29ffe701b057190fdd5860afd592b018db60dbc1ee56e74f6f9bdeecc793`.
+Pogodba vsebuje vseh sedem polj provenience ter natančno identiteto vsakega
+poročila in tekoče tekme. Zapečateno predvajanje obnovi preverjene bajte. Za golo metapodatkovno pot
+`/matches/<id>` ima prednost `po-sifri-<id>.json`; samo če datoteke ni,
+dovoli ohranjeni `tekma-<id>.json`. Pokvarjenega ali nevarnega kanoničnega
+zapisa ne nadomesti in nikoli ne opravi omrežnega zahtevka.
+
+Vsi nadaljnji koraki priprave, bootstrap, cenitve in vklopa ostanejo obvezni.

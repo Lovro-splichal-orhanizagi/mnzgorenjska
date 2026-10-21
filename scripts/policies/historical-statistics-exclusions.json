@@ -489,6 +489,130 @@
           "reasonCode": "missing_dismissal_clocks"
         }
       ]
+    },
+    {
+      "id": "mt-nl2-reviewed-history-2026-10-21-v1",
+      "provider": "mfa",
+      "sourcePolicy": "mt-mfa-nl2-reviewed-history-v1",
+      "competitionSlug": "mt-nl2",
+      "season": "2026/27",
+      "recordedAt": "2026-10-21T20:08:53.918Z",
+      "approvalReference": "User reply Allow this reviewed historical exclusion to call_8704b229964d4d00af0aea857b11fbf8; recording time, original user send time unavailable; User reply Allow both reviewed historical exclusions to call_4fd7f0aef4cc49e4bae88528b45fd483; recording time, original user send times unavailable",
+      "entries": [
+        {
+          "sourceMatchId": "51962893",
+          "sourceCompetitionId": "50920420",
+          "sourcePhase": null,
+          "sourceRound": 4,
+          "season": "2025/26",
+          "playedOn": "2026-01-13",
+          "homeSourceClubId": "39633",
+          "awaySourceClubId": "39613",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/51962893",
+          "rawSha256": "87bae2121282e371e0784cfde1c96fdfd03148e9c5849fa57bc5ef3770ac3338",
+          "observedHomeScore": 1,
+          "observedAwayScore": 1,
+          "reasonCode": "unresolved_continuation_lineup"
+        },
+        {
+          "sourceMatchId": "50920572",
+          "sourceCompetitionId": "50920420",
+          "sourcePhase": null,
+          "sourceRound": 7,
+          "season": "2025/26",
+          "playedOn": "2025-12-14",
+          "homeSourceClubId": "39613",
+          "awaySourceClubId": "39645",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50920572",
+          "rawSha256": "a3f0eac8e8c513484e983921671d8f2e1359e8d1cd397d1edb4371b5aa5169fe",
+          "observedHomeScore": 0,
+          "observedAwayScore": 0,
+          "reasonCode": "missing_dismissal_clocks"
+        },
+        {
+          "sourceMatchId": "50920621",
+          "sourceCompetitionId": "50920420",
+          "sourcePhase": null,
+          "sourceRound": 15,
+          "season": "2025/26",
+          "playedOn": "2026-02-14",
+          "homeSourceClubId": "39613",
+          "awaySourceClubId": "39633",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50920621",
+          "rawSha256": "0cf0ecc1687c9bd2220576fd9da705b33cfbcdd3fa2bdf7475a5b40bad6572ea",
+          "observedHomeScore": 2,
+          "observedAwayScore": 1,
+          "reasonCode": "missing_dismissal_clocks"
+        }
+      ],
+      "reconciliation": {
+        "sourceMatchIds": [
+          "50920555",
+          "51962893"
+        ],
+        "orderingAnchorSourceMatchId": "50920555",
+        "metadataSha256": {
+          "50920555": "18f7d96530e3e674ec019d52e409b41d72322fa169d89a62b7663f2797f36ecc",
+          "51962893": "f683323b9e69208d49be8fc2c3f93e68cbfb35430b0d3dee63de9df2bc805bcd"
+        },
+        "resultSha256": {
+          "50920555": "dae890a4e691d4e8f3a4805bcac66ba2a49e9427803cf02874028d06207e85f5",
+          "51962893": "282ddd39f09fb92a66d060d418331bc92c68474570cbbc364302ee4b6c576b39"
+        },
+        "lineupSha256": {
+          "50920555": "1298413083d3ec71886ebb5f56894319a311ca7fa4c6987449e0d355cc91a83a",
+          "51962893": "87bae2121282e371e0784cfde1c96fdfd03148e9c5849fa57bc5ef3770ac3338"
+        },
+        "reason": "Unrecorded home substitution between abandoned and resumed segments; individual timelines must never be merged.",
+        "officialArticles": [
+          {
+            "url": "https://matchcentre.mfa.com.mt/articles/general-category/bov-amateur-league-2-md4-review-rabat-continue-promotion-charge-ghaxaq-and-marsaskala-share-spoils/",
+            "publishedOn": "2025-11-13",
+            "evidenceKind": "opened_official_article"
+          },
+          {
+            "url": "https://matchcentre.mfa.com.mt/articles/general-category/bov-amateur-league-ii-md10-review-msida-hand-kalkara-first-defeat-as-title-race-gets-tighter/",
+            "publishedOn": "2026-01-19",
+            "evidenceKind": "official_search_snippet_article_open_timed_out"
+          }
+        ]
+      },
+      "approvals": [
+        {
+          "recordedAt": "2026-10-21T18:08:45.898106+00:00",
+          "approvalReference": "User reply Allow this reviewed historical exclusion to call_8704b229964d4d00af0aea857b11fbf8; recording time, original user send time unavailable",
+          "sourceMatchIds": [
+            "50920555",
+            "51962893"
+          ],
+          "logicalFixtures": 1
+        },
+        {
+          "recordedAt": "2026-10-21T20:02:19.939655+00:00",
+          "approvalReference": "User reply Allow both reviewed historical exclusions to call_4fd7f0aef4cc49e4bae88528b45fd483",
+          "sourceMatchIds": [
+            "50920572",
+            "50920621"
+          ],
+          "logicalFixtures": 2
+        }
+      ],
+      "dismissalEvidence": [
+        {
+          "sourceMatchId": "50920572",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50920572",
+          "resultSha256": "af0a9811a15f59cf6cb633e29115acfd0adfeedd687d88584f2e2ed7f0ba71df",
+          "lineupSha256": "a3f0eac8e8c513484e983921671d8f2e1359e8d1cd397d1edb4371b5aa5169fe",
+          "reason": "on-field dismissal time missing; never infer minutes"
+        },
+        {
+          "sourceMatchId": "50920621",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/50920621",
+          "resultSha256": "4ec24a9accfa00b1e7cda89e7927065765087e2aa81ae4e5231ae6062627ff9d",
+          "lineupSha256": "0cf0ecc1687c9bd2220576fd9da705b33cfbcdd3fa2bdf7475a5b40bad6572ea",
+          "reason": "on-field dismissal time missing; never infer minutes"
+        }
+      ]
     }
   ]
 }
