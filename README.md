@@ -19,6 +19,11 @@ oznako, da statistika igralcev ni na voljo. Za te tekme ni nastopov, golov
 ali glasovanja o asistencah; seštevki in cene uporabljajo le preverjene
 nastope, vmesnik pa pokaže nepopolno pokritost zgodovine.
 
+Malteški NL bootstrap ima zaprte servisne prepare/apply/receipt RPC-je in
+zasebno potrdilo `private_mfa_nl_history.bootstrap_receipt`. Pred namestitvijo
+zahteva uvoženo tekočo sezono, pregledano arhivsko politiko in nespremenjen
+posnetek baze; ne uvaža individualnih statistik ali vklaplja lige.
+
 ## Ključne funkcionalnosti
 
 - **Sestavljanje ekipe** — igrišče s prvo postavo in klopjo: 15 igralcev (2 vratarja,

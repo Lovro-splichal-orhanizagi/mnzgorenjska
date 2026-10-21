@@ -178,6 +178,47 @@ Pred tem se preveri, da nobena nima uvoženih statistik ali uporabniških
 fantasy ekip. Prihodnji prvi fantasy krog se pregleda po popravku. Sam
 popravek ne vklopi lige in ne odobri nobene zgodovinske izjeme.
 
+## NL I / NL II: zaprto ogrodje namestitve arhivskih oznak
+
+`20261021183000_mfa_nl_archive_bootstrap.sql` doda samo zasebno ogrodje in
+servisne RPC-je; ne vpiše nobene odobritve v SQL ali JS register. Natančni
+native dvojici sta `973/mt-nl1/2601267/2027` in `974/mt-nl2/6234492/2027`.
+Podprta ID-ja politike sta `mt-nl1-reviewed-history-2026-10-21-v1` in
+`mt-nl2-reviewed-history-2026-10-21-v1`; brez poznejšega pregledanega vpisa
+politike in vezav izvornih klubov prepare zavrne. To ne pomeni, da so
+arhivske izjeme NL I že odobrene.
+
+Najprej se na navadni poti uvozi **samo tekoča sezona**, še pred registracijo
+politike. Izvorno potrjene popravke razporeda je treba namestiti pred prepare.
+`prepare_mfa_nl_reviewed_bootstrap(competition_id, main_sha, policy_sha)`
+zaklene relevantni obseg, zahteva neaktivno ligo brez arhiva, uporabniških
+ekip ali sedanjih/izbrisanih glasov ter vrne celotni `beforeImageText` in
+`beforeSha256`. Prihodnji odklenjeni začetni krog izbere iz dejanskih
+tekočih vrstic po navadnem pravilu vrzeli/odigranih krogov. Preverba polne
+pokritosti vira in njegovih izvirnih hashov ostaja naloga poznejše zaprte
+priprave; domnevno prestavljenih tekočih tekem ta SQL ne razglasi za odigrane.
+
+Po zunanjem pregledu apply sprejme še `before_sha` in `before_image_text`,
+v isti transakciji ponovno preveri celoten posnetek in ustvari samo
+politiki pripadajoče prazne arhivske glave, kroge ter natančne vezave klubov.
+Ne briše ali rekonstruira nastopov/golov. Tekoče tekme, igralci, krogi in
+izpeljani podatki ostanejo enaki. NL II dovoli samo končni `mt51962893`,
+krog 4, 13. 1. 2026, 1:1; `mt50920555` je prepovedana glava.
+`get_mfa_nl_reviewed_bootstrap_receipt(competition_id)` obnovi potrdilo po
+nejasnem odgovoru; apply se ne ponavlja na slepo. Zasebni deli niso odprti
+niti servisu; javna ovoja uporabljata dejansko uro tudi ob koncu transakcije.
+Cenitev, dokaz celotnega uvoza, predogled in vklop v tem ogrodju še ne obstajajo.
+
+Rollback preizkus in dve povezavi tečeta samo na izrecno lastni sveži
+bazi `supabase_db_slff_mfa_nl_bootstrap_20261021` z oznako tega projekta.
+`MFA_NL_BOOTSTRAP_DISPOSABLE_TEST=1` omogoči SQL pogodbo;
+`MFA_NL_BOOTSTRAP_RACE_TEST=1` omogoči tekmovalni preizkus, ki potrebuje
+novo prazno testno bazo in za seboj pusti le sintetične testne vrstice.
+Rollback SQL je vključen tudi v točno CI opravilo `varnost` na njegovi sveži
+bazi; izven tega opravila običajna razvijalčeva baza ni dovoljena.
+Ukaz je `npm run test:mfa-nl-bootstrap`; brez zastavic sta native preizkusa
+preskočena. Ne uporabljaj razvijalčeve običajne baze.
+
 ## Premier: pregledani zgodovinski izjemi (20. 10. 2026)
 
 Uporabnik je odobril **samo `mt52581524` (2025/26, krog 28, 2:2) in
