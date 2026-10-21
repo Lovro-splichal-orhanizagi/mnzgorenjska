@@ -22,7 +22,10 @@ nastope, vmesnik pa pokaže nepopolno pokritost zgodovine.
 Malteški NL bootstrap ima zaprte servisne prepare/apply/receipt RPC-je in
 zasebno potrdilo `private_mfa_nl_history.bootstrap_receipt`. Pred namestitvijo
 zahteva uvoženo tekočo sezono, pregledano arhivsko politiko in nespremenjen
-posnetek baze; ne uvaža individualnih statistik ali vklaplja lige.
+posnetek baze; ne uvaža individualnih statistik. Ločeno zaprto ogrodje
+source/import/prices/release zahteva nespremenljivo pregledano pogodbo vira,
+zunanje potrjen posnetek nogometa in svežo cenitev istega commita; pogodbe
+ali novih odobritev ogrodje ne vpisuje.
 
 ## Ključne funkcionalnosti
 

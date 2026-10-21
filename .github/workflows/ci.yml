@@ -170,6 +170,11 @@ jobs:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
           MFA_NL_BOOTSTRAP_DISPOSABLE_TEST: '1'
         run: node --test scripts/test-mfa-nl-bootstrap-sql.mjs
+      - name: MFA NL closed source/import/prices/release rollback regression
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          MFA_NL_RELEASE_DISPOSABLE_TEST: '1'
+        run: node --test scripts/test-mfa-nl-release-sql.mjs
       - name: MFA Challenge four-report cleanup and release rollback regression
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska

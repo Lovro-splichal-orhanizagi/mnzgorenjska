@@ -8090,6 +8090,16 @@ export type Database = {
         }
         Returns: Json
       }
+      check_mfa_nl_reviewed_release: {
+        Args: {
+          p_activate?: boolean
+          p_competition_id: number
+          p_contract_sha: string
+          p_expected_preview_sha?: string
+          p_main_sha: string
+        }
+        Returns: Json
+      }
       check_mfa_reviewed_release: {
         Args: {
           p_activate?: boolean
@@ -8162,6 +8172,22 @@ export type Database = {
       }
       get_mfa_nl_reviewed_bootstrap_receipt: {
         Args: { p_competition_id: number }
+        Returns: Json
+      }
+      get_mfa_nl_reviewed_release_receipt: {
+        Args: { p_competition_id: number }
+        Returns: Json
+      }
+      get_mfa_nl_reviewed_source_contract: {
+        Args: { p_competition_id: number; p_contract_sha: string }
+        Returns: Json
+      }
+      get_mfa_nl_reviewed_source_state: {
+        Args: {
+          p_competition_id: number
+          p_contract_sha: string
+          p_main_sha: string
+        }
         Returns: Json
       }
       get_mfa_reviewed_receipt: {
@@ -8976,6 +9002,23 @@ export type Database = {
       }
       record_mfa_challenge_reviewed_prices: {
         Args: { p_main_sha: string }
+        Returns: Json
+      }
+      record_mfa_nl_reviewed_import: {
+        Args: {
+          p_competition_id: number
+          p_contract_sha: string
+          p_football_sha: string
+          p_main_sha: string
+        }
+        Returns: Json
+      }
+      record_mfa_nl_reviewed_prices: {
+        Args: {
+          p_competition_id: number
+          p_contract_sha: string
+          p_main_sha: string
+        }
         Returns: Json
       }
       record_mfa_reviewed_prices: {

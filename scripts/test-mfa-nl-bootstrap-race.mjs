@@ -7,18 +7,18 @@ import {readFileSync}from'node:fs'
 const enabled=process.env.MFA_NL_BOOTSTRAP_RACE_TEST==='1'
 test('MFA NL concurrent installs and current writers cannot bypass the reviewed snapshot',{skip:!enabled,timeout:30000},async()=>{
  const container=process.env.SUPABASE_DB_CONTAINER
- assert.equal(container,'supabase_db_slff_mfa_nl_bootstrap_20261021')
+ assert.ok(['supabase_db_slff_mfa_nl_bootstrap_20261021','supabase_db_slff_mfa_nl_release_20261021'].includes(container),'explicit owned NL test project required')
  const docker=args=>execFileSync('docker',args,{encoding:'utf8',maxBuffer:16*1024*1024})
  const labels=JSON.parse(docker(['inspect',container,'--format','{{json .Config.Labels}}']))
- assert.equal(labels['com.supabase.cli.project'],'slff_mfa_nl_bootstrap_20261021')
+ assert.equal(labels['com.supabase.cli.project'],container.replace('supabase_db_',''))
  const args=['exec','-i',container,'psql','-U','postgres','-d','postgres','-X','-At','-v','ON_ERROR_STOP=1']
  const sql=q=>execFileSync('docker',args,{input:q,encoding:'utf8',maxBuffer:16*1024*1024}).trim()
- assert.equal(sql("select not exists(select 1 from private_mfa_nl_history.bootstrap_receipt)and not exists(select 1 from private_historical_statistics.policies where id like'mt-nl%-reviewed-history-%');"),'t','fresh row-free owned baseline required')
+ assert.equal(sql("select not exists(select 1 from private_mfa_nl_history.bootstrap_receipt)and not exists(select 1 from private_historical_statistics.installed_policies where competition_id in(973,974));"),'t','fresh row-free owned baseline required')
  const fixture=readFileSync(new URL('../supabase/tests/mfa-nl-bootstrap-fixture.sql',import.meta.url),'utf8')
- sql(`begin;${fixture}\ninsert into private_historical_statistics.policies select id,sha,document from nl_test_policies;commit;`)
- const prepared=new Map([973,974].map(cid=>[cid,JSON.parse(sql(`select public.prepare_mfa_nl_reviewed_bootstrap(${cid},repeat('e',40),repeat('${cid===973?'a':'b'}',64));`))]))
+ sql(`begin;${fixture}\ninsert into private_historical_statistics.policies select id,sha,document from nl_test_policies on conflict(id)do nothing;commit;`)
+ const prepared=new Map([973,974].map(cid=>[cid,JSON.parse(sql(`select public.prepare_mfa_nl_reviewed_bootstrap(${cid},repeat('e',40),(select policy_sha256 from private_historical_statistics.policies where id='mt-nl${cid-972}-reviewed-history-2026-10-21-v1'));`))]))
  const literal=value=>`'${value.replaceAll("'","''")}'`
- const apply=cid=>`select public.apply_mfa_nl_reviewed_bootstrap(${cid},repeat('e',40),repeat('${cid===973?'a':'b'}',64),${literal(prepared.get(cid).beforeSha256)},${literal(prepared.get(cid).beforeImageText)});`
+ const apply=cid=>`select public.apply_mfa_nl_reviewed_bootstrap(${cid},repeat('e',40),(select policy_sha256 from private_historical_statistics.policies where id='mt-nl${cid-972}-reviewed-history-2026-10-21-v1'),${literal(prepared.get(cid).beforeSha256)},${literal(prepared.get(cid).beforeImageText)});`
  function start(text,signal){
   const child=spawn('docker',args,{stdio:['pipe','pipe','pipe']});let stdout='',stderr='',signaled=false
   let resolveReady

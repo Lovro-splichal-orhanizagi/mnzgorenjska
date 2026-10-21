@@ -266,7 +266,10 @@ Malteški NL bootstrap uporablja ločene servisne `prepare_mfa_nl_reviewed_boots
 `apply_mfa_nl_reviewed_bootstrap` in `get_mfa_nl_reviewed_bootstrap_receipt`.
 Pred registracijo politike mora obstajati navaden uvoz samo tekoče sezone;
 namestitev ustvari le odobrene prazne arhivske glave in ohrani tekoče podatke.
-Nova shema `private_mfa_nl_history` ne vsebuje odobritev ali poti za vklop.
+Zasebna `source_contract` in servisni source/import/prices/release RPC-ji ostanejo
+zaprti brez poznejše pregledane pogodbe vira; ogrodje ne vsebuje odobritev.
+Posnetek nogometa se preverja po nespremenjenih bajtih `footballImageText`;
+cene/pozicije/active igralcev so ločeni izhodi cenitve.
 Podrobnosti in omejitve so v `docs/viri/malta.md`.
 
 ## Mobilna aplikacija

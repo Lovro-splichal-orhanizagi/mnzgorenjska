@@ -27,7 +27,7 @@ select p.competition_id*10000+1,p.id,p.team_id,true,90,0,90,p.position='GK'from 
 analyze appearances;
 insert into private_historical_statistics.source_club_bindings(provider,source_club_id,country_code,canonical_names,proofs)
 values('mfa','98001','MT',array['NLI bootstrap home'],'[]'),('mfa','98002','MT',array['NLI bootstrap away'],'[]'),
-('mfa','98003','MT',array['NLI archive-only club'],'[]'),('mfa','39633','MT',array['Msida St.Joseph'],'[]'),('mfa','39613','MT',array['Dingli Swallows'],'[]');
+('mfa','98003','MT',array['NLI archive-only club'],'[]'),('mfa','39633','MT',array['Msida St.Joseph'],'[]'),('mfa','39613','MT',array['Dingli Swallows'],'[]')on conflict(provider,source_club_id,source_category_id)do nothing;
 -- Kept in a temporary table until the test explicitly authorizes synthetic policy seed.
 create temporary table nl_test_policies as
 select 'mt-nl'||n||'-reviewed-history-2026-10-21-v1' as id,repeat(case n when 1 then'a'else'b'end,64) as sha,
@@ -37,3 +37,7 @@ jsonb_build_object('id','mt-nl'||n||'-reviewed-history-2026-10-21-v1','provider'
  jsonb_build_object('sourceMatchId','90001973','sourceCompetitionId','50921000','sourcePhase',null,'sourceRound',4,'season','2025/26','playedOn','2025-11-08','homeSourceClubId','98003','awaySourceClubId','98002','sourceUrl','https://matchcentre.mfa.com.mt/match/90001973','rawSha256',repeat('d',64),'observedHomeScore',0,'observedAwayScore',0,'reasonCode','synthetic_clock_missing'))
 else jsonb_build_array(jsonb_build_object('sourceMatchId','51962893','sourceCompetitionId','50920420','sourcePhase',null,'sourceRound',4,'season','2025/26','playedOn','2026-01-13','homeSourceClubId','39633','awaySourceClubId','39613','sourceUrl','https://matchcentre.mfa.com.mt/match/51962893','rawSha256','87bae2121282e371e0784cfde1c96fdfd03148e9c5849fa57bc5ef3770ac3338','observedHomeScore',1,'observedAwayScore',1,'reasonCode','unresolved_continuation_lineup'))end) as document
 from generate_series(1,2)n;
+
+-- Adopt a real reviewed policy when a later migration has already seeded it.
+update nl_test_policies n set sha=p.policy_sha256,document=p.document from private_historical_statistics.policies p where p.id=n.id;
+create function pg_temp.nl_sha(p_cid bigint)returns text language sql as $$select sha from pg_temp.nl_test_policies where id='mt-nl'||(p_cid-972)||'-reviewed-history-2026-10-21-v1'$$;

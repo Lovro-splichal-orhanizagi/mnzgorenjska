@@ -207,7 +207,7 @@ krog 4, 13. 1. 2026, 1:1; `mt50920555` je prepovedana glava.
 `get_mfa_nl_reviewed_bootstrap_receipt(competition_id)` obnovi potrdilo po
 nejasnem odgovoru; apply se ne ponavlja na slepo. Zasebni deli niso odprti
 niti servisu; javna ovoja uporabljata dejansko uro tudi ob koncu transakcije.
-Cenitev, dokaz celotnega uvoza, predogled in vklop v tem ogrodju še ne obstajajo.
+Dokaz celotnega uvoza, cenitev in vklop zahtevajo še ločeno pogodbo vira spodaj.
 
 Rollback preizkus in dve povezavi tečeta samo na izrecno lastni sveži
 bazi `supabase_db_slff_mfa_nl_bootstrap_20261021` z oznako tega projekta.
@@ -218,6 +218,52 @@ Rollback SQL je vključen tudi v točno CI opravilo `varnost` na njegovi sveži
 bazi; izven tega opravila običajna razvijalčeva baza ni dovoljena.
 Ukaz je `npm run test:mfa-nl-bootstrap`; brez zastavic sta native preizkusa
 preskočena. Ne uporabljaj razvijalčeve običajne baze.
+
+## NL I / NL II: zaprta pogodba vira in vklop
+
+`20261021200000_mfa_nl_source_release.sql` ne odobri nobenega novega poročila,
+števila tekem ali paketa. Nespremenljiva zasebna tabela `source_contract`
+potrebuje poznejšo pregledano migracijo. Dokument in njegov kanonični UTF-8
+SHA vključujeta celotno provenienco `sourceArtifact` (runId, artifactId, digest,
+commit, workflow, branch, name), natančne glave vseh arhivskih/tekočih poročil,
+celoten tekoči razpored, število klubov in arhivskih krogov ter
+`opening:{round,playedOn,deadlineAt}`. Deadline mora biti neodvisno izračunan
+iz vira in enak izvirnemu bootstrap posnetku. Sintetični preizkusi niso odobritev.
+
+Vsi novi RPC-ji so samo servisni in omejeni na 973/974:
+
+- `get_mfa_nl_reviewed_source_contract(competition_id, contract_sha)` omogoča
+  preverbo pogodbe in izvornega paketa že pred bootstrap; ne zahteva oznak.
+- `get_mfa_nl_reviewed_source_state(competition_id, main_sha, contract_sha)`
+  po bootstrap preveri celotno pokritost in vrne `footballImageText` ter
+  `footballSha256`. Zunanji preverjevalnik primerja vsako izvorno vrstico in
+  zgoščuje **iste bajte besedila**, brez ponovne serializacije. Posnetek vsebuje
+  polne vrstice ekip/krogov/tekem/nastopov/golov in identiteto igralcev
+  (id, competition_id, team_id, reg_st, first_name, last_name, full_name,
+  shirt_number, nzs_birth_year). Cen, pozicij in active igralca ne zamrzne.
+- `record_mfa_nl_reviewed_import(competition_id, main_sha, contract_sha,
+  football_sha)` zabeleži zunanje potrjeni posnetek; isti commit ga ne more
+  zamenjati. `record_mfa_nl_reviewed_prices(competition_id, main_sha,
+  contract_sha)` po cenitvi zamrzne polno stanje ob nespremenjenem nogometu.
+- `check_mfa_nl_reviewed_release(competition_id, main_sha, contract_sha,
+  expected_preview_sha default null, activate default false)` preveri isti
+  commit, pogodbo, bootstrap, posnetek, sveže cene, bodoči izvirni začetek,
+  gole/XI/minute/identitete, trenutne zanesljive vratarje, klop, raznolikost
+  cen in legalnih 15 do 100. Vklop zahteva pregledani digest in pod istimi
+  ključavnicami izda zasebno dovoljenje ter vklopi ligo. Javni ovoj ob koncu
+  ponovno preveri dejansko uro. `get_mfa_nl_reviewed_release_receipt(id)`
+  obnovi potrdila po nejasnem odgovoru.
+
+Čakajoče tekme nimajo shranjenega izvornega ID-ja: `fixtureBindings.indirect`
+je zato true in vezava uporablja točen krog/datum/par klubov ter celotno
+množico. Odigrana poročila imajo neposredno vezavo na `mtID`.
+
+`npm run test:mfa-nl-release` uporablja samo izrecno lastno bazo
+`supabase_db_slff_mfa_nl_release_20261021` ali točno sveže CI opravilo
+`varnost`. `MFA_NL_RELEASE_DISPOSABLE_TEST=1` omogoči rollback pogodbo;
+`MFA_NL_RELEASE_RACE_TEST=1` na prazni lastni bazi preveri dve povezavi in
+za seboj pusti sintetične vrstice. Običajni CI registrira samo rollback test.
+Pogodba brez zastavic nima dostopa do baze. Premier/Challenge ostajata ločena.
 
 ## Premier: pregledani zgodovinski izjemi (20. 10. 2026)
 
