@@ -36,8 +36,8 @@ export const aplikacija = {
     zid: 'Pivski zid',
     /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
     okno: {
-      naslov: 'Pssst… maskota je žejna 🍺',
-      besedilo: 'SLFF je brezplačen: brez oglasov, brez stav, brez naročnin. Strežnik pa žal ne teče na navdušenje. Eno pivo pomaga plačati strežnik in pošto, tvoje ime pa pristane na pivskem zidu.',
+      naslov: 'No, pa še nam lahko plačaš eno pivo 🍺',
+      besedilo: 'Lej, kako zabavno igrico smo naredili. Če bi nas srečal po tekmi, bi nam sigurno dal za pivo. SLFF ostaja brezplačen, brez oglasov in stav, tvoje ime pa pristane na pivskem zidu.',
       kasneje: 'Mogoče naslednjič',
       zeSem: 'Sem že častil 🍻',
     },
