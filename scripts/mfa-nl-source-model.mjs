@@ -15,6 +15,7 @@ const cached = (cache, name) => { const body = cache.get(name); require(body, `m
 export async function deriveNlSourceModel({ league, cache, currentOnly = false, firstFantasyPlayedOn }) {
   const tuple = tuples[league]; require(tuple && cache instanceof Map, 'fixed native league and authenticated cache required')
   const policy = getHistoricalStatisticsPolicy(league)
+  require(currentOnly || policy, 'complete registered archive policy required before full source derivation')
   const competition = { id: tuple[0], slug: league, source: 'mfa', source_league_code: `${tuple[1]}/2027`, source_policy: policy?.sourcePolicy ?? null, firstFantasyPlayedOn }
   const read = async (_url, file) => {
     const match = /^tekma-(\d+)[.]json$/.exec(file)

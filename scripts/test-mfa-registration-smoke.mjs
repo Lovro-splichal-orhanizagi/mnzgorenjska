@@ -19,7 +19,7 @@ test('real release smoke runs both ordinary registration CLIs with installed nat
  const{createServer}=await import('node:http'),{spawn}=await import('node:child_process')
  const{getHistoricalStatisticsPolicy,historicalStatisticsPolicySha256}=await import('./lib/historical-statistics-policy.mjs')
  const calls=[]
- const rows=[[971,'mt-premier','58539/2027','2026-10-21'],[972,'mt-challenge','2601248/2027','2026-10-23'],[973,'mt-nl1','2601267/2027','2026-11-13'],[974,'mt-nl2','6234492/2027','2026-11-01']].map(([id,slug,code,date])=>({id,slug,source:'mfa',source_policy:getHistoricalStatisticsPolicy(slug).sourcePolicy,source_league_code:code,active:false,date}))
+ const rows=[[971,'mt-premier','58539/2027','2026-10-21'],[972,'mt-challenge','2601248/2027','2026-10-23'],[973,'mt-nl1','2601267/2027','2026-11-13']].map(([id,slug,code,date])=>({id,slug,source:'mfa',source_policy:getHistoricalStatisticsPolicy(slug).sourcePolicy,source_league_code:code,active:false,date}))
  const server=createServer(async(req,res)=>{
   let body='';for await(const chunk of req)body+=chunk
   const u=new URL(req.url,'http://localhost');calls.push([req.method,u.pathname])
@@ -34,10 +34,10 @@ test('real release smoke runs both ordinary registration CLIs with installed nat
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve))
  try{
   const endpoint=`http://127.0.0.1:${server.address().port}`
-  const child=spawn(process.execPath,['--input-type=module','-e',`import {runMfaRegistrationSmoke} from './scripts/mfa-registration-smoke.mjs';console.log(JSON.stringify([...runMfaRegistrationSmoke(process.env.SUPABASE_URL,process.env),...runMfaRegistrationSmoke(process.env.SUPABASE_URL,process.env,{competitionId:973}),...runMfaRegistrationSmoke(process.env.SUPABASE_URL,process.env,{competitionId:974})]))`],{env:{PATH:process.env.PATH,SUPABASE_URL:endpoint,SUPABASE_SERVICE_ROLE_KEY:'fixture-only'}})
+  const child=spawn(process.execPath,['--input-type=module','-e',`import {runMfaRegistrationSmoke} from './scripts/mfa-registration-smoke.mjs';console.log(JSON.stringify([...runMfaRegistrationSmoke(process.env.SUPABASE_URL,process.env),...runMfaRegistrationSmoke(process.env.SUPABASE_URL,process.env,{competitionId:973})]))`],{env:{PATH:process.env.PATH,SUPABASE_URL:endpoint,SUPABASE_SERVICE_ROLE_KEY:'fixture-only'}})
   let out='',err='';child.stdout.on('data',x=>out+=x);child.stderr.on('data',x=>err+=x)
   const code=await new Promise((resolve,reject)=>{child.on('error',reject);child.on('close',resolve)})
-  assert.equal(code,0,err);assert.deepEqual(JSON.parse(out).map(x=>x.competitionId),[971,972,973,974]);assert.equal(calls.filter(([m])=>m==='POST').length,4)
+  assert.equal(code,0,err);assert.deepEqual(JSON.parse(out).map(x=>x.competitionId),[971,972,973]);assert.equal(calls.filter(([m])=>m==='POST').length,3)
   assert.ok(calls.every(([method,path])=>method==='GET'&&path==='/rest/v1/competitions'||method==='POST'&&path==='/rest/v1/rpc/get_installed_historical_statistics_markers'))
  }finally{await new Promise(resolve=>server.close(resolve))}
 })

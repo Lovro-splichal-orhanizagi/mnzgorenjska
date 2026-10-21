@@ -132,9 +132,11 @@ NL I `mt50921445` (Mellieha : Victoria Hotspurs, 18. 4. 2026, 1:0,
 manjkajoča časa dveh izključitev; 1/181 arhivskih poročil) in NL II
 skupno tekmo `50920555` + `51962893` (končni 1:1, 1/132 logičnih
 arhivskih tekem; manjkajoča povezovalna menjava). Uradni rezultati ostanejo,
-individualne statistike so nedostopne. Nespremenljivi politiki in natančni
-izvorni hashi sta v registru in pregledanih migracijah; samo njun vpis
-ne namesti oznak, ne uvozi arhiva in ne vklopi lig.
+individualne statistike so nedostopne. Nespremenljiva politika NL I in natančni izvorni hashi so v registru in
+pregledanih migracijah; sam vpis ne namesti oznak, ne uvozi arhiva in ne
+vklopi lige. Odobritev nadaljevanja NL II je zadržana v dokaznem paketu;
+politika te lige še ni registrirana ali vstavljena v SQL, dokler ni
+razrešen celoten pregled zgodovine.
 
 Celotni zadržani audit NL I pokrije 181 arhivskih in 20 tekočih poročil;
 NL II 133 surovih arhivskih segmentov, 132 logičnih tekem in 35 tekočih
@@ -159,7 +161,7 @@ mtime je čas datoteke, ne čas potrjenega odziva vira, status/čas prvotnega za
 pa iz predpomnilnika nista dokazljiva. Opozoril, zavrnitev in izzivov ta pregled
 ne odpravlja ali odobrava ponovnega branja.
 
-Poln uvoz obeh sezon ene lige je približno 20–25 minut; arhiv 130–190 tekem
+Prvotni poln omrežni uvoz obeh sezon ene lige je približno 20–25 minut; arhiv 130–190 tekem
 je ~15–20 minut (dva zahtevka na zapisnik in dodatni seznami/dopolnitev).
 Oba NL skupaj bi potrebovala približno 840–890 zahtevkov in 40–50 minut;
 NL II šele po ločeni odobritvi obravnave nadaljevanja. Izrecnega dovoljenja MFA
@@ -376,3 +378,22 @@ Ta sprememba ne namesti oznake ali vklopi lige. Polna izvirna inventura zadržan
 paketa `39655969899` je potrdila 132 logičnih tekem, 22 krogov in prvotno
 mesto nadaljevanja v krogu 4; API nima polja za krog. Tekoča sezona 2026/27
 in obstoječi pregledani poti Premier/Challenge ostanejo nespremenjene.
+
+## NL I: pregledani vir za prvo objavo
+
+Celotni zadržani vir je vezan na uspešen audit `39654281589`, artefakt
+`12369359893`, digest `sha256:a758e66fa050cfefb5897018e9b71eb9595fb3a7c3947627c90fc58a71a662e2`.
+Pogodba `9b25cae2297d920720d152d135799d109468642144e12202d8265cedd8343815`
+vključuje vseh 201 odigranih poročil (180 popolnih arhivskih, eno označeno
+arhivsko in 20 popolnih tekočih), 50 tekočih tekem in 11 tekočih klubov.
+Običajni uvoz `39661344819` je odstranil šest neodigranih tekem Mtarfe;
+poznejše branje baze potrjuje natančnih 611 tekočih nastopov in 67 golov
+z vsemi neposrednimi fantazijskimi števci. Začetek je dejanski krog 5,
+13. 11. 2026, rok `2026-11-13T13:30:00.000Z`, ne domnevni naslednji krog.
+
+Zaprta pot `mfa-nl-reviewed-history.yml` uporablja pripravo, pregled natančnih
+bajtov posnetka, bootstrap, zapečateno predvajanje običajnega uvoza iz
+avtenticiranega predpomnilnika, cenitev, pregled in vklop. Noben od teh
+korakov sam ne preskoči drugih preverjanj. Arhiva se ne prenaša znova z MFA.
+NL II ostane izven registra politik in brez pogodbe vira do ločene
+razrešitve dveh dodatnih zgodovinskih poročil.

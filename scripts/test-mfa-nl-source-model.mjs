@@ -51,3 +51,8 @@ test('native semantic comparison catches scorer identity, minute and fantasy cou
     assert.throws(() => verifyNlNativeFootball(m, wrong), /native.*differs/)
   }
 })
+
+test('full NL II source derivation stays closed while its historical policy is unregistered',async()=>{
+ const {deriveNlSourceModel}=await import(moduleURL)
+ await assert.rejects(deriveNlSourceModel({league:'mt-nl2',cache:cache(),currentOnly:false}),/complete registered archive policy/)
+})

@@ -7,7 +7,7 @@ import {
 } from './historical-statistics-policy.mjs'
 
 const registry = JSON.parse(readFileSync(new URL('../policies/historical-statistics-exclusions.json', import.meta.url)))
-const seedSql=['20261018180000_historical_statistical_availability.sql','20261018231000_dfb_nord_west_historical_policy.sql','20261020223000_mfa_reviewed_history.sql','20261021093000_mfa_challenge_reviewed_history.sql','20261021190000_mfa_nl2_reviewed_policy.sql','20261021190100_mfa_nl1_reviewed_policy.sql'].map(file=>readFileSync(new URL(`../../supabase/migrations/${file}`,import.meta.url),'utf8')).join('\n')
+const seedSql=['20261018180000_historical_statistical_availability.sql','20261018231000_dfb_nord_west_historical_policy.sql','20261020223000_mfa_reviewed_history.sql','20261021093000_mfa_challenge_reviewed_history.sql','20261021190100_mfa_nl1_reviewed_policy.sql'].map(file=>readFileSync(new URL(`../../supabase/migrations/${file}`,import.meta.url),'utf8')).join('\n')
 const clone = value => structuredClone(value)
 const hr = registry.policies.find(p => p.provider === 'hns')
 const de = registry.policies.find(p => p.provider === 'dfb')
@@ -23,7 +23,7 @@ test('registry contains exactly reviewed HNS3, DFB12 and FCF4 historical identit
   assert.deepEqual(de.entries.map(x => x.sourceMatchId).sort(), ['2402929', '2403004'])
   assert.deepEqual(registry.policies.filter(p=>p.provider==='dfb').flatMap(p=>p.entries.map(e=>e.sourceMatchId)).sort(),['2402287','2402299','2402306','2402312','2402325','2402332','2402346','2402352','2402929','2403004','2405268','2405441'])
   assert.deepEqual(registry.policies.filter(p=>p.provider==='fcf').flatMap(p=>p.entries.map(e=>e.sourceMatchId)).sort(), ['4109388','4116215','4118352','4118358'])
-  assert.equal(registry.policies.length,11)
+  assert.equal(registry.policies.length,10)
   assert.ok(!hr.entries.some(x => x.sourceMatchId === '100511758'))
 })
 
