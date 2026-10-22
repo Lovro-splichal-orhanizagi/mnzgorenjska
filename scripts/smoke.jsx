@@ -11353,11 +11353,14 @@ preveri(
   const si = { slug: 'clani', oznaka: 'Člani', ime: '1. Gorenjska liga', drzava: 'SI' }
   const sk = { slug: 'sk-ssfz-4liga', oznaka: 'IV. liga', ime: 'IV. liga SsFZ', drzava: 'SK' }
   const slovensko = /Živjo|ekip[aeo]|krog|točk|Popravi|opomnik/
-  const rok = '2026-10-03T08:00:00Z' // sobota 10:00 po obeh pasovih
+  const rok = '2026-10-03T08:00:00Z'
+  // Zadeva opomnika z rokom nosi uro (10:00, 11:00, da-DK 10.00).
+  const imaRok = (m) => /\d{1,2}[:.]\d{2}/.test(m.naslov) // sobota 10:00 po obeh pasovih
 
-  const oSl = E.sestaviOpomnik(si, { display_name: 'Janez Novak', brez_ekipe: true })
-  const oSk = E.sestaviOpomnik(sk, { display_name: 'Ján Kováč', brez_ekipe: false })
-  preveri('e-pošta: opomnik sl', oSl.naslov.includes('še nimaš ekipe') && oSl.html.includes('Živjo, Janez!'))
+  const razlog = 'Iz kluba Šenčur imas 4 igralce, dovoljeni so 3. To se zgodi tudi brez tvoje spremembe — ce igralec med sezono prestopi v klub, iz katerega jih ze imas.'
+  const oSl = E.sestaviOpomnik(si, { display_name: 'Janez Novak', rok, razlog })
+  const oSk = E.sestaviOpomnik(sk, { display_name: 'Ján Kováč' })
+  preveri('e-pošta: opomnik sl', imaRok(oSl) && oSl.naslov.includes('dokončaj ekipo do') && oSl.html.includes('Živjo, Janez!'))
   preveri('e-pošta: opomnik sk', oSk.naslov.includes('dokonči tím') && oSk.html.includes('Ahoj, Ján!') && !slovensko.test(oSk.naslov + oSk.html), oSk.naslov)
   preveri(
     'e-pošta: povezave na ligo in odjava',
@@ -11368,10 +11371,9 @@ preveri(
   )
   preveri('e-pošta: odjava v jeziku lige', oSk.html.includes('Nechcem už dostávať pripomienky') && oSl.html.includes('Ne želim več opomnikov'))
 
-  const razlog = 'Iz kluba Šenčur imas 4 igralce, dovoljeni so 3. To se zgodi tudi brez tvoje spremembe — ce igralec med sezono prestopi v klub, iz katerega jih ze imas.'
   const zSl = E.sestaviOpozorilo(si, { display_name: null, team_name: 'Nedeljski <junaki>', round_number: 5, deadline_at: rok, razlog })
   const zSk = E.sestaviOpozorilo(sk, { display_name: null, team_name: 'Nedeľní hrdinovia', round_number: 5, deadline_at: rok, razlog })
-  preveri('e-pošta: opozorilo sl', zSl.naslov.includes('5. krog ne bo zaklenila') && zSl.html.includes('Iz kluba Šenčur') && zSl.html.includes('sobota') && zSl.html.includes('10:00'), zSl.naslov)
+  preveri('e-pošta: opozorilo sl', zSl.naslov.includes('ne bo dobila točk v 5. krogu') && zSl.html.includes('Iz kluba Šenčur') && zSl.html.includes('sobota') && zSl.html.includes('10:00'), zSl.naslov)
   preveri('e-pošta: opozorilo sl ubeži HTML', zSl.html.includes('Nedeljski &lt;junaki&gt;'))
   preveri(
     'e-pošta: opozorilo sk (rok po bratislavsko, razlog preveden)',
@@ -11382,12 +11384,12 @@ preveri(
   preveri('e-pošta: rok v časovnem pasu lige', E.izpisRoka(rok, sk).includes('10:00') && E.izpisRoka(rok, si).includes('10:00'))
   const zivaSk = E.sestaviLigaZivi(null, { display_name: null, liga: sk })
   const zivaEn = E.sestaviLigaZivi('en', { display_name: 'Ana', liga: { ...si, ime: 'A <b>' } })
-  preveri('e-pošta: zadeva brez pomišljaja (dvopičje)', zivaSk.naslov === 'SLFF IV. liga: tvoja liga je tu' && zivaEn.naslov === 'SLFF Člani: your league is here', zivaSk.naslov)
+  preveri('e-pošta: zadeva brez pomišljaja (dvopičje)', !/—/.test(zivaSk.naslov + zivaEn.naslov) && zivaSk.naslov.includes('IV. liga SsFZ') && zivaEn.naslov.includes('A <b>'), zivaSk.naslov)
   preveri(
     'e-pošta: liga je zaživela (jezik lige ali želje, ubeži ime)',
     zivaSk.html.includes('Ahoj!') && !slovensko.test(zivaSk.naslov + zivaSk.html) &&
       zivaSk.html.includes('my-team?sestavi=1&amp;t=sk-ssfz-4liga') &&
-      zivaEn.html.includes('Hi Ana,') && zivaEn.html.includes('A &lt;b&gt;') && !zivaEn.odjava,
+      zivaEn.html.includes('Hi Ana!') && zivaEn.html.includes('A &lt;b&gt;') && !zivaEn.odjava,
   )
 
   const razlogi = [
@@ -11421,19 +11423,19 @@ preveri(
   const bSl = E.sestaviOpomnikBrezLige(null, { display_name: 'Janez Novak' })
   const bSk = E.sestaviOpomnikBrezLige('sk', { display_name: 'Ján' })
   preveri('e-pošta: brez lige sl ne imenuje lige in vodi na sestavo ekipe',
-    bSl.naslov.includes('izberi svojo ligo') && !/GNL|1\. SNL — |\?t=/.test(bSl.naslov) &&
+    bSl.naslov.includes('ekipa je pripravljena') && !/GNL|1\. SNL — |\?t=/.test(bSl.naslov) &&
       bSl.html.includes('href="https://slff.eu/my-team?sestavi=1"') && !bSl.html.includes('?t=') && bSl.html.includes('Živjo, Janez!'))
   preveri('e-pošta: brez lige sk v slovaščini na sestavo ekipe',
-    bSk.naslov.includes('vyber si ligu') && bSk.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+    bSk.naslov.includes('tím je pripravený') && bSk.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
       !slovensko.test(bSk.html) && bSk.html.includes('Ahoj, Ján!'))
   preveri('e-pošta: brez lige ima odjavo', bSl.odjava === 'https://slff.eu/reminders' && bSk.html.includes('/reminders'))
   const bEn = E.sestaviOpomnikBrezLige('en', { display_name: 'Ana Horvat' })
   preveri('e-pošta: dobrodošlica en v angleščini na sestavo ekipe',
-    bEn.naslov.includes('build your team') && bEn.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
-      !slovensko.test(bEn.html) && bEn.html.includes('Hi Ana,') && bEn.html.includes('Stop these reminders'))
+    bEn.naslov.includes('team is ready') && bEn.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+      !slovensko.test(bEn.html) && bEn.html.includes('Hi Ana!') && bEn.html.includes('Stop these reminders'))
   const zSlE = E.sestaviOpomnikBrezEkipe('sl', { display_name: 'Janez', liga: si, rok })
   preveri('e-pošta: brez ekipe sl z ligo, rokom in sestavo v ligi',
-    zSlE.naslov === 'SLFF Člani: ekipa te še čaka' && zSlE.html.includes('href="https://slff.eu/my-team?sestavi=1&amp;t=clani"') &&
+    zSlE.naslov.startsWith('SLFF Člani: rok je ') && zSlE.naslov.endsWith(', ekipe še nimaš') && zSlE.html.includes('href="https://slff.eu/my-team?sestavi=1&amp;t=clani"') &&
       zSlE.html.includes('Člani') && zSlE.html.includes('10:00') && zSlE.odjava === 'https://slff.eu/reminders?t=clani', zSlE.naslov)
   const zEnE = E.sestaviOpomnikBrezEkipe('en', { display_name: 'Ana', liga: null, rok: null })
   preveri('e-pošta: brez ekipe brez lige ne imenuje lige',
@@ -11461,10 +11463,10 @@ preveri(
   const hrL = { slug: 'hr-mz-1mnl', oznaka: '1. MNL', ime: '1. MNL Međimurje', drzava: 'HR' }
   const slovenskoHr = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestav/
   const pomisljaj = /—/
-  const oHr = E.sestaviOpomnik(hrL, { display_name: 'Ivan Horvat', brez_ekipe: true })
-  const oHr2 = E.sestaviOpomnik(hrL, { display_name: null, brez_ekipe: false })
+  const oHr = E.sestaviOpomnik(hrL, { display_name: 'Ivan Horvat', rok, razlog })
+  const oHr2 = E.sestaviOpomnik(hrL, { display_name: null })
   preveri('e-pošta: opomnik hr',
-    oHr.naslov.includes('još nemaš momčad') && oHr.html.includes('Bok, Ivan!') && oHr2.html.includes('Bok!') &&
+    imaRok(oHr) && oHr.html.includes('Bok, Ivan!') && oHr2.html.includes('Bok!') &&
       oHr2.naslov.includes('dovrši momčad') && oHr.odjava === 'https://slff.eu/reminders?t=hr-mz-1mnl' &&
       oHr.html.includes('https://slff.eu/my-team?t=hr-mz-1mnl') && oHr.html.includes('Ne želim više primati podsjetnike') &&
       !slovenskoHr.test(oHr.naslov + oHr.html + oHr2.naslov + oHr2.html), oHr.naslov)
@@ -11486,7 +11488,7 @@ preveri(
     `${prevodiHr[1]} | ${prevodiHr[2]}`)
   const bHr = E.sestaviOpomnikBrezLige('hr', { display_name: 'Ivan' })
   preveri('e-pošta: brez lige hr v hrvaščini',
-    bHr.naslov.includes('odaberi svoju ligu') && bHr.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+    bHr.naslov.includes('momčad je spremna') && bHr.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
       bHr.html.includes('Bok, Ivan!') && !slovenskoHr.test(bHr.html.replace(/href="[^"]*"/g, '')))
   const pHr = E.sestaviPoznavalca(hrL, { display_name: 'Ivan', obseg: 'klub', klub: 'NK Polet' })
   preveri('e-pošta: poznavalec hr', pHr.html.includes('poznavatelj kluba NK Polet') && pHr.html.includes('/positions?t=hr-mz-1mnl') && !slovenskoHr.test(pHr.html))
@@ -11496,17 +11498,17 @@ preveri(
     popHr.html.includes('(sada vezni)') && izHr.naslov.includes('istupio je iz lige') &&
       !slovenskoHr.test(popHr.naslov + popHr.html + izHr.naslov + izHr.html), popHr.naslov)
   // Novo hrvaško besedilo je brez pomišljajev (noga "SLFF — Sunday League" je skupna).
-  const brezNoge = (h) => h.replace('SLFF — Sunday League', '')
+  const brezNoge = (h) => h.replace(/<style>[\s\S]*?<\/style>/g, '').replace(/SLFF · Sunday League Fantasy Football[^<]*/g, '')
   preveri('e-pošta: hr brez pomišljajev',
     [oHr, oHr2, zHr, bHr, pHr, popHr, izHr].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))))
 
   // Češka: isti maili v češčini, rok po praško, razlog preveden.
   const czL = { slug: 'cz-ok-kladno', oznaka: 'OP Kladno', ime: 'Okresní přebor Kladno', drzava: 'CZ' }
   const slovenskoCs = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Popravi/
-  const oCs = E.sestaviOpomnik(czL, { display_name: 'Jan Novák', brez_ekipe: true })
-  const oCs2 = E.sestaviOpomnik(czL, { display_name: null, brez_ekipe: false })
+  const oCs = E.sestaviOpomnik(czL, { display_name: 'Jan Novák', rok, razlog })
+  const oCs2 = E.sestaviOpomnik(czL, { display_name: null })
   preveri('e-pošta: opomnik cs',
-    oCs.naslov.includes('ještě nemáš tým') && oCs.html.includes('Ahoj, Jan!') && oCs2.html.includes('Ahoj!') &&
+    imaRok(oCs) && oCs.html.includes('Ahoj, Jan!') && oCs2.html.includes('Ahoj!') &&
       oCs2.naslov.includes('dokonči tým') && oCs.odjava === 'https://slff.eu/reminders?t=cz-ok-kladno' &&
       oCs.html.includes('https://slff.eu/my-team?t=cz-ok-kladno') && oCs.html.includes('Nechci už dostávat připomínky') &&
       !slovenskoCs.test(oCs.naslov + oCs.html + oCs2.naslov + oCs2.html), oCs.naslov)
@@ -11528,7 +11530,7 @@ preveri(
     `${prevodiCs[1]} | ${prevodiCs[2]}`)
   const bCs = E.sestaviOpomnikBrezLige('cs', { display_name: 'Jan' })
   preveri('e-pošta: brez lige cs v češčini',
-    bCs.naslov.includes('vyber si ligu') && bCs.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+    bCs.naslov.includes('tým je připravený') && bCs.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
       bCs.html.includes('Ahoj, Jan!') && !slovenskoCs.test(bCs.html.replace(/href="[^"]*"/g, '')))
   const pCs = E.sestaviPoznavalca(czL, { display_name: 'Jan', obseg: 'klub', klub: 'SK Kladno' })
   preveri('e-pošta: poznavalec cs', pCs.html.includes('znalcem klubu SK Kladno') && pCs.html.includes('/positions?t=cz-ok-kladno') && !slovenskoCs.test(pCs.html))
@@ -11549,10 +11551,10 @@ preveri(
   // Madžarska: isti maili v madžarščini, rok po budimpeštansko, razlog preveden.
   const huL = { slug: 'hu-pest-megye1', oznaka: 'Pest I.', ime: 'Megyei I. osztály Pest', drzava: 'HU' }
   const slovenskoHu = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Popravi|Ahoj|Bok/
-  const oHu = E.sestaviOpomnik(huL, { display_name: 'Péter Nagy', brez_ekipe: true })
-  const oHu2 = E.sestaviOpomnik(huL, { display_name: null, brez_ekipe: false })
+  const oHu = E.sestaviOpomnik(huL, { display_name: 'Péter Nagy', rok, razlog })
+  const oHu2 = E.sestaviOpomnik(huL, { display_name: null })
   preveri('e-pošta: opomnik hu',
-    oHu.naslov.includes('még nincs csapatod') && oHu.html.includes('Szia, Péter!') && oHu2.html.includes('Szia!') &&
+    imaRok(oHu) && oHu.html.includes('Szia, Péter!') && oHu2.html.includes('Szia!') &&
       oHu2.naslov.includes('fejezd be a csapatodat') && oHu.odjava === 'https://slff.eu/reminders?t=hu-pest-megye1' &&
       oHu.html.includes('https://slff.eu/my-team?t=hu-pest-megye1') && oHu.html.includes('Nem kérek több emlékeztetőt') &&
       !slovenskoHu.test(oHu.naslov + oHu.html + oHu2.naslov + oHu2.html), oHu.naslov)
@@ -11573,7 +11575,7 @@ preveri(
     `${prevodiHu[1]} | ${prevodiHu[7]}`)
   const bHu = E.sestaviOpomnikBrezLige('hu', { display_name: 'Péter' })
   preveri('e-pošta: brez lige hu v madžarščini',
-    bHu.naslov.includes('válaszd ki a bajnokságodat') && bHu.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+    bHu.naslov.includes('Kész az SLFF csapatod') && bHu.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
       bHu.html.includes('Szia, Péter!') && !slovenskoHu.test(bHu.html.replace(/href="[^"]*"/g, '')))
   const pHu = E.sestaviPoznavalca(huL, { display_name: 'Péter', obseg: 'klub', klub: 'Bakonyi SE' })
   preveri('e-pošta: poznavalec hu', pHu.html.includes('Bakonyi SE klub szakértője') && pHu.html.includes('/positions?t=hu-pest-megye1') && !slovenskoHu.test(pHu.html))
@@ -11586,7 +11588,7 @@ preveri(
   })
   preveri('e-pošta: popravek pozicije, izstop, push in tedenski pregled hu',
     popHu.html.includes('(mostantól középpályás)') && izHu.naslov.includes('visszalépett a bajnokságból') &&
-      pushHu.naslov.includes('még nincs csapatod') && tHu.naslov.includes('2,5 pont') && tHu.html.includes('2,5 pontot') &&
+      pushHu.naslov.includes('még nincs csapatod') && tHu.naslov.includes('2,5 pont') && tHu.html.includes('2,5 pont') &&
       tHu.html.includes('4 pont') && !slovenskoHu.test(popHu.naslov + popHu.html + izHu.naslov + izHu.html + pushHu.besedilo + tHu.naslov + tHu.html), tHu.naslov)
   preveri('e-pošta: hu brez pomišljajev',
     [oHu, oHu2, zHu, bHu, pHu, popHu, izHu, tHu].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))) &&
@@ -11606,10 +11608,10 @@ preveri(
   // Avstrija: isti maili v nemščini, rok po dunajsko, razlog preveden.
   const atL = { slug: 'at-stmk-landesliga', oznaka: 'Stmk. LL', ime: 'Landesliga Steiermark', drzava: 'AT' }
   const slovenskoDe = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Popravi|Ahoj|Bok|Szia/
-  const oDe = E.sestaviOpomnik(atL, { display_name: 'Lukas Gruber', brez_ekipe: true })
-  const oDe2 = E.sestaviOpomnik(atL, { display_name: null, brez_ekipe: false })
+  const oDe = E.sestaviOpomnik(atL, { display_name: 'Lukas Gruber', rok, razlog })
+  const oDe2 = E.sestaviOpomnik(atL, { display_name: null })
   preveri('e-pošta: opomnik de',
-    oDe.naslov.includes('noch kein Team') && oDe.html.includes('Servus, Lukas!') && oDe2.html.includes('Servus!') &&
+    imaRok(oDe) && oDe.html.includes('Servus, Lukas!') && oDe2.html.includes('Servus!') &&
       oDe2.naslov.includes('vervollständige dein Team') && oDe.odjava === 'https://slff.eu/reminders?t=at-stmk-landesliga' &&
       oDe.html.includes('https://slff.eu/my-team?t=at-stmk-landesliga') && oDe.html.includes('Keine Erinnerungen mehr') &&
       !slovenskoDe.test(oDe.naslov + oDe.html + oDe2.naslov + oDe2.html), oDe.naslov)
@@ -11630,7 +11632,7 @@ preveri(
     `${prevodiDe[1]} | ${prevodiDe[7]}`)
   const bDe = E.sestaviOpomnikBrezLige('de', { display_name: 'Lukas' })
   preveri('e-pošta: brez lige de v nemščini',
-    bDe.naslov.includes('wähl deine Liga') && bDe.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+    bDe.naslov.includes('Team ist fertig') && bDe.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
       bDe.html.includes('Servus, Lukas!') && !slovenskoDe.test(bDe.html.replace(/href="[^"]*"/g, '')))
   const pDe = E.sestaviPoznavalca(atL, { display_name: 'Lukas', obseg: 'klub', klub: 'SV Gnas' })
   preveri('e-pošta: poznavalec de', pDe.html.includes('Kenner des Klubs SV Gnas') && pDe.html.includes('/positions?t=at-stmk-landesliga') && !slovenskoDe.test(pDe.html))
@@ -11643,7 +11645,7 @@ preveri(
   })
   preveri('e-pošta: popravek pozicije, izstop, push in tedenski pregled de',
     popDe.html.includes('(jetzt Mittelfeldspieler)') && izDe.naslov.includes('aus der Liga zurückgezogen') &&
-      pushDe.naslov.includes('noch kein Team') && tDe.naslov.includes('2,5 Punkte') && tDe.html.includes('1 Punkt.') &&
+      pushDe.naslov.includes('noch kein Team') && tDe.naslov.includes('2,5 Punkte') && tDe.html.includes('1 Punkt') &&
       !slovenskoDe.test(popDe.naslov + popDe.html + izDe.naslov + izDe.html + pushDe.besedilo + tDe.naslov + tDe.html), tDe.naslov)
   preveri('e-pošta: de brez pomišljajev',
     [oDe, oDe2, zDe, bDe, pDe, popDe, izDe, tDe].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))) &&
@@ -11664,10 +11666,10 @@ preveri(
   const rsL = { slug: 'rs-beograd-zona', oznaka: 'BG Zona', ime: 'Zona Beograd', drzava: 'RS' }
   // Slovenščina ali hrvaščina v srbskem mailu ("Popravi" je tudi srbsko, zato ga ni).
   const slovenskoSr = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Ahoj|Bok|Szia|Servus|momčad|mjest|sljede|prije\b|vratar/
-  const oSr = E.sestaviOpomnik(rsL, { display_name: 'Nikola Jovanović', brez_ekipe: true })
-  const oSr2 = E.sestaviOpomnik(rsL, { display_name: null, brez_ekipe: false })
+  const oSr = E.sestaviOpomnik(rsL, { display_name: 'Nikola Jovanović', rok, razlog })
+  const oSr2 = E.sestaviOpomnik(rsL, { display_name: null })
   preveri('e-pošta: opomnik sr',
-    oSr.naslov.includes('još nemaš tim') && oSr.html.includes('Zdravo, Nikola!') && oSr2.html.includes('Zdravo!') &&
+    imaRok(oSr) && oSr.html.includes('Zdravo, Nikola!') && oSr2.html.includes('Zdravo!') &&
       oSr2.naslov.includes('dovrši tim') && oSr.odjava === 'https://slff.eu/reminders?t=rs-beograd-zona' &&
       oSr.html.includes('https://slff.eu/my-team?t=rs-beograd-zona') && oSr.html.includes('Ne želim više da primam podsetnike') &&
       !slovenskoSr.test(oSr.naslov + oSr.html + oSr2.naslov + oSr2.html), oSr.naslov)
@@ -11688,7 +11690,7 @@ preveri(
     `${prevodiSr[1]} | ${prevodiSr[7]}`)
   const bSr = E.sestaviOpomnikBrezLige('sr', { display_name: 'Nikola' })
   preveri('e-pošta: brez lige sr v srbščini',
-    bSr.naslov.includes('izaberi svoju ligu') && bSr.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+    bSr.naslov.includes('tim je spreman') && bSr.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
       bSr.html.includes('Zdravo, Nikola!') && !slovenskoSr.test(bSr.html.replace(/href="[^"]*"/g, '')))
   const pSr = E.sestaviPoznavalca(rsL, { display_name: 'Nikola', obseg: 'klub', klub: 'FK Sloga' })
   preveri('e-pošta: poznavalec sr', pSr.html.includes('poznavalac kluba FK Sloga') && pSr.html.includes('/positions?t=rs-beograd-zona') && !slovenskoSr.test(pSr.html))
@@ -11722,10 +11724,10 @@ preveri(
   const roL = { slug: 'ro-if-liga4', oznaka: 'Liga 4 IF', ime: 'Liga a IV-a Ilfov', drzava: 'RO' }
   // Slovenščina, pozdravi drugih jezikov ali ş/ţ s cedilo v romunskem mailu.
   const slovenskoRo = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Ahoj|Bok|Szia|Servus|Zdravo|[şţŞŢ]/
-  const oRo = E.sestaviOpomnik(roL, { display_name: 'Andrei Popescu', brez_ekipe: true })
-  const oRo2 = E.sestaviOpomnik(roL, { display_name: null, brez_ekipe: false })
+  const oRo = E.sestaviOpomnik(roL, { display_name: 'Andrei Popescu', rok, razlog })
+  const oRo2 = E.sestaviOpomnik(roL, { display_name: null })
   preveri('e-pošta: opomnik ro',
-    oRo.naslov.includes('încă nu ai echipă') && oRo.html.includes('Salut, Andrei!') && oRo2.html.includes('Salut!') &&
+    imaRok(oRo) && oRo.html.includes('Salut, Andrei!') && oRo2.html.includes('Salut!') &&
       oRo2.naslov.includes('completează-ți echipa') && oRo.odjava === 'https://slff.eu/reminders?t=ro-if-liga4' &&
       oRo.html.includes('https://slff.eu/my-team?t=ro-if-liga4') && oRo.html.includes('Nu mai vreau mementouri') &&
       !slovenskoRo.test(oRo.naslov + oRo.html + oRo2.naslov + oRo2.html), oRo.naslov)
@@ -11748,7 +11750,7 @@ preveri(
     `${prevodiRo[1]} | ${prevodiRo[7]}`)
   const bRo = E.sestaviOpomnikBrezLige('ro', { display_name: 'Andrei' })
   preveri('e-pošta: brez lige ro v romunščini',
-    bRo.naslov.includes('alege-ți liga') && bRo.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+    bRo.naslov.includes('e gata') && bRo.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
       bRo.html.includes('Salut, Andrei!') && !slovenskoRo.test(bRo.html.replace(/href="[^"]*"/g, '')))
   const pRo = E.sestaviPoznavalca(roL, { display_name: 'Andrei', obseg: 'klub', klub: 'AS Voința' })
   preveri('e-pošta: poznavalec ro', pRo.html.includes('cunoscător al clubului AS Voința') && pRo.html.includes('/positions?t=ro-if-liga4') && !slovenskoRo.test(pRo.html))
@@ -11783,11 +11785,11 @@ preveri(
   const eeL = { slug: 'ee-esiliiga', oznaka: 'Esiliiga', ime: 'Esiliiga', drzava: 'EE' }
   // Slovenščina ali pozdravi drugih jezikov v estonskem mailu.
   const slovenskoEt = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Ahoj|Bok|Szia|Servus|Zdravo|Salut/
-  const oEt = E.sestaviOpomnik(eeL, { display_name: 'Martin Tamm', brez_ekipe: true })
-  const oEt2 = E.sestaviOpomnik(eeL, { display_name: null, brez_ekipe: false })
+  const oEt = E.sestaviOpomnik(eeL, { display_name: 'Martin Tamm', rok, razlog })
+  const oEt2 = E.sestaviOpomnik(eeL, { display_name: null })
   preveri('e-pošta: opomnik et',
-    oEt.naslov.includes('sul pole veel järgmiseks vooruks meeskonda') && oEt.html.includes('Tere, Martin!') && oEt2.html.includes('Tere!') &&
-      oEt2.naslov.includes('täienda oma meeskonda') && oEt.odjava === 'https://slff.eu/reminders?t=ee-esiliiga' &&
+    imaRok(oEt) && oEt.html.includes('Tere, Martin!') && oEt2.html.includes('Tere!') &&
+      oEt2.naslov.includes('vii meeskond lõpule') && oEt.odjava === 'https://slff.eu/reminders?t=ee-esiliiga' &&
       oEt.html.includes('https://slff.eu/my-team?t=ee-esiliiga') && oEt.html.includes('Ma ei soovi enam meeldetuletusi') &&
       !slovenskoEt.test(oEt.naslov + oEt.html + oEt2.naslov + oEt2.html), oEt.naslov)
   const zEt = E.sestaviOpozorilo(eeL, { display_name: 'Martin', team_name: 'Saaremaa Hülged', round_number: 5, deadline_at: rok, razlog })
@@ -11808,7 +11810,7 @@ preveri(
     `${prevodiEt[1]} | ${prevodiEt[7]}`)
   const bEt = E.sestaviOpomnikBrezLige('et', { display_name: 'Martin' })
   preveri('e-pošta: brez lige et v estonščini',
-    bEt.naslov.includes('vali oma liiga') && bEt.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+    bEt.naslov.includes('meeskond on valmis') && bEt.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
       bEt.html.includes('Tere, Martin!') && !slovenskoEt.test(bEt.html.replace(/href="[^"]*"/g, '')))
   const pEt = E.sestaviPoznavalca(eeL, { display_name: 'Martin', obseg: 'klub', klub: 'JK Kalev' })
   preveri('e-pošta: poznavalec et', pEt.html.includes('klubi <strong>JK Kalev</strong> asjatundja') && pEt.html.includes('/positions?t=ee-esiliiga') && !slovenskoEt.test(pEt.html))
@@ -11821,7 +11823,7 @@ preveri(
   })
   preveri('e-pošta: popravek pozicije, izstop, push in tedenski pregled et',
     popEt.html.includes('(nüüd poolkaitsja)') && izEt.naslov.includes('lahkus liigast') &&
-      pushEt.naslov.includes('sul pole veel meeskonda') && tEt.naslov.includes('2,5 punkti') && tEt.html.includes('1 punkt.') &&
+      pushEt.naslov.includes('sul pole veel meeskonda') && tEt.naslov.includes('2,5 punkti') && tEt.html.includes('1 punkt') &&
       tEt.html.includes('24 punkti') &&
       !slovenskoEt.test(popEt.naslov + popEt.html + izEt.naslov + izEt.html + pushEt.besedilo + tEt.naslov + tEt.html), tEt.naslov)
   preveri('e-pošta: et brez pomišljajev',
@@ -11843,11 +11845,11 @@ preveri(
   const plL = { slug: 'pl-klasa-a', oznaka: 'Klasa A', ime: 'Klasa A', drzava: 'PL' }
   // Slovenščina ali pozdravi drugih jezikov v poljskem mailu.
   const slovenskoPl = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Ahoj|Bok|Szia|Servus|Zdravo|Salut|Tere/
-  const oPl = E.sestaviOpomnik(plL, { display_name: 'Jakub Nowak', brez_ekipe: true })
-  const oPl2 = E.sestaviOpomnik(plL, { display_name: null, brez_ekipe: false })
+  const oPl = E.sestaviOpomnik(plL, { display_name: 'Jakub Nowak', rok, razlog })
+  const oPl2 = E.sestaviOpomnik(plL, { display_name: null })
   preveri('e-pošta: opomnik pl',
-    oPl.naslov.includes('nie masz jeszcze drużyny na następną kolejkę') && oPl.html.includes('Cześć, Jakub!') && oPl2.html.includes('Cześć!') &&
-      oPl2.naslov.includes('uzupełnij drużynę') && oPl.odjava === 'https://slff.eu/reminders?t=pl-klasa-a' &&
+    imaRok(oPl) && oPl.html.includes('Cześć, Jakub!') && oPl2.html.includes('Cześć!') &&
+      oPl2.naslov.includes('dokończ drużynę') && oPl.odjava === 'https://slff.eu/reminders?t=pl-klasa-a' &&
       oPl.html.includes('https://slff.eu/my-team?t=pl-klasa-a') && oPl.html.includes('Nie chcę więcej przypomnień') &&
       !slovenskoPl.test(oPl.naslov + oPl.html + oPl2.naslov + oPl2.html), oPl.naslov)
   const zPl = E.sestaviOpozorilo(plL, { display_name: 'Jakub', team_name: 'Orły Klasy A', round_number: 5, deadline_at: rok, razlog })
@@ -11871,7 +11873,7 @@ preveri(
     `${prevodiPl[1]} | ${prevodiPl[2]} | ${prevodiPl[7]}`)
   const bPl = E.sestaviOpomnikBrezLige('pl', { display_name: 'Jakub' })
   preveri('e-pošta: brez lige pl v poljščini',
-    bPl.naslov.includes('wybierz swoją ligę') && bPl.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+    bPl.naslov.includes('jest gotowa') && bPl.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
       bPl.html.includes('Cześć, Jakub!') && !slovenskoPl.test(bPl.html.replace(/href="[^"]*"/g, '')))
   const pPl = E.sestaviPoznavalca(plL, { display_name: 'Jakub', obseg: 'klub', klub: 'LKS Orzeł' })
   preveri('e-pošta: poznavalec pl', pPl.html.includes('znawcą klubu <strong>LKS Orzeł</strong>') && pPl.html.includes('/positions?t=pl-klasa-a') && !slovenskoPl.test(pPl.html))
@@ -11888,7 +11890,7 @@ preveri(
   })
   preveri('e-pošta: popravek pozicije, izstop, push in tedenski pregled pl',
     popPl.html.includes('(teraz pomocnik)') && izPl.naslov.includes('wycofał się z ligi') &&
-      pushPl.naslov.includes('nie masz jeszcze drużyny') && tPl.naslov.includes('2,5 punktu') && tPl.html.includes('1 punkt.') &&
+      pushPl.naslov.includes('nie masz jeszcze drużyny') && tPl.naslov.includes('2,5 punktu') && tPl.html.includes('1 punkt') &&
       tPl.html.includes('24 punkty') && tPl2.naslov.includes('25 punktów') && tPl2.html.includes('12 punktów') &&
       !slovenskoPl.test(popPl.naslov + popPl.html + izPl.naslov + izPl.html + pushPl.besedilo + tPl.naslov + tPl.html), tPl.naslov)
   preveri('e-pošta: pl brez pomišljajev',
@@ -11910,10 +11912,10 @@ preveri(
   const esL = { slug: 'es-primera-regional', oznaka: 'Primera Regional', ime: 'Primera Regional', drzava: 'ES' }
   // Slovenščina ali pozdravi drugih jezikov v španskem mailu.
   const slovenskoEs = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Ahoj|Bok|Szia|Servus|Zdravo|Salut|Tere|Cześć/
-  const oEs = E.sestaviOpomnik(esL, { display_name: 'Javier García', brez_ekipe: true })
-  const oEs2 = E.sestaviOpomnik(esL, { display_name: null, brez_ekipe: false })
+  const oEs = E.sestaviOpomnik(esL, { display_name: 'Javier García', rok, razlog })
+  const oEs2 = E.sestaviOpomnik(esL, { display_name: null })
   preveri('e-pošta: opomnik es',
-    oEs.naslov.includes('aún no tienes equipo para la próxima jornada') && oEs.html.includes('¡Hola, Javier!') && oEs2.html.includes('¡Hola!') &&
+    imaRok(oEs) && oEs.html.includes('¡Hola, Javier!') && oEs2.html.includes('¡Hola!') &&
       oEs2.naslov.includes('completa tu equipo') && oEs.odjava === 'https://slff.eu/reminders?t=es-primera-regional' &&
       oEs.html.includes('https://slff.eu/my-team?t=es-primera-regional') && oEs.html.includes('No quiero más recordatorios') &&
       !slovenskoEs.test(oEs.naslov + oEs.html + oEs2.naslov + oEs2.html), oEs.naslov)
@@ -11935,7 +11937,7 @@ preveri(
     `${prevodiEs[1]} | ${prevodiEs[7]}`)
   const bEs = E.sestaviOpomnikBrezLige('es', { display_name: 'Javier' })
   preveri('e-pošta: brez lige es v španščini',
-    bEs.naslov.includes('elige tu liga') && bEs.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+    bEs.naslov.includes('está listo') && bEs.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
       bEs.html.includes('¡Hola, Javier!') && !slovenskoEs.test(bEs.html.replace(/href="[^"]*"/g, '')))
   const pEs = E.sestaviPoznavalca(esL, { display_name: 'Javier', obseg: 'klub', klub: 'CD Ejemplo' })
   preveri('e-pošta: poznavalec es', pEs.html.includes('experto del club <strong>CD Ejemplo</strong>') && pEs.html.includes('/positions?t=es-primera-regional') && !slovenskoEs.test(pEs.html))
@@ -11948,7 +11950,7 @@ preveri(
   })
   preveri('e-pošta: popravek pozicije, izstop, push in tedenski pregled es',
     popEs.html.includes('(ahora centrocampista)') && izEs.naslov.includes('se ha retirado de la liga') &&
-      pushEs.naslov.includes('aún no tienes equipo') && tEsP.naslov.includes('2,5 puntos') && tEsP.html.includes('1 punto.') &&
+      pushEs.naslov.includes('aún no tienes equipo') && tEsP.naslov.includes('2,5 puntos') && tEsP.html.includes('1 punto') &&
       tEsP.html.includes('24 puntos') &&
       !slovenskoEs.test(popEs.naslov + popEs.html + izEs.naslov + izEs.html + pushEs.besedilo + tEsP.naslov + tEsP.html), tEsP.naslov)
   preveri('e-pošta: es brez pomišljajev',
@@ -11970,11 +11972,11 @@ preveri(
   const lvL = { slug: 'lv-virsliga', oznaka: 'Virslīga', ime: 'Virslīga', drzava: 'LV' }
   // Slovenščina ali pozdravi drugih jezikov v latvijskem mailu.
   const slovenskoLv = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Ahoj|Bok|Szia|Servus|Zdravo|Salut|Tere|Cześć|Hola/
-  const oLv = E.sestaviOpomnik(lvL, { display_name: 'Jānis Bērziņš', brez_ekipe: true })
-  const oLv2 = E.sestaviOpomnik(lvL, { display_name: null, brez_ekipe: false })
+  const oLv = E.sestaviOpomnik(lvL, { display_name: 'Jānis Bērziņš', rok, razlog })
+  const oLv2 = E.sestaviOpomnik(lvL, { display_name: null })
   preveri('e-pošta: opomnik lv',
-    oLv.naslov.includes('tev vēl nav komandas nākamajai kārtai') && oLv.html.includes('Sveiki, Jānis!') && oLv2.html.includes('Sveiki!') &&
-      oLv2.naslov.includes('papildini savu komandu') && oLv.odjava === 'https://slff.eu/reminders?t=lv-virsliga' &&
+    imaRok(oLv) && oLv.html.includes('Sveiki, Jānis!') && oLv2.html.includes('Sveiki!') &&
+      oLv2.naslov.includes('pabeidz komandu') && oLv.odjava === 'https://slff.eu/reminders?t=lv-virsliga' &&
       oLv.html.includes('https://slff.eu/my-team?t=lv-virsliga') && oLv.html.includes('Vairs nevēlos saņemt atgādinājumus') &&
       !slovenskoLv.test(oLv.naslov + oLv.html + oLv2.naslov + oLv2.html), oLv.naslov)
   const zLv = E.sestaviOpozorilo(lvL, { display_name: 'Jānis', team_name: 'Daugavas Lači', round_number: 5, deadline_at: rok, razlog })
@@ -11997,7 +11999,7 @@ preveri(
     `${prevodiLv[1]} | ${prevodiLv[2]} | ${prevodiLv[7]}`)
   const bLv = E.sestaviOpomnikBrezLige('lv', { display_name: 'Jānis' })
   preveri('e-pošta: brez lige lv v latvijščini',
-    bLv.naslov.includes('izvēlies savu līgu') && bLv.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+    bLv.naslov.includes('komanda ir gatava') && bLv.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
       bLv.html.includes('Sveiki, Jānis!') && !slovenskoLv.test(bLv.html.replace(/href="[^"]*"/g, '')))
   const pLv = E.sestaviPoznavalca(lvL, { display_name: 'Jānis', obseg: 'klub', klub: 'FK Auda' })
   preveri('e-pošta: poznavalec lv', pLv.html.includes('klubs: <strong>FK Auda</strong>') && pLv.html.includes('/positions?t=lv-virsliga') && !slovenskoLv.test(pLv.html))
@@ -12014,7 +12016,7 @@ preveri(
   })
   preveri('e-pošta: popravek pozicije, izstop, push in tedenski pregled lv',
     popLv.html.includes('(tagad pussargs)') && izLv.naslov.includes('izstājās no līgas') &&
-      pushLv.naslov.includes('tev vēl nav komandas') && tLv.naslov.includes('2,5 punkti') && tLv.html.includes('1 punkts.') &&
+      pushLv.naslov.includes('tev vēl nav komandas') && tLv.naslov.includes('2,5 punkti') && tLv.html.includes('1 punkts') &&
       tLv.html.includes('24 punkti') && tLv2.naslov.includes('21 punkts') && tLv2.html.includes('10 punktu') &&
       !slovenskoLv.test(popLv.naslov + popLv.html + izLv.naslov + izLv.html + pushLv.besedilo + tLv.naslov + tLv.html), tLv.naslov)
   preveri('e-pošta: lv brez pomišljajev',
@@ -12036,10 +12038,10 @@ preveri(
   const mkL = { slug: 'mk-prva-mfl', oznaka: 'Прва МФЛ', ime: 'Прва МФЛ', drzava: 'MK' }
   // Slovenščina ali pozdravi drugih jezikov v makedonskem mailu (makedonščina je v cirilici).
   const slovenskoMk = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Ahoj|Bok|Szia|Servus|Zdravo|Salut|Tere|Cześć|Hola|Sveiki/
-  const oMk = E.sestaviOpomnik(mkL, { display_name: 'Никола Стојановски', brez_ekipe: true })
-  const oMk2 = E.sestaviOpomnik(mkL, { display_name: null, brez_ekipe: false })
+  const oMk = E.sestaviOpomnik(mkL, { display_name: 'Никола Стојановски', rok, razlog })
+  const oMk2 = E.sestaviOpomnik(mkL, { display_name: null })
   preveri('e-pošta: opomnik mk',
-    oMk.naslov.includes('сè уште немаш тим за следното коло') && oMk.html.includes('Здраво, Никола!') && oMk2.html.includes('Здраво!') &&
+    imaRok(oMk) && oMk.html.includes('Здраво, Никола!') && oMk2.html.includes('Здраво!') &&
       oMk2.naslov.includes('доврши го тимот') && oMk.odjava === 'https://slff.eu/reminders?t=mk-prva-mfl' &&
       oMk.html.includes('Не сакам повеќе потсетници') && !slovenskoMk.test(oMk.naslov + oMk.html + oMk2.naslov + oMk2.html), oMk.naslov)
   const zMk = E.sestaviOpozorilo(mkL, { display_name: 'Никола', team_name: 'Вардарски Соколи', round_number: 5, deadline_at: rok, razlog })
@@ -12059,7 +12061,7 @@ preveri(
     `${prevodiMk[1]} | ${prevodiMk[4]}`)
   const bMk = E.sestaviOpomnikBrezLige('mk', { display_name: 'Никола' })
   preveri('e-pošta: brez lige mk v makedonščini',
-    bMk.naslov.includes('избери ја својата лига') && bMk.html.includes('Здраво, Никола!') &&
+    bMk.naslov.includes('тим е подготвен') && bMk.html.includes('Здраво, Никола!') &&
       !slovenskoMk.test(bMk.html.replace(/href="[^"]*"/g, '')))
   const pMk = E.sestaviPoznavalca(mkL, { display_name: 'Никола', obseg: 'klub', klub: 'ФК Студеничан' })
   preveri('e-pošta: poznavalec mk', pMk.html.includes('клуб: <strong>ФК Студеничан</strong>') && pMk.html.includes('/positions?t=mk-prva-mfl') && !slovenskoMk.test(pMk.html))
@@ -12072,7 +12074,7 @@ preveri(
   })
   preveri('e-pošta: popravek pozicije, izstop, push in tedenski pregled mk',
     popMk.html.includes('(сега среден ред)') && izMk.naslov.includes('се повлече од лигата') &&
-      pushMk.naslov.includes('сè уште немаш тим') && tMk.naslov.includes('2,5 поени') && tMk.html.includes('1 поен.') &&
+      pushMk.naslov.includes('сè уште немаш тим') && tMk.naslov.includes('2,5 поени') && tMk.html.includes('1 поен') &&
       tMk.html.includes('21 поен') && !slovenskoMk.test(popMk.naslov + popMk.html + izMk.naslov + izMk.html + pushMk.besedilo + tMk.naslov + tMk.html), tMk.naslov)
   preveri('e-pošta: mk brez pomišljajev',
     [oMk, oMk2, zMk, bMk, pMk, popMk, izMk, tMk].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))) &&
@@ -12100,50 +12102,50 @@ preveri(
       pozdrav: 'Γεια σου, Νίκο!', brez: 'Γεια σου!', nimas: 'δεν έχεις ακόμα ομάδα για την επόμενη αγωνιστική', dokoncaj: 'ολοκλήρωσε την ομάδα σου',
       odjava: 'Δεν θέλω άλλες υπενθυμίσεις', krog: '5η αγωνιστική', ura: '11:00', klub: 'Από τον σύλλογο Šenčur έχεις 4 παίκτες',
       r3: 'Το ρόστερ έχει 3 παίκτες αντί για 15.', r1: 'Για 1 παίκτη η θέση δεν είναι γνωστή.', r21: 'Το ρόστερ έχει 21 παίκτες αντί για 15.',
-      brezLige: 'διάλεξε το πρωτάθλημά σου', poznavalec: 'σύλλογος: <strong>K</strong>', popravek: '(τώρα μέσος)', izstop: 'αποσύρθηκε από το πρωτάθλημα',
-      push: 'δεν έχεις ακόμα ομάδα', tocke: ['2,5 πόντοι', '1 πόντος.', '21 πόντοι'] },
+      brezLige: 'είναι έτοιμη', poznavalec: 'σύλλογος: <strong>K</strong>', popravek: '(τώρα μέσος)', izstop: 'αποσύρθηκε από το πρωτάθλημα',
+      push: 'δεν έχεις ακόμα ομάδα', tocke: ['2,5 πόντοι', '1 πόντος', '21 πόντοι'] },
     { j: 'tr', liga: { slug: 'tr-3-lig-1', oznaka: '3. Lig 1', ime: 'TFF 3. Lig 1. Grup', drzava: 'TR' }, ime: 'Ahmet Yılmaz',
       pozdrav: 'Merhaba, Ahmet!', brez: 'Merhaba!', nimas: 'gelecek hafta için henüz takımın yok', dokoncaj: 'takımını tamamla',
       odjava: 'Artık hatırlatma almak istemiyorum', krog: '5. hafta', ura: '11:00', klub: 'Šenčur kulübünden 4 oyuncu var',
       r3: 'Kadroda 15 yerine 3 oyuncu var.', r1: '1 oyuncu için mevki bilinmiyor.', r21: 'Kadroda 15 yerine 21 oyuncu var.',
-      brezLige: 'ligini seç', poznavalec: 'kulüp: <strong>K</strong>', popravek: '(artık orta saha)', izstop: 'ligden çekildi',
-      push: 'henüz takımın yok', tocke: ['2,5 puan', '1 puan.', '21 puan'] },
+      brezLige: 'takımın hazır', poznavalec: 'kulüp: <strong>K</strong>', popravek: '(artık orta saha)', izstop: 'ligden çekildi',
+      push: 'henüz takımın yok', tocke: ['2,5 puan', '1 puan', '21 puan'] },
     { j: 'uk', liga: { slug: 'ua-persha-liga', oznaka: 'Перша ліга', ime: 'Перша ліга', drzava: 'UA' }, ime: 'Андрій Мельник',
-      pozdrav: 'Привіт, Андрій!', brez: 'Привіт!', nimas: 'у тебе ще немає команди на наступний тур', dokoncaj: 'доповни команду',
+      pozdrav: 'Привіт, Андрій!', brez: 'Привіт!', nimas: 'у тебе ще немає команди на наступний тур', dokoncaj: 'заверши команду',
       odjava: 'Більше не хочу нагадувань', krog: '5-му турі', ura: '11:00', klub: 'З клубу Šenčur у тебе 4 гравці',
       r3: 'У складі 3 гравці замість 15.', r1: 'Для 1 гравця позиція невідома.', r21: 'У складі 21 гравець замість 15.',
-      brezLige: 'обери свою лігу', poznavalec: 'клуб: <strong>K</strong>', popravek: '(тепер півзахисник)', izstop: 'знявся з ліги',
-      push: 'у тебе ще немає команди', tocke: ['2,5 очка', '1 очко.', '21 очко'] },
+      brezLige: 'команда SLFF готова', poznavalec: 'клуб: <strong>K</strong>', popravek: '(тепер півзахисник)', izstop: 'знявся з ліги',
+      push: 'у тебе ще немає команди', tocke: ['2,5 очка', '1 очко', '21 очко'] },
     { j: 'hy', liga: { slug: 'am-first-league', oznaka: 'Առաջին լիգա', ime: 'Առաջին լիգա', drzava: 'AM' }, ime: 'Արամ Սարգսյան',
       pozdrav: 'Բարև, Արամ!', brez: 'Բարև!', nimas: 'դեռ թիմ չունես հաջորդ տուրի համար', dokoncaj: 'ավարտիր թիմդ',
       odjava: 'Այլևս չեմ ուզում հիշեցումներ ստանալ', krog: 'տուր 5-ում', ura: '12:00', klub: 'Šenčur ակումբից ունես 4 խաղացող',
       r3: 'Կազմում կա 3 խաղացող՝ 15-ի փոխարեն։', r1: '1 խաղացողի դիրքը հայտնի չէ։', r21: 'Կազմում կա 21 խաղացող՝ 15-ի փոխարեն։',
-      brezLige: 'ընտրիր քո լիգան', poznavalec: 'ակումբ: <strong>K</strong>', popravek: '(այժմ կիսապաշտպան)', izstop: 'դուրս է եկել լիգայից',
-      push: 'դեռ թիմ չունես', tocke: ['2,5 միավոր', '1 միավոր։', '21 միավոր', '3-րդ</strong> տեղում'] },
+      brezLige: 'թիմը պատրաստ է', poznavalec: 'ակումբ: <strong>K</strong>', popravek: '(այժմ կիսապաշտպան)', izstop: 'դուրս է եկել լիգայից',
+      push: 'դեռ թիմ չունես', tocke: ['2,5 միավոր', '1 միավոր', '21 միավոր', '3-րդ'] },
     { j: 'az', liga: { slug: 'az-liqa1', oznaka: 'I Liqa', ime: 'Azərbaycan I Liqası', drzava: 'AZ' }, ime: 'Elvin Məmmədov',
       pozdrav: 'Salam, Elvin!', brez: 'Salam!', nimas: 'növbəti tur üçün hələ komandan yoxdur', dokoncaj: 'komandanı tamamla',
       odjava: 'Daha xatırlatma almaq istəmirəm', krog: 'tur 5', ura: '12:00', klub: 'Šenčur klubundan 4 oyunçun var',
       r3: 'Heyətdə 15 yerinə 3 oyunçu var.', r1: '1 oyunçunun mövqeyi məlum deyil.', r21: 'Heyətdə 15 yerinə 21 oyunçu var.',
-      brezLige: 'liqanı seç', poznavalec: 'klub: <strong>K</strong>', popravek: '(indi yarımmüdafiəçi)', izstop: 'liqadan çıxıb',
-      push: 'hələ komandan yoxdur', tocke: ['2,5 xal', '1 xal.', '21 xal'] },
+      brezLige: 'komandan hazırdır', poznavalec: 'klub: <strong>K</strong>', popravek: '(indi yarımmüdafiəçi)', izstop: 'liqadan çıxıb',
+      push: 'hələ komandan yoxdur', tocke: ['2,5 xal', '1 xal', '21 xal'] },
     { j: 'da', liga: { slug: 'dk-serie-1', oznaka: 'Serie 1', ime: 'Serie 1, pulje 3', drzava: 'DK' }, ime: 'Mads Jensen',
       pozdrav: 'Hej, Mads!', brez: 'Hej!', nimas: 'du har endnu intet hold til næste runde', dokoncaj: 'gør dit hold færdigt',
       odjava: 'Jeg vil ikke have flere påmindelser', krog: '5. runde', ura: '10.00', klub: 'Du har 4 spillere fra klubben Šenčur',
       r3: 'Der er 3 spillere i truppen i stedet for 15.', r1: 'For 1 spiller er positionen ikke kendt.', r21: 'Der er 21 spillere i truppen i stedet for 15.',
-      brezLige: 'vælg din liga', poznavalec: 'klub: <strong>K</strong>', popravek: '(nu midtbanespiller)', izstop: 'har trukket sig fra ligaen',
-      push: 'du har endnu intet hold', tocke: ['2,5 point', '1 point.', '21 point'] },
+      brezLige: 'hold er klar', poznavalec: 'klub: <strong>K</strong>', popravek: '(nu midtbanespiller)', izstop: 'har trukket sig fra ligaen',
+      push: 'du har endnu intet hold', tocke: ['2,5 point', '1 point', '21 point'] },
     { j: 'en', liga: { slug: 'gb-isthmian-premier', oznaka: 'Isthmian PD', ime: 'Isthmian League Premier Division', drzava: 'GB' }, ime: 'Jack Smith',
-      pozdrav: 'Hi Jack,', brez: 'Hi,', nimas: 'you don’t have a team for the next round yet', dokoncaj: 'finish your team',
+      pozdrav: 'Hi Jack!', brez: 'Hi!', nimas: 'you don’t have a team for the next round yet', dokoncaj: 'finish your team',
       odjava: 'Stop these reminders', krog: 'round 5', ura: '09:00', klub: 'You have 4 players from Šenčur',
       r3: 'The squad has 3 players instead of 15.', r1: 'The position of 1 player is unknown.', r21: 'The squad has 21 players instead of 15.',
-      brezLige: 'pick your league', poznavalec: 'club: <strong>K</strong>', popravek: '(now midfielder)', izstop: 'has withdrawn from the league',
-      push: 'you don’t have a team yet', tocke: ['2.5 points', '1 point.', '21 points', '<strong>3rd</strong> of 12'] },
+      brezLige: 'team is ready', poznavalec: 'club: <strong>K</strong>', popravek: '(now midfielder)', izstop: 'has withdrawn from the league',
+      push: 'you don’t have a team yet', tocke: ['2.5 points', '1 point', '21 points', '3rd'] },
   ]
   for (const n of NOVI) {
     const p = (ime, [ok, podrobno]) => preveri(`e-pošta ${n.j} (${n.liga.drzava}): ${ime}`, ok, podrobno)
-    const o = E.sestaviOpomnik(n.liga, { display_name: n.ime, brez_ekipe: true })
-    const o2 = E.sestaviOpomnik(n.liga, { display_name: null, brez_ekipe: false })
-    p('opomnik', [o.naslov.includes(n.nimas) && o.html.includes(n.pozdrav) && o2.html.includes(n.brez) && o2.naslov.includes(n.dokoncaj) &&
+    const o = E.sestaviOpomnik(n.liga, { display_name: n.ime, rok, razlog })
+    const o2 = E.sestaviOpomnik(n.liga, { display_name: null })
+    p('opomnik', [imaRok(o) && o.html.includes(n.pozdrav) && o2.html.includes(n.brez) && o2.naslov.includes(n.dokoncaj) &&
       o.odjava === `https://slff.eu/reminders?t=${n.liga.slug}` && o.html.includes(n.odjava), o.naslov])
     const z = E.sestaviOpozorilo(n.liga, { display_name: n.ime, team_name: 'Ekipa X', round_number: 5, deadline_at: rok, razlog })
     p('opozorilo (rok v pasu lige, razlog preveden)', [z.naslov.includes(n.krog) && z.html.includes(n.ura) && z.html.includes(n.klub), `${z.naslov} | ${E.izpisRoka(rok, n.liga)}`])
@@ -12167,7 +12169,7 @@ preveri(
       b.naslov.includes(n.brezLige) && b.html.includes(n.pozdrav) && pz.html.includes(n.poznavalec) && pz.html.includes(`/positions?t=${n.liga.slug}`) &&
         pop.html.includes(n.popravek) && iz.naslov.includes(n.izstop) && push.naslov.includes(n.push) &&
         t.naslov.includes(n.tocke[0]) && n.tocke.slice(1).every((x) => t.html.includes(x)) && t.html.includes('slff.eu/pivo') &&
-        bE.naslov.startsWith(`SLFF ${n.liga.oznaka}: `) && bE.html.includes(n.ura) && zi.naslov.startsWith(`SLFF ${n.liga.oznaka}: `) && zi.html.includes(n.brez),
+        bE.naslov.startsWith(`SLFF ${n.liga.oznaka}: `) && bE.html.includes(n.ura) && zi.naslov.includes(n.liga.ime) && zi.html.includes(n.brez),
       `${t.naslov} | ${pop.html.match(/\([^)]*\)/)?.[0]}`])
     const vsi = [o, o2, z, b, pz, pop, iz, t, bE, zi]
     const slaba = vsi.map((m) => m.naslov + brezNoge(m.html)).find((x) => tujeBesede.test(brezPovezav(x)) || pomisljaj.test(x))
@@ -12178,7 +12180,7 @@ preveri(
       zadeve.every((x) => x.startsWith('SLFF: ') && !tujeBesede.test(x) && !pomisljaj.test(x)), zadeve.join(' | ')])
   }
   // Grški klicnik: Νίκος → Νίκο, Κωνσταντίνος → Κωνσταντίνε, Παναγιώτης → Παναγιώτη; latinica in ženska imena ostanejo.
-  const klicnik = (ime) => E.sestaviOpomnik(NOVI[0].liga, { display_name: ime, brez_ekipe: true }).html.match(/Γεια σου, ([^!]+)!/)?.[1]
+  const klicnik = (ime) => E.sestaviOpomnik(NOVI[0].liga, { display_name: ime, rok, razlog }).html.match(/Γεια σου, ([^!]+)!/)?.[1]
   preveri('e-pošta el: pozdrav v klicniku',
     klicnik('Κωνσταντίνος Π.') === 'Κωνσταντίνε' && klicnik('Παναγιώτης') === 'Παναγιώτη' && klicnik('Ηλίας') === 'Ηλία' &&
       klicnik('Γιώργος') === 'Γιώργο' && klicnik('Nikos') === 'Nikos' && klicnik('Μαρία') === 'Μαρία',
@@ -12186,7 +12188,7 @@ preveri(
   preveri('e-pošta el: rok s 24-urnim časom (brez π.μ.)', !/π\.μ\.|μ\.μ\./.test(E.izpisRoka(rok, NOVI[0].liga)), E.izpisRoka(rok, NOVI[0].liga))
   // Malta: angleščina, rok po malteško (= ljubljansko).
   const zMt = E.sestaviOpozorilo({ slug: 'mt-premier', oznaka: 'Premier', drzava: 'MT' }, { display_name: 'Joseph Borg', team_name: 'X', round_number: 5, deadline_at: rok, razlog })
-  preveri('e-pošta MT: angleščina, rok po malteško', zMt.html.includes('Hi Joseph,') && zMt.html.includes('10:00') && zMt.naslov.includes('round 5'), zMt.naslov)
+  preveri('e-pošta MT: angleščina, rok po malteško', zMt.html.includes('Hi Joseph!') && zMt.html.includes('10:00') && zMt.naslov.includes('round 5'), zMt.naslov)
   // Črna gora, Bosna in Hercegovina, Moldavija: jezik sosede, rok v svojem pasu.
   for (const [drz, pozdravSosede, ura] of [['ME', 'Zdravo, Marko!', '10:00'], ['BA', 'Bok, Marko!', '10:00'], ['MD', 'Salut, Marko!', '11:00']]) {
     const l = { slug: `${drz.toLowerCase()}-liga`, oznaka: 'Liga', drzava: drz }
@@ -12221,22 +12223,24 @@ preveri(
   }
   const tSi = E.sestaviTedenskiPregled(si, krog)
   preveri('e-pošta: tedenski pregled sl',
-    tSi.naslov === 'SLFF Člani — 5. krog: 48 točk, 3. mesto (+2)' && tSi.html.includes('Kranjski &lt;orli&gt;') &&
-      tSi.html.includes('(prej 5.)') && tSi.html.includes('Kapetan Janez Kos: 12 točk') &&
-      tSi.html.includes('Miha Zupan (9 točk)') && !tSi.html.includes('Največ točk v vsej ligi') &&
+    tSi.naslov === 'SLFF Člani, 5. krog: 48 točk in 3. mesto (▲2)' && tSi.html.includes('Kranjski &lt;orli&gt;') &&
+      tSi.html.includes('▲ 2') && tSi.besedilo.includes('Kapetan: Janez Kos · 12 točk') &&
+      tSi.besedilo.includes('Najboljši: Miha Zupan · 9 točk') && !tSi.html.includes('Največ točk v vsej ligi') &&
+      tSi.besedilo.includes('https://slff.eu/table?t=clani') &&
       tSi.odjava === 'https://slff.eu/reminders?t=clani', tSi.naslov)
   const tSi1 = E.sestaviTedenskiPregled(si, { ...krog, tocke: 61, mesto: 1, mesto_prej: null, kapetan: 'Miha Zupan', kapetan_tocke: 2 })
   preveri('e-pošta: tedenski pregled sl, prvi v krogu, brez prejšnjega mesta',
-    tSi1.naslov.endsWith('61 točk, 1. mesto') && tSi1.html.includes('Največ točk v vsej ligi') &&
-      !tSi1.html.includes('prej') && tSi1.html.includes('Kapetan Miha Zupan: 2 točki') && !tSi1.html.includes('Najboljši v ekipi'),
+    tSi1.naslov.endsWith('61 točk in 1. mesto') && tSi1.html.includes('Največ točk v vsej ligi') &&
+      !tSi1.html.includes('▲') && !tSi1.html.includes('▼') && tSi1.besedilo.includes('Kapetan: Miha Zupan · 2 točki') &&
+      !tSi1.besedilo.includes('Najboljši:'),
     tSi1.naslov)
   const tSk = E.sestaviTedenskiPregled(sk, { ...krog, tocke: 3, mesto: 7 })
   preveri('e-pošta: tedenski pregled sk',
-    tSk.naslov === 'SLFF IV. liga: 5. kolo, 3 body, 7. miesto (-2)' && tSk.html.includes('Ahoj, Ana!') &&
+    tSk.naslov === 'SLFF IV. liga: 5. kolo, 3 body, 7. miesto (▼2)' && tSk.html.includes('Ahoj, Ana!') &&
       !slovensko.test(tSk.naslov + tSk.html.replace(/href="[^"]*"/g, '')), tSk.naslov)
   const tHr = E.sestaviTedenskiPregled(hrL, { ...krog, tocke: 22 })
   preveri('e-pošta: tedenski pregled hr',
-    tHr.naslov === 'SLFF 1. MNL: 5. kolo, 22 boda, 3. mjesto (+2)' && tHr.html.includes('Bok, Ana!') &&
+    tHr.naslov === 'SLFF 1. MNL: 5. kolo, 22 boda, 3. mjesto (▲2)' && tHr.html.includes('Bok, Ana!') &&
       !slovenskoHr.test(tHr.naslov + tHr.html.replace(/href="[^"]*"/g, '')) &&
       !pomisljaj.test(tHr.naslov + brezNoge(tHr.html)), tHr.naslov)
   preveri('e-pošta: tedenski pregled, pivo le po krogu nad povprečjem',
@@ -12254,6 +12258,52 @@ preveri(
       m.html.includes('/pivo?src=mail-krog') && !slo.test(m.naslov + m.html.replace(/href="[^"]*"/g, '')) &&
         !pomisljaj.test(m.naslov + brezNoge(m.html)), m.naslov)
   }
+  // Mladim brez piva: P.S. s pivom nikoli v mladinski ligi, tudi po dobrem krogu.
+  preveri('e-pošta: tedenski pregled brez piva v mladinskih ligah',
+    !E.sestaviTedenskiPregled({ ...si, slug: 'mladinci' }, { ...krog, tocke: 50 }).html.includes('/pivo') &&
+      !E.sestaviTedenskiPregled({ ...sk, slug: 'sk-u19-x' }, { ...krog, tocke: 50 }).html.includes('/pivo') &&
+      E.sestaviTedenskiPregled(si, { ...krog, tocke: 50 }).html.includes('/pivo'))
+
+  // Nova postavitev: vsak mail ima čistopis (z naslovom gumba, brez &amp;) in predglavo.
+  const gumbUrl = (m) => m.html.match(/class="gumb-povezava" href="([^"]+)"/)?.[1]?.replaceAll('&amp;', '&')
+  const vzorci = [oSl, oSk, oHr, oHr2, zSl, zSk, bSl, bSk, bEn, zSlE, zEnE, zivaSk, zivaEn, pSl, pSk, popHr, izHr, tSi, tSi1, tSk, tHr]
+  const brezCistopisa = vzorci.find((m) => !m.besedilo || !m.predglava || !gumbUrl(m) || !m.besedilo.includes(gumbUrl(m)) || m.besedilo.includes('&amp;'))
+  preveri('e-pošta: čistopis z naslovom gumba in predglava v vseh mailih', !brezCistopisa, brezCistopisa?.naslov)
+  preveri('e-pošta: odjava tudi v čistopisu', [oSl, zSl, bSl, zSlE, tSi].every((m) => m.besedilo.includes(m.odjava)))
+
+  // Manjkajoči podatki: brez vrstice, ne prazna vrstica.
+  const oBrez = E.sestaviOpomnik(si, { display_name: 'Janez' })
+  preveri('e-pošta: opomnik brez roka in razloga nima vrstic Rok/Manjka, z njima ima obe',
+    !/Rok:|Manjka:/.test(oBrez.besedilo) && oBrez.naslov === 'SLFF Člani: dokončaj ekipo pred naslednjim krogom' &&
+      oSl.besedilo.includes('Manjka: Iz kluba Šenčur') && oSl.besedilo.includes('Rok: ') && imaRok(oSl), oBrez.naslov)
+  preveri('e-pošta: liga je zaživela, "Prvi rok" le z rokom',
+    !E.sestaviLigaZivi('sl', { display_name: null, liga: si }).besedilo.includes('Prvi rok') &&
+      E.sestaviLigaZivi('sl', { display_name: null, liga: si, rok }).besedilo.includes('Prvi rok: '))
+  const izBrez = E.sestaviIzstopKluba(si, { display_name: 'Janez', team_name: 'X', igralci: [{ ime: 'A B', klub: 'K' }] })
+  const izZRokom = E.sestaviIzstopKluba(si, { display_name: 'Janez', team_name: 'X', igralci: [{ ime: 'A B', klub: 'K' }], rok })
+  preveri('e-pošta: izstop kluba, rok le z rokom',
+    !izBrez.besedilo.includes('Zamenjaj do') && !imaRok(izBrez) && izZRokom.besedilo.includes('Zamenjaj do: ') && imaRok(izZRokom), izBrez.naslov)
+
+  // Pivo 7 dni po prvi ekipi: vseh 20 jezikov, gumb na pivo, odjava, brez slovenščine in pomišljajev, kapetan trikrat.
+  const pivoLige = [si, sk, hrL, czL, huL, atL, rsL, roL, eeL, plL, esL, lvL, mkL, ...NOVI.map((n) => n.liga)]
+  const piva = pivoLige.map((l) => [l, E.sestaviPivo7dni(l, { display_name: 'Ana Novak' })])
+  const jezikiPiva = new Set(pivoLige.map((l) => E.jezikLige(l)))
+  const slabPivo = piva.find(([l, m]) => {
+    const tuj = E.jezikLige(l) !== 'sl'
+    const besedilo = brezPovezav(m.naslov + brezNoge(m.html))
+    return !gumbUrl(m)?.includes('/pivo?src=mail-7dni') || m.odjava !== `https://slff.eu/reminders?t=${l.slug}` ||
+      !m.html.includes(`href="${m.odjava}"`) || !m.besedilo.includes(m.odjava) || !m.besedilo.includes('/pivo?src=mail-7dni') ||
+      (tuj && (slovensko.test(besedilo) || pomisljaj.test(besedilo))) ||
+      /dvoj|double|dupl|doppel|(?<!tre)dobbelt|ikiqat|topelt|podwój|dobles|dubult|двој|διπλ|çift|подвій|կրկնակ|dvostr/i.test(m.besedilo)
+  })
+  preveri('e-pošta: pivo 7 dni v vseh 20 jezikih (gumb, odjava, brez slovenščine in pomišljajev)',
+    jezikiPiva.size === 20 && !slabPivo, slabPivo ? `${slabPivo[0].drzava}: ${slabPivo[1].naslov}` : `${jezikiPiva.size} jezikov`)
+  preveri('e-pošta: pivo 7 dni sl, kapetan dobi trojne točke', piva[0][1].besedilo.includes('trojne') && piva[0][1].html.includes('Živjo, Ana!'))
+  const migPivo = readFileSync(new URL('../supabase/migrations/20261022120000_pivo_7dni.sql', import.meta.url), 'utf8')
+  const tokPivo = readFileSync(new URL('../.github/workflows/pivo-7dni.yml', import.meta.url), 'utf8')
+  preveri('pivo 7 dni: SQL izpusti mladinske lige, odjavljene in hišne ekipe, enkrat na človeka',
+    ['je_mladinski_slug', 'brez_opomnikov', 'hisna', "'pivo-7dni'"].every((x) => migPivo.includes(x)))
+  preveri('pivo 7 dni: urnik izklopljen do objave funkcije', !/^\s*schedule:/m.test(tokPivo) && /workflow_dispatch:/.test(tokPivo))
 }
 
 // --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------
@@ -13116,7 +13166,7 @@ preveri(
     trgovinaMail('potrditev', { ...n, znesek_skupaj: 3390 }, 'x').besedilo.includes('Popust: −20,00 €') &&
     trgovinaMail('potrditev', { ...n, jezik: 'en', znesek_skupaj: 3390 }, 'x').besedilo.includes('Discount: −€20.00'))
   preveri('trgovina mail: html v skupni obliki (logo, skupaj, SHOP, brez nezamenjanih {})',
-    [sl, en].every((m) => m.html.includes('https://slff.eu/logo/slff-ikona-180.png') && m.html.includes('SHOP') && !m.html.includes('{')) &&
+    [sl, en].every((m) => m.html.includes('https://slff.eu/logo/slff-ikona-180.png') && m.html.includes('SHOP') && !m.html.replace(/<style>[\s\S]*?<\/style>/g, '').includes('{')) &&
       sl.html.includes('53,90 €') && en.html.includes('RR123456789SI'))
   preveri('trgovina mail: en obrazec za odstop v angleščini',
     trgovinaMail('potrditev', { ...n, jezik: 'en' }, 'x').besedilo.includes('Withdrawal form: x/withdrawal') &&
