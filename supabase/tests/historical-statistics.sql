@@ -124,28 +124,35 @@ reset role;
 -- closed native cleanup and is explicitly refused in mfa-reviewed-history.sql.
 -- Cross-provider archive/current positives exercise the same club/category primitive.
 do $$
-declare p record;c bigint;rid bigint;e jsonb;h jsonb;side text;team_id bigint;home_id bigint;away_id bigint;country bigint;native_name text;f jsonb;
+declare p record;c bigint;rid bigint;e jsonb;h jsonb;side text;team_id bigint;home_id bigint;away_id bigint;country bigint;native_name text;f jsonb;entry_season text;
 begin
  for p in select * from private_historical_statistics.policies where document->>'provider'in('dfb','fcf')and(document->>'provider'<>'fcf'or document->>'sourcePolicy'='es-fcf-reviewed-history-v1')loop
+ begin
   select id into country from public.countries where code=case p.document->>'provider'when 'dfb'then 'DE'else 'ES'end;
   insert into public.competitions(slug,name,short_name,source,source_policy,country_id,prvi_fantasy_krog,active)
   values(p.document->>'competitionSlug','Cross-provider test','Cross',p.document->>'provider',p.document->>'sourcePolicy',country,30,false)on conflict(slug)do update set source=excluded.source,source_policy=excluded.source_policy,country_id=excluded.country_id,prvi_fantasy_krog=excluded.prvi_fantasy_krog,active=false returning id into c;
   insert into public.rounds(competition_id,season,number,played_on,deadline_at)values(c,public.sezona_lige(c),30,current_date+7,now()+interval '7 days');
   perform public.apply_historical_statistics_policy(c,p.id,p.policy_sha256,p.document->'entries');
   for e in select value from jsonb_array_elements(p.document->'entries')loop
-   insert into public.rounds(competition_id,season,number,played_on)values(c,p.document->>'season',(e->>'sourceRound')::int,(e->>'playedOn')::date)on conflict(competition_id,season,number)do update set played_on=excluded.played_on returning id into rid;
+   entry_season:=coalesce(e->>'season',p.document->>'season');
+   insert into public.rounds(competition_id,season,number,played_on)values(c,entry_season,(e->>'sourceRound')::int,(e->>'playedOn')::date)on conflict(competition_id,season,number)do update set played_on=excluded.played_on returning id into rid;
    foreach side in array array['home','away']loop
     select canonical_names[1]into native_name from private_historical_statistics.source_club_bindings where provider=p.document->>'provider'and source_club_id=e->>(side||'SourceClubId')and source_category_id=coalesce(e->>(side||'SourceCategoryId'),'');
     select t.id into team_id from public.teams t where t.name=native_name and t.country_id=country;
     if team_id is null then insert into public.teams(name,short_name,country_id)values(native_name,'X',country)returning id into team_id;end if;
     if side='home'then home_id:=team_id;else away_id:=team_id;end if;
    end loop;
-   f:=(e-array['rawSha256','reasonCode'])||jsonb_build_object('season',p.document->>'season');
+   f:=(e-array['rawSha256','reasonCode'])||jsonb_build_object('season',entry_season);
    h:=jsonb_build_object('roundId',rid,'homeTeamId',home_id,'awayTeamId',away_id,'fixture',f);
    if p.document->>'provider'='fcf'then perform pg_temp.hs_refuses(format('select public.upsert_unavailable_historical_match(%s,%L,%L,%L,%L,%L::jsonb)',c,e->>'sourceMatchId',p.id,p.policy_sha256,e->>'rawSha256',jsonb_set(h,'{fixture,homeSourceCategoryId}','"wrong-category"')::text),'FCF category identity drift');end if;
    perform public.upsert_unavailable_historical_match(c,e->>'sourceMatchId',p.id,p.policy_sha256,e->>'rawSha256',h);
   end loop;
   perform pg_temp.hs_assert(jsonb_array_length(public.get_installed_historical_statistics_markers(c)->'markers')=jsonb_array_length(p.document->'entries'),'cross-provider exact marker coverage '||p.id);
+  -- Multiple immutable policy versions may describe one inactive competition.
+  -- Exercise each independently instead of trying to replace its installed policy.
+  raise exception using errcode='PT001',message='rollback one cross-provider policy fixture';
+ exception when sqlstate 'PT001'then null;
+ end;
  end loop;
 end $$;
 

@@ -4,8 +4,13 @@ import {nordWestPolicyFixture}from'./dfb-nord-west-historical-test-fixture.mjs'
 import {preveriOdobritev,sha}from'./vklopi-dfb-regijo.mjs'
 const container=process.env.SUPABASE_DB_CONTAINER,db=process.env.SUPABASE_TEST_DB
 if(!container||!db)throw Error('Explicit disposable container AND database required')
-for(const region of ['nord','west']){
+const regions=process.env.DFB_TEST_REGION?[process.env.DFB_TEST_REGION]:['nord','west']
+if(regions.some(r=>!['nord','west'].includes(r)))throw Error('Unknown disposable DFB test region')
+for(const region of regions){
  const m=nordWestPolicyFixture(region),raw=JSON.stringify(m)+'\n';preveriOdobritev(raw,sha(raw))
+ const unavailable=m.seasons.flatMap(s=>s.fixtures).filter(f=>f.statisticsStatus==='unavailable_historical').length
+ const firstRound=Math.min(...m.seasons[1].fixtures.filter(f=>!f.played&&f.date===m.statisticsPolicy.firstFantasyPlayedOn).map(f=>f.round))
+ const currentException=m.seasons[1].fixtures.findIndex(f=>f.statisticsStatus==='unavailable_historical')
  const sql=`begin;
 set local statement_timeout='120s';
 select set_config('slff.test_slug','${m.slug}',true);
@@ -19,7 +24,7 @@ do $$declare c competitions%rowtype;r jsonb;begin
  if c.id is null or c.active or c.source_policy is not null or exists(select 1 from rounds where competition_id=c.id)then raise exception 'Fresh inactive disposable target required';end if;
  if has_function_privilege('anon','public.prepare_dfb_historical_statistics(text,text)','EXECUTE')or has_function_privilege('authenticated','public.varen_vklop_dfb_regije(text,text,boolean)','EXECUTE')or has_function_privilege('service_role','private_dfb_release.varen_vklop_dfb_regije_policy_v4(text,text,boolean)','EXECUTE')then raise exception 'Private/service grants failed';end if;
  r:=pg_temp.nw_prepare();
- if r->>'prepared'is distinct from 'true'or(r->>'unavailableHistoricalCount')::int<>${m.seasons[0].statisticsCoverage.unavailableHistoricalCount} or(select count(*)from players where competition_id=c.id)<>0 or(select count(*)from matches m join rounds rr on rr.id=m.round_id where rr.competition_id=c.id)<>${m.seasons[0].statisticsCoverage.unavailableHistoricalCount} then raise exception 'Bootstrap invented statistics or omitted exact markers';end if;
+ if r->>'prepared'is distinct from 'true'or(r->>'unavailableHistoricalCount')::int<>${unavailable} or(select count(*)from players where competition_id=c.id)<>0 or(select count(*)from matches m join rounds rr on rr.id=m.round_id where rr.competition_id=c.id)<>${unavailable} then raise exception 'Bootstrap invented statistics or omitted exact markers';end if;
  raise notice 'PASS exact ${region} empty bootstrap, no players';
 end$$;
 insert into teams(name,short_name,country_id)
@@ -83,17 +88,19 @@ do $$begin if current_setting('slff.test_slug')='de-regionalliga-nord' then
 end if;end$$;
 select pg_temp.nw_reject('changed normal appearance','update appearances set minutes_played=89 where id=(select min(ap.id)from appearances ap join players p on p.id=ap.player_id where p.competition_id=(select id from competitions where slug=current_setting(''slff.test_slug'')))');
 select pg_temp.nw_reject('wrong policy hash',$x$update nw_packet set raw=jsonb_set(raw::jsonb,'{statisticsPolicy,sha256}',to_jsonb(repeat('0',64)))::text$x$);
-select pg_temp.nw_reject('failed current parent',$x$update nw_packet set raw=jsonb_set(raw::jsonb,'{seasons,1,lineage,capture,conclusion}','"failure"')::text$x$);
+select pg_temp.nw_reject('wrong current parent conclusion',$x$update nw_packet set raw=jsonb_set(raw::jsonb,'{seasons,1,lineage,capture,conclusion}','"${region==='west'?'success':'failure'}"')::text$x$);
 select pg_temp.nw_reject('guessed unavailable arrays',$x$update nw_packet set raw=replace(raw,'"starters":null','"starters":[]')$x$);
 select pg_temp.nw_reject('all default prices','update players set value=4.5 where competition_id=(select id from competitions where slug=current_setting(''slff.test_slug''))');
 select pg_temp.nw_reject('wrong official GK position','update players set position=''MID''where competition_id=(select id from competitions where slug=current_setting(''slff.test_slug''))and position=''GK''');
-select pg_temp.nw_reject('wrong future deadline','update rounds set deadline_at=deadline_at+interval''1 hour''where competition_id=(select id from competitions where slug=current_setting(''slff.test_slug''))and season=''2026/27''and number=3');
+select pg_temp.nw_reject('wrong future deadline','update rounds set deadline_at=deadline_at+interval''1 hour''where competition_id=(select id from competitions where slug=current_setting(''slff.test_slug''))and season=''2026/27''and number=${firstRound}');
 select pg_temp.nw_reject('changed raw exception hash',$x$update nw_packet set raw=replace(raw,'${m.seasons[0].fixtures.find(f=>f.statisticsStatus==='unavailable_historical').sourceRawSha256}',repeat('0',64))$x$);
+${currentException<0?'':`select pg_temp.nw_reject('current unavailable wrong season',$x$update nw_packet set raw=jsonb_set(raw::jsonb,'{seasons,1,fixtures,${currentException},sourceFixture,season}','"2025/26"')::text$x$);
+select pg_temp.nw_reject('current exclusion reaches launch',$x$update nw_packet set raw=jsonb_set(raw::jsonb,'{statisticsPolicy,firstFantasyPlayedOn}','"2026-10-20"')::text$x$);`}
 do $$begin begin update competitions set active=true where slug=current_setting('slff.test_slug');raise exception'direct activation accepted';exception when others then if sqlerrm='direct activation accepted'then raise;end if;end;end$$;
 set local role service_role;
 select public.varen_vklop_dfb_regije(raw,encode(sha256(convert_to(raw,'UTF8')),'hex'),true)from nw_packet;
 reset role;
-do $$begin if not exists(select 1 from competitions where slug=current_setting('slff.test_slug')and active and prvi_fantasy_krog=3)then raise exception'atomic policy v4 activation failed';end if;end$$;
+do $$begin if not exists(select 1 from competitions where slug=current_setting('slff.test_slug')and active and prvi_fantasy_krog=${firstRound})then raise exception'atomic policy v4 activation failed';end if;end$$;
 rollback;
 `
  execFileSync('docker',['exec','-i',container,'psql','-U','supabase_admin','-d',db,'-X','-v','ON_ERROR_STOP=1'],{input:sql,stdio:['pipe','inherit','inherit']})

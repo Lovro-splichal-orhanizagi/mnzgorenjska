@@ -617,3 +617,39 @@ regiji poganja zaporedoma in vse spremembe razveljavi. Njegove posamezne
 postave/nastopi/goli so jasno označeni **TEST ONLY**; resnični so koledarski
 naslovi in točna nedosegljiva dokazila, testne individualne vrstice nikoli
 niso izvorni dokaz ali produkcijski paket.
+
+
+## West: točne predzačetne izjeme iz dveh sezon (22. 10. 2026)
+
+Sveži celotni zajem `39829375576`, posel `120001142581`, commit
+`e4bdca52b315b8f5ce7fc4edfafb787e5737ef4b` ima 134 zaprtih dokumentov,
+116 odigranih tekem in 114 popolnih zapisnikov. Transportnih napak,
+opozoril, izzivov in klubov brez izrecnega vratarja ni. Preostali napaki sta
+`2425409` (Wattenscheid–Schalke II, 21. 8., 3:0; samo deset gostujočih
+začetnikov) in `2425474` (Schalke II–Köln II, 20. 10., 1:3; brez postav).
+Obe sta pred prvo predlagano fantasy tekmo 23. 10. Podatkov igralcev ne
+rekonstruiramo iz rezultata ali poročil klubov.
+
+Nova politika `de-dfb-west-prelaunch-unavailable-v2` ohrani vseh osem
+arhivskih opisov in doda samo ta dva opisa s sezono `2026/27`. Njen SHA je
+`487fb62e608c75ab798c18500f59ff01c16e043513089603e66a7b338acce95e`.
+Migracija `20261022185000` doda novo nespremenljivo različico; stara v1
+ostane v SQL registru. Lastnikovo dovoljenje za pregledane nemške izjeme
+pred začetkom fantasy igre velja ob popolnosti vseh poznejših zapisnikov.
+
+Ponovitev s to politiko zahteva točno dve prvotni semantični napaki ter
+ustrezni manjkajoči identiteti in skupni števili. Nobena dodatna napaka,
+transportni status, opozorilo ali manjkajoč izvorni dokument ne postane
+izjema. Celotna ponovitev ponovno preveri vseh 114 drugih tekočih
+zapisnikov in točne bajte/diagnozi obeh izjem. Prvotni zajem ostane star
+največ 12 ur; ponovitev ne pomladi časa. Arhiv `39032122832` ostane isti,
+z največ sedemdnevno veljavnostjo.
+
+V4 vsebuje 298 razpoložljivih in osem nerazpoložljivih arhivskih statistik
+ter 114 razpoložljivih in dve nerazpoložljivi tekoči statistiki. Vsaka
+izjema je strogo pred preverjenim prvim fantasy datumom. Namestitev
+uporabi dejansko sezono vsake oznake; izvajalnik preskoči samo oznake
+zahtevane sezone. Izidi ostanejo uradni, individualna statistika ostane
+izrecno nerazpoložljiva. Nord, Südwest in drugi ponudniki ohranijo
+prejšnja pravila. Uvoz, cene, native primerjava in dejanski prihodnji rok
+morajo uspeti pred vklopom; sam zajem ali testni vklop ne aktivira produkcije.

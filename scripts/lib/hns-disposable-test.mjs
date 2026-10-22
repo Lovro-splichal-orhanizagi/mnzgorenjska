@@ -24,7 +24,7 @@ export async function withHnsDisposableDatabase(env,body,{run=execFileSync}={}){
  const{container,source}=assertHnsDisposableTarget(env)
  const docker=(args,options={})=>run('docker',args,{maxBuffer:128*1024*1024,...options})
  const identity=JSON.parse(docker(['inspect',container,'--format','{"name":{{json .Name}},"image":{{json .Config.Image}}}']).toString())
- if(identity.name!==`/${container}`||!/^(?:public\.ecr\.aws|ghcr\.io)\/supabase\/postgres:[0-9]+(?:\.[0-9]+)*$/.test(identity.image))throw Error('Owned HNS container identity/image mismatch')
+ if(identity.name!==`/${container}`||!/^(?:(?:public\.ecr\.aws|ghcr\.io|docker\.io)\/supabase\/postgres|supabase\/postgres):[0-9]+(?:\.[0-9]+)*$/.test(identity.image))throw Error('Owned HNS container identity/image mismatch')
  const ready=docker(['exec',container,'psql','-U','postgres','-d',source,'-X','-At','-v','ON_ERROR_STOP=1','-c',"select to_regprocedure('public.check_hns_women_release(text,text,boolean)')is not null and not exists(select 1 from public.competitions where slug='hr-prva-hnlz');"]).toString().trim()
  if(ready!=='t')throw Error('HNS row-free fully migrated source required')
  const name=`hns_ci_${process.pid}_${randomBytes(8).toString('hex')}`,directory=mkdtempSync(join(tmpdir(),'slff-hns-ci-')),files=[]

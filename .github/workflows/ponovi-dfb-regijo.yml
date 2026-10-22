@@ -22,7 +22,7 @@ on:
       historical_policy:
         description: Pregledana zgodovinska politika; none ohrani strogo ponovitev
         type: choice
-        options: ['none', 'de-dfb-suedwest-2025-historical-unavailable-v1', 'de-dfb-nord-2025-historical-unavailable-v1', 'de-dfb-west-2025-historical-unavailable-v1']
+        options: ['none', 'de-dfb-suedwest-2025-historical-unavailable-v1', 'de-dfb-nord-2025-historical-unavailable-v1', 'de-dfb-west-prelaunch-unavailable-v2']
         default: 'none'
       first_fantasy_day:
         description: Predlagani datum dejanske prve fantasy tekme; samo za politiko
@@ -62,8 +62,11 @@ jobs:
             de-dfb-suedwest-2025-historical-unavailable-v1)
               test "$LIGA" = de-regionalliga-suedwest
               [[ "$FIRST_FANTASY_DAY" =~ ^20[0-9]{2}-[0-9]{2}-[0-9]{2}$ ]] ;;
-            de-dfb-nord-2025-historical-unavailable-v1|de-dfb-west-2025-historical-unavailable-v1)
+            de-dfb-nord-2025-historical-unavailable-v1)
               test "$HISTORICAL_POLICY" = "de-dfb-${LIGA#de-regionalliga-}-2025-historical-unavailable-v1"
+              [[ "$FIRST_FANTASY_DAY" =~ ^20[0-9]{2}-[0-9]{2}-[0-9]{2}$ ]] ;;
+            de-dfb-west-prelaunch-unavailable-v2)
+              test "$LIGA" = de-regionalliga-west
               [[ "$FIRST_FANTASY_DAY" =~ ^20[0-9]{2}-[0-9]{2}-[0-9]{2}$ ]] ;;
             *) exit 1 ;;
           esac

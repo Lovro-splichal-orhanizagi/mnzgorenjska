@@ -55,6 +55,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Replay provenance tests read the immutable original parser commit.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -69,7 +72,7 @@ jobs:
       # `npm run build` že poganja `tsc --noEmit`, a ločen korak pove, KATERI
       # od obeh je padel, brez brskanja po dnevniku.
       - name: Germany activation manifest
-        run: node --test scripts/test-dfb-calendar.mjs scripts/test-dfb-nord-west-historical.mjs scripts/test-vklop-nemcije.mjs scripts/test-zagona-nemcije.mjs scripts/test-vklop-dfb-regije.mjs scripts/test-dfb-regije-dokazi.mjs scripts/test-dfb-regije-replay.mjs scripts/test-dfb-west-clock.mjs scripts/test-current-player-reactivation.mjs scripts/test-predpomnjen-vratar.mjs scripts/test-dfb-current-reactivation.mjs
+        run: node --test scripts/test-dfb-west-prelaunch-proof.mjs scripts/test-dfb-historical-policy.mjs scripts/test-dfb-historical-provider.mjs scripts/lib/historical-statistics-policy.test.mjs scripts/lib/historical-statistics-installed.test.mjs scripts/lib/historical-statistics-runtime.test.mjs scripts/test-dfb-calendar.mjs scripts/test-dfb-nord-west-historical.mjs scripts/test-vklop-nemcije.mjs scripts/test-zagona-nemcije.mjs scripts/test-vklop-dfb-regije.mjs scripts/test-dfb-regije-dokazi.mjs scripts/test-dfb-regije-replay.mjs scripts/test-dfb-west-clock.mjs scripts/test-current-player-reactivation.mjs scripts/test-predpomnjen-vratar.mjs scripts/test-dfb-current-reactivation.mjs
 
       - name: Existing leagues batch catch-up (source-free)
         run: node --test scripts/test-mlsz-reviewed-runtime.mjs scripts/test-mlsz-history-operator.mjs scripts/test-mlsz-transport.mjs scripts/test-vklop-obstojecih-lig.mjs scripts/test-refresh-existing-leagues.mjs scripts/test-missing-report-import.mjs scripts/test-eps-missing-reports.mjs scripts/test-hlf-missing-reports.mjs
