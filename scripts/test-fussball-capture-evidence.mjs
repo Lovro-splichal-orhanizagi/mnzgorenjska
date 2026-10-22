@@ -3,6 +3,9 @@ import assert from 'node:assert/strict'
 import {mkdtempSync,readFileSync,writeFileSync,rmSync,symlinkSync} from 'node:fs'
 import {join} from 'node:path'
 import {tmpdir} from 'node:os'
+import {collectFussballSeason} from './fussball-season.mjs'
+import {razberiKrog} from './viri/fussball.mjs'
+import {inspectFussballPage,fussballFontUrl} from './viri/fussball-discovery.mjs'
 
 const api=await import('./fussball-capture-evidence.mjs').catch(error=>{if(error.code==='ERR_MODULE_NOT_FOUND')return {};throw error})
 const seedUrl='https://www.fussball.de/spieltag/-/staffel/031EKNM2HG00000LVS5489BUVUR5FS5A-G'
@@ -80,4 +83,59 @@ test('default capture calendar day remains tied to createdAt across UTC midnight
   const m=await api.captureFussballDirectory({directory,options,fetchFn:network,collectFn:collector})
   assert.equal(m.options.asOfDate,m.createdAt.slice(0,10))
  }finally{globalThis.Date=OriginalDate}
+}))
+
+test('authentic strict season result survives content-addressed capture and offline replay with lazy fonts',async t=>sample(async({directory})=>{
+ const roundHtml=readFileSync(new URL('./vzorci/de-fussball-krog8.html',import.meta.url),'utf8')
+ const mainHtml=readFileSync(new URL('./vzorci/de-fussball-ilvesheim-main.html',import.meta.url),'utf8')
+ const lineupHtml=readFileSync(new URL('./vzorci/de-fussball-ilvesheim-lineup.html',import.meta.url),'utf8')
+ const fontManifest=JSON.parse(readFileSync(new URL('./vzorci/de-fussball-zapisnik.json',import.meta.url),'utf8'))
+ const fonts=Object.fromEntries(Object.entries(fontManifest.fonts).map(([id,font])=>[
+  id,{bytes:readFileSync(new URL(`./vzorci/${font.file}`,import.meta.url)),sha256:font.sha256},
+ ]))
+ const staffel=options.staffel,matchId='031EQBPLF4000000VS5489BTVUS470OH'
+ const seedUrl=fontManifest.provenance.roundUrl
+ const baseSelector=razberiKrog(roundHtml,{fonts,staffel}).krogi.slice(0,8)
+ const fixture=razberiKrog(roundHtml,{fonts,staffel}).tekme.find(row=>row.id===matchId)
+ assert.ok(fixture)
+ const reportUrl=fixture.url
+ const lineupUrl=fontManifest.provenance.lineupUrl
+ const cssFor=id=>`@font-face{font-family:font-${id};src:url('//www.fussball.de/export.fontface/-/format/woff/id/${id}/type/font') format('woff'),url('//www.fussball.de/export.fontface/-/format/ttf/id/${id}/type/font') format('truetype');}.results-c-${id}{font-family:font-${id}!important;}`
+ const parsers={
+  inspectPage:inspectFussballPage,
+  fontUrl:fussballFontUrl,
+  parseRound:(html,{fonts:roundFonts,staffel:scope,url})=>{
+   const parsed=razberiKrog(html,{fonts:roundFonts,staffel:scope})
+   const selected=Number(url.match(/\/spieltag\/(\d+)\/staffel\//)?.[1]??parsed.krog)
+   return {...parsed,krog:selected,krogi:baseSelector.map(row=>({...row,izbran:row.krog===selected})),tekme:selected===8?[fixture]:[],prestavljene:[]}
+  },
+ }
+ const collectFn=input=>collectFussballSeason(input,parsers)
+ let clock=Date.parse('2026-10-23T00:00:00.000Z')
+ t.mock.method(Date,'now',()=>clock)
+ t.mock.method(globalThis,'setTimeout',(callback,ms)=>{clock+=ms;queueMicrotask(callback);return 1})
+ const calls=[]
+ const fetchFn=async url=>{
+  calls.push(url)
+  if(url===seedUrl||baseSelector.some(row=>row.url===url))return new Response(roundHtml,{headers:{'content-type':'text/html; charset=utf-8'}})
+  if(url===reportUrl)return new Response(mainHtml,{headers:{'content-type':'text/html; charset=utf-8'}})
+  if(url===lineupUrl)return new Response(lineupHtml,{headers:{'content-type':'text/html; charset=utf-8'}})
+  const cssId=url.match(/\/export\.fontface\/-\/id\/([a-z0-9]{8})\/type\/css$/)?.[1]
+  if(cssId)return new Response(cssFor(cssId),{headers:{'content-type':'text/css'}})
+  const fontId=url.match(/\/export\.fontface\/-\/format\/woff\/id\/([a-z0-9]{8})\/type\/font$/)?.[1]
+  if(fontId&&fonts[fontId])return new Response(fonts[fontId].bytes,{headers:{'content-type':'font/woff'}})
+  throw Error(`unexpected authentic fixture request: ${url}`)
+ }
+ const manifest=await api.captureFussballDirectory({directory,options:{...options,seedUrl,reportLimit:1,asOfDate:'2026-10-23',maxRequests:80},fetchFn,collectFn})
+ assert.equal(manifest.success,true)
+ const rawText=readFileSync(join(directory,'result.json'),'utf8'),raw=JSON.parse(rawText)
+ assert.ok(!rawText.includes('__SLFF_OBSERVED_FONT_'))
+ assert.equal(raw.coverage.completeReports,1)
+ assert.equal(raw.reports[0].result.nastopi.length,30)
+ assert.equal(raw.reports[0].result.nepripisaniRumeni.length,3)
+ assert.ok(!calls.includes('https://www.fussball.de/export.fontface/-/id/ilpaevbo/type/css'))
+ const replay=await api.verifyFussballDirectory(directory,{collectFn})
+ assert.equal(replay.verified,true)
+ assert.equal(replay.resultSha256,manifest.resultSha256)
+ assert.equal(replay.requests,manifest.snapshot.requests)
 }))

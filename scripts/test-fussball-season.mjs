@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs'
 import { assembleFussballSchedule, collectFussballSeason } from './fussball-season.mjs'
 import { razberiKrog } from './viri/fussball.mjs'
 import { inspectFussballPage, fussballFontUrl } from './viri/fussball-discovery.mjs'
+import { razberiFantasyZapisnik } from './viri/fussball-statistika.mjs'
 
 const BASE = 'https://www.fussball.de'
 const STAFFEL = '031EKNM2HG00000LVS5489BUVUR5FS5A-G'
@@ -146,7 +147,8 @@ function makeCollectorFixture({ reportLimit = 1, reportParser } = {}) {
       assert.equal(lineupHtml, `lineup:${id}`)
       assert.equal(options.id, id)
       assert.equal(options.lineupId, id)
-      assert.deepEqual(Object.keys(options.fonts).sort(), ['abcdefgh', 'ijklmnop'])
+      assert.ok(options.fonts.abcdefgh?.bytes)
+      assert.ok(options.fonts.ijklmnop?.bytes)
       const fixture = primary.find(item => item.id === id)
       return {
         reportStatistikaPripravljena: true,
@@ -273,6 +275,16 @@ test('report limit zero is an explicitly sampled schedule-only result', async ()
   assert.deepEqual(fixture.calls.filter(call => call.kind === 'report'), [])
 })
 
+test('unobserved font IDs never trigger CSS or font reads', async () => {
+  const fixture = makeCollectorFixture({ reportLimit: 1, reportParser: (_main, _lineup, options) => {
+    assert.equal(options.fonts.zzzzzzzz, undefined)
+    throw Object.assign(Error('fixture parser rejected an unobserved font reference'), { code: 'FUSSBALL_REPORT_UNSUPPORTED' })
+  } })
+  const result = await collectFussballSeason({ seedUrl: fixture.seedUrl, staffel: STAFFEL, season: '2026/27', client: fixture.client, reportLimit: 1 }, fixture.parsers)
+  assert.equal(result.rejectedReports[0].code, 'FUSSBALL_REPORT_UNSUPPORTED')
+  assert.ok(!fixture.calls.some(call => call.url.includes('/id/zzzzzzzz/')))
+})
+
 test('collector replays an authentic saved round and report through the strict fantasy parser', async () => {
   const roundHtml = readFileSync(new URL('./vzorci/de-fussball-krog8.html', import.meta.url), 'utf8')
   const mainHtml = readFileSync(new URL('./vzorci/de-fussball-ilvesheim-main.html', import.meta.url), 'utf8')
@@ -294,6 +306,7 @@ test('collector replays an authentic saved round and report through the strict f
       if (url === exactReportUrl) return doc(url, kind, mainHtml)
       if (url === exactLineupUrl) return doc(url, kind, lineupHtml)
       const cssId = url.match(/\/export\.fontface\/-\/id\/([a-z0-9]{8})\/type\/css$/)?.[1]
+      if (cssId === 'ilpaevbo') throw Error('irrelevant observed font must stay unfetched')
       if (cssId) return doc(url, kind, cssFor(cssId))
       const fontId = url.match(/\/export\.fontface\/-\/format\/woff\/id\/([a-z0-9]{8})\/type\/font$/)?.[1]
       if (fontId) return doc(url, kind, fontsOnDisk[fontId]?.bytes)
@@ -334,7 +347,13 @@ test('collector replays an authentic saved round and report through the strict f
   assert.equal(result.reports[0].result.nastopi.length, 30)
   assert.equal(result.reports[0].result.nepripisaniRumeni.length, 3)
   assert.deepEqual(result.reports[0].result.z.rezultat, { domaci: 2, gostje: 3 })
+  assert.deepEqual(result.reports[0].result, razberiFantasyZapisnik(mainHtml, lineupHtml, {
+    fonts: fontsOnDisk,
+    id: parsedFixture.id,
+    lineupId: parsedFixture.id,
+  }))
   assert.equal(calls.filter(call => call.url === seedUrl).length, 1)
   assert.ok(calls.some(call => call.kind === 'lineup' && call.url === exactLineupUrl))
   assert.ok(calls.some(call => call.kind === 'font'))
+  assert.ok(!calls.some(call => /\/export\.fontface\/-\/id\/ilpaevbo\/type\/css$/.test(call.url)))
 })

@@ -127,6 +127,9 @@ node scripts/zajemi-fussball-sezono.mjs verify <mapa>
 
 Zajem ohrani izvirne dokumente s SHA-256, dnevnik zahtevkov, manifest in
 rezultat s popolnim razporedom ter ločenimi razlogi za zavrnjene zapisnike.
+Pisavo prenese šele, ko jo zahteva strogi razčlenjevalnik; nepovezane pisave
+drugih prikaznih polj ne povzročijo dodatnih zahtevkov. Vsak zahtevani ID mora
+biti prej opažen na isti strani/postavi, ponavljanje razčlenitve pa je omejeno.
 Koledarski dan je pripet ob začetku; offline preverba zahteva isto kodo in
 ponovi celoten prehod samo iz shranjenih bajtov, brez omrežnega nadomestila.
 `preveri-fussball-sezono.yml` omogoča isti javni zajem na `main`, brez skrivnosti

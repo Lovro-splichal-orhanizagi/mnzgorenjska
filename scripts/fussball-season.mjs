@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { razberiKrog } from './viri/fussball.mjs'
 import { inspectFussballLineup, razberiFantasyZapisnik } from './viri/fussball-statistika.mjs'
 import * as discovery from './viri/fussball-discovery.mjs'
@@ -8,6 +9,13 @@ const MATCH_ID = /^[A-Z0-9]{32}$/
 const FONT_ID = /^[a-z0-9]{8}$/
 const fail = (message, code = 'FUSSBALL_SCHEDULE_INVALID') => Object.assign(new Error(`fussball season: ${message}`), { code })
 const text = bytes => new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+
+class NeedObservedFont extends Error {
+  constructor(id, token) {
+    super(`__SLFF_OBSERVED_FONT_${token}_${id}__`)
+    this.fontId = id
+  }
+}
 
 function roundUrl(url) {
   if (typeof url !== 'string' || !url.startsWith(`${BASE}/`)) return null
@@ -178,6 +186,49 @@ function makeFontsLoader(readSource, parsers) {
   }
 }
 
+function makeLazyFontParser(loadFonts, allowedIds, cssTemplate, token, parse) {
+  const allowed = new Set(allowedIds)
+  const loaded = Object.create(null)
+  let requested = null
+  const fonts = new Proxy(loaded, {
+    get(target, key, receiver) {
+      if (typeof key === 'string' && !Object.hasOwn(target, key) && allowed.has(key)) {
+        requested = new NeedObservedFont(key, token)
+        throw requested
+      }
+      return Reflect.get(target, key, receiver)
+    },
+  })
+
+  return async () => {
+    for (let retry = 0; retry <= allowedIds.length; retry++) {
+      requested = null
+      let missing = null, value
+      try {
+        value = await parse(fonts)
+      } catch (error) {
+        if (error instanceof NeedObservedFont) missing = error
+        else {
+          // The strict report parser wraps decoder errors but preserves their
+          // message. Match only this invocation's unguessable sentinel.
+          const suffix = `__SLFF_OBSERVED_FONT_${token}_([a-z0-9]{8})__`
+          const wrapped = error?.code === 'FUSSBALL_REPORT_INVALID' &&
+            typeof error.message === 'string' && error.message.match(new RegExp(`${suffix}$`))
+          if (!wrapped) throw error
+          missing = { fontId: wrapped[1] }
+        }
+      }
+      missing ??= requested
+      if (!missing) return value
+      if (!missing || !allowed.has(missing.fontId) || Object.hasOwn(loaded, missing.fontId))
+        throw fail('lazy font retry requested an unobserved or repeated field ID')
+      const fetched = await loadFonts([missing.fontId], cssTemplate)
+      loaded[missing.fontId] = fetched[missing.fontId]
+    }
+    throw fail('lazy font parser exceeded its observed field-ID bound')
+  }
+}
+
 function sameResult(a, b) {
   return a && b && a.domaci === b.domaci && a.gostje === b.gostje
 }
@@ -241,6 +292,9 @@ export async function collectFussballSeason({
     return { document, html: text(document.bytes) }
   }
   const loadFonts = makeFontsLoader(readSource, parsers)
+  const fontRetryToken = randomUUID()
+  const parseWithObservedFonts = (fontIds, cssTemplate, parse) =>
+    makeLazyFontParser(loadFonts, fontIds, cssTemplate, fontRetryToken, parse)()
   const progress = async event => { if (onProgress) await onProgress(event) }
 
   const pageRecords = []
@@ -252,8 +306,8 @@ export async function collectFussballSeason({
   if (!asOfDate || !validDate(asOfDate)) throw fail('a valid asOfDate or seed capture timestamp is required', 'FUSSBALL_AS_OF_DATE_REQUIRED')
   const seedInfo = parsers.inspectPage(seedHtml, { kind: 'round', staffel })
   validatePageInfo(seedInfo, { kind: 'round', staffel })
-  const seedFonts = await loadFonts(seedInfo.fontIds, seedInfo.cssTemplate)
-  const seedParsed = parsers.parseRound(seedHtml, { fonts: seedFonts, staffel, url: seedUrl })
+  const seedParsed = await parseWithObservedFonts(seedInfo.fontIds, seedInfo.cssTemplate,
+    fonts => parsers.parseRound(seedHtml, { fonts, staffel, url: seedUrl }))
   pageRecords.push({ url: seedUrl, parsed: seedParsed })
   await progress({ phase: 'round', round: seedParsed.krog, total: seedParsed.krogi?.length ?? null, url: seedUrl })
 
@@ -264,8 +318,8 @@ export async function collectFussballSeason({
     const { html } = await readPage(item.url, 'round')
     const info = parsers.inspectPage(html, { kind: 'round', staffel })
     validatePageInfo(info, { kind: 'round', staffel })
-    const fonts = await loadFonts(info.fontIds, info.cssTemplate)
-    const parsed = parsers.parseRound(html, { fonts, staffel, url: item.url })
+    const parsed = await parseWithObservedFonts(info.fontIds, info.cssTemplate,
+      fonts => parsers.parseRound(html, { fonts, staffel, url: item.url }))
     pageRecords.push({ url: item.url, parsed })
     await progress({ phase: 'round', round: parsed.krog, total: seedSelector.length, url: item.url })
   }
@@ -281,7 +335,7 @@ export async function collectFussballSeason({
     await progress({ phase: 'report', matchId: fixture.id, index: index + 1, total: selected.length })
 
     const mainDocument = await readSource(fixture.url, 'report')
-    let info, mainHtml, lineupHtml, fonts
+    let info, mainHtml, lineupHtml, observedFontIds
     try {
       mainHtml = text(mainDocument.bytes)
       info = parsers.inspectPage(mainHtml, { kind: 'report', matchId: fixture.id })
@@ -299,8 +353,7 @@ export async function collectFussballSeason({
       const lineupFonts = parsers.inspectLineup(lineupHtml)
       if (!Array.isArray(lineupFonts) || !lineupFonts.every(id => FONT_ID.test(id)) || new Set(lineupFonts).size !== lineupFonts.length)
         throw fail('lineup discovery returned invalid font IDs', 'FUSSBALL_LINEUP_INVALID')
-      const union = [...new Set([...info.fontIds, ...lineupFonts])].sort()
-      fonts = await loadFonts(union, info.cssTemplate)
+      observedFontIds = [...new Set([...info.fontIds, ...lineupFonts])].sort()
     } catch (error) {
       if (sourceErrors.has(error)) throw error
       if (error?.code === 'FUSSBALL_FONT_CSS_UNSUPPORTED') {
@@ -311,10 +364,12 @@ export async function collectFussballSeason({
       continue
     }
     try {
-      const result = parsers.parseFantasyReport(mainHtml, lineupHtml, { fonts, id: fixture.id, lineupId: fixture.id })
+      const result = await parseWithObservedFonts(observedFontIds, info.cssTemplate,
+        fonts => parsers.parseFantasyReport(mainHtml, lineupHtml, { fonts, id: fixture.id, lineupId: fixture.id }))
       validateFantasyResult(result, fixture)
       reports.push({ fixture, result })
     } catch (error) {
+      if (sourceErrors.has(error)) throw error
       rejectedReports.push(reportFailure(fixture, error))
     }
   }
