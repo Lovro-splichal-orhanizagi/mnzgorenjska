@@ -1,0 +1,14 @@
+{
+  "source": {
+    "capture": "/tmp/slff-large-countries-20261022/germany/season-capture-1",
+    "manifestSha256": "d25bc171ee556b70c8b30fe0e085b21303b9bc9f6fa596ac828d933f8147b069",
+    "matchId": "031EQBPNM4000000VS5489BTVUS470OH",
+    "documentKind": "report",
+    "documentSha256": "20558646b70253f44bf7155bacd13dc76055d7f721a7fa476373046ed8138bb7",
+    "documentBytes": 201872,
+    "eventByteOffset": 155808,
+    "eventInfoByteOffset": 156437,
+    "scoreEventMarkup": "<div class=\"even\"><span data-obfuscation=\"efzrxl44\" class=\"score-left\">&#xE685;</span><span class=\"colon\">:</span><span data-obfuscation=\"efzrxl44\" class=\"score-right\">&#xE669;</span><span class=\"event-info\">Strafstoßtor</span></div>",
+    "quickViewEvent": "{'time':'52','type':'goal','team':'away'}"
+  }
+}

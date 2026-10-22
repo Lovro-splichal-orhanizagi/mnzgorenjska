@@ -1,6 +1,6 @@
 // Offline, report-only statistics. This is intentionally not a source adapter.
 import {createHash} from 'node:crypto'
-import {razberiZapisnik} from './fussball.mjs'
+import {parseFussballEventClock, razberiZapisnik} from './fussball.mjs'
 
 class ReportError extends Error {
  constructor(reason,code='FUSSBALL_REPORT_UNSUPPORTED'){super(`fussball statistika: ${reason}`);this.name='FussballReportError';this.code=code}
@@ -194,11 +194,19 @@ function rawEvent(n,half,ordinal,html){
  requireProof(['hexagon black','hexagon green'].includes(color),'nepodprt označevalec časa')
  const [icon,inner]=box(time,color,2);shape(icon,'span',{class:'icon-hexagon'},0)
  const clock=box(box(inner,'inner',1)[0],'valign-wrapper',1)[0]
- const cas=text(clock,'div',{class:'valign-inner'},/^\d{1,2}(?:\s*\+\s*\d{1,2})?'$/)
- const match=decode(cas).match(/^(\d{1,2})(?:\s*\+\s*(\d{1,2}))?'$/),base=+match[1],added=+(match[2]??0)
+ shape(clock,'div',{class:'valign-inner'})
+ const rawClock=clock.children.map(child=>{
+  if(typeof child==='string')return child
+  const [value]=shape(child,'div',{},1)
+  requireProof(typeof value==='string'&&/^\+\d{1,2}$/.test(value),'nepodprta oblika dodatka časa')
+  return `<div>${value}</div>`
+ }).join('')
+ const parsedClock=parseFussballEventClock(rawClock)
+ requireProof(parsedClock,'nepodprta minuta dogodka')
+ const cas=rawClock,base=parsedClock.base,added=parsedClock.added
  requireProof(added<=30&&(half===1?base>=1&&base<=45:base>=46&&base<=90)&&(!added||base===(half===1?45:90)),'čas ne pripada podprtemu polčasu')
  const proof={ekipaIdx:side,cas,osnovnaMinuta:base,dodatek:added,minuta:Math.min(90,base),polcas:half,ordinal,eventSha256:hash(html.slice(n.start,n.end))}
- let vrsta,refs
+ let vrsta,refs,enajstmetrovka=false
  if(ec.tag==='i'){
   const cls=ec.attrs.class
   if(cls==='icon-substitute'){
@@ -215,7 +223,9 @@ function rawEvent(n,half,ordinal,html){
   }
   requireProof(color==='hexagon black','neskladna barva dogodka')
  }else{
-  const scores=box(ec,'even',3)
+  const scores=box(ec,'even')
+  requireProof(scores.length===3||scores.length===4,'nepodprti podrejeni elementi div')
+  if(scores.length===4){text(scores[3],'span',{class:'event-info'},/^Strafstoßtor$/);enajstmetrovka=true}
   for(const [i,cls] of [[0,'score-left'],[2,'score-right']]){
    const s=scores[i],font=s?.attrs?.['data-obfuscation']
    requireProof(/^[a-z0-9]+$/.test(font??''),'manjka pisava izida dogodka')
@@ -225,7 +235,7 @@ function rawEvent(n,half,ordinal,html){
   requireProof(pc.length===1&&color==='hexagon green','nepodprta oblika gola')
   refs=[player(pc[0],{goal:true})];vrsta='gol'
  }
- return {...proof,vrsta,refs}
+ return {...proof,...(vrsta==='gol'?{enajstmetrovka}:{}),vrsta,refs}
 }
 function keys(o,expected){requireProof(o&&typeof o==='object'&&!Array.isArray(o)&&Object.keys(o).length===expected.length&&expected.every(k=>Object.hasOwn(o,k)),'nepodprta oblika obdobij hitrega pregleda')}
 function summary(source){
@@ -302,7 +312,7 @@ function associate(z,raw){
  for(const e of raw){
   const event=queues[e.vrsta].shift(),team=[z.domaci,z.gostje][e.ekipaIdx]
   requireProof(event&&event.minuta===e.minuta,'neujemanje surovega dogodka z validatorjem')
-  if(e.vrsta==='gol')requireProof(event.virId===e.refs[0]&&event.rezultat&&(event.avtogol||event.ekipa===team.ime),'neujemanje identitete gola')
+  if(e.vrsta==='gol')requireProof(event.virId===e.refs[0]&&event.rezultat&&(event.avtogol||event.ekipa===team.ime)&&event.enajstmetrovka===e.enajstmetrovka&&!(e.enajstmetrovka&&event.avtogol),'neujemanje identitete ali označevalca gola')
   else if(e.vrsta==='menjava')requireProof(event.ekipa===team.ime&&event.noter.virId===e.refs[0]&&event.ven.virId===e.refs[1],'neujemanje identitet menjave')
   else requireProof(event.ekipa===team.ime&&event.vrsta==='rumeni','neujemanje običajnega rumenega')
  }
@@ -339,7 +349,7 @@ function appearances(z,raw){
  return [...roster.values()].filter(p=>p.od!=null).map(p=>{
   requireProof(p.od<=p.do&&p.od>=0&&p.do<=90,'neveljaven interval nastopa')
   const goals=z.goli.filter(g=>g.virId===p.virId),conceded=p.ekipaIdx===0?z.rezultat.gostje:z.rezultat.domaci
-  return {virId:p.virId,ekipaIdx:p.ekipaIdx,ekipa:teams[p.ekipaIdx].ime,st:p.st,ime:p.ime,regSt:null,pozicija:p.vratar?'GK':null,vratar:p.vratar,zacetnik:p.zacetnik,minutaOd:p.od,minutaDo:p.do,minute:p.do-p.od,goli:goals.filter(g=>!g.avtogol).length,goliIzEnajstmetrovke:0,avtogoli:goals.filter(g=>g.avtogol).length,zgreseneEnajstmetrovke:0,rumeni:0,rdeci:0,prejetiGoli:conceded,cleanSheet:conceded===0}
+  return {virId:p.virId,ekipaIdx:p.ekipaIdx,ekipa:teams[p.ekipaIdx].ime,st:p.st,ime:p.ime,regSt:null,pozicija:p.vratar?'GK':null,vratar:p.vratar,zacetnik:p.zacetnik,minutaOd:p.od,minutaDo:p.do,minute:p.do-p.od,goli:goals.filter(g=>!g.avtogol).length,goliIzEnajstmetrovke:goals.filter(g=>!g.avtogol&&g.enajstmetrovka).length,avtogoli:goals.filter(g=>g.avtogol).length,zgreseneEnajstmetrovke:0,rumeni:0,rdeci:0,prejetiGoli:conceded,cleanSheet:conceded===0}
  })
 }
 

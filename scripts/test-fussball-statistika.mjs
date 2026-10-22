@@ -9,6 +9,9 @@ import {spawnSync} from 'node:child_process'
 const base=new URL('./vzorci/',import.meta.url),read=n=>readFileSync(new URL(n,base))
 const main=read('de-fussball-ilvesheim-main.html').toString(),lineup=read('de-fussball-ilvesheim-lineup.html').toString()
 const manifest=JSON.parse(read('de-fussball-zapisnik.json'))
+const nestedAddedTime=JSON.parse(read('de-fussball-nested-added-time.json'))
+const strafstosstor=JSON.parse(read('de-fussball-strafstosstor.json'))
+const {razberiZapisnik}=await import('./viri/fussball.mjs')
 const fonts=Object.fromEntries(Object.entries(manifest.fonts).map(([id,f])=>[id,{bytes:read(f.file),sha256:f.sha256}]))
 const id='031EQBPLF4000000VS5489BTVUS470OH',options={id,lineupId:id,fonts}
 const sha=s=>createHash('sha256').update(s).digest('hex')
@@ -33,6 +36,7 @@ function elementRange(html,opening){
 }
 function wrapElement(html,opening,before,after){const r=elementRange(html,opening);return html.slice(0,r.start)+before+r.raw+after+html.slice(r.end)}
 function quick(html,fn){return html.replace(/data-match-events="([^"]*)"/,(_,s)=>`data-match-events="${JSON.stringify(fn(JSON.parse(s.replace(/'/g,'"')))).replace(/"/g,"'")}"`)}
+function eventInfo(i,label='Strafstoßtor',html=main){return edit(i,raw=>{const r=elementRange(raw,'<div class="even">');return raw.slice(0,r.end-6)+`<span class="event-info">${label}</span></div>`+raw.slice(r.end)},html)}
 function clock(i,value,html=main){
  html=edit(i,s=>s.replace(/class="valign-inner">[^<]+/,`class="valign-inner">${value}&rsquo;`),html)
  return quick(html,q=>{const events=[...q['first-half'].events,...q['second-half'].events];events[i].time=value;return q})
@@ -100,6 +104,75 @@ test('anonymous yellows retain exact raw clocks, ordinals, side and raw event SH
  assert.ok(r.opozorila.some(w=>w.includes('3')&&w.includes('nepripisan')&&w.includes('odbitkov')))
  assert.ok(r.opozorila.every(w=>!w.startsWith('SLFF_UNATTRIBUTED_YELLOW_V1:')))
  for(const [i,p] of r.dogodki.entries()){assert.equal(p.ordinal,i+1);assert.equal(p.eventSha256,sha(raw[i].raw))}
+})
+test('captured nested 90+1 clock parses without changing substitution identity or interval facts',()=>{
+ const captures=nestedAddedTime.observedCaptureClocks
+ assert.deepEqual(captures.map(c=>[c.base,c.added]),[[90,1],[90,4]])
+ for(const capture of captures){
+  assert.match(capture.source.rawClockHtml,new RegExp(`90\\s+&rsquo;\\s+<div>\\+${capture.added}<\\/div>`))
+ }
+ const index=rows(main).findIndex(({raw})=>raw.includes('class="icon-substitute"')&&raw.includes('<div class="valign-inner">90&rsquo;</div>'))
+ assert.equal(index,15,'fixture target is the final 90-minute substitution in the authentic parsed report')
+ for(const capture of captures){
+  const captured=edit(index,raw=>raw.replace('<div class="valign-inner">90&rsquo;</div>',capture.source.rawClockHtml),main)
+  const variant=quick(captured,q=>{q['second-half'].events[index-q['first-half'].events.length].time=`90+${capture.added}`;return q})
+  const result=parse(variant)
+  const event=result.dogodki.find(item=>item.ordinal===index+1)
+  assert.deepEqual([event.vrsta,event.osnovnaMinuta,event.dodatek,event.minuta],['menjava',capture.base,capture.added,90])
+  assert.deepEqual(result.z.menjave.at(-1).minuta,90)
+ }
+})
+test('nested added-time markup remains restricted to observed 90-minute clocks',()=>{
+ const index=rows(main).findIndex(({raw})=>raw.includes('class="icon-substitute"')&&raw.includes('<div class="valign-inner">90&rsquo;</div>'))
+ const unsupportedClock=nestedAddedTime.observedCaptureClocks[0].source.rawClockHtml.replace(/\b90\b/,'45').replace('+1','+2')
+ const captured=edit(index,raw=>raw.replace('<div class="valign-inner">90&rsquo;</div>',unsupportedClock),main)
+ const variant=quick(captured,q=>{q['second-half'].events[index-q['first-half'].events.length].time='45+2';return q})
+ reject(variant,lineup,options,/nepodprta minuta dogodka/)
+})
+test('captured Strafstoßtor marker sets penalty-goal evidence and the appearance statistic',()=>{
+ const source=strafstosstor.source
+ assert.equal(source.documentSha256,'20558646b70253f44bf7155bacd13dc76055d7f721a7fa476373046ed8138bb7')
+ assert.equal(source.eventByteOffset,155808)
+ assert.equal(source.eventInfoByteOffset,156437)
+ assert.match(source.scoreEventMarkup,/<span class="event-info">Strafstoßtor<\/span>/)
+ assert.equal(source.quickViewEvent,"{'time':'52','type':'goal','team':'away'}")
+ const index=rows(main).findIndex(({raw})=>raw.includes('<div class="even">'))
+ assert.ok(index>=0)
+ const parsed=parse(eventInfo(index))
+ const penalty=parsed.z.goli.find(goal=>goal.enajstmetrovka)
+ assert.ok(penalty,'validated low-level goal retains the explicit penalty marker')
+ assert.equal(penalty.avtogol,false)
+ assert.ok(parsed.dogodki.some(event=>event.vrsta==='gol'&&event.enajstmetrovka))
+ const appearance=parsed.nastopi.find(player=>player.virId===penalty.virId)
+ assert.equal(appearance.goliIzEnajstmetrovke,1)
+ assert.equal(parsed.z.rezultat.domaci+parsed.z.rezultat.gostje,5)
+ const lowLevel=razberiZapisnik(eventInfo(index),lineup,{...options,fonts})
+ assert.equal(lowLevel.goli.find(goal=>goal.enajstmetrovka)?.enajstmetrovka,true)
+})
+test('low-level penalty evidence rejects comment and script decoys outside the live fourth score child',()=>{
+ const index=rows(main).findIndex(({raw})=>raw.includes('<div class="even">'))
+ const decoys=[
+  '<!-- <span class="event-info">Strafstoßtor</span> -->',
+  '<script>"<span class=\"event-info\">Strafstoßtor</span>"</script>',
+ ]
+ for(const decoy of decoys){
+  const html=edit(index,raw=>{
+   const score=elementRange(raw,'<div class="even">')
+   return raw.slice(0,score.end-6)+decoy+'</div>'+raw.slice(score.end)
+  })
+  assert.throws(()=>razberiZapisnik(html,lineup,{...options,fonts}),undefined,decoy)
+ }
+})
+test('unknown, duplicate, and own-goal penalty flags remain rejected',()=>{
+ const index=rows(main).findIndex(({raw})=>raw.includes('<div class="even">'))
+ reject(eventInfo(index,'Eigentor'))
+ reject(eventInfo(index,'Strafstoßtor',eventInfo(index)))
+ const side=rows(main)[index].raw.includes('event-left')?0:1
+ const opposite=expected.find(([team,,from])=>team!==side&&from===0)[1]
+ const [,namespace,profile]=opposite.match(/^de-fussball-(player-id|userid)-([A-Z0-9]{32})$/)
+ const otherHref=`https://www.fussball.de/spielerprofil/-/${namespace}/${profile}`
+ const ownGoal=edit(index,raw=>raw.replace(/href="https:\/\/www\.fussball\.de\/spielerprofil\/-\/(?:player-id|userid)\/[A-Z0-9]{32}"/,`href="${otherHref}"`),eventInfo(index))
+ reject(ownGoal)
 })
 test('no wrapper network access is required',()=>{
  const saved=globalThis.fetch;globalThis.fetch=()=>{throw Error('network forbidden')}
