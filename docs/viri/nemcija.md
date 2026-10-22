@@ -95,15 +95,19 @@ Izhod 0 pomeni samo `reportStatistikaPripravljena:true`. Vedno ostaneta
 izrecno `koda`/`razlog`, false-ready zastavice in `nastopi:[]`.
 Stari validator in njegov izhod 3 ostajata nespremenjena.
 
-Podprt je samo preverjeni navadni format brez pripisanih kartonov in
-posebnih oznak zadetkov. Rdeči, drugi rumeni, mešane/neznane ikone,
-pripisani kartoni, enajstmetrovke in zgrešene enajstmetrovke, neznani
+Podprt je preverjeni navadni format brez pripisanih kartonov ter izrecna
+oznaka zadete enajstmetrovke `Strafstoßtor` kot četrti živi otrok elementa
+izida. Oznaka se ohrani pri golu in v `goliIzEnajstmetrovke`; komentarji,
+skripte, podvojeni ali neznani dodatki in protislovje z avtogolom se zavrnejo.
+Rdeči, drugi rumeni, mešane/neznane ikone,
+pripisani kartoni, zgrešene enajstmetrovke, neznani
 podrejeni elementi dogodkov, podaljšek ali prekinitev zadržijo vse nastope.
 Prav tako se zavrne ponovni vstop, napačna stran, dvoumen istočasni strelec
 in menjava, nedokazana menjava vloge vratarja ter polčasna menjava 45/46.
 Neodvisna para pri 67 sta dovoljena. Dodatek ostane v dokazu, statistična
-minuta pa je omejena na 90; sintetična preverba dodatka ni zajem novega
-pristnega formata. Nove oblike zahtevajo pristne vzorce in nove regresije.
+minuta pa je omejena na 90. Shranjena pristna oblika `90 &rsquo; <div>+N</div>`
+je podprta samo pri 90 in dodatku 1–30; vzorci ohranijo izvorni SHA-256 in
+odmik v bajtih. Nove oblike zahtevajo pristne vzorce in nove regresije.
 
 Še vedno manjkajo registriran vir, potrjena arhivska povezava 2025/26 za amatersko ligo,
 popoln prehod obeh sezon, trajna uvozna vezava profilnih identitet ter
