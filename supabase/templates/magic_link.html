@@ -1,177 +1,70 @@
 <!doctype html>
-<!-- Prijava s povezavo. Jezik izbere `jezik` v metapodatkih uporabnika;
-     brez njega slovenščina. Vsebino prilepi v Supabase → Auth → Email
-     Templates → Magic Link.
-     Glava in noga sta kopija ovoj() iz supabase/functions/_shared/mail.ts. -->
-<html>
+<!-- Prijava s povezavo. Jezik izbere `jezik` v metapodatkih uporabnika; brez njega
+     slovenščina. Vsebino prilepi v Supabase → Auth → Email Templates →
+     Magic Link, zadevo pa iz supabase/config.toml.
+     Oblika je izpis postavi() iz supabase/functions/_shared/mail.ts. -->
+<html lang="{{ if eq (printf "%v" .Data.jezik) "sk" }}sk{{ else if eq (printf "%v" .Data.jezik) "hr" }}hr{{ else if eq (printf "%v" .Data.jezik) "cs" }}cs{{ else if eq (printf "%v" .Data.jezik) "hu" }}hu{{ else if eq (printf "%v" .Data.jezik) "de" }}de{{ else if eq (printf "%v" .Data.jezik) "sr" }}sr{{ else if eq (printf "%v" .Data.jezik) "ro" }}ro{{ else if eq (printf "%v" .Data.jezik) "et" }}et{{ else if eq (printf "%v" .Data.jezik) "pl" }}pl{{ else if eq (printf "%v" .Data.jezik) "es" }}es{{ else if eq (printf "%v" .Data.jezik) "lv" }}lv{{ else if eq (printf "%v" .Data.jezik) "mk" }}mk{{ else if eq (printf "%v" .Data.jezik) "el" }}el{{ else if eq (printf "%v" .Data.jezik) "tr" }}tr{{ else if eq (printf "%v" .Data.jezik) "uk" }}uk{{ else if eq (printf "%v" .Data.jezik) "hy" }}hy{{ else if eq (printf "%v" .Data.jezik) "az" }}az{{ else if eq (printf "%v" .Data.jezik) "da" }}da{{ else if eq (printf "%v" .Data.jezik) "en" }}en{{ else }}sl{{ end }}" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light">
-<meta name="supported-color-schemes" content="light">
-<title>SLFF</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<title>{{ if eq (printf "%v" .Data.jezik) "sk" }}SLFF: tvoj odkaz na prihlásenie{{ else if eq (printf "%v" .Data.jezik) "hr" }}SLFF: tvoja poveznica za prijavu{{ else if eq (printf "%v" .Data.jezik) "cs" }}SLFF: tvůj odkaz pro přihlášení{{ else if eq (printf "%v" .Data.jezik) "hu" }}SLFF: belépési linked{{ else if eq (printf "%v" .Data.jezik) "de" }}SLFF: dein Anmeldelink{{ else if eq (printf "%v" .Data.jezik) "sr" }}SLFF: tvoj link za prijavu{{ else if eq (printf "%v" .Data.jezik) "et" }}SLFF: sinu sisselogimislink{{ else if eq (printf "%v" .Data.jezik) "pl" }}SLFF: twój link do logowania{{ else if eq (printf "%v" .Data.jezik) "es" }}SLFF: tu enlace para iniciar sesión{{ else if eq (printf "%v" .Data.jezik) "en" }}SLFF: your sign-in link{{ else if eq (printf "%v" .Data.jezik) "ro" }}SLFF: linkul tău de conectare{{ else if eq (printf "%v" .Data.jezik) "lv" }}SLFF: tava pieteikšanās saite{{ else if eq (printf "%v" .Data.jezik) "mk" }}SLFF: твојата врска за најава{{ else if eq (printf "%v" .Data.jezik) "el" }}SLFF: ο σύνδεσμος σύνδεσής σου{{ else if eq (printf "%v" .Data.jezik) "tr" }}SLFF: giriş bağlantın{{ else if eq (printf "%v" .Data.jezik) "uk" }}SLFF: твоє посилання для входу{{ else if eq (printf "%v" .Data.jezik) "hy" }}SLFF: մուտքի հղումդ{{ else if eq (printf "%v" .Data.jezik) "az" }}SLFF: giriş keçidin{{ else if eq (printf "%v" .Data.jezik) "da" }}SLFF: dit login-link{{ else }}SLFF: tvoja povezava za prijavo{{ end }}</title>
+<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><style>td,p,a,div{font-family:'Segoe UI',Arial,sans-serif !important;}</style><![endif]-->
+<style>
+  :root { color-scheme: light dark; supported-color-schemes: light dark; }
+  body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+  a { text-decoration: none; }
+  @media (max-width: 620px) {
+    .px { padding-left: 20px !important; padding-right: 20px !important; }
+    .h1 { font-size: 22px !important; line-height: 28px !important; }
+    .gumb-celica, .gumb-povezava { display: block !important; width: 100% !important; box-sizing: border-box; text-align: center !important; }
+    .ploscica { display: block !important; width: 100% !important; box-sizing: border-box; margin-bottom: 8px; }
+    .skrij-mobi { display: none !important; }
+    .gumb-tabela { width: 100% !important; }
+  }
+  @media (prefers-color-scheme: dark) {
+    .ozadje { background-color: #07110d !important; }
+    .kartica { background-color: #0f1d17 !important; border-color: #1d3328 !important; }
+    .tx { color: #e6efe9 !important; }
+    .siv { color: #9db3a7 !important; }
+    .pov { color: #6fe4ae !important; }
+    .dejstva { background-color: #13261d !important; border-color: #24402f !important; }
+    .opoz { background-color: #2a230f !important; border-color: #8a6d1f !important; }
+  }
+  [data-ogsc] .tx { color: #e6efe9 !important; }
+  [data-ogsc] .siv { color: #9db3a7 !important; }
+  [data-ogsc] .pov { color: #6fe4ae !important; }
+</style>
 </head>
-<body style="margin: 0; padding: 0; background: #f1f5f9;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9" style="background: #f1f5f9;">
-<tr><td align="center" style="padding: 24px 8px;">
-<!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 600px;">
-<tr><td bgcolor="#020617" style="background: #020617; padding: 16px 24px; border-radius: 12px 12px 0 0;">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-<td style="vertical-align: middle;"><a href="https://slff.eu" style="text-decoration: none;"><img src="https://slff.eu/logo/slff-ikona-180.png" width="36" height="36" alt="SLFF" style="display: block; border: 0; width: 36px; height: 36px;"></a></td>
-<td style="padding-left: 10px; vertical-align: middle; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px;">SLFF</td>
-</tr></table>
-</td></tr>
-<tr><td bgcolor="#22c55e" height="3" style="background: #22c55e; height: 3px; line-height: 3px; font-size: 0;">&nbsp;</td></tr>
-<tr><td bgcolor="#ffffff" style="background: #ffffff; padding: 28px 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #0f172a;">
-{{ if eq (printf "%v" .Data.jezik) "sk" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Prihlásenie do SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Klikni na tlačidlo a prihlásiš sa. Odkaz platí jednu hodinu a dá sa použiť iba raz.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Prihlásiť sa →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ak si o prihlásenie nežiadal ty, tento e-mail ignoruj.</p>
-{{ else if eq (printf "%v" .Data.jezik) "hr" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Prijava u SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Klikni gumb i prijavljen/a si. Poveznica vrijedi jedan sat i može se iskoristiti samo jednom.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Prijavi se →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ako nisi ti zatražio/la prijavu, zanemari ovaj e-mail.</p>
-{{ else if eq (printf "%v" .Data.jezik) "cs" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Přihlášení do SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Klikni na tlačítko a jsi přihlášený/á. Odkaz platí hodinu a dá se použít jen jednou.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Přihlásit se →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Pokud jsi o přihlášení nežádal/a ty, tento e-mail ignoruj.</p>
-{{ else if eq (printf "%v" .Data.jezik) "hu" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Belépés az SLFF-be</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Kattints a gombra, és már be is léptél. A link egy óráig érvényes, és csak egyszer használható.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Belépés →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ha nem te kérted a belépést, hagyd figyelmen kívül ezt az e-mailt.</p>
-{{ else if eq (printf "%v" .Data.jezik) "de" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Anmeldung bei SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Klick auf den Button und du bist angemeldet. Der Link gilt eine Stunde und funktioniert nur einmal.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Anmelden →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Wenn du die Anmeldung nicht angefordert hast, ignorier diese E-Mail einfach.</p>
-{{ else if eq (printf "%v" .Data.jezik) "sr" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Prijava na SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Klikni na dugme i prijavljen/a si. Link važi jedan sat i može da se iskoristi samo jednom.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Prijavi se →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ako nisi ti zatražio/la prijavu, zanemari ovaj imejl.</p>
-{{ else if eq (printf "%v" .Data.jezik) "ro" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Autentificare pe SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Apasă butonul și ești autentificat. Linkul e valabil o oră și poate fi folosit o singură dată.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Autentifică-te →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Dacă nu tu ai cerut autentificarea, ignoră acest e-mail.</p>
-{{ else if eq (printf "%v" .Data.jezik) "et" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Sisselogimine SLFF-i</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Vajuta nupule ja oled sisse logitud. Link kehtib ühe tunni ja seda saab kasutada ainult üks kord.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Logi sisse →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Kui sa ise sisselogimist ei taotlenud, jäta see kiri tähelepanuta.</p>
-{{ else if eq (printf "%v" .Data.jezik) "pl" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Logowanie do SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Kliknij przycisk i jesteś zalogowany. Link jest ważny przez godzinę i można go użyć tylko raz.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Zaloguj się →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Jeśli to nie ty prosiłeś o logowanie, zignoruj tę wiadomość.</p>
-{{ else if eq (printf "%v" .Data.jezik) "es" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Inicio de sesión en SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Pulsa el botón y habrás iniciado sesión. El enlace vale una hora y solo se puede usar una vez.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Iniciar sesión →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Si no has pedido iniciar sesión, ignora este mensaje.</p>
-{{ else if eq (printf "%v" .Data.jezik) "lv" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Pieteikšanās SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Nospied pogu, un esi pieteicies. Saite ir derīga vienu stundu, un to var izmantot tikai vienreiz.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Pieteikties →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ja tu pats nepieprasīji pieteikšanos, vienkārši ignorē šo vēstuli.</p>
-{{ else if eq (printf "%v" .Data.jezik) "mk" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Најава на SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Притисни го копчето и најавен си. Врската важи еден час и може да се искористи само еднаш.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Најави се →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ако не побара најава ти, само игнорирај ја оваа порака.</p>
-{{ else if eq (printf "%v" .Data.jezik) "el" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Σύνδεση στο SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Πάτα το κουμπί και είσαι μέσα. Ο σύνδεσμος ισχύει μία ώρα και χρησιμοποιείται μόνο μία φορά.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Σύνδεση →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Αν δεν ζήτησες εσύ σύνδεση, απλώς αγνόησε αυτό το μήνυμα.</p>
-{{ else if eq (printf "%v" .Data.jezik) "tr" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">SLFF’ye giriş</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Butona bas, giriş yapmış olursun. Bağlantı bir saat geçerli ve yalnızca bir kez kullanılabilir.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Giriş yap →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Girişi sen istemediysen bu e-postayı görmezden gelebilirsin.</p>
-{{ else if eq (printf "%v" .Data.jezik) "uk" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Вхід у SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Натисни кнопку, і ти в акаунті. Посилання дійсне одну годину, і скористатися ним можна лише раз.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Увійти →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Якщо ти не просив про вхід, просто проігноруй цей лист.</p>
-{{ else if eq (printf "%v" .Data.jezik) "hy" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Մուտք SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Սեղմիր կոճակը, և մուտք կգործես։ Հղումը գործում է մեկ ժամ և կարող է օգտագործվել միայն մեկ անգամ։</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Մուտք գործել →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Եթե դու մուտք չես խնդրել, պարզապես անտեսիր այս նամակը։</p>
-{{ else if eq (printf "%v" .Data.jezik) "az" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">SLFF-ə giriş</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Düyməni bas və daxil olmusan. Keçid bir saat etibarlıdır və yalnız bir dəfə istifadə oluna bilər.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Daxil ol →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Girişi sən istəməmisənsə, bu məktubu nəzərə alma.</p>
-{{ else if eq (printf "%v" .Data.jezik) "da" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Log ind på SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Tryk på knappen, så er du logget ind. Linket gælder i en time og kan kun bruges én gang.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Log ind →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Har du ikke selv bedt om at logge ind, kan du bare se bort fra denne mail.</p>
-{{ else if eq (printf "%v" .Data.jezik) "en" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Sign in to SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Tap the button and you’re in. The link is valid for one hour and works only once.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Sign in →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">If you didn’t ask to sign in, just ignore this email.</p>
-{{ else }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Prijava v SLFF</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Klikni gumb in prijavljen/a si. Povezava velja eno uro in jo lahko uporabiš le enkrat.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Prijavi se →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Če prijave nisi zahteval/a ti, ta mail prezri.</p>
-{{ end }}
-</td></tr>
-<tr><td bgcolor="#020617" style="background: #020617; padding: 18px 24px; border-radius: 0 0 12px 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #94a3b8;">
-Sunday League Fantasy Football · <a href="https://slff.eu" style="color: #94a3b8;">slff.eu</a> · <a href="mailto:info@slff.eu" style="color: #94a3b8;">info@slff.eu</a>
-</td></tr>
-</table>
-<!--[if mso]></td></tr></table><![endif]-->
-</td></tr>
-</table>
-</body>
-</html>
+<body class="ozadje" style="margin: 0; padding: 0; background-color: #f3f1ea;">
+<div style="display: none; max-height: 0; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #f3f1ea; opacity: 0;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Klikni na tlačidlo a prihlásiš sa. Odkaz platí jednu hodinu a dá sa použiť iba raz.{{ else if eq (printf "%v" .Data.jezik) "hr" }}Klikni gumb i prijavljen/a si. Poveznica vrijedi jedan sat i može se iskoristiti samo jednom.{{ else if eq (printf "%v" .Data.jezik) "cs" }}Klikni na tlačítko a jsi přihlášený/á. Odkaz platí hodinu a dá se použít jen jednou.{{ else if eq (printf "%v" .Data.jezik) "hu" }}Kattints a gombra, és már be is léptél. A link egy óráig érvényes, és csak egyszer használható.{{ else if eq (printf "%v" .Data.jezik) "de" }}Klick auf den Button und du bist angemeldet. Der Link gilt eine Stunde und funktioniert nur einmal.{{ else if eq (printf "%v" .Data.jezik) "sr" }}Klikni na dugme i prijavljen/a si. Link važi jedan sat i može da se iskoristi samo jednom.{{ else if eq (printf "%v" .Data.jezik) "ro" }}Apasă butonul și ești autentificat. Linkul e valabil o oră și poate fi folosit o singură dată.{{ else if eq (printf "%v" .Data.jezik) "et" }}Vajuta nupule ja oled sisse logitud. Link kehtib ühe tunni ja seda saab kasutada ainult üks kord.{{ else if eq (printf "%v" .Data.jezik) "pl" }}Kliknij przycisk i jesteś zalogowany. Link jest ważny przez godzinę i można go użyć tylko raz.{{ else if eq (printf "%v" .Data.jezik) "es" }}Pulsa el botón y habrás iniciado sesión. El enlace vale una hora y solo se puede usar una vez.{{ else if eq (printf "%v" .Data.jezik) "lv" }}Nospied pogu, un esi pieteicies. Saite ir derīga vienu stundu, un to var izmantot tikai vienreiz.{{ else if eq (printf "%v" .Data.jezik) "mk" }}Притисни го копчето и најавен си. Врската важи еден час и може да се искористи само еднаш.{{ else if eq (printf "%v" .Data.jezik) "el" }}Πάτα το κουμπί και είσαι μέσα. Ο σύνδεσμος ισχύει μία ώρα και χρησιμοποιείται μόνο μία φορά.{{ else if eq (printf "%v" .Data.jezik) "tr" }}Butona bas, giriş yapmış olursun. Bağlantı bir saat geçerli ve yalnızca bir kez kullanılabilir.{{ else if eq (printf "%v" .Data.jezik) "uk" }}Натисни кнопку, і ти в акаунті. Посилання дійсне одну годину, і скористатися ним можна лише раз.{{ else if eq (printf "%v" .Data.jezik) "hy" }}Սեղմիր կոճակը, և մուտք կգործես։ Հղումը գործում է մեկ ժամ և կարող է օգտագործվել միայն մեկ անգամ։{{ else if eq (printf "%v" .Data.jezik) "az" }}Düyməni bas və daxil olmusan. Keçid bir saat etibarlıdır və yalnız bir dəfə istifadə oluna bilər.{{ else if eq (printf "%v" .Data.jezik) "da" }}Tryk på knappen, så er du logget ind. Linket gælder i en time og kan kun bruges én gang.{{ else if eq (printf "%v" .Data.jezik) "en" }}Tap the button and you’re in. The link is valid for one hour and works only once.{{ else }}Klikni gumb in prijavljen/a si. Povezava velja eno uro in jo lahko uporabiš le enkrat.{{ end }}&#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; </div>
+<table role="presentation" class="ozadje" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f3f1ea" style="background-color: #f3f1ea;">
+<tr><td align="center" style="padding: 24px 12px;">
+  <!--[if mso]><table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0"><tr><td><![endif]-->
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px;">
+    <tr><td bgcolor="#0b3d2e" style="background-color: #0b3d2e; border-radius: 14px 14px 0 0; padding: 14px 24px;" class="px">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr>
+        <td width="44" valign="middle"><a href="https://slff.eu"><img src="https://slff.eu/logo/slff-ikona-180.png" width="44" height="44" alt="SLFF" style="display: block; border: 0; width: 44px; height: 44px;"></a></td>
+        <td valign="middle" style="padding-left: 12px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; line-height: 22px; font-weight: 800; letter-spacing: 1px; color: #fdf6e3;">SLFF<br><span style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: .6px; color: #ffd166; text-transform: uppercase;">Sunday League Fantasy Football</span></td>
+        
+      </tr></table>
+    </td></tr>
+    <tr><td class="kartica px" bgcolor="#ffffff" style="background-color: #ffffff; border: 1px solid #e7e3d8; border-top: 0; border-radius: 0 0 14px 14px; padding: 28px 32px 24px;">
+      <h1 class="h1 tx" style="margin: 0 0 14px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 24px; line-height: 30px; font-weight: 800; color: #0f172a;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Prihlásenie do SLFF{{ else if eq (printf "%v" .Data.jezik) "hr" }}Prijava u SLFF{{ else if eq (printf "%v" .Data.jezik) "cs" }}Přihlášení do SLFF{{ else if eq (printf "%v" .Data.jezik) "hu" }}Belépés az SLFF-be{{ else if eq (printf "%v" .Data.jezik) "de" }}Anmeldung bei SLFF{{ else if eq (printf "%v" .Data.jezik) "sr" }}Prijava na SLFF{{ else if eq (printf "%v" .Data.jezik) "ro" }}Autentificare pe SLFF{{ else if eq (printf "%v" .Data.jezik) "et" }}Sisselogimine SLFF-i{{ else if eq (printf "%v" .Data.jezik) "pl" }}Logowanie do SLFF{{ else if eq (printf "%v" .Data.jezik) "es" }}Inicio de sesión en SLFF{{ else if eq (printf "%v" .Data.jezik) "lv" }}Pieteikšanās SLFF{{ else if eq (printf "%v" .Data.jezik) "mk" }}Најава на SLFF{{ else if eq (printf "%v" .Data.jezik) "el" }}Σύνδεση στο SLFF{{ else if eq (printf "%v" .Data.jezik) "tr" }}SLFF’ye giriş{{ else if eq (printf "%v" .Data.jezik) "uk" }}Вхід у SLFF{{ else if eq (printf "%v" .Data.jezik) "hy" }}Մուտք SLFF{{ else if eq (printf "%v" .Data.jezik) "az" }}SLFF-ə giriş{{ else if eq (printf "%v" .Data.jezik) "da" }}Log ind på SLFF{{ else if eq (printf "%v" .Data.jezik) "en" }}Sign in to SLFF{{ else }}Prijava v SLFF{{ end }}</h1>
+      <p class="tx" style="margin: 0 0 16px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px; color: #0f172a;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Klikni na tlačidlo a prihlásiš sa. Odkaz platí jednu hodinu a dá sa použiť iba raz.{{ else if eq (printf "%v" .Data.jezik) "hr" }}Klikni gumb i prijavljen/a si. Poveznica vrijedi jedan sat i može se iskoristiti samo jednom.{{ else if eq (printf "%v" .Data.jezik) "cs" }}Klikni na tlačítko a jsi přihlášený/á. Odkaz platí hodinu a dá se použít jen jednou.{{ else if eq (printf "%v" .Data.jezik) "hu" }}Kattints a gombra, és már be is léptél. A link egy óráig érvényes, és csak egyszer használható.{{ else if eq (printf "%v" .Data.jezik) "de" }}Klick auf den Button und du bist angemeldet. Der Link gilt eine Stunde und funktioniert nur einmal.{{ else if eq (printf "%v" .Data.jezik) "sr" }}Klikni na dugme i prijavljen/a si. Link važi jedan sat i može da se iskoristi samo jednom.{{ else if eq (printf "%v" .Data.jezik) "ro" }}Apasă butonul și ești autentificat. Linkul e valabil o oră și poate fi folosit o singură dată.{{ else if eq (printf "%v" .Data.jezik) "et" }}Vajuta nupule ja oled sisse logitud. Link kehtib ühe tunni ja seda saab kasutada ainult üks kord.{{ else if eq (printf "%v" .Data.jezik) "pl" }}Kliknij przycisk i jesteś zalogowany. Link jest ważny przez godzinę i można go użyć tylko raz.{{ else if eq (printf "%v" .Data.jezik) "es" }}Pulsa el botón y habrás iniciado sesión. El enlace vale una hora y solo se puede usar una vez.{{ else if eq (printf "%v" .Data.jezik) "lv" }}Nospied pogu, un esi pieteicies. Saite ir derīga vienu stundu, un to var izmantot tikai vienreiz.{{ else if eq (printf "%v" .Data.jezik) "mk" }}Притисни го копчето и најавен си. Врската важи еден час и може да се искористи само еднаш.{{ else if eq (printf "%v" .Data.jezik) "el" }}Πάτα το κουμπί και είσαι μέσα. Ο σύνδεσμος ισχύει μία ώρα και χρησιμοποιείται μόνο μία φορά.{{ else if eq (printf "%v" .Data.jezik) "tr" }}Butona bas, giriş yapmış olursun. Bağlantı bir saat geçerli ve yalnızca bir kez kullanılabilir.{{ else if eq (printf "%v" .Data.jezik) "uk" }}Натисни кнопку, і ти в акаунті. Посилання дійсне одну годину, і скористатися ним можна лише раз.{{ else if eq (printf "%v" .Data.jezik) "hy" }}Սեղմիր կոճակը, և մուտք կգործես։ Հղումը գործում է մեկ ժամ և կարող է օգտագործվել միայն մեկ անգամ։{{ else if eq (printf "%v" .Data.jezik) "az" }}Düyməni bas və daxil olmusan. Keçid bir saat etibarlıdır və yalnız bir dəfə istifadə oluna bilər.{{ else if eq (printf "%v" .Data.jezik) "da" }}Tryk på knappen, så er du logget ind. Linket gælder i en time og kan kun bruges én gang.{{ else if eq (printf "%v" .Data.jezik) "en" }}Tap the button and you’re in. The link is valid for one hour and works only once.{{ else }}Klikni gumb in prijavljen/a si. Povezava velja eno uro in jo lahko uporabiš le enkrat.{{ end }}</p>
+      <table role="presentation" class="gumb-tabela" cellspacing="0" cellpadding="0" border="0" style="margin: 8px 0 4px;">
+  <tr><td class="gumb-celica" align="center" bgcolor="#34d399" style="border-radius: 10px; background-color: #34d399;">
+    <a class="gumb-povezava" href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=magiclink" target="_blank" style="display: inline-block; padding: 14px 28px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 16px; line-height: 20px; font-weight: 800; color: #052e16; text-decoration: none; border-radius: 10px;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Prihlásiť sa{{ else if eq (printf "%v" .Data.jezik) "hr" }}Prijavi se{{ else if eq (printf "%v" .Data.jezik) "cs" }}Přihlásit se{{ else if eq (printf "%v" .Data.jezik) "hu" }}Belépés{{ else if eq (printf "%v" .Data.jezik) "de" }}Anmelden{{ else if eq (printf "%v" .Data.jezik) "sr" }}Prijavi se{{ else if eq (printf "%v" .Data.jezik) "ro" }}Autentifică-te{{ else if eq (printf "%v" .Data.jezik) "et" }}Logi sisse{{ else if eq (printf "%v" .Data.jezik) "pl" }}Zaloguj się{{ else if eq (printf "%v" .Data.jezik) "es" }}Iniciar sesión{{ else if eq (printf "%v" .Data.jezik) "lv" }}Pieteikties{{ else if eq (printf "%v" .Data.jezik) "mk" }}Најави се{{ else if eq (printf "%v" .Data.jezik) "el" }}Σύνδεση{{ else if eq (printf "%v" .Data.jezik) "tr" }}Giriş yap{{ else if eq (printf "%v" .Data.jezik) "uk" }}Увійти{{ else if eq (printf "%v" .Data.jezik) "hy" }}Մուտք գործել{{ else if eq (printf "%v" .Data.jezik) "az" }}Daxil ol{{ else if eq (printf "%v" .Data.jezik) "da" }}Log ind{{ else if eq (printf "%v" .Data.jezik) "en" }}Sign in{{ else }}Prijavi se{{ end }}</a>
+  </td></tr></table>
+      <p class="siv" style="margin: 0 0 12px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 19px; color: #5b6b63; margin-top: 12px;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Tlačidlo nefunguje? Otvor tento odkaz:{{ else if eq (printf "%v" .Data.jezik) "hr" }}Gumb ne radi? Otvori ovu poveznicu:{{ else if eq (printf "%v" .Data.jezik) "cs" }}Tlačítko nefunguje? Otevři tento odkaz:{{ else if eq (printf "%v" .Data.jezik) "hu" }}Nem működik a gomb? Nyisd meg ezt a linket:{{ else if eq (printf "%v" .Data.jezik) "de" }}Der Button funktioniert nicht? Öffne diesen Link:{{ else if eq (printf "%v" .Data.jezik) "sr" }}Dugme ne radi? Otvori ovaj link:{{ else if eq (printf "%v" .Data.jezik) "ro" }}Butonul nu funcționează? Deschide acest link:{{ else if eq (printf "%v" .Data.jezik) "et" }}Nupp ei tööta? Ava see link:{{ else if eq (printf "%v" .Data.jezik) "pl" }}Przycisk nie działa? Otwórz ten link:{{ else if eq (printf "%v" .Data.jezik) "es" }}¿No funciona el botón? Abre este enlace:{{ else if eq (printf "%v" .Data.jezik) "lv" }}Poga nedarbojas? Atver šo saiti:{{ else if eq (printf "%v" .Data.jezik) "mk" }}Копчето не работи? Отвори ја оваа врска:{{ else if eq (printf "%v" .Data.jezik) "el" }}Δεν λειτουργεί το κουμπί; Άνοιξε αυτόν τον σύνδεσμο:{{ else if eq (printf "%v" .Data.jezik) "tr" }}Düğme çalışmıyor mu? Bu bağlantıyı aç:{{ else if eq (printf "%v" .Data.jezik) "uk" }}Кнопка не працює? Відкрий це посилання:{{ else if eq (printf "%v" .Data.jezik) "hy" }}Կոճակը չի՞ աշխատում։ Բացիր այս հղումը:{{ else if eq (printf "%v" .Data.jezik) "az" }}Düymə işləmir? Bu keçidi aç:{{ else if eq (printf "%v" .Data.jezik) "da" }}Virker knappen ikke? Åbn dette link:{{ else if eq (printf "%v" .Data.jezik) "en" }}Button not working? Open this link:{{ else }}Gumb ne deluje? Odpri to povezavo:{{ end }}<br><a class="pov" href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=magiclink" style="color: #047655; word-break: break-all;">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=magiclink</a></p>
+      <p class="siv" style="margin: 0 0 12px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 19px; color: #5b6b63; margin-top: 20px;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Ak si o prihlásenie nežiadal ty, tento e-mail ignoruj.{{ else if eq (printf "%v" .Data.jezik) "hr" }}Ako nisi ti zatražio/la prijavu, zanemari ovaj e-mail.{{ else if eq (printf "%v" .Data.jezik) "cs" }}Pokud jsi o přihlášení nežádal/a ty, tento e-mail ignoruj.{{ else if eq (printf "%v" .Data.jezik) "hu" }}Ha nem te kérted a belépést, hagyd figyelmen kívül ezt az e-mailt.{{ else if eq (printf "%v" .Data.jezik) "de" }}Wenn du die Anmeldung nicht angefordert hast, ignorier diese E-Mail einfach.{{ else if eq (printf "%v" .Data.jezik) "sr" }}Ako nisi ti zatražio/la prijavu, zanemari ovaj imejl.{{ else if eq (printf "%v" .Data.jezik) "ro" }}Dacă nu tu ai cerut autentificarea, ignoră acest e-mail.{{ else if eq (printf "%v" .Data.jezik) "et" }}Kui sa ise sisselogimist ei taotlenud, jäta see kiri tähelepanuta.{{ else if eq (printf "%v" .Data.jezik) "pl" }}Jeśli to nie ty prosiłeś o logowanie, zignoruj tę wiadomość.{{ else if eq (printf "%v" .Data.jezik) "es" }}Si no has pedido iniciar sesión, ignora este mensaje.{{ else if eq (printf "%v" .Data.jezik) "lv" }}Ja tu pats nepieprasīji pieteikšanos, vienkārši ignorē šo vēstuli.{{ else if eq (printf "%v" .Data.jezik) "mk" }}Ако не побара најава ти, само игнорирај ја оваа порака.{{ else if eq (printf "%v" .Data.jezik) "el" }}Αν δεν ζήτησες εσύ σύνδεση, απλώς αγνόησε αυτό το μήνυμα.{{ else if eq (printf "%v" .Data.jezik) "tr" }}Girişi sen istemediysen bu e-postayı görmezden gelebilirsin.{{ else if eq (printf "%v" .Data.jezik) "uk" }}Якщо ти не просив про вхід, просто проігноруй цей лист.{{ else if eq (printf "%v" .Data.jezik) "hy" }}Եթե դու մուտք չես խնդրել, պարզապես անտեսիր այս նամակը։{{ else if eq (printf "%v" .Data.jezik) "az" }}Girişi sən istəməmisənsə, bu məktubu nəzərə alma.{{ else if eq (printf "%v" .Data.jezik) "da" }}Har du ikke selv bedt om at logge ind, kan du bare se bort fra denne mail.{{ else if eq (printf "%v" .Data.jezik) "en" }}If you didn’t ask to sign in, just ignore this email.{{ else }}Če prijave nisi zahteval/a ti, ta mail prezri.{{ end }}</p>
+    </td></tr>
+    
+    <tr><td class="px" align="center" style="padding: 20px 32px 8px;"><p class="siv" style="margin: 0 0 12px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 19px; color: #5b6b63; text-align: center; font-size: 12px; line-height: 18px;">SLFF · Sunday League Fantasy Football · <a class="siv" href="https://slff.eu" style="color: #5b6b63;">slff.eu</a> · <a class="siv" href="mailto:info@slff.eu" style="color: #5b6b63;">info@slff.eu</a></p></td></tr>
+  </table>
+  <!--[if mso]></td></tr></table><![endif]-->
+</td></tr></table>
+</body></html>
