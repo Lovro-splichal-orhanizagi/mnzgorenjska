@@ -119,3 +119,27 @@ fssid). Kontumacij (3:0 brez zapisnika) ni bilo. 13 avtogolov, 24 golov z
 Uvoz (ena za drugo, **brez arhiva**, ko bo vmesnik): `gh workflow run
 uvoz-lige.yml -f liga=md-liga-2 -f cene=true`. Liga 2 je ~210 zahtevkov po 3 s
 (~11 minut) ob prvem uvozu.
+
+**Omejen dokaz za varovani vpis (23. 10. 2026).** V petih zaporednih
+anonimnih javnih zahtevkih (vsaj 3 s narazen, brez prijave, piškotkov ali
+ponovitev; vsi HTTP 200, brez preusmeritev) smo pregledali stran tekmovanja,
+sezonski razpored, 14. krog, stran tekme 50504 in njen zapisnik. Sezonska
+stran je pokazala 210 tekem Lige 2, zadnje jesensko kolo 28. 11. 2026 in
+nadaljevanje 13. 3. 2027. Obstoječi razčlenjevalnik je vzorčni zapisnik
+CF Maiak : CF Edineț (2 : 5) prebral kot predlogo A: 11 začetnikov in 4–6
+rezerv na stran, izrecni G, 32 različnih šifer COMET na tej tekmi, 7 golov,
+4 rumene kartone in 5 menjav z minuto. To je preverba ene tekme in poti do
+razporeda, **ne** popoln ponovni preizkus treh lig, arhiva ali celotnega
+uvoza. Evidenca in očiščeni vzorci so zunaj repozitorija v
+`/tmp/slff-large-countries-20261022/moldova/`.
+
+Varovani seznam uporablja ID-je v tabeli `competitions`, ne številk FMF:
+`1105 / md-liga-1-a / liga-1-faza-1-grupa-a-1783092701/878`,
+`1106 / md-liga-1-b / liga-1-faza-1-grupa-b-1783092819/879` in
+`1107 / md-liga-2 / liga-2-1782306996/877`. Izbira sprejme le te tri točne
+četverice; seznam sam ni odobritev vklopa. Pred vklopom mora obstoječi
+preverjevalnik znova potrditi poročila za pretekle tekme, izvedljiv cenik in
+vratarja z uvoženo oznako G, prihodnji nezaklenjeni rok ter ujemanje seštevka
+golov z izidi. Brez arhiva se cene vrednotijo samo iz trenutne sezone; šifre
+COMET se še naprej posvojijo v obstoječe istoimenske zapise po pravilih zgoraj.
+Vzorčni dostop ne pomeni dovoljenja FMF; izrecnega dovoljenja še nimamo.

@@ -49,6 +49,10 @@
     "mfa": {
       "document": "docs/viri/malta.md",
       "permission": "Existing public Match Centre API route; no explicit MFA permission recorded. Courtesy contact is recommended, not a prerequisite. Use the existing 3-second paced adapter and stop on withdrawal, login, challenge/CAPTCHA or HTTP 401/403/429; do not retry or bypass."
+    },
+    "fmf": {
+      "document": "docs/viri/moldavija.md",
+      "permission": "Existing public anonymous route; no explicit FMF permission recorded. No authentication; use at least 3-second pacing. Current-season reports only: no archive support, so prices use current-season reports. Preserve the existing COMET identity adoption path for unkeyed players. Stop on withdrawal, login, challenge/CAPTCHA or HTTP 401/403/429; no retries or alternate access after refusal."
     }
   },
   "candidates": [
@@ -573,6 +577,24 @@
       "slug": "hu-to-3-nyugat",
       "source": "mlsz",
       "source_league_code": "67/17/34465"
+    },
+    {
+      "id": 1105,
+      "slug": "md-liga-1-a",
+      "source": "fmf",
+      "source_league_code": "liga-1-faza-1-grupa-a-1783092701/878"
+    },
+    {
+      "id": 1106,
+      "slug": "md-liga-1-b",
+      "source": "fmf",
+      "source_league_code": "liga-1-faza-1-grupa-b-1783092819/879"
+    },
+    {
+      "id": 1107,
+      "slug": "md-liga-2",
+      "source": "fmf",
+      "source_league_code": "liga-2-1782306996/877"
     }
   ]
 }

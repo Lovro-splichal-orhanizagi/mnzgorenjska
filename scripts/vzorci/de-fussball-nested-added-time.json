@@ -1,0 +1,34 @@
+{
+  "observedCaptureClocks": [
+    {
+      "matchId": "031EQBPNE8000000VS5489BTVUS470OH",
+      "base": 90,
+      "added": 1,
+      "source": {
+    "capture": "/tmp/slff-large-countries-20261022/germany/season-capture-1",
+    "manifestSha256": "d25bc171ee556b70c8b30fe0e085b21303b9bc9f6fa596ac828d933f8147b069",
+    "documentKind": "report",
+    "documentSha256": "198a9aa2fcdeef024129216d1b06956b2850bfaa631a04147835fb95fc02240c",
+    "documentBytes": 197931,
+    "eventByteOffset": 172225,
+    "clockByteOffset": 172453,
+        "rawClockHtml": "<div class=\"valign-inner\">\n\t\t\t\t\t\t\t\t90\n\t\t\t\t\t\t\t\t&rsquo;\n\t\t\t\t\t\t\t\t<div>+1</div>\n\t\t\t\t\t\t\t</div>"
+      }
+    },
+    {
+      "matchId": "031EQBPNG0000000VS5489BTVUS470OH",
+      "base": 90,
+      "added": 4,
+      "source": {
+        "capture": "/tmp/slff-large-countries-20261022/germany/season-capture-1",
+        "manifestSha256": "d25bc171ee556b70c8b30fe0e085b21303b9bc9f6fa596ac828d933f8147b069",
+        "documentKind": "report",
+        "documentSha256": "8ee4fee845ef9e7db6ddbe7635934c7936f9142707880e3e2d3b29e9d5fe8f07",
+        "documentBytes": 195723,
+        "eventByteOffset": 170071,
+        "clockByteOffset": 171371,
+        "rawClockHtml": "<div class=\"valign-inner\">\n\t\t\t\t\t\t\t\t90\n\t\t\t\t\t\t\t\t&rsquo;\n\t\t\t\t\t\t\t\t<div>+4</div>\n\t\t\t\t\t\t\t</div>"
+      }
+    }
+  ]
+}

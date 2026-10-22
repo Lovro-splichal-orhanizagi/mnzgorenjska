@@ -81,6 +81,43 @@ test('Hungarian admission stays explicit and holds on missing past reports',asyn
   assert.ok(results.every(r=>r.status==='HOLD'&&r.reason.includes('Past current fixtures')))
   assert.deepEqual(calls,[])
 })
+test('FMF admission binds only the three reviewed Moldova production tuples',()=>{
+  const expected=[
+    {id:1105,slug:'md-liga-1-a',source:'fmf',source_league_code:'liga-1-faza-1-grupa-a-1783092701/878'},
+    {id:1106,slug:'md-liga-1-b',source:'fmf',source_league_code:'liga-1-faza-1-grupa-b-1783092819/879'},
+    {id:1107,slug:'md-liga-2',source:'fmf',source_league_code:'liga-2-1782306996/877'},
+  ]
+  assert.deepEqual(validateSelection(registry,expected.map(c=>c.slug)),expected)
+  assert.deepEqual(registry.candidates.filter(c=>c.source==='fmf'),expected)
+  assert.equal(registry.source_contracts.fmf.document,'docs/viri/moldavija.md')
+  assert.match(registry.source_contracts.fmf.permission,/public/i)
+  assert.match(registry.source_contracts.fmf.permission,/3.?second/i)
+  assert.match(registry.source_contracts.fmf.permission,/no archive/i)
+  assert.match(registry.source_contracts.fmf.permission,/identity adoption/i)
+  assert.match(registry.source_contracts.fmf.permission,/401.*403.*429/i)
+  for(const slug of ['md-unknown','md-liga-1-c']) assert.throws(()=>validateSelection(registry,[slug]))
+  for(const c of expected) for(const patch of [{id:c.id+1},{source:'mlsz'},{source_league_code:'changed'}]) {
+    const altered={...registry,candidates:registry.candidates.map(row=>row.slug===c.slug?{...row,...patch}:row)}
+    assert.throws(()=>validateSelection(altered,[c.slug]))
+  }
+})
+test('FMF admission inherits missing-report, position/price, deadline, and score holds',async()=>{
+  const candidates=validateSelection(registry,['md-liga-1-a','md-liga-1-b','md-liga-2'])
+  const cases=[
+    {name:'missing report',patch:{matches:async()=>[{id:11,round_id:1,played_on:'2026-10-10',imported_at:null,kontumacija:false,vir_brez_izida:false}]},reason:/Past current fixtures/},
+    {name:'missing goalkeeper/position',patch:{state:async()=>({...state,igralci:players.filter(p=>p.position!=='GK')})},reason:/kader-nemogoc/},
+    {name:'unaffordable price list',patch:{state:async()=>({...state,igralci:players.map(p=>({...p,value:10}))})},reason:/kader-predrag/},
+    {name:'deadline is no longer future',patch:{rounds:async()=>[{id:2,number:2,season:'2026/27',played_on:'2026-10-24',deadline_at:'2026-10-18T19:00:00Z',lineups_locked_at:null}]},reason:/No unlocked future first round/},
+    {name:'score and goal mismatch',patch:{matches:async()=>[{id:11,round_id:1,home_goals:2,away_goals:0,imported_at:'2026-10-10',kontumacija:false,goals:[{count:1}],appearances:[{count:22}]},{id:12,round_id:2,home_goals:null,away_goals:null,imported_at:null,kontumacija:false,goals:[{count:0}],appearances:[{count:0}]}]},reason:/score\/goals mismatch/},
+  ]
+  for(const c of candidates) for(const scenario of cases) {
+    const f=fixture(scenario.patch)
+    const [result]=await runBatch({candidates:[c],transport:f.transport,apply:true,now})
+    assert.equal(result.status,'HOLD',`${c.slug} ${scenario.name}`)
+    assert.match(result.reason,scenario.reason,`${c.slug} ${scenario.name}`)
+    assert.deepEqual(f.calls,[],`${c.slug} ${scenario.name} must not activate`)
+  }
+})
 test('English Streamline candidates bind all reviewed tuples and reject unknown leagues',()=>{
   const expected=[
     [977,'gb-isthmian-north','isthmian','isthmian/67d7d0c1749090308acc1021/2026-27'],

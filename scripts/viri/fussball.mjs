@@ -10,6 +10,16 @@ const text = s => entities(s.replace(/<[^>]*>/g,' ')).replace(/\s+/g,' ').trim()
 export const jeIzziv = s => /<title>\s*(?:Just a moment|Attention Required)|cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha/i.test(String(s))
 const classTokens = s => new Set((attr(s,'class')??'').split(/\s+/).filter(Boolean))
 const attr = (s,k) => s.match(new RegExp(`\\b${k}="([^"]*)"`))?.[1]
+export function parseFussballEventClock(source) {
+ const raw=String(source??'')
+ const marker="(?:&rsquo;|&apos;|&#039;|')"
+ const nested=new RegExp(`^\\s*(\\d{1,2})\\s*${marker}\\s*<div>\\s*\\+(\\d{1,2})\\s*<\\/div>\\s*$`).exec(raw)
+ if(nested){const base=+nested[1],added=+nested[2];return base===90&&added>=1&&added<=30?{base,added}:null}
+ const flat=new RegExp(`^\\s*(\\d{1,2})(?:\\s*\\+\\s*(\\d{1,2}))?\\s*${marker}\\s*$`).exec(raw)
+ if(!flat)return null
+ const base=+flat[1],added=+(flat[2]??0)
+ return base<=90&&added<=30?{base,added}:null
+}
 function element(s,cls) {
  const start = new RegExp(`<([a-z]+)\\b[^>]*class="(?:[^"]*\\s)?${cls}(?:\\s[^"]*)?"[^>]*>`,'i').exec(s)
  if(!start)fail(`manjka element ${cls}`)
@@ -73,6 +83,12 @@ function score(s,decode,allowUnplayed=false){
  if(values.some(v=>!/^\d{1,2}$/.test(v)))fail('neveljaven izid')
  return {domaci:+values[0],gostje:+values[1]}
 }
+function liveScoreChildren(s){
+ const html=element(s,'even'),start=html.indexOf('>')+1,end=html.lastIndexOf('</div>'),body=html.slice(start,end)
+ const children=[...body.matchAll(/<span\b[^>]*>[^<]*<\/span>/g)].map(m=>m[0])
+ if(children.join('')!==body)fail('nepodprta struktura izida dogodka')
+ return children
+}
 export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
  if(jeIzziv(html))fail('izziv v zapisniku')
  if(!/<\/body>\s*<\/html>\s*$/i.test(html) || !/<h3>Abpfiff<\/h3>/.test(html))fail('odrezan zapisnik: manjka Abpfiff')
@@ -110,9 +126,10 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
  if(starts.length!==structuralEvents || starts.length!==eventSignals || starts.length!==(course.match(/class="row-event\b/g)??[]).length)fail('nepodprt ali manjkajoč dogodek')
  for(let i=0;i<starts.length;i++){
   const s=course.slice(starts[i].index,starts[i+1]?.index??course.length),side=starts[i][1]==='left'?0:1
-  const minute=text(s.match(/class="valign-inner">([^<]+)</)?.[1]??'').match(/^(\d{1,2})(?:\s*\+\s*(\d{1,2}))?'$/)
-  if(!minute || +minute[1]>90 || +(minute[2]??0)>30)fail('nepodprta minuta dogodka')
-  const order=+minute[1]*100+ +(minute[2]??0),minuta=Math.min(90,+minute[1])
+  const clockHtml=s.match(/<div class="valign-inner">((?:[^<]|<div>\s*\+\d{1,2}\s*<\/div>)*)<\/div>/)?.[1]??''
+  const minute=parseFussballEventClock(clockHtml)
+  if(!minute)fail('nepodprta minuta dogodka')
+  const order=minute.base*100+minute.added,minuta=Math.min(90,minute.base)
   if(order<previous)fail('neveljavno časovno zaporedje dogodkov');previous=order
   const refs=[...s.matchAll(/<a\b[^>]*href="https:\/\/www\.fussball\.de\/spielerprofil\/-\/(?:player-id|userid)\/[A-Z0-9]{32}"[^>]*>/g)].map(m=>identity(m[0]))
   const player=ref=>{const p=players.get(ref);if(!p)fail('dogodek vsebuje neznanega igralca');return p}
@@ -121,7 +138,12 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
    const p=player(refs[0]),next=score(s,decode),delta=[next.domaci-current.domaci,next.gostje-current.gostje]
    if(delta[0]+delta[1]!==1 || delta.some(d=>d<0||d>1) || delta[side]!==1)fail('neveljavno zaporedje izidov')
    if(!active.has(p.virId))fail('gol neaktivnega igralca')
-   goli.push({virId:p.virId,ime:p.ime,minuta,ekipa:teams[p.side].ime,avtogol:p.side!==side,rezultat:next});current=next
+   const scoreChildren=liveScoreChildren(s),marker=scoreChildren[3]
+   if(scoreChildren.length!==3&&scoreChildren.length!==4)fail('nepodprt dodatek gola')
+   if(marker!==undefined&&marker!=='<span class="event-info">Strafstoßtor</span>')fail('nepodprt dodatek gola')
+   const enajstmetrovka=marker!==undefined,avtogol=p.side!==side
+   if(enajstmetrovka&&avtogol)fail('protisloven označevalec enajstmetrovke in avtogola')
+   goli.push({virId:p.virId,ime:p.ime,minuta,ekipa:teams[p.side].ime,avtogol,enajstmetrovka,rezultat:next});current=next
   }else if(/icon-substitute/.test(s)){
    if(refs.length!==2)fail('menjava brez obeh igralcev')
    const noter=player(refs[0]),ven=player(refs[1])
