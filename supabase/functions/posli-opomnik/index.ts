@@ -27,6 +27,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import {
   JEZIK_DRZAVE,
+  esc,
   sestaviOpomnik,
   sestaviOpomnikBrezEkipe,
   sestaviOpomnikBrezLige,
@@ -36,6 +37,7 @@ import {
   sestaviPopravekPozicije,
   sestaviPoznavalca,
   sestaviPushOpomnik,
+  sestaviPivo7dni,
   sestaviTedenskiPregled,
   type Liga,
   type PregledKroga,
@@ -44,7 +46,7 @@ import {
 import { posljiPush, pushNastavljen, type Obvestilo } from './push.ts'
 import nodemailer from 'npm:nodemailer@6.9.16'
 
-const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi'] as const
+const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni'] as const
 type Vrsta = (typeof VRSTE)[number]
 
 // Besedila so v `sporocila.ts`, v jeziku DRŽAVE LIGE (slovaška liga →
@@ -216,6 +218,42 @@ Deno.serve(async (req) => {
     return json({ kandidati_stevilo: kand.length, poslano, poslanih_mailov: poslanih, preskoceno: kand.length - poslano })
   }
 
+  // `pivo-7dni`: teden po prvi (nehišni, nemladinski) ekipi en sproščen mail
+  // "SLFF je brezplačen … plačaš eno pivo?". Kdo ga dobi, določi
+  // `kandidati_za_pivo_7dni` (enkrat na človeka, brez odjavljenih). Le pošta:
+  // povezava na pivo v aplikaciji ni dovoljena (trgovini, glej Pivo.tsx).
+  if (vrsta === 'pivo-7dni') {
+    if (!jeStroj) return json({ error: 'Pivo pošlje samo urnik (servisni ključ).' }, 403)
+    if (!SMTP_PASS && !suho) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
+    const service4 = createClient(SUPABASE_URL, SERVICE_KEY)
+    const { data, error } = await service4.rpc('kandidati_za_pivo_7dni', {
+      p_najvec: suho ? 1000 : Math.min(vhod.najvec_poslati ?? 10, 20),
+    })
+    if (error) return json({ error: error.message }, 500)
+    const kand = (data ?? []) as Array<{
+      user_id: string; email: string; display_name: string | null
+      competition_id: number; liga_slug: string; liga_oznaka: string; liga_drzava: string | null
+    }>
+    if (suho) return json({ suho: true, kandidati_stevilo: kand.length })
+    let poslano = 0
+    for (const u of kand) {
+      if (poslano > 0) await new Promise((r) => setTimeout(r, 600))
+      const liga: Liga = { slug: u.liga_slug, oznaka: u.liga_oznaka, drzava: u.liga_drzava }
+      const sporocilo = await sOdjavo(service4, u.user_id, sestaviPivo7dni(liga, { display_name: u.display_name }))
+      const rez = await poslji(EMAIL_FROM, u.email, sporocilo, Deno.env.get('EMAIL_REPLY_TO'))
+      if (!rez.napaka) poslano++
+      await service4.from('email_log').insert({
+        user_id: u.user_id,
+        email: u.email,
+        vrsta,
+        competition_id: u.competition_id,
+        resend_id: rez.id ?? null,
+        napaka: rez.napaka ?? null,
+      })
+    }
+    return json({ kandidati_stevilo: kand.length, poslano, preskoceno: kand.length - poslano })
+  }
+
   // `liga-zivi`: enkratno obvestilo na željo "Moje lige ni", ko je liga
   // aktivna (`kandidati_za_zivo_ligo`). Ob uspehu `zelja_lige_poslana`
   // pobriše e-naslov; neuspeh se poskusi še dvakrat.
@@ -348,7 +386,7 @@ Deno.serve(async (req) => {
     const rez = await poslji(
       EMAIL_FROM,
       test_email,
-      sestaviOpomnik(liga, { display_name: 'Test', brez_ekipe: false }),
+      sestaviOpomnik(liga, { display_name: 'Test', rok: await naslednjiRok(service, competition_id) }),
     )
     // Tudi test zabeležimo — ko kdo reče "nisem dobil", je prazen dnevnik
     // najslabši možni odgovor.
@@ -466,6 +504,7 @@ Deno.serve(async (req) => {
       return json({ error: `Preveč ekip (${poEkipi.size}, meja ${vhod.najvec}). Nič ni bilo poslano.`, kandidati_stevilo: poEkipi.size }, 409)
 
     const rezultati: Array<{ ekipa: number; ok: boolean; razlog?: string }> = []
+    const rok = vrsta === 'izstop-kluba' ? await naslednjiRok(service, competition_id) : null
     for (const [ekipa, e] of poEkipi) {
       let zeQ = service
         .from('email_log').select('id')
@@ -491,10 +530,10 @@ Deno.serve(async (req) => {
         rezultati.push({ ekipa, ok: false, razlog: 'odjavljen' })
         continue
       }
-      const sporociloEkipi = await sOdjavo(service, e.owner_id, (vrsta === 'izstop-kluba' ? sestaviIzstopKluba : sestaviPopravekPozicije)(
-        liga,
-        { display_name: pr?.display_name ?? null, team_name: e.team_name, igralci: e.igralci },
-      ))
+      const podatki = { display_name: pr?.display_name ?? null, team_name: e.team_name, igralci: e.igralci }
+      const sporociloEkipi = await sOdjavo(service, e.owner_id, vrsta === 'izstop-kluba'
+        ? sestaviIzstopKluba(liga, { ...podatki, rok })
+        : sestaviPopravekPozicije(liga, podatki))
       const rez: { id?: string; napaka?: string } = zaPosto
         ? await poslji(EMAIL_FROM, email!, sporociloEkipi, Deno.env.get('EMAIL_REPLY_TO'))
         : {}
@@ -583,6 +622,8 @@ Deno.serve(async (req) => {
   // HelpStacka in ne sme izpasti kot pošiljatelj množične pošte.
   const meja = typeof vhod.najvec_poslati === 'number' ? Math.max(0, vhod.najvec_poslati) : Infinity
   let poslanih = 0
+  // Rok naslednjega kroga za vrstico v opomniku (brez njega vrstice ni).
+  const rok = vrsta === 'opozorilo' ? null : await naslednjiRok(service, competition_id)
   for (const u of kandidati) {
     // Kvota velja samo za pošto; kdor je le na pushu, gre skozi.
     if (u.email_vklop && poslanih >= meja) {
@@ -611,7 +652,7 @@ Deno.serve(async (req) => {
         : !u.team_id
           // Brez ekipe ni lige: povabilo k izbiri v jeziku prijave.
           ? sestaviOpomnikBrezLige(u.jezik, { display_name: u.display_name })
-          : sestaviOpomnik(liga, { display_name: u.display_name, brez_ekipe: false }),
+          : sestaviOpomnik(liga, { display_name: u.display_name, rok, razlog: await razlogEkipe(service, u.team_id) }),
     )
     let rez: { id?: string; napaka?: string } = {}
     const zaPosto = u.email_vklop && !!u.email
@@ -688,14 +729,37 @@ async function sOdjavo(db: any, userId: string, s: Sporocilo): Promise<Sporocilo
   return {
     ...s,
     odjava: nova,
-    html: s.html.split(`href="${s.odjava}"`).join(`href="${nova.replaceAll('&', '&amp;')}"`),
+    html: s.html.split(`href="${esc(s.odjava)}"`).join(`href="${esc(nova)}"`),
+    // V čistopisu je odjava vrstica "<oznaka>: <url>" v nogi.
+    besedilo: s.besedilo.split(`: ${s.odjava}\n`).join(`: ${nova}\n`),
   }
 }
 
-/** Zadeva maila "SLFF GNL — tvoja ekipa …" kot naslov in besedilo obvestila. */
+/** Zadeva maila kot naslov obvestila, predglava kot njegovo besedilo. */
 function vObvestilo(s: Sporocilo, url: string): Obvestilo {
-  const [naslov, ...ostalo] = s.naslov.split(' — ')
-  return { naslov, besedilo: ostalo.join(' — ') || s.naslov, url }
+  return { naslov: s.naslov, besedilo: s.predglava || s.naslov, url }
+}
+
+/** Rok naslednjega kroga lige ali null. */
+// deno-lint-ignore no-explicit-any
+async function naslednjiRok(db: any, competitionId: number): Promise<string | null> {
+  const { data } = await db
+    .from('rounds')
+    .select('deadline_at')
+    .eq('competition_id', competitionId)
+    .gt('deadline_at', new Date().toISOString())
+    .order('deadline_at')
+    .limit(1)
+    .maybeSingle()
+  return data?.deadline_at ?? null
+}
+
+/** Zakaj ekipa ni veljavna (slovensko, iz baze) ali null. */
+// deno-lint-ignore no-explicit-any
+async function razlogEkipe(db: any, teamId: number | null): Promise<string | null> {
+  if (!teamId) return null
+  const { data } = await db.rpc('razlog_neveljavne_ekipe', { p_team_id: teamId })
+  return typeof data === 'string' && data ? data : null
 }
 
 /** Liga za predlogo; država določa jezik mail in časovni pas roka. */
@@ -735,7 +799,7 @@ async function poslji(
 ): Promise<{ id?: string; napaka?: string }> {
   try {
     const r = await smtp.sendMail({
-      from, to, subject: s.naslov, html: s.html,
+      from, to, subject: s.naslov, text: s.besedilo, html: s.html,
       ...(replyTo ? { replyTo } : {}),
       // Odjava z enim klikom v poštnem odjemalcu vodi na isto stran.
       ...(s.odjava ? { list: { unsubscribe: s.odjava } } : {}),
