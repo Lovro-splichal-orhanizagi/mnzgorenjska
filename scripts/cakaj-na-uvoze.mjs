@@ -160,6 +160,7 @@ function seKrize(tok, naslov, id) {
     // zadeva (madžarske lige pred vklopom: sicer bi vsak urni zagon čakal
     // na tekoči ročni uvoz).
     if (liga.drzava !== mojaDrzava) return false
+    if (mojaLiga === slug) return true
     if (popravek) return true
     if (SKUPEN_VIR[mojaDrzava]) return true
     if (!mojaLiga && !liga.aktivna) return false

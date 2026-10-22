@@ -58,6 +58,8 @@ const regional = [
   ['vklop-dfb-regije.yml', 'Preverjen vklop DFB regije de-regionalliga-nord'],
 ]
 const fixtures = [
+  { slug: 'hu-to-3-nyugat', active: false, source: 'mlsz', countries: { code: 'HU' }, federations: { code: 'mlsz-to' } },
+  { slug: 'hu-baz-u19-2-kozep', active: false, source: 'mlsz', countries: { code: 'HU' }, federations: { code: 'mlsz-baz' } },
   { slug: 'de-regionalliga-nord', active: false, source: 'dfb', countries: { code: 'DE' }, federations: { code: 'nfv-nord' } },
   { slug: 'dk-example', active: false, source: 'dbu', countries: { code: 'DK' }, federations: { code: 'dbu' } },
   { slug: 'pl-example', active: false, source: 'pzpn', countries: { code: 'PL' }, federations: { code: 'pzpn' } },
@@ -68,6 +70,18 @@ const fixtures = [
   { slug: 'es-ct-primera-g1', active: false, source: 'fcf', countries: { code: 'ES' }, federations: { code: 'fcf' } },
   { slug: 'es-active', active: true, source: 'fcf', countries: { code: 'ES' }, federations: { code: 'fcf' } },
 ]
+test('source-free MLSZ release uses inactive league coordination while retaining global and same-league waits',async()=>{
+ const workflow=readFileSync(new URL('../.github/workflows/mlsz-reviewed-history.yml',import.meta.url),'utf8')
+ for(const slug of ['hu-to-3-nyugat','hu-baz-u19-2-kozep']){
+  assert.ok(workflow.includes(`cakaj-na-uvoze.mjs --liga ${slug} --najvec 120`))
+  const nightly={'uvoz-zapisnikov.yml':[run('Nightly')]}
+  assert.equal((await coordinate(['--liga',slug],nightly,[{name:'uvoz HU 1/3',status:'in_progress'}])).code,0)
+  for(const [wf,title]of [['tedensko-cene.yml','Weekly prices'],['zdruzi-klube.yml','Merge clubs'],['uvoz-lige.yml',`Uvoz lige ${slug}`]])assert.equal((await coordinate(['--liga',slug],{[wf]:[run(title)]})).code,1)
+  const fixture=fixtures.find(c=>c.slug===slug);fixture.active=true
+  try{assert.equal((await coordinate(['--liga',slug],nightly,[{name:'uvoz HU 1/3',status:'in_progress'}])).code,1)}finally{fixture.active=false}
+ }
+ assert.ok(!workflow.includes('--popravek'))
+})
 const startedAt = '2026-10-17T10:00:00Z'
 const run = (title, patch = {}) => ({ databaseId: 10, startedAt, status: 'in_progress', displayTitle: title, ...patch })
 async function coordinate(args, runs = {}, jobs = [{ name: 'uvoz DE', status: 'completed' }], historyControl = {}) {
