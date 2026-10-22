@@ -46,7 +46,11 @@ test('HNS clone accepts official registry fallback but rejects lookalikes, colli
  const fallback=dockerFake({image:'ghcr.io/supabase/postgres:17.6.1.167'})
  await helper.withHnsDisposableDatabase(local,()=>{}, {run:fallback.run})
  assert.ok(fallback.calls.some(args=>args.includes('createdb')));assert.ok(fallback.calls.some(args=>args.includes('dropdb')))
- for(const image of ['ghcr.io.evil/supabase/postgres:17.6.1.167','evil.io/supabase/postgres:17.6.1.167','ghcr.io/foreign/postgres:17.6.1.167','ghcr.io/supabase/postgres-other:17.6.1.167','ghcr.io/supabase/postgres:latest','ghcr.io/supabase/postgres:17.6.1.167-bad','public.ecr.aws.evil/supabase/postgres:17.6.1.167']){const fake=dockerFake({image});await assert.rejects(()=>helper.withHnsDisposableDatabase(local,()=>assert.fail('must reject foreign image'),{run:fake.run}),/identity\/image mismatch/);assert.equal(fake.calls.length,1)}
+ for(const image of ['docker.io/supabase/postgres:17.6.1.167','supabase/postgres:17.6.1.167']){
+  const fake=dockerFake({image});await helper.withHnsDisposableDatabase(local,()=>{}, {run:fake.run})
+  assert.ok(fake.calls.some(args=>args.includes('createdb')));assert.ok(fake.calls.some(args=>args.includes('dropdb')))
+ }
+ for(const image of ['ghcr.io.evil/supabase/postgres:17.6.1.167','evil.io/supabase/postgres:17.6.1.167','ghcr.io/foreign/postgres:17.6.1.167','ghcr.io/supabase/postgres-other:17.6.1.167','ghcr.io/supabase/postgres:latest','ghcr.io/supabase/postgres:17.6.1.167-bad','public.ecr.aws.evil/supabase/postgres:17.6.1.167','docker.io.evil/supabase/postgres:17.6.1.167','docker.io/foreign/postgres:17.6.1.167','docker.io/supabase/other:17.6.1.167','docker.io/supabase/postgres:latest','supabase/postgres:17.6.1.167-bad','supabase/postgres-other:17.6.1.167']){const fake=dockerFake({image});await assert.rejects(()=>helper.withHnsDisposableDatabase(local,()=>assert.fail('must reject foreign image'),{run:fake.run}),/identity\/image mismatch/);assert.equal(fake.calls.length,1)}
  for(const options of [{collision:true},{wrongIdentity:true}]){const fake=dockerFake(options);await assert.rejects(()=>helper.withHnsDisposableDatabase(local,()=>assert.fail('must not run child'),{run:fake.run}));assert.ok(!fake.calls.some(args=>args.includes('dropdb')))}
 })
 
