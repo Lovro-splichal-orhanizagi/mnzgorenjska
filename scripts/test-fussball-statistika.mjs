@@ -11,6 +11,7 @@ const main=read('de-fussball-ilvesheim-main.html').toString(),lineup=read('de-fu
 const manifest=JSON.parse(read('de-fussball-zapisnik.json'))
 const nestedAddedTime=JSON.parse(read('de-fussball-nested-added-time.json'))
 const strafstosstor=JSON.parse(read('de-fussball-strafstosstor.json'))
+const observedShapes=JSON.parse(read('de-fussball-observed-shapes.json'))
 const {razberiZapisnik}=await import('./viri/fussball.mjs')
 const fonts=Object.fromEntries(Object.entries(manifest.fonts).map(([id,f])=>[id,{bytes:read(f.file),sha256:f.sha256}]))
 const id='031EQBPLF4000000VS5489BTVUS470OH',options={id,lineupId:id,fonts}
@@ -148,6 +149,52 @@ test('captured Strafstoßtor marker sets penalty-goal evidence and the appearanc
  assert.equal(parsed.z.rezultat.domaci+parsed.z.rezultat.gostje,5)
  const lowLevel=razberiZapisnik(eventInfo(index),lineup,{...options,fonts})
  assert.equal(lowLevel.goli.find(goal=>goal.enajstmetrovka)?.enajstmetrovka,true)
+})
+test('observed images.media profile photos are decorative while linked profile identity remains required',()=>{
+ const observed=observedShapes.images
+ assert.deepEqual(observed.map(x=>x.documentId),['031EQBPNE8000000VS5489BTVUS470OH','031EQBPNM4000000VS5489BTVUS470OH'])
+ const index=rows(main).findIndex(({raw})=>raw.includes('<div class="even">'))
+ assert.ok(index>=0)
+ const baseline=parse()
+ for(const source of observed){
+  const html=edit(index,raw=>raw.replace(/data-responsive-image="[^"]+"/,`data-responsive-image="${source.url}"`))
+  const parsed=parse(html)
+  assert.equal(parsed.z.goli[0].virId,baseline.z.goli[0].virId,'scorer identity still comes from the linked profile ID')
+  assert.equal(parsed.z.rezultat.domaci+parsed.z.rezultat.gostje,5)
+ }
+})
+test('player photo URL support stays within the exact observed HTTPS userfiles family',()=>{
+ const index=rows(main).findIndex(({raw})=>raw.includes('<div class="even">'))
+ const captured=observedShapes.images[0].url
+ const variants=[captured.replace('https://','http://'),captured.replace('images.media.fussball.de','images.media.fussball.de.evil'),captured.replace('_p3.jpg','_p2.jpg'),captured.replace('.de/','.de:443/')]
+ for(const url of variants) reject(edit(index,raw=>raw.replace(/data-responsive-image="[^"]+"/,`data-responsive-image="${url}"`)))
+})
+function nestedAddedGoal(html=main,quickTime='90',rowIndex=rows(main).findLastIndex(({raw})=>raw.includes('<div class="even">'))){
+ const firstHalfCount=JSON.parse(html.match(/data-match-events="([^"]+)"/)[1].replace(/'/g,'"'))['first-half'].events.length
+ const setQuickTime=(q,index,value)=>{const half=index<firstHalfCount?'first-half':'second-half',local=index<firstHalfCount?index:index-firstHalfCount;q[half].events[local].time=value}
+ for(let index=rowIndex;index<rows(html).length;index++){
+  const added=4+index-rowIndex,rawClock=index===rowIndex?observedShapes.coarseClock.rawClockHtml:`<div class="valign-inner">90&rsquo; <div>+${added}</div></div>`
+  html=edit(index,raw=>raw.replace(/<div class="valign-inner">[^<]+<\/div>/,rawClock),html)
+  html=quick(html,q=>{setQuickTime(q,index,index===rowIndex?quickTime:`90+${added}`);return q})
+ }
+ return html
+}
+test('minute-only quick view corroborates an observed raw 90+N clock without losing added time',()=>{
+ const fixture=observedShapes.coarseClock
+ assert.equal(fixture.rawClockHtml,'<div class="valign-inner">90 &rsquo; <div>+4</div></div>')
+ assert.equal(fixture.quickViewEvent,"{'time':'90','type':'goal','team':'home'}")
+ const html=nestedAddedGoal(),index=rows(main).findLastIndex(({raw})=>raw.includes('<div class="even">'))
+ const rawRow=rows(html)[index].raw,result=parse(html),event=result.dogodki.find(item=>item.ordinal===index+1)
+ assert.equal(event.osnovnaMinuta,90)
+ assert.equal(event.dodatek,4)
+ assert.equal(event.minuta,90)
+ assert.equal(event.eventSha256,sha(rawRow),'the exact source row including the added-time child remains fingerprinted')
+})
+test('coarse quick-view time cannot override conflicting explicit time or an earlier-period raw clock',()=>{
+ reject(nestedAddedGoal(main,'90+3'))
+ reject(nestedAddedGoal(main,'89'))
+ const firstHalf=nestedAddedGoal(main,'90',0)
+ reject(firstHalf)
 })
 test('low-level penalty evidence rejects comment and script decoys outside the live fourth score child',()=>{
  const index=rows(main).findIndex(({raw})=>raw.includes('<div class="even">'))

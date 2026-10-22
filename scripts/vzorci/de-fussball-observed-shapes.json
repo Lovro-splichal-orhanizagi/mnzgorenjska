@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "Retained failed Germany season capture; original capture outcome remains failed and is not changed by these fixtures.",
+  "images": [
+    {
+      "documentId": "031EQBPNE8000000VS5489BTVUS470OH",
+      "documentSha256": "198a9aa2fcdeef024129216d1b06956b2850bfaa631a04147835fb95fc02240c",
+      "documentBytes": 197931,
+      "rowUtf8ByteOffsets": [155032, 156480],
+      "imageAttributeUtf8ByteOffsets": [155353, 156801],
+      "url": "https://images.media.fussball.de/userfiles/B/a/9/doYsRMxLtbHeic5oVpgfBa_p3.jpg"
+    },
+    {
+      "documentId": "031EQBPNM4000000VS5489BTVUS470OH",
+      "documentSha256": "20558646b70253f44bf7155bacd13dc76055d7f721a7fa476373046ed8138bb7",
+      "documentBytes": 201872,
+      "rowUtf8ByteOffsets": [175598],
+      "imageAttributeUtf8ByteOffsets": [176565],
+      "url": "https://images.media.fussball.de/userfiles/3/U/M/SFDWs8muNSn20nNDIvQX91_p3.jpg"
+    }
+  ],
+  "coarseClock": {
+    "documentId": "031EQBPNG0000000VS5489BTVUS470OH",
+    "documentSha256": "8ee4fee845ef9e7db6ddbe7635934c7936f9142707880e3e2d3b29e9d5fe8f07",
+    "documentBytes": 195723,
+    "eventOrdinal": 19,
+    "rawEventUtf8ByteOffset": 170071,
+    "rawClockUtf8ByteOffset": 171397,
+    "rawClockHtml": "<div class=\"valign-inner\">90 &rsquo; <div>+4</div></div>",
+    "quickViewEventUtf8ByteOffset": 128395,
+    "quickViewEvent": "{'time':'90','type':'goal','team':'home'}"
+  }
+}

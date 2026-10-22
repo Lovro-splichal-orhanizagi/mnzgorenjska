@@ -176,7 +176,7 @@ function player(n,{goal=false}={}){
  if(goal){
   const image=shape(c[0],'span',{class:'player-image table-image'},1)[0]
   const imageUrl=image?.attrs?.['data-responsive-image']
-  requireProof(/^(?:https:\/\/cdn\.fussball\.de\/public\/[A-Z0-9]{32}\.stamp|\/\/www\.fussball\.de\/export\.media\/-\/action\/getPlayerImage\/format\/15\/image-id\/NPI_[0-9]{28})$/.test(imageUrl??''),'nepodprta slika igralca')
+  requireProof(/^(?:https:\/\/cdn\.fussball\.de\/public\/[A-Z0-9]{32}\.stamp|\/\/www\.fussball\.de\/export\.media\/-\/action\/getPlayerImage\/format\/15\/image-id\/NPI_[0-9]{28}|https:\/\/images\.media\.fussball\.de\/userfiles\/[A-Za-z0-9]+\/[A-Za-z0-9]+\/[A-Za-z0-9]+\/[A-Za-z0-9_-]+_p3\.jpg)$/.test(imageUrl??''),'nepodprta slika igralca')
   shape(image,'span',{'data-alt':'player-image','data-responsive-image':imageUrl},0)
  }
  const name=c.at(-1)
@@ -300,7 +300,8 @@ function events(html,tags){
   for(const [j,e] of actual.entries()){
    const raw=p.events[j];keys(raw,['time','type','team'])
    const clock=`${e.osnovnaMinuta}${e.dodatek?`+${e.dodatek}`:''}`
-   requireProof(raw.time===clock&&raw.type===({gol:'goal',menjava:'substitute',rumeni:'yellow-card'})[e.vrsta]&&raw.team===(e.ekipaIdx?'away':'home'),'neskladje vrste, strani ali časa dogodka')
+   const coarseAddedTime=raw.time==='90'&&e.osnovnaMinuta===90&&e.dodatek>=1&&e.dodatek<=30
+   requireProof((raw.time===clock||coarseAddedTime)&&raw.type===({gol:'goal',menjava:'substitute',rumeni:'yellow-card'})[e.vrsta]&&raw.team===(e.ekipaIdx?'away':'home'),'neskladje vrste, strani ali časa dogodka')
    const order=e.osnovnaMinuta*100+e.dodatek
    requireProof(order>=previous,'neurejeni izvorni časi');previous=order
   }

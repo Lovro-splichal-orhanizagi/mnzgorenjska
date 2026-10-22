@@ -109,6 +109,13 @@ minuta pa je omejena na 90. Shranjena pristna oblika `90 &rsquo; <div>+N</div>`
 je podprta samo pri 90 in dodatku 1–30; vzorci ohranijo izvorni SHA-256 in
 odmik v bajtih. Nove oblike zahtevajo pristne vzorce in nove regresije.
 
+Hitri pregled sme pri tako dokazanem `90+N` objaviti samo `90`; vrsta,
+stran, število in vrstni red dogodkov se še vedno ujemajo. Izrecno drugačen
+dodatek se zavrne, izvirni dodatek in odtis vrstice ostaneta v dokazu.
+Dodatna opažena oblika slike `images.media.fussball.de/userfiles/…_p3.jpg`
+je le okras: identiteto še vedno določata profilna povezava in preverjena
+pisava, slike se ne prenašajo.
+
 Še vedno manjkajo registriran vir, potrjena arhivska povezava 2025/26 za amatersko ligo,
 popoln prehod obeh sezon, trajna uvozna vezava profilnih identitet ter
 ločene preverbe vlog, cenika in vklopa. Ta ukaz ne dostopa do omrežja ali
