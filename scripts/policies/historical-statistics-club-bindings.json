@@ -786,6 +786,80 @@
           "rawSha256": "a3f0eac8e8c513484e983921671d8f2e1359e8d1cd397d1edb4371b5aa5169fe"
         }
       ]
+    },
+    {
+      "provider": "mlsz",
+      "sourceClubId": "318500",
+      "sourceCategoryId": null,
+      "countryCode": "HU",
+      "canonicalNames": [
+        "NAGYDOROG KSE"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2175016",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/17/31528/12/2175016.html",
+          "rawSha256": "ca3ddd1393b8ec598e9e343d0f4eea4f8bb3c56e6e35fc26d8b4571bfdcfd4f5"
+        }
+      ]
+    },
+    {
+      "provider": "mlsz",
+      "sourceClubId": "318499",
+      "sourceCategoryId": null,
+      "countryCode": "HU",
+      "canonicalNames": [
+        "NÉMETKÉRI SE"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2175016",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/17/31528/12/2175016.html",
+          "rawSha256": "ca3ddd1393b8ec598e9e343d0f4eea4f8bb3c56e6e35fc26d8b4571bfdcfd4f5"
+        }
+      ]
+    },
+    {
+      "provider": "mlsz",
+      "sourceClubId": "310339",
+      "sourceCategoryId": null,
+      "countryCode": "HU",
+      "canonicalNames": [
+        "Onga SE"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2078392",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/4/31796/2/2078392.html",
+          "rawSha256": "59b4a00e841bcadd2f78e92cf799b2346321c3cf11d1967a20133644f81922a0"
+        },
+        {
+          "sourceMatchId": "2078437",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/4/31796/11/2078437.html",
+          "rawSha256": "0413bbafb89880a00e14f4adaeb57932ca764b7d60145adb210b0bc8affdc2e8"
+        }
+      ]
+    },
+    {
+      "provider": "mlsz",
+      "sourceClubId": "310335",
+      "sourceCategoryId": null,
+      "countryCode": "HU",
+      "canonicalNames": [
+        "Borsodivánka SE"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2078392",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/4/31796/2/2078392.html",
+          "rawSha256": "59b4a00e841bcadd2f78e92cf799b2346321c3cf11d1967a20133644f81922a0"
+        },
+        {
+          "sourceMatchId": "2078437",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/4/31796/11/2078437.html",
+          "rawSha256": "0413bbafb89880a00e14f4adaeb57932ca764b7d60145adb210b0bc8affdc2e8"
+        }
+      ]
     }
   ]
 }

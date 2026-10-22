@@ -613,6 +613,74 @@
           "reason": "on-field dismissal time missing; never infer minutes"
         }
       ]
+    },
+    {
+      "id": "hu-mlsz-tolna-reviewed-history-20261022-v1",
+      "provider": "mlsz",
+      "sourcePolicy": "hu-mlsz-reviewed-history-v1",
+      "competitionSlug": "hu-to-3-nyugat",
+      "competitionId": 463,
+      "sourceLeagueCode": "67/17/34465",
+      "season": "2025/26",
+      "recordedAt": "2026-10-22T10:47:18.409587+00:00",
+      "approvalReference": "User instruction 'you can enable hungary' on 22 October 2026, following the exact-three Hungarian historical-exclusion proposal; recording time, user send time unavailable.",
+      "entries": [
+        {
+          "sourceMatchId": "2175016",
+          "sourceCompetitionId": "65/17/31528",
+          "sourcePhase": null,
+          "sourceRound": 12,
+          "playedOn": "2026-03-21",
+          "homeSourceClubId": "318500",
+          "awaySourceClubId": "318499",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/17/31528/12/2175016.html",
+          "rawSha256": "ca3ddd1393b8ec598e9e343d0f4eea4f8bb3c56e6e35fc26d8b4571bfdcfd4f5",
+          "observedHomeScore": 3,
+          "observedAwayScore": 0,
+          "reasonCode": "score_goal_events_disagree"
+        }
+      ]
+    },
+    {
+      "id": "hu-mlsz-baz-u19-reviewed-history-20261022-v1",
+      "provider": "mlsz",
+      "sourcePolicy": "hu-mlsz-reviewed-history-v1",
+      "competitionSlug": "hu-baz-u19-2-kozep",
+      "competitionId": 619,
+      "sourceLeagueCode": "67/4/34094",
+      "season": "2025/26",
+      "recordedAt": "2026-10-22T10:47:18.409587+00:00",
+      "approvalReference": "User instruction 'you can enable hungary' on 22 October 2026, following the exact-three Hungarian historical-exclusion proposal; recording time, user send time unavailable.",
+      "entries": [
+        {
+          "sourceMatchId": "2078392",
+          "sourceCompetitionId": "65/4/31796",
+          "sourcePhase": null,
+          "sourceRound": 2,
+          "playedOn": "2025-09-13",
+          "homeSourceClubId": "310339",
+          "awaySourceClubId": "310335",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/4/31796/2/2078392.html",
+          "rawSha256": "59b4a00e841bcadd2f78e92cf799b2346321c3cf11d1967a20133644f81922a0",
+          "observedHomeScore": 0,
+          "observedAwayScore": 3,
+          "reasonCode": "score_goal_events_disagree"
+        },
+        {
+          "sourceMatchId": "2078437",
+          "sourceCompetitionId": "65/4/31796",
+          "sourcePhase": null,
+          "sourceRound": 11,
+          "playedOn": "2026-04-04",
+          "homeSourceClubId": "310335",
+          "awaySourceClubId": "310339",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/4/31796/11/2078437.html",
+          "rawSha256": "0413bbafb89880a00e14f4adaeb57932ca764b7d60145adb210b0bc8affdc2e8",
+          "observedHomeScore": 3,
+          "observedAwayScore": 0,
+          "reasonCode": "score_goal_events_disagree"
+        }
+      ]
     }
   ]
 }

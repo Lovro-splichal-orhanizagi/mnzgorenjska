@@ -274,8 +274,31 @@ so porabile druge lige, KEM je imel lani eno samo U19).
 predogled in vklop še vedno preverita natančno šifro, manjkajoče pretekle
 tekoče zapisnike, izide proti golom, cene, veljaven kader in prihodnji rok.
 Pred vklopom posebej preveri vse arhivske in tekoče napake minut ter
-aktivnega vratarja vsakega trenutnega kluba. Izjem za zgodovinske zapisnike
-ali za manjkajoči arhiv ti ligi nimata.
+aktivnega vratarja vsakega trenutnega kluba. Uporabnik je 22. 10. 2026 z
+»you can enable hungary« odobril predlagane tri zgodovinske izključitve:
+Tolna `2175016` (1/87 arhivskih zapisnikov) ter U19 `2078392` in `2078437`
+(2/65). Uradni izidi ostanejo; 77 nastopov in 18 golov se odstranijo v eni
+transakciji, posamezne statistike pa dobijo oznako `unavailable_historical`.
+Razloga ne označuj kot kontumacijo: vir vzroka neskladja ne potrjuje.
+
+Natančni politiki `hu-mlsz-tolna-reviewed-history-20261022-v1` in
+`hu-mlsz-baz-u19-reviewed-history-20261022-v1` sta v skupnem nespremenljivem
+katalogu. Namestitev in vklop vodi samo glavni GitHub Actions workflow
+`mlsz-reviewed-history.yml`: `prepare` shrani celotno prvotno stanje;
+`cleanup` zahteva pregledani SHA datoteke `prepare.json` iz uspešnega prvega
+poskusa na istem commitu; `price` ponovno določi pozicije in cene; `preview`
+preveri oba kandidata; `activate` zahteva pregledani SHA `preview.json`.
+Po nejasnem rezultatu pisanja najprej preberi `get_mlsz_reviewed_history_receipt()`
+in shranjeni artefakt; ne ponavljaj pisanja na slepo. Workflow nima zahtevkov
+do MLSZ. Običajni uvoz preskoči samo popolnoma preverjene nameščene oznake,
+tudi pri ciljanem popravilu in branju razporeda.
+
+Vklop zahteva 194 preostalih veljavnih zapisnikov (149 arhivskih in 45
+tekočih), nespremenjene običajne dogodke, aktualnega potrjenega vratarja
+vsakega kluba, raznolike cene, dovoljen kader za največ 100 in natanko
+pregledana prihodnja kroga: Tolna 8, U19 7, rok 24. 10. 2026 ob 07:00 UTC.
+Po tem roku je potreben nov pregled začetka. To ni odobritev drugih izjem
+ali lig brez arhiva; dejanski vklop potrdi s svežim branjem in artefaktom.
 
 Preverba arhivov (11.–12. 10. 2026, zadnji krog vsakega od 49 arhivov): število
 krogov se ujema s seznamom zveze, zadnji krog je odigran (Békés Észak ena

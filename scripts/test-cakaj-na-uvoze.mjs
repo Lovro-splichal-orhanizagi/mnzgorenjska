@@ -434,3 +434,14 @@ test('Challenge reviewed writes share Malta and global writer coordination',asyn
  for(const stage of ['prepare','preview','receipt'])assert.equal((await coordinate(['--drzava','MT'],{[workflow]:[run(`MFA Challenge reviewed history ${stage} mt-challenge`)]})).code,0)
  for(const name of ['zdruzi-klube.yml','tedensko-cene.yml'])assert.match(readFileSync(new URL(`../.github/workflows/${name}`,import.meta.url),'utf8'),/for wf in[^\n]*mfa-challenge-reviewed-history\.yml/)
 })
+
+test('MLSZ reviewed history writes serialize with HU imports and health checks',async()=>{
+ const workflow='mlsz-reviewed-history.yml'
+ for(const mode of['cleanup','price','activate']){
+  const runs={[workflow]:[run(`MLSZ reviewed history ${mode} hu-to-3-nyugat,hu-baz-u19-2-kozep`)]}
+  assert.equal((await coordinate(['--drzava','HU'],runs)).code,1)
+  assert.equal((await coordinate(['--drzava','AT'],runs)).code,0)
+  assert.equal((await coordinate(['--tece'],runs)).code,3)
+ }
+ for(const mode of['prepare','preview'])assert.equal((await coordinate(['--drzava','HU'],{[workflow]:[run(`MLSZ reviewed history ${mode} hu-to-3-nyugat,hu-baz-u19-2-kozep`)]})).code,0)
+})
