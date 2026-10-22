@@ -7,23 +7,24 @@ import {
 } from './historical-statistics-policy.mjs'
 
 const registry = JSON.parse(readFileSync(new URL('../policies/historical-statistics-exclusions.json', import.meta.url)))
-const seedSql=['20261018180000_historical_statistical_availability.sql','20261018231000_dfb_nord_west_historical_policy.sql','20261020223000_mfa_reviewed_history.sql','20261021093000_mfa_challenge_reviewed_history.sql','20261021190100_mfa_nl1_reviewed_policy.sql','20261021203000_mfa_nl2_reviewed_policy.sql'].map(file=>readFileSync(new URL(`../../supabase/migrations/${file}`,import.meta.url),'utf8')).join('\n')
+const seedSql=['20261018180000_historical_statistical_availability.sql','20261018231000_dfb_nord_west_historical_policy.sql','20261020223000_mfa_reviewed_history.sql','20261021093000_mfa_challenge_reviewed_history.sql','20261021190100_mfa_nl1_reviewed_policy.sql','20261021203000_mfa_nl2_reviewed_policy.sql','20261022121000_mlsz_reviewed_history.sql'].map(file=>readFileSync(new URL(`../../supabase/migrations/${file}`,import.meta.url),'utf8')).join('\n')
 const clone = value => structuredClone(value)
 const hr = registry.policies.find(p => p.provider === 'hns')
 const de = registry.policies.find(p => p.provider === 'dfb')
-const competitionFor = policy => ({ ...(policy.provider==='mfa'?(policy.competitionSlug==='mt-premier'?{id:971,source_league_code:'58539/2027'}:policy.competitionSlug==='mt-challenge'?{id:972,source_league_code:'2601248/2027'}:policy.competitionSlug==='mt-nl1'?{id:973,source_league_code:'2601267/2027'}:{id:974,source_league_code:'6234492/2027'}):{}),slug: policy.competitionSlug, source: policy.provider, source_policy: policy.sourcePolicy, firstFantasyPlayedOn: '2026-10-25' })
+const competitionFor = policy => ({ ...(policy.provider==='mlsz'?{id:policy.competitionId,source_league_code:policy.sourceLeagueCode}:{}),...(policy.provider==='mfa'?(policy.competitionSlug==='mt-premier'?{id:971,source_league_code:'58539/2027'}:policy.competitionSlug==='mt-challenge'?{id:972,source_league_code:'2601248/2027'}:policy.competitionSlug==='mt-nl1'?{id:973,source_league_code:'2601267/2027'}:{id:974,source_league_code:'6234492/2027'}):{}),slug: policy.competitionSlug, source: policy.provider, source_policy: policy.sourcePolicy, firstFantasyPlayedOn: '2026-10-25' })
 const fixtureFor = (policy, entry) => ({ ...entry, season: entry.season??policy.season })
 const classify = (policy = hr, entry = policy.entries[0], overrides = {}) => classifyHistoricalStatistics({
   competition: competitionFor(policy), fixture: fixtureFor(policy, entry), rawSha256: entry.rawSha256, policy, ...overrides,
 })
 
-test('registry contains exactly reviewed HNS3, DFB12 and FCF4 historical identities', () => {
+test('registry contains exactly reviewed HNS3, DFB12, FCF4, MFA and MLSZ3 historical identities', () => {
   assert.equal(validateHistoricalStatisticsRegistry(registry), true)
   assert.deepEqual(hr.entries.map(x => x.sourceMatchId).sort(), ['114471617', '114471627', '114471629'])
   assert.deepEqual(de.entries.map(x => x.sourceMatchId).sort(), ['2402929', '2403004'])
   assert.deepEqual(registry.policies.filter(p=>p.provider==='dfb').flatMap(p=>p.entries.map(e=>e.sourceMatchId)).sort(),['2402287','2402299','2402306','2402312','2402325','2402332','2402346','2402352','2402929','2403004','2405268','2405441'])
   assert.deepEqual(registry.policies.filter(p=>p.provider==='fcf').flatMap(p=>p.entries.map(e=>e.sourceMatchId)).sort(), ['4109388','4116215','4118352','4118358'])
-  assert.equal(registry.policies.length,11)
+  assert.deepEqual(registry.policies.filter(p=>p.provider==='mlsz').flatMap(p=>p.entries.map(e=>e.sourceMatchId)).sort(), ['2078392','2078437','2175016'])
+  assert.equal(registry.policies.length,13)
   assert.ok(!hr.entries.some(x => x.sourceMatchId === '100511758'))
 })
 

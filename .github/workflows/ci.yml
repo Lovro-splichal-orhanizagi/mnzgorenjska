@@ -72,7 +72,7 @@ jobs:
         run: node --test scripts/test-dfb-calendar.mjs scripts/test-dfb-nord-west-historical.mjs scripts/test-vklop-nemcije.mjs scripts/test-zagona-nemcije.mjs scripts/test-vklop-dfb-regije.mjs scripts/test-dfb-regije-dokazi.mjs scripts/test-dfb-regije-replay.mjs scripts/test-dfb-west-clock.mjs scripts/test-current-player-reactivation.mjs scripts/test-predpomnjen-vratar.mjs scripts/test-dfb-current-reactivation.mjs
 
       - name: Existing leagues batch catch-up (source-free)
-        run: node --test scripts/test-mlsz-transport.mjs scripts/test-vklop-obstojecih-lig.mjs scripts/test-refresh-existing-leagues.mjs scripts/test-missing-report-import.mjs scripts/test-eps-missing-reports.mjs scripts/test-hlf-missing-reports.mjs
+        run: node --test scripts/test-mlsz-reviewed-runtime.mjs scripts/test-mlsz-history-operator.mjs scripts/test-mlsz-transport.mjs scripts/test-vklop-obstojecih-lig.mjs scripts/test-refresh-existing-leagues.mjs scripts/test-missing-report-import.mjs scripts/test-eps-missing-reports.mjs scripts/test-hlf-missing-reports.mjs
 
       - name: FCF closed evidence and current-only packet
         run: node --test scripts/test-fcf-single-source-proof.mjs scripts/test-fcf-current-source-proof.mjs scripts/test-fcf-history-evidence.mjs scripts/test-fcf-historical-release.mjs scripts/test-fcf-final-audit-plan.mjs scripts/test-fcf-history-cache-proof.mjs
@@ -194,6 +194,12 @@ jobs:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
           HNS_WOMEN_DISPOSABLE_TEST: '1'
         run: npm run test:hns-women-ci
+      - name: MLSZ reviewed historical cleanup and activation
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          SUPABASE_TEST_DB: postgres
+          MLSZ_HISTORY_DISPOSABLE_TEST: '1'
+        run: node scripts/test-mlsz-reviewed-history-sql.mjs
       - name: Germany activation guard in fresh database
         run: node scripts/test-vklop-nemcije-sql.mjs
       - name: Regional DFB gate and concurrent writes

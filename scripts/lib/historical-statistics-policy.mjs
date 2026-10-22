@@ -96,6 +96,7 @@ export function classifyHistoricalStatistics({ competition, fixture, rawSha256, 
   if (!reviewed || historicalStatisticsPolicySha256(candidate) !== historicalStatisticsPolicySha256(reviewed)) throw new Error('historical policy: unreviewed policy')
   if (competition?.slug !== reviewed.competitionSlug || competition?.source !== reviewed.provider || competition?.source_policy !== reviewed.sourcePolicy) throw new Error('historical policy: competition/provider/policy binding differs')
   if(reviewed.provider==='mfa'&&!exactMfaTuple(competition))throw new Error('historical policy: exact MFA native competition/code binding differs')
+  if(reviewed.provider==='mlsz'&&(competition.id!==reviewed.competitionId||competition.source_league_code!==reviewed.sourceLeagueCode))throw new Error('historical policy: exact MLSZ competition/code binding differs')
   const exception = reviewed.entries.find(entry => entry.sourceMatchId === fixture?.sourceMatchId)
   if (!exception) return { kind: 'normal' }
   const identityFields = reviewed.provider === 'fcf' ? [...IDENTITY_FIELDS, 'homeSourceCategoryId', 'awaySourceCategoryId'] : IDENTITY_FIELDS
@@ -116,6 +117,7 @@ export function validateInstalledHistoricalStatisticsMarkers({competition,bindin
   }
   if(competition.source!==policy.provider || competition.source_policy!==policy.sourcePolicy)fail('competition/provider/policy binding differs')
   if(policy.provider==='mfa'&&!exactMfaTuple(competition))fail('exact MFA native competition/code binding differs')
+  if(policy.provider==='mlsz'&&(competition.id!==policy.competitionId||competition.source_league_code!==policy.sourceLeagueCode))fail('exact MLSZ competition/code binding differs')
   const sha=historicalStatisticsPolicySha256(policy)
   if(binding?.installed!==true || binding.policyId!==policy.id || binding.policySha256!==sha)fail('complete installed policy binding required before provider traversal')
   if(!dateOnly(binding.firstFantasyPlayedOn) || (competition.firstFantasyPlayedOn!=null && competition.firstFantasyPlayedOn!==binding.firstFantasyPlayedOn))fail('first fantasy date binding differs')

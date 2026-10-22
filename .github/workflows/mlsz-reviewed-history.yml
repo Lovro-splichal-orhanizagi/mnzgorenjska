@@ -1,0 +1,76 @@
+name: MLSZ reviewed historical release
+run-name: MLSZ reviewed history ${{ inputs.mode }} ${{ inputs.lige }}
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        type: choice
+        required: true
+        options: [prepare, cleanup, price, preview, activate]
+      expected_sha:
+        type: string
+        required: true
+        description: Exact reviewed main commit
+      lige:
+        type: string
+        required: true
+        default: hu-to-3-nyugat,hu-baz-u19-2-kozep
+      source_run_id:
+        type: string
+        required: false
+        description: Successful first-attempt prepare or preview run on the same main commit
+      approved_sha256:
+        type: string
+        required: false
+        description: Reviewed prepare.json or preview.json file SHA256
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mlsz-reviewed-history
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      MODE: ${{ inputs.mode }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      LIGE: ${{ inputs.lige }}
+      SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      APPROVED_SHA256: ${{ inputs.approved_sha256 }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Verify exact main and offline runtime tests
+        run: |
+          node --input-type=module -e "if(process.env.EXPECTED_SHA!==process.env.GITHUB_SHA)throw Error('Exact main SHA required')"
+          node --test scripts/test-mlsz-reviewed-runtime.mjs scripts/test-mlsz-history-operator.mjs scripts/test-mlsz-transport.mjs
+      - name: Wait for older HU writers
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          node scripts/cakaj-na-uvoze.mjs --popravek --tekmovanje hu-to-3-nyugat --najvec 120
+          node scripts/cakaj-na-uvoze.mjs --popravek --tekmovanje hu-baz-u19-2-kozep --najvec 120
+      - name: Exact cleanup, pricing or guarded release (no provider requests)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/mlsz-history-operator.mjs
+      - name: Preserve receipts and partial readback
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlsz-history-${{ github.run_id }}
+          path: release/mlsz-history/
+          if-no-files-found: ignore
+          retention-days: 90

@@ -583,21 +583,23 @@ const vir = {
   // Zapisnik potrebuje krog; brez njega adatbank vrne tekmo po kratkem naslovu.
   naslovZapisnika: (koda, sifra, krog) => (krog ? naslovTekme(koda, krog, sifra) : `${OSNOVNI}/match/${sifra}`),
 
-  async razporedVseStrani(koda, prenesi) {
+  async razporedVseStrani(koda, prenesi, options = {}) {
     const krogi = []
     for (const { krog, html } of await straniKrogov(koda, prenesi, true)) {
       const tekme = []
       for (const t of vrsticeKroga(html, krog)) {
+        const historicalMarker = options.historicalMarkerFor?.(t, krog)
         // Le 3:0 / 0:3 je lahko kontumacija; zapisnik prebere tudi uvoz
         // zapisnikov, zato to ne pomeni veliko novih zahtevkov.
         let kontumacija = false
-        if (mozna3do0(t.izid) && t.id) {
+        if (!historicalMarker && mozna3do0(t.izid) && t.id) {
           const stran = await stranTekme(naslovTekme(koda, krog, t.id), imeTekme(koda, t.id), prenesi, true)
           kontumacija = !!stran && jeKontumacija(stran, t.izid) && (!brezPostav(stran, t.izid) || starostDni(t.datum) > 7)
         }
         tekme.push({
           domaci: t.domaci, gostje: t.gostje, datum: t.datum, ura: t.ura, kontumacija, odigrana: !!t.izid,
           ...(kontumacija ? { izid: t.izid } : {}),
+          ...(historicalMarker ? { historicalMarker } : {}),
         })
       }
       if (tekme.length) krogi.push({ stevilka: krog, tekme })
@@ -605,10 +607,11 @@ const vir = {
     return krogi
   },
 
-  async zapisniki(koda, prenesi) {
+  async zapisniki(koda, prenesi, options = {}) {
     const out = []
     for (const { krog, html } of await straniKrogov(koda, prenesi, false)) {
       for (const t of vrsticeKroga(html, krog).filter((x) => x.izid && x.id)) {
+        if (options.preskoci?.has(String(t.id))) continue
         const url = naslovTekme(koda, krog, t.id)
         const ime = imeTekme(koda, t.id)
         const stran = await stranTekme(url, ime, prenesi)
