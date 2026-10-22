@@ -12557,6 +12557,12 @@ preveri(
 // --- pošta klubom (scripts/posta-klubom.mjs) ----------------------------------
 {
   const { besedilo, sporocilo, kandidati, izmenicno, vOknu, zakrij, stareZaOpomnik, POSLAL } = await import('./posta-klubom.mjs')
+  // Del multiparta (text/plain ali text/html), dekodiran iz base64.
+  const delMaila = (m, tip) => {
+    const meja = m.match(/boundary="([^"]+)"/)[1]
+    const del = m.split(`--${meja}`).find((d) => d.includes(`Content-Type: ${tip};`))
+    return Buffer.from(del.split('\r\n\r\n')[1].replace(/\r\n/g, ''), 'base64').toString()
+  }
   const k = (drzava) => ({ drzava, team_id: 2002, liga_slug: 'x-liga', ime_lige: 'Kärntner Liga', klub: 'St. Veit SC' })
   const p = { igralcev: 19, naj: 'Sebastian Weiss', tocke: 55, ekip: 7 }
   for (const drzava of ['AT', 'EE', 'HR', 'HU', 'RS']) {
@@ -12566,12 +12572,16 @@ preveri(
         const vse = `${b.zadeva}\n${b.telo}`
         preveri(`pošta klubom: ${drzava} ${vrsta} brez ostankov`, !/[{}]|undefined|null|NaN/.test(vse) && vse.includes('https://slff.eu/club/2002?t=x-liga'), vse.slice(0, 80))
         if (drzava === 'EE') preveri(`pošta klubom: EE ${vrsta} brez pomišljajev`, !/[–—]/.test(vse))
-        const m = sporocilo({ na: 'klub@example.com', zadeva: b.zadeva, telo: b.telo, odjava: b.odjava, id: 'x' })
+        const m = sporocilo({ na: 'klub@example.com', zadeva: b.zadeva, telo: b.telo, odjava: b.odjava, jezik: b.jezik, id: 'x' })
         const glava = m.match(/^Subject: (.*(?:\r\n .*)*)/m)[1]
         const nazaj = glava.split('\r\n ').map((w) => w.match(/^=\?UTF-8\?B\?(.*)\?=$/)).map((x, i) => (x ? Buffer.from(x[1], 'base64').toString() : glava.split('\r\n ')[i])).join('')
         preveri(`pošta klubom: ${drzava} ${vrsta} vrstica zadeve ≤ 78`, `Subject: ${glava}`.split('\r\n').every((v) => v.length <= 78))
         preveri(`pošta klubom: ${drzava} ${vrsta} zadeva in telo nazaj`, nazaj === b.zadeva && /^[\x00-\x7f]*$/.test(m)
-          && Buffer.from(m.split('\r\n\r\n')[1].replace(/\r\n/g, ''), 'base64').toString() === b.telo.replace(/\n/g, '\r\n'))
+          && delMaila(m, 'text/plain') === b.telo.replace(/\n/g, '\r\n'))
+        const html = delMaila(m, 'text/html')
+        preveri(`pošta klubom: ${drzava} ${vrsta} multipart (najprej text/plain, nato HTML s povezavo in jezikom)`,
+          m.indexOf('text/plain') < m.indexOf('text/html') && /^List-Unsubscribe: <mailto:/m.test(m) &&
+            html.includes('href="https://slff.eu/club/2002?t=x-liga"') && html.includes(`lang="${b.jezik}"`) && !/<script|undefined/.test(html))
       }
     }
   }
