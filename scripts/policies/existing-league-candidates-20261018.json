@@ -42,6 +42,10 @@
       "document": "docs/viri/litva-crna-gora.md",
       "permission": "Existing public FSCG/COMET route; no explicit permission recorded. Use the existing 3-second paced adapter. Stop on withdrawal, login, challenge/CAPTCHA or HTTP 401/403/429; do not retry or bypass."
     },
+    "mlsz": {
+      "document": "docs/viri/madzarska.md",
+      "permission": "Existing public MLSZ Adatbank route; no explicit MLSZ permission recorded. Use the existing adapter, SLFF User-Agent and at least 1.5-second pacing (including shared nightly readers). Stop on withdrawal, login, challenge/CAPTCHA or HTTP 401/403/429; do not retry or bypass. Both registered candidates require their documented archive, validated current reports, goalkeeper coverage, fresh prices and future deadlines."
+    },
     "mfa": {
       "document": "docs/viri/malta.md",
       "permission": "Existing public Match Centre API route; no explicit MFA permission recorded. Courtesy contact is recommended, not a prerequisite. Use the existing 3-second paced adapter and stop on withdrawal, login, challenge/CAPTCHA or HTTP 401/403/429; do not retry or bypass."
@@ -557,6 +561,18 @@
       "slug": "mt-nl2",
       "source": "mfa",
       "source_league_code": "6234492/2027"
+    },
+    {
+      "id": 619,
+      "slug": "hu-baz-u19-2-kozep",
+      "source": "mlsz",
+      "source_league_code": "67/4/34094"
+    },
+    {
+      "id": 463,
+      "slug": "hu-to-3-nyugat",
+      "source": "mlsz",
+      "source_league_code": "67/17/34465"
     }
   ]
 }

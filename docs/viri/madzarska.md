@@ -22,6 +22,11 @@ vsa tekmovanja. Brez zaščite pred roboti, robots.txt branje dovoli
 (ada1bank: `Crawl-delay: 1`), posrednika ni treba. Beremo odkrito
 (`User-Agent: SLFF fantasy`, 1,5 s med stranmi, popolnih zapisnikov ne
 beremo znova). **Če se pojavi izziv ali CAPTCHA, ustavi — ne obhajaj.**
+Prenos `mlszFetch` zavrne 401/403/429 pred skupnimi ponovitvami, izziv ali
+stran samo s prijavo pa tudi ob HTTP 200/5xx. Tipizirana zavrnitev ne dovoli
+rezerve razporeda; bralnika kroga in tekme jo ustavita pred umikom ob
+preobremenitvi. Običajni ostanek `Too many connections` ostaja prehodna
+napaka strežnika in se nikoli ne shrani v predpomnilnik.
 
 - **Šifra lige** je `<évad>/<szervezet>/<verseny>`, npr. `67/20/33915`
   (Zala Vármegyei I. osztály 2026/27). Évad je id sezone, ne letnica, in ni
@@ -262,6 +267,15 @@ izbran po skupnih klubih 1. kroga (BLSZ 2025/26 je bila ena skupina →
 1. csoport, 2. csoport dobi 2024/25; Pest 2025/26 A–D → A, C, D, E).
 **Pest U19 B in Komárom-Esztergom U19 II. sta brez arhiva** (lanske skupine
 so porabile druge lige, KEM je imel lani eno samo U19).
+
+22. 10. 2026 sta v običajni paket obstoječih lig prijavljena samo
+`hu-baz-u19-2-kozep` (`67/4/34094`, arhiv `65/4/31796`) in
+`hu-to-3-nyugat` (`67/17/34465`, arhiv `65/17/31528`). Registracija ni vklop:
+predogled in vklop še vedno preverita natančno šifro, manjkajoče pretekle
+tekoče zapisnike, izide proti golom, cene, veljaven kader in prihodnji rok.
+Pred vklopom posebej preveri vse arhivske in tekoče napake minut ter
+aktivnega vratarja vsakega trenutnega kluba. Izjem za zgodovinske zapisnike
+ali za manjkajoči arhiv ti ligi nimata.
 
 Preverba arhivov (11.–12. 10. 2026, zadnji krog vsakega od 49 arhivov): število
 krogov se ujema s seznamom zveze, zadnji krog je odigran (Békés Észak ena
