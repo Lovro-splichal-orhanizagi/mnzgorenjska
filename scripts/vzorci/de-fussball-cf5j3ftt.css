@@ -1,0 +1,10 @@
+@font-face {
+	font-family: font-cf5j3ftt;
+	src: 
+		url('//www.fussball.de/export.fontface/-/format/woff/id/cf5j3ftt/type/font') format('woff'),
+		url('//www.fussball.de/export.fontface/-/format/ttf/id/cf5j3ftt/type/font') format('truetype');
+}
+
+.results-c-cf5j3ftt {
+	font-family: font-cf5j3ftt !important;
+}

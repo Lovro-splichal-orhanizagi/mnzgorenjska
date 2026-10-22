@@ -105,11 +105,36 @@ Neodvisna para pri 67 sta dovoljena. Dodatek ostane v dokazu, statistična
 minuta pa je omejena na 90; sintetična preverba dodatka ni zajem novega
 pristnega formata. Nove oblike zahtevajo pristne vzorce in nove regresije.
 
-Še vedno manjkajo registriran vir, varen omejen prenos in predpomnilnik
-celotnih dokazov, potrjena arhivska povezava 2025/26 za amatersko ligo,
+Še vedno manjkajo registriran vir, potrjena arhivska povezava 2025/26 za amatersko ligo,
 popoln prehod obeh sezon, trajna uvozna vezava profilnih identitet ter
 ločene preverbe vlog, cenika in vklopa. Ta ukaz ne dostopa do omrežja ali
 baze in ne aktivira nobene lige; ne dokazuje podpore 600 ligam.
+
+### Omejen zajem cele amaterske sezone
+
+`scripts/zajemi-fussball-sezono.mjs capture` najprej prebere vse oglaševane
+kroge iste lige/sezone, preveri enolične primarne tekme in skladne prestavitve,
+nato preveri odigrane zapisnike. Uporabi samo opažene javne povezave in pisave.
+Zahtevki tečejo zaporedno z vsaj šestimi sekundami med začetki, brez ponovitev
+ali preusmeritev; zavrnitev, izziv ali napaka prenosa ustavi ves zajem.
+Za `--max-requests` je obvezna meja 1–4000 (gostovani workflow največ 3000).
+`--reports all` zahteva vse odigrane zapisnike; številka izrecno omeji vzorec.
+
+```bash
+node scripts/zajemi-fussball-sezono.mjs capture --seed-url <opaženi-URL-kroga> --staffel <ID-G> --season 2026/27 --max-requests 1000 --reports all --output <nova-mapa>
+node scripts/zajemi-fussball-sezono.mjs verify <mapa>
+```
+
+Zajem ohrani izvirne dokumente s SHA-256, dnevnik zahtevkov, manifest in
+rezultat s popolnim razporedom ter ločenimi razlogi za zavrnjene zapisnike.
+Pisavo prenese šele, ko jo zahteva strogi razčlenjevalnik; nepovezane pisave
+drugih prikaznih polj ne povzročijo dodatnih zahtevkov. Vsak zahtevani ID mora
+biti prej opažen na isti strani/postavi, ponavljanje razčlenitve pa je omejeno.
+Koledarski dan je pripet ob začetku; offline preverba zahteva isto kodo in
+ponovi celoten prehod samo iz shranjenih bajtov, brez omrežnega nadomestila.
+`preveri-fussball-sezono.yml` omogoča isti javni zajem na `main`, brez skrivnosti
+ali dostopa do baze. Izhod vedno vsebuje `activationEligible:false`; ta
+zbiralnik sam ne vpiše igralcev in ne vklopi lige.
 
 ## Galicija
 
