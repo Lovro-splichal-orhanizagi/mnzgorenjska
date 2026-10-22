@@ -22,6 +22,11 @@ vsa tekmovanja. Brez zaščite pred roboti, robots.txt branje dovoli
 (ada1bank: `Crawl-delay: 1`), posrednika ni treba. Beremo odkrito
 (`User-Agent: SLFF fantasy`, 1,5 s med stranmi, popolnih zapisnikov ne
 beremo znova). **Če se pojavi izziv ali CAPTCHA, ustavi — ne obhajaj.**
+Prenos `mlszFetch` zavrne 401/403/429 pred skupnimi ponovitvami, izziv ali
+stran samo s prijavo pa tudi ob HTTP 200/5xx. Tipizirana zavrnitev ne dovoli
+rezerve razporeda; bralnika kroga in tekme jo ustavita pred umikom ob
+preobremenitvi. Običajni ostanek `Too many connections` ostaja prehodna
+napaka strežnika in se nikoli ne shrani v predpomnilnik.
 
 - **Šifra lige** je `<évad>/<szervezet>/<verseny>`, npr. `67/20/33915`
   (Zala Vármegyei I. osztály 2026/27). Évad je id sezone, ne letnica, in ni

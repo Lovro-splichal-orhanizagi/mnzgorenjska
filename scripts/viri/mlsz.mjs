@@ -36,6 +36,34 @@ const OSNOVNI = 'https://adatbank.mlsz.hu'
 // Enako kot v zapisnik.mjs: sodniški podaljšek se ne šteje (adatbank piše 91–96).
 const DOLZINA_TEKME = 90
 
+export class MlszZavrnitev extends Error {
+  constructor(message, status = null) {
+    super(message)
+    this.name = 'MlszZavrnitev'
+    this.status = status
+    this.zavrnitev = true
+  }
+}
+export const jeIzziv = html => /<title>\s*(?:Just a moment|Attention Required|Access denied)|cf_chl_opt|cf-turnstile|challenge-platform\/h\/|class=["'][^"']*(?:g-recaptcha|h-captcha)|captcha-delivery/i.test(String(html ?? ''))
+export const jePrijava = html => /<form\b/i.test(String(html ?? '')) && /<input\b[^>]*type\s*=\s*["']password["']/i.test(String(html ?? '')) && !jeStranKroga(html) && !jeStranTekme(html)
+function preveriZavrnitev(html, url) {
+  if (jeIzziv(html) || jePrijava(html)) throw new MlszZavrnitev(`mlsz: ${url} vrne izziv ali prijavo — uvoz ustavljen`)
+  return html
+}
+export async function mlszFetch(url, init) {
+  const response = await fetch(url, init)
+  if ([401, 403, 429].includes(response.status)) {
+    try { await response.body?.cancel() } catch { /* refusal remains final */ }
+    throw new MlszZavrnitev(`mlsz: HTTP ${response.status} — uvoz ustavljen`, response.status)
+  }
+  // Check challenge bodies before the shared layer can retry an HTTP 5xx.
+  preveriZavrnitev(await response.clone().text(), url)
+  return response
+}
+async function prenesiVarno(prenesi, url, ...args) {
+  return preveriZavrnitev(await prenesi(url, ...args), url)
+}
+
 // Id sezone (évad) → sezona, prepisano iz izbirnika `Évad` na adatbanku
 // (10/2026). Zapisnik in stran kroga sezono povesta sama (izbrana možnost);
 // ta slovar je le rezerva.
@@ -488,11 +516,11 @@ export const jeStranKroga = (html) => String(html ?? '').includes('id="match_pan
 export const UMIK_MS = [20_000, 60_000, 180_000]
 
 export async function stranKroga(koda, krog, prenesi, sveze, umik = UMIK_MS) {
-  let html = await prenesi(naslovKroga(koda, krog), imeKroga(koda, krog), sveze)
+  let html = await prenesiVarno(prenesi, naslovKroga(koda, krog), imeKroga(koda, krog), sveze)
   for (const ms of umik) {
     if (jeStranKroga(html)) return html
     await new Promise((r) => setTimeout(r, ms))
-    html = await prenesi(naslovKroga(koda, krog), imeKroga(koda, krog), true)
+    html = await prenesiVarno(prenesi, naslovKroga(koda, krog), imeKroga(koda, krog), true)
   }
   if (jeStranKroga(html)) return html
   throw new Error(`mlsz: ${koda} krog ${krog} ni stran kroga (${String(html ?? '').length} B: ${String(html ?? '').slice(0, 60)}) — uvoz ustavljen`)
@@ -509,11 +537,11 @@ export const jeStranTekme = (html) => String(html ?? '').includes('id="left_team
  * tekmo preskočimo z opozorilom (drugi zapisniki lige se uvozijo).
  */
 export async function stranTekme(url, ime, prenesi, sveze = false, umik = UMIK_MS) {
-  let html = await prenesi(url, ime, sveze)
+  let html = await prenesiVarno(prenesi, url, ime, sveze)
   for (const ms of umik) {
     if (jeStranTekme(html)) return html
     await new Promise((r) => setTimeout(r, ms))
-    html = await prenesi(url, ime, true)
+    html = await prenesiVarno(prenesi, url, ime, true)
   }
   if (jeStranTekme(html)) return html
   console.warn(`\n  mlsz: ${url} ni stran tekme (${String(html ?? '').length} B: ${String(html ?? '').slice(0, 60)}) — tekma preskočena, uvoz jo prebere naslednjič`)
@@ -543,12 +571,15 @@ const vir = {
   glave: { 'User-Agent': 'SLFF fantasy (https://slff.eu)' },
   // ada1bank ima v robots.txt Crawl-delay: 1; mi čakamo 1,5 s.
   premorMs: 1500,
+  fetch: mlszFetch,
+  jeIzziv: html => jeIzziv(html) || jePrijava(html),
+  zavrnitev: (message, status) => new MlszZavrnitev(message, status),
   imaRegistracije: false,
 
   naslovRazporeda: (koda) => naslovKroga(koda, 1),
   // V predpomnilnik le prava stran kroga ali tekme, nikoli ostanek
   // preobremenjenega ada1bank (glej `jeStranKroga`, `jeStranTekme`).
-  zaPredpomnilnik: (html) => jeStranKroga(html) || jeStranTekme(html),
+  zaPredpomnilnik: (html) => !jeIzziv(html) && !jePrijava(html) && (jeStranKroga(html) || jeStranTekme(html)),
   // Zapisnik potrebuje krog; brez njega adatbank vrne tekmo po kratkem naslovu.
   naslovZapisnika: (koda, sifra, krog) => (krog ? naslovTekme(koda, krog, sifra) : `${OSNOVNI}/match/${sifra}`),
 
