@@ -263,6 +263,15 @@ izbran po skupnih klubih 1. kroga (BLSZ 2025/26 je bila ena skupina →
 **Pest U19 B in Komárom-Esztergom U19 II. sta brez arhiva** (lanske skupine
 so porabile druge lige, KEM je imel lani eno samo U19).
 
+22. 10. 2026 sta v običajni paket obstoječih lig prijavljena samo
+`hu-baz-u19-2-kozep` (`67/4/34094`, arhiv `65/4/31796`) in
+`hu-to-3-nyugat` (`67/17/34465`, arhiv `65/17/31528`). Registracija ni vklop:
+predogled in vklop še vedno preverita natančno šifro, manjkajoče pretekle
+tekoče zapisnike, izide proti golom, cene, veljaven kader in prihodnji rok.
+Pred vklopom posebej preveri vse arhivske in tekoče napake minut ter
+aktivnega vratarja vsakega trenutnega kluba. Izjem za zgodovinske zapisnike
+ali za manjkajoči arhiv ti ligi nimata.
+
 Preverba arhivov (11.–12. 10. 2026, zadnji krog vsakega od 49 arhivov): število
 krogov se ujema s seznamom zveze, zadnji krog je odigran (Békés Észak ena
 neodigrana tekma); prvi zapisnik z izidom se razčleni pri 47 (goli = izid,

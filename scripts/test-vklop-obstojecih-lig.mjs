@@ -62,6 +62,25 @@ test('Danish third division registration binds the reviewed production tuple',()
   const dk=validateSelection(registry,['dk-3-division'])
   assert.deepEqual(dk,[{id:1051,slug:'dk-3-division',source:'dbu',source_league_code:'508657'}])
 })
+test('Hungarian admission stays explicit and holds on missing past reports',async()=>{
+  const expected=[
+    {id:619,slug:'hu-baz-u19-2-kozep',source:'mlsz',source_league_code:'67/4/34094'},
+    {id:463,slug:'hu-to-3-nyugat',source:'mlsz',source_league_code:'67/17/34465'},
+  ]
+  const candidates=validateSelection(registry,expected.map(c=>c.slug))
+  assert.deepEqual(candidates,expected)
+  assert.deepEqual(registry.candidates.filter(c=>c.source==='mlsz'),expected)
+  assert.throws(()=>validateSelection(registry,['hu-bp-u19-1']))
+  assert.equal(registry.source_contracts.mlsz.document,'docs/viri/madzarska.md')
+  assert.match(registry.source_contracts.mlsz.permission,/no explicit.*permission/i)
+  assert.match(registry.source_contracts.mlsz.permission,/stop/i)
+  const {transport,calls}=fixture({matches:async()=>[
+    {id:11,round_id:1,played_on:'2026-10-10',imported_at:null,kontumacija:false,vir_brez_izida:false},
+  ]})
+  const results=await runBatch({candidates,transport,apply:true,now})
+  assert.ok(results.every(r=>r.status==='HOLD'&&r.reason.includes('Past current fixtures')))
+  assert.deepEqual(calls,[])
+})
 test('English Streamline candidates bind all reviewed tuples and reject unknown leagues',()=>{
   const expected=[
     [977,'gb-isthmian-north','isthmian','isthmian/67d7d0c1749090308acc1021/2026-27'],
