@@ -327,6 +327,14 @@
   z rokom naslednjega kroga; brez nje mail lige ne imenuje. Najprej najnovejše
   registracije. Teče vsako uro v `opozorila.yml` (`VRSTA=brez-ekipe`, 60 na
   zagon); preizkus `npm run preizkus-brez-ekipe`
+- `kandidati_za_pivo_7dni(najvec)` → en sproščen mail "SLFF je brezplačen …
+  plačaš eno pivo?" (`/pivo?src=mail-7dni`) teden po prvi nehišni ekipi
+  (okno 7–10 dni), enkrat na človeka (`email_log` vrsta `pivo-7dni`,
+  neuspel največ trikrat, en poskus na dan). Ne dobi ga, kdor je odjavljen
+  (`brez_opomnikov`) ali igra le v mladinskih ligah (`je_mladinski_slug`,
+  mladim brez piva); liga in jezik sta od najstarejše nemladinske ekipe. Le
+  pošta, brez pusha (povezava na pivo v aplikaciji ni dovoljena). Teče v
+  `pivo-7dni.yml` (`VRSTA=pivo-7dni`), urnik je ob uvedbi izklopljen
 - `kandidati_za_push_opomnik(liga)` → samo push "še nimaš ekipe": kdor ima
   napravo in v ligi nima ekipe (ali ima prazno; brez ekipe šteje domača liga
   kot pri opomniku), 24 ur pred rokom, enkrat na krog (`email_log` vrsta
