@@ -8,11 +8,11 @@ import {parserSha256}from'./vklopi-dfb-regijo.mjs'
 import {receiptSha256}from'./viri/dfb-calendar.mjs'
 import {captureWorkflow,replayWorkflow,captureStep,policyReplayStep}from'./dfb-replay-proof.mjs'
 export function nordWestPolicyFixture(region='nord'){
- const slug=`de-regionalliga-${region}`,scope=dfbHistoricalScope(slug),p=getHistoricalStatisticsPolicy(slug),future=new Date(Date.now()+3*86400000).toISOString().slice(0,10),competition={slug,source:'dfb',source_policy:p.id,firstFantasyPlayedOn:future},binding=dfbPolicyBinding(competition),source=JSON.parse(readFileSync(new URL('./vzorci/de-dfb-historical-calendars.json',import.meta.url))).seasons.find(s=>s.region===region)
+ const slug=`de-regionalliga-${region}`,scope=dfbHistoricalScope(slug),p=getHistoricalStatisticsPolicy(slug),future=region==='west'?'2026-10-23':new Date(Date.now()+3*86400000).toISOString().slice(0,10),competition={slug,source:'dfb',source_policy:p.id,firstFantasyPlayedOn:future},binding=dfbPolicyBinding(competition),source=JSON.parse(readFileSync(new URL('./vzorci/de-dfb-historical-calendars.json',import.meta.url))).seasons.find(s=>s.region===region)
  const documents=new Map(),nepopolni=[]
- for(const e of p.entries){documents.set(e.sourceUrl,readFileSync(new URL(scope.documents[e.sourceMatchId].file,new URL('./viri/',import.meta.url)),'utf8'));nepopolni.push({id:'de-dfb-'+e.sourceMatchId,url:e.sourceUrl,status:'DFB_INVALID_REPORT',razlog:scope.documents[e.sourceMatchId].strictDiagnostic})}
+ for(const e of p.entries.filter(e=>(e.season??p.season)==='2025/26')){documents.set(e.sourceUrl,readFileSync(new URL(scope.documents[e.sourceMatchId].file,new URL('./viri/',import.meta.url)),'utf8'));nepopolni.push({id:'de-dfb-'+e.sourceMatchId,url:e.sourceUrl,status:'DFB_INVALID_REPORT',razlog:scope.documents[e.sourceMatchId].strictDiagnostic})}
  const archiveSchedule=Array.from({length:34},(_,i)=>({stevilka:i+1,tekme:source.fixtures.filter(f=>f.round===i+1).map(f=>({id:f.id.slice(7),domaci:f.home,gostje:f.away,domaciId:f.homeSourceClubId,gostjeId:f.awaySourceClubId,datum:f.date,ura:f.time,izid:{domaci:f.homeGoals,gostje:f.awayGoals},url:f.url,odigrana:true}))}))
- const classified=collectDfbHistorical({slug,sezona:'2025/26',razpored:archiveSchedule,zapisniki:source.fixtures.filter(f=>!p.entries.some(e=>'de-dfb-'+e.sourceMatchId===f.id)),nepopolni,historicalPolicy:{competition,documents}})
+ const classified=collectDfbHistorical({slug,sezona:'2025/26',razpored:archiveSchedule,zapisniki:source.fixtures.filter(f=>!p.entries.some(e=>(e.season??p.season)==='2025/26'&&'de-dfb-'+e.sourceMatchId===f.id)),nepopolni,historicalPolicy:{competition,documents}})
  const name=(club,i)=>`${club} TEST ONLY Player ${i}`
  const normal=(f,played)=>{
   const appearances=[],starters=[],goals=[],scores=[0,0]
@@ -52,12 +52,38 @@ export function nordWestPolicyFixture(region='nord'){
    Object.assign(f,{id:p.id,date:p.date,url:p.url,postponed:true})
   }
  }
- const current=currentSchedule.map(f=>{
-  const date=f.postponed?f.date:f.round<=2?new Date(Date.now()-(3-f.round)*86400000).toISOString().slice(0,10):new Date(Date.parse(future)+(f.round-3)*5*86400000).toISOString().slice(0,10)
-  const url=f.postponed?f.url:`https://datencenter.dfb.de/datencenter/regionalliga-${region}/2026-2027/${f.round}-spieltag/TEST-ONLY-${f.id}`
-  return normal({...f,id:'de-dfb-'+f.id,date,time:'14:00',homeGoals:0,awayGoals:0,url},f.round<=2)
+ if(region==='west'){
+  const remap=new Map([['club-6',['SG Wattenscheid 09','sg-wattenscheid-09-13217']],['club-7',['FC Schalke 04 II','fc-schalke-04-ii']],['club-16',['1. FC Köln II','1-fc-koeln-ii']]])
+  for(const f of currentSchedule)for(const side of ['home','away'])if(remap.has(f[`${side}SourceClubId`]))[f[side],f[`${side}SourceClubId`]]=remap.get(f[`${side}SourceClubId`])
+ }
+ const westEntries=region==='west'?p.entries.filter(e=>e.season==='2026/27'):[]
+ const westByRound=new Map(westEntries.map(e=>[e.sourceRound,e])),foundWest=new Set()
+ for(const f of currentSchedule){const e=westByRound.get(f.round);if(e&&f.homeSourceClubId===e.homeSourceClubId&&f.awaySourceClubId===e.awaySourceClubId){Object.assign(f,{id:e.sourceMatchId,homeSourceClubId:e.homeSourceClubId,awaySourceClubId:e.awaySourceClubId,home:scope.clubNames[e.homeSourceClubId],away:scope.clubNames[e.awaySourceClubId],date:e.playedOn,time:scope.documents[e.sourceMatchId].time,url:e.sourceUrl,homeGoals:e.observedHomeScore,awayGoals:e.observedAwayScore});foundWest.add(e.sourceMatchId)}}
+ if(foundWest.size!==westEntries.length)throw Error(`West test calendar is missing exact exception identities ${westEntries.filter(e=>!foundWest.has(e.sourceMatchId)).map(e=>e.sourceMatchId).join(',')}`)
+ if(region==='west'){
+  const postponed=currentSchedule.find(f=>f.round===13&&!westByRound.has(f.round));if(!postponed)throw Error('West test calendar requires one prelaunch postponed fixture')
+  postponed.postponed=true
+ }
+ const dayForRound=r=>region==='west'?new Date(Date.UTC(2026,6,25+(r-1)*7)).toISOString().slice(0,10):null
+ const currentScheduleReady=currentSchedule.map(f=>{
+  const date=f.date??(f.round<14&&region==='west'?dayForRound(f.round):new Date(Date.parse(future)+(f.round-(region==='west'?14:3))*5*86400000).toISOString().slice(0,10))
+  const url=f.url??`https://datencenter.dfb.de/datencenter/regionalliga-${region}/2026-2027/${f.round}-spieltag/TEST-ONLY-${f.id}`
+  return {...f,date,time:f.time??'14:00',url}
+ })
+ const currentHistoricalPolicy=region==='west'?(()=>{
+  const currentDocuments=new Map(),currentDefects=[]
+  for(const e of westEntries){currentDocuments.set(e.sourceUrl,readFileSync(new URL(scope.documents[e.sourceMatchId].file,new URL('./viri/',import.meta.url)),'utf8'));currentDefects.push({id:`de-dfb-${e.sourceMatchId}`,url:e.sourceUrl,status:'DFB_INVALID_REPORT',razlog:scope.documents[e.sourceMatchId].strictDiagnostic})}
+  const schedule=Array.from({length:34},(_,i)=>({stevilka:i+1,tekme:currentScheduleReady.filter(f=>f.round===i+1).map(f=>({id:f.id,dfbId:f.id,domaci:f.home,gostje:f.away,domaciId:f.homeSourceClubId,gostjeId:f.awaySourceClubId,datum:f.date,ura:f.time,izid:{domaci:f.homeGoals,gostje:f.awayGoals},url:f.url,odigrana:f.round<=13&&!f.postponed}))}))
+  const reports=westEntries.map(e=>({id:`de-dfb-${e.sourceMatchId}`}))
+  const currentClassified=collectDfbHistorical({slug,sezona:'2026/27',razpored:schedule,zapisniki:[],nepopolni:currentDefects,historicalPolicy:{competition,documents:currentDocuments}})
+  return {schedule,currentDocuments,currentDefects,currentClassified}
+ })():null
+ const current=currentScheduleReady.map(f=>{
+  const played=region==='west'?f.round<=13&&!f.postponed:f.round<=2
+  const c=currentHistoricalPolicy?.currentClassified.get(`de-dfb-${f.id}`)
+  return c?unavailableDfbFixture({datum:f.date,ura:f.time,domaci:f.home,gostje:f.away,url:f.url},f.round,c):normal({id:`de-dfb-${f.id}`,round:f.round,date:f.date,time:f.time,home:f.home,away:f.away,homeSourceClubId:f.homeSourceClubId,awaySourceClubId:f.awaySourceClubId,homeGoals:f.homeGoals??0,awayGoals:f.awayGoals??0,url:f.url,calendarEvidence:f.calendarEvidence},played)
  })
  const at=new Date().toISOString(),sourceCommit='a'.repeat(40),parser=parserSha256()
- const seasons=[archive,current].map((fixtures,i)=>{const season=i?'2026/27':'2025/26',s={season,code:`regionalliga-${region}/${i?'2026-2027':'2025-2026'}`,capturedAt:at,runId:String(500+i),jobId:String(600+i),documentsSha256:'c'.repeat(64),fixtures,statisticsCoverage:dfbStatisticsCoverage(fixtures),evidenceMode:'policy-replay'};s.lineage={capture:{runId:String(100+i),jobId:String(200+i),commit:'b'.repeat(40),workflow:captureWorkflow,step:captureStep(season),conclusion:i?'success':'failure',workflowSha256:'c'.repeat(64),parserSha256:'d'.repeat(64),artifactId:String(300+i),artifactDigest:'sha256:'+'e'.repeat(64),indexSha256:'f'.repeat(64),documentsSha256:s.documentsSha256,capturedAt:at},replay:{runId:s.runId,jobId:s.jobId,commit:sourceCommit,workflow:replayWorkflow,step:policyReplayStep,workflowSha256:'1'.repeat(64),parserSha256:parser,artifactId:String(700+i),artifactDigest:'sha256:'+'2'.repeat(64),generatedAt:at,statisticsPolicyId:binding.id,statisticsPolicySha256:binding.sha256,firstFantasyPlayedOn:binding.firstFantasyPlayedOn}};return s})
+ const seasons=[archive,current].map((fixtures,i)=>{const season=i?'2026/27':'2025/26',s={season,code:`regionalliga-${region}/${i?'2026-2027':'2025-2026'}`,capturedAt:at,runId:String(500+i),jobId:String(600+i),documentsSha256:'c'.repeat(64),fixtures,statisticsCoverage:dfbStatisticsCoverage(fixtures),evidenceMode:'policy-replay'};s.lineage={capture:{runId:String(100+i),jobId:String(200+i),commit:'b'.repeat(40),workflow:captureWorkflow,step:captureStep(season),conclusion:i?(region==='west'?'failure':'success'):'failure',workflowSha256:'c'.repeat(64),parserSha256:'d'.repeat(64),artifactId:String(300+i),artifactDigest:'sha256:'+'e'.repeat(64),indexSha256:'f'.repeat(64),documentsSha256:s.documentsSha256,capturedAt:at},replay:{runId:s.runId,jobId:s.jobId,commit:sourceCommit,workflow:replayWorkflow,step:policyReplayStep,workflowSha256:'1'.repeat(64),parserSha256:parser,artifactId:String(700+i),artifactDigest:'sha256:'+'2'.repeat(64),generatedAt:at,statisticsPolicyId:binding.id,statisticsPolicySha256:binding.sha256,firstFantasyPlayedOn:binding.firstFantasyPlayedOn}};return s})
  return{version:4,provenanceVersion:2,calendarReceiptSha256:receiptSha256,slug,sourceCommit,parserSha256:parser,statisticsPolicy:binding,seasons}
 }

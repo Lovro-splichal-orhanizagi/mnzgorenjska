@@ -230,13 +230,13 @@
       ]
     },
     {
-      "id": "de-dfb-west-2025-historical-unavailable-v1",
+      "id": "de-dfb-west-prelaunch-unavailable-v2",
       "provider": "dfb",
-      "sourcePolicy": "de-dfb-west-2025-historical-unavailable-v1",
+      "sourcePolicy": "de-dfb-west-prelaunch-unavailable-v2",
       "competitionSlug": "de-regionalliga-west",
       "season": "2025/26",
-      "recordedAt": "2026-10-18T19:43:41.831407Z",
-      "approvalReference": "User authorized reviewed German historical exclusions; root task relay 2026-10-18. Recording time is not an unavailable user approval send time.",
+      "recordedAt": "2026-10-22T18:36:33.355924+00:00",
+      "approvalReference": "Owner authorized reviewed German prelaunch exclusions; root task relay 2026-10-22. Recording time is evidence review time, not an unavailable user approval send time.",
       "entries": [
         {
           "sourceMatchId": "2402287",
@@ -349,47 +349,36 @@
           "observedHomeScore": 0,
           "observedAwayScore": 1,
           "reasonCode": "missing_lineups_and_individual_statistics"
-        }
-      ]
-    },
-    {
-      "id": "mt-premier-reviewed-history-2026-10-20-v1",
-      "provider": "mfa",
-      "sourcePolicy": "mt-mfa-reviewed-history-v1",
-      "competitionSlug": "mt-premier",
-      "season": "2026/27",
-      "recordedAt": "2026-10-20T21:51:20.686509+00:00",
-      "approvalReference": "user reply Allow both reviewed exclusions to call_ef96603eabce40598063979c62d0a2dd",
-      "entries": [
-        {
-          "sourceMatchId": "52581524",
-          "sourceCompetitionId": "52561747",
-          "sourcePhase": null,
-          "sourceRound": 28,
-          "season": "2025/26",
-          "playedOn": "2026-04-11",
-          "homeSourceClubId": "39611",
-          "awaySourceClubId": "39606",
-          "sourceUrl": "https://matchcentre.mfa.com.mt/match/52581524",
-          "rawSha256": "a81da11a4fdad7c6cca90acc28e02248566ae044653b905435acb2f0fbbaa949",
-          "observedHomeScore": 2,
-          "observedAwayScore": 2,
-          "reasonCode": "missing_dismissal_clock"
         },
         {
-          "sourceMatchId": "53142122",
-          "sourceCompetitionId": "53109748",
-          "sourcePhase": null,
-          "sourceRound": 1,
           "season": "2026/27",
-          "playedOn": "2026-08-17",
-          "homeSourceClubId": "39636",
-          "awaySourceClubId": "39615",
-          "sourceUrl": "https://matchcentre.mfa.com.mt/match/53142122",
-          "rawSha256": "dc0d717b5be05389e72f081df04bac8ee93fe93384ff31f51817d6faaf0b5399",
-          "observedHomeScore": 4,
+          "sourceMatchId": "2425409",
+          "sourceCompetitionId": "regionalliga-west/2026-2027",
+          "sourcePhase": null,
+          "sourceRound": 4,
+          "playedOn": "2026-08-21",
+          "homeSourceClubId": "sg-wattenscheid-09-13217",
+          "awaySourceClubId": "fc-schalke-04-ii",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/4-spieltag/sg-wattenscheid-09-fc-schalke-04-ii-2425409",
+          "rawSha256": "d53f88bed78e469a53896ca6646d6e8c2cc4a47e0516e31bd2e40341b104f573",
+          "observedHomeScore": 3,
           "observedAwayScore": 0,
-          "reasonCode": "missing_dismissal_clock"
+          "reasonCode": "incomplete_starting_lineup"
+        },
+        {
+          "season": "2026/27",
+          "sourceMatchId": "2425474",
+          "sourceCompetitionId": "regionalliga-west/2026-2027",
+          "sourcePhase": null,
+          "sourceRound": 11,
+          "playedOn": "2026-10-20",
+          "homeSourceClubId": "fc-schalke-04-ii",
+          "awaySourceClubId": "1-fc-koeln-ii",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/11-spieltag/fc-schalke-04-ii-1-fc-koeln-ii-2425474",
+          "rawSha256": "9cefa3a5cb4e70b919fca7ffc4b9ad95544e330b6443efc5bac6dab7d609e8a1",
+          "observedHomeScore": 1,
+          "observedAwayScore": 3,
+          "reasonCode": "missing_lineups_and_individual_statistics"
         }
       ]
     },
@@ -615,29 +604,43 @@
       ]
     },
     {
-      "id": "hu-mlsz-tolna-reviewed-history-20261022-v1",
-      "provider": "mlsz",
-      "sourcePolicy": "hu-mlsz-reviewed-history-v1",
-      "competitionSlug": "hu-to-3-nyugat",
-      "competitionId": 463,
-      "sourceLeagueCode": "67/17/34465",
-      "season": "2025/26",
-      "recordedAt": "2026-10-22T10:47:18.409587+00:00",
-      "approvalReference": "User instruction 'you can enable hungary' on 22 October 2026, following the exact-three Hungarian historical-exclusion proposal; recording time, user send time unavailable.",
+      "id": "mt-premier-reviewed-history-2026-10-20-v1",
+      "provider": "mfa",
+      "sourcePolicy": "mt-mfa-reviewed-history-v1",
+      "competitionSlug": "mt-premier",
+      "season": "2026/27",
+      "recordedAt": "2026-10-20T21:51:20.686509+00:00",
+      "approvalReference": "user reply Allow both reviewed exclusions to call_ef96603eabce40598063979c62d0a2dd",
       "entries": [
         {
-          "sourceMatchId": "2175016",
-          "sourceCompetitionId": "65/17/31528",
+          "sourceMatchId": "52581524",
+          "sourceCompetitionId": "52561747",
           "sourcePhase": null,
-          "sourceRound": 12,
-          "playedOn": "2026-03-21",
-          "homeSourceClubId": "318500",
-          "awaySourceClubId": "318499",
-          "sourceUrl": "https://adatbank.mlsz.hu/match/65/17/31528/12/2175016.html",
-          "rawSha256": "ca3ddd1393b8ec598e9e343d0f4eea4f8bb3c56e6e35fc26d8b4571bfdcfd4f5",
-          "observedHomeScore": 3,
+          "sourceRound": 28,
+          "season": "2025/26",
+          "playedOn": "2026-04-11",
+          "homeSourceClubId": "39611",
+          "awaySourceClubId": "39606",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/52581524",
+          "rawSha256": "a81da11a4fdad7c6cca90acc28e02248566ae044653b905435acb2f0fbbaa949",
+          "observedHomeScore": 2,
+          "observedAwayScore": 2,
+          "reasonCode": "missing_dismissal_clock"
+        },
+        {
+          "sourceMatchId": "53142122",
+          "sourceCompetitionId": "53109748",
+          "sourcePhase": null,
+          "sourceRound": 1,
+          "season": "2026/27",
+          "playedOn": "2026-08-17",
+          "homeSourceClubId": "39636",
+          "awaySourceClubId": "39615",
+          "sourceUrl": "https://matchcentre.mfa.com.mt/match/53142122",
+          "rawSha256": "dc0d717b5be05389e72f081df04bac8ee93fe93384ff31f51817d6faaf0b5399",
+          "observedHomeScore": 4,
           "observedAwayScore": 0,
-          "reasonCode": "score_goal_events_disagree"
+          "reasonCode": "missing_dismissal_clock"
         }
       ]
     },
@@ -676,6 +679,33 @@
           "awaySourceClubId": "310339",
           "sourceUrl": "https://adatbank.mlsz.hu/match/65/4/31796/11/2078437.html",
           "rawSha256": "0413bbafb89880a00e14f4adaeb57932ca764b7d60145adb210b0bc8affdc2e8",
+          "observedHomeScore": 3,
+          "observedAwayScore": 0,
+          "reasonCode": "score_goal_events_disagree"
+        }
+      ]
+    },
+    {
+      "id": "hu-mlsz-tolna-reviewed-history-20261022-v1",
+      "provider": "mlsz",
+      "sourcePolicy": "hu-mlsz-reviewed-history-v1",
+      "competitionSlug": "hu-to-3-nyugat",
+      "competitionId": 463,
+      "sourceLeagueCode": "67/17/34465",
+      "season": "2025/26",
+      "recordedAt": "2026-10-22T10:47:18.409587+00:00",
+      "approvalReference": "User instruction 'you can enable hungary' on 22 October 2026, following the exact-three Hungarian historical-exclusion proposal; recording time, user send time unavailable.",
+      "entries": [
+        {
+          "sourceMatchId": "2175016",
+          "sourceCompetitionId": "65/17/31528",
+          "sourcePhase": null,
+          "sourceRound": 12,
+          "playedOn": "2026-03-21",
+          "homeSourceClubId": "318500",
+          "awaySourceClubId": "318499",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/17/31528/12/2175016.html",
+          "rawSha256": "ca3ddd1393b8ec598e9e343d0f4eea4f8bb3c56e6e35fc26d8b4571bfdcfd4f5",
           "observedHomeScore": 3,
           "observedAwayScore": 0,
           "reasonCode": "score_goal_events_disagree"

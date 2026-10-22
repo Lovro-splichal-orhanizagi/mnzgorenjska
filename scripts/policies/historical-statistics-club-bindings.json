@@ -860,6 +860,59 @@
           "rawSha256": "0413bbafb89880a00e14f4adaeb57932ca764b7d60145adb210b0bc8affdc2e8"
         }
       ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "sg-wattenscheid-09-13217",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "SG Wattenscheid 09"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2425409",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/4-spieltag/sg-wattenscheid-09-fc-schalke-04-ii-2425409",
+          "rawSha256": "d53f88bed78e469a53896ca6646d6e8c2cc4a47e0516e31bd2e40341b104f573"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "fc-schalke-04-ii",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "FC Schalke 04 II"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2425409",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/4-spieltag/sg-wattenscheid-09-fc-schalke-04-ii-2425409",
+          "rawSha256": "d53f88bed78e469a53896ca6646d6e8c2cc4a47e0516e31bd2e40341b104f573"
+        },
+        {
+          "sourceMatchId": "2425474",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/11-spieltag/fc-schalke-04-ii-1-fc-koeln-ii-2425474",
+          "rawSha256": "9cefa3a5cb4e70b919fca7ffc4b9ad95544e330b6443efc5bac6dab7d609e8a1"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "1-fc-koeln-ii",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "1. FC Köln II"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2425474",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/11-spieltag/fc-schalke-04-ii-1-fc-koeln-ii-2425474",
+          "rawSha256": "9cefa3a5cb4e70b919fca7ffc4b9ad95544e330b6443efc5bac6dab7d609e8a1"
+        }
+      ]
     }
   ]
 }

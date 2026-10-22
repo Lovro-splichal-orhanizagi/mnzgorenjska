@@ -3,7 +3,10 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 
 const MFA_POLICY_IDS = ['mt-premier-reviewed-history-2026-10-20-v1','mt-challenge-reviewed-history-2026-10-21-v1','mt-nl2-reviewed-history-2026-10-21-v1','mt-nl1-reviewed-history-2026-10-21-v1']
-const mfaEntrySeason = (policy,entry) => MFA_POLICY_IDS.includes(policy.id) ? entry.season : policy.season
+const WEST_V2_POLICY_ID = 'de-dfb-west-prelaunch-unavailable-v2'
+const WEST_V2_CURRENT_IDS = new Set(['2425409','2425474'])
+const exactWestV2 = policy => policy?.id === WEST_V2_POLICY_ID && policy.provider === 'dfb' && policy.competitionSlug === 'de-regionalliga-west' && policy.sourcePolicy === WEST_V2_POLICY_ID && policy.season === '2025/26'
+const entrySeason = (policy,entry) => MFA_POLICY_IDS.includes(policy.id) || (exactWestV2(policy) && WEST_V2_CURRENT_IDS.has(entry.sourceMatchId)) ? entry.season : policy.season
 const exactMfaTuple = competition => (competition?.id===971 && competition?.slug==='mt-premier' && competition?.source_league_code==='58539/2027') || (competition?.id===972 && competition?.slug==='mt-challenge' && competition?.source_league_code==='2601248/2027') || (competition?.id===973 && competition?.slug==='mt-nl1' && competition?.source_league_code==='2601267/2027') || (competition?.id===974 && competition?.slug==='mt-nl2' && competition?.source_league_code==='6234492/2027')
 const SHA256 = /^[a-f0-9]{64}$/
 const text = value => typeof value === 'string' && value.trim().length > 0
@@ -38,7 +41,10 @@ export function validateHistoricalStatisticsRegistry(registry) {
     if ('approvedAt' in policy) fail('policy must record evidence time, not an unknown approval send time')
     if (!Array.isArray(policy.entries) || !policy.entries.length) fail('empty policy entries')
     for (const entry of policy.entries) {
-      if ('season' in entry && !(MFA_POLICY_IDS.includes(policy.id) && policy.provider === 'mfa' && ((policy.competitionSlug === 'mt-premier' && policy.sourcePolicy === 'mt-mfa-reviewed-history-v1') || (policy.competitionSlug === 'mt-challenge' && policy.sourcePolicy === 'mt-mfa-challenge-reviewed-history-v1') || (policy.competitionSlug === 'mt-nl1' && policy.sourcePolicy === 'mt-mfa-nl1-reviewed-history-v1') || (policy.competitionSlug === 'mt-nl2' && policy.sourcePolicy === 'mt-mfa-nl2-reviewed-history-v1')) && /^\d{4}\/\d{2}$/.test(entry.season))) fail('unsupported entry season override')
+      const exactMfaOverride = MFA_POLICY_IDS.includes(policy.id) && policy.provider === 'mfa' && ((policy.competitionSlug === 'mt-premier' && policy.sourcePolicy === 'mt-mfa-reviewed-history-v1') || (policy.competitionSlug === 'mt-challenge' && policy.sourcePolicy === 'mt-mfa-challenge-reviewed-history-v1') || (policy.competitionSlug === 'mt-nl1' && policy.sourcePolicy === 'mt-mfa-nl1-reviewed-history-v1') || (policy.competitionSlug === 'mt-nl2' && policy.sourcePolicy === 'mt-mfa-nl2-reviewed-history-v1')) && /^\d{4}\/\d{2}$/.test(entry.season)
+      const exactWestOverride = exactWestV2(policy) && WEST_V2_CURRENT_IDS.has(entry.sourceMatchId) && entry.season === '2026/27'
+      if ('season' in entry && !(exactMfaOverride || exactWestOverride)) fail('unsupported entry season override')
+      if (exactWestV2(policy) && WEST_V2_CURRENT_IDS.has(entry.sourceMatchId) && entry.season !== '2026/27') fail('unsupported West current entry season')
       if (policy.provider === 'mfa' && (!MFA_POLICY_IDS.includes(policy.id) || !['2025/26','2026/27'].includes(entry.season))) fail('unsupported MFA entry season')
       for (const field of ['sourceMatchId', 'sourceCompetitionId', 'homeSourceClubId', 'awaySourceClubId', 'sourceUrl', 'reasonCode']) if (!text(entry?.[field])) fail(`invalid entry ${field}`)
       if (policy.provider === 'fcf') for (const field of ['homeSourceCategoryId', 'awaySourceCategoryId']) if (!text(entry[field])) fail(`invalid entry ${field}`)
@@ -101,7 +107,7 @@ export function classifyHistoricalStatistics({ competition, fixture, rawSha256, 
   if (!exception) return { kind: 'normal' }
   const identityFields = reviewed.provider === 'fcf' ? [...IDENTITY_FIELDS, 'homeSourceCategoryId', 'awaySourceCategoryId'] : IDENTITY_FIELDS
   for (const field of identityFields) if (fixture[field] !== exception[field]) throw new Error(`historical fixture identity differs: ${field}`)
-  if (fixture.season !== mfaEntrySeason(reviewed,exception)) throw new Error('historical fixture identity differs: season')
+  if (fixture.season !== entrySeason(reviewed,exception)) throw new Error('historical fixture identity differs: season')
   if (!SHA256.test(rawSha256 ?? '') || rawSha256 !== exception.rawSha256) throw new Error('historical raw SHA256 differs from approved packet')
   if (!dateOnly(competition.firstFantasyPlayedOn) || exception.playedOn >= competition.firstFantasyPlayedOn) throw new Error('historical policy: exception must be strictly prelaunch; valid first fantasy date required')
   return { kind: 'unavailable_historical', exception, policySha256: historicalStatisticsPolicySha256(reviewed) }
@@ -131,7 +137,7 @@ export function validateInstalledHistoricalStatisticsMarkers({competition,bindin
     const expectedReportID=policy.provider==='dfb'?`de-dfb-${entry.sourceMatchId}`:policy.provider==='fcf'?`es${entry.sourceMatchId}`:policy.provider==='mfa'?`mt${entry.sourceMatchId}`:entry.sourceMatchId
     if(marker.reportId!==expectedReportID || marker.policyId!==policy.id || marker.policySha256!==sha || marker.rawSha256!==entry.rawSha256)fail('marker report/policy/raw binding differs')
     const {rawSha256,reasonCode,...identity}=entry
-    const fixture={...identity,season:mfaEntrySeason(policy,entry)}
+    const fixture={...identity,season:entrySeason(policy,entry)}
     if(historicalStatisticsPolicySha256(marker.fixture)!==historicalStatisticsPolicySha256(fixture))fail('fixture binding differs')
     if(entry.playedOn>=binding.firstFantasyPlayedOn)fail('marker is not strictly prelaunch')
     if(marker.statisticsStatus!=='unavailable_historical'||marker.importedAt!==null||marker.individualRowCount!==0)fail('unavailable marker contains individual/imported statistics')

@@ -95,7 +95,7 @@ export async function pripravi({slug,archiveDir,currentDir,sourceCommit,proof}){
   if(p?.season!==season||p.captureCommit!==sourceCommit||p.seasonJobPassed!==true)fail('season capture job mismatch')
   if(version>=2){
    verifyLineage({...p,...(policyAware?{evidenceMode:'policy-replay'}:{}),capturedAt:p.lineage?.capture.capturedAt,documentsSha256:p.lineage?.capture.documentsSha256},{version,slug,provenanceVersion:policyAware?2:undefined,calendarReceiptSha256:version===4?receiptSha256:undefined,statisticsPolicy:proof.statisticsPolicy,sourceCommit,parserSha256:parserSha256()})
-   const {readClosedCapture}=await import('./ponovi-dfb-regijo.mjs');readClosedCapture(dir,slug,season,p.lineage.capture,{historical:policyAware})
+   const {readClosedCapture}=await import('./ponovi-dfb-regijo.mjs');readClosedCapture(dir,slug,season,p.lineage.capture,{historical:policyAware,statisticsPolicy:proof.statisticsPolicy})
   }else if(p.lineage!=null)fail('Mixed direct/replay proof')
   const snapshot=preveriPosnetek(dir,JSON.parse(readFileSync(resolve(dir,'prenosi.json'),'utf8')))
   const read=async url=>{if(!snapshot.documents.has(url))fail(`missing captured URL ${url}`);return snapshot.documents.get(url)}

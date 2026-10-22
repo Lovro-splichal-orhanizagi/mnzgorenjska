@@ -34,7 +34,7 @@
       }
     },
     "de-regionalliga-west": {
-      "policyId": "de-dfb-west-2025-historical-unavailable-v1",
+      "policyId": "de-dfb-west-prelaunch-unavailable-v2",
       "ids": [
         "2402287",
         "2402299",
@@ -43,7 +43,9 @@
         "2402325",
         "2402332",
         "2402346",
-        "2402352"
+        "2402352",
+        "2425409",
+        "2425474"
       ],
       "clubNames": {
         "wuppertaler-sv": "Wuppertaler SV",
@@ -54,7 +56,10 @@
         "fortuna-duesseldorf-ii": "Fortuna Düsseldorf II",
         "bonner-sc": "Bonner SC",
         "fortuna-koeln": "Fortuna Köln",
-        "ssvg-velbert": "SSVg Velbert"
+        "ssvg-velbert": "SSVg Velbert",
+        "sg-wattenscheid-09-13217": "SG Wattenscheid 09",
+        "fc-schalke-04-ii": "FC Schalke 04 II",
+        "1-fc-koeln-ii": "1. FC Köln II"
       },
       "documents": {
         "2402287": {
@@ -120,6 +125,22 @@
           "rawSha256": "123d7023ff8442359d925630eab0b89f6556306e13af08eccbe9886a94659b9b",
           "capturedAt": "2026-10-17T12:48:39.935Z",
           "file": "../vzorci/de-dfb-west-2402352.html"
+        },
+        "2425409": {
+          "time": "19:00",
+          "strictDiagnostic": "dfb: nepopolna začetna postava ali vratar",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/4-spieltag/sg-wattenscheid-09-fc-schalke-04-ii-2425409",
+          "rawSha256": "d53f88bed78e469a53896ca6646d6e8c2cc4a47e0516e31bd2e40341b104f573",
+          "capturedAt": "2026-10-22T18:20:20.883Z",
+          "file": "../vzorci/de-dfb-west-current-2425409.html"
+        },
+        "2425474": {
+          "time": "16:00",
+          "strictDiagnostic": "dfb: nepopolna postava ali klop",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/11-spieltag/fc-schalke-04-ii-1-fc-koeln-ii-2425474",
+          "rawSha256": "9cefa3a5cb4e70b919fca7ffc4b9ad95544e330b6443efc5bac6dab7d609e8a1",
+          "capturedAt": "2026-10-22T18:31:05.175Z",
+          "file": "../vzorci/de-dfb-west-current-2425474.html"
         }
       }
     }
