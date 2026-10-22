@@ -54,13 +54,13 @@ jobs:
         run: |
           node --input-type=module -e "if(process.env.EXPECTED_SHA!==process.env.GITHUB_SHA)throw Error('Exact main SHA required')"
           node --test scripts/test-mlsz-reviewed-runtime.mjs scripts/test-mlsz-history-operator.mjs scripts/test-mlsz-transport.mjs
-      - name: Wait for older HU writers
+      - name: Coordinate the exact inactive leagues (no provider requests)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          node scripts/cakaj-na-uvoze.mjs --popravek --tekmovanje hu-to-3-nyugat --najvec 120
-          node scripts/cakaj-na-uvoze.mjs --popravek --tekmovanje hu-baz-u19-2-kozep --najvec 120
+          node scripts/cakaj-na-uvoze.mjs --liga hu-to-3-nyugat --najvec 120
+          node scripts/cakaj-na-uvoze.mjs --liga hu-baz-u19-2-kozep --najvec 120
       - name: Exact cleanup, pricing or guarded release (no provider requests)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
