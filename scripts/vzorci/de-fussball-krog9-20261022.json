@@ -1,0 +1,76 @@
+{
+  "provenance": {
+    "capturedAt": "2026-10-22T21:59:04.113Z",
+    "roundUrl": "https://www.fussball.de/spieltag/kreisliga-mannheim-kreis-mannheim-kreisliga-herren-saison2627-baden/-/staffel/031EKNM2HG00000LVS5489BUVUR5FS5A-G",
+    "method": "Ordinary public SLFF visitor GETs; no retries or bypass",
+    "staffel": "031EKNM2HG00000LVS5489BUVUR5FS5A-G",
+    "season": "2026/27",
+    "round": 9,
+    "requests": [
+      {
+        "at": "2026-10-22T21:59:04.113Z",
+        "url": "https://www.fussball.de/spieltag/kreisliga-mannheim-kreis-mannheim-kreisliga-herren-saison2627-baden/-/staffel/031EKNM2HG00000LVS5489BUVUR5FS5A-G",
+        "status": 200,
+        "location": null,
+        "contentType": "text/html; charset=UTF-8",
+        "bytes": 200109,
+        "sha256": "daa5614d03d9540be7701a09beedbf1a0f67b6c4124e848498b42c71179d5b54",
+        "challenge": false
+      },
+      {
+        "at": "2026-10-22T21:59:49.429Z",
+        "url": "https://www.fussball.de/export.fontface/-/id/0vtt1mjz/type/css",
+        "status": 200,
+        "location": null,
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 308,
+        "sha256": "e18836daa20f747efaecd7cf4c8d34fc6b75cf8f01e49bf1ec7c5890c116f9ef",
+        "file": "date.css",
+        "challenge": false
+      },
+      {
+        "at": "2026-10-22T22:00:09.520Z",
+        "url": "https://www.fussball.de/export.fontface/-/format/woff/id/0vtt1mjz/type/font",
+        "status": 200,
+        "location": null,
+        "contentType": "application/font-woff",
+        "bytes": 8988,
+        "sha256": "4410b600536a5d1a89e0d9235f52398b96e3da2c91914756bab0cdc4c2b6feae",
+        "file": "date.woff",
+        "challenge": false
+      },
+      {
+        "at": "2026-10-22T22:00:15.522Z",
+        "url": "https://www.fussball.de/export.fontface/-/id/cf5j3ftt/type/css",
+        "status": 200,
+        "location": null,
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 308,
+        "sha256": "a9cf3f1bcc70ffcc34cc1fa1f9c386a4e1a0ad6a0412908bc6ecdc3cdb31b445",
+        "file": "score.css",
+        "challenge": false
+      },
+      {
+        "at": "2026-10-22T22:00:21.523Z",
+        "url": "https://www.fussball.de/export.fontface/-/format/woff/id/cf5j3ftt/type/font",
+        "status": 200,
+        "location": null,
+        "contentType": "application/font-woff",
+        "bytes": 2988,
+        "sha256": "7a4e19a541aa4bbb1a73b1ec93c565a2b3d331e28c6e8e5697ef84819c3d3b44",
+        "file": "score.woff",
+        "challenge": false
+      }
+    ]
+  },
+  "fonts": {
+    "0vtt1mjz": {
+      "file": "de-fussball-0vtt1mjz.woff",
+      "sha256": "4410b600536a5d1a89e0d9235f52398b96e3da2c91914756bab0cdc4c2b6feae"
+    },
+    "cf5j3ftt": {
+      "file": "de-fussball-cf5j3ftt.woff",
+      "sha256": "7a4e19a541aa4bbb1a73b1ec93c565a2b3d331e28c6e8e5697ef84819c3d3b44"
+    }
+  }
+}

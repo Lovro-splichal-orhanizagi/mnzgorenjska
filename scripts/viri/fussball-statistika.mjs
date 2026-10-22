@@ -88,7 +88,7 @@ function sourceUrl(tags,id){
 // in this grammar, and attributes cannot contain markup-shaped source bytes.
 function lineupProof(html){
  const allowed={div:['id','class'],a:['href','class'],span:['class','data-obfuscation','data-alt','data-responsive-image'],img:['src','alt'],h3:['class']}
- const tokens=/<[^>]*>|[^<]+/gy,stack=[]
+ const tokens=/<[^>]*>|[^<]+/gy,stack=[],fontIds=new Set()
  let cursor=0,root=false
  while(cursor<html.length){
   tokens.lastIndex=cursor;const m=tokens.exec(html)
@@ -104,6 +104,9 @@ function lineupProof(html){
    requireProof(allowed[tag].includes(a[1])&&!Object.hasOwn(attrs,a[1]),'nepodprt ali podvojen atribut dokazne postave')
    attrs[a[1]]=a[2]
   }
+  if(Object.hasOwn(attrs,'data-obfuscation')){
+   fontIds.add(attrs['data-obfuscation'])
+  }
   if(!stack.length){
    requireProof(!root&&tag==='div'&&Object.keys(attrs).length===1&&attrs.id==='match_course_body','manjka enoličen koren dokazne postave');root=true
   }else{
@@ -114,7 +117,16 @@ function lineupProof(html){
   if(tag!=='img')stack.push(tag)
  }
  requireProof(root&&!stack.length,'odrezana dokazna postava')
+ return [...fontIds].sort()
 }
+
+/** Font evidence is exposed only after the same closed lineup grammar used by the strict report validator. */
+export function inspectFussballLineup(html){
+ const ids=lineupProof(html)
+ requireProof(ids.every(id=>/^[a-z0-9]{8}$/.test(id??'')),'neveljaven ID pisave dokazne postave')
+ return ids
+}
+export {liveTags as fussballLiveTags}
 
 // A small closed grammar, not a browser/HTML repair parser: every tag, attribute,
 // non-whitespace text and child must be consumed by an explicitly known shape.
