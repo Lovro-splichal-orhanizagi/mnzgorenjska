@@ -68,3 +68,7 @@
 - Task 2 complete: original e4 closure independently pinned; current parent checks reject extra errors/refusals; new SQL migration passes West bootstrap/check/activation rollback and Nord/Südwest/strict legacy regressions.
 - Shared SQL regression covers immutable v1 and v2 independently in rollback subtransactions; the initial duplicate-round fixture assumption was corrected without changing production policy installation.
 - Local full E2E command stops before any request because local API keys are absent; no environment file or production secret was read. Source/parser and disposable SQL coverage plus CI remain the relevant release checks.
+
+- Final review: one Important compatibility finding, no Critical or Minor findings. The new shared upsert initially omitted the existing MLSZ numeric report namespace; the actual Hungarian SQL protocol reproduced `unknown report identity namespace` before the fix and all three tests pass after preserving the branch.
+- Final review release-time checks are owned by root: authenticated artifact availability/freshness, deployed DE HTML/Caddy/reminders and actual future native deadline remain mandatory rollout steps, not waived review items.
+- Verification: 245 DFB tests and 1720 source tests pass (223 existing skips); shared SQL tests, West/Nord/Südwest launch rollback and MLSZ full SQL protocol pass. Full local API E2E cannot run without local-only keys.

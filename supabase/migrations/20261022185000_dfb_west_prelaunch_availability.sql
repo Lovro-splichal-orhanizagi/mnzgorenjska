@@ -183,7 +183,7 @@ begin
  if exists(select 1 from public.fantasy_teams where competition_id=c.id)then raise exception 'HISTORICAL_POLICY: user-owned activity';end if;
  perform private_historical_statistics.bind_source_club(p.document->>'provider',e->>'homeSourceClubId',e->>'homeSourceCategoryId',c.country_id,home_id);
  perform private_historical_statistics.bind_source_club(p.document->>'provider',e->>'awaySourceClubId',e->>'awaySourceCategoryId',c.country_id,away_id);
- report_id:=case p.document->>'provider' when 'dfb' then 'de-dfb-'||p_source_match_id when 'hns' then p_source_match_id when 'fcf' then 'es'||p_source_match_id else null end;
+ report_id:=case p.document->>'provider' when 'dfb' then 'de-dfb-'||p_source_match_id when 'hns' then p_source_match_id when 'mlsz' then case when p_source_match_id~'^[1-9][0-9]+$'then p_source_match_id end when 'fcf' then 'es'||p_source_match_id else null end;
  if report_id is null then raise exception 'HISTORICAL_POLICY: unknown report identity namespace';end if;
  if(select count(*)from public.matches where zapisnik_id=report_id or(round_id=r.id and home_team_id=home_id and away_team_id=away_id))>1 then raise exception 'HISTORICAL_POLICY: conflicting existing fixture';end if;
  select * into m from public.matches where zapisnik_id=report_id or(round_id=r.id and home_team_id=home_id and away_team_id=away_id)for update;
