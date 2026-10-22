@@ -30,6 +30,7 @@ import { Link } from '../components/Povezava'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Plakat from '../components/Plakat'
 import { izvor } from '../lib/platforma'
+import { vseVrstice } from '../lib/strani'
 
 // Koliko uporabnikov pokaže ena stran seznama.
 const UPORABNIKOV_NA_STRAN = 50
@@ -233,13 +234,23 @@ export default function Administracija() {
   }, [session, loading, tekmovanjeId])
 
   async function naloziUporabnike() {
-    const { data, error } = await supabase.rpc('admin_uporabniki', {
-      p_competition_id: tekmovanjeId ?? undefined,
-    })
-    if (error) return setNapaka(error.message)
+    // Produkcija vrne največ 5000 vrstic na zahtevek (PGRST_DB_MAX_ROWS) in
+    // števec je obstal pri 5000 — zato po straneh.
+    let data: any[]
+    try {
+      data = await vseVrstice((od, do_) =>
+        supabase
+          .rpc('admin_uporabniki', { p_competition_id: tekmovanjeId ?? undefined })
+          .order('user_id')
+          .order('team_id')
+          .range(od, do_),
+      )
+    } catch (e) {
+      return setNapaka((e as Error).message)
+    }
     // Najnovejši člani na prvo stran, najstarejši na zadnjo.
     setUporabniki(
-      ((data ?? []) as any[]).sort((a, b) =>
+      data.sort((a, b) =>
         (b.registered_at ?? '').localeCompare(a.registered_at ?? ''),
       ),
     )

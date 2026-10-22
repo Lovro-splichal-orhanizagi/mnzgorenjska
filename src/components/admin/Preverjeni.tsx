@@ -6,6 +6,7 @@
 // Spodaj naročila natisnjenih značk z naslovi (le admin).
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { vseVrstice } from '../../lib/strani'
 import { pozabiPreverjene } from '../../lib/preverjeni'
 import { Link } from '../Povezava'
 
@@ -73,12 +74,17 @@ export default function Preverjeni() {
   // Uporabnike za preizkuševalce naloži šele, ko jih admin išče.
   useEffect(() => {
     if (iskanjeTesterja.trim().length < 2 || uporabniki.length) return
-    void supabase.rpc('admin_uporabniki', {}).then(({ data, error }) => {
-      if (error) return setNapaka(error.message)
-      const vsi = new Map<string, Tester>()
-      for (const u of data ?? []) vsi.set(u.user_id, { user_id: u.user_id, display_name: u.display_name, email: u.email })
-      setUporabniki([...vsi.values()])
-    })
+    // Po straneh: produkcija vrne največ 5000 vrstic na zahtevek.
+    vseVrstice((od, do_) =>
+      supabase.rpc('admin_uporabniki', {}).order('user_id').order('team_id').range(od, do_),
+    ).then(
+      (data) => {
+        const vsi = new Map<string, Tester>()
+        for (const u of data) vsi.set(u.user_id, { user_id: u.user_id, display_name: u.display_name, email: u.email })
+        setUporabniki([...vsi.values()])
+      },
+      (e: Error) => setNapaka(e.message),
+    )
   }, [iskanjeTesterja, uporabniki.length])
 
   async function izvedi(fn: () => PromiseLike<{ error: { message: string } | null }>) {
