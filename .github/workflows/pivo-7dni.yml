@@ -1,0 +1,61 @@
+name: Pivo 7 dni po prvi ekipi
+
+# Teden po prvi (nehisni, nemladinski) ekipi en sprosceni mail "SLFF je
+# brezplacen … lahko pa nam placas eno pivo" (`posli-opomnik`, vrsta
+# `pivo-7dni`). Kdo ga dobi, doloci `kandidati_za_pivo_7dni`: enkrat na
+# cloveka za vedno, brez odjavljenih (`brez_opomnikov`), brez tistih, ki
+# igrajo le v mladinskih ligah (mladim brez piva).
+#
+# URNIK JE IZKLOPLJEN. Migracija gre v produkcijo ob zdruzitvi, edge funkcija
+# pa sele z rocnim `scripts/hetzner/objavi-funkcije.sh`; stara funkcija vrsto
+# `pivo-7dni` zavrne (400). Vklop po objavi funkcije:
+#   1. rocni zagon s `suho: true` (presteje kandidate),
+#   2. rocni zagon s `suho: false` (prvi paket),
+#   3. odkomentiraj `schedule` spodaj (podnevi, vsako uro med 8 in 17 UTC).
+on:
+  # schedule:
+  #   - cron: '37 8-17 * * *'
+  workflow_dispatch:
+    inputs:
+      suho:
+        description: 'Suhi tek (samo presteje, ne poslje)'
+        required: false
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: opozorila
+  cancel-in-progress: false
+
+jobs:
+  pivo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
+      # za macOS); brez njih tuja koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
+      - name: Poslji pivo 7 dni po prvi ekipi
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VRSTA: pivo-7dni
+          # Po urniku posilja (inputs so takrat prazni), rocno privzeto suho.
+          SUHO: ${{ github.event_name == 'schedule' && 'false' || inputs.suho }}
+          NAJVEC_DOBRODOSLIC: 40
+        run: node scripts/posli-opomnike.mjs
+
+      - name: Javi padec na Discord
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_TEDENSKO }}
+        run: node scripts/javi-napako.mjs "Pivo 7 dni"
