@@ -523,11 +523,18 @@ kanonični `?t=` po svoji ligi.
   jezik po `jezik` v metapodatkih uporabnika (vpiše ga registracija);
   v gostujočem projektu predloge **niso** iz config.toml — prilepi jih v
   Auth → Email Templates.
-- **Oblika maila** (temna glava z logom, zelena črta, bela kartica, temna
-  noga, tabele in slogi v vrstici) je ena: `ovoj()` in `gumb()` v
-  `supabase/functions/_shared/mail.ts` (opomniki, prevzem, trgovina).
-  `supabase/templates/*.html` imajo statično kopijo iste glave in noge; po
+- **Oblika maila** (temnozelena glava z logom in značko lige, bela kartica z
+  naslovom, okvir dejstev, en gumb, drobna noga z razlogom in odjavo; tabele,
+  slogi v vrstici, predglava, temni način) je ena: `postavi()` v
+  `supabase/functions/_shared/mail.ts` (opomniki, prevzem, trgovina) vrne HTML
+  in čistopis iz istih podatkov, zato ima vsak mail tudi text/plain. Kjer
+  podatka ni (rok, razlog), vrstice ni. `supabase/templates/*.html` so izpis
+  iste oblike (zadeve v `config.toml` in `docker-compose.slff.yml`); po
   spremembi jih je treba na strežniku znova uveljaviti ročno.
+- **Pivo 7 dni** (`pivo-7dni.yml`, `kandidati_za_pivo_7dni`): en mail teden po
+  prvi nehišni ekipi, enkrat na človeka, nikoli v mladinski ligi. Nova vrsta
+  pošte z urnikom gre v produkcijo šele po ročni objavi funkcije: delovni tok
+  naj ima do takrat le `workflow_dispatch` (stara funkcija neznano vrsto zavrne).
 - `index.html` je slovenski; `main.tsx` za drug jezik zamenja le `lang` in
   opis strani, naslov nastavi `useNaslov`. Kartica ob deljenju (og:) mora biti
   v statičnem HTML, ker je Facebook/WhatsApp bereta brez JS: build zato zapiše

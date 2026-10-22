@@ -60,7 +60,11 @@ kluba v 3 dneh zabeleži** z `node scripts/stiki-klubov.mjs zabelezi --za
 gleda le INBOX in Junk, zato odgovor, premaknjen v drugo mapo ali arhiviran,
 ne ustavi opomnika. Številke v mailu so sveže;
 besedila (nemška, estonska, hrvaška, madžarska, srbska v latinici) so v
-skripti in ne trdijo, da imamo dovoljenje zveze. Prehodne napake delavec le zabeleži; zavrnjena prijava: ura premora,
+skripti in ne trdijo, da imamo dovoljenje zveze. Mail je
+`multipart/alternative`: najprej text/plain (ta gre tudi v `klub_stik_posta`),
+nato lahek HTML iz istega besedila (`vHtml`, videti kot osebni mail, brez
+glave in gumba). Opomnik ni odgovor v isti niti, ker se Message-ID prvega
+maila ne hrani. Prehodne napake delavec le zabeleži; zavrnjena prijava: ura premora,
 nato izhod (Docker ga znova zažene).
 
 **Dnevno poročilo** (koliko je včeraj odšlo, po pošiljatelju, državi in

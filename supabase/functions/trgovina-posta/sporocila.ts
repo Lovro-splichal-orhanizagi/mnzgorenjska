@@ -2,7 +2,7 @@
 // preveri jih smoke. Naročilo je oblika trgovina.narocilo_json. HTML je v skupni obliki
 // (_shared/mail.ts); `besedilo` je čistopis z enako vsebino in celotnim pravnim besedilom.
 
-import { gumb, ovoj } from '../_shared/mail.ts'
+import { BARVE, postavi, povezava, type Mail as Mail_, type Vrstica } from '../_shared/mail.ts'
 
 /** Kopije iz shop/src/besede.ts (smoke primerja): funkcija se objavi brez shop/. */
 export const TELEFON = '+386 40 773 385'
@@ -46,8 +46,19 @@ export interface Mail {
 
 const BESEDILA = {
   sl: {
-    potrditev: 'Potrditev naročila {o}',
+    potrditev: 'Hvala! Naročilo {o} je plačano',
     poslano: 'Naročilo {o} je na poti',
+    poslanoSledilna: 'Naročilo {o} je na poti ({s})',
+    placanoNaslov: 'Naročilo {o} je plačano',
+    posljemo: 'Ko paket oddamo na pošto, dobite sledilno številko.',
+    naPotiNaslov: 'Paket je na poti',
+    bonNaslov: 'Darilni bon SLFF',
+    kodaKratko: 'Koda',
+    sledilnaKratko: 'Sledilna št.',
+    naslovKratko: 'Na naslov',
+    skupajKratko: 'Skupaj',
+    poglej: 'Poglej naročilo',
+    mojaNarocila: 'Moja naročila',
     pozdrav: 'Pozdravljeni,',
     hvala: 'hvala za nakup v trgovini SLFF. Plačilo smo prejeli, naročilo {o} pripravljamo za odpošiljanje.',
     na_poti: 'naročilo {o} smo oddali na Pošti Slovenije.',
@@ -78,8 +89,19 @@ const BESEDILA = {
     prodajalec: 'Prodajalec: SPACE GUARDIAN d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, ID za DDV SI42765153',
   },
   en: {
-    potrditev: 'Order confirmation {o}',
+    potrditev: 'Thank you! Order {o} is paid',
     poslano: 'Your order {o} is on its way',
+    poslanoSledilna: 'Your order {o} is on its way ({s})',
+    placanoNaslov: 'Order {o} is paid',
+    posljemo: 'Once the parcel is with the post office, you get a tracking number.',
+    naPotiNaslov: 'Your parcel is on its way',
+    bonNaslov: 'SLFF gift card',
+    kodaKratko: 'Code',
+    sledilnaKratko: 'Tracking no.',
+    naslovKratko: 'Ship to',
+    skupajKratko: 'Total',
+    poglej: 'View order',
+    mojaNarocila: 'My orders',
     pozdrav: 'Hello,',
     hvala: 'thank you for shopping at the SLFF shop. We have received your payment and are preparing order {o} for shipping.',
     na_poti: 'we have handed order {o} over to Pošta Slovenije.',
@@ -169,89 +191,81 @@ export function sestaviMail(vrsta: 'potrditev' | 'poslano' | 'bon', n: Narocilo,
         ]
   odstavki.push([v(b.vprasanja)], [b.podpis, b.prodajalec])
 
-  // HTML: glavna vsebina zgoraj, pravno besedilo spodaj z drobnim tiskom, prodajalec v nogi.
-  const P = 'margin: 0 0 12px;'
-  const H2 = 'margin: 28px 0 8px; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;'
-  const MALI = 'margin: 0 0 10px; font-size: 12px; line-height: 1.5; color: #64748b;'
-  const PODNASLOV = 'margin: 16px 0 8px; font-size: 13px; font-weight: 800; color: #334155;'
-  const odst = (t: string, slog = P) => `<p style="${slog}">${t}</p>`
-  // Povezave v besedilu (obrazec, pogoji, pošta) so klikljive.
-  const povezi = (t: string) => esc(t).replace(/https?:\/\/[^\s<]+/g, (u) => `<a href="${u}" style="color: #15803d;">${u}</a>`)
-  const celica = 'padding: 8px 0; border-bottom: 1px solid #e2e8f0; vertical-align: top;'
-  const vrstica = (levo: string, desno: string, slog = '') =>
-    `<tr><td style="${celica} ${slog}">${levo}</td><td align="right" style="${celica} padding-left: 12px; white-space: nowrap; ${slog}">${desno}</td></tr>`
-  const skatla = (t: string) =>
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 0 0 12px;"><tr>` +
-    `<td bgcolor="#f0fdf4" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px;">${t}</td></tr></table>`
-  const koda = (k: string) =>
-    `<span style="font-family: Menlo, Consolas, 'Courier New', monospace; font-size: 20px; font-weight: 800; letter-spacing: 1px; color: #052e16;">${esc(k)}</span>`
-  const naslovHtml = `<h2 style="${H2}">${esc(b.naslov.replace(/:$/, ''))}</h2>${odst(naslov.map(esc).join('<br>'))}`
+  // HTML v skupni obliki (_shared/mail.ts): glavno zgoraj, pravno besedilo
+  // (trajni nosilec, dobesedno) v drobnem tisku pod kartico, prodajalec na dnu.
+  const siv = (t: string) => `<span class="siv" style="font-weight: 400; color: ${BARVE.sivo};">${t}</span>`
+  const koda = (k: string, px = 18) =>
+    `<span style="font-family: Consolas, Menlo, 'Courier New', monospace; font-size: ${px}px; letter-spacing: 1px;">${esc(k)}</span>`
+  // Povezave v pravnem besedilu (obrazec, pogoji) so klikljive.
+  const povezi = (t: string) => esc(t).replace(/https?:\/\/[^\s<]+/g, (u) => povezava(u, u))
+  const naNaslov: Vrstica[] = n.naslov ? [{ k: b.naslovKratko, v: naslov.map(esc).join(', ') }] : []
+  const sklep = `${esc(v(b.vprasanja))}<br>${esc(b.podpis)}`
 
-  const zadeva = v(vrsta === 'bon' ? b.bon : vrsta === 'poslano' ? b.poslano : b.potrditev)
-  let glavno: string[]
-  let predogled: string
+  const zadeva = v(vrsta === 'bon' ? b.bon : vrsta === 'poslano' ? (n.sledilna ? b.poslanoSledilna : b.poslano) : b.potrditev)
+  let o: Omit<Mail_, 'jezik' | 'zadeva' | 'oznaka' | 'noga'>
   if (vrsta === 'bon') {
-    predogled = b.bonUvod
-    glavno = [
-      odst(esc(b.pozdrav)), odst(esc(b.bonUvod)),
-      // bonKoda je "{k} — vrednost {z}, velja do {d}": koda gre v okvir, ostalo pod njo.
-      ...kode.map((k) => skatla(`${koda(k.koda)}<br><span style="font-size: 14px; color: #166534;">${
-        esc((b.bonKoda.split(' — ')[1] ?? b.bonKoda).replace('{z}', e(k.znesek)).replace('{d}', datumBona(k.velja_do, j)))}</span>`)),
-      odst(esc(b.bonPravila), 'margin: 0 0 12px; font-size: 14px; color: #334155;'),
-      gumb(esc(shop), esc(b.vTrgovino)),
-    ]
+    o = {
+      predglava: b.bonUvod.replace(/:$/, '.'),
+      naslov: esc(b.bonNaslov),
+      uvod: `${esc(b.pozdrav)} ${esc(b.bonUvod)}`,
+      // bonKoda je "{k} — vrednost {z}, velja do {d}": koda krepko, ostalo pod njo.
+      dejstva: kode.map((k) => ({
+        k: b.kodaKratko,
+        v: `${koda(k.koda)}<br>${siv(esc((b.bonKoda.split(' — ')[1] ?? b.bonKoda).replace('{z}', e(k.znesek)).replace('{d}', datumBona(k.velja_do, j))))}`,
+      })),
+      gumb: { label: b.vTrgovino, url: shop },
+      opomba: `${esc(b.bonPravila)}<br><br>${sklep}`,
+    }
   } else if (vrsta === 'poslano') {
-    predogled = n.sledilna ? v(b.sledilna) : v(b.na_poti)
-    glavno = [
-      odst(esc(b.pozdrav)), odst(esc(v(b.na_poti))),
-      ...(n.sledilna ? [skatla(`<span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #166534;">${
-        esc(b.sledilna.replace(/:.*$/, ''))}</span><br>${koda(n.sledilna)}`)] : []),
-      gumb('https://www.posta.si/', esc(b.sledi)),
-      odst(povezi(b.sledenje), 'margin: 0 0 12px; font-size: 13px; color: #64748b;'),
-      naslovHtml,
-    ]
+    o = {
+      predglava: n.sledilna ? v(b.sledilna) : v(b.na_poti),
+      naslov: esc(b.naPotiNaslov),
+      uvod: `${esc(b.pozdrav)} ${esc(v(b.na_poti))}`,
+      dejstva: [
+        ...(n.sledilna ? [{ k: b.sledilnaKratko, v: koda(n.sledilna, 16) }] : []),
+        ...naNaslov,
+      ],
+      gumb: { label: b.sledi, url: 'https://www.posta.si/' },
+      opomba: sklep,
+    }
   } else {
-    predogled = v(b.hvala)
-    const postavke = n.postavke.map((p) => {
-      const o = opis(p)
-      return vrstica(`${p.kolicina} × ${esc(p.ime)}${o ? `<br><span style="font-size: 13px; color: #64748b;">${esc(o)}</span>` : ''}`,
-        e((p.cena + (p.doplacilo ?? 0)) * p.kolicina))
-    })
-    glavno = [
-      odst(esc(b.pozdrav)), odst(esc(v(b.hvala))),
-      `<h2 style="${H2}">${esc(b.postavke.replace(/:$/, ''))}</h2>`,
-      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; font-size: 15px;">`,
-      ...postavke,
-      vrstica(esc(b.dostava), e(n.znesek_dostava)),
-      ...(popust > 0 ? [vrstica(esc(b.popust), `−${e(popust)}`, 'color: #15803d;')] : []),
-      vrstica(esc(b.skupaj), e(n.znesek_skupaj), 'border-bottom: 0; font-size: 17px; font-weight: 800;'),
-      vrstica(esc(b.ddv), e(n.znesek_ddv), 'border-bottom: 0; padding-top: 0; font-size: 13px; color: #64748b;'),
-      '</table>',
-      ...opombe.map((o) => odst(esc(o), 'margin: 12px 0 0; font-size: 14px; color: #334155;')),
-      ...(n.naslov ? [naslovHtml] : []),
-      // Pravno besedilo (trajni nosilec) dobesedno, a drobneje.
-      '<hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0 0;">',
-      odst(esc(b.odstopNaslov), PODNASLOV),
-      ...b.odstopBesedilo.split('\n\n').map((o) => odst(esc(o), MALI)),
-      odst(esc(b.vzorecNaslov), PODNASLOV),
-      ...b.vzorec.split('\n\n').map((o) => odst(o.split('\n').map(esc).join('<br>'), MALI)),
-      odst(v(b.odstop).split('\n').map(povezi).join('<br>'), MALI),
-    ]
+    o = {
+      predglava: `${b.skupaj}: ${e(n.znesek_skupaj)}. ${b.posljemo}`,
+      naslov: esc(v(b.placanoNaslov)),
+      uvod: `${esc(b.pozdrav)} ${esc(v(b.hvala))}`,
+      dejstva: [
+        ...n.postavke.map((p) => {
+          const op = opis(p)
+          return { k: `${p.kolicina} ×`, v: `${esc(p.ime)}${op ? ` ${siv(esc(op))}` : ''} · ${e((p.cena + (p.doplacilo ?? 0)) * p.kolicina)}` }
+        }),
+        { k: b.dostava, v: e(n.znesek_dostava) },
+        ...(popust > 0 ? [{ k: b.popust, v: `−${e(popust)}` }] : []),
+        { k: b.skupajKratko, v: `${e(n.znesek_skupaj)} ${siv(`(${esc(b.ddv)} ${e(n.znesek_ddv)})`)}` },
+        ...naNaslov,
+      ],
+      gumb: { label: b.poglej, url: `${shop}/orders` },
+      opomba: [...opombe.map(esc), sklep].join('<br><br>'),
+      pravno: [
+        `<strong>${esc(b.odstopNaslov)}</strong>`,
+        ...b.odstopBesedilo.split('\n\n').map(esc),
+        `<strong>${esc(b.vzorecNaslov)}</strong>`,
+        ...b.vzorec.split('\n\n').map((t) => t.split('\n').map(esc).join('<br>')),
+        v(b.odstop).split('\n').map(povezi).join('<br>'),
+      ],
+    }
   }
+  const { html } = postavi({
+    jezik: j,
+    zadeva,
+    oznaka: 'SHOP',
+    ...o,
+    pravno: [...(o.pravno ?? []), esc(b.prodajalec)],
+    noga: { povezave: [{ label: b.mojaNarocila, url: `${shop}/orders` }] },
+  })
 
   return {
     naslov: zadeva,
     besedilo: odstavki.map((o) => o.join('\n')).join('\n\n'),
-    html: ovoj({
-      znacka: 'SHOP',
-      predogled: esc(predogled),
-      vsebina: [
-        `<h1 style="margin: 0 0 20px; font-size: 22px; line-height: 1.3; font-weight: 800; color: #0f172a;">${esc(zadeva)}</h1>`,
-        ...glavno,
-        odst(esc(v(b.vprasanja)), 'margin: 24px 0 12px; font-size: 14px; color: #334155;'),
-        odst(esc(b.podpis), 'margin: 0; font-weight: 700;'),
-      ].join('\n'),
-      noga: `<br>${esc(b.prodajalec)}`,
-    }),
+    html,
   }
 }

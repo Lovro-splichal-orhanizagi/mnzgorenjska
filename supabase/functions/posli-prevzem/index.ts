@@ -25,7 +25,7 @@
 
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.45.4'
 import nodemailer from 'npm:nodemailer@6.9.16'
-import { gumb, ovoj } from '../_shared/mail.ts'
+import { postavi } from '../_shared/mail.ts'
 
 interface Vrstica {
   zahtevek_id: number
@@ -164,11 +164,18 @@ function sestavi(v: Vrstica): { naslov: string; html: string; besedilo: string }
   return {
     naslov: vstavi(b.naslov),
     besedilo: `${b.pozdrav}\n\n${b.uvod}\n\n${vstavi(b.prosnja)}\n\n${povezava}\n\n${vstavi(b.velja)}\n\n${b.podpis}`,
-    html: ovoj({
-      vsebina:
-        `<p>${esc(b.pozdrav)}</p><p>${esc(b.uvod)}</p><p>${vstavi(esc(b.prosnja), krepko)}</p>` +
-        `${gumb(povezava, esc(b.gumb))}<p>${esc(vstavi(b.velja))}</p><p>${esc(b.podpis)}</p>`,
-    }),
+    // Skupna oblika (_shared/mail.ts); čistopis zgoraj ostane ročno napisan.
+    html: postavi({
+      jezik: b.jezik,
+      zadeva: vstavi(b.naslov),
+      predglava: vstavi(b.prosnja).replace(/:$/, '.'),
+      naslov: esc(vstavi(b.naslov)),
+      uvod: `${esc(b.pozdrav)} ${vstavi(esc(b.prosnja), krepko)}`,
+      gumb: { label: b.gumb, url: povezava },
+      potem: esc(vstavi(b.velja)),
+      opomba: `${esc(b.uvod)}<br>${esc(b.podpis)}`,
+      noga: {},
+    }).html,
   }
 }
 
@@ -237,9 +244,19 @@ function sestaviPotrjen(v: Neobvescen): { naslov: string; html: string; besedilo
   const liga = v.liga.replaceAll(' — ', ', ')
   const vstavi = (t: string) => t.replaceAll('{i}', v.igralec).replaceAll('{k}', v.klub).replaceAll('{l}', liga)
   const besedilo = `${vstavi(b.telo).replaceAll('{u}', u)}\n\nJernej, SLFF`
-  const odstavki = esc(vstavi(b.telo)).split('\n\n').map((o) =>
-    o.includes('{u}') ? `<p>${o.replace('\n{u}', '')}</p>${gumb(u, esc(b.gumb))}` : `<p>${o}</p>`)
-  return { naslov: b.naslov, besedilo, html: ovoj({ vsebina: odstavki.join('') + '<p>Jernej, SLFF</p>' }) }
+  // Odstavki telesa: pozdrav, potrditev, kaj lahko dodaš (s povezavo), uradni podatki.
+  const [pozdrav, potrditev, dodaj, uradno] = vstavi(b.telo).split('\n\n')
+  const html = postavi({
+    jezik: (BESEDILA[v.drzava ?? ''] ?? BESEDILA.EN).jezik,
+    zadeva: b.naslov,
+    predglava: potrditev,
+    naslov: esc(b.naslov),
+    uvod: `${esc(pozdrav)} ${esc(potrditev)}<br><br>${esc(dodaj.replace('\n{u}', ''))}`,
+    gumb: { label: b.gumb, url: u },
+    opomba: `${esc(uradno ?? '')}<br>Jernej, SLFF`,
+    noga: {},
+  }).html
+  return { naslov: b.naslov, besedilo, html }
 }
 
 async function obvestiPotrjene(service: SupabaseClient): Promise<Response> {

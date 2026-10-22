@@ -1,180 +1,70 @@
 <!doctype html>
-<!-- Potrditev registracije. Jezik izbere `jezik` v metapodatkih uporabnika
-     (Prijava.tsx ga vpiše ob registraciji); brez njega ostane slovenščina.
-     Vsebino te datoteke je treba ročno prilepiti v Supabase → Auth → Email
-     Templates → Confirm signup, config.toml velja le za lokalni stack.
-     Povezava vodi naravnost na slff.eu/auth/confirm (PotrditevPovezave.tsx),
-     ne prek supabase.co: le tako jo telefon odpre v mobilni aplikaciji.
-     Glava in noga sta kopija ovoj() iz supabase/functions/_shared/mail.ts. -->
-<html>
+<!-- Potrditev registracije. Jezik izbere `jezik` v metapodatkih uporabnika; brez njega
+     slovenščina. Vsebino prilepi v Supabase → Auth → Email Templates →
+     Confirm signup, zadevo pa iz supabase/config.toml.
+     Oblika je izpis postavi() iz supabase/functions/_shared/mail.ts. -->
+<html lang="{{ if eq (printf "%v" .Data.jezik) "sk" }}sk{{ else if eq (printf "%v" .Data.jezik) "hr" }}hr{{ else if eq (printf "%v" .Data.jezik) "cs" }}cs{{ else if eq (printf "%v" .Data.jezik) "hu" }}hu{{ else if eq (printf "%v" .Data.jezik) "de" }}de{{ else if eq (printf "%v" .Data.jezik) "sr" }}sr{{ else if eq (printf "%v" .Data.jezik) "ro" }}ro{{ else if eq (printf "%v" .Data.jezik) "et" }}et{{ else if eq (printf "%v" .Data.jezik) "pl" }}pl{{ else if eq (printf "%v" .Data.jezik) "es" }}es{{ else if eq (printf "%v" .Data.jezik) "lv" }}lv{{ else if eq (printf "%v" .Data.jezik) "mk" }}mk{{ else if eq (printf "%v" .Data.jezik) "el" }}el{{ else if eq (printf "%v" .Data.jezik) "tr" }}tr{{ else if eq (printf "%v" .Data.jezik) "uk" }}uk{{ else if eq (printf "%v" .Data.jezik) "hy" }}hy{{ else if eq (printf "%v" .Data.jezik) "az" }}az{{ else if eq (printf "%v" .Data.jezik) "da" }}da{{ else if eq (printf "%v" .Data.jezik) "en" }}en{{ else }}sl{{ end }}" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light">
-<meta name="supported-color-schemes" content="light">
-<title>SLFF</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<title>{{ if eq (printf "%v" .Data.jezik) "sk" }}SLFF: potvrď svoju e-mailovú adresu{{ else if eq (printf "%v" .Data.jezik) "hr" }}SLFF: potvrdi svoju e-mail adresu{{ else if eq (printf "%v" .Data.jezik) "cs" }}SLFF: potvrď svou e-mailovou adresu{{ else if eq (printf "%v" .Data.jezik) "hu" }}SLFF: erősítsd meg az e-mail-címedet{{ else if eq (printf "%v" .Data.jezik) "de" }}SLFF: bestätige deine E-Mail-Adresse{{ else if eq (printf "%v" .Data.jezik) "sr" }}SLFF: potvrdi svoju imejl adresu{{ else if eq (printf "%v" .Data.jezik) "et" }}SLFF: kinnita oma e-posti aadress{{ else if eq (printf "%v" .Data.jezik) "pl" }}SLFF: potwierdź swój adres e-mail{{ else if eq (printf "%v" .Data.jezik) "es" }}SLFF: confirma tu correo electrónico{{ else if eq (printf "%v" .Data.jezik) "en" }}SLFF: confirm your email address{{ else if eq (printf "%v" .Data.jezik) "ro" }}SLFF: confirmă adresa de e-mail{{ else if eq (printf "%v" .Data.jezik) "lv" }}SLFF: apstiprini savu e-pasta adresi{{ else if eq (printf "%v" .Data.jezik) "mk" }}SLFF: потврди ја својата е-адреса{{ else if eq (printf "%v" .Data.jezik) "el" }}SLFF: επιβεβαίωσε το email σου{{ else if eq (printf "%v" .Data.jezik) "tr" }}SLFF: e-posta adresini onayla{{ else if eq (printf "%v" .Data.jezik) "uk" }}SLFF: підтверди свою електронну адресу{{ else if eq (printf "%v" .Data.jezik) "hy" }}SLFF: հաստատիր էլ. հասցեդ{{ else if eq (printf "%v" .Data.jezik) "az" }}SLFF: e-poçt ünvanını təsdiqlə{{ else if eq (printf "%v" .Data.jezik) "da" }}SLFF: bekræft din e-mailadresse{{ else }}SLFF: potrdi svoj e-naslov{{ end }}</title>
+<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><style>td,p,a,div{font-family:'Segoe UI',Arial,sans-serif !important;}</style><![endif]-->
+<style>
+  :root { color-scheme: light dark; supported-color-schemes: light dark; }
+  body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+  a { text-decoration: none; }
+  @media (max-width: 620px) {
+    .px { padding-left: 20px !important; padding-right: 20px !important; }
+    .h1 { font-size: 22px !important; line-height: 28px !important; }
+    .gumb-celica, .gumb-povezava { display: block !important; width: 100% !important; box-sizing: border-box; text-align: center !important; }
+    .ploscica { display: block !important; width: 100% !important; box-sizing: border-box; margin-bottom: 8px; }
+    .skrij-mobi { display: none !important; }
+    .gumb-tabela { width: 100% !important; }
+  }
+  @media (prefers-color-scheme: dark) {
+    .ozadje { background-color: #07110d !important; }
+    .kartica { background-color: #0f1d17 !important; border-color: #1d3328 !important; }
+    .tx { color: #e6efe9 !important; }
+    .siv { color: #9db3a7 !important; }
+    .pov { color: #6fe4ae !important; }
+    .dejstva { background-color: #13261d !important; border-color: #24402f !important; }
+    .opoz { background-color: #2a230f !important; border-color: #8a6d1f !important; }
+  }
+  [data-ogsc] .tx { color: #e6efe9 !important; }
+  [data-ogsc] .siv { color: #9db3a7 !important; }
+  [data-ogsc] .pov { color: #6fe4ae !important; }
+</style>
 </head>
-<body style="margin: 0; padding: 0; background: #f1f5f9;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9" style="background: #f1f5f9;">
-<tr><td align="center" style="padding: 24px 8px;">
-<!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 600px;">
-<tr><td bgcolor="#020617" style="background: #020617; padding: 16px 24px; border-radius: 12px 12px 0 0;">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-<td style="vertical-align: middle;"><a href="https://slff.eu" style="text-decoration: none;"><img src="https://slff.eu/logo/slff-ikona-180.png" width="36" height="36" alt="SLFF" style="display: block; border: 0; width: 36px; height: 36px;"></a></td>
-<td style="padding-left: 10px; vertical-align: middle; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px;">SLFF</td>
-</tr></table>
-</td></tr>
-<tr><td bgcolor="#22c55e" height="3" style="background: #22c55e; height: 3px; line-height: 3px; font-size: 0;">&nbsp;</td></tr>
-<tr><td bgcolor="#ffffff" style="background: #ffffff; padding: 28px 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #0f172a;">
-{{ if eq (printf "%v" .Data.jezik) "sk" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Ahoj!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Ďakujeme za registráciu v SLFF. Kliknutím na tlačidlo potvrdíš svoju e-mailovú adresu a môžeš si začať zostavovať tím.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Potvrdiť e-mail →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ak si sa neregistroval ty, tento e-mail ignoruj.</p>
-{{ else if eq (printf "%v" .Data.jezik) "hr" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Bok!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Hvala na registraciji u SLFF. Klikom na gumb potvrđuješ svoju e-mail adresu i možeš početi slagati momčad.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Potvrdi e-mail →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ako se nisi ti registrirao/la, zanemari ovaj e-mail.</p>
-{{ else if eq (printf "%v" .Data.jezik) "cs" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Ahoj!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Díky za registraci v SLFF. Kliknutím na tlačítko potvrdíš svou e-mailovou adresu a můžeš začít skládat tým.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Potvrdit e-mail →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Pokud ses neregistroval/a ty, tento e-mail ignoruj.</p>
-{{ else if eq (printf "%v" .Data.jezik) "hu" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Szia!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Köszönjük, hogy regisztráltál az SLFF-re. A gombra kattintva megerősíted az e-mail-címedet, és már rakhatod is össze a csapatodat.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">E-mail-cím megerősítése →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ha nem te regisztráltál, hagyd figyelmen kívül ezt az e-mailt.</p>
-{{ else if eq (printf "%v" .Data.jezik) "de" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Servus!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Danke für deine Registrierung bei SLFF. Mit einem Klick auf den Button bestätigst du deine E-Mail-Adresse und kannst gleich dein Team zusammenstellen.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">E-Mail-Adresse bestätigen →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Wenn du dich nicht registriert hast, ignorier diese E-Mail einfach.</p>
-{{ else if eq (printf "%v" .Data.jezik) "sr" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Zdravo!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Hvala na registraciji na SLFF. Klikom na dugme potvrđuješ svoju imejl adresu i možeš odmah da sastaviš svoj tim.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Potvrdi imejl →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ako se nisi ti registrovao/la, zanemari ovaj imejl.</p>
-{{ else if eq (printf "%v" .Data.jezik) "ro" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Salut!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Mersi că te-ai înregistrat pe SLFF. Apasă butonul ca să-ți confirmi adresa de e-mail, apoi îți poți face imediat echipa.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Confirmă e-mailul →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Dacă nu tu te-ai înregistrat, ignoră acest e-mail.</p>
-{{ else if eq (printf "%v" .Data.jezik) "et" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Tere!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Aitäh, et registreerusid SLFF-is. Vajuta nupule, et kinnitada oma e-posti aadress, ja saad kohe meeskonna kokku panna.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Kinnita e-post →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Kui sa ise ei registreerunud, jäta see kiri tähelepanuta.</p>
-{{ else if eq (printf "%v" .Data.jezik) "pl" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Cześć!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Dziękujemy za rejestrację w SLFF. Kliknij przycisk, aby potwierdzić swój adres e-mail, i od razu możesz ułożyć drużynę.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Potwierdź e-mail →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Jeśli to nie ty się rejestrowałeś, zignoruj tę wiadomość.</p>
-{{ else if eq (printf "%v" .Data.jezik) "es" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">¡Hola!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Gracias por registrarte en SLFF. Pulsa el botón para confirmar tu correo electrónico y ya puedes empezar a hacer tu equipo.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Confirmar correo →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Si no te has registrado tú, ignora este mensaje.</p>
-{{ else if eq (printf "%v" .Data.jezik) "lv" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Sveiki!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Paldies, ka reģistrējies SLFF. Nospied pogu, lai apstiprinātu savu e-pasta adresi, un vari uzreiz sastādīt komandu.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Apstiprināt e-pastu →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ja tu pats nereģistrējies, vienkārši ignorē šo vēstuli.</p>
-{{ else if eq (printf "%v" .Data.jezik) "mk" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Здраво!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Ти благодариме што се регистрира на SLFF. Притисни го копчето за да ја потврдиш својата е-пошта и веднаш можеш да составиш тим.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Потврди ја е-поштата →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ако не се регистрираше ти, само игнорирај ја оваа порака.</p>
-{{ else if eq (printf "%v" .Data.jezik) "el" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Γεια σου!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Ευχαριστούμε για την εγγραφή σου στο SLFF. Πάτα το κουμπί για να επιβεβαιώσεις το email σου και μπορείς αμέσως να φτιάξεις ομάδα.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Επιβεβαίωση email →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Αν δεν έκανες εσύ την εγγραφή, απλώς αγνόησε αυτό το μήνυμα.</p>
-{{ else if eq (printf "%v" .Data.jezik) "tr" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Merhaba!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">SLFF’ye kaydolduğun için teşekkürler. E-posta adresini doğrulamak için butona bas, hemen takımını kurabilirsin.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">E-postamı doğrula →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Kaydı sen yapmadıysan bu e-postayı görmezden gelebilirsin.</p>
-{{ else if eq (printf "%v" .Data.jezik) "uk" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Привіт!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Дякуємо за реєстрацію в SLFF. Натисни кнопку, щоб підтвердити свою електронну пошту, і одразу можеш збирати команду.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Підтвердити пошту →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Якщо ти не реєструвався, просто проігноруй цей лист.</p>
-{{ else if eq (printf "%v" .Data.jezik) "hy" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Բարև!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Շնորհակալություն SLFF-ում գրանցվելու համար։ Սեղմիր կոճակը՝ էլ. հասցեդ հաստատելու համար, և կարող ես անմիջապես թիմ կազմել։</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Հաստատել էլ. հասցեն →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Եթե դու չես գրանցվել, պարզապես անտեսիր այս նամակը։</p>
-{{ else if eq (printf "%v" .Data.jezik) "az" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Salam!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">SLFF-də qeydiyyatdan keçdiyin üçün təşəkkürlər. E-poçtunu təsdiqləmək üçün düyməni bas və dərhal komanda yığa bilərsən.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">E-poçtu təsdiqlə →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Qeydiyyatdan sən keçməmisənsə, bu məktubu nəzərə alma.</p>
-{{ else if eq (printf "%v" .Data.jezik) "da" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Hej!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Tak, fordi du har oprettet dig på SLFF. Tryk på knappen for at bekræfte din e-mail, så kan du straks sætte dit hold.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Bekræft e-mail →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Har du ikke selv oprettet dig, kan du bare se bort fra denne mail.</p>
-{{ else if eq (printf "%v" .Data.jezik) "en" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Hi!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Thanks for signing up to SLFF. Tap the button to confirm your email and you can start building your team straight away.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Confirm email →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">If you didn’t sign up yourself, just ignore this email.</p>
-{{ else }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Živjo!</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Hvala za registracijo v SLFF. S klikom na gumb potrdiš svoj e-naslov in lahko začneš sestavljati ekipo.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Potrdi e-naslov →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Če se nisi registriral/a ti, ta mail prezri.</p>
-{{ end }}
-</td></tr>
-<tr><td bgcolor="#020617" style="background: #020617; padding: 18px 24px; border-radius: 0 0 12px 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #94a3b8;">
-Sunday League Fantasy Football · <a href="https://slff.eu" style="color: #94a3b8;">slff.eu</a> · <a href="mailto:info@slff.eu" style="color: #94a3b8;">info@slff.eu</a>
-</td></tr>
-</table>
-<!--[if mso]></td></tr></table><![endif]-->
-</td></tr>
-</table>
-</body>
-</html>
+<body class="ozadje" style="margin: 0; padding: 0; background-color: #f3f1ea;">
+<div style="display: none; max-height: 0; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #f3f1ea; opacity: 0;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Ďakujeme za registráciu v SLFF. Kliknutím na tlačidlo potvrdíš svoju e-mailovú adresu a môžeš si začať zostavovať tím.{{ else if eq (printf "%v" .Data.jezik) "hr" }}Hvala na registraciji u SLFF. Klikom na gumb potvrđuješ svoju e-mail adresu i možeš početi slagati momčad.{{ else if eq (printf "%v" .Data.jezik) "cs" }}Díky za registraci v SLFF. Kliknutím na tlačítko potvrdíš svou e-mailovou adresu a můžeš začít skládat tým.{{ else if eq (printf "%v" .Data.jezik) "hu" }}Köszönjük, hogy regisztráltál az SLFF-re. A gombra kattintva megerősíted az e-mail-címedet, és már rakhatod is össze a csapatodat.{{ else if eq (printf "%v" .Data.jezik) "de" }}Danke für deine Registrierung bei SLFF. Mit einem Klick auf den Button bestätigst du deine E-Mail-Adresse und kannst gleich dein Team zusammenstellen.{{ else if eq (printf "%v" .Data.jezik) "sr" }}Hvala na registraciji na SLFF. Klikom na dugme potvrđuješ svoju imejl adresu i možeš odmah da sastaviš svoj tim.{{ else if eq (printf "%v" .Data.jezik) "ro" }}Mersi că te-ai înregistrat pe SLFF. Apasă butonul ca să-ți confirmi adresa de e-mail, apoi îți poți face imediat echipa.{{ else if eq (printf "%v" .Data.jezik) "et" }}Aitäh, et registreerusid SLFF-is. Vajuta nupule, et kinnitada oma e-posti aadress, ja saad kohe meeskonna kokku panna.{{ else if eq (printf "%v" .Data.jezik) "pl" }}Dziękujemy za rejestrację w SLFF. Kliknij przycisk, aby potwierdzić swój adres e-mail, i od razu możesz ułożyć drużynę.{{ else if eq (printf "%v" .Data.jezik) "es" }}Gracias por registrarte en SLFF. Pulsa el botón para confirmar tu correo electrónico y ya puedes empezar a hacer tu equipo.{{ else if eq (printf "%v" .Data.jezik) "lv" }}Paldies, ka reģistrējies SLFF. Nospied pogu, lai apstiprinātu savu e-pasta adresi, un vari uzreiz sastādīt komandu.{{ else if eq (printf "%v" .Data.jezik) "mk" }}Ти благодариме што се регистрира на SLFF. Притисни го копчето за да ја потврдиш својата е-пошта и веднаш можеш да составиш тим.{{ else if eq (printf "%v" .Data.jezik) "el" }}Ευχαριστούμε για την εγγραφή σου στο SLFF. Πάτα το κουμπί για να επιβεβαιώσεις το email σου και μπορείς αμέσως να φτιάξεις ομάδα.{{ else if eq (printf "%v" .Data.jezik) "tr" }}SLFF’ye kaydolduğun için teşekkürler. E-posta adresini doğrulamak için butona bas, hemen takımını kurabilirsin.{{ else if eq (printf "%v" .Data.jezik) "uk" }}Дякуємо за реєстрацію в SLFF. Натисни кнопку, щоб підтвердити свою електронну пошту, і одразу можеш збирати команду.{{ else if eq (printf "%v" .Data.jezik) "hy" }}Շնորհակալություն SLFF-ում գրանցվելու համար։ Սեղմիր կոճակը՝ էլ. հասցեդ հաստատելու համար, և կարող ես անմիջապես թիմ կազմել։{{ else if eq (printf "%v" .Data.jezik) "az" }}SLFF-də qeydiyyatdan keçdiyin üçün təşəkkürlər. E-poçtunu təsdiqləmək üçün düyməni bas və dərhal komanda yığa bilərsən.{{ else if eq (printf "%v" .Data.jezik) "da" }}Tak, fordi du har oprettet dig på SLFF. Tryk på knappen for at bekræfte din e-mail, så kan du straks sætte dit hold.{{ else if eq (printf "%v" .Data.jezik) "en" }}Thanks for signing up to SLFF. Tap the button to confirm your email and you can start building your team straight away.{{ else }}Hvala za registracijo v SLFF. S klikom na gumb potrdiš svoj e-naslov in lahko začneš sestavljati ekipo.{{ end }}&#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; </div>
+<table role="presentation" class="ozadje" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f3f1ea" style="background-color: #f3f1ea;">
+<tr><td align="center" style="padding: 24px 12px;">
+  <!--[if mso]><table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0"><tr><td><![endif]-->
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px;">
+    <tr><td bgcolor="#0b3d2e" style="background-color: #0b3d2e; border-radius: 14px 14px 0 0; padding: 14px 24px;" class="px">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr>
+        <td width="44" valign="middle"><a href="https://slff.eu"><img src="https://slff.eu/logo/slff-ikona-180.png" width="44" height="44" alt="SLFF" style="display: block; border: 0; width: 44px; height: 44px;"></a></td>
+        <td valign="middle" style="padding-left: 12px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; line-height: 22px; font-weight: 800; letter-spacing: 1px; color: #fdf6e3;">SLFF<br><span style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: .6px; color: #ffd166; text-transform: uppercase;">Sunday League Fantasy Football</span></td>
+        
+      </tr></table>
+    </td></tr>
+    <tr><td class="kartica px" bgcolor="#ffffff" style="background-color: #ffffff; border: 1px solid #e7e3d8; border-top: 0; border-radius: 0 0 14px 14px; padding: 28px 32px 24px;">
+      <h1 class="h1 tx" style="margin: 0 0 14px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 24px; line-height: 30px; font-weight: 800; color: #0f172a;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Ahoj!{{ else if eq (printf "%v" .Data.jezik) "hr" }}Bok!{{ else if eq (printf "%v" .Data.jezik) "cs" }}Ahoj!{{ else if eq (printf "%v" .Data.jezik) "hu" }}Szia!{{ else if eq (printf "%v" .Data.jezik) "de" }}Servus!{{ else if eq (printf "%v" .Data.jezik) "sr" }}Zdravo!{{ else if eq (printf "%v" .Data.jezik) "ro" }}Salut!{{ else if eq (printf "%v" .Data.jezik) "et" }}Tere!{{ else if eq (printf "%v" .Data.jezik) "pl" }}Cześć!{{ else if eq (printf "%v" .Data.jezik) "es" }}¡Hola!{{ else if eq (printf "%v" .Data.jezik) "lv" }}Sveiki!{{ else if eq (printf "%v" .Data.jezik) "mk" }}Здраво!{{ else if eq (printf "%v" .Data.jezik) "el" }}Γεια σου!{{ else if eq (printf "%v" .Data.jezik) "tr" }}Merhaba!{{ else if eq (printf "%v" .Data.jezik) "uk" }}Привіт!{{ else if eq (printf "%v" .Data.jezik) "hy" }}Բարև!{{ else if eq (printf "%v" .Data.jezik) "az" }}Salam!{{ else if eq (printf "%v" .Data.jezik) "da" }}Hej!{{ else if eq (printf "%v" .Data.jezik) "en" }}Hi!{{ else }}Živjo!{{ end }}</h1>
+      <p class="tx" style="margin: 0 0 16px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px; color: #0f172a;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Ďakujeme za registráciu v SLFF. Kliknutím na tlačidlo potvrdíš svoju e-mailovú adresu a môžeš si začať zostavovať tím.{{ else if eq (printf "%v" .Data.jezik) "hr" }}Hvala na registraciji u SLFF. Klikom na gumb potvrđuješ svoju e-mail adresu i možeš početi slagati momčad.{{ else if eq (printf "%v" .Data.jezik) "cs" }}Díky za registraci v SLFF. Kliknutím na tlačítko potvrdíš svou e-mailovou adresu a můžeš začít skládat tým.{{ else if eq (printf "%v" .Data.jezik) "hu" }}Köszönjük, hogy regisztráltál az SLFF-re. A gombra kattintva megerősíted az e-mail-címedet, és már rakhatod is össze a csapatodat.{{ else if eq (printf "%v" .Data.jezik) "de" }}Danke für deine Registrierung bei SLFF. Mit einem Klick auf den Button bestätigst du deine E-Mail-Adresse und kannst gleich dein Team zusammenstellen.{{ else if eq (printf "%v" .Data.jezik) "sr" }}Hvala na registraciji na SLFF. Klikom na dugme potvrđuješ svoju imejl adresu i možeš odmah da sastaviš svoj tim.{{ else if eq (printf "%v" .Data.jezik) "ro" }}Mersi că te-ai înregistrat pe SLFF. Apasă butonul ca să-ți confirmi adresa de e-mail, apoi îți poți face imediat echipa.{{ else if eq (printf "%v" .Data.jezik) "et" }}Aitäh, et registreerusid SLFF-is. Vajuta nupule, et kinnitada oma e-posti aadress, ja saad kohe meeskonna kokku panna.{{ else if eq (printf "%v" .Data.jezik) "pl" }}Dziękujemy za rejestrację w SLFF. Kliknij przycisk, aby potwierdzić swój adres e-mail, i od razu możesz ułożyć drużynę.{{ else if eq (printf "%v" .Data.jezik) "es" }}Gracias por registrarte en SLFF. Pulsa el botón para confirmar tu correo electrónico y ya puedes empezar a hacer tu equipo.{{ else if eq (printf "%v" .Data.jezik) "lv" }}Paldies, ka reģistrējies SLFF. Nospied pogu, lai apstiprinātu savu e-pasta adresi, un vari uzreiz sastādīt komandu.{{ else if eq (printf "%v" .Data.jezik) "mk" }}Ти благодариме што се регистрира на SLFF. Притисни го копчето за да ја потврдиш својата е-пошта и веднаш можеш да составиш тим.{{ else if eq (printf "%v" .Data.jezik) "el" }}Ευχαριστούμε για την εγγραφή σου στο SLFF. Πάτα το κουμπί για να επιβεβαιώσεις το email σου και μπορείς αμέσως να φτιάξεις ομάδα.{{ else if eq (printf "%v" .Data.jezik) "tr" }}SLFF’ye kaydolduğun için teşekkürler. E-posta adresini doğrulamak için butona bas, hemen takımını kurabilirsin.{{ else if eq (printf "%v" .Data.jezik) "uk" }}Дякуємо за реєстрацію в SLFF. Натисни кнопку, щоб підтвердити свою електронну пошту, і одразу можеш збирати команду.{{ else if eq (printf "%v" .Data.jezik) "hy" }}Շնորհակալություն SLFF-ում գրանցվելու համար։ Սեղմիր կոճակը՝ էլ. հասցեդ հաստատելու համար, և կարող ես անմիջապես թիմ կազմել։{{ else if eq (printf "%v" .Data.jezik) "az" }}SLFF-də qeydiyyatdan keçdiyin üçün təşəkkürlər. E-poçtunu təsdiqləmək üçün düyməni bas və dərhal komanda yığa bilərsən.{{ else if eq (printf "%v" .Data.jezik) "da" }}Tak, fordi du har oprettet dig på SLFF. Tryk på knappen for at bekræfte din e-mail, så kan du straks sætte dit hold.{{ else if eq (printf "%v" .Data.jezik) "en" }}Thanks for signing up to SLFF. Tap the button to confirm your email and you can start building your team straight away.{{ else }}Hvala za registracijo v SLFF. S klikom na gumb potrdiš svoj e-naslov in lahko začneš sestavljati ekipo.{{ end }}</p>
+      <table role="presentation" class="gumb-tabela" cellspacing="0" cellpadding="0" border="0" style="margin: 8px 0 4px;">
+  <tr><td class="gumb-celica" align="center" bgcolor="#34d399" style="border-radius: 10px; background-color: #34d399;">
+    <a class="gumb-povezava" href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" target="_blank" style="display: inline-block; padding: 14px 28px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 16px; line-height: 20px; font-weight: 800; color: #052e16; text-decoration: none; border-radius: 10px;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Potvrdiť e-mail{{ else if eq (printf "%v" .Data.jezik) "hr" }}Potvrdi e-mail{{ else if eq (printf "%v" .Data.jezik) "cs" }}Potvrdit e-mail{{ else if eq (printf "%v" .Data.jezik) "hu" }}E-mail-cím megerősítése{{ else if eq (printf "%v" .Data.jezik) "de" }}E-Mail-Adresse bestätigen{{ else if eq (printf "%v" .Data.jezik) "sr" }}Potvrdi imejl{{ else if eq (printf "%v" .Data.jezik) "ro" }}Confirmă e-mailul{{ else if eq (printf "%v" .Data.jezik) "et" }}Kinnita e-post{{ else if eq (printf "%v" .Data.jezik) "pl" }}Potwierdź e-mail{{ else if eq (printf "%v" .Data.jezik) "es" }}Confirmar correo{{ else if eq (printf "%v" .Data.jezik) "lv" }}Apstiprināt e-pastu{{ else if eq (printf "%v" .Data.jezik) "mk" }}Потврди ја е-поштата{{ else if eq (printf "%v" .Data.jezik) "el" }}Επιβεβαίωση email{{ else if eq (printf "%v" .Data.jezik) "tr" }}E-postamı doğrula{{ else if eq (printf "%v" .Data.jezik) "uk" }}Підтвердити пошту{{ else if eq (printf "%v" .Data.jezik) "hy" }}Հաստատել էլ. հասցեն{{ else if eq (printf "%v" .Data.jezik) "az" }}E-poçtu təsdiqlə{{ else if eq (printf "%v" .Data.jezik) "da" }}Bekræft e-mail{{ else if eq (printf "%v" .Data.jezik) "en" }}Confirm email{{ else }}Potrdi e-naslov{{ end }}</a>
+  </td></tr></table>
+      <p class="siv" style="margin: 0 0 12px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 19px; color: #5b6b63; margin-top: 12px;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Tlačidlo nefunguje? Otvor tento odkaz:{{ else if eq (printf "%v" .Data.jezik) "hr" }}Gumb ne radi? Otvori ovu poveznicu:{{ else if eq (printf "%v" .Data.jezik) "cs" }}Tlačítko nefunguje? Otevři tento odkaz:{{ else if eq (printf "%v" .Data.jezik) "hu" }}Nem működik a gomb? Nyisd meg ezt a linket:{{ else if eq (printf "%v" .Data.jezik) "de" }}Der Button funktioniert nicht? Öffne diesen Link:{{ else if eq (printf "%v" .Data.jezik) "sr" }}Dugme ne radi? Otvori ovaj link:{{ else if eq (printf "%v" .Data.jezik) "ro" }}Butonul nu funcționează? Deschide acest link:{{ else if eq (printf "%v" .Data.jezik) "et" }}Nupp ei tööta? Ava see link:{{ else if eq (printf "%v" .Data.jezik) "pl" }}Przycisk nie działa? Otwórz ten link:{{ else if eq (printf "%v" .Data.jezik) "es" }}¿No funciona el botón? Abre este enlace:{{ else if eq (printf "%v" .Data.jezik) "lv" }}Poga nedarbojas? Atver šo saiti:{{ else if eq (printf "%v" .Data.jezik) "mk" }}Копчето не работи? Отвори ја оваа врска:{{ else if eq (printf "%v" .Data.jezik) "el" }}Δεν λειτουργεί το κουμπί; Άνοιξε αυτόν τον σύνδεσμο:{{ else if eq (printf "%v" .Data.jezik) "tr" }}Düğme çalışmıyor mu? Bu bağlantıyı aç:{{ else if eq (printf "%v" .Data.jezik) "uk" }}Кнопка не працює? Відкрий це посилання:{{ else if eq (printf "%v" .Data.jezik) "hy" }}Կոճակը չի՞ աշխատում։ Բացիր այս հղումը:{{ else if eq (printf "%v" .Data.jezik) "az" }}Düymə işləmir? Bu keçidi aç:{{ else if eq (printf "%v" .Data.jezik) "da" }}Virker knappen ikke? Åbn dette link:{{ else if eq (printf "%v" .Data.jezik) "en" }}Button not working? Open this link:{{ else }}Gumb ne deluje? Odpri to povezavo:{{ end }}<br><a class="pov" href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="color: #047655; word-break: break-all;">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup</a></p>
+      <p class="siv" style="margin: 0 0 12px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 19px; color: #5b6b63; margin-top: 20px;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Ak si sa neregistroval ty, tento e-mail ignoruj.{{ else if eq (printf "%v" .Data.jezik) "hr" }}Ako se nisi ti registrirao/la, zanemari ovaj e-mail.{{ else if eq (printf "%v" .Data.jezik) "cs" }}Pokud ses neregistroval/a ty, tento e-mail ignoruj.{{ else if eq (printf "%v" .Data.jezik) "hu" }}Ha nem te regisztráltál, hagyd figyelmen kívül ezt az e-mailt.{{ else if eq (printf "%v" .Data.jezik) "de" }}Wenn du dich nicht registriert hast, ignorier diese E-Mail einfach.{{ else if eq (printf "%v" .Data.jezik) "sr" }}Ako se nisi ti registrovao/la, zanemari ovaj imejl.{{ else if eq (printf "%v" .Data.jezik) "ro" }}Dacă nu tu te-ai înregistrat, ignoră acest e-mail.{{ else if eq (printf "%v" .Data.jezik) "et" }}Kui sa ise ei registreerunud, jäta see kiri tähelepanuta.{{ else if eq (printf "%v" .Data.jezik) "pl" }}Jeśli to nie ty się rejestrowałeś, zignoruj tę wiadomość.{{ else if eq (printf "%v" .Data.jezik) "es" }}Si no te has registrado tú, ignora este mensaje.{{ else if eq (printf "%v" .Data.jezik) "lv" }}Ja tu pats nereģistrējies, vienkārši ignorē šo vēstuli.{{ else if eq (printf "%v" .Data.jezik) "mk" }}Ако не се регистрираше ти, само игнорирај ја оваа порака.{{ else if eq (printf "%v" .Data.jezik) "el" }}Αν δεν έκανες εσύ την εγγραφή, απλώς αγνόησε αυτό το μήνυμα.{{ else if eq (printf "%v" .Data.jezik) "tr" }}Kaydı sen yapmadıysan bu e-postayı görmezden gelebilirsin.{{ else if eq (printf "%v" .Data.jezik) "uk" }}Якщо ти не реєструвався, просто проігноруй цей лист.{{ else if eq (printf "%v" .Data.jezik) "hy" }}Եթե դու չես գրանցվել, պարզապես անտեսիր այս նամակը։{{ else if eq (printf "%v" .Data.jezik) "az" }}Qeydiyyatdan sən keçməmisənsə, bu məktubu nəzərə alma.{{ else if eq (printf "%v" .Data.jezik) "da" }}Har du ikke selv oprettet dig, kan du bare se bort fra denne mail.{{ else if eq (printf "%v" .Data.jezik) "en" }}If you didn’t sign up yourself, just ignore this email.{{ else }}Če se nisi registriral/a ti, ta mail prezri.{{ end }}</p>
+    </td></tr>
+    
+    <tr><td class="px" align="center" style="padding: 20px 32px 8px;"><p class="siv" style="margin: 0 0 12px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 19px; color: #5b6b63; text-align: center; font-size: 12px; line-height: 18px;">SLFF · Sunday League Fantasy Football · <a class="siv" href="https://slff.eu" style="color: #5b6b63;">slff.eu</a> · <a class="siv" href="mailto:info@slff.eu" style="color: #5b6b63;">info@slff.eu</a></p></td></tr>
+  </table>
+  <!--[if mso]></td></tr></table><![endif]-->
+</td></tr></table>
+</body></html>

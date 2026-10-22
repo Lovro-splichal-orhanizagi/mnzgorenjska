@@ -1,179 +1,70 @@
 <!doctype html>
-<!-- Ponastavitev gesla. Po potrditvi povezave stran odpre /novo-geslo.
-     Jezik izbere `jezik` v metapodatkih uporabnika; brez njega slovenščina.
-     Vsebino prilepi v Supabase → Auth → Email Templates → Reset Password.
-     Povezava vodi naravnost na slff.eu/auth/confirm (PotrditevPovezave.tsx),
-     ne prek supabase.co: le tako jo telefon odpre v mobilni aplikaciji.
-     Glava in noga sta kopija ovoj() iz supabase/functions/_shared/mail.ts. -->
-<html>
+<!-- Ponastavitev gesla. Jezik izbere `jezik` v metapodatkih uporabnika; brez njega
+     slovenščina. Vsebino prilepi v Supabase → Auth → Email Templates →
+     Reset password, zadevo pa iz supabase/config.toml.
+     Oblika je izpis postavi() iz supabase/functions/_shared/mail.ts. -->
+<html lang="{{ if eq (printf "%v" .Data.jezik) "sk" }}sk{{ else if eq (printf "%v" .Data.jezik) "hr" }}hr{{ else if eq (printf "%v" .Data.jezik) "cs" }}cs{{ else if eq (printf "%v" .Data.jezik) "hu" }}hu{{ else if eq (printf "%v" .Data.jezik) "de" }}de{{ else if eq (printf "%v" .Data.jezik) "sr" }}sr{{ else if eq (printf "%v" .Data.jezik) "ro" }}ro{{ else if eq (printf "%v" .Data.jezik) "et" }}et{{ else if eq (printf "%v" .Data.jezik) "pl" }}pl{{ else if eq (printf "%v" .Data.jezik) "es" }}es{{ else if eq (printf "%v" .Data.jezik) "lv" }}lv{{ else if eq (printf "%v" .Data.jezik) "mk" }}mk{{ else if eq (printf "%v" .Data.jezik) "el" }}el{{ else if eq (printf "%v" .Data.jezik) "tr" }}tr{{ else if eq (printf "%v" .Data.jezik) "uk" }}uk{{ else if eq (printf "%v" .Data.jezik) "hy" }}hy{{ else if eq (printf "%v" .Data.jezik) "az" }}az{{ else if eq (printf "%v" .Data.jezik) "da" }}da{{ else if eq (printf "%v" .Data.jezik) "en" }}en{{ else }}sl{{ end }}" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light">
-<meta name="supported-color-schemes" content="light">
-<title>SLFF</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<title>{{ if eq (printf "%v" .Data.jezik) "sk" }}SLFF: nastav si nové heslo{{ else if eq (printf "%v" .Data.jezik) "hr" }}SLFF: postavi novu lozinku{{ else if eq (printf "%v" .Data.jezik) "cs" }}SLFF: nastav si nové heslo{{ else if eq (printf "%v" .Data.jezik) "hu" }}SLFF: új jelszó beállítása{{ else if eq (printf "%v" .Data.jezik) "de" }}SLFF: neues Passwort festlegen{{ else if eq (printf "%v" .Data.jezik) "sr" }}SLFF: postavi novu lozinku{{ else if eq (printf "%v" .Data.jezik) "et" }}SLFF: määra uus parool{{ else if eq (printf "%v" .Data.jezik) "pl" }}SLFF: ustaw nowe hasło{{ else if eq (printf "%v" .Data.jezik) "es" }}SLFF: crea una contraseña nueva{{ else if eq (printf "%v" .Data.jezik) "en" }}SLFF: set a new password{{ else if eq (printf "%v" .Data.jezik) "ro" }}SLFF: setează o parolă nouă{{ else if eq (printf "%v" .Data.jezik) "lv" }}SLFF: iestati jaunu paroli{{ else if eq (printf "%v" .Data.jezik) "mk" }}SLFF: постави нова лозинка{{ else if eq (printf "%v" .Data.jezik) "el" }}SLFF: όρισε νέο κωδικό{{ else if eq (printf "%v" .Data.jezik) "tr" }}SLFF: yeni şifre belirle{{ else if eq (printf "%v" .Data.jezik) "uk" }}SLFF: створи новий пароль{{ else if eq (printf "%v" .Data.jezik) "hy" }}SLFF: սահմանիր նոր գաղտնաբառ{{ else if eq (printf "%v" .Data.jezik) "az" }}SLFF: yeni şifrə təyin et{{ else if eq (printf "%v" .Data.jezik) "da" }}SLFF: vælg en ny adgangskode{{ else }}SLFF: nastavi novo geslo{{ end }}</title>
+<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><style>td,p,a,div{font-family:'Segoe UI',Arial,sans-serif !important;}</style><![endif]-->
+<style>
+  :root { color-scheme: light dark; supported-color-schemes: light dark; }
+  body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+  a { text-decoration: none; }
+  @media (max-width: 620px) {
+    .px { padding-left: 20px !important; padding-right: 20px !important; }
+    .h1 { font-size: 22px !important; line-height: 28px !important; }
+    .gumb-celica, .gumb-povezava { display: block !important; width: 100% !important; box-sizing: border-box; text-align: center !important; }
+    .ploscica { display: block !important; width: 100% !important; box-sizing: border-box; margin-bottom: 8px; }
+    .skrij-mobi { display: none !important; }
+    .gumb-tabela { width: 100% !important; }
+  }
+  @media (prefers-color-scheme: dark) {
+    .ozadje { background-color: #07110d !important; }
+    .kartica { background-color: #0f1d17 !important; border-color: #1d3328 !important; }
+    .tx { color: #e6efe9 !important; }
+    .siv { color: #9db3a7 !important; }
+    .pov { color: #6fe4ae !important; }
+    .dejstva { background-color: #13261d !important; border-color: #24402f !important; }
+    .opoz { background-color: #2a230f !important; border-color: #8a6d1f !important; }
+  }
+  [data-ogsc] .tx { color: #e6efe9 !important; }
+  [data-ogsc] .siv { color: #9db3a7 !important; }
+  [data-ogsc] .pov { color: #6fe4ae !important; }
+</style>
 </head>
-<body style="margin: 0; padding: 0; background: #f1f5f9;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9" style="background: #f1f5f9;">
-<tr><td align="center" style="padding: 24px 8px;">
-<!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 600px;">
-<tr><td bgcolor="#020617" style="background: #020617; padding: 16px 24px; border-radius: 12px 12px 0 0;">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-<td style="vertical-align: middle;"><a href="https://slff.eu" style="text-decoration: none;"><img src="https://slff.eu/logo/slff-ikona-180.png" width="36" height="36" alt="SLFF" style="display: block; border: 0; width: 36px; height: 36px;"></a></td>
-<td style="padding-left: 10px; vertical-align: middle; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px;">SLFF</td>
-</tr></table>
-</td></tr>
-<tr><td bgcolor="#22c55e" height="3" style="background: #22c55e; height: 3px; line-height: 3px; font-size: 0;">&nbsp;</td></tr>
-<tr><td bgcolor="#ffffff" style="background: #ffffff; padding: 28px 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #0f172a;">
-{{ if eq (printf "%v" .Data.jezik) "sk" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Obnovenie hesla</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Niekto (dúfame, že ty) požiadal o nové heslo do SLFF. Klikni na tlačidlo a zadaj nové heslo.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Nastaviť nové heslo →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ak si o nové heslo nežiadal ty, tento e-mail ignoruj — staré heslo zostáva v platnosti.</p>
-{{ else if eq (printf "%v" .Data.jezik) "hr" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Nova lozinka</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Netko (nadamo se ti) zatražio je novu lozinku za SLFF. Klikni gumb i upiši novu lozinku.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Postavi novu lozinku →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ako nisi ti zatražio/la novu lozinku, zanemari ovaj e-mail. Stara lozinka ostaje važeća.</p>
-{{ else if eq (printf "%v" .Data.jezik) "cs" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Obnovení hesla</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Někdo (doufáme, že ty) požádal o nové heslo do SLFF. Klikni na tlačítko a zadej nové heslo.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Nastavit nové heslo →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Pokud jsi o nové heslo nežádal/a ty, tento e-mail ignoruj. Staré heslo zůstává v platnosti.</p>
-{{ else if eq (printf "%v" .Data.jezik) "hu" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Új jelszó</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Valaki (reméljük, te) új jelszót kért az SLFF-hez. Kattints a gombra, és add meg az új jelszavadat.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Új jelszó megadása →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ha nem te kértél új jelszót, hagyd figyelmen kívül ezt az e-mailt. A régi jelszavad továbbra is érvényes.</p>
-{{ else if eq (printf "%v" .Data.jezik) "de" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Neues Passwort</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Jemand (hoffentlich du) hat ein neues Passwort für SLFF angefordert. Klick auf den Button und gib dein neues Passwort ein.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Neues Passwort festlegen →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Wenn du kein neues Passwort angefordert hast, ignorier diese E-Mail einfach. Dein altes Passwort bleibt gültig.</p>
-{{ else if eq (printf "%v" .Data.jezik) "sr" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Nova lozinka</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Neko (nadamo se da si to ti) zatražio je novu lozinku za SLFF. Klikni na dugme i upiši novu lozinku.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Postavi novu lozinku →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ako nisi ti zatražio/la novu lozinku, zanemari ovaj imejl. Stara lozinka i dalje važi.</p>
-{{ else if eq (printf "%v" .Data.jezik) "ro" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Parolă nouă</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Cineva (sperăm că tu) a cerut o parolă nouă pentru SLFF. Apasă butonul și scrie parola nouă.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Setează parola nouă →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Dacă nu tu ai cerut o parolă nouă, ignoră acest e-mail. Parola veche rămâne valabilă.</p>
-{{ else if eq (printf "%v" .Data.jezik) "et" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Uus parool</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Keegi (loodetavasti sina) taotles SLFF-i jaoks uut parooli. Vajuta nupule ja sisesta uus parool.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Määra uus parool →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Kui sa ise uut parooli ei taotlenud, jäta see kiri tähelepanuta. Vana parool kehtib edasi.</p>
-{{ else if eq (printf "%v" .Data.jezik) "pl" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Nowe hasło</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Ktoś (mamy nadzieję, że ty) poprosił o nowe hasło do SLFF. Kliknij przycisk i wpisz nowe hasło.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Ustaw nowe hasło →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Jeśli to nie ty prosiłeś o nowe hasło, zignoruj tę wiadomość. Stare hasło nadal działa.</p>
-{{ else if eq (printf "%v" .Data.jezik) "es" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Nueva contraseña</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Alguien (esperamos que tú) ha pedido una nueva contraseña para SLFF. Pulsa el botón y escribe la nueva contraseña.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Elegir nueva contraseña →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Si no has pedido una nueva contraseña, ignora este mensaje. La contraseña anterior sigue valiendo.</p>
-{{ else if eq (printf "%v" .Data.jezik) "lv" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Jauna parole</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Kāds (cerams, ka tu) pieprasīja jaunu SLFF paroli. Nospied pogu un ievadi jauno paroli.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Iestatīt jaunu paroli →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ja tu pats nepieprasīji jaunu paroli, vienkārši ignorē šo vēstuli. Vecā parole joprojām ir derīga.</p>
-{{ else if eq (printf "%v" .Data.jezik) "mk" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Нова лозинка</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Некој (се надеваме дека тоа си ти) побара нова лозинка за SLFF. Притисни го копчето и внеси ја новата лозинка.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Постави нова лозинка →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ако не побара нова лозинка ти, само игнорирај ја оваа порака. Старата лозинка сè уште важи.</p>
-{{ else if eq (printf "%v" .Data.jezik) "el" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Νέος κωδικός</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Κάποιος (ελπίζουμε εσύ) ζήτησε νέο κωδικό για το SLFF. Πάτα το κουμπί και γράψε τον νέο σου κωδικό.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Ορισμός νέου κωδικού →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Αν δεν ζήτησες εσύ νέο κωδικό, απλώς αγνόησε αυτό το μήνυμα. Ο παλιός κωδικός ισχύει ακόμα.</p>
-{{ else if eq (printf "%v" .Data.jezik) "tr" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Yeni şifre</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Birisi (umarız sensin) SLFF için yeni bir şifre istedi. Butona bas ve yeni şifreni gir.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Yeni şifre belirle →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Yeni şifreyi sen istemediysen bu e-postayı görmezden gelebilirsin. Eski şifren hâlâ geçerli.</p>
-{{ else if eq (printf "%v" .Data.jezik) "uk" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Новий пароль</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Хтось (сподіваємося, що ти) попросив новий пароль для SLFF. Натисни кнопку і введи новий пароль.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Встановити новий пароль →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Якщо ти не просив новий пароль, просто проігноруй цей лист. Старий пароль і далі дійсний.</p>
-{{ else if eq (printf "%v" .Data.jezik) "hy" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Նոր գաղտնաբառ</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Ինչ-որ մեկը (հուսով ենք՝ դու) նոր գաղտնաբառ է խնդրել SLFF-ի համար։ Սեղմիր կոճակը և մուտքագրիր նոր գաղտնաբառը։</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Սահմանել նոր գաղտնաբառ →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Եթե դու նոր գաղտնաբառ չես խնդրել, պարզապես անտեսիր այս նամակը։ Հին գաղտնաբառը դեռ գործում է։</p>
-{{ else if eq (printf "%v" .Data.jezik) "az" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Yeni şifrə</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Kimsə (ümid edirik ki, sən) SLFF üçün yeni şifrə istəyib. Düyməni bas və yeni şifrəni daxil et.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Yeni şifrə təyin et →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Yeni şifrəni sən istəməmisənsə, bu məktubu nəzərə alma. Köhnə şifrən hələ də etibarlıdır.</p>
-{{ else if eq (printf "%v" .Data.jezik) "da" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Ny adgangskode</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Nogen (forhåbentlig dig) har bedt om en ny adgangskode til SLFF. Tryk på knappen, og skriv din nye adgangskode.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Vælg ny adgangskode →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Har du ikke selv bedt om en ny adgangskode, kan du bare se bort fra denne mail. Din gamle adgangskode virker stadig.</p>
-{{ else if eq (printf "%v" .Data.jezik) "en" }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">New password</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Someone (hopefully you) asked for a new SLFF password. Tap the button and enter your new password.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Set a new password →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">If you didn’t ask for a new password, just ignore this email. Your old password still works.</p>
-{{ else }}
-  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Ponastavitev gesla</p>
-  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Nekdo (upamo, da ti) je zahteval novo geslo za SLFF. Klikni gumb in vpiši novo geslo.</p>
-  <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Nastavi novo geslo →</a>
-  </p>
-  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Če novega gesla nisi zahteval/a ti, ta mail prezri — staro geslo ostane veljavno.</p>
-{{ end }}
-</td></tr>
-<tr><td bgcolor="#020617" style="background: #020617; padding: 18px 24px; border-radius: 0 0 12px 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #94a3b8;">
-Sunday League Fantasy Football · <a href="https://slff.eu" style="color: #94a3b8;">slff.eu</a> · <a href="mailto:info@slff.eu" style="color: #94a3b8;">info@slff.eu</a>
-</td></tr>
-</table>
-<!--[if mso]></td></tr></table><![endif]-->
-</td></tr>
-</table>
-</body>
-</html>
+<body class="ozadje" style="margin: 0; padding: 0; background-color: #f3f1ea;">
+<div style="display: none; max-height: 0; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #f3f1ea; opacity: 0;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Niekto (dúfame, že ty) požiadal o nové heslo do SLFF. Klikni na tlačidlo a zadaj nové heslo.{{ else if eq (printf "%v" .Data.jezik) "hr" }}Netko (nadamo se ti) zatražio je novu lozinku za SLFF. Klikni gumb i upiši novu lozinku.{{ else if eq (printf "%v" .Data.jezik) "cs" }}Někdo (doufáme, že ty) požádal o nové heslo do SLFF. Klikni na tlačítko a zadej nové heslo.{{ else if eq (printf "%v" .Data.jezik) "hu" }}Valaki (reméljük, te) új jelszót kért az SLFF-hez. Kattints a gombra, és add meg az új jelszavadat.{{ else if eq (printf "%v" .Data.jezik) "de" }}Jemand (hoffentlich du) hat ein neues Passwort für SLFF angefordert. Klick auf den Button und gib dein neues Passwort ein.{{ else if eq (printf "%v" .Data.jezik) "sr" }}Neko (nadamo se da si to ti) zatražio je novu lozinku za SLFF. Klikni na dugme i upiši novu lozinku.{{ else if eq (printf "%v" .Data.jezik) "ro" }}Cineva (sperăm că tu) a cerut o parolă nouă pentru SLFF. Apasă butonul și scrie parola nouă.{{ else if eq (printf "%v" .Data.jezik) "et" }}Keegi (loodetavasti sina) taotles SLFF-i jaoks uut parooli. Vajuta nupule ja sisesta uus parool.{{ else if eq (printf "%v" .Data.jezik) "pl" }}Ktoś (mamy nadzieję, że ty) poprosił o nowe hasło do SLFF. Kliknij przycisk i wpisz nowe hasło.{{ else if eq (printf "%v" .Data.jezik) "es" }}Alguien (esperamos que tú) ha pedido una nueva contraseña para SLFF. Pulsa el botón y escribe la nueva contraseña.{{ else if eq (printf "%v" .Data.jezik) "lv" }}Kāds (cerams, ka tu) pieprasīja jaunu SLFF paroli. Nospied pogu un ievadi jauno paroli.{{ else if eq (printf "%v" .Data.jezik) "mk" }}Некој (се надеваме дека тоа си ти) побара нова лозинка за SLFF. Притисни го копчето и внеси ја новата лозинка.{{ else if eq (printf "%v" .Data.jezik) "el" }}Κάποιος (ελπίζουμε εσύ) ζήτησε νέο κωδικό για το SLFF. Πάτα το κουμπί και γράψε τον νέο σου κωδικό.{{ else if eq (printf "%v" .Data.jezik) "tr" }}Birisi (umarız sensin) SLFF için yeni bir şifre istedi. Butona bas ve yeni şifreni gir.{{ else if eq (printf "%v" .Data.jezik) "uk" }}Хтось (сподіваємося, що ти) попросив новий пароль для SLFF. Натисни кнопку і введи новий пароль.{{ else if eq (printf "%v" .Data.jezik) "hy" }}Ինչ-որ մեկը (հուսով ենք՝ դու) նոր գաղտնաբառ է խնդրել SLFF-ի համար։ Սեղմիր կոճակը և մուտքագրիր նոր գաղտնաբառը։{{ else if eq (printf "%v" .Data.jezik) "az" }}Kimsə (ümid edirik ki, sən) SLFF üçün yeni şifrə istəyib. Düyməni bas və yeni şifrəni daxil et.{{ else if eq (printf "%v" .Data.jezik) "da" }}Nogen (forhåbentlig dig) har bedt om en ny adgangskode til SLFF. Tryk på knappen, og skriv din nye adgangskode.{{ else if eq (printf "%v" .Data.jezik) "en" }}Someone (hopefully you) asked for a new SLFF password. Tap the button and enter your new password.{{ else }}Nekdo (upamo, da ti) je zahteval novo geslo za SLFF. Klikni gumb in vpiši novo geslo.{{ end }}&#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847; </div>
+<table role="presentation" class="ozadje" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f3f1ea" style="background-color: #f3f1ea;">
+<tr><td align="center" style="padding: 24px 12px;">
+  <!--[if mso]><table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0"><tr><td><![endif]-->
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px;">
+    <tr><td bgcolor="#0b3d2e" style="background-color: #0b3d2e; border-radius: 14px 14px 0 0; padding: 14px 24px;" class="px">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr>
+        <td width="44" valign="middle"><a href="https://slff.eu"><img src="https://slff.eu/logo/slff-ikona-180.png" width="44" height="44" alt="SLFF" style="display: block; border: 0; width: 44px; height: 44px;"></a></td>
+        <td valign="middle" style="padding-left: 12px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; line-height: 22px; font-weight: 800; letter-spacing: 1px; color: #fdf6e3;">SLFF<br><span style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: .6px; color: #ffd166; text-transform: uppercase;">Sunday League Fantasy Football</span></td>
+        
+      </tr></table>
+    </td></tr>
+    <tr><td class="kartica px" bgcolor="#ffffff" style="background-color: #ffffff; border: 1px solid #e7e3d8; border-top: 0; border-radius: 0 0 14px 14px; padding: 28px 32px 24px;">
+      <h1 class="h1 tx" style="margin: 0 0 14px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 24px; line-height: 30px; font-weight: 800; color: #0f172a;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Obnovenie hesla{{ else if eq (printf "%v" .Data.jezik) "hr" }}Nova lozinka{{ else if eq (printf "%v" .Data.jezik) "cs" }}Obnovení hesla{{ else if eq (printf "%v" .Data.jezik) "hu" }}Új jelszó{{ else if eq (printf "%v" .Data.jezik) "de" }}Neues Passwort{{ else if eq (printf "%v" .Data.jezik) "sr" }}Nova lozinka{{ else if eq (printf "%v" .Data.jezik) "ro" }}Parolă nouă{{ else if eq (printf "%v" .Data.jezik) "et" }}Uus parool{{ else if eq (printf "%v" .Data.jezik) "pl" }}Nowe hasło{{ else if eq (printf "%v" .Data.jezik) "es" }}Nueva contraseña{{ else if eq (printf "%v" .Data.jezik) "lv" }}Jauna parole{{ else if eq (printf "%v" .Data.jezik) "mk" }}Нова лозинка{{ else if eq (printf "%v" .Data.jezik) "el" }}Νέος κωδικός{{ else if eq (printf "%v" .Data.jezik) "tr" }}Yeni şifre{{ else if eq (printf "%v" .Data.jezik) "uk" }}Новий пароль{{ else if eq (printf "%v" .Data.jezik) "hy" }}Նոր գաղտնաբառ{{ else if eq (printf "%v" .Data.jezik) "az" }}Yeni şifrə{{ else if eq (printf "%v" .Data.jezik) "da" }}Ny adgangskode{{ else if eq (printf "%v" .Data.jezik) "en" }}New password{{ else }}Ponastavitev gesla{{ end }}</h1>
+      <p class="tx" style="margin: 0 0 16px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px; color: #0f172a;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Niekto (dúfame, že ty) požiadal o nové heslo do SLFF. Klikni na tlačidlo a zadaj nové heslo.{{ else if eq (printf "%v" .Data.jezik) "hr" }}Netko (nadamo se ti) zatražio je novu lozinku za SLFF. Klikni gumb i upiši novu lozinku.{{ else if eq (printf "%v" .Data.jezik) "cs" }}Někdo (doufáme, že ty) požádal o nové heslo do SLFF. Klikni na tlačítko a zadej nové heslo.{{ else if eq (printf "%v" .Data.jezik) "hu" }}Valaki (reméljük, te) új jelszót kért az SLFF-hez. Kattints a gombra, és add meg az új jelszavadat.{{ else if eq (printf "%v" .Data.jezik) "de" }}Jemand (hoffentlich du) hat ein neues Passwort für SLFF angefordert. Klick auf den Button und gib dein neues Passwort ein.{{ else if eq (printf "%v" .Data.jezik) "sr" }}Neko (nadamo se da si to ti) zatražio je novu lozinku za SLFF. Klikni na dugme i upiši novu lozinku.{{ else if eq (printf "%v" .Data.jezik) "ro" }}Cineva (sperăm că tu) a cerut o parolă nouă pentru SLFF. Apasă butonul și scrie parola nouă.{{ else if eq (printf "%v" .Data.jezik) "et" }}Keegi (loodetavasti sina) taotles SLFF-i jaoks uut parooli. Vajuta nupule ja sisesta uus parool.{{ else if eq (printf "%v" .Data.jezik) "pl" }}Ktoś (mamy nadzieję, że ty) poprosił o nowe hasło do SLFF. Kliknij przycisk i wpisz nowe hasło.{{ else if eq (printf "%v" .Data.jezik) "es" }}Alguien (esperamos que tú) ha pedido una nueva contraseña para SLFF. Pulsa el botón y escribe la nueva contraseña.{{ else if eq (printf "%v" .Data.jezik) "lv" }}Kāds (cerams, ka tu) pieprasīja jaunu SLFF paroli. Nospied pogu un ievadi jauno paroli.{{ else if eq (printf "%v" .Data.jezik) "mk" }}Некој (се надеваме дека тоа си ти) побара нова лозинка за SLFF. Притисни го копчето и внеси ја новата лозинка.{{ else if eq (printf "%v" .Data.jezik) "el" }}Κάποιος (ελπίζουμε εσύ) ζήτησε νέο κωδικό για το SLFF. Πάτα το κουμπί και γράψε τον νέο σου κωδικό.{{ else if eq (printf "%v" .Data.jezik) "tr" }}Birisi (umarız sensin) SLFF için yeni bir şifre istedi. Butona bas ve yeni şifreni gir.{{ else if eq (printf "%v" .Data.jezik) "uk" }}Хтось (сподіваємося, що ти) попросив новий пароль для SLFF. Натисни кнопку і введи новий пароль.{{ else if eq (printf "%v" .Data.jezik) "hy" }}Ինչ-որ մեկը (հուսով ենք՝ դու) նոր գաղտնաբառ է խնդրել SLFF-ի համար։ Սեղմիր կոճակը և մուտքագրիր նոր գաղտնաբառը։{{ else if eq (printf "%v" .Data.jezik) "az" }}Kimsə (ümid edirik ki, sən) SLFF üçün yeni şifrə istəyib. Düyməni bas və yeni şifrəni daxil et.{{ else if eq (printf "%v" .Data.jezik) "da" }}Nogen (forhåbentlig dig) har bedt om en ny adgangskode til SLFF. Tryk på knappen, og skriv din nye adgangskode.{{ else if eq (printf "%v" .Data.jezik) "en" }}Someone (hopefully you) asked for a new SLFF password. Tap the button and enter your new password.{{ else }}Nekdo (upamo, da ti) je zahteval novo geslo za SLFF. Klikni gumb in vpiši novo geslo.{{ end }}</p>
+      <table role="presentation" class="gumb-tabela" cellspacing="0" cellpadding="0" border="0" style="margin: 8px 0 4px;">
+  <tr><td class="gumb-celica" align="center" bgcolor="#34d399" style="border-radius: 10px; background-color: #34d399;">
+    <a class="gumb-povezava" href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" target="_blank" style="display: inline-block; padding: 14px 28px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 16px; line-height: 20px; font-weight: 800; color: #052e16; text-decoration: none; border-radius: 10px;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Nastaviť nové heslo{{ else if eq (printf "%v" .Data.jezik) "hr" }}Postavi novu lozinku{{ else if eq (printf "%v" .Data.jezik) "cs" }}Nastavit nové heslo{{ else if eq (printf "%v" .Data.jezik) "hu" }}Új jelszó megadása{{ else if eq (printf "%v" .Data.jezik) "de" }}Neues Passwort festlegen{{ else if eq (printf "%v" .Data.jezik) "sr" }}Postavi novu lozinku{{ else if eq (printf "%v" .Data.jezik) "ro" }}Setează parola nouă{{ else if eq (printf "%v" .Data.jezik) "et" }}Määra uus parool{{ else if eq (printf "%v" .Data.jezik) "pl" }}Ustaw nowe hasło{{ else if eq (printf "%v" .Data.jezik) "es" }}Elegir nueva contraseña{{ else if eq (printf "%v" .Data.jezik) "lv" }}Iestatīt jaunu paroli{{ else if eq (printf "%v" .Data.jezik) "mk" }}Постави нова лозинка{{ else if eq (printf "%v" .Data.jezik) "el" }}Ορισμός νέου κωδικού{{ else if eq (printf "%v" .Data.jezik) "tr" }}Yeni şifre belirle{{ else if eq (printf "%v" .Data.jezik) "uk" }}Встановити новий пароль{{ else if eq (printf "%v" .Data.jezik) "hy" }}Սահմանել նոր գաղտնաբառ{{ else if eq (printf "%v" .Data.jezik) "az" }}Yeni şifrə təyin et{{ else if eq (printf "%v" .Data.jezik) "da" }}Vælg ny adgangskode{{ else if eq (printf "%v" .Data.jezik) "en" }}Set a new password{{ else }}Nastavi novo geslo{{ end }}</a>
+  </td></tr></table>
+      <p class="siv" style="margin: 0 0 12px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 19px; color: #5b6b63; margin-top: 12px;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Tlačidlo nefunguje? Otvor tento odkaz:{{ else if eq (printf "%v" .Data.jezik) "hr" }}Gumb ne radi? Otvori ovu poveznicu:{{ else if eq (printf "%v" .Data.jezik) "cs" }}Tlačítko nefunguje? Otevři tento odkaz:{{ else if eq (printf "%v" .Data.jezik) "hu" }}Nem működik a gomb? Nyisd meg ezt a linket:{{ else if eq (printf "%v" .Data.jezik) "de" }}Der Button funktioniert nicht? Öffne diesen Link:{{ else if eq (printf "%v" .Data.jezik) "sr" }}Dugme ne radi? Otvori ovaj link:{{ else if eq (printf "%v" .Data.jezik) "ro" }}Butonul nu funcționează? Deschide acest link:{{ else if eq (printf "%v" .Data.jezik) "et" }}Nupp ei tööta? Ava see link:{{ else if eq (printf "%v" .Data.jezik) "pl" }}Przycisk nie działa? Otwórz ten link:{{ else if eq (printf "%v" .Data.jezik) "es" }}¿No funciona el botón? Abre este enlace:{{ else if eq (printf "%v" .Data.jezik) "lv" }}Poga nedarbojas? Atver šo saiti:{{ else if eq (printf "%v" .Data.jezik) "mk" }}Копчето не работи? Отвори ја оваа врска:{{ else if eq (printf "%v" .Data.jezik) "el" }}Δεν λειτουργεί το κουμπί; Άνοιξε αυτόν τον σύνδεσμο:{{ else if eq (printf "%v" .Data.jezik) "tr" }}Düğme çalışmıyor mu? Bu bağlantıyı aç:{{ else if eq (printf "%v" .Data.jezik) "uk" }}Кнопка не працює? Відкрий це посилання:{{ else if eq (printf "%v" .Data.jezik) "hy" }}Կոճակը չի՞ աշխատում։ Բացիր այս հղումը:{{ else if eq (printf "%v" .Data.jezik) "az" }}Düymə işləmir? Bu keçidi aç:{{ else if eq (printf "%v" .Data.jezik) "da" }}Virker knappen ikke? Åbn dette link:{{ else if eq (printf "%v" .Data.jezik) "en" }}Button not working? Open this link:{{ else }}Gumb ne deluje? Odpri to povezavo:{{ end }}<br><a class="pov" href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="color: #047655; word-break: break-all;">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery</a></p>
+      <p class="siv" style="margin: 0 0 12px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 19px; color: #5b6b63; margin-top: 20px;">{{ if eq (printf "%v" .Data.jezik) "sk" }}Ak si o nové heslo nežiadal ty, tento e-mail ignoruj — staré heslo zostáva v platnosti.{{ else if eq (printf "%v" .Data.jezik) "hr" }}Ako nisi ti zatražio/la novu lozinku, zanemari ovaj e-mail. Stara lozinka ostaje važeća.{{ else if eq (printf "%v" .Data.jezik) "cs" }}Pokud jsi o nové heslo nežádal/a ty, tento e-mail ignoruj. Staré heslo zůstává v platnosti.{{ else if eq (printf "%v" .Data.jezik) "hu" }}Ha nem te kértél új jelszót, hagyd figyelmen kívül ezt az e-mailt. A régi jelszavad továbbra is érvényes.{{ else if eq (printf "%v" .Data.jezik) "de" }}Wenn du kein neues Passwort angefordert hast, ignorier diese E-Mail einfach. Dein altes Passwort bleibt gültig.{{ else if eq (printf "%v" .Data.jezik) "sr" }}Ako nisi ti zatražio/la novu lozinku, zanemari ovaj imejl. Stara lozinka i dalje važi.{{ else if eq (printf "%v" .Data.jezik) "ro" }}Dacă nu tu ai cerut o parolă nouă, ignoră acest e-mail. Parola veche rămâne valabilă.{{ else if eq (printf "%v" .Data.jezik) "et" }}Kui sa ise uut parooli ei taotlenud, jäta see kiri tähelepanuta. Vana parool kehtib edasi.{{ else if eq (printf "%v" .Data.jezik) "pl" }}Jeśli to nie ty prosiłeś o nowe hasło, zignoruj tę wiadomość. Stare hasło nadal działa.{{ else if eq (printf "%v" .Data.jezik) "es" }}Si no has pedido una nueva contraseña, ignora este mensaje. La contraseña anterior sigue valiendo.{{ else if eq (printf "%v" .Data.jezik) "lv" }}Ja tu pats nepieprasīji jaunu paroli, vienkārši ignorē šo vēstuli. Vecā parole joprojām ir derīga.{{ else if eq (printf "%v" .Data.jezik) "mk" }}Ако не побара нова лозинка ти, само игнорирај ја оваа порака. Старата лозинка сè уште важи.{{ else if eq (printf "%v" .Data.jezik) "el" }}Αν δεν ζήτησες εσύ νέο κωδικό, απλώς αγνόησε αυτό το μήνυμα. Ο παλιός κωδικός ισχύει ακόμα.{{ else if eq (printf "%v" .Data.jezik) "tr" }}Yeni şifreyi sen istemediysen bu e-postayı görmezden gelebilirsin. Eski şifren hâlâ geçerli.{{ else if eq (printf "%v" .Data.jezik) "uk" }}Якщо ти не просив новий пароль, просто проігноруй цей лист. Старий пароль і далі дійсний.{{ else if eq (printf "%v" .Data.jezik) "hy" }}Եթե դու նոր գաղտնաբառ չես խնդրել, պարզապես անտեսիր այս նամակը։ Հին գաղտնաբառը դեռ գործում է։{{ else if eq (printf "%v" .Data.jezik) "az" }}Yeni şifrəni sən istəməmisənsə, bu məktubu nəzərə alma. Köhnə şifrən hələ də etibarlıdır.{{ else if eq (printf "%v" .Data.jezik) "da" }}Har du ikke selv bedt om en ny adgangskode, kan du bare se bort fra denne mail. Din gamle adgangskode virker stadig.{{ else if eq (printf "%v" .Data.jezik) "en" }}If you didn’t ask for a new password, just ignore this email. Your old password still works.{{ else }}Če novega gesla nisi zahteval/a ti, ta mail prezri — staro geslo ostane veljavno.{{ end }}</p>
+    </td></tr>
+    
+    <tr><td class="px" align="center" style="padding: 20px 32px 8px;"><p class="siv" style="margin: 0 0 12px; font-family: Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 19px; color: #5b6b63; text-align: center; font-size: 12px; line-height: 18px;">SLFF · Sunday League Fantasy Football · <a class="siv" href="https://slff.eu" style="color: #5b6b63;">slff.eu</a> · <a class="siv" href="mailto:info@slff.eu" style="color: #5b6b63;">info@slff.eu</a></p></td></tr>
+  </table>
+  <!--[if mso]></td></tr></table><![endif]-->
+</td></tr></table>
+</body></html>

@@ -104,24 +104,25 @@ const tocke = (n) => {
   return Number.isInteger(n) ? String(n) : n.toFixed(1).replace('.', ',')
 }
 
-// Nemška besedila so prenesena dobesedno iz prvega pošiljanja (posli.py), da
-// opomnik ustreza že poslanim prvim mailom.
+// Kratko (prenova 10/2026): kdo smo in vir točk, koliko igralcev kluba je že v
+// igri in povezava na stran kluba, povabilo k deljenju, odjava. Opomnik je
+// tri vrstice z eno novico (koliko ekip) in je zadnji. Brez pomišljajev.
 function nemsko(k, p, vrsta, url, po) {
   const { ime_lige: liga, klub } = k
   const ekipa = po.ekipa
   const podpis = ekipa ? 'Das SLFF-Team' : po.ime
-  const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} Punkte` : null
+  const naj = p.naj ? `${p.naj} mit ${tocke(p.tocke)} ${Number(p.tocke) === 1 ? 'Punkt' : 'Punkten'}` : null
   if (vrsta === 'prvi') {
     return {
-      zadeva: `Spieler von ${klub} im Fantasy-Spiel der ${liga}`,
+      zadeva: `${klub}: ${p.igralcev} Spieler schon im Fantasy-Spiel der ${liga}`,
       telo: `Guten Tag,
 
-${ekipa ? 'wir sind das Team von SLFF' : `ich bin ${po.ime} von SLFF`}, einem kostenlosen Fantasy-Fußballspiel für Amateurligen. Seit Kurzem ist auch die ${liga} dabei: Fans stellen ihr Team aus echten Spielern der Liga zusammen, die Punkte kommen aus den offiziellen Spielberichten auf oefb.at. ${p.igralcev} Spieler von ${klub} sind schon im Spiel:
+${ekipa ? 'wir sind das Team von SLFF' : `ich bin ${po.ime} von SLFF`}, einem kostenlosen Fantasy-Fußballspiel für Amateurligen. Seit Kurzem ist auch die ${liga} dabei, die Punkte kommen aus den offiziellen Spielberichten auf oefb.at.
+
+${p.igralcev} Spieler von ${klub} sind schon im Spiel${naj ? `, bisher bester: ${naj}` : ''}. Ihre Vereinsseite mit Statistik und einem fertigen Bild zum Teilen:
 ${url}
-${naj ? `
-Bisher bester Spieler: ${naj}.
-` : ''}
-Wenn es Ihnen gefällt, teilen Sie den Link gerne in der Vereinsgruppe oder auf Facebook. Manche Vereine sehen das als kleine Extra-Motivation für die Spieler, weil man nach jeder Runde sieht, wer Punkte sammelt. Es ist kostenlos.
+
+Wenn es Ihnen gefällt, teilen Sie den Link gern in der Vereinsgruppe oder auf Facebook. Nach jeder Runde sieht man, wer Punkte sammelt.
 
 Möchte ein Spieler nicht namentlich aufscheinen oder wollen Sie keine weiteren E-Mails, genügt eine kurze Antwort.
 
@@ -136,14 +137,10 @@ slff.eu
     zadeva: ekip >= 5 ? `${klub}: Ihre Spieler sind schon in ${ekip} Fantasy-Teams` : `${klub} im Fantasy-Spiel: so läuft es für Ihre Spieler`,
     telo: `Guten Tag,
 
-vor ein paar Tagen ${ekipa ? 'haben wir' : 'habe ich'} Ihnen über SLFF geschrieben, das kostenlose Fantasy-Spiel für die ${liga}. Kurz: Die Spieler von ${klub} sind im Spiel und sammeln Punkte${ekip >= 5 ? `, und sie stehen schon in ${ekip} Fantasy-Teams` : ''}.${naj ? ` Bisher bester Spieler: ${naj}.` : ''}
-
-Die Vereinsseite mit Statistiken und einem fertigen Bild zum Teilen:
+kurz nachgefragt zu ${ekipa ? 'unserer' : 'meiner'} letzten Nachricht: ${ekip >= 5 ? `Die Spieler von ${klub} stehen inzwischen in ${ekip} Fantasy-Teams` : `Die Spieler von ${klub} sind im Spiel und sammeln Punkte`}${naj ? `, bisher bester ist ${naj}` : ''}.
 ${url}
 
-Wenn Sie den Link in die Vereinsgruppe oder auf Facebook stellen, können sich Fans und auch die Spieler selbst messen. Es ist kostenlos.
-
-Das ist ${ekipa ? 'unsere' : 'meine'} letzte Nachricht dazu. Möchte ein Spieler nicht namentlich aufscheinen, genügt eine kurze Antwort.
+Wenn das für Ihre Vereinsgruppe oder Facebook passt, freut es uns. Das ist ${ekipa ? 'unsere' : 'meine'} letzte Nachricht dazu; für Fragen oder Wünsche genügt eine kurze Antwort.
 
 Mit freundlichen Grüßen
 ${podpis}
@@ -160,17 +157,18 @@ function estonsko(k, p, vrsta, url, po) {
   const ekipa = po.ekipa
   const podpis = ekipa ? 'SLFF meeskond' : po.ime
   const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} ${Number(p.tocke) === 1 ? 'punkt' : 'punkti'}` : null
+  const mangijat = p.igralcev === 1 ? 'mängija' : 'mängijat'
   if (vrsta === 'prvi') {
     return {
-      zadeva: `Klubi ${klub} mängijad fantaasiajalgpallis (${liga})`,
+      zadeva: `Klubi ${klub} ${p.igralcev} ${mangijat} on juba fantaasiajalgpallis (${liga})`,
       telo: `Tere!
 
-${ekipa ? 'Oleme SLFF-i meeskond. SLFF on' : `Olen ${po.ime} SLFF-ist. See on`} tasuta fantaasiajalgpalli mäng amatöörliigadele. Nüüd on mängus ka uus liiga: ${liga}. Fännid panevad oma meeskonna kokku liiga päris mängijatest ja punktid tulevad ametlikest mänguprotokollidest lehel jalgpall.ee. Mängus on juba ${p.igralcev} ${p.igralcev === 1 ? 'mängija' : 'mängijat'} klubist ${klub}:
+${ekipa ? 'Oleme SLFF-i meeskond. SLFF on' : `Olen ${po.ime} SLFF-ist. See on`} tasuta fantaasiajalgpalli mäng amatöörliigadele. Nüüd on mängus ka uus liiga: ${liga}. Punktid tulevad ametlikest mänguprotokollidest lehel jalgpall.ee.
+
+Mängus on juba ${p.igralcev} ${mangijat} klubist ${klub}${naj ? ` (seni parim: ${naj})` : ''}. Klubi leht statistika ja jagamiseks valmis pildiga:
 ${url}
-${naj ? `
-Seni parim mängija: ${naj}.
-` : ''}
-Kui see Teile meeldib, jagage linki julgelt klubi grupis või Facebookis. Mõni klubi näeb selles mängijatele väikest lisamotivatsiooni, sest pärast iga vooru on näha, kes punkte kogub. See on tasuta.
+
+Kui see Teile meeldib, jagage linki julgelt klubi grupis või Facebookis. Pärast iga vooru on näha, kes punkte kogub.
 
 Kui mõni mängija ei soovi oma nimega mängus olla või Te ei soovi rohkem kirju, piisab lühikesest vastusest.
 
@@ -185,14 +183,10 @@ slff.eu
     zadeva: ekip >= 5 ? `Klubi ${klub} mängijad on juba ${ekip} fantaasiameeskonnas` : `Klubi ${klub} fantaasiamängus: nii läheb Teie mängijatel`,
     telo: `Tere!
 
-Mõni päev tagasi ${ekipa ? 'kirjutasime' : 'kirjutasin'} Teile SLFF-ist, tasuta fantaasiajalgpallist (liiga: ${liga}). Lühidalt: klubi ${klub} mängijad on mängus ja koguvad punkte${ekip >= 5 ? ` ning nad on juba ${ekip} fantaasiameeskonnas` : ''}.${naj ? ` Seni parim: ${naj}.` : ''}
-
-Klubi leht statistika ja jagamiseks valmis pildiga:
+Lühike järelpärimine ${ekipa ? 'meie' : 'minu'} eelmisele kirjale: ${ekip >= 5 ? `klubi ${klub} mängijad on juba ${ekip} fantaasiameeskonnas` : `klubi ${klub} mängijad on mängus ja koguvad punkte`}${naj ? ` (seni parim: ${naj})` : ''}.
 ${url}
 
-Kui panete lingi klubi gruppi või Facebooki, saavad fännid ja ka mängijad ise omavahel võistelda. See on tasuta.
-
-See on ${ekipa ? 'meie' : 'minu'} viimane kiri sel teemal. Kui mõni mängija ei soovi oma nimega mängus olla, piisab lühikesest vastusest.
+Kui see sobib klubi gruppi või Facebooki, on meil hea meel. See on ${ekipa ? 'meie' : 'minu'} viimane kiri sel teemal; küsimuste või soovide korral piisab lühikesest vastusest.
 
 Lugupidamisega
 ${podpis}
@@ -218,17 +212,18 @@ function hrvasko(k, p, vrsta, url, po) {
   const ekipa = po.ekipa
   const podpis = ekipa ? 'SLFF tim' : po.ime
   const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} ${slovansko(p.tocke, 'bod', 'boda', 'bodova')}` : null
+  const igracev = `${p.igralcev} ${slovansko(p.igralcev, 'igrač', 'igrača', 'igrača')}`
   if (vrsta === 'prvi') {
     return {
-      zadeva: `Igrači kluba ${klub} u fantasy nogometu (${liga})`,
+      zadeva: `${klub}: ${igracev} već u fantasy nogometu (${liga})`,
       telo: `Poštovani,
 
-${ekipa ? 'mi smo tim SLFF-a' : `ja sam ${po.ime} iz SLFF-a`}, besplatne fantasy nogometne igre za amaterske lige. Odnedavno je u igri i ${liga}: navijači slažu svoju momčad od stvarnih igrača lige, a bodovi dolaze iz službenih zapisnika utakmica na semafor.hns.family. U igri je već ${p.igralcev} ${slovansko(p.igralcev, 'igrač', 'igrača', 'igrača')} kluba ${klub}:
+${ekipa ? 'mi smo tim SLFF-a' : `ja sam ${po.ime} iz SLFF-a`}, besplatne fantasy nogometne igre za amaterske lige. Odnedavno je u igri i ${liga}, a bodovi dolaze iz službenih zapisnika utakmica na semafor.hns.family.
+
+U igri je već ${igracev} kluba ${klub}${naj ? `, dosad najbolji: ${naj}` : ''}. Stranica kluba sa statistikom i gotovom slikom za dijeljenje:
 ${url}
-${naj ? `
-Dosad najbolji igrač: ${naj}.
-` : ''}
-Ako vam se sviđa, slobodno podijelite poveznicu u klupskoj grupi ili na Facebooku. Neki klubovi to vide kao malu dodatnu motivaciju za igrače, jer se nakon svakog kola vidi tko skuplja bodove. Igra je besplatna.
+
+Ako vam se sviđa, slobodno podijelite poveznicu u klupskoj grupi ili na Facebooku. Nakon svakog kola vidi se tko skuplja bodove.
 
 Ako neki igrač ne želi biti u igri pod svojim imenom ili ne želite više poruka, dovoljan je kratak odgovor.
 
@@ -243,14 +238,10 @@ slff.eu
     zadeva: ekip >= 5 ? `${klub}: vaši igrači su već u fantasy momčadima (${ekip})` : `${klub} u fantasy igri: kako stoje vaši igrači`,
     telo: `Poštovani,
 
-prije nekoliko dana ${ekipa ? 'pisali smo' : 'pisao sam'} vam o SLFF-u, besplatnoj fantasy igri (${liga}). Ukratko: igrači kluba ${klub} su u igri i skupljaju bodove${ekip >= 5 ? `, a fantasy momčadi s njima već ima ${ekip}` : ''}.${naj ? ` Dosad najbolji: ${naj}.` : ''}
-
-Stranica kluba sa statistikom i gotovom slikom za dijeljenje:
+kratko se javljam ${ekipa ? 'na našu' : 'na moju'} prethodnu poruku: igrači kluba ${klub} su u igri i skupljaju bodove${ekip >= 5 ? `, a fantasy momčadi s njima već ima ${ekip}` : ''}${naj ? `. Dosad najbolji: ${naj}` : ''}.
 ${url}
 
-Ako stavite poveznicu u klupsku grupu ili na Facebook, navijači, ali i sami igrači mogu se međusobno natjecati. Igra je besplatna.
-
-Ovo ${ekipa ? 'nam' : 'mi'} je posljednja poruka o tome. Ako neki igrač ne želi biti u igri pod svojim imenom, dovoljan je kratak odgovor.
+Ako vam to odgovara za klupsku grupu ili Facebook, drago nam je. Ovo ${ekipa ? 'nam' : 'mi'} je posljednja poruka o tome; za pitanja ili želje dovoljan je kratak odgovor.
 
 Lijep pozdrav
 ${podpis}
@@ -267,17 +258,18 @@ function srbsko(k, p, vrsta, url, po) {
   const podpis = ekipa ? 'SLFF tim' : po.ime
   const vir = /^rs-(u19-)?bg-/.test(k.liga_slug ?? '') ? 'fsb.org.rs' : 'fss.rs'
   const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} ${slovansko(p.tocke, 'poen', 'poena', 'poena')}` : null
+  const igracev = `${p.igralcev} ${slovansko(p.igralcev, 'igrač', 'igrača', 'igrača')}`
   if (vrsta === 'prvi') {
     return {
-      zadeva: `Igrači kluba ${klub} u fantasy fudbalu (${liga})`,
+      zadeva: `${klub}: ${igracev} već u fantasy fudbalu (${liga})`,
       telo: `Poštovani,
 
-${ekipa ? 'mi smo tim SLFF-a' : `ja sam ${po.ime} iz SLFF-a`}, besplatne fantasy fudbalske igre za amaterske lige. Odnedavno je u igri i ${liga}: navijači sastavljaju svoj tim od stvarnih igrača lige, a poeni dolaze iz zvaničnih zapisnika sa utakmica na ${vir}. U igri je već ${p.igralcev} ${slovansko(p.igralcev, 'igrač', 'igrača', 'igrača')} kluba ${klub}:
+${ekipa ? 'mi smo tim SLFF-a' : `ja sam ${po.ime} iz SLFF-a`}, besplatne fantasy fudbalske igre za amaterske lige. Odnedavno je u igri i ${liga}, a poeni se računaju iz zvaničnih zapisnika na ${vir}.
+
+U igri je već ${igracev} kluba ${klub}${naj ? `, do sada najbolji: ${naj}` : ''}. Stranica kluba sa statistikom i slikom spremnom za deljenje:
 ${url}
-${naj ? `
-Do sada najbolji igrač: ${naj}.
-` : ''}
-Ako Vam se dopada, slobodno podelite link u klupskoj grupi ili na Fejsbuku. Neki klubovi to vide kao malu dodatnu motivaciju za igrače, jer se posle svakog kola vidi ko skuplja poene. Igra je besplatna.
+
+Ako Vam se dopada, slobodno podelite link u klupskoj grupi ili na Fejsbuku. Posle svakog kola se vidi ko skuplja poene.
 
 Ako neki igrač ne želi da bude u igri pod svojim imenom ili ne želite više poruka, dovoljan je kratak odgovor.
 
@@ -292,14 +284,10 @@ slff.eu
     zadeva: ekip >= 5 ? `${klub}: Vaši igrači su već u fantasy timovima (${ekip})` : `${klub} u fantasy igri: kako stoje Vaši igrači`,
     telo: `Poštovani,
 
-pre nekoliko dana ${ekipa ? 'smo Vam pisali' : 'sam Vam pisao'} o SLFF-u, besplatnoj fantasy igri (${liga}). Ukratko: igrači kluba ${klub} su u igri i skupljaju poene${ekip >= 5 ? `, a fantasy timova sa njima već ima ${ekip}` : ''}.${naj ? ` Do sada najbolji: ${naj}.` : ''}
-
-Stranica kluba sa statistikom i gotovom slikom za deljenje:
+kratko se javljam povodom ${ekipa ? 'naše' : 'moje'} prethodne poruke: igrači kluba ${klub} su u igri i skupljaju poene${ekip >= 5 ? `, a fantasy timova sa njima već ima ${ekip}` : ''}${naj ? `. Do sada najbolji: ${naj}` : ''}.
 ${url}
 
-Ako postavite link u klupsku grupu ili na Fejsbuk, navijači, ali i sami igrači mogu međusobno da se takmiče. Igra je besplatna.
-
-Ovo ${ekipa ? 'nam' : 'mi'} je poslednja poruka o tome. Ako neki igrač ne želi da bude u igri pod svojim imenom, dovoljan je kratak odgovor.
+Ako Vam to odgovara za klupsku grupu ili Fejsbuk, drago nam je. Ovo ${ekipa ? 'nam' : 'mi'} je poslednja poruka o tome; za pitanja ili želje dovoljan je kratak odgovor.
 
 Srdačan pozdrav
 ${podpis}
@@ -318,15 +306,15 @@ function madzarsko(k, p, vrsta, url, po) {
   const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} pont` : null
   if (vrsta === 'prvi') {
     return {
-      zadeva: `${klub} játékosai a fantasy fociban (${liga})`,
+      zadeva: `${klub}: már ${p.igralcev} játékos a fantasy fociban (${liga})`,
       telo: `${ekipa ? 'Jó napot kívánunk!' : 'Jó napot kívánok!'}
 
-${ekipa ? 'Az SLFF csapata vagyunk. Az SLFF' : `${po.ime} vagyok az SLFF-től, amely`} egy ingyenes fantasy futballjáték amatőr bajnokságoknak. Nemrég bekerült a játékba ez a bajnokság is: ${liga}. A szurkolók a bajnokság valódi játékosaiból állítják össze a csapatukat, a pontok pedig a hivatalos mérkőzés-jegyzőkönyvekből származnak (adatbank.mlsz.hu). ${klub} játékosai közül már ${p.igralcev} szerepel a játékban:
+${ekipa ? 'Az SLFF csapata vagyunk. Az SLFF' : `${po.ime} vagyok az SLFF-től, amely`} egy ingyenes fantasy futballjáték amatőr bajnokságoknak. Nemrég bekerült a játékba ez a bajnokság is: ${liga}. A pontok a hivatalos mérkőzés-jegyzőkönyvekből származnak (adatbank.mlsz.hu).
+
+${klub} játékosai közül már ${p.igralcev} szerepel a játékban${naj ? ` (eddigi legjobb: ${naj})` : ''}. A klub oldala statisztikákkal és megosztásra kész képpel:
 ${url}
-${naj ? `
-Eddigi legjobb játékos: ${naj}.
-` : ''}
-Ha tetszik Önöknek, nyugodtan osszák meg a linket a klub csoportjában vagy a Facebookon. Néhány klub ezt kis plusz motivációnak tekinti a játékosok számára, mert minden forduló után látszik, ki gyűjti a pontokat. A játék ingyenes.
+
+Ha tetszik Önöknek, nyugodtan osszák meg a linket a klub csoportjában vagy a Facebookon. Minden forduló után látszik, ki gyűjti a pontokat.
 
 Ha valamelyik játékos nem szeretne a saját nevével szerepelni, vagy nem kérnek több levelet, elég egy rövid válasz.
 
@@ -341,14 +329,10 @@ slff.eu
     zadeva: ekip >= 5 ? `${klub} játékosai már ${ekip} fantasy csapatban szerepelnek` : `${klub} a fantasy játékban: így állnak a játékosok`,
     telo: `${ekipa ? 'Jó napot kívánunk!' : 'Jó napot kívánok!'}
 
-Néhány napja ${ekipa ? 'írtunk' : 'írtam'} Önöknek az SLFF-ről, az ingyenes fantasy játékról (bajnokság: ${liga}). Röviden: ${klub} játékosai a játékban vannak és pontokat gyűjtenek${ekip >= 5 ? `, és már ${ekip} fantasy csapatban szerepelnek` : ''}.${naj ? ` Eddig a legjobb: ${naj}.` : ''}
-
-A klub oldala statisztikákkal és megosztásra kész képpel:
+Röviden ${ekipa ? 'jelentkezünk az előző levelünk' : 'jelentkezem az előző levelem'} kapcsán: ${klub} játékosai a játékban vannak és pontokat gyűjtenek${ekip >= 5 ? `, és már ${ekip} fantasy csapatban szerepelnek` : ''}${naj ? ` (eddig a legjobb: ${naj})` : ''}.
 ${url}
 
-Ha kiteszik a linket a klub csoportjába vagy a Facebookra, a szurkolók és maguk a játékosok is versenyezhetnek egymással. A játék ingyenes.
-
-Ez az utolsó ${ekipa ? 'levelünk' : 'levelem'} ebben a témában. Ha valamelyik játékos nem szeretne a saját nevével szerepelni, elég egy rövid válasz.
+Ha ez illik a klub csoportjába vagy a Facebookra, örülünk neki. Ez az utolsó ${ekipa ? 'levelünk' : 'levelem'} ebben a témában; kérdés vagy kérés esetén elég egy rövid válasz.
 
 Üdvözlettel
 ${podpis}
@@ -358,11 +342,11 @@ slff.eu
 }
 
 const BESEDILA = {
-  AT: { sestavi: nemsko, odjava: 'Abmelden' },
-  EE: { sestavi: estonsko, odjava: 'Loobu' },
-  HR: { sestavi: hrvasko, odjava: 'Odjava' },
-  HU: { sestavi: madzarsko, odjava: 'Leiratkozás' },
-  RS: { sestavi: srbsko, odjava: 'Odjava' },
+  AT: { sestavi: nemsko, odjava: 'Abmelden', jezik: 'de' },
+  EE: { sestavi: estonsko, odjava: 'Loobu', jezik: 'et' },
+  HR: { sestavi: hrvasko, odjava: 'Odjava', jezik: 'hr' },
+  HU: { sestavi: madzarsko, odjava: 'Leiratkozás', jezik: 'hu' },
+  RS: { sestavi: srbsko, odjava: 'Odjava', jezik: 'sr-Latn' },
 }
 
 /**
@@ -374,7 +358,7 @@ export function besedilo(k, p, vrsta, po = POSILJATELJI[0]) {
   const b = BESEDILA[k.drzava]
   if (!b) return null
   const { zadeva, telo } = b.sestavi(k, p, vrsta, `https://slff.eu/club/${k.team_id}?t=${k.liga_slug}`, po)
-  return { zadeva, telo: telo.replace(/\n{3,}/g, '\n\n'), odjava: b.odjava }
+  return { zadeva, telo: telo.replace(/\n{3,}/g, '\n\n'), odjava: b.odjava, jezik: b.jezik }
 }
 
 // --- MIME --------------------------------------------------------------------
@@ -390,10 +374,43 @@ export function kodirajGlavo(s) {
   return kosi.map((k) => `=?UTF-8?B?${Buffer.from(k).toString('base64')}?=`).join('\r\n ')
 }
 
-/** Celoten mail (CRLF, telo v base64). */
+const escHtml = (t) => String(t).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')
+
+/**
+ * Lahek HTML iz čistopisa: videti kot navaden osebni mail (brez glave in
+ * gumba), povezava krepko, podpis z drobnim logom. Vsebina je ista kot v
+ * text/plain, ki ostane prvi del.
+ */
+export function vHtml(telo, jezik = 'en') {
+  const P = 'Arial, Helvetica, sans-serif'
+  const bloki = telo.trim().split(/\n{2,}/)
+  const podpis = bloki.at(-1).split('\n')
+  const vrstica = (v) => /^https:\/\/\S+$/.test(v)
+    ? `<a href="${escHtml(v)}" style="color: #1a73e8; font-weight: bold;">${escHtml(v.replace(/^https:\/\//, ''))}</a>`
+    : escHtml(v)
+  const odstavki = bloki.slice(0, -1).map((b) => `<p style="margin: 0 0 14px;">${b.split('\n').map(vrstica).join('<br>')}</p>`)
+  return `<!doctype html>
+<html lang="${jezik}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"></head>
+<body style="margin: 0; padding: 16px;">
+<div style="max-width: 560px; font-family: ${P}; font-size: 15px; line-height: 22px;">
+${odstavki.join('\n')}
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top: 6px;"><tr>
+  <td valign="top" style="padding-right: 10px;"><img src="https://slff.eu/logo/slff-ikona-180.png" width="32" height="32" alt="" style="display: block; border: 0;"></td>
+  <td valign="top" style="font-family: ${P}; font-size: 14px; line-height: 18px;">${podpis.map(vrstica).join('<br>')}</td>
+</tr></table>
+</div></body></html>`
+}
+
+const b64 = (t) => Buffer.from(t.replace(/\r?\n/g, '\r\n')).toString('base64').match(/.{1,76}/g) ?? []
+
+/**
+ * Celoten mail (CRLF): multipart/alternative, najprej text/plain (`telo`), nato
+ * lahek HTML iz istega besedila; oba dela v base64. Opomnik gre kot nov mail:
+ * Message-ID prvega se ne hrani (klub_stik_posta ga nima), zato ni niti.
+ */
 // Ekipa (klubi@) se podpiše kot "SLFF", ne "Ekipa SLFF (SLFF)".
-export function sporocilo({ na, zadeva, telo, odjava, po = POSILJATELJI[0], zdaj = new Date(), id = randomUUID() }) {
-  const b64 = Buffer.from(telo.replace(/\r?\n/g, '\r\n')).toString('base64').match(/.{1,76}/g) ?? []
+export function sporocilo({ na, zadeva, telo, odjava, jezik = 'en', po = POSILJATELJI[0], zdaj = new Date(), id = randomUUID() }) {
+  const meja = `slff-${id}`
   return [
     `From: "${po.ekipa ? 'SLFF' : `${po.ime} (SLFF)`}" <${po.od}>`,
     `To: <${na}>`,
@@ -402,10 +419,20 @@ export function sporocilo({ na, zadeva, telo, odjava, po = POSILJATELJI[0], zdaj
     `Message-ID: <${id}@slff.eu>`,
     `List-Unsubscribe: <mailto:${po.od}?subject=${encodeURIComponent(odjava)}>`,
     'MIME-Version: 1.0',
+    `Content-Type: multipart/alternative; boundary="${meja}"`,
+    '',
+    `--${meja}`,
     'Content-Type: text/plain; charset=UTF-8',
     'Content-Transfer-Encoding: base64',
     '',
-    ...b64,
+    ...b64(telo),
+    `--${meja}`,
+    'Content-Type: text/html; charset=UTF-8',
+    'Content-Transfer-Encoding: base64',
+    '',
+    ...b64(vHtml(telo, jezik)),
+    `--${meja}--`,
+    '',
   ].join('\r\n')
 }
 
@@ -811,7 +838,7 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
       log(`preskok ${oznaka(s)}: ${prevzem.error ? `prevzem ni uspel (${prevzem.error.message})` : 'vrstico je vzel drug zagon'}`)
       continue
     }
-    const m = sporocilo({ na: s.email, zadeva: b.zadeva, telo: b.telo, odjava: b.odjava, po })
+    const m = sporocilo({ na: s.email, zadeva: b.zadeva, telo: b.telo, odjava: b.odjava, jezik: b.jezik, po })
     try {
       await posljiSmtp(await povezi(GOSTITELJ, 465), { od: po.od, na: s.email, geslo: po.geslo, sporocilo: m })
     } catch (e) {
