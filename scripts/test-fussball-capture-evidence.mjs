@@ -71,3 +71,13 @@ test('capture pins an explicit calendar day and refuses invalid day values befor
  const m=await api.captureFussballDirectory({directory,options:{...options,asOfDate:'2026-10-22'},fetchFn:network,collectFn:collector})
  assert.equal(m.options.asOfDate,'2026-10-22')
 }))
+test('default capture calendar day remains tied to createdAt across UTC midnight',async()=>sample(async({directory})=>{
+ const OriginalDate=globalThis.Date;let reads=0
+ globalThis.Date=class extends OriginalDate{
+  constructor(...args){super(...(args.length?args:[reads++===0?'2026-10-22T23:59:59.999Z':'2026-10-23T00:00:00.001Z']))}
+ }
+ try{
+  const m=await api.captureFussballDirectory({directory,options,fetchFn:network,collectFn:collector})
+  assert.equal(m.options.asOfDate,m.createdAt.slice(0,10))
+ }finally{globalThis.Date=OriginalDate}
+}))

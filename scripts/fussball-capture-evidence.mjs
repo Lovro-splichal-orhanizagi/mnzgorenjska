@@ -28,7 +28,8 @@ export function validateFussballCaptureOptions(options){
  return {seedUrl:options.seedUrl,staffel:options.staffel,season:options.season,maxRequests:options.maxRequests,reportLimit:options.reportLimit,asOfDate}
 }
 export async function captureFussballDirectory({directory,options,fetchFn=globalThis.fetch,collectFn=collectFussballSeason,onProgress=()=>{}}){
- const config=validateFussballCaptureOptions(options),codeSha256=fussballCaptureCodeSha256(),createdAt=new Date().toISOString()
+ const createdAt=new Date().toISOString()
+ const config=validateFussballCaptureOptions({...options,asOfDate:options?.asOfDate??createdAt.slice(0,10)}),codeSha256=fussballCaptureCodeSha256()
  const documents=[],urls=new Set();let client
  // A fresh directory prevents accidentally combining scopes or overwriting evidence.
  mkdirSync(directory);mkdirSync(join(directory,'documents'))
