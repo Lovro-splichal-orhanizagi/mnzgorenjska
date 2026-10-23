@@ -69,6 +69,7 @@ const fixtures = [
   { slug: 'at-two', active: false, source: 'oefb', countries: { code: 'AT' }, federations: { code: 'wfv' } },
   { slug: 'es-ct-primera-g1', active: false, source: 'fcf', countries: { code: 'ES' }, federations: { code: 'fcf' } },
   { slug: 'es-active', active: true, source: 'fcf', countries: { code: 'ES' }, federations: { code: 'fcf' } },
+  { slug: 'hr-ri-u19', active: false, source: 'hns', countries: { code: 'HR' }, federations: { code: 'hns' } },
 ]
 test('source-free MLSZ release uses inactive league coordination while retaining global and same-league waits',async()=>{
  const workflow=readFileSync(new URL('../.github/workflows/mlsz-reviewed-history.yml',import.meta.url),'utf8')
@@ -81,6 +82,51 @@ test('source-free MLSZ release uses inactive league coordination while retaining
   try{assert.equal((await coordinate(['--liga',slug],nightly,[{name:'uvoz HU 1/3',status:'in_progress'}])).code,1)}finally{fixture.active=false}
  }
  assert.ok(!workflow.includes('--popravek'))
+})
+
+test('inactive Croatian target activation ignores unrelated older HNS nightly shards but keeps all overlapping writers', async () => {
+  const target = fixtures.find(c => c.slug === 'hr-ri-u19')
+  const oldNightly = { 'uvoz-zapisnikov.yml': [run('Nightly')] }
+  const nightly = [{ name: 'uvoz HR 1/3', status: 'in_progress' }, { name: 'uvoz HR 2/3', status: 'queued' }, { name: 'uvoz HR 3/3', status: 'queued' }]
+  assert.equal((await coordinate(['--liga', target.slug], oldNightly, nightly)).code, 0)
+  for (const [workflow, title] of [
+    ['uvoz-lige.yml', `Uvoz lige ${target.slug}`],
+    ['zdruzi-klube.yml', 'Zdruzi podvojena kluba'],
+    ['tedensko-cene.yml', 'Tedensko prevrednotenje'],
+  ]) assert.equal((await coordinate(['--liga', target.slug], { [workflow]: [run(title)] }, [])).code, 1, workflow)
+  target.active = true
+  try { assert.equal((await coordinate(['--liga', target.slug], oldNightly, nightly)).code, 1) }
+  finally { target.active = false }
+})
+
+test('existing-league workflow uses nightly waits for activation and scoped repair waits for refresh', async () => {
+  const { execFileSync, spawnSync } = await import('node:child_process')
+  const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs')
+  const { join } = await import('node:path'), { tmpdir } = await import('node:os')
+  const workflow = readFileSync(new URL('../.github/workflows/vklop-obstojecih-lig.yml', import.meta.url), 'utf8')
+  const step = workflow.slice(workflow.indexOf('      - name: Pred vklopom pocakaj na starejse pisce')).split('        run: |\n')[1].split('\n      - name:')[0]
+  const script = step.split('\n').filter(line => line.startsWith('          ')).map(line => line.slice(10)).join('\n')
+  assert.match(workflow, /if: inputs\.activate \|\| inputs\.refresh/)
+  const dir = mkdtempSync(join(tmpdir(), 'slff-hr-activation-wait-'))
+  try {
+    writeFileSync(join(dir, 'node'), `#!${process.execPath}\n` + `
+      const fs=require('node:fs'); const a=process.argv.slice(2);
+      if(a[0]==='--input-type=module')process.stdout.write(process.env.SELECTED_SLUGS+'\\n');
+      else { fs.appendFileSync(process.env.WAIT_CALLS,JSON.stringify(a)+'\\n'); process.exit(process.env.BLOCK_WAIT==='true'?79:0); }
+    `, { mode: 0o755 })
+    for (const [activate, refresh, expected] of [
+      ['true', 'false', ['scripts/cakaj-na-uvoze.mjs', '--liga', 'hr-ri-u19', '--najvec', '120']],
+      ['false', 'true', ['scripts/cakaj-na-uvoze.mjs', '--popravek', '--tekmovanje', 'hr-ri-u19', '--najvec', '120']],
+    ]) for (const [blocked, resultCode] of [['false', 0], ['true', 79]]) {
+      const callsPath = join(dir, `calls-${activate}-${refresh}-${blocked}.jsonl`)
+      const result = spawnSync('bash', ['-c', script], { encoding: 'utf8', timeout: 10000,
+        env: { ...process.env, PATH: `${dir}:${process.env.PATH}`, LIGE: 'hr-ri-u19', EXPECTED_SHA: 'a'.repeat(40), GITHUB_SHA: 'a'.repeat(40),
+          ACTIVATE: activate, REFRESH: refresh, SELECTED_SLUGS: 'hr-ri-u19', WAIT_CALLS: callsPath, BLOCK_WAIT: blocked } })
+      assert.equal(result.status, resultCode, result.stderr)
+      const calls = readFileSync(callsPath, 'utf8').trim().split('\n').map(JSON.parse)
+      assert.deepEqual(calls, [expected])
+    }
+  } finally { rmSync(dir, { recursive: true, force: true }) }
 })
 const startedAt = '2026-10-17T10:00:00Z'
 const run = (title, patch = {}) => ({ databaseId: 10, startedAt, status: 'in_progress', displayTitle: title, ...patch })
