@@ -1,0 +1,93 @@
+name: Reviewed existing league history release
+run-name: Reviewed existing history ${{ inputs.mode }} / ${{ inputs.slug }}
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        type: choice
+        required: true
+        options: [prepare, apply, price, preview, activate, receipt]
+        description: One offline release stage; activation requires a reviewed preview artifact.
+      slug:
+        type: choice
+        required: true
+        options: [gb-npl-midlands, gb-sfl-d1-south, ro-liga3-s1, ba-wwin-liga-bih]
+        description: Fixed competition allowlist; no default selection.
+      expected_sha:
+        type: string
+        required: true
+        description: Exact current main commit SHA reviewed for this stage.
+      source_run_id:
+        type: string
+        required: false
+        description: Successful first-attempt prepare or preview run ID for apply/activate.
+      source_artifact_id:
+        type: string
+        required: false
+        description: Exact retained artifact ID from the reviewed source run.
+      source_artifact_digest:
+        type: string
+        required: false
+        description: Exact GitHub artifact SHA256 digest.
+      approved_sha256:
+        type: string
+        required: false
+        description: Independently reviewed SHA256 of prepare.json or preview.json.
+      expected_preview_sha256:
+        type: string
+        required: false
+        description: Independently reviewed previewSha256 from the preview receipt.
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: reviewed-existing-history-${{ inputs.slug }}
+  cancel-in-progress: false
+jobs:
+  stage:
+    if: github.repository == 'Lovro-splichal-orhanizagi/mnzgorenjska' && github.ref == 'refs/heads/main' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      MODE: ${{ inputs.mode }}
+      SLUG: ${{ inputs.slug }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      SOURCE_ARTIFACT_ID: ${{ inputs.source_artifact_id }}
+      SOURCE_ARTIFACT_DIGEST: ${{ inputs.source_artifact_digest }}
+      APPROVED_SHA256: ${{ inputs.approved_sha256 }}
+      EXPECTED_PREVIEW_SHA256: ${{ inputs.expected_preview_sha256 }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Verify exact-main operator and SQL contract tests
+        run: |
+          node --input-type=module -e "if(process.env.EXPECTED_SHA!==process.env.GITHUB_SHA)throw Error('Expected SHA must equal workflow SHA')"
+          node --test scripts/test-reviewed-existing-history.mjs scripts/test-reviewed-existing-history-sql.mjs
+      - name: Wait for the selected league's imports to settle
+        env:
+          LIGA: ${{ inputs.slug }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --liga "$LIGA" --najvec 120
+      - name: Execute the single reviewed stage without source requests
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/reviewed-existing-history.mjs
+      - name: Preserve the stage receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reviewed-existing-history-${{ github.run_id }}
+          path: release/reviewed-existing-history/
+          if-no-files-found: ignore
+          retention-days: 90

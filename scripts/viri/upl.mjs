@@ -100,6 +100,16 @@ export class UplZavrnitev extends Error {
   }
 }
 
+// Refusals must reach the provider before the shared downloader can retry 429.
+export async function uplFetch(url, options = {}) {
+  const response = await fetch(url, { ...options, redirect: 'manual' })
+  if ([401, 403, 429].includes(response.status) || (response.status >= 300 && response.status < 400)) {
+    try { await response.body?.cancel() } catch {}
+    throw new UplZavrnitev(`upl: ${url} → HTTP ${response.status} — uvoz ustavljen, ne obhajamo`, response.status)
+  }
+  return response
+}
+
 /** Prava stran koledarja ali zapisnika; vse drugo (napaka, ostanek, izziv) ne gre v predpomnilnik. */
 export const jeStranKoledarja = (html) => /class="tour-title"/.test(html ?? '') && !jeIzziv(html)
 export const jeStranTekme = (html) => /class="match-main-info"/.test(html ?? '') && !jeIzziv(html)
@@ -457,6 +467,7 @@ export async function koledar(koda, prenesi) {
 
 const vir = {
   ime: 'upl',
+  fetch: uplFetch,
   polnoIme: "Українська Прем'єр-Ліга (upl.ua)",
   drzava: 'UA',
   osnovniNaslov: OSNOVNI,

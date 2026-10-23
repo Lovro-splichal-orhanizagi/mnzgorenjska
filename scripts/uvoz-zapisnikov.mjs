@@ -716,7 +716,7 @@ if (vir.ime === 'dfb' && !samoZapisnik) {
 console.log(`Berem zapisnike vira ${vir.ime} (liga ${liga})`)
 let zapisniki = preberiPosamezniZapisnik
   ? await preberiPosamezniZapisnik(prenesi)
-  : ['dfb','eps','hlf'].includes(vir.ime)
+  : ['dfb','eps','hlf','isthmian','nfsbih'].includes(vir.ime)
     ? await vir.zapisniki(liga, prenesi, { samoZapisnik, preskoci, sveziZapisniki })
     : await vir.zapisniki(liga, prenesi)
 // Validate the complete loaded batch before deriving or writing any individual rows.

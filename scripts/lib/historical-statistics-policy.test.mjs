@@ -7,18 +7,19 @@ import {
 } from './historical-statistics-policy.mjs'
 
 const registry = JSON.parse(readFileSync(new URL('../policies/historical-statistics-exclusions.json', import.meta.url)))
-const seedSql=['20261018180000_historical_statistical_availability.sql','20261018231000_dfb_nord_west_historical_policy.sql','20261020223000_mfa_reviewed_history.sql','20261021093000_mfa_challenge_reviewed_history.sql','20261021190100_mfa_nl1_reviewed_policy.sql','20261021203000_mfa_nl2_reviewed_policy.sql','20261022121000_mlsz_reviewed_history.sql','20261022185000_dfb_west_prelaunch_availability.sql'].map(file=>readFileSync(new URL(`../../supabase/migrations/${file}`,import.meta.url),'utf8')).join('\n')
+const seedSql=['20261018180000_historical_statistical_availability.sql','20261018231000_dfb_nord_west_historical_policy.sql','20261020223000_mfa_reviewed_history.sql','20261021093000_mfa_challenge_reviewed_history.sql','20261021190100_mfa_nl1_reviewed_policy.sql','20261021203000_mfa_nl2_reviewed_policy.sql','20261022121000_mlsz_reviewed_history.sql','20261022185000_dfb_west_prelaunch_availability.sql','20261023103000_reviewed_existing_history.sql'].map(file=>readFileSync(new URL(`../../supabase/migrations/${file}`,import.meta.url),'utf8')).join('\n')
 const clone = value => structuredClone(value)
+const reEscape = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const hr = registry.policies.find(p => p.provider === 'hns')
 const de = registry.policies.find(p => p.competitionSlug === 'de-regionalliga-suedwest')
 const west = registry.policies.find(p => p.competitionSlug === 'de-regionalliga-west')
-const competitionFor = policy => ({ ...(policy.provider==='mlsz'?{id:policy.competitionId,source_league_code:policy.sourceLeagueCode}:{}),...(policy.provider==='mfa'?(policy.competitionSlug==='mt-premier'?{id:971,source_league_code:'58539/2027'}:policy.competitionSlug==='mt-challenge'?{id:972,source_league_code:'2601248/2027'}:policy.competitionSlug==='mt-nl1'?{id:973,source_league_code:'2601267/2027'}:{id:974,source_league_code:'6234492/2027'}):{}),slug: policy.competitionSlug, source: policy.provider, source_policy: policy.sourcePolicy, firstFantasyPlayedOn: '2026-10-25' })
+const competitionFor = policy => ({ ...(policy.provider==='mlsz'||policy.sourcePolicy==='reviewed-existing-history-20261023-v1'?{id:policy.competitionId,source_league_code:policy.sourceLeagueCode}:{}),...(policy.provider==='mfa'?(policy.competitionSlug==='mt-premier'?{id:971,source_league_code:'58539/2027'}:policy.competitionSlug==='mt-challenge'?{id:972,source_league_code:'2601248/2027'}:policy.competitionSlug==='mt-nl1'?{id:973,source_league_code:'2601267/2027'}:{id:974,source_league_code:'6234492/2027'}):{}),slug: policy.competitionSlug, source: policy.provider, source_policy: policy.sourcePolicy, firstFantasyPlayedOn: '2026-10-25' })
 const fixtureFor = (policy, entry) => ({ ...entry, season: entry.season??policy.season })
 const classify = (policy = hr, entry = policy.entries[0], overrides = {}) => classifyHistoricalStatistics({
   competition: competitionFor(policy), fixture: fixtureFor(policy, entry), rawSha256: entry.rawSha256, policy, ...overrides,
 })
 
-test('registry contains exactly reviewed HNS3, DFB14, FCF4, MFA and MLSZ3 historical identities', () => {
+test('registry contains exactly reviewed identities, including the six cleanup targets', () => {
   assert.equal(validateHistoricalStatisticsRegistry(registry), true)
   assert.deepEqual(hr.entries.map(x => x.sourceMatchId).sort(), ['114471617', '114471627', '114471629'])
   assert.deepEqual(de.entries.map(x => x.sourceMatchId).sort(), ['2402929', '2403004'])
@@ -26,7 +27,11 @@ test('registry contains exactly reviewed HNS3, DFB14, FCF4, MFA and MLSZ3 histor
   assert.deepEqual(west.entries.filter(e=>e.season==='2026/27').map(e=>e.sourceMatchId).sort(),['2425409','2425474'])
   assert.deepEqual(registry.policies.filter(p=>p.provider==='fcf').flatMap(p=>p.entries.map(e=>e.sourceMatchId)).sort(), ['4109388','4116215','4118352','4118358'])
   assert.deepEqual(registry.policies.filter(p=>p.provider==='mlsz').flatMap(p=>p.entries.map(e=>e.sourceMatchId)).sort(), ['2078392','2078437','2175016'])
-  assert.equal(registry.policies.length,13)
+  assert.equal(registry.policies.length,17)
+  const npl=registry.policies.find(p=>p.competitionSlug==='gb-npl-midlands')
+  assert.deepEqual(npl.entries.map(x=>[x.sourceMatchId,x.season??npl.season]).sort(),[['6896abc31c6f4c56212c7ac5','2025/26'],['6a590670ce9ef452b61f386d','2026/27']])
+  const bih=registry.policies.find(p=>p.competitionSlug==='ba-wwin-liga-bih')
+  assert.deepEqual(bih.entries.map(x=>x.sourceMatchId).sort(),['54152295','54152303'])
   assert.ok(!hr.entries.some(x => x.sourceMatchId === '100511758'))
 })
 
@@ -139,7 +144,7 @@ test('unregistered ordinary provider identity still follows strict normal parsin
 
 test('migration-pinned canonical policy bodies and hashes match the single reviewed JSON registry', () => {
   const sql = seedSql
-  const seeds = [...sql.matchAll(/insert into private_historical_statistics\.policies values\('([^']+)','([a-f0-9]{64})','((?:''|[^'])*)'::jsonb\);/g)]
+  const seeds = [...sql.matchAll(/\('([^']+)','([a-f0-9]{64})','((?:''|[^'])*)'::jsonb\)/g)]
   const legacy=seeds.filter(m=>m[1]==='de-dfb-west-2025-historical-unavailable-v1')
   assert.equal(legacy.length,1)
   assert.equal(legacy[0][2],'fc72bd2cbd6f9f6ea914efccb392fe44e941666affff8b10af69ddbe79709f26')
@@ -180,8 +185,8 @@ test('reviewed club bindings cover every approved source club/category and retai
       assert.ok(entry);assert.equal(proof.sourceUrl,entry.sourceUrl);assert.equal(proof.rawSha256,entry.rawSha256)
     }
     const q=s=>"'"+s.replaceAll("'","''")+"'"
-    const values=[binding.provider,binding.sourceClubId,binding.sourceCategoryId??'',binding.countryCode].map(q).join(',')+`,array[${binding.canonicalNames.map(q).join(',')}],${q(JSON.stringify(binding.proofs))}::jsonb)`
-    assert.ok(sql.includes(values),`missing exact SQL binding ${key}`)
+    const values=[binding.provider,binding.sourceClubId,binding.sourceCategoryId??''].map(q).join(',')+`,\\s*${reEscape(q(binding.countryCode))},\\s*array\\[${binding.canonicalNames.map(name=>reEscape(q(name))).join(',')}\\],\\s*${reEscape(q(JSON.stringify(binding.proofs)))}(?:::jsonb)?`
+    assert.ok(new RegExp(values).test(sql),`missing exact SQL binding ${key}`)
   }
   for(const policy of registry.policies)for(const entry of policy.entries)for(const side of ['home','away'])assert.ok(keys.has([policy.provider,entry[`${side}SourceClubId`],entry[`${side}SourceCategoryId`]??''].join(':')))
 })

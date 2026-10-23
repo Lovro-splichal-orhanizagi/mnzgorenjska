@@ -58,6 +58,7 @@ import fscg from './fscg.mjs'
 import mfa from './mfa.mjs'
 import {withMfaHistoricalStatistics} from './mfa-historical.mjs'
 import {withMlszHistoricalStatistics} from './mlsz-historical.mjs'
+import {withReviewedExistingHistoryStatistics} from './reviewed-existing-history.mjs'
 import isthmian from './isthmian.mjs'
 import pflUa from './pfl-ua.mjs'
 import nsfbih from './nsfbih.mjs'
@@ -243,6 +244,9 @@ export function viraZa(tekmovanje, {installedHistoricalMarkers=null}={}) {
   }else if(ime==='mlsz') {
     wrapped=withMlszHistoricalStatistics(vir,tekmovanje,{installedHistoricalMarkers})
     files=zaprtje('scripts/viri/mlsz-historical.mjs')
+  }else if(ime==='isthmian'||ime==='hlf'||ime==='nfsbih') {
+    wrapped=withReviewedExistingHistoryStatistics(vir,tekmovanje,{installedHistoricalMarkers})
+    files=zaprtje('scripts/viri/reviewed-existing-history.mjs')
   }else if(ime==='hns') {
     const reviewedClubBindings=validateHnsWomenClubBindings(tekmovanje,{competitionId:tekmovanje.id,sourceCompetitionId:tekmovanje.source_league_code,clubs:tekmovanje.reviewedClubBindings},installedHistoricalMarkers?.markers??[])
     wrapped={...withHnsWomenStatistics(vir,tekmovanje,{installedHistoricalMarkers}),reviewedClubBindings}

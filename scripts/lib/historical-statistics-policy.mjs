@@ -6,8 +6,20 @@ const MFA_POLICY_IDS = ['mt-premier-reviewed-history-2026-10-20-v1','mt-challeng
 const WEST_V2_POLICY_ID = 'de-dfb-west-prelaunch-unavailable-v2'
 const WEST_V2_CURRENT_IDS = new Set(['2425409','2425474'])
 const exactWestV2 = policy => policy?.id === WEST_V2_POLICY_ID && policy.provider === 'dfb' && policy.competitionSlug === 'de-regionalliga-west' && policy.sourcePolicy === WEST_V2_POLICY_ID && policy.season === '2025/26'
-const entrySeason = (policy,entry) => MFA_POLICY_IDS.includes(policy.id) || (exactWestV2(policy) && WEST_V2_CURRENT_IDS.has(entry.sourceMatchId)) ? entry.season : policy.season
+const entrySeason = (policy,entry) => MFA_POLICY_IDS.includes(policy.id) || (exactWestV2(policy) && WEST_V2_CURRENT_IDS.has(entry.sourceMatchId)) || (policy?.id==='gb-npl-midlands-historical-unavailable-2026-10-23-v1' && entry?.sourceMatchId==='6896abc31c6f4c56212c7ac5') ? entry.season : policy.season
 const exactMfaTuple = competition => (competition?.id===971 && competition?.slug==='mt-premier' && competition?.source_league_code==='58539/2027') || (competition?.id===972 && competition?.slug==='mt-challenge' && competition?.source_league_code==='2601248/2027') || (competition?.id===973 && competition?.slug==='mt-nl1' && competition?.source_league_code==='2601267/2027') || (competition?.id===974 && competition?.slug==='mt-nl2' && competition?.source_league_code==='6234492/2027')
+const EXISTING_HISTORY_SOURCE_POLICY = 'reviewed-existing-history-20261023-v1'
+const EXISTING_HISTORY_TUPLES = {
+  'gb-npl-midlands': { id: 979, provider: 'isthmian', code: 'npl/67d7c7bb74247876e6dae40c/2026-27', policyId: 'gb-npl-midlands-historical-unavailable-2026-10-23-v1' },
+  'gb-sfl-d1-south': { id: 984, provider: 'isthmian', code: 'sfl/69d0bdf9b616bafb97331d41/2026-27', policyId: 'gb-sfl-d1-south-historical-unavailable-2026-10-23-v1' },
+  'ro-liga3-s1': { id: 497, provider: 'hlf', code: 'national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1', policyId: 'ro-liga3-s1-historical-unavailable-2026-10-23-v1' },
+  'ba-wwin-liga-bih': { id: 998, provider: 'nfsbih', code: 'wwin-liga-bih/54152223', policyId: 'ba-wwin-liga-bih-historical-unavailable-2026-10-23-v1' },
+}
+const exactNplArchiveEntry = (policy,entry) => policy?.id==='gb-npl-midlands-historical-unavailable-2026-10-23-v1' && policy.provider==='isthmian' && policy.competitionSlug==='gb-npl-midlands' && policy.sourcePolicy===EXISTING_HISTORY_SOURCE_POLICY && policy.competitionId===979 && policy.sourceLeagueCode==='npl/67d7c7bb74247876e6dae40c/2026-27' && entry?.sourceMatchId==='6896abc31c6f4c56212c7ac5' && entry?.season==='2025/26'
+const exactExistingHistoryTuple = (policy, competition) => {
+  const expected = EXISTING_HISTORY_TUPLES[policy?.competitionSlug]
+  return !!expected && policy.id === expected.policyId && policy.provider === expected.provider && policy.sourcePolicy === EXISTING_HISTORY_SOURCE_POLICY && policy.season === '2026/27' && policy.competitionId === expected.id && policy.sourceLeagueCode === expected.code && competition?.id === expected.id && competition?.source_league_code === expected.code
+}
 const SHA256 = /^[a-f0-9]{64}$/
 const text = value => typeof value === 'string' && value.trim().length > 0
 const dateOnly = value => {
@@ -39,11 +51,19 @@ export function validateHistoricalStatisticsRegistry(registry) {
     if (!/^\d{4}\/\d{2}$/.test(policy.season)) fail('invalid policy season')
     if (!text(policy.recordedAt) || !/T.*(?:Z|[+-]\d\d:\d\d)$/.test(policy.recordedAt) || !Number.isFinite(Date.parse(policy.recordedAt))) fail('invalid policy recording time')
     if ('approvedAt' in policy) fail('policy must record evidence time, not an unknown approval send time')
+    const exactTuple = EXISTING_HISTORY_TUPLES[policy.competitionSlug]
+    if (exactTuple && (policy.provider !== exactTuple.provider || policy.id !== exactTuple.policyId || policy.sourcePolicy !== EXISTING_HISTORY_SOURCE_POLICY || policy.season !== '2026/27' || policy.competitionId !== exactTuple.id || policy.sourceLeagueCode !== exactTuple.code)) fail('reviewed-existing-history exact competition/provider/code tuple differs')
+    if (policy.sourcePolicy === EXISTING_HISTORY_SOURCE_POLICY && !exactTuple) fail('unregistered reviewed-existing-history competition')
+    if (policy.provider === 'isthmian' && exactTuple && !['gb-npl-midlands', 'gb-sfl-d1-south'].includes(policy.competitionSlug)) fail('unreviewed Isthmian history tuple')
+    if (policy.provider === 'hlf' && exactTuple && policy.competitionSlug !== 'ro-liga3-s1') fail('unreviewed HLF history tuple')
+    if (policy.provider === 'nfsbih' && exactTuple && policy.competitionSlug !== 'ba-wwin-liga-bih') fail('unreviewed NFSBiH history tuple')
     if (!Array.isArray(policy.entries) || !policy.entries.length) fail('empty policy entries')
     for (const entry of policy.entries) {
       const exactMfaOverride = MFA_POLICY_IDS.includes(policy.id) && policy.provider === 'mfa' && ((policy.competitionSlug === 'mt-premier' && policy.sourcePolicy === 'mt-mfa-reviewed-history-v1') || (policy.competitionSlug === 'mt-challenge' && policy.sourcePolicy === 'mt-mfa-challenge-reviewed-history-v1') || (policy.competitionSlug === 'mt-nl1' && policy.sourcePolicy === 'mt-mfa-nl1-reviewed-history-v1') || (policy.competitionSlug === 'mt-nl2' && policy.sourcePolicy === 'mt-mfa-nl2-reviewed-history-v1')) && /^\d{4}\/\d{2}$/.test(entry.season)
       const exactWestOverride = exactWestV2(policy) && WEST_V2_CURRENT_IDS.has(entry.sourceMatchId) && entry.season === '2026/27'
-      if ('season' in entry && !(exactMfaOverride || exactWestOverride)) fail('unsupported entry season override')
+      const exactArchiveOverride = exactNplArchiveEntry(policy,entry)
+      if ('season' in entry && !(exactMfaOverride || exactWestOverride || exactArchiveOverride)) fail('unsupported entry season override')
+      if (exactArchiveOverride && entry.season !== '2025/26') fail('unsupported NPL archive entry season')
       if (exactWestV2(policy) && WEST_V2_CURRENT_IDS.has(entry.sourceMatchId) && entry.season !== '2026/27') fail('unsupported West current entry season')
       if (policy.provider === 'mfa' && (!MFA_POLICY_IDS.includes(policy.id) || !['2025/26','2026/27'].includes(entry.season))) fail('unsupported MFA entry season')
       for (const field of ['sourceMatchId', 'sourceCompetitionId', 'homeSourceClubId', 'awaySourceClubId', 'sourceUrl', 'reasonCode']) if (!text(entry?.[field])) fail(`invalid entry ${field}`)
@@ -52,6 +72,12 @@ export function validateHistoricalStatisticsRegistry(registry) {
       if (!Number.isInteger(entry.sourceRound) || entry.sourceRound < 1) fail('invalid entry sourceRound')
       if (!dateOnly(entry.playedOn)) fail('invalid entry playedOn')
       if (!SHA256.test(entry.rawSha256 ?? '')) fail('invalid entry rawSha256')
+      if (policy.competitionSlug === 'ro-liga3-s1') {
+        const proof = entry.sourceProof
+        if (!SHA256.test(proof?.roundResponseSha256 ?? '') || !SHA256.test(proof?.matchSheetSha256 ?? '') || !text(proof?.matchSheetId) || proof?.rawSha256Formula !== 'SHA256(JSON.stringify({matchSheetSha256,roundResponseSha256}) in lexicographic key order)') fail('invalid HLF raw source proof')
+        const combined = createHash('sha256').update(JSON.stringify({ matchSheetSha256: proof.matchSheetSha256, roundResponseSha256: proof.roundResponseSha256 })).digest('hex')
+        if (combined !== entry.rawSha256) fail('HLF composite raw source hash differs')
+      } else if ('sourceProof' in entry) fail('source proof is only supported for HLF composite captures')
       for (const field of ['observedHomeScore', 'observedAwayScore']) if (!Number.isInteger(entry[field]) || entry[field] < 0) fail(`invalid entry ${field}`)
       let url
       try { url = new URL(entry.sourceUrl) } catch { fail('invalid entry sourceUrl') }
@@ -101,12 +127,19 @@ export function classifyHistoricalStatistics({ competition, fixture, rawSha256, 
   const reviewed = registry.policies.find(known => known.id === candidate.id)
   if (!reviewed || historicalStatisticsPolicySha256(candidate) !== historicalStatisticsPolicySha256(reviewed)) throw new Error('historical policy: unreviewed policy')
   if (competition?.slug !== reviewed.competitionSlug || competition?.source !== reviewed.provider || competition?.source_policy !== reviewed.sourcePolicy) throw new Error('historical policy: competition/provider/policy binding differs')
+  if (['isthmian','hlf','nfsbih'].includes(reviewed.provider) && !exactExistingHistoryTuple(reviewed, competition)) throw new Error('historical policy: exact reviewed-existing-history native competition/code binding differs')
   if(reviewed.provider==='mfa'&&!exactMfaTuple(competition))throw new Error('historical policy: exact MFA native competition/code binding differs')
   if(reviewed.provider==='mlsz'&&(competition.id!==reviewed.competitionId||competition.source_league_code!==reviewed.sourceLeagueCode))throw new Error('historical policy: exact MLSZ competition/code binding differs')
   const exception = reviewed.entries.find(entry => entry.sourceMatchId === fixture?.sourceMatchId)
   if (!exception) return { kind: 'normal' }
-  const identityFields = reviewed.provider === 'fcf' ? [...IDENTITY_FIELDS, 'homeSourceCategoryId', 'awaySourceCategoryId'] : IDENTITY_FIELDS
-  for (const field of identityFields) if (fixture[field] !== exception[field]) throw new Error(`historical fixture identity differs: ${field}`)
+  const identityFields = reviewed.provider === 'fcf' ? [...IDENTITY_FIELDS, 'homeSourceCategoryId', 'awaySourceCategoryId'] : reviewed.provider === 'hlf' ? [...IDENTITY_FIELDS, 'sourceProof'] : IDENTITY_FIELDS
+  for (const field of identityFields) {
+    const actual = fixture[field], expected = exception[field]
+    const same = actual !== null && typeof actual === 'object' || expected !== null && typeof expected === 'object'
+      ? JSON.stringify(canonical(actual)) === JSON.stringify(canonical(expected))
+      : actual === expected
+    if (!same) throw new Error(`historical fixture identity differs: ${field}`)
+  }
   if (fixture.season !== entrySeason(reviewed,exception)) throw new Error('historical fixture identity differs: season')
   if (!SHA256.test(rawSha256 ?? '') || rawSha256 !== exception.rawSha256) throw new Error('historical raw SHA256 differs from approved packet')
   if (!dateOnly(competition.firstFantasyPlayedOn) || exception.playedOn >= competition.firstFantasyPlayedOn) throw new Error('historical policy: exception must be strictly prelaunch; valid first fantasy date required')
@@ -122,6 +155,7 @@ export function validateInstalledHistoricalStatisticsMarkers({competition,bindin
     return null
   }
   if(competition.source!==policy.provider || competition.source_policy!==policy.sourcePolicy)fail('competition/provider/policy binding differs')
+  if(['isthmian','hlf','nfsbih'].includes(policy.provider)&&!exactExistingHistoryTuple(policy,competition))fail('exact reviewed-existing-history native competition/code binding differs')
   if(policy.provider==='mfa'&&!exactMfaTuple(competition))fail('exact MFA native competition/code binding differs')
   if(policy.provider==='mlsz'&&(competition.id!==policy.competitionId||competition.source_league_code!==policy.sourceLeagueCode))fail('exact MLSZ competition/code binding differs')
   const sha=historicalStatisticsPolicySha256(policy)
@@ -134,7 +168,7 @@ export function validateInstalledHistoricalStatisticsMarkers({competition,bindin
     const entry=policy.entries.find(e=>e.sourceMatchId===marker?.sourceMatchId)
     if(!entry || nativeIDs.has(marker.sourceMatchId))fail('unknown or duplicate source identity')
     nativeIDs.add(marker.sourceMatchId)
-    const expectedReportID=policy.provider==='dfb'?`de-dfb-${entry.sourceMatchId}`:policy.provider==='fcf'?`es${entry.sourceMatchId}`:policy.provider==='mfa'?`mt${entry.sourceMatchId}`:entry.sourceMatchId
+    const expectedReportID=policy.provider==='dfb'?`de-dfb-${entry.sourceMatchId}`:policy.provider==='fcf'?`es${entry.sourceMatchId}`:policy.provider==='mfa'?`mt${entry.sourceMatchId}`:policy.provider==='isthmian'?`gb${entry.sourceMatchId}`:policy.provider==='nfsbih'?`ba${entry.sourceMatchId}`:entry.sourceMatchId
     if(marker.reportId!==expectedReportID || marker.policyId!==policy.id || marker.policySha256!==sha || marker.rawSha256!==entry.rawSha256)fail('marker report/policy/raw binding differs')
     const {rawSha256,reasonCode,...identity}=entry
     const fixture={...identity,season:entrySeason(policy,entry)}

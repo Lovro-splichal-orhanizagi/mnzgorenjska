@@ -119,7 +119,7 @@ test('existing-league workflow uses nightly waits for activation and scoped repa
       ['false', 'true', ['scripts/cakaj-na-uvoze.mjs', '--popravek', '--tekmovanje', 'hr-ri-u19', '--najvec', '120']],
     ]) for (const [blocked, resultCode] of [['false', 0], ['true', 79]]) {
       const callsPath = join(dir, `calls-${activate}-${refresh}-${blocked}.jsonl`)
-      const result = spawnSync('bash', ['-c', script], { encoding: 'utf8', timeout: 10000,
+      const result = spawnSync('bash', ['-c', script], { cwd: dir, encoding: 'utf8', timeout: 10000,
         env: { ...process.env, PATH: `${dir}:${process.env.PATH}`, LIGE: 'hr-ri-u19', EXPECTED_SHA: 'a'.repeat(40), GITHUB_SHA: 'a'.repeat(40),
           ACTIVATE: activate, REFRESH: refresh, SELECTED_SLUGS: 'hr-ri-u19', WAIT_CALLS: callsPath, BLOCK_WAIT: blocked } })
       assert.equal(result.status, resultCode, result.stderr)
@@ -130,6 +130,25 @@ test('existing-league workflow uses nightly waits for activation and scoped repa
 })
 const startedAt = '2026-10-17T10:00:00Z'
 const run = (title, patch = {}) => ({ databaseId: 10, startedAt, status: 'in_progress', displayTitle: title, ...patch })
+test('reviewed existing history writes are coordinated by country and read stages stay independent',async()=>{
+ const workflow='reviewed-existing-history.yml'
+ for(const mode of ['apply','price','activate']) {
+  const runs={[workflow]:[run(`Reviewed existing history ${mode} / ro-liga3-s1`)]}
+  assert.equal((await coordinate(['--drzava','RO'],runs)).code,1)
+  assert.equal((await coordinate(['--drzava','GB'],runs)).code,0)
+  assert.equal((await coordinate(['--tece'],runs)).code,3)
+ }
+ for(const mode of ['prepare','preview','receipt']) {
+  const runs={[workflow]:[run(`Reviewed existing history ${mode} / gb-npl-midlands`)]}
+  assert.equal((await coordinate(['--drzava','GB'],runs)).code,0)
+  assert.equal((await coordinate(['--tece'],runs)).code,0)
+ }
+ const bosnia={[workflow]:[run('Reviewed existing history apply / ba-wwin-liga-bih')]}
+ assert.equal((await coordinate(['--drzava','BA'],bosnia)).code,1)
+ assert.equal((await coordinate(['--drzava','RO'],bosnia)).code,0)
+ assert.equal((await coordinate(['--drzava','RO'],{[workflow]:[run('Reviewed existing history unknown / foreign')]})).code,1)
+ for(const name of ['zdruzi-klube.yml','tedensko-cene.yml']) assert.match(readFileSync(new URL(`../.github/workflows/${name}`,import.meta.url),'utf8'),/for wf in[^\n]*reviewed-existing-history\.yml/)
+})
 async function coordinate(args, runs = {}, jobs = [{ name: 'uvoz DE', status: 'completed' }], historyControl = {}) {
   class Exit extends Error { constructor(code) { super(); this.code = code } }
   const queried = [], logs = [], historyPages = []
@@ -216,7 +235,7 @@ test('actual club-merge and weekly-price shell waiters see older regional jobs a
       const block = text.slice(text.indexOf('      - name: Pocakaj na starejse uvoze')).split('        run: |\n')[1].split('\n      - name:')[0]
       const script = block.split('\n').filter(x => x.startsWith('          ')).map(x => x.slice(10)).join('\n')
       for (const [workflow, title] of [...regional, ['vklop-katalonije.yml', 'Preverjen vklop Katalonije ES'], ...extraWriters]) for (const [patch, expected] of [[{},79],[{status:'queued'},79],[{databaseId:30,startedAt:'2026-10-17T09:59:59Z'},79],[{databaseId:30},0],[{databaseId:20},0],[{status:'completed'},0]]) {
-        const result = spawnSync('bash', ['-c', script], { encoding: 'utf8', timeout: 10000,
+        const result = spawnSync('bash', ['-c', script], { cwd: dir, encoding: 'utf8', timeout: 10000,
           env: { ...process.env, PATH: `${dir}:${process.env.PATH}`, GITHUB_RUN_ID: '20', GITHUB_REPOSITORY: 'fixture/repo',
             COORDINATION_FIXTURE: JSON.stringify({ startedAt, workflow, runs: [run(title, patch)] }) } })
         assert.equal(result.status, expected, `${wf} / ${workflow} / ${JSON.stringify(patch)}: ${result.stderr}`)

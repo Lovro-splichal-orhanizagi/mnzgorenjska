@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "sourcePolicy": "reviewed-existing-history-20261023-v1",
+  "generatedAt": "2026-10-23T11:07:48.880Z",
+  "competitions": [
+    {
+      "competitionId": 979,
+      "slug": "gb-npl-midlands",
+      "provider": "isthmian",
+      "sourceLeagueCode": "npl/67d7c7bb74247876e6dae40c/2026-27",
+      "country": "GB",
+      "expectedReportsBySeason": {
+        "2025/26": 462,
+        "2026/27": 150
+      },
+      "policyId": "gb-npl-midlands-historical-unavailable-2026-10-23-v1",
+      "policySha256": "5f88bd981434a2d1bb8097a71d4b62974601b0eb01758509b345c8eb6b0c6924",
+      "targets": [
+        {
+          "nativeMatchId": 562344,
+          "nativeRoundId": 35365,
+          "round": 3,
+          "homeTeamId": 10869,
+          "awayTeamId": 10864,
+          "date": "2026-08-18",
+          "score": [
+            1,
+            1
+          ],
+          "reportId": "gb6a590670ce9ef452b61f386d",
+          "sourceMatchId": "6a590670ce9ef452b61f386d",
+          "season": "2026/27",
+          "apps": 29,
+          "goals": 2,
+          "sourcePhase": null,
+          "sourceRound": 3,
+          "initialSourcePhase": null,
+          "initialSourceRound": null
+        },
+        {
+          "nativeMatchId": 561922,
+          "nativeRoundId": 35329,
+          "round": 7,
+          "homeTeamId": 10862,
+          "awayTeamId": 10847,
+          "date": "2025-09-13",
+          "score": [
+            2,
+            3
+          ],
+          "reportId": "gb6896abc31c6f4c56212c7ac5",
+          "sourceMatchId": "6896abc31c6f4c56212c7ac5",
+          "season": "2025/26",
+          "apps": 27,
+          "goals": 5,
+          "sourcePhase": null,
+          "sourceRound": 7,
+          "initialSourcePhase": null,
+          "initialSourceRound": null
+        }
+      ]
+    },
+    {
+      "competitionId": 984,
+      "slug": "gb-sfl-d1-south",
+      "provider": "isthmian",
+      "sourceLeagueCode": "sfl/69d0bdf9b616bafb97331d41/2026-27",
+      "country": "GB",
+      "expectedReportsBySeason": {
+        "2026/27": 132
+      },
+      "policyId": "gb-sfl-d1-south-historical-unavailable-2026-10-23-v1",
+      "policySha256": "682dbaa0e1acfb0a4a03da9da93cdc706eb0d16dc4a8df180e994f6980369a30",
+      "targets": [
+        {
+          "nativeMatchId": 509795,
+          "nativeRoundId": 34273,
+          "round": 11,
+          "homeTeamId": 10535,
+          "awayTeamId": 10517,
+          "date": "2026-10-14",
+          "score": [
+            1,
+            2
+          ],
+          "reportId": "gb6a5a1b79ce9ef452b61f4398",
+          "sourceMatchId": "6a5a1b79ce9ef452b61f4398",
+          "season": "2026/27",
+          "apps": 29,
+          "goals": 3,
+          "sourcePhase": null,
+          "sourceRound": 11,
+          "initialSourcePhase": null,
+          "initialSourceRound": null
+        }
+      ]
+    },
+    {
+      "competitionId": 497,
+      "slug": "ro-liga3-s1",
+      "provider": "hlf",
+      "sourceLeagueCode": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1",
+      "country": "RO",
+      "expectedReportsBySeason": {
+        "2026/27": 54
+      },
+      "policyId": "ro-liga3-s1-historical-unavailable-2026-10-23-v1",
+      "policySha256": "b6686671855dfa9a6f96fa8cf67d530aa4fc4208f859e783929cb36140169329",
+      "targets": [
+        {
+          "nativeMatchId": 133334,
+          "nativeRoundId": 10663,
+          "round": 1,
+          "homeTeamId": 3016,
+          "awayTeamId": 3017,
+          "date": "2026-08-29",
+          "score": [
+            2,
+            1
+          ],
+          "reportId": "f43d55c1-6530-49dc-a02e-4d7e578d6205",
+          "sourceMatchId": "f43d55c1-6530-49dc-a02e-4d7e578d6205",
+          "season": "2026/27",
+          "apps": 33,
+          "goals": 3,
+          "sourcePhase": "91e5da84-f4cf-4424-8904-59f91185358b",
+          "sourceRound": 1,
+          "initialSourcePhase": null,
+          "initialSourceRound": null
+        }
+      ]
+    },
+    {
+      "competitionId": 998,
+      "slug": "ba-wwin-liga-bih",
+      "provider": "nfsbih",
+      "sourceLeagueCode": "wwin-liga-bih/54152223",
+      "country": "BA",
+      "expectedReportsBySeason": {
+        "2026/27": 49
+      },
+      "policyId": "ba-wwin-liga-bih-historical-unavailable-2026-10-23-v1",
+      "policySha256": "fa48230a81834fe5d182012bdf34ab5df513392f5000ad4e0186f24d5b9a1366",
+      "targets": [
+        {
+          "nativeMatchId": 576391,
+          "nativeRoundId": 35409,
+          "round": 5,
+          "homeTeamId": 10876,
+          "awayTeamId": 10872,
+          "date": "2026-09-02",
+          "score": [
+            1,
+            2
+          ],
+          "reportId": "ba54152295",
+          "sourceMatchId": "54152295",
+          "season": "2026/27",
+          "apps": 32,
+          "goals": 3,
+          "sourcePhase": null,
+          "sourceRound": 5,
+          "initialSourcePhase": null,
+          "initialSourceRound": null
+        },
+        {
+          "nativeMatchId": 576399,
+          "nativeRoundId": 35410,
+          "round": 6,
+          "homeTeamId": 10874,
+          "awayTeamId": 10876,
+          "date": "2026-09-06",
+          "score": [
+            2,
+            1
+          ],
+          "reportId": "ba54152303",
+          "sourceMatchId": "54152303",
+          "season": "2026/27",
+          "apps": 32,
+          "goals": 3,
+          "sourcePhase": null,
+          "sourceRound": 6,
+          "initialSourcePhase": null,
+          "initialSourceRound": null
+        }
+      ]
+    }
+  ]
+}

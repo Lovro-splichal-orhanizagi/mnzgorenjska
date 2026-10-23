@@ -245,3 +245,9 @@ kjer je zadnja tekma več kot tri dni po prvi; največji razponi so od 66 dni
 najzgodnejšo tekmo kroga, lahko zato zaklene poznejše tekme prezgodaj.
 Pred vklopom je treba roke preveriti posebej za vsako ligo; ta pregled ni
 vklop ali uvoz in sam ne potrjuje pripravljenosti.
+
+### Reviewed existing-report release, 23 October 2026
+
+The owner approved preserving official results while marking individual statistics unavailable for Grantham Town–St Ives Town (18 August 2026, `gb6a590670ce9ef452b61f386d`, native `562344`) and Larkhall Athletic–Swindon Supermarine (14 October 2026, `gb6a5a1b79ce9ef452b61f4398`, native `509795`). The exact policies and source-club bindings are in the immutable historical-statistics registries. `reviewed-existing-history.yml` provides prepare, artifact-pinned cleanup, one-use repricing, preview and preview-pinned activation; a policy registration alone does not activate a league. Native cleanup preserves official results and all unaffected football rows.
+
+NPL Midlands also has an unresolved archived dismissal clock in St Neots Town–Long Eaton United (13 September 2025, `gb6896abc31c6f4c56212c7ac5`, native `561922`). The source records two cards at minute zero and another yellow at 93. The owner separately approved this additional archived exclusion on 23 October. The closed NPL policy therefore covers exactly two reports across the current and archived seasons. Preserve both official results and mark their individual statistics unavailable; require all 462 archive fixtures (461 available reports plus this one marker) and all 150 imported current fixtures (149 available plus the approved Grantham marker). Never infer a real minute-zero dismissal from these source events.

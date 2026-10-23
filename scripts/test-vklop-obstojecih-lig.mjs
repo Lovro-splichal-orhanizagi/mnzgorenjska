@@ -80,6 +80,88 @@ test('Croatian admission permits only the two exact HNS tuples',()=>{
   const arbitrary={...registry,candidates:[...registry.candidates,{...expected[0],id:115,slug:'hr-other-league',source_league_code:'other'}]}
   assert.throws(()=>validateSelection(arbitrary,['hr-other-league']))
 })
+test('Bosnia and Ukraine admission permits only the exact reviewed tuples',()=>{
+  const expected=[
+    {id:998,slug:'ba-wwin-liga-bih',source:'nfsbih',source_league_code:'wwin-liga-bih/54152223'},
+    {id:1001,slug:'ua-upl',source:'upl',source_league_code:'432'},
+  ]
+  assert.deepEqual(validateSelection(registry,expected.map(c=>c.slug)),expected)
+  assert.deepEqual(registry.candidates.filter(c=>['nfsbih','upl'].includes(c.source)),expected)
+  assert.equal(registry.source_contracts.nfsbih.document,'docs/viri/bih.md')
+  assert.match(registry.source_contracts.nfsbih.permission,/no explicit permission/i)
+  assert.match(registry.source_contracts.nfsbih.permission,/3-second/i)
+  assert.match(registry.source_contracts.nfsbih.permission,/no archive/i)
+  assert.match(registry.source_contracts.nfsbih.permission,/401.*403.*429/i)
+  assert.equal(registry.source_contracts.upl.document,'docs/viri/ukrajina.md')
+  assert.match(registry.source_contracts.upl.permission,/no explicit permission/i)
+  assert.match(registry.source_contracts.upl.permission,/3-second/i)
+  assert.match(registry.source_contracts.upl.permission,/archive.*428/i)
+  assert.match(registry.source_contracts.upl.permission,/401.*403.*429/i)
+  for(const candidate of expected) for(const patch of [
+    {id:candidate.id+1},{source:candidate.source==='upl'?'nfsbih':'upl'},
+    {source_league_code:candidate.source_league_code+'-changed'},
+    {slug:candidate.source==='upl'?'ua-2-liga-a':'ba-other-league'},
+  ]) {
+    const altered={...registry,candidates:registry.candidates.map(c=>c.slug===candidate.slug?{...c,...patch}:c)}
+    assert.throws(()=>validateSelection(altered,[patch.slug??candidate.slug]))
+  }
+  for(const [slug,source] of [['ba-other-league','nfsbih'],['ua-regional-league','upl']]) {
+    const arbitrary={...registry,candidates:[...registry.candidates,{...expected[0],id:1999,slug,source,source_league_code:'arbitrary'}]}
+    assert.throws(()=>validateSelection(arbitrary,[slug]))
+  }
+})
+const lineupCandidateSlugs=['ba-wwin-liga-bih','ua-upl']
+function matchSquad({homeGK=1,awayGK=1,redStarter=false,unusedRedBench=false,extraBench=false,missingTeams=false}={}) {
+  const appearance_rows=[]
+  for(const [team_id,gkCount] of [[10,homeGK],[20,awayGK]]) {
+    for(let i=0;i<11;i++) {
+      const sentOff=redStarter&&team_id===10&&i===10
+      appearance_rows.push({team_id,started:true,is_goalkeeper:i<gkCount,minutes_played:sentOff?70:90,minute_on:0,minute_off:sentOff?70:90,red_cards:sentOff?1:0})
+    }
+  }
+  if(unusedRedBench)appearance_rows.push({team_id:10,started:false,is_goalkeeper:false,minutes_played:0,minute_on:0,minute_off:0,red_cards:1})
+  if(extraBench)appearance_rows.push({team_id:10,started:false,is_goalkeeper:false,minutes_played:1,minute_on:60,minute_off:61,red_cards:0})
+  return {id:11,round_id:1,home_team_id:missingTeams?null:10,away_team_id:20,home_goals:1,away_goals:0,imported_at:'2026-10-10T12:00:00Z',kontumacija:false,statistics_status:'available',goals:[{count:1}],appearances:[{count:appearance_rows.length}],appearance_rows}
+}
+function runReviewedLineup(slug,match,patch={}) {
+  const c=registry.candidates.find(x=>x.slug===slug)
+  const f=fixture({matches:async()=>[match,{id:12,round_id:2,home_goals:null,away_goals:null,imported_at:null,kontumacija:false,goals:[{count:0}],appearances:[{count:0}]}],...patch})
+  return runBatch({candidates:[c],transport:f.transport,now})
+}
+test('BA/Ukrainian routes require full teams, explicit starting keepers and reconciled feasible minutes',async()=>{
+  for(const slug of lineupCandidateSlugs) {
+    const rows=await runReviewedLineup(slug,matchSquad())
+    assert.equal(rows[0].status,'READY',`${slug}: ${rows[0].reason}`)
+    const redRows=await runReviewedLineup(slug,matchSquad({redStarter:true,unusedRedBench:true}))
+    assert.equal(redRows[0].status,'READY',`${slug} legitimate red/unused bench: ${redRows[0].reason}`)
+    for(const [label,match] of [
+      ['missing individual rows',{...matchSquad(),appearance_rows:undefined}],
+      ['non-playing team',{...matchSquad(),appearance_rows:[...matchSquad().appearance_rows,{team_id:999,started:false,is_goalkeeper:false,minutes_played:0,minute_on:0,minute_off:0,red_cards:0}],appearances:[{count:23}]}],
+      ['missing team identity',matchSquad({missingTeams:true})],
+      ['no explicit goalkeeper',matchSquad({homeGK:0})],
+      ['two explicit goalkeepers',matchSquad({homeGK:2})],
+      ['invalid duration',{...matchSquad(),appearance_rows:matchSquad().appearance_rows.map((a,i)=>i===0?{...a,minutes_played:89}:a)}],
+      ['out-of-range minute',{...matchSquad(),appearance_rows:matchSquad().appearance_rows.map((a,i)=>i===0?{...a,minute_off:91,minutes_played:91}:a)}],
+      ['reversed minute span',{...matchSquad(),appearance_rows:matchSquad().appearance_rows.map((a,i)=>i===0?{...a,minute_on:91,minute_off:90,minutes_played:-1}:a)}],
+      ['overlapping extra bench',{...matchSquad({extraBench:true}),appearances:[{count:23}]}],
+      ['starting player begins late despite balanced team minutes',{...matchSquad({extraBench:true}),appearance_rows:matchSquad({extraBench:true}).appearance_rows.map((a,i)=>i===0?{...a,minute_on:1,minutes_played:89}:a)}],
+      ['red-card span does not reconcile',{...matchSquad(),appearance_rows:matchSquad().appearance_rows.map((a,i)=>i===0?{...a,red_cards:1,minute_off:70}:a)}],
+    ]) {
+      const held=await runReviewedLineup(slug,match)
+      assert.equal(held[0].status,'HOLD',`${slug} ${label} was accepted`)
+    }
+  }
+})
+test('REST transport requests individual lineup evidence only for the exact BA and UPL routes',async()=>{
+  const seen=[]
+  const transport=createTransport({url:'https://db.example.test',key:'test',fetch:async url=>{seen.push(url);return new Response('[]',{status:200})}})
+  for(const slug of lineupCandidateSlugs)await transport.matches(registry.candidates.find(c=>c.slug===slug))
+  await transport.matches(candidate)
+  const select=seen.map(url=>new URL(url).searchParams.get('select'))
+  assert.ok(select[0].includes('home_team_id,away_team_id,appearance_rows:appearances('))
+  assert.ok(select[1].includes('home_team_id,away_team_id,appearance_rows:appearances('))
+  assert.ok(!select[2].includes('appearance_rows:appearances('))
+})
 test('Danish third division registration binds the reviewed production tuple',()=>{
   const dk=validateSelection(registry,['dk-3-division'])
   assert.deepEqual(dk,[{id:1051,slug:'dk-3-division',source:'dbu',source_league_code:'508657'}])

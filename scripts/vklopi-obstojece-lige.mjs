@@ -23,14 +23,25 @@ const reviewedHnsCandidates = new Set([
   '113|hr-ls-ns-lsz|hns|115979433',
   '824|hr-ri-u19|hns|115228638',
 ])
+const reviewedNfsbihCandidates = new Set([
+  '998|ba-wwin-liga-bih|nfsbih|wwin-liga-bih/54152223',
+])
+const reviewedUplCandidates = new Set([
+  '1001|ua-upl|upl|432',
+])
 const usesReviewedCalendarStart = competition => reviewedCalendarStarts.has(`${competition.slug}|${competition.source}|${competition.source_league_code}`)
+const usesDetailedSquadProof = competition =>
+  (competition.id === 998 && competition.slug === 'ba-wwin-liga-bih' && competition.source === 'nfsbih' && competition.source_league_code === 'wwin-liga-bih/54152223') ||
+  (competition.id === 1001 && competition.slug === 'ua-upl' && competition.source === 'upl' && competition.source_league_code === '432')
 export function validateSelection(registry, slugs) {
   if (!slugs.length || new Set(slugs).size !== slugs.length) throw Error('Provide a nonempty explicit list without duplicates.')
   return slugs.map(slug => {
     const candidate = registry.candidates.find(c => c.slug === slug)
     const fmfTuple = candidate && [candidate.id,candidate.slug,candidate.source,candidate.source_league_code].join('|')
     const hnsTuple = candidate && [candidate.id,candidate.slug,candidate.source,candidate.source_league_code].join('|')
-    if (!candidate || !['ncefl','pzpn','wmzpn','eps','sportnet','dbu','hlf','isthmian','lowland','fscg','mfa','mlsz','fmf','hns'].includes(candidate.source) || ((candidate.source==='fmf'||slug.startsWith('md-'))&&!reviewedFmfCandidates.has(fmfTuple)) || ((candidate.source==='hns'||slug.startsWith('hr-'))&&!reviewedHnsCandidates.has(hnsTuple)) || /^(de|es)-/.test(slug)) throw Error(`Outside fixed existing-league scope: ${slug}`)
+    const nfsbihTuple = candidate && [candidate.id,candidate.slug,candidate.source,candidate.source_league_code].join('|')
+    const uplTuple = candidate && [candidate.id,candidate.slug,candidate.source,candidate.source_league_code].join('|')
+    if (!candidate || !['ncefl','pzpn','wmzpn','eps','sportnet','dbu','hlf','isthmian','lowland','fscg','mfa','mlsz','fmf','hns','nfsbih','upl'].includes(candidate.source) || ((candidate.source==='fmf'||slug.startsWith('md-'))&&!reviewedFmfCandidates.has(fmfTuple)) || ((candidate.source==='hns'||slug.startsWith('hr-'))&&!reviewedHnsCandidates.has(hnsTuple)) || ((candidate.source==='nfsbih'||slug.startsWith('ba-'))&&!reviewedNfsbihCandidates.has(nfsbihTuple)) || ((candidate.source==='upl'||slug.startsWith('ua-'))&&!reviewedUplCandidates.has(uplTuple)) || /^(de|es)-/.test(slug)) throw Error(`Outside fixed existing-league scope: ${slug}`)
     return candidate
   }).sort((a,b) => a.slug.localeCompare(b.slug))
 }
@@ -59,7 +70,7 @@ export function createTransport({url,key,fetch:request=globalThis.fetch}) {
     state:c=>call('rpc/stanje_lige',{p_competition_id:c.id}),
     season:c=>call('rpc/sezona_lige',{p_competition_id:c.id}),
     rounds:c=>rows('rounds',{select:'id,number,season,deadline_at,played_on,lineups_locked_at',competition_id:`eq.${c.id}`,order:'id'}),
-    matches:c=>rows('matches',{select:'id,round_id,played_on,zapisnik_id,vir_brez_izida,home_goals,away_goals,imported_at,kontumacija,statistics_status,goals(count),appearances(count),rounds!inner(competition_id)', 'rounds.competition_id':`eq.${c.id}`,order:'id'}),
+    matches:c=>rows('matches',{select:`id,round_id,played_on,zapisnik_id,vir_brez_izida,home_goals,away_goals,imported_at,kontumacija,statistics_status,goals(count),appearances(count),${usesDetailedSquadProof(c)?'home_team_id,away_team_id,appearance_rows:appearances(team_id,started,is_goalkeeper,minutes_played,minute_on,minute_off,red_cards),':''}rounds!inner(competition_id)`, 'rounds.competition_id':`eq.${c.id}`,order:'id'}),
     fantasyData:async c=>({teams:await rows('fantasy_teams',{select:'id',competition_id:`eq.${c.id}`}),lineups:await rows('fantasy_lineups',{select:'round_id,rounds!inner(competition_id)','rounds.competition_id':`eq.${c.id}`})}),
     activate:c=>call('rpc/vklopi_ligo_sredi_sezone',{p_slug:c.slug}),
   }
@@ -68,6 +79,28 @@ const count = (match,key) => {
   const value=match[key]?.[0]?.count
   if (!Number.isSafeInteger(value) || value<0) throw Error(`Missing ${key} count for match ${match.id}`)
   return value
+}
+function verifyImportedSquads(candidate,matches) {
+  if(!usesDetailedSquadProof(candidate))return
+  for(const match of matches)if(match.imported_at&&!match.kontumacija) {
+    if(!Number.isSafeInteger(match.home_team_id)||!Number.isSafeInteger(match.away_team_id)||match.home_team_id===match.away_team_id)throw Error(`Match ${match.id} has missing or invalid home/away teams.`)
+    const rows=match.appearance_rows
+    if(!Array.isArray(rows)||rows.length!==count(match,'appearances'))throw Error(`Match ${match.id} lacks complete individual appearances.`)
+    const sides=new Map([[match.home_team_id,{starters:0,keepers:0,minutes:0,redLoss:0}],[match.away_team_id,{starters:0,keepers:0,minutes:0,redLoss:0}]])
+    for(const row of rows) {
+      const side=sides.get(row.team_id)
+      if(!side)throw Error(`Match ${match.id} has an appearance for a non-playing team.`)
+      if(typeof row.started!=='boolean'||typeof row.is_goalkeeper!=='boolean'||![row.minutes_played,row.minute_on,row.minute_off,row.red_cards].every(Number.isSafeInteger)||row.minutes_played<0||row.minute_on<0||row.minute_off<0||row.minute_on>90||row.minute_off>90||row.minute_on>row.minute_off||row.minutes_played!==row.minute_off-row.minute_on||(row.started&&row.minute_on!==0)||row.red_cards<0)throw Error(`Match ${match.id} has incomplete or infeasible appearance minutes/role evidence.`)
+      if(row.started)side.starters++
+      if(row.started&&row.is_goalkeeper)side.keepers++
+      side.minutes+=row.minutes_played
+      if(row.red_cards>0&&(row.started||row.minutes_played>0))side.redLoss+=90-row.minute_off
+    }
+    for(const [teamId,side] of sides) {
+      if(side.starters<7||side.starters>11||side.keepers!==1)throw Error(`Match ${match.id} team ${teamId} lacks 7–11 starters and exactly one explicit starting goalkeeper.`)
+      if(side.minutes!==90*side.starters-side.redLoss)throw Error(`Match ${match.id} team ${teamId} individual minutes do not reconcile with starters and sendings-off.`)
+    }
+  }
 }
 function inspect(candidate,competition,state,season,rounds,matches,now,fantasyData={teams:[],lineups:[]}) {
   for(const key of ['id','slug','source','source_league_code'])if(competition[key]!==candidate[key])throw Error(`Candidate ${key} changed.`)
@@ -99,6 +132,7 @@ function inspect(candidate,competition,state,season,rounds,matches,now,fantasyDa
     error.evidence={score_goal_difference:difference,score_goal_mismatches:mismatches}
     throw error
   }
+  verifyImportedSquads(candidate,matches)
   const played=new Set(currentMatches.filter(m=>count(m,'appearances')>0).map(m=>m.round_id))
   const future=current.filter(r=>Date.parse(r.deadline_at)>now.getTime()).sort((a,b)=>a.number-b.number)
   const gap=future.find(r=>!played.has(r.id))?.number

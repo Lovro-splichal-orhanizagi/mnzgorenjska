@@ -96,6 +96,15 @@ export class NfsbihZavrnitev extends Error {
   }
 }
 export const jeZavrnitev = (status) => status === 401 || status === 403 || status === 429
+// Refusals must reach the provider before the shared downloader can retry 429.
+export async function nfsbihFetch(url, options = {}) {
+  const response = await fetch(url, { ...options, redirect: 'manual' })
+  if (jeZavrnitev(response.status) || (response.status >= 300 && response.status < 400)) {
+    try { await response.body?.cancel() } catch {}
+    throw new NfsbihZavrnitev(`nfsbih: ${url} → HTTP ${response.status} — uvoz ustavljen, ne obhajamo`, response.status)
+  }
+  return response
+}
 export const jeIzziv = (html) =>
   /<title>\s*(Just a moment|Attention Required)|cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha|captcha/i.test(String(html ?? ''))
 
@@ -427,6 +436,7 @@ async function stranTekme(prenesi, url, ime, sveze) {
 
 const vir = {
   ime: 'nfsbih',
+  fetch: nfsbihFetch,
   polnoIme: 'Nogometni/Fudbalski savez BiH (nfsbih.ba)',
   drzava: 'BA',
   osnovniNaslov: OSNOVNI,
@@ -447,11 +457,15 @@ const vir = {
     return razcleniRazpored(koda, await beri(prenesi, naslovLige(koda), imeLige(koda), true))
   },
 
-  async zapisniki(koda, prenesi) {
+  async zapisniki(koda, prenesi, { preskoci = new Set(), samoZapisnik = null } = {}) {
     const { slug } = razberiKodo(koda)
     const { sezona, tekme } = tekmeLige(koda, await beri(prenesi, naslovLige(koda), imeLige(koda), true))
     const out = []
+    const preskoceni = new Set(preskoci ?? [])
+    const iskaniID = samoZapisnik == null ? null : String(samoZapisnik).replace(/^ba/, '')
     for (const t of tekme.filter((x) => x.izid && !jeKontumacija(x))) {
+      const sourceId = String(t.id).replace(/^ba/, '')
+      if (preskoceni.has(sourceId) || preskoceni.has(`ba${sourceId}`) || (iskaniID && sourceId !== iskaniID)) continue
       const url = naslovTekme(slug, t.id)
       const id = sifraZapisnika(t.id)
       const star = starostDni(t.datum)
