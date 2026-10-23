@@ -73,7 +73,14 @@ jobs:
           console.log(validateSelection(registry, process.env.LIGE.split(',').map(s => s.trim()).filter(Boolean)).map(c => c.slug).join('\n'))
           JS
           while IFS= read -r slug; do
-            node scripts/cakaj-na-uvoze.mjs --popravek --tekmovanje "$slug" --najvec 120
+            if [ "$ACTIVATE" = true ]; then
+              # An inactive target does not depend on a nightly writer serving only active leagues.
+              # The coordinator still waits for nightly when this selected league is already active.
+              node scripts/cakaj-na-uvoze.mjs --liga "$slug" --najvec 120
+            else
+              # Refresh imports only into this inactive target; preserve same-country repair serialization.
+              node scripts/cakaj-na-uvoze.mjs --popravek --tekmovanje "$slug" --najvec 120
+            fi
           done < release/obstojece-lige/selected-slugs.txt
       - name: Namesti Chromium za javni HLF obisk
         if: inputs.refresh && contains(inputs.lige, 'ro-')
