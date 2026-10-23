@@ -97,6 +97,8 @@ jobs:
     if: needs.zacni.outputs.teci == 'true'
     strategy:
       fail-fast: false
+      # Leave hosted runner capacity for release validation and deployment jobs.
+      max-parallel: 16
       matrix:
         # Nova država mora na ta seznam, sicer se njene lige ponoči ne uvažajo.
         # Število košev je isto kot KOSOV v scripts/nocni-kosi.mjs (smoke primerja).
