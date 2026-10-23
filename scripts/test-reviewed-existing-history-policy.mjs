@@ -11,15 +11,22 @@ import {
 
 const registry=JSON.parse(readFileSync(new URL('./policies/historical-statistics-exclusions.json',import.meta.url)))
 const ssot=JSON.parse(readFileSync(new URL('./policies/reviewed-existing-cleanup-targets-20261023.json',import.meta.url)))
-const reportId=(provider,id)=>provider==='isthmian'?`gb${id}`:provider==='nfsbih'?`ba${id}`:id
+const reportId=(provider,id)=>provider==='isthmian'?`gb${id}`:provider==='nfsbih'?`ba${id}`:provider==='fmf'?`md${id}`:id
 
-test('registry and SSOT contain exactly four tuples and the six approved report identities',()=>{
+test('registry and SSOT contain exactly six tuples and nine approved report identities',()=>{
  assert.equal(validateHistoricalStatisticsRegistry(registry),true)
  assert.equal(ssot.schemaVersion,1)
  assert.equal(ssot.sourcePolicy,'reviewed-existing-history-20261023-v1')
- assert.equal(ssot.competitions.length,4)
- assert.deepEqual(ssot.competitions.map(x=>x.slug).sort(),['ba-wwin-liga-bih','gb-npl-midlands','gb-sfl-d1-south','ro-liga3-s1'])
- assert.equal(ssot.competitions.reduce((n,c)=>n+c.targets.length,0),6)
+ assert.equal(ssot.competitions.length,6)
+ assert.deepEqual(ssot.competitions.map(x=>x.slug).sort(),['ba-wwin-liga-bih','gb-npl-midlands','gb-sfl-d1-south','md-liga-2','ro-ab-l4-s2','ro-liga3-s1'])
+ assert.equal(ssot.competitions.reduce((n,c)=>n+c.targets.length,0),9)
+ const oldPolicies=registry.policies.filter(p=>['gb-npl-midlands','gb-sfl-d1-south','ro-liga3-s1','ba-wwin-liga-bih'].includes(p.competitionSlug))
+ assert.deepEqual(oldPolicies.map(p=>[p.competitionSlug,p.id,p.entries.length]).sort(),[
+  ['ba-wwin-liga-bih','ba-wwin-liga-bih-historical-unavailable-2026-10-23-v1',2],
+  ['gb-npl-midlands','gb-npl-midlands-historical-unavailable-2026-10-23-v1',2],
+  ['gb-sfl-d1-south','gb-sfl-d1-south-historical-unavailable-2026-10-23-v1',1],
+  ['ro-liga3-s1','ro-liga3-s1-historical-unavailable-2026-10-23-v1',1],
+ ])
  for(const target of ssot.competitions){
   const policy=getHistoricalStatisticsPolicy(target.slug)
   assert.ok(policy,`missing ${target.slug}`)
@@ -47,6 +54,10 @@ test('registry and SSOT contain exactly four tuples and the six approved report 
  assert.deepEqual(ssot.competitions.find(x=>x.slug==='gb-sfl-d1-south').expectedReportsBySeason,{'2026/27':132})
  assert.deepEqual(ssot.competitions.find(x=>x.slug==='ro-liga3-s1').expectedReportsBySeason,{'2026/27':54})
  assert.deepEqual(ssot.competitions.find(x=>x.slug==='ba-wwin-liga-bih').expectedReportsBySeason,{'2026/27':49})
+ assert.deepEqual(ssot.competitions.find(x=>x.slug==='ro-ab-l4-s2').expectedReportsBySeason,{'2026/27':23})
+ assert.deepEqual(ssot.competitions.find(x=>x.slug==='ro-ab-l4-s2').expectedPublishedFixturesBySeason,{'2026/27':24})
+ assert.deepEqual(ssot.competitions.find(x=>x.slug==='md-liga-2').expectedReportsBySeason,{'2026/27':95})
+ assert.deepEqual(ssot.competitions.find(x=>x.slug==='md-liga-2').expectedPublishedFixturesBySeason,{'2026/27':97})
 })
 
 for(const target of ssot.competitions){

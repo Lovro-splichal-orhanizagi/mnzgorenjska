@@ -76,6 +76,14 @@ export const naslovPdf = (pot) => `${OSNOVNI}/${String(pot).replace(/^\/+/, '').
 // številskem prostoru drugih virov, `matches.zapisnik_id` pa je enoličen čez vse.
 export const sifraZapisnika = (id) => `md${String(id).replace(/^md/, '')}`
 
+/** Exact source/report ID gate used before fetching or parsing an FMF PDF. */
+export function fmfZapisnikJeIzbran(id, { preskoci = new Set(), samoZapisnik = null } = {}) {
+  const sourceId = String(id).replace(/^md/, '')
+  const reportId = sifraZapisnika(sourceId)
+  return !preskoci.has(sourceId) && !preskoci.has(reportId) &&
+    (samoZapisnik == null || [sourceId, reportId].includes(String(samoZapisnik)))
+}
+
 const imeTiska = (koda) => `tisk-${razbijKodo(koda).tekmovanje}.html`
 const imeTekmovanja = (koda) => `tekmovanje-${razbijKodo(koda).slug}.html`
 const imeKroga = (edition) => `krog-${edition}.html`
@@ -864,7 +872,7 @@ const vir = {
   razcleniRazpored: (_vrstice, html) => razcleniRazpored(html),
   vBesedilo: (s) => String(s ?? '').split('\n'),
 
-  async zapisniki(koda, prenesi) {
+  async zapisniki(koda, prenesi, { preskoci = new Set(), samoZapisnik = null } = {}) {
     const html = await tisk(koda, prenesi)
     const sezona = sezonaTiska(html)
     const tekme = tekmeTiska(html)
@@ -874,7 +882,7 @@ const vir = {
     if (prvi?.datum && sezona && sezonaIz(prvi.datum) !== sezona)
       throw new Error(`fmf: sezona ${sezona} se začne ${prvi.datum} (pred 1. julijem) — uvoz razporeda bi jo vpisal v ${sezonaIz(prvi.datum)}; uvoz ustavljen`)
     const out = []
-    for (const t of await odigraneSSifro(koda, prenesi, tekme)) {
+    for (const t of (await odigraneSSifro(koda, prenesi, tekme)).filter(t => fmfZapisnikJeIzbran(t.id, { preskoci, samoZapisnik }))) {
       const star = starostDni(t.datum)
       const sveze = star <= 3
       const pot = await pdfTekme(prenesi, t.id, sveze)

@@ -8,14 +8,16 @@ const cases = [
   { slug: 'gb-npl-midlands', provider: 'isthmian', id: 979, code: 'npl/67d7c7bb74247876e6dae40c/2026-27' },
   { slug: 'gb-sfl-d1-south', provider: 'isthmian', id: 984, code: 'sfl/69d0bdf9b616bafb97331d41/2026-27' },
   { slug: 'ro-liga3-s1', provider: 'hlf', id: 497, code: 'national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1' },
+  { slug: 'ro-ab-l4-s2', provider: 'hlf', id: 501, code: 'judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2' },
   { slug: 'ba-wwin-liga-bih', provider: 'nfsbih', id: 998, code: 'wwin-liga-bih/54152223' },
+  { slug: 'md-liga-2', provider: 'fmf', id: 1107, code: 'liga-2-1782306996/877' },
 ]
 
 function setup(item, selectedEntry = null) {
   const policy = getHistoricalStatisticsPolicy(item.slug)
   const sha = historicalStatisticsPolicySha256(policy)
   const entry = selectedEntry ?? policy.entries[0]
-  const reportIdFor = sourceMatchId => item.provider === 'isthmian' ? `gb${sourceMatchId}` : item.provider === 'nfsbih' ? `ba${sourceMatchId}` : sourceMatchId
+  const reportIdFor = sourceMatchId => item.provider === 'isthmian' ? `gb${sourceMatchId}` : item.provider === 'nfsbih' ? `ba${sourceMatchId}` : item.provider === 'fmf' ? `md${sourceMatchId}` : sourceMatchId
   const binding = {
     installed: true,
     policyId: policy.id,
@@ -43,7 +45,7 @@ function setup(item, selectedEntry = null) {
 for (const item of cases) {
   test(`${item.slug}: installed single-report exclusion returns before provider traversal`, async () => {
     const { entry, calls, provider, competition, binding } = setup(item)
-    const reportId = item.provider === 'isthmian' ? `gb${entry.sourceMatchId}` : item.provider === 'nfsbih' ? `ba${entry.sourceMatchId}` : entry.sourceMatchId
+    const reportId = item.provider === 'isthmian' ? `gb${entry.sourceMatchId}` : item.provider === 'nfsbih' ? `ba${entry.sourceMatchId}` : item.provider === 'fmf' ? `md${entry.sourceMatchId}` : entry.sourceMatchId
     const result = await provider.zapisniki(item.code, () => { throw Error('source read must not occur') }, { samoZapisnik: reportId })
     assert.deepEqual(result, [])
     assert.equal(calls.length, 0)
@@ -71,6 +73,16 @@ for (const item of cases) {
     assert.equal(calls.length, 0)
   })
 }
+
+test('FMF future publication of an excluded PDF is filtered before report import',async()=>{
+ const item=cases.find(x=>x.slug==='md-liga-2'),{entry,calls,provider,base,report}=setup(item)
+ const reports=getHistoricalStatisticsPolicy(item.slug).entries.map(e=>({id:`md${e.sourceMatchId}`,z:{shouldNeverImport:true}}))
+ base.zapisniki=async(code,read,options)=>{calls.push({code,read,options});return [...reports,report]}
+ const result=await provider.zapisniki(item.code,()=> 'read')
+ assert.deepEqual(result,[report])
+ assert.ok(calls[0].options.preskoci.has('50422'))
+ assert.ok(calls[0].options.preskoci.has('50481'))
+})
 
 test('NPL archive marker accepts only its exact archive season and skips before source traversal', async () => {
   const item=cases[0], policy=getHistoricalStatisticsPolicy(item.slug), entry=policy.entries.find(e=>e.season==='2025/26')

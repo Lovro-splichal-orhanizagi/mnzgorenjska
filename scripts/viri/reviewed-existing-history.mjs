@@ -8,7 +8,7 @@ import {
 export function withReviewedExistingHistoryStatistics(base, competition, { installedHistoricalMarkers } = {}) {
   const fail = message => { throw new Error(`reviewed-existing-history provider: ${message}`) }
   const policy = getHistoricalStatisticsPolicy(competition?.slug)
-  if (!policy || !['isthmian', 'hlf', 'nfsbih'].includes(policy.provider) || base?.ime !== policy.provider) fail('invalid reviewed provider')
+  if (!policy || !['isthmian', 'hlf', 'nfsbih', 'fmf'].includes(policy.provider) || base?.ime !== policy.provider) fail('invalid reviewed provider')
   const binding = validateInstalledHistoricalStatisticsMarkers({ competition, binding: installedHistoricalMarkers })
   if (!binding) fail('complete installed binding required')
   const sourceIDs = new Set(binding.markers.map(marker => marker.sourceMatchId))
@@ -29,7 +29,14 @@ export function withReviewedExistingHistoryStatistics(base, competition, { insta
       if (single && (reportIDs.has(single) || sourceIDs.has(single) || sourceIDs.has(single.replace(/^gb/, '')))) return []
       const preskoci = new Set(options?.preskoci ?? [])
       for (const id of sourceIDs) preskoci.add(id)
-      return base.zapisniki(code, read, { ...options, preskoci })
+      for (const id of reportIDs) preskoci.add(id)
+      const reports = await base.zapisniki(code, read, { ...options, preskoci })
+      if (!Array.isArray(reports)) return reports
+      const sourceID = id => policy.provider === 'isthmian' ? id.replace(/^gb/, '') : policy.provider === 'nfsbih' ? id.replace(/^ba/, '') : policy.provider === 'fmf' ? id.replace(/^md/, '') : id
+      return reports.filter(report => {
+        const id=String(report?.id ?? '')
+        return !reportIDs.has(id) && !sourceIDs.has(id) && !sourceIDs.has(sourceID(id))
+      })
     },
   }
   return provider

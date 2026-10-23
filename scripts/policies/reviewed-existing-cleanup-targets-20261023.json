@@ -185,6 +185,124 @@
           "initialSourceRound": null
         }
       ]
+    },
+    {
+      "competitionId": 501,
+      "slug": "ro-ab-l4-s2",
+      "provider": "hlf",
+      "sourceLeagueCode": "judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2",
+      "country": "RO",
+      "expectedReportsBySeason": {
+        "2026/27": 23
+      },
+      "expectedPublishedFixturesBySeason": {
+        "2026/27": 24
+      },
+      "policyId": "ro-ab-l4-s2-historical-unavailable-2026-10-23-v1",
+      "policySha256": "0d81629b586336edb075b88be89271c6cb0aea141f8b8bbb2459ff6fc4e97e2b",
+      "targets": [
+        {
+          "nativeMatchId": 202353,
+          "nativeRoundId": 18012,
+          "round": 1,
+          "homeTeamId": 5068,
+          "awayTeamId": 5069,
+          "date": "2026-09-13",
+          "score": [
+            3,
+            0
+          ],
+          "reportId": "8b7af269-2420-4534-9af2-f3cd51852f15",
+          "sourceMatchId": "8b7af269-2420-4534-9af2-f3cd51852f15",
+          "season": "2026/27",
+          "apps": 13,
+          "goals": 3,
+          "sourcePhase": "7e0e09aa-988c-4b1c-be8d-b50b11f38019",
+          "sourceRound": 1,
+          "initialSourcePhase": null,
+          "initialSourceRound": null,
+          "initialImportedAt": null,
+          "initialReportId": "8b7af269-2420-4534-9af2-f3cd51852f15",
+          "initialScore": [
+            3,
+            0
+          ],
+          "admissionKind": "incomplete_report"
+        }
+      ]
+    },
+    {
+      "competitionId": 1107,
+      "slug": "md-liga-2",
+      "provider": "fmf",
+      "sourceLeagueCode": "liga-2-1782306996/877",
+      "country": "MD",
+      "expectedReportsBySeason": {
+        "2026/27": 95
+      },
+      "expectedPublishedFixturesBySeason": {
+        "2026/27": 97
+      },
+      "policyId": "md-liga-2-historical-unavailable-2026-10-23-v1",
+      "policySha256": "95d6bb7928ac81a43fa6055abf2a31f75d48633c6c5158c4c6b70b9f4149450e",
+      "targets": [
+        {
+          "nativeMatchId": 560748,
+          "nativeRoundId": 35237,
+          "round": 4,
+          "homeTeamId": 10842,
+          "awayTeamId": 10836,
+          "date": "2026-08-08",
+          "score": [
+            11,
+            0
+          ],
+          "reportId": "md50422",
+          "sourceMatchId": "50422",
+          "season": "2026/27",
+          "apps": 0,
+          "goals": 0,
+          "sourcePhase": null,
+          "sourceRound": 4,
+          "initialSourcePhase": null,
+          "initialSourceRound": null,
+          "initialImportedAt": null,
+          "initialReportId": null,
+          "initialScore": [
+            0,
+            0
+          ],
+          "admissionKind": "schedule_only_official_result"
+        },
+        {
+          "nativeMatchId": 560803,
+          "nativeRoundId": 35244,
+          "round": 11,
+          "homeTeamId": 10833,
+          "awayTeamId": 10842,
+          "date": "2026-10-14",
+          "score": [
+            2,
+            3
+          ],
+          "reportId": "md50481",
+          "sourceMatchId": "50481",
+          "season": "2026/27",
+          "apps": 0,
+          "goals": 0,
+          "sourcePhase": null,
+          "sourceRound": 11,
+          "initialSourcePhase": null,
+          "initialSourceRound": null,
+          "initialImportedAt": null,
+          "initialReportId": null,
+          "initialScore": [
+            0,
+            0
+          ],
+          "admissionKind": "schedule_only_official_result"
+        }
+      ]
     }
   ]
 }
