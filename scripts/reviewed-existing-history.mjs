@@ -13,8 +13,10 @@ const REPOSITORY = 'Lovro-splichal-orhanizagi/mnzgorenjska'
 const WORKFLOW = '.github/workflows/reviewed-existing-history.yml'
 const ROOT = 'release/reviewed-existing-history'
 const SOURCE_POLICY = 'reviewed-existing-history-20261023-v1'
-const LEGACY_SFL_NATIVE_MAIN = '41aa6ce964223706ef9dffc626bda3edcd59e741'
-const LEGACY_SFL_SLUG = 'gb-sfl-d1-south'
+const LEGACY_NATIVE_MAIN_BY_SLUG = Object.freeze({
+  'gb-sfl-d1-south': '41aa6ce964223706ef9dffc626bda3edcd59e741',
+  'gb-npl-midlands': 'ac1cc5a2dd363088a3e7f309cba67214ddcc5187',
+})
 const EXACT = new Map([
   ['gb-npl-midlands', { id: 979, source: 'isthmian', source_league_code: 'npl/67d7c7bb74247876e6dae40c/2026-27', country:'GB' }],
   ['gb-sfl-d1-south', { id: 984, source: 'isthmian', source_league_code: 'sfl/69d0bdf9b616bafb97331d41/2026-27', country:'GB' }],
@@ -87,8 +89,9 @@ export function verifyArtifactReceipt({ run, artifact, bytes, kind, main, slug, 
 export function verifyPreviewPayload(data, candidate, policy, main) {
   require(data && typeof data === 'object' && !Array.isArray(data), 'preview payload must be an object')
   const legacy = data.releaseMainCommit !== undefined
-  const nativeMain = legacy ? LEGACY_SFL_NATIVE_MAIN : main
-  require(!legacy || (candidate.slug === LEGACY_SFL_SLUG && main !== LEGACY_SFL_NATIVE_MAIN && data.releaseMainCommit === LEGACY_SFL_NATIVE_MAIN), 'legacy SFL native-main continuation is not allowed')
+  const legacyNativeMain = LEGACY_NATIVE_MAIN_BY_SLUG[candidate.slug]
+  const nativeMain = legacy ? legacyNativeMain : main
+  require(!legacy || (legacyNativeMain && main !== legacyNativeMain && data.releaseMainCommit === legacyNativeMain), 'legacy native-main continuation is not allowed')
   for (const [key, value] of Object.entries({ slug: candidate.slug, competitionId: candidate.id, mainCommit: nativeMain, policyId: policy.id, policySha256: policy.sha256 })) require(data[key] === value, `preview ${key} differs`)
   if (legacy) verifyNativeReceipt(data.nativeReceipt, candidate, policy, nativeMain, { expectedActive: false, requireCleanup: true, requirePrices: true })
   require(typeof data.ready === 'boolean' && typeof data.active === 'boolean' && (data.reason === null || typeof data.reason === 'string'), 'preview readiness fields invalid')
@@ -204,9 +207,10 @@ export async function runStage(env = process.env, deps = {}) {
   let legacyContinuation = false
   const nativeReceipt = async options => {
     const receipt = await call('rpc/get_reviewed_existing_cleanup_receipt', { p_slug: candidate.slug })
-    const legacy = candidate.slug === LEGACY_SFL_SLUG && main !== LEGACY_SFL_NATIVE_MAIN && receipt?.cleanup?.mainCommit === LEGACY_SFL_NATIVE_MAIN
-    if (legacy) require(['preview', 'activate', 'receipt'].includes(env.MODE), 'legacy SFL receipts allow only preview, activate, and receipt stages; apply and price are forbidden')
-    nativeMain = legacy ? LEGACY_SFL_NATIVE_MAIN : main
+    const legacyNativeMain = LEGACY_NATIVE_MAIN_BY_SLUG[candidate.slug]
+    const legacy = !!legacyNativeMain && main !== legacyNativeMain && receipt?.cleanup?.mainCommit === legacyNativeMain
+    if (legacy) require(['preview', 'activate', 'receipt'].includes(env.MODE), 'legacy reviewed claim allows only preview, activate, and receipt stages; apply and price are forbidden')
+    nativeMain = legacy ? legacyNativeMain : main
     legacyContinuation = legacy
     return verifyNativeReceipt(receipt, candidate, policy, nativeMain, options)
   }
@@ -230,12 +234,13 @@ export async function runStage(env = process.env, deps = {}) {
     return data
   }
   if (env.MODE === 'apply') {
-    if (candidate.slug === LEGACY_SFL_SLUG) {
+    if (LEGACY_NATIVE_MAIN_BY_SLUG[candidate.slug]) {
       const prior = await call('rpc/get_reviewed_existing_cleanup_receipt', { p_slug: candidate.slug })
       require(prior && typeof prior === 'object' && !Array.isArray(prior), 'SFL cleanup receipt state missing')
-      const legacy = main !== LEGACY_SFL_NATIVE_MAIN && prior.cleanup?.mainCommit === LEGACY_SFL_NATIVE_MAIN
-      require(!legacy, 'legacy SFL receipts allow only preview, activate, and receipt stages; apply is forbidden')
-      require(prior.cleanup == null && prior.priceClaim == null && prior.prices == null, 'SFL cleanup or price attempt already exists; apply is forbidden')
+      const legacyNativeMain = LEGACY_NATIVE_MAIN_BY_SLUG[candidate.slug]
+      const legacy = main !== legacyNativeMain && prior.cleanup?.mainCommit === legacyNativeMain
+      require(!legacy, 'legacy reviewed claim cannot enter apply stage')
+      require(prior.cleanup == null && prior.priceClaim == null && prior.prices == null, 'reviewed cleanup or price attempt already exists; apply is forbidden')
     }
     const source = await sourceArtifact('prepare')
     const before = verifyPreparePayload(source.data, candidate, policy, main)

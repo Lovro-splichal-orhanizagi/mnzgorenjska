@@ -527,6 +527,88 @@ test('legacy SFL receipts continue from an old native anchor under a new verifie
   }
 })
 
+test('legacy NPL claim allows only current-head preview, activation, and receipt under its fixed native anchor', async () => {
+  const npl = validateSlug('gb-npl-midlands')
+  const nplPolicy = policyForSlug(npl.slug)
+  const releaseMain = 'd'.repeat(40)
+  const legacyMain = 'ac1cc5a2dd363088a3e7f309cba67214ddcc5187'
+  const native = ({ active = false } = {}) => nativeCleanupReceipt({ candidate: npl, policy: nplPolicy, main: legacyMain, active })
+  const preview = {
+    ready: true, active: false, reason: null, slug: npl.slug, competitionId: npl.id, mainCommit: legacyMain,
+    policyId: nplPolicy.id, policySha256: nplPolicy.sha256, markers: { installed: true }, firstRound: 12,
+    firstDeadline: '2026-10-24T10:00:00Z', firstPlayedOn: '2026-10-24', cheapestLegal15: 99.5,
+    priceSha256: 'b'.repeat(64), previewSha256: 'c'.repeat(64),
+  }
+  const competition = (active, installed) => ({ ...npl, active, source_policy: installed ? nplPolicy.document.sourcePolicy : null, prvi_fantasy_krog: null })
+  const releaseEnv = (mode, extra = {}) => baseEnv({ MODE: mode, SLUG: npl.slug, EXPECTED_SHA: releaseMain, GITHUB_SHA: releaseMain, ...extra })
+  const temp = mkdtempSync(join(tmpdir(), 'reviewed-npl-continuation-'))
+  const previous = process.cwd()
+  let activated = false
+  try {
+    process.chdir(temp)
+    await runStage(releaseEnv('preview'), {
+      assertMain: async sha => assert.equal(sha, releaseMain), readCompetition: async () => competition(false, false),
+      call: async path => path === 'rpc/get_reviewed_existing_cleanup_receipt' ? native() : preview,
+    })
+    const published = JSON.parse(readFileSync('release/reviewed-existing-history/preview.json', 'utf8'))
+    assert.equal(published.mainCommit, releaseMain)
+    assert.equal(published.data.mainCommit, legacyMain)
+    assert.equal(published.data.releaseMainCommit, legacyMain)
+    assert.equal(published.data.nativeReceipt.priceClaim.mainCommit, legacyMain)
+    assert.equal(published.data.nativeReceipt.prices.mainCommit, legacyMain)
+
+    await runStage(releaseEnv('receipt'), {
+      assertMain: async sha => assert.equal(sha, releaseMain), readCompetition: async () => competition(false, false),
+      call: async () => native(),
+    })
+    assert.equal(JSON.parse(readFileSync('release/reviewed-existing-history/receipt.json', 'utf8')).mainCommit, releaseMain)
+
+    const activationCalls = []
+    await runStage(releaseEnv('activate', { EXPECTED_PREVIEW_SHA256: preview.previewSha256 }), {
+      assertMain: async sha => assert.equal(sha, releaseMain), readCompetition: async () => competition(activated, activated),
+      sourceArtifact: async kind => { assert.equal(kind, 'preview'); return { data: published.data } },
+      call: async (path, body) => {
+        activationCalls.push([path, body])
+        if (path === 'rpc/get_reviewed_existing_cleanup_receipt') return native({ active: activated })
+        assert.equal(body.p_main_sha, legacyMain)
+        activated = true
+        return { ...preview, active: true }
+      },
+      save: () => {},
+    })
+    const activation = activationCalls.filter(([path]) => path === 'rpc/check_reviewed_existing_release')
+    assert.equal(activation.length, 1)
+    assert.deepEqual(activation[0][1], { p_slug: npl.slug, p_main_sha: legacyMain, p_policy_sha: nplPolicy.sha256, p_expected_preview_sha: preview.previewSha256, p_activate: true })
+
+    for (const bad of [
+      { slug: 'gb-sfl-d1-south', competitionId: 984, policyId: policy.id, policySha256: policy.sha256 },
+      { slug: npl.slug, competitionId: npl.id, policyId: nplPolicy.id, policySha256: nplPolicy.sha256, mainCommit: '0'.repeat(40), releaseMainCommit: '0'.repeat(40) },
+    ]) {
+      assert.throws(() => verifyActivationPreview({ ...preview, ...bad, releaseMainCommit: bad.releaseMainCommit ?? legacyMain }, {
+        slug: npl.slug, main: releaseMain, expectedPreviewSha256: preview.previewSha256,
+      }))
+    }
+  } finally {
+    process.chdir(previous)
+    rmSync(temp, { recursive: true, force: true })
+  }
+
+  for (const mode of ['apply', 'price']) {
+    const calls = []
+    let artifactFetches = 0, cliCalls = 0
+    await assert.rejects(() => runStage(releaseEnv(mode), {
+      assertMain: async () => {}, readCompetition: async () => competition(false, false),
+      sourceArtifact: async () => { artifactFetches++; throw new Error('legacy stage fetched an artifact') },
+      runCommand: () => { cliCalls++ },
+      call: async path => { calls.push(path); if (path === 'rpc/get_reviewed_existing_cleanup_receipt') return native(); throw new Error(`unexpected RPC ${path}`) },
+      save: () => {},
+    }), /legacy NPL|legacy reviewed claim|price attempt|current release main/i)
+    assert.equal(artifactFetches, 0)
+    assert.equal(cliCalls, 0)
+    assert.deepEqual(calls, ['rpc/get_reviewed_existing_cleanup_receipt'])
+  }
+})
+
 test('legacy SFL receipts cannot enter apply or price stages', async () => {
   const sfl = validateSlug('gb-sfl-d1-south')
   const sflPolicy = policyForSlug(sfl.slug)
@@ -544,7 +626,7 @@ test('legacy SFL receipts cannot enter apply or price stages', async () => {
   }
   for (const mode of ['apply', 'price']) {
     calls.length = 0
-    await assert.rejects(() => runStage(baseEnv({ MODE: mode, SLUG: sfl.slug }), deps), /legacy SFL|current release main|native receipt scope/i)
+    await assert.rejects(() => runStage(baseEnv({ MODE: mode, SLUG: sfl.slug }), deps), /legacy reviewed claim|current release main|native receipt scope/i)
     assert.deepEqual(calls.map(([path]) => path), ['rpc/get_reviewed_existing_cleanup_receipt'])
   }
 })
@@ -568,7 +650,11 @@ test('ambiguous apply failure is not retried', async () => {
   const deps = {
     assertMain: async () => {}, readCompetition: async () => exactCompetition(),
     sourceArtifact: async () => ({ data: prepared }),
-    call: async (path, body) => { calls.push([path, body]); if (path === 'rpc/apply_reviewed_existing_cleanup') throw new Error('connection lost after write') },
+    call: async (path, body) => {
+      calls.push([path, body])
+      if (path === 'rpc/get_reviewed_existing_cleanup_receipt') return { cleanup: null, priceClaim: null, prices: null }
+      if (path === 'rpc/apply_reviewed_existing_cleanup') throw new Error('connection lost after write')
+    },
     save: () => {},
   }
   await assert.rejects(() => runStage(baseEnv({ MODE: 'apply' }), deps), /connection lost/)
