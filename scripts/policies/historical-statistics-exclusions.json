@@ -711,6 +711,149 @@
           "reasonCode": "score_goal_events_disagree"
         }
       ]
+    },
+    {
+      "sourcePolicy": "reviewed-existing-history-20261023-v1",
+      "season": "2026/27",
+      "recordedAt": "2026-10-23T10:09:04.868Z",
+      "approvalReference": "Owner approved gb-npl-midlands/6a590670ce9ef452b61f386d in the 2026-10-23 relay and later approved the NPL archive report 6896abc31c6f4c56212c7ac5 in a separate 2026-10-23 relay. Recording time is implementation time; exact approval send timestamps unavailable.",
+      "id": "gb-npl-midlands-historical-unavailable-2026-10-23-v1",
+      "provider": "isthmian",
+      "competitionSlug": "gb-npl-midlands",
+      "competitionId": 979,
+      "sourceLeagueCode": "npl/67d7c7bb74247876e6dae40c/2026-27",
+      "entries": [
+        {
+          "sourceMatchId": "6a590670ce9ef452b61f386d",
+          "sourceCompetitionId": "67d7c7bb74247876e6dae40c",
+          "sourcePhase": null,
+          "sourceRound": 3,
+          "playedOn": "2026-08-18",
+          "homeSourceClubId": "68072a04bda6e04641c6e014",
+          "awaySourceClubId": "6a0adf9eda5d0d0847a023fc",
+          "sourceUrl": "https://www.thenpl.co.uk/match/6a590670ce9ef452b61f386d",
+          "rawSha256": "9699add7ce6c86447bb39d3ab53b2ec0194d0b36250da5cdc728f2fde4ebaa36",
+          "observedHomeScore": 1,
+          "observedAwayScore": 1,
+          "reasonCode": "source_substitution_names_player_absent_from_squad"
+        },
+        {
+          "sourceMatchId": "6896abc31c6f4c56212c7ac5",
+          "sourceCompetitionId": "67d7c7bb74247876e6dae40c",
+          "sourcePhase": null,
+          "sourceRound": 7,
+          "playedOn": "2025-09-13",
+          "homeSourceClubId": "6853aad421dd3fcf18f4fa48",
+          "awaySourceClubId": "68072882bda6e04641c6e003",
+          "sourceUrl": "https://www.thenpl.co.uk/match/6896abc31c6f4c56212c7ac5",
+          "rawSha256": "d4215f591cee4adb3ac1c45948c8bac726fcec46d6d76d50e03c8c783d064f2c",
+          "season": "2025/26",
+          "observedHomeScore": 2,
+          "observedAwayScore": 3,
+          "reasonCode": "second_yellow_event_clock_unresolved"
+        }
+      ]
+    },
+    {
+      "sourcePolicy": "reviewed-existing-history-20261023-v1",
+      "season": "2026/27",
+      "recordedAt": "2026-10-23T10:09:04.868Z",
+      "approvalReference": "Owner approved the three exact historical exclusions in root's 2026-10-23 relay: gb-npl-midlands/6a590670ce9ef452b61f386d, gb-sfl-d1-south/6a5a1b79ce9ef452b61f4398, ro-liga3-s1/f43d55c1-6530-49dc-a02e-4d7e578d6205. Recording time is implementation time; exact approval send timestamp unavailable.",
+      "id": "gb-sfl-d1-south-historical-unavailable-2026-10-23-v1",
+      "provider": "isthmian",
+      "competitionSlug": "gb-sfl-d1-south",
+      "competitionId": 984,
+      "sourceLeagueCode": "sfl/69d0bdf9b616bafb97331d41/2026-27",
+      "entries": [
+        {
+          "sourceMatchId": "6a5a1b79ce9ef452b61f4398",
+          "sourceCompetitionId": "69d0bdf9b616bafb97331d41",
+          "sourcePhase": null,
+          "sourceRound": 11,
+          "playedOn": "2026-10-14",
+          "homeSourceClubId": "6a0adf9eda5d0d0847a02391",
+          "awaySourceClubId": "6a0adf9eda5d0d0847a02385",
+          "sourceUrl": "https://www.southern-football-league.co.uk/match/6a5a1b79ce9ef452b61f4398",
+          "rawSha256": "27a4fcb4f75f86e7e9462c72b09da357a00815d6871b72989900a7909a6a9988",
+          "observedHomeScore": 1,
+          "observedAwayScore": 2,
+          "reasonCode": "bench_scorer_has_no_source_entry_or_outgoing_substitution"
+        }
+      ]
+    },
+    {
+      "sourcePolicy": "reviewed-existing-history-20261023-v1",
+      "season": "2026/27",
+      "recordedAt": "2026-10-23T10:09:04.868Z",
+      "approvalReference": "Owner approved the three exact historical exclusions in root's 2026-10-23 relay: gb-npl-midlands/6a590670ce9ef452b61f386d, gb-sfl-d1-south/6a5a1b79ce9ef452b61f4398, ro-liga3-s1/f43d55c1-6530-49dc-a02e-4d7e578d6205. Recording time is implementation time; exact approval send timestamp unavailable.",
+      "id": "ro-liga3-s1-historical-unavailable-2026-10-23-v1",
+      "provider": "hlf",
+      "competitionSlug": "ro-liga3-s1",
+      "competitionId": 497,
+      "sourceLeagueCode": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1",
+      "entries": [
+        {
+          "sourceMatchId": "f43d55c1-6530-49dc-a02e-4d7e578d6205",
+          "sourceCompetitionId": "73b994af-fd1a-499f-a64d-d41d3a5e7223",
+          "sourcePhase": "91e5da84-f4cf-4424-8904-59f91185358b",
+          "sourceRound": 1,
+          "playedOn": "2026-08-29",
+          "homeSourceClubId": "a91ef983-185f-4a35-b5cc-6421c820bd97",
+          "awaySourceClubId": "3e8d6813-1504-43b1-beef-4118d343f2c7",
+          "sourceUrl": "https://hailafotbal.ro/rezultate/national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1/etapa-1",
+          "rawSha256": "2bbc7abd2cc90cd648bc63e142c3615602c5651e8f965b603a0ab0c350cda20e",
+          "sourceProof": {
+            "roundResponseSha256": "4d6fd95aba6929a410ef5f8f48006505ddebc0556d62923979c15ed55b67ab84",
+            "matchSheetSha256": "a2d77def7c88cbe8415b091bc8ab07cf4c5508c6a98830d3719eb925150165fc",
+            "matchSheetId": "8e4dad5c-5e4c-497c-ae2f-0c7d038d1440",
+            "rawSha256Formula": "SHA256(JSON.stringify({matchSheetSha256,roundResponseSha256}) in lexicographic key order)"
+          },
+          "observedHomeScore": 2,
+          "observedAwayScore": 1,
+          "reasonCode": "contradictory_substitution_events_create_impossible_minutes"
+        }
+      ]
+    },
+    {
+      "sourcePolicy": "reviewed-existing-history-20261023-v1",
+      "season": "2026/27",
+      "recordedAt": "2026-10-23T10:45:00Z",
+      "approvalReference": "Owner approved both exact WWIN Liga BiH exclusions in root's 2026-10-23 relay: ba-wwin-liga-bih/ba54152295 and ba-wwin-liga-bih/ba54152303. Recording time is implementation time; exact approval send timestamp unavailable.",
+      "id": "ba-wwin-liga-bih-historical-unavailable-2026-10-23-v1",
+      "provider": "nfsbih",
+      "competitionSlug": "ba-wwin-liga-bih",
+      "competitionId": 998,
+      "sourceLeagueCode": "wwin-liga-bih/54152223",
+      "entries": [
+        {
+          "sourceMatchId": "54152295",
+          "sourceCompetitionId": "54152223",
+          "sourcePhase": null,
+          "sourceRound": 5,
+          "playedOn": "2026-09-02",
+          "homeSourceClubId": "831",
+          "awaySourceClubId": "409",
+          "sourceUrl": "https://www.nfsbih.ba/takmicenja/nogomet-muskarci/wwin-liga-bih?view=match&id=54152295",
+          "rawSha256": "8159bdcad70d354ec460293e6f4071bd742c452e5fef61951ca619f6b9241da8",
+          "observedHomeScore": 1,
+          "observedAwayScore": 2,
+          "reasonCode": "substitution_has_no_matching_outgoing_event"
+        },
+        {
+          "sourceMatchId": "54152303",
+          "sourceCompetitionId": "54152223",
+          "sourcePhase": null,
+          "sourceRound": 6,
+          "playedOn": "2026-09-06",
+          "homeSourceClubId": "517",
+          "awaySourceClubId": "831",
+          "sourceUrl": "https://www.nfsbih.ba/takmicenja/nogomet-muskarci/wwin-liga-bih?view=match&id=54152303",
+          "rawSha256": "ea099885c9b881827c721b117a0f85033324686bca5f1f6e29751e1067abd4a5",
+          "observedHomeScore": 2,
+          "observedAwayScore": 1,
+          "reasonCode": "substitution_has_no_matching_outgoing_event"
+        }
+      ]
     }
   ]
 }

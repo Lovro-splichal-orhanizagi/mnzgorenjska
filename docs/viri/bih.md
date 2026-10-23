@@ -173,3 +173,10 @@ Preizkus v živo (15. 10. 2026, vsi zapisniki, brez pisanja v bazo):
 Neaktivna, zveza `nfsbih`. Uvoz (brez arhiva): `gh workflow run
 uvoz-lige.yml -f liga=ba-wwin-liga-bih -f cene=true`; 45 zapisnikov po 3 s
 je ~3 minute.
+
+Registrirani obstoječi kandidat `ba-wwin-liga-bih` (id 998) ostane current-
+season only: arhiv 2025/26 nima postav in ne more prispevati cen. Vir vratarja
+je izrecni `(GK)` v trenutnem zapisniku; to ni dovoljenje za vklop ali dokaz
+pripravljenosti. Ohranita se 3-sekundni premor in ustavitev ob zavrnitvi.
+
+Rollout audit on 23 October 2026 imported 49 current reports and prepared 248 active players across ten clubs. Two reports still have an incoming substitute without an outgoing player: `ba54152295` (Široki Brijeg–Sarajevo, 2 September, 1–2) and `ba54152303` (Zrinjski–Široki Brijeg, 6 September, 2–1). Fresh source captures reproduce the missing events. The owner separately approved these exact two historical exclusions on 23 October. Use the shared reviewed-history release: preserve both official results, mark their individual statistics unavailable, reprice from the remaining 47 reports and require a fresh legal squad, verified goalkeepers and future deadline before activation. This approval does not extend to other reports.

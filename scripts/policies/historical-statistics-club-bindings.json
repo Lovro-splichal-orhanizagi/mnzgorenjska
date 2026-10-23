@@ -913,6 +913,187 @@
           "rawSha256": "9cefa3a5cb4e70b919fca7ffc4b9ad95544e330b6443efc5bac6dab7d609e8a1"
         }
       ]
+    },
+    {
+      "provider": "isthmian",
+      "sourceClubId": "68072a04bda6e04641c6e014",
+      "sourceCategoryId": null,
+      "countryCode": "GB",
+      "canonicalNames": [
+        "Grantham Town"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "6a590670ce9ef452b61f386d",
+          "sourceUrl": "https://www.thenpl.co.uk/match/6a590670ce9ef452b61f386d",
+          "rawSha256": "9699add7ce6c86447bb39d3ab53b2ec0194d0b36250da5cdc728f2fde4ebaa36"
+        }
+      ]
+    },
+    {
+      "provider": "isthmian",
+      "sourceClubId": "6a0adf9eda5d0d0847a023fc",
+      "sourceCategoryId": null,
+      "countryCode": "GB",
+      "canonicalNames": [
+        "St Ives Town"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "6a590670ce9ef452b61f386d",
+          "sourceUrl": "https://www.thenpl.co.uk/match/6a590670ce9ef452b61f386d",
+          "rawSha256": "9699add7ce6c86447bb39d3ab53b2ec0194d0b36250da5cdc728f2fde4ebaa36"
+        }
+      ]
+    },
+    {
+      "provider": "isthmian",
+      "sourceClubId": "6a0adf9eda5d0d0847a02391",
+      "sourceCategoryId": null,
+      "countryCode": "GB",
+      "canonicalNames": [
+        "Larkhall Athletic"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "6a5a1b79ce9ef452b61f4398",
+          "sourceUrl": "https://www.southern-football-league.co.uk/match/6a5a1b79ce9ef452b61f4398",
+          "rawSha256": "27a4fcb4f75f86e7e9462c72b09da357a00815d6871b72989900a7909a6a9988"
+        }
+      ]
+    },
+    {
+      "provider": "isthmian",
+      "sourceClubId": "6a0adf9eda5d0d0847a02385",
+      "sourceCategoryId": null,
+      "countryCode": "GB",
+      "canonicalNames": [
+        "Swindon Supermarine"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "6a5a1b79ce9ef452b61f4398",
+          "sourceUrl": "https://www.southern-football-league.co.uk/match/6a5a1b79ce9ef452b61f4398",
+          "rawSha256": "27a4fcb4f75f86e7e9462c72b09da357a00815d6871b72989900a7909a6a9988"
+        }
+      ]
+    },
+    {
+      "provider": "hlf",
+      "sourceClubId": "a91ef983-185f-4a35-b5cc-6421c820bd97",
+      "sourceCategoryId": null,
+      "countryCode": "RO",
+      "canonicalNames": [
+        "Club Sportiv USV-CSM Iaşi 2020"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "f43d55c1-6530-49dc-a02e-4d7e578d6205",
+          "sourceUrl": "https://hailafotbal.ro/rezultate/national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1/etapa-1",
+          "rawSha256": "2bbc7abd2cc90cd648bc63e142c3615602c5651e8f965b603a0ab0c350cda20e"
+        }
+      ]
+    },
+    {
+      "provider": "hlf",
+      "sourceClubId": "3e8d6813-1504-43b1-beef-4118d343f2c7",
+      "sourceCategoryId": null,
+      "countryCode": "RO",
+      "canonicalNames": [
+        "KSE Târgu Secuiesc"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "f43d55c1-6530-49dc-a02e-4d7e578d6205",
+          "sourceUrl": "https://hailafotbal.ro/rezultate/national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1/etapa-1",
+          "rawSha256": "2bbc7abd2cc90cd648bc63e142c3615602c5651e8f965b603a0ab0c350cda20e"
+        }
+      ]
+    },
+    {
+      "provider": "isthmian",
+      "sourceClubId": "6853aad421dd3fcf18f4fa48",
+      "sourceCategoryId": null,
+      "countryCode": "GB",
+      "canonicalNames": [
+        "St Neots Town"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "6896abc31c6f4c56212c7ac5",
+          "sourceUrl": "https://www.thenpl.co.uk/match/6896abc31c6f4c56212c7ac5",
+          "rawSha256": "d4215f591cee4adb3ac1c45948c8bac726fcec46d6d76d50e03c8c783d064f2c"
+        }
+      ]
+    },
+    {
+      "provider": "isthmian",
+      "sourceClubId": "68072882bda6e04641c6e003",
+      "sourceCategoryId": null,
+      "countryCode": "GB",
+      "canonicalNames": [
+        "Long Eaton United"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "6896abc31c6f4c56212c7ac5",
+          "sourceUrl": "https://www.thenpl.co.uk/match/6896abc31c6f4c56212c7ac5",
+          "rawSha256": "d4215f591cee4adb3ac1c45948c8bac726fcec46d6d76d50e03c8c783d064f2c"
+        }
+      ]
+    },
+    {
+      "provider": "nfsbih",
+      "sourceClubId": "831",
+      "sourceCategoryId": null,
+      "countryCode": "BA",
+      "canonicalNames": [
+        "NK ŠIROKI BRIJEG"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "54152295",
+          "sourceUrl": "https://www.nfsbih.ba/takmicenja/nogomet-muskarci/wwin-liga-bih?view=match&id=54152295",
+          "rawSha256": "8159bdcad70d354ec460293e6f4071bd742c452e5fef61951ca619f6b9241da8"
+        },
+        {
+          "sourceMatchId": "54152303",
+          "sourceUrl": "https://www.nfsbih.ba/takmicenja/nogomet-muskarci/wwin-liga-bih?view=match&id=54152303",
+          "rawSha256": "ea099885c9b881827c721b117a0f85033324686bca5f1f6e29751e1067abd4a5"
+        }
+      ]
+    },
+    {
+      "provider": "nfsbih",
+      "sourceClubId": "409",
+      "sourceCategoryId": null,
+      "countryCode": "BA",
+      "canonicalNames": [
+        "FK SARAJEVO"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "54152295",
+          "sourceUrl": "https://www.nfsbih.ba/takmicenja/nogomet-muskarci/wwin-liga-bih?view=match&id=54152295",
+          "rawSha256": "8159bdcad70d354ec460293e6f4071bd742c452e5fef61951ca619f6b9241da8"
+        }
+      ]
+    },
+    {
+      "provider": "nfsbih",
+      "sourceClubId": "517",
+      "sourceCategoryId": null,
+      "countryCode": "BA",
+      "canonicalNames": [
+        "HŠK ZRINJSKI"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "54152303",
+          "sourceUrl": "https://www.nfsbih.ba/takmicenja/nogomet-muskarci/wwin-liga-bih?view=match&id=54152303",
+          "rawSha256": "ea099885c9b881827c721b117a0f85033324686bca5f1f6e29751e1067abd4a5"
+        }
+      ]
     }
   ]
 }

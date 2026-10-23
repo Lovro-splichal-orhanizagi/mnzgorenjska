@@ -31,7 +31,9 @@ export function assertHistoricalReportImportable({competition,report}) {
   if(report?.historicalStatistics!=null || !report?.z || typeof report.z!=='object')throw Error('historical import: unavailable or missing normal report body')
   if(competition.source==='mfa')assertMfaReportTiming(report.z)
   const id=String(report.id)
-  const sourceMatchId=competition.source==='dfb'?id.replace(/^de-dfb-/,''):competition.source==='fcf'?id.replace(/^es/,''):competition.source==='mfa'?id.replace(/^mt/,''):id
+  const sourceMatchId=competition.source==='dfb'?id.replace(/^de-dfb-/,''):competition.source==='fcf'?id.replace(/^es/,''):competition.source==='mfa'?id.replace(/^mt/,''):competition.source==='isthmian'?id.replace(/^gb/,''):competition.source==='nfsbih'?id.replace(/^ba/,''):id
+  const policy=getHistoricalStatisticsPolicy(competition.slug)
+  if(policy?.provider===competition.source && policy.entries.some(entry=>entry.sourceMatchId===sourceMatchId))throw Error('historical import: registered unavailable report cannot derive individual rows')
   // An accidentally leaked installed ID or wrong competition must fail before any appearances/prices.
   if(competition.source_policy===FCF_SIX_SOURCE_POLICY){if(getFcfSixPolicy(competition.slug)?.entries.some(e=>e.sourceMatchId===sourceMatchId))throw Error('six historical import: installed unavailable report cannot derive rows');classifyFcfSixHistoricalStatistics({competition,id:sourceMatchId,html:null})}else classifyHistoricalStatistics({competition,fixture:{sourceMatchId}})
 }

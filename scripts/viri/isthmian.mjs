@@ -467,10 +467,15 @@ const vir = {
   },
 
   /** Zapisniki vseh odigranih tekem sezone — v seznamu so že celi (seznam vedno svež). */
-  async zapisniki(koda, prenesi, danes = Date.now()) {
+  async zapisniki(koda, prenesi, danesOrOptions = Date.now()) {
     const { tenant, sezona } = razbijKodo(koda)
+    const options = typeof danesOrOptions === 'number' ? {} : (danesOrOptions ?? {})
+    const danes = typeof danesOrOptions === 'number' ? danesOrOptions : (options.danes ?? Date.now())
+    const preskoci = new Set(options.preskoci ?? [])
     const out = []
     for (const t of await vseTekme(koda, prenesi)) {
+      const sourceId = String(t.id ?? t._id).replace(/^gb/, '')
+      if (preskoci.has(sourceId) || preskoci.has(`gb${sourceId}`) || (options.samoZapisnik && sourceId !== String(options.samoZapisnik).replace(/^gb/, ''))) continue
       if (!jeOdigrana(t) || jeKontumacija(t, danes)) continue
       const z = vZapisnik(t, { danes })
       if (!z) continue

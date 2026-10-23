@@ -224,3 +224,7 @@ Câmpia Turzii je vpisana s 3/5 polnih.
 
 Uvoz (ena za drugo, **brez arhiva**): `gh workflow run uvoz-lige.yml -f
 liga=ro-liga3-s1 -f cene=true`. Liga ~1–2 minuti.
+
+### Exact reviewed current-season exclusion, 23 October 2026
+
+The owner approved keeping the official 2–1 result of USV-CSM Iași–KSE Târgu Secuiesc (29 August 2026, report `f43d55c1-6530-49dc-a02e-4d7e578d6205`, native `133334`) while marking its individual statistics unavailable. Two conflicting medical/ordinary substitution sequences are present in the source itself. The exact policy pins both retained round and match-sheet hashes; no substitution is guessed or silently removed. The shared `reviewed-existing-history.yml` requires a reviewed beforeimage, one-use cleanup, fresh positions/prices, a fresh native preview and its pinned activation. Registration alone is not activation. Serie 1 retains its documented current-season-only pricing route.

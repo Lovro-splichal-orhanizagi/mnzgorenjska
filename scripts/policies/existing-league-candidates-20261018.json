@@ -57,6 +57,14 @@
     "hns": {
       "document": "docs/viri/hrvaska.md",
       "permission": "Existing public HNS Semafor route; no explicit permission recorded. Use the existing adapter with 500 ms pacing. Stop on withdrawal, login, challenge/CAPTCHA, network fault or HTTP 401/403/429; no retries or alternate access after refusal."
+    },
+    "nfsbih": {
+      "document": "docs/viri/bih.md",
+      "permission": "Existing public NFSBiH WWIN route; no explicit permission recorded. Use only the existing adapter with 3-second pacing. Current season only: no archive is usable because 2025/26 has no lineups. Stop on withdrawal, login, challenge/CAPTCHA or HTTP 401/403/429; do not retry or bypass refusal."
+    },
+    "upl": {
+      "document": "docs/viri/ukrajina.md",
+      "permission": "Existing public UPL route; no explicit permission recorded. Use only the existing adapter with 3-second pacing. Archive 428 is required for full archived lineups/pricing. Goalkeeper evidence comes from the official tactical field layout. Stop on withdrawal, login, challenge/CAPTCHA or HTTP 401/403/429; do not retry or bypass refusal."
     }
   },
   "candidates": [
@@ -617,6 +625,18 @@
       "slug": "md-liga-2",
       "source": "fmf",
       "source_league_code": "liga-2-1782306996/877"
+    },
+    {
+      "id": 998,
+      "slug": "ba-wwin-liga-bih",
+      "source": "nfsbih",
+      "source_league_code": "wwin-liga-bih/54152223"
+    },
+    {
+      "id": 1001,
+      "slug": "ua-upl",
+      "source": "upl",
+      "source_league_code": "432"
     }
   ]
 }

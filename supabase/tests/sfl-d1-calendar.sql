@@ -108,10 +108,13 @@ begin
  end if;
 end $$;
 
--- Both exact tuples activate through the actual service-only native RPC.
+-- Ordinary exact tuples activate through the service-only native RPC. South's
+-- reviewed historical policy now requires its dedicated artifact-pinned route,
+-- whose positive path is covered by reviewed-existing-history.sql.
+grant execute on function pg_temp.sfl_expect(text,boolean,int,text) to service_role;
 set local role service_role;
 select pg_temp.sfl_expect('gb-sfl-d1-central',true,14);
-select pg_temp.sfl_expect('gb-sfl-d1-south',true,15);
+select pg_temp.sfl_expect('gb-sfl-d1-south',false,15,'HISTORICAL_POLICY: invalid activation tuple');
 select pg_temp.sfl_expect('gb-npl-east',true,16);
 select pg_temp.sfl_expect('gb-isthmian-south-central',true,15);
 reset role;
@@ -281,7 +284,7 @@ where id=(select id from sfl_test_competitions where slug='gb-sfl-d1-central');
 update competitions set active=false,source_league_code='wrong-code'
 where id=(select id from sfl_test_competitions where slug='gb-sfl-d1-south');
 set local role service_role;
-select pg_temp.sfl_expect('gb-sfl-d1-south',true,41);
+select pg_temp.sfl_expect('gb-sfl-d1-south',false,41,'HISTORICAL_POLICY: invalid activation tuple');
 reset role;
 update competitions set active=false,source_league_code='sfl/69d0bdf9b616bafb97331d41/2026-27'
 where id=(select id from sfl_test_competitions where slug='gb-sfl-d1-south');

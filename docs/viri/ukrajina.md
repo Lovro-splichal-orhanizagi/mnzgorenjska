@@ -404,6 +404,13 @@ pojasni rdeči karton), 2092 menjav, 7350 nastopov, vsi s šifro, 0 opozoril.
 Uvoz: `gh workflow run uvoz-lige.yml -f liga=ua-upl -f arhiv=428 -f
 cene=true`. Arhiv 240 zapisnikov po 3 s je ~15 minut.
 
+Registrirani obstoječi kandidat `ua-upl` (id 1001) ostane vezan na UPL
+sezono `432`. Za celotne arhivske nastope in cene je potreben izrecni arhiv
+`428`; vratar je dokazljiv samo iz uradne postavitve igrišča (`#field` /
+`#field2`), ne iz vrstnega reda ali dresa. To ne obide običajnih preverjanj
+poročil, cen, kadra, roka in dovoljenja za vklop. Ohranita se 3-sekundni
+premor in ustavitev ob zavrnitvi.
+
 ## Ukrajina — vir `ffl` (Lvivska oblast)
 
 Vir `ffl` (`scripts/viri/ffl.mjs`) bere **ffl.org.ua** (Львівська асоціація
@@ -528,3 +535,5 @@ datumov vnaprej (koledar ЛАФ, objava razporeda v novicah) ali ocena roka
 prihodnjega kroga, kot jo ima `fssid` (`ocenjeniDatumi`), le da tu pari
 prihodnjega kroga niso znani — uvoz razporeda bi moral sprejeti krog brez
 tekem z ocenjenim rokom.
+
+UPL rollout audit on 23 October 2026: the documented archive/current import has run, but this does not establish launch readiness. The current calendar leaves Chornomorets–Kolos (round 2) without a date, score or report link, and Obolon–Kryvbas (round 8, report `15940`) without a date; neither is explicitly marked postponed. Report `15956` currently shows 1–0 with no goal events, captured 45 minutes after its listed kickoff without an explicit live/final marker. Preserve these holds; do not infer postponements, final scores or finished player minutes. Recheck authoritative report completeness before any activation.
