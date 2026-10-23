@@ -13,6 +13,8 @@ const REPOSITORY = 'Lovro-splichal-orhanizagi/mnzgorenjska'
 const WORKFLOW = '.github/workflows/reviewed-existing-history.yml'
 const ROOT = 'release/reviewed-existing-history'
 const SOURCE_POLICY = 'reviewed-existing-history-20261023-v1'
+const LEGACY_SFL_NATIVE_MAIN = '41aa6ce964223706ef9dffc626bda3edcd59e741'
+const LEGACY_SFL_SLUG = 'gb-sfl-d1-south'
 const EXACT = new Map([
   ['gb-npl-midlands', { id: 979, source: 'isthmian', source_league_code: 'npl/67d7c7bb74247876e6dae40c/2026-27', country:'GB' }],
   ['gb-sfl-d1-south', { id: 984, source: 'isthmian', source_league_code: 'sfl/69d0bdf9b616bafb97331d41/2026-27', country:'GB' }],
@@ -84,7 +86,11 @@ export function verifyArtifactReceipt({ run, artifact, bytes, kind, main, slug, 
 
 export function verifyPreviewPayload(data, candidate, policy, main) {
   require(data && typeof data === 'object' && !Array.isArray(data), 'preview payload must be an object')
-  for (const [key, value] of Object.entries({ slug: candidate.slug, competitionId: candidate.id, mainCommit: main, policyId: policy.id, policySha256: policy.sha256 })) require(data[key] === value, `preview ${key} differs`)
+  const legacy = data.releaseMainCommit !== undefined
+  const nativeMain = legacy ? LEGACY_SFL_NATIVE_MAIN : main
+  require(!legacy || (candidate.slug === LEGACY_SFL_SLUG && main !== LEGACY_SFL_NATIVE_MAIN && data.releaseMainCommit === LEGACY_SFL_NATIVE_MAIN), 'legacy SFL native-main continuation is not allowed')
+  for (const [key, value] of Object.entries({ slug: candidate.slug, competitionId: candidate.id, mainCommit: nativeMain, policyId: policy.id, policySha256: policy.sha256 })) require(data[key] === value, `preview ${key} differs`)
+  if (legacy) verifyNativeReceipt(data.nativeReceipt, candidate, policy, nativeMain, { expectedActive: false, requireCleanup: true, requirePrices: true })
   require(typeof data.ready === 'boolean' && typeof data.active === 'boolean' && (data.reason === null || typeof data.reason === 'string'), 'preview readiness fields invalid')
   require(data.markers && typeof data.markers === 'object' && Number.isSafeInteger(data.firstRound) && data.firstRound > 0 && Number.isFinite(Date.parse(data.firstDeadline)) && dateOnly(data.firstPlayedOn), 'preview deadline/marker fields invalid')
   require(Number.isFinite(data.cheapestLegal15) && data.cheapestLegal15 >= 0 && SHA64.test(data.priceSha256 ?? '') && SHA64.test(data.previewSha256 ?? ''), 'preview price/hash fields invalid')
@@ -152,7 +158,24 @@ const db = (url, key) => async (path, body) => {
     redirect: 'error',
     signal: AbortSignal.timeout(120_000),
   })
-  if (!response.ok) throw new Error(`Database operation failed: HTTP ${response.status}; do not retry a write; run receipt mode to inspect state`)
+  if (!response.ok) {
+    let diagnostic = ''
+    if (/^application\/json\b|\+json\b/i.test(response.headers.get('content-type') ?? '')) {
+      try {
+        const error = await response.json()
+        const code = typeof error?.code === 'string' && /^[0-9A-Z]{5}$/.test(error.code) ? error.code : ''
+        if (code && typeof error?.message === 'string') {
+          diagnostic = error.message
+            .replace(/[\u0000-\u001f\u007f]/g, ' ')
+            .replaceAll(key, '[redacted]')
+            .slice(0, 1000)
+            .trim()
+          if (diagnostic) diagnostic = ` ${code}: ${diagnostic}`
+        }
+      } catch {}
+    }
+    throw new Error(`Database operation failed: HTTP ${response.status}${diagnostic}; do not retry a write; run receipt mode to inspect state`)
+  }
   return response.json()
 }
 
@@ -177,9 +200,15 @@ export async function runStage(env = process.env, deps = {}) {
   const runCommand = deps.runCommand ?? ((script, args) => execFileSync(process.execPath, [script, ...args], { stdio: 'inherit', env: { SUPABASE_URL: env.SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: env.SUPABASE_SERVICE_ROLE_KEY } }))
   const write = deps.save ?? ((mode, data) => saveReceipt(mode, main, candidate, policy, data))
   const checkMain = async () => { await assertMain(main) }
+  let nativeMain = main
+  let legacyContinuation = false
   const nativeReceipt = async options => {
     const receipt = await call('rpc/get_reviewed_existing_cleanup_receipt', { p_slug: candidate.slug })
-    return verifyNativeReceipt(receipt, candidate, policy, main, options)
+    const legacy = candidate.slug === LEGACY_SFL_SLUG && main !== LEGACY_SFL_NATIVE_MAIN && receipt?.cleanup?.mainCommit === LEGACY_SFL_NATIVE_MAIN
+    if (legacy) require(['preview', 'activate', 'receipt'].includes(env.MODE), 'legacy SFL receipts allow only preview, activate, and receipt stages; apply and price are forbidden')
+    nativeMain = legacy ? LEGACY_SFL_NATIVE_MAIN : main
+    legacyContinuation = legacy
+    return verifyNativeReceipt(receipt, candidate, policy, nativeMain, options)
   }
   const fetchSourceArtifact = async kind => {
     require(/^[1-9]\d{0,19}$/.test(env.SOURCE_RUN_ID ?? '') && /^[1-9]\d{0,19}$/.test(env.SOURCE_ARTIFACT_ID ?? ''), 'source run and artifact IDs required')
@@ -201,6 +230,13 @@ export async function runStage(env = process.env, deps = {}) {
     return data
   }
   if (env.MODE === 'apply') {
+    if (candidate.slug === LEGACY_SFL_SLUG) {
+      const prior = await call('rpc/get_reviewed_existing_cleanup_receipt', { p_slug: candidate.slug })
+      require(prior && typeof prior === 'object' && !Array.isArray(prior), 'SFL cleanup receipt state missing')
+      const legacy = main !== LEGACY_SFL_NATIVE_MAIN && prior.cleanup?.mainCommit === LEGACY_SFL_NATIVE_MAIN
+      require(!legacy, 'legacy SFL receipts allow only preview, activate, and receipt stages; apply is forbidden')
+      require(prior.cleanup == null && prior.priceClaim == null && prior.prices == null, 'SFL cleanup or price attempt already exists; apply is forbidden')
+    }
     const source = await sourceArtifact('prepare')
     const before = verifyPreparePayload(source.data, candidate, policy, main)
     await checkMain()
@@ -231,8 +267,9 @@ export async function runStage(env = process.env, deps = {}) {
   }
   if (env.MODE === 'preview') {
     const receipt = await nativeReceipt({ requireCleanup: true, requirePrices: true })
-    const data = await call('rpc/check_reviewed_existing_release', { p_slug: candidate.slug, p_main_sha: main, p_policy_sha: policy.sha256, p_expected_preview_sha: null, p_activate: false })
-    write('preview', { ...data, nativeReceipt: receipt })
+    const nativeData = await call('rpc/check_reviewed_existing_release', { p_slug: candidate.slug, p_main_sha: nativeMain, p_policy_sha: policy.sha256, p_expected_preview_sha: null, p_activate: false })
+    const data = { ...nativeData, nativeReceipt: receipt, ...(legacyContinuation ? { releaseMainCommit: nativeMain } : {}) }
+    write('preview', data)
     require(data?.ready === true, `native preview HOLD: ${data?.reason ?? 'readiness not established'}`)
     verifyPreviewPayload(data, candidate, policy, main)
     return data
@@ -241,8 +278,10 @@ export async function runStage(env = process.env, deps = {}) {
     const source = await sourceArtifact('preview')
     const preview = verifyActivationPreview(source.data, { slug: candidate.slug, main, expectedPreviewSha256: env.EXPECTED_PREVIEW_SHA256 })
     const receipt = await nativeReceipt({ requireCleanup: true, requirePrices: true })
+    require(nativeMain === (preview.releaseMainCommit ?? main), 'native receipt main differs from reviewed preview')
     await checkMain()
-    const data = await call('rpc/check_reviewed_existing_release', { p_slug: candidate.slug, p_main_sha: main, p_policy_sha: policy.sha256, p_expected_preview_sha: preview.previewSha256, p_activate: true })
+    const nativeData = await call('rpc/check_reviewed_existing_release', { p_slug: candidate.slug, p_main_sha: nativeMain, p_policy_sha: policy.sha256, p_expected_preview_sha: preview.previewSha256, p_activate: true })
+    const data = { ...nativeData, ...(legacyContinuation ? { releaseMainCommit: nativeMain, nativeReceipt: receipt } : {}) }
     verifyPreviewPayload(data, candidate, policy, main)
     require(data.ready === true && data.active === true && data.previewSha256 === preview.previewSha256, 'native activation receipt differs from reviewed preview')
     const after = await readCompetition()

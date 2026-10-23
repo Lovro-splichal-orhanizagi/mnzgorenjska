@@ -33,6 +33,18 @@ test('reviewed-existing SQL route pins the six approved reports and keeps generi
  assert.doesNotMatch(migration,/disable trigger|session_replication_role/i)
 })
 
+test('native compatibility migration pins the reported Romanian and NPL evidence',()=>{
+ const migration=readFileSync(new URL('../supabase/migrations/20261023111000_reviewed_native_compatibility.sql',import.meta.url),'utf8')
+ for(const exact of ['652686','652688','561922','6896abc31c6f4c56212c7ac5','133334','f43d55c1-6530-49dc-a02e-4d7e578d6205','3016','Club Sportiv USV-CSM Iași 2020','Club Sportiv USV-CSM Iaşi 2020','https://hailafotbal.ro/rezultate/national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1/etapa-1/club-sportiv-usv-csm-iasi-2020-kse-targu-secuiesc'])assert.ok(migration.includes(exact),`native compatibility pin missing ${exact}`)
+ assert.match(migration,/active_goal_identity_valid/)
+ assert.match(migration,/exact_npl_unattributed_goal\(/)
+ assert.match(migration,/g\.team_id is null/)
+ assert.match(migration,/coalesce\(p_cid=979/)
+ assert.match(migration,/native_binding_audits/)
+ assert.match(migration,/bind_ro_native_home_if_present/)
+ assert.doesNotMatch(migration,/create function private_reviewed_existing_history\.release_core/i)
+})
+
 test('reviewed-existing native SQL rollback and service-only ACL contract',{skip:process.env.REVIEWED_EXISTING_DISPOSABLE_TEST!=='1'},()=>{
  console.log('Reviewed history SQL: verify disposable container and RPCs')
  const target=disposableTarget(process.env)
