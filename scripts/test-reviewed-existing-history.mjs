@@ -206,11 +206,86 @@ const baseEnv = overrides => ({
   GITHUB_WORKFLOW_REF: 'Lovro-splichal-orhanizagi/mnzgorenjska/.github/workflows/reviewed-existing-history.yml@refs/heads/main',
   SUPABASE_URL: 'https://db.example.invalid', SUPABASE_SERVICE_ROLE_KEY: 'test-key', ...overrides,
 })
-const nativeCleanupReceipt = ({ prices = true, active = false, claimed = prices } = {}) => ({
-  cleanup: { slug: candidate.slug, mainCommit: main, policySha256: policy.sha256, beforeSha256: 'e'.repeat(64), afterSha256: 'f'.repeat(64), removedAppearances: 3, removedGoals: 2, unavailableMatches: 1, recordedAt: '2026-10-23T10:00:00Z' },
-  ...(claimed ? { priceClaim: { slug: candidate.slug, mainCommit: main, policySha256: policy.sha256, cleanupBeforeSha256: 'e'.repeat(64), footballStateSha256: 'a'.repeat(64), claimedAt: '2026-10-23T10:01:00Z' } } : {}),
-  ...(prices ? { prices: { slug: candidate.slug, mainCommit: main, policySha256: policy.sha256, cleanupBeforeSha256: 'e'.repeat(64), priceSha256: 'b'.repeat(64), footballStateSha256: 'a'.repeat(64), recordedAt: '2026-10-23T10:00:00Z' } } : {}),
-  competitions: [{ id: candidate.id, slug: candidate.slug, active, markers: { installed: true, policyId: policy.id, policySha256: policy.sha256, firstFantasyPlayedOn: '2026-10-24', markers: policy.document.entries.map(entry=>({ sourceMatchId: entry.sourceMatchId, policyId: policy.id, policySha256: policy.sha256 })) } }],
+
+test('prepare surfaces only a safe PostgREST SQL error and never retries its write', async () => {
+  const requests = []
+  const previousFetch = globalThis.fetch
+  const key = 'local-test-service-role-secret'
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(String(input))
+    requests.push({ url, init })
+    if (url.pathname.endsWith('/competitions')) {
+      return new Response(JSON.stringify([{
+        id: candidate.id, slug: candidate.slug, source: candidate.source,
+        source_league_code: candidate.source_league_code, source_policy: null,
+      }]), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    }
+    return new Response(JSON.stringify({
+      code: 'P0001', message: `REVIEWED_EXISTING: native target changed ${'x'.repeat(1200)}`,
+      details: `do-not-leak ${key}`, hint: `also-private ${key}`,
+    }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+  }
+  let error
+  try {
+    await assert.rejects(() => runStage(baseEnv({ MODE: 'prepare', SUPABASE_SERVICE_ROLE_KEY: key }), {
+      assertMain: async () => {}, save: () => {},
+    }), caught => {
+      error = caught
+      assert.match(caught.message, /HTTP 400/)
+      assert.match(caught.message, /P0001/)
+      assert.match(caught.message, /REVIEWED_EXISTING: native target changed/)
+      const sqlMessage = caught.message.split('P0001: ')[1].split('; do not retry a write')[0]
+      assert.equal(sqlMessage.length, 1000, 'SQL message is capped at 1000 characters')
+      assert.match(caught.message, /do not retry a write/)
+      assert.doesNotMatch(caught.message, /do-not-leak|also-private|local-test-service-role-secret/)
+      return true
+    })
+  } finally {
+    globalThis.fetch = previousFetch
+  }
+  assert.ok(error)
+  assert.equal(requests.length, 2, 'one competition read and one prepare RPC request')
+  assert.equal(requests.filter(request => request.init.method === 'POST').length, 1)
+  assert.equal(requests[1].init.headers.Authorization, `Bearer ${key}`)
+})
+
+test('prepare falls back safely when an HTTP error is not JSON', async () => {
+  const requests = []
+  const previousFetch = globalThis.fetch
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(String(input))
+    requests.push({ url, init })
+    if (url.pathname.endsWith('/competitions')) {
+      return new Response(JSON.stringify([{
+        id: candidate.id, slug: candidate.slug, source: candidate.source,
+        source_league_code: candidate.source_league_code, source_policy: null,
+      }]), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    }
+    return new Response('raw upstream body must not be copied into the error', {
+      status: 502, headers: { 'Content-Type': 'text/plain' },
+    })
+  }
+  try {
+    await assert.rejects(() => runStage(baseEnv({ MODE: 'prepare' }), {
+      assertMain: async () => {}, save: () => {},
+    }), error => {
+      assert.match(error.message, /HTTP 502/)
+      assert.match(error.message, /do not retry a write/)
+      assert.doesNotMatch(error.message, /raw upstream body/)
+      return true
+    })
+  } finally {
+    globalThis.fetch = previousFetch
+  }
+  assert.equal(requests.length, 2, 'non-JSON failure must not trigger a retry')
+  assert.equal(requests.filter(request => request.init.method === 'POST').length, 1)
+})
+
+const nativeCleanupReceipt = ({ prices = true, active = false, claimed = prices, candidate: receiptCandidate = candidate, policy: receiptPolicy = policy, main: receiptMain = main } = {}) => ({
+  cleanup: { slug: receiptCandidate.slug, mainCommit: receiptMain, policySha256: receiptPolicy.sha256, beforeSha256: 'e'.repeat(64), afterSha256: 'f'.repeat(64), removedAppearances: 3, removedGoals: 2, unavailableMatches: 1, recordedAt: '2026-10-23T10:00:00Z' },
+  ...(claimed ? { priceClaim: { slug: receiptCandidate.slug, mainCommit: receiptMain, policySha256: receiptPolicy.sha256, cleanupBeforeSha256: 'e'.repeat(64), footballStateSha256: 'a'.repeat(64), claimedAt: '2026-10-23T10:01:00Z' } } : {}),
+  ...(prices ? { prices: { slug: receiptCandidate.slug, mainCommit: receiptMain, policySha256: receiptPolicy.sha256, cleanupBeforeSha256: 'e'.repeat(64), priceSha256: 'b'.repeat(64), footballStateSha256: 'a'.repeat(64), recordedAt: '2026-10-23T10:00:00Z' } } : {}),
+  competitions: [{ id: receiptCandidate.id, slug: receiptCandidate.slug, active, markers: { installed: true, policyId: receiptPolicy.id, policySha256: receiptPolicy.sha256, firstFantasyPlayedOn: '2026-10-24', markers: receiptPolicy.document.entries.map(entry=>({ sourceMatchId: entry.sourceMatchId, policyId: receiptPolicy.id, policySha256: receiptPolicy.sha256 })) } }],
 })
 const validPreview = () => ({
   ready: true, active: false, reason: null, slug: candidate.slug, competitionId: candidate.id, mainCommit: main,
@@ -311,6 +386,166 @@ test('published preview receipt survives ZIP verification and activates from its
   } finally {
     process.chdir(previous)
     rmSync(temp, { recursive: true, force: true })
+  }
+})
+
+test('fresh SFL apply reaches its verified artifact before requiring installed cleanup markers', async () => {
+  const sfl = validateSlug('gb-sfl-d1-south')
+  const sflPolicy = policyForSlug(sfl.slug)
+  const sflTargets = cleanupTargets.competitions.find(competition => competition.slug === sfl.slug).targets
+  const sflBeforeImage = { matches: sflTargets.map(target => ({ id: target.nativeMatchId, home_goals: target.score[0], away_goals: target.score[1] })), other: [] }
+  const sflBeforeImageText = JSON.stringify(sflBeforeImage)
+  const sflPrepared = {
+    slug: sfl.slug, competitionId: sfl.id, policyId: sflPolicy.id, policySha256: sflPolicy.sha256,
+    beforeImage: sflBeforeImage, beforeImageText: sflBeforeImageText, beforeSha256: sha256(sflBeforeImageText),
+    firstFantasyPlayedOn: '2026-10-24', targetMatchIds: sflTargets.map(target => target.nativeMatchId),
+  }
+  const uninstalled = {
+    cleanup: null, priceClaim: null, prices: null,
+    competitions: [{ id: sfl.id, slug: sfl.slug, active: false, markers: { installed: false, markers: [] } }],
+  }
+  const calls = []
+  let receiptReads = 0
+  const result = await runStage(baseEnv({ MODE: 'apply', SLUG: sfl.slug }), {
+    assertMain: async () => {}, readCompetition: async () => ({ ...sfl, active: false, source_policy: null }),
+    sourceArtifact: async kind => { assert.equal(kind, 'prepare'); return { data: sflPrepared } },
+    call: async (path, body) => {
+      calls.push([path, body])
+      if (path === 'rpc/get_reviewed_existing_cleanup_receipt') {
+        receiptReads += 1
+        return receiptReads === 1 ? uninstalled : nativeCleanupReceipt({ candidate: sfl, policy: sflPolicy, prices: false, claimed: false })
+      }
+      assert.equal(path, 'rpc/apply_reviewed_existing_cleanup')
+      return { slug: sfl.slug, mainCommit: main, beforeSha256: sflPrepared.beforeSha256, afterSha256: 'f'.repeat(64), removedAppearances: 0, removedGoals: 0, unavailableMatches: 1 }
+    },
+    save: () => {},
+  })
+  assert.equal(result.slug, sfl.slug)
+  assert.equal(calls.filter(([path]) => path === 'rpc/apply_reviewed_existing_cleanup').length, 1)
+  assert.deepEqual(calls[0], ['rpc/get_reviewed_existing_cleanup_receipt', { p_slug: sfl.slug }])
+  assert.equal(receiptReads, 2, 'one empty-state precheck and one installed-marker readback')
+})
+
+test('legacy SFL receipts continue from an old native anchor under a new verified main artifact', async () => {
+  const sfl = validateSlug('gb-sfl-d1-south')
+  const sflPolicy = policyForSlug(sfl.slug)
+  const releaseMain = 'd'.repeat(40)
+  const legacyMain = '41aa6ce964223706ef9dffc626bda3edcd59e741'
+  const legacyReceipt = ({ active = false } = {}) => nativeCleanupReceipt({ candidate: sfl, policy: sflPolicy, main: legacyMain, active })
+  const legacyPreview = {
+    ready: true, active: false, reason: null, slug: sfl.slug, competitionId: sfl.id, mainCommit: legacyMain,
+    policyId: sflPolicy.id, policySha256: sflPolicy.sha256, markers: { installed: true }, firstRound: 13,
+    firstDeadline: '2026-10-24T10:00:00Z', firstPlayedOn: '2026-10-24', cheapestLegal15: 99.5,
+    priceSha256: 'b'.repeat(64), previewSha256: 'c'.repeat(64),
+  }
+  const sflCompetition = (active, installed) => ({ ...sfl, active, source_policy: installed ? sflPolicy.document.sourcePolicy : null, prvi_fantasy_krog: null })
+  const temp = mkdtempSync(join(tmpdir(), 'reviewed-sfl-continuation-'))
+  const previous = process.cwd()
+  let activated = false
+  const calls = []
+  try {
+    process.chdir(temp)
+    await runStage(baseEnv({ MODE: 'preview', SLUG: sfl.slug, EXPECTED_SHA: releaseMain, GITHUB_SHA: releaseMain }), {
+      assertMain: async sha => assert.equal(sha, releaseMain),
+      readCompetition: async () => sflCompetition(false, false),
+      call: async (path, body) => {
+        calls.push([path, body])
+        if (path === 'rpc/get_reviewed_existing_cleanup_receipt') return legacyReceipt()
+        return legacyPreview
+      },
+    })
+    const jsonBytes = readFileSync('release/reviewed-existing-history/preview.json')
+    const published = JSON.parse(jsonBytes)
+    assert.equal(published.mainCommit, releaseMain, 'artifact source lineage remains pinned to current code')
+    assert.equal(published.data.mainCommit, legacyMain, 'native preview remains pinned to cleanup/price receipts')
+    assert.equal(published.data.releaseMainCommit, legacyMain)
+    assert.equal(published.data.nativeReceipt.cleanup.mainCommit, legacyMain)
+    assert.equal(published.data.nativeReceipt.priceClaim.mainCommit, legacyMain)
+    assert.equal(published.data.nativeReceipt.prices.mainCommit, legacyMain)
+    await runStage(baseEnv({ MODE: 'receipt', SLUG: sfl.slug, EXPECTED_SHA: releaseMain, GITHUB_SHA: releaseMain }), {
+      assertMain: async sha => assert.equal(sha, releaseMain),
+      readCompetition: async () => sflCompetition(false, false),
+      call: async () => legacyReceipt(),
+    })
+    const receiptEnvelope = JSON.parse(readFileSync('release/reviewed-existing-history/receipt.json', 'utf8'))
+    assert.equal(receiptEnvelope.mainCommit, releaseMain)
+    assert.equal(receiptEnvelope.data.cleanup.mainCommit, legacyMain)
+    const artifactBytes = zip(['preview.json', jsonBytes.toString('utf8')])
+    const artifactDigest = `sha256:${sha256(artifactBytes)}`
+    const releaseRun = { ...run, head_sha: releaseMain }
+    const releaseArtifact = {
+      ...artifact, size_in_bytes: artifactBytes.length, digest: artifactDigest,
+      workflow_run: { id: 123, head_sha: releaseMain },
+    }
+    const sourceArtifact = async kind => verifyArtifactReceipt({
+      run: releaseRun, artifact: releaseArtifact, bytes: artifactBytes, kind,
+      main: releaseMain, slug: sfl.slug, sourceRunId: 123, sourceArtifactId: 456,
+      sourceArtifactDigest: artifactDigest, approvedSha256: sha256(jsonBytes),
+    })
+    const activateCalls = []
+    const activation = await runStage(baseEnv({ MODE: 'activate', SLUG: sfl.slug, EXPECTED_SHA: releaseMain, GITHUB_SHA: releaseMain, EXPECTED_PREVIEW_SHA256: legacyPreview.previewSha256 }), {
+      assertMain: async sha => assert.equal(sha, releaseMain),
+      readCompetition: async () => sflCompetition(activated, activated),
+      sourceArtifact,
+      call: async (path, body) => {
+        activateCalls.push([path, body])
+        if (path === 'rpc/get_reviewed_existing_cleanup_receipt') return legacyReceipt({ active: activated })
+        assert.equal(body.p_main_sha, legacyMain)
+        activated = true
+        return { ...legacyPreview, active: true }
+      },
+      save: () => {},
+    })
+    assert.equal(activation.active, true)
+    const rpcActivations = activateCalls.filter(([path]) => path === 'rpc/check_reviewed_existing_release')
+    assert.equal(rpcActivations.length, 1)
+    assert.deepEqual(rpcActivations[0][1], {
+      p_slug: sfl.slug, p_main_sha: legacyMain, p_policy_sha: sflPolicy.sha256,
+      p_expected_preview_sha: legacyPreview.previewSha256, p_activate: true,
+    })
+    assert.equal(calls.filter(([path]) => path === 'rpc/check_reviewed_existing_release').length, 1)
+
+    assert.throws(() => verifyActivationPreview({ ...published.data, releaseMainCommit: '0'.repeat(40) }, {
+      slug: sfl.slug, main: releaseMain, expectedPreviewSha256: legacyPreview.previewSha256,
+    }), /legacy|native main|release main/i)
+    const foreignPreview = {
+      ...validPreview(), mainCommit: legacyMain, releaseMainCommit: legacyMain,
+    }
+    assert.throws(() => verifyActivationPreview(foreignPreview, {
+      slug: candidate.slug, main: releaseMain, expectedPreviewSha256: foreignPreview.previewSha256,
+    }), /legacy|native main|release main/i)
+    assert.throws(() => verifyArtifactReceipt({
+      run: { ...releaseRun, head_sha: legacyMain },
+      artifact: { ...releaseArtifact, workflow_run: { id: 123, head_sha: legacyMain } },
+      bytes: artifactBytes, kind: 'preview', main: releaseMain, slug: sfl.slug,
+      sourceRunId: 123, sourceArtifactId: 456, sourceArtifactDigest: artifactDigest,
+      approvedSha256: sha256(jsonBytes),
+    }), /source run lineage differs/)
+  } finally {
+    process.chdir(previous)
+    rmSync(temp, { recursive: true, force: true })
+  }
+})
+
+test('legacy SFL receipts cannot enter apply or price stages', async () => {
+  const sfl = validateSlug('gb-sfl-d1-south')
+  const sflPolicy = policyForSlug(sfl.slug)
+  const legacyMain = '41aa6ce964223706ef9dffc626bda3edcd59e741'
+  const calls = []
+  const deps = {
+    assertMain: async () => {}, readCompetition: async () => ({ ...sfl, active: false, source_policy: null }),
+    sourceArtifact: async () => { throw new Error('must reject before artifact access') },
+    call: async (path, body) => {
+      calls.push([path, body])
+      if (path === 'rpc/get_reviewed_existing_cleanup_receipt') return nativeCleanupReceipt({ candidate: sfl, policy: sflPolicy, main: legacyMain })
+      throw new Error(`unexpected write ${path}`)
+    },
+    runCommand: () => { throw new Error('must not run pricing CLI') }, save: () => {},
+  }
+  for (const mode of ['apply', 'price']) {
+    calls.length = 0
+    await assert.rejects(() => runStage(baseEnv({ MODE: mode, SLUG: sfl.slug }), deps), /legacy SFL|current release main|native receipt scope/i)
+    assert.deepEqual(calls.map(([path]) => path), ['rpc/get_reviewed_existing_cleanup_receipt'])
   }
 })
 
