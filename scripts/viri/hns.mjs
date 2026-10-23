@@ -155,7 +155,9 @@ export function vrsticeRazporeda(html) {
     }
     const r1 = v.match(/<div class="res1">([^<]*)</)?.[1]?.trim()
     const r2 = v.match(/<div class="res2">([^<]*)</)?.[1]?.trim()
-    const { datum, ura } = datumUra(v.match(/<div class="date">([^<]*)</)?.[1])
+    const datumBesedilo = v.match(/<div class="date">([^<]*)</)?.[1]?.trim() ?? ''
+    const { datum, ura } = datumUra(datumBesedilo)
+    const prestavljena = /^Odgođeno$/i.test(datumBesedilo)
     const odigrana = /^\d+$/.test(r1 ?? '') && /^\d+$/.test(r2 ?? '')
     tekme.set(id, {
       id,
@@ -167,6 +169,7 @@ export function vrsticeRazporeda(html) {
       domaciId: klub('club1')?.[1] ?? null,
       gostjeId: klub('club2')?.[1] ?? null,
       izid: odigrana ? { domaci: Number(r1), gostje: Number(r2) } : null,
+      ...(prestavljena ? { prestavljena: true } : {}),
     })
   }
   return [...tekme.values()].filter((t) => t.domaci && t.gostje)
@@ -499,7 +502,8 @@ const vir = {
       // zveza prestavi brez novega datuma (Mladost 1977 : Vatrogasac, 6. 9.
       // 2026), ostane pri starem datumu brez izida — preverba je ne javlja.
       krogi.get(t.krog).tekme.push({
-        domaci: t.domaci, gostje: t.gostje, datum: t.datum, ura: t.ura, kontumacija, odigrana: !!t.izid,
+        domaci: t.domaci, gostje: t.gostje, datum: t.datum, ura: t.ura, kontumacija,
+        odigrana: !!t.izid, ...(t.prestavljena ? { prestavljena: true } : {}),
         ...(kontumacija ? { izid: t.izid } : {}),
       })
     }

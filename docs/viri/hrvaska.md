@@ -35,6 +35,15 @@ Both require current-season catch-up and repricing before launch. Keep the
 missing-report gate; this snapshot establishes neither readiness nor source
 permission.
 
+In the retained Rijeka U18 schedule (source capture SHA-256
+`4a503fe82ba82a1d47ef23dbef1a005f97fd7c31e831c1087697055394e3c079`), HNS
+labels source matches `115696669` (round 1) and `115696690` (round 4)
+**Odgođeno**, with no date or score. Native placeholders `288104` and `288124`
+are retained and marked `vir_brez_izida` from that explicit postponed status;
+the missing date is not inferred from round dates. If a later schedule shows
+either match played, the next import clears the marker. This is schedule state,
+not a historical-statistics exclusion, and makes no activation claim.
+
 Vpisanih je 15 lig severozahoda (migracija 20261004163300), **neaktivnih**:
 
 | liga | tekoča 2026/27 | arhiv 2025/26 |
