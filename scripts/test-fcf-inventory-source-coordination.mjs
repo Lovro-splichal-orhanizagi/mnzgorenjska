@@ -28,6 +28,10 @@ test('all unique declared ES shards terminal clears the source slot',async()=>{c
 test('fixed non-ES existing-data batch is visible but does not consume an ES source slot',async()=>{
  assert.ok(api.FCF_INVENTORY_COORDINATION_FAMILY.includes('vklop-obstojecih-lig.yml'))
  const registry=JSON.parse(readFileSync(new URL('./policies/existing-league-candidates-20261018.json',import.meta.url)))
- assert.ok(registry.candidates.every(c=>!/^(es|de|hr)-/.test(c.slug)))
+ assert.ok(registry.candidates.every(c=>!/^(es|de)-/.test(c.slug)))
+ assert.deepEqual(registry.candidates.filter(c=>c.slug.startsWith('hr-')).map(({id,slug,source,source_league_code})=>({id,slug,source,source_league_code})),[
+  {id:113,slug:'hr-ls-ns-lsz',source:'hns',source_league_code:'115979433'},
+  {id:824,slug:'hr-ri-u19',source:'hns',source_league_code:'115228638'},
+ ])
  assert.equal((await coordinate({runs:{'vklop-obstojecih-lig.yml':[run(122,'Obstojece lige vklop pl-sk-4-liga')]}})).result.status,'clear')
 })

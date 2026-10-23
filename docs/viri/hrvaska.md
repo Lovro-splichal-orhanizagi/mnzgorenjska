@@ -17,6 +17,24 @@ node scripts/hrvaske-lige.mjs              # vse zveze
 node scripts/hrvaske-lige.mjs --zveza 40   # ena zveza (oid, 40 = Međimurje)
 ```
 
+**HNS candidates in the existing-league guarded path:** exactly these two
+tuples are registered; the route remains public with no explicit permission
+recorded.
+
+- `hr-ls-ns-lsz` (competition 113, source code `115979433`): native snapshot
+  23. 10. 2026 shows inactive, no source/deadline policy or fantasy teams;
+  8 clubs, 135 players, source-labelled keepers, prices 4.3–5.8 with default
+  9. Eight past matches lack imported reports; no score/goal mismatches were
+  reported.
+- `hr-ri-u19` (competition 824, source code `115228638`; U18): native snapshot
+  23. 10. 2026 shows 14 clubs and 261 active players (208 default-priced),
+  with 11 current fixtures missing reports and no score/goal mismatches. The
+  league has no archive and next deadline is 24. 10. 2026.
+
+Both require current-season catch-up and repricing before launch. Keep the
+missing-report gate; this snapshot establishes neither readiness nor source
+permission.
+
 Vpisanih je 15 lig severozahoda (migracija 20261004163300), **neaktivnih**:
 
 | liga | tekoča 2026/27 | arhiv 2025/26 |

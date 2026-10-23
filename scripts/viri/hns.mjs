@@ -23,6 +23,67 @@ const OSNOVNI = 'https://semafor.hns.family'
 // Enako kot v zapisnik.mjs: sodniški podaljšek se ne šteje.
 const DOLZINA_TEKME = 90
 
+/** Zavrnitev HNS je trajna za ta vir; skupni prenos je ne sme ponoviti. */
+export class HnsZavrnitev extends Error {
+  constructor(sporocilo, status = null) {
+    super(sporocilo)
+    this.name = 'HnsZavrnitev'
+    this.status = status
+    this.zavrnitev = true
+  }
+}
+
+const IZZIV_ALI_PRIJAVA = /(?:<title[^>]*>[^<]*(?:just a moment|attention required|access denied|captcha|prijava|prijavite se|log ?in|sign ?in)|cf_chl_opt|cf-turnstile|challenge-platform\/h\/|class=["'][^"']*\b(?:g-recaptcha|h-captcha)\b|<form\b[^>]*(?:action|id|class)=["'][^"']*(?:login|prijav))/i
+
+export function jeIzziv(html) {
+  return IZZIV_ALI_PRIJAVA.test(String(html ?? ''))
+}
+
+/** HNS zahteve ostanejo javne, počasne in brez samodejnega sledenja preusmeritvam. */
+export async function hnsFetch(url, options = {}) {
+  let parsed
+  try {
+    parsed = new URL(url)
+  } catch {
+    throw new HnsZavrnitev(`hns: neveljaven javni naslov — zahteva ustavljena`)
+  }
+  const javnaPot = /^\/(?:natjecanja|utakmice)\/\d+\/x\/$/.test(parsed.pathname)
+  if (parsed.protocol !== 'https:' || parsed.hostname !== 'semafor.hns.family' || parsed.port || parsed.username || parsed.password || parsed.search || parsed.hash || !javnaPot) {
+    throw new HnsZavrnitev(`hns: naslov zunaj dovoljenih javnih poti Semaforja — zahteva ustavljena`)
+  }
+  if (String(options.method ?? 'GET').toUpperCase() !== 'GET') {
+    throw new HnsZavrnitev(`hns: dovoljen je samo GET — zahteva ustavljena`)
+  }
+
+  let response
+  try {
+    response = await fetch(url, { ...options, redirect: 'manual' })
+    if (!response.ok) {
+      try { await response.body?.cancel() } catch {}
+      throw new HnsZavrnitev(`hns: ${url} → HTTP ${response.status} — uvoz ustavljen`, response.status)
+    }
+    const mime = response.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase()
+    if (mime !== 'text/html' && mime !== 'application/xhtml+xml') {
+      try { await response.body?.cancel() } catch {}
+      throw new HnsZavrnitev(`hns: ${url} ima nepričakovan Content-Type ${mime ?? '(manjka)'} — uvoz ustavljen`, response.status)
+    }
+    // Beri kopijo: klicatelj prejme nespremenjeno izvirno telo, glave in status.
+    const html = await response.clone().text()
+    if (!html.trim()) {
+      try { await response.body?.cancel() } catch {}
+      throw new HnsZavrnitev(`hns: ${url} vrne prazno telo — uvoz ustavljen`, response.status)
+    }
+    if (jeIzziv(html)) {
+      try { await response.body?.cancel() } catch {}
+      throw new HnsZavrnitev(`hns: ${url} vrne izziv ali prijavo — uvoz ustavljen`, response.status)
+    }
+    return response
+  } catch (error) {
+    if (error?.zavrnitev === true) throw error
+    throw new HnsZavrnitev(`hns: ${url} — transport napaka: ${error?.message ?? String(error)}`, response?.status ?? null)
+  }
+}
+
 export function razbijKodo(koda) {
   const id = String(koda ?? '').trim()
   if (!/^\d+$/.test(id)) throw new Error(`hns: šifra lige je id tekmovanja na Semaforju (število), ne "${koda}"`)
@@ -408,6 +469,9 @@ const vir = {
   glave: { 'User-Agent': 'SLFF fantasy (https://slff.eu)' },
   premorMs: 500,
   imaRegistracije: false,
+  fetch: hnsFetch,
+  jeIzziv,
+  zavrnitev: (sporocilo, status = null) => new HnsZavrnitev(sporocilo, status),
 
   naslovRazporeda: naslovTekmovanja,
   naslovZapisnika: (_koda, sifra) => naslovTekme(sifra),

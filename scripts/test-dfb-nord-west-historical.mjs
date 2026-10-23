@@ -24,7 +24,9 @@ for(const region of ['nord','west'])test(`${region} composes reviewed calendar a
  assert.equal(check(m).version,4);assert.equal(m.seasons[0].statisticsCoverage.unavailableHistoricalCount,Object.keys(hashes[region]).length)
  if(region==='west'){
   assert.equal(m.statisticsPolicy.id,'de-dfb-west-prelaunch-unavailable-v2')
-  assert.equal(m.statisticsPolicy.firstFantasyPlayedOn,'2026-10-23')
+  const minimumSafeDate=new Date(Date.now()+3*86400000).toISOString().slice(0,10)
+  assert.ok(m.statisticsPolicy.firstFantasyPlayedOn>=minimumSafeDate)
+  assert.ok(m.seasons[1].fixtures.some(f=>!f.played&&f.date===m.statisticsPolicy.firstFantasyPlayedOn))
   assert.equal(m.seasons[1].statisticsCoverage.playedCount,116)
   assert.equal(m.seasons[1].statisticsCoverage.availableStatisticsCount,114)
   assert.equal(m.seasons[1].statisticsCoverage.unavailableHistoricalCount,2)

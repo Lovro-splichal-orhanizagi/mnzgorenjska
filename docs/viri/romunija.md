@@ -169,6 +169,11 @@ Lastnik je vir odobril (10. 10. 2026). robots.txt stran nima.
   tekočo sezono. Arhiva s `frf` ne mešaj: šifre igralcev so druge, nastopi bi
   pristali na podvojenih igralcih. Cene dajo minute tekoče sezone (uvoz brez
   `arhiv`, s `cene`) — oktobra ima redni igralec že 600+ minut.
+- **Liga 3 Serie 1** (`ro-liga3-s1`, tekmovanje 497) je v registru obstoječih
+  lig z isto trenutno šifro kot Serie 1 v tabeli zgoraj. Posnetek 23. 10. 2026
+  ima 12 klubov in 260 igralcev; šest zapisnikov 9. kroga (16.–17. 10.) še
+  manjka, brez ugotovljenih razlik med goli in izidi. Ti zapisniki ostanejo
+  običajna manjkajoča poročila za ciljno osvežitev; izjema za njih ni odobrena.
 - **Nepopolni zapisniki** ("nu există o versiune salvată a foii de joc") kot
   pri `frf`: izid se zapiše, `imported_at` ostane prazen, 45 dni se bere
   znova. Kontumacija: 3:0 brez zapisnika, starejša od tedna dni.

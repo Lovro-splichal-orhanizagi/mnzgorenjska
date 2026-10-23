@@ -10,6 +10,8 @@ for(const region of regions){
  const m=nordWestPolicyFixture(region),raw=JSON.stringify(m)+'\n';preveriOdobritev(raw,sha(raw))
  const unavailable=m.seasons.flatMap(s=>s.fixtures).filter(f=>f.statisticsStatus==='unavailable_historical').length
  const firstRound=Math.min(...m.seasons[1].fixtures.filter(f=>!f.played&&f.date===m.statisticsPolicy.firstFantasyPlayedOn).map(f=>f.round))
+ const minimumSafeDate=new Date(Date.now()+3*86400000).toISOString().slice(0,10)
+ if(m.statisticsPolicy.firstFantasyPlayedOn<minimumSafeDate)throw Error(`TEST ONLY: ${region} launch candidate date must remain at least three days in the future`)
  const currentException=m.seasons[1].fixtures.findIndex(f=>f.statisticsStatus==='unavailable_historical')
  const sql=`begin;
 set local statement_timeout='120s';
