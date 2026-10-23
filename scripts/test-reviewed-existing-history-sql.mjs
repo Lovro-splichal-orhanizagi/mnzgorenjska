@@ -34,16 +34,20 @@ test('reviewed-existing SQL route pins the six approved reports and keeps generi
 })
 
 test('reviewed-existing native SQL rollback and service-only ACL contract',{skip:process.env.REVIEWED_EXISTING_DISPOSABLE_TEST!=='1'},()=>{
+ console.log('Reviewed history SQL: verify disposable container and RPCs')
  const target=disposableTarget(process.env)
  const container=target.container
- const docker=(args,options={})=>execFileSync('docker',args,{encoding:'utf8',maxBuffer:32*1024*1024,...options})
+ const docker=(args,options={})=>execFileSync('docker',args,{encoding:'utf8',timeout:300_000,maxBuffer:32*1024*1024,...options})
  const labels=JSON.parse(docker(['inspect',container,'--format','{{json .Config.Labels}}']))
  assert.equal(labels['com.supabase.cli.project'],target.project)
  assert.ok(!process.env.SUPABASE_TEST_DB||process.env.SUPABASE_TEST_DB==='postgres','only owned postgres fixture database is allowed')
- const sql=q=>docker(['exec','-i',container,'psql','-U','postgres','-d','postgres','-X','-qAt','-v','ON_ERROR_STOP=1'],{input:q}).trim()
+ const sql=q=>docker(['exec','-i',container,'psql','-U','postgres','-d','postgres','-X','-qAt','-v','ON_ERROR_STOP=1'],{input:`${q}\n;\n\\quit\n`}).trim()
  const catalogHash=()=>sql("select encode(sha256(convert_to(jsonb_build_object('competitions',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from public.competitions x),'teams',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from public.teams x),'rounds',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from public.rounds x),'players',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from public.players x),'matches',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from public.matches x),'appearances',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from public.appearances x),'goals',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from public.goals x),'player_scores',(select coalesce(jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text),'[]')from public.player_scores x),'player_stats',(select coalesce(jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text),'[]')from public.statistika_igralcev x),'round_stats',(select coalesce(jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text),'[]')from public.tocke_krogov x),'policies',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from private_historical_statistics.policies x),'bindings',(select coalesce(jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text),'[]')from private_historical_statistics.source_club_bindings x),'reviewed_cleanup',(select coalesce(jsonb_agg(to_jsonb(x) order by x.slug),'[]')from private_reviewed_existing_history.cleanup_receipts x),'reviewed_price_claims',(select coalesce(jsonb_agg(to_jsonb(x) order by x.slug),'[]')from private_reviewed_existing_history.price_attempts x),'reviewed_prices',(select coalesce(jsonb_agg(to_jsonb(x) order by x.slug),'[]')from private_reviewed_existing_history.price_receipts x))::text,'UTF8')),'hex')")
  assert.equal(sql("select to_regprocedure('public.prepare_reviewed_existing_cleanup(text,text,text)') is not null and to_regprocedure('public.apply_reviewed_existing_cleanup(text,text,text,text,text)') is not null and to_regprocedure('public.begin_reviewed_existing_prices(text,text,text)') is not null and to_regprocedure('public.record_reviewed_existing_prices(text,text,text)') is not null and to_regprocedure('public.check_reviewed_existing_release(text,text,text,text,boolean)') is not null"),'t')
+ console.log('Reviewed history SQL: capture pre-fixture catalog hash')
  const before=catalogHash()
+ console.log('Reviewed history SQL: start rollback fixture')
  sql(readFileSync(new URL('../supabase/tests/reviewed-existing-history.sql',import.meta.url),'utf8'))
+ console.log('Reviewed history SQL: verify post-rollback catalog hash')
  assert.equal(catalogHash(),before,'fixture cleanup and activation roll back every native row and receipt')
 })

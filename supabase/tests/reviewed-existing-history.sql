@@ -1,4 +1,6 @@
 begin;
+set local lock_timeout='30s';
+set local statement_timeout='240s';
 create temporary table _reviewed_existing_routes(slug text primary key,cid bigint,provider text,code text,country_code text,policy_id text,policy_sha text,mid bigint,report_id text,rid bigint,rno int,home_id bigint,away_id bigint,played_on date,home_goals int,away_goals int,appearance_count int,goal_count int,current_reports int,games_per_round int,round_count int,team_count int) on commit drop;
 insert into _reviewed_existing_routes values
  ('gb-npl-midlands',979,'isthmian','npl/67d7c7bb74247876e6dae40c/2026-27','GB','gb-npl-midlands-historical-unavailable-2026-10-23-v1','5f88bd981434a2d1bb8097a71d4b62974601b0eb01758509b345c8eb6b0c6924',562344,'gb6a590670ce9ef452b61f386d',35365,3,10869,10864,'2026-08-18',1,1,29,2,150,10,15,20),
