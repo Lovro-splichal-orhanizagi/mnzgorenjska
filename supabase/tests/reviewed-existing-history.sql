@@ -60,7 +60,7 @@ begin
   end loop;
   for slot_no in 1..r.round_count loop
    select * into tr from _reviewed_existing_targets where slug=r.slug and season='2026/27' and rno=slot_no;
-   if tr.rid is not null then vround:=tr.rid;insert into rounds(id,season,number,played_on,deadline_at,competition_id)overriding system value values(vround,'2026/27',slot_no,tr.played_on,clock_timestamp()-interval '1 day',r.cid);
+   if tr.rid is not null then vround:=tr.rid;insert into rounds(id,season,number,played_on,deadline_at,competition_id)overriding system value values(vround,'2026/27',slot_no,case when r.cid=497 and tr.rid=10663 then date '2026-08-28' else tr.played_on end,clock_timestamp()-interval '1 day',r.cid);
    else vround:=r.cid::bigint*100000+slot_no;insert into rounds(id,season,number,played_on,deadline_at,competition_id)overriding system value values(vround,'2026/27',slot_no,current_date-80+slot_no*3,clock_timestamp()-interval '1 day',r.cid);end if;
    insert into _reviewed_existing_rounds values(r.slug,slot_no,vround);
   end loop;
