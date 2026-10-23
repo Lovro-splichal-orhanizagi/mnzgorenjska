@@ -19,13 +19,18 @@ const reviewedFmfCandidates = new Set([
   '1106|md-liga-1-b|fmf|liga-1-faza-1-grupa-b-1783092819/879',
   '1107|md-liga-2|fmf|liga-2-1782306996/877',
 ])
+const reviewedHnsCandidates = new Set([
+  '113|hr-ls-ns-lsz|hns|115979433',
+  '824|hr-ri-u19|hns|115228638',
+])
 const usesReviewedCalendarStart = competition => reviewedCalendarStarts.has(`${competition.slug}|${competition.source}|${competition.source_league_code}`)
 export function validateSelection(registry, slugs) {
   if (!slugs.length || new Set(slugs).size !== slugs.length) throw Error('Provide a nonempty explicit list without duplicates.')
   return slugs.map(slug => {
     const candidate = registry.candidates.find(c => c.slug === slug)
     const fmfTuple = candidate && [candidate.id,candidate.slug,candidate.source,candidate.source_league_code].join('|')
-    if (!candidate || !['ncefl','pzpn','wmzpn','eps','sportnet','dbu','hlf','isthmian','lowland','fscg','mfa','mlsz','fmf'].includes(candidate.source) || ((candidate.source==='fmf'||slug.startsWith('md-'))&&!reviewedFmfCandidates.has(fmfTuple)) || /^(de|es|hr)-/.test(slug)) throw Error(`Outside fixed existing-league scope: ${slug}`)
+    const hnsTuple = candidate && [candidate.id,candidate.slug,candidate.source,candidate.source_league_code].join('|')
+    if (!candidate || !['ncefl','pzpn','wmzpn','eps','sportnet','dbu','hlf','isthmian','lowland','fscg','mfa','mlsz','fmf','hns'].includes(candidate.source) || ((candidate.source==='fmf'||slug.startsWith('md-'))&&!reviewedFmfCandidates.has(fmfTuple)) || ((candidate.source==='hns'||slug.startsWith('hr-'))&&!reviewedHnsCandidates.has(hnsTuple)) || /^(de|es)-/.test(slug)) throw Error(`Outside fixed existing-league scope: ${slug}`)
     return candidate
   }).sort((a,b) => a.slug.localeCompare(b.slug))
 }

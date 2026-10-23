@@ -53,6 +53,10 @@
     "fmf": {
       "document": "docs/viri/moldavija.md",
       "permission": "Existing public anonymous route; no explicit FMF permission recorded. No authentication; use at least 3-second pacing. Current-season reports only: no archive support, so prices use current-season reports. Preserve the existing COMET identity adoption path for unkeyed players. Stop on withdrawal, login, challenge/CAPTCHA or HTTP 401/403/429; no retries or alternate access after refusal."
+    },
+    "hns": {
+      "document": "docs/viri/hrvaska.md",
+      "permission": "Existing public HNS Semafor route; no explicit permission recorded. Use the existing adapter with 500 ms pacing. Stop on withdrawal, login, challenge/CAPTCHA, network fault or HTTP 401/403/429; no retries or alternate access after refusal."
     }
   },
   "candidates": [
@@ -313,6 +317,12 @@
       "slug": "sk-sk-u19",
       "source": "sportnet",
       "source_league_code": "ondavsky-futbalovy-zvaz.futbalnet.sk/6a1d3d3a44ff24612e4977db"
+    },
+    {
+      "id": 497,
+      "slug": "ro-liga3-s1",
+      "source": "hlf",
+      "source_league_code": "national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1"
     },
     {
       "id": 496,
@@ -577,6 +587,18 @@
       "slug": "hu-to-3-nyugat",
       "source": "mlsz",
       "source_league_code": "67/17/34465"
+    },
+    {
+      "id": 113,
+      "slug": "hr-ls-ns-lsz",
+      "source": "hns",
+      "source_league_code": "115979433"
+    },
+    {
+      "id": 824,
+      "slug": "hr-ri-u19",
+      "source": "hns",
+      "source_league_code": "115228638"
     },
     {
       "id": 1105,

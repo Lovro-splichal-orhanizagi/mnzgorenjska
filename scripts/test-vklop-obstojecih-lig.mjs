@@ -38,7 +38,9 @@ test('selection is explicit and rejects bespoke routes, unknown leagues and dupl
 })
 test('HLF registry binds only the reviewed production tuples and its public-browser contract',()=>{
   const hlf=registry.candidates.filter(c=>c.source==='hlf')
-  const expected=[...Array.from({length:7},(_,i)=>[496-i,`ro-liga3-s${i+2}`,`national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-${i+2}`]),
+  const expected=[
+    [497,'ro-liga3-s1','national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1'],
+    ...Array.from({length:7},(_,i)=>[496-i,`ro-liga3-s${i+2}`,`national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-${i+2}`]),
     [503,'ro-ab-superliga','judetean/alba/fotbal/2026-2027/superliga-ajf-alba/sezon-regular/1'],
     [510,'ro-cj-l4','judetean/cluj/fotbal/2026-2027/liga-4-cluj/sezon-regular/grupa-a'],
     [512,'ro-hd-l4','judetean/hunedoara/fotbal/2026-2027/liga-4/sezon-regular/serie-1'],
@@ -54,9 +56,29 @@ test('HLF registry binds only the reviewed production tuples and its public-brow
     [507,"ro-cj-l5-gherla","judetean/cluj/fotbal/2026-2027/liga-5-gherla/sezon-regular/grupa-a"],
     [511,"ro-hd-l5","judetean/hunedoara/fotbal/2026-2027/liga-5/campionat/serie-1"]]
   assert.deepEqual(hlf.map(c=>[c.id,c.slug,c.source_league_code]),expected)
-  assert.equal(validateSelection(registry,hlf.map(c=>c.slug)).length,21)
-  assert.throws(()=>validateSelection(registry,['ro-liga3-s1']))
+  assert.equal(validateSelection(registry,hlf.map(c=>c.slug)).length,22)
+  assert.throws(()=>validateSelection(registry,['ro-liga3-s9']))
   assert.equal(registry.source_contracts.hlf.document,'docs/viri/romunija.md')
+})
+test('Croatian admission permits only the two exact HNS tuples',()=>{
+  const expected=[
+    {id:113,slug:'hr-ls-ns-lsz',source:'hns',source_league_code:'115979433'},
+    {id:824,slug:'hr-ri-u19',source:'hns',source_league_code:'115228638'},
+  ]
+  assert.deepEqual(validateSelection(registry,expected.map(c=>c.slug)),expected)
+  assert.deepEqual(registry.candidates.filter(c=>c.source==='hns'),expected)
+  assert.equal(registry.source_contracts.hns.document,'docs/viri/hrvaska.md')
+  assert.match(registry.source_contracts.hns.permission,/no explicit permission/i)
+  assert.match(registry.source_contracts.hns.permission,/500 ms/i)
+  assert.match(registry.source_contracts.hns.permission,/network fault/i)
+  assert.match(registry.source_contracts.hns.permission,/no retries/i)
+  for(const candidate of expected) for(const patch of [{id:candidate.id+1},{slug:'hr-womens-competition'},{source:'mlsz'},{source_league_code:'changed'}]) {
+    const altered={...registry,candidates:registry.candidates.map(c=>c.slug===candidate.slug?{...c,...patch}:c)}
+    assert.throws(()=>validateSelection(altered,[patch.slug??candidate.slug]))
+  }
+  assert.throws(()=>validateSelection(registry,['hr-prva-hnlz']))
+  const arbitrary={...registry,candidates:[...registry.candidates,{...expected[0],id:115,slug:'hr-other-league',source_league_code:'other'}]}
+  assert.throws(()=>validateSelection(arbitrary,['hr-other-league']))
 })
 test('Danish third division registration binds the reviewed production tuple',()=>{
   const dk=validateSelection(registry,['dk-3-division'])
