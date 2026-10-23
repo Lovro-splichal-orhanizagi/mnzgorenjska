@@ -32,9 +32,15 @@ export function zacetniceKluba(ime: string | null | undefined, kratko?: string |
     .slice(0, 3)
 }
 
-/** Iz "Priimek Ime" naredi "Ime Priimek" za prijaznejši prikaz. */
+/**
+ * Iz "Priimek Ime" naredi "Ime Priimek" za prijaznejši prikaz. Anonimiziran
+ * igralec ("#7") je "Igralec 7"; nedeljivi presledek, da igrišče, ki kaže
+ * zadnjo besedo, ne pokaže le "7".
+ */
 export function prikazniIme(polno: string | null | undefined): string {
   if (!polno) return ''
+  const anonimen = /^#(\d+)$/.exec(polno.trim())
+  if (anonimen) return t('skupno.anonimenIgralec', { n: anonimen[1] }).replace(/ /g, ' ')
   const deli = polno.trim().split(/\s+/)
   if (deli.length < 2) return polno
   return deli.slice(1).join(' ') + ' ' + deli[0]

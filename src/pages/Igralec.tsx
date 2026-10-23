@@ -97,6 +97,24 @@ export default function Igralec() {
   const [razlage, setRazlage] = useState<Razlaga[]>([])
   const [odprtRazlaga, setOdprtRazlaga] = useState<number | null>(null)
   const [cene, setCene] = useState<any[]>([])
+  // Ime je skrito na željo kluba (ugovor), ne zaradi neaktivnosti.
+  const [naZeljoKluba, setNaZeljoKluba] = useState(false)
+  useEffect(() => {
+    setNaZeljoKluba(false)
+    if (!igralec?.id || !String(igralec.full_name ?? '').startsWith('#')) return
+    let veljavno = true
+    void supabase
+      .from('players')
+      .select('anonimiziran_razlog')
+      .eq('id', igralec.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (veljavno) setNaZeljoKluba(data?.anonimiziran_razlog === 'ugovor')
+      })
+    return () => {
+      veljavno = false
+    }
+  }, [igralec?.id, igralec?.full_name])
   const [izhodisce, setIzhodisce] = useState<number | null>(null)
   const [zadnjiKrog, setZadnjiKrog] = useState(0)
   const [tekme, setTekme] = useState<any[]>([])
@@ -491,6 +509,7 @@ export default function Igralec() {
             )}
             {igralec.shirt_number != null && t('igralci.profil.stevilkaDresa', { st: igralec.shirt_number })}
           </p>
+          {naZeljoKluba && <p className="text-xs text-slate-500">{t('skupno.naZeljoKluba')}</p>}
         </div>
         {!gost && (
         <div className="text-right">

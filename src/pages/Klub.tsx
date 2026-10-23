@@ -57,6 +57,8 @@ export default function Klub() {
   // kar na plakatu brez zveze ne pove, KJE je ta liga.
   const [ligaZaPlakat, setLigaZaPlakat] = useState<string>('')
   const [igralci, setIgralci] = useState<Igralec[]>([])
+  // Klub je prosil, naj igralci ne bodo navedeni z imenom.
+  const [naZeljoKluba, setNaZeljoKluba] = useState(false)
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
   // Plakata se rišeta (platno, PNG) šele, ko kdo odpre razdelek "Za objavo".
@@ -151,6 +153,18 @@ export default function Klub() {
       setLiga(izbran?.liga ?? null)
       setLigaId(izbran?.id ?? null)
       setIgralci(izbran?.igralci ?? [])
+      setNaZeljoKluba(false)
+      if (izbran?.igralci.some((i) => String(i.full_name ?? '').startsWith('#'))) {
+        const { data: ugovor } = await supabase
+          .from('players')
+          .select('id')
+          .eq('team_id', Number(id))
+          .eq('competition_id', izbran.id)
+          .eq('anonimiziran_razlog', 'ugovor')
+          .order('id')
+          .limit(1)
+        if (veljavno) setNaZeljoKluba(!!ugovor?.length)
+      }
       if (izbran) {
         const izbranId = izbran.id
         const v = (imena ?? []).find((x) => x.id === izbranId)
@@ -219,6 +233,7 @@ export default function Klub() {
               igralci: mnozina(igralci.length, IGRALCI),
             })}
           </p>
+          {naZeljoKluba && <p className="text-xs text-slate-500">{t('skupno.naZeljoKluba')}</p>}
         </div>
       </header>
 

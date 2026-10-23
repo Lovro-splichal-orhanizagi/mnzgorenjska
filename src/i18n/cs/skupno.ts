@@ -3,6 +3,8 @@
 import type { Prevod } from '../jedro.ts'
 
 export const skupno: NonNullable<Prevod['skupno']> = {
+  anonimenIgralec: 'Hráč {n}',
+  naZeljoKluba: 'Na přání klubu nejsou hráči uvedeni jménem.',
   pozicija: {
     GK: 'Brankář',
     DEF: 'Obránce',
