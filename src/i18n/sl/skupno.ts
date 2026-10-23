@@ -1,5 +1,8 @@
 // Nizi, ki jih uporablja več strani: pozicije, števne besede, splošni gumbi.
 export const skupno = {
+  // Anonimiziran igralec ("#7"): številka v klubu, ime skrito.
+  anonimenIgralec: 'Igralec {n}',
+  naZeljoKluba: 'Na željo kluba igralci niso prikazani z imenom.',
   pozicija: {
     GK: 'Vratar',
     DEF: 'Branilec',
