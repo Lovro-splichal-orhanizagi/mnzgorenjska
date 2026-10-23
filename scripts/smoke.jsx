@@ -4507,6 +4507,24 @@ preveri(
       tekme.length === 16 && tekme.filter((t) => t.odigrana === true).length === 8 && tekme.filter((t) => t.odigrana === false).length === 8,
       tekme.map((t) => t.odigrana).join(','))
   }
+  {
+    // Retained HNS capture: these two exact source rows say "Odgođeno" and
+    // have no date; the round also has a normal played fixture. An undated
+    // row without that explicit source label must stay unmarked.
+    const html = beri('hns-rijeka-postponed-undated.html')
+    const sourceRows = H.vrsticeRazporeda(html)
+    preveri('hns: retained undated postponement source rows',
+      ['115696669', '115696690'].every((id) => sourceRows.some((t) => t.id === id && t.prestavljena && !t.izid && t.datum === null)))
+    const rounds = await H.default.razporedVseStrani('115228638', async () => html)
+    const oznaka = oznakaBrezIzida(rounds, '2026-10-23')
+    const target1 = rounds.find((r) => r.stevilka === 1).tekme.find((t) => t.domaci === 'HNK Goranin')
+    const target4 = rounds.find((r) => r.stevilka === 4).tekme.find((t) => t.gostje === 'HNK Goranin')
+    const brezOznake = rounds.find((r) => r.stevilka === 2).tekme[0]
+    preveri('hns: explicit postponed undated rows reach no-result marker',
+      target1.prestavljena && target4.prestavljena && oznaka.brezIzida(target1) === true && oznaka.brezIzida(target4) === true)
+    preveri('hns: undated row without Odgođeno remains unmarked',
+      brezOznake.datum === null && !brezOznake.prestavljena && oznaka.brezIzida(brezOznake) === null)
+  }
 
   const z = H.vZapisnik(beri('hns-tekma-11m.html'), { id: 'a' })
   const n = H.nastopi(z)

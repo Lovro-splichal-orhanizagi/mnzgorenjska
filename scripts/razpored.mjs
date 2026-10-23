@@ -114,19 +114,24 @@ export function razcleniRazpored(vrstice) {
  * Razpored, v katerem ni odigrana NOBENA od vsaj treh minulih tekem, je
  * skoraj gotovo razčlenjevalnik, ki izida ne najde več (zveza je spremenila
  * stran): tudi tedaj `null`, sicer bi preverba utihnila prav ob pokvarjenem
- * uvozu.
+ * uvozu. Nekateri viri izrecno označijo prestavitev, vendar odstranijo datum.
+ * Tako vrstico označimo samo ob izrecnem podatku vira, da ne sklepamo iz samega
+ * manjkajočega datuma.
  *
- * @param {{tekme:{datum:string|null, odigrana?:boolean}[]}[]} krogi
+ * @param {{tekme:{datum:string|null, odigrana?:boolean, prestavljena?:boolean}[]}[]} krogi
  * @param {string} danes 'YYYY-MM-DD'
- * @returns {{ brezIzida: (t: {datum:string|null, odigrana?:boolean}) => boolean|null, pokvarjen: boolean }}
+ * @returns {{ brezIzida: (t: {datum:string|null, odigrana?:boolean, prestavljena?:boolean}) => boolean|null, pokvarjen: boolean }}
  */
 export function oznakaBrezIzida(krogi, danes) {
   const tekme = krogi.flatMap((k) => k.tekme)
   const minule = tekme.filter((t) => t.datum && t.datum < danes)
   const vePove = tekme.some((t) => typeof t.odigrana === 'boolean')
   const pokvarjen = vePove && minule.length >= 3 && !minule.some((t) => t.odigrana)
-  const brezIzida = (t) =>
-    !vePove || pokvarjen || typeof t.odigrana !== 'boolean' ? null : !t.odigrana && !!t.datum && t.datum < danes
+  const brezIzida = (t) => {
+    if (!vePove || pokvarjen || typeof t.odigrana !== 'boolean') return null
+    if (!t.odigrana && t.datum === null) return t.prestavljena === true ? true : null
+    return !t.odigrana && !!t.datum && t.datum < danes
+  }
   return { brezIzida, pokvarjen }
 }
 
