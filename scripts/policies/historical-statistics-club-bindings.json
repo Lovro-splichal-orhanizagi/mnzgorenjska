@@ -1094,6 +1094,96 @@
           "rawSha256": "ea099885c9b881827c721b117a0f85033324686bca5f1f6e29751e1067abd4a5"
         }
       ]
+    },
+    {
+      "provider": "hlf",
+      "sourceClubId": "48d9c84b-3ea6-47e4-8833-3b81dd468159",
+      "sourceCategoryId": "",
+      "countryCode": "RO",
+      "canonicalNames": [
+        "Recolta Crăciunel"
+      ],
+      "boundTeamId": 5068,
+      "proofs": [
+        {
+          "sourceMatchId": "8b7af269-2420-4534-9af2-f3cd51852f15",
+          "sourceUrl": "https://hailafotbal.ro/rezultate/judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2/etapa-1",
+          "rawSha256": "da7436f90c7440ee420eec8a66b2f57d9e338909af257ae933005169cb8ec31c"
+        }
+      ]
+    },
+    {
+      "provider": "hlf",
+      "sourceClubId": "a431c936-ec34-40fe-a0f3-22bfbae157a5",
+      "sourceCategoryId": "",
+      "countryCode": "RO",
+      "canonicalNames": [
+        "CSO Arieșul Apuseni Baia de Arieș"
+      ],
+      "boundTeamId": 5069,
+      "proofs": [
+        {
+          "sourceMatchId": "8b7af269-2420-4534-9af2-f3cd51852f15",
+          "sourceUrl": "https://hailafotbal.ro/rezultate/judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2/etapa-1",
+          "rawSha256": "da7436f90c7440ee420eec8a66b2f57d9e338909af257ae933005169cb8ec31c"
+        }
+      ]
+    },
+    {
+      "provider": "fmf",
+      "sourceClubId": "Sheriff-2",
+      "sourceCategoryId": "",
+      "countryCode": "MD",
+      "canonicalNames": [
+        "Sheriff-2"
+      ],
+      "boundTeamId": 10842,
+      "proofs": [
+        {
+          "sourceMatchId": "50422",
+          "sourceUrl": "https://www.fmf.md/home/meciuri-info?match=50422",
+          "rawSha256": "f9060e1bf8e91a925473c88d67c0a10cf077f461f36ae06ca811e9f9f63f12f5"
+        },
+        {
+          "sourceMatchId": "50481",
+          "sourceUrl": "https://www.fmf.md/home/meciuri-info?match=50481",
+          "rawSha256": "2fc49fc7784c1d65b5e15275b6bf14cab3f611dc99c23b241e4d68d5b9ec82aa"
+        }
+      ]
+    },
+    {
+      "provider": "fmf",
+      "sourceClubId": "CF Maiak",
+      "sourceCategoryId": "",
+      "countryCode": "MD",
+      "canonicalNames": [
+        "CF Maiak"
+      ],
+      "boundTeamId": 10836,
+      "proofs": [
+        {
+          "sourceMatchId": "50422",
+          "sourceUrl": "https://www.fmf.md/home/meciuri-info?match=50422",
+          "rawSha256": "f9060e1bf8e91a925473c88d67c0a10cf077f461f36ae06ca811e9f9f63f12f5"
+        }
+      ]
+    },
+    {
+      "provider": "fmf",
+      "sourceClubId": "CMF Cahul",
+      "sourceCategoryId": "",
+      "countryCode": "MD",
+      "canonicalNames": [
+        "CMF Cahul"
+      ],
+      "boundTeamId": 10833,
+      "proofs": [
+        {
+          "sourceMatchId": "50481",
+          "sourceUrl": "https://www.fmf.md/home/meciuri-info?match=50481",
+          "rawSha256": "2fc49fc7784c1d65b5e15275b6bf14cab3f611dc99c23b241e4d68d5b9ec82aa"
+        }
+      ]
     }
   ]
 }

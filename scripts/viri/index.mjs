@@ -244,7 +244,7 @@ export function viraZa(tekmovanje, {installedHistoricalMarkers=null}={}) {
   }else if(ime==='mlsz') {
     wrapped=withMlszHistoricalStatistics(vir,tekmovanje,{installedHistoricalMarkers})
     files=zaprtje('scripts/viri/mlsz-historical.mjs')
-  }else if(ime==='isthmian'||ime==='hlf'||ime==='nfsbih') {
+  }else if(ime==='isthmian'||ime==='hlf'||ime==='nfsbih'||ime==='fmf') {
     wrapped=withReviewedExistingHistoryStatistics(vir,tekmovanje,{installedHistoricalMarkers})
     files=zaprtje('scripts/viri/reviewed-existing-history.mjs')
   }else if(ime==='hns') {

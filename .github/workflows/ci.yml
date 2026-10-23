@@ -214,6 +214,12 @@ jobs:
           SUPABASE_TEST_DB: postgres
           REVIEWED_EXISTING_DISPOSABLE_TEST: '1'
         run: node scripts/test-reviewed-existing-history-sql.mjs
+      - name: Reviewed Romanian and Moldovan incomplete report admission rollback
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          SUPABASE_TEST_DB: postgres
+          REVIEWED_RO_MD_DISPOSABLE_TEST: '1'
+        run: node --test scripts/test-reviewed-ro-md-sql.mjs
       - name: BiH one-time prelaunch deadline configuration rollback
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska

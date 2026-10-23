@@ -50,3 +50,10 @@ test('all six reviewed report IDs fail closed at the individual import admission
   assert.throws(()=>assertHistoricalReportImportable({competition,report:{id:reportId,z:{}}}),/registered unavailable report/i,`${slug}/${reportId}`)
  }
 })
+
+test('the exact FMF MD report namespace is blocked if a future PDF is published',()=>{
+ const p=getHistoricalStatisticsPolicy('md-liga-2')
+ const competition={id:p.competitionId,slug:p.competitionSlug,source:p.provider,source_policy:p.sourcePolicy,source_league_code:p.sourceLeagueCode}
+ for(const entry of p.entries)assert.throws(()=>assertHistoricalReportImportable({competition,report:{id:`md${entry.sourceMatchId}`,z:{}}}),/registered unavailable report/i)
+ assert.doesNotThrow(()=>assertHistoricalReportImportable({competition,report:{id:'md50423',z:{}}}))
+})

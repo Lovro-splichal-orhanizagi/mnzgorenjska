@@ -70,8 +70,8 @@ const lineage = {
   approvedSha256: sha256(receiptBody),
 }
 
-test('reviewed operator admits exactly the four approved league slugs', () => {
-  const approved=['gb-npl-midlands', 'gb-sfl-d1-south', 'ro-liga3-s1', 'ba-wwin-liga-bih']
+test('reviewed operator admits exactly the six approved league slugs', () => {
+  const approved=['gb-npl-midlands', 'gb-sfl-d1-south', 'ro-liga3-s1', 'ro-ab-l4-s2', 'ba-wwin-liga-bih', 'md-liga-2']
   assert.deepEqual(approved.map(validateSlug).map(({ slug }) => slug), approved)
   for (const slug of ['', 'gb-npl-north', 'ro-liga3-s2', 'ua-upl', 'ba-other-league', 'GB-NPL-MIDLANDS']) assert.throws(() => validateSlug(slug))
 })
@@ -80,7 +80,7 @@ test('workflow exposes only the fixed stages and slug allowlist on main', () => 
   const workflow = readFileSync(new URL('../.github/workflows/reviewed-existing-history.yml', import.meta.url), 'utf8')
   assert.match(workflow, /if: github\.repository == 'Lovro-splichal-orhanizagi\/mnzgorenjska' && github\.ref == 'refs\/heads\/main' && github\.run_attempt == 1/)
   assert.match(workflow, /options: \[prepare, apply, price, preview, activate, receipt\]/)
-  assert.match(workflow, /options: \[gb-npl-midlands, gb-sfl-d1-south, ro-liga3-s1, ba-wwin-liga-bih\]/)
+  assert.match(workflow, /options: \[gb-npl-midlands, gb-sfl-d1-south, ro-liga3-s1, ro-ab-l4-s2, ba-wwin-liga-bih, md-liga-2\]/)
   assert.match(workflow, /group: reviewed-existing-history-\$\{\{ inputs\.slug \}\}/)
   assert.match(workflow, /name: reviewed-existing-history-\$\{\{ github\.run_id \}\}/)
   assert.match(workflow, /if: always\(\)/)
@@ -89,7 +89,7 @@ test('workflow exposes only the fixed stages and slug allowlist on main', () => 
 
 test('reviewed operator policies pin exact source tuple and sourcePolicy', () => {
   assert.deepEqual(
-    ['gb-npl-midlands', 'gb-sfl-d1-south', 'ro-liga3-s1', 'ba-wwin-liga-bih'].map(slug => {
+    ['gb-npl-midlands', 'gb-sfl-d1-south', 'ro-liga3-s1', 'ro-ab-l4-s2', 'ba-wwin-liga-bih', 'md-liga-2'].map(slug => {
       const c = validateSlug(slug)
       const p = policyForSlug(slug)
       return [c.id, c.slug, c.source, c.source_league_code, p.id, p.sha256, p.document.sourcePolicy]
@@ -98,29 +98,39 @@ test('reviewed operator policies pin exact source tuple and sourcePolicy', () =>
       [979, 'gb-npl-midlands', 'isthmian', 'npl/67d7c7bb74247876e6dae40c/2026-27', 'gb-npl-midlands-historical-unavailable-2026-10-23-v1', '5f88bd981434a2d1bb8097a71d4b62974601b0eb01758509b345c8eb6b0c6924', 'reviewed-existing-history-20261023-v1'],
       [984, 'gb-sfl-d1-south', 'isthmian', 'sfl/69d0bdf9b616bafb97331d41/2026-27', 'gb-sfl-d1-south-historical-unavailable-2026-10-23-v1', '682dbaa0e1acfb0a4a03da9da93cdc706eb0d16dc4a8df180e994f6980369a30', 'reviewed-existing-history-20261023-v1'],
       [497, 'ro-liga3-s1', 'hlf', 'national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1', 'ro-liga3-s1-historical-unavailable-2026-10-23-v1', 'b6686671855dfa9a6f96fa8cf67d530aa4fc4208f859e783929cb36140169329', 'reviewed-existing-history-20261023-v1'],
+      [501, 'ro-ab-l4-s2', 'hlf', 'judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2', 'ro-ab-l4-s2-historical-unavailable-2026-10-23-v1', '0d81629b586336edb075b88be89271c6cb0aea141f8b8bbb2459ff6fc4e97e2b', 'reviewed-existing-history-20261023-v1'],
       [998, 'ba-wwin-liga-bih', 'nfsbih', 'wwin-liga-bih/54152223', 'ba-wwin-liga-bih-historical-unavailable-2026-10-23-v1', 'fa48230a81834fe5d182012bdf34ab5df513392f5000ad4e0186f24d5b9a1366', 'reviewed-existing-history-20261023-v1'],
+      [1107, 'md-liga-2', 'fmf', 'liga-2-1782306996/877', 'md-liga-2-historical-unavailable-2026-10-23-v1', '95d6bb7928ac81a43fa6055abf2a31f75d48633c6c5158c4c6b70b9f4149450e', 'reviewed-existing-history-20261023-v1'],
     ],
   )
   assert.throws(() => verifyPreparePayload({ ...prepared, competitionId: 1234 }, candidate, policy, main))
   assert.throws(() => verifyPreparePayload({ ...prepared, targetMatchIds: [12] }, candidate, policy, main), /target match/)
 })
 
-test('the four cleanup policies pin the native SSOT target IDs exactly, including two BiH reports', () => {
+test('the six cleanup policies pin the native SSOT target IDs exactly, including incomplete HLF and schedule-only FMF admissions', () => {
   const nativeTargets=Object.fromEntries(cleanupTargets.competitions.map(target=>[target.slug,target.targets.map(entry=>entry.nativeMatchId).sort((a,b)=>a-b)]))
   assert.deepEqual(nativeTargets,{
     'gb-npl-midlands':[561922,562344],
     'gb-sfl-d1-south':[509795],
     'ro-liga3-s1':[133334],
+    'ro-ab-l4-s2':[202353],
     'ba-wwin-liga-bih':[576391,576399],
+    'md-liga-2':[560748,560803],
   })
   assert.deepEqual(Object.fromEntries(cleanupTargets.competitions.map(target=>[target.slug,target.expectedReportsBySeason])),{
     'gb-npl-midlands':{'2025/26':462,'2026/27':150},
     'gb-sfl-d1-south':{'2026/27':132},
     'ro-liga3-s1':{'2026/27':54},
+    'ro-ab-l4-s2':{'2026/27':23},
     'ba-wwin-liga-bih':{'2026/27':49},
+    'md-liga-2':{'2026/27':95},
   })
-  assert.equal(cleanupTargets.competitions.length,4)
-  assert.equal(cleanupTargets.competitions.reduce((sum,target)=>sum+target.targets.length,0),6)
+  assert.deepEqual(Object.fromEntries(cleanupTargets.competitions.filter(target=>target.expectedPublishedFixturesBySeason).map(target=>[target.slug,target.expectedPublishedFixturesBySeason])),{
+    'ro-ab-l4-s2':{'2026/27':24},
+    'md-liga-2':{'2026/27':97},
+  })
+  assert.equal(cleanupTargets.competitions.length,6)
+  assert.equal(cleanupTargets.competitions.reduce((sum,target)=>sum+target.targets.length,0),9)
   for(const target of cleanupTargets.competitions) {
     const bound=policyForSlug(target.slug)
     assert.equal(bound.id,target.policyId)
@@ -137,6 +147,34 @@ test('the four cleanup policies pin the native SSOT target IDs exactly, includin
   const baPrepared={slug:baCandidate.slug,competitionId:baCandidate.id,policyId:baPolicy.id,policySha256:baPolicy.sha256,beforeImage,beforeImageText,beforeSha256:sha256(beforeImageText),firstFantasyPlayedOn:'2026-10-24',targetMatchIds}
   assert.equal(verifyPreparePayload(baPrepared,baCandidate,baPolicy,main),baPrepared)
   for(const wrong of [[576391],[576391,576391],[576391,576399,12],[54152295,54152303]])assert.throws(()=>verifyPreparePayload({...baPrepared,targetMatchIds:wrong},baCandidate,baPolicy,main),/target match/)
+})
+
+test('prepare artifacts admit only the pinned incomplete HLF and schedule-only FMF native shapes',()=>{
+ const admissionFixture=slug=>{
+  const c=validateSlug(slug),p=policyForSlug(slug),group=cleanupTargets.competitions.find(x=>x.slug===slug)
+  const beforeImage={
+   matches:group.targets.map(t=>({id:t.nativeMatchId,played_on:t.date,home_goals:t.initialScore[0],away_goals:t.initialScore[1],imported_at:t.initialImportedAt,zapisnik_id:t.initialReportId})),
+   appearances:group.targets.flatMap(t=>Array.from({length:t.apps},()=>({match_id:t.nativeMatchId}))),
+   goals:group.targets.flatMap(t=>Array.from({length:t.goals},()=>({match_id:t.nativeMatchId}))),
+  }
+  const beforeImageText=JSON.stringify(beforeImage)
+  return {c,p,group,data:{slug,competitionId:c.id,policyId:p.id,policySha256:p.sha256,beforeImage,beforeImageText,beforeSha256:sha256(beforeImageText),firstFantasyPlayedOn:'2026-10-24',targetMatchIds:group.targets.map(t=>t.nativeMatchId)}}
+ }
+ for(const slug of ['ro-ab-l4-s2','md-liga-2']) {
+  const {c,p,group,data}=admissionFixture(slug)
+  assert.equal(verifyPreparePayload(data,c,p,main),data)
+  const badImage=structuredClone(data.beforeImage)
+  badImage.matches[0].home_goals++
+  const badText=JSON.stringify(badImage)
+  assert.throws(()=>verifyPreparePayload({...data,beforeImage:badImage,beforeImageText:badText,beforeSha256:sha256(badText)},c,p,main),/initial target report\/score admission/)
+  if(slug==='md-liga-2') {
+   const withUnexpectedApp={...data.beforeImage,appearances:[...data.beforeImage.appearances,{match_id:560748}]}
+   const text=JSON.stringify(withUnexpectedApp)
+   assert.throws(()=>verifyPreparePayload({...data,beforeImage:withUnexpectedApp,beforeImageText:text,beforeSha256:sha256(text)},c,p,main),/initial target individual rows/)
+  }
+ }
+ const {c,p,data}=admissionFixture('md-liga-2')
+ assert.throws(()=>verifyPreparePayload({...data,targetMatchIds:[560748]},c,p,main),/target match/)
 })
 
 test('prepare must preserve the exact before-image text and native hash', () => {

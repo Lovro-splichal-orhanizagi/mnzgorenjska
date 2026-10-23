@@ -7,7 +7,7 @@ import {
 } from './historical-statistics-policy.mjs'
 
 const registry = JSON.parse(readFileSync(new URL('../policies/historical-statistics-exclusions.json', import.meta.url)))
-const seedSql=['20261018180000_historical_statistical_availability.sql','20261018231000_dfb_nord_west_historical_policy.sql','20261020223000_mfa_reviewed_history.sql','20261021093000_mfa_challenge_reviewed_history.sql','20261021190100_mfa_nl1_reviewed_policy.sql','20261021203000_mfa_nl2_reviewed_policy.sql','20261022121000_mlsz_reviewed_history.sql','20261022185000_dfb_west_prelaunch_availability.sql','20261023103000_reviewed_existing_history.sql'].map(file=>readFileSync(new URL(`../../supabase/migrations/${file}`,import.meta.url),'utf8')).join('\n')
+const seedSql=['20261018180000_historical_statistical_availability.sql','20261018231000_dfb_nord_west_historical_policy.sql','20261020223000_mfa_reviewed_history.sql','20261021093000_mfa_challenge_reviewed_history.sql','20261021190100_mfa_nl1_reviewed_policy.sql','20261021203000_mfa_nl2_reviewed_policy.sql','20261022121000_mlsz_reviewed_history.sql','20261022185000_dfb_west_prelaunch_availability.sql','20261023103000_reviewed_existing_history.sql','20261023200000_reviewed_ro_md_admission.sql'].map(file=>readFileSync(new URL(`../../supabase/migrations/${file}`,import.meta.url),'utf8')).join('\n')
 const clone = value => structuredClone(value)
 const reEscape = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const hr = registry.policies.find(p => p.provider === 'hns')
@@ -27,7 +27,7 @@ test('registry contains exactly reviewed identities, including the six cleanup t
   assert.deepEqual(west.entries.filter(e=>e.season==='2026/27').map(e=>e.sourceMatchId).sort(),['2425409','2425474'])
   assert.deepEqual(registry.policies.filter(p=>p.provider==='fcf').flatMap(p=>p.entries.map(e=>e.sourceMatchId)).sort(), ['4109388','4116215','4118352','4118358'])
   assert.deepEqual(registry.policies.filter(p=>p.provider==='mlsz').flatMap(p=>p.entries.map(e=>e.sourceMatchId)).sort(), ['2078392','2078437','2175016'])
-  assert.equal(registry.policies.length,17)
+  assert.equal(registry.policies.length,19)
   const npl=registry.policies.find(p=>p.competitionSlug==='gb-npl-midlands')
   assert.deepEqual(npl.entries.map(x=>[x.sourceMatchId,x.season??npl.season]).sort(),[['6896abc31c6f4c56212c7ac5','2025/26'],['6a590670ce9ef452b61f386d','2026/27']])
   const bih=registry.policies.find(p=>p.competitionSlug==='ba-wwin-liga-bih')
@@ -189,4 +189,26 @@ test('reviewed club bindings cover every approved source club/category and retai
     assert.ok(new RegExp(values).test(sql),`missing exact SQL binding ${key}`)
   }
   for(const policy of registry.policies)for(const entry of policy.entries)for(const side of ['home','away'])assert.ok(keys.has([policy.provider,entry[`${side}SourceClubId`],entry[`${side}SourceCategoryId`]??''].join(':')))
+})
+
+test('new RO and MD admissions pin exact composite proof, season and native tuple',()=>{
+ const expected=[
+  ['ro-ab-l4-s2','hlf',501,'judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2','ro-ab-l4-s2-historical-unavailable-2026-10-23-v1','0d81629b586336edb075b88be89271c6cb0aea141f8b8bbb2459ff6fc4e97e2b',['8b7af269-2420-4534-9af2-f3cd51852f15']],
+  ['md-liga-2','fmf',1107,'liga-2-1782306996/877','md-liga-2-historical-unavailable-2026-10-23-v1','95d6bb7928ac81a43fa6055abf2a31f75d48633c6c5158c4c6b70b9f4149450e',['50422','50481']],
+ ]
+ for(const [slug,provider,id,code,policyId,sha,matchIds] of expected){
+  const policy=getHistoricalStatisticsPolicy(slug)
+  assert.ok(policy,`${slug} must be registered`)
+  assert.equal(policy.provider,provider);assert.equal(policy.competitionId,id);assert.equal(policy.sourceLeagueCode,code);assert.equal(policy.id,policyId);assert.equal(historicalStatisticsPolicySha256(policy),sha)
+  assert.deepEqual(policy.entries.map(e=>e.sourceMatchId),matchIds)
+  assert.ok(policy.entries.every(e=>e.season===undefined || e.season==='2026/27'))
+  assert.ok(policy.entries.every(e=>e.sourceProof&&e.rawSha256))
+  const competition=competitionFor(policy)
+  assert.equal(classify(policy,policy.entries[0]).kind,'unavailable_historical')
+  assert.throws(()=>classify(policy,policy.entries[0],{competition:{...competition,id:id+1}}),/tuple|binding|competition/i)
+  assert.throws(()=>classify(policy,policy.entries[0],{fixture:{...fixtureFor(policy,policy.entries[0]),sourceProof:{...policy.entries[0].sourceProof,pdfPublished:true}}}),/identity|fixture/i)
+ }
+ const md=getHistoricalStatisticsPolicy('md-liga-2')
+ assert.ok(md.entries.every(e=>e.sourceProof.pdfPublished===false&&e.sourceProof.clubIdentityKind==='published_name'))
+ assert.ok(md.entries.every(e=>e.homeSourceClubId&&e.awaySourceClubId))
 })

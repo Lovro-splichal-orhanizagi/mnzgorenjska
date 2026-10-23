@@ -1,4 +1,4 @@
-// Exact-main, artifact-gated operator for six approved reports across four leagues.
+// Exact-main, artifact-gated operator for nine approved reports across six leagues.
 // It performs no source requests and never retries a mutating call.
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
@@ -21,8 +21,17 @@ const EXACT = new Map([
   ['gb-npl-midlands', { id: 979, source: 'isthmian', source_league_code: 'npl/67d7c7bb74247876e6dae40c/2026-27', country:'GB' }],
   ['gb-sfl-d1-south', { id: 984, source: 'isthmian', source_league_code: 'sfl/69d0bdf9b616bafb97331d41/2026-27', country:'GB' }],
   ['ro-liga3-s1', { id: 497, source: 'hlf', source_league_code: 'national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1', country:'RO' }],
+  ['ro-ab-l4-s2', { id: 501, source: 'hlf', source_league_code: 'judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2', country:'RO' }],
   ['ba-wwin-liga-bih', { id: 998, source: 'nfsbih', source_league_code: 'wwin-liga-bih/54152223', country:'BA' }],
+  ['md-liga-2', { id: 1107, source: 'fmf', source_league_code: 'liga-2-1782306996/877', country:'MD' }],
 ])
+const ADMISSION_SHAPES = Object.freeze({
+  'ro-ab-l4-s2': Object.freeze([{ nativeMatchId:202353, sourceMatchId:'8b7af269-2420-4534-9af2-f3cd51852f15', admissionKind:'incomplete_report', apps:13, goals:3, initialImportedAt:null, initialReportId:'8b7af269-2420-4534-9af2-f3cd51852f15', initialScore:[3,0] }]),
+  'md-liga-2': Object.freeze([
+    { nativeMatchId:560748, sourceMatchId:'50422', admissionKind:'schedule_only_official_result', apps:0, goals:0, initialImportedAt:null, initialReportId:null, initialScore:[0,0] },
+    { nativeMatchId:560803, sourceMatchId:'50481', admissionKind:'schedule_only_official_result', apps:0, goals:0, initialImportedAt:null, initialReportId:null, initialScore:[0,0] },
+  ]),
+})
 const MODES = new Set(['prepare', 'apply', 'price', 'preview', 'activate', 'receipt'])
 const SHA40 = /^[a-f0-9]{40}$/
 const SHA64 = /^[a-f0-9]{64}$/
@@ -35,6 +44,11 @@ export function validateSlug(slug) {
   const registered = candidatesRegistry.candidates.find(candidate => candidate.slug === slug)
   const target = cleanupTargets.competitions.find(competition => competition.slug === slug)
   require(cleanupTargets.schemaVersion === 1 && cleanupTargets.sourcePolicy === SOURCE_POLICY && cleanupTargets.competitions.length === EXACT.size && exact && registered && registered.id === exact.id && registered.source === exact.source && registered.source_league_code === exact.source_league_code && target?.competitionId === exact.id && target.provider === exact.source && target.sourceLeagueCode === exact.source_league_code && target.country === exact.country, 'fixed league selection required')
+  const admissions=ADMISSION_SHAPES[slug]
+  if(admissions) {
+    const actual=target.targets.map(({nativeMatchId,sourceMatchId,admissionKind,apps,goals,initialImportedAt,initialReportId,initialScore})=>({nativeMatchId,sourceMatchId,admissionKind,apps,goals,initialImportedAt,initialReportId,initialScore}))
+    require(JSON.stringify(actual)===JSON.stringify(admissions), 'fixed initial admission shape required')
+  }
   return { id: exact.id, slug, source: exact.source, source_league_code: exact.source_league_code }
 }
 
@@ -60,6 +74,17 @@ export function verifyPreparePayload(data, candidate, policy, main) {
   const expectedTargetIds = cleanupTargets.competitions.find(competition => competition.slug === candidate.slug).targets.map(target => String(target.nativeMatchId)).sort()
   const actualTargetIds = Array.isArray(data.targetMatchIds) ? data.targetMatchIds.map(String).sort() : []
   require(actualTargetIds.length === expectedTargetIds.length && new Set(actualTargetIds).size === actualTargetIds.length && JSON.stringify(actualTargetIds) === JSON.stringify(expectedTargetIds), 'target match list differs')
+  const admissions=ADMISSION_SHAPES[candidate.slug]
+  if(admissions) {
+    const imageMatches=Array.isArray(data.beforeImage.matches)?data.beforeImage.matches:[]
+    const imageApps=Array.isArray(data.beforeImage.appearances)?data.beforeImage.appearances:[]
+    const imageGoals=Array.isArray(data.beforeImage.goals)?data.beforeImage.goals:[]
+    for(const expected of admissions) {
+      const row=imageMatches.find(match=>match.id===expected.nativeMatchId)
+      require(row && row.played_on===cleanupTargets.competitions.find(c=>c.slug===candidate.slug).targets.find(t=>t.nativeMatchId===expected.nativeMatchId).date && row.home_goals===expected.initialScore[0] && row.away_goals===expected.initialScore[1] && row.imported_at===expected.initialImportedAt && row.zapisnik_id===expected.initialReportId,'initial target report/score admission differs')
+      require(imageApps.filter(item=>item.match_id===expected.nativeMatchId).length===expected.apps && imageGoals.filter(item=>item.match_id===expected.nativeMatchId).length===expected.goals,'initial target individual rows differ from the fixed admission shape')
+    }
+  }
   require(SHA40.test(main), 'main SHA invalid')
   return data
 }

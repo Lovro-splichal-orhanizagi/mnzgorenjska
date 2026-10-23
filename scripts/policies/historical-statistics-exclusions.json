@@ -854,6 +854,96 @@
           "reasonCode": "substitution_has_no_matching_outgoing_event"
         }
       ]
+    },
+    {
+      "sourcePolicy": "reviewed-existing-history-20261023-v1",
+      "season": "2026/27",
+      "recordedAt": "2026-10-23T19:54:59.735346+00:00",
+      "approvalReference": "Owner explicitly approved all three exact exclusions in reply to call_7eb0d2fbb5fc48fc92ce1517a8f32530. Recording time is not the unknown user-send timestamp.",
+      "id": "ro-ab-l4-s2-historical-unavailable-2026-10-23-v1",
+      "provider": "hlf",
+      "competitionSlug": "ro-ab-l4-s2",
+      "competitionId": 501,
+      "sourceLeagueCode": "judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2",
+      "entries": [
+        {
+          "sourceMatchId": "8b7af269-2420-4534-9af2-f3cd51852f15",
+          "sourceCompetitionId": "4f6c569a-aa5b-436b-8542-02ae8add78fa",
+          "sourcePhase": "7e0e09aa-988c-4b1c-be8d-b50b11f38019",
+          "sourceRound": 1,
+          "playedOn": "2026-09-13",
+          "homeSourceClubId": "48d9c84b-3ea6-47e4-8833-3b81dd468159",
+          "awaySourceClubId": "a431c936-ec34-40fe-a0f3-22bfbae157a5",
+          "sourceUrl": "https://hailafotbal.ro/rezultate/judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2/etapa-1",
+          "rawSha256": "da7436f90c7440ee420eec8a66b2f57d9e338909af257ae933005169cb8ec31c",
+          "sourceProof": {
+            "matchSheetSha256": "81e0517aa6fd0fb04249bdcdab405820d20e81a1eb174ca2ea42e51052ccc07a",
+            "roundResponseSha256": "daaa98db38a59f74e86667b2d515b50f778afffb0bd35422d68dddf344057a8a",
+            "matchSheetId": "52d4ccd6-6028-4b06-a492-58cbf89ba169",
+            "rawSha256Formula": "SHA256(JSON.stringify({matchSheetSha256,roundResponseSha256}) in lexicographic key order)"
+          },
+          "observedHomeScore": 3,
+          "observedAwayScore": 0,
+          "reasonCode": "opponent_lineup_absent_in_official_report"
+        }
+      ]
+    },
+    {
+      "sourcePolicy": "reviewed-existing-history-20261023-v1",
+      "season": "2026/27",
+      "recordedAt": "2026-10-23T19:54:59.735346+00:00",
+      "approvalReference": "Owner explicitly approved all three exact exclusions in reply to call_7eb0d2fbb5fc48fc92ce1517a8f32530. Recording time is not the unknown user-send timestamp.",
+      "id": "md-liga-2-historical-unavailable-2026-10-23-v1",
+      "provider": "fmf",
+      "competitionSlug": "md-liga-2",
+      "competitionId": 1107,
+      "sourceLeagueCode": "liga-2-1782306996/877",
+      "entries": [
+        {
+          "sourceMatchId": "50422",
+          "sourceCompetitionId": "877",
+          "sourcePhase": null,
+          "sourceRound": 4,
+          "playedOn": "2026-08-08",
+          "homeSourceClubId": "Sheriff-2",
+          "awaySourceClubId": "CF Maiak",
+          "sourceUrl": "https://www.fmf.md/home/meciuri-info?match=50422",
+          "rawSha256": "f9060e1bf8e91a925473c88d67c0a10cf077f461f36ae06ca811e9f9f63f12f5",
+          "sourceProof": {
+            "calendarSha256": "b07c15800ddc9b0af3c9c05c5756e0d002b26582e3c9845219f6afce5ccc6eb2",
+            "matchDetailSha256": "83342fc8f52c2aa1df70aa47ee553e99998cf035a3bca510227c2516ac40e136",
+            "roundPageSha256": "896abe46e02e5c1c94fb732c9dca67ad2d948df2123118245eba7569f474cdde",
+            "pdfPublished": false,
+            "clubIdentityKind": "published_name",
+            "rawSha256Formula": "SHA256(JSON.stringify({calendarSha256,matchDetailSha256,roundPageSha256}) in lexicographic key order)"
+          },
+          "observedHomeScore": 11,
+          "observedAwayScore": 0,
+          "reasonCode": "official_result_published_but_match_report_pdf_unpublished"
+        },
+        {
+          "sourceMatchId": "50481",
+          "sourceCompetitionId": "877",
+          "sourcePhase": null,
+          "sourceRound": 11,
+          "playedOn": "2026-10-14",
+          "homeSourceClubId": "CMF Cahul",
+          "awaySourceClubId": "Sheriff-2",
+          "sourceUrl": "https://www.fmf.md/home/meciuri-info?match=50481",
+          "rawSha256": "2fc49fc7784c1d65b5e15275b6bf14cab3f611dc99c23b241e4d68d5b9ec82aa",
+          "sourceProof": {
+            "calendarSha256": "b07c15800ddc9b0af3c9c05c5756e0d002b26582e3c9845219f6afce5ccc6eb2",
+            "matchDetailSha256": "1cc08d91396ca90d4d528101d4b94751ac833e5bbdfc8b821456d69eefd55245",
+            "roundPageSha256": "18ad6b21efd7f4bd439ecc2e9c4715b32d4c06d3e3b82cfcacb2f33c4757320d",
+            "pdfPublished": false,
+            "clubIdentityKind": "published_name",
+            "rawSha256Formula": "SHA256(JSON.stringify({calendarSha256,matchDetailSha256,roundPageSha256}) in lexicographic key order)"
+          },
+          "observedHomeScore": 2,
+          "observedAwayScore": 3,
+          "reasonCode": "official_result_published_but_match_report_pdf_unpublished"
+        }
+      ]
     }
   ]
 }
