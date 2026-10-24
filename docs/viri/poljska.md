@@ -22,6 +22,53 @@ Sloveniji. `PL` je v matriki nočnega uvoza. Zveze, tekmovanja in vir vpiše
 svoja migracija. Manjka še: poljski kanal v HelpStacku (`Podpora.tsx` za `pl`
 uporabi slovenskega) in **pregled prevoda pri naravnem govorcu**.
 
+## Sveže stanje in paketna diagnostika (24. 10. 2026)
+
+Preverjeni živi inventar: **7 aktivnih od 20 registriranih lig**. Spodnji
+prvotni tabeli opisujeta registracijo, ne današnjega števila aktivnih lig.
+`predogled-drzave.yml` sprejme `country=PL`, `limit=1..5`, `offset` in točni
+`expected_sha` trenutnega `main`. Prebere paginiran inventar in preveri samo
+točne neaktivne kandidate iz pregledanega registra; ne odkriva vseh poljskih
+lig, ne bere zveze, ne uvaža in ne vklaplja. Rezultati in razlogi se ohranijo
+v artefaktu `country-preview-<run>-PL`.
+
+Generični `READY` postane `PROVISIONAL_READY / NEEDS_STRICT_SOURCE_AUDIT`:
+obstoječa generična vrata za večino virov ne preverijo vseh dokazov vratarjev
+in minut. Podatkovni HOLD ene lige ne ustavi drugih, infrastrukturna napaka
+pa ustavi preostanek. Čas inventarja ni čas zadnje preverbe vira.
+
+`pl-sk-b-kielce-1` ima 142 preverjenih arhivskih in 46 tekočih zapisnikov,
+vendar Samson–SPORT CK (218689, 6. september) nima objavljenega izida.
+`Rozegrany` ob praznih `final` in `full_time` ni dokaz 0:0. Vir šteje tekmo
+za odigrano samo z izrecnim izidom oziroma kontumacijo; uvožen preverjen
+zapisnik se s praznim razporedom ne skrije. Izstop SPORT CK ostaja nepotrjen.
+
+WMZPN še vedno ne objavi vratarjev. Pravilnik 2026/27 (str. 74) za klaso B
+potrdi povratne menjave, zato iz manjkajočih intervalov ne moremo izdelati
+zanesljivih minut. Sedem skupin IV/okręgowa/A ima uporabnejše postave in
+časovne menjave, a pred vklopom potrebuje dokazan vir vratarjev.
+
+### Lokalni pregled CKM / Concordia
+
+`scripts/viri/ckm-report.mjs` bere samo tri ohranjene oblike SportsPress na
+`concordiaknurow.pl`. Ni registriran uvozni vir. Pristni zapisnik
+Sośnica–Silesia (3. oktober 2026, III liga Śląska) vsebuje oba vratarja,
+profilne identitete, pet parov menjav, gole in kartone; lokalna uskladitev
+da 27 nastopov in 990/983 ekipnih minut. Dva druga vzorca ostaneta HOLD:
+tekoči nima gostujoče postave/dogodkov, arhivski ima le devet gostujočih
+začetnikov in pripada drugi ligi. Celotna sezonska pokritost, pravilna
+arhivska povezava in pogoji nadaljnjega zbiranja še niso potrjeni.
+
+```bash
+node scripts/preveri-ckm-zapisnik.mjs --datoteka scripts/vzorci/pl-ckm-complete.html --url https://concordiaknurow.pl/event/sosnica-gliwice-vs-silesia-miechowice/
+```
+
+Izhod 0 pomeni samo usklajene posamezne statistike tega zapisnika; 2 pomeni
+HOLD, 1 napačne argumente/datoteko. `activationEligible:false` in
+`sezonskiUvozPodprt:false` veljata vedno. Sezona, izpeljana iz datuma, ni
+potrjena oznaka sezone. Izvirni SHA in izvor so v `pl-ckm-provenance.json`.
+Preizkusi vključujejo tudi inertne HTML odseke in protislovne dogodke.
+
 ## Poljska — vir `pzpn`
 
 Država, jezik in vmesnik so opisani zgoraj (*Poljska*); lige vpiše migracija

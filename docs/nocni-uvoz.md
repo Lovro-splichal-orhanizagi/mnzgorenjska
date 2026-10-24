@@ -1,5 +1,15 @@
 # Nočni uvoz: države in koši
 
+Za pripravo novih lig je ločen ročni `predogled-drzave.yml`: `country`,
+`limit` (1–5), `offset` in točni `expected_sha` trenutnega `main`. Samo bere
+svež paginiran inventar in obstoječe stanje pregledanih kandidatov; ničesar
+ne uvaža ali aktivira in ne kliče strani zvez. Za vsako ligo shrani ločen
+rezultat, `READY` pa označi kot `PROVISIONAL_READY`, ker za večino virov še
+manjka ločen strog pregled vseh postav, vratarjev in minut. Podatkovni HOLD
+ne ustavi sosednjih lig; napaka infrastrukture ustavi preostanek. `offset`
+je odmik v trenutnem seznamu upravičenih kandidatov, ne trajni kazalec po
+celotni državi. To ni nočni uvoz in ne odkriva še neregistriranih lig.
+
 **Nočni uvoz teče po državah, velike države po koših** (matrika `include` v
 `.github/workflows/uvoz-zapisnikov.yml`, vsak koš svoj posel; zanka koša je
 `scripts/nocni-uvoz.sh`, razdelitev `scripts/nocni-kosi.mjs`). Nova država

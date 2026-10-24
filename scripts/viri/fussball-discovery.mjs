@@ -1,3 +1,4 @@
+import {fussballRoundScope} from '../lib/fussball-capture.mjs'
 import {fussballLiveTags} from './fussball-statistika.mjs'
 
 const fail = reason => { throw new Error(`fussball discovery: ${reason}`) }
@@ -15,7 +16,7 @@ function normalizePublicUrl(value) {
 
 function ownUrlId(url, kind) {
   if (kind === 'round') {
-    return url?.match(/^https:\/\/www\.fussball\.de\/spieltag\/(?:[a-z0-9-]+\/)?-\/staffel\/([A-Z0-9]{32}-G)$/)?.[1] ?? null
+    return fussballRoundScope(url)?.staffel ?? null
   }
   return url?.match(/^https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/([A-Z0-9]{32})$/)?.[1] ?? null
 }

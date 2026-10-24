@@ -1,0 +1,25 @@
+{
+  "id": "6fdf32c5-8837-48a9-bc3f-97f4d63dacd0",
+  "kickoff_at": "2026-09-06T15:00:00+02:00",
+  "league_name": "ŚZPN: Klasa B (Świętokrzyskie)",
+  "round_label": "Kolejka 3",
+  "state": "Rozegrany",
+  "is_live": false,
+  "has_broadcast": false,
+  "broadcast_audio": false,
+  "is_favorite": false,
+  "host": {
+    "id": "0b9387a8-8d80-4eeb-b9b5-f107cc0c59e6",
+    "name": "KS SAMSON Samsonów"
+  },
+  "guest": {
+    "id": "7ac7b025-0400-4f58-ad73-f5dd41f2659f",
+    "name": "SPORT CK"
+  },
+  "score": {
+    "final": null,
+    "half": null,
+    "full_time": null
+  },
+  "stadium": "Samsonów , 26-050 Zagnańsk"
+}

@@ -87,6 +87,9 @@ export function izid(s) {
   return m ? { domaci: Number(m[1]), gostje: Number(m[2]) } : null
 }
 
+// Enak objavljeni izid za razpored in zapisnike; 0:0 je veljaven, null ni izid.
+const koncniIzid = (tekma) => izid(tekma?.score?.final ?? tekma?.score?.full_time)
+
 /** Prost krog ("pauzuje w tej kolejce") ni tekma. */
 export const jePauza = (t) => /pauzuj/i.test(`${t?.host?.name ?? ''} ${t?.guest?.name ?? ''}`)
 
@@ -119,7 +122,7 @@ function ekipa(blok) {
  * odgovor events.json. Null, če tekma nima izida.
  */
 export function vZapisnik(tekma, odgovor) {
-  const rezultat = izid(tekma?.score?.final ?? tekma?.score?.full_time)
+  const rezultat = koncniIzid(tekma)
   if (!rezultat) return null
   const e = odgovor?.events ?? {}
   const imeni = [presledki(tekma.host?.name), presledki(tekma.guest?.name)]
@@ -248,7 +251,7 @@ const vir = {
         datum: cas.datum,
         ura: cas.ura,
         kontumacija,
-        odigrana: t.state === 'Rozegrany' || kontumacija,
+        odigrana: (t.state === 'Rozegrany' && !!koncniIzid(t)) || kontumacija,
         ...(kontumacija && izid(t.score?.final) ? { izid: izid(t.score.final) } : {}),
       })
     }
@@ -259,7 +262,7 @@ const vir = {
   async zapisniki(koda, prenesi) {
     const out = []
     for (const t of await vseTekme(koda, prenesi)) {
-      if (t.state !== 'Rozegrany' || jeWalkower(t) || !izid(t.score?.final)) continue
+      if (t.state !== 'Rozegrany' || jeWalkower(t) || !koncniIzid(t)) continue
       const url = naslovZapisnika(koda, t.id)
       const ime = `pzpn-zapisnik-${t.id}.json`
       let odgovor = json(await prenesi(url, ime), url)
