@@ -165,6 +165,21 @@
     "teams"
   ],
   [
+    "public.klub_dodani_igralci",
+    "competition_id",
+    "competitions"
+  ],
+  [
+    "public.klub_dodani_igralci",
+    "player_id",
+    "players"
+  ],
+  [
+    "public.klub_dodani_igralci",
+    "team_id",
+    "teams"
+  ],
+  [
     "public.klubski_racuni",
     "team_id",
     "teams"

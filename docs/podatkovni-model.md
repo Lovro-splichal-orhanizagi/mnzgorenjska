@@ -748,9 +748,21 @@
   (`klub_nastavi_grb`; `teams.logo_url` je relativna pot `/storage/…`, ki ji
   `naslovSlike` doda `API_URL`); `teams.logo_vir = 'klub'` in sprožilec
   `teams_grb_kluba` skriptam za grbe in `zdruzi-klube` preprečita povoziti
-  grb, dokler ga admin ne ponastavi (`admin_ponastavi_grb`). Dodajanje
-  igralcev in prijave napak sta fazi 3–4. Klub nikoli ne piše minut, golov, cen ali
-  `reg_st`. Hrvaški in srbski stiki so s klubi povezani po imenu in ligi
+  grb, dokler ga admin ne ponastavi (`admin_ponastavi_grb`). **Faza 3**
+  (migracija 20261024123700): klub doda igralca (`klub_dodaj_igralca`:
+  "Priimek Ime", pozicija z virom `klub`, 4.5, `players.dodal_klub_at`), takoj
+  na trgu, točke šele z nastopom. Omejitev 25 na klub in sezono šteje dnevnik
+  `klub_dodani_igralci` (tudi odstranjene); alarmi na Discord (10 v 24 urah,
+  20 od 25, ime podobno obstoječemu, `pg_trgm`). Dvojnik po
+  `ime_za_primerjavo` (brez šumnikov, besede po abecedi) in igralec z
+  ugovorom sta zavrnjena. Uvoz ga posvoji (`scripts/klubski-igralci.mjs`,
+  `posvojiKlubskega` v `igralecId`): isti klub in liga, brez šifre in
+  nastopa, isto ime po normalizaciji, natanko en zadetek; ime in šifra
+  prideta iz vira. Odstranitev (`klub_odstrani_igralca`, admin
+  `admin_odstrani_klubskega_igralca`) le brez nastopa: brez lastnikov izbris,
+  sicer odhod (`odsel_at`), ne v 24 urah pred rokom; Administracija → Klubi
+  kaže dodane brez nastopa po 6 tednih. Prijave napak so faza 4. Klub nikoli
+  ne piše minut, golov, cen ali `reg_st`. Hrvaški in srbski stiki so s klubi povezani po imenu in ligi
   (migracija 20261013203100)
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
   ščit z začetnicami

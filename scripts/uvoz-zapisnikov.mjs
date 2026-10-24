@@ -29,6 +29,7 @@ import { imeHash, regHash } from './anonimizacija.mjs'
 import { NEPOPOLN } from './viri/frf.mjs'
 import { unattributedYellowEvents } from '../src/lib/nepripisaniRumeni.mjs'
 import { prestopSkladen, posvojiBrezSifre } from './prestop.mjs'
+import { najdiKlubskega } from './klubski-igralci.mjs'
 
 // Vir je zavrnil (jalgpall: 403, 429, izziv): izhod 4, da nočna zanka države
 // ne bere naprej (uvoz-zapisnikov.yml). Izhod 5: vir je nedosegljiv (HTTP 5xx,
@@ -287,6 +288,26 @@ async function preveriUgovor(id, polnoIme, regSt) {
   console.log(`  nov igralec ${id} anonimiziran (ugovor)`)
 }
 
+// Igralec, ki ga je dodal klub (klub_dodaj_igralca), pred prvim nastopom: ime
+// in šifra pridejo iz zapisnika, pozicija kluba ostane. Brez tega bi zapisnik
+// ustvaril dvojnika, klubski pa bi ostal brez točk pri lastnikih.
+async function posvojiKlubskega(teamId, polnoIme, { st = null, regSt = null, opozorila = null } = {}) {
+  const p = await najdiKlubskega(db, {
+    competitionId: tekmovanje.id, teamId, polnoIme, polja: POLJA_IGRALCA, opozorila,
+  })
+  if (!p) return null
+  const { priimek, ime } = razdeliIme(polnoIme)
+  const popravek = { full_name: polnoIme, last_name: priimek, first_name: ime }
+  if (st != null) popravek.shirt_number = st
+  if (regSt != null) popravek.reg_st = regSt
+  const { error, count } = await db.from('players').update(popravek, { count: 'exact' })
+    .eq('id', p.id).is('reg_st', null)
+  if (error) throw new Error(`igralec ${polnoIme}: ${error.message}`)
+  if (count !== 1) throw new Error(`klubski igralec ${polnoIme}: pričakovan natanko en igralec`)
+  console.log(`  klubski igralec posvojen: ${p.full_name} → ${polnoIme} (id ${p.id})`)
+  return p
+}
+
 /**
  * Vrne id igralca; po potrebi ga ustvari.
  *
@@ -442,6 +463,14 @@ async function igralecId(
       }
     }
 
+    const klubski = dvoumno ? null : await posvojiKlubskega(teamId, polnoIme, { st, regSt, opozorila })
+    if (klubski) {
+      javiVratarjaIzPolja(klubski)
+      igralci.set(kljucReg, klubski.id)
+      klubPoReg.set(kljucReg, { team: teamId, datum })
+      return klubski.id
+    }
+
     const { priimek, ime } = razdeliIme(polnoIme)
     const { data: nov, error: eNov } = await db
       .from('players')
@@ -501,6 +530,10 @@ async function igralecId(
   }
 
   let obstoj = zadetki?.[0]
+
+  // Klubski igralec z drugače zapisanim imenom ("Peter Novák" proti "Novák
+  // Péter") ima prednost pred soimenjakom pri drugem klubu.
+  if (!obstoj && !dvoumno) obstoj = await posvojiKlubskega(teamId, polnoIme, { st, opozorila }) ?? undefined
 
   // Prestop med sezono: igralca s tem imenom pri tem klubu ni, imamo pa ga pri
   // drugem. Zapisnik je najzanesljivejsi dokaz — ce nastopa za ta klub, je

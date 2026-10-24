@@ -7,6 +7,7 @@ import { t } from '../i18n'
 import { prevediNapako } from '../lib/napake'
 import { pripraviGrb } from '../lib/klubskiRacun'
 import type { Predstavitev } from './KlubPredstavitev'
+import KlubDodaniIgralci from './KlubDodaniIgralci'
 
 const POZICIJE = ['GK', 'DEF', 'MID', 'FWD'] as const
 
@@ -17,10 +18,12 @@ interface IgralecKluba {
 
 export default function KlubUrejanje({
   klubId,
+  ligaId,
   igralci,
   onSpremeni,
 }: {
   klubId: number
+  ligaId: number | null
   igralci: IgralecKluba[]
   onSpremeni: () => void
 }) {
@@ -133,6 +136,8 @@ export default function KlubUrejanje({
           </ul>
         )}
       </section>
+
+      {ligaId != null && <KlubDodaniIgralci klubId={klubId} ligaId={ligaId} />}
 
       <section className="mt-4 space-y-2">
         <h3 className="font-semibold">{t('lestvice.klub.urejanje.pozicije')}</h3>

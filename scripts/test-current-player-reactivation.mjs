@@ -66,7 +66,7 @@ function importer({ team = 10404, current = true, overrides = {}, extraRows = []
     anonimiziranVLigi: async () => anonymous && anonymousMappingExists ? { ...row } : null,
     imeHash: () => 'verified-anonymous-key',
     razdeliIme: () => ({ priimek: 'Grawe', ime: 'Benedikt' }),
-    preveriUgovor: async () => {}, console: { log() {} },
+    preveriUgovor: async () => {}, posvojiKlubskega: async () => null, console: { log() {} },
   })
   return { row, rows, failWrites: value => { failing = value }, failTransfer: value => { transferFails = value }, refuseActive: value => { refuseActive = value }, refuseIdentity: value => { refuseIdentity = value }, resolve: options => resolve(10412, 'Benedikt Grawe', {
     st: 1, vratar: true, datum: '2026-08-08',

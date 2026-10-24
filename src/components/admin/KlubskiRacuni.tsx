@@ -1,12 +1,15 @@
 // Administracija → Klubi: klubski računi in vrsta zahtevkov (migracija
 // 20261013201100). Brez kluba: izberi klub. Polno: izberi račun za preklic.
 // Nov naslov: preveri povezavo (dokaz), nato potrdi ali zavrni z razlogom.
+// Igralci, ki jih je dodal klub (20261024123700) in po 6 tednih še niso
+// nastopili: pusti ali odstrani (kdor ga ima v ekipi, ga le umakne s trga).
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import type { Database } from '../../lib/baza.types'
 
 type Zahtevek = Database['public']['Functions']['admin_klubski_zahtevki']['Returns'][number]
 type Racun = Database['public']['Functions']['admin_klubski_racuni']['Returns'][number]
+type BrezNastopa = Database['public']['Functions']['admin_klubski_igralci_brez_nastopa']['Returns'][number]
 
 const VRSTA: Record<string, string> = {
   brez_kluba: 'naslov brez kluba',
@@ -17,16 +20,22 @@ const VRSTA: Record<string, string> = {
 export default function KlubskiRacuni() {
   const [zahtevki, setZahtevki] = useState<Zahtevek[] | null>(null)
   const [racuni, setRacuni] = useState<Racun[]>([])
+  const [brezNastopa, setBrezNastopa] = useState<BrezNastopa[]>([])
   const [napaka, setNapaka] = useState<string | null>(null)
   const [klubZa, setKlubZa] = useState<Record<number, string>>({})
   const [preklicZa, setPreklicZa] = useState<Record<number, string>>({})
   const [razlogZa, setRazlogZa] = useState<Record<number, string>>({})
 
   const nalozi = useCallback(async () => {
-    const [z, r] = await Promise.all([supabase.rpc('admin_klubski_zahtevki'), supabase.rpc('admin_klubski_racuni')])
+    const [z, r, b] = await Promise.all([
+      supabase.rpc('admin_klubski_zahtevki'),
+      supabase.rpc('admin_klubski_racuni'),
+      supabase.rpc('admin_klubski_igralci_brez_nastopa'),
+    ])
     if (z.error || r.error) return setNapaka((z.error ?? r.error)!.message)
     setZahtevki(z.data ?? [])
     setRacuni(r.data ?? [])
+    setBrezNastopa((b.data ?? []).filter((x) => x.aktiven))
   }, [])
   useEffect(() => {
     void nalozi()
@@ -47,6 +56,12 @@ export default function KlubskiRacuni() {
 
   async function preklici(r: Racun) {
     const { error } = await supabase.rpc('admin_preklici_klubski_racun', { p_id: r.id })
+    if (error) return setNapaka(error.message)
+    await nalozi()
+  }
+
+  async function odstraniIgralca(id: number) {
+    const { error } = await supabase.rpc('admin_odstrani_klubskega_igralca', { p_player_id: id })
     if (error) return setNapaka(error.message)
     await nalozi()
   }
@@ -138,6 +153,30 @@ export default function KlubskiRacuni() {
           ))}
         </ul>
       </details>
+      {brezNastopa.length > 0 && (
+        <details>
+          <summary className="cursor-pointer text-sm text-slate-400">
+            Dodani igralci brez nastopa po 6 tednih ({brezNastopa.length})
+          </summary>
+          <ul className="mt-2 divide-y divide-white/5 text-sm">
+            {brezNastopa.map((b) => (
+              <li key={b.igralec} className="flex items-center justify-between gap-2 py-1">
+                <span>
+                  <b>{b.ime}</b> · {b.klub} · {b.liga} · dodan {new Date(b.dodan).toLocaleDateString('sl-SI')}
+                  {b.lastnikov > 0 && ` · ${b.lastnikov} v ekipah`}
+                </span>
+                <button
+                  type="button"
+                  className="text-xs text-rose-300 underline"
+                  onClick={() => void odstraniIgralca(b.igralec)}
+                >
+                  odstrani
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </section>
   )
 }
