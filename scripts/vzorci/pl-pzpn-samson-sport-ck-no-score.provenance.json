@@ -1,0 +1,9 @@
+{
+  "sourceUrl": "https://szpnkielce.pl/wp-json/szpn/v1/proxy/matches.json?play_id=ed980a22-e851-4b47-bf75-5dfbee9f60cc&type=results&limit=500&page=1&tz=Europe/Warsaw",
+  "retrievedAt": "2026-10-24T19:01:52.921851+00:00",
+  "httpStatus": 200,
+  "rawResponseSha256": "75b7cb3a9845b291bfffb3cc0955e767020855749568632dd86c14d6e3115243",
+  "fixtureId": "6fdf32c5-8837-48a9-bc3f-97f4d63dacd0",
+  "minimization": "Exact match row from data array; removed host.logo_url and guest.logo_url only. No score/state fields changed.",
+  "fixtureSha256": "147aa196f4cf0763c1d00691b369e40038c6cffcc4a0c88666d0a247e32a2930"
+}
