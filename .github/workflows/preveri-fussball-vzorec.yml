@@ -1,0 +1,73 @@
+name: FUSSBALL bounded league screen
+run-name: FUSSBALL screen ${{ inputs.staffel }} ${{ inputs.season }}
+on:
+  workflow_dispatch:
+    inputs:
+      seed_url:
+        description: Observed public league-round URL on www.fussball.de
+        type: string
+        required: true
+      staffel:
+        description: Exact observed competition ID including -G
+        type: string
+        required: true
+      season:
+        description: Exact season YYYY/YY
+        type: string
+        required: true
+      max_requests:
+        description: Total requests including CSS, fonts and failures (1–80)
+        type: number
+        default: 80
+      reports:
+        description: Maximum linked reports (1–3); never a season import
+        type: number
+        default: 3
+      expected_sha:
+        description: Exact reviewed 40-character main commit SHA
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: fussball-public-season-source
+  cancel-in-progress: false
+jobs:
+  screen:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      SEED_URL: ${{ inputs.seed_url }}
+      STAFFEL: ${{ inputs.staffel }}
+      SEASON: ${{ inputs.season }}
+      MAX_REQUESTS: ${{ inputs.max_requests }}
+      REPORTS: ${{ inputs.reports }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require the exact reviewed main and bounded request budget
+        run: |
+          node --input-type=module <<'NODE'
+          import {execFileSync} from 'node:child_process'
+          const e=process.env, head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()
+          if(e.GITHUB_REPOSITORY!=='Lovro-splichal-orhanizagi/mnzgorenjska'||e.GITHUB_REF!=='refs/heads/main'||! /^[a-f0-9]{40}$/.test(e.EXPECTED_SHA??'')||head!==e.EXPECTED_SHA||e.GITHUB_SHA!==e.EXPECTED_SHA)throw Error('Exact reviewed main required')
+          for(const [value,max] of [[e.MAX_REQUESTS,80],[e.REPORTS,3]])if(!/^\d+$/.test(value??'')||Number(value)<1||Number(value)>max)throw Error('Invalid bounded screen scope')
+          NODE
+      - name: Offline source and evidence checks
+        run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
+      - name: Screen ordinary public source without database credentials
+        run: node scripts/zajemi-fussball-vzorec.mjs capture --seed-url "$SEED_URL" --staffel "$STAFFEL" --season "$SEASON" --max-requests "$MAX_REQUESTS" --reports "$REPORTS" --output screen
+      - name: Verify original documents offline
+        run: node scripts/zajemi-fussball-vzorec.mjs verify screen
+      - name: Preserve source bytes, counted requests and typed coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fussball-screen-${{ github.run_id }}
+          path: screen/
+          if-no-files-found: warn
+          retention-days: 90

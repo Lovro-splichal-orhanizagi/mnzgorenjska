@@ -46,6 +46,12 @@ Interfaces: `collectFussballScreen({seedUrl,staffel,season,maxRequests,reportLim
 
 ## Execution ledger
 
+- Parent integration adds `preveri-fussball-vzorec.yml`: exact-main SHA guard,
+  environment-quoted scope, maximum 80 requests/3 reports, shared global
+  FUSSBALL source concurrency, no credentials, offline verification and
+  always-uploaded separate screen artifact. Independent workflow review and
+  integrated smoke are required before merge; no screen artifact grants import.
+
 - Native managed-worktree creation failed because host task cwd is not a Git repository. Reused no occupied checkout; created isolated fallback `/tmp/slff-fussball-fast-screen-20261024` from `1d05c29a`.
 - Owner explicitly authorizes inline extension and execution choices; no repeated plan approval is needed.
 

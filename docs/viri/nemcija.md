@@ -147,6 +147,33 @@ ponovi celoten prehod samo iz shranjenih bajtov, brez omrežnega nadomestila.
 ali dostopa do baze. Izhod vedno vsebuje `activationEligible:false`; ta
 zbiralnik sam ne vpiše igralcev in ne vklopi lige.
 
+### Hitri pregled pred celotnim zajemom (24. 10. 2026)
+
+`zajemi-fussball-vzorec.mjs` preveri opaženi krog in največ en prej
+oglaševani starejši krog ter največ tri odigrane zapisnike. Izrecni proračun
+1–80 vključuje HTML, CSS, pisave in neuspele zahtevke. Zaporedni šestsekundni
+začetki, ustavitev ob zavrnitvi/napaki ter preverba izvirnih bajtov so enaki
+celotnemu zajemu. Veljavni datirani URL vsebuje resničen koledarski datum.
+
+```bash
+node scripts/zajemi-fussball-vzorec.mjs capture --seed-url <opazovani-URL> --staffel <ID-G> --season 2026/27 --max-requests 80 --reports 3 --output <nova-mapa>
+node scripts/zajemi-fussball-vzorec.mjs verify <mapa>
+```
+
+`preveri-fussball-vzorec.yml` zažene isto preverbo na točnem `expected_sha`
+trenutnega `main`, brez skrivnosti ali baze. Deli skupino sočasnosti
+`fussball-public-season-source` s celotnim zajemom. Artefakt `fussball-screen-*`
+je diagnostika, nikoli dovoljeni `fussball-season-*` uvozni dokaz; obe zastavici
+`activationEligible` in `sezonskiUvozPodprt` ostaneta `false`.
+
+Živi pregled Oberlige Schleswig-Holstein 24. 10. je po petih uspešnih GET
+prebral krog in pisavi, nato odkril nepodprte dvojne vezaje v objavljenih
+prikaznih URL. Ni zahteval nobenega zapisnika: to ni dokaz kakovosti postav.
+Te slovnične vrzeli ne enačimo z zavrnitvijo vira. Mannheimovi starejši vzorci
+pa vsebujejo tudi resnične `k.A.` udeležence in rdeče brez igralca; pisava ne
+more povrniti podatka, ki ni objavljen. Trenutno je aktivnih pet lig DFB,
+noben `fussball-public` kandidat še ni registriran ali aktiviran.
+
 ## Javni amaterski uvoz `fussball-public` (24. 10. 2026)
 
 Ločeni vir `scripts/viri/fussball-public.mjs` poveže preverjen zajem z
