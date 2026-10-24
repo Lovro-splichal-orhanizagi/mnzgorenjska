@@ -743,7 +743,9 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
           .in('player_id', kos).eq('fantasy_teams.hisna', false).order('fantasy_team_id').order('player_id').range(od, do_),
       )) ekipe.add(r.fantasy_team_id)
     }
-    const ime = naj ? `${poId.get(naj.id).first_name ?? ''} ${poId.get(naj.id).last_name ?? ''}`.trim() : null
+    // Madžari pišejo priimek pred imenom ("Magyar Bulcsú Péter"), ostali ime pred priimkom.
+    const x = naj && poId.get(naj.id)
+    const ime = x ? (s.drzava === 'HU' ? `${x.last_name ?? ''} ${x.first_name ?? ''}` : `${x.first_name ?? ''} ${x.last_name ?? ''}`).trim() : null
     return { igralcev: st.length, naj: ime || null, tocke: naj?.points ?? 0, ekip: ekipe.size, ime_lige: liga.name }
   }
 
