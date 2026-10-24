@@ -35,7 +35,7 @@ test('private Dribl identities preserve tenant namespaces, atomicity and service
   assert.equal(sql("select to_regprocedure('public.dribl_reserve_player_ids(text[])') is not null"),'t','Dribl reservation migration must exist')
   await t.test('actual published user IDs agree with JS SHA52 and are repeatable',()=>{
    const ids=['dribl:1RwNlWemjr:user:bd9XzXARK4','dribl:1RwNlWemjr:user:RNEgPGBpad',player('1'),player('1','2RwNlWemjr')]
-   const reserve=()=>JSON.parse(sql(`set role service_role;select json_agg(r order by source_id) from public.dribl_reserve_player_ids(${idsArray(ids)})r`))
+   const reserve=()=>JSON.parse(sql(`set role service_role;select json_agg(r order by source_id collate "C") from public.dribl_reserve_player_ids(${idsArray(ids)})r`))
    const expected=ids.map(source_id=>({source_id,reg_st:key(source_id)})).sort((a,b)=>a.source_id<b.source_id?-1:1)
    assert.deepEqual(reserve(),expected);assert.deepEqual(reserve(),expected)
    assert.notEqual(key(player('1')),key(player('1','2RwNlWemjr')))

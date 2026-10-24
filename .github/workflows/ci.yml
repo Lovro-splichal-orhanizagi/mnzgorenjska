@@ -78,7 +78,7 @@ jobs:
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
 
       - name: Provider batch and Dribl source diagnostics (source-free)
-        run: node --test scripts/test-provider-league-batch.mjs scripts/test-provider-source-budget.mjs scripts/test-dribl.mjs
+        run: node --test scripts/test-provider-league-batch.mjs scripts/test-provider-source-budget.mjs scripts/test-mlsz-provider-proof.mjs scripts/test-dribl.mjs scripts/test-dribl-capture.mjs scripts/test-dribl-import.mjs scripts/test-dribl-cli.mjs scripts/test-dribl-country-binding.mjs
 
       - name: Country preview and Polish report diagnostics (source-free)
         run: node --test scripts/test-country-league-preview.mjs scripts/test-ckm-report.mjs scripts/test-pzpn-no-score.mjs
@@ -178,7 +178,9 @@ jobs:
       # Zagon same baze preveri celotno verigo migracij na praznem Postgresu.
       - run: npx --yes supabase@2.117.0 db start
       - name: Generate database types from the fresh migration chain
-        run: npx --yes supabase@2.117.0 gen types typescript --local > /tmp/baza.types.ts
+        run: |
+          npx --yes supabase@2.117.0 gen types typescript --local > /tmp/baza.types.ts
+          node -e 'const fs=require("node:fs"),p="/tmp/baza.types.ts";fs.writeFileSync(p,fs.readFileSync(p,"utf8").trimEnd()+"\n")'
       - name: Preserve generated database types
         uses: actions/upload-artifact@v4
         with:
