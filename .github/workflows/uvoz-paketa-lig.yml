@@ -1,0 +1,95 @@
+name: Uvoz pregledanega paketa lig
+run-name: Uvoz paketa lig mlsz ${{ inputs.lige }}
+on:
+  workflow_dispatch:
+    inputs:
+      lige:
+        description: 'Exact reviewed inactive slugs, comma-separated (initially hu-pe-u19-e,hu-za-3-kozep); imports and prices, activation requires strict provider proof'
+        type: string
+        required: true
+      expected_sha:
+        description: 'Exact reviewed 40-character current main SHA; stop if main changes'
+        type: string
+        required: true
+      max_requests:
+        description: 'Shared MLSZ actual request budget (1–1000), including the documented canonical redirect hop'
+        type: number
+        default: 500
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: provider-league-batch-mlsz
+  cancel-in-progress: false
+jobs:
+  batch:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      LIGE: ${{ inputs.lige }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      MAX_REQUESTS: ${{ inputs.max_requests }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Offline batch and source budget regressions
+        run: node --test scripts/test-provider-league-batch.mjs scripts/test-provider-source-budget.mjs
+      - name: Require exact reviewed main and fixed candidate mappings before database coordination
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'JS'
+          import {execFileSync} from 'node:child_process'
+          import {readFileSync,existsSync} from 'node:fs'
+          import {assertBatchExecution,parseArguments,selectProviderCandidates} from './scripts/provider-league-batch.mjs'
+          const options=parseArguments(['--lige',process.env.LIGE,'--expected-sha',process.env.EXPECTED_SHA,'--max-requests',process.env.MAX_REQUESTS])
+          assertBatchExecution({expectedSha:options.expectedSha,headSha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),mainSha:execFileSync('git',['ls-remote','--exit-code','origin','refs/heads/main'],{encoding:'utf8',timeout:30000}).split(/\s/)[0],envFileExists:existsSync('.env')})
+          selectProviderCandidates(JSON.parse(readFileSync('scripts/policies/existing-league-candidates-20261018.json','utf8')),options.slugs)
+          JS
+      - name: Wait for older database writers and every active MLSZ nightly reader
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --popravek --vir mlsz --najvec 120
+      - name: Restore authentic MLSZ cache
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: provider-batch-mlsz-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            provider-batch-mlsz-
+            zapisniki-HU-
+            zapisniki-hu-
+      - name: Import archives and current season, audit, price and strictly gate native activation
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          node scripts/provider-league-batch.mjs --lige "$LIGE" --expected-sha "$EXPECTED_SHA" \
+            --max-requests "$MAX_REQUESTS" --output release/provider-batch
+      - name: Mark any interrupted write UNKNOWN without retry
+        if: always()
+        run: node --input-type=module -e "import {markInterrupted} from './scripts/provider-league-batch.mjs'; markInterrupted('release/provider-batch/report.json')"
+      - name: Preserve import cache without rewriting source timestamps
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: provider-batch-mlsz-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Preserve atomic stage receipts, source budget and command logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-batch-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release/provider-batch/
+          if-no-files-found: warn
+          retention-days: 90

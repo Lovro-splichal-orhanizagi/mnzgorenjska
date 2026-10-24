@@ -528,3 +528,11 @@ test('MLSZ reviewed history writes serialize with HU imports and health checks',
  }
  for(const mode of['prepare','preview'])assert.equal((await coordinate(['--drzava','HU'],{[workflow]:[run(`MLSZ reviewed history ${mode} hu-to-3-nyugat,hu-baz-u19-2-kozep`)]})).code,0)
 })
+
+test('real provider batch is visible to both coordinator loops and blocks active nightly readers',async()=>{
+ const workflow='uvoz-paketa-lig.yml',runs={[workflow]:[run('Uvoz paketa lig mlsz hu-pe-u19-e,hu-za-3-kozep')]}
+ for(const args of [['--drzava','HU'],['--liga','si-example'],['--popravek','--vir','mlsz']])assert.equal((await coordinate(args,runs)).code,1)
+ assert.equal((await coordinate(['--tece'],runs)).code,3)
+ assert.equal((await coordinate(['--popravek','--vir','mlsz'],{'uvoz-zapisnikov.yml':[run('Nightly')]},[{name:'uvoz HU 1/3',status:'completed'},{name:'uvoz HU 2/3',status:'in_progress'},{name:'uvoz HU 3/3',status:'completed'}])).code,1)
+ assert.equal((await coordinate(['--popravek','--vir','mlsz'],{'uvoz-zapisnikov.yml':[run('Nightly')]},[{name:'uvoz HU 1/3',status:'completed'},{name:'uvoz HU 2/3',status:'completed'},{name:'uvoz HU 3/3',status:'completed'},{name:'uvoz AT',status:'in_progress'}])).code,0)
+})
