@@ -62,6 +62,9 @@ insert into appearances(match_id,player_id,team_id,started,minutes_played,minute
  join players p on p.id=-924000-t.n*20-i where f.played and f.id<>(select min(id)from de_fixtures where played);
 analyze public.players, public.rounds, public.matches, public.appearances,
   public.goals, public.player_scores, public.statistika_igralcev;
+-- Synthetic source packets retain the DFB parser contract: no MLSZ clock field.
+-- One end-of-play red allows a clock-only extra-metadata refusal below.
+update appearances set red_cards=1 where id=(select ap.id from appearances ap join matches m on m.id=ap.match_id join rounds r on r.id=m.round_id where m.id in(select id from de_fixtures)and r.season='2026/27'and ap.started and not ap.is_goalkeeper and ap.minute_off=90 order by ap.player_id,ap.id limit 1);
 create temporary table de_manifest(raw text);
 insert into de_manifest
 select jsonb_build_object('version',1,'slug',current_setting('slff.test_slug'),'sourceCommit',repeat('a',40),'parserSha256',repeat('b',64),
@@ -70,7 +73,7 @@ select jsonb_build_object('version',1,'slug',current_setting('slff.test_slug'),'
   substring(current_setting('slff.test_slug') from 4)||'/'||case f.s when 0 then '2025-2026' else '2026-2027' end code,
   jsonb_agg(jsonb_build_object('id',f.report,'round',f.round,'date',m.played_on,'time','18:00','home',h.name,'away',a.name,'played',f.played,
    'homeGoals',case when f.played then 0 end,'awayGoals',case when f.played then 0 end,'url',m.source_url,'warnings','[]'::jsonb,'goals','[]'::jsonb,
-   'appearances',coalesce((select jsonb_agg((to_jsonb(ap)-array['id','match_id','player_id','team_id','penalties_saved'])||jsonb_build_object('side',case when ap.team_id=m.home_team_id then 0 else 1 end,'name',p.full_name)) from appearances ap join players p on p.id=ap.player_id where ap.match_id=m.id),'[]'::jsonb),
+   'appearances',coalesce((select jsonb_agg((to_jsonb(ap)-array['id','match_id','player_id','team_id','penalties_saved','red_card_minute'])||jsonb_build_object('side',case when ap.team_id=m.home_team_id then 0 else 1 end,'name',p.full_name)) from appearances ap join players p on p.id=ap.player_id where ap.match_id=m.id),'[]'::jsonb),
    'starters',case when f.played then (select jsonb_agg(jsonb_build_object('side',side,'name',t.name||' Player '||i,'keeper',i=0,'proof',case when i=0 then 'oznaka-T' end) order by side,i)
      from generate_series(0,1)side cross join generate_series(0,10)i join de_clubs t on t.n=case side when 0 then f.home else f.away end) else '[]'::jsonb end) order by f.round,f.slot) fixtures
  from de_fixtures f join matches m on m.id=f.id join de_clubs h on h.n=f.home join de_clubs a on a.n=f.away group by f.s) x))::text;
@@ -99,6 +102,7 @@ do $$ declare r jsonb; begin
     or exists(select 1 from competitions where slug=current_setting('slff.test_slug') and active) then raise exception 'Nonmutating preflight failed: %',r; end if;
  raise notice 'PASS complete manifest preflight; inactive state retained';
 end $$;
+select pg_temp.de_reject('unexpected nonnull MLSZ clock metadata', $$update appearances set red_card_minute=90 where id=(select min(id)from appearances where match_id in(select id from de_fixtures)and red_cards=1)$$);
 -- REPLAY_MUTATIONS
 select pg_temp.de_reject('missing archive report', $$update matches set imported_at=null where id=-926010$$);
 select pg_temp.de_reject('wrong report identity', $$update matches set zapisnik_id='de-dfb-99999999' where id=-926010$$);
@@ -152,7 +156,7 @@ do $$ declare own boolean; m matches%rowtype; target bigint; begin
    update appearances set goals=case when own then 0 else 1 end,own_goals=case when own then 1 else 0 end where match_id=m.id and player_id=target;
    update de_manifest set raw=jsonb_set(jsonb_set(jsonb_set(raw::jsonb,'{seasons,0,fixtures,0,homeGoals}','1'),'{seasons,0,fixtures,0,goals}',
      (select jsonb_agg((to_jsonb(g)-array['id','match_id','scorer_id','team_id','assist_player_id','assist_confirmed_at','assist_none_confirmed_at'])||jsonb_build_object('side',case when g.team_id=m.home_team_id then 0 else 1 end,'name',p.full_name)) from goals g join players p on p.id=g.scorer_id where g.match_id=m.id)),
-     '{seasons,0,fixtures,0,appearances}',(select jsonb_agg((to_jsonb(ap)-array['id','match_id','player_id','team_id','penalties_saved'])||jsonb_build_object('side',case when ap.team_id=m.home_team_id then 0 else 1 end,'name',p.full_name)) from appearances ap join players p on p.id=ap.player_id where ap.match_id=m.id))::text;
+     '{seasons,0,fixtures,0,appearances}',(select jsonb_agg((to_jsonb(ap)-array['id','match_id','player_id','team_id','penalties_saved','red_card_minute'])||jsonb_build_object('side',case when ap.team_id=m.home_team_id then 0 else 1 end,'name',p.full_name)) from appearances ap join players p on p.id=ap.player_id where ap.match_id=m.id))::text;
    perform pg_temp.de_check();
    perform pg_temp.de_reject('wrong scorer same historical side',format('update goals set scorer_id=%s where match_id=-926010',target-1));
    perform pg_temp.de_reject('changed goal minute','update goals set minute=32 where match_id=-926010');
