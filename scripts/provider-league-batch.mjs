@@ -71,6 +71,7 @@ export function auditStoredData(candidate,snapshot,now=new Date()) {
    if(!side||!p||!Number.isSafeInteger(p.reg_st)||p.reg_st<=0||appearances.has(a.player_id))fail('Missing source profile identity or invalid team-linked appearance.')
    appearances.set(a.player_id,a)
    if(typeof a.started!=='boolean'||typeof a.is_goalkeeper!=='boolean'||![a.minute_on,a.minute_off,a.minutes_played,a.red_cards].every(Number.isSafeInteger)||a.minute_on<0||a.minute_off>90||a.minute_off<a.minute_on||a.minutes_played!==a.minute_off-a.minute_on||(a.started&&a.minute_on!==0)||a.red_cards<0||a.red_cards>1)fail('Invalid timed appearance interval or role.')
+   if(!Number.isSafeInteger(a.penalties_missed)||a.penalties_missed<0)fail('Incomplete or invalid penalties_missed count.')
    if(a.red_cards&&a.red_card_minute!=null&&a.red_card_minute!==a.minute_off)fail('Red card interval does not reconcile.')
    if(a.started)side.starters++
    if(a.started&&a.is_goalkeeper)side.keepers++

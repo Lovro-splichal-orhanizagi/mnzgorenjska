@@ -34,10 +34,50 @@ function metadata(html,code,round) {
  }
  require(sezonaStrani(html)===sezonaIzKode(code),'source page season binding mismatch')
 }
-function strictSchedule(html,code,round) {
- const start=html.indexOf('id="match_panel"'),end=html.indexOf('team_lapbar',start),panel=html.slice(start,end<0?undefined:end)
+// Independent lexical inventory: legal attribute/quote variants must not vanish just
+// because the legacy adapter does not recognize them. Ignore inert markup and scope
+// to the live match panel before its sidebar; unsupported live rows HOLD.
+function liveMarkup(html) {
+ const tokens=/<!--[\s\S]*?(?:-->|$)|<\/?([a-z][\w:-]*)(?=\s|\/?>)((?:"[^"]*"|'[^']*'|[^'">])*)>/gi
+ let out='',cursor=0,raw=null,templates=0
+ for(const token of html.matchAll(tokens)) {
+  const end=token.index+token[0].length,tag=token[1]?.toLowerCase(),closing=/^<\//.test(token[0])
+  if(raw){if(closing&&tag===raw)raw=null;cursor=end;continue}
+  if(!tag){out+=templates?'':html.slice(cursor,token.index);cursor=end;continue}
+  if(tag==='template'){templates+=closing?-1:1;require(templates>=0,'unbalanced inert source markup');cursor=end;continue}
+  if(/^(script|style|textarea|title|xmp|iframe|noembed|noframes|noscript|plaintext)$/.test(tag)&&!closing){raw=tag;cursor=end;continue}
+  if(!templates)out+=html.slice(cursor,token.index)+token[0]
+  cursor=end
+ }
+ require(!raw&&!templates,'unclosed inert source markup')
+ return out+html.slice(cursor)
+}
+function divInventory(html) {
+ const nodes=[],stack=[]
+ for(const token of html.matchAll(/<\/?div(?=\s|\/?>)((?:"[^"]*"|'[^']*'|[^'">])*)>/gi)) {
+  if(/^<\//.test(token[0])){const node=stack.pop();if(node)node.end=token.index+token[0].length;continue}
+  const attributes=new Map()
+  for(const attr of token[1].matchAll(/([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g)) {
+   const key=attr[1].toLowerCase()
+   require(!attributes.has(key)||!['class','id'].includes(key),'ambiguous duplicate source identity/class attribute')
+   attributes.set(key,razpakiraj(attr[2]??attr[3]??attr[4]??''))
+  }
+  const node={start:token.index,end:null,id:attributes.get('id'),classes:(attributes.get('class')??'').split(/\s+/)}
+  nodes.push(node);stack.push(node)
+ }
+ return nodes
+}
+export function strictMlszSchedule(original,code,round) {
+ const html=liveMarkup(original),nodes=divInventory(html),panels=nodes.filter(n=>n.id==='match_panel')
+ require(panels.length===1,'missing or ambiguous live source match panel')
+ const panel=panels[0],sidebars=nodes.filter(n=>n.start>panel.start&&n.start<(panel.end??Infinity)&&n.classes.includes('team_lapbar'))
+ const end=Math.min(panel.end??Infinity,...sidebars.map(n=>n.start))
+ require(Number.isFinite(end),'source match panel scope is incomplete')
+ const rows=nodes.filter(n=>n.start>panel.start&&n.start<end&&n.classes.includes('schedule'))
  let expected=0
- for(const block of panel.split(/<div class="schedule[ "]/).slice(1)) {
+ for(const row of rows) {
+  require(row.end!==null&&row.end<=end,'unclosed published source row')
+  const block=html.slice(row.start,row.end)
   const name=side=>razpakiraj(block.match(new RegExp(`<div class="${side}_team">[\\s\\S]*?<span>([^<]*)</span>`))?.[1]??'')
   const home=name('home'),away=name('away')
   require(home&&away,'unparsed published source row team names')
@@ -46,7 +86,7 @@ function strictSchedule(html,code,round) {
   const link=block.match(/\/match\/(\d+)\/(\d+)\/(\d+)\/(\d+)\/(\d+)\.html/)
   if(link)require(link.slice(1,4).join('/')===code&&Number(link[4])===round,'published source row league/round binding differs')
  }
- const fixtures=vrsticeKroga(html,round)
+ const fixtures=vrsticeKroga(html.slice(panel.start,end),round)
  require(expected===fixtures.length,'unparsed published source row; inventory incomplete')
  return fixtures
 }
@@ -75,7 +115,7 @@ function compareReport({z,match,snapshot,fixture,round}) {
   const rows=native.filter(a=>a.team_id===ids[n.ekipaIdx]&&players.get(a.player_id)?.reg_st===n.regSt)
   require(rows.length===1,'source profile does not resolve to exactly one native appearance')
   const a=rows[0];require(!observed.has(a.player_id),'duplicate native source appearance');observed.add(a.player_id)
-  const fields={shirt_number:n.st,started:n.zacetnik,is_goalkeeper:n.vratar,minute_on:n.minutaOd,minute_off:n.minutaDo,minutes_played:n.minute,goals:n.goli,own_goals:n.avtogoli,penalties_scored:n.goliIzEnajstmetrovke,yellow_cards:n.rumeni,red_cards:n.rdeci,red_card_minute:n.redCardMinute,goals_conceded:n.prejetiGoli,clean_sheet:n.cleanSheet}
+  const fields={shirt_number:n.st,started:n.zacetnik,is_goalkeeper:n.vratar,minute_on:n.minutaOd,minute_off:n.minutaDo,minutes_played:n.minute,goals:n.goli,own_goals:n.avtogoli,penalties_scored:n.goliIzEnajstmetrovke,penalties_missed:n.zgreseneEnajstmetrovke,yellow_cards:n.rumeni,red_cards:n.rdeci,red_card_minute:n.redCardMinute,goals_conceded:n.prejetiGoli,clean_sheet:n.cleanSheet}
   for(const [key,value]of Object.entries(fields))require(a[key]===value,`source individual ${key} differs (profile ${n.regSt})`)
  }
  for(let i=0;i<2;i++) {
@@ -111,7 +151,7 @@ function replayPages({candidate,expectedSha,snapshot,receipts,pages,read,now}) {
   for(const number of numbers) {
    const html=number===1?first:load(naslovKroga(code,number),'schedule',code,number)
    require(same(krogiStrani(html),numbers),'source round selectors changed during capture')
-   const fixtures=strictSchedule(html,code,number);require(fixtures.length>0,'empty or incomplete published source round')
+   const fixtures=strictMlszSchedule(html,code,number);require(fixtures.length>0,'empty or incomplete published source round')
    const nativeRounds=snapshot.rounds.filter(r=>r.season===season&&r.number===number)
    if(code===candidate.source_league_code)require(nativeRounds.length===1,'current published source round missing in native calendar')
    const round=nativeRounds[0],roundDate=fixtures.map(f=>f.datum).filter(Boolean).sort()[0],roundTime=fixtures.filter(f=>f.datum===roundDate&&f.ura).map(f=>f.ura).sort()[0]
@@ -163,7 +203,7 @@ export async function produceMlszProof({candidate,expectedSha,snapshot,receipts,
   for(const round of numbers) {
    const html=round===1?first:await capture(naslovKroga(code,round),'schedule',code,round)
    require(same(krogiStrani(html),numbers),'source round selectors changed during capture')
-   for(const fixture of strictSchedule(html,code,round))if(fixture.izid){require(fixture.id,'published source report ID missing');await capture(naslovTekme(code,round,fixture.id),'report',code,round,fixture.id)}
+   for(const fixture of strictMlszSchedule(html,code,round))if(fixture.izid){require(fixture.id,'published source report ID missing');await capture(naslovTekme(code,round,fixture.id),'report',code,round,fixture.id)}
   }
  }
  const generated=clock(),summary=replayPages({candidate,expectedSha,snapshot,receipts,pages,read:p=>readFileSync(join(evidenceRoot,p.file)),now:generated})

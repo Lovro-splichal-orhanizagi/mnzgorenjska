@@ -9,7 +9,7 @@ const registry=JSON.parse(readFileSync(new URL('./policies/existing-league-candi
 const candidates=()=>selectProviderCandidates(registry,['hu-pe-u19-e','hu-za-3-kozep'])
 function snapshot(c) {
  const players=Array.from({length:22},(_,i)=>({id:i+1,reg_st:100+i,team_id:i<11?1:2,active:true,position:i%11===0?'GK':'MID',position_source:'zapisnik'}))
- const appearances=players.map(p=>({player_id:p.id,team_id:p.team_id,started:true,is_goalkeeper:p.position==='GK',minute_on:0,minute_off:90,minutes_played:90,red_cards:0}))
+ const appearances=players.map(p=>({player_id:p.id,team_id:p.team_id,started:true,is_goalkeeper:p.position==='GK',minute_on:0,minute_off:90,minutes_played:90,red_cards:0,penalties_missed:0}))
  return {competition:{...c,active:false,source_policy:null,date_only_deadline_policy:null},season:'2026/27',fantasy:{teams:[],lineups:[]},players,rounds:[{id:1,season:c.archives[0].season},{id:2,season:'2026/27'}],matches:[1,2].map(id=>({id,round_id:id,zapisnik_id:String(1000+id),home_team_id:1,away_team_id:2,played_on:'2026-01-01',imported_at:'2026-01-02',statistics_status:'complete',kontumacija:false,home_goals:0,away_goals:0,appearance_rows:structuredClone(appearances),goal_rows:[]}))}
 }
 function harness(patch={}) {
@@ -170,4 +170,8 @@ test('pre-write competition DB failure stops host instead of treating it as foot
 for(const [key,value]of [['active',true],['source_league_code','changed'],['source_policy','custom']])test(`latest snapshot ${key} drift prevents every corresponding write`,async()=>{
  const h=harness();let count=0;h.options.transport.snapshot=async c=>{const s=snapshot(c);if(++count>1)s.competition[key]=value;return s}
  const r=await runProviderBatch(h.options);assert.equal(h.calls.length,0);assert.equal(r.results[0].status,'HOLD')
+})
+test('fresh stored audit requires a complete nonnegative integer missed-penalty field',()=>{
+ const c=candidates()[0]
+ for(const value of [null,undefined,-1,1.5]){const s=snapshot(c);s.matches[0].appearance_rows[0].penalties_missed=value;assert.throws(()=>auditStoredData(c,s),/penalt/i)}
 })

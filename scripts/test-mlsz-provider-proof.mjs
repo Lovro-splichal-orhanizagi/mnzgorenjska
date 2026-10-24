@@ -6,7 +6,7 @@ import {join} from 'node:path'
 import {createHash} from 'node:crypto'
 import {vZapisnik,nastopi} from './viri/mlsz.mjs'
 import {rokKroga} from './razporedi.mjs'
-import {produceMlszProof,replayMlszProof,MLSZ_BATCH_MAPPINGS,createMlszContract,loadMlszPage} from './mlsz-provider-proof.mjs'
+import {produceMlszProof,replayMlszProof,MLSZ_BATCH_MAPPINGS,createMlszContract,loadMlszPage,strictMlszSchedule} from './mlsz-provider-proof.mjs'
 const hash=v=>createHash('sha256').update(JSON.stringify(v)).digest('hex'),sha='a'.repeat(40),now=new Date('2026-10-24T18:00:00Z')
 const raw=readFileSync(new URL('./vzorci/hu-adatbank-tekma-65-20-31672-2090962.html',import.meta.url),'utf8')
 // Synthetic league metadata/schedule around an authentic report body; never production source evidence.
@@ -24,7 +24,7 @@ export function proofFixture() {
   const id=String(9000001+index),html=report(code,id),z=vZapisnik(html,{id}),ns=nastopi(z),roundId=index+1
   if(!snapshot.teams.length)snapshot.teams=[{id:1,name:z.domaci.ime},{id:2,name:z.gostje.ime}]
   snapshot.rounds.push({id:roundId,number:1,season:z.sezona,played_on:z.datum,deadline_at:'2025-10-04T10:30:00Z'})
-  const rows=ns.map(n=>{if(!playerMap.has(n.regSt)){const p={id:playerMap.size+1,reg_st:n.regSt,team_id:n.ekipaIdx+1,active:true,position:n.vratar?'GK':'MID',position_source:'zapisnik',value:5};playerMap.set(n.regSt,p);snapshot.players.push(p)}return {player_id:playerMap.get(n.regSt).id,team_id:n.ekipaIdx+1,shirt_number:n.st,started:n.zacetnik,is_goalkeeper:n.vratar,minute_on:n.minutaOd,minute_off:n.minutaDo,minutes_played:n.minute,goals:n.goli,own_goals:n.avtogoli,penalties_scored:n.goliIzEnajstmetrovke,yellow_cards:n.rumeni,red_cards:n.rdeci,red_card_minute:n.redCardMinute,goals_conceded:n.prejetiGoli,clean_sheet:n.cleanSheet}})
+  const rows=ns.map(n=>{if(!playerMap.has(n.regSt)){const p={id:playerMap.size+1,reg_st:n.regSt,team_id:n.ekipaIdx+1,active:true,position:n.vratar?'GK':'MID',position_source:'zapisnik',value:5};playerMap.set(n.regSt,p);snapshot.players.push(p)}return {player_id:playerMap.get(n.regSt).id,team_id:n.ekipaIdx+1,shirt_number:n.st,started:n.zacetnik,is_goalkeeper:n.vratar,minute_on:n.minutaOd,minute_off:n.minutaDo,minutes_played:n.minute,goals:n.goli,own_goals:n.avtogoli,penalties_scored:n.goliIzEnajstmetrovke,penalties_missed:0,yellow_cards:n.rumeni,red_cards:n.rdeci,red_card_minute:n.redCardMinute,goals_conceded:n.prejetiGoli,clean_sheet:n.cleanSheet}})
   const goals=z.goli.map((g,i)=>{const actor=ns.find(n=>n.ekipaIdx===g.ekipaIdx&&n.st===g.st&&n.ime===g.ime);return {id:i+1,scorer_id:playerMap.get(actor.regSt).id,team_id:g.ekipaIdx+1,minute:g.minuta,is_own_goal:g.avtogol,is_penalty:g.enajstmetrovka}})
   snapshot.matches.push({id:roundId,round_id:roundId,zapisnik_id:id,home_team_id:1,away_team_id:2,played_on:z.datum,imported_at:'2026-10-24T17:00:00Z',home_goals:z.rezultat.domaci,away_goals:z.rezultat.gostje,kontumacija:false,statistics_status:'complete',import_warnings:z.opozorila,appearance_rows:rows,goal_rows:goals})
   pages.set(`https://adatbank.mlsz.hu/league/${code}/1.html`,schedule(code,1,id,`${z.rezultat.domaci} - ${z.rezultat.gostje}`,z.domaci.ime,z.gostje.ime))
@@ -102,4 +102,28 @@ test('live producer generation uses the completion clock rather than rejecting i
  const f=proofFixture(),dir=mkdtempSync(join(tmpdir(),'mlsz-live-clock-'));f.receipts.steps.forEach(s=>s.completed_at=new Date(Date.now()-1000).toISOString())
  const original=f.loadPage;const loadPage=async(...args)=>{await new Promise(r=>setTimeout(r,2));const page=await original(...args);return {...page,captured_at:args[1].kind==='schedule'?new Date().toISOString():page.captured_at}}
  try{const proof=await produceMlszProof({...f,expectedSha:sha,evidenceRoot:join(dir,'evidence'),loadPage});assert.equal(replayMlszProof({candidate:f.candidate,expectedSha:sha,snapshot:f.snapshot,proof}),true)}finally{rmSync(dir,{recursive:true,force:true})}
+})
+test('source missed penalties must exactly match every native appearance',async()=>{
+ const f=proofFixture();assert.equal(vZapisnik(f.pages.get(`https://adatbank.mlsz.hu/match/${f.candidate.source_league_code}/1/9000002.html`)).zgresene.length,0)
+ f.snapshot.matches[0].appearance_rows[0].penalties_missed=1;f.receipts.snapshot_sha256=hash(f.snapshot)
+ await assert.rejects(()=>generate(f),/penalties_missed/i)
+})
+for(const opening of ["<div class='schedule'>",'<div data-live="yes" class="schedule">','<DIV class="schedule">','<div class = schedule>','<div class="other schedule">'])test(`unrecognized legal live source row ${opening} cannot certify complete inventory`,async()=>{
+ const f=proofFixture(),url=`https://adatbank.mlsz.hu/league/${f.candidate.source_league_code}/1.html`,extra=`${opening}<div class="home_team"><span>Unbound SC</span></div><div class="away_team"><span>Unbound SE</span></div><div class="schedule-points">1 - 0</div><a href="/match/${f.candidate.source_league_code}/1/9999999.html">report</a><div class="team_sorsolas_date">2026. 10. 01. 14:30</div></div>`
+ f.pages.set(url,f.pages.get(url).replace('<div class="team_lapbar">',extra+'<div class="team_lapbar">'))
+ await assert.rejects(()=>generate(f),e=>e.dataHold===true)
+})
+
+const actualRound=readFileSync(new URL('./vzorci/hu-adatbank-krog-67-20-33915-8.html',import.meta.url),'utf8')
+const addedRow=(opening='<div class="schedule">')=>`${opening}<div class="home_team"><span>Unbound SC</span></div><div class="away_team"><span>Unbound SE</span></div><div class="schedule-points">1 - 0</div><a href="/match/67/20/33915/8/9999999.html">report</a><div class="team_sorsolas_date">2026. 10. 01. 14:30</div></div>`
+test('authentic live match panel inventories six fixtures and excludes the actual sidebar other-round rows',()=>{
+ assert.equal(strictMlszSchedule(actualRound,'67/20/33915',8).length,6)
+})
+for(const opening of ["<div class='schedule'>",'<div data-text="a > b" class="schedule">','<DIV CLASS="schedule">','<div class = schedule>','<div class="other schedule">'])test(`authentic source HTML unmatched live row ${opening} HOLDs`,()=>{
+ const changed=actualRound.replace('<div class="schedule ">',addedRow(opening)+'<div class="schedule ">')
+ assert.throws(()=>strictMlszSchedule(changed,'67/20/33915',8),e=>e.dataHold===true)
+})
+for(const inert of [row=>`<!--${row}-->`,row=>`<script>const row='${row}'</script>`,row=>`<template>${row}</template>`,row=>`<template><template>${row}</template>${row}</template>`,row=>`<textarea>${row}</textarea>`])test('inert fixture markup inside authentic source panel never becomes a published source row',()=>{
+ const changed=actualRound.replace('<div class="schedule ">',inert(addedRow())+'<div class="schedule ">')
+ assert.equal(strictMlszSchedule(changed,'67/20/33915',8).length,6)
 })
