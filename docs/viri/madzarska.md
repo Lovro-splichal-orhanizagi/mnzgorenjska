@@ -342,3 +342,20 @@ vračal `SQLSTATE[08004] [1040] Too many connections` — preverba je tekla s
 | hu-to-u19 | `67/17/33960` | `65/17/31536` |
 | hu-ve-u19 | `67/19/34165` | `65/19/32094` |
 | hu-za-u19 | `67/20/33922` | `65/20/31681` |
+
+
+24. 10. 2026 je v običajni paket obstoječih lig prijavljenih še 14 natančnih
+kandidatov: `hu-ba-u19-2`, `hu-bk-u19-del`, `hu-bk-u19-eszak`, `hu-bp-u19-1`,
+`hu-cs-u19-szalai`, `hu-cs-u19-toth`, `hu-pe-u19-a`, `hu-pe-u19-c`,
+`hu-pe-u19-d`, `hu-pe-u19-e`, `hu-u19-orszagos-alap`,
+`hu-u19-orszagos-kiemelt`, `hu-ve-3-del` in `hu-za-3-kozep`.
+Pregled njihovih že uvoženih tekočih zapisnikov ni našel razlik med goli
+in izidi, neskladnih minut ali manjkajočega začetnega vratarja po
+obstoječem MLSZ vrstnem redu postave (ta je namig, ne izrecna oznaka).
+To ni vklop ali potrditev popolnosti: manjkajoči tekoči zapisniki in arhivi
+iz zgornjih tabel se morajo uvoziti, preveriti se morajo vsi nastopi,
+aktualni vratarji, raznolike cene, dovoljen kader in svež prihodnji rok.
+Nobena nova zgodovinska izključitev ali pot brez arhiva ni odobrena.
+`hu-bk-u19-kozep` in `hu-bp-u19-2` ostajata zunaj tega paketa zaradi
+neskladnih golov v že uvoženih poročilih. Uvozi MLSZ tečejo zaporedno;
+ob zavrnitvi ali nedosegljivosti vira se paket ustavi.

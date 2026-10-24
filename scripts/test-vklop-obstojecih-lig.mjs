@@ -170,11 +170,25 @@ test('Hungarian admission stays explicit and holds on missing past reports',asyn
   const expected=[
     {id:619,slug:'hu-baz-u19-2-kozep',source:'mlsz',source_league_code:'67/4/34094'},
     {id:463,slug:'hu-to-3-nyugat',source:'mlsz',source_league_code:'67/17/34465'},
+    {id:615,slug:'hu-ba-u19-2',source:'mlsz',source_league_code:'67/2/33847'},
+    {id:614,slug:'hu-bk-u19-del',source:'mlsz',source_league_code:'67/1/33679'},
+    {id:613,slug:'hu-bk-u19-eszak',source:'mlsz',source_league_code:'67/1/33680'},
+    {id:624,slug:'hu-bp-u19-1',source:'mlsz',source_league_code:'67/5/33817'},
+    {id:626,slug:'hu-cs-u19-szalai',source:'mlsz',source_league_code:'67/6/33880'},
+    {id:625,slug:'hu-cs-u19-toth',source:'mlsz',source_league_code:'67/6/34102'},
+    {id:639,slug:'hu-pe-u19-a',source:'mlsz',source_league_code:'67/14/34248'},
+    {id:637,slug:'hu-pe-u19-c',source:'mlsz',source_league_code:'67/14/34250'},
+    {id:636,slug:'hu-pe-u19-d',source:'mlsz',source_league_code:'67/14/34387'},
+    {id:635,slug:'hu-pe-u19-e',source:'mlsz',source_league_code:'67/14/34252'},
+    {id:657,slug:'hu-u19-orszagos-alap',source:'mlsz',source_league_code:'67/0/33758'},
+    {id:658,slug:'hu-u19-orszagos-kiemelt',source:'mlsz',source_league_code:'67/0/34125'},
+    {id:470,slug:'hu-ve-3-del',source:'mlsz',source_league_code:'67/19/34246'},
+    {id:475,slug:'hu-za-3-kozep',source:'mlsz',source_league_code:'67/20/34240'},
   ]
   const candidates=validateSelection(registry,expected.map(c=>c.slug))
-  assert.deepEqual(candidates,expected)
+  assert.deepEqual(candidates,[...expected].sort((a,b)=>a.slug.localeCompare(b.slug)))
   assert.deepEqual(registry.candidates.filter(c=>c.source==='mlsz'),expected)
-  assert.throws(()=>validateSelection(registry,['hu-bp-u19-1']))
+  for(const slug of ['hu-bk-u19-kozep','hu-bp-u19-2','hu-arbitrary'])assert.throws(()=>validateSelection(registry,[slug]))
   assert.equal(registry.source_contracts.mlsz.document,'docs/viri/madzarska.md')
   assert.match(registry.source_contracts.mlsz.permission,/no explicit.*permission/i)
   assert.match(registry.source_contracts.mlsz.permission,/stop/i)
