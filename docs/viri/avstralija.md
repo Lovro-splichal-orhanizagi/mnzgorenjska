@@ -108,7 +108,18 @@ objavljenega načina celotnega inventarja, še vedno **ne** zajeta celotna sezon
 Vrstice imajo `type=fixtures`, različen `hash_id` in `attributes.match_hash_id`,
 čas pa `2026-02-06T08:30:00.000000Z` (rezultati uporabljajo presledek brez Z).
 `links.next` tudi tu vsebuje samo kazalec; ob nadaljevanju je treba ohraniti
-opažene filtre. Čisti `parseDriblSchedule` iz prvega koraka trenutno bere samo
-opaženo stran `results`; naslednji korak zajema mora dodati ta dokazani format
-`fixtures` in uskladiti vse strani. Nadaljnjega omrežja ni bilo: meja 20
+opažene filtre. Čisti `parseDriblSchedule` bere oba opažena formata: `results` z
+`date_range=default` in `fixtures` z `date_range=all`. Prazni način Upcoming
+Fixtures (`date_range=default`) ostane HOLD in ni dokaz celotnega inventarja.
+Neopaženi filtri, podvojeni parametri in drugačen kontekst so zavrnjeni;
+`fullInventoryEvidence=true` označi le opaženi način celotnega inventarja,
+ne vseh zajetih strani. Naslednji korak mora zajeti in uskladiti vse strani. Nadaljnjega omrežja ni bilo: meja 20
 (13 neposrednih JSON branj + 7 prehodov strani) je dosežena.
+
+Glava zapisnika ohrani izvorne vrednosti `round_number` → `round`,
+`display_round_number` → `displayRound`, `round_label` → `roundLabel` in
+`match_type` → `matchType`. Semifinal ima 2 / F2 / Semi Finals / finals;
+Grand Final 3 / F3 / Grand Final / finals. `full_round` v ohranjenih glavah
+zapisnikov ni objavljen, zato `fullRound=null`; razpored ga dejansko objavi
+(npr. Round 1) in ga parser ohrani. Ne izmišljamo si skupne številke kroga
+za redni del in končnico.

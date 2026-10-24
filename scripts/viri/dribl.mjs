@@ -56,29 +56,40 @@ export function parseDriblCatalog(bytes,{kind,url,scope}={}) {
   r.complete=r.issues.length===0;r.verdict=r.complete?'PASS':'HOLD';return r
 }
 export function parseDriblSchedule(bytes,{url,scope}={}) {
-  const [r,issue]=result({rows:[],nextCursor:null,nextUrl:null,complete:false,seasonComplete:false,completenessScope:'bound-results-query'},scope)
-  const u=urlScope(url,/^\/api\/results$/,scope,KEYS,issue)
-  if(u?.searchParams.get('results')!=='1'||u?.searchParams.get('date_range')!=='default')issue('SCHEDULE_FILTER')
+  const [r,issue]=result({rows:[],nextCursor:null,nextUrl:null,complete:false,seasonComplete:false,fullInventoryEvidence:false,inventoryKind:null,completenessScope:'bound-query-pages'},scope)
+  const u=urlScope(url,/^\/api\/(?:results|fixtures)$/,scope,KEYS,issue)
+  const fixtures=u?.pathname==='/api/fixtures'
+  r.inventoryKind=fixtures?'fixtures-all':u?.pathname==='/api/results'?'results':null
+  const allowed=new Set([...KEYS,'date_range','timezone','cursor',...(!fixtures?['results']:[])])
+  if(u&&([...u.searchParams.keys()].some(k=>!allowed.has(k))||u.searchParams.get('timezone')!=='Europe/Ljubljana'||u.searchParams.get('date_range')!==(fixtures?'all':'default')||(!fixtures&&u.searchParams.get('results')!=='1')))issue('SCHEDULE_FILTER')
+  if(u?.searchParams.has('cursor')&&!/^[A-Za-z0-9_-]{1,2000}$/.test(u.searchParams.get('cursor')))issue('SCHEDULE_CURSOR')
   const x=read(bytes,issue)
-  if(!Array.isArray(x?.data)||!x.meta||!x.links)issue('SCHEDULE_MISSING')
+  if(!Array.isArray(x?.data)||!x.meta||!x.links||x.meta.path!==`${API}${u?.pathname}`||x.meta.per_page!==30)issue('SCHEDULE_MISSING')
   const seen=new Set()
   for(const p of Array.isArray(x?.data)?x.data:[]){
     if(!p||typeof p!=='object'){issue('SCHEDULE_ROW');continue}
     const a=p.attributes??{}
-    if(p.type!=='results'||!id(p.hash_id)||!id(a.match_hash_id)||seen.has(a.match_hash_id)||!id(a.home_team_hash_id)||!id(a.away_team_hash_id)||a.league_result_access!=='public'){issue('SCHEDULE_ROW');continue}
+    if(p.type!==(fixtures?'fixtures':'results')||!id(p.hash_id)||!id(a.match_hash_id)||seen.has(a.match_hash_id)||!id(a.home_team_hash_id)||!id(a.away_team_hash_id)||a.league_result_access!=='public'){issue('SCHEDULE_ROW');continue}
     seen.add(a.match_hash_id)
-    r.rows.push({resultId:p.hash_id,matchId:a.match_hash_id,dateUtc:dateUtc(a.date),home:{teamId:a.home_team_hash_id,name:a.home_team_name},away:{teamId:a.away_team_hash_id,name:a.away_team_name},score:{home:a.home_score,away:a.away_score},round:a.round,roundLabel:a.round_label,status:a.status,matchUrl:`${SITE}/matchcentre/?m=${a.match_hash_id}`})
+    r.rows.push({resultId:p.hash_id,matchId:a.match_hash_id,dateUtc:fixtures?fixtureDateUtc(a.date):dateUtc(a.date),home:{teamId:a.home_team_hash_id,name:a.home_team_name},away:{teamId:a.away_team_hash_id,name:a.away_team_name},score:{home:a.home_score,away:a.away_score},round:a.round,fullRound:a.full_round??null,roundLabel:a.round_label,status:a.status,matchUrl:`${SITE}/matchcentre/?m=${a.match_hash_id}`})
     if(!r.rows.at(-1).dateUtc)issue('SCHEDULE_DATE')
   }
   const cursor=x?.meta?.next_cursor
-  if(cursor!==null&&typeof cursor!=='string')issue('SCHEDULE_CURSOR')
+  if(cursor!==null&&(typeof cursor!=='string'||!/^[A-Za-z0-9_-]{1,2000}$/.test(cursor)))issue('SCHEDULE_CURSOR')
   if(typeof cursor==='string'&&cursor){
     r.nextCursor=cursor
     // API links.next contains only cursor: preserve the independently bound public filters.
     if(u){const next=new URL(u);next.searchParams.set('cursor',cursor);r.nextUrl=next.href}
+    try{const next=new URL(x.links.next);if(next.origin!==API||next.pathname!==u?.pathname||next.searchParams.get('cursor')!==cursor||[...next.searchParams.keys()].some(k=>k!=='cursor'))issue('SCHEDULE_CURSOR')}catch{issue('SCHEDULE_CURSOR')}
     issue('SCHEDULE_INCOMPLETE',{message:'Remaining cursor pages have not been captured'})
   }else if(x?.links?.next!==null)issue('SCHEDULE_CURSOR')
+  r.fullInventoryEvidence=Boolean(fixtures&&u&&r.issues.every(i=>i.code==='SCHEDULE_INCOMPLETE'))
   r.complete=r.issues.length===0;r.verdict=r.complete?'PASS':'HOLD';return r
+}
+// Actual fixtures use an explicit UTC ISO timestamp with six fractional zeros.
+function fixtureDateUtc(value){
+  if(typeof value!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.000000Z$/.test(value))return null
+  return dateUtc(value.slice(0,19).replace('T',' '))
 }
 function dateUtc(s){
   if(typeof s!=='string'||!/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$/.test(s))return null
@@ -100,7 +111,7 @@ export function parseDriblReport(bundle,{scope}={}) {
   if(!a||x.data.type!=='fixtures'||!id(matchId)||mu?.pathname!==`/api/matchcentre/${matchId}`){issue('MATCH_MISSING');return r}
   for(const k of KEYS)if(!id(scope?.[k])||a[`${k}_hash_id`]!==scope[k])issue('CONTEXT_MISMATCH',{field:k})
   if(a.match_hash_id!==matchId)issue('CONTEXT_MISMATCH',{field:'match'})
-  r.header={matchId,...Object.fromEntries(KEYS.map(k=>[k,a[`${k}_hash_id`]])),dateUtc:dateUtc(a.date),score:{home:a.home_score,away:a.away_score},home:{teamId:a.home_team_hash_id,clubId:a.home_club_hash_id,name:a.home_team_name},away:{teamId:a.away_team_hash_id,clubId:a.away_club_hash_id,name:a.away_team_name}}
+  r.header={matchId,round:a.round_number??null,displayRound:a.display_round_number??null,fullRound:a.full_round??null,roundLabel:a.round_label??null,matchType:a.match_type??null,...Object.fromEntries(KEYS.map(k=>[k,a[`${k}_hash_id`]])),dateUtc:dateUtc(a.date),score:{home:a.home_score,away:a.away_score},home:{teamId:a.home_team_hash_id,clubId:a.home_club_hash_id,name:a.home_team_name},away:{teamId:a.away_team_hash_id,clubId:a.away_club_hash_id,name:a.away_team_name}}
   if(!r.header.dateUtc||!['home','away'].every(s=>id(r.header[s].teamId)&&id(r.header[s].clubId)&&typeof r.header[s].name==='string')||a.home_team_hash_id===a.away_team_hash_id)issue('HEADER_INVALID')
   const publicComplete=a.league_result_access==='public'&&a.league_enable_match_events===1&&a.league_enable_squad_public_display===true&&a.hide_lineups===false&&a.publish_status==='published'&&a.matchsheet_status==='completed'&&a.status==='complete'&&a.event_status==='complete'&&['home','away'].every(s=>a[`matchsheet_${s}_team_submitted`]===true)
   r.diagnostics.matchsheet={status:a.matchsheet_status,homeSubmitted:a.matchsheet_home_team_submitted,awaySubmitted:a.matchsheet_away_team_submitted,homeConfirmed:a.matchsheet_home_team_confirmed,awayConfirmed:a.matchsheet_away_team_confirmed}
