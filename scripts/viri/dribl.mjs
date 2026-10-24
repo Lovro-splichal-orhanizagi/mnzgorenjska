@@ -104,7 +104,7 @@ function clock(e,issue){
   return {minute,section:e.game_section,effectiveMinute:Math.min(minute,e.game_section==='ft-first-half'?45:90)}
 }
 function card(e,issue){
-  const yellow=e.final_card_type==='Yellow Card'&&e.first_card_type==='Yellow Card',red=e.final_card_type==='Red Card'&&e.first_card_type==='Red Card'&&['R5','R7'].includes(e.final_card_code)
+  const yellow=e.final_card_type==='Yellow Card'&&e.first_card_type==='Yellow Card'&&['Y1','Y2','Y3','Y4'].includes(e.final_card_code),red=e.final_card_type==='Red Card'&&e.first_card_type==='Red Card'&&['R5','R7'].includes(e.final_card_code)
   if((!yellow&&!red)||e.final_card_code!==e.first_card_code||typeof e.final_card_code!=='string'||e.final_card_override_color!==null||e.first_card_override_color!==null)issue('CARD_UNSUPPORTED')
   return {kind:red?'red':'yellow',code:e.final_card_code??null,secondYellow:red&&e.final_card_code==='R7'}
 }
@@ -191,7 +191,7 @@ export function parseDriblReport(bundle,{scope}={}) {
     if(ins.length>1||outs.length>1||(p.starter&&ins.length)||(!p.starter&&outs.length&&!ins.length))issue('INTERVAL_INVALID',{profileId:p.profileId})
     const cards=nested.filter(e=>e.type==='card'&&e.profileId===p.profileId),reds=cards.filter(e=>e.kind==='red'),yellows=cards.filter(e=>e.kind==='yellow').sort((a,b)=>clockOrder(a)-clockOrder(b))
     if(reds.length>1||yellows.length>2)issue('DISCIPLINE_INCONSISTENT',{profileId:p.profileId})
-    if(reds.some(e=>e.secondYellow)&&(yellows.length!==2||clockOrder(yellows[0])>=clockOrder(yellows[1])||clockOrder(yellows[1])!==clockOrder(reds[0]))||yellows.length===2&&!reds.some(e=>e.secondYellow))issue('SECOND_YELLOW_INCONSISTENT',{profileId:p.profileId})
+    if(reds.some(e=>e.secondYellow)&&(yellows.length!==2||clockOrder(yellows[0])>clockOrder(yellows[1])||clockOrder(yellows[1])!==clockOrder(reds[0]))||yellows.length===2&&!reds.some(e=>e.secondYellow))issue('SECOND_YELLOW_INCONSISTENT',{profileId:p.profileId})
     if(reds.length&&outs.some(e=>clockOrder(e)>=clockOrder(reds[0])))issue('INTERVAL_INVALID',{profileId:p.profileId})
     p.from=p.starter?0:ins[0]?.effectiveMinute??null;p.to=p.from===null?null:Math.min(outs[0]?.effectiveMinute??90,reds[0]?.effectiveMinute??90);p.minutes=p.from===null?null:p.to-p.from
     const rawFrom=p.starter?0:ins[0]?clockOrder(ins[0]):null,rawTo=Math.min(outs[0]?clockOrder(outs[0]):Infinity,reds[0]?clockOrder(reds[0]):Infinity)
