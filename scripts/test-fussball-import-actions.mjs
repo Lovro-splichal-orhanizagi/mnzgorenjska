@@ -16,9 +16,9 @@ test('only a successful same-repository main audit at the exact checked-out comm
 })
 test('manual import requires the exact inactive German competition',()=>{
  assert.equal(typeof api.assertFussballImportCompetition,'function')
- const code='031EKNM2HG00000LVS5489BUVUR5FS5A-G:2026/27',row={id:9999,slug:'de-test',country_id:'DE',source:'fussball-public',source_policy:null,source_league_code:code,active:false},scope={slug:'de-test',code}
+ const code='031EKNM2HG00000LVS5489BUVUR5FS5A-G:2026/27',row={id:9999,slug:'de-test',country_id:44,country_code:'DE',source:'fussball-public',source_policy:null,source_league_code:code,active:false},scope={slug:'de-test',code}
  assert.equal(api.assertFussballImportCompetition(row,scope),row)
- for(const patch of [{active:true},{source:'dfb'},{country_id:'PL'},{slug:'de-other'},{source_league_code:code.replace('2026/27','2025/26')},{source_policy:'other'}, {id:null}])assert.throws(()=>api.assertFussballImportCompetition({...row,...patch},scope))
+ for(const patch of [{active:true},{source:'dfb'},{country_code:'PL'},{country_id:'DE'},{country_id:0},{country_id:null},{country_code:undefined},{slug:'de-other'},{source_league_code:code.replace('2026/27','2025/26')},{source_policy:'other'}, {id:null}])assert.throws(()=>api.assertFussballImportCompetition({...row,...patch},scope))
 })
 test('manual workflow never executes artifact code, accepts alternate refs or activates leagues',()=>{
  const s=readFileSync(new URL('../.github/workflows/uvoz-fussball-public.yml',import.meta.url),'utf8')

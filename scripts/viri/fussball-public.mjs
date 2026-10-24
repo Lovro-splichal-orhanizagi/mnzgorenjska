@@ -21,7 +21,7 @@ export async function reserveFussballIdentities(db,identities){
 }
 
 export function createFussballPublicSource({competition,db,directory=process.env.SLFF_FUSSBALL_CAPTURE,archiveCode=process.env.SLFF_FUSSBALL_ARCHIVE_CODE,loadCapture=loadFussballImportCapture}={}){
- requireProof(competition?.source==='fussball-public'&&competition.country_id==='DE'&&/^de-/.test(competition.slug??'')&&competition.source_policy==null,'invalid competition/provider/policy scope')
+ requireProof(competition?.source==='fussball-public'&&Number.isSafeInteger(competition.country_id)&&competition.country_id>0&&competition.country_code==='DE'&&/^de-/.test(competition.slug??'')&&competition.source_policy==null,'invalid competition/provider/policy scope')
  const currentScope=parseFussballLeagueCode(competition.source_league_code)
  if(archiveCode){const archive=parseFussballLeagueCode(archiveCode);requireProof(+archive.season.slice(0,4)===+currentScope.season.slice(0,4)-1,'archive must be the explicitly bound previous season')}
  let loaded=null,reservation=null,boundCode=null

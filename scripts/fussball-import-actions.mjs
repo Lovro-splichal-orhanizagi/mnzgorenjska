@@ -14,6 +14,6 @@ export function admitFussballAudit(run,inventory,{repository,headSha,runId}={}){
 
 export function assertFussballImportCompetition(row,{slug,code}={}){
  parseFussballLeagueCode(code)
- requireProof(typeof slug==='string'&&/^de-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)&&row?.slug===slug&&Number.isSafeInteger(row.id)&&row.id>0&&row.country_id==='DE'&&row.source==='fussball-public'&&row.source_league_code===code&&row.source_policy===null&&row.active===false,'manual import requires the exact inactive German competition without another source policy')
+ requireProof(typeof slug==='string'&&/^de-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)&&row?.slug===slug&&Number.isSafeInteger(row.id)&&row.id>0&&Number.isSafeInteger(row.country_id)&&row.country_id>0&&row.country_code==='DE'&&row.source==='fussball-public'&&row.source_league_code===code&&row.source_policy===null&&row.active===false,'manual import requires the exact inactive German competition without another source policy')
  return row
 }
