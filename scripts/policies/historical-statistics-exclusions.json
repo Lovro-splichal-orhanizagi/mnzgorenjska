@@ -1004,6 +1004,47 @@
           "reasonCode": "score_goal_events_disagree"
         }
       ]
+    },
+    {
+      "sourcePolicy": "reviewed-existing-history-20261023-v1",
+      "season": "2025/26",
+      "recordedAt": "2026-10-24T15:38:19.076500+00:00",
+      "approvalReference": "Owner explicitly answered Allow the reviewed archive policy up to 5% to call_3a8674f5af8c4b8c8ba9bac6c54d0481 question0 on 24 October 2026 for remaining unlaunched Hungarian candidates, archive only. These two source-proven Toth reports are 2 of 87 archive reports (2.30%): preserve official 3–0 and 0–3, mark individual statistics unavailable, remove exactly 52 appearances and 11 goal events, reprice and rerun all current-report, goalkeeper, price/legal-squad and fresh deadline gates. Recording time is evidence time, not the unknown user-send timestamp.",
+      "id": "hu-cs-u19-toth-historical-unavailable-2026-10-24-v1",
+      "provider": "mlsz",
+      "competitionSlug": "hu-cs-u19-toth",
+      "competitionId": 625,
+      "sourceLeagueCode": "67/6/34102",
+      "entries": [
+        {
+          "sourceMatchId": "2079402",
+          "sourceCompetitionId": "65/6/31904",
+          "sourcePhase": null,
+          "sourceRound": 10,
+          "playedOn": "2025-11-16",
+          "homeSourceClubId": "311188",
+          "awaySourceClubId": "311185",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/6/31904/10/2079402.html",
+          "rawSha256": "f233a3f56df2c829c4e1d4909d1e7bcbb033b5fc1fedff38f6f39892b2f2b991",
+          "observedHomeScore": 3,
+          "observedAwayScore": 0,
+          "reasonCode": "score_goal_events_disagree"
+        },
+        {
+          "sourceMatchId": "2079433",
+          "sourceCompetitionId": "65/6/31904",
+          "sourcePhase": null,
+          "sourceRound": 16,
+          "playedOn": "2026-04-25",
+          "homeSourceClubId": "311187",
+          "awaySourceClubId": "311186",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/6/31904/16/2079433.html",
+          "rawSha256": "2ea11f7d6b83ba65fcd673215bdef161a1ac636e23bd17f7e647fad6d13409c6",
+          "observedHomeScore": 0,
+          "observedAwayScore": 3,
+          "reasonCode": "score_goal_events_disagree"
+        }
+      ]
     }
   ]
 }
