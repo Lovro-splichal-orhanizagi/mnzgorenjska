@@ -61,3 +61,25 @@ test('missing shared pacing timestamp cannot silently allow another source reque
  const {writeFileSync}=await import('node:fs'),f=fixture()
  try{await f.fetch('https://adatbank.mlsz.hu/league/1');const state=JSON.parse(readFileSync(f.path));delete state.last_started_ms;writeFileSync(f.path,JSON.stringify(state));await assert.rejects(()=>createBudgetFetch(f.opts)('https://adatbank.mlsz.hu/league/2'),/receipt|stopped/i);assert.equal(f.calls.length,1)}finally{f.dispose()}
 })
+
+test('oversized streaming source bodies are cancelled before the full response is buffered',async()=>{
+ let chunks=0,cancelled=false,calls=0
+ const stream=new ReadableStream({pull(controller){chunks++;if(chunks<=144)controller.enqueue(new Uint8Array(64*1024).fill(32));else controller.close()},cancel(){cancelled=true}})
+ const f=fixture({fetch:async()=>{calls++;return new Response(stream)}})
+ try{
+  await assert.rejects(()=>f.fetch('https://adatbank.mlsz.hu/league/1'),/source/i)
+  assert.equal(cancelled,true);assert.ok(chunks<=66,`read ${chunks} chunks instead of stopping at the 4MiB bound`)
+  const state=JSON.parse(readFileSync(f.path));assert.equal(state.requests,1);assert.equal(state.pending,false);assert.ok(state.stopped)
+  await assert.rejects(()=>createBudgetFetch(f.opts)('https://adatbank.mlsz.hu/league/2'),/stopped/i);assert.equal(calls,1)
+ }finally{f.dispose()}
+})
+test('declared oversized source body is cancelled without consuming it',async()=>{
+ let cancelled=false,chunks=0
+ const stream=new ReadableStream({pull(controller){chunks++;if(chunks<=144)controller.enqueue(new Uint8Array(64*1024));else controller.close()},cancel(){cancelled=true}})
+ const f=fixture({fetch:async()=>new Response(stream,{headers:{'content-length':String(9*1024*1024)}})})
+ try{await assert.rejects(()=>f.fetch('https://adatbank.mlsz.hu/league/1'),/source/i);assert.equal(cancelled,true);assert.ok(chunks<=1)}finally{f.dispose()}
+})
+test('bounded source bytes remain readable by the native importer',async()=>{
+ const body='<div id="match_panel">Árvíztűrő</div>',f=fixture({fetch:async()=>new Response(body,{headers:{'content-type':'text/html; charset=utf-8'}})})
+ try{const response=await f.fetch('https://adatbank.mlsz.hu/league/1');assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'text/html; charset=utf-8');assert.equal(await response.text(),body)}finally{f.dispose()}
+})

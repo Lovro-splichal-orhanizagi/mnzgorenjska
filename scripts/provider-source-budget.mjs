@@ -3,7 +3,16 @@ import {readFileSync,writeFileSync,existsSync,mkdirSync,openSync,closeSync,unlin
 import {dirname,isAbsolute} from 'node:path'
 import {createHash} from 'node:crypto'
 import {jeIzziv,jePrijava} from './viri/mlsz.mjs'
-const HOST='adatbank.mlsz.hu',CANONICAL='ada1bank.mlsz.hu',PACE_MS=1500
+const HOST='adatbank.mlsz.hu',CANONICAL='ada1bank.mlsz.hu',PACE_MS=1500,MAX_BYTES=4*1024*1024
+async function boundedSourceBody(response){
+ const limit=message=>Object.assign(Error(message),{sourceBodyLimit:true})
+ const declared=response.headers.get('content-length')
+ if(declared!==null&&(!/^\d+$/.test(declared)||Number(declared)>MAX_BYTES)){void response.body?.cancel().catch(()=>{});throw limit('Source response exceeds bounded HTML size.')}
+ if(!response.body)return new Uint8Array()
+ const reader=response.body.getReader(),chunks=[];let length=0
+ try{for(;;){const {done,value}=await reader.read();if(done)break;length+=value.byteLength;if(length>MAX_BYTES){void reader.cancel().catch(()=>{});throw limit('Source response exceeds bounded HTML size.')}chunks.push(value)}}finally{reader.releaseLock()}
+ return Buffer.concat(chunks,length)
+}
 const stopError=message=>Object.assign(Error(`Provider source stopped: ${message}`),{code:'SLFF_SOURCE_STOP',zavrnitev:true})
 function save(path,value){const tmp=path+'.tmp';writeFileSync(tmp,JSON.stringify(value,null,2)+'\n',{mode:0o600});const fd=openSync(tmp,'r');try{fsyncSync(fd)}finally{closeSync(fd)}renameSync(tmp,path)}
 export function readSourceBudget(path){return JSON.parse(readFileSync(path,'utf8'))}
@@ -40,7 +49,7 @@ export function createBudgetFetch({path,maxRequests,databaseOrigin,fetch:request
     const event={sequence:state.requests,started_at:new Date(started).toISOString(),host:url.hostname,request_sha256:createHash('sha256').update(url.href).digest('hex'),status:'RUNNING'}
     state.events.push(event);save(path,state)
     let response
-    try{response=await request(url,{method:'GET',redirect:'manual',headers:{'user-agent':'SLFF fantasy (https://slff.eu)'},...(init.signal?{signal:init.signal}:{})})}catch{event.status='UNKNOWN';stop('Source transport failure; response unknown.')}
+    try{response=await request(url,{method:'GET',redirect:'manual',headers:{'user-agent':'SLFF fantasy (https://slff.eu)'},signal:init.signal?AbortSignal.any([init.signal,AbortSignal.timeout(30000)]):AbortSignal.timeout(30000)})}catch{event.status='UNKNOWN';stop('Source transport failure; response unknown.')}
     event.http_status=response.status
     if([301,302,307,308].includes(response.status)) {
      let target
@@ -50,12 +59,13 @@ export function createBudgetFetch({path,maxRequests,databaseOrigin,fetch:request
     }
     if(response.status!==200){event.status='STOPPED';stop(`Source HTTP ${response.status}; no source retry authorized.`)}
     let bytes
-    try{bytes=new Uint8Array(await response.clone().arrayBuffer())}catch{event.status='UNKNOWN';stop('Source response body failed.')}
-    if(bytes.length>4*1024*1024){event.status='STOPPED';stop('Source response exceeds bounded HTML size.')}
+    try{bytes=await boundedSourceBody(response)}catch(error){event.status=error.sourceBodyLimit?'STOPPED':'UNKNOWN';stop(error.sourceBodyLimit?error.message:'Source response body failed.')}
     const body=new TextDecoder().decode(bytes)
     if(jeIzziv(body)||jePrijava(body)||/SQLSTATE|Too many connections/i.test(body)){event.status='STOPPED';stop('Source challenge, login or overload response.')}
     event.status='COMPLETED';event.original_bytes_sha256=createHash('sha256').update(bytes).digest('hex');event.completed_at=new Date(now()).toISOString();state.pending=false;save(path,state)
-    return response
+    const retained=new Response(bytes,{status:response.status,statusText:response.statusText,headers:response.headers})
+    Object.defineProperties(retained,{url:{value:response.url},redirected:{value:response.redirected}})
+    return retained
    }
    stop('Canonical redirect bound exceeded.')
   }catch(error){
