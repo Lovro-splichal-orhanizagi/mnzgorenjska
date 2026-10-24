@@ -56,6 +56,7 @@ test('coordination reads German leagues beyond the 1000-row boundary in stable p
 const regional = [
   ['uvoz-dfb-regije.yml', 'Uvoz odobrene DFB regije de-regionalliga-nord'],
   ['vklop-dfb-regije.yml', 'Preverjen vklop DFB regije de-regionalliga-nord'],
+  ['uvoz-fussball-public.yml', 'Uvoz lige de-regionalliga-nord FUSSBALL public'],
 ]
 const fixtures = [
   { slug: 'hu-to-3-nyugat', active: false, source: 'mlsz', countries: { code: 'HU' }, federations: { code: 'mlsz-to' } },

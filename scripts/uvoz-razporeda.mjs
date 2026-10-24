@@ -76,7 +76,7 @@ const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global
 
 const originalCompetition = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
 const {competition:tekmovanje,installedHistoricalMarkers}=await loadHistoricalStatisticsImportContext(db,originalCompetition)
-const vir = viraZa(tekmovanje,{installedHistoricalMarkers})
+const vir = viraZa(tekmovanje,{installedHistoricalMarkers,db})
 const liga = arg('liga', sifraLige(tekmovanje, '1601'))
 // Isti pomak kot pri delegiranju: mladinci igrajo zgodaj, zato imajo krajsega.
 const pomakUr = Number(arg('pomak', null) ?? tekmovanje.rok_pomak_ur ?? 6)

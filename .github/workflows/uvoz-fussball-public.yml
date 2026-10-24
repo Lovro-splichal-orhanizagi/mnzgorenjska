@@ -1,0 +1,84 @@
+name: Import verified FUSSBALL public season
+run-name: Uvoz lige ${{ inputs.liga }} FUSSBALL public
+on:
+  workflow_dispatch:
+    inputs:
+      liga:
+        description: Existing inactive German competition slug
+        type: string
+        required: true
+      source_code:
+        description: Exact observed staffel-G:YYYY/YY matching the competition
+        type: string
+        required: true
+      audit_run:
+        description: Successful full FUSSBALL audit run on this exact main commit
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: uvoz-lige-${{ inputs.liga }}
+  cancel-in-progress: false
+jobs:
+  import:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      LIGA: ${{ inputs.liga }}
+      SOURCE_CODE: ${{ inputs.source_code }}
+      AUDIT_RUN: ${{ inputs.audit_run }}
+      SLFF_FUSSBALL_CAPTURE: ${{ github.workspace }}/capture
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Admit exact same-repository audit before downloading evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node --input-type=module -e 'if(!/^[1-9]\d{0,14}$/.test(process.env.AUDIT_RUN))throw Error("Invalid audit run")'
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AUDIT_RUN" > audit-run.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AUDIT_RUN/artifacts?per_page=100" > audit-artifacts.json
+          node scripts/preveri-fussball-uvoz.mjs admit --run audit-run.json --artifacts audit-artifacts.json --repository "$GITHUB_REPOSITORY" --head-sha "$GITHUB_SHA" --run-id "$AUDIT_RUN" > admission.json
+          gh run download "$AUDIT_RUN" --repo "$GITHUB_REPOSITORY" --name "fussball-season-$AUDIT_RUN" --dir capture
+      - name: Replay complete original source bytes and produce native preview
+        run: node scripts/preveri-fussball-uvoz.mjs preview --capture "$SLFF_FUSSBALL_CAPTURE" --code "$SOURCE_CODE" --output preview.json
+      - name: Wait for older imports
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --liga "$LIGA"
+      - name: Check exact inactive competition and empty fantasy bootstrap
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/preveri-fussball-uvoz.mjs check-competition --slug "$LIGA" --code "$SOURCE_CODE"
+      - name: Import validated schedule and reports, then calculate prices
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          node scripts/uvoz-razporeda.mjs --tekmovanje "$LIGA" --pisi
+          node scripts/uvoz-zapisnikov.mjs --tekmovanje "$LIGA"
+          node scripts/ugani-pozicije.mjs --tekmovanje "$LIGA" --samo-nove --pisi
+          node scripts/ovrednoti-igralce.mjs --tekmovanje "$LIGA" --pisi
+          node scripts/pripravljenost-lige.mjs --tekmovanje "$LIGA"
+      - name: Import admission and public-data preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fussball-import-${{ github.run_id }}
+          path: |
+            admission.json
+            preview.json
+          if-no-files-found: ignore
+          retention-days: 90

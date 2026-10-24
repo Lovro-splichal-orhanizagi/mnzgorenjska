@@ -43,6 +43,7 @@ import askf from './askf.mjs'
 import ffa from './ffa.mjs'
 import novanet from './novanet.mjs'
 import dfb from './dfb.mjs'
+import {createFussballPublicSource} from './fussball-public.mjs'
 import {withDfbHistoricalStatistics} from './dfb-historical.mjs'
 import {withFcfHistoricalStatistics} from './fcf-historical.mjs'
 import {verifyFcfInstalledHistoricalMarker} from '../fcf-historical-policy.mjs'
@@ -148,6 +149,8 @@ const VIRI = {
   novanet,
   // Nemčija: javni zapisniki DFB Datencenter, Regionalliga Nordost.
   dfb,
+  // FUSSBALL.DE: complete original-byte capture; configured per competition.
+  'fussball-public': createFussballPublicSource,
   // Grčija: regionalne zveze EPS na platformi Mascotnet (deset domen, šifra
   // `<domena>:<diorganosi>`), brez šifer igralcev, vratar prvi začetnik (namig).
   // Pisno dovoljenje upravljavca (Lovro, oktober 2026).
@@ -216,9 +219,9 @@ const VIRI = {
  *
  * @param {{ source?: string, slug?: string }} tekmovanje vrstica iz `competitions`
  */
-export function viraZa(tekmovanje, {installedHistoricalMarkers=null}={}) {
+export function viraZa(tekmovanje, {installedHistoricalMarkers=null,db=null}={}) {
   const ime = tekmovanje?.source ?? 'mnzg'
-  const vir = VIRI[ime]
+  const vir = ime==='fussball-public' ? createFussballPublicSource({competition:tekmovanje,db}) : VIRI[ime]
   if (!vir) {
     const znani = Object.keys(VIRI).join(', ')
     throw new Error(

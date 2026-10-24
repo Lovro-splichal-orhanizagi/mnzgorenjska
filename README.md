@@ -29,6 +29,12 @@ ali novih odobritev ogrodje ne vpisuje.
 
 ## Ključne funkcionalnosti
 
+Nemški vir `fussball-public` uvaža samo celotne preverjene zajeme javnih
+zapisnikov. Zasebna tabela `private_fussball.identity_map` in servisni RPC
+`fussball_reserve_player_ids` ohranita točne profilne identitete; številčni
+ključi so interne šifre SLFF, ne registrske številke DFB. Trk ustavi celoten
+vpis. Uvoz ne pomeni vklopa lige; postopek je v `docs/viri/nemcija.md`.
+
 - **Sestavljanje ekipe** — igrišče s prvo postavo in klopjo: 15 igralcev (2 vratarja,
   5 branilcev, 5 vezistov, 3 napadalci), 11 v prvi postavi, največ 3 iz kluba, proračun 100.
 - **Kapetan** — trak prinese trojne točke; če kapetan ne igra, ga prevzame namestnik.
