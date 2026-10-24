@@ -174,3 +174,105 @@ Obe redni tekmi dokazujeta `display_round_number=R1/R26` in
 ni dokaz kronologije. Upravičenost uporablja par (polčas, surova minuta),
 minutne vsote pa le meje 45/90. Napredovanje izida preverimo v dejanskem
 logičnem vrstnem redu, izvirnega polja ne spreminjamo.
+
+## Zajem, ponovitev in native vmesnik
+
+Izvedba je v `scripts/dribl-capture.mjs`, `scripts/dribl-import.mjs`,
+`scripts/viri/dribl-public.mjs` in CLI `scripts/zajemi-dribl.mjs`. Nobena od teh
+sprememb vira ne registrira ali aktivira. Zajem/ponovitev nimata odjemalca baze.
+Izvirne datoteke prejšnjih faz niso celoten uvozni artefakt; sedaj ni bilo
+nobenega novega živega zahtevka. Vsi celotni zajemi v testih so izrecno
+sintetično okvirjanje paginacije/faz okoli ohranjenih resničnih statistik.
+
+Vhod je lokalni JSON seznam 1–5 izrecnih kontekstov preverjenega NSW tenanta:
+
+```json
+[{"tenant":"1RwNlWemjr","season":"wOmelzGd02","competition":"A4KLxx87Kq","league":"bgdMjoBxmE"}]
+```
+
+Operaterjev naslednji ločeno odobreni zajem uporablja:
+
+```sh
+node scripts/zajemi-dribl.mjs capture --scopes scopes.json --max-requests 500 --reports all --output /tmp/NEW-dribl-capture
+node scripts/zajemi-dribl.mjs verify /tmp/NEW-dribl-capture
+node scripts/zajemi-dribl.mjs preview /tmp/NEW-dribl-capture --scope 1RwNlWemjr:wOmelzGd02:A4KLxx87Kq:bgdMjoBxmE
+```
+
+`--reports all` je celotni namen, `1`, `2`, `3` so vzorci in nikoli niso
+uvozno upravičeni. En klient za vse lige deli proračun 1–1000 zahtevkov, tri
+sekunde med začetki in isti predpomnilnik. `--max-pages` omeji strani na
+1–100 (privzeto 100). Zahtevek ima odkrit SLFF User-Agent, `credentials=omit`,
+ročno zavrnjene preusmeritve, 20-sekundni timeout in največ 2 MB izvirnega
+JSON. Dnevnik `pending` je zapisan pred fetch. HTTP napaka, izziv/prijava,
+transportna napaka, neveljaven UTF-8/JSON, MIME/byte napaka ali porabljen skupni
+proračun ustavi vse, brez ponovitve ali uporabe starega odgovora po napaki.
+
+Klient bere samo opažene javne poti: vezavo tenanta, tri imenike,
+`fixtures?date_range=all`, zapisnik in postavi te tekme. Vsako ligo najprej
+potrdi v dejanskih imenikih sezone/tekmovanja/lige. Vse strani inventarja
+izčrpa po izvirnih kazalcih in ohrani filtre; ponovljen kazalec ali ponovljen
+ID vrstice/tekme je HOLD. Izvorno ime, ekipi, datum, izid, faza in številka
+kroga morajo ustrezati zapisniku. Pretekla tekma brez pojasnjenega izida,
+neznana faza, nepopolna paginacija ali vzorčenje prepreči native uvoz.
+Semantični HOLD ne ustavi naslednje lige. Ob prvem slabem zapisniku preneha
+brati njegovo ligo, da preostali skupni proračun ostane drugim.
+
+Artefakt:
+
+- `manifest.json`: različica/ponudnik, začetni in končni čas, natančne možnosti,
+  odtis lokalnega zaprtja kode, izid transporta, končni request snapshot,
+  seznam izvirnih dokumentov in SHA rezultata.
+- `attempts.jsonl`: zaporedni nameni pred omrežnim zahtevkom.
+- `documents/<sha256>.json`: nespremenjeni izvirni bajti; vsaka manifestna
+  vrstica ima URL, vrsto, HTTP/MIME, velikost in čas začetka.
+- `result.json`: ponovljiva razčlenitev po ligah, inventar/faze, poročila,
+  pokritost, razlogi HOLD, `fullImportEligible` in `activationEligible=false`.
+
+`success=true` / CLI izhod 0 pri `capture` pomeni le konec transporta; veljaven
+artefakt ima lahko vse lige HOLD. `verify` izhod 0 pomeni identično zaprto
+ponovitev, ne dovoljenja za uvoz. `preview` vrne 2 za izbrano ligo HOLD.
+Tehnična ustavitev klienta vrne 4; napaka argumenta/artefakta vrne 1. Manjkajoči,
+spremenjeni, neuporabljeni ali dodatni izvirni dokumenti, simbolične povezave,
+spremenjen dnevnik/odtis kode ali urejen rezultat zavrnejo ponovitev. Omrežnega
+fallbacka ni. Odtis zajema transitivno zaprtje parserja, zajema, native modula,
+tovarne vira in CLI; prenovljena koda zahteva novo pregledano dokazilo.
+
+Native `buildDriblImportBatch({options,documents},{scope})` vedno ponovno
+razčleni zaprte izvirne dokumente; urejenemu `capture.result` ne zaupa.
+`loadDriblImportCapture(directory,{tenant,season,competition,league,current,now})`
+preveri še artefakt in za tekoči zajem največ 24 ur od začetka. Samo liga s
+celotnim objavljenim paginiranim inventarjem, brez vzorčenja in z vsemi
+odigranimi zapisniki PASS lahko vrne normalizirane `z`/`nastopi`.
+
+Tovarna `createDriblPublicSource` zahteva državo AU, `au-` slug, vir
+`dribl-public`, prazno `source_policy` in `SLFF_DRIBL_CAPTURE` direktorij.
+Dovoljen je samo točno vezani trenutni `source_league_code` ali izrecni
+`SLFF_DRIBL_ARCHIVE_CODE` prejšnje objavljene koledarske sezone. Ena instanca
+ne meša kontekstov. Pred objavo zapisnikov zahteva RPC
+`dribl_reserve_player_ids({p_source_ids})`; vseh 1–5000 vrnjenih numeričnih
+ključev se mora natančno ujemati z izračunanimi SHA ključi. Source ID ima
+polni 10-znakovni tenant in 10-znakovni uporabniški profil, nikoli drugega
+imenskega prostora `member_id` gola. Trk ali neuspešna rezervacija ne objavi
+nobenega zapisnika. Registracijo, migracijo/RPC in gostovani workflow vodi
+ločena integracija.
+
+Native postavi hranita tudi neuporabljene rezerve, nastopi pa samo začetnike
+in časovno dokazano vstopljene igralce. Rdeča konča nastop, pričakovane minute
+ekipe se zmanjšajo. R5 pomeni neposredno rdečo; R7 eno fantasy rumeno in eno
+rdečo, tudi če sta obe objavljeni rumeni v isti minuti. `z.sourceCards` ohrani
+vse izvorne rumene/rdeče; `z.rumeni`, `z.rdeci` in `nastopi` hranijo fantasy
+obravnavo. Ohranjeni so izvorna minuta/polčas, polni ID profila in ločeni ID
+gola. Trenutno so dokazani rumeni kodi Y1–Y4; druge kode so izrecen adapterjev
+HOLD, dokler ni preverjen njihov izvorni pomen.
+
+Redni krogi morajo tvoriti R1…Rmax, finalne faze pa F1…Fmax. Izvorni
+`F2#6` ostane `sourcePhase=finals`, `sourceRound=2`; notranji `krog` je
+Rmax+2. To je izpeljani fantasy krog, ne uradna številka. Neznana ali
+manjkajoča faza je HOLD. Native rezultat ohrani izvorno metapodatkovno sled,
+ob izpisu pa UTC čas pretvori v standardni Europe/Ljubljana datum/uro.
+
+Preverbe so brez omrežja in baze:
+
+```sh
+node --test scripts/test-dribl.mjs scripts/test-dribl-capture.mjs scripts/test-dribl-import.mjs scripts/test-dribl-cli.mjs
+```
