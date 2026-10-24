@@ -8,7 +8,7 @@ export function withMlszHistoricalStatistics(base,competition,{installedHistoric
  if(base.ime!=='mlsz'||competition.source!=='mlsz'||policy?.provider!=='mlsz')fail('exact MLSZ policy required')
  const binding=validateInstalledHistoricalStatisticsMarkers({competition,binding:installedHistoricalMarkers})
  if(!binding)fail('complete installed markers required')
- const context=code=>{if(!new Set([policy.sourceLeagueCode,...policy.entries.map(e=>e.sourceCompetitionId)]).has(code))fail('foreign source season/code');return binding}
+ const context=code=>{if(!new Set([policy.sourceLeagueCode,...policy.entries.map(e=>e.sourceCompetitionId),...(policy.archiveSourceLeagueCodes??[])]).has(code))fail('foreign source season/code');return binding}
  const markerFor=(code,t,round)=>{
   const marker=binding.markers.find(m=>m.sourceMatchId===String(t.id));if(!marker)return undefined
   const f=marker.fixture
