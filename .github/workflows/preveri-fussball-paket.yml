@@ -1,0 +1,69 @@
+name: FUSSBALL bounded multi-league screen
+run-name: FUSSBALL batch screen (${{ inputs.max_requests }} total requests)
+on:
+  workflow_dispatch:
+    inputs:
+      leagues_json:
+        description: JSON array of 1–10 exact observed {seedUrl,staffel,season} tuples; no catalog discovery
+        type: string
+        required: true
+      max_requests:
+        description: Shared TOTAL requests across all leagues, CSS, fonts and failures (1–80)
+        type: number
+        default: 80
+      reports:
+        description: Maximum strict linked reports per league (1–3); never a season import
+        type: number
+        default: 3
+      expected_sha:
+        description: Exact reviewed 40-character main commit SHA
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: fussball-public-season-source
+  cancel-in-progress: false
+jobs:
+  screen:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      LEAGUES_JSON: ${{ inputs.leagues_json }}
+      MAX_REQUESTS: ${{ inputs.max_requests }}
+      REPORTS: ${{ inputs.reports }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require exact reviewed main and validate every scope before source access
+        run: |
+          node --input-type=module <<'NODE'
+          import {execFileSync} from 'node:child_process'
+          import {writeFileSync} from 'node:fs'
+          import {fussballBatchScreenOptions} from './scripts/fussball-batch-screen.mjs'
+          const e=process.env, head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()
+          if(e.GITHUB_REPOSITORY!=='Lovro-splichal-orhanizagi/mnzgorenjska'||e.GITHUB_REF!=='refs/heads/main'||!/^[a-f0-9]{40}$/.test(e.EXPECTED_SHA??'')||head!==e.EXPECTED_SHA||e.GITHUB_SHA!==e.EXPECTED_SHA)throw Error('Exact reviewed main required')
+          for(const value of [e.MAX_REQUESTS,e.REPORTS])if(!/^\d+$/.test(value??''))throw Error('Explicit numeric batch limits required')
+          const options=fussballBatchScreenOptions({leagues:JSON.parse(e.LEAGUES_JSON),maxRequests:Number(e.MAX_REQUESTS),reportLimit:Number(e.REPORTS),asOfDate:new Date().toISOString().slice(0,10)})
+          writeFileSync('observed-leagues.json',JSON.stringify(options.leagues)+'\n')
+          NODE
+      - name: Offline source and evidence checks
+        run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
+      - name: Screen observed public leagues with one shared client and total budget
+        id: capture
+        run: node scripts/zajemi-fussball-paket.mjs capture --leagues observed-leagues.json --max-requests "$MAX_REQUESTS" --reports "$REPORTS" --output batch-screen
+      - name: Replay original batch documents offline, preserving terminal failure
+        if: always() && (steps.capture.outcome == 'success' || steps.capture.outcome == 'failure')
+        run: node scripts/zajemi-fussball-paket.mjs verify batch-screen
+      - name: Preserve separate batch diagnostics and original bytes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fussball-batch-screen-${{ github.run_id }}
+          path: batch-screen/
+          if-no-files-found: warn
+          retention-days: 90
