@@ -38,7 +38,9 @@ napaka strežnika in se nikoli ne shrani v predpomnilnik.
 - **Strani**: krog `league/<évad>/<sz>/<verseny>/<krog>.html` (`#match_panel`,
   koliko krogov je, pove izbirnik `Forduló`; pod razporedom kroga je še ves
   razpored ene ekipe, zato se bere le panel in le tekme s tem krogom v
-  povezavi; `szabadnap` je prost krog), zapisnik
+  povezavi; točni oznaki `SZABADNAP` in `SZABADNAPOS` sta prost krog,
+  zato se tak par izpusti pri obeh vrstnih redih; navadna tekma brez izida
+  in klub, katerega daljše ime vsebuje to besedo, ostaneta), zapisnik
   `match/<évad>/<sz>/<verseny>/<krog>/<id>.html` (lahko preusmeri na
   ada1bank, ista stran). Seznam lig zveze vrne
   `POST ada1bank.mlsz.hu/libs/ajax.php` (`type=getHeaderFilderData`).
@@ -359,3 +361,13 @@ Nobena nova zgodovinska izključitev ali pot brez arhiva ni odobrena.
 `hu-bk-u19-kozep` in `hu-bp-u19-2` ostajata zunaj tega paketa zaradi
 neskladnih golov v že uvoženih poročilih. Uvozi MLSZ tečejo zaporedno;
 ob zavrnitvi ali nedosegljivosti vira se paket ustavi.
+
+Preverba prostega kroga (24. 10. 2026):
+[`hu-adatbank-szalai-round1.html`](../../scripts/vzorci/hu-adatbank-szalai-round1.html)
+je izvirnih 140980 bajtov odgovora HTTP 200 za
+`https://adatbank.mlsz.hu/league/67/6/33880/1.html`, SHA256
+`8955730b85b47befea3ddb7cc81f9b5ecfc1c2452dc666decb3ac958be8dca3a`.
+`test-mlsz-bye.mjs` preveri štiri prave tekme, izpuščeno vrstico
+`SZABADNAPOS : Csanytelek SC` ter vseh devet klubov v stranskem seznamu,
+vključno s klubom, ki je v tem krogu prost. Prazni izidi pravih tekem
+ostanejo v razporedu; prost krog ni kontumacija ali zgodovinska izjema.

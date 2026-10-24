@@ -174,7 +174,7 @@ export function krogiStrani(html) {
 /**
  * Tekme kroga s strani kroga. Stran pod razporedom kroga našteje še ves
  * razpored ENE ekipe (tekme drugih krogov), zato beremo samo `#match_panel`
- * in le tekme, katerih povezava nosi ta krog. Prost krog ("szabadnap") ni
+ * in le tekme, katerih povezava nosi ta krog. Prost krog ("szabadnap" / "szabadnapos") ni
  * tekma.
  */
 export function vrsticeKroga(html, krog) {
@@ -189,7 +189,7 @@ export function vrsticeKroga(html, krog) {
     const ime = (k) => besedilo(blok.match(new RegExp(`<div class="${k}">[\\s\\S]*?<span>([^<]*)</span>`))?.[1])
     const domaci = ime('home_team')
     const gostje = ime('away_team')
-    if (!domaci || !gostje || /^szabadnap$/i.test(domaci) || /^szabadnap$/i.test(gostje)) continue
+    if (!domaci || !gostje || /^szabadnap(?:os)?$/i.test(domaci) || /^szabadnap(?:os)?$/i.test(gostje)) continue
     const povezava = blok.match(/\/match\/(\d+)\/(\d+)\/(\d+)\/(\d+)\/(\d+)\.html/)
     if (povezava && Number(povezava[4]) !== krog) continue
     const id = povezava?.[5] ?? null
