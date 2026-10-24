@@ -1,5 +1,6 @@
 // Synthetic projections only: these objects carry no source/admission authority.
 import {readFileSync} from 'node:fs'
+import {FCF_TARGET_SQL_TEST_NOW} from './fcf-target-sql-test-fixture.mjs'
 import {calendarFixture,packetFixture} from './fcf-release-test-fixture.mjs'
 import {createHash} from 'node:crypto'
 const policyRows=[...readFileSync(new URL('../supabase/migrations/20261019150000_fcf_six_reviewed_native.sql',import.meta.url),'utf8').matchAll(/insert into private_historical_statistics\.policies values\('([^']+)','([^']+)','((?:[^']|'')+)'::jsonb\);/g)].map(x=>({policy:JSON.parse(x[3].replaceAll("''","'")),hash:x[2]}))
@@ -79,13 +80,13 @@ export function sixG9ReleaseFixture(){
  const binding={schemaVersion:1,kind:'fcf-missing-target-admission',protocol:'six-reviewed-continuation-v1',targetSlug:slug,sourceCommit:'a'.repeat(40),sourceClaimState:'consumed',sourceFingerprintSha256:'c'.repeat(64),maximumSourceGETs:478,priorSourceGETs:22,newSourceGETs:233,actualSourceGETs:255,claimBinding:{test:'synthetic'},consumptionBinding:{test:'synthetic'},inventoryBinding:{test:'synthetic'},auditBinding:{test:'synthetic'},finalReceiptBinding:{test:'synthetic'}}
  for(const m of f.sourceData.fixtures){
   const e=policy.entries.find(e=>'es'+e.sourceMatchId===m.id)
-  Object.assign(m,{source:{sourceUrl:'https://www.fcf.cat/ca/competicio/acta/'+m.id.slice(2),capturedUTC:new Date(Date.now()-60000).toISOString(),rawSha256:'d'.repeat(64)},report:m.statisticsStatus==='available'?{opozorila:[]}:null,sourceFixture:null,statisticsReason:null})
+  Object.assign(m,{source:{sourceUrl:'https://www.fcf.cat/ca/competicio/acta/'+m.id.slice(2),capturedUTC:FCF_TARGET_SQL_TEST_NOW,rawSha256:'d'.repeat(64)},report:m.statisticsStatus==='available'?{opozorila:[]}:null,sourceFixture:null,statisticsReason:null})
   if(e){const {rawSha256,reasonCode,...fixture}=e;Object.assign(m,{date:e.playedOn,homeGoals:e.observedHomeScore,awayGoals:e.observedAwayScore,statisticsReason:reasonCode,sourceFixture:{...fixture,season:'2026/27'},source:{...m.source,rawSha256},appearances:null,goals:null})}
   else if(m.statisticsStatus==='pending'){m.appearances=null;m.goals=null}
  }
  const mapping={kind:'fcf-native-target-mapping',targetSlug:slug,sourceCommit:f.writerCommit,sourceFingerprintSha256:binding.sourceFingerprintSha256,mappings:f.sourceData.clubs.map(c=>({nativeClubId:c.sourceClubId,nativeCategoryId:c.sourceCategoryId,sourceName:c.name,canonicalTeamName:c.name,teamId:f.databaseInventory.teams.find(t=>t.name===c.name).id})),fixtures:f.sourceData.fixtures.map((m,i)=>({sourceMatchId:m.id,matchId:f.databaseInventory.matches[i].id,roundId:f.databaseInventory.matches[i].round_id}))}
  const mappingText=JSON.stringify(mapping),sha=s=>createHash('sha256').update(s).digest('hex')
- const packet={schemaVersion:3,kind:'fcf-six-current-target-release',targetSlug:slug,sourceCommit:f.writerCommit,auditedUTC:new Date(Date.now()-60000).toISOString(),cleanupBinding:null,databaseInventory:{},target:{sourceEvidence:binding,competitionId:cid,competitionSlug:slug,season:'2026/27',firstFantasyPlayedOn:'2026-10-24',policyId:policy.id,policySha256:sixPolicyHash(slug),fixtures:f.sourceData.fixtures}}
+ const packet={schemaVersion:3,kind:'fcf-six-current-target-release',targetSlug:slug,sourceCommit:f.writerCommit,auditedUTC:FCF_TARGET_SQL_TEST_NOW,cleanupBinding:null,databaseInventory:{},target:{sourceEvidence:binding,competitionId:cid,competitionSlug:slug,season:'2026/27',firstFantasyPlayedOn:'2026-10-24',policyId:policy.id,policySha256:sixPolicyHash(slug),fixtures:f.sourceData.fixtures}}
  const rollout={schemaVersion:2,kind:'fcf-six-current-target-rollout',targetSlug:slug,sourceCommit:f.writerCommit,execution:{},targetPacketText:'',targetPacketSha256:'',inventoryBinding:binding,cleanupBinding:null,identityPlan:{mappingText,mappingSha256:sha(mappingText)},readiness:null}
  let sql=`insert into teams(id,name,short_name,country_id)overriding system value select(x->>'id')::bigint,x->>'name','TEST',(select id from countries where code='ES')from jsonb_array_elements(${q(JSON.stringify(f.databaseInventory.teams))}::jsonb)x on conflict(id)do nothing;
 `
