@@ -163,3 +163,11 @@ test('failed durable stage checkpoint stops the batch before any corresponding w
  h.options.onCheckpoint=async report=>{if(!failed&&report.results[0]?.steps.some(s=>s.status==='RUNNING')){failed=true;throw Error('disk full')}}
  const r=await runProviderBatch(h.options);assert.equal(h.calls.length,0);assert.equal(r.status,'STOPPED');assert.equal(r.results[1].status,'SKIPPED_SOURCE_STOP')
 })
+test('pre-write competition DB failure stops host instead of treating it as football HOLD',async()=>{
+ const h=harness();h.options.transport.competition=async()=>{throw Error('Database HTTP 503')}
+ const r=await runProviderBatch(h.options);assert.equal(h.calls.length,0);assert.equal(r.results[0].status,'INFRASTRUCTURE_STOP');assert.equal(r.results[1].status,'SKIPPED_SOURCE_STOP');assert.ok(r.host_stop)
+})
+for(const [key,value]of [['active',true],['source_league_code','changed'],['source_policy','custom']])test(`latest snapshot ${key} drift prevents every corresponding write`,async()=>{
+ const h=harness();let count=0;h.options.transport.snapshot=async c=>{const s=snapshot(c);if(++count>1)s.competition[key]=value;return s}
+ const r=await runProviderBatch(h.options);assert.equal(h.calls.length,0);assert.equal(r.results[0].status,'HOLD')
+})

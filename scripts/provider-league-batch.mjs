@@ -9,7 +9,7 @@ import {createTransport,runBatch} from './vklopi-obstojece-lige.mjs'
 const REPOSITORY='Lovro-splichal-orhanizagi/mnzgorenjska'
 const TUPLE=['id','slug','source','source_league_code']
 const digest=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex')
-const fail=message=>{throw Error(message)}
+const fail=message=>{throw Object.assign(Error(message),{dataHold:true})}
 // Only exact mappings reviewed in docs/viri/madzarska.md; registry presence is not permission.
 const MAPPINGS=[
  {id:635,slug:'hu-pe-u19-e',source:'mlsz',source_league_code:'67/14/34252',host:'adatbank.mlsz.hu',archives:[{code:'65/14/32325',season:'2025/26'}]},
@@ -200,7 +200,7 @@ export async function runProviderBatch({candidates,expectedSha,transport,guard,r
    try {
     const initial=await transport.snapshot(candidate);requireCandidate(candidate,initial.competition);requireNoFantasy(initial)
     const stage=async(name,file,args)=>{
-     await guarded();requireCandidate(candidate,await transport.competition(candidate));requireNoFantasy(await transport.snapshot(candidate))
+     await guarded();requireCandidate(candidate,await transport.competition(candidate));const latest=await transport.snapshot(candidate);requireCandidate(candidate,latest.competition);requireNoFantasy(latest)
      const step={stage:name,status:'RUNNING',started_at:now().toISOString(),file,args};result.steps.push(step);await checkpoint()
      mutating=true
      let output
@@ -244,7 +244,8 @@ export async function runProviderBatch({candidates,expectedSha,transport,guard,r
     if(mutating){result.status='UNKNOWN';report.host_stop='Ambiguous write; inspect retained checkpoint and readback before a new reviewed run.';try{result.readback=await transport.competition(candidate)}catch{result.readback_error='Readback unavailable.'}}
     else if(error.sourceStop){result.status='SOURCE_STOP';report.host_stop=error.message}
     else if(error.infrastructure){result.status='INFRASTRUCTURE_STOP';report.host_stop=error.message}
-    else result.status='HOLD'
+    else if(error.dataHold)result.status='HOLD'
+    else {result.status='INFRASTRUCTURE_STOP';report.host_stop=error.message}
     await checkpoint()
    }
   }
