@@ -1,6 +1,7 @@
 import {readFileSync,writeFileSync} from 'node:fs'
 import {resolve} from 'node:path'
 import {pathToFileURL} from 'node:url'
+import {tekmovanje} from './tekmovanje.mjs'
 import {admitFussballAudit,assertFussballImportCompetition} from './fussball-import-actions.mjs'
 import {loadFussballImportCapture,parseFussballLeagueCode} from './fussball-import.mjs'
 
@@ -18,8 +19,7 @@ export async function runFussballImportCli(args){
  if(!process.env.SUPABASE_URL||!process.env.SUPABASE_SERVICE_ROLE_KEY)throw Error('Writer database configuration is required')
  const {createClient}=await import('@supabase/supabase-js')
  const db=createClient(process.env.SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false}})
- const {data,error}=await db.from('competitions').select('id,slug,country_id,source,source_policy,source_league_code,active').eq('slug',options.slug).single()
- if(error)throw Error('Could not read import competition: '+error.message)
+ const data=await tekmovanje(db,options.slug)
  assertFussballImportCompetition(data,{slug:options.slug,code:options.code})
  const {count,error:teamError}=await db.from('fantasy_teams').select('id',{count:'exact',head:true}).eq('competition_id',data.id)
  if(teamError||count!==0)throw Error('Manual bootstrap requires no existing fantasy teams')
