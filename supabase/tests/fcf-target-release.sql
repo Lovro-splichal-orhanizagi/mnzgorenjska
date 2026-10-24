@@ -37,6 +37,21 @@ create function pg_temp.fcf_target_mutant(command text,label text)returns void l
 end$$;
 select pg_temp.fcf_ready(783);
 select pg_temp.fcf_target_assert(pg_temp.fcf_gate('es-ct-segona-g1')->>'stage'='checked','full canonical/pricing/source gate passes');
+-- Exercise the unchanged production source-deadline guard with the same recent
+-- synthetic captures. The failed subtransaction also restores the test setting.
+do $$declare before_clock timestamptz:=clock_timestamp();begin
+ perform pg_temp.fcf_target_assert(before_clock='2026-10-24T07:30:00Z'::timestamptz,'pinned prelaunch clock reaches the production gate');
+ perform pg_temp.fcf_target_assert((select deadline_at from rounds where competition_id=783 and number=6)='2026-10-24T08:00:00Z'::timestamptz,'official source deadline remains unchanged');
+ begin
+  perform set_config('slff.fcf_target_test_clock','2026-10-24T08:00:01Z',true);
+  perform pg_temp.fcf_gate('es-ct-segona-g1');
+  raise exception 'FCF TARGET TEST: source deadline accepted after test clock advanced';
+ exception when others then
+  if sqlerrm<>'FCF_TARGET: source R6 deadline genuinely future' then raise;end if;
+ end;
+ perform pg_temp.fcf_target_assert(clock_timestamp()=before_clock,'deadline rejection restores prelaunch test clock');
+end$$;
+
 select pg_temp.fcf_target_mutant('update players set value=value+0.5 where id=(select min(id)from players where competition_id=783)','price race');
 select pg_temp.fcf_target_mutant('update players set position_source=''admin''where id=(select min(id)from players where competition_id=783)','provenance race');
 select pg_temp.fcf_target_mutant('update appearances set minute_off=minute_off-1 where id=(select min(a.id)from appearances a join players p on p.id=a.player_id where p.competition_id=783)','native interval drift');
@@ -47,6 +62,7 @@ select pg_temp.fcf_target_mutant('update rounds set deadline_at=clock_timestamp(
 select pg_temp.fcf_target_mutant('create table public.fcf_target_unknown_dependency(appearance_id bigint)','unknown empty reference column');
 select pg_temp.fcf_target_mutant('create table public.fcf_target_unknown_fk(app bigint references public.appearances)','unknown empty FK');
 select pg_temp.fcf_target_assert(pg_temp.fcf_gate('es-ct-segona-g1',true)->>'active'='true','common same-XID authorization activates G1');
+select pg_temp.fcf_target_assert((select recorded_at from private_historical_statistics.release_authorizations where competition_id=783 and authorized_xid=txid_current())=clock_timestamp(),'common authorization shares the pinned test clock');
 select pg_temp.fcf_target_assert(pg_temp.fcf_gate('es-ct-segona-g1',true)->>'noOp'='true','activation retry reads committed receipt');
 select pg_temp.fcf_target_assert((public.read_fcf_current_target_receipt('es-ct-segona-g1')->>'rolloutText')is not null and(public.read_fcf_current_target_receipt('es-ct-segona-g1')->>'currentActive')='true','committed original envelope permits readback when artifact was lost');
 -- Non-target activity after the single all-four cleanup cannot block G9.

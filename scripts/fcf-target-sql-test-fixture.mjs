@@ -1,9 +1,24 @@
 // Synthetic SQL-only inputs. These never confer Task5 reader capabilities.
 import {readFileSync} from 'node:fs'
+import {assertFcfDisposableTest} from './lib/fcf-disposable-test.mjs'
 import {fullNativeMatchFixture} from './fcf-native-plan-test-fixture.mjs'
 import {planFcfNativeMapping} from './fcf-target-native-plan.mjs'
 import {getHistoricalStatisticsPolicy,historicalStatisticsPolicySha256 as hash} from './lib/historical-statistics-policy.mjs'
 const q=s=>"'"+String(s).replaceAll("'","''")+"'"
+// The fixture's official R6 deadline is 2026-10-24T08:00Z. Keep source capture
+// metadata and every production clock_timestamp() call in the same prelaunch context.
+export const FCF_TARGET_SQL_TEST_NOW='2026-10-24T07:30:00.000Z'
+export function fcfTargetSqlTestClock(env=process.env){
+ assertFcfDisposableTest(env)
+ // The caller wraps this in BEGIN/ROLLBACK. PostgreSQL catalog changes are
+ // transactional, so other sessions keep the original built-in clock function.
+ return `savepoint fcf_target_test_clock_scope;
+set local slff.fcf_target_test_clock='${FCF_TARGET_SQL_TEST_NOW}';
+create or replace function pg_catalog.clock_timestamp() returns timestamptz
+language sql volatile parallel safe as $$select current_setting('slff.fcf_target_test_clock')::timestamptz$$;
+release savepoint fcf_target_test_clock_scope;
+`
+}
 export function fcfTargetSqlFixture(){
  const old=readFileSync(new URL('../supabase/tests/fcf-historical-cleanup.sql',import.meta.url),'utf8'),prefix=old.slice(old.indexOf('-- Exact production fixture identities'),old.indexOf('-- Independent ordinary report'))
  const groups=['es-ct-segona-g1','es-ct-tercera-g9'].map(slug=>{
@@ -14,11 +29,11 @@ export function fcfTargetSqlFixture(){
   f.sourceData.binding={...f.sourceData.binding,...binding}
   for(const m of f.sourceData.fixtures){
    const entry=policy.entries.find(e=>'es'+e.sourceMatchId===m.id)
-   Object.assign(m,{source:{sourceUrl:'https://www.fcf.cat/ca/competicio/acta/'+m.id.slice(2),capturedUTC:new Date().toISOString(),rawSha256:'d'.repeat(64)},report:m.statisticsStatus==='available'?{opozorila:[]}:null,sourceFixture:null,statisticsReason:null})
+   Object.assign(m,{source:{sourceUrl:'https://www.fcf.cat/ca/competicio/acta/'+m.id.slice(2),capturedUTC:FCF_TARGET_SQL_TEST_NOW,rawSha256:'d'.repeat(64)},report:m.statisticsStatus==='available'?{opozorila:[]}:null,sourceFixture:null,statisticsReason:null})
    if(entry){const{rawSha256,reasonCode,...fixture}=entry;Object.assign(m,{date:entry.playedOn,homeGoals:entry.observedHomeScore,awayGoals:entry.observedAwayScore,statisticsReason:reasonCode,sourceFixture:{...fixture,season:'2026/27'},source:{...m.source,rawSha256},appearances:null,goals:null})}
    else if(m.statisticsStatus==='pending'){m.appearances=null;m.goals=null}
   }
-  const mapping=planFcfNativeMapping(f),packet={schemaVersion:2,kind:'fcf-current-target-release',targetSlug:slug,sourceCommit:f.writerCommit,auditedUTC:new Date().toISOString(),cleanupBinding:null,databaseInventory:{},target:{sourceEvidence:binding,competitionId:cid,competitionSlug:slug,season:'2026/27',firstFantasyPlayedOn:'2026-10-24',policyId:policy.id,policySha256:hash(policy),fixtures:f.sourceData.fixtures}}
+  const mapping=planFcfNativeMapping(f),packet={schemaVersion:2,kind:'fcf-current-target-release',targetSlug:slug,sourceCommit:f.writerCommit,auditedUTC:FCF_TARGET_SQL_TEST_NOW,cleanupBinding:null,databaseInventory:{},target:{sourceEvidence:binding,competitionId:cid,competitionSlug:slug,season:'2026/27',firstFantasyPlayedOn:'2026-10-24',policyId:policy.id,policySha256:hash(policy),fixtures:f.sourceData.fixtures}}
   const rollout={schemaVersion:1,kind:'fcf-current-target-rollout',targetSlug:slug,sourceCommit:f.writerCommit,execution:{},targetPacketText:'',targetPacketSha256:'',inventoryBinding:binding,cleanupBinding:null,identityPlan:{mappingText:mapping.proposalText,mappingSha256:mapping.proposalSha256},readiness:null}
   return{f,packet,rollout}
  })
