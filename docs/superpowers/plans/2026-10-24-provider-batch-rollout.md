@@ -32,9 +32,9 @@
 
 **Interfaces:** `runProviderBatch({candidates,transport,runCommand,strictProof,onCheckpoint,...})` executes fixed import/audit/price/release stages with durable results. Source budget state spans all sequential children. Production activation requires an implemented independently validated provider contract, not generic aggregate READY alone.
 
-- [ ] Write failure-isolation, tuple/scope drift, source-stop, budget, ambiguity and native-readback tests; observe RED.
-- [ ] Implement fixed stages and main-only credentialed workflow; preserve source-specific keeper policy evidence and separate unsupported release contracts.
-- [ ] Run focused tests, freeze implementation and independently review.
+- [x] Write failure-isolation, tuple/scope drift, source-stop, budget, ambiguity and native-readback tests; observe RED.
+- [x] Implement fixed stages and main-only credentialed workflow; preserve source-specific keeper policy evidence and separate unsupported release contracts.
+- [x] Run focused tests, freeze implementation and independently review.
 
 ### Task 2: Dribl public data and native normalization
 
@@ -42,18 +42,18 @@
 
 **Interfaces:** Source worker supplies `parseDriblCatalog`, `parseDriblSchedule`, `parseDriblReport`. Native normalization consumes reconciled complete reports and preserves tenant-scoped profile identities, exact team/scorer binding, minutes and scoring semantics. Capture/import admission distinguishes complete published inventory from default upcoming-only views.
 
-- [ ] Capture bounded actual public samples and freeze parser interfaces/provenance.
-- [ ] Write actual positive and held report regressions; observe RED, implement and verify.
-- [ ] Implement capture/import normalization only against the frozen schema; reject incomplete inventory, partial data and identity collisions.
-- [ ] Independently review source/identity/import boundaries before registration or source writes.
+- [x] Capture bounded actual public samples and freeze parser interfaces/provenance.
+- [x] Write actual positive and held report regressions; observe RED, implement and verify.
+- [x] Implement capture/import normalization only against the frozen schema; reject incomplete inventory, partial data and identity collisions.
+- [x] Independently review source/identity/import boundaries before registration or source writes.
 
 ### Task 3: German shared-budget league screen
 
 **Files:** separate batch module/CLI/workflow and tests; existing season/import admission unchanged.
 
-- [ ] Write shared-budget/cache, semantic continuation, technical stop and offline corruption tests; observe RED.
-- [ ] Implement durable batch evidence and main-only secret-free workflow.
-- [ ] Verify strict original-byte replay, freeze and independently review.
+- [x] Write shared-budget/cache, semantic continuation, technical stop and offline corruption tests; observe RED.
+- [x] Implement durable batch evidence and main-only secret-free workflow.
+- [x] Verify strict original-byte replay, freeze and independently review.
 
 ### Task 4: Integration and authorized operation
 
@@ -74,3 +74,28 @@
 - Fresh Actions schema generation preserves its types as an artifact so the
   checked-in types can be regenerated from actual migrations without secret-file
   access or handwritten RPC types.
+
+
+## Integrated verification (24 October)
+
+- Production MLSZ contract is installed, independently reviewed after exact
+  missed-penalty and live schedule-row hardening; 230 integrated runner,
+  budget, source-proof, Dribl and coordinator tests passed. This includes a
+  closed six-club fixture through the actual native activation/readback path.
+- Dribl parser and capture/native package were independently approved at
+  `b7343e7e` and `6f13bbde`; their tests use retained real reports and explicitly
+  synthetic full-inventory framing, never a claimed live complete season.
+- Actual fresh Actions database generation produced checked-in schema types
+  (artifact from run 40132857110). The first native identity test exposed only
+  a locale-dependent test result ordering; production SQL was unchanged.
+  Test ordering now uses bytewise C collation and is rerunning in fresh CI.
+- Local production build passed. All 2,508 source tests completed with
+  2,275 passes, 233 explicit native-database skips and no failures. The
+  rendering smoke component passed with public placeholder configuration;
+  the first unconfigured render attempt had stopped on missing Supabase URL.
+  Fresh Actions type/build/render passed; Dribl identity native SQL passed.
+  The remaining fresh-database CI checks are still running.
+- No new leagues were activated during implementation. No Australian country
+  registration, frontend routing or nightly operation is implied by adding
+  the capture-bound adapter. Main review/deployment and bounded operations
+  are the remaining release work.

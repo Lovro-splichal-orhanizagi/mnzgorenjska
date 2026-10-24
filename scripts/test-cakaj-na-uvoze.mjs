@@ -536,3 +536,17 @@ test('real provider batch is visible to both coordinator loops and blocks active
  assert.equal((await coordinate(['--popravek','--vir','mlsz'],{'uvoz-zapisnikov.yml':[run('Nightly')]},[{name:'uvoz HU 1/3',status:'completed'},{name:'uvoz HU 2/3',status:'in_progress'},{name:'uvoz HU 3/3',status:'completed'}])).code,1)
  assert.equal((await coordinate(['--popravek','--vir','mlsz'],{'uvoz-zapisnikov.yml':[run('Nightly')]},[{name:'uvoz HU 1/3',status:'completed'},{name:'uvoz HU 2/3',status:'completed'},{name:'uvoz HU 3/3',status:'completed'},{name:'uvoz AT',status:'in_progress'}])).code,0)
 })
+
+
+test('Dribl native bootstrap shares AU/global writes and stays visible to both coordinators',async()=>{
+ fixtures.push({slug:'au-nsw-npl',active:false,source:'dribl-public',countries:{code:'AU'},federations:{code:'football-nsw'}})
+ try{
+  const workflow='uvoz-dribl-public.yml',runs={[workflow]:[run('Uvoz lige au-nsw-npl Dribl public')]}
+  for(const args of [['--liga','au-nsw-npl'],['--popravek','--vir','dribl-public'],['--drzava','AU']])assert.equal((await coordinate(args,runs)).code,args[0]==='--drzava'?0:1)
+  assert.equal((await coordinate(['--drzava','DE'],runs)).code,0)
+  assert.equal((await coordinate(['--tece'],runs)).code,0)
+  fixtures.at(-1).active=true
+  assert.equal((await coordinate(['--tece'],runs)).code,3)
+  for(const file of ['zdruzi-klube.yml','tedensko-cene.yml'])assert.match(readFileSync(new URL(`../.github/workflows/${file}`,import.meta.url),'utf8'),/for wf in[^\n]*uvoz-dribl-public\.yml/)
+ }finally{fixtures.pop()}
+})
