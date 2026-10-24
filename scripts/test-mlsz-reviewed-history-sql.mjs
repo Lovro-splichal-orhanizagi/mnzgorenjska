@@ -29,7 +29,7 @@ test('MLSZ exact cleanup, rollback, release and ACL SQL contract',{skip:process.
  const sql=q=>docker(['exec','-i',target.container,'psql','-U','postgres','-d','postgres','-X','-qAt','-v','ON_ERROR_STOP=1'],{input:q}).trim()
  assert.equal(sql("select to_regprocedure('public.prepare_mlsz_historical_cleanup(text,jsonb)') is not null"),'t')
  if(sql("select clock_timestamp()>='2026-10-24T07:00:00Z'::timestamptz")==='t'){
-  const hold=sql("do $$begin begin perform public.prepare_mlsz_historical_cleanup(repeat('a',40),(select jsonb_object_agg(id,policy_sha256)from private_historical_statistics.policies where document->>'provider'='mlsz'));exception when others then if sqlerrm like 'MLSZ_HISTORY: exact future unlocked%'then return;end if;raise;end;raise exception 'expired opening incorrectly accepted';end$$;")
+  const hold=sql("do $$begin begin perform public.prepare_mlsz_historical_cleanup(repeat('a',40),(select jsonb_object_agg(id,policy_sha256)from private_historical_statistics.policies where document->>'provider'='mlsz' and document->>'sourcePolicy'='hu-mlsz-reviewed-history-v1'));exception when others then if sqlerrm like 'MLSZ_HISTORY: exact future unlocked%'then return;end if;raise;end;raise exception 'expired opening incorrectly accepted';end$$;")
   assert.equal(hold,'')
   t.skip('Pinned October24 opening expired: real SQL HOLD verified; positive cleanup/activation fixture requires a reviewed future opening')
   return

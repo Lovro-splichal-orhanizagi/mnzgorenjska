@@ -225,6 +225,12 @@ jobs:
           SUPABASE_TEST_DB: postgres
           REVIEWED_RO_MD_DISPOSABLE_TEST: '1'
         run: node --test scripts/test-reviewed-ro-md-sql.mjs
+      - name: Pest C exact historical cleanup and fresh release rollback
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          SUPABASE_TEST_DB: postgres
+          HU_PEST_HISTORY_DISPOSABLE_TEST: '1'
+        run: node --test scripts/test-hu-pest-c-history-sql.mjs
       - name: BiH one-time prelaunch deadline configuration rollback
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska

@@ -106,7 +106,7 @@ select pg_temp.hu_release_mutant('update appearances set is_goalkeeper=false whe
 select pg_temp.hu_release_mutant('update matches set imported_at=null where id=(select id from hu_ordinary)','past current report missing without receipt');
 rollback to fresh_import;
 create function pg_temp.hu_release_mutant(cmd text,msg text)returns void language plpgsql as $$declare result jsonb;begin begin execute cmd;result:=public.release_mlsz_reviewed_history(463,repeat('a',40),false);perform pg_temp.hu_assert(result->>'ready'='false','release refused '||msg);perform pg_temp.hu_assert(not(select active from competitions where id=463),'failed preview leaves inactive');raise exception using errcode='ZX001';exception when sqlstate'ZX001'then null;end;end$$;
-create temporary table hu_proof as select repeat('a',40)main_sha,(select jsonb_object_agg(id,policy_sha256)from private_historical_statistics.policies where document->>'provider'='mlsz')hashes,null::jsonb prepared;
+create temporary table hu_proof as select repeat('a',40)main_sha,(select jsonb_object_agg(id,policy_sha256)from private_historical_statistics.policies where document->>'provider'='mlsz' and document->>'sourcePolicy'='hu-mlsz-reviewed-history-v1')hashes,null::jsonb prepared;
 select pg_temp.hu_refuses('select public.prepare_mlsz_historical_cleanup(''invalid'',''{}''::jsonb)','invalid main SHA');
 select pg_temp.hu_refuses('select public.prepare_mlsz_historical_cleanup(repeat(''a'',40),''{}''::jsonb)','wrong policy hashes');
 update hu_proof set prepared=public.prepare_mlsz_historical_cleanup(main_sha,hashes);

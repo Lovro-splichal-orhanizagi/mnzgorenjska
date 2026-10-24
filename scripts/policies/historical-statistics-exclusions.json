@@ -977,6 +977,33 @@
           "reasonCode": "official_score_published_but_scorer_events_absent"
         }
       ]
+    },
+    {
+      "sourcePolicy": "reviewed-existing-history-20261023-v1",
+      "season": "2025/26",
+      "recordedAt": "2026-10-24T14:09:56Z",
+      "approvalReference": "Owner explicitly answered Allow this reviewed historical exclusion to call_d832fae0d7a04d249b56f9f5d7cbd596 questionItem0 on 24 October 2026: preserve official 3–0, mark individual statistics unavailable, remove 25 appearances and 8 goal events, reprice and revalidate. Recording time is evidence time, not the unknown user-send timestamp.",
+      "id": "hu-pe-u19-c-historical-unavailable-2026-10-24-v1",
+      "provider": "mlsz",
+      "competitionSlug": "hu-pe-u19-c",
+      "competitionId": 637,
+      "sourceLeagueCode": "67/14/34250",
+      "entries": [
+        {
+          "sourceMatchId": "2120218",
+          "sourceCompetitionId": "65/14/32327",
+          "sourcePhase": null,
+          "sourceRound": 2,
+          "playedOn": "2025-09-13",
+          "homeSourceClubId": "317012",
+          "awaySourceClubId": "317011",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/14/32327/2/2120218.html",
+          "rawSha256": "4e54028d642fd71865a44017ddef28ffdcdbea3e22ad2bb669bb18527ba75efe",
+          "observedHomeScore": 3,
+          "observedAwayScore": 0,
+          "reasonCode": "score_goal_events_disagree"
+        }
+      ]
     }
   ]
 }
