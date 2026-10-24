@@ -58,9 +58,9 @@ Oliver Kalac nima izrecne vratarske vloge. Noben popravek osebe ni dovoljen.
 
 ## Ohranjeni dokazi in offline preverba
 
-`scripts/vzorci/au-dribl-provenance.json` navaja 12 izvirnih JSON odgovorov,
-URL-je, datume zajema, HTTP 200, velikost in SHA-256. 12 neposrednih JSON
-branj in pet dejanj prehoda v brskalniku; brez ponovitev, zavrnitev ali izziva.
+`scripts/vzorci/au-dribl-provenance.json` navaja 13 izvirnih JSON odgovorov,
+URL-je, datume zajema, HTTP 200, velikost in SHA-256. 13 neposrednih JSON
+branj in sedem dejanj prehoda v brskalniku; brez ponovitev, zavrnitev ali izziva.
 Vzorcev ne popravljamo; negativni preizkusi spreminjajo le kopije v pomnilniku.
 
 Semifinal `1K3pRqqeGd`, Sydney United–Manly 3:1, 6. 9. 2026 ob 04:00 UTC,
@@ -97,3 +97,18 @@ rumeni kartoni. Rdeči kartoni, avtogoli, podaljški ali kazenski streli zahteva
 nov izvirni dokaz in preizkuse; do takrat HOLD. Vzorca ne dokazujeta uporabnosti
 vseh lig NSW, drugih avstralskih zvez ali arhivov. Transport/zajem, povezava v
 uvoz in presoja vsake lige so ločeni naslednji koraki; država ni aktivirana.
+
+Naknadno je dejanski javni filter `Filter → Date → All Fixtures`, nato
+navigacija `Fixtures`, pokazal celotni način `date_range=all`. Opaženi URL:
+`https://mc-api.dribl.com/api/fixtures?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE&date_range=all&tenant=1RwNlWemjr&timezone=Europe%2FLjubljana`.
+Izvirni odgovor `au-dribl-fixtures-all-npl.json` vsebuje 30 vrstic od začetka
+sezone in tudi končane tekme, s kazalcem za naslednjo stran. To je dokaz
+objavljenega načina celotnega inventarja, še vedno **ne** zajeta celotna sezona.
+
+Vrstice imajo `type=fixtures`, različen `hash_id` in `attributes.match_hash_id`,
+čas pa `2026-02-06T08:30:00.000000Z` (rezultati uporabljajo presledek brez Z).
+`links.next` tudi tu vsebuje samo kazalec; ob nadaljevanju je treba ohraniti
+opažene filtre. Čisti `parseDriblSchedule` iz prvega koraka trenutno bere samo
+opaženo stran `results`; naslednji korak zajema mora dodati ta dokazani format
+`fixtures` in uskladiti vse strani. Nadaljnjega omrežja ni bilo: meja 20
+(13 neposrednih JSON branj + 7 prehodov strani) je dosežena.

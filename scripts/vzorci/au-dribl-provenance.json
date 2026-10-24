@@ -3,8 +3,8 @@
   "source": "dribl",
   "capturedAt": "2026-10-24",
   "transport": "ordinary identified-UA GET; no credentials; redirects disabled",
-  "ordinaryJsonReads": 12,
-  "browserRouteActions": 5,
+  "ordinaryJsonReads": 13,
+  "browserRouteActions": 7,
   "sourceStopObserved": false,
   "permissionsVerified": false,
   "scope": {
@@ -144,6 +144,20 @@
       "bytes": 182,
       "file": "au-dribl-fixtures-upcoming-npl.json",
       "observedFrom": "https://competitions.footballnsw.com.au/fixtures?date_range=default&season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE&timezone=Europe%2FLjubljana"
+    },
+    {
+      "url": "https://mc-api.dribl.com/api/fixtures?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE&date_range=all&tenant=1RwNlWemjr&timezone=Europe%2FLjubljana",
+      "startedAt": "2026-10-24T20:36:47.716416+00:00",
+      "capturedAt": "2026-10-24T20:36:48.144952+00:00",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "313484c2d23d9e190f93583bc041f92e37966963fec5aacd9307b004ad9fbff1",
+      "bytes": 65905,
+      "file": "au-dribl-fixtures-all-npl.json",
+      "observedFrom": "https://competitions.footballnsw.com.au/fixtures?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE&date_range=all&timezone=Europe%2FLjubljana",
+      "observation": "Public Filter > Date > All Fixtures, then Fixtures navigation; exact API URL from pageAssets inventory"
     }
-  ]
+  ],
+  "sourceReadBudget": 20,
+  "sourceAccessStoppedAtBudget": true
 }
