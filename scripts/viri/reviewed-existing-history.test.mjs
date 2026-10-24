@@ -8,6 +8,7 @@ const cases = [
   { slug: 'gb-npl-midlands', provider: 'isthmian', id: 979, code: 'npl/67d7c7bb74247876e6dae40c/2026-27' },
   { slug: 'gb-sfl-d1-south', provider: 'isthmian', id: 984, code: 'sfl/69d0bdf9b616bafb97331d41/2026-27' },
   { slug: 'ro-liga3-s1', provider: 'hlf', id: 497, code: 'national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1' },
+  { slug: 'ro-ab-l5-s2', provider: 'hlf', id: 499, code: 'judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-2' },
   { slug: 'ro-ab-l4-s2', provider: 'hlf', id: 501, code: 'judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2' },
   { slug: 'ba-wwin-liga-bih', provider: 'nfsbih', id: 998, code: 'wwin-liga-bih/54152223' },
   { slug: 'md-liga-2', provider: 'fmf', id: 1107, code: 'liga-2-1782306996/877' },

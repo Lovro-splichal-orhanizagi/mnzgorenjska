@@ -79,8 +79,9 @@ test('reviewed-existing native SQL rollback and service-only ACL contract',{skip
  const docker=(args,options={})=>execFileSync('docker',args,{encoding:'utf8',timeout:300_000,maxBuffer:32*1024*1024,...options})
  const labels=JSON.parse(docker(['inspect',container,'--format','{{json .Config.Labels}}']))
  assert.equal(labels['com.supabase.cli.project'],target.project)
- assert.ok(!process.env.SUPABASE_TEST_DB||process.env.SUPABASE_TEST_DB==='postgres','only owned postgres fixture database is allowed')
- const sql=q=>docker(['exec','-i',container,'psql','-U','postgres','-d','postgres','-X','-qAt','-v','ON_ERROR_STOP=1'],{input:`${q}\n;\n\\quit\n`}).trim()
+ const database=process.env.SUPABASE_TEST_DB??'postgres'
+ assert.ok(database==='postgres'||(target.project==='slff_mlsz_history_20261022'&&database==='slff_ro499_20261024'),'only owned postgres or exact fresh Alba fixture database is allowed')
+ const sql=q=>docker(['exec','-i',container,'psql','-U','postgres','-d',database,'-X','-qAt','-v','ON_ERROR_STOP=1'],{input:`${q}\n;\n\\quit\n`}).trim()
  const catalogHash=()=>sql("select encode(sha256(convert_to(jsonb_build_object('competitions',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from public.competitions x),'teams',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from public.teams x),'rounds',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from public.rounds x),'players',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from public.players x),'matches',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from public.matches x),'appearances',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from public.appearances x),'goals',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from public.goals x),'player_scores',(select coalesce(jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text),'[]')from public.player_scores x),'player_stats',(select coalesce(jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text),'[]')from public.statistika_igralcev x),'round_stats',(select coalesce(jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text),'[]')from public.tocke_krogov x),'policies',(select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]')from private_historical_statistics.policies x),'bindings',(select coalesce(jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text),'[]')from private_historical_statistics.source_club_bindings x),'reviewed_cleanup',(select coalesce(jsonb_agg(to_jsonb(x) order by x.slug),'[]')from private_reviewed_existing_history.cleanup_receipts x),'reviewed_price_claims',(select coalesce(jsonb_agg(to_jsonb(x) order by x.slug),'[]')from private_reviewed_existing_history.price_attempts x),'reviewed_prices',(select coalesce(jsonb_agg(to_jsonb(x) order by x.slug),'[]')from private_reviewed_existing_history.price_receipts x))::text,'UTF8')),'hex')")
  assert.equal(sql("select to_regprocedure('public.prepare_reviewed_existing_cleanup(text,text,text)') is not null and to_regprocedure('public.apply_reviewed_existing_cleanup(text,text,text,text,text)') is not null and to_regprocedure('public.begin_reviewed_existing_prices(text,text,text)') is not null and to_regprocedure('public.record_reviewed_existing_prices(text,text,text)') is not null and to_regprocedure('public.check_reviewed_existing_release(text,text,text,text,boolean)') is not null"),'t')
  console.log('Reviewed history SQL: capture pre-fixture catalog hash')
@@ -105,4 +106,14 @@ test('reviewed-existing native SQL rollback and service-only ACL contract',{skip
  sql(fixture)
  console.log('Reviewed history SQL: verify post-rollback catalog hash')
  assert.equal(catalogHash(),before,'fixture cleanup and activation roll back every native row and receipt')
+})
+
+
+test('Alba L5 S2 forward admission preserves exact policy bytes and the seven-league closed scope',()=>{
+ const migration=readFileSync(new URL('../supabase/migrations/20261024090000_reviewed_ro_alba_l5_s2.sql',import.meta.url),'utf8')
+ const registry=JSON.parse(readFileSync(new URL('./policies/historical-statistics-exclusions.json',import.meta.url),'utf8'))
+ const policy=registry.policies.find(p=>p.competitionSlug==='ro-ab-l5-s2')
+ assert.ok(migration.includes(JSON.stringify(policy)))
+ for(const token of ['202541::bigint','18053::bigint','5083::bigint','5079::bigint', '86feb0be-2e6f-4c2e-9fd3-f26aba19fb91', 'c.id=499', '30,0', '2,3,27,0,null::text,null::int', 'HISTORICAL_POLICY: reviewed-existing fixed tuple required', 'HISTORICAL_POLICY: reviewed-existing fixed report required', 'protect_catalog'])assert.ok(migration.includes(token),token)
+ assert.doesNotMatch(migration,/disable trigger|session_replication_role|update\s+competitions|activate/i)
 })

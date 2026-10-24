@@ -130,10 +130,10 @@ const mojId = Number(GITHUB_RUN_ID)
 // Ali zagon drugega toka piše v iste vrstice kot ta?
 function seKrize(tok, naslov, id) {
   if (tok === 'reviewed-existing-history.yml') {
-    const scope = /^Reviewed existing history (prepare|apply|price|preview|activate|receipt) \/ (gb-npl-midlands|gb-sfl-d1-south|ro-liga3-s1|ba-wwin-liga-bih)$/.exec(naslov ?? '')
+    const scope = /^Reviewed existing history (prepare|apply|price|preview|activate|receipt) \/ (gb-npl-midlands|gb-sfl-d1-south|ro-liga3-s1|ro-ab-l4-s2|ro-ab-l5-s2|ba-wwin-liga-bih|md-liga-2)$/.exec(naslov ?? '')
     if (!scope) return true
     if (['prepare', 'preview', 'receipt'].includes(scope[1])) return false
-    const country = scope[2] === 'ro-liga3-s1' ? 'RO' : scope[2] === 'ba-wwin-liga-bih' ? 'BA' : 'GB'
+    const country = ['ro-liga3-s1','ro-ab-l4-s2','ro-ab-l5-s2'].includes(scope[2]) ? 'RO' : scope[2] === 'ba-wwin-liga-bih' ? 'BA' : scope[2] === 'md-liga-2' ? 'MD' : 'GB'
     return !mojaDrzava || mojaDrzava === country
   }
   // Bounded multi-country activation is a global database writer; preview only reads.

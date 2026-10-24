@@ -2,16 +2,19 @@ begin;
 set local lock_timeout='30s';
 -- NPL_RECOVERY_TEST_FUNCTION
 set local statement_timeout='240s';
+select private_reviewed_existing_history.require((select count(*) from private_reviewed_existing_history.report_targets('ro-ab-l5-s2') where mid=202541 and cid=499)=1,'exact Alba L5 S2 SQL admission required');
 create temporary table _reviewed_existing_routes(slug text primary key,cid bigint,provider text,code text,country_code text,policy_id text,policy_sha text,mid bigint,report_id text,rid bigint,rno int,home_id bigint,away_id bigint,played_on date,home_goals int,away_goals int,appearance_count int,goal_count int,current_reports int,games_per_round int,round_count int,team_count int) on commit drop;
 insert into _reviewed_existing_routes values
  ('gb-npl-midlands',979,'isthmian','npl/67d7c7bb74247876e6dae40c/2026-27','GB','gb-npl-midlands-historical-unavailable-2026-10-23-v1','5f88bd981434a2d1bb8097a71d4b62974601b0eb01758509b345c8eb6b0c6924',562344,'gb6a590670ce9ef452b61f386d',35365,3,10869,10864,'2026-08-18',1,1,29,2,150,10,15,20),
  ('gb-sfl-d1-south',984,'isthmian','sfl/69d0bdf9b616bafb97331d41/2026-27','GB','gb-sfl-d1-south-historical-unavailable-2026-10-23-v1','682dbaa0e1acfb0a4a03da9da93cdc706eb0d16dc4a8df180e994f6980369a30',509795,'gb6a5a1b79ce9ef452b61f4398',34273,11,10535,10517,'2026-10-14',1,2,29,3,132,11,12,22),
  ('ba-wwin-liga-bih',998,'nfsbih','wwin-liga-bih/54152223','BA','ba-wwin-liga-bih-historical-unavailable-2026-10-23-v1','fa48230a81834fe5d182012bdf34ab5df513392f5000ad4e0186f24d5b9a1366',576391,'ba54152295',35409,5,10876,10872,'2026-09-02',1,2,32,3,49,5,10,10),
+ ('ro-ab-l5-s2',499,'hlf','judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-2','RO','ro-ab-l5-s2-historical-unavailable-2026-10-24-v1','c13732fdacafd49ef60bd13ec20999d9d64f7a5894a21c43f7e74526ee7a0f26',202541,'86feb0be-2e6f-4c2e-9fd3-f26aba19fb91',18053,6,5083,5079,'2026-10-18',2,3,27,0,30,5,6,10),
  ('ro-liga3-s1',497,'hlf','national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1','RO','ro-liga3-s1-historical-unavailable-2026-10-23-v1','b6686671855dfa9a6f96fa8cf67d530aa4fc4208f859e783929cb36140169329',133334,'f43d55c1-6530-49dc-a02e-4d7e578d6205',10663,1,3016,3017,'2026-08-29',2,1,33,3,54,9,6,18);
 create temporary table _reviewed_existing_targets on commit drop as select * from private_reviewed_existing_history.report_targets('gb-npl-midlands') where false;
 insert into _reviewed_existing_targets select * from private_reviewed_existing_history.report_targets('gb-npl-midlands');
 insert into _reviewed_existing_targets select * from private_reviewed_existing_history.report_targets('gb-sfl-d1-south');
 insert into _reviewed_existing_targets select * from private_reviewed_existing_history.report_targets('ro-liga3-s1');
+insert into _reviewed_existing_targets select * from private_reviewed_existing_history.report_targets('ro-ab-l5-s2');
 insert into _reviewed_existing_targets select * from private_reviewed_existing_history.report_targets('ba-wwin-liga-bih');
 create temporary table _reviewed_existing_teams(slug text,idx int,team_id bigint,primary key(slug,idx)) on commit drop;
 create temporary table _reviewed_existing_players(slug text,team_idx int,player_idx int,player_id bigint,primary key(slug,team_idx,player_idx)) on commit drop;
@@ -24,7 +27,7 @@ begin
  -- The owned SQL-test database deliberately holds unrelated fixtures in these IDs.
  -- They are renamed/reconfigured only within this transaction; the runner checks the
  -- complete football catalog digest before and after rollback.
- update competitions set slug='REX-displaced-'||id||'-'||slug where slug in('gb-npl-midlands','gb-sfl-d1-south','ro-liga3-s1','ba-wwin-liga-bih') and id not in(979,984,497,998);
+ update competitions set slug='REX-displaced-'||id||'-'||slug where slug in('gb-npl-midlands','gb-sfl-d1-south','ro-liga3-s1','ro-ab-l5-s2','ba-wwin-liga-bih') and id not in(979,984,497,499,998);
  for r in select * from _reviewed_existing_routes order by cid loop
   if r.cid=979 then perform private_reviewed_existing_history.require(not exists(select 1 from matches where id in(561922,562344)) and not exists(select 1 from rounds where id in(35329,35365)),'NPL target fixture IDs must be free');end if;
   if r.cid=998 then perform private_reviewed_existing_history.require(not exists(select 1 from matches where id in(576391,576399)) and not exists(select 1 from rounds where id in(35409,35410)),'BiH target fixture IDs must be free');end if;
@@ -224,6 +227,14 @@ begin
    if private_reviewed_existing_history.active_goal_identity_valid(r.cid) then raise exception 'foreign nonnull SFL scorer unexpectedly valid';end if;
    update goals set scorer_id=null where id=anon_goal_id;
   end if;
+  if r.cid=499 then
+   -- The exception never makes any other played report or future header admissible.
+   begin update matches set home_goals=3 where id=202541;perform public.prepare_reviewed_existing_cleanup(r.slug,main_sha,r.policy_sha);raise exception 'Alba score drift passed';exception when others then if sqlerrm='Alba score drift passed' then raise;elsif sqlerrm<>'REVIEWED_EXISTING: exact approved existing report header and individual row counts required' then raise;end if;end;
+   begin update matches set source_url=source_url||'?other' where id=202541;perform public.prepare_reviewed_existing_cleanup(r.slug,main_sha,r.policy_sha);raise exception 'Alba source URL drift passed';exception when others then if sqlerrm='Alba source URL drift passed' then raise;elsif sqlerrm<>'REVIEWED_EXISTING: exact approved existing report header and individual row counts required' then raise;end if;end;
+   begin delete from appearances where match_id=202541 and player_id=(select min(player_id) from appearances where match_id=202541);perform public.prepare_reviewed_existing_cleanup(r.slug,main_sha,r.policy_sha);raise exception 'Alba individual row drift passed';exception when others then if sqlerrm='Alba individual row drift passed' then raise;elsif sqlerrm<>'REVIEWED_EXISTING: exact approved existing report header and individual row counts required' then raise;end if;end;
+   begin update private_historical_statistics.policies set document=document||'{"drift":true}'::jsonb where id=r.policy_id;raise exception 'Alba policy mutation passed';exception when others then if sqlerrm='Alba policy mutation passed' then raise;elsif sqlerrm<>'REVIEWED_EXISTING: immutable approved policy' then raise;end if;end;
+   begin update private_historical_statistics.source_club_bindings set canonical_names=array['Foreign'] where provider='hlf' and source_club_id='d0a838cf-6c6f-4b82-9cd0-c6d8cead047a';raise exception 'Alba club mutation passed';exception when others then if sqlerrm='Alba club mutation passed' then raise;elsif sqlerrm<>'REVIEWED_EXISTING: immutable reviewed source-club binding' then raise;end if;end;
+  end if;
   prepared:=public.prepare_reviewed_existing_cleanup(r.slug,main_sha,r.policy_sha);
   if r.cid=497 and ((select count(*) from private_historical_statistics.source_club_bindings where provider='hlf' and source_club_id='a91ef983-185f-4a35-b5cc-6421c820bd97' and bound_team_id=3016)<>1 or not exists(select 1 from private_reviewed_existing_history.native_binding_audits where audit_id='ro-home-club-binding-v1' and before_binding->>'bound_team_id' is null and after_binding->>'bound_team_id'='3016')) then raise exception 'RO native binding lacks immutable before/after audit';end if;
   if prepared->>'beforeSha256' is null or prepared->'targetMatchIds' is distinct from (select jsonb_agg(mid order by mid) from _reviewed_existing_targets where slug=r.slug) or prepared->>'firstFantasyPlayedOn' is null then raise exception 'prepare response lacks full beforeimage/opening binding';end if;
@@ -238,7 +249,7 @@ begin
   if exists(select 1 from _reviewed_existing_targets tr join matches m on m.id=tr.mid where tr.slug=r.slug and (m.home_goals is distinct from tr.home_goals or m.away_goals is distinct from tr.away_goals)) then raise exception 'cleanup changed an approved report official score';end if;
   if exists(select 1 from _reviewed_existing_targets tr left join matches m on m.id=tr.mid where tr.slug=r.slug and (m.id is null or m.imported_at is not null or m.statistics_status<>'unavailable_historical')) then raise exception 'cleanup did not install every approved unavailable marker';end if;
   if exists(select 1 from matches m join rounds rr on rr.id=m.round_id where rr.competition_id=r.cid and m.statistics_status='unavailable_historical' and not exists(select 1 from _reviewed_existing_targets tr where tr.slug=r.slug and tr.mid=m.id)) then raise exception 'cleanup installed an unapproved unavailable marker';end if;
-  if (select count(*) from matches m join rounds rr on rr.id=m.round_id where rr.competition_id=r.cid and rr.season='2026/27' and m.imported_at is not null and m.statistics_status='available')<>(case r.cid when 979 then 149 when 984 then 131 when 497 then 53 when 998 then 47 end) then raise exception 'post-cleanup current report inventory is not exact';end if;
+  if (select count(*) from matches m join rounds rr on rr.id=m.round_id where rr.competition_id=r.cid and rr.season='2026/27' and m.imported_at is not null and m.statistics_status='available')<>(case r.cid when 979 then 149 when 984 then 131 when 497 then 53 when 499 then 29 when 998 then 47 end) then raise exception 'post-cleanup current report inventory is not exact';end if;
   if r.cid=979 and (select count(*) from matches m join rounds rr on rr.id=m.round_id where rr.competition_id=979 and rr.season='2025/26' and m.imported_at is not null and m.statistics_status='available')<>461 then raise exception 'post-cleanup NPL archive must retain exactly 461 reports';end if;
   if public.get_reviewed_existing_cleanup_receipt(r.slug)->'cleanup'->>'beforeSha256' is distinct from prepared->>'beforeSha256' then raise exception 'cleanup receipt readback differs';end if;
   if r.cid=979 then

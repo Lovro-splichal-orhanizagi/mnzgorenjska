@@ -13,13 +13,13 @@ const registry=JSON.parse(readFileSync(new URL('./policies/historical-statistics
 const ssot=JSON.parse(readFileSync(new URL('./policies/reviewed-existing-cleanup-targets-20261023.json',import.meta.url)))
 const reportId=(provider,id)=>provider==='isthmian'?`gb${id}`:provider==='nfsbih'?`ba${id}`:provider==='fmf'?`md${id}`:id
 
-test('registry and SSOT contain exactly six tuples and nine approved report identities',()=>{
+test('registry and SSOT contain exactly seven tuples and ten approved report identities',()=>{
  assert.equal(validateHistoricalStatisticsRegistry(registry),true)
  assert.equal(ssot.schemaVersion,1)
  assert.equal(ssot.sourcePolicy,'reviewed-existing-history-20261023-v1')
- assert.equal(ssot.competitions.length,6)
- assert.deepEqual(ssot.competitions.map(x=>x.slug).sort(),['ba-wwin-liga-bih','gb-npl-midlands','gb-sfl-d1-south','md-liga-2','ro-ab-l4-s2','ro-liga3-s1'])
- assert.equal(ssot.competitions.reduce((n,c)=>n+c.targets.length,0),9)
+ assert.equal(ssot.competitions.length,7)
+ assert.deepEqual(ssot.competitions.map(x=>x.slug).sort(),['ba-wwin-liga-bih','gb-npl-midlands','gb-sfl-d1-south','md-liga-2','ro-ab-l4-s2','ro-ab-l5-s2','ro-liga3-s1'])
+ assert.equal(ssot.competitions.reduce((n,c)=>n+c.targets.length,0),10)
  const oldPolicies=registry.policies.filter(p=>['gb-npl-midlands','gb-sfl-d1-south','ro-liga3-s1','ba-wwin-liga-bih'].includes(p.competitionSlug))
  assert.deepEqual(oldPolicies.map(p=>[p.competitionSlug,p.id,p.entries.length]).sort(),[
   ['ba-wwin-liga-bih','ba-wwin-liga-bih-historical-unavailable-2026-10-23-v1',2],
@@ -91,3 +91,25 @@ for(const target of ssot.competitions){
    assert.throws(()=>validateInstalledHistoricalStatisticsMarkers({competition,binding:bad}),/binding|marker|identity/i)
  })
 }
+
+
+test('Alba L5 S2 admits only the reviewed scorer omission with the exact composite proof',()=>{
+ const policy=getHistoricalStatisticsPolicy('ro-ab-l5-s2')
+ assert.ok(policy,'reviewed Alba L5 S2 policy must exist')
+ const entry=policy.entries[0]
+ assert.equal(policy.entries.length,1)
+ assert.equal(entry.sourceMatchId,'86feb0be-2e6f-4c2e-9fd3-f26aba19fb91')
+ assert.deepEqual([entry.observedHomeScore,entry.observedAwayScore],[2,3])
+ assert.equal(entry.sourceProof.matchSheetId,'493d2020-b10f-4a31-a58d-a9b75bc1b73b')
+ const competition={id:499,slug:policy.competitionSlug,source:'hlf',source_policy:policy.sourcePolicy,source_league_code:policy.sourceLeagueCode,firstFantasyPlayedOn:'2026-10-25'}
+ const fixture={...entry,season:policy.season}
+ assert.equal(classifyHistoricalStatistics({competition,fixture,rawSha256:entry.rawSha256}).kind,'unavailable_historical')
+ for(const patch of [{sourceMatchId:'future-report'},{sourceRound:7},{playedOn:'2026-10-19'},{observedHomeScore:3},{homeSourceClubId:entry.awaySourceClubId},{sourceProof:{...entry.sourceProof,matchSheetId:'other'}}]) {
+  const changed={...fixture,...patch}
+  if(patch.sourceMatchId) assert.equal(classifyHistoricalStatistics({competition,fixture:changed,rawSha256:entry.rawSha256}).kind,'normal')
+  else assert.throws(()=>classifyHistoricalStatistics({competition,fixture:changed,rawSha256:entry.rawSha256}),/identity/)
+ }
+ const broken=structuredClone(registry)
+ broken.policies.find(p=>p.id===policy.id).entries[0].sourceProof.roundResponseSha256='0'.repeat(64)
+ assert.throws(()=>validateHistoricalStatisticsRegistry(broken),/composite/)
+})

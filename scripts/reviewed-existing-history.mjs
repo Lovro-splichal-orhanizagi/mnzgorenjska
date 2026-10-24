@@ -1,4 +1,4 @@
-// Exact-main, artifact-gated operator for nine approved reports across six leagues.
+// Exact-main, artifact-gated operator for ten approved reports across seven leagues.
 // It performs no source requests and never retries a mutating call.
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
@@ -21,6 +21,7 @@ const EXACT = new Map([
   ['gb-npl-midlands', { id: 979, source: 'isthmian', source_league_code: 'npl/67d7c7bb74247876e6dae40c/2026-27', country:'GB' }],
   ['gb-sfl-d1-south', { id: 984, source: 'isthmian', source_league_code: 'sfl/69d0bdf9b616bafb97331d41/2026-27', country:'GB' }],
   ['ro-liga3-s1', { id: 497, source: 'hlf', source_league_code: 'national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1', country:'RO' }],
+  ['ro-ab-l5-s2', { id: 499, source: 'hlf', source_league_code: 'judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-2', country:'RO' }],
   ['ro-ab-l4-s2', { id: 501, source: 'hlf', source_league_code: 'judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2', country:'RO' }],
   ['ba-wwin-liga-bih', { id: 998, source: 'nfsbih', source_league_code: 'wwin-liga-bih/54152223', country:'BA' }],
   ['md-liga-2', { id: 1107, source: 'fmf', source_league_code: 'liga-2-1782306996/877', country:'MD' }],

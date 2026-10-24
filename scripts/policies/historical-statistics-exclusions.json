@@ -944,6 +944,39 @@
           "reasonCode": "official_result_published_but_match_report_pdf_unpublished"
         }
       ]
+    },
+    {
+      "sourcePolicy": "reviewed-existing-history-20261023-v1",
+      "season": "2026/27",
+      "recordedAt": "2026-10-24T07:43:31.680Z",
+      "approvalReference": "Owner explicitly approved this exact exclusion in reply to call_3b1fed93bbec4963aabd344f3fa4f5d8: preserve official 2–3, mark individual statistics unavailable, reprice and revalidate. Recording time is evidence time, not the unknown user-send timestamp.",
+      "id": "ro-ab-l5-s2-historical-unavailable-2026-10-24-v1",
+      "provider": "hlf",
+      "competitionSlug": "ro-ab-l5-s2",
+      "competitionId": 499,
+      "sourceLeagueCode": "judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-2",
+      "entries": [
+        {
+          "sourceMatchId": "86feb0be-2e6f-4c2e-9fd3-f26aba19fb91",
+          "sourceCompetitionId": "64515604-83ad-4af0-8abe-4557b25e90b0",
+          "sourcePhase": "45f3b9be-0f00-4937-9f55-066d73a227a6",
+          "sourceRound": 6,
+          "playedOn": "2026-10-18",
+          "homeSourceClubId": "d0a838cf-6c6f-4b82-9cd0-c6d8cead047a",
+          "awaySourceClubId": "3e590326-8240-43f8-bc15-89868451e90c",
+          "sourceUrl": "https://hailafotbal.ro/rezultate/judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-2/etapa-6/acs-sanmiclaus-acs-gaz-metan-valea-lunga",
+          "rawSha256": "438c1da7a7620142e25907227ca2c81caf4e7c67607bf10f5d2cf388e9501f00",
+          "sourceProof": {
+            "matchSheetSha256": "031c540b037773a0fb0044e274bd6f26c9c1563f277c176a0c962e2f94d6309b",
+            "roundResponseSha256": "8e2a9ded229fc6b9985904eead0765e0c9e0a621e6a7ff56148e542c81f47bfb",
+            "matchSheetId": "493d2020-b10f-4a31-a58d-a9b75bc1b73b",
+            "rawSha256Formula": "SHA256(JSON.stringify({matchSheetSha256,roundResponseSha256}) in lexicographic key order)"
+          },
+          "observedHomeScore": 2,
+          "observedAwayScore": 3,
+          "reasonCode": "official_score_published_but_scorer_events_absent"
+        }
+      ]
     }
   ]
 }

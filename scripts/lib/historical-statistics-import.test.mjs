@@ -37,11 +37,14 @@ test('runtime individual import accepts only ordinary complete report envelopes'
 })
 test('wrong competition cannot derive individual statistics for another registered provider report',()=>assert.throws(()=>assertHistoricalReportImportable({competition:{slug:'ordinary',source:'fcf'},report:{id:'es4109388',z:{}}}),/historical|marker/i))
 
-test('all six reviewed report IDs fail closed at the individual import admission boundary',()=>{
+test('all ten reviewed report IDs fail closed at the individual import admission boundary',()=>{
  const cases=[
   ['gb-npl-midlands','gb6a590670ce9ef452b61f386d'],['gb-npl-midlands','gb6896abc31c6f4c56212c7ac5'],
   ['gb-sfl-d1-south','gb6a5a1b79ce9ef452b61f4398'],
   ['ro-liga3-s1','f43d55c1-6530-49dc-a02e-4d7e578d6205'],
+  ['ro-ab-l4-s2','8b7af269-2420-4534-9af2-f3cd51852f15'],
+  ['ro-ab-l5-s2','86feb0be-2e6f-4c2e-9fd3-f26aba19fb91'],
+  ['md-liga-2','md50422'],['md-liga-2','md50481'],
   ['ba-wwin-liga-bih','ba54152295'],['ba-wwin-liga-bih','ba54152303'],
  ]
  for(const [slug,reportId] of cases){
