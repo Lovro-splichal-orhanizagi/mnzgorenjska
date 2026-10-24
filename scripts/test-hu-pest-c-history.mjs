@@ -28,7 +28,7 @@ test('Pest C exact approval preserves official 3–0 and binds original raw sour
 test('Pest C ordinary/fresh/targeted archive imports skip the installed body and bind schedule without false walkover',async()=>{
  const vir=viraZa(competition,{installedHistoricalMarkers:binding()});let calls=[]
  const read=async url=>{calls.push(url);assert.ok(!url.includes('/match/'),'excluded body is never read');return page()}
- for(const options of [{},{svezi:true},{samoZapisnik:'2120218'}]){calls=[];assert.deepEqual(await vir.zapisniki('65/14/32327',read,options),[]);if(options.samoZapisnik)assert.equal(calls.length,0)}
+ for(const options of [{},{sveziZapisniki:new Set(['2120218'])},{samoZapisnik:'2120218'}]){calls=[];assert.deepEqual(await vir.zapisniki('65/14/32327',read,options),[]);if(options.samoZapisnik)assert.equal(calls.length,0)}
  const rounds=await vir.razporedVseStrani('65/14/32327',read)
  assert.equal(rounds[0].tekme[0].historicalMarker.matchId,616508);assert.equal(rounds[0].tekme[0].kontumacija,false)
  for(const html of [page('0 - 8'),page('3 - 0','Other club'),page().replace('2025. 09. 13.','2025. 09. 14.')])await assert.rejects(vir.razporedVseStrani('65/14/32327',async()=>html),/identity/)
