@@ -276,3 +276,20 @@ Preverbe so brez omrežja in baze:
 ```sh
 node --test scripts/test-dribl.mjs scripts/test-dribl-capture.mjs scripts/test-dribl-import.mjs scripts/test-dribl-cli.mjs
 ```
+
+
+## Gostovana integracija
+
+Adapter je vključen v `viri/index.mjs`; migracija
+`20261024210000_dribl_source_identities.sql` zagotovi zasebno rezervacijo šifer.
+Nobena liga ali država s tem ni registrirana v bazi ali aktivirana.
+`preveri-dribl-paket.yml` sprejme 1–5 opaženih NSW kontekstov, skupni proračun
+1–500 in izrecno vzorčenje ali celotni zajem. Deluje brez ključev baze.
+`uvoz-dribl-public.yml` lahko uvozi le že registrirano nevklopljeno AU ligo
+iz uspešnega popolnega zajema istega main commita v zadnjih 24 urah.
+Pred vsakim pisanjem preveri prazne fantasy ekipe/postave in isti izvorni
+kontekst. Native podprocesi smejo klicati le natančni origin baze; ne berejo
+vira. Ne izvede vklopa. Prejšnja koledarska sezona je izrecni dodatni kontekst
+v istem popolnem artefaktu. Cene in pripravljenost se izračunajo z obstoječimi
+pravili. Prihodnja avstralska uvedba še potrebuje državno integracijo, nočni
+zajem, popolne podatke in resnični prihodnji rok; v opaženem imeniku ni 2027.

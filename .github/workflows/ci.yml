@@ -78,7 +78,7 @@ jobs:
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
 
       - name: Provider batch and Dribl source diagnostics (source-free)
-        run: node --test scripts/test-provider-league-batch.mjs scripts/test-provider-source-budget.mjs scripts/test-mlsz-provider-proof.mjs scripts/test-dribl.mjs scripts/test-dribl-capture.mjs scripts/test-dribl-import.mjs scripts/test-dribl-cli.mjs scripts/test-dribl-country-binding.mjs
+        run: node --test scripts/test-provider-league-batch.mjs scripts/test-provider-source-budget.mjs scripts/test-mlsz-provider-proof.mjs scripts/test-dribl.mjs scripts/test-dribl-import-actions.mjs scripts/test-dribl-capture.mjs scripts/test-dribl-import.mjs scripts/test-dribl-cli.mjs scripts/test-dribl-country-binding.mjs
 
       - name: Country preview and Polish report diagnostics (source-free)
         run: node --test scripts/test-country-league-preview.mjs scripts/test-ckm-report.mjs scripts/test-pzpn-no-score.mjs

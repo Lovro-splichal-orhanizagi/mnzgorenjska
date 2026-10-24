@@ -16,11 +16,11 @@ on:
         type: string
         default: ''
       capture_run:
-        description: Successful full main capture run from the past24hours on this exact commit
+        description: Successful full main capture run from the past 24 hours on this exact commit
         type: string
         required: true
       expected_sha:
-        description: Exact reviewed40character current main commitSHA
+        description: Exact reviewed 40-character main commit SHA
         type: string
         required: true
 permissions:

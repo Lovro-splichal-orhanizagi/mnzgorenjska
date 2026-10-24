@@ -99,3 +99,24 @@
   registration, frontend routing or nightly operation is implied by adding
   the capture-bound adapter. Main review/deployment and bounded operations
   are the remaining release work.
+
+
+## Final review fixes and operator integration
+
+- Independent integration review found that the MLSZ byte bound buffered an
+  entire cloned response before checking size. Finite 9 MiB streaming
+  regressions reproduced the failure; the fixed reader cancels at 4 MiB,
+  rejects oversized Content-Length before reading and combines a 30-second
+  timeout with the caller signal. All 25 budget tests passed and review
+  approved `5f8de8cb`. No provider request was used in these tests.
+- Dribl hosted import admission is independently approved at `3ff6aa65`.
+  It admits only a successful recent same-repository/main/commit capture,
+  replays the selected full current and optional previous-year archive
+  scopes, checks the inactive AU tuple and empty fantasy bootstrap before
+  every writer, and denies source network during native import. It does
+  not activate or register a league.
+- Final changed-code runner/proof/budget/operator/native set: 112 tests
+  passed, zero failed. CI YAML and whitespace checks passed. Independent
+  integration review approved country binding, coordination, SQL privileges
+  and MLSZ activation boundaries. Final branch CI and main deployment
+  remain required before live dispatch.
