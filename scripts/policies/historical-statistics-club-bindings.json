@@ -1250,6 +1250,70 @@
           "rawSha256": "4e54028d642fd71865a44017ddef28ffdcdbea3e22ad2bb669bb18527ba75efe"
         }
       ]
+    },
+    {
+      "provider": "mlsz",
+      "sourceClubId": "311188",
+      "sourceCategoryId": null,
+      "countryCode": "HU",
+      "canonicalNames": [
+        "NagyLog-St.Mihály FC"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2079402",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/6/31904/10/2079402.html",
+          "rawSha256": "f233a3f56df2c829c4e1d4909d1e7bcbb033b5fc1fedff38f6f39892b2f2b991"
+        }
+      ]
+    },
+    {
+      "provider": "mlsz",
+      "sourceClubId": "311185",
+      "sourceCategoryId": null,
+      "countryCode": "HU",
+      "canonicalNames": [
+        "UTC 1913 Labdarúgó Kft"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2079402",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/6/31904/10/2079402.html",
+          "rawSha256": "f233a3f56df2c829c4e1d4909d1e7bcbb033b5fc1fedff38f6f39892b2f2b991"
+        }
+      ]
+    },
+    {
+      "provider": "mlsz",
+      "sourceClubId": "311187",
+      "sourceCategoryId": null,
+      "countryCode": "HU",
+      "canonicalNames": [
+        "Szőreg RSE"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2079433",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/6/31904/16/2079433.html",
+          "rawSha256": "2ea11f7d6b83ba65fcd673215bdef161a1ac636e23bd17f7e647fad6d13409c6"
+        }
+      ]
+    },
+    {
+      "provider": "mlsz",
+      "sourceClubId": "311186",
+      "sourceCategoryId": null,
+      "countryCode": "HU",
+      "canonicalNames": [
+        "ESK Kiskundorozsma"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2079433",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/6/31904/16/2079433.html",
+          "rawSha256": "2ea11f7d6b83ba65fcd673215bdef161a1ac636e23bd17f7e647fad6d13409c6"
+        }
+      ]
     }
   ]
 }

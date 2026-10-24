@@ -374,6 +374,63 @@
           "initialSourceRound": null
         }
       ]
+    },
+    {
+      "competitionId": 625,
+      "slug": "hu-cs-u19-toth",
+      "provider": "mlsz",
+      "sourceLeagueCode": "67/6/34102",
+      "country": "HU",
+      "expectedReportsBySeason": {
+        "2025/26": 87,
+        "2026/27": 23
+      },
+      "policyId": "hu-cs-u19-toth-historical-unavailable-2026-10-24-v1",
+      "policySha256": "e6a60a710be2da291be450cec66b57998b25a4484f092eb27a41da47389bbf34",
+      "targets": [
+        {
+          "nativeMatchId": 622735,
+          "nativeRoundId": 35640,
+          "round": 10,
+          "homeTeamId": 10928,
+          "awayTeamId": 2448,
+          "date": "2025-11-16",
+          "score": [
+            3,
+            0
+          ],
+          "reportId": "2079402",
+          "sourceMatchId": "2079402",
+          "season": "2025/26",
+          "apps": 33,
+          "goals": 9,
+          "sourcePhase": null,
+          "sourceRound": 10,
+          "initialSourcePhase": null,
+          "initialSourceRound": null
+        },
+        {
+          "nativeMatchId": 622772,
+          "nativeRoundId": 35646,
+          "round": 16,
+          "homeTeamId": 10926,
+          "awayTeamId": 6471,
+          "date": "2026-04-25",
+          "score": [
+            0,
+            3
+          ],
+          "reportId": "2079433",
+          "sourceMatchId": "2079433",
+          "season": "2025/26",
+          "apps": 19,
+          "goals": 2,
+          "sourcePhase": null,
+          "sourceRound": 16,
+          "initialSourcePhase": null,
+          "initialSourceRound": null
+        }
+      ]
     }
   ]
 }

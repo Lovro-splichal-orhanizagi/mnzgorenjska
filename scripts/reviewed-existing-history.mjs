@@ -1,4 +1,4 @@
-// Exact-main, artifact-gated operator for eleven approved reports across eight leagues.
+// Exact-main, artifact-gated operator for thirteen approved reports across nine leagues.
 // It performs no source requests and never retries a mutating call.
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
@@ -18,6 +18,7 @@ const LEGACY_NATIVE_MAIN_BY_SLUG = Object.freeze({
   'gb-npl-midlands': 'ac1cc5a2dd363088a3e7f309cba67214ddcc5187',
 })
 const EXACT = new Map([
+  ['hu-cs-u19-toth', { id: 625, source: 'mlsz', source_league_code: '67/6/34102', country:'HU' }],
   ['hu-pe-u19-c', { id: 637, source: 'mlsz', source_league_code: '67/14/34250', country:'HU' }],
   ['gb-npl-midlands', { id: 979, source: 'isthmian', source_league_code: 'npl/67d7c7bb74247876e6dae40c/2026-27', country:'GB' }],
   ['gb-sfl-d1-south', { id: 984, source: 'isthmian', source_league_code: 'sfl/69d0bdf9b616bafb97331d41/2026-27', country:'GB' }],

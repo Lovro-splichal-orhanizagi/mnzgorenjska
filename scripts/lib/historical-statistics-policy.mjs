@@ -10,6 +10,7 @@ const entrySeason = (policy,entry) => MFA_POLICY_IDS.includes(policy.id) || (exa
 const exactMfaTuple = competition => (competition?.id===971 && competition?.slug==='mt-premier' && competition?.source_league_code==='58539/2027') || (competition?.id===972 && competition?.slug==='mt-challenge' && competition?.source_league_code==='2601248/2027') || (competition?.id===973 && competition?.slug==='mt-nl1' && competition?.source_league_code==='2601267/2027') || (competition?.id===974 && competition?.slug==='mt-nl2' && competition?.source_league_code==='6234492/2027')
 const EXISTING_HISTORY_SOURCE_POLICY = 'reviewed-existing-history-20261023-v1'
 const EXISTING_HISTORY_TUPLES = {
+  'hu-cs-u19-toth': { id: 625, provider: 'mlsz', code: '67/6/34102', policyId: 'hu-cs-u19-toth-historical-unavailable-2026-10-24-v1', season: '2025/26' },
   'hu-pe-u19-c': { id: 637, provider: 'mlsz', code: '67/14/34250', policyId: 'hu-pe-u19-c-historical-unavailable-2026-10-24-v1', season: '2025/26' },
   'gb-npl-midlands': { id: 979, provider: 'isthmian', code: 'npl/67d7c7bb74247876e6dae40c/2026-27', policyId: 'gb-npl-midlands-historical-unavailable-2026-10-23-v1' },
   'gb-sfl-d1-south': { id: 984, provider: 'isthmian', code: 'sfl/69d0bdf9b616bafb97331d41/2026-27', policyId: 'gb-sfl-d1-south-historical-unavailable-2026-10-23-v1' },
