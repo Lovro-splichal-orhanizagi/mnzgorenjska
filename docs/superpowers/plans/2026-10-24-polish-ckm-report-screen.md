@@ -71,3 +71,7 @@
 
 - Verification complete: UI render smoke passes with VSE OK using explicit local placeholders. Combined with the green 2176-test source suite, both npm run smoke stages passed. npm test remains blocked before network by absent local anon/service keys. No production credentials or .env were used.
 - Review handoff: parent owns independent review; no sub-agents spawned (explicit task constraint). All new source/package/country/CI registration remains absent.
+
+- Independent parent review found P2 literal/inert scope false acceptance: textarea/xmp/iframe body wrappers were interpreted as report elements. Reproduced before fixing; new scope regression suite initially had 34 failures.
+- Fix: consume raw-text elements atomically; give template/SVG/MathML fragments isolated boundaries; refuse unclosed/malformed/unsupported boundaries and ambiguous script escape states. Duplicate attributes and duplicate primary header fields hold statistics. This remains a bounded report reader, not a browser HTML implementation.
+- Scope fix verification: 74/74 focused tests pass on Node 22.23.1. Full original captures produce exactly equal JSON outputs to the prior frozen version (complete/held/held); football reconciliation code unchanged. No source network or unchanged repository-wide suite rerun, per parent review instruction.

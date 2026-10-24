@@ -187,3 +187,68 @@ for (const args of [[], ['--url', url], ['--datoteka', '/nonexistent-report.html
     assert.match(r.stderr, /ckm:/)
   })
 }
+
+const wrapBody = (html, tag) => html.replace(/(<body\b[^>]*>)/, `$1<${tag}>`).replace('</body>', `</${tag}></body>`)
+for (const tag of ['textarea', 'xmp', 'iframe', 'title', 'noembed', 'noscript', 'template', 'script', 'style', 'svg', 'math']) {
+  test(`literal/inert ${tag} body contents cannot become a report`, () => {
+    held(parse(wrapBody(complete, tag)), 'REPORT_SCOPE')
+  })
+}
+for (const tag of ['textarea', 'xmp', 'iframe', 'title', 'noembed', 'noscript', 'template', 'script', 'style', 'svg', 'math']) {
+  test(`fake outer closing tags in ${tag} cannot escape their fragment`, () => {
+    const decoy = `<${tag}></div></div></body><div class="event-main-content">not a report</div></${tag}>`
+    const r = parse(complete.replace('<div class="event-main-content">', `<div class="event-main-content">${decoy}`))
+    assert.equal(r.reportStatistikaPripravljena, true, JSON.stringify(r.issues))
+    assert.equal(r.appearances.length, 27)
+    assert.equal(r.events.length, 14)
+  })
+}
+test('nested template boundaries respect a raw-text fragment containing a fake template end tag', () => {
+  const fragment = '<template><template><textarea></template></div></textarea></template></template>'
+  const r = parse(complete.replace('<div class="event-main-content">', `<div class="event-main-content">${fragment}`))
+  assert.equal(r.reportStatistikaPripravljena, true, JSON.stringify(r.issues))
+  assert.equal(r.appearances.length, 27)
+})
+for (const tag of ['textarea', 'xmp', 'iframe', 'title', 'noembed', 'noscript', 'template', 'script', 'style', 'svg', 'math']) {
+  test(`unclosed ${tag} after an otherwise complete report fails closed`, () => {
+    held(parse(complete.replace('</body>', `<${tag}></body>`)), 'HTML_UNCLOSED_INERT')
+  })
+}
+test('unsupported plaintext remainder fails closed rather than reading literal report markup', () => {
+  held(parse(wrapBody(complete, 'plaintext')), 'HTML_INERT_UNSUPPORTED')
+})
+test('unclosed comment after report fails closed instead of accepting uncertain document boundaries', () => {
+  held(parse(complete.replace('</body>', '<!-- </body>')), 'HTML_UNCLOSED_COMMENT')
+})
+for (const [label, mutate] of [
+  ['body class', h => h.replace('<body class=', '<body class="unrelated" class=')],
+  ['canonical href', h => h.replace('<link href=', '<link href="https://example.com/" href=')],
+]) test(`duplicate ${label} attributes cannot use last-attribute-wins parsing to accept a report`, () => {
+  held(parse(mutate(complete)), 'HTML_DUPLICATE_ATTRIBUTE')
+})
+for (const [label, mutate] of [
+  ['score box', h => h.replace('<div class="hero-score-box">', '<div class="hero-score-box">conflicting</div><div class="hero-score-box">')],
+  ['details bar', h => h.replace('<div class="match-details-bar">', '<div class="match-details-bar">conflicting</div><div class="match-details-bar">')],
+]) test(`multiple primary ${label} sections are ambiguous, not first-match wins`, () => {
+  held(parse(mutate(complete)), 'HEADER_AMBIGUOUS')
+})
+test('malformed tag boundary within an inert fragment fails closed instead of leaking later report scope', () => {
+  const fragment = '<template></unfinished</template>'
+  held(parse(complete.replace('<div class="event-main-content">', `<div class="event-main-content">${fragment}`)), 'HTML_TOKEN_UNSUPPORTED')
+})
+test('unsupported case-variant CDATA remainder cannot hide an unclosed boundary after a report', () => {
+  held(parse(complete.replace('</body>', '<![cdata[</body>')), 'HTML_INERT_UNSUPPORTED')
+})
+for (const [label, before, after] of [
+  ['score', '<div class="hero-score">1:1</div>', '<div class="hero-score">1:1</div><div class="hero-score">9:9</div>'],
+  ['team name', '<h2>Sośnica Gliwice</h2>', '<h2>Sośnica Gliwice</h2><h2>Other Club</h2>'],
+  ['league/round label', 'III LIGA ŚLĄSKA | 10 KOLEJKA', 'III LIGA ŚLĄSKA | 10 KOLEJKA</div><div>OTHER LEAGUE | 99 KOLEJKA'],
+]) test(`duplicate primary ${label} fields cannot silently select the first value`, () => {
+  const changed = complete.replace(before, after)
+  assert.notEqual(changed, complete, 'fixture mutation must affect the real primary field')
+  held(parse(changed), 'HEADER_AMBIGUOUS')
+})
+test('unsupported double-escaped script data cannot expose a literal report after its first apparent close', () => {
+  const changed = complete.replace(/(<body\b[^>]*>)/, '$1<script><!--<script></script>').replace('</body>', '</script></body>')
+  held(parse(changed), 'HTML_INERT_UNSUPPORTED')
+})

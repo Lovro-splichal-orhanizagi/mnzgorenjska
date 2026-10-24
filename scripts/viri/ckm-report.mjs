@@ -5,7 +5,10 @@ import { createHash } from 'node:crypto'
 const ORIGIN = 'https://concordiaknurow.pl'
 const POSITIONS = { BRAMKARZ: 'GK', OBROŃCY: 'DEF', POMOCNICY: 'MID', NAPASTNICY: 'FWD' }
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'])
-const OMIT = new Set(['script', 'style', 'template', 'noscript', 'aside'])
+const RAW_TEXT = new Set(['script', 'style', 'textarea', 'xmp', 'iframe', 'title', 'noembed', 'noscript'])
+const FENCED = new Set(['template', 'svg', 'math'])
+const OMIT = new Set([...RAW_TEXT, ...FENCED, 'aside', 'plaintext'])
+const HTML_TOKEN = /<!--[^]*?(?:-->|$)|<!\[CDATA\[[^]*?(?:\]\]>|$)|<![^>]*>|<\/?[a-z][\w:-]*(?:[^<>"']|"[^"]*"|'[^']*')*>|[^<]+/gi
 const normalize = value => value.normalize('NFC').replace(/\s+/gu, ' ').trim().toLocaleLowerCase('pl')
 
 function decode(value) {
@@ -20,29 +23,100 @@ const has = (node, cls) => (node.attrs?.class ?? '').split(/\s+/).includes(cls)
 const ignored = node => OMIT.has(node.tag) || node.attrs?.hidden !== undefined ||
   node.attrs?.['aria-hidden'] === 'true' || /(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*hidden)\b/i.test(node.attrs?.style ?? '') || has(node, 'widget')
 
-// Small balanced tree reader for the observed HTML, not regex slices of nested divs.
-// Raw-text elements are removed before tokenization so their fake closing tags
-// cannot change the scope stack. Nothing is executed and the input is untouched.
-function htmlTree(html) {
+// This is a bounded report reader, not a browser HTML parser. Consume raw-text
+// and inert/foreign fragments before their contents can touch the outer stack.
+// Templates/foreign subtrees have their own fence stack; fake </body>/<div>
+// tags inside them must never promote a literal/foreign report into HTML scope.
+function skipRaw(html, tag, offset, issue) {
+  const close = new RegExp(`</${tag}(?=[\\s/>])(?:[^<>"']|"[^"]*"|'[^']*')*>`, 'gi')
+  close.lastIndex = offset
+  const end = close.exec(html)
+  if (end) {
+    if (tag === 'script' && /<!--[^]*?<script(?=[\s/>])/i.test(html.slice(offset, end.index))) {
+      issue('HTML_INERT_UNSUPPORTED', 'Double-escaped script data requires unsupported browser parsing states')
+    }
+    return close.lastIndex
+  }
+  issue('HTML_UNCLOSED_INERT', 'Unclosed raw-text or inert fragment', { tag })
+  return html.length
+}
+function skipFenced(html, tag, offset, issue) {
+  const scanner = new RegExp(HTML_TOKEN.source, HTML_TOKEN.flags), fences = [tag]
+  scanner.lastIndex = offset
+  let match
+  while ((match = scanner.exec(html))) {
+    if (match.index !== offset) issue('HTML_TOKEN_UNSUPPORTED', 'Malformed boundary inside inert or foreign fragment')
+    const token = match[0]
+    offset = scanner.lastIndex
+    if (token.startsWith('<!--')) {
+      if (!token.endsWith('-->')) issue('HTML_UNCLOSED_COMMENT', 'Unclosed comment inside inert fragment')
+      continue
+    }
+    if (/^<!\[CDATA\[/i.test(token)) {
+      if (!token.endsWith(']]>')) issue('HTML_UNCLOSED_INERT', 'Unclosed foreign CDATA fragment', { tag: 'cdata' })
+      continue
+    }
+    const t = token.match(/^<(\/?)([\w:-]+)/)
+    if (!t) continue
+    const inner = t[2].toLowerCase()
+    if (!t[1] && RAW_TEXT.has(inner)) { offset = scanner.lastIndex = skipRaw(html, inner, scanner.lastIndex, issue); continue }
+    if (!t[1] && inner === 'plaintext') {
+      issue('HTML_INERT_UNSUPPORTED', 'Plaintext remainder has no supported closing boundary'); return html.length
+    }
+    if (!FENCED.has(inner)) continue
+    if (!t[1]) {
+      // HTML templates ignore self-closing syntax; SVG/MathML support it.
+      if (inner === 'template' || !/\/\s*>$/.test(token)) fences.push(inner)
+    } else {
+      if (fences.at(-1) !== inner) {
+        issue('HTML_OPAQUE_BOUNDARY', 'Crossed or ambiguous inert/foreign boundaries', { tag: inner })
+        return scanner.lastIndex
+      }
+      fences.pop()
+      if (!fences.length) return scanner.lastIndex
+    }
+  }
+  issue('HTML_UNCLOSED_INERT', 'Unclosed inert or foreign fragment', { tag })
+  return html.length
+}
+function htmlTree(html, issue) {
   const root = { tag: '#document', attrs: {}, children: [] }, stack = [root]
-  const safe = html.replace(/<!--[^]*?-->/g, '').replace(/<(script|style)\b[^>]*>[^]*?<\/\1\s*>/gi, '')
-  const tokens = safe.match(/<\/?[a-z][\w:-]*(?:[^<>"']|"[^"]*"|'[^']*')*>|[^<]+/gi) ?? []
-  for (const token of tokens) {
+  const scanner = new RegExp(HTML_TOKEN.source, HTML_TOKEN.flags)
+  let match, offset = 0
+  while ((match = scanner.exec(html))) {
+    if (match.index !== offset) issue('HTML_TOKEN_UNSUPPORTED', 'Malformed or unsupported HTML boundary')
+    const token = match[0]
+    offset = scanner.lastIndex
+    if (token.startsWith('<!--')) {
+      if (!token.endsWith('-->')) issue('HTML_UNCLOSED_COMMENT', 'Unclosed HTML comment')
+      continue
+    }
+    if (/^<!\[CDATA\[/i.test(token)) { issue('HTML_INERT_UNSUPPORTED', 'CDATA outside a foreign fragment is unsupported'); continue }
+    if (token.startsWith('<!')) continue
     if (!token.startsWith('<')) { stack.at(-1).children.push(decode(token)); continue }
-    const match = token.match(/^<(\/?)([\w:-]+)/), tag = match[2].toLowerCase()
-    if (match[1]) {
+    const t = token.match(/^<(\/?)([\w:-]+)/), tag = t[2].toLowerCase()
+    if (t[1]) {
       const index = stack.findLastIndex(node => node.tag === tag)
       if (index > 0) stack.length = index
       continue
     }
-    const attrs = {}
-    for (const a of token.slice(match[0].length).matchAll(/([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g)) {
-      attrs[a[1].toLowerCase()] = decode(a[2] ?? a[3] ?? a[4] ?? '')
+    const attrs = Object.create(null)
+    for (const a of token.slice(t[0].length).matchAll(/([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g)) {
+      const key = a[1].toLowerCase()
+      if (Object.hasOwn(attrs, key)) issue('HTML_DUPLICATE_ATTRIBUTE', 'Duplicate attributes have ambiguous source meaning', { tag, attribute: key })
+      else attrs[key] = decode(a[2] ?? a[3] ?? a[4] ?? '')
+    }
+    if (tag === 'plaintext') { issue('HTML_INERT_UNSUPPORTED', 'Plaintext remainder has no supported closing boundary'); offset = html.length; break }
+    if (RAW_TEXT.has(tag)) { offset = scanner.lastIndex = skipRaw(html, tag, offset, issue); continue }
+    if (FENCED.has(tag)) {
+      if (tag === 'template' || !/\/\s*>$/.test(token)) offset = scanner.lastIndex = skipFenced(html, tag, offset, issue)
+      continue
     }
     const node = { tag, attrs, children: [] }
     stack.at(-1).children.push(node)
     if (!VOID.has(tag) && !/\/\s*>$/.test(token)) stack.push(node)
   }
+  if (offset !== html.length) issue('HTML_TOKEN_UNSUPPORTED', 'Unterminated HTML token')
   return root
 }
 function children(node) { return (node?.children ?? []).filter(n => typeof n !== 'string' && !ignored(n)) }
@@ -81,7 +155,7 @@ export function parseCkmReport(html, { url } = {}) {
   const issue = (code, message, fields = {}) => result.issues.push({ code, message, blocksReportStatistics: true, ...fields })
   const warning = (code, message, fields = {}) => result.warnings.push({ code, message, ...fields })
   if (Buffer.byteLength(html) > 2_000_000) { issue('HTML_TOO_LARGE', 'Bounded screen accepts at most 2 MB'); return result }
-  const document = htmlTree(html), bodies = all(document, n => n.tag === 'body')
+  const document = htmlTree(html, issue), bodies = all(document, n => n.tag === 'body')
   const canonical = all(document, n => n.tag === 'link' && n.attrs.rel === 'canonical')
   const boundUrl = observedUrl(url, /^\/event\/[^/]+\/$/)
   if (!boundUrl) issue('URL_SCOPE', 'Expected exact observed Concordia HTTPS event URL')
@@ -99,12 +173,20 @@ export function parseCkmReport(html, { url } = {}) {
   if (postIds.length > 1) issue('SOURCE_ID_AMBIGUOUS', 'Multiple primary WP event IDs')
   result.sourceId = postIds.length === 1 ? `ckm:concordiaknurow.pl:event:${postIds[0].slice(7)}` : boundUrl
   const hero = heroes[0], teamNodes = children(hero).filter(n => has(n, 'hero-team'))
-  const names = teamNodes.map(n => text(all(n, c => c.tag === 'h2')[0]))
+  const headings = teamNodes.map(n => all(n, c => c.tag === 'h2'))
+  const names = headings.map(nodes => text(nodes[0]))
   const boxes = children(hero).filter(n => has(n, 'hero-score-box'))
-  const label = text(children(boxes[0]).find(n => !has(n, 'hero-score')))
+  const details = children(main).filter(n => has(n, 'match-details-bar'))
+  if (boxes.length !== 1 || details.length !== 1) issue('HEADER_AMBIGUOUS', 'Exactly one primary score box and details bar required')
+  const labels = children(boxes[0]).filter(n => !has(n, 'hero-score'))
+  const scores = byClass(boxes[0], 'hero-score')
+  if (headings.some(nodes => nodes.length !== 1) || labels.length !== 1 || scores.length !== 1) {
+    issue('HEADER_AMBIGUOUS', 'Exactly one team heading, league/round label and score field required')
+  }
+  const label = text(labels[0])
   const leagueRound = label.match(/^(.+?)\s*\|\s*(\d+)\s+KOLEJKA$/u)
-  const finalScore = score(text(oneClass(boxes[0], 'hero-score')))
-  const dates = byClass(children(main).find(n => has(n, 'match-details-bar')), 'detail-item')
+  const finalScore = score(text(scores[0]))
+  const dates = byClass(details[0], 'detail-item')
     .map(text).map(v => v.match(/^📅\s*(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})$/u)).filter(Boolean)
   const d = dates.length === 1 ? dates[0] : null
   let date = null, time = null, derived = null
