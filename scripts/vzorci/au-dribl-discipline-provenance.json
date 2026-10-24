@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "source": "dribl",
+  "phase": "parent-owned separately bounded discipline validation",
+  "phaseReadLimit": 8,
+  "phaseRequests": 7,
+  "sourceAccessStopped": true,
+  "permissionsVerified": false,
+  "scope": {
+    "tenant": "1RwNlWemjr",
+    "season": "wOmelzGd02",
+    "competition": "A4KLxx87Kq",
+    "league": "bgdMjoBxmE"
+  },
+  "responses": [
+    {
+      "file": "au-dribl-match-Pmj27A1G5m.json",
+      "url": "https://mc-api.dribl.com/api/matchcentre/Pmj27A1G5m?tenant=1RwNlWemjr",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "18cd09e90b9ab758b312cdeb55c2da8db1b2cfb27581f8eb3e4758c0ab6f819f",
+      "bytes": 7025,
+      "startedAt": "2026-10-24T21:10:55.816789+00:00",
+      "capturedAt": "2026-10-24T21:10:56.844737+00:00",
+      "purpose": "Actual red-card schema validation from retained official fixture ID",
+      "observedFrom": "https://competitions.footballnsw.com.au/results?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE"
+    },
+    {
+      "file": "au-dribl-home-Pmj27A1G5m.json",
+      "url": "https://mc-api.dribl.com/api/matchcentre-match-members/match/Pmj27A1G5m/team/pmvzZa7rmv",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "7b3bc54ce529e055105358a6199db9be86c40a92c1ccb1307eda83abd938edc5",
+      "bytes": 17611,
+      "startedAt": "2026-10-24T21:10:58.820854+00:00",
+      "capturedAt": "2026-10-24T21:10:59.301491+00:00",
+      "purpose": "Actual red-card schema validation from retained official fixture ID",
+      "observedFrom": "https://competitions.footballnsw.com.au/results?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE"
+    },
+    {
+      "file": "au-dribl-away-Pmj27A1G5m.json",
+      "url": "https://mc-api.dribl.com/api/matchcentre-match-members/match/Pmj27A1G5m/team/MNGolA40NA",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "74fae87a5fd1cc6a632c73cd73d9b2e80b41a258455665d56cfcc2ba7921224e",
+      "bytes": 18413,
+      "startedAt": "2026-10-24T21:11:01.822045+00:00",
+      "capturedAt": "2026-10-24T21:11:02.297999+00:00",
+      "purpose": "Actual red-card schema validation from retained official fixture ID",
+      "observedFrom": "https://competitions.footballnsw.com.au/results?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE"
+    },
+    {
+      "file": "au-dribl-results-page2.json",
+      "url": "https://mc-api.dribl.com/api/results?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE&date_range=default&tenant=1RwNlWemjr&results=1&timezone=Europe%2FLjubljana&cursor=eyJzY2hlZHVsZV9ldmVudHMuZGF0ZSI6IjIwMjYtMDgtMDkgMDU6MDA6MDAiLCJzY2hlZHVsZV9ldmVudHMuaWQiOjUxNjcxMjQsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "c09aa9bd48b2a6d57ee1f16789a8ecb32585ad0510e1d3f4e761cc512a6b4cce",
+      "bytes": 42803,
+      "startedAt": "2026-10-24T21:12:46.596746+00:00",
+      "capturedAt": "2026-10-24T21:12:47.620579+00:00",
+      "purpose": "Follow exact published cursor to locate officially reported Sydney United\u2013NWS Spirit 2 August fixture",
+      "observedFrom": "https://competitions.footballnsw.com.au/results?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE"
+    },
+    {
+      "file": "au-dribl-match-1K3pvJ2P7d.json",
+      "url": "https://mc-api.dribl.com/api/matchcentre/1K3pvJ2P7d?tenant=1RwNlWemjr",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "9ccbce7fe341d1c2f4a4c6253dc93fc68eaa458c768cfd8b8af0d08c89e2dfab",
+      "bytes": 6575,
+      "startedAt": "2026-10-24T21:12:49.597800+00:00",
+      "capturedAt": "2026-10-24T21:12:50.028449+00:00",
+      "purpose": "Validate actual publicly attributed straight red card schema",
+      "observedFrom": "https://competitions.footballnsw.com.au/results?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE"
+    },
+    {
+      "file": "au-dribl-home-1K3pvJ2P7d.json",
+      "url": "https://mc-api.dribl.com/api/matchcentre-match-members/match/1K3pvJ2P7d/team/lNb38MwoKx",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "d5ba797eec64edfe8404a2b602b85d719cb3eec308bdb680d0852b75101d367c",
+      "bytes": 18092,
+      "startedAt": "2026-10-24T21:12:52.599083+00:00",
+      "capturedAt": "2026-10-24T21:12:53.057565+00:00",
+      "purpose": "Cross-bind red-card identity and minutes to exact published team roster",
+      "observedFrom": "https://competitions.footballnsw.com.au/results?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE"
+    },
+    {
+      "file": "au-dribl-away-1K3pvJ2P7d.json",
+      "url": "https://mc-api.dribl.com/api/matchcentre-match-members/match/1K3pvJ2P7d/team/pmvzZa7rmv",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "3b0952986e183ef3f09c332c4c830905b34214013416b0b15e93942e9134b3ec",
+      "bytes": 17120,
+      "startedAt": "2026-10-24T21:12:55.602564+00:00",
+      "capturedAt": "2026-10-24T21:12:56.070332+00:00",
+      "purpose": "Cross-bind red-card identity and minutes to exact published team roster",
+      "observedFrom": "https://competitions.footballnsw.com.au/results?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE"
+    }
+  ]
+}

@@ -103,8 +103,13 @@ function clock(e,issue){
   if(!Number.isInteger(minute)||!['ft-first-half','ft-second-half'].includes(e.game_section)||minute<0||(e.game_section==='ft-first-half'?minute>60:minute<45||minute>110)) {issue('CLOCK_UNSUPPORTED');return null}
   return {minute,section:e.game_section,effectiveMinute:Math.min(minute,e.game_section==='ft-first-half'?45:90)}
 }
+function card(e,issue){
+  const yellow=e.final_card_type==='Yellow Card'&&e.first_card_type==='Yellow Card',red=e.final_card_type==='Red Card'&&e.first_card_type==='Red Card'&&['R5','R7'].includes(e.final_card_code)
+  if((!yellow&&!red)||e.final_card_code!==e.first_card_code||typeof e.final_card_code!=='string'||e.final_card_override_color!==null||e.first_card_override_color!==null)issue('CARD_UNSUPPORTED')
+  return {kind:red?'red':'yellow',code:e.final_card_code??null,secondYellow:red&&e.final_card_code==='R7'}
+}
 const clockOrder=e=>(e.section==='ft-second-half'?1000:0)+e.minute
-const eventKey=e=>JSON.stringify([e.type,e.teamId,e.profileId,e.minute,e.section,e.kind??null,e.ownGoal??null,e.penalty??null])
+const eventKey=e=>JSON.stringify([e.type,e.teamId,e.profileId,e.minute,e.section,e.kind??null,e.code??null,e.ownGoal??null,e.penalty??null])
 function reconcile(a,b,issue,field){const counts=xs=>xs.map(eventKey).sort();if(!same(counts(a),counts(b)))issue('EVENT_RECONCILIATION',{field})}
 export function parseDriblReport(bundle,{scope}={}) {
   const [r,issue]=result({reportStatistikaPripravljena:false,sezonskiUvozPodprt:false,header:null,appearances:null,goals:null,cards:null,substitutions:null,diagnostics:{teams:[],appearances:[],goals:[],cards:[],substitutions:[]}},scope)
@@ -142,7 +147,7 @@ export function parseDriblReport(bundle,{scope}={}) {
         const c=clock(e,issue);if(!c)continue
         const n={type,profileId:player.profileId,sourcePlayerId:player.sourcePlayerId,profileUrl:player.profileUrl,name:player.name,teamId,side,...c}
         if(type==='goal'){if(typeof e.own_goal!=='boolean'||typeof e.penalty_kick!=='boolean'||e.own_goal)issue('GOAL_UNSUPPORTED');Object.assign(n,{ownGoal:e.own_goal,penalty:e.penalty_kick})}
-        if(type==='card'){if(e.final_card_type!=='Yellow Card'||e.first_card_type!=='Yellow Card'||e.final_card_override_color!==null||e.first_card_override_color!==null)issue('CARD_UNSUPPORTED');n.kind='yellow'}
+        if(type==='card')Object.assign(n,card(e,issue))
         nested.push(n)
       }
       team.players.push(player);allPlayers.push(player)
@@ -152,12 +157,10 @@ export function parseDriblReport(bundle,{scope}={}) {
     for(const field of ['name','shirt']){const values=team.players.map(p=>p[field]);if(new Set(values).size!==values.length)issue(field==='name'?'ACTOR_AMBIGUOUS':'SHIRT_AMBIGUOUS',{side})}
   }
   const actor=(teamId,n,shirt)=>{const ps=allPlayers.filter(p=>p.teamId===teamId&&p.name===(typeof n==='string'?n.normalize('NFC').replace(/\s+/gu,' ').trim():null)&&(shirt===undefined||p.shirt===shirt));if(ps.length!==1){issue('ACTOR_AMBIGUOUS',{teamId,name:n});return null}return ps[0]}
-  const timeline=[];let lastClock=-1
+  const timeline=[]
   for(const e of list(a.match_events,issue,'match_events')){
     const c=clock(e,issue);if(!c)continue
-    const order=clockOrder(c)
-    if(order<lastClock)issue('EVENT_ORDER');lastClock=order
-    if(e.type==='sub'){
+        if(e.type==='sub'){
       const pin=actor(e.team_id,e.in_name,e.in_jersey),pout=actor(e.team_id,e.out_name,e.out_jersey)
       if(!pin||!pout)continue
       for(const[type,p]of[['in',pin],['out',pout]])timeline.push({type,teamId:e.team_id,profileId:p.profileId,...c})
@@ -167,7 +170,7 @@ export function parseDriblReport(bundle,{scope}={}) {
     const p=actor(e.team_id,e.name,e.jersey);if(!p)continue
     const v={type:e.type,teamId:e.team_id,profileId:p.profileId,...c}
     if(e.type==='goal'){if(typeof e.own_goal!=='boolean'||typeof e.penalty_kick!=='boolean'||e.own_goal)issue('GOAL_UNSUPPORTED');Object.assign(v,{ownGoal:e.own_goal,penalty:e.penalty_kick})}
-    else{if(e.final_card_type!=='Yellow Card'||e.first_card_type!=='Yellow Card'||e.final_card_override_color!==null||e.first_card_override_color!==null)issue('CARD_UNSUPPORTED');v.kind='yellow'}
+    else Object.assign(v,card(e,issue))
     timeline.push(v)
   }
   reconcile(nested,timeline,issue,'member events versus match timeline')
@@ -182,19 +185,24 @@ export function parseDriblReport(bundle,{scope}={}) {
   if(!Number.isInteger(a.home_score)||a.home_score<0||!Number.isInteger(a.away_score)||a.away_score<0||goals.filter(e=>e.side==='home').length!==a.home_score||goals.filter(e=>e.side==='away').length!==a.away_score)issue('SCORE_MISMATCH')
   if(a.enable_half_time_scores!==true||!Number.isInteger(a.home_score_ht)||!Number.isInteger(a.away_score_ht)||goals.filter(e=>e.side==='home'&&e.section==='ft-first-half').length!==a.home_score_ht||goals.filter(e=>e.side==='away'&&e.section==='ft-first-half').length!==a.away_score_ht)issue('HALF_TIME_SCORE_MISMATCH')
   let home=0,away=0
-  for(const e of Array.isArray(a.match_events)?a.match_events:[]){if(e?.type!=='goal')continue;if(e.team_id===a.home_team_hash_id)home++;else if(e.team_id===a.away_team_hash_id)away++;else issue('SCORE_MISMATCH');if(e.home_score!==home||e.away_score!==away)issue('SCORE_MISMATCH')}
+  for(const e of (Array.isArray(a.match_events)?a.match_events:[]).filter(e=>e?.type==='goal').slice().sort((x,y)=>(x.game_section==='ft-second-half'?1000:0)+Number(x.minute)-((y.game_section==='ft-second-half'?1000:0)+Number(y.minute)))){if(e.team_id===a.home_team_hash_id)home++;else if(e.team_id===a.away_team_hash_id)away++;else issue('SCORE_MISMATCH');if(e.home_score!==home||e.away_score!==away)issue('SCORE_MISMATCH')}
   for(const p of allPlayers){
     const ins=nested.filter(e=>e.type==='in'&&e.profileId===p.profileId),outs=nested.filter(e=>e.type==='out'&&e.profileId===p.profileId)
     if(ins.length>1||outs.length>1||(p.starter&&ins.length)||(!p.starter&&outs.length&&!ins.length))issue('INTERVAL_INVALID',{profileId:p.profileId})
-    p.from=p.starter?0:ins[0]?.effectiveMinute??null;p.to=p.from===null?null:outs[0]?.effectiveMinute??90;p.minutes=p.from===null?null:p.to-p.from
-    const rawFrom=p.starter?0:ins[0]?clockOrder(ins[0]):null,rawTo=outs[0]?clockOrder(outs[0]):Infinity
+    const cards=nested.filter(e=>e.type==='card'&&e.profileId===p.profileId),reds=cards.filter(e=>e.kind==='red'),yellows=cards.filter(e=>e.kind==='yellow').sort((a,b)=>clockOrder(a)-clockOrder(b))
+    if(reds.length>1||yellows.length>2)issue('DISCIPLINE_INCONSISTENT',{profileId:p.profileId})
+    if(reds.some(e=>e.secondYellow)&&(yellows.length!==2||clockOrder(yellows[0])>=clockOrder(yellows[1])||clockOrder(yellows[1])!==clockOrder(reds[0]))||yellows.length===2&&!reds.some(e=>e.secondYellow))issue('SECOND_YELLOW_INCONSISTENT',{profileId:p.profileId})
+    if(reds.length&&outs.some(e=>clockOrder(e)>=clockOrder(reds[0])))issue('INTERVAL_INVALID',{profileId:p.profileId})
+    p.from=p.starter?0:ins[0]?.effectiveMinute??null;p.to=p.from===null?null:Math.min(outs[0]?.effectiveMinute??90,reds[0]?.effectiveMinute??90);p.minutes=p.from===null?null:p.to-p.from
+    const rawFrom=p.starter?0:ins[0]?clockOrder(ins[0]):null,rawTo=Math.min(outs[0]?clockOrder(outs[0]):Infinity,reds[0]?clockOrder(reds[0]):Infinity)
     if(p.minutes!==null&&(p.minutes<0||p.minutes>90)||rawFrom!==null&&rawFrom>rawTo)issue('INTERVAL_INVALID',{profileId:p.profileId})
     // Period and unclamped minute establish eligibility; 45/90 clamps apply only to duration totals.
     for(const e of nested.filter(e=>e.profileId===p.profileId&&['goal','card'].includes(e.type)))if(rawFrom===null||clockOrder(e)<rawFrom||clockOrder(e)>rawTo)issue('EVENT_OUTSIDE_INTERVAL',{profileId:p.profileId})
     delete p._in;delete p._out
     if(p.from!==null)r.diagnostics.appearances.push({...p})
   }
-  for(const side of ['home','away'])if(r.diagnostics.appearances.filter(p=>p.side===side).reduce((s,p)=>s+p.minutes,0)!==990)issue('TEAM_MINUTES_MISMATCH',{side})
+  r.diagnostics.teamMinutesExpected={}
+  for(const side of ['home','away']){const expected=990-nested.filter(e=>e.type==='card'&&e.kind==='red'&&e.side===side).reduce((n,e)=>n+90-e.effectiveMinute,0);r.diagnostics.teamMinutesExpected[side]=expected;if(r.diagnostics.appearances.filter(p=>p.side===side).reduce((s,p)=>s+p.minutes,0)!==expected)issue('TEAM_MINUTES_MISMATCH',{side})}
   r.diagnostics.goals=goals;r.diagnostics.cards=nested.filter(e=>e.type==='card')
   r.reportStatistikaPripravljena=r.issues.length===0;r.verdict=r.reportStatistikaPripravljena?'PASS':'HOLD'
   if(r.reportStatistikaPripravljena)for(const k of ['appearances','goals','cards','substitutions'])r[k]=r.diagnostics[k]

@@ -92,9 +92,10 @@ je vrnil prazno stran brez kazalca. UI ga označi **Upcoming Fixtures**;
 to ni dokaz vseh neodigranih/preloženih tekem v sezoni. Za sezonski uvoz
 potrebujemo dokaz celotnega objavljenega inventarja in vse zapisnike.
 
-Omejitve: trenutno podprta sta samo običajna polčasa 45+45 in izrecno opaženi
-rumeni kartoni. Rdeči kartoni, avtogoli, podaljški ali kazenski streli zahtevajo
-nov izvirni dokaz in preizkuse; do takrat HOLD. Vzorca ne dokazujeta uporabnosti
+Omejitve: podprta sta običajna polčasa 45+45, izrecno rumeni kartoni ter
+spodaj izvirno dokazana rdeča kartona R5/R7. Druge vrste rdečih kartonov,
+avtogoli, podaljški ali kazenski streli zahtevajo nov izvirni dokaz in
+preizkuse; do takrat HOLD. Vzorca ne dokazujeta uporabnosti
 vseh lig NSW, drugih avstralskih zvez ali arhivov. Transport/zajem, povezava v
 uvoz in presoja vsake lige so ločeni naslednji koraki; država ni aktivirana.
 
@@ -123,3 +124,53 @@ Grand Final 3 / F3 / Grand Final / finals. `full_round` v ohranjenih glavah
 zapisnikov ni objavljen, zato `fullRound=null`; razpored ga dejansko objavi
 (npr. Round 1) in ga parser ohrani. Ne izmišljamo si skupne številke kroga
 za redni del in končnico.
+
+## Načrt omejenega zajema in native vmesnika
+
+Naslednji ločeni korak uporablja en klient za 1–5 izrecnih lig iste preverjene
+zveze NSW: en skupni proračun 1–1000, začetki najmanj 3 s narazen, dnevnik pred
+zahtevkom, brez preusmeritev, ponovitev ali poverilnic. Celotni `fixtures/all`
+inventar mora priti do konca kazalcev. Vzorčenje 1–3 zapisnikov je vedno HOLD
+za uvoz. Semantična napaka zadrži svojo ligo in dovoli naslednjo; tehnična
+napaka klienta ustavi vse. Noben nov živi zahtevek v tem razvojnem koraku.
+
+Artefakt bo hranil izvirne odgovore, SHA/MIME/velikosti, natančne možnosti,
+časovnico poskusov in odtis lokalnega zaprtja kode. Offline ponovitev uporablja
+izključno zaprto mapo odgovorov; neuporabljene, manjkajoče ali spremenjene
+odgovore zavrne. Native vmesnik ponovno bere izvirne bajte, ne zaupa urejenemu
+razčlenjenemu JSON. Tekoči zajem velja največ 24 ur. Igralec je celotni
+`dribl:<tenant>:user:<id>`; notranji numerični ključ je SHA-256 prvih 13 hex
+znakov + 2^52, s preverjanjem trkov in obveznim RPC rezerviranjem.
+
+Izvorne R1…Rmax in F1#n…Fmax#n ohranimo. Šele celotni inventar z vsemi
+zaporednimi rednimi krogi in finalnimi fazami dovoli interno fantasy preslikavo
+Fštevilka → Rmax+Fštevilka. To niso uradne številke krogov. Vzorci celotnega
+zajema v testih bodo izrecno sintetično okvirjanje faz/paginacije okoli
+resničnega semifinalnega zapisnika; ne bodo predstavljeni kot živa cela sezona.
+
+## Ločen dokaz disciplinskih podatkov (faza 2)
+
+Po koncu prvotne meje 20 je koordinator izvedel ločeno izrecno omejeno fazo
+7/8 zahtevkov, vse HTTP 200, najmanj 3 s med začetki, brez ponovitev.
+`au-dribl-discipline-ledger.json` ohrani njegov izvirni dnevnik;
+`au-dribl-discipline-provenance.json` veže sedem odgovorov na SHA/URL/čas.
+Ta podagent ni izvedel dodatnega živega zahtevka.
+
+- `Pmj27A1G5m`, NWS Spirit–Sutherland 1:0: Callum Kealy ima Y1 pri 6, Y1
+  pri 69 in izrecni Red Card R7 pri 69, v obeh osebnih dogodkih in časovnici.
+  R7 zahteva dve ločeni rumeni, drugo v istem polčasu/minuti kot izključitev.
+  Izvirne tri vrstice ostanejo ohranjene; fantasy obravnava eno rumeno in eno
+  rdečo. Nastop konča pri 69, pričakovane minute ekipe so 969. Zapisnik še
+  vedno ostane HOLD zaradi manjkajoče izrecne začetne vratarske vloge gostov.
+- `1K3pvJ2P7d`, Sydney United–NWS Spirit 2:0: Simon Nicholas ima izrecni
+  Red Card R5 pri 81, brez predhodnih rumenih. Obe začetni vratarski vlogi
+  sta izrecni; zapisnik PASS, izključeni 81 minut, ekipa 981 minut.
+- Drugi rdeči kodi ali neopažena razlika med first/final vrsto/kodo ostanejo
+  HOLD. Tipa ne ugibamo iz rezultata ali besedila novice.
+
+Obe redni tekmi dokazujeta `display_round_number=R1/R26` in
+`match_type=roundrobin`. Časovnica R26 razvršča po surovi minuti:
+47 v drugem polčasu stoji pred 50 v prvem polčasu. Zato vrstni red polja
+ni dokaz kronologije. Upravičenost uporablja par (polčas, surova minuta),
+minutne vsote pa le meje 45/90. Napredovanje izida preverimo v dejanskem
+logičnem vrstnem redu, izvirnega polja ne spreminjamo.
