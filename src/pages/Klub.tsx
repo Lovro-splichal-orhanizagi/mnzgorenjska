@@ -311,7 +311,7 @@ export default function Klub() {
 
 
       {id && mojKlub === Number(id) && (
-        <KlubUrejanje klubId={Number(id)} igralci={igralci} onSpremeni={osveziKlub} />
+        <KlubUrejanje klubId={Number(id)} ligaId={ligaId} igralci={igralci} onSpremeni={osveziKlub} />
       )}
 
       {id && <ZahtevkiKluba klubId={Number(id)} />}

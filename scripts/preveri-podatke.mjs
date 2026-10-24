@@ -280,6 +280,26 @@ else {
     })
 }
 
+// --- klubi, ki so dodali več kot 25 igralcev v sezoni --------------------------
+// klub_dodaj_igralca omejitev drži pod zaklepom; preverba ujame, kar bi šlo
+// mimo nje (ročni vpis, spremenjena funkcija).
+const dodani = await vseVrstice((od, do_) =>
+  db.from('klub_dodani_igralci').select('team_id, sezona, teams(name)').order('id').range(od, do_),
+)
+const dodanihPoKlubu = new Map()
+for (const d of dodani ?? []) {
+  const k = `${d.teams?.name ?? d.team_id} ${d.sezona}`
+  dodanihPoKlubu.set(k, (dodanihPoKlubu.get(k) ?? 0) + 1)
+}
+const cezOmejitev = [...dodanihPoKlubu].filter(([, n]) => n > 25)
+if (cezOmejitev.length)
+  tezave.push({
+    kljuc: 'klub-prevec-dodanih',
+    opis: 'Klub je v sezoni dodal več kot 25 igralcev',
+    koliko: cezOmejitev.length,
+    primer: cezOmejitev.map(([k, n]) => `${k}: ${n}`).join(', '),
+  })
+
 // --- izpis ------------------------------------------------------------------
 for(const o of opozorila)console.log(`  • [${o.kljuc}] ${o.opis}\n    ${o.koliko}× — npr. ${o.primer}`)
 if (!tezave.length) {

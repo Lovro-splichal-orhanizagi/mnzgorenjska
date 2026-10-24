@@ -1464,6 +1464,156 @@ export type Database = {
           },
         ]
       }
+      klub_dodani_igralci: {
+        Row: {
+          competition_id: number
+          created_at: string
+          full_name: string
+          id: number
+          odstranjen_at: string | null
+          player_id: number | null
+          sezona: string
+          team_id: number
+          user_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          competition_id: number
+          created_at?: string
+          full_name: string
+          id?: never
+          odstranjen_at?: string | null
+          player_id?: number | null
+          sezona: string
+          team_id: number
+          user_id?: string | null
+        }
+        Update: {
+          competition_id?: number
+          created_at?: string
+          full_name?: string
+          id?: never
+          odstranjen_at?: string | null
+          player_id?: number | null
+          sezona?: string
+          team_id?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "klub_dodani_igralci_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_season_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "pozicije_v_cakanju"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "competition_teams"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "player_reports_view"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "uradne_odsotnosti_view"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "klub_dodani_igralci_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       klub_predstavitev: {
         Row: {
           facebook: string | null
@@ -2681,6 +2831,7 @@ export type Database = {
           anonimiziran_at: string | null
           anonimiziran_razlog: string | null
           competition_id: number
+          dodal_klub_at: string | null
           first_name: string
           full_name: string | null
           id: number
@@ -2710,6 +2861,7 @@ export type Database = {
           anonimiziran_at?: string | null
           anonimiziran_razlog?: string | null
           competition_id?: number
+          dodal_klub_at?: string | null
           first_name: string
           full_name?: string | null
           id?: never
@@ -2738,6 +2890,7 @@ export type Database = {
           anonimiziran_at?: string | null
           anonimiziran_razlog?: string | null
           competition_id?: number
+          dodal_klub_at?: string | null
           first_name?: string
           full_name?: string | null
           id?: never
@@ -7620,6 +7773,18 @@ export type Database = {
         }[]
       }
       admin_izbrisi_pivo: { Args: { p_id: number }; Returns: undefined }
+      admin_klubski_igralci_brez_nastopa: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          aktiven: boolean
+          dodan: string
+          igralec: number
+          ime: string
+          klub: string
+          lastnikov: number
+          liga: string
+        }[]
+      }
       admin_klubski_racuni: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -7706,6 +7871,10 @@ export type Database = {
       admin_odstrani_fotografijo: {
         Args: { p_player_id: number }
         Returns: undefined
+      }
+      admin_odstrani_klubskega_igralca: {
+        Args: { p_player_id: number }
+        Returns: string
       }
       admin_odvzemi_preverjen: { Args: { p_id: number }; Returns: undefined }
       admin_piva: {
@@ -8199,6 +8368,7 @@ export type Database = {
         Args: { p_competition_id: number; p_id: number }
         Returns: string
       }
+      ime_za_primerjavo: { Args: { p: string }; Returns: string }
       import_fcf_current_target: {
         Args: { p_rollout_text: string; p_sha256: string }
         Returns: Json
@@ -8368,6 +8538,31 @@ export type Database = {
           pozicija: string
         }[]
       }
+      klub_dodaj_igralca: {
+        Args: {
+          p_competition_id: number
+          p_ime: string
+          p_position: string
+          p_priimek: string
+          p_st?: number
+        }
+        Returns: number
+      }
+      klub_dodani: {
+        Args: { p_team_id: number }
+        Returns: {
+          aktiven: boolean
+          dnevnik: number
+          dodan: string
+          dres: number
+          igralec: number
+          ime: string
+          liga: string
+          nastopov: number
+          odstranjen: string
+          pozicija: string
+        }[]
+      }
       klub_nastavi_grb: {
         Args: { p_pot: string; p_team_id: number }
         Returns: string
@@ -8389,6 +8584,7 @@ export type Database = {
           vrsta: string
         }[]
       }
+      klub_odstrani_igralca: { Args: { p_player_id: number }; Returns: string }
       klub_potrdi_odsotnost: { Args: { p_id: number }; Returns: undefined }
       klub_preklici_pozicijo: {
         Args: { p_player_id: number }
@@ -8619,6 +8815,10 @@ export type Database = {
         Returns: undefined
       }
       odstrani_hisne_ekipe: { Args: { p_ids: number[] }; Returns: number }
+      odstrani_klubskega_igralca: {
+        Args: { p_player_id: number }
+        Returns: string
+      }
       okno_preracuna_tock: { Args: Record<PropertyKey, never>; Returns: string }
       osvezi_statistiko_igralcev: {
         Args: { p_igralci: number[] }
