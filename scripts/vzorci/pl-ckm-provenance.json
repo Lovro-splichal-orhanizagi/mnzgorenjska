@@ -1,0 +1,23 @@
+[
+  {
+    "fixture": "pl-ckm-complete.html",
+    "sourceUrl": "https://concordiaknurow.pl/event/sosnica-gliwice-vs-silesia-miechowice/",
+    "originalSha256": "7c1a1538e76971abd52a94723b817870d97d52960878438a66a4be0ef81574ce",
+    "fixtureSha256": "5fdef867cd91ce78a12fc13c9ecdde264f46732db29899a531d1cb9a96438576",
+    "transformation": "Retain canonical, body attributes and authentic event wrapper including current-season sidebar. Remove scripts/styles/images and staff-only blocks; no football names/times/positions changed. Normalize line endings and remove trailing whitespace."
+  },
+  {
+    "fixture": "pl-ckm-partial.html",
+    "sourceUrl": "https://concordiaknurow.pl/event/burza-borowa-wies-vs-walka-zabrze/",
+    "originalSha256": "d5d07f6047ac8f77866daca4208f360ccac64dc112a9675dfd3200f31c21f6e4",
+    "fixtureSha256": "7218d3366a327eea861e127384d7783dc5bda92d052f85e50b8db5dc824ff031",
+    "transformation": "Retain canonical, body attributes and authentic event wrapper including current-season sidebar. Remove scripts/styles/images and staff-only blocks; no football names/times/positions changed. Normalize line endings and remove trailing whitespace."
+  },
+  {
+    "fixture": "pl-ckm-archive.html",
+    "sourceUrl": "https://concordiaknurow.pl/event/concordia-knurow-vs-cks-czeladz/",
+    "originalSha256": "52b1188e94a2e30bcdb7c7619760453c170bd653a9d72d56b96a43db1547e62c",
+    "fixtureSha256": "9d3437306ad3c369ea503f1e85e320fd2a971ed0307bdb5c180d94e15e4049a5",
+    "transformation": "Retain canonical, body attributes and authentic event wrapper including current-season sidebar. Remove scripts/styles/images and staff-only blocks; no football names/times/positions changed. Normalize line endings and remove trailing whitespace."
+  }
+]
