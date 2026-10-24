@@ -88,3 +88,25 @@ test('actual empty Upcoming Fixtures page cannot prove full inventory or season 
 })
 for(const extra of ['&include_all=1','&results=1','&date_range=default','&token=secret'])test(`All Fixtures rejects unobserved or duplicate query filter ${extra}`,()=>{const r=receipt('fixtures-all-npl'),p=parseDriblSchedule(r.bytes,{url:r.url+extra,scope});assert.equal(p.fullInventoryEvidence,false);assert.equal(p.verdict,'HOLD');assert.ok(p.issues.some(i=>['SCHEDULE_FILTER','URL_SCOPE'].includes(i.code)))})
 test('report header retains actual source round fields without inventing a full-round label',()=>{const r=parseDriblReport(bundle(),{scope});assert.equal(r.header.round,2);assert.equal(r.header.displayRound,'F2');assert.equal(r.header.roundLabel,'Semi Finals');assert.equal(r.header.matchType,'finals');assert.equal(r.header.fullRound,null)})
+test('raw half-period eligibility rejects a scorer whose clamped minute overlaps a later entry',()=>{
+ const r=mutate(b=>{
+  const a=b.match.bytes.data.attributes
+  const sub=a.match_events.find(e=>e.type==='sub'&&e.in_name==='Tomislav Ozanic');sub.minute=45
+  b.home.bytes.find(p=>p.first_name==='Tomislav').in_subs[0].minute='45';b.home.bytes.find(p=>p.first_name==='Julian').out_subs[0].minute='45'
+  const goal=a.match_events.find(e=>e.type==='goal'&&e.name==='Tomislav Ozanic');goal.minute=47;goal.game_section='ft-first-half'
+  for(const g of [b.home.bytes.find(p=>p.first_name==='Tomislav').goals[0],a.goals.find(g=>g.first_name==='Tomislav')]){g.minute=typeof g.minute==='string'?'47':47;g.game_section='ft-first-half'}
+  a.home_score_ht=3
+  a.match_events.sort((x,y)=>(x.game_section==='ft-second-half'?1000:0)+Number(x.minute)-((y.game_section==='ft-second-half'?1000:0)+Number(y.minute)))
+ });held(r);assert.ok(r.issues.some(x=>x.code==='EVENT_OUTSIDE_INTERVAL'))
+})
+test('raw 90+N order rejects goal or card before a substitution although both clamp to90',()=>{
+ for(const kind of ['goal','card']){const r=mutate(b=>{
+  const a=b.match.bytes.data.attributes,p=b.home.bytes.find(p=>p.first_name==='Tomislav'),out=b.home.bytes.find(p=>p.first_name==='Julian')
+  const sub=a.match_events.find(e=>e.type==='sub'&&e.in_name==='Tomislav Ozanic');sub.minute=94;p.in_subs[0].minute='94';out.out_subs[0].minute='94'
+  if(kind==='card'){a.match_events.find(e=>e.type==='card'&&e.name==='Tomislav Ozanic').minute=93;p.cards[0].minute='93'}
+  else{a.match_events.find(e=>e.type==='goal'&&e.name==='Tomislav Ozanic').minute=93;p.goals[0].minute='93'}
+  a.match_events.sort((x,y)=>(x.game_section==='ft-second-half'?1000:0)+Number(x.minute)-((y.game_section==='ft-second-half'?1000:0)+Number(y.minute)))
+ });held(r);assert.ok(r.issues.some(x=>x.code==='EVENT_OUTSIDE_INTERVAL'))}
+})
+test('substitution exit in first-half added time cannot precede its halftime entry',()=>{const r=mutate(b=>{const p=b.home.bytes.find(p=>p.first_name==='Tomislav');p.in_subs[0].minute='45';p.out_subs=[{minute:'47',game_section:'ft-first-half'}]});held(r);assert.ok(r.issues.some(x=>x.code==='INTERVAL_INVALID'))})
+for(const extra of ['&season=foreign','&limit=1','&sort=-name','&disable_paging=false'])test(`league catalog refuses unobserved or duplicate filters ${extra}`,()=>{const r=receipt('leagues-npl'),p=parseDriblCatalog(r.bytes,{kind:'leagues',url:r.url+extra,scope});assert.equal(p.verdict,'HOLD');assert.equal(p.complete,false)})

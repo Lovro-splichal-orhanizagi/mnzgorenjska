@@ -42,6 +42,8 @@ export function parseDriblCatalog(bytes,{kind,url,scope}={}) {
   const [r,issue]=result({kind,rows:[],complete:false},scope)
   if(!['seasons','competitions','leagues'].includes(kind)){issue('CATALOG_KIND');return r}
   const u=urlScope(url,new RegExp(`^/api/list/${kind}$`),scope,kind==='seasons'?['tenant']:kind==='competitions'?['tenant','season']:['tenant','competition'],issue)
+  const allowed=new Set(['tenant','disable_paging',...(kind==='competitions'?['season']:kind==='leagues'?['competition','sort']:[])])
+  if(u&&([...u.searchParams.keys()].some(k=>!allowed.has(k))||(kind==='leagues'&&u.searchParams.get('sort')!=='+name')))issue('CATALOG_FILTER')
   if(u?.searchParams.get('disable_paging')!=='true')issue('CATALOG_PAGING')
   const x=read(bytes,issue),rows=x?.data
   if(!Array.isArray(rows)||!rows.length)issue('CATALOG_MISSING')
@@ -101,6 +103,7 @@ function clock(e,issue){
   if(!Number.isInteger(minute)||!['ft-first-half','ft-second-half'].includes(e.game_section)||minute<0||(e.game_section==='ft-first-half'?minute>60:minute<45||minute>110)) {issue('CLOCK_UNSUPPORTED');return null}
   return {minute,section:e.game_section,effectiveMinute:Math.min(minute,e.game_section==='ft-first-half'?45:90)}
 }
+const clockOrder=e=>(e.section==='ft-second-half'?1000:0)+e.minute
 const eventKey=e=>JSON.stringify([e.type,e.teamId,e.profileId,e.minute,e.section,e.kind??null,e.ownGoal??null,e.penalty??null])
 function reconcile(a,b,issue,field){const counts=xs=>xs.map(eventKey).sort();if(!same(counts(a),counts(b)))issue('EVENT_RECONCILIATION',{field})}
 export function parseDriblReport(bundle,{scope}={}) {
@@ -152,7 +155,7 @@ export function parseDriblReport(bundle,{scope}={}) {
   const timeline=[];let lastClock=-1
   for(const e of list(a.match_events,issue,'match_events')){
     const c=clock(e,issue);if(!c)continue
-    const order=(c.section==='ft-second-half'?1000:0)+c.minute
+    const order=clockOrder(c)
     if(order<lastClock)issue('EVENT_ORDER');lastClock=order
     if(e.type==='sub'){
       const pin=actor(e.team_id,e.in_name,e.in_jersey),pout=actor(e.team_id,e.out_name,e.out_jersey)
@@ -184,8 +187,10 @@ export function parseDriblReport(bundle,{scope}={}) {
     const ins=nested.filter(e=>e.type==='in'&&e.profileId===p.profileId),outs=nested.filter(e=>e.type==='out'&&e.profileId===p.profileId)
     if(ins.length>1||outs.length>1||(p.starter&&ins.length)||(!p.starter&&outs.length&&!ins.length))issue('INTERVAL_INVALID',{profileId:p.profileId})
     p.from=p.starter?0:ins[0]?.effectiveMinute??null;p.to=p.from===null?null:outs[0]?.effectiveMinute??90;p.minutes=p.from===null?null:p.to-p.from
-    if(p.minutes!==null&&(p.minutes<0||p.minutes>90))issue('INTERVAL_INVALID',{profileId:p.profileId})
-    for(const e of nested.filter(e=>e.profileId===p.profileId&&['goal','card'].includes(e.type)))if(e.type==='goal'&&(p.from===null||e.effectiveMinute<p.from||e.effectiveMinute>p.to))issue('EVENT_OUTSIDE_INTERVAL',{profileId:p.profileId})
+    const rawFrom=p.starter?0:ins[0]?clockOrder(ins[0]):null,rawTo=outs[0]?clockOrder(outs[0]):Infinity
+    if(p.minutes!==null&&(p.minutes<0||p.minutes>90)||rawFrom!==null&&rawFrom>rawTo)issue('INTERVAL_INVALID',{profileId:p.profileId})
+    // Period and unclamped minute establish eligibility; 45/90 clamps apply only to duration totals.
+    for(const e of nested.filter(e=>e.profileId===p.profileId&&['goal','card'].includes(e.type)))if(rawFrom===null||clockOrder(e)<rawFrom||clockOrder(e)>rawTo)issue('EVENT_OUTSIDE_INTERVAL',{profileId:p.profileId})
     delete p._in;delete p._out
     if(p.from!==null)r.diagnostics.appearances.push({...p})
   }
