@@ -8,7 +8,7 @@ on:
         type: string
         required: true
       max_requests:
-        description: Shared total including catalogs, pages, reports, rosters and failures (1–500)
+        description: Shared total including catalogs, pages, reports, rosters and failures (1–1000)
         type: number
         default: 80
       reports:
@@ -47,7 +47,7 @@ jobs:
           import {validateDriblCaptureOptions} from './scripts/dribl-capture.mjs'
           const e=process.env,head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()
           if(e.GITHUB_REPOSITORY!=='Lovro-splichal-orhanizagi/mnzgorenjska'||e.GITHUB_REF!=='refs/heads/main'||! /^[a-f0-9]{40}$/.test(e.EXPECTED_SHA??'')||e.EXPECTED_SHA!==head||e.GITHUB_SHA!==head)throw Error('Exact reviewed main required')
-          if(!/^\d+$/.test(e.MAX_REQUESTS??'')||Number(e.MAX_REQUESTS)<1||Number(e.MAX_REQUESTS)>500||! /^(all|[1-3])$/.test(e.REPORTS??''))throw Error('Invalid hosted request/report limits')
+          if(!/^\d+$/.test(e.MAX_REQUESTS??'')||Number(e.MAX_REQUESTS)<1||Number(e.MAX_REQUESTS)>1000||! /^(all|[1-3])$/.test(e.REPORTS??''))throw Error('Invalid hosted request/report limits')
           const options=validateDriblCaptureOptions({scopes:JSON.parse(e.SCOPES_JSON),maxRequests:Number(e.MAX_REQUESTS),reportLimit:e.REPORTS==='all'?null:Number(e.REPORTS),maxPages:100,asOfDate:new Date().toISOString().slice(0,10)})
           writeFileSync('observed-dribl-scopes.json',JSON.stringify(options.scopes)+'\n')
           NODE

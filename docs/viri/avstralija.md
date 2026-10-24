@@ -284,7 +284,7 @@ Adapter je vključen v `viri/index.mjs`; migracija
 `20261024210000_dribl_source_identities.sql` zagotovi zasebno rezervacijo šifer.
 Nobena liga ali država s tem ni registrirana v bazi ali aktivirana.
 `preveri-dribl-paket.yml` sprejme 1–5 opaženih NSW kontekstov, skupni proračun
-1–500 in izrecno vzorčenje ali celotni zajem. Deluje brez ključev baze.
+1–1000 in izrecno vzorčenje ali celotni zajem. Deluje brez ključev baze.
 `uvoz-dribl-public.yml` lahko uvozi le že registrirano nevklopljeno AU ligo
 iz uspešnega popolnega zajema istega main commita v zadnjih 24 urah.
 Pred vsakim pisanjem preveri prazne fantasy ekipe/postave in isti izvorni
