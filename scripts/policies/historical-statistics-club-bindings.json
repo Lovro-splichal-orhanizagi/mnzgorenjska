@@ -1218,6 +1218,38 @@
           "rawSha256": "438c1da7a7620142e25907227ca2c81caf4e7c67607bf10f5d2cf388e9501f00"
         }
       ]
+    },
+    {
+      "provider": "mlsz",
+      "sourceClubId": "317012",
+      "sourceCategoryId": null,
+      "countryCode": "HU",
+      "canonicalNames": [
+        "Abonyi KID FC"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2120218",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/14/32327/2/2120218.html",
+          "rawSha256": "4e54028d642fd71865a44017ddef28ffdcdbea3e22ad2bb669bb18527ba75efe"
+        }
+      ]
+    },
+    {
+      "provider": "mlsz",
+      "sourceClubId": "317011",
+      "sourceCategoryId": null,
+      "countryCode": "HU",
+      "canonicalNames": [
+        "Albertirsai SE"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2120218",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/14/32327/2/2120218.html",
+          "rawSha256": "4e54028d642fd71865a44017ddef28ffdcdbea3e22ad2bb669bb18527ba75efe"
+        }
+      ]
     }
   ]
 }

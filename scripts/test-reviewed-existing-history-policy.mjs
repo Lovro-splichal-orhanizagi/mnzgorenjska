@@ -13,13 +13,13 @@ const registry=JSON.parse(readFileSync(new URL('./policies/historical-statistics
 const ssot=JSON.parse(readFileSync(new URL('./policies/reviewed-existing-cleanup-targets-20261023.json',import.meta.url)))
 const reportId=(provider,id)=>provider==='isthmian'?`gb${id}`:provider==='nfsbih'?`ba${id}`:provider==='fmf'?`md${id}`:id
 
-test('registry and SSOT contain exactly seven tuples and ten approved report identities',()=>{
+test('registry and SSOT contain exactly eight tuples and eleven approved report identities',()=>{
  assert.equal(validateHistoricalStatisticsRegistry(registry),true)
  assert.equal(ssot.schemaVersion,1)
  assert.equal(ssot.sourcePolicy,'reviewed-existing-history-20261023-v1')
- assert.equal(ssot.competitions.length,7)
- assert.deepEqual(ssot.competitions.map(x=>x.slug).sort(),['ba-wwin-liga-bih','gb-npl-midlands','gb-sfl-d1-south','md-liga-2','ro-ab-l4-s2','ro-ab-l5-s2','ro-liga3-s1'])
- assert.equal(ssot.competitions.reduce((n,c)=>n+c.targets.length,0),10)
+ assert.equal(ssot.competitions.length,8)
+ assert.deepEqual(ssot.competitions.map(x=>x.slug).sort(),['ba-wwin-liga-bih','gb-npl-midlands','gb-sfl-d1-south','hu-pe-u19-c','md-liga-2','ro-ab-l4-s2','ro-ab-l5-s2','ro-liga3-s1'])
+ assert.equal(ssot.competitions.reduce((n,c)=>n+c.targets.length,0),11)
  const oldPolicies=registry.policies.filter(p=>['gb-npl-midlands','gb-sfl-d1-south','ro-liga3-s1','ba-wwin-liga-bih'].includes(p.competitionSlug))
  assert.deepEqual(oldPolicies.map(p=>[p.competitionSlug,p.id,p.entries.length]).sort(),[
   ['ba-wwin-liga-bih','ba-wwin-liga-bih-historical-unavailable-2026-10-23-v1',2],

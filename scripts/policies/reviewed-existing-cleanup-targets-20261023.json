@@ -338,6 +338,42 @@
           "initialSourceRound": null
         }
       ]
+    },
+    {
+      "competitionId": 637,
+      "slug": "hu-pe-u19-c",
+      "provider": "mlsz",
+      "sourceLeagueCode": "67/14/34250",
+      "country": "HU",
+      "expectedReportsBySeason": {
+        "2025/26": 28,
+        "2026/27": 19
+      },
+      "policyId": "hu-pe-u19-c-historical-unavailable-2026-10-24-v1",
+      "policySha256": "f3925f7cdc5ad93c7001eea587e75f88cd9b486dcc7788b5f2eb7c0a2d5aaed2",
+      "targets": [
+        {
+          "nativeMatchId": 616508,
+          "nativeRoundId": 35547,
+          "round": 2,
+          "homeTeamId": 7676,
+          "awayTeamId": 6814,
+          "date": "2025-09-13",
+          "score": [
+            3,
+            0
+          ],
+          "reportId": "2120218",
+          "sourceMatchId": "2120218",
+          "season": "2025/26",
+          "apps": 25,
+          "goals": 8,
+          "sourcePhase": null,
+          "sourceRound": 2,
+          "initialSourcePhase": null,
+          "initialSourceRound": null
+        }
+      ]
     }
   ]
 }
