@@ -77,6 +77,9 @@ jobs:
       - name: German amateur source collection and offline evidence
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
 
+      - name: Provider batch and Dribl source diagnostics (source-free)
+        run: node --test scripts/test-provider-league-batch.mjs scripts/test-provider-source-budget.mjs scripts/test-dribl.mjs
+
       - name: Country preview and Polish report diagnostics (source-free)
         run: node --test scripts/test-country-league-preview.mjs scripts/test-ckm-report.mjs scripts/test-pzpn-no-score.mjs
 
@@ -174,6 +177,19 @@ jobs:
       - run: npm ci --ignore-scripts
       # Zagon same baze preveri celotno verigo migracij na praznem Postgresu.
       - run: npx --yes supabase@2.117.0 db start
+      - name: Generate database types from the fresh migration chain
+        run: npx --yes supabase@2.117.0 gen types typescript --local > /tmp/baza.types.ts
+      - name: Preserve generated database types
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-database-types-${{ github.run_id }}
+          path: /tmp/baza.types.ts
+          retention-days: 7
+      - name: Dribl tenant-scoped source identity reservation
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          DRIBL_IDENTITIES_DISPOSABLE_TEST: '1'
+        run: node --test scripts/test-dribl-identities-sql.mjs
       - name: FUSSBALL exact source identity reservation and collision rollback
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska

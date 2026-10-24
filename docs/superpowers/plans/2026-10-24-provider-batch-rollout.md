@@ -61,3 +61,16 @@
 - [ ] Run integrated smoke/build and required database checks if schema changes.
 - [ ] Review the complete branch, merge and verify main deployment.
 - [ ] Run only reviewed bounded live operations; record exact imported/active/held counts. Do not count tools or samples as activated leagues.
+
+## Integration verification notes
+
+- Initial integrated offline run: 118 tests, 117 passed, one explicit native
+  disposable-container skip, zero failures. CI YAML parses and diff checks pass.
+- Dribl identity SQL observed RED with its RPC absent. The first post-migration
+  local run stopped at Docker metadata inspection (`docker inspect` timed out),
+  before any migration SQL ran. Even `docker version`/`docker port` subsequently
+  timed out or returned daemon HTTP 500. Do not change SQL-test expectations or
+  restart other projects’ Docker services. Validate on the fresh Actions database.
+- Fresh Actions schema generation preserves its types as an artifact so the
+  checked-in types can be regenerated from actual migrations without secret-file
+  access or handwritten RPC types.
