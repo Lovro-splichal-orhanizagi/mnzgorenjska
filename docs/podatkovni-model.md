@@ -1,6 +1,14 @@
 # Glavni koncepti podatkovnega modela
 
 - `players` → realni igralci, vezani na realni klub (`teams`) in tekmovanje
+- `private_fussball.identity_map` → točna javna identiteta FUSSBALL.DE
+  (`player-id` in `userid` sta ločena) ter enoličen interni številčni ključ v
+  `[2^52, 2^53−1]`, ki ga uvoz uporabi kot `players.reg_st`. To ni registrska
+  številka DFB. Servisni `fussball_reserve_player_ids(text[])` preveri SHA-256,
+  ponovitve in trke ter ob napaki razveljavi ves paket; zasebne tabele ne
+  berejo ali spreminjajo niti javne vloge niti servisna vloga neposredno.
+  Nepripisani navadni rumeni imajo javno dokazno oznako z virom `fussball`;
+  odbitek se ne pripiše ugibanemu igralcu.
 - **Soimenjak pri drugem klubu ni samodejno prestop.** Vir brez šifre igralca
   (stari CMS MNZ, NZS, fsb, fss, fssid, ffm) pozna le ime in klub; uvoz je
   istoimenskega igralca drugega kluba imel za prestop tudi, ko sta igrala

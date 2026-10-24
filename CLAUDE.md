@@ -105,7 +105,7 @@ tabelo šifer tam, ne tu.
 | Latvija | `docs/viri/latvija.md` | `lff` |
 | Poljska | `docs/viri/poljska.md` | `pzpn`, `wmzpn` |
 | Španija | `docs/viri/spanija.md`, `docs/viri/novanet.md` | `fcf`, `fas`, `novanet` |
-| Nemčija | `docs/viri/nemcija.md` | `dfb` (Regionalliga Nordost; pred vklopom audit obeh sezon) |
+| Nemčija | `docs/viri/nemcija.md` | `dfb` (Regionallige), `fussball-public` (celoten preverjen javni zajem; vklop posebej) |
 | Anglija | `docs/viri/anglija.md` | `ncefl`, `isthmian` |
 | Severna Makedonija | `docs/viri/makedonija.md` | `ffm` |
 | Ukrajina | `docs/viri/ukrajina.md` | `aft`, `hoff-km`, `pfl-ua`, `upl`, `ffl` |
@@ -250,6 +250,13 @@ to področje. Bistvo, ki ga je treba vedeti vedno:
   `docs/podatkovni-model.md` (*Preverjeni igralci*).
 
 ## Pregledane zgodovinske vrzeli
+
+FUSSBALL javni uvoz uporablja zasebno `private_fussball.identity_map` in
+servisni `fussball_reserve_player_ids(text[])`. `reg_st` je pri tem interni
+SHA-256/52-bitni ključ točne profilne šifre, ne številka DFB. Trk razveljavi
+ves paket. `SLFF_FUSSBALL_CAPTURE` mora vezati celoten nespremenjen zajem;
+vzorec ali zavrnjen zapisnik ne smeta postati popoln uvoz. Ročni bootstrap
+teče v `uvoz-fussball-public.yml`, vklop/poznejše osveževanje sta ločena.
 
 `matches.statistics_status = 'unavailable_historical'` ohrani uradni izid,
 vendar nima nastopov/golov in `imported_at` ostane NULL. Izjeme so omejene

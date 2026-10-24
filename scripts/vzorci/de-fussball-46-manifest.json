@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "description": "Exact source-bound public report and lineup for the observed second-half 46-minute substitution; no network fallback.",
+  "capture": {
+    "directory": "league-rollout-evidence/2026-10-23-europe-expansion/germany-capture-1/capture",
+    "manifestSha256": "d25bc171ee556b70c8b30fe0e085b21303b9bc9f6fa596ac828d933f8147b069",
+    "captureStatus": "failed after transport error; this fixture is only a parser regression and does not certify completeness"
+  },
+  "match": {
+    "id": "031EQBPNNK000000VS5489BTVUS470OH",
+    "url": "https://www.fussball.de/spiel/sv-rohrhof-spvgg-03-ilvesheim/-/spiel/031EQBPNNK000000VS5489BTVUS470OH",
+    "lineupUrl": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031EQBPNNK000000VS5489BTVUS470OH/ticker-id/selectedTickerId",
+    "season": "2026/27",
+    "round": 1,
+    "date": "2026-08-30",
+    "home": "SV Rohrhof",
+    "away": "SpVgg 03 Ilvesheim",
+    "score": {
+      "home": 0,
+      "away": 2
+    }
+  },
+  "report": {
+    "file": "de-fussball-46-main.html",
+    "sha256": "d5643c6dadfe2503347497d65967b804253bb47e4eb2ffa60d05552f7772cacf",
+    "bytes": 190852
+  },
+  "lineup": {
+    "file": "de-fussball-46-lineup.html",
+    "sha256": "6b537b3b4ef69e35d152958918ecb70aa47a2419ce1b227b4db9c9f33133e196",
+    "bytes": 26984
+  },
+  "fonts": {
+    "3i1swyaz": {
+      "file": "de-fussball-46-3i1swyaz.woff",
+      "sha256": "20e407ee214db34cd42237905a9154a408c33079857bf2c226e6442f420532ef",
+      "sourceUrl": "https://www.fussball.de/export.fontface/-/format/woff/id/3i1swyaz/type/font",
+      "cssSha256": "1794e63a2b7d5dcddb0c9420a5d8b405867c9877b3dc36ca53b89fd50a5a8799",
+      "cssUrl": "https://www.fussball.de/export.fontface/-/id/3i1swyaz/type/css"
+    },
+    "az48s7tb": {
+      "file": "de-fussball-46-az48s7tb.woff",
+      "sha256": "7a4c1c27fd75ba7dddba00658d699e02b4b87246989ca55bddbe1aeaf22c692d",
+      "sourceUrl": "https://www.fussball.de/export.fontface/-/format/woff/id/az48s7tb/type/font",
+      "cssSha256": "a057f8c028d287ed2ab94ce247a4b5bb2cb03bbc3a355dff004386ef0cd83d20",
+      "cssUrl": "https://www.fussball.de/export.fontface/-/id/az48s7tb/type/css"
+    },
+    "jax3sc3y": {
+      "file": "de-fussball-46-jax3sc3y.woff",
+      "sha256": "3f898a36d2a5c19a21c57d39fc4a5ff6224c17a3108d37ea423434accfbb14db",
+      "sourceUrl": "https://www.fussball.de/export.fontface/-/format/woff/id/jax3sc3y/type/font",
+      "cssSha256": "8469a3f967e45463365dd3d1ee7a2d4941a5119742f21582f385ab4dc605ca80",
+      "cssUrl": "https://www.fussball.de/export.fontface/-/id/jax3sc3y/type/css"
+    },
+    "tc271wuv": {
+      "file": "de-fussball-46-tc271wuv.woff",
+      "sha256": "55c14197753ba8af215ed5d48d3d5fc02385fbab0bdc1cd03c23ccbd57db5922",
+      "sourceUrl": "https://www.fussball.de/export.fontface/-/format/woff/id/tc271wuv/type/font",
+      "cssSha256": "543d99b1f7e399a19cfedd3ba14897e759f3bc7533a57ab532625365d757b849",
+      "cssUrl": "https://www.fussball.de/export.fontface/-/id/tc271wuv/type/css"
+    }
+  },
+  "provenance": {
+    "capturedAt": "2026-10-22T22:48:19.679Z",
+    "method": "Retained ordinary public FUSSBALL.DE source capture; offline replay only",
+    "matchUrl": "https://www.fussball.de/spiel/sv-rohrhof-spvgg-03-ilvesheim/-/spiel/031EQBPNNK000000VS5489BTVUS470OH",
+    "lineupUrl": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031EQBPNNK000000VS5489BTVUS470OH/ticker-id/selectedTickerId",
+    "note": "Both original documents and all source fonts are pinned by SHA-256. No photo is fetched; inline profile photo URLs are decorative."
+  },
+  "eventGlyphFont": {
+    "id": "s23ila4t",
+    "role": "substitution-row glyph only; player identity comes from its profile URL and parser does not decode this display name",
+    "woffUrl": "https://www.fussball.de/export.fontface/-/format/woff/id/s23ila4t/type/font",
+    "woffSha256": "695f7abd0a487bf4d8b530b4b28a9ca5369d38178d303ec184a75678199aee04",
+    "captureFile": "documents/695f7abd0a487bf4d8b530b4b28a9ca5369d38178d303ec184a75678199aee04.woff",
+    "cssUrl": "https://www.fussball.de/export.fontface/-/id/s23ila4t/type/css",
+    "cssSha256": "9277fb20f124d321d52c3a7e3259a784d87a1b2fd4d9369d24683b60fc7420e0"
+  },
+  "event": {
+    "rowCharOffset": 149539,
+    "rowUtf8ByteOffset": 149706,
+    "ordinal": 3,
+    "section": "second-half ingame",
+    "precedingBoundary": "<div class=\"row-time\">45&#039;</div>",
+    "side": "home",
+    "icon": "<i class=\"icon-substitute\"></i>",
+    "rawClockHtml": "<div class=\"valign-inner\">46&rsquo;</div>",
+    "incomingProfile": "userid/022QO0FITS000000VS541L4GVS3APGTL",
+    "outgoingProfile": "player-id/025CBPBL34000000VS54898FVUVB4QL0",
+    "fontId": "s23ila4t",
+    "expectedIntervals": {
+      "incoming": [
+        46,
+        90,
+        44
+      ],
+      "outgoing": [
+        0,
+        46,
+        46
+      ]
+    }
+  }
+}

@@ -9,6 +9,10 @@ import {spawnSync} from 'node:child_process'
 const base=new URL('./vzorci/',import.meta.url),read=n=>readFileSync(new URL(n,base))
 const main=read('de-fussball-ilvesheim-main.html').toString(),lineup=read('de-fussball-ilvesheim-lineup.html').toString()
 const manifest=JSON.parse(read('de-fussball-zapisnik.json'))
+const authentic46Manifest=JSON.parse(read('de-fussball-46-manifest.json'))
+const authentic46Main=read('de-fussball-46-main.html').toString()
+const authentic46Lineup=read('de-fussball-46-lineup.html').toString()
+const authentic46Fonts=Object.fromEntries(Object.entries(authentic46Manifest.fonts).map(([fontId,f])=>[fontId,{bytes:read(f.file),sha256:f.sha256}]))
 const nestedAddedTime=JSON.parse(read('de-fussball-nested-added-time.json'))
 const strafstosstor=JSON.parse(read('de-fussball-strafstosstor.json'))
 const observedShapes=JSON.parse(read('de-fussball-observed-shapes.json'))
@@ -81,6 +85,38 @@ test('authentic capture and all bound fonts retain exact evidence hashes',()=>{
  assert.equal(sha(main),'40ddfc149977bcd0f245a5a43d5865775ee8c363f67d36c883b9733fe188d1a3')
  assert.equal(sha(lineup),'f7a16d5aefb32d6c13b801bf89646b60acafc02ad7a72563ef33ef4bb39ab8cf')
  for(const f of Object.values(fonts))assert.equal(sha(f.bytes),f.sha256)
+})
+test('authentic second-half 46 substitution preserves source minute, identities and independent intervals',()=>{
+ assert.equal(sha(read('de-fussball-46-manifest.json')),'975ae572336e7898e13d1f9b5b8bf7dad9af99d9e88ddf3b7395aa25db9e9f95')
+ assert.equal(sha(authentic46Main),'d5643c6dadfe2503347497d65967b804253bb47e4eb2ffa60d05552f7772cacf')
+ assert.equal(sha(authentic46Lineup),'6b537b3b4ef69e35d152958918ecb70aa47a2419ce1b227b4db9c9f33133e196')
+ assert.equal(sha(authentic46Main),authentic46Manifest.report.sha256)
+ assert.equal(Buffer.byteLength(authentic46Main),authentic46Manifest.report.bytes)
+ assert.equal(sha(authentic46Lineup),authentic46Manifest.lineup.sha256)
+ assert.equal(Buffer.byteLength(authentic46Lineup),authentic46Manifest.lineup.bytes)
+ for(const f of Object.values(authentic46Fonts))assert.equal(sha(f.bytes),f.sha256)
+ const sourceRow=rows(authentic46Main).find(({raw})=>raw.includes(authentic46Manifest.event.icon)&&raw.includes(authentic46Manifest.event.rawClockHtml))
+ assert.ok(sourceRow)
+ assert.equal(Buffer.byteLength(authentic46Main.slice(0,sourceRow.start)),authentic46Manifest.event.rowUtf8ByteOffset)
+ const r=parse(authentic46Main,authentic46Lineup,{id:authentic46Manifest.match.id,lineupId:authentic46Manifest.match.id,fonts:authentic46Fonts})
+ const sub=r.dogodki.find(e=>e.vrsta==='menjava'&&e.osnovnaMinuta===46)
+ assert.ok(sub)
+ assert.equal(sub.polcas,2)
+ assert.equal(sub.ekipaIdx,0)
+ assert.equal(sub.ordinal,authentic46Manifest.event.ordinal)
+ assert.equal(sub.cas,'46&rsquo;')
+ assert.deepEqual(sub.virIds,[
+  'de-fussball-userid-022QO0FITS000000VS541L4GVS3APGTL',
+  'de-fussball-player-id-025CBPBL34000000VS54898FVUVB4QL0',
+ ])
+ const incoming=r.nastopi.find(p=>p.virId===sub.virIds[0]),outgoing=r.nastopi.find(p=>p.virId===sub.virIds[1])
+ assert.deepEqual([incoming.minutaOd,incoming.minutaDo,incoming.minute],[46,90,44])
+ assert.deepEqual([outgoing.minutaOd,outgoing.minutaDo,outgoing.minute],[0,46,46])
+})
+test('authentic 46 substitution still rejects an entrant without a profile identity',()=>{
+ const index=rows(authentic46Main).findIndex(({raw})=>raw.includes('class="icon-substitute"')&&raw.includes('<div class="valign-inner">46&rsquo;</div>'))
+ const missing=edit(index,raw=>raw.replace(/<a href="https:\/\/www\.fussball\.de\/spielerprofil\/-\/userid\/022QO0FITS000000VS541L4GVS3APGTL">[\s\S]*?<\/a>/,'<span><span>k.A. (17)</span></span>'),authentic46Main)
+ assert.throws(()=>parse(missing,authentic46Lineup,{id:authentic46Manifest.match.id,lineupId:authentic46Manifest.match.id,fonts:authentic46Fonts}),/menjava brez obeh igralcev/)
 })
 test('Ilvesheim yields exact historical intervals, goals, keepers and report-only readiness',()=>{
  const r=parse(),a=r.nastopi
@@ -263,8 +299,8 @@ for(const [name,fn] of [
 ])test(`positive period proof required: ${name}`,()=>reject(fn(main)))
 
 test('a scorer sharing an entry clock is rejected even when DOM order looks causal',()=>reject(clock(9,'67',clock(8,'67',clock(7,'67'))),lineup,options,/dvoumen čas strelca/))
-test('halftime 45/46 substitutions are unsupported',()=>{
- for(const time of ['45','46']){
+test('ambiguous halftime 45 substitutions remain unsupported',()=>{
+ for(const time of ['45']){
   // Move the actual first substitution ahead of second-half events, keeping summary aligned.
   const r=rows(main),sub=r[4].raw.replace('59&rsquo;',`${time}&rsquo;`)
   let html=main.slice(0,r[4].start)+main.slice(r[4].end)

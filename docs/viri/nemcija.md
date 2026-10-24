@@ -147,6 +147,56 @@ ponovi celoten prehod samo iz shranjenih bajtov, brez omrežnega nadomestila.
 ali dostopa do baze. Izhod vedno vsebuje `activationEligible:false`; ta
 zbiralnik sam ne vpiše igralcev in ne vklopi lige.
 
+## Javni amaterski uvoz `fussball-public` (24. 10. 2026)
+
+Ločeni vir `scripts/viri/fussball-public.mjs` poveže preverjen zajem z
+običajnima uvoznikoma razporeda in zapisnikov. Osnovni lokalni validator
+`fussball.mjs` in report-only zastavice ostanejo ločeni. Šifra novega vira je
+`<32-znakovna-staffel>-G:<YYYY/YY>`; ne zamenjuj je s kodami DFB Datencentra.
+Izvirno postavo, profile in pisave preveri `verifyFussballDirectory`, nato
+`fussball-import.mjs` zahteva vse kroge in vse odigrane zapisnike, brez
+vzorčenja, zavrnitev, podvojitev ali preteklih tekem brez preverjenega izida.
+Nobene nove lige ta sprememba sama ne vpiše ali vklopi.
+
+Podprta je pristno zajeta menjava pri 46′ v izrecnem drugem polčasu, z obema
+profilnima povezavama. Ohrani minuto 46 (vstop 44 minut, izstop 46), ne sklepa
+45. minute. Dvoumen 45′, anonimni dejanski udeleženci, rdeči brez prejemnika
+in drugi nepodprti dogodki ostanejo zavrnjeni. Pristni vzorec je
+`scripts/vzorci/de-fussball-46-manifest.json`; različice drugih predlog s tem
+niso samodejno potrjene.
+
+Polne profilne šifre `de-fussball-player-id-…` / `de-fussball-userid-…`
+ostanejo v ločenih prostorih. Zasebni `private_fussball.identity_map` pred
+uvozom rezervira enolične interne številčne ključe v razponu 2^52–2^53−1.
+Trk ali spremenjena preslikava ustavita celoten paket. To niso registrske
+številke DFB; imen, dresov ali podobnosti ne uporabljamo za zlivanje profilov.
+Navadni anonimni rumeni ostanejo v `matches.import_warnings` z izvirnim SHA,
+časom, stranjo in URL; obstoječi vmesnik pokaže število nepripisanih kartonov.
+
+Operativno zaporedje:
+
+1. Obstoječi `preveri-fussball-sezono.yml` na trenutnem `main` zajame `reports=all`
+   z izrecnim proračunom. Zavrnitev ali napaka ustavi zajem; ni ponovitev prek
+   drugega gostitelja ali seje. Celoten izvirni artefakt mora uspešno prestati
+   offline ponovitev. Ne uporabljaj starega neuspelega Mannheimovega zajema za uvoz.
+2. `uvoz-fussball-public.yml` sprejme le uspešen audit iz istega repozitorija,
+   na `main` in točno istem commitu. Liga mora že obstajati kot neaktivna,
+   imeti vir `fussball-public`, točno sezonsko šifro in nič fantasy ekip.
+   Svež tekoči zajem je star največ 24 ur od začetka; računajo se tudi čakanja.
+3. Po preverbi vseh bajtov in pokritosti sledi razpored, rezervacija identitet,
+   nastopi/goli, začetne pozicije in cene ter običajna preverba pripravljenosti.
+   Oba standardna uvoznika bereta `SLFF_FUSSBALL_CAPTURE`, brez novih zahtevkov
+   k viru. Ročni arhiv potrebuje izrecno `SLFF_FUSSBALL_ARCHIVE_CODE` ter njegov
+   ločeni popolni zajem prejšnje sezone; trenutni workflow je samo za tekočo.
+4. Pred prvim vklopom sta še vedno potrebna dokazano redno osveževanje vira in
+   ločen pregled cen, vratarjev, arhiva oziroma odobrene alternative ter svežega
+   prihodnjega roka. Ta bootstrap nima cron urnika in nikoli ne kliče vklopa.
+
+Predogled brez baze: `node scripts/preveri-fussball-uvoz.mjs preview --capture
+<mapa> --code <staffel-G:YYYY/YY> --output <nova-datoteka.json>`. `npm run
+test:fussball` preveri tudi adapter, pravice in meje uvoza; naravni SQL test je
+izrecno omejen na odstranljivo bazo in se v CI izvede posebej.
+
 ## Galicija
 
 Ligo vodi in podatke objavlja [Real Federación Galega de Fútbol](https://www.futgal.es/).

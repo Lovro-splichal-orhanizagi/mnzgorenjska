@@ -338,7 +338,7 @@ function appearances(z,raw){
  for(const e of raw){
   if(e.vrsta==='gol')requireProof(active.has(e.refs[0]),'gol zunaj aktivnega intervala')
   if(e.vrsta!=='menjava')continue
-  requireProof(![45,46].includes(e.osnovnaMinuta),'nepodprta dvoumna polčasna menjava')
+  requireProof(e.osnovnaMinuta!==45&&(e.osnovnaMinuta!==46||e.polcas===2),'nepodprta dvoumna polčasna menjava')
   const [incoming,outgoing]=e.refs.map(ref=>roster.get(ref))
   requireProof(incoming&&outgoing&&incoming.ekipaIdx===e.ekipaIdx&&outgoing.ekipaIdx===e.ekipaIdx,'menjava napačne zgodovinske strani')
   requireProof(!entered.has(incoming.virId)&&active.has(outgoing.virId),'ponovni vstop ali neveljaven izstop')

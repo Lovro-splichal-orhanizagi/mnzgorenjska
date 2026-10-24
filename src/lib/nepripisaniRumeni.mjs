@@ -1,7 +1,17 @@
 // Public, versioned event evidence stored in matches.import_warnings.
 export const UNATTRIBUTED_YELLOW_PREFIX='SLFF_UNATTRIBUTED_YELLOW_V1:'
 const fields=['source','matchId','sourceUrl','side','clock','minute','reason','eventSha256','ordinal','profileId']
+function validFussball(e){
+ if(!e||typeof e!=='object'||Array.isArray(e)||Object.keys(e).length!==fields.length||fields.some(k=>!Object.hasOwn(e,k)))return false
+ if(e.source!=='fussball'||e.reason!=='not-published'||e.profileId!==null||![0,1].includes(e.side))return false
+ if(typeof e.eventSha256!=='string'||!/^[a-f0-9]{64}$/.test(e.eventSha256)||!Number.isInteger(e.ordinal)||e.ordinal<0||e.ordinal>1000)return false
+ const clock=typeof e.clock==='string'&&e.clock.match(/^(\d{1,2})(?:\+([1-9]|[12]\d|30))?'$/)
+ if(!clock||+clock[1]<1||+clock[1]>90||e.minute!==+clock[1]||(clock[2]&&!['45','90'].includes(clock[1])))return false
+ const url=typeof e.sourceUrl==='string'&&e.sourceUrl.match(/^https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)?-\/spiel\/([A-Z0-9]{32})$/)
+ return !!url&&e.matchId===`de-fussball-${url[1]}`
+}
 function valid(e){
+ if(e?.source==='fussball')return validFussball(e)
  if(!e||typeof e!=='object'||Array.isArray(e)||Object.keys(e).length!==fields.length||fields.some(k=>!Object.hasOwn(e,k)))return false
  if(e.source!=='dfb'||!/^de-dfb-\d{1,12}$/.test(e.matchId)||![0,1].includes(e.side)||!['unknown-role','player-coach'].includes(e.reason))return false
  if(typeof e.eventSha256!=='string'||!/[a-f0-9]{64}/.test(e.eventSha256)||e.eventSha256.length!==64||!Number.isInteger(e.ordinal)||e.ordinal<0||e.ordinal>1000)return false

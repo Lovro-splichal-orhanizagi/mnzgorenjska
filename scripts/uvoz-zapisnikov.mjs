@@ -113,7 +113,7 @@ if(installedHistoricalMarkers?.markers.some(m=>m.reportId===String(arg('zapisnik
   console.log('Historical report has explicit unavailable statistics; immutable installed marker retained without source reads or writes.')
   process.exit(0)
 }
-const vir = viraZa(tekmovanje,{installedHistoricalMarkers})
+const vir = viraZa(tekmovanje,{installedHistoricalMarkers,db})
 if (virIme) console.log(`Vir povožen: ${virIme}`)
 const liga = arg('liga', sifraLige(tekmovanje, '1502'))
 // Arhiv (prejšnja sezona) igralca ne vrača med aktivne; nastop v tekoči sezoni ga.
