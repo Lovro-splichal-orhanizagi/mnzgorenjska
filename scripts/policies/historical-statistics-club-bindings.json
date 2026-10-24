@@ -1314,6 +1314,38 @@
           "rawSha256": "2ea11f7d6b83ba65fcd673215bdef161a1ac636e23bd17f7e647fad6d13409c6"
         }
       ]
+    },
+    {
+      "provider": "mlsz",
+      "sourceClubId": "315796",
+      "sourceCategoryId": null,
+      "countryCode": "HU",
+      "canonicalNames": [
+        "EGERÁG SE"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2111703",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/2/32200/1/2111703.html",
+          "rawSha256": "8d658e612d7be17b447076737c5a4157f83d0a9a0c0dd174c979e5ce7232ab9e"
+        }
+      ]
+    },
+    {
+      "provider": "mlsz",
+      "sourceClubId": "315795",
+      "sourceCategoryId": null,
+      "countryCode": "HU",
+      "canonicalNames": [
+        "SÁSD VSK"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2111703",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/2/32200/1/2111703.html",
+          "rawSha256": "8d658e612d7be17b447076737c5a4157f83d0a9a0c0dd174c979e5ce7232ab9e"
+        }
+      ]
     }
   ]
 }

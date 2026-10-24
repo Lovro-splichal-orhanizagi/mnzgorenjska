@@ -1045,6 +1045,41 @@
           "reasonCode": "score_goal_events_disagree"
         }
       ]
+    },
+    {
+      "sourcePolicy": "reviewed-existing-history-20261023-v1",
+      "season": "2025/26",
+      "recordedAt": "2026-10-24T16:24:49.236927+00:00",
+      "approvalReference": "Owner explicitly answered Allow the reviewed archive policy up to 5% to call_3a8674f5af8c4b8c8ba9bac6c54d0481 question0 on 24 October 2026 for remaining unlaunched Hungarian candidates, archive only. This exact source-proven Baranya report is 1 of 28 reports in archive 65/2/32200 (3.57%); separate archive 65/2/32199 retains all 28 ordinary reports. Preserve official 3–0, mark individual statistics unavailable, remove exactly 21 appearances and zero goals, reprice and rerun all current-report, goalkeeper, price/legal-squad and fresh deadline gates. Recording time is evidence time, not the unknown user-send timestamp.",
+      "id": "hu-ba-u19-2-historical-unavailable-2026-10-24-v1",
+      "provider": "mlsz",
+      "competitionSlug": "hu-ba-u19-2",
+      "competitionId": 615,
+      "sourceLeagueCode": "67/2/33847",
+      "archiveSourceLeagueCodes": [
+        "65/2/32199",
+        "65/2/32200"
+      ],
+      "reviewedArchiveReportCounts": {
+        "65/2/32199": 28,
+        "65/2/32200": 28
+      },
+      "entries": [
+        {
+          "sourceMatchId": "2111703",
+          "sourceCompetitionId": "65/2/32200",
+          "sourcePhase": null,
+          "sourceRound": 1,
+          "playedOn": "2025-09-13",
+          "homeSourceClubId": "315796",
+          "awaySourceClubId": "315795",
+          "sourceUrl": "https://adatbank.mlsz.hu/match/65/2/32200/1/2111703.html",
+          "rawSha256": "8d658e612d7be17b447076737c5a4157f83d0a9a0c0dd174c979e5ce7232ab9e",
+          "observedHomeScore": 3,
+          "observedAwayScore": 0,
+          "reasonCode": "official_score_published_but_scorer_events_absent"
+        }
+      ]
     }
   ]
 }

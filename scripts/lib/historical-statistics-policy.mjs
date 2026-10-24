@@ -10,6 +10,7 @@ const entrySeason = (policy,entry) => MFA_POLICY_IDS.includes(policy.id) || (exa
 const exactMfaTuple = competition => (competition?.id===971 && competition?.slug==='mt-premier' && competition?.source_league_code==='58539/2027') || (competition?.id===972 && competition?.slug==='mt-challenge' && competition?.source_league_code==='2601248/2027') || (competition?.id===973 && competition?.slug==='mt-nl1' && competition?.source_league_code==='2601267/2027') || (competition?.id===974 && competition?.slug==='mt-nl2' && competition?.source_league_code==='6234492/2027')
 const EXISTING_HISTORY_SOURCE_POLICY = 'reviewed-existing-history-20261023-v1'
 const EXISTING_HISTORY_TUPLES = {
+  'hu-ba-u19-2': { id: 615, provider: 'mlsz', code: '67/2/33847', policyId: 'hu-ba-u19-2-historical-unavailable-2026-10-24-v1', season: '2025/26' },
   'hu-cs-u19-toth': { id: 625, provider: 'mlsz', code: '67/6/34102', policyId: 'hu-cs-u19-toth-historical-unavailable-2026-10-24-v1', season: '2025/26' },
   'hu-pe-u19-c': { id: 637, provider: 'mlsz', code: '67/14/34250', policyId: 'hu-pe-u19-c-historical-unavailable-2026-10-24-v1', season: '2025/26' },
   'gb-npl-midlands': { id: 979, provider: 'isthmian', code: 'npl/67d7c7bb74247876e6dae40c/2026-27', policyId: 'gb-npl-midlands-historical-unavailable-2026-10-23-v1' },
@@ -65,6 +66,9 @@ export function validateHistoricalStatisticsRegistry(registry) {
     if (policy.provider === 'hlf' && exactTuple && !['ro-liga3-s1','ro-ab-l4-s2','ro-ab-l5-s2'].includes(policy.competitionSlug)) fail('unreviewed HLF history tuple')
     if (policy.provider === 'nfsbih' && exactTuple && policy.competitionSlug !== 'ba-wwin-liga-bih') fail('unreviewed NFSBiH history tuple')
     if (policy.provider === 'fmf' && exactTuple && !exactMdfmfProof(policy)) fail('unreviewed FMF history tuple')
+    if (policy.competitionSlug === 'hu-ba-u19-2' || 'archiveSourceLeagueCodes' in policy || 'reviewedArchiveReportCounts' in policy) {
+      if (policy.id !== 'hu-ba-u19-2-historical-unavailable-2026-10-24-v1' || policy.provider !== 'mlsz' || JSON.stringify(policy.archiveSourceLeagueCodes) !== '["65/2/32199","65/2/32200"]' || JSON.stringify(policy.reviewedArchiveReportCounts) !== '{"65/2/32199":28,"65/2/32200":28}' || policy.entries?.length !== 1 || policy.entries[0].sourceMatchId !== '2111703' || policy.entries[0].sourceCompetitionId !== '65/2/32200') fail('exact Baranya archive inventory binding differs')
+    }
     if (!Array.isArray(policy.entries) || !policy.entries.length) fail('empty policy entries')
     for (const entry of policy.entries) {
       const exactMfaOverride = MFA_POLICY_IDS.includes(policy.id) && policy.provider === 'mfa' && ((policy.competitionSlug === 'mt-premier' && policy.sourcePolicy === 'mt-mfa-reviewed-history-v1') || (policy.competitionSlug === 'mt-challenge' && policy.sourcePolicy === 'mt-mfa-challenge-reviewed-history-v1') || (policy.competitionSlug === 'mt-nl1' && policy.sourcePolicy === 'mt-mfa-nl1-reviewed-history-v1') || (policy.competitionSlug === 'mt-nl2' && policy.sourcePolicy === 'mt-mfa-nl2-reviewed-history-v1')) && /^\d{4}\/\d{2}$/.test(entry.season)

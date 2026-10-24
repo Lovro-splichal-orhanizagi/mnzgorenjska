@@ -307,6 +307,18 @@ export function brezPostav(html, izid = izidZapisnika(String(html ?? ''))?.rezul
   return !!n && n.every((x) => x === 0)
 }
 
+function duplicateShirts(players) {
+  const groups = new Map()
+  for (const p of players) if (p.st != null) groups.set(p.st, [...(groups.get(p.st) ?? []), p])
+  const duplicates = new Set()
+  for (const [shirt, group] of groups) if (group.length > 1) {
+    if (group.some(p => !Number.isSafeInteger(p.regSt) || p.regSt <= 0) || new Set(group.map(p => p.regSt)).size !== group.length)
+      throw new Error('MLSZ duplicate shirt: distinct exact source registration identities required')
+    duplicates.add(shirt)
+  }
+  return duplicates
+}
+
 /**
  * Stran tekme v obliko zapisnika, kot jo dajo drugi viri.
  * Vrne null, če tekma nima izida ali ena od ekip nima postave (zapisnik še ni
@@ -337,8 +349,10 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
   const menjave = []
   ekipe.forEach((e, ekipaIdx) => {
     const vsi = [...e.postava, ...e.rezerve]
+    const duplicates = duplicateShirts(vsi)
+    const actor = i => ({ st: i.st, ime: i.ime, ...(duplicates.has(i.st) ? { regSt: i.regSt } : {}) })
     for (const i of vsi) {
-      const kdo = { ekipaIdx, st: i.st, ime: i.ime }
+      const kdo = { ekipaIdx, ...actor(i) }
       for (const d of i.dogodki) {
         const z = { ...kdo, minuta: d.minuta }
         if (d.vrsta === 'goal') goli.push({ ...z, avtogol: false, enajstmetrovka: false })
@@ -361,8 +375,8 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
       menjave.push({
         ekipaIdx,
         minuta: minutaM,
-        noter: noter ? { st: noter.st, ime: noter.ime } : { st: null, ime: null },
-        ven: ven ? { st: ven.st, ime: ven.ime } : { st: null, ime: null },
+        noter: noter ? actor(noter) : { st: null, ime: null },
+        ven: ven ? actor(ven) : { st: null, ime: null },
       })
       if (noter) pokrite.add(`${noter.regSt}|${minutaM}`)
       if (ven) pokrite.add(`${ven.regSt}|${minutaM}`)
@@ -424,16 +438,35 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
  * igralca; kdor je šel ven in nazaj (leteče menjave), dobi minute iz vseh.
  */
 export function nastopi(z) {
-  return skupniNastopi(z).map((n) => {
+  const teams = [z.domaci, z.gostje]
+  const players = teams.map(e => [...e.postava, ...e.rezerve])
+  const duplicates = players.map(duplicateShirts)
+  const key = (p, side) => duplicates[side].has(p.st) ? `mlsz-reg:${p.regSt}` : p.st
+  let projected = z
+  if (duplicates.some(group => group.size)) {
+    // The shared mapper keys by shirt. Use exact source IDs only inside this
+    // collision projection; every public/native output keeps the published shirt.
+    const actor = (p, side) => {
+      if (!duplicates[side].has(p.st)) return p
+      const matches = players[side].filter(source => source.regSt === p.regSt && source.st === p.st && source.ime === p.ime)
+      if (matches.length !== 1) throw new Error('MLSZ duplicate shirt: actor has no unique exact source identity')
+      return { ...p, st: key(matches[0], side) }
+    }
+    const team = (e, side) => ({ ...e, postava: e.postava.map(p => actor(p, side)), rezerve: e.rezerve.map(p => actor(p, side)) })
+    projected = { ...z, domaci: team(z.domaci, 0), gostje: team(z.gostje, 1),
+      ...Object.fromEntries(['goli', 'zgresene', 'rumeni', 'rdeci'].map(field => [field, z[field].map(p => actor(p, p.ekipaIdx))])),
+      menjave: z.menjave.map(m => ({ ...m, noter: actor(m.noter, m.ekipaIdx), ven: actor(m.ven, m.ekipaIdx) })),
+    }
+  }
+  const appearances = skupniNastopi(projected).map((n) => {
     const e = n.ekipaIdx === 0 ? z.domaci : z.gostje
-    const i = [...e.postava, ...e.rezerve].find((x) => x.st === n.st && x.ime === n.ime)
+    const i = [...e.postava, ...e.rezerve].find((x) => key(x, n.ekipaIdx) === n.st && x.ime === n.ime)
     // A bench card may occur after substitution; retain its own authoritative clock.
-    const red = z.rdeci.find(k => k.ekipaIdx === n.ekipaIdx && k.st === n.st)
-    const out = { ...n, regSt: i?.regSt ?? null, pozicija: i?.pozicija ?? null, redCardMinute: red?.minuta ?? null }
+    const red = projected.rdeci.find(k => k.ekipaIdx === n.ekipaIdx && k.st === n.st)
+    const out = { ...n, st: i?.st ?? n.st, regSt: i?.regSt ?? null, pozicija: i?.pozicija ?? null, redCardMinute: red?.minuta ?? null }
     // Začetnik z več kot enim preklopom ali rezerva z več kot dvema.
-    if (i && i.preklopi.length > (n.zacetnik ? 1 : 2)) {
-      const rdec = z.rdeci.find((k) => k.ekipaIdx === n.ekipaIdx && k.st === n.st)
-      const konec = rdec?.minuta ?? DOLZINA_TEKME
+    if (i && (duplicates[n.ekipaIdx].has(i.st) || i.preklopi.length > (n.zacetnik ? 1 : 2))) {
+      const konec = red?.minuta ?? DOLZINA_TEKME
       const { minute, prvic } = minuteIzPreklopov(n.zacetnik, i.preklopi, konec)
       out.minute = minute
       out.minutaOd = prvic ?? out.minutaOd
@@ -441,6 +474,12 @@ export function nastopi(z) {
     }
     return out
   })
+  for (const g of z.goli) if (duplicates[g.ekipaIdx].has(g.st)) {
+    const a = appearances.find(p => p.ekipaIdx === g.ekipaIdx && p.regSt === g.regSt)
+    if (!a || g.minuta < a.minutaOd || g.minuta > a.minutaDo)
+      throw new Error('MLSZ duplicate shirt: scorer has no matching source appearance interval')
+  }
+  return appearances
 }
 
 // --- klubi -------------------------------------------------------------------
