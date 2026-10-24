@@ -229,6 +229,40 @@ function makeLazyFontParser(loadFonts, allowedIds, cssTemplate, token, parse) {
   }
 }
 
+/** Shared strict parser session; source reads remain owned by the caller's stopped client. */
+export function createFussballParserSession(readSource, injectedParsers = {}) {
+  const parsers = parserDependencies(injectedParsers)
+  const loadFonts = makeFontsLoader(readSource, parsers), token = randomUUID()
+  const parse = (ids, template, fn) => makeLazyFontParser(loadFonts, ids, template, token, fn)()
+  return {
+    async round(html, {staffel, url}) {
+      const info = parsers.inspectPage(html, {kind:'round', staffel})
+      // Dated seeds are admitted by strict discovery; season collection still has its own base-only seed gate.
+      const parsed = await parse(info.fontIds, info.cssTemplate, fonts => parsers.parseRound(html, {fonts,staffel,url}))
+      return {info, parsed}
+    },
+    async report(fixture) {
+      const mainDocument = await readSource(fixture.url, 'report'), mainHtml = text(mainDocument.bytes)
+      const info = parsers.inspectPage(mainHtml, {kind:'report',matchId:fixture.id})
+      validatePageInfo(info, {kind:'report',matchId:fixture.id})
+      if (!info.lineupUrl || lineupId(info.lineupUrl) !== fixture.id)
+        throw fail('report has no exact observed lineup URL', 'FUSSBALL_LINEUP_LINK_MISSING')
+      const lineupDocument = await readSource(info.lineupUrl, 'lineup'), lineupHtml = text(lineupDocument.bytes)
+      let lineupFonts
+      try {
+        lineupFonts = parsers.inspectLineup(lineupHtml)
+        if (!Array.isArray(lineupFonts) || !lineupFonts.every(id => FONT_ID.test(id)) || new Set(lineupFonts).size !== lineupFonts.length)
+          throw fail('lineup discovery returned invalid font IDs', 'FUSSBALL_LINEUP_INVALID')
+      } catch (error) {throw Object.assign(error,{code:error?.code ?? 'FUSSBALL_LINEUP_INVALID'})}
+      const ids = [...new Set([...info.fontIds,...lineupFonts])].sort()
+      const result = await parse(ids, info.cssTemplate, fonts => parsers.parseFantasyReport(mainHtml,lineupHtml,{fonts,id:fixture.id,lineupId:fixture.id}))
+      validateFantasyResult(result,fixture)
+      return {fixture,result}
+    },
+  }
+}
+export {validateFixture as validateFussballFixture}
+
 function sameResult(a, b) {
   return a && b && a.domaci === b.domaci && a.gostje === b.gostje
 }
@@ -330,47 +364,15 @@ export async function collectFussballSeason({
   const played = schedule.fixtures.filter(fixture => fixture.rezultat !== null)
   const selected = reportLimit == null ? played : played.slice(0, reportLimit)
   const reports = [], rejectedReports = []
+  const reportSession = createFussballParserSession(readSource, injectedParsers)
   for (let index = 0; index < selected.length; index++) {
     const fixture = selected[index]
     await progress({ phase: 'report', matchId: fixture.id, index: index + 1, total: selected.length })
 
-    const mainDocument = await readSource(fixture.url, 'report')
-    let info, mainHtml, lineupHtml, observedFontIds
-    try {
-      mainHtml = text(mainDocument.bytes)
-      info = parsers.inspectPage(mainHtml, { kind: 'report', matchId: fixture.id })
-      validatePageInfo(info, { kind: 'report', matchId: fixture.id })
-      if (reportId(info.url) !== fixture.id) throw fail('report URL does not match scheduled fixture')
-      if (!info.lineupUrl || lineupId(info.lineupUrl) !== fixture.id) throw fail('report has no exact observed lineup URL', 'FUSSBALL_LINEUP_LINK_MISSING')
-    } catch (error) {
-      rejectedReports.push(reportFailure(fixture, error))
-      continue
-    }
-
-    const lineupDocument = await readSource(info.lineupUrl, 'lineup')
-    try {
-      lineupHtml = text(lineupDocument.bytes)
-      const lineupFonts = parsers.inspectLineup(lineupHtml)
-      if (!Array.isArray(lineupFonts) || !lineupFonts.every(id => FONT_ID.test(id)) || new Set(lineupFonts).size !== lineupFonts.length)
-        throw fail('lineup discovery returned invalid font IDs', 'FUSSBALL_LINEUP_INVALID')
-      observedFontIds = [...new Set([...info.fontIds, ...lineupFonts])].sort()
-    } catch (error) {
+    try { reports.push(await reportSession.report(fixture)) }
+    catch (error) {
       if (sourceErrors.has(error)) throw error
-      if (error?.code === 'FUSSBALL_FONT_CSS_UNSUPPORTED') {
-        rejectedReports.push(reportFailure(fixture, error))
-        continue
-      }
-      rejectedReports.push(reportFailure(fixture, Object.assign(error, { code: error?.code ?? 'FUSSBALL_LINEUP_INVALID' })))
-      continue
-    }
-    try {
-      const result = await parseWithObservedFonts(observedFontIds, info.cssTemplate,
-        fonts => parsers.parseFantasyReport(mainHtml, lineupHtml, { fonts, id: fixture.id, lineupId: fixture.id }))
-      validateFantasyResult(result, fixture)
-      reports.push({ fixture, result })
-    } catch (error) {
-      if (sourceErrors.has(error)) throw error
-      rejectedReports.push(reportFailure(fixture, error))
+      rejectedReports.push(reportFailure(fixture,error))
     }
   }
 

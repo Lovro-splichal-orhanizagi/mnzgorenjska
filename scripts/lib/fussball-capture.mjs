@@ -13,6 +13,15 @@ const fail = message => new Error(`fussball capture: ${message}`)
 const timestamp = milliseconds => new Date(milliseconds).toISOString()
 const pause = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
 
+/** Exact supported public round routes, including observed calendar-day seeds. */
+export function fussballRoundScope(url) {
+  if (typeof url !== 'string') return null
+  const m = url.match(/^https:\/\/www\.fussball\.de\/spieltag\/(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)?-\/(?:(?:spieltag\/([1-9]\d{0,2})|spieldatum\/(20\d{2}-\d{2}-\d{2}))\/)?staffel\/([A-Z0-9]{32}-G)$/)
+  if (!m) return null
+  if (m[2] && (!Number.isFinite(Date.parse(m[2] + 'T00:00:00Z')) || new Date(m[2] + 'T00:00:00Z').toISOString().slice(0, 10) !== m[2])) return null
+  return {staffel:m[3],round:m[1] ? Number(m[1]) : null,date:m[2] ?? null}
+}
+
 function routeKind(url, kind) {
   if (typeof url !== 'string' || !url || /[\s\\]/.test(url)) throw fail('invalid source URL')
   if (!KINDS.has(kind)) throw fail(`unsupported document kind ${String(kind)}`)
@@ -25,13 +34,9 @@ function routeKind(url, kind) {
 
   const slug = '(?:[a-z0-9]+(?:-[a-z0-9]+)*/)?'
   const id = '[A-Z0-9]{32}'
-  const staffel = `${id}-G`
   const path = parsed.pathname
   const matches = {
-    round: [
-      new RegExp(`^/spieltag/${slug}-/staffel/${staffel}$`),
-      new RegExp(`^/spieltag/${slug}-/spieltag/[1-9]\\d{0,2}/staffel/${staffel}$`),
-    ].some(re => re.test(path)),
+    round: fussballRoundScope(url) !== null,
     report: new RegExp(`^/spiel/${slug}-/spiel/${id}$`).test(path),
     lineup: new RegExp(`^/ajax\\.match\\.lineup/-/mode/PAGE/spiel/${id}(?:/ticker-id/selectedTickerId)?$`).test(path),
     css: /^\/export\.fontface\/-\/id\/[a-z0-9]{8}\/type\/css$/.test(path),
@@ -209,6 +214,7 @@ export function createFussballCaptureClient({
   }
 
   return {
+    get requestLimit() { return maxRequests },
     read(url, kind) {
       const result = queue.then(() => performRead(url, kind))
       queue = result.catch(() => undefined)
