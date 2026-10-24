@@ -1567,6 +1567,8 @@ preveri(
       // Vratarji z goli tekoče sezone (preveri-podatke): privzeto jih ni.
       if (tabela === 'player_season_standings') return odgovor(moznosti.strelci ?? [])
       if (tabela === 'player_overview') return odgovor([])
+      // Dodani igralci klubov (klub_dodaj_igralca): privzeto jih ni.
+      if (tabela === 'klub_dodani_igralci') return odgovor(moznosti.dodani ?? [])
       if (tabela === 'players') {
         const od = Number(url.searchParams.get('offset') ?? 0)
         const koliko = Number(url.searchParams.get('limit') ?? 1000)
@@ -1629,6 +1631,14 @@ preveri(
     const izid = cli('preveri-podatke.mjs', [...igralci, ...vrhCenika], { strelci })
     preveri('preverba javi vratarja z goli',
       izid.status === 0 && izid.stdout.includes('vratar-strelec') && izid.stdout.includes('Labaška'),
+      izid.stdout.trim().split('\n').slice(-1)[0])
+  }
+  // Klub čez omejitev 25 dodanih na sezono (klub_dodaj_igralca jo drži sam).
+  {
+    const dodani = Array.from({ length: 26 }, () => ({ team_id: 7, sezona: '2026/27', teams: { name: 'NK Test' } }))
+    const izid = cli('preveri-podatke.mjs', [...igralci, ...vrhCenika], { dodani })
+    preveri('preverba javi klub z več kot 25 dodanimi',
+      izid.status === 0 && izid.stdout.includes('klub-prevec-dodanih') && izid.stdout.includes('NK Test 2026/27: 26'),
       izid.stdout.trim().split('\n').slice(-1)[0])
   }
   // Igralec iz polja v vratih (Debeljak): uvoz ga ne prekrsti, preverba javi.
