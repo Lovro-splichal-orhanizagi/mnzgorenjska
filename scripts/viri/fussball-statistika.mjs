@@ -13,7 +13,8 @@ const decode=s=>s.replace(/&#x([a-f0-9]+);/gi,(_,n)=>String.fromCodePoint(parseI
 // Discover actual opening tags without interpreting comment/raw-text contents
 // or markup-shaped attribute values as elements. Keep original source offsets;
 // strict subtree parsing and row hashes still consume the unchanged raw HTML.
-function liveTags(html){
+function liveTags(html,{trackForeign=false}={}){
+ const foreign=[]
  const tags=[],rawText=new Set(['script','style','title','textarea','iframe','xmp','noembed','noframes','noscript'])
  let cursor=0,inHead=false,templates=0,heads=0,headEnds=0
  while(cursor<html.length){
@@ -59,11 +60,16 @@ function liveTags(html){
   if(tag==='template')templates+=closing?-1:1
   requireProof(templates>=0,'neveljavna meja predloge HTML')
   if(!templates){
+   const foreignTag=['svg','math'].includes(tag)
+   if(trackForeign&&foreignTag){
+    if(closing)requireProof(foreign.pop()===tag,'neujemajoča tuja meja HTML')
+    else if(!/\/\s*>$/.test(html.slice(start,end)))foreign.push(tag)
+   }
    if(tag==='head'){
     if(closing){requireProof(inHead,'neveljaven zaključek glave HTML');headEnds++;inHead=false}
     else{requireProof(!inHead&&!heads,'podvojena glava HTML');heads++;inHead=true}
    }
-   if(!closing)tags.push({tag,attrs,start,end,inHead})
+   if(!closing)tags.push({tag,attrs,start,end,inHead,...(trackForeign?{foreignContext:foreign.length>0||foreignTag}:{})})
   }
   cursor=end
   if(!closing&&rawText.has(tag)){
@@ -71,6 +77,7 @@ function liveTags(html){
    requireProof(close.exec(html),'odrezana surova vsebina HTML');cursor=close.lastIndex
   }else if(!closing&&tag==='plaintext')cursor=html.length
  }
+ requireProof(!trackForeign||!foreign.length,'odrezan tuji kontekst HTML')
  requireProof(!templates&&heads===1&&headEnds===1,'manjka enolična živa glava HTML')
  return tags
 }

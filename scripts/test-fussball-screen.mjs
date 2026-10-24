@@ -131,3 +131,24 @@ test('budget exhausted inside a report remains a terminal source failure rather 
 test('a caller cannot supply a larger client budget than the explicit screen budget',async()=>{
  const f=source();f.options.maxRequests=7;await assert.rejects(()=>screen(f),/budget/);assert.equal(f.calls.length,0)
 })
+
+test('foreign selector proof stays rejected with uppercase, spaced and nested closing boundaries',async()=>{
+ for(const [open,close]of [['<svg>','</SVG>'],['<svg>','</svg >'],['<svg><g><math>','</MATH ></g></SVG>']]){
+  const f=source(),selector=f.html.match(/<select\b[^>]*name="spieltag"[^>]*>[\s\S]*?<\/select>/)[0]
+  f.docs.get(dated).bytes=f.html.replace(selector,open+selector+close)
+  await assert.rejects(()=>screen(f),/foreign|live|selector/);assert.equal(f.calls.length,1)
+ }
+})
+test('API capture from another cwd verifies through API and absolute CLI from both cwd locations',async t=>{
+ const {spawnSync}=await import('node:child_process'),{fileURLToPath}=await import('node:url')
+ const f=source(),parent=mkdtempSync(join(tmpdir(),'slff-fast-screen-cwd-')),directory=join(parent,'screen'),originalCwd=process.cwd()
+ const cli=fileURLToPath(new URL('./zajemi-fussball-vzorec.mjs',import.meta.url));let clock=Date.now()
+ t.mock.method(Date,'now',()=>clock);t.mock.method(globalThis,'setTimeout',(fn,ms)=>{clock+=ms;queueMicrotask(fn);return 1})
+ try{
+  process.chdir(parent)
+  const m=await api.captureFussballScreenDirectory({directory,options:f.options,fetchFn:f.fetchFn})
+  process.chdir(originalCwd)
+  const r=await api.verifyFussballScreenDirectory(directory);assert.equal(r.codeSha256,m.codeSha256)
+  for(const cwd of [parent,originalCwd]){const run=spawnSync(process.execPath,[cli,'verify',directory],{cwd,encoding:'utf8'});assert.equal(run.status,0,run.stderr);assert.equal(JSON.parse(run.stdout).codeSha256,m.codeSha256)}
+ }finally{process.chdir(originalCwd);rmSync(parent,{recursive:true,force:true})}
+})

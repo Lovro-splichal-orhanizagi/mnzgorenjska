@@ -1,6 +1,6 @@
 // A bounded report sample. This is never a complete season or an import/release manifest.
 import {createHash} from 'node:crypto'
-import {readFileSync,writeFileSync,appendFileSync,mkdirSync,lstatSync,realpathSync} from 'node:fs'
+import {readFileSync,writeFileSync,appendFileSync,mkdirSync,lstatSync,realpathSync,existsSync} from 'node:fs'
 import {resolve,join,relative} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {createFussballCaptureClient,fussballRoundScope} from './lib/fussball-capture.mjs'
@@ -21,21 +21,18 @@ function config(options){
  proof(validDate(options.asOfDate),'invalid pinned calendar date')
  return {seedUrl:options.seedUrl,staffel:options.staffel,season:options.season,maxRequests:options.maxRequests,reportLimit:options.reportLimit,asOfDate:options.asOfDate}
 }
-function inForeignContext(html,tags,tag){
- return tags.some(t=>['svg','math'].includes(t.tag)&&t.start<tag.start&&html.indexOf(`</${t.tag}>`,t.end)>tag.start)
-}
 function liveSelector(html,tags,name){
  const selects=tags.filter(t=>t.tag==='select'&&t.attrs.name===name)
  proof(selects.length===1,`missing unique live ${name} selector`)
  const start=selects[0],end=html.indexOf('</select>',start.end)
- proof(!inForeignContext(html,tags,start),'foreign selector context')
+ proof(!start.foreignContext,'foreign selector context')
  proof(end>=start.end,'truncated live selector')
  const options=tags.filter(t=>t.tag==='option'&&t.start>start.end&&t.end<=end)
  proof(options.length>0&&(html.slice(start.end,end).match(/<option\b/g)??[]).length===options.length,'hidden selector options')
  return options.map(t=>({...t,label:html.slice(t.end,html.indexOf('</option>',t.end)).trim()}))
 }
 function validateRound(html,{info,parsed},url,options){
- const tags=fussballLiveTags(html),scope=fussballRoundScope(url),canonical=fussballRoundScope(info.url)
+ const tags=fussballLiveTags(html,{trackForeign:true}),scope=fussballRoundScope(url),canonical=fussballRoundScope(info.url)
  proof(scope?.staffel===options.staffel&&canonical?.staffel===options.staffel,'wrong round identity')
  proof(parsed.sezona===options.season,'round season differs')
  proof(Number.isInteger(parsed.krog)&&parsed.krogi.length>0&&parsed.krogi.length<=80,'invalid round selector')
@@ -60,7 +57,7 @@ function validateRound(html,{info,parsed},url,options){
  proof(blocks.length===1,'missing live fixtures block')
  const tbody=tags.find(t=>t.tag==='tbody'&&t.start>blocks[0].end),end=tbody&&html.indexOf('</tbody>',tbody.end)
  proof(tbody&&end>tbody.end,'missing live fixtures tbody')
- const links=tags.filter(t=>t.tag==='a'&&t.start>tbody.end&&t.end<end&&!inForeignContext(html,tags,t)).map(t=>t.attrs.href?.split('#')[0])
+ const links=tags.filter(t=>t.tag==='a'&&t.start>tbody.end&&t.end<end&&!t.foreignContext).map(t=>t.attrs.href?.split('#')[0])
  proof(Array.isArray(parsed.tekme)&&parsed.tekme.length>0,'empty selected round')
  for(const f of [...parsed.tekme,...parsed.prestavljene]){validateFussballFixture(f,{round:parsed.krog,rescheduled:f.krog===null});proof(links.includes(f.url),'fixture has no live report link')}
  proof(new Set(parsed.tekme.map(f=>f.id)).size===parsed.tekme.length,'duplicate primary fixture')
@@ -77,7 +74,7 @@ export async function collectFussballScreen(input){
  const parser=createFussballParserSession(read),rounds=[]
  const readRound=async url=>{
   const doc=await read(url,'round'),html=text(doc.bytes)
-  const tags=fussballLiveTags(html);liveSelector(html,tags,'spieltag');liveSelector(html,tags,'saison')
+  const tags=fussballLiveTags(html,{trackForeign:true});liveSelector(html,tags,'spieltag');liveSelector(html,tags,'saison')
   const page=await parser.round(html,{staffel:options.staffel,url})
   const extra=validateRound(html,page,url,options);rounds.push({url,round:page.parsed.krog,...extra});return page.parsed
  }
@@ -99,7 +96,7 @@ export async function collectFussballScreen(input){
   activationEligible:false,sezonskiUvozPodprt:false}
 }
 const root=fileURLToPath(new URL('../',import.meta.url))
-function codeHash(){return hash([...new Set([...zaprtje('scripts/fussball-screen.mjs'),'scripts/zajemi-fussball-vzorec.mjs','scripts/viri/fussball-datumski-glifi.json'])].sort().map(f=>`${f}\0${hash(readFileSync(resolve(root,f)))}`).join('\n'))}
+function codeHash(){return hash([...new Set([...zaprtje('scripts/fussball-screen.mjs',f=>readFileSync(resolve(root,f),'utf8'),f=>existsSync(resolve(root,f))),'scripts/zajemi-fussball-vzorec.mjs','scripts/viri/fussball-datumski-glifi.json'])].sort().map(f=>`${f}\0${hash(readFileSync(resolve(root,f)))}`).join('\n'))}
 const ext=kind=>kind==='font'?'woff':kind==='css'?'css':'html'
 export async function captureFussballScreenDirectory({directory,options,fetchFn=globalThis.fetch}){
  const createdAt=new Date().toISOString(),opts=config({...options,asOfDate:options?.asOfDate??createdAt.slice(0,10)}),codeSha256=codeHash(),documents=[]
