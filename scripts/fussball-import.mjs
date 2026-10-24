@@ -14,7 +14,7 @@ const clone=value=>structuredClone(value)
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex')
 const sameScore=(a,b)=>a&&b&&a.domaci===b.domaci&&a.gostje===b.gostje
 const validDate=s=>typeof s==='string'&&/^20\d\d-\d\d-\d\d$/.test(s)&&Number.isFinite(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s
-const reportUrlId=url=>typeof url==='string'&&url.match(/^https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)?-\/spiel\/([A-Z0-9]{32})$/)?.[1]
+const reportUrlId=url=>typeof url==='string'&&url.match(/^https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9]+(?:-{1,2}[a-z0-9]+)*\/)?-\/spiel\/([A-Z0-9]{32})$/)?.[1]
 const headerEqual=(a,b)=>['id','zapisnikId','url','krog','datum','ura','domaci','gostje'].every(k=>a?.[k]===b?.[k])&&sameScore(a?.rezultat,b?.rezultat)
 
 export function parseFussballLeagueCode(code){

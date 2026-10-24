@@ -32,7 +32,7 @@ function routeKind(url, kind) {
   if (parsed.origin !== BASE || parsed.username || parsed.password || parsed.port || parsed.search || parsed.hash || parsed.href !== url)
     throw fail('URL must use HTTPS www.fussball.de without credentials, port, query or fragment')
 
-  const slug = '(?:[a-z0-9]+(?:-[a-z0-9]+)*/)?'
+  const slug = '(?:[a-z0-9]+(?:-{1,2}[a-z0-9]+)*/)?'
   const id = '[A-Z0-9]{32}'
   const path = parsed.pathname
   const matches = {

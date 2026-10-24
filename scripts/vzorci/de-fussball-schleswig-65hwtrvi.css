@@ -1,0 +1,10 @@
+@font-face {
+	font-family: font-65hwtrvi;
+	src: 
+		url('//www.fussball.de/export.fontface/-/format/woff/id/65hwtrvi/type/font') format('woff'),
+		url('//www.fussball.de/export.fontface/-/format/ttf/id/65hwtrvi/type/font') format('truetype');
+}
+
+.results-c-65hwtrvi {
+	font-family: font-65hwtrvi !important;
+}

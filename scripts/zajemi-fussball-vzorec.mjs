@@ -1,5 +1,6 @@
 import {resolve} from 'node:path'
-import {pathToFileURL} from 'node:url'
+import {fileURLToPath} from 'node:url'
+import {realpathSync} from 'node:fs'
 import {captureFussballScreenDirectory,verifyFussballScreenDirectory} from './fussball-screen.mjs'
 export async function runFussballScreenCli(args){
  const mode=args.shift(),options={}
@@ -10,4 +11,5 @@ export async function runFussballScreenCli(args){
  const directory=resolve(options['--output']),m=await captureFussballScreenDirectory({directory,options:{seedUrl:options['--seed-url'],staffel:options['--staffel'],season:options['--season'],maxRequests:Number(options['--max-requests']),reportLimit:Number(options['--reports'])}})
  return {success:m.success,activationEligible:false,sezonskiUvozPodprt:false,requests:m.snapshot.requests,output:directory}
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href)runFussballScreenCli(process.argv.slice(2)).then(x=>console.log(JSON.stringify(x))).catch(e=>{console.error(e.message);process.exitCode=1})
+const isMain=()=>{try{return !!process.argv[1]&&realpathSync(resolve(process.argv[1]))===fileURLToPath(import.meta.url)}catch{return false}}
+if(isMain())runFussballScreenCli(process.argv.slice(2)).then(x=>console.log(JSON.stringify(x))).catch(e=>{console.error(e.message);process.exitCode=1})

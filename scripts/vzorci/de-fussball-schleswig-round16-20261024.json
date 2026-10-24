@@ -1,0 +1,80 @@
+{
+  "capturedWithCommit": "f94ef6efcae8f5e21159be90b73f3f2fad218883",
+  "originalManifestSha256": "df27f3371a1b589024e58bd2e5dfa4111b613f378d432bcc5d28d517dda21d56",
+  "originalCaptureSuccess": false,
+  "originalCaptureError": "fussball season: fixture source ID, report ID or URL is invalid",
+  "createdAt": "2026-10-24T19:25:38.326Z",
+  "completedAt": "2026-10-24T19:26:02.496Z",
+  "scope": {
+    "seedUrl": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2627-schleswig-holstein/-/spieldatum/2026-11-08/staffel/031AVH9TIC000004VS5489BTVSK8S3O6-G",
+    "staffel": "031AVH9TIC000004VS5489BTVSK8S3O6-G",
+    "season": "2026/27",
+    "maxRequests": 80,
+    "reportLimit": 3,
+    "asOfDate": "2026-10-24"
+  },
+  "requests": 5,
+  "documents": [
+    {
+      "url": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2627-schleswig-holstein/-/spieldatum/2026-11-08/staffel/031AVH9TIC000004VS5489BTVSK8S3O6-G",
+      "kind": "round",
+      "bytes": 202630,
+      "sha256": "2e4601ec1f97d8452f184bf59bc2be8de9d4f068254a5f64cd6a740279dfc47a",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-10-24T19:25:38.334Z",
+      "file": "de-fussball-schleswig-round16-20261024.html"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/1ykct8fa/type/css",
+      "kind": "css",
+      "bytes": 308,
+      "sha256": "74fbdf7a8a782faf5d45532466dfabee9583ed8365af53dc5d53cb85f13dab59",
+      "status": 200,
+      "contentType": "text/css; charset=UTF-8",
+      "capturedAt": "2026-10-24T19:25:44.335Z",
+      "file": "de-fussball-schleswig-1ykct8fa.css"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/1ykct8fa/type/font",
+      "kind": "font",
+      "bytes": 8988,
+      "sha256": "d13bf049de065474abb5ed56dc80a26b37ca6445d6231ef364bee6d5a95dd0e3",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-10-24T19:25:50.336Z",
+      "file": "de-fussball-schleswig-1ykct8fa.woff"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/65hwtrvi/type/css",
+      "kind": "css",
+      "bytes": 308,
+      "sha256": "b6f80fb514b315a0ff4227b7dd44d38cafd864f533cf08e35b1de57ab48ba33a",
+      "status": 200,
+      "contentType": "text/css; charset=UTF-8",
+      "capturedAt": "2026-10-24T19:25:56.338Z",
+      "file": "de-fussball-schleswig-65hwtrvi.css"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/65hwtrvi/type/font",
+      "kind": "font",
+      "bytes": 2984,
+      "sha256": "bb2008e6d5a0fe2447e9a5513f498c608e2c8b3b2965c77c82e8f6b0ad326fe5",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-10-24T19:26:02.339Z",
+      "file": "de-fussball-schleswig-65hwtrvi.woff"
+    }
+  ],
+  "note": "Original bytes only; failed live screen remains failed. Regression proves URL grammar/round decoding, not report completeness or activation.",
+  "expectedFixtureIds": [
+    "031BT5B0NS000000VS5489BTVUS470OH",
+    "031BT5B0QC000000VS5489BTVUS470OH",
+    "031BT5B120000000VS5489BTVUS470OH",
+    "031BT5B170000000VS5489BTVUS470OH",
+    "031BT5B0SS000000VS5489BTVUS470OH",
+    "031BT5B19C000000VS5489BTVUS470OH",
+    "031BT5B0VG000000VS5489BTVUS470OH",
+    "031BT5B14C000000VS5489BTVUS470OH"
+  ]
+}

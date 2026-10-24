@@ -109,3 +109,12 @@ test('capture loader requires replay, full-capture intent, exact scope, original
   await assert.rejects(api.loadFussballImportCapture(directory,{...scope,now},{verifyDirectory}),/regular/)
  }finally{rmSync(directory,{recursive:true,force:true})}
 })
+
+test('normalizer preserves a future official double-hyphen slug while still binding its exact match ID',()=>{
+ // Synthetic season framing; the future fixture URL/ID below are from the retained Schleswig round.
+ const s=season(),f=s.schedule.fixtures[1]
+ f.id='031BT5B19C000000VS5489BTVUS470OH';f.zapisnikId='de-fussball-'+f.id
+ f.url='https://www.fussball.de/spiel/vfb-luebeck-ii--u21-eckernfoerder-sv/-/spiel/'+f.id
+ const result=build(s);assert.equal(result.schedule.find(r=>r.stevilka===9).tekme[0].url,f.url)
+ const bad=season();bad.schedule.fixtures[1]={...f,url:f.url.replace('--','---')};assert.throws(()=>build(bad),/identity/)
+})

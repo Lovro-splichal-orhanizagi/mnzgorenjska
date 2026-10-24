@@ -31,7 +31,7 @@ function baseRoundUrl(url) {
 
 function reportId(url) {
   if (typeof url !== 'string') return null
-  return url.match(/^https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)?-\/spiel\/([A-Z0-9]{32})$/)?.[1] ?? null
+  return url.match(/^https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9]+(?:-{1,2}[a-z0-9]+)*\/)?-\/spiel\/([A-Z0-9]{32})$/)?.[1] ?? null
 }
 
 function lineupId(url) {
