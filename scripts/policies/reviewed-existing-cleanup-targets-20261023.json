@@ -303,6 +303,41 @@
           "admissionKind": "schedule_only_official_result"
         }
       ]
+    },
+    {
+      "competitionId": 499,
+      "slug": "ro-ab-l5-s2",
+      "provider": "hlf",
+      "sourceLeagueCode": "judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-2",
+      "country": "RO",
+      "expectedReportsBySeason": {
+        "2026/27": 30
+      },
+      "policyId": "ro-ab-l5-s2-historical-unavailable-2026-10-24-v1",
+      "policySha256": "c13732fdacafd49ef60bd13ec20999d9d64f7a5894a21c43f7e74526ee7a0f26",
+      "targets": [
+        {
+          "nativeMatchId": 202541,
+          "nativeRoundId": 18053,
+          "round": 6,
+          "homeTeamId": 5083,
+          "awayTeamId": 5079,
+          "date": "2026-10-18",
+          "score": [
+            2,
+            3
+          ],
+          "reportId": "86feb0be-2e6f-4c2e-9fd3-f26aba19fb91",
+          "sourceMatchId": "86feb0be-2e6f-4c2e-9fd3-f26aba19fb91",
+          "season": "2026/27",
+          "apps": 27,
+          "goals": 0,
+          "sourcePhase": "45f3b9be-0f00-4937-9f55-066d73a227a6",
+          "sourceRound": 6,
+          "initialSourcePhase": null,
+          "initialSourceRound": null
+        }
+      ]
     }
   ]
 }

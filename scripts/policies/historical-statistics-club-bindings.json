@@ -1184,6 +1184,40 @@
           "rawSha256": "2fc49fc7784c1d65b5e15275b6bf14cab3f611dc99c23b241e4d68d5b9ec82aa"
         }
       ]
+    },
+    {
+      "provider": "hlf",
+      "sourceClubId": "d0a838cf-6c6f-4b82-9cd0-c6d8cead047a",
+      "sourceCategoryId": "",
+      "countryCode": "RO",
+      "canonicalNames": [
+        "ACS Sânmiclăuș"
+      ],
+      "boundTeamId": 5083,
+      "proofs": [
+        {
+          "sourceMatchId": "86feb0be-2e6f-4c2e-9fd3-f26aba19fb91",
+          "sourceUrl": "https://hailafotbal.ro/rezultate/judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-2/etapa-6/acs-sanmiclaus-acs-gaz-metan-valea-lunga",
+          "rawSha256": "438c1da7a7620142e25907227ca2c81caf4e7c67607bf10f5d2cf388e9501f00"
+        }
+      ]
+    },
+    {
+      "provider": "hlf",
+      "sourceClubId": "3e590326-8240-43f8-bc15-89868451e90c",
+      "sourceCategoryId": "",
+      "countryCode": "RO",
+      "canonicalNames": [
+        "ACS Gaz Metan Valea Lungă"
+      ],
+      "boundTeamId": 5079,
+      "proofs": [
+        {
+          "sourceMatchId": "86feb0be-2e6f-4c2e-9fd3-f26aba19fb91",
+          "sourceUrl": "https://hailafotbal.ro/rezultate/judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-2/etapa-6/acs-sanmiclaus-acs-gaz-metan-valea-lunga",
+          "rawSha256": "438c1da7a7620142e25907227ca2c81caf4e7c67607bf10f5d2cf388e9501f00"
+        }
+      ]
     }
   ]
 }

@@ -637,6 +637,18 @@
       "slug": "ua-upl",
       "source": "upl",
       "source_league_code": "432"
+    },
+    {
+      "id": 965,
+      "slug": "me-u19-1",
+      "source": "fscg",
+      "source_league_code": "fscg/prva-omladinska-liga/9312757"
+    },
+    {
+      "id": 968,
+      "slug": "me-3-liga-centar",
+      "source": "fscg",
+      "source_league_code": "centar/seniorska-liga/9331975"
     }
   ]
 }

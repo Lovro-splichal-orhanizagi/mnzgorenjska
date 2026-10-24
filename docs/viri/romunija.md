@@ -232,3 +232,32 @@ The owner approved keeping the official 2–1 result of USV-CSM Iași–KSE Târ
 The reviewed Liga 3 S1 fixture (native match 133334) stores the official match-detail URL while its immutable source proof records the containing round page. Both exact official URLs identify the same approved fixture. Its source club spells Iaşi with a cedilla and the native row spells Iași with a comma; a one-time audited binding pins that exact source UUID to native team 3016, preserving both source and native spelling. The binding is checked before historical cleanup and does not change any match result, player or report policy.
 
 Round 1 begins on 28 August, while the reviewed USV–KSE match is dated 29 August. Club binding validates the exact match date and round identity/season/number; it does not equate the round’s first fixture date with every match date.
+
+### Exact reviewed Alba L5 S2 scorer omission, 24 October 2026
+
+The owner approved one additional current-season exclusion for `ro-ab-l5-s2`
+(competition 499): ACS Sânmiclăuș–ACS Gaz Metan Valea Lungă, 18 October,
+round 6, native match `202541`, source report
+`86feb0be-2e6f-4c2e-9fd3-f26aba19fb91`. Keep the official **2–3** result and
+mark all individual statistics unavailable. The public browser returned HTTP
+200 throughout; the round contains 20 scorer events for other matches and none
+for this match. The parser likewise returns zero goals. Its 27 imported
+appearances cannot repair the missing scorers; no goals or statistics are guessed.
+
+The exact policy `ro-ab-l5-s2-historical-unavailable-2026-10-24-v1` pins the
+retained round SHA `8e2a9ded229fc6b9985904eead0765e0c9e0a621e6a7ff56148e542c81f47bfb`,
+retained sheet SHA `031c540b037773a0fb0044e274bd6f26c9c1563f277c176a0c962e2f94d6309b`,
+and sheet ID `493d2020-b10f-4a31-a58d-a9b75bc1b73b`. These captures were
+scrubbed of photo/logo, birth, delegate/staff and contact/address fields;
+the hashes identify the exact retained bytes, not unmodified raw responses.
+The composite proof uses the existing sorted-key HLF hash formula. Source club
+UUIDs are bound only to native teams 5083 and 5079.
+
+The other 29 imported reports passed the native goal-side, minute and keeper
+audit; no past report is missing. This remains the documented HLF
+current-season-only pricing route, with no older digital archive. Use the
+existing source-free `reviewed-existing-history.yml` stages: prepare, review the
+beforeimage, apply, fresh positions/prices, preview, reviewed activation and
+receipt. The closed route now covers seven leagues and ten reports. Its
+forward migration only registers this exact admission; it does not activate
+competition 499. Future reports remain subject to ordinary import checks.

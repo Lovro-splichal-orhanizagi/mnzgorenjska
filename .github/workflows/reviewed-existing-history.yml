@@ -11,7 +11,7 @@ on:
       slug:
         type: choice
         required: true
-        options: [gb-npl-midlands, gb-sfl-d1-south, ro-liga3-s1, ro-ab-l4-s2, ba-wwin-liga-bih, md-liga-2]
+        options: [gb-npl-midlands, gb-sfl-d1-south, ro-liga3-s1, ro-ab-l4-s2, ro-ab-l5-s2, ba-wwin-liga-bih, md-liga-2]
         description: Fixed competition allowlist; no default selection.
       expected_sha:
         type: string

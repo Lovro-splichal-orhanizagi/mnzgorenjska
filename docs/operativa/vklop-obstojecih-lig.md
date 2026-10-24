@@ -144,3 +144,12 @@ ne podaja dovoljenja za aktivne cene in preskoči lige, ki že opravijo
 preverbo pripravljenosti. Vnos `predpona` za ta paket ostane prazen.
 Po zaključku ponovno izvedi predogled izbranega obsega; cenovni korak
 sam ne odobri vklopa ali izpuščanja nepopolnih zapisnikov.
+
+Pregledana pot `reviewed-existing-history.yml` ima sedem točnih lig in deset
+zapisnikov: `gb-npl-midlands`, `gb-sfl-d1-south`, `ro-liga3-s1`,
+`ro-ab-l4-s2`, `ro-ab-l5-s2`, `ba-wwin-liga-bih`, `md-liga-2`.
+Dodatek 24. 10. za `ro-ab-l5-s2` velja samo za tekmo 202541 z uradnim izidom
+2–3 in manjkajočimi dogodki strelcev; podrobnosti in zgoščene vrednosti so v
+`docs/viri/romunija.md`. Priprava, uporaba, cenitev, predogled, vklop in potrdilo
+ostanejo ločene stopnje brez branja vira. Koordinator vse tri romunske poti
+preslika v RO, moldavsko v MD ter ohrani ločitev bralnih in pisalnih stopenj.

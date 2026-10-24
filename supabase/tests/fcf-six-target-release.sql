@@ -20,6 +20,21 @@ end$$;
 do $$declare t text;begin select rollout::text into t from fcf_target_packets;begin perform public.import_fcf_current_target(t,encode(sha256(convert_to(t,'UTF8')),'hex'));raise exception 'SIX TEST: old API accepted six packet';exception when others then if sqlerrm not like 'FCF_TARGET:%'then raise;end if;end;end$$;
 select pg_temp.fcf_ready(797);
 select pg_temp.six_assert(pg_temp.six_gate()->>'stage'='checked','six full native vector/legal15/futuredeadline passes');
+-- The unchanged source deadline must reject an advanced test clock while all
+-- synthetic captures are still fresh. The failed subtransaction restores it.
+do $$declare before_clock timestamptz:=clock_timestamp();begin
+ perform pg_temp.six_assert(before_clock='2026-10-24T07:30:00Z'::timestamptz,'six pinned prelaunch clock reaches the production gate');
+ perform pg_temp.six_assert((select deadline_at from rounds where competition_id=797 and number=6)='2026-10-24T08:00:00Z'::timestamptz,'six official source deadline remains unchanged');
+ begin
+  perform set_config('slff.fcf_target_test_clock','2026-10-24T08:00:01Z',true);
+  perform pg_temp.six_gate();
+  raise exception 'SIX TEST: source deadline accepted after test clock advanced';
+ exception when others then
+  if sqlerrm<>'FCF_TARGET: source R6 deadline genuinely future' then raise;end if;
+ end;
+ perform pg_temp.six_assert(clock_timestamp()=before_clock,'six deadline rejection restores prelaunch test clock');
+end$$;
+
 create function pg_temp.six_release_mutant(command text,label text)returns void language plpgsql as $$begin
  begin execute command;perform pg_temp.six_gate();raise exception 'SIX TEST: accepted %',label;exception when others then if sqlerrm not like 'FCF_TARGET:%'and sqlerrm not like 'HISTORICAL_POLICY:%'then raise;end if;end;
 end$$;
@@ -28,6 +43,7 @@ select pg_temp.six_release_mutant('update rounds set lineups_locked_at=clock_tim
 select pg_temp.six_release_mutant('update rounds set deadline_at=clock_timestamp()-interval''1 hour''where competition_id=797 and number=6','expired officialR6');
 select pg_temp.six_release_mutant('update players set anonimiziran_at=clock_timestamp()where id=(select min(id)from players where competition_id=797)','privacy suppression');
 select pg_temp.six_assert(pg_temp.six_gate(true)->>'active'='true','six sameTX activation');
+select pg_temp.six_assert((select recorded_at from private_historical_statistics.release_authorizations where competition_id=797 and authorized_xid=txid_current())=clock_timestamp(),'six common authorization shares the pinned test clock');
 select pg_temp.six_assert(pg_temp.six_gate(true)->>'noOp'='true','activation receipt replay');
 select pg_temp.six_assert(public.fcf_six_current_target_receipt('es-ct-tercera-g9')->>'currentActive'='true','six release readback');
 select pg_temp.six_assert((select not active from competitions where id=783)and(select count(*)from rounds where competition_id=783)<30,'G1 stays inactive partialcalendar');

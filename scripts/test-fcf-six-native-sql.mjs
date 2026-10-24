@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {execFileSync} from 'node:child_process'
 import {sixG9ReleaseFixture} from './fcf-six-native-test-fixture.mjs'
+import {fcfTargetSqlTestClock} from './fcf-target-sql-test-fixture.mjs'
 import {assertFcfDisposableTest} from './lib/fcf-disposable-test.mjs'
 const migration=new URL('../supabase/migrations/20261019150000_fcf_six_reviewed_native.sql',import.meta.url)
 const migrate=()=>"begin;\nselect to_regnamespace('private_fcf_six_history')is null as six_missing \\gset\n\\if :six_missing\n"+readFileSync(migration,'utf8')+"\n\\endif\n"
@@ -19,7 +20,13 @@ test('six SQL actual disposable contracts',{skip:process.env.FCF_HISTORY_DISPOSA
 
 test('six full G9 native release independent of G1',{skip:process.env.FCF_HISTORY_DISPOSABLE_TEST!=='1'},()=>{
  const cleanup=readFileSync(new URL('../supabase/tests/fcf-six-native.sql',import.meta.url),'utf8').split('select public.fcf_historical_six_restore')[0]
- execFileSync('docker',['exec','-i',assertFcfDisposableTest(),'psql','-U','supabase_admin','-d',process.env.FCF_TARGET_TEST_DB??'postgres','-X','-v','ON_ERROR_STOP=1'],{input:migrate()+cleanup+'\n'+sixG9ReleaseFixture()+'\n'+readFileSync(new URL('../supabase/tests/fcf-six-target-release.sql',import.meta.url),'utf8')+'\nrollback;',timeout:180000,maxBuffer:8*1024*1024})
+ const container=assertFcfDisposableTest()
+ const clockState=()=>execFileSync('docker',['exec',container,'psql','-U','supabase_admin','-d',process.env.FCF_TARGET_TEST_DB??'postgres','-X','-qAt','-c',"select jsonb_build_object('function',(select to_jsonb(p) from pg_proc p where oid='pg_catalog.clock_timestamp()'::regprocedure),'setting',current_setting('slff.fcf_target_test_clock',true))::text"],{encoding:'utf8'}).trim()
+ const originalClock=clockState()
+ const clockBefore="select coalesce(current_setting('slff.fcf_target_test_clock',true),'') fcf_clock_before \\gset\n"
+ const clockAfter="\nrollback;\nselect coalesce(current_setting('slff.fcf_target_test_clock',true),'')=:'fcf_clock_before' as fcf_clock_restored \\gset\n\\if :fcf_clock_restored\n\\else\n\\quit 1\n\\endif\n"
+ try{execFileSync('docker',['exec','-i',container,'psql','-U','supabase_admin','-d',process.env.FCF_TARGET_TEST_DB??'postgres','-X','-v','ON_ERROR_STOP=1'],{input:clockBefore+migrate()+fcfTargetSqlTestClock()+cleanup+'\n'+sixG9ReleaseFixture()+'\n'+readFileSync(new URL('../supabase/tests/fcf-six-target-release.sql',import.meta.url),'utf8')+clockAfter,timeout:180000,maxBuffer:8*1024*1024})}
+ finally{assert.equal(clockState(),originalClock,'ROLLBACK restores the exact built-in clock catalog row and session clock configuration')}
 })
 
 test('legacy four native cleanup still accepts only original policy registry',{skip:process.env.FCF_HISTORY_DISPOSABLE_TEST!=='1'},()=>{

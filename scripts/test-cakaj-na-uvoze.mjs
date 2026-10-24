@@ -132,17 +132,20 @@ const startedAt = '2026-10-17T10:00:00Z'
 const run = (title, patch = {}) => ({ databaseId: 10, startedAt, status: 'in_progress', displayTitle: title, ...patch })
 test('reviewed existing history writes are coordinated by country and read stages stay independent',async()=>{
  const workflow='reviewed-existing-history.yml'
- for(const mode of ['apply','price','activate']) {
-  const runs={[workflow]:[run(`Reviewed existing history ${mode} / ro-liga3-s1`)]}
+ for(const slug of ['ro-liga3-s1','ro-ab-l4-s2','ro-ab-l5-s2']) for(const mode of ['apply','price','activate']) {
+  const runs={[workflow]:[run(`Reviewed existing history ${mode} / ${slug}`)]}
   assert.equal((await coordinate(['--drzava','RO'],runs)).code,1)
   assert.equal((await coordinate(['--drzava','GB'],runs)).code,0)
   assert.equal((await coordinate(['--tece'],runs)).code,3)
  }
- for(const mode of ['prepare','preview','receipt']) {
-  const runs={[workflow]:[run(`Reviewed existing history ${mode} / gb-npl-midlands`)]}
+ for(const slug of ['gb-npl-midlands','gb-sfl-d1-south','ro-liga3-s1','ro-ab-l4-s2','ro-ab-l5-s2','ba-wwin-liga-bih','md-liga-2']) for(const mode of ['prepare','preview','receipt']) {
+  const runs={[workflow]:[run(`Reviewed existing history ${mode} / ${slug}`)]}
   assert.equal((await coordinate(['--drzava','GB'],runs)).code,0)
   assert.equal((await coordinate(['--tece'],runs)).code,0)
  }
+ const moldova={[workflow]:[run('Reviewed existing history apply / md-liga-2')]}
+ assert.equal((await coordinate(['--drzava','MD'],moldova)).code,1)
+ assert.equal((await coordinate(['--drzava','RO'],moldova)).code,0)
  const bosnia={[workflow]:[run('Reviewed existing history apply / ba-wwin-liga-bih')]}
  assert.equal((await coordinate(['--drzava','BA'],bosnia)).code,1)
  assert.equal((await coordinate(['--drzava','RO'],bosnia)).code,0)

@@ -70,8 +70,8 @@ const lineage = {
   approvedSha256: sha256(receiptBody),
 }
 
-test('reviewed operator admits exactly the six approved league slugs', () => {
-  const approved=['gb-npl-midlands', 'gb-sfl-d1-south', 'ro-liga3-s1', 'ro-ab-l4-s2', 'ba-wwin-liga-bih', 'md-liga-2']
+test('reviewed operator admits exactly the seven approved league slugs', () => {
+  const approved=['gb-npl-midlands', 'gb-sfl-d1-south', 'ro-liga3-s1', 'ro-ab-l4-s2', 'ro-ab-l5-s2', 'ba-wwin-liga-bih', 'md-liga-2']
   assert.deepEqual(approved.map(validateSlug).map(({ slug }) => slug), approved)
   for (const slug of ['', 'gb-npl-north', 'ro-liga3-s2', 'ua-upl', 'ba-other-league', 'GB-NPL-MIDLANDS']) assert.throws(() => validateSlug(slug))
 })
@@ -80,7 +80,7 @@ test('workflow exposes only the fixed stages and slug allowlist on main', () => 
   const workflow = readFileSync(new URL('../.github/workflows/reviewed-existing-history.yml', import.meta.url), 'utf8')
   assert.match(workflow, /if: github\.repository == 'Lovro-splichal-orhanizagi\/mnzgorenjska' && github\.ref == 'refs\/heads\/main' && github\.run_attempt == 1/)
   assert.match(workflow, /options: \[prepare, apply, price, preview, activate, receipt\]/)
-  assert.match(workflow, /options: \[gb-npl-midlands, gb-sfl-d1-south, ro-liga3-s1, ro-ab-l4-s2, ba-wwin-liga-bih, md-liga-2\]/)
+  assert.match(workflow, /options: \[gb-npl-midlands, gb-sfl-d1-south, ro-liga3-s1, ro-ab-l4-s2, ro-ab-l5-s2, ba-wwin-liga-bih, md-liga-2\]/)
   assert.match(workflow, /group: reviewed-existing-history-\$\{\{ inputs\.slug \}\}/)
   assert.match(workflow, /name: reviewed-existing-history-\$\{\{ github\.run_id \}\}/)
   assert.match(workflow, /if: always\(\)/)
@@ -89,7 +89,7 @@ test('workflow exposes only the fixed stages and slug allowlist on main', () => 
 
 test('reviewed operator policies pin exact source tuple and sourcePolicy', () => {
   assert.deepEqual(
-    ['gb-npl-midlands', 'gb-sfl-d1-south', 'ro-liga3-s1', 'ro-ab-l4-s2', 'ba-wwin-liga-bih', 'md-liga-2'].map(slug => {
+    ['gb-npl-midlands', 'gb-sfl-d1-south', 'ro-liga3-s1', 'ro-ab-l4-s2', 'ro-ab-l5-s2', 'ba-wwin-liga-bih', 'md-liga-2'].map(slug => {
       const c = validateSlug(slug)
       const p = policyForSlug(slug)
       return [c.id, c.slug, c.source, c.source_league_code, p.id, p.sha256, p.document.sourcePolicy]
@@ -99,6 +99,7 @@ test('reviewed operator policies pin exact source tuple and sourcePolicy', () =>
       [984, 'gb-sfl-d1-south', 'isthmian', 'sfl/69d0bdf9b616bafb97331d41/2026-27', 'gb-sfl-d1-south-historical-unavailable-2026-10-23-v1', '682dbaa0e1acfb0a4a03da9da93cdc706eb0d16dc4a8df180e994f6980369a30', 'reviewed-existing-history-20261023-v1'],
       [497, 'ro-liga3-s1', 'hlf', 'national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1', 'ro-liga3-s1-historical-unavailable-2026-10-23-v1', 'b6686671855dfa9a6f96fa8cf67d530aa4fc4208f859e783929cb36140169329', 'reviewed-existing-history-20261023-v1'],
       [501, 'ro-ab-l4-s2', 'hlf', 'judetean/alba/fotbal/2026-2027/liga-4/sezon-regular/serie-2', 'ro-ab-l4-s2-historical-unavailable-2026-10-23-v1', '0d81629b586336edb075b88be89271c6cb0aea141f8b8bbb2459ff6fc4e97e2b', 'reviewed-existing-history-20261023-v1'],
+      [499, 'ro-ab-l5-s2', 'hlf', 'judetean/alba/fotbal/2026-2027/liga-5/sezon-regular/serie-2', 'ro-ab-l5-s2-historical-unavailable-2026-10-24-v1', 'c13732fdacafd49ef60bd13ec20999d9d64f7a5894a21c43f7e74526ee7a0f26', 'reviewed-existing-history-20261023-v1'],
       [998, 'ba-wwin-liga-bih', 'nfsbih', 'wwin-liga-bih/54152223', 'ba-wwin-liga-bih-historical-unavailable-2026-10-23-v1', 'fa48230a81834fe5d182012bdf34ab5df513392f5000ad4e0186f24d5b9a1366', 'reviewed-existing-history-20261023-v1'],
       [1107, 'md-liga-2', 'fmf', 'liga-2-1782306996/877', 'md-liga-2-historical-unavailable-2026-10-23-v1', '95d6bb7928ac81a43fa6055abf2a31f75d48633c6c5158c4c6b70b9f4149450e', 'reviewed-existing-history-20261023-v1'],
     ],
@@ -107,13 +108,14 @@ test('reviewed operator policies pin exact source tuple and sourcePolicy', () =>
   assert.throws(() => verifyPreparePayload({ ...prepared, targetMatchIds: [12] }, candidate, policy, main), /target match/)
 })
 
-test('the six cleanup policies pin the native SSOT target IDs exactly, including incomplete HLF and schedule-only FMF admissions', () => {
+test('the seven cleanup policies pin the native SSOT target IDs exactly, including incomplete HLF and schedule-only FMF admissions', () => {
   const nativeTargets=Object.fromEntries(cleanupTargets.competitions.map(target=>[target.slug,target.targets.map(entry=>entry.nativeMatchId).sort((a,b)=>a-b)]))
   assert.deepEqual(nativeTargets,{
     'gb-npl-midlands':[561922,562344],
     'gb-sfl-d1-south':[509795],
     'ro-liga3-s1':[133334],
     'ro-ab-l4-s2':[202353],
+    'ro-ab-l5-s2':[202541],
     'ba-wwin-liga-bih':[576391,576399],
     'md-liga-2':[560748,560803],
   })
@@ -122,6 +124,7 @@ test('the six cleanup policies pin the native SSOT target IDs exactly, including
     'gb-sfl-d1-south':{'2026/27':132},
     'ro-liga3-s1':{'2026/27':54},
     'ro-ab-l4-s2':{'2026/27':23},
+    'ro-ab-l5-s2':{'2026/27':30},
     'ba-wwin-liga-bih':{'2026/27':49},
     'md-liga-2':{'2026/27':95},
   })
@@ -129,8 +132,8 @@ test('the six cleanup policies pin the native SSOT target IDs exactly, including
     'ro-ab-l4-s2':{'2026/27':24},
     'md-liga-2':{'2026/27':97},
   })
-  assert.equal(cleanupTargets.competitions.length,6)
-  assert.equal(cleanupTargets.competitions.reduce((sum,target)=>sum+target.targets.length,0),9)
+  assert.equal(cleanupTargets.competitions.length,7)
+  assert.equal(cleanupTargets.competitions.reduce((sum,target)=>sum+target.targets.length,0),10)
   for(const target of cleanupTargets.competitions) {
     const bound=policyForSlug(target.slug)
     assert.equal(bound.id,target.policyId)
