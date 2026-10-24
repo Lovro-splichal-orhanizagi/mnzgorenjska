@@ -126,7 +126,6 @@ function all(node, predicate) {
 const byClass = (node, cls) => all(node, n => has(n, cls))
 const text = node => typeof node === 'string' ? node : ignored(node ?? {}) ? '' :
   (node?.children ?? []).map(text).join(' ').replace(/\s+/gu, ' ').trim()
-const oneClass = (node, cls) => byClass(node, cls)[0]
 function observedUrl(value, pathname) {
   try {
     const u = new URL(value)
@@ -154,6 +153,16 @@ export function parseCkmReport(html, { url } = {}) {
   }
   const issue = (code, message, fields = {}) => result.issues.push({ code, message, blocksReportStatistics: true, ...fields })
   const warning = (code, message, fields = {}) => result.warnings.push({ code, message, ...fields })
+  // Cardinality is scoped to all visible descendants, not just direct siblings.
+  // An ambiguous scalar has no selected value, even in the held evidence.
+  const scalar = (node, field, domain, fields = {}) => {
+    const nodes = byClass(node, field)
+    if (nodes.length !== 1) {
+      issue(`${domain}_FIELD_${nodes.length ? 'AMBIGUOUS' : 'MISSING'}`, 'Exactly one visible scalar field required', { ...fields, field, observed: nodes.length })
+      return null
+    }
+    return nodes[0]
+  }
   if (Buffer.byteLength(html) > 2_000_000) { issue('HTML_TOO_LARGE', 'Bounded screen accepts at most 2 MB'); return result }
   const document = htmlTree(html, issue), bodies = all(document, n => n.tag === 'body')
   const canonical = all(document, n => n.tag === 'link' && n.attrs.rel === 'canonical')
@@ -220,9 +229,9 @@ export function parseCkmReport(html, { url } = {}) {
         if (has(node, 'formation-header')) { position = POSITIONS[text(node)] ?? null; continue }
         if (node.tag !== 'a' || !has(node, 'player-entry') || !node.attrs.href?.includes('/player/')) continue
         const profileUrl = observedUrl(node.attrs.href, /^\/player\/[^/]+\/$/)
-        const name = text(oneClass(node, 'p-name'))
+        const name = text(scalar(node, 'p-name', 'PLAYER', { side, profileUrl }))
         const player = { name, profileUrl, sourcePlayerId: profileUrl, side, starter: target === 'starters', position,
-          positionEvidence: 'explicit-heading', shirt: text(oneClass(node, 'p-nr')) || null }
+          positionEvidence: 'explicit-heading', shirt: text(scalar(node, 'p-nr', 'PLAYER', { side, profileUrl })) || null }
         team[target].push(player)
         if (!name || !profileUrl) issue('PLAYER_ID_MISSING', 'Player needs observed exact profile URL and name', { side, actor: name })
         if (!position) issue('POSITION_MISSING', 'Player has no supported explicit position heading', { side, actor: name })
@@ -253,10 +262,17 @@ export function parseCkmReport(html, { url } = {}) {
   let previousMinute = -1
   for (const row of rows) {
     const side = /flex-direction\s*:\s*row-reverse/i.test(row.attrs.style ?? '') ? 'away' : 'home'
-    const rawMinute = text(oneClass(row, 'tm-min')), clock = rawMinute.match(/^(\d{1,2})'$/)
+    const rawMinute = text(scalar(row, 'tm-min', 'EVENT', { side })), clock = rawMinute.match(/^(\d{1,2})'$/)
     const minute = clock && Number(clock[1]) <= 90 ? Number(clock[1]) : null
-    const rawText = text(row), icon = text(oneClass(row, 'tm-icon')), info = oneClass(row, 'tm-info')
-    const parts = children(children(info)[0]).filter(n => n.tag === 'span')
+    const rawText = text(row), icon = text(scalar(row, 'tm-icon', 'EVENT', { side }))
+    const info = scalar(row, 'tm-info', 'EVENT', { side })
+    const containers = children(info)
+    if (info && (containers.length !== 1 || containers[0].tag !== 'div')) {
+      issue('EVENT_INFO_AMBIGUOUS', 'Exactly one visible event actor container required', { side })
+    }
+    const contents = containers.length === 1 ? children(containers[0]) : []
+    const parts = contents.filter(n => n.tag === 'span')
+    if (contents.length !== parts.length) issue('EVENT_INFO_AMBIGUOUS', 'Unsupported visible content outside event actor fields', { side })
     if (minute === null) issue('CLOCK_UNSUPPORTED', 'Unsupported or absent event clock; do not infer/clamp time', { rawMinute })
     else if (minute < previousMinute) issue('EVENT_ORDER', 'Published event times go backwards')
     if (minute !== null) previousMinute = minute
@@ -272,10 +288,13 @@ export function parseCkmReport(html, { url } = {}) {
       event.in = resolve(text(incoming[0]).replace(/[↑↓]/gu, '').trim(), side)
       event.out = resolve(text(outgoing[0]).replace(/[↑↓]/gu, '').trim(), side)
     } else {
+      if (['yellow', 'red'].includes(type) && parts.length !== 1) {
+        issue('EVENT_ACTOR_AMBIGUOUS', 'Card requires exactly one visible actor field', { side, observed: parts.length })
+      }
       const actor = text(parts[0])
       event.player = resolve(actor, side)
       if (type === 'goal') {
-        event.runningScore = score(text(oneClass(row, 'tm-score')))
+        event.runningScore = score(text(scalar(row, 'tm-score', 'EVENT', { side })))
         if (!event.runningScore) issue('GOAL_RUNNING_SCORE_MISSING', 'Published goal lacks running score', { rawText })
         for (const extra of parts.slice(1)) {
           if (/asysta:/iu.test(text(extra))) result.sourceExtras.push({ type: 'assist', side, minute, rawText: text(extra), confirmed: false })

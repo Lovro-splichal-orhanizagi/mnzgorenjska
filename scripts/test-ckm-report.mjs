@@ -252,3 +252,46 @@ test('unsupported double-escaped script data cannot expose a literal report afte
   const changed = complete.replace(/(<body\b[^>]*>)/, '$1<script><!--<script></script>').replace('</body>', '</script></body>')
   held(parse(changed), 'HTML_INERT_UNSUPPORTED')
 })
+
+function repeatEventScalar(cls, value, nested = false) {
+  const target = cls === 'tm-min' ? /<div class="tm-min"[^>]*>\s*48'\s*<\/div>/ :
+    new RegExp(`<div class="${cls}"[^>]*>[^]*?</div>`)
+  const extra = `<span class="${cls}">${value}</span>`
+  const changed = complete.replace(target, original => original + (nested ? `<div class="source-detail">${extra}</div>` : extra))
+  assert.notEqual(changed, complete, `real ${cls} field must be mutated`)
+  return changed
+}
+for (const nested of [false, true]) {
+  for (const [field, value] of [['tm-min', "60'"], ['tm-icon', '🟥'], ['tm-info', 'Other Actor'], ['tm-score', '0:1']]) {
+    test(`${nested ? 'nested' : 'direct'} repeated visible event ${field} is ambiguous`, () => {
+      const changed = repeatEventScalar(field, value, nested)
+      held(parse(changed), 'EVENT_FIELD_AMBIGUOUS')
+    })
+  }
+  for (const [field, value] of [['p-name', 'Other Keeper'], ['p-nr', '99']]) {
+    test(`${nested ? 'nested' : 'direct'} repeated visible roster ${field} does not use its first value`, () => {
+      const changed = complete.replace(/(<a class="player-entry" href="https:\/\/concordiaknurow\.pl\/player\/dawid-ziarnik\/">)([^]*?)(<\/a>)/,
+        (_, open, content, close) => open + content + (nested ? `<div class="source-detail"><span class="${field}">${value}</span></div>` : `<div class="${field}">${value}</div>`) + close)
+      assert.notEqual(changed, complete, 'starting goalkeeper anchor must be mutated')
+      held(parse(changed), 'PLAYER_FIELD_AMBIGUOUS')
+    })
+  }
+}
+test('multiple visible actor containers inside one event info block are ambiguous', () => {
+  const changed = complete.replace(/(<div class="tm-info"[^>]*>\s*)(<div[^>]*>[^]*?<\/div>)/,
+    '$1$2<div><span>Other Actor</span></div>')
+  assert.notEqual(changed, complete)
+  held(parse(changed), 'EVENT_INFO_AMBIGUOUS')
+})
+test('a second visible card actor is not silently ignored', () => {
+  const changed = complete.replace(/(Oliwer Mansfeld\s*<\/span>)/, '$1<span>Other Actor</span>')
+  held(parse(changed), 'EVENT_ACTOR_AMBIGUOUS')
+})
+test('hidden repeated leaf fields remain outside the scalar evidence scope', () => {
+  let changed = complete.replace(/(<div class="tm-min"[^>]*>\s*48'\s*<\/div>)/, '$1<div hidden><span class="tm-min">60\'</span></div>')
+  changed = changed.replace(/(Ziarnik Dawid\s*<\/div>)/, '$1<div aria-hidden="true"><span class="p-name">Other Keeper</span></div>')
+  const r = parse(changed)
+  assert.equal(r.reportStatistikaPripravljena, true)
+  assert.equal(r.appearances.find(p => p.name === 'Piernikarczyk Jakub').minutes, 42)
+  assert.equal(r.teams[0].starters.find(p => p.position === 'GK').name, 'Ziarnik Dawid')
+})
