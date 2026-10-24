@@ -1,0 +1,63 @@
+name: Predogled pregledanih lig drzave
+run-name: Country preview ${{ inputs.country }} offset ${{ inputs.offset }}
+on:
+  workflow_dispatch:
+    inputs:
+      country:
+        description: 'Two uppercase country letters; reviewed generic candidates only, not a whole-country catalog'
+        type: string
+        required: true
+      limit:
+        description: 'Maximum inactive reviewed candidates (1–5)'
+        type: number
+        default: 5
+      offset:
+        description: 'Offset within eligible reviewed candidates (0–10000)'
+        type: number
+        default: 0
+      expected_sha:
+        description: 'Exact reviewed 40-character main commit SHA'
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: country-preview-${{ inputs.country }}
+  cancel-in-progress: false
+jobs:
+  preview:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      COUNTRY: ${{ inputs.country }}
+      LIMIT: ${{ inputs.limit }}
+      OFFSET: ${{ inputs.offset }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Country preview offline regression tests
+        run: node --test scripts/test-country-league-preview.mjs scripts/test-vklop-obstojecih-lig.mjs
+      - name: Read existing database and preview exact reviewed candidates
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          node scripts/country-league-preview.mjs \
+            --country "$COUNTRY" --limit "$LIMIT" --offset "$OFFSET" \
+            --expected-sha "$EXPECTED_SHA" --output release/country-preview
+      - name: Preserve diagnostic plan and provisional child results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: country-preview-${{ github.run_id }}-${{ inputs.country }}
+          path: release/country-preview/
+          if-no-files-found: warn
+          retention-days: 90
