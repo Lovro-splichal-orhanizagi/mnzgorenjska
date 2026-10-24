@@ -13,7 +13,7 @@ insert into repair_plan select jsonb_build_object('version',1,'id','de-suedwest-
  'observationSha256',encode(sha256(convert_to(private_dfb_reactivation.canonical_json(private_dfb_reactivation.observations(raw::jsonb)),'UTF8')),'hex'),
  'captures',(select jsonb_agg(jsonb_build_object('season',s->'season','code',s->'code','capturedAt',s->'capturedAt','documentsSha256',s->'documentsSha256','capture',s#>'{lineage,capture}')order by s->>'season')from jsonb_array_elements(raw::jsonb->'seasons')s),
  'players',(select jsonb_agg(to_jsonb(p)order by p.id)from players p join repair_ids i on i.id=p.id),
- 'participants',(select jsonb_agg(jsonb_build_object('playerId',p.id,'native',to_jsonb(ap)||jsonb_build_object('season',r.season,'source_report',m.zapisnik_id,'round_number',r.number,'home_team_id',m.home_team_id,'away_team_id',m.away_team_id),'source',x)order by ap.id)
+ 'participants',(select jsonb_agg(jsonb_build_object('playerId',p.id,'native',(case when ap.red_card_minute is null then to_jsonb(ap)-'red_card_minute' else to_jsonb(ap)end)||jsonb_build_object('season',r.season,'source_report',m.zapisnik_id,'round_number',r.number,'home_team_id',m.home_team_id,'away_team_id',m.away_team_id),'source',x)order by ap.id)
   from appearances ap join players p on p.id=ap.player_id join repair_ids i on i.id=p.id join matches m on m.id=ap.match_id join rounds r on r.id=m.round_id
   join _dfb_expected e on e.id=m.zapisnik_id and e.season=r.season cross join lateral jsonb_array_elements(e.f->'appearances')x
   where r.season='2026/27'and x->>'name'=p.full_name and(x->>'side')::int=case when ap.team_id=m.home_team_id then 0 else 1 end))::text from de_manifest;
@@ -68,6 +68,9 @@ declare original appearances%rowtype;other_id bigint;begin
  values(original.match_id,other_id,original.team_id,original.started,original.is_goalkeeper,original.shirt_number);
 end$$;
 select pg_temp.repair_reject('two native identities for one exact source participant','select pg_temp.repair_ambiguous_participant()','DFB_REACTIVATION: missing/ambiguous exact source participant identity');
+-- The pre-column synthetic native approval omits only NULL clocks; populated metadata stays bound.
+do $$begin if not exists(select 1 from appearances ap join repair_ids i on i.id=ap.player_id where ap.red_cards=1)then raise exception 'missing exact clock-only repair refusal fixture';end if;end$$;
+select pg_temp.repair_reject('unexpected nonnull clock changes approved native proof',$m$update appearances set red_card_minute=90 where id=(select min(ap.id)from appearances ap join repair_ids i on i.id=ap.player_id where ap.red_cards=1)$m$,'DFB_REACTIVATION: complete reviewed native/source participant proof differs');
 select pg_temp.repair_reject('mixed status','update players set active=true where id=(select min(id)from repair_ids)');
 select pg_temp.repair_reject('identity drift','update players set full_name=full_name||'' changed''where id=(select min(id)from repair_ids)');
 select pg_temp.repair_reject('price drift','update players set value=value+0.5 where id=(select min(id)from repair_ids)');

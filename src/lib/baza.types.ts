@@ -109,6 +109,7 @@ export type Database = {
           penalties_saved: number
           penalties_scored: number
           player_id: number
+          red_card_minute: number | null
           red_cards: number
           shirt_number: number | null
           started: boolean
@@ -131,6 +132,7 @@ export type Database = {
           penalties_saved?: number
           penalties_scored?: number
           player_id: number
+          red_card_minute?: number | null
           red_cards?: number
           shirt_number?: number | null
           started?: boolean
@@ -152,6 +154,7 @@ export type Database = {
           penalties_saved?: number
           penalties_scored?: number
           player_id?: number
+          red_card_minute?: number | null
           red_cards?: number
           shirt_number?: number | null
           started?: boolean

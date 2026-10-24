@@ -7,7 +7,10 @@ if(!container||!db)throw Error('Explicit disposable container AND database requi
 const regions=process.env.DFB_TEST_REGION?[process.env.DFB_TEST_REGION]:['nord','west']
 if(regions.some(r=>!['nord','west'].includes(r)))throw Error('Unknown disposable DFB test region')
 for(const region of regions){
- const m=nordWestPolicyFixture(region),raw=JSON.stringify(m)+'\n';preveriOdobritev(raw,sha(raw))
+ const m=nordWestPolicyFixture(region)
+ // A synthetic end-of-play dismissal lets the native gate reject clock-only extra metadata.
+ m.seasons.flatMap(s=>s.fixtures).find(f=>f.statisticsStatus==='available'&&f.appearances?.length).appearances.find(a=>a.minute_off===90&&!a.is_goalkeeper).red_cards=1
+ const raw=JSON.stringify(m)+'\n';preveriOdobritev(raw,sha(raw))
  const unavailable=m.seasons.flatMap(s=>s.fixtures).filter(f=>f.statisticsStatus==='unavailable_historical').length
  const firstRound=Math.min(...m.seasons[1].fixtures.filter(f=>!f.played&&f.date===m.statisticsPolicy.firstFantasyPlayedOn).map(f=>f.round))
  const minimumSafeDate=new Date(Date.now()+3*86400000).toISOString().slice(0,10)
@@ -88,6 +91,7 @@ do $$begin if current_setting('slff.test_slug')='de-regionalliga-nord' then
  perform pg_temp.nw_reject('wrong unplayed fixture date','update matches set played_on=played_on+1 where source_url like ''%2423176''');
  perform pg_temp.nw_reject('unplayed fixture marked forfait','update matches set kontumacija=true where source_url like ''%2423176''');
 end if;end$$;
+select pg_temp.nw_reject('unexpected nonnull card metadata',$x$update appearances set red_card_minute=90 where id=(select a.id from appearances a join players p on p.id=a.player_id where p.competition_id=(select id from competitions where slug=current_setting('slff.test_slug'))and a.red_cards>0 limit 1)$x$);
 select pg_temp.nw_reject('changed normal appearance','update appearances set minutes_played=89 where id=(select min(ap.id)from appearances ap join players p on p.id=ap.player_id where p.competition_id=(select id from competitions where slug=current_setting(''slff.test_slug'')))');
 select pg_temp.nw_reject('wrong policy hash',$x$update nw_packet set raw=jsonb_set(raw::jsonb,'{statisticsPolicy,sha256}',to_jsonb(repeat('0',64)))::text$x$);
 select pg_temp.nw_reject('wrong current parent conclusion',$x$update nw_packet set raw=jsonb_set(raw::jsonb,'{seasons,1,lineage,capture,conclusion}','"${region==='west'?'success':'failure'}"')::text$x$);

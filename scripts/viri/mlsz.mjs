@@ -427,7 +427,9 @@ export function nastopi(z) {
   return skupniNastopi(z).map((n) => {
     const e = n.ekipaIdx === 0 ? z.domaci : z.gostje
     const i = [...e.postava, ...e.rezerve].find((x) => x.st === n.st && x.ime === n.ime)
-    const out = { ...n, regSt: i?.regSt ?? null, pozicija: i?.pozicija ?? null }
+    // A bench card may occur after substitution; retain its own authoritative clock.
+    const red = z.rdeci.find(k => k.ekipaIdx === n.ekipaIdx && k.st === n.st)
+    const out = { ...n, regSt: i?.regSt ?? null, pozicija: i?.pozicija ?? null, redCardMinute: red?.minuta ?? null }
     // Začetnik z več kot enim preklopom ali rezerva z več kot dvema.
     if (i && i.preklopi.length > (n.zacetnik ? 1 : 2)) {
       const rdec = z.rdeci.find((k) => k.ekipaIdx === n.ekipaIdx && k.st === n.st)

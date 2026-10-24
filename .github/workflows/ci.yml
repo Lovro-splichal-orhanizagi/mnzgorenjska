@@ -237,6 +237,18 @@ jobs:
           SUPABASE_TEST_DB: postgres
           MLSZ_TOTH_HISTORY_DISPOSABLE_TEST: '1'
         run: node --test scripts/test-mlsz-toth-history-sql.mjs
+      - name: MLSZ authoritative card clock and legacy NULL gate rollback
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          SUPABASE_TEST_DB: postgres
+          MLSZ_RED_CLOCK_DISPOSABLE_TEST: '1'
+        run: node --test scripts/test-mlsz-red-clock-sql.mjs
+      - name: Legacy appearance receipt JSON NULL compatibility rollback
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          SUPABASE_TEST_DB: postgres
+          RED_CLOCK_JSON_COMPAT_DISPOSABLE_TEST: '1'
+        run: node --test scripts/test-red-clock-json-compat-sql.mjs
       - name: BiH one-time prelaunch deadline configuration rollback
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska

@@ -994,6 +994,7 @@ for (const { id, z, url } of zapisniki) {
         penalties_missed: x.zgreseneEnajstmetrovke,
         yellow_cards: x.rumeni,
         red_cards: x.rdeci,
+        red_card_minute: vir.ime === 'mlsz' ? x.redCardMinute ?? null : null,
         goals_conceded: x.prejetiGoli,
         clean_sheet: x.cleanSheet,
         // Oznaka vratarja na TEJ tekmi (ne pozicija igralca): uskladi-pozicije
