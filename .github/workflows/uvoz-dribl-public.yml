@@ -1,0 +1,109 @@
+name: Import verified Dribl public capture
+run-name: Uvoz lige ${{ inputs.liga }} Dribl public
+on:
+  workflow_dispatch:
+    inputs:
+      liga:
+        description: Existing inactive AU/dribl-public competition slug; never activates
+        type: string
+        required: true
+      source_code:
+        description: Exact tenant:season:competition:league matching the existing competition
+        type: string
+        required: true
+      archive_code:
+        description: Optional previous published season scope in the SAME complete capture
+        type: string
+        default: ''
+      capture_run:
+        description: Successful full main capture run from the past 24 hours on this exact commit
+        type: string
+        required: true
+      expected_sha:
+        description: Exact reviewed 40-character main commit SHA
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: uvoz-lige-${{ inputs.liga }}
+  cancel-in-progress: false
+jobs:
+  import:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      LIGA: ${{ inputs.liga }}
+      SOURCE_CODE: ${{ inputs.source_code }}
+      SLFF_DRIBL_ARCHIVE_CODE: ${{ inputs.archive_code }}
+      CAPTURE_RUN: ${{ inputs.capture_run }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      SLFF_DRIBL_CAPTURE: ${{ github.workspace }}/capture
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Offline admission and native replay regression tests
+        run: node --test scripts/test-dribl-import-actions.mjs scripts/test-dribl-import.mjs
+      - name: Admit exact recent same-repository capture before downloading evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node scripts/preveri-dribl-uvoz.mjs guard --expected-sha "$EXPECTED_SHA"
+          node --input-type=module -e 'if(!/^[1-9]\d{0,14}$/.test(process.env.CAPTURE_RUN))throw Error("Invalid capture run")'
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CAPTURE_RUN" > capture-run.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CAPTURE_RUN/artifacts?per_page=100" > capture-artifacts.json
+          node scripts/preveri-dribl-uvoz.mjs admit --run capture-run.json --artifacts capture-artifacts.json --repository "$GITHUB_REPOSITORY" --head-sha "$GITHUB_SHA" --run-id "$CAPTURE_RUN" > admission.json
+          gh run download "$CAPTURE_RUN" --repo "$GITHUB_REPOSITORY" --name "dribl-batch-$CAPTURE_RUN" --dir capture
+      - name: Replay selected current and optional archive original bytes
+        run: |
+          set -euo pipefail
+          args=()
+          if [ -n "$SLFF_DRIBL_ARCHIVE_CODE" ]; then args+=(--archive-code "$SLFF_DRIBL_ARCHIVE_CODE"); fi
+          node scripts/preveri-dribl-uvoz.mjs preview --capture "$SLFF_DRIBL_CAPTURE" --code "$SOURCE_CODE" --output preview.json "${args[@]}"
+      - name: Wait for older imports and writers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --liga "$LIGA" --popravek --tekmovanje "$LIGA"
+      - name: Guarded offline native import, prices and readiness; no activation
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SLFF_DRIBL_OFFLINE_IMPORT: 'true'
+          NODE_OPTIONS: --import ./scripts/preveri-dribl-uvoz.mjs
+        run: |
+          set -euo pipefail
+          guard() { node scripts/preveri-dribl-uvoz.mjs check-competition --slug "$LIGA" --code "$SOURCE_CODE" --expected-sha "$EXPECTED_SHA"; }
+          if [ -n "$SLFF_DRIBL_ARCHIVE_CODE" ]; then
+            guard
+            node scripts/uvoz-zapisnikov.mjs --tekmovanje "$LIGA" --liga "$SLFF_DRIBL_ARCHIVE_CODE"
+          fi
+          guard
+          node scripts/uvoz-razporeda.mjs --tekmovanje "$LIGA" --pisi
+          guard
+          node scripts/uvoz-zapisnikov.mjs --tekmovanje "$LIGA"
+          guard
+          node scripts/ugani-pozicije.mjs --tekmovanje "$LIGA" --samo-nove --pisi
+          guard
+          node scripts/ovrednoti-igralce.mjs --tekmovanje "$LIGA" --pisi
+          node scripts/pripravljenost-lige.mjs --tekmovanje "$LIGA"
+      - name: Preserve import admission and native preview receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dribl-import-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            admission.json
+            preview.json
+            capture-run.json
+            capture-artifacts.json
+          if-no-files-found: warn
+          retention-days: 90

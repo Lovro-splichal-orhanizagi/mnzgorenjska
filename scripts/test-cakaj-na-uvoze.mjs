@@ -528,3 +528,25 @@ test('MLSZ reviewed history writes serialize with HU imports and health checks',
  }
  for(const mode of['prepare','preview'])assert.equal((await coordinate(['--drzava','HU'],{[workflow]:[run(`MLSZ reviewed history ${mode} hu-to-3-nyugat,hu-baz-u19-2-kozep`)]})).code,0)
 })
+
+test('real provider batch is visible to both coordinator loops and blocks active nightly readers',async()=>{
+ const workflow='uvoz-paketa-lig.yml',runs={[workflow]:[run('Uvoz paketa lig mlsz hu-pe-u19-e,hu-za-3-kozep')]}
+ for(const args of [['--drzava','HU'],['--liga','si-example'],['--popravek','--vir','mlsz']])assert.equal((await coordinate(args,runs)).code,1)
+ assert.equal((await coordinate(['--tece'],runs)).code,3)
+ assert.equal((await coordinate(['--popravek','--vir','mlsz'],{'uvoz-zapisnikov.yml':[run('Nightly')]},[{name:'uvoz HU 1/3',status:'completed'},{name:'uvoz HU 2/3',status:'in_progress'},{name:'uvoz HU 3/3',status:'completed'}])).code,1)
+ assert.equal((await coordinate(['--popravek','--vir','mlsz'],{'uvoz-zapisnikov.yml':[run('Nightly')]},[{name:'uvoz HU 1/3',status:'completed'},{name:'uvoz HU 2/3',status:'completed'},{name:'uvoz HU 3/3',status:'completed'},{name:'uvoz AT',status:'in_progress'}])).code,0)
+})
+
+
+test('Dribl native bootstrap shares AU/global writes and stays visible to both coordinators',async()=>{
+ fixtures.push({slug:'au-nsw-npl',active:false,source:'dribl-public',countries:{code:'AU'},federations:{code:'football-nsw'}})
+ try{
+  const workflow='uvoz-dribl-public.yml',runs={[workflow]:[run('Uvoz lige au-nsw-npl Dribl public')]}
+  for(const args of [['--liga','au-nsw-npl'],['--popravek','--vir','dribl-public'],['--drzava','AU']])assert.equal((await coordinate(args,runs)).code,args[0]==='--drzava'?0:1)
+  assert.equal((await coordinate(['--drzava','DE'],runs)).code,0)
+  assert.equal((await coordinate(['--tece'],runs)).code,0)
+  fixtures.at(-1).active=true
+  assert.equal((await coordinate(['--tece'],runs)).code,3)
+  for(const file of ['zdruzi-klube.yml','tedensko-cene.yml'])assert.match(readFileSync(new URL(`../.github/workflows/${file}`,import.meta.url),'utf8'),/for wf in[^\n]*uvoz-dribl-public\.yml/)
+ }finally{fixtures.pop()}
+})

@@ -53,20 +53,20 @@ export async function tekmovanje(db, slug = slugTekmovanja()) {
     .select('sezona_koledarska')
     .eq('id', data.id)
     .maybeSingle()
-  // FUSSBALL binds its provider scope to the actual country row. country_id
+  // Capture-bound providers bind their scope to the actual country row. country_id
   // is a numeric foreign key, never an ISO code. Keep other providers' row
   // shape and query contract unchanged.
   let country = {}
-  if (data.source === 'fussball-public') {
+  if (['fussball-public', 'dribl-public'].includes(data.source)) {
     if (!Number.isSafeInteger(data.country_id) || data.country_id <= 0)
-      throw new Error('fussball country: invalid country_id foreign key')
+      throw new Error(`${data.source} country: invalid country_id foreign key`)
     const { data: row, error: countryError } = await db
       .from('countries')
       .select('code')
       .eq('id', data.country_id)
       .maybeSingle()
     if (countryError || typeof row?.code !== 'string' || !row.code)
-      throw new Error(`fussball country: country lookup failed${countryError ? ': ' + countryError.message : ''}`)
+      throw new Error(`${data.source} country: country lookup failed${countryError ? ': ' + countryError.message : ''}`)
     country = { country_code: row.code }
   }
   return { ...data, ...country, sezona_koledarska: !eKol && Boolean(kol?.sezona_koledarska) }

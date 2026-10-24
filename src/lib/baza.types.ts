@@ -39,7 +39,6 @@ export type Database = {
           kljuc: string
           player_id: number
         }
-        ComputedFields: never
         Insert: {
           kljuc: string
           player_id: number
@@ -116,7 +115,6 @@ export type Database = {
           team_id: number
           yellow_cards: number
         }
-        ComputedFields: never
         Insert: {
           clean_sheet?: boolean
           goals?: number
@@ -263,7 +261,6 @@ export type Database = {
           player_id: number | null
           voter_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           goal_id: number
@@ -348,7 +345,6 @@ export type Database = {
           reason: string | null
           voter_id: string | null
         }
-        ComputedFields: never
         Insert: {
           created_at?: string | null
           deleted_at?: string
@@ -380,7 +376,6 @@ export type Database = {
           id: number
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           alias: string
           content: string
@@ -432,18 +427,17 @@ export type Database = {
         Row: {
           competition_id: number
           key: string
-          value: NonNullable<Json>
+          value: Json
         }
-        ComputedFields: never
         Insert: {
           competition_id: number
           key: string
-          value: NonNullable<Json>
+          value: Json
         }
         Update: {
           competition_id?: number
           key?: string
-          value?: NonNullable<Json>
+          value?: Json
         }
         Relationships: [
           {
@@ -497,7 +491,6 @@ export type Database = {
           vir_ime: string | null
           vir_url: string | null
         }
-        ComputedFields: never
         Insert: {
           active?: boolean
           country_id: number
@@ -563,7 +556,6 @@ export type Database = {
           name: string
           sort_order: number
         }
-        ComputedFields: never
         Insert: {
           active?: boolean
           code: string
@@ -593,7 +585,6 @@ export type Database = {
           user_id: string | null
           vrsta: string
         }
-        ComputedFields: never
         Insert: {
           competition_id?: number | null
           email: string
@@ -685,7 +676,6 @@ export type Database = {
           round_id: number
           season: string
         }
-        ComputedFields: never
         Insert: {
           chip: string
           fantasy_team_id: number
@@ -792,7 +782,6 @@ export type Database = {
           position: string | null
           round_id: number
         }
-        ComputedFields: never
         Insert: {
           bench_order?: number | null
           captured_at?: string
@@ -948,7 +937,6 @@ export type Database = {
           is_vice: boolean
           player_id: number
         }
-        ComputedFields: never
         Insert: {
           bench_order?: number | null
           buy_position?: string | null
@@ -1076,7 +1064,6 @@ export type Database = {
           owner_id: string
           roster_updated_at: string
         }
-        ComputedFields: never
         Insert: {
           budget?: number
           cash?: number
@@ -1148,7 +1135,6 @@ export type Database = {
           round_id: number
           transfers: number
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           fantasy_team_id: number
@@ -1256,7 +1242,6 @@ export type Database = {
           site_url: string | null
           sort_order: number
         }
-        ComputedFields: never
         Insert: {
           active?: boolean
           code: string
@@ -1302,7 +1287,6 @@ export type Database = {
           scorer_id: number | null
           team_id: number
         }
-        ComputedFields: never
         Insert: {
           assist_confirmed_at?: string | null
           assist_none_confirmed_at?: string | null
@@ -1479,7 +1463,6 @@ export type Database = {
           team_id: number
           user_id: string | null
         }
-        ComputedFields: never
         Insert: {
           competition_id: number
           created_at?: string
@@ -1627,7 +1610,6 @@ export type Database = {
           updated_at: string
           updated_by: string | null
         }
-        ComputedFields: never
         Insert: {
           facebook?: string | null
           instagram?: string | null
@@ -1713,7 +1695,6 @@ export type Database = {
           vir_url: string | null
           zadnji_mail_at: string | null
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           drzava: string
@@ -1808,7 +1789,6 @@ export type Database = {
           za: string | null
           zadeva: string | null
         }
-        ComputedFields: never
         Insert: {
           created_by?: string | null
           gmail_nit?: string | null
@@ -1855,7 +1835,6 @@ export type Database = {
           team_id: number
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           id?: never
@@ -1950,7 +1929,6 @@ export type Database = {
           vloga: string | null
           vrsta: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           decided_at?: string | null
@@ -2048,7 +2026,6 @@ export type Database = {
           koda: string
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           koda: string
@@ -2075,7 +2052,6 @@ export type Database = {
           korak: string
           stevilo: number
         }
-        ComputedFields: never
         Insert: {
           dan?: string
           korak: string
@@ -2108,7 +2084,6 @@ export type Database = {
           vir_brez_izida: boolean
           zapisnik_id: string | null
         }
-        ComputedFields: never
         Insert: {
           away_goals?: number | null
           away_team_id: number
@@ -2254,7 +2229,6 @@ export type Database = {
           joined_at: string
           mini_liga_id: number
         }
-        ComputedFields: never
         Insert: {
           fantasy_team_id: number
           joined_at?: string
@@ -2337,7 +2311,6 @@ export type Database = {
           owner_id: string
           saljive_nagrade: boolean
         }
-        ComputedFields: never
         Insert: {
           code: string
           competition_id?: number | null
@@ -2405,7 +2378,7 @@ export type Database = {
           created_at: string
           id: number
           ime_na_znacki: string
-          naslov: NonNullable<Json>
+          naslov: Json
           opomba: string | null
           player_id: number | null
           poslano_at: string | null
@@ -2415,12 +2388,11 @@ export type Database = {
           stripe_checkout_id: string
           user_id: string | null
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           id?: never
           ime_na_znacki: string
-          naslov: NonNullable<Json>
+          naslov: Json
           opomba?: string | null
           player_id?: number | null
           poslano_at?: string | null
@@ -2434,7 +2406,7 @@ export type Database = {
           created_at?: string
           id?: never
           ime_na_znacki?: string
-          naslov?: NonNullable<Json>
+          naslov?: Json
           opomba?: string | null
           player_id?: number | null
           poslano_at?: string | null
@@ -2510,7 +2482,6 @@ export type Database = {
           stevilo: number
           stran: string
         }
-        ComputedFields: never
         Insert: {
           dan?: string
           skupina: string
@@ -2527,7 +2498,7 @@ export type Database = {
       }
       objave: {
         Row: {
-          dejstva: NonNullable<Json>
+          dejstva: Json
           discord_at: string | null
           drzava: string | null
           fb_povezava: string | null
@@ -2550,9 +2521,8 @@ export type Database = {
           ustvarjeno: string
           vrsta: string | null
         }
-        ComputedFields: never
         Insert: {
-          dejstva: NonNullable<Json>
+          dejstva: Json
           discord_at?: string | null
           drzava?: string | null
           fb_povezava?: string | null
@@ -2576,7 +2546,7 @@ export type Database = {
           vrsta?: string | null
         }
         Update: {
-          dejstva?: NonNullable<Json>
+          dejstva?: Json
           discord_at?: string | null
           drzava?: string | null
           fb_povezava?: string | null
@@ -2606,7 +2576,6 @@ export type Database = {
           id: number
           kljuc: string
         }
-        ComputedFields: never
         Insert: {
           id?: number
           kljuc: string
@@ -2630,7 +2599,6 @@ export type Database = {
           vracilo: boolean
           zunanji_id: string | null
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           id?: never
@@ -2666,7 +2634,6 @@ export type Database = {
           player_id: number
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           content: string
           created_at?: string
@@ -2742,7 +2709,6 @@ export type Database = {
           points: number
           round_id: number
         }
-        ComputedFields: never
         Insert: {
           computed_at?: string
           player_id: number
@@ -2858,7 +2824,6 @@ export type Database = {
           value_locked: boolean
           value_start: number | null
         }
-        ComputedFields: never
         Insert: {
           active?: boolean
           anonimiziran_at?: string | null
@@ -2997,7 +2962,6 @@ export type Database = {
           score: number
           updated_at: string
         }
-        ComputedFields: never
         Insert: {
           player_id: number
           position: string
@@ -3063,7 +3027,6 @@ export type Database = {
           position: string
           voter_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           id?: never
@@ -3141,7 +3104,6 @@ export type Database = {
           reason: string | null
           voter_id: string | null
         }
-        ComputedFields: never
         Insert: {
           created_at?: string | null
           deleted_at?: string
@@ -3171,7 +3133,6 @@ export type Database = {
           user_id: string
           zahtevek_id: number
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           player_id: number
@@ -3250,7 +3211,6 @@ export type Database = {
           povabil: string
           povabljeni: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           kvalificiran_at?: string | null
@@ -3287,7 +3247,6 @@ export type Database = {
           povezal: string | null
           zahtevek_id: number
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           player_id: number
@@ -3366,7 +3325,6 @@ export type Database = {
           position: string
           user_id: string | null
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           player_id: number
@@ -3440,7 +3398,6 @@ export type Database = {
           staro: string | null
           user_id: string | null
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           id?: never
@@ -3522,7 +3479,6 @@ export type Database = {
           user_id: string
           vloga: string
         }
-        ComputedFields: never
         Insert: {
           competition_id: number
           created_at?: string
@@ -3647,7 +3603,6 @@ export type Database = {
           vir: string
           znesek_pravice: number | null
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           id?: never
@@ -3755,7 +3710,6 @@ export type Database = {
           player_id: number
           round_id: number
         }
-        ComputedFields: never
         Insert: {
           changed_at?: string
           form: number
@@ -3857,7 +3811,6 @@ export type Database = {
           resil: string | null
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           id?: never
@@ -3910,7 +3863,6 @@ export type Database = {
           user_id: string
           zahtevek_id: number
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           id?: never
@@ -3965,7 +3917,6 @@ export type Database = {
           updated_at: string
           vzdevek: string | null
         }
-        ComputedFields: never
         Insert: {
           facebook?: string | null
           fotografija?: string | null
@@ -4047,7 +3998,6 @@ export type Database = {
           x: string | null
           youtube: string | null
         }
-        ComputedFields: never
         Insert: {
           barva?: string | null
           opis?: string | null
@@ -4149,7 +4099,6 @@ export type Database = {
           javni_profil: boolean
           navijam_team_id: number | null
         }
-        ComputedFields: never
         Insert: {
           avatar_barva?: number | null
           avatar_ikona?: string | null
@@ -4288,7 +4237,6 @@ export type Database = {
           updated_at: string
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           platforma: string
           token: string
@@ -4327,7 +4275,6 @@ export type Database = {
           voting_closes_at: string | null
           voting_opens_at: string | null
         }
-        ComputedFields: never
         Insert: {
           borza_po_starem?: boolean
           borza_z_odmikom?: boolean
@@ -4392,16 +4339,15 @@ export type Database = {
       settings: {
         Row: {
           key: string
-          value: NonNullable<Json>
+          value: Json
         }
-        ComputedFields: never
         Insert: {
           key: string
-          value: NonNullable<Json>
+          value: Json
         }
         Update: {
           key?: string
-          value?: NonNullable<Json>
+          value?: Json
         }
         Relationships: []
       }
@@ -4415,7 +4361,6 @@ export type Database = {
           prikazov: number
           sponsor_id: number
         }
-        ComputedFields: never
         Insert: {
           competition_id?: number | null
           dan: string
@@ -4492,7 +4437,6 @@ export type Database = {
           url: string
           utez: number
         }
-        ComputedFields: never
         Insert: {
           active?: boolean
           claim?: string | null
@@ -4593,7 +4537,6 @@ export type Database = {
           season: string
           yellow_cards: number
         }
-        ComputedFields: never
         Insert: {
           assists: number
           clean_sheets: number
@@ -4676,7 +4619,6 @@ export type Database = {
           id: number
           kljuc: string
         }
-        ComputedFields: never
         Insert: {
           id?: number
           kljuc: string
@@ -4694,7 +4636,6 @@ export type Database = {
           prejeto_at: string
           tip: string
         }
-        ComputedFields: never
         Insert: {
           id: string
           obdelano_at?: string | null
@@ -4718,7 +4659,6 @@ export type Database = {
           name: string
           short_name: string | null
         }
-        ComputedFields: never
         Insert: {
           country_id: number
           id?: never
@@ -4751,7 +4691,6 @@ export type Database = {
           dodal: string | null
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           dodal?: string | null
@@ -4787,7 +4726,6 @@ export type Database = {
           round_id: number
           transfers: number
         }
-        ComputedFields: never
         Insert: {
           fantasy_team_id: number
           penalty: number
@@ -4889,7 +4827,6 @@ export type Database = {
           skupaj: number
           trgovina: string
         }
-        ComputedFields: never
         Insert: {
           dan: string
           novi?: number | null
@@ -4911,7 +4848,6 @@ export type Database = {
           stanje: string | null
           trgovina: string
         }
-        ComputedFields: never
         Insert: {
           mejnik?: number | null
           posodobljeno?: string
@@ -4945,7 +4881,6 @@ export type Database = {
           zahtevek_id: number
           zaprto_at: string | null
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           id?: never
@@ -5071,7 +5006,6 @@ export type Database = {
           uveljavljeno_at: string | null
           znesek: number
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           odsotnost_id: number
@@ -5193,7 +5127,6 @@ export type Database = {
           status: string
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           decided_at?: string | null
@@ -5300,7 +5233,6 @@ export type Database = {
           poskusov: number
           user_id: string | null
         }
-        ComputedFields: never
         Insert: {
           competition_id?: number | null
           created_at?: string
@@ -5374,7 +5306,6 @@ export type Database = {
           porabljen_at: string | null
           zahtevek_id: number
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           expires_at?: string
@@ -5432,7 +5363,6 @@ export type Database = {
           round_id: number | null
           zmaga: boolean | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "appearances_match_id_fkey"
@@ -5526,7 +5456,6 @@ export type Database = {
           player_id: number | null
           votes: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "assist_votes_goal_id_fkey"
@@ -5587,7 +5516,6 @@ export type Database = {
           short_name: string | null
           team_id: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "players_competition_id_fkey"
@@ -5645,7 +5573,6 @@ export type Database = {
           vir_ime: string | null
           vir_url: string | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "competitions_country_id_fkey"
@@ -5674,7 +5601,6 @@ export type Database = {
           season: string | null
           transfers: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "fantasy_teams_competition_id_fkey"
@@ -5794,7 +5720,6 @@ export type Database = {
           season: string | null
           transfers: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "fantasy_teams_competition_id_fkey"
@@ -5841,7 +5766,6 @@ export type Database = {
           team_name: string | null
           transfers: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "fantasy_teams_competition_id_fkey"
@@ -5959,7 +5883,6 @@ export type Database = {
           remaining: number | null
           spent: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "fantasy_teams_competition_id_fkey"
@@ -6005,7 +5928,6 @@ export type Database = {
           team_name: string | null
           total_points: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "fantasy_teams_competition_id_fkey"
@@ -6047,7 +5969,6 @@ export type Database = {
           starting_budget: number | null
           total_wealth: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "fantasy_teams_competition_id_fkey"
@@ -6084,7 +6005,6 @@ export type Database = {
           fotografija: string | null
           player_id: number | null
         }
-        ComputedFields: never
         Relationships: []
       }
       klepet_sporocila: {
@@ -6096,7 +6016,6 @@ export type Database = {
           id: number | null
           je_moje: boolean | null
         }
-        ComputedFields: never
         Insert: {
           alias?: string | null
           content?: string | null
@@ -6156,7 +6075,6 @@ export type Database = {
           team_short: string | null
           value: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "player_scores_round_id_fkey"
@@ -6233,7 +6151,6 @@ export type Database = {
           team_name: string | null
           total_points: number | null
         }
-        ComputedFields: never
         Relationships: []
       }
       match_assist_status: {
@@ -6261,7 +6178,6 @@ export type Database = {
           statistics_reason: string | null
           statistics_status: string | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "matches_away_team_id_fkey"
@@ -6406,7 +6322,6 @@ export type Database = {
           team_name: string | null
           total_points: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "mini_liga_clani_mini_liga_id_fkey"
@@ -6423,7 +6338,6 @@ export type Database = {
           player_id: number | null
           round_id: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "appearances_player_id_fkey"
@@ -6505,7 +6419,6 @@ export type Database = {
           obveljalo_pozicij: number | null
           voter_id: string | null
         }
-        ComputedFields: never
         Relationships: []
       }
       naslednji_krog: {
@@ -6517,7 +6430,6 @@ export type Database = {
           played_on: string | null
           season: string | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "rounds_competition_id_fkey"
@@ -6557,7 +6469,6 @@ export type Database = {
           kratko: string | null
           slug: string | null
         }
-        ComputedFields: never
         Relationships: []
       }
       odsotni_igralci: {
@@ -6568,7 +6479,6 @@ export type Database = {
           kind: string | null
           player_id: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "player_reports_player_id_fkey"
@@ -6667,7 +6577,6 @@ export type Database = {
           team_short: string | null
           value: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "players_competition_id_fkey"
@@ -6750,7 +6659,6 @@ export type Database = {
           team_short: string | null
           user_id: string | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "player_reports_player_id_fkey"
@@ -6857,7 +6765,6 @@ export type Database = {
           team_short: string | null
           value: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "players_competition_id_fkey"
@@ -6939,7 +6846,6 @@ export type Database = {
           season: string | null
           yellow_cards: number | null
         }
-        ComputedFields: never
         Insert: {
           assists?: number | null
           clean_sheets?: number | null
@@ -7028,7 +6934,6 @@ export type Database = {
           season: string | null
           yellow_cards: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "appearances_player_id_fkey"
@@ -7127,7 +7032,6 @@ export type Database = {
           team_short: string | null
           value: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "players_competition_id_fkey"
@@ -7199,7 +7103,6 @@ export type Database = {
           players: number | null
           position_source: string | null
         }
-        ComputedFields: never
         Relationships: []
       }
       position_prior_leader: {
@@ -7208,7 +7111,6 @@ export type Database = {
           leader_score: number | null
           player_id: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "position_priors_player_id_fkey"
@@ -7260,7 +7162,6 @@ export type Database = {
           position: string | null
           votes: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "position_votes_player_id_fkey"
@@ -7313,7 +7214,6 @@ export type Database = {
           votes: number | null
           weight: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "position_votes_player_id_fkey"
@@ -7366,7 +7266,6 @@ export type Database = {
           potrdil: string | null
           potrjen_at: string | null
         }
-        ComputedFields: never
         Relationships: []
       }
       pozicije_v_cakanju: {
@@ -7381,7 +7280,6 @@ export type Database = {
           trenutna: string | null
           utez: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "players_competition_id_fkey"
@@ -7463,7 +7361,6 @@ export type Database = {
           season: string | null
           team_id: number | null
         }
-        ComputedFields: never
         Relationships: []
       }
       sezone: {
@@ -7477,7 +7374,6 @@ export type Database = {
           tekoca: boolean | null
           zadnji_dan: string | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "rounds_competition_id_fkey"
@@ -7514,7 +7410,6 @@ export type Database = {
           competition_id: number | null
           ekip: number | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "fantasy_teams_competition_id_fkey"
@@ -7569,7 +7464,6 @@ export type Database = {
           vrsta: string | null
           zaprto_at: string | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "players_competition_id_fkey"
@@ -7691,7 +7585,6 @@ export type Database = {
           resolved: number | null
           voter_id: string | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "position_votes_voter_id_fkey"
@@ -7710,7 +7603,6 @@ export type Database = {
           played_on: string | null
           season: string | null
         }
-        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "rounds_competition_id_fkey"
@@ -7777,7 +7669,7 @@ export type Database = {
       }
       admin_izbrisi_pivo: { Args: { p_id: number }; Returns: undefined }
       admin_klubski_igralci_brez_nastopa: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           aktiven: boolean
           dodan: string
@@ -7789,7 +7681,7 @@ export type Database = {
         }[]
       }
       admin_klubski_racuni: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           display_name: string
@@ -7802,7 +7694,7 @@ export type Database = {
         }[]
       }
       admin_klubski_zahtevki: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           display_name: string
@@ -7821,7 +7713,7 @@ export type Database = {
         }[]
       }
       admin_narocila_znack: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           id: number
@@ -7881,7 +7773,7 @@ export type Database = {
       }
       admin_odvzemi_preverjen: { Args: { p_id: number }; Returns: undefined }
       admin_piva: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           id: number
@@ -7897,7 +7789,7 @@ export type Database = {
       }
       admin_ponastavi_grb: { Args: { p_team_id: number }; Returns: undefined }
       admin_potrjeni_poznavalci: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           competition_id: number
           competition_name: string
@@ -7914,7 +7806,7 @@ export type Database = {
         }[]
       }
       admin_povabila_po_uporabniku: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           brez_ekipe: number
           povabil: number
@@ -7922,7 +7814,7 @@ export type Database = {
         }[]
       }
       admin_povabila_skupaj: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           registracij: number
           z_ekipo: number
@@ -7960,7 +7852,7 @@ export type Database = {
         Returns: undefined
       }
       admin_preverjeni: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           aktivna: boolean
           dodeljena_at: string
@@ -7998,7 +7890,7 @@ export type Database = {
         }[]
       }
       admin_prijave_mini_lig: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           ekip: number
           ime: string
@@ -8014,7 +7906,7 @@ export type Database = {
         }[]
       }
       admin_prosnje_poznavalcev: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           competition_id: number
           competition_name: string
@@ -8050,7 +7942,7 @@ export type Database = {
         Returns: undefined
       }
       admin_sponzorji: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active: boolean
           claim: string
@@ -8073,7 +7965,7 @@ export type Database = {
         }[]
       }
       admin_sponzorji_po_mestih: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           klikov: number
           klikov_7: number
@@ -8097,7 +7989,7 @@ export type Database = {
         }[]
       }
       admin_testerji: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           display_name: string
@@ -8123,7 +8015,7 @@ export type Database = {
         }[]
       }
       admin_zahtevki_igralcev: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           competition_id: number
           created_at: string
@@ -8153,7 +8045,7 @@ export type Database = {
         }[]
       }
       admin_zelje_lig: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           aktivna: boolean
           competition_id: number
@@ -8168,7 +8060,7 @@ export type Database = {
         }[]
       }
       admin_zivost: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           aktivnih_30dni: number
           aktivnih_7dni: number
@@ -8185,10 +8077,7 @@ export type Database = {
         Args: { p_player_id: number; p_razlog?: string }
         Returns: undefined
       }
-      anonimiziraj_neaktivne: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      anonimiziraj_neaktivne: { Args: never; Returns: number }
       apply_fcf_current_target_cleanup: {
         Args: {
           p_before_image_text: string
@@ -8244,8 +8133,31 @@ export type Database = {
         }
         Returns: Json
       }
+      apply_mlsz_historical_cleanup: {
+        Args: {
+          p_before_image_text: string
+          p_before_sha: string
+          p_main_sha: string
+          p_policy_hashes: Json
+        }
+        Returns: Json
+      }
+      apply_reviewed_existing_cleanup: {
+        Args: {
+          p_before_image_text: string
+          p_before_sha: string
+          p_main_sha: string
+          p_policy_sha: string
+          p_slug: string
+        }
+        Returns: Json
+      }
       asistenca_odprta: { Args: { p_goal_id: number }; Returns: boolean }
       asistence_odprte_do: { Args: { p_match_id: number }; Returns: string }
+      begin_reviewed_existing_prices: {
+        Args: { p_main_sha: string; p_policy_sha: string; p_slug: string }
+        Returns: Json
+      }
       check_fcf_current_target: {
         Args: { p_activate?: boolean; p_rollout_text: string; p_sha256: string }
         Returns: Json
@@ -8280,7 +8192,24 @@ export type Database = {
         }
         Returns: Json
       }
+      check_reviewed_existing_release: {
+        Args: {
+          p_activate?: boolean
+          p_expected_preview_sha?: string
+          p_main_sha: string
+          p_policy_sha: string
+          p_slug: string
+        }
+        Returns: Json
+      }
       dan_kroga: { Args: { p_round_id: number }; Returns: string }
+      dribl_reserve_player_ids: {
+        Args: { p_source_ids: string[] }
+        Returns: {
+          reg_st: number
+          source_id: string
+        }[]
+      }
       fcf_historical_six_apply: {
         Args: {
           p_before_image_text: string
@@ -8318,6 +8247,13 @@ export type Database = {
         Args: { p_slug: string }
         Returns: Json
       }
+      fussball_reserve_player_ids: {
+        Args: { p_source_ids: string[] }
+        Returns: {
+          reg_st: number
+          source_id: string
+        }[]
+      }
       get_fcf_current_target_inventory: {
         Args: { p_privacy_keys: string[]; p_slug: string }
         Returns: Json
@@ -8338,10 +8274,7 @@ export type Database = {
         Args: { p_competition_id: number }
         Returns: Json
       }
-      get_mfa_challenge_reviewed_receipt: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_mfa_challenge_reviewed_receipt: { Args: never; Returns: Json }
       get_mfa_nl_reviewed_bootstrap_receipt: {
         Args: { p_competition_id: number }
         Returns: Json
@@ -8362,8 +8295,10 @@ export type Database = {
         }
         Returns: Json
       }
-      get_mfa_reviewed_receipt: {
-        Args: Record<PropertyKey, never>
+      get_mfa_reviewed_receipt: { Args: never; Returns: Json }
+      get_mlsz_reviewed_history_receipt: { Args: never; Returns: Json }
+      get_reviewed_existing_cleanup_receipt: {
+        Args: { p_slug: string }
         Returns: Json
       }
       ima_klubski_racun: { Args: { p_team_id: number }; Returns: boolean }
@@ -8376,7 +8311,7 @@ export type Database = {
         Args: { p_rollout_text: string; p_sha256: string }
         Returns: Json
       }
-      is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      is_admin: { Args: never; Returns: boolean }
       isci_igralce: {
         Args: { iskanje: string; omejitev?: number }
         Returns: {
@@ -8404,16 +8339,13 @@ export type Database = {
           liga: string
         }[]
       }
-      izbrisi_moj_racun: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      izbrisi_moj_racun: { Args: never; Returns: undefined }
       izstop_kluba: {
         Args: { p_competition_id: number; p_team_id: number }
         Returns: Json
       }
       javna_piva: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           ime: string
@@ -8504,6 +8436,18 @@ export type Database = {
           round_number: number
           team_id: number
           team_name: string
+          user_id: string
+        }[]
+      }
+      kandidati_za_pivo_7dni: {
+        Args: { p_najvec?: number }
+        Returns: {
+          competition_id: number
+          display_name: string
+          email: string
+          liga_drzava: string
+          liga_oznaka: string
+          liga_slug: string
           user_id: string
         }[]
       }
@@ -8673,7 +8617,7 @@ export type Database = {
       }
       liga: { Args: { liga: string }; Returns: Json }
       meje_borze: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           najnizja: number
           najvisja: number
@@ -8707,10 +8651,10 @@ export type Database = {
           owner_name: string
         }[]
       }
-      moj_klubski_racun: { Args: Record<PropertyKey, never>; Returns: Json }
-      moja_koda_vabila: { Args: Record<PropertyKey, never>; Returns: string }
+      moj_klubski_racun: { Args: never; Returns: Json }
+      moja_koda_vabila: { Args: never; Returns: string }
       moje_mesto_v_vrsti: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           mesto: number
           pripeljanih: number
@@ -8772,7 +8716,7 @@ export type Database = {
         Args: { p_competition_id: number; p_user_id: string }
         Returns: boolean
       }
-      nova_koda_mini_lige: { Args: Record<PropertyKey, never>; Returns: string }
+      nova_koda_mini_lige: { Args: never; Returns: string }
       objava_cene: { Args: { p_do: string; p_od: string }; Returns: Json }
       objava_dejstva: {
         Args: { p_do: string; p_drzava: string; p_od: string }
@@ -8793,7 +8737,7 @@ export type Database = {
         Args: { p_do: string; p_izkljuci?: string[]; p_od: string }
         Returns: Json
       }
-      objava_mejnik_dejstva: { Args: Record<PropertyKey, never>; Returns: Json }
+      objava_mejnik_dejstva: { Args: never; Returns: Json }
       objava_obramba: { Args: { p_do: string }; Returns: Json }
       objava_stat: { Args: { p_do: string; p_od: string }; Returns: Json }
       objava_strelci: { Args: { p_do: string }; Returns: Json }
@@ -8822,20 +8766,14 @@ export type Database = {
         Args: { p_player_id: number }
         Returns: string
       }
-      okno_preracuna_tock: { Args: Record<PropertyKey, never>; Returns: string }
+      okno_preracuna_tock: { Args: never; Returns: string }
       osvezi_statistiko_igralcev: {
         Args: { p_igralci: number[] }
         Returns: undefined
       }
       osvezi_tocke_krogov: { Args: { p_krogi: number[] }; Returns: undefined }
-      osvezi_vse_tocke_krogov: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      osvezi_vso_statistiko_igralcev: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      osvezi_vse_tocke_krogov: { Args: never; Returns: undefined }
+      osvezi_vso_statistiko_igralcev: { Args: never; Returns: undefined }
       oznaci_odhod_igralca: {
         Args: { p_odsel: boolean; p_player_id: number }
         Returns: undefined
@@ -8878,7 +8816,7 @@ export type Database = {
       potrdi_asistenco: { Args: { p_goal_id: number }; Returns: undefined }
       potrdi_pozicijo: { Args: { p_player_id: number }; Returns: undefined }
       potrdi_soigralca: { Args: { p_id: number }; Returns: string }
-      povzetek_rasti: { Args: Record<PropertyKey, never>; Returns: string }
+      povzetek_rasti: { Args: never; Returns: string }
       preklici_moj_zahtevek: { Args: { p_id: number }; Returns: undefined }
       prepare_dfb_historical_statistics: {
         Args: { p_manifest: string; p_sha256: string }
@@ -8908,6 +8846,14 @@ export type Database = {
         Args: { p_main_sha: string; p_policy_sha: string }
         Returns: Json
       }
+      prepare_mlsz_historical_cleanup: {
+        Args: { p_main_sha: string; p_policy_hashes: Json }
+        Returns: Json
+      }
+      prepare_reviewed_existing_cleanup: {
+        Args: { p_main_sha: string; p_policy_sha: string; p_slug: string }
+        Returns: Json
+      }
       prepovedane_besede: { Args: { p_besedilo: string }; Returns: string }
       prepovedano_besedilo: { Args: { p_besedilo: string }; Returns: string }
       preracunaj_cene: {
@@ -8924,7 +8870,7 @@ export type Database = {
         Returns: number
       }
       preveri_podatke: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           kljuc: string
           koliko: number
@@ -8932,14 +8878,8 @@ export type Database = {
           primer: string
         }[]
       }
-      preveri_uradne_odsotnosti: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      preverjen_cakajoci_preklici: {
-        Args: Record<PropertyKey, never>
-        Returns: string[]
-      }
+      preveri_uradne_odsotnosti: { Args: never; Returns: number }
+      preverjen_cakajoci_preklici: { Args: never; Returns: string[] }
       preverjen_ime_znacke: { Args: { p_ime: string }; Returns: string }
       preverjen_iz_placila: {
         Args: {
@@ -8972,7 +8912,7 @@ export type Database = {
         }[]
       }
       preverjen_moje_narocnine: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           stripe_customer_id: string
           velja_do: string
@@ -8982,10 +8922,7 @@ export type Database = {
         Args: { p_konec: string; p_subscription: string }
         Returns: number
       }
-      preverjen_pocisti_naslove: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      preverjen_pocisti_naslove: { Args: never; Returns: number }
       preverjen_podaljsaj: {
         Args: { p_subscription: string; p_velja_do: string }
         Returns: string
@@ -9066,7 +9003,7 @@ export type Database = {
         Returns: boolean
       }
       prevzem_neobvesceni: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           drzava: string
           email: string
@@ -9099,10 +9036,7 @@ export type Database = {
         Args: { p_id: number; p_kdo: string; p_note: string }
         Returns: undefined
       }
-      prevzem_pripravi_shrambo: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      prevzem_pripravi_shrambo: { Args: never; Returns: undefined }
       prevzem_sme_brisati_foto: { Args: { p_name: string }; Returns: boolean }
       prevzem_sme_pisati_foto: { Args: { p_name: string }; Returns: boolean }
       prevzem_soigralec: {
@@ -9228,6 +9162,18 @@ export type Database = {
         Args: { p_main_sha: string }
         Returns: Json
       }
+      record_reviewed_existing_prices: {
+        Args: { p_main_sha: string; p_policy_sha: string; p_slug: string }
+        Returns: Json
+      }
+      release_mlsz_reviewed_history: {
+        Args: {
+          p_activate?: boolean
+          p_competition_id: number
+          p_main_sha: string
+        }
+        Returns: Json
+      }
       roster_je_veljaven: { Args: { p_team_id: number }; Returns: boolean }
       scout_igralec: { Args: { p_player_id: number }; Returns: Json }
       scout_isci: {
@@ -9265,7 +9211,7 @@ export type Database = {
         Returns: string
       }
       scout_klub: { Args: { p_team_id?: number }; Returns: Json }
-      scout_moj_klub: { Args: Record<PropertyKey, never>; Returns: Json }
+      scout_moj_klub: { Args: never; Returns: Json }
       scout_moj_profil: {
         Args: { p_player_id: number }
         Returns: {
@@ -9283,7 +9229,7 @@ export type Database = {
         Returns: string
       }
       scout_opazovani: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           dodano: string
           ime: string
@@ -9318,7 +9264,7 @@ export type Database = {
           skupina: string
         }[]
       }
-      scout_portal_kupec: { Args: Record<PropertyKey, never>; Returns: string }
+      scout_portal_kupec: { Args: never; Returns: string }
       scout_preklici_privolitev: {
         Args: { p_player_id: number }
         Returns: undefined
@@ -9347,7 +9293,7 @@ export type Database = {
         Returns: undefined
       }
       scout_vrzeli: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           ime: string
           liga: string
@@ -9361,10 +9307,7 @@ export type Database = {
         Args: { p_sprejmem_pogoje: boolean }
         Returns: undefined
       }
-      scout_zasedi_sedez: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      scout_zasedi_sedez: { Args: never; Returns: undefined }
       sem_v_mini_ligi: { Args: { p_liga: number }; Returns: boolean }
       sezona_lige: {
         Args: { p_competition_id: number; p_datum?: string }
@@ -9378,8 +9321,8 @@ export type Database = {
         Args: { p_platforma: string; p_zeton: string }
         Returns: undefined
       }
-      skrij_moje_ime: { Args: Record<PropertyKey, never>; Returns: number }
-      skupaj_uporabnikov: { Args: Record<PropertyKey, never>; Returns: number }
+      skrij_moje_ime: { Args: never; Returns: number }
+      skupaj_uporabnikov: { Args: never; Returns: number }
       sme_videti_ekipo: { Args: { p_team: number }; Returns: boolean }
       sponzorji_za: {
         Args: { p_competition_id: number; p_mesto?: string }
@@ -9395,7 +9338,7 @@ export type Database = {
       }
       stanje_lige: { Args: { p_competition_id: number }; Returns: Json }
       stanje_mojih_ekip: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           brez_tock: boolean
           competition_id: number
@@ -9525,12 +9468,9 @@ export type Database = {
             }
             Returns: number
           }
-      trgovina_admin_boni: { Args: Record<PropertyKey, never>; Returns: Json }
-      trgovina_admin_izdelki: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      trgovina_admin_motivi: { Args: Record<PropertyKey, never>; Returns: Json }
+      trgovina_admin_boni: { Args: never; Returns: Json }
+      trgovina_admin_izdelki: { Args: never; Returns: Json }
+      trgovina_admin_motivi: { Args: never; Returns: Json }
       trgovina_admin_narocila: { Args: { p_stanje?: string }; Returns: Json }
       trgovina_admin_narocilo: { Args: { p_id: number }; Returns: Json }
       trgovina_admin_nastavi_stanje: {
@@ -9550,7 +9490,7 @@ export type Database = {
         Args: { p_id: number; p_stanje: string }
         Returns: Json
       }
-      trgovina_admin_serije: { Args: Record<PropertyKey, never>; Returns: Json }
+      trgovina_admin_serije: { Args: never; Returns: Json }
       trgovina_admin_shrani_izdelek: { Args: { p: Json }; Returns: number }
       trgovina_admin_shrani_motiv: { Args: { p: Json }; Returns: number }
       trgovina_admin_shrani_personalizacijo: {
@@ -9572,10 +9512,7 @@ export type Database = {
         }
         Returns: Json
       }
-      trgovina_admin_za_tisk: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      trgovina_admin_za_tisk: { Args: never; Returns: Json }
       trgovina_bon_porabljen: { Args: { p_promocija: string }; Returns: string }
       trgovina_bon_poslan: { Args: { p_narocilo: number }; Returns: undefined }
       trgovina_boni_narocila: { Args: { p_narocilo: number }; Returns: Json }
@@ -9596,25 +9533,19 @@ export type Database = {
         Returns: string
       }
       trgovina_izdelek: { Args: { p_slug: string }; Returns: Json }
-      trgovina_katalog: { Args: Record<PropertyKey, never>; Returns: Json }
-      trgovina_moja_narocila: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      trgovina_katalog: { Args: never; Returns: Json }
+      trgovina_moja_narocila: { Args: never; Returns: Json }
       trgovina_moja_postava: { Args: { p_team_id: number }; Returns: Json }
-      trgovina_moja_znacka: { Args: Record<PropertyKey, never>; Returns: Json }
-      trgovina_moji_prvaki: { Args: Record<PropertyKey, never>; Returns: Json }
-      trgovina_motivi: { Args: Record<PropertyKey, never>; Returns: Json }
+      trgovina_moja_znacka: { Args: never; Returns: Json }
+      trgovina_moji_prvaki: { Args: never; Returns: Json }
+      trgovina_motivi: { Args: never; Returns: Json }
       trgovina_narocilo_seje: {
         Args: { p_checkout: string; p_odjemalec: string; p_user: string }
         Returns: Json
       }
       trgovina_narocilo_za_posto: { Args: { p_id: number }; Returns: Json }
       trgovina_potekla: { Args: { p_checkout: string }; Returns: string }
-      trgovina_pripravi_shrambo: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      trgovina_pripravi_shrambo: { Args: never; Returns: undefined }
       trgovina_rezerviraj: {
         Args: {
           p_jezik: string
@@ -9684,10 +9615,7 @@ export type Database = {
         }
         Returns: Json
       }
-      uradne_odsotnosti_najvec: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      uradne_odsotnosti_najvec: { Args: never; Returns: number }
       uradne_odsotnosti_opomini: { Args: { p_user: string }; Returns: number }
       ustavi_objavo: { Args: { p_zeton: string }; Returns: boolean }
       ustvari_hisno_ekipo: {
@@ -9707,11 +9635,8 @@ export type Database = {
         }[]
       }
       uveljavi_cene: { Args: { p_round_id: number }; Returns: number }
-      uveljavi_klubski_racun: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      uveljavi_pozicije: { Args: Record<PropertyKey, never>; Returns: number }
+      uveljavi_klubski_racun: { Args: never; Returns: number }
+      uveljavi_pozicije: { Args: never; Returns: number }
       uveljavi_zapadle_cene: { Args: { p_okno?: string }; Returns: number }
       varen_vklop_dfb_regije: {
         Args: { p_aktiviraj?: boolean; p_manifest: string; p_sha256: string }
@@ -9721,7 +9646,7 @@ export type Database = {
         Args: { p_aktiviraj?: boolean; p_manifest: string; p_sha256: string }
         Returns: Json
       }
-      vidi_preverjene: { Args: Record<PropertyKey, never>; Returns: boolean }
+      vidi_preverjene: { Args: never; Returns: boolean }
       vklopi_ligo_sredi_sezone: { Args: { p_slug: string }; Returns: Json }
       voter_weight: { Args: { p_voter_id: string }; Returns: number }
       vrh_drzave: {
@@ -9767,7 +9692,7 @@ export type Database = {
         }[]
       }
       vrsta_zahtevkov_igralca: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           mesto: number
           pripeljanih: number
@@ -9898,7 +9823,8 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -9922,7 +9848,8 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -9946,7 +9873,8 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }

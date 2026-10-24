@@ -1,0 +1,295 @@
+# Avstralija — Dribl (omejeni dokaz, 24. 10. 2026)
+
+Noben vir ali liga nista registrirana ali aktivirana. Delo poteka brez baze.
+Dovoljenje za avtomatizirano branje ostaja nepreverjeno: prejšnji enkratni
+zahtevek `https://dribl.com/terms/` je potekel; tega gostitelja ne ponavljamo.
+Javni Football NSW Match Centre se izriše brez prijave ali izziva.
+
+## Načrt in pogodba vira
+
+1. Ohranimo izvirne bajte le javno opaženih zahtevkov in SHA-256 provenienco.
+2. Najprej preizkusi na resničnih JSON odgovorih, nato strogi offline parser.
+3. Ločen omejeni zajem; najmanj 3 s med začetki, največ 20 zahtevkov,
+   brez preusmeritev/ponovitev/prijave. Napaka transporta ali blokada ustavi zajem.
+4. Popoln zapisnik je šele dokaz za zapisnik; celotna liga potrebuje razpored,
+   vse strani in ločeno presojo vsake tekme. Nepopolna liga ostane HOLD.
+
+Opaženi javni API je `https://mc-api.dribl.com/api/`, oglasile so ga dejanske
+zahteve strani `https://competitions.footballnsw.com.au/` (pageAssets inventory).
+Ne uporabljamo zasebnih/admin poti, piškotkov ali ključev.
+
+- `tenants?mc_link=competitions.footballnsw.com.au&slug=competitions`:
+  `data.id=1RwNlWemjr`, Football New South Wales.
+- `list/seasons?disable_paging=true&tenant=1RwNlWemjr`: 2022–2026,
+  tekoča 2026 `wOmelzGd02`. Sezona 2027 ni opažena.
+- `list/competitions?disable_paging=true&tenant=1RwNlWemjr&season=wOmelzGd02`:
+  imenik tekmovanj; NPL Men's NSW `A4KLxx87Kq`.
+- `list/leagues?disable_paging=true&tenant=1RwNlWemjr&competition=A4KLxx87Kq&sort=%2Bname`:
+  First Grade `bgdMjoBxmE`, U20 `Bjmaxvo6dR`.
+- `results?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE&date_range=default&tenant=1RwNlWemjr&results=1&timezone=Europe%2FLjubljana`:
+  30 vrstic na stran, kazalci. `data[].hash_id` NI ID zapisnika;
+  uporabi `attributes.match_hash_id`. `links.next` sam ne ohrani filtrov!
+- `matchcentre/<match_hash_id>?tenant=1RwNlWemjr`:
+  `data.type=fixtures`, `data.hash_id`, `attributes` z izidom, kontekstom,
+  stanjem zapisnika in dogodki.
+- `matchcentre-match-members/match/<match_hash_id>/team/<team_hash_id>`:
+  polje oseb in osebja. Igralci so `role_slug=player`; profilna šifra je
+  `user_hash_id`. `playing=true` imajo tudi neuporabljene rezerve. Nastop
+  izhaja iz `starting` in dejanskih časovnih menjav.
+
+`matchcentre.attributes.goals[].member_id` je DRUG imenski prostor kot
+`user_hash_id`. Ne smeta postati ista šifra. Gol povežemo s profilom prek
+osebnih dogodkov in strogega ujemanja ekipe, imena, minute in polčasa;
+nejednoznačnost je HOLD. Menjave in kartone dodatno uskladimo s časovnico.
+
+Vratar je izrecen `field_role=Goalkeeper`, `field_role_slug=goalkeeper` in
+`field_role_group=goalkeeper`; `is_goalkeeper=false` sam ne zanika te vloge
+(tako je dejansko zapisan Adam Pavlesic). Številka 1, ime ali clean sheets
+niso dokaz. Odsotna/kontradiktorna vloga začetnega vratarja je HOLD.
+
+Minute so absolutne: menjava 45 v `ft-second-half` pomeni začetek drugega
+polčasa; karton 47 v `ft-first-half` je sodnikov dodatek prvega. Izvirno minuto
+in polčas ohranimo; za minute nastopa uporabljamo 45/90-minutni meji.
+Podprta sta samo opažena redna polčasa 45+45; podaljški, streljanje penalov,
+kontumacija in neopažene vrste kartonov ostanejo HOLD.
+
+Resnični Grand Final `vdWDwrrWym` APIA–Sydney United 1:3 ostane HOLD:
+Oliver Kalac nima izrecne vratarske vloge. Noben popravek osebe ni dovoljen.
+
+## Ohranjeni dokazi in offline preverba
+
+`scripts/vzorci/au-dribl-provenance.json` navaja 13 izvirnih JSON odgovorov,
+URL-je, datume zajema, HTTP 200, velikost in SHA-256. 13 neposrednih JSON
+branj in sedem dejanj prehoda v brskalniku; brez ponovitev, zavrnitev ali izziva.
+Vzorcev ne popravljamo; negativni preizkusi spreminjajo le kopije v pomnilniku.
+
+Semifinal `1K3pRqqeGd`, Sydney United–Manly 3:1, 6. 9. 2026 ob 04:00 UTC,
+je pozitiven vzorec: 22 začetnikov, sedem rezerv z dejanskim vstopom, štirje
+goli, pet rumenih kartonov in sedem parov menjav. Obe začetni vratarski vlogi
+sta izrecni. `matchsheet_away_team_confirmed=false` je ohranjen upravni podatek;
+objavljen dokončan zapisnik z usklajenimi statistikami zaradi tega ni nepopoln.
+Zahtevamo obe oddani postavi; upravna potrditev drugega kluba ni nadomestilo za
+preverjanje podatkov. Drugi vzorec Grand Final ostane HOLD.
+
+```sh
+node --test scripts/test-dribl.mjs
+node scripts/dribl-offline.mjs --manifest scripts/vzorci/au-dribl-provenance.json --match 1K3pRqqeGd
+node scripts/dribl-offline.mjs --manifest scripts/vzorci/au-dribl-provenance.json --match vdWDwrrWym
+```
+
+Izhod 0 pomeni samo preverjen zapisnik; 2 pomeni HOLD, 1 napako vhodnega
+dokaza. CLI preveri tri izvirne SHA in ne vsebuje omrežja ali baze. Čiste
+funkcije so `parseDriblCatalog`, `parseDriblSchedule`, `parseDriblReport` in
+`verifyDriblReceipt` v `scripts/viri/dribl.mjs`. Izvoz za HOLD ima javno
+uporabne statistične sezname `null`; surova razčlenitev ostane v `diagnostics`.
+Vedno `activationEligible=false`, `sezonskiUvozPodprt=false`.
+
+Razpored je samo prva stran 30 rezultatov (`next_cursor` ni prazen), zato
+ostane HOLD. `nextUrl` ohrani prvotne filtre in doda opaženi kazalec.
+`seasonComplete=false` prepreči zamenjavo konca strani za pregledano sezono.
+Javni `fixtures?date_range=default&season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE&tenant=1RwNlWemjr&timezone=Europe%2FLjubljana`
+je vrnil prazno stran brez kazalca. UI ga označi **Upcoming Fixtures**;
+to ni dokaz vseh neodigranih/preloženih tekem v sezoni. Za sezonski uvoz
+potrebujemo dokaz celotnega objavljenega inventarja in vse zapisnike.
+
+Omejitve: podprta sta običajna polčasa 45+45, izrecno rumeni kartoni ter
+spodaj izvirno dokazana rdeča kartona R5/R7. Druge vrste rdečih kartonov,
+avtogoli, podaljški ali kazenski streli zahtevajo nov izvirni dokaz in
+preizkuse; do takrat HOLD. Vzorca ne dokazujeta uporabnosti
+vseh lig NSW, drugih avstralskih zvez ali arhivov. Transport/zajem, povezava v
+uvoz in presoja vsake lige so ločeni naslednji koraki; država ni aktivirana.
+
+Naknadno je dejanski javni filter `Filter → Date → All Fixtures`, nato
+navigacija `Fixtures`, pokazal celotni način `date_range=all`. Opaženi URL:
+`https://mc-api.dribl.com/api/fixtures?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE&date_range=all&tenant=1RwNlWemjr&timezone=Europe%2FLjubljana`.
+Izvirni odgovor `au-dribl-fixtures-all-npl.json` vsebuje 30 vrstic od začetka
+sezone in tudi končane tekme, s kazalcem za naslednjo stran. To je dokaz
+objavljenega načina celotnega inventarja, še vedno **ne** zajeta celotna sezona.
+
+Vrstice imajo `type=fixtures`, različen `hash_id` in `attributes.match_hash_id`,
+čas pa `2026-02-06T08:30:00.000000Z` (rezultati uporabljajo presledek brez Z).
+`links.next` tudi tu vsebuje samo kazalec; ob nadaljevanju je treba ohraniti
+opažene filtre. Čisti `parseDriblSchedule` bere oba opažena formata: `results` z
+`date_range=default` in `fixtures` z `date_range=all`. Prazni način Upcoming
+Fixtures (`date_range=default`) ostane HOLD in ni dokaz celotnega inventarja.
+Neopaženi filtri, podvojeni parametri in drugačen kontekst so zavrnjeni;
+`fullInventoryEvidence=true` označi le opaženi način celotnega inventarja,
+ne vseh zajetih strani. Naslednji korak mora zajeti in uskladiti vse strani. Nadaljnjega omrežja ni bilo: meja 20
+(13 neposrednih JSON branj + 7 prehodov strani) je dosežena.
+
+Glava zapisnika ohrani izvorne vrednosti `round_number` → `round`,
+`display_round_number` → `displayRound`, `round_label` → `roundLabel` in
+`match_type` → `matchType`. Semifinal ima 2 / F2 / Semi Finals / finals;
+Grand Final 3 / F3 / Grand Final / finals. `full_round` v ohranjenih glavah
+zapisnikov ni objavljen, zato `fullRound=null`; razpored ga dejansko objavi
+(npr. Round 1) in ga parser ohrani. Ne izmišljamo si skupne številke kroga
+za redni del in končnico.
+
+## Načrt omejenega zajema in native vmesnika
+
+Naslednji ločeni korak uporablja en klient za 1–5 izrecnih lig iste preverjene
+zveze NSW: en skupni proračun 1–1000, začetki najmanj 3 s narazen, dnevnik pred
+zahtevkom, brez preusmeritev, ponovitev ali poverilnic. Celotni `fixtures/all`
+inventar mora priti do konca kazalcev. Vzorčenje 1–3 zapisnikov je vedno HOLD
+za uvoz. Semantična napaka zadrži svojo ligo in dovoli naslednjo; tehnična
+napaka klienta ustavi vse. Noben nov živi zahtevek v tem razvojnem koraku.
+
+Artefakt bo hranil izvirne odgovore, SHA/MIME/velikosti, natančne možnosti,
+časovnico poskusov in odtis lokalnega zaprtja kode. Offline ponovitev uporablja
+izključno zaprto mapo odgovorov; neuporabljene, manjkajoče ali spremenjene
+odgovore zavrne. Native vmesnik ponovno bere izvirne bajte, ne zaupa urejenemu
+razčlenjenemu JSON. Tekoči zajem velja največ 24 ur. Igralec je celotni
+`dribl:<tenant>:user:<id>`; notranji numerični ključ je SHA-256 prvih 13 hex
+znakov + 2^52, s preverjanjem trkov in obveznim RPC rezerviranjem.
+
+Izvorne R1…Rmax in F1#n…Fmax#n ohranimo. Šele celotni inventar z vsemi
+zaporednimi rednimi krogi in finalnimi fazami dovoli interno fantasy preslikavo
+Fštevilka → Rmax+Fštevilka. To niso uradne številke krogov. Vzorci celotnega
+zajema v testih bodo izrecno sintetično okvirjanje faz/paginacije okoli
+resničnega semifinalnega zapisnika; ne bodo predstavljeni kot živa cela sezona.
+
+## Ločen dokaz disciplinskih podatkov (faza 2)
+
+Po koncu prvotne meje 20 je koordinator izvedel ločeno izrecno omejeno fazo
+7/8 zahtevkov, vse HTTP 200, najmanj 3 s med začetki, brez ponovitev.
+`au-dribl-discipline-ledger.json` ohrani njegov izvirni dnevnik;
+`au-dribl-discipline-provenance.json` veže sedem odgovorov na SHA/URL/čas.
+Ta podagent ni izvedel dodatnega živega zahtevka.
+
+- `Pmj27A1G5m`, NWS Spirit–Sutherland 1:0: Callum Kealy ima Y1 pri 6, Y1
+  pri 69 in izrecni Red Card R7 pri 69, v obeh osebnih dogodkih in časovnici.
+  R7 zahteva dve ločeni rumeni, drugo v istem polčasu/minuti kot izključitev.
+  Izvirne tri vrstice ostanejo ohranjene; fantasy obravnava eno rumeno in eno
+  rdečo. Nastop konča pri 69, pričakovane minute ekipe so 969. Zapisnik še
+  vedno ostane HOLD zaradi manjkajoče izrecne začetne vratarske vloge gostov.
+- `1K3pvJ2P7d`, Sydney United–NWS Spirit 2:0: Simon Nicholas ima izrecni
+  Red Card R5 pri 81, brez predhodnih rumenih. Obe začetni vratarski vlogi
+  sta izrecni; zapisnik PASS, izključeni 81 minut, ekipa 981 minut.
+- Drugi rdeči kodi ali neopažena razlika med first/final vrsto/kodo ostanejo
+  HOLD. Tipa ne ugibamo iz rezultata ali besedila novice.
+
+Obe redni tekmi dokazujeta `display_round_number=R1/R26` in
+`match_type=roundrobin`. Časovnica R26 razvršča po surovi minuti:
+47 v drugem polčasu stoji pred 50 v prvem polčasu. Zato vrstni red polja
+ni dokaz kronologije. Upravičenost uporablja par (polčas, surova minuta),
+minutne vsote pa le meje 45/90. Napredovanje izida preverimo v dejanskem
+logičnem vrstnem redu, izvirnega polja ne spreminjamo.
+
+## Zajem, ponovitev in native vmesnik
+
+Izvedba je v `scripts/dribl-capture.mjs`, `scripts/dribl-import.mjs`,
+`scripts/viri/dribl-public.mjs` in CLI `scripts/zajemi-dribl.mjs`. Nobena od teh
+sprememb vira ne registrira ali aktivira. Zajem/ponovitev nimata odjemalca baze.
+Izvirne datoteke prejšnjih faz niso celoten uvozni artefakt; sedaj ni bilo
+nobenega novega živega zahtevka. Vsi celotni zajemi v testih so izrecno
+sintetično okvirjanje paginacije/faz okoli ohranjenih resničnih statistik.
+
+Vhod je lokalni JSON seznam 1–5 izrecnih kontekstov preverjenega NSW tenanta:
+
+```json
+[{"tenant":"1RwNlWemjr","season":"wOmelzGd02","competition":"A4KLxx87Kq","league":"bgdMjoBxmE"}]
+```
+
+Operaterjev naslednji ločeno odobreni zajem uporablja:
+
+```sh
+node scripts/zajemi-dribl.mjs capture --scopes scopes.json --max-requests 500 --reports all --output /tmp/NEW-dribl-capture
+node scripts/zajemi-dribl.mjs verify /tmp/NEW-dribl-capture
+node scripts/zajemi-dribl.mjs preview /tmp/NEW-dribl-capture --scope 1RwNlWemjr:wOmelzGd02:A4KLxx87Kq:bgdMjoBxmE
+```
+
+`--reports all` je celotni namen, `1`, `2`, `3` so vzorci in nikoli niso
+uvozno upravičeni. En klient za vse lige deli proračun 1–1000 zahtevkov, tri
+sekunde med začetki in isti predpomnilnik. `--max-pages` omeji strani na
+1–100 (privzeto 100). Zahtevek ima odkrit SLFF User-Agent, `credentials=omit`,
+ročno zavrnjene preusmeritve, 20-sekundni timeout in največ 2 MB izvirnega
+JSON. Dnevnik `pending` je zapisan pred fetch. HTTP napaka, izziv/prijava,
+transportna napaka, neveljaven UTF-8/JSON, MIME/byte napaka ali porabljen skupni
+proračun ustavi vse, brez ponovitve ali uporabe starega odgovora po napaki.
+
+Klient bere samo opažene javne poti: vezavo tenanta, tri imenike,
+`fixtures?date_range=all`, zapisnik in postavi te tekme. Vsako ligo najprej
+potrdi v dejanskih imenikih sezone/tekmovanja/lige. Vse strani inventarja
+izčrpa po izvirnih kazalcih in ohrani filtre; ponovljen kazalec ali ponovljen
+ID vrstice/tekme je HOLD. Izvorno ime, ekipi, datum, izid, faza in številka
+kroga morajo ustrezati zapisniku. Pretekla tekma brez pojasnjenega izida,
+neznana faza, nepopolna paginacija ali vzorčenje prepreči native uvoz.
+Semantični HOLD ne ustavi naslednje lige. Ob prvem slabem zapisniku preneha
+brati njegovo ligo, da preostali skupni proračun ostane drugim.
+
+Artefakt:
+
+- `manifest.json`: različica/ponudnik, začetni in končni čas, natančne možnosti,
+  odtis lokalnega zaprtja kode, izid transporta, končni request snapshot,
+  seznam izvirnih dokumentov in SHA rezultata.
+- `attempts.jsonl`: zaporedni nameni pred omrežnim zahtevkom.
+- `documents/<sha256>.json`: nespremenjeni izvirni bajti; vsaka manifestna
+  vrstica ima URL, vrsto, HTTP/MIME, velikost in čas začetka.
+- `result.json`: ponovljiva razčlenitev po ligah, inventar/faze, poročila,
+  pokritost, razlogi HOLD, `fullImportEligible` in `activationEligible=false`.
+
+`success=true` / CLI izhod 0 pri `capture` pomeni le konec transporta; veljaven
+artefakt ima lahko vse lige HOLD. `verify` izhod 0 pomeni identično zaprto
+ponovitev, ne dovoljenja za uvoz. `preview` vrne 2 za izbrano ligo HOLD.
+Tehnična ustavitev klienta vrne 4; napaka argumenta/artefakta vrne 1. Manjkajoči,
+spremenjeni, neuporabljeni ali dodatni izvirni dokumenti, simbolične povezave,
+spremenjen dnevnik/odtis kode ali urejen rezultat zavrnejo ponovitev. Omrežnega
+fallbacka ni. Odtis zajema transitivno zaprtje parserja, zajema, native modula,
+tovarne vira in CLI; prenovljena koda zahteva novo pregledano dokazilo.
+
+Native `buildDriblImportBatch({options,documents},{scope})` vedno ponovno
+razčleni zaprte izvirne dokumente; urejenemu `capture.result` ne zaupa.
+`loadDriblImportCapture(directory,{tenant,season,competition,league,current,now})`
+preveri še artefakt in za tekoči zajem največ 24 ur od začetka. Samo liga s
+celotnim objavljenim paginiranim inventarjem, brez vzorčenja in z vsemi
+odigranimi zapisniki PASS lahko vrne normalizirane `z`/`nastopi`.
+
+Tovarna `createDriblPublicSource` zahteva državo AU, `au-` slug, vir
+`dribl-public`, prazno `source_policy` in `SLFF_DRIBL_CAPTURE` direktorij.
+Dovoljen je samo točno vezani trenutni `source_league_code` ali izrecni
+`SLFF_DRIBL_ARCHIVE_CODE` prejšnje objavljene koledarske sezone. Ena instanca
+ne meša kontekstov. Pred objavo zapisnikov zahteva RPC
+`dribl_reserve_player_ids({p_source_ids})`; vseh 1–5000 vrnjenih numeričnih
+ključev se mora natančno ujemati z izračunanimi SHA ključi. Source ID ima
+polni 10-znakovni tenant in 10-znakovni uporabniški profil, nikoli drugega
+imenskega prostora `member_id` gola. Trk ali neuspešna rezervacija ne objavi
+nobenega zapisnika. Registracijo, migracijo/RPC in gostovani workflow vodi
+ločena integracija.
+
+Native postavi hranita tudi neuporabljene rezerve, nastopi pa samo začetnike
+in časovno dokazano vstopljene igralce. Rdeča konča nastop, pričakovane minute
+ekipe se zmanjšajo. R5 pomeni neposredno rdečo; R7 eno fantasy rumeno in eno
+rdečo, tudi če sta obe objavljeni rumeni v isti minuti. `z.sourceCards` ohrani
+vse izvorne rumene/rdeče; `z.rumeni`, `z.rdeci` in `nastopi` hranijo fantasy
+obravnavo. Ohranjeni so izvorna minuta/polčas, polni ID profila in ločeni ID
+gola. Trenutno so dokazani rumeni kodi Y1–Y4; druge kode so izrecen adapterjev
+HOLD, dokler ni preverjen njihov izvorni pomen.
+
+Redni krogi morajo tvoriti R1…Rmax, finalne faze pa F1…Fmax. Izvorni
+`F2#6` ostane `sourcePhase=finals`, `sourceRound=2`; notranji `krog` je
+Rmax+2. To je izpeljani fantasy krog, ne uradna številka. Neznana ali
+manjkajoča faza je HOLD. Native rezultat ohrani izvorno metapodatkovno sled,
+ob izpisu pa UTC čas pretvori v standardni Europe/Ljubljana datum/uro.
+
+Preverbe so brez omrežja in baze:
+
+```sh
+node --test scripts/test-dribl.mjs scripts/test-dribl-capture.mjs scripts/test-dribl-import.mjs scripts/test-dribl-cli.mjs
+```
+
+
+## Gostovana integracija
+
+Adapter je vključen v `viri/index.mjs`; migracija
+`20261024210000_dribl_source_identities.sql` zagotovi zasebno rezervacijo šifer.
+Nobena liga ali država s tem ni registrirana v bazi ali aktivirana.
+`preveri-dribl-paket.yml` sprejme 1–5 opaženih NSW kontekstov, skupni proračun
+1–1000 in izrecno vzorčenje ali celotni zajem. Deluje brez ključev baze.
+`uvoz-dribl-public.yml` lahko uvozi le že registrirano nevklopljeno AU ligo
+iz uspešnega popolnega zajema istega main commita v zadnjih 24 urah.
+Pred vsakim pisanjem preveri prazne fantasy ekipe/postave in isti izvorni
+kontekst. Native podprocesi smejo klicati le natančni origin baze; ne berejo
+vira. Ne izvede vklopa. Prejšnja koledarska sezona je izrecni dodatni kontekst
+v istem popolnem artefaktu. Cene in pripravljenost se izračunajo z obstoječimi
+pravili. Prihodnja avstralska uvedba še potrebuje državno integracijo, nočni
+zajem, popolne podatke in resnični prihodnji rok; v opaženem imeniku ni 2027.

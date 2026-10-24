@@ -1,0 +1,163 @@
+{
+  "version": 1,
+  "source": "dribl",
+  "capturedAt": "2026-10-24",
+  "transport": "ordinary identified-UA GET; no credentials; redirects disabled",
+  "ordinaryJsonReads": 13,
+  "browserRouteActions": 7,
+  "sourceStopObserved": false,
+  "permissionsVerified": false,
+  "scope": {
+    "tenant": "1RwNlWemjr",
+    "season": "wOmelzGd02",
+    "competition": "A4KLxx87Kq",
+    "league": "bgdMjoBxmE"
+  },
+  "responses": [
+    {
+      "url": "https://mc-api.dribl.com/api/list/competitions?disable_paging=true&tenant=1RwNlWemjr&season=wOmelzGd02",
+      "startedAt": "2026-10-24T20:21:02.906099+00:00",
+      "capturedAt": "2026-10-24T20:21:03.275983+00:00",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "e87aecefe2c89955fc757008b684d0db57fd8d76c3426a2b9845a497016ae716",
+      "bytes": 3555,
+      "file": "au-dribl-competitions-2026.json",
+      "observedFrom": "https://competitions.footballnsw.com.au/matchcentre/?m=vdWDwrrWym"
+    },
+    {
+      "url": "https://mc-api.dribl.com/api/list/leagues?disable_paging=true&tenant=1RwNlWemjr&competition=A4KLxx87Kq&sort=%2Bname",
+      "startedAt": "2026-10-24T20:21:15.561020+00:00",
+      "capturedAt": "2026-10-24T20:21:15.915170+00:00",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "0a02a8ad5cc2ae4ec0063444c4012a93498a42cf5f4db38128c2963d5a62bb25",
+      "bytes": 676,
+      "file": "au-dribl-leagues-npl.json",
+      "observedFrom": "https://competitions.footballnsw.com.au/matchcentre/?m=vdWDwrrWym"
+    },
+    {
+      "url": "https://mc-api.dribl.com/api/matchcentre/1K3pRqqeGd?tenant=1RwNlWemjr",
+      "startedAt": "2026-10-24T20:22:03.143261+00:00",
+      "capturedAt": "2026-10-24T20:22:03.527913+00:00",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "f3a75e354110199dc877b0eb9b6211f352405241bdc59e4aa457f918d5a672eb",
+      "bytes": 7470,
+      "file": "au-dribl-match-1K3pRqqeGd.json",
+      "observedFrom": "https://competitions.footballnsw.com.au/results?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE"
+    },
+    {
+      "url": "https://mc-api.dribl.com/api/matchcentre/vdWDwrrWym?tenant=1RwNlWemjr",
+      "capturedAt": "2026-10-24T20:19:35.650116+00:00",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "fdb9b9dd2c6e85f62f59dbb8db11b82d705967e7eff9c07c9736fb75aed17e83",
+      "bytes": 6795,
+      "file": "au-dribl-match-vdWDwrrWym.json",
+      "observedFrom": "https://competitions.footballnsw.com.au/matchcentre/?m=vdWDwrrWym"
+    },
+    {
+      "url": "https://mc-api.dribl.com/api/matchcentre-match-members/match/vdWDwrrWym/team/lNb38MwoKx",
+      "startedAt": "2026-10-24T20:19:54.410053+00:00",
+      "capturedAt": "2026-10-24T20:19:54.867674+00:00",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "35a8fba8848cf88be41180f12432d615e128675de9c91b5864f0be03dc4d7b52",
+      "bytes": 19691,
+      "file": "au-dribl-members-away.json",
+      "observedFrom": "https://competitions.footballnsw.com.au/matchcentre/?m=vdWDwrrWym"
+    },
+    {
+      "url": "https://mc-api.dribl.com/api/matchcentre-match-members/match/vdWDwrrWym/team/2KpvXawBmY",
+      "startedAt": "2026-10-24T20:19:50.762143+00:00",
+      "capturedAt": "2026-10-24T20:19:51.303993+00:00",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "7727bcdd60717c10fe7a95710a75ec08fb88469e87fb87463704fbfa4b4b0750",
+      "bytes": 22605,
+      "file": "au-dribl-members-home.json",
+      "observedFrom": "https://competitions.footballnsw.com.au/matchcentre/?m=vdWDwrrWym"
+    },
+    {
+      "url": "https://mc-api.dribl.com/api/results?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE&date_range=default&tenant=1RwNlWemjr&results=1&timezone=Europe%2FLjubljana",
+      "startedAt": "2026-10-24T20:21:23.900169+00:00",
+      "capturedAt": "2026-10-24T20:21:24.331252+00:00",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "a44dd1e35260307eafd0c13b0260308035b3c031ac8eab1e595b4919e42f8f1f",
+      "bytes": 42597,
+      "file": "au-dribl-results-npl.json",
+      "observedFrom": "https://competitions.footballnsw.com.au/matchcentre/?m=vdWDwrrWym"
+    },
+    {
+      "url": "https://mc-api.dribl.com/api/list/seasons?disable_paging=true&tenant=1RwNlWemjr",
+      "startedAt": "2026-10-24T20:20:59.428436+00:00",
+      "capturedAt": "2026-10-24T20:20:59.804045+00:00",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "dafe2f474c4177ab6cdde3ef788e67fd8eb5104e91abfd8535e28705799e6c28",
+      "bytes": 1004,
+      "file": "au-dribl-seasons.json",
+      "observedFrom": "https://competitions.footballnsw.com.au/matchcentre/?m=vdWDwrrWym"
+    },
+    {
+      "url": "https://mc-api.dribl.com/api/matchcentre-match-members/match/1K3pRqqeGd/team/ld4OgL6pKW",
+      "startedAt": "2026-10-24T20:28:37.969573+00:00",
+      "capturedAt": "2026-10-24T20:28:38.503360+00:00",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "aaab7727f03e4f50dabfd1fb81fd81b9719dac20284b0235183cb8ca855d3679",
+      "bytes": 22684,
+      "file": "au-dribl-semi-away.json",
+      "observedFrom": "https://competitions.footballnsw.com.au/results?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE"
+    },
+    {
+      "url": "https://mc-api.dribl.com/api/matchcentre-match-members/match/1K3pRqqeGd/team/lNb38MwoKx",
+      "startedAt": "2026-10-24T20:28:33.658628+00:00",
+      "capturedAt": "2026-10-24T20:28:34.805362+00:00",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "9ac08884e79f0719cdf10180afaae9105171b18af4a007df1dc2dc646b9207eb",
+      "bytes": 20565,
+      "file": "au-dribl-semi-home.json",
+      "observedFrom": "https://competitions.footballnsw.com.au/results?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE"
+    },
+    {
+      "url": "https://mc-api.dribl.com/api/tenants?mc_link=competitions.footballnsw.com.au&slug=competitions",
+      "startedAt": "2026-10-24T20:19:57.973186+00:00",
+      "capturedAt": "2026-10-24T20:19:58.331889+00:00",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "e7751c040a241a66195702e111173da2dda00b76d939d2982568d72b3d2aba6e",
+      "bytes": 721,
+      "file": "au-dribl-tenants.json",
+      "observedFrom": "https://competitions.footballnsw.com.au/matchcentre/?m=vdWDwrrWym"
+    },
+    {
+      "url": "https://mc-api.dribl.com/api/fixtures?date_range=default&season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE&tenant=1RwNlWemjr&timezone=Europe%2FLjubljana",
+      "startedAt": "2026-10-24T20:32:09.468785+00:00",
+      "capturedAt": "2026-10-24T20:32:10.450696+00:00",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "1b9d7820401aed0b6a3e56c3a5f942995aeecac5de1d3f8cd8448decdddc7d6c",
+      "bytes": 182,
+      "file": "au-dribl-fixtures-upcoming-npl.json",
+      "observedFrom": "https://competitions.footballnsw.com.au/fixtures?date_range=default&season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE&timezone=Europe%2FLjubljana"
+    },
+    {
+      "url": "https://mc-api.dribl.com/api/fixtures?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE&date_range=all&tenant=1RwNlWemjr&timezone=Europe%2FLjubljana",
+      "startedAt": "2026-10-24T20:36:47.716416+00:00",
+      "capturedAt": "2026-10-24T20:36:48.144952+00:00",
+      "status": 200,
+      "contentType": "application/json",
+      "sha256": "313484c2d23d9e190f93583bc041f92e37966963fec5aacd9307b004ad9fbff1",
+      "bytes": 65905,
+      "file": "au-dribl-fixtures-all-npl.json",
+      "observedFrom": "https://competitions.footballnsw.com.au/fixtures?season=wOmelzGd02&competition=A4KLxx87Kq&league=bgdMjoBxmE&date_range=all&timezone=Europe%2FLjubljana",
+      "observation": "Public Filter > Date > All Fixtures, then Fixtures navigation; exact API URL from pageAssets inventory"
+    }
+  ],
+  "sourceReadBudget": 20,
+  "sourceAccessStoppedAtBudget": true
+}

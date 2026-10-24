@@ -120,6 +120,7 @@ tabelo šifer tam, ne tu.
 | Islandija | `docs/viri/islandija.md` | `ksi` |
 | Ferski otoki | `docs/viri/ferski-otoki.md` | `fsf` |
 | ZDA | `docs/viri/zda.md` | `modular11` |
+| Avstralija (uvozni vmesnik; brez aktivnih lig) | `docs/viri/avstralija.md` | `dribl-public` |
 | Danska | `docs/viri/danska.md` | `dbu` |
 | Norveška | `docs/viri/norveska.md` | `nff` |
 | Kazahstan | `docs/viri/kazahstan.md` | `kff` |

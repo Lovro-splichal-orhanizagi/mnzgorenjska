@@ -1,0 +1,69 @@
+name: Dribl public league capture
+run-name: Dribl batch (${{ inputs.reports }} reports, ${{ inputs.max_requests }} total requests)
+on:
+  workflow_dispatch:
+    inputs:
+      scopes_json:
+        description: JSON array of 1–5 observed NSW tenant/season/competition/league tuples
+        type: string
+        required: true
+      max_requests:
+        description: Shared total including catalogs, pages, reports, rosters and failures (1–1000)
+        type: number
+        default: 80
+      reports:
+        description: all for a complete-season attempt, or 1–3 for screening
+        type: string
+        default: '1'
+      expected_sha:
+        description: Exact reviewed 40-character main commit SHA
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: dribl-public-source
+  cancel-in-progress: false
+jobs:
+  capture:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      SCOPES_JSON: ${{ inputs.scopes_json }}
+      MAX_REQUESTS: ${{ inputs.max_requests }}
+      REPORTS: ${{ inputs.reports }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Bind the complete request scope to reviewed main before collection
+        run: |
+          node --input-type=module <<'NODE'
+          import {execFileSync} from 'node:child_process'
+          import {writeFileSync} from 'node:fs'
+          import {validateDriblCaptureOptions} from './scripts/dribl-capture.mjs'
+          const e=process.env,head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()
+          if(e.GITHUB_REPOSITORY!=='Lovro-splichal-orhanizagi/mnzgorenjska'||e.GITHUB_REF!=='refs/heads/main'||! /^[a-f0-9]{40}$/.test(e.EXPECTED_SHA??'')||e.EXPECTED_SHA!==head||e.GITHUB_SHA!==head)throw Error('Exact reviewed main required')
+          if(!/^\d+$/.test(e.MAX_REQUESTS??'')||Number(e.MAX_REQUESTS)<1||Number(e.MAX_REQUESTS)>1000||! /^(all|[1-3])$/.test(e.REPORTS??''))throw Error('Invalid hosted request/report limits')
+          const options=validateDriblCaptureOptions({scopes:JSON.parse(e.SCOPES_JSON),maxRequests:Number(e.MAX_REQUESTS),reportLimit:e.REPORTS==='all'?null:Number(e.REPORTS),maxPages:100,asOfDate:new Date().toISOString().slice(0,10)})
+          writeFileSync('observed-dribl-scopes.json',JSON.stringify(options.scopes)+'\n')
+          NODE
+      - name: Offline source, capture and native normalization regressions
+        run: node --test scripts/test-dribl.mjs scripts/test-dribl-capture.mjs scripts/test-dribl-import.mjs
+      - name: Capture ordinary public JSON without database credentials
+        id: source
+        run: node scripts/zajemi-dribl.mjs capture --scopes observed-dribl-scopes.json --max-requests "$MAX_REQUESTS" --reports "$REPORTS" --output dribl-capture
+      - name: Replay only retained original documents
+        if: always() && (steps.source.outcome == 'success' || steps.source.outcome == 'failure')
+        run: node scripts/zajemi-dribl.mjs verify dribl-capture
+      - name: Preserve independent league verdicts and source receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dribl-batch-${{ github.run_id }}
+          path: dribl-capture/
+          if-no-files-found: warn
+          retention-days: 90
