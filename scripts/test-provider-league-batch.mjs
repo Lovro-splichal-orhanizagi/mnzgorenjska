@@ -15,7 +15,7 @@ function snapshot(c) {
 function harness(patch={}) {
  const cs=candidates(),calls=[],checkpoints=[]
  const transport={snapshot:async c=>snapshot(c),competition:async c=>snapshot(c).competition,...patch.transport}
- return {cs,calls,checkpoints,options:{candidates:cs,expectedSha:sha,transport,guard:async()=>{},runCommand:async(file,args)=>{calls.push({file,args});return {code:0,sourceFailure:false}},onCheckpoint:async r=>checkpoints.push(r),...patch}}
+ return {cs,calls,checkpoints,options:{candidates:cs,expectedSha:sha,transport,contracts:{},guard:async()=>{},runCommand:async(file,args)=>{calls.push({file,args});return {code:0,sourceFailure:false}},onCheckpoint:async r=>checkpoints.push(r),...patch}}
 }
 test('only exact reviewed bounded same-host candidate mappings enter the real runner',()=>{
  const cs=candidates();assert.equal(cs[0].archives[0].code,'65/14/32325');assert.equal(cs[1].archives[0].code,'63/20/29515')

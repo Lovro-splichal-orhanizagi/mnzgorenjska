@@ -4,6 +4,7 @@ import {spawn,execFileSync} from 'node:child_process'
 import {readFileSync,writeFileSync,mkdirSync,renameSync,existsSync,openSync,fsyncSync,closeSync} from 'node:fs'
 import {resolve,dirname} from 'node:path'
 import {fileURLToPath} from 'node:url'
+import {MLSZ_BATCH_MAPPINGS,createMlszContract} from './mlsz-provider-proof.mjs'
 import {readSourceBudget} from './provider-source-budget.mjs'
 import {createTransport,runBatch} from './vklopi-obstojece-lige.mjs'
 const REPOSITORY='Lovro-splichal-orhanizagi/mnzgorenjska'
@@ -11,14 +12,7 @@ const TUPLE=['id','slug','source','source_league_code']
 const digest=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex')
 const fail=message=>{throw Object.assign(Error(message),{dataHold:true})}
 // Only exact mappings reviewed in docs/viri/madzarska.md; registry presence is not permission.
-const MAPPINGS=[
- {id:635,slug:'hu-pe-u19-e',source:'mlsz',source_league_code:'67/14/34252',host:'adatbank.mlsz.hu',archives:[{code:'65/14/32325',season:'2025/26'}]},
- {id:475,slug:'hu-za-3-kozep',source:'mlsz',source_league_code:'67/20/34240',host:'adatbank.mlsz.hu',archives:[{code:'63/20/29515',season:'2024/25'}]},
-]
-// No source proof contract is installed for MLSZ: its adapter labels GK as a hint.
-// A reviewed provider implementation must capture/replay original source bytes and verify
-// complete schedule, archive ownership and keeper/event semantics before joining this map.
-const PROVIDER_CONTRACTS=Object.freeze({})
+const MAPPINGS=MLSZ_BATCH_MAPPINGS
 export function selectProviderCandidates(registry,slugs) {
  if(!Array.isArray(slugs)||slugs.length<1||slugs.length>5||new Set(slugs).size!==slugs.length)fail('Select one to five distinct explicit league slugs.')
  const selected=slugs.map(slug=>{
@@ -104,14 +98,14 @@ export function auditStoredData(candidate,snapshot,now=new Date()) {
  }
  if([...requiredSeasons].some(s=>!seenSeasons.has(s)))fail('Missing complete reports in a required current/archive season.')
  for(const club of clubs)if(!players.some(p=>p.team_id===club&&p.active===true&&p.position==='GK'&&p.position_source&&p.position_source!=='ugibanje'&&Number.isSafeInteger(p.reg_st)&&p.reg_st>0))fail('Current club lacks active report-linked goalkeeper coverage.')
- return {reports,snapshot_sha256:digest(snapshot),keeper_basis:candidate.source==='mlsz'?'MLSZ_FIRST_STARTER_HINT':'STORED_ROLE_ONLY',source_completeness:'NOT_ESTABLISHED'}
+ return {reports,snapshot_sha256:digest(snapshot),keeper_basis:candidate.source==='mlsz'?'mlsz-published-order-inference':'STORED_ROLE_ONLY',source_completeness:'NOT_ESTABLISHED'}
 }
-export function assertProviderProof({candidate,expectedSha,audit,proof,contract,now=new Date()}) {
+export function assertProviderProof({candidate,expectedSha,audit,snapshot,proof,contract,now=new Date()}) {
  if(!contract||contract.source!==candidate.source||contract.host!==candidate.host||typeof contract.verify!=='function')fail('No installed reviewed strict provider contract; source proof required.')
  if(!proof||proof.contract_id!==contract.id||proof.expected_sha!==expectedSha||digest(proof.candidate)!==digest(candidate)||proof.snapshot_sha256!==audit.snapshot_sha256||proof.schedule_complete!==true||digest(proof.archives)!==digest(candidate.archives)||!Array.isArray(proof.archive_collisions)||proof.archive_collisions.length||! /^[a-f0-9]{64}$/.test(proof.original_bytes_sha256??'')||!proof.keeper_basis)fail('Strict provider proof binding/completeness failed.')
  const age=now.getTime()-Date.parse(proof.captured_at)
  if(!Number.isFinite(age)||age<0||age>15*60_000)fail('Strict provider proof is stale or lacks original capture time.')
- if(contract.verify({candidate,expectedSha,audit,proof,now})!==true)fail('Strict provider proof verifier rejected evidence.')
+ if(contract.verify({candidate,expectedSha,audit,snapshot,proof,now})!==true)fail('Strict provider proof verifier rejected evidence.')
  return proof
 }
 export function atomicCheckpoint(path,report) {
@@ -171,22 +165,25 @@ export function createBatchTransport({url,key,fetch:request=globalThis.fetch}) {
  const native=createTransport({url,key,fetch:request})
  return {...native,snapshot:async c=>{
   try {
-   const competition=await native.competition(c),season=await native.season(c)
+   const competitionRows=await rows('competitions',{select:'*',id:`eq.${c.id}`,order:'id'});if(competitionRows.length!==1)throw Error('Native competition missing or ambiguous.');const competition=competitionRows[0],season=await native.season(c)
    const rounds=await rows('rounds',{select:'id,number,season,deadline_at,played_on,lineups_locked_at',competition_id:`eq.${c.id}`,order:'id'})
-   const matches=await rows('matches',{select:'id,round_id,played_on,zapisnik_id,vir_brez_izida,home_goals,away_goals,home_team_id,away_team_id,imported_at,kontumacija,statistics_status,rounds!inner(competition_id)','rounds.competition_id':`eq.${c.id}`,order:'id'})
+   const matches=await rows('matches',{select:'id,round_id,played_on,zapisnik_id,vir_brez_izida,home_goals,away_goals,home_team_id,away_team_id,imported_at,kontumacija,statistics_status,import_warnings,rounds!inner(competition_id)','rounds.competition_id':`eq.${c.id}`,order:'id'})
    const linked={select:'*,matches!inner(rounds!inner(competition_id))','matches.rounds.competition_id':`eq.${c.id}`,order:'id'}
    const appearances=await rows('appearances',linked),goals=await rows('goals',linked)
    const players=await rows('players',{select:'id,reg_st,team_id,active,position,position_source,value',competition_id:`eq.${c.id}`,order:'id'})
+   const clubIds=[...new Set(matches.flatMap(m=>[m.home_team_id,m.away_team_id]))].sort((a,b)=>a-b)
+   const clubs=clubIds.length?await rows('teams',{select:'id,name',id:`in.(${clubIds.join(',')})`,order:'id'}):[]
    const teams=await rows('fantasy_teams',{select:'id',competition_id:`eq.${c.id}`,order:'id'})
    const lineups=await rows('fantasy_lineups',{select:'round_id,fantasy_team_id,player_id,rounds!inner(competition_id)','rounds.competition_id':`eq.${c.id}`,order:'round_id,fantasy_team_id,player_id'})
    for(const match of matches){match.appearance_rows=appearances.filter(a=>a.match_id===match.id);match.goal_rows=goals.filter(g=>g.match_id===match.id)}
-   return {competition,season,rounds,matches,players,fantasy:{teams,lineups}}
+   return {competition,season,rounds,matches,players,teams:clubs,fantasy:{teams,lineups}}
   }catch(error){error.infrastructure=true;throw error}
  }}
 }
-export async function runProviderBatch({candidates,expectedSha,transport,guard,runCommand=runImportCommand,contracts=PROVIDER_CONTRACTS,activationRunner=runBatch,onCheckpoint=()=>{},now=()=>new Date(),logDirectory,budgetPath,maxRequests=500}) {
+export async function runProviderBatch({candidates,expectedSha,transport,guard,runCommand=runImportCommand,contracts,activationRunner=runBatch,onCheckpoint=()=>{},now=()=>new Date(),logDirectory,budgetPath,maxRequests=500}) {
  if(!Array.isArray(candidates)||!candidates.length||candidates.length>5||new Set(candidates.map(c=>c.slug)).size!==candidates.length||new Set(candidates.map(c=>c.source+'|'+c.host)).size!==1)fail('Invalid bounded provider selection.')
  if(typeof guard!=='function')fail('Exact main guard is required.')
+ contracts??={mlsz:createMlszContract({runCommand,budgetPath,maxRequests,outputDirectory:logDirectory?resolve(logDirectory,'../source-proof'):undefined})}
  const report={version:1,expected_sha:expectedSha,candidates,scope_sha256:digest({expectedSha,candidates}),status:'RUNNING',results:[],host_stop:null}
  const checkpoint=async()=>{try{await onCheckpoint(structuredClone(report))}catch(error){error.infrastructure=true;throw error}}
  await checkpoint()
@@ -222,14 +219,17 @@ export async function runProviderBatch({candidates,expectedSha,transport,guard,r
     for(const [name,file]of [['keepers','lazni-vratarji'],['positions','ugani-pozicije'],['prices','ovrednoti-igralce']])await stage(name,`scripts/${file}.mjs`,['--tekmovanje',candidate.slug,'--pisi'])
     result.pricing='COMPLETED';result.post_price_audit=auditStoredData(candidate,await transport.snapshot(candidate),now());await checkpoint()
     const contract=contracts[candidate.source]
-    if(!contract){result.status='HOLD';result.reason_code='NEEDS_STRICT_PROVIDER_PROOF';result.reason='Import and pricing completed; aggregate READY and MLSZ inferred keeper flags do not prove source completeness or approved keeper semantics.';await checkpoint();continue}
+    if(!contract){result.status='HOLD';result.reason_code='NEEDS_STRICT_PROVIDER_PROOF';result.reason='Import and pricing completed; no installed strict source-proof contract was selected. Aggregate READY does not establish source completeness.';await checkpoint();continue}
     await guarded()
     const snapshot=await transport.snapshot(candidate),audit=auditStoredData(candidate,snapshot,now())
-    const proof=await contract.capture({candidate,expectedSha,snapshot,audit,now:now()})
-    assertProviderProof({candidate,expectedSha,audit,proof,contract,now:now()});result.source_proof=proof;await checkpoint()
+    const receipts={expected_sha:expectedSha,slug:candidate.slug,snapshot_sha256:audit.snapshot_sha256,steps:result.steps.filter(s=>['keepers','positions','prices'].includes(s.stage))}
+    const proofStep={stage:'source-proof',status:'RUNNING',started_at:now().toISOString()};result.steps.push(proofStep);await checkpoint()
+    const proof=await contract.capture({candidate,expectedSha,snapshot,audit,receipts,now:now()})
+    proofStep.status='COMPLETED';proofStep.completed_at=now().toISOString()
+    assertProviderProof({candidate,expectedSha,audit,snapshot,proof,contract,now:now()});result.source_proof=proof;await checkpoint()
     // Fresh state must still match the independently verified proof immediately before native apply.
-    await guarded();const finalAudit=auditStoredData(candidate,await transport.snapshot(candidate),now())
-    assertProviderProof({candidate,expectedSha,audit:finalAudit,proof,contract,now:now()})
+    await guarded();const finalSnapshot=await transport.snapshot(candidate),finalAudit=auditStoredData(candidate,finalSnapshot,now())
+    assertProviderProof({candidate,expectedSha,audit:finalAudit,snapshot:finalSnapshot,proof,contract,now:now()})
     const step={stage:'activate',status:'RUNNING',started_at:now().toISOString()};result.steps.push(step);await checkpoint();mutating=true
     let activationStarted=false,activationReturned=false
     const native={...transport,activate:async c=>{activationStarted=true;const value=await transport.activate(c);activationReturned=true;return value}}

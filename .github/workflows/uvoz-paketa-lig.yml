@@ -38,7 +38,7 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - name: Offline batch and source budget regressions
-        run: node --test scripts/test-provider-league-batch.mjs scripts/test-provider-source-budget.mjs
+        run: node --test scripts/test-provider-league-batch.mjs scripts/test-provider-source-budget.mjs scripts/test-mlsz-provider-proof.mjs
       - name: Require exact reviewed main and fixed candidate mappings before database coordination
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
