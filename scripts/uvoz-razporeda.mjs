@@ -21,7 +21,7 @@ import { viraZa } from './viri/index.mjs'
 import {loadHistoricalStatisticsImportContext} from './lib/historical-statistics-import.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { sifra } from './viri/zapisniki.mjs'
-import { razcleniRazpored, sezonaIz, oznakaBrezIzida, tekmaDrugegaKroga, odvecneVrsticePara, preberiKontumacije } from './razpored.mjs'
+import { razcleniRazpored, sezonaIz, oznakaBrezIzida, tekmaDrugegaKroga, odvecneVrsticePara, preberiKontumacije, krogiZDatumomNazaj } from './razpored.mjs'
 import { rokKroga } from './razporedi.mjs'
 import {persistHnsWomenRound} from './hr-zenske-import.mjs'
 import { vseVrstice } from './strani.mjs'
@@ -537,6 +537,30 @@ if (vir.krogiPoTednih) {
       console.error(`  podvojene tekme prestavljenih parov: ${error.message}`)
       process.exitCode = 1
     } else console.log(`Odstranjenih podvojenih vrstic prestavljenih tekem: ${odvec.length} (${odvec.map((m) => m.id).join(', ')})`)
+  }
+}
+
+// Krog, ki ga razpored nima več (vir zanj nima datuma), bi v bazi obdržal
+// stari datum. Je ta več kot dva tedna pred prejšnjim krogom, je napačen:
+// datum in rok počistimo (tudi neuvoženim tekmam), vrne ju razpored, ko zveza
+// krog objavi. Zaklenjenega kroga se ne dotaknemo.
+if (tekmovanje.source_policy !== 'hr-hnlz-v1') {
+  const uvozeniKrogi = new Set(
+    [...obstojeceTekme.values()].filter((m) => m.imported_at || m.zapisnik_id || m.kontumacija).map((m) => m.round_id),
+  )
+  for (const r of krogiZDatumomNazaj(obstojeciKrogi, veljavni, uvozeniKrogi)) {
+    const { error } = await db
+      .from('rounds')
+      .update({ played_on: null, deadline_at: null, ...(vir.ocenjeniDatumi ? { datum_ocenjen: false } : {}) })
+      .eq('id', r.id)
+      .is('lineups_locked_at', null)
+    const { error: eTekme } = error
+      ? { error: null }
+      : await db.from('matches').update({ played_on: null }).eq('round_id', r.id).is('imported_at', null).is('zapisnik_id', null)
+    if (error || eTekme) {
+      console.error(`  krog ${r.stevilka}: datum pred prejšnjim krogom ni počiščen — ${(error ?? eTekme).message}`)
+      process.exitCode = 1
+    } else console.log(`  krog ${r.stevilka}: datum ${r.played_on} je pred prejšnjim krogom in ga razpored nima več — počiščen`)
   }
 }
 

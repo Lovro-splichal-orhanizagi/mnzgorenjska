@@ -1569,6 +1569,8 @@ preveri(
       if (tabela === 'player_overview') return odgovor([])
       // Dodani igralci klubov (klub_dodaj_igralca): privzeto jih ni.
       if (tabela === 'klub_dodani_igralci') return odgovor(moznosti.dodani ?? [])
+      // Krogi vklopljenih lig (krog z datumom pred prejšnjim): privzeto jih ni.
+      if (tabela === 'rounds') return odgovor(moznosti.krogi ?? [])
       if (tabela === 'players') {
         const od = Number(url.searchParams.get('offset') ?? 0)
         const koliko = Number(url.searchParams.get('limit') ?? 1000)
@@ -1639,6 +1641,17 @@ preveri(
     const izid = cli('preveri-podatke.mjs', [...igralci, ...vrhCenika], { dodani })
     preveri('preverba javi klub z več kot 25 dodanimi',
       izid.status === 0 && izid.stdout.includes('klub-prevec-dodanih') && izid.stdout.includes('NK Test 2026/27: 26'),
+      izid.stdout.trim().split('\n').slice(-1)[0])
+  }
+  // Pomladni krog z datumom jeseni (Zona Centar 2026/27, fssid): preverba javi.
+  {
+    const kr = (number, played_on) => ({ id: 100 + number, competition_id: 1, season: '2026/27', number, played_on,
+      competitions: { slug: 'preizkus', active: true } })
+    const krogi = [kr(12, '2026-11-08'), kr(13, '2026-11-14'), kr(14, '2026-08-22'), kr(15, '2026-08-29')]
+    const izid = cli('preveri-podatke.mjs', [...igralci, ...vrhCenika], { krogi })
+    preveri('preverba javi minuli krog z datumom pred prejšnjim krogom',
+      izid.status === 0 && izid.stdout.includes('krog-pred-prejsnjim') && izid.stdout.includes('2×') &&
+        izid.stdout.includes('14. krog 2026-08-22 (prej 2026-11-14)'),
       izid.stdout.trim().split('\n').slice(-1)[0])
   }
   // Igralec iz polja v vratih (Debeljak): uvoz ga ne prekrsti, preverba javi.

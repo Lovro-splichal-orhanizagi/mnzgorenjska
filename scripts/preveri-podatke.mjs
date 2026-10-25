@@ -13,7 +13,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { vseVrstice } from './strani.mjs'
-import { sezonaIz } from './razpored.mjs'
+import { sezonaIz, krogiPredPrejsnjim } from './razpored.mjs'
 import { VELIKOST_EKIPE, PRORACUN } from '../src/lib/pravila.ts'
 import { najcenejsiKader } from '../src/lib/pripravljenost.ts'
 import { NEPOPOLN } from './viri/frf.mjs'
@@ -299,6 +299,45 @@ if (cezOmejitev.length)
     koliko: cezOmejitev.length,
     primer: cezOmejitev.map(([k, n]) => `${k}: ${n}`).join(', '),
   })
+
+// --- minuli krogi z datumom pred prejšnjim krogom, brez uvožene tekme ---------
+// Zona Centar 2026/27 (fssid): vir datumov je 14. krogu dal datum 1. kroga,
+// ocena pa je iz njega naredila še osem "minulih" pomladnih krogov. Nobena
+// tekma ni bila zamujena, zaklep pa je v 22. krog zajel postave 27 ekip.
+const krogiLig = await vseVrstice((od, do_) =>
+  db
+    .from('rounds')
+    .select('id, competition_id, season, number, played_on, competitions!inner(slug, active)')
+    .eq('competitions.active', true)
+    .not('played_on', 'is', null)
+    .order('id')
+    .range(od, do_),
+)
+const danesIso = new Date().toISOString().slice(0, 10)
+const nazaj = krogiPredPrejsnjim(krogiLig ?? []).filter((r) => r.played_on < danesIso)
+if (nazaj.length) {
+  const { data: uvozene, error: napakaUvozenih } = await db
+    .from('matches')
+    .select('round_id')
+    .in('round_id', nazaj.map((r) => r.id))
+    .or('imported_at.not.is.null,zapisnik_id.not.is.null,kontumacija.eq.true')
+  if (napakaUvozenih) {
+    console.error(`Uvoženih tekem krogov ni bilo mogoče prebrati: ${napakaUvozenih.message}`)
+    process.exit(1)
+  }
+  const zUvozom = new Set((uvozene ?? []).map((m) => m.round_id))
+  const brez = nazaj.filter((r) => !zUvozom.has(r.id))
+  if (brez.length)
+    tezave.push({
+      kljuc: 'krog-pred-prejsnjim',
+      opis: 'Minuli krog brez uvožene tekme ima datum pred prejšnjim krogom (napačen datum vira?)',
+      koliko: brez.length,
+      primer: brez
+        .slice(0, 5)
+        .map((r) => `${r.competitions?.slug ?? r.competition_id} ${r.season} ${r.number}. krog ${r.played_on} (prej ${r.prejsnji})`)
+        .join('; '),
+    })
+}
 
 // --- izpis ------------------------------------------------------------------
 for(const o of opozorila)console.log(`  • [${o.kljuc}] ${o.opis}\n    ${o.koliko}× — npr. ${o.primer}`)

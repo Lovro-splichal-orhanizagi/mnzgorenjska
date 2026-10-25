@@ -170,6 +170,71 @@ export function odvecneVrsticePara(tekmePara, krogPara) {
 }
 
 /**
+ * Ali je datum kroga več kot `zamikDni` pred VEČINO prejšnjih krogov. Večina,
+ * ne najkasnejši: v celoti prestavljen krog (17. krog v maj) ne sme narediti
+ * sumljivih vseh krogov za njim. Pomladni krog z datumom začetka sezone (fssid,
+ * Zona Centar 2026/27: 14. kolo "22.08.2026") je pred vsemi.
+ *
+ * @param {string|null} datum
+ * @param {string[]} prejsnji datumi prejšnjih krogov iste lige in sezone
+ */
+export function datumPredPrejsnjimi(datum, prejsnji, zamikDni = 14) {
+  if (!datum || !prejsnji.length) return false
+  const meja = new Date(Date.parse(`${datum}T12:00:00Z`) + zamikDni * 86400000).toISOString().slice(0, 10)
+  return prejsnji.filter((d) => d > meja).length * 2 > prejsnji.length
+}
+
+/**
+ * Krogi v bazi, ki jih razpored nima več in katerih datum je pred večino
+ * prejšnjih krogov razporeda (`datumPredPrejsnjimi`). Tak krog brez uvožene
+ * tekme bi preverba javljala kot neuvožen, zaklep pa bi vanj zajel postave.
+ * Zaklenjen krog ni na seznamu — tega popravi človek.
+ *
+ * @param {Iterable<[number, { id:number, played_on:string|null, lineups_locked_at?:string|null }]>} obstojeciKrogi številka → krog
+ * @param {{ stevilka:number, tekme:{ datum?:string|null }[] }[]} krogi razpored
+ * @param {Set<number>} uvozeniKrogi id krogov z uvoženo tekmo
+ */
+export function krogiZDatumomNazaj(obstojeciKrogi, krogi, uvozeniKrogi) {
+  const datumi = krogi
+    .map((k) => [k.stevilka, k.tekme.map((t) => t.datum).filter(Boolean).sort()[0]])
+    .filter(([, d]) => d)
+  const out = []
+  for (const [stevilka, r] of obstojeciKrogi) {
+    if (!r.played_on || r.lineups_locked_at || uvozeniKrogi.has(r.id)) continue
+    if (krogi.some((k) => k.stevilka === stevilka)) continue
+    const prej = datumi.filter(([s]) => s < stevilka).map(([, d]) => d)
+    if (datumPredPrejsnjimi(r.played_on, prej)) out.push({ stevilka, ...r })
+  }
+  return out.sort((a, b) => a.stevilka - b.stevilka)
+}
+
+/**
+ * Krogi z datumom pred večino prejšnjih krogov iste lige in sezone (preverba
+ * podatkov). `prejsnji` je najkasnejši datum pred njim, za izpis.
+ *
+ * @param {{ id:number, competition_id:number, season:string, number:number, played_on:string|null }[]} krogi
+ */
+export function krogiPredPrejsnjim(krogi) {
+  const poLigi = new Map()
+  for (const r of krogi) {
+    if (!r.played_on) continue
+    const k = `${r.competition_id}|${r.season}`
+    if (!poLigi.has(k)) poLigi.set(k, [])
+    poLigi.get(k).push(r)
+  }
+  const out = []
+  for (const vrsta of poLigi.values()) {
+    const prej = []
+    for (const r of vrsta.sort((a, b) => a.number - b.number)) {
+      // Sumljiv krog ne gre med prejšnje: naslednji napačni bi se primerjali z njim.
+      if (datumPredPrejsnjimi(r.played_on, prej)) out.push({ ...r, prejsnji: [...prej].sort().at(-1) })
+      else prej.push(r.played_on)
+    }
+  }
+  return out
+}
+
+/**
  * Kontumacije vira, ki jih razpored ne pokaže (`vir.kontumacije`). Napaka tu
  * ne ustavi razporeda — brez oznake je stanje enako, kot ko jo vpiše admin —
  * **razen zavrnitve** (401/403/429, izziv): ta gre naprej, da skripta konča z
