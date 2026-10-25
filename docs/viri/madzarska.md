@@ -58,7 +58,11 @@ napaka strežnika in se nikoli ne shrani v predpomnilnik.
   namig popravi *Uskladi pozicije* z `vir = mlsz` (večina tekem).
 - **Kontumacija**: 3:0 (0:0) brez postav (Zala I 2025/26 tri). Razpored jo
   označi (pri obeh praznih postavah po tednu dni, kot hns), zapisnik vrne null.
-- Vzdevek kluba: `ZVFC` (2025/26) = `Zalaszentgróti VFC` (2026/27).
+- Vzdevka kluba: `ZVFC` (2025/26) = `Zalaszentgróti VFC` (2026/27);
+  `Vácrátót KSE` (od 25. 10. 2026) = `Vácrátóti KSE` (Pest IV. Észak).
+  Novo ime podvoji vse tekme kluba in nočni uvoz pade na
+  `matches_zapisnik_id_key`; vzdevek dodaj v `ISTI_KLUB_HU`, dvojnik združi
+  z *Zdruzi podvojena kluba*.
 - **Delitve sezone so ločene lige**: felsőház/alsóház, rájátszás 1–6 / 7–12
   (npr. Zala III. Északi rájátszás `33546`/`33548`, Veszprém II. felsőház
   `33478`) imajo vsaka svoj verseny z ekipami več skupin. Za arhiv osnovne

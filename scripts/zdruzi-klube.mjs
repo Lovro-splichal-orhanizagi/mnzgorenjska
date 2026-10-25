@@ -18,6 +18,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { MAX_IZ_KLUBA } from '../src/lib/pravila.ts'
+import { vseVrstice } from './strani.mjs'
 
 function izEnv() {
   try {
@@ -84,12 +85,15 @@ const opisKluba = (k, p) =>
   `${p.igralci} igralcev, ${p.nastopi} nastopov, ${p.goli} golov, ` +
   `${p.doma + p.gostje} tekem, ${k.logo_url ? 'ima grb' : 'brez grba'}`
 
-const { data: klubi, error: napakaKlubov } = await db
-  .from('teams')
-  .select('id, name, short_name, logo_url')
-  .order('id')
-if (napakaKlubov) {
-  console.error('Klubov ni bilo mogoče prebrati:', napakaKlubov.message)
+// PostgREST vrne največ 1000 vrstic: klubov je več, zato po straneh (sicer
+// klub z višjim id-jem "ne obstaja").
+let klubi
+try {
+  klubi = await vseVrstice((od, do_) =>
+    db.from('teams').select('id, name, short_name, logo_url').order('id').range(od, do_),
+  )
+} catch (e) {
+  console.error('Klubov ni bilo mogoče prebrati:', e.message)
   process.exit(1)
 }
 

@@ -4717,7 +4717,7 @@ preveri(
     M.kratkoImeHu('swisspor LENTI TE ') === 'Swisspor Lenti' && M.kratkoImeHu('ZVFC') === 'ZVFC' && M.kratkoImeHu('Semjénháza Se') === 'Semjénháza')
   preveri('mlsz: ključ kluba (velikost črk, naglasi, vzdevek)',
     M.kljucKlubaHu('KISKANIZSAI SÁSKÁK') === M.kljucKlubaHu('Kiskanizsai Sáskák') && M.kljucKlubaHu('Hévíz SK') !== M.kljucKlubaHu('Heviz SK') &&
-    M.kljucKlubaHu('ZVFC') === M.kljucKlubaHu('Zalaszentgróti VFC'))
+    M.kljucKlubaHu('ZVFC') === M.kljucKlubaHu('Zalaszentgróti VFC') && M.kljucKlubaHu('Vácrátót KSE') === M.kljucKlubaHu('Vácrátóti KSE'))
 
   // Stran kroga: Zala I 2025/26, 7. krog — pod razporedom kroga je še razpored
   // ene ekipe čez vso sezono (tudi 2090965 iz 7. kroga, ki se ne sme podvojiti).
@@ -11162,6 +11162,8 @@ preveri(
   preveri('oefb: ime igralca "Priimek Ime"', O.priimekIme('Julian Di Ronza', 'Di Ronza') === 'Di Ronza Julian' && O.priimekIme('Elias Pitterka', 'Pitterka') === 'Pitterka Elias' &&
     O.priimekIme('Pele', 'Pele') === 'Pele')
   preveri('oefb: ključ in kratko ime kluba', O.kljucKlubaAt('Dellach / Gail') === O.kljucKlubaAt('Dellach/Gail') &&
+    O.kljucKlubaAt('Austria Klagenfurt 1b') === O.kljucKlubaAt('Austria Klagenfurt Amat.') &&
+    O.kljucKlubaAt('SG ASKÖ Wölfnitz / SV Oberglan Juniors 1b') === O.kljucKlubaAt('SG ASKÖ Wölfnitz / SV Oberglan Juniors') &&
     O.kljucKlubaAt('SV Straßwalchen') !== O.kljucKlubaAt('SV Strasswalchen') && O.kljucKlubaAt('Völkermarkt') === 'völkermarkt' &&
     O.kratkoImeAt('SV Straßwalchen') === 'Straßwalchen' && O.kratkoImeAt('USV 1960 Berndorf') === 'Berndorf' && O.kratkoImeAt('Dellach / Gail') === 'Dellach / Gail' &&
     O.kratkoImeAt('SV') === 'SV')

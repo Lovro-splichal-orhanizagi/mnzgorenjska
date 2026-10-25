@@ -407,8 +407,13 @@ export function nastopi(z) {
 // --- klubi -------------------------------------------------------------------
 
 // Vzdevki: levo ključ, kot ga piše vir, desno ključ, pod katerim klub že
-// poznamo. Dodaj le videne.
-const ISTI_KLUB_AT = {}
+// poznamo. Dodaj le videne. Koroška je oktobra 2026 drugim ekipam dodala "1b":
+// razpored je pod novim imenom podvojil vse tekme kluba (isti nasprotnik, isti
+// krog), zapisnik 13. kroga pa je pristal pri dvojniku.
+const ISTI_KLUB_AT = {
+  'sg askö wölfnitz sv oberglan juniors 1b': 'sg askö wölfnitz sv oberglan juniors',
+  'austria klagenfurt 1b': 'austria klagenfurt amat',
+}
 
 const kljucBrezVzdevka = (ime) =>
   razpakiraj(ime)

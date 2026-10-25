@@ -60,6 +60,11 @@ Strani izriše JavaScript, podatki pa so v strani kot JSON
   (`vereine.oefb.at/<društvo>/`) v "Rust (NÖ)" ipd.; koroški in štajerski
   klubi ostanejo, kot so. Pregled 9. 10. 2026 je zajel vseh 153 lig; ob novi
   ligi preveri trke znova in nov trk dodaj tja.
+- **Preimenovanje sredi sezone** (Koroška, oktober 2026: "Austria Klagenfurt
+  Amat." → "Austria Klagenfurt 1b", "SG ASKÖ Wölfnitz / SV Oberglan Juniors"
+  → "… 1b"): razpored pod novim imenom ustvari drug klub in podvoji vse tekme.
+  Vzdevek gre v `ISTI_KLUB_AT` v viru, dvojnik se združi z *Zdruzi podvojena
+  kluba*.
 
 **Kje najti šifre.** Izbirnik zvez in lig na oefb.at kliče javni posrednik
 strani (`/proxy/oefb3/1469066385635312874_<ključ>?proxyUrl=<…>`, ključ je
