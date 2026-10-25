@@ -29,6 +29,18 @@ const client = (fetchFn, options = {}) => createFussballCaptureClient({
   ...options,
 })
 
+test('retained originals preserve timestamps and never count as fresh network reads',async()=>{
+ const bytes=Buffer.from(html),url=`${base}/spiel/-/spiel/${ID}`
+ const d={url,kind:'report',bytes,status:200,contentType:'text/html',capturedAt:'2026-10-01T00:00:00.000Z',sha256:createHash('sha256').update(bytes).digest('hex')}
+ let calls=0,uses=0
+ const c=client(async()=>{calls++;throw Error('no network fallback')},{cachedDocuments:[d],onCachedDocument:()=>uses++})
+ assert.equal((await c.read(url,'report')).capturedAt,d.capturedAt)
+ await c.read(url,'report');assert.equal(calls,0);assert.equal(uses,1);assert.equal(c.snapshot().requests,0)
+ assert.throws(()=>client(()=>{}, {cachedDocuments:[{...d,kind:'round',url:`${base}/spieltag/-/staffel/${staffel}`}]}),/schedule/i)
+ assert.throws(()=>client(()=>{}, {cachedDocuments:[{...d,sha256:'0'.repeat(64)}]}),/cached/i)
+ assert.throws(()=>client(()=>{}, {cachedDocuments:[{...d,contentType:'application/json'}]}),/MIME/i)
+})
+
 test('read returns original response bytes, a byte digest and persisted metadata', async () => {
   const body = Buffer.from('<html>Grüße</html>')
   const persisted = []

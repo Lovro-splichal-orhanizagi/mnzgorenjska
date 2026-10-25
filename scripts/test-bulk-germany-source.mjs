@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {collectFussballSeason} from './fussball-season.mjs'
 import {razberiKrog} from './viri/fussball.mjs'
+import {fussballBulkCacheDocuments,captureFussballDirectory,verifyFussballDirectory} from './fussball-capture-evidence.mjs'
 
 const api=await import('./bulk-germany-source.mjs').catch(e=>{if(e.code==='ERR_MODULE_NOT_FOUND')return {};throw e})
 const read=name=>readFileSync(new URL(`./vzorci/${name}`,import.meta.url))
@@ -76,7 +77,7 @@ test('observed catalog binds exact source/current tuples and HOLDs absent archiv
  assert.throws(()=>api.validateGermanyCandidate({...paired,archives:[{...paired.archives[0],season:'2024/25',code:staffel+':2024/25'}]},{catalog:[{...paired,archives:[{...paired.archives[0],season:'2024/25',code:staffel+':2024/25'}]}]}),/archive|previous/i)
 })
 
-test('full two-season collection replays real positive statistics, native schedule and identities',async()=>{
+test('full two-season collection replays real positive statistics, native schedule and identities',async t=>{
  const f=setup()
  try{
   const {pack}=await capture(f)
@@ -96,6 +97,19 @@ test('full two-season collection replays real positive statistics, native schedu
   const loaded=await api.loadGermanyPack(f.directory,{candidate:paired,now:f.now},f.dependencies)
   assert.deepEqual(loaded,pack)
   assert.deepEqual(await api.loadGermanyPack(f.directory,{candidate:paired,now:new Date(f.now())},f.dependencies),pack)
+  const cache=await fussballBulkCacheDocuments(f.directory,{staffel,season,seedUrl,collectFn:f.dependencies.collectSeason,loadPack:(d,o)=>api.loadGermanyPack(d,{...o,now:f.now},f.dependencies)})
+  assert.ok(cache.some(d=>d.kind==='report')&&cache.some(d=>d.kind==='lineup'))
+  assert.ok(cache.every(d=>d.kind!=='round'&&d.capturedAt===d.originalReceipt.document.capturedAt))
+  t.mock.method(Date,'now',f.now)
+  t.mock.method(globalThis,'setTimeout',(callback,ms)=>{f.sleep(ms);queueMicrotask(callback);return 1})
+  const freshCalls=[]
+  const refreshed=await captureFussballDirectory({directory:join(f.directory,'..','nightly'),reuseBulkDirectory:f.directory,
+   options:{staffel,season,seedUrl,maxRequests:100,reportLimit:null,asOfDate:'2026-10-25'},collectFn:f.dependencies.collectSeason,
+   loadBulkPack:(d,o)=>api.loadGermanyPack(d,{...o,now:f.now},f.dependencies),
+   fetchFn:async url=>{freshCalls.push(url);assert.ok(url===seedUrl||selector.some(s=>s.url===url),'bulk seed must suppress all already-complete report requests');return f.fetch(url)},
+  })
+  assert.equal(freshCalls.length,8);assert.equal(refreshed.snapshot.requests,8)
+  assert.equal((await verifyFussballDirectory(join(f.directory,'..','nightly'),{collectFn:f.dependencies.collectSeason})).verified,true)
  }finally{cleanup(f)}
 })
 

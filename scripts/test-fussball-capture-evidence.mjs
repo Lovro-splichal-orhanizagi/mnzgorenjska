@@ -126,7 +126,7 @@ test('authentic strict season result survives content-addressed capture and offl
   if(fontId&&fonts[fontId])return new Response(fonts[fontId].bytes,{headers:{'content-type':'font/woff'}})
   throw Error(`unexpected authentic fixture request: ${url}`)
  }
- const manifest=await api.captureFussballDirectory({directory,options:{...options,seedUrl,reportLimit:1,asOfDate:'2026-10-23',maxRequests:80},fetchFn,collectFn})
+ const manifest=await api.captureFussballDirectory({directory,options:{...options,seedUrl,reportLimit:null,asOfDate:'2026-10-23',maxRequests:80},fetchFn,collectFn})
  assert.equal(manifest.success,true)
  const rawText=readFileSync(join(directory,'result.json'),'utf8'),raw=JSON.parse(rawText)
  assert.ok(!rawText.includes('__SLFF_OBSERVED_FONT_'))
@@ -138,4 +138,41 @@ test('authentic strict season result survives content-addressed capture and offl
  assert.equal(replay.verified,true)
  assert.equal(replay.resultSha256,manifest.resultSha256)
  assert.equal(replay.requests,manifest.snapshot.requests)
+ const refreshed=directory+'-refresh',freshCalls=[]
+ const fresh=await api.captureFussballDirectory({directory:refreshed,reuseDirectory:directory,options:manifest.options,collectFn,fetchFn:async url=>{
+  freshCalls.push(url)
+  assert.ok(url===seedUrl||baseSelector.some(r=>r.url===url),'complete reports, lineup and immutable fonts must not be fetched again')
+  return fetchFn(url)
+ }})
+ assert.equal(fresh.version,2);assert.equal(freshCalls.length,8)
+ assert.equal(fresh.snapshot.requests,8)
+ const cached=fresh.documents.filter(d=>d.origin==='cache')
+ assert.ok(cached.some(d=>d.kind==='report'));assert.ok(cached.some(d=>d.kind==='lineup'))
+ for(const d of cached)assert.equal(d.capturedAt,manifest.documents.find(old=>old.url===d.url).capturedAt)
+ assert.equal((await api.verifyFussballDirectory(refreshed,{collectFn})).verified,true)
+ const again=await api.captureFussballDirectory({directory:directory+'-again',reuseDirectory:refreshed,options:manifest.options,collectFn,fetchFn})
+ assert.deepEqual(again.documents.filter(d=>d.origin==='cache').map(d=>d.originalReceipt),cached.map(d=>d.originalReceipt),'flat original receipts never grow an ancestry chain')
+ const receiptPath=join(refreshed,'manifest.json'),saved=readFileSync(receiptPath)
+ fresh.documents.find(d=>d.origin==='cache').capturedAt='2026-10-25T12:00:00Z';writeFileSync(receiptPath,JSON.stringify(fresh))
+ await assert.rejects(api.verifyFussballDirectory(refreshed,{collectFn}),/cache|original|receipt/)
+ let corruptFetches=0
+ await assert.rejects(api.captureFussballDirectory({directory:directory+'-corrupt',reuseDirectory:refreshed,options:manifest.options,collectFn,fetchFn:async()=>{corruptFetches++;throw Error('no fallback')}}))
+ assert.equal(corruptFetches,0);writeFileSync(receiptPath,saved)
+ const newFixture=razberiKrog(roundHtml,{fonts,staffel}).tekme.find(f=>f.id!==matchId&&f.rezultat!==null)
+ const newCalls=[]
+ const changedCollector=input=>collectFussballSeason(input,{...parsers,parseRound:(html,args)=>{
+  const parsed=parsers.parseRound(html,args)
+  if(html.includes('SYNTHETIC_NEW_PLAYED_FIXTURE')&&parsed.krog===8)parsed.tekme.push(newFixture)
+  return parsed
+ }})
+ // Synthetic inventory framing adds another ACTUAL match ID from this saved
+ // round. The refused closed-map response proves new reports are requested,
+ // while the already-complete actual report must remain entirely cached.
+ await assert.rejects(api.captureFussballDirectory({directory:directory+'-new-report',reuseDirectory:refreshed,options:manifest.options,collectFn:changedCollector,fetchFn:async url=>{
+  newCalls.push(url)
+  if(url===seedUrl||baseSelector.some(r=>r.url===url))return new Response(roundHtml.replace('</body>','<!--SYNTHETIC_NEW_PLAYED_FIXTURE--></body>'),{headers:{'content-type':'text/html'}})
+  assert.equal(url,newFixture.url)
+  return new Response('refused',{status:403})
+ }}),/403/)
+ assert.ok(newCalls.includes(newFixture.url));assert.ok(!newCalls.includes(reportUrl)&&!newCalls.includes(lineupUrl))
 }))
