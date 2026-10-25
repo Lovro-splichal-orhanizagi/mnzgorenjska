@@ -370,6 +370,11 @@
     "competitions"
   ],
   [
+    "public.samodejni_poznavalci",
+    "competition_id",
+    "competitions"
+  ],
+  [
     "public.sponsor_stats",
     "competition_id",
     "competitions"

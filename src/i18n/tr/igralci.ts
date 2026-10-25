@@ -27,6 +27,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     izberiKlubNapaka: 'Tanıdığın bir kulüp seç.',
     siPoznavalec: 'Bu ligde uzmansın: verdiğin tek oy bir oyuncunun mevkisini veya bir asisti onaylar.',
+    samodejno: 'Oyların doğru olduğu için bunu otomatik olarak aldın.',
     caka: 'Uzmanlık başvurun inceleniyor. Teşekkürler.',
     povabilo: 'Oyuncu, antrenör veya kulüp yönetiminden misin? <gumb>Uzman olarak başvur</gumb>, oyların daha çok sayılır.',
     opis: 'Lig uzmanı bir mevkiyi veya asisti tek oyla onaylar. Başvuruyu bir yönetici inceler.',

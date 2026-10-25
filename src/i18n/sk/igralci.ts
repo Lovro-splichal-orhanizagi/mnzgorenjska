@@ -27,6 +27,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     izberiKlubNapaka: 'Vyber klub, ktorý poznáš.',
     siPoznavalec: 'Si znalec tejto ligy — tvoj hlas sám potvrdí pozíciu alebo asistenciu.',
+    samodejno: 'Získal si ho automaticky, pretože tvoje hlasy boli presné.',
     caka: 'Tvoja žiadosť o status znalca ligy čaká na posúdenie. Ďakujeme.',
     povabilo: 'Si hráč, tréner alebo vo vedení klubu? <gumb>Prihlás sa ako znalec ligy</gumb> — tvoj hlas bude mať väčšiu váhu.',
     opis: 'Znalec ligy potvrdí pozíciu alebo asistenciu jediným hlasom. Žiadosť posúdi správca.',

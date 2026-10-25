@@ -27,6 +27,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     izberiKlubNapaka: 'Izvēlies klubu, ko pazīsti.',
     siPoznavalec: 'Tu esi šīs līgas eksperts: tava balss viena pati apstiprina pozīciju vai rezultatīvo piespēli.',
+    samodejno: 'Tu to saņēmi automātiski, jo tavas balsis bija precīzas.',
     caka: 'Tavs pieteikums eksperta statusam gaida izskatīšanu. Paldies.',
     povabilo: 'Esi spēlētājs, treneris vai kluba vadībā? <gumb>Piesakies kā eksperts</gumb>, un tava balss skaitīsies vairāk.',
     opis: 'Līgas eksperts apstiprina pozīciju vai rezultatīvo piespēli ar vienu balsi. Pieteikumu izskata administrators.',

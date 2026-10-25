@@ -25,6 +25,7 @@ export const igralci = {
     },
     izberiKlubNapaka: 'Izberi klub, ki ga poznaš.',
     siPoznavalec: 'Poznavalec te lige si — tvoj glas sam potrdi pozicijo ali asistenco.',
+    samodejno: 'Dobil si ga samodejno, ker so bili tvoji glasovi točni.',
     caka: 'Tvoja prošnja za poznavalca čaka na pregled. Hvala.',
     povabilo: 'Si igralec, trener ali v vodstvu kluba? <gumb>Prijavi se kot poznavalec</gumb> — tvoj glas bo štel več.',
     opis: 'Poznavalec lige potrdi pozicijo ali asistenco z enim glasom. Prošnjo pregleda skrbnik.',

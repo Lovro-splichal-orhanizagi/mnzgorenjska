@@ -27,6 +27,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     izberiKlubNapaka: 'Vali klubi, mida tunned.',
     siPoznavalec: 'Oled selle liiga asjatundja: sinu hääl üksi kinnitab positsiooni või resultatiivse söödu.',
+    samodejno: 'Said selle automaatselt, sest sinu hääled olid täpsed.',
     caka: 'Sinu asjatundja taotlus ootab läbivaatamist. Aitäh.',
     povabilo: 'Oled mängija, treener või klubi juhtkonnas? <gumb>Kandideeri asjatundjaks</gumb>, siis loeb sinu hääl rohkem.',
     opis: 'Liiga asjatundja kinnitab positsiooni või resultatiivse söödu ühe häälega. Taotluse vaatab üle admin.',

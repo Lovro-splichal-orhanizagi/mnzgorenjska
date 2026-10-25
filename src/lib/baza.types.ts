@@ -4811,6 +4811,82 @@ export type Database = {
           },
         ]
       }
+      samodejni_poznavalci: {
+        Row: {
+          competition_id: number
+          glasov: number
+          odvzel: string | null
+          odvzeto_at: string | null
+          podeljeno_at: string
+          pravilnih: number
+          razlog: string | null
+          user_id: string
+        }
+        Insert: {
+          competition_id: number
+          glasov: number
+          odvzel?: string | null
+          odvzeto_at?: string | null
+          podeljeno_at?: string
+          pravilnih: number
+          razlog?: string | null
+          user_id: string
+        }
+        Update: {
+          competition_id?: number
+          glasov?: number
+          odvzel?: string | null
+          odvzeto_at?: string | null
+          podeljeno_at?: string
+          pravilnih?: number
+          razlog?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "samodejni_poznavalci_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "samodejni_poznavalci_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "samodejni_poznavalci_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "samodejni_poznavalci_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "samodejni_poznavalci_odvzel_fkey"
+            columns: ["odvzel"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "samodejni_poznavalci_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings: {
         Row: {
           key: string
@@ -8453,6 +8529,21 @@ export type Database = {
           teden: string
         }[]
       }
+      admin_samodejni_poznavalci: {
+        Args: never
+        Returns: {
+          competition_id: number
+          display_name: string
+          glasov: number
+          liga: string
+          odvzel_admin: boolean
+          odvzeto_at: string
+          podeljeno_at: string
+          pravilnih: number
+          razlog: string
+          user_id: string
+        }[]
+      }
       admin_scout_skrij: { Args: { p_player_ids: number[] }; Returns: number }
       admin_skrij_pivo: {
         Args: { p_id: number; p_skrito: boolean }
@@ -9245,6 +9336,15 @@ export type Database = {
         Args: { p_competition_id: number; p_user_id: string }
         Returns: boolean
       }
+      neodvisna_natancnost: {
+        Args: never
+        Returns: {
+          competition_id: number
+          glasov: number
+          pravilnih: number
+          voter_id: string
+        }[]
+      }
       nova_koda_mini_lige: { Args: never; Returns: string }
       objava_cene: { Args: { p_do: string; p_od: string }; Returns: Json }
       objava_dejstva: {
@@ -9312,6 +9412,7 @@ export type Database = {
         Args: { p_odsel: boolean; p_player_id: number }
         Returns: undefined
       }
+      podeli_samodejne_poznavalce: { Args: never; Returns: number }
       podpora_brez_sumnikov: { Args: { t: string }; Returns: string }
       podpora_kandidati: {
         Args: { ime: string; liga: string; nacin: string }

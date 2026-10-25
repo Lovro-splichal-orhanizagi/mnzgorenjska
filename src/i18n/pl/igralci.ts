@@ -27,6 +27,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     izberiKlubNapaka: 'Wybierz klub, który znasz.',
     siPoznavalec: 'Jesteś znawcą tej ligi — twój głos sam zatwierdza pozycję lub asystę.',
+    samodejno: 'Otrzymałeś to automatycznie, bo twoje głosy były trafne.',
     caka: 'Twoja prośba o status znawcy czeka na rozpatrzenie. Dziękujemy.',
     povabilo: 'Jesteś zawodnikiem, trenerem albo działaczem klubu? <gumb>Zgłoś się jako znawca</gumb> — twój głos będzie liczył się bardziej.',
     opis: 'Znawca ligi zatwierdza pozycję lub asystę jednym głosem. Prośbę rozpatruje administrator.',

@@ -128,7 +128,26 @@
   premika ne izgubijo.
 - `appearances` → nastop igralca na tekmi (minute, goli, kartoni, prejeti goli)
 - `goals` → posamezen gol; nosi tudi potrjeno asistenco
-- `assist_votes`, `position_votes` → glasovanje skupnosti (prag v `settings`)
+- `assist_votes`, `position_votes` → glasovanje skupnosti (prag v `settings`;
+  pozicija od 25. 10. 2026 **3**, migracija 20261025223100, prej 5)
+- **Samodejni poznavalci lige** (20261025223100): nočna naloga
+  `podeli_samodejne_poznavalce()` (pg_cron `samodejni-poznavalci`, 5.13) da
+  `insider_competition_id` človeku, ki ima v ligi vsaj
+  `samodejni_poznavalec_min_glasov` (20) neodvisno razrešenih glasov in vsaj
+  `samodejni_poznavalec_odstotek` (85 %) pravilnih, račun star vsaj
+  `samodejni_poznavalec_min_dni` (14), nikoli omejen in še ni poznavalec lige
+  (pri več ligah tista z največ glasovi). Neodvisno (`neodvisna_natancnost()`):
+  pozicija iz vira, admina ali kluba ali glasovanje, pri katerem sta isto
+  izbrala vsaj dva **druga** glasovalca; asistenca iz vira ali potrjena, za
+  katero sta glasovala vsaj dva druga. `voter_position_accuracy` (in z njim
+  `voter_weight`) šteje tudi izide, ki jih je odločil lastni glas, zato ni
+  merilo za poznavalca. Pod `samodejni_poznavalec_odvzem` (75 %) se samodejni
+  odvzame; podelitev in odvzem gresta na Discord. Pozicij ne preračuna ne
+  migracija praga ne podelitev: glasovi se uveljavijo v ponedeljek
+  (`uveljavi_pozicije`, 2.00), kot vedno. `samodejni_poznavalci` (ena vrstica na človeka, zaprta za agente,
+  uporabnik bere svojo): `admin_nastavi_poznavalca` ob odvzemu ali zamenjavi
+  zapiše `odvzel` in samodejno ga ne dobi nikoli več. Administracija →
+  Uporabniki → Samodejni poznavalci (`admin_samodejni_poznavalci`).
 - `player_scores` → točke igralca na krog (iz pogleda `appearance_points`);
   posnetek se osveži sam, ko se spremeni pozicija igralca ali potrdi asistenca
   — pozicija odloča, koliko je vreden gol, zato bi brez tega lestvica kazala

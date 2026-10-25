@@ -246,13 +246,22 @@ select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab'
 set local role authenticated;
 select pg_temp.zavrnjeno('uporabnik si ne more sam dodeliti poznavalca lige',
   $$update profiles set insider_competition_id=-913001 where id=auth.uid()$$);
--- Navaden glas (utez 1) pod pragom: pozicija ostane.
+reset role;
+-- Navaden glas (utez 1) pod pragom: pozicija ostane. Ta uporabnik je navijac
+-- kluba -913001 (utez 3), ki od praga 3 (20261025223100) sam premakne pozicijo;
+-- za navaden glas mu oznako zacasno vzamemo.
+update profiles set insider_team_id=null where id='b8a06635-2322-4444-8c42-44e419f912ab';
+select pg_temp.preveri('prag pozicije je 3',
+  (select value='3'::jsonb from settings where key='prag_glasov_pozicija'));
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
 insert into position_votes(player_id, voter_id, position) values (-913016, auth.uid(), 'FWD');
 reset role;
 -- Pozicije se uveljavijo tedensko (uveljavi_pozicije), ne ob glasu.
 select uveljavi_pozicije();
 select pg_temp.preveri('en navaden glas pozicije ne potrdi',
   (select position='MID' from players where id=-913016));
+update profiles set insider_team_id=-913001 where id='b8a06635-2322-4444-8c42-44e419f912ab';
 
 -- Tujec postane poznavalec lige (nastavi admin/servis) in glasuje enkrat.
 update profiles set insider_competition_id=-913001 where id='b8a06635-2322-4444-8c42-44e419f912ac';

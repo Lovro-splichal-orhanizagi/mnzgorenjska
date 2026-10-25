@@ -27,6 +27,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     izberiKlubNapaka: 'Alege clubul pe care îl cunoști.',
     siPoznavalec: 'Ești cunoscător al acestei ligi: votul tău confirmă singur poziția sau pasa decisivă.',
+    samodejno: 'L-ai primit automat, pentru că voturile tale au fost corecte.',
     caka: 'Cererea ta de cunoscător așteaptă verificarea. Mulțumim.',
     povabilo: 'Ești jucător, antrenor sau în conducerea clubului? <gumb>Înscrie-te ca cunoscător</gumb> și votul tău va conta mai mult.',
     opis: 'Un cunoscător al ligii confirmă poziția sau pasa decisivă cu un singur vot. Cererea e verificată de un administrator.',
