@@ -437,7 +437,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     napaka: 'No se pudo iniciar el pago. Inténtalo de nuevo.',
     niMogoce: 'El precio de este jugador no se puede revalorizar ahora.',
     ovire: {
-      borza: 'El mercado mueve el precio de este jugador después de cada jornada, así que no se puede revalorizar.',
       taTeden: 'El precio ya se revalorizó esta semana. Inténtalo la semana que viene.',
       nedavno: 'Este jugador se revalorizó hace poco o ya hay una solicitud en revisión.',
       rok: 'Faltan menos de 24 horas para el cierre de la jornada. Inténtalo cuando empiece la jornada.',

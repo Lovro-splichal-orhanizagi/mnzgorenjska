@@ -435,7 +435,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     napaka: 'Makset ei õnnestunud alustada. Proovi uuesti.',
     niMogoce: 'Selle mängija hinda ei saa praegu ümber hinnata.',
     ovire: {
-      borza: 'Selle mängija hinda liigutab pärast iga vooru turg, seega ümberhindamine pole võimalik.',
       taTeden: 'Hind on sel nädalal juba ümber hinnatud. Proovi järgmisel nädalal.',
       nedavno: 'Seda mängijat hinnati hiljuti ümber või on taotlus juba ülevaatusel.',
       rok: 'Vooru tähtajani on vähem kui 24 tundi. Proovi, kui voor on alanud.',

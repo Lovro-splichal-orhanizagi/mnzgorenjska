@@ -27,7 +27,7 @@ interface Stanje {
 }
 
 // Ovire, ki jih uporabniku razložimo; ostale (liga, mladinska, zaklenjena …) le skrijejo gumb.
-const OVIRE = { borza: 'borza', ta_teden: 'taTeden', nedavno: 'nedavno', rok: 'rok' } as const
+const OVIRE = { ta_teden: 'taTeden', nedavno: 'nedavno', rok: 'rok' } as const
 
 export default function PonovnaCena({ igralecId }: { igralecId: number }) {
   const { session } = useAuth()

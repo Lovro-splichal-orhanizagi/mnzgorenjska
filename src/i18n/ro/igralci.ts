@@ -437,7 +437,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     napaka: 'Plata nu a putut fi pornită. Încearcă din nou.',
     niMogoce: 'Prețul acestui jucător nu poate fi reevaluat acum.',
     ovire: {
-      borza: 'Prețul acestui jucător este mișcat de piață după fiecare etapă, așa că nu poate fi reevaluat.',
       taTeden: 'Prețul a fost deja reevaluat săptămâna aceasta. Încearcă săptămâna viitoare.',
       nedavno: 'Acest jucător a fost reevaluat recent sau o cerere este deja în verificare.',
       rok: 'Până la termenul etapei sunt mai puțin de 24 de ore. Încearcă după ce începe etapa.',

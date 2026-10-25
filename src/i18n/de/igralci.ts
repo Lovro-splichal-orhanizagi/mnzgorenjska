@@ -435,7 +435,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     napaka: 'Die Zahlung konnte nicht gestartet werden. Bitte versuche es erneut.',
     niMogoce: 'Der Preis dieses Spielers kann gerade nicht neu bewertet werden.',
     ovire: {
-      borza: 'Der Preis dieses Spielers wird nach jeder Runde vom Markt bewegt, daher ist keine Neubewertung möglich.',
       taTeden: 'Der Preis wurde diese Woche bereits neu bewertet. Versuche es nächste Woche.',
       nedavno: 'Dieser Spieler wurde kürzlich neu bewertet oder eine Anfrage wird bereits geprüft.',
       rok: 'Bis zur Rundendeadline sind es weniger als 24 Stunden. Versuche es, wenn die Runde begonnen hat.',

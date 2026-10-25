@@ -437,7 +437,6 @@ export const igralci = {
     napaka: 'Plačila ni bilo mogoče začeti. Poskusi znova.',
     niMogoce: 'Ponovno vrednotenje cene za tega igralca zdaj ni mogoče.',
     ovire: {
-      borza: 'Ceno tega igralca po vsakem krogu premika borza, zato ponovno vrednotenje ni mogoče.',
       taTeden: 'Cena je bila ta teden že ponovno ovrednotena. Poskusi naslednji teden.',
       nedavno: 'Ta igralec je bil nedavno ponovno ovrednoten ali pa je zahtevek že v pregledu.',
       rok: 'Do roka kroga je manj kot 24 ur. Poskusi, ko se krog začne.',
