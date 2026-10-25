@@ -3005,7 +3005,6 @@ export type Database = {
           asistent_id: number | null
           competition_id: number
           created_at: string
-          goal_id: number | null
           gol_avtogol: boolean | null
           gol_enajstmetrovka: boolean | null
           gol_minuta: number | null
@@ -3028,7 +3027,6 @@ export type Database = {
           asistent_id?: number | null
           competition_id: number
           created_at?: string
-          goal_id?: number | null
           gol_avtogol?: boolean | null
           gol_enajstmetrovka?: boolean | null
           gol_minuta?: number | null
@@ -3050,7 +3048,6 @@ export type Database = {
           asistent_id?: number | null
           competition_id?: number
           created_at?: string
-          goal_id?: number | null
           gol_avtogol?: boolean | null
           gol_enajstmetrovka?: boolean | null
           gol_minuta?: number | null
@@ -8650,6 +8647,17 @@ export type Database = {
       get_reviewed_existing_cleanup_receipt: {
         Args: { p_slug: string }
         Returns: Json
+      }
+      gol_popravka: {
+        Args: {
+          p_avtogol: boolean
+          p_enajstmetrovka: boolean
+          p_match_id: number
+          p_minuta: number
+          p_strelec: number
+          p_team_id: number
+        }
+        Returns: number
       }
       ima_klubski_racun: { Args: { p_team_id: number }; Returns: boolean }
       ime_hisnega_lastnika: {

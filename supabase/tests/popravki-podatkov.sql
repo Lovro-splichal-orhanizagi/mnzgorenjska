@@ -162,8 +162,9 @@ begin
   assert (select count(*) from goals where match_id = 990231) = 1, 'en gol';
   assert not exists (select 1 from goals where id = 990251), 'stari gol je zamenjan';
   assert (select assist_player_id from goals where match_id = 990231) = 990242, 'asistenca preživi uvoz';
-  assert (select goal_id from popravki_podatkov where vrsta = 'asistenca' and match_id = 990231)
-       = (select id from goals where match_id = 990231), 'popravek kaže na nov gol';
+  assert (select gol_popravka(p.match_id, p.gol_minuta, p.gol_strelec_id, p.team_id, p.gol_avtogol, p.gol_enajstmetrovka)
+            from popravki_podatkov p where p.vrsta = 'asistenca' and p.match_id = 990231 and p.stanje = 'sprejet' limit 1)
+       = (select id from goals where match_id = 990231), 'popravek najde nov gol';
 end;
 $$;
 

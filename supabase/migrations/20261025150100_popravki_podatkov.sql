@@ -33,10 +33,9 @@ create table public.popravki_podatkov (
   player_id          bigint references public.players on delete cascade,
   pozicija           text check (pozicija in ('GK', 'DEF', 'MID', 'FWD')),
   match_id           bigint references public.matches on delete cascade,
-  -- Brez tujega ključa: uvoz gole briše in vpiše znova (zamenjaj_nastope_tekme),
-  -- popravek pa gol najde po ključu (minuta, strelec, klub). Nova odvisnost od
-  -- goals bi tudi zlomila pregledano čiščenje MFA (20261021093000).
-  goal_id            bigint,
+  -- Gol je določen s ključem (tekma, minuta, strelec, klub, avtogol, 11 m), ne z
+  -- vrstico: uvoz gole briše in vpiše znova (zamenjaj_nastope_tekme). Stolpec
+  -- goal_id bi tudi zlomil pregledano čiščenje MFA (20261021093000).
   gol_minuta         int,
   gol_strelec_id     bigint references public.players on delete set null,
   gol_avtogol        boolean,
@@ -58,6 +57,25 @@ create table public.popravki_podatkov (
 create index popravki_podatkov_caka on public.popravki_podatkov (team_id) where stanje = 'caka';
 create index popravki_podatkov_tekma on public.popravki_podatkov (match_id) where vrsta = 'asistenca' and stanje = 'sprejet';
 create index popravki_podatkov_uporabnik on public.popravki_podatkov (user_id, created_at desc);
+
+-- Gol popravka po ključu; NULL, če ni natanko enega.
+create or replace function public.gol_popravka(p_match_id bigint, p_minuta int, p_strelec bigint,
+                                               p_team_id bigint, p_avtogol boolean, p_enajstmetrovka boolean)
+returns bigint
+language sql stable
+set search_path = public
+as $$
+  select min(g.id)
+    from goals g
+   where g.match_id = p_match_id
+     and g.minute is not distinct from p_minuta
+     and g.scorer_id is not distinct from p_strelec
+     and g.team_id = p_team_id
+     and g.is_own_goal = coalesce(p_avtogol, false)
+     and g.is_penalty = coalesce(p_enajstmetrovka, false)
+  having count(*) = 1
+$$;
+revoke all on function public.gol_popravka(bigint, int, bigint, bigint, boolean, boolean) from public, anon, authenticated;
 alter table public.popravki_podatkov enable row level security;
 revoke all on public.popravki_podatkov from anon, authenticated;
 
@@ -72,6 +90,7 @@ returns void language plpgsql security definer set search_path = public
 as $$
 declare
   v popravki_podatkov;
+  v_gol bigint;
 begin
   select * into v from popravki_podatkov where id = p_id for update;
   if v.vrsta = 'pozicija' then
@@ -106,17 +125,18 @@ begin
      where id = v.player_id and active;
 
   elsif v.vrsta = 'asistenca' then
-    if v.goal_id is null or not exists (select 1 from goals where id = v.goal_id) then
+    v_gol := gol_popravka(v.match_id, v.gol_minuta, v.gol_strelec_id, v.team_id, v.gol_avtogol, v.gol_enajstmetrovka);
+    if v_gol is null then
       raise exception 'Gola ni več v zapisniku.';
     end if;
     if v.asistent_id is null then
       update goals
          set assist_player_id = null, assist_confirmed_at = null, assist_none_confirmed_at = now()
-       where id = v.goal_id;
+       where id = v_gol;
     else
       update goals
          set assist_player_id = v.asistent_id, assist_confirmed_at = now(), assist_none_confirmed_at = null
-       where id = v.goal_id;
+       where id = v_gol;
     end if;
   end if;
 
@@ -127,7 +147,9 @@ begin
            p.stanje = 'caka'
            and p.vrsta = v.vrsta
            and p.player_id is not distinct from v.player_id
-           and p.goal_id is not distinct from v.goal_id
+           and p.match_id is not distinct from v.match_id
+           and p.gol_minuta is not distinct from v.gol_minuta
+           and p.gol_strelec_id is not distinct from v.gol_strelec_id
            and p.pozicija is not distinct from v.pozicija
            and p.asistent_id is not distinct from v.asistent_id));
 end;
@@ -228,7 +250,10 @@ begin
   if exists (select 1 from popravki_podatkov
               where user_id = v_uid and stanje = 'caka' and vrsta = p_vrsta
                 and player_id is not distinct from (case when p_vrsta = 'asistenca' then null else p_player_id end)
-                and goal_id is not distinct from (case when p_vrsta = 'asistenca' then p_goal_id end)) then
+                and (p_vrsta <> 'asistenca' or (match_id = v_gol.match_id
+                     and gol_minuta is not distinct from v_gol.minute
+                     and gol_strelec_id is not distinct from v_gol.scorer_id
+                     and team_id = v_gol.team_id))) then
     raise exception 'Tak popravek že čaka na pregled.';
   end if;
   if (select count(*) from popravki_podatkov
@@ -237,13 +262,13 @@ begin
   end if;
 
   insert into popravki_podatkov (
-    vrsta, competition_id, team_id, player_id, pozicija, match_id, goal_id,
+    vrsta, competition_id, team_id, player_id, pozicija, match_id,
     gol_minuta, gol_strelec_id, gol_avtogol, gol_enajstmetrovka, asistent_id, opomba, user_id
   ) values (
     p_vrsta, v_liga, v_team,
     case when p_vrsta = 'asistenca' then null else p_player_id end,
     case when p_vrsta = 'pozicija' then p_pozicija end,
-    v_tekma, v_gol.id, v_gol.minute, v_gol.scorer_id, v_gol.is_own_goal, v_gol.is_penalty,
+    v_tekma, v_gol.minute, v_gol.scorer_id, v_gol.is_own_goal, v_gol.is_penalty,
     case when p_vrsta = 'asistenca' then p_asistent_id end,
     v_opomba, v_uid
   ) returning id into v_id;
@@ -321,7 +346,7 @@ begin
       left join players pl on pl.id = p.player_id
       left join players s on s.id = p.gol_strelec_id
       left join players a on a.id = p.asistent_id
-      left join goals g on g.id = p.goal_id
+      left join goals g on g.id = gol_popravka(p.match_id, p.gol_minuta, p.gol_strelec_id, p.team_id, p.gol_avtogol, p.gol_enajstmetrovka)
       left join players a0 on a0.id = g.assist_player_id
       left join profiles pr on pr.id = p.user_id
      where p.stanje = 'caka'
@@ -387,15 +412,7 @@ begin
        where p.match_id = p_match_id and p.vrsta = 'asistenca' and p.stanje = 'sprejet'
        order by p.gol_minuta, p.gol_strelec_id, p.team_id, p.gol_avtogol, p.gol_enajstmetrovka, p.odloceno_at desc
     loop
-      select min(g.id) into v_gol
-        from goals g
-       where g.match_id = p_match_id
-         and g.minute is not distinct from v_pop.gol_minuta
-         and g.scorer_id is not distinct from v_pop.gol_strelec_id
-         and g.team_id = v_pop.team_id
-         and g.is_own_goal = coalesce(v_pop.gol_avtogol, false)
-         and g.is_penalty = coalesce(v_pop.gol_enajstmetrovka, false)
-      having count(*) = 1;
+      v_gol := gol_popravka(p_match_id, v_pop.gol_minuta, v_pop.gol_strelec_id, v_pop.team_id, v_pop.gol_avtogol, v_pop.gol_enajstmetrovka);
       continue when v_gol is null;
       if v_pop.asistent_id is null then
         update goals set assist_none_confirmed_at = now() where id = v_gol;
@@ -406,7 +423,6 @@ begin
       else
         continue;
       end if;
-      update popravki_podatkov set goal_id = v_gol where id = v_pop.id;
     end loop;
   end if;
 end;
