@@ -486,9 +486,11 @@ export function nastopi(z) {
 
 // Vzdevki: levo ključ, kot ga piše vir, desno ključ, pod katerim klub že
 // poznamo. Dodaj le videne: "ZVFC" (2025/26) je "Zalaszentgróti VFC" (2026/27),
-// isti grb (EgyesuletLogo 6/5490).
+// isti grb (EgyesuletLogo 6/5490). "Vácrátót KSE" (od 23. 10. 2026 v razporedu
+// Pest IV. Észak) je "Vácrátóti KSE" (klub 6734; izidi 1-4 in 2-1 se ujemajo).
 const ISTI_KLUB_HU = {
   zvfc: 'zalaszentgróti vfc',
+  'vácrátót kse': 'vácrátóti kse',
 }
 
 const kljucBrezVzdevka = (ime) =>
