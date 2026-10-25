@@ -21,4 +21,4 @@
 - Full installed PL pipeline passes source replay through native activation; altered scorer is held with no activation.
 - Coordinator holds semantic failures independently, counts/isolates source refusals, skips active/fantasy-owned leagues and checkpoints ambiguous registration/import/activation as UNKNOWN.
 - Independent review fixes: durable registration receipt, propagated native-gate DB failures, closed-directory admission sidecars, complete host-reader pagination, rejected reader reruns and 24h source/1h pricing freshness.
-- Final review identified nightly complete-report cache bypass; cache repair in progress before deployment. No source or production database calls have been made for this build.
+- Final review identified nightly complete-report cache bypass; verified original-byte reuse and initial seed bridge are integrated. Preparation, cache persistence and activation now run as separate phases. No source or production database calls have been made for this build.
