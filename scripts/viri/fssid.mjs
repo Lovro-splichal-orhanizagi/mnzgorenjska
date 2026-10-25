@@ -37,6 +37,7 @@
 // na vrsti, sicer enkrat na teden. Izziv ali CAPTCHA ustavi uvoz.
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { razpakiraj } from '../klubi.mjs'
+import { datumPredPrejsnjimi } from '../razpored.mjs'
 import { kljucKlubaRs, kratkoImeRs } from './fsb.mjs'
 import { datumUra, dresiVratarjev, imeKluba as imeKlubaFss, naslovIzvestaja, naslovVratarjev, nastopi, sezonaIzDatuma, vZapisnik } from './fss.mjs'
 
@@ -438,6 +439,7 @@ export function sestaviBlok(blok, strani, vrstice = [], { danes = Date.now() } =
     if (t.stanje === 'odigrana') { if (v.datum === t.datum) datumSeUjema++; continue }
     t.datum = v.datum
     t.ura = v.ura
+    t.izVira = true
     datumVira++
   }
 
@@ -449,6 +451,28 @@ export function sestaviBlok(blok, strani, vrstice = [], { danes = Date.now() } =
     const datumi = t.filter((x) => x.datum).sort((a, b) => (a.datum + (a.ura ?? '')).localeCompare(b.datum + (b.ura ?? '')))
     krogi.push({ stevilka: k, tekme: t, datum: datumi[0]?.datum ?? null, ura: datumi[0]?.ura ?? null, ocenjen: false })
   }
+  // Vir datumov da krogu druge polovice lahko datum začetka sezone (fsris,
+  // Zona Centar 2026/27: 14. kolo "22.08.2026", 15.–22. brez datuma). Iz njega
+  // je ocena naredila devet minulih krogov brez zapisnikov, v zaklenjen 22.
+  // krog pa so šli posnetki ekip. Datum vira pred večino prejšnjih krogov
+  // (`datumPredPrejsnjimi`) zato zavrnemo: krog ostane brez datuma (in krogi
+  // za njim brez ocene), dokler ga zveza ne objavi. Datum iz zapisnika ostane.
+  const zavrnjeniKrogi = []
+  const prejsnji = []
+  for (const k of krogi) {
+    if (datumPredPrejsnjimi(k.datum, prejsnji)) {
+      const izVira = k.tekme.filter((t) => t.izVira && datumPredPrejsnjimi(t.datum, prejsnji))
+      for (const t of izVira) { t.datum = null; t.ura = null; t.izVira = false; datumVira-- }
+      if (izVira.length) {
+        const ostali = k.tekme.filter((x) => x.datum).sort((a, b) => (a.datum + (a.ura ?? '')).localeCompare(b.datum + (b.ura ?? '')))
+        k.datum = ostali[0]?.datum ?? null
+        k.ura = ostali[0]?.ura ?? null
+        k.zavrnjen = true
+        zavrnjeniKrogi.push(k.stevilka)
+      }
+    }
+    if (k.datum) prejsnji.push(k.datum)
+  }
   const znani = krogi.filter((k) => k.datum)
   const dan = najpogostejsi(znani.map((k) => danVTednu(k.datum)))
   const ura = najpogostejsi(znani.map((k) => k.ura).filter(Boolean))
@@ -456,6 +480,7 @@ export function sestaviBlok(blok, strani, vrstice = [], { danes = Date.now() } =
   let zadnji = null
   for (const k of krogi) {
     if (k.datum) { zadnji = k; continue }
+    if (k.zavrnjen) { zadnji = null; continue }
     if (!zadnji || polovica(zadnji.stevilka) !== polovica(k.stevilka)) continue
     let d = dodajDni(zadnji.datum, 7 * (k.stevilka - zadnji.stevilka))
     if (dan != null) {
@@ -471,7 +496,7 @@ export function sestaviBlok(blok, strani, vrstice = [], { danes = Date.now() } =
     for (const t of k.tekme)
       if (!t.datum && k.datum) { t.datum = k.datum; t.ura = k.ura }
 
-  return { tekme, krogi, neObstaja, neujemanjaKrogov, ujetihVrstic: ujete.size, neujetih, datumVira, datumSeUjema }
+  return { tekme, krogi, neObstaja, neujemanjaKrogov, ujetihVrstic: ujete.size, neujetih, datumVira, datumSeUjema, zavrnjeniKrogi }
 }
 
 /** Kako star sme biti predpomnjen list tekme (ms) glede na to, kdaj je na vrsti. */
@@ -522,6 +547,8 @@ export async function preberiBlok(koda, prenesi, { danes = Date.now(), svezi = f
   if (b.neObstaja.length) console.warn(`fssid: v bloku ${koda} ni tekem ${b.neObstaja.join(', ')}`)
   if (b.neujemanjaKrogov.length)
     console.warn(`fssid: krog iz zapisnika ni krog po mestu pri ${b.neujemanjaKrogov.map((x) => `${x.id} (${x.krog}. ≠ ${x.mesto}.)`).join(', ')}`)
+  if (b.zavrnjeniKrogi.length)
+    console.warn(`fssid: datum vira je pred prejšnjim krogom pri krogih ${b.zavrnjeniKrogi.join(', ')} — zavrnjen, krogi brez datuma`)
   if (vrstice.length && b.neujetih) console.warn(`fssid: ${b.neujetih} od ${vrstice.length} tekem vira datumov ni ujetih`)
   return { blok, ...b, prebranih, vrstic: vrstice.length }
 }
