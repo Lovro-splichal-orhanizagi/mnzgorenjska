@@ -3000,6 +3000,301 @@ export type Database = {
           },
         ]
       }
+      popravki_podatkov: {
+        Row: {
+          asistent_id: number | null
+          competition_id: number
+          created_at: string
+          goal_id: number | null
+          gol_avtogol: boolean | null
+          gol_enajstmetrovka: boolean | null
+          gol_minuta: number | null
+          gol_strelec_id: number | null
+          id: number
+          match_id: number | null
+          odloceno_at: string | null
+          odlocil: string | null
+          opomba: string | null
+          player_id: number | null
+          pozicija: string | null
+          razlog: string | null
+          stanje: string
+          team_id: number
+          user_id: string
+          vrsta: string
+        }
+        ComputedFields: never
+        Insert: {
+          asistent_id?: number | null
+          competition_id: number
+          created_at?: string
+          goal_id?: number | null
+          gol_avtogol?: boolean | null
+          gol_enajstmetrovka?: boolean | null
+          gol_minuta?: number | null
+          gol_strelec_id?: number | null
+          id?: never
+          match_id?: number | null
+          odloceno_at?: string | null
+          odlocil?: string | null
+          opomba?: string | null
+          player_id?: number | null
+          pozicija?: string | null
+          razlog?: string | null
+          stanje?: string
+          team_id: number
+          user_id: string
+          vrsta: string
+        }
+        Update: {
+          asistent_id?: number | null
+          competition_id?: number
+          created_at?: string
+          goal_id?: number | null
+          gol_avtogol?: boolean | null
+          gol_enajstmetrovka?: boolean | null
+          gol_minuta?: number | null
+          gol_strelec_id?: number | null
+          id?: never
+          match_id?: number | null
+          odloceno_at?: string | null
+          odlocil?: string | null
+          opomba?: string | null
+          player_id?: number | null
+          pozicija?: string | null
+          razlog?: string | null
+          stanje?: string
+          team_id?: number
+          user_id?: string
+          vrsta?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "popravki_podatkov_asistent_id_fkey"
+            columns: ["asistent_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_asistent_id_fkey"
+            columns: ["asistent_id"]
+            isOneToOne: false
+            referencedRelation: "player_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_asistent_id_fkey"
+            columns: ["asistent_id"]
+            isOneToOne: false
+            referencedRelation: "player_season_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_asistent_id_fkey"
+            columns: ["asistent_id"]
+            isOneToOne: false
+            referencedRelation: "player_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_asistent_id_fkey"
+            columns: ["asistent_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_asistent_id_fkey"
+            columns: ["asistent_id"]
+            isOneToOne: false
+            referencedRelation: "pozicije_v_cakanju"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_gol_strelec_id_fkey"
+            columns: ["gol_strelec_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_gol_strelec_id_fkey"
+            columns: ["gol_strelec_id"]
+            isOneToOne: false
+            referencedRelation: "player_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_gol_strelec_id_fkey"
+            columns: ["gol_strelec_id"]
+            isOneToOne: false
+            referencedRelation: "player_season_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_gol_strelec_id_fkey"
+            columns: ["gol_strelec_id"]
+            isOneToOne: false
+            referencedRelation: "player_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_gol_strelec_id_fkey"
+            columns: ["gol_strelec_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_gol_strelec_id_fkey"
+            columns: ["gol_strelec_id"]
+            isOneToOne: false
+            referencedRelation: "pozicije_v_cakanju"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "match_assist_status"
+            referencedColumns: ["match_id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_odlocil_fkey"
+            columns: ["odlocil"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_season_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "pozicije_v_cakanju"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "competition_teams"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "player_reports_view"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "uradne_odsotnosti_view"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "popravki_podatkov_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       position_priors: {
         Row: {
           player_id: number
@@ -8820,6 +9115,10 @@ export type Database = {
         Args: { p_user: string; p_zeton: string }
         Returns: boolean
       }
+      odloci_popravek: {
+        Args: { p_id: number; p_razlog?: string; p_sprejmi: boolean }
+        Returns: undefined
+      }
       odloci_zahtevek_klub: {
         Args: { p_id: number; p_note?: string; p_potrdi: boolean }
         Returns: undefined
@@ -8866,6 +9165,29 @@ export type Database = {
         Returns: boolean
       }
       poenostavljeno_ime: { Args: { p_ime: string }; Returns: string }
+      popravki_v_pregledu: {
+        Args: { p_team_id?: number }
+        Returns: {
+          asistenca_zdaj: string
+          asistent: string
+          avtor: string
+          created_at: string
+          id: number
+          igralec: string
+          igralec_id: number
+          klub: string
+          liga: string
+          minuta: number
+          opomba: string
+          pozicija: string
+          pozicija_zdaj: string
+          strelec: string
+          team_id: number
+          tekma_id: number
+          vir_pozicije: string
+          vrsta: string
+        }[]
+      }
       postava_kroga: {
         Args: { p_round: number; p_team: number }
         Returns: {
@@ -9167,6 +9489,17 @@ export type Database = {
       prijavi_mini_ligo: {
         Args: { p_liga: number; p_razlog?: string }
         Returns: undefined
+      }
+      prijavi_popravek: {
+        Args: {
+          p_asistent_id?: number
+          p_goal_id?: number
+          p_opomba?: string
+          p_player_id?: number
+          p_pozicija?: string
+          p_vrsta: string
+        }
+        Returns: string
       }
       prijavi_profil_igralca: {
         Args: { p_player_id: number; p_razlog?: string }
@@ -9700,6 +10033,7 @@ export type Database = {
       }
       uveljavi_cene: { Args: { p_round_id: number }; Returns: number }
       uveljavi_klubski_racun: { Args: never; Returns: number }
+      uveljavi_popravek: { Args: { p_id: number }; Returns: undefined }
       uveljavi_pozicije: { Args: never; Returns: number }
       uveljavi_zapadle_cene: { Args: { p_okno?: string }; Returns: number }
       varen_vklop_dfb_regije: {

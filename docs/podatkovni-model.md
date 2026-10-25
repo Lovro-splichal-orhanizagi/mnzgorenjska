@@ -769,7 +769,8 @@
   prideta iz vira. Odstranitev (`klub_odstrani_igralca`, admin
   `admin_odstrani_klubskega_igralca`) le brez nastopa: brez lastnikov izbris,
   sicer odhod (`odsel_at`), ne v 24 urah pred rokom; Administracija → Klubi
-  kaže dodane brez nastopa po 6 tednih. Prijave napak so faza 4. Klub nikoli
+  kaže dodane brez nastopa po 6 tednih. Prijave napak so faza 4 (*Popravki
+  podatkov* spodaj). Klub nikoli
   ne piše minut, golov, cen ali `reg_st`. Hrvaški in srbski stiki so s klubi povezani po imenu in ligi
   (migracija 20261013203100)
 - **Omejitve uporabnikov** (migracija 20261025111100): admin uporabnika za
@@ -783,6 +784,27 @@
   ime ostanejo. Nova pot pisanja o drugih ljudeh dobi isti sprožilec.
   Administracija → Uporabniki → Omejitve kaže zadnjih 100 prijav o igralcih z
   avtorjem (izbris, omejitev 7 ali 30 dni)
+- **Popravki podatkov** (klubski računi, faza 4, migracija 20261025150100):
+  `popravki_podatkov` (zaprta tabela, sprožilec `zavrni_omejenega`) hrani
+  strukturirane prijave napak namesto prostega besedila "drugo": `pozicija`
+  (tudi `zapisnik`, kjer glasovanja ni), `odhod` (ni več v klubu, končal) in
+  `asistenca` (gol tekoče sezone, podajalec z minutami za klub strelca ali
+  "brez asistence", tudi po zaprtem glasovanju). Piše le `prijavi_popravek`
+  (opomba ≤ 300 skozi `prepovedane_besede`, en čakajoč na cilj in
+  uporabnika, 20 na dan). Admin ali klubski račun kluba (`team_id` = klub
+  igralca oz. strelca) o svojem velja takoj; ostalo čaka in gre na Discord.
+  Odloča `odloci_popravek` (admin vse, klub le svoje), seznam
+  `popravki_v_pregledu(p_team_id)` (stran kluba → Urejanje, Administracija →
+  Igralci → Popravki podatkov). Uveljavitev (`uveljavi_popravek`, zaprta):
+  pozicija admina `position_source = 'admin'`, kluba prek
+  `pozicije_klub_cakajo` (ponedeljek); odhod kot `oznaci_odhod_igralca`
+  (`odsel_at`, ne v 24 urah pred rokom razen admina); asistenca na `goals`
+  (preračun točk s sprožilcem `goals_asistenca_preracun`). Uvoz to spoštuje:
+  `admin`/`klub` pozicije ne povozi, `odsel_at` ne obudi (nov nastop pa,
+  uradno ima prednost), `zamenjaj_nastope_tekme` po zamenjavi golov sprejete
+  asistence vpiše nazaj po ključu gola (minuta, strelec, klub, avtogol,
+  enajstmetrovka; en sam zadetek, podajalec z nastopom). Gola, minut in
+  kartonov se ne popravlja
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
   ščit z začetnicami
 

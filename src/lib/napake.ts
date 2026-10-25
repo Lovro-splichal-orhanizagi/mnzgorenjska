@@ -58,6 +58,17 @@ const ZNANE: [RegExp, Parameters<typeof t>[0]][] = [
   [/^Preveč odprtih prijav/, 'lestvice.javneLige.napake.prevecPrijav'],
   [/^Javnost mini lige nastavi le/, 'lestvice.javneLige.napake.leUstvarjalec'],
   [/^To mini ligo je skril administrator/, 'lestvice.javneLige.napake.zaklenjena'],
+  [/^Tak popravek že čaka/, 'skupno.napakeRpc.popravekCaka'],
+  [/^Danes si oddal že 20 popravkov/, 'skupno.napakeRpc.popravkovDanes'],
+  [/^Opomba vsebuje neprimerne besede/, 'skupno.napakeRpc.opombaNeprimerna'],
+  [/^Igralec je že označen kot odšel/, 'skupno.napakeRpc.zeOdsel'],
+  [/^Igralec že ima to pozicijo/, 'skupno.napakeRpc.zePozicija'],
+  [/^Podajalec mora igrati za klub strelca/, 'skupno.napakeRpc.podajalec'],
+  [/^Asistenca je že taka/, 'skupno.napakeRpc.asistencaZe'],
+  [/^Enajstmetrovka in avtogol nimata asistence/, 'skupno.napakeRpc.brezAsistence'],
+  [/^Popravek je mogoč le za tekočo sezono/, 'skupno.napakeRpc.tekocaSezona'],
+  [/^Odhod lahko označiš najkasneje 24 ur/, 'skupno.napakeRpc.odhodRok'],
+  [/^O popravku je že odločeno/, 'skupno.napakeRpc.zeOdloceno'],
 ]
 
 export function prevediNapako(sporocilo: string): string {

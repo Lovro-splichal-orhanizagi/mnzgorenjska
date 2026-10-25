@@ -15,6 +15,7 @@ import Grb from '../components/Grb'
 import { NedosegljivaStatistika } from '../components/PokritostStatistike'
 import IgrisceTocke from '../components/IgrisceTocke'
 import GolZaGlasovanje, { caka } from '../components/GolZaGlasovanje'
+import PopravekAsistence from '../components/PopravekAsistence'
 import type { Gol, Glas, Kandidat } from '../components/GolZaGlasovanje'
 import type { NastopNaTekmi } from '../components/IgrisceTocke'
 import type { TekmaVrstica } from '../lib/tipi'
@@ -408,6 +409,7 @@ export default function Tekma() {
               />
             ))}
           </ul>
+          {session && <PopravekAsistence goli={goli} nastopi={nastopi} />}
         </section>
       )}
       {napaka && <p className="text-sm text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>}

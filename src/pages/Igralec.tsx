@@ -45,6 +45,7 @@ import { t, tx } from '../i18n'
 import { izvor } from '../lib/platforma'
 import { naTrgu } from '../lib/osnutek'
 import { zabeleziKorak } from '../lib/lijak'
+import PopravekIgralca from '../components/PopravekIgralca'
 import { prevediNapako } from '../lib/napake'
 import { NalaganjeZaBralnik, Skelet } from '../components/Skelet'
 import GumbGoogle from '../components/GumbGoogle'
@@ -796,6 +797,15 @@ export default function Igralec() {
               ),
             })}
           </p>
+        )}
+        {session && !anonimiziran && (
+          <div className="mt-3">
+            <PopravekIgralca
+              igralecId={igralec.id}
+              pozicija={(igralec.position as Pozicija | null) ?? null}
+              aktiven={igralec.active !== false}
+            />
+          </div>
         )}
       </section>
 
