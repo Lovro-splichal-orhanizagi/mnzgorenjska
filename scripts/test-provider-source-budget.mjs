@@ -130,3 +130,42 @@ test('identity-equivalent query keys may be reordered and national federation0 i
  const f=fixture({fetch:async()=>++calls===1?new Response(null,{status:302,headers:{location:target}}):new Response('synthetic national-route boundary fixture')})
  try{assert.equal(await(await f.fetch(source)).text(),'synthetic national-route boundary fixture');assert.equal(calls,2);assert.equal(JSON.parse(readFileSync(f.path)).events[0].redirect_kind,'same-match-query')}finally{f.dispose()}
 })
+
+const observedLeague='https://adatbank.mlsz.hu/league/67/14/34252/1.html'
+const observedLeagueCanonical='https://ada1bank.mlsz.hu/league?evad=67&szervezet=14&verseny=34252&fordulo=1'
+const canonicalLeagueBytes=readFileSync(new URL('./vzorci/hu-pest-e-canonical-round1.html',import.meta.url))
+test('observed same-league query canonical hop is counted, paced, credential-free and safely journaled',async()=>{
+ const calls=[],f=fixture({fetch:async(url,init)=>{calls.push({url:String(url),init});return calls.length===1?new Response(null,{status:302,headers:{location:observedLeagueCanonical}}):new Response(canonicalLeagueBytes)}})
+ try{assert.deepEqual(Buffer.from(await(await f.fetch(observedLeague,{headers:{Authorization:'secret',Cookie:'secret'}})).arrayBuffer()),canonicalLeagueBytes);assert.deepEqual(calls.map(c=>c.url),[observedLeague,observedLeagueCanonical]);assert.deepEqual(f.sleeps,[1500]);const state=JSON.parse(readFileSync(f.path));assert.equal(state.requests,2);assert.equal(state.events[0].redirect_kind,'same-league-query');assert.deepEqual(state.events[0].redirect_target,{origin:'https://ada1bank.mlsz.hu',route:'/league',query:[['evad','67'],['szervezet','14'],['verseny','34252'],['fordulo','1']]});assert.equal(state.events[0].source.path,'/league/67/14/34252/1.html');assert.ok(calls.every(c=>!new Headers(c.init.headers).has('authorization')&&!new Headers(c.init.headers).has('cookie')))}finally{f.dispose()}
+})
+for(const field of ['evad','szervezet','verseny','fordulo'])for(const variant of ['changed','missing','duplicate'])test(`league query canonical ${field} ${variant} stops before the second GET and retains only public identities`,async()=>{
+ const target=new URL(observedLeagueCanonical);if(variant==='changed')target.searchParams.set(field,'999999');else if(variant==='missing')target.searchParams.delete(field);else target.searchParams.append(field,target.searchParams.get(field))
+ let calls=0;const f=fixture({fetch:async()=>{calls++;return new Response(null,{status:302,headers:{location:target.href}})}})
+ try{await assert.rejects(()=>f.fetch(observedLeague),/redirect/i);assert.equal(calls,1);const state=JSON.parse(readFileSync(f.path));assert.ok(state.stopped);assert.deepEqual(state.events[0].redirect_target.query,[...target.searchParams]);assert.equal(state.events[0].redirect_target.route,'/league')}finally{f.dispose()}
+})
+test('league canonical key ordering and national federation0 preserve exact identity',async()=>{
+ const source='https://adatbank.mlsz.hu/league/67/0/33586/2.html',target='https://ada1bank.mlsz.hu/league?fordulo=2&verseny=33586&szervezet=0&evad=67';let calls=0
+ const f=fixture({fetch:async()=>++calls===1?new Response(null,{status:302,headers:{location:target}}):new Response('synthetic national league route fixture')})
+ try{await f.fetch(source);assert.equal(calls,2);assert.equal(JSON.parse(readFileSync(f.path)).events[0].redirect_kind,'same-league-query')}finally{f.dispose()}
+})
+for(const [source,target]of [[observedLeague+'?evad=67',observedLeagueCanonical],[observedLeague,observedLeagueCanonical.replace('/league?','/match?')],[observedLeague,observedLeagueCanonical+'&itemId=1'],[observedLeague,observedLeagueCanonical+'&token=secret'],[observedLeague,observedLeagueCanonical+'#secret'],[observedLeague,observedLeagueCanonical.replace('ada1bank.mlsz.hu','evil.invalid')]])test('league source query, wrong route, extra identity, secret, fragment or foreign host remain blocked',async()=>{
+ let calls=0;const f=fixture({fetch:async()=>{calls++;return new Response(null,{status:302,headers:{location:target}})}})
+ try{await assert.rejects(()=>f.fetch(source),/redirect/i);assert.equal(calls,1)}finally{f.dispose()}
+})
+for(const target of ['https://ada1bank.mlsz.hu/redirect?token=secret','https://username:password@ada1bank.mlsz.hu/login-secret?evad=67&token=secret','https://ada1bank.mlsz.hu/league?evad=secret&szervezet=14&verseny=34252&fordulo=1&secretKey=123'])test('rejected redirect journal redacts unknown keys, values, credentials and private paths',async()=>{
+ let calls=0;const f=fixture({fetch:async()=>{calls++;return new Response(null,{status:302,headers:{location:target}})}})
+ try{await assert.rejects(()=>f.fetch(observedLeague),/redirect/i);assert.equal(calls,1);const text=readFileSync(f.path,'utf8');assert.doesNotMatch(text,/secret|username|password|token|secretKey|login-/);const event=JSON.parse(text).events[0];assert.equal(event.redirect_target.origin,'https://ada1bank.mlsz.hu');assert.ok(['/league','[unreviewed-route]'].includes(event.redirect_target.route));assert.ok(event.redirect_target.query.some(([key,value])=>key==='[redacted]'||value==='[redacted]'))}finally{f.dispose()}
+})
+test('unreviewed original source path/query values are never copied into redirect journal',async()=>{
+ const f=fixture({fetch:async()=>new Response(null,{status:302,headers:{location:'https://ada1bank.mlsz.hu/redirect?token=secret'}})})
+ try{await assert.rejects(()=>f.fetch('https://adatbank.mlsz.hu/private-secret?token=secret'),/redirect/i);const text=readFileSync(f.path,'utf8');assert.doesNotMatch(text,/secret|token|private-/);assert.equal(JSON.parse(text).events[0].source.path,'[unreviewed-route]')}finally{f.dispose()}
+})
+test('retained observed canonical league bytes bind round1, four fixtures and the nine-round selector',async()=>{
+ const {vrsticeKroga,krogiStrani}=await import('./viri/mlsz.mjs'),receipt=JSON.parse(readFileSync(new URL('./vzorci/hu-pest-e-canonical-round1-provenance.json',import.meta.url),'utf8'))
+ assert.equal(receipt.original_request.url,observedLeague);assert.equal(receipt.original_request.status,302);assert.equal(receipt.original_request.location,observedLeagueCanonical);assert.equal(receipt.canonical_response.url,observedLeagueCanonical);assert.equal(receipt.canonical_response.status,200);assert.equal(receipt.canonical_response.bytes,canonicalLeagueBytes.length);assert.equal(receipt.canonical_response.sha256,createHash('sha256').update(canonicalLeagueBytes).digest('hex'))
+ assert.deepEqual(krogiStrani(canonicalLeagueBytes.toString()),[1,2,3,4,5,6,7,8,9]);assert.deepEqual(vrsticeKroga(canonicalLeagueBytes.toString(),1).map(f=>({id:f.id,home:f.domaci,away:f.gostje,score:f.izid})),receipt.canonical_response.fixtures)
+})
+test('observed league query canonical response cannot redirect a second time',async()=>{
+ let calls=0;const f=fixture({fetch:async()=>{calls++;return new Response(null,{status:302,headers:{location:observedLeagueCanonical}})}})
+ try{await assert.rejects(()=>f.fetch(observedLeague),/redirect/i);assert.equal(calls,2);assert.equal(JSON.parse(readFileSync(f.path)).events[1].redirect_target.route,'/league')}finally{f.dispose()}
+})

@@ -393,3 +393,25 @@ from adatbank to ada1bank, count and pace both requests, strip credentials,
 and retain the shared host stop on any refusal or unknown redirect.
 This does not authorize login redirects, alternate hosts or repeated hops.
 No historical exclusion or activation requirement is changed.
+
+The next bounded batch stopped on the schedule's first page after two source
+requests. A further two separately authorized diagnostic GETs (no redirect
+following or retries) confirmed the equivalent league route:
+`https://adatbank.mlsz.hu/league/67/14/34252/1.html` → HTTP302 →
+`https://ada1bank.mlsz.hu/league?evad=67&szervezet=14&verseny=34252&fordulo=1`.
+The canonical HTTP200 bytes are retained in `hu-pest-e-canonical-round1.html`
+with `hu-pest-e-canonical-round1-provenance.json`: 229491 bytes, SHA256
+`4355677345c105f45c78048b53de423769d3942fe4bab1c3e72d01709f8a8adb`,
+four round1 fixtures (one unscored) and the round1–9 selector.
+
+The same bounded identity rule now covers both observed query forms: `/league`
+requires exactly `evad`, `szervezet`, `verseny`, `fordulo`; `/match` also
+requires `itemId`. Query-form conversion requires a query-free full numeric
+source path. All identities must match exactly, including federation0; key
+order may differ. Missing, changed, duplicate or extra fields, wrong routes,
+foreign hosts, credentials, fragments and another hop remain refused. The
+legacy identical-path hop, shared pacing/counting and refusal stop are unchanged.
+Accepted and refused redirects retain sanitized origin/route and public numeric
+query pairs (including duplicates); private paths, credentials and unknown
+query keys/values are redacted. This adds no source retry, historical exclusion
+or activation permission.

@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "original_request": {
+    "url": "https://adatbank.mlsz.hu/league/67/14/34252/1.html",
+    "status": 302,
+    "location": "https://ada1bank.mlsz.hu/league?evad=67&szervezet=14&verseny=34252&fordulo=1",
+    "startedAt": "2026-10-25T10:00:10.303Z",
+    "completedAt": "2026-10-25T10:00:10.843Z"
+  },
+  "canonical_response": {
+    "url": "https://ada1bank.mlsz.hu/league?evad=67&szervezet=14&verseny=34252&fordulo=1",
+    "status": 200,
+    "contentType": "text/html; charset=UTF-8",
+    "bytes": 229491,
+    "sha256": "4355677345c105f45c78048b53de423769d3942fe4bab1c3e72d01709f8a8adb",
+    "startedAt": "2026-10-25T10:00:28.996Z",
+    "completedAt": "2026-10-25T10:00:29.309Z",
+    "rounds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "fixtures": [
+      {
+        "id": "2225838",
+        "home": "Szigetgyöngye SE",
+        "away": "Nagykovácsi USE",
+        "score": {
+          "domaci": 0,
+          "gostje": 7
+        }
+      },
+      {
+        "id": "2225837",
+        "home": "Pilisszentiváni SE",
+        "away": "Budakalászi MSE",
+        "score": {
+          "domaci": 1,
+          "gostje": 2
+        }
+      },
+      {
+        "id": "2225835",
+        "home": "Dunabogdányi SE",
+        "away": "PILE-Szántó SE",
+        "score": {
+          "domaci": 3,
+          "gostje": 5
+        }
+      },
+      {
+        "id": null,
+        "home": "Solymári SC",
+        "away": "Pilisborosjenői USC",
+        "score": null
+      }
+    ]
+  },
+  "fixture": "hu-pest-e-canonical-round1.html",
+  "diagnostic_source_requests": 2,
+  "note": "Two separately authorized diagnostic GETs, each with redirects disabled and no retries. Original canonical HTTP200 bytes copied unchanged; all parsing and transport tests are offline."
+}
