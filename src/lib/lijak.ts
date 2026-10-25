@@ -18,17 +18,28 @@ export type KorakLijaka =
   | 'igralec_cta'
   | 'kartica_deljena'
   | 'pivo_okno'
+  | 'pivo_prikaz'
 
-export function zabeleziKorak(korak: KorakLijaka) {
+/** Kje je gumb "Časti pivo"; mora se ujemati s seznamom v `zabelezi_korak`. */
+export type PivoVir = 'noga' | 'domov' | 'domov-lestvica' | 'zid' | 'okno'
+
+export function zabeleziKorak(korak: KorakLijaka | `${'pivo' | 'pivo_prikaz'}:${PivoVir}`) {
   const kljuc = `slff-lijak-${korak}-${new Date().toISOString().slice(0, 10)}`
   try {
     if (sessionStorage.getItem(kljuc)) return
     sessionStorage.setItem(kljuc, '1')
   } catch {}
-  dogodek(korak)
+  // Korak z virom je le razčlenitev skupnega: Umami dobi le skupnega, da ne šteje dvakrat.
+  if (!korak.includes(':')) dogodek(korak)
   // Klic se izvede šele ob then — `void supabase.rpc(…)` ne pošlje ničesar.
   supabase.rpc('zabelezi_korak', { p_korak: korak }).then(
     () => {},
     () => {},
   )
+}
+
+/** Prikaz ali klik gumba "Časti pivo": skupni korak in isti korak z virom. */
+export function zabeleziPivo(korak: 'pivo' | 'pivo_prikaz', vir: PivoVir) {
+  zabeleziKorak(korak)
+  zabeleziKorak(`${korak}:${vir}`)
 }
