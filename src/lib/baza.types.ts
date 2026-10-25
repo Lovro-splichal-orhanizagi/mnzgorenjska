@@ -3140,13 +3140,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "popravki_podatkov_goal_id_fkey"
-            columns: ["goal_id"]
-            isOneToOne: false
-            referencedRelation: "goals"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "popravki_podatkov_gol_strelec_id_fkey"
             columns: ["gol_strelec_id"]
             isOneToOne: false

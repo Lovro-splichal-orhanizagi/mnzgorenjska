@@ -33,7 +33,10 @@ create table public.popravki_podatkov (
   player_id          bigint references public.players on delete cascade,
   pozicija           text check (pozicija in ('GK', 'DEF', 'MID', 'FWD')),
   match_id           bigint references public.matches on delete cascade,
-  goal_id            bigint references public.goals on delete set null,
+  -- Brez tujega ključa: uvoz gole briše in vpiše znova (zamenjaj_nastope_tekme),
+  -- popravek pa gol najde po ključu (minuta, strelec, klub). Nova odvisnost od
+  -- goals bi tudi zlomila pregledano čiščenje MFA (20261021093000).
+  goal_id            bigint,
   gol_minuta         int,
   gol_strelec_id     bigint references public.players on delete set null,
   gol_avtogol        boolean,
@@ -103,7 +106,7 @@ begin
      where id = v.player_id and active;
 
   elsif v.vrsta = 'asistenca' then
-    if v.goal_id is null then
+    if v.goal_id is null or not exists (select 1 from goals where id = v.goal_id) then
       raise exception 'Gola ni več v zapisniku.';
     end if;
     if v.asistent_id is null then
