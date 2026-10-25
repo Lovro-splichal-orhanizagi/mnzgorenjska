@@ -1,0 +1,195 @@
+{
+  "version": 1,
+  "candidates": [
+    {
+      "id": 582,
+      "slug": "pl-sk-b-kielce-1",
+      "source": "pzpn",
+      "source_league_code": "swietokrzyski/ed980a22-e851-4b47-bf75-5dfbee9f60cc",
+      "host": "szpnkielce.pl",
+      "country_code": "PL",
+      "season": "2026/27",
+      "archives": [
+        {
+          "code": "swietokrzyski/e5e68aa9-4602-42f9-80f5-b6d3b73330e1",
+          "season": "2025/26"
+        }
+      ]
+    },
+    {
+      "id": 949,
+      "slug": "pl-wm-4-liga",
+      "source": "wmzpn",
+      "source_league_code": "c164ca31-22e4-43fc-9e30-4f3bcc2b7d72/2820e642-1475-40f8-9489-13c742fbc63a/3c77d143-8010-4073-9842-d6b63365ffce",
+      "host": "wmzpn.pl",
+      "country_code": "PL",
+      "season": "2026/27",
+      "archives": [
+        {
+          "code": "c164ca31-22e4-43fc-9e30-4f3bcc2b7d72/17285e70-dba8-4fa2-a27a-30646ce64d6d/e9d66181-d03e-4bb3-b889-4da848f4831d",
+          "season": "2025/26"
+        }
+      ]
+    },
+    {
+      "id": 950,
+      "slug": "pl-wm-okregowa-1",
+      "source": "wmzpn",
+      "source_league_code": "c5afdf4b-b449-4ef3-acf5-dded47fc5f58/33dde60f-37d8-4592-a080-6795cc040465/3c77d143-8010-4073-9842-d6b63365ffce",
+      "host": "wmzpn.pl",
+      "country_code": "PL",
+      "season": "2026/27",
+      "archives": [
+        {
+          "code": "c5afdf4b-b449-4ef3-acf5-dded47fc5f58/bbb69021-0b53-44c6-863b-96715174e7e7/e9d66181-d03e-4bb3-b889-4da848f4831d",
+          "season": "2025/26"
+        }
+      ]
+    },
+    {
+      "id": 951,
+      "slug": "pl-wm-okregowa-2",
+      "source": "wmzpn",
+      "source_league_code": "c5afdf4b-b449-4ef3-acf5-dded47fc5f58/add51c43-5c34-4d4a-82a6-7ee821ec1638/3c77d143-8010-4073-9842-d6b63365ffce",
+      "host": "wmzpn.pl",
+      "country_code": "PL",
+      "season": "2026/27",
+      "archives": [
+        {
+          "code": "c5afdf4b-b449-4ef3-acf5-dded47fc5f58/a0f01f01-7dff-4e92-ba57-1b339bb84e68/e9d66181-d03e-4bb3-b889-4da848f4831d",
+          "season": "2025/26"
+        }
+      ]
+    },
+    {
+      "id": 952,
+      "slug": "pl-wm-a-1",
+      "source": "wmzpn",
+      "source_league_code": "63d04023-727a-4c0c-a8c6-4154fe1104b7/0aace3bb-4a47-4117-a614-a0a54e2085e8/3c77d143-8010-4073-9842-d6b63365ffce",
+      "host": "wmzpn.pl",
+      "country_code": "PL",
+      "season": "2026/27",
+      "archives": [
+        {
+          "code": "63d04023-727a-4c0c-a8c6-4154fe1104b7/e75c0e65-cfc0-44f5-8692-3673dd094715/e9d66181-d03e-4bb3-b889-4da848f4831d",
+          "season": "2025/26"
+        }
+      ]
+    },
+    {
+      "id": 953,
+      "slug": "pl-wm-a-2",
+      "source": "wmzpn",
+      "source_league_code": "63d04023-727a-4c0c-a8c6-4154fe1104b7/a18e856f-d73b-4ff8-b44f-77ae417c83c9/3c77d143-8010-4073-9842-d6b63365ffce",
+      "host": "wmzpn.pl",
+      "country_code": "PL",
+      "season": "2026/27",
+      "archives": [
+        {
+          "code": "63d04023-727a-4c0c-a8c6-4154fe1104b7/9097e2ba-2e68-4552-953a-24766eafcba6/e9d66181-d03e-4bb3-b889-4da848f4831d",
+          "season": "2025/26"
+        }
+      ]
+    },
+    {
+      "id": 954,
+      "slug": "pl-wm-a-3",
+      "source": "wmzpn",
+      "source_league_code": "63d04023-727a-4c0c-a8c6-4154fe1104b7/d0d84a85-7816-4ca0-8f6a-de8e3d3f5965/3c77d143-8010-4073-9842-d6b63365ffce",
+      "host": "wmzpn.pl",
+      "country_code": "PL",
+      "season": "2026/27",
+      "archives": [
+        {
+          "code": "63d04023-727a-4c0c-a8c6-4154fe1104b7/8cf5857a-d4cc-45d8-b4ae-884d1bf38b10/e9d66181-d03e-4bb3-b889-4da848f4831d",
+          "season": "2025/26"
+        }
+      ]
+    },
+    {
+      "id": 955,
+      "slug": "pl-wm-a-4",
+      "source": "wmzpn",
+      "source_league_code": "63d04023-727a-4c0c-a8c6-4154fe1104b7/711ae517-02ca-4e5a-90a3-f0cbc75e7986/3c77d143-8010-4073-9842-d6b63365ffce",
+      "host": "wmzpn.pl",
+      "country_code": "PL",
+      "season": "2026/27",
+      "archives": [
+        {
+          "code": "63d04023-727a-4c0c-a8c6-4154fe1104b7/92e717fe-4cc1-445a-bf7e-85fc6ee377ea/e9d66181-d03e-4bb3-b889-4da848f4831d",
+          "season": "2025/26"
+        }
+      ]
+    },
+    {
+      "id": 956,
+      "slug": "pl-wm-b-1",
+      "source": "wmzpn",
+      "source_league_code": "b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/2b6f4e61-f6fe-48fc-9637-0270ed5c3607/3c77d143-8010-4073-9842-d6b63365ffce",
+      "host": "wmzpn.pl",
+      "country_code": "PL",
+      "season": "2026/27",
+      "archives": [
+        {
+          "code": "b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/d8336132-3283-4853-9199-02e4bad4e292/e9d66181-d03e-4bb3-b889-4da848f4831d",
+          "season": "2025/26"
+        }
+      ]
+    },
+    {
+      "id": 957,
+      "slug": "pl-wm-b-2",
+      "source": "wmzpn",
+      "source_league_code": "b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/4885750d-c754-45b9-be62-622caac0ceb2/3c77d143-8010-4073-9842-d6b63365ffce",
+      "host": "wmzpn.pl",
+      "country_code": "PL",
+      "season": "2026/27",
+      "archives": [
+        {
+          "code": "b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/e3f3d4b6-23fa-4241-823a-557ef7eb2c76/e9d66181-d03e-4bb3-b889-4da848f4831d",
+          "season": "2025/26"
+        }
+      ]
+    },
+    {
+      "id": 958,
+      "slug": "pl-wm-b-3",
+      "source": "wmzpn",
+      "source_league_code": "b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/b7ee2253-ab8b-46ff-93af-c94500e196c1/3c77d143-8010-4073-9842-d6b63365ffce",
+      "host": "wmzpn.pl",
+      "country_code": "PL",
+      "season": "2026/27",
+      "archives": [
+        {
+          "code": "b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/6f5236af-3dd0-463e-b80c-43b6865c5190/e9d66181-d03e-4bb3-b889-4da848f4831d",
+          "season": "2025/26"
+        }
+      ]
+    },
+    {
+      "id": 959,
+      "slug": "pl-wm-b-4",
+      "source": "wmzpn",
+      "source_league_code": "b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/34438712-87a8-4300-a5ad-2df29ecb415d/3c77d143-8010-4073-9842-d6b63365ffce",
+      "host": "wmzpn.pl",
+      "country_code": "PL",
+      "season": "2026/27",
+      "archives": [
+        {
+          "code": "b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/3adbaf0b-5784-4682-a306-763477dd0a44/e9d66181-d03e-4bb3-b889-4da848f4831d",
+          "season": "2025/26"
+        }
+      ]
+    },
+    {
+      "id": 960,
+      "slug": "pl-wm-b-5",
+      "source": "wmzpn",
+      "source_league_code": "b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/c7a545a8-9770-4a42-b5f8-8fcbda7e3cf6/3c77d143-8010-4073-9842-d6b63365ffce",
+      "host": "wmzpn.pl",
+      "country_code": "PL",
+      "season": "2026/27",
+      "archives": []
+    }
+  ]
+}
