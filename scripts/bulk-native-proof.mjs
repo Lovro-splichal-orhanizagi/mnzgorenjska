@@ -112,7 +112,7 @@ export function verifyBulkNative({candidate,pack,snapshot,receipts,expectedSha,n
  require(pack?.candidate&&typeof pack.candidate==='object','missing source pack candidate binding')
  const scopes=assertBulkCandidate(candidate,pack.candidate);nativeScope(candidate,snapshot);pricing(receipts,candidate,snapshot,expectedSha,now)
  const captured=Date.parse(pack?.captured_at)
- require(pack?.version===1&&/^[a-f0-9]{64}$/.test(pack.original_bytes_sha256??'')&&Number.isFinite(captured)&&captured<=+now&&+now-captured<=15*60_000,'fresh original-byte source pack missing')
+ require(pack?.version===1&&/^[a-f0-9]{64}$/.test(pack.original_bytes_sha256??'')&&Number.isFinite(captured)&&captured<=+now&&+now-captured<=24*3600_000,'original-byte source pack is missing, future or older than 24 hours')
  require(Array.isArray(pack.seasons)&&pack.seasons.length===scopes.length&&new Set(pack.seasons.map(s=>s.code)).size===scopes.length,'source season inventory differs')
  const usedRounds=new Set(),usedMatches=new Set(),usedReports=new Set(),currentClubs=new Set(),currentKeepers=new Map();let reportCount=0,fixtureCount=0
  const teamsFor=name=>{const rows=snapshot.teams.filter(t=>clubKey(t.name)===clubKey(name));require(clubKey(name)&&rows.length===1,'source club absent or ambiguous in native mapping');return rows[0].id}

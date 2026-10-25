@@ -111,3 +111,11 @@ test('missing pack candidate and unregistered Polish identity cannot bypass admi
  const f=fixture();delete f.pack.candidate;assert.throws(()=>verify(f),/candidate/)
  const g=fixture();delete g.candidate.id;delete g.pack.candidate.id;assert.throws(()=>verify(g),/identity/)
 })
+
+test('source pack freshness follows the 24-hour capture contract while native prices remain fresh',()=>{
+ const f=fixture();f.pack.captured_at=new Date(+now-2*3600_000).toISOString();assert.equal(verify(f).reports,2)
+ f.pack.captured_at=new Date(+now-24*3600_000).toISOString();assert.equal(verify(f).reports,2)
+ f.pack.captured_at=new Date(+now-24*3600_000-1).toISOString();assert.throws(()=>verify(f),/24 hours/)
+ f.pack.captured_at=new Date(+now+1).toISOString();assert.throws(()=>verify(f),/future/)
+ f.pack.captured_at=now.toISOString();f.receipts.steps[0].completed_at=new Date(+now-3600_001).toISOString();assert.throws(()=>verify(f),/fresh completed keepers/)
+})
