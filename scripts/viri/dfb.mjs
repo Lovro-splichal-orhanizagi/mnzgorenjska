@@ -31,6 +31,12 @@ export class DfbNepopoln extends Error {
 // This is a pending report, never a fabricated lineup, event or 0-0 result.
 const pendingHistorical={id:'de-dfb-2426099',url:'https://datencenter.dfb.de/datencenter/regionalliga-nordost/2026-2027/13-spieltag/hertha-bsc-ii-rsv-eintracht-1949-2426099',sezona:'2026/27',krog:13,datum:'2026-10-16',ura:'19:00',domaci:'Hertha BSC II',gostje:'RSV Eintracht 1949',domaciId:'hertha-bsc-ii',gostjeId:'rsv-eintracht-1949',domaciGoli:0,gostjeGoli:1,polcasDomaci:0,polcasGostje:0}
 export const jeCakajociDfb=n=>n?.status==='DFB_PENDING_REPORT'&&Object.entries(pendingHistorical).every(([k,v])=>n[k]===v)
+// Nightly import skips individually unreadable reports. Many unreadable
+// reports with fewer readable ones mean the page layout changed: fail loudly.
+export function preveriPreskocene(nepopolni,dobrih,liga=''){
+  if(nepopolni.length>Math.max(8,dobrih))
+    throw new Error(`dfb ${liga}: ${nepopolni.length} zapisnikov ni mogoče prebrati (dobrih ${dobrih}) — verjetno je vir spremenil stran`)
+}
 const text = s => razpakiraj(String(s ?? '').replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim()
 const attr = (s, k) => s.match(new RegExp(`\\b${k}=["']([^"']*)["']`))?.[1]
 const has = (tag, cls) => (attr(tag, 'class') ?? '').split(/\s+/).includes(cls)

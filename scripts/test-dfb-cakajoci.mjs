@@ -35,3 +35,12 @@ test('coverage distinguishes an approved pending historical report from a corrup
   assert(preveriPokritost({...b,dovoliCakajociDfb:true}).napake.length>0)
  }
 })
+
+test('nightly import tolerates a few unreadable reports but fails when most of a league is unreadable',()=>{
+ const bad=n=>Array.from({length:n},(_,i)=>({id:`de-dfb-${i}`}))
+ dfb.preveriPreskocene(bad(4),120,'west')
+ dfb.preveriPreskocene(bad(8),0,'west')
+ assert.throws(()=>dfb.preveriPreskocene(bad(9),0,'west'),/spremenil stran/)
+ assert.throws(()=>dfb.preveriPreskocene(bad(30),20,'west'),/spremenil stran/)
+ dfb.preveriPreskocene(bad(30),120,'west')
+})

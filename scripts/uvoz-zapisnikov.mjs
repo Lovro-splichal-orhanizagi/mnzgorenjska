@@ -18,6 +18,7 @@ import { readFileSync, existsSync, mkdirSync, writeFileSync, readdirSync } from 
 import { createHash } from 'node:crypto'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
+import { preveriPreskocene } from './viri/dfb.mjs'
 import {loadHistoricalStatisticsImportContext,assertHistoricalReportImportable} from './lib/historical-statistics-import.mjs'
 import { zaprtje } from './odtis-kode.mjs'
 import { mapaKlubov } from './klubi.mjs'
@@ -750,8 +751,18 @@ console.log(`Berem zapisnike vira ${vir.ime} (liga ${liga})`)
 let zapisniki = preberiPosamezniZapisnik
   ? await preberiPosamezniZapisnik(prenesi)
   : ['dfb','eps','hlf','isthmian','nfsbih'].includes(vir.ime)
-    ? await vir.zapisniki(liga, prenesi, { samoZapisnik, preskoci, sveziZapisniki })
+    ? await vir.zapisniki(liga, prenesi, { samoZapisnik, preskoci, sveziZapisniki, ...(vir.ime === 'dfb' ? { zberiNapake: true } : {}) })
     : await vir.zapisniki(liga, prenesi)
+// dfb: en slab zapisnik (le izid brez postave, ki ga zapisnikar še ni izpolnil, ali
+// neskladni javni podatki) ne sme ustaviti cele lige — 23.–25. 10. 2026 je en tak
+// zapisnik na noč podrl uvoz West, Nord, Südwest in Bayern. Slabe preskočimo in jih
+// naštejemo; ob naslednjem teku jih vir znova poskusi. Če jih je več kot osem in več kot
+// dobrih, je verjetneje spremenjena stran kot posamezna napaka (preveriPreskocene), tek pade.
+if (vir.ime === 'dfb' && vir.nepopolni?.length) {
+  for (const n of vir.nepopolni) console.warn(`::warning::dfb ${liga}: zapisnik ${n.id} preskočen (${n.razlog}) ${n.url}`)
+  preveriPreskocene(vir.nepopolni, zapisniki.length, liga)
+  console.warn(`  OPOZORILO: ${vir.nepopolni.length} zapisnikov dfb preskočenih, ostali se uvozijo`)
+}
 // Validate the complete loaded batch before deriving or writing any individual rows.
 for(const report of zapisniki)assertHistoricalReportImportable({competition:tekmovanje,report})
 // Sources that do not implement traversal filtering retain the generic filter.
