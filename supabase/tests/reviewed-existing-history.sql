@@ -189,13 +189,17 @@ begin
   select * into r from _reviewed_existing_routes rt where rt.slug=vslug;
   main_sha:=case when r.cid=979 then 'ac1cc5a2dd363088a3e7f309cba67214ddcc5187' else repeat('a',40) end;
   if r.cid=497 then
-   boundary_clock:=((clock_timestamp() at time zone 'UTC')::date+time '22:30') at time zone 'UTC';boundary_utc_date:=(boundary_clock at time zone 'UTC')::date;
+   -- 23:30 UTC is the following Ljubljana date in both CET and CEST.
+   boundary_clock:=((clock_timestamp() at time zone 'UTC')::date+time '23:30') at time zone 'UTC';boundary_utc_date:=(boundary_clock at time zone 'UTC')::date;
+   if (boundary_clock at time zone 'Europe/Ljubljana')::date<>boundary_utc_date+1 then raise exception 'midnight fixture must cross UTC/Ljubljana dates';end if;
    select id,played_on into opening_match,original_played from matches where round_id=(select round_id from _reviewed_existing_rounds where slug=r.slug and rno=r.round_count+1) order by id limit 1;
    update matches set played_on=null where id=opening_match;
    begin perform private_reviewed_existing_history.opening(r.slug,clock_timestamp());raise exception 'null-dated opening fixture unexpectedly passed';exception when others then if sqlerrm='null-dated opening fixture unexpectedly passed'then raise;elsif sqlerrm<>'REVIEWED_EXISTING: first future round must remain future, unlocked and empty'then raise;end if;end;
    update matches set played_on=original_played where id=opening_match;
    update matches set played_on=boundary_utc_date where id=opening_match;
    begin perform private_reviewed_existing_history.opening(r.slug,boundary_clock);raise exception 'UTC/Ljubljana midnight boundary accepted prior local-day kickoff';exception when others then if sqlerrm='UTC/Ljubljana midnight boundary accepted prior local-day kickoff'then raise;elsif sqlerrm<>'REVIEWED_EXISTING: first future round must remain future, unlocked and empty'then raise;end if;end;
+   update matches set played_on=(boundary_clock at time zone 'Europe/Ljubljana')::date where id=opening_match;
+   perform private_reviewed_existing_history.opening(r.slug,boundary_clock); -- Same local-day kickoff remains admissible.
    update matches set played_on=original_played where id=opening_match;
   end if;
   insert into matches(id,round_id,home_team_id,away_team_id,home_goals,away_goals,played_on,statistics_status)overriding system value

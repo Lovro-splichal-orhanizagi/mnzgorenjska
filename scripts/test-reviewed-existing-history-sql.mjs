@@ -19,6 +19,18 @@ test('SQL fixture runner permits only the owned database or exact disposable CI 
  assert.throws(()=>disposableTarget({}),/disposable/)
 })
 
+test('native midnight fixture crosses UTC/Ljubljana dates in CET, CEST and both sides of the autumn switch',()=>{
+ const fixture=readFileSync(new URL('../supabase/tests/reviewed-existing-history.sql',import.meta.url),'utf8')
+ const time=fixture.match(/boundary_clock:=\(\(clock_timestamp\(\) at time zone 'UTC'\)::date\+time '(\d{2}:\d{2})'\) at time zone 'UTC';/)?.[1]
+ assert.ok(time,'exercise the actual native fixture clock assignment')
+ const localDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Ljubljana',year:'numeric',month:'2-digit',day:'2-digit'})
+ for(const day of ['2026-01-15','2026-07-15','2026-10-24','2026-10-25']) {
+  const clock=new Date(`${day}T${time}:00Z`),nextDay=new Date(Date.parse(`${day}T00:00:00Z`)+86400000).toISOString().slice(0,10)
+  assert.equal(clock.toISOString().slice(0,10),day)
+  assert.equal(localDate.format(clock),nextDay,`${day}: fixture must test a prior UTC day against the next Ljubljana day`)
+ }
+})
+
 test('reviewed-existing SQL route pins the six approved reports and keeps generic history APIs narrow',()=>{
  const migration=readFileSync(new URL('../supabase/migrations/20261023103000_reviewed_existing_history.sql',import.meta.url),'utf8')
  for(const fn of ['prepare_reviewed_existing_cleanup','apply_reviewed_existing_cleanup','get_reviewed_existing_cleanup_receipt','begin_reviewed_existing_prices','record_reviewed_existing_prices','check_reviewed_existing_release'])assert.match(migration,new RegExp(`function public\\.${fn}\\(`))
