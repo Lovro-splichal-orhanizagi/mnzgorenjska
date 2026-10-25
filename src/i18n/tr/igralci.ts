@@ -419,6 +419,28 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     tekme: 'Maç',
     cena: 'En yüksek değer',
   },
+  // Plačljivo ponovno vrednotenje cene (PonovnaCena, le splet). {cena} je znesek z valuto.
+  ponovnaCena: {
+    naslov: 'Fiyatın yeniden değerlendirilmesi',
+    gumb: 'Fiyatı yeniden değerlendir',
+    opis: 'Fiyatı her hafta olduğu gibi aynı kurallarla yeniden hesaplıyor ve birkaç gün içinde onaylıyoruz. Yükselebilir, düşebilir veya aynı kalabilir. Tek seferlik ödeme: {cena}. Fiyat aynı kalırsa ücret iade edilmez.',
+    odpoved: 'Hesaplamanın hemen başladığını ve ödeme yaparak 14 günlük cayma hakkımı kaybettiğimi anlıyorum.',
+    pogoji: '<pogoji>Ücretli hizmet koşulları</pogoji> geçerlidir.',
+    kupi: '{cena} öde',
+    zapri: 'Kapat',
+    vPregledu: 'Fiyatın yeniden değerlendirilmesi istendi ve inceleniyor.',
+    zadnja: 'Son yeniden değerlendirme ({datum}): {stara} → {nova}',
+    zadnjaEnaka: 'Son yeniden değerlendirme ({datum}): fiyat {stara} olarak kaldı',
+    uspeh: 'Teşekkürler! Ödeme alındı. Fiyatı yeniden hesaplayıp birkaç gün içinde onaylayacağız.',
+    napaka: 'Ödeme başlatılamadı. Tekrar dene.',
+    niMogoce: 'Bu oyuncunun fiyatı şu anda yeniden değerlendirilemez.',
+    ovire: {
+      borza: 'Bu oyuncunun fiyatını her haftadan sonra piyasa değiştirir, bu yüzden yeniden değerlendirilemez.',
+      taTeden: 'Fiyat bu hafta zaten yeniden değerlendirildi. Gelecek hafta tekrar dene.',
+      nedavno: 'Bu oyuncu kısa süre önce yeniden değerlendirildi veya bir talep zaten inceleniyor.',
+      rok: 'Hafta son tarihine 24 saatten az kaldı. Hafta başladıktan sonra tekrar dene.',
+    },
+  },
   scout: {
     naslov: 'SLFF Scout',
     opis: 'Oyuncu arayan kulüpler SLFF Scout\'ta maçlarından elde edilen göstergeleri görür. Burada onların göreceği şeyleri sadece senin onayınla eklersin.',

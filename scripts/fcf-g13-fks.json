@@ -270,6 +270,16 @@
     "players"
   ],
   [
+    "public.ponovne_cene",
+    "competition_id",
+    "competitions"
+  ],
+  [
+    "public.ponovne_cene",
+    "player_id",
+    "players"
+  ],
+  [
     "public.popravki_podatkov",
     "asistent_id",
     "players"

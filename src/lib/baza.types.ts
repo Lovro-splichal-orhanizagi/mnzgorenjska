@@ -3000,6 +3000,151 @@ export type Database = {
           },
         ]
       }
+      ponovne_cene: {
+        Row: {
+          competition_id: number
+          created_at: string
+          id: number
+          izid: string | null
+          nova_cena: number | null
+          odloceno_at: string | null
+          odlocil: string | null
+          opomba: string | null
+          placano_at: string | null
+          player_id: number
+          podlaga: Json | null
+          predlog_at: string | null
+          stanje: string
+          stara_cena: number | null
+          stripe_placilo: string | null
+          stripe_seja: string | null
+          user_id: string | null
+        }
+        Insert: {
+          competition_id: number
+          created_at?: string
+          id?: never
+          izid?: string | null
+          nova_cena?: number | null
+          odloceno_at?: string | null
+          odlocil?: string | null
+          opomba?: string | null
+          placano_at?: string | null
+          player_id: number
+          podlaga?: Json | null
+          predlog_at?: string | null
+          stanje?: string
+          stara_cena?: number | null
+          stripe_placilo?: string | null
+          stripe_seja?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          competition_id?: number
+          created_at?: string
+          id?: never
+          izid?: string | null
+          nova_cena?: number | null
+          odloceno_at?: string | null
+          odlocil?: string | null
+          opomba?: string | null
+          placano_at?: string | null
+          player_id?: number
+          podlaga?: Json | null
+          predlog_at?: string | null
+          stanje?: string
+          stara_cena?: number | null
+          stripe_placilo?: string | null
+          stripe_seja?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponovne_cene_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponovne_cene_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponovne_cene_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "ponovne_cene_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponovne_cene_odlocil_fkey"
+            columns: ["odlocil"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponovne_cene_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "ponovne_cene_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponovne_cene_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_season_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponovne_cene_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponovne_cene_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponovne_cene_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "pozicije_v_cakanju"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "ponovne_cene_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       popravki_podatkov: {
         Row: {
           asistent_id: number | null
@@ -8135,6 +8280,31 @@ export type Database = {
         }[]
       }
       admin_ponastavi_grb: { Args: { p_team_id: number }; Returns: undefined }
+      admin_ponovna_cena_potrdi: { Args: { p_id: number }; Returns: string }
+      admin_ponovna_cena_zavrni: {
+        Args: { p_id: number; p_opomba?: string }
+        Returns: undefined
+      }
+      admin_ponovna_cena_znova: { Args: { p_id: number }; Returns: undefined }
+      admin_ponovne_cene: {
+        Args: never
+        Returns: {
+          id: number
+          igralec: string
+          izid: string
+          kdaj: string
+          kupec: string
+          liga: string
+          nova: number
+          opomba: string
+          player_id: number
+          podlaga: Json
+          stanje: string
+          stara: number
+          stripe_placilo: string
+          v_roku: boolean
+        }[]
+      }
       admin_potrjeni_poznavalci: {
         Args: never
         Returns: {
@@ -9166,6 +9336,54 @@ export type Database = {
         Returns: boolean
       }
       poenostavljeno_ime: { Args: { p_ime: string }; Returns: string }
+      ponovna_cena_iz_placila: {
+        Args: {
+          p_placilo: string
+          p_seja: string
+          p_user_id: string
+          p_zahtevek: number
+        }
+        Returns: string
+      }
+      ponovna_cena_ovira: {
+        Args: { p_player_id: number; p_razen?: number }
+        Returns: string
+      }
+      ponovna_cena_ovira_igralca: {
+        Args: { p_player_id: number }
+        Returns: string
+      }
+      ponovna_cena_predlog: {
+        Args: {
+          p_izid: string
+          p_nova: number
+          p_podlaga?: Json
+          p_stara: number
+          p_zahtevek: number
+        }
+        Returns: string
+      }
+      ponovna_cena_pripravi: {
+        Args: { p_player_id: number }
+        Returns: {
+          email: string
+          liga: string
+          zahtevek: number
+        }[]
+      }
+      ponovna_cena_stanje: { Args: { p_player_id: number }; Returns: Json }
+      ponovna_cena_v_roku: {
+        Args: { p_competition_id: number }
+        Returns: boolean
+      }
+      ponovne_cene_za_izracun: {
+        Args: never
+        Returns: {
+          liga: string
+          player_id: number
+          zahtevek: number
+        }[]
+      }
       popravki_v_pregledu: {
         Args: { p_team_id?: number }
         Returns: {
@@ -10045,6 +10263,7 @@ export type Database = {
         Args: { p_aktiviraj?: boolean; p_manifest: string; p_sha256: string }
         Returns: Json
       }
+      vidi_ponovno_ceno: { Args: never; Returns: boolean }
       vidi_preverjene: { Args: never; Returns: boolean }
       vklopi_ligo_sredi_sezone: { Args: { p_slug: string }; Returns: Json }
       voter_weight: { Args: { p_voter_id: string }; Returns: number }

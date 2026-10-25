@@ -423,6 +423,28 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     tekme: 'Zápasy',
     cena: 'Nejvyšší cena',
   },
+  // Plačljivo ponovno vrednotenje cene (PonovnaCena, le splet). {cena} je znesek z valuto.
+  ponovnaCena: {
+    naslov: 'Nové ocenění ceny',
+    gumb: 'Znovu ocenit cenu',
+    opis: 'Cenu přepočítáme podle stejných pravidel jako každý týden a potvrdíme ji během několika dní. Může stoupnout, klesnout nebo zůstat stejná. Jednorázová platba: {cena}. Pokud cena zůstane stejná, peníze nevracíme.',
+    odpoved: 'Rozumím, že výpočet začne hned a že platbou ztrácím právo na odstoupení do 14 dní.',
+    pogoji: 'Platí <pogoji>podmínky placených služeb</pogoji>.',
+    kupi: 'Zaplatit {cena}',
+    zapri: 'Zavřít',
+    vPregledu: 'Nové ocenění ceny je objednané a posuzuje se.',
+    zadnja: 'Poslední nové ocenění ({datum}): {stara} → {nova}',
+    zadnjaEnaka: 'Poslední nové ocenění ({datum}): cena zůstala {stara}',
+    uspeh: 'Děkujeme! Platba je přijata. Cenu přepočítáme a potvrdíme během několika dní.',
+    napaka: 'Platbu se nepodařilo zahájit. Zkus to znovu.',
+    niMogoce: 'Cenu tohoto hráče teď nelze znovu ocenit.',
+    ovire: {
+      borza: 'Cenu tohoto hráče po každém kole posouvá burza, proto nové ocenění není možné.',
+      taTeden: 'Cena už byla tento týden znovu oceněna. Zkus to příští týden.',
+      nedavno: 'Tento hráč byl nedávno znovu oceněn nebo se žádost už posuzuje.',
+      rok: 'Do uzávěrky kola zbývá méně než 24 hodin. Zkus to, až kolo začne.',
+    },
+  },
   scout: {
     naslov: 'SLFF Scout',
     opis: 'Kluby, které hledají hráče, vidí ve SLFF Scoutu ukazatele z tvých zápasů. Tady přidáš to, co vidí jen s tvým souhlasem.',

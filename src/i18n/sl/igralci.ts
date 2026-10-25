@@ -421,6 +421,28 @@ export const igralci = {
     tekme: 'Tekme',
     cena: 'Najvišja cena',
   },
+  // Plačljivo ponovno vrednotenje cene (PonovnaCena, le splet). {cena} je znesek z valuto.
+  ponovnaCena: {
+    naslov: 'Ponovno vrednotenje cene',
+    gumb: 'Ponovno ovrednoti ceno',
+    opis: 'Ceno izračunamo znova z istimi pravili kot vsak teden in jo potrdimo v nekaj dneh. Lahko se zviša, zniža ali ostane enaka. Enkratno plačilo: {cena}. Če cena ostane enaka, denarja ne vračamo.',
+    odpoved: 'Razumem, da izračun začnemo takoj in da s plačilom izgubim pravico do odstopa v 14 dneh.',
+    pogoji: 'Veljajo <pogoji>pogoji plačljivih storitev</pogoji>.',
+    kupi: 'Plačaj {cena}',
+    zapri: 'Zapri',
+    vPregledu: 'Ponovno vrednotenje cene je naročeno in v pregledu.',
+    zadnja: 'Zadnje ponovno vrednotenje ({datum}): {stara} → {nova}',
+    zadnjaEnaka: 'Zadnje ponovno vrednotenje ({datum}): cena je ostala {stara}',
+    uspeh: 'Hvala! Plačilo je prejeto. Ceno izračunamo znova in jo potrdimo v nekaj dneh.',
+    napaka: 'Plačila ni bilo mogoče začeti. Poskusi znova.',
+    niMogoce: 'Ponovno vrednotenje cene za tega igralca zdaj ni mogoče.',
+    ovire: {
+      borza: 'Ceno tega igralca po vsakem krogu premika borza, zato ponovno vrednotenje ni mogoče.',
+      taTeden: 'Cena je bila ta teden že ponovno ovrednotena. Poskusi naslednji teden.',
+      nedavno: 'Ta igralec je bil nedavno ponovno ovrednoten ali pa je zahtevek že v pregledu.',
+      rok: 'Do roka kroga je manj kot 24 ur. Poskusi, ko se krog začne.',
+    },
+  },
   // SLFF Scout na prevzetem profilu (ScoutIgralca) in povezava za ugovor na
   // strani igralca. <pravno> je povezava na /legal#scout.
   scout: {

@@ -128,6 +128,22 @@ const dovoliAktivno = process.argv.includes('--dovoli-aktivno')
 // cronu, kjer polna ovrednota lahko premika stare cene skokovito, mi pa
 // samo hočemo, da vsakič novi rekruti dobijo pravo sidro.
 const samoNove = process.argv.includes('--samo-nove')
+// `--igralec <id> --izid <datoteka>`: predlog za plačljivo ponovno vrednotenje
+// enega igralca (delovni tok *Ponovne cene*, migracija 20261025193100).
+// Percentili so iz cele lige kot vedno, pravila so tedenskega zagona. Nikoli
+// ne piše (ceno uveljavi šele admin s `admin_ponovna_cena_potrdi`); izid
+// (premaknjena, brez_spremembe, borza, ta_teden, zaklenjena, ni_igralca) s
+// podlago izračuna gre v JSON za `ponovna_cena_predlog`.
+const samoIgralec = arg('igralec') == null ? null : Number(arg('igralec'))
+const izidPot = arg('izid')
+if (samoIgralec != null && (!Number.isInteger(samoIgralec) || !tedensko || pisi || znova || samoNove || typeof izidPot !== 'string')) {
+  console.error('--igralec <id> zahteva --tedensko in --izid <datoteka> (brez --pisi, --znova in --samo-nove).')
+  process.exit(1)
+}
+let izidIgralca = { izid: 'ni_igralca', stara: null, nova: null }
+const zapisiIzid = () => {
+  if (samoIgralec != null) writeFileSync(izidPot, JSON.stringify(izidIgralca))
+}
 const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
 // Exact inactive FCF replay uses the ordinary calculation below. No writes,
 // weekly movement, active override or partial/new-player mode is admitted.
@@ -147,7 +163,7 @@ if (pisi && tekmovanje.active && !tedensko && !samoNove && !dovoliAktivno) {
   process.exit(1)
 }
 
-const igralci = await vseVrstice((od, do_) =>
+const vsiIgralci = await vseVrstice((od, do_) =>
   db
     .from('players')
     .select(
@@ -157,8 +173,10 @@ const igralci = await vseVrstice((od, do_) =>
     .order('id')
     .range(od, do_),
 )
+// Percentili potrebujejo vse igralce lige; pišemo le izbranemu.
+const igralci = samoIgralec == null ? vsiIgralci : (vsiIgralci ?? []).filter((p) => p.id === samoIgralec)
 
-const naSi = new Set((igralci ?? []).map((p) => p.id))
+const naSi = new Set((vsiIgralci ?? []).map((p) => p.id))
 
 // Cene igralcev z zgodovino upravlja borza, ki lahko znova uveljavi stare zapise.
 // Zgodovino potrebujeta dva primera: tedenski zagon (ki borzne igralce
@@ -228,7 +246,7 @@ const prag = tekmovanje.active ? MIN_MINUT : Math.min(MIN_MINUT, Math.max(90, Ma
 if (prag < MIN_MINUT) console.log(`Malo odigranega (največ ${najvecMinut} min): prag znižan na ${prag} min`)
 
 const ocene = new Map()
-for (const p of igralci ?? []) {
+for (const p of vsiIgralci ?? []) {
   const s = poIgralcu.get(p.id)
   if (!s || s.minutes < prag) continue
 
@@ -255,6 +273,9 @@ console.log(`Igralcev z dovolj minutami (>=${prag}): ${ocene.size}`)
 
 if (ocene.size === 0) {
   console.log('Ni dovolj podatkov za vrednotenje.')
+  const p = igralci?.[0]
+  if (p) izidIgralca = { izid: p.value_locked ? 'zaklenjena' : 'brez_spremembe', stara: Number(p.value), nova: Number(p.value) }
+  zapisiIzid()
   process.exit(releasePlan ? 1 : 0)
 }
 
@@ -373,7 +394,7 @@ async function ceneIzVisjihLig() {
 // v vrh cenika — povprečen napadalec je stal 9.9 in trije so pojedli tretjino
 // proračuna.
 const poPoziciji = new Map()
-for (const p of igralci ?? []) {
+for (const p of vsiIgralci ?? []) {
   const o = ocene.get(p.id)
   if (o == null) continue
   const koda = p.position ?? 'MID'
@@ -402,7 +423,9 @@ const novinci = []
 const razpored = new Map()
 
 for (const p of igralci ?? []) {
+  if (samoIgralec != null) izidIgralca = { izid: 'brez_spremembe', stara: Number(p.value), nova: Number(p.value) }
   if (p.value_locked) {
+    if (samoIgralec != null) izidIgralca.izid = 'zaklenjena'
     if (releasePlan) releaseVector.push({id:p.id,value:Number(p.value),value_start:p.value_start==null?null:Number(p.value_start),position:p.position,position_source:p.position_source})
     zaklenjenih++
     continue
@@ -416,6 +439,7 @@ for (const p of igralci ?? []) {
   // lige, ki je pod ceno iz višje lige, tedenski zagon vseeno dvigne (z njim
   // potuje sidro, zato borzni odmik ostane) — sicer bi ostal pri 4.5.
   if (tedensko && naBorzi.has(p.id) && !(prenos && prenos.cena > Number(p.value))) {
+    if (samoIgralec != null) izidIgralca.izid = 'borza'
     borznih++
     continue
   }
@@ -423,6 +447,7 @@ for (const p of igralci ?? []) {
   // Dvakrat v istem tednu torej pomeni premik za 2.0 — prav zato je bil urnik
   // izklopljen. Igralca, ki je ta teden ze bil prevrednoten, pustimo pri miru.
   if (tedensko && !znova && p.repriced_week === tekociTeden) {
+    if (samoIgralec != null) izidIgralca.izid = 'ta_teden'
     zeTaTeden++
     continue
   }
@@ -466,8 +491,27 @@ for (const p of igralci ?? []) {
 
   if (tedensko) {
     const stara = Number(p.value)
+    const ciljna = vrednost
     vrednost = premakniProti(stara, vrednost, najvecPremik)
     popravek.value = vrednost
+    if (samoIgralec != null) {
+      const s = poIgralcu.get(p.id)
+      izidIgralca = {
+        izid: vrednost === stara ? 'brez_spremembe' : 'premaknjena',
+        stara,
+        nova: vrednost,
+        podlaga: {
+          ciljna,
+          najvec: najvecPremik,
+          minute: s?.minutes ?? 0,
+          goli: s?.goals ?? 0,
+          tekme: s?.matches ?? 0,
+          prag,
+          pozicija: koda,
+          visja_liga: prenos ? { liga: prenos.liga, cena: prenos.tamCena, minute: prenos.minute } : null,
+        },
+      }
+    }
     if (vrednost === stara) continue
     // Sidro potuje z isto razliko: cena, ki se je pomaknila, mora imeti okoli
     // sebe enak manevrski prostor kot prej, sicer bi borza takoj obstala.
@@ -497,6 +541,7 @@ for (const p of igralci ?? []) {
   } else posodobljenih++
 }
 
+zapisiIzid()
 if (releasePlan) writeFileSync(releasePlan,JSON.stringify({schemaVersion:1,kind:'fcf-target-price-replay',targetSlug:tekmovanje.slug,competitionId:tekmovanje.id,season:sezona,modelSha256:fcfTargetPricingModelSha256(),computedCount:ocene.size,threshold:prag,players:releaseVector.sort((a,b)=>a.id-b.id)}),{flag:'wx',mode:0o600})
 
 if (pisi)

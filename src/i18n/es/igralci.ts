@@ -421,6 +421,28 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     tekme: 'Partidos',
     cena: 'Precio más alto',
   },
+  // Plačljivo ponovno vrednotenje cene (PonovnaCena, le splet). {cena} je znesek z valuto.
+  ponovnaCena: {
+    naslov: 'Revalorización del precio',
+    gumb: 'Revalorizar precio',
+    opis: 'Recalculamos el precio con las mismas reglas que cada semana y lo confirmamos en unos días. Puede subir, bajar o quedarse igual. Pago único: {cena}. Si el precio no cambia, no se devuelve el dinero.',
+    odpoved: 'Entiendo que el cálculo empieza de inmediato y que al pagar pierdo el derecho de desistimiento de 14 días.',
+    pogoji: 'Se aplican las <pogoji>condiciones de los servicios de pago</pogoji>.',
+    kupi: 'Pagar {cena}',
+    zapri: 'Cerrar',
+    vPregledu: 'Se ha solicitado una revalorización del precio y está en revisión.',
+    zadnja: 'Última revalorización ({datum}): {stara} → {nova}',
+    zadnjaEnaka: 'Última revalorización ({datum}): el precio se quedó en {stara}',
+    uspeh: '¡Gracias! Pago recibido. Recalcularemos el precio y lo confirmaremos en unos días.',
+    napaka: 'No se pudo iniciar el pago. Inténtalo de nuevo.',
+    niMogoce: 'El precio de este jugador no se puede revalorizar ahora.',
+    ovire: {
+      borza: 'El mercado mueve el precio de este jugador después de cada jornada, así que no se puede revalorizar.',
+      taTeden: 'El precio ya se revalorizó esta semana. Inténtalo la semana que viene.',
+      nedavno: 'Este jugador se revalorizó hace poco o ya hay una solicitud en revisión.',
+      rok: 'Faltan menos de 24 horas para el cierre de la jornada. Inténtalo cuando empiece la jornada.',
+    },
+  },
   scout: {
     naslov: 'SLFF Scout',
     opis: 'Los clubes que buscan jugadores ven en SLFF Scout indicadores de tus partidos. Aquí añades lo que solo ven con tu consentimiento.',

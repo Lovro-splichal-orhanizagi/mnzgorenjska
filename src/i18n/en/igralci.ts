@@ -419,6 +419,28 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     tekme: 'Matches',
     cena: 'Highest value',
   },
+  // Plačljivo ponovno vrednotenje cene (PonovnaCena, le splet). {cena} je znesek z valuto.
+  ponovnaCena: {
+    naslov: 'Price re-evaluation',
+    gumb: 'Re-evaluate price',
+    opis: 'We recalculate the price with the same rules as every week and confirm it within a few days. It can go up, down or stay the same. One-off payment: {cena}. No refund if the price stays the same.',
+    odpoved: 'I understand the calculation starts right away and that by paying I lose the 14-day right of withdrawal.',
+    pogoji: 'The <pogoji>terms for paid services</pogoji> apply.',
+    kupi: 'Pay {cena}',
+    zapri: 'Close',
+    vPregledu: 'A price re-evaluation has been requested and is under review.',
+    zadnja: 'Last re-evaluation ({datum}): {stara} → {nova}',
+    zadnjaEnaka: 'Last re-evaluation ({datum}): price stayed at {stara}',
+    uspeh: 'Thank you! Payment received. We will recalculate the price and confirm it within a few days.',
+    napaka: 'The payment could not be started. Please try again.',
+    niMogoce: 'This player\'s price can\'t be re-evaluated right now.',
+    ovire: {
+      borza: 'This player\'s price is moved by the market after every round, so it can\'t be re-evaluated.',
+      taTeden: 'The price was already re-evaluated this week. Try again next week.',
+      nedavno: 'This player was re-evaluated recently or a request is already under review.',
+      rok: 'The round deadline is less than 24 hours away. Try again once the round has started.',
+    },
+  },
   scout: {
     naslov: 'SLFF Scout',
     opis: 'Clubs looking for players see indicators from your matches in SLFF Scout. Here you add what they see only with your consent.',
