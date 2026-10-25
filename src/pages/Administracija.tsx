@@ -18,6 +18,7 @@ import Prevzemi from '../components/admin/Prevzemi'
 import Preverjeni from '../components/admin/Preverjeni'
 import PrijaveMiniLig from '../components/admin/PrijaveMiniLig'
 import OmejitveUporabnikov from '../components/admin/OmejitveUporabnikov'
+import SeznamPopravkov from '../components/SeznamPopravkov'
 import RastLig from '../components/admin/RastLig'
 import ZeljeLig from '../components/admin/ZeljeLig'
 import Rast from '../components/admin/Rast'
@@ -680,6 +681,7 @@ export default function Administracija() {
       skupina: 'Igralci',
       razdelki: [
         { id: 'igralec', naslov: 'Igralec — pozicija in NZS' },
+        { id: 'popravki', naslov: 'Popravki podatkov' },
         { id: 'prevzemi', naslov: 'Prevzemi profilov' },
         { id: 'preverjeni', naslov: 'Preverjeni' },
       ],
@@ -815,6 +817,9 @@ export default function Administracija() {
             </Razdelek>
             <Razdelek id="omejitve">
               <OmejitveUporabnikov />
+            </Razdelek>
+            <Razdelek id="popravki">
+              <SeznamPopravkov />
             </Razdelek>
             <Razdelek id="rast-lig">
               <RastLig />

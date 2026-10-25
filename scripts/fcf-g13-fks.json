@@ -270,6 +270,41 @@
     "players"
   ],
   [
+    "public.popravki_podatkov",
+    "asistent_id",
+    "players"
+  ],
+  [
+    "public.popravki_podatkov",
+    "competition_id",
+    "competitions"
+  ],
+  [
+    "public.popravki_podatkov",
+    "goal_id",
+    "goals"
+  ],
+  [
+    "public.popravki_podatkov",
+    "gol_strelec_id",
+    "players"
+  ],
+  [
+    "public.popravki_podatkov",
+    "match_id",
+    "matches"
+  ],
+  [
+    "public.popravki_podatkov",
+    "player_id",
+    "players"
+  ],
+  [
+    "public.popravki_podatkov",
+    "team_id",
+    "teams"
+  ],
+  [
     "public.poznavalec_prosnje",
     "competition_id",
     "competitions"

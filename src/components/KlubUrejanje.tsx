@@ -8,6 +8,7 @@ import { prevediNapako } from '../lib/napake'
 import { pripraviGrb } from '../lib/klubskiRacun'
 import type { Predstavitev } from './KlubPredstavitev'
 import KlubDodaniIgralci from './KlubDodaniIgralci'
+import SeznamPopravkov from './SeznamPopravkov'
 
 const POZICIJE = ['GK', 'DEF', 'MID', 'FWD'] as const
 
@@ -138,6 +139,7 @@ export default function KlubUrejanje({
       </section>
 
       {ligaId != null && <KlubDodaniIgralci klubId={klubId} ligaId={ligaId} />}
+      <SeznamPopravkov klubId={klubId} />
 
       <section className="mt-4 space-y-2">
         <h3 className="font-semibold">{t('lestvice.klub.urejanje.pozicije')}</h3>
