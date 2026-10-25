@@ -27,6 +27,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     izberiKlubNapaka: 'Wähle den Verein, den du kennst.',
     siPoznavalec: 'Du bist Kenner dieser Liga: Deine Stimme bestätigt eine Position oder Torvorlage allein.',
+    samodejno: 'Du hast das automatisch bekommen, weil deine Stimmen gestimmt haben.',
     caka: 'Dein Antrag als Kenner wird gerade geprüft. Danke.',
     povabilo: 'Bist du Spieler, Trainer oder in der Vereinsführung? <gumb>Melde dich als Kenner an</gumb>, dann zählt deine Stimme mehr.',
     opis: 'Ein Kenner der Liga bestätigt eine Position oder Torvorlage mit einer einzigen Stimme. Den Antrag prüft ein Administrator.',

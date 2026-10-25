@@ -11,7 +11,8 @@ znotraj proračuna in tekmujejo na skupni lestvici svoje lige.
 
 Točke temeljijo na uradni statistiki iz zapisnikov MNZ Gorenjska. Skupnost z glasovanjem
 določi le tisto, česar zapisnik ne pove: **asistence** in **pozicije** (zapisnik označi le
-vratarja z (V), postave pa našteje po številkah dresov). Prag je 5 glasov.
+vratarja z (V), postave pa našteje po številkah dresov). Prag za pozicijo so 3 glasovi
+(od 25. 10. 2026; poznavalec lige potrdi sam, samodejne glej `docs/podatkovni-model.md`).
 
 ## Tehnološki sklop
 

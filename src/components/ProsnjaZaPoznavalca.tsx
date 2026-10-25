@@ -40,6 +40,8 @@ export default function ProsnjaZaPoznavalca({
   const [sporocilo, setSporocilo] = useState('')
   const [napaka, setNapaka] = useState<string | null>(null)
   const [dela, setDela] = useState(false)
+  // Poznavalec, ki ga je podelila nočna naloga po točnosti glasov.
+  const [samodejno, setSamodejno] = useState(false)
 
   useEffect(() => {
     if (!session) return
@@ -54,10 +56,20 @@ export default function ProsnjaZaPoznavalca({
       .then(({ data }) => {
         if (veljavno) setStatus((data?.[0]?.status as string | undefined) ?? null)
       })
+    if (insiderCompetitionId === competitionId)
+      supabase
+        .from('samodejni_poznavalci')
+        .select('competition_id')
+        .eq('user_id', session.user.id)
+        .is('odvzeto_at', null)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (veljavno) setSamodejno(data?.competition_id === competitionId)
+        })
     return () => {
       veljavno = false
     }
-  }, [session, competitionId])
+  }, [session, competitionId, insiderCompetitionId])
 
   async function poslji() {
     setNapaka(null)
@@ -81,6 +93,7 @@ export default function ProsnjaZaPoznavalca({
     return (
       <p className="text-xs text-sky-200">
         <span aria-hidden="true">★ </span>{t('igralci.poznavalec.siPoznavalec')}
+        {samodejno && <> {t('igralci.poznavalec.samodejno')}</>}
       </p>
     )
 

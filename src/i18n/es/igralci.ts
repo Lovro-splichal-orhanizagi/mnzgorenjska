@@ -27,6 +27,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     izberiKlubNapaka: 'Elige el club que conoces.',
     siPoznavalec: 'Eres experto de esta liga: tu voto confirma por sí solo una posición o una asistencia.',
+    samodejno: 'Lo has recibido automáticamente porque tus votos fueron acertados.',
     caka: 'Tu solicitud para ser experto está pendiente de revisión. Gracias.',
     povabilo: '¿Eres jugador, entrenador o de la directiva de un club? <gumb>Apúntate como experto</gumb> y tu voto contará más.',
     opis: 'Un experto de la liga confirma una posición o una asistencia con un solo voto. La solicitud la revisa un administrador.',

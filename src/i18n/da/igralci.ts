@@ -27,6 +27,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     izberiKlubNapaka: 'Vælg en klub, du kender.',
     siPoznavalec: 'Du er insider i denne liga: din stemme alene bekræfter en position eller en assist.',
+    samodejno: 'Du fik det automatisk, fordi dine stemmer var præcise.',
     caka: 'Din insideranmodning venter på at blive behandlet. Tak.',
     povabilo: 'Er du spiller, træner eller en del af klubledelsen? <gumb>Søg om at blive insider</gumb>, så vejer din stemme mere.',
     opis: 'En insider i ligaen bekræfter en position eller en assist med én stemme. En administrator gennemgår anmodningen.',

@@ -13,6 +13,7 @@ import UpravljanjeLig from '../components/admin/UpravljanjeLig'
 import ZivostSkupnosti from '../components/admin/Zivost'
 import ProsnjePoznavalcev from '../components/admin/ProsnjePoznavalcev'
 import PotrjeniPoznavalci from '../components/admin/PotrjeniPoznavalci'
+import SamodejniPoznavalci from '../components/admin/SamodejniPoznavalci'
 import KlubskiRacuni from '../components/admin/KlubskiRacuni'
 import Prevzemi from '../components/admin/Prevzemi'
 import Preverjeni from '../components/admin/Preverjeni'
@@ -695,6 +696,7 @@ export default function Administracija() {
         { id: 'ekipe', naslov: `Fantasy ekipe (${ekipe.length})` },
         { id: 'poznavalci', naslov: 'Prošnje poznavalcev' },
         { id: 'potrjeni-poznavalci', naslov: 'Potrjeni poznavalci' },
+        { id: 'samodejni-poznavalci', naslov: 'Samodejni poznavalci' },
         { id: 'klubski-racuni', naslov: 'Klubski računi' },
         { id: 'mini-lige', naslov: 'Prijave mini lig' },
         { id: 'omejitve', naslov: 'Omejitve in prijave igralcev' },
@@ -804,6 +806,9 @@ export default function Administracija() {
             </Razdelek>
             <Razdelek id="potrjeni-poznavalci">
               <PotrjeniPoznavalci />
+            </Razdelek>
+            <Razdelek id="samodejni-poznavalci">
+              <SamodejniPoznavalci />
             </Razdelek>
             <Razdelek id="klubski-racuni">
               <KlubskiRacuni />

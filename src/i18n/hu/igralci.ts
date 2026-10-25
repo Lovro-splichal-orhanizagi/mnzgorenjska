@@ -27,6 +27,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     izberiKlubNapaka: 'Válaszd ki a klubot, amelyet ismersz.',
     siPoznavalec: 'Ennek a bajnokságnak a szakértője vagy: a szavazatod egymagában megerősíti a posztot vagy a gólpasszt.',
+    samodejno: 'Automatikusan kaptad meg, mert a szavazataid pontosak voltak.',
     caka: 'Szakértői kérelmed elbírálásra vár. Köszönjük.',
     povabilo: 'Játékos, edző vagy a klubvezetés tagja vagy? <gumb>Jelentkezz szakértőnek</gumb>, és a szavazatod többet fog érni.',
     opis: 'A bajnokság szakértője egyetlen szavazattal megerősíti a posztot vagy a gólpasszt. A kérelmet egy adminisztrátor bírálja el.',

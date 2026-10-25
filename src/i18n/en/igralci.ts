@@ -27,6 +27,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     izberiKlubNapaka: 'Choose a club you know.',
     siPoznavalec: 'You are an insider in this league — your vote alone confirms a position or an assist.',
+    samodejno: 'You got this automatically because your votes were accurate.',
     caka: 'Your insider request is awaiting review. Thank you.',
     povabilo: 'Are you a player, coach or part of club management? <gumb>Apply as an insider</gumb> — your vote will count for more.',
     opis: 'A league insider confirms a position or assist with a single vote. An admin reviews the request.',
