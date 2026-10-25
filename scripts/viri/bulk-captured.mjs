@@ -27,7 +27,7 @@ export function createBulkCapturedSource({competition,db,directory=process.env.S
   proof(mappings.size>0&&mappings.size<=5000,'bounded complete DE identities missing')
   await reserveFussballIdentities(db,[...mappings].map(([source_id,reg_st])=>({source_id,reg_st})))
  }
- return {ime:competition.source,drzava:competition.country_code,polnoIme:competition.source==='fussball-public'?'FUSSBALL.DE — captured public reports':'Polish federation — captured official reports',osnovniNaslov:competition.source==='fussball-public'?'https://www.fussball.de':'https://'+(competition.source==='pzpn'?'szpnkielce.pl':'wmzpn.pl'),imaRegistracije:true,razporedBrezUvodnegaPrenosa:true,kljucKluba:key,poenostavi:key,kratkoIme:s=>String(s??'').normalize('NFC').replace(/\s+/gu,' ').trim(),
+ return {ime:competition.source,bulkCaptured:true,drzava:competition.country_code,polnoIme:competition.source==='fussball-public'?'FUSSBALL.DE — captured public reports':'Polish federation — captured official reports',osnovniNaslov:competition.source==='fussball-public'?'https://www.fussball.de':'https://'+(competition.source==='pzpn'?'szpnkielce.pl':'wmzpn.pl'),imaRegistracije:true,razporedBrezUvodnegaPrenosa:true,kljucKluba:key,poenostavi:key,kratkoIme:s=>String(s??'').normalize('NFC').replace(/\s+/gu,' ').trim(),
   naslovRazporeda(){return 'offline:bulk-captured'},
   async razporedVseStrani(code){return structuredClone((await get(code)).season.schedule)},
   async zapisniki(code){const {pack,season}=await get(code);if(competition.source==='fussball-public'){reservation??=reserve(pack,season);await reservation}return season.reports.map(r=>{const z=structuredClone(r.z);appearances.set(z,bulkAppearances(r));return {id:r.id,url:r.url,z}})},
