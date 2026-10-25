@@ -156,7 +156,7 @@ delete from public.player_reports where user_id in (
 insert into public.omejitve_uporabnikov (user_id, velja_do, razlog)
 select p.id, now() + make_interval(days => o.dni), o.razlog
   from (values
-    ('8de578a4-c395-4256-b44a-e6d7ce60a154'::uuid, 30, 'žaljive prijave o igralcih drugih klubov'),
+    ('8de578a4-c395-4256-b44a-e6d7ce60a154'::uuid, 7, 'žaljive prijave o igralcih drugih klubov'),
     ('537dac5b-95ea-4d5a-9201-682daf46b0ea'::uuid, 7, 'lažne in vulgarne prijave'),
     ('67b42251-a663-4e33-afee-dc1c8722f012'::uuid, 7, 'lažne in vulgarne prijave'),
     ('e6aaaf68-d4f1-4a47-b710-b792dbe64392'::uuid, 7, 'lažne in vulgarne prijave'),
