@@ -82,13 +82,11 @@ jobs:
         with:
           path: scripts/.predpomnilnik
           key: zapisniki-DE-bulk-${{ github.run_id }}-${{ github.run_attempt }}
-      - name: Record successful seed persistence
+      - name: Confirm durable exact-run cache before recording seed persistence
         if: steps.prepare.outputs.needs_seed_cache == 'true'
-        run: |
-          node --input-type=module <<'JS'
-          import {atomicCheckpoint} from './scripts/provider-league-batch.mjs'
-          atomicCheckpoint('release/pl-de-bulk/seed-cache-receipt.json',{expected_sha:process.env.EXPECTED_SHA,run_id:process.env.GITHUB_RUN_ID,persisted:true})
-          JS
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/bulk-seed-cache-receipt.mjs
       - name: Recheck source proof and native readiness, activate passes, verify readback
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

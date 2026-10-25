@@ -12,7 +12,7 @@ import {createBulkCapturedSource} from './viri/bulk-captured.mjs'
 import {loadAndVerifyBulkNative} from './bulk-native-proof.mjs'
 import {collectBulkBatch,runBulkRollout} from './bulk-league-rollout.mjs'
 import {rokKroga} from './razporedi.mjs'
-const sha='a'.repeat(40)
+const sha=process.env.GITHUB_SHA??'a'.repeat(40)
 const clone=structuredClone
 async function scenario({tamper=false}={}){
  const f=makePolandBulkFixture(),base=mkdtempSync(join(tmpdir(),'bulk-installed-')),commands=[]

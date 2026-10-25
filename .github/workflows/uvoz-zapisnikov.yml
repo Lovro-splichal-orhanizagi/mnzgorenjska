@@ -200,7 +200,7 @@ jobs:
           path: scripts/.predpomnilnik
           key: zapisniki-${{ matrix.drzava }}-k${{ matrix.kos }}od${{ matrix.kosov }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            zapisniki-${{ matrix.drzava }}-k${{ matrix.kos }}od${{ matrix.kosov }}-
+            ${{ matrix.drzava == 'DE' && 'zapisniki-DE-' || format('zapisniki-{0}-k{1}od{2}-', matrix.drzava, matrix.kos, matrix.kosov) }}
             zapisniki-${{ matrix.drzava }}-
 
       # === Vklopljene lige koša ===========================================
