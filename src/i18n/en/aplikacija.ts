@@ -34,6 +34,14 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: "SLFF is free: no ads, no betting, no subscriptions. Sadly, the server doesn't run on enthusiasm. One beer helps pay for the server and email, and your name lands on the beer wall.",
       kasneje: 'Maybe next time',
       zeSem: 'I already did 🍻',
+      /** Okno po shranjeni ekipi za naslednji krog. */
+      ekipaNaslov: 'Your team for round {krog} is set! 🍺',
+      /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
+      krogNaslov: 'Great round {krog}! 🔥',
+      krogMesta: { one: '+{n} place in the table 🚀', other: '+{n} places in the table 🚀' },
+      krogTocke: 'Points: {tocke} · league average: {povprecje}',
+      /** Sporočilo ob nakupu je javno na /beers. */
+      zid: 'Whatever you write with your beer goes up on the beer wall for everyone to see 👀',
     },
     lestvicaDomov: 'Beer leaderboard',
     // Stran /beers (pages/Piva.tsx): brez zneskov.

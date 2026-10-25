@@ -34,6 +34,14 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'SLFF e gratuit: fără reclame, fără pariuri, fără abonamente. Din păcate, serverul nu merge pe entuziasm. O bere ajută la plata serverului și a e-mailurilor, iar numele tău ajunge pe zidul berii.',
       kasneje: 'Poate data viitoare',
       zeSem: 'Am făcut-o deja 🍻',
+      /** Okno po shranjeni ekipi za naslednji krog. */
+      ekipaNaslov: 'Echipa pentru etapa {krog} e gata! 🍺',
+      /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
+      krogNaslov: 'Etapa {krog}, super! 🔥',
+      krogMesta: { one: '+{n} loc în clasament 🚀', few: '+{n} locuri în clasament 🚀', other: '+{n} de locuri în clasament 🚀' },
+      krogTocke: 'Puncte: {tocke} · media ligii: {povprecje}',
+      /** Sporočilo ob nakupu je javno na /beers. */
+      zid: 'Ce scrii lângă bere ajunge pe peretele berii, la vedere pentru toți 👀',
     },
     lestvicaDomov: 'Clasamentul berilor',
     // Stran /beers (pages/Piva.tsx): brez zneskov.

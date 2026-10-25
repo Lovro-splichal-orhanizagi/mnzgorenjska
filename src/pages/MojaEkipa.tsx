@@ -78,6 +78,7 @@ import { izvor } from '../lib/platforma'
 import { useZaklepPomika } from '../lib/zaklepPomika'
 import { registrirajPush } from '../components/PotisnaObvestila'
 import { EKIPA_SHRANJENA } from '../components/OpozoriloEkipe'
+import { sproziPivoOkno } from '../lib/pivoNavdusenje'
 
 /** Igralec na trgu (`player_overview` / `player_season_standings`). */
 interface IgralecTrga {
@@ -1453,6 +1454,9 @@ export default function MojaEkipa() {
         : t('mojaEkipa.sporocila.shranjenaVeljavna')
       : t('mojaEkipa.sporocila.osnutekShranjen')
     if (!eOsvezitev) setSporocilo([rok, stanje, denar].filter(Boolean).join(' '))
+    // Ekipa je pripravljena za krog: dober trenutek za "Časti pivo" (okno
+    // samo preveri, ali se sme pokazati).
+    if (veljavna && ciljniKrog?.number != null) sproziPivoOkno({ vrsta: 'ekipa', krog: ciljniKrog.number })
 
     // Povabilo v mini ligo, ki je cakalo na ekipo: vstop dokoncamo zdaj, brez
     // vracanja na povezavo iz tujega pogovora.

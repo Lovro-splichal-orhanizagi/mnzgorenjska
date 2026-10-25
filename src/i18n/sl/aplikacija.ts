@@ -40,6 +40,14 @@ export const aplikacija = {
       besedilo: 'Lej, kako zabavno igrico smo naredili. Če bi nas srečal po tekmi, bi nam sigurno dal za pivo. SLFF ostaja brezplačen, brez oglasov in stav, tvoje ime pa pristane na pivskem zidu.',
       kasneje: 'Mogoče naslednjič',
       zeSem: 'Sem že častil 🍻',
+      /** Okno po shranjeni ekipi za naslednji krog. */
+      ekipaNaslov: 'Ekipa za {krog}. krog je pripravljena! 🍺',
+      /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
+      krogNaslov: 'Odličen {krog}. krog! 🔥',
+      krogMesta: { one: '+{n} mesto na lestvici 🚀', two: '+{n} mesti na lestvici 🚀', few: '+{n} mesta na lestvici 🚀', other: '+{n} mest na lestvici 🚀' },
+      krogTocke: 'Točke: {tocke} · povprečje lige: {povprecje}',
+      /** Sporočilo ob nakupu je javno na /beers. */
+      zid: 'Kar napišeš ob pivu, pristane na pivskem zidu na ogled vsem 👀',
     },
     lestvicaDomov: 'Pivska lestvica',
     // Stran /beers (pages/Piva.tsx): brez zneskov.

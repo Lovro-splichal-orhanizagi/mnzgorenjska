@@ -18,6 +18,10 @@ export type KorakLijaka =
   | 'igralec_cta'
   | 'kartica_deljena'
   | 'pivo_okno'
+  | 'pivo_okno_ekipa'
+  | 'pivo_okno_krog'
+  | 'pivo_klik_ekipa'
+  | 'pivo_klik_krog'
 
 export function zabeleziKorak(korak: KorakLijaka) {
   const kljuc = `slff-lijak-${korak}-${new Date().toISOString().slice(0, 10)}`
