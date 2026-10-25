@@ -93,12 +93,22 @@ test('predlog premakne ceno proti izračunani, največ 1.0, in nič ne zapiše',
   assert.deepEqual(zapisi, [])
 })
 
-test('igralec z borzno zgodovino ostane borzi', async () => {
+test('igralec z borzno zgodovino dobi predlog, borzni odmik je v podlagi', async () => {
   const p = liga()
-  p.zgodovina = [{ player_id: 5, round_id: 1, old_value: 4.5, new_value: 4.6 }]
+  // Borza ga je s sidra 4.5 dvignila na 4.8.
+  p.igralci[4].value = 4.8
+  p.zgodovina = [{ player_id: 5, round_id: 1, old_value: 4.5, new_value: 4.8 }]
   const { izid, zapisi } = await ovrednoti(p)
-  assert.equal(izid.izid, 'borza')
+  assert.equal(izid.izid, 'premaknjena')
+  assert.equal(izid.stara, 4.8)
+  // Ista pravila kot tedenski zagon: največ 1.0, na mreži 0.5 proti trenutni ceni.
+  assert.equal(izid.nova, 5.5)
+  assert.deepEqual(izid.podlaga.borza, { sidro: 4.5, odmik: 0.3 })
   assert.deepEqual(zapisi, [])
+})
+
+test('igralec brez borze nima borznega dela v podlagi', async () => {
+  assert.equal((await ovrednoti(liga())).izid.podlaga.borza, null)
 })
 
 test('ta teden že prevrednoten in zaklenjen igralec se ne premakneta', async () => {

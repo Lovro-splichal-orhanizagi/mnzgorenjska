@@ -6,7 +6,7 @@
 //   {"player_id": 123, "jezik"?: "sl"|…} → {"url": "<Checkout>"}
 //
 // Kaj sme, odloči baza z JWT kupca (`ponovna_cena_pripravi`: stikalo
-// `ponovna_cena`, liga, igralec, borza, teden, 7 dni, rok kroga; zahtevek
+// `ponovna_cena`, liga, igralec, teden, 7 dni, rok kroga; zahtevek
 // 'caka_placilo'). Plačilo zabeleži stripe-webhook (metadata app=slff-cena →
 // `ponovna_cena_iz_placila`), predlog izračuna delovni tok *Ponovne cene*,
 // ceno premakne šele admin. Cena po lookup_key `slff_ponovna_cena` (z DDV).

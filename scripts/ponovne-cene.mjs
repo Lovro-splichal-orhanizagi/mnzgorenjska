@@ -17,7 +17,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const IZIDI = ['premaknjena', 'brez_spremembe', 'borza', 'ta_teden', 'zaklenjena', 'ni_igralca']
+const IZIDI = ['premaknjena', 'brez_spremembe', 'ta_teden', 'zaklenjena', 'ni_igralca']
 
 /** Izid ovrednoti-igralce za enega igralca ali null, če izračun ni uspel. */
 export function izracunaj(liga, igralec) {

@@ -435,7 +435,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     napaka: 'A fizetést nem sikerült elindítani. Próbáld újra.',
     niMogoce: 'Ennek a játékosnak az ára most nem értékelhető újra.',
     ovire: {
-      borza: 'Ennek a játékosnak az árát minden forduló után a piac mozgatja, ezért nem értékelhető újra.',
       taTeden: 'Az árat ezen a héten már újraértékelték. Próbáld jövő héten.',
       nedavno: 'Ezt a játékost nemrég értékelték újra, vagy egy kérés már ellenőrzés alatt van.',
       rok: 'A forduló határidejéig kevesebb mint 24 óra van hátra. Próbáld a forduló kezdete után.',

@@ -132,8 +132,10 @@ const samoNove = process.argv.includes('--samo-nove')
 // enega igralca (delovni tok *Ponovne cene*, migracija 20261025193100).
 // Percentili so iz cele lige kot vedno, pravila so tedenskega zagona. Nikoli
 // ne piše (ceno uveljavi šele admin s `admin_ponovna_cena_potrdi`); izid
-// (premaknjena, brez_spremembe, borza, ta_teden, zaklenjena, ni_igralca) s
-// podlago izračuna gre v JSON za `ponovna_cena_predlog`.
+// (premaknjena, brez_spremembe, ta_teden, zaklenjena, ni_igralca) s podlago
+// izračuna gre v JSON za `ponovna_cena_predlog`. Igralca z borzno zgodovino
+// tedenski zagon preskoči, plačljivi izračun pa ne (migracija 20261025213100):
+// cena gre proti izračunani največ za 1.0, borzni odmik od sidra ostane.
 const samoIgralec = arg('igralec') == null ? null : Number(arg('igralec'))
 const izidPot = arg('izid')
 if (samoIgralec != null && (!Number.isInteger(samoIgralec) || !tedensko || pisi || znova || samoNove || typeof izidPot !== 'string')) {
@@ -438,8 +440,7 @@ for (const p of igralci ?? []) {
   // Borza upravlja ceno igralca, ki je že igral v živi ligi. Novinca iz višje
   // lige, ki je pod ceno iz višje lige, tedenski zagon vseeno dvigne (z njim
   // potuje sidro, zato borzni odmik ostane) — sicer bi ostal pri 4.5.
-  if (tedensko && naBorzi.has(p.id) && !(prenos && prenos.cena > Number(p.value))) {
-    if (samoIgralec != null) izidIgralca.izid = 'borza'
+  if (tedensko && samoIgralec == null && naBorzi.has(p.id) && !(prenos && prenos.cena > Number(p.value))) {
     borznih++
     continue
   }
@@ -509,6 +510,11 @@ for (const p of igralci ?? []) {
           prag,
           pozicija: koda,
           visja_liga: prenos ? { liga: prenos.liga, cena: prenos.tamCena, minute: prenos.minute } : null,
+          // Borzni del cene: sidro in odmik, ki ga je nabrala borza (ostane).
+          borza: naBorzi.has(p.id)
+            ? { sidro: p.value_start == null ? null : Number(p.value_start),
+                odmik: p.value_start == null ? null : Math.round((stara - Number(p.value_start)) * 10) / 10 }
+            : null,
         },
       }
     }

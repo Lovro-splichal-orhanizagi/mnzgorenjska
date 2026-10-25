@@ -435,7 +435,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     napaka: 'Ödeme başlatılamadı. Tekrar dene.',
     niMogoce: 'Bu oyuncunun fiyatı şu anda yeniden değerlendirilemez.',
     ovire: {
-      borza: 'Bu oyuncunun fiyatını her haftadan sonra piyasa değiştirir, bu yüzden yeniden değerlendirilemez.',
       taTeden: 'Fiyat bu hafta zaten yeniden değerlendirildi. Gelecek hafta tekrar dene.',
       nedavno: 'Bu oyuncu kısa süre önce yeniden değerlendirildi veya bir talep zaten inceleniyor.',
       rok: 'Hafta son tarihine 24 saatten az kaldı. Hafta başladıktan sonra tekrar dene.',

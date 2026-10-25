@@ -435,7 +435,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     napaka: 'Ödənişi başlatmaq mümkün olmadı. Yenidən cəhd et.',
     niMogoce: 'Bu oyunçunun qiyməti hazırda yenidən qiymətləndirilə bilməz.',
     ovire: {
-      borza: 'Bu oyunçunun qiymətini hər turdan sonra bazar dəyişir, ona görə yenidən qiymətləndirmə mümkün deyil.',
       taTeden: 'Qiymət bu həftə artıq yenidən qiymətləndirilib. Gələn həftə cəhd et.',
       nedavno: 'Bu oyunçu bu yaxınlarda yenidən qiymətləndirilib və ya sorğu artıq yoxlanılır.',
       rok: 'Turun son müddətinə 24 saatdan az qalıb. Tur başlayandan sonra cəhd et.',

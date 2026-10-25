@@ -437,7 +437,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     napaka: 'Plaćanje nije bilo moguće započeti. Pokušaj ponovno.',
     niMogoce: 'Ponovna procjena cijene za ovog igrača trenutno nije moguća.',
     ovire: {
-      borza: 'Cijenu ovog igrača nakon svakog kola pomiče burza, pa ponovna procjena nije moguća.',
       taTeden: 'Cijena je ovaj tjedan već ponovno procijenjena. Pokušaj sljedeći tjedan.',
       nedavno: 'Ovaj igrač je nedavno ponovno procijenjen ili je zahtjev već u pregledu.',
       rok: 'Do roka kola ostalo je manje od 24 sata. Pokušaj kad kolo počne.',

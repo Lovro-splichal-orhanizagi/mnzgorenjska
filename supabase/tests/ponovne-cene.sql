@@ -1,5 +1,6 @@
--- Plačljivo ponovno vrednotenje cene (20261025193100): kdo sme kupiti, da
--- plačilo in predlog ceno pustita, da jo premakne le admin, in okno roka.
+-- Plačljivo ponovno vrednotenje cene (20261025193100, borza 20261025213100):
+-- kdo sme kupiti, da plačilo in predlog ceno pustita, da jo premakne le admin,
+-- okno roka in igralec z borzno zgodovino (nočna borza potrjene cene ne povozi).
 -- Teče v transakciji in se povrne: psql -v ON_ERROR_STOP=1 -f tega.
 begin;
 
@@ -28,7 +29,7 @@ insert into rounds (id, competition_id, season, number, deadline_at) overriding 
   (990122, 990102, sezona_lige(990102), 1, now() + interval '10 hours');
 insert into players (id, competition_id, team_id, full_name, last_name, first_name, value, value_start) overriding system value values
   (990131, 990101, 990111, 'Kos Jan', 'Kos', 'Jan', 4.5, 4.5),
-  (990132, 990101, 990111, 'Borza Ana', 'Borza', 'Ana', 6.0, 6.0),
+  (990132, 990101, 990111, 'Borza Ana', 'Borza', 'Ana', 6.1, 6.0),
   (990133, 990102, 990111, 'Rok Tim', 'Rok', 'Tim', 5.0, 5.0),
   (990134, 990103, 990111, 'Mlad Ivo', 'Mlad', 'Ivo', 4.5, 4.5);
 insert into price_changes (player_id, round_id, old_value, new_value, form) values (990132, 990121, 6.0, 6.1, 0);
@@ -64,7 +65,7 @@ declare
   v_napaka text;
 begin
   assert ponovna_cena_stanje(990131) ->> 'ovira' is null, 'igralec je na voljo';
-  assert ponovna_cena_stanje(990132) ->> 'ovira' = 'borza', 'borza';
+  assert ponovna_cena_stanje(990132) ->> 'ovira' is null, 'borzni igralec je na voljo';
   assert ponovna_cena_stanje(990133) ->> 'ovira' = 'rok', 'rok kroga';
   assert ponovna_cena_stanje(990134) ->> 'ovira' = 'mladinska', 'mladinska liga';
   select zahtevek into v_id from ponovna_cena_pripravi(990131);
@@ -73,12 +74,7 @@ begin
   select zahtevek into v_id from ponovna_cena_pripravi(990131);
   assert v_id is not null, 'ponovni poskus';
 
-  begin
-    perform ponovna_cena_pripravi(990132);
-    raise exception 'borza ni zavrnjena';
-  exception when others then v_napaka := sqlerrm;
-  end;
-  assert v_napaka like 'Ponovno vrednotenje cene zdaj ni mogoče (borza)%', 'borza: ' || v_napaka;
+  assert (select zahtevek from ponovna_cena_pripravi(990132)) is not null, 'borzni igralec: zahtevek';
 
   begin
     perform 1 from ponovne_cene;
@@ -203,6 +199,48 @@ begin
 end;
 $$;
 reset role;
+
+-- Borzni igralec (6.0 → 6.1 v krogu 1): brez potrditve cena ostane, potrjena
+-- premakne ceno, sidro z isto razliko in zadnjo vrstico borze; nočni ponovni
+-- obračun je ne povozi, poznejši borzni premik gre od nje.
+reset role;
+delete from ponovne_cene where player_id = 990132;
+insert into ponovne_cene (player_id, competition_id, user_id, stanje, placano_at, izid, stara_cena, nova_cena, podlaga)
+values (990132, 990101, '00000000-0000-0000-0000-00000000e001', 'v_pregledu', now(), 'premaknjena', 6.1, 7.0,
+        '{"borza": {"sidro": 6.0, "odmik": 0.1}}');
+create temp table t_borza as select id from ponovne_cene where player_id = 990132;
+grant select on t_borza to authenticated;
+do $$
+begin
+  assert (select value from players where id = 990132) = 6.1, 'borza: brez potrditve cena ostane';
+end;
+$$;
+set local role authenticated;
+do $$
+begin
+  assert admin_ponovna_cena_potrdi((select id from t_borza)) = 'potrjeno', 'borza: potrjeno';
+end;
+$$;
+reset role;
+do $$
+begin
+  assert (select value || '|' || value_start from players where id = 990132) = '7.0|6.9', 'borza: cena in sidro';
+  assert (select new_value from price_changes where player_id = 990132 and round_id = 990121) = 7.0, 'borza: zadnja vrstica';
+  -- Nočna borza (uveljavi_zapadle_cene → uveljavi_cene) ceno postavi iz vrstice.
+  perform uveljavi_cene(990121);
+  assert (select value from players where id = 990132) = 7.0, 'borza: noč ne povozi';
+end;
+$$;
+insert into rounds (id, competition_id, season, number, deadline_at) overriding system value
+values (990123, 990101, sezona_lige(990101), 2, now() + interval '12 days');
+insert into price_changes (player_id, round_id, old_value, new_value, form) values (990132, 990123, 7.0, 7.2, 0);
+do $$
+begin
+  perform uveljavi_cene(990121);
+  perform uveljavi_cene(990123);
+  assert (select value from players where id = 990132) = 7.2, 'borza: poznejši premik gre od potrjene cene';
+end;
+$$;
 
 -- Plačan zahtevek v oknu roka: predlog da, potrditev ne.
 insert into ponovne_cene (player_id, competition_id, user_id, stanje, placano_at, izid, stara_cena, nova_cena)

@@ -755,14 +755,25 @@
   delovni tok vsakih 15 min) → `potrjeno` (`admin_ponovna_cena_potrdi`: value,
   sidro `value_start` z isto razliko, `repriced_week/at`, kot tedenski zagon) ali
   `zavrnjeno` (cena ostane, vračilo ročno v Stripe, opomba). `za_vracilo`:
-  po plačilu ni mogoče (hkratni kupec, igralec prišel na borzo). Nakup zavrne
+  po plačilu ni mogoče (hkratni kupec, igralec se je vmes zaklenil ...). Nakup zavrne
   `ponovna_cena_ovira`: stikalo `ponovna_cena` (0/1 admin in testerji/2 vsi),
   neaktivna ali mladinska liga, neaktiven/anonimiziran/izstopil/zaklenjen
-  igralec, borzna zgodovina (ceno vodi borza), ta ISO teden že prevrednoten,
+  igralec, ta ISO teden že prevrednoten,
   odprt zahtevek ali plačan v 7 dneh (od kogarkoli), odprta seja (35 min),
   rok kroga −24 h do zaklepa. Potrditev zavrne zastarel predlog (cena se je
-  vmes spremenila; "Izračunaj znova"), borzo, isti teden in okno roka.
-  Tedenska meja 1.0 tako velja za tedenski in plačljivi premik skupaj.
+  vmes spremenila; "Izračunaj znova"), isti teden in okno roka.
+  Tedenska meja 1.0 tako velja za tedenski in plačljivi premik skupaj;
+  borznih premikov (po krogih) ne ustavi. **Borzni igralci** (migracija
+  20261025213100): tedenski zagon jih preskoči, ker nočni
+  `uveljavi_zapadle_cene` za kroge zadnjih 14 dni znova postavi
+  `value = price_changes.new_value` in bi neposreden popravek povozil. Plačljivi
+  izračun (`--igralec`) jih ne preskoči: cena gre proti izračunani največ za
+  1.0 (mreža 0.5 kot ob tedenskem zagonu), podlaga pokaže sidro in borzni
+  odmik. Potrditev premakne `value` (znotraj `meje_borze()`), sidro z isto
+  razliko (odmik ostane) in v igralčevi **zadnji** vrstici `price_changes`
+  postavi `new_value` na potrjeno ceno (kot kazen neuradne odsotnosti), zato
+  je noč ne povozi, poznejši krogi pa se računajo od nje. Nove vrstice ne
+  doda: vrstica za še neobračunan krog bi igralcu vzela premik tega kroga.
   Omejeni računi ne kupujejo (`zavrni_omejenega`). Tabela je zaprta (tudi za
   agente); stran bere le `ponovna_cena_stanje`. Administracija → Igralci →
   Ponovne cene (stikalo, predlogi, potrditev, zavrnitev). V aplikaciji ga ni.

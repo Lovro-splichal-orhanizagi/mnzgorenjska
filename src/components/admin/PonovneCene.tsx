@@ -19,7 +19,7 @@ interface Zahtevek {
   izid: string | null
   stara: number | null
   nova: number | null
-  podlaga: { ciljna?: number; minute?: number; goli?: number; tekme?: number; prag?: number; pozicija?: string; visja_liga?: { liga: string; cena: number } | null } | null
+  podlaga: { ciljna?: number; minute?: number; goli?: number; tekme?: number; prag?: number; pozicija?: string; visja_liga?: { liga: string; cena: number } | null; borza?: { sidro: number | null; odmik: number | null } | null } | null
   opomba: string | null
   stripe_placilo: string | null
   v_roku: boolean
@@ -107,6 +107,8 @@ export default function PonovneCene() {
                     {' '}· izračunana {z.podlaga.ciljna?.toFixed(1)}, {z.podlaga.minute} min, {z.podlaga.goli} golov, {z.podlaga.tekme} tekem,
                     prag {z.podlaga.prag}, {z.podlaga.pozicija}
                     {z.podlaga.visja_liga && `, višja liga ${z.podlaga.visja_liga.liga} (${z.podlaga.visja_liga.cena})`}
+                    {z.podlaga.borza &&
+                      `, borza: sidro ${z.podlaga.borza.sidro?.toFixed(1) ?? '?'}, borzni odmik ${(z.podlaga.borza.odmik ?? 0) >= 0 ? '+' : ''}${z.podlaga.borza.odmik?.toFixed(1) ?? '?'} (ostane)`}
                   </span>
                 )}
               </p>

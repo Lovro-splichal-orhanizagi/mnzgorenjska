@@ -439,7 +439,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     napaka: 'Nie udało się rozpocząć płatności. Spróbuj ponownie.',
     niMogoce: 'Ceny tego zawodnika nie można teraz ponownie wycenić.',
     ovire: {
-      borza: 'Cenę tego zawodnika po każdej kolejce zmienia rynek, więc ponowna wycena nie jest możliwa.',
       taTeden: 'Cena była już w tym tygodniu ponownie wyceniona. Spróbuj w przyszłym tygodniu.',
       nedavno: 'Ten zawodnik był niedawno wyceniony ponownie albo wniosek jest już weryfikowany.',
       rok: 'Do terminu kolejki zostało mniej niż 24 godziny. Spróbuj, gdy kolejka się zacznie.',

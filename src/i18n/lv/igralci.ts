@@ -440,7 +440,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     napaka: 'Maksājumu neizdevās sākt. Mēģini vēlreiz.',
     niMogoce: 'Šī spēlētāja cenu pašlaik nevar pārvērtēt.',
     ovire: {
-      borza: 'Šī spēlētāja cenu pēc katras kārtas maina tirgus, tāpēc pārvērtēšana nav iespējama.',
       taTeden: 'Cena šonedēļ jau ir pārvērtēta. Mēģini nākamnedēļ.',
       nedavno: 'Šis spēlētājs nesen tika pārvērtēts vai pieprasījums jau tiek pārskatīts.',
       rok: 'Līdz kārtas termiņam ir mazāk nekā 24 stundas. Mēģini, kad kārta sāksies.',
