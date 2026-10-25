@@ -49,5 +49,6 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     prosnjaCaka: 'Bu liqa üçün müraciətin artıq gözləmədədir.',
     prosnjaZavrnjena: 'Bu liqa üçün müraciətin bu yaxınlarda rədd edilib. Yeni müraciəti rədd edilmədən 14 gün sonra göndərə bilərsən.',
     klubNeIgra: 'Seçilmiş klub bu liqada oynamır.',
+    omejen: 'Hesabın bu tarixədək məhdudlaşdırılıb: {do}. O vaxta qədər səs verə, söhbətə yaza və bildiriş göndərə bilməzsən.',
   },
 }

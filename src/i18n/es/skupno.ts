@@ -50,5 +50,6 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     prosnjaCaka: 'Tu solicitud para esta liga ya está pendiente.',
     prosnjaZavrnjena: 'Tu solicitud para esta liga se rechazó hace poco. Puedes enviar otra 14 días después del rechazo.',
     klubNeIgra: 'El club seleccionado no juega en esta liga.',
+    omejen: 'Tu cuenta está restringida hasta el {do}. Hasta entonces no puedes votar, escribir en el chat ni enviar avisos.',
   },
 }

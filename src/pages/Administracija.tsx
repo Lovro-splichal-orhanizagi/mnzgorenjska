@@ -17,6 +17,7 @@ import KlubskiRacuni from '../components/admin/KlubskiRacuni'
 import Prevzemi from '../components/admin/Prevzemi'
 import Preverjeni from '../components/admin/Preverjeni'
 import PrijaveMiniLig from '../components/admin/PrijaveMiniLig'
+import OmejitveUporabnikov from '../components/admin/OmejitveUporabnikov'
 import RastLig from '../components/admin/RastLig'
 import ZeljeLig from '../components/admin/ZeljeLig'
 import Rast from '../components/admin/Rast'
@@ -692,6 +693,7 @@ export default function Administracija() {
         { id: 'potrjeni-poznavalci', naslov: 'Potrjeni poznavalci' },
         { id: 'klubski-racuni', naslov: 'Klubski računi' },
         { id: 'mini-lige', naslov: 'Prijave mini lig' },
+        { id: 'omejitve', naslov: 'Omejitve in prijave igralcev' },
       ],
     },
     {
@@ -810,6 +812,9 @@ export default function Administracija() {
             </Razdelek>
             <Razdelek id="mini-lige">
               <PrijaveMiniLig />
+            </Razdelek>
+            <Razdelek id="omejitve">
+              <OmejitveUporabnikov />
             </Razdelek>
             <Razdelek id="rast-lig">
               <RastLig />

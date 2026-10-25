@@ -2586,6 +2586,51 @@ export type Database = {
         }
         Relationships: []
       }
+      omejitve_uporabnikov: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: number
+          odstranjena_at: string | null
+          razlog: string
+          user_id: string
+          velja_do: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: number
+          odstranjena_at?: string | null
+          razlog: string
+          user_id: string
+          velja_do: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: number
+          odstranjena_at?: string | null
+          razlog?: string
+          user_id?: string
+          velja_do?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "omejitve_uporabnikov_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "omejitve_uporabnikov_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       piva: {
         Row: {
           created_at: string
@@ -7771,7 +7816,24 @@ export type Database = {
         Args: { p_player_id: number }
         Returns: string
       }
+      admin_odstrani_omejitev: { Args: { p_id: number }; Returns: undefined }
       admin_odvzemi_preverjen: { Args: { p_id: number }; Returns: undefined }
+      admin_omeji_uporabnika: {
+        Args: { p_dni: number; p_razlog: string; p_user_id: string }
+        Returns: number
+      }
+      admin_omejitve: {
+        Args: never
+        Returns: {
+          avtor: string
+          created_at: string
+          id: number
+          ime: string
+          razlog: string
+          user_id: string
+          velja_do: string
+        }[]
+      }
       admin_piva: {
         Args: never
         Returns: {
@@ -8377,6 +8439,7 @@ export type Database = {
         Returns: boolean
       }
       je_mladinski_slug: { Args: { p_slug: string }; Returns: boolean }
+      je_omejen: { Args: { p_uid: string }; Returns: boolean }
       je_potrjen_igralec: { Args: { p_player_id: number }; Returns: boolean }
       je_poznavalec_lige: {
         Args: { p_competition_id: number }
@@ -8767,6 +8830,7 @@ export type Database = {
         Returns: string
       }
       okno_preracuna_tock: { Args: never; Returns: string }
+      omejen_do: { Args: { p_uid: string }; Returns: string }
       osvezi_statistiko_igralcev: {
         Args: { p_igralci: number[] }
         Returns: undefined

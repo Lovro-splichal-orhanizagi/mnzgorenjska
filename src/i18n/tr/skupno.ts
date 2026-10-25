@@ -50,5 +50,6 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     prosnjaCaka: 'Bu lig için başvurun zaten inceleniyor.',
     prosnjaZavrnjena: 'Bu lig için başvurun kısa süre önce reddedildi. 14 gün sonra yeni bir başvuru gönderebilirsin.',
     klubNeIgra: 'Seçilen kulüp bu ligde oynamıyor.',
+    omejen: 'Hesabın şu tarihe kadar kısıtlandı: {do}. O zamana kadar oy veremez, sohbete yazamaz ve bildirim gönderemezsin.',
   },
 }
