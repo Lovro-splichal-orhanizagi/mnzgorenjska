@@ -49,5 +49,6 @@ export const skupno = {
     prosnjaCaka: 'Tvoja prošnja za to ligo že čaka.',
     prosnjaZavrnjena: 'Prošnja za to ligo je bila nedavno zavrnjena. Novo lahko oddaš 14 dni po zavrnitvi.',
     klubNeIgra: 'Izbrani klub ne igra v tej ligi.',
+    omejen: 'Tvoj račun je omejen do {do}. Do takrat ne moreš glasovati, pisati v klepet ali oddajati prijav.',
   },
 }

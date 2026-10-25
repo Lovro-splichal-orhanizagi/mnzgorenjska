@@ -7,6 +7,7 @@ import type { FormEvent } from 'react'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { t, tx, datum, jezikSlovarja } from '../i18n'
+import { prevediNapako } from '../lib/napake'
 
 // Anonimni klepet — sporočila so javna, avtor pa skrit za psevdonimom, ki se
 // deterministično izpelje iz user_id, tako da ista oseba vedno "govori" kot
@@ -380,7 +381,7 @@ export default function Klepet() {
       .select('id, content, alias, created_at')
       .single()
     setPosiljam(false)
-    if (error) return setNapaka(error.message)
+    if (error) return setNapaka(prevediNapako(error.message))
     if (data) setSporocila((prej) => [{ ...data, je_moje: true }, ...prej.filter((s) => s.id !== data.id)])
     setBesedilo('')
   }

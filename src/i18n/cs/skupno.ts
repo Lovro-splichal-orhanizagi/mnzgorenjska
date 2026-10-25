@@ -49,5 +49,6 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     prosnjaCaka: 'Tvoje žádost pro tuto ligu už čeká na vyřízení.',
     prosnjaZavrnjena: 'Žádost pro tuto ligu byla nedávno zamítnuta. Novou můžeš poslat 14 dní po zamítnutí.',
     klubNeIgra: 'Vybraný klub v této lize nehraje.',
+    omejen: 'Tvůj účet je omezen do {do}. Do té doby nemůžeš hlasovat, psát do chatu ani posílat hlášení.',
   },
 }

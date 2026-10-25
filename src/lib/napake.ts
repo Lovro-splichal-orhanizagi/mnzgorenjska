@@ -1,6 +1,6 @@
 // Napake iz baze (RPC) so slovenske. Tiste, ki jih vidi navaden uporabnik,
 // prevedemo; neznano sporočilo ostane, kot je (admin ostaja slovenski).
-import { t } from '../i18n'
+import { datumUra, t } from '../i18n'
 
 const ZNANE: [RegExp, Parameters<typeof t>[0]][] = [
   [/^Mini lige s to kodo ni/, 'skupno.napakeRpc.miniLigaNi'],
@@ -61,6 +61,9 @@ const ZNANE: [RegExp, Parameters<typeof t>[0]][] = [
 ]
 
 export function prevediNapako(sporocilo: string): string {
+  // Omejen račun (zavrni_omejenega): rok pride v ISO in se izpiše v jeziku.
+  const omejen = sporocilo.match(/^Račun je omejen do (\S+?)\.?$/)
+  if (omejen) return t('skupno.napakeRpc.omejen', { do: datumUra(omejen[1], { dateStyle: 'medium', timeStyle: 'short' }) })
   const zadetek = ZNANE.find(([vzorec]) => vzorec.test(sporocilo))
   return zadetek ? t(zadetek[1]) : sporocilo
 }

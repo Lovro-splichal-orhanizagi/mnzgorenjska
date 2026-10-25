@@ -48,5 +48,6 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     prosnjaCaka: 'Your request for this league is already pending.',
     prosnjaZavrnjena: 'Your request for this league was recently declined. You can send a new one 14 days later.',
     klubNeIgra: "The selected club doesn't play in this league.",
+    omejen: 'Your account is restricted until {do}. Until then you can’t vote, write in the chat or send reports.',
   },
 }

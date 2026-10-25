@@ -49,5 +49,6 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     prosnjaCaka: 'Sinu taotlus selle liiga kohta on juba ootel.',
     prosnjaZavrnjena: 'Sinu taotlus selle liiga kohta lükati hiljuti tagasi. Uue saad saata 14 päeva pärast.',
     klubNeIgra: 'Valitud klubi selles liigas ei mängi.',
+    omejen: 'Sinu konto on piiratud kuni {do}. Seni ei saa sa hääletada, vestlusesse kirjutada ega teateid saata.',
   },
 }

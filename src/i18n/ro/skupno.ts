@@ -52,5 +52,6 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     prosnjaCaka: 'Cererea ta pentru această ligă așteaptă deja.',
     prosnjaZavrnjena: 'Cererea pentru această ligă a fost respinsă recent. Poți trimite una nouă la 14 zile după respingere.',
     klubNeIgra: 'Clubul ales nu joacă în această ligă.',
+    omejen: 'Contul tău este restricționat până la {do}. Până atunci nu poți vota, scrie în chat sau trimite raportări.',
   },
 }

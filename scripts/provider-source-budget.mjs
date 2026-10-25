@@ -13,13 +13,25 @@ async function boundedSourceBody(response){
  try{for(;;){const {done,value}=await reader.read();if(done)break;length+=value.byteLength;if(length>MAX_BYTES){void reader.cancel().catch(()=>{});throw limit('Source response exceeds bounded HTML size.')}chunks.push(value)}}finally{reader.releaseLock()}
  return Buffer.concat(chunks,length)
 }
-// Some public match pages canonically switch from the path form to this
-// observed query form. Every provider identity must remain exactly the same.
-function sameMatchQueryRedirect(source,target){
- const ids=/^\/match\/([1-9]\d*)\/(0|[1-9]\d*)\/([1-9]\d*)\/([1-9]\d*)\/([1-9]\d*)\.html$/.exec(source.pathname)
- if(!ids||source.search||target.pathname!=='/match')return false
- const expected={evad:ids[1],szervezet:ids[2],verseny:ids[3],fordulo:ids[4],itemId:ids[5]}
- return [...target.searchParams].length===5&&Object.entries(expected).every(([key,value])=>target.searchParams.getAll(key).length===1&&target.searchParams.get(key)===value)
+// Observed public path/query canonical forms must preserve every numeric identity.
+const ID_FIELDS=['evad','szervezet','verseny','fordulo','itemId']
+const numericId=(key,value)=>(key==='szervezet'?/^(0|[1-9]\d*)$/:/^[1-9]\d*$/).test(value)
+function publicPathIdentity(url){
+ for(const [route,pattern]of [
+  ['/league',/^\/league\/([1-9]\d*)\/(0|[1-9]\d*)\/([1-9]\d*)\/([1-9]\d*)\.html$/],
+  ['/match',/^\/match\/([1-9]\d*)\/(0|[1-9]\d*)\/([1-9]\d*)\/([1-9]\d*)\/([1-9]\d*)\.html$/],
+ ]){const ids=pattern.exec(url.pathname);if(ids)return {route,expected:Object.fromEntries(ids.slice(1).map((value,index)=>[ID_FIELDS[index],value]))}}
+ return null
+}
+function sameIdentityQueryRedirect(source,target){
+ const identity=publicPathIdentity(source)
+ if(!identity||source.search||target.pathname!==identity.route)return null
+ return [...target.searchParams].length===Object.keys(identity.expected).length&&Object.entries(identity.expected).every(([key,value])=>target.searchParams.getAll(key).length===1&&target.searchParams.get(key)===value)?identity.route:null
+}
+function publicJournalLocation(url,source=false){
+ if(!url)return {origin:'[unparseable-origin]',route:'[unreviewed-route]',query:[]}
+ const identity=publicPathIdentity(url),query=[...url.searchParams].map(([key,value])=>ID_FIELDS.includes(key)?[key,numericId(key,value)?value:'[redacted]']:['[redacted]','[redacted]'])
+ return {origin:url.origin,...(source?{path:identity?url.pathname:'[unreviewed-route]'}:{route:['/league','/match'].includes(url.pathname)?url.pathname:identity?.route??'[unreviewed-route]'}),query}
 }
 const stopError=message=>Object.assign(Error(`Provider source stopped: ${message}`),{code:'SLFF_SOURCE_STOP',zavrnitev:true})
 function save(path,value){const tmp=path+'.tmp';writeFileSync(tmp,JSON.stringify(value,null,2)+'\n',{mode:0o600});const fd=openSync(tmp,'r');try{fsyncSync(fd)}finally{closeSync(fd)}renameSync(tmp,path)}
@@ -54,18 +66,17 @@ export function createBudgetFetch({path,maxRequests,databaseOrigin,fetch:request
     const started=now()
     if(!Number.isFinite(started)||state.last_started_ms!==null&&started<state.last_started_ms)stop('Invalid source clock.')
     state.requests++;state.last_started_ms=started;state.pending=true
-    const event={sequence:state.requests,started_at:new Date(started).toISOString(),host:url.hostname,request_sha256:createHash('sha256').update(url.href).digest('hex'),status:'RUNNING'}
+    const event={sequence:state.requests,started_at:new Date(started).toISOString(),host:url.hostname,source:publicJournalLocation(url,true),request_sha256:createHash('sha256').update(url.href).digest('hex'),status:'RUNNING'}
     state.events.push(event);save(path,state)
     let response
     try{response=await request(url,{method:'GET',redirect:'manual',headers:{'user-agent':'SLFF fantasy (https://slff.eu)'},signal:init.signal?AbortSignal.any([init.signal,AbortSignal.timeout(30000)]):AbortSignal.timeout(30000)})}catch{event.status='UNKNOWN';stop('Source transport failure; response unknown.')}
     event.http_status=response.status
     if([301,302,307,308].includes(response.status)) {
-     let target
-     try{target=new URL(response.headers.get('location'),url)}catch{event.status='STOPPED';stop('Invalid canonical source redirect.')}
-     const samePath=target.pathname===url.pathname&&target.search===url.search,sameMatch=sameMatchQueryRedirect(url,target)
-     event.redirect_kind='unreviewed'
-     if(hop!==0||url.hostname!==HOST||target.protocol!=='https:'||target.hostname!==CANONICAL||target.port||target.username||target.password||target.hash||!samePath&&!sameMatch){event.status='STOPPED';stop('Unreviewed or repeated canonical source redirect.')}
-     event.redirect_kind=samePath?'same-path':'same-match-query';event.status='CANONICAL_REDIRECT';state.pending=false;save(path,state);await response.body?.cancel();url=target;continue
+     let target;event.redirect_kind='unreviewed';event.redirect_target=publicJournalLocation(null)
+     try{target=new URL(response.headers.get('location'),url);event.redirect_target=publicJournalLocation(target)}catch{event.status='STOPPED';stop('Invalid canonical source redirect.')}
+     const samePath=target.pathname===url.pathname&&target.search===url.search,sameQuery=sameIdentityQueryRedirect(url,target)
+     if(hop!==0||url.hostname!==HOST||target.protocol!=='https:'||target.hostname!==CANONICAL||target.port||target.username||target.password||target.hash||!samePath&&!sameQuery){event.status='STOPPED';stop('Unreviewed or repeated canonical source redirect.')}
+     event.redirect_kind=samePath?'same-path':`same-${sameQuery.slice(1)}-query`;event.status='CANONICAL_REDIRECT';state.pending=false;save(path,state);await response.body?.cancel();url=target;continue
     }
     if(response.status!==200){event.status='STOPPED';stop(`Source HTTP ${response.status}; no source retry authorized.`)}
     let bytes
