@@ -34,6 +34,14 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'SLFF ücretsiz: reklam yok, bahis yok, abonelik yok. Ne yazık ki sunucu heyecanla çalışmıyor. Bir bira sunucu ve e-posta masraflarına yardım eder, adın da bira duvarına yazılır.',
       kasneje: 'Belki bir dahaki sefere',
       zeSem: 'Zaten ısmarladım 🍻',
+      /** Okno po shranjeni ekipi za naslednji krog. */
+      ekipaNaslov: '{krog}. hafta için takımın hazır! 🍺',
+      /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
+      krogNaslov: 'Harika bir {krog}. hafta! 🔥',
+      krogMesta: { one: 'Sıralamada +{n} basamak 🚀', other: 'Sıralamada +{n} basamak 🚀' },
+      krogTocke: 'Puan: {tocke} · lig ortalaması: {povprecje}',
+      /** Sporočilo ob nakupu je javno na /beers. */
+      zid: 'Biranla birlikte yazdığın her şey, herkes görsün diye bira duvarına çıkar 👀',
     },
     lestvicaDomov: 'Bira sıralaması',
     // Stran /beers (pages/Piva.tsx): brez zneskov.

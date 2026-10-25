@@ -34,6 +34,14 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'SLFF pulsuzdur: reklam yox, mərc yox, abunə yox. Təəssüf ki, server həvəslə işləmir. Bir pivə server və poçt xərclərinə kömək edir, adın isə pivə divarına düşür.',
       kasneje: 'Bəlkə növbəti dəfə',
       zeSem: 'Artıq qonaq etmişəm 🍻',
+      /** Okno po shranjeni ekipi za naslednji krog. */
+      ekipaNaslov: '{krog}-ci tur üçün komandan hazırdır! 🍺',
+      /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
+      krogNaslov: 'Əla {krog}-ci tur! 🔥',
+      krogMesta: { one: 'Cədvəldə +{n} pillə 🚀', other: 'Cədvəldə +{n} pillə 🚀' },
+      krogTocke: 'Xal: {tocke} · liqa ortalaması: {povprecje}',
+      /** Sporočilo ob nakupu je javno na /beers. */
+      zid: 'Pivə ilə yazdığın hər şey hamı görsün deyə pivə divarına düşür 👀',
     },
     lestvicaDomov: 'Pivə reytinqi',
     // Stran /beers (pages/Piva.tsx): brez zneskov.

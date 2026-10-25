@@ -71,6 +71,7 @@ import { TabelaNavijacev, KlubMedNavijaci, IzbiraKluba } from '../src/components
 import { jeMojaEkipa } from '../src/components/ImeEkipe'
 import { veljavenOsnutek } from '../src/lib/osnutek'
 import { krogKoncan, mestoVLigi, igralciPregleda, postaviPregled, oznakaPremika, imeDatotekePregleda, KVADRAT, SIRINA_P, VISINA_P, ROB_P } from '../src/lib/tedenskiPregled'
+import { jeDoberKrog, povprecjeKroga } from '../src/lib/pivoNavdusenje'
 import { parsirajZapisnik, nastopi, dodajStrelceSKlopi } from './zapisnik.mjs'
 import { poZvezah, ustreza, pokaziZvezo, ustrezaRavni, privzetoRazprte } from '../src/components/IzbirnikLige'
 import { dovoljZaIskanje, ujemaIme, opisIgralca, potIgralca, izDrugihLig } from '../src/lib/iskanjeIgralcev'
@@ -3324,6 +3325,12 @@ preveri(
   const nova = mestoVLigi([...vr, { round_id: 12, fantasy_team_id: 4, points: 1 }], krogi, 4, 2)
   preveri('pregled: nova ekipa nima premika', nova.premik === null && nova.mesto === 4, JSON.stringify(nova))
   preveri('pregled: oznake premika', oznakaPremika(2).besedilo === '▲ 2' && oznakaPremika(-1).besedilo === '▼ 1' && oznakaPremika(0).besedilo === '=' && oznakaPremika(null) === null)
+
+  // Okno "Časti pivo" le po dobrem krogu.
+  preveri('pivo: napredek na lestvici je dober krog', jeDoberKrog(5, 30, 2))
+  preveri('pivo: nad povprečjem brez premika je dober krog', jeDoberKrog(31, 30, 0) && jeDoberKrog(31, 30, null))
+  preveri('pivo: padec ali povprečje nista dober krog', !jeDoberKrog(30, 30, 0) && !jeDoberKrog(10, 30, -3) && !jeDoberKrog(0, -1, null))
+  preveri('pivo: povprečje kroga na eno decimalko', povprecjeKroga([10, 20, 21]) === 17 && povprecjeKroga([1, 2]) === 1.5 && povprecjeKroga([]) === 0)
 
   // Kapetan in najboljsi.
   const v = (player_id, ime, tocke, mnozitelj, je_kapetan = false, je_namestnik = false) =>

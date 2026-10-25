@@ -34,6 +34,14 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'SLFF безкоштовний: без реклами, без ставок, без підписок. На жаль, сервер не працює на ентузіазмі. Одне пиво допомагає оплатити сервер і пошту, а твоє ім’я потрапить на пивну стіну.',
       kasneje: 'Можливо, наступного разу',
       zeSem: 'Я вже пригостив 🍻',
+      /** Okno po shranjeni ekipi za naslednji krog. */
+      ekipaNaslov: 'Команда на {krog}-й тур готова! 🍺',
+      /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
+      krogNaslov: 'Чудовий {krog}-й тур! 🔥',
+      krogMesta: { one: '+{n} місце в таблиці 🚀', few: '+{n} місця в таблиці 🚀', many: '+{n} місць у таблиці 🚀', other: '+{n} місця в таблиці 🚀' },
+      krogTocke: 'Очки: {tocke} · середнє ліги: {povprecje}',
+      /** Sporočilo ob nakupu je javno na /beers. */
+      zid: 'Що напишеш разом із кухлем, потрапить на пивну стіну, і всі це побачать 👀',
     },
     lestvicaDomov: 'Пивний рейтинг',
     // Stran /beers (pages/Piva.tsx): brez zneskov.

@@ -34,6 +34,14 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'Az SLFF ingyenes: nincs reklám, nincs fogadás, nincs előfizetés. A szerver sajnos nem lelkesedésből megy. Egy sör segít fizetni a szervert és a levelezést, a neved pedig felkerül a sörfalra.',
       kasneje: 'Talán legközelebb',
       zeSem: 'Már meghívtalak 🍻',
+      /** Okno po shranjeni ekipi za naslednji krog. */
+      ekipaNaslov: 'A csapatod kész a(z) {krog}. fordulóra! 🍺',
+      /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
+      krogNaslov: 'Remek {krog}. forduló! 🔥',
+      krogMesta: { one: '+{n} hely a tabellán 🚀', other: '+{n} hely a tabellán 🚀' },
+      krogTocke: 'Pontok: {tocke} · bajnoki átlag: {povprecje}',
+      /** Sporočilo ob nakupu je javno na /beers. */
+      zid: 'Amit a sör mellé írsz, az felkerül a sörfalra, mindenki láthatja 👀',
     },
     lestvicaDomov: 'Sörtoplista',
     // Stran /beers (pages/Piva.tsx): brez zneskov.

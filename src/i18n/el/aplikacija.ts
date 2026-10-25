@@ -34,6 +34,14 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'Το SLFF είναι δωρεάν: χωρίς διαφημίσεις, χωρίς στοιχήματα, χωρίς συνδρομές. Δυστυχώς, ο διακομιστής δεν λειτουργεί με ενθουσιασμό. Μια μπίρα βοηθά να πληρώσουμε διακομιστή και email, και το όνομά σου μπαίνει στον τοίχο της μπίρας.',
       kasneje: 'Ίσως την επόμενη φορά',
       zeSem: 'Το έκανα ήδη 🍻',
+      /** Okno po shranjeni ekipi za naslednji krog. */
+      ekipaNaslov: 'Η ομάδα σου για την αγωνιστική {krog} είναι έτοιμη! 🍺',
+      /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
+      krogNaslov: 'Τρομερή αγωνιστική {krog}! 🔥',
+      krogMesta: { one: '+{n} θέση στη βαθμολογία 🚀', other: '+{n} θέσεις στη βαθμολογία 🚀' },
+      krogTocke: 'Πόντοι: {tocke} · μέσος όρος λίγκας: {povprecje}',
+      /** Sporočilo ob nakupu je javno na /beers. */
+      zid: 'Ό,τι γράψεις με την μπίρα σου μπαίνει στον τοίχο μπίρας για να το δουν όλοι 👀',
     },
     lestvicaDomov: 'Κατάταξη μπίρας',
     // Stran /beers (pages/Piva.tsx): brez zneskov.

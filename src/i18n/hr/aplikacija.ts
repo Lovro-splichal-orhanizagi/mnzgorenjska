@@ -34,6 +34,14 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'SLFF je besplatan: bez oglasa, bez klađenja, bez pretplata. Nažalost, poslužitelj ne radi na entuzijazam. Jedno pivo pomaže platiti poslužitelj i e-poštu, a tvoje ime završi na zidu piva.',
       kasneje: 'Možda idući put',
       zeSem: 'Već sam častio 🍻',
+      /** Okno po shranjeni ekipi za naslednji krog. */
+      ekipaNaslov: 'Ekipa za {krog}. kolo je spremna! 🍺',
+      /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
+      krogNaslov: 'Odlično {krog}. kolo! 🔥',
+      krogMesta: { one: '+{n} mjesto na ljestvici 🚀', few: '+{n} mjesta na ljestvici 🚀', other: '+{n} mjesta na ljestvici 🚀' },
+      krogTocke: 'Bodovi: {tocke} · prosjek lige: {povprecje}',
+      /** Sporočilo ob nakupu je javno na /beers. */
+      zid: 'Što napišeš uz pivo, završi na pivskom zidu da svi vide 👀',
     },
     lestvicaDomov: 'Pivska ljestvica',
     // Stran /beers (pages/Piva.tsx): brez zneskov.

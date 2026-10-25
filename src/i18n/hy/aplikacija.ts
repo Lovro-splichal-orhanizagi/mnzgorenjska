@@ -34,6 +34,14 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'SLFF-ն անվճար է՝ առանց գովազդի, խաղադրույքների և բաժանորդագրության։ Ցավոք, սերվերը ոգևորությամբ չի աշխատում։ Մեկ գարեջուրն օգնում է վճարել սերվերի և փոստի համար, իսկ քո անունը կհայտնվի գարեջրի պատին։',
       kasneje: 'Գուցե հաջորդ անգամ',
       zeSem: 'Արդեն հյուրասիրել եմ 🍻',
+      /** Okno po shranjeni ekipi za naslednji krog. */
+      ekipaNaslov: '{krog}-րդ տուրի թիմդ պատրաստ է! 🍺',
+      /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
+      krogNaslov: 'Հիանալի {krog}-րդ տուր! 🔥',
+      krogMesta: { one: '+{n} տեղ աղյուսակում 🚀', other: '+{n} տեղ աղյուսակում 🚀' },
+      krogTocke: 'Միավորներ՝ {tocke} · լիգայի միջինը՝ {povprecje}',
+      /** Sporočilo ob nakupu je javno na /beers. */
+      zid: 'Ինչ գրես գարեջրի հետ, կհայտնվի գարեջրի պատին՝ բոլորի համար տեսանելի 👀',
     },
     lestvicaDomov: 'Գարեջրի դասակարգում',
     // Stran /beers (pages/Piva.tsx): brez zneskov.

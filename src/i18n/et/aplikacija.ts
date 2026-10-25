@@ -34,6 +34,14 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'SLFF on tasuta: ilma reklaamide, kihlvedude ja tellimusteta. Kahjuks ei tööta server entusiasmi peal. Üks õlu aitab maksta serveri ja e-posti eest ning sinu nimi jõuab õllemüürile.',
       kasneje: 'Võib-olla järgmine kord',
       zeSem: 'Juba tegin 🍻',
+      /** Okno po shranjeni ekipi za naslednji krog. */
+      ekipaNaslov: 'Sinu meeskond {krog}. vooruks on valmis! 🍺',
+      /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
+      krogNaslov: 'Suurepärane {krog}. voor! 🔥',
+      krogMesta: { one: '+{n} koht tabelis 🚀', other: '+{n} kohta tabelis 🚀' },
+      krogTocke: 'Punktid: {tocke} · liiga keskmine: {povprecje}',
+      /** Sporočilo ob nakupu je javno na /beers. */
+      zid: 'Mida õlle juurde kirjutad, jõuab õllemüürile kõigile näha 👀',
     },
     lestvicaDomov: 'Õlle edetabel',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
