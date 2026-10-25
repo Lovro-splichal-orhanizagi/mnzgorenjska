@@ -228,7 +228,7 @@ SLFF); **izziv ali CAPTCHA ustavi uvoz — ne obhajaj.**
 - **Datum vira pred prejšnjimi krogi se zavrne** (Zona Centar 2026/27: fsris
   ima 14. kolo z datumom 1. kola "22.08.2026"; ocena je iz njega naredila
   kroge 14–22 v jeseni, zaklep 22. kroga je zajel posnetke 27 ekip, migracija
-  `20261025093100` jih je pobrisala). Datum neodigrane tekme iz vira, ki je
+  `20261025113100` jih je pobrisala). Datum neodigrane tekme iz vira, ki je
   več kot 14 dni pred večino prejšnjih krogov (`datumPredPrejsnjimi` v
   `scripts/razpored.mjs`), `sestaviBlok` zavrže; krog ostane brez datuma in
   krogi za njim brez ocene. Uvoz razporeda krogu, ki ga razpored nima več in
