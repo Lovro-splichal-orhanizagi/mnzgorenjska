@@ -4,6 +4,8 @@ import {mkdtempSync,rmSync,readFileSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {createBudgetFetch} from './provider-source-budget.mjs'
+import {vZapisnik} from './viri/mlsz.mjs'
+import {createHash} from 'node:crypto'
 function fixture(options={}) {
  const dir=mkdtempSync(join(tmpdir(),'provider-budget-')),path=join(dir,'budget.json'),calls=[],sleeps=[];let time=1_000
  const request=async(url,init)=>{calls.push({url:String(url),init});return new Response('<div id="match_panel"></div>')}
@@ -82,4 +84,49 @@ test('declared oversized source body is cancelled without consuming it',async()=
 test('bounded source bytes remain readable by the native importer',async()=>{
  const body='<div id="match_panel">Árvíztűrő</div>',f=fixture({fetch:async()=>new Response(body,{headers:{'content-type':'text/html; charset=utf-8'}})})
  try{const response=await f.fetch('https://adatbank.mlsz.hu/league/1');assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'text/html; charset=utf-8');assert.equal(await response.text(),body)}finally{f.dispose()}
+})
+
+const observedMatch='https://adatbank.mlsz.hu/match/67/14/34252/2/2225843.html'
+const observedCanonical='https://ada1bank.mlsz.hu/match?itemId=2225843&evad=67&szervezet=14&verseny=34252&fordulo=2'
+const canonicalBytes=readFileSync(new URL('./vzorci/hu-pest-e-canonical-2225843.html',import.meta.url))
+test('observed same-match query canonical redirect remains counted, paced and credential-free',async()=>{
+ const calls=[],f=fixture({fetch:async(url,init)=>{calls.push({url:String(url),init});return calls.length===1?new Response(null,{status:302,headers:{location:observedCanonical}}):new Response(canonicalBytes)}})
+ try{
+  const response=await f.fetch(observedMatch,{headers:{Authorization:'secret',Cookie:'secret'}})
+  assert.equal(await response.text(),canonicalBytes.toString('utf8'));assert.deepEqual(calls.map(c=>c.url),[observedMatch,observedCanonical]);assert.deepEqual(f.sleeps,[1500]);assert.equal(JSON.parse(readFileSync(f.path)).requests,2)
+  assert.ok(calls.every(c=>!new Headers(c.init.headers).has('authorization')&&!new Headers(c.init.headers).has('cookie')))
+ }finally{f.dispose()}
+})
+for(const field of ['itemId','evad','szervezet','verseny','fordulo'])for(const variant of ['changed','missing','duplicate'])test(`query canonical ${field} ${variant} stops before the second GET`,async()=>{
+ const target=new URL(observedCanonical);if(variant==='changed')target.searchParams.set(field,'999999');else if(variant==='missing')target.searchParams.delete(field);else target.searchParams.append(field,target.searchParams.get(field))
+ let calls=0;const f=fixture({fetch:async()=>{calls++;return new Response(null,{status:302,headers:{location:target.href}})}})
+ try{await assert.rejects(()=>f.fetch(observedMatch),/redirect/i);assert.equal(calls,1);assert.ok(JSON.parse(readFileSync(f.path)).stopped)}finally{f.dispose()}
+})
+for(const location of [observedCanonical+'&token=secret',observedCanonical.replace('/match?','/login?'),observedCanonical.replace('ada1bank.mlsz.hu','evil.invalid'),observedCanonical.replace('https:','http:'),observedCanonical.replace('https://','https://user:secret@'),observedCanonical+'#changed'])test('unobserved query canonical origin/path/extra/auth/fragment remains blocked',async()=>{
+ let calls=0;const f=fixture({fetch:async()=>{calls++;return new Response(null,{status:302,headers:{location}})}})
+ try{await assert.rejects(()=>f.fetch(observedMatch),/redirect/i);assert.equal(calls,1)}finally{f.dispose()}
+})
+test('query canonical target cannot redirect again or accept a different source route',async()=>{
+ let calls=0;const f=fixture({fetch:async()=>{calls++;return new Response(null,{status:302,headers:{location:observedCanonical}})}})
+ try{await assert.rejects(()=>f.fetch(observedMatch),/redirect/i);assert.equal(calls,2)}finally{f.dispose()}
+ for(const source of ['https://adatbank.mlsz.hu/league/67/14/34252/2.html','https://adatbank.mlsz.hu/match/2225843','https://adatbank.mlsz.hu/match/67/14/34252/2/2225843.html?changed=1']){
+  let count=0;const other=fixture({fetch:async()=>{count++;return new Response(null,{status:302,headers:{location:observedCanonical}})}})
+  try{await assert.rejects(()=>other.fetch(source),/redirect/i);assert.equal(count,1)}finally{other.dispose()}
+ }
+})
+
+
+test('retained canonical report bytes describe the exact redirected match',()=>{
+ const receipt=JSON.parse(readFileSync(new URL('./vzorci/hu-pest-e-canonical-provenance.json',import.meta.url),'utf8'))
+ assert.equal(receipt.original_request.url,observedMatch);assert.equal(receipt.original_request.status,302);assert.equal(receipt.original_request.location,observedCanonical)
+ assert.equal(receipt.canonical_response.url,observedCanonical);assert.equal(receipt.canonical_response.status,200);assert.equal(receipt.canonical_response.bytes,canonicalBytes.length);assert.equal(receipt.canonical_response.sha256,createHash('sha256').update(canonicalBytes).digest('hex'))
+ const z=vZapisnik(canonicalBytes.toString('utf8'),{id:'2225843',url:observedMatch})
+ assert.equal(z.zapisnikId,'2225843');assert.equal(z.sezona,'2026/27');assert.equal(z.krog,2);assert.equal(z.domaci.ime,'Dunabogdányi SE');assert.equal(z.gostje.ime,'Solymári SC');assert.deepEqual(z.rezultat,{domaci:1,gostje:3})
+})
+
+
+test('identity-equivalent query keys may be reordered and national federation0 is preserved',async()=>{
+ const source='https://adatbank.mlsz.hu/match/67/0/33586/2/1234567.html',target='https://ada1bank.mlsz.hu/match?fordulo=2&verseny=33586&szervezet=0&evad=67&itemId=1234567';let calls=0
+ const f=fixture({fetch:async()=>++calls===1?new Response(null,{status:302,headers:{location:target}}):new Response('synthetic national-route boundary fixture')})
+ try{assert.equal(await(await f.fetch(source)).text(),'synthetic national-route boundary fixture');assert.equal(calls,2);assert.equal(JSON.parse(readFileSync(f.path)).events[0].redirect_kind,'same-match-query')}finally{f.dispose()}
 })

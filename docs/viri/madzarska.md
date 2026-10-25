@@ -371,3 +371,25 @@ je izvirnih 140980 bajtov odgovora HTTP 200 za
 `SZABADNAPOS : Csanytelek SC` ter vseh devet klubov v stranskem seznamu,
 vključno s klubom, ki je v tem krogu prost. Prazni izidi pravih tekem
 ostanejo v razporedu; prost krog ni kontumacija ali zgodovinska izjema.
+
+
+## Batch canonical match redirect (25 October 2026)
+
+The first provider batch imported Pest U19 E's archive and schedule, then
+refused report `2225843` after 64 total requests. Its original public URL
+`https://adatbank.mlsz.hu/match/67/14/34252/2/2225843.html` returns HTTP302
+to `https://ada1bank.mlsz.hu/match?itemId=2225843&evad=67&szervezet=14&verseny=34252&fordulo=2`.
+Two bounded diagnostic GETs, each with redirects disabled, confirmed the
+canonical HTTP200 report: Dunabogdányi SE–Solymári SC, 1–3, round2, 2026/27.
+Original bytes and request/response hashes are retained in
+`hu-pest-e-canonical-2225843.html` and `hu-pest-e-canonical-provenance.json`.
+
+The batch fetch boundary accepts this observed query form only for an exact
+full match path and an identity-equivalent five-key query. The season,
+federation (including0), league, round and report ID must match as strings;
+missing, duplicate, changed or additional fields are refused. The legacy
+same-path canonical hop remains supported. Both paths allow one HTTPS hop
+from adatbank to ada1bank, count and pace both requests, strip credentials,
+and retain the shared host stop on any refusal or unknown redirect.
+This does not authorize login redirects, alternate hosts or repeated hops.
+No historical exclusion or activation requirement is changed.

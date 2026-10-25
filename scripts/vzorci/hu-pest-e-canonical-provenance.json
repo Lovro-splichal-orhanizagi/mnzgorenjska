@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "original_request": {
+    "url": "https://adatbank.mlsz.hu/match/67/14/34252/2/2225843.html",
+    "status": 302,
+    "location": "https://ada1bank.mlsz.hu/match?itemId=2225843&evad=67&szervezet=14&verseny=34252&fordulo=2",
+    "captured_at": "2026-10-25T09:05:12.511Z"
+  },
+  "canonical_response": {
+    "url": "https://ada1bank.mlsz.hu/match?itemId=2225843&evad=67&szervezet=14&verseny=34252&fordulo=2",
+    "status": 200,
+    "contentType": "text/html; charset=UTF-8",
+    "bytes": 223078,
+    "sha256": "0b1ac0784c88a3a15cbb9dc547c5821b752ac0804f1e3cbefcb44095add3b46e",
+    "startedAt": "2026-10-25T09:06:12.484Z"
+  },
+  "fixture": "hu-pest-e-canonical-2225843.html",
+  "diagnostic_source_requests": 2,
+  "note": "Two separate manual GETs, each with redirects disabled; original canonical HTTP200 bytes unchanged. The initial diagnostic parser import failed after capture and was corrected entirely offline."
+}
