@@ -77,6 +77,24 @@ const SKUPINE: [string, string][] = [
 const odstotek = (del: number, celota: number) =>
   celota > 0 ? `${Math.round((del / celota) * 100)} %` : '—'
 
+/** Strežnik vrne največ 1000 vrstic; s koraki po viru jih 90 dni lahko preseže, zato po straneh. */
+async function vseVrsticeLijaka(od: string) {
+  const STRAN = 1000
+  const data: VrsticaLijaka[] = []
+  for (let i = 0; ; i += STRAN) {
+    const r = await supabase
+      .from('lijak_dnevno')
+      .select('dan, korak, stevilo')
+      .gte('dan', od)
+      .order('dan')
+      .order('korak')
+      .range(i, i + STRAN - 1)
+    if (r.error) return { data, error: r.error }
+    data.push(...((r.data ?? []) as VrsticaLijaka[]))
+    if ((r.data?.length ?? 0) < STRAN) return { data, error: null }
+  }
+}
+
 export default function Lijak() {
   const [lijak, setLijak] = useState<VrsticaLijaka[]>([])
   const [obiski, setObiski] = useState<VrsticaObiska[]>([])
@@ -90,7 +108,7 @@ export default function Lijak() {
       setNalaganje(true)
       const od = new Date(Date.now() - dni * 86400000).toISOString().slice(0, 10)
       const [a, b] = await Promise.all([
-        supabase.from('lijak_dnevno').select('dan, korak, stevilo').gte('dan', od),
+        vseVrsticeLijaka(od),
         supabase.from('obiski_dnevno').select('dan, stran, skupina, stevilo').gte('dan', od),
       ])
       if (!veljavno) return
