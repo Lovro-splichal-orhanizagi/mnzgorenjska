@@ -18,6 +18,6 @@ test('completed German nightly jobs do not wait for other country shards',async(
 })
 
 test('reader gate rejects incomplete inventories and reruns before source release',async()=>{
- for(const response of [{total_count:1,workflow_runs:[]},{total_count:-1,workflow_runs:[]}])await assert.rejects(waitForGermanSource({env:{GITHUB_REPOSITORY:'owner/repo',GITHUB_RUN_ID:'2'},api:async path=>path==='actions/runs/2'?{id:2,run_attempt:1,created_at:'2026-10-25T10:00:00Z'}:response,sleep:async()=>{}}),/Incomplete/)
+ for(const response of [{total_count:1,workflow_runs:[]},{total_count:-1,workflow_runs:[]},{total_count:2,workflow_runs:[{id:2},{id:2}]}])await assert.rejects(waitForGermanSource({env:{GITHUB_REPOSITORY:'owner/repo',GITHUB_RUN_ID:'2'},api:async path=>path==='actions/runs/2'?{id:2,run_attempt:1,created_at:'2026-10-25T10:00:00Z'}:response,sleep:async()=>{}}),/Incomplete/)
  await assert.rejects(waitForGermanSource({env:{GITHUB_REPOSITORY:'owner/repo',GITHUB_RUN_ID:'2'},api:async()=>({id:2,run_attempt:2,created_at:'2026-10-25T10:00:00Z'}),sleep:async()=>{}}),/reruns/)
 })

@@ -44,7 +44,7 @@ function requireInactive(candidate,snapshot){
  if(snapshot.competition.active!==false||snapshot.competition.source_policy!==null||snapshot.competition.date_only_deadline_policy!==null)throw hold('Inactive league with standard policies required.')
  if(!Array.isArray(snapshot.fantasy?.teams)||!Array.isArray(snapshot.fantasy?.lineups)||snapshot.fantasy.teams.length||snapshot.fantasy.lineups.length)throw hold('Existing or unproven fantasy data prevents mutation.')
 }
-export async function runBulkRollout({sourceReport,expectedSha,transport,guard,runCommand,loadPack,verifyNative,activationRunner=runBatch,onCheckpoint=async()=>{},now=()=>new Date()}){
+export async function runBulkRollout({sourceReport,expectedSha,transport,guard,runCommand,loadPack,verifyNative,activationRunner=runBatch,onCheckpoint=async()=>{},now=()=>new Date(),importOnly=false,activationOnly=false}){
  if(!sourceReport||sourceReport.expected_sha!==expectedSha||sourceReport.phase&&sourceReport.phase!=='source')throw Error('Source batch provenance differs.')
  selection(sourceReport.results.map(r=>r.candidate))
  if(typeof guard!=='function')throw Error('Exact main execution guard required.')
@@ -56,6 +56,7 @@ export async function runBulkRollout({sourceReport,expectedSha,transport,guard,r
   const result={slug:staged.slug,candidate:staged.candidate,status:'RUNNING',steps:[]};report.results.push(result);await save()
   if(staged.status!=='STAGED'){result.status=staged.status;result.reason=staged.reason;result.reason_code=staged.reason_code;await save();continue}
   if(report.infrastructure_stop){result.status='SKIPPED_INFRASTRUCTURE_STOP';await save();continue}
+  if(activationOnly)result.steps=structuredClone(staged.steps??[])
   let candidate=staged.candidate,mutating=false
   try{
    await ensureGuard()
@@ -82,18 +83,22 @@ export async function runBulkRollout({sourceReport,expectedSha,transport,guard,r
     if(output?.code!==0)throw Error(`${stage}: incomplete write (exit ${output?.code??'unknown'}); inspect native state before another run.`)
     mutating=false;receipt.status='COMPLETED';receipt.completed_at=now().toISOString();await save()
    }
+   if(!activationOnly){
    for(const [i,a]of candidate.archives.entries())await stage(`archive-${i+1}`,'scripts/uvoz-zapisnikov.mjs',['--tekmovanje',candidate.slug,'--liga',a.code])
    await stage('schedule','scripts/uvoz-razporeda.mjs',['--tekmovanje',candidate.slug,'--pisi'])
    await stage('current','scripts/uvoz-zapisnikov.mjs',['--tekmovanje',candidate.slug])
    for(const [name,file]of [['keepers','lazni-vratarji'],['positions','ugani-pozicije'],['prices','ovrednoti-igralce']])await stage(name,`scripts/${file}.mjs`,['--tekmovanje',candidate.slug,'--pisi'])
+   }
    await guarded()
    const snapshot=await transport.snapshot(candidate)
    const receipts={expected_sha:expectedSha,slug:candidate.slug,snapshot_sha256:hash(snapshot),steps:result.steps.filter(s=>['keepers','positions','prices'].includes(s.stage))}
    result.proof=await verifyNative({candidate,pack,snapshot,receipts,expectedSha,now:now(),directory:staged.directory,loadPack})
+   if(!activationOnly&&candidate.source==='fussball-public')await stage('nightly-seed','scripts/prepare-fussball-nightly.mjs',['seed','--tekmovanje',candidate.slug,'--bulk-capture',staged.directory])
    await guarded()
    // Detect any intervening native update; source verification is tied to this exact snapshot.
    const finalSnapshot=await transport.snapshot(candidate)
    if(hash(finalSnapshot)!==hash(snapshot))throw hold('Native snapshot changed after strict source proof.')
+   if(importOnly){result.status='VERIFIED';result.directory=staged.directory;await save();continue}
    const receipt={stage:'activate',status:'RUNNING',started_at:now().toISOString()};result.steps.push(receipt);await save()
    let gateError=null,activationAnswer=null
    const native={...transport}
@@ -114,11 +119,11 @@ export async function runBulkRollout({sourceReport,expectedSha,transport,guard,r
   }
   await save()
  }
- report.status=report.infrastructure_stop?'STOPPED':report.results.every(r=>['ACTIVE','SKIPPED_ACTIVE'].includes(r.status))?'ACTIVE':'COMPLETED_WITH_HOLDS';await save();return report
+ report.status=report.infrastructure_stop?'STOPPED':report.results.every(r=>['ACTIVE','SKIPPED_ACTIVE'].includes(r.status))?'ACTIVE':importOnly&&report.results.every(r=>r.status==='VERIFIED')?'VERIFIED':'COMPLETED_WITH_HOLDS';await save();return report
 }
 
 export function runOfflineImport(file,args,{directory,logDirectory,slug}={}){
- const allowed=new Set(['uvoz-zapisnikov','uvoz-razporeda','lazni-vratarji','ugani-pozicije','ovrednoti-igralce'].map(n=>`scripts/${n}.mjs`))
+ const allowed=new Set(['uvoz-zapisnikov','uvoz-razporeda','lazni-vratarji','ugani-pozicije','ovrednoti-igralce','prepare-fussball-nightly'].map(n=>`scripts/${n}.mjs`))
  if(!allowed.has(file))throw Error('Unreviewed native child command.')
  return new Promise((resolvePromise,reject)=>{
   const child=spawn(process.execPath,['--import',resolve('scripts/bulk-offline-network.mjs'),file,...args],{env:{...process.env,SLFF_BULK_CAPTURE:resolve(directory)},stdio:['ignore','pipe','pipe'],timeout:45*60_000})
@@ -135,7 +140,7 @@ export function runOfflineImport(file,args,{directory,logDirectory,slug}={}){
 async function main(){
  const [mode,...args]=process.argv.slice(2),options={output:'release/pl-de-bulk'}
  for(let i=0;i<args.length;i+=2){const k=args[i],v=args[i+1];if(!['--country','--expected-sha','--max-requests','--output'].includes(k)||!v||options[k])throw Error('Invalid bulk arguments.');options[k]=v}
- if(!['collect','apply'].includes(mode)||!['PL','DE','ALL'].includes(options['--country'])||!/^[a-f0-9]{40}$/.test(options['--expected-sha']??''))throw Error('collect|apply, country and exact current main SHA required.')
+ if(!['collect','import','activate'].includes(mode)||!['PL','DE','ALL'].includes(options['--country'])||!/^[a-f0-9]{40}$/.test(options['--expected-sha']??''))throw Error('collect|import|activate, country and exact current main SHA required.')
  const expectedSha=options['--expected-sha'],directory=resolve(options['--output']??options.output),sha=()=>execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()
  const guard=async()=>assertBatchExecution({expectedSha,headSha:sha(),mainSha:execFileSync('git',['ls-remote','--exit-code','origin','refs/heads/main'],{encoding:'utf8',timeout:30000}).split(/\s/)[0],envFileExists:existsSync('.env')})
  const {bulkCandidates,captureBulkCandidate,saveBulkAdmission,loadBulkPack}=await import('./bulk-source-packs.mjs')
@@ -153,15 +158,28 @@ async function main(){
   const report=await collectBulkBatch({candidates,expectedSha,directory:join(directory,'packs'),capture:(c,o)=>captureBulkCandidate(c,{...o,maxRequests,fetch:budget.fetch,now:new Date()}),saveAdmission:saveBulkAdmission,onCheckpoint:r=>atomicCheckpoint(join(directory,'source-report.json'),r)})
   console.log(JSON.stringify({phase:'source',status:report.status,counts:counts(report)}));if(report.status==='STOPPED')process.exitCode=1
  }else{
-  if(existsSync(join(directory,'native-report.json')))throw Error('Existing native checkpoint; automatic write replay forbidden.')
+  const reportName=mode==='import'?'native-import-report.json':'native-report.json'
+  if(existsSync(join(directory,reportName)))throw Error('Existing native checkpoint; automatic write replay forbidden.')
   await guard()
   const report=JSON.parse(readFileSync(join(directory,'source-report.json'),'utf8'))
   if(report.scope_sha256!==hash(candidates)||report.results.length!==candidates.length||report.results.some((r,i)=>hash(r.candidate)!==hash(candidates[i])||r.slug!==r.candidate.slug||resolve(r.directory)!==join(directory,'packs',r.slug)))throw Error('Collected catalog or pack directory scope differs.')
   const {loadAndVerifyBulkNative}=await import('./bulk-native-proof.mjs')
   const {createBulkTransport}=await import('./bulk-native-transport.mjs')
   const transport=createBulkTransport({url:process.env.SUPABASE_URL,key:process.env.SUPABASE_SERVICE_ROLE_KEY,base:createBatchTransport({url:process.env.SUPABASE_URL,key:process.env.SUPABASE_SERVICE_ROLE_KEY})})
-  const result=await runBulkRollout({sourceReport:report,expectedSha,transport,guard,loadPack:loadBulkPack,verifyNative:loadAndVerifyBulkNative,runCommand:(file,args,o)=>runOfflineImport(file,args,{...o,slug:o.candidate.slug,logDirectory:join(directory,'logs')}),onCheckpoint:r=>atomicCheckpoint(join(directory,'native-report.json'),r)})
-  console.log(JSON.stringify({phase:'native',status:result.status,counts:counts(result)}));if(result.status==='STOPPED')process.exitCode=1
+  let selected=report
+  if(mode==='activate'){
+   const prepared=JSON.parse(readFileSync(join(directory,'native-import-report.json'),'utf8'))
+   if(prepared.expected_sha!==expectedSha||prepared.source_scope_sha256!==report.scope_sha256||['RUNNING','STOPPED'].includes(prepared.status)||prepared.infrastructure_stop||prepared.results?.length!==report.results.length)throw Error('Incomplete or changed native preparation receipt.')
+   for(let i=0;i<prepared.results.length;i++){const row=prepared.results[i],original=report.results[i].candidate,scope={...row.candidate};if(!original.id)delete scope.id;if(hash(scope)!==hash(original)||row.slug!==original.slug||row.status==='VERIFIED'&&resolve(row.directory)!==join(directory,'packs',row.slug))throw Error('Prepared candidate or directory changed.')}
+   if(prepared.results.some(r=>r.status==='VERIFIED'&&r.candidate.source==='fussball-public')){
+    const persisted=JSON.parse(readFileSync(join(directory,'seed-cache-receipt.json'),'utf8'))
+    if(persisted.expected_sha!==expectedSha||persisted.run_id!==process.env.GITHUB_RUN_ID||persisted.persisted!==true)throw Error('Verified nightly seed cache was not persisted before activation.')
+   }
+   selected={...report,results:prepared.results.map(r=>({...r,status:r.status==='VERIFIED'?'STAGED':r.status}))}
+  }
+  const result=await runBulkRollout({sourceReport:selected,importOnly:mode==='import',activationOnly:mode==='activate',expectedSha,transport,guard,loadPack:loadBulkPack,verifyNative:loadAndVerifyBulkNative,runCommand:(file,args,o)=>runOfflineImport(file,args,{...o,slug:o.candidate.slug,logDirectory:join(directory,'logs')}),onCheckpoint:r=>atomicCheckpoint(join(directory,reportName),r)})
+  if(mode==='import'&&process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,'needs_seed_cache='+String(result.results.some(r=>r.status==='VERIFIED'&&r.candidate.source==='fussball-public'))+'\n')
+  console.log(JSON.stringify({phase:mode,status:result.status,counts:counts(result)}));if(result.status==='STOPPED')process.exitCode=1
  }
 }
 function counts(report){return report.results.reduce((v,r)=>(v[r.status]=(v[r.status]??0)+1,v),{})}

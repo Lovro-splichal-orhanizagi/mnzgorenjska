@@ -63,14 +63,40 @@ jobs:
         run: node scripts/bulk-source-coordination.mjs
       - name: Stage original source bytes and independently filter leagues (no database keys)
         run: node scripts/bulk-league-rollout.mjs collect --country "$COUNTRY" --expected-sha "$EXPECTED_SHA" --max-requests "$MAX_REQUESTS"
-      - name: Offline import, fresh prices, strict source replay, native activation and readback
+      - name: Restore verified complete-report cache
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-DE-bulk-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            zapisniki-DE-
+      - name: Offline imports, fresh prices, source proof and inactive nightly seed
+        id: prepare
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/bulk-league-rollout.mjs apply --country "$COUNTRY" --expected-sha "$EXPECTED_SHA"
+        run: node scripts/bulk-league-rollout.mjs import --country "$COUNTRY" --expected-sha "$EXPECTED_SHA"
+      - name: Persist verified initial nightly seed before any German activation
+        if: steps.prepare.outputs.needs_seed_cache == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-DE-bulk-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Record successful seed persistence
+        if: steps.prepare.outputs.needs_seed_cache == 'true'
+        run: |
+          node --input-type=module <<'JS'
+          import {atomicCheckpoint} from './scripts/provider-league-batch.mjs'
+          atomicCheckpoint('release/pl-de-bulk/seed-cache-receipt.json',{expected_sha:process.env.EXPECTED_SHA,run_id:process.env.GITHUB_RUN_ID,persisted:true})
+          JS
+      - name: Recheck source proof and native readiness, activate passes, verify readback
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/bulk-league-rollout.mjs activate --country "$COUNTRY" --expected-sha "$EXPECTED_SHA"
       - name: Retain UNKNOWN after interruption without write replay
         if: always()
-        run: node --input-type=module -e "import {markInterrupted} from './scripts/provider-league-batch.mjs';markInterrupted('release/pl-de-bulk/native-report.json')"
+        run: node --input-type=module -e "import {markInterrupted} from './scripts/provider-league-batch.mjs';for(const file of ['native-import-report.json','native-report.json'])markInterrupted('release/pl-de-bulk/'+file)"
       - name: Retain original bytes, host ledgers and individual league verdicts
         if: always()
         uses: actions/upload-artifact@v4

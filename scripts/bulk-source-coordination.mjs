@@ -25,7 +25,7 @@ export async function waitForGermanSource({env=process.env,api,sleep=ms=>new Pro
     let total=null,received=0;const seen=new Set()
     for(let page=1;page<=10;page++){
     const data=await api(`actions/workflows/${workflow}/runs?status=${status}&per_page=100&page=${page}`)
-    if(!Array.isArray(data.workflow_runs)||!Number.isSafeInteger(data.total_count)||data.total_count<0||data.total_count>1000||total!==null&&total!==data.total_count||data.workflow_runs.length!==Math.min(100,data.total_count-received)||data.workflow_runs.some(r=>seen.has(r.id)||!Number.isSafeInteger(r.id)))throw Error('Incomplete reader enumeration.')
+    if(!Array.isArray(data.workflow_runs)||!Number.isSafeInteger(data.total_count)||data.total_count<0||data.total_count>1000||total!==null&&total!==data.total_count||data.workflow_runs.length!==Math.min(100,data.total_count-received)||new Set(data.workflow_runs.map(r=>r.id)).size!==data.workflow_runs.length||data.workflow_runs.some(r=>seen.has(r.id)||!Number.isSafeInteger(r.id)))throw Error('Incomplete reader enumeration.')
     total=data.total_count;received+=data.workflow_runs.length
     for(const run of data.workflow_runs){seen.add(run.id);runs.push(run)}
     if(received===total)break

@@ -55,3 +55,11 @@ test('new registration has a durable pending step before its write and interrupt
  const report=await runBulkRollout({...f,sourceReport:{expected_sha:sha,results:[{candidate,slug:candidate.slug,status:'STAGED',directory:'/tmp/pack'}]},expectedSha:sha,onCheckpoint:r=>receipts.push(r)})
  assert.equal(report.results[0].status,'UNKNOWN');assert.equal(report.results[0].steps[0].status,'UNKNOWN')
 })
+test('preparation and activation are separate phases; activation reuses verified receipts without reimporting',async()=>{
+ const f=fixture(),sourceReport={expected_sha:sha,results:[{candidate:c(1),slug:c(1).slug,status:'STAGED',directory:'/tmp/pack'}]}
+ const prepared=await runBulkRollout({...f,sourceReport,expectedSha:sha,importOnly:true})
+ assert.equal(prepared.results[0].status,'VERIFIED');assert.equal(f.active.size,0);assert.equal(f.calls.length,6)
+ const staged={...sourceReport,results:prepared.results.map(r=>({...r,status:'STAGED'}))}
+ const activated=await runBulkRollout({...f,sourceReport:staged,expectedSha:sha,activationOnly:true,runCommand:async()=>{throw Error('Activation must never repeat native imports')}})
+ assert.equal(activated.results[0].status,'ACTIVE');assert.equal(f.active.size,1);assert.equal(f.calls.length,6)
+})
