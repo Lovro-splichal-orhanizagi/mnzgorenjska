@@ -56,7 +56,8 @@
     "test:fcf-six": "node --test scripts/test-fcf-six-historical-policy.mjs scripts/test-fcf-six-continuation.mjs scripts/test-fcf-six-capture.mjs scripts/test-fcf-six-cleanup-evidence.mjs scripts/test-fcf-six-target-downstream.mjs",
     "test:fcf-six-native": "node --test scripts/test-fcf-six-native-sql.mjs",
     "test:mfa-nl-bootstrap": "node --test scripts/test-mfa-nl-bootstrap-sql.mjs scripts/test-mfa-nl-bootstrap-race.mjs",
-    "test:mfa-nl-release": "node --test scripts/test-mfa-nl-release-sql.mjs scripts/test-mfa-nl-release-race.mjs"
+    "test:mfa-nl-release": "node --test scripts/test-mfa-nl-release-sql.mjs scripts/test-mfa-nl-release-race.mjs",
+    "test:bulk": "node --test scripts/test-bulk-*.mjs scripts/test-prepare-fussball-nightly.mjs"
   },
   "dependencies": {
     "@capacitor-firebase/messaging": "^8.5.2",

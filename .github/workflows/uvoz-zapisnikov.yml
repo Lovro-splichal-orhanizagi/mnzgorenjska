@@ -208,6 +208,7 @@ jobs:
       # vrnemo neuspeh, ce katera liga ni uspela (glej scripts/nocni-uvoz.sh).
       - name: Uvoz po ligah
         env:
+          GH_TOKEN: ${{ github.token }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           # Ceske lige: is.fotbal.cz doseze le posrednik v EU (scripts/hetzner/facr-posrednik.sh).

@@ -43,6 +43,7 @@ import askf from './askf.mjs'
 import ffa from './ffa.mjs'
 import novanet from './novanet.mjs'
 import dfb from './dfb.mjs'
+import {createBulkCapturedSource} from './bulk-captured.mjs'
 import {createFussballPublicSource} from './fussball-public.mjs'
 import {createDriblPublicSource} from './dribl-public.mjs'
 import {withDfbHistoricalStatistics} from './dfb-historical.mjs'
@@ -224,6 +225,7 @@ const VIRI = {
  */
 export function viraZa(tekmovanje, {installedHistoricalMarkers=null,db=null}={}) {
   const ime = tekmovanje?.source ?? 'mnzg'
+  if (process.env.SLFF_BULK_CAPTURE) return createBulkCapturedSource({competition:tekmovanje,db,directory:process.env.SLFF_BULK_CAPTURE})
   const vir = ['fussball-public','dribl-public'].includes(ime) ? VIRI[ime]({competition:tekmovanje,db}) : VIRI[ime]
   if (!vir) {
     const znani = Object.keys(VIRI).join(', ')

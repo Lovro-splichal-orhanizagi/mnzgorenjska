@@ -766,3 +766,14 @@ zahtevane sezone. Izidi ostanejo uradni, individualna statistika ostane
 izrecno nerazpoložljiva. Nord, Südwest in drugi ponudniki ohranijo
 prejšnja pravila. Uvoz, cene, native primerjava in dejanski prihodnji rok
 morajo uspeti pred vklopom; sam zajem ali testni vklop ne aktivira produkcije.
+
+
+## Bulk capture and activation (25 October 2026)
+
+`uvoz-pl-de-paketa.yml` selects all reviewed candidates for PL, DE or ALL in one dispatch. Exact current/archive tuples live in `scripts/policies/pl-bulk-candidates.json` and `de-bulk-candidates.json`. Catalog presence never establishes readiness. Source collectors preserve original bytes; the installed provider replay, complete native snapshot comparison and ordinary native activation RPC must all pass. A semantic report failure holds that league; a refusal/transport failure stops its host. No guessed keepers, missing scores, new historical exclusions or active repricing are admitted.
+
+The source stage has no database credentials. Native imports use an offline adapter with network restricted to the exact database REST origin. Admission receipts are sidecars outside the provider's closed evidence directory. Source packs expire after 24 hours, pricing receipts after one hour; the native gate checks an actual future untouched opening round at activation. Every mutation requires first-attempt Actions on the exact current main SHA, the same inactive tuple and no fantasy data. Interrupted writes are UNKNOWN, retained and never automatically replayed.
+
+The explicit dispatch budget counts actual requests, including failures, separately per host. PZPN collector instances additionally cap at 1000 requests; FUSSBALL at 4000. There are no new source requests during implementation. Previously spent diagnostic budgets are not reset by this feature. Any operational source run needs its recorded bounded scope and request authorization.
+
+Initial catalog: Mannheim and Schleswig-Holstein current seasons. No verified archive staffel pair exists in the retained evidence, so both hold before any GET. Supplying observed reviewed archive tuples is configuration, not a new importer. This catalog does not contain 600 German leagues. Active FUSSBALL leagues prepare and replay a fresh full current-season capture before nightly import; preparation failure stops that provider for the run. Source-only audits, bulk jobs and nightly readers use creation-ordered host coordination before requests, without holding a host mutex while waiting. Future large catalogs still need practical request/time budgets; a six-hour job is not unlimited collection capacity.

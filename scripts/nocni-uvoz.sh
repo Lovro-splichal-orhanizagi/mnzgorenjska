@@ -49,6 +49,17 @@ teci() { "$@" </dev/null; zadnji_izhod=$?; return "$zadnji_izhod"; }
 uvozi() {
   local liga=$1 ok=1 zavrnil=0 dol=0
   export SLFF_PREMOR_FAKTOR=$2
+  unset SLFF_FUSSBALL_CAPTURE
+  if [ "$3" = fussball-public ]; then
+    # Capture/replay the complete current source before any native write. Source
+    # refusals stop this provider for the run; no second attempt or fallback.
+    node scripts/bulk-source-coordination.mjs </dev/null || return 4
+    local capture_dir
+    capture_dir=$(mktemp -d)
+    rmdir "$capture_dir" || return 4
+    teci node scripts/prepare-fussball-nightly.mjs --tekmovanje "$liga" --output "$capture_dir" --max-requests 3000 || return 4
+    export SLFF_FUSSBALL_CAPTURE="$capture_dir"
+  fi
   # Izhod 3: klub manjka v razporedu (izstop?) — odloči človek, liga ni padla.
   teci node scripts/uvoz-razporeda.mjs --tekmovanje "$liga" --pisi || case $zadnji_izhod in
     3) odlocitve="$odlocitve $liga" ;;
