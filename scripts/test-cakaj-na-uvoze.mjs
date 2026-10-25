@@ -550,3 +550,15 @@ test('Dribl native bootstrap shares AU/global writes and stays visible to both c
   for(const file of ['zdruzi-klube.yml','tedensko-cene.yml'])assert.match(readFileSync(new URL(`../.github/workflows/${file}`,import.meta.url),'utf8'),/for wf in[^\n]*uvoz-dribl-public\.yml/)
  }finally{fixtures.pop()}
 })
+
+test('PL/DE bulk rollout is visible to both loops and shares only its selected countries',async()=>{
+ const wf='uvoz-pl-de-paketa.yml'
+ for(const country of ['PL','DE']){
+  const runs={[wf]:[run(`Bulk leagues ${country}`)]}
+  assert.equal((await coordinate(['--drzava',country],runs)).code,1)
+  assert.equal((await coordinate(['--drzava','HU'],runs)).code,0)
+  assert.equal((await coordinate(['--tece'],runs)).code,3)
+ }
+ for(const country of ['PL','DE'])assert.equal((await coordinate(['--drzava',country],{[wf]:[run('Bulk leagues ALL')]})).code,1)
+ for(const file of ['zdruzi-klube.yml','tedensko-cene.yml'])assert.match(readFileSync(new URL(`../.github/workflows/${file}`,import.meta.url),'utf8'),/for wf in[^\n]*uvoz-pl-de-paketa\.yml/)
+})

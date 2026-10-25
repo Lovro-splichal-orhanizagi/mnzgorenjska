@@ -29,9 +29,7 @@ on:
         required: true
 permissions:
   contents: read
-concurrency:
-  group: fussball-public-season-source
-  cancel-in-progress: false
+  actions: read
 jobs:
   screen:
     if: github.ref == 'refs/heads/main'
@@ -57,6 +55,10 @@ jobs:
           if(e.GITHUB_REPOSITORY!=='Lovro-splichal-orhanizagi/mnzgorenjska'||e.GITHUB_REF!=='refs/heads/main'||! /^[a-f0-9]{40}$/.test(e.EXPECTED_SHA??'')||head!==e.EXPECTED_SHA||e.GITHUB_SHA!==e.EXPECTED_SHA)throw Error('Exact reviewed main required')
           for(const [value,max] of [[e.MAX_REQUESTS,80],[e.REPORTS,3]])if(!/^\d+$/.test(value??'')||Number(value)<1||Number(value)>max)throw Error('Invalid bounded screen scope')
           NODE
+      - name: Share host pacing with older nightly and bulk readers
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/bulk-source-coordination.mjs
       - name: Offline source and evidence checks
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
       - name: Screen ordinary public source without database credentials

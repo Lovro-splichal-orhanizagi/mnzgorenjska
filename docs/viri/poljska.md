@@ -317,3 +317,14 @@ cene=true`.
 statični izvozi Extraneta v `/wp-content/uploads/…/*.html` (`/terminarze-2026-2027/`:
 razpored z izidi in igrišči, brez povezav na tekme in brez postav). Za
 fantasy neuporabno.
+
+
+## Bulk capture and activation (25 October 2026)
+
+`uvoz-pl-de-paketa.yml` selects all reviewed candidates for PL, DE or ALL in one dispatch. Exact current/archive tuples live in `scripts/policies/pl-bulk-candidates.json` and `de-bulk-candidates.json`. Catalog presence never establishes readiness. Source collectors preserve original bytes; the installed provider replay, complete native snapshot comparison and ordinary native activation RPC must all pass. A semantic report failure holds that league; a refusal/transport failure stops its host. No guessed keepers, missing scores, new historical exclusions or active repricing are admitted.
+
+The source stage has no database credentials. Native imports use an offline adapter with network restricted to the exact database REST origin. Admission receipts are sidecars outside the provider's closed evidence directory. Source packs expire after 24 hours, pricing receipts after one hour; the native gate checks an actual future untouched opening round at activation. Every mutation requires first-attempt Actions on the exact current main SHA, the same inactive tuple and no fantasy data. Interrupted writes are UNKNOWN, retained and never automatically replayed.
+
+The explicit dispatch budget counts actual requests, including failures, separately per host. PZPN collector instances additionally cap at 1000 requests; FUSSBALL at 4000. There are no new source requests during implementation. Previously spent diagnostic budgets are not reset by this feature. Any operational source run needs its recorded bounded scope and request authorization.
+
+Initial catalog: B1 Kielce plus twelve WMZPN groups. B1 still needs the missing official score; WMZPN has no goalkeeper labels, Klasa B also has rolling substitution limitations, and B5 lacks an archive. These remain individual source holds, not permission to infer facts. The public Kielce proxy covers its federation; it does not provide all Polish leagues.

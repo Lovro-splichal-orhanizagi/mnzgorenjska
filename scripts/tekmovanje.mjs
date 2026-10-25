@@ -57,7 +57,7 @@ export async function tekmovanje(db, slug = slugTekmovanja()) {
   // is a numeric foreign key, never an ISO code. Keep other providers' row
   // shape and query contract unchanged.
   let country = {}
-  if (['fussball-public', 'dribl-public'].includes(data.source)) {
+  if (process.env.SLFF_BULK_CAPTURE || ['fussball-public', 'dribl-public'].includes(data.source)) {
     if (!Number.isSafeInteger(data.country_id) || data.country_id <= 0)
       throw new Error(`${data.source} country: invalid country_id foreign key`)
     const { data: row, error: countryError } = await db

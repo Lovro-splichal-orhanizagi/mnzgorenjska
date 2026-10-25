@@ -121,6 +121,8 @@ export function createFussballCaptureClient({
   sleep = pause,
   onAttempt,
   onDocument,
+  cachedDocuments = [],
+  onCachedDocument,
 } = {}) {
   if (!Number.isInteger(maxRequests) || maxRequests < 1 || maxRequests > 4000)
     throw fail('request budget must be an integer from 1 to 4000')
@@ -130,6 +132,19 @@ export function createFussballCaptureClient({
   if (onDocument != null && typeof onDocument !== 'function') throw fail('onDocument must be a function')
 
   const cache = new Map()
+  const retained = new Map()
+  const usedRetained = new Set()
+  if (!Array.isArray(cachedDocuments)) throw fail('cachedDocuments must be an array')
+  for (const d of cachedDocuments) {
+    routeKind(d.url, d.kind)
+    if (d.kind === 'round' || retained.has(d.url)) throw fail('cached schedules or duplicate cached documents refused')
+    validateMime(d.kind, d.contentType)
+    const bytes = new Uint8Array(d.bytes)
+    if (!bytes.length || bytes.length > (d.kind === 'css' ? CSS_LIMIT : HTML_LIMIT) || d.status !== 200 ||
+        createHash('sha256').update(bytes).digest('hex') !== d.sha256 || !Number.isFinite(Date.parse(d.capturedAt))) throw fail('invalid cached original document')
+    detectChallenge(bytes, d.kind)
+    retained.set(d.url, { ...d, bytes })
+  }
   const attempts = []
   let requestCount = 0
   let stoppedBy = null
@@ -152,6 +167,15 @@ export function createFussballCaptureClient({
     let response = null
     try {
       routeKind(url, kind)
+      if (retained.has(url)) {
+        const saved = retained.get(url)
+        if (saved.kind !== kind) throw fail('cached document kind differs')
+        if (!usedRetained.has(url)) {
+          if (onCachedDocument) await onCachedDocument({ ...saved, bytes: new Uint8Array(saved.bytes) })
+          usedRetained.add(url)
+        }
+        return { ...saved, bytes: new Uint8Array(saved.bytes) }
+      }
       if (cache.has(url)) {
         const saved = cache.get(url)
         return { ...saved, bytes: new Uint8Array(saved.bytes) }

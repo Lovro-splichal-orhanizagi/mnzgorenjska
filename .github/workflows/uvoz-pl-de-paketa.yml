@@ -1,0 +1,105 @@
+name: Poland and Germany bulk rollout
+run-name: Bulk leagues ${{ inputs.country }}
+on:
+  workflow_dispatch:
+    inputs:
+      country:
+        description: 'Process every reviewed catalog entry; activate complete passes, retain individual holds'
+        type: choice
+        options: [PL, DE, ALL]
+        required: true
+      expected_sha:
+        description: 'Exact reviewed current main SHA; stop writes if main changes'
+        type: string
+        required: true
+      max_requests:
+        description: 'Explicit actual request cap PER HOST (1–4000); failed requests count'
+        type: number
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  rollout:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    # Source readers use creation-ordered coordination before any source call.
+    # No host mutex is held while waiting for an older nightly reader.
+    env:
+      COUNTRY: ${{ inputs.country }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      MAX_REQUESTS: ${{ inputs.max_requests }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Validate requested catalog and exact execution provenance before coordination
+        run: |
+          node --input-type=module <<'JS'
+          import {execFileSync} from 'node:child_process'
+          import {existsSync} from 'node:fs'
+          import {bulkCandidates} from './scripts/bulk-source-packs.mjs'
+          const {COUNTRY,EXPECTED_SHA,MAX_REQUESTS,GITHUB_SHA,GITHUB_REF,GITHUB_RUN_ATTEMPT}=process.env
+          if(!['PL','DE','ALL'].includes(COUNTRY)||!/^[a-f0-9]{40}$/.test(EXPECTED_SHA??'')||GITHUB_SHA!==EXPECTED_SHA||GITHUB_REF!=='refs/heads/main'||GITHUB_RUN_ATTEMPT!=='1'||existsSync('.env')||!Number.isSafeInteger(Number(MAX_REQUESTS))||Number(MAX_REQUESTS)<1||Number(MAX_REQUESTS)>4000||!bulkCandidates(COUNTRY).length)throw Error('Invalid bulk execution scope')
+          if(execFileSync('git',['ls-remote','--exit-code','origin','refs/heads/main'],{encoding:'utf8'}).split(/\s/)[0]!==EXPECTED_SHA)throw Error('Main changed')
+          JS
+      - name: Coordinate with existing country readers and native writers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ "$COUNTRY" = PL ] || [ "$COUNTRY" = ALL ]; then node scripts/cakaj-na-uvoze.mjs --drzava PL --popravek --vir pzpn; fi
+          if [ "$COUNTRY" = DE ] || [ "$COUNTRY" = ALL ]; then node scripts/cakaj-na-uvoze.mjs --drzava DE --popravek --vir dfb; fi
+      - name: Coordinate older German source-only readers
+        if: inputs.country != 'PL'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/bulk-source-coordination.mjs
+      - name: Stage original source bytes and independently filter leagues (no database keys)
+        run: node scripts/bulk-league-rollout.mjs collect --country "$COUNTRY" --expected-sha "$EXPECTED_SHA" --max-requests "$MAX_REQUESTS"
+      - name: Restore verified complete-report cache
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-DE-bulk-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            zapisniki-DE-
+      - name: Offline imports, fresh prices, source proof and inactive nightly seed
+        id: prepare
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/bulk-league-rollout.mjs import --country "$COUNTRY" --expected-sha "$EXPECTED_SHA"
+      - name: Persist verified initial nightly seed before any German activation
+        if: steps.prepare.outputs.needs_seed_cache == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-DE-bulk-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Confirm durable exact-run cache before recording seed persistence
+        if: steps.prepare.outputs.needs_seed_cache == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/bulk-seed-cache-receipt.mjs
+      - name: Recheck source proof and native readiness, activate passes, verify readback
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/bulk-league-rollout.mjs activate --country "$COUNTRY" --expected-sha "$EXPECTED_SHA"
+      - name: Retain UNKNOWN after interruption without write replay
+        if: always()
+        run: node --input-type=module -e "import {markInterrupted} from './scripts/provider-league-batch.mjs';for(const file of ['native-import-report.json','native-report.json'])markInterrupted('release/pl-de-bulk/'+file)"
+      - name: Retain original bytes, host ledgers and individual league verdicts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pl-de-bulk-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release/pl-de-bulk/
+          if-no-files-found: warn
+          retention-days: 90
