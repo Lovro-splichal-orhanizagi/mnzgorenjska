@@ -419,6 +419,28 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     tekme: 'Kampe',
     cena: 'Højeste værdi',
   },
+  // Plačljivo ponovno vrednotenje cene (PonovnaCena, le splet). {cena} je znesek z valuto.
+  ponovnaCena: {
+    naslov: 'Ny vurdering af prisen',
+    gumb: 'Vurder prisen igen',
+    opis: 'Vi genberegner prisen med de samme regler som hver uge og bekræfter den inden for få dage. Den kan stige, falde eller forblive den samme. Engangsbetaling: {cena}. Hvis prisen forbliver den samme, refunderer vi ikke.',
+    odpoved: 'Jeg forstår, at beregningen starter med det samme, og at jeg ved at betale mister min 14-dages fortrydelsesret.',
+    pogoji: '<pogoji>Betingelserne for betalte tjenester</pogoji> gælder.',
+    kupi: 'Betal {cena}',
+    zapri: 'Luk',
+    vPregledu: 'En ny vurdering af prisen er bestilt og bliver gennemgået.',
+    zadnja: 'Seneste nye vurdering ({datum}): {stara} → {nova}',
+    zadnjaEnaka: 'Seneste nye vurdering ({datum}): prisen forblev {stara}',
+    uspeh: 'Tak! Betalingen er modtaget. Vi genberegner prisen og bekræfter den inden for få dage.',
+    napaka: 'Betalingen kunne ikke startes. Prøv igen.',
+    niMogoce: 'Denne spillers pris kan ikke vurderes igen lige nu.',
+    ovire: {
+      borza: 'Denne spillers pris flyttes af markedet efter hver runde, så den kan ikke vurderes igen.',
+      taTeden: 'Prisen er allerede vurderet igen i denne uge. Prøv igen i næste uge.',
+      nedavno: 'Denne spiller er for nylig vurderet igen, eller en anmodning bliver allerede gennemgået.',
+      rok: 'Der er mindre end 24 timer til rundens deadline. Prøv igen, når runden er startet.',
+    },
+  },
   scout: {
     naslov: 'SLFF Scout',
     opis: 'Klubber, der leder efter spillere, ser nøgletal fra dine kampe i SLFF Scout. Her tilføjer du det, de kun må se med dit samtykke.',

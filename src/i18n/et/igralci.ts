@@ -419,6 +419,28 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     tekme: 'Mängud',
     cena: 'Kõrgeim väärtus',
   },
+  // Plačljivo ponovno vrednotenje cene (PonovnaCena, le splet). {cena} je znesek z valuto.
+  ponovnaCena: {
+    naslov: 'Hinna ümberhindamine',
+    gumb: 'Hinda hind ümber',
+    opis: 'Arvutame hinna ümber samade reeglitega nagu igal nädalal ja kinnitame selle mõne päeva jooksul. See võib tõusta, langeda või jääda samaks. Ühekordne makse: {cena}. Kui hind jääb samaks, raha ei tagastata.',
+    odpoved: 'Saan aru, et arvutus algab kohe ja et maksega kaotan 14-päevase taganemisõiguse.',
+    pogoji: 'Kehtivad <pogoji>tasuliste teenuste tingimused</pogoji>.',
+    kupi: 'Maksa {cena}',
+    zapri: 'Sulge',
+    vPregledu: 'Hinna ümberhindamine on tellitud ja ülevaatusel.',
+    zadnja: 'Viimane ümberhindamine ({datum}): {stara} → {nova}',
+    zadnjaEnaka: 'Viimane ümberhindamine ({datum}): hind jäi {stara}',
+    uspeh: 'Aitäh! Makse on laekunud. Arvutame hinna ümber ja kinnitame selle mõne päeva jooksul.',
+    napaka: 'Makset ei õnnestunud alustada. Proovi uuesti.',
+    niMogoce: 'Selle mängija hinda ei saa praegu ümber hinnata.',
+    ovire: {
+      borza: 'Selle mängija hinda liigutab pärast iga vooru turg, seega ümberhindamine pole võimalik.',
+      taTeden: 'Hind on sel nädalal juba ümber hinnatud. Proovi järgmisel nädalal.',
+      nedavno: 'Seda mängijat hinnati hiljuti ümber või on taotlus juba ülevaatusel.',
+      rok: 'Vooru tähtajani on vähem kui 24 tundi. Proovi, kui voor on alanud.',
+    },
+  },
   scout: {
     naslov: 'SLFF Scout',
     opis: 'Mängijaid otsivad klubid näevad SLFF Scoutis sinu mängude põhjal arvutatud näitajaid. Siin lisad selle, mida nad näevad ainult sinu nõusolekul.',

@@ -62,6 +62,10 @@
 // (bon_mail_at), dogodek vrne 500 in Stripe ga ponovi (do 3 dni); nato admin
 // "Pošlji bon znova".
 //
+// Ponovna cena igralca (metadata app=slff-cena): plačana seja (le enkratno
+// plačilo, postavka slff_ponovna_cena) → ponovna_cena_iz_placila ('placano',
+// 'ze' ali 'za_vracilo:<razlog>' z Discordom). Vračila so ročna v Stripe.
+//
 // Promocijske kode: plačana seja trgovine, Scouta ali preverjenih s popustom
 // → trgovina_bon_porabljen za vsako kodo (le zapis, napaka ne ustavi dogodka).
 //
@@ -267,6 +271,7 @@ async function obdelaj(tip: string, o: Obj): Promise<string> {
       if (['slff', 'slff-scout', 'slff-shop'].includes(m.app) && ['paid', 'no_payment_required'].includes(o.payment_status)) await oznaciBone(o)
       if (m.app === 'slff-scout') return await scoutSeja(o)
       if (m.app === 'slff-shop') return await trgovinaSeja(o)
+      if (m.app === 'slff-cena') return await cenaSeja(o)
       if (m.app !== 'slff') return 'ignored'
       if (!['paid', 'no_payment_required'].includes(o.payment_status)) return 'unpaid'
       const vir = m.vir
@@ -450,6 +455,27 @@ async function scoutNarocnina(tip: string, o: Obj): Promise<string> {
   const konec = konecObdobja(o)
   if (!konec || !['active', 'trialing'].includes(o.status)) return 'unchanged'
   return await scoutPodaljsaj(o, konec)
+}
+
+// --- Ponovna cena igralca (metadata app=slff-cena) -------------------------
+
+async function cenaSeja(o: Obj): Promise<string> {
+  const m = o.metadata ?? {}
+  if (o.payment_status !== 'paid') return 'unpaid'
+  const p = await beri(`checkout/sessions/${o.id}/line_items?limit=10`)
+  const postavke = (p.data ?? []) as Obj[]
+  const zahtevek = Number(m.zahtevek)
+  if (postavke.length !== 1 || postavke[0].price?.lookup_key !== 'slff_ponovna_cena' || postavke[0].quantity !== 1 || !Number.isInteger(zahtevek)) {
+    await discord(`⚠️ Ponovna cena, seja ${o.id}: postavke se ne ujemajo, zahtevek ni plačan (preveri in vrni denar v Stripe).`)
+    return 'neveljavne postavke'
+  }
+  // RPC sam javi Discordu (plačano, za vračilo); 'ze' je ponovitev dogodka.
+  return await rpc('ponovna_cena_iz_placila', {
+    p_zahtevek: zahtevek,
+    p_user_id: m.user_id,
+    p_seja: o.id,
+    p_placilo: id(o.payment_intent),
+  })
 }
 
 // --- SLFF Trgovina (metadata app=slff-shop) ---------------------------------

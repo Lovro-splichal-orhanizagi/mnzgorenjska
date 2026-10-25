@@ -421,6 +421,28 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     tekme: 'Utakmice',
     cena: 'Najviša cijena',
   },
+  // Plačljivo ponovno vrednotenje cene (PonovnaCena, le splet). {cena} je znesek z valuto.
+  ponovnaCena: {
+    naslov: 'Ponovna procjena cijene',
+    gumb: 'Ponovno procijeni cijenu',
+    opis: 'Cijenu ponovno izračunavamo po istim pravilima kao svaki tjedan i potvrđujemo je u nekoliko dana. Može porasti, pasti ili ostati ista. Jednokratno plaćanje: {cena}. Ako cijena ostane ista, novac ne vraćamo.',
+    odpoved: 'Razumijem da izračun počinje odmah i da plaćanjem gubim pravo na odustanak u roku od 14 dana.',
+    pogoji: 'Vrijede <pogoji>uvjeti plaćenih usluga</pogoji>.',
+    kupi: 'Plati {cena}',
+    zapri: 'Zatvori',
+    vPregledu: 'Ponovna procjena cijene je naručena i u pregledu je.',
+    zadnja: 'Zadnja ponovna procjena ({datum}): {stara} → {nova}',
+    zadnjaEnaka: 'Zadnja ponovna procjena ({datum}): cijena je ostala {stara}',
+    uspeh: 'Hvala! Plaćanje je primljeno. Cijenu ćemo ponovno izračunati i potvrditi u nekoliko dana.',
+    napaka: 'Plaćanje nije bilo moguće započeti. Pokušaj ponovno.',
+    niMogoce: 'Ponovna procjena cijene za ovog igrača trenutno nije moguća.',
+    ovire: {
+      borza: 'Cijenu ovog igrača nakon svakog kola pomiče burza, pa ponovna procjena nije moguća.',
+      taTeden: 'Cijena je ovaj tjedan već ponovno procijenjena. Pokušaj sljedeći tjedan.',
+      nedavno: 'Ovaj igrač je nedavno ponovno procijenjen ili je zahtjev već u pregledu.',
+      rok: 'Do roka kola ostalo je manje od 24 sata. Pokušaj kad kolo počne.',
+    },
+  },
   scout: {
     naslov: 'SLFF Scout',
     opis: 'Klubovi koji traže igrače u SLFF Scoutu vide pokazatelje iz tvojih utakmica. Ovdje dodaješ ono što vide samo uz tvoju privolu.',

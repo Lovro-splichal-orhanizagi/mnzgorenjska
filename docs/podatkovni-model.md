@@ -742,6 +742,30 @@
   Prikaz šteje `pivo_okno` in `pivo_okno_<povod>`, klik iz okna `pivo` in
   `pivo_klik_<povod>` (migracija 20261025173100), BMC ga loči po
   `utm_medium=okno-<povod>`
+- **Ponovno vrednotenje cene** (plačljivo, le splet; migracija 20261025193100,
+  `PonovnaCena.tsx`, edge `ponovna-cena`, delovni tok *Ponovne cene*,
+  `scripts/ponovne-cene.mjs`): prijavljen uporabnik plača enkratni znesek
+  (Stripe lookup_key `slff_ponovna_cena`, prikaz `ponovna_cena_centi`, privzeto
+  499 = 4,99 €) in dobi ponovni izračun cene igralca z **istim algoritmom in pravili kot
+  tedenski zagon** (`ovrednoti-igralce.mjs --tedensko --igralec <id> --izid`,
+  percentili iz cele lige, nikoli ne piše). Cena se lahko zviša, zniža ali
+  ostane; plačilo kupi izračun, ne smeri. **Ceno premakne le admin**: zahtevek
+  `ponovne_cene` gre `caka_placilo` → `placano` (stripe-webhook, metadata
+  app=slff-cena, `ponovna_cena_iz_placila`) → `v_pregledu` (predlog s podlago,
+  delovni tok vsakih 15 min) → `potrjeno` (`admin_ponovna_cena_potrdi`: value,
+  sidro `value_start` z isto razliko, `repriced_week/at`, kot tedenski zagon) ali
+  `zavrnjeno` (cena ostane, vračilo ročno v Stripe, opomba). `za_vracilo`:
+  po plačilu ni mogoče (hkratni kupec, igralec prišel na borzo). Nakup zavrne
+  `ponovna_cena_ovira`: stikalo `ponovna_cena` (0/1 admin in testerji/2 vsi),
+  neaktivna ali mladinska liga, neaktiven/anonimiziran/izstopil/zaklenjen
+  igralec, borzna zgodovina (ceno vodi borza), ta ISO teden že prevrednoten,
+  odprt zahtevek ali plačan v 7 dneh (od kogarkoli), odprta seja (35 min),
+  rok kroga −24 h do zaklepa. Potrditev zavrne zastarel predlog (cena se je
+  vmes spremenila; "Izračunaj znova"), borzo, isti teden in okno roka.
+  Tedenska meja 1.0 tako velja za tedenski in plačljivi premik skupaj.
+  Omejeni računi ne kupujejo (`zavrni_omejenega`). Tabela je zaprta (tudi za
+  agente); stran bere le `ponovna_cena_stanje`. Administracija → Igralci →
+  Ponovne cene (stikalo, predlogi, potrditev, zavrnitev). V aplikaciji ga ni.
 - **Klubski računi** (migracija 20261013201100, spec
   `docs/superpowers/specs/2026-10-13-klubski-racuni-design.md`): klub dobi
   račun, ko se prijavi s **potrjenim** uradnim naslovom iz `klub_stik`

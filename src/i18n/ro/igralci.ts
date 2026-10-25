@@ -421,6 +421,28 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     tekme: 'Meciuri',
     cena: 'Cel mai mare preț',
   },
+  // Plačljivo ponovno vrednotenje cene (PonovnaCena, le splet). {cena} je znesek z valuto.
+  ponovnaCena: {
+    naslov: 'Reevaluarea prețului',
+    gumb: 'Reevaluează prețul',
+    opis: 'Recalculăm prețul cu aceleași reguli ca în fiecare săptămână și îl confirmăm în câteva zile. Poate crește, scădea sau rămâne la fel. Plată unică: {cena}. Dacă prețul rămâne la fel, nu returnăm banii.',
+    odpoved: 'Înțeleg că recalcularea începe imediat și că prin plată pierd dreptul de retragere de 14 zile.',
+    pogoji: 'Se aplică <pogoji>condițiile serviciilor plătite</pogoji>.',
+    kupi: 'Plătește {cena}',
+    zapri: 'Închide',
+    vPregledu: 'O reevaluare a prețului a fost comandată și este în verificare.',
+    zadnja: 'Ultima reevaluare ({datum}): {stara} → {nova}',
+    zadnjaEnaka: 'Ultima reevaluare ({datum}): prețul a rămas {stara}',
+    uspeh: 'Mulțumim! Plata a fost primită. Recalculăm prețul și îl confirmăm în câteva zile.',
+    napaka: 'Plata nu a putut fi pornită. Încearcă din nou.',
+    niMogoce: 'Prețul acestui jucător nu poate fi reevaluat acum.',
+    ovire: {
+      borza: 'Prețul acestui jucător este mișcat de piață după fiecare etapă, așa că nu poate fi reevaluat.',
+      taTeden: 'Prețul a fost deja reevaluat săptămâna aceasta. Încearcă săptămâna viitoare.',
+      nedavno: 'Acest jucător a fost reevaluat recent sau o cerere este deja în verificare.',
+      rok: 'Până la termenul etapei sunt mai puțin de 24 de ore. Încearcă după ce începe etapa.',
+    },
+  },
   scout: {
     naslov: 'SLFF Scout',
     opis: 'Cluburile care caută jucători văd în SLFF Scout indicatori din meciurile tale. Aici adaugi ce văd doar cu acordul tău.',

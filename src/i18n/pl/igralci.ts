@@ -423,6 +423,28 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     tekme: 'Mecze',
     cena: 'Najwyższa cena',
   },
+  // Plačljivo ponovno vrednotenje cene (PonovnaCena, le splet). {cena} je znesek z valuto.
+  ponovnaCena: {
+    naslov: 'Ponowna wycena',
+    gumb: 'Wyceń ponownie',
+    opis: 'Przeliczamy cenę według tych samych zasad co co tydzień i potwierdzamy ją w ciągu kilku dni. Może wzrosnąć, spaść albo pozostać taka sama. Jednorazowa opłata: {cena}. Jeśli cena się nie zmieni, nie zwracamy pieniędzy.',
+    odpoved: 'Rozumiem, że przeliczenie zaczyna się od razu i że płacąc tracę prawo do odstąpienia w ciągu 14 dni.',
+    pogoji: 'Obowiązują <pogoji>warunki usług płatnych</pogoji>.',
+    kupi: 'Zapłać {cena}',
+    zapri: 'Zamknij',
+    vPregledu: 'Ponowna wycena została zamówiona i jest weryfikowana.',
+    zadnja: 'Ostatnia ponowna wycena ({datum}): {stara} → {nova}',
+    zadnjaEnaka: 'Ostatnia ponowna wycena ({datum}): cena pozostała {stara}',
+    uspeh: 'Dziękujemy! Płatność otrzymana. Przeliczymy cenę i potwierdzimy ją w ciągu kilku dni.',
+    napaka: 'Nie udało się rozpocząć płatności. Spróbuj ponownie.',
+    niMogoce: 'Ceny tego zawodnika nie można teraz ponownie wycenić.',
+    ovire: {
+      borza: 'Cenę tego zawodnika po każdej kolejce zmienia rynek, więc ponowna wycena nie jest możliwa.',
+      taTeden: 'Cena była już w tym tygodniu ponownie wyceniona. Spróbuj w przyszłym tygodniu.',
+      nedavno: 'Ten zawodnik był niedawno wyceniony ponownie albo wniosek jest już weryfikowany.',
+      rok: 'Do terminu kolejki zostało mniej niż 24 godziny. Spróbuj, gdy kolejka się zacznie.',
+    },
+  },
   scout: {
     naslov: 'SLFF Scout',
     opis: 'Kluby szukające zawodników widzą w SLFF Scout wskaźniki z twoich meczów. Tutaj dodajesz to, co widzą tylko za twoją zgodą.',

@@ -1,0 +1,50 @@
+name: Ponovne cene
+
+# Plačljivo ponovno vrednotenje cene (migracija 20261025193100): za vsak
+# plačan zahtevek izračuna PREDLOG z istim algoritmom in pravili kot tedenski
+# zagon (`ovrednoti-igralce.mjs --tedensko --igralec`, brez pisanja) in ga
+# zapiše v `ponovna_cena_predlog`. Cene ne spremeni: to stori šele admin v
+# Administraciji (`admin_ponovna_cena_potrdi`). Brez plačanih zahtevkov konča
+# pred namestitvijo odvisnosti.
+on:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ponovne-cene
+  cancel-in-progress: false
+
+jobs:
+  predlogi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Ali so plačani zahtevki?
+        id: vrsta
+        run: |
+          set -euo pipefail
+          n=$(curl -fsS -X POST "$SUPABASE_URL/rest/v1/rpc/ponovne_cene_za_izracun" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H 'Content-Type: application/json' -d '{}' | jq length)
+          echo "Plačanih brez predloga: $n"
+          echo "n=$n" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        if: steps.vrsta.outputs.n != '0'
+      - uses: actions/setup-node@v4
+        if: steps.vrsta.outputs.n != '0'
+        with:
+          node-version: '22'
+          cache: npm
+      # Nobena odvisnost ne potrebuje namestitvenih skript; brez njih tuja koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
+        if: steps.vrsta.outputs.n != '0'
+      - name: Predlogi
+        if: steps.vrsta.outputs.n != '0'
+        run: node scripts/ponovne-cene.mjs --pisi

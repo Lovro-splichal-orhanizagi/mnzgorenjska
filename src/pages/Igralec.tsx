@@ -46,6 +46,7 @@ import { izvor } from '../lib/platforma'
 import { naTrgu } from '../lib/osnutek'
 import { zabeleziKorak } from '../lib/lijak'
 import PopravekIgralca from '../components/PopravekIgralca'
+import PonovnaCena from '../components/PonovnaCena'
 import { prevediNapako } from '../lib/napake'
 import { NalaganjeZaBralnik, Skelet } from '../components/Skelet'
 import GumbGoogle from '../components/GumbGoogle'
@@ -527,6 +528,7 @@ export default function Igralec() {
             )}
           </div>
           <RazlagaCene cena={igralec.value} izhodisce={izhodisce} />
+          <PonovnaCena igralecId={igralec.id} />
         </div>
         )}
       </div>
