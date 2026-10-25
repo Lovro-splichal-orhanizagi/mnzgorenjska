@@ -34,6 +34,15 @@ const KORAKI: [string, string][] = [
   ['prva_shramba', 'Prvič shranil ekipo'],
 ]
 
+/** Kje je gumb "Časti pivo" (`src`); `okno` je PivoOkno, njegov prikaz je `pivo_okno`. */
+const PIVO_VIRI: [string, string][] = [
+  ['noga', 'Noga strani'],
+  ['domov', 'Domov'],
+  ['domov-lestvica', 'Domov, pod lestvico'],
+  ['zid', 'Zid podpornikov'],
+  ['okno', 'Okno (po 12 s)'],
+]
+
 /** Imena strani iz `zabelezi_obisk()` v človeška. */
 const STRANI: Record<string, string> = {
   domov: 'Domov',
@@ -179,9 +188,7 @@ export default function Lijak() {
           )
         })}
         <p className="text-xs text-slate-500">
-          Iz e-pošte (»Sestavi mi ekipo«): {poKoraku.get('sestavi_iz_maila') ?? 0}. Klik na
-          »Časti pivo«: {poKoraku.get('pivo') ?? 0}, okno pokazano{' '}
-          {poKoraku.get('pivo_okno') ?? 0} (nakupi pridejo na Discord). Vodič za novince:
+          Iz e-pošte (»Sestavi mi ekipo«): {poKoraku.get('sestavi_iz_maila') ?? 0}. Vodič za novince:
           začet {poKoraku.get('vodic_zacetek') ?? 0}, preskočen {poKoraku.get('vodic_preskok') ?? 0},
           do konca {poKoraku.get('vodic_konec') ?? 0}. Brez prijave: sestavljal{' '}
           {poKoraku.get('osnutek_brez_prijave') ?? 0}, po prijavi shranil{' '}
@@ -189,6 +196,49 @@ export default function Lijak() {
           {poKoraku.get('igralec_cta') ?? 0}. Deljene kartice igralcev:{' '}
           {poKoraku.get('kartica_deljena') ?? 0}. Isti korak se v
           isti seji šteje enkrat na dan.
+        </p>
+      </div>
+
+      {/* Lijak "Časti pivo" — viden gumb ali okno → klik; nakup vidi le BMC */}
+      <div className="space-y-1.5">
+        <h3 className="text-sm font-bold text-slate-300">
+          Časti pivo
+          <span className="ml-2 text-xs font-normal text-slate-500">
+            gumb viden {poKoraku.get('pivo_prikaz') ?? 0}, okno pokazano{' '}
+            {poKoraku.get('pivo_okno') ?? 0}, klik {poKoraku.get('pivo') ?? 0}
+          </span>
+        </h3>
+        <table className="w-full text-xs sm:text-sm">
+          <thead className="text-slate-500">
+            <tr>
+              <th className="py-1 text-left font-normal">Kje</th>
+              <th className="py-1 pl-2 text-right font-normal">Viden</th>
+              <th className="py-1 pl-2 text-right font-normal">Klik</th>
+              <th className="py-1 pl-2 text-right font-normal">Klik / viden</th>
+            </tr>
+          </thead>
+          <tbody>
+            {PIVO_VIRI.map(([vir, oznaka]) => {
+              const viden = poKoraku.get(vir === 'okno' ? 'pivo_okno' : `pivo_prikaz:${vir}`) ?? 0
+              const klik = poKoraku.get(`pivo:${vir}`) ?? 0
+              return (
+                <tr key={vir} className="border-t border-white/5">
+                  <td className="py-1.5 pr-2">{oznaka}</td>
+                  <td className="py-1.5 pl-2 text-right tabular-nums text-slate-400">{viden}</td>
+                  <td className="py-1.5 pl-2 text-right font-bold tabular-nums">{klik}</td>
+                  <td className="py-1.5 pl-2 text-right tabular-nums text-slate-500">
+                    {odstotek(klik, viden)}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+        <p className="text-xs text-slate-500">
+          Viden = gumb vsaj do polovice na zaslonu. Skupni števci štejejo enkrat na sejo na dan,
+          vrstice enkrat na vir, zato je vsota vrstic lahko večja od skupnega. Razčlenitev po viru
+          se začne šteti z migracijo 20261025140000; prej je bil le skupni klik. Kliki iz mailov
+          gredo naravnost na BMC (utm_medium), nakupi pridejo na Discord.
         </p>
       </div>
 

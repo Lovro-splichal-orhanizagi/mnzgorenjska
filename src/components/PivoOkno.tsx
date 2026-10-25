@@ -14,7 +14,7 @@ import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { jeMladinskiSlug } from '../lib/prevzem'
 import { jeNativno } from '../lib/platforma'
-import { zabeleziKorak } from '../lib/lijak'
+import { zabeleziKorak, zabeleziPivo } from '../lib/lijak'
 import { zeVprasan } from './PrviObisk'
 import { t } from '../i18n'
 
@@ -120,7 +120,7 @@ export default function PivoOkno() {
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => {
-            zabeleziKorak('pivo')
+            zabeleziPivo('pivo', 'okno')
             utisajPivoOkno(60)
             setOdprto(false)
           }}
