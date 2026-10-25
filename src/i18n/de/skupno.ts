@@ -49,5 +49,6 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     prosnjaCaka: 'Deine Anfrage für diese Liga wartet bereits.',
     prosnjaZavrnjena: 'Deine Anfrage für diese Liga wurde kürzlich abgelehnt. Eine neue kannst du 14 Tage nach der Ablehnung stellen.',
     klubNeIgra: 'Der gewählte Klub spielt nicht in dieser Liga.',
+    omejen: 'Dein Konto ist bis {do} eingeschränkt. Bis dahin kannst du nicht abstimmen, im Chat schreiben oder Meldungen senden.',
   },
 }

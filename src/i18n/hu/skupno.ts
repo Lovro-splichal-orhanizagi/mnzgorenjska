@@ -51,5 +51,6 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     prosnjaCaka: 'A kérelmed ehhez a bajnoksághoz már elbírálásra vár.',
     prosnjaZavrnjena: 'A kérelmedet ehhez a bajnoksághoz nemrég elutasították. Újat az elutasítás után 14 nappal küldhetsz.',
     klubNeIgra: 'A kiválasztott klub nem ebben a bajnokságban játszik.',
+    omejen: 'A fiókod korlátozva van eddig: {do}. Addig nem szavazhatsz, nem írhatsz a csevegőbe és nem küldhetsz bejelentést.',
   },
 }

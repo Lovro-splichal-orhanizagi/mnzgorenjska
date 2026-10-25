@@ -772,6 +772,17 @@
   kaže dodane brez nastopa po 6 tednih. Prijave napak so faza 4. Klub nikoli
   ne piše minut, golov, cen ali `reg_st`. Hrvaški in srbski stiki so s klubi povezani po imenu in ligi
   (migracija 20261013203100)
+- **Omejitve uporabnikov** (migracija 20261025111100): admin uporabnika za
+  1–365 dni omeji (`admin_omeji_uporabnika`, nova nadomesti veljavno;
+  `admin_odstrani_omejitev`, `admin_omejitve`; Discord ob novi). Omejen račun
+  ne more prijavljati igralcev, mini lig in profilov, pisati v klepet,
+  glasovati o asistencah in pozicijah ali potrjevati soigralcev: sprožilec
+  `zavrni_omejenega` (BEFORE INSERT, pri glasovih tudi UPDATE) na vsaki od teh
+  tabel, `auth.uid()` NULL (uvoz, servis) gre mimo. Napaka "Račun je omejen
+  do <ISO>." se v vmesniku prevede z rokom (`prevediNapako`). Ekipa, kader in
+  ime ostanejo. Nova pot pisanja o drugih ljudeh dobi isti sprožilec.
+  Administracija → Uporabniki → Omejitve kaže zadnjih 100 prijav o igralcih z
+  avtorjem (izbris, omejitev 7 ali 30 dni)
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
   ščit z začetnicami
 

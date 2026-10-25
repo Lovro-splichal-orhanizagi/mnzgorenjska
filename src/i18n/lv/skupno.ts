@@ -51,5 +51,6 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     prosnjaCaka: 'Tavs pieteikums šai līgai jau gaida.',
     prosnjaZavrnjena: 'Pieteikums šai līgai nesen tika noraidīts. Jaunu vari iesniegt 14 dienas pēc noraidīšanas.',
     klubNeIgra: 'Izvēlētais klubs šajā līgā nespēlē.',
+    omejen: 'Tavs konts ir ierobežots līdz {do}. Līdz tam tu nevari balsot, rakstīt tērzēšanā vai sūtīt ziņojumus.',
   },
 }
