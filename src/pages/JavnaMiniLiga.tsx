@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Link } from '../components/Povezava'
 import ImeLastnika from '../components/ImeLastnika'
 import IzstopMiniLige from '../components/IzstopMiniLige'
@@ -7,47 +7,31 @@ import DvobojiMiniLige, { IzbiraPogleda, type PogledMiniLige } from '../componen
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'
-import { povezavaNaPrijavo } from '../lib/prijava'
 import { formatirajTocke, mnozina, EKIPE, KROGI } from '../lib/pomozno'
-import { razvrstiMini, vecLig, NAJMANJ_EKIP_ZA_DVOBOJE, type MiniVrstica } from '../lib/miniLige'
-import { napakaJavnosti, type GlavaLige } from '../lib/javneMiniLige'
-import { dogodek } from '../lib/analitika'
+import { razvrstiMini, vecLig, NAJMANJ_EKIP_ZA_DVOBOJE, type GlavaLige, type MiniVrstica } from '../lib/miniLige'
 import { t, tx } from '../i18n'
 
 const MEDALJE = ['🥇', '🥈', '🥉']
 
-interface Ekipa {
-  id: number
-  name: string
-  competition_id: number | null
-}
-
 /**
- * Javna stran mini lige (/mini-leagues/:id): glava in lestvica, vidna vsem,
- * ko je liga javna (zasebna le članom). Le lestvica — ime ekipe, lastnik,
- * točke, mesto —, nikoli postave tujih ekip. Pridružitev brez kode z ekipo
- * lige, v kateri je mini liga javna; prijava lige gre v vrsto admina.
+ * Stran mini lige (/mini-leagues/:id): glava in lestvica, vidna članom. Le
+ * lestvica — ime ekipe, lastnik, točke, mesto —, nikoli postave tujih ekip.
+ * Vstop je le s kodo ali povezavo (/l/:koda).
  */
 export default function JavnaMiniLiga() {
   const { id: surovId } = useParams()
   const ligaId = Number(surovId)
   const { session, loading } = useAuth()
   const uporabnikId = session?.user.id
-  const { pathname, search } = useLocation()
   const pojdi = useNavigate()
   const [glava, setGlava] = useState<GlavaLige | null | undefined>(undefined)
   const [lestvica, setLestvica] = useState<MiniVrstica[]>([])
-  const [ekipe, setEkipe] = useState<Ekipa[]>([])
   const [osvezi, setOsvezi] = useState(0)
-  const [napaka, setNapaka] = useState<string | null>(null)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
-  const [dela, setDela] = useState(false)
-  const [prijavljam, setPrijavljam] = useState(false)
-  const [razlog, setRazlog] = useState('')
   const [pogled, setPogled] = useState<PogledMiniLige>('skupno')
 
   // Ime in opis piše uporabnik: pot je med zasebnimi (noindex, `jeZasebna`).
-  useNaslov(glava ? glava.name : t('lestvice.javneLige.javnaMiniLiga'))
+  useNaslov(glava ? glava.name : t('lestvice.vstop.miniLiga'))
 
   useEffect(() => {
     if (!Number.isFinite(ligaId) || loading) return
@@ -67,28 +51,13 @@ export default function JavnaMiniLiga() {
     }
   }, [ligaId, loading, uporabnikId, osvezi])
 
-  useEffect(() => {
-    if (!uporabnikId) return setEkipe([])
-    let veljavno = true
-    supabase
-      .from('fantasy_teams')
-      .select('id, name, competition_id')
-      .eq('owner_id', uporabnikId)
-      .then(({ data }) => {
-        if (veljavno) setEkipe((data ?? []) as Ekipa[])
-      })
-    return () => {
-      veljavno = false
-    }
-  }, [uporabnikId])
-
   const urejena = useMemo(() => razvrstiMini(lestvica), [lestvica])
   const kaziLigo = useMemo(() => vecLig(lestvica), [lestvica])
 
   if (!Number.isFinite(ligaId) || glava === null)
     return (
       <div className="mx-auto max-w-md space-y-4">
-        <h1 className="text-2xl font-black naslov">{t('lestvice.javneLige.niLige')}</h1>
+        <h1 className="text-2xl font-black naslov">{t('lestvice.vstop.niLige')}</h1>
         <p className="kartica p-4 text-sm text-slate-400">
           {tx('lestvice.javneLige.niLigeOpis', {}, {
             mini: (b) => (
@@ -102,57 +71,24 @@ export default function JavnaMiniLiga() {
     )
   if (glava === undefined) return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
 
-  const mojaEkipa = ekipe.find((e) => e.competition_id === glava.competition_id) ?? null
   const mojihVLigi = uporabnikId ? lestvica.filter((v) => v.owner_id === uporabnikId).length : 0
 
   function poIzstopu(besedilo: string) {
-    // Zasebna liga po izstopu zadnje ekipe ni več vidna: nazaj na Mini lige.
+    // Liga po izstopu zadnje ekipe ni več vidna: nazaj na Mini lige.
     // Gumb ima tujec le za svoje ekipe, zato je to vedno izstop, ne odstranitev.
-    if (glava && !glava.javna && !glava.sem_lastnik && mojihVLigi <= 1) {
+    if (glava && !glava.sem_lastnik && mojihVLigi <= 1) {
       pojdi('/mini-leagues')
       return
     }
-    setNapaka(null)
     setSporocilo(besedilo)
     setOsvezi((n) => n + 1)
-  }
-
-  async function pridruzi() {
-    if (!mojaEkipa || !glava) return
-    setNapaka(null)
-    setSporocilo(null)
-    setDela(true)
-    const { error } = await supabase.rpc('pridruzi_javni_mini_ligi', {
-      p_liga: glava.id,
-      p_ekipa: mojaEkipa.id,
-    })
-    setDela(false)
-    if (error) return setNapaka(napakaJavnosti(error))
-    dogodek('mini_liga_pridruzitev', { vir: 'javna-stran' })
-    setSporocilo(t('lestvice.javneLige.pridruzen', { ime: glava.name }))
-    setOsvezi((n) => n + 1)
-  }
-
-  async function prijavi() {
-    if (!glava) return
-    setNapaka(null)
-    setDela(true)
-    const { error } = await supabase.rpc('prijavi_mini_ligo', {
-      p_liga: glava.id,
-      p_razlog: razlog.trim() || undefined,
-    })
-    setDela(false)
-    if (error) return setNapaka(napakaJavnosti(error))
-    setPrijavljam(false)
-    setRazlog('')
-    setSporocilo(t('lestvice.javneLige.prijavljena'))
   }
 
   return (
     <div className="space-y-6">
       <div className="kartica space-y-1 p-5">
         <p className="text-xs text-slate-500">
-          {glava.javna ? t('lestvice.javneLige.javnaMiniLiga') : t('lestvice.vstop.miniLiga')}
+          {t('lestvice.vstop.miniLiga')}
           {glava.competition_short ? ` · ${glava.competition_short}` : ''}
         </p>
         <h1 className="text-2xl font-black naslov">{glava.name}</h1>
@@ -170,38 +106,13 @@ export default function JavnaMiniLiga() {
         </p>
       </div>
 
-      {napaka && <p role="alert" className="text-sm text-rose-400">{napaka}</p>}
       {sporocilo && <p role="status" className="text-sm text-gnl-300">{sporocilo}</p>}
 
-      {glava.sem_clan ? (
+      {glava.sem_clan && (
         <Link to={`/mini-leagues?liga=${glava.id}`} className="gumb-glavni inline-block text-sm">
           {t('lestvice.javneLige.moja')}
         </Link>
-      ) : glava.javna && !session ? (
-        <p className="text-sm text-slate-400">
-          {tx('lestvice.javneLige.prijava', {}, {
-            prijava: (b) => (
-              <Link
-                to={povezavaNaPrijavo(pathname + search)}
-                className="font-semibold text-gnl-300 underline hover:text-gnl-200"
-              >
-                {b}
-              </Link>
-            ),
-          })}
-        </p>
-      ) : glava.javna && mojaEkipa ? (
-        <button onClick={pridruzi} disabled={dela} className="gumb-glavni text-sm">
-          {t('lestvice.vstop.pridruziSe', { ime: mojaEkipa.name })}
-        </button>
-      ) : glava.javna ? (
-        <p className="text-sm text-slate-400">
-          {t('lestvice.javneLige.potrebujesEkipo')}{' '}
-          <Link to="/my-team" className="font-semibold text-gnl-300 hover:underline">
-            {t('lestvice.javneLige.sestaviEkipo')}
-          </Link>
-        </p>
-      ) : null}
+      )}
 
       {urejena.length >= NAJMANJ_EKIP_ZA_DVOBOJE && <IzbiraPogleda pogled={pogled} onPogled={setPogled} />}
 
@@ -246,54 +157,12 @@ export default function JavnaMiniLiga() {
                   nacin={v.owner_id === uporabnikId ? 'izstop' : 'odstrani'}
                   zadnja={mojihVLigi <= 1}
                   lastnik={glava.sem_lastnik}
-                  javna={glava.javna}
                   onKoncano={poIzstopu}
                 />
               )}
             </li>
           ))}
         </ol>
-      )}
-
-      {glava.javna && session && !glava.sem_lastnik && (
-        <div className="text-sm">
-          {prijavljam ? (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                void prijavi()
-              }}
-              className="kartica space-y-2 p-3"
-            >
-              <input
-                value={razlog}
-                onChange={(e) => setRazlog(e.target.value)}
-                placeholder={t('lestvice.javneLige.razlog')}
-                maxLength={300}
-                className="w-full rounded-lg bg-white/5 px-3 py-2 text-sm outline-none ring-1 ring-white/10"
-              />
-              <div className="flex gap-2">
-                <button type="submit" disabled={dela} className="gumb-glavni text-sm">
-                  {t('lestvice.javneLige.poslji')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPrijavljam(false)}
-                  className="rounded-md px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
-                >
-                  {t('lestvice.javneLige.preklici')}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <button
-              onClick={() => setPrijavljam(true)}
-              className="text-xs text-slate-500 underline hover:text-slate-300"
-            >
-              {t('lestvice.javneLige.prijavi')}
-            </button>
-          )}
-        </div>
       )}
     </div>
   )

@@ -20,6 +20,19 @@ export interface MiniVrstica {
   federation_short: string | null
 }
 
+/** Glava strani lige, `mini_liga_glava(id)`. Kode ne vsebuje. */
+export interface GlavaLige {
+  id: number
+  name: string
+  opis: string | null
+  competition_short: string | null
+  ekip: number
+  owner_name: string | null
+  owner_id: string | null
+  sem_clan: boolean
+  sem_lastnik: boolean
+}
+
 export interface MiniLiga {
   id: number
   name: string

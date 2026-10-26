@@ -1,5 +1,5 @@
 // Nizi za področje `aplikacija` (glej src/i18n/index.tsx): ogrodje strani —
-// meni, izbirnik lige, pojavna okna, noga, klepet, sponzor, napake in lib/.
+// meni, izbirnik lige, pojavna okna, noga, sponzor, napake in lib/.
 export const aplikacija = {
   rumeniKartoni: {
     nepripisani: 'Nepripisani rumeni kartoni: {n}. Zanje odbitki točk niso obračunani.',
@@ -202,33 +202,13 @@ export const aplikacija = {
     niVidno: 'Tega na tej strani ni videti. Morda se moraš najprej prijaviti ali sestaviti ekipo.',
     neznano: 'Tega ti žal ne znam pokazati.',
   },
-  klepet: {
-    gost: 'Gost',
-    zdaj: 'zdaj',
-    minut: '{n} min',
-    ur: '{n} h',
-    dni: '{n} d',
-    morasSePrijaviti: 'Za objavo se moraš prijaviti.',
-    predolgo: 'Sporočilo je predolgo (največ 500 znakov).',
-    izbrisiVprasanje: 'Izbrišem sporočilo?',
-    naslov: 'Pomagaj nam izboljšati!',
-    anonimno: 'anonimno',
-    uvod: 'Kaj te moti? Kaj bi rad videl? Kaj pogrešaš? Tvoj vtis nam ogromno pomeni — <krepko>povej</krepko>. Klepet je anonimen; nihče ne vidi, kdo je kaj napisal.',
-    prikazesKot: 'V klepetu se prikažeš kot <ime>{ime}</ime>. Tvoje registrirano ime ostane skrito.',
-    zaPisanje: 'Za pisanje se prijavi (branje je javno). Tvoje registrirano ime ostane skrito, pojaviš se pod naključnim psevdonimom.',
-    bodiPrvi: 'Bodi prvi, ki napiše sporočilo.',
-    izbrisi: 'Izbriši sporočilo',
-    napisi: 'Napiši sporočilo …',
-    poslji: 'Pošlji',
-    zaObjavo: 'Za objavo se <prijava>prijavi</prijava>.',
-  },
   sponzor: {
     oznaka: 'Sponzor',
     obisci: 'Obišči stran',
   },
   napaka: {
     naslov: 'Stran se je zataknila',
-    opis: 'Nekaj je šlo narobe pri prikazu te strani. Osveži stran ali se vrni na začetek — če se ponavlja, nam piši prek klepeta na začetni strani.',
+    opis: 'Nekaj je šlo narobe pri prikazu te strani. Osveži stran ali se vrni na začetek — če se ponavlja, nam piši prek klepeta za pomoč v spodnjem desnem kotu.',
     nazaj: 'Nazaj na začetno stran',
     osvezi: 'Osveži stran',
   },

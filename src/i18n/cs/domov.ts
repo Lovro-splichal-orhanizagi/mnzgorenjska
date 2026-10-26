@@ -98,7 +98,6 @@ export const domov: NonNullable<Prevod['domov']> = {
     uredi: 'Můj tým →',
   },
   taTeden: 'Tento týden',
-  klepet: 'Chat a návrhy',
   // Prosojnice samodejnih objav (Instagram, Facebook; stran /objava).
   objava: {
     igralecKroga: 'Hráč kola',

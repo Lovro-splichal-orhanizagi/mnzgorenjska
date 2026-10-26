@@ -14,7 +14,6 @@ interface Vrstica {
   ekip: number
   tocke: number
   vodilni: string | null
-  javna: boolean
   semLastnik: boolean
   /** Moja ekipa v tej mini ligi (ime in liga za vprašanje ob izstopu). */
   ekipa: string
@@ -53,7 +52,7 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
         return
       }
       const [{ data: lige }, { data: lestvice }] = await Promise.all([
-        supabase.from('mini_lige').select('id, name, owner_id, javna').in('id', idji),
+        supabase.from('mini_lige').select('id, name, owner_id').in('id', idji),
         supabase
           .from('mini_liga_lestvica')
           .select('mini_liga_id, fantasy_team_id, team_name, owner_name, owner_id, total_points, rounds_played, points_per_round, competition_short, federation_short')
@@ -73,7 +72,6 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
           ekip: urejene.length,
           tocke: Number(moja?.total_points ?? 0),
           vodilni: urejene[0]?.team_name ?? null,
-          javna: !!l.javna,
           semLastnik: !!uporabnikId && l.owner_id === uporabnikId,
           ekipa: moja?.team_name ?? '',
           ligaEkipe: moja?.competition_short ?? null,
@@ -148,7 +146,6 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
                 nacin="izstop"
                 zadnja={v.mojih <= 1}
                 lastnik={v.semLastnik}
-                javna={v.javna}
                 onKoncano={(besedilo) => {
                   setSporocilo(besedilo)
                   setOsvezi((n) => n + 1)

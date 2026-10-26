@@ -21,7 +21,6 @@ import { useNastavitev } from '../lib/nastavitve'
 import { useNaslov, zDrzavo } from '../lib/naslov'
 import { PRAG_ASISTENCE_PRIVZETO } from '../components/GolZaGlasovanje'
 import Grb from '../components/Grb'
-import Klepet from '../components/Klepet'
 import Odstevanje from '../components/Odstevanje'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
 import type { IgralecEnajsterice } from '../components/EnajstericaNaIgriscu'
@@ -622,7 +621,7 @@ export default function Domov() {
 
       {/* Na širšem zaslonu razdelki v dveh stolpcih, na telefonu drug pod drugim. */}
       {/* Dokler prvi val ne pride (`sezonaTece` je null), razdelki držijo
-          zaslon prostora: sicer bi sponzor, klepet in navodila pod njimi
+          zaslon prostora: sicer bi sponzor in navodila pod njimi
           najprej stali tik pod uvodom in nato skočili navzdol (CLS). */}
       <div
         className={`grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start ${
@@ -809,19 +808,6 @@ export default function Domov() {
       </div>
 
       <Sponzor kje="domov" />
-
-      {/* Klepet je dolg; na telefonu je zaprt, kot navodila spodaj. Na
-          širšem zaslonu je odprt in brez dvojnega naslova. */}
-      {siroko ? (
-        <Klepet />
-      ) : (
-        <details className="group">
-          <Povzetek>{t('domov.klepet')}</Povzetek>
-          <div className="mt-3">
-            <Klepet />
-          </div>
-        </details>
-      )}
 
       {/* potek igre — na telefonu zaprto, da naslovnica ni neskončna; novinec
           ga ima že v kartici na vrhu */}
