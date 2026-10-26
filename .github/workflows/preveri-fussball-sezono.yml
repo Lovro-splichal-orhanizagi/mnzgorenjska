@@ -23,27 +23,52 @@ on:
         description: all, or an explicit nonnegative report sample count
         type: string
         default: all
+      archive_json:
+        description: Optional observed adjacent archive JSON (seedUrl, staffel, season, maxRequests; optional observedSeedUrl)
+        type: string
+        default: ''
+      prior_requests:
+        description: Already spent cumulative website requests (paired pilot minimum 363)
+        type: number
+        default: 363
+      total_request_cap:
+        description: Cumulative website request cap including prior requests (paired pilot at most 5000)
+        type: number
+        default: 5000
+      expected_sha:
+        description: Exact reviewed main SHA, required for paired seasons
+        type: string
+        default: ''
 permissions:
   contents: read
   actions: read
+env:
+  SEED_URL: ${{ inputs.seed_url }}
+  STAFFEL: ${{ inputs.staffel }}
+  SEASON: ${{ inputs.season }}
+  MAX_REQUESTS: ${{ inputs.max_requests }}
+  REPORTS: ${{ inputs.reports }}
+  ARCHIVE_JSON: ${{ inputs.archive_json }}
+  PRIOR_REQUESTS: ${{ inputs.prior_requests }}
+  TOTAL_REQUEST_CAP: ${{ inputs.total_request_cap }}
+  EXPECTED_SHA: ${{ inputs.expected_sha }}
 jobs:
   capture:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 360
-    env:
-      SEED_URL: ${{ inputs.seed_url }}
-      STAFFEL: ${{ inputs.staffel }}
-      SEASON: ${{ inputs.season }}
-      MAX_REQUESTS: ${{ inputs.max_requests }}
-      REPORTS: ${{ inputs.reports }}
+    outputs:
+      archive_allowed: ${{ steps.authorize.outputs.archive_allowed }}
+      current_requests: ${{ steps.authorize.outputs.current_requests }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Bound request scope to the hosted job duration
-        run: node --input-type=module -e 'const n=Number(process.env.MAX_REQUESTS); if(!Number.isInteger(n)||n<1||n>3000) throw Error("Hosted captures require 1–3000 requests; larger local captures need their own time budget")'
+      - name: Validate hosted scope and reserve both season budgets before requests
+        run: node scripts/fussball-season-pilot.mjs validate
       - name: Offline source and evidence checks
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
       - name: Share host pacing with older nightly and bulk readers
@@ -54,11 +79,48 @@ jobs:
         run: node scripts/zajemi-fussball-sezono.mjs capture --seed-url "$SEED_URL" --staffel "$STAFFEL" --season "$SEASON" --max-requests "$MAX_REQUESTS" --reports "$REPORTS" --output capture
       - name: Replay only retained original documents, without network
         run: node scripts/zajemi-fussball-sezono.mjs verify capture
+      - name: Authorize archive only from independently replayed current originals
+        if: inputs.archive_json != ''
+        id: authorize
+        run: node scripts/fussball-season-pilot.mjs authorize capture
       - name: Source bytes, request journal and coverage
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: fussball-season-${{ github.run_id }}
           path: capture/
+          if-no-files-found: ignore
+          retention-days: 90
+  archive:
+    needs: capture
+    if: github.ref == 'refs/heads/main' && needs.capture.result == 'success' && needs.capture.outputs.archive_allowed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate immutable reviewed scope before the continuation
+        run: node scripts/fussball-season-pilot.mjs validate
+      - name: Download only this run's retained current originals
+        uses: actions/download-artifact@v4
+        with:
+          name: fussball-season-${{ github.run_id }}
+          path: current-capture/
+      - name: Share host pacing with older nightly and bulk readers
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/bulk-source-coordination.mjs
+      - name: Independently replay current originals, bind archive and budget, then capture and verify
+        run: node scripts/fussball-season-pilot.mjs capture-archive current-capture
+      - name: Preserve distinct archive audit bytes and request journal
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fussball-season-archive-${{ github.run_id }}
+          path: capture-archive/
           if-no-files-found: ignore
           retention-days: 90

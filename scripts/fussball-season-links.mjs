@@ -1,9 +1,10 @@
 // Discovery from retained original bytes only. A menu link establishes an
 // observed pairing, not the target page's identity or complete season coverage.
 import {createHash} from 'node:crypto'
+import {readFileSync} from 'node:fs'
 import {fussballLiveTags} from './viri/fussball-statistika.mjs'
 import {inspectFussballPage} from './viri/fussball-discovery.mjs'
-import {fussballRoundScope} from './lib/fussball-capture.mjs'
+import {fussballRoundScope,fussballCanonicalRoundLocation} from './lib/fussball-capture.mjs'
 import {parseFussballLeagueCode} from './fussball-import.mjs'
 const requireProof=(ok,message)=>{if(!ok)throw Error(`fussball season links: ${message}`)}
 function label(text,current){
@@ -61,4 +62,17 @@ export function inspectFussballArchivePage(html,{archive,current}={}){
  const close=end.exec(html)?.index
  requireProof(selector&&selector.start>forms[0].end&&close>selector.end,'season selector is not inside the archive form')
  return {...page,url:archive.seedUrl,canonicalUrl:page.url,archiveOf:current.staffel}
+}
+
+// One byte-bound, reviewed terminal301 observation. This is offline alias
+// evidence only: the HTTP client continues to refuse redirects without follow.
+export function fussballArchiveSeedAlias(archive,current){
+ const observed=archive.observedSeedUrl??archive.seedUrl
+ if(observed===archive.seedUrl)return null
+ const proof=JSON.parse(readFileSync(new URL('./vzorci/de-fussball-baden-archive-20261026.json',import.meta.url)))
+ const raw=JSON.stringify(proof.redirectProbeManifest)+'\n'
+ const attempt=proof.redirectProbeManifest.snapshot.attempts[0],alias=proof.redirect
+ requireProof(createHash('sha256').update(raw).digest('hex')===alias.manifestSha256&&attempt.url===alias.from&&attempt.canonicalLocation===alias.to&&attempt.httpStatus===alias.status&&attempt.startedAt===alias.startedAt&&attempt.status==='failed'&&proof.redirectProbeManifest.snapshot.requests===1,'reviewed redirect original differs')
+ requireProof(['seedUrl','staffel','season'].every(k=>current[k]===proof.current[k]&&archive[k]===proof.archive[k])&&observed===proof.observedSeedUrl&&alias.from===observed&&alias.to===archive.seedUrl&&fussballCanonicalRoundLocation(observed,archive.seedUrl,alias.status)===archive.seedUrl,'unobserved archive seed alias')
+ return alias
 }

@@ -857,3 +857,61 @@ postane dopusten uvoz; njegove posamezne nespremenjene strani so uporabne
 za diagnostiko brez dodatnih zahtevkov. Popravilo imen omogoči lokalno
 preverbo prvega Badenovega zapisnika (30 nastopov, dva gola, oba vratarja),
 kar še ni dokaz cele lige.
+
+### Gostovani zaporedni audit dveh sezon (26. 10. 2026)
+
+`preveri-fussball-sezono.yml` lahko po uspešnem tekočem zajemu nadaljuje z
+izrecno odobrenim sosednjim arhivom na drugem gostovanem GitHub poslu.
+Prazen `archive_json` ohrani običajen enosezonski vmesnik. Za par je obvezen
+`reports=all`, točen pregledani `expected_sha` na `main` v izvornem repozitoriju
+in prvi poskus ročnega zagona. `archive_json` vsebuje samo `seedUrl`, `staffel`,
+`season`, `maxRequests` ter po potrebi `observedSeedUrl` za izrecno pregledano
+normalizacijo URL. Vsaka sezona ima največ 3000 zahtevkov in 360 minut.
+
+`scripts/fussball-season-pilot.mjs validate` pred prvim branjem rezervira
+`prior_requests + max_requests + archive.maxRequests <= total_request_cap`.
+Odobreni Baden pilot šteje že porabljenih **363** (prvotnih 361 in dva arhivska pregleda), največ **1500** za 2026/27
+(`03188V27L800000JVS5489BTVU7GTVLE-G`) in **3000** za opaženi arhiv 2025/26
+(`02TGLSVQ1800000IVS5489BTVTLPPK10-G`), skupaj pod mejo **5000**. Prejšnje
+porabe ni dovoljeno ponastaviti; to varovalo zavrne manj kot 363 in mejo nad
+5000. Nov operativni poskus potrebuje novo pregledano kumulativno porabo.
+
+Tekoči posel šele po uspešnem zajemu in neodvisnem offline ponavljanju izda
+`archive_allowed` in dejansko število zahtevkov. Arhivski posel prenese samo
+artefakt tega zagona, znova preveri izvirnike z isto nespremenljivo kodo ter
+veže točen arhivski URL, ID in sezono na edini živi izbirnik sezon izvirne
+tekoče strani. Pred arhivskim branjem ponovno preveri preostali proračun.
+Napaka prenosa, zavrnitev vira, delni zajem ali neuspešna offline preverba
+ustavijo nadaljevanje. Semantično zavrnjeni zapisniki ostanejo v dokazu in
+ne preprečijo ločeno odobrenega arhivskega audita, če je bil ves vir uspešno
+prebran. Še vedno preprečujejo ustrezno poznejšo pripravljenost za uvoz.
+
+Oba posla uporabljata obstoječi vrstni red bralcev istega gostitelja in vsaj
+šest sekund med začetki zahtevkov, brez ponovitev ali nadomestnega dostopa.
+Arhiv ne čaka na zaključek svojega starševskega zagona. Tekoči artefakt ostane
+`fussball-season-<run_id>`, arhivski je ločen
+`fussball-season-archive-<run_id>` in ni sprejet kot tekoči uvozni dokaz.
+To je izključno audit vira brez baze, fotografij, registracije ali vklopa lige;
+obstoječa produkcijska uvozna vrata se ne spreminjajo.
+
+Badenov [prvi arhivski pregled](https://github.com/Lovro-splichal-orhanizagi/mnzgorenjska/actions/runs/40403312901)
+je porabil en zahtevek in se ustavil ob HTTP 301 s kratkega izbirniškega URL
+na opaženi daljši URL; preusmeritvi ni sledil. Ločeni
+[pregled kanoničnega arhivskega URL](https://github.com/Lovro-splichal-orhanizagi/mnzgorenjska/actions/runs/40404124953)
+je porabil še en zahtevek in shranil izvirni HTTP 200 header, preden je običajni
+razčlenjevalnik zavrnil SEO canonical tekoče sezone. Nespremenjena izvirnika
+tekoče strani in arhivske glave ter točni računi pregledov so v
+`de-fussball-baden-archive-20261026.json` in pripadajočih HTML vzorcih.
+
+Za ta opaženi par `archive_json.seedUrl` poda daljši URL,
+`observedSeedUrl` pa ohrani točen kratek URL iz tekočega živega izbirnika.
+Razlika je dovoljena samo ob ujemanju točnega pregledanega terminalnega
+301 računa in obeh sezonskih identitet; omrežni odjemalec še vedno ne sledi
+preusmeritvam. Arhivski manifest v3 ohrani vse izvirne bajte tekoče strani
+pod vsebinskim SHA-256 in njen ploski izvirni račun, brez novih zahtevkov ali
+spremenjenih časov. Celoten dokaz starša ima svoj SHA-256. Tako zajem kot
+običajna offline preverba v3 preverita isti živi izbirnik, opaženo normalizacijo,
+arhivsko izbrano sezono in njen obrazec z obstoječim strogim
+`inspectFussballArchivePage`. Manjkajoč ali spremenjen dokaz oziroma simbolna
+povezava se zavrne. Običajna identiteta strani brez tega dokaza ostane stroga;
+pregled glave še ne dokazuje kakovosti celotnega arhiva.
