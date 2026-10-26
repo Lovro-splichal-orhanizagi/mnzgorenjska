@@ -57,8 +57,14 @@ export function razberiPostavo(html,{fonts}={}) {
  if(jeIzziv(html))fail('izziv v postavi')
  if(!/^<div id="match_course_body">/.test(html.trim()) || (html.match(/<div\b/g)??[]).length!==(html.match(/<\/div>/g)??[]).length)fail('odrezana postava')
  const decode=decoder(fonts),head=element(html,'head')
- const names=[...head.matchAll(/<div class="club-name">\s*<a\b[^>]*>([^<]+)<\/a>/g)].map(m=>text(m[1]))
- if(names.length!==2)fail('manjkajo imena ekip')
+ const headers=[...head.matchAll(/<div class="club-name">([\s\S]*?)<\/div>/g)]
+ if(headers.length!==2||(html.match(/\bclass="[^"]*\bclub-name\b[^"]*"/g)??[]).length!==2)fail('manjkajo ali niso enolična imena ekip')
+ const names=headers.map(([,body])=>{
+  const child=body.match(/^\s*(?:<a\b[^>]*>([^<]+)<\/a>|<span>([^<]+)<\/span>)\s*$/)
+  if(!child)fail('nepodprta oblika imena ekipe')
+  const name=text(child[1]??child[2]);if(!name)fail('manjka ime ekipe')
+  return name
+ })
  const bench=html.indexOf('<div class="substitutes club-wrapper">')
  if(bench<0)fail('manjka klop postave')
  const teams=names.map(ime=>({ime,postava:[],rezerve:[]})),seen=new Set()

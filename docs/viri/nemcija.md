@@ -66,7 +66,15 @@ poljubni popravljeni strukturi HTML ali dodatnim predlogam postave.
 nima neodvisne šifre tekme. Imena se razberejo samo iz pripadajočih pisav,
 dogodki pa se povežejo po točnih profilnih šifrah. `player-id` in `userid`
 ostaneta ločena; `regSt` je `null`.
-Javni `userid` podpira tudi točno opaženo obliko `I.[0-9]{6}.-{23}`
+Glava postave podpira tudi izrecni navadni otrok `<span>Ime kluba</span>`
+v `div.club-name`, opažen v obeh zajetih Bayernliga zapisnikih. Vsaka glava
+ima en sam podprt otrok, skupaj morata biti natanko dva kluba in ujemati
+se morata z naslovom zapisnika. Mešani, skriti, prazni ali dodatni otroci
+in dodatne glave se zavrnejo; logotipi in `alt` niso nadomestilo imena.
+Nespremenjeni izvorni glavi in provenienca sta v
+`de-fussball-club-name-span.json`; sestavljene regresije uporabljajo
+podprte postave in pisave, dokler celotna izvirnika nimata vseh pisav.
+Javni `userid` podpira tudi točno opaženo obliko `I\.[0-9]{6}\.-{23}`
 (npr. `I.715682.-----------------------` v Hessnu in
 `I.573584.-----------------------` v Sachsenligi). Celoten neprosojni niz
 ostane del identitete `de-fussball-userid-…`; šestmestno število ni nova

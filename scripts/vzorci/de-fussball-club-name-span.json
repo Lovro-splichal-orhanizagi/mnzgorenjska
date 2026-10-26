@@ -1,0 +1,50 @@
+{
+  "sources": [
+    {
+      "capture": "github-batch-40375102622",
+      "manifestSha256": "8054bc35a04a30ea3a0d6034559ffb6718ff453e64e58d846123efbfe1786f66",
+      "matchId": "0318BE2DVO000000VS5489BTVU7GTVLE",
+      "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/0318BE2DVO000000VS5489BTVU7GTVLE/ticker-id/selectedTickerId",
+      "documentSha256": "b6be96748aa138082f67693de48ccf816c8efb3142ed7e75068d4de4666c6acd",
+      "documentBytes": 26491,
+      "capturedAt": "2026-10-26T18:09:53.014Z",
+      "headers": [
+        {
+          "name": "DJK Don Bosco Bamberg",
+          "raw": "<div class=\"club-name\"><span>DJK Don Bosco Bamberg</span></div>",
+          "byteOffset": 406,
+          "sha256": "15b526e28910d68a035de17d78992878b05dc4170b0b43b23f28df8ada47206a"
+        },
+        {
+          "name": "DJK Ammerthal",
+          "raw": "<div class=\"club-name\"><span>DJK Ammerthal</span></div>",
+          "byteOffset": 1838,
+          "sha256": "a1e7854e77a7139fd4c44596b1bdbc078a4107a49d19b9bd8becbcbc4e6c4763"
+        }
+      ]
+    },
+    {
+      "capture": "github-batch-40375102622",
+      "manifestSha256": "8054bc35a04a30ea3a0d6034559ffb6718ff453e64e58d846123efbfe1786f66",
+      "matchId": "03182353JK000000VS5489BUVSBBVPEU",
+      "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/03182353JK000000VS5489BUVSBBVPEU/ticker-id/selectedTickerId",
+      "documentSha256": "02fb5b0e090d943c86c2b63c34155351f6e020f8a60c5276ebd5ab8ba839b0c9",
+      "documentBytes": 30195,
+      "capturedAt": "2026-10-26T18:10:35.016Z",
+      "headers": [
+        {
+          "name": "SV Erlbach",
+          "raw": "<div class=\"club-name\"><span>SV Erlbach</span></div>",
+          "byteOffset": 406,
+          "sha256": "0722281e0e83132b1f9a7cd2eed21cadd35a545c683accb5e612e9ae8a038bd6"
+        },
+        {
+          "name": "SV Schalding-Heining",
+          "raw": "<div class=\"club-name\"><span>SV Schalding-Heining</span></div>",
+          "byteOffset": 1819,
+          "sha256": "d78545db2ea30e449536d2c85fbe8f6a85b73b1e6a2295f4c342fe61ceaaef14"
+        }
+      ]
+    }
+  ]
+}

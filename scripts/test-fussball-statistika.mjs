@@ -526,3 +526,42 @@ test('offline CLI refuses missing or conflicting captured lineup provenance',()=
  const missing=structuredClone(manifest);delete missing.provenance.lineupUrl
  for(const m of [wrong,missing]){const r=cli(main,lineup,m);assert.notEqual(r.status,0);const out=JSON.parse(r.stdout);assert.deepEqual(out.nastopi,[]);assert.match(out.razlog,/Manifest/)}
 })
+
+function spanClubLineup(){return lineup.replace(/<div class="club-name">\s*<a\b[^>]*>([^<]+)<\/a>\s*<\/div>/g,'<div class="club-name"><span>$1</span></div>')}
+test('authentic plain-span club headers preserve exactly two named sides and supported statistics',()=>{
+ const sources=JSON.parse(read('de-fussball-club-name-span.json')).sources
+ for(const source of sources){
+  assert.equal(source.headers.length,2)
+  for(const header of source.headers)assert.equal(sha(header.raw),header.sha256)
+  // Actual header bytes, supported Ilvesheim roster/fonts and report frame.
+  let index=0
+  const players=spanClubLineup().replace(/<div class="club-name"><span>[^<]+<\/span><\/div>/g,()=>source.headers[index++].raw)
+  const html=main.replaceAll('SpVgg 03 Ilvesheim',source.headers[0].name).replaceAll('SG Oftersheim',source.headers[1].name)
+  const result=parse(html,players),raw=razberiZapisnik(html,players,options)
+  assert.deepEqual([result.z.domaci.ime,result.z.gostje.ime],source.headers.map(h=>h.name))
+  assert.deepEqual([raw.domaci.ime,raw.gostje.ime],source.headers.map(h=>h.name))
+  assert.equal(result.nastopi.length,30);assert.equal(result.z.goli.length,5)
+  assert.deepEqual(result.z.rezultat,{domaci:2,gostje:3})
+ }
+})
+test('plain-span club names reject mixed, hidden, extra or contradictory header evidence',()=>{
+ const source=spanClubLineup(),header='<div class="club-name"><span>SpVgg 03 Ilvesheim</span></div>'
+ assert.notEqual(source,lineup)
+ for(const replacement of [
+  '<div class="club-name"><span>SpVgg 03 Ilvesheim</span><span>Extra</span></div>',
+  '<div class="club-name"><span>SpVgg 03 Ilvesheim</span><a href="/">Extra</a></div>',
+  '<div class="club-name"><a href="/"><span>SpVgg 03 Ilvesheim</span></a></div>',
+  '<div class="club-name"><span class="hidden">SpVgg 03 Ilvesheim</span></div>',
+  '<div class="club-name"><span hidden="hidden">SpVgg 03 Ilvesheim</span></div>',
+  '<div class="club-name"><span style="display:none">SpVgg 03 Ilvesheim</span></div>',
+  '<div class="club-name"><!-- <span>SpVgg 03 Ilvesheim</span> --></div>',
+  '<div class="club-name"><span>Wrong Team</span></div>',
+  '<div class="club-name"><span> </span></div>',
+  '<div class="club-name">SpVgg 03 Ilvesheim</div>',
+  header+'<div class="club-name"><span>Extra</span></div>',
+  header+'<div class="club-name hidden"><span>Extra</span></div>',
+ ]){const players=source.replace(header,replacement);reject(main,players);assert.throws(()=>razberiZapisnik(main,players,options))}
+ // Complete apparent names inside comments/inert markup remain non-evidence.
+ for(const wrap of [h=>`<!-- ${h} -->`,h=>`<template>${h}</template>`])reject(main,source.replace(header,wrap(header)))
+ reject(main,source.replace(/<span>(SpVgg 03 Ilvesheim|SG Oftersheim)<\/span>/g,(_,name)=>`<span>${name==='SG Oftersheim'?'SpVgg 03 Ilvesheim':'SG Oftersheim'}</span>`))
+})
