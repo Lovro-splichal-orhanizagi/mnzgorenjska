@@ -282,7 +282,7 @@ Deno.serve(async (req) => {
         poslano++
         const { data: pr } = await service5.from('profiles').select('brez_push').eq('id', u.user_id).maybeSingle()
         if (!pr?.brez_push && pushNastavljen())
-          push += await posljiPush(service5, u.user_id, vObvestilo(sporocilo, `/mini-leagues?t=${u.liga_slug}`)).catch(() => 0)
+          push += await posljiPush(service5, u.user_id, vObvestilo(sporocilo, `/${u.v_mini_ligi ? 'mini-leagues' : 'predictions'}?t=${u.liga_slug}`)).catch(() => 0)
       }
       await service5.from('email_log').insert({
         user_id: u.user_id,
