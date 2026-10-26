@@ -191,8 +191,10 @@ function player(n,{goal=false}={}){
  return `de-fussball-${m[1]}-${m[2]}`
 }
 function rawEvent(n,half,ordinal,html){
- const side=n?.attrs?.class==='row-event event-left'?0:1
- const columns=box(n,`row-event event-${side===0?'left':'right'}`,3)
+ const rowClass=n?.attrs?.class,match=/^row-event event-(left|right)( own-goal)?$/.exec(rowClass??'')
+ requireProof(match,'nepodprt razred dogodka')
+ const side=match[1]==='left'?0:1,explicitOwnGoal=match[2]!==undefined
+ const columns=box(n,rowClass,3)
  const [pn,en,tn]=side===0?columns:[columns[2],columns[1],columns[0]]
  const pc=shape(cell(pn),'div',{class:'valign-cell'})
  box(pn,'column-player',1);box(en,'column-event',1);box(tn,'column-time',1)
@@ -215,6 +217,7 @@ function rawEvent(n,half,ordinal,html){
  const proof={ekipaIdx:side,cas,osnovnaMinuta:base,dodatek:added,minuta:Math.min(90,base),polcas:half,ordinal,eventSha256:hash(html.slice(n.start,n.end))}
  let vrsta,refs,enajstmetrovka=false,drugiRumeni=false
  if(ec.tag==='i'||ec.tag==='span'&&ec.attrs.class==='icon-stack'){
+  requireProof(!explicitOwnGoal,'označevalec avtogola brez gola')
   const cls=ec.attrs.class
   if(cls==='icon-substitute'){
    shape(ec,'i',{class:cls},0);requireProof(pc.length===2,'nepodprta menjava')
@@ -245,7 +248,10 @@ function rawEvent(n,half,ordinal,html){
  }else{
   const scores=box(ec,'even')
   requireProof(scores.length===3||scores.length===4,'nepodprti podrejeni elementi div')
-  if(scores.length===4){text(scores[3],'span',{class:'event-info'},/^Strafstoßtor$/);enajstmetrovka=true}
+  if(scores.length===4){
+   text(scores[3],'span',{class:'event-info'},explicitOwnGoal?/^Eigentor$/:/^Strafstoßtor$/)
+   enajstmetrovka=!explicitOwnGoal
+  }else requireProof(!explicitOwnGoal,'manjka izrecna oznaka avtogola')
   for(const [i,cls] of [[0,'score-left'],[2,'score-right']]){
    const s=scores[i],font=s?.attrs?.['data-obfuscation']
    requireProof(/^[a-z0-9]+$/.test(font??''),'manjka pisava izida dogodka')

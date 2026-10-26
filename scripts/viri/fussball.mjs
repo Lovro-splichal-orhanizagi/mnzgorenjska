@@ -121,7 +121,7 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
  const active=new Set(teams.flatMap(t=>t.postava.map(p=>p.virId)))
  let previous=0,current={domaci:0,gostje:0}
  const goli=[],menjave=[],nepripisaniKartoni=[],rumeni=[],rdeci=[]
- const starts=[...course.matchAll(/<div class="row-event event-(left|right)">/g)]
+ const starts=[...course.matchAll(/<div class="row-event event-(left|right)( own-goal)?">/g)]
  const structuralEvents=(course.match(/class="column-event"/g)??[]).length
  const eventSignals=(course.match(/class="even"|\bicon-card(?=[\s"])|\bicon-substitute\b/g)??[]).length
  if(starts.length!==structuralEvents || starts.length!==eventSignals || starts.length!==(course.match(/class="row-event\b/g)??[]).length)fail('nepodprt ali manjkajoč dogodek')
@@ -134,6 +134,8 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
   if(order<previous)fail('neveljavno časovno zaporedje dogodkov');previous=order
   const refs=[...s.matchAll(/<a\b[^>]*href="https:\/\/www\.fussball\.de\/spielerprofil\/-\/(?:player-id|userid)\/[A-Z0-9]{32}"[^>]*>/g)].map(m=>identity(m[0]))
   const player=ref=>{const p=players.get(ref);if(!p)fail('dogodek vsebuje neznanega igralca');return p}
+  const explicitOwnGoal=starts[i][2]!==undefined
+  if(explicitOwnGoal&&!/class="even"/.test(s))fail('označevalec avtogola brez gola')
   if(/class="even"/.test(s)){
    if(refs.length!==1)fail('gol brez enoličnega igralca')
    const p=player(refs[0]),next=score(s,decode),delta=[next.domaci-current.domaci,next.gostje-current.gostje]
@@ -141,8 +143,10 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
    if(!active.has(p.virId))fail('gol neaktivnega igralca')
    const scoreChildren=liveScoreChildren(s),marker=scoreChildren[3]
    if(scoreChildren.length!==3&&scoreChildren.length!==4)fail('nepodprt dodatek gola')
-   if(marker!==undefined&&marker!=='<span class="event-info">Strafstoßtor</span>')fail('nepodprt dodatek gola')
-   const enajstmetrovka=marker!==undefined,avtogol=p.side!==side
+   if(marker!==undefined&&!['<span class="event-info">Strafstoßtor</span>','<span class="event-info">Eigentor</span>'].includes(marker))fail('nepodprt dodatek gola')
+   const ownGoalMarker=marker==='<span class="event-info">Eigentor</span>'
+   const enajstmetrovka=marker==='<span class="event-info">Strafstoßtor</span>',avtogol=p.side!==side
+   if(explicitOwnGoal!==ownGoalMarker||(explicitOwnGoal&&!avtogol))fail('protisloven označevalec avtogola in strani igralca')
    if(enajstmetrovka&&avtogol)fail('protisloven označevalec enajstmetrovke in avtogola')
    goli.push({virId:p.virId,ime:p.ime,minuta,ekipa:teams[p.side].ime,avtogol,enajstmetrovka,rezultat:next});current=next
   }else if(/icon-substitute/.test(s)){

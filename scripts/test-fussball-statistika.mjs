@@ -324,6 +324,59 @@ test('same unqualified goal grammar preserves own-goal scorer identity and benef
  assert.equal(r.z.goli[0].ekipa,'SpVgg 03 Ilvesheim');assert.equal(r.z.goli[0].avtogol,true);assert.deepEqual(r.z.goli[0].rezultat,{domaci:0,gostje:1})
  assert.equal(r.nastopi.reduce((n,p)=>n+p.goli,0),4);assert.equal(r.nastopi.reduce((n,p)=>n+p.avtogoli,0),1)
 })
+// Composed reports below retain the supported Ilvesheim source scores/fonts.
+// Only the class/marker grammar is observed; the scorer substitutions are synthetic.
+function explicitOwnGoal(index,profile,html=main){
+ return edit(index,row=>row.replace(/class="row-event event-(left|right)"/,'class="row-event event-$1 own-goal"').replace(/(spielerprofil\/-\/)(?:player-id|userid)\/[A-Z0-9]{32}/,`$1${profile}`),eventInfo(index,'Eigentor',html))
+}
+test('observed explicit own-goal grammar preserves scorer identity on both beneficiary sides',()=>{
+ const source=JSON.parse(read('de-fussball-own-goal.json')).source
+ assert.equal(sha(source.rawEvent),source.eventSha256)
+ assert.match(source.rawEvent,/^<div class="row-event event-right own-goal">/)
+ assert.match(source.rawEvent,/<span class="event-info">Eigentor<\/span>/)
+ assert.match(source.rawEvent,/player-id\/00MC74URVG000000VV0AG85VVSMHI0R7/)
+ for(const [index,profile,score,side] of [
+  [2,'player-id/00NKAU0I64000000VV0AG85VVUH1CIQU',{domaci:0,gostje:1},0],
+  [3,'player-id/0192B6VBGS000000VV0AG80NVSFDG9QH',{domaci:1,gostje:1},1],
+ ]){
+  const html=explicitOwnGoal(index,profile),r=parse(html)
+  const goal=r.z.goli.find(g=>g.avtogol),scorer=r.nastopi.find(p=>p.virId===goal.virId)
+  assert.equal(goal.virId,`de-fussball-${profile.replace('/','-')}`)
+  assert.deepEqual(goal.rezultat,score);assert.equal(goal.enajstmetrovka,false)
+  assert.equal(scorer.ekipaIdx,side);assert.equal(scorer.avtogoli,1);assert.equal(scorer.goli,0)
+  assert.equal(r.nastopi.reduce((n,p)=>n+p.goli,0),4)
+  assert.equal(r.nastopi.reduce((n,p)=>n+p.avtogoli,0),1)
+  assert.equal(razberiZapisnik(html,lineup,options).goli.find(g=>g.avtogol)?.virId,goal.virId)
+ }
+})
+test('retained authentic own-goal row composes with supported score bytes and roster identity',()=>{
+ const source=JSON.parse(read('de-fussball-own-goal.json')).source
+ // Keep the original DOM, time container, image and obfuscated name spans.
+ // Rebind only score glyphs/font, active scorer and clock to the replay report.
+ const score=elementRange(rows(main)[2].raw,'<div class="even">').raw.replace('</div>','<span class="event-info">Eigentor</span></div>')
+ const originalScore=elementRange(source.rawEvent,'<div class="even">').raw
+ const row=source.rawEvent.replace(originalScore,score).replace('47&rsquo;','56&rsquo;').replace('player-id/00MC74URVG000000VV0AG85VVSMHI0R7','player-id/00NKAU0I64000000VV0AG85VVUH1CIQU')
+ const r=parse(edit(2,()=>row)),goal=r.z.goli[0]
+ assert.equal(goal.avtogol,true);assert.equal(goal.enajstmetrovka,false)
+ assert.deepEqual(goal.rezultat,{domaci:0,gostje:1})
+ assert.equal(r.nastopi.find(p=>p.virId===goal.virId).avtogoli,1)
+ assert.equal(r.dogodki.find(e=>e.ordinal===3).eventSha256,sha(row))
+})
+test('explicit own-goal requires paired marker/class, opposite roster side and active scorer',()=>{
+ const html=explicitOwnGoal(2,'player-id/00NKAU0I64000000VV0AG85VVUH1CIQU')
+ for(const bad of [
+  html.replace(' own-goal',''),html.replace('<span class="event-info">Eigentor</span>',''),
+  html.replace('Eigentor</span>','Strafstoßtor</span>'),html.replace('Eigentor</span>','Tor</span>'),
+  html.replace(' own-goal',' own-goal unknown'),
+  explicitOwnGoal(2,'player-id/00NKAUN7HO000000VV0AG85VVUH1CIQU'),
+  explicitOwnGoal(2,'userid/025BQ1KJJO000000VS541L4HVS5D4572'),
+  explicitOwnGoal(2,'player-id/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'),
+  // The visual beneficiary still has to match the unchanged score progression.
+  html.replace('event-right own-goal','event-left own-goal'),
+  html.replace('<span class="event-info">Eigentor</span>','<span class="event-info">Eigentor</span><span class="event-info">Eigentor</span>'),
+ ]){reject(bad);assert.throws(()=>razberiZapisnik(bad,lineup,options))}
+ reject(edit(0,row=>row.replace('event-left','event-left own-goal')))
+})
 test('wrong side and unknown player identities cannot create appearances',()=>{
  reject(edit(4,s=>s.replace('event-left','event-right')))
  reject(edit(4,s=>s.replace('025BQ1KJJO000000VS541L4HVS5D4572','025BQ1KJJO000000VS541L4HVS5D457X')))

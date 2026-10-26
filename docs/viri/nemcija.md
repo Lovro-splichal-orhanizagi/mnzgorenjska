@@ -99,6 +99,17 @@ Podprt je preverjeni navadni format brez pripisanih kartonov ter izrecna
 oznaka zadete enajstmetrovke `Strafstoßtor` kot četrti živi otrok elementa
 izida. Oznaka se ohrani pri golu in v `goliIzEnajstmetrovke`; komentarji,
 skripte, podvojeni ali neznani dodatki in protislovje z avtogolom se zavrnejo.
+Podprt je tudi pristno opaženi par razreda `row-event event-right own-goal`
+in četrtega otroka izida `<span class="event-info">Eigentor</span>`; simetrična
+leva oblika je preverjena s sestavljenim zapisnikom. Oba označevalca morata
+biti prisotna skupaj, strelec mora biti aktiven in po preverjeni profilni
+identiteti pripadati nasprotni postavi od strani, ki ji izid doda gol.
+Običajno dokazovanje avtogola iz postave in zaporedja izidov ostane veljavno.
+Izvirna vrstica Schermbeck–Lippstadt pri 47 in njen SHA-256/provenienca sta v
+`de-fussball-own-goal.json`; celoten izvirnik še ni ponovljen, ker zajem pred
+zavrnitvijo dogodka ni pridobil potrebne pisave izida `lksxyf9m`. Regresije
+sestavijo opaženo obliko s podprtimi bajti izida in preverjeno postavo ter ne
+predstavljajo celotnega izvirnega zapisnika. Dodatnih pisav nismo pridobivali.
 Rdeči, drugi rumeni, mešane/neznane ikone,
 pripisani kartoni, zgrešene enajstmetrovke, neznani
 podrejeni elementi dogodkov, podaljšek ali prekinitev zadržijo vse nastope.
