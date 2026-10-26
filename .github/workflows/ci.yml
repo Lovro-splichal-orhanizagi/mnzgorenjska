@@ -80,6 +80,9 @@ jobs:
       - name: Provider batch and Dribl source diagnostics (source-free)
         run: node --test scripts/test-provider-league-batch.mjs scripts/test-provider-source-budget.mjs scripts/test-mlsz-provider-proof.mjs scripts/test-dribl.mjs scripts/test-dribl-import-actions.mjs scripts/test-dribl-capture.mjs scripts/test-dribl-import.mjs scripts/test-dribl-cli.mjs scripts/test-dribl-country-binding.mjs
 
+      - name: DFB current pending report isolation (source-free)
+        run: node --test scripts/test-dfb-pending.mjs scripts/test-dfb-nightly-pending.mjs scripts/test-dfb-pending-pricing.mjs
+
       - name: Poland and Germany complete bulk rollout (source-free)
         run: node --test scripts/test-bulk-*.mjs scripts/test-prepare-fussball-nightly.mjs
 
@@ -200,6 +203,11 @@ jobs:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
           FUSSBALL_IDENTITIES_DISPOSABLE_TEST: '1'
         run: node --test scripts/test-fussball-identities-sql.mjs
+      - name: DFB current pending evidence, finality and repair rollback
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          SUPABASE_TEST_DB: postgres
+        run: node scripts/test-dfb-pending-sql.mjs
       - name: MFA NL closed archive bootstrap rollback regression
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska

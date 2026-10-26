@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "boundary": "All retained card rows below are anonymous. Positive linked-card test cases are SYNTHETIC compositions of these icon/label shapes and the existing authentic substitution profile/glyph grammar; no captured named-card format or whole-league PASS is claimed.",
+  "observed": [
+    {
+      "kind": "straight-red",
+      "sourceUrl": "https://www.fussball.de/spiel/psv-neumuenster-vfr-neumuenster/-/spiel/031BT5AP4G000000VS5489BTVUS470OH",
+      "sourceSha256": "62579c3494f7d98d64c74a8e7c72b635283dba2f0c0d2adda8595cfbb7f7f71e",
+      "rowUtf8ByteOffset": 150829,
+      "rowUtf8Bytes": 688,
+      "rowSha256": "25595beb96e32cf7bf34bc6979dd571c9425ae6fb0dd7e92014bf78db39405a6",
+      "rawRow": "<div class=\"row-event event-right\">\n\t\t\t\t\t\t\t<div class=\"column-time\">\n\t\t\t\t\t\t\t\t<div class=\"hexagon black\">\n\t\t\t\t\t\t\t\t\t<span class=\"icon-hexagon\"></span>\n\t\t\t\t\t\t\t\t\t<div class=\"inner\">\n\t\t\t\t\t\t\t\t\t\t<div class=\"valign-wrapper\">\n\t\t\t\t\t\t\t\t\t\t\t<div class=\"valign-inner\">39&rsquo;</div>\n\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class=\"column-event\">\n\t\t\t\t\t\t\t\t<div class=\"valign-table\">\n\t\t\t\t\t\t\t\t\t<div class=\"valign-cell\">\n\t\t\t\t\t\t\t\t\t\t<i class=\"icon-card red-card\"></i>\n\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class=\"column-player\">\n\t\t\t\t\t\t\t\t<div class=\"valign-table\">\n\t\t\t\t\t\t\t\t\t<div class=\"valign-cell\">Rote Karte</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>"
+    },
+    {
+      "kind": "second-yellow",
+      "sourceUrl": "https://www.fussball.de/spiel/sc-pfingstberg-hochstaett-sg-oftersheim/-/spiel/031EQBPNKK000000VS5489BTVUS470OH",
+      "sourceSha256": "e4448276cb0dbe48489c4fdd3af5e0060321299c87d635f40fea4de4efd49d0e",
+      "rowUtf8ByteOffset": 156693,
+      "rowUtf8Bytes": 757,
+      "rowSha256": "c7cc6f5bb83aef13a2f5de4fb4527ff6a3df635e308a04213a7a7c53638d0431",
+      "rawRow": "<div class=\"row-event event-left\">\n\t\t\t\t\t\t\t<div class=\"column-player\">\n\t\t\t\t\t\t\t\t<div class=\"valign-table\">\n\t\t\t\t\t\t\t\t\t<div class=\"valign-cell\">Gelb-Rote Karte</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class=\"column-event\">\n\t\t\t\t\t\t\t\t<div class=\"valign-table\">\n\t\t\t\t\t\t\t\t\t<div class=\"valign-cell\"><span class=\"icon-stack\"><span class=\"icon-card-half yellow-card\"></span><span class=\"icon-card red-card\"></span></span></div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class=\"column-time\">\n\t\t\t\t\t\t\t\t<div class=\"hexagon black\">\n\t\t\t\t\t\t\t\t\t<span class=\"icon-hexagon\"></span>\n\t\t\t\t\t\t\t\t\t<div class=\"inner\">\n\t\t\t\t\t\t\t\t\t\t<div class=\"valign-wrapper\">\n\t\t\t\t\t\t\t\t\t\t\t<div class=\"valign-inner\">59&rsquo;</div>\n\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>"
+    }
+  ]
+}

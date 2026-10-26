@@ -38,6 +38,7 @@ try {
       ['historical club binding',"update private_historical_statistics.source_club_bindings set bound_team_id=10388 where provider='fcf' and source_club_id='5042'"],
       ['six target release receipt',"insert into private_fcf_six_target_release.receipts(competition_id,inventory_key,packet_sha256,packet_text,rollout_text,rollout_sha256,source_fingerprint,cleanup_before_sha256,imported_state_sha256,stage)values(801,'concurrent','test','{}','{}','test','test','test','test','imported')"],
       ['six foreign target club binding',"insert into private_fcf_six_target_release.club_bindings(competition_id,club_id,category_id,team_id,country_id,source_fingerprint)values((select min(id)from competitions where id<>801),'concurrent','test',10388,(select country_id from competitions where id=801),'test')"],
+      ['DFB quarantine evidence FK',"insert into private_dfb_pending.evidence(competition_id,match_id,report_id,source_code,fixture,status,reason,raw_sha256,raw_bytes,observed_at) values(801,427263,'TEST ONLY','TEST ONLY','{}','DFB_INVALID_REPORT','TEST ONLY',repeat('a',64),decode('78','hex'),now())"],
       ['new Scout non-FK reference',"insert into scout.dnevnik(team_id,vrsta) values(10388,'isci')"],
       ['new FK DDL','create table public.g13_concurrent_fk(team_id bigint references teams)'],
     ]

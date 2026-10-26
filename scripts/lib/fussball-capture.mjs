@@ -22,6 +22,13 @@ export function fussballRoundScope(url) {
   return {staffel:m[3],round:m[1] ? Number(m[1]) : null,date:m[2] ?? null}
 }
 
+// Discovery evidence only: callers still receive the terminal redirect refusal.
+// Never retain login URLs, queries, credentials or a different league/round.
+export function fussballCanonicalRoundLocation(url,location,status){
+  const from=fussballRoundScope(url),to=fussballRoundScope(location)
+  return status===301&&from&&to&&location!==url&&from.staffel===to.staffel&&from.round===to.round&&from.date===to.date?location:null
+}
+
 function routeKind(url, kind) {
   if (typeof url !== 'string' || !url || /[\s\\]/.test(url)) throw fail('invalid source URL')
   if (!KINDS.has(kind)) throw fail(`unsupported document kind ${String(kind)}`)
@@ -202,7 +209,10 @@ export function createFussballCaptureClient({
       })
       if (!(response instanceof Response)) throw fail('fetchFn did not return a Web Response')
       attempt.httpStatus = response.status
-      if (response.status >= 300 && response.status < 400) throw fail(`redirect refused (HTTP ${response.status})`)
+      if (response.status >= 300 && response.status < 400) {
+        if(kind==='round')attempt.canonicalLocation=fussballCanonicalRoundLocation(url,response.headers.get('location'),response.status)
+        throw fail(`redirect refused (HTTP ${response.status})`)
+      }
       if (response.status !== 200) throw fail(`source request failed (HTTP ${response.status})`)
       if (response.redirected || (response.url && response.url !== url)) throw fail('redirected response refused')
       const contentType = response.headers.get('content-type')

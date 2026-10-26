@@ -47,7 +47,7 @@ teci() { "$@" </dev/null; zadnji_izhod=$?; return "$zadnji_izhod"; }
 
 # uvozi <liga> <faktor> <vir> → 0 v redu, 1 napaka, 4 vir je zavrnil, 5 vir je dol
 uvozi() {
-  local liga=$1 ok=1 zavrnil=0 dol=0
+  local liga=$1 ok=1 zavrnil=0 dol=0 pending=0
   export SLFF_PREMOR_FAKTOR=$2
   unset SLFF_FUSSBALL_CAPTURE
   if [ "$3" = fussball-public ]; then
@@ -70,11 +70,14 @@ uvozi() {
   node scripts/uvoz-delegiranja.mjs --tekmovanje "$liga" --pisi </dev/null || ok=0
   rm -f /tmp/uvozenih
   local dodatno=""
+  local dfb_pending=()
+  [ "$3" = dfb ] && dfb_pending=(--dfb-pending)
   [ "$URNI" = 1 ] && dodatno="--samo-dotaknjene"
   if [ "$zavrnil" = 0 ] && [ "$dol" = 0 ]; then
-    teci node scripts/uvoz-zapisnikov.mjs --tekmovanje "$liga" --sveze 21 --porocilo /tmp/uvozenih $dodatno || case $zadnji_izhod in
+    teci node scripts/uvoz-zapisnikov.mjs --tekmovanje "$liga" --sveze 21 --porocilo /tmp/uvozenih $dodatno "${dfb_pending[@]}" || case $zadnji_izhod in
       4) ok=0; zavrnil=1 ;;
       5) dol=1 ;;
+      6) pending=1 ;;
       *) ok=0 ;;
     esac
   fi
@@ -93,12 +96,14 @@ uvozi() {
     node scripts/ugani-pozicije.mjs --tekmovanje "$liga" --pisi --samo-nove </dev/null || ok=0
   fi
   [ "$zavrnil" = 1 ] && return 4
+  [ "$ok" = 1 ] && [ "$pending" = 1 ] && return 6
   [ "$ok" = 1 ] && return 0
   return 1
 }
 
 padle=""
 vir_dol=""     # vir vrača 5xx: povzetek na koncu, koš zaradi tega ne pade
+cakajoci=""    # DFB podatki čakajo; brez takojšnje ponovitve cele lige
 odlocitve=""   # razpored ima klub manj kot baza: izstop kluba ali --dovoli-manj-klubov
 zacasno=""      # padle v prvem krogu, za ponovni poskus: "liga faktor vir"
 preskocene=""
@@ -117,6 +122,8 @@ while read -r liga faktor vir; do
   uvozi "$liga" "$faktor" "$vir"; izid=$?
   echo "::endgroup::"
   case $izid in
+    6) echo "::warning title=DFB podatki čakajo::$liga — DFB pending; veljavni zapisniki uvoženi, zavrnjeni v karanteni, ponovitev posameznih zapisnikov v poznejšem zagonu"
+       cakajoci="$cakajoci $liga" ;;
     5) echo "::warning title=Vir ne dela::$liga — vir $vir vrača 5xx (nedosegljiv); ostale lige tega vira preskočene, ni napaka uvoza"
        nedosegljivi="$nedosegljivi$vir "; vir_dol="$vir_dol $liga" ;;
     0) echo "$liga: v redu"; node scripts/nocni-kosi.mjs --zabelezi "$liga" --stanje "$STANJE" ;;
@@ -137,6 +144,9 @@ while read -r liga faktor vir; do
   if [ "$izid" = 0 ]; then
     echo "$liga: v redu v drugem poskusu"
     node scripts/nocni-kosi.mjs --zabelezi "$liga" --stanje "$STANJE"
+  elif [ "$izid" = 6 ]; then
+    echo "::warning title=DFB podatki čakajo::$liga — brez nadaljnje ponovitve"
+    cakajoci="$cakajoci $liga"
   else
     echo "::warning title=Uvoz lige::$liga ni uspela niti v drugem poskusu"
     padle="$padle $liga"
@@ -154,6 +164,10 @@ if [ -n "$vir_dol" ]; then
 fi
 if [ -n "$odlocitve" ]; then
   echo "::warning title=Klub manjka v razporedu::$(echo $odlocitve | tr ' ' '\n' | sort -u | tr '\n' ' ')— izstop kluba (delovni tok Izstop kluba), uvoz z --dovoli-manj-klubov ali le okrnjena stran vira (naslednji zagon jo prebere znova)"
+fi
+if [ -n "$cakajoci" ]; then
+  echo "::warning title=DFB pending::Zavrnjeni zapisniki in nepopolni krogi:$cakajoci"
+  [ -n "${GITHUB_STEP_SUMMARY:-}" ] && echo "DFB podatki čakajo (zavrnjen zapisnik ni popoln uvoz):$cakajoci" >> "$GITHUB_STEP_SUMMARY"
 fi
 echo "Koš $KOS/$KOSOV končan v $(minut) min."
 if [ -n "$padle" ]; then

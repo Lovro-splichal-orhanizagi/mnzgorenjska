@@ -5,10 +5,12 @@ import {createHash} from 'node:crypto'
 import {readFileSync,writeFileSync,appendFileSync,mkdirSync,lstatSync,readdirSync,existsSync} from 'node:fs'
 import {resolve,join,relative} from 'node:path'
 import {fileURLToPath} from 'node:url'
-import {createFussballCaptureClient,fussballRoundScope} from './lib/fussball-capture.mjs'
+import {createFussballCaptureClient,fussballRoundScope,fussballCanonicalRoundLocation} from './lib/fussball-capture.mjs'
 import {collectFussballSeason} from './fussball-season.mjs'
 import {buildFussballImportBatch,parseFussballLeagueCode} from './fussball-import.mjs'
 import {zaprtje} from './odtis-kode.mjs'
+import {extractFussballSeasonLinks,inspectFussballArchivePage} from './fussball-season-links.mjs'
+import {inspectFussballPage} from './viri/fussball-discovery.mjs'
 
 const ROOT=fileURLToPath(new URL('../',import.meta.url))
 const POLICY='scripts/policies/de-bulk-candidates.json'
@@ -33,13 +35,29 @@ function tuple(code,season,seedUrl){
  proof(parsed.season===season&&scope?.staffel===parsed.staffel&&scope.round===null&&scope.date===null,'catalog tuple/seed scope differs','GERMANY_CATALOG_INVALID')
  return {code,season,seedUrl,staffel:parsed.staffel}
 }
+function evidenceBytes(e){
+ proof(e&&/^scripts\/vzorci\/[a-zA-Z0-9_.-]+\.html$/.test(e.file),'catalog source evidence path missing','GERMANY_CATALOG_INVALID')
+ const path=resolve(ROOT,e.file),stat=lstatSync(path)
+ proof(stat.isFile()&&!stat.isSymbolicLink()&&stat.size<=8*1024*1024,'invalid original catalog evidence file','GERMANY_CATALOG_INVALID')
+ const raw=readFileSync(path);proof(hash(raw)===e.sha256,'catalog original evidence digest differs','GERMANY_CATALOG_INVALID');return raw
+}
 function checkPolicyEvidence(candidate){
  for(const t of [tuple(candidate.source_league_code,candidate.season,candidate.seedUrl),...candidate.archives.map(a=>tuple(a.code,a.season,a.seedUrl))]){
   const e=policy.evidence.filter(e=>e.code===t.code)
-  proof(e.length===1&&/^scripts\/vzorci\/[a-zA-Z0-9_.-]+\.html$/.test(e[0].file),'catalog source evidence missing','GERMANY_CATALOG_INVALID')
-  const raw=readFileSync(resolve(ROOT,e[0].file)),year=Number(t.season.slice(0,4))
-  proof(hash(raw)===e[0].sha256&&raw.toString().includes(`rel="canonical" href="${t.seedUrl}"`)&&raw.toString().includes(`${year}/${year+1}`),'catalog original evidence differs','GERMANY_CATALOG_INVALID')
+  proof(e.length===1,'catalog source evidence missing','GERMANY_CATALOG_INVALID')
+  const raw=evidenceBytes(e[0]),year=Number(t.season.slice(0,4)),a=candidate.archives.find(a=>a.code===t.code)
+  if(a?.canonicalParent){
+   proof(a.canonicalParent.code===candidate.source_league_code&&a.canonicalParent.seedUrl===candidate.seedUrl&&Array.isArray(a.observedFrom)&&a.observedFrom.length>=2&&new Set(a.observedFrom.map(e=>e.file)).size===a.observedFrom.length,'archive parent evidence differs','GERMANY_CATALOG_INVALID')
+   for(const witness of a.observedFrom){const links=extractFussballSeasonLinks(evidenceBytes(witness).toString('utf8'),parseFussballLeagueCode(candidate.source_league_code));proof(links.previous?.code===a.code&&links.previous.seedUrl===a.observedSeedUrl,'archive menu does not advertise this tuple','GERMANY_CATALOG_INVALID')}
+   proof(a.observedRedirect?.from===a.observedSeedUrl&&a.observedRedirect?.to===a.seedUrl&&fussballCanonicalRoundLocation(a.observedSeedUrl,a.seedUrl,a.observedRedirect?.status)===a.seedUrl,'archive canonical URL is not an observed same-league normalization','GERMANY_CATALOG_INVALID')
+   inspectFussballArchivePage(raw.toString('utf8'),{archive:t,current:{...parseFussballLeagueCode(candidate.source_league_code),seedUrl:candidate.seedUrl}})
+  }else proof(raw.toString().includes(`rel="canonical" href="${t.seedUrl}"`)&&raw.toString().includes(`${year}/${year+1}`),'catalog original evidence differs','GERMANY_CATALOG_INVALID')
  }
+}
+export function collectGermanySeason(t,candidate,{client,asOfDate,collectSeason=collectFussballSeason}={}){
+ const archive=candidate.archives.find(a=>a.code===t.code)
+ const parsers=archive?.canonicalParent?{inspectPage:(html,options)=>options.kind==='round'?inspectFussballArchivePage(html,{archive:t,current:{...parseFussballLeagueCode(candidate.source_league_code),seedUrl:candidate.seedUrl}}):inspectFussballPage(html,options)}:{}
+ return collectSeason({...t,client,reportLimit:null,asOfDate},parsers)
 }
 /** Catalog argument is an explicit offline-test seam, never a CLI override. */
 export function validateGermanyCandidate(candidate,{catalog=GERMANY_BULK_CANDIDATES}={}){
@@ -108,7 +126,7 @@ export async function captureGermanyCandidate(candidate,{directory,maxRequests,n
  let error=null
  try{
   for(const [index,t] of tuples(c).entries()){
-   const raw=await (dependencies.collectSeason??collectFussballSeason)({...t,client,reportLimit:null,asOfDate:m.captured_at.slice(0,10)})
+   const raw=await collectGermanySeason(t,c,{client,asOfDate:m.captured_at.slice(0,10),collectSeason:dependencies.collectSeason})
    const bytes=json(raw),file=`seasons/${index}.json`
    writeFileSync(join(directory,file),bytes);m.results.push({code:t.code,file,sha256:hash(bytes)})
    normalize(raw,t)
@@ -159,7 +177,7 @@ export async function loadGermanyPack(directory,{candidate,now=Date.now,requireF
    const r=m.results[i];proof(r.code===t.code&&r.file===`seasons/${i}.json`,'season result scope differs')
    const original=readRegular(directory,r.file);allowed.push(r.file)
    proof(hash(original)===r.sha256,'season result hash differs')
-   const raw=await (dependencies.collectSeason??collectFussballSeason)({...t,client:replay,reportLimit:null,asOfDate:m.captured_at.slice(0,10)})
+   const raw=await collectGermanySeason(t,c,{client:replay,asOfDate:m.captured_at.slice(0,10),collectSeason:dependencies.collectSeason})
    proof(json(raw)===original.toString(),'original-byte replay result differs')
    seasons.push(normalize(raw,t))
   }

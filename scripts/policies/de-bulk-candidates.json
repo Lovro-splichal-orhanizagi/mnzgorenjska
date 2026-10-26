@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "Reviewed current source tuples only. Neither retained source has an observed 2025/26 archive staffel pairing; both remain HOLD before collection. Archive IDs must be added from reviewed original source evidence, never derived from the current ID.",
+  "note": "Reviewed current tuples and observed archive evidence. Schleswig 2025/26 is advertised by two current season selectors and its archived body/form is verified; SEO canonical points at the current parent. Full season reports remain unvalidated. Mannheim has no observed previous-season pairing. No readiness or activation follows from this catalog.",
   "candidates": [
     {
       "slug": "de-kreisliga-mannheim",
@@ -12,8 +12,11 @@
       "archives": [],
       "seedUrl": "https://www.fussball.de/spieltag/kreisliga-mannheim-kreis-mannheim-kreisliga-herren-saison2627-baden/-/staffel/031EKNM2HG00000LVS5489BUVUR5FS5A-G",
       "registration": {
-        "name": "Kreisliga Mannheim", "short_name": "Kreisliga Mannheim", "sort_order": 100,
-        "rok_pomak_ur": 0, "vir_ime": "FUSSBALL.DE",
+        "name": "Kreisliga Mannheim",
+        "short_name": "Kreisliga Mannheim",
+        "sort_order": 100,
+        "rok_pomak_ur": 0,
+        "vir_ime": "FUSSBALL.DE",
         "vir_url": "https://www.fussball.de/spieltag/kreisliga-mannheim-kreis-mannheim-kreisliga-herren-saison2627-baden/-/staffel/031EKNM2HG00000LVS5489BUVUR5FS5A-G"
       }
     },
@@ -24,17 +27,60 @@
       "host": "www.fussball.de",
       "country_code": "DE",
       "season": "2026/27",
-      "archives": [],
+      "archives": [
+        {
+          "code": "02TC3RCRHK000004VS5489BTVVQ0O654-G:2025/26",
+          "season": "2025/26",
+          "seedUrl": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2526-schleswig-holstein/-/staffel/02TC3RCRHK000004VS5489BTVVQ0O654-G",
+          "canonicalParent": {
+            "code": "031AVH9TIC000004VS5489BTVSK8S3O6-G:2026/27",
+            "seedUrl": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2627-schleswig-holstein/-/staffel/031AVH9TIC000004VS5489BTVSK8S3O6-G"
+          },
+          "observedSeedUrl": "https://www.fussball.de/spieltag/-/staffel/02TC3RCRHK000004VS5489BTVVQ0O654-G",
+          "observedRedirect": {
+            "from": "https://www.fussball.de/spieltag/-/staffel/02TC3RCRHK000004VS5489BTVVQ0O654-G",
+            "to": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2526-schleswig-holstein/-/staffel/02TC3RCRHK000004VS5489BTVVQ0O654-G",
+            "status": 301,
+            "capturedAt": "2026-10-26T09:35:20.575Z"
+          },
+          "observedFrom": [
+            {
+              "file": "scripts/vzorci/de-fussball-schleswig-round16-20261024.html",
+              "sha256": "2e4601ec1f97d8452f184bf59bc2be8de9d4f068254a5f64cd6a740279dfc47a"
+            },
+            {
+              "file": "scripts/vzorci/de-fussball-schleswig-round1-20261024.html",
+              "sha256": "37b18e2ad7ea280cf327b8145b75f91d6def6f66d619fbbab9c0e28504e8a264"
+            }
+          ]
+        }
+      ],
       "seedUrl": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2627-schleswig-holstein/-/staffel/031AVH9TIC000004VS5489BTVSK8S3O6-G",
       "registration": {
-        "name": "Flens Oberliga Schleswig-Holstein", "short_name": "Oberliga Schleswig-Holstein", "sort_order": 101,
-        "rok_pomak_ur": 0, "vir_ime": "FUSSBALL.DE",
+        "name": "Flens Oberliga Schleswig-Holstein",
+        "short_name": "Oberliga Schleswig-Holstein",
+        "sort_order": 101,
+        "rok_pomak_ur": 0,
+        "vir_ime": "FUSSBALL.DE",
         "vir_url": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2627-schleswig-holstein/-/staffel/031AVH9TIC000004VS5489BTVSK8S3O6-G"
       }
     }
   ],
   "evidence": [
-    {"code": "031EKNM2HG00000LVS5489BUVUR5FS5A-G:2026/27", "file": "scripts/vzorci/de-fussball-krog8.html", "sha256": "2e2f17ec74aabe6b6fc6f6a01e40bdbb7674f921e99fd61c33349ecd84335914"},
-    {"code": "031AVH9TIC000004VS5489BTVSK8S3O6-G:2026/27", "file": "scripts/vzorci/de-fussball-schleswig-round16-20261024.html", "sha256": "2e4601ec1f97d8452f184bf59bc2be8de9d4f068254a5f64cd6a740279dfc47a"}
+    {
+      "code": "031EKNM2HG00000LVS5489BUVUR5FS5A-G:2026/27",
+      "file": "scripts/vzorci/de-fussball-krog8.html",
+      "sha256": "2e2f17ec74aabe6b6fc6f6a01e40bdbb7674f921e99fd61c33349ecd84335914"
+    },
+    {
+      "code": "031AVH9TIC000004VS5489BTVSK8S3O6-G:2026/27",
+      "file": "scripts/vzorci/de-fussball-schleswig-round16-20261024.html",
+      "sha256": "2e4601ec1f97d8452f184bf59bc2be8de9d4f068254a5f64cd6a740279dfc47a"
+    },
+    {
+      "code": "02TC3RCRHK000004VS5489BTVVQ0O654-G:2025/26",
+      "file": "scripts/vzorci/de-fussball-schleswig-archive-20261026.html",
+      "sha256": "9c6c1c35efa8179091a071788e8a21554bdea7693b1e0c9ec637be598157cbb4"
+    }
   ]
 }
