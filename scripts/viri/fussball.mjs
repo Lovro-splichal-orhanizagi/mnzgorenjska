@@ -78,6 +78,7 @@ export function razberiPostavo(html,{fonts}={}) {
  return teams
 }
 function score(s,decode,allowUnplayed=false){
+ if(allowUnplayed&&/^<td class="column-score">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/[A-Z0-9]{32}"><span class="info-text">Ausfall<\/span><\/a>\s*<\/td>$/.test(s))return null
  const values=['score-left','score-right'].map(c=>{const field=element(s,c);if(!/data-obfuscation=/.test(field))fail('izid brez vezane pisave');return decode(field)})
  if(allowUnplayed && values.every(v=>v==='-'))return null
  if(values.some(v=>!/^\d{1,2}$/.test(v)))fail('neveljaven izid')
@@ -208,7 +209,7 @@ export function razberiKrog(html,{fonts,staffel}={}) {
    continue
   }
   if((row.match(/<td\b[^>]*class="column-club(?: |")/g)??[]).length!==2)fail('neveljavna tekma kroga: manjka klub')
-  const names=[...row.matchAll(/<div class="club-name">([\s\S]*?)<\/div>/g)].map(n=>text(n[1]))
+  const names=[...row.matchAll(/<div class="club-name">([\s\S]*?)<\/div>/g)].map(n=>text(n[1]).replace(/\u200B/g,''))
   const ids=[...row.matchAll(/href="(https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/([A-Z0-9]{32}))(?:#![^\"]*)?"/g)]
   // The official table includes a club's bye as two club cells, but no fixture.
   // Admit only the observed empty-date/result shape; never hide a real match.

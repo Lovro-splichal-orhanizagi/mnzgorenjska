@@ -21,13 +21,13 @@ const fakeClock = () => {
     advance: ms => { time += ms },
   }
 }
-const client = (fetchFn, options = {}) => createFussballCaptureClient({
+const client = (fetchFn, options = {}) => {const clock=fakeClock();clock.advance(1_798_000_000_000);return createFussballCaptureClient({
   maxRequests: 4,
   fetchFn,
-  now: () => 1_798_000_000_000,
-  sleep: async () => {},
+  now: clock.now,
+  sleep: clock.sleep,
   ...options,
-})
+})}
 
 test('retained originals preserve timestamps and never count as fresh network reads',async()=>{
  const bytes=Buffer.from(html),url=`${base}/spiel/-/spiel/${ID}`
@@ -85,6 +85,21 @@ test('concurrent reads serialize network starts and enforce six seconds between 
   assert.equal(starts.length, 2)
   assert.ok(starts[1] - starts[0] >= 6000)
   assert.deepEqual(clock.sleeps, [6000])
+})
+
+test('an early timer wake is checked again before the next network start',async()=>{
+ let clock=0,wakes=0;const starts=[]
+ const c=client(async()=>{starts.push(clock);return htmlResponse()},{now:()=>clock,sleep:async ms=>{clock+=ms-(wakes++===0?1:0)}})
+ await c.read(`${base}/spieltag/-/staffel/${staffel}`,'round')
+ await c.read(`${base}/spiel/-/spiel/${ID}`,'report')
+ assert.deepEqual(starts,[0,6000]);assert.equal(wakes,2)
+})
+test('a stuck pacing clock stops before a second network request',async()=>{
+ let calls=0
+ const c=client(async()=>{calls++;return htmlResponse()},{now:()=>0,sleep:async()=>{}})
+ await c.read(`${base}/spieltag/-/staffel/${staffel}`,'round')
+ await assert.rejects(()=>c.read(`${base}/spiel/-/spiel/${ID}`,'report'),/pacing|clock/)
+ assert.equal(calls,1);assert.equal(c.snapshot().stopped,true)
 })
 
 test('successful duplicate reads reuse bytes while all actual attempts are counted', async () => {

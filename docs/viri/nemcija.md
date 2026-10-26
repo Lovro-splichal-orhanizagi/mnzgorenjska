@@ -804,3 +804,17 @@ tekme, drugi klub, rezultat ali skrita oznaka te izjeme ne dobijo. Izvirna
 vrstica in njen SHA/odmik sta v `de-fussball-baden-bye-provenance.json`.
 Ponovitev celotne shranjene strani potrdi sedem resničnih tekem 11. kroga;
 to ni dokaz popolnosti njihovih zapisnikov ali dovoljenje za vklop lige.
+
+
+Živi paketni pregled `40369728901` je razkril še tri ozke vrzeli. Ime
+`DJK/&#8203;FC Ziegelhausen-Peterstal` v razporedu vsebuje prikazni U+200B,
+ki ga glava zapisnika nima; razpored odstrani samo ta nevidni prelom pri
+imenih klubov. Izrecni `Ausfall` v praznem rezultatskem polju ohrani tekmo
+z `rezultat:null`, nikoli 0:0; pretekla tekma brez izida še vedno prepreči
+popoln sezonski uvoz. Pristna celica Westfalna ima ločeno provenienco.
+Časovnik zajema po vsakem prebujanju ponovno preveri dejanski šestsekundni
+razmik. Stari paket je zaradi enega razmika 5999 ms neuspešen dokaz in ne
+postane dopusten uvoz; njegove posamezne nespremenjene strani so uporabne
+za diagnostiko brez dodatnih zahtevkov. Popravilo imen omogoči lokalno
+preverbo prvega Badenovega zapisnika (30 nastopov, dva gola, oba vratarja),
+kar še ni dokaz cele lige.

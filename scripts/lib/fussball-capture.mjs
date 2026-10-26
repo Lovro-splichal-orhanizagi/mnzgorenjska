@@ -165,8 +165,14 @@ export function createFussballCaptureClient({
 
   const waitForTurn = async () => {
     if (lastStartedAt == null) return
-    const delay = MIN_GAP_MS - (now() - lastStartedAt)
-    if (delay > 0) await sleep(delay)
+    // Timers may wake a millisecond early. The recorded clock, rather than the
+    // requested timeout, must prove the minimum gap before starting a request.
+    for (let wake = 0; wake < 10; wake++) {
+      const delay = MIN_GAP_MS - (now() - lastStartedAt)
+      if (delay <= 0) return
+      await sleep(delay)
+    }
+    if (now() - lastStartedAt < MIN_GAP_MS) throw fail('pacing clock did not advance to the minimum request gap')
   }
 
   const performRead = async (url, kind) => {
