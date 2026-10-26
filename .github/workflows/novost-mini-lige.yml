@@ -1,0 +1,49 @@
+name: Novost mini lig (dvoboji in napovedi)
+# Enkratni mail in potisno obvestilo o dvobojih in napovedih v mini ligah
+# (`posli-opomnik`, vrsta `novost-mini-lige`). Kdo ga dobi, doloci
+# `kandidati_za_novost_mini_lig`: enkrat na cloveka za vedno, vsi z nehisno
+# ekipo, brez odjavljenih (`brez_opomnikov`) in omejenih. ~3000 ljudi.
+#
+# Le rocno, privzeto suho. mail.slff.eu se se ogreva in hkrati tecejo
+# opomniki in tedenski pregled, zato po paketih (`najvec`, privzeto 500) cez
+# vec dni; kdor je mail ze dobil, ga ne dobi znova (email_log).
+on:
+  workflow_dispatch:
+    inputs:
+      suho:
+        description: 'Suhi tek (samo presteje, ne poslje)'
+        required: false
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
+      najvec:
+        description: 'Najvec poslanih v tem zagonu'
+        required: false
+        default: '500'
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: opozorila
+  cancel-in-progress: false
+jobs:
+  novost:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
+      # za macOS); brez njih tuja koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
+      - name: Poslji novost mini lig
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VRSTA: novost-mini-lige
+          SUHO: ${{ inputs.suho }}
+          NAJVEC_DOBRODOSLIC: ${{ inputs.najvec }}
+        run: node scripts/posli-opomnike.mjs
