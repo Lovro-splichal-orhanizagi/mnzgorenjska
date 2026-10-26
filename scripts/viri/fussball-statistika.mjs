@@ -213,8 +213,8 @@ function rawEvent(n,half,ordinal,html){
  const cas=rawClock,base=parsedClock.base,added=parsedClock.added
  requireProof(added<=30&&(half===1?base>=1&&base<=45:base>=46&&base<=90)&&(!added||base===(half===1?45:90)),'čas ne pripada podprtemu polčasu')
  const proof={ekipaIdx:side,cas,osnovnaMinuta:base,dodatek:added,minuta:Math.min(90,base),polcas:half,ordinal,eventSha256:hash(html.slice(n.start,n.end))}
- let vrsta,refs,enajstmetrovka=false
- if(ec.tag==='i'){
+ let vrsta,refs,enajstmetrovka=false,drugiRumeni=false
+ if(ec.tag==='i'||ec.tag==='span'&&ec.attrs.class==='icon-stack'){
   const cls=ec.attrs.class
   if(cls==='icon-substitute'){
    shape(ec,'i',{class:cls},0);requireProof(pc.length===2,'nepodprta menjava')
@@ -223,10 +223,23 @@ function rawEvent(n,half,ordinal,html){
    requireProof(oc[0]==='für','nepodprta smer menjave')
    refs=[player(incoming),player(oc[1])];vrsta='menjava'
   }else{
-   const tokens=(cls??'').split(/\s+/)
-   requireProof(tokens.length===2&&new Set(tokens).size===2&&tokens.includes('icon-card')&&tokens.includes('yellow-card'),'nepodprt karton: samo izrecni običajni rumeni')
-   shape(ec,'i',{class:cls},0);requireProof(pc.length===1&&pc[0]==='Gelbe Karte','nepodprt pripisan ali spremenjen karton')
-   refs=[];vrsta='rumeni'
+   let label
+   if(ec.tag==='span'){
+    const halves=shape(ec,'span',{class:'icon-stack'},2)
+    shape(halves[0],'span',{class:'icon-card-half yellow-card'},0);shape(halves[1],'span',{class:'icon-card red-card'},0)
+    vrsta='rdeci';drugiRumeni=true;label='Gelb-Rote Karte'
+   }else{
+    requireProof(['icon-card yellow-card','icon-card red-card'].includes(cls),'nepodprt karton: neznana ali mešana ikona')
+    shape(ec,'i',{class:cls},0);vrsta=cls==='icon-card yellow-card'?'rumeni':'rdeci';label=vrsta==='rumeni'?'Gelbe Karte':'Rote Karte'
+   }
+   if(pc.length===1&&pc[0]===label){requireProof(vrsta==='rumeni','vir ne objavi prejemnika rdečega kartona');refs=[]}
+   else{
+    // Closed composition of observed label and substitution-profile grammar.
+    // Positive compositions in tests are synthetic: retained LIVE card rows
+    // remain anonymous and are never relabelled as named source evidence.
+    requireProof(pc.length===2,'nepodprt pripisan ali spremenjen karton')
+    text(pc[0],'div',{},new RegExp(`^${label}$`));refs=[player(pc[1])]
+   }
   }
   requireProof(color==='hexagon black','neskladna barva dogodka')
  }else{
@@ -242,7 +255,7 @@ function rawEvent(n,half,ordinal,html){
   requireProof(pc.length===1&&color==='hexagon green','nepodprta oblika gola')
   refs=[player(pc[0],{goal:true})];vrsta='gol'
  }
- return {...proof,...(vrsta==='gol'?{enajstmetrovka}:{}),vrsta,refs}
+ return {...proof,...(vrsta==='gol'?{enajstmetrovka}:{}),...(vrsta==='rdeci'?{drugiRumeni}:{}),vrsta,refs}
 }
 function keys(o,expected){requireProof(o&&typeof o==='object'&&!Array.isArray(o)&&Object.keys(o).length===expected.length&&expected.every(k=>Object.hasOwn(o,k)),'nepodprta oblika obdobij hitrega pregleda')}
 function summary(source){
@@ -308,7 +321,7 @@ function events(html,tags){
    const raw=p.events[j];keys(raw,['time','type','team'])
    const clock=`${e.osnovnaMinuta}${e.dodatek?`+${e.dodatek}`:''}`
    const coarseAddedTime=raw.time==='90'&&e.osnovnaMinuta===90&&e.dodatek>=1&&e.dodatek<=30
-   requireProof((raw.time===clock||coarseAddedTime)&&raw.type===({gol:'goal',menjava:'substitute',rumeni:'yellow-card'})[e.vrsta]&&raw.team===(e.ekipaIdx?'away':'home'),'neskladje vrste, strani ali časa dogodka')
+   requireProof((raw.time===clock||coarseAddedTime)&&raw.type===(e.vrsta==='rdeci'?(e.drugiRumeni?'yellow-red-card':'red-card'):({gol:'goal',menjava:'substitute',rumeni:'yellow-card'})[e.vrsta])&&raw.team===(e.ekipaIdx?'away':'home'),'neskladje vrste, strani ali časa dogodka')
    const order=e.osnovnaMinuta*100+e.dodatek
    requireProof(order>=previous,'neurejeni izvorni časi');previous=order
   }
@@ -316,21 +329,21 @@ function events(html,tags){
  return out
 }
 function associate(z,raw){
- const queues={gol:[...z.goli],menjava:[...z.menjave],rumeni:[...z.nepripisaniKartoni]}
+ const queues={gol:[...z.goli],menjava:[...z.menjave],rumeni:[...z.nepripisaniKartoni],namedYellow:[...(z.rumeni??[])],rdeci:[...(z.rdeci??[])]}
  for(const e of raw){
-  const event=queues[e.vrsta].shift(),team=[z.domaci,z.gostje][e.ekipaIdx]
+  const event=queues[e.vrsta==='rumeni'&&e.refs.length?'namedYellow':e.vrsta].shift(),team=[z.domaci,z.gostje][e.ekipaIdx]
   requireProof(event&&event.minuta===e.minuta,'neujemanje surovega dogodka z validatorjem')
   if(e.vrsta==='gol')requireProof(event.virId===e.refs[0]&&event.rezultat&&(event.avtogol||event.ekipa===team.ime)&&event.enajstmetrovka===e.enajstmetrovka&&!(e.enajstmetrovka&&event.avtogol),'neujemanje identitete ali označevalca gola')
   else if(e.vrsta==='menjava')requireProof(event.ekipa===team.ime&&event.noter.virId===e.refs[0]&&event.ven.virId===e.refs[1],'neujemanje identitet menjave')
-  else requireProof(event.ekipa===team.ime&&event.vrsta==='rumeni','neujemanje običajnega rumenega')
+  else requireProof(event.ekipa===team.ime&&event.vrsta===e.vrsta&&(!e.refs.length||event.virId===e.refs[0])&&(e.vrsta!=='rdeci'||event.drugiRumeni===e.drugiRumeni),'neujemanje identitete ali vrste kartona')
  }
  requireProof(Object.values(queues).every(q=>!q.length),'nepovezan dogodek validatorja')
 }
 function appearances(z,raw){
- const teams=[z.domaci,z.gostje],roster=new Map(),active=new Set(),entered=new Set()
+ const teams=[z.domaci,z.gostje],roster=new Map(),active=new Set(),entered=new Set(),dismissed=new Set()
  for(const [side,t] of teams.entries())for(const p of [...t.postava,...t.rezerve]){
   const starter=t.postava.includes(p)
-  roster.set(p.virId,{...p,ekipaIdx:side,zacetnik:starter,od:starter?0:null,do:90})
+  roster.set(p.virId,{...p,ekipaIdx:side,zacetnik:starter,od:starter?0:null,do:90,rumeni:0,rdeci:0,redCardMinute:null,carded:false})
   if(starter){active.add(p.virId);entered.add(p.virId)}
  }
  // Equal raw clocks do not prove causal order. Disjoint substitutions commute;
@@ -341,23 +354,39 @@ function appearances(z,raw){
   const used=new Set()
   for(const e of group.filter(e=>e.vrsta==='menjava'))for(const ref of e.refs){requireProof(!used.has(ref),'neenolične sočasne menjave');used.add(ref)}
   for(const e of group.filter(e=>e.vrsta==='gol'))requireProof(!used.has(e.refs[0]),'dvoumen čas strelca in menjave')
+  const reds=new Set(group.filter(e=>e.vrsta==='rdeci').map(e=>e.refs[0]))
+  for(const e of group.filter(e=>e.vrsta==='gol'))requireProof(!reds.has(e.refs[0]),'dvoumen čas strelca in izključitve')
+  for(const e of group.filter(e=>['rumeni','rdeci'].includes(e.vrsta)&&e.refs.length))requireProof(!used.has(e.refs[0]),'dvoumen čas kartona in menjave')
  }
  for(const e of raw){
   if(e.vrsta==='gol')requireProof(active.has(e.refs[0]),'gol zunaj aktivnega intervala')
+  if(['rumeni','rdeci'].includes(e.vrsta)&&e.refs.length){
+   const p=roster.get(e.refs[0])
+   requireProof(p&&p.ekipaIdx===e.ekipaIdx&&!dismissed.has(p.virId),'karton napačne strani ali že izključenega igralca')
+   p.carded=true
+   if(e.vrsta==='rumeni'){requireProof(p.rumeni===0,'drugi običajni rumeni brez izrecne izključitve');p.rumeni=1}
+   else{
+    requireProof(!e.drugiRumeni||p.rumeni===1,'drugi rumeni brez objavljenega predhodnega prvega rumenega')
+    e.naIgriscu=active.has(p.virId);p.rdeci=1;p.redCardMinute=e.minuta;dismissed.add(p.virId)
+    if(e.naIgriscu){requireProof(!p.vratar,'izključitev vratarja brez dokazane nove vloge vratarja');p.do=e.minuta;active.delete(p.virId)}
+    requireProof([...active].filter(ref=>roster.get(ref).ekipaIdx===e.ekipaIdx).length>=7,'premalo aktivnih igralcev po izključitvi')
+   }
+  }
   if(e.vrsta!=='menjava')continue
   requireProof(e.osnovnaMinuta!==45&&(e.osnovnaMinuta!==46||e.polcas===2),'nepodprta dvoumna polčasna menjava')
   const [incoming,outgoing]=e.refs.map(ref=>roster.get(ref))
   requireProof(incoming&&outgoing&&incoming.ekipaIdx===e.ekipaIdx&&outgoing.ekipaIdx===e.ekipaIdx,'menjava napačne zgodovinske strani')
-  requireProof(!entered.has(incoming.virId)&&active.has(outgoing.virId),'ponovni vstop ali neveljaven izstop')
+  requireProof(!entered.has(incoming.virId)&&active.has(outgoing.virId)&&!dismissed.has(incoming.virId),'ponovni vstop ali neveljaven izstop')
   requireProof(incoming.vratar===outgoing.vratar,'nepotrjena menjava vloge vratarja')
   outgoing.do=e.minuta;incoming.od=e.minuta
   active.delete(outgoing.virId);active.add(incoming.virId);entered.add(incoming.virId)
   for(const side of [0,1])requireProof([...active].filter(ref=>roster.get(ref).ekipaIdx===side&&roster.get(ref).vratar).length===1,'manjka enoličen aktivni vratar')
  }
- return [...roster.values()].filter(p=>p.od!=null).map(p=>{
+ return [...roster.values()].filter(p=>p.od!=null||p.carded).map(p=>{
+  if(p.od==null){p.od=0;p.do=0}
   requireProof(p.od<=p.do&&p.od>=0&&p.do<=90,'neveljaven interval nastopa')
   const goals=z.goli.filter(g=>g.virId===p.virId),conceded=p.ekipaIdx===0?z.rezultat.gostje:z.rezultat.domaci
-  return {virId:p.virId,ekipaIdx:p.ekipaIdx,ekipa:teams[p.ekipaIdx].ime,st:p.st,ime:p.ime,regSt:null,pozicija:p.vratar?'GK':null,vratar:p.vratar,zacetnik:p.zacetnik,minutaOd:p.od,minutaDo:p.do,minute:p.do-p.od,goli:goals.filter(g=>!g.avtogol).length,goliIzEnajstmetrovke:goals.filter(g=>!g.avtogol&&g.enajstmetrovka).length,avtogoli:goals.filter(g=>g.avtogol).length,zgreseneEnajstmetrovke:0,rumeni:0,rdeci:0,prejetiGoli:conceded,cleanSheet:conceded===0}
+  return {virId:p.virId,ekipaIdx:p.ekipaIdx,ekipa:teams[p.ekipaIdx].ime,st:p.st,ime:p.ime,regSt:null,pozicija:p.vratar?'GK':null,vratar:p.vratar,zacetnik:p.zacetnik,minutaOd:p.od,minutaDo:p.do,minute:p.do-p.od,goli:goals.filter(g=>!g.avtogol).length,goliIzEnajstmetrovke:goals.filter(g=>!g.avtogol&&g.enajstmetrovka).length,avtogoli:goals.filter(g=>g.avtogol).length,zgreseneEnajstmetrovke:0,rumeni:p.rumeni,rdeci:p.rdeci,...(p.carded?{redCardMinute:p.redCardMinute}:{}),prejetiGoli:conceded,cleanSheet:conceded===0}
  })
 }
 
@@ -372,8 +401,9 @@ export function razberiFantasyZapisnik(mainHtml,lineupHtml,{fonts,id,lineupId}={
   resultProof(mainHtml,z,raw,tags)
   const nastopi=appearances(z,raw)
   const dogodki=raw.map(({refs,...proof})=>({...proof,virId:refs[0]??null,virIds:refs,zapisnikId:z.zapisnikId,virUrl}))
-  const nepripisaniRumeni=dogodki.filter(e=>e.vrsta==='rumeni')
+  const nepripisaniRumeni=dogodki.filter(e=>e.vrsta==='rumeni'&&e.virId===null)
+  if(dogodki.some(e=>['rumeni','rdeci'].includes(e.vrsta)&&e.virId!==null))for(const [key,type]of [['rumeni','rumeni'],['rdeci','rdeci']])z[key]=dogodki.filter(e=>e.vrsta===type&&e.virId!==null).map(e=>{const p=nastopi.find(p=>p.virId===e.virId);return {...e,ime:p.ime,ekipa:p.ekipa,st:p.st,regSt:null}})
   const opozorila=[`${nepripisaniRumeni.length} nepripisanih običajnih rumenih: vir ne objavi prejemnikov; ni ugibanih odbitkov. Statistika je potrjena samo za ta zapisnik; sezonski uvoz in vklop nista podprta.`]
   return {reportStatistikaPripravljena:true,sezonskiUvozPodprt:false,activationEligible:false,z,nastopi,nepripisaniRumeni,dogodki,opozorila}
- }catch(e){if(e instanceof ReportError)throw e;throw new ReportError(e.message,'FUSSBALL_REPORT_INVALID')}
+ }catch(e){if(e instanceof ReportError)throw e;const failure=new ReportError(e.message,e.code==='FUSSBALL_REPORT_UNSUPPORTED'?e.code:'FUSSBALL_REPORT_INVALID');if(e.reason_code)Object.assign(failure,{reason_code:e.reason_code,dataHold:true});throw failure}
 }

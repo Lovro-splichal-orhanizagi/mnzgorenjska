@@ -5,6 +5,7 @@ import {readFileSync,lstatSync} from 'node:fs'
 import {join} from 'node:path'
 import {verifyFussballDirectory} from './fussball-capture-evidence.mjs'
 import {encodeUnattributedYellow} from '../src/lib/nepripisaniRumeni.mjs'
+import {parseFussballEventClock} from './viri/fussball.mjs'
 
 const SOURCE_ID=/^de-fussball-(?:player-id|userid)-[A-Z0-9]{32}$/
 const MATCH_ID=/^[A-Z0-9]{32}$/
@@ -35,6 +36,50 @@ function yellowWarning(event,fixture){
  return encodeUnattributedYellow({source:'fussball',matchId:fixture.zapisnikId,sourceUrl:fixture.url,side:event.ekipaIdx,clock:`${event.osnovnaMinuta}${event.dodatek?'+'+event.dodatek:''}'`,minute:event.minuta,reason:'not-published',eventSha256:event.eventSha256,ordinal:event.ordinal,profileId:null})
 }
 
+function nativeDiscipline(result,fixture,roster,remember){
+ const {z}=result,raw=result.dogodki
+ requireProof(Array.isArray(z.rumeni??[])&&Array.isArray(z.rdeci??[])&&Array.isArray(raw),'missing source discipline evidence')
+ const counts=new Map(),seen=new Set(),active=new Set([...roster].filter(([,p])=>p.starter).map(([id])=>id)),entered=new Set(active),dismissed=new Set(),byOrdinal=new Map()
+ const clock=e=>e.polcas*100000+e.osnovnaMinuta*100+e.dodatek
+ let previous=-1
+ for(const [i,e]of raw.entries()){
+  const parsed=parseFussballEventClock(e.cas)
+  requireProof(e.ordinal===i+1&&parsed&&parsed.base===e.osnovnaMinuta&&parsed.added===e.dodatek&&[1,2].includes(e.polcas)&&e.minuta===Math.min(90,parsed.base)&&clock(e)>=previous&&e.zapisnikId===fixture.zapisnikId&&e.virUrl===fixture.url&&HASH.test(e.eventSha256??''),'invalid source discipline clock/order/provenance')
+  previous=clock(e);byOrdinal.set(e.ordinal,e)
+ }
+ const convert=(event,type)=>{
+  const p=roster.get(event.virId),source=byOrdinal.get(event.ordinal)
+  requireProof(p&&event.regSt===null&&event.vrsta===type&&event.ime===p.ime&&event.st===p.st&&event.ekipaIdx===p.side&&event.ekipa===[z.domaci,z.gostje][p.side].ime&&!seen.has(event.ordinal),'card recipient/historical side differs')
+  const fields=['vrsta','virId','virIds','ekipaIdx','cas','osnovnaMinuta','dodatek','minuta','polcas','ordinal','eventSha256','zapisnikId','virUrl',...(type==='rdeci'?['drugiRumeni','naIgriscu']:[])]
+  requireProof(source&&fields.every(k=>JSON.stringify(source[k])===JSON.stringify(event[k]))&&event.virIds?.length===1&&event.virIds[0]===event.virId,'card differs from authoritative raw event')
+  if(type==='rdeci')requireProof(typeof event.drugiRumeni==='boolean'&&typeof event.naIgriscu==='boolean','red-card type/on-field proof missing')
+  seen.add(event.ordinal)
+  const own=counts.get(event.virId)??{yellow:[],red:[]};own[type==='rumeni'?'yellow':'red'].push(event);counts.set(event.virId,own)
+  requireProof(own.yellow.length<=1&&own.red.length<=1,'duplicate source caution/dismissal')
+  return {...clone(event),regSt:remember(event.virId)}
+ }
+ const rumeni=(z.rumeni??[]).map(e=>convert(e,'rumeni')),rdeci=(z.rdeci??[]).map(e=>convert(e,'rdeci'))
+ requireProof(raw.filter(e=>['rumeni','rdeci'].includes(e.vrsta)&&e.virId!==null).length===seen.size,'source cards missing from card inventory')
+ for(const e of raw){
+  if(e.vrsta==='gol')requireProof(active.has(e.virId),'goal outside authoritative raw active interval')
+  if(e.vrsta==='menjava'){
+   const [incoming,outgoing]=e.virIds??[]
+   requireProof(e.virIds.length===2&&active.has(outgoing)&&roster.get(incoming)?.side===e.ekipaIdx&&roster.get(outgoing)?.side===e.ekipaIdx&&!entered.has(incoming)&&!dismissed.has(incoming),'substitution outside authoritative raw active interval')
+   active.delete(outgoing);active.add(incoming);entered.add(incoming)
+  }
+  if(['rumeni','rdeci'].includes(e.vrsta)&&e.virId!==null){
+   requireProof(seen.has(e.ordinal)&&!dismissed.has(e.virId),'card after dismissal or outside source inventory')
+   if(e.vrsta==='rdeci'){
+    const first=counts.get(e.virId).yellow[0]
+    requireProof(!e.drugiRumeni||first&&first.ordinal<e.ordinal&&clock(first)<=clock(e),'second yellow lacks published prior caution')
+    requireProof(e.naIgriscu===active.has(e.virId),'red on-field proof differs from source timeline')
+    dismissed.add(e.virId);active.delete(e.virId)
+   }
+  }
+ }
+ return {rumeni,rdeci,counts}
+}
+
 function nativeReport(entry,fixture,season,identities){
  const result=entry?.result,z=result?.z
  requireProof(headerEqual(entry?.fixture,fixture),'report fixture differs from schedule')
@@ -56,18 +101,21 @@ function nativeReport(entry,fixture,season,identities){
   }
   return {ime:team.ime,postava:team.postava.map(p=>convert(p,true)),rezerve:team.rezerve.map(p=>convert(p,false))}
  })
+ const discipline=nativeDiscipline(result,fixture,roster,remember)
  const appeared=new Map(),totals=[0,0]
  const nastopi=result.nastopi.map(a=>{
   const p=roster.get(a.virId)
   requireProof(p&&!appeared.has(a.virId)&&a.regSt===null&&a.ekipaIdx===p.side&&a.ekipa===teams[p.side].ime&&a.ime===p.ime&&a.st===p.st&&a.vratar===p.vratar&&a.zacetnik===p.starter,'appearance identity or historical side differs')
   requireProof(['minutaOd','minutaDo','minute','goli','goliIzEnajstmetrovke','avtogoli','zgreseneEnajstmetrovke','rumeni','rdeci','prejetiGoli'].every(k=>Number.isInteger(a[k])&&a[k]>=0),'invalid numeric appearance field')
-  requireProof(a.minutaDo<=90&&a.minutaOd<=a.minutaDo&&a.minute===a.minutaDo-a.minutaOd&&(!a.zacetnik||a.minutaOd===0)&&a.rumeni===0&&a.rdeci===0&&a.zgreseneEnajstmetrovke===0,'invalid or unsupported appearance interval/discipline')
+  const cards=discipline.counts.get(a.virId)??{yellow:[],red:[]},red=cards.red[0]
+  requireProof(a.minutaDo<=90&&a.minutaOd<=a.minutaDo&&a.minute===a.minutaDo-a.minutaOd&&(!a.zacetnik||a.minutaOd===0)&&a.rumeni===cards.yellow.length&&a.rdeci===cards.red.length&&(a.redCardMinute??null)===(red?.minuta??null)&&a.zgreseneEnajstmetrovke===0,'invalid or unsupported appearance interval/discipline')
+  if(red)requireProof(red.naIgriscu?a.minutaDo===red.minuta&&a.minutaOd<=red.minuta:a.minutaDo<=red.minuta,'red-card interval differs')
   const conceded=p.side===0?z.rezultat.gostje:z.rezultat.domaci
   requireProof(a.prejetiGoli===conceded&&a.cleanSheet===(conceded===0)&&a.pozicija===(a.vratar?'GK':null),'appearance scoring policy differs')
   totals[p.side]+=a.minute
   const native={...clone(a),regSt:remember(a.virId)};appeared.set(a.virId,native);return native
  })
- requireProof(totals.every(n=>n===990)&&[...roster.entries()].filter(([,p])=>p.starter).every(([id])=>appeared.has(id)),'incomplete appearance coverage')
+ requireProof(totals.every((n,side)=>n===990-discipline.rdeci.filter(e=>e.ekipaIdx===side&&e.naIgriscu).reduce((loss,e)=>loss+90-e.minuta,0))&&[...roster.entries()].filter(([,p])=>p.starter).every(([id])=>appeared.has(id))&&[...discipline.counts.keys()].every(id=>appeared.has(id)),'incomplete appearance coverage/dismissal minute totals')
  let home=0,away=0
  const goli=z.goli.map(g=>{
   const a=appeared.get(g.virId)
@@ -83,7 +131,7 @@ function nativeReport(entry,fixture,season,identities){
   requireProof(a.goli===goals.filter(g=>!g.avtogol).length&&a.avtogoli===goals.filter(g=>g.avtogol).length&&a.goliIzEnajstmetrovke===goals.filter(g=>g.enajstmetrovka&&!g.avtogol).length,'appearance goal totals differ')
  }
  const warnings=result.nepripisaniRumeni.map(e=>yellowWarning(e,fixture))
- return {id:fixture.zapisnikId,url:fixture.url,nastopi,z:{zapisnikId:fixture.zapisnikId,sezona:season,datum:z.datum,ura:z.ura,krog:z.krog,domaci:teams[0],gostje:teams[1],rezultat:clone(z.rezultat),goli,menjave:clone(z.menjave),rumeni:[],rdeci:[],nepopoln:false,opozorila:warnings}}
+ return {id:fixture.zapisnikId,url:fixture.url,nastopi,z:{zapisnikId:fixture.zapisnikId,sezona:season,datum:z.datum,ura:z.ura,krog:z.krog,domaci:teams[0],gostje:teams[1],rezultat:clone(z.rezultat),goli,menjave:clone(z.menjave),rumeni:discipline.rumeni,rdeci:discipline.rdeci,nepopoln:false,opozorila:warnings}}
 }
 
 /** Pure normalization. Trust is added only by complete original-byte replay. */

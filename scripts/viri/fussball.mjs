@@ -119,10 +119,10 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
  const players=new Map(teams.flatMap((t,side)=>[...t.postava,...t.rezerve].map(p=>[p.virId,{...p,side}])))
  const active=new Set(teams.flatMap(t=>t.postava.map(p=>p.virId)))
  let previous=0,current={domaci:0,gostje:0}
- const goli=[],menjave=[],nepripisaniKartoni=[]
+ const goli=[],menjave=[],nepripisaniKartoni=[],rumeni=[],rdeci=[]
  const starts=[...course.matchAll(/<div class="row-event event-(left|right)">/g)]
  const structuralEvents=(course.match(/class="column-event"/g)??[]).length
- const eventSignals=(course.match(/class="even"|\bicon-card\b|\bicon-substitute\b/g)??[]).length
+ const eventSignals=(course.match(/class="even"|\bicon-card(?=[\s"])|\bicon-substitute\b/g)??[]).length
  if(starts.length!==structuralEvents || starts.length!==eventSignals || starts.length!==(course.match(/class="row-event\b/g)??[]).length)fail('nepodprt ali manjkajoč dogodek')
  for(let i=0;i<starts.length;i++){
   const s=course.slice(starts[i].index,starts[i+1]?.index??course.length),side=starts[i][1]==='left'?0:1
@@ -151,16 +151,27 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
    active.delete(ven.virId);active.add(noter.virId)
    menjave.push({minuta,ekipa:teams[side].ime,noter,ven})
   }else if(/icon-card/.test(s)){
-   // Public report exposes minute and colour, but no attributable player.
-   // Even unknown red cards prevent ALL fantasy minutes and clean sheets.
-   if(refs.length)fail('nepodprt format pripisanega kartona')
-   nepripisaniKartoni.push({minuta,ekipa:teams[side].ime,vrsta:/yellow-card/.test(s)?'rumeni':/red-card/.test(s)?'rdeci':'neznan'})
+   const drugiRumeni=/class="icon-stack"/.test(s),red=/class="icon-card red-card"/.test(s),yellow=/class="icon-card yellow-card"/.test(s)
+   if(!red&&!yellow)fail('nepodprt karton')
+   if(!refs.length){
+    if(red)throw Object.assign(new Error('fussball: vir ne objavi prejemnika rdečega kartona'),{code:'FUSSBALL_REPORT_UNSUPPORTED',reason_code:'FUSSBALL_CARD_RECIPIENT_MISSING',dataHold:true})
+    nepripisaniKartoni.push({minuta,ekipa:teams[side].ime,vrsta:'rumeni'})
+   }else{
+    if(refs.length!==1)fail('karton brez enoličnega igralca')
+    const p=player(refs[0]);if(p.side!==side)fail('karton napačne zgodovinske strani')
+    const link=s.match(/<a\b[^>]*href="https:\/\/www\.fussball\.de\/spielerprofil\/-\/(?:player-id|userid)\/[A-Z0-9]{32}"[^>]*>[\s\S]*?<\/a>/)?.[0]
+    const name=link?decode(link):null
+    if(name!==p.ime&&name!==`${p.ime} (${p.st})`)fail('neujemanje imena in profilne identitete kartona')
+    const event={virId:p.virId,ime:p.ime,minuta,ekipa:teams[side].ime,vrsta:red?'rdeci':'rumeni',...(red?{drugiRumeni}:{})}
+    ;(red?rdeci:rumeni).push(event)
+    if(red)active.delete(p.virId)
+   }
   }else fail('nepodprt dogodek v zapisniku')
  }
  if(current.domaci!==rezultat.domaci || current.gostje!==rezultat.gostje)fail('končni izid se ne ujema z dogodki')
  // Saved-page support does not establish a complete season source, even when
  // an individual page happens to contain no anonymous cards.
- return {zapisnikId:`de-fussball-${id}`,datum,ura:time[0],krog:+round[1],domaci:teams[0],gostje:teams[1],rezultat,goli,menjave,nepripisaniKartoni,nepopoln:true,opozorila:[`${NEPOPOLN}: ${nepripisaniKartoni.length} nepripisanih kartonov; nastopi zadržani; sezonski uvoz ni podprt`]}
+ return {zapisnikId:`de-fussball-${id}`,datum,ura:time[0],krog:+round[1],domaci:teams[0],gostje:teams[1],rezultat,goli,menjave,...(rumeni.length||rdeci.length?{rumeni,rdeci}:{}),nepripisaniKartoni,nepopoln:true,opozorila:[`${NEPOPOLN}: ${nepripisaniKartoni.length} nepripisanih kartonov; nastopi zadržani; sezonski uvoz ni podprt`]}
 }
 export function nastopi(){return []}
 
