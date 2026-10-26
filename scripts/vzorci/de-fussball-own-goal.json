@@ -1,0 +1,16 @@
+{
+  "source": {
+    "capture": "github-batch-40372605054",
+    "manifestSha256": "f73a87df2b276f80e54bb10328920d43a5f06b0b63df63a36edcde0bfb60c68f",
+    "matchId": "031FB70QBK000000VS5489BTVUS470OH",
+    "url": "https://www.fussball.de/spiel/sportverein-schermbeck-sv-lippstadt-08/-/spiel/031FB70QBK000000VS5489BTVUS470OH",
+    "documentSha256": "77119eaa30b36fa46ffba98229071e45b9d4a3dd19ff7e18168101be27f276f1",
+    "documentBytes": 193247,
+    "capturedAt": "2026-10-26T17:56:34.870Z",
+    "eventByteOffset": 153619,
+    "eventSha256": "73863a7e8197af44215e7a9d3e59386f4a4c499f7e709c3cdb4081e541f6e862",
+    "rawEvent": "<div class=\"row-event event-right own-goal\">\n\t\t\t\t\t\t\t<div class=\"column-time\">\n\t\t\t\t\t\t\t\t<div class=\"hexagon green\">\n\t\t\t\t\t\t\t\t\t<span class=\"icon-hexagon\"></span>\n\t\t\t\t\t\t\t\t\t<div class=\"inner\">\n\t\t\t\t\t\t\t\t\t\t<div class=\"valign-wrapper\">\n\t\t\t\t\t\t\t\t\t\t\t<div class=\"valign-inner\">47&rsquo;</div>\n\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class=\"column-event\">\n\t\t\t\t\t\t\t\t<div class=\"valign-table\">\n\t\t\t\t\t\t\t\t\t<div class=\"valign-cell\">\n\t\t\t\t\t\t\t\t\t\t<div class=\"even\"><span data-obfuscation=\"lksxyf9m\" class=\"score-left\">&#xE689;</span><span class=\"colon\">:</span><span data-obfuscation=\"lksxyf9m\" class=\"score-right\">&#xE68A;</span><span class=\"event-info\">Eigentor</span></div>\n\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class=\"column-player\">\n\t\t\t\t\t\t\t\t<div class=\"valign-table\">\n\t\t\t\t\t\t\t\t\t<div class=\"valign-cell\">\n\t\t\t\t\t\t\t\t\t\t<a href=\"https://www.fussball.de/spielerprofil/-/player-id/00MC74URVG000000VV0AG85VVSMHI0R7\">\n\t\t\t\t\t\t\t\t\t\t\t<span class=\"player-image table-image\"><span data-alt=\"player-image\" data-responsive-image=\"https://cdn.fussball.de/public/031LNLRKJ4000000VS5489BVVUA3QVBD.stamp\"></span></span>\n\t\t\t\t\t\t\t\t\t\t\t<div class=\"player-name\"><span data-obfuscation=\"4dclz8ye\">&#xE926;&#xED13;&#xEAA7;&#xE92E;&#xEC2D;&#xEC79;</span><span data-obfuscation=\"4dclz8ye\">&#xE8C3;&#xE8F8;&#xEAFF;&#xEC86;&#xEB85;&#xE690;&#x0020;&#xEBED;&#xE715;&#xE840;&#xE918;</span></div>\n\t\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>",
+    "quickViewEvent": "{'time':'47','type':'goal','team':'away'}",
+    "originalReplay": "Incomplete: original name/score font bytes were not requested before raw event rejection. No fonts fetched for this repair."
+  }
+}

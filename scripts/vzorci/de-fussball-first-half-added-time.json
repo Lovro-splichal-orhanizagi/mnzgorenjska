@@ -1,0 +1,16 @@
+{
+  "source": {
+    "capture": "github-batch-40373480085",
+    "manifestSha256": "f6cff3105fa1e141652b9ce85c58d79dd920e3c5afcd6a693bb6d4f782f46d93",
+    "matchId": "0318V44VSS000000VS5489BUVV628VP4",
+    "url": "https://www.fussball.de/spiel/tus-bersenbrueck-fc-verden-04/-/spiel/0318V44VSS000000VS5489BUVV628VP4",
+    "documentSha256": "77c397fa792fbd1dd1c93aa30e4a22ff4a367f15262825c6469ded88074dd2ac",
+    "documentBytes": 202611,
+    "capturedAt": "2026-10-26T17:59:50.711Z",
+    "eventByteOffset": 156756,
+    "eventSha256": "7754c13eb147a72c1c07fe1f02acefcb5d2c005d8e93663cdfd51dbc01e4ad87",
+    "rawEvent": "<div class=\"row-event event-right\">\n\t\t\t\t\t\t\t<div class=\"column-time\">\n\t\t\t\t\t\t\t\t<div class=\"hexagon black\">\n\t\t\t\t\t\t\t\t\t<span class=\"icon-hexagon\"></span>\n\t\t\t\t\t\t\t\t\t<div class=\"inner\">\n\t\t\t\t\t\t\t\t\t\t<div class=\"valign-wrapper\">\n\t\t\t\t\t\t\t\t\t\t\t<div class=\"valign-inner\">\n\t\t\t\t\t\t\t\t\t\t\t\t45\n\t\t\t\t\t\t\t\t\t\t\t\t&rsquo;\n\t\t\t\t\t\t\t\t\t\t\t\t<div>+2</div>\n\t\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class=\"column-event\">\n\t\t\t\t\t\t\t\t<div class=\"valign-table\">\n\t\t\t\t\t\t\t\t\t<div class=\"valign-cell\">\n\t\t\t\t\t\t\t\t\t\t<i class=\"icon-card yellow-card\"></i>\n\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class=\"column-player\">\n\t\t\t\t\t\t\t\t<div class=\"valign-table\">\n\t\t\t\t\t\t\t\t\t<div class=\"valign-cell\">Gelbe Karte</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>",
+    "rawClockHtml": "<div class=\"valign-inner\">\n\t\t\t\t\t\t\t\t\t\t\t\t45\n\t\t\t\t\t\t\t\t\t\t\t\t&rsquo;\n\t\t\t\t\t\t\t\t\t\t\t\t<div>+2</div>\n\t\t\t\t\t\t\t\t\t\t\t</div>",
+    "quickViewEvent": "{'time':'45','type':'yellow-card','team':'away'}"
+  }
+}

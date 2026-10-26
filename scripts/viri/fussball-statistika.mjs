@@ -1,6 +1,7 @@
 // Offline, report-only statistics. This is intentionally not a source adapter.
 import {createHash} from 'node:crypto'
 import {parseFussballEventClock, razberiZapisnik} from './fussball.mjs'
+import {fussballProfileIdentity} from '../lib/fussball-identity.mjs'
 
 class ReportError extends Error {
  constructor(reason,code='FUSSBALL_REPORT_UNSUPPORTED'){super(`fussball statistika: ${reason}`);this.name='FussballReportError';this.code=code}
@@ -177,8 +178,8 @@ function glyph(n){
  text(n,'span',{'data-obfuscation':n.attrs['data-obfuscation']},/^[\uE000-\uF8FF ]+$/u)
 }
 function player(n,{goal=false}={}){
- const url=n?.attrs?.href,m=url?.match(/^https:\/\/www\.fussball\.de\/spielerprofil\/-\/(player-id|userid)\/([A-Z0-9]{32})$/)
- requireProof(m,'manjka točna profilna identiteta dogodka')
+ const url=n?.attrs?.href,sourceId=fussballProfileIdentity(url)
+ requireProof(sourceId,'manjka točna profilna identiteta dogodka')
  const c=shape(n,'a',{href:url},goal?2:1)
  if(goal){
   const image=shape(c[0],'span',{class:'player-image table-image'},1)[0]
@@ -188,11 +189,13 @@ function player(n,{goal=false}={}){
  }
  const name=c.at(-1)
  if(name?.tag==='div'){for(const s of box(name,'player-name',goal?2:1))glyph(s)}else{requireProof(!goal,'manjka struktura imena strelca');glyph(name)}
- return `de-fussball-${m[1]}-${m[2]}`
+ return sourceId
 }
 function rawEvent(n,half,ordinal,html){
- const side=n?.attrs?.class==='row-event event-left'?0:1
- const columns=box(n,`row-event event-${side===0?'left':'right'}`,3)
+ const rowClass=n?.attrs?.class,match=/^row-event event-(left|right)( own-goal)?$/.exec(rowClass??'')
+ requireProof(match,'nepodprt razred dogodka')
+ const side=match[1]==='left'?0:1,explicitOwnGoal=match[2]!==undefined
+ const columns=box(n,rowClass,3)
  const [pn,en,tn]=side===0?columns:[columns[2],columns[1],columns[0]]
  const pc=shape(cell(pn),'div',{class:'valign-cell'})
  box(pn,'column-player',1);box(en,'column-event',1);box(tn,'column-time',1)
@@ -215,6 +218,7 @@ function rawEvent(n,half,ordinal,html){
  const proof={ekipaIdx:side,cas,osnovnaMinuta:base,dodatek:added,minuta:Math.min(90,base),polcas:half,ordinal,eventSha256:hash(html.slice(n.start,n.end))}
  let vrsta,refs,enajstmetrovka=false,drugiRumeni=false
  if(ec.tag==='i'||ec.tag==='span'&&ec.attrs.class==='icon-stack'){
+  requireProof(!explicitOwnGoal,'označevalec avtogola brez gola')
   const cls=ec.attrs.class
   if(cls==='icon-substitute'){
    shape(ec,'i',{class:cls},0);requireProof(pc.length===2,'nepodprta menjava')
@@ -245,7 +249,10 @@ function rawEvent(n,half,ordinal,html){
  }else{
   const scores=box(ec,'even')
   requireProof(scores.length===3||scores.length===4,'nepodprti podrejeni elementi div')
-  if(scores.length===4){text(scores[3],'span',{class:'event-info'},/^Strafstoßtor$/);enajstmetrovka=true}
+  if(scores.length===4){
+   text(scores[3],'span',{class:'event-info'},explicitOwnGoal?/^Eigentor$/:/^Strafstoßtor$/)
+   enajstmetrovka=!explicitOwnGoal
+  }else requireProof(!explicitOwnGoal,'manjka izrecna oznaka avtogola')
   for(const [i,cls] of [[0,'score-left'],[2,'score-right']]){
    const s=scores[i],font=s?.attrs?.['data-obfuscation']
    requireProof(/^[a-z0-9]+$/.test(font??''),'manjka pisava izida dogodka')
@@ -320,7 +327,7 @@ function events(html,tags){
   for(const [j,e] of actual.entries()){
    const raw=p.events[j];keys(raw,['time','type','team'])
    const clock=`${e.osnovnaMinuta}${e.dodatek?`+${e.dodatek}`:''}`
-   const coarseAddedTime=raw.time==='90'&&e.osnovnaMinuta===90&&e.dodatek>=1&&e.dodatek<=30
+   const coarseAddedTime=[45,90].includes(e.osnovnaMinuta)&&raw.time===String(e.osnovnaMinuta)&&e.dodatek>=1&&e.dodatek<=30
    requireProof((raw.time===clock||coarseAddedTime)&&raw.type===(e.vrsta==='rdeci'?(e.drugiRumeni?'yellow-red-card':'red-card'):({gol:'goal',menjava:'substitute',rumeni:'yellow-card'})[e.vrsta])&&raw.team===(e.ekipaIdx?'away':'home'),'neskladje vrste, strani ali časa dogodka')
    const order=e.osnovnaMinuta*100+e.dodatek
    requireProof(order>=previous,'neurejeni izvorni časi');previous=order

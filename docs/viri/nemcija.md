@@ -66,6 +66,29 @@ poljubni popravljeni strukturi HTML ali dodatnim predlogam postave.
 nima neodvisne šifre tekme. Imena se razberejo samo iz pripadajočih pisav,
 dogodki pa se povežejo po točnih profilnih šifrah. `player-id` in `userid`
 ostaneta ločena; `regSt` je `null`.
+Glava postave podpira tudi izrecni navadni otrok `<span>Ime kluba</span>`
+v `div.club-name`, opažen v obeh zajetih Bayernliga zapisnikih. Vsaka glava
+ima en sam podprt otrok, skupaj morata biti natanko dva kluba in ujemati
+se morata z naslovom zapisnika. Mešani, skriti, prazni ali dodatni otroci
+in dodatne glave se zavrnejo; logotipi in `alt` niso nadomestilo imena.
+Nespremenjeni izvorni glavi in provenienca sta v
+`de-fussball-club-name-span.json`; sestavljene regresije uporabljajo
+podprte postave in pisave, dokler celotna izvirnika nimata vseh pisav.
+Javni `userid` podpira tudi točno opaženo obliko `I\.[0-9]{6}\.-{23}`
+(npr. `I.715682.-----------------------` v Hessnu in
+`I.573584.-----------------------` v Sachsenligi). Celoten neprosojni niz
+ostane del identitete `de-fussball-userid-…`; šestmestno število ni nova
+registrska številka in identitete ne združujemo po imenu. Oblika ne velja
+za `player-id`. Napačna dolžina, velike/male črke, pripone, poizvedbe in
+fragmenti se zavrnejo v obeh razčlenjevalnikih in domačem pretvorniku.
+Nova migracija `20261026192000` razširi samo zasebno preverbo oblike in
+servisni RPC; ohrani SHA-256/52-bitni ključ, preverbe trkov, atomski rollback,
+prazni `search_path` in omejitve dostopa. Izvorne povezave, vrstice in
+SHA-256 obeh neodvisnih prič so v `de-fussball-legacy-userid.json`.
+Celotna izvirnika še ostaneta brez potrebnih zajetih pisav `0bivxpjv`
+(Hessen) in `v0vmz4z1` (Sachsen); sestavljene regresije ne nadomestijo njune
+celotne ponovitve. Povezava `href="#"` ali manjkajoča identiteta ni podprta.
+
 
 Pravi vzorec Ilvesheim–Oftersheim (2 : 3, 11. 10. 2026) potrdi 30 nastopov,
 22 začetnikov, osem dejanskih vstopov, 990 minut na stran, oba izrecna
@@ -99,6 +122,17 @@ Podprt je preverjeni navadni format brez pripisanih kartonov ter izrecna
 oznaka zadete enajstmetrovke `Strafstoßtor` kot četrti živi otrok elementa
 izida. Oznaka se ohrani pri golu in v `goliIzEnajstmetrovke`; komentarji,
 skripte, podvojeni ali neznani dodatki in protislovje z avtogolom se zavrnejo.
+Podprt je tudi pristno opaženi par razreda `row-event event-right own-goal`
+in četrtega otroka izida `<span class="event-info">Eigentor</span>`; simetrična
+leva oblika je preverjena s sestavljenim zapisnikom. Oba označevalca morata
+biti prisotna skupaj, strelec mora biti aktiven in po preverjeni profilni
+identiteti pripadati nasprotni postavi od strani, ki ji izid doda gol.
+Običajno dokazovanje avtogola iz postave in zaporedja izidov ostane veljavno.
+Izvirna vrstica Schermbeck–Lippstadt pri 47 in njen SHA-256/provenienca sta v
+`de-fussball-own-goal.json`; celoten izvirnik še ni ponovljen, ker zajem pred
+zavrnitvijo dogodka ni pridobil potrebne pisave izida `lksxyf9m`. Regresije
+sestavijo opaženo obliko s podprtimi bajti izida in preverjeno postavo ter ne
+predstavljajo celotnega izvirnega zapisnika. Dodatnih pisav nismo pridobivali.
 Rdeči, drugi rumeni, mešane/neznane ikone,
 pripisani kartoni, zgrešene enajstmetrovke, neznani
 podrejeni elementi dogodkov, podaljšek ali prekinitev zadržijo vse nastope.
@@ -106,12 +140,17 @@ Prav tako se zavrne ponovni vstop, napačna stran, dvoumen istočasni strelec
 in menjava, nedokazana menjava vloge vratarja ter polčasna menjava 45/46.
 Neodvisna para pri 67 sta dovoljena. Dodatek ostane v dokazu, statistična
 minuta pa je omejena na 90. Shranjena pristna oblika `90 &rsquo; <div>+N</div>`
-je podprta samo pri 90 in dodatku 1–30; vzorci ohranijo izvorni SHA-256 in
+je podprta pri zaključku polčasa 45 ali 90 in dodatku 1–30; vzorci ohranijo izvorni SHA-256 in
 odmik v bajtih. Nove oblike zahtevajo pristne vzorce in nove regresije.
 
-Hitri pregled sme pri tako dokazanem `90+N` objaviti samo `90`; vrsta,
+Hitri pregled sme pri tako dokazanem `45+N`/`90+N` objaviti samo `45`/`90`; vrsta,
 stran, število in vrstni red dogodkov se še vedno ujemajo. Izrecno drugačen
 dodatek se zavrne, izvirni dodatek in odtis vrstice ostaneta v dokazu.
+Pristna vrstica Bersenbrück–Verden z `45 &rsquo; <div>+2</div>` je shranjena
+z izvorno provenienco v `de-fussball-first-half-added-time.json`. Polčas,
+dodatek in odtis vrstice se ohranijo; celoten zajeti izvirnik se offline
+preveri z 32 nastopi. Izrecno drugačen dodatek, napačen
+polčas, neurejena kronologija in dvoumna menjava pri 45 ostanejo zavrnjeni.
 Dodatna opažena oblika slike `images.media.fussball.de/userfiles/…_p3.jpg`
 je le okras: identiteto še vedno določata profilna povezava in preverjena
 pisava, slike se ne prenašajo.

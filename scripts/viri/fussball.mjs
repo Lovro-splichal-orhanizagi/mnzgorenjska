@@ -3,6 +3,7 @@
 // traversal has not been validated. No network requests, caching or DB writes.
 import { createHash } from 'node:crypto'
 import { preslikavaPisave, dekodirajIme } from './fussball-pisava.mjs'
+import {fussballProfileIdentity} from '../lib/fussball-identity.mjs'
 export const NEPOPOLN = 'zapisnik nepopoln'
 const fail = s => { throw new Error(`fussball: ${s}`) }
 const entities = s => String(s).replace(/&#x([a-f0-9]+);/gi,(_,n)=>String.fromCodePoint(parseInt(n,16))).replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(+n)).replace(/&(?:rsquo|apos|#039);/g,"'").replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&quot;/g,'"')
@@ -14,7 +15,7 @@ export function parseFussballEventClock(source) {
  const raw=String(source??'')
  const marker="(?:&rsquo;|&apos;|&#039;|')"
  const nested=new RegExp(`^\\s*(\\d{1,2})\\s*${marker}\\s*<div>\\s*\\+(\\d{1,2})\\s*<\\/div>\\s*$`).exec(raw)
- if(nested){const base=+nested[1],added=+nested[2];return base===90&&added>=1&&added<=30?{base,added}:null}
+ if(nested){const base=+nested[1],added=+nested[2];return (base===45||base===90)&&added>=1&&added<=30?{base,added}:null}
  const flat=new RegExp(`^\\s*(\\d{1,2})(?:\\s*\\+\\s*(\\d{1,2}))?\\s*${marker}\\s*$`).exec(raw)
  if(!flat)return null
  const base=+flat[1],added=+(flat[2]??0)
@@ -48,16 +49,22 @@ function decoder(fonts) {
  }
 }
 const identity = s => {
- const m=s.match(/https:\/\/www\.fussball\.de\/spielerprofil\/-\/(player-id|userid)\/([A-Z0-9]{32})(?:["/])/)
- if(!m)fail('manjka stalna identiteta igralca')
- return `de-fussball-${m[1]}-${m[2]}`
+ const sourceId=fussballProfileIdentity(attr(s,'href'))
+ if(!sourceId)fail('manjka stalna identiteta igralca')
+ return sourceId
 }
 export function razberiPostavo(html,{fonts}={}) {
  if(jeIzziv(html))fail('izziv v postavi')
  if(!/^<div id="match_course_body">/.test(html.trim()) || (html.match(/<div\b/g)??[]).length!==(html.match(/<\/div>/g)??[]).length)fail('odrezana postava')
  const decode=decoder(fonts),head=element(html,'head')
- const names=[...head.matchAll(/<div class="club-name">\s*<a\b[^>]*>([^<]+)<\/a>/g)].map(m=>text(m[1]))
- if(names.length!==2)fail('manjkajo imena ekip')
+ const headers=[...head.matchAll(/<div class="club-name">([\s\S]*?)<\/div>/g)]
+ if(headers.length!==2||(html.match(/\bclass="[^"]*\bclub-name\b[^"]*"/g)??[]).length!==2)fail('manjkajo ali niso enolična imena ekip')
+ const names=headers.map(([,body])=>{
+  const child=body.match(/^\s*(?:<a\b[^>]*>([^<]+)<\/a>|<span>([^<]+)<\/span>)\s*$/)
+  if(!child)fail('nepodprta oblika imena ekipe')
+  const name=text(child[1]??child[2]);if(!name)fail('manjka ime ekipe')
+  return name
+ })
  const bench=html.indexOf('<div class="substitutes club-wrapper">')
  if(bench<0)fail('manjka klop postave')
  const teams=names.map(ime=>({ime,postava:[],rezerve:[]})),seen=new Set()
@@ -121,7 +128,7 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
  const active=new Set(teams.flatMap(t=>t.postava.map(p=>p.virId)))
  let previous=0,current={domaci:0,gostje:0}
  const goli=[],menjave=[],nepripisaniKartoni=[],rumeni=[],rdeci=[]
- const starts=[...course.matchAll(/<div class="row-event event-(left|right)">/g)]
+ const starts=[...course.matchAll(/<div class="row-event event-(left|right)( own-goal)?">/g)]
  const structuralEvents=(course.match(/class="column-event"/g)??[]).length
  const eventSignals=(course.match(/class="even"|\bicon-card(?=[\s"])|\bicon-substitute\b/g)??[]).length
  if(starts.length!==structuralEvents || starts.length!==eventSignals || starts.length!==(course.match(/class="row-event\b/g)??[]).length)fail('nepodprt ali manjkajoč dogodek')
@@ -132,8 +139,10 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
   if(!minute)fail('nepodprta minuta dogodka')
   const order=minute.base*100+minute.added,minuta=Math.min(90,minute.base)
   if(order<previous)fail('neveljavno časovno zaporedje dogodkov');previous=order
-  const refs=[...s.matchAll(/<a\b[^>]*href="https:\/\/www\.fussball\.de\/spielerprofil\/-\/(?:player-id|userid)\/[A-Z0-9]{32}"[^>]*>/g)].map(m=>identity(m[0]))
+  const refs=[...s.matchAll(/<a\b[^>]*href="https:\/\/www\.fussball\.de\/spielerprofil\/[^"]*"[^>]*>/g)].map(m=>identity(m[0]))
   const player=ref=>{const p=players.get(ref);if(!p)fail('dogodek vsebuje neznanega igralca');return p}
+  const explicitOwnGoal=starts[i][2]!==undefined
+  if(explicitOwnGoal&&!/class="even"/.test(s))fail('označevalec avtogola brez gola')
   if(/class="even"/.test(s)){
    if(refs.length!==1)fail('gol brez enoličnega igralca')
    const p=player(refs[0]),next=score(s,decode),delta=[next.domaci-current.domaci,next.gostje-current.gostje]
@@ -141,8 +150,10 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
    if(!active.has(p.virId))fail('gol neaktivnega igralca')
    const scoreChildren=liveScoreChildren(s),marker=scoreChildren[3]
    if(scoreChildren.length!==3&&scoreChildren.length!==4)fail('nepodprt dodatek gola')
-   if(marker!==undefined&&marker!=='<span class="event-info">Strafstoßtor</span>')fail('nepodprt dodatek gola')
-   const enajstmetrovka=marker!==undefined,avtogol=p.side!==side
+   if(marker!==undefined&&!['<span class="event-info">Strafstoßtor</span>','<span class="event-info">Eigentor</span>'].includes(marker))fail('nepodprt dodatek gola')
+   const ownGoalMarker=marker==='<span class="event-info">Eigentor</span>'
+   const enajstmetrovka=marker==='<span class="event-info">Strafstoßtor</span>',avtogol=p.side!==side
+   if(explicitOwnGoal!==ownGoalMarker||(explicitOwnGoal&&!avtogol))fail('protisloven označevalec avtogola in strani igralca')
    if(enajstmetrovka&&avtogol)fail('protisloven označevalec enajstmetrovke in avtogola')
    goli.push({virId:p.virId,ime:p.ime,minuta,ekipa:teams[p.side].ime,avtogol,enajstmetrovka,rezultat:next});current=next
   }else if(/icon-substitute/.test(s)){
@@ -160,7 +171,7 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
    }else{
     if(refs.length!==1)fail('karton brez enoličnega igralca')
     const p=player(refs[0]);if(p.side!==side)fail('karton napačne zgodovinske strani')
-    const link=s.match(/<a\b[^>]*href="https:\/\/www\.fussball\.de\/spielerprofil\/-\/(?:player-id|userid)\/[A-Z0-9]{32}"[^>]*>[\s\S]*?<\/a>/)?.[0]
+    const link=s.match(/<a\b[^>]*href="https:\/\/www\.fussball\.de\/spielerprofil\/[^"]*"[^>]*>[\s\S]*?<\/a>/)?.[0]
     const name=link?decode(link):null
     if(name!==p.ime&&name!==`${p.ime} (${p.st})`)fail('neujemanje imena in profilne identitete kartona')
     const event={virId:p.virId,ime:p.ime,minuta,ekipa:teams[side].ime,vrsta:red?'rdeci':'rumeni',...(red?{drugiRumeni}:{})}

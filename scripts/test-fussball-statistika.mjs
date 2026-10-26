@@ -159,11 +159,11 @@ test('captured nested 90+1 clock parses without changing substitution identity o
   assert.deepEqual(result.z.menjave.at(-1).minuta,90)
  }
 })
-test('nested added-time markup remains restricted to observed 90-minute clocks',()=>{
+test('nested added-time markup remains restricted to observed half-ending clocks',()=>{
  const index=rows(main).findIndex(({raw})=>raw.includes('class="icon-substitute"')&&raw.includes('<div class="valign-inner">90&rsquo;</div>'))
- const unsupportedClock=nestedAddedTime.observedCaptureClocks[0].source.rawClockHtml.replace(/\b90\b/,'45').replace('+1','+2')
+ const unsupportedClock=nestedAddedTime.observedCaptureClocks[0].source.rawClockHtml.replace(/\b90\b/,'44').replace('+1','+2')
  const captured=edit(index,raw=>raw.replace('<div class="valign-inner">90&rsquo;</div>',unsupportedClock),main)
- const variant=quick(captured,q=>{q['second-half'].events[index-q['first-half'].events.length].time='45+2';return q})
+ const variant=quick(captured,q=>{q['second-half'].events[index-q['first-half'].events.length].time='44+2';return q})
  reject(variant,lineup,options,/nepodprta minuta dogodka/)
 })
 test('captured Strafstoßtor marker sets penalty-goal evidence and the appearance statistic',()=>{
@@ -231,6 +231,36 @@ test('coarse quick-view time cannot override conflicting explicit time or an ear
  reject(nestedAddedGoal(main,'89'))
  const firstHalf=nestedAddedGoal(main,'90',0)
  reject(firstHalf)
+})
+function firstHalfAddedCard(quickTime='45'){
+ const source=JSON.parse(read('de-fussball-first-half-added-time.json')).source
+ return quick(edit(0,()=>source.rawEvent),q=>{q['first-half'].events[0]={time:quickTime,type:'yellow-card',team:'away'};return q})
+}
+test('authentic nested first-half added time retains period, addition and exact row fingerprint',()=>{
+ const source=JSON.parse(read('de-fussball-first-half-added-time.json')).source
+ assert.equal(sha(source.rawEvent),source.eventSha256)
+ for(const quickTime of ['45','45+2']){
+  const r=parse(firstHalfAddedCard(quickTime)),event=r.dogodki[0]
+  assert.deepEqual([event.osnovnaMinuta,event.dodatek,event.minuta,event.polcas,event.ekipaIdx],[45,2,45,1,1])
+  assert.equal(event.eventSha256,source.eventSha256)
+  assert.equal(r.nepripisaniRumeni[0].dodatek,2)
+ }
+})
+test('first-half nested added time cannot override conflicting quick time, wrong period or chronology',()=>{
+ for(const time of ['44','45+1','45+3','46'])reject(firstHalfAddedCard(time))
+ for(const raw of ['44','46','89','91'])reject(firstHalfAddedCard().replace(/45(\s+&rsquo;\s+<div>\+2)/,`${raw}$1`))
+ for(const added of ['0','31'])reject(firstHalfAddedCard().replace('<div>+2</div>',`<div>+${added}</div>`))
+ // A second first-half row at 45+1 after the observed 45+2 must not be sorted.
+ const source=JSON.parse(read('de-fussball-first-half-added-time.json')).source
+ let html=edit(0,row=>source.rawEvent+source.rawEvent.replace('+2','+1'))
+ html=quick(html,q=>{q['first-half'].events=[{time:'45',type:'yellow-card',team:'away'},{time:'45+1',type:'yellow-card',team:'away'}];return q})
+ reject(html,lineup,options,/zaporedje|neurejeni/)
+ // Move a real substitution to the first half at the same nested45+2 clock.
+ const sub=rows(main)[4].raw.replace(/<div class="valign-inner">[^<]+<\/div>/,source.rawClockHtml)
+ let moved=edit(4,()=>'',main)
+ moved=edit(0,()=>sub,moved)
+ moved=quick(moved,q=>{q['second-half'].events.splice(3,1);q['first-half'].events[0]={time:'45',type:'substitute',team:'home'};return q})
+ reject(moved,lineup,options,/polčasna menjava/)
 })
 test('low-level penalty evidence rejects comment and script decoys outside the live fourth score child',()=>{
  const index=rows(main).findIndex(({raw})=>raw.includes('<div class="even">'))
@@ -323,6 +353,59 @@ test('same unqualified goal grammar preserves own-goal scorer identity and benef
  assert.equal(keeper.goli,0);assert.equal(keeper.avtogoli,1);assert.equal(keeper.prejetiGoli,3)
  assert.equal(r.z.goli[0].ekipa,'SpVgg 03 Ilvesheim');assert.equal(r.z.goli[0].avtogol,true);assert.deepEqual(r.z.goli[0].rezultat,{domaci:0,gostje:1})
  assert.equal(r.nastopi.reduce((n,p)=>n+p.goli,0),4);assert.equal(r.nastopi.reduce((n,p)=>n+p.avtogoli,0),1)
+})
+// Composed reports below retain the supported Ilvesheim source scores/fonts.
+// Only the class/marker grammar is observed; the scorer substitutions are synthetic.
+function explicitOwnGoal(index,profile,html=main){
+ return edit(index,row=>row.replace(/class="row-event event-(left|right)"/,'class="row-event event-$1 own-goal"').replace(/(spielerprofil\/-\/)(?:player-id|userid)\/[A-Z0-9]{32}/,`$1${profile}`),eventInfo(index,'Eigentor',html))
+}
+test('observed explicit own-goal grammar preserves scorer identity on both beneficiary sides',()=>{
+ const source=JSON.parse(read('de-fussball-own-goal.json')).source
+ assert.equal(sha(source.rawEvent),source.eventSha256)
+ assert.match(source.rawEvent,/^<div class="row-event event-right own-goal">/)
+ assert.match(source.rawEvent,/<span class="event-info">Eigentor<\/span>/)
+ assert.match(source.rawEvent,/player-id\/00MC74URVG000000VV0AG85VVSMHI0R7/)
+ for(const [index,profile,score,side] of [
+  [2,'player-id/00NKAU0I64000000VV0AG85VVUH1CIQU',{domaci:0,gostje:1},0],
+  [3,'player-id/0192B6VBGS000000VV0AG80NVSFDG9QH',{domaci:1,gostje:1},1],
+ ]){
+  const html=explicitOwnGoal(index,profile),r=parse(html)
+  const goal=r.z.goli.find(g=>g.avtogol),scorer=r.nastopi.find(p=>p.virId===goal.virId)
+  assert.equal(goal.virId,`de-fussball-${profile.replace('/','-')}`)
+  assert.deepEqual(goal.rezultat,score);assert.equal(goal.enajstmetrovka,false)
+  assert.equal(scorer.ekipaIdx,side);assert.equal(scorer.avtogoli,1);assert.equal(scorer.goli,0)
+  assert.equal(r.nastopi.reduce((n,p)=>n+p.goli,0),4)
+  assert.equal(r.nastopi.reduce((n,p)=>n+p.avtogoli,0),1)
+  assert.equal(razberiZapisnik(html,lineup,options).goli.find(g=>g.avtogol)?.virId,goal.virId)
+ }
+})
+test('retained authentic own-goal row composes with supported score bytes and roster identity',()=>{
+ const source=JSON.parse(read('de-fussball-own-goal.json')).source
+ // Keep the original DOM, time container, image and obfuscated name spans.
+ // Rebind only score glyphs/font, active scorer and clock to the replay report.
+ const score=elementRange(rows(main)[2].raw,'<div class="even">').raw.replace('</div>','<span class="event-info">Eigentor</span></div>')
+ const originalScore=elementRange(source.rawEvent,'<div class="even">').raw
+ const row=source.rawEvent.replace(originalScore,score).replace('47&rsquo;','56&rsquo;').replace('player-id/00MC74URVG000000VV0AG85VVSMHI0R7','player-id/00NKAU0I64000000VV0AG85VVUH1CIQU')
+ const r=parse(edit(2,()=>row)),goal=r.z.goli[0]
+ assert.equal(goal.avtogol,true);assert.equal(goal.enajstmetrovka,false)
+ assert.deepEqual(goal.rezultat,{domaci:0,gostje:1})
+ assert.equal(r.nastopi.find(p=>p.virId===goal.virId).avtogoli,1)
+ assert.equal(r.dogodki.find(e=>e.ordinal===3).eventSha256,sha(row))
+})
+test('explicit own-goal requires paired marker/class, opposite roster side and active scorer',()=>{
+ const html=explicitOwnGoal(2,'player-id/00NKAU0I64000000VV0AG85VVUH1CIQU')
+ for(const bad of [
+  html.replace(' own-goal',''),html.replace('<span class="event-info">Eigentor</span>',''),
+  html.replace('Eigentor</span>','Strafstoßtor</span>'),html.replace('Eigentor</span>','Tor</span>'),
+  html.replace(' own-goal',' own-goal unknown'),
+  explicitOwnGoal(2,'player-id/00NKAUN7HO000000VV0AG85VVUH1CIQU'),
+  explicitOwnGoal(2,'userid/025BQ1KJJO000000VS541L4HVS5D4572'),
+  explicitOwnGoal(2,'player-id/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'),
+  // The visual beneficiary still has to match the unchanged score progression.
+  html.replace('event-right own-goal','event-left own-goal'),
+  html.replace('<span class="event-info">Eigentor</span>','<span class="event-info">Eigentor</span><span class="event-info">Eigentor</span>'),
+ ]){reject(bad);assert.throws(()=>razberiZapisnik(bad,lineup,options))}
+ reject(edit(0,row=>row.replace('event-left','event-left own-goal')))
 })
 test('wrong side and unknown player identities cannot create appearances',()=>{
  reject(edit(4,s=>s.replace('event-left','event-right')))
@@ -442,4 +525,43 @@ test('offline CLI refuses missing or conflicting captured lineup provenance',()=
  const wrong=structuredClone(manifest);wrong.provenance.lineupUrl=wrong.provenance.lineupUrl.replace(id,'031EQBPLDS000000VS5489BTVUS470OH')
  const missing=structuredClone(manifest);delete missing.provenance.lineupUrl
  for(const m of [wrong,missing]){const r=cli(main,lineup,m);assert.notEqual(r.status,0);const out=JSON.parse(r.stdout);assert.deepEqual(out.nastopi,[]);assert.match(out.razlog,/Manifest/)}
+})
+
+function spanClubLineup(){return lineup.replace(/<div class="club-name">\s*<a\b[^>]*>([^<]+)<\/a>\s*<\/div>/g,'<div class="club-name"><span>$1</span></div>')}
+test('authentic plain-span club headers preserve exactly two named sides and supported statistics',()=>{
+ const sources=JSON.parse(read('de-fussball-club-name-span.json')).sources
+ for(const source of sources){
+  assert.equal(source.headers.length,2)
+  for(const header of source.headers)assert.equal(sha(header.raw),header.sha256)
+  // Actual header bytes, supported Ilvesheim roster/fonts and report frame.
+  let index=0
+  const players=spanClubLineup().replace(/<div class="club-name"><span>[^<]+<\/span><\/div>/g,()=>source.headers[index++].raw)
+  const html=main.replaceAll('SpVgg 03 Ilvesheim',source.headers[0].name).replaceAll('SG Oftersheim',source.headers[1].name)
+  const result=parse(html,players),raw=razberiZapisnik(html,players,options)
+  assert.deepEqual([result.z.domaci.ime,result.z.gostje.ime],source.headers.map(h=>h.name))
+  assert.deepEqual([raw.domaci.ime,raw.gostje.ime],source.headers.map(h=>h.name))
+  assert.equal(result.nastopi.length,30);assert.equal(result.z.goli.length,5)
+  assert.deepEqual(result.z.rezultat,{domaci:2,gostje:3})
+ }
+})
+test('plain-span club names reject mixed, hidden, extra or contradictory header evidence',()=>{
+ const source=spanClubLineup(),header='<div class="club-name"><span>SpVgg 03 Ilvesheim</span></div>'
+ assert.notEqual(source,lineup)
+ for(const replacement of [
+  '<div class="club-name"><span>SpVgg 03 Ilvesheim</span><span>Extra</span></div>',
+  '<div class="club-name"><span>SpVgg 03 Ilvesheim</span><a href="/">Extra</a></div>',
+  '<div class="club-name"><a href="/"><span>SpVgg 03 Ilvesheim</span></a></div>',
+  '<div class="club-name"><span class="hidden">SpVgg 03 Ilvesheim</span></div>',
+  '<div class="club-name"><span hidden="hidden">SpVgg 03 Ilvesheim</span></div>',
+  '<div class="club-name"><span style="display:none">SpVgg 03 Ilvesheim</span></div>',
+  '<div class="club-name"><!-- <span>SpVgg 03 Ilvesheim</span> --></div>',
+  '<div class="club-name"><span>Wrong Team</span></div>',
+  '<div class="club-name"><span> </span></div>',
+  '<div class="club-name">SpVgg 03 Ilvesheim</div>',
+  header+'<div class="club-name"><span>Extra</span></div>',
+  header+'<div class="club-name hidden"><span>Extra</span></div>',
+ ]){const players=source.replace(header,replacement);reject(main,players);assert.throws(()=>razberiZapisnik(main,players,options))}
+ // Complete apparent names inside comments/inert markup remain non-evidence.
+ for(const wrap of [h=>`<!-- ${h} -->`,h=>`<template>${h}</template>`])reject(main,source.replace(header,wrap(header)))
+ reject(main,source.replace(/<span>(SpVgg 03 Ilvesheim|SG Oftersheim)<\/span>/g,(_,name)=>`<span>${name==='SG Oftersheim'?'SpVgg 03 Ilvesheim':'SG Oftersheim'}</span>`))
 })
