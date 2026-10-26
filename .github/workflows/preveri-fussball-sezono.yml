@@ -72,6 +72,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+      - name: Install locked dependencies for offline source and handoff checks
+        run: npm ci --ignore-scripts
       - name: Validate hosted scope and reserve both season budgets before requests
         run: node scripts/fussball-season-pilot.mjs validate
       - name: Offline source and evidence checks
