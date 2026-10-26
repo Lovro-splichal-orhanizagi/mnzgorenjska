@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {createEpsBudgetFetch} from './eps-source-budget.mjs'
 import {selectProviderCandidates,runProviderBatch} from './provider-league-batch.mjs'
+import {validateSelection} from './vklopi-obstojece-lige.mjs'
 
 // Synthetic football rows exercise orchestration only, never source readiness.
 const sha='a'.repeat(40)
@@ -26,11 +27,17 @@ test('EPS selection admits the exact multi-host catalog while retaining MLSZ lim
  assert.deepEqual(cs.map(c=>c.host),[first.host,other.host])
  assert.throws(()=>selectProviderCandidates(registry,[first.slug,'hu-pe-u19-e']))
  assert.throws(()=>selectProviderCandidates(registry,[first.slug,first.slug]))
- const drift=structuredClone(registry);drift.candidates.find(c=>c.slug===first.slug).id++
- assert.throws(()=>selectProviderCandidates(drift,[first.slug]))
+ const drift=structuredClone(registry);drift.candidates.find(c=>c.slug===other.slug).id++
+ assert.throws(()=>selectProviderCandidates(drift,[other.slug]))
  const all=JSON.parse(readFileSync(new URL('./policies/eps-batch-candidates.json',import.meta.url)))
  assert.equal(all.length,30)
  assert.equal(selectProviderCandidates(registry,all.map(c=>c.slug)).length,30)
+})
+test('new EPS tuples are admitted only through the source-proof batch, not the legacy generic activation route',()=>{
+ const registry=JSON.parse(readFileSync(new URL('./policies/existing-league-candidates-20261018.json',import.meta.url)))
+ assert.equal(registry.candidates.find(c=>c.slug===first.slug),undefined)
+ assert.throws(()=>validateSelection(registry,[first.slug]))
+ assert.doesNotThrow(()=>selectProviderCandidates(registry,[first.slug]))
 })
 test('EPS current catch-up skips archive rewrites and preserves the strict-proof HOLD',async()=>{
  const h=harness(),r=await runProviderBatch(h.options)

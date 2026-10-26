@@ -25,7 +25,9 @@ export function selectProviderCandidates(registry,slugs) {
  if(!Array.isArray(slugs)||slugs.length<1||slugs.length>32||new Set(slugs).size!==slugs.length)fail('Select distinct explicit reviewed league slugs within the provider bound.')
  const selected=slugs.map(slug=>{
   const mapping=MAPPINGS.find(c=>c.slug===slug),candidate=registry?.candidates?.find(c=>c.slug===slug)
-  if(!mapping||!candidate||TUPLE.some(k=>mapping[k]!==candidate[k]))fail(`Outside reviewed provider mapping or changed tuple: ${slug}`)
+  // EPS has its own proof-only catalog; adding its tuples to the generic
+  // activation registry would create a route that skips this source proof.
+  if(!mapping||mapping.source==='mlsz'&&!candidate||candidate&&TUPLE.some(k=>mapping[k]!==candidate[k])||mapping.source==='eps'&&!registry?.source_contracts?.eps)fail(`Outside reviewed provider mapping or changed tuple: ${slug}`)
   return structuredClone(mapping)
  })
  if(!validProviderSelection(selected))fail('A batch must share one provider; MLSZ remains limited to five on one host.')
