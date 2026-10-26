@@ -857,3 +857,42 @@ postane dopusten uvoz; njegove posamezne nespremenjene strani so uporabne
 za diagnostiko brez dodatnih zahtevkov. Popravilo imen omogoči lokalno
 preverbo prvega Badenovega zapisnika (30 nastopov, dva gola, oba vratarja),
 kar še ni dokaz cele lige.
+
+### Gostovani zaporedni audit dveh sezon (26. 10. 2026)
+
+`preveri-fussball-sezono.yml` lahko po uspešnem tekočem zajemu nadaljuje z
+izrecno odobrenim sosednjim arhivom na drugem gostovanem GitHub poslu.
+Prazen `archive_json` ohrani običajen enosezonski vmesnik. Za par je obvezen
+`reports=all`, točen pregledani `expected_sha` na `main` v izvornem repozitoriju
+in prvi poskus ročnega zagona. `archive_json` vsebuje samo `seedUrl`, `staffel`,
+`season`, `maxRequests`. Vsaka sezona ima največ 3000 zahtevkov in 360 minut.
+
+`scripts/fussball-season-pilot.mjs validate` pred prvim branjem rezervira
+`prior_requests + max_requests + archive.maxRequests <= total_request_cap`.
+Odobreni Baden pilot šteje že porabljenih **361**, največ **1500** za 2026/27
+(`03188V27L800000JVS5489BTVU7GTVLE-G`) in **3000** za opaženi arhiv 2025/26
+(`02TGLSVQ1800000IVS5489BTVTLPPK10-G`), skupaj pod mejo **5000**. Prejšnje
+porabe ni dovoljeno ponastaviti; to varovalo zavrne manj kot 361 in mejo nad
+5000. Nov operativni poskus potrebuje novo pregledano kumulativno porabo.
+
+Tekoči posel šele po uspešnem zajemu in neodvisnem offline ponavljanju izda
+`archive_allowed` in dejansko število zahtevkov. Arhivski posel prenese samo
+artefakt tega zagona, znova preveri izvirnike z isto nespremenljivo kodo ter
+veže točen arhivski URL, ID in sezono na edini živi izbirnik sezon izvirne
+tekoče strani. Pred arhivskim branjem ponovno preveri preostali proračun.
+Napaka prenosa, zavrnitev vira, delni zajem ali neuspešna offline preverba
+ustavijo nadaljevanje. Semantično zavrnjeni zapisniki ostanejo v dokazu in
+ne preprečijo ločeno odobrenega arhivskega audita, če je bil ves vir uspešno
+prebran. Še vedno preprečujejo ustrezno poznejšo pripravljenost za uvoz.
+
+Oba posla uporabljata obstoječi vrstni red bralcev istega gostitelja in vsaj
+šest sekund med začetki zahtevkov, brez ponovitev ali nadomestnega dostopa.
+Arhiv ne čaka na zaključek svojega starševskega zagona. Tekoči artefakt ostane
+`fussball-season-<run_id>`, arhivski je ločen
+`fussball-season-archive-<run_id>` in ni sprejet kot tekoči uvozni dokaz.
+To je izključno audit vira brez baze, fotografij, registracije ali vklopa lige;
+obstoječa produkcijska uvozna vrata se ne spreminjajo.
+
+Nadaljevanje uporablja običajni zbiralnik in njegovo strogo vezavo identitete
+arhivske strani. Če arhiv oglašuje SEO canonical tekoče sezone namesto svoje,
+se audit varno ustavi; sam ta handoff ne razširi podprte arhivske slovnice.
