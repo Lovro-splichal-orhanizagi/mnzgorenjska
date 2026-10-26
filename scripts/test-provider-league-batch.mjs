@@ -175,3 +175,14 @@ test('fresh stored audit requires a complete nonnegative integer missed-penalty 
  const c=candidates()[0]
  for(const value of [null,undefined,-1,1.5]){const s=snapshot(c);s.matches[0].appearance_rows[0].penalties_missed=value;assert.throws(()=>auditStoredData(c,s),/penalt/i)}
 })
+
+function epsBenchSnapshot(){
+ const c=selectProviderCandidates(registry,['gr-ath-b-2'])[0],s=snapshot(c);s.competition.country_code='GR'
+ for(const m of s.matches){for(const a of m.appearance_rows)a.red_card_minute=null;const actor=m.appearance_rows[1];actor.minute_off=55;actor.minutes_played=55;actor.red_cards=1;m.appearance_rows.push({...actor,player_id:23,started:false,is_goalkeeper:false,minute_on:55,minute_off:90,minutes_played:35,red_cards:0})}
+ s.players.push({id:23,reg_st:123,team_id:1,active:true,position:'MID',position_source:'zapisnik'});return {c,s}
+}
+test('EPS legacy NULL red clock permits only provisional occupancy pending mandatory strict source proof',()=>{const {c,s}=epsBenchSnapshot();assert.equal(auditStoredData(c,s).reports,2);assert.equal(auditStoredData(c,s).source_completeness,'NOT_ESTABLISHED');assert.throws(()=>assertProviderProof({candidate:c,snapshot:s,expectedSha:sha,audit:auditStoredData(c,s),proof:null}),/contract|proof/)})
+test('EPS provisional red envelope still rejects occupancy surplus and unexplained early gaps',()=>{
+ for(const change of [m=>{const a=m.appearance_rows.at(-1);a.minute_on=25;a.minutes_played=65},m=>{const a=m.appearance_rows[2];a.minute_off=30;a.minutes_played=30}]){const {c,s}=epsBenchSnapshot();change(s.matches[0]);assert.throws(()=>auditStoredData(c,s),/minutes|interval|occupancy/)}
+})
+test('EPS bench-red correction leaves MLSZ stored interval gate unchanged',()=>{const {s}=epsBenchSnapshot(),c=candidates()[0];s.competition={...s.competition,...c};s.rounds[0].season=c.archives[0].season;assert.throws(()=>auditStoredData(c,s),/minutes|interval/)})
