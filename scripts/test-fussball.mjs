@@ -63,6 +63,28 @@ test('real round links bound all 30 rounds and keep rescheduled rows unassigned'
  assert.throws(()=>razberiKrog(html,{...opts,staffel:'031EKNM2HG00000LVS5489BUVUR5FS5Z-G'}),/lig/)
 })
 
+// Authentic Baden bye row composed into the retained Mannheim round.
+// A bye must not block real matches or become a fictitious scoreless fixture.
+test('an explicit spielfrei row preserves all scheduled and rescheduled fixtures',()=>{
+ const html=read('de-fussball-krog8.html').toString(),bye=read('de-fussball-baden-bye.html').toString()
+ const composed=changed(html,'</tbody>',bye+'</tbody>')
+ const r=razberiKrog(composed,{fonts,staffel:'031EKNM2HG00000LVS5489BUVUR5FS5A-G'})
+ assert.equal(r.tekme.length,8);assert.equal(r.prestavljene.length,2)
+ assert.ok(![...r.tekme,...r.prestavljene].some(f=>f.domaci==='FC Zuzenhausen'||f.gostje==='FC Zuzenhausen'))
+ assert.deepEqual(r.tekme.find(f=>f.id==='031EQBPLF4000000VS5489BTVUS470OH').rezultat,{domaci:2,gostje:3})
+})
+test('spielfrei text cannot conceal a report link, result, second club or unknown opponent',()=>{
+ const html=read('de-fussball-krog8.html').toString(),bye=read('de-fussball-baden-bye.html').toString()
+ const mutations=[
+  changed(bye,'class="column-score"></td>','class="column-score"><a href="https://www.fussball.de/spiel/-/spiel/031EQBPLF4000000VS5489BTVUS470OH">2:3</a></td>'),
+  changed(bye,'class="column-score"></td>','class="column-score">2:3</td>'),
+  changed(bye,'<span class="info-text">spielfrei</span>','<div class="club-name">Other club</div><span class="info-text">spielfrei</span>'),
+  changed(bye,'>spielfrei</span>','>unbekannt</span>'),
+  changed(bye,'<span class="info-text">spielfrei</span>','<!-- <span class="info-text">spielfrei</span> -->'),
+ ]
+ for(const bad of mutations)assert.throws(()=>razberiKrog(changed(html,'</tbody>',bad+'</tbody>'),{fonts,staffel:'031EKNM2HG00000LVS5489BUVUR5FS5A-G'}),/tekma kroga|spielfrei/)
+})
+
 test('decoy score outside the match stage cannot replace the actual result',()=>{
  const fake='<span class="end-result"><span data-obfuscation="q73uvs1t" class="score-left">&#xE6A7;</span><span data-obfuscation="q73uvs1t" class="score-right">&#xE66F;</span></span>'
  assert.deepEqual(parse(main.replace('<body ',fake+'<body ')).rezultat,{domaci:2,gostje:3})
