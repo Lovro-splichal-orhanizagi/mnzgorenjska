@@ -318,9 +318,14 @@ const vir = {
     for (const t of odigrane) {
       const url = vir.naslovZapisnika(koda, t._id)
       const ime = `tekma-${t._id}.json`
-      // Zaključena tekma v predpomnilniku se ne spreminja več; nezaključeno
-      // (zapisnik se še dopolnjuje) preberemo znova.
-      let z = vZapisnik(JSON.parse(await prenesi(url, ime)), { url })
+      // Nezaključeno tekmo (zapisnik se še dopolnjuje) preberemo znova. Tudi
+      // zaključeno klub še popravi (Látky : Hnúšťa, 25. 10. 2026: najprej
+      // 0:0, dan pozneje 2:0) — zato znova beremo zadnjih sedem dni in vsako,
+      // ki ji seznam tekem kaže drug izid kot predpomnilnik.
+      const shranjena = JSON.parse(await prenesi(url, ime))
+      const sveza = Date.now() - Date.parse(t.startDate) <= 7 * 86400000
+      const drugIzid = Array.isArray(t.score) && String(t.score) !== String(shranjena?.score)
+      let z = sveza || drugIzid ? null : vZapisnik(shranjena, { url })
       if (!z) z = vZapisnik(JSON.parse(await prenesi(url, ime, true)), { url })
       if (z) out.push({ id: z.zapisnikId, z, url })
     }
