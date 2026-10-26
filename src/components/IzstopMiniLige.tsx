@@ -25,7 +25,6 @@ export default function IzstopMiniLige({
   nacin,
   zadnja = false,
   lastnik = false,
-  javna = false,
   onKoncano,
 }: {
   ligaId: number
@@ -40,8 +39,6 @@ export default function IzstopMiniLige({
   zadnja?: boolean
   /** Izstopa lastnik mini lige: ostane lastnik. */
   lastnik?: boolean
-  /** Javna liga: odstranjena ekipa se lahko spet pridruži. */
-  javna?: boolean
   onKoncano: (sporocilo: string) => void
 }) {
   const [odprto, setOdprto] = useState(false)
@@ -78,7 +75,6 @@ export default function IzstopMiniLige({
   const opombe = [
     izstop && lastnik ? t('lestvice.izstopMiniLige.lastnikOstane') : null,
     izstop && !lastnik && zadnja ? t('lestvice.izstopMiniLige.zadnja') : null,
-    !izstop && javna ? t('lestvice.izstopMiniLige.javnaNazaj') : null,
   ].filter(Boolean)
 
   return (

@@ -97,7 +97,6 @@ export const domov = {
     uredi: 'Moja ekipa →',
   },
   taTeden: 'Ta teden',
-  klepet: 'Klepet in predlogi',
   // Prosojnice samodejnih objav (Instagram, Facebook; stran /objava).
   objava: {
     igralecKroga: 'Igralec kroga',
