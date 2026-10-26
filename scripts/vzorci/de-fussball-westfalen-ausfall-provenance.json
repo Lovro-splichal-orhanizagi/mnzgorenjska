@@ -1,0 +1,11 @@
+{
+  "sourceUrl": "https://www.fussball.de/spieltag/oberliga-westfalen-westfalen-oberliga-westfalen-herren-saison2627-westfalen/-/staffel/0313Q1DCFS000012VS5489BTVU7GTVLE-G",
+  "sourceRun": 40369728901,
+  "capturedAt": "2026-10-26T17:35:39.171Z",
+  "sourceSha256": "1c6df79063ab26f4a67bf0c82cedb83f33b1720a969fc623d3b17c42074ec427",
+  "sourceBytes": 205993,
+  "fixtureSha256": "2ffa86d6eda044b291ecd85743f77c5c2fd5e18dbe600e1ba1c44f6bbbf0d3df",
+  "byteOffset": 158100,
+  "fixture": "de-fussball-westfalen-ausfall.html",
+  "note": "Exact original score cell. Tests compose it into another retained round with its fixture URL, not a second real result."
+}
