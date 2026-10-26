@@ -402,7 +402,8 @@ Deno.serve(async (req) => {
 
   // Tedenski pregled: po koncanem krogu en mail na ekipo. Kdo ga dobi in kaj
   // pise, doloci `tedenski_pregled_ekip` (tudi da ga za isti krog ne dobi
-  // dvakrat). Le posta: potisno obvestilo za pregled bi bilo prevec.
+  // dvakrat). Od 26. 10. 2026 gre ob mailu še potisno obvestilo (le enkrat na
+  // krog, ker mail za isti krog ne gre dvakrat) z dvoboji in napovedmi.
   if (vrsta === 'tedenski-pregled') {
     const { data, error } = await service.rpc('tedenski_pregled_ekip', { p_competition_id: competition_id })
     if (error) return json({ error: error.message }, 500)
@@ -416,21 +417,46 @@ Deno.serve(async (req) => {
     // Dnevna mera za nov strežnik: ostali pridejo ob naslednjem zagonu
     // (poslanim `tedenski_pregled_ekip` istega kroga ne vrne več).
     const zdaj = typeof vhod.najvec_poslati === 'number' ? vrstice.slice(0, vhod.najvec_poslati) : vrstice
-    const rezultati: Array<{ ekipa: number; ok: boolean; razlog?: string }> = []
+    const rezultati: Array<{ ekipa: number; ok: boolean; razlog?: string; push?: number }> = []
     for (const v of zdaj) {
+      // Mini lige (26. 10. 2026): končani dvoboji kroga (največ trije) in
+      // točke napovedi. Napaka pri branju ne ustavi maila — ostane brez njiju.
+      const [{ data: dv }, { data: np }, { data: pr }] = await Promise.all([
+        service.rpc('dvoboji_ekipe', { p_ekipa: v.fantasy_team_id, p_krog: v.krog }),
+        service.rpc('povzetek_napovedi_kroga', { p_user_id: v.user_id, p_round_id: v.round_id }),
+        service.from('profiles').select('brez_push').eq('id', v.user_id).maybeSingle(),
+      ])
+      // deno-lint-ignore no-explicit-any
+      const dvoboji = ((dv ?? []) as any[]).filter((d) => d.koncan && d.izid).slice(0, 3).map((d) => ({
+        mini_liga: String(d.mini_liga),
+        nasprotnik: d.nasprotnik_id == null ? null : String(d.nasprotnik),
+        tocke: Number(d.tocke),
+        tocke_nasprotnika: Number(d.tocke_nasprotnika),
+        izid: d.izid as 'zmaga' | 'remi' | 'poraz',
+      }))
+      // deno-lint-ignore no-explicit-any
+      const n = (Array.isArray(np) ? np[0] : np) as any
+      const napovedi = n && Number(n.ocenjenih) > 0 ? { tocke: Number(n.tocke), tocnih: Number(n.tocnih) } : null
+      const sporocilo = sestaviTedenskiPregled(liga, {
+        ...v,
+        tocke: Number(v.tocke),
+        povprecje: v.povprecje == null ? null : Number(v.povprecje),
+        najvec: v.najvec == null ? null : Number(v.najvec),
+        kapetan_tocke: v.kapetan_tocke == null ? null : Number(v.kapetan_tocke),
+        najboljsi_tocke: v.najboljsi_tocke == null ? null : Number(v.najboljsi_tocke),
+        dvoboji,
+        napovedi,
+      })
       const rez = await poslji(
         EMAIL_FROM,
         v.email,
-        await sOdjavo(service, v.user_id, sestaviTedenskiPregled(liga, {
-          ...v,
-          tocke: Number(v.tocke),
-          povprecje: v.povprecje == null ? null : Number(v.povprecje),
-          najvec: v.najvec == null ? null : Number(v.najvec),
-          kapetan_tocke: v.kapetan_tocke == null ? null : Number(v.kapetan_tocke),
-          najboljsi_tocke: v.najboljsi_tocke == null ? null : Number(v.najboljsi_tocke),
-        })),
+        await sOdjavo(service, v.user_id, sporocilo),
         Deno.env.get('EMAIL_REPLY_TO'),
       )
+      // Ob mailu še potisno obvestilo (le aplikacija; brez `brez_push`).
+      const push = !rez.napaka && !pr?.brez_push && pushNastavljen()
+        ? await posljiPush(service, v.user_id, vObvestilo(sporocilo, `/my-team?t=${liga.slug}`)).catch(() => 0)
+        : 0
       await service.from('email_log').insert({
         user_id: v.user_id,
         email: v.email,
@@ -440,7 +466,7 @@ Deno.serve(async (req) => {
         resend_id: rez.id ?? null,
         napaka: rez.napaka ?? null,
       })
-      rezultati.push({ ekipa: v.fantasy_team_id, ok: !rez.napaka, razlog: rez.napaka })
+      rezultati.push({ ekipa: v.fantasy_team_id, ok: !rez.napaka, razlog: rez.napaka, push })
     }
     return json({
       kandidati_stevilo: vrstice.length,
