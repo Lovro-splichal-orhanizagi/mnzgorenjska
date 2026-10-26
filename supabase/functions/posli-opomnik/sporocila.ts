@@ -2679,6 +2679,10 @@ export interface PregledKroga {
   kapetan_tocke: number | null
   najboljsi: string | null
   najboljsi_tocke: number | null
+  /** Končani dvoboji kroga v mini ligah (`dvoboji_ekipe`); nasprotnik null = povprečje lige. */
+  dvoboji?: Array<{ mini_liga: string; nasprotnik: string | null; tocke: number; tocke_nasprotnika: number; izid: 'zmaga' | 'remi' | 'poraz' }>
+  /** Napovedi kroga (`povzetek_napovedi_kroga`); brez, če ni napovedoval ali ni ocenjenih. */
+  napovedi?: { tocke: number; tocnih: number } | null
 }
 
 /** Slovenska množina po zadnjih dveh mestih: 1 / 2 / 3–4 / ostalo. */
@@ -2711,6 +2715,12 @@ interface BesedilaPregleda {
   potem: (povezava: string) => string
   pivo: string
   odjava: string
+  /** Dvoboj v mini ligi: oznaka, izid in nasprotnik povprečje lige. */
+  dvoboj: string
+  izid: Record<'zmaga' | 'remi' | 'poraz', string>
+  povprecjeLige: string
+  napovedi: string
+  tocni: string
   zakaj: (ozn: string) => string
 }
 
@@ -2726,6 +2736,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'celo lestvico', potem: (l) => `Ali poglej ${l}.`,
     pivo: 'P.S. SLFF je brezplačen in teče na pivu. Če ti je ta krog polepšal ponedeljek, nas počasti z enim, pa dobiš mesto na pivskem zidu:',
     odjava: 'Ne želim več e-pošte',
+    dvoboj: 'Dvoboj', izid: { zmaga: 'Zmaga', remi: 'Remi', poraz: 'Poraz' }, povprecjeLige: 'povprečje lige',
+    napovedi: 'Napovedi', tocni: 'točni izidi',
     zakaj: (o) => `Pregled dobiš po vsakem krogu, ker imaš ekipo v ligi ${o}.`,
   },
   sk: {
@@ -2739,6 +2751,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'celú tabuľku', potem: (l) => `Alebo si pozri ${l}.`,
     pivo: 'P.S. SLFF je zadarmo a beží na pive. Ak ti toto kolo spríjemnilo pondelok, pozvi nás na jedno a získaš miesto na pivnej stene:',
     odjava: 'Nechcem už dostávať e-maily',
+    dvoboj: 'Duel', izid: { zmaga: 'Výhra', remi: 'Remíza', poraz: 'Prehra' }, povprecjeLige: 'priemer ligy',
+    napovedi: 'Tipy', tocni: 'presné výsledky',
     zakaj: (o) => `Prehľad dostávaš po každom kole, lebo máš tím v lige ${o}.`,
   },
   hr: {
@@ -2752,6 +2766,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'cijelu ljestvicu', potem: (l) => `Ili pogledaj ${l}.`,
     pivo: 'P.S. SLFF je besplatan i radi na pivu. Ako ti je ovo kolo uljepšalo ponedjeljak, počasti nas jednim i dobij mjesto na pivskom zidu:',
     odjava: 'Ne želim više primati e-mailove',
+    dvoboj: 'Dvoboj', izid: { zmaga: 'Pobjeda', remi: 'Neriješeno', poraz: 'Poraz' }, povprecjeLige: 'prosjek lige',
+    napovedi: 'Prognoze', tocni: 'točni rezultati',
     zakaj: (o) => `Pregled dobivaš nakon svakog kola jer imaš momčad u ligi ${o}.`,
   },
   cs: {
@@ -2765,6 +2781,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'celý žebříček', potem: (l) => `Nebo se podívej na ${l}.`,
     pivo: 'P.S. SLFF je zdarma a běží na pivu. Jestli ti tohle kolo zpříjemnilo pondělí, kup nám jedno a získáš místo na pivní zdi:',
     odjava: 'Nechci už dostávat e-maily',
+    dvoboj: 'Duel', izid: { zmaga: 'Výhra', remi: 'Remíza', poraz: 'Prohra' }, povprecjeLige: 'průměr ligy',
+    napovedi: 'Tipy', tocni: 'přesné výsledky',
     zakaj: (o) => `Přehled dostáváš po každém kole, protože máš tým v lize ${o}.`,
   },
   // Madžarščina: člen a/az pred številko je odvisen od izgovora, zato
@@ -2780,6 +2798,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'a teljes tabellát', potem: (l) => `Vagy nézd meg ${l}.`,
     pivo: 'U.i. Az SLFF ingyenes, és sörből működik. Ha ez a forduló feldobta a hétfődet, hívj meg minket egyre, és felkerülsz a sörfalra:',
     odjava: 'Nem kérek több e-mailt',
+    dvoboj: 'Párharc', izid: { zmaga: 'Győzelem', remi: 'Döntetlen', poraz: 'Vereség' }, povprecjeLige: 'liga átlaga',
+    napovedi: 'Tippek', tocni: 'pontos eredmények',
     zakaj: (o) => `Az összefoglalót minden forduló után megkapod, mert van csapatod ebben a bajnokságban: ${o}.`,
   },
   de: {
@@ -2793,6 +2813,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'die ganze Tabelle', potem: (l) => `Oder schau dir ${l} an.`,
     pivo: 'PS: SLFF ist kostenlos und läuft mit Bier. Wenn dir diese Runde den Montag versüßt hat, spendier uns eins und hol dir einen Platz an der Bierwand:',
     odjava: 'Keine E-Mails mehr',
+    dvoboj: 'Duell', izid: { zmaga: 'Sieg', remi: 'Remis', poraz: 'Niederlage' }, povprecjeLige: 'Ligaschnitt',
+    napovedi: 'Tipps', tocni: 'exakte Ergebnisse',
     zakaj: (o) => `Du bekommst die Übersicht nach jeder Runde, weil du ein Team in dieser Liga hast: ${o}.`,
   },
   sr: {
@@ -2806,6 +2828,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'celu tabelu', potem: (l) => `Ili pogledaj ${l}.`,
     pivo: 'P.S. SLFF je besplatan i radi na pivu. Ako ti je ovo kolo ulepšalo ponedeljak, časti nas jednim i dobij mesto na pivskom zidu:',
     odjava: 'Ne želim više da primam imejlove',
+    dvoboj: 'Dvoboj', izid: { zmaga: 'Pobeda', remi: 'Nerešeno', poraz: 'Poraz' }, povprecjeLige: 'prosek lige',
+    napovedi: 'Prognoze', tocni: 'tačni rezultati',
     zakaj: (o) => `Pregled dobijaš posle svakog kola jer imaš tim u ligi ${o}.`,
   },
   ro: {
@@ -2819,6 +2843,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'tot clasamentul', potem: (l) => `Sau vezi ${l}.`,
     pivo: 'P.S. SLFF este gratuit și merge cu bere. Dacă etapa asta ți-a înseninat ziua de luni, fă-ne cinste cu una și primești un loc pe zidul berilor:',
     odjava: 'Nu mai vreau e-mailuri',
+    dvoboj: 'Duel', izid: { zmaga: 'Victorie', remi: 'Egal', poraz: 'Înfrângere' }, povprecjeLige: 'media ligii',
+    napovedi: 'Pronosticuri', tocni: 'scoruri exacte',
     zakaj: (o) => `Primești rezumatul după fiecare etapă pentru că ai o echipă în liga ${o}.`,
   },
   et: {
@@ -2832,6 +2858,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'kogu edetabelit', potem: (l) => `Või vaata ${l}.`,
     pivo: 'P.S. SLFF on tasuta ja töötab õlle peal. Kui see voor tegi su esmaspäeva paremaks, osta meile üks ja saad koha õlleseinal:',
     odjava: 'Ma ei soovi enam kirju',
+    dvoboj: 'Duell', izid: { zmaga: 'Võit', remi: 'Viik', poraz: 'Kaotus' }, povprecjeLige: 'liiga keskmine',
+    napovedi: 'Ennustused', tocni: 'täpsed tulemused',
     zakaj: (o) => `Saad ülevaate pärast iga vooru, sest sul on meeskond (liiga: ${o}).`,
   },
   pl: {
@@ -2845,6 +2873,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'cały ranking', potem: (l) => `Albo zobacz ${l}.`,
     pivo: 'P.S. SLFF jest darmowy i działa na piwie. Jeśli ta kolejka umiliła ci poniedziałek, postaw nam jedno i zdobądź miejsce na ścianie piw:',
     odjava: 'Nie chcę więcej e-maili',
+    dvoboj: 'Pojedynek', izid: { zmaga: 'Wygrana', remi: 'Remis', poraz: 'Porażka' }, povprecjeLige: 'średnia ligi',
+    napovedi: 'Typy', tocni: 'dokładne wyniki',
     zakaj: (o) => `Podsumowanie dostajesz po każdej kolejce, bo masz drużynę w lidze ${o}.`,
   },
   es: {
@@ -2858,6 +2888,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'la clasificación completa', potem: (l) => `O mira ${l}.`,
     pivo: 'P. D. SLFF es gratis y funciona a base de cañas. Si esta jornada te ha alegrado el lunes, invítanos a una y consigue un sitio en el muro de cañas:',
     odjava: 'No quiero más correos',
+    dvoboj: 'Duelo', izid: { zmaga: 'Victoria', remi: 'Empate', poraz: 'Derrota' }, povprecjeLige: 'media de la liga',
+    napovedi: 'Pronósticos', tocni: 'resultados exactos',
     zakaj: (o) => `Recibes el resumen tras cada jornada porque tienes equipo en la liga ${o}.`,
   },
   lv: {
@@ -2871,6 +2903,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'visu kopvērtējumu', potem: (l) => `Vai apskati ${l}.`,
     pivo: 'P.S. SLFF ir bez maksas un darbojas uz alus. Ja šī kārta tev padarīja pirmdienu labāku, uzsauc mums vienu un iegūsti vietu uz alus sienas:',
     odjava: 'Vairs nevēlos saņemt e-pastus',
+    dvoboj: 'Duelis', izid: { zmaga: 'Uzvara', remi: 'Neizšķirts', poraz: 'Zaudējums' }, povprecjeLige: 'līgas vidējais',
+    napovedi: 'Prognozes', tocni: 'precīzi rezultāti',
     zakaj: (o) => `Pārskatu saņem pēc katras kārtas, jo tev ir komanda (līga: ${o}).`,
   },
   mk: {
@@ -2884,6 +2918,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'целата табела', potem: (l) => `Или погледни ја ${l}.`,
     pivo: 'П.С. SLFF е бесплатен и работи на пиво. Ако ова коло ти го разубави понеделникот, почести нè со едно и добиј место на ѕидот на пива:',
     odjava: 'Не сакам повеќе да добивам пораки',
+    dvoboj: 'Дуел', izid: { zmaga: 'Победа', remi: 'Нерешено', poraz: 'Пораз' }, povprecjeLige: 'просек на лигата',
+    napovedi: 'Прогнози', tocni: 'точни резултати',
     zakaj: (o) => `Прегледот го добиваш по секое коло затоа што имаш тим (лига: ${o}).`,
   },
   el: {
@@ -2897,6 +2933,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'ολόκληρη την κατάταξη', potem: (l) => `Ή δες ${l}.`,
     pivo: 'Υ.Γ. Το SLFF είναι δωρεάν και δουλεύει με μπίρα. Αν αυτή η αγωνιστική σού έφτιαξε τη Δευτέρα, κέρασέ μας μία και πάρε μια θέση στον τοίχο της μπίρας:',
     odjava: 'Δεν θέλω άλλα email',
+    dvoboj: 'Μονομαχία', izid: { zmaga: 'Νίκη', remi: 'Ισοπαλία', poraz: 'Ήττα' }, povprecjeLige: 'μέσος όρος λίγκας',
+    napovedi: 'Προβλέψεις', tocni: 'ακριβή σκορ',
     zakaj: (o) => `Λαμβάνεις τη σύνοψη μετά από κάθε αγωνιστική επειδή έχεις ομάδα (πρωτάθλημα: ${o}).`,
   },
   tr: {
@@ -2910,6 +2948,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'puan durumunun tamamına', potem: (l) => `Ya da ${l} göz at.`,
     pivo: 'Not: SLFF ücretsiz ve biraya çalışıyor. Bu hafta pazartesini güzelleştirdiyse bize bir bira ısmarla, bira duvarında yerini al:',
     odjava: 'Artık e-posta almak istemiyorum',
+    dvoboj: 'Düello', izid: { zmaga: 'Galibiyet', remi: 'Beraberlik', poraz: 'Mağlubiyet' }, povprecjeLige: 'lig ortalaması',
+    napovedi: 'Tahminler', tocni: 'tam skorlar',
     zakaj: (o) => `Bu özeti her haftadan sonra alıyorsun çünkü takımın var (lig: ${o}).`,
   },
   uk: {
@@ -2923,6 +2963,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'весь рейтинг', potem: (l) => `Або переглянь ${l}.`,
     pivo: 'P.S. SLFF безкоштовний і працює на пиві. Якщо цей тур зробив твій понеділок кращим, пригости нас кухлем і отримай місце на пивній стіні:',
     odjava: 'Більше не хочу отримувати листи',
+    dvoboj: 'Дуель', izid: { zmaga: 'Перемога', remi: 'Нічия', poraz: 'Поразка' }, povprecjeLige: 'середнє ліги',
+    napovedi: 'Прогнози', tocni: 'точні рахунки',
     zakaj: (o) => `Огляд ти отримуєш після кожного туру, бо маєш команду (ліга: ${o}).`,
   },
   hy: {
@@ -2936,6 +2978,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'ամբողջ աղյուսակը', potem: (l) => `Կամ նայիր ${l}։`,
     pivo: 'Հ.Գ. SLFF-ն անվճար է և աշխատում է գարեջրով։ Եթե այս տուրը գեղեցկացրեց քո երկուշաբթին, հյուրասիրիր մեզ մեկ գարեջուր և տեղ ստացիր գարեջրի պատին:',
     odjava: 'Այլևս չեմ ուզում նամակներ ստանալ',
+    dvoboj: 'Մենամարտ', izid: { zmaga: 'Հաղթանակ', remi: 'Ոչ-ոքի', poraz: 'Պարտություն' }, povprecjeLige: 'լիգայի միջինը',
+    napovedi: 'Կանխատեսումներ', tocni: 'ճշգրիտ հաշիվներ',
     zakaj: (o) => `Ամփոփումը ստանում ես յուրաքանչյուր տուրից հետո, քանի որ թիմ ունես (լիգա՝ ${o})։`,
   },
   az: {
@@ -2949,6 +2993,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'bütün cədvələ', potem: (l) => `Və ya ${l} bax.`,
     pivo: 'P.S. SLFF pulsuzdur və pivə ilə işləyir. Bu tur bazar ertəni gözəlləşdiribsə, bizi birinə qonaq et və pivə divarında yer al:',
     odjava: 'Daha məktub almaq istəmirəm',
+    dvoboj: 'Duel', izid: { zmaga: 'Qələbə', remi: 'Heç-heçə', poraz: 'Məğlubiyyət' }, povprecjeLige: 'liqanın ortalaması',
+    napovedi: 'Proqnozlar', tocni: 'dəqiq hesablar',
     zakaj: (o) => `Xülasəni hər turdan sonra alırsan, çünki komandan var (liqa: ${o}).`,
   },
   da: {
@@ -2962,6 +3008,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'hele ranglisten', potem: (l) => `Eller se ${l}.`,
     pivo: 'PS: SLFF er gratis og kører på øl. Gjorde denne runde din mandag bedre, så giv os en og få en plads på ølvæggen:',
     odjava: 'Jeg vil ikke have flere mails',
+    dvoboj: 'Duel', izid: { zmaga: 'Sejr', remi: 'Uafgjort', poraz: 'Nederlag' }, povprecjeLige: 'ligaens gennemsnit',
+    napovedi: 'Tips', tocni: 'præcise resultater',
     zakaj: (o) => `Du får overblikket efter hver runde, fordi du har et hold (liga: ${o}).`,
   },
   en: {
@@ -2975,6 +3023,8 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     lestvica: 'the full table', potem: (l) => `Or see ${l}.`,
     pivo: 'P.S. SLFF is free and runs on beer. If this round made your Monday better, buy us one and get a spot on the beer wall:',
     odjava: 'Stop these emails',
+    dvoboj: 'Head-to-head', izid: { zmaga: 'Win', remi: 'Draw', poraz: 'Loss' }, povprecjeLige: 'league average',
+    napovedi: 'Predictions', tocni: 'exact scores',
     zakaj: (o) => `You get this summary after every round because you have a team in ${o}.`,
   },
 }
@@ -3053,6 +3103,19 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
   if (najboljsiNiKapetan) {
     dejstva.push({ k: B.najboljsi, v: `${esc(m.najboljsi!)} · ${esc(tock(m.najboljsi_tocke ?? 0))}` })
     predglava.push(`${B.najboljsi} ${m.najboljsi}: ${tock(m.najboljsi_tocke ?? 0)}`)
+  }
+  // Mini lige: končani dvoboji kroga in točke napovedi.
+  for (const d of m.dvoboji ?? []) {
+    const proti = d.nasprotnik ?? B.povprecjeLige
+    dejstva.push({
+      k: `${B.dvoboj} · ${esc(d.mini_liga)}`,
+      v: `<strong>${esc(B.izid[d.izid])}</strong> ${esc(st(d.tocke))}:${esc(st(d.tocke_nasprotnika))} · ${esc(proti)}`,
+    })
+    predglava.push(`${B.dvoboj}: ${B.izid[d.izid]} ${st(d.tocke)}:${st(d.tocke_nasprotnika)}`)
+  }
+  if (m.napovedi) {
+    dejstva.push({ k: B.napovedi, v: esc(`${tock(m.napovedi.tocke)} · ${B.tocni} ${m.napovedi.tocnih}`) })
+    predglava.push(`${B.napovedi}: ${tock(m.napovedi.tocke)}`)
   }
   if (m.povprecje != null && m.najvec != null) {
     dejstva.push({ k: B.liga, v: esc(`${B.povprecje} ${st(m.povprecje)} · ${B.najvec} ${st(m.najvec)}`) })
