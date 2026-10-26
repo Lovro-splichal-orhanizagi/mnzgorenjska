@@ -30,6 +30,7 @@ import { NEPOPOLN } from './viri/frf.mjs'
 import { unattributedYellowEvents } from '../src/lib/nepripisaniRumeni.mjs'
 import { prestopSkladen, posvojiBrezSifre } from './prestop.mjs'
 import { najdiKlubskega } from './klubski-igralci.mjs'
+import {requireDfbPendingScope,createDfbPendingContext} from './dfb-pending.mjs'
 
 // Vir je zavrnil (jalgpall: 403, 429, izziv): izhod 4, da nočna zanka države
 // ne bere naprej (uvoz-zapisnikov.yml). Izhod 5: vir je nedosegljiv (HTTP 5xx,
@@ -118,6 +119,7 @@ if (virIme) console.log(`Vir povožen: ${virIme}`)
 const liga = arg('liga', sifraLige(tekmovanje, '1502'))
 // Arhiv (prejšnja sezona) igralca ne vrača med aktivne; nastop v tekoči sezoni ga.
 const tekocaSezona = liga === sifraLige(tekmovanje, '1502')
+if(arg('dfb-pending'))requireDfbPendingScope({competition:{...tekmovanje,country_code:vir.drzava},leagueCode:liga,sourceOverride:virIme,singleReport:arg('zapisnik'),limit:omeji,cleanup:pocisti})
 const samoManjkajoce = Boolean(arg('samo-manjkajoce'))
 if (samoManjkajoce) requireMissingReportImportScope({competition:tekmovanje,leagueCode:liga,sourceOverride:virIme,singleReport:arg('zapisnik')})
 console.log(`Tekmovanje: ${tekmovanje.name} (liga ${liga})`)
@@ -144,13 +146,17 @@ if (!existsSync(MAPA)) mkdirSync(MAPA, { recursive: true })
 // ostanek bi sicer obveljal za vselej (mlsz, 10.–12. 10. 2026: 286 tekem brez
 // zapisnika, ker je bila v predpomnilniku stran "Too many connections").
 // Neveljavne strani ne shranimo in shranjene ne beremo — vir jo prebere znova.
+const dfbRawResponses=new Map()
 const smeVPredpomnilnik = (besedilo, datoteka) => vir.zaPredpomnilnik?.(besedilo, datoteka) ?? true
 
 async function prenesi(url, datoteka, sveze = false) {
   const pot = `${MAPA}/${datoteka}`
   if (!sveze && existsSync(pot)) {
     const shranjeno = readFileSync(pot, 'utf8')
-    if (smeVPredpomnilnik(shranjeno, datoteka)) return shranjeno
+    if (smeVPredpomnilnik(shranjeno, datoteka)) {
+      if(vir.ime==='dfb'&&arg('dfb-pending'))dfbRawResponses.set(url,readFileSync(pot))
+      return shranjeno
+    }
   }
   // Vir lahko zahteva vljudnost: premor med zahtevki in glavo, ki pove, kdo
   // bere (Sportnet). Slovenski viri tega nimajo in ostanejo, kot so bili.
@@ -163,7 +169,9 @@ async function prenesi(url, datoteka, sveze = false) {
     e.status = odgovor.status
     throw e
   }
-  const besedilo = await odgovor.text()
+  const raw=vir.ime==='dfb'&&arg('dfb-pending')?Buffer.from(await odgovor.arrayBuffer()):null
+  if(raw)dfbRawResponses.set(url,raw)
+  const besedilo = raw?raw.toString('utf8'):await odgovor.text()
   // Izziv (CAPTCHA) ne sme v predpomnilnik namesto zapisnika.
   if (vir.jeIzziv?.(besedilo)) throw vir.zavrnitev(`${url} vrne izziv (CAPTCHA)`)
   if (smeVPredpomnilnik(besedilo, datoteka)) writeFileSync(pot, besedilo)
@@ -725,6 +733,7 @@ if (pocisti) {
 // reveal that its missing attribution has since been corrected at the source.
 const svezeDni = arg('sveze') ? Number(arg('sveze')) : null
 const preskoci = new Set(), sveziZapisniki = new Set()
+const dfbPendingContext=arg('dfb-pending')?await createDfbPendingContext({db,competition:{...tekmovanje,country_code:vir.drzava},leagueCode:liga,directory:`${MAPA}/quarantine`,rawByUrl:dfbRawResponses}):null
 if ((samoManjkajoce || svezeDni != null) && !samoZapisnik) {
   const meja = new Date(Date.now() - svezeDni * 86400000).toISOString().slice(0, 10)
   const stare = await vseVrstice((od, do_) => {
@@ -746,11 +755,15 @@ if (vir.ime === 'dfb' && !samoZapisnik) {
   for (const m of recent) if (unattributedYellowEvents(m.import_warnings).some(e => e.matchId === String(m.zapisnik_id)))
     sveziZapisniki.add(String(m.zapisnik_id))
 }
+if(dfbPendingContext){
+  for(const id of dfbPendingContext.deferred)preskoci.add(id)
+  for(const id of dfbPendingContext.due){preskoci.delete(id);sveziZapisniki.add(id)}
+}
 console.log(`Berem zapisnike vira ${vir.ime} (liga ${liga})`)
 let zapisniki = preberiPosamezniZapisnik
   ? await preberiPosamezniZapisnik(prenesi)
   : ['dfb','eps','hlf','isthmian','nfsbih'].includes(vir.ime)
-    ? await vir.zapisniki(liga, prenesi, { samoZapisnik, preskoci, sveziZapisniki })
+    ? await vir.zapisniki(liga, prenesi, { samoZapisnik, preskoci, sveziZapisniki,...(arg('dfb-pending')?{zberiNapake:true,onRejected:dfbPendingContext.reject}:{}) })
     : await vir.zapisniki(liga, prenesi)
 // Validate the complete loaded batch before deriving or writing any individual rows.
 for(const report of zapisniki)assertHistoricalReportImportable({competition:tekmovanje,report})
@@ -808,7 +821,7 @@ if ((svezeDni != null || samoZapisnik) && zapisniki.length) {
     // Nepopolna tekma (frf: klub postave še ni vnesel) nima `imported_at`, a
     // je zapisana; nespremenjeno je ne pišemo vsako uro znova.
     for (const m of data ?? [])
-      if (m.imported_at || jeNepopolna(m.import_warnings)) uvozene.add(String(m.zapisnik_id))
+      if (!dfbPendingContext?.remaining.has(String(m.zapisnik_id))&&(m.imported_at || jeNepopolna(m.import_warnings))) uvozene.add(String(m.zapisnik_id))
   }
   const prej = zapisniki.length
   zapisniki = zapisniki.filter((x) => !(uvozene.has(String(x.id)) && odtisi[x.id] === odtisZapisnika(x.z)))
@@ -1137,14 +1150,15 @@ for (const { id, z, url } of zapisniki) {
     // Sele zdaj je tekma res uvozena. Skupaj z zigom zapisemo opozorila —
     // med razclenjevanjem nastopov jih lahko pribudejo (negotov pripis
     // soimenjaka), vrstica tekme pa je bila zapisana ze prej.
-    const { error: eKonec } = await db
-      .from('matches')
-      .update({
+    if(dfbPendingContext?.remaining.has(String(id))){
+      await dfbPendingContext.complete({id,matchId:tekma.id,warnings:z.opozorila})
+    }else{
+      const { error: eKonec } = await db.from('matches').update({
         imported_at: z.nepopoln ? null : new Date().toISOString(),
         import_warnings: z.opozorila,
-      })
-      .eq('id', tekma.id)
-    if (eKonec) throw new Error(eKonec.message)
+      }).eq('id', tekma.id)
+      if (eKonec) throw new Error(eKonec.message)
+    }
 
     if (z.nepopoln) nepopolnih++
     uvozenih++
@@ -1239,4 +1253,9 @@ if (vsaOpozorila.length) {
 if (napak > 0) {
   console.error(`\nUvoz ni uspel v celoti: ${napak} napak (glej zgoraj).`)
   process.exitCode = 1
+}
+
+if(!napak&&dfbPendingContext?.remaining.size){
+  console.warn(`DFB_DATA_PENDING: ${dfbPendingContext.remaining.size} zapisnikov čaka; dokazi v ${MAPA}/quarantine, brez takojšnje ponovitve lige.`)
+  process.exitCode=6
 }

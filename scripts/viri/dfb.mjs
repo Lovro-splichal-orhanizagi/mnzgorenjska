@@ -371,7 +371,7 @@ function verifiedReserve(html,meta,tables,teams,players,coaches){
 }
 
 /** A complete played public match report; every discrepancy rejects the report. */
-export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {}) {
+function glavaZapisnika(html, { id, tekma, liga='regionalliga-nordost' } = {}) {
   const meta = metadata(String(html), id, liga)
   const configuration=konfiguracijaDfb(`${liga}/${new URL(meta.url).pathname.split('/')[3]}`)
   const result = one(html, 'div', 'm-MatchDetails-result').inner
@@ -386,6 +386,20 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
   if (!score) fail('manjka končni izid ali polčas')
   const rezultat = { domaci: +score[1], gostje: +score[2] }, polcas = { domaci: +score[3], gostje: +score[4] }
   if (polcas.domaci > rezultat.domaci || polcas.gostje > rezultat.gostje) fail('neveljaven polčas')
+  return {meta,configuration,result,teams,rezultat,polcas}
+}
+
+// This independent header check runs outside nightly parser-error collection.
+function preveriVezavoDfb(html,tekma,liga){
+  const {meta,teams,rezultat}=glavaZapisnika(html,{id:tekma.id,liga})
+  if(meta.url!==tekma.url)fail('razpored: neujemanje kanoničnega URL')
+  for(const k of ['krog','datum','ura','sezona'])if(tekma[k]!==meta[k])fail(`razpored: neujemanje ${k}`)
+  for(const [i,k]of ['domaci','gostje'].entries())if(tekma[k]!==teams[i].ime||tekma[k+'Id']!==teams[i].virId)fail(`razpored: neujemanje ${k}`)
+  if(!tekma.izid||tekma.izid.domaci!==rezultat.domaci||tekma.izid.gostje!==rezultat.gostje)fail('razpored: neujemanje izida')
+}
+
+export function vZapisnik(html,{id,tekma,liga='regionalliga-nordost'}={}){
+  const {meta,configuration,result,teams,rezultat,polcas}=glavaZapisnika(html,{id,liga})
   const tables = elements(html, 'table', 'm-MatchDetails-lineup-table')
   const pending={id:meta.zapisnikId,url:meta.url,sezona:meta.sezona,krog:meta.krog,datum:meta.datum,ura:meta.ura,domaci:teams[0].ime,gostje:teams[1].ime,domaciId:teams[0].virId,gostjeId:teams[1].virId,domaciGoli:rezultat.domaci,gostjeGoli:rezultat.gostje,polcasDomaci:polcas.domaci,polcasGostje:polcas.gostje,status:'DFB_PENDING_REPORT'}
   if(!tables.length&&jeCakajociDfb(pending)){
@@ -830,7 +844,7 @@ const vir={
   jeIzziv,zaPredpomnilnik,zavrnitev:(s,status)=>new DfbZavrnitev(s,status),fetch:varniFetch,
   async razporedVseStrani(koda,prenesi){return vRazpored(await tekmeSezone(koda,prenesi))},
   nepopolni:[],
-  async zapisniki(koda,prenesi,{zberiNapake=false,samoZapisnik=null,preskoci=new Set(),sveziZapisniki=new Set()}={}){
+  async zapisniki(koda,prenesi,{zberiNapake=false,samoZapisnik=null,preskoci=new Set(),sveziZapisniki=new Set(),onRejected=null}={}){
     vir.nepopolni=[]
     const all=await tekmeSezone(koda,prenesi),out=[]
     for(const t of all.filter(t=>t.izid&&(!samoZapisnik||`de-dfb-${t.id}`===String(samoZapisnik))&&!preskoci.has(`de-dfb-${t.id}`))){
@@ -838,12 +852,14 @@ const vir={
       // Network, refusal, challenge and body-bound failures remain fatal even
       // during an audit. Only recognized strict report-parser errors collect.
       const html=await prenesiStran(prenesi,t.url,`match-${t.id}.html`,fresh)
+      if(onRejected)preveriVezavoDfb(html,t,konfiguracijaDfb(koda).liga)
       try {
         const z=vZapisnik(html,{id:t.id,tekma:t,liga:konfiguracijaDfb(koda).liga})
         out.push({id:z.zapisnikId,z,url:t.url})
       }catch(e){
         const pending=e.koda==='DFB_PENDING_REPORT'&&jeCakajociDfb(e.podatki)
         if(!pending&&(!zberiNapake||!['DFB_INVALID_REPORT','DFB_UNSUPPORTED_FORMAT','DFB_INCOMPLETE_REPORT'].includes(e.koda)))throw e
+        if(onRejected)await onRejected({fixture:t,status:e.koda,reason:e.message,html})
         vir.nepopolni.push({...e.podatki,id:`de-dfb-${t.id}`,url:t.url,razlog:e.message,status:e.koda})
         if(pending)console.warn(`DFB_PENDING_REPORT: ${t.id} — brez uvoženih nastopov ali golov; fantasy začne po 13. krogu.`)
       }
