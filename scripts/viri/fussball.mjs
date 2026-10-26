@@ -210,6 +210,13 @@ export function razberiKrog(html,{fonts,staffel}={}) {
   if((row.match(/<td\b[^>]*class="column-club(?: |")/g)??[]).length!==2)fail('neveljavna tekma kroga: manjka klub')
   const names=[...row.matchAll(/<div class="club-name">([\s\S]*?)<\/div>/g)].map(n=>text(n[1]))
   const ids=[...row.matchAll(/href="(https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/([A-Z0-9]{32}))(?:#![^\"]*)?"/g)]
+  // The official table includes a club's bye as two club cells, but no fixture.
+  // Admit only the observed empty-date/result shape; never hide a real match.
+  if(/<td class="column-club no-border">\s*<span class="info-text">spielfrei<\/span>\s*<\/td>/.test(row)&&
+     !/<!--|<\/?(?:script|template|textarea)\b/i.test(row)&&names.length===1&&names[0]&&
+     !/href="[^\"]*\/spiel\//.test(row)&&ids.length===0&&
+     [...row.matchAll(/href="https:\/\/www\.fussball\.de\/mannschaft\//g)].length===1&&
+     text(element(row,'column-date'))===''&&text(element(row,'column-score'))==='')continue
   if(names.length!==2 || !ids.length || ids.some(r=>r[2]!==ids[0][2]))fail('neveljavna tekma kroga')
   const date=decode(element(row,'column-date')),time=date.match(/(?:^|[ |])(\d{2}:\d{2})$/)
   if(!/^(?:(?:Mo|Di|Mi|Do|Fr|Sa|So), \d{2}\.\d{2}\.\d{2} \| )?\d{2}:\d{2}$/.test(date))fail('nepodprt format datuma vrstice kroga')

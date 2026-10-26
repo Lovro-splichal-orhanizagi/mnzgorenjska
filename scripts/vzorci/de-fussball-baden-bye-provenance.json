@@ -1,0 +1,11 @@
+{
+  "sourceUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+  "capturedAt": "2026-10-26T17:13:07.893Z",
+  "sourceSha256": "8f254a7962340dce6dfcc6a1ec8ecd1b9ebdd5721f2eae65ecbe7086303613b2",
+  "sourceBytes": 199724,
+  "sourceRun": 40366437379,
+  "fixture": "de-fussball-baden-bye.html",
+  "fixtureSha256": "6bb3b39916a97d78dd07794394a10dc5634f8f1bd853d26e65f97e972918dec1",
+  "byteOffset": 151134,
+  "note": "Unmodified exact bye row; tests compose it with a separate retained round, not a new real fixture."
+}

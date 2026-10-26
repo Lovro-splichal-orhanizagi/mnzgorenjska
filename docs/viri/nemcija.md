@@ -793,3 +793,14 @@ FUSSBALL named cards now retain published identities, source clocks and dismissa
 Schleswig's current season selectors independently advertise archive staffel `02TC3RCRHK000004VS5489BTVVQ0O654-G` (2025/26). Original archive HTML binds that selected season and its form URL, although its SEO canonical points to the current parent. The collector accepts only this explicitly reviewed adjacent-season family, with the same identity check during capture and closed replay. Default current/report identity validation remains strict. Mannheim still has no verified archive pairing. This resolves catalog identity only; the archive's full schedule/reports, goalkeeper coverage, prices and native launch gate remain unvalidated.
 
 Three bounded archive requests were recorded under the existing 80-request diagnostic allowance: terminal 301, separate redirect metadata witness, and the observed canonical target (200). Total spent is 23/80, including the previous 20; no budget was reset. Redirects are not automatically followed. Original evidence and the offline identity replay are in `league-rollout-evidence/2026-10-26-german-operational/`. No new German league was activated by these code changes.
+
+## Izrecni prosti klubi v javnem razporedu (26. 10. 2026)
+
+Razpored Baden Verbandslige je v pregledu Actions `40366437379` vseboval
+vrstico `FC Zuzenhausen : spielfrei`. To je prost klub, ne tekma brez izida.
+Razčlenjevalnik preskoči samo opaženo obliko z enim klubom, izrecnim živim
+`spielfrei`, praznim datumom in izidom ter brez povezave zapisnika. Povezava
+tekme, drugi klub, rezultat ali skrita oznaka te izjeme ne dobijo. Izvirna
+vrstica in njen SHA/odmik sta v `de-fussball-baden-bye-provenance.json`.
+Ponovitev celotne shranjene strani potrdi sedem resničnih tekem 11. kroga;
+to ni dokaz popolnosti njihovih zapisnikov ali dovoljenje za vklop lige.
