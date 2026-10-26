@@ -6,8 +6,9 @@ import {join} from 'node:path'
 import {verifyFussballDirectory} from './fussball-capture-evidence.mjs'
 import {encodeUnattributedYellow} from '../src/lib/nepripisaniRumeni.mjs'
 import {parseFussballEventClock} from './viri/fussball.mjs'
+import {FUSSBALL_SOURCE_ID} from './lib/fussball-identity.mjs'
 
-const SOURCE_ID=/^de-fussball-(?:player-id|userid)-[A-Z0-9]{32}$/
+const SOURCE_ID=FUSSBALL_SOURCE_ID
 const MATCH_ID=/^[A-Z0-9]{32}$/
 const HASH=/^[a-f0-9]{64}$/
 const requireProof=(ok,reason)=>{if(!ok)throw Error(`fussball import: ${reason}`)}

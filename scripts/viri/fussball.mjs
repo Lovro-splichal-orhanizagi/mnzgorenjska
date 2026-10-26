@@ -3,6 +3,7 @@
 // traversal has not been validated. No network requests, caching or DB writes.
 import { createHash } from 'node:crypto'
 import { preslikavaPisave, dekodirajIme } from './fussball-pisava.mjs'
+import {fussballProfileIdentity} from '../lib/fussball-identity.mjs'
 export const NEPOPOLN = 'zapisnik nepopoln'
 const fail = s => { throw new Error(`fussball: ${s}`) }
 const entities = s => String(s).replace(/&#x([a-f0-9]+);/gi,(_,n)=>String.fromCodePoint(parseInt(n,16))).replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(+n)).replace(/&(?:rsquo|apos|#039);/g,"'").replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&quot;/g,'"')
@@ -48,9 +49,9 @@ function decoder(fonts) {
  }
 }
 const identity = s => {
- const m=s.match(/https:\/\/www\.fussball\.de\/spielerprofil\/-\/(player-id|userid)\/([A-Z0-9]{32})(?:["/])/)
- if(!m)fail('manjka stalna identiteta igralca')
- return `de-fussball-${m[1]}-${m[2]}`
+ const sourceId=fussballProfileIdentity(attr(s,'href'))
+ if(!sourceId)fail('manjka stalna identiteta igralca')
+ return sourceId
 }
 export function razberiPostavo(html,{fonts}={}) {
  if(jeIzziv(html))fail('izziv v postavi')
@@ -132,7 +133,7 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
   if(!minute)fail('nepodprta minuta dogodka')
   const order=minute.base*100+minute.added,minuta=Math.min(90,minute.base)
   if(order<previous)fail('neveljavno časovno zaporedje dogodkov');previous=order
-  const refs=[...s.matchAll(/<a\b[^>]*href="https:\/\/www\.fussball\.de\/spielerprofil\/-\/(?:player-id|userid)\/[A-Z0-9]{32}"[^>]*>/g)].map(m=>identity(m[0]))
+  const refs=[...s.matchAll(/<a\b[^>]*href="https:\/\/www\.fussball\.de\/spielerprofil\/[^"]*"[^>]*>/g)].map(m=>identity(m[0]))
   const player=ref=>{const p=players.get(ref);if(!p)fail('dogodek vsebuje neznanega igralca');return p}
   const explicitOwnGoal=starts[i][2]!==undefined
   if(explicitOwnGoal&&!/class="even"/.test(s))fail('označevalec avtogola brez gola')
@@ -164,7 +165,7 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
    }else{
     if(refs.length!==1)fail('karton brez enoličnega igralca')
     const p=player(refs[0]);if(p.side!==side)fail('karton napačne zgodovinske strani')
-    const link=s.match(/<a\b[^>]*href="https:\/\/www\.fussball\.de\/spielerprofil\/-\/(?:player-id|userid)\/[A-Z0-9]{32}"[^>]*>[\s\S]*?<\/a>/)?.[0]
+    const link=s.match(/<a\b[^>]*href="https:\/\/www\.fussball\.de\/spielerprofil\/[^"]*"[^>]*>[\s\S]*?<\/a>/)?.[0]
     const name=link?decode(link):null
     if(name!==p.ime&&name!==`${p.ime} (${p.st})`)fail('neujemanje imena in profilne identitete kartona')
     const event={virId:p.virId,ime:p.ime,minuta,ekipa:teams[side].ime,vrsta:red?'rdeci':'rumeni',...(red?{drugiRumeni}:{})}

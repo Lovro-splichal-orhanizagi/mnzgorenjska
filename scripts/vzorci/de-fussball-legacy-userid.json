@@ -1,0 +1,48 @@
+{
+  "source": {
+    "capture": "github-batch-40373480085",
+    "manifestSha256": "f6cff3105fa1e141652b9ce85c58d79dd920e3c5afcd6a693bb6d4f782f46d93",
+    "matchId": "031990IH5K000000VS5489BUVV628VP4",
+    "profileUrl": "https://www.fussball.de/spielerprofil/-/userid/I.715682.-----------------------",
+    "sourceId": "de-fussball-userid-I.715682.-----------------------",
+    "report": {
+      "url": "https://www.fussball.de/spiel/tuerk-guecue-friedberg-ksv-hessen-kassel-ii/-/spiel/031990IH5K000000VS5489BUVV628VP4",
+      "sha256": "059c2bc6e218e254374665f8b2c90fcfa480c93b050d15b16ba7233e1e4efa0f",
+      "bytes": 197559,
+      "capturedAt": "2026-10-26T18:03:08.730Z",
+      "profileByteOffset": 164420,
+      "rawEvent": "<div class=\"row-event event-right\">\n\t\t\t\t\t\t\t<div class=\"column-time\">\n\t\t\t\t\t\t\t\t<div class=\"hexagon black\">\n\t\t\t\t\t\t\t\t\t<span class=\"icon-hexagon\"></span>\n\t\t\t\t\t\t\t\t\t<div class=\"inner\">\n\t\t\t\t\t\t\t\t\t\t<div class=\"valign-wrapper\">\n\t\t\t\t\t\t\t\t\t\t\t<div class=\"valign-inner\">56&rsquo;</div>\n\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class=\"column-event\">\n\t\t\t\t\t\t\t\t<div class=\"valign-table\">\n\t\t\t\t\t\t\t\t\t<div class=\"valign-cell\">\n\t\t\t\t\t\t\t\t\t\t<i class=\"icon-substitute\"></i>\n\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class=\"column-player\">\n\t\t\t\t\t\t\t\t<div class=\"valign-table\">\n\t\t\t\t\t\t\t\t\t<div class=\"valign-cell\">\n\t\t\t\t\t\t\t\t\t\t<div>Auswechslung</div>\n\t\t\t\t\t\t\t\t\t\t<div class=\"substitute\">\n\t\t\t\t\t\t\t\t\t\t\t<a href=\"https://www.fussball.de/spielerprofil/-/userid/I.715682.-----------------------\">\n\t\t\t\t\t\t\t\t\t\t\t\t<div class=\"player-name\"><span data-obfuscation=\"ui90aqm4\">&#xE7F0;&#xEF0A;&#xECAD;&#xECB2;&#x0020;&#xE6E4;&#xE8FC;&#xF04E;&#xED95;&#xE851;&#xE8FC;&#x0020;&#xE653;&#xEF1C;&#xEFE5;&#xEAB1;</span></div>\n\t\t\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t\t\t\t<div class=\"substitute\">für\n\t\t\t\t\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t\t\t\t<a href=\"https://www.fussball.de/spielerprofil/-/player-id/02SAT6TFD4000000VS5489B7VT1PTU3B\"><span data-obfuscation=\"ui90aqm4\">&#xEF13;&#xEDCC;&#xE668;&#xE714;&#xE72C;&#xE90A;&#xEA4D;&#x0020;&#xEF71;&#xED95;&#xE94F;&#xEC89;&#xE82F;&#xE714;&#xEC68;&#x0020;&#xE653;&#xEDAA;&#xEA1B;&#xEAB1;</span></a>\n\t\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>",
+      "rawEventByteOffset": 163703,
+      "rawEventSha256": "ae24d3e32e337cd0e65013db9e9f5e4d298c7b931fd36e4cc7871e6580a38153"
+    },
+    "lineup": {
+      "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031990IH5K000000VS5489BUVV628VP4/ticker-id/selectedTickerId",
+      "sha256": "80b0d77c5bd657f7f17965719116dec13c9935d7430a90b3716234870c06dc9c",
+      "bytes": 27360,
+      "capturedAt": "2026-10-26T18:03:14.730Z",
+      "profileByteOffset": 25069,
+      "rawPlayer": "<a href=\"https://www.fussball.de/spielerprofil/-/userid/I.715682.-----------------------\" class=\"player-wrapper away\">\n\t\t\t\t\t\t\t\t<div class=\"player-image table-image hidden-small\"><span data-alt=\"player-thumbnail\" data-responsive-image=\"https://cdn.fussball.de/public/031JQET2RG000000VS5489BVVUA3QVBD.stamp\"></span></div>\n\t\t\t\t\t\t\t\t<div class=\"player-name\"><span data-obfuscation=\"vt4h77lo\" class=\"firstname\">&#xF069;&#xEEB7;&#xEA8E;&#xEA8E;</span><span data-obfuscation=\"vt4h77lo\" class=\"lastname\">&#xE94D;&#xEC68;&#xEF1D;&#xE9F8;&#xE6FB;&#xEC68;</span></div>\n\t\t\t\t\t\t\t\t<span class=\"player-number\">27</span>\n\t\t\t\t\t\t\t</a>",
+      "rawPlayerByteOffset": 25060,
+      "rawPlayerSha256": "77139dea5a59cb071235e551f530a6c1a81637704f003cb5a62e90a093987837"
+    }
+  },
+  "independentWitnesses": [
+    {
+      "capture": "github-batch-40374397299",
+      "manifestSha256": "0f560530386bfd5ec4d0e6893f9bfef267b8b4ea598979b2e6d1f2f220cece46",
+      "matchId": "031CP23IG8000000VS5489BTVUS470OH",
+      "profileUrl": "https://www.fussball.de/spielerprofil/-/userid/I.573584.-----------------------",
+      "sourceId": "de-fussball-userid-I.573584.-----------------------",
+      "lineup": {
+        "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031CP23IG8000000VS5489BTVUS470OH/ticker-id/selectedTickerId",
+        "sha256": "384ea0e7e5070977b9c7a2d0d10f2fa84b81926db1d8a5cc34034d6992ee0189",
+        "bytes": 26759,
+        "capturedAt": "2026-10-26T18:08:03.142Z",
+        "profileByteOffset": 19085,
+        "rawPlayer": "<a href=\"https://www.fussball.de/spielerprofil/-/userid/I.573584.-----------------------\" class=\"player-wrapper home\">\n\t\t\t\t\t\t\t\t<div class=\"player-image table-image hidden-small\"><span data-alt=\"player-thumbnail\" data-responsive-image=\"https://cdn.fussball.de/public/031KQPEG14000000VS5489C3VSQMSI47.stamp\"></span></div>\n\t\t\t\t\t\t\t\t<div class=\"player-name\"><span data-obfuscation=\"lzqygtnl\" class=\"firstname\">&#xE6C9;&#xEEA6;&#xEFCB;&#xE699;&#xEF02;</span><span data-obfuscation=\"lzqygtnl\" class=\"lastname\">&#xEF36;&#xF086;&#xEE32;&#xEE32;&#xE8BD;</span></div>\n\t\t\t\t\t\t\t\t<span class=\"player-number\">05</span>\n\t\t\t\t\t\t\t</a>",
+        "rawPlayerByteOffset": 19076,
+        "rawPlayerSha256": "f4a321c1556a93139ed5aab9ba18d401975db5147fb3b7f0e12d0f5d51b1be8e"
+      }
+    }
+  ]
+}

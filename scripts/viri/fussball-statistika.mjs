@@ -1,6 +1,7 @@
 // Offline, report-only statistics. This is intentionally not a source adapter.
 import {createHash} from 'node:crypto'
 import {parseFussballEventClock, razberiZapisnik} from './fussball.mjs'
+import {fussballProfileIdentity} from '../lib/fussball-identity.mjs'
 
 class ReportError extends Error {
  constructor(reason,code='FUSSBALL_REPORT_UNSUPPORTED'){super(`fussball statistika: ${reason}`);this.name='FussballReportError';this.code=code}
@@ -177,8 +178,8 @@ function glyph(n){
  text(n,'span',{'data-obfuscation':n.attrs['data-obfuscation']},/^[\uE000-\uF8FF ]+$/u)
 }
 function player(n,{goal=false}={}){
- const url=n?.attrs?.href,m=url?.match(/^https:\/\/www\.fussball\.de\/spielerprofil\/-\/(player-id|userid)\/([A-Z0-9]{32})$/)
- requireProof(m,'manjka točna profilna identiteta dogodka')
+ const url=n?.attrs?.href,sourceId=fussballProfileIdentity(url)
+ requireProof(sourceId,'manjka točna profilna identiteta dogodka')
  const c=shape(n,'a',{href:url},goal?2:1)
  if(goal){
   const image=shape(c[0],'span',{class:'player-image table-image'},1)[0]
@@ -188,7 +189,7 @@ function player(n,{goal=false}={}){
  }
  const name=c.at(-1)
  if(name?.tag==='div'){for(const s of box(name,'player-name',goal?2:1))glyph(s)}else{requireProof(!goal,'manjka struktura imena strelca');glyph(name)}
- return `de-fussball-${m[1]}-${m[2]}`
+ return sourceId
 }
 function rawEvent(n,half,ordinal,html){
  const rowClass=n?.attrs?.class,match=/^row-event event-(left|right)( own-goal)?$/.exec(rowClass??'')

@@ -66,6 +66,21 @@ poljubni popravljeni strukturi HTML ali dodatnim predlogam postave.
 nima neodvisne šifre tekme. Imena se razberejo samo iz pripadajočih pisav,
 dogodki pa se povežejo po točnih profilnih šifrah. `player-id` in `userid`
 ostaneta ločena; `regSt` je `null`.
+Javni `userid` podpira tudi točno opaženo obliko `I.[0-9]{6}.-{23}`
+(npr. `I.715682.-----------------------` v Hessnu in
+`I.573584.-----------------------` v Sachsenligi). Celoten neprosojni niz
+ostane del identitete `de-fussball-userid-…`; šestmestno število ni nova
+registrska številka in identitete ne združujemo po imenu. Oblika ne velja
+za `player-id`. Napačna dolžina, velike/male črke, pripone, poizvedbe in
+fragmenti se zavrnejo v obeh razčlenjevalnikih in domačem pretvorniku.
+Nova migracija `20261026192000` razširi samo zasebno preverbo oblike in
+servisni RPC; ohrani SHA-256/52-bitni ključ, preverbe trkov, atomski rollback,
+prazni `search_path` in omejitve dostopa. Izvorne povezave, vrstice in
+SHA-256 obeh neodvisnih prič so v `de-fussball-legacy-userid.json`.
+Celotna izvirnika še ostaneta brez potrebnih zajetih pisav `0bivxpjv`
+(Hessen) in `v0vmz4z1` (Sachsen); sestavljene regresije ne nadomestijo njune
+celotne ponovitve. Povezava `href="#"` ali manjkajoča identiteta ni podprta.
+
 
 Pravi vzorec Ilvesheim–Oftersheim (2 : 3, 11. 10. 2026) potrdi 30 nastopov,
 22 začetnikov, osem dejanskih vstopov, 990 minut na stran, oba izrecna
@@ -125,7 +140,8 @@ stran, število in vrstni red dogodkov se še vedno ujemajo. Izrecno drugačen
 dodatek se zavrne, izvirni dodatek in odtis vrstice ostaneta v dokazu.
 Pristna vrstica Bersenbrück–Verden z `45 &rsquo; <div>+2</div>` je shranjena
 z izvorno provenienco v `de-fussball-first-half-added-time.json`. Polčas,
-dodatek in odtis vrstice se ohranijo; izrecno drugačen dodatek, napačen
+dodatek in odtis vrstice se ohranijo; celoten zajeti izvirnik se offline
+preveri z 32 nastopi. Izrecno drugačen dodatek, napačen
 polčas, neurejena kronologija in dvoumna menjava pri 45 ostanejo zavrnjeni.
 Dodatna opažena oblika slike `images.media.fussball.de/userfiles/…_p3.jpg`
 je le okras: identiteto še vedno določata profilna povezava in preverjena
