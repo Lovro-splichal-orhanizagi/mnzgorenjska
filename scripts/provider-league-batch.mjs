@@ -5,6 +5,7 @@ import {readFileSync,writeFileSync,mkdirSync,renameSync,existsSync,openSync,fsyn
 import {resolve,dirname} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {MLSZ_BATCH_MAPPINGS,createMlszContract} from './mlsz-provider-proof.mjs'
+import {EPS_BATCH_MAPPINGS,createEpsContract} from './eps-provider-proof.mjs'
 import {readSourceBudget} from './provider-source-budget.mjs'
 import {createTransport,runBatch} from './vklopi-obstojece-lige.mjs'
 const REPOSITORY='Lovro-splichal-orhanizagi/mnzgorenjska'
@@ -12,15 +13,24 @@ const TUPLE=['id','slug','source','source_league_code']
 const digest=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex')
 const fail=message=>{throw Object.assign(Error(message),{dataHold:true})}
 // Only exact mappings reviewed in docs/viri/madzarska.md; registry presence is not permission.
-const MAPPINGS=MLSZ_BATCH_MAPPINGS
+const MAPPINGS=[...MLSZ_BATCH_MAPPINGS,...EPS_BATCH_MAPPINGS]
+function validProviderSelection(selected) {
+ const source=selected?.[0]?.source
+ return Array.isArray(selected)&&selected.length>0&&new Set(selected.map(c=>c.slug)).size===selected.length&&
+  selected.every(c=>c.source===source)&&
+  (source==='eps'?selected.length<=32&&selected.every(c=>EPS_BATCH_MAPPINGS.some(m=>digest(m)===digest(c))):
+   source==='mlsz'&&selected.length<=5&&new Set(selected.map(c=>c.host)).size===1)
+}
 export function selectProviderCandidates(registry,slugs) {
- if(!Array.isArray(slugs)||slugs.length<1||slugs.length>5||new Set(slugs).size!==slugs.length)fail('Select one to five distinct explicit league slugs.')
+ if(!Array.isArray(slugs)||slugs.length<1||slugs.length>32||new Set(slugs).size!==slugs.length)fail('Select distinct explicit reviewed league slugs within the provider bound.')
  const selected=slugs.map(slug=>{
   const mapping=MAPPINGS.find(c=>c.slug===slug),candidate=registry?.candidates?.find(c=>c.slug===slug)
-  if(!mapping||!candidate||TUPLE.some(k=>mapping[k]!==candidate[k]))fail(`Outside reviewed provider mapping or changed tuple: ${slug}`)
+  // EPS has its own proof-only catalog; adding its tuples to the generic
+  // activation registry would create a route that skips this source proof.
+  if(!mapping||mapping.source==='mlsz'&&!candidate||candidate&&TUPLE.some(k=>mapping[k]!==candidate[k])||mapping.source==='eps'&&!registry?.source_contracts?.eps)fail(`Outside reviewed provider mapping or changed tuple: ${slug}`)
   return structuredClone(mapping)
  })
- if(new Set(selected.map(c=>c.source+'|'+c.host)).size!==1)fail('A batch must share one provider and host.')
+ if(!validProviderSelection(selected))fail('A batch must share one provider; MLSZ remains limited to five on one host.')
  const archives=selected.flatMap(c=>c.archives.map(a=>a.code))
  if(new Set(archives).size!==archives.length)fail('Archive ownership collision in selected mappings.')
  return selected
@@ -41,6 +51,7 @@ function requireCandidate(candidate,competition) {
  if(TUPLE.some(k=>competition?.[k]!==candidate[k]))fail('Candidate tuple changed.')
  if(competition.active!==false)fail('Candidate must remain inactive.')
  if(competition.source_policy!==null||competition.date_only_deadline_policy!==null)fail('Custom or unknown source/deadline policy requires its reviewed route.')
+ if(candidate.source==='eps'&&competition.country_code!=='GR')fail('EPS requires the actual Greek country.')
 }
 function requireNoFantasy(snapshot) {
  if(!Array.isArray(snapshot.fantasy?.teams)||!Array.isArray(snapshot.fantasy?.lineups))fail('Incomplete fantasy-data check.')
@@ -99,7 +110,8 @@ export function auditStoredData(candidate,snapshot,now=new Date()) {
  }
  if([...requiredSeasons].some(s=>!seenSeasons.has(s)))fail('Missing complete reports in a required current/archive season.')
  for(const club of clubs)if(!players.some(p=>p.team_id===club&&p.active===true&&p.position==='GK'&&p.position_source&&p.position_source!=='ugibanje'&&Number.isSafeInteger(p.reg_st)&&p.reg_st>0))fail('Current club lacks active report-linked goalkeeper coverage.')
- return {reports,snapshot_sha256:digest(snapshot),keeper_basis:candidate.source==='mlsz'?'mlsz-published-order-inference':'STORED_ROLE_ONLY',source_completeness:'NOT_ESTABLISHED'}
+ if(candidate.source==='eps'&&(snapshot.competition.country_code!=='GR'||season!=='2026/27'))fail('EPS requires the actual Greek country and current reviewed season.')
+ return {reports,snapshot_sha256:digest(snapshot),keeper_basis:candidate.source==='mlsz'?'mlsz-published-order-inference':candidate.source==='eps'?'eps-published-order-inference':'STORED_ROLE_ONLY',source_completeness:'NOT_ESTABLISHED'}
 }
 export function assertProviderProof({candidate,expectedSha,audit,snapshot,proof,contract,now=new Date()}) {
  if(!contract||contract.source!==candidate.source||contract.host!==candidate.host||typeof contract.verify!=='function')fail('No installed reviewed strict provider contract; source proof required.')
@@ -125,13 +137,16 @@ export function markInterrupted(path) {
  atomicCheckpoint(path,report)
 }
 const SOURCE_FAILURE=/HTTP\s*(?:401|403|429|5\d\d)|CAPTCHA|Too many connections|SQLSTATE|ECONN|ETIMEDOUT|ENOTFOUND|fetch failed|vir.{0,20}(?:zavrnil|nedosegljiv)|stran.{0,25}(?:ni|ne).{0,20}(?:dosegljiv|zapisnik)/i
-export function runImportCommand(file,args,{logPath,budgetPath,maxRequests}={}) {
+export function runImportCommand(file,args,{logPath,budgetPath,maxRequests,source='mlsz',hosts=[]}={}) {
  return new Promise((resolve,reject)=>{
   if(!budgetPath||!Number.isSafeInteger(maxRequests)||maxRequests<1||maxRequests>1000)return reject(Error('Fixed source budget is required for every batch child.'))
-  const hook=fileURLToPath(new URL('./provider-source-budget.mjs',import.meta.url))
-  const child=spawn(process.execPath,['--import',hook,file,...args],{env:{...process.env,SLFF_PROVIDER_BUDGET_PATH:budgetPath,SLFF_PROVIDER_MAX_REQUESTS:String(maxRequests)},stdio:['ignore','pipe','pipe'],timeout:45*60_000});let sourceFailure=false,archiveCollision=false,tail='',log
+  if(!['mlsz','eps'].includes(source))return reject(Error('Unreviewed child provider.'))
+  const hook=fileURLToPath(new URL(source==='eps'?'./eps-source-budget.mjs':'./provider-source-budget.mjs',import.meta.url))
+  const budgetEnv=source==='eps'?{SLFF_EPS_BUDGET_PATH:budgetPath,SLFF_EPS_MAX_REQUESTS:String(maxRequests),SLFF_EPS_HOSTS:JSON.stringify(hosts)}:{SLFF_PROVIDER_BUDGET_PATH:budgetPath,SLFF_PROVIDER_MAX_REQUESTS:String(maxRequests)}
+  const env={...process.env};for(const key of ['SLFF_PROVIDER_BUDGET_PATH','SLFF_PROVIDER_MAX_REQUESTS','SLFF_EPS_BUDGET_PATH','SLFF_EPS_MAX_REQUESTS','SLFF_EPS_HOSTS'])delete env[key]
+  const child=spawn(process.execPath,['--import',hook,file,...args],{env:{...env,...budgetEnv},stdio:['ignore','pipe','pipe'],timeout:45*60_000});let sourceFailure=false,archiveCollision=false,tail='',log
   if(logPath){mkdirSync(dirname(logPath),{recursive:true});log=openSync(logPath,'a',0o600)}
-  const output=(chunk,stream)=>{stream.write(chunk);if(log!=null)writeFileSync(log,chunk);tail=(tail+chunk.toString()).slice(-8192);if(SOURCE_FAILURE.test(tail)||/Provider source stopped/.test(tail))sourceFailure=true;if(/zapisnikov je že v drugi ligi|skupen arhiv/.test(tail))archiveCollision=true}
+  const output=(chunk,stream)=>{stream.write(chunk);if(log!=null)writeFileSync(log,chunk);tail=(tail+chunk.toString()).slice(-8192);if(SOURCE_FAILURE.test(tail)||/(?:Provider|EPS) source stopped/i.test(tail))sourceFailure=true;if(/zapisnikov je že v drugi ligi|skupen arhiv/.test(tail))archiveCollision=true}
   child.stdout.on('data',c=>output(c,process.stdout));child.stderr.on('data',c=>output(c,process.stderr))
   child.once('error',error=>{if(log!=null){closeSync(log);log=null}reject(error)})
   child.once('close',(code,signal)=>{if(log!=null)closeSync(log);signal?reject(Error(`Write terminated (${signal}); inspect checkpoint and database before another run.`)):resolve({code,sourceFailure,archiveCollision})})
@@ -164,9 +179,21 @@ export function createBatchTransport({url,key,fetch:request=globalThis.fetch}) {
   throw Object.assign(Error('Database pagination incomplete at bound.'),{infrastructure:true})
  }
  const native=createTransport({url,key,fetch:request})
- return {...native,snapshot:async c=>{
+ const boundCompetition=async c=>{
+  const cs=await rows('competitions',{select:'*',id:`eq.${c.id}`,order:'id'})
+  if(cs.length!==1)throw Error('Native competition missing or ambiguous.')
+  const competition=cs[0]
+  if(c.source==='eps'){
+   if(!Number.isSafeInteger(competition.country_id)||competition.country_id<=0)throw Error('EPS country foreign key missing.')
+   const countries=await rows('countries',{select:'id,code',id:`eq.${competition.country_id}`,order:'id'})
+   if(countries.length!==1||countries[0].code!=='GR')throw Error('EPS actual country differs.')
+   competition.country_code=countries[0].code
+  }
+  return competition
+ }
+ return {...native,competition:c=>c.source==='eps'?boundCompetition(c):native.competition(c),snapshot:async c=>{
   try {
-   const competitionRows=await rows('competitions',{select:'*',id:`eq.${c.id}`,order:'id'});if(competitionRows.length!==1)throw Error('Native competition missing or ambiguous.');const competition=competitionRows[0],season=await native.season(c)
+   const competition=await boundCompetition(c),season=await native.season(c)
    const rounds=await rows('rounds',{select:'id,number,season,deadline_at,played_on,lineups_locked_at',competition_id:`eq.${c.id}`,order:'id'})
    const matches=await rows('matches',{select:'id,round_id,played_on,zapisnik_id,vir_brez_izida,home_goals,away_goals,home_team_id,away_team_id,imported_at,kontumacija,statistics_status,import_warnings,rounds!inner(competition_id)','rounds.competition_id':`eq.${c.id}`,order:'id'})
    const linked={select:'*,matches!inner(rounds!inner(competition_id))','matches.rounds.competition_id':`eq.${c.id}`,order:'id'}
@@ -182,45 +209,76 @@ export function createBatchTransport({url,key,fetch:request=globalThis.fetch}) {
  }}
 }
 export async function runProviderBatch({candidates,expectedSha,transport,guard,runCommand=runImportCommand,contracts,activationRunner=runBatch,onCheckpoint=()=>{},now=()=>new Date(),logDirectory,budgetPath,maxRequests=500}) {
- if(!Array.isArray(candidates)||!candidates.length||candidates.length>5||new Set(candidates.map(c=>c.slug)).size!==candidates.length||new Set(candidates.map(c=>c.source+'|'+c.host)).size!==1)fail('Invalid bounded provider selection.')
+ if(!validProviderSelection(candidates))fail('Invalid bounded provider selection.')
  if(typeof guard!=='function')fail('Exact main guard is required.')
- contracts??={mlsz:createMlszContract({runCommand,budgetPath,maxRequests,outputDirectory:logDirectory?resolve(logDirectory,'../source-proof'):undefined})}
- const report={version:1,expected_sha:expectedSha,candidates,scope_sha256:digest({expectedSha,candidates}),status:'RUNNING',results:[],host_stop:null}
+ const hosts=[...new Set(candidates.map(c=>c.host))].sort(),outputDirectory=logDirectory?resolve(logDirectory,'../source-proof'):undefined
+ contracts??={mlsz:createMlszContract({runCommand,budgetPath,maxRequests,outputDirectory}),...Object.fromEntries(hosts.filter(host=>candidates[0].source==='eps').map(host=>['eps|'+host,createEpsContract({host,runCommand:(file,args,opts)=>runCommand(file,args,{...opts,source:'eps',hosts}),budgetPath,maxRequests,outputDirectory})]))}
+ const report={version:1,expected_sha:expectedSha,candidates,scope_sha256:digest({expectedSha,candidates}),status:'RUNNING',results:[],host_stop:null,host_stops:{}}
  const checkpoint=async()=>{try{await onCheckpoint(structuredClone(report))}catch(error){error.infrastructure=true;throw error}}
  await checkpoint()
  try {
   await guard()
   for(const candidate of candidates) {
    const result={slug:candidate.slug,status:'RUNNING',steps:[],pricing:'NOT_RUN'};report.results.push(result);await checkpoint()
-   if(report.host_stop){result.status='SKIPPED_SOURCE_STOP';result.reason=report.host_stop;await checkpoint();continue}
+   if(report.host_stop||report.host_stops[candidate.host]){result.status='SKIPPED_SOURCE_STOP';result.reason=report.host_stop??report.host_stops[candidate.host];await checkpoint();continue}
    let mutating=false
    const guarded=async()=>{try{await guard()}catch(error){error.infrastructure=true;throw error}}
    try {
     const initial=await transport.snapshot(candidate);requireCandidate(candidate,initial.competition);requireNoFantasy(initial)
+    if(candidate.source==='eps'&&initial.season!=='2026/27')fail('EPS current native season changed.')
+    // Missing-only catch-up cannot repair a completed contradictory report.
+    // Filter that known blocker before spending source budget or writing rows.
+    if(candidate.source==='eps'&&initial.matches.some(m=>m.imported_at&&!m.kontumacija&&Array.isArray(m.goal_rows)&&m.home_goals+m.away_goals!==m.goal_rows.length)){
+     result.reason_code='EXISTING_REPORT_MISMATCH';fail('Completed imported report score/goals mismatch needs reviewed repair before missing-only catch-up.')
+    }
     const stage=async(name,file,args)=>{
      await guarded();requireCandidate(candidate,await transport.competition(candidate));const latest=await transport.snapshot(candidate);requireCandidate(candidate,latest.competition);requireNoFantasy(latest)
+     if(candidate.source==='eps'&&latest.season!=='2026/27')fail('EPS current native season changed.')
      const step={stage:name,status:'RUNNING',started_at:now().toISOString(),file,args};result.steps.push(step);await checkpoint()
      mutating=true
      let output
-     try{output=await runCommand(file,args,{logPath:logDirectory?resolve(logDirectory,`${candidate.slug}-${name}.log`):undefined,budgetPath,maxRequests})}catch(error){step.status='UNKNOWN';throw error}
+     try{output=await runCommand(file,args,{logPath:logDirectory?resolve(logDirectory,`${candidate.slug}-${name}.log`):undefined,budgetPath,maxRequests,source:candidate.source,hosts})}catch(error){step.status='UNKNOWN';throw error}
      mutating=false
+     let establishedHostStop=false
      if(budgetPath&&(existsSync(budgetPath)||existsSync(budgetPath+'.stopped'))) {
       const budget=existsSync(budgetPath)?readSourceBudget(budgetPath):null;report.source_budget=budget
-      if(budget?.stopped||budget?.pending||existsSync(budgetPath+'.stopped'))output.sourceFailure=true
+      if(candidate.source==='eps'){
+       if(budget?.global?.stopped||existsSync(budgetPath+'.stopped'))throw Object.assign(Error('EPS global source budget or receipt stopped.'),{infrastructure:true})
+       establishedHostStop=typeof budget?.hosts?.[candidate.host]?.stopped==='string'
+       if(establishedHostStop||budget?.hosts?.[candidate.host]?.pending)output.sourceFailure=true
+      }else if(budget?.stopped||budget?.pending||existsSync(budgetPath+'.stopped'))output.sourceFailure=true
      }
      step.exit_code=output.code;step.completed_at=now().toISOString()
-     if(output.sourceFailure||output.code!==0){step.status=output.code===3?'HOLD':'FAILED';if(output.code!==3||output.sourceFailure)throw Object.assign(Error(`${name}: source failure or unclassified exit ${output.code}; stop shared host.`),{sourceStop:true});fail(`${name}: league club-count guard refused.`)}
+     if(output.sourceFailure||output.code!==0){
+      step.status=output.code===3?'HOLD':'FAILED'
+      if(candidate.source==='eps'&&!establishedHostStop&&(output.code!==3||output.sourceFailure)){
+       // Log text such as "fetch failed" can originate from a native DB write.
+       // Only a durable source-host stop permits independent-host continuation.
+       mutating=true;step.status='UNKNOWN';throw Error(`${name}: unclassified EPS write failure; reconciliation required.`)
+      }
+      if(output.code!==3||output.sourceFailure)throw Object.assign(Error(`${name}: source failure or unclassified exit ${output.code}; stop shared host.`),{sourceStop:true})
+      fail(`${name}: league club-count guard refused.`)
+     }
      if(output.archiveCollision){step.status='HOLD';fail('Observed archive ownership collision; no pricing or exception fallback.')}
      step.status='COMPLETED';await checkpoint()
     }
-    for(let i=0;i<candidate.archives.length;i++)await stage(`archive-${i+1}`,'scripts/uvoz-zapisnikov.mjs',['--tekmovanje',candidate.slug,'--liga',candidate.archives[i].code])
+    if(candidate.source!=='eps')for(let i=0;i<candidate.archives.length;i++)await stage(`archive-${i+1}`,'scripts/uvoz-zapisnikov.mjs',['--tekmovanje',candidate.slug,'--liga',candidate.archives[i].code])
     await stage('schedule','scripts/uvoz-razporeda.mjs',['--tekmovanje',candidate.slug,'--pisi'])
-    await stage('current','scripts/uvoz-zapisnikov.mjs',['--tekmovanje',candidate.slug])
+    await stage('current','scripts/uvoz-zapisnikov.mjs',['--tekmovanje',candidate.slug,...(candidate.source==='eps'?['--samo-manjkajoce']:[])])
     result.pre_price_audit=auditStoredData(candidate,await transport.snapshot(candidate),now());await checkpoint()
     for(const [name,file]of [['keepers','lazni-vratarji'],['positions','ugani-pozicije'],['prices','ovrednoti-igralce']])await stage(name,`scripts/${file}.mjs`,['--tekmovanje',candidate.slug,'--pisi'])
     result.pricing='COMPLETED';result.post_price_audit=auditStoredData(candidate,await transport.snapshot(candidate),now());await checkpoint()
-    const contract=contracts[candidate.source]
+    const contract=contracts[candidate.source+'|'+candidate.host]??contracts[candidate.source]
     if(!contract){result.status='HOLD';result.reason_code='NEEDS_STRICT_PROVIDER_PROOF';result.reason='Import and pricing completed; no installed strict source-proof contract was selected. Aggregate READY does not establish source completeness.';await checkpoint();continue}
+    if(candidate.source==='eps'){
+     // A negative native preview can avoid a costly full-season source proof.
+     // READY here is only provisional; source proof still precedes every write
+     // activation below. No official future round remains an ordinary HOLD.
+     await guarded()
+     const [preview]=await activationRunner({candidates:[candidate],transport,apply:false,now})
+     result.native_preflight=preview;await checkpoint()
+     if(preview?.status!=='READY')fail(preview?.reason??'Native readiness preflight refused.')
+    }
     await guarded()
     const snapshot=await transport.snapshot(candidate),audit=auditStoredData(candidate,snapshot,now())
     const receipts={expected_sha:expectedSha,slug:candidate.slug,snapshot_sha256:audit.snapshot_sha256,steps:result.steps.filter(s=>['keepers','positions','prices'].includes(s.stage))}
@@ -242,9 +300,12 @@ export async function runProviderBatch({candidates,expectedSha,transport,guard,r
     step.status='COMPLETED';step.completed_at=now().toISOString();result.status='ACTIVE';await checkpoint()
    }catch(error){
     result.reason=error.message
+    if(candidate.source==='eps'&&budgetPath){
+     try{const budget=existsSync(budgetPath)?readSourceBudget(budgetPath):null;if(budget?.global?.stopped||existsSync(budgetPath+'.stopped'))error.infrastructure=true}catch{error.infrastructure=true}
+    }
     if(mutating){result.status='UNKNOWN';report.host_stop='Ambiguous write; inspect retained checkpoint and readback before a new reviewed run.';try{result.readback=await transport.competition(candidate)}catch{result.readback_error='Readback unavailable.'}}
-    else if(error.sourceStop){result.status='SOURCE_STOP';report.host_stop=error.message}
     else if(error.infrastructure){result.status='INFRASTRUCTURE_STOP';report.host_stop=error.message}
+    else if(error.sourceStop){result.status='SOURCE_STOP';if(candidate.source==='eps')report.host_stops[candidate.host]=error.message;else report.host_stop=error.message}
     else if(error.dataHold)result.status='HOLD'
     else {result.status='INFRASTRUCTURE_STOP';report.host_stop=error.message}
     await checkpoint()
@@ -267,6 +328,7 @@ async function main() {
   await guard()
   const registry=JSON.parse(readFileSync(new URL('./policies/existing-league-candidates-20261018.json',import.meta.url),'utf8'))
   const candidates=selectProviderCandidates(registry,options.slugs)
+  if(candidates[0].source==='eps'&&options.maxRequests<=6)fail('EPS allowance must include six prior qualifier requests and at least one new request.')
   const report=await runProviderBatch({candidates,expectedSha:options.expectedSha,transport:createBatchTransport({url:process.env.SUPABASE_URL,key:process.env.SUPABASE_SERVICE_ROLE_KEY}),guard,budgetPath:resolve(output,'source-budget.json'),maxRequests:options.maxRequests,logDirectory:resolve(output,'logs'),onCheckpoint:r=>atomicCheckpoint(path,r)})
   for(const r of report.results)console.log(`${r.status}: ${r.slug}${r.reason?' — '+r.reason:''}`)
   if(report.status!=='ACTIVE')process.exitCode=1

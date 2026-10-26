@@ -1,0 +1,392 @@
+[
+  {
+    "id": 907,
+    "slug": "gr-ana-a",
+    "source": "eps",
+    "source_league_code": "epsana.gr:747",
+    "host": "www.epsana.gr",
+    "archives": [
+      {
+        "code": "epsana.gr:689",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 906,
+    "slug": "gr-ana-b",
+    "source": "eps",
+    "source_league_code": "epsana.gr:749",
+    "host": "www.epsana.gr",
+    "archives": [
+      {
+        "code": "epsana.gr:690",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 905,
+    "slug": "gr-ana-g",
+    "source": "eps",
+    "source_league_code": "epsana.gr:748",
+    "host": "www.epsana.gr",
+    "archives": [
+      {
+        "code": "epsana.gr:691",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 914,
+    "slug": "gr-arg-a1",
+    "source": "eps",
+    "source_league_code": "epsarg.gr:1042",
+    "host": "www.epsarg.gr",
+    "archives": [
+      {
+        "code": "epsarg.gr:1020",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 924,
+    "slug": "gr-ath-a-1",
+    "source": "eps",
+    "source_league_code": "epsath.gr:1534",
+    "host": "www.epsath.gr",
+    "archives": [
+      {
+        "code": "epsath.gr:1410",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 923,
+    "slug": "gr-ath-a-2",
+    "source": "eps",
+    "source_league_code": "epsath.gr:1535",
+    "host": "www.epsath.gr",
+    "archives": [
+      {
+        "code": "epsath.gr:1411",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 922,
+    "slug": "gr-ath-b-1",
+    "source": "eps",
+    "source_league_code": "epsath.gr:1537",
+    "host": "www.epsath.gr",
+    "archives": [
+      {
+        "code": "epsath.gr:1413",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 921,
+    "slug": "gr-ath-b-2",
+    "source": "eps",
+    "source_league_code": "epsath.gr:1538",
+    "host": "www.epsath.gr",
+    "archives": [
+      {
+        "code": "epsath.gr:1412",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 920,
+    "slug": "gr-ath-b-3",
+    "source": "eps",
+    "source_league_code": "epsath.gr:1539",
+    "host": "www.epsath.gr",
+    "archives": [
+      {
+        "code": "epsath.gr:1414",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 919,
+    "slug": "gr-ath-g-1",
+    "source": "eps",
+    "source_league_code": "epsath.gr:1541",
+    "host": "www.epsath.gr",
+    "archives": [
+      {
+        "code": "epsath.gr:1436",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 918,
+    "slug": "gr-ath-g-2",
+    "source": "eps",
+    "source_league_code": "epsath.gr:1542",
+    "host": "www.epsath.gr",
+    "archives": [
+      {
+        "code": "epsath.gr:1435",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 917,
+    "slug": "gr-ath-g-3",
+    "source": "eps",
+    "source_league_code": "epsath.gr:1543",
+    "host": "www.epsath.gr",
+    "archives": [
+      {
+        "code": "epsath.gr:1437",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 916,
+    "slug": "gr-ath-g-4",
+    "source": "eps",
+    "source_league_code": "epsath.gr:1544",
+    "host": "www.epsath.gr",
+    "archives": [
+      {
+        "code": "epsath.gr:1434",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 908,
+    "slug": "gr-da-a",
+    "source": "eps",
+    "source_league_code": "epsda.gr:278",
+    "host": "www.epsda.gr",
+    "archives": [
+      {
+        "code": "epsda.gr:244",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 913,
+    "slug": "gr-dod-a",
+    "source": "eps",
+    "source_league_code": "epsdod.gr:495",
+    "host": "www.epsdod.gr",
+    "archives": [
+      {
+        "code": "epsdod.gr:443",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 929,
+    "slug": "gr-ev-b-1",
+    "source": "eps",
+    "source_league_code": "epsevias.gr:273",
+    "host": "www.epsevias.gr",
+    "archives": [
+      {
+        "code": "epsevias.gr:218",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 928,
+    "slug": "gr-ev-b-2",
+    "source": "eps",
+    "source_league_code": "epsevias.gr:279",
+    "host": "www.epsevias.gr",
+    "archives": [
+      {
+        "code": "epsevias.gr:219",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 927,
+    "slug": "gr-ev-g-1",
+    "source": "eps",
+    "source_league_code": "epsevias.gr:275",
+    "host": "www.epsevias.gr",
+    "archives": [
+      {
+        "code": "epsevias.gr:220",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 926,
+    "slug": "gr-ev-g-2",
+    "source": "eps",
+    "source_league_code": "epsevias.gr:276",
+    "host": "www.epsevias.gr",
+    "archives": [
+      {
+        "code": "epsevias.gr:221",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 925,
+    "slug": "gr-ev-g-3",
+    "source": "eps",
+    "source_league_code": "epsevias.gr:277",
+    "host": "www.epsevias.gr",
+    "archives": [
+      {
+        "code": "epsevias.gr:222",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 912,
+    "slug": "gr-ip-a",
+    "source": "eps",
+    "source_league_code": "epsip.gr:328",
+    "host": "www.epsip.gr",
+    "archives": [
+      {
+        "code": "epsip.gr:300",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 911,
+    "slug": "gr-ip-b",
+    "source": "eps",
+    "source_league_code": "epsip.gr:329",
+    "host": "www.epsip.gr",
+    "archives": [
+      {
+        "code": "epsip.gr:301",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 910,
+    "slug": "gr-ip-g-a",
+    "source": "eps",
+    "source_league_code": "epsip.gr:331",
+    "host": "www.epsip.gr",
+    "archives": [
+      {
+        "code": "epsip.gr:303",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 909,
+    "slug": "gr-ip-g-b",
+    "source": "eps",
+    "source_league_code": "epsip.gr:332",
+    "host": "www.epsip.gr",
+    "archives": [
+      {
+        "code": "epsip.gr:304",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 904,
+    "slug": "gr-peir-a-1",
+    "source": "eps",
+    "source_league_code": "epspeir.gr:726",
+    "host": "www.epspeir.gr",
+    "archives": [
+      {
+        "code": "epspeir.gr:605",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 903,
+    "slug": "gr-peir-a-2",
+    "source": "eps",
+    "source_league_code": "epspeir.gr:727",
+    "host": "www.epspeir.gr",
+    "archives": [
+      {
+        "code": "epspeir.gr:606",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 902,
+    "slug": "gr-peir-b-1",
+    "source": "eps",
+    "source_league_code": "epspeir.gr:738",
+    "host": "www.epspeir.gr",
+    "archives": [
+      {
+        "code": "epspeir.gr:607",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 901,
+    "slug": "gr-peir-b-2",
+    "source": "eps",
+    "source_league_code": "epspeir.gr:729",
+    "host": "www.epspeir.gr",
+    "archives": [
+      {
+        "code": "epspeir.gr:608",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 900,
+    "slug": "gr-peir-g-1",
+    "source": "eps",
+    "source_league_code": "epspeir.gr:735",
+    "host": "www.epspeir.gr",
+    "archives": [
+      {
+        "code": "epspeir.gr:610",
+        "season": "2025/26"
+      }
+    ]
+  },
+  {
+    "id": 899,
+    "slug": "gr-peir-g-2",
+    "source": "eps",
+    "source_league_code": "epspeir.gr:736",
+    "host": "www.epspeir.gr",
+    "archives": [
+      {
+        "code": "epspeir.gr:609",
+        "season": "2025/26"
+      }
+    ]
+  }
+]

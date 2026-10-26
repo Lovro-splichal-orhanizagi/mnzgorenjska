@@ -141,7 +141,13 @@ function seKrize(tok, naslov, id) {
     const scope = /^Bulk leagues (PL|DE|ALL)$/.exec(naslov ?? '')?.[1]
     return !scope || !mojaDrzava || scope === 'ALL' && ['PL','DE'].includes(mojaDrzava) || scope === mojaDrzava
   }
-  if (tok === 'uvoz-paketa-lig.yml') return true
+  if (tok === 'uvoz-paketa-lig.yml') {
+    // EPS is an exact Greek-only catalog. Unknown/legacy batch scopes retain
+    // their conservative global crossing; the existing MLSZ path is unchanged.
+    if (/^Uvoz paketa lig eps gr-[a-z0-9-]+(?:,gr-[a-z0-9-]+)*$/.test(naslov ?? ''))
+      return !mojaDrzava || mojaDrzava === 'GR'
+    return true
+  }
   if (tok === 'vklop-obstojecih-lig.yml') return !/^Obstojece lige predogled /.test(naslov ?? '')
   if (tok === 'uvoz-fcf-zgodovina.yml') {
     if (/^FCF history (cache-export|seed-stage) /.test(naslov ?? '')) return false
