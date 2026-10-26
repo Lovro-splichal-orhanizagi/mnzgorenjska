@@ -340,3 +340,14 @@ vpiši, ko se menjave pokažejo. Mladinske (Κ12–Κ17) niso vpisane.
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=gr-peir-a-1 -f
 arhiv=epspeir.gr:605 -f cene=true`. Arhiv 240 zapisnikov po 3 s je okoli
 12 minut na ligo (Atene odgovarjajo počasneje, ~5 s na stran).
+
+
+## EPS multi-league source proof (26 October 2026)
+
+The provider batch accepts the exact 30 currently inactive EPS tuples in `scripts/policies/eps-batch-candidates.json`, each with its documented owned archive. This expands batching capability, not production activation. A single reviewed first-attempt main dispatch selects `provider=eps` in `uvoz-paketa-lig.yml`. Native current catch-up skips completed report IDs; archives are not blindly rewritten. Source proof independently compares every available current/archive fixture, appearance, goal, interval and warning against original HTML. First-listed goalkeeper remains explicitly an existing inference convention. Native pricing, legal squad and an official future untouched round must pass before activation and readback. No new historical exceptions are included.
+
+A negative native preview can stop a held league before full archive replay. Provisional READY never grants activation without the source contract. Missing/corrupt originals require a bounded source fetch or HOLD; native row counts and file age alone never prove completeness. Complete retained report bytes keep original capture provenance; current/archive schedule and result inventories are freshly captured.
+
+The EPS-specific shared ledger counts actual requests across subprocesses, including six prior Piraeus qualifier GETs; the present effort is capped at1000 total. Requests use the selected installed HTTPS www EPS hosts, exact public GET routes, at least3seconds between starts per host, bounded original bodies and durable pre-request intents. The existing reviewed EPS HTTP500 body cases stay narrow. Technical host stops leave independent selected hosts available; overall budget exhaustion and uncertain native writes stop the batch. Source refusals are never retried or worked around. No recurring collection or messages are added.
+
+Fresh qualification found three previously missing Piraeus reports complete (`gr1-27876`, `gr1-28511`, `gr1-28641`), with no parser warnings. Three current schedules (`726`, `735`, `736`) still have no published future fixture dates, so these observations cannot authorize their launch. Evidence and all six original request receipts are retained privately in `league-rollout-evidence/2026-10-26-large-cohort/greece-qualifier/`. Existing Spanish478, German80 and Polish diagnostic budgets are unchanged.

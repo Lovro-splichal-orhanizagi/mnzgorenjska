@@ -537,6 +537,16 @@ test('real provider batch is visible to both coordinator loops and blocks active
  assert.equal((await coordinate(['--popravek','--vir','mlsz'],{'uvoz-zapisnikov.yml':[run('Nightly')]},[{name:'uvoz HU 1/3',status:'completed'},{name:'uvoz HU 2/3',status:'completed'},{name:'uvoz HU 3/3',status:'completed'},{name:'uvoz AT',status:'in_progress'}])).code,0)
 })
 
+test('EPS batch waits in Greece while leaving unrelated countries independent',async()=>{
+ const workflow='uvoz-paketa-lig.yml',runs={[workflow]:[run('Uvoz paketa lig eps gr-peir-a-1,gr-ev-b-1')]}
+ assert.equal((await coordinate(['--drzava','GR'],runs)).code,1)
+ assert.equal((await coordinate(['--liga','si-example'],runs)).code,0)
+ assert.equal((await coordinate(['--drzava','HU'],runs)).code,0)
+ assert.equal((await coordinate(['--tece'],runs)).code,3)
+ for(const title of ['Uvoz paketa lig unknown gr-peir-a-1','Uvoz paketa lig eps hu-pe-u19-e','Uvoz paketa lig eps'])
+  assert.equal((await coordinate(['--liga','si-example'],{[workflow]:[run(title)]})).code,1)
+})
+
 
 test('Dribl native bootstrap shares AU/global writes and stays visible to both coordinators',async()=>{
  fixtures.push({slug:'au-nsw-npl',active:false,source:'dribl-public',countries:{code:'AU'},federations:{code:'football-nsw'}})

@@ -1,8 +1,13 @@
 name: Uvoz pregledanega paketa lig
-run-name: Uvoz paketa lig mlsz ${{ inputs.lige }}
+run-name: Uvoz paketa lig ${{ inputs.provider || 'mlsz' }} ${{ inputs.lige }}
 on:
   workflow_dispatch:
     inputs:
+      provider:
+        description: Reviewed provider; EPS accepts up to 32 exact tuples, MLSZ up to five
+        type: choice
+        options: [mlsz, eps]
+        default: mlsz
       lige:
         description: 'Exact reviewed inactive slugs, comma-separated (initially hu-pe-u19-e,hu-za-3-kozep); imports and prices, activation requires strict provider proof'
         type: string
@@ -12,14 +17,14 @@ on:
         type: string
         required: true
       max_requests:
-        description: 'Shared MLSZ actual request budget (1–1000), including the documented canonical redirect hop'
+        description: 'Shared actual request limit (up to 1000); EPS includes six prior qualifier requests'
         type: number
         default: 500
 permissions:
   contents: read
   actions: read
 concurrency:
-  group: provider-league-batch-mlsz
+  group: provider-league-batch-${{ inputs.provider || 'mlsz' }}
   cancel-in-progress: false
 jobs:
   batch:
@@ -27,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     env:
+      PROVIDER: ${{ inputs.provider || 'mlsz' }}
       LIGE: ${{ inputs.lige }}
       EXPECTED_SHA: ${{ inputs.expected_sha }}
       MAX_REQUESTS: ${{ inputs.max_requests }}
@@ -38,7 +44,7 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - name: Offline batch and source budget regressions
-        run: node --test scripts/test-provider-league-batch.mjs scripts/test-provider-source-budget.mjs scripts/test-mlsz-provider-proof.mjs
+        run: node --test scripts/test-provider-league-batch.mjs scripts/test-provider-source-budget.mjs scripts/test-mlsz-provider-proof.mjs scripts/test-eps-provider-batch.mjs scripts/test-eps-provider-proof.mjs scripts/test-eps-source-budget.mjs
       - name: Require exact reviewed main and fixed candidate mappings before database coordination
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -51,23 +57,29 @@ jobs:
           import {assertBatchExecution,parseArguments,selectProviderCandidates} from './scripts/provider-league-batch.mjs'
           const options=parseArguments(['--lige',process.env.LIGE,'--expected-sha',process.env.EXPECTED_SHA,'--max-requests',process.env.MAX_REQUESTS])
           assertBatchExecution({expectedSha:options.expectedSha,headSha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),mainSha:execFileSync('git',['ls-remote','--exit-code','origin','refs/heads/main'],{encoding:'utf8',timeout:30000}).split(/\s/)[0],envFileExists:existsSync('.env')})
-          selectProviderCandidates(JSON.parse(readFileSync('scripts/policies/existing-league-candidates-20261018.json','utf8')),options.slugs)
+          const selected=selectProviderCandidates(JSON.parse(readFileSync('scripts/policies/existing-league-candidates-20261018.json','utf8')),options.slugs)
+          if (!['mlsz','eps'].includes(process.env.PROVIDER) || selected.some(c=>c.source!==process.env.PROVIDER) || process.env.PROVIDER==='eps' && options.maxRequests<=6) throw Error('Provider selection or EPS allowance differs.')
           JS
       - name: Wait for older database writers and every active MLSZ nightly reader
         env:
           GH_TOKEN: ${{ github.token }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/cakaj-na-uvoze.mjs --popravek --vir mlsz --najvec 120
+        run: |
+          if [ "$PROVIDER" = mlsz ]; then
+            node scripts/cakaj-na-uvoze.mjs --popravek --vir mlsz --najvec 120
+          else
+            node scripts/cakaj-na-uvoze.mjs --popravek --vir eps --najvec 120
+          fi
       - name: Restore authentic MLSZ cache
         uses: actions/cache/restore@v4
         with:
           path: scripts/.predpomnilnik
-          key: provider-batch-mlsz-${{ github.run_id }}-${{ github.run_attempt }}
+          key: provider-batch-${{ inputs.provider || 'mlsz' }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            provider-batch-mlsz-
-            zapisniki-HU-
-            zapisniki-hu-
+            provider-batch-${{ inputs.provider || 'mlsz' }}-
+            ${{ inputs.provider == 'eps' && 'zapisniki-GR-' || 'zapisniki-HU-' }}
+            ${{ inputs.provider == 'eps' && 'zapisniki-gr-' || 'zapisniki-hu-' }}
       - name: Import archives and current season, audit, price and strictly gate native activation
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -84,7 +96,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: scripts/.predpomnilnik
-          key: provider-batch-mlsz-${{ github.run_id }}-${{ github.run_attempt }}
+          key: provider-batch-${{ inputs.provider || 'mlsz' }}-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Preserve atomic stage receipts, source budget and command logs
         if: always()
         uses: actions/upload-artifact@v4
