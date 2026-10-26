@@ -24,13 +24,13 @@ on:
         type: string
         default: all
       archive_json:
-        description: Optional observed adjacent archive JSON (seedUrl, staffel, season, maxRequests)
+        description: Optional observed adjacent archive JSON (seedUrl, staffel, season, maxRequests; optional observedSeedUrl)
         type: string
         default: ''
       prior_requests:
-        description: Already spent cumulative website requests (paired pilot minimum 361)
+        description: Already spent cumulative website requests (paired pilot minimum 363)
         type: number
-        default: 361
+        default: 363
       total_request_cap:
         description: Cumulative website request cap including prior requests (paired pilot at most 5000)
         type: number

@@ -3,9 +3,9 @@ import {readFileSync,appendFileSync} from 'node:fs'
 import {resolve,join} from 'node:path'
 import {pathToFileURL} from 'node:url'
 import {execFileSync} from 'node:child_process'
-import {validateFussballCaptureOptions,verifyFussballDirectory} from './fussball-capture-evidence.mjs'
+import {validateFussballCaptureOptions,verifyFussballDirectory,captureFussballDirectory} from './fussball-capture-evidence.mjs'
 import {fussballRoundScope} from './lib/fussball-capture.mjs'
-import {extractFussballSeasonLinks} from './fussball-season-links.mjs'
+import {extractFussballSeasonLinks,fussballArchiveSeedAlias} from './fussball-season-links.mjs'
 import {runFussballCaptureCli} from './zajemi-fussball-sezono.mjs'
 const requireProof=(ok,message)=>{if(!ok)throw Error(`fussball season pilot: ${message}`)}
 const repository='Lovro-splichal-orhanizagi/mnzgorenjska'
@@ -26,13 +26,14 @@ export function validateFussballSeasonPilot(e,{headSha}={}){
  requireProof(/^[a-f0-9]{40}$/.test(e.EXPECTED_SHA??'')&&e.EXPECTED_SHA===e.GITHUB_SHA&&e.EXPECTED_SHA===headSha,'exact reviewed main SHA required')
  requireProof(e.REPORTS==='all','paired seasons require reports=all')
  const raw=JSON.parse(e.ARCHIVE_JSON)
- requireProof(raw&&typeof raw==='object'&&!Array.isArray(raw)&&Object.keys(raw).sort().join(',')==='maxRequests,season,seedUrl,staffel','exact archive tuple required')
+ requireProof(raw&&typeof raw==='object'&&!Array.isArray(raw)&&['maxRequests,season,seedUrl,staffel','maxRequests,observedSeedUrl,season,seedUrl,staffel'].includes(Object.keys(raw).sort().join(',')),'exact archive tuple required')
  requireProof(Number.isInteger(raw.maxRequests)&&raw.maxRequests>=1&&raw.maxRequests<=3000,'invalid archive request budget')
- const current=scope({seedUrl:e.SEED_URL,staffel:e.STAFFEL,season:e.SEASON,maxRequests}),archive=scope(raw)
+ const current=scope({seedUrl:e.SEED_URL,staffel:e.STAFFEL,season:e.SEASON,maxRequests}),archive={...scope(raw),...(Object.hasOwn(raw,'observedSeedUrl')?{observedSeedUrl:raw.observedSeedUrl}:{})}
  const route=fussballRoundScope(archive.seedUrl)
  requireProof(route.round===null&&route.date===null&&archive.staffel!==current.staffel&&Number(archive.season.slice(0,4))+1===Number(current.season.slice(0,4)),'adjacent archive seed required')
- // The approved pilot has already spent 361 requests; never reset that ledger.
- const priorRequests=integer(e.PRIOR_REQUESTS,361,5000),totalRequestCap=integer(e.TOTAL_REQUEST_CAP,1,5000)
+ if(Object.hasOwn(raw,'observedSeedUrl')){requireProof(typeof raw.observedSeedUrl==='string'&&raw.observedSeedUrl!==raw.seedUrl,'distinct observed menu seed required');fussballArchiveSeedAlias(archive,current)}
+ // Initial361 plus two retained GitHub identity probes stay on the ledger.
+ const priorRequests=integer(e.PRIOR_REQUESTS,363,5000),totalRequestCap=integer(e.TOTAL_REQUEST_CAP,1,5000)
  requireProof(priorRequests+current.maxRequests+archive.maxRequests<=totalRequestCap,'cumulative reserved request budget exceeds cap')
  return {current,archive,priorRequests,totalRequestCap}
 }
@@ -46,7 +47,7 @@ export async function authorizeFussballSeasonArchive(directory,e,{headSha,collec
  // The offline verifier checked these exact content-addressed bytes. Discovery
  // accepts one live page-scoped selector, rejecting inert or duplicate menus.
  const links=extractFussballSeasonLinks(readFileSync(join(directory,seed.file),'utf8'),plan.current)
- requireProof(links.previous&&['seedUrl','staffel','season'].every(k=>links.previous[k]===plan.archive[k]),'archive differs from observed adjacent live season link')
+ requireProof(links.previous&&links.previous.seedUrl===(plan.archive.observedSeedUrl??plan.archive.seedUrl)&&['staffel','season'].every(k=>links.previous[k]===plan.archive[k]),'archive differs from observed adjacent live season link')
  const cumulativeReserved=plan.priorRequests+verified.requests+plan.archive.maxRequests
  requireProof(cumulativeReserved<=plan.totalRequestCap,'remaining cumulative request budget exceeded')
  return {...plan,currentRequests:verified.requests,cumulativeReserved}
@@ -63,7 +64,13 @@ async function main(args){
   console.log(JSON.stringify(result));return
  }
  const a=result.archive
- await runFussballCaptureCli(['capture','--seed-url',a.seedUrl,'--staffel',a.staffel,'--season',a.season,'--max-requests',String(a.maxRequests),'--reports','all','--output','capture-archive'])
+ let archiveParent
+ if(a.observedSeedUrl){
+  const m=JSON.parse(readFileSync(join(directory,'manifest.json'))),seed=m.documents.find(d=>d.kind==='round'&&d.url===result.current.seedUrl)
+  const document=Object.fromEntries(['url','kind','sha256','bytes','status','contentType','capturedAt'].map(k=>[k,seed[k]]))
+  archiveParent={current:Object.fromEntries(['seedUrl','staffel','season'].map(k=>[k,result.current[k]])),observedSeedUrl:a.observedSeedUrl,document,bytes:readFileSync(join(directory,seed.file)),originalReceipt:{version:1,document,attempt:m.snapshot.attempts.find(attempt=>attempt.url===seed.url),capture:{createdAt:m.createdAt,codeSha256:m.codeSha256,staffel:m.options.staffel,season:m.options.season}}}
+ }
+ await captureFussballDirectory({directory:resolve('capture-archive'),options:{...a,reportLimit:null},archiveParent,onProgress:p=>console.log(JSON.stringify(p))})
  console.log(JSON.stringify(await runFussballCaptureCli(['verify','capture-archive'])))
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href)main(process.argv.slice(2)).catch(error=>{console.error(error.message);process.exitCode=1})

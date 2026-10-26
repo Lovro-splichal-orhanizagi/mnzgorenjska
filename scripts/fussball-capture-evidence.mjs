@@ -4,6 +4,8 @@ import {resolve,join,relative} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {createFussballCaptureClient} from './lib/fussball-capture.mjs'
 import {collectFussballSeason} from './fussball-season.mjs'
+import {extractFussballSeasonLinks,inspectFussballArchivePage,fussballArchiveSeedAlias} from './fussball-season-links.mjs'
+import {inspectFussballPage} from './viri/fussball-discovery.mjs'
 import {zaprtje} from './odtis-kode.mjs'
 
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex')
@@ -13,7 +15,7 @@ const extension=kind=>kind==='font'?'woff':kind==='css'?'css':'html'
 const root=fileURLToPath(new URL('../',import.meta.url))
 
 export function fussballCaptureCodeSha256(){
- const files=[...new Set([...zaprtje('scripts/fussball-capture-evidence.mjs'),'scripts/zajemi-fussball-sezono.mjs','scripts/viri/fussball-datumski-glifi.json'])].sort()
+ const files=[...new Set([...zaprtje('scripts/fussball-capture-evidence.mjs'),'scripts/zajemi-fussball-sezono.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/vzorci/de-fussball-baden-archive-20261026.json'])].sort()
  return hash(files.map(file=>`${file}\0${hash(readFileSync(resolve(root,file)))}`).join('\n'))
 }
 export function validateFussballCaptureOptions(options){
@@ -54,12 +56,35 @@ export async function fussballBulkCacheDocuments(directory,{staffel,season,seedU
  const source={snapshot:m.snapshot,createdAt:m.captured_at,codeSha256:m.code_sha256,options:{staffel,season}}
  return [...used].map(url=>docs.get(url)).filter(d=>d.kind!=='round').map(d=>({...d,bytes:readRegular(directory,d.file),originalReceipt:originalReceipt(d,source)}))
 }
-export async function captureFussballDirectory({directory,options,fetchFn=globalThis.fetch,collectFn=collectFussballSeason,onProgress=()=>{},reuseDirectory,reuseBulkDirectory,loadBulkPack}={}){
+// Parent proof is separate from the archive's source request journal. Its raw
+// current seed and flat receipt keep their original hashes and timestamps.
+function archiveParentProof(parent,options,bytes,{persisted=false}={}){
+ requireProof(parent&&parent.current&&parent.document&&parent.originalReceipt,'archive parent proof required')
+ const {current,document}=parent
+ const source=Buffer.from(bytes)
+ requireProof(document.url===current.seedUrl&&document.kind==='round'&&document.status===200&&source.length===document.bytes&&hash(source)===document.sha256,'archive parent original bytes/hash differ')
+ checkOriginalReceipt({...document,originalReceipt:parent.originalReceipt},current)
+ const links=extractFussballSeasonLinks(source.toString('utf8'),current)
+ const observedSeedUrl=parent.observedSeedUrl??options.seedUrl
+ requireProof(links.previous&&links.previous.staffel===options.staffel&&links.previous.season===options.season&&links.previous.seedUrl===observedSeedUrl,'archive parent live adjacent menu differs')
+ const alias=fussballArchiveSeedAlias({...options,observedSeedUrl},current)
+ const file=`archive-parent/${document.sha256}.html`
+ const proof={version:1,current,observedSeedUrl,document:receiptDocument(document),originalReceipt:parent.originalReceipt,alias,file}
+ const proofSha256=hash(json(proof))
+ if(persisted)requireProof(parent.version===1&&parent.file===file&&json(parent.alias)===json(alias)&&parent.proofSha256===proofSha256,'persisted archive parent proof/alias/path differs')
+ return {...proof,proofSha256}
+}
+function collectWithArchiveParent(collectFn,options,parent){
+ return collectFn(options,parent?{inspectPage:(html,scope)=>scope.kind==='round'?inspectFussballArchivePage(html,{archive:options,current:parent.current}):inspectFussballPage(html,scope)}:{})
+}
+export async function captureFussballDirectory({directory,options,fetchFn=globalThis.fetch,collectFn=collectFussballSeason,onProgress=()=>{},reuseDirectory,reuseBulkDirectory,loadBulkPack,archiveParent}={}){
  const createdAt=new Date().toISOString()
  const config=validateFussballCaptureOptions({...options,asOfDate:options?.asOfDate??createdAt.slice(0,10)}),codeSha256=fussballCaptureCodeSha256()
  let cachedDocuments=[]
  requireProof(!(reuseDirectory&&reuseBulkDirectory),'one verified reuse source required')
  const mixed=!!(reuseDirectory||reuseBulkDirectory)
+ requireProof(!(archiveParent&&mixed),'archive parent cannot mix cached captures')
+ const parent=archiveParent?archiveParentProof(archiveParent,config,archiveParent.bytes):null
  if(reuseDirectory){
   // A code update may reparse old original bytes for CACHE ADMISSION only. The
   // new capture/import still requires today's exact code fingerprint and full
@@ -77,6 +102,7 @@ export async function captureFussballDirectory({directory,options,fetchFn=global
  const documents=[],urls=new Set();let client
  // A fresh directory prevents accidentally combining scopes or overwriting evidence.
  mkdirSync(directory);mkdirSync(join(directory,'documents'))
+ if(parent){mkdirSync(join(directory,'archive-parent'));writeFileSync(join(directory,parent.file),Buffer.from(archiveParent.bytes))}
  writeFileSync(join(directory,'attempts.jsonl'),'');writeFileSync(join(directory,'progress.jsonl'),'')
  const saveDocument=(document,origin)=>{
    const bytes=Buffer.from(document.bytes)
@@ -89,11 +115,12 @@ export async function captureFussballDirectory({directory,options,fetchFn=global
   onAttempt:attempt=>appendFileSync(join(directory,'attempts.jsonl'),json(attempt)),
   onDocument:document=>saveDocument(document,'network'),onCachedDocument:document=>saveDocument(document,'cache')})
  let result=null,error=null
- try{result=await collectFn({...config,client,onProgress:async progress=>{appendFileSync(join(directory,'progress.jsonl'),json(progress));await onProgress(progress)}})}catch(failure){error=failure}
+ try{result=await collectWithArchiveParent(collectFn,{...config,client,onProgress:async progress=>{appendFileSync(join(directory,'progress.jsonl'),json(progress));await onProgress(progress)}},parent)}catch(failure){error=failure}
  const raw=result===null?null:json(result)
  if(raw!==null)writeFileSync(join(directory,'result.json'),raw)
- const manifest={version:mixed?2:1,provider:'fussball',createdAt,completedAt:new Date().toISOString(),options:config,codeSha256,
+ const manifest={version:parent?3:mixed?2:1,provider:'fussball',createdAt,completedAt:new Date().toISOString(),options:config,codeSha256,
   success:error===null,error:error?.message??null,snapshot:client.snapshot(),documents,resultSha256:raw===null?null:hash(raw),activationEligible:false}
+ if(parent)manifest.archiveParent=parent
  if(mixed)for(const d of documents)if(d.origin==='network')d.originalReceipt=originalReceipt(d,manifest)
  writeFileSync(join(directory,'manifest.json'),json(manifest))
  if(error)throw error
@@ -102,19 +129,22 @@ export async function captureFussballDirectory({directory,options,fetchFn=global
 function readRegular(directory,path){
  const base=realpathSync(directory),full=resolve(base,path)
  requireProof(relative(base,full)!==''&&!relative(base,full).startsWith('..')&&!path.startsWith('/'),'unsafe evidence path')
- if(path.startsWith('documents/'))requireProof(lstatSync(join(base,'documents')).isDirectory()&&!lstatSync(join(base,'documents')).isSymbolicLink(),'symbolic documents directory')
+ for(const folder of ['documents','archive-parent'])if(path.startsWith(folder+'/'))requireProof(lstatSync(join(base,folder)).isDirectory()&&!lstatSync(join(base,folder)).isSymbolicLink(),'symbolic documents directory')
  const stat=lstatSync(full);requireProof(stat.isFile()&&!stat.isSymbolicLink(),'source must be a regular file, not a symlink')
  return readFileSync(full)
 }
 export async function verifyFussballDirectory(directory,{collectFn=collectFussballSeason,requireCodeMatch=true}={}){
  const m=JSON.parse(readRegular(directory,'manifest.json'))
- requireProof([1,2].includes(m.version)&&m.provider==='fussball'&&m.success===true&&m.activationEligible===false,'incomplete or failed capture')
+ requireProof([1,2,3].includes(m.version)&&m.provider==='fussball'&&m.success===true&&m.activationEligible===false,'incomplete or failed capture')
  requireProof(/^[a-f0-9]{64}$/.test(m.codeSha256??'')&&(!requireCodeMatch||m.codeSha256===fussballCaptureCodeSha256()),'capture code fingerprint differs')
  const options=validateFussballCaptureOptions(m.options),snapshot=m.snapshot
+ requireProof((m.version===3)===Object.hasOwn(m,'archiveParent'),'archive parent proof/version differs')
+ if(m.version===3)requireProof(/^[a-f0-9]{64}$/.test(m.archiveParent?.document?.sha256??'')&&m.archiveParent?.file===`archive-parent/${m.archiveParent.document.sha256}.html`,'archive parent content-addressed path differs')
+ const parent=m.version===3?archiveParentProof(m.archiveParent,options,readRegular(directory,m.archiveParent.file),{persisted:true}):null
  requireProof(m.options.asOfDate===options.asOfDate,'capture calendar day is not pinned')
  requireProof(snapshot&&snapshot.stopped===false&&snapshot.stopReason===null&&Number.isInteger(snapshot.requests)&&snapshot.requests>0&&snapshot.requests<=options.maxRequests&&snapshot.attempts?.length===snapshot.requests,'request accounting differs')
  requireProof(Array.isArray(m.documents)&&m.documents.length<=20000,'bounded document inventory differs')
- const network=m.documents.filter(d=>m.version===1||d.origin==='network'),cached=m.documents.filter(d=>m.version===2&&d.origin==='cache')
+ const network=m.documents.filter(d=>m.version!==2||d.origin==='network'),cached=m.documents.filter(d=>m.version===2&&d.origin==='cache')
  requireProof(network.length===snapshot.requests&&network.length+cached.length===m.documents.length,'document request count differs')
  const journal=readRegular(directory,'attempts.jsonl').toString().trim().split('\n').map(line=>JSON.parse(line))
  requireProof(journal.length===snapshot.requests,'request journal count differs')
@@ -141,7 +171,7 @@ export async function verifyFussballDirectory(directory,{collectFn=collectFussba
   const d=documents.get(url);requireProof(d,'missing captured source document')
   return new Response(d.bytes,{status:d.status,headers:{'content-type':d.contentType}})
  }})
- const result=await collectFn({...options,client:replay,onProgress:()=>{}})
+ const result=await collectWithArchiveParent(collectFn,{...options,client:replay,onProgress:()=>{}},parent)
  requireProof(json(result)===raw,'result differs from full offline replay')
  requireProof(replay.snapshot().requests===snapshot.requests&&usedCached.size===cached.length,'unused or missing source documents in replay')
  return {verified:true,activationEligible:false,scope:result.scope,coverage:result.coverage,requests:snapshot.requests,resultSha256:m.resultSha256,codeSha256:m.codeSha256}

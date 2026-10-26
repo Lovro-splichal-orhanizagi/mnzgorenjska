@@ -1,0 +1,101 @@
+{
+  "current": {
+    "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+    "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+    "season": "2026/27"
+  },
+  "currentSourceRun": 40366437379,
+  "currentSourceFile": "de-fussball-baden-current-20261026.html",
+  "currentOriginalReceipt": {
+    "version": 1,
+    "document": {
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+      "kind": "round",
+      "sha256": "8f254a7962340dce6dfcc6a1ec8ecd1b9ebdd5721f2eae65ecbe7086303613b2",
+      "bytes": 199724,
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-10-26T17:13:07.893Z"
+    },
+    "attempt": {
+      "number": 1,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+      "kind": "round",
+      "startedAt": "2026-10-26T17:13:07.893Z",
+      "status": "success",
+      "error": null,
+      "httpStatus": 200
+    },
+    "capture": {
+      "createdAt": "2026-10-26T17:13:07.888Z",
+      "codeSha256": "d93304933cf1ed1f52736d8a2b054a980ff11a3020217f4a6887fa73ed47e1a5",
+      "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+      "season": "2026/27"
+    }
+  },
+  "archive": {
+    "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+    "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+    "season": "2025/26"
+  },
+  "archiveSourceRun": 40404124953,
+  "archiveSourceFile": "de-fussball-baden-archive-20261026.html",
+  "archiveSourceDocument": {
+    "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+    "kind": "round",
+    "bytes": 200888,
+    "sha256": "0656d749fe1aae62c48d11e478c103717db53e34bb3cd57a79b2d503e55bc6ea",
+    "status": 200,
+    "contentType": "text/html; charset=UTF-8",
+    "capturedAt": "2026-10-26T21:25:18.232Z",
+    "file": "documents/0656d749fe1aae62c48d11e478c103717db53e34bb3cd57a79b2d503e55bc6ea.html"
+  },
+  "observedSeedUrl": "https://www.fussball.de/spieltag/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+  "redirect": {
+    "from": "https://www.fussball.de/spieltag/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+    "to": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+    "status": 301,
+    "sourceRun": 40403312901,
+    "startedAt": "2026-10-26T21:19:35.829Z",
+    "manifestSha256": "3486ef93abee62b3897c55cc25403fbe51e6157290391d0de37cd75015cd6b8a"
+  },
+  "redirectProbeManifest": {
+    "version": 1,
+    "provider": "fussball-screen",
+    "createdAt": "2026-10-26T21:19:35.826Z",
+    "completedAt": "2026-10-26T21:19:36.627Z",
+    "options": {
+      "seedUrl": "https://www.fussball.de/spieltag/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "season": "2025/26",
+      "maxRequests": 1,
+      "reportLimit": 1,
+      "asOfDate": "2026-10-26"
+    },
+    "codeSha256": "1594122f8f7da3b201d50f6a1d06d03d5777815e60644a1a25d09481af35b344",
+    "success": false,
+    "error": "fussball capture: redirect refused (HTTP 301)",
+    "snapshot": {
+      "requests": 1,
+      "attempts": [
+        {
+          "number": 1,
+          "url": "https://www.fussball.de/spieltag/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "kind": "round",
+          "startedAt": "2026-10-26T21:19:35.829Z",
+          "status": "failed",
+          "error": "fussball capture: redirect refused (HTTP 301)",
+          "httpStatus": 301,
+          "canonicalLocation": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G"
+        }
+      ],
+      "stopped": true,
+      "stopReason": "fussball capture: redirect refused (HTTP 301)"
+    },
+    "documents": [],
+    "resultSha256": null,
+    "activationEligible": false,
+    "sezonskiUvozPodprt": false
+  },
+  "note": "Unmodified original current and archive HTML. Archive header probe returned HTTP200 then ordinary source identity refused current-parent SEO. The HTTP301 probe was terminal and never followed; its single request and the canonical header request remain in cumulative prior363."
+}
