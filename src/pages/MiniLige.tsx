@@ -15,6 +15,7 @@ import {
   vecLig,
   privzetoImeLige,
   DOLZINA_KODE,
+  NAJMANJ_EKIP_ZA_DVOBOJE,
   type MiniVrstica,
 } from '../lib/miniLige'
 import DeliMiniLigo from '../components/DeliMiniLigo'
@@ -24,6 +25,7 @@ import JavnostMiniLige from '../components/JavnostMiniLige'
 import IzstopMiniLige from '../components/IzstopMiniLige'
 import SaljiveNagrade from '../components/SaljiveNagrade'
 import NapovediMiniLige from '../components/NapovediMiniLige'
+import DvobojiMiniLige, { IzbiraPogleda, type PogledMiniLige } from '../components/DvobojiMiniLige'
 import { t, tx } from '../i18n'
 import { dogodek } from '../lib/analitika'
 import { prevediNapako } from '../lib/napake'
@@ -83,9 +85,10 @@ export default function MiniLige() {
   const [novaLiga, setNovaLiga] = useState<number | null>(null)
   // Po izstopu ali odstranitvi ekipe lestvico naložimo znova.
   const [osvezi, setOsvezi] = useState(0)
-  // Lestvica ekip ali napovedi izidov; poziv z Moje ekipe pride z ?pogled=napovedi.
-  const [pogled, setPogled] = useState<'lestvica' | 'napovedi'>(() =>
-    params.get('pogled') === 'napovedi' ? 'napovedi' : 'lestvica',
+  // Skupna lestvica, dvoboji ali napovedi izidov; izbira ostane ob preklopu
+  // mini lige. Poziv z Moje ekipe pride z ?pogled=napovedi.
+  const [pogled, setPogled] = useState<PogledMiniLige>(() =>
+    params.get('pogled') === 'napovedi' ? 'napovedi' : 'skupno',
   )
 
   useEffect(() => {
@@ -189,6 +192,8 @@ export default function MiniLige() {
   const trenutna = lige.find((l) => l.id === izbrana) ?? null
   const semLastnik = !!trenutna && trenutna.owner_id === uporabnikId
   const mojihVLigi = lestvica.filter((v) => v.owner_id === uporabnikId).length
+  // Z eno samo ekipo dvobojev ni; pogled se skrije in kaže skupno lestvico.
+  const zDvoboji = lestvicaZa === izbrana && urejena.length >= NAJMANJ_EKIP_ZA_DVOBOJE
 
   async function poIzstopu(besedilo: string) {
     setNapaka(null)
@@ -414,23 +419,16 @@ export default function MiniLige() {
             <DeliMiniLigo ime={trenutna.name} koda={trenutna.code} stanje={stanjeDeljenja} />
           )}
 
-          <div className="flex gap-1 rounded-lg bg-white/5 p-1" role="group">
-            {(['lestvica', 'napovedi'] as const).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPogled(p)}
-                aria-pressed={pogled === p}
-                className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition ${
-                  pogled === p ? 'bg-gnl-500 text-slate-950' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                {p === 'lestvica' ? t('lestvice.napovedi.lestvica') : t('lestvice.napovedi.napovedi')}
-              </button>
-            ))}
-          </div>
+          <IzbiraPogleda
+            pogled={pogled}
+            onPogled={setPogled}
+            moznosti={zDvoboji ? ['skupno', 'dvoboji', 'napovedi'] : ['skupno', 'napovedi']}
+          />
 
           {pogled === 'napovedi' && trenutna ? (
             <NapovediMiniLige ligaId={trenutna.id} />
+          ) : zDvoboji && pogled === 'dvoboji' && trenutna ? (
+            <DvobojiMiniLige ligaId={trenutna.id} />
           ) : urejena.length === 0 ? (
             <p className="text-sm text-slate-400">
               {t('lestvice.miniLige.prazna')}
@@ -490,7 +488,7 @@ export default function MiniLige() {
             </ol>
           )}
 
-          {trenutna && pogled === 'lestvica' && (
+          {trenutna && pogled !== 'napovedi' && (
             // Ob preklopu šaljivih nagrad se pregled naloži znova.
             <TedenskiPregled
               key={`${trenutna.id}-${trenutna.saljive_nagrade}`}
