@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react'
-import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom'
+import { lazy, Suspense, useEffect } from 'react'
+import { Routes, Route, Navigate, useLocation, useNavigationType, useParams } from 'react-router-dom'
 import { Link } from './components/Povezava'
 import { AuthProvider } from './lib/useAuth'
 import { TekmovanjeProvider } from './lib/tekmovanje'
@@ -99,11 +99,24 @@ function NiStrani() {
   )
 }
 
+// Nova stran se začne na vrhu: brez tega je klik na povezavo z dna Moje
+// ekipe odprl Napovedi pri nogi (26. 10. 2026). Nazaj/naprej (POP) ohrani,
+// kar obnovi brskalnik, povezava s # pa skoči na svoj cilj. Le ob menjavi
+// poti, ne ob ?t= (izbira lige ostane na istem mestu strani).
+function useNaVrhObPrehodu(pathname: string, hash: string) {
+  const vrsta = useNavigationType()
+  useEffect(() => {
+    if (vrsta !== 'POP' && !hash) window.scrollTo(0, 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
+}
+
 export default function App() {
   // Napaka na eni strani naj ne ostane prilepljena na vse naslednje: nov
   // ključ ob navigaciji oprijem ponastavi.
-  const { pathname, search } = useLocation()
+  const { pathname, search, hash } = useLocation()
   useKanonicni(pathname, search)
+  useNaVrhObPrehodu(pathname, hash)
   useNoindex(jeZasebna(pathname))
   // Katero stran človek po registraciji sploh odpre — dnevni seštevki, brez
   // uporabnika in naprave (`src/lib/obiski.ts`).
