@@ -21,6 +21,7 @@
 // pred rokom, enkrat na krog) prav tako.
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
+import { vseVrstice } from './strani.mjs'
 
 function izEnv() {
   try {
@@ -105,6 +106,21 @@ let padlo = 0
 // pocena ali proracun porabljen. Ponovni klic ne podvaja: opomnik istemu
 // cloveku ne gre dvakrat v 7 dneh, tedenski pregled ne dvakrat za isti krog.
 const KOS = Number(process.env.KOS ?? 10)
+// Samodejna shramba (26. 10. 2026) shrani tudi na pol sestavljene ekipe; te
+// so neveljavne, dokler jih lastnik ne dopolni, in opozorilo pred rokom jim
+// prav pride. Meje NAJVEC_NA_LIGO pa ne smejo zapolniti: ta lovi veljavne
+// ekipe, ki se pokvarijo hkrati (napaka uvoza). Nove nepopolne ekipe (brez
+// posnetka kroga, manj kot 15 igralcev) zato meji prištejemo.
+async function nepopolneNove(ligaId) {
+  const ekipe = await vseVrstice((od, do_) => db.from('fantasy_teams')
+    .select('id, fantasy_roster(count), fantasy_lineups(count)')
+    .eq('competition_id', ligaId).eq('hisna', false).order('id').range(od, do_))
+  return ekipe.filter((e) => {
+    const kader = e.fantasy_roster?.[0]?.count ?? 0
+    return kader > 0 && kader < 15 && !(e.fantasy_lineups?.[0]?.count)
+  }).length
+}
+
 const poklici = (liga, najvecPoslati) =>
   fetch(`${BASE}/functions/v1/posli-opomnik`, {
     method: 'POST',
@@ -116,15 +132,26 @@ const poklici = (liga, najvecPoslati) =>
     // po odgovoru, ko je bila posta ze poslana.
     body: JSON.stringify({
       competition_id: liga.id, suho, vrsta, dni,
-      ...(poUrniku ? { najvec: NAJVEC_NA_LIGO } : {}),
+      ...(poUrniku ? { najvec: liga.meja } : {}),
       ...(najvecPoslati != null ? { najvec_poslati: najvecPoslati } : {}),
     }),
   })
 
 for (const liga of lige ?? []) {
+  liga.meja = NAJVEC_NA_LIGO
   const poKosih = sProracunom && !suho
   let odgovor = await poklici(liga, poKosih ? Math.min(KOS, proracun) : sProracunom ? proracun : null)
   let izid = await odgovor.json().catch(() => ({}))
+  // Nad mejo: preštejemo nove nepopolne ekipe (le takrat, ne vsako uro za
+  // vsako ligo) in poskusimo enkrat znova z višjo mejo.
+  if (odgovor.status === 409 && vrsta === 'opozorilo') {
+    const nove = await nepopolneNove(liga.id)
+    if (nove > 0) {
+      liga.meja += nove
+      odgovor = await poklici(liga, null)
+      izid = await odgovor.json().catch(() => ({}))
+    }
+  }
   if (poKosih && odgovor.ok) {
     const kandidatov = izid.kandidati_stevilo ?? 0
     let poslano = izid.poslanih_mailov ?? izid.poslano ?? 0
@@ -147,7 +174,7 @@ for (const liga of lige ?? []) {
   }
   if (odgovor.status === 409) {
     console.error(
-      `  ${liga.slug.padEnd(14)} USTAVLJENO: ${izid.kandidati_stevilo ?? '?'} kandidatov (meja ${NAJVEC_NA_LIGO}).` +
+      `  ${liga.slug.padEnd(14)} USTAVLJENO: ${izid.kandidati_stevilo ?? '?'} kandidatov (meja ${liga.meja}).` +
         ' Toliko hkrati pomeni napako pri uvozu, ne pri uporabnikih. Nic ni bilo poslano.',
     )
     padlo++
@@ -161,17 +188,18 @@ for (const liga of lige ?? []) {
   const n = izid.kandidati_stevilo ?? 0
   // Suhi tek ne posilja, zato ga funkcija ne ustavi; mejo pa vseeno pokazemo,
   // da se vidi, katera liga bi se ob pravem zagonu ustavila.
-  if (poUrniku && n > NAJVEC_NA_LIGO && suho) {
+  if (suho && vrsta === 'opozorilo' && n > liga.meja) liga.meja += await nepopolneNove(liga.id)
+  if (poUrniku && n > liga.meja && suho) {
     console.error(
-      `  ${liga.slug.padEnd(14)} BI USTAVILO: ${n} kandidatov (meja ${NAJVEC_NA_LIGO}).`,
+      `  ${liga.slug.padEnd(14)} BI USTAVILO: ${n} kandidatov (meja ${liga.meja}).`,
     )
   }
   // Pravi zagon nad mejo, ki ga funkcija NI ustavila: objavljena je stara
   // razlicica brez `najvec` in je sporocila ze poslala. Ustaviti ne moremo
   // vec, zagon pa mora biti rdec, da se opazi.
-  if (poUrniku && n > NAJVEC_NA_LIGO && !suho) {
+  if (poUrniku && n > liga.meja && !suho) {
     console.error(
-      `::error::${liga.slug}: ${n} kandidatov nad mejo ${NAJVEC_NA_LIGO}, funkcija pa ni ustavila ` +
+      `::error::${liga.slug}: ${n} kandidatov nad mejo ${liga.meja}, funkcija pa ni ustavila ` +
         'posiljanja — objavljena je stara razlicica brez `najvec`. Objavi funkcijo znova.',
     )
     padlo++
