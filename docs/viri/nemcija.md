@@ -186,6 +186,18 @@ ponovi celoten prehod samo iz shranjenih bajtov, brez omrežnega nadomestila.
 ali dostopa do baze. Izhod vedno vsebuje `activationEligible:false`; ta
 zbiralnik sam ne vpiše igralcev in ne vklopi lige.
 
+Zajem Baden 40407936449 se je po 90 zahtevkih ustavil pri razčlenitvi
+20. kroga (19. je zadnji uspešno zabeleženi). Vrstica `spielfrei` lahko
+namesto praznega datuma vsebuje samo datum brez ure, opaženo
+`Mo, 29.03.27 |`. Takšna vrstica ni tekma: še vedno zahteva en klub,
+izrecni `spielfrei`, prazen izid in nobene povezave na zapisnik. Datum se
+dekodira z vezano pisavo, mora biti veljaven in se ujemati z glavo istega
+dne; ura ali drugačna/neprepoznana vsebina se zavrne. Izvirna stran in obe
+pisavi s provenienco so v `de-fussball-baden-round20-20261026.json`.
+Offline ponovitev ohrani vseh sedem tekem in eno prestavljeno referenco.
+Zavrnjen zajem ostane zavrnjen; ne postane dovoljenje za uvoz ali arhiv.
+Skupna poraba pred ponovitvijo je 453 od odobrenih 5000 zahtevkov.
+
 ### Hitri pregled pred celotnim zajemom (24. 10. 2026)
 
 `zajemi-fussball-vzorec.mjs` preveri opaženi krog in največ en prej

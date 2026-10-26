@@ -1,0 +1,39 @@
+{
+  "sourceRun": 40407936449,
+  "sourceUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/spieltag/20/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+  "capturedAt": "2026-10-26T22:01:23.501Z",
+  "sourceSha256": "b292bee469de80e577fed1f8354c5a115de0009eed0f2a9443601fcaa6e3c0e5",
+  "sourceBytes": 200360,
+  "fixture": "de-fussball-baden-round20-20261026.html",
+  "fonts": {
+    "4n0zaz5q": {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/4n0zaz5q/type/font",
+      "kind": "font",
+      "bytes": 8984,
+      "sha256": "4705524e6fed8c318ca019162ec22435938efad5c92b17cbf7ab9d49f1655880",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-10-26T22:01:35.502Z",
+      "file": "de-fussball-baden-round20-4n0zaz5q.woff"
+    },
+    "enz2aawj": {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/enz2aawj/type/font",
+      "kind": "font",
+      "bytes": 2984,
+      "sha256": "1d34767032ea59590071cf3198f34e4bcf42077dd79f618acfff0effc4f662c5",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-10-26T22:01:47.503Z",
+      "file": "de-fussball-baden-round20-enz2aawj.woff"
+    }
+  },
+  "expected": {
+    "season": "2026/27",
+    "round": 20,
+    "fixtures": 7,
+    "rescheduled": 1,
+    "byeClub": "SV Waldhof Mannheim 2",
+    "byeDate": "2027-03-29"
+  },
+  "note": "Unmodified full round and exact bound fonts from the failed hosted capture. A dated spielfrei row is not a match."
+}

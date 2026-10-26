@@ -84,6 +84,20 @@ test('spielfrei text cannot conceal a report link, result, second club or unknow
  ]
  for(const bad of mutations)assert.throws(()=>razberiKrog(changed(html,'</tbody>',bad+'</tbody>'),{fonts,staffel:'031EKNM2HG00000LVS5489BUVUR5FS5A-G'}),/tekma kroga|spielfrei/)
 })
+test('the genuine dated Baden bye preserves seven fixtures and one postponed reference',()=>{
+ const proof=JSON.parse(read('de-fussball-baden-round20-20261026.json'))
+ const html=read(proof.fixture).toString(),opts={staffel:'03188V27L800000JVS5489BTVU7GTVLE-G',fonts:Object.fromEntries(Object.entries(proof.fonts).map(([id,f])=>[id,{bytes:read(f.file),sha256:f.sha256}]))}
+ const r=razberiKrog(html,opts)
+ assert.equal(r.krog,20);assert.equal(r.sezona,'2026/27')
+ assert.equal(r.tekme.length,7);assert.equal(r.prestavljene.length,1)
+ assert.ok(![...r.tekme,...r.prestavljene].some(t=>t.domaci==='SV Waldhof Mannheim 2'||t.gostje==='SV Waldhof Mannheim 2'))
+ const row=[...html.matchAll(/<tr\b[^>]*>[\s\S]*?<\/tr>/g)].map(m=>m[0]).find(row=>row.includes('>spielfrei</span>'))
+ const date=row.match(/<td class="column-date">[\s\S]*?<\/td>/)[0]
+ for(const invalid of ['Mo, 29.03.27 | 15:00','Mo, 30.03.27 |','Mo, 31.02.27 |','unknown','<!-- Mo, 29.03.27 | -->']){
+  const bad=changed(html,row,changed(row,date,`<td class="column-date">${invalid}</td>`))
+  assert.throws(()=>razberiKrog(bad,opts),/krog|spielfrei/)
+ }
+})
 test('zero-width club wrap markers do not create a different scheduled team',()=>{
  const html=changed(read('de-fussball-krog8.html').toString(),'SpVgg 03 Ilvesheim','SpVgg&#8203; 03 Ilvesheim')
  const r=razberiKrog(html,{fonts,staffel:'031EKNM2HG00000LVS5489BUVUR5FS5A-G'})
