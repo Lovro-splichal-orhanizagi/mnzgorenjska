@@ -760,7 +760,8 @@ let zapisniki = preberiPosamezniZapisnik
 // dobrih, je verjetneje spremenjena stran kot posamezna napaka (preveriPreskocene), tek pade.
 if (vir.ime === 'dfb' && vir.nepopolni?.length) {
   for (const n of vir.nepopolni) console.warn(`::warning::dfb ${liga}: zapisnik ${n.id} preskočen (${n.razlog}) ${n.url}`)
-  preveriPreskocene(vir.nepopolni, zapisniki.length, liga)
+  preveriPreskocene(vir.nepopolni, zapisniki.length, liga,
+    svezeDni != null ? new Date(Date.now() - svezeDni * 86400000).toISOString().slice(0, 10) : null)
   console.warn(`  OPOZORILO: ${vir.nepopolni.length} zapisnikov dfb preskočenih, ostali se uvozijo`)
 }
 // Validate the complete loaded batch before deriving or writing any individual rows.
