@@ -9,4 +9,4 @@ let fixture=readFileSync(new URL('../supabase/tests/vklop-dfb-regije.sql',import
 if(!/rollback;\s*$/.test(fixture))throw Error('Expected rollback-only native DFB fixture')
 fixture=fixture.replace(/rollback;\s*$/,'')
 const checks=readFileSync(new URL('../supabase/tests/dfb-pending-reports.sql',import.meta.url),'utf8')
-execFileSync('docker',['exec','-i',container,'psql','-U','supabase_admin','-d',db,'-X','-v','ON_ERROR_STOP=1','-v','regional_slug=de-regionalliga-suedwest','-v','current_clubs=18','-v','current_rounds=34'],{input:fixture+'\n'+checks,stdio:['pipe','inherit','inherit']})
+execFileSync('docker',['exec','-i',container,'psql','-U','supabase_admin','-d',db,'-X','-v','ON_ERROR_STOP=1','-v','regional_slug=de-regionalliga-nord','-v','current_clubs=18','-v','current_rounds=34'],{input:fixture+'\n'+checks,stdio:['pipe','inherit','inherit']})
