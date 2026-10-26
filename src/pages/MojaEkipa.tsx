@@ -284,6 +284,8 @@ export default function MojaEkipa() {
   const [napakaNalaganja, setNapakaNalaganja] = useState<string | null>(null)
   const [poskus, setPoskus] = useState(0)
   const [shranjujem, setShranjujem] = useState(false)
+  // Zadnja shramba je bila samodejna (gumb takrat pove »Shranjeno«).
+  const [samodejnoShranjeno, setSamodejnoShranjeno] = useState(false)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
   // Odstranjen igralec za gumb "Razveljavi" — vrne se na isto mesto in vlogo.
   const [razveljavi, setRazveljavi] = useState<{
@@ -413,6 +415,31 @@ export default function MojaEkipa() {
     !nalaganje &&
     !napakaNalaganja &&
     (kljucKadra(izbrani) !== shranjenKljuc || (ekipa != null && imeEkipe.trim() !== ekipa.name))
+
+  // Samodejna shramba (26. 10. 2026): nova ali še nepopolna ekipa se shrani
+  // sama, malo po zadnji spremembi — tudi osnutek izpred prijave. Prestope
+  // šteje šele zaklep kroga (razlika do prejšnje postave), zato vmesne shrambe
+  // ne stanejo nič. Popolna shranjena ekipa ostane na gumbu: na pol narejena
+  // menjava bi sicer veljavno ekipo pred rokom pokvarila.
+  const samodejnaShramba =
+    neshranjeno && zacetniIds.size < VELIKOST_EKIPE && izbrani.length > 0 && !!imeEkipe.trim()
+  const kljucIzbranih = kljucKadra(izbrani)
+  // Zadnji izbrani kader: shramba, ki se konča po novi spremembi, je ne povozi.
+  const zadnjiKljuc = useRef(kljucIzbranih)
+  zadnjiKljuc.current = kljucIzbranih
+  // Kader, ki ga je samodejna shramba že poskusila: ob napaki ne poskuša
+  // znova v zanki, ampak šele po naslednji spremembi.
+  const poskusenKljuc = useRef<string | null>(null)
+  useEffect(() => {
+    if (!samodejnaShramba || shranjujem || poskusenKljuc.current === kljucIzbranih) return
+    const cas = setTimeout(() => {
+      poskusenKljuc.current = kljucIzbranih
+      setShranjujem(true)
+      shrani(true).finally(() => setShranjujem(false))
+    }, 1200)
+    return () => clearTimeout(cas)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [samodejnaShramba, kljucIzbranih, imeEkipe, shranjujem])
 
   // Izbirnik lige in odjava v meniju vprašata sama (lib/neshranjeno).
   useEffect(() => {
@@ -1098,7 +1125,9 @@ export default function MojaEkipa() {
     // Ne gre (pozicija, klub, denar): dodaj pokaže razlog kot gumb na trgu.
     if (zakajNeGre(igralec, izbraniPodrobno, preostalo)) return dodaj(igralec)
     dodaj(igralec)
-    setSporocilo(t('mojaEkipa.sporocila.dodan', { ime: ime(id) }))
+    // Nova ali nepopolna ekipa prijavljenega se shrani sama (samodejnaShramba).
+    const sama = uporabnikId != null && zacetniIds.size < VELIKOST_EKIPE
+    setSporocilo(t(sama ? 'mojaEkipa.sporocila.dodanSamodejno' : 'mojaEkipa.sporocila.dodan', { ime: ime(id) }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nalaganje, napakaNalaganja, tekmovanjeId, tekmovanje?.slug, lokacija.search])
 
@@ -1340,12 +1369,22 @@ export default function MojaEkipa() {
     shrani().finally(() => setShranjujem(false))
   }
 
-  async function shrani() {
-    setNapaka(null)
-    setSporocilo(null)
-    setRazveljavi(null)
+  /**
+   * `samodejno`: klic samodejne shrambe. Dokler ekipa ne izpolnjuje pravil,
+   * shrani tiho (brez sporočil, piva, povabil in vprašanja za obvestila);
+   * ko je popolna, gre naprej kot ob pritisku na gumb — to je trenutek zanje.
+   */
+  async function shrani(samodejno = false) {
     // Stanje ob pritisku: po njem povemo, ali je ekipa pripravljena za krog.
     const veljavna = napakeEkipe.length === 0
+    const tiho = samodejno && !veljavna
+    const poslanKljuc = kljucKadra(izbrani)
+    setNapaka(null)
+    if (!tiho) {
+      setSporocilo(null)
+      setRazveljavi(null)
+    }
+    setSamodejnoShranjeno(false)
     const zdajMs = Date.now()
     const rokPotekel =
       naslednjiKrog?.deadline_at != null && Date.parse(naslednjiKrog.deadline_at) <= zdajMs
@@ -1370,10 +1409,12 @@ export default function MojaEkipa() {
       ekipaId = data.id
       setEkipa(data)
       zabeleziKorak('prva_shramba')
-      vodicKonec()
-      // Prva shramba je trenutek, ko opomnik pred rokom očitno pomaga: v
-      // aplikaciji takrat (le prvič) vprašamo za potisna obvestila.
-      void registrirajPush(true)
+      if (!tiho) {
+        vodicKonec()
+        // Prva shramba je trenutek, ko opomnik pred rokom očitno pomaga: v
+        // aplikaciji takrat (le prvič) vprašamo za potisna obvestila.
+        void registrirajPush(true)
+      }
     } else if (imeEkipe.trim() !== ekipa.name) {
       const { error } = await supabase
         .from('fantasy_teams')
@@ -1432,11 +1473,17 @@ export default function MojaEkipa() {
       setNapaka(t('mojaEkipa.napake.osvezitev'))
     } else {
       const urejen = poVrstiKlopi(svezRoster as VrsticaKadra[])
-      setIzbrani(urejen)
+      // Med samodejno shrambo je lahko kdo že izbral naslednjega igralca:
+      // njegov kader ostane, shranjeno izhodišče pa je to s strežnika.
+      if (zadnjiKljuc.current === poslanKljuc) setIzbrani(urejen)
       setZacetniIds(new Set(urejen.map((x) => x.player_id)))
       setShranjenKljuc(kljucKadra(urejen))
     }
     osveziRok()
+    if (tiho) {
+      if (!eOsvezitev) setSamodejnoShranjeno(true)
+      return
+    }
 
     const deltaC = centi(izid?.dobicek) - centi(izid?.strosek)
     const denar =
@@ -2527,7 +2574,11 @@ export default function MojaEkipa() {
             }
             className="gumb-glavni relative min-h-[44px] shrink-0 px-4 text-sm disabled:cursor-wait disabled:opacity-60"
           >
-            {shranjujem ? t('mojaEkipa.povzetek.shranjujem') : t('skupno.shrani')}
+            {shranjujem
+              ? t('mojaEkipa.povzetek.shranjujem')
+              : samodejnoShranjeno && !neshranjeno
+                ? t('mojaEkipa.povzetek.shranjeno')
+                : t('skupno.shrani')}
             {!shranjujem && ((uporabnikId && !imeEkipe.trim()) || napakeEkipe.length > 0) && (
               <span
                 aria-label={t('mojaEkipa.telefon.neIzpolnjuje')}
