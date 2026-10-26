@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "Reviewed current tuples and observed archive evidence. Schleswig 2025/26 is advertised by two current season selectors and its archived body/form is verified; SEO canonical points at the current parent. Full season reports remain unvalidated. Mannheim has no observed previous-season pairing. No readiness or activation follows from this catalog.",
+  "note": "Reviewed current tuples and observed archive evidence. Schleswig 2025/26 is advertised by two current season selectors and its archived body/form is verified; SEO canonical points at the current parent. Full season reports remain unvalidated. Mannheim has no observed previous-season pairing. No readiness or activation follows from this catalog. Baden current/archive pairing is bound to retained independent current seed/round20 selectors and explicit terminal301 provenance. Catalog membership alone grants no import or activation.",
   "candidates": [
     {
       "slug": "de-kreisliga-mannheim",
@@ -64,6 +64,51 @@
         "vir_ime": "FUSSBALL.DE",
         "vir_url": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2627-schleswig-holstein/-/staffel/031AVH9TIC000004VS5489BTVSK8S3O6-G"
       }
+    },
+    {
+      "slug": "de-verbandsliga-baden",
+      "source": "fussball-public",
+      "source_league_code": "03188V27L800000JVS5489BTVU7GTVLE-G:2026/27",
+      "host": "www.fussball.de",
+      "country_code": "DE",
+      "season": "2026/27",
+      "archives": [
+        {
+          "code": "02TGLSVQ1800000IVS5489BTVTLPPK10-G:2025/26",
+          "season": "2025/26",
+          "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "canonicalParent": {
+            "code": "03188V27L800000JVS5489BTVU7GTVLE-G:2026/27",
+            "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G"
+          },
+          "observedSeedUrl": "https://www.fussball.de/spieltag/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "observedRedirect": {
+            "from": "https://www.fussball.de/spieltag/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+            "to": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+            "status": 301,
+            "capturedAt": "2026-10-26T21:19:35.829Z"
+          },
+          "observedFrom": [
+            {
+              "file": "scripts/vzorci/de-fussball-baden-current-20261026.html",
+              "sha256": "8f254a7962340dce6dfcc6a1ec8ecd1b9ebdd5721f2eae65ecbe7086303613b2"
+            },
+            {
+              "file": "scripts/vzorci/de-fussball-baden-round20-20261026.html",
+              "sha256": "b292bee469de80e577fed1f8354c5a115de0009eed0f2a9443601fcaa6e3c0e5"
+            }
+          ]
+        }
+      ],
+      "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+      "registration": {
+        "name": "BFV Verbandsliga Baden",
+        "short_name": "Verbandsliga Baden",
+        "sort_order": 102,
+        "rok_pomak_ur": 0,
+        "vir_ime": "FUSSBALL.DE",
+        "vir_url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G"
+      }
     }
   ],
   "evidence": [
@@ -81,6 +126,16 @@
       "code": "02TC3RCRHK000004VS5489BTVVQ0O654-G:2025/26",
       "file": "scripts/vzorci/de-fussball-schleswig-archive-20261026.html",
       "sha256": "9c6c1c35efa8179091a071788e8a21554bdea7693b1e0c9ec637be598157cbb4"
+    },
+    {
+      "code": "03188V27L800000JVS5489BTVU7GTVLE-G:2026/27",
+      "file": "scripts/vzorci/de-fussball-baden-current-20261026.html",
+      "sha256": "8f254a7962340dce6dfcc6a1ec8ecd1b9ebdd5721f2eae65ecbe7086303613b2"
+    },
+    {
+      "code": "02TGLSVQ1800000IVS5489BTVTLPPK10-G:2025/26",
+      "file": "scripts/vzorci/de-fussball-baden-archive-20261026.html",
+      "sha256": "0656d749fe1aae62c48d11e478c103717db53e34bb3cd57a79b2d503e55bc6ea"
     }
   ]
 }

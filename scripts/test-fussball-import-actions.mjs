@@ -29,3 +29,14 @@ test('manual workflow never executes artifact code, accepts alternate refs or ac
  assert.ok(!/vklopi_ligo|vklop-lige|update.*active|checkout[^\n]*capture/.test(s))
  assert.match(s,/cancel-in-progress: false/)
 })
+
+test('paired admission requires both distinct exact-run artifacts and first audit attempt',()=>{
+ assert.equal(typeof api.admitFussballPairedAudit,'function')
+ const inventory=artifacts();inventory.artifacts.push({...inventory.artifacts[0],id:124,name:'fussball-season-archive-'+runId})
+ const admitted=api.admitFussballPairedAudit({...run(),run_attempt:1},inventory,options)
+ assert.equal(admitted.current.artifactId,123);assert.equal(admitted.archive.artifactId,124)
+ for(const alter of [x=>x.artifacts.pop(),x=>x.artifacts[1].expired=true,x=>x.artifacts[1].workflow_run.head_sha='b'.repeat(40),x=>x.artifacts[1].id=123,x=>x.artifacts.push(structuredClone(x.artifacts[1]))]){
+  const bad=structuredClone(inventory);alter(bad);assert.throws(()=>api.admitFussballPairedAudit({...run(),run_attempt:1},bad,options))
+ }
+ assert.throws(()=>api.admitFussballPairedAudit({...run(),run_attempt:2},inventory,options))
+})

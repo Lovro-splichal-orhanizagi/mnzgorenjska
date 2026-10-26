@@ -45,6 +45,11 @@ export async function fussballBulkCacheDocuments(directory,{staffel,season,seedU
  const {loadGermanyPack}=await import('./bulk-germany-source.mjs')
  await (loadPack??loadGermanyPack)(directory,{candidate:m.candidate,requireFresh:false})
  requireProof(m.candidate?.source_league_code===`${staffel}:${season}`&&m.candidate.seedUrl===seedUrl,'bulk cache current scope differs')
+ if(m.provider==='germany-paired-fussball'){
+  const current=JSON.parse(readRegular(directory,'current/manifest.json'))
+  requireProof(current.version===1&&current.options.staffel===staffel&&current.options.season===season&&current.options.seedUrl===seedUrl,'paired cache current scope differs')
+  return current.documents.filter(d=>d.kind!=='round').map(d=>({...d,bytes:readRegular(directory,'current/'+d.file),originalReceipt:originalReceipt(d,current)}))
+ }
  const docs=new Map(m.documents.map(d=>[d.url,d])),used=new Set()
  const result=await collectFn({staffel,season,seedUrl,reportLimit:null,asOfDate:m.captured_at.slice(0,10),client:{read:async(url,kind)=>{
   const d=docs.get(url);requireProof(d?.kind===kind,'missing original current bulk document')

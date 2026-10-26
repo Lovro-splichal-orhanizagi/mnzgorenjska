@@ -1,4 +1,5 @@
-// Optional source-only hosted continuation. No database or activation authority.
+// Optional hosted continuation. No database or activation authority; an explicit
+// rollout selection may dispatch the separately gated native workflow.
 import {readFileSync,appendFileSync} from 'node:fs'
 import {resolve,join} from 'node:path'
 import {pathToFileURL} from 'node:url'
@@ -6,6 +7,8 @@ import {execFileSync} from 'node:child_process'
 import {validateFussballCaptureOptions,verifyFussballDirectory,captureFussballDirectory} from './fussball-capture-evidence.mjs'
 import {fussballRoundScope} from './lib/fussball-capture.mjs'
 import {extractFussballSeasonLinks,fussballArchiveSeedAlias} from './fussball-season-links.mjs'
+import {GERMANY_BULK_CANDIDATES,validateGermanyCandidate} from './bulk-germany-source.mjs'
+import {loadFussballImportCapture} from './fussball-import.mjs'
 import {runFussballCaptureCli} from './zajemi-fussball-sezono.mjs'
 const requireProof=(ok,message)=>{if(!ok)throw Error(`fussball season pilot: ${message}`)}
 const repository='Lovro-splichal-orhanizagi/mnzgorenjska'
@@ -21,7 +24,7 @@ function scope(options){
 }
 export function validateFussballSeasonPilot(e,{headSha}={}){
  const maxRequests=integer(e.MAX_REQUESTS,1,3000)
- if(!e.ARCHIVE_JSON?.trim())return null
+ if(!e.ARCHIVE_JSON?.trim()){requireProof(!e.ROLLOUT_CANDIDATE,'rollout requires paired archive scope');return null}
  requireProof(e.GITHUB_REPOSITORY===repository&&e.GITHUB_REF==='refs/heads/main'&&e.GITHUB_EVENT_NAME==='workflow_dispatch'&&e.GITHUB_WORKFLOW_REF===`${repository}/.github/workflows/preveri-fussball-sezono.yml@refs/heads/main`&&e.GITHUB_RUN_ATTEMPT==='1'&&/^[1-9]\d*$/.test(e.GITHUB_RUN_ID??''),'exact repository main dispatch and first attempt required')
  requireProof(/^[a-f0-9]{40}$/.test(e.EXPECTED_SHA??'')&&e.EXPECTED_SHA===e.GITHUB_SHA&&e.EXPECTED_SHA===headSha,'exact reviewed main SHA required')
  requireProof(e.REPORTS==='all','paired seasons require reports=all')
@@ -35,7 +38,13 @@ export function validateFussballSeasonPilot(e,{headSha}={}){
  // Initial361 plus two retained GitHub identity probes stay on the ledger.
  const priorRequests=integer(e.PRIOR_REQUESTS,363,5000),totalRequestCap=integer(e.TOTAL_REQUEST_CAP,1,5000)
  requireProof(priorRequests+current.maxRequests+archive.maxRequests<=totalRequestCap,'cumulative reserved request budget exceeds cap')
- return {current,archive,priorRequests,totalRequestCap}
+ if(e.ROLLOUT_CANDIDATE){
+  const candidates=GERMANY_BULK_CANDIDATES.filter(c=>c.slug===e.ROLLOUT_CANDIDATE)
+  requireProof(candidates.length===1,'unknown reviewed rollout candidate')
+  const c=validateGermanyCandidate(candidates[0]),a=c.archives[0]
+  requireProof(c.archives.length===1&&c.source_league_code===`${current.staffel}:${current.season}`&&c.seedUrl===current.seedUrl&&a.code===`${archive.staffel}:${archive.season}`&&a.seedUrl===archive.seedUrl&&(a.observedSeedUrl??a.seedUrl)===(archive.observedSeedUrl??archive.seedUrl),'rollout candidate does not own the exact paired scopes')
+ }
+ return {current,archive,priorRequests,totalRequestCap,...(e.ROLLOUT_CANDIDATE?{rolloutCandidate:e.ROLLOUT_CANDIDATE}:{})}
 }
 export async function authorizeFussballSeasonArchive(directory,e,{headSha,collectFn}={}){
  const plan=validateFussballSeasonPilot(e,{headSha});requireProof(plan,'archive plan required')
@@ -52,11 +61,28 @@ export async function authorizeFussballSeasonArchive(directory,e,{headSha,collec
  requireProof(cumulativeReserved<=plan.totalRequestCap,'remaining cumulative request budget exceeded')
  return {...plan,currentRequests:verified.requests,cumulativeReserved}
 }
+export async function authorizeFussballRollout({currentDirectory,archiveDirectory,e,headSha,mainSha,now=Date.now()}={}, {loadCapture=loadFussballImportCapture,readManifest=directory=>JSON.parse(readFileSync(join(directory,'manifest.json')))}={}){
+ const plan=validateFussballSeasonPilot(e,{headSha})
+ requireProof(plan?.rolloutCandidate&&mainSha===e.EXPECTED_SHA,'explicit reviewed rollout selection and unchanged main required')
+ for(const [directory,scope,current,version]of [[currentDirectory,plan.current,true,1],[archiveDirectory,plan.archive,false,3]]){
+  const m=readManifest(directory)
+  requireProof(m.version===version&&m.success===true&&m.options?.reportLimit===null&&['seedUrl','staffel','season'].every(k=>m.options[k]===scope[k]),'handoff capture version/scope/full intent differs')
+  const batch=await loadCapture(directory,{staffel:scope.staffel,season:scope.season,current,now})
+  requireProof(batch.provider==='fussball-public'&&batch.staffel===scope.staffel&&batch.season===scope.season&&batch.activationEligible===false&&batch.reports?.length>0&&batch.schedule?.length>0&&batch.identities?.length>0,'complete native source batch required before dispatch')
+ }
+ return ['workflow','run','uvoz-pl-de-paketa.yml','--repo',repository,'--ref','main','-f','country=DE','-f','expected_sha='+e.EXPECTED_SHA,'-f','audit_run='+e.GITHUB_RUN_ID,'-f','candidate='+plan.rolloutCandidate,'-f','max_requests=1']
+}
 async function main(args){
  const [mode,directory]=args
- requireProof((mode==='validate'&&args.length===1)||(['authorize','capture-archive'].includes(mode)&&args.length===2),'use validate, authorize DIRECTORY or capture-archive DIRECTORY')
+ requireProof((mode==='validate'&&args.length===1)||(['authorize','capture-archive'].includes(mode)&&args.length===2)||(mode==='handoff'&&args.length===3),'use validate, authorize DIRECTORY, capture-archive DIRECTORY or handoff CURRENT ARCHIVE')
  const e=process.env,headSha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()
  if(mode==='validate'){console.log(JSON.stringify(validateFussballSeasonPilot(e,{headSha})));return}
+ if(mode==='handoff'){
+  const remoteMain=()=>execFileSync('git',['ls-remote','--exit-code','origin','refs/heads/main'],{encoding:'utf8',timeout:30000}).split(/\s/)[0]
+  const dispatch=await authorizeFussballRollout({currentDirectory:resolve(directory),archiveDirectory:resolve(args[2]),e,headSha,mainSha:remoteMain()})
+  requireProof(remoteMain()===e.EXPECTED_SHA,'main changed after offline rollout verification')
+  execFileSync('gh',dispatch,{stdio:'inherit',timeout:30000});return
+ }
  const result=await authorizeFussballSeasonArchive(resolve(directory),e,{headSha})
  if(mode==='authorize'){
   // Only a successful capture and independent replay can emit this permission.

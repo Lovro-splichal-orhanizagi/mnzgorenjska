@@ -2,15 +2,15 @@ import {readFileSync,writeFileSync} from 'node:fs'
 import {resolve} from 'node:path'
 import {pathToFileURL} from 'node:url'
 import {tekmovanje} from './tekmovanje.mjs'
-import {admitFussballAudit,assertFussballImportCompetition} from './fussball-import-actions.mjs'
+import {admitFussballAudit,admitFussballPairedAudit,assertFussballImportCompetition} from './fussball-import-actions.mjs'
 import {loadFussballImportCapture,parseFussballLeagueCode} from './fussball-import.mjs'
 
 export async function runFussballImportCli(args){
- const mode=args.shift(),allowed={admit:['run','artifacts','repository','head-sha','run-id'],preview:['capture','code','output'],'check-competition':['slug','code']}[mode],options={}
+ const mode=args.shift(),allowed={admit:['run','artifacts','repository','head-sha','run-id'],'admit-pair':['run','artifacts','repository','head-sha','run-id'],preview:['capture','code','output'],'check-competition':['slug','code']}[mode],options={}
  if(!allowed)throw Error('Use admit, preview or check-competition with their explicit named arguments')
  while(args.length){const key=args.shift(),value=args.shift();if(!key?.startsWith('--')||!allowed.includes(key.slice(2))||!value||value.startsWith('--')||Object.hasOwn(options,key.slice(2)))throw Error('Invalid or duplicate import argument');options[key.slice(2)]=value}
  if(allowed.some(key=>!options[key]))throw Error('Missing required import argument')
- if(mode==='admit')return admitFussballAudit(JSON.parse(readFileSync(options.run,'utf8')),JSON.parse(readFileSync(options.artifacts,'utf8')),{repository:options.repository,headSha:options['head-sha'],runId:options['run-id']})
+ if(['admit','admit-pair'].includes(mode))return (mode==='admit'?admitFussballAudit:admitFussballPairedAudit)(JSON.parse(readFileSync(options.run,'utf8')),JSON.parse(readFileSync(options.artifacts,'utf8')),{repository:options.repository,headSha:options['head-sha'],runId:options['run-id']})
  if(mode==='preview'){
   const batch=await loadFussballImportCapture(resolve(options.capture),{...parseFussballLeagueCode(options.code),current:true})
   writeFileSync(options.output,JSON.stringify(batch)+'\n',{flag:'wx'})

@@ -16,6 +16,14 @@ on:
         description: 'Explicit actual request cap PER HOST (1–4000); failed requests count'
         type: number
         required: true
+      audit_run:
+        description: 'Optional successful paired FUSSBALL audit run at expected_sha; stages retained originals without source requests'
+        type: string
+        default: ''
+      candidate:
+        description: 'Required with audit_run: one exact reviewed German candidate slug'
+        type: string
+        default: ''
 permissions:
   contents: read
   actions: read
@@ -30,6 +38,8 @@ jobs:
       COUNTRY: ${{ inputs.country }}
       EXPECTED_SHA: ${{ inputs.expected_sha }}
       MAX_REQUESTS: ${{ inputs.max_requests }}
+      AUDIT_RUN: ${{ inputs.audit_run }}
+      CANDIDATE: ${{ inputs.candidate }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -42,9 +52,10 @@ jobs:
           node --input-type=module <<'JS'
           import {execFileSync} from 'node:child_process'
           import {existsSync} from 'node:fs'
-          import {bulkCandidates} from './scripts/bulk-source-packs.mjs'
-          const {COUNTRY,EXPECTED_SHA,MAX_REQUESTS,GITHUB_SHA,GITHUB_REF,GITHUB_RUN_ATTEMPT}=process.env
-          if(!['PL','DE','ALL'].includes(COUNTRY)||!/^[a-f0-9]{40}$/.test(EXPECTED_SHA??'')||GITHUB_SHA!==EXPECTED_SHA||GITHUB_REF!=='refs/heads/main'||GITHUB_RUN_ATTEMPT!=='1'||existsSync('.env')||!Number.isSafeInteger(Number(MAX_REQUESTS))||Number(MAX_REQUESTS)<1||Number(MAX_REQUESTS)>4000||!bulkCandidates(COUNTRY).length)throw Error('Invalid bulk execution scope')
+          import {selectBulkCandidates} from './scripts/bulk-source-packs.mjs'
+          const {COUNTRY,EXPECTED_SHA,MAX_REQUESTS,AUDIT_RUN,CANDIDATE,GITHUB_SHA,GITHUB_REF,GITHUB_RUN_ATTEMPT}=process.env
+          if(!['PL','DE','ALL'].includes(COUNTRY)||!/^[a-f0-9]{40}$/.test(EXPECTED_SHA??'')||GITHUB_SHA!==EXPECTED_SHA||GITHUB_REF!=='refs/heads/main'||GITHUB_RUN_ATTEMPT!=='1'||existsSync('.env')||!Number.isSafeInteger(Number(MAX_REQUESTS))||Number(MAX_REQUESTS)<1||Number(MAX_REQUESTS)>4000||!selectBulkCandidates(COUNTRY,CANDIDATE||undefined).length)throw Error('Invalid bulk execution scope')
+          if(Boolean(AUDIT_RUN)!==Boolean(CANDIDATE)||AUDIT_RUN&&(COUNTRY!=='DE'||! /^[1-9]\d{0,14}$/.test(AUDIT_RUN)))throw Error('Paired handoff requires DE, one reviewed candidate and an audit run')
           if(execFileSync('git',['ls-remote','--exit-code','origin','refs/heads/main'],{encoding:'utf8'}).split(/\s/)[0]!==EXPECTED_SHA)throw Error('Main changed')
           JS
       - name: Coordinate with existing country readers and native writers
@@ -57,12 +68,26 @@ jobs:
           if [ "$COUNTRY" = PL ] || [ "$COUNTRY" = ALL ]; then node scripts/cakaj-na-uvoze.mjs --drzava PL --popravek --vir pzpn; fi
           if [ "$COUNTRY" = DE ] || [ "$COUNTRY" = ALL ]; then node scripts/cakaj-na-uvoze.mjs --drzava DE --popravek --vir dfb; fi
       - name: Coordinate older German source-only readers
-        if: inputs.country != 'PL'
+        if: inputs.country != 'PL' && inputs.audit_run == ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/bulk-source-coordination.mjs
       - name: Stage original source bytes and independently filter leagues (no database keys)
+        if: inputs.audit_run == ''
         run: node scripts/bulk-league-rollout.mjs collect --country "$COUNTRY" --expected-sha "$EXPECTED_SHA" --max-requests "$MAX_REQUESTS"
+      - name: Admit and stage exact-run current and archive originals (no database keys)
+        if: inputs.audit_run != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh run watch "$AUDIT_RUN" --repo "$GITHUB_REPOSITORY" --exit-status --interval 10
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AUDIT_RUN" > audit-run.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AUDIT_RUN/artifacts?per_page=100" > audit-artifacts.json
+          node scripts/preveri-fussball-uvoz.mjs admit-pair --run audit-run.json --artifacts audit-artifacts.json --repository "$GITHUB_REPOSITORY" --head-sha "$GITHUB_SHA" --run-id "$AUDIT_RUN" > paired-admission.json
+          gh run download "$AUDIT_RUN" --repo "$GITHUB_REPOSITORY" --name "fussball-season-$AUDIT_RUN" --dir current-capture
+          gh run download "$AUDIT_RUN" --repo "$GITHUB_REPOSITORY" --name "fussball-season-archive-$AUDIT_RUN" --dir archive-capture
+          node scripts/stage-fussball-paired-audit.mjs
       - name: Restore verified complete-report cache
         uses: actions/cache/restore@v4
         with:
@@ -75,7 +100,11 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/bulk-league-rollout.mjs import --country "$COUNTRY" --expected-sha "$EXPECTED_SHA"
+        run: |
+          set -euo pipefail
+          candidate_args=()
+          if [ -n "$CANDIDATE" ]; then candidate_args=(--candidate "$CANDIDATE"); fi
+          node scripts/bulk-league-rollout.mjs import --country "$COUNTRY" --expected-sha "$EXPECTED_SHA" "${candidate_args[@]}"
       - name: Persist verified initial nightly seed before any German activation
         if: steps.prepare.outputs.needs_seed_cache == 'true'
         uses: actions/cache/save@v4
@@ -91,7 +120,11 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/bulk-league-rollout.mjs activate --country "$COUNTRY" --expected-sha "$EXPECTED_SHA"
+        run: |
+          set -euo pipefail
+          candidate_args=()
+          if [ -n "$CANDIDATE" ]; then candidate_args=(--candidate "$CANDIDATE"); fi
+          node scripts/bulk-league-rollout.mjs activate --country "$COUNTRY" --expected-sha "$EXPECTED_SHA" "${candidate_args[@]}"
       - name: Retain UNKNOWN after interruption without write replay
         if: always()
         run: node --input-type=module -e "import {markInterrupted} from './scripts/provider-league-batch.mjs';for(const file of ['native-import-report.json','native-report.json'])markInterrupted('release/pl-de-bulk/'+file)"

@@ -139,12 +139,13 @@ export function runOfflineImport(file,args,{directory,logDirectory,slug}={}){
 
 async function main(){
  const [mode,...args]=process.argv.slice(2),options={output:'release/pl-de-bulk'}
- for(let i=0;i<args.length;i+=2){const k=args[i],v=args[i+1];if(!['--country','--expected-sha','--max-requests','--output'].includes(k)||!v||options[k])throw Error('Invalid bulk arguments.');options[k]=v}
+ for(let i=0;i<args.length;i+=2){const k=args[i],v=args[i+1];if(!['--country','--expected-sha','--max-requests','--output','--candidate'].includes(k)||!v||options[k])throw Error('Invalid bulk arguments.');options[k]=v}
  if(!['collect','import','activate'].includes(mode)||!['PL','DE','ALL'].includes(options['--country'])||!/^[a-f0-9]{40}$/.test(options['--expected-sha']??''))throw Error('collect|import|activate, country and exact current main SHA required.')
  const expectedSha=options['--expected-sha'],directory=resolve(options['--output']??options.output),sha=()=>execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()
  const guard=async()=>assertBatchExecution({expectedSha,headSha:sha(),mainSha:execFileSync('git',['ls-remote','--exit-code','origin','refs/heads/main'],{encoding:'utf8',timeout:30000}).split(/\s/)[0],envFileExists:existsSync('.env')})
- const {bulkCandidates,captureBulkCandidate,saveBulkAdmission,loadBulkPack}=await import('./bulk-source-packs.mjs')
- const candidates=bulkCandidates(options['--country']);selection(candidates)
+ const {selectBulkCandidates,captureBulkCandidate,saveBulkAdmission,loadBulkPack}=await import('./bulk-source-packs.mjs')
+ if(mode==='collect'&&options['--candidate'])throw Error('Paired candidates must be staged from an admitted audit, never recollected by this option.')
+ const candidates=selectBulkCandidates(options['--country'],options['--candidate']);selection(candidates)
  mkdirSync(directory,{recursive:true})
  if(mode==='collect'){
   if(existsSync(join(directory,'source-report.json')))throw Error('Existing collection checkpoint; automatic replay forbidden.')

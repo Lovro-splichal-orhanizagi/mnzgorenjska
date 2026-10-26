@@ -198,6 +198,41 @@ Offline ponovitev ohrani vseh sedem tekem in eno prestavljeno referenco.
 Zavrnjen zajem ostane zavrnjen; ne postane dovoljenje za uvoz ali arhiv.
 Skupna poraba pred ponovitvijo je 453 od odobrenih 5000 zahtevkov.
 
+Pregledani katalog `scripts/policies/de-bulk-candidates.json` zdaj vsebuje
+tudi `de-verbandsliga-baden`. Tekoča šifra je
+`03188V27L800000JVS5489BTVU7GTVLE-G:2026/27`, arhivska pa
+`02TGLSVQ1800000IVS5489BTVTLPPK10-G:2025/26`. Povezavo dokazujeta izvirni
+tekoči izbirnik in neodvisni 20. krog ter shranjeni terminalni 301 in
+arhivska stran. To ni aktivacija ali potrditev celotnih statistik.
+
+Predaja uspešnega gostovanega para uporablja oba izvirna zajema
+ločeno, brez prepisovanja dnevnikov ali ponovnega branja vira. Pred pisanjem
+mora ponovno preveriti isti uspešen Actions run/commit in oba artefakta,
+celotnost in svežino tekoče sezone, sosednji arhiv ter njegov dokaz istega
+tekočega izvirnika. Nato uporabi obstoječi paketni uvoz: neaktivna registracija,
+arhiv, tekoči razpored in zapisniki, vratarji/pozicije/cene, primerjava z
+izvirnikom, obstojen začetni nočni predpomnilnik in njegov potrjeni zapis,
+šele nato sveže preverbe roka, kadra in vklopa ter branje rezultata.
+Vrzeli zadržijo ligo; uspeh samega zajema ne dovoli vklopa.
+
+Gostovani par lahko z izrecnim `rollout_candidate=de-verbandsliga-baden`
+po uspešnih obeh zajemih sam preda dokaz obstoječemu
+`uvoz-pl-de-paketa.yml`. Ta možnost ne velja za navadne vzorce in privzeti
+audit ostane samo bralen. Izbrana liga mora ustrezati obema katalogskima
+šiframa in URL-jema; pred predajo se obe sezoni preverita tudi kot popolna
+domača paketa. Pred sprejemom artefaktov naslednji workflow počaka na
+končni uspeh izvornega zagona. Predaja ne potrebuje budnega klepeta in nima
+zahtevkov do nogometnega vira; napake razčlenjevanja še vedno potrebujejo popravek.
+
+Ročna predaja istega uspešnega para (brez novega zajema):
+
+```bash
+gh workflow run uvoz-pl-de-paketa.yml -f country=DE -f expected_sha=<isti-pregledani-main-SHA> -f max_requests=1 -f audit_run=<uspesen-parni-zagon> -f candidate=de-verbandsliga-baden
+```
+
+`max_requests` je tu obvezen stari vhod, ne dovoljenje za nadomestno branje;
+pot `audit_run` ob manjkajočih ali neveljavnih dokazih ne preklopi na zbiranje.
+
 ### Hitri pregled pred celotnim zajemom (24. 10. 2026)
 
 `zajemi-fussball-vzorec.mjs` preveri opaženi krog in največ en prej
