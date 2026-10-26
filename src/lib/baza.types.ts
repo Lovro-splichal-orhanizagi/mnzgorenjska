@@ -9287,6 +9287,22 @@ export type Database = {
           user_id: string
         }[]
       }
+      kandidati_za_opozorilo_odsotnih: {
+        Args: { p_competition_id: number }
+        Returns: {
+          deadline_at: string
+          display_name: string
+          email: string
+          email_vklop: boolean
+          kapetan: string
+          odsotni: string[]
+          push_vklop: boolean
+          round_id: number
+          round_number: number
+          team_id: number
+          user_id: string
+        }[]
+      }
       kandidati_za_pivo_7dni: {
         Args: { p_najvec?: number }
         Returns: {
@@ -9569,6 +9585,15 @@ export type Database = {
       }
       najcenejsi_kader: { Args: { p_igralci: Json }; Returns: number }
       najdi_igralca: { Args: { ime: string; liga?: string }; Returns: Json }
+      namigi_ekipe: {
+        Args: { p_ekipa: number; p_round_id: number }
+        Returns: {
+          cipi: string[]
+          kapetan_ni_igral: string
+          ni_igralo: number
+          prosti_prestopi: number
+        }[]
+      }
       napaka_prikaznega_imena: { Args: { p_ime: string }; Returns: string }
       napovedi_mini_lige_krog: {
         Args: { p_krog: number; p_liga: number }

@@ -15,6 +15,7 @@
 //   ... VRSTA=liga-zivi node scripts/posli-opomnike.mjs                  # želena liga je zaživela (Moje lige ni)
 //   ... VRSTA=pivo-7dni node scripts/posli-opomnike.mjs                  # teden po prvi ekipi: plačaš pivo? (enkrat)
 //   ... VRSTA=novost-mini-lige node scripts/posli-opomnike.mjs           # enkratno: dvoboji in napovedi v mini ligah
+//   ... VRSTA=opozorilo-odsotni node scripts/posli-opomnike.mjs          # rok jutri: odsoten igralec v prvi postavi
 //
 // Opomnik gre vsem brez ekipe (353 ljudi) in je zato ročna odločitev.
 // Opozorilo gre samo tistim, ki ekipo IMAJO in se jim ne bo zaklenila — to
@@ -43,7 +44,7 @@ if (!SERVICE) { console.error('Manjka SUPABASE_SERVICE_ROLE_KEY'); process.exit(
 // Suho je PRIVZETO. Pošiljanje pošte resničnim ljudem mora biti izrecna
 // izbira, ne privzeta posledica zagona.
 const suho = String(process.env.SUHO ?? 'true').toLowerCase() !== 'false'
-const vrsta = ['opozorilo', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige'].includes(process.env.VRSTA) ? process.env.VRSTA : 'opomnik'
+const vrsta = ['opozorilo', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni'].includes(process.env.VRSTA) ? process.env.VRSTA : 'opomnik'
 // Opozorilo, push opomnik in tedenski pregled tečejo po urniku; varuje jih meja na ligo.
 const poUrniku = vrsta !== 'opomnik'
 // Opomnik in tedenski pregled gresta po pošti v velikem številu: oba omejuje
@@ -95,7 +96,7 @@ const { data: lige, error } = await db
 if (error) { console.error(`Lig ni bilo mogoče prebrati: ${error.message}`); process.exit(1) }
 
 console.log(
-  `${{ opozorilo: 'OPOZORILA (ekipa se ne bo zaklenila)', 'opomnik-push': 'PUSH OPOMNIKI (ni ekipe, rok jutri)', opomnik: 'OPOMNIKI (ni ekipe)', 'tedenski-pregled': 'TEDENSKI PREGLED (tvoj krog)' }[vrsta]} — ` +
+  `${{ opozorilo: 'OPOZORILA (ekipa se ne bo zaklenila)', 'opomnik-push': 'PUSH OPOMNIKI (ni ekipe, rok jutri)', opomnik: 'OPOMNIKI (ni ekipe)', 'tedenski-pregled': 'TEDENSKI PREGLED (tvoj krog)', 'opozorilo-odsotni': 'OPOZORILA (odsoten igralec v postavi)' }[vrsta]} — ` +
     (suho ? 'SUHI TEK, ne pošiljam.\n' : 'POŠILJAM.\n'),
 )
 
