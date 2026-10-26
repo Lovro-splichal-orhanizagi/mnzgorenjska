@@ -527,8 +527,8 @@ kanonični `?t=` po svoji ligi.
   zapiše `jezik` države lige, ki jo gleda. Nov jezik = nova veja v `sporocila.ts` in vrstica v
   `JEZIK_DRZAVE` tam. Funkcij CI ne objavi: po združitvi
   `scripts/hetzner/objavi-funkcije.sh` (rsync na VM, kopija prejšnje, ponovni
-  zagon). Tedenski mail "tvoj krog" (`tedenski-pregled.yml`, pon in tor
-  zvečer) bere `tedenski_pregled_ekip`. Avtentikacijska pošta (`supabase/templates/`) izbere
+  zagon). Tedenski mail "tvoj krog" (`tedenski-pregled.yml`, šest zagonov
+  pon–sre, do 300 na zagon) bere `tedenski_pregled_ekip`. Avtentikacijska pošta (`supabase/templates/`) izbere
   jezik po `jezik` v metapodatkih uporabnika (vpiše ga registracija);
   v gostujočem projektu predloge **niso** iz config.toml — prilepi jih v
   Auth → Email Templates.
