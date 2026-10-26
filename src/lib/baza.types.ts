@@ -2373,6 +2373,55 @@ export type Database = {
           },
         ]
       }
+      napovedi: {
+        Row: {
+          away_goals: number
+          created_at: string
+          home_goals: number
+          match_id: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          away_goals: number
+          created_at?: string
+          home_goals: number
+          match_id: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          away_goals?: number
+          created_at?: string
+          home_goals?: number
+          match_id?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "napovedi_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "match_assist_status"
+            referencedColumns: ["match_id"]
+          },
+          {
+            foreignKeyName: "napovedi_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "napovedi_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       narocila_znack: {
         Row: {
           created_at: string
@@ -8810,6 +8859,15 @@ export type Database = {
         }
         Returns: Json
       }
+      clani_napovedi_mini_lige: {
+        Args: { p_liga: number }
+        Returns: {
+          competition_id: number
+          competition_short: string
+          sezona: string
+          user_id: string
+        }[]
+      }
       dan_kroga: { Args: { p_round_id: number }; Returns: string }
       dribl_reserve_player_ids: {
         Args: { p_source_ids: string[] }
@@ -8959,6 +9017,10 @@ export type Database = {
         }[]
       }
       izbrisi_moj_racun: { Args: never; Returns: undefined }
+      izid_znan: {
+        Args: { p_imported_at: string; p_statistics_status: string }
+        Returns: boolean
+      }
       izstop_kluba: {
         Args: { p_competition_id: number; p_team_id: number }
         Returns: Json
@@ -9201,6 +9263,12 @@ export type Database = {
         }[]
       }
       krog_je_odigran: { Args: { p_round_id: number }; Returns: boolean }
+      krogi_napovedi_mini_lige: {
+        Args: { p_liga: number }
+        Returns: {
+          krog: number
+        }[]
+      }
       lestvica_javne_mini_lige: {
         Args: { p_liga: number }
         Returns: {
@@ -9233,6 +9301,17 @@ export type Database = {
           tekme: number
           tocke: number
           zmage: number
+        }[]
+      }
+      lestvica_napovedi_mini_lige: {
+        Args: { p_krog?: number; p_liga: number }
+        Returns: {
+          display_name: string
+          ocenjenih: number
+          razpletov: number
+          tocke: number
+          tocnih: number
+          user_id: string
         }[]
       }
       liga: { Args: { liga: string }; Returns: Json }
@@ -9282,9 +9361,52 @@ export type Database = {
           zahtevek_id: number
         }[]
       }
+      moje_odprte_napovedi: {
+        Args: { p_tekmovanje?: number }
+        Returns: {
+          away_logo: string
+          away_name: string
+          away_short: string
+          competition_id: number
+          competition_short: string
+          home_logo: string
+          home_name: string
+          home_short: string
+          krog: number
+          match_id: number
+          napoved_doma: number
+          napoved_gostje: number
+          played_on: string
+          rok: string
+          round_id: number
+        }[]
+      }
       najcenejsi_kader: { Args: { p_igralci: Json }; Returns: number }
       najdi_igralca: { Args: { ime: string; liga?: string }; Returns: Json }
       napaka_prikaznega_imena: { Args: { p_ime: string }; Returns: string }
+      napovedi_mini_lige_krog: {
+        Args: { p_krog: number; p_liga: number }
+        Returns: {
+          away_logo: string
+          away_name: string
+          away_short: string
+          competition_id: number
+          competition_short: string
+          display_name: string
+          home_logo: string
+          home_name: string
+          home_short: string
+          izid_doma: number
+          izid_gostje: number
+          match_id: number
+          napoved_doma: number
+          napoved_gostje: number
+          played_on: string
+          stanje: string
+          tocke: number
+          user_id: string
+        }[]
+      }
       nastavi_javnost_mini_lige: {
         Args: {
           p_javna: boolean
@@ -9522,6 +9644,15 @@ export type Database = {
       potrdi_asistenco: { Args: { p_goal_id: number }; Returns: undefined }
       potrdi_pozicijo: { Args: { p_player_id: number }; Returns: undefined }
       potrdi_soigralca: { Args: { p_id: number }; Returns: string }
+      povzetek_napovedi_kroga: {
+        Args: { p_round_id: number; p_user_id: string }
+        Returns: {
+          napovedi: number
+          ocenjenih: number
+          tocke: number
+          tocnih: number
+        }[]
+      }
       povzetek_rasti: { Args: never; Returns: string }
       preklici_moj_zahtevek: { Args: { p_id: number }; Returns: undefined }
       prepare_dfb_historical_statistics: {
@@ -9891,6 +10022,7 @@ export type Database = {
         }
         Returns: Json
       }
+      rok_napovedi: { Args: { p_round_id: number }; Returns: string }
       roster_je_veljaven: { Args: { p_team_id: number }; Returns: boolean }
       scout_igralec: { Args: { p_player_id: number }; Returns: Json }
       scout_isci: {
@@ -10034,6 +10166,10 @@ export type Database = {
         Args: { p_roster: Json; p_team_id: number }
         Returns: Json
       }
+      shrani_napoved: {
+        Args: { p_doma?: number; p_gostje?: number; p_tekma: number }
+        Returns: undefined
+      }
       shrani_push_zeton: {
         Args: { p_platforma: string; p_zeton: string }
         Returns: undefined
@@ -10069,6 +10205,15 @@ export type Database = {
           team_name: string
           veljavna: boolean
         }[]
+      }
+      stanje_tekme_napovedi: {
+        Args: {
+          p_brez_izida: boolean
+          p_dan: string
+          p_kontumacija: boolean
+          p_znan: boolean
+        }
+        Returns: string
       }
       stanje_uradne_odsotnosti: {
         Args: { p_player_id: number }
@@ -10185,6 +10330,15 @@ export type Database = {
             }
             Returns: number
           }
+      tocke_napovedi: {
+        Args: {
+          p_doma: number
+          p_gostje: number
+          p_izid_doma: number
+          p_izid_gostje: number
+        }
+        Returns: number
+      }
       trgovina_admin_boni: { Args: never; Returns: Json }
       trgovina_admin_izdelki: { Args: never; Returns: Json }
       trgovina_admin_motivi: { Args: never; Returns: Json }

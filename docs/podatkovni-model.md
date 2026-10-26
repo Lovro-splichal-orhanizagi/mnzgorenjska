@@ -223,6 +223,23 @@
   uporabnika in ligo, največ 10 odprtih); Administracija → Prijave mini lig
   (`admin_prijave_mini_lig`, `admin_odloci_mini_ligo`: skrij in zakleni ali
   zavrni). Stran `/mini-leagues/:id` (`JavnaMiniLiga.tsx`, noindex)
+- **Napovedi izidov** (migracija 20261026153100): `napovedi` (uporabnik,
+  tekma, goli 0–20), ena na tekmo, šteje v vseh mini ligah. Piše le
+  `shrani_napoved` (obe vrednosti NULL = izbris): pred `rok_napovedi` (rok
+  kroga kot `naslednji_krog`), tekma brez znanega izida (`izid_znan`:
+  `imported_at` ali `unavailable_historical`; neodigrana ima 0:0), ekipa
+  (nehišna) v ligi tekme, sprožilec `zavrni_omejenega`. RLS: le svoje
+  napovedi. Točke se ne hranijo: `tocke_napovedi` 3 točen, 1 razplet, 0;
+  kontumacija ne šteje, brez izida teden po datumu ali `vir_brez_izida` je
+  razveljavljena (`stanje_tekme_napovedi`). Šteje krog, v katerem je tekma
+  zdaj. V mini ligi štejejo napovedi člana na tekmah lig, s katerimi je v njej,
+  tekoče sezone (`clani_napovedi_mini_lige`): `lestvica_napovedi_mini_lige(liga,
+  krog)` (javna vsem prijavljenim, zasebna članom; točke, točni, razpleti),
+  `krogi_napovedi_mini_lige`, `napovedi_mini_lige_krog` (le članom, le po
+  roku). Obrazec: `moje_odprte_napovedi(liga)` (naslednji krog mojih lig).
+  Servisni `povzetek_napovedi_kroga(uporabnik, krog)` za pošto. Vmesnik:
+  Mini lige → Napovedi (`NapovediMiniLige.tsx`, `?pogled=napovedi`), poziv na
+  Moji ekipi (`PozivNapovedi.tsx`)
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
 - `statistika_igralcev` → statistika igralca po ligi in sezoni (nastopi,
   minute, goli, kartoni, čiste mreže, točke, asistence, zadnji krog, forma).
