@@ -83,6 +83,10 @@ select pg_temp.g13_reject('changed fixture date', $$update matches set played_on
 -- This wrong opponent is FK-valid, non-self and unique within R8. Reversing
 -- the pair would collide with the still-present surplus match309381.
 select pg_temp.g13_reject('invalid calendar opponent', 'update matches set home_team_id=8372 where id=427267');
+
+-- New DFB quarantine references are known, locked, and never rewritten by G13.
+select pg_temp.g13_reject('DFB quarantine evidence linked to repair target', $$insert into private_dfb_pending.evidence(competition_id,match_id,report_id,source_code,fixture,status,reason,raw_sha256,raw_bytes,observed_at) values(801,427263,'TEST ONLY','TEST ONLY','{}','DFB_INVALID_REPORT','TEST ONLY',repeat('a',64),decode('78','hex'),now())$$);
+
 select pg_temp.g13_reject('unrecognized foreign key', 'create table public.g13_unknown_dependency(id int, team_id bigint references teams)');
 select pg_temp.g13_reject('installed historical policy', $$insert into private_historical_statistics.installed_policies(competition_id,policy_id,policy_sha256,first_fantasy_played_on) select 801,id,policy_sha256,current_date+7 from private_historical_statistics.policies where id='es-fcf-segona-g1-history-2026-10-18-v1'$$);
 select pg_temp.g13_reject('bound historical club', $$update private_historical_statistics.source_club_bindings set bound_team_id=8371 where provider='fcf' and source_club_id='5042'$$);

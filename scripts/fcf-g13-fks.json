@@ -1,5 +1,30 @@
 [
   [
+    "private_dfb_pending.evidence",
+    "competition_id",
+    "competitions"
+  ],
+  [
+    "private_dfb_pending.evidence",
+    "match_id",
+    "matches"
+  ],
+  [
+    "private_dfb_pending.pending",
+    "competition_id",
+    "competitions"
+  ],
+  [
+    "private_dfb_pending.pending",
+    "match_id",
+    "matches"
+  ],
+  [
+    "private_dfb_pending.pending",
+    "round_id",
+    "rounds"
+  ],
+  [
     "private_fcf_six_target_release.club_bindings",
     "competition_id",
     "competitions"
