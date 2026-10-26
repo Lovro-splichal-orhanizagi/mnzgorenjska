@@ -5,7 +5,8 @@ import { t } from '../i18n'
 
 /**
  * Poziv na Moji ekipi: naslednji krog lige ima tekme brez moje napovedi.
- * Kaže se le članu kake mini lige — napovedi tekmujejo tam.
+ * Kaže se vsakemu z ekipo v ligi — napovedi tekmujejo na lestvici lige
+ * (/predictions) in v vseh njegovih mini ligah.
  */
 export default function PozivNapovedi({ tekmovanjeId }: { tekmovanjeId: number | null }) {
   const [poziv, setPoziv] = useState<{ krog: number; brez: number } | null>(null)
@@ -17,10 +18,7 @@ export default function PozivNapovedi({ tekmovanjeId }: { tekmovanjeId: number |
     ;(async () => {
       const { data: tekme } = await supabase.rpc('moje_odprte_napovedi', { p_tekmovanje: tekmovanjeId })
       const brez = (tekme ?? []).filter((tk) => tk.napoved_doma == null)
-      if (!brez.length) return
-      // Mini lige vidi član prek RLS: brez vrstice ni lige.
-      const { count } = await supabase.from('mini_liga_clani').select('mini_liga_id', { count: 'exact', head: true })
-      if (veljavno && count) setPoziv({ krog: brez[0].krog, brez: brez.length })
+      if (veljavno && brez.length) setPoziv({ krog: brez[0].krog, brez: brez.length })
     })()
     return () => {
       veljavno = false
@@ -30,7 +28,7 @@ export default function PozivNapovedi({ tekmovanjeId }: { tekmovanjeId: number |
   if (!poziv) return null
   return (
     <Link
-      to="/mini-leagues?pogled=napovedi"
+      to="/predictions"
       className="kartica flex items-center gap-3 p-3 transition hover:bg-white/5"
     >
       <span aria-hidden className="text-2xl">🎯</span>

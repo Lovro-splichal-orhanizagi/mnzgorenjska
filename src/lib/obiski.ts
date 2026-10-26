@@ -45,6 +45,7 @@ const PO_POTI: Record<string, string> = {
   '/standings': 'lestvica',
   '/national': 'slovenija',
   '/mini-leagues': 'mini_lige',
+  '/predictions': 'napovedi',
   '/results': 'rezultati',
   '/table': 'tabela',
   '/assists': 'glasovanje',

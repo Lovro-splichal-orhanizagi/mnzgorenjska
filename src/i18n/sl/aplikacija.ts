@@ -78,6 +78,7 @@ export const aplikacija = {
     rezultati: 'Rezultati',
     tabela: 'Lestvica lige',
     miniLige: 'Mini lige',
+    napovedi: 'Napovedi',
     asistence: 'Asistence',
     pozicije: 'Pozicije',
     odsotnosti: 'Odsotnosti',

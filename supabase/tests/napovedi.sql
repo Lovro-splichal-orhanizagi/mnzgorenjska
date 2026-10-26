@@ -239,5 +239,95 @@ begin
 end;
 $$;
 
+-- ---------------------------------------------------------------------------
+-- Napovedi za vse (20261026183100): lestvica lige, krogi, izbira skupnosti.
+-- ---------------------------------------------------------------------------
+-- H ima le hišno ekipo v ligi; njegove napovedi (vpisane mimo RPC) ne štejejo.
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-00000000f0a1', 'napoved-h@test.invalid');
+insert into profiles (id, display_name) values
+  ('00000000-0000-0000-0000-00000000f0a1', 'Napoved H')
+on conflict (id) do nothing;
+insert into fantasy_teams (id, owner_id, name, competition_id, created_at, hisna) overriding system value values
+  (990545, '00000000-0000-0000-0000-00000000f0a1', 'Hisna H', 990501, now() - interval '9 days', true);
+insert into napovedi (user_id, match_id, home_goals, away_goals) values
+  ('00000000-0000-0000-0000-00000000f0a1', 990531, 2, 1),
+  ('00000000-0000-0000-0000-00000000f0a1', 990532, 0, 0),
+  -- Krog 2 je pred rokom: trije napovedi tekme 990536 ostanejo skrite.
+  ('00000000-0000-0000-0000-00000000f00a', 990536, 1, 0),
+  ('00000000-0000-0000-0000-00000000f00b', 990536, 1, 1),
+  ('00000000-0000-0000-0000-00000000f00d', 990536, 0, 2);
+
+do $$
+begin
+  -- Rezultat javnih funkcij nima user_id (ne e-pošte).
+  assert not exists (
+    select 1 from pg_proc
+     where proname in ('lestvica_napovedi_lige', 'krogi_napovedi_lige', 'skupnost_napovedi_kroga')
+       and pronamespace = 'public'::regnamespace
+       and (pg_get_function_result(oid) ilike '%user_id%' or pg_get_function_result(oid) ilike '%email%')
+  ), 'javne funkcije napovedi ne vrnejo user_id';
+end;
+$$;
+
+-- Neprijavljen bere lestvico, kroge in izbiro skupnosti.
+set local role anon;
+do $$
+begin
+  -- A 4 (točen + razplet), D 3 (točen), B 1; C (brez napovedi) in H (hišna) nista.
+  assert (select array_agg(mesto || ':' || display_name || ':' || tocke || ':' || tocnih || ':' || razpletov || ':' || ocenjenih order by mesto, display_name)
+            from lestvica_napovedi_lige(990501))
+         = array['1:napoved-a:4:1:1:2', '2:napoved-d:3:1:0:1', '3:napoved-b:1:0:1:2'], 'lestvica napovedi lige';
+  assert not exists (select 1 from lestvica_napovedi_lige(990501) where je_moj), 'anon nima svoje vrstice';
+  assert (select count(*) from lestvica_napovedi_lige(990501, 1)) = 3, 'lestvica kroga 1';
+  -- Krog 2 še nima izidov, šteje pa le tiste, ki so ga napovedovali.
+  assert (select count(*) from lestvica_napovedi_lige(990501, 2) where ocenjenih = 0) = 3, 'krog 2 brez izidov';
+  assert (select array_agg(krog) from krogi_napovedi_lige(990501)) = array[1], 'krogi napovedi lige: le po roku';
+  assert (select round_id from krogi_napovedi_lige(990501)) = 990521, 'krog nosi id';
+  -- 990531: A, B, D za domače (H ne šteje) -> 3; 990532: A, B -> pod 3, skrita.
+  assert (select array_agg(match_id || ':' || n || ':' || doma || ':' || remi || ':' || gostje)
+            from skupnost_napovedi_kroga(990521)) = array['990531:3:3:0:0'], 'izbira skupnosti kroga 1';
+  assert not exists (select 1 from skupnost_napovedi_kroga(990522)), 'izbira skupnosti pred rokom je zaprta';
+end;
+$$;
+reset role;
+
+-- Prijavljen B vidi svojo vrstico; pri več kot 50 igralcih je dodana pod vrh.
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000f00b","role":"authenticated"}', true);
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000f00b', true);
+do $$
+begin
+  assert (select je_moj from lestvica_napovedi_lige(990501) where display_name = 'napoved-b'), 'je_moj';
+  assert (select count(*) from lestvica_napovedi_lige(990501) where je_moj) = 1, 'le ena moja vrstica';
+end;
+$$;
+reset role;
+
+insert into auth.users (id, email)
+select ('00000000-0000-0000-0000-0000009' || lpad(g::text, 5, '0'))::uuid, 'napoved-mnozica-' || g || '@test.invalid'
+  from generate_series(1, 55) g;
+insert into profiles (id, display_name)
+select ('00000000-0000-0000-0000-0000009' || lpad(g::text, 5, '0'))::uuid, 'Mnozica ' || g
+  from generate_series(1, 55) g
+on conflict (id) do update set display_name = excluded.display_name;
+insert into fantasy_teams (id, owner_id, name, competition_id, created_at) overriding system value
+select 990600 + g, ('00000000-0000-0000-0000-0000009' || lpad(g::text, 5, '0'))::uuid, 'Mnozica ' || g, 990501, now() - interval '9 days'
+  from generate_series(1, 55) g;
+insert into napovedi (user_id, match_id, home_goals, away_goals)
+select ('00000000-0000-0000-0000-0000009' || lpad(g::text, 5, '0'))::uuid, 990531, 2, 1
+  from generate_series(1, 55) g;
+
+set local role authenticated;
+do $$
+begin
+  -- 58 igralcev: B (1 točka) je zadnji, zunaj vrha 50.
+  assert (select count(*) from lestvica_napovedi_lige(990501)) = 51, 'vrh 50 in moja vrstica';
+  assert (select mesto = 58 and je_moj from lestvica_napovedi_lige(990501) where display_name = 'napoved-b'), 'moja vrstica pod vrhom';
+  assert (select count(*) from lestvica_napovedi_lige(990501) where mesto = 2) = 49, 'enake točke delijo mesto (vrh 50)';
+end;
+$$;
+reset role;
+
 select 'napovedi: ok';
 rollback;

@@ -16,6 +16,7 @@ import { NedosegljivaStatistika } from '../components/PokritostStatistike'
 import IgrisceTocke from '../components/IgrisceTocke'
 import GolZaGlasovanje, { caka } from '../components/GolZaGlasovanje'
 import PopravekAsistence from '../components/PopravekAsistence'
+import PasSkupnosti from '../components/PasSkupnosti'
 import type { Gol, Glas, Kandidat } from '../components/GolZaGlasovanje'
 import type { NastopNaTekmi } from '../components/IgrisceTocke'
 import type { TekmaVrstica } from '../lib/tipi'
@@ -115,6 +116,21 @@ export default function Tekma() {
   const [pravkarOddan, setPravkarOddan] = useState<number | null>(null)
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
+  // Izbira skupnosti (napovedi) za to tekmo: baza jo da šele po roku kroga
+  // in od treh napovedi naprej, sicer je ni.
+  const [skupnost, setSkupnost] = useState<{ match_id: number; n: number; doma: number; remi: number; gostje: number } | null>(null)
+  const krogTekme = tekma?.round_id ?? null
+  useEffect(() => {
+    setSkupnost(null)
+    if (krogTekme == null) return
+    let veljavno = true
+    supabase.rpc('skupnost_napovedi_kroga', { p_round: krogTekme }).then(({ data }) => {
+      if (veljavno) setSkupnost((data ?? []).find((v) => v.match_id === tekmaId) ?? null)
+    })
+    return () => {
+      veljavno = false
+    }
+  }, [krogTekme, tekmaId])
 
   useEffect(() => {
     let preklican = false
@@ -331,6 +347,15 @@ export default function Tekma() {
         </span>
         <Klub ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} id={tekma.away_team_id} liga={slugLige} />
       </h1>
+
+      {skupnost && skupnost.match_id === tekmaId && (
+        <section className="kartica space-y-2 p-3" aria-label={t('lestvice.napovediLige.skupnost')}>
+          <Link to={zLigo('/predictions', slugLige)} className="text-xs font-bold uppercase tracking-wide text-slate-400 hover:text-gnl-300">
+            {t('lestvice.napovediLige.skupnost')}
+          </Link>
+          <PasSkupnosti n={skupnost.n} doma={skupnost.doma} remi={skupnost.remi} gostje={skupnost.gostje} />
+        </section>
+      )}
 
       {!nedosegljivo && opozorilaRumenih?.tekmaId === tekmaId && (
         <OpozoriloRumenih

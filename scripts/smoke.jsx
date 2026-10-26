@@ -22,6 +22,7 @@ import Pozicije from '../src/pages/Pozicije'
 import Odsotnosti from '../src/pages/Odsotnosti'
 import Slovenija from '../src/pages/Slovenija'
 import MiniLige from '../src/pages/MiniLige'
+import Napovedi from '../src/pages/Napovedi'
 import VstopVMiniLigo from '../src/pages/VstopVMiniLigo'
 import JavnaMiniLiga from '../src/pages/JavnaMiniLiga'
 import Ekipa from '../src/pages/Ekipa'
@@ -124,6 +125,7 @@ const strani = [
   ['Lestvica', Lestvica, '/standings'],
   ['Slovenija', Slovenija, '/national'],
   ['Mini lige', MiniLige, '/mini-leagues'],
+  ['Napovedi', Napovedi, '/predictions'],
   ['Vstop v mini ligo', VstopVMiniLigo, '/l/ABCDEF'],
   ['Javna mini liga', JavnaMiniLiga, '/mini-leagues/1'],
   ['Tuja ekipa', Ekipa, '/team/1'],
@@ -323,6 +325,7 @@ try {
     === 'sitemap-x.xml:2 sitemap-x-2.xml:2 sitemap-x-3.xml:1')
   preveri('obisk: /table se šteje kot tabela', imeStrani('/table') === 'tabela')
   preveri('obisk: /u/<id> se šteje kot profil', imeStrani('/u/b8a06635-2322') === 'profil')
+  preveri('obisk: /predictions se šteje kot napovedi', imeStrani('/predictions') === 'napovedi')
 }
 
 // --- e-pošta: predlog domene ob tipkarski napaki (src/lib/eposta.ts) -------
@@ -3640,7 +3643,7 @@ preveri(
   preveri('naslov: kanonicni obdrzi le ligo', kanonicni('/players', '?t=mladinci&klub=3') === 'https://slff.eu/players?t=mladinci')
   preveri('naslov: kanonicni brez lige', kanonicni('/', '') === 'https://slff.eu/')
   preveri('naslov: kanonicni brez koncne posevnice', kanonicni('/players/', '?t=x') === 'https://slff.eu/players?t=x' && kanonicni('/', '') === 'https://slff.eu/')
-  preveri('naslov: zasebne strani noindex', ['/my-team', '/my-team/', '/mini-leagues', '/login', '/account', '/reminders', '/new-password', '/team/5', '/l/AB12', '/admin', '/mini-leagues/3', '/u/abc'].every(jeZasebna) && !jeZasebna('/players') && !jeZasebna('/'))
+  preveri('naslov: zasebne strani noindex', ['/my-team', '/my-team/', '/mini-leagues', '/predictions', '/login', '/account', '/reminders', '/new-password', '/team/5', '/l/AB12', '/admin', '/mini-leagues/3', '/u/abc'].every(jeZasebna) && !jeZasebna('/players') && !jeZasebna('/'))
   preveri('naslov: kanonicni strani brez lige nima ?t=', kanonicni('/legal', '?t=mladinci') === 'https://slff.eu/legal')
   const { zLigo } = await import('../src/lib/tekmovanje')
   preveri('povezava: liga v naslovu', zLigo('/player/5', 'sk-za-1trieda') === '/player/5?t=sk-za-1trieda')
