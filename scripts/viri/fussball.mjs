@@ -14,7 +14,7 @@ export function parseFussballEventClock(source) {
  const raw=String(source??'')
  const marker="(?:&rsquo;|&apos;|&#039;|')"
  const nested=new RegExp(`^\\s*(\\d{1,2})\\s*${marker}\\s*<div>\\s*\\+(\\d{1,2})\\s*<\\/div>\\s*$`).exec(raw)
- if(nested){const base=+nested[1],added=+nested[2];return base===90&&added>=1&&added<=30?{base,added}:null}
+ if(nested){const base=+nested[1],added=+nested[2];return (base===45||base===90)&&added>=1&&added<=30?{base,added}:null}
  const flat=new RegExp(`^\\s*(\\d{1,2})(?:\\s*\\+\\s*(\\d{1,2}))?\\s*${marker}\\s*$`).exec(raw)
  if(!flat)return null
  const base=+flat[1],added=+(flat[2]??0)

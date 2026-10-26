@@ -326,7 +326,7 @@ function events(html,tags){
   for(const [j,e] of actual.entries()){
    const raw=p.events[j];keys(raw,['time','type','team'])
    const clock=`${e.osnovnaMinuta}${e.dodatek?`+${e.dodatek}`:''}`
-   const coarseAddedTime=raw.time==='90'&&e.osnovnaMinuta===90&&e.dodatek>=1&&e.dodatek<=30
+   const coarseAddedTime=[45,90].includes(e.osnovnaMinuta)&&raw.time===String(e.osnovnaMinuta)&&e.dodatek>=1&&e.dodatek<=30
    requireProof((raw.time===clock||coarseAddedTime)&&raw.type===(e.vrsta==='rdeci'?(e.drugiRumeni?'yellow-red-card':'red-card'):({gol:'goal',menjava:'substitute',rumeni:'yellow-card'})[e.vrsta])&&raw.team===(e.ekipaIdx?'away':'home'),'neskladje vrste, strani ali časa dogodka')
    const order=e.osnovnaMinuta*100+e.dodatek
    requireProof(order>=previous,'neurejeni izvorni časi');previous=order

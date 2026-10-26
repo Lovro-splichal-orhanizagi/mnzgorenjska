@@ -117,12 +117,16 @@ Prav tako se zavrne ponovni vstop, napačna stran, dvoumen istočasni strelec
 in menjava, nedokazana menjava vloge vratarja ter polčasna menjava 45/46.
 Neodvisna para pri 67 sta dovoljena. Dodatek ostane v dokazu, statistična
 minuta pa je omejena na 90. Shranjena pristna oblika `90 &rsquo; <div>+N</div>`
-je podprta samo pri 90 in dodatku 1–30; vzorci ohranijo izvorni SHA-256 in
+je podprta pri zaključku polčasa 45 ali 90 in dodatku 1–30; vzorci ohranijo izvorni SHA-256 in
 odmik v bajtih. Nove oblike zahtevajo pristne vzorce in nove regresije.
 
-Hitri pregled sme pri tako dokazanem `90+N` objaviti samo `90`; vrsta,
+Hitri pregled sme pri tako dokazanem `45+N`/`90+N` objaviti samo `45`/`90`; vrsta,
 stran, število in vrstni red dogodkov se še vedno ujemajo. Izrecno drugačen
 dodatek se zavrne, izvirni dodatek in odtis vrstice ostaneta v dokazu.
+Pristna vrstica Bersenbrück–Verden z `45 &rsquo; <div>+2</div>` je shranjena
+z izvorno provenienco v `de-fussball-first-half-added-time.json`. Polčas,
+dodatek in odtis vrstice se ohranijo; izrecno drugačen dodatek, napačen
+polčas, neurejena kronologija in dvoumna menjava pri 45 ostanejo zavrnjeni.
 Dodatna opažena oblika slike `images.media.fussball.de/userfiles/…_p3.jpg`
 je le okras: identiteto še vedno določata profilna povezava in preverjena
 pisava, slike se ne prenašajo.

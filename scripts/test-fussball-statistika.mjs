@@ -159,11 +159,11 @@ test('captured nested 90+1 clock parses without changing substitution identity o
   assert.deepEqual(result.z.menjave.at(-1).minuta,90)
  }
 })
-test('nested added-time markup remains restricted to observed 90-minute clocks',()=>{
+test('nested added-time markup remains restricted to observed half-ending clocks',()=>{
  const index=rows(main).findIndex(({raw})=>raw.includes('class="icon-substitute"')&&raw.includes('<div class="valign-inner">90&rsquo;</div>'))
- const unsupportedClock=nestedAddedTime.observedCaptureClocks[0].source.rawClockHtml.replace(/\b90\b/,'45').replace('+1','+2')
+ const unsupportedClock=nestedAddedTime.observedCaptureClocks[0].source.rawClockHtml.replace(/\b90\b/,'44').replace('+1','+2')
  const captured=edit(index,raw=>raw.replace('<div class="valign-inner">90&rsquo;</div>',unsupportedClock),main)
- const variant=quick(captured,q=>{q['second-half'].events[index-q['first-half'].events.length].time='45+2';return q})
+ const variant=quick(captured,q=>{q['second-half'].events[index-q['first-half'].events.length].time='44+2';return q})
  reject(variant,lineup,options,/nepodprta minuta dogodka/)
 })
 test('captured Strafstoßtor marker sets penalty-goal evidence and the appearance statistic',()=>{
@@ -231,6 +231,36 @@ test('coarse quick-view time cannot override conflicting explicit time or an ear
  reject(nestedAddedGoal(main,'89'))
  const firstHalf=nestedAddedGoal(main,'90',0)
  reject(firstHalf)
+})
+function firstHalfAddedCard(quickTime='45'){
+ const source=JSON.parse(read('de-fussball-first-half-added-time.json')).source
+ return quick(edit(0,()=>source.rawEvent),q=>{q['first-half'].events[0]={time:quickTime,type:'yellow-card',team:'away'};return q})
+}
+test('authentic nested first-half added time retains period, addition and exact row fingerprint',()=>{
+ const source=JSON.parse(read('de-fussball-first-half-added-time.json')).source
+ assert.equal(sha(source.rawEvent),source.eventSha256)
+ for(const quickTime of ['45','45+2']){
+  const r=parse(firstHalfAddedCard(quickTime)),event=r.dogodki[0]
+  assert.deepEqual([event.osnovnaMinuta,event.dodatek,event.minuta,event.polcas,event.ekipaIdx],[45,2,45,1,1])
+  assert.equal(event.eventSha256,source.eventSha256)
+  assert.equal(r.nepripisaniRumeni[0].dodatek,2)
+ }
+})
+test('first-half nested added time cannot override conflicting quick time, wrong period or chronology',()=>{
+ for(const time of ['44','45+1','45+3','46'])reject(firstHalfAddedCard(time))
+ for(const raw of ['44','46','89','91'])reject(firstHalfAddedCard().replace(/45(\s+&rsquo;\s+<div>\+2)/,`${raw}$1`))
+ for(const added of ['0','31'])reject(firstHalfAddedCard().replace('<div>+2</div>',`<div>+${added}</div>`))
+ // A second first-half row at 45+1 after the observed 45+2 must not be sorted.
+ const source=JSON.parse(read('de-fussball-first-half-added-time.json')).source
+ let html=edit(0,row=>source.rawEvent+source.rawEvent.replace('+2','+1'))
+ html=quick(html,q=>{q['first-half'].events=[{time:'45',type:'yellow-card',team:'away'},{time:'45+1',type:'yellow-card',team:'away'}];return q})
+ reject(html,lineup,options,/zaporedje|neurejeni/)
+ // Move a real substitution to the first half at the same nested45+2 clock.
+ const sub=rows(main)[4].raw.replace(/<div class="valign-inner">[^<]+<\/div>/,source.rawClockHtml)
+ let moved=edit(4,()=>'',main)
+ moved=edit(0,()=>sub,moved)
+ moved=quick(moved,q=>{q['second-half'].events.splice(3,1);q['first-half'].events[0]={time:'45',type:'substitute',team:'home'};return q})
+ reject(moved,lineup,options,/polčasna menjava/)
 })
 test('low-level penalty evidence rejects comment and script decoys outside the live fourth score child',()=>{
  const index=rows(main).findIndex(({raw})=>raw.includes('<div class="even">'))
