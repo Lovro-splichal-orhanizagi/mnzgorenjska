@@ -1,0 +1,12 @@
+{
+  "provider": "fussball-public",
+  "method": "unchanged original source bytes",
+  "document": {
+    "url": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2526-schleswig-holstein/-/staffel/02TC3RCRHK000004VS5489BTVVQ0O654-G",
+    "kind": "round",
+    "sha256": "9c6c1c35efa8179091a071788e8a21554bdea7693b1e0c9ec637be598157cbb4",
+    "status": 200,
+    "contentType": "text/html; charset=UTF-8",
+    "capturedAt": "2026-10-26T09:38:41.616Z"
+  }
+}

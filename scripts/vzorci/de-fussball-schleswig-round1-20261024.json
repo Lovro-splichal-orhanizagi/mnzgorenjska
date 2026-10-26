@@ -1,0 +1,11 @@
+{
+  "provider": "fussball-public",
+  "method": "unchanged original source bytes",
+  "document": {
+    "url": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2627-schleswig-holstein/-/spieltag/1/staffel/031AVH9TIC000004VS5489BTVSK8S3O6-G",
+    "sha256": "37b18e2ad7ea280cf327b8145b75f91d6def6f66d619fbbab9c0e28504e8a264",
+    "capturedAt": "2026-10-24T19:35:17.838Z",
+    "status": 200,
+    "kind": "round"
+  }
+}

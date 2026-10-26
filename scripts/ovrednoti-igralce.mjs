@@ -165,6 +165,21 @@ if (pisi && tekmovanje.active && !tedensko && !samoNove && !dovoliAktivno) {
   process.exit(1)
 }
 
+// Retained statistics from a rejected DFB report are provisional. Defer the
+// whole percentile cohort before any player/statistic read or automatic write.
+// The service RPC validates the actual German competition/current source code.
+if (tedensko && pisi && tekmovanje.active && tekmovanje.source === 'dfb') {
+  const { data: pending, error } = await db.rpc('get_dfb_pending_reports', {
+    p_competition_id: tekmovanje.id,
+    p_code: tekmovanje.source_league_code,
+  })
+  if (error || !Array.isArray(pending)) throw new Error(`DFB pending pricing inventory: ${error?.message ?? 'invalid response'}`)
+  if (pending.length) {
+    console.warn(`DFB pending: ${pending.length} — tedensko vrednotenje ${tekmovanje.slug} odloženo.`)
+    process.exit(0)
+  }
+}
+
 const vsiIgralci = await vseVrstice((od, do_) =>
   db
     .from('players')

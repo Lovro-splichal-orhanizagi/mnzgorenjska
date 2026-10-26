@@ -59,13 +59,14 @@ async function capture(f=setup(),candidate=paired){
 }
 const cleanup=f=>rmSync(join(f.directory,'..'),{recursive:true,force:true})
 
-test('observed catalog binds exact source/current tuples and HOLDs absent archive before GET',async()=>{
+test('observed catalog binds source tuples, validates witnessed archive, and HOLDs missing pairings before GET',async()=>{
  assert.equal(typeof api.validateGermanyCandidate,'function')
  assert.equal(api.GERMANY_BULK_CANDIDATES.length,2)
  for(const c of api.GERMANY_BULK_CANDIDATES){
-  assert.equal(c.archives.length,0)
+  assert.equal(c.archives.length,c.slug==='de-flens-oberliga-schleswig-holstein'?1:0)
   assert.ok(c.registration.name&&c.registration.short_name&&Number.isInteger(c.registration.sort_order))
   assert.equal(api.validateGermanyCandidate(c).source,'fussball-public')
+  if(c.archives.length){assert.equal(c.archives[0].code,'02TC3RCRHK000004VS5489BTVVQ0O654-G:2025/26');assert.equal(c.archives[0].observedFrom.length,2);continue}
   let requests=0
   await assert.rejects(api.captureGermanyCandidate(c,{directory:'/unused',maxRequests:1,fetch:async()=>{requests++}}),e=>e.dataHold===true&&e.reason_code==='GERMANY_ARCHIVE_MISSING')
   assert.equal(requests,0)
@@ -75,6 +76,20 @@ test('observed catalog binds exact source/current tuples and HOLDs absent archiv
  }
  assert.equal(api.validateGermanyCandidate(paired,{catalog:[paired]}).archives[0].season,'2025/26')
  assert.throws(()=>api.validateGermanyCandidate({...paired,archives:[{...paired.archives[0],season:'2024/25',code:staffel+':2024/25'}]},{catalog:[{...paired,archives:[{...paired.archives[0],season:'2024/25',code:staffel+':2024/25'}]}]}),/archive|previous/i)
+})
+
+test('installed archive collector forwards its identity parser to the actual season collector',async()=>{
+ const c=api.GERMANY_BULK_CANDIDATES.find(c=>c.archives.length)
+ const a=c.archives[0],t={...a,staffel:a.code.split(':')[0]}
+ const html=read('de-fussball-schleswig-archive-20261026.html')
+ const client={read:async(url,kind)=>{assert.equal(url,a.seedUrl);assert.equal(kind,'round');return {bytes:html,capturedAt:'2026-10-26T09:38:41.616Z'}}}
+ // Stop immediately after real identity validation. This deliberately proves
+ // adapter composition only; it cannot establish full-season/source readiness.
+ const reached=Error('reached real archive round parser')
+ const collectSeason=(options,parsers)=>collectFussballSeason(options,{...parsers,parseRound:()=>{throw reached}})
+ await assert.rejects(api.collectGermanySeason(t,c,{client,asOfDate:'2026-10-26',collectSeason}),e=>e===reached)
+ // The ordinary collector must still reject that parent-canonical archive.
+ await assert.rejects(collectFussballSeason({...t,client,asOfDate:'2026-10-26'},{parseRound:()=>{throw reached}}),e=>e!==reached)
 })
 
 test('full two-season collection replays real positive statistics, native schedule and identities',async t=>{
