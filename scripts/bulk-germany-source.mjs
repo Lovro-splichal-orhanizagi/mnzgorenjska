@@ -144,6 +144,7 @@ export async function captureGermanyCandidate(candidate,{directory,maxRequests,n
 export async function loadGermanyPack(directory,{candidate,now=Date.now,requireFresh=true}={},dependencies={}){
  try{
   const c=paired(candidate,dependencies),m=JSON.parse(readRegular(directory,'manifest.json'))
+  if(m.provider==='germany-paired-fussball'){const {loadFussballPairedPack}=await import('./fussball-paired-pack.mjs');return await loadFussballPairedPack(directory,{candidate:c,now,requireFresh},dependencies)}
   proof(m.version===1&&m.provider==='germany-bulk-fussball'&&m.complete===true&&m.error===null,'capture incomplete')
   proof(equal(c,m.candidate),'capture candidate scope differs')
   proof(m.code_sha256===codeHash(),'capture code fingerprint differs')

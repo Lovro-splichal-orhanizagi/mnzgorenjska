@@ -3,12 +3,21 @@ import {createHash} from 'node:crypto'
 import {readFileSync,lstatSync} from 'node:fs'
 import {resolve,join} from 'node:path'
 import {POLAND_BULK_CANDIDATES,capturePolandCandidate,loadPolandPack} from './bulk-poland-source.mjs'
-import {GERMANY_BULK_CANDIDATES,captureGermanyCandidate,loadGermanyPack} from './bulk-germany-source.mjs'
+import {GERMANY_BULK_CANDIDATES,captureGermanyCandidate,loadGermanyPack,validateGermanyCandidate} from './bulk-germany-source.mjs'
 import {atomicCheckpoint} from './provider-league-batch.mjs'
 import {zaprtje} from './odtis-kode.mjs'
 const digest=v=>createHash('sha256').update(JSON.stringify(v)).digest('hex')
 const fail=message=>{throw Object.assign(Error(message),{dataHold:true,reason_code:'BULK_SOURCE_ADMISSION_HOLD'})}
 export const bulkCandidates=country=>structuredClone([...POLAND_BULK_CANDIDATES,...GERMANY_BULK_CANDIDATES].filter(c=>country==='ALL'||c.country_code===country))
+export function selectBulkCandidates(country,slug){
+ const candidates=bulkCandidates(country)
+ if(slug===undefined)return candidates
+ if(country!=='DE'||!/^de-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))fail('Single-candidate selection requires an exact reviewed German slug.')
+ const selected=candidates.filter(c=>c.slug===slug)
+ if(selected.length!==1)fail('Unknown or ambiguous reviewed German candidate.')
+ validateGermanyCandidate(selected[0])
+ return selected
+}
 function candidateScope(candidate){
  const catalog=bulkCandidates('ALL'),found=catalog.find(c=>c.slug===candidate?.slug)
  if(!found||digest(found)!==digest(candidate))fail('Pack candidate differs from the checked-in catalog.')

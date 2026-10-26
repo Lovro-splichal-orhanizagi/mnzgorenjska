@@ -39,6 +39,10 @@ on:
         description: Exact reviewed main SHA, required for paired seasons
         type: string
         default: ''
+      rollout_candidate:
+        description: Optional exact reviewed German slug; after both complete audits dispatch the separately gated native rollout
+        type: string
+        default: ''
 permissions:
   contents: read
   actions: read
@@ -52,6 +56,7 @@ env:
   PRIOR_REQUESTS: ${{ inputs.prior_requests }}
   TOTAL_REQUEST_CAP: ${{ inputs.total_request_cap }}
   EXPECTED_SHA: ${{ inputs.expected_sha }}
+  ROLLOUT_CANDIDATE: ${{ inputs.rollout_candidate }}
 jobs:
   capture:
     if: github.ref == 'refs/heads/main'
@@ -124,3 +129,31 @@ jobs:
           path: capture-archive/
           if-no-files-found: ignore
           retention-days: 90
+
+  handoff:
+    needs: [capture, archive]
+    if: github.ref == 'refs/heads/main' && inputs.rollout_candidate != '' && needs.capture.result == 'success' && needs.archive.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: fussball-season-${{ github.run_id }}
+          path: current-capture/
+      - uses: actions/download-artifact@v4
+        with:
+          name: fussball-season-archive-${{ github.run_id }}
+          path: archive-capture/
+      - name: Require complete native source batches and unchanged main, then dispatch separate native gates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/fussball-season-pilot.mjs handoff current-capture archive-capture

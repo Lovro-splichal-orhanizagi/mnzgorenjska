@@ -10,7 +10,7 @@ const sha='a'.repeat(40),repository='Lovro-splichal-orhanizagi/mnzgorenjska'
 const staffel='03188V27L800000JVS5489BTVU7GTVLE-G',archiveStaffel='02TGLSVQ1800000IVS5489BTVTLPPK10-G'
 const seedUrl='https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/'+staffel
 const archive={seedUrl:'https://www.fussball.de/spieltag/-/staffel/'+archiveStaffel,staffel:archiveStaffel,season:'2025/26',maxRequests:3000}
-const environment=()=>({SEED_URL:seedUrl,STAFFEL:staffel,SEASON:'2026/27',MAX_REQUESTS:'1500',REPORTS:'all',ARCHIVE_JSON:JSON.stringify(archive),PRIOR_REQUESTS:'363',TOTAL_REQUEST_CAP:'5000',EXPECTED_SHA:sha,GITHUB_SHA:sha,GITHUB_REF:'refs/heads/main',GITHUB_REPOSITORY:repository,GITHUB_RUN_ATTEMPT:'1',GITHUB_RUN_ID:'40000000000',GITHUB_EVENT_NAME:'workflow_dispatch',GITHUB_WORKFLOW_REF:repository+'/.github/workflows/preveri-fussball-sezono.yml@refs/heads/main'})
+const environment=()=>({ROLLOUT_CANDIDATE:'',SEED_URL:seedUrl,STAFFEL:staffel,SEASON:'2026/27',MAX_REQUESTS:'1500',REPORTS:'all',ARCHIVE_JSON:JSON.stringify(archive),PRIOR_REQUESTS:'363',TOTAL_REQUEST_CAP:'5000',EXPECTED_SHA:sha,GITHUB_SHA:sha,GITHUB_REF:'refs/heads/main',GITHUB_REPOSITORY:repository,GITHUB_RUN_ATTEMPT:'1',GITHUB_RUN_ID:'40000000000',GITHUB_EVENT_NAME:'workflow_dispatch',GITHUB_WORKFLOW_REF:repository+'/.github/workflows/preveri-fussball-sezono.yml@refs/heads/main'})
 const validate=e=>api.validateFussballSeasonPilot(e,{headSha:sha})
 test('ordinary single-season mode retains the old optional interface and hosted ceiling',()=>{
  assert.equal(typeof api.validateFussballSeasonPilot,'function')
@@ -81,7 +81,7 @@ test('CLI keeps ordinary mode and validates an exact reviewed paired plan at the
  const head=spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).stdout.trim()
  const child=spawnSync(process.execPath,[script,'validate'],{env:{...process.env,...environment(),EXPECTED_SHA:head,GITHUB_SHA:head},encoding:'utf8'})
  assert.equal(child.status,0,child.stderr);assert.equal(JSON.parse(child.stdout).priorRequests,363)
- const ordinary=spawnSync(process.execPath,[script,'validate'],{env:{...process.env,MAX_REQUESTS:'1000',ARCHIVE_JSON:''},encoding:'utf8'})
+ const ordinary=spawnSync(process.execPath,[script,'validate'],{env:{...process.env,MAX_REQUESTS:'1000',ARCHIVE_JSON:'',ROLLOUT_CANDIDATE:''},encoding:'utf8'})
  assert.equal(ordinary.status,0,ordinary.stderr);assert.equal(JSON.parse(ordinary.stdout),null)
 })
 
@@ -113,4 +113,24 @@ test('archive authorization binds the exact current short menu even when capture
   assert.equal(allowed.archive.seedUrl,badenProof.archive.seedUrl);assert.equal(allowed.archive.observedSeedUrl,badenProof.observedSeedUrl)
   await assert.rejects(api.authorizeFussballSeasonArchive(directory,{...e,ARCHIVE_JSON:JSON.stringify({...archive,...badenProof.archive})},{headSha:sha,collectFn:collector}),/observed adjacent/)
  },{e,html:readFileSync(new URL('./vzorci/'+badenProof.currentSourceFile,import.meta.url))})
+})
+
+test('opt-in rollout candidate must exactly own both observed catalog scopes before source requests',()=>{
+ const e={...environment(),ROLLOUT_CANDIDATE:'de-verbandsliga-baden',ARCHIVE_JSON:JSON.stringify({...archive,...badenProof.archive,observedSeedUrl:badenProof.observedSeedUrl})}
+ assert.equal(validate(e).rolloutCandidate,'de-verbandsliga-baden')
+ for(const patch of [{ROLLOUT_CANDIDATE:'de-other'},{ROLLOUT_CANDIDATE:'de-flens-oberliga-schleswig-holstein'},{ARCHIVE_JSON:''},{STAFFEL:fixtureStaffel,SEED_URL:fixtureSeed},{ARCHIVE_JSON:JSON.stringify({...archive,...badenProof.archive,seedUrl:archive.seedUrl})}])assert.throws(()=>validate({...e,...patch}))
+})
+
+test('rollout authorization requires both complete fresh native batches and unchanged main before creating exact dispatch args',async()=>{
+ assert.equal(typeof api.authorizeFussballRollout,'function')
+ const e={...environment(),ROLLOUT_CANDIDATE:'de-verbandsliga-baden',ARCHIVE_JSON:JSON.stringify({...archive,...badenProof.archive,observedSeedUrl:badenProof.observedSeedUrl})},calls=[]
+ const readManifest=path=>({version:path==='current'?1:3,success:true,options:{...(path==='current'?badenProof.current:badenProof.archive),reportLimit:null}})
+ const loadCapture=async(path,o)=>{calls.push({path,...o});return {provider:'fussball-public',staffel:o.staffel,season:o.season,activationEligible:false,reports:[{id:'report'}],schedule:[{stevilka:1}],identities:[{source_id:'source',reg_st:1}]}}
+ const options={currentDirectory:'current',archiveDirectory:'archive',e,headSha:sha,mainSha:sha}
+ const result=await api.authorizeFussballRollout(options,{loadCapture,readManifest})
+ assert.deepEqual(result,['workflow','run','uvoz-pl-de-paketa.yml','--repo',repository,'--ref','main','-f','country=DE','-f','expected_sha='+sha,'-f','audit_run=40000000000','-f','candidate=de-verbandsliga-baden','-f','max_requests=1'])
+ assert.deepEqual(calls.map(c=>[c.path,c.current]),[['current',true],['archive',false]])
+ await assert.rejects(api.authorizeFussballRollout({...options,mainSha:'b'.repeat(40)},{loadCapture:()=>assert.fail('changed main must reject before replay'),readManifest}))
+ for(const failedPath of ['current','archive'])await assert.rejects(api.authorizeFussballRollout(options,{readManifest,loadCapture:async(path,o)=>{if(path===failedPath)throw Error('incomplete coverage or stale/fingerprint hold');return loadCapture(path,o)}}),/coverage/)
+ await assert.rejects(api.authorizeFussballRollout(options,{readManifest,loadCapture:async(path,o)=>({...await loadCapture(path,o),reports:[]})}))
 })
