@@ -235,6 +235,11 @@
     "competitions"
   ],
   [
+    "public.napovedi",
+    "match_id",
+    "matches"
+  ],
+  [
     "public.narocila_znack",
     "player_id",
     "players"

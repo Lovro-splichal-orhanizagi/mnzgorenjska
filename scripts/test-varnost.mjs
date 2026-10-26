@@ -3,7 +3,7 @@
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 
-const sql = ['varnost.sql', 'claim-referral-priority.sql', 'klub-dodaja-igralce.sql', 'omejitve-uporabnikov.sql', 'popravki-podatkov.sql', 'ponovne-cene.sql', 'samodejni-poznavalci.sql', 'mini-lige-dvoboji.sql']
+const sql = ['varnost.sql', 'claim-referral-priority.sql', 'klub-dodaja-igralce.sql', 'omejitve-uporabnikov.sql', 'popravki-podatkov.sql', 'ponovne-cene.sql', 'samodejni-poznavalci.sql', 'mini-lige-dvoboji.sql', 'napovedi.sql']
   .map((file) => readFileSync(new URL(`../supabase/tests/${file}`, import.meta.url), 'utf8'))
   .join('\n')
 try {

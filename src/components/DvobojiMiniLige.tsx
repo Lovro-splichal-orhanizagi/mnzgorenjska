@@ -6,13 +6,27 @@ import { formatirajTocke } from '../lib/pomozno'
 import { stanjeDvoboja, type Dvoboji, type ParDvoboja } from '../lib/miniLige'
 import { t } from '../i18n'
 
-export type PogledMiniLige = 'skupno' | 'dvoboji'
+export type PogledMiniLige = 'skupno' | 'dvoboji' | 'napovedi'
 
-/** Preklop med skupno lestvico in dvoboji; nad lestvico mini lige. */
-export function IzbiraPogleda({ pogled, onPogled }: { pogled: PogledMiniLige; onPogled: (p: PogledMiniLige) => void }) {
+const OZNAKA_POGLEDA: Record<PogledMiniLige, () => string> = {
+  skupno: () => t('lestvice.dvoboji.skupno'),
+  dvoboji: () => t('lestvice.dvoboji.naslov'),
+  napovedi: () => t('lestvice.napovedi.napovedi'),
+}
+
+/** Preklop med skupno lestvico, dvoboji in napovedmi; nad lestvico mini lige. */
+export function IzbiraPogleda({
+  pogled,
+  onPogled,
+  moznosti = ['skupno', 'dvoboji'],
+}: {
+  pogled: PogledMiniLige
+  onPogled: (p: PogledMiniLige) => void
+  moznosti?: PogledMiniLige[]
+}) {
   return (
     <div role="group" aria-label={t('lestvice.dvoboji.pogled')} className="flex gap-1 rounded-lg bg-white/5 p-1">
-      {(['skupno', 'dvoboji'] as const).map((p) => (
+      {moznosti.map((p) => (
         <button
           key={p}
           onClick={() => onPogled(p)}
@@ -21,7 +35,7 @@ export function IzbiraPogleda({ pogled, onPogled }: { pogled: PogledMiniLige; on
             pogled === p ? 'bg-gnl-500 text-slate-950' : 'text-slate-400 hover:text-white'
           }`}
         >
-          {p === 'skupno' ? t('lestvice.dvoboji.skupno') : t('lestvice.dvoboji.naslov')}
+          {OZNAKA_POGLEDA[p]()}
         </button>
       ))}
     </div>

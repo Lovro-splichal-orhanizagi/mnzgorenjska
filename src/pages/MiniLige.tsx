@@ -24,6 +24,7 @@ import JavneMiniLige from '../components/JavneMiniLige'
 import JavnostMiniLige from '../components/JavnostMiniLige'
 import IzstopMiniLige from '../components/IzstopMiniLige'
 import SaljiveNagrade from '../components/SaljiveNagrade'
+import NapovediMiniLige from '../components/NapovediMiniLige'
 import DvobojiMiniLige, { IzbiraPogleda, type PogledMiniLige } from '../components/DvobojiMiniLige'
 import { t, tx } from '../i18n'
 import { dogodek } from '../lib/analitika'
@@ -84,8 +85,11 @@ export default function MiniLige() {
   const [novaLiga, setNovaLiga] = useState<number | null>(null)
   // Po izstopu ali odstranitvi ekipe lestvico naložimo znova.
   const [osvezi, setOsvezi] = useState(0)
-  // Skupna lestvica ali dvoboji; izbira ostane ob preklopu mini lige.
-  const [pogled, setPogled] = useState<PogledMiniLige>('skupno')
+  // Skupna lestvica, dvoboji ali napovedi izidov; izbira ostane ob preklopu
+  // mini lige. Poziv z Moje ekipe pride z ?pogled=napovedi.
+  const [pogled, setPogled] = useState<PogledMiniLige>(() =>
+    params.get('pogled') === 'napovedi' ? 'napovedi' : 'skupno',
+  )
 
   useEffect(() => {
     const vstop = params.get('vstop')
@@ -415,9 +419,15 @@ export default function MiniLige() {
             <DeliMiniLigo ime={trenutna.name} koda={trenutna.code} stanje={stanjeDeljenja} />
           )}
 
-          {zDvoboji && <IzbiraPogleda pogled={pogled} onPogled={setPogled} />}
+          <IzbiraPogleda
+            pogled={pogled}
+            onPogled={setPogled}
+            moznosti={zDvoboji ? ['skupno', 'dvoboji', 'napovedi'] : ['skupno', 'napovedi']}
+          />
 
-          {zDvoboji && pogled === 'dvoboji' && trenutna ? (
+          {pogled === 'napovedi' && trenutna ? (
+            <NapovediMiniLige ligaId={trenutna.id} />
+          ) : zDvoboji && pogled === 'dvoboji' && trenutna ? (
             <DvobojiMiniLige ligaId={trenutna.id} />
           ) : urejena.length === 0 ? (
             <p className="text-sm text-slate-400">
@@ -478,7 +488,7 @@ export default function MiniLige() {
             </ol>
           )}
 
-          {trenutna && (
+          {trenutna && pogled !== 'napovedi' && (
             // Ob preklopu šaljivih nagrad se pregled naloži znova.
             <TedenskiPregled
               key={`${trenutna.id}-${trenutna.saljive_nagrade}`}

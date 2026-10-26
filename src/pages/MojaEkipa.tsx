@@ -10,6 +10,7 @@ import type { Odsotnost } from '../lib/odsotni'
 import { useAuth } from '../lib/useAuth'
 import { preberiVabilo, pozabiVabilo } from '../lib/miniLige'
 import PovabiSoigralce from '../components/PovabiSoigralce'
+import PozivNapovedi from '../components/PozivNapovedi'
 import { zabeleziKorak } from '../lib/lijak'
 import { naTrgu, pozabiOsnutek, preberiOsnutek, shraniOsnutek, veljavenOsnutek } from '../lib/osnutek'
 import { osvetliCilj } from '../lib/podporaOrodja'
@@ -2127,6 +2128,8 @@ export default function MojaEkipa() {
               }}
             />
           )}
+
+          {uporabnikId && ekipa?.id && <PozivNapovedi tekmovanjeId={tekmovanjeId} />}
 
           {/* Vse, kar ni sestava ekipe, je zloženo: na telefonu zaprto, na
               računalniku odprto. Brez računa ni ne pripomočkov ne zgodovine. */}
