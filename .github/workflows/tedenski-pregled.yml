@@ -4,19 +4,25 @@ name: Tedenski pregled (tvoj krog)
 # lige, kapetanom in najboljsim igralcem (`tedenski_pregled_ekip`).
 #
 # Krog je koncan, ko so vsi zapisniki zadnjega tedna v bazi; vecina jih pride
-# do ponedeljka. Zato ponedeljek zvecer in torek zvecer: kdor je v ponedeljek
-# ze dobil mail za krog, ga v torek ne dobi znova (email_log z round_id), torek
-# pa pobere lige s pozno vnesenimi zapisniki in ostanek dnevne mere.
+# do ponedeljka. Kdor je mail za krog ze dobil, ga ne dobi znova (email_log z
+# round_id); poznejsi zagoni poberejo lige s pozno vnesenimi zapisniki in
+# ostanek mere.
 #
-# Mera: najvec 300 na zagon. mail.slff.eu je nov posiljatelj (glej opomniki.yml),
-# aktivnih lastnikov je ~500. Meja na ligo je le varovalka za napako (najvecja
-# liga ima ~120 ekip).
+# Mera: najvec 300 na zagon. Do 26. 10. 2026 sta bila zagona dva (600 na
+# teden), lastnikov ekip pa je ~3000 — pregled je dobila le petina. Zdaj sest
+# zagonov od ponedeljka do srede (do 1800 na teden): mail.slff.eu se ogreva
+# (glej opomniki.yml), zato postopno; ko gre brez zavrnitev, dvigni mero.
+# Meja na ligo je le varovalka za napako (najvecja liga ima ~120 ekip).
 #
 # Rocni zagon je privzeto suh: izpise, koliko bi jih slo po ligah.
 on:
   schedule:
     - cron: '7 17 * * 1'
+    - cron: '7 20 * * 1'
+    - cron: '7 8 * * 2'
     - cron: '7 17 * * 2'
+    - cron: '7 8 * * 3'
+    - cron: '7 17 * * 3'
   workflow_dispatch:
     inputs:
       suho:
