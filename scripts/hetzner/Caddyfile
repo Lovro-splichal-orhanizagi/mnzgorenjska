@@ -137,7 +137,7 @@ slff.eu {
 
 	# The same page with a trailing slash (/players/): one address for search engines,
 	# 301 to the canonical one without it, query kept (same trick as @stara_pot).
-	@posevnica path_regexp ^/(my-team|assists|positions|absences|players|standings|national|mini-leagues|results|table|login|legal|reminders|account|admin|si|sk|hr|cz|hu|at|rs|ro|ee|pl|es|lv|mk|de|gr|tr|ua|am|az|dk|gb|mt|me|ba|md)/$
+	@posevnica path_regexp ^/(my-team|assists|positions|absences|players|standings|national|mini-leagues|predictions|results|table|login|legal|reminders|account|admin|si|sk|hr|cz|hu|at|rs|ro|ee|pl|es|lv|mk|de|gr|tr|ua|am|az|dk|gb|mt|me|ba|md)/$
 	handle @posevnica {
 		route {
 			uri path_regexp ^(/[a-z-]+)/$ $1
@@ -160,7 +160,7 @@ slff.eu {
 	header -Server
 	# Private or per-user pages stay out of search results (they are not in the sitemap
 	# either). Keep in sync with the routes in src/App.tsx.
-	@zasebne path /my-team /mini-leagues /mini-leagues/* /login /account /reminders /new-password /novo-geslo /admin /claim /auth/* /team/* /l/* /u/* /objava
+	@zasebne path /my-team /mini-leagues /mini-leagues/* /predictions /login /account /reminders /new-password /novo-geslo /admin /claim /auth/* /team/* /l/* /u/* /objava
 	header @zasebne X-Robots-Tag "noindex"
 	# Hashed by Vite; a new build means new names.
 	header /assets/* Cache-Control "public, max-age=31536000, immutable"
@@ -422,7 +422,7 @@ slff.eu {
 		@ni_strani {
 			not path *.*
 			not path / /sk /hr /cz /hu /at /rs /ro /ee /pl /es /lv /mk /de /gr /tr /ua /am /az /dk /gb /mt /me /ba /md /si
-			not path /my-team /assists /positions /absences /players /standings /national /mini-leagues /results /table
+			not path /my-team /assists /positions /absences /players /standings /national /mini-leagues /predictions /results /table
 			not path /player/* /team/* /club/* /match/* /l/* /u/* /mini-leagues/*
 			not path /login /new-password /novo-geslo /legal /reminders /account /auth/confirm /admin /claim /beers /objava
 		}

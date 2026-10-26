@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Grb from './Grb'
 import ImeLastnika from './ImeLastnika'
+import { Link } from './Povezava'
 import { supabase } from '../lib/supabase'
 import { t, datumUra } from '../i18n'
 import { prevediNapako } from '../lib/napake'
@@ -77,24 +78,7 @@ export default function NapovediMiniLige({ ligaId }: { ligaId: number }) {
       <section className="kartica space-y-3 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-bold">{t('lestvice.napovedi.lestvicaNaslov')}</h2>
-          {krogi.length > 0 && (
-            <div className="flex min-w-0 max-w-full gap-1 overflow-x-auto pb-1" role="group">
-              {[null, ...krogi].map((k) => (
-                <button
-                  key={k ?? 'skupno'}
-                  onClick={() => setKrog(k)}
-                  aria-pressed={k === krog}
-                  className={`shrink-0 whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-bold tabular-nums ${
-                    k === krog
-                      ? 'bg-gnl-500/20 text-gnl-200 ring-1 ring-gnl-400/40'
-                      : 'bg-white/5 text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  {k == null ? t('lestvice.napovedi.skupno') : t('lestvice.krog', { n: k })}
-                </button>
-              ))}
-            </div>
-          )}
+          <IzbiraKroga krogi={krogi} krog={krog} onKrog={setKrog} />
         </div>
 
         {lestvica == null ? (
@@ -142,23 +126,63 @@ export default function NapovediMiniLige({ ligaId }: { ligaId: number }) {
       {krogTekem != null && napovediKroga.length > 0 && (
         <NapovediPoTekmah krog={krogTekem} vrstice={napovediKroga} />
       )}
+
+      <Link to="/predictions" className="block text-center text-sm font-semibold text-gnl-300 underline hover:text-gnl-200">
+        {t('lestvice.napovedi.lestvicaLige')}
+      </Link>
     </div>
   )
 }
 
-/** Tekme naslednjega kroga vseh mojih lig z mojimi napovedmi. */
-function ObrazecNapovedi() {
+/** Gumbi "Skupno" in krogi z napovedmi (mini liga in lestvica lige). */
+export function IzbiraKroga({ krogi, krog, onKrog }: {
+  krogi: number[]
+  krog: number | null
+  onKrog: (krog: number | null) => void
+}) {
+  if (krogi.length === 0) return null
+  return (
+    <div className="flex min-w-0 max-w-full gap-1 overflow-x-auto pb-1" role="group">
+      {[null, ...krogi].map((k) => (
+        <button
+          key={k ?? 'skupno'}
+          onClick={() => onKrog(k)}
+          aria-pressed={k === krog}
+          className={`shrink-0 whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-bold tabular-nums ${
+            k === krog
+              ? 'bg-gnl-500/20 text-gnl-200 ring-1 ring-gnl-400/40'
+              : 'bg-white/5 text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          {k == null ? t('lestvice.napovedi.skupno') : t('lestvice.krog', { n: k })}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Tekme naslednjega kroga z mojimi napovedmi: vseh mojih lig (mini liga) ali
+ * le ene (`tekmovanjeId`, stran Napovedi). Napoved je ena in velja povsod.
+ */
+export function ObrazecNapovedi({ tekmovanjeId, brezPravil = false }: {
+  tekmovanjeId?: number
+  brezPravil?: boolean
+}) {
   const [tekme, setTekme] = useState<Odprta[] | null>(null)
 
   useEffect(() => {
     let veljavno = true
-    supabase.rpc('moje_odprte_napovedi', {}).then(({ data }) => {
-      if (veljavno) setTekme(data ?? [])
-    })
+    setTekme(null)
+    supabase
+      .rpc('moje_odprte_napovedi', tekmovanjeId == null ? {} : { p_tekmovanje: tekmovanjeId })
+      .then(({ data }) => {
+        if (veljavno) setTekme(data ?? [])
+      })
     return () => {
       veljavno = false
     }
-  }, [])
+  }, [tekmovanjeId])
 
   // Po ligah: vsaka ima svoj krog in rok.
   const poLigah = useMemo(() => {
@@ -174,12 +198,14 @@ function ObrazecNapovedi() {
     <section className="kartica space-y-3 p-4">
       <div>
         <h2 className="text-lg font-bold">{t('lestvice.napovedi.naslov')}</h2>
-        <p className="mt-0.5 text-xs text-slate-400">{t('lestvice.napovedi.pravila')}</p>
+        {!brezPravil && <p className="mt-0.5 text-xs text-slate-400">{t('lestvice.napovedi.pravila')}</p>}
       </div>
       {tekme == null ? (
         <p className="animiraj-utrip text-sm text-slate-400">{t('skupno.nalaganje')}</p>
       ) : poLigah.length === 0 ? (
-        <p className="text-sm text-slate-400">{t('lestvice.napovedi.niTekem')}</p>
+        <p className="text-sm text-slate-400">
+          {tekmovanjeId == null ? t('lestvice.napovedi.niTekem') : t('lestvice.napovedi.niTekemLige')}
+        </p>
       ) : (
         poLigah.map((skupina) => {
           const prva = skupina[0]

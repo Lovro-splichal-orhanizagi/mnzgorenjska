@@ -254,8 +254,24 @@
   `krogi_napovedi_mini_lige`, `napovedi_mini_lige_krog` (le članom, le po
   roku). Obrazec: `moje_odprte_napovedi(liga)` (naslednji krog mojih lig).
   Servisni `povzetek_napovedi_kroga(uporabnik, krog)` za pošto. Vmesnik:
-  Mini lige → Napovedi (`NapovediMiniLige.tsx`, `?pogled=napovedi`), poziv na
-  Moji ekipi (`PozivNapovedi.tsx`)
+  Mini lige → Napovedi (`NapovediMiniLige.tsx`, `?pogled=napovedi`, povezava
+  na lestvico lige).
+- **Napovedi za vse** (migracija 20261026183100): napoveduje vsak z nehišno
+  ekipo v ligi, ne le člani mini lig. Stran `/predictions` (`Napovedi.tsx`,
+  noindex, obisk `napovedi`) za izbrano ligo: obrazec (`ObrazecNapovedi` iz
+  `NapovediMiniLige.tsx`, le tekme te lige), lestvica in izbira skupnosti.
+  `lestvica_napovedi_lige(liga, krog)` (anon + authenticated, security
+  definer): lastniki nehišnih ekip lige z vsaj eno napovedjo na tekmah tekoče
+  sezone (`sezona_lige`; s `krog` le tisti, ki so napovedali ta krog), točke
+  kot v mini ligi; vrne `mesto` (skupno pri enakih točkah in točnih), prikazno
+  ime, točke, točne, razplete, ocenjene in `je_moj` — vrh 50 in klicateljevo
+  vrstico, **nikoli user_id**. `krogi_napovedi_lige(liga)` → (krog, round_id)
+  tekoče sezone po roku z vsaj eno napovedjo, najnovejši prvi.
+  `skupnost_napovedi_kroga(round)` → (tekma, n, doma, remi, gostje): šele po
+  `rok_napovedi`, le tekme z vsaj 3 napovedmi, brez lastnikov samo hišnih
+  ekip; prikaz `PasSkupnosti.tsx` na strani in na tekmi (`/match/:id`).
+  Poziv na Moji ekipi (`PozivNapovedi.tsx`) dobi vsak z ekipo, ki ima v
+  naslednjem krogu tekme brez napovedi, in vodi na `/predictions`.
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
 - `statistika_igralcev` → statistika igralca po ligi in sezoni (nastopi,
   minute, goli, kartoni, čiste mreže, točke, asistence, zadnji krog, forma).

@@ -70,6 +70,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     rezultati: 'Nəticələr',
     tabela: 'Turnir cədvəli',
     miniLige: 'Mini-liqalar',
+    napovedi: 'Proqnozlar',
     asistence: 'Asistlər',
     pozicije: 'Mövqelər',
     odsotnosti: 'Oynamayanlar',

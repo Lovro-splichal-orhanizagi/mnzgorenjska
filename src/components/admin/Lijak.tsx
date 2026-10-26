@@ -44,6 +44,7 @@ const STRANI: Record<string, string> = {
   lestvica: 'Lestvica',
   slovenija: 'Državna lestvica',
   mini_lige: 'Mini lige',
+  napovedi: 'Napovedi',
   vstop_v_mini_ligo: 'Vstop v mini ligo',
   ekipa: 'Tuja ekipa',
   klub: 'Klub',

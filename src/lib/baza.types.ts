@@ -9430,6 +9430,13 @@ export type Database = {
       }
       krog_dvoboja_koncan: { Args: { p_round_id: number }; Returns: boolean }
       krog_je_odigran: { Args: { p_round_id: number }; Returns: boolean }
+      krogi_napovedi_lige: {
+        Args: { p_tekmovanje: number }
+        Returns: {
+          krog: number
+          round_id: number
+        }[]
+      }
       krogi_napovedi_mini_lige: {
         Args: { p_liga: number }
         Returns: {
@@ -9468,6 +9475,18 @@ export type Database = {
           tekme: number
           tocke: number
           zmage: number
+        }[]
+      }
+      lestvica_napovedi_lige: {
+        Args: { p_krog?: number; p_tekmovanje: number }
+        Returns: {
+          display_name: string
+          je_moj: boolean
+          mesto: number
+          ocenjenih: number
+          razpletov: number
+          tocke: number
+          tocnih: number
         }[]
       }
       lestvica_napovedi_mini_lige: {
@@ -10347,6 +10366,16 @@ export type Database = {
       }
       skrij_moje_ime: { Args: never; Returns: number }
       skupaj_uporabnikov: { Args: never; Returns: number }
+      skupnost_napovedi_kroga: {
+        Args: { p_round: number }
+        Returns: {
+          doma: number
+          gostje: number
+          match_id: number
+          n: number
+          remi: number
+        }[]
+      }
       sme_videti_ekipo: { Args: { p_team: number }; Returns: boolean }
       sponzorji_za: {
         Args: { p_competition_id: number; p_mesto?: string }

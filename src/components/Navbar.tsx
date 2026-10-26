@@ -15,6 +15,8 @@ import { t } from '../i18n'
 interface Povezava {
   pot: string
   naslov: string
+  /** Na računalniku v vrstici šele od xl, prej v "Več" (prostor ob izbirniku lige). */
+  odXl?: boolean
 }
 
 // Glavne povezave so tiste, ki jih manager odpre vsak teden. Vse ostalo je
@@ -29,6 +31,7 @@ const glavne: Povezava[] = [
   { pot: '/standings', get naslov() { return t('aplikacija.meni.lestvica') } },
   { pot: '/results', get naslov() { return t('aplikacija.meni.rezultati') } },
   { pot: '/mini-leagues', get naslov() { return t('aplikacija.meni.miniLige') } },
+  { pot: '/predictions', get naslov() { return t('aplikacija.meni.napovedi') }, odXl: true },
 ]
 
 const ostale: Povezava[] = [
@@ -206,7 +209,7 @@ export default function Navbar() {
 
           <div className="ml-auto hidden items-center gap-1 text-sm lg:flex">
             {glavne.map((p) => (
-              <NavLink key={p.pot} to={p.pot} className={slog}>
+              <NavLink key={p.pot} to={p.pot} className={(a) => (p.odXl ? `${slog(a)} hidden xl:inline` : slog(a))}>
                 {p.naslov}
               </NavLink>
             ))}
@@ -243,13 +246,13 @@ export default function Navbar() {
                   role="menu"
                   className="animiraj-vstop absolute right-0 mt-2 min-w-[11rem] rounded-xl border border-white/10 bg-slate-900 p-1.5 shadow-xl shadow-black/40"
                 >
-                  {vec.map((p) => (
+                  {[...glavne.filter((p) => p.odXl), ...vec].map((p: Povezava) => (
                     <NavLink
                       key={p.pot}
                       to={p.pot}
                       role="menuitem"
                       className={({ isActive }) =>
-                        `${vrsticaMenija} ${isActive ? 'font-semibold text-gnl-300' : ''}`
+                        `${vrsticaMenija} ${isActive ? 'font-semibold text-gnl-300' : ''} ${p.odXl ? 'xl:hidden' : ''}`
                       }
                       onClick={() => setVecOdprt(false)}
                     >
