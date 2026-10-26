@@ -205,6 +205,22 @@
   - Mladim nikoli alkohola: v mladinski mini ligi so poze s pivom zamenjane
     z `-mladi` (sok, `POZE_S_PIVOM`); nobena nova poza nima cigarete, zato
     slike nagrad nimajo grba SLFF (na njem maskota kadi in pije), ampak napis.
+- **Dvoboji mini lige** (migracija 20261026151100). Vsak krog so člani v
+  parih, več točk kroga zmaga (3 / 1 / 0). Krog je **številka**, kot v
+  pregledu; točke so iz `fantasy_round_points` krog s to številko v ligi
+  vsake ekipe. Pare hrani `mini_liga_dvoboji` (`ekipa_b` NULL = proti
+  povprečju mini lige v krogu); piše jih le `sestavi_dvoboje`, ki ga sproži
+  prvi zaklep kroga s to številko v kateri od lig članov
+  (`rounds.lineups_locked_at`, le tekoča sezona). Nastopijo ekipe, ki so bile
+  v mini ligi (`joined_at`) in obstajale pred zaklepom, zato se pari za nazaj
+  ne spremenijo. Razpored je krožni (prvi po `joined_at` stoji, ostali se
+  zavrtijo za toliko mest, kolikor krogov ima mini liga v sezoni že za sabo);
+  liho število doda "duha", kar je povprečje. Končan dvoboj = končan krog
+  obeh ekip (`krog_dvoboja_koncan`, pravilo `koncani_krogi_mini_lige`).
+  Vmesnik bere `dvoboji_mini_lige(liga, krog)` (član ali javna liga, tudi
+  anonimni); pošta lahko kliče servisni `dvoboji_ekipe(ekipa, krog)` (vrstica
+  na mini ligo: nasprotnik, točke, izid). Preizkus:
+  `supabase/tests/mini-lige-dvoboji.sql` (v `npm run test:varnost`).
 - **Javne mini lige** (migracija 20261012139100): `mini_lige.javna`, `opis`
   (≤ 120), `competition_id` (liga, v kateri je javna; mini liga sama še vedno
   gre čez lige) in `javna_zaklenjena_at` (admin jo je skril, lastnik je ne more

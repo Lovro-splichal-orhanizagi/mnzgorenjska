@@ -396,3 +396,66 @@ export function besediloPregleda(
     povezavaVabila(koda, naslov),
   ].join('\n')
 }
+
+// --------------------------------------------------------------------------
+// Dvoboji
+// --------------------------------------------------------------------------
+
+/** Dvoboji imajo smisel od dveh ekip naprej; z eno je pogled skrit. */
+export const NAJMANJ_EKIP_ZA_DVOBOJE = 2
+
+/** Ena stran dvoboja; `tocke` je `null`, dokler krog ekipe ni zaklenjen. */
+export interface StranDvoboja {
+  ekipa_id: number
+  ekipa: string
+  lastnik: string | null
+  lastnik_id?: string | null
+  tocke: number | null
+}
+
+/** Par kroga, kot ga vrne `dvoboji_mini_lige`. Brez `b` igra A proti povprečju. */
+export interface ParDvoboja {
+  a: StranDvoboja
+  b: StranDvoboja | null
+  povprecje: number | null
+  koncan: boolean
+}
+
+export interface VrsticaDvobojev {
+  ekipa_id: number
+  ekipa: string
+  lastnik: string | null
+  lastnik_id?: string | null
+  odigranih: number
+  zmage: number
+  remiji: number
+  porazi: number
+  tocke_za: number
+  tocke: number
+}
+
+export interface Dvoboji {
+  sezona: string | null
+  krog: number | null
+  krogi: number[]
+  pari: ParDvoboja[]
+  /** Že razvrščena: točke dvobojev, nato točke krogov. Šteje le končane dvoboje. */
+  lestvica: VrsticaDvobojev[]
+}
+
+/**
+ * Stanje para: `caka`, dokler katera stran nima točk (krog njene lige še ni
+ * zaklenjen), `v_teku`, ko točke prihajajo, `koncan`, ko so dokončne. Vodi
+ * tisti z več točkami — med krogom je to le trenutni izid.
+ */
+export function stanjeDvoboja(p: ParDvoboja): {
+  stanje: 'caka' | 'v_teku' | 'koncan'
+  vodi: 'a' | 'b' | 'remi' | null
+  tockeB: number | null
+} {
+  const tockeB = p.b ? p.b.tocke : p.povprecje
+  if (p.a.tocke == null || tockeB == null) return { stanje: 'caka', vodi: null, tockeB }
+  const a = Number(p.a.tocke)
+  const b = Number(tockeB)
+  return { stanje: p.koncan ? 'koncan' : 'v_teku', vodi: a > b ? 'a' : b > a ? 'b' : 'remi', tockeB }
+}

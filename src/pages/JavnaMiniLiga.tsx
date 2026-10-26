@@ -3,12 +3,13 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Link } from '../components/Povezava'
 import ImeLastnika from '../components/ImeLastnika'
 import IzstopMiniLige from '../components/IzstopMiniLige'
+import DvobojiMiniLige, { IzbiraPogleda, type PogledMiniLige } from '../components/DvobojiMiniLige'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import { formatirajTocke, mnozina, EKIPE, KROGI } from '../lib/pomozno'
-import { razvrstiMini, vecLig, type MiniVrstica } from '../lib/miniLige'
+import { razvrstiMini, vecLig, NAJMANJ_EKIP_ZA_DVOBOJE, type MiniVrstica } from '../lib/miniLige'
 import { napakaJavnosti, type GlavaLige } from '../lib/javneMiniLige'
 import { dogodek } from '../lib/analitika'
 import { t, tx } from '../i18n'
@@ -43,6 +44,7 @@ export default function JavnaMiniLiga() {
   const [dela, setDela] = useState(false)
   const [prijavljam, setPrijavljam] = useState(false)
   const [razlog, setRazlog] = useState('')
+  const [pogled, setPogled] = useState<PogledMiniLige>('skupno')
 
   // Ime in opis piše uporabnik: pot je med zasebnimi (noindex, `jeZasebna`).
   useNaslov(glava ? glava.name : t('lestvice.javneLige.javnaMiniLiga'))
@@ -201,7 +203,11 @@ export default function JavnaMiniLiga() {
         </p>
       ) : null}
 
-      {urejena.length === 0 ? (
+      {urejena.length >= NAJMANJ_EKIP_ZA_DVOBOJE && <IzbiraPogleda pogled={pogled} onPogled={setPogled} />}
+
+      {urejena.length >= NAJMANJ_EKIP_ZA_DVOBOJE && pogled === 'dvoboji' ? (
+        <DvobojiMiniLige ligaId={ligaId} />
+      ) : urejena.length === 0 ? (
         <p className="text-sm text-slate-400">{t('lestvice.miniLige.prazna')}</p>
       ) : (
         <ol className="kartica divide-y divide-white/10 overflow-hidden">
