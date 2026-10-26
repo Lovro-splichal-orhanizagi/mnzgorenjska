@@ -4,7 +4,7 @@ import {readFileSync,writeFileSync,mkdtempSync,rmSync,utimesSync,statSync} from 
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {pathToFileURL,fileURLToPath} from 'node:url'
-import {runImportCommand} from './provider-league-batch.mjs'
+import {runImportCommand,auditStoredData} from './provider-league-batch.mjs'
 import {createHash} from 'node:crypto'
 import {vZapisnik,nastopi,casovnica,naslovRazporeda,naslovMreze,naslovTekme} from './viri/eps.mjs'
 import {rokKroga} from './razporedi.mjs'
@@ -13,20 +13,23 @@ const hash=x=>createHash('sha256').update(JSON.stringify(x)).digest('hex'),sha='
 const raw=readFileSync(new URL('./vzorci/gr-eps-tekma-epspeir-27822.html',import.meta.url),'utf8')
 // Authentic report body in synthetic current/archive one-match league framing.
 // This tests the contract, and is never evidence of a complete real season.
-function fixture(sourceRaw=raw){
- const candidate=structuredClone(EPS_BATCH_MAPPINGS.find(c=>c.slug==='gr-peir-a-1')),pages=new Map(),snapshot={competition:{...candidate,country_code:'GR',active:false,source_policy:null,date_only_deadline_policy:null,rok_pomak_ur:6},season:'2026/27',teams:[],players:[],rounds:[],matches:[],fantasy:{teams:[],lineups:[]}},playerMap=new Map()
+function fixture(sourceRaw=raw,slug='gr-peir-a-1'){
+ const candidate=structuredClone(EPS_BATCH_MAPPINGS.find(c=>c.slug===slug)),pages=new Map(),snapshot={competition:{...candidate,country_code:'GR',active:false,source_policy:null,date_only_deadline_policy:null,rok_pomak_ur:6},season:'2026/27',teams:[],players:[],rounds:[],matches:[],fantasy:{teams:[],lineups:[]}},playerMap=new Map()
  for(const [i,scope]of [{code:candidate.source_league_code,season:'2026/27'},...candidate.archives].entries()){
-  const code=scope.code,id=27822+i,html=sourceRaw.replaceAll('league_id=726',`league_id=${code.split(':')[1]}`).replaceAll('27822',String(id)).replaceAll('2026-2027',i?'2025-2026':'2026-2027').replace(/(\d{2}-\d{2})-2026/g,(_,d)=>d+(i?'-2025':'-2026')),z=vZapisnik(html,{domena:'epspeir.gr',gameId:id}),ns=nastopi(z)
+  const code=scope.code,domena=code.split(':')[0],originalId=Number(sourceRaw.match(/game_id=(\d+)/)[1]),id=slug==='gr-peir-a-1'?27822+i:originalId+1-i
+  // Synthetic one-round/current framing around unchanged authentic event/lineup
+  // bodies. The retained archive HTML also remains a separate raw fixture.
+  const html=sourceRaw.replace(/league_id=\d+/g,`league_id=${code.split(':')[1]}`).replaceAll(`game_id=${originalId}`,`game_id=${id}`).replace(/(https?):\/\/www\.[a-z]+\.gr/g,(_,scheme)=>`${scheme}://www.${domena}`).replace(/Περιόδου \d{4}[- ]\d{4}/g,`Περιόδου ${i?'2025-2026':'2026-2027'}`).replace(/(\d{2}-\d{2})-\d{4}/g,(_,d)=>d+(i?'-2025':'-2026')).replace(/\d+η\s+Αγωνιστική/g,'1η Αγωνιστική'),z=vZapisnik(html,{domena,gameId:id}),ns=nastopi(z)
   if(!snapshot.teams.length)snapshot.teams=[{id:1,name:z.domaci.ime},{id:2,name:z.gostje.ime}]
   snapshot.rounds.push({id:i+1,number:1,season:scope.season,played_on:z.datum,deadline_at:rokKroga(z.datum,z.ura,6)})
   const appearance_rows=ns.map(n=>{if(!playerMap.has(n.regSt)){const p={id:playerMap.size+1,reg_st:n.regSt,team_id:n.ekipaIdx+1,active:true,position:n.vratar?'GK':'MID',position_source:'zapisnik',value:5};playerMap.set(n.regSt,p);snapshot.players.push(p)}return {player_id:playerMap.get(n.regSt).id,team_id:n.ekipaIdx+1,shirt_number:n.st,started:n.zacetnik,is_goalkeeper:n.vratar,minute_on:n.minutaOd,minute_off:n.minutaDo,minutes_played:n.minute,goals:n.goli,own_goals:n.avtogoli,penalties_scored:n.goliIzEnajstmetrovke,penalties_missed:n.zgreseneEnajstmetrovke,yellow_cards:n.rumeni,red_cards:n.rdeci,red_card_minute:null,goals_conceded:n.prejetiGoli,clean_sheet:n.cleanSheet}})
   const goal_rows=z.goli.map((g,j)=>({id:j+1,scorer_id:playerMap.get(g.regSt).id,team_id:g.ekipaIdx+1,minute:g.minuta,is_own_goal:g.avtogol,is_penalty:g.enajstmetrovka}))
-  snapshot.matches.push({id:i+1,round_id:i+1,zapisnik_id:`gr1-${id}`,home_team_id:1,away_team_id:2,played_on:z.datum,imported_at:now.toISOString(),home_goals:z.rezultat.domaci,away_goals:z.rezultat.gostje,kontumacija:false,statistics_status:'complete',import_warnings:[],appearance_rows,goal_rows})
-  const date=z.datum.slice(8)+'/'+z.datum.slice(5,7)+'/'+z.datum.slice(2,4),row=`<tr class='odd'><td><a href='display_game.php?game_id=${id}'>${z.domaci.ime} - ${z.gostje.ime}</a></td><td></td><td></td><td>${date}</td><td>16:30</td><td></td><td><a href='display_game.php?game_id=${id}'>${z.rezultat.domaci}-${z.rezultat.gostje}</a></td></tr>`
+  snapshot.matches.push({id:i+1,round_id:i+1,zapisnik_id:`gr${Math.floor(ns[0].regSt/10000000)}-${id}`,home_team_id:1,away_team_id:2,played_on:z.datum,imported_at:now.toISOString(),home_goals:z.rezultat.domaci,away_goals:z.rezultat.gostje,kontumacija:false,statistics_status:'complete',import_warnings:[],appearance_rows,goal_rows})
+  const date=z.datum.slice(8)+'/'+z.datum.slice(5,7)+'/'+z.datum.slice(2,4),row=`<tr class='odd'><td><a href='display_game.php?game_id=${id}'>${z.domaci.ime} - ${z.gostje.ime}</a></td><td></td><td></td><td>${date}</td><td>${z.ura?String(Number(z.ura.slice(0,2))+1).padStart(2,'0')+z.ura.slice(2):''}</td><td></td><td><a href='display_game.php?game_id=${id}'>${z.rezultat.domaci}-${z.rezultat.gostje}</a></td></tr>`
   const header=kind=>`<html><div id="maincolumn"><h1>${kind} Περιόδου ${i?'2025-2026':'2026-2027'}<br />${z.liga}</h1><div id="horizontal_menu"><a href="/results/display_schedule.php?league_id=${code.split(':')[1]}">Πρόγραμμα Αγώνων</a><a href="/results/display_results.php?league_id=${code.split(':')[1]}">Αποτελέσματα</a></div>`
   pages.set(naslovRazporeda(code),`${header('Πρόγραμμα Αγώνων')}<div class="table"><h2>1η Αγωνιστική</h2><table>${row}</table></div></div><div id="footer"></div></html>`)
   pages.set(naslovMreze(code),`${header('Αποτελέσματα')}<div class="table"><table><tr><td><a href='display_game.php?game_id=${id}'>${z.rezultat.domaci}-${z.rezultat.gostje}</a></td></tr></table></div></div><div id="footer"></div></html>`)
-  pages.set(naslovTekme('epspeir.gr',id),html)
+  pages.set(naslovTekme(domena,id),html)
  }
  const receipts={expected_sha:sha,slug:candidate.slug,snapshot_sha256:hash(snapshot),steps:['keepers','positions','prices'].map(stage=>({stage,status:'COMPLETED',completed_at:now.toISOString()}))}
  const loadPage=async(url,{kind})=>{assert.ok(pages.has(url),`Unmapped offline URL ${url}`);return {bytes:Buffer.from(pages.get(url)),captured_at:kind==='report'?'2026-10-20T18:00:00Z':now.toISOString(),obtained:kind==='report'?'cache':'network'}}
@@ -43,7 +46,7 @@ for(const [name,change]of [
 for(const opening of ["<tr class='new'>",'<TR CLASS="odd">','<tr data-a="x > y" class="odd">','<tr class = odd>'])test(`unparsed source schedule row ${opening} HOLDs`,async()=>{const f=fixture(),url=naslovRazporeda(f.candidate.source_league_code);f.pages.set(url,f.pages.get(url).replace('</table>',`${opening}<td>UNKNOWN - OTHER</td><td></td><td></td><td></td><td></td><td></td><td></td></tr></table>`));await assert.rejects(()=>generate(f),e=>e.dataHold===true)})
 for(const wrap of [x=>`<!--${x}-->`,x=>`<template>${x}</template>`,x=>`<script>${JSON.stringify(x)}</script>`])test('inert schedule fixtures cannot establish a source proof',async()=>{const f=fixture(),url=naslovRazporeda(f.candidate.source_league_code);f.pages.set(url,f.pages.get(url).replace(/<tr class='odd'>[\s\S]*?<\/tr>/,wrap));await assert.rejects(()=>generate(f),e=>e.dataHold===true)})
 test('native EPS red clock remains null while exact source red minute must equal playing interval',async()=>{const f=fixture();f.snapshot.matches[0].appearance_rows[0].red_card_minute=57;f.receipts.snapshot_sha256=hash(f.snapshot);await assert.rejects(()=>generate(f),e=>e.dataHold===true)})
-test('authentic off-pitch red cards HOLD even when adapter-native facts agree',async()=>{const source=readFileSync(new URL('./vzorci/gr-eps-tekma-rdeci-epspeir-27966.html',import.meta.url),'utf8').replaceAll('27966','27822').replaceAll('league_id=727','league_id=726').replace(/2η\s+Αγωνιστική/,'1η  Αγωνιστική');const f=fixture(source);await assert.rejects(()=>generate(f),/source red card.*interval|off-pitch/i)})
+test('authentic substituted players retain their later bench red without losing team minutes',async()=>{const source=readFileSync(new URL('./vzorci/gr-eps-tekma-rdeci-epspeir-27966.html',import.meta.url),'utf8').replaceAll('27966','27822').replaceAll('league_id=727','league_id=726').replace(/2η\s+Αγωνιστική/,'1η  Αγωνιστική');const g=await generate(fixture(source));try{assert.equal(g.proof.report_count,2)}finally{g.dispose()}})
 test('in-play source red retains NULL native clock and proves exact dismissal interval',async()=>{let source=readFileSync(new URL('./vzorci/gr-eps-tekma-rdeci-epspeir-27966.html',import.meta.url),'utf8').replaceAll('27966','27822').replaceAll('league_id=727','league_id=726').replace(/2η\s+Αγωνιστική/,'1η  Αγωνιστική');const start=source.indexOf('Διακύμανση Αποτελέσματος'),end=source.indexOf('Συμμετοχές',start),timeline=source.slice(start,end).replace(/<tr\b[^>]*>[\s\S]*?<\/tr>/g,row=>/images\/(?:redCard|yellowRedCards)\.png/.test(row)&&!row.includes('ΒΟΖΙΚΗΣ ΝΙΚΟΛΑΟΣ')?'':row);source=source.slice(0,start)+timeline+source.slice(end);const g=await generate(fixture(source));try{assert.equal(g.proof.report_count,2);const rows=g.f.snapshot.matches[0].appearance_rows.filter(a=>a.red_cards);assert.equal(rows.length,1);assert.equal(rows[0].minute_off,57);assert.equal(rows[0].red_card_minute,null)}finally{g.dispose()}})
 test('unparsed source fixture before the first round cannot vanish from full schedule inventory',async()=>{const f=fixture(),url=naslovRazporeda(f.candidate.source_league_code);f.pages.set(url,f.pages.get(url).replace('<h2>1η',"<table><tr><td>UNKNOWN - OTHER</td></tr></table><h2>1η"));await assert.rejects(()=>generate(f),/unparsed|inventory/i)})
 test('extra player row outside report role sections cannot vanish from proof',async()=>{const f=fixture(),url=naslovTekme('epspeir.gr',27822);f.pages.set(url,f.pages.get(url).replace('<div id="horizontal_menu">',`<table><tr><td><a href='../players/display_player.php?player_id=999999'>UNKNOWN</a></td></tr></table><div id="horizontal_menu">`));await assert.rejects(()=>generate(f),/unparsed|role/i)})
@@ -94,4 +97,36 @@ for(const duplicateMinute of [57,80])test(`raw second dismissal at ${duplicateMi
  assert.deepEqual(rawReds.map(e=>e.minuta),[57,duplicateMinute]);assert.deepEqual(parsed.rdeci.map(e=>e.minuta),[57])
  // Native fixture deliberately uses the installed adapter that drops this row.
  await assert.rejects(()=>generate(fixture(source)),/duplicate.*dismissal|raw.*dismissal/i)
+})
+
+const benchRedOriginal=readFileSync(new URL('./vzorci/gr-eps-tekma-klop-rdeci-epsath-77075.html',import.meta.url),'utf8')
+const badExitOriginal=readFileSync(new URL('./vzorci/gr-eps-tekma-napacen-izstop-epsdod-24025.html',import.meta.url),'utf8')
+function changeTimeline(html,change){const start=html.indexOf('Διακύμανση Αποτελέσματος'),end=html.indexOf('Συμμετοχές',start);return html.slice(0,start)+change(html.slice(start,end))+html.slice(end)}
+function eventRows(html){return [...html.matchAll(/<tr\b[^>]*>[\s\S]*?<\/tr>/g)].map(m=>m[0])}
+const isEvent=(row,id,icon)=>row.includes(`player_id=${id}'`)&&row.includes(`images/${icon}.png`)
+test('retained Athens report proves off55/red83, both990 and exact native card/interval replay',async()=>{
+ const z=vZapisnik(benchRedOriginal,{domena:'epsath.gr',gameId:77075}),ns=nastopi(z),actor=ns.find(n=>n.regSt===150047442)
+ assert.equal(actor.minutaDo,55);assert.equal(actor.rdeci,1);assert.deepEqual([0,1].map(i=>ns.filter(n=>n.ekipaIdx===i).reduce((sum,n)=>sum+n.minute,0)),[990,990]);assert.deepEqual(z.opozorila,[])
+ const f=fixture(benchRedOriginal,'gr-ath-b-2');assert.equal(auditStoredData(f.candidate,f.snapshot,now).source_completeness,'NOT_ESTABLISHED')
+ const g=await generate(f);try{assert.equal(g.proof.report_count,2);assert.equal(replayEpsProof({candidate:f.candidate,expectedSha:sha,snapshot:f.snapshot,proof:g.proof,now}),true)}finally{g.dispose()}
+})
+test('Athens proof rejects changed native bench-red count and exit clock',async()=>{for(const field of ['red_cards','minute_off']){const f=fixture(benchRedOriginal,'gr-ath-b-2'),p=f.snapshot.players.find(p=>p.reg_st===150047442),a=f.snapshot.matches[0].appearance_rows.find(a=>a.player_id===p.id);a[field]--;f.receipts.snapshot_sha256=hash(f.snapshot);await assert.rejects(()=>generate(f),/source individual/ )}})
+for(const [name,change]of [
+ ['red before exit',timeline=>timeline.replace(eventRows(timeline).find(row=>isEvent(row,47442,'redCard')),row=>row.replace("83'","54'"))],
+ ['same-minute red and exit',timeline=>timeline.replace(eventRows(timeline).find(row=>isEvent(row,47442,'redCard')),row=>row.replace("83'","55'"))],
+ ['unpaired substitution',timeline=>timeline.replace(eventRows(timeline).find(row=>isEvent(row,44483,'greenArrow')),'')],
+ ['unknown raw red recipient',timeline=>timeline.replace(eventRows(timeline).find(row=>isEvent(row,47442,'redCard')),row=>row.replace('player_id=47442','player_id=999999'))],
+])test(`strict EPS occupancy HOLDs ${name}`,async()=>{await assert.rejects(()=>generate(fixture(changeTimeline(benchRedOriginal,change),'gr-ath-b-2')),e=>e.dataHold===true)})
+test('red before a later reserve entry cannot become a guessed bench dismissal',async()=>{
+ const source=changeTimeline(benchRedOriginal,timeline=>{const row=eventRows(timeline).find(row=>isEvent(row,47442,'redCard'));return timeline.replace(row,row.replace('player_id=47442','player_id=44483').replace("83'","40'"))})
+ await assert.rejects(()=>generate(fixture(source,'gr-ath-b-2')),e=>e.dataHold===true)
+})
+test('unused bench red omitted by installed EPS appearances remains explicit HOLD',async()=>{
+ const source=changeTimeline(benchRedOriginal,timeline=>{const row=eventRows(timeline).find(row=>isEvent(row,47442,'redCard'));return timeline.replace(row,row.replace('player_id=47442','player_id=57215'))})
+ assert.equal(nastopi(vZapisnik(source,{domena:'epsath.gr',gameId:77075})).some(n=>n.regSt===150057215),false)
+ await assert.rejects(()=>generate(fixture(source,'gr-ath-b-2')),e=>e.dataHold===true)
+})
+test('Dodecanese reserve exit without an entry stays HOLD despite warning-free parser output',async()=>{
+ const z=vZapisnik(badExitOriginal,{domena:'epsdod.gr',gameId:24025}),ns=nastopi(z);assert.deepEqual(z.opozorila,[]);assert.equal(ns.filter(n=>n.ekipaIdx===0).reduce((sum,n)=>sum+n.minute,0),1020)
+ const f=fixture(badExitOriginal,'gr-dod-a');assert.throws(()=>auditStoredData(f.candidate,f.snapshot,now));await assert.rejects(()=>generate(f),/source.*(?:substitution|occupancy|interval|exit)/i)
 })

@@ -89,15 +89,22 @@ export function auditStoredData(candidate,snapshot,now=new Date()) {
    side.minutes+=a.minutes_played
    if(a.red_cards&&(a.started||a.minutes_played>0))side.redLoss+=90-a.minute_off
   }
-  for(const side of sides.values())if(side.starters<7||side.starters>11||side.keepers!==1||side.minutes!==90*side.starters-side.redLoss)fail('Starter/keeper counts or team minutes do not reconcile.')
+  // EPS stores legacy NULL dismissal clocks: a red may follow a substitution.
+  // This envelope is provisional sanity only, never a bench/field decision.
+  // Mandatory EPS original-source replay must establish exact timed occupancy.
+  const epsProvisional=candidate.source==='eps'
+  for(const side of sides.values())if(side.starters<7||side.starters>11||side.keepers!==1||(epsProvisional?(side.minutes>90*side.starters||side.minutes<90*side.starters-side.redLoss):side.minutes!==90*side.starters-side.redLoss))fail('Starter/keeper counts or team minutes do not reconcile.')
   for(const [teamId,side] of sides) {
    const teamRows=m.appearance_rows.filter(a=>a.team_id===teamId)
    const bounds=[...new Set([0,90,...teamRows.flatMap(a=>[a.minute_on,a.minute_off])])].sort((a,b)=>a-b)
+   let previousDeficit=0
    for(let i=1;i<bounds.length;i++) {
     const time=(bounds[i-1]+bounds[i])/2
     const onPitch=teamRows.filter(a=>a.minute_on<=time&&a.minute_off>time).length
     const sentOff=teamRows.filter(a=>a.red_cards&&(a.started||a.minutes_played>0)&&a.minute_off<=time).length
-    if(onPitch!==side.starters-sentOff)fail('Timed substitution/red-card intervals do not reconcile.')
+    const deficit=side.starters-onPitch
+    if(epsProvisional?(deficit<previousDeficit||deficit<0||deficit>sentOff):onPitch!==side.starters-sentOff)fail('Timed substitution/red-card intervals do not reconcile.')
+    previousDeficit=deficit
    }
   }
   for(const g of m.goal_rows) {

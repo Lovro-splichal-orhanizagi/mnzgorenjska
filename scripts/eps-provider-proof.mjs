@@ -103,6 +103,56 @@ function strictResults(original,code,season){
  require(scoreCells.length===results.filter(r=>r.izid).length,'unlinked/unparsed published source result')
  return {results,name:besedilo(heading.split(/<br\s*\/?>/i).slice(1).join(' '))}
 }
+// Replay original role events independently of the adapter's undirected flips.
+// Paired substitutions preserve occupancy; only a red to a player still on the
+// pitch reduces it. A later bench red preserves an already explicit exit.
+function requireSourceOccupancy({z,events,lineups,domena}){
+ const source=nastopi(z)
+ for(let side=0;side<2;side++){
+  const roster=new Map(),rows=source.filter(n=>n.ekipaIdx===side),fieldReds=[]
+  for(const p of lineups[side]){
+   require(!roster.has(p.playerId),'source occupancy has duplicate lineup identity')
+   roster.set(p.playerId,{started:p.zacetnik,on:p.zacetnik,entered:p.zacetnik?0:null,off:null,exit:null,red:false})
+  }
+  const starters=[...roster.values()].filter(p=>p.started).length
+  const roles=events.filter(e=>e.ekipaIdx===side&&['ven','noter','rdeci','drugiRumeni'].includes(e.vrsta))
+  for(const minute of [...new Set(roles.map(e=>e.minuta))].sort((a,b)=>a-b)){
+   const group=roles.filter(e=>e.minuta===minute),actors=new Set()
+   require(group.filter(e=>e.vrsta==='ven').length===group.filter(e=>e.vrsta==='noter').length,'source substitution exits/entries are unpaired')
+   for(const event of group){
+    require(!actors.has(event.playerId),'source substitution/red at same minute is ambiguous');actors.add(event.playerId)
+    const p=roster.get(event.playerId);require(p,'source role event actor missing from lineup')
+    if(event.vrsta==='ven'){
+     require(p.on&&!p.red&&p.off===null,'source substitution exit without an active playing interval')
+     p.on=false;p.off=minute;p.exit='substitution'
+    }else if(event.vrsta==='noter'){
+     require(!p.on&&!p.red&&p.entered===null,'source substitution entry after red, repeated entry or invalid role')
+     p.on=true;p.entered=minute
+    }else{
+     const appearances=rows.filter(n=>n.regSt===sifraIgralca(domena,event.playerId))
+     require(!p.red&&appearances.length===1&&appearances[0].rdeci===1,'source dismissal card has no exact native-comparable appearance')
+     if(p.on){p.on=false;p.off=minute;p.exit='dismissal';fieldReds.push(minute)}
+     else require(p.exit==='substitution'&&p.off<minute,'source bench dismissal lacks an explicit earlier substitution exit')
+     p.red=true
+    }
+   }
+   require([...roster.values()].filter(p=>p.on).length===starters-fieldReds.length,'source occupancy differs after timed role events')
+  }
+  let appearances=0
+  for(const [playerId,p]of roster){
+   const matches=rows.filter(n=>n.regSt===sifraIgralca(domena,playerId))
+   if(p.entered===null){require(matches.length===0&&!p.red,'source unused bench card/appearance is unsupported');continue}
+   appearances++;const n=matches[0],off=p.off??90
+   require(matches.length===1&&n.zacetnik===p.started&&n.minutaOd===p.entered&&n.minutaDo===off&&n.minute===off-p.entered&&n.rdeci===Number(p.red),'source playing interval differs from original substitution/dismissal events')
+  }
+  require(appearances===rows.length&&rows.reduce((sum,n)=>sum+n.minute,0)===90*starters-fieldReds.reduce((sum,m)=>sum+90-m,0),'source occupancy/team minutes do not reconcile')
+  const bounds=[...new Set([0,90,...rows.flatMap(n=>[n.minutaOd,n.minutaDo]),...fieldReds])].sort((a,b)=>a-b)
+  for(let i=1;i<bounds.length;i++){
+   const time=(bounds[i-1]+bounds[i])/2
+   require(rows.filter(n=>n.minutaOd<=time&&n.minutaDo>time).length===starters-fieldReds.filter(m=>m<=time).length,'source timed occupancy gap or surplus')
+  }
+ }
+}
 function strictReport(original,code,season,id){
  const {html,main}=metadata(original,code,'report',season),{domena}=razberiKodo(code),{gameId}=razberiZapisnik(id)
  const urls=[...main.matchAll(/<input\b((?:"[^"]*"|'[^']*'|[^'">])*)>/gi)].map(m=>attributes(m[1])).filter(a=>a.get('name')==='url').map(a=>a.get('value'))
@@ -132,6 +182,7 @@ function strictReport(original,code,season,id){
   require(dismissals.length===z.rdeci.length,'raw dismissal inventory differs from parsed source report')
   const allPlayers=[...main.matchAll(/<a\b((?:"[^"]*"|'[^']*'|[^'">])*)>/gi)].filter(m=>(attributes(m[1]).get('href')??'').includes('display_player.php'))
   require(allPlayers.length===links.length+events.length,'unparsed source player outside source role sections')
+  requireSourceOccupancy({z,events,lineups,domena})
  }
  return z
 }
@@ -161,12 +212,8 @@ function compareReport({z,match,snapshot,fixture,round,domena,league}){
   for(const [key,value]of Object.entries(fields))require(a[key]===value,`source individual ${key} differs (profile ${n.regSt})`)
  }
  for(let i=0;i<2;i++)require(teams[i].postava[0]?.vratar===true&&source.filter(n=>n.ekipaIdx===i&&n.zacetnik&&n.vratar).length===1,'first-starter keeper inference differs')
- // Installed EPS importer persists no separate red clock. Its NULL is checked
- // above; independently bind each published dismissal to a playing interval.
- for(const red of z.rdeci){
-  const actors=source.filter(n=>n.ekipaIdx===red.ekipaIdx&&n.regSt===red.regSt)
-  require(actors.length===1&&Number.isSafeInteger(red.minuta)&&actors[0].rdeci===1&&actors[0].minutaDo===red.minuta&&actors[0].minutaOd<=red.minuta&&(actors[0].zacetnik||actors[0].minute>0),'source red card off-pitch or ambiguous playing interval')
- }
+ // Raw role replay above proves field dismissals and explicitly earlier exits;
+ // the installed native EPS red clock remains NULL and is compared as such.
  const sourceGoals=z.goli.map(g=>{require(source.filter(n=>n.ekipaIdx===g.ekipaIdx&&n.regSt===g.regSt).length===1,'source scorer identity missing/ambiguous');return {reg:g.regSt,team:ids[g.ekipaIdx],minute:g.minuta,own:g.avtogol,penalty:g.enajstmetrovka}}).map(digest).sort()
  require(Array.isArray(match.goal_rows),'native individual goals missing')
  const nativeGoals=match.goal_rows.map(g=>({reg:players.get(g.scorer_id)?.reg_st,team:g.team_id,minute:g.minute,own:g.is_own_goal,penalty:g.is_penalty})).map(digest).sort()
