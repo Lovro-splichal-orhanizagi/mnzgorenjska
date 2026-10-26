@@ -2683,6 +2683,8 @@ export interface PregledKroga {
   dvoboji?: Array<{ mini_liga: string; nasprotnik: string | null; tocke: number; tocke_nasprotnika: number; izid: 'zmaga' | 'remi' | 'poraz' }>
   /** Napovedi kroga (`povzetek_napovedi_kroga`); brez, če ni napovedoval ali ni ocenjenih. */
   napovedi?: { tocke: number; tocnih: number } | null
+  /** Namigi za naslednji krog (`namigi_ekipe`); brez, če jih ni bilo mogoče prebrati. */
+  namigi?: { kapetan_ni_igral: string | null; ni_igralo: number; prosti_prestopi: number; cipi: Array<'wildcard' | 'klop_plus'> } | null
 }
 
 /** Slovenska množina po zadnjih dveh mestih: 1 / 2 / 3–4 / ostalo. */
@@ -3122,6 +3124,14 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
     predglava.push(`${B.liga}: ${B.povprecje} ${st(m.povprecje)}`)
   }
 
+  // Pred naslednjim krogom: kapetan in igralci brez minute, neporabljeni
+  // pripomočki. Kapetan gre na začetek predglave, ker je to besedilo pusha.
+  const namigi = m.namigi ? namigiKroga(j, m.namigi) : null
+  if (namigi?.predglava) {
+    if (m.kapetan && m.kapetan === m.namigi?.kapetan_ni_igral) predglava.shift()
+    predglava.unshift(namigi.predglava)
+  }
+
   const zadeva = j === 'sl'
     ? `SLFF ${ozn}, ${m.krog}. krog: ${tock(m.tocke)} in ${m.mesto}. mesto${premikZnak}`
     : `SLFF ${ozn}: ${B.zadeva(m.krog, tock(m.tocke), m.mesto, premikZnak)}`
@@ -3134,11 +3144,248 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
     ploscice,
     uvod: `${pozdrav(j, m.display_name)} ${B.uvod}${najboljsiVLigi ? ` <strong>${B.top}</strong>` : ''}`,
     dejstva,
+    ...(namigi?.vrstice.length ? { opozorilo: namigi.vrstice } : {}),
     gumb: { label: B.gumb(m.krog + 1), url: p.ekipa },
     potem: B.potem(povezava(B.lestvica, `${SITE}/table?t=${encodeURIComponent(liga.slug)}`)),
     ...(pivo ? { opomba: `${B.pivo} ${povezava('slff.eu/pivo', `${SITE}/pivo?src=mail-krog`)}` } : {}),
     zakaj: B.zakaj(ozn),
   }, p.odjava, B.odjava)
+}
+
+// --- namigi v pregledu kroga ------------------------------------------------
+// Ljudje ekipo sestavijo in pustijo (26. 10. 2026: kapetana je kdaj zamenjalo
+// 9 % ekip, prestope naredilo 9 %). Pregled zato pove, kaj popraviti pred
+// naslednjim krogom: kapetan brez minute, igralci prve postave brez minute in
+// pripomočki, ki jih še nisi porabil. Brez plurala: "oznaka: število".
+
+interface BesedilaNamigov {
+  kapetanNi: string
+  izberi: string
+  brezMinute: string
+  prosti: (n: number) => string
+  neporabljeno: string
+  cip: Record<'wildcard' | 'klop_plus', string>
+}
+
+const NAMIGI: Record<Jezik, BesedilaNamigov> = {
+  sl: { kapetanNi: 'Kapetan ni igral', izberi: 'za naslednji krog izberi drugega', brezMinute: 'Brez minute v prvi postavi', prosti: (n) => `prosti prestopi vsak krog: ${n}`, neporabljeno: 'Še neporabljeno', cip: { wildcard: 'Wildcard', klop_plus: 'Klop+' } },
+  en: { kapetanNi: 'Captain did not play', izberi: 'pick another for the next round', brezMinute: 'Starters without a minute', prosti: (n) => `free transfers every round: ${n}`, neporabljeno: 'Still unused', cip: { wildcard: 'Wildcard', klop_plus: 'Bench+' } },
+  sk: { kapetanNi: 'Kapitán nehral', izberi: 'na ďalšie kolo vyber iného', brezMinute: 'Bez minúty v základnej zostave', prosti: (n) => `voľné prestupy každé kolo: ${n}`, neporabljeno: 'Ešte nepoužité', cip: { wildcard: 'Wildcard', klop_plus: 'Lavička+' } },
+  hr: { kapetanNi: 'Kapetan nije igrao', izberi: 'za sljedeće kolo odaberi drugog', brezMinute: 'Bez minute u prvih 11', prosti: (n) => `besplatni prijelazi svako kolo: ${n}`, neporabljeno: 'Još neiskorišteno', cip: { wildcard: 'Wildcard', klop_plus: 'Klupa+' } },
+  cs: { kapetanNi: 'Kapitán nehrál', izberi: 'na další kolo vyber jiného', brezMinute: 'Bez minuty v základní sestavě', prosti: (n) => `volné přestupy každé kolo: ${n}`, neporabljeno: 'Ještě nevyužito', cip: { wildcard: 'Žolík', klop_plus: 'Lavička+' } },
+  hu: { kapetanNi: 'A csapatkapitány nem játszott', izberi: 'a következő fordulóra válassz mást', brezMinute: 'Perc nélkül a kezdőben', prosti: (n) => `ingyenes átigazolás fordulónként: ${n}`, neporabljeno: 'Még fel nem használt', cip: { wildcard: 'Wildcard', klop_plus: 'Kispad+' } },
+  de: { kapetanNi: 'Kapitän hat nicht gespielt', izberi: 'wähle für die nächste Runde einen anderen', brezMinute: 'Startelf ohne Einsatzminute', prosti: (n) => `freie Transfers pro Runde: ${n}`, neporabljeno: 'Noch ungenutzt', cip: { wildcard: 'Wildcard', klop_plus: 'Bank+' } },
+  sr: { kapetanNi: 'Kapiten nije igrao', izberi: 'za sledeće kolo izaberi drugog', brezMinute: 'Bez minuta u prvih 11', prosti: (n) => `besplatni transferi svako kolo: ${n}`, neporabljeno: 'Još neiskorišćeno', cip: { wildcard: 'Wildcard', klop_plus: 'Klupa+' } },
+  ro: { kapetanNi: 'Căpitanul nu a jucat', izberi: 'alege altul pentru etapa următoare', brezMinute: 'Fără niciun minut în primul 11', prosti: (n) => `transferuri gratuite în fiecare etapă: ${n}`, neporabljeno: 'Încă nefolosit', cip: { wildcard: 'Wildcard', klop_plus: 'Bancă+' } },
+  et: { kapetanNi: 'Kapten ei mänginud', izberi: 'vali järgmiseks vooruks teine', brezMinute: 'Algkoosseisus ilma minutita', prosti: (n) => `tasuta üleminekuid igas voorus: ${n}`, neporabljeno: 'Veel kasutamata', cip: { wildcard: 'Wildcard', klop_plus: 'Pink+' } },
+  lv: { kapetanNi: 'Kapteinis nespēlēja', izberi: 'nākamajai kārtai izvēlies citu', brezMinute: 'Bez minūtes pamatsastāvā', prosti: (n) => `bezmaksas transfēri katrā kārtā: ${n}`, neporabljeno: 'Vēl neizmantots', cip: { wildcard: 'Wildcard', klop_plus: 'Soliņš+' } },
+  pl: { kapetanNi: 'Kapitan nie zagrał', izberi: 'na następną kolejkę wybierz innego', brezMinute: 'Bez minuty w pierwszym składzie', prosti: (n) => `darmowe transfery w każdej kolejce: ${n}`, neporabljeno: 'Jeszcze niewykorzystane', cip: { wildcard: 'Wildcard', klop_plus: 'Ławka+' } },
+  es: { kapetanNi: 'El capitán no jugó', izberi: 'elige otro para la próxima jornada', brezMinute: 'Titulares sin minutos', prosti: (n) => `fichajes gratis cada jornada: ${n}`, neporabljeno: 'Aún sin usar', cip: { wildcard: 'Wildcard', klop_plus: 'Banquillo+' } },
+  mk: { kapetanNi: 'Капитенот не играше', izberi: 'за следното коло избери друг', brezMinute: 'Без минута во првите 11', prosti: (n) => `бесплатни трансфери секое коло: ${n}`, neporabljeno: 'Уште неискористено', cip: { wildcard: 'Wildcard', klop_plus: 'Клупа+' } },
+  el: { kapetanNi: 'Ο αρχηγός δεν αγωνίστηκε', izberi: 'διάλεξε άλλον για την επόμενη αγωνιστική', brezMinute: 'Βασικοί χωρίς λεπτό συμμετοχής', prosti: (n) => `δωρεάν μεταγραφές κάθε αγωνιστική: ${n}`, neporabljeno: 'Αχρησιμοποίητα ακόμη', cip: { wildcard: 'Wildcard', klop_plus: 'Πάγκος+' } },
+  tr: { kapetanNi: 'Kaptan oynamadı', izberi: 'sonraki hafta için başka birini seç', brezMinute: "İlk 11'de dakika almayan", prosti: (n) => `her hafta ücretsiz transfer: ${n}`, neporabljeno: 'Henüz kullanılmadı', cip: { wildcard: 'Joker', klop_plus: 'Yedek+' } },
+  uk: { kapetanNi: 'Капітан не грав', izberi: 'на наступний тур обери іншого', brezMinute: 'Без хвилини в стартовому складі', prosti: (n) => `безкоштовні трансфери щотуру: ${n}`, neporabljeno: 'Ще не використано', cip: { wildcard: 'Вайлдкард', klop_plus: 'Лава+' } },
+  hy: { kapetanNi: 'Ավագը չի խաղացել', izberi: 'հաջորդ տուրի համար ընտրիր ուրիշին', brezMinute: 'Հիմնական կազմում առանց րոպեի', prosti: (n) => `անվճար տրանսֆերներ յուրաքանչյուր տուրում՝ ${n}`, neporabljeno: 'Դեռ չօգտագործված', cip: { wildcard: 'Wildcard', klop_plus: 'Նստարան+' } },
+  az: { kapetanNi: 'Kapitan oynamadı', izberi: 'növbəti tur üçün başqasını seç', brezMinute: 'Əsas heyətdə dəqiqəsiz', prosti: (n) => `hər tur pulsuz transfer: ${n}`, neporabljeno: 'Hələ istifadə olunmayıb', cip: { wildcard: 'Wildcard', klop_plus: 'Ehtiyat+' } },
+  da: { kapetanNi: 'Kaptajnen spillede ikke', izberi: 'vælg en anden til næste runde', brezMinute: 'Startere uden spilleminutter', prosti: (n) => `gratis transfers hver runde: ${n}`, neporabljeno: 'Endnu ubrugt', cip: { wildcard: 'Wildcard', klop_plus: 'Bænk+' } },
+}
+
+/** Rumeni okvir pregleda in prva vrstica predglave (= besedilo pusha). */
+function namigiKroga(j: Jezik, n: NonNullable<PregledKroga['namigi']>): { vrstice: Vrstica[]; predglava: string | null } {
+  const B = NAMIGI[j]
+  const vrstice: Vrstica[] = []
+  if (n.kapetan_ni_igral)
+    vrstice.push({ k: B.kapetanNi, v: `${esc(n.kapetan_ni_igral)} · ${esc(B.izberi)}` })
+  if (n.ni_igralo > 0)
+    vrstice.push({ k: B.brezMinute, v: esc(`${n.ni_igralo} · ${B.prosti(n.prosti_prestopi)}`) })
+  if (n.cipi.length)
+    vrstice.push({ k: B.neporabljeno, v: esc(n.cipi.map((c) => B.cip[c]).join(', ')) })
+  return { vrstice, predglava: n.kapetan_ni_igral ? `${B.kapetanNi}: ${n.kapetan_ni_igral}` : null }
+}
+
+// --- opozorilo pred rokom: odsoten igralec v prvi postavi --------------------
+// Dan pred rokom, enkrat na krog, ko je o igralcu iz prve postave javljena
+// poškodba ali odsotnost po zadnji spremembi ekipe
+// (`kandidati_za_opozorilo_odsotnih`). Mail in push.
+
+interface BesedilaOdsotnih {
+  zadevaKapetan: (ime: string) => string
+  zadeva: string
+  naslov: (krog: number) => string
+  uvod: string
+  kapetan: string
+  odsotni: string
+  rok: string
+  gumb: string
+  zakaj: (ozn: string) => string
+}
+
+const ODSOTNI: Record<Jezik, BesedilaOdsotnih> = {
+  sl: {
+    zadevaKapetan: (i) => `Kapetan ${i} je javljen kot odsoten`, zadeva: 'V prvi postavi imaš odsotnega igralca',
+    naslov: (k) => `Pred ${k}. krogom`,
+    uvod: 'O igralcu iz tvoje prve postave je javljena poškodba ali odsotnost. Do roka ga še lahko zamenjaš.',
+    kapetan: 'Kapetan', odsotni: 'Javljeni odsotni', rok: 'Rok', gumb: 'Uredi postavo',
+    zakaj: (o) => `To sporočilo dobiš, ker imaš ekipo v ligi ${o} in je bila za igralca iz tvoje postave javljena odsotnost.`,
+  },
+  en: {
+    zadevaKapetan: (i) => `Your captain ${i} is reported unavailable`, zadeva: 'A starter in your team is reported unavailable',
+    naslov: (k) => `Before round ${k}`,
+    uvod: 'A player in your starting eleven has been reported injured or unavailable. You can still swap him before the deadline.',
+    kapetan: 'Captain', odsotni: 'Reported unavailable', rok: 'Deadline', gumb: 'Edit your lineup',
+    zakaj: (o) => `You get this because you have a team in ${o} and a player in your lineup was reported unavailable.`,
+  },
+  sk: {
+    zadevaKapetan: (i) => `Kapitán ${i} je nahlásený ako neprítomný`, zadeva: 'V základnej zostave máš neprítomného hráča',
+    naslov: (k) => `Pred ${k}. kolom`,
+    uvod: 'Hráč z tvojej základnej zostavy je nahlásený ako zranený alebo neprítomný. Do uzávierky ho ešte môžeš vymeniť.',
+    kapetan: 'Kapitán', odsotni: 'Nahlásení neprítomní', rok: 'Uzávierka', gumb: 'Uprav zostavu',
+    zakaj: (o) => `Túto správu dostávaš, lebo máš tím v lige ${o} a hráč z tvojej zostavy bol nahlásený ako neprítomný.`,
+  },
+  hr: {
+    zadevaKapetan: (i) => `Kapetan ${i} prijavljen je kao odsutan`, zadeva: 'U prvih 11 imaš odsutnog igrača',
+    naslov: (k) => `Prije ${k}. kola`,
+    uvod: 'Za igrača iz tvoje početne postave prijavljena je ozljeda ili odsutnost. Do roka ga još možeš zamijeniti.',
+    kapetan: 'Kapetan', odsotni: 'Prijavljeni odsutni', rok: 'Rok', gumb: 'Uredi postavu',
+    zakaj: (o) => `Ovu poruku dobivaš jer imaš momčad u ligi ${o}, a za igrača iz tvoje postave prijavljena je odsutnost.`,
+  },
+  cs: {
+    zadevaKapetan: (i) => `Kapitán ${i} je nahlášen jako nepřítomný`, zadeva: 'V základní sestavě máš nepřítomného hráče',
+    naslov: (k) => `Před ${k}. kolem`,
+    uvod: 'Hráč z tvé základní sestavy je nahlášen jako zraněný nebo nepřítomný. Do uzávěrky ho ještě můžeš vyměnit.',
+    kapetan: 'Kapitán', odsotni: 'Nahlášení nepřítomní', rok: 'Uzávěrka', gumb: 'Uprav sestavu',
+    zakaj: (o) => `Tuto zprávu dostáváš, protože máš tým v lize ${o} a hráč z tvé sestavy byl nahlášen jako nepřítomný.`,
+  },
+  hu: {
+    zadevaKapetan: (i) => `${i} csapatkapitányt hiányzónak jelentették`, zadeva: 'A kezdőcsapatodban hiányzó játékos van',
+    naslov: (k) => `${k}. forduló előtt`,
+    uvod: 'A kezdőcsapatod egyik játékosáról sérülést vagy hiányzást jelentettek. A határidőig még lecserélheted.',
+    kapetan: 'Csapatkapitány', odsotni: 'Jelentett hiányzók', rok: 'Határidő', gumb: 'Kezdőcsapat szerkesztése',
+    zakaj: (o) => `Azért kapod ezt az üzenetet, mert van csapatod ebben a bajnokságban: ${o}, és a kezdődből egy játékost hiányzónak jelentettek.`,
+  },
+  de: {
+    zadevaKapetan: (i) => `Kapitän ${i} ist als abwesend gemeldet`, zadeva: 'Ein Spieler deiner Startelf ist als abwesend gemeldet',
+    naslov: (k) => `Vor Runde ${k}`,
+    uvod: 'Für einen Spieler deiner Startelf wurde eine Verletzung oder Abwesenheit gemeldet. Bis zur Frist kannst du ihn noch tauschen.',
+    kapetan: 'Kapitän', odsotni: 'Als abwesend gemeldet', rok: 'Frist', gumb: 'Aufstellung bearbeiten',
+    zakaj: (o) => `Du bekommst diese Nachricht, weil du ein Team in ${o} hast und ein Spieler deiner Aufstellung als abwesend gemeldet wurde.`,
+  },
+  sr: {
+    zadevaKapetan: (i) => `Kapiten ${i} je prijavljen kao odsutan`, zadeva: 'U prvih 11 imaš odsutnog igrača',
+    naslov: (k) => `Pre ${k}. kola`,
+    uvod: 'Za igrača iz tvog početnog sastava prijavljena je povreda ili odsustvo. Do roka ga još možeš zameniti.',
+    kapetan: 'Kapiten', odsotni: 'Prijavljeni odsutni', rok: 'Rok', gumb: 'Uredi sastav',
+    zakaj: (o) => `Ovu poruku dobijaš jer imaš tim u ligi ${o}, a za igrača iz tvog sastava prijavljeno je odsustvo.`,
+  },
+  ro: {
+    zadevaKapetan: (i) => `Căpitanul ${i} este anunțat absent`, zadeva: 'Ai un jucător absent în primul 11',
+    naslov: (k) => `Înainte de etapa ${k}`,
+    uvod: 'Pentru un jucător din primul tău 11 s-a anunțat o accidentare sau o absență. Îl mai poți înlocui până la termen.',
+    kapetan: 'Căpitan', odsotni: 'Anunțați absenți', rok: 'Termen', gumb: 'Editează primul 11',
+    zakaj: (o) => `Primești acest mesaj pentru că ai o echipă în liga ${o}, iar un jucător din primul tău 11 a fost anunțat absent.`,
+  },
+  et: {
+    zadevaKapetan: (i) => `Kapten ${i} on teatatud puuduvaks`, zadeva: 'Sinu algkoosseisus on puuduv mängija',
+    naslov: (k) => `Enne ${k}. vooru`,
+    uvod: 'Sinu algkoosseisu mängija kohta on teatatud vigastusest või puudumisest. Tähtajani saad ta veel välja vahetada.',
+    kapetan: 'Kapten', odsotni: 'Teatatud puuduvad', rok: 'Tähtaeg', gumb: 'Muuda koosseisu',
+    zakaj: (o) => `Saad selle sõnumi, sest sul on meeskond liigas ${o} ja sinu koosseisu mängija on teatatud puuduvaks.`,
+  },
+  lv: {
+    zadevaKapetan: (i) => `Kapteinis ${i} ir pieteikts kā prombūtnē`, zadeva: 'Tavā pamatsastāvā ir spēlētājs prombūtnē',
+    naslov: (k) => `Pirms ${k}. kārtas`,
+    uvod: 'Par spēlētāju no tava pamatsastāva ziņots par traumu vai prombūtni. Līdz termiņam viņu vēl vari nomainīt.',
+    kapetan: 'Kapteinis', odsotni: 'Ziņots par prombūtni', rok: 'Termiņš', gumb: 'Labot sastāvu',
+    zakaj: (o) => `Tu saņem šo ziņu, jo tev ir komanda līgā ${o} un par spēlētāju no tava sastāva ziņots par prombūtni.`,
+  },
+  pl: {
+    zadevaKapetan: (i) => `Kapitan ${i} jest zgłoszony jako nieobecny`, zadeva: 'W pierwszym składzie masz nieobecnego zawodnika',
+    naslov: (k) => `Przed ${k}. kolejką`,
+    uvod: 'Zawodnik z twojego pierwszego składu został zgłoszony jako kontuzjowany lub nieobecny. Do terminu możesz go jeszcze wymienić.',
+    kapetan: 'Kapitan', odsotni: 'Zgłoszeni nieobecni', rok: 'Termin', gumb: 'Edytuj skład',
+    zakaj: (o) => `Dostajesz tę wiadomość, bo masz drużynę w lidze ${o}, a zawodnik z twojego składu został zgłoszony jako nieobecny.`,
+  },
+  es: {
+    zadevaKapetan: (i) => `Tu capitán ${i} figura como baja`, zadeva: 'Tienes una baja en tu once inicial',
+    naslov: (k) => `Antes de la jornada ${k}`,
+    uvod: 'Se ha comunicado una lesión o ausencia de un jugador de tu once inicial. Aún puedes cambiarlo antes del plazo.',
+    kapetan: 'Capitán', odsotni: 'Bajas comunicadas', rok: 'Plazo', gumb: 'Editar alineación',
+    zakaj: (o) => `Recibes este mensaje porque tienes un equipo en ${o} y un jugador de tu alineación figura como baja.`,
+  },
+  mk: {
+    zadevaKapetan: (i) => `Капитенот ${i} е пријавен како отсутен`, zadeva: 'Во првите 11 имаш отсутен играч',
+    naslov: (k) => `Пред ${k}. коло`,
+    uvod: 'За играч од твојот почетен состав е пријавена повреда или отсуство. До рокот уште можеш да го замениш.',
+    kapetan: 'Капитен', odsotni: 'Пријавени отсутни', rok: 'Рок', gumb: 'Уреди состав',
+    zakaj: (o) => `Ја добиваш оваа порака затоа што имаш тим во лигата ${o}, а за играч од твојот состав е пријавено отсуство.`,
+  },
+  el: {
+    zadevaKapetan: (i) => `Ο αρχηγός ${i} δηλώθηκε απών`, zadeva: 'Έχεις απόντα παίκτη στην αρχική ενδεκάδα',
+    naslov: (k) => `Πριν από την ${k}η αγωνιστική`,
+    uvod: 'Για παίκτη της αρχικής σου ενδεκάδας δηλώθηκε τραυματισμός ή απουσία. Μπορείς ακόμη να τον αλλάξεις πριν από την προθεσμία.',
+    kapetan: 'Αρχηγός', odsotni: 'Δηλωμένοι απόντες', rok: 'Προθεσμία', gumb: 'Επεξεργασία ενδεκάδας',
+    zakaj: (o) => `Λαμβάνεις αυτό το μήνυμα επειδή έχεις ομάδα στο ${o} και παίκτης της ενδεκάδας σου δηλώθηκε απών.`,
+  },
+  tr: {
+    zadevaKapetan: (i) => `Kaptanın ${i} eksik olarak bildirildi`, zadeva: "İlk 11'inde eksik bir oyuncu var",
+    naslov: (k) => `${k}. hafta öncesi`,
+    uvod: "İlk 11'indeki bir oyuncu için sakatlık veya eksiklik bildirildi. Son tarihe kadar onu hâlâ değiştirebilirsin.",
+    kapetan: 'Kaptan', odsotni: 'Eksik bildirilenler', rok: 'Son tarih', gumb: 'Kadroyu düzenle',
+    zakaj: (o) => `Bu mesajı, ${o} liginde takımın olduğu ve kadrondaki bir oyuncu eksik bildirildiği için alıyorsun.`,
+  },
+  uk: {
+    zadevaKapetan: (i) => `Капітана ${i} заявлено відсутнім`, zadeva: 'У стартовому складі є відсутній гравець',
+    naslov: (k) => `Перед ${k}-м туром`,
+    uvod: 'Про гравця з твого стартового складу повідомили травму або відсутність. До дедлайну його ще можна замінити.',
+    kapetan: 'Капітан', odsotni: 'Заявлені відсутні', rok: 'Дедлайн', gumb: 'Редагувати склад',
+    zakaj: (o) => `Ти отримуєш це повідомлення, бо маєш команду в лізі ${o}, а гравця з твого складу заявлено відсутнім.`,
+  },
+  hy: {
+    zadevaKapetan: (i) => `Ավագ ${i}-ը հայտարարված է բացակա`, zadeva: 'Հիմնական կազմում բացակա խաղացող ունես',
+    naslov: (k) => `Տուր ${k}-ից առաջ`,
+    uvod: 'Հիմնական կազմիդ խաղացողի մասին հայտնվել է վնասվածք կամ բացակայություն։ Մինչև վերջնաժամկետը դեռ կարող ես փոխարինել նրան։',
+    kapetan: 'Ավագ', odsotni: 'Հայտնված բացականեր', rok: 'Վերջնաժամկետ', gumb: 'Խմբագրել կազմը',
+    zakaj: (o) => `Այս հաղորդագրությունը ստանում ես, քանի որ թիմ ունես ${o} լիգայում, և կազմիդ խաղացողը հայտարարվել է բացակա։`,
+  },
+  az: {
+    zadevaKapetan: (i) => `Kapitan ${i} iştirak etməyəcək kimi bildirilib`, zadeva: 'Əsas heyətində iştirak etməyəcək oyunçu var',
+    naslov: (k) => `Tur ${k} öncəsi`,
+    uvod: 'Əsas heyətindəki oyunçu üçün zədə və ya iştirak etməmə bildirilib. Son tarixə qədər onu hələ dəyişə bilərsən.',
+    kapetan: 'Kapitan', odsotni: 'Bildirilən yoxlar', rok: 'Son tarix', gumb: 'Heyəti redaktə et',
+    zakaj: (o) => `Bu mesajı ${o} liqasında komandan olduğu və heyətindəki oyunçu iştirak etməyəcək kimi bildirildiyi üçün alırsan.`,
+  },
+  da: {
+    zadevaKapetan: (i) => `Din kaptajn ${i} er meldt ude`, zadeva: 'En spiller i din startopstilling er meldt ude',
+    naslov: (k) => `Før ${k}. runde`,
+    uvod: 'En spiller i din startopstilling er meldt skadet eller fraværende. Du kan stadig skifte ham ud inden fristen.',
+    kapetan: 'Kaptajn', odsotni: 'Meldt ude', rok: 'Frist', gumb: 'Ret opstilling',
+    zakaj: (o) => `Du får denne besked, fordi du har et hold i ${o}, og en spiller i din opstilling er meldt ude.`,
+  },
+}
+
+export function sestaviOpozoriloOdsotnih(
+  liga: Liga,
+  m: { display_name: string | null; krog: number; rok: string; kapetan: string | null; odsotni: string[] },
+): Sporocilo {
+  const j = jezikLige(liga)
+  const p = povezave(liga.slug)
+  const B = ODSOTNI[j]
+  const ozn = liga.oznaka
+  const opozorilo: Vrstica[] = []
+  if (m.kapetan) opozorilo.push({ k: B.kapetan, v: esc(m.kapetan) })
+  const ostali = m.odsotni.filter((i) => i !== m.kapetan)
+  if (ostali.length) opozorilo.push({ k: B.odsotni, v: esc(ostali.join(', ')) })
+  opozorilo.push({ k: B.rok, v: esc(izpisRoka(m.rok, liga)) })
+  return sestavi(j, {
+    zadeva: `SLFF ${ozn}: ${m.kapetan ? B.zadevaKapetan(m.kapetan) : B.zadeva}`,
+    predglava: m.odsotni.join(', '),
+    oznaka: ozn,
+    naslov: B.naslov(m.krog),
+    uvod: `${pozdrav(j, m.display_name)} ${B.uvod}`,
+    opozorilo,
+    gumb: { label: B.gumb, url: p.ekipa },
+    zakaj: B.zakaj(ozn),
+  }, p.odjava, ODJAVA[j])
 }
 
 // --- pivo 7 dni po prvi ekipi -----------------------------------------------

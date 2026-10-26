@@ -528,7 +528,10 @@ kanonični `?t=` po svoji ligi.
   `JEZIK_DRZAVE` tam. Funkcij CI ne objavi: po združitvi
   `scripts/hetzner/objavi-funkcije.sh` (rsync na VM, kopija prejšnje, ponovni
   zagon). Tedenski mail "tvoj krog" (`tedenski-pregled.yml`, šest zagonov
-  pon–sre, do 300 na zagon) bere `tedenski_pregled_ekip`. Avtentikacijska pošta (`supabase/templates/`) izbere
+  pon–sre, do 300 na zagon) bere `tedenski_pregled_ekip` in `namigi_ekipe`
+  (kapetan brez minute, igralci brez minute, neporabljeni pripomočki). Dan pred
+  rokom gre iz `opozorila.yml` še `opozorilo-odsotni` (javljena poškodba v
+  prvi postavi, `kandidati_za_opozorilo_odsotnih`). Avtentikacijska pošta (`supabase/templates/`) izbere
   jezik po `jezik` v metapodatkih uporabnika (vpiše ga registracija);
   v gostujočem projektu predloge **niso** iz config.toml — prilepi jih v
   Auth → Email Templates.

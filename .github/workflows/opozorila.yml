@@ -73,6 +73,16 @@ jobs:
           SUHO: ${{ github.event_name == 'workflow_dispatch' && inputs.suho || 'false' }}
         run: node scripts/posli-opomnike.mjs
 
+      # Odsoten igralec v prvi postavi (javljena poskodba ali odsotnost po
+      # zadnji spremembi ekipe): mail in push dan pred rokom, enkrat na krog.
+      - name: Poslji opozorila (odsoten igralec v postavi)
+        if: success() || failure()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VRSTA: opozorilo-odsotni
+          SUHO: ${{ github.event_name == 'workflow_dispatch' && inputs.suho || 'false' }}
+        run: node scripts/posli-opomnike.mjs
       - name: Poslji push opomnike (ni ekipe)
         if: success() || failure()
         env:
