@@ -31,6 +31,17 @@ export class DfbNepopoln extends Error {
 // This is a pending report, never a fabricated lineup, event or 0-0 result.
 const pendingHistorical={id:'de-dfb-2426099',url:'https://datencenter.dfb.de/datencenter/regionalliga-nordost/2026-2027/13-spieltag/hertha-bsc-ii-rsv-eintracht-1949-2426099',sezona:'2026/27',krog:13,datum:'2026-10-16',ura:'19:00',domaci:'Hertha BSC II',gostje:'RSV Eintracht 1949',domaciId:'hertha-bsc-ii',gostjeId:'rsv-eintracht-1949',domaciGoli:0,gostjeGoli:1,polcasDomaci:0,polcasGostje:0}
 export const jeCakajociDfb=n=>n?.status==='DFB_PENDING_REPORT'&&Object.entries(pendingHistorical).every(([k,v])=>n[k]===v)
+// Nightly import skips individually unreadable reports. Many unreadable
+// reports with fewer readable ones mean the page layout changed: fail loudly.
+// `dobrih` counts only reports of the same window as the bad ones (the nightly
+// run skips already imported older games), so with `odDatuma` only bad reports
+// played on or after it count; permanently unreadable older ones (a 10-player
+// lineup never gets fixed) pile up over a season and must not trip the check.
+export function preveriPreskocene(nepopolni,dobrih,liga='',odDatuma=null){
+  const stevilo=odDatuma?nepopolni.filter(n=>!n.datum||n.datum>=odDatuma).length:nepopolni.length
+  if(stevilo>Math.max(8,dobrih))
+    throw new Error(`dfb ${liga}: ${stevilo} zapisnikov ni mogoče prebrati (dobrih ${dobrih}) — verjetno je vir spremenil stran`)
+}
 const text = s => razpakiraj(String(s ?? '').replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim()
 const attr = (s, k) => s.match(new RegExp(`\\b${k}=["']([^"']*)["']`))?.[1]
 const has = (tag, cls) => (attr(tag, 'class') ?? '').split(/\s+/).includes(cls)
@@ -844,7 +855,7 @@ const vir={
       }catch(e){
         const pending=e.koda==='DFB_PENDING_REPORT'&&jeCakajociDfb(e.podatki)
         if(!pending&&(!zberiNapake||!['DFB_INVALID_REPORT','DFB_UNSUPPORTED_FORMAT','DFB_INCOMPLETE_REPORT'].includes(e.koda)))throw e
-        vir.nepopolni.push({...e.podatki,id:`de-dfb-${t.id}`,url:t.url,razlog:e.message,status:e.koda})
+        vir.nepopolni.push({datum:t.datum,...e.podatki,id:`de-dfb-${t.id}`,url:t.url,razlog:e.message,status:e.koda})
         if(pending)console.warn(`DFB_PENDING_REPORT: ${t.id} — brez uvoženih nastopov ali golov; fantasy začne po 13. krogu.`)
       }
     }
