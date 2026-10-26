@@ -15,6 +15,7 @@ import {
   vecLig,
   privzetoImeLige,
   DOLZINA_KODE,
+  NAJMANJ_EKIP_ZA_DVOBOJE,
   type MiniVrstica,
 } from '../lib/miniLige'
 import DeliMiniLigo from '../components/DeliMiniLigo'
@@ -23,6 +24,7 @@ import JavneMiniLige from '../components/JavneMiniLige'
 import JavnostMiniLige from '../components/JavnostMiniLige'
 import IzstopMiniLige from '../components/IzstopMiniLige'
 import SaljiveNagrade from '../components/SaljiveNagrade'
+import DvobojiMiniLige, { IzbiraPogleda, type PogledMiniLige } from '../components/DvobojiMiniLige'
 import { t, tx } from '../i18n'
 import { dogodek } from '../lib/analitika'
 import { prevediNapako } from '../lib/napake'
@@ -82,6 +84,8 @@ export default function MiniLige() {
   const [novaLiga, setNovaLiga] = useState<number | null>(null)
   // Po izstopu ali odstranitvi ekipe lestvico naložimo znova.
   const [osvezi, setOsvezi] = useState(0)
+  // Skupna lestvica ali dvoboji; izbira ostane ob preklopu mini lige.
+  const [pogled, setPogled] = useState<PogledMiniLige>('skupno')
 
   useEffect(() => {
     const vstop = params.get('vstop')
@@ -184,6 +188,8 @@ export default function MiniLige() {
   const trenutna = lige.find((l) => l.id === izbrana) ?? null
   const semLastnik = !!trenutna && trenutna.owner_id === uporabnikId
   const mojihVLigi = lestvica.filter((v) => v.owner_id === uporabnikId).length
+  // Z eno samo ekipo dvobojev ni; pogled se skrije in kaže skupno lestvico.
+  const zDvoboji = lestvicaZa === izbrana && urejena.length >= NAJMANJ_EKIP_ZA_DVOBOJE
 
   async function poIzstopu(besedilo: string) {
     setNapaka(null)
@@ -409,7 +415,11 @@ export default function MiniLige() {
             <DeliMiniLigo ime={trenutna.name} koda={trenutna.code} stanje={stanjeDeljenja} />
           )}
 
-          {urejena.length === 0 ? (
+          {zDvoboji && <IzbiraPogleda pogled={pogled} onPogled={setPogled} />}
+
+          {zDvoboji && pogled === 'dvoboji' && trenutna ? (
+            <DvobojiMiniLige ligaId={trenutna.id} />
+          ) : urejena.length === 0 ? (
             <p className="text-sm text-slate-400">
               {t('lestvice.miniLige.prazna')}
             </p>
