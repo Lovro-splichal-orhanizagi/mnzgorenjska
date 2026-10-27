@@ -50,6 +50,15 @@ function validScore(score) {
     score.domaci >= 0 && score.domaci <= 99 && score.gostje >= 0 && score.gostje <= 99)
 }
 
+function validAdministrativeResult(value) {
+  const closed = (object, keys) => object && typeof object === 'object' && !Array.isArray(object) &&
+    Object.keys(object).length === keys.length && keys.every(key => Object.hasOwn(object, key))
+  return closed(value, ['schemaVersion', 'kind', 'marker', 'displayedScores']) && value.schemaVersion === 1 &&
+    value.kind === 'confirmed-administrative-decision' && value.marker === 'V' &&
+    Array.isArray(value.displayedScores) && value.displayedScores.length === 2 &&
+    value.displayedScores.every(score => closed(score, ['domaci', 'gostje']) && validScore(score))
+}
+
 function validateFixture(fixture, { round, rescheduled = false } = {}) {
   if (!fixture || !MATCH_ID.test(fixture.id ?? '') || fixture.zapisnikId !== `de-fussball-${fixture.id}` || reportId(fixture.url) !== fixture.id)
     throw fail('fixture source ID, report ID or URL is invalid')
@@ -59,6 +68,9 @@ function validateFixture(fixture, { round, rescheduled = false } = {}) {
       typeof fixture.domaci !== 'string' || !fixture.domaci.trim() || typeof fixture.gostje !== 'string' || !fixture.gostje.trim() ||
       !validScore(fixture.rezultat))
     throw fail('fixture header has invalid date, time, clubs or score')
+  if (Object.hasOwn(fixture, 'administrativeResult') &&
+      (fixture.rezultat !== null || !validAdministrativeResult(fixture.administrativeResult)))
+    throw fail('fixture has an invalid or conflicting administrative result')
 }
 
 function normalizedSelector(items, staffel) {
@@ -76,7 +88,9 @@ function normalizedSelector(items, staffel) {
 }
 
 function fixtureHeader(fixture) {
-  return JSON.stringify([fixture.domaci, fixture.gostje, fixture.datum, fixture.ura, fixture.rezultat])
+  const admin = fixture.administrativeResult
+  return JSON.stringify([fixture.domaci, fixture.gostje, fixture.datum, fixture.ura, fixture.rezultat,
+    ...(admin ? [[admin.schemaVersion, admin.kind, admin.marker, admin.displayedScores.map(s => [s.domaci, s.gostje])]] : [])])
 }
 
 /** Combines already-parsed round pages into one season-scoped fixture inventory. */
@@ -286,7 +300,7 @@ function reportFailure(fixture, error) {
 }
 
 function unscoredCounts(fixtures, asOfDate) {
-  const rows = fixtures.filter(fixture => fixture.rezultat === null)
+  const rows = fixtures.filter(fixture => fixture.rezultat === null && !Object.hasOwn(fixture, 'administrativeResult'))
   const out = { total: rows.length, past: 0, current: 0, future: 0, unknownDate: 0 }
   for (const fixture of rows) {
     if (!validDate(fixture.datum)) out.unknownDate++
@@ -365,6 +379,8 @@ export async function collectFussballSeason({
   const schedule = assembleFussballSchedule(pageRecords, { season, staffel })
   await progress({ phase: 'schedule-complete', rounds: schedule.rounds.length, fixtures: schedule.fixtures.length })
 
+  const administrativeFixtures = schedule.fixtures.filter(fixture => Object.hasOwn(fixture, 'administrativeResult'))
+    .map(fixture => ({fixture, code:'FUSSBALL_ADMINISTRATIVE_RESULT_UNSUPPORTED', reason:'Administrative result retained without ordinary played statistics'}))
   const played = schedule.fixtures.filter(fixture => fixture.rezultat !== null)
   const selected = reportLimit == null ? played : played.slice(0, reportLimit)
   const reports = [], rejectedReports = [], pendingReports = []
@@ -385,6 +401,7 @@ export async function collectFussballSeason({
     version: 1,
     scope: { provider: 'fussball', seedUrl, staffel, season, asOfDate,...(cardPolicy?{cardPolicy}:{}) },
     schedule,
+    ...(administrativeFixtures.length ? {administrativeFixtures} : {}),
     reports,
     ...(cardPolicy?{pendingReports,cardEnvelopes:[...reports,...pendingReports].map(e=>e.result.cardEnvelope)}:{}),
     rejectedReports,
@@ -393,6 +410,7 @@ export async function collectFussballSeason({
       capturedRounds: pageRecords.length,
       fixtures: schedule.fixtures.length,
       playedFixtures: played.length,
+      ...(administrativeFixtures.length ? {administrativeFixtures:administrativeFixtures.length} : {}),
       attemptedReports: selected.length,
       completeReports: reports.length,
       ...(cardPolicy?{pendingReports:pendingReports.length}:{}),

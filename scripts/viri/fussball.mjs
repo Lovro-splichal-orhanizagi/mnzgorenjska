@@ -110,11 +110,21 @@ export function razberiPostavo(html,{fonts}={}) {
  return teams
 }
 function score(s,decode,allowUnplayed=false){
+ if(/\bscore-special\b/.test(s))fail('administrativni izid ni običajen izid')
  if(allowUnplayed&&/^<td class="column-score">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/[A-Z0-9]{32}"><span class="info-text">Ausfall<\/span><\/a>\s*<\/td>$/.test(s))return null
  const values=['score-left','score-right'].map(c=>{const field=element(s,c);if(!/data-obfuscation=/.test(field))fail('izid brez vezane pisave');return decode(field)})
  if(allowUnplayed && values.every(v=>v==='-'))return null
  if(values.some(v=>!/^\d{1,2}$/.test(v)))fail('neveljaven izid')
  return {domaci:+values[0],gostje:+values[1]}
+}
+// Preserve display order only: neither pair establishes ordinary played statistics.
+function administrativeScore(s,decode,html){
+ const shape=/^<td class="column-score">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/[A-Z0-9]{32}"><span class="score-special"><span data-obfuscation="([a-z0-9]{8})">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>&nbsp;V&nbsp;<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><\/span><\/a>\s*<\/td>$/
+ const match=shape.exec(s)
+ if(!match||(html.match(/<div class="description">\(V\) Verwaltungsentscheid \(bestätigt\)<\/div>/g)??[]).length!==1)fail('nepodprt ali dvoumen administrativni izid')
+ const values=match.slice(2).map(value=>decode(`<span data-obfuscation="${match[1]}">${value}</span>`))
+ if(values.some(value=>!/^\d{1,2}$/.test(value)))fail('neveljaven administrativni izid')
+ return {schemaVersion:1,kind:'confirmed-administrative-decision',marker:'V',displayedScores:[{domaci:+values[0],gostje:+values[1]},{domaci:+values[2],gostje:+values[3]}]}
 }
 function liveScoreChildren(s){
  const html=element(s,'even'),start=html.indexOf('>')+1,end=html.lastIndexOf('</div>'),body=html.slice(start,end)
@@ -272,8 +282,11 @@ export function razberiKrog(html,{fonts,staffel}={}) {
   if(!datum || !time || new Date(`${datum}T00:00:00Z`).toISOString().slice(0,10)!==datum || +time[1].slice(0,2)>23 || +time[1].slice(3)>59)fail('neveljaven datum tekme kroga')
   const shortDate=date.match(/(?:^|[ ,])(\d{2})\.(\d{2})\.(\d{2})(?:\s|$)/)
   if(shortDate && `${datum.slice(8)}.${datum.slice(5,7)}.${datum.slice(2,4)}`!==shortDate.slice(1).join('.'))fail('neujemanje datuma vrstice kroga')
-  const result=score(element(row,'column-score'),decode,true)
-  ;(extra?prestavljene:tekme).push({id:ids[0][2],zapisnikId:`de-fussball-${ids[0][2]}`,url:ids[0][1],krog:extra?null:krog,datum,ura:time[1],domaci:names[0],gostje:names[1],rezultat:result})
+  const scoreCell=element(row,'column-score'),special=/\bscore-special\b/.test(scoreCell)
+  if((row.match(/<td\b[^>]*class="(?:[^"]*\s)?column-score(?:\s[^"]*)?"/g)??[]).length!==1 || /\bscore-special\b/.test(row)!==special)fail('dvoumen element izida kroga')
+  const administrativeResult=special?administrativeScore(scoreCell,decode,html):null
+  const result=special?null:score(scoreCell,decode,true)
+  ;(extra?prestavljene:tekme).push({id:ids[0][2],zapisnikId:`de-fussball-${ids[0][2]}`,url:ids[0][1],krog:extra?null:krog,datum,ura:time[1],domaci:names[0],gostje:names[1],rezultat:result,...(special?{administrativeResult}:{})})
  }
  if(!tekme.length || new Set([...tekme,...prestavljene].map(t=>t.id)).size!==tekme.length+prestavljene.length)fail('prazen ali podvojen razpored kroga')
  return {sezona,krog,krogi,tekme,prestavljene}
