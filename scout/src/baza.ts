@@ -140,7 +140,16 @@ export interface Selekcija {
 }
 
 /** scout_koledar(od, do): uradne tekme kluba živo iz zapisnikov, dogodki kluba iz scout.dogodki. */
-export interface Koledar {
+/** Pogled kluba: svoj ali (administrator) tuj klub države, ki vidi le javno. */
+export interface PogledKluba {
+  team_id: number
+  ime: string
+  svoj: boolean
+  admin: boolean
+  country_id: number
+}
+
+export interface Koledar extends PogledKluba {
   selekcije: Selekcija[]
   tekme: { id: number; datum: string; competition_id: number; doma: boolean; nasprotnik: string; za: number | null; proti: number | null }[]
   dogodki: { id: number; competition_id: number; vrsta: VrstaDogodka; zacetek: string; trajanje_min: number; kraj: string | null; serija: string | null; oznaceni: number }[]
@@ -175,7 +184,7 @@ export interface ClanKadra {
   prisoten: number
   oznacen: number
 }
-export interface Ekipa {
+export interface Ekipa extends PogledKluba {
   selekcije: Selekcija[]
   competition_id: number | null
   sezona?: string

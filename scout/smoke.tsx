@@ -124,6 +124,7 @@ const mOk = mesecIzNaslova('2026-03').getMonth() === 2 && mesecIzNaslova('2026-1
   && mesecIzNaslova(null, new Date(2026, 9, 27)).getDate() === 1
 preveri('koledar: mesec iz naslova, neveljaven → tekoči', mOk)
 const kol: KoledarT = {
+  team_id: 2, ime: 'NK Šenčur', svoj: true, admin: false, country_id: 1,
   selekcije: [{ competition_id: 1, ime: 'Člani', mladinska: false }, { competition_id: 2, ime: 'Mladinci', mladinska: true }],
   tekme: [{ id: 9, datum: '2026-10-11', competition_id: 1, doma: false, nasprotnik: 'Tržič', za: 2, proti: 1 }],
   dogodki: [
@@ -150,7 +151,8 @@ const izrisi: [string, () => ReactNode, string][] = [
   ['koledar: izris dni', () => <SeznamDni k={kol} selekcija={null} />, 'Tržič'],
   ['koledar: prazen mesec', () => <SeznamDni k={{ ...kol, tekme: [], dogodki: [] }} selekcija={null} />, SL['koledar.prazno']],
   ['dogodek: izris prisotnosti', () => <Prisotnost d={dog} />, 'aria-pressed="true"'],
-  ['kader: izris', () => <KaderView e={{ selekcije: kol.selekcije, competition_id: 1, sezona: '2026/27', igralci: [clan] }} onSelekcija={() => {}} />, '6/8'],
+  ['kader: izris', () => <KaderView e={{ team_id: 2, ime: 'NK Šenčur', svoj: true, admin: false, country_id: 1, selekcije: kol.selekcije, competition_id: 1, sezona: '2026/27', igralci: [clan] }} onSelekcija={() => {}} />, '6/8'],
+  ['kader: administratorjev pogled tujega kluba z imenom', () => <KaderView e={{ team_id: 9, ime: 'NK Tuji', svoj: false, admin: true, country_id: 1, selekcije: kol.selekcije, competition_id: 1, sezona: '2026/27', igralci: [{ ...clan, prisoten: 0, oznacen: 0 }] }} onSelekcija={() => {}} />, 'NK Tuji'],
 ]
 for (const [opis, f, vsebuje] of izrisi) {
   try {

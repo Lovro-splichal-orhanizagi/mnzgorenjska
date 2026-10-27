@@ -1,7 +1,7 @@
 // Edge Function: scout-placilo
 //
 // Naročnina SLFF Scout s Stripe Checkout. Kliče prijavljen uradni račun kluba
-// s scout.slff.eu (Bearer <access_token>):
+// s club.slff.eu (Bearer <access_token>):
 //
 //   {"akcija": "checkout", "obdobje": "mesec"|"sezona", "jezik"?: "sl"|"en"} → {"url": "<Checkout>"}
 //   {"akcija": "portal"} → {"url": "<Billing portal>"}  (plačnik ali katerikoli
@@ -16,7 +16,7 @@
 // enkrat na način, načrt 3b naloga 8), da kupec ne preklopi na ceno preverjenih.
 //
 // Env: STRIPE_SECRET_KEY, SUPABASE_URL, SUPABASE_ANON_KEY, SCOUT_URL (neobvezno,
-// privzeto https://scout.slff.eu). Objava: scripts/hetzner/objavi-funkcije.sh scout-placilo
+// privzeto https://club.slff.eu). Objava: scripts/hetzner/objavi-funkcije.sh scout-placilo
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 
@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })
   if (req.method !== 'POST') return json({ error: 'Samo POST.' }, 405)
   if (!Deno.env.get('STRIPE_SECRET_KEY')) return json({ error: NAPAKA }, 503)
-  const SCOUT = (Deno.env.get('SCOUT_URL') ?? 'https://scout.slff.eu').replace(/\/$/, '')
+  const SCOUT = (Deno.env.get('SCOUT_URL') ?? 'https://club.slff.eu').replace(/\/$/, '')
 
   const auth = req.headers.get('Authorization') ?? ''
   const baza = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {

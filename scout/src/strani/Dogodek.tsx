@@ -72,7 +72,7 @@ export function Dogodek() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="space-y-1">
               <h1 className="text-2xl font-black naslov sm:text-3xl">{t(`vrsta.${d.vrsta}` as Kljuc)}</h1>
-              <p className="text-sm capitalize text-slate-300">
+              <p className="text-sm first-letter:uppercase text-slate-300">
                 {dan(z)} · {ura(d.zacetek)}–{ura(new Date(z.getTime() + d.trajanje_min * 60000).toISOString())}
               </p>
               <p className="text-sm text-slate-400">{[d.selekcija, d.kraj, d.serija ? t('koledar.serija') : null].filter(Boolean).join(' · ')}</p>

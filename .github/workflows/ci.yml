@@ -600,11 +600,11 @@ jobs:
           echo "  - projekt je zaustavljen (Settings -> General)"
           exit 1
 
-  # SLFF Scout (scout.slff.eu): isti tok kot objavi-vm, svoja mapa
-  # /srv/slff-scout. Teče šele, ko je strežnik pripravljen in lastnik nastavi
+  # SLFF Club (club.slff.eu, prej Scout; scout.slff.eu preusmeri): isti tok kot
+  # objavi-vm, svoja mapa /srv/slff-scout. Teče šele, ko je strežnik pripravljen in lastnik nastavi
   # spremenljivko repozitorija SCOUT_OBJAVA=1 (docs/scout.md, Objava aplikacije).
   objavi-scout:
-    name: Objava Scout na Hetzner VM
+    name: Objava Club na Hetzner VM
     needs: [preveri, varnost, migracije]
     if: inputs.diagnostika != true && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && vars.SCOUT_OBJAVA == '1'
     runs-on: ubuntu-latest

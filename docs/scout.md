@@ -278,7 +278,14 @@ plačila) in `…-faza3b-aplikacija.md` (scout.slff.eu). Migracije
   select count(distinct team_id) from scout.dnevnik where created_at > now() - interval '7 days';
   ```
 
-## Aplikacija scout.slff.eu (faza 3b)
+## Aplikacija club.slff.eu (faza 3b)
+
+**27. 10. 2026 preimenovano v SLFF Club** (`club.slff.eu`; `scout.slff.eu`
+preusmeri s 301 v Caddyju). Ostanejo: mapa `/srv/slff-scout`, shema in RPC
+`scout_*`, lookup keys Stripa, `storageKey` seje (nov izvor pomeni novo prijavo).
+Scout je ime modula za iskanje igralcev. DNS `club` (Proxied) in GoTrue
+`https://club.slff.eu/**` sta dodana; `scout-placilo` ima privzeti
+`SCOUT_URL` `https://club.slff.eu` (objavi funkcijo po združitvi).
 
 Vite + React + TypeScript v `scout/` (`scout/src/`, `scout/vite.config.js`,
 lasten Tailwind), sveženj `dist-scout/`. Ukazi: `npm run dev:scout` (5174,
@@ -331,10 +338,11 @@ Spec in raziskava trga: `docs/superpowers/specs/2026-10-27-scout-klubsko-upravlj
   goli, rumeni, rdeči tekoče sezone in prisotnost zadnjih 30 dni. Kartoni so
   število, ne napoved kazni (pravilniki po zvezah so faza 6).
 - Vsak klic gre skozi `scout.dostop` (vrste `koledar`, `dogodek`, `ekipa`;
-  šteje v mejo 300); `scout_dogodek` in `scout_ekipa` zapišeta vrnjene
-  igralce v `parametri.igralci`. `scout.pocisti` briše dogodke (s
-  prisotnostjo) starejše od 24 mesecev in prisotnost anonimiziranih igralcev. Klub je upravljavec teh podatkov
-  (pogoji, razdelek *Podatki, ki jih vnese klub*).
+  šteje v mejo 300). Od `20261027203000` `scout_dogodek` in `scout_ekipa`
+  **ne** pišeta igralcev v dnevnik (pravni pregled: lastni klub, mladoletni). `scout.pocisti` briše dogodke (s
+  prisotnostjo) starejše od 24 mesecev, dogodke kluba 90 dni po koncu naročnine in prisotnost
+  anonimiziranih igralcev. Klub je upravljavec teh podatkov, SLFF obdelovalec (pogoji, *Pogodba o
+  obdelavi podatkov*, `pogoji.obdelava`).
 - Izmerjeno na produkciji 27. 10. 2026 (klub 1747, branje): selekcije (dve
   sezoni) 1–2 ms toplo, 194 ms hladno; kader 1–15 ms, tekme koledarja 0,1 ms.
 - **Prehod sezone** (`scout.sezona_selekcije`): sezona dne dogodka, če ima klub

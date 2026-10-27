@@ -4,6 +4,7 @@ import { supabase, type ClanKadra, type Ekipa } from '../baza'
 import { napaka, odstotek, t, type Kljuc } from '../besede'
 import { Nalaganje } from '../seja'
 import { idIzNaslova } from './Igralec'
+import { IzbiraKluba, klubIzNaslova } from './Klub'
 
 /** Delež prisotnosti 0..1 ali null, če igralec ni bil označen. */
 export const delezPrisotnosti = (k: ClanKadra): number | null => (k.oznacen > 0 ? k.prisoten / k.oznacen : null)
@@ -26,6 +27,8 @@ const vrednost = (k: ClanKadra, p: Polje): number => (p === 'prisotnost' ? delez
 export function Kader() {
   const [q, setQ] = useSearchParams()
   const izbrana = idIzNaslova(q.get('sel') ?? undefined)
+  const team = klubIzNaslova(q.get('team'))
+  const [adm, setAdm] = useState<{ admin: boolean; country_id: number } | null>(null)
   const [e, setE] = useState<Ekipa | null>(null)
   const [napakaE, setNapakaE] = useState<string | null>(null)
 
@@ -33,19 +36,35 @@ export function Kader() {
     let velja = true
     setE(null)
     setNapakaE(null)
-    void supabase.rpc('scout_ekipa', izbrana ? { p_competition_id: izbrana } : {}).then(({ data, error }) => {
+    void supabase.rpc('scout_ekipa', { p_competition_id: izbrana ?? undefined, p_team_id: team }).then(({ data, error }) => {
       if (!velja) return
       if (error) setNapakaE(napaka(error))
-      else setE(data as unknown as Ekipa)
+      else {
+        const r = data as unknown as Ekipa
+        setE(r)
+        setAdm({ admin: r.admin, country_id: r.country_id })
+      }
     })
     return () => {
       velja = false
     }
-  }, [izbrana])
+  }, [izbrana, team])
 
-  if (napakaE) return <p className="opozorilo">{napakaE}</p>
+  const izbira = adm?.admin && <IzbiraKluba drzava={adm.country_id} onIzbira={(id) => setQ({ team: String(id) })} />
+  if (napakaE)
+    return (
+      <div className="space-y-6">
+        {izbira}
+        <p className="opozorilo">{napakaE}</p>
+      </div>
+    )
   if (!e) return <Nalaganje />
-  return <KaderView e={e} onSelekcija={(id) => setQ({ sel: String(id) })} />
+  return (
+    <div className="space-y-6">
+      {izbira}
+      <KaderView e={e} onSelekcija={(id) => setQ({ sel: String(id), ...(team ? { team: String(team) } : {}) })} />
+    </div>
+  )
 }
 
 export function KaderView({ e, onSelekcija }: { e: Ekipa; onSelekcija: (id: number) => void }) {
@@ -56,6 +75,7 @@ export function KaderView({ e, onSelekcija }: { e: Ekipa; onSelekcija: (id: numb
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
           <h1 className="text-2xl font-black naslov sm:text-3xl">{t('kader.naslov')}</h1>
+          {!e.svoj && <p className="font-semibold text-gnl-300">{e.ime}</p>}
           <p className="text-sm text-slate-400">{t('kader.uvod')}{e.sezona ? ` · ${e.sezona}` : ''}</p>
         </div>
         {e.selekcije.length > 1 && (
