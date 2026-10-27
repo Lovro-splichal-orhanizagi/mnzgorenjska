@@ -56,3 +56,14 @@ export function requireFcfInventoryConsumption(proof){if(!consumptions.has(proof
 
 /** Only the reader-issued claim object carries execution authority. */
 export function requireFcfInventoryExecutionClaim(proof){if(!claims.has(proof))fail('authenticated execution claim required');return proof}
+
+/** Bind current visible protection metadata to the full owner-attested snapshot.
+ * A read-only API response may omit bypass_actors. That omission is unknown,
+ * never an empty-actor attestation; the approved snapshot must still include it,
+ * and every visible field (including updated_at) must remain unchanged.
+ */
+export function verifyFcfInventoryRulesetSnapshot({snapshot,actual,now=Date.now()}){
+ const root=snapshotFcfInventoryRuleset({ruleset:snapshot?.ruleset,checkedUTC:snapshot?.checkedUTC,now})
+ if(!equal(snapshot,root)||!actual||typeof actual!=='object'||Array.isArray(actual)||Object.hasOwn(actual,'bypass_actors')&&(!Array.isArray(actual.bypass_actors)||actual.bypass_actors.length)||!equal(visibleRule(actual),visibleRule(root.ruleset)))fail('current visible protection differs from the owner-attested no-bypass snapshot')
+ return root
+}

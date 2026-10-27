@@ -17,6 +17,12 @@ const records={
  finalReceipt:{artifactId:'12180274909',jobId:'118017966735',artifactDigest:'sha256:d1e1d0a16a250b599779f9c44f3a6f5da8a55807060921743597288a0c6e4126',manifestSha256:'38039bacfb2c8d509ac4852150b72534842f837f18c1792a0acbf32925364b68',name:'fcf-missing-inventory-final-39238757730-1'},
 }
 
+// Data pins only: exporting these does not register accounting or source proof.
+export function fcfPostSixAccountingReferences(){
+ const record=kind=>({runId:terminal.runId,runAttempt:terminal.runAttempt,sourceCommit:terminal.sourceCommit,...records[kind]})
+ return frozenJSON({claim:{...terminal},consumption:record('consumption'),children:[record('g9'),record('g1')],finalReceipt:record('finalReceipt')})
+}
+
 function archivalBundle(input,kind){
  exactKeys(input,['zipBytes','artifact','run','jobs','expected'],`${kind} post-six accounting transport`)
  const expected={runId:terminal.runId,runAttempt:terminal.runAttempt,sourceCommit:terminal.sourceCommit,...records[kind]}

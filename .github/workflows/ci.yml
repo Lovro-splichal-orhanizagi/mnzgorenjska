@@ -110,6 +110,9 @@ jobs:
       - name: FCF six reviewed source/accounting/policy protocols (source-free)
         run: npm run test:fcf-six
 
+      - name: FCF fresh-source future launch protocol (source-free)
+        run: npm run test:fcf-future
+
       - name: FCF native target offline planning (source-free)
         run: node --test scripts/test-fcf-target-native-plan.mjs scripts/test-fcf-target-native-adapter.mjs scripts/test-fcf-target-offline.mjs
 
