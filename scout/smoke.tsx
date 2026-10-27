@@ -15,6 +15,10 @@ import { Klub, PregledKlubaView, globina } from './src/strani/Klub'
 import type { PregledKluba, StatEkipe } from './src/baza'
 import { Opazovani } from './src/strani/Opazovani'
 import { Pogoji } from './src/strani/Pogoji'
+import { Koledar, SeznamDni, mesecIzNaslova, poDnevih } from './src/strani/Koledar'
+import { Dogodek, Prisotnost, spremembe } from './src/strani/Dogodek'
+import { Kader, KaderView, delezPrisotnosti } from './src/strani/Kader'
+import type { ClanKadra, Dogodek as DogodekT, Koledar as KoledarT } from './src/baza'
 import { EN, SL, type Kljuc } from './src/besede'
 
 let napak = 0
@@ -32,6 +36,9 @@ const strani: [string, string, ReactNode][] = [
   ['/gaps', '/gaps', <Vrzeli />],
   ['/watchlist', '/watchlist', <Opazovani />],
   ['/terms', '/terms', <Pogoji />],
+  ['/calendar', '/calendar', <Koledar />],
+  ['/calendar/5', '/calendar/:id', <Dogodek />],
+  ['/squad', '/squad', <Kader />],
 ]
 for (const [pot, vzorec, stran] of strani) {
   try {
@@ -107,6 +114,48 @@ for (const [opis, pr, vsebuje] of primeri) {
       </StaticRouter>,
     )
     preveri(opis, (!vsebuje || html.includes(vsebuje)) && !html.includes('/player/3'))
+  } catch (e) {
+    preveri(opis, false, String(e))
+  }
+}
+
+// Ekipa: koledar, prisotnost, kader
+const mOk = mesecIzNaslova('2026-03').getMonth() === 2 && mesecIzNaslova('2026-13', new Date(2026, 9, 27)).getMonth() === 9
+  && mesecIzNaslova(null, new Date(2026, 9, 27)).getDate() === 1
+preveri('koledar: mesec iz naslova, neveljaven → tekoči', mOk)
+const kol: KoledarT = {
+  selekcije: [{ competition_id: 1, ime: 'Člani', mladinska: false }, { competition_id: 2, ime: 'Mladinci', mladinska: true }],
+  tekme: [{ id: 9, datum: '2026-10-11', competition_id: 1, doma: false, nasprotnik: 'Tržič', za: 2, proti: 1 }],
+  dogodki: [
+    { id: 7, competition_id: 1, vrsta: 'trening', zacetek: new Date(2026, 9, 11, 18).toISOString(), trajanje_min: 90, kraj: 'Igrišče', serija: 'x', oznaceni: 3 },
+    { id: 8, competition_id: 2, vrsta: 'sestanek', zacetek: new Date(2026, 9, 14, 19).toISOString(), trajanje_min: 60, kraj: null, serija: null, oznaceni: 0 },
+  ],
+}
+const dn = poDnevih(kol, null)
+preveri('koledar: po dnevih, tekma pred treningom istega dne',
+  dn.length === 2 && dn[0][0] === '2026-10-11' && dn[0][1][0].vrsta === 'tekma' && dn[0][1][1].vrsta === 'dogodek')
+preveri('koledar: filter selekcije', poDnevih(kol, 2).length === 1 && poDnevih(kol, 2)[0][0] === '2026-10-14')
+const dog: DogodekT = {
+  id: 7, competition_id: 1, selekcija: 'Člani', vrsta: 'trening', zacetek: kol.dogodki[0].zacetek, trajanje_min: 90,
+  kraj: null, opomba: null, serija: null, selekcije: kol.selekcije,
+  kader: [{ player_id: 1, ime: 'A', pozicija: 'GK', stanje: 'prisoten' }, { player_id: 2, ime: 'B', pozicija: null, stanje: null }],
+}
+const sp = spremembe(dog.kader, { 1: 'prisoten', 2: 'odsoten' })
+preveri('dogodek: shrani le spremenjene', sp.length === 1 && sp[0].player_id === 2 && sp[0].stanje === 'odsoten')
+const sp2 = spremembe(dog.kader, { 1: null })
+preveri('dogodek: odznačitev pošlje null', sp2.length === 1 && sp2[0].stanje === null)
+const clan: ClanKadra = { player_id: 1, ime: 'A', pozicija: 'MID', nastopi: 5, zacetki: 4, minute: 400, goli: 1, rumeni: 4, rdeci: 0, prisoten: 6, oznacen: 8 }
+preveri('kader: delež prisotnosti, brez oznak null', delezPrisotnosti(clan) === 0.75 && delezPrisotnosti({ ...clan, oznacen: 0 }) === null)
+const izrisi: [string, () => ReactNode, string][] = [
+  ['koledar: izris dni', () => <SeznamDni k={kol} selekcija={null} />, 'Tržič'],
+  ['koledar: prazen mesec', () => <SeznamDni k={{ ...kol, tekme: [], dogodki: [] }} selekcija={null} />, SL['koledar.prazno']],
+  ['dogodek: izris prisotnosti', () => <Prisotnost d={dog} />, 'aria-pressed="true"'],
+  ['kader: izris', () => <KaderView e={{ selekcije: kol.selekcije, competition_id: 1, sezona: '2026/27', igralci: [clan] }} onSelekcija={() => {}} />, '6/8'],
+]
+for (const [opis, f, vsebuje] of izrisi) {
+  try {
+    const html = renderToString(<StaticRouter location="/calendar">{f()}</StaticRouter>)
+    preveri(opis, html.includes(vsebuje), html.slice(0, 200))
   } catch (e) {
     preveri(opis, false, String(e))
   }

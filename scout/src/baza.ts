@@ -127,3 +127,57 @@ export interface PregledKluba {
   kader: IgralecKluba[]
   vrzeli: Vrzel[]
 }
+
+export type VrstaDogodka = 'trening' | 'prijateljska' | 'sestanek' | 'drugo'
+export const VRSTE_DOGODKOV: VrstaDogodka[] = ['trening', 'prijateljska', 'sestanek', 'drugo']
+export type Stanje = 'prisoten' | 'opravicen' | 'odsoten'
+export const STANJA: Stanje[] = ['prisoten', 'opravicen', 'odsoten']
+
+export interface Selekcija {
+  competition_id: number
+  ime: string
+  mladinska: boolean
+}
+
+/** scout_koledar(od, do): uradne tekme kluba živo iz zapisnikov, dogodki kluba iz scout.dogodki. */
+export interface Koledar {
+  selekcije: Selekcija[]
+  tekme: { id: number; datum: string; competition_id: number; doma: boolean; nasprotnik: string; za: number | null; proti: number | null }[]
+  dogodki: { id: number; competition_id: number; vrsta: VrstaDogodka; zacetek: string; trajanje_min: number; kraj: string | null; serija: string | null; oznaceni: number }[]
+}
+
+/** scout_dogodek(id) */
+export interface Dogodek {
+  id: number
+  competition_id: number
+  selekcija: string
+  vrsta: VrstaDogodka
+  zacetek: string
+  trajanje_min: number
+  kraj: string | null
+  opomba: string | null
+  serija: string | null
+  selekcije: Selekcija[]
+  kader: { player_id: number; ime: string; pozicija: Skupina | null; stanje: Stanje | null }[]
+}
+
+/** scout_ekipa(selekcija): dejstva tekoče sezone in prisotnost zadnjih 30 dni. */
+export interface ClanKadra {
+  player_id: number
+  ime: string
+  pozicija: Skupina | null
+  nastopi: number
+  zacetki: number
+  minute: number
+  goli: number
+  rumeni: number
+  rdeci: number
+  prisoten: number
+  oznacen: number
+}
+export interface Ekipa {
+  selekcije: Selekcija[]
+  competition_id: number | null
+  sezona?: string
+  igralci: ClanKadra[]
+}

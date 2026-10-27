@@ -32,6 +32,8 @@ export function Okvir({ children }: { children: ReactNode }) {
               {dostop && (
                 <>
                   <NavLink to="/club" className={povezava}>{t('nav.klub')}</NavLink>
+                  <NavLink to="/calendar" className={povezava}>{t('nav.koledar')}</NavLink>
+                  <NavLink to="/squad" className={povezava}>{t('nav.kader')}</NavLink>
                   <NavLink to="/" end className={povezava}>{t('nav.iskanje')}</NavLink>
                   <NavLink to="/gaps" className={povezava}>{t('nav.vrzeli')}</NavLink>
                   <NavLink to="/watchlist" className={povezava}>{t('nav.seznam')}</NavLink>

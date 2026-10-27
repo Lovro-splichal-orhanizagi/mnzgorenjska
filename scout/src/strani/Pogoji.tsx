@@ -1,7 +1,7 @@
 import { t, type Kljuc } from '../besede'
 
 // Pogoji za klube (spec 2): pred prvim plačilom morajo biti objavljeni.
-const RAZDELKI = ['kaj', 'kdo', 'raba', 'meje', 'dnevnik', 'cene', 'odpoved', 'krsitev', 'zasebnost', 'ponudnik', 'pravo'] as const
+const RAZDELKI = ['kaj', 'kdo', 'raba', 'ekipa', 'meje', 'dnevnik', 'cene', 'odpoved', 'krsitev', 'zasebnost', 'ponudnik', 'pravo'] as const
 
 export function Pogoji() {
   return (
