@@ -316,8 +316,9 @@ Spec in raziskava trga: `docs/superpowers/specs/2026-10-27-scout-klubsko-upravlj
   tekoči ali prejšnji sezoni (`sezona_lige`) ali z aktivnim igralcem, ki ga je dodal klub;
   tudi mladinska. Tuja selekcija → napaka, nikoli tiho druga.
 - **Kader selekcije** (`scout.kader_selekcije`): nastop za klub v tekoči
-  sezoni ali dodan s strani kluba; brez anonimiziranih (tudi po ključu) in
-  brez ugovora (`scout.je_skrit`), kot stran Klub.
+  sezoni ali dodan s strani kluba; brez anonimiziranih (tudi po ključu).
+  Igralec z ugovorom proti Scoutu **je** v kadru in prisotnosti lastnega kluba
+  (ugovor je proti skavtiranju drugih klubov; lastnik 27. 10. 2026).
 - **Koledar** (`/calendar`, `scout_koledar(od, do)`, največ 62 dni): uradne
   tekme se berejo živo iz `matches` (ne kopiramo jih), dogodki iz
   `scout.dogodki` (trening, prijateljska, sestanek, drugo). Tedenska serija
@@ -332,7 +333,7 @@ Spec in raziskava trga: `docs/superpowers/specs/2026-10-27-scout-klubsko-upravlj
 - Vsak klic gre skozi `scout.dostop` (vrste `koledar`, `dogodek`, `ekipa`;
   šteje v mejo 300); `scout_dogodek` in `scout_ekipa` zapišeta vrnjene
   igralce v `parametri.igralci`. `scout.pocisti` briše dogodke (s
-  prisotnostjo) starejše od 24 mesecev in prisotnost anonimiziranih ter igralcev z ugovorom. Klub je upravljavec teh podatkov
+  prisotnostjo) starejše od 24 mesecev in prisotnost anonimiziranih igralcev. Klub je upravljavec teh podatkov
   (pogoji, razdelek *Podatki, ki jih vnese klub*).
 - Izmerjeno na produkciji 27. 10. 2026 (klub 1747, branje): selekcije (dve
   sezoni) 1–2 ms toplo, 194 ms hladno; kader 1–15 ms, tekme koledarja 0,1 ms.

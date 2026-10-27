@@ -1,7 +1,7 @@
 # SLFF Scout → orodje za upravljanje kluba
 
-Datum: 27. 10. 2026. Status: osnutek (Claude, po raziskavi trga; lastnik je
-raziskavo in načrt prepustil Claudu). Odločitve, označene **(Claude)**, so
+Datum: 27. 10. 2026. Status: faza 1 zgrajena (Claude, po raziskavi trga; lastnik je
+raziskavo in načrt prepustil Claudu, odločitve 27. 10. 2026 spodaj). Odločitve, označene **(Claude)**, so
 privzete in jih lastnik lahko spremeni.
 
 ## Zakaj
@@ -69,11 +69,10 @@ upravljanja (koledar, prisotnost), da ga trener odpre vsak teden.
 | 5 Vsebina in sponzorji | samodejni plakati tekem in strelcev (strežnik slik že obstaja), poročilo o dosegu za sponzorje, gradnik za spletno stran kluba | — |
 | 6 Kazni | opozorila o rumenih kartonih po pravilniku vsake zveze | pravila po zvezah |
 
-Paketi **(Claude, predlog lastniku)**: brezplačno *Klub* (koledar,
-prisotnost, kader — rast, vsak klub je že v bazi), plačljivo *Scout*
-(obstoječe 39 €/mesec, 290 €/sezono), pozneje *Pro*. **Faza 1 Stripe ne
-spreminja**: nove strani so za istim sedežem in naročnino (tudi preizkus) kot
-preostanek Scouta, dokler lastnik ne odloči o brezplačni ravni.
+**Paket (lastnik, 27. 10. 2026): nič ni brezplačno.** Orodje za upravljanje
+kluba **nadomesti modul Scout** — en plačljiv izdelek za klub, skavtiranje je
+njegov del. Vse strani so za sedežem in naročnino (tudi preizkus); Stripe faza 1
+ne spreminja.
 
 Ime in domena ostaneta `scout.slff.eu` / SLFF Scout, dokler lastnik ne
 odloči o preimenovanju.
@@ -102,7 +101,7 @@ odloči o preimenovanju.
 |---|---|---|
 | kdo | imetniki sedežev kluba z veljavno naročnino ali preizkusom (`scout.dostop`), kot ostali Scout | brez novega modela pravic v fazi 1 |
 | selekcije | tekmovanja, v katerih ima klub tekme ali igralce v tekoči sezoni (`sezona_lige`), tudi mladinske | upravljanje celega kluba; podatki so klubu lastni |
-| kader selekcije | igralci kluba v tej selekciji z nastopom v tekoči sezoni ali dodani s strani kluba (`dodal_klub_at`, aktivni); brez anonimiziranih in brez ugovora (`scout.ugovori`) | ista pravila kot stran Klub (odločitev lastnika 18. 10.); glej odprta vprašanja |
+| kader selekcije | igralci kluba v tej selekciji z nastopom v sezoni dogodka (ob prehodu prejšnja) ali dodani s strani kluba (`dodal_klub_at`, aktivni) in že označeni; brez anonimiziranih. Igralec z ugovorom proti Scoutu **je** v kadru lastnega kluba | **lastnik 27. 10. 2026**: ugovor je proti skavtiranju drugih klubov, ne proti lastnemu klubu |
 | mladi | igralci z mladinsko vrstico so v kadru svoje selekcije (le lastni klub), samo javna dejstva tekem | kot stran Klub (U19, 18. 10.) |
 | prisotnost | le tri stanja, **brez razloga in proste besede** | razlog odsotnosti je pogosto zdravstveni podatek (čl. 9) |
 | shramba | zaprta shema `scout` (`scout.dogodki`, `scout.prisotnost`), le prek RPC | kot ostali Scout; agentom shema ni dostopna |
@@ -151,11 +150,8 @@ odloči o preimenovanju.
 
 ## Odprta vprašanja za lastnika
 
-1. **Brezplačna raven** *Klub* (koledar, prisotnost, kader) za vsak klubski
-   račun, Scout ostane plačljiv? (Claude priporoča da — rast.)
-2. **Ugovor proti Scoutu** zdaj skrije igralca tudi iz kadra in prisotnosti
-   lastnega kluba. Za upravljanje bi klub moral videti vse svoje igralce;
-   ugovor je mišljen proti skavtiranju, ne proti lastnemu klubu.
+1. ~~Brezplačna raven~~ — odločeno: nič brezplačno, izdelek nadomesti Scout.
+2. ~~Ugovor proti Scoutu v lastnem klubu~~ — odločeno: lastni klub ga vidi.
 3. **Pogodba o obdelavi** (čl. 28) za faze 3+ (računi igralcev in staršev).
 4. **Ime**: ostane "SLFF Scout" ali postane "SLFF Klub" z modulom Scout?
 

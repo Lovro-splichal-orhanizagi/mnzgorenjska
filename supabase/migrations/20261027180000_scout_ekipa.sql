@@ -76,8 +76,9 @@ $$;
 
 -- Kader selekcije na dan: igralci z nastopom za klub v sezoni selekcije tega
 -- dne (scout.sezona_selekcije), aktivni igralci, ki jih je dodal klub, in že
--- označeni na dogodku. Brez anonimiziranih (tudi po ključu) in brez ugovora,
--- kot stran Klub (odločitev lastnika 18. 10. 2026).
+-- označeni na dogodku. Brez anonimiziranih (tudi po ključu). Ugovor proti
+-- Scoutu velja proti skavtiranju drugih klubov, ne proti lastnemu klubu
+-- (odločitev lastnika 27. 10. 2026), zato ga kader selekcije ne izloči.
 create function scout.kader_selekcije(p_team bigint, p_competition bigint,
   p_datum date default (now() at time zone 'Europe/Ljubljana')::date, p_dogodek bigint default null)
 returns table (player_id bigint, ime text, pozicija text)
@@ -100,7 +101,6 @@ as $$
    where p.anonimiziran_at is null
      and not exists (select 1 from scout.kljuci_vrstic(array[p.id]) x
                       join anonimizirani_igralci a on a.kljuc = x.kljuc)
-     and not scout.je_skrit(array[p.id])
 $$;
 
 -- Selekcija mora biti klubova, sicer napaka (nikoli tiho druga selekcija).
@@ -408,7 +408,6 @@ as $$
       or scout.je_skrit(array[o.player_id]);
   delete from scout.dogodki where zacetek < now() - interval '24 months';
   delete from scout.prisotnost x
-   where not exists (select 1 from public.players p where p.id = x.player_id and p.anonimiziran_at is null)
-      or scout.je_skrit(array[x.player_id]);
+   where not exists (select 1 from public.players p where p.id = x.player_id and p.anonimiziran_at is null);
 $$;
 revoke all on function scout.pocisti() from public, anon, authenticated;

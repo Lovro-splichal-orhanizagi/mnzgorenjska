@@ -24,7 +24,7 @@ values (980021, 980001, sezona_lige(980001), 1), (980022, 980002, sezona_lige(98
 insert into matches (id, round_id, home_team_id, away_team_id, played_on, home_goals, away_goals, imported_at) overriding system value
 values (980031, 980021, 980011, 980012, '2026-10-11', 2, 1, now()),
        (980032, 980022, 980012, 980013, '2026-10-12', 0, 0, now());
--- 980041 viden, 980042 ugovor, 980043 anonimiziran, 980044 pri B
+-- 980041 viden, 980042 ugovor (lastni klub ga vidi), 980043 anonimiziran, 980044 pri B
 insert into players (id, competition_id, team_id, full_name, first_name, last_name, position) overriding system value
 values (980041, 980001, 980011, 'Kos Jan', 'Jan', 'Kos', 'MID'),
        (980042, 980001, 980011, 'Ugovor Ana', 'Ana', 'Ugovor', 'DEF'),
@@ -107,8 +107,9 @@ begin
   v_id := scout_shrani_dogodek(980001, 'trening', '2026-10-14 16:00+00', 90, '  Igrišče ', '');
   e := scout_dogodek(v_id);
   assert e->>'kraj' = 'Igrišče' and e->'opomba' = 'null'::jsonb, 'dogodek: kraj obrezan, prazna opomba null';
-  assert (select array_agg((x->>'player_id')::bigint) from jsonb_array_elements(e->'kader') x) = array[980041::bigint],
-    'kader: brez ugovora, anonimiziranega in tujega: ' || (e->'kader')::text;
+  assert (select array_agg((x->>'player_id')::bigint order by (x->>'player_id')::bigint) from jsonb_array_elements(e->'kader') x)
+         = array[980041, 980042]::bigint[],
+    'kader: z ugovorom (lastni klub), brez anonimiziranega in tujega: ' || (e->'kader')::text;
 
   -- serija čez premik ure (25. 10. 2026): ura ostane 18.00 po ljubljanskem času
   v_serija := scout_shrani_dogodek(980001, 'trening', '2026-10-20 16:00+00', 90, null, null, null, '2026-11-03');
@@ -130,22 +131,28 @@ begin
     raise exception 'igralec drugega kluba sprejet';
   exception when insufficient_privilege then null;
   end;
+  perform scout_shrani_prisotnost(v_id, '[{"player_id": 980042, "stanje": "prisoten"}]');
+  perform scout_shrani_prisotnost(v_id, '[{"player_id": 980042, "stanje": null}]');
   begin
-    perform scout_shrani_prisotnost(v_id, '[{"player_id": 980042, "stanje": "prisoten"}]');
-    raise exception 'igralec z ugovorom sprejet';
+    perform scout_shrani_prisotnost(v_id, '[{"player_id": 980043, "stanje": "prisoten"}]');
+    raise exception 'anonimiziran igralec sprejet';
   exception when insufficient_privilege then null;
   end;
 
   perform scout_shrani_prisotnost(v_id, '[{"player_id": 980041, "stanje": "prisoten"}]');
-  assert (scout_dogodek(v_id)->'kader'->0->>'stanje') = 'prisoten', 'prisotnost shranjena';
+  assert (select x->>'stanje' from jsonb_array_elements(scout_dogodek(v_id)->'kader') x
+           where (x->>'player_id')::bigint = 980041) = 'prisoten', 'prisotnost shranjena';
   perform scout_shrani_prisotnost(v_id, '[{"player_id": 980041, "stanje": null}]');
-  assert (scout_dogodek(v_id)->'kader'->0->'stanje') = 'null'::jsonb, 'null pobriše oznako';
+  assert (select x->'stanje' from jsonb_array_elements(scout_dogodek(v_id)->'kader') x
+           where (x->>'player_id')::bigint = 980041) = 'null'::jsonb, 'null pobriše oznako';
   perform scout_shrani_prisotnost(v_id, '[{"player_id": 980041, "stanje": "opravicen"}]');
 
   e := scout_ekipa();
-  assert (e->>'competition_id')::bigint = 980001 and jsonb_array_length(e->'igralci') = 1
-     and (e->'igralci'->0->>'minute')::int = 90 and (e->'igralci'->0->>'rumeni')::int = 1
-     and (e->'igralci'->0->>'goli')::int = 1, 'kader: dejstva sezone: ' || (e->'igralci')::text;
+  assert (e->>'competition_id')::bigint = 980001 and jsonb_array_length(e->'igralci') = 2
+     and exists (select 1 from jsonb_array_elements(e->'igralci') x
+                  where (x->>'player_id')::bigint = 980041 and (x->>'minute')::int = 90
+                    and (x->>'rumeni')::int = 1 and (x->>'goli')::int = 1),
+    'kader: dejstva sezone: ' || (e->'igralci')::text;
 
   begin
     perform scout_ekipa(980002);
@@ -195,7 +202,7 @@ begin
   assert (select count(*) from scout.dnevnik where team_id = 980011 and vrsta in ('koledar', 'dogodek', 'ekipa')) > 0,
     'klici v dnevniku';
   assert (select parametri->'igralci' from scout.dnevnik where team_id = 980011 and vrsta = 'ekipa' order by id limit 1)
-         = '[980041]'::jsonb, 'dnevnik kadra hrani vrnjene igralce';
+         = '[980041, 980042]'::jsonb, 'dnevnik kadra hrani vrnjene igralce';
   assert not exists (select 1 from scout.dnevnik where team_id = 980012), 'zavrnjeni klici niso v dnevniku';
 end;
 $$;
@@ -245,11 +252,11 @@ declare
   e jsonb := scout_ekipa();
   d jsonb := scout_dogodek(current_setting('test.prehod')::bigint);
 begin
-  assert (e->>'competition_id')::bigint = 980001 and jsonb_array_length(e->'igralci') = 1
+  assert (e->>'competition_id')::bigint = 980001 and jsonb_array_length(e->'igralci') = 2
      and (e->>'sezona') = sezona_lige(980001, (now() at time zone 'Europe/Ljubljana')::date - 365),
     'prehod sezone: selekcija in kader iz prejšnje sezone: ' || e::text;
   assert (select array_agg((x->>'player_id')::bigint order by (x->>'player_id')::bigint) from jsonb_array_elements(d->'kader') x)
-         = array[980041, 980045]::bigint[], 'že označen ostane v kadru dogodka: ' || (d->'kader')::text;
+         = array[980041, 980042, 980045]::bigint[], 'že označen ostane v kadru dogodka: ' || (d->'kader')::text;
   assert jsonb_array_length(d->'selekcije') = 1, 'dogodek vrne selekcije za urejanje';
 end;
 $$;
