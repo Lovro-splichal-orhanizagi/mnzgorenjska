@@ -9,7 +9,7 @@ import {deriveFcfInventoryHeader,validateFcfInventoryHeaders} from './fcf-missin
 import {requireFcfInventoryConsumption,readFcfInventoryExecutionClaim,readFcfInventoryConsumptionArtifact} from './fcf-missing-inventory-claim.mjs'
 import {proveFcfCurrentReleaseDocument,proveFcfG9FreshReleaseDocument,proveFcfSixReleaseDocument,validateFcfCurrentReleaseCalendar} from './fcf-historical-release.mjs'
 import {inventoryFail as fail,exactKeys,rawSha256,jsonBytes,validUTC,frozenJSON,verifyInventoryExecution,readInventoryZip,nativeId} from './fcf-missing-inventory-artifact.mjs'
-import {validateFcfInventorySourcePlan,isFcfG9HeldParentPlan,isFcfIndependentSourcePlan,isFcfSixPlan,fcfInventorySeedBinding} from './fcf-inventory-source-protocol.mjs'
+import {validateFcfInventorySourcePlan,isFcfG9HeldParentPlan,isFcfIndependentSourcePlan,isFcfSixPlan,isFcfFutureSourcePlan,fcfInventorySeedBinding} from './fcf-inventory-source-protocol.mjs'
 import {readFcfHeldParentAccounting} from './fcf-held-parent-accounting.mjs'
 import {validateFcfG9HeldParentPlan} from './fcf-g9-held-parent-plan.mjs'
 const sixContinuations=new WeakMap(),stages=new WeakMap(),children=new WeakMap(),continuations=new WeakMap(),finalReceipts=new WeakMap(),finals=new WeakMap(),audited=new WeakMap(),targets=new WeakMap()
@@ -20,7 +20,7 @@ const docKeys='id kind artifactFile bytes rawSha256 receipt header validation'.s
 const receiptKeys='sequence id targetSlug sourceUrl method startedUTC headersUTC capturedUTC httpStatus responseURL redirected responseHeaders bodyState bytes rawSha256 prefixBytes prefixSha256 artifactFile'.split(' ')
 const consumptionBinding=p=>({artifactId:p.artifactId,artifactDigest:p.artifactDigest,manifestSha256:p.manifestSha256,runId:p.runId,runAttempt:p.runAttempt,jobId:p.jobId,claimRef:p.claimRef,claimCommit:p.claimCommit,claimJsonSha256:p.claimJsonSha256})
 const childJob=slug=>`missing-inventory-${slug==='es-ct-segona-g1'?'g1':'g9'}`
-function scope(input){const {plan,targetSlug,expected,consumptionProof,now=Date.now()}=input,p=requireFcfInventoryConsumption(consumptionProof),child=validateFcfInventorySourcePlan({plan,expectedPlanSha256:expected?.planSha256??plan?.planSha256,now}).find(c=>c.targetSlug===targetSlug);if(!child||p.planSha256!==plan.planSha256||p.sourceCommit!==plan.sourceCommit)fail('exact target/consumption required');return{child,consumption:p,now}}
+function scope(input){if(isFcfFutureSourcePlan(input?.plan))fail('future source requires its separate evidence admission');const {plan,targetSlug,expected,consumptionProof,now=Date.now()}=input,p=requireFcfInventoryConsumption(consumptionProof),child=validateFcfInventorySourcePlan({plan,expectedPlanSha256:expected?.planSha256??plan?.planSha256,now}).find(c=>c.targetSlug===targetSlug);if(!child||p.planSha256!==plan.planSha256||p.sourceCommit!==plan.sourceCommit)fail('exact target/consumption required');return{child,consumption:p,now}}
 function bindingMatches(m,child,input,consumption){
  exactKeys(m,[...manifestKeys,...(isFcfIndependentSourcePlan(input.plan)?['sourceClearanceUTC']:[])],'inventory manifest')
  const {plan,expected}=input,e=m.execution
@@ -113,6 +113,7 @@ export function readFcfMissingInventoryContinuation(input){const child=readFcfMi
 export function requireFcfInventoryContinuation(proof){if(!continuations.has(proof))fail('authenticated completed G1 source continuation required');return proof}
 export function readFcfMissingInventoryDiagnosticArtifact(input){const ctx=readChild(input,true),m=ctx.manifest;const proof=frozenJSON({kind:'fcf-missing-inventory-diagnostic-proof',targetSlug:m.targetSlug,planSha256:m.planSha256,sourceCommit:m.sourceCommit,runId:ctx.binding.runId,runAttempt:'1',claimCommit:ctx.consumption.claimCommit,status:'failed',actualSourceGETs:m.actualSourceGETs,firstSourceUTC:m.firstSourceUTC,lastCompletedUTC:m.lastCompletedUTC,stopReason:m.stopReason,inventoryBinding:ctx.binding,auditBinding:null});children.set(proof,{ctx});return proof}
 export function buildFcfMissingInventoryFinalReceipt({plan,claimProof,consumptionProof,childRecords,execution,now=Date.now()}){
+ if(isFcfFutureSourcePlan(plan))fail('future source requires its separate evidence admission')
  const p=requireFcfInventoryConsumption(consumptionProof),g9=isFcfIndependentSourcePlan(plan),six=isFcfSixPlan(plan)
  validateFcfInventorySourcePlan({plan,expectedPlanSha256:plan?.planSha256,now})
  exactKeys(execution,['repository','workflow','ref','sourceCommit','runId','runAttempt','jobId'],'final receipt execution')

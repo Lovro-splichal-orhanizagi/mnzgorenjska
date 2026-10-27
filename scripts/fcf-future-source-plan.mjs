@@ -35,10 +35,12 @@ export function buildFcfFutureSourcePlan(input){
  return plan
 }
 
-/** Reauthenticate a proposal against a reader-issued ledger, never a copy. */
+/** Reauthenticate against a reader-issued ledger. Only an already registered
+ * plan may reuse its private ledger; serialized plans must reauthenticate it.
+ */
 export function validateFcfFutureSourcePlan(input){
- exactKeys(input,['plan','accountingProof','expectedPlanSha256',...(Object.hasOwn(input??{},'now')?['now']:[])],'future source validation input')
- const {plan,expectedPlanSha256}=input,old=history(input.accountingProof),now=Object.hasOwn(input,'now')?input.now:Date.now()
+ exactKeys(input,['plan','expectedPlanSha256',...(Object.hasOwn(input??{},'accountingProof')?['accountingProof']:[]),...(Object.hasOwn(input??{},'now')?['now']:[])],'future source validation input')
+ const {plan,expectedPlanSha256}=input,old=history(input.accountingProof??plans.get(plan)),now=Object.hasOwn(input,'now')?input.now:Date.now()
  exactKeys(plan,['schemaVersion','kind','preset','sourceCommit','createdUTC','rulesetSnapshotSha256','maximumCumulativeSourceGETs','maximumNewSourceGETs','priorSourceGETs','plannedCumulativeSourceGETs','stopOnDefect','accountingBinding','historySha256','policyHashes','limits','child','planSha256'],'future source proposal')
  const {planSha256,...body}=plan
  if(plan.schemaVersion!==1||plan.kind!=='fcf-future-source-plan'||plan.preset!==FCF_FUTURE_SOURCE_PROTOCOL||!sha256Id(expectedPlanSha256)||planSha256!==expectedPlanSha256||hash(body)!==planSha256||!commitId(plan.sourceCommit)||plan.sourceCommit===old.latest.sourceCommit||!sha256Id(plan.rulesetSnapshotSha256)||!clock(now)||!validUTC(plan.createdUTC)||Date.parse(plan.createdUTC)<Date.parse(old.latest.completedUTC)||Date.parse(plan.createdUTC)>now||now-Date.parse(plan.createdUTC)>limits.maximumPlanAgeMs||plan.maximumCumulativeSourceGETs!==478||plan.maximumNewSourceGETs!==240||plan.priorSourceGETs!==37||plan.plannedCumulativeSourceGETs!==277||plan.maximumNewSourceGETs>old.remainingSourceGETs||plan.stopOnDefect!==true||!same(plan.accountingBinding,old)||plan.historySha256!==hash(old)||!same(plan.policyHashes,fcfSixPolicyHashes())||!same(plan.limits,limits)||!same(plan.child,fixedChild()))fail('fixed fresh G9 proposal/hash/clock/accounting/policy/bounds differ')
@@ -46,10 +48,12 @@ export function validateFcfFutureSourcePlan(input){
  return frozenJSON({...structuredClone(plan.child),childPlanSha256:hash({...plan.child,parentPlanSha256:planSha256})})
 }
 
+export function getFcfFutureSourcePlanAccounting(plan){return history(plans.get(plan))}
+
 /** One string namespace per spent history, regardless of proposal alternatives.
  * No tag is created and this helper does not establish claim eligibility.
  */
 export function fcfFutureSourceClaimRef(plan){
- const old=history(plans.get(plan))
+ const old=getFcfFutureSourcePlanAccounting(plan)
  return `refs/tags/fcf-inventory-claim/future-g9-after-${hash(old)}`
 }

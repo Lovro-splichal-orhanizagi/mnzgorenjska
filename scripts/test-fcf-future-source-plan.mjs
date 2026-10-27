@@ -6,6 +6,7 @@ import {postSixAccountingWire} from './fcf-post-six-accounting-test-fixture.mjs'
 import {readFcfPostSixAccounting} from './fcf-post-six-accounting.mjs'
 import {historicalStatisticsPolicySha256 as hash} from './lib/historical-statistics-policy.mjs'
 import {fcfSixPolicyHashes,getFcfSixPolicy} from './fcf-six-historical-policy.mjs'
+import {validateFcfMissingInventoryPlan} from './fcf-missing-inventory-plan.mjs'
 import {validateFcfInventorySourcePlan,isFcfIndependentSourcePlan} from './fcf-inventory-source-protocol.mjs'
 import {requireFcfInventoryConsumption} from './fcf-missing-inventory-claim.mjs'
 import {getFcfCapturedTargetData,requireFcfSixSourceContinuation} from './fcf-missing-inventory-evidence.mjs'
@@ -47,10 +48,11 @@ test('creation and validation use current plan clocks without refreshing old sou
  assert.throws(()=>validate({plan:p,accountingProof:accounting(),expectedPlanSha256:p.planSha256,now:now-1}),/FCF_INVENTORY/)
  const later=build({...input(),now:Date.parse('2030-01-01T00:00:00Z')});assert.equal(later.priorSourceGETs,37);assert.deepEqual(later.child.reuse,[]);assert.deepEqual(later.accountingBinding,accounting())
 })
-test('plan/hash/ref grant no legacy source, consumed claim, sibling or target capability',genuine,()=>{
+test('explicit future union does not grant legacy source, consumed claim, sibling or target capability',genuine,()=>{
  const p=build(input())
- assert.equal(isFcfIndependentSourcePlan(p),false)
- assert.throws(()=>validateFcfInventorySourcePlan({plan:p,expectedPlanSha256:p.planSha256,now}),/FCF_INVENTORY/)
+ assert.equal(isFcfIndependentSourcePlan(p),true)
+ assert.equal(validateFcfInventorySourcePlan({plan:p,expectedPlanSha256:p.planSha256,now})[0].targetSlug,'es-ct-tercera-g9')
+ assert.throws(()=>validateFcfMissingInventoryPlan({plan:p,expectedPlanSha256:p.planSha256,now}),/FCF_INVENTORY/)
  for(const require of [requireFcfInventoryConsumption,requireFcfSixSourceContinuation])assert.throws(()=>require(p),/FCF_INVENTORY/)
  assert.throws(()=>getFcfCapturedTargetData({targetEvidence:p,targetSlug:'es-ct-tercera-g9',now}),/FCF_INVENTORY/)
  assert.equal(Object.hasOwn(p,'verified'),false);assert.equal(Object.hasOwn(p,'admissible'),false)
