@@ -10281,7 +10281,10 @@ export type Database = {
         Returns: number
       }
       scout_dogodek: { Args: { p_id: number }; Returns: Json }
-      scout_ekipa: { Args: { p_competition_id?: number }; Returns: Json }
+      scout_ekipa: {
+        Args: { p_competition_id?: number; p_team_id?: number }
+        Returns: Json
+      }
       scout_igralec: { Args: { p_player_id: number }; Returns: Json }
       scout_isci: {
         Args: {
@@ -10318,7 +10321,10 @@ export type Database = {
         Returns: string
       }
       scout_klub: { Args: { p_team_id?: number }; Returns: Json }
-      scout_koledar: { Args: { p_do: string; p_od: string }; Returns: Json }
+      scout_koledar: {
+        Args: { p_do: string; p_od: string; p_team_id?: number }
+        Returns: Json
+      }
       scout_moj_klub: { Args: never; Returns: Json }
       scout_moj_profil: {
         Args: { p_player_id: number }

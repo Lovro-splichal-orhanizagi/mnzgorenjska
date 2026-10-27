@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useSearchParams } from 'react-router-dom'
 import grb from '../../public/logo/slff-grb.png'
 import { supabase } from './baza'
 import { izberiJezik, jezik, t } from './besede'
@@ -16,6 +16,9 @@ const tiho = 'whitespace-nowrap rounded-lg px-3 py-1.5 text-slate-400 hover:bg-w
 export function Okvir({ children }: { children: ReactNode }) {
   const { seja, klub } = useSeja()
   const dostop = Boolean(klub?.sedez && klub.narocnina?.velja)
+  // Administratorjev izbrani klub (?team=) ostane med Klub, Koledar in Kader.
+  const team = useSearchParams()[0].get('team')
+  const sKlubom = (pot: string) => (team ? `${pot}?team=${encodeURIComponent(team)}` : pot)
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/80 backdrop-blur">
@@ -31,9 +34,9 @@ export function Okvir({ children }: { children: ReactNode }) {
             <nav className="order-last -mx-1 flex w-full gap-1 overflow-x-auto text-sm sm:order-none sm:mx-0 sm:w-auto">
               {dostop && (
                 <>
-                  <NavLink to="/club" className={povezava}>{t('nav.klub')}</NavLink>
-                  <NavLink to="/calendar" className={povezava}>{t('nav.koledar')}</NavLink>
-                  <NavLink to="/squad" className={povezava}>{t('nav.kader')}</NavLink>
+                  <NavLink to={sKlubom('/club')} className={povezava}>{t('nav.klub')}</NavLink>
+                  <NavLink to={sKlubom('/calendar')} className={povezava}>{t('nav.koledar')}</NavLink>
+                  <NavLink to={sKlubom('/squad')} className={povezava}>{t('nav.kader')}</NavLink>
                   <NavLink to="/" end className={povezava}>{t('nav.iskanje')}</NavLink>
                   <NavLink to="/gaps" className={povezava}>{t('nav.vrzeli')}</NavLink>
                   <NavLink to="/watchlist" className={povezava}>{t('nav.seznam')}</NavLink>

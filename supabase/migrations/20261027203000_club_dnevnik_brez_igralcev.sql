@@ -7,6 +7,11 @@
 --    z uvozom ali kontumacijo (prej je vsaka prihodnja tekma kazala 0:0).
 -- 2. Pogodba o obdelavi, točka 8: dogodki (s prisotnostjo) kluba, katerega
 --    naročnina je potekla pred več kot 90 dnevi, se izbrišejo.
+-- 4. Administrator SLFF (sedež + is_admin()) odpre koledar in kader kateregakoli
+--    kluba države naročnine (?team=, kot stran Klub). Tuj klub vidi le javno:
+--    uradne tekme in dejstva članskih selekcij; brez dogodkov in prisotnosti
+--    (podatki tega kluba, mi smo zanje obdelovalec), brez mladinskih selekcij
+--    in brez igralcev z ugovorom proti Scoutu; vrnjeni igralci gredo v dnevnik.
 
 create or replace function public.scout_dogodek(p_id bigint)
 returns jsonb
@@ -35,26 +40,60 @@ begin
 end;
 $$;
 
-create or replace function public.scout_ekipa(p_competition_id bigint default null)
+-- Ciljni klub klica: svoj ali (le administrator) klub države naročnine; drugače
+-- napaka, nikoli tiho nazaj na svoj klub.
+create function scout.ciljni_klub(p_svoj bigint, p_country bigint, p_team bigint)
+returns bigint language plpgsql stable set search_path = public
+as $$
+begin
+  if p_team is null or p_team = p_svoj then return p_svoj; end if;
+  if not (is_admin() and exists (select 1 from teams t where t.id = p_team and t.country_id = p_country)) then
+    raise insufficient_privilege using message = 'Scout: le svoj klub.';
+  end if;
+  return p_team;
+end;
+$$;
+revoke all on function scout.ciljni_klub(bigint, bigint, bigint) from public, anon, authenticated;
+
+-- Selekcije za pogled: tuj klub le članske.
+create function scout.selekcije_pogleda(p_team bigint, p_svoj boolean)
+returns jsonb language sql stable set search_path = public
+as $$
+  select coalesce(jsonb_agg(e order by i), '[]'::jsonb)
+    from jsonb_array_elements(scout.selekcije_json(p_team)) with ordinality x(e, i)
+   where p_svoj or not (e->>'mladinska')::boolean
+$$;
+revoke all on function scout.selekcije_pogleda(bigint, boolean) from public, anon, authenticated;
+
+drop function public.scout_ekipa(bigint);
+create function public.scout_ekipa(p_competition_id bigint default null, p_team_id bigint default null)
 returns jsonb
 language plpgsql security definer set search_path = public
 as $$
 declare
   d record;
+  v_team bigint;
+  v_svoj boolean;
   v_igralci jsonb;
   v_selekcije jsonb;
   v_sezona text;
 begin
-  select * into d from scout.dostop('ekipa', null, jsonb_build_object('selekcija', p_competition_id));
-  v_selekcije := scout.selekcije_json(d.team_id);
+  select * into d from scout.dostop('ekipa', null, jsonb_build_object('selekcija', p_competition_id, 'team', p_team_id));
+  v_team := scout.ciljni_klub(d.team_id, d.country_id, p_team_id);
+  v_svoj := v_team = d.team_id;
+  v_selekcije := scout.selekcije_pogleda(v_team, v_svoj);
   if p_competition_id is null then
     p_competition_id := (v_selekcije->0->>'competition_id')::bigint;
-    if p_competition_id is null then
-      return jsonb_build_object('selekcije', v_selekcije, 'competition_id', null, 'igralci', '[]'::jsonb);
-    end if;
   end if;
-  perform scout.preveri_selekcijo(d.team_id, p_competition_id);
-  v_sezona := scout.sezona_selekcije(d.team_id, p_competition_id, scout.dan(now()));
+  if p_competition_id is null then
+    return jsonb_build_object('team_id', v_team, 'ime', (select t.name from teams t where t.id = v_team),
+      'svoj', v_svoj, 'admin', is_admin(), 'country_id', d.country_id,
+      'selekcije', v_selekcije, 'competition_id', null, 'igralci', '[]'::jsonb);
+  end if;
+  if not exists (select 1 from jsonb_array_elements(v_selekcije) e where (e->>'competition_id')::bigint = p_competition_id) then
+    raise insufficient_privilege using message = 'Scout: selekcija ni klubova.';
+  end if;
+  v_sezona := scout.sezona_selekcije(v_team, p_competition_id, scout.dan(now()));
   select coalesce(jsonb_agg(jsonb_build_object(
            'player_id', k.player_id, 'ime', k.ime, 'pozicija', k.pozicija,
            'nastopi', coalesce(s.nastopi, 0), 'zacetki', coalesce(s.zacetki, 0),
@@ -63,26 +102,38 @@ begin
            'prisoten', coalesce(pr.prisoten, 0), 'oznacen', coalesce(pr.oznacen, 0))
            order by coalesce(s.minute, 0) desc, k.ime), '[]'::jsonb)
     into v_igralci
-    from scout.kader_selekcije(d.team_id, p_competition_id) k
+    from scout.kader_selekcije(v_team, p_competition_id) k
     left join lateral (
       select (count(*) filter (where a.minutes_played > 0))::int as nastopi, sum(a.started::int)::int as zacetki,
              sum(a.minutes_played)::int as minute, sum(a.goals)::int as goli,
              sum(a.yellow_cards)::int as rumeni, sum(a.red_cards)::int as rdeci
         from appearances a join matches m on m.id = a.match_id join rounds r on r.id = m.round_id
-       where a.player_id = k.player_id and a.team_id = d.team_id
+       where a.player_id = k.player_id and a.team_id = v_team
          and r.competition_id = p_competition_id and r.season = v_sezona) s on true
     left join lateral (
       select (count(*) filter (where x.stanje = 'prisoten'))::int as prisoten, count(*)::int as oznacen
         from scout.prisotnost x join scout.dogodki e on e.id = x.dogodek_id
-       where x.player_id = k.player_id and e.team_id = d.team_id and e.competition_id = p_competition_id
-         and e.zacetek between now() - interval '30 days' and now()) pr on true;
+       where v_svoj and x.player_id = k.player_id and e.team_id = v_team and e.competition_id = p_competition_id
+         and e.zacetek between now() - interval '30 days' and now()) pr on true
+   where v_svoj or not scout.je_skrit(array[k.player_id]);
+  -- Tuj klub (administrator): vrnjeni igralci v dnevnik, kot stran Klub.
+  if not v_svoj then
+    update scout.dnevnik x set parametri = x.parametri || jsonb_build_object('igralci',
+        (select coalesce(jsonb_agg((i->>'player_id')::bigint order by (i->>'player_id')::bigint), '[]'::jsonb)
+           from jsonb_array_elements(v_igralci) i))
+     where x.id = d.dnevnik_id;
+  end if;
   return jsonb_build_object(
+    'team_id', v_team, 'ime', (select t.name from teams t where t.id = v_team),
+    'svoj', v_svoj, 'admin', is_admin(), 'country_id', d.country_id,
     'selekcije', v_selekcije,
     'competition_id', p_competition_id,
     'sezona', v_sezona,
     'igralci', v_igralci);
 end;
 $$;
+revoke all on function public.scout_ekipa(bigint, bigint) from public, anon;
+grant execute on function public.scout_ekipa(bigint, bigint) to authenticated;
 
 create or replace function scout.pocisti()
 returns void language sql
@@ -103,33 +154,43 @@ $$;
 
 revoke all on function scout.pocisti() from public, anon, authenticated;
 
-create or replace function public.scout_koledar(p_od date, p_do date)
+drop function public.scout_koledar(date, date);
+create function public.scout_koledar(p_od date, p_do date, p_team_id bigint default null)
 returns jsonb
 language plpgsql security definer set search_path = public
 as $$
 declare
   d record;
+  v_team bigint;
+  v_svoj boolean;
 begin
   if p_od is null or p_do is null or p_do < p_od or p_do - p_od > 62 then
     raise exception 'Scout: neveljavno obdobje koledarja.' using hint = 'scout-obdobje';
   end if;
-  select * into d from scout.dostop('koledar', null, jsonb_build_object('od', p_od, 'do', p_do));
+  select * into d from scout.dostop('koledar', null, jsonb_build_object('od', p_od, 'do', p_do, 'team', p_team_id));
+  v_team := scout.ciljni_klub(d.team_id, d.country_id, p_team_id);
+  v_svoj := v_team = d.team_id;
   return jsonb_build_object(
-    'selekcije', scout.selekcije_json(d.team_id),
+    'team_id', v_team, 'ime', (select t.name from teams t where t.id = v_team),
+    'svoj', v_svoj, 'admin', is_admin(), 'country_id', d.country_id,
+    'selekcije', scout.selekcije_pogleda(v_team, v_svoj),
     'tekme', (select coalesce(jsonb_agg(jsonb_build_object(
                 'id', m.id, 'datum', m.played_on, 'competition_id', r.competition_id,
-                'doma', m.home_team_id = d.team_id,
+                'doma', m.home_team_id = v_team,
                 'nasprotnik', t.name,
                 -- Neodigrana tekma ima v bazi 0:0 brez uvoza; izid velja šele z uvozom ali kontumacijo.
                 'za', case when m.imported_at is null and not m.kontumacija then null
-                           when m.home_team_id = d.team_id then m.home_goals else m.away_goals end,
+                           when m.home_team_id = v_team then m.home_goals else m.away_goals end,
                 'proti', case when m.imported_at is null and not m.kontumacija then null
-                              when m.home_team_id = d.team_id then m.away_goals else m.home_goals end)
+                              when m.home_team_id = v_team then m.away_goals else m.home_goals end)
                 order by m.played_on, m.id), '[]'::jsonb)
                 from matches m join rounds r on r.id = m.round_id
-                join teams t on t.id = case when m.home_team_id = d.team_id then m.away_team_id else m.home_team_id end
-               where d.team_id in (m.home_team_id, m.away_team_id)
+                join competitions c on c.id = r.competition_id
+                join teams t on t.id = case when m.home_team_id = v_team then m.away_team_id else m.home_team_id end
+               where v_team in (m.home_team_id, m.away_team_id)
+                 and (v_svoj or not je_mladinski_slug(c.slug))
                  and m.played_on between p_od and p_do),
+    -- Dogodki in prisotnost so podatki kluba: le svojemu klubu.
     'dogodki', (select coalesce(jsonb_agg(jsonb_build_object(
                   'id', e.id, 'competition_id', e.competition_id, 'vrsta', e.vrsta, 'zacetek', e.zacetek,
                   'trajanje_min', e.trajanje_min, 'kraj', e.kraj, 'serija', e.serija,
@@ -139,8 +200,10 @@ begin
                                                    join anonimizirani_igralci a on a.kljuc = k.kljuc)))
                   order by e.zacetek, e.id), '[]'::jsonb)
                   from scout.dogodki e
-                 where e.team_id = d.team_id
+                 where v_svoj and e.team_id = v_team
                    and e.zacetek >= (p_od::timestamp at time zone 'Europe/Ljubljana')
                    and e.zacetek < ((p_do + 1)::timestamp at time zone 'Europe/Ljubljana')));
 end;
 $$;
+revoke all on function public.scout_koledar(date, date, bigint) from public, anon;
+grant execute on function public.scout_koledar(date, date, bigint) to authenticated;

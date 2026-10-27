@@ -52,9 +52,9 @@ update scout.drzave set stanje = 'odprto' where country_id = (select id from cou
 
 do $$
 begin
-  assert not has_function_privilege('anon', 'public.scout_koledar(date, date)', 'execute')
+  assert not has_function_privilege('anon', 'public.scout_koledar(date, date, bigint)', 'execute')
      and not has_function_privilege('anon', 'public.scout_shrani_prisotnost(bigint, jsonb)', 'execute')
-     and has_function_privilege('authenticated', 'public.scout_ekipa(bigint)', 'execute')
+     and has_function_privilege('authenticated', 'public.scout_ekipa(bigint, bigint)', 'execute')
      and not has_function_privilege('authenticated', 'scout.kader_selekcije(bigint, bigint, date, bigint)', 'execute')
      and not has_table_privilege('authenticated', 'scout.dogodki', 'select')
      and not has_table_privilege('authenticated', 'scout.prisotnost', 'insert'),
@@ -293,6 +293,70 @@ begin
   assert not exists (select 1 from scout.dogodki where team_id = 980011), '90 dni po koncu izbrisano';
   assert not exists (select 1 from scout.prisotnost x where not exists (select 1 from scout.dogodki e where e.id = x.dogodek_id)),
     'prisotnost gre z dogodkom';
+end;
+$$;
+
+-- Administrator (20261027203000): tuj klub države le javno, brez dogodkov, mladinskih in ugovora.
+update scout.narocnine set velja_do = now() + interval '14 days' where team_id = 980011;
+update rounds set season = sezona_lige(980001) where id = 980021;
+insert into competitions (id, slug, name, short_name, active, country_id, source) overriding system value
+select 980003, 'test-ekipa-mladinci', 'Test mladinci', 'T', false, id, 'test' from countries where code = 'SI';
+insert into rounds (id, competition_id, season, number) overriding system value values (980023, 980003, sezona_lige(980003), 1);
+insert into matches (id, round_id, home_team_id, away_team_id, played_on, home_goals, away_goals, imported_at) overriding system value
+values (980034, 980023, 980012, 980013, '2026-10-12', 1, 0, now());
+insert into players (id, competition_id, team_id, full_name, first_name, last_name) overriding system value
+values (980046, 980001, 980012, 'Ugovor B', 'B', 'Ugovor');
+insert into appearances (match_id, player_id, team_id, started, minutes_played) values (980031, 980046, 980012, true, 90);
+insert into scout.ugovori (player_id, kljuc) select k.player_id, k.kljuc from scout.kljuci_vrstic(array[980046::bigint]) k;
+insert into scout.dogodki (team_id, competition_id, vrsta, zacetek, trajanje_min) values (980012, 980001, 'trening', '2026-10-14 16:00+00', 60);
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000e0a01', true);
+do $$
+begin
+  begin
+    perform scout_koledar('2026-10-01', '2026-10-31', 980012);
+    raise exception 'ne-admin vidi tuj koledar';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform scout_ekipa(null, 980012);
+    raise exception 'ne-admin vidi tuj kader';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
+reset role;
+update profiles set is_admin = true where id = '00000000-0000-0000-0000-0000000e0a01';
+set local role authenticated;
+do $$
+declare
+  k jsonb := scout_koledar('2026-10-01', '2026-10-31', 980012);
+  e jsonb := scout_ekipa(980001, 980012);
+begin
+  assert (k->>'team_id')::bigint = 980012 and not (k->>'svoj')::boolean and (k->>'admin')::boolean, 'admin: tuj klub';
+  assert (select array_agg((x->>'competition_id')::bigint order by (x->>'competition_id')::bigint) from jsonb_array_elements(k->'selekcije') x)
+         = array[980001, 980002]::bigint[],
+    'admin: brez mladinskih selekcij: ' || (k->'selekcije')::text;
+  assert not exists (select 1 from jsonb_array_elements(k->'tekme') x where (x->>'id')::bigint = 980034)
+     and exists (select 1 from jsonb_array_elements(k->'tekme') x where (x->>'id')::bigint = 980031 and not (x->>'doma')::boolean),
+    'admin: le članske tekme, z vidika tujega kluba';
+  assert jsonb_array_length(k->'dogodki') = 0, 'admin: brez dogodkov tujega kluba';
+  assert (select array_agg((x->>'player_id')::bigint) from jsonb_array_elements(e->'igralci') x) = array[980044::bigint]
+     and (e->'igralci'->0->>'oznacen')::int = 0, 'admin: kader brez ugovora, brez prisotnosti: ' || (e->'igralci')::text;
+  begin
+    perform scout_ekipa(980003, 980012);
+    raise exception 'admin vidi tujo mladinsko selekcijo';
+  exception when insufficient_privilege then null;
+  end;
+  assert (scout_koledar('2026-10-01', '2026-10-31')->>'svoj')::boolean, 'admin: brez team svoj klub';
+end;
+$$;
+reset role;
+do $$
+begin
+  assert (select parametri->'igralci' from scout.dnevnik where team_id = 980011 and vrsta = 'ekipa'
+           and parametri->>'team' = '980012' order by id desc limit 1) = '[980044]'::jsonb,
+    'admin: vrnjeni igralci tujega kluba v dnevniku';
 end;
 $$;
 

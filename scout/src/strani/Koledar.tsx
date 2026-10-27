@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { supabase, VRSTE_DOGODKOV, type Koledar as KoledarT, type Selekcija, type VrstaDogodka } from '../baza'
 import { dan, mesec, napaka, t, ura, type Kljuc } from '../besede'
 import { Nalaganje } from '../seja'
+import { IzbiraKluba, klubIzNaslova } from './Klub'
 
 /** Krajevni dan "YYYY-MM-DD" (brez UTC zamika toISOString). */
 export const dIso = (d: Date): string =>
@@ -37,6 +38,9 @@ export function Koledar() {
   const [q, setQ] = useSearchParams()
   const m = mesecIzNaslova(q.get('m'))
   const mKljuc = dIso(m).slice(0, 7)
+  const team = klubIzNaslova(q.get('team'))
+  // Iz zadnjega uspešnega odgovora: administrator ob napaki obdrži izbiro kluba.
+  const [adm, setAdm] = useState<{ admin: boolean; country_id: number } | null>(null)
   const [k, setK] = useState<KoledarT | null>(null)
   const [napakaK, setNapakaK] = useState<string | null>(null)
   const [selekcija, setSelekcija] = useState<number | null>(null)
@@ -49,33 +53,46 @@ export function Koledar() {
     const od = new Date(m)
     const doo = new Date(m.getFullYear(), m.getMonth() + 1, 0)
     setNapakaK(null)
-    void supabase.rpc('scout_koledar', { p_od: dIso(od), p_do: dIso(doo) }).then(({ data, error }) => {
+    void supabase.rpc('scout_koledar', { p_od: dIso(od), p_do: dIso(doo), p_team_id: team }).then(({ data, error }) => {
       if (!velja) return
       if (error) setNapakaK(napaka(error))
       else {
         const r = data as unknown as KoledarT
         setK(r)
-        setSelekcije(r.selekcije)
+        setSelekcije(r.svoj ? r.selekcije : [])
+        setAdm({ admin: r.admin, country_id: r.country_id })
       }
     })
     return () => {
       velja = false
     }
     // m se izračuna iz mKljuc ob vsakem izrisu
-  }, [mKljuc])
+  }, [mKljuc, team])
   useEffect(nalozi, [nalozi])
 
   const premakni = (n: number) => {
     const x = new Date(m.getFullYear(), m.getMonth() + n, 1)
     setK(null)
-    setQ({ m: dIso(x).slice(0, 7) })
+    setQ({ m: dIso(x).slice(0, 7), ...(team ? { team: String(team) } : {}) })
   }
 
   return (
     <div className="space-y-6">
+      {adm?.admin && (
+        <IzbiraKluba
+          drzava={adm.country_id}
+          onIzbira={(id) => {
+            setK(null)
+            setObrazec(false)
+            setSelekcija(null)
+            setQ({ m: mKljuc, team: String(id) })
+          }}
+        />
+      )}
       <header className="space-y-1">
         <h1 className="text-2xl font-black naslov sm:text-3xl">{t('koledar.naslov')}</h1>
-        <p className="text-sm text-slate-400">{t('koledar.uvod')}</p>
+        {k && !k.svoj && <p className="font-semibold text-gnl-300">{k.ime}</p>}
+        <p className="text-sm text-slate-400">{k && !k.svoj ? t('koledar.tujKlub') : t('koledar.uvod')}</p>
       </header>
 
       <div className="flex flex-wrap items-center gap-2">

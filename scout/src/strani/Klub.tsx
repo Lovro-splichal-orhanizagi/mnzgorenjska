@@ -47,7 +47,7 @@ const VRSTICE: [Kljuc, keyof StatEkipe, (x: number | null | undefined) => string
 ]
 
 /** Id kluba iz naslova (?team=): le varno pozitivno celo število. */
-function klubIzNaslova(v: string | null): number | undefined {
+export function klubIzNaslova(v: string | null): number | undefined {
   if (!v || !/^[1-9]\d*$/.test(v)) return undefined
   const n = Number(v)
   return Number.isSafeInteger(n) ? n : undefined
@@ -256,7 +256,7 @@ export function PregledKlubaView({ p, razvrsti, setRazvrsti, onIzbira }: {
 }
 
 /** Izbira kluba za administratorje SLFF (preizkus na pravih klubih); baza preveri še enkrat. */
-function IzbiraKluba({ drzava, onIzbira }: { drzava: number; onIzbira: (id: number) => void }) {
+export function IzbiraKluba({ drzava, onIzbira }: { drzava: number; onIzbira: (id: number) => void }) {
   const [iskanje, setIskanje] = useState('')
   const [zadetki, setZadetki] = useState<{ id: number; name: string }[]>([])
 
