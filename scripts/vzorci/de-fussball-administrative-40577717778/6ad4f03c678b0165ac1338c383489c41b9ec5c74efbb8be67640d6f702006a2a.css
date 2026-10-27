@@ -1,0 +1,10 @@
+@font-face {
+	font-family: font-t3c825iw;
+	src: 
+		url('//www.fussball.de/export.fontface/-/format/woff/id/t3c825iw/type/font') format('woff'),
+		url('//www.fussball.de/export.fontface/-/format/ttf/id/t3c825iw/type/font') format('truetype');
+}
+
+.results-c-t3c825iw {
+	font-family: font-t3c825iw !important;
+}

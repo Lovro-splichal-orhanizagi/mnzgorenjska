@@ -150,6 +150,7 @@ export function buildFussballImportBatch(result,{staffel,season,cardPolicy}={}){
  requireProof(Array.isArray(s.fixtures)&&s.fixtures.length>0&&Array.isArray(result.reports)&&Array.isArray(result.rejectedReports)&&result.rejectedReports.length===0,'missing fixtures or rejected reports')
  const fixtures=new Map()
  for(const f of s.fixtures){
+  requireProof(!f||!Object.hasOwn(f,'administrativeResult'),'administrative result requires explicit native policy; import refused')
   requireProof(MATCH_ID.test(f.id??'')&&f.zapisnikId===`de-fussball-${f.id}`&&reportUrlId(f.url)===f.id&&!fixtures.has(f.id),'invalid or duplicate fixture identity')
   requireProof(s.rounds.includes(f.krog)&&validDate(f.datum)&&/^([01]\d|2[0-3]):[0-5]\d$/.test(f.ura??'')&&typeof f.domaci==='string'&&f.domaci.trim()&&typeof f.gostje==='string'&&f.gostje.trim()&&f.domaci!==f.gostje,'invalid fixture header')
   requireProof(f.rezultat===null||['domaci','gostje'].every(k=>Number.isInteger(f.rezultat?.[k])&&f.rezultat[k]>=0&&f.rezultat[k]<=99),'invalid fixture score')

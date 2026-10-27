@@ -1,0 +1,58 @@
+{
+  "runId": 40577717778,
+  "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+  "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+  "season": "2025/26",
+  "documents": [
+    {
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "kind": "round",
+      "bytes": 201319,
+      "sha256": "4126bea18c6f975a262d7f169d539aebe43b2740e4498accfe51c5f34fb15bb8",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-10-27T20:47:37.163Z",
+      "file": "documents/4126bea18c6f975a262d7f169d539aebe43b2740e4498accfe51c5f34fb15bb8.html"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/t3c825iw/type/css",
+      "kind": "css",
+      "bytes": 308,
+      "sha256": "6ad4f03c678b0165ac1338c383489c41b9ec5c74efbb8be67640d6f702006a2a",
+      "status": 200,
+      "contentType": "text/css; charset=UTF-8",
+      "capturedAt": "2026-10-27T20:47:43.164Z",
+      "file": "documents/6ad4f03c678b0165ac1338c383489c41b9ec5c74efbb8be67640d6f702006a2a.css"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/t3c825iw/type/font",
+      "kind": "font",
+      "bytes": 8984,
+      "sha256": "d70806e25c417e863f6a66ec7a18c9633bb359f8501e6524a8ba054bd5a042fb",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-10-27T20:47:49.166Z",
+      "file": "documents/d70806e25c417e863f6a66ec7a18c9633bb359f8501e6524a8ba054bd5a042fb.woff"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/4m27drse/type/css",
+      "kind": "css",
+      "bytes": 308,
+      "sha256": "b7432277d961470459cdb02c354f9a5c3501b94b205e8a284a197c7a85c1e8d0",
+      "status": 200,
+      "contentType": "text/css; charset=UTF-8",
+      "capturedAt": "2026-10-27T20:47:55.167Z",
+      "file": "documents/b7432277d961470459cdb02c354f9a5c3501b94b205e8a284a197c7a85c1e8d0.css"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/4m27drse/type/font",
+      "kind": "font",
+      "bytes": 2988,
+      "sha256": "4c66f71636934446e3af35b887428d1a46a856a7151433c3dad0a35060c2e32e",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-10-27T20:48:01.169Z",
+      "file": "documents/4c66f71636934446e3af35b887428d1a46a856a7151433c3dad0a35060c2e32e.woff"
+    }
+  ]
+}
