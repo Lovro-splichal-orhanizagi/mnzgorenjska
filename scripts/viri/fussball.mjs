@@ -53,6 +53,23 @@ const identity = s => {
  if(!sourceId)fail('manjka stalna identiteta igralca')
  return sourceId
 }
+// A public placeholder is not a player identity. Omit only the exact witnessed
+// unused-reserve row, inside its own bench group; event identities stay strict.
+const omittedBenchCount=Symbol('omitted anonymous bench rows')
+const anonymousBenchRow=/^<a href="#" class="player-wrapper (home|away)">\s*<div class="player-image table-image hidden-small"><span data-alt="player-thumbnail" data-responsive-image="\/\/www\.fussball\.de\/export\.media\/-\/action\/getPlayerImage\/format\/15\/image-id\/NPI_1234567890123456789012345678"><\/span><\/div>\s*<div class="player-name"><span class="firstname"><\/span><span class="lastname">k\.A\.<\/span><\/div>\s*<span class="player-number">(\d{1,2})<\/span>\s*<\/a>$/
+function anonymousBench(html,row,index,bench){
+ const match=anonymousBenchRow.exec(row)
+ if(!match||Number(match[2])<1||index<bench)return null
+ if((html.match(/<div class="substitutes club-wrapper">/g)??[]).length!==1)return null
+ const parents=[]
+ for(const token of html.slice(0,index).matchAll(/<\/?div\b[^>]*>/g)){
+  if(token[0].startsWith('</'))parents.pop()
+  else parents.push(attr(token[0],'class')??'')
+ }
+ const expected=['substitutes club-wrapper',match[1]==='home'?'club':'club last',`group ${match[1]}`]
+ if(parents.slice(-3).join('|')!==expected.join('|'))return null
+ return `${match[1]}:${Number(match[2])}`
+}
 export function razberiPostavo(html,{fonts}={}) {
  if(jeIzziv(html))fail('izziv v postavi')
  if(!/^<div id="match_course_body">/.test(html.trim()) || (html.match(/<div\b/g)??[]).length!==(html.match(/<\/div>/g)??[]).length)fail('odrezana postava')
@@ -67,10 +84,17 @@ export function razberiPostavo(html,{fonts}={}) {
  })
  const bench=html.indexOf('<div class="substitutes club-wrapper">')
  if(bench<0)fail('manjka klop postave')
- const teams=names.map(ime=>({ime,postava:[],rezerve:[]})),seen=new Set()
+ const teams=names.map(ime=>({ime,postava:[],rezerve:[]})),seen=new Set(),anonymous=new Set()
  for(const m of html.matchAll(/<a\b[^>]*>[\s\S]*?<\/a>/g)){
   const s=m[0],href=attr(s,'href')??'',classes=classTokens(s)
-  if(!href.startsWith('https://www.fussball.de/spielerprofil/')){if(classes.has('player-wrapper'))fail('igralec brez profilne povezave');continue}
+  if(!href.startsWith('https://www.fussball.de/spielerprofil/')){
+   if(classes.has('player-wrapper')){
+    const omitted=anonymousBench(html,s,m.index,bench)
+    if(!omitted||anonymous.has(omitted))fail('igralec brez profilne povezave')
+    anonymous.add(omitted)
+   }
+   continue
+  }
   if(!classes.has('player-wrapper') || classes.has('home')===classes.has('away'))fail('nepodprta profilna povezava igralca')
   const virId=identity(s),side=classes.has('home')?0:1
   if(seen.has(virId))fail('podvojen igralec v postavi');seen.add(virId)
@@ -82,6 +106,7 @@ export function razberiPostavo(html,{fonts}={}) {
   teams[side][m.index<bench?'postava':'rezerve'].push({virId,ime,st:+number,vratar:/class="c">T<\/span>/.test(s)})
  }
  for(const e of teams)if(e.postava.length!==11 || e.postava.filter(p=>p.vratar).length!==1)fail('nepopolna začetna postava ali vratar')
+ if(anonymous.size)Object.defineProperty(teams,omittedBenchCount,{value:anonymous.size})
  return teams
 }
 function score(s,decode,allowUnplayed=false){
@@ -188,7 +213,7 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId,cardPolicy,cardRe
  if(current.domaci!==rezultat.domaci || current.gostje!==rezultat.gostje)fail('končni izid se ne ujema z dogodki')
  // Saved-page support does not establish a complete season source, even when
  // an individual page happens to contain no anonymous cards.
- return {zapisnikId:`de-fussball-${id}`,datum,ura:time[0],krog:+round[1],domaci:teams[0],gostje:teams[1],rezultat,goli,menjave,...(rumeni.length||rdeci.length?{rumeni,rdeci}:{}),nepripisaniKartoni,nepopoln:true,opozorila:[`${NEPOPOLN}: ${nepripisaniKartoni.length} nepripisanih kartonov; nastopi zadržani; sezonski uvoz ni podprt`]}
+ return {zapisnikId:`de-fussball-${id}`,datum,ura:time[0],krog:+round[1],domaci:teams[0],gostje:teams[1],rezultat,goli,menjave,...(rumeni.length||rdeci.length?{rumeni,rdeci}:{}),nepripisaniKartoni,nepopoln:true,opozorila:[`${NEPOPOLN}: ${nepripisaniKartoni.length} nepripisanih kartonov; nastopi zadržani; sezonski uvoz ni podprt`,...(teams[omittedBenchCount]?[`fussball: izpuščene nejavne neuporabljene rezerve: ${teams[omittedBenchCount]}; brez ugibanja identitete.`]:[])]}
 }
 export function nastopi(){return []}
 
