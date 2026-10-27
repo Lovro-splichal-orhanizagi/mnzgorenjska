@@ -424,6 +424,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   ponovnaCena: {
     naslov: 'Ár újraértékelése',
     gumb: 'Ár újraértékelése',
+    vprasanje: 'Szerinted a játékos más árat érdemel?',
+    podnaslov: 'Újraszámoljuk, és néhány napon belül megerősítjük. Egyszeri {cena}.',
     opis: 'Az árat ugyanazokkal a szabályokkal számoljuk újra, mint minden héten, és néhány napon belül jóváhagyjuk. Emelkedhet, csökkenhet vagy maradhat. Egyszeri díj: {cena}. Ha az ár nem változik, a díjat nem térítjük vissza.',
     odpoved: 'Tudomásul veszem, hogy a számítás azonnal elindul, és a fizetéssel elveszítem a 14 napos elállási jogot.',
     pogoji: 'A <pogoji>fizetős szolgáltatások feltételei</pogoji> érvényesek.',

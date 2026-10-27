@@ -424,6 +424,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   ponovnaCena: {
     naslov: 'Fiyatın yeniden değerlendirilmesi',
     gumb: 'Fiyatı yeniden değerlendir',
+    vprasanje: 'Bu oyuncunun farklı bir fiyatı hak ettiğini mi düşünüyorsun?',
+    podnaslov: 'Fiyatı yeniden hesaplar ve birkaç gün içinde onaylarız. Tek seferlik {cena}.',
     opis: 'Fiyatı her hafta olduğu gibi aynı kurallarla yeniden hesaplıyor ve birkaç gün içinde onaylıyoruz. Yükselebilir, düşebilir veya aynı kalabilir. Tek seferlik ödeme: {cena}. Fiyat aynı kalırsa ücret iade edilmez.',
     odpoved: 'Hesaplamanın hemen başladığını ve ödeme yaparak 14 günlük cayma hakkımı kaybettiğimi anlıyorum.',
     pogoji: '<pogoji>Ücretli hizmet koşulları</pogoji> geçerlidir.',

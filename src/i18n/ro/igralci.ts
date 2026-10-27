@@ -426,6 +426,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   ponovnaCena: {
     naslov: 'Reevaluarea prețului',
     gumb: 'Reevaluează prețul',
+    vprasanje: 'Crezi că jucătorul merită alt preț?',
+    podnaslov: 'Îl recalculăm și îl confirmăm în câteva zile. Plată unică: {cena}.',
     opis: 'Recalculăm prețul cu aceleași reguli ca în fiecare săptămână și îl confirmăm în câteva zile. Poate crește, scădea sau rămâne la fel. Plată unică: {cena}. Dacă prețul rămâne la fel, nu returnăm banii.',
     odpoved: 'Înțeleg că recalcularea începe imediat și că prin plată pierd dreptul de retragere de 14 zile.',
     pogoji: 'Se aplică <pogoji>condițiile serviciilor plătite</pogoji>.',

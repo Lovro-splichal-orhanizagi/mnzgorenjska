@@ -428,6 +428,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   ponovnaCena: {
     naslov: 'Nové ocenění ceny',
     gumb: 'Znovu ocenit cenu',
+    vprasanje: 'Myslíš, že si hráč zaslouží jinou cenu?',
+    podnaslov: 'Cenu přepočítáme a potvrdíme během několika dní. Jednorázově {cena}.',
     opis: 'Cenu přepočítáme podle stejných pravidel jako každý týden a potvrdíme ji během několika dní. Může stoupnout, klesnout nebo zůstat stejná. Jednorázová platba: {cena}. Pokud cena zůstane stejná, peníze nevracíme.',
     odpoved: 'Rozumím, že výpočet začne hned a že platbou ztrácím právo na odstoupení do 14 dní.',
     pogoji: 'Platí <pogoji>podmínky placených služeb</pogoji>.',
