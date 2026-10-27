@@ -103,3 +103,105 @@ export function readFussballTransportCheckpoint(input){
 function requireProof(proof){const state=proofs.get(proof);if(!state)fail('reader-issued cache-only checkpoint required');return state}
 export function getFussballCheckpointDocuments(proof){return requireProof(proof).documents.map(({bytes,...d})=>({...structuredClone(d),bytes:Buffer.from(bytes)}))}
 export function exportFussballTransportCheckpoint(proof){return {proof,parents:requireProof(proof).parents.map(copyParent)}}
+
+// Exact successor to one consumed completion. The old v1 registry/reader above
+// keep their three-parent and1114 contract; this is still cache-only metadata.
+const resumption=freeze(JSON.parse(readFileSync(new URL('./policies/fussball-transport-resumption.json',import.meta.url),'utf8')))
+export function reviewedFussballResumptionParent(){return freeze(structuredClone(resumption.parent))}
+function resumptionMetadata(parent,pin,now){
+ closed(parent,['run','artifact','jobs','zipBytes'],'raw resumption parent')
+ const {run:r,artifact:a,jobs:e,zipBytes}=parent
+ if(!r||String(r.id)!==pin.runId||r.run_attempt!==1||r.repository?.full_name!==repository||r.head_repository?.full_name!==repository||r.path!==resumption.workflow||r.event!=='workflow_dispatch'||r.head_branch!=='main'||r.head_sha!==pin.sourceCommit||r.status!=='completed'||r.conclusion!=='failure'||!utc(r.updated_at)||Date.parse(r.updated_at)>now)fail('exact terminal failed resumption execution required')
+ if(!a||String(a.id)!==pin.artifactId||a.name!==`fussball-season-${pin.runId}`||a.digest!==pin.artifactDigest||a.size_in_bytes!==pin.artifactSize||typeof a.expired!=='boolean'||String(a.workflow_run?.id)!==pin.runId||a.workflow_run?.head_sha!==pin.sourceCommit||a.workflow_run?.head_branch!=='main'||!Buffer.isBuffer(zipBytes)||zipBytes.length!==pin.artifactSize||`sha256:${sha256(zipBytes)}`!==pin.artifactDigest)fail('exact retained resumption artifact required')
+ closed(e,['total_count','jobs'],'resumption jobs envelope')
+ if(e.total_count!==3||!Array.isArray(e.jobs)||e.jobs.length!==3||new Set(e.jobs.map(j=>j.id)).size!==3||e.jobs.some(j=>String(j.run_id)!==pin.runId||j.run_attempt!==1||j.head_sha!==pin.sourceCommit||j.status!=='completed'))fail('complete exact resumption jobs required')
+ const captures=e.jobs.filter(j=>j.name==='capture'),job=captures[0]
+ if(captures.length!==1||String(job.id)!==pin.jobId||job.conclusion!=='failure'||!Array.isArray(job.steps))fail('exact failed resumption capture job required')
+ for(const [name,conclusion]of[
+  ['Validate exact reviewed completion scope and total5000 budget','success'],['Offline source and evidence checks','success'],['Authenticate only the three reviewed failed source artifacts','success'],['Share host pacing with older nightly and bulk readers','success'],
+  ['Capture fresh rounds and missing originals without database credentials','failure'],['Independently replay only retained original documents','skipped'],['Authorize archive only from complete replayed current originals','skipped'],['Preserve source originals, checkpoint provenance and request journal','success'],
+ ]){const rows=job.steps.filter(s=>s.name===name);if(rows.length!==1||rows[0].status!=='completed'||rows[0].conclusion!==conclusion)fail('resumption failure/upload/skipped continuation steps differ')}
+ if(['archive','handoff'].some(name=>{const rows=e.jobs.filter(j=>j.name===name);return rows.length!==1||rows[0].conclusion!=='skipped'}))fail('resumption archive/handoff must remain skipped')
+}
+
+/** Exactly {parent:{run,artifact,jobs:{total_count,jobs},zipBytes},now?}.
+ * No serialized proof, caller pins, freshness/readiness or source authority. */
+export function readFussballTransportResumption(input){
+ closed(input,['parent',...(Object.hasOwn(input??{},'now')?['now']:[])],'resumption input')
+ const now=Object.hasOwn(input,'now')?input.now:Date.now(),pin=resumption.parent
+ if(!Number.isFinite(now)||resumption.preset!=='baden-reviewed-transports-v2'||resumption.priorRequests!==1212||resumption.totalRequestCap!==5000||pin.requests!==98||!same(resumption.scope,registry.scope)||resumption.documentsCount!==631)fail('fixed1212/5000 resumption scope/clock required')
+ resumptionMetadata(input.parent,pin,now)
+ const files=unpackVerifiedArchive(input.parent.zipBytes,pin.artifactDigest,'fussball-resumption')
+ for(const [file,key]of[['manifest.json','manifestSha256'],['attempts.jsonl','attemptsSha256'],['progress.jsonl','progressSha256']])if(!files.has(file)||sha256(files.get(file))!==pin[key])fail('exact resumption manifest/journal/progress hashes required')
+ const m=parse(files.get('manifest.json'),'resumption manifest')
+ closed(m,['version','provider','createdAt','completedAt','options','codeSha256','success','error','snapshot','documents','resultSha256','activationEligible','checkpoint'],'resumption manifest')
+ if(m.version!==4||m.provider!=='fussball'||m.success!==false||m.activationEligible!==false||m.resultSha256!==null||m.error!=='fetch failed'||m.codeSha256!==pin.codeSha256||m.createdAt!==pin.createdAt||m.completedAt!==pin.completedAt||!same(m.options,pin.options)||!utc(m.createdAt)||!utc(m.completedAt)||Date.parse(m.createdAt)>Date.parse(m.completedAt)||Date.parse(m.completedAt)>now)fail('exact reviewed failed v4 resumption capture required')
+ const expectedFiles=registry.parents.map(p=>({runId:p.runId,metadataFile:`checkpoint/parents/${p.runId}.json`,zipFile:`checkpoint/parents/${p.runId}.zip`}))
+ closed(m.checkpoint,['version','proof','parentFiles'],'embedded checkpoint')
+ if(m.checkpoint.version!==1||!same(m.checkpoint.parentFiles,expectedFiles))fail('exact embedded old3 parent paths required')
+ const used=new Set(['manifest.json','attempts.jsonl','progress.jsonl']),parents=expectedFiles.map(p=>{
+  if(!files.has(p.metadataFile)||!files.has(p.zipFile))fail('all embedded old3 raw parents required')
+  const meta=parse(files.get(p.metadataFile),'embedded parent metadata');closed(meta,['run','artifact','jobs'],'embedded parent metadata');used.add(p.metadataFile);used.add(p.zipFile)
+  return {...meta,zipBytes:files.get(p.zipFile)}
+ })
+ const oldProof=readFussballTransportCheckpoint({parents,now})
+ if(!same(m.checkpoint.proof,oldProof)||oldProof.priorRequests+pin.requests!==1212)fail('independently authenticated old checkpoint/ledger differs')
+ const oldDocuments=getFussballCheckpointDocuments(oldProof),old=new Map(oldDocuments.map(d=>[d.url,d]))
+ const s=m.snapshot;closed(s,['requests','attempts','stopped','stopReason'],'resumption terminal snapshot')
+ if(s.requests!==98||s.stopped!==true||s.stopReason!=='fetch failed'||!Array.isArray(s.attempts)||s.attempts.length!==98||!Array.isArray(m.documents)||m.documents.length!==232)fail('complete98 requests and232 originals required')
+ const terminal=s.attempts.at(-1);closed(terminal,['number','url','kind','startedAt','status','error'],'resumption no-response failure')
+ if(!same(terminal,pin.terminal)||terminal.status!=='failed'||terminal.error!=='fetch failed'||terminal.number!==98)fail('exact no-response resumption terminal required')
+ const journal=lines(files.get('attempts.jsonl'),'resumption intents');lines(files.get('progress.jsonl'),'resumption progress')
+ if(journal.length!==98)fail('complete resumption request intent journal required')
+ for(const [i,a]of s.attempts.entries()){
+  const j=journal[i];closed(j,['number','url','kind','startedAt','status','error'],'resumption original intent')
+  if(a.number!==i+1||!utc(a.startedAt)||Date.parse(a.startedAt)<Date.parse(m.createdAt)||Date.parse(a.startedAt)>Date.parse(m.completedAt)||i&&Date.parse(a.startedAt)-Date.parse(s.attempts[i-1].startedAt)<6000||j.number!==a.number||j.url!==a.url||j.kind!==a.kind||j.startedAt!==null||j.status!=='pending'||j.error!==null)fail('ordered paced resumption journal differs')
+  if(i<97){closed(a,['number','url','kind','startedAt','status','error','httpStatus'],'resumption network success');if(a.status!=='success'||a.error!==null||a.httpStatus!==200)fail('all97 network originals must be HTTP200')}
+ }
+ const urls=new Set(),network=[],cached=[];let networkIndex=0,rounds=0
+ for(const d of m.documents){
+  closed(d,['url','kind','bytes','sha256','status','contentType','capturedAt','file','origin','originalReceipt'],'resumption retained document')
+  if(urls.has(d.url)||!['round','report','lineup','css','font'].includes(d.kind)||!['cache','network'].includes(d.origin)||d.status!==200||!Number.isInteger(d.bytes)||d.bytes<1||typeof d.contentType!=='string'||!utc(d.capturedAt)||!/^[a-f0-9]{64}$/.test(d.sha256))fail('unique complete resumption document descriptor required')
+  urls.add(d.url)
+  const ext=d.kind==='font'?'woff':d.kind==='css'?'css':'html',bytes=files.get(d.file)
+  if(d.file!==`documents/${d.sha256}.${ext}`||!bytes||bytes.length!==d.bytes||sha256(bytes)!==d.sha256)fail('resumption original body/path/hash differs')
+  used.add(d.file)
+  const {origin,originalReceipt,...plainDocument}=d
+  if(origin==='cache'){
+   const prior=old.get(d.url)
+   if(d.kind==='round'||!prior)fail('cached body/flat receipt must match authenticated old original')
+   const {bytes:oldBytes,originalReceipt:oldReceipt,...oldDescriptor}=prior
+   if(!same(plainDocument,{...oldDescriptor,bytes:oldBytes.length})||!same(originalReceipt,oldReceipt)||!bytes.equals(oldBytes))fail('cached body/flat receipt must match authenticated old original')
+   cached.push(d)
+  }else{
+   const a=s.attempts[networkIndex++]
+   if(!a||a.status!=='success'||a.url!==d.url||a.kind!==d.kind||a.startedAt!==d.capturedAt||!same(originalReceipt,{version:1,document:receiptDocument(d),attempt:a,capture:{createdAt:m.createdAt,codeSha256:m.codeSha256,staffel:m.options.staffel,season:m.options.season}}))fail('network original and flat receipt differ')
+   if(d.kind==='round'){
+    if(fussballRoundScope(d.url)?.staffel!==registry.scope.staffel||d.contentType.split(';')[0].trim().toLowerCase()!=='text/html'||/<title>\s*(?:Just a moment|Attention Required)|cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha/i.test(bytes.toString('utf8')))fail('resumption round scope/MIME/challenge differs')
+    rounds++
+   }else network.push({...structuredClone(plainDocument),bytes:Buffer.from(bytes),originalReceipt:structuredClone(originalReceipt)})
+  }
+ }
+ if(networkIndex!==97||rounds!==30||network.length!==67||cached.length!==135||files.size!==used.size||[...files.keys()].some(k=>!used.has(k)))fail('exact network/cache/round/member inventory required')
+ createFussballCaptureClient({maxRequests:1,cachedDocuments:network,fetchFn:()=>fail('resumption reader has no network')})
+ // Four specifically reviewed differing URLs are authenticated, then BOTH
+ // entire report+lineup revisions are excluded. No generic newest-wins rule.
+ const conflicts=new Map(resumption.conflicts.map(c=>[c.url,c])),seenConflicts=new Set(),selected=new Map(old)
+ if(conflicts.size!==4||resumption.conflicts.some(c=>!['report','lineup'].includes(c.kind)||!/(?:031DS4G7UK000000VS5489BUVUR5FS5A|031DS4G74K000000VS5489BUVUR5FS5A)(?:\/ticker-id\/selectedTickerId)?$/.test(c.url)))fail('exact four reviewed pair conflicts required')
+ for(const d of network){
+  const previous=old.get(d.url)
+  if(previous){
+   const c=conflicts.get(d.url)
+   if(!c||c.kind!==d.kind||previous.kind!==d.kind||c.oldSha256!==previous.sha256||c.newSha256!==d.sha256||previous.bytes.equals(d.bytes))fail('unexpected retained URL/kind/body conflict requires review')
+   seenConflicts.add(d.url)
+  }else selected.set(d.url,d)
+ }
+ if(seenConflicts.size!==4)fail('all four exact old/new revisions required; old-pair fallback forbidden')
+ for(const url of conflicts.keys())selected.delete(url)
+ const documents=[...selected.values()].sort((a,b)=>a.url<b.url?-1:a.url>b.url?1:0)
+ if(documents.length!==631)fail('exact631 pre-filter candidates required')
+ const documentsSha256=sha256(JSON.stringify(documents.map(({bytes,...d})=>({...d,bytes:bytes.length}))))
+ if(documentsSha256!==resumption.documentsSha256)fail('exact retained candidate descriptor digest differs')
+ const proof=freeze({preset:resumption.preset,scope:structuredClone(resumption.scope),priorRequests:1212,totalRequestCap:5000,parents:[structuredClone(pin)],documentsSha256,documentsCount:documents.length})
+ proofs.set(proof,{documents,parents:[copyParent(input.parent)]});return proof
+}

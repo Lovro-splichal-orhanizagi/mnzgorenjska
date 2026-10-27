@@ -7,8 +7,15 @@ on:
         description: Exact reviewed main SHA
         type: string
         required: true
+      checkpoint_preset:
+        description: Exact reviewed spent-history checkpoint; used presets cannot restart
+        type: choice
+        default: baden-reviewed-transports-v1
+        options:
+          - baden-reviewed-transports-v1
+          - baden-reviewed-transports-v2
       current_requests:
-        description: New current-season request ceiling (1–886), after1114 spent
+        description: New current request ceiling (v1<=886 after1114; v2<=788 after1212)
         type: number
         default: 886
       archive_requests:
@@ -20,6 +27,7 @@ permissions:
   actions: read
 env:
   EXPECTED_SHA: ${{ inputs.expected_sha }}
+  COMPLETION_PRESET: ${{ inputs.checkpoint_preset }}
   COMPLETION_CURRENT_REQUESTS: ${{ inputs.current_requests }}
   COMPLETION_ARCHIVE_REQUESTS: ${{ inputs.archive_requests }}
 jobs:
@@ -42,7 +50,7 @@ jobs:
         run: node scripts/fussball-completion-actions.mjs validate
       - name: Offline source and evidence checks
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
-      - name: Authenticate only the three reviewed failed source artifacts
+      - name: Authenticate only the exact reviewed failed source artifacts for the selected preset
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/fussball-completion-actions.mjs parents checkpoint-input
