@@ -204,7 +204,7 @@ begin
   assert (select count(*) from scout.dogodki where team_id = 980011) = 2, 'dogodki A: ostaneta 2';
   assert (select count(*) from scout.dnevnik where team_id = 980011 and vrsta in ('koledar', 'dogodek', 'ekipa')) > 0,
     'klici v dnevniku';
-  -- 20261028090000: klici lastnega kluba ne pišejo igralcev (mladoletni) v dnevnik
+  -- 20261027203000: klici lastnega kluba ne pišejo igralcev (mladoletni) v dnevnik
   assert not exists (select 1 from scout.dnevnik where team_id = 980011 and vrsta in ('ekipa', 'dogodek')
                       and parametri ? 'igralci'), 'dnevnik kluba brez igralcev';
   assert not exists (select 1 from scout.dnevnik where team_id = 980012), 'zavrnjeni klici niso v dnevniku';

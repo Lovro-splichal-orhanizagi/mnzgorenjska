@@ -338,7 +338,7 @@ Spec in raziskava trga: `docs/superpowers/specs/2026-10-27-scout-klubsko-upravlj
   goli, rumeni, rdeči tekoče sezone in prisotnost zadnjih 30 dni. Kartoni so
   število, ne napoved kazni (pravilniki po zvezah so faza 6).
 - Vsak klic gre skozi `scout.dostop` (vrste `koledar`, `dogodek`, `ekipa`;
-  šteje v mejo 300). Od `20261028090000` `scout_dogodek` in `scout_ekipa`
+  šteje v mejo 300). Od `20261027203000` `scout_dogodek` in `scout_ekipa`
   **ne** pišeta igralcev v dnevnik (pravni pregled: lastni klub, mladoletni). `scout.pocisti` briše dogodke (s
   prisotnostjo) starejše od 24 mesecev, dogodke kluba 90 dni po koncu naročnine in prisotnost
   anonimiziranih igralcev. Klub je upravljavec teh podatkov, SLFF obdelovalec (pogoji, *Pogodba o
