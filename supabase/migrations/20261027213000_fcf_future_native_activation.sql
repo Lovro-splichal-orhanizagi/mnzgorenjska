@@ -24,6 +24,16 @@ create function private_fcf_future_activation.after_image()returns jsonb languag
  select jsonb_build_object('footballSha256',private_historical_statistics.state_sha256(797),'active',(select active from competitions where id=797),'pricingSnapshotText',private_fcf_six_target_release.pricing_snapshot(797)::text,'installedPolicy',(select to_jsonb(i)from private_historical_statistics.installed_policies i where competition_id=797),'markers',public.get_installed_historical_statistics_markers(797),'clubBindings',(select jsonb_agg(to_jsonb(b)order by club_id,category_id)from private_fcf_six_target_release.club_bindings b where competition_id=797),'cleanupSha256',(select encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex')from private_fcf_future_history.cleanup_receipt r where singleton));
 $$;
 
+-- Preserve the original fifteen-field imported receipt. Activated recovery
+-- additionally exposes the CURRENT complete afterimage, never a copy of saved
+-- success; the STABLE readonly statement supplies one consistent SQL snapshot.
+create or replace function public.fcf_future_current_target_receipt(p_slug text)returns jsonb language plpgsql stable security definer set search_path=public,pg_temp as $$begin
+ perform private_fcf_six_target_release.require(p_slug='es-ct-tercera-g9'and current_setting('transaction_read_only')='on','explicit readonly future G9 receipt recovery');
+ return coalesce((select(to_jsonb(r)-array['packet_text','rollout_text','rollout_sha256'])||jsonb_build_object('rolloutText',r.rollout_text,'rolloutSha256',r.rollout_sha256,'currentActive',c.active,'currentStateSha256',private_historical_statistics.state_sha256(c.id),'canonicalVerified',false)||case when r.stage='activated'then jsonb_build_object('currentActivationAfterImage',private_fcf_future_activation.after_image())else'{}'::jsonb end from private_fcf_future_target_release.receipts r join competitions c on c.id=r.competition_id where r.competition_id=797),'null'::jsonb);
+end$$;
+revoke all on function public.fcf_future_current_target_receipt(text)from public,anon,authenticated;
+grant execute on function public.fcf_future_current_target_receipt(text)to service_role;
+
 create function public.fcf_future_current_target_check(p_activation_text text,p_sha256 text,p_activate boolean default false)returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
 #variable_conflict use_column
 declare

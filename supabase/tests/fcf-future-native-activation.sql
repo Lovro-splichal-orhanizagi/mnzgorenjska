@@ -37,6 +37,11 @@ end$$;
 select 'ACTIVATION_SYNTHETIC_PROJECTION:'||proof::text from activation_pure_control;
 create function pg_temp.activation_gate(activate boolean default false)returns jsonb language plpgsql as $$declare t text;begin select a::text into t from activation_packet;return public.fcf_future_current_target_check(t,encode(sha256(convert_to(t,'UTF8')),'hex'),activate);end$$;
 create temporary table activation_before as select private_historical_statistics.state_sha256(797)state,(select to_jsonb(r)from private_fcf_future_target_release.receipts r where competition_id=797)receipt,(select to_jsonb(r)from private_fcf_future_history.cleanup_receipt r where singleton)cleanup;
+-- The imported readonly receipt retains exactly its original fifteen fields.
+savepoint imported_readonly_receipt;
+set local transaction_read_only=on;
+select pg_temp.six_assert(private_fcf_future_import.keys(public.fcf_future_current_target_receipt('es-ct-tercera-g9'),array['id','competition_id','inventory_key','packet_sha256','source_fingerprint','cleanup_before_sha256','imported_state_sha256','stage','activation_result','created_at','rolloutText','rolloutSha256','currentActive','currentStateSha256','canonicalVerified'])and not(public.fcf_future_current_target_receipt('es-ct-tercera-g9')?'currentActivationAfterImage'),'imported receipt exact15fields unchanged');
+rollback to savepoint imported_readonly_receipt;
 select pg_temp.six_assert(pg_temp.activation_gate()->>'stage'='checked','actual future7 check after repricing passes');
 select pg_temp.six_assert(private_historical_statistics.state_sha256(797)=(select state from activation_before)and(select to_jsonb(r)from private_fcf_future_target_release.receipts r where competition_id=797)=(select receipt from activation_before),'check has no persistent mutations');
 -- Each source/native/dependency mutation is a real subtransaction. Failure
@@ -82,4 +87,28 @@ end$$;
 savepoint activation_readonly_recovery;
 set local transaction_read_only=on;
 select pg_temp.six_assert(public.fcf_future_current_target_receipt('es-ct-tercera-g9')->>'currentActive'='true'and public.fcf_future_current_target_receipt('es-ct-tercera-g9')->>'stage'='activated','readonly activated receipt recovery');
+do $$declare actual jsonb;saved jsonb;before_image jsonb;begin
+ select to_jsonb(r)into saved from private_fcf_future_target_release.receipts r where competition_id=797;before_image:=private_fcf_future_activation.after_image();actual:=public.fcf_future_current_target_receipt('es-ct-tercera-g9');
+ perform pg_temp.six_assert((select count(*)from jsonb_object_keys(actual))=16 and actual->'currentActivationAfterImage'=saved#>'{activation_result,afterImage}'and actual->'currentActivationAfterImage'=before_image,'activated readonly receipt exact16fields/current complete afterimage');
+ perform pg_temp.six_assert((select to_jsonb(r)from private_fcf_future_target_release.receipts r where competition_id=797)=saved and private_fcf_future_activation.after_image()=before_image,'complete actual readonly readback makes no writes');
+end$$;
+
 rollback to savepoint activation_readonly_recovery;
+
+-- These independent private-state changes were invisible to footballSHA alone.
+-- The saved receipt must remain unchanged while CURRENT afterimage differs.
+create function pg_temp.readback_private_drift(command text,label text)returns void language plpgsql as $$declare saved jsonb;actual jsonb;football_sha text;begin
+ select to_jsonb(r)into saved from private_fcf_future_target_release.receipts r where competition_id=797;football_sha:=private_historical_statistics.state_sha256(797);
+ begin execute command;perform set_config('transaction_read_only','on',true);actual:=public.fcf_future_current_target_receipt('es-ct-tercera-g9');
+  perform pg_temp.six_assert(actual->'currentActivationAfterImage'is distinct from saved#>'{activation_result,afterImage}'and actual->>'currentStateSha256'=football_sha and actual->'activation_result'=saved->'activation_result'and(select to_jsonb(r)from private_fcf_future_target_release.receipts r where competition_id=797)=saved,label||' actual drift differs from unchanged saved receipt');
+  perform pg_temp.six_assert(actual->'currentActivationAfterImage'=private_fcf_future_activation.after_image(),label||' returns current complete SQL afterimage');
+  raise exception 'ROLLBACK READBACK MUTANT';
+ exception when others then if sqlerrm<>'ROLLBACK READBACK MUTANT'then raise;end if;end;
+end$$;
+select pg_temp.readback_private_drift('update private_historical_statistics.installed_policies set first_fantasy_played_on=first_fantasy_played_on+1 where competition_id=797','policy');
+select pg_temp.readback_private_drift('update private_fcf_six_target_release.club_bindings set source_fingerprint=repeat(''e'',64)where competition_id=797','club bindings');
+select pg_temp.readback_private_drift('update private_fcf_future_history.cleanup_receipt set restored=true where singleton','cleanup');
+do $$begin
+ begin perform public.fcf_future_current_target_receipt('es-ct-tercera-g9');raise exception 'FUTURE ACTIVATION TEST: receipt allowed read-write transaction';exception when others then if sqlerrm<>'FCF_TARGET: explicit readonly future G9 receipt recovery'then raise;end if;end;
+end$$;
+select pg_temp.six_assert(not has_function_privilege('anon','public.fcf_future_current_target_receipt(text)','execute')and not has_function_privilege('authenticated','public.fcf_future_current_target_receipt(text)','execute')and has_function_privilege('service_role','public.fcf_future_current_target_receipt(text)','execute'),'complete readonly receipt stays service-only');
