@@ -11,6 +11,7 @@ import {GERMANY_BULK_CANDIDATES,validateGermanyCandidate} from './bulk-germany-s
 import {loadFussballImportCapture} from './fussball-import.mjs'
 import {runFussballCaptureCli} from './zajemi-fussball-sezono.mjs'
 import {fussballCardPolicyForCandidate} from './fussball-community-policy.mjs'
+import {loadFussballCompletionParents} from './fussball-completion-actions.mjs'
 const requireProof=(ok,message)=>{if(!ok)throw Error(`fussball season pilot: ${message}`)}
 const repository='Lovro-splichal-orhanizagi/mnzgorenjska'
 function integer(value,min,max){
@@ -25,8 +26,12 @@ function scope(options){
 }
 export function validateFussballSeasonPilot(e,{headSha}={}){
  const maxRequests=integer(e.MAX_REQUESTS,1,3000)
+ const completion=e.FUSSBALL_COMPLETION_PRESET==='baden-reviewed-transports-v1'
+ requireProof(!e.FUSSBALL_COMPLETION_PRESET||completion,'unknown reviewed completion preset')
+ requireProof(!completion||e.ARCHIVE_JSON?.trim()&&maxRequests<=886,'completion requires the reviewed paired current allowance')
  if(!e.ARCHIVE_JSON?.trim()){requireProof(!e.ROLLOUT_CANDIDATE,'rollout requires paired archive scope');return null}
- requireProof(e.GITHUB_REPOSITORY===repository&&e.GITHUB_REF==='refs/heads/main'&&e.GITHUB_EVENT_NAME==='workflow_dispatch'&&e.GITHUB_WORKFLOW_REF===`${repository}/.github/workflows/preveri-fussball-sezono.yml@refs/heads/main`&&e.GITHUB_RUN_ATTEMPT==='1'&&/^[1-9]\d*$/.test(e.GITHUB_RUN_ID??''),'exact repository main dispatch and first attempt required')
+ const workflow=completion?'preveri-fussball-dopolni.yml':'preveri-fussball-sezono.yml'
+ requireProof(e.GITHUB_REPOSITORY===repository&&e.GITHUB_REF==='refs/heads/main'&&e.GITHUB_EVENT_NAME==='workflow_dispatch'&&e.GITHUB_WORKFLOW_REF===`${repository}/.github/workflows/${workflow}@refs/heads/main`&&e.GITHUB_RUN_ATTEMPT==='1'&&/^[1-9]\d*$/.test(e.GITHUB_RUN_ID??''),'exact repository main dispatch and first attempt required')
  requireProof(/^[a-f0-9]{40}$/.test(e.EXPECTED_SHA??'')&&e.EXPECTED_SHA===e.GITHUB_SHA&&e.EXPECTED_SHA===headSha,'exact reviewed main SHA required')
  requireProof(e.REPORTS==='all','paired seasons require reports=all')
  const raw=JSON.parse(e.ARCHIVE_JSON)
@@ -38,6 +43,7 @@ export function validateFussballSeasonPilot(e,{headSha}={}){
  if(Object.hasOwn(raw,'observedSeedUrl')){requireProof(typeof raw.observedSeedUrl==='string'&&raw.observedSeedUrl!==raw.seedUrl,'distinct observed menu seed required');fussballArchiveSeedAlias(archive,current)}
  // Initial361 plus two retained GitHub identity probes stay on the ledger.
  const priorRequests=integer(e.PRIOR_REQUESTS,363,5000),totalRequestCap=integer(e.TOTAL_REQUEST_CAP,1,5000)
+ if(completion)requireProof(priorRequests===1114&&totalRequestCap===5000&&e.ROLLOUT_CANDIDATE==='de-verbandsliga-baden','reviewed checkpoint ledger/candidate differs')
  requireProof(priorRequests+current.maxRequests+archive.maxRequests<=totalRequestCap,'cumulative reserved request budget exceeds cap')
  if(e.ROLLOUT_CANDIDATE){
   const candidates=GERMANY_BULK_CANDIDATES.filter(c=>c.slug===e.ROLLOUT_CANDIDATE)
@@ -47,13 +53,14 @@ export function validateFussballSeasonPilot(e,{headSha}={}){
   if(cardPolicy){current.cardPolicy=cardPolicy;archive.cardPolicy=cardPolicy}
   requireProof(c.archives.length===1&&c.source_league_code===`${current.staffel}:${current.season}`&&c.seedUrl===current.seedUrl&&a.code===`${archive.staffel}:${archive.season}`&&a.seedUrl===archive.seedUrl&&(a.observedSeedUrl??a.seedUrl)===(archive.observedSeedUrl??archive.seedUrl),'rollout candidate does not own the exact paired scopes')
  }
- return {current,archive,priorRequests,totalRequestCap,...(e.ROLLOUT_CANDIDATE?{rolloutCandidate:e.ROLLOUT_CANDIDATE}:{})}
+ return {current,archive,priorRequests,totalRequestCap,...(e.ROLLOUT_CANDIDATE?{rolloutCandidate:e.ROLLOUT_CANDIDATE}:{}),...(completion?{checkpointPreset:e.FUSSBALL_COMPLETION_PRESET}:{})}
 }
 export async function authorizeFussballSeasonArchive(directory,e,{headSha,collectFn}={}){
  const plan=validateFussballSeasonPilot(e,{headSha});requireProof(plan,'archive plan required')
  const verified=await verifyFussballDirectory(directory,{collectFn})
  const m=JSON.parse(readFileSync(join(directory,'manifest.json')))
- requireProof(m.version===1&&m.options.reportLimit===null&&m.options.cardPolicy===plan.current.cardPolicy&&Object.entries(plan.current).every(([k,v])=>m.options[k]===v),'fresh full current capture scope/budget differs')
+ requireProof(m.version===(plan.checkpointPreset?4:1)&&m.options.reportLimit===null&&m.options.cardPolicy===plan.current.cardPolicy&&Object.entries(plan.current).every(([k,v])=>m.options[k]===v),'fresh full current capture scope/budget differs')
+ if(plan.checkpointPreset)requireProof(verified.checkpointPreset===plan.checkpointPreset&&verified.priorRequests===plan.priorRequests,'authenticated checkpoint ledger differs')
  const seed=m.documents.find(d=>d.kind==='round'&&d.url===plan.current.seedUrl)
  requireProof(seed,'current original seed document required')
  // The offline verifier checked these exact content-addressed bytes. Discovery
@@ -67,7 +74,7 @@ export async function authorizeFussballSeasonArchive(directory,e,{headSha,collec
 export async function authorizeFussballRollout({currentDirectory,archiveDirectory,e,headSha,mainSha,now=Date.now()}={}, {loadCapture=loadFussballImportCapture,readManifest=directory=>JSON.parse(readFileSync(join(directory,'manifest.json')))}={}){
  const plan=validateFussballSeasonPilot(e,{headSha})
  requireProof(plan?.rolloutCandidate&&mainSha===e.EXPECTED_SHA,'explicit reviewed rollout selection and unchanged main required')
- for(const [directory,scope,current,version]of [[currentDirectory,plan.current,true,1],[archiveDirectory,plan.archive,false,3]]){
+ for(const [directory,scope,current,version]of [[currentDirectory,plan.current,true,plan.checkpointPreset?4:1],[archiveDirectory,plan.archive,false,3]]){
   const m=readManifest(directory)
   requireProof(m.version===version&&m.success===true&&m.options?.reportLimit===null&&['seedUrl','staffel','season'].every(k=>m.options[k]===scope[k])&&m.options.cardPolicy===scope.cardPolicy,'handoff capture version/scope/full intent differs')
   const batch=await loadCapture(directory,{staffel:scope.staffel,season:scope.season,current,now,...(scope.cardPolicy?{cardPolicy:scope.cardPolicy}:{})})
@@ -78,7 +85,8 @@ export async function authorizeFussballRollout({currentDirectory,archiveDirector
 export async function captureFussballSeasonCurrent(directory,e,{headSha,captureDirectory=captureFussballDirectory}={}){
  const plan=validateFussballSeasonPilot(e,{headSha})
  const options={seedUrl:e.SEED_URL,staffel:e.STAFFEL,season:e.SEASON,maxRequests:integer(e.MAX_REQUESTS,1,3000),reportLimit:e.REPORTS==='all'?null:integer(e.REPORTS,0,3000),...(plan?.current.cardPolicy?{cardPolicy:plan.current.cardPolicy}:{})}
- return captureDirectory({directory,options,onProgress:p=>console.log(JSON.stringify(p))})
+ const completionProof=plan?.checkpointPreset?loadFussballCompletionParents(e.FUSSBALL_COMPLETION_DIRECTORY??'checkpoint-input'):null
+ return captureDirectory({directory,options,onProgress:p=>console.log(JSON.stringify(p)),...(completionProof?{completionProof}:{})})
 }
 async function main(args){
  const [mode,directory]=args

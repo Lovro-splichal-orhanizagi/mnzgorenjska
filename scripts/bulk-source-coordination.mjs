@@ -3,7 +3,7 @@
 import {execFileSync} from 'node:child_process'
 import {resolve} from 'node:path'
 import {fileURLToPath} from 'node:url'
-export const GERMAN_READERS=['preveri-fussball-vzorec.yml','preveri-fussball-sezono.yml','preveri-fussball-paket.yml','uvoz-pl-de-paketa.yml','uvoz-zapisnikov.yml']
+export const GERMAN_READERS=['preveri-fussball-vzorec.yml','preveri-fussball-sezono.yml','preveri-fussball-dopolni.yml','preveri-fussball-paket.yml','uvoz-pl-de-paketa.yml','uvoz-zapisnikov.yml']
 export function olderGermanReaders(runs,own){
  if(!Number.isSafeInteger(own.id)||!Number.isFinite(Date.parse(own.created_at)))throw Error('Unknown reader identity.')
  return runs.filter(r=>{

@@ -1,9 +1,10 @@
 import {parseFussballLeagueCode} from './fussball-import.mjs'
 const requireProof=(ok,reason)=>{if(!ok)throw Error(`fussball action: ${reason}`)}
 
-function admitAuditArtifact(run,inventory,{repository,headSha,runId}={},archive=false){
+function admitAuditArtifact(run,inventory,{repository,headSha,runId}={},archive=false,completion=false){
  requireProof(typeof runId==='string'&&/^[1-9]\d{0,14}$/.test(runId)&&Number.isSafeInteger(Number(runId))&&typeof repository==='string'&&/^[\w.-]+\/[\w.-]+$/.test(repository)&&/^[a-f0-9]{40}$/.test(headSha??''),'invalid audit admission identity')
- requireProof(run?.id===Number(runId)&&run.status==='completed'&&run.conclusion==='success'&&run.event==='workflow_dispatch'&&run.head_branch==='main'&&run.head_sha===headSha&&run.head_repository?.full_name===repository&&run.path==='.github/workflows/preveri-fussball-sezono.yml','audit must be successful same-repository main workflow at the checked-out commit')
+ const approvedPath=run?.path==='.github/workflows/preveri-fussball-sezono.yml'||completion&&run?.path==='.github/workflows/preveri-fussball-dopolni.yml'
+ requireProof(run?.id===Number(runId)&&run.status==='completed'&&run.conclusion==='success'&&run.event==='workflow_dispatch'&&run.head_branch==='main'&&run.head_sha===headSha&&run.head_repository?.full_name===repository&&approvedPath,'audit must be successful same-repository main workflow at the checked-out commit')
  const name=`fussball-season-${archive?'archive-':''}${runId}`
  const artifacts=inventory?.artifacts?.filter(a=>a.name===name)
  requireProof(artifacts?.length===1,'expected exactly one named audit artifact')
@@ -21,7 +22,7 @@ export function assertFussballImportCompetition(row,{slug,code}={}){
 export function admitFussballAudit(run,inventory,options){return admitAuditArtifact(run,inventory,options)}
 export function admitFussballPairedAudit(run,inventory,options){
  requireProof(run?.run_attempt===1,'paired audit requires its first attempt')
- const current=admitAuditArtifact(run,inventory,options),archive=admitAuditArtifact(run,inventory,options,true)
+ const current=admitAuditArtifact(run,inventory,options,false,true),archive=admitAuditArtifact(run,inventory,options,true,true)
  requireProof(current.artifactId!==archive.artifactId,'paired artifacts must be distinct')
  return {current,archive}
 }

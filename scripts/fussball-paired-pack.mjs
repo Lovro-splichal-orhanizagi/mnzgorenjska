@@ -32,7 +32,7 @@ export async function loadFussballPairedPack(directory,{candidate,now=Date.now,r
  proof(scopes[0].staffel!==scopes[1].staffel,'distinct current/archive staffel required')
  const manifests=['current','archive'].map(name=>JSON.parse(readPairedOriginal(directory,name+'/manifest.json')))
  const [cm,am]=manifests
- proof(cm.version===1&&am.version===3&&cm.success===true&&am.success===true,'successful v1 current and v3 archive required')
+ proof([1,4].includes(cm.version)&&am.version===3&&cm.success===true&&am.success===true,'successful ordinary/completed current and v3 archive required')
  const time=typeof now==='function'?now():now,at=time instanceof Date?+time:time
  proof(Number.isFinite(at)&&Date.parse(cm.createdAt)<=Date.parse(cm.completedAt)&&Date.parse(cm.completedAt)<=Date.parse(am.createdAt)&&Date.parse(am.createdAt)<=Date.parse(am.completedAt)&&Date.parse(am.completedAt)<=at,'paired chronology differs')
  for(const [i,s]of scopes.entries())proof(['seedUrl','staffel','season'].every(k=>manifests[i].options?.[k]===s[k])&&manifests[i].options.reportLimit===null&&manifests[i].options.cardPolicy===cardPolicy,'capture scope/full intent differs')

@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "preset": "baden-reviewed-transports-v1",
+  "repository": "Lovro-splichal-orhanizagi/mnzgorenjska",
+  "workflow": ".github/workflows/preveri-fussball-sezono.yml",
+  "scope": {
+    "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+    "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+    "season": "2026/27"
+  },
+  "carriedForwardRequests": 453,
+  "totalRequestCap": 5000,
+  "transportAudit": {
+    "sourcePath": "scripts/lib/fussball-capture.mjs",
+    "sourceSha256": "a715760bd9672ea2ae18646e272c72d248d75966ff7cd35ea82a94d66a211885",
+    "event": "fetch-rejection-before-response-status-v1",
+    "review": "All three pinned source commits have this identical client. httpStatus is assigned immediately after fetch returns a Response, before body or challenge validation. Only the exact pinned failed entry without httpStatus is admitted; no DNS, TLS or other cause is inferred."
+  },
+  "parents": [
+    {
+      "runId": "40416972177",
+      "sourceCommit": "4486fc21502446e8bb2917bd5fccd77fd513bb76",
+      "jobId": "121901635034",
+      "artifactId": "12699355470",
+      "artifactDigest": "sha256:83048af03a5a21861d9f0d120513680c61e8b6953fc94c0b5138f9706f5b29ce",
+      "artifactSize": 8682712,
+      "manifestSha256": "6739d990229f4f116eda6a77f4293f8fa43d28632b8100ca61194ef30622ea6b",
+      "codeSha256": "e8c55481aa1c5a78416596c96c22b0bbc0914fb084c602ae9d20b7961f94267f",
+      "requests": 508,
+      "options": {
+        "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+        "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+        "season": "2026/27",
+        "maxRequests": 1000,
+        "reportLimit": null,
+        "asOfDate": "2026-10-26"
+      },
+      "createdAt": "2026-10-26T23:03:44.629Z",
+      "completedAt": "2026-10-26T23:54:27.174Z",
+      "attemptsSha256": "25d1bc1c81831a85de5b055962b0b07c0040baf4168452dd7d245f357ea00188",
+      "progressSha256": "a84cf9258aef465d6264758ea4f4e80649921cc517019b27233955e9d19f389c",
+      "terminal": {
+        "number": 508,
+        "url": "https://www.fussball.de/export.fontface/-/format/woff/id/k7qwuhzs/type/font",
+        "kind": "font",
+        "startedAt": "2026-10-26T23:54:26.906Z",
+        "status": "failed",
+        "error": "fetch failed"
+      }
+    },
+    {
+      "runId": "40509926697",
+      "sourceCommit": "bbc12335f5dcd6cae5761f7075de019aa23dd419",
+      "jobId": "122208831877",
+      "artifactId": "12742122262",
+      "artifactDigest": "sha256:fcaf8c6921f1b91fb9047fcf73f17e9f11f750626367ed4c14c265c4da3c0a73",
+      "artifactSize": 388723,
+      "manifestSha256": "2faa075605058f88c36b60d47ac58281a17024cb0d00e916a7ecfb3478a12a9a",
+      "codeSha256": "b117a93149f08ace9daabea5d26b46c13a1613f4581ecd187609e914349b0e35",
+      "requests": 48,
+      "options": {
+        "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+        "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+        "season": "2026/27",
+        "maxRequests": 1000,
+        "reportLimit": null,
+        "asOfDate": "2026-10-27",
+        "cardPolicy": "community-v1"
+      },
+      "createdAt": "2026-10-27T14:25:55.521Z",
+      "completedAt": "2026-10-27T14:30:37.910Z",
+      "attemptsSha256": "f66b70d96e3f6c3e42f2ffdb101180c37142dc6f0a3f49551e3b9a4bf77f207c",
+      "progressSha256": "c46d185e95b76785b4e03f5cb07d85f7dca8c878c5574ad72a99c5ac64613beb",
+      "terminal": {
+        "number": 48,
+        "url": "https://www.fussball.de/export.fontface/-/format/woff/id/jgy3dzzg/type/font",
+        "kind": "font",
+        "startedAt": "2026-10-27T14:30:37.555Z",
+        "status": "failed",
+        "error": "fetch failed"
+      }
+    },
+    {
+      "runId": "40531709101",
+      "sourceCommit": "086021b26ee5d787c8897836d3366bd2d3e55202",
+      "jobId": "122285991766",
+      "artifactId": "12746479228",
+      "artifactDigest": "sha256:5ee6451c74baf629840cec624b9edbaef53fe90d1e52c601d3d382c16d40132f",
+      "artifactSize": 905937,
+      "manifestSha256": "63345b266d4fea0c54f316313fde96ba84e15905da20c8f6aa84db8fb7179ffb",
+      "codeSha256": "b117a93149f08ace9daabea5d26b46c13a1613f4581ecd187609e914349b0e35",
+      "requests": 105,
+      "options": {
+        "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+        "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+        "season": "2026/27",
+        "maxRequests": 1000,
+        "reportLimit": null,
+        "asOfDate": "2026-10-27",
+        "cardPolicy": "community-v1"
+      },
+      "createdAt": "2026-10-27T15:31:50.273Z",
+      "completedAt": "2026-10-27T15:42:14.764Z",
+      "attemptsSha256": "af9f58502d5540660dd28cef34e8401423d716e5ba65b391fef8f7ebdd7e47eb",
+      "progressSha256": "c04abbe06d0355e2f900bff0799b8ca34658f18ab7bede17f6d30ad83362cd20",
+      "terminal": {
+        "number": 105,
+        "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/spieltag/25/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+        "kind": "round",
+        "startedAt": "2026-10-27T15:42:14.344Z",
+        "status": "failed",
+        "error": "fetch failed"
+      }
+    }
+  ]
+}
