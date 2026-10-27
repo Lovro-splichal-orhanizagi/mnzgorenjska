@@ -1,0 +1,58 @@
+{
+  "matchId": "031DS4G7P8000000VS5489BUVUR5FS5A",
+  "season": "2026/27",
+  "sourceRun": 40416972177,
+  "sourceManifestSha256": "6739d990229f4f116eda6a77f4293f8fa43d28632b8100ca61194ef30622ea6b",
+  "documents": [
+    {
+      "url": "https://www.fussball.de/spiel/fc-zuzenhausen-vfb-eppingen/-/spiel/031DS4G7P8000000VS5489BUVUR5FS5A",
+      "kind": "report",
+      "bytes": 195052,
+      "sha256": "5c546aff90d7bdd2949712652f5763355e0cc5bd733a53e449c3ba1de81d8122",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-10-26T23:17:20.711Z",
+      "file": "documents/5c546aff90d7bdd2949712652f5763355e0cc5bd733a53e449c3ba1de81d8122.html"
+    },
+    {
+      "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G7P8000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+      "kind": "lineup",
+      "bytes": 28672,
+      "sha256": "64ee24b6e8ea6a63c2beba72e044c329f39da48c21584ee094823505e979ff50",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-10-26T23:17:26.712Z",
+      "file": "documents/64ee24b6e8ea6a63c2beba72e044c329f39da48c21584ee094823505e979ff50.html"
+    }
+  ],
+  "fonts": {
+    "71sd3rc7": {
+      "file": "71sd3rc7.woff",
+      "sha256": "e0c2094f5e9b4800ebdb92ac3f3dd870e287225814605192762f654dfa783a28"
+    },
+    "q7mmnqjw": {
+      "file": "q7mmnqjw.woff",
+      "sha256": "33bd84567a76b912114207a70643a3af80e3b4adffa71d156c5ab379c68e4242"
+    },
+    "kw5w8axx": {
+      "file": "kw5w8axx.woff",
+      "sha256": "6ef1d35150504da6c635f4ec780de114f97b994c6081881019943353df3465a3"
+    },
+    "ozw35jo6": {
+      "file": "ozw35jo6.woff",
+      "sha256": "dfa62923716648fcc2209de3b7dee012b49497089e7a177674f7c210fe715117"
+    },
+    "x6xu7ow8": {
+      "file": "x6xu7ow8.woff",
+      "sha256": "14089e812818997caeb90158f88d33e3d6ac132323eec8b451a34e8dae7a8e39"
+    },
+    "lwdennuv": {
+      "file": "lwdennuv.woff",
+      "sha256": "b89984ef2ea4a4e56fd749b49223fc0c14e24fdb533f6e993f0212399a11046d"
+    },
+    "c7lxd39h": {
+      "file": "c7lxd39h.woff",
+      "sha256": "8b4031e204a352bb1e8c476f078d3fc4a5cc21400e4a0ee1732ef1a306829533"
+    }
+  }
+}

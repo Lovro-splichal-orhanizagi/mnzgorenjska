@@ -1,3 +1,4 @@
+import CakajocKrog from '../components/CakajocKrog'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { Link } from '../components/Povezava'
@@ -47,6 +48,7 @@ export default function Ekipa() {
     owner_name: string | null
     owner_id: string | null
     total_points: number | null
+    statistics_pending?: boolean | null
     competition_id: number | null
   } | null>(null)
   const [krogi, setKrogi] = useState<Krog[]>([])
@@ -56,6 +58,7 @@ export default function Ekipa() {
   const [nalaganjePostave, setNalaganjePostave] = useState(false)
   const [okvara, setOkvara] = useState<string | null>(null)
   const [kazen, setKazen] = useState(0)
+  const [statisticsPending, setStatisticsPending] = useState(false)
   const [neto, setNeto] = useState<number | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [mesto, setMesto] = useState<number | null>(null)
@@ -81,7 +84,7 @@ export default function Ekipa() {
       setNalaganje(true)
       const { data: e, error } = await supabase
         .from('fantasy_team_standings')
-        .select('team_name, owner_name, owner_id, total_points, competition_id')
+        .select('team_name, owner_name, owner_id, total_points, competition_id, statistics_pending')
         .eq('fantasy_team_id', Number(id))
         .maybeSingle()
       if (!veljavno) return
@@ -185,7 +188,7 @@ export default function Ekipa() {
         // igralcev odsteje se kazen za prestope.
         supabase
           .from('fantasy_round_points')
-          .select('points, penalty')
+          .select('points, penalty, statistics_pending')
           .eq('fantasy_team_id', Number(id))
           .eq('round_id', izbranKrog)
           .maybeSingle(),
@@ -197,7 +200,8 @@ export default function Ekipa() {
       setOkvara(error ? t('lestvice.ekipa.okvara') : null)
       setVrstice(error ? [] : ((data ?? []) as VrsticaTuje[]))
       setKazen(Number(krogTocke?.penalty ?? 0))
-      setNeto(krogTocke ? Number(krogTocke.points) : null)
+      setStatisticsPending(krogTocke?.statistics_pending === true)
+      setNeto(krogTocke?.points != null ? Number(krogTocke.points) : null)
       setNalaganjePostave(false)
     })()
     return () => {
@@ -259,10 +263,11 @@ export default function Ekipa() {
             </>
           ) : null}
           {t('lestvice.ekipa.skupaj', {
-            tocke: formatirajTocke(ekipa?.total_points),
+            tocke: ekipa?.statistics_pending && !ekipa.total_points ? '—' : formatirajTocke(ekipa?.total_points),
             beseda: tockZ(ekipa?.total_points),
           })}
-          {mesto != null && <> · {t('lestvice.mesto', { mesto })}</>}
+          {ekipa?.statistics_pending && <span className="block text-amber-200">{t('tekme.kartoni.zacasno')}</span>}
+          {!ekipa?.statistics_pending && mesto != null && <> · {t('lestvice.mesto', { mesto })}</>}
         </p>
       </header>
 
@@ -307,7 +312,7 @@ export default function Ekipa() {
             <p className="text-slate-400">{t('lestvice.ekipa.nalaganjePostave')}</p>
           ) : okvara ? (
             <p className="text-sm text-rose-300">{okvara}</p>
-          ) : vrstice.length === 0 ? (
+          ) : statisticsPending ? <CakajocKrog /> : vrstice.length === 0 ? (
             <p className="text-sm text-slate-400">
               {t('lestvice.ekipa.brezPostave')}
             </p>

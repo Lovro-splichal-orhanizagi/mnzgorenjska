@@ -10,6 +10,7 @@ import {extractFussballSeasonLinks,fussballArchiveSeedAlias} from './fussball-se
 import {GERMANY_BULK_CANDIDATES,validateGermanyCandidate} from './bulk-germany-source.mjs'
 import {loadFussballImportCapture} from './fussball-import.mjs'
 import {runFussballCaptureCli} from './zajemi-fussball-sezono.mjs'
+import {fussballCardPolicyForCandidate} from './fussball-community-policy.mjs'
 const requireProof=(ok,message)=>{if(!ok)throw Error(`fussball season pilot: ${message}`)}
 const repository='Lovro-splichal-orhanizagi/mnzgorenjska'
 function integer(value,min,max){
@@ -42,6 +43,8 @@ export function validateFussballSeasonPilot(e,{headSha}={}){
   const candidates=GERMANY_BULK_CANDIDATES.filter(c=>c.slug===e.ROLLOUT_CANDIDATE)
   requireProof(candidates.length===1,'unknown reviewed rollout candidate')
   const c=validateGermanyCandidate(candidates[0]),a=c.archives[0]
+  const cardPolicy=fussballCardPolicyForCandidate(c)
+  if(cardPolicy){current.cardPolicy=cardPolicy;archive.cardPolicy=cardPolicy}
   requireProof(c.archives.length===1&&c.source_league_code===`${current.staffel}:${current.season}`&&c.seedUrl===current.seedUrl&&a.code===`${archive.staffel}:${archive.season}`&&a.seedUrl===archive.seedUrl&&(a.observedSeedUrl??a.seedUrl)===(archive.observedSeedUrl??archive.seedUrl),'rollout candidate does not own the exact paired scopes')
  }
  return {current,archive,priorRequests,totalRequestCap,...(e.ROLLOUT_CANDIDATE?{rolloutCandidate:e.ROLLOUT_CANDIDATE}:{})}
@@ -50,7 +53,7 @@ export async function authorizeFussballSeasonArchive(directory,e,{headSha,collec
  const plan=validateFussballSeasonPilot(e,{headSha});requireProof(plan,'archive plan required')
  const verified=await verifyFussballDirectory(directory,{collectFn})
  const m=JSON.parse(readFileSync(join(directory,'manifest.json')))
- requireProof(m.version===1&&m.options.reportLimit===null&&Object.entries(plan.current).every(([k,v])=>m.options[k]===v),'fresh full current capture scope/budget differs')
+ requireProof(m.version===1&&m.options.reportLimit===null&&m.options.cardPolicy===plan.current.cardPolicy&&Object.entries(plan.current).every(([k,v])=>m.options[k]===v),'fresh full current capture scope/budget differs')
  const seed=m.documents.find(d=>d.kind==='round'&&d.url===plan.current.seedUrl)
  requireProof(seed,'current original seed document required')
  // The offline verifier checked these exact content-addressed bytes. Discovery
@@ -66,17 +69,23 @@ export async function authorizeFussballRollout({currentDirectory,archiveDirector
  requireProof(plan?.rolloutCandidate&&mainSha===e.EXPECTED_SHA,'explicit reviewed rollout selection and unchanged main required')
  for(const [directory,scope,current,version]of [[currentDirectory,plan.current,true,1],[archiveDirectory,plan.archive,false,3]]){
   const m=readManifest(directory)
-  requireProof(m.version===version&&m.success===true&&m.options?.reportLimit===null&&['seedUrl','staffel','season'].every(k=>m.options[k]===scope[k]),'handoff capture version/scope/full intent differs')
-  const batch=await loadCapture(directory,{staffel:scope.staffel,season:scope.season,current,now})
-  requireProof(batch.provider==='fussball-public'&&batch.staffel===scope.staffel&&batch.season===scope.season&&batch.activationEligible===false&&batch.reports?.length>0&&batch.schedule?.length>0&&batch.identities?.length>0,'complete native source batch required before dispatch')
+  requireProof(m.version===version&&m.success===true&&m.options?.reportLimit===null&&['seedUrl','staffel','season'].every(k=>m.options[k]===scope[k])&&m.options.cardPolicy===scope.cardPolicy,'handoff capture version/scope/full intent differs')
+  const batch=await loadCapture(directory,{staffel:scope.staffel,season:scope.season,current,now,...(scope.cardPolicy?{cardPolicy:scope.cardPolicy}:{})})
+  requireProof(batch.provider==='fussball-public'&&batch.staffel===scope.staffel&&batch.season===scope.season&&batch.activationEligible===false&&Array.isArray(batch.reports)&&batch.reports.length+(batch.pendingReports?.length??0)>0&&batch.cardPolicy===scope.cardPolicy&&(!scope.cardPolicy||Array.isArray(batch.pendingReports)&&batch.pendingReports.every(r=>r.statisticsPending===true&&r.cardEnvelope&&!Object.hasOwn(r,'nastopi')&&!Object.hasOwn(r.z??{},'goli')))&&batch.schedule?.length>0&&batch.identities?.length>0,'complete native source batch required before dispatch')
  }
  return ['workflow','run','uvoz-pl-de-paketa.yml','--repo',repository,'--ref','main','-f','country=DE','-f','expected_sha='+e.EXPECTED_SHA,'-f','audit_run='+e.GITHUB_RUN_ID,'-f','candidate='+plan.rolloutCandidate,'-f','max_requests=1']
 }
+export async function captureFussballSeasonCurrent(directory,e,{headSha,captureDirectory=captureFussballDirectory}={}){
+ const plan=validateFussballSeasonPilot(e,{headSha})
+ const options={seedUrl:e.SEED_URL,staffel:e.STAFFEL,season:e.SEASON,maxRequests:integer(e.MAX_REQUESTS,1,3000),reportLimit:e.REPORTS==='all'?null:integer(e.REPORTS,0,3000),...(plan?.current.cardPolicy?{cardPolicy:plan.current.cardPolicy}:{})}
+ return captureDirectory({directory,options,onProgress:p=>console.log(JSON.stringify(p))})
+}
 async function main(args){
  const [mode,directory]=args
- requireProof((mode==='validate'&&args.length===1)||(['authorize','capture-archive'].includes(mode)&&args.length===2)||(mode==='handoff'&&args.length===3),'use validate, authorize DIRECTORY, capture-archive DIRECTORY or handoff CURRENT ARCHIVE')
+ requireProof((mode==='validate'&&args.length===1)||(['authorize','capture-archive','capture-current'].includes(mode)&&args.length===2)||(mode==='handoff'&&args.length===3),'use validate, capture-current DIRECTORY, authorize DIRECTORY, capture-archive DIRECTORY or handoff CURRENT ARCHIVE')
  const e=process.env,headSha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()
  if(mode==='validate'){console.log(JSON.stringify(validateFussballSeasonPilot(e,{headSha})));return}
+ if(mode==='capture-current'){const m=await captureFussballSeasonCurrent(resolve(directory),e,{headSha});console.log(JSON.stringify({success:m.success,requests:m.snapshot.requests,activationEligible:false}));return}
  if(mode==='handoff'){
   const remoteMain=()=>execFileSync('git',['ls-remote','--exit-code','origin','refs/heads/main'],{encoding:'utf8',timeout:30000}).split(/\s/)[0]
   const dispatch=await authorizeFussballRollout({currentDirectory:resolve(directory),archiveDirectory:resolve(args[2]),e,headSha,mainSha:remoteMain()})

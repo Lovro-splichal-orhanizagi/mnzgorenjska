@@ -2,6 +2,26 @@
 import type { Prevod } from '../jedro.ts'
 
 export const tekme: NonNullable<Prevod['tekme']> = {
+  // Card voting currently uses the English fallback outside SL/DE/EN.
+  kartoni: {
+    preveriPrejemnika: "Please check the card recipient. You can change your vote.",
+    krogCaka: "Round points await confirmation of red card recipients. Points, automatic substitutions and round rank are not yet available.",
+    zacasno: "Provisional total · round statistics pending",
+    naslov: "Cards · community attribution",
+    uvod: "Card type, time and team come from the official report. The community identifies the missing recipient from this match’s lineup. Threshold: {prag}. You can change your vote until confirmation; league insiders’ votes count more.",
+    yellow: "Yellow card",
+    red: "Red card",
+    second_yellow: "Second yellow card",
+    pending: "Recipient awaiting votes",
+    queued: "Choice awaiting verification",
+    confirmed: "Recipient confirmed",
+    statistikaCaka: "Player statistics await confirmation of red card recipients. Minutes, goals and points are not yet available. The official result is retained.",
+    glasovi: "Weighted votes: {n} / {prag}",
+    prejemnikNedosegljiv: "The confirmed recipient’s name is unavailable.",
+    brezKandidatov: "Public candidates from this match’s lineup are unavailable.",
+    napaka: "Voting could not be loaded or saved. Check your login and permission to vote, then try again.",
+    ponovi: "Try again",
+  },
   statistika: {
     brezStrelcev: "Niciun marcator verificat.",
     nedosegljivo: "Statisticile jucătorilor nu sunt disponibile pentru acest meci istoric. Rezultatul oficial este păstrat.",

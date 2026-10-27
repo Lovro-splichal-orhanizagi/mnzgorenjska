@@ -572,3 +572,20 @@ test('PL/DE bulk rollout is visible to both loops and shares only its selected c
  for(const country of ['PL','DE'])assert.equal((await coordinate(['--drzava',country],{[wf]:[run('Bulk leagues ALL')]})).code,1)
  for(const file of ['zdruzi-klube.yml','tedensko-cene.yml'])assert.match(readFileSync(new URL(`../.github/workflows/${file}`,import.meta.url),'utf8'),/for wf in[^\n]*uvoz-pl-de-paketa\.yml/)
 })
+
+test('retained FUSSBALL replay writes cross only DE, while unknown scopes stay conservative',async()=>{
+ const workflow='replay-fussball-cards.yml',title='FUSSBALL card replay DE all'
+ for(const args of [['--drzava','DE'],['--liga','de-regionalliga-nord'],['--popravek']])assert.equal((await coordinate(args,{[workflow]:[run(title)]})).code,1)
+ for(const country of ['SI','PL','HU','GR'])assert.equal((await coordinate(['--drzava',country],{[workflow]:[run(title)]})).code,0)
+ assert.equal((await coordinate(['--tece'],{[workflow]:[run(title)]})).code,3)
+ assert.equal((await coordinate(['--drzava','PL'],{[workflow]:[run('Unscoped replay writer')]})).code,1)
+ for(const patch of [{databaseId:30},{databaseId:20},{status:'completed'}])assert.equal((await coordinate(['--drzava','DE'],{[workflow]:[run(title,patch)]})).code,0)
+ assert.equal((await coordinate(['--drzava','DE'],{[workflow]:[run(title,{status:'queued'})]})).code,1)
+})
+test('global maintenance enumerates the retained replay writer and hourly replay uses native DE coordination without source reads',()=>{
+ for(const file of ['zdruzi-klube.yml','tedensko-cene.yml'])assert.match(readFileSync(new URL(`../.github/workflows/${file}`,import.meta.url),'utf8'),/for wf in[^\n]*replay-fussball-cards\.yml/)
+ const workflow=readFileSync(new URL('../.github/workflows/replay-fussball-cards.yml',import.meta.url),'utf8')
+ assert.match(workflow,/cron: '23 \* \* \* \*'/);assert.match(workflow,/cakaj-na-uvoze\.mjs --drzava DE/);assert.match(workflow,/replay-fussball-cards\.mjs run/);assert.match(workflow,/github\.run_attempt == 1/)
+ assert.doesNotMatch(workflow,/upload-artifact|zajemi-fussball|bulk-source-coordination|SLFF_FUSSBALL_CAPTURE/)
+ assert.match(readFileSync(new URL('../.github/workflows/preveri-podatke.yml',import.meta.url),'utf8'),/workflows:.*Replay retained FUSSBALL cards/)
+})

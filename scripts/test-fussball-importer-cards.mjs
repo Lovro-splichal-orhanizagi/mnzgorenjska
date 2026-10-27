@@ -6,7 +6,8 @@ import {runInNewContext} from 'node:vm'
 import {razberiFantasyZapisnik} from './viri/fussball-statistika.mjs'
 import {buildFussballImportBatch,fussballPlayerKey} from './fussball-import.mjs'
 import {createFussballPublicSource} from './viri/fussball-public.mjs'
-import {assertHistoricalReportImportable} from './lib/historical-statistics-import.mjs'
+import {assertHistoricalReportImportable,skipIncompleteArchiveReport} from './lib/historical-statistics-import.mjs'
+import {isFussballCommunityCompetition} from './fussball-community-policy.mjs'
 import {completedReportIds} from './missing-report-import.mjs'
 import {zaprtje} from './odtis-kode.mjs'
 import {dodajStrelceSKlopi} from './zapisnik.mjs'
@@ -67,7 +68,7 @@ for(const [player,minuteOff,minutes,teamMinutes]of [['Tobias Baumann',85,85,985]
  const start=source.indexOf('// --- seznam zapisnikov'),end=source.indexOf('// --- preračun točk po krogih')
  assert.ok(start>=0&&end>start)
  await runInNewContext(`(async()=>{${source.slice(start,end)};if(napak)throw Error('import failed')})()`,{
-  samoManjkajoce:false,completedReportIds,assertHistoricalReportImportable,db,tekmovanje:competition,vir,liga:competition.source_league_code,
+  samoManjkajoce:false,completedReportIds,assertHistoricalReportImportable,skipIncompleteArchiveReport,isFussballCommunityCompetition,db,tekmovanje:competition,vir,liga:competition.source_league_code,
   prenesi(){assert.fail('no source HTTP in capture-bound import')},arg:()=>null,samoZapisnik:null,preberiPosamezniZapisnik:null,omeji:null,tekocaSezona:true,virIme:null,unattributedYellowEvents,
   console:{log(){},warn(){},error(...args){throw Error(args.join(' '))}},process:{stdout:{write(){}}},Date,Set,Map,createHash,readdirSync,zaprtje,dodajStrelceSKlopi,MAPA:'memory',
   readFileSync:(path,...args)=>String(path)==='memory/odtisi-de-test-card-import.json'?fingerprint:readFileSync(path,...args),
@@ -83,4 +84,15 @@ for(const [player,minuteOff,minutes,teamMinutes]of [['Tobias Baumann',85,85,985]
  assert.equal(appearanceRows.filter(r=>r.team_id===201).reduce((n,r)=>n+r.minutes_played,0),teamMinutes)
  assert.equal(appearanceRows.length,30);assert.ok(row.imported_at)
  if(player==='Tobias Schneider')assert.ok(stored.red_card_minute>stored.minute_off,'bench dismissal clock must not be replaced by substitution time')
+})
+
+test('ordinary import fingerprint invalidates changed raw card revisions even when pending normalized data is identical',()=>{
+ const source=readFileSync(new URL('./uvoz-zapisnikov.mjs',import.meta.url),'utf8')
+ const start=source.indexOf('const odtisZapisnika ='),end=source.indexOf('let odtisi =',start)
+ assert.ok(start>=0&&end>start)
+ const fingerprint=runInNewContext(`(()=>{${source.slice(start,end)};return odtisZapisnika})()`,{createHash,odtisKode:'code',isFussballCommunityCompetition,tekmovanje:{...competition,source_policy:'fussball-community-cards-v1'}})
+ const pending={nepopoln:true,opozorila:['SLFF_FUSSBALL_CARDS_PENDING_V1'],domaci:{ime:'Home'},gostje:{ime:'Away'}}
+ assert.notEqual(fingerprint(pending,{revisionSha256:'a'.repeat(64)}),fingerprint(pending,{revisionSha256:'b'.repeat(64)}))
+ assert.equal(fingerprint(pending,{revisionSha256:'a'.repeat(64)}),fingerprint(structuredClone(pending),{revisionSha256:'a'.repeat(64)}))
+ assert.throws(()=>fingerprint(pending),/revision required/)
 })

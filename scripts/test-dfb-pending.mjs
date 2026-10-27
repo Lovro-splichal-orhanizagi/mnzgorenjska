@@ -66,7 +66,8 @@ test('actual parser quarantines bad/good/bad/good and rejects wrong-header or qu
  await assert.rejects(()=>vir.zapisniki(competition.source_league_code,f.read,{zberiNapake:true,onRejected:async()=>{throw Error('DB down')}}),/DB down/)
 })
 import {completedReportIds} from './missing-report-import.mjs'
-import {assertHistoricalReportImportable} from './lib/historical-statistics-import.mjs'
+import {assertHistoricalReportImportable,skipIncompleteArchiveReport} from './lib/historical-statistics-import.mjs'
+import {isFussballCommunityCompetition} from './fussball-community-policy.mjs'
 import {unattributedYellowEvents} from '../src/lib/nepripisaniRumeni.mjs'
 import {zaprtje} from './odtis-kode.mjs'
 import {dodajStrelceSKlopi} from './zapisnik.mjs'
@@ -98,7 +99,7 @@ test('actual importer preserves rejected old rows, imports good siblings, and la
  const script=readFileSync(new URL('./uvoz-zapisnikov.mjs',import.meta.url),'utf8'),body=script.slice(script.indexOf('// --- seznam zapisnikov'),script.indexOf('// --- preračun točk po krogih'))
  let clock=now
  const run=()=>runInNewContext(`(async()=>{${body};return {napak,pending:typeof dfbPendingContext==='undefined'?0:dfbPendingContext?.remaining.size??0}})()`,{
-  samoManjkajoce:false,completedReportIds,assertHistoricalReportImportable,db,tekmovanje:competition,vir,liga:competition.source_league_code,prenesi:async(url,...rest)=>{const html=await f.read(url,...rest);rawByUrl.set(url,Buffer.from(html));return html},arg:k=>k==='dfb-pending'?true:k==='sveze'?'21':null,samoZapisnik:null,preberiPosamezniZapisnik:null,omeji:null,tekocaSezona:true,virIme:null,unattributedYellowEvents,createDfbPendingContext:o=>api.createDfbPendingContext({...o,now:()=>clock}),dfbRawResponses:rawByUrl,
+  samoManjkajoce:false,completedReportIds,assertHistoricalReportImportable,skipIncompleteArchiveReport,isFussballCommunityCompetition,db,tekmovanje:competition,vir,liga:competition.source_league_code,prenesi:async(url,...rest)=>{const html=await f.read(url,...rest);rawByUrl.set(url,Buffer.from(html));return html},arg:k=>k==='dfb-pending'?true:k==='sveze'?'21':null,samoZapisnik:null,preberiPosamezniZapisnik:null,omeji:null,tekocaSezona:true,virIme:null,unattributedYellowEvents,createDfbPendingContext:o=>api.createDfbPendingContext({...o,now:()=>clock}),dfbRawResponses:rawByUrl,
   console:{log(){},warn(){},error(){}},process:{stdout:{write(){}}},Date,Set,Map,createHash,readdirSync,zaprtje,dodajStrelceSKlopi,MAPA:directory,
   readFileSync:(path,...args)=>String(path).endsWith('/odtisi-'+competition.slug+'.json')?fingerprint:readFileSync(path,...args),writeFileSync:(path,data)=>{if(String(path).endsWith('/odtisi-'+competition.slug+'.json'))fingerprint=data;else throw Error('unexpected write '+path)},
   vseVrstice:async build=>{const r=await build(0,999);if(r.error)throw Error(r.error.message);return r.data},klubId:async name=>idFor(name),krogId:async()=>5,igralecId:async(team,name)=>idFor(`${team}|${name}`),

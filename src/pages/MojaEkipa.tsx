@@ -1,3 +1,4 @@
+import CakajocKrog from '../components/CakajocKrog'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -260,6 +261,7 @@ export default function MojaEkipa() {
   const [naslednjiKrog, setNaslednjiKrog] = useState<KrogRok | null>(null)
   const [zadnjiKrog, setZadnjiKrog] = useState<KrogRok | null>(null)
   // player_id -> tocke zadnjega kroga
+  const [zadnjiKrogCaka, setZadnjiKrogCaka] = useState(false)
   const [tockeZadnjiKrog, setTockeZadnjiKrog] = useState<Record<string, number>>(
     {},
   )
@@ -630,6 +632,9 @@ export default function MojaEkipa() {
 
       // Točke zadnjega odigranega kroga za VSE igralce lige — trg jih kaže
       // ob vsakem imenu in "Kaj-če" jih rabi tudi za pravkar dodane.
+      const { data: pendingLast } = zadnji ? await supabase.rpc('fussball_round_has_pending', { p_round_id: zadnji.id }) : { data: false }
+      if (!veljavno) return
+      setZadnjiKrogCaka(pendingLast === true)
       const tocke = zadnji
         ? await vseVrstice((od, do_) =>
             supabase
@@ -684,10 +689,11 @@ export default function MojaEkipa() {
           // Točke krogov po samodejnih menjavah in odbitkih — iste kot na lestvici.
           supabase
             .from('fantasy_round_points')
-            .select('round_id, points')
+            .select('round_id, points, statistics_pending')
             .eq('fantasy_team_id', moja.id),
         ])
         const nabor = poVrstiKlopi((podatki(rNabor) ?? []) as VrsticaKadra[])
+        const pendingRounds = new Set((podatki(rSkupno) ?? []).filter(r => r.statistics_pending).map(r => r.round_id))
         const skupno = new Map(
           (podatki(rSkupno) ?? []).map((r) => [r.round_id, r.points]),
         )
@@ -733,6 +739,7 @@ export default function MojaEkipa() {
             round_id: key,
             krog: p.rounds,
             skupaj: skupno.get(key) ?? null,
+            statistics_pending: pendingRounds.has(key),
             igralci: [],
           }
           const det = igralecPo[p.player_id]
@@ -835,8 +842,9 @@ export default function MojaEkipa() {
   // točke pa mu šteje prava, trenutna pozicija.
   // Plakat kroga v zgodovini: podatki se preberejo šele, ko je krog izbran.
   const ekipaId: number | null = ekipa?.id ?? null
+  const zgodovinaCaka = posnetkiPoKrogih.some(p => p.round_id === zgodovinaKrogId && p.statistics_pending)
   useEffect(() => {
-    if (!ekipaId || !zgodovinaKrogId) {
+    if (!ekipaId || !zgodovinaKrogId || zgodovinaCaka) {
       setDelitevKroga(null)
       return
     }
@@ -871,7 +879,7 @@ export default function MojaEkipa() {
     return () => {
       veljavno = false
     }
-  }, [ekipaId, zgodovinaKrogId])
+  }, [ekipaId, zgodovinaKrogId, zgodovinaCaka])
 
   // Kateri klubi igrajo v naslednjem krogu — kdor nima tekme, ne dobi točk.
   const naslednjiKrogId = naslednjiKrog?.id ?? null
@@ -2154,7 +2162,8 @@ export default function MojaEkipa() {
                   krogu. NI zgodovinski rezultat te ekipe — ta je na lestvici in
                   v posnetku postave. Skrito, dokler fantasy točkovanje v ligi še
                   ni začelo (mladinci: prvi krog se ne šteje). */}
-              {zadnjiKrog &&
+              {zadnjiKrogCaka && <CakajocKrog />}
+              {zadnjiKrog && !zadnjiKrogCaka &&
                 Object.keys(tockeZadnjiKrog).length > 0 &&
                 (!tekmovanje?.prvi_fantasy_krog ||
                   Number(zadnjiKrog.number ?? 0) >= tekmovanje.prvi_fantasy_krog) && (
@@ -2385,6 +2394,7 @@ export default function MojaEkipa() {
                   {(() => {
                     const izbrani = posnetkiPoKrogih.find((p) => p.round_id === zgodovinaKrogId)
                     if (!izbrani) return null
+                    if (izbrani.statistics_pending) return <CakajocKrog />
                     const starterji = izbrani.igralci.filter((i: any) => i.is_starter)
                     // Točke kroga iz lestvice: s samodejnimi menjavami, trakom
                     // namestnika in odbitkom za prestope.

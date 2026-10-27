@@ -19,6 +19,7 @@ export interface VrsticaKroga {
   team_name?: string | null
   owner_name?: string | null
   owner_id?: string | null
+  statistics_pending?: boolean | null
   points?: number | null
 }
 
@@ -27,6 +28,7 @@ export interface SkupekEkipe {
   team_name: string | null
   owner_name: string | null
   owner_id?: string | null
+  statistics_pending?: boolean
   points: number
   krogov: number
 }
@@ -52,8 +54,11 @@ export function sestejOdKroga(
         points: 0,
         krogov: 0,
       }
-    prej.points += Number(v.points ?? 0)
-    prej.krogov += 1
+    if (v.statistics_pending) prej.statistics_pending = true
+    if (!v.statistics_pending) {
+      prej.points += Number(v.points ?? 0)
+      prej.krogov += 1
+    }
     skupine.set(v.fantasy_team_id, prej)
   }
   return [...skupine.values()].sort((a, b) => b.points - a.points)

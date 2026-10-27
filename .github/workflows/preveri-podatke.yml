@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
   # Po uvozu zapisnikov: ce je uvoz kaj pokvaril, naj se izve takoj.
   workflow_run:
-    workflows: ['Uvoz zapisnikov', 'Uvoz lige (rocno)']
+    workflows: ['Uvoz zapisnikov', 'Uvoz lige (rocno)', 'Replay retained FUSSBALL cards']
     types: [completed]
 
 permissions:

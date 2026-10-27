@@ -1,3 +1,4 @@
+import { StatistikaCakaKartone } from '../components/KartoniZaGlasovanje'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNastavitev } from '../lib/nastavitve'
 import { imeZveze } from '../components/VirPodatkov'
@@ -223,7 +224,7 @@ export default function Glasovanje() {
   )
 
   async function glasuj(golId: number, playerId: number | null) {
-    if (!session || tekma?.statistics_status === 'unavailable_historical') return
+    if (!session || tekma?.statistics_status === 'unavailable_historical' || tekma?.statistics_status === 'pending_cards') return
     setNapaka(null)
 
     const { error } = await supabase.from('assist_votes').upsert(
@@ -410,7 +411,9 @@ export default function Glasovanje() {
                     ? '—'
                     : `${tk.home_goals}:${tk.away_goals}`}
                 </span>
-                {tk.statistics_status === 'unavailable_historical' ? (
+                {tk.statistics_status === 'pending_cards' ? (
+                  <span className="text-xs text-amber-200">{t('tekme.kartoni.pending')}</span>
+                ) : tk.statistics_status === 'unavailable_historical' ? (
                   <span className="text-xs text-amber-200">{t('tekme.statistika.kratko')}</span>
                 ) : Number(tk.brez_asistence ?? 0) === 0 ? (
                   <span className="znacka bg-gnl-400/20 text-gnl-200" aria-label={t('tekme.glasovanje.vsePotrjeno')}>✓</span>
@@ -453,7 +456,7 @@ export default function Glasovanje() {
         </div>
       )}
 
-      {tekma?.statistics_status === 'unavailable_historical' ? <NedosegljivaStatistika resultKnown={tekma.home_goals != null && tekma.away_goals != null} /> : goli.length === 0 ? (
+      {tekma?.statistics_status === 'pending_cards' ? <StatistikaCakaKartone /> : tekma?.statistics_status === 'unavailable_historical' ? <NedosegljivaStatistika resultKnown={tekma.home_goals != null && tekma.away_goals != null} /> : goli.length === 0 ? (
         <p className="text-sm text-slate-400">{t('tekme.glasovanje.niGolov')}</p>
       ) : (
         <>

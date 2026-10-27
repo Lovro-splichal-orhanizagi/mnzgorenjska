@@ -9,6 +9,22 @@
   berejo ali spreminjajo niti javne vloge niti servisna vloga neposredno.
   Nepripisani navadni rumeni imajo javno dokazno oznako z virom `fussball`;
   odbitek se ne pripiše ugibanemu igralcu.
+- `private_fussball.card_*` → zasebni izvirniki, nespremenljive revizije,
+  javna zgodovinska postava, glasovi in potrjeni prejemniki kartonov.
+  `fussball-community-cards-v1` se namesti servisno po ligi; privzeto je
+  izključena. Javna RPC `match_fussball_card_votes` in `vote_fussball_card`
+  ne razkrivata izvirnikov, profilnih šifer vira ali identitet glasovalcev.
+  Običajen glas šteje enkrat, poznavalec iste lige doseže prag (privzeto 3).
+  Prag pripravi predlog, ki je do uspešnega strogega ponavljanja še popravljiv.
+  Nepripisan rdeči in še neuporabljena zamenjana revizija imata
+  `matches.statistics_status='pending_cards'`: uradni izid ostane,
+  individualni podatki pa niso ničle. Fantasy krog ima NULL točke in
+  `statistics_pending`, ne shranjuje navideznih samodejnih menjav in ne
+  pošilja dokončnih rezultatov. Servisni `apply_fussball_card_report`
+  pod ključavnico preveri revizijo in glasove ter skupaj zamenja statistiko,
+  ohrani potrjene asistence, potrdi prejemnike in preračuna točke. Novi
+  zajem ne sme prepisati potrjenih odločitev iste revizije. Celotna pravila
+  vira, vklopa in delavca so v `docs/viri/nemcija.md`.
 - **Soimenjak pri drugem klubu ni samodejno prestop.** Vir brez šifre igralca
   (stari CMS MNZ, NZS, fsb, fss, fssid, ffm) pozna le ime in klub; uvoz je
   istoimenskega igralca drugega kluba imel za prestop tudi, ko sta igrala

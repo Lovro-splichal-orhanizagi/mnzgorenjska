@@ -55,6 +55,46 @@
     "competitions"
   ],
   [
+    "private_fussball.card_admissions",
+    "competition_id",
+    "competitions"
+  ],
+  [
+    "private_fussball.card_events",
+    "confirmed_player_id",
+    "players"
+  ],
+  [
+    "private_fussball.card_events",
+    "official_player_id",
+    "players"
+  ],
+  [
+    "private_fussball.card_heads",
+    "match_id",
+    "matches"
+  ],
+  [
+    "private_fussball.card_policies",
+    "competition_id",
+    "competitions"
+  ],
+  [
+    "private_fussball.card_reports",
+    "competition_id",
+    "competitions"
+  ],
+  [
+    "private_fussball.card_reports",
+    "match_id",
+    "matches"
+  ],
+  [
+    "private_fussball.card_votes",
+    "player_id",
+    "players"
+  ],
+  [
     "private_historical_statistics.installed_policies",
     "competition_id",
     "competitions"

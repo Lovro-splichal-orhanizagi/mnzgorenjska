@@ -18,7 +18,7 @@ import { readFileSync, existsSync, mkdirSync, writeFileSync, readdirSync } from 
 import { createHash } from 'node:crypto'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
-import {loadHistoricalStatisticsImportContext,assertHistoricalReportImportable} from './lib/historical-statistics-import.mjs'
+import {loadHistoricalStatisticsImportContext,assertHistoricalReportImportable,skipIncompleteArchiveReport} from './lib/historical-statistics-import.mjs'
 import { zaprtje } from './odtis-kode.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { vseVrstice } from './strani.mjs'
@@ -31,6 +31,8 @@ import { unattributedYellowEvents } from '../src/lib/nepripisaniRumeni.mjs'
 import { prestopSkladen, posvojiBrezSifre } from './prestop.mjs'
 import { najdiKlubskega } from './klubski-igralci.mjs'
 import {requireDfbPendingScope,createDfbPendingContext} from './dfb-pending.mjs'
+import {isFussballCommunityCompetition} from './fussball-community-policy.mjs'
+import {stageAndReplayFussballCardReport} from './fussball-community-runtime.mjs'
 
 // Vir je zavrnil (jalgpall: 403, 429, izziv): izhod 4, da nočna zanka države
 // ne bere naprej (uvoz-zapisnikov.yml). Izhod 5: vir je nedosegljiv (HTTP 5xx,
@@ -791,6 +793,7 @@ const odtisKode = (() => {
   const datoteke = [
     'scripts/uvoz-zapisnikov.mjs',
     ...zaprtje('scripts/lib/historical-statistics-import.mjs'),
+    ...(isFussballCommunityCompetition(tekmovanje) ? zaprtje('scripts/fussball-community-runtime.mjs') : []),
     ...(vir.historicalSourceFiles??[]),
     'src/lib/nepripisaniRumeni.mjs',
     'scripts/prestop.mjs',
@@ -804,7 +807,14 @@ const odtisKode = (() => {
   for (const f of datoteke) h.update(f).update(readFileSync(f))
   return h.digest('hex').slice(0, 16)
 })()
-const odtisZapisnika = (z) => createHash('sha256').update(odtisKode).update(JSON.stringify(z)).digest('hex').slice(0, 16)
+const odtisZapisnika = (z,envelope) => {
+  const h=createHash('sha256').update(odtisKode).update(JSON.stringify(z))
+  if(isFussballCommunityCompetition(tekmovanje)){
+    if(!/^[a-f0-9]{64}$/.test(envelope?.revisionSha256??''))throw Error('community card import: source revision required for cache fingerprint')
+    h.update(envelope.revisionSha256)
+  }
+  return h.digest('hex').slice(0,16)
+}
 let odtisi = {}
 try {
   odtisi = JSON.parse(readFileSync(ODTISI, 'utf8'))
@@ -824,12 +834,13 @@ if ((svezeDni != null || samoZapisnik) && zapisniki.length) {
       if (!dfbPendingContext?.remaining.has(String(m.zapisnik_id))&&(m.imported_at || jeNepopolna(m.import_warnings))) uvozene.add(String(m.zapisnik_id))
   }
   const prej = zapisniki.length
-  zapisniki = zapisniki.filter((x) => !(uvozene.has(String(x.id)) && odtisi[x.id] === odtisZapisnika(x.z)))
+  zapisniki = zapisniki.filter((x) => !(uvozene.has(String(x.id)) && odtisi[x.id] === odtisZapisnika(x.z,x.cardEnvelope)))
   console.log(`Nespremenjenih (preskočenih): ${prej - zapisniki.length}; za uvoz: ${zapisniki.length}`)
 }
 const dotaknjeniKrogi = new Set()
 
 let uvozenih = 0
+let skupnostnihCakajocih = 0
 // Nepopolni zapisniki (vir jih označi z `z.nepopoln`, zdaj le frf): ekipa brez
 // postave ali le z igralci, ki imajo dogodek. Tekoča sezona: izid in znane
 // nastope zapišemo, `imported_at` ostane prazen — nočni uvoz tekmo bere znova,
@@ -847,13 +858,14 @@ let napak = 0
 // se izgubila med vrsticami napredka.
 const vsaOpozorila = []
 
-for (const { id, z, url } of zapisniki) {
+for (const report of zapisniki) {
+  const {id,z,url,cardEnvelope}=report
   if (!z.sezona || z.krog == null) {
     console.log(`  ${id}: manjka sezona ali krog — preskočeno`)
     preskocenih++
     continue
   }
-  if (z.nepopoln && !tekocaSezona) {
+  if (skipIncompleteArchiveReport({competition:tekmovanje,report,currentSeason:tekocaSezona})) {
     nepopolnihArhiv++
     preskocenih++
     continue
@@ -864,6 +876,37 @@ for (const { id, z, url } of zapisniki) {
     const gostjeId = await klubId(z.gostje.ime)
     const rId = await krogId(z.sezona, z.krog, z.datum)
     dotaknjeniKrogi.add(rId)
+
+    if(isFussballCommunityCompetition(tekmovanje)){
+      // Every opted-in write, including a plain yellow baseline, goes through
+      // retained-source replay and one atomic native application. Generic
+      // upserts must not erase an already-confirmed recipient or old assists.
+      if(!cardEnvelope)throw Error('community card import: original envelope missing')
+      const {data:existing,error:lookupError}=await db.from('matches').select('id,zapisnik_id,source_url')
+        .eq('round_id',rId).eq('home_team_id',domaciId).eq('away_team_id',gostjeId).maybeSingle()
+      if(lookupError)throw Error(lookupError.message)
+      let matchId=existing?.id
+      if(existing&&((existing.zapisnik_id&&existing.zapisnik_id!==id)||(existing.source_url&&existing.source_url!==url)))throw Error('community card import: existing fixture owns another report')
+      if(!matchId){
+        const {data:created,error:createError}=await db.from('matches').insert({round_id:rId,home_team_id:domaciId,away_team_id:gostjeId,played_on:z.datum,home_goals:z.rezultat.domaci,away_goals:z.rezultat.gostje,zapisnik_id:id,source_url:url,imported_at:null,import_warnings:[]}).select('id').single()
+        if(createError)throw Error(createError.message)
+        matchId=created?.id
+      }
+      if(!Number.isSafeInteger(matchId)||matchId<=0)throw Error('community card import: exact native match missing')
+      const candidates=[],used=new Set(),context={id:matchId,sezona:z.sezona,krog:z.krog,datum:z.datum}
+      for(const p of cardEnvelope.roster){
+        const teamId=p.side===0?domaciId:gostjeId
+        const playerId=await igralecId(teamId,p.name,{vratar:p.goalkeeper,st:p.shirt,regSt:p.regSt,zasedeni:used,pozicija:p.goalkeeper?'GK':null,opozorila:z.opozorila,datum:z.datum,tekma:context})
+        if(used.has(playerId))throw Error('community card import: historical roster identity collision')
+        used.add(playerId);candidates.push({source_id:p.sourceId,player_id:playerId,team_id:teamId})
+      }
+      const outcome=await stageAndReplayFussballCardReport({db,competitionId:tekmovanje.id,code:liga,matchId,envelope:cardEnvelope,candidates})
+      if(outcome.status==='APPLIED')uvozenih++;else preskocenih++
+      if(['PENDING','HOLD'].includes(outcome.status))skupnostnihCakajocih++
+      noviOdtisi[id]=odtisZapisnika(z,cardEnvelope)
+      console.log(`  ${id}: community cards ${outcome.status}`)
+      continue
+    }
 
     // tekma
     // onConflict cilja `(round_id, home_team_id, away_team_id)` — isti nabor
@@ -1171,10 +1214,12 @@ for (const { id, z, url } of zapisniki) {
   } catch (e) {
     console.error(`\n  ${id}: napaka — ${e.message}`)
     napak++
+    if(isFussballCommunityCompetition(tekmovanje))break
   }
 }
 
 console.log(`\n\nUvoženih tekem: ${uvozenih}, preskočenih: ${preskocenih}, napak: ${napak}`)
+if(skupnostnihCakajocih)console.warn(`FUSSBALL_CARDS_PENDING: ${skupnostnihCakajocih} source-bound reports await recipient votes; no guessed individual statistics.`)
 if (nepopolnih)
   console.warn(`  OPOZORILO: ${nepopolnih} nepopolnih zapisnikov (izid in znani nastopi zapisani, tekma čaka na dopolnitev)`)
 if (nepopolnihArhiv) console.warn(`  OPOZORILO: ${nepopolnihArhiv} nepopolnih zapisnikov arhiva preskočenih`)
@@ -1204,6 +1249,10 @@ if (process.argv.includes('--samo-dotaknjene')) {
   const danes = new Date().toISOString().slice(0, 10)
   krogi = krogi.filter((k) => dotaknjeniKrogi.has(k.id) || (k.played_on && k.played_on >= meja && k.played_on <= danes))
 }
+// Registered community reports recompute their round inside the same native
+// transaction as registration/application. A generic follow-up writer must
+// neither edit guarded appearances nor turn pending fantasy totals into zero.
+if(isFussballCommunityCompetition(tekmovanje))krogi=[]
 for (const k of krogi ?? []) {
   // Zapisnik obrambe enajstmetrovke ne beleži, zgrešeno pa. Zgrešeno pripiše
   // vratarju nasprotnikov — PO vpisu nastopov, ker jih uvoz tekme zamenja in

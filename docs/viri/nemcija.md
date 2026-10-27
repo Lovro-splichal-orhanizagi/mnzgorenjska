@@ -962,3 +962,59 @@ arhivsko izbrano sezono in njen obrazec z obstoječim strogim
 `inspectFussballArchivePage`. Manjkajoč ali spremenjen dokaz oziroma simbolna
 povezava se zavrne. Običajna identiteta strani brez tega dokaza ostane stroga;
 pregled glave še ne dokazuje kakovosti celotnega arhiva.
+
+## Prejemniki kartonov po glasovanju (27. 10. 2026)
+
+Ločena politika `fussball-community-cards-v1` omogoča glasovanje za manjkajočega
+prejemnika uradnega kartona. Format zajema je `cardPolicy: community-v1`;
+privzeti strogi format in že aktivne DFB Regionallige se ne spreminjajo.
+Prvi pregledani kandidat z `communityCards: true` je samo
+`de-verbandsliga-baden`. Sama namestitev politike ne vklopi lige.
+
+Nespremenljivi zasebni `cardEnvelope` vsebuje izvirne bajte zapisnika, postave
+in pisav ter SHA-256, vse uradne dogodke in javno zgodovinsko postavo z rezervami.
+Glas lahko določi samo prejemnika na uradni strani dogodka; vrste, časa,
+strani, izida, identitete ali vloge vratarja ne more popraviti. Ni izbire
+»brez kartona«. Fotografije se ne uporabljajo. Prag `prag_glasov_karton` je
+privzeto 3; veljajo obstoječe omejitve uporabnikov in poznavalec iste lige.
+Predlog ostane popravljiv do uspešne uporabe; nasprotujoč drugi rumeni ali
+menjava ostaneta odprta za pregled, brez ugibanja minut.
+
+Nepripisan navadni rumeni ohrani dokazane nastope, odbitek počaka na prejemnika.
+Nepripisan rdeči shrani uradni izid in dokaz, vendar nima individualnih nastopov
+ali golov. Spremenjena revizija do uspešne ponovitve prav tako ne sme objaviti
+starih ali praznih statistik kot dokončnih. `pending_cards` označi fantasy
+krog kot začasen, vrne NULL točke in zadrži dokončne rezultate, obvestila in
+prizadeto cenitev. Atomski servisni zapis preveri aktualne glasove/revizijo,
+strogo časovnico, vratarja in gole, ohrani potrjene asistence ter skupaj
+potrdi prejemnike in preračuna točke.
+
+`replay-fussball-cards.yml` teče vsako uro in ročno po izbrani ligi. V enem
+zagonu obdela največ 10 predlogov iz izvirnikov v bazi, izmenično po tekoči
+sezoni in arhivu. Ne bere FUSSBALL.DE, ne potrebuje modela za vsako tekmo,
+ne ponavlja dvoumnih zapisov v bazo in po neuspelem predlogu ne ugiba.
+Uporablja isti vrstni red nemških zapisovalcev kot običajni uvoz. Navaden,
+nočni in paketni uvoz uporabljajo isto registracijo in atomsko ponovitev;
+odtis predpomnilnika vključuje SHA izvirne revizije, tudi če razčlenjeno telo
+zapisnika izgleda enako.
+
+Vklop še vedno zahteva celoten preverjen tekoči in arhivski zajem brez drugih
+napak, točno domačo inventuro vseh odigranih zapisnikov, vratarje, cene,
+dosegljiv veljaven kader, nedotaknjen prihodnji prvi krog in trajno shranjen
+predpomnilnik istega zagona. Samo točno registrirani čakajoči kartoni so
+dovoljena izjema; manjkajoči javni profili in nepodprti dogodki ostanejo razlog
+za ustavitev. Potrdilo vira, predpomnilnika in inventure se pred vklopom
+ponovno veže na aktualno stanje v bazi.
+
+Zadnji Badenov zajem `40416972177` je ostal delni in neuspešen: 508 dejanskih
+zahtevkov, skupaj **961/5000**. Pri prvih 55 celotnih izvirnikih nova strožja
+preverba da 39 popolnih, 8 tipiziranih čakajočih in 8 drugih zavrnjenih
+(6 povezav igralcev in 2 obliki slike; eden od prej 9 rdečih je skrival še
+napako oblike). To je diagnostika, ne dovoljenje za vklop. Implementacija
+glasovanja sama po sebi ne pomeni novih aktivnih lig ali 600 preverjenih lig.
+
+Preverbe: `npm run test:fussball`, `npm run test:bulk`, offline UI skripte
+`test-community-cards-ui.mjs` in `test-community-round-ui.mjs`, ter izrecno
+disposable `test-fussball-community-sql.mjs` in
+`test-fussball-community-integration.mjs`. Slednja ponovi resnični shranjeni
+zapisnik prek pravih glasov in atomske baze v eni transakciji z rollback.

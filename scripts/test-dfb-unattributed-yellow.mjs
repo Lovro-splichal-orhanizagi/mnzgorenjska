@@ -2,7 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {createHash} from 'node:crypto'
-import {assertHistoricalReportImportable} from './lib/historical-statistics-import.mjs'
+import {assertHistoricalReportImportable,skipIncompleteArchiveReport} from './lib/historical-statistics-import.mjs'
+import {isFussballCommunityCompetition} from './fussball-community-policy.mjs'
 import {completedReportIds} from './missing-report-import.mjs'
 import {vZapisnik,nastopi} from './viri/dfb.mjs'
 const provenance=JSON.parse(readFileSync(new URL('./vzorci/de-dfb-unattributed-provenance.json',import.meta.url)))
@@ -149,7 +150,7 @@ test('actual importer persists warnings, replaces a corrected deduction once, an
  };return q},async rpc(name,p){assert.equal(name,'zamenjaj_nastope_tekme');assert.equal(p.p_match_id,7);appearances=structuredClone(p.p_nastopi);replacements++;return {error:null}}}
  const ids=new Map(),idFor=key=>{if(!ids.has(key))ids.set(key,ids.size+1);return ids.get(key)}
  const run=async()=>runInNewContext(`(async()=>{${body};if(napak)throw Error('import failed')})()`,{
-  samoManjkajoce:false,completedReportIds,assertHistoricalReportImportable,db,tekmovanje:{id:99,slug:'test',source:'dfb'},vir:{ime:'dfb',nastopi,async zapisniki(){return [{id:z.zapisnikId,url:z.url,z:structuredClone(z)}]}},liga:'regionalliga-west/2025-2026',prenesi(){},arg:k=>k==='zapisnik'?'de-dfb-2402201':null,samoZapisnik:'de-dfb-2402201',preberiPosamezniZapisnik:null,omeji:null,tekocaSezona:false,virIme:null,unattributedYellowEvents,
+  samoManjkajoce:false,completedReportIds,assertHistoricalReportImportable,skipIncompleteArchiveReport,isFussballCommunityCompetition,db,tekmovanje:{id:99,slug:'test',source:'dfb'},vir:{ime:'dfb',nastopi,async zapisniki(){return [{id:z.zapisnikId,url:z.url,z:structuredClone(z)}]}},liga:'regionalliga-west/2025-2026',prenesi(){},arg:k=>k==='zapisnik'?'de-dfb-2402201':null,samoZapisnik:'de-dfb-2402201',preberiPosamezniZapisnik:null,omeji:null,tekocaSezona:false,virIme:null,unattributedYellowEvents,
   console:{log(){},warn(){},error(...args){throw Error(args.join(' '))}},process:{stdout:{write(){}}},Date,Set,Map,createHash,readdirSync,zaprtje,dodajStrelceSKlopi,MAPA:'memory',
   readFileSync:(path,...args)=>String(path)==='memory/odtisi-test.json'?fingerprint:readFileSync(path,...args),writeFileSync:(path,data)=>{assert.equal(path,'memory/odtisi-test.json');fingerprint=data},
   vseVrstice:async build=>(await build(0,999)).data,klubId:async name=>idFor(name),krogId:async()=>5,igralecId:async(team,name)=>idFor(`${team}|${name}`),

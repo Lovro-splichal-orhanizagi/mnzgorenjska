@@ -25,6 +25,7 @@
 // države, ki ga vir prepozna po šifri osebe (`reg_st`): ta dobi ceno, izpeljano
 // iz cene v višji ligi (`scripts/visja-liga.mjs`). Na vklopljeni ligi pride do
 // nje le tedenski zagon, največ za `--najvec` na teden.
+import {isFussballCommunityCompetition} from './fussball-community-policy.mjs'
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fcfTargetPricingModelSha256 } from './fcf-target-pricing-model.mjs'
@@ -163,6 +164,20 @@ if (pisi && tekmovanje.active && !tedensko && !samoNove && !dovoliAktivno) {
       'za izrecen prepis pa dodaj --dovoli-aktivno.',
   )
   process.exit(1)
+}
+
+// Missing red recipients can change minutes across the percentile cohort.
+// Keep every active-league price write deferred until retained replay succeeds.
+if (pisi && tekmovanje.active && isFussballCommunityCompetition(tekmovanje)) {
+  const { data: cards, error } = await db.rpc('check_fussball_card_readiness', {
+    p_competition_id: tekmovanje.id,
+    p_code: tekmovanje.source_league_code,
+  })
+  if (error || cards?.installed !== true || cards.enabled !== true || !Array.isArray(cards.pending_reports)) throw new Error(`FUSSBALL pending pricing inventory: ${error?.message ?? 'invalid response'}`)
+  if (cards.pending_reports.length) {
+    console.warn(`FUSSBALL pending: ${cards.pending_reports.length} — vrednotenje ${tekmovanje.slug} odloženo.`)
+    process.exit(0)
+  }
 }
 
 // Retained statistics from a rejected DFB report are provisional. Defer the

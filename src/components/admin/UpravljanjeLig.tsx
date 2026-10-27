@@ -45,6 +45,12 @@ const PRAGOVI: { kljuc: string; naslov: string; privzeto: number; pojasnilo: str
     pojasnilo: 'Trije glasovi so v ligi z dvesto igralci lahek dosežek, v ligi z dvajsetimi nedosegljivi.',
   },
   {
+    kljuc: 'prag_glasov_karton',
+    naslov: 'Glasov za prejemnika kartona',
+    privzeto: 3,
+    pojasnilo: 'Velja le za izrecno odobrene lige z glasovanjem o kartonih. Izbira se preveri pred spremembo statistike.',
+  },
+  {
     kljuc: 'prag_glasov_pozicija',
     naslov: 'Glasov za pozicijo',
     privzeto: 5,
@@ -187,7 +193,7 @@ export default function UpravljanjeLig() {
     setNapaka(null)
     const prazno = vrednost.trim() === ''
     const stevilo = Number(vrednost)
-    if (!prazno && (!Number.isFinite(stevilo) || stevilo < 1)) {
+    if (!prazno && (!Number.isInteger(stevilo) || (kljuc === 'fussball_card_voting_enabled' ? ![0, 1].includes(stevilo) : stevilo < 1))) {
       setNapaka('Prag mora biti število, večje od nič.')
       return
     }
@@ -201,7 +207,7 @@ export default function UpravljanjeLig() {
           .from('competition_settings')
           .upsert({ competition_id: l.id, key: kljuc, value: stevilo })
     if (error) return setNapaka(error.message)
-    setSporocilo(prazno ? 'Prag vrnjen na globalnega.' : 'Prag shranjen.')
+    setSporocilo(kljuc === 'fussball_card_voting_enabled' ? 'Nastavitev glasovanja o kartonih shranjena.' : prazno ? 'Prag vrnjen na globalnega.' : 'Prag shranjen.')
     nalozi()
   }
 
@@ -330,6 +336,15 @@ export default function UpravljanjeLig() {
                       ))}
                     </div>
                   </div>
+
+                  {l.source === 'fussball-public' && <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm">
+                      <input type="checkbox" checked={nastavitve[l.id]?.fussball_card_voting_enabled === 1}
+                        onChange={(e) => void shraniPrag(l, 'fussball_card_voting_enabled', e.target.checked ? '1' : '0')} />
+                      Glasovanje o prejemnikih kartonov
+                    </label>
+                    <p className="text-xs text-slate-400">Privzeto izklopljeno. Vklop je dovoljen le za posebej pregledano in odobreno ligo; to preveri strežnik. Ta nastavitev sama ne vklopi lige in ne potrdi čakajoče statistike.</p>
+                  </div>}
 
                   <div>
                     <p className="mb-1 font-semibold">Uvoz</p>

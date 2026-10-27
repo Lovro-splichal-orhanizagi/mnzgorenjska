@@ -230,7 +230,8 @@ function makeLazyFontParser(loadFonts, allowedIds, cssTemplate, token, parse) {
 }
 
 /** Shared strict parser session; source reads remain owned by the caller's stopped client. */
-export function createFussballParserSession(readSource, injectedParsers = {}) {
+export function createFussballParserSession(readSource, injectedParsers = {}, {cardPolicy,season} = {}) {
+  if(cardPolicy!==undefined&&cardPolicy!=='community-v1')throw fail('invalid card policy')
   const parsers = parserDependencies(injectedParsers)
   const loadFonts = makeFontsLoader(readSource, parsers), token = randomUUID()
   const parse = (ids, template, fn) => makeLazyFontParser(loadFonts, ids, template, token, fn)()
@@ -255,8 +256,8 @@ export function createFussballParserSession(readSource, injectedParsers = {}) {
           throw fail('lineup discovery returned invalid font IDs', 'FUSSBALL_LINEUP_INVALID')
       } catch (error) {throw Object.assign(error,{code:error?.code ?? 'FUSSBALL_LINEUP_INVALID'})}
       const ids = [...new Set([...info.fontIds,...lineupFonts])].sort()
-      const result = await parse(ids, info.cssTemplate, fonts => parsers.parseFantasyReport(mainHtml,lineupHtml,{fonts,id:fixture.id,lineupId:fixture.id}))
-      validateFantasyResult(result,fixture)
+      const result = await parse(ids, info.cssTemplate, fonts => parsers.parseFantasyReport(mainHtml,lineupHtml,{fonts,id:fixture.id,lineupId:fixture.id,...(cardPolicy?{cardPolicy,season}:{})}))
+      validateFantasyResult(result,fixture,{cardPolicy})
       return {fixture,result}
     },
   }
@@ -267,11 +268,12 @@ function sameResult(a, b) {
   return a && b && a.domaci === b.domaci && a.gostje === b.gostje
 }
 
-function validateFantasyResult(result, fixture) {
+function validateFantasyResult(result, fixture, {cardPolicy} = {}) {
   const z = result?.z
-  if (result?.reportStatistikaPripravljena !== true || result?.sezonskiUvozPodprt !== false ||
+  const pending=cardPolicy==='community-v1'&&result?.statisticsPending===true&&result?.reportStatistikaPripravljena===false&&result?.cardEnvelope&&z&&!Object.hasOwn(result,'nastopi')&&!Object.hasOwn(z,'goli')
+  if ((!pending&&result?.reportStatistikaPripravljena !== true) || result?.sezonskiUvozPodprt !== false ||
       result?.activationEligible !== false || z?.nepopoln !== true ||
-      !Array.isArray(result.nastopi) || !Array.isArray(result.nepripisaniRumeni))
+      (!pending&&!Array.isArray(result.nastopi)) || !Array.isArray(result.nepripisaniRumeni))
     throw fail('strict report parser did not return a report-only success envelope', 'FUSSBALL_REPORT_ENVELOPE_INVALID')
   if (z.zapisnikId !== fixture.zapisnikId || z.datum !== fixture.datum || z.ura !== fixture.ura || z.krog !== fixture.krog ||
       z.domaci?.ime !== fixture.domaci || z.gostje?.ime !== fixture.gostje || !sameResult(z.rezultat, fixture.rezultat))
@@ -303,7 +305,9 @@ export async function collectFussballSeason({
   reportLimit = null,
   asOfDate: requestedAsOfDate,
   onProgress,
+  cardPolicy,
 } = {}, injectedParsers = {}) {
+  if(cardPolicy!==undefined&&cardPolicy!=='community-v1')throw fail('invalid card policy')
   if (requestedAsOfDate !== undefined && !validDate(requestedAsOfDate))
     throw fail('asOfDate must be a valid YYYY-MM-DD calendar date', 'FUSSBALL_AS_OF_DATE_INVALID')
   if (!client || typeof client.read !== 'function' || !STAFFEL.test(staffel ?? '') || !/^20\d{2}\/\d{2}$/.test(season ?? '') ||
@@ -363,13 +367,13 @@ export async function collectFussballSeason({
 
   const played = schedule.fixtures.filter(fixture => fixture.rezultat !== null)
   const selected = reportLimit == null ? played : played.slice(0, reportLimit)
-  const reports = [], rejectedReports = []
-  const reportSession = createFussballParserSession(readSource, injectedParsers)
+  const reports = [], rejectedReports = [], pendingReports = []
+  const reportSession = createFussballParserSession(readSource, injectedParsers,{cardPolicy,season})
   for (let index = 0; index < selected.length; index++) {
     const fixture = selected[index]
     await progress({ phase: 'report', matchId: fixture.id, index: index + 1, total: selected.length })
 
-    try { reports.push(await reportSession.report(fixture)) }
+    try { const entry=await reportSession.report(fixture);(cardPolicy==='community-v1'&&entry.result.statisticsPending===true?pendingReports:reports).push(entry) }
     catch (error) {
       if (sourceErrors.has(error)) throw error
       rejectedReports.push(reportFailure(fixture,error))
@@ -379,9 +383,10 @@ export async function collectFussballSeason({
   const unscored = unscoredCounts(schedule.fixtures, asOfDate)
   return {
     version: 1,
-    scope: { provider: 'fussball', seedUrl, staffel, season, asOfDate },
+    scope: { provider: 'fussball', seedUrl, staffel, season, asOfDate,...(cardPolicy?{cardPolicy}:{}) },
     schedule,
     reports,
+    ...(cardPolicy?{pendingReports,cardEnvelopes:[...reports,...pendingReports].map(e=>e.result.cardEnvelope)}:{}),
     rejectedReports,
     coverage: {
       expectedRounds: schedule.rounds.length,
@@ -390,6 +395,7 @@ export async function collectFussballSeason({
       playedFixtures: played.length,
       attemptedReports: selected.length,
       completeReports: reports.length,
+      ...(cardPolicy?{pendingReports:pendingReports.length}:{}),
       rejectedReports: rejectedReports.length,
       sampled: reportLimit !== null && selected.length < played.length,
       unscoredFixtures: unscored,

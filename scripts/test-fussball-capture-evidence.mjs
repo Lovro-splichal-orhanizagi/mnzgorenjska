@@ -176,3 +176,16 @@ test('authentic strict season result survives content-addressed capture and offl
  }}),/403/)
  assert.ok(newCalls.includes(newFixture.url));assert.ok(!newCalls.includes(reportUrl)&&!newCalls.includes(lineupUrl))
 }))
+
+test('community card capture policy is pinned into original-byte offline replay and cannot be removed',async()=>sample(async({directory})=>{
+ const communityCollector=async input=>{
+  const base=await collector(input)
+  assert.equal(input.cardPolicy,'community-v1')
+  return {...base,scope:{...base.scope,cardPolicy:input.cardPolicy},pendingReports:[],cardEnvelopes:[]}
+ }
+ const m=await api.captureFussballDirectory({directory,options:{...options,cardPolicy:'community-v1'},fetchFn:network,collectFn:communityCollector})
+ assert.equal(m.options.cardPolicy,'community-v1')
+ assert.equal((await api.verifyFussballDirectory(directory,{collectFn:communityCollector})).verified,true)
+ delete m.options.cardPolicy;writeFileSync(join(directory,'manifest.json'),JSON.stringify(m))
+ await assert.rejects(()=>api.verifyFussballDirectory(directory,{collectFn:communityCollector}),/community-v1/)
+}))

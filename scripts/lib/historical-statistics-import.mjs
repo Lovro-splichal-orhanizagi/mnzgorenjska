@@ -3,10 +3,23 @@ import {FCF_SIX_SOURCE_POLICY,getFcfSixPolicy,validateFcfSixInstalledMarkers,cla
 import {validateHnsWomenClubBindings} from '../viri/hns-zenske-binding.mjs'
 import {assertHnsWomenOfflineAuthority} from '../hr-zenske-offline.mjs'
 import {getHistoricalStatisticsPolicy,validateInstalledHistoricalStatisticsMarkers,classifyHistoricalStatistics} from './historical-statistics-policy.mjs'
+import {isFussballCommunityCompetition,FUSSBALL_COMMUNITY_SOURCE_POLICY} from '../fussball-community-policy.mjs'
+
+// A typed pending-card archive is imported as an official fixture plus private
+// evidence, never as partial appearances. Other incomplete archives still skip.
+export function skipIncompleteArchiveReport({competition,report,currentSeason}){
+  return !!report?.z?.nepopoln&&!currentSeason&&!(isFussballCommunityCompetition(competition)&&report.statisticsPending===true&&report.cardEnvelope)
+}
 
 /** Normal CLI cannot bootstrap or recover partial policies; dedicated packet writers do that atomically. */
 export async function loadHistoricalStatisticsImportContext(db,original,{sourceOverride=null}={}) {
   const competition={...original,...(sourceOverride?{source:sourceOverride}:{})}
+  if(isFussballCommunityCompetition(competition)){
+    if(sourceOverride)throw Error('community card import: source override forbidden')
+    const {data:binding,error}=await db.rpc('get_fussball_card_policy',{p_competition_id:competition.id})
+    if(error||binding?.installed!==true||binding.enabled!==true||binding.source_policy!==FUSSBALL_COMMUNITY_SOURCE_POLICY||binding.current_code!==competition.source_league_code||!Array.isArray(binding.archive_codes))throw Error('community card import: exact installed enabled policy required')
+    return {competition:{...competition,communityCardBinding:binding},installedHistoricalMarkers:null}
+  }
   if(competition.source_policy===FCF_SIX_SOURCE_POLICY){const {data,error}=await db.rpc('get_installed_fcf_six_statistics_markers',{p_competition_id:competition.id});if(error)throw Error(`six historical import: ${error.message}`);const installedHistoricalMarkers=validateFcfSixInstalledMarkers({competition,binding:data});return{competition:{...competition,firstFantasyPlayedOn:installedHistoricalMarkers.firstFantasyPlayedOn},installedHistoricalMarkers}}
   const policy=getHistoricalStatisticsPolicy(competition.slug)
   if(!policy && competition.source_policy==null)return {competition,installedHistoricalMarkers:null}
@@ -29,6 +42,12 @@ export function assertHistoricalReportImportable({competition,report}) {
   if(competition.source==='mfa'&&['mt50920555','mt51962893'].includes(String(report?.id)))throw Error('historical import: neither continuation segment may derive individual statistics')
   if(report?.statisticsStatus!=null && report.statisticsStatus!=='available')throw Error('historical import: unavailable/unknown statistics status cannot derive individual rows')
   if(report?.historicalStatistics!=null || !report?.z || typeof report.z!=='object')throw Error('historical import: unavailable or missing normal report body')
+  if(isFussballCommunityCompetition(competition)){
+    const e=report.cardEnvelope,b=competition.communityCardBinding
+    if(!b?.installed||!b.enabled||b.current_code!==competition.source_league_code||e?.reportId!==String(report.id)||e.sourceUrl!==report.url||e.season!==report.z.sezona)throw Error('community card import: unbound policy or report envelope')
+    if(report.statisticsPending===true&&(Object.hasOwn(report,'nastopi')||Object.hasOwn(report.z,'goli')))throw Error('community card import: pending statistics cannot carry individual rows')
+    return
+  }
   if(competition.source==='mfa')assertMfaReportTiming(report.z)
   const id=String(report.id)
   const sourceMatchId=competition.source==='dfb'?id.replace(/^de-dfb-/,''):competition.source==='fcf'?id.replace(/^es/,''):competition.source==='mfa'?id.replace(/^mt/,''):competition.source==='isthmian'?id.replace(/^gb/,''):competition.source==='nfsbih'?id.replace(/^ba/,''):competition.source==='fmf'?id.replace(/^md/,''):id

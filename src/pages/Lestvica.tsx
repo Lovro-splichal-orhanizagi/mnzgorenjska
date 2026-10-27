@@ -1,3 +1,4 @@
+import CakajocKrog from '../components/CakajocKrog'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import ImeLastnika from '../components/ImeLastnika'
@@ -33,6 +34,7 @@ interface TockeKroga {
   team_name: string | null
   owner_name: string | null
   owner_id?: string | null
+  statistics_pending?: boolean | null
   points: number | null
   penalty: number | null
   transfers: number | null
@@ -49,6 +51,7 @@ interface VrsticaLestvice {
   team_name: string | null
   owner_name: string | null
   owner_id?: string | null
+  statistics_pending?: boolean | null
   total_points?: number | null
   points?: number | null
   penalty?: number | null
@@ -130,7 +133,7 @@ export default function Lestvica() {
       supabase
         .from('fantasy_team_standings')
         .select(
-          'fantasy_team_id, team_name, owner_name, owner_id, owner_registered_at, team_created_at, total_points',
+          'fantasy_team_id, team_name, owner_name, owner_id, owner_registered_at, team_created_at, total_points, statistics_pending',
         )
         .eq('competition_id', ligaId)
         .order('total_points', { ascending: false })
@@ -172,7 +175,7 @@ export default function Lestvica() {
           supabase
             .from('fantasy_round_standings')
             .select(
-              'round_id, fantasy_team_id, team_name, owner_name, owner_id, points, penalty, transfers, rank',
+              'round_id, fantasy_team_id, team_name, owner_name, owner_id, points, penalty, transfers, rank, statistics_pending',
             )
             .eq('competition_id', ligaId)
             .order('round_id')
@@ -236,6 +239,7 @@ export default function Lestvica() {
   const zmagovalciKrogov = useMemo(() => {
     const najPoKrogu = new Map<number, TockeKroga>()
     for (const t of odigraneTocke) {
+      if (t.statistics_pending || t.points == null) continue
       const prej = najPoKrogu.get(t.round_id)
       if (!prej || Number(t.points ?? 0) > Number(prej.points ?? 0)) {
         najPoKrogu.set(t.round_id, t)
@@ -321,7 +325,7 @@ export default function Lestvica() {
   const seznam = lestvicaOd ?? ekipe
   const mojeMesto = mojaEkipa ? seznam.findIndex((e) => e.fantasy_team_id === mojaEkipa) : -1
 
-  const zmagovalecKroga = krogLestvica[0]
+  const zmagovalecKroga = krogLestvica.find(row => !row.statistics_pending && row.points != null)
   const mojRezultat = mojaEkipa
     ? krogLestvica.find((e) => e.fantasy_team_id === mojaEkipa)
     : undefined
@@ -349,7 +353,8 @@ export default function Lestvica() {
 
       {/* Svoj rezultat kroga — edina stvar, ki se ponovi vsak teden in jo
           človek rad pokaže. Pokažemo jo NAD lestvico, ker je njegova. */}
-      {mojRezultat && (
+      {(ekipe.some(row => row.statistics_pending) || krogLestvica.some(row => row.statistics_pending)) && <div className="space-y-2"><p className="text-sm text-amber-200">{t('tekme.kartoni.zacasno')}</p><CakajocKrog /></div>}
+      {mojRezultat && !mojRezultat.statistics_pending && mojRezultat.points != null && (
         <section className="space-y-3 rounded-2xl bg-gnl-500/5 p-3 ring-1 ring-gnl-400/20 sm:p-4">
           <div className="flex items-baseline justify-between gap-2">
             <span className="text-sm text-slate-400">
@@ -462,7 +467,8 @@ export default function Lestvica() {
 
             <ol className="kartica divide-y divide-white/10 overflow-hidden">
               {seznam.slice(0, koliko).map((e, i) => {
-                const tocke = lestvicaOd ? Number(e.points ?? 0) : Number(e.total_points ?? 0)
+                const raw = lestvicaOd ? e.points : e.total_points
+                const tocke = e.statistics_pending && (raw == null || raw === 0) ? null : Number(raw ?? 0)
                 const moja = e.fantasy_team_id === mojaEkipa
                 return (
                   <li
@@ -475,7 +481,7 @@ export default function Lestvica() {
                     <span className="w-7 shrink-0 text-center text-sm font-bold tabular-nums text-slate-400">
                       {/* Medalja in mesto šele, ko je kaj točk: pri samih ničlah
                           bi mesto določil le vrstni red vnosa. */}
-                      {tocke > 0 ? (MEDALJE[i] ?? i + 1) : '–'}
+                      {!e.statistics_pending && tocke != null && tocke > 0 ? (MEDALJE[i] ?? i + 1) : '–'}
                     </span>
                     <div className="min-w-0 flex-1">
                       {/* Sestavo vidi le lastnik: povezavo (z ::after čez
@@ -505,7 +511,7 @@ export default function Lestvica() {
                       </div>
                     </div>
                     <span className="shrink-0 font-bold tabular-nums text-gnl-300">
-                      {formatirajTocke(tocke)}
+                      {tocke == null ? '—' : formatirajTocke(tocke)}
                     </span>
                   </li>
                 )

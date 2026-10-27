@@ -218,6 +218,7 @@ export default function Rezultati() {
                   </Link>
                   <Grb ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} velikost={22} />
                   <ImeKluba id={tekma.away_team_id} ime={tekma.away_name} />
+                  {tekma.statistics_status === 'pending_cards' && <span className="w-full text-center text-xs text-amber-200">{t('tekme.kartoni.pending')}</span>}
                   {tekma.statistics_status === 'unavailable_historical' && (
                     <span className="w-full text-center text-xs text-amber-200">{t('tekme.statistika.kratko')}</span>
                   )}

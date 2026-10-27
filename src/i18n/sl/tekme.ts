@@ -1,5 +1,24 @@
 // Nizi za področje `tekme` (glej src/i18n/index.tsx).
 export const tekme = {
+  kartoni: {
+    preveriPrejemnika: "Preveri prejemnika kartona. Glas lahko spremeniš.",
+    krogCaka: "Točke kroga čakajo na potrditev prejemnikov rdečih kartonov. Točke, samodejne menjave in uvrstitev kroga še niso na voljo.",
+    zacasno: "Začasni seštevek · čakamo statistiko kroga",
+    naslov: "Kartoni · izbira skupnosti",
+    uvod: "Vrsta, čas in ekipa kartona so iz uradnega zapisnika. Skupnost določi manjkajočega prejemnika iz postave te tekme. Prag: {prag}. Glas lahko spremeniš do potrditve; glasovi poznavalcev lige štejejo več.",
+    yellow: "Rumeni karton",
+    red: "Rdeči karton",
+    second_yellow: "Drugi rumeni karton",
+    pending: "Prejemnik čaka na glasove",
+    queued: "Izbira čaka na preverjanje",
+    confirmed: "Prejemnik potrjen",
+    statistikaCaka: "Statistika igralcev čaka na potrditev prejemnikov rdečih kartonov. Minute, goli in točke še niso na voljo. Uradni izid je ohranjen.",
+    glasovi: "Uteženi glasovi: {n} / {prag}",
+    prejemnikNedosegljiv: "Ime potrjenega prejemnika ni na voljo.",
+    brezKandidatov: "Javni kandidati iz postave te tekme niso na voljo.",
+    napaka: "Glasovanja ni bilo mogoče prebrati ali shraniti. Preveri prijavo in dovoljenje za glasovanje ter poskusi znova.",
+    ponovi: "Poskusi znova",
+  },
   statistika: {
     brezStrelcev: "Ni preverjenih strelcev.",
     nedosegljivo: "Statistika igralcev za to zgodovinsko tekmo ni na voljo. Uradni izid je ohranjen.",

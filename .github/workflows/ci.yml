@@ -77,6 +77,13 @@ jobs:
       - name: German amateur source collection and offline evidence
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
 
+      - name: Community card voting and provisional round UI (offline)
+        run: |
+          npx playwright install --with-deps chromium
+          node scripts/test-community-cards-ui.mjs
+          node scripts/test-community-round-ui.mjs
+          npx vite-node scripts/test-community-round-points.ts
+
       - name: Provider batch and Dribl source diagnostics (source-free)
         run: node --test scripts/test-provider-league-batch.mjs scripts/test-provider-source-budget.mjs scripts/test-mlsz-provider-proof.mjs scripts/test-eps-provider-batch.mjs scripts/test-eps-provider-proof.mjs scripts/test-eps-source-budget.mjs scripts/test-dribl.mjs scripts/test-dribl-import-actions.mjs scripts/test-dribl-capture.mjs scripts/test-dribl-import.mjs scripts/test-dribl-cli.mjs scripts/test-dribl-country-binding.mjs
 
@@ -203,6 +210,13 @@ jobs:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
           FUSSBALL_IDENTITIES_DISPOSABLE_TEST: '1'
         run: node --test scripts/test-fussball-identities-sql.mjs
+      - name: Community card voting, real retained report replay and atomic scoring
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          FUSSBALL_COMMUNITY_DISPOSABLE_TEST: '1'
+        run: |
+          node --test scripts/test-fussball-community-sql.mjs
+          node --test scripts/test-fussball-community-integration.mjs
       - name: DFB current pending evidence, finality and repair rollback
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska

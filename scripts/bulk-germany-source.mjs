@@ -10,6 +10,7 @@ import {collectFussballSeason} from './fussball-season.mjs'
 import {buildFussballImportBatch,parseFussballLeagueCode} from './fussball-import.mjs'
 import {zaprtje} from './odtis-kode.mjs'
 import {extractFussballSeasonLinks,inspectFussballArchivePage} from './fussball-season-links.mjs'
+import {fussballCardPolicyForCandidate} from './fussball-community-policy.mjs'
 import {inspectFussballPage} from './viri/fussball-discovery.mjs'
 
 const ROOT=fileURLToPath(new URL('../',import.meta.url))
@@ -57,7 +58,8 @@ function checkPolicyEvidence(candidate){
 export function collectGermanySeason(t,candidate,{client,asOfDate,collectSeason=collectFussballSeason}={}){
  const archive=candidate.archives.find(a=>a.code===t.code)
  const parsers=archive?.canonicalParent?{inspectPage:(html,options)=>options.kind==='round'?inspectFussballArchivePage(html,{archive:t,current:{...parseFussballLeagueCode(candidate.source_league_code),seedUrl:candidate.seedUrl}}):inspectFussballPage(html,options)}:{}
- return collectSeason({...t,client,reportLimit:null,asOfDate},parsers)
+ const cardPolicy=fussballCardPolicyForCandidate(candidate)
+ return collectSeason({...t,client,reportLimit:null,asOfDate,...(cardPolicy?{cardPolicy}:{})},parsers)
 }
 /** Catalog argument is an explicit offline-test seam, never a CLI override. */
 export function validateGermanyCandidate(candidate,{catalog=GERMANY_BULK_CANDIDATES}={}){
@@ -79,8 +81,8 @@ function codeHash(){
  const files=[...new Set([...zaprtje('scripts/bulk-germany-source.mjs',p=>readFileSync(resolve(ROOT,p),'utf8'),p=>existsSync(resolve(ROOT,p))),POLICY,'scripts/viri/fussball-datumski-glifi.json'])].sort()
  return hash(files.map(f=>`${f}\0${hash(readFileSync(resolve(ROOT,f)))}`).join('\n'))
 }
-function normalize(raw,t){
- try{const b=buildFussballImportBatch(raw,t);return {code:t.code,season:t.season,schedule:b.schedule,reports:b.reports,identities:b.identities}}
+function normalize(raw,t,candidate){
+ try{const cardPolicy=fussballCardPolicyForCandidate(candidate),b=buildFussballImportBatch(raw,{...t,...(cardPolicy?{cardPolicy}:{})});return {code:t.code,season:t.season,schedule:b.schedule,reports:b.reports,identities:b.identities,...(cardPolicy?{cardPolicy,pendingReports:b.pendingReports,cardEnvelopes:b.cardEnvelopes}:{})}}
  catch(e){throw failure(`incomplete ${t.code}: ${e.message}`,'GERMANY_SEASON_INCOMPLETE')}
 }
 function readRegular(directory,file){
@@ -129,7 +131,7 @@ export async function captureGermanyCandidate(candidate,{directory,maxRequests,n
    const raw=await collectGermanySeason(t,c,{client,asOfDate:m.captured_at.slice(0,10),collectSeason:dependencies.collectSeason})
    const bytes=json(raw),file=`seasons/${index}.json`
    writeFileSync(join(directory,file),bytes);m.results.push({code:t.code,file,sha256:hash(bytes)})
-   normalize(raw,t)
+   normalize(raw,t,c)
   }
   m.complete=true
  }catch(e){error=client.snapshot().stopped?failure(e.message,'GERMANY_SOURCE_STOP',true):e.dataHold?e:failure(e.message,'GERMANY_SEASON_INCOMPLETE')}
@@ -180,7 +182,7 @@ export async function loadGermanyPack(directory,{candidate,now=Date.now,requireF
    proof(hash(original)===r.sha256,'season result hash differs')
    const raw=await collectGermanySeason(t,c,{client:replay,asOfDate:m.captured_at.slice(0,10),collectSeason:dependencies.collectSeason})
    proof(json(raw)===original.toString(),'original-byte replay result differs')
-   seasons.push(normalize(raw,t))
+   seasons.push(normalize(raw,t,c))
   }
   proof(index===docs.length&&equal(replay.snapshot(),s),'unused documents or replay accounting differs')
   proof(equal([...new Set(allowed)].sort(),filesUnder(directory).sort()),'unexpected unlisted evidence files')

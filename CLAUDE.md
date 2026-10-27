@@ -260,6 +260,16 @@ ves paket. `SLFF_FUSSBALL_CAPTURE` mora vezati celoten nespremenjen zajem;
 vzorec ali zavrnjen zapisnik ne smeta postati popoln uvoz. Ročni bootstrap
 teče v `uvoz-fussball-public.yml`, vklop/poznejše osveževanje sta ločena.
 
+Kartoni FUSSBALL imajo ločeno opt-in politiko `fussball-community-cards-v1`.
+Pregledani kandidat mora imeti `communityCards: true` (za zdaj samo Baden),
+servisno nameščeno vezavo tekoče/arhivske šifre in stikalo lige. Glasovi
+določijo le prejemnika javnega dogodka iz zgodovinske postave. Rdeči brez
+prejemnika nima individualnih statistik; `pending_cards` zapre dokončne
+rezultate, samodejne menjave in obvestila. Potrdi jih šele atomski zapis po
+ponovitvi izvirnih bajtov. `replay-fussball-cards.yml` vsako uro obdela največ
+10 predlogov brez branja nogometnih strani. Delni zajem ali napaka javne
+identitete še vedno prepreči vklop; podrobnosti v `docs/viri/nemcija.md`.
+
 `matches.statistics_status = 'unavailable_historical'` ohrani uradni izid,
 vendar nima nastopov/golov in `imported_at` ostane NULL. Izjeme so omejene
 na točne identitete in SHA v `scripts/policies/historical-statistics-exclusions.json`;

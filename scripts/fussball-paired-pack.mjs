@@ -5,6 +5,7 @@ import {readFileSync,lstatSync,mkdirSync,cpSync,writeFileSync,existsSync} from '
 import {resolve,join} from 'node:path'
 import {loadFussballImportCapture,parseFussballLeagueCode} from './fussball-import.mjs'
 import {validateGermanyCandidate} from './bulk-germany-source.mjs'
+import {fussballCardPolicyForCandidate} from './fussball-community-policy.mjs'
 const hash=b=>createHash('sha256').update(b).digest('hex')
 const canonical=v=>JSON.stringify(v&&typeof v==='object'?(Array.isArray(v)?v.map(x=>JSON.parse(canonical(x))):Object.fromEntries(Object.keys(v).sort().map(k=>[k,JSON.parse(canonical(v[k]))]))):v)
 const same=(a,b)=>canonical(a)===canonical(b)
@@ -26,6 +27,7 @@ export async function loadFussballPairedPack(directory,{candidate,now=Date.now,r
  // Native admission stays at the audited commit. Cache-only replay can survive
  // an unrelated main commit; installed capture fingerprints still must match.
  if(requireFresh&&process.env.GITHUB_ACTIONS==='true')proof(current.headSha===process.env.GITHUB_SHA,'paired audit commit differs')
+ const cardPolicy=fussballCardPolicyForCandidate(c)
  const scopes=[{...parseFussballLeagueCode(c.source_league_code),seedUrl:c.seedUrl},{...parseFussballLeagueCode(c.archives[0].code),seedUrl:c.archives[0].seedUrl}]
  proof(scopes[0].staffel!==scopes[1].staffel,'distinct current/archive staffel required')
  const manifests=['current','archive'].map(name=>JSON.parse(readPairedOriginal(directory,name+'/manifest.json')))
@@ -33,7 +35,7 @@ export async function loadFussballPairedPack(directory,{candidate,now=Date.now,r
  proof(cm.version===1&&am.version===3&&cm.success===true&&am.success===true,'successful v1 current and v3 archive required')
  const time=typeof now==='function'?now():now,at=time instanceof Date?+time:time
  proof(Number.isFinite(at)&&Date.parse(cm.createdAt)<=Date.parse(cm.completedAt)&&Date.parse(cm.completedAt)<=Date.parse(am.createdAt)&&Date.parse(am.createdAt)<=Date.parse(am.completedAt)&&Date.parse(am.completedAt)<=at,'paired chronology differs')
- for(const [i,s]of scopes.entries())proof(['seedUrl','staffel','season'].every(k=>manifests[i].options?.[k]===s[k])&&manifests[i].options.reportLimit===null,'capture scope/full intent differs')
+ for(const [i,s]of scopes.entries())proof(['seedUrl','staffel','season'].every(k=>manifests[i].options?.[k]===s[k])&&manifests[i].options.reportLimit===null&&manifests[i].options.cardPolicy===cardPolicy,'capture scope/full intent differs')
  const seed=cm.documents.filter(d=>d.kind==='round'&&d.url===scopes[0].seedUrl)
  proof(seed.length===1,'exact current original seed required')
  const d=seed[0],parent=am.archiveParent,originalReceipt={version:1,document:documentReceipt(d),attempt:cm.snapshot.attempts.find(a=>a.url===d.url),capture:{createdAt:cm.createdAt,codeSha256:cm.codeSha256,staffel:scopes[0].staffel,season:scopes[0].season}}
@@ -42,9 +44,9 @@ export async function loadFussballPairedPack(directory,{candidate,now=Date.now,r
  proof(source.length===d.bytes&&hash(source)===d.sha256&&source.equals(parentBytes),'archive parent original seed bytes differ')
  const load=dependencies.loadCapture??loadFussballImportCapture,seasons=[]
  for(const [i,s]of scopes.entries()){
-  const batch=await load(join(directory,i===0?'current':'archive'),{staffel:s.staffel,season:s.season,current:i===0&&requireFresh,now:at})
-  proof(batch.provider==='fussball-public'&&batch.staffel===s.staffel&&batch.season===s.season&&batch.activationEligible===false,'verified native batch scope differs')
-  seasons.push({code:i===0?c.source_league_code:c.archives[0].code,season:s.season,schedule:batch.schedule,reports:batch.reports,identities:batch.identities})
+  const batch=await load(join(directory,i===0?'current':'archive'),{staffel:s.staffel,season:s.season,current:i===0&&requireFresh,now:at,...(cardPolicy?{cardPolicy}:{})})
+  proof(batch.provider==='fussball-public'&&batch.staffel===s.staffel&&batch.season===s.season&&batch.activationEligible===false&&batch.cardPolicy===cardPolicy,'verified native batch scope differs')
+  seasons.push({code:i===0?c.source_league_code:c.archives[0].code,season:s.season,schedule:batch.schedule,reports:batch.reports,identities:batch.identities,...(cardPolicy?{cardPolicy,pendingReports:batch.pendingReports,cardEnvelopes:batch.cardEnvelopes}:{})})
  }
  const originals=['current','archive'].map(name=>['manifest.json','result.json','attempts.jsonl'].map(file=>[name+'/'+file,hash(readPairedOriginal(directory,name+'/'+file))]))
  return {version:1,candidate:c,seasons,captured_at:cm.createdAt,original_bytes_sha256:hash(canonical([['manifest.json',hash(readPairedOriginal(directory,'manifest.json'))],...originals]))}
