@@ -261,6 +261,23 @@ begin
 end;
 $$;
 reset role;
+-- Selekcija izpade s seznama kluba (dve sezoni nazaj): dogodek se še ureja, nova selekcija ne.
+update rounds set season = sezona_lige(980001, (now() at time zone 'Europe/Ljubljana')::date - 800) where id = 980021;
+set local role authenticated;
+do $$
+declare
+  v_id bigint := current_setting('test.prehod')::bigint;
+begin
+  assert jsonb_array_length(scout_koledar(current_date, current_date + 7)->'selekcije') = 0, 'selekcija izpadla';
+  perform scout_shrani_dogodek(980001, 'sestanek', now() + interval '1 day', 60, 'Klubska soba', null, v_id);
+  begin
+    perform scout_shrani_dogodek(980001, 'trening', now() + interval '1 day', 60, null, null);
+    raise exception 'nov dogodek v izpadli selekciji sprejet';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
+reset role;
 
 select 'scout-ekipa: ok';
 rollback;

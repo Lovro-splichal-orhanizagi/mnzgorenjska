@@ -56,7 +56,10 @@ export function Dogodek() {
 
       {urejam ? (
         <ObrazecDogodka
-          selekcije={d.selekcije}
+          // Selekcija starejšega dogodka je lahko izpadla s seznama kluba; ostane izbira.
+          selekcije={d.selekcije.some((x) => x.competition_id === d.competition_id)
+            ? d.selekcije
+            : [{ competition_id: d.competition_id, ime: d.selekcija, mladinska: false }, ...d.selekcije]}
           zacetna={d}
           onShranjeno={() => {
             setUrejam(false)

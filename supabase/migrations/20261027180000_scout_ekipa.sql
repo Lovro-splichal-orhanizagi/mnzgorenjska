@@ -180,7 +180,9 @@ begin
                   'id', e.id, 'competition_id', e.competition_id, 'vrsta', e.vrsta, 'zacetek', e.zacetek,
                   'trajanje_min', e.trajanje_min, 'kraj', e.kraj, 'serija', e.serija,
                   'oznaceni', (select count(*) from scout.prisotnost x join players p on p.id = x.player_id
-                                where x.dogodek_id = e.id and p.anonimiziran_at is null))
+                                where x.dogodek_id = e.id and p.anonimiziran_at is null
+                                  and not exists (select 1 from scout.kljuci_vrstic(array[p.id]) k
+                                                   join anonimizirani_igralci a on a.kljuc = k.kljuc)))
                   order by e.zacetek, e.id), '[]'::jsonb)
                   from scout.dogodki e
                  where e.team_id = d.team_id
@@ -237,7 +239,11 @@ declare
   n int := 1;
 begin
   select * into d from scout.dostop('dogodek', null, jsonb_build_object('dogodek', p_id, 'shrani', true));
-  perform scout.preveri_selekcijo(d.team_id, p_competition_id);
+  -- Starejši dogodek obdrži svojo selekcijo, tudi ko je ta izpadla s seznama kluba.
+  if p_id is null or not exists (select 1 from scout.dogodki x where x.id = p_id and x.team_id = d.team_id
+                                    and x.competition_id = p_competition_id) then
+    perform scout.preveri_selekcijo(d.team_id, p_competition_id);
+  end if;
   if p_zacetek is null or p_zacetek not between now() - interval '2 years' and now() + interval '2 years' then
     raise exception 'Scout: začetek manjka ali je več kot dve leti od danes.' using hint = 'scout-dogodek';
   end if;
@@ -408,6 +414,8 @@ as $$
       or scout.je_skrit(array[o.player_id]);
   delete from scout.dogodki where zacetek < now() - interval '24 months';
   delete from scout.prisotnost x
-   where not exists (select 1 from public.players p where p.id = x.player_id and p.anonimiziran_at is null);
+   where not exists (select 1 from public.players p where p.id = x.player_id and p.anonimiziran_at is null)
+      or exists (select 1 from scout.kljuci_vrstic(array[x.player_id]) k
+                  join public.anonimizirani_igralci a on a.kljuc = k.kljuc);
 $$;
 revoke all on function scout.pocisti() from public, anon, authenticated;
