@@ -356,6 +356,7 @@ jobs:
           node --test scripts/test-fcf-future-historical-sql.mjs
           node --test scripts/test-fcf-future-native-projection-sql.mjs
           node --test scripts/test-fcf-future-native-import-sql.mjs
+          node --test scripts/test-fcf-future-native-activation-sql.mjs
       - name: Reviewed English source-calendar native regression
         run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/sfl-d1-calendar.sql
       - run: npm run test:varnost
