@@ -1018,3 +1018,27 @@ Preverbe: `npm run test:fussball`, `npm run test:bulk`, offline UI skripte
 disposable `test-fussball-community-sql.mjs` in
 `test-fussball-community-integration.mjs`. Slednja ponovi resnični shranjeni
 zapisnik prek pravih glasov in atomske baze v eni transakciji z rollback.
+
+### Opažene oblike zapisnikov in nejavne rezerve (27. 10. 2026)
+
+Dekorativni naslov `//images.media.fussball.de/userfiles/..._p3.jpg` je dovoljen
+pod enakimi omejitvami gostitelja in poti kot različica `https:`. Slike se ne
+prenašajo; identiteta še vedno zahteva javni profil in pripadajočo pisavo.
+Pravi shranjeni zapisnik Heddesheim–Eppelheim ohrani 32 nastopov, tri gole,
+izid 3–0 in pravilne minute ter prestane pretvorbo v domači uvozni model.
+
+Postava lahko izpusti samo točno opaženo anonimno neuporabljeno rezervo:
+`href="#"`, prazno ime, priimek `k.A.`, nadomestno sliko in številko dresa
+znotraj pravilne domače oziroma gostujoče klopi. O izpustu ostane opozorilo;
+izvirni bajti se ohranijo, identiteta ali kandidat za glasovanje se ne ustvari.
+Anonimni začetni igralec, strelec, menjava ali povezani karton še vedno
+zavrne zapisnik. Preverbe polnih nastopov z vstavljeno nespremenjeno vrstico
+klopi so izrecno sestavljeni primeri, ne dokaz popolnosti njenih izvornih tekem.
+
+Ponovitev prvih 55 zapisnikov iz neuspelega zajema `40416972177` brez omrežja
+po teh popravkih da **40 popolnih, 9 čakajočih na kartone, 1 zavrnjenega**
+zaradi treh nejavnih začetnih igralcev in **5 z manjkajočimi izvirniki pisav**.
+Teh pet postav je razčlenljivih, polni zapisniki pa niso dokazani: stari parser
+je pred zajemom potrebnih pisav že zavrnil postavo. Delni zajem ostane
+neuspešen in ne omogoča vklopa; potrebna je nova celotna preverba. Poraba ostaja
+**961/5000**, saj diagnostika ni poslala nobenega zahtevka.

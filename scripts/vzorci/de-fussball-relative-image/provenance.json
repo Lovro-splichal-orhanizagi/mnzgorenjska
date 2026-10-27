@@ -1,0 +1,67 @@
+{
+  "matchId": "031DS4G5HS000000VS5489BUVUR5FS5A",
+  "season": "2026/27",
+  "sourceRun": 40416972177,
+  "sourceManifestSha256": "6739d990229f4f116eda6a77f4293f8fa43d28632b8100ca61194ef30622ea6b",
+  "documents": [
+    {
+      "url": "https://www.fussball.de/spiel/fv-fortuna-heddesheim-asv-eppelheim/-/spiel/031DS4G5HS000000VS5489BUVUR5FS5A",
+      "kind": "report",
+      "bytes": 194639,
+      "sha256": "c9cd781f54957e7cc10268f28fb8cb371c15dd29cc61d94cf8c403e59f2a1be7",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-10-26T23:39:32.825Z",
+      "file": "documents/c9cd781f54957e7cc10268f28fb8cb371c15dd29cc61d94cf8c403e59f2a1be7.html"
+    },
+    {
+      "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G5HS000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+      "kind": "lineup",
+      "bytes": 27832,
+      "sha256": "b01317484fc1d6219decba92865ebb13e28557167e37c6a37baf85d8bf40e46d",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-10-26T23:39:38.825Z",
+      "file": "documents/b01317484fc1d6219decba92865ebb13e28557167e37c6a37baf85d8bf40e46d.html"
+    }
+  ],
+  "fonts": {
+    "d6ngt5be": {
+      "file": "d6ngt5be.woff",
+      "sha256": "83b89e525d877090b1a398b4370959979c0066fe9bd49f1ac09083e33803221e",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/d6ngt5be/type/font",
+      "capturedAt": "2026-10-26T23:40:02.827Z"
+    },
+    "lem6evin": {
+      "file": "lem6evin.woff",
+      "sha256": "773887c1392e0c61cac8ed5c123fcdfcd42c0ce5db0e12daa726f2e27bf135ce",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/lem6evin/type/font",
+      "capturedAt": "2026-10-26T23:36:02.810Z"
+    },
+    "lvysqwg3": {
+      "file": "lvysqwg3.woff",
+      "sha256": "2df852744e5642d52881d7fe96b7b6c69747b474b972a164f74698a837366ed1",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/lvysqwg3/type/font",
+      "capturedAt": "2026-10-26T23:07:26.656Z"
+    },
+    "oy4lrct2": {
+      "file": "oy4lrct2.woff",
+      "sha256": "d2dd826f8e1ec66fac113fcc6849d9ad51099bd69534a19f91d5ee615f5f527a",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/oy4lrct2/type/font",
+      "capturedAt": "2026-10-26T23:24:38.747Z"
+    },
+    "pgxrw9qe": {
+      "file": "pgxrw9qe.woff",
+      "sha256": "86400add712d3907b0a00cc27f392c06b7d4b6de52a86832db4e823b63fd10a0",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/pgxrw9qe/type/font",
+      "capturedAt": "2026-10-26T23:35:50.809Z"
+    },
+    "ui90aqm4": {
+      "file": "ui90aqm4.woff",
+      "sha256": "2e240b89ad4da0461a77a04241bd1939e0f782fcc452a5d2975811d311dcc545",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/ui90aqm4/type/font",
+      "capturedAt": "2026-10-26T23:39:50.826Z"
+    }
+  },
+  "photosFetched": false
+}
