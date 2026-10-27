@@ -41,7 +41,7 @@ Task1 verification:94 focused tests pass. Fresh selection follows the existing d
 ## Task2: Accounted fresh continuation
 
 - [x] Authenticate terminal run39238757730 and its consumed claim, both diagnostics and final receipt, adding its15 GETs to the earlier22.
-- [ ] Introduce a distinct protocol/preset with honest37 baseline and a feasible remaining441 ceiling. Preserve old claim/tag/history rejection semantics; no replay of consumed executions.
+- [x] Add the proposal-only `future-g9-after-six-v1` protocol: honest37 baseline,240 fresh G9 originals,277 planned cumulative under478, no reuse. Its history-keyed namespace is not an execution claim; consumed-claim integration remains open.
 - [ ] Build new source admission using actual fresh originals, exact approved exclusions and the chosen future opening boundary. Pending user decisions may require a separate immutable policy namespace; do not pre-approve it here.
 - [ ] Add focused protocol/expiry/budget/claim tests and actual retained-evidence reauthentication. No provider execution until scope, new approval assets and claim are concretely reviewed.
 
@@ -59,3 +59,5 @@ Accounting subpiece: `fcf-post-six-accounting.mjs`/`test-fcf-post-six-accounting
 - [ ] Obtain the pending policy/budget decisions and review exact new source/writer artifacts before source execution or production mutation.
 - [ ] Run the bounded source capture once, count all failures, audit source completeness, then prepare/import/reprice/check through Actions.
 - [ ] Activate only candidates passing every gate and read back exact active state, unchanged approved data, official opening/deadline and deployed commit. Keep all failures explicit.
+
+Future source subpieces (27October): `fcf-future-source-plan.mjs` fixes the G9-only proposal above and requires the actual reader-issued accounting proof. `parseFcfFutureAuditDocument` shares the strict normal-report checker while permitting completed/scored current-season rounds1–30; legacy R6 behavior is unchanged. All six historical IDs stay outside normal parsing, and actual4109409/4118365 closed no-score pages still hold. Neither helper grants source/claim/admission/activation authority. Root verified the combined plan/accounting/parser/legacy suite:131 passed,2 existing private Calonge fixture skips,0 failures; all new retained-evidence cases passed. Separate bounded independent reviews approved both subpieces. These local changes are not a deployed or executable continuation.

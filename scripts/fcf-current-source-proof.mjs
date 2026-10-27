@@ -2,12 +2,14 @@
 // come from the existing FCF validators/parser; this module performs no IO.
 import {createHash} from 'node:crypto'
 import {getHistoricalStatisticsPolicy} from './lib/historical-statistics-policy.mjs'
+import {getFcfSixPolicy} from './fcf-six-historical-policy.mjs'
 import {fcfFinalAuditScope} from './fcf-final-audit.mjs'
 import {validateFcfSingleReportSource,vZapisnik,nastopi} from './viri/fcf.mjs'
 const fail=message=>{throw Error(`FCF_SOURCE_PROOF: ${message}`)}
-export function parseFcfCurrentAuditDocument({id,competitionSlug,expectedSourceRound,html,receipt,now=Date.now()}){
- const scope=fcfFinalAuditScope(competitionSlug),policy=getHistoricalStatisticsPolicy(competitionSlug)
- if(!scope||policy?.provider!=='fcf'||typeof id!=='string'||!/^[1-9]\d*$/.test(id)||policy.entries.some(e=>e.sourceMatchId===id))fail('exact normal current report required; historical markers never enter individual parsing')
+function parseAuditDocument({id,competitionSlug,expectedSourceRound,html,receipt,now=Date.now()},future){
+ const scope=fcfFinalAuditScope(competitionSlug),policy=future?getFcfSixPolicy(competitionSlug):getHistoricalStatisticsPolicy(competitionSlug)
+ const historical=future?['es-ct-segona-g1','es-ct-tercera-g2','es-ct-tercera-g9'].some(slug=>getFcfSixPolicy(slug)?.entries.some(e=>e.sourceMatchId===id)):policy?.entries.some(e=>e.sourceMatchId===id)
+ if(!scope||policy?.provider!=='fcf'||typeof id!=='string'||!/^[1-9]\d*$/.test(id)||historical||future&&(!['es-ct-segona-g1','es-ct-tercera-g9'].includes(competitionSlug)||!Number.isFinite(now)))fail('exact normal current report required; historical markers never enter individual parsing')
  if(typeof html!=='string'||html.charCodeAt(0)===0xfeff||!receipt||receipt.id!==id||receipt.competitionSlug!==competitionSlug||receipt.sourceUrl!==`https://www.fcf.cat/ca/competicio/acta/${id}`||receipt.bytes!==Buffer.byteLength(html)||receipt.rawSha256!==createHash('sha256').update(html).digest('hex'))fail('actual source bytes/receipt binding differs')
  if(!Number.isInteger(expectedSourceRound)||expectedSourceRound<1||expectedSourceRound>30)fail('verified actual calendar round required')
  const c={slug:competitionSlug,source:'fcf',source_league_code:scope.code,sezona_koledarska:false}
@@ -15,10 +17,10 @@ export function parseFcfCurrentAuditDocument({id,competitionSlug,expectedSourceR
  if(header.krog!==expectedSourceRound||!/^202[67]-\d{2}-\d{2}$/.test(header.datum??'')||!Number.isFinite(Date.parse(header.datum))||header.datum<'2026-07-01'||header.datum>='2027-07-01')fail('actual source round/date changed or is outside current season')
  if(!header.izid){
   if(header.zaprt)fail('closed source lacks an official result')
-  if(expectedSourceRound===6&&(!header.ura||Date.parse(`${header.datum}T00:00:00Z`)<=now))fail('R6 requires an explicit future official kickoff')
+  if(!future&&expectedSourceRound===6&&(!header.ura||Date.parse(`${header.datum}T00:00:00Z`)<=now))fail('R6 requires an explicit future official kickoff')
   return{status:'pending',header,report:null,appearances:null}
  }
- if(expectedSourceRound>=6||!header.zaprt||Date.parse(`${header.datum}T00:00:00Z`)>now)fail('new result is not a completed reviewed prelaunch round')
+ if(!future&&expectedSourceRound>=6||!header.zaprt||Date.parse(`${header.datum}T00:00:00Z`)>now)fail('new result is not a completed reviewed prelaunch round')
  const report=vZapisnik(html,{id:`es${id}`,url:receipt.sourceUrl})
  if(!report||report.prazen||report.nepopoln||report.sezona!=='2026/27'||!Array.isArray(report.opozorila))fail('normal report has incomplete individual statistics')
  const appearances=nastopi(report),players=[]
@@ -43,3 +45,16 @@ export function parseFcfCurrentAuditDocument({id,competitionSlug,expectedSourceR
  }
  return{status:'complete',header,report,appearances}
 }
+
+/** Original R6/prelaunch contract, unchanged for all legacy consumers. */
+export function parseFcfCurrentAuditDocument(input){return parseAuditDocument(input,false)}
+
+/** Separate G1/G9 normal-document parser for the future-release protocol.
+ * Completed/scored reports may be in any actual round1–30 on a past/current
+ * source day. Official unplayed pages stay pending, even in an elapsed round.
+ * All six reviewed historical IDs require their separate historical prover;
+ * closed reports without a score remain errors, with no new exceptions.
+ * Structural raw-byte/receipt validation grants NO source authentication,
+ * freshness, exclusion approval, calendar completeness or activation authority.
+ */
+export function parseFcfFutureAuditDocument(input){return parseAuditDocument(input,true)}
