@@ -600,11 +600,11 @@ jobs:
           echo "  - projekt je zaustavljen (Settings -> General)"
           exit 1
 
-  # SLFF Scout (scout.slff.eu): isti tok kot objavi-vm, svoja mapa
-  # /srv/slff-scout. Teče šele, ko je strežnik pripravljen in lastnik nastavi
+  # SLFF Club (club.slff.eu, prej Scout; scout.slff.eu preusmeri): isti tok kot
+  # objavi-vm, svoja mapa /srv/slff-scout. Teče šele, ko je strežnik pripravljen in lastnik nastavi
   # spremenljivko repozitorija SCOUT_OBJAVA=1 (docs/scout.md, Objava aplikacije).
   objavi-scout:
-    name: Objava Scout na Hetzner VM
+    name: Objava Club na Hetzner VM
     needs: [preveri, varnost, migracije]
     if: inputs.diagnostika != true && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && vars.SCOUT_OBJAVA == '1'
     runs-on: ubuntu-latest
@@ -646,13 +646,13 @@ jobs:
       - name: Je nova različica v zraku?
         run: |
           for i in $(seq 1 20); do
-            NAJDEN=$(curl -sS -m 20 -H 'Cache-Control: no-cache' "https://scout.slff.eu/?ci=$(date +%s)" \
+            NAJDEN=$(curl -sS -m 20 -H 'Cache-Control: no-cache' "https://club.slff.eu/?ci=$(date +%s)" \
               | grep -o 'name="slff-commit" content="[a-f0-9]*"' | grep -o '[a-f0-9]\{40\}' || true)
-            if [ "$NAJDEN" = "$GITHUB_SHA" ]; then echo "OK — scout.slff.eu streže $NAJDEN"; exit 0; fi
+            if [ "$NAJDEN" = "$GITHUB_SHA" ]; then echo "OK — club.slff.eu streže $NAJDEN"; exit 0; fi
             echo "  poskus $i/20: v zraku je ${NAJDEN:-<brez znamke>}"
             sleep 15
           done
-          echo "NAPAKA: scout.slff.eu po 5 minutah ne streže $GITHUB_SHA (Caddy blok, DNS, /srv/slff-scout?)."
+          echo "NAPAKA: club.slff.eu po 5 minutah ne streže $GITHUB_SHA (Caddy blok, DNS, /srv/slff-scout?)."
           exit 1
 
   # SLFF Trgovina (shop.slff.eu): isti tok kot objavi-vm, svoja mapa

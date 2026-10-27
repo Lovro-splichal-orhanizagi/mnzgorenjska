@@ -23,7 +23,7 @@ export function Okvir({ children }: { children: ReactNode }) {
           <Link to={dostop ? '/club' : '/'} aria-label={t('app.ime')} className="flex shrink-0 items-center gap-2 font-black">
             <img src={grb} alt="" className="h-8 w-8" />
             <span className="naslov">SLFF</span>
-            <span className="znacka bg-gnl-400/15 text-gnl-300 ring-1 ring-gnl-400/30">Scout</span>
+            <span className="znacka bg-gnl-400/15 text-gnl-300 ring-1 ring-gnl-400/30">Club</span>
           </Link>
           {klub && <span className="min-w-0 max-w-[40vw] truncate text-sm text-slate-400 sm:max-w-xs">{klub.klub}</span>}
           <span className="flex-1" />

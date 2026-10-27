@@ -32,11 +32,17 @@ stats.slff.eu {
 	reverse_proxy localhost:3100
 }
 
-# SLFF Scout (docs/scout.md): SPA that CI rsyncs to /srv/slff-scout/releases/<sha> and
-# switches `current`. Proxied A record `scout` in Cloudflare; the origin cert must cover
-# it (*.slff.eu). The API stays at api.slff.eu (cross-origin, like the mobile app).
-# A paid tool for logged-in clubs: nothing on it is for search engines.
+# SLFF Club (docs/scout.md; renamed from Scout 27. 10. 2026): SPA that CI rsyncs to
+# /srv/slff-scout/releases/<sha> and switches `current`. Proxied A records `club` and
+# `scout` in Cloudflare; the origin cert covers *.slff.eu. The API stays at api.slff.eu
+# (cross-origin, like the mobile app). A paid tool for logged-in clubs: nothing on it is
+# for search engines.
 scout.slff.eu {
+	import origin_tls
+	redir https://club.slff.eu{uri} permanent
+}
+
+club.slff.eu {
 	import origin_tls
 	root * /srv/slff-scout/current
 	encode zstd gzip

@@ -80,7 +80,7 @@ export function Koledar() {
 
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={() => premakni(-1)} aria-label={t('koledar.prejsnji')} className="gumb-tih min-h-11 min-w-11 px-3">←</button>
-        <h2 className="min-w-40 text-center text-lg font-bold capitalize text-slate-100" aria-live="polite">{mesec(m)}</h2>
+        <h2 className="min-w-40 text-center text-lg font-bold first-letter:uppercase text-slate-100" aria-live="polite">{mesec(m)}</h2>
         <button type="button" onClick={() => premakni(1)} aria-label={t('koledar.naslednji')} className="gumb-tih min-h-11 min-w-11 px-3">→</button>
         <span className="flex-1" />
         {selekcije.length > 0 && !obrazec && (
@@ -139,7 +139,7 @@ export function SeznamDni({ k, selekcija }: { k: KoledarT; selekcija: number | n
     <ol className="space-y-4">
       {dnevi.map(([d, vnosi]) => (
         <li key={d} className="space-y-2">
-          <h3 className={`text-sm font-semibold capitalize ${d === danes ? 'text-gnl-300' : 'text-slate-400'}`}>
+          <h3 className={`text-sm font-semibold first-letter:uppercase ${d === danes ? 'text-gnl-300' : 'text-slate-400'}`}>
             {dan(new Date(`${d}T00:00`))}
           </h3>
           <ul className="kartica divide-y divide-white/5 overflow-hidden">
@@ -264,7 +264,7 @@ export function ObrazecDogodka({ selekcije, zacetna, onShranjeno, onPreklic }: {
       </label>
       <label className={`${oznaka} sm:col-span-2`}>
         <span>{t('obrazec.opomba')}</span>
-        <textarea value={opomba} maxLength={500} rows={2} onChange={(e) => setOpomba(e.target.value)} className="polje w-full" />
+        <textarea value={opomba} maxLength={500} rows={2} onChange={(e) => setOpomba(e.target.value)} placeholder={t('obrazec.brezIgralcev')} className="polje w-full" />
       </label>
       {!zacetna.id && (
         <div className="space-y-2 sm:col-span-2">

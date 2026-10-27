@@ -431,21 +431,26 @@ objava, testi): `docs/scout.md`. Bistvo:
   (`cd scout/stroj && .venv/bin/pytest -q`) in `deno check`/`lint` robnih
   funkcij poganja `scout-in-funkcije.yml`, le na PR, ki spremeni njuno mapo.
 
-## SLFF Scout (klubi, scout.slff.eu)
+## SLFF Club (klubi, club.slff.eu; prej Scout)
 
-Plačljivo orodje za klube: ločena Vite aplikacija v `scout/`
+Plačljivo orodje za upravljanje kluba **SLFF Club** (od 27. 10. 2026 nadomesti
+SLFF Scout; Scout ostane ime modula za iskanje igralcev). `scout.slff.eu`
+preusmeri (301) na `club.slff.eu`; mapa, shema, RPC `scout_*` in lookup keys
+Stripa ostanejo. Ločena Vite aplikacija v `scout/`
 (`npm run dev:scout`, `build:scout` → `dist-scout/`, `smoke:scout`), ista
 baza in računi, seja svoja. Bere **le** RPC `scout_*`, nikoli sheme `scout`
 neposredno. Stran Klub (`/club`, `scout_klub`) je pregled lastnega kluba;
 administratorji izberejo katerikoli klub v državi naročnine. Koledar, prisotnost in kader
 selekcije (`/calendar`, `/squad`, `scout.dogodki`, `scout.prisotnost`) so prvi korak
 upravljanja kluba; prisotnost brez razloga odsotnosti (`docs/scout.md`, *Ekipa*).
+Za dogodke in prisotnost je SLFF **obdelovalec** (pogodba o obdelavi v
+`pogoji.obdelava`); klici lastnega kluba ne pišejo igralcev v dnevnik.
 Vsaka nova funkcija Scouta gre skozi `scout.dostop` in
 `scout.vidni` in dobi test v `supabase/tests/varnost.sql`; vsako novo
 poizvedbo pred združitvijo izmeri na produkciji. Nizi so v
 `scout/src/besede.ts`: "kazalniki iz podatkov tekem", brez negativnih oznak. CI jo objavi le ob `SCOUT_OBJAVA=1`; DNS, Caddy blok,
 GoTrue, funkcije in Stripe so ročni. Vse: `docs/scout.md` (*Aplikacija
-scout.slff.eu*, *Objava aplikacije*).
+club.slff.eu*, *Objava aplikacije*).
 
 ## SLFF Trgovina (shop.slff.eu)
 

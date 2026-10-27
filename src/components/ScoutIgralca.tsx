@@ -150,10 +150,7 @@ export function ScoutIgralca({ glavni }: { glavni: number }) {
               ))}
             </div>
           </fieldset>
-          <label className="flex min-h-11 items-center gap-2">
-            <input type="checkbox" checked={kontakt} onChange={(e) => setKontakt(e.target.checked)} />
-            {t('igralci.scout.kontakt')}
-          </label>
+          {/* Stika klub–igralec še ni (pravni pregled 27. 10. 2026): kljukica skrita, shrani se obstoječa vrednost. */}
           <p className="text-xs text-slate-400">
             {tx('igralci.scout.privolitev', {}, {
               pravno: (v) => (

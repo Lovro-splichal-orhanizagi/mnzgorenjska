@@ -23,6 +23,7 @@ insert into rounds (id, competition_id, season, number) overriding system value
 values (980021, 980001, sezona_lige(980001), 1), (980022, 980002, sezona_lige(980002), 1);
 insert into matches (id, round_id, home_team_id, away_team_id, played_on, home_goals, away_goals, imported_at) overriding system value
 values (980031, 980021, 980011, 980012, '2026-10-11', 2, 1, now()),
+       (980033, 980021, 980013, 980011, '2026-10-25', 0, 0, null),
        (980032, 980022, 980012, 980013, '2026-10-12', 0, 0, now());
 -- 980041 viden, 980042 ugovor (lastni klub ga vidi), 980043 anonimiziran, 980044 pri B
 insert into players (id, competition_id, team_id, full_name, first_name, last_name, position) overriding system value
@@ -87,9 +88,11 @@ begin
   k := scout_koledar('2026-10-01', '2026-10-31');
   assert (select array_agg((s->>'competition_id')::bigint) from jsonb_array_elements(k->'selekcije') s) = array[980001::bigint],
     'selekcije: le tekmovanja kluba: ' || (k->'selekcije')::text;
-  assert jsonb_array_length(k->'tekme') = 1 and (k->'tekme'->0->>'id')::bigint = 980031
+  assert jsonb_array_length(k->'tekme') = 2 and (k->'tekme'->0->>'id')::bigint = 980031
      and (k->'tekme'->0->>'doma')::boolean and (k->'tekme'->0->>'nasprotnik') = 'NK B'
      and (k->'tekme'->0->>'za')::int = 2, 'koledar: tekma kluba z izidom';
+  assert (k->'tekme'->1->'za') = 'null'::jsonb and (k->'tekme'->1->'proti') = 'null'::jsonb
+     and not (k->'tekme'->1->>'doma')::boolean, 'koledar: neodigrana tekma brez izida 0:0';
 
   begin
     perform scout_koledar('2026-01-01', '2026-12-31');
@@ -201,8 +204,9 @@ begin
   assert (select count(*) from scout.dogodki where team_id = 980011) = 2, 'dogodki A: ostaneta 2';
   assert (select count(*) from scout.dnevnik where team_id = 980011 and vrsta in ('koledar', 'dogodek', 'ekipa')) > 0,
     'klici v dnevniku';
-  assert (select parametri->'igralci' from scout.dnevnik where team_id = 980011 and vrsta = 'ekipa' order by id limit 1)
-         = '[980041, 980042]'::jsonb, 'dnevnik kadra hrani vrnjene igralce';
+  -- 20261028090000: klici lastnega kluba ne pišejo igralcev (mladoletni) v dnevnik
+  assert not exists (select 1 from scout.dnevnik where team_id = 980011 and vrsta in ('ekipa', 'dogodek')
+                      and parametri ? 'igralci'), 'dnevnik kluba brez igralcev';
   assert not exists (select 1 from scout.dnevnik where team_id = 980012), 'zavrnjeni klici niso v dnevniku';
 end;
 $$;
@@ -278,6 +282,19 @@ begin
 end;
 $$;
 reset role;
+
+-- Pogodba o obdelavi, točka 8: 90 dni po koncu naročnine se dogodki izbrišejo.
+do $$
+begin
+  perform scout.pocisti();
+  assert exists (select 1 from scout.dogodki where team_id = 980011), 'veljavna naročnina obdrži dogodke';
+  update scout.narocnine set velja_do = now() - interval '91 days' where team_id = 980011;
+  perform scout.pocisti();
+  assert not exists (select 1 from scout.dogodki where team_id = 980011), '90 dni po koncu izbrisano';
+  assert not exists (select 1 from scout.prisotnost x where not exists (select 1 from scout.dogodki e where e.id = x.dogodek_id)),
+    'prisotnost gre z dogodkom';
+end;
+$$;
 
 select 'scout-ekipa: ok';
 rollback;
