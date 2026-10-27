@@ -2,6 +2,25 @@
 import type { Prevod } from '../jedro.ts'
 
 export const tekme: NonNullable<Prevod['tekme']> = {
+  kartoni: {
+    preveriPrejemnika: "Bitte prüfe den Kartenempfänger. Du kannst deine Stimme ändern.",
+    krogCaka: "Die Rundenpunkte warten auf die Bestätigung der Empfänger roter Karten. Punkte, automatische Wechsel und Rundenplatzierung sind noch nicht verfügbar.",
+    zacasno: "Vorläufige Summe · Rundenstatistik ausstehend",
+    naslov: "Karten · Community-Zuordnung",
+    uvod: "Kartenart, Zeitpunkt und Mannschaft stammen aus dem offiziellen Spielbericht. Die Community bestimmt den fehlenden Empfänger aus der Aufstellung dieses Spiels. Schwelle: {prag}. Bis zur Bestätigung kannst du deine Stimme ändern; Stimmen von Ligakennern zählen mehr.",
+    yellow: "Gelbe Karte",
+    red: "Rote Karte",
+    second_yellow: "Gelb-Rote Karte",
+    pending: "Empfänger wartet auf Stimmen",
+    queued: "Auswahl wartet auf Prüfung",
+    confirmed: "Empfänger bestätigt",
+    statistikaCaka: "Die Spielerstatistik wartet auf die Bestätigung der Empfänger roter Karten. Minuten, Tore und Punkte sind noch nicht verfügbar. Das offizielle Ergebnis bleibt erhalten.",
+    glasovi: "Gewichtete Stimmen: {n} / {prag}",
+    prejemnikNedosegljiv: "Der Name des bestätigten Empfängers ist nicht verfügbar.",
+    brezKandidatov: "Öffentliche Kandidaten aus der Aufstellung dieses Spiels sind nicht verfügbar.",
+    napaka: "Die Abstimmung konnte nicht geladen oder gespeichert werden. Prüfe deine Anmeldung und Stimmberechtigung und versuche es erneut.",
+    ponovi: "Erneut versuchen",
+  },
   statistika: {
     brezStrelcev: "Keine bestätigten Torschützen.",
     nedosegljivo: "Für dieses historische Spiel sind keine Spielerstatistiken verfügbar. Das offizielle Ergebnis bleibt erhalten.",

@@ -1,5 +1,5 @@
 // Ena tekma: obe postavi na igrišču in točke, ki jih je prinesla.
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNastavitev } from '../lib/nastavitve'
 import { PRAG_ASISTENCE_PRIVZETO } from '../components/GolZaGlasovanje'
 import { useLocation, useParams } from 'react-router-dom'
@@ -11,6 +11,7 @@ import { t, datum } from '../i18n'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import type { Pozicija } from '../lib/tipi'
+import KartoniZaGlasovanje, { StatistikaCakaKartone } from '../components/KartoniZaGlasovanje'
 import Grb from '../components/Grb'
 import { NedosegljivaStatistika } from '../components/PokritostStatistike'
 import IgrisceTocke from '../components/IgrisceTocke'
@@ -90,6 +91,8 @@ export default function Tekma() {
   const { session } = useAuth()
   const uporabnikId = session?.user.id ?? null
   const lokacija = useLocation()
+  const [cardPending, setCardPending] = useState<{ matchId: number; pending: boolean } | null>(null)
+  const updateCardPending = useCallback((pending: boolean) => setCardPending({ matchId: tekmaId, pending }), [tekmaId])
   const [tekma, setTekma] = useState<TekmaVrstica | null>(null)
   // Prag lige, v kateri je bila tekma odigrana — ne lige iz menija. Do
   // nalaganja tekme velja privzetek.
@@ -213,7 +216,7 @@ export default function Tekma() {
 
       // Glasovi o asistencah — na tej strani se da tudi glasovati.
       const idji = (g ?? []).map((x: any) => x.id as number)
-      if (t?.statistics_status !== 'unavailable_historical' && idji.length) osveziGlasove(idji)
+      if (t?.statistics_status !== 'unavailable_historical' && t?.statistics_status !== 'pending_cards' && idji.length) osveziGlasove(idji)
     }
     async function osveziGlasove(idji: number[]) {
       const { data: st } = await supabase
@@ -252,7 +255,7 @@ export default function Tekma() {
   }, [tekmaId, uporabnikId])
 
   async function glasuj(golId: number, playerId: number | null) {
-    if (!session || tekma?.statistics_status === 'unavailable_historical') return
+    if (!session || tekma?.statistics_status === 'unavailable_historical' || tekma?.statistics_status === 'pending_cards' || (cardPending?.matchId === tekmaId && cardPending.pending)) return
     setNapaka(null)
 
     const { error } = await supabase.from('assist_votes').upsert(
@@ -314,7 +317,8 @@ export default function Tekma() {
 
   // Koliko golov te tekme še čaka na odločitev skupnosti. Enajstmetrovke,
   // avtogoli in goli, pri katerih je zmagalo »brez asistence«, ne čakajo.
-  const nedosegljivo = tekma.statistics_status === 'unavailable_historical'
+  const kartoniCakajo = tekma.statistics_status === 'pending_cards' || (cardPending?.matchId === tekmaId && cardPending.pending)
+  const nedosegljivo = tekma.statistics_status === 'unavailable_historical' || kartoniCakajo
   const cakajocih = goli.filter((g) => caka(g, glasovi[String(g.id)] ?? [], pragAsistence)).length
 
   // Nastopi so v isti tabeli za obe ekipi; razdelimo jih po klubu.
@@ -364,7 +368,7 @@ export default function Tekma() {
         />
       )}
 
-      {nedosegljivo ? <NedosegljivaStatistika resultKnown={tekma.home_goals != null && tekma.away_goals != null} /> : nastopi.length === 0 ? (
+      {kartoniCakajo ? <StatistikaCakaKartone /> : nedosegljivo ? <NedosegljivaStatistika resultKnown={tekma.home_goals != null && tekma.away_goals != null} /> : nastopi.length === 0 ? (
         <p className="text-sm text-slate-400">
           {t('tekme.tekma.brezPostav')}
         </p>
@@ -393,6 +397,8 @@ export default function Tekma() {
           </div>
         </>
       )}
+
+      {tekma.statistics_status !== 'unavailable_historical' && <KartoniZaGlasovanje key={tekmaId} matchId={tekmaId} onStatisticsPending={updateCardPending} />}
 
       {!nedosegljivo && cakajocih > 0 && (
         <p className="text-sm text-amber-200">

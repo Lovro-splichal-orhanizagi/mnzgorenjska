@@ -202,7 +202,7 @@ export function createBatchTransport({url,key,fetch:request=globalThis.fetch}) {
   try {
    const competition=await boundCompetition(c),season=await native.season(c)
    const rounds=await rows('rounds',{select:'id,number,season,deadline_at,played_on,lineups_locked_at',competition_id:`eq.${c.id}`,order:'id'})
-   const matches=await rows('matches',{select:'id,round_id,played_on,zapisnik_id,vir_brez_izida,home_goals,away_goals,home_team_id,away_team_id,imported_at,kontumacija,statistics_status,import_warnings,rounds!inner(competition_id)','rounds.competition_id':`eq.${c.id}`,order:'id'})
+   const matches=await rows('matches',{select:'id,round_id,played_on,zapisnik_id,vir_brez_izida,home_goals,away_goals,home_team_id,away_team_id,imported_at,kontumacija,statistics_status,statistics_reason,source_url,import_warnings,rounds!inner(competition_id)','rounds.competition_id':`eq.${c.id}`,order:'id'})
    const linked={select:'*,matches!inner(rounds!inner(competition_id))','matches.rounds.competition_id':`eq.${c.id}`,order:'id'}
    const appearances=await rows('appearances',linked),goals=await rows('goals',linked)
    const players=await rows('players',{select:'id,reg_st,team_id,active,position,position_source,value',competition_id:`eq.${c.id}`,order:'id'})

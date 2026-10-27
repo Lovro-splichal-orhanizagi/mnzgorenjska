@@ -14,17 +14,17 @@ const archive={staffel:'02TGLSVQ1800000IVS5489BTVTLPPK10-G',season:'2025/26',see
 const candidate={slug:'de-test',source:'fussball-public',country_code:'DE',host:'www.fussball.de',source_league_code:current.staffel+':'+current.season,season:current.season,seedUrl:current.seedUrl,archives:[{code:archive.staffel+':'+archive.season,season:archive.season,seedUrl:archive.seedUrl}]}
 const auditSha=/^[a-f0-9]{40}$/.test(process.env.GITHUB_SHA??'')?process.env.GITHUB_SHA:'a'.repeat(40)
 const audit={current:{runId:'40000000000',artifactId:123,artifactName:'fussball-season-40000000000',headSha:auditSha,repository:'Lovro-splichal-orhanizagi/mnzgorenjska'},archive:{runId:'40000000000',artifactId:124,artifactName:'fussball-season-archive-40000000000',headSha:auditSha,repository:'Lovro-splichal-orhanizagi/mnzgorenjska'}}
-function setup(){
+function setup({selected=candidate,cardPolicy}={}){
  const root=mkdtempSync(join(tmpdir(),'fussball-pair-')),bytes=Buffer.from('original current seed'),document={url:current.seedUrl,kind:'round',sha256:hash(bytes),bytes:bytes.length,status:200,contentType:'text/html',capturedAt:'2026-10-27T00:00:00.001Z'},attempt={number:1,url:document.url,kind:'round',startedAt:document.capturedAt,status:'success',error:null,httpStatus:200}
- const cm={version:1,success:true,createdAt:'2026-10-27T00:00:00.000Z',completedAt:'2026-10-27T00:00:01.000Z',codeSha256:'b'.repeat(64),options:{...current,reportLimit:null},documents:[{...document,file:'documents/'+document.sha256+'.html'}],snapshot:{attempts:[attempt]}}
- const am={version:3,success:true,createdAt:'2026-10-27T00:00:02.000Z',completedAt:'2026-10-27T00:00:03.000Z',codeSha256:'b'.repeat(64),options:{...archive,reportLimit:null},documents:[],archiveParent:{current:structuredClone(current),document,originalReceipt:{version:1,document,attempt,capture:{createdAt:cm.createdAt,codeSha256:cm.codeSha256,staffel:current.staffel,season:current.season}},file:'archive-parent/'+document.sha256+'.html'}}
+ const cm={version:1,success:true,createdAt:'2026-10-27T00:00:00.000Z',completedAt:'2026-10-27T00:00:01.000Z',codeSha256:'b'.repeat(64),options:{...current,reportLimit:null,...(cardPolicy?{cardPolicy}:{})},documents:[{...document,file:'documents/'+document.sha256+'.html'}],snapshot:{attempts:[attempt]}}
+ const am={version:3,success:true,createdAt:'2026-10-27T00:00:02.000Z',completedAt:'2026-10-27T00:00:03.000Z',codeSha256:'b'.repeat(64),options:{...archive,reportLimit:null,...(cardPolicy?{cardPolicy}:{})},documents:[],archiveParent:{current:structuredClone(current),document,originalReceipt:{version:1,document,attempt,capture:{createdAt:cm.createdAt,codeSha256:cm.codeSha256,staffel:current.staffel,season:current.season}},file:'archive-parent/'+document.sha256+'.html'}}
  for(const [name,m]of [['current',cm],['archive',am]]){mkdirSync(join(root,name));writeFileSync(join(root,name,'manifest.json'),JSON.stringify(m));writeFileSync(join(root,name,'attempts.jsonl'),'original journal\n');writeFileSync(join(root,name,'result.json'),'original result\n')}
  mkdirSync(join(root,'current','documents'));writeFileSync(join(root,'current',cm.documents[0].file),bytes);mkdirSync(join(root,'archive','archive-parent'));writeFileSync(join(root,'archive',am.archiveParent.file),bytes)
  // Capture parser/coverage/fingerprint checks are independently exercised by
  // loadFussballImportCapture tests. This seam isolates cross-capture binding.
  const calls=[],loadCapture=async(d,o)=>{calls.push(o);return {provider:'fussball-public',staffel:o.staffel,season:o.season,schedule:[{stevilka:1,tekme:[]}],reports:[{id:o.season}],identities:[],activationEligible:false,provenance:{createdAt:JSON.parse(readFileSync(join(d,'manifest.json'))).createdAt}}}
- writeFileSync(join(root,'manifest.json'),JSON.stringify({version:1,provider:'germany-paired-fussball',candidate,audit,current:'current',archive:'archive'}))
- return {root,cm,am,calls,dependencies:{catalog:[candidate],loadCapture},clean:()=>rmSync(root,{recursive:true,force:true})}
+ writeFileSync(join(root,'manifest.json'),JSON.stringify({version:1,provider:'germany-paired-fussball',candidate:selected,audit,current:'current',archive:'archive'}))
+ return {root,cm,am,calls,dependencies:{catalog:[selected],loadCapture},clean:()=>rmSync(root,{recursive:true,force:true})}
 }
 test('paired pack binds separate originals and passes each exact season through the import verifier',async()=>{
  assert.equal(typeof api.loadFussballPairedPack,'function')
@@ -99,7 +99,7 @@ test('hosted workflow validation executes for a paired Baden dispatch and reject
  }finally{rmSync(root,{recursive:true,force:true})}
 })
 
-test('paired adapter composes real capture replay, full native coverage, installed fingerprints and freshness checks',async()=>{
+test('strict paired adapter composes real capture replay, full native coverage, installed fingerprints and freshness checks',async()=>{
  const [{captureFussballDirectory,verifyFussballDirectory},{loadFussballImportCapture},{razberiFantasyZapisnik}]=await Promise.all([import('./fussball-capture-evidence.mjs'),import('./fussball-import.mjs'),import('./viri/fussball-statistika.mjs')])
  const read=file=>readFileSync(new URL('./vzorci/'+file,import.meta.url)),witness=JSON.parse(read('de-fussball-baden-archive-20261026.json')),fontProof=JSON.parse(read('de-fussball-zapisnik.json')),fonts=Object.fromEntries(Object.entries(fontProof.fonts).map(([id,f])=>[id,{bytes:read(f.file),sha256:f.sha256}]))
  // Explicitly synthetic one-report season framing, with real decoded statistics
@@ -113,11 +113,12 @@ test('paired adapter composes real capture replay, full native coverage, install
  }
  const root=mkdtempSync(join(tmpdir(),'paired-real-loader-'))
  try{
- const catalog=(await import('./bulk-germany-source.mjs')).GERMANY_BULK_CANDIDATES.find(c=>c.slug==='de-verbandsliga-baden'),currentDirectory=join(root,'current-input'),archiveDirectory=join(root,'archive-input'),directory=join(root,'pair')
+ const catalog=structuredClone((await import('./bulk-germany-source.mjs')).GERMANY_BULK_CANDIDATES.find(c=>c.slug==='de-verbandsliga-baden'));delete catalog.communityCards // Explicit strict test catalog; production Baden is separately opted in.
+ const currentDirectory=join(root,'current-input'),archiveDirectory=join(root,'archive-input'),directory=join(root,'pair')
  const cm=await captureFussballDirectory({directory:currentDirectory,options:{...witness.current,maxRequests:2,reportLimit:null},fetchFn:async()=>new Response(read(witness.currentSourceFile),{headers:{'content-type':'text/html'}}),collectFn})
  const document=Object.fromEntries(['url','kind','sha256','bytes','status','contentType','capturedAt'].map(k=>[k,cm.documents[0][k]])),originalReceipt={version:1,document,attempt:cm.snapshot.attempts[0],capture:{createdAt:cm.createdAt,codeSha256:cm.codeSha256,staffel:witness.current.staffel,season:witness.current.season}}
  await captureFussballDirectory({directory:archiveDirectory,options:{...witness.archive,maxRequests:2,reportLimit:null},archiveParent:{current:witness.current,observedSeedUrl:witness.observedSeedUrl,document,originalReceipt,bytes:read(witness.currentSourceFile)},fetchFn:async()=>new Response(read(witness.archiveSourceFile),{headers:{'content-type':'text/html'}}),collectFn})
- const dependencies={loadCapture:(path,options)=>loadFussballImportCapture(path,options,{verifyDirectory:d=>verifyFussballDirectory(d,{collectFn})})}
+ const dependencies={catalog:[catalog],loadCapture:(path,options)=>loadFussballImportCapture(path,options,{verifyDirectory:d=>verifyFussballDirectory(d,{collectFn})})}
  const pack=await api.stageFussballPairedPack({directory,currentDirectory,archiveDirectory,candidate:catalog,audit},dependencies)
  assert.deepEqual(pack.seasons.map(s=>s.reports.length),[1,1]);assert.equal(pack.seasons[0].reports[0].nastopi.length,30)
  await assert.rejects(api.loadFussballPairedPack(directory,{candidate:catalog,now:Date.parse(cm.createdAt)+25*3600_000},dependencies),/stale/)
@@ -149,4 +150,17 @@ test('fresh native imports require audit SHA while verified nightly cache may ou
  if(priorSha===undefined)delete process.env.GITHUB_SHA;else process.env.GITHUB_SHA=priorSha
  f.clean()
  }
+})
+
+
+test('community paired loader binds policy on both captures and preserves typed pending inventory',async()=>{
+ const selected={...candidate,communityCards:true},f=setup({selected,cardPolicy:'community-v1'})
+ try{
+ const pending={id:'private-raw-report',statisticsPending:true,cardEnvelope:{version:1},z:{}}
+ const dependencies={...f.dependencies,loadCapture:async(d,o)=>{assert.equal(o.cardPolicy,'community-v1');return {provider:'fussball-public',staffel:o.staffel,season:o.season,cardPolicy:'community-v1',activationEligible:false,reports:[],pendingReports:[pending],cardEnvelopes:[pending.cardEnvelope],schedule:[{stevilka:1}],identities:[]}}}
+ const pack=await api.loadFussballPairedPack(f.root,{candidate:selected,now:new Date('2026-10-27T01:00:00Z')},dependencies)
+ assert.deepEqual(pack.seasons.map(s=>s.pendingReports.length),[1,1]);assert.deepEqual(pack.seasons[0].cardEnvelopes,[pending.cardEnvelope])
+ delete f.am.options.cardPolicy;writeFileSync(join(f.root,'archive','manifest.json'),JSON.stringify(f.am))
+ await assert.rejects(api.loadFussballPairedPack(f.root,{candidate:selected,now:new Date('2026-10-27T01:00:00Z')},dependencies),/scope/)
+ }finally{f.clean()}
 })

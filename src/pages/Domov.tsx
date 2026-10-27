@@ -1082,7 +1082,7 @@ function MojaGlava({
 }) {
   // undefined = nalaganje, null = brez ekipe v tej ligi, false = napaka branja
   const [ekipa, setEkipa] = useState<
-    { ime: string; tocke: number; krog: number | null; mesto: number; od: number } | null | false | undefined
+    { ime: string; tocke: number; krog: number | null; mesto: number; od: number; statistics_pending: boolean } | null | false | undefined
   >(undefined)
   const krogId = krog?.id ?? null
 
@@ -1106,7 +1106,7 @@ function MojaGlava({
       if (!moja) return null
       const { data: vrsta } = await supabase
         .from('fantasy_team_standings')
-        .select('total_points')
+        .select('total_points, statistics_pending')
         .eq('fantasy_team_id', moja.id)
         .maybeSingle()
       const tocke = Number(vrsta?.total_points ?? 0)
@@ -1132,6 +1132,7 @@ function MojaGlava({
       ])
       return {
         ime: moja.name,
+        statistics_pending: vrsta?.statistics_pending === true,
         tocke,
         krog: kroga.data?.points ?? null,
         mesto: (boljsi.count ?? 0) + 1,
@@ -1170,9 +1171,10 @@ function MojaGlava({
       {ekipa === undefined ? (
         <div className="kartica h-[66px] animate-pulse" aria-hidden />
       ) : ekipa ? (
+        <>
         <dl className="kartica grid grid-cols-3 divide-x divide-white/10 text-center">
           {[
-            [t('domov.moja.tocke'), formatirajTocke(ekipa.tocke)],
+            [t('domov.moja.tocke'), ekipa.statistics_pending && ekipa.tocke === 0 ? '—' : formatirajTocke(ekipa.tocke)],
             [
               krog ? t('domov.krog', { krog: krog.number }) : t('domov.brezKroga'),
               ekipa.krog == null ? '–' : formatirajTocke(ekipa.krog),
@@ -1181,7 +1183,7 @@ function MojaGlava({
             // na lestvico ekip; povezava razpne čez celo celico.
             [
               t('domov.moja.mesto'),
-              ekipa.tocke > 0 ? t('domov.moja.mestoOd', { mesto: ekipa.mesto, n: ekipa.od }) : '–',
+              !ekipa.statistics_pending && ekipa.tocke > 0 ? t('domov.moja.mestoOd', { mesto: ekipa.mesto, n: ekipa.od }) : '–',
               '/standings',
             ],
           ].map(([oznaka, vrednost, pot]) => (
@@ -1202,6 +1204,8 @@ function MojaGlava({
             </div>
           ))}
         </dl>
+        {ekipa.statistics_pending && <p role="status" className="text-sm text-amber-200">{t('tekme.kartoni.zacasno')}</p>}
+        </>
       ) : (
         <Link to="/my-team" className="gumb-glavni inline-block">
           {t('domov.uvod.sestaviEkipo')}

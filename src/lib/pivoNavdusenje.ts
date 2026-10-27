@@ -76,12 +76,13 @@ export async function najdiDoberKrog(uporabnik: string, ligaId: number): Promise
 
   const { data: zadnja } = await supabase
     .from('fantasy_round_points')
-    .select('round_id, season, round_number, points')
+    .select('round_id, season, round_number, points, statistics_pending')
     .eq('fantasy_team_id', ekipa.id)
     .order('season', { ascending: false })
     .order('round_number', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (zadnja?.statistics_pending || zadnja?.points == null) return null
   if (!zadnja?.round_id || zadnja.season == null || zadnja.round_number == null) return null
   const krogId = zadnja.round_id
   if (zeOcenjen(krogId)) return null
@@ -104,7 +105,7 @@ export async function najdiDoberKrog(uporabnik: string, ligaId: number): Promise
     vseVrstice((od, do_) =>
       supabase
         .from('fantasy_round_points')
-        .select('round_id, fantasy_team_id, points')
+        .select('round_id, fantasy_team_id, points, statistics_pending')
         .eq('competition_id', ligaId)
         .eq('season', zadnja.season!)
         .lte('round_number', zadnja.round_number!)
@@ -113,6 +114,7 @@ export async function najdiDoberKrog(uporabnik: string, ligaId: number): Promise
         .range(od, do_),
     ),
   ])
+  if (vrstice.some(row => row.statistics_pending)) return null
   oznaciOcenjen(krogId)
 
   const stevilke = new Map<number, number>((krogi.data ?? []).map((k) => [k.id, k.number]))

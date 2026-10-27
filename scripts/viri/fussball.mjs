@@ -97,7 +97,7 @@ function liveScoreChildren(s){
  if(children.join('')!==body)fail('nepodprta struktura izida dogodka')
  return children
 }
-export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
+export function razberiZapisnik(html,lineup,{fonts,id,lineupId,cardPolicy,cardRecipients={}}={}) {
  if(jeIzziv(html))fail('izziv v zapisniku')
  if(!/<\/body>\s*<\/html>\s*$/i.test(html) || !/<h3>Abpfiff<\/h3>/.test(html))fail('odrezan zapisnik: manjka Abpfiff')
  const head=html.match(/<head\b[^>]*>([\s\S]*?)<\/head>/i)?.[1]??''
@@ -166,8 +166,13 @@ export function razberiZapisnik(html,lineup,{fonts,id,lineupId}={}) {
    const drugiRumeni=/class="icon-stack"/.test(s),red=/class="icon-card red-card"/.test(s),yellow=/class="icon-card yellow-card"/.test(s)
    if(!red&&!yellow)fail('nepodprt karton')
    if(!refs.length){
-    if(red)throw Object.assign(new Error('fussball: vir ne objavi prejemnika rdečega kartona'),{code:'FUSSBALL_REPORT_UNSUPPORTED',reason_code:'FUSSBALL_CARD_RECIPIENT_MISSING',dataHold:true})
-    nepripisaniKartoni.push({minuta,ekipa:teams[side].ime,vrsta:'rumeni'})
+    if(red&&cardPolicy!=='community-v1')throw Object.assign(new Error('fussball: vir ne objavi prejemnika rdečega kartona'),{code:'FUSSBALL_REPORT_UNSUPPORTED',reason_code:'FUSSBALL_CARD_RECIPIENT_MISSING',dataHold:true})
+    const recipient=cardPolicy==='community-v1'?cardRecipients[i+1]:null
+    if(recipient){
+     const p=player(recipient);if(p.side!==side)fail('karton napačne zgodovinske strani')
+     ;(red?rdeci:rumeni).push({virId:p.virId,ime:p.ime,minuta,ekipa:teams[side].ime,vrsta:red?'rdeci':'rumeni',...(red?{drugiRumeni}:{}),attribution:'community',officialSourceId:null})
+     if(red)active.delete(p.virId)
+    }else nepripisaniKartoni.push({minuta,ekipa:teams[side].ime,vrsta:red?'rdeci':'rumeni',...(red?{drugiRumeni}:{})})
    }else{
     if(refs.length!==1)fail('karton brez enoličnega igralca')
     const p=player(refs[0]);if(p.side!==side)fail('karton napačne zgodovinske strani')

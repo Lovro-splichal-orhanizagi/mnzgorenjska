@@ -19,6 +19,7 @@ export function fussballCaptureCodeSha256(){
  return hash(files.map(file=>`${file}\0${hash(readFileSync(resolve(root,file)))}`).join('\n'))
 }
 export function validateFussballCaptureOptions(options){
+ requireProof(options?.cardPolicy===undefined||options.cardPolicy==='community-v1','invalid card policy')
  requireProof(options&&/^[A-Z0-9]{32}-G$/.test(options.staffel??''),'invalid staffel')
  const season=options.season?.match(/^(20\d{2})\/(\d{2})$/)
  requireProof(season&&(+season[1]+1)%100===+season[2],'invalid season')
@@ -27,7 +28,7 @@ export function validateFussballCaptureOptions(options){
  requireProof(options.reportLimit===null||Number.isInteger(options.reportLimit)&&options.reportLimit>=0,'invalid report limit')
  const asOfDate=options.asOfDate??new Date().toISOString().slice(0,10)
  requireProof(typeof asOfDate==='string'&&/^20\d{2}-\d{2}-\d{2}$/.test(asOfDate)&&Number.isFinite(Date.parse(asOfDate+'T00:00:00Z'))&&new Date(asOfDate+'T00:00:00Z').toISOString().slice(0,10)===asOfDate,'invalid capture calendar date')
- return {seedUrl:options.seedUrl,staffel:options.staffel,season:options.season,maxRequests:options.maxRequests,reportLimit:options.reportLimit,asOfDate}
+ return {seedUrl:options.seedUrl,staffel:options.staffel,season:options.season,maxRequests:options.maxRequests,reportLimit:options.reportLimit,asOfDate,...(options.cardPolicy?{cardPolicy:options.cardPolicy}:{})}
 }
 const receiptDocument=d=>Object.fromEntries(['url','kind','sha256','bytes','status','contentType','capturedAt'].map(k=>[k,d[k]]))
 function originalReceipt(d,m){
@@ -40,24 +41,26 @@ function checkOriginalReceipt(d,options){
  requireProof(r?.version===1&&json(r.document)===json(receiptDocument(d))&&r.capture?.staffel===options.staffel&&r.capture.season===options.season&&/^[a-f0-9]{64}$/.test(r.capture.codeSha256??'')&&Number.isFinite(Date.parse(r.capture.createdAt)),'cache original receipt differs')
  requireProof(a?.url===d.url&&a.kind===d.kind&&a.startedAt===d.capturedAt&&a.status==='success'&&a.error===null&&a.httpStatus===200&&Number.isInteger(a.number)&&a.number>0,'cache original network request differs')
 }
-export async function fussballBulkCacheDocuments(directory,{staffel,season,seedUrl,collectFn=collectFussballSeason,loadPack}={}){
+export async function fussballBulkCacheDocuments(directory,{staffel,season,seedUrl,cardPolicy,collectFn=collectFussballSeason,loadPack}={}){
+ requireProof(cardPolicy===undefined||cardPolicy==='community-v1','invalid card policy')
  const m=JSON.parse(readRegular(directory,'manifest.json'))
  const {loadGermanyPack}=await import('./bulk-germany-source.mjs')
  await (loadPack??loadGermanyPack)(directory,{candidate:m.candidate,requireFresh:false})
+ requireProof(Boolean(m.candidate?.communityCards)===Boolean(cardPolicy),'bulk cache card policy differs')
  requireProof(m.candidate?.source_league_code===`${staffel}:${season}`&&m.candidate.seedUrl===seedUrl,'bulk cache current scope differs')
  if(m.provider==='germany-paired-fussball'){
   const current=JSON.parse(readRegular(directory,'current/manifest.json'))
-  requireProof(current.version===1&&current.options.staffel===staffel&&current.options.season===season&&current.options.seedUrl===seedUrl,'paired cache current scope differs')
+  requireProof(current.version===1&&current.options.staffel===staffel&&current.options.season===season&&current.options.seedUrl===seedUrl&&current.options.cardPolicy===cardPolicy,'paired cache current scope differs')
   return current.documents.filter(d=>d.kind!=='round').map(d=>({...d,bytes:readRegular(directory,'current/'+d.file),originalReceipt:originalReceipt(d,current)}))
  }
  const docs=new Map(m.documents.map(d=>[d.url,d])),used=new Set()
- const result=await collectFn({staffel,season,seedUrl,reportLimit:null,asOfDate:m.captured_at.slice(0,10),client:{read:async(url,kind)=>{
+ const result=await collectFn({staffel,season,seedUrl,...(cardPolicy?{cardPolicy}:{}),reportLimit:null,asOfDate:m.captured_at.slice(0,10),client:{read:async(url,kind)=>{
   const d=docs.get(url);requireProof(d?.kind===kind,'missing original current bulk document')
   const bytes=readRegular(directory,d.file);requireProof(bytes.length===d.bytes&&hash(bytes)===d.sha256,'bulk original bytes differ')
   used.add(url);return {...d,bytes}
  }}})
  const {buildFussballImportBatch}=await import('./fussball-import.mjs')
- buildFussballImportBatch(result,{staffel,season})
+ buildFussballImportBatch(result,{staffel,season,cardPolicy})
  const source={snapshot:m.snapshot,createdAt:m.captured_at,codeSha256:m.code_sha256,options:{staffel,season}}
  return [...used].map(url=>docs.get(url)).filter(d=>d.kind!=='round').map(d=>({...d,bytes:readRegular(directory,d.file),originalReceipt:originalReceipt(d,source)}))
 }
@@ -96,9 +99,9 @@ export async function captureFussballDirectory({directory,options,fetchFn=global
   // native proof; damaged/obsolete cache never falls back to a source reread.
   await verifyFussballDirectory(reuseDirectory,{collectFn,requireCodeMatch:false})
   const prior=JSON.parse(readRegular(reuseDirectory,'manifest.json')),raw=JSON.parse(readRegular(reuseDirectory,'result.json'))
-  requireProof(prior.options.staffel===config.staffel&&prior.options.season===config.season&&prior.options.seedUrl===config.seedUrl&&prior.options.reportLimit===null,'reuse cache scope/full intent differs')
+  requireProof(prior.options.staffel===config.staffel&&prior.options.season===config.season&&prior.options.seedUrl===config.seedUrl&&prior.options.reportLimit===null&&prior.options.cardPolicy===config.cardPolicy,'reuse cache scope/full intent differs')
   const {buildFussballImportBatch}=await import('./fussball-import.mjs')
-  buildFussballImportBatch(raw,{staffel:config.staffel,season:config.season})
+  buildFussballImportBatch(raw,{staffel:config.staffel,season:config.season,cardPolicy:config.cardPolicy})
   cachedDocuments=prior.documents.filter(d=>d.kind!=='round').map(d=>({...d,bytes:readRegular(reuseDirectory,d.file),originalReceipt:originalReceipt(d,prior)}))
   requireProof(cachedDocuments.length<=20000,'bounded original cache exceeded')
  }

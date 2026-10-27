@@ -67,6 +67,7 @@
     },
     {
       "slug": "de-verbandsliga-baden",
+      "communityCards": true,
       "source": "fussball-public",
       "source_league_code": "03188V27L800000JVS5489BTVU7GTVLE-G:2026/27",
       "host": "www.fussball.de",

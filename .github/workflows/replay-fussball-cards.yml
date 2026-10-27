@@ -1,0 +1,52 @@
+name: Replay retained FUSSBALL cards
+run-name: FUSSBALL card replay DE ${{ inputs.liga || 'all' }}
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+    inputs:
+      liga:
+        description: Optional exact reviewed German league slug; empty selects installed enabled leagues
+        type: string
+        default: ''
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fussball-card-replay-DE
+  cancel-in-progress: false
+jobs:
+  replay:
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      LIGA: ${{ inputs.liga || '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Validate immutable native replay execution before credentials
+        run: |
+          scope=()
+          if [ -n "$LIGA" ]; then scope=(--liga "$LIGA"); fi
+          node scripts/replay-fussball-cards.mjs check "${scope[@]}"
+      - name: Coordinate with older German native writers and global maintenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --drzava DE
+      - name: Replay at most ten retained native jobs without football requests
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          scope=()
+          if [ -n "$LIGA" ]; then scope=(--liga "$LIGA"); fi
+          node scripts/replay-fussball-cards.mjs run "${scope[@]}"

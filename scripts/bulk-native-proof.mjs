@@ -4,6 +4,9 @@ import {createHash} from 'node:crypto'
 import {kljucKlubaPl} from './viri/pzpn.mjs'
 import {createFussballPublicSource} from './viri/fussball-public.mjs'
 import {parseUnattributedYellow} from '../src/lib/nepripisaniRumeni.mjs'
+import {isFussballCommunityCandidate,FUSSBALL_COMMUNITY_SOURCE_POLICY} from './fussball-community-policy.mjs'
+import {validateGermanyCandidate} from './bulk-germany-source.mjs'
+import {validateFussballCardEnvelope,replayFussballCardEnvelope} from './viri/fussball-card-envelope.mjs'
 import {rokKroga} from './razporedi.mjs'
 const digest=x=>createHash('sha256').update(JSON.stringify(x)).digest('hex')
 const hold=message=>{throw Object.assign(Error(`bulk native proof: ${message}`),{dataHold:true})}
@@ -12,6 +15,8 @@ const own=(o,k)=>Object.hasOwn(o??{},k),validId=x=>Number.isSafeInteger(x)&&x>0
 const same=(a,b)=>digest(a)===digest(b)
 const date=x=>typeof x==='string'&&/^20\d\d-\d\d-\d\d$/.test(x)&&Number.isFinite(Date.parse(x+'T00:00:00Z'))&&new Date(x+'T00:00:00Z').toISOString().slice(0,10)===x
 const instant=x=>x==null?null:Date.parse(x)
+const HASH=/^[a-f0-9]{64}$/
+const PENDING_WARNING='zapisnik nepopoln: FUSSBALL card recipients pending'
 const expectedCountries={pzpn:'PL',wmzpn:'PL','fussball-public':'DE'}
 export function bulkClubKey(source){
  if(source==='pzpn'||source==='wmzpn')return kljucKlubaPl
@@ -28,10 +33,21 @@ export function assertBulkCandidate(candidate,packed=candidate){
  require(packed&&same(tuple(packed),tuple(candidate))&&(packed.id===undefined||packed.id===candidate.id),'source pack candidate differs from admitted tuple')
  return scopes
 }
-function nativeScope(candidate,snapshot){
+function communityBinding(candidate,snapshot){
+ if(!candidate?.communityCards)return null
+ require(isFussballCommunityCandidate(candidate),'community cards require reviewed German source candidate')
+ const {id,...catalogCandidate}=candidate
+ try{validateGermanyCandidate(catalogCandidate)}catch(error){hold(error.message)}
+ const c=snapshot?.fussball_cards,archives=candidate.archives.map(a=>a.code).sort()
+ require(c?.installed===true&&c.enabled===true&&c.source_policy===FUSSBALL_COMMUNITY_SOURCE_POLICY&&c.current_code===candidate.source_league_code&&Array.isArray(c.archive_codes)&&same([...c.archive_codes].sort(),archives),'installed enabled community card source scope differs')
+ require(HASH.test(c.pending_inventory_sha256??'')&&Array.isArray(c.pending_reports)&&Array.isArray(c.registered_reports)&&c.registered_reports.length<=6000,'community card native inventory missing or unbounded')
+ for(const rows of [c.pending_reports,c.registered_reports])require(rows.every(r=>validId(r.match_id)&&typeof r.report_id==='string'&&HASH.test(r.revision_sha256??''))&&new Set(rows.map(r=>r.match_id)).size===rows.length&&new Set(rows.map(r=>r.report_id)).size===rows.length,'duplicate/invalid community card native inventory')
+ return c
+}
+function nativeScope(candidate,snapshot,community){
  const c=snapshot?.competition
  require(validId(c?.id)&&validId(c.country_id)&&['slug','source','source_league_code','country_code'].every(k=>c[k]===candidate[k])&&(candidate.id===undefined||c.id===candidate.id),'native candidate identity/country differs')
- require(c.active===false&&c.source_policy===null&&c.date_only_deadline_policy===null,'active league or custom policy requires its own route')
+ require(c.active===false&&c.source_policy===(community?FUSSBALL_COMMUNITY_SOURCE_POLICY:null)&&c.date_only_deadline_policy===null,'active league or custom policy requires its own route')
  require(snapshot.season===candidate.season,'native current season differs')
  require(['teams','players','rounds','matches'].every(k=>Array.isArray(snapshot[k])),'incomplete native snapshot')
  require(Array.isArray(snapshot.fantasy?.teams)&&!snapshot.fantasy.teams.length&&Array.isArray(snapshot.fantasy?.lineups)&&!snapshot.fantasy.lineups.length,'existing or unknown fantasy data prevents bootstrap')
@@ -110,17 +126,22 @@ const sourceScore=f=>{const s=f.izid??f.rezultat;if(s==null)return null;return A
 export function verifyBulkNative({candidate,pack,snapshot,receipts,expectedSha,now=new Date(),clubKey=bulkClubKey(candidate?.source)}){
  now=new Date(now);require(Number.isFinite(+now),'invalid proof clock')
  require(pack?.candidate&&typeof pack.candidate==='object','missing source pack candidate binding')
- const scopes=assertBulkCandidate(candidate,pack.candidate);nativeScope(candidate,snapshot);pricing(receipts,candidate,snapshot,expectedSha,now)
+ const scopes=assertBulkCandidate(candidate,pack.candidate),community=communityBinding(candidate,snapshot);nativeScope(candidate,snapshot,community);pricing(receipts,candidate,snapshot,expectedSha,now)
  const captured=Date.parse(pack?.captured_at)
  require(pack?.version===1&&/^[a-f0-9]{64}$/.test(pack.original_bytes_sha256??'')&&Number.isFinite(captured)&&captured<=+now&&+now-captured<=24*3600_000,'original-byte source pack is missing, future or older than 24 hours')
  require(Array.isArray(pack.seasons)&&pack.seasons.length===scopes.length&&new Set(pack.seasons.map(s=>s.code)).size===scopes.length,'source season inventory differs')
- const usedRounds=new Set(),usedMatches=new Set(),usedReports=new Set(),currentClubs=new Set(),currentKeepers=new Map();let reportCount=0,fixtureCount=0
+ const usedRounds=new Set(),usedMatches=new Set(),usedReports=new Set(),currentClubs=new Set(),currentKeepers=new Map(),registeredMatches=new Set(),pendingMatches=new Set();let reportCount=0,fixtureCount=0,pendingCount=0
  const teamsFor=name=>{const rows=snapshot.teams.filter(t=>clubKey(t.name)===clubKey(name));require(clubKey(name)&&rows.length===1,'source club absent or ambiguous in native mapping');return rows[0].id}
  for(const scope of scopes){
   const source=pack.seasons.find(s=>s.code===scope.code)
   require(source?.season===scope.season&&Array.isArray(source.schedule)&&source.schedule.length>0&&Array.isArray(source.reports),'source season/schedule binding missing')
   require(new Set(source.schedule.map(r=>r.stevilka)).size===source.schedule.length&&source.schedule.every(r=>Number.isInteger(r.stevilka)&&r.stevilka>=1&&Array.isArray(r.tekme)&&r.tekme.length>0),'source round inventory invalid')
-  require(new Set(source.reports.map(r=>r.id)).size===source.reports.length,'duplicate source report identity')
+  const sourceReports=community?[...source.reports,...(source.pendingReports??[])]:source.reports
+  if(community){
+   require(source.cardPolicy==='community-v1'&&Array.isArray(source.pendingReports)&&Array.isArray(source.cardEnvelopes)&&(!source.rejectedReports||Array.isArray(source.rejectedReports)&&source.rejectedReports.length===0),'community source report policy/inventory differs')
+   require(source.cardEnvelopes.length===sourceReports.length&&sourceReports.every(r=>r.cardEnvelope&&source.cardEnvelopes.some(e=>e.reportId===r.id&&same(e,r.cardEnvelope))),'source card envelope inventory differs')
+  }
+  require(new Set(sourceReports.map(r=>r.id)).size===sourceReports.length,'duplicate source report identity')
   const consumedReports=new Set()
   for(const round of source.schedule){
    const rows=snapshot.rounds.filter(r=>r.season===scope.season&&r.number===round.stevilka);require(rows.length===1,'native round inventory differs');const nativeRound=rows[0];usedRounds.add(nativeRound.id)
@@ -136,7 +157,7 @@ export function verifyBulkNative({candidate,pack,snapshot,receipts,expectedSha,n
     const match=native[0];usedMatches.add(match.id)
     require((match.played_on??null)===(f.datum??null),'native fixture date differs')
     if(f.ura&&own(match,'kickoff_at'))require(instant(match.kickoff_at)===instant(rokKroga(f.datum,f.ura,0)),'native fixture kickoff differs')
-    const rs=source.reports.filter(r=>r.z?.krog===round.stevilka&&clubKey(r.z?.domaci?.ime)===clubKey(f.domaci)&&clubKey(r.z?.gostje?.ime)===clubKey(f.gostje))
+    const rs=sourceReports.filter(r=>r.z?.krog===round.stevilka&&clubKey(r.z?.domaci?.ime)===clubKey(f.domaci)&&clubKey(r.z?.gostje?.ime)===clubKey(f.gostje))
     const score=sourceScore(f),forfeit=f.kontumacija===true
     require(score===null||score.length===2&&score.every(n=>Number.isInteger(n)&&n>=0),'source fixture score invalid')
     require(rs.length<=1,'ambiguous source fixture/report')
@@ -151,7 +172,35 @@ export function verifyBulkNative({candidate,pack,snapshot,receipts,expectedSha,n
      require(Array.isArray(match.import_warnings)&&match.import_warnings.length===0,'unplayed fixture carries unreviewed native warnings')
      require(!f.datum||f.datum>=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Ljubljana',year:'numeric',month:'2-digit',day:'2-digit'}).format(now),'past source fixture missing result/report');continue
     }
-    const report=rs[0],ns=sourceReport(report,scope,round,f,clubKey)
+    let report=rs[0]
+    if(community){
+     const envelope=report.cardEnvelope,registration=community.registered_reports.find(r=>r.match_id===match.id)
+     require(registration&&registration.report_id===report.id&&registration.revision_sha256===envelope.revisionSha256&&registration.source_code===scope.code&&match.source_url===envelope.sourceUrl,'registered native card report revision/source scope differs')
+     require(!registeredMatches.has(match.id),'registered native card report reused');registeredMatches.add(match.id)
+     let raw
+     try{raw=validateFussballCardEnvelope(envelope).result}catch(error){hold(error.message)}
+     require(envelope.reportId===report.id&&envelope.sourceUrl===report.url&&envelope.season===scope.season&&envelope.round===round.stevilka&&envelope.date===f.datum&&envelope.time===f.ura&&envelope.homeName===f.domaci&&envelope.awayName===f.gostje,'card report differs from source fixture')
+     if(match.statistics_status==='pending_cards'){
+      const pending=community.pending_reports.find(p=>p.match_id===match.id)
+      require(report.statisticsPending===true&&source.pendingReports.includes(report)&&raw.statisticsPending===true&&!own(report,'nastopi')&&!own(report.z,'goli')&&report.z.nepopoln===true,'pending native cards require typed raw anonymous-red source evidence')
+      require(report.z.zapisnikId===envelope.reportId&&report.z.sezona===envelope.season&&report.z.krog===envelope.round&&report.z.datum===envelope.date&&report.z.ura===envelope.time&&report.z.domaci?.ime===envelope.homeName&&report.z.gostje?.ime===envelope.awayName&&same(report.z.rezultat,envelope.score)&&same(report.z.opozorila,['SLFF_FUSSBALL_CARDS_PENDING_V1']),'typed pending source header/marker differs')
+      require(registration.status==='pending'&&pending&&pending.report_id===report.id&&pending.revision_sha256===envelope.revisionSha256&&pending.season===scope.season&&pending.round_id===nativeRound.id,'pending native card inventory/revision differs')
+      require(match.zapisnik_id===report.id&&match.imported_at===null&&match.statistics_reason==='community_card_recipient_pending'&&match.vir_brez_izida===false&&Array.isArray(match.appearance_rows)&&match.appearance_rows.length===0&&Array.isArray(match.goal_rows)&&match.goal_rows.length===0,'pending native cards expose individual statistics or lack exact marker')
+      require(Array.isArray(match.import_warnings)&&same(match.import_warnings,[PENDING_WARNING]),'pending native card warning marker differs')
+      require(f.odigrana!==false&&score&&score[0]===envelope.score.domaci&&score[1]===envelope.score.gostje&&match.home_goals===score[0]&&match.away_goals===score[1],'pending official source score differs')
+      require(!usedReports.has(report.id)&&!consumedReports.has(report.id),'pending report identity reused')
+      usedReports.add(report.id);consumedReports.add(report.id);pendingMatches.add(match.id);pendingCount++;reportCount++
+      if(scope.code===candidate.source_league_code)for(const p of envelope.roster.filter(p=>p.goalkeeper&&p.starter)){const club=p.side===0?home:away;if(!currentKeepers.has(club))currentKeepers.set(club,new Set());currentKeepers.get(club).add(p.regSt)}
+      continue
+     }
+     require(!community.pending_reports.some(p=>p.match_id===match.id),'complete native report remains in pending inventory')
+     const resolutions=registration.confirmed_resolutions
+     require(resolutions&&typeof resolutions==='object'&&!Array.isArray(resolutions),'committed card recipient inventory missing')
+     if(registration.status==='applied')require(HASH.test(registration.applied_resolution_sha256??'')&&Number.isFinite(instant(registration.applied_at))&&instant(registration.applied_at)<=+now,'committed card replay receipt missing')
+     else require(registration.status==='registered'&&!Object.keys(resolutions).length&&raw.statisticsPending!==true&&!registration.applied_at&&!registration.applied_resolution_sha256,'native resolved cards lack committed replay receipt')
+     try{report=replayFussballCardEnvelope(envelope,resolutions)}catch(error){hold(error.message)}
+    }
+    const ns=sourceReport(report,scope,round,f,clubKey)
     require(f.odigrana!==false,'source report contradicts unplayed fixture')
     require(!usedReports.has(report.id)&&!consumedReports.has(report.id)&&match.zapisnik_id===report.id&&!!match.imported_at,'native report identity/import differs or source archive is shared');usedReports.add(report.id);consumedReports.add(report.id)
     require(match.home_goals===report.z.rezultat.domaci&&match.away_goals===report.z.rezultat.gostje&&(!score||score[0]===match.home_goals&&score[1]===match.away_goals),'native/source fixture result differs')
@@ -161,11 +210,12 @@ export function verifyBulkNative({candidate,pack,snapshot,receipts,expectedSha,n
     reportCount++
    }
   }
-  require(consumedReports.size===source.reports.length&&consumedReports.size>0,'source reports missing or outside exact schedule')
+  require(consumedReports.size===sourceReports.length&&consumedReports.size>0,'source reports missing or outside exact schedule')
  }
+ if(community)require(registeredMatches.size===community.registered_reports.length&&pendingMatches.size===community.pending_reports.length,'extra or missing registered/pending native card reports')
  require(usedRounds.size===snapshot.rounds.length&&usedMatches.size===snapshot.matches.length,'extra native round/fixture absent from complete source inventory')
  for(const club of currentClubs)require(snapshot.players.some(p=>p.team_id===club&&p.active===true&&p.position==='GK'&&['zapisnik','admin','glasovanje','klub'].includes(p.position_source)&&validId(p.reg_st)&&currentKeepers.get(club)?.has(p.reg_st)),'current native club has no active source-linked keeper')
- return {version:1,contract_id:'bulk-native-source-replay-v1',candidate:structuredClone(candidate),expected_sha:expectedSha,snapshot_sha256:digest(snapshot),original_bytes_sha256:pack.original_bytes_sha256,pack_sha256:digest(pack),receipts_sha256:digest(receipts),captured_at:pack.captured_at,verified_at:now.toISOString(),reports:reportCount,fixtures:fixtureCount,schedule_complete:true,archives:structuredClone(candidate.archives),archive_collisions:[],keeper_basis:'published-source-role',activationEligible:false}
+ return {version:1,contract_id:community?'bulk-native-community-cards-v1':'bulk-native-source-replay-v1',...(community?{pending_reports:pendingCount,pending_inventory_sha256:community.pending_inventory_sha256}:{}),candidate:structuredClone(candidate),expected_sha:expectedSha,snapshot_sha256:digest(snapshot),original_bytes_sha256:pack.original_bytes_sha256,pack_sha256:digest(pack),receipts_sha256:digest(receipts),captured_at:pack.captured_at,verified_at:now.toISOString(),reports:reportCount,fixtures:fixtureCount,schedule_complete:true,archives:structuredClone(candidate.archives),archive_collisions:[],keeper_basis:'published-source-role',activationEligible:false}
 }
 export async function loadAndVerifyBulkNative({directory,loadPack,...options}){
  const loader=loadPack??(await import('./bulk-source-packs.mjs')).loadBulkPack

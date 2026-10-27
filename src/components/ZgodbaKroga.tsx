@@ -161,7 +161,7 @@ async function naloziPregled(
     vseVrstice((od, do_) =>
       supabase
         .from('fantasy_round_points')
-        .select('round_id, fantasy_team_id, points')
+        .select('round_id, fantasy_team_id, points, statistics_pending')
         .eq('competition_id', ligaId)
         .eq('season', krog.season)
         .lte('round_number', krog.number)
@@ -173,7 +173,7 @@ async function naloziPregled(
   ])
   if (!krogKoncan(tekme.data ?? [], danesIso())) return null
   const moje = tocke.find((v) => v.fantasy_team_id === ekipaId && v.round_id === krogId)
-  if (!moje) return null
+  if (!moje || moje.points == null || tocke.some(row => row.statistics_pending)) return null
 
   const stevilke = new Map<number, number>((krogi.data ?? []).map((k) => [k.id, k.number]))
   const { mesto, odEkip, premik } = mestoVLigi(tocke, stevilke, ekipaId, krog.number)

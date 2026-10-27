@@ -124,8 +124,8 @@ test('opt-in rollout candidate must exactly own both observed catalog scopes bef
 test('rollout authorization requires both complete fresh native batches and unchanged main before creating exact dispatch args',async()=>{
  assert.equal(typeof api.authorizeFussballRollout,'function')
  const e={...environment(),ROLLOUT_CANDIDATE:'de-verbandsliga-baden',ARCHIVE_JSON:JSON.stringify({...archive,...badenProof.archive,observedSeedUrl:badenProof.observedSeedUrl})},calls=[]
- const readManifest=path=>({version:path==='current'?1:3,success:true,options:{...(path==='current'?badenProof.current:badenProof.archive),reportLimit:null}})
- const loadCapture=async(path,o)=>{calls.push({path,...o});return {provider:'fussball-public',staffel:o.staffel,season:o.season,activationEligible:false,reports:[{id:'report'}],schedule:[{stevilka:1}],identities:[{source_id:'source',reg_st:1}]}}
+ const readManifest=path=>({version:path==='current'?1:3,success:true,options:{...(path==='current'?badenProof.current:badenProof.archive),reportLimit:null,cardPolicy:'community-v1'}})
+ const loadCapture=async(path,o)=>{calls.push({path,...o});return {provider:'fussball-public',staffel:o.staffel,season:o.season,activationEligible:false,cardPolicy:'community-v1',pendingReports:[],cardEnvelopes:[],reports:[{id:'report'}],schedule:[{stevilka:1}],identities:[{source_id:'source',reg_st:1}]}}
  const options={currentDirectory:'current',archiveDirectory:'archive',e,headSha:sha,mainSha:sha}
  const result=await api.authorizeFussballRollout(options,{loadCapture,readManifest})
  assert.deepEqual(result,['workflow','run','uvoz-pl-de-paketa.yml','--repo',repository,'--ref','main','-f','country=DE','-f','expected_sha='+sha,'-f','audit_run=40000000000','-f','candidate=de-verbandsliga-baden','-f','max_requests=1'])

@@ -7,6 +7,8 @@ import {spawn,execFileSync} from 'node:child_process'
 import {atomicCheckpoint,assertBatchExecution,createBatchTransport} from './provider-league-batch.mjs'
 import {runBatch} from './vklopi-obstojece-lige.mjs'
 import {createBulkSourceBudget} from './bulk-source-budget.mjs'
+import {isFussballCommunityCandidate,FUSSBALL_COMMUNITY_SOURCE_POLICY} from './fussball-community-policy.mjs'
+import {assertReviewedFussballCommunityCandidate,inspectFussballCommunityReadiness,buildFussballCardAdmission} from './fussball-community-release.mjs'
 const hash=v=>createHash('sha256').update(JSON.stringify(v)).digest('hex')
 const hold=(message,code='LEAGUE_DATA_HOLD')=>Object.assign(Error(message),{dataHold:true,reason_code:code})
 const sameTuple=(a,b)=>['slug','source','source_league_code'].every(k=>a?.[k]===b?.[k])&&(!a.id||a.id===b.id)
@@ -38,13 +40,15 @@ export async function collectBulkBatch({candidates,expectedSha,directory,capture
  }
  report.status=report.infrastructure_stop?'STOPPED':report.results.every(r=>r.status==='STAGED')?'STAGED':'COMPLETED_WITH_HOLDS';await save();return report
 }
-function requireInactive(candidate,snapshot){
+function requireInactive(candidate,snapshot,{allowUninstalled=false}={}){
+ const community=isFussballCommunityCandidate(candidate)
+ if(community)assertReviewedFussballCommunityCandidate(candidate)
  if(!sameTuple(candidate,snapshot?.competition))throw hold('Native competition identity changed.')
  if(snapshot.competition.active===true)throw hold('League already active.','ALREADY_ACTIVE')
- if(snapshot.competition.active!==false||snapshot.competition.source_policy!==null||snapshot.competition.date_only_deadline_policy!==null)throw hold('Inactive league with standard policies required.')
+ if(snapshot.competition.active!==false||(community?!((allowUninstalled&&snapshot.competition.source_policy===null)||snapshot.competition.source_policy===FUSSBALL_COMMUNITY_SOURCE_POLICY):snapshot.competition.source_policy!==null)||snapshot.competition.date_only_deadline_policy!==null)throw hold('Inactive league with standard policies required.')
  if(!Array.isArray(snapshot.fantasy?.teams)||!Array.isArray(snapshot.fantasy?.lineups)||snapshot.fantasy.teams.length||snapshot.fantasy.lineups.length)throw hold('Existing or unproven fantasy data prevents mutation.')
 }
-export async function runBulkRollout({sourceReport,expectedSha,transport,guard,runCommand,loadPack,verifyNative,activationRunner=runBatch,onCheckpoint=async()=>{},now=()=>new Date(),importOnly=false,activationOnly=false}){
+export async function runBulkRollout({sourceReport,expectedSha,transport,guard,runCommand,loadPack,verifyNative,activationRunner=runBatch,onCheckpoint=async()=>{},now=()=>new Date(),importOnly=false,activationOnly=false,seedCacheReceipt,runId}){
  if(!sourceReport||sourceReport.expected_sha!==expectedSha||sourceReport.phase&&sourceReport.phase!=='source')throw Error('Source batch provenance differs.')
  selection(sourceReport.results.map(r=>r.candidate))
  if(typeof guard!=='function')throw Error('Exact main execution guard required.')
@@ -65,7 +69,7 @@ export async function runBulkRollout({sourceReport,expectedSha,transport,guard,r
    if(!candidate.id){
     if(!transport.register)throw hold('Inactive registration route unavailable.','NEEDS_REGISTRATION')
     await ensureGuard();const found=await transport.find(candidate)
-    if(found){candidate={...candidate,id:found.id};requireInactive(candidate,await transport.snapshot(candidate))}
+    if(found){candidate={...candidate,id:found.id};requireInactive(candidate,await transport.snapshot(candidate),{allowUninstalled:!activationOnly})}
     else {
      const receipt={stage:'register',status:'RUNNING',started_at:now().toISOString()};result.steps.push(receipt);await save()
      mutating=true;candidate={...candidate,id:await transport.register(candidate)};mutating=false
@@ -73,7 +77,16 @@ export async function runBulkRollout({sourceReport,expectedSha,transport,guard,r
     }
     result.candidate=candidate
    }
-   requireInactive(candidate,await transport.snapshot(candidate))
+   const community=isFussballCommunityCandidate(candidate)
+   requireInactive(candidate,await transport.snapshot(candidate),{allowUninstalled:!activationOnly})
+   if(community&&!activationOnly){
+    if(typeof transport.installCommunityPolicy!=='function')throw hold('Installed community policy route unavailable.')
+    await ensureGuard();requireInactive(candidate,await transport.snapshot(candidate),{allowUninstalled:true})
+    const receipt={stage:'community-policy',status:'RUNNING',started_at:now().toISOString()};result.steps.push(receipt);await save()
+    mutating=true;const answer=await transport.installCommunityPolicy(candidate)
+    if(answer?.installed!==true||answer.source_policy!==FUSSBALL_COMMUNITY_SOURCE_POLICY)throw Error('Ambiguous community policy installation response.')
+    mutating=false;receipt.status='COMPLETED';receipt.completed_at=now().toISOString();await save()
+   }
    const guarded=async()=>{await ensureGuard();requireInactive(candidate,await transport.snapshot(candidate))}
    const stage=async(stage,file,args)=>{
     await guarded()
@@ -99,6 +112,25 @@ export async function runBulkRollout({sourceReport,expectedSha,transport,guard,r
    const finalSnapshot=await transport.snapshot(candidate)
    if(hash(finalSnapshot)!==hash(snapshot))throw hold('Native snapshot changed after strict source proof.')
    if(importOnly){result.status='VERIFIED';result.directory=staged.directory;await save();continue}
+   if(community){
+    const state=await transport.state(candidate),readiness=inspectFussballCommunityReadiness({candidate,snapshot:finalSnapshot,state})
+    const admission=buildFussballCardAdmission({candidate,pack,snapshot:finalSnapshot,proof:result.proof,seedCacheReceipt,expectedSha,runId,now:now()})
+    await guarded();if(hash(await transport.snapshot(candidate))!==hash(finalSnapshot))throw hold('Native community snapshot changed before admission.')
+    if(typeof transport.recordCommunityAdmission!=='function')throw hold('Native community admission route unavailable.')
+    // Activation has not started yet; persist the service admission write first.
+    const receipt={stage:'community-admission',status:'RUNNING',started_at:now().toISOString()};result.steps.push(receipt);await save();mutating=true
+    const registered=await transport.recordCommunityAdmission(candidate,admission)
+    if(registered?.registered!==true||registered.manifest_sha256!==admission.sha256||registered.pending_inventory_sha256!==admission.manifest.pendingInventorySha256||registered.opening_round_id!==admission.openingRound.id)throw Error('Ambiguous community admission response.')
+    mutating=false;receipt.status='COMPLETED';receipt.completed_at=now().toISOString();result.community_admission={manifest:admission.manifest,sha256:admission.sha256,receipt:registered};await save()
+    await guarded();const admittedSnapshot=await transport.snapshot(candidate),expectedSnapshot=structuredClone(finalSnapshot);expectedSnapshot.competition.prvi_fantasy_krog=admission.openingRound.number
+    if(hash(admittedSnapshot)!==hash(expectedSnapshot))throw hold('Native community snapshot changed after admission.')
+    const activationReceipt={stage:'activate',status:'RUNNING',started_at:now().toISOString()};result.steps.push(activationReceipt);await save();mutating=true
+    const answer=await transport.activate(candidate)
+    if(answer?.vklopljena===false){mutating=false;throw hold(answer.razlog??'Native community activation refused.')}
+    result.readback=await transport.competition(candidate)
+    if(answer?.vklopljena!==true||answer.razlika!==0||answer.prvi_krog!==admission.openingRound.number||result.readback?.active!==true||result.readback.prvi_fantasy_krog!==admission.openingRound.number||result.readback.source_policy!==FUSSBALL_COMMUNITY_SOURCE_POLICY)throw Error('Community activation result/readback differs; inspect persisted state.')
+    mutating=false;activationReceipt.status='COMPLETED';activationReceipt.completed_at=now().toISOString();result.activation={status:'ACTIVE',first_round:admission.openingRound,...readiness,activation:answer};result.status='ACTIVE';await save();continue
+   }
    const receipt={stage:'activate',status:'RUNNING',started_at:now().toISOString()};result.steps.push(receipt);await save()
    let gateError=null,activationAnswer=null
    const native={...transport}
@@ -167,18 +199,18 @@ async function main(){
   const {loadAndVerifyBulkNative}=await import('./bulk-native-proof.mjs')
   const {createBulkTransport}=await import('./bulk-native-transport.mjs')
   const transport=createBulkTransport({url:process.env.SUPABASE_URL,key:process.env.SUPABASE_SERVICE_ROLE_KEY,base:createBatchTransport({url:process.env.SUPABASE_URL,key:process.env.SUPABASE_SERVICE_ROLE_KEY})})
-  let selected=report
+  let selected=report,seedCacheReceipt
   if(mode==='activate'){
    const prepared=JSON.parse(readFileSync(join(directory,'native-import-report.json'),'utf8'))
    if(prepared.expected_sha!==expectedSha||prepared.source_scope_sha256!==report.scope_sha256||['RUNNING','STOPPED'].includes(prepared.status)||prepared.infrastructure_stop||prepared.results?.length!==report.results.length)throw Error('Incomplete or changed native preparation receipt.')
    for(let i=0;i<prepared.results.length;i++){const row=prepared.results[i],original=report.results[i].candidate,scope={...row.candidate};if(!original.id)delete scope.id;if(hash(scope)!==hash(original)||row.slug!==original.slug||row.status==='VERIFIED'&&resolve(row.directory)!==join(directory,'packs',row.slug))throw Error('Prepared candidate or directory changed.')}
    if(prepared.results.some(r=>r.status==='VERIFIED'&&r.candidate.source==='fussball-public')){
-    const persisted=JSON.parse(readFileSync(join(directory,'seed-cache-receipt.json'),'utf8'))
+    const persisted=JSON.parse(readFileSync(join(directory,'seed-cache-receipt.json'),'utf8'));seedCacheReceipt=persisted
     if(persisted.expected_sha!==expectedSha||persisted.run_id!==process.env.GITHUB_RUN_ID||persisted.persisted!==true)throw Error('Verified nightly seed cache was not persisted before activation.')
    }
    selected={...report,results:prepared.results.map(r=>({...r,status:r.status==='VERIFIED'?'STAGED':r.status}))}
   }
-  const result=await runBulkRollout({sourceReport:selected,importOnly:mode==='import',activationOnly:mode==='activate',expectedSha,transport,guard,loadPack:loadBulkPack,verifyNative:loadAndVerifyBulkNative,runCommand:(file,args,o)=>runOfflineImport(file,args,{...o,slug:o.candidate.slug,logDirectory:join(directory,'logs')}),onCheckpoint:r=>atomicCheckpoint(join(directory,reportName),r)})
+  const result=await runBulkRollout({sourceReport:selected,importOnly:mode==='import',activationOnly:mode==='activate',seedCacheReceipt,runId:process.env.GITHUB_RUN_ID,expectedSha,transport,guard,loadPack:loadBulkPack,verifyNative:loadAndVerifyBulkNative,runCommand:(file,args,o)=>runOfflineImport(file,args,{...o,slug:o.candidate.slug,logDirectory:join(directory,'logs')}),onCheckpoint:r=>atomicCheckpoint(join(directory,reportName),r)})
   if(mode==='import'&&process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,'needs_seed_cache='+String(result.results.some(r=>r.status==='VERIFIED'&&r.candidate.source==='fussball-public'))+'\n')
   console.log(JSON.stringify({phase:mode,status:result.status,counts:counts(result)}));if(result.status==='STOPPED')process.exitCode=1
  }

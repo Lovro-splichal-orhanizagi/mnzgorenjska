@@ -84,7 +84,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/bulk-source-coordination.mjs
       - name: Capture ordinary public source, without database credentials
-        run: node scripts/zajemi-fussball-sezono.mjs capture --seed-url "$SEED_URL" --staffel "$STAFFEL" --season "$SEASON" --max-requests "$MAX_REQUESTS" --reports "$REPORTS" --output capture
+        run: node scripts/fussball-season-pilot.mjs capture-current capture
       - name: Replay only retained original documents, without network
         run: node scripts/zajemi-fussball-sezono.mjs verify capture
       - name: Authorize archive only from independently replayed current originals

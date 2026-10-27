@@ -6,6 +6,7 @@ import {join} from 'node:path'
 import {verifyFussballDirectory} from './fussball-capture-evidence.mjs'
 import {encodeUnattributedYellow} from '../src/lib/nepripisaniRumeni.mjs'
 import {parseFussballEventClock} from './viri/fussball.mjs'
+import {validateFussballCardEnvelope} from './viri/fussball-card-envelope.mjs'
 import {FUSSBALL_SOURCE_ID} from './lib/fussball-identity.mjs'
 
 const SOURCE_ID=FUSSBALL_SOURCE_ID
@@ -81,7 +82,7 @@ function nativeDiscipline(result,fixture,roster,remember){
  return {rumeni,rdeci,counts}
 }
 
-function nativeReport(entry,fixture,season,identities){
+export function normalizeFussballReport(entry,fixture,season,identities=new Map()){
  const result=entry?.result,z=result?.z
  requireProof(headerEqual(entry?.fixture,fixture),'report fixture differs from schedule')
  requireProof(result.reportStatistikaPripravljena===true&&result.sezonskiUvozPodprt===false&&result.activationEligible===false&&z?.nepopoln===true,'missing report-only parser proof')
@@ -132,13 +133,17 @@ function nativeReport(entry,fixture,season,identities){
   requireProof(a.goli===goals.filter(g=>!g.avtogol).length&&a.avtogoli===goals.filter(g=>g.avtogol).length&&a.goliIzEnajstmetrovke===goals.filter(g=>g.enajstmetrovka&&!g.avtogol).length,'appearance goal totals differ')
  }
  const warnings=result.nepripisaniRumeni.map(e=>yellowWarning(e,fixture))
- return {id:fixture.zapisnikId,url:fixture.url,nastopi,z:{zapisnikId:fixture.zapisnikId,sezona:season,datum:z.datum,ura:z.ura,krog:z.krog,domaci:teams[0],gostje:teams[1],rezultat:clone(z.rezultat),goli,menjave:clone(z.menjave),rumeni:discipline.rumeni,rdeci:discipline.rdeci,nepopoln:false,opozorila:warnings}}
+ return {id:fixture.zapisnikId,url:fixture.url,nastopi,...(result.cardEnvelope?{cardEnvelope:clone(result.cardEnvelope)}:{}),z:{zapisnikId:fixture.zapisnikId,sezona:season,datum:z.datum,ura:z.ura,krog:z.krog,domaci:teams[0],gostje:teams[1],rezultat:clone(z.rezultat),goli,menjave:clone(z.menjave),rumeni:discipline.rumeni,rdeci:discipline.rdeci,nepopoln:false,opozorila:warnings}}
 }
 
 /** Pure normalization. Trust is added only by complete original-byte replay. */
-export function buildFussballImportBatch(result,{staffel,season}={}){
+export function buildFussballImportBatch(result,{staffel,season,cardPolicy}={}){
  parseFussballLeagueCode(`${staffel}:${season}`)
  const s=result?.schedule,c=result?.coverage,scope=result?.scope
+ const community=cardPolicy==='community-v1'
+ requireProof((cardPolicy===undefined||community)&&scope?.cardPolicy===cardPolicy,'capture card policy differs')
+ const pending=community?result.pendingReports:[]
+ if(community)requireProof(Array.isArray(pending)&&Array.isArray(result.cardEnvelopes),'missing pending/card evidence')
  requireProof(result?.version===1&&result.activationEligible===false&&scope?.provider==='fussball'&&scope.staffel===staffel&&scope.season===season&&s?.staffel===staffel&&s.season===season&&validDate(scope.asOfDate),'capture scope differs')
  requireProof(typeof scope.seedUrl==='string'&&new RegExp(`^https://www\\.fussball\\.de/spieltag/(?:[a-z0-9]+(?:-[a-z0-9]+)*/)?-/staffel/${staffel}$`).test(scope.seedUrl),'invalid seed scope')
  requireProof(Array.isArray(s.rounds)&&s.rounds.length>0&&s.rounds.length<=80&&s.rounds.every((r,i)=>r===i+1),'missing or noncontiguous advertised rounds')
@@ -153,31 +158,51 @@ export function buildFussballImportBatch(result,{staffel,season}={}){
  }
  const played=s.fixtures.filter(f=>f.rezultat!==null),unscored=s.fixtures.filter(f=>f.rezultat===null)
  const unscoredCounts={total:unscored.length,past:0,current:unscored.filter(f=>f.datum===scope.asOfDate).length,future:unscored.filter(f=>f.datum>scope.asOfDate).length,unknownDate:0}
- requireProof(c?.sampled===false&&c.expectedRounds===s.rounds.length&&c.capturedRounds===s.rounds.length&&c.fixtures===s.fixtures.length&&c.playedFixtures===played.length&&c.attemptedReports===played.length&&c.completeReports===played.length&&c.rejectedReports===0&&result.reports.length===played.length&&Object.keys(unscoredCounts).every(k=>c.unscoredFixtures?.[k]===unscoredCounts[k]),'incomplete or inconsistent full-season coverage')
+ requireProof(c?.sampled===false&&c.expectedRounds===s.rounds.length&&c.capturedRounds===s.rounds.length&&c.fixtures===s.fixtures.length&&c.playedFixtures===played.length&&c.attemptedReports===played.length&&c.completeReports===result.reports.length&&c.rejectedReports===0&&result.reports.length+pending.length===played.length&&(!community||c.pendingReports===pending.length)&&Object.keys(unscoredCounts).every(k=>c.unscoredFixtures?.[k]===unscoredCounts[k]),'incomplete or inconsistent full-season coverage')
  requireProof(played.length>0,'no verified played reports')
  const identities=new Map(),seen=new Set(),reports=[]
  for(const entry of result.reports){
   const f=fixtures.get(entry?.fixture?.id)
   requireProof(f&&f.rezultat!==null&&!seen.has(f.id),'duplicate or out-of-scope report')
-  seen.add(f.id);reports.push(nativeReport(entry,f,season,identities))
+  seen.add(f.id);reports.push(normalizeFussballReport(entry,f,season,identities))
+ }
+ const pendingReports=[]
+ if(community){
+  const allEnvelopes=[]
+  for(const entry of [...result.reports,...pending]){
+   const f=fixtures.get(entry?.fixture?.id),e=entry?.result?.cardEnvelope
+   requireProof(f&&headerEqual(entry.fixture,f)&&e,'missing/out-of-scope card report')
+   const verified=validateFussballCardEnvelope(e),rz=verified.result.z
+   requireProof(e.matchId===f.id&&e.reportId===f.zapisnikId&&e.sourceUrl===f.url&&e.season===season&&e.round===f.krog&&e.date===f.datum&&e.time===f.ura&&e.homeName===f.domaci&&e.awayName===f.gostje&&sameScore(e.score,f.rezultat),'card evidence header differs')
+   requireProof(JSON.stringify(entry.result)===JSON.stringify(verified.result),'card evidence differs from original-byte replay')
+   allEnvelopes.push(e)
+   for(const p of e.roster){const key=fussballPlayerKey(p.sourceId);requireProof(!identities.has(key)||identities.get(key)===p.sourceId,'numeric player identity collision');identities.set(key,p.sourceId)}
+   if(!pending.includes(entry))continue
+   requireProof(!seen.has(f.id)&&entry.result.statisticsPending===true&&entry.result.reportStatistikaPripravljena===false&&verified.result.statisticsPending===true&&!Object.hasOwn(entry.result,'nastopi')&&!Object.hasOwn(entry.result.z,'goli'),'invalid pending statistics envelope')
+   seen.add(f.id)
+   const teams=[rz.domaci,rz.gostje].map(t=>({...clone(t),postava:t.postava.map(p=>({...clone(p),regSt:fussballPlayerKey(p.virId)})),rezerve:t.rezerve.map(p=>({...clone(p),regSt:fussballPlayerKey(p.virId)}))}))
+   pendingReports.push({id:f.zapisnikId,url:f.url,statisticsPending:true,cardEnvelope:clone(e),z:{zapisnikId:f.zapisnikId,sezona:season,datum:rz.datum,ura:rz.ura,krog:rz.krog,domaci:teams[0],gostje:teams[1],rezultat:clone(rz.rezultat),nepopoln:true,opozorila:['SLFF_FUSSBALL_CARDS_PENDING_V1']}})
+  }
+  requireProof(JSON.stringify(result.cardEnvelopes)===JSON.stringify(allEnvelopes),'card envelope inventory differs')
  }
  const schedule=s.rounds.map(stevilka=>({stevilka,tekme:s.fixtures.filter(f=>f.krog===stevilka).map(f=>({...clone(f),izid:f.rezultat?[f.rezultat.domaci,f.rezultat.gostje]:null,odigrana:f.rezultat!==null,kontumacija:false}))}))
- return {provider:'fussball-public',staffel,season,asOfDate:scope.asOfDate,reports,schedule,identities:[...identities].map(([reg_st,source_id])=>({source_id,reg_st})).sort((a,b)=>a.source_id.localeCompare(b.source_id)),activationEligible:false}
+ return {provider:'fussball-public',staffel,season,asOfDate:scope.asOfDate,reports,...(community?{cardPolicy,pendingReports,cardEnvelopes:clone(result.cardEnvelopes)}:{}),schedule,identities:[...identities].map(([reg_st,source_id])=>({source_id,reg_st})).sort((a,b)=>a.source_id.localeCompare(b.source_id)),activationEligible:false}
 }
 
 /** Complete capture verification, with no source or database network fallback. */
-export async function loadFussballImportCapture(directory,{staffel,season,current=true,now=Date.now()}={}, {verifyDirectory=verifyFussballDirectory}={}){
+export async function loadFussballImportCapture(directory,{staffel,season,current=true,now=Date.now(),cardPolicy}={}, {verifyDirectory=verifyFussballDirectory}={}){
  const receipt=await verifyDirectory(directory)
  requireProof(receipt.scope?.staffel===staffel&&receipt.scope?.season===season,'verified capture belongs to another league or season')
  const file=join(directory,'result.json'),manifestFile=join(directory,'manifest.json')
  requireProof(lstatSync(file).isFile()&&!lstatSync(file).isSymbolicLink()&&lstatSync(manifestFile).isFile()&&!lstatSync(manifestFile).isSymbolicLink(),'capture result must be a regular file')
  const bytes=readFileSync(file),manifest=JSON.parse(readFileSync(manifestFile,'utf8'))
  requireProof(HASH.test(receipt.resultSha256)&&hash(bytes)===receipt.resultSha256&&manifest.resultSha256===receipt.resultSha256,'verified capture changed after replay')
+ requireProof(manifest.options?.cardPolicy===cardPolicy,'capture card policy differs')
  requireProof(manifest.options?.reportLimit===null,'sample capture cannot be imported')
  if(current){
   const start=Date.parse(manifest.createdAt),end=Date.parse(manifest.completedAt)
   requireProof(Number.isFinite(now)&&Number.isFinite(start)&&Number.isFinite(end)&&start<=end&&end<=now&&now-start<=24*3600_000,'current capture is stale or has future timestamps')
  }
- const batch=buildFussballImportBatch(JSON.parse(bytes),{staffel,season})
+ const batch=buildFussballImportBatch(JSON.parse(bytes),{staffel,season,cardPolicy})
  return {...batch,provenance:{resultSha256:receipt.resultSha256,codeSha256:receipt.codeSha256,createdAt:manifest.createdAt,completedAt:manifest.completedAt,requests:receipt.requests}}
 }

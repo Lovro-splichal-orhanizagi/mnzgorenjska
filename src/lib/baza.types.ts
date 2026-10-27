@@ -6328,6 +6328,7 @@ export type Database = {
       }
       fantasy_round_points: {
         Row: {
+          statistics_pending: boolean | null
           competition_id: number | null
           fantasy_team_id: number | null
           penalty: number | null
@@ -6489,6 +6490,7 @@ export type Database = {
       }
       fantasy_round_standings: {
         Row: {
+          statistics_pending: boolean | null
           competition_id: number | null
           fantasy_team_id: number | null
           owner_id: string | null
@@ -6652,6 +6654,7 @@ export type Database = {
       }
       fantasy_team_standings: {
         Row: {
+          statistics_pending: boolean | null
           best_round: number | null
           competition_id: number | null
           fantasy_team_id: number | null
@@ -8372,6 +8375,15 @@ export type Database = {
       }
     }
     Functions: {
+      fussball_round_has_pending: { Args: { p_round_id: number }; Returns: boolean }
+      match_fussball_card_votes: {
+        Args: { p_match_id: number }
+        Returns: Json
+      }
+      vote_fussball_card: {
+        Args: { p_event_id: number; p_player_id: number }
+        Returns: Json
+      }
       adaptivni_prag: {
         Args: { p_player_id: number; p_position: string }
         Returns: number
