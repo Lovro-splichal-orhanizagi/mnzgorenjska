@@ -18,6 +18,7 @@ export function verifyArtifact(a,{runId,commit,name}){
 export function unpackVerifiedArchive(bytes,digest,kind){
  if(bytes.length>maxArchive||!/^sha256:[a-f0-9]{64}$/.test(digest??'')||`sha256:${sha256(bytes)}`!==digest)throw Error('Artifact ZIP digest mismatch')
  if(kind==='fussball-checkpoint')return unpackFussballCheckpoint(bytes)
+ if(kind==='fussball-resumption')return unpackFussballResumption(bytes)
  const sixCleanup=kind==='fcf-six-cleanup-prepared'||kind==='fcf-six-cleanup-applied',cleanup=sixCleanup||kind==='fcf-cleanup-prepared'||kind==='fcf-cleanup-applied',fcf=kind==='fcf-history'||cleanup
  const cleanupName=name=>name==='manifest.json'||['fcf-cleanup-prepared','fcf-six-cleanup-prepared'].includes(kind)&&(name==='before-image.json'||(sixCleanup?['4109388','4109404','4116215','4118352','4118354','4118358']:['4109388','4116215','4118352','4118358']).some(id=>name===`acta-${id}.html`))
  const fcfName=name=>cleanup?cleanupName(name):fcfHistoryName(name)
@@ -65,6 +66,30 @@ function unpackFussballCheckpoint(bytes){
    const body=execFileSync('unzip',['-p',zip,name],{maxBuffer:bound+1})
    if(body.length>bound)throw Error('Checkpoint artifact member size exceeded')
    total+=body.length;if(total>192*1024*1024)throw Error('Checkpoint artifact expanded size exceeded')
+   files.set(name,body)
+  }
+  return files
+ }finally{rmSync(dir,{recursive:true,force:true})}
+}
+// Exact fourth-parent v4 envelope only. Nested ZIPs are returned as raw bytes;
+// only the unchanged v1 reader may subsequently authenticate the fixed old3.
+function unpackFussballResumption(bytes){
+ const dir=mkdtempSync(join(tmpdir(),'slff-fussball-resumption-'))
+ try{
+  const zip=join(dir,'source.zip');writeFileSync(zip,bytes)
+  const names=execFileSync('unzip',['-Z1',zip],{encoding:'utf8',maxBuffer:256*1024}).trimEnd().split('\n')
+  const details=execFileSync('unzip',['-Z','-l',zip],{encoding:'utf8',maxBuffer:512*1024}).split('\n')
+  if(!names.length||names.length>241||new Set(names).size!==names.length)throw Error('Invalid resumption artifact entry set')
+  const files=new Map();let total=0
+  for(const name of names){
+   const nested=/^checkpoint\/parents\/(?:40416972177|40509926697|40531709101)\.(?:json|zip)$/.test(name)
+   if(!nested&&!/^(?:manifest\.json|attempts\.jsonl|progress\.jsonl|documents\/[a-f0-9]{64}\.(?:html|css|woff))$/.test(name))throw Error('Invalid resumption artifact path')
+   const rows=details.filter(row=>row.endsWith(` ${name}`))
+   if(rows.length!==1||!/^-[rwxstST-]{9}\s/.test(rows[0]))throw Error('Resumption artifact member must be regular, never symlink or directory')
+   const bound=nested?(name.endsWith('.zip')?32*1024*1024:1024*1024):name.endsWith('.css')?64*1024:name.startsWith('documents/')?8*1024*1024:16*1024*1024
+   const body=execFileSync('unzip',['-p',zip,name],{maxBuffer:bound+1})
+   if(body.length>bound)throw Error('Resumption artifact member size exceeded')
+   total+=body.length;if(total>192*1024*1024)throw Error('Resumption artifact expanded size exceeded')
    files.set(name,body)
   }
   return files

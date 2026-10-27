@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "preset": "baden-reviewed-transports-v2",
+  "repository": "Lovro-splichal-orhanizagi/mnzgorenjska",
+  "workflow": ".github/workflows/preveri-fussball-dopolni.yml",
+  "scope": {
+    "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+    "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+    "season": "2026/27"
+  },
+  "priorRequests": 1212,
+  "totalRequestCap": 5000,
+  "transportAudit": {
+    "sourcePath": "scripts/lib/fussball-capture.mjs",
+    "sourceSha256": "a715760bd9672ea2ae18646e272c72d248d75966ff7cd35ea82a94d66a211885",
+    "event": "fetch-rejection-before-response-status-v1",
+    "review": "All three pinned source commits have this identical client. httpStatus is assigned immediately after fetch returns a Response, before body or challenge validation. Only the exact pinned failed entry without httpStatus is admitted; no DNS, TLS or other cause is inferred."
+  },
+  "parent": {
+    "runId": "40566792786",
+    "sourceCommit": "78ef666fa2f61671e95892a315eb38cbc9c080d2",
+    "jobId": "122410108716",
+    "artifactId": "12763736902",
+    "artifactDigest": "sha256:21488f80e0d1253de9cb8d304a89c12a7b8fda2cb640a487d704daf810ddc91d",
+    "artifactSize": 13007918,
+    "manifestSha256": "2e2ee2e7d9b867a997d7ceb131911fc143c783855a9b64672033bea45412a34e",
+    "codeSha256": "906b60b135e3f054fc8eb865717c86e4a3023ac3145afb6a66de886c18deee54",
+    "requests": 98,
+    "options": {
+      "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+      "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+      "season": "2026/27",
+      "maxRequests": 886,
+      "reportLimit": null,
+      "asOfDate": "2026-10-27",
+      "cardPolicy": "community-v1"
+    },
+    "createdAt": "2026-10-27T19:12:30.777Z",
+    "completedAt": "2026-10-27T19:22:13.834Z",
+    "attemptsSha256": "c49db28f67fd7faaa2230aa38a112a87bdcbdfc05cafc3529388fbc3047e953e",
+    "progressSha256": "8b662d37b539b5edc66c602490309a889d9ae7087a024cabdcc563bdc1b1d419",
+    "terminal": {
+      "number": 98,
+      "url": "https://www.fussball.de/export.fontface/-/id/6uw9h6fi/type/css",
+      "kind": "css",
+      "startedAt": "2026-10-27T19:22:13.572Z",
+      "status": "failed",
+      "error": "fetch failed"
+    }
+  },
+  "conflicts": [
+    {
+      "url": "https://www.fussball.de/spiel/vfr-mannheim-2-djk-fc-ziegelhausen-peterstal/-/spiel/031DS4G7UK000000VS5489BUVUR5FS5A",
+      "kind": "report",
+      "oldSha256": "6ac2d21743264848707f5072facb0e99317afba1d6571a3a4ae5c00a9dd3df5a",
+      "newSha256": "041d75802c2c4d9a4430e6a7d83b2dc9816d424706e9b06beb1d4c743e89d6a3"
+    },
+    {
+      "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G7UK000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+      "kind": "lineup",
+      "oldSha256": "427aef77fb2bf27d76da35cee8b0198f05b2a6735a4309d0eb652a4b910842ea",
+      "newSha256": "f32817e9496d949d0554227b61ada25347d34ad5dcb397fbfec029587290a979"
+    },
+    {
+      "url": "https://www.fussball.de/spiel/djk-fc-ziegelhausen-peterstal-1fc-bruchsal-1899-ev/-/spiel/031DS4G74K000000VS5489BUVUR5FS5A",
+      "kind": "report",
+      "oldSha256": "e9590920d727ef083a88fb153313dc908cc7d2a22a7c49a08e897364227a9f45",
+      "newSha256": "577bf20c8fc08605f65b9c1f1646a115c7bed6fa8b95e8f7512db84d9251a71e"
+    },
+    {
+      "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G74K000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+      "kind": "lineup",
+      "oldSha256": "ec812248e91f9f8af81e1432f87e72bf8399d70cb27029a1af55701f2df06dea",
+      "newSha256": "2a1445ad1caae1281a9eee9a808fdee5426c0d8ee0bb90dbad382cdc63e47872"
+    }
+  ],
+  "documentsCount": 631,
+  "documentsSha256": "ce374d05ce4bf4a0d887ca41c7c237a178c46fe1a6c044ae3f65235b8af13ffa"
+}
