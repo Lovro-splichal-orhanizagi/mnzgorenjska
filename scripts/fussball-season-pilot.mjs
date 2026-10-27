@@ -3,6 +3,7 @@
 import {readFileSync,appendFileSync} from 'node:fs'
 import {resolve,join} from 'node:path'
 import {pathToFileURL} from 'node:url'
+import {formatFussballErrorDiagnostic} from './lib/fussball-error-diagnostic.mjs'
 import {execFileSync} from 'node:child_process'
 import {validateFussballCaptureOptions,verifyFussballDirectory,captureFussballDirectory} from './fussball-capture-evidence.mjs'
 import {fussballRoundScope} from './lib/fussball-capture.mjs'
@@ -116,4 +117,4 @@ async function main(args){
  await captureFussballDirectory({directory:resolve('capture-archive'),options:{...a,reportLimit:null},archiveParent,onProgress:p=>console.log(JSON.stringify(p))})
  console.log(JSON.stringify(await runFussballCaptureCli(['verify','capture-archive'])))
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href)main(process.argv.slice(2)).catch(error=>{console.error(error.message);process.exitCode=1})
+if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href)main(process.argv.slice(2)).catch(error=>{console.error(error.message);const diagnostic=formatFussballErrorDiagnostic(error);if(diagnostic)console.error(diagnostic);process.exitCode=1})
