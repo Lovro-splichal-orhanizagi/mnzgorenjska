@@ -268,6 +268,10 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     pozivGumb: 'Ennusta',
     lestvicaLige: 'Kogu liiga ennustuste tabel',
     niTekemLige: 'Selle liiga järgmises voorus pole avatud mänge.',
+    kralj: 'Ennustuskuningas: {ime}',
+    kraljKroga: 'Vooru kuningas: {ime}',
+    kraljOznaka: 'Ennustuskuningas',
+    krone: 'Vooru kroone: {n}',
   },
   // Stran Napovedi (/predictions): lestvica napovedi lige in izbira skupnosti.
   napovediLige: {

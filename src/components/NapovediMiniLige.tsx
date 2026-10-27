@@ -86,10 +86,13 @@ export default function NapovediMiniLige({ ligaId }: { ligaId: number }) {
         ) : lestvica.every((v) => v.ocenjenih === 0) ? (
           <p className="text-sm text-slate-400">{t('lestvice.napovedi.prazna')}</p>
         ) : (
+          <>
+          <KraljNapovedi vrstice={lestvica} krog={krog} />
           <ol className="divide-y divide-white/10">
             <li className="flex items-center gap-3 pb-1 text-[11px] uppercase tracking-wide text-slate-500">
               <span className="w-7 shrink-0" />
               <span className="min-w-0 flex-1" />
+              <span className="w-9 shrink-0" />
               <span className="w-12 shrink-0 text-right">{t('lestvice.napovedi.tocni')}</span>
               <span className="w-12 shrink-0 text-right">{t('lestvice.napovedi.tocke')}</span>
             </li>
@@ -114,12 +117,14 @@ export default function NapovediMiniLige({ ligaId }: { ligaId: number }) {
                   <span className="min-w-0 flex-1 truncate font-semibold">
                     <ImeLastnika ime={v.display_name} id={v.user_id} />
                   </span>
+                  <KroneVrstice kralj={v.kralj} kron={v.kron} />
                   <span className="w-12 shrink-0 text-right tabular-nums text-slate-400">{v.tocnih}</span>
                   <span className="w-12 shrink-0 text-right font-bold tabular-nums text-gnl-300">{v.tocke}</span>
                 </li>
               )
             })}
           </ol>
+          </>
         )}
       </section>
 
@@ -131,6 +136,87 @@ export default function NapovediMiniLige({ ligaId }: { ligaId: number }) {
         {t('lestvice.napovedi.lestvicaLige')}
       </Link>
     </div>
+  )
+}
+
+/**
+ * Vrstica nad lestvico napovedi: kralj sezone (skupno) ali kralji izbranega
+ * kroga. Brez kralja (krog še ni končan, nihče nima točk) je ni.
+ */
+export function KraljNapovedi({ vrstice, krog, drobno = false }: {
+  vrstice: { kralj: boolean; display_name: string | null }[]
+  krog: number | null
+  /** Tiha vrstica pod glavo mini lige (brez okvirja). */
+  drobno?: boolean
+}) {
+  const imena = vrstice.filter((v) => v.kralj).map((v) => v.display_name ?? '?')
+  if (imena.length === 0) return null
+  const ime = imena.join(', ')
+  if (drobno)
+    return (
+      <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-200/90">
+        <span aria-hidden="true">👑</span>
+        <span className="min-w-0 truncate">{t('lestvice.napovedi.kralj', { ime })}</span>
+      </p>
+    )
+  return (
+    <p className="flex items-center gap-2 rounded-lg bg-amber-400/10 px-3 py-2 text-sm font-semibold text-amber-100 ring-1 ring-amber-400/30">
+      <span aria-hidden="true">👑</span>
+      <span className="min-w-0">
+        {krog == null ? t('lestvice.napovedi.kralj', { ime }) : t('lestvice.napovedi.kraljKroga', { ime })}
+      </span>
+    </p>
+  )
+}
+
+/**
+ * Kralj napovedi sezone mini lige za glavo in glavno lestvico točk. Bere
+ * `lestvica_napovedi_mini_lige` (iste pravice: član ali javna liga); brez
+ * pravice ali brez kralja je seznam prazen.
+ */
+export function useKraljMiniLige(ligaId: number | null) {
+  const [kralji, setKralji] = useState<VrsticaLestvice[]>([])
+  useEffect(() => {
+    setKralji([])
+    if (ligaId == null) return
+    let veljavno = true
+    supabase.rpc('lestvica_napovedi_mini_lige', { p_liga: ligaId }).then(({ data }) => {
+      if (veljavno) setKralji((data ?? []).filter((v) => v.kralj))
+    })
+    return () => {
+      veljavno = false
+    }
+  }, [ligaId])
+  return kralji
+}
+
+/** Drobna krona pred imenom člana, ki je kralj napovedi sezone. */
+export function KronaKralja() {
+  return (
+    <span role="img" aria-label={t('lestvice.napovedi.kraljOznaka')} title={t('lestvice.napovedi.kraljOznaka')} className="mr-1">
+      👑
+    </span>
+  )
+}
+
+/** Krona ob imenu kralja in število kron krogov v vrstici lestvice. */
+export function KroneVrstice({ kralj, kron }: { kralj: boolean; kron: number }) {
+  return (
+    <>
+      {kralj && (
+        <span role="img" aria-label={t('lestvice.napovedi.kraljOznaka')} title={t('lestvice.napovedi.kraljOznaka')} className="shrink-0">
+          👑
+        </span>
+      )}
+      <span className="w-9 shrink-0 text-right text-[11px] font-bold tabular-nums text-amber-200/80">
+        {kron > 0 && (
+          <span title={t('lestvice.napovedi.krone', { n: kron })} aria-label={t('lestvice.napovedi.krone', { n: kron })}>
+            <span aria-hidden="true">👑</span>
+            <span aria-hidden="true">{kron}</span>
+          </span>
+        )}
+      </span>
+    </>
   )
 }
 

@@ -269,6 +269,10 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     pozivGumb: 'Prognozēt',
     lestvicaLige: 'Visas līgas prognožu tabula',
     niTekemLige: 'Šīs līgas nākamajā kārtā nav atvērtu spēļu.',
+    kralj: 'Prognožu karalis: {ime}',
+    kraljKroga: 'Kārtas karalis: {ime}',
+    kraljOznaka: 'Prognožu karalis',
+    krone: 'Kārtu kroņi: {n}',
   },
   // Stran Napovedi (/predictions): lestvica napovedi lige in izbira skupnosti.
   napovediLige: {

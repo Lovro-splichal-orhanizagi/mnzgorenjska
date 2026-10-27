@@ -268,6 +268,10 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     pozivGumb: 'Proqnoz ver',
     lestvicaLige: 'Bütün liqanın proqnoz cədvəli',
     niTekemLige: 'Bu liqanın növbəti turunda açıq oyun yoxdur.',
+    kralj: 'Proqnoz kralı: {ime}',
+    kraljKroga: 'Turun kralı: {ime}',
+    kraljOznaka: 'Proqnoz kralı',
+    krone: 'Tur tacları: {n}',
   },
   // Stran Napovedi (/predictions): lestvica napovedi lige in izbira skupnosti.
   napovediLige: {

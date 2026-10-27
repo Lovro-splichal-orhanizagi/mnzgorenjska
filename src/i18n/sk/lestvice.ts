@@ -275,6 +275,10 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     pozivGumb: 'Tipovať',
     lestvicaLige: 'Tabuľka tipov celej ligy',
     niTekemLige: 'Ďalšie kolo tejto ligy nemá otvorené zápasy.',
+    kralj: 'Kráľ tipov: {ime}',
+    kraljKroga: 'Kráľ kola: {ime}',
+    kraljOznaka: 'Kráľ tipov',
+    krone: 'Korunky z kôl: {n}',
   },
   // Stran Napovedi (/predictions): lestvica napovedi lige in izbira skupnosti.
   napovediLige: {

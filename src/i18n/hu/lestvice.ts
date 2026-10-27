@@ -269,6 +269,10 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     pozivGumb: 'Tippelek',
     lestvicaLige: 'Az egész liga tipptabellája',
     niTekemLige: 'A liga következő fordulójában nincs nyitott mérkőzés.',
+    kralj: 'Tippkirály: {ime}',
+    kraljKroga: 'A forduló királya: {ime}',
+    kraljOznaka: 'Tippkirály',
+    krone: 'Fordulókoronák: {n}',
   },
   // Stran Napovedi (/predictions): lestvica napovedi lige in izbira skupnosti.
   napovediLige: {
