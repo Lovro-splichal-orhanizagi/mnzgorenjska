@@ -10276,6 +10276,12 @@ export type Database = {
       }
       rok_napovedi: { Args: { p_round_id: number }; Returns: string }
       roster_je_veljaven: { Args: { p_team_id: number }; Returns: boolean }
+      scout_brisi_dogodek: {
+        Args: { p_id: number; p_vse_prihodnje?: boolean }
+        Returns: number
+      }
+      scout_dogodek: { Args: { p_id: number }; Returns: Json }
+      scout_ekipa: { Args: { p_competition_id?: number }; Returns: Json }
       scout_igralec: { Args: { p_player_id: number }; Returns: Json }
       scout_isci: {
         Args: {
@@ -10312,6 +10318,7 @@ export type Database = {
         Returns: string
       }
       scout_klub: { Args: { p_team_id?: number }; Returns: Json }
+      scout_koledar: { Args: { p_do: string; p_od: string }; Returns: Json }
       scout_moj_klub: { Args: never; Returns: Json }
       scout_moj_profil: {
         Args: { p_player_id: number }
@@ -10377,6 +10384,23 @@ export type Database = {
           stripe_customer_id: string
           team_id: number
         }[]
+      }
+      scout_shrani_dogodek: {
+        Args: {
+          p_competition_id: number
+          p_id?: number
+          p_kraj: string
+          p_opomba: string
+          p_ponovi_do?: string
+          p_trajanje_min: number
+          p_vrsta: string
+          p_zacetek: string
+        }
+        Returns: number
+      }
+      scout_shrani_prisotnost: {
+        Args: { p_id: number; p_vnosi: Json }
+        Returns: undefined
       }
       scout_shrani_privolitev: {
         Args: {

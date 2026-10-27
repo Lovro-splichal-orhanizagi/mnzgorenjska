@@ -1,9 +1,12 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Okvir } from './Okvir'
 import { SejaProvider, ZahtevaSedez } from './seja'
+import { Dogodek } from './strani/Dogodek'
 import { Igralec } from './strani/Igralec'
 import { Iskanje } from './strani/Iskanje'
+import { Kader } from './strani/Kader'
 import { Klub } from './strani/Klub'
+import { Koledar } from './strani/Koledar'
 import { Opazovani } from './strani/Opazovani'
 import { Pogoji } from './strani/Pogoji'
 import { Prijava } from './strani/Prijava'
@@ -18,6 +21,9 @@ export function App() {
           <Route path="/" element={<ZahtevaSedez><Iskanje /></ZahtevaSedez>} />
           <Route path="/player/:id" element={<ZahtevaSedez><Igralec /></ZahtevaSedez>} />
           <Route path="/club" element={<ZahtevaSedez><Klub /></ZahtevaSedez>} />
+          <Route path="/calendar" element={<ZahtevaSedez><Koledar /></ZahtevaSedez>} />
+          <Route path="/calendar/:id" element={<ZahtevaSedez><Dogodek /></ZahtevaSedez>} />
+          <Route path="/squad" element={<ZahtevaSedez><Kader /></ZahtevaSedez>} />
           <Route path="/gaps" element={<ZahtevaSedez><Vrzeli /></ZahtevaSedez>} />
           <Route path="/watchlist" element={<ZahtevaSedez><Opazovani /></ZahtevaSedez>} />
           <Route path="/account" element={<Racun />} />

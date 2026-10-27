@@ -306,6 +306,40 @@ katerikoli klub države naročnine (preizkus na pravih klubih); drugim tuj klub
 vrne napako, nikoli tiho svojega. Izmerjeno na produkciji 18. 10. 2026:
 13–38 ms za klub z največ vrsticami.
 
+### Ekipa: koledar, prisotnost, kader (faza 1 upravljanja kluba)
+
+Spec in raziskava trga: `docs/superpowers/specs/2026-10-27-scout-klubsko-upravljanje-design.md`,
+`…-raziskava-trga-klubi.md`. Migracija `20261027180000`, testi
+`supabase/tests/scout-ekipa.sql` (v `npm run test:varnost`).
+
+- **Selekcije kluba** (`scout.selekcije_kluba`): tekmovanja s tekmo kluba v
+  tekoči ali prejšnji sezoni (`sezona_lige`) ali z aktivnim igralcem, ki ga je dodal klub;
+  tudi mladinska. Tuja selekcija → napaka, nikoli tiho druga.
+- **Kader selekcije** (`scout.kader_selekcije`): nastop za klub v tekoči
+  sezoni ali dodan s strani kluba; brez anonimiziranih (tudi po ključu) in
+  brez ugovora (`scout.je_skrit`), kot stran Klub.
+- **Koledar** (`/calendar`, `scout_koledar(od, do)`, največ 62 dni): uradne
+  tekme se berejo živo iz `matches` (ne kopiramo jih), dogodki iz
+  `scout.dogodki` (trening, prijateljska, sestanek, drugo). Tedenska serija
+  (`p_ponovi_do`, največ 52) teče po ljubljanskem času; v državi brez premika
+  ure se čez premik zamakne (shortcut v migraciji).
+- **Prisotnost** (`/calendar/:id`, `scout_dogodek`, `scout_shrani_prisotnost`):
+  tri stanja (`prisoten`/`opravicen`/`odsoten`), **brez razloga** (zdravstveni
+  podatek); ves kader v enem klicu, le igralci iz kadra selekcije.
+- **Kader** (`/squad`, `scout_ekipa(selekcija)`): nastopi, začetki, minute,
+  goli, rumeni, rdeči tekoče sezone in prisotnost zadnjih 30 dni. Kartoni so
+  število, ne napoved kazni (pravilniki po zvezah so faza 6).
+- Vsak klic gre skozi `scout.dostop` (vrste `koledar`, `dogodek`, `ekipa`;
+  šteje v mejo 300); `scout_dogodek` in `scout_ekipa` zapišeta vrnjene
+  igralce v `parametri.igralci`. `scout.pocisti` briše dogodke (s
+  prisotnostjo) starejše od 24 mesecev in prisotnost anonimiziranih ter igralcev z ugovorom. Klub je upravljavec teh podatkov
+  (pogoji, razdelek *Podatki, ki jih vnese klub*).
+- Izmerjeno na produkciji 27. 10. 2026 (klub 1747, branje): selekcije (dve
+  sezoni) 1–2 ms toplo, 194 ms hladno; kader 1–15 ms, tekme koledarja 0,1 ms.
+- **Prehod sezone** (`scout.sezona_selekcije`): sezona dne dogodka, če ima klub
+  v njej tekmo, sicer prejšnja — selekcija in kader ostaneta od 1. 7. do uvoza
+  novega razporeda. Kader dogodka vsebuje tudi že označene igralce.
+
 ### Objava aplikacije
 
 CI (`objavi-scout`) zgradi in prenese `dist-scout/` v

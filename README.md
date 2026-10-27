@@ -149,7 +149,7 @@ rezervnih igralcev.
 | `teams` | Klubi — **skupni** obema ligama (grb, ime) |
 | `players` | Igralci ene lige (cena, pozicija, vir pozicije); ista oseba je v obeh ligah dve vrstici; `anonimiziran_at` = ime skrito (GDPR); ugovor proti Scoutu in privolitev sta v zaprti shemi `scout` |
 | `anonimizirani_igralci` | Zgoščeno izvirno ime in šifra anonimiziranega igralca, da ga uvoz še prepozna in nov zapis iste osebe z ugovorom anonimizira (zaprta tabela) |
-| `scout.*` | Rezultati nočnega stroja Scout (`drzave`, `modeli`, `lige_moc`, `ekipe_elo`, `kazalniki`, `indeks`, `vektorji`, `vrzeli`), ugovori in privolitve igralcev, računi klubov (`narocnine`, `sedezi`, `dnevnik`, `opazovani`); zaprta shema, glej `docs/scout.md` |
+| `scout.*` | Rezultati nočnega stroja Scout (`drzave`, `modeli`, `lige_moc`, `ekipe_elo`, `kazalniki`, `indeks`, `vektorji`, `vrzeli`), ugovori in privolitve igralcev, računi klubov (`narocnine`, `sedezi`, `dnevnik`, `opazovani`), koledar in prisotnost kluba (`dogodki`, `prisotnost`); zaprta shema, glej `docs/scout.md` |
 | `zahtevki_igralca` | Zahtevki "To sem jaz": uporabnik prevzame profil igralca (`cakajoc`, `potrjen`, `zavrnjen`, `preklican`; potrdil `klub`, `soigralci` ali `admin`). Največ en potrjen na igralca in na uporabnika; piše le prek RPC |
 | `kode_vabil` / `povabila` | Zasebna povabila prijateljev; prvi strežniški čas kvalifikacije (registracija + nehišna ekipa) določa prednost prevzema. Nov prijatelj prestavi zahtevek na vrh, dodatna ekipa istega prijatelja ne |
 | `povezani_igralci` | Druge vrstice iste osebe (druga liga, mladinci, prestop), ki jih admin poveže k potrjenemu profilu |
