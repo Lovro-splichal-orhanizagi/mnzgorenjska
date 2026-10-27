@@ -23,6 +23,15 @@ on:
           - target-check
           - target-activate
           - target-recover
+          - future-target-approval-stage
+          - future-target-mapping
+          - future-cleanup-prepare
+          - future-cleanup-apply
+          - future-target-import
+          - future-target-price
+          - future-target-check
+          - future-target-activate
+          - future-target-recover
       cache_key:
         description: Exact reviewed cache snapshot, with no fallback
         required: true
@@ -996,5 +1005,107 @@ jobs:
         with:
           name: fcf-target-recover-${{ steps.operation.outputs.target_slug }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: fcf-target-recover/
+          if-no-files-found: error
+          retention-days: 30
+
+  # Future writer approval staging is GET-only and has no database authority.
+  future-target-approval:
+    name: future-target-approval
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.mode == 'future-target-approval-stage'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      manifest_sha: ${{ steps.operation.outputs.manifest_sha }}
+      target_slug: ${{ steps.operation.outputs.target_slug }}
+    steps:
+      - name: Checkout exact reviewed main SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Stage reviewed future FCF target approval
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FCF_TARGET_ASSET_ID: ${{ inputs.asset_id }}
+          FCF_TARGET_ASSET_SHA256: ${{ inputs.asset_sha256 }}
+        run: node scripts/uvozi-fcf-prihodnji-cilj.mjs --mode approval-stage
+      - name: Retain reviewed future FCF target approval
+        if: success() && steps.operation.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.operation.outputs.artifact_name }}
+          path: ${{ steps.operation.outputs.artifact_directory }}
+          if-no-files-found: error
+          retention-days: 30
+
+  # A closed route to the reviewed offline future writer, never a source job.
+  future-target:
+    name: ${{ inputs.mode }}
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1 && contains(fromJSON('["future-target-mapping","future-cleanup-prepare","future-cleanup-apply","future-target-import","future-target-price","future-target-check","future-target-activate","future-target-recover"]'), inputs.mode)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      manifest_sha: ${{ steps.operation.outputs.manifest_sha }}
+      target_slug: ${{ steps.operation.outputs.target_slug }}
+    steps:
+      - name: Checkout exact reviewed main SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Existing database tunnel decision
+        id: database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          test -n "$SUPABASE_DB_URL"
+          case "$SUPABASE_DB_URL" in *@127.0.0.1*) echo "tunel=da" >> "$GITHUB_OUTPUT";; *) exit 1;; esac
+      - name: Tunel do baze na VM
+        if: steps.database.outputs.tunel == 'da'
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: ${{ fromJSON('{"future-target-mapping":"Derive exact future FCF native mapping","future-cleanup-prepare":"Prepare exact future six FCF cleanup before-image","future-cleanup-apply":"Apply exact future six FCF cleanup","future-target-import":"Import exact future FCF target offline","future-target-price":"Price exact future FCF target","future-target-check":"Check exact future FCF target release","future-target-activate":"Activate exact future FCF target","future-target-recover":"Read back exact future FCF target receipt"}')[inputs.mode] }}
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FCF_FUTURE_TARGET_MODE: ${{ fromJSON('{"future-target-mapping":"mapping","future-cleanup-prepare":"cleanup-prepare","future-cleanup-apply":"cleanup-apply","future-target-import":"import","future-target-price":"price","future-target-check":"check","future-target-activate":"activate","future-target-recover":"recover"}')[inputs.mode] }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ contains(fromJSON('["future-cleanup-prepare","future-cleanup-apply","future-target-import","future-target-price","future-target-check","future-target-activate"]'), inputs.mode) && secrets.SUPABASE_SERVICE_ROLE_KEY || '' }}
+          FCF_TARGET_APPROVAL_ID: ${{ inputs.target_approval_id }}
+          FCF_TARGET_APPROVAL_RUN_ID: ${{ inputs.target_approval_run_id }}
+          FCF_TARGET_APPROVAL_ATTEMPT: ${{ inputs.target_approval_attempt }}
+          FCF_TARGET_APPROVAL_DIGEST: ${{ inputs.target_approval_digest }}
+          FCF_TARGET_APPROVAL_SHA256: ${{ inputs.target_approval_sha256 }}
+        run: node scripts/uvozi-fcf-prihodnji-cilj.mjs --mode "$FCF_FUTURE_TARGET_MODE"
+      - name: ${{ fromJSON('{"future-target-mapping":"Retain exact future FCF native mapping","future-cleanup-prepare":"Retain exact future FCF cleanup before-image","future-cleanup-apply":"Retain exact future FCF cleanup receipt","future-target-import":"Retain exact future FCF target import","future-target-price":"Retain exact future FCF target pricing","future-target-check":"Retain exact future FCF target check","future-target-activate":"Retain exact future FCF target activation","future-target-recover":"Retain exact future FCF target recovery"}')[inputs.mode] }}
+        if: success() && steps.operation.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.operation.outputs.artifact_name }}
+          path: ${{ steps.operation.outputs.artifact_directory }}
           if-no-files-found: error
           retention-days: 30
