@@ -94,3 +94,5 @@ nightly/pilot/paired loaders, policy JSON, docs and integration tests.
 
 - PR #554 first CI: complete app/source/UI/build/smoke and Scout passed. Fresh card SQL/genuine replay passed. Existing DFB owner-internal activation exposed an overly broad new JWT check; community JWT validation now runs after ordinary-policy delegation, with a focused native regression.
 - Updated native/genuine checks: 6/6. Race snapshots now use logical dump/restore without terminating source workers; an open source connection survives the complete concurrency test. Existing full DFB activation reached its final active-state checks locally; appended legacy pending fixture uses newer auth JSON helpers than the bare local image, so the complete original fixture remains a fresh-CI gate.
+
+- Second CI passed the complete DFB group, source/app and most native groups. The Spanish six-report regression caught a dropped known-score predicate in the extended `sezone` view. Restored both non-NULL score checks; original Spanish six-report fixture and the 6 native/card integration checks pass locally. Final CI remains required before merge.

@@ -438,7 +438,7 @@ where m.imported_at is not null or m.statistics_status in('unavailable_historica
 group by m.id,r.season,r.number,r.competition_id,h.name,h.short_name,h.logo_url,a.name,a.short_name,a.logo_url;
 create or replace view public.sezone as
 select r.season,count(distinct r.id)::int as krogov,
- count(distinct m.id)filter(where m.imported_at is not null or m.statistics_status in('unavailable_historical','pending_cards'))::int as odigranih,
+ count(distinct m.id)filter(where(m.imported_at is not null or m.statistics_status in('unavailable_historical','pending_cards'))and m.home_goals is not null and m.away_goals is not null)::int as odigranih,
  max(r.played_on)as zadnji_dan,bool_or(r.played_on>=current_date)as tekoca,r.competition_id,
  count(distinct m.id)filter(where m.imported_at is not null)::int as statistics_complete_matches,
  count(distinct m.id)filter(where m.statistics_status in('unavailable_historical','pending_cards'))::int as statistics_unavailable_matches
