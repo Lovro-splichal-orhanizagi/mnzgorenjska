@@ -495,9 +495,24 @@
     "competitions"
   ],
   [
+    "scout.dogodki",
+    "competition_id",
+    "competitions"
+  ],
+  [
+    "scout.dogodki",
+    "team_id",
+    "teams"
+  ],
+  [
     "scout.narocnine",
     "team_id",
     "teams"
+  ],
+  [
+    "scout.prisotnost",
+    "player_id",
+    "players"
   ],
   [
     "scout.privolitve",
