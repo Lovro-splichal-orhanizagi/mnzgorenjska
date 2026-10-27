@@ -424,6 +424,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   ponovnaCena: {
     naslov: 'Ny vurdering af prisen',
     gumb: 'Vurder prisen igen',
+    vprasanje: 'Synes du, spilleren fortjener en anden pris?',
+    podnaslov: 'Vi beregner den igen og bekræfter den inden for få dage. Engangsbeløb {cena}.',
     opis: 'Vi genberegner prisen med de samme regler som hver uge og bekræfter den inden for få dage. Den kan stige, falde eller forblive den samme. Engangsbetaling: {cena}. Hvis prisen forbliver den samme, refunderer vi ikke.',
     odpoved: 'Jeg forstår, at beregningen starter med det samme, og at jeg ved at betale mister min 14-dages fortrydelsesret.',
     pogoji: '<pogoji>Betingelserne for betalte tjenester</pogoji> gælder.',

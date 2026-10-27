@@ -429,6 +429,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   ponovnaCena: {
     naslov: 'Cenas pārvērtēšana',
     gumb: 'Pārvērtēt cenu',
+    vprasanje: 'Domā, ka spēlētājs ir pelnījis citu cenu?',
+    podnaslov: 'Mēs to pārrēķināsim un apstiprināsim dažu dienu laikā. Vienreizēji {cena}.',
     opis: 'Mēs pārrēķinām cenu pēc tiem pašiem noteikumiem kā katru nedēļu un apstiprinām to dažu dienu laikā. Tā var pieaugt, samazināties vai palikt nemainīga. Vienreizējs maksājums: {cena}. Ja cena paliek nemainīga, naudu neatmaksājam.',
     odpoved: 'Saprotu, ka aprēķins sākas uzreiz un ka, samaksājot, zaudēju 14 dienu atteikuma tiesības.',
     pogoji: 'Ir spēkā <pogoji>maksas pakalpojumu noteikumi</pogoji>.',

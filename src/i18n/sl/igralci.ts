@@ -425,7 +425,9 @@ export const igralci = {
   // Plačljivo ponovno vrednotenje cene (PonovnaCena, le splet). {cena} je znesek z valuto.
   ponovnaCena: {
     naslov: 'Ponovno vrednotenje cene',
-    gumb: 'Ponovno ovrednoti ceno',
+    gumb: 'Preveri ceno',
+    vprasanje: 'Verjameš, da si igralec zasluži drugačno ceno?',
+    podnaslov: 'Ceno izračunamo znova in jo potrdimo v nekaj dneh. Enkratno {cena}.',
     opis: 'Ceno izračunamo znova z istimi pravili kot vsak teden in jo potrdimo v nekaj dneh. Lahko se zviša, zniža ali ostane enaka. Enkratno plačilo: {cena}. Če cena ostane enaka, denarja ne vračamo.',
     odpoved: 'Razumem, da izračun začnemo takoj in da s plačilom izgubim pravico do odstopa v 14 dneh.',
     pogoji: 'Veljajo <pogoji>pogoji plačljivih storitev</pogoji>.',

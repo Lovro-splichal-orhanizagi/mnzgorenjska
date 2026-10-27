@@ -528,10 +528,10 @@ export default function Igralec() {
             )}
           </div>
           <RazlagaCene cena={igralec.value} izhodisce={izhodisce} />
-          <PonovnaCena igralecId={igralec.id} />
         </div>
         )}
       </div>
+      {!gost && <PonovnaCena igralecId={igralec.id} />}
 
       {/* Deljena povezava na igralca vodi v igro: dodaj ga v svojo ekipo (tudi brez računa). */}
       {slugLige && naTrgu(igralec) && !String(igralec.full_name ?? '').startsWith('#') && (

@@ -423,7 +423,9 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   // Plačljivo ponovno vrednotenje cene (PonovnaCena, le splet). {cena} je znesek z valuto.
   ponovnaCena: {
     naslov: 'Price re-evaluation',
-    gumb: 'Re-evaluate price',
+    gumb: 'Check the price',
+    vprasanje: 'Think this player deserves a different price?',
+    podnaslov: 'We recalculate it and confirm it within a few days. One-off {cena}.',
     opis: 'We recalculate the price with the same rules as every week and confirm it within a few days. It can go up, down or stay the same. One-off payment: {cena}. No refund if the price stays the same.',
     odpoved: 'I understand the calculation starts right away and that by paying I lose the 14-day right of withdrawal.',
     pogoji: 'The <pogoji>terms for paid services</pogoji> apply.',

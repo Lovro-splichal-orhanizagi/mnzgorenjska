@@ -424,6 +424,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   ponovnaCena: {
     naslov: 'Hinna ümberhindamine',
     gumb: 'Hinda hind ümber',
+    vprasanje: 'Arvad, et mängija väärib teistsugust hinda?',
+    podnaslov: 'Arvutame hinna uuesti ja kinnitame mõne päeva jooksul. Ühekordselt {cena}.',
     opis: 'Arvutame hinna ümber samade reeglitega nagu igal nädalal ja kinnitame selle mõne päeva jooksul. See võib tõusta, langeda või jääda samaks. Ühekordne makse: {cena}. Kui hind jääb samaks, raha ei tagastata.',
     odpoved: 'Saan aru, et arvutus algab kohe ja et maksega kaotan 14-päevase taganemisõiguse.',
     pogoji: 'Kehtivad <pogoji>tasuliste teenuste tingimused</pogoji>.',

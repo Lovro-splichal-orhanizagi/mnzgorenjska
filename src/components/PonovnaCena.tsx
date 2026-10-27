@@ -1,6 +1,6 @@
 // Plačljivo ponovno vrednotenje cene igralca (migracija 20261025193100).
 //
-// Pod ceno na strani igralca: povezava, ki odpre okno z razlago in plačilom
+// Pod glavo strani igralca: kartica s pozivom, ki odpre okno z razlago in plačilom
 // (Stripe Checkout prek funkcije `ponovna-cena`). Izračun je isti kot ob
 // tedenskem zagonu in ceno premakne šele admin, zato besedilo ne obljublja
 // smeri. Kaj kdo vidi in sme, pove baza (`ponovna_cena_stanje`: stikalo,
@@ -85,15 +85,30 @@ export default function PonovnaCena({ igralecId }: { igralecId: number }) {
   }
 
   const z = stanje.zadnja
+  const naprodaj = !stanje.v_pregledu && stanje.ovira == null
   return (
-    <div className="mt-1 space-y-0.5 text-xs text-slate-400">
-      {vrnitev === 'uspeh' && <p className="text-gnl-300">{t('igralci.ponovnaCena.uspeh')}</p>}
-      {stanje.v_pregledu ? (
+    <div className="mt-4 space-y-1 text-xs text-slate-400">
+      {vrnitev === 'uspeh' && <p className="text-sm text-gnl-300">{t('igralci.ponovnaCena.uspeh')}</p>}
+      {naprodaj ? (
+        // Edina plačljiva storitev na strani: kartica čez celo širino, ne povezava pod ceno.
+        <section className="kartica flex flex-col gap-3 border-gnl-400/40 bg-gradient-to-br from-gnl-400/15 via-white/[0.04] to-transparent p-4 text-left sm:flex-row sm:items-center sm:gap-4">
+          <span aria-hidden="true" className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gnl-400/20 text-xl sm:flex">
+            ⚖️
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-bold text-white">{t('igralci.ponovnaCena.vprasanje')}</p>
+            <p className="text-sm text-slate-300">{t('igralci.ponovnaCena.podnaslov', { cena: znesek })}</p>
+          </div>
+          <button
+            type="button"
+            className="gumb-glavni w-full shrink-0 shadow-lg shadow-gnl-400/20 sm:w-auto"
+            onClick={() => setOdprto(true)}
+          >
+            {t('igralci.ponovnaCena.gumb')}
+          </button>
+        </section>
+      ) : stanje.v_pregledu ? (
         <p>{t('igralci.ponovnaCena.vPregledu')}</p>
-      ) : stanje.ovira == null ? (
-        <button type="button" className="text-sky-300 underline hover:text-sky-200" onClick={() => setOdprto(true)}>
-          {t('igralci.ponovnaCena.gumb')}
-        </button>
       ) : (
         ovira && <p>{t(`igralci.ponovnaCena.ovire.${ovira}`)}</p>
       )}
@@ -117,9 +132,12 @@ export default function PonovnaCena({ igralecId }: { igralecId: number }) {
             tabIndex={-1}
             className="kartica w-full max-w-md space-y-3 p-4 text-sm text-slate-200"
           >
-            <h2 id={`${idp}-naslov`} className="text-base font-bold">
-              {t('igralci.ponovnaCena.naslov')}
-            </h2>
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 id={`${idp}-naslov`} className="text-base font-bold">
+                {t('igralci.ponovnaCena.naslov')}
+              </h2>
+              <span className="text-xl font-black tabular-nums text-gnl-300">{znesek}</span>
+            </div>
             <p>{t('igralci.ponovnaCena.opis', { cena: znesek })}</p>
             <label htmlFor={`${idp}-odpoved`} className="flex cursor-pointer items-start gap-2">
               <input id={`${idp}-odpoved`} type="checkbox" className="mt-1" checked={odpoved} onChange={(e) => setOdpoved(e.target.checked)} />
@@ -141,7 +159,7 @@ export default function PonovnaCena({ igralecId }: { igralecId: number }) {
               </button>
               <button
                 type="button"
-                className="gumb-glavni text-sm disabled:opacity-50"
+                className="gumb-glavni flex-1 text-sm disabled:opacity-50 sm:flex-none"
                 disabled={dela || !odpoved}
                 onClick={() => void kupi()}
               >
