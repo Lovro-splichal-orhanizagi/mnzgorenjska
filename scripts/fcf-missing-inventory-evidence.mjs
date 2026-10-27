@@ -233,13 +233,23 @@ export function readFcfFutureSourceStagingArtifact(input){
  const proof=frozenJSON({kind:'fcf-future-source-staged-proof',targetSlug:m.targetSlug,planSha256:m.planSha256,statisticsAudit:'not-run',binding:clone(ctx.binding),priorSourceGETs:37,actualSourceGETs:m.actualSourceGETs,firstSourceUTC:m.firstSourceUTC,lastCompletedUTC:m.lastCompletedUTC})
  futureStages.set(proof,ctx);return proof
 }
-export function auditFcfFutureSourceOffline({stagingProof,policyHashes,now=Date.now()}){
+function futureSourceStagedData(stagingProof,now){
  const ctx=futureStages.get(stagingProof)
- if(!ctx||!equal(policyHashes,ctx.plan.policyHashes)||!Number.isFinite(now))fail('authenticated future staged inventory/current policies required')
+ if(!ctx||!Number.isFinite(now))fail('authenticated future staged inventory/current policies required')
  validateFcfInventorySourcePlan({plan:ctx.plan,expectedPlanSha256:ctx.manifest.planSha256,now})
- const m=ctx.manifest,c={id:797,slug:'es-ct-tercera-g9',source:'fcf',source_policy:FCF_SIX_SOURCE_POLICY,source_league_code:'4118349-4118588',active:false,sezona_koledarska:false}
- const fixtures=ctx.documents.map(document=>proveFcfFutureSourceDocument({competition:c,document,now})),calendar=validateFcfCurrentReleaseCalendar(fixtures)
+ const m=ctx.manifest,competition={id:797,slug:'es-ct-tercera-g9',source:'fcf',source_policy:FCF_SIX_SOURCE_POLICY,source_league_code:'4118349-4118588',active:false,sezona_koledarska:false}
+ const fixtures=ctx.documents.map(document=>proveFcfFutureSourceDocument({competition,document,now})),calendar=validateFcfCurrentReleaseCalendar(fixtures)
+ return {ctx,m,competition,fixtures,calendar}
+}
+export function auditFcfFutureSourceOffline({stagingProof,policyHashes,now=Date.now()}){
+ const {ctx,m,fixtures,calendar}=futureSourceStagedData(stagingProof,now)
+ if(!equal(policyHashes,ctx.plan.policyHashes))fail('authenticated future staged inventory/current policies required')
  return frozenJSON({schemaVersion:2,kind:'fcf-future-source-offline-audit',status:'passed',targetSlug:m.targetSlug,sourceCommit:m.sourceCommit,planSha256:m.planSha256,childPlanSha256:m.childPlanSha256,auditedUTC:new Date(now).toISOString(),execution:clone(m.execution),inventoryBinding:clone(ctx.binding),policyHashes:clone(policyHashes),canonicalSha256:hash(fixtures),calendarSha256:hash(calendar),priorSourceGETs:37,newSourceGETs:m.actualSourceGETs,actualSourceGETs:37+m.actualSourceGETs})
+}
+/** Detached re-audited staging data, never terminal target/native authority. */
+export function getFcfFutureSourceStagedData({stagingProof,now=Date.now()}){
+ const {ctx,m,competition,fixtures,calendar}=futureSourceStagedData(stagingProof,now)
+ return frozenJSON({evidenceKind:'fcf-future-source-staging-data',targetSlug:m.targetSlug,competition,documents:clone(ctx.documents),fixtures,...calendar,binding:clone(ctx.binding)})
 }
 export function readFcfFutureSourceDiagnosticArtifact(input){
  const ctx=readChild(input,true,true),m=ctx.manifest

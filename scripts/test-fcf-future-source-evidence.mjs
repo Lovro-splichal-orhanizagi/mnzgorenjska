@@ -21,6 +21,8 @@ function staged(f,r,diagnostic=false){
 test('future raw inventory independently replays full240/16/GK without expired R6 opening authority',opts,async t=>{
  const f=await futureCaptureFixture(t),r=await collectFcfMissingInventoryChild(f),wire=staged(f,r),proof=api('readFcfFutureSourceStagingArtifact',wire)
  assert.equal(proof.kind,'fcf-future-source-staged-proof');assert.equal(proof.priorSourceGETs,37);assert.equal(proof.actualSourceGETs,240)
+ const data=api('getFcfFutureSourceStagedData',{stagingProof:proof,now:f.clock()});assert.equal(data.evidenceKind,'fcf-future-source-staging-data');assert.equal(data.fixtures.length,240);assert.equal(data.documents.length,240);assert.equal(data.clubs.length,16);assert.equal(data.verifiedKeeperClubs.length,16);assert.ok(Object.isFrozen(data)&&Object.isFrozen(data.fixtures));assert.equal(Object.hasOwn(data.competition,'firstFantasyPlayedOn'),false)
+ assert.throws(()=>api('getFcfFutureSourceStagedData',{stagingProof:structuredClone(proof),now:f.clock()}),/authenticated future staged/)
  const result=api('auditFcfFutureSourceOffline',{stagingProof:proof,policyHashes:f.plan.policyHashes,now:f.clock()})
  assert.equal(result.kind,'fcf-future-source-offline-audit');assert.equal(result.status,'passed');assert.equal(result.priorSourceGETs,37);assert.equal(result.actualSourceGETs,277);assert.equal(result.newSourceGETs,240)
  assert.equal(Object.hasOwn(result,'firstFantasyRound'),false);assert.equal(Object.hasOwn(result,'admissible'),false)

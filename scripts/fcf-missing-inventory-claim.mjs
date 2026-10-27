@@ -53,3 +53,6 @@ export function readFcfInventoryConsumptionArtifact({zipBytes,artifact,run,jobs,
 }
 /** Capability checks for the later collector, never caller-created success flags. */
 export function requireFcfInventoryConsumption(proof){if(!consumptions.has(proof))fail('authenticated one-shot consumption required');return proof}
+
+/** Only the reader-issued claim object carries execution authority. */
+export function requireFcfInventoryExecutionClaim(proof){if(!claims.has(proof))fail('authenticated execution claim required');return proof}

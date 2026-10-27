@@ -65,3 +65,11 @@ for(const [name,change]of[
 for(const [name,change]of[
  ['old schema1',c=>{c.manifest.schemaVersion=1;c.manifest.kind='fcf-missing-inventory-consumed'}],['old schema2',c=>{c.manifest.schemaVersion=2;c.manifest.kind='fcf-g9-held-parent-consumed'}],['old schema3',c=>{c.manifest.schemaVersion=3;c.manifest.kind='fcf-six-consumed'}],['changed claim commit',c=>c.manifest.claimCommit='1'.repeat(40)],['changed source commit',c=>c.manifest.sourceCommit='1'.repeat(40)],['future consumption time',c=>c.manifest.consumedUTC=new Date(c.now+1).toISOString()],['unknown success flag',c=>c.manifest.verified=true],['attempt2',c=>c.run.run_attempt=2],['expired artifact',c=>c.artifact.expired=true],['failed upload',c=>c.jobs[0].steps[1].conclusion='failure'],
 ])test(`future consumption refuses ${name}`,genuine,()=>{const c=futureConsumptionFixture(futureClaimFixture());change(c);resealConsumption(c);assert.throws(()=>readFcfInventoryConsumptionArtifact(c),/FCF_INVENTORY/)})
+
+import * as claimAPI from './fcf-missing-inventory-claim.mjs'
+test('execution-claim capability checker rejects copied claim proofs',genuine,()=>{
+ assert.equal(typeof claimAPI.requireFcfInventoryExecutionClaim,'function')
+ const proof=readFcfInventoryExecutionClaim(futureClaimFixture())
+ assert.equal(claimAPI.requireFcfInventoryExecutionClaim(proof),proof)
+ for(const fake of [null,{},structuredClone(proof)])assert.throws(()=>claimAPI.requireFcfInventoryExecutionClaim(fake),/authenticated execution claim/)
+})
