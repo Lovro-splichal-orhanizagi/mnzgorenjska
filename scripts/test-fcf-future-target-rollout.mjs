@@ -126,3 +126,32 @@ test('returned provider methods reauthenticate at current invocation clock',actu
  assert.throws(()=>view.report('es4118354'),/FCF_/,'already-returned report must expire')
  assert.equal(fetchCalls,0)
 })
+
+test('original preimport rollout replays after intended native import growth',actual,async t=>{
+ const wire=await futureAdmissionWire(t),inventoryAdmission=readFcfFutureCapturedTargetEvidence(wire),data=getFcfFutureCapturedTargetData({targetEvidence:inventoryAdmission,now:wire.now}),native=nativeInput(data,wire.now),proofs=cleanup(t)
+ const normal=data.fixtures.filter(f=>f.statisticsStatus==='available'),known=normal.slice(0,2).map(f=>f.id.slice(2)),pre=native.databaseInventory
+ assert.ok(normal.length>known.length)
+ pre.groups.find(g=>g.slug===slug).nativeImportedIDs=[...known]
+ for(const f of normal.filter(f=>!known.includes(f.id.slice(2)))){const m=pre.matches.find(m=>m.zapisnik_id===f.id);m.zapisnik_id=null;m.imported_at=null}
+ const base={targetSlug:slug,sourceCommit:writer,inventoryAdmission,databaseInventory:pre,existingExceptionBindings:native.existingExceptionBindings,now:wire.now},mapping=derive(base)
+ const result=build({...base,mappingText:mapping.proposalText,mappingSha256:mapping.proposalSha256,cleanupEvidence:proofs.applied,execution}),saved=JSON.parse(result.rolloutText),packet=JSON.parse(saved.targetPacketText),post=structuredClone(pre),now=wire.now+1000
+ assert.deepEqual(packet.databaseInventory.groups.find(g=>g.slug===slug).nativeImportedIDs,known)
+ post.capturedUTC=new Date(now).toISOString();post.identityPrivacy.capturedUTC=post.capturedUTC
+ post.groups.find(g=>g.slug===slug).nativeImportedIDs=normal.map(f=>f.id.slice(2))
+ const identities=JSON.parse(mapping.proposalText).fixtures
+ for(const f of normal){const identity=identities.find(m=>m.sourceMatchId===f.id),m=post.matches.find(m=>m.id===identity.matchId);m.zapisnik_id=f.id;m.imported_at=post.capturedUTC;m.statistics_status='available'}
+ const replayInput={...base,databaseInventory:post,cleanupEvidence:proofs.applied,execution,now,...result}
+ assert.deepEqual(replay(replayInput),result,'exact original bytes survive intended imported-ID/status growth')
+ await t.test('old known ID cannot be lost from current complete summary',()=>{
+  const bad={...replayInput,databaseInventory:structuredClone(post)};bad.databaseInventory.groups.find(g=>g.slug===slug).nativeImportedIDs=normal.map(f=>f.id.slice(2)).filter(id=>id!==known[0]);assert.throws(()=>replay(bad),/FCF_/)
+ })
+ await t.test('old imported native match cannot be downgraded to pending state',()=>{
+  const bad={...replayInput,databaseInventory:structuredClone(post)},m=bad.databaseInventory.matches.find(m=>m.zapisnik_id==='es'+known[0]);m.zapisnik_id=null;m.imported_at=null;assert.throws(()=>replay(bad),/FCF_/)
+ })
+ await t.test('source pending report cannot be claimed as current imported ID',()=>{
+  const bad={...replayInput,databaseInventory:structuredClone(post)};bad.databaseInventory.groups.find(g=>g.slug===slug).nativeImportedIDs.push(data.fixtures.find(f=>f.statisticsStatus==='pending').id.slice(2));assert.throws(()=>replay(bad),/FCF_/)
+ })
+ await t.test('foreign current imported ID remains outside selected target',()=>{
+  const bad={...replayInput,databaseInventory:structuredClone(post)};bad.databaseInventory.groups.find(g=>g.slug===slug).nativeImportedIDs.push('4109388');assert.throws(()=>replay(bad),/FCF_/)
+ })
+})

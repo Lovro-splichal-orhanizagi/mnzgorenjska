@@ -4,6 +4,7 @@ import {createHash} from 'node:crypto'
 import {getFcfFutureCapturedTargetData} from './fcf-future-source-admission.mjs'
 import {compileFcfFutureTargetImportPacket,verifyFcfFutureTargetImportPacket} from './fcf-future-target-release.mjs'
 import {planFcfNativeTargetRows,verifyFcfNativeMappingProposal} from './fcf-target-native-plan.mjs'
+import {validateFcfTargetReleaseInventory} from './fcf-target-release.mjs'
 const slug='es-ct-tercera-g9',hash=text=>createHash('sha256').update(text).digest('hex'),limit=8*1024*1024
 const fail=m=>{throw Error(`FCF_FUTURE_ROLLOUT: ${m}`)}
 const baseFields=['targetSlug','sourceCommit','inventoryAdmission','databaseInventory','existingExceptionBindings','cleanupEvidence','execution']
@@ -37,13 +38,33 @@ export function buildFcfFutureTargetImportRollout(input={}){
  const packet=compileFcfFutureTargetImportPacket(packetInput(input,ctx.now))
  return envelope(input,ctx,packet,mapping)
 }
+function currentImportState(ctx,originalInventory){
+ // This is CURRENT read-only SQL scope, distinct from the packet's immutable
+ // PRE-import observation. Import may grow selected IDs, never erase old ones.
+ const {target}=validateFcfTargetReleaseInventory({targetSlug:slug,databaseInventory:ctx.native.databaseInventory,cleanupPhase:'applied',sourcePolicy:'es-fcf-six-reviewed-history-v1',now:ctx.now})
+ const original=originalInventory.groups.find(g=>g.slug===slug),known=new Set(target.nativeImportedIDs),sourceById=new Map(ctx.data.fixtures.map(f=>[f.id.slice(2),f])),matches=ctx.native.databaseInventory.matches
+ if(!Array.isArray(matches))fail('complete current native match inventory required')
+ if(original.nativeImportedIDs.some(id=>!known.has(id)))fail('original known imported selected IDs were lost')
+ for(const id of known){
+  const source=sourceById.get(id),rows=matches.filter(m=>m.zapisnik_id==='es'+id),m=rows[0]
+  if(source?.statisticsStatus!=='available'||rows.length!==1||m.statistics_status!=='available'||typeof m.imported_at!=='string'||!Number.isFinite(Date.parse(m.imported_at))||Date.parse(m.imported_at)>ctx.now)fail('current imported ID/source/native status differs or was downgraded')
+ }
+ // Complete actual per-match imported observations cannot disappear from the
+ // current summary, including during a purported normal import transition.
+ if(matches.some(m=>m.imported_at!=null&&(typeof m.zapisnik_id!=='string'||!known.has(m.zapisnik_id.replace(/^es/,'')))))fail('current imported native row missing from complete selected summary')
+}
 export function replayFcfFutureTargetImportRollout(input={}){
  const ctx=context(input,['rolloutText','rolloutSha256']),text=input.rolloutText,expected=input.rolloutSha256
  if(typeof text!=='string'||!text.length||Buffer.byteLength(text)>limit||text.charCodeAt(0)===0xfeff||!/^[a-f0-9]{64}$/.test(expected??'')||hash(text)!==expected)fail('exact bounded future rollout TEXT/SHA required')
  let r;try{r=JSON.parse(text)}catch{fail('invalid future rollout JSON')}
  keys(r,wireFields,'future import rollout');keys(r.identityPlan,['mappingText','mappingSha256'],'identity plan')
  if(r.schemaVersion!==3||r.kind!=='fcf-future-current-target-import-rollout'||r.targetSlug!==slug||r.sourceCommit!==input.sourceCommit||r.readiness!==null||JSON.stringify(execution(r.execution,r.sourceCommit))!==JSON.stringify(ctx.e))fail('exact future import identity/null readiness/same actual execution required')
- const packet=verifyFcfFutureTargetImportPacket({...packetInput(input,ctx.now),manifestText:r.targetPacketText,manifestSha256:r.targetPacketSha256})
+ let originalPacket;try{originalPacket=JSON.parse(r.targetPacketText)}catch{fail('invalid original future import packet JSON')}
+ // Verify immutable original packet bytes/source/cleanup at its original audit
+ // timestamp and actual current clock. Stored inventory is a PRE-import image,
+ // not evidence of the current SQL state or a refreshed capture timestamp.
+ const packet=verifyFcfFutureTargetImportPacket({...packetInput(input,ctx.now),databaseInventory:originalPacket.databaseInventory,manifestText:r.targetPacketText,manifestSha256:r.targetPacketSha256})
+ currentImportState(ctx,originalPacket.databaseInventory)
  const mapping=verifyFcfNativeMappingProposal({...ctx.native,proposalText:r.identityPlan.mappingText,proposalSha256:r.identityPlan.mappingSha256})
  planFcfNativeTargetRows(ctx.native)
  const rebuilt=envelope(input,ctx,packet,mapping)
