@@ -646,13 +646,13 @@ jobs:
       - name: Je nova različica v zraku?
         run: |
           for i in $(seq 1 20); do
-            NAJDEN=$(curl -sS -m 20 -H 'Cache-Control: no-cache' "https://scout.slff.eu/?ci=$(date +%s)" \
+            NAJDEN=$(curl -sS -m 20 -H 'Cache-Control: no-cache' "https://club.slff.eu/?ci=$(date +%s)" \
               | grep -o 'name="slff-commit" content="[a-f0-9]*"' | grep -o '[a-f0-9]\{40\}' || true)
-            if [ "$NAJDEN" = "$GITHUB_SHA" ]; then echo "OK — scout.slff.eu streže $NAJDEN"; exit 0; fi
+            if [ "$NAJDEN" = "$GITHUB_SHA" ]; then echo "OK — club.slff.eu streže $NAJDEN"; exit 0; fi
             echo "  poskus $i/20: v zraku je ${NAJDEN:-<brez znamke>}"
             sleep 15
           done
-          echo "NAPAKA: scout.slff.eu po 5 minutah ne streže $GITHUB_SHA (Caddy blok, DNS, /srv/slff-scout?)."
+          echo "NAPAKA: club.slff.eu po 5 minutah ne streže $GITHUB_SHA (Caddy blok, DNS, /srv/slff-scout?)."
           exit 1
 
   # SLFF Trgovina (shop.slff.eu): isti tok kot objavi-vm, svoja mapa
