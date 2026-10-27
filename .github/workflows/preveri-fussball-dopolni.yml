@@ -14,8 +14,9 @@ on:
         options:
           - baden-reviewed-transports-v1
           - baden-reviewed-transports-v2
+          - baden-reviewed-transports-v3
       current_requests:
-        description: New current request ceiling (v1<=886 after1114; v2<=788 after1212)
+        description: New current request ceiling (v1<=886 after1114; v2<=788 after1212; v3<=577 after1423, enter577 explicitly)
         type: number
         default: 886
       archive_requests:
@@ -50,7 +51,7 @@ jobs:
         run: node scripts/fussball-completion-actions.mjs validate
       - name: Offline source and evidence checks
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
-      - name: Authenticate only the exact reviewed failed source artifacts for the selected preset
+      - name: Authenticate only the exact reviewed source artifacts for the selected preset
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/fussball-completion-actions.mjs parents checkpoint-input

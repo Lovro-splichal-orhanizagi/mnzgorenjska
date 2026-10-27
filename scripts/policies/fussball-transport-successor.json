@@ -1,0 +1,123 @@
+{
+  "preset": "baden-reviewed-transports-v3",
+  "workflow": ".github/workflows/preveri-fussball-dopolni.yml",
+  "scope": {
+    "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+    "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+    "season": "2026/27"
+  },
+  "priorRequests": 1423,
+  "totalRequestCap": 5000,
+  "documentsCount": 634,
+  "parents": [
+    {
+      "stage": "current",
+      "runId": "40577717778",
+      "sourceCommit": "a4625c2e8a668686b961751108948321f26899fe",
+      "jobId": "122448503907",
+      "artifactId": "12769641870",
+      "artifactDigest": "sha256:ee64314381294ee6f3ddc65b3a4a8d906f3502efbd1a5c5f391c9357f12155c2",
+      "artifactSize": 50810420,
+      "requests": 206,
+      "documentsCount": 664,
+      "options": {
+        "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+        "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+        "season": "2026/27",
+        "maxRequests": 788,
+        "reportLimit": null,
+        "asOfDate": "2026-10-27",
+        "cardPolicy": "community-v1"
+      },
+      "codeSha256": "f89e1f3a219af2c99ca140525862f94b9ebd6855e461692cd9f881aba15065a1",
+      "createdAt": "2026-10-27T20:25:40.955Z",
+      "completedAt": "2026-10-27T20:46:13.485Z",
+      "manifestSha256": "52e755486bd2c8e90389a65264890634d6b617ecc5eeefed02013d1542e77e79",
+      "attemptsSha256": "c45e905e3e22e1634ab95afd2b4186752cfb3877310f794e03be6e64b77207f0",
+      "progressSha256": "70c095f6d447ccf83cb869a34a9375e4aecec0f31d9974bf3082572ca486fbcb",
+      "resultSha256": "c003298bab37251a3c9a8b9421395b0aa03568685fda022ed53d543350474e61"
+    },
+    {
+      "stage": "archive",
+      "runId": "40577717778",
+      "sourceCommit": "a4625c2e8a668686b961751108948321f26899fe",
+      "jobId": "122460201066",
+      "artifactId": "12770031223",
+      "artifactDigest": "sha256:5c9c8b2d2e11131c0bcd05776442f99862ee4c7a21962f120bb82ecc4fd750a8",
+      "artifactSize": 68509,
+      "requests": 5,
+      "documentsCount": 5,
+      "options": {
+        "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+        "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+        "season": "2025/26",
+        "maxRequests": 3000,
+        "reportLimit": null,
+        "asOfDate": "2026-10-27",
+        "cardPolicy": "community-v1"
+      },
+      "codeSha256": "f89e1f3a219af2c99ca140525862f94b9ebd6855e461692cd9f881aba15065a1",
+      "createdAt": "2026-10-27T20:47:37.150Z",
+      "completedAt": "2026-10-27T20:48:01.640Z",
+      "manifestSha256": "233fcc21066b471b1d5c115ec66ae5ffaaa4fbec35f916a82a2ef41d363db586",
+      "attemptsSha256": "0655f0ba7dde41e659f97d7c690a2e939684b935691056bfc3190e5ff257255c",
+      "progressSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archiveParent": {
+        "version": 1,
+        "current": {
+          "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+          "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+          "season": "2026/27"
+        },
+        "observedSeedUrl": "https://www.fussball.de/spieltag/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+        "document": {
+          "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+          "kind": "round",
+          "sha256": "7a0bb00b1aae60f61ec36985a3718d897f704dc4400255ff60896e2e653c4734",
+          "bytes": 199727,
+          "status": 200,
+          "contentType": "text/html; charset=UTF-8",
+          "capturedAt": "2026-10-27T20:25:42.177Z"
+        },
+        "originalReceipt": {
+          "version": 1,
+          "document": {
+            "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+            "kind": "round",
+            "sha256": "7a0bb00b1aae60f61ec36985a3718d897f704dc4400255ff60896e2e653c4734",
+            "bytes": 199727,
+            "status": 200,
+            "contentType": "text/html; charset=UTF-8",
+            "capturedAt": "2026-10-27T20:25:42.177Z"
+          },
+          "attempt": {
+            "number": 1,
+            "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+            "kind": "round",
+            "startedAt": "2026-10-27T20:25:42.177Z",
+            "status": "success",
+            "error": null,
+            "httpStatus": 200
+          },
+          "capture": {
+            "createdAt": "2026-10-27T20:25:40.955Z",
+            "codeSha256": "f89e1f3a219af2c99ca140525862f94b9ebd6855e461692cd9f881aba15065a1",
+            "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+            "season": "2026/27"
+          }
+        },
+        "alias": {
+          "from": "https://www.fussball.de/spieltag/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "to": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "status": 301,
+          "sourceRun": 40403312901,
+          "startedAt": "2026-10-26T21:19:35.829Z",
+          "manifestSha256": "3486ef93abee62b3897c55cc25403fbe51e6157290391d0de37cd75015cd6b8a"
+        },
+        "file": "archive-parent/7a0bb00b1aae60f61ec36985a3718d897f704dc4400255ff60896e2e653c4734.html",
+        "proofSha256": "87b85cb6b6689ce0f98adade17c5b01d9216d7d58c3609b2a092f59ae38ede53"
+      }
+    }
+  ],
+  "documentsSha256": "3bce3e28ceaa4f6717c610c6e436e59d78ea6b802a54959a9e56efe4a6052dfa"
+}

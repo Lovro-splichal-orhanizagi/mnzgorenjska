@@ -28,9 +28,10 @@ function scope(options){
 export function validateFussballSeasonPilot(e,{headSha}={}){
  const maxRequests=integer(e.MAX_REQUESTS,1,3000)
  const resumption=e.FUSSBALL_COMPLETION_PRESET==='baden-reviewed-transports-v2'
- const completion=e.FUSSBALL_COMPLETION_PRESET==='baden-reviewed-transports-v1'||resumption
+ const successor=e.FUSSBALL_COMPLETION_PRESET==='baden-reviewed-transports-v3'
+ const completion=e.FUSSBALL_COMPLETION_PRESET==='baden-reviewed-transports-v1'||resumption||successor
  requireProof(!e.FUSSBALL_COMPLETION_PRESET||completion,'unknown reviewed completion preset')
- requireProof(!completion||e.ARCHIVE_JSON?.trim()&&maxRequests<=(resumption?788:886),'completion requires the reviewed paired current allowance')
+ requireProof(!completion||e.ARCHIVE_JSON?.trim()&&maxRequests<=(successor?577:resumption?788:886),'completion requires the reviewed paired current allowance')
  if(!e.ARCHIVE_JSON?.trim()){requireProof(!e.ROLLOUT_CANDIDATE,'rollout requires paired archive scope');return null}
  const workflow=completion?'preveri-fussball-dopolni.yml':'preveri-fussball-sezono.yml'
  requireProof(e.GITHUB_REPOSITORY===repository&&e.GITHUB_REF==='refs/heads/main'&&e.GITHUB_EVENT_NAME==='workflow_dispatch'&&e.GITHUB_WORKFLOW_REF===`${repository}/.github/workflows/${workflow}@refs/heads/main`&&e.GITHUB_RUN_ATTEMPT==='1'&&/^[1-9]\d*$/.test(e.GITHUB_RUN_ID??''),'exact repository main dispatch and first attempt required')
@@ -45,7 +46,7 @@ export function validateFussballSeasonPilot(e,{headSha}={}){
  if(Object.hasOwn(raw,'observedSeedUrl')){requireProof(typeof raw.observedSeedUrl==='string'&&raw.observedSeedUrl!==raw.seedUrl,'distinct observed menu seed required');fussballArchiveSeedAlias(archive,current)}
  // Initial361 plus two retained GitHub identity probes stay on the ledger.
  const priorRequests=integer(e.PRIOR_REQUESTS,363,5000),totalRequestCap=integer(e.TOTAL_REQUEST_CAP,1,5000)
- if(completion)requireProof(priorRequests===(resumption?1212:1114)&&totalRequestCap===5000&&e.ROLLOUT_CANDIDATE==='de-verbandsliga-baden','reviewed checkpoint ledger/candidate differs')
+ if(completion)requireProof(priorRequests===(successor?1423:resumption?1212:1114)&&totalRequestCap===5000&&e.ROLLOUT_CANDIDATE==='de-verbandsliga-baden','reviewed checkpoint ledger/candidate differs')
  requireProof(priorRequests+current.maxRequests+archive.maxRequests<=totalRequestCap,'cumulative reserved request budget exceeds cap')
  if(e.ROLLOUT_CANDIDATE){
   const candidates=GERMANY_BULK_CANDIDATES.filter(c=>c.slug===e.ROLLOUT_CANDIDATE)
