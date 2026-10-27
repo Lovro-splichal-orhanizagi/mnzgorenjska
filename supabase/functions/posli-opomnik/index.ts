@@ -465,11 +465,13 @@ Deno.serve(async (req) => {
       // Mini lige (26. 10. 2026): končani dvoboji kroga (največ trije) in
       // točke napovedi. Napaka pri branju ne ustavi maila — ostane brez njiju.
       // Namigi za naslednji krog (kapetan, igralci brez minute, pripomočki).
-      const [{ data: dv }, { data: np }, { data: pr }, { data: nm }] = await Promise.all([
+      // Kralj napovedi kroga v ligi in mini ligah (27. 10. 2026).
+      const [{ data: dv }, { data: np }, { data: pr }, { data: nm }, { data: kr }] = await Promise.all([
         service.rpc('dvoboji_ekipe', { p_ekipa: v.fantasy_team_id, p_krog: v.krog }),
         service.rpc('povzetek_napovedi_kroga', { p_user_id: v.user_id, p_round_id: v.round_id }),
         service.from('profiles').select('brez_push').eq('id', v.user_id).maybeSingle(),
         service.rpc('namigi_ekipe', { p_ekipa: v.fantasy_team_id, p_round_id: v.round_id }),
+        service.rpc('kralj_napovedi_kroga', { p_user_id: v.user_id, p_round_id: v.round_id }),
       ])
       // deno-lint-ignore no-explicit-any
       const dvoboji = ((dv ?? []) as any[]).filter((d) => d.koncan && d.izid).slice(0, 3).map((d) => ({
@@ -482,6 +484,9 @@ Deno.serve(async (req) => {
       // deno-lint-ignore no-explicit-any
       const n = (Array.isArray(np) ? np[0] : np) as any
       const napovedi = n && Number(n.ocenjenih) > 0 ? { tocke: Number(n.tocke), tocnih: Number(n.tocnih) } : null
+      // Vrstica brez mini lige je liga sama (v mailu njena oznaka).
+      // deno-lint-ignore no-explicit-any
+      const kralj = ((kr ?? []) as any[]).map((k) => (k.mini_liga_id == null ? null : String(k.mini_liga)))
       // deno-lint-ignore no-explicit-any
       const h = (Array.isArray(nm) ? nm[0] : nm) as any
       const namigi = h
@@ -501,6 +506,7 @@ Deno.serve(async (req) => {
         najboljsi_tocke: v.najboljsi_tocke == null ? null : Number(v.najboljsi_tocke),
         dvoboji,
         napovedi,
+        kralj,
         namigi,
       })
       const rez = await poslji(

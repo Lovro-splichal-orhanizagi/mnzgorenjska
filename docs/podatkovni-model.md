@@ -288,6 +288,21 @@
   ekip; prikaz `PasSkupnosti.tsx` na strani in na tekmi (`/match/:id`).
   Poziv na Moji ekipi (`PozivNapovedi.tsx`) dobi vsak z ekipo, ki ima v
   naslednjem krogu tekme brez napovedi, in vodi na `/predictions`.
+- **Kralj napovedi** (migracija 20261027141100): kralj kroga je, kdor v
+  končanem krogu (rok vseh krogov s to številko je potekel in nobena tekma ni
+  `caka` po `stanje_tekme_napovedi`; v mini ligi krogi vseh lig članov) zbere
+  največ točk napovedi, nato točnih izidov; popolnoma izenačeni si krono
+  delijo, potrebnih je več kot 0 točk. Notranja `kralji_krogov_lige(liga,
+  krog)` in `kralji_krogov_mini_lige(liga, krog)` (brez pravic) vrneta
+  (krog, user_id, tocke, tocnih). `lestvica_napovedi_lige` in
+  `lestvica_napovedi_mini_lige` imata stolpca `kron` (krone krogov v sezoni)
+  in `kralj` (skupno: vodilni z več kot 0 točkami, kralj sezone; s `krog`:
+  kralj tega kroga); pravice ostanejo, liga brez user_id. Servisni
+  `kralj_napovedi_kroga(uporabnik, round)` → (mini_liga_id, mini_liga),
+  NULL = liga sama, za vrstico v mailu "tvoj krog". Vmesnik: 👑 ob imenu in
+  "👑 n" v vrstici obeh lestvic napovedi, vrstica "Kralj napovedi" nad njima;
+  krona kralja sezone še v glavni lestvici mini lige in glavi njene strani
+  (`useKraljMiniLige`, le člani).
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
 - `statistika_igralcev` → statistika igralca po ligi in sezoni (nastopi,
   minute, goli, kartoni, čiste mreže, točke, asistence, zadnji krog, forma).

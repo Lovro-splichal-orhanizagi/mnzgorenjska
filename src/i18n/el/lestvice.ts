@@ -268,6 +268,10 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     pozivGumb: 'Πρόβλεψε',
     lestvicaLige: 'Βαθμολογία προβλέψεων όλης της λίγκας',
     niTekemLige: 'Η επόμενη αγωνιστική αυτής της λίγκας δεν έχει ανοιχτούς αγώνες.',
+    kralj: 'Βασιλιάς των προβλέψεων: {ime}',
+    kraljKroga: 'Βασιλιάς της αγωνιστικής: {ime}',
+    kraljOznaka: 'Βασιλιάς των προβλέψεων',
+    krone: 'Στέμματα αγωνιστικών: {n}',
   },
   // Stran Napovedi (/predictions): lestvica napovedi lige in izbira skupnosti.
   napovediLige: {

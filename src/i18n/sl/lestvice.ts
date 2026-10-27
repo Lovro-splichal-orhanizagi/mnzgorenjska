@@ -284,6 +284,10 @@ export const lestvice = {
     pozivGumb: 'Napovej',
     lestvicaLige: 'Lestvica napovedi cele lige',
     niTekemLige: 'Naslednji krog te lige nima odprtih tekem.',
+    kralj: 'Kralj napovedi: {ime}',
+    kraljKroga: 'Kralj kroga: {ime}',
+    kraljOznaka: 'Kralj napovedi',
+    krone: 'Krone krogov: {n}',
   },
   // Stran Napovedi (/predictions): lestvica napovedi lige in izbira skupnosti.
   napovediLige: {

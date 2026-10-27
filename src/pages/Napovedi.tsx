@@ -5,7 +5,7 @@ import { useLocation } from 'react-router-dom'
 import { Link } from '../components/Povezava'
 import Grb from '../components/Grb'
 import PasSkupnosti from '../components/PasSkupnosti'
-import { ObrazecNapovedi, IzbiraKroga } from '../components/NapovediMiniLige'
+import { ObrazecNapovedi, IzbiraKroga, KraljNapovedi, KroneVrstice } from '../components/NapovediMiniLige'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -169,10 +169,13 @@ export default function Napovedi() {
         ) : lestvica.length === 0 || lestvica.every((v) => v.ocenjenih === 0) ? (
           <p className="text-sm text-slate-400">{t('lestvice.napovedi.prazna')}</p>
         ) : (
+          <>
+          <KraljNapovedi vrstice={lestvica} krog={krog} />
           <ol className="divide-y divide-white/10">
             <li className="flex items-center gap-3 pb-1 text-[11px] uppercase tracking-wide text-slate-500">
               <span className="w-7 shrink-0" />
               <span className="min-w-0 flex-1" />
+              <span className="w-9 shrink-0" />
               <span className="w-12 shrink-0 text-right">{t('lestvice.napovedi.tocni')}</span>
               <span className="w-12 shrink-0 text-right">{t('lestvice.napovedi.tocke')}</span>
             </li>
@@ -199,12 +202,14 @@ export default function Napovedi() {
                     {v.display_name}
                     {v.je_moj && <span className="ml-1.5 text-xs font-normal text-gnl-300">({t('lestvice.napovediLige.ti')})</span>}
                   </span>
+                  <KroneVrstice kralj={v.kralj} kron={v.kron} />
                   <span className="w-12 shrink-0 text-right tabular-nums text-slate-400">{v.tocnih}</span>
                   <span className="w-12 shrink-0 text-right font-bold tabular-nums text-gnl-300">{v.tocke}</span>
                 </li>
               )
             })}
           </ol>
+          </>
         )}
       </section>
 

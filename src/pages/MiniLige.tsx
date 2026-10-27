@@ -22,7 +22,7 @@ import DeliMiniLigo from '../components/DeliMiniLigo'
 import TedenskiPregled from '../components/TedenskiPregled'
 import IzstopMiniLige from '../components/IzstopMiniLige'
 import SaljiveNagrade from '../components/SaljiveNagrade'
-import NapovediMiniLige from '../components/NapovediMiniLige'
+import NapovediMiniLige, { KraljNapovedi, KronaKralja, useKraljMiniLige } from '../components/NapovediMiniLige'
 import DvobojiMiniLige, { IzbiraPogleda, type PogledMiniLige } from '../components/DvobojiMiniLige'
 import { t, tx } from '../i18n'
 import { dogodek } from '../lib/analitika'
@@ -183,6 +183,9 @@ export default function MiniLige() {
   const urejena = useMemo(() => razvrstiMini(lestvica), [lestvica])
   const kaziLigo = useMemo(() => vecLig(lestvica), [lestvica])
   const trenutna = lige.find((l) => l.id === izbrana) ?? null
+  // Kralj napovedi sezone: krona v glavni lestvici, vidna brez zavihka Napovedi.
+  const kralji = useKraljMiniLige(trenutna?.id ?? null)
+  const kraljiId = useMemo(() => new Set(kralji.map((k) => k.user_id)), [kralji])
   const semLastnik = !!trenutna && trenutna.owner_id === uporabnikId
   const mojihVLigi = lestvica.filter((v) => v.owner_id === uporabnikId).length
   // Z eno samo ekipo dvobojev ni; pogled se skrije in kaže skupno lestvico.
@@ -409,6 +412,8 @@ export default function MiniLige() {
             <DeliMiniLigo ime={trenutna.name} koda={trenutna.code} stanje={stanjeDeljenja} />
           )}
 
+          {pogled !== 'napovedi' && <KraljNapovedi vrstice={kralji} krog={null} drobno />}
+
           <IzbiraPogleda
             pogled={pogled}
             onPogled={setPogled}
@@ -449,6 +454,7 @@ export default function MiniLige() {
                       {v.team_name}
                     </ImeEkipe>
                     <div className="truncate text-xs text-slate-500">
+                      {v.owner_id != null && kraljiId.has(v.owner_id) && <KronaKralja />}
                       <ImeLastnika ime={v.owner_name} id={v.owner_id} />
                       {kaziLigo && v.competition_short ? ` · ${v.competition_short}` : ''}
                     </div>

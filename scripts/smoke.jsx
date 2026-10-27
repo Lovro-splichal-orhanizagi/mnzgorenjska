@@ -11589,6 +11589,16 @@ preveri(
       !slovenskoCs.test(popCs.naslov + popCs.html + izCs.naslov + izCs.html + pushCs.besedilo + tCs.naslov + tCs.html), tCs.naslov)
   preveri('e-pošta: cs brez pomišljajev',
     [oCs, oCs2, zCs, bCs, pCs, popCs, izCs, tCs].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))))
+  // Kralj napovedi kroga: ena vrstica, liga (null) po oznaki, ime mini lige ubežano.
+  const tCsK = E.sestaviTedenskiPregled(czL, {
+    display_name: 'Jan', ekipa: 'Hrdinové', krog: 5, tocke: 2.5, mesto: 3, mesto_prej: 5, ekip: 12,
+    povprecje: 30, najvec: 60, kapetan: null, kapetan_tocke: null, najboljsi: null, najboljsi_tocke: null,
+    kralj: [null, 'Kamarádi <3'],
+  })
+  preveri('e-pošta: kralj napovedi kroga cs',
+    tCsK.html.includes('Jsi král tipů 5. kola') && tCsK.html.includes('Kamarádi &lt;3') &&
+      tCsK.html.includes(czL.oznaka) && !tCs.html.includes('král tipů') && !pomisljaj.test(brezNoge(tCsK.html)),
+    tCsK.html.match(/Jsi král[^<]*/)?.[0])
 
   // Madžarska: isti maili v madžarščini, rok po budimpeštansko, razlog preveden.
   const huL = { slug: 'hu-pest-megye1', oznaka: 'Pest I.', ime: 'Megyei I. osztály Pest', drzava: 'HU' }

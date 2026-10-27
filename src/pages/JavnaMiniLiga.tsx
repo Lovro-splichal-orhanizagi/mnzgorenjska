@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Link } from '../components/Povezava'
 import ImeLastnika from '../components/ImeLastnika'
+import { KraljNapovedi, KronaKralja, useKraljMiniLige } from '../components/NapovediMiniLige'
 import IzstopMiniLige from '../components/IzstopMiniLige'
 import DvobojiMiniLige, { IzbiraPogleda, type PogledMiniLige } from '../components/DvobojiMiniLige'
 import { supabase } from '../lib/supabase'
@@ -53,6 +54,9 @@ export default function JavnaMiniLiga() {
 
   const urejena = useMemo(() => razvrstiMini(lestvica), [lestvica])
   const kaziLigo = useMemo(() => vecLig(lestvica), [lestvica])
+  // Kralj napovedi sezone: le članom (javno ligo gledajo tudi nečlani).
+  const kralji = useKraljMiniLige(glava?.sem_clan ? ligaId : null)
+  const kraljiId = useMemo(() => new Set(kralji.map((k) => k.user_id)), [kralji])
 
   if (!Number.isFinite(ligaId) || glava === null)
     return (
@@ -104,6 +108,7 @@ export default function JavnaMiniLiga() {
           )}
           {mnozina(glava.ekip, EKIPE)}
         </p>
+        <KraljNapovedi vrstice={kralji} krog={null} drobno />
       </div>
 
       {sporocilo && <p role="status" className="text-sm text-gnl-300">{sporocilo}</p>}
@@ -139,6 +144,7 @@ export default function JavnaMiniLiga() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">{v.team_name}</p>
                 <div className="truncate text-xs text-slate-500">
+                  {v.owner_id != null && kraljiId.has(v.owner_id) && <KronaKralja />}
                   <ImeLastnika ime={v.owner_name} id={v.owner_id} />
                   {kaziLigo && v.competition_short ? ` · ${v.competition_short}` : ''}
                 </div>

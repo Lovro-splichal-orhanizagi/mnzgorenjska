@@ -9456,6 +9456,31 @@ export type Database = {
           season: string
         }[]
       }
+      kralj_napovedi_kroga: {
+        Args: { p_round_id: number; p_user_id: string }
+        Returns: {
+          mini_liga: string
+          mini_liga_id: number
+        }[]
+      }
+      kralji_krogov_lige: {
+        Args: { p_krog?: number; p_tekmovanje: number }
+        Returns: {
+          krog: number
+          tocke: number
+          tocnih: number
+          user_id: string
+        }[]
+      }
+      kralji_krogov_mini_lige: {
+        Args: { p_krog?: number; p_liga: number }
+        Returns: {
+          krog: number
+          tocke: number
+          tocnih: number
+          user_id: string
+        }[]
+      }
       krog_dvoboja_koncan: { Args: { p_round_id: number }; Returns: boolean }
       krog_je_odigran: { Args: { p_round_id: number }; Returns: boolean }
       krogi_napovedi_lige: {
@@ -9510,6 +9535,8 @@ export type Database = {
         Returns: {
           display_name: string
           je_moj: boolean
+          kralj: boolean
+          kron: number
           mesto: number
           ocenjenih: number
           razpletov: number
@@ -9521,6 +9548,8 @@ export type Database = {
         Args: { p_krog?: number; p_liga: number }
         Returns: {
           display_name: string
+          kralj: boolean
+          kron: number
           ocenjenih: number
           razpletov: number
           tocke: number

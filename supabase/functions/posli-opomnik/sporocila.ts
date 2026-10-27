@@ -2683,6 +2683,8 @@ export interface PregledKroga {
   dvoboji?: Array<{ mini_liga: string; nasprotnik: string | null; tocke: number; tocke_nasprotnika: number; izid: 'zmaga' | 'remi' | 'poraz' }>
   /** Napovedi kroga (`povzetek_napovedi_kroga`); brez, če ni napovedoval ali ni ocenjenih. */
   napovedi?: { tocke: number; tocnih: number } | null
+  /** Kje je kralj napovedi kroga (`kralj_napovedi_kroga`): mini lige, null = liga sama. */
+  kralj?: Array<string | null> | null
   /** Namigi za naslednji krog (`namigi_ekipe`); brez, če jih ni bilo mogoče prebrati. */
   namigi?: { kapetan_ni_igral: string | null; ni_igralo: number; prosti_prestopi: number; cipi: Array<'wildcard' | 'klop_plus'> } | null
 }
@@ -2723,6 +2725,8 @@ interface BesedilaPregleda {
   povprecjeLige: string
   napovedi: string
   tocni: string
+  /** Kralj napovedi kroga; `kje` je seznam lige in mini lig (ubeži klicatelj). */
+  kralj: (krog: number, kje: string) => string
   zakaj: (ozn: string) => string
 }
 
@@ -2740,6 +2744,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Ne želim več e-pošte',
     dvoboj: 'Dvoboj', izid: { zmaga: 'Zmaga', remi: 'Remi', poraz: 'Poraz' }, povprecjeLige: 'povprečje lige',
     napovedi: 'Napovedi', tocni: 'točni izidi',
+    kralj: (k, kje) => `Ti si kralj napovedi ${k}. kroga: ${kje}!`,
     zakaj: (o) => `Pregled dobiš po vsakem krogu, ker imaš ekipo v ligi ${o}.`,
   },
   sk: {
@@ -2755,6 +2760,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Nechcem už dostávať e-maily',
     dvoboj: 'Duel', izid: { zmaga: 'Výhra', remi: 'Remíza', poraz: 'Prehra' }, povprecjeLige: 'priemer ligy',
     napovedi: 'Tipy', tocni: 'presné výsledky',
+    kralj: (k, kje) => `Si kráľ tipov ${k}. kola: ${kje}!`,
     zakaj: (o) => `Prehľad dostávaš po každom kole, lebo máš tím v lige ${o}.`,
   },
   hr: {
@@ -2770,6 +2776,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Ne želim više primati e-mailove',
     dvoboj: 'Dvoboj', izid: { zmaga: 'Pobjeda', remi: 'Neriješeno', poraz: 'Poraz' }, povprecjeLige: 'prosjek lige',
     napovedi: 'Prognoze', tocni: 'točni rezultati',
+    kralj: (k, kje) => `Ti si kralj prognoza ${k}. kola: ${kje}!`,
     zakaj: (o) => `Pregled dobivaš nakon svakog kola jer imaš momčad u ligi ${o}.`,
   },
   cs: {
@@ -2785,6 +2792,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Nechci už dostávat e-maily',
     dvoboj: 'Duel', izid: { zmaga: 'Výhra', remi: 'Remíza', poraz: 'Prohra' }, povprecjeLige: 'průměr ligy',
     napovedi: 'Tipy', tocni: 'přesné výsledky',
+    kralj: (k, kje) => `Jsi král tipů ${k}. kola: ${kje}!`,
     zakaj: (o) => `Přehled dostáváš po každém kole, protože máš tým v lize ${o}.`,
   },
   // Madžarščina: člen a/az pred številko je odvisen od izgovora, zato
@@ -2802,6 +2810,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Nem kérek több e-mailt',
     dvoboj: 'Párharc', izid: { zmaga: 'Győzelem', remi: 'Döntetlen', poraz: 'Vereség' }, povprecjeLige: 'liga átlaga',
     napovedi: 'Tippek', tocni: 'pontos eredmények',
+    kralj: (k, kje) => `Te vagy a ${k}. forduló tippkirálya: ${kje}!`,
     zakaj: (o) => `Az összefoglalót minden forduló után megkapod, mert van csapatod ebben a bajnokságban: ${o}.`,
   },
   de: {
@@ -2817,6 +2826,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Keine E-Mails mehr',
     dvoboj: 'Duell', izid: { zmaga: 'Sieg', remi: 'Remis', poraz: 'Niederlage' }, povprecjeLige: 'Ligaschnitt',
     napovedi: 'Tipps', tocni: 'exakte Ergebnisse',
+    kralj: (k, kje) => `Du bist Tippkönig der ${k}. Runde: ${kje}!`,
     zakaj: (o) => `Du bekommst die Übersicht nach jeder Runde, weil du ein Team in dieser Liga hast: ${o}.`,
   },
   sr: {
@@ -2832,6 +2842,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Ne želim više da primam imejlove',
     dvoboj: 'Dvoboj', izid: { zmaga: 'Pobeda', remi: 'Nerešeno', poraz: 'Poraz' }, povprecjeLige: 'prosek lige',
     napovedi: 'Prognoze', tocni: 'tačni rezultati',
+    kralj: (k, kje) => `Ti si kralj prognoza ${k}. kola: ${kje}!`,
     zakaj: (o) => `Pregled dobijaš posle svakog kola jer imaš tim u ligi ${o}.`,
   },
   ro: {
@@ -2847,6 +2858,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Nu mai vreau e-mailuri',
     dvoboj: 'Duel', izid: { zmaga: 'Victorie', remi: 'Egal', poraz: 'Înfrângere' }, povprecjeLige: 'media ligii',
     napovedi: 'Pronosticuri', tocni: 'scoruri exacte',
+    kralj: (k, kje) => `Ești regele pronosticurilor în etapa ${k}: ${kje}!`,
     zakaj: (o) => `Primești rezumatul după fiecare etapă pentru că ai o echipă în liga ${o}.`,
   },
   et: {
@@ -2862,6 +2874,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Ma ei soovi enam kirju',
     dvoboj: 'Duell', izid: { zmaga: 'Võit', remi: 'Viik', poraz: 'Kaotus' }, povprecjeLige: 'liiga keskmine',
     napovedi: 'Ennustused', tocni: 'täpsed tulemused',
+    kralj: (k, kje) => `Sa oled ${k}. vooru ennustuskuningas: ${kje}!`,
     zakaj: (o) => `Saad ülevaate pärast iga vooru, sest sul on meeskond (liiga: ${o}).`,
   },
   pl: {
@@ -2877,6 +2890,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Nie chcę więcej e-maili',
     dvoboj: 'Pojedynek', izid: { zmaga: 'Wygrana', remi: 'Remis', poraz: 'Porażka' }, povprecjeLige: 'średnia ligi',
     napovedi: 'Typy', tocni: 'dokładne wyniki',
+    kralj: (k, kje) => `Jesteś królem typów ${k}. kolejki: ${kje}!`,
     zakaj: (o) => `Podsumowanie dostajesz po każdej kolejce, bo masz drużynę w lidze ${o}.`,
   },
   es: {
@@ -2892,6 +2906,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'No quiero más correos',
     dvoboj: 'Duelo', izid: { zmaga: 'Victoria', remi: 'Empate', poraz: 'Derrota' }, povprecjeLige: 'media de la liga',
     napovedi: 'Pronósticos', tocni: 'resultados exactos',
+    kralj: (k, kje) => `¡Eres el rey de los pronósticos de la jornada ${k}: ${kje}!`,
     zakaj: (o) => `Recibes el resumen tras cada jornada porque tienes equipo en la liga ${o}.`,
   },
   lv: {
@@ -2907,6 +2922,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Vairs nevēlos saņemt e-pastus',
     dvoboj: 'Duelis', izid: { zmaga: 'Uzvara', remi: 'Neizšķirts', poraz: 'Zaudējums' }, povprecjeLige: 'līgas vidējais',
     napovedi: 'Prognozes', tocni: 'precīzi rezultāti',
+    kralj: (k, kje) => `Tu esi ${k}. kārtas prognožu karalis: ${kje}!`,
     zakaj: (o) => `Pārskatu saņem pēc katras kārtas, jo tev ir komanda (līga: ${o}).`,
   },
   mk: {
@@ -2922,6 +2938,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Не сакам повеќе да добивам пораки',
     dvoboj: 'Дуел', izid: { zmaga: 'Победа', remi: 'Нерешено', poraz: 'Пораз' }, povprecjeLige: 'просек на лигата',
     napovedi: 'Прогнози', tocni: 'точни резултати',
+    kralj: (k, kje) => `Ти си крал на прогнозите во ${k}. коло: ${kje}!`,
     zakaj: (o) => `Прегледот го добиваш по секое коло затоа што имаш тим (лига: ${o}).`,
   },
   el: {
@@ -2937,6 +2954,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Δεν θέλω άλλα email',
     dvoboj: 'Μονομαχία', izid: { zmaga: 'Νίκη', remi: 'Ισοπαλία', poraz: 'Ήττα' }, povprecjeLige: 'μέσος όρος λίγκας',
     napovedi: 'Προβλέψεις', tocni: 'ακριβή σκορ',
+    kralj: (k, kje) => `Είσαι ο βασιλιάς των προβλέψεων της ${k}ης αγωνιστικής: ${kje}!`,
     zakaj: (o) => `Λαμβάνεις τη σύνοψη μετά από κάθε αγωνιστική επειδή έχεις ομάδα (πρωτάθλημα: ${o}).`,
   },
   tr: {
@@ -2952,6 +2970,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Artık e-posta almak istemiyorum',
     dvoboj: 'Düello', izid: { zmaga: 'Galibiyet', remi: 'Beraberlik', poraz: 'Mağlubiyet' }, povprecjeLige: 'lig ortalaması',
     napovedi: 'Tahminler', tocni: 'tam skorlar',
+    kralj: (k, kje) => `${k}. haftanın tahmin kralı sensin: ${kje}!`,
     zakaj: (o) => `Bu özeti her haftadan sonra alıyorsun çünkü takımın var (lig: ${o}).`,
   },
   uk: {
@@ -2967,6 +2986,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Більше не хочу отримувати листи',
     dvoboj: 'Дуель', izid: { zmaga: 'Перемога', remi: 'Нічия', poraz: 'Поразка' }, povprecjeLige: 'середнє ліги',
     napovedi: 'Прогнози', tocni: 'точні рахунки',
+    kralj: (k, kje) => `Ти король прогнозів ${k}-го туру: ${kje}!`,
     zakaj: (o) => `Огляд ти отримуєш після кожного туру, бо маєш команду (ліга: ${o}).`,
   },
   hy: {
@@ -2982,6 +3002,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Այլևս չեմ ուզում նամակներ ստանալ',
     dvoboj: 'Մենամարտ', izid: { zmaga: 'Հաղթանակ', remi: 'Ոչ-ոքի', poraz: 'Պարտություն' }, povprecjeLige: 'լիգայի միջինը',
     napovedi: 'Կանխատեսումներ', tocni: 'ճշգրիտ հաշիվներ',
+    kralj: (k, kje) => `Դու կանխատեսումների արքան ես, տուր ${k}: ${kje}!`,
     zakaj: (o) => `Ամփոփումը ստանում ես յուրաքանչյուր տուրից հետո, քանի որ թիմ ունես (լիգա՝ ${o})։`,
   },
   az: {
@@ -2997,6 +3018,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Daha məktub almaq istəmirəm',
     dvoboj: 'Duel', izid: { zmaga: 'Qələbə', remi: 'Heç-heçə', poraz: 'Məğlubiyyət' }, povprecjeLige: 'liqanın ortalaması',
     napovedi: 'Proqnozlar', tocni: 'dəqiq hesablar',
+    kralj: (k, kje) => `Sən proqnoz kralısan, tur ${k}: ${kje}!`,
     zakaj: (o) => `Xülasəni hər turdan sonra alırsan, çünki komandan var (liqa: ${o}).`,
   },
   da: {
@@ -3012,6 +3034,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Jeg vil ikke have flere mails',
     dvoboj: 'Duel', izid: { zmaga: 'Sejr', remi: 'Uafgjort', poraz: 'Nederlag' }, povprecjeLige: 'ligaens gennemsnit',
     napovedi: 'Tips', tocni: 'præcise resultater',
+    kralj: (k, kje) => `Du er tipskonge i ${k}. runde: ${kje}!`,
     zakaj: (o) => `Du får overblikket efter hver runde, fordi du har et hold (liga: ${o}).`,
   },
   en: {
@@ -3027,6 +3050,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     odjava: 'Stop these emails',
     dvoboj: 'Head-to-head', izid: { zmaga: 'Win', remi: 'Draw', poraz: 'Loss' }, povprecjeLige: 'league average',
     napovedi: 'Predictions', tocni: 'exact scores',
+    kralj: (k, kje) => `You are King of predictions for round ${k}: ${kje}!`,
     zakaj: (o) => `You get this summary after every round because you have a team in ${o}.`,
   },
 }
@@ -3119,6 +3143,9 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
     dejstva.push({ k: B.napovedi, v: esc(`${tock(m.napovedi.tocke)} · ${B.tocni} ${m.napovedi.tocnih}`) })
     predglava.push(`${B.napovedi}: ${tock(m.napovedi.tocke)}`)
   }
+  // Kralj napovedi kroga v ligi in/ali mini ligah: ena slavnostna vrstica.
+  const kralj = m.kralj?.length ? B.kralj(m.krog, m.kralj.map((k) => k ?? ozn).join(', ')) : null
+  if (kralj) predglava.push(`👑 ${kralj}`)
   if (m.povprecje != null && m.najvec != null) {
     dejstva.push({ k: B.liga, v: esc(`${B.povprecje} ${st(m.povprecje)} · ${B.najvec} ${st(m.najvec)}`) })
     predglava.push(`${B.liga}: ${B.povprecje} ${st(m.povprecje)}`)
@@ -3142,7 +3169,9 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
     oznaka: ozn,
     naslov: B.naslov(esc(m.ekipa), m.krog),
     ploscice,
-    uvod: `${pozdrav(j, m.display_name)} ${B.uvod}${najboljsiVLigi ? ` <strong>${B.top}</strong>` : ''}`,
+    uvod: `${pozdrav(j, m.display_name)} ${B.uvod}${najboljsiVLigi ? ` <strong>${B.top}</strong>` : ''}${
+      kralj ? ` <strong>👑 ${esc(kralj)}</strong>` : ''
+    }`,
     dejstva,
     ...(namigi?.vrstice.length ? { opozorilo: namigi.vrstice } : {}),
     gumb: { label: B.gumb(m.krog + 1), url: p.ekipa },

@@ -268,6 +268,10 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     pozivGumb: 'Pronosticar',
     lestvicaLige: 'Clasificación de pronósticos de toda la liga',
     niTekemLige: 'La próxima jornada de esta liga no tiene partidos abiertos.',
+    kralj: 'Rey de los pronósticos: {ime}',
+    kraljKroga: 'Rey de la jornada: {ime}',
+    kraljOznaka: 'Rey de los pronósticos',
+    krone: 'Coronas de jornada: {n}',
   },
   // Stran Napovedi (/predictions): lestvica napovedi lige in izbira skupnosti.
   napovediLige: {
