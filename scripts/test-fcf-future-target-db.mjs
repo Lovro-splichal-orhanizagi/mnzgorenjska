@@ -29,3 +29,13 @@ test('future DB ambiguous completion requires readback, known refusals do not re
  for(const reply of [()=>{throw Error('SECRET')},()=>new Response('',{status:503}),()=>new Response('invalid'),()=>({ok:true,status:200,arrayBuffer:async()=>{throw Error('SECRET')}})]){let count=0;const db=api.createFcfFutureTargetDatabase({env:{SUPABASE_URL:'https://synthetic.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'SECRET'},network:async()=>{count++;return reply()}});await assert.rejects(db.mutate('import',params),e=>e.ambiguous===true&&!e.message.includes('SECRET'));assert.equal(count,1)}
  for(const status of [302,400,403]){let count=0;const db=api.createFcfFutureTargetDatabase({env:{SUPABASE_URL:'https://synthetic.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'TEST'},network:async()=>{count++;return new Response('',{status})}});await assert.rejects(db.mutate('import',params),e=>!e.ambiguous&&/FCF_/.test(e.message));assert.equal(count,1)}
 })
+test('readonly psql environment pins localhost hostaddr and drops inherited libpq service configuration',()=>{
+ for(const inherited of [{PGHOSTADDR:'203.0.113.77'},{PGSERVICE:'foreign-service',PGSERVICEFILE:'/synthetic/foreign-pg_service.conf',PGSYSCONFDIR:'/synthetic/service-directory'},{PGHOSTADDR:'203.0.113.77',PGSERVICE:'foreign-service',PGSERVICEFILE:'/synthetic/foreign-pg_service.conf',PGSYSCONFDIR:'/synthetic/service-directory'}]){
+  const env={SUPABASE_DB_URL:'postgresql://local:test@127.0.0.1:5432/postgres',PATH:'/synthetic/bin',...inherited},before={...env};let passed
+  const db=api.createFcfFutureTargetDatabase({env,execute:(_file,_args,options)=>{passed=options.env;return Buffer.from('{"players":[]}')}})
+  db.inventory(slug,[])
+  assert.equal(passed.PGHOSTADDR,'127.0.0.1','libpq actual network destination must be the existing localhost tunnel')
+  for(const key of ['PGSERVICE','PGSERVICEFILE','PGSYSCONFDIR'])assert.equal(Object.hasOwn(passed,key),false,`${key} must not supply an alternate service hostaddr`)
+  assert.equal(passed.PGDATABASE,env.SUPABASE_DB_URL);assert.equal(passed.PGCONNECT_TIMEOUT,'15');assert.equal(passed.PATH,env.PATH);assert.deepEqual(env,before,'caller environment remains unchanged')
+ }
+})

@@ -16,7 +16,11 @@ export function createFcfFutureTargetDatabase(input={}){
  const privacy=values=>{if(!Array.isArray(values)||values.length>20000||new Set(values).size!==values.length||values.some(v=>typeof v!=='string'||!/^[a-f0-9]{64}$/.test(v)))fail('unique bounded privacy SHA keys required');return `ARRAY[${values.map(literal).join(',')}]::text[]`}
  function read(expression){
   if(!env.SUPABASE_DB_URL)fail('existing database URL required')
-  let raw;try{raw=execute('psql',['-X','-qAt','-v','ON_ERROR_STOP=1'],{env:{...env,PGDATABASE:env.SUPABASE_DB_URL,PGCONNECT_TIMEOUT:'15'},input:`BEGIN READ ONLY;\nSET LOCAL ROLE service_role;\nSET LOCAL statement_timeout='180s';\nSELECT ${expression};\nROLLBACK;\n`,timeout:200000,maxBuffer:limit,stdio:['pipe','pipe','pipe']})}catch{fail('readonly database query failed')}
+  // URI host validation alone does not constrain libpq's actual destination:
+  // inherited hostaddr/service settings must not bypass the existing tunnel.
+  const readEnv={...env,PGDATABASE:env.SUPABASE_DB_URL,PGHOSTADDR:'127.0.0.1',PGCONNECT_TIMEOUT:'15'}
+  for(const key of ['PGSERVICE','PGSERVICEFILE','PGSYSCONFDIR'])delete readEnv[key]
+  let raw;try{raw=execute('psql',['-X','-qAt','-v','ON_ERROR_STOP=1'],{env:readEnv,input:`BEGIN READ ONLY;\nSET LOCAL ROLE service_role;\nSET LOCAL statement_timeout='180s';\nSELECT ${expression};\nROLLBACK;\n`,timeout:200000,maxBuffer:limit,stdio:['pipe','pipe','pipe']})}catch{fail('readonly database query failed')}
   try{const value=String(raw).trim();if(Buffer.byteLength(value)>limit)fail('readonly result bound exceeded');return JSON.parse(value)}catch{fail('invalid bounded readonly database result')}
  }
  function parameters(stage,p){
