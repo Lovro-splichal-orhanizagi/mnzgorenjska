@@ -1,5 +1,6 @@
 import {resolve} from 'node:path'
 import {pathToFileURL} from 'node:url'
+import {formatFussballErrorDiagnostic} from './lib/fussball-error-diagnostic.mjs'
 import {captureFussballDirectory,verifyFussballDirectory} from './fussball-capture-evidence.mjs'
 
 export async function runFussballCaptureCli(args){
@@ -11,4 +12,4 @@ export async function runFussballCaptureCli(args){
  const result=await captureFussballDirectory({directory:resolve(options['--output']),options:{seedUrl:options['--seed-url'],staffel:options['--staffel'],season:options['--season'],maxRequests:Number(options['--max-requests']),...(options['--card-policy']?{cardPolicy:options['--card-policy']}:{}),reportLimit:options['--reports']==='all'?null:Number(options['--reports'])},onProgress:p=>console.log(JSON.stringify(p))})
  return {success:result.success,activationEligible:false,requests:result.snapshot.requests,resultSha256:result.resultSha256,output:resolve(options['--output'])}
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href)runFussballCaptureCli(process.argv.slice(2)).then(result=>console.log(JSON.stringify(result))).catch(error=>{console.error(error.message);process.exitCode=1})
+if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href)runFussballCaptureCli(process.argv.slice(2)).then(result=>console.log(JSON.stringify(result))).catch(error=>{console.error(error.message);const diagnostic=formatFussballErrorDiagnostic(error);if(diagnostic)console.error(diagnostic);process.exitCode=1})
