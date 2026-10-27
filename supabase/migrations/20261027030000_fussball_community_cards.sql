@@ -554,9 +554,11 @@ create function public.vklopi_ligo_sredi_sezone(p_slug text)returns jsonb langua
 
 declare c competitions;a private_fussball.card_admissions;p private_fussball.card_policies;r rounds;
 begin
- perform private_fussball.service();
  select * into c from competitions where slug=p_slug for update;
  if c.source_policy is distinct from'fussball-community-cards-v1'then return private_fussball.vklopi_ligo_sredi_sezone(p_slug);end if;
+ -- Existing service-granted internal callers (including DFB release wrappers)
+ -- retain their original role contract; only this new policy requires JWT scope.
+ perform private_fussball.service();
  perform private_fussball.scope(c.id,c.source_league_code);
  select * into strict p from private_fussball.card_policies where competition_id=c.id;
  if c.active then return jsonb_build_object('vklopljena',false,'razlog','Liga je že vklopljena.');end if;

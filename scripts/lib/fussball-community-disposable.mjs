@@ -48,3 +48,54 @@ export async function bootstrapCommunityCardDatabase(env=process.env){
  return result
 }
 if(process.argv[1]===fileURLToPath(import.meta.url))console.log(JSON.stringify(await bootstrapCommunityCardDatabase()))
+
+// pg_cron can be installed only in its configured database. Its extension-owned
+// queue/ACL objects are irrelevant to native card voting; retain every app object
+// and all app RLS/grants, including extension grant event-trigger functions.
+export function communityCloneRestoreList(toc){
+ return toc.split('\n').filter(line=>!(/\b(?:pg_cron|cron)\b/.test(line))).join('\n')
+}
+export function communityCloneTarget(env,source,target){
+ const name=env.SUPABASE_DB_CONTAINER
+ const local=name===container
+ const ci=name==='supabase_db_mnzgorenjska'&&env.CI==='true'&&env.GITHUB_ACTIONS==='true'&&env.GITHUB_REPOSITORY==='Lovro-splichal-orhanizagi/mnzgorenjska'&&env.GITHUB_JOB==='varnost'
+ assert.ok(env.FUSSBALL_COMMUNITY_DISPOSABLE_TEST==='1'&&(local||ci),'explicit owned community-card clone required')
+ assert.match(source,/^(postgres|community_cards_[a-z0-9_]+)$/)
+ assert.match(target,/^community_cards_race_[0-9]+_[0-9]+$/)
+ assert.notEqual(source,target)
+ return name
+}
+// A logical snapshot works while cron/net remain connected. Never disallow
+// source connections or terminate a worker: killing pg_net can crash the server.
+export function cloneCommunityCardDatabase(env,source,target){
+ const name=communityCloneTarget(env,source,target)
+ const [state]=JSON.parse(docker(['inspect',name]))
+ if(name===container)assert.equal(state.Config.Labels?.['slff.test.owner'],owner)
+ else assert.equal(state.Config.Labels?.['com.supabase.cli.project'],'mnzgorenjska')
+ const dump=`/tmp/${target}.dump`,list=`/tmp/${target}.list`
+ const sql=(query,db='template1')=>docker(['exec','-i',name,'psql','-U','supabase_admin','-d',db,'-X','-qAt','-v','ON_ERROR_STOP=1'],{input:query,timeout:300000}).trim()
+ let created=false
+ const cleanup=()=>{
+  if(created){
+   assert.equal(sql(`select count(*)from pg_stat_activity where datname='${target}'and backend_type<>'client backend';`),'0','refusing to terminate database workers')
+   sql(`drop database ${target} with(force);`)
+   created=false
+  }
+  for(const path of [dump,list]){
+   let exists=false
+   try{docker(['exec',name,'test','-f',path]);exists=true}catch{}
+   if(exists)docker(['exec',name,'rm','--',path])
+  }
+ }
+ try{
+  docker(['exec',name,'pg_dump','-U','supabase_admin','-d',source,'--format=custom','--exclude-schema=cron','--exclude-schema=net','--exclude-schema=vault',`--file=${dump}`],{timeout:300000})
+  const toc=communityCloneRestoreList(docker(['exec',name,'pg_restore','--list',dump]))
+  // Filename is generated and validated above; bytes travel on stdin, never in
+  // a shell command or host file. No credentials/configuration files are read.
+  docker(['exec','-i',name,'sh','-c','cat > "$1"','community-card-clone-list',list],{input:toc})
+  sql(`create database ${target} template template0;`);created=true
+  sql('create schema vault;',target)
+  docker(['exec',name,'pg_restore','-U','supabase_admin','-d',target,'--exit-on-error','--single-transaction',`--use-list=${list}`,dump],{timeout:300000})
+  return cleanup
+ }catch(error){cleanup();throw error}
+}

@@ -54,6 +54,14 @@ begin
  insert into card_fixture values('cid',to_jsonb(cid)),('other_cid',to_jsonb(other_cid)),('mid',to_jsonb(mid)),('rid',to_jsonb(rid)),('envelope',envelope),('candidates',candidates),('apps',apps),('goals',goal),('users',to_jsonb(users));
  perform public.install_fussball_card_policy(cid,repeat('A',32)||'-G:2026/27',array[repeat('B',32)||'-G:2025/26']);
 end$$;
+-- Ordinary owner/service-granted internal release callers do not set a REST
+-- JWT. The new policy must not change their existing activation contract.
+do $$declare res jsonb;begin
+ perform set_config('request.jwt.claim.role','',true);
+ res:=public.vklopi_ligo_sredi_sezone('community-test-missing-ordinary-league');
+ perform pg_temp.card_assert(res->>'vklopljena'='false'and res->>'razlog'='Lige ni.','ordinary activation delegates before community-only JWT check');
+ perform set_config('request.jwt.claim.role','service_role',true);
+end$$;
 -- No private originals, mappings, voter identities or service mutation RPC leaks.
 set local role anon;
 select pg_temp.card_reject('select * from private_fussball.card_reports','permission denied');

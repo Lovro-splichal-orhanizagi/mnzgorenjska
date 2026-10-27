@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {execFileSync} from 'node:child_process'
-import {bootstrapCommunityCardDatabase} from './lib/fussball-community-disposable.mjs'
+import {bootstrapCommunityCardDatabase,cloneCommunityCardDatabase,communityCloneTarget,communityCloneRestoreList} from './lib/fussball-community-disposable.mjs'
 
 export function communityTarget(env){
  const container=env.SUPABASE_DB_CONTAINER
@@ -19,6 +19,16 @@ test('community-card SQL runner rejects implicit and unrelated databases',()=>{
 test('fresh bootstrap refuses absent consent or any other container before Docker access',async()=>{
  await assert.rejects(bootstrapCommunityCardDatabase({}),/explicit disposable/)
  await assert.rejects(bootstrapCommunityCardDatabase({FUSSBALL_COMMUNITY_DISPOSABLE_TEST:'1',SUPABASE_DB_CONTAINER:'supabase_db_mnzgorenjska'}),/exact owned/)
+})
+test('logical clone removes only cron TOC objects and preserves app permissions',()=>{
+ const toc=['2; 3079 17135 EXTENSION - pg_cron','6929; 0 0 COMMENT - EXTENSION pg_cron','6930; 0 0 ACL - SCHEMA cron supabase_admin','100; 1255 1 FUNCTION extensions grant_pg_cron_access() supabase_admin','101; 0 0 ACL public FUNCTION vote_fussball_card(bigint,bigint) supabase_admin','102; 3079 2 EXTENSION - pg_net'].join('\n')
+ const kept=communityCloneRestoreList(toc)
+ assert.ok(!kept.includes('EXTENSION - pg_cron'));assert.ok(!kept.includes('SCHEMA cron'))
+ assert.ok(kept.includes('grant_pg_cron_access()'));assert.ok(kept.includes('ACL public FUNCTION vote_fussball_card'));assert.ok(kept.includes('EXTENSION - pg_net'))
+ const env={FUSSBALL_COMMUNITY_DISPOSABLE_TEST:'1',SUPABASE_DB_CONTAINER:'slff-community-cards-20261027'}
+ assert.equal(communityCloneTarget(env,'postgres','community_cards_race_123_456'),env.SUPABASE_DB_CONTAINER)
+ assert.throws(()=>communityCloneTarget(env,'postgres','postgres'),/community_cards_race/)
+ assert.throws(()=>communityCloneTarget({...env,FUSSBALL_COMMUNITY_DISPOSABLE_TEST:undefined},'postgres','community_cards_race_123_456'),/owned/)
 })
 test('community-card native voting, private evidence and atomic replay', {skip:process.env.FUSSBALL_COMMUNITY_DISPOSABLE_TEST!=='1'},()=>{
  const container=communityTarget(process.env),database=process.env.SUPABASE_TEST_DB||'postgres'
@@ -38,17 +48,22 @@ test('concurrent vote and apply serialize on the native fixture and revalidate c
  const raceDb=`community_cards_race_${process.pid}_${Date.now()}`
  const exec=(q,db=raceDb)=>execFileSync('docker',['exec','-i',container,'psql','-U','supabase_admin','-d',db,'-X','-qAt','-v','ON_ERROR_STOP=1'],{input:q,encoding:'utf8',timeout:300000,maxBuffer:16*1024*1024}).trim()
  assert.match(base,/^(postgres|community_cards_[a-z0-9_]+)$/)
- const maintenance=q=>exec(q,'template1')
- // The test image runs cron/net workers in postgres. Stop connections only in
- // this explicitly owned disposable source while copying it; always reopen it.
- try{
-  assert.equal(maintenance(`select count(*)from pg_stat_activity where datname='${base}'and backend_type='client backend';`),'0','owned DB must be idle before cloning')
-  maintenance(`alter database ${base} allow_connections=false;`)
-  maintenance(`select pg_terminate_backend(pid)from pg_stat_activity where datname='${base}'and pid<>pg_backend_pid();`)
-  maintenance(`create database ${raceDb} template ${base};`)
- }finally{maintenance(`alter database ${base} allow_connections=true;`)}
+ // Keep a real original-DB client alive during clone and race. The old
+ // worker-termination scheme killed this connection and could crash PostgreSQL.
+ const sentinel=spawn('docker',['exec','-i',container,'psql','-U','supabase_admin','-d',base,'-X','-qAt','-v','ON_ERROR_STOP=1'],{stdio:['pipe','pipe','pipe']})
+ let sentinelOut='',sentinelError='',sentinelReady=false
+ sentinel.stderr.on('data',b=>{sentinelError+=b})
+ const sentinelConnected=new Promise((resolve,reject)=>{
+  sentinel.stdout.on('data',b=>{sentinelOut+=b;if(sentinelOut.includes('SOURCE_CONNECTED')){sentinelReady=true;resolve()}})
+  sentinel.on('error',reject);sentinel.on('exit',code=>{if(!sentinelReady)reject(Error(`source sentinel exited ${code}: ${sentinelError}`))})
+ })
+ const sentinelFinished=new Promise(resolve=>sentinel.on('exit',resolve))
+ sentinel.stdin.write("select 'SOURCE_CONNECTED';\n")
+ await sentinelConnected
+ let cleanupClone
  const q=value=>`'${String(value).replaceAll("'","''")}'`
  try{
+  cleanupClone=cloneCommunityCardDatabase(process.env,base,raceDb)
   const fixture=readFileSync(new URL('../supabase/tests/fussball-community-cards.sql',import.meta.url),'utf8')
   const setup=fixture.slice(0,fixture.indexOf('-- Real auth roles:')).replace('create temporary table card_fixture','create table card_fixture').replace('create temporary table card_players','create table card_players')
   exec(setup+'\ncommit;')
@@ -80,5 +95,10 @@ test('concurrent vote and apply serialize on the native fixture and revalidate c
   assert.ok(Date.now()-started>=350,'worker waited for competing vote lock')
   assert.equal(exec(`select statistics_status from matches where id=${q(job.match_id)}`),'pending_cards')
   assert.equal(exec(`select count(*)from appearances where match_id=${q(job.match_id)}`),'0')
- }finally{exec(`drop database ${raceDb} with(force);`,'postgres')}
+ }finally{
+  cleanupClone?.()
+  sentinel.stdin.end("select 'SOURCE_SURVIVED';\n\\quit\n")
+  assert.equal(await sentinelFinished,0,`original DB connection survived: ${sentinelError}`)
+  assert.ok(sentinelOut.includes('SOURCE_SURVIVED'),'logical cloning preserves source connections')
+ }
 })
