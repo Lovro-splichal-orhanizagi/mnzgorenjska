@@ -5,8 +5,13 @@ import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import { sessionSQL } from './fcf-g13-repair.mjs'
 const container=process.env.SUPABASE_DB_CONTAINER
-if (process.env.FCF_G13_DISPOSABLE_TEST!=='1' || !container?.startsWith('supabase_db_')) throw Error('Explicit disposable Supabase container and FCF_G13_DISPOSABLE_TEST=1 required')
-const args=['exec','-i',container,'psql','-U','postgres','-d',process.env.SUPABASE_TEST_DB??'postgres','-X','-qAt','-v','ON_ERROR_STOP=1']
+const ownedCommunity=process.env.FUSSBALL_COMMUNITY_DISPOSABLE_TEST==='1'&&container==='slff-community-cards-20261027'
+if (process.env.FCF_G13_DISPOSABLE_TEST!=='1' || !(container?.startsWith('supabase_db_')||ownedCommunity)) throw Error('Explicit disposable Supabase container and FCF_G13_DISPOSABLE_TEST=1 required')
+if(ownedCommunity){
+ const ownership=execFileSync('docker',['inspect','--format','{{index .Config.Labels "slff.test.owner"}} {{.HostConfig.NetworkMode}}',container],{encoding:'utf8'}).trim()
+ if(ownership!=='community-cards-20261027 none')throw Error('Exact owned no-network community disposable container required')
+}
+const args=['exec','-i',container,'psql','-U',ownedCommunity?'supabase_admin':'postgres','-d',process.env.SUPABASE_TEST_DB??'postgres','-X','-qAt','-v','ON_ERROR_STOP=1']
 const read=name=>readFileSync(new URL(`../supabase/tests/${name}`,import.meta.url),'utf8')
 const seed=`begin isolation level read committed;\n${sessionSQL()}\n${read('fcf-g13-fixture.sql')}`
 const run=(sql)=>execFileSync('docker',args,{input:sql,encoding:'utf8',timeout:180000,maxBuffer:8*1024*1024,stdio:['pipe','pipe','pipe']})
@@ -39,6 +44,7 @@ try {
       ['six target release receipt',"insert into private_fcf_six_target_release.receipts(competition_id,inventory_key,packet_sha256,packet_text,rollout_text,rollout_sha256,source_fingerprint,cleanup_before_sha256,imported_state_sha256,stage)values(801,'concurrent','test','{}','{}','test','test','test','test','imported')"],
       ['six foreign target club binding',"insert into private_fcf_six_target_release.club_bindings(competition_id,club_id,category_id,team_id,country_id,source_fingerprint)values((select min(id)from competitions where id<>801),'concurrent','test',10388,(select country_id from competitions where id=801),'test')"],
       ['DFB quarantine evidence FK',"insert into private_dfb_pending.evidence(competition_id,match_id,report_id,source_code,fixture,status,reason,raw_sha256,raw_bytes,observed_at) values(801,427263,'TEST ONLY','TEST ONLY','{}','DFB_INVALID_REPORT','TEST ONLY',repeat('a',64),decode('78','hex'),now())"],
+      ['private card admission FK',"insert into private_fussball.card_admissions(competition_id,manifest,manifest_sha256,state_sha256)values(801,'{}','TEST ONLY','TEST ONLY')"],
       ['new Scout non-FK reference',"insert into scout.dnevnik(team_id,vrsta) values(10388,'isci')"],
       ['new FK DDL','create table public.g13_concurrent_fk(team_id bigint references teams)'],
     ]
