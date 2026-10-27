@@ -1,0 +1,128 @@
+name: FUSSBALL reviewed transport completion
+run-name: FUSSBALL Baden reviewed transport completion
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact reviewed main SHA
+        type: string
+        required: true
+      current_requests:
+        description: New current-season request ceiling (1–886), after1114 spent
+        type: number
+        default: 886
+      archive_requests:
+        description: Separately reserved archive request ceiling (1–3000)
+        type: number
+        default: 3000
+permissions:
+  contents: read
+  actions: read
+env:
+  EXPECTED_SHA: ${{ inputs.expected_sha }}
+  COMPLETION_CURRENT_REQUESTS: ${{ inputs.current_requests }}
+  COMPLETION_ARCHIVE_REQUESTS: ${{ inputs.archive_requests }}
+jobs:
+  capture:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    outputs:
+      archive_allowed: ${{ steps.authorize.outputs.archive_allowed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Validate exact reviewed completion scope and total5000 budget
+        run: node scripts/fussball-completion-actions.mjs validate
+      - name: Offline source and evidence checks
+        run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
+      - name: Authenticate only the three reviewed failed source artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/fussball-completion-actions.mjs parents checkpoint-input
+      - name: Share host pacing with older nightly and bulk readers
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/bulk-source-coordination.mjs
+      - name: Capture fresh rounds and missing originals without database credentials
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/fussball-completion-actions.mjs capture-current capture
+      - name: Independently replay only retained original documents
+        run: node scripts/zajemi-fussball-sezono.mjs verify capture
+      - name: Authorize archive only from complete replayed current originals
+        id: authorize
+        run: node scripts/fussball-completion-actions.mjs authorize capture
+      - name: Preserve source originals, checkpoint provenance and request journal
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fussball-season-${{ github.run_id }}
+          path: capture/
+          if-no-files-found: ignore
+          retention-days: 90
+  archive:
+    needs: capture
+    if: github.ref == 'refs/heads/main' && needs.capture.result == 'success' && needs.capture.outputs.archive_allowed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate unchanged reviewed main and reserved allowances
+        run: node scripts/fussball-completion-actions.mjs validate
+      - uses: actions/download-artifact@v4
+        with:
+          name: fussball-season-${{ github.run_id }}
+          path: current-capture/
+      - name: Share host pacing with older nightly and bulk readers
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/bulk-source-coordination.mjs
+      - name: Reauthenticate and replay current proof, bind adjacent archive, capture and replay
+        run: node scripts/fussball-completion-actions.mjs capture-archive current-capture
+      - name: Preserve separate archive originals and request journal
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fussball-season-archive-${{ github.run_id }}
+          path: capture-archive/
+          if-no-files-found: ignore
+          retention-days: 90
+  handoff:
+    needs: [capture, archive]
+    if: github.ref == 'refs/heads/main' && needs.capture.result == 'success' && needs.archive.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: fussball-season-${{ github.run_id }}
+          path: current-capture/
+      - uses: actions/download-artifact@v4
+        with:
+          name: fussball-season-archive-${{ github.run_id }}
+          path: archive-capture/
+      - name: Require unchanged main and complete native source batches before separate native gates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/fussball-completion-actions.mjs handoff current-capture archive-capture

@@ -1042,3 +1042,45 @@ Teh pet postav je razčlenljivih, polni zapisniki pa niso dokazani: stari parser
 je pred zajemom potrebnih pisav že zavrnil postavo. Delni zajem ostane
 neuspešen in ne omogoča vklopa; potrebna je nova celotna preverba. Poraba ostaja
 **961/5000**, saj diagnostika ni poslala nobenega zahtevka.
+
+## Pregledano nadaljevanje po transportnih napakah (27. 10. 2026)
+
+Zajema `40509926697` in `40531709101` sta se ustavila še pred zapisniki,
+po 48 oziroma 105 zahtevkih. Skupni račun je zdaj **1114/5000**:
+453 prej porabljenih ter 508, 48 in 105 v treh ohranjenih neuspelih zajemih.
+Noben od teh zajemov ne dokazuje popolne sezone ali dovoljuje vklopa.
+
+Ločen tok `preveri-fussball-dopolni.yml` uporablja samo fiksni pregledani
+`baden-reviewed-transports-v1`. Register `fussball-transport-checkpoints.json`
+veže izvirne zagone, commite/kodno zaprtje, posle, artefakte in SHA dejanskih
+ZIP-ov, manifestov ter dnevnikov. Bralnik preveri točne transportne napake
+pred prejemom odgovora HTTP. Zavrnitev, izziv, status HTTP, neznana ali
+nepopolna inventura ne dobi nadaljevanja. Njegovo pomnilniško potrdilo je
+samo pravica do preverjenega predpomnilnika, nikoli pripravljenost lige.
+
+Inventura vsebuje 572 različnih izvirnikov brez strani krogov. Predpomnilnik
+lahko uporabi zapisnik in njegovo dejansko postavo samo kot par, ki uspešno
+prestane trenutni strogi oziroma skupnostni parser z opaženimi CSS in WOFF.
+Nepopoln par, manjkajoča vezana pisava ali zasebni začetnik se bere sveže;
+izvirnih pisav ne ugibamo ali zamenjujemo. Vse strani krogov se berejo sveže.
+Dejanski bralnik ponovno primerja zapisnik s tem novim razporedom.
+
+Manifest v4 shrani izvirne dokaze staršev in loči nove zahtevke od dejansko
+uporabljenih izvirnikov. Ti ohranijo prvotni čas, hash in ploski račun.
+Neodvisna offline ponovitev ponovno preveri starše, vsak uporabljeni dokument,
+celoten rezultat in točen račun novih zahtevkov. Šele uspešen poln zajem
+lahko odobri ločen arhiv v3; začetna stran arhiva je še vedno vezana na nov
+tekoči izbirnik. Izvirni neuspešni manifesti se nikoli ne prepišejo v uspeh.
+
+Fiksni preostali dovoljenji sta največ 886 novih tekočih in 3000 arhivskih
+zahtevkov. Pred prvim branjem vira mora biti glavni commit pregledan,
+zagon ročen in prvi, starejši bralniki zaključeni, zgodovina istega toka pa
+brez predhodno začetega ali neznanega zajema tega dovoljenja. Ponoven ročni
+zagon zato ne more skriti nove porabe pod starim računom1114. Po novi napaki
+je potreben pregled njenega dejanskega računa in nove zgodovine.
+
+Navadni zajem v1, popolni predpomnilnik v2 in arhiv v3 ohranijo svoje pogoje.
+V4 vstopa le v celotno parno izvorno in domačo preverbo; neposredni ročni
+uvoz ga ne sprejme kot navaden dokaz. Vratarji, cene, kader, zasebnost,
+prihodnji rok, celovitost statistik in obstoječe kartonsko glasovanje
+ostanejo obvezni. Ta sprememba ne dodaja zgodovinskih izjem ali aktivnih lig.

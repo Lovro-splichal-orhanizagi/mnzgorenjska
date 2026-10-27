@@ -14,7 +14,8 @@ test('completed German nightly jobs do not wait for other country shards',async(
   const found=path.includes('uvoz-zapisnikov')&&path.includes('status=in_progress')
   return {total_count:found?1:0,workflow_runs:found?[{id:1,created_at:'2026-10-25T09:00:00Z',status:'in_progress',path:'.github/workflows/uvoz-zapisnikov.yml'}]:[]}
  }})
- assert.equal(calls,27)
+ // Own run, six reader workflows in five states, and the older nightly jobs.
+ assert.equal(calls,32)
 })
 
 test('reader gate rejects incomplete inventories and reruns before source release',async()=>{
