@@ -228,6 +228,11 @@ Posebnosti, ki jih je našel pregled pred vklopom (7. 10. 2026):
 
 Beremo odkrito (`User-Agent: SLFF fantasy`, 500 ms med zahtevki,
 popolnih zapisnikov ne beremo znova), vir je v nogi vsake strani.
+Zapisnik s postavami ni nujno popoln: zveza lahko postave vnese pred izidom
+(Samoborski Otok : Novaki, 24. 10. 2026 — v predpomnilniku 0:0 brez golov,
+uradno 5:1). Kadar se izid zapisnika v predpomnilniku ne ujema z izidom
+razporeda (ta se bere vsakič znova), uvoz tekmo v 45 dneh prebere znova
+(`izidSeUjema` v `scripts/viri/hns.mjs`).
 
 Grbe hrvaških klubov prinese `scripts/grbi-hns.mjs` z glave strani tekme
 (`club1` domači, `club2` gostje — po mestu, ne po `alt`; izvirnik namesto
