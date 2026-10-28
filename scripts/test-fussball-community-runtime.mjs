@@ -1,4 +1,8 @@
 import test from 'node:test'
+import {nativeRuntimeFixture,isolatedTestModule} from './fussball-native-runtime-test-fixture.mjs'
+import * as fcfSupplement from './lib/fcf-g1-supplement-installed.mjs'
+import * as communityPolicy from './fussball-community-policy.mjs'
+import {join} from 'node:path'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {razberiFantasyZapisnik} from './viri/fussball-statistika.mjs'
@@ -44,13 +48,13 @@ test('corrupt original evidence fails before any mutation and ambiguous database
  const broken=database({failApply:true});await assert.rejects(api.processFussballCardJob({db:broken,competitionId:44,code:'03188V27L800000JVS5489BTVU7GTVLE-G:2026/27',job}),/ambiguous|apply/i)
  assert.deepEqual(broken.calls.map(c=>c.name),['apply_fussball_card_report'])
 })
-test('ordinary import admits only an installed community policy and preserves typed pending bodies',async()=>{
- const {loadHistoricalStatisticsImportContext,assertHistoricalReportImportable,skipIncompleteArchiveReport}=await import('./lib/historical-statistics-import.mjs')
- const c={id:44,slug:'de-verbandsliga-baden',source:'fussball-public',country_code:'DE',source_policy:'fussball-community-cards-v1',source_league_code:'03188V27L800000JVS5489BTVU7GTVLE-G:2026/27'}
- const binding={installed:true,enabled:true,source_policy:c.source_policy,current_code:c.source_league_code,archive_codes:['02TGLSVQ1800000IVS5489BTVTLPPK10-G:2025/26']}
- const db={rpc:async name=>{assert.equal(name,'get_fussball_card_policy');return {data:binding}}}
- const ctx=await loadHistoricalStatisticsImportContext(db,c)
- assert.equal(ctx.competition.communityCardBinding,binding)
+test('ordinary import admits only a private source-bound installed community context and preserves typed pending bodies',async t=>{
+ const c={id:44,country_id:4,active:false,date_only_deadline_policy:null,slug:'de-verbandsliga-baden',source:'fussball-public',country_code:'DE',source_policy:'fussball-community-cards-v1',source_league_code:'03188V27L800000JVS5489BTVU7GTVLE-G:2026/27'}
+ const f=nativeRuntimeFixture(t,c),binding=f.observed.cards
+ const {loadHistoricalStatisticsImportContext,assertHistoricalReportImportable,skipIncompleteArchiveReport}=isolatedTestModule('./lib/historical-statistics-import.mjs',{...communityPolicy,...fcfSupplement,...f.api,join},['loadHistoricalStatisticsImportContext','assertHistoricalReportImportable','skipIncompleteArchiveReport'])
+ await assert.rejects(loadHistoricalStatisticsImportContext(f.db,c),/fresh private hosted composition/)
+ const ctx=await loadHistoricalStatisticsImportContext(f.db,c,{nativeComposition:f.token})
+ assert.deepEqual(ctx.competition.communityCardBinding,binding);assert.ok(f.calls.includes('source'));assert.ok(f.calls.includes('get_fussball_historical_runtime'))
  const pending={id:envelope.reportId,url:envelope.sourceUrl,statisticsPending:true,cardEnvelope:envelope,z:{zapisnikId:envelope.reportId,sezona:envelope.season,nepopoln:false}}
  assert.doesNotThrow(()=>assertHistoricalReportImportable({competition:ctx.competition,report:pending}))
  const archivePending={...pending,z:{...pending.z,nepopoln:true}}
@@ -58,5 +62,5 @@ test('ordinary import admits only an installed community policy and preserves ty
  assert.equal(skipIncompleteArchiveReport({competition:{...c,source_policy:null},report:archivePending,currentSeason:false}),true,'ordinary incomplete archive still skips')
  assert.equal(skipIncompleteArchiveReport({competition:ctx.competition,report:{...archivePending,statisticsPending:false},currentSeason:false}),true,'untyped partial archive is never admitted')
  assert.throws(()=>assertHistoricalReportImportable({competition:ctx.competition,report:{...pending,nastopi:[]}}),/pending|statistics|rows/i)
- await assert.rejects(loadHistoricalStatisticsImportContext({rpc:async()=>({data:{...binding,installed:false}})},c),/installed|policy/i)
+ f.controls.mutate=v=>{v.cards.installed=false};await assert.rejects(loadHistoricalStatisticsImportContext(f.db,c,{nativeComposition:f.token}),/installed|policy|binding/i)
 })
