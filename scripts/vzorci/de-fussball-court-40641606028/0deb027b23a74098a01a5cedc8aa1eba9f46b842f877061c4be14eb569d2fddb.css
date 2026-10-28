@@ -1,0 +1,10 @@
+@font-face {
+	font-family: font-uo318li5;
+	src: 
+		url('//www.fussball.de/export.fontface/-/format/woff/id/uo318li5/type/font') format('woff'),
+		url('//www.fussball.de/export.fontface/-/format/ttf/id/uo318li5/type/font') format('truetype');
+}
+
+.results-c-uo318li5 {
+	font-family: font-uo318li5 !important;
+}

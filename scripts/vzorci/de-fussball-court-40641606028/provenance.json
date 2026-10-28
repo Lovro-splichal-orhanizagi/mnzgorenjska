@@ -1,0 +1,389 @@
+{
+  "runId": 40641606028,
+  "artifactSha256": "d7ea312ffba97814a472900ff97a22f1cf667d86a87060c18536773fa7900d26",
+  "captureCodeSha256": "dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528",
+  "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+  "season": "2025/26",
+  "documents": [
+    {
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "kind": "round",
+      "bytes": 201319,
+      "sha256": "d25d3ec1a201886fc8408e4a6fc31457e859aab2250e3579cdbccece0c2b3e80",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-10-28T06:26:01.393Z",
+      "file": "documents/d25d3ec1a201886fc8408e4a6fc31457e859aab2250e3579cdbccece0c2b3e80.html",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "kind": "round",
+          "sha256": "d25d3ec1a201886fc8408e4a6fc31457e859aab2250e3579cdbccece0c2b3e80",
+          "bytes": 201319,
+          "status": 200,
+          "contentType": "text/html; charset=UTF-8",
+          "capturedAt": "2026-10-28T06:26:01.393Z"
+        },
+        "attempt": {
+          "number": 1,
+          "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "kind": "round",
+          "startedAt": "2026-10-28T06:26:01.393Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-10-28T06:26:01.316Z",
+          "codeSha256": "dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528",
+          "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "season": "2025/26"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/vvt92owy/type/css",
+      "kind": "css",
+      "bytes": 308,
+      "sha256": "8a0ef734daaa035e2ce91452c68c8eb4f635316d2da7a46bf4701ce52b7d6039",
+      "status": 200,
+      "contentType": "text/css; charset=UTF-8",
+      "capturedAt": "2026-10-28T06:26:07.394Z",
+      "file": "documents/8a0ef734daaa035e2ce91452c68c8eb4f635316d2da7a46bf4701ce52b7d6039.css",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/export.fontface/-/id/vvt92owy/type/css",
+          "kind": "css",
+          "sha256": "8a0ef734daaa035e2ce91452c68c8eb4f635316d2da7a46bf4701ce52b7d6039",
+          "bytes": 308,
+          "status": 200,
+          "contentType": "text/css; charset=UTF-8",
+          "capturedAt": "2026-10-28T06:26:07.394Z"
+        },
+        "attempt": {
+          "number": 2,
+          "url": "https://www.fussball.de/export.fontface/-/id/vvt92owy/type/css",
+          "kind": "css",
+          "startedAt": "2026-10-28T06:26:07.394Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-10-28T06:26:01.316Z",
+          "codeSha256": "dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528",
+          "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "season": "2025/26"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/vvt92owy/type/font",
+      "kind": "font",
+      "bytes": 8988,
+      "sha256": "7b1c2a99bb27952f011cf6562cacd33719a18c84d67ce79b6f769be9e025f99e",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-10-28T06:26:13.396Z",
+      "file": "documents/7b1c2a99bb27952f011cf6562cacd33719a18c84d67ce79b6f769be9e025f99e.woff",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/vvt92owy/type/font",
+          "kind": "font",
+          "sha256": "7b1c2a99bb27952f011cf6562cacd33719a18c84d67ce79b6f769be9e025f99e",
+          "bytes": 8988,
+          "status": 200,
+          "contentType": "application/font-woff",
+          "capturedAt": "2026-10-28T06:26:13.396Z"
+        },
+        "attempt": {
+          "number": 3,
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/vvt92owy/type/font",
+          "kind": "font",
+          "startedAt": "2026-10-28T06:26:13.396Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-10-28T06:26:01.316Z",
+          "codeSha256": "dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528",
+          "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "season": "2025/26"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/3c06zlaw/type/css",
+      "kind": "css",
+      "bytes": 308,
+      "sha256": "4f63144987e1a2e278636146c74b0fba2011db237d6b6fb3657cf46511d72fdc",
+      "status": 200,
+      "contentType": "text/css; charset=UTF-8",
+      "capturedAt": "2026-10-28T06:26:19.398Z",
+      "file": "documents/4f63144987e1a2e278636146c74b0fba2011db237d6b6fb3657cf46511d72fdc.css",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/export.fontface/-/id/3c06zlaw/type/css",
+          "kind": "css",
+          "sha256": "4f63144987e1a2e278636146c74b0fba2011db237d6b6fb3657cf46511d72fdc",
+          "bytes": 308,
+          "status": 200,
+          "contentType": "text/css; charset=UTF-8",
+          "capturedAt": "2026-10-28T06:26:19.398Z"
+        },
+        "attempt": {
+          "number": 4,
+          "url": "https://www.fussball.de/export.fontface/-/id/3c06zlaw/type/css",
+          "kind": "css",
+          "startedAt": "2026-10-28T06:26:19.398Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-10-28T06:26:01.316Z",
+          "codeSha256": "dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528",
+          "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "season": "2025/26"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/3c06zlaw/type/font",
+      "kind": "font",
+      "bytes": 2988,
+      "sha256": "5f56b0092ce8fac2c317690da36c8e9e1b7835c18550a5037dfb55a8ea2e79b8",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-10-28T06:26:25.400Z",
+      "file": "documents/5f56b0092ce8fac2c317690da36c8e9e1b7835c18550a5037dfb55a8ea2e79b8.woff",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/3c06zlaw/type/font",
+          "kind": "font",
+          "sha256": "5f56b0092ce8fac2c317690da36c8e9e1b7835c18550a5037dfb55a8ea2e79b8",
+          "bytes": 2988,
+          "status": 200,
+          "contentType": "application/font-woff",
+          "capturedAt": "2026-10-28T06:26:25.400Z"
+        },
+        "attempt": {
+          "number": 5,
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/3c06zlaw/type/font",
+          "kind": "font",
+          "startedAt": "2026-10-28T06:26:25.400Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-10-28T06:26:01.316Z",
+          "codeSha256": "dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528",
+          "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "season": "2025/26"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/21/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "kind": "round",
+      "bytes": 201504,
+      "sha256": "1e8c44e617aae198982cddb01e3d0ec475aff430ceb5e104cfa584b1ffc91b22",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-10-28T06:35:55.451Z",
+      "file": "documents/1e8c44e617aae198982cddb01e3d0ec475aff430ceb5e104cfa584b1ffc91b22.html",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/21/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "kind": "round",
+          "sha256": "1e8c44e617aae198982cddb01e3d0ec475aff430ceb5e104cfa584b1ffc91b22",
+          "bytes": 201504,
+          "status": 200,
+          "contentType": "text/html; charset=UTF-8",
+          "capturedAt": "2026-10-28T06:35:55.451Z"
+        },
+        "attempt": {
+          "number": 100,
+          "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/21/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "kind": "round",
+          "startedAt": "2026-10-28T06:35:55.451Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-10-28T06:26:01.316Z",
+          "codeSha256": "dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528",
+          "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "season": "2025/26"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/uo318li5/type/css",
+      "kind": "css",
+      "bytes": 308,
+      "sha256": "0deb027b23a74098a01a5cedc8aa1eba9f46b842f877061c4be14eb569d2fddb",
+      "status": 200,
+      "contentType": "text/css; charset=UTF-8",
+      "capturedAt": "2026-10-28T06:36:01.452Z",
+      "file": "documents/0deb027b23a74098a01a5cedc8aa1eba9f46b842f877061c4be14eb569d2fddb.css",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/export.fontface/-/id/uo318li5/type/css",
+          "kind": "css",
+          "sha256": "0deb027b23a74098a01a5cedc8aa1eba9f46b842f877061c4be14eb569d2fddb",
+          "bytes": 308,
+          "status": 200,
+          "contentType": "text/css; charset=UTF-8",
+          "capturedAt": "2026-10-28T06:36:01.452Z"
+        },
+        "attempt": {
+          "number": 101,
+          "url": "https://www.fussball.de/export.fontface/-/id/uo318li5/type/css",
+          "kind": "css",
+          "startedAt": "2026-10-28T06:36:01.452Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-10-28T06:26:01.316Z",
+          "codeSha256": "dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528",
+          "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "season": "2025/26"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/uo318li5/type/font",
+      "kind": "font",
+      "bytes": 8984,
+      "sha256": "49e152a0ac8382023619f34ad2afb279ca848b9f0aa6aae3750779eb66f094d8",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-10-28T06:36:07.452Z",
+      "file": "documents/49e152a0ac8382023619f34ad2afb279ca848b9f0aa6aae3750779eb66f094d8.woff",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/uo318li5/type/font",
+          "kind": "font",
+          "sha256": "49e152a0ac8382023619f34ad2afb279ca848b9f0aa6aae3750779eb66f094d8",
+          "bytes": 8984,
+          "status": 200,
+          "contentType": "application/font-woff",
+          "capturedAt": "2026-10-28T06:36:07.452Z"
+        },
+        "attempt": {
+          "number": 102,
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/uo318li5/type/font",
+          "kind": "font",
+          "startedAt": "2026-10-28T06:36:07.452Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-10-28T06:26:01.316Z",
+          "codeSha256": "dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528",
+          "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "season": "2025/26"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/ycoz8iso/type/css",
+      "kind": "css",
+      "bytes": 308,
+      "sha256": "20290e25f9937fc7349aea28ecf9251ffdeddac7e21b0f40a4d4e4bb81e0b165",
+      "status": 200,
+      "contentType": "text/css; charset=UTF-8",
+      "capturedAt": "2026-10-28T06:36:13.454Z",
+      "file": "documents/20290e25f9937fc7349aea28ecf9251ffdeddac7e21b0f40a4d4e4bb81e0b165.css",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/export.fontface/-/id/ycoz8iso/type/css",
+          "kind": "css",
+          "sha256": "20290e25f9937fc7349aea28ecf9251ffdeddac7e21b0f40a4d4e4bb81e0b165",
+          "bytes": 308,
+          "status": 200,
+          "contentType": "text/css; charset=UTF-8",
+          "capturedAt": "2026-10-28T06:36:13.454Z"
+        },
+        "attempt": {
+          "number": 103,
+          "url": "https://www.fussball.de/export.fontface/-/id/ycoz8iso/type/css",
+          "kind": "css",
+          "startedAt": "2026-10-28T06:36:13.454Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-10-28T06:26:01.316Z",
+          "codeSha256": "dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528",
+          "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "season": "2025/26"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/ycoz8iso/type/font",
+      "kind": "font",
+      "bytes": 2984,
+      "sha256": "56a1a8205386f664668a0c86a4484c6e40f3a23c2e9256fd00699372f3148528",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-10-28T06:36:19.454Z",
+      "file": "documents/56a1a8205386f664668a0c86a4484c6e40f3a23c2e9256fd00699372f3148528.woff",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/ycoz8iso/type/font",
+          "kind": "font",
+          "sha256": "56a1a8205386f664668a0c86a4484c6e40f3a23c2e9256fd00699372f3148528",
+          "bytes": 2984,
+          "status": 200,
+          "contentType": "application/font-woff",
+          "capturedAt": "2026-10-28T06:36:19.454Z"
+        },
+        "attempt": {
+          "number": 104,
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/ycoz8iso/type/font",
+          "kind": "font",
+          "startedAt": "2026-10-28T06:36:19.454Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-10-28T06:26:01.316Z",
+          "codeSha256": "dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528",
+          "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+          "season": "2025/26"
+        }
+      }
+    }
+  ]
+}

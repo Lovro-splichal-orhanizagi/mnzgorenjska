@@ -118,13 +118,37 @@ function score(s,decode,allowUnplayed=false){
  return {domaci:+values[0],gostje:+values[1]}
 }
 // Preserve display order only: neither pair establishes ordinary played statistics.
-function administrativeScore(s,decode,html){
- const shape=/^<td class="column-score">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/[A-Z0-9]{32}"><span class="score-special"><span data-obfuscation="([a-z0-9]{8})">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>&nbsp;V&nbsp;<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><\/span><\/a>\s*<\/td>$/
+function administrativeScore(s,decode,html,row,id){
+ const court=/<span>&nbsp;U&nbsp;<\/span>/.test(s)
+ const shape=court?/^<td class="column-score">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/[A-Z0-9]{32}(?:#!\/section\/course)?"><span class="score-special"><span data-obfuscation="([a-z0-9]{8})">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>&nbsp;U&nbsp;<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><\/span><\/a>\s*<\/td>$/
+  :/^<td class="column-score">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/[A-Z0-9]{32}"><span class="score-special"><span data-obfuscation="([a-z0-9]{8})">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>&nbsp;V&nbsp;<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><\/span><\/a>\s*<\/td>$/
  const match=shape.exec(s)
- if(!match||(html.match(/<div class="description">\(V\) Verwaltungsentscheid \(bestätigt\)<\/div>/g)??[]).length!==1)fail('nepodprt ali dvoumen administrativni izid')
+ // Inventory containers before validating the one witnessed child shape.
+ const courtDescriptions=court?[...html.matchAll(/<div\b[^>]*>/gi)]
+  .filter(m=>{
+   const classes=[...m[0].matchAll(/\sclass\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/gi)]
+   if(!classes.some(c=>(c[1]??c[2]??c[3]).split(/\s+/).some(token=>token.toLowerCase()==='description')))return false
+   // Loose inventory is rejection-only; the shared canonical readers stay closed.
+   if((m[0].match(/\sclass\s*=/gi)??[]).length!==1||!classTokens(m[0]).has('description'))fail('nepodprt ali dvoumen administrativni izid')
+   return true
+  })
+  .map(m=>element(html.slice(m.index),'description')).filter(description=>/\(U\)/.test(text(description))):[]
+ const legend=court?/<div class="description">\(U\) Sportgerichtsurteil \(bestätigt\)<\/div>/g:/<div class="description">\(V\) Verwaltungsentscheid \(bestätigt\)<\/div>/g
+ if(!match||(html.match(legend)??[]).length!==1||
+    (court&&courtDescriptions.length!==1)||
+    (row.match(/\bscore-special\b/g)??[]).length!==1||/\bscore-(?:left|right)\b/.test(row))fail('nepodprt ali dvoumen administrativni izid')
+ // Validate every row report reference, including malformed links that the
+ // ordinary ID inventory cannot recognize. Only U admits the witnessed suffix.
+ for(const [anchor] of row.matchAll(/<a\b[^>]*>/gi)){
+  if(!/\/spiel\//.test(anchor))continue
+  const href=attr(anchor,'href')
+  if(!href||(anchor.match(/\bhref\s*=/gi)??[]).length!==1)fail('neveljavna povezava administrativnega izida')
+  const ref=href.match(/^https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/([A-Z0-9]{32})(#!\/section\/course)?$/)
+  if(!ref||ref[1]!==id||(!court&&ref[2]))fail('neveljavna povezava administrativnega izida')
+ }
  const values=match.slice(2).map(value=>decode(`<span data-obfuscation="${match[1]}">${value}</span>`))
  if(values.some(value=>!/^\d{1,2}$/.test(value)))fail('neveljaven administrativni izid')
- return {schemaVersion:1,kind:'confirmed-administrative-decision',marker:'V',displayedScores:[{domaci:+values[0],gostje:+values[1]},{domaci:+values[2],gostje:+values[3]}]}
+ return {schemaVersion:1,kind:court?'confirmed-sports-court-decision':'confirmed-administrative-decision',marker:court?'U':'V',displayedScores:[{domaci:+values[0],gostje:+values[1]},{domaci:+values[2],gostje:+values[3]}]}
 }
 function liveScoreChildren(s){
  const html=element(s,'even'),start=html.indexOf('>')+1,end=html.lastIndexOf('</div>'),body=html.slice(start,end)
@@ -284,7 +308,7 @@ export function razberiKrog(html,{fonts,staffel}={}) {
   if(shortDate && `${datum.slice(8)}.${datum.slice(5,7)}.${datum.slice(2,4)}`!==shortDate.slice(1).join('.'))fail('neujemanje datuma vrstice kroga')
   const scoreCell=element(row,'column-score'),special=/\bscore-special\b/.test(scoreCell)
   if((row.match(/<td\b[^>]*class="(?:[^"]*\s)?column-score(?:\s[^"]*)?"/g)??[]).length!==1 || /\bscore-special\b/.test(row)!==special)fail('dvoumen element izida kroga')
-  const administrativeResult=special?administrativeScore(scoreCell,decode,html):null
+  const administrativeResult=special?administrativeScore(scoreCell,decode,html,row,ids[0][2]):null
   const result=special?null:score(scoreCell,decode,true)
   ;(extra?prestavljene:tekme).push({id:ids[0][2],zapisnikId:`de-fussball-${ids[0][2]}`,url:ids[0][1],krog:extra?null:krog,datum,ura:time[1],domaci:names[0],gostje:names[1],rezultat:result,...(special?{administrativeResult}:{})})
  }
