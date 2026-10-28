@@ -85,7 +85,7 @@ begin
   execute format('lock table %s in row share mode',fk.rel);
   execute format('select 1 from %s t where %I in(select id from g13_ids where kind=%L) order by to_jsonb(t)::text collate "C" for update',fk.rel,fk.col,fk.target);
   insert into g13_queries values('fk:'||fk.rel||'.'||fk.col,fk.rel,format('%I in(select id from g13_ids where kind=%L)',fk.col,fk.target));
-  if fk.rel like 'private_dfb_pending.%' or fk.rel like 'private_fussball.%' or fk.rel like 'private_historical_statistics.%' or fk.rel like 'private_fcf_target_release.%' or fk.rel like 'private_fcf_six_target_release.%' then
+  if fk.rel like 'private_dfb_pending.%' or fk.rel like 'private_fussball.%' or fk.rel like 'private_historical_statistics.%' or fk.rel like 'private_fcf_target_release.%' or fk.rel like 'private_fcf_six_target_release.%' or fk.rel like 'private_fcf_g1_supplement.%' then
    execute format('select count(*) from %s where %I in(select id from g13_ids where kind=%L)',fk.rel,fk.col,fk.target) into n;
    perform pg_temp.g13_assert(n=0,'historical state present');
   end if;
