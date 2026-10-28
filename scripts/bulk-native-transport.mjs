@@ -23,7 +23,7 @@ export function createBulkTransport({url,key,base,fetch:request=globalThis.fetch
   const row=rows[0];if(['slug','source','source_league_code'].some(k=>row[k]!==c[k]))throw hold('Existing candidate registration identity differs.')
   await country(row.country_id,c.country_code);return row
  }
- return {...base,find,snapshot:async c=>{
+ return {...base,find,prepareFussballHistory:async({manifest,sha256})=>call('rpc/prepare_fussball_historical_statistics',{p_manifest:manifest,p_sha256:sha256}),readFussballHistory:async id=>call('rpc/get_fussball_historical_preparation',{p_competition_id:id}),snapshot:async c=>{
   const snapshot=await base.snapshot(c)
   await country(snapshot.competition.country_id,c.country_code)
   snapshot.competition.country_code=c.country_code
