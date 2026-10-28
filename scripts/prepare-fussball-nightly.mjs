@@ -10,14 +10,22 @@ import {captureFussballDirectory} from './fussball-capture-evidence.mjs'
 import {loadFussballImportCapture,parseFussballLeagueCode} from './fussball-import.mjs'
 
 import {isFussballCommunityCandidate,isFussballCommunityCompetition,fussballCardPolicyForCandidate} from './fussball-community-policy.mjs'
+import {isBadenNativeCompetition,loadFussballNativeRuntimeSeed,seedFussballNativeRuntime,captureFussballNativeRuntimeDirectory} from './fussball-native-runtime.mjs'
 const fail=message=>Object.assign(new Error(`fussball nightly: ${message}`),{exitCode:1,dataHold:true})
 const proof=(ok,message)=>{if(!ok)throw fail(message)}
 const time=now=>{const value=typeof now==='function'?now():now,n=value instanceof Date?value.getTime():value;proof(Number.isFinite(n),'invalid clock');return n}
 const cacheRoot=slug=>resolve('scripts/.predpomnilnik/fussball-public',slug)
 
-export async function seedFussballNightly({candidate,bulkDirectory,cacheDirectory,loadPack=loadGermanyPack}={}){
+export async function seedFussballNightly({candidate,bulkDirectory,cacheDirectory,loadPack=loadGermanyPack,installedHistoricalMarkers=candidate?.fussballHistoricalContext}={}){
  proof(candidate?.active===false,'initial cache seed requires inactive competition')
  const reviewed=assertFussballNightlyCompetition({...candidate,active:true})
+ if(isBadenNativeCompetition(candidate)){
+  const cache=cacheDirectory??cacheRoot(reviewed.slug),seed=join(cache,'bulk-seed'),next=join(cache,'bulk-seed-next')
+  mkdirSync(cache,{recursive:true});proof(lstatSync(cache).isDirectory()&&!lstatSync(cache).isSymbolicLink(),'cache root must be regular directory')
+  rmSync(next,{recursive:true,force:true});await seedFussballNativeRuntime({context:installedHistoricalMarkers,competition:candidate,directory:next})
+  rmSync(seed,{recursive:true,force:true});renameSync(next,seed)
+  return {directory:resolve(seed),source_league_code:reviewed.source_league_code,seeded:true}
+ }
  const pack=await loadPack(bulkDirectory,{candidate:reviewed,requireFresh:false})
  proof(pack.candidate?.source_league_code===reviewed.source_league_code&&pack.candidate.slug===reviewed.slug&&Boolean(pack.candidate.communityCards)===Boolean(reviewed.communityCards)&&pack.seasons?.some(s=>s.code===reviewed.source_league_code),'verified bulk seed scope differs')
  const cache=cacheDirectory??cacheRoot(reviewed.slug),seed=join(cache,'bulk-seed'),next=join(cache,'bulk-seed-next')
@@ -42,7 +50,7 @@ function stoppedCapture(directory){
   return s.isFile()&&!s.isSymbolicLink()&&JSON.parse(readFileSync(file,'utf8')).snapshot?.stopped===true
  }catch{return false}
 }
-export async function prepareFussballNightly({candidate,directory,maxRequests=4000,now=Date.now,captureDirectory=captureFussballDirectory,loadCapture=loadFussballImportCapture,fetchFn,cacheDirectory}={}){
+export async function prepareFussballNightly({candidate,directory,maxRequests=4000,now=Date.now,captureDirectory=captureFussballDirectory,loadCapture=loadFussballImportCapture,fetchFn,cacheDirectory,installedHistoricalMarkers=candidate?.fussballHistoricalContext,db}={}){
  const reviewed=assertFussballNightlyCompetition(candidate),scope=parseFussballLeagueCode(reviewed.source_league_code)
  proof(typeof directory==='string'&&directory.length>0&&!existsSync(directory),'output must identify a new capture directory')
  proof(Number.isInteger(maxRequests)&&maxRequests>=1&&maxRequests<=4000,'request budget must be 1..4000')
@@ -54,6 +62,15 @@ export async function prepareFussballNightly({candidate,directory,maxRequests=40
  proof(lstatSync(cache).isDirectory()&&!lstatSync(cache).isSymbolicLink(),'cache root must be a regular directory')
  if(!existsSync(latest)&&existsSync(previous))renameSync(previous,latest)
  if(existsSync(latest))proof(lstatSync(latest).isDirectory()&&!lstatSync(latest).isSymbolicLink(),'latest cache must be a regular directory')
+ if(isBadenNativeCompetition(candidate)){
+  const seedDirectory=existsSync(latest)?join(latest,'seed'):seed
+  const loaded=await loadFussballNativeRuntimeSeed({context:installedHistoricalMarkers,competition:candidate,db,directory:seedDirectory})
+  const batch=await captureFussballNativeRuntimeDirectory({context:loaded.context,competition:loaded.competition,directory,seedDirectory,...(existsSync(latest)?{reuseDirectory:latest}:{}),maxRequests,asOfDate,...(fetchFn?{fetchFn}:{})})
+  rmSync(next,{recursive:true,force:true});cpSync(directory,next,{recursive:true});rmSync(previous,{recursive:true,force:true})
+  if(existsSync(latest))renameSync(latest,previous)
+  renameSync(next,latest);rmSync(previous,{recursive:true,force:true});rmSync(seed,{recursive:true,force:true})
+  return {directory:resolve(directory),source_league_code:reviewed.source_league_code,...scope,reports:batch.reports.length,pendingReports:batch.pendingReports.length,provenance:batch.provenance}
+ }
  try{
   await captureDirectory({directory,options:{seedUrl:reviewed.seedUrl,...scope,maxRequests,reportLimit:null,asOfDate,...(cardPolicy?{cardPolicy}:{})},...(fetchFn?{fetchFn}:{}),...(existsSync(latest)?{reuseDirectory:latest}:existsSync(seed)?{reuseBulkDirectory:seed}:{})})
   const batch=await loadCapture(directory,{...scope,current:true,now:time(now),...(cardPolicy?{cardPolicy}:{})})
@@ -75,7 +92,12 @@ async function readCompetition(slug){
  proof(process.env.SUPABASE_URL&&process.env.SUPABASE_SERVICE_ROLE_KEY,'Actions database configuration required')
  const [{createClient},{tekmovanje},{fetchZaBazo}]=await Promise.all([import('@supabase/supabase-js'),import('./tekmovanje.mjs'),import('./prenos.mjs')])
  const db=createClient(process.env.SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false},global:{fetch:fetchZaBazo()}})
- return tekmovanje(db,slug)
+ const row=await tekmovanje(db,slug)
+ if(isBadenNativeCompetition(row)&&row.active===true){
+  const cache=cacheRoot(slug),seedDirectory=existsSync(join(cache,'latest'))?join(cache,'latest','seed'):join(cache,'bulk-seed')
+  return (await loadFussballNativeRuntimeSeed({competition:row,db,directory:seedDirectory})).competition
+ }
+ return row
 }
 /** --output is NEW_DIR. Export that path as SLFF_FUSSBALL_CAPTURE only on exit0. */
 export async function runFussballNightlyCli(args,{readCompetition:read=readCompetition,prepare=prepareFussballNightly,seed=seedFussballNightly,hasCache=slug=>['latest','bulk-seed'].some(p=>existsSync(join(cacheRoot(slug),p)))}={}){

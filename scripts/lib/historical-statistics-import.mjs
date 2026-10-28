@@ -5,6 +5,8 @@ import {validateHnsWomenClubBindings} from '../viri/hns-zenske-binding.mjs'
 import {assertHnsWomenOfflineAuthority} from '../hr-zenske-offline.mjs'
 import {getHistoricalStatisticsPolicy,validateInstalledHistoricalStatisticsMarkers,classifyHistoricalStatistics} from './historical-statistics-policy.mjs'
 import {isFussballCommunityCompetition,FUSSBALL_COMMUNITY_SOURCE_POLICY} from '../fussball-community-policy.mjs'
+import {isBadenNativeCompetition,loadFussballNativeImportContext,loadFussballNativeRuntimeSeed,getFussballNativeRuntimeContext} from '../fussball-native-runtime.mjs'
+import {join} from 'node:path'
 
 // A typed pending-card archive is imported as an official fixture plus private
 // evidence, never as partial appearances. Other incomplete archives still skip.
@@ -13,8 +15,14 @@ export function skipIncompleteArchiveReport({competition,report,currentSeason}){
 }
 
 /** Normal CLI cannot bootstrap or recover partial policies; dedicated packet writers do that atomically. */
-export async function loadHistoricalStatisticsImportContext(db,original,{sourceOverride=null}={}) {
+export async function loadHistoricalStatisticsImportContext(db,original,{sourceOverride=null,nativePreparation=null,nativeComposition=null,nativeSeedDirectory=null}={}) {
   const competition={...original,...(sourceOverride?{source:sourceOverride}:{})}
+  if(original.slug==='de-verbandsliga-baden'&&original.source_policy===FUSSBALL_COMMUNITY_SOURCE_POLICY){
+    if(sourceOverride||!isBadenNativeCompetition(competition))throw Error('Baden import: exact source/history/cards tuple required')
+    const seedDirectory=nativeSeedDirectory??(competition.active===true&&process.env.SLFF_FUSSBALL_CAPTURE?join(process.env.SLFF_FUSSBALL_CAPTURE,'seed'):null)
+    if(seedDirectory){const loaded=await loadFussballNativeRuntimeSeed({competition,db,directory:seedDirectory,composition:nativeComposition});return {competition:loaded.competition,installedHistoricalMarkers:loaded.context}}
+    return loadFussballNativeImportContext({competition,db,preparation:nativePreparation,composition:nativeComposition})
+  }
   if(isFussballCommunityCompetition(competition)){
     if(sourceOverride)throw Error('community card import: source override forbidden')
     const {data:binding,error}=await db.rpc('get_fussball_card_policy',{p_competition_id:competition.id})
@@ -42,6 +50,10 @@ export async function loadHistoricalStatisticsImportContext(db,original,{sourceO
 export function assertHistoricalReportImportable({competition,report,installedG1Supplement}) {
   if(isFcfG1SupplementCompetition(competition))requireFcfG1InstalledSupplement({competition,installedG1Supplement})
   if(competition.source==='fcf'&&String(report?.id)==='es4109409'){isFcfG1SupplementReport({competition,installedG1Supplement,id:report.id});throw Error('historical import: installed supplement cannot derive individual rows')}
+  if(isBadenNativeCompetition(competition)){
+    const state=getFussballNativeRuntimeContext(competition.fussballHistoricalContext,competition)
+    if(state.state.readback.history.markers.some(m=>m.reportId===report?.id))throw Error('Baden historical import: unavailable report cannot derive individual/card rows')
+  }
   if(competition.source==='mfa'&&['mt50920555','mt51962893'].includes(String(report?.id)))throw Error('historical import: neither continuation segment may derive individual statistics')
   if(report?.statisticsStatus!=null && report.statisticsStatus!=='available')throw Error('historical import: unavailable/unknown statistics status cannot derive individual rows')
   if(report?.historicalStatistics!=null || !report?.z || typeof report.z!=='object')throw Error('historical import: unavailable or missing normal report body')

@@ -2,17 +2,20 @@
 import {assertBulkCandidate,bulkClubKey,bulkAppearances} from '../bulk-native-proof.mjs'
 import {reserveFussballIdentities,reviewedFussballCommunityCompetition,assertFussballCommunityScope} from './fussball-public.mjs'
 import {fussballPlayerKey} from '../fussball-import.mjs'
+import {isBadenNativeCompetition,loadPreparedFussballNativePack,getFussballNativeRuntimeContext} from '../fussball-native-runtime.mjs'
 const proof=(ok,message)=>{if(!ok)throw Error(`bulk captured: ${message}`)}
 const countries={pzpn:'PL',wmzpn:'PL','fussball-public':'DE'}
-export function createBulkCapturedSource({competition,db,directory=process.env.SLFF_BULK_CAPTURE,loadPack}={}){
+export function createBulkCapturedSource({competition,db,directory=process.env.SLFF_BULK_CAPTURE,loadPack,installedHistoricalMarkers=null}={}){
+ const native=isBadenNativeCompetition(competition),context=installedHistoricalMarkers??competition?.fussballHistoricalContext
+ if(native)getFussballNativeRuntimeContext(context,competition)
  const community=competition?.source==='fussball-public'?reviewedFussballCommunityCompetition(competition):null
  proof(competition&&countries[competition.source]===competition.country_code&&Number.isSafeInteger(competition.id)&&competition.id>0&&Number.isSafeInteger(competition.country_id)&&competition.country_id>0&&competition.active===false&&(competition.source_policy===null||community)&&competition.date_only_deadline_policy===null,'exact inactive source/country/NULL-policy competition required')
  proof(typeof directory==='string'&&directory.length>0,'explicit bulk capture directory required')
  const key=bulkClubKey(competition.source),appearances=new WeakMap();let loaded=null,boundCode=null,reservation=null
  const get=async code=>{
   proof(typeof code==='string'&&code,'explicit source season code required');proof(boundCode===null||boundCode===code,'one source instance cannot mix source season codes');boundCode=code
-  if(community)await assertFussballCommunityScope(db,competition,code)
-  loaded??=(async()=>{const loader=loadPack??(await import('../bulk-source-packs.mjs')).loadBulkPack;const pack=await loader(directory,{competition,now:new Date(),requireFresh:true});assertBulkCandidate(pack.candidate)
+  if(community&&!native)await assertFussballCommunityScope(db,competition,code)
+  loaded??=(async()=>{const loader=loadPack??(await import('../bulk-source-packs.mjs')).loadBulkPack;const pack=native?await loadPreparedFussballNativePack({competition,context}):await loader(directory,{competition,now:new Date(),requireFresh:true});assertBulkCandidate(pack.candidate)
    const c=pack.candidate;proof(Boolean(c.communityCards)===Boolean(community)&&(!community||JSON.stringify(c.archives.map(a=>a.code))===JSON.stringify(community.archives.map(a=>a.code))),'pack candidate card policy differs');proof(['slug','source','source_league_code','country_code'].every(k=>c[k]===competition[k])&&(c.id===undefined||c.id===competition.id),'pack candidate differs from exact registered tuple');return pack})()
   const pack=await loaded,scopes=assertBulkCandidate(pack.candidate),scope=scopes.find(s=>s.code===code)
   proof(scope&&Array.isArray(pack.seasons),'source code not bound to admitted current/archive scope')
@@ -31,7 +34,7 @@ export function createBulkCapturedSource({competition,db,directory=process.env.S
   proof(mappings.size>0&&mappings.size<=5000,'bounded complete DE identities missing')
   await reserveFussballIdentities(db,[...mappings].map(([source_id,reg_st])=>({source_id,reg_st})))
  }
- return {ime:competition.source,bulkCaptured:true,drzava:competition.country_code,polnoIme:competition.source==='fussball-public'?'FUSSBALL.DE — captured public reports':'Polish federation — captured official reports',osnovniNaslov:competition.source==='fussball-public'?'https://www.fussball.de':'https://'+(competition.source==='pzpn'?'szpnkielce.pl':'wmzpn.pl'),imaRegistracije:true,razporedBrezUvodnegaPrenosa:true,kljucKluba:key,poenostavi:key,kratkoIme:s=>String(s??'').normalize('NFC').replace(/\s+/gu,' ').trim(),
+ return {ime:competition.source,...(native?{fussballHistoricalContext:context}:{}),bulkCaptured:true,drzava:competition.country_code,polnoIme:competition.source==='fussball-public'?'FUSSBALL.DE — captured public reports':'Polish federation — captured official reports',osnovniNaslov:competition.source==='fussball-public'?'https://www.fussball.de':'https://'+(competition.source==='pzpn'?'szpnkielce.pl':'wmzpn.pl'),imaRegistracije:true,razporedBrezUvodnegaPrenosa:true,kljucKluba:key,poenostavi:key,kratkoIme:s=>String(s??'').normalize('NFC').replace(/\s+/gu,' ').trim(),
   naslovRazporeda(){return 'offline:bulk-captured'},
   async razporedVseStrani(code){return structuredClone((await get(code)).season.schedule)},
   async zapisniki(code){const {pack,season}=await get(code);if(competition.source==='fussball-public'){reservation??=reserve(pack,season);await reservation}return [...season.reports,...(season.pendingReports??[])].map(r=>{const z=structuredClone(r.z);if(r.statisticsPending!==true)appearances.set(z,bulkAppearances(r));return {id:r.id,url:r.url,z,...(r.cardEnvelope?{cardEnvelope:structuredClone(r.cardEnvelope)}:{}),...(r.statisticsPending===true?{statisticsPending:true}:{})}})},
