@@ -1115,7 +1115,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: read
+      # Draft release listing requires push access; this probe still performs GETs only.
+      contents: write
       actions: read
     steps:
       - name: Node 22
