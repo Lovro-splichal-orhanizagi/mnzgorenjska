@@ -47,11 +47,15 @@ create function private_baden_history.unknown_result_allowed(rid bigint,h bigint
  and k.fixture->>'sourceUrl'=url and (k.fixture->>'playedOn')::date=day and status='unavailable_historical'and k.fixture->>'resultKnown'='false'and k.fixture->'observedHomeScore'='null'::jsonb and k.fixture->'observedAwayScore'='null'::jsonb and k.fixture->'administrativeResult'->>'marker'='V'
  and reason=(select e->>'reasonCode'from jsonb_array_elements(p.document->'entries')e where e->>'sourceMatchId'=k.source_match_id)and phase is null and rn=(k.fixture->>'sourceRound')::int);
 $$;
-alter table public.matches drop constraint paired_result_availability;
-alter table public.matches add constraint paired_result_availability check(
- (home_goals is not null and away_goals is not null)or(home_goals is null and away_goals is null and
- (private_fcf_six_history.unknown_result_allowed(round_id,home_team_id,away_team_id,zapisnik_id,source_url,played_on,statistics_status,statistics_reason,source_phase,source_round)is true
- or private_baden_history.unknown_result_allowed(round_id,home_team_id,away_team_id,zapisnik_id,source_url,played_on,statistics_status,statistics_reason,source_phase,source_round)is true)));
+-- Preserve the installed pure CHECK expression, including the earlier Spanish
+-- G1 supplement disjunct. Only append the exact Baden both-NULL allowance.
+-- No marker/table lookup is added to another provider's pure row predicate.
+do $$declare prior_check text;begin
+ select pg_get_constraintdef(oid)into strict prior_check from pg_constraint where conrelid='public.matches'::regclass and conname='paired_result_availability';
+ perform private_baden_history.require(left(prior_check,6)='CHECK ' and right(prior_check,1)=')','existing validated paired-score CHECK required');
+ alter table public.matches drop constraint paired_result_availability;
+ execute 'alter table public.matches add constraint paired_result_availability CHECK ('||substring(prior_check from 7)||' OR (home_goals is null and away_goals is null and private_baden_history.unknown_result_allowed(round_id,home_team_id,away_team_id,zapisnik_id,source_url,played_on,statistics_status,statistics_reason,source_phase,source_round)is true))';
+end$$;
 -- Preserve every existing provider's implementation; exact Baden dispatch only.
 alter function public.upsert_unavailable_historical_match(bigint,text,text,text,text,jsonb)rename to legacy_upsert;
 alter function public.legacy_upsert(bigint,text,text,text,text,jsonb)set schema private_baden_history;

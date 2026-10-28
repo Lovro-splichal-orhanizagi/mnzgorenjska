@@ -6,7 +6,7 @@ import {readFileSync,writeFileSync,appendFileSync,mkdirSync,lstatSync} from 'nod
 import {join} from 'node:path'
 import {reauthenticateFussballNativePreparation} from './prepare-fussball-native-history.mjs'
 import {getFussballNativeComposition,reauthenticateFussballNativeComposition,validateFussballNativeCatalog} from './fussball-native-composition.mjs'
-import {getFussballCompletedSourceV6} from './fussball-completed-source-v6.mjs'
+import {getFussballCompletedSourceV7} from './fussball-completed-source-v7.mjs'
 import {createFussballParserSession,assembleFussballSchedule,validateFussballFixture} from './fussball-season.mjs'
 import {createFussballCaptureClient} from './lib/fussball-capture.mjs'
 import {GERMANY_BULK_CANDIDATES} from './bulk-germany-source.mjs'
@@ -107,7 +107,7 @@ export function bindFussballHistoricalSchedule(context,competition,code,schedule
 }
 const nativeSchedule=season=>[...new Set(season.fixtures.map(f=>f.krog))].sort((a,b)=>a-b).map(stevilka=>({stevilka,tekme:season.fixtures.filter(f=>f.krog===stevilka).map(f=>({...structuredClone(f),izid:f.rezultat?[f.rezultat.domaci,f.rezultat.gostje]:null,odigrana:f.rezultat!==null,kontumacija:false}))}))
 function originalSeason(s,code){
- const source=s.pack.seasons.find(x=>x.code===code),originals=s.originals??getFussballCompletedSourceV6(s.sourceProof).originals.stages
+ const source=s.pack.seasons.find(x=>x.code===code),originals=s.originals??getFussballCompletedSourceV7(s.sourceProof).originals.stages
  const stage=originals[source?.inventory.scope.stage],candidate=GERMANY_BULK_CANDIDATES.find(c=>c.slug===BADEN_SLUG)
  const reviewed=code===candidate?.source_league_code?candidate:candidate?.archives.find(a=>a.code===code)
  need(source&&stage&&reviewed&&stage.result.scope.staffel+':'+stage.result.scope.season===code&&stage.result.scope.seedUrl===reviewed.seedUrl&&stage.manifest.options.seedUrl===reviewed.seedUrl,'authenticated canonical seasonal seed required')
@@ -162,7 +162,7 @@ export async function collectFussballNativeRuntime({context,competition,code,cli
 }
 function regular(root,path){need(typeof path==='string'&&!path.startsWith('/')&&!path.includes('\\')&&path.split('/').every(x=>x&&x!=='.'&&x!=='..'),'unsafe retained path');let current=root;need(lstatSync(current).isDirectory()&&!lstatSync(current).isSymbolicLink(),'regular retained directory required');for(const part of path.split('/')){current=join(current,part);need(!lstatSync(current).isSymbolicLink(),'retained symlink refused')}need(lstatSync(current).isFile(),'retained original missing');return readFileSync(current)}
 function seedState(s){
- const originals=s.originals??getFussballCompletedSourceV6(s.sourceProof).originals.stages
+ const originals=s.originals??getFussballCompletedSourceV7(s.sourceProof).originals.stages
  const files=new Map()
  for(const [stage,value]of Object.entries(originals))for(const [path,bytes]of value.files)files.set(stage+'/'+path,Buffer.from(bytes))
  const seal={version:1,kind:'baden-prepared-originals-seed',receipt:s.state.receipt,manifest:s.state.manifest,readback:s.state.readback,pack:s.pack,source:s.pack.source,sourceCertificateSha256:s.pack.sourceCertificateSha256,derivedPackSha256:s.pack.derivedPackSha256,captured_at:s.pack.captured_at,currentFreshUntil:s.pack.currentFreshUntil,files:[...files].map(([path,b])=>({path,bytes:b.length,sha256:sha(b)})).sort((a,b)=>a.path.localeCompare(b.path))}

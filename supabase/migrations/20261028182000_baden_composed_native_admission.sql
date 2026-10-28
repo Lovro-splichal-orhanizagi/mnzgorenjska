@@ -24,6 +24,18 @@ do $$declare d text;changed text;begin
  if changed=d then raise exception 'BADEN_HISTORY: upsert court-decision anchor missing';end if;execute changed;
 end$$;
 
+-- W is a separately reviewed exact source tuple, never a selected winner.
+do $$declare d text;changed text;begin
+ d:=pg_get_functiondef('private_baden_history.unknown_result_allowed(bigint,bigint,bigint,text,text,date,text,text,text,integer)'::regprocedure);
+ changed:=replace(d,$q$k.source_match_id in('02TNBSVDG0000000VS5489BUVSSD35NB','02TNBSVIMS000000VS5489BUVSSD35NB')$q$,$q$k.source_match_id in('02TNBSVDG0000000VS5489BUVSSD35NB','02TNBSVIMS000000VS5489BUVSSD35NB','02TNBSVEEG000000VS5489BUVSSD35NB')$q$);
+ changed:=replace(changed,$q$k.fixture->'administrativeResult'->>'marker'='V'$q$,$q$(k.fixture->'administrativeResult'->>'marker'='V' or(k.fixture#>>'{administrativeResult,marker}'='W' and k.fixture#>>'{administrativeResult,kind}'='confirmed-match-authority-decision' and k.fixture#>>'{administrativeResult,rawMarker}'in('w','W') and k.source_match_id='02TNBSVEEG000000VS5489BUVSSD35NB' and rn=29 and day=date'2026-05-25' and k.fixture->>'sourceTime'='17:00' and k.fixture#>'{administrativeResult,displayedScores}'='[{"domaci":3,"gostje":0},{"domaci":0,"gostje":3}]'::jsonb and k.fixture->>'homeSourceClubId'=private_fussball.canonical_json(jsonb_build_object('sourceCompetitionId','02TGLSVQ1800000IVS5489BTVTLPPK10-G:2025/26','season','2025/26','name','TSG 1862/09 Weinheim')) and k.fixture->>'awaySourceClubId'=private_fussball.canonical_json(jsonb_build_object('sourceCompetitionId','02TGLSVQ1800000IVS5489BTVTLPPK10-G:2025/26','season','2025/26','name','GU-Türk. SV Pforzheim zg.'))))$q$);
+ if changed=d then raise exception 'BADEN_HISTORY: exact W allowance anchor missing';end if;execute changed;
+ d:=pg_get_functiondef('public.upsert_unavailable_historical_match(bigint,text,text,text,text,jsonb)'::regprocedure);
+ changed:=replace(d,$q$p_source_match_id in('02TNBSVDG0000000VS5489BUVSSD35NB','02TNBSVIMS000000VS5489BUVSSD35NB')$q$,$q$p_source_match_id in('02TNBSVDG0000000VS5489BUVSSD35NB','02TNBSVIMS000000VS5489BUVSSD35NB','02TNBSVEEG000000VS5489BUVSSD35NB')$q$);
+ changed:=replace(changed,$q$e#>>'{administrativeResult,kind}'='confirmed-administrative-decision'$q$,$q$(e#>>'{administrativeResult,kind}'='confirmed-administrative-decision' or(e#>>'{administrativeResult,kind}'='confirmed-match-authority-decision' and e#>>'{administrativeResult,marker}'='W' and e#>>'{administrativeResult,rawMarker}'in('w','W') and p_source_match_id='02TNBSVEEG000000VS5489BUVSSD35NB' and e->>'sourceRound'='29' and e->>'playedOn'='2026-05-25' and e->>'sourceTime'='17:00' and e#>'{administrativeResult,displayedScores}'='[{"domaci":3,"gostje":0},{"domaci":0,"gostje":3}]'::jsonb))$q$);
+ if changed=d then raise exception 'BADEN_HISTORY: exact W upsert anchor missing';end if;execute changed;
+end$$;
+
 create function private_baden_history.launch_headers(cid bigint)returns jsonb language sql stable security definer set search_path=public,pg_temp as $$
  select coalesce(jsonb_agg(jsonb_build_object('matchId',x->'matchId','reportId',x->'reportId','sourceMatchId',x->'sourceMatchId','sourceCompetitionId',x#>'{fixture,sourceCompetitionId}','roundId',x->'roundId','homeTeamId',x->'homeTeamId','awayTeamId',x->'awayTeamId','fixture',x->'fixture','rawSha256',x->'rawSha256')order by(x->>'matchId')::bigint),'[]')from jsonb_array_elements(public.get_installed_historical_statistics_markers(cid)->'markers')x
 $$;
@@ -175,4 +187,16 @@ do $$declare d text;changed text;begin
  d:=pg_get_functiondef('public.lestvica_lige(bigint,text)'::regprocedure);
  changed:=replace(d,'m.imported_at is not null or m.kontumacija or(', 'm.imported_at is not null or m.kontumacija or public.baden_known_native_result(m.id) or(');
  if changed=d then raise exception 'BADEN_HISTORY: standings result predicate anchor missing';end if;execute changed;
+end$$;
+
+-- CHECK expressions initialize function ACLs even for ordinary known scores.
+-- Grant only schema lookup and these boolean predicates to the actual importer.
+-- Private marker/catalog tables and all preparer/mutator functions stay closed.
+grant usage on schema private_baden_history,private_fcf_six_history to service_role;
+grant execute on function private_baden_history.unknown_result_allowed(bigint,bigint,bigint,text,text,date,text,text,text,integer),private_fcf_six_history.unknown_result_allowed(bigint,bigint,bigint,text,text,date,text,text,text,integer)to service_role;
+do $$begin
+ if to_regprocedure('private_fcf_g1_supplement.unknown_result_allowed(text,text,date,text,text,text,integer,integer,integer,timestamp with time zone,boolean,boolean,text[])')is not null then
+  grant usage on schema private_fcf_g1_supplement to service_role;
+  grant execute on function private_fcf_g1_supplement.unknown_result_allowed(text,text,date,text,text,text,integer,integer,integer,timestamptz,boolean,boolean,text[])to service_role;
+ end if;
 end$$;

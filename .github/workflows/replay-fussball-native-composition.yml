@@ -8,7 +8,7 @@ on:
         type: string
         required: true
       source_run:
-        description: Actual completed V6 archive source run; source head is independently authenticated
+        description: Actual completed V7 archive source run; source head is independently authenticated
         type: string
         required: true
 permissions:
@@ -26,6 +26,7 @@ jobs:
       EXPECTED_SHA: ${{ inputs.expected_sha }}
       SOURCE_RUN_ID: ${{ inputs.source_run }}
       FROZEN_DE77_DIRECTORY: frozen-de77
+      FROZEN_V6_DIRECTORY: frozen-v6
       NODE_OPTIONS: --max-old-space-size=6144
     steps:
       - uses: actions/checkout@v4
@@ -36,6 +37,11 @@ jobs:
         with:
           ref: de77b661cbc11d95256a500e57c2fdea861a0647
           path: frozen-de77
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 4e1e7caac02aa6e12c789c7cea7aac699d3c2566
+          path: frozen-v6
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:

@@ -91,7 +91,7 @@ test('TEST ONLY source partition rejects missing/extra/overlap/exclusion, wrong 
  for(const mutate of mutations){const f=partitionFixture();mutate(f);const api=isolatedComposition(f);assert.throws(()=>api.buildFussballNativeComposition(f.proof),undefined,mutate.toString())}
 })
 test('TEST ONLY hosted derived reader issues only cold preparation scope after independent source reauthentication',async t=>{
- const f=await hostedDerivedFixture(t),before=f.sourceReads,p=await f.api.loadFussballNativeComposition({derivedRunId,derivedHead,frozenDirectory:'TEST-ONLY-frozen',github:f.github})
+ const f=await hostedDerivedFixture(t),before=f.sourceReads,p=await f.api.loadFussballNativeComposition({derivedRunId,derivedHead,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e',github:f.github})
  assert.equal(f.sourceReads-before,2);assert.equal(p.kind,'source-partition-verified-awaiting-native-preparation');assert.equal(p.registrationEligible,false);assert.equal(p.nativeImportEligible,false);assert.equal(p.activationEligible,false);assert.equal(p.actualReady,false)
  const state=f.api.getFussballNativeComposition(p);assert.equal(state.pack.sourceHead,'b'.repeat(40));assert.equal(state.pack.replayHead,derivedHead);assert.equal(state.pack.expectedSha,derivedHead);assert.equal(state.pack.nativeAdmission,false);state.pack.seasons=[];assert.equal(f.api.getFussballNativeComposition(p).pack.seasons.length,2)
  assert.throws(()=>f.api.getFussballNativeComposition({...p}),/reader-issued/)
@@ -128,24 +128,24 @@ for(const [name,change]of[
  ['source failure on reread',f=>{f.sourceFailure=true}],
 ])test(`TEST ONLY derived proof rejects ${name}`,async t=>{
  const f=await hostedDerivedFixture(t);change(f)
- await assert.rejects(f.api.loadFussballNativeComposition({derivedRunId,derivedHead,frozenDirectory:'TEST-ONLY-frozen',github:f.github}))
+ await assert.rejects(f.api.loadFussballNativeComposition({derivedRunId,derivedHead,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e',github:f.github}))
 })
 
 test('TEST ONLY self-consistent forged pack/certificate digests cannot replace exact source partition',async t=>{
  const f=await hostedDerivedFixture(t),pack=JSON.parse(f.files.get('pack.json'))
  pack.seasons[0].inventory.partition['reviewed-known-result-unavailable'].push('FORGED')
  const b=json(pack);f.files.set('pack.json',b);f.recertify(c=>{c.packBytes=b.length;c.packSha256=hash(b);c.partitions=pack.seasons.map(s=>({inventory:s.inventory,partitionSha256:s.partitionSha256}))})
- await assert.rejects(f.api.loadFussballNativeComposition({derivedRunId,derivedHead,frozenDirectory:'TEST-ONLY-frozen',github:f.github}),/fresh authenticated rebuild/)
+ await assert.rejects(f.api.loadFussballNativeComposition({derivedRunId,derivedHead,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e',github:f.github}),/fresh authenticated rebuild/)
 })
 
 test('TEST ONLY current expiry and source/runtime drift are rechecked at final proof and child factory boundaries',async t=>{
- const f=await hostedDerivedFixture(t),p=await f.api.loadFussballNativeComposition({derivedRunId,derivedHead,frozenDirectory:'TEST-ONLY-frozen',github:f.github}),real=Date.now
+ const f=await hostedDerivedFixture(t),p=await f.api.loadFussballNativeComposition({derivedRunId,derivedHead,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e',github:f.github}),real=Date.now
  Date.now=()=>Date.parse(p.currentFreshUntil)+1
  try{assert.throws(()=>f.api.getFussballNativeComposition(p),/freshness/);await assert.rejects(f.api.reauthenticateFussballNativeComposition(p),/freshness/)}finally{Date.now=real}
  const g=await hostedDerivedFixture(t);let runReads=0;g.controls.change=(path,v)=>path.endsWith('/runs/'+derivedRunId)&&++runReads===2?{...v,updated_at:'2000-01-01T00:00:00Z'}:v
- await assert.rejects(g.api.loadFussballNativeComposition({derivedRunId,derivedHead,frozenDirectory:'TEST-ONLY-frozen',github:g.github}),/metadata\/main\/runtime drift/)
+ await assert.rejects(g.api.loadFussballNativeComposition({derivedRunId,derivedHead,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e',github:g.github}),/metadata\/main\/runtime drift/)
  const h=await hostedDerivedFixture(t);h.controls.change=(path,v)=>path.includes('/contents/')?{...v,content:Buffer.from('changed runtime').toString('base64')}:v
- await assert.rejects(h.api.loadFussballNativeComposition({derivedRunId,derivedHead,frozenDirectory:'TEST-ONLY-frozen',github:h.github}),/installed runtime/)
+ await assert.rejects(h.api.loadFussballNativeComposition({derivedRunId,derivedHead,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e',github:h.github}),/installed runtime/)
 })
 
 test('TEST ONLY per-report bundles bind main SHA separately from latest lineup, observed fonts and receipts',()=>{

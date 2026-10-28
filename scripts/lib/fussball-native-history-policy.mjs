@@ -16,7 +16,7 @@ export function projectBadenHistoricalPolicy(c){
   sourceMatchId:e.fixture.id,sourceCompetitionId:e.sourceCompetitionId,season:e.season,sourcePhase:null,sourceRound:e.fixture.krog,playedOn:e.fixture.datum,
   homeSourceClubId:badenClubKey(e.sourceCompetitionId,e.season,e.fixture.domaci),awaySourceClubId:badenClubKey(e.sourceCompetitionId,e.season,e.fixture.gostje),sourceUrl:e.fixture.url,
   rawSha256:e.sourceRawSha256,observedHomeScore:e.fixture.rezultat?.domaci??null,observedAwayScore:e.fixture.rezultat?.gostje??null,reasonCode:e.defect.kind,
-  resultKnown:e.resultKnown,retainedBundleSha256:e.retainedBundleSha256,defect:e.defect,documents:e.documents,observedFontIds:e.observedFontIds,missingObservedFonts:e.missingObservedFonts,administrativeResult:e.fixture.administrativeResult??null,approvalReference:e.approvalReference
+  ...(e.fixture.administrativeResult?.marker==='W'?{sourceTime:e.fixture.ura}:{}),resultKnown:e.resultKnown,retainedBundleSha256:e.retainedBundleSha256,defect:e.defect,documents:e.documents,observedFontIds:e.observedFontIds,missingObservedFonts:e.missingObservedFonts,administrativeResult:e.fixture.administrativeResult??null,approvalReference:e.approvalReference
  })))}
 }
 const compiled=JSON.parse(readFileSync(new URL('../policies/fussball-baden-native-composition.json',import.meta.url)))
