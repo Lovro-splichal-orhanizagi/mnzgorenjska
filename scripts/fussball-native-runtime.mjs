@@ -2,13 +2,14 @@
 // strict and unchanged; only this private prepared capability can omit a report.
 import {createHash} from 'node:crypto'
 import {isDeepStrictEqual as same} from 'node:util'
-import {readFileSync,writeFileSync,mkdirSync,lstatSync} from 'node:fs'
+import {readFileSync,writeFileSync,appendFileSync,mkdirSync,lstatSync} from 'node:fs'
 import {join} from 'node:path'
 import {reauthenticateFussballNativePreparation} from './prepare-fussball-native-history.mjs'
 import {getFussballNativeComposition,reauthenticateFussballNativeComposition,validateFussballNativeCatalog} from './fussball-native-composition.mjs'
 import {getFussballCompletedSourceV6} from './fussball-completed-source-v6.mjs'
 import {createFussballParserSession,assembleFussballSchedule,validateFussballFixture} from './fussball-season.mjs'
 import {createFussballCaptureClient} from './lib/fussball-capture.mjs'
+import {GERMANY_BULK_CANDIDATES} from './bulk-germany-source.mjs'
 import {normalizeFussballReport,parseFussballLeagueCode,fussballPlayerKey} from './fussball-import.mjs'
 import {validateFussballCardEnvelope} from './viri/fussball-card-envelope.mjs'
 import {BADEN_CURRENT,BADEN_ARCHIVE,BADEN_SLUG,BADEN_CARDS,badenCanonical,badenClubKey,compiledBadenHistoricalPolicy} from './lib/fussball-native-history-policy.mjs'
@@ -105,6 +106,13 @@ export function bindFussballHistoricalSchedule(context,competition,code,schedule
  return out
 }
 const nativeSchedule=season=>[...new Set(season.fixtures.map(f=>f.krog))].sort((a,b)=>a-b).map(stevilka=>({stevilka,tekme:season.fixtures.filter(f=>f.krog===stevilka).map(f=>({...structuredClone(f),izid:f.rezultat?[f.rezultat.domaci,f.rezultat.gostje]:null,odigrana:f.rezultat!==null,kontumacija:false}))}))
+function originalSeason(s,code){
+ const source=s.pack.seasons.find(x=>x.code===code),originals=s.originals??getFussballCompletedSourceV6(s.sourceProof).originals.stages
+ const stage=originals[source?.inventory.scope.stage],candidate=GERMANY_BULK_CANDIDATES.find(c=>c.slug===BADEN_SLUG)
+ const reviewed=code===candidate?.source_league_code?candidate:candidate?.archives.find(a=>a.code===code)
+ need(source&&stage&&reviewed&&stage.result.scope.staffel+':'+stage.result.scope.season===code&&stage.result.scope.seedUrl===reviewed.seedUrl&&stage.manifest.options.seedUrl===reviewed.seedUrl,'authenticated canonical seasonal seed required')
+ return stage
+}
 /** Native factory gate occurs AFTER registration/preparation, exactly once per
  * source instance. The source-only bulk profile cannot register itself. */
 export async function loadPreparedFussballNativePack({competition,context,preparation,composition,db}={}){
@@ -128,11 +136,12 @@ function pending(entry,f,season,identities){
  * first report GET, strict report parse, card envelope and individual derivation.
  * No injected parser or caller skip-ID list is accepted in production. */
 export async function collectFussballNativeRuntime({context,competition,code,client,asOfDate}={}){
- const s=await reauthenticateFussballNativeRuntimeContext(context,competition),scope=parseFussballLeagueCode(code)
+ await reauthenticateFussballNativeRuntimeContext(context,competition)
+ const s=privateContext(context,competition),scope=parseFussballLeagueCode(code)
  need(s.pack.seasons.some(x=>x.code===code)&&client&&typeof client.read==='function','bound source client/season required')
  need(/^20\d\d-\d\d-\d\d$/.test(asOfDate??''),'explicit as-of date required')
  const session=createFussballParserSession((url,kind)=>client.read(url,kind),{},{cardPolicy:'community-v1',season:scope.season})
- const seedUrl='https://www.fussball.de/spieltag/-/staffel/'+scope.staffel,pages=[]
+ const seedUrl=originalSeason(s,code).result.scope.seedUrl,pages=[]
  async function page(url){const document=await client.read(url,'round');need(document?.bytes&&Number.isFinite(Date.parse(document.capturedAt)),'source round receipt required');const {info,parsed}=await session.round(new TextDecoder('utf8',{fatal:true}).decode(document.bytes),{staffel:scope.staffel,url});need(typeof info.url==='string'&&new RegExp('^https://www\\.fussball\\.de/spieltag/(?:[a-z0-9]+(?:-[a-z0-9]+)*/)?-/(?:spieltag/[1-9]\\d{0,2}/)?staffel/'+scope.staffel+'$').test(info.url),'round canonical source identity differs');pages.push({url,parsed});return parsed}
  const seed=await page(seedUrl)
  need(Array.isArray(seed.krogi)&&seed.krogi.length>0&&seed.krogi.length<=80,'bounded full source selector required')
@@ -162,7 +171,8 @@ function seedState(s){
 /** Durable copies retain the original source clock and every byte, including
  * unavailable reports. A seed is evidence, never a replacement issuer. */
 export async function seedFussballNativeRuntime({context,competition,directory}={}){
- const s=await reauthenticateFussballNativeRuntimeContext(context,competition),{files,seal}=seedState(s)
+ await reauthenticateFussballNativeRuntimeContext(context,competition)
+ const s=privateContext(context,competition),{files,seal}=seedState(s)
  mkdirSync(directory);for(const [path,bytes]of files){const target=join(directory,path);mkdirSync(join(target,'..'),{recursive:true});writeFileSync(target,bytes,{flag:'wx'})}
  writeFileSync(join(directory,'native-history-seed.json'),JSON.stringify(seal)+'\n',{flag:'wx'})
  await loadFussballNativeRuntimeSeed({context,competition,directory});return {directory,seeded:true,captured_at:seal.captured_at,currentFreshUntil:seal.currentFreshUntil}
@@ -193,13 +203,17 @@ export async function loadFussballNativeRuntimeSeed({context,competition,directo
  return {context,competition:{...competition,firstFantasyPlayedOn:s.state.readback.firstFantasyPlayedOn,communityCardBinding:structuredClone(s.state.readback.cards),fussballHistoricalContext:context},seal:structuredClone(seal)}
 }
 const runtimeCode=()=>sha(readFileSync(new URL('./fussball-native-runtime.mjs',import.meta.url)))
+const documentReceipt=d=>Object.fromEntries(['url','kind','bytes','sha256','status','contentType','capturedAt'].map(k=>[k,d[k]]))
+function runtimeOriginal(d){
+ const r=d.originalReceipt,a=r?.attempt,c=r?.capture
+ need(r?.version===1&&same(r.document,documentReceipt(d))&&a?.status==='success'&&a.httpStatus===200&&a.error===null&&a.url===d.url&&a.kind===d.kind&&a.startedAt===d.capturedAt&&Number.isInteger(a.number)&&a.number>0&&c?.kind==='baden-marker-aware-runtime'&&c.codeSha256===runtimeCode()&&c.asOfDate===c.createdAt?.slice(0,10)&&Date.parse(c.createdAt)<=Date.parse(d.capturedAt)&&Date.parse(d.capturedAt)<=Date.parse(c.completedAt),'cached runtime original receipt differs')
+ return r
+}
 /** Separate marker-aware capture format. Never call the frozen collector with
  * fake fixtures/HTML or disguise this as its complete ordinary capture. */
 export async function captureFussballNativeRuntimeDirectory({context,competition,directory,seedDirectory,reuseDirectory,code=BADEN_CURRENT,maxRequests=4000,asOfDate=new Date().toISOString().slice(0,10),fetchFn}={}){
  await loadFussballNativeRuntimeSeed({context,competition,directory:seedDirectory})
- const s=privateContext(context,competition),originals=s.originals??getFussballCompletedSourceV6(s.sourceProof).originals.stages
- const stage=Object.values(originals).find(x=>x.result.scope.staffel+':'+x.result.scope.season===code)
- need(stage,'original cache scope missing')
+ const s=privateContext(context,competition),stage=originalSeason(s,code)
  const cached=new Map(stage.manifest.documents.filter(d=>d.kind!=='round').map(d=>[d.url,{...d,bytes:Buffer.from(stage.files.get(d.file))}]))
  if(reuseDirectory){
   await loadFussballNativeRuntimeCapture({context,competition,directory:reuseDirectory,code,requireFresh:false})
@@ -208,15 +222,20 @@ export async function captureFussballNativeRuntimeDirectory({context,competition
  }
  const cachedDocuments=[...cached.values()]
  mkdirSync(directory);mkdirSync(join(directory,'documents'))
- const documents=[],attempts=[],createdAt=new Date().toISOString(),save=d=>{
+ const documents=[],createdAt=new Date().toISOString(),save=(d,origin)=>{
   const bytes=Buffer.from(d.bytes);need(sha(bytes)===d.sha256&&!documents.some(x=>x.url===d.url),'source document digest/identity differs')
   const file='documents/'+d.sha256;writeFileSync(join(directory,file),bytes)
-  documents.push({...d,bytes:bytes.length,file})
+  documents.push({...d,bytes:bytes.length,file,origin})
  }
- const client=createFussballCaptureClient({maxRequests,...(fetchFn?{fetchFn}:{}),cachedDocuments,onAttempt:a=>attempts.push(a),onDocument:save,onCachedDocument:save})
+ need(asOfDate===createdAt.slice(0,10),'capture as-of calendar must equal original current execution day')
+ writeFileSync(join(directory,'attempts.jsonl'),'');writeFileSync(join(directory,'outcomes.jsonl'),'')
+ const client=createFussballCaptureClient({maxRequests,...(fetchFn?{fetchFn}:{}),cachedDocuments,onAttempt:a=>appendFileSync(join(directory,'attempts.jsonl'),JSON.stringify(a)+'\n'),onDocument:d=>save(d,'network'),onCachedDocument:d=>save(d,'cache')})
  const batch=await collectFussballNativeRuntime({context,competition,code,client,asOfDate}),body=JSON.stringify(batch)+'\n'
  writeFileSync(join(directory,'result.json'),body,{flag:'wx'})
- const manifest={version:1,kind:'baden-marker-aware-runtime',code,createdAt,completedAt:new Date().toISOString(),runtimeCodeSha256:runtimeCode(),preparation:s.state.receipt,resultSha256:sha(body),snapshot:client.snapshot(),attempts,documents,asOfDate}
+ const snapshot=client.snapshot(),completedAt=new Date().toISOString(),codeSha256=runtimeCode()
+ writeFileSync(join(directory,'outcomes.jsonl'),snapshot.attempts.map(a=>JSON.stringify(a)+'\n').join(''))
+ for(const d of documents.filter(d=>d.origin==='network')){const attempt=snapshot.attempts.find(a=>a.url===d.url&&a.kind===d.kind&&a.startedAt===d.capturedAt);need(attempt?.status==='success','network document has no completed successful outcome');d.originalReceipt={version:1,document:documentReceipt(d),attempt,capture:{kind:'baden-marker-aware-runtime',code,createdAt,completedAt,codeSha256,asOfDate}}}
+ const manifest={version:2,kind:'baden-marker-aware-runtime',code,createdAt,completedAt,runtimeCodeSha256:codeSha256,preparation:s.state.receipt,resultSha256:sha(body),snapshot,intentsSha256:sha(regular(directory,'attempts.jsonl')),outcomesSha256:sha(regular(directory,'outcomes.jsonl')),maxRequests,documents,asOfDate}
  writeFileSync(join(directory,'native-runtime.json'),JSON.stringify(manifest)+'\n',{flag:'wx'})
  // Preserve the authenticated originals+marker seal with every latest cache.
  await seedFussballNativeRuntime({context,competition,directory:join(directory,'seed')})
@@ -225,11 +244,35 @@ export async function captureFussballNativeRuntimeDirectory({context,competition
 export async function loadFussballNativeRuntimeCapture({context,competition,directory,code=BADEN_CURRENT,requireFresh=true}={}){
  await loadFussballNativeRuntimeSeed({context,competition,directory:join(directory,'seed')})
  const s=privateContext(context,competition),m=JSON.parse(regular(directory,'native-runtime.json')),now=Date.now()
- need(m.kind==='baden-marker-aware-runtime'&&m.version===1&&m.code===code&&same(m.preparation,s.state.receipt)&&m.runtimeCodeSha256===runtimeCode()&&Date.parse(m.createdAt)<=Date.parse(m.completedAt)&&Date.parse(m.completedAt)<=now&&(!requireFresh||now-Date.parse(m.createdAt)<=24*3600_000),'fresh marker-aware runtime provenance required')
- need(Array.isArray(m.documents)&&m.documents.length<=20000&&m.snapshot?.stopped===false&&Array.isArray(m.attempts)&&same(m.attempts,m.snapshot.attempts),'complete runtime source receipts required')
- const used=new Set(),docs=new Map()
- for(const d of m.documents){need(d.file==='documents/'+d.sha256&&!docs.has(d.url)&&d.status===200,'unique runtime document identity required');const bytes=regular(directory,d.file);need(bytes.length===d.bytes&&sha(bytes)===d.sha256,'runtime source original changed');docs.set(d.url,{...d,bytes})}
- const batch=await collectFussballNativeRuntime({context,competition,code,asOfDate:m.asOfDate,client:{async read(url,kind){const d=docs.get(url);need(d?.kind===kind,'runtime replay source original missing');used.add(url);return d}}})
- const bytes=regular(directory,'result.json');need(used.size===docs.size&&sha(bytes)===m.resultSha256&&same(JSON.parse(bytes),batch),'complete runtime replay differs')
+ need(m.kind==='baden-marker-aware-runtime'&&m.version===2&&m.code===code&&same(m.preparation,s.state.receipt)&&m.runtimeCodeSha256===runtimeCode()&&Date.parse(m.createdAt)<=Date.parse(m.completedAt)&&Date.parse(m.completedAt)<=now,'marker-aware runtime provenance required')
+ need(m.asOfDate===m.createdAt.slice(0,10),'runtime as-of calendar differs from original execution day')
+ const intentsBytes=regular(directory,'attempts.jsonl'),outcomesBytes=regular(directory,'outcomes.jsonl'),parseJournal=b=>b.toString().trim().split('\n').filter(Boolean).map(line=>JSON.parse(line))
+ need(sha(intentsBytes)===m.intentsSha256&&sha(outcomesBytes)===m.outcomesSha256,'runtime intent/outcome journal changed')
+ const intents=parseJournal(intentsBytes),outcomes=parseJournal(outcomesBytes),snapshot=m.snapshot
+ need(Array.isArray(m.documents)&&m.documents.length<=20000&&snapshot?.stopped===false&&snapshot.stopReason===null&&Number.isInteger(m.maxRequests)&&m.maxRequests>=1&&m.maxRequests<=4000&&Number.isInteger(snapshot.requests)&&snapshot.requests>0&&snapshot.requests<=m.maxRequests&&intents.length===snapshot.requests&&outcomes.length===snapshot.requests&&same(outcomes,snapshot.attempts),'complete runtime intent/outcome accounting required')
+ const network=m.documents.filter(d=>d.origin==='network'),cached=m.documents.filter(d=>d.origin==='cache'),docs=new Map(),originals=originalSeason(privateContext(context,competition),code).manifest.documents
+ need(network.length===outcomes.length&&network.length+cached.length===m.documents.length,'complete runtime network/cache accounting required')
+ for(const [i,a]of outcomes.entries()){
+  const p=intents[i],d=network[i]
+  need(same(Object.keys(p).sort(),['error','kind','number','startedAt','status','url'])&&same(Object.keys(a).sort(),['error','httpStatus','kind','number','startedAt','status','url'])&&p.number===i+1&&p.number===a.number&&p.url===a.url&&p.kind===a.kind&&p.status==='pending'&&p.startedAt===null&&p.error===null&&a.status==='success'&&a.httpStatus===200&&a.error===null&&a.url===d.url&&a.kind===d.kind&&a.startedAt===d.capturedAt&&Date.parse(m.createdAt)<=Date.parse(a.startedAt)&&Date.parse(a.startedAt)<=Date.parse(m.completedAt)&&(i===0||Date.parse(a.startedAt)-Date.parse(outcomes[i-1].startedAt)>=6000),'runtime pending intent/successful outcome/document interval differs')
+  need(same(runtimeOriginal(d).capture,{kind:'baden-marker-aware-runtime',code,createdAt:m.createdAt,completedAt:m.completedAt,codeSha256:m.runtimeCodeSha256,asOfDate:m.asOfDate})&&same(d.originalReceipt.attempt,a),'network original receipt differs from execution interval')
+ }
+ const rounds=network.filter(d=>d.kind==='round')
+ need(rounds.length>0&&rounds.every(d=>d.capturedAt.slice(0,10)===m.asOfDate&&(!requireFresh||now-Date.parse(d.capturedAt)<=24*3600_000)),'fresh original round network receipts required')
+ for(const d of m.documents){
+  need(d.file==='documents/'+d.sha256&&!docs.has(d.url)&&d.status===200,'unique runtime document identity required')
+  if(d.origin==='cache'){
+   need(d.kind!=='round'&&Date.parse(d.capturedAt)<=Date.parse(m.createdAt),'cached rounds or future originals refused')
+   const source=originals.find(o=>o.url===d.url&&same(documentReceipt(o),documentReceipt(d))&&same(o.originalReceipt,d.originalReceipt))
+   if(!source){const r=runtimeOriginal(d);need(r.capture.code===code&&Date.parse(r.capture.completedAt)<=Date.parse(m.createdAt),'cached original execution provenance differs')}
+  }
+  const bytes=regular(directory,d.file);need(bytes.length===d.bytes&&sha(bytes)===d.sha256,'runtime source original changed');docs.set(d.url,{...d,bytes})
+ }
+ // Reuse the real client offline: exact routes, MIME, body limits, challenge
+ // checks, cache refusal for rounds and the original successful request clock.
+ let clock=Date.parse(outcomes[0].startedAt),next=0
+ const usedNetwork=new Set(),usedCached=new Set(),replay=createFussballCaptureClient({maxRequests:m.maxRequests,cachedDocuments:cached.map(d=>docs.get(d.url)),now:()=>clock,sleep:async ms=>{clock+=ms},onAttempt:p=>{need(same(p,intents[next]),'replayed intent differs');clock=Date.parse(outcomes[next++].startedAt)},onCachedDocument:d=>usedCached.add(d.url),onDocument:d=>{need(same(documentReceipt({...d,bytes:d.bytes.length}),documentReceipt({...docs.get(d.url),bytes:docs.get(d.url).bytes.length})),'replayed network receipt differs');usedNetwork.add(d.url)},fetchFn:async url=>{const d=docs.get(url);need(d?.origin==='network','runtime replay network original missing');return new Response(d.bytes,{status:d.status,headers:{'content-type':d.contentType}})}})
+ const batch=await collectFussballNativeRuntime({context,competition,code,asOfDate:m.asOfDate,client:replay})
+ const bytes=regular(directory,'result.json');need(same(replay.snapshot(),snapshot)&&usedNetwork.size===network.length&&usedCached.size===cached.length&&sha(bytes)===m.resultSha256&&same(JSON.parse(bytes),batch),'complete runtime replay differs')
  return {...batch,provenance:{createdAt:m.createdAt,completedAt:m.completedAt,resultSha256:m.resultSha256,codeSha256:m.runtimeCodeSha256,requests:m.snapshot.requests,originalCurrentCreatedAt:s.pack.captured_at}}
 }

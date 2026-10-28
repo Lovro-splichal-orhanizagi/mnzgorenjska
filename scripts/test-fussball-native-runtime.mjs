@@ -14,13 +14,16 @@ import {createFussballCaptureClient} from './lib/fussball-capture.mjs'
 import {validateFussballCardEnvelope} from './viri/fussball-card-envelope.mjs'
 import * as bulkProof from './bulk-native-proof.mjs'
 import {reserveFussballIdentities,reviewedFussballCommunityCompetition,assertFussballCommunityScope} from './viri/fussball-public.mjs'
+import {GERMANY_BULK_CANDIDATES} from './bulk-germany-source.mjs'
 const runtimePath=new URL('./fussball-native-runtime.mjs',import.meta.url)
 const competition={id:77001,country_id:66,country_code:'DE',slug:policy.BADEN_SLUG,source:'fussball-public',source_league_code:policy.BADEN_CURRENT,source_policy:policy.BADEN_CARDS,date_only_deadline_policy:null,active:false}
 // TEST ONLY isolated module evaluation. Synthetic round pages and native IDs
 // never mint a production capability. Reports still use retained original bytes
 // and the real strict parser/normalizer. No genuine full archive claim.
 function fixture(t){
- const f=partitionFixture();for(const stage of Object.values(f.state.originals.stages)){stage.manifest.options={...stage.manifest.options,staffel:stage.result.scope.staffel,season:stage.result.scope.season};stage.files.set('manifest.json',json(stage.manifest))}
+ const f=partitionFixture(),candidate=GERMANY_BULK_CANDIDATES.find(c=>c.slug===policy.BADEN_SLUG)
+ for(const stage of Object.values(f.state.originals.stages)){const scope=stage.result.scope,seedUrl=scope.season==='2026/27'?candidate.seedUrl:candidate.archives[0].seedUrl;scope.seedUrl=seedUrl;stage.manifest.options={...stage.manifest.options,staffel:scope.staffel,season:scope.season,seedUrl}}
+ f.repin();for(const stage of Object.values(f.state.originals.stages))stage.files.set('manifest.json',json(stage.manifest))
  const composition=isolatedComposition(f),pack=composition.buildFussballNativeComposition(f.proof),compiledPolicy=policy.projectBadenHistoricalPolicy(f.catalog),token=Object.freeze({TEST_ONLY:true}),controls={},calls=[]
  const fixtures=pack.seasons.flatMap(s=>s.fixtures.map(x=>({sourceCompetitionId:s.code,season:s.season,sourceMatchId:x.id,reportId:x.zapisnikId,sourceUrl:x.url,round:x.krog,date:x.datum,time:x.ura,homeName:x.domaci,awayName:x.gostje,homeSourceClubId:policy.badenClubKey(s.code,s.season,x.domaci),awaySourceClubId:policy.badenClubKey(s.code,s.season,x.gostje),score:x.rezultat,administrativeResult:x.administrativeResult??null,unavailable:s.unavailable.some(e=>e.sourceMatchId===x.id)})))
  const manifest={version:1,slug:policy.BADEN_SLUG,currentCode:policy.BADEN_CURRENT,archiveCode:policy.BADEN_ARCHIVE,policy:compiledPolicy,derivedPackSha256:pack.derivedPackSha256,sourceCertificateSha256:pack.sourceCertificateSha256,firstFantasyPlayedOn:pack.firstFantasyPlayedOn,fixtures}
@@ -40,14 +43,72 @@ function fixture(t){
   }}
  }
  const localRead=(url,...args)=>url instanceof URL&&url.href.endsWith('/policies/fussball-baden-native-composition.json')?json(f.catalog):fs.readFileSync(url,...args)
- const code=fs.readFileSync(runtimePath,'utf8').replace(/^import .*\n/gm,'').replaceAll('import.meta.url',JSON.stringify(runtimePath.href)).replace(/\bexport /g,'')+'\nreturn {isBadenNativeCompetition,loadFussballNativeImportContext,getFussballNativeRuntimeContext,reauthenticateFussballNativeRuntimeContext,bindFussballHistoricalSchedule,loadPreparedFussballNativePack,collectFussballNativeRuntime,seedFussballNativeRuntime,loadFussballNativeRuntimeSeed,loadFussballNativeRuntimeCapture};'
- const deps={createHash,same,readFileSync:localRead,writeFileSync:fs.writeFileSync,mkdirSync:fs.mkdirSync,lstatSync:fs.lstatSync,join,getFussballNativePreparation:()=>{throw Error('TEST ONLY cold receipt forbidden after imports')},reauthenticateFussballNativePreparation:async()=>{throw Error('TEST ONLY private cold receipt required')},getFussballNativeComposition:get,reauthenticateFussballNativeComposition:reauth,validateFussballNativeCatalog:composition.validateFussballNativeCatalog,getFussballCompletedSourceV6:p=>{assert.equal(p,f.proof);return f.state},createFussballParserSession:session,assembleFussballSchedule:seasonApi.assembleFussballSchedule,validateFussballFixture:seasonApi.validateFussballFixture,createFussballCaptureClient,...nativeImport,validateFussballCardEnvelope,...policy,compiledBadenHistoricalPolicy:()=>compiledPolicy}
+ const code=fs.readFileSync(runtimePath,'utf8').replace(/^import .*\n/gm,'').replaceAll('import.meta.url',JSON.stringify(runtimePath.href)).replace(/\bexport /g,'')+'\nreturn {isBadenNativeCompetition,loadFussballNativeImportContext,getFussballNativeRuntimeContext,reauthenticateFussballNativeRuntimeContext,bindFussballHistoricalSchedule,loadPreparedFussballNativePack,collectFussballNativeRuntime,seedFussballNativeRuntime,loadFussballNativeRuntimeSeed,captureFussballNativeRuntimeDirectory,loadFussballNativeRuntimeCapture};'
+ // TEST ONLY advancing clock removes waits while retaining the REAL capture
+ // client's pending callback, pacing, network receipts, cache and outcomes.
+ const TestDate=class extends Date{constructor(...args){super(...(args.length?args:[controls.clock??Date.now()]))}static now(){return controls.clock??Date.now()}}
+ const deps={Date:TestDate,createHash,same,readFileSync:localRead,writeFileSync:fs.writeFileSync,appendFileSync:fs.appendFileSync,mkdirSync:fs.mkdirSync,lstatSync:fs.lstatSync,join,GERMANY_BULK_CANDIDATES,getFussballNativePreparation:()=>{throw Error('TEST ONLY cold receipt forbidden after imports')},reauthenticateFussballNativePreparation:async()=>{throw Error('TEST ONLY private cold receipt required')},getFussballNativeComposition:get,reauthenticateFussballNativeComposition:reauth,validateFussballNativeCatalog:composition.validateFussballNativeCatalog,getFussballCompletedSourceV6:p=>{assert.equal(p,f.proof);return f.state},createFussballParserSession:session,assembleFussballSchedule:seasonApi.assembleFussballSchedule,validateFussballFixture:seasonApi.validateFussballFixture,createFussballCaptureClient:opts=>createFussballCaptureClient({...opts,now:opts.now??(()=>TestDate.now()),sleep:opts.sleep??(async ms=>{controls.clock=TestDate.now()+ms})}),...nativeImport,validateFussballCardEnvelope,...policy,compiledBadenHistoricalPolicy:()=>compiledPolicy}
  const api=new Function(...Object.keys(deps),code)(...Object.values(deps))
  const directory=fs.mkdtempSync(join(tmpdir(),'baden-runtime-TEST-ONLY-'));t.after(()=>fs.rmSync(directory,{recursive:true,force:true}))
  async function context(){return (await api.loadFussballNativeImportContext({competition,composition:token,db})).installedHistoricalMarkers}
  function client(code){const source=pack.seasons.find(s=>s.code===code),stage=f.state.originals.stages[source.inventory.scope.stage],requests=[];return {requests,async read(url,kind){requests.push({url,kind});if(kind==='round')return {bytes:Buffer.from('TEST ONLY synthetic full schedule'),capturedAt:new Date().toISOString()};const d=stage.manifest.documents.find(d=>d.url===url);assert.ok(d,'TEST ONLY original source missing: '+url);return {...d,bytes:stage.files.get(d.file)}}}}
  return {api,f,pack,observed,controls,calls,db,token,context,client,directory}
 }
+test('TEST ONLY real capture client writes and immediately reloads successful runtime; both canonical seeds are bound',async t=>{
+ const f=fixture(t),context=await f.context(),seed=join(f.directory,'seed');f.controls.clock=Date.now()
+ await f.api.seedFussballNativeRuntime({context,competition,directory:seed})
+ for(const source of f.pack.seasons){
+  const requests=[],directory=join(f.directory,source.inventory.scope.stage),stage=f.f.state.originals.stages[source.inventory.scope.stage]
+  const batch=await f.api.captureFussballNativeRuntimeDirectory({context,competition,code:source.code,directory,seedDirectory:seed,fetchFn:async url=>{requests.push(url);return new Response('TEST ONLY synthetic full schedule',{status:200,headers:{'content-type':'text/html'}})}})
+  assert.equal(requests[0],stage.result.scope.seedUrl)
+  assert.deepEqual(await f.api.loadFussballNativeRuntimeCapture({context,competition,code:source.code,directory}),batch)
+  const manifest=JSON.parse(fs.readFileSync(join(directory,'native-runtime.json')))
+  assert.equal(manifest.snapshot.attempts[0].status,'success')
+  assert.equal(JSON.parse(fs.readFileSync(join(directory,'attempts.jsonl'),'utf8').trim().split('\n')[0]).status,'pending')
+  assert.ok(!requests.some(url=>f.observed.history.markers.some(m=>url.includes(m.sourceMatchId))))
+ }
+})
+test('TEST ONLY canonical season seed comes from sealed originals rather than the redirecting alias',async t=>{
+ const f=fixture(t),context=await f.context()
+ for(const source of f.pack.seasons){const client=f.client(source.code);await f.api.collectFussballNativeRuntime({context,competition,code:source.code,client,asOfDate:'2026-10-28'});assert.equal(client.requests[0].url,f.f.state.originals.stages[source.inventory.scope.stage].result.scope.seedUrl)}
+})
+test('TEST ONLY relabeled manifest clocks cannot refresh old round receipts',async t=>{
+ const f=fixture(t),initial=await f.context(),seed=join(f.directory,'seed'),directory=join(f.directory,'runtime');f.controls.clock=Date.now()
+ await f.api.seedFussballNativeRuntime({context:initial,competition,directory:seed});f.observed.active=true
+ const {context}=await f.api.loadFussballNativeRuntimeSeed({competition,db:f.db,directory:seed})
+ await f.api.captureFussballNativeRuntimeDirectory({context:initial,competition,directory,seedDirectory:seed,fetchFn:async()=>new Response('TEST ONLY synthetic full schedule',{status:200,headers:{'content-type':'text/html'}})})
+ const path=join(directory,'native-runtime.json'),manifest=JSON.parse(fs.readFileSync(path))
+ await f.api.loadFussballNativeRuntimeCapture({context,competition,directory})
+ f.controls.clock+=2*24*3600_000;manifest.createdAt=new Date(f.controls.clock).toISOString();manifest.completedAt=manifest.createdAt
+ fs.writeFileSync(path,JSON.stringify(manifest))
+ await assert.rejects(f.api.loadFussballNativeRuntimeCapture({context,competition,directory}),/round|receipt|calendar|as.of|interval/i)
+ manifest.asOfDate=manifest.createdAt.slice(0,10);fs.writeFileSync(path,JSON.stringify(manifest))
+ await assert.rejects(f.api.loadFussballNativeRuntimeCapture({context,competition,directory}),/receipt|interval/i)
+})
+test('TEST ONLY real-client replay refuses missing/empty/altered journals and cached rounds; retained non-round dates survive reuse',async t=>{
+ const f=fixture(t),initial=await f.context(),seed=join(f.directory,'seed'),directory=join(f.directory,'runtime');f.controls.clock=Date.now()
+ await f.api.seedFussballNativeRuntime({context:initial,competition,directory:seed});f.observed.active=true
+ const {context}=await f.api.loadFussballNativeRuntimeSeed({competition,db:f.db,directory:seed}),fetchFn=async()=>new Response('TEST ONLY synthetic full schedule',{status:200,headers:{'content-type':'text/html'}})
+ await f.api.captureFussballNativeRuntimeDirectory({context,competition,directory,seedDirectory:seed,fetchFn})
+ const path=join(directory,'native-runtime.json'),original=JSON.parse(fs.readFileSync(path)),intentsPath=join(directory,'attempts.jsonl'),outcomesPath=join(directory,'outcomes.jsonl'),intents=fs.readFileSync(intentsPath),outcomes=fs.readFileSync(outcomesPath)
+ fs.unlinkSync(intentsPath);await assert.rejects(f.api.loadFussballNativeRuntimeCapture({context,competition,directory}),/ENOENT/);fs.writeFileSync(intentsPath,intents)
+ for(const mutate of [
+  (m)=>{fs.writeFileSync(intentsPath,'');fs.writeFileSync(outcomesPath,'');m.intentsSha256=hash(Buffer.alloc(0));m.outcomesSha256=m.intentsSha256;m.snapshot.attempts=[];m.snapshot.requests=0},
+  (m)=>{const list=intents.toString().trim().split('\n').map(JSON.parse);list[0].url+='-tamper';const bytes=jsonLines(list);fs.writeFileSync(intentsPath,bytes);m.intentsSha256=hash(bytes)},
+  (m)=>{m.documents.find(d=>d.origin==='cache').kind='round'},
+  (m)=>{const d=m.documents.find(d=>d.origin==='cache');d.capturedAt=m.createdAt},
+  (m)=>{const list=outcomes.toString().trim().split('\n').map(JSON.parse);list[0].startedAt=new Date(Date.parse(list[0].startedAt)+1).toISOString();const bytes=jsonLines(list);fs.writeFileSync(outcomesPath,bytes);m.outcomesSha256=hash(bytes);m.snapshot.attempts=list},
+ ]){
+  const m=structuredClone(original);mutate(m);fs.writeFileSync(path,JSON.stringify(m))
+  await assert.rejects(f.api.loadFussballNativeRuntimeCapture({context,competition,directory}),/accounting|intent|outcome|cached round|receipt|interval/i)
+  fs.writeFileSync(path,JSON.stringify(original));fs.writeFileSync(intentsPath,intents);fs.writeFileSync(outcomesPath,outcomes)
+ }
+ f.controls.clock+=6000;const reused=join(f.directory,'reused')
+ await f.api.captureFussballNativeRuntimeDirectory({context,competition,directory:reused,seedDirectory:join(directory,'seed'),reuseDirectory:directory,fetchFn})
+ const later=JSON.parse(fs.readFileSync(join(reused,'native-runtime.json')))
+ for(const d of later.documents.filter(d=>d.origin==='cache')){const previous=original.documents.find(p=>p.url===d.url);assert.equal(d.capturedAt,previous.capturedAt);assert.deepEqual(d.originalReceipt,previous.originalReceipt)}
+ function jsonLines(values){return Buffer.from(values.map(v=>JSON.stringify(v)+'\n').join(''))}
+})
 test('production cannot recreate runtime authority from copied context/preparation or unfinalized catalog',async()=>{
  const api=await import('./fussball-native-runtime.mjs');let reads=0
  for(const p of [{},{nativeImportEligible:true}]){
