@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {createHash} from 'node:crypto'
 import {preslikavaPisave,dekodirajIme} from './viri/fussball-pisava.mjs'
+import {razberiNativeFantasyZapisnik,replayFussballNativeRoleEnvelope} from './viri/fussball-native-role-parser.mjs'
 import {razberiFantasyZapisnik} from './viri/fussball-statistika.mjs'
 import {replayFussballCardEnvelope} from './viri/fussball-card-envelope.mjs'
 import {fussballPlayerKey} from './fussball-import.mjs'
@@ -85,4 +86,16 @@ test('complete yellow envelopes compare baseline and committed partial attributi
  assert.equal(verifyBulkNative(rebind(f)).pending_reports,1)
  const carded=f.snapshot.matches[0].appearance_rows.find(a=>a.player_id===f.snapshot.players.find(p=>p.reg_st===e.roster.find(p=>p.sourceId===resolutions[yellow.eventKey]).regSt).id);carded.yellow_cards=0
  assert.throws(()=>verifyBulkNative(rebind(f)),/yellow_cards/)
+})
+
+test('native bulk proof accepts extended original envelope pending and committed replay while rejecting changed extension/raw',()=>{
+ const f=fixture(),s=f.pack.seasons[0],old=s.cardEnvelopes[0],changed=lineup.replace('<div class="captain"><span class="c">T</span></div>','<div class="captain"><span class="c">C</span></div><div class="goal-keeper"><span class="k">T</span></div>')
+ const e=razberiNativeFantasyZapisnik(main,changed,{fonts,id:old.matchId,lineupId:old.matchId,season:old.season,cardPolicy:'community-v1'}).cardEnvelope
+ s.cardEnvelopes=[e];s.pendingReports[0].cardEnvelope=e
+ const registration=f.snapshot.fussball_cards.registered_reports[0];registration.revision_sha256=e.revisionSha256;f.snapshot.fussball_cards.pending_reports[0].revision_sha256=e.revisionSha256
+ assert.equal(verifyBulkNative(rebind(f)).pending_reports,2)
+ for(const mutate of [v=>{v.nativeRoleParser.protocol='other'},v=>{v.bundle.lineup.base64=Buffer.from('changed').toString('base64')}]){const bad=structuredClone(f);mutate(bad.pack.seasons[0].pendingReports[0].cardEnvelope);assert.throws(()=>verifyBulkNative(rebind(bad)),e=>e.dataHold===true)}
+ const red=e.cards.find(c=>c.type==='second_yellow'),yellow=e.cards.find(c=>c.type==='yellow'&&c.side===red.side&&c.ordinal<red.ordinal),p=e.roster.find(p=>p.side===red.side&&!p.goalkeeper&&!p.starter&&!main.includes(p.sourceId.split('-').at(-1))),resolutions={[red.eventKey]:p.sourceId,[yellow.eventKey]:p.sourceId},report=replayFussballNativeRoleEnvelope(e,resolutions)
+ storeNative(f,0,report);Object.assign(registration,{status:'applied',resolutions,confirmed_resolutions:resolutions,applied_at:now.toISOString(),applied_resolution_sha256:'e'.repeat(64)});f.snapshot.fussball_cards.pending_reports.shift()
+ assert.equal(verifyBulkNative(rebind(f)).pending_reports,1)
 })

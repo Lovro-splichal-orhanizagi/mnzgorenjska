@@ -178,3 +178,15 @@ test('Baden archive-only insertion inactive; archive cannot move current members
  const historical=await run(false,old);assert.ok(historical.writes.every(w=>w.update?.team_id===undefined&&w.update?.position===undefined&&w.update?.active===undefined))
  const current=await run(true,old);assert.ok(current.writes.some(w=>w.update?.team_id===2&&w.update.active===true&&w.update.position==='GK'))
 })
+
+test('TEST ONLY fixed native runtime parses original captain keeper role bytes and refuses duplicate live roles',async t=>{
+ const f=fixture(t),context=await f.context(),code=policy.BADEN_CURRENT
+ const single='<div class="captain"><span class="c">T</span></div>',role='<div class="captain"><span class="c">C</span></div><div class="goal-keeper"><span class="k">T</span></div>'
+ let duplicate=false
+ const base=f.client(code),pending=f.pack.seasons.find(s=>s.code===code).pendingReports[0],lineupId=JSON.parse(fs.readFileSync(new URL('./vzorci/de-fussball-community/provenance.json',import.meta.url))).matchId
+ const client={async read(url,kind){const d=await base.read(url,kind);if(kind!=='lineup'||!url.includes(lineupId))return d;assert.ok(d.bytes.toString().includes(single));return {...d,bytes:Buffer.from(d.bytes.toString().replace(single,duplicate?role+role:role))}}}
+ const batch=await f.api.collectFussballNativeRuntime({context,competition,code,client,asOfDate:'2026-10-28'}),e=batch.cardEnvelopes.find(e=>e.reportId===pending.id)
+ assert.equal(e.nativeRoleParser.protocol,'fussball-native-captain-keeper-v1');assert.ok(Buffer.from(e.bundle.lineup.base64,'base64').toString().includes(role));assert.equal(batch.pendingReports.find(r=>r.id===pending.id).statisticsPending,true)
+ assert.throws(()=>validateFussballCardEnvelope(e));duplicate=true
+ await assert.rejects(f.api.collectFussballNativeRuntime({context,competition,code,client,asOfDate:'2026-10-28'}),/duplicate|vratar|goalkeeper/)
+})

@@ -1,5 +1,5 @@
 // Retained-source card correction only: no football fetch or inferred identities.
-import {validateFussballCardEnvelope,replayFussballCardEnvelope} from './viri/fussball-card-envelope.mjs'
+import {validateFussballNativeRoleEnvelope as validateFussballCardEnvelope,replayFussballNativeRoleEnvelope as replayFussballCardEnvelope} from './viri/fussball-native-role-parser.mjs'
 import {parseFussballLeagueCode} from './fussball-import.mjs'
 const requireProof=(ok,message)=>{if(!ok)throw Error('FUSSBALL card runtime: '+message)}
 const id=n=>Number.isSafeInteger(n)&&n>0
