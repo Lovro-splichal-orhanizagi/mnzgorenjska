@@ -47,12 +47,15 @@ async function readiness({a,github,root}){
 }
 async function history(github,parentProof){
  const parent=getFcfG1RemainderParent(parentProof),accounted=new Set(parent.sourceReferences.accountedRunIds),all=[]
- // The fixed83 anchor authenticates all older history; new runs after that
- // anchor must be known counted links, this actual own run, or conclusive zero.
+ // The fixed83 anchor proves only its authenticated run IDs, never an age
+ // cutoff. Every other run/attempt must obtain an actual zero witness or HOLD.
  for(const w of ['uvoz-fcf-zgodovina.yml','fcf-javni-dokazi.yml'])for(const r of await pages(github,`actions/workflows/${w}/runs?`,'workflow_runs')){
-  if(accounted.has(String(r.id))||BigInt(r.id)<40737060608n)continue
-  const b=await bundle(github,String(r.id));all.push({...r,jobs:b.jobs})
+  if(accounted.has(String(r.id)))continue
+  const run=await github(repo+`actions/runs/${r.id}`)
+  if(!nativeId(String(r.id))||String(run?.id)!==String(r.id)||run.repository?.full_name!==repository||run.path!==`.github/workflows/${w}`||!commitId(run.head_sha)||!Number.isSafeInteger(run.run_attempt)||run.run_attempt<1||run.run_attempt>100)fail('actual FCF history run/attempt unknown; held')
+  for(let attempt=1;attempt<=run.run_attempt;attempt++){const jobs=await pages(github,`actions/runs/${run.id}/attempts/${attempt}/jobs?`,'jobs');all.push({...run,observedAttempt:attempt,jobs})}
  }
+
  return all
 }
 export async function runFcfG1RemainderActions({argv,env=process.env,root=process.cwd(),github,sourceFetch=fetch,pause,clock}){

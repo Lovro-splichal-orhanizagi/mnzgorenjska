@@ -14,6 +14,7 @@ import {historicalStatisticsPolicySha256 as hash} from './lib/historical-statist
 import {waitForFcfInventorySourceSlot} from './fcf-inventory-source-coordination.mjs'
 import {getFcfFutureCapturedTargetData} from './fcf-future-source-admission.mjs'
 import {auditFcfG1QuarantineDocuments} from './fcf-g1-quarantine-audit.mjs'
+const notFound=id=>Buffer.from('<title>Acta no trobada | FCF</title><script>self.__next_f.push([1,'+JSON.stringify('0:'+JSON.stringify({c:['','ca','competicio','acta',id],body:['$','div',null,{children:[['$','h1',null,{children:'Acta no trobada'}],['$','$L20',null,{href:'/ca/competicio',children:'Tornar a competició'}]]}]})+'\n')+'])</script>')
 const sha=b=>createHash('sha256').update(b).digest('hex'),repository='Lovro-splichal-orhanizagi/mnzgorenjska',workflow='.github/workflows/uvoz-fcf-zgodovina.yml',commit='b'.repeat(40),actor={login:'nejcar20',id:25134229}
 let parentPromise,parentSeedInput
 async function parent(){return parentPromise??=(async()=>{
@@ -32,7 +33,7 @@ async function fixture(t,{appendProofs=[]}={}){
  t.after(()=>rmSync(root,{recursive:true,force:true}));let time=Date.now(),calls=[]
  const f={parentProof,plan,execution,claimWire,claimProof,consumptionProof,runningWire,runningProof,root,clock:()=>time,pause:async ms=>{time+=ms},calls,advance:ms=>{time+=ms}}
  f.sourceSlotProof=await waitForFcfInventorySourceSlot({execution:{...execution,startedUTC:new Date().toISOString()},listRuns:async()=>({total_count:0,workflow_runs:[]}),listJobs:async()=>({total_count:0,jobs:[]})})
- f.request=async(url,init)=>{calls.push({url,init});time+=5;const id=url.split('/').at(-1),bytes=id==='4109412'?Buffer.from('<title>Acta no trobada | FCF</title>'):headerBytes({id,status:id==='4109413'?'Acta Tancada':'Pendent'});return new Response(bytes)};return f
+ f.request=async(url,init)=>{calls.push({url,init});time+=5;const id=url.split('/').at(-1),bytes=id==='4109412'?notFound(id):headerBytes({id,status:id==='4109413'?'Acta Tancada':'Pendent'});return new Response(bytes)};return f
 }
 function rawBundle(f,result){const directory=result.outputDirectory,entries=readdirSync(directory).map(name=>({name,body:readFileSync(join(directory,name))}));return bundle({entries,jobName:'missing-inventory-g1',jobId:'555',name:`fcf-missing-inventory-${result.status==='failed'?'diagnostic-':''}es-ct-segona-g1-${f.execution.runId}-1`,runId:f.execution.runId,diagnostic:result.status==='failed'})}
 const genuine={skip:!process.env.FCF_G1_REMAINDER_EVIDENCE_DIR}
@@ -54,7 +55,8 @@ test('clock and unbranded claims hold before source, unaccounted extra executed 
  const sourceJob={name:'missing-inventory-g1',status:'completed',conclusion:'skipped',steps:[]},g9Job={...sourceJob,name:'missing-inventory-g9'},other={id:90000000099,jobs:[sourceJob,g9Job,{name:'unknown-source-job',status:'completed',conclusion:'success',steps:[]}]};assert.throws(()=>api.readFcfG1RemainderRunningExecution({...f.runningWire,history:[other]}),/unknown|unaccounted/)
  other.jobs=[sourceJob,g9Job,{name:'missing-inventory-approval',status:'completed',conclusion:'failure',steps:[{name:'unknown-source-step',conclusion:'success'}]}];assert.throws(()=>api.readFcfG1RemainderRunningExecution({...f.runningWire,history:[other]}),/unknown/)
  assert.throws(()=>api.readFcfG1RemainderRunningExecution({...f.runningWire,jobs:[...f.runningWire.jobs,{name:'target-import',status:'in_progress',conclusion:null,steps:[]}]}),/own source/)
- const preflight={id:90000000098,jobs:[sourceJob,g9Job,{name:'missing-inventory-approval',status:'completed',conclusion:'failure',steps:[{name:'Checkout immutable failed G1 verifier',status:'completed',conclusion:'success'},{name:'Stage reviewed FCF inventory approval',status:'completed',conclusion:'failure'}]}]};assert.ok(api.readFcfG1RemainderRunningExecution({...f.runningWire,history:[preflight]}))
+ assert.throws(()=>api.readFcfG1RemainderRunningExecution({...f.runningWire,history:[{...f.runningWire.run,observedAttempt:2,run_attempt:2,jobs:f.runningWire.jobs}]}),/own execution/);
+ const preflight={...f.runningWire.run,id:90000000098,status:'completed',conclusion:'failure',observedAttempt:1,jobs:['cache-export','missing-inventory-seed','missing-inventory-approval','missing-inventory-consume','missing-inventory-g1','missing-inventory-g9','missing-inventory-receipt','target-approval','cleanup-originals','target-mapping','cleanup-prepare','cleanup-apply','target-import','target-price','target-check','target-activate','target-recover','future-target-approval','missing-inventory'].map((name,i)=>({id:100+i,run_id:90000000098,run_attempt:1,head_sha:commit,name,status:'completed',conclusion:name==='missing-inventory-approval'?'failure':'skipped',steps:name==='missing-inventory-approval'?[{name:'Checkout immutable failed G1 verifier',status:'completed',conclusion:'success'},{name:'Stage reviewed FCF inventory approval',status:'completed',conclusion:'failure'}]:[]}))};assert.ok(api.readFcfG1RemainderRunningExecution({...f.runningWire,history:[preflight]}))
  await assert.rejects(api.collectFcfG1Remainder({...f,consumptionProof:{}}));assert.equal(f.calls.length,0)
 })
 test('terminal partial links append exact spent counts and retained prefix without a new protocol or refund',genuine,async t=>{

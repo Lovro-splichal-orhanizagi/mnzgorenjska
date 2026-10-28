@@ -20,10 +20,14 @@ const dataErrors=new Set([
  'FCF_SOURCE_PROOF: continuous exactly one explicit goalkeeper per side over minutes0–90 required',
  'FCF_SOURCE_PROOF: new result is not a completed reviewed prelaunch round',
 ])
+function canonicalSourceRoute(html,id){
+ const roots=drevoRsc(html),rows=vrsticeRsc(tokRsc(html)),routes=[],stack=[...rows.values()]
+ while(stack.length){const x=stack.pop();if(!x||typeof x!=='object')continue;if(!Array.isArray(x)&&Array.isArray(x.c)&&x.c[1]==='ca'&&x.c[2]==='competicio'&&x.c[3]==='acta')routes.push(JSON.stringify(x.c));stack.push(...Object.values(x).filter(v=>v&&typeof v==='object'))}
+ const expected=JSON.stringify(['','ca','competicio','acta',id]);if(JSON.stringify(rows.get('0')?.c)!==expected||routes.length!==1||routes[0]!==expected)fail('conflicting source route held')
+ return roots
+}
 function closedNullHeader(html,id,h){
- const roots=drevoRsc(html),rows=vrsticeRsc(tokRsc(html)),routes=new Set(),stack=[...rows.values()]
- while(stack.length){const x=stack.pop();if(!x||typeof x!=='object')continue;if(!Array.isArray(x)&&Array.isArray(x.c)&&x.c[1]==='ca'&&x.c[2]==='competicio'&&x.c[3]==='acta')routes.add(JSON.stringify(x.c));stack.push(...Object.values(x).filter(v=>v&&typeof v==='object'))}
- const expected=JSON.stringify(['','ca','competicio','acta',id]);if(JSON.stringify(rows.get('0')?.c)!==expected||routes.size!==1||!routes.has(expected))fail('conflicting source route held')
+ const roots=canonicalSourceRoute(html,id)
  const wrappers=[...elementi(roots)].filter(e=>e.props?.title==='Acta del partit');if(wrappers.length!==1)fail('ambiguous closed NULL wrapper held')
  const link=e=>[...elementi(e)].some(x=>/^\/ca\/clubs\/[1-9]\d*\/categories\/[1-9]\d*$/.test(x.props?.href??'')),columns=[...elementi(wrappers[0])].filter(e=>{const d=e.otroci.filter(jeElement);return e.tip==='div'&&d.length===3&&/-/.test(besedilo(d[1]))&&link(d[0])&&link(d[2])})
  if(columns.length!==1)fail('ambiguous closed NULL columns held');const [home,middle,away]=columns[0].otroci.filter(jeElement)
@@ -36,8 +40,8 @@ export function classifyFcfG1QuarantineDocument({id,bytes}){
  if(typeof id!=='string'||!/^4109\d{3}$/.test(id)||+id<4109388||+id>4109627||!Buffer.isBuffer(bytes)||!bytes.length||bytes.length>2097152)fail('fixed G1 bounded raw document required')
  let html;try{html=new TextDecoder('utf-8',{fatal:true}).decode(bytes)}catch{fail('actual UTF8 required')}
  if(bytes[0]===0xef&&bytes[1]===0xbb&&bytes[2]===0xbf||jeIzziv(html)||/cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha/i.test(html))fail('BOM/challenge/refusal held')
- const common={id,url:url(id),sha256:rawSha256(bytes),byteLength:bytes.length,...flags},kind=vrstaStrani(html)
- if(kind==='ni'){const titles=[...html.matchAll(/<title>([\s\S]*?)<\/title>/gi)];if(titles.length!==1||!/^Acta no trobada(?:\s*\|[^<>]*)?$/i.test(titles[0][1].trim()))fail('ambiguous official not-found page held');return frozenJSON({...common,classification:'official-not-found',header:null,individuals:null,unresolved:true})}
+ const roots=canonicalSourceRoute(html,id),common={id,url:url(id),sha256:rawSha256(bytes),byteLength:bytes.length,...flags},kind=vrstaStrani(html)
+ if(kind==='ni'){const titles=[...html.matchAll(/<title>([\s\S]*?)<\/title>/gi)];if(titles.length!==1||!/^Acta no trobada(?:\s*\|[^<>]*)?$/i.test(titles[0][1].trim()))fail('ambiguous official not-found page held');const nodes=[...elementi(roots)],markers=nodes.filter(e=>e.tip==='h1'&&besedilo(e)==='Acta no trobada'),returns=nodes.filter(e=>e.props?.href==='/ca/competicio'&&besedilo(e)==='Tornar a competició');if(markers.length!==1||returns.length!==1||nodes.filter(e=>e.tip==='div'&&e.otroci.filter(jeElement).length===2&&e.otroci.includes(markers[0])&&e.otroci.includes(returns[0])).length!==1||nodes.some(e=>e.props?.title==='Acta del partit'||e.props&&('localNode'in e.props||'visitorNode'in e.props)))fail('unknown/conflicting official not-found structure held');return frozenJSON({...common,classification:'official-not-found',header:null,individuals:null,unresolved:true})}
  if(kind!=='zapisnik')fail('unknown page held')
  let header
  try{header=validateFcfSingleReportSource(html,'4109388-4109627',{id:`es${id}`,tekmovanje:{slug,source:'fcf',source_league_code:'4109388-4109627',sezona_koledarska:false},sezona:'2026/27',danes:Date.now()})}catch(error){throw Error('FCF_G1_QUARANTINE: source identity/shape held',{cause:error})}
