@@ -153,6 +153,14 @@ export default function PrviObisk() {
   // Izbira lige iz shrambe bi lahko ponudila že ugasnjeno ligo — počakamo na svež seznam.
   const prikazan =
     !skrit && cas && !vabljen && ligeSveze && (vprasajDrzavo ? vsaTekmovanja : tekmovanja).length >= 2
+  // Vodič za novince (lib/vodic.ts) ne sme začeti, dokler vprašanje čaka na
+  // zamik ali seznam lig: okno takrat še ni v strani, njegov overlay pa bi
+  // potem požrl klike na izbiro lige.
+  const caka = !skrit && !vabljen && !(ligeSveze && (vprasajDrzavo ? vsaTekmovanja : tekmovanja).length < 2)
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-prvi-obisk', caka)
+    return () => document.documentElement.removeAttribute('data-prvi-obisk')
+  }, [caka])
   useEffect(() => {
     if (!prikazan) return
     okno.current?.focus()
