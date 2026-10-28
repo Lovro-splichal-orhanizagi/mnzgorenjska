@@ -1,5 +1,5 @@
-name: FCF prepare rollback diagnostic
-run-name: FCF prepare rollback diagnostic ${{ inputs.expected_diagnostic_sha }}
+name: FCF Scout read-only inventory
+run-name: FCF Scout read-only inventory ${{ inputs.expected_diagnostic_sha }}
 
 on:
   workflow_dispatch:
@@ -19,7 +19,7 @@ permissions:
   actions: read
 
 jobs:
-  prepare-rollback:
+  scout-inventory:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -38,7 +38,7 @@ jobs:
           node-version: '22'
       - name: Verify branch and live main pins before tunnel
         run: node scripts/diagnose-fcf-prepare-rollback.mjs --identity
-      - name: Existing deploy tunnel for bounded rollback diagnostic
+      - name: Existing deploy tunnel for bounded read-only inventory
         env:
           KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
           ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
@@ -59,16 +59,16 @@ jobs:
             echo 'FCF prepare diagnostic: tunnel setup failed.'
             exit 1
           fi
-      - name: Fixed prepare call with unconditional rollback
+      - name: Fixed Scout reference counts with unconditional rollback
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-        run: node scripts/diagnose-fcf-prepare-rollback.mjs --probe
-      - name: Retain sanitized rollback diagnostic
+        run: node scripts/diagnose-fcf-prepare-rollback.mjs --scout-inventory
+      - name: Retain sanitized Scout inventory
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fcf-prepare-rollback-${{ github.run_id }}-${{ github.run_attempt }}
-          path: fcf-prepare-rollback/result.json
+          name: fcf-scout-readonly-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-scout-readonly/result.json
           if-no-files-found: error
           overwrite: false
           retention-days: 90
