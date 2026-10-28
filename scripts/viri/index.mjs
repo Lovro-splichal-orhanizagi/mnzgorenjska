@@ -72,6 +72,7 @@ import ffl from './ffl.mjs'
 import ksi from './ksi.mjs'
 import fsf from './fsf.mjs'
 import modular11 from './modular11.mjs'
+import gfa from './gfa.mjs'
 import dbu from './dbu.mjs'
 import nff from './nff.mjs'
 import kff from './kff.mjs'
@@ -205,6 +206,9 @@ const VIRI = {
   // ZDA: USL League Two prek Modular11 (prvi vir zunaj Evrope); razpored je
   // GET seznam tekem divizije, zapisnik JSON v strani tekme, krog je teden.
   modular11,
+  // Gibraltar (GFA) prek gibraltarfa.com (HTML): šifra osebe iz profila, kartoni
+  // brez minute, drugi polčas pri viru zamaknjen za +45.
+  gfa,
   // Danska: Dansk Boldspil-Union prek dbu.dk/resultater (HTML), pulje po sezoni,
   // brez šifer igralcev (ime + klub); krogi iz datumov. Pisno dovoljenje DBU.
   dbu,

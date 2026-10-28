@@ -6287,6 +6287,138 @@ preveri(
     koliko(ravenLige({ slug: 'kz-2-liga-yugo-zapad' }), ravenLige({ slug: 'kz-2-liga-severo-vostok' })) === 0)
 }
 
+// --- vir gfa (Gibraltar, gibraltarfa.com) ------------------------------------------
+{
+  const G = await import('./viri/gfa.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  const vir = G.default
+  const GFL = 'gibraltar-football-league-26-27-3395567'
+  preveri('gfa: vir je vpisan, 3 s, User-Agent SLFF', viri.gfa === vir && vir.drzava === 'GI' && vir.imaRegistracije === false &&
+    vir.premorMs >= 3000 && vir.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' && vir.razporedBrezUvodnegaPrenosa === true)
+  let slabaSifra = null
+  try { G.razbijKodo('3395567') } catch (e) { slabaSifra = e.message }
+  preveri('gfa: šifra je pot tekmovanja (faze s +), naslovi seznama in zapisnika, napačna šifra ustavi uvoz',
+    vir.naslovRazporeda(GFL) === `https://www.gibraltarfa.com/competitions/${GFL}/matches` &&
+    vir.naslovZapisnika(GFL, 'gi3398099') === `https://www.gibraltarfa.com/competitions/${GFL}/match-report/m-3398099` &&
+    G.razbijKodo(`${GFL}+gibraltar-football-league-25-26-3082383`).map((f) => f.id).join() === '3395567,3082383' &&
+    G.sifraZapisnika('3398099') === 'gi3398099' && /<slug>-<id>/.test(slabaSifra ?? ''))
+  preveri('gfa: minute — 1. polčas, kot so (45 +6 → 45), 2. polčas −45 (116 → 71, 135 +4 → 90), 46–90 sumljiva',
+    G.minutaVira('5').minuta === 5 && G.minutaVira('45', '6').minuta === 45 && G.minutaVira('91').minuta === 46 &&
+    G.minutaVira('116').minuta === 71 && G.minutaVira('135', '4').minuta === 90 && !G.minutaVira('135').sumljiva &&
+    G.minutaVira('60').sumljiva && G.minutaVira('60').minuta === 60 && G.minutaVira('0').minuta === null)
+  preveri('gfa: čas zapisnika in seznama (pas Gibraltarja = Ljubljana), sezona avg–maj',
+    G.casZapisnika('25th October 2026, 4:30 PM').datum === '2026-10-25' && G.casZapisnika('25th October 2026, 4:30 PM').ura === '16:30' &&
+    G.casZapisnika('1st November 2026, 12:05 AM').ura === '00:05' && G.casRazporeda('30/10/2026 - 21:00').datum === '2026-10-30' &&
+    G.casRazporeda('30/10/2026 - 21:00').ura === '21:00' && G.sezonaIzDatuma('2026-08-15') === '2026/27' && G.sezonaIzDatuma('2027-03-14') === '2026/27')
+
+  const seznam = beri('gi-gfa-tekme-gfl-2627.html')
+  const vrstice = G.vrsticeTekem(seznam)
+  const klubi = new Set(vrstice.flatMap((t) => [t.domaci, t.gostje]))
+  const college = vrstice.find((t) => t.domaci === 'College 1975 FC' && t.gostje === 'Glacis United FC' && t.krog === 7)
+  preveri('gfa: seznam GFL 2026/27 — 109 tekem, 22 krogov, 11 klubov, 37 izidov; odigrana ima id in nima datuma, neodigrana datum',
+    G.jeStranTekem(seznam) && vrstice.length === 109 && Math.max(...vrstice.map((t) => t.krog)) === 22 && klubi.size === 11 &&
+    vrstice.filter((t) => t.izid).length === 37 && vrstice.filter((t) => t.izid).every((t) => t.id && !t.datum) &&
+    college?.datum === '2026-10-28' && college.ura === '21:00' && !college.id && !college.izid &&
+    vrstice.find((t) => t.id === '3398099')?.izid?.domaci === 5 && vrstice.filter((t) => t.krog === 1).length === 4)
+  const faze = G.tekmeFaz(`${GFL}+gibraltar-football-league-25-26-3082383`, [seznam, beri('gi-gfa-tekme-gfl-2526-championship.html')])
+  preveri('gfa: poznejša faza (Championship Group) se začne za zadnjim krogom osnovne — krogi 23–27',
+    faze.length === 124 && Math.min(...faze.filter((t) => t.pot.endsWith('3082383')).map((t) => t.krog)) === 23 &&
+    Math.max(...faze.map((t) => t.krog)) === 27)
+  const rez = G.vrsticeTekem(beri('gi-gfa-tekme-reserve-2627.html'))
+  preveri('gfa: Reserve League 2026/27 — 9 klubov, 27 krogov, tekma brez datuma in izida ostane brez obojega',
+    new Set(rez.flatMap((t) => [t.domaci, t.gostje])).size === 9 && Math.max(...rez.map((t) => t.krog)) === 27 &&
+    rez.filter((t) => !t.izid && !t.datum).length === 1)
+
+  const z = G.vZapisnik(beri('gi-gfa-tekma-3398099.html'), { id: '3398099' })
+  const n = G.nastopi(z)
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('gfa: zapisnik St Joseph\'s : College 1975 5:0 — 11 + 11, 9 + 9 rezerv, goli = izid, 10 menjav, 990 minut, popoln',
+    z.rezultat.domaci === 5 && z.rezultat.gostje === 0 && z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.domaci.rezerve.length === 9 && z.gostje.rezerve.length === 9 && z.goli.length === 5 && z.menjave.length === 10 &&
+    minute(n, 0) === 990 && minute(n, 1) === 990 && n.filter((x) => !x.zacetnik).length === 10 && !z.nepopoln && z.opozorila.length === 0 &&
+    z.datum === '2026-10-25' && z.ura === '16:30' && z.sezona === '2026/27')
+  preveri('gfa: drugi polčas −45 — Bayoud 116\' in 126\' → 71\' in 81\'; menjava 103\' → 58\', vstopi Rosa Blanco (32 minut)',
+    z.goli.filter((g) => g.ime === 'Bayoud Mohamed Taufek').map((g) => g.minuta).join() === '71,81' &&
+    z.menjave.find((m) => m.noter.ime === 'Rosa Blanco Marco')?.minuta === 58 &&
+    n.find((x) => x.ime === 'Rosa Blanco Marco')?.minute === 32 && n.find((x) => x.ime === 'Gonzalez Perez Juan Manuel')?.minute === 58)
+  preveri('gfa: igralec — Priimek Ime, dres, šifra profila (reg_st), vratar (GK); brez rojstnih podatkov',
+    z.domaci.postava[0].ime === 'Banda Bradley' && z.domaci.postava[0].st === 1 && z.domaci.postava[0].regSt === 1749 &&
+    z.domaci.postava[0].vratar && z.gostje.postava[0].ime === 'Soler Ortuño Manuel' &&
+    [z.domaci, z.gostje].every((e) => e.postava.filter((i) => i.vratar).length === 1) && n.every((x) => x.regSt) &&
+    !/birth|rojst/i.test(JSON.stringify(z)))
+
+  const og = G.vZapisnik(beri('gi-gfa-tekma-3398068.html'))
+  const ogN = G.nastopi(og)
+  const faleye = ogN.find((x) => x.ime === 'Faleye Sunday')
+  preveri('gfa: avtogol (o.g.) šteje domačim, strelec je gost; rdeči + rumeni = 1 + 1 brez minute; igralec brez profila vstopi',
+    og.goli.find((g) => g.avtogol)?.ekipaIdx === 1 && og.goli.find((g) => g.avtogol)?.minuta === 42 && og.rezultat.domaci === 2 && !og.nepopoln &&
+    og.rdeci.length === 1 && og.rdeci[0].minuta === null && faleye?.rdeci === 1 && faleye.rumeni === 1 && !faleye.zacetnik &&
+    og.rumeni.length === 6 && ogN.find((x) => x.ime === 'Maristany Ortiz Jorge' && x.regSt === null && !x.zacetnik)?.minute > 0 &&
+    minute(ogN, 0) === 990 && minute(ogN, 1) === 990)
+  const bp = G.vZapisnik(beri('gi-gfa-tekma-3398090.html'))
+  preveri('gfa: trije igralci brez profila (Ime PRIIMEK) — menjave najdene, imena "Priimek Ime", šifre ni',
+    ['Bryson Jair', 'Williams Jr. Roger', 'Delbosco Anointing'].every((i) => bp.menjave.some((m) => m.noter.ime === i && m.noter.regSt === null)) &&
+    G.brezProfila('Pedro IVO REZENDE DOS SANTOS').priimek === 'IVO REZENDE DOS SANTOS' && !bp.nepopoln &&
+    bp.opozorila.length === 0 && minute(G.nastopi(bp), 0) === 990)
+  const na = G.vZapisnik(beri('gi-gfa-tekma-3398084.html'))
+  preveri('gfa: neznan vstopni ("N/A") je opozorilo, izstopni igra do menjave', !na.nepopoln &&
+    na.opozorila.some((o) => /"N\/A" ni med rezervami/.test(o)) && na.menjave.some((m) => m.noter.ime === null && m.minuta === 75))
+  const tip = G.vZapisnik(beri('gi-gfa-tekma-3088090.html'))
+  preveri('gfa: tipkarska napaka v profilu ("Rosruiguez" : "RODRIGUEZ MACIAS Yoel-David") se ujame po imenu',
+    tip.menjave.some((m) => m.noter.regSt === 20667 && m.minuta === 79) && tip.opozorila.length === 0)
+  const pen = G.vZapisnik(beri('gi-gfa-tekma-3088012.html'))
+  const ps = G.vZapisnik(beri('gi-gfa-tekma-3398067.html'))
+  preveri('gfa: enajstmetrovka (pen.), podaljšek 135 +4 → 90, 45 +6 → 45', pen.goli.filter((g) => g.enajstmetrovka).length === 1 &&
+    pen.goli.at(-1).minuta === 90 && ps.goli.some((g) => g.minuta === 45) && ps.goli.filter((g) => g.enajstmetrovka).length === 1 && !pen.nepopoln && !ps.nepopoln)
+  const brezGolov = G.vZapisnik(beri('gi-gfa-tekma-3398093.html'))
+  preveri('gfa: izid 0:8 brez strelcev v glavi je nepopoln (NEPOPOLN prvo opozorilo)', brezGolov.nepopoln &&
+    brezGolov.opozorila[0].startsWith(G.NEPOPOLN) && /izid 0:8/.test(brezGolov.opozorila[0]))
+  const prazen = beri('gi-gfa-tekma-3398094.html')
+  preveri('gfa: neodigrana tekma (prazen zapisnik) nima zapisnika in ne gre v predpomnilnik', G.vZapisnik(prazen) === null &&
+    G.jeStranZapisnika(prazen) && !G.jeCelZapisnik(prazen) && !vir.zaPredpomnilnik(prazen) && vir.zaPredpomnilnik(beri('gi-gfa-tekma-3398099.html')) &&
+    vir.zaPredpomnilnik(seznam) && !vir.zaPredpomnilnik('<html>vzdrževanje</html>'))
+  const im = G.vZapisnik(beri('gi-gfa-tekma-3148814.html'))
+  preveri('gfa: vratar brez profila ("David MAYORAL PEREZ (GK)") je v postavi, 11 + 11, dve enajstmetrovki', !im.nepopoln &&
+    im.domaci.postava.length === 11 && im.domaci.postava[0].vratar && im.domaci.postava[0].ime === 'Mayoral Perez David' &&
+    im.goli.filter((g) => g.enajstmetrovka).length === 2)
+
+  // zapisniki() in razpored na vzorcih: zapisnik, ki ga ni v vzorcih, je prazen.
+  const vzorec = (url) => {
+    const id = url.match(/match-report\/[^/]*?-(\d+)$/)?.[1]
+    try { return beri(`gi-gfa-tekma-${id}.html`) } catch { return prazen }
+  }
+  const prenosi = []
+  const prenesi = async (url) => { prenosi.push(url); return url.endsWith('/matches') ? seznam : vzorec(url) }
+  const zs = await vir.zapisniki(GFL, prenesi)
+  preveri('gfa: zapisniki() — šifra gi<id>, ime kluba s seznama (FC Magpies, ne FCB), krog s seznama, prazni preskočeni',
+    zs.length === 6 && zs.every((x) => /^gi\d+$/.test(x.id) && x.z.zapisnikId === x.id) &&
+    zs.find((x) => x.id === 'gi3398068')?.z.domaci.ime === 'FC Magpies' && zs.find((x) => x.id === 'gi3398099')?.z.krog === 8 &&
+    zs.find((x) => x.id === 'gi3398093')?.z.nepopoln === true)
+  const krogi = await vir.razporedVseStrani(GFL, prenesi)
+  const k8 = krogi.find((k) => k.stevilka === 8)
+  preveri('gfa: razpored — 22 krogov, datum odigrane tekme z zapisnika, neodigrane s seznama',
+    krogi.length === 22 && krogi.reduce((a, k) => a + k.tekme.length, 0) === 109 &&
+    k8.tekme.find((t) => t.gfaId === '3398099')?.datum === '2026-10-25' && k8.tekme.find((t) => t.gfaId === '3398099')?.odigrana &&
+    krogi.find((k) => k.stevilka === 22).tekme[0].datum === '2027-03-12' && krogi.find((k) => k.stevilka === 22).tekme[0].ura === '21:00')
+
+  let zavrnjen = null
+  try { await vir.zapisniki(GFL, async () => { const e = new Error('HTTP 403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+  let izziv = null
+  try { await vir.zapisniki(GFL, async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  let napaka = null
+  try { await vir.zapisniki(GFL, async () => '<html>Page not found</html>') } catch (e) { napaka = e }
+  preveri('gfa: 401/403/429 in izziv vržejo GfaZavrnitev (izhod 4), napačna stran ustavi uvoz', zavrnjen instanceof G.GfaZavrnitev &&
+    zavrnjen.status === 403 && izziv instanceof G.GfaZavrnitev && vir.zavrnitev('x', 429).zavrnitev === true &&
+    G.jeZavrnitev(401) && G.jeZavrnitev(429) && !G.jeZavrnitev(404) && /ni seznam tekem/.test(napaka?.message ?? ''))
+  preveri('gfa: ključ in kratko ime kluba; Mons Calpe SC = Mons Calpe FC, Intermediate = Reserves',
+    G.kljucKlubaGi("St Joseph's FC") === 'st joseph s fc' && G.kljucKlubaGi('Mons Calpe SC') === G.kljucKlubaGi('Mons Calpe FC') &&
+    G.kljucKlubaGi('Lynx FC Intermediate') === G.kljucKlubaGi('Lynx FC Reserves') &&
+    G.kljucKlubaGi('Lynx FC Reserves') !== G.kljucKlubaGi('Lynx FC') &&
+    G.kratkoImeGi("St Joseph's FC") === "St Joseph's" && G.kratkoImeGi('FC Hound Dogs') === 'Hound Dogs' &&
+    G.kratkoImeGi('Mons Calpe Sports Club Reserves') === 'Mons Calpe Res.' && G.kratkoImeGi('Lincoln Red Imps FC Reserves') === 'Lincoln Red Imps Res.')
+}
+
 // --- vir modular11 (ZDA, USL League Two) --------------------------------------------
 {
   const U = await import('./viri/modular11.mjs')
