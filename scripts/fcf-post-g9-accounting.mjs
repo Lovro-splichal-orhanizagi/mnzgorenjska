@@ -80,3 +80,12 @@ export function requireFcfPostG9Accounting(proof){
  if(!proofs.has(proof))fail('reader-issued post-G9 accounting required')
  return proof
 }
+
+/** Stable source-history DATA derived only from a privately reader-issued ledger.
+ * Raw API witnesses remain in the forensic ledger; mutable display/transport
+ * metadata must not create a second source claim or invalidate a prepared plan.
+ */
+export function getFcfPostG9SourceHistory(proof){
+ const p=requireFcfPostG9Accounting(proof),l=p.latest,u=l.unstartedBinding
+ return frozenJSON({schemaVersion:1,kind:'fcf-post-g9-source-history',priorSourceGETs:p.priorSourceGETs,latestSourceGETs:p.latestSourceGETs,maximumCumulativeSourceGETs:p.maximumCumulativeSourceGETs,remainingSourceGETs:p.remainingSourceGETs,admissible:false,priorAccountingBinding:clone(p.priorAccountingBinding),latest:{sourceCommit:l.sourceCommit,planSha256:l.planSha256,runId:l.runId,runAttempt:l.runAttempt,rulesetId:l.rulesetId,completedUTC:l.completedUTC,conclusion:l.conclusion,claimBinding:clone(l.claimBinding),consumptionBinding:clone(l.consumptionBinding),child:clone(l.child),unstartedBinding:u?Object.fromEntries(['runId','runAttempt','sourceCommit','jobId','planSha256'].map(k=>[k,u[k]])):null,finalReceiptBinding:clone(l.finalReceiptBinding)}})
+}

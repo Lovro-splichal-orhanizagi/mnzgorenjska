@@ -16,7 +16,7 @@ test('closed G1 plan requires private post-G9 proof and refuses a complete240 pr
 test('G1 exact fresh240 plan preserves actual partial spend and history-only one-use key across new writers',enabled,async t=>{
  const raw=await postG9AccountingWire(t,'diagnostic'),proof=readFcfPostG9Accounting(raw),input={sourceCommit:'b'.repeat(40),accountingProof:proof,rulesetSnapshotSha256:'c'.repeat(64),now:raw.now+1000},p=build(input)
  assert.equal(p.preset,'future-g1-after-g9-v1');assert.equal(p.maximumCumulativeSourceGETs,478);assert.equal(p.priorSourceGETs,38);assert.equal(p.plannedCumulativeSourceGETs,278);assert.equal(p.child.targetSlug,'es-ct-segona-g1');assert.equal(p.child.competitionId,783);assert.equal(p.child.sourceCode,'4109388-4109627');assert.equal(p.child.season,'2026/27');assert.equal(p.child.fetchIds.length,240);assert.equal(p.child.fetchIds[0],'4109388');assert.equal(p.child.fetchIds.at(-1),'4109627');assert.deepEqual(p.child.reuse,[])
- assert.equal(fcfFutureSourceClaimRef(p),`refs/tags/fcf-inventory-claim/future-after-${hash(proof)}`)
+ assert.equal(fcfFutureSourceClaimRef(p),`refs/tags/fcf-inventory-claim/future-after-${hash(p.accountingBinding)}`)
  const q=build({...input,sourceCommit:'d'.repeat(40),now:input.now+1});assert.notEqual(p.planSha256,q.planSha256);assert.equal(fcfFutureSourceClaimRef(p),fcfFutureSourceClaimRef(q))
  const changed=structuredClone(p);changed.maximumCumulativeSourceGETs=517;const {planSha256,...body}=changed;changed.planSha256=hash(body)
  assert.throws(()=>validateFcfFutureSourcePlan({plan:changed,accountingProof:proof,expectedPlanSha256:changed.planSha256,now:input.now}),/FCF_INVENTORY/)
