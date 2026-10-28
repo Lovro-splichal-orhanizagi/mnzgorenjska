@@ -5,6 +5,7 @@ import * as communityPolicy from './fussball-community-policy.mjs'
 import {join} from 'node:path'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
+import {razberiNativeFantasyZapisnik} from './viri/fussball-native-role-parser.mjs'
 import {razberiFantasyZapisnik} from './viri/fussball-statistika.mjs'
 import {replayFussballCardEnvelope} from './viri/fussball-card-envelope.mjs'
 const api=await import('./fussball-community-runtime.mjs').catch(e=>{if(e.code==='ERR_MODULE_NOT_FOUND')return {};throw e})
@@ -63,4 +64,17 @@ test('ordinary import admits only a private source-bound installed community con
  assert.equal(skipIncompleteArchiveReport({competition:ctx.competition,report:{...archivePending,statisticsPending:false},currentSeason:false}),true,'untyped partial archive is never admitted')
  assert.throws(()=>assertHistoricalReportImportable({competition:ctx.competition,report:{...pending,nastopi:[]}}),/pending|statistics|rows/i)
  f.controls.mutate=v=>{v.cards.installed=false};await assert.rejects(loadHistoricalStatisticsImportContext(f.db,c,{nativeComposition:f.token}),/installed|policy|binding/i)
+})
+
+test('native community validates original extended envelope before applying exact recipient replay',async()=>{
+ const changed=read('lineup.html').toString().replace('<div class="captain"><span class="c">T</span></div>','<div class="captain"><span class="c">C</span></div><div class="goal-keeper"><span class="k">T</span></div>')
+ const e=razberiNativeFantasyZapisnik(html,changed,{fonts,id:witness.matchId,lineupId:witness.matchId,season:witness.season,cardPolicy:'community-v1'}).cardEnvelope
+ const red=e.cards.find(c=>c.type==='second_yellow'),yellow=e.cards.find(c=>c.type==='yellow'&&c.side===red.side&&c.ordinal<red.ordinal),resolutions={[red.eventKey]:recipient.sourceId,[yellow.eventKey]:recipient.sourceId},calls=[]
+ const db={async rpc(name,args){calls.push({name,args});assert.equal(name,'apply_fussball_card_report');return {data:{applied:true,match_id:789,revision_sha256:e.revisionSha256,resolution_sha256:job.resolution_sha256}}}}
+ const scoped={...job,envelope:e,revision_sha256:e.revisionSha256,resolutions}
+ assert.equal((await api.processFussballCardJob({db,competitionId:44,code:'03188V27L800000JVS5489BTVU7GTVLE-G:2026/27',job:scoped})).status,'APPLIED')
+ assert.equal(calls.length,1);assert.equal(calls[0].args.p_revision_sha,e.revisionSha256)
+ const staged=[];const stageDb={async rpc(name,args){staged.push(name);if(name==='register_fussball_card_report'){assert.deepEqual(args.p_envelope,e);return {data:{match_id:789,revision_sha256:e.revisionSha256,statistics_pending:true}}}assert.equal(name,'get_fussball_card_replay_jobs');return {data:[]}}}
+ assert.equal((await api.stageAndReplayFussballCardReport({db:stageDb,competitionId:44,code:'03188V27L800000JVS5489BTVU7GTVLE-G:2026/27',matchId:789,envelope:e,candidates})).status,'PENDING');assert.deepEqual(staged,['register_fussball_card_report','get_fussball_card_replay_jobs'])
+ for(const mutate of [v=>{v.nativeRoleParser.replacementOffsets[0]++},v=>{v.bundle.lineup.base64=Buffer.from('changed').toString('base64')}]){const bad=structuredClone(e);mutate(bad);calls.length=0;await assert.rejects(api.processFussballCardJob({db,competitionId:44,code:'03188V27L800000JVS5489BTVU7GTVLE-G:2026/27',job:{...scoped,envelope:bad}}));assert.equal(calls.length,0)}
 })

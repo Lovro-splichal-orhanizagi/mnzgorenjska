@@ -11,7 +11,7 @@ import {createFussballParserSession,assembleFussballSchedule,validateFussballFix
 import {createFussballCaptureClient} from './lib/fussball-capture.mjs'
 import {GERMANY_BULK_CANDIDATES} from './bulk-germany-source.mjs'
 import {normalizeFussballReport,parseFussballLeagueCode,fussballPlayerKey} from './fussball-import.mjs'
-import {validateFussballCardEnvelope} from './viri/fussball-card-envelope.mjs'
+import {razberiNativeFantasyZapisnik,validateFussballNativeRoleEnvelope as validateFussballCardEnvelope} from './viri/fussball-native-role-parser.mjs'
 import {BADEN_CURRENT,BADEN_ARCHIVE,BADEN_SLUG,BADEN_CARDS,badenCanonical,badenClubKey,compiledBadenHistoricalPolicy} from './lib/fussball-native-history-policy.mjs'
 const runtimeCaches=new WeakMap(),contexts=new WeakMap(),sha=v=>createHash('sha256').update(typeof v==='string'||Buffer.isBuffer(v)?v:badenCanonical(v)).digest('hex')
 const catalogBytes=readFileSync(new URL('./policies/fussball-baden-native-composition.json',import.meta.url)),catalog=JSON.parse(catalogBytes)
@@ -140,7 +140,7 @@ export async function collectFussballNativeRuntime({context,competition,code,cli
  const s=privateContext(context,competition),scope=parseFussballLeagueCode(code)
  need(s.pack.seasons.some(x=>x.code===code)&&client&&typeof client.read==='function','bound source client/season required')
  need(/^20\d\d-\d\d-\d\d$/.test(asOfDate??''),'explicit as-of date required')
- const session=createFussballParserSession((url,kind)=>client.read(url,kind),{},{cardPolicy:'community-v1',season:scope.season})
+ const session=createFussballParserSession((url,kind)=>client.read(url,kind),{parseFantasyReport:razberiNativeFantasyZapisnik},{cardPolicy:'community-v1',season:scope.season})
  const seedUrl=originalSeason(s,code).result.scope.seedUrl,pages=[]
  async function page(url){const document=await client.read(url,'round');need(document?.bytes&&Number.isFinite(Date.parse(document.capturedAt)),'source round receipt required');const {info,parsed}=await session.round(new TextDecoder('utf8',{fatal:true}).decode(document.bytes),{staffel:scope.staffel,url});need(typeof info.url==='string'&&new RegExp('^https://www\\.fussball\\.de/spieltag/(?:[a-z0-9]+(?:-[a-z0-9]+)*/)?-/(?:spieltag/[1-9]\\d{0,2}/)?staffel/'+scope.staffel+'$').test(info.url),'round canonical source identity differs');pages.push({url,parsed});return parsed}
  const seed=await page(seedUrl)

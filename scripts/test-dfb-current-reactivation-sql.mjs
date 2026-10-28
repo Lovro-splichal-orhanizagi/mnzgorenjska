@@ -16,7 +16,9 @@ child.stdout.on('data', chunk => { output += chunk; process.stdout.write(chunk) 
 child.stderr.on('data', chunk => process.stderr.write(chunk))
 const closed = new Promise((resolve, reject) => { child.once('error', reject); child.once('close', resolve) })
 const held = new Promise((resolve, reject) => {
-  const timer = setTimeout(() => reject(Error('Actual native repair did not reach lock verification')), 45000)
+  // Fixture setup runs all repair rejection cases before reaching the marker.
+  // Allow slower CI runners to finish; concurrent writes still get only 500ms.
+  const timer = setTimeout(() => reject(Error('Actual native repair did not reach lock verification')), 120000)
   child.stdout.on('data', () => { if (output.includes('DFB_REPAIR_LOCKS_HELD')) { clearTimeout(timer); resolve() } })
   closed.then(code => { if (!output.includes('DFB_REPAIR_LOCKS_HELD')) { clearTimeout(timer); reject(Error(`SQL repair fixture stopped before locks, exit${code}`)) } })
 })

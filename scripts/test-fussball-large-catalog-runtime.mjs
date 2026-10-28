@@ -10,7 +10,10 @@ import {fileURLToPath} from 'node:url'
 const MiB=1024*1024,repo='repos/Lovro-splichal-orhanizagi/mnzgorenjska/',catalog='scripts/policies/fussball-baden-native-composition.json',head='a'.repeat(40)
 const blob=b=>createHash('sha1').update(Buffer.from(`blob ${b.length}\0`)).update(b).digest('hex')
 if(process.argv[2]==='runtime'){
- const mode=process.argv[3],read=fs.readFileSync,path=fileURLToPath(new URL('../'+catalog,import.meta.url)),original=read(path),size=mode==='oversize'?4*MiB+1:mode==='small'?original.length:2*MiB
+ // Small inline branch uses exact historical Git957de052 catalog bytes, while
+ // every large/negative branch continues to use current production catalog DATA.
+ const mode=process.argv[3],read=fs.readFileSync,path=fileURLToPath(new URL('../'+catalog,import.meta.url)),original=mode==='small'?read(new URL('./vzorci/fussball-baden-native-catalog-unfinalized-957de052.json',import.meta.url)):read(path),size=mode==='oversize'?4*MiB+1:mode==='small'?original.length:2*MiB
+ if(mode==='small')assert.ok(original.length<=MiB,'historical inline fixture must fit GitHub base64 limit')
  const bytes=Buffer.concat([original,Buffer.alloc(size-original.length,32)])
  fs.readFileSync=function(p,options){if(String(p)===path||(p instanceof URL&&fileURLToPath(p)===path))return typeof options==='string'||options?.encoding?bytes.toString():Buffer.from(bytes);return read.apply(this,arguments)}
  syncBuiltinESMExports()

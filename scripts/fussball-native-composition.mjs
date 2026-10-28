@@ -10,9 +10,10 @@ import {readFussballCompletedSourceV7,getFussballCompletedSourceV7} from './fuss
 import {fussballArchiveV7CodeSha256} from './fussball-archive-v7.mjs'
 import {zaprtje} from './odtis-kode.mjs'
 import {normalizeFussballReport,parseFussballLeagueCode,fussballPlayerKey} from './fussball-import.mjs'
-import {validateFussballCardEnvelope} from './viri/fussball-card-envelope.mjs'
+import {validateFussballNativeRoleEnvelope as validateFussballCardEnvelope,razberiNativeFantasyZapisnik as razberiFantasyZapisnik} from './viri/fussball-native-role-parser.mjs'
+import {replayFussballNativeRoles} from './fussball-native-role-replay.mjs'
 import {inspectFussballPage,fussballFontUrl} from './viri/fussball-discovery.mjs'
-import {inspectFussballLineup,razberiFantasyZapisnik} from './viri/fussball-statistika.mjs'
+import {inspectFussballLineup} from './viri/fussball-statistika.mjs'
 import {validateFussballFixture} from './fussball-season.mjs'
 
 const profile='germany-retained-fussball-native-v1',sourcePolicy='fussball-community-cards-v1'
@@ -62,8 +63,8 @@ export function validateFussballNativeCatalog(c){
  for(const d of c.clubDescriptors){closed(d,['sourceCompetitionId','season','name'],'closed source club descriptor required');const s=scopes.find(s=>s.season===d.season);need(s&&d.sourceCompetitionId===`${s.staffel}:${s.season}`&&typeof d.name==='string'&&d.name.trim()&&!clubs.has(canonical(d)),'unique exact Baden source club descriptor required');clubs.add(canonical(d))}
  need(Array.isArray(c.seasons)&&c.seasons.length===2,'complete exact current/archive catalog required')
  for(const [i,s]of c.seasons.entries()){
-  closed(s,['stage','staffel','season','fixtureInventorySha256','resultSha256','rejectionsSha256','administrativeSha256','reviews'],'closed seasonal catalog required')
-  need(Object.entries(scopes[i]).every(([k,v])=>s[k]===v)&&['fixtureInventorySha256','resultSha256','rejectionsSha256','administrativeSha256'].every(k=>HASH.test(s[k]??''))&&Array.isArray(s.reviews)&&s.reviews.length<=612,'finalized seasonal inventory hashes required')
+  closed(s,['stage','staffel','season','fixtureInventorySha256','resultSha256','rejectionsSha256','administrativeSha256','nativeRoleReplaySha256','reviews'],'closed seasonal catalog required')
+  need(Object.entries(scopes[i]).every(([k,v])=>s[k]===v)&&['fixtureInventorySha256','resultSha256','rejectionsSha256','administrativeSha256','nativeRoleReplaySha256'].every(k=>HASH.test(s[k]??''))&&Array.isArray(s.reviews)&&s.reviews.length<=612,'finalized seasonal inventory hashes required')
   parseFussballLeagueCode(`${s.staffel}:${s.season}`);const ids=new Set()
   for(const e of s.reviews){
    closed(e,['kind','fixture','sourceCompetitionId','season','defect','documents','sourceRawSha256','observedFontIds','missingObservedFonts','approvalReference','resultKnown','retainedBundleSha256'],'closed per-fixture reviewed exclusion required')
@@ -142,24 +143,25 @@ function cardEntry(entry,f,season,documents){
 function partitionState(state,c){
  validateFussballNativeCatalog(c);fresh(state.proof.source)
  need(state.proof.source.sourceRunId===c.sourceRunId&&state.proof.source.sourceHead===c.sourceHead&&state.proof.source.captureCodeSha256===c.captureCodeSha256&&state.proof.source.nativeEligible===false&&state.proof.source.activationEligible===false,'source-only capability scope differs')
- const seasons=[],clubs=[]
+ const seasons=[],clubs=[],roleReplay=replayFussballNativeRoles(state.originals.stages)
  for(const s of c.seasons){
-  const stage=state.originals.stages[s.stage],r=stage.result,sch=r.schedule,scope=r.scope,cov=r.coverage
+  const stage=state.originals.stages[s.stage],original=stage.result,replay=roleReplay[s.stage],r=replay.result,sch=r.schedule,scope=r.scope,cov=r.coverage
+  need(s.nativeRoleReplaySha256===replay.nativeRoleReplaySha256,'finalized native role replay witness differs')
   need(stage.manifest.success===true&&stage.manifest.error===null&&stage.manifest.options.reportLimit===null&&scope?.provider==='fussball'&&scope.staffel===s.staffel&&scope.season===s.season&&scope.cardPolicy==='community-v1'&&sch?.staffel===s.staffel&&sch.season===s.season&&r.version===1&&r.activationEligible===false&&date(scope.asOfDate),'complete replayed seasonal scope required')
-  need(stage.manifest.resultSha256===s.resultSha256&&hash(stage.files.get('result.json'))===s.resultSha256&&digest(sch.fixtures)===s.fixtureInventorySha256&&digest(r.rejectedReports)===s.rejectionsSha256&&digest(r.administrativeFixtures??[])===s.administrativeSha256,'finalized source fixture/result/rejection/admin inventory differs')
+  need(stage.manifest.resultSha256===s.resultSha256&&hash(stage.files.get('result.json'))===s.resultSha256&&digest(sch.fixtures)===s.fixtureInventorySha256&&digest(original.rejectedReports)===s.rejectionsSha256&&digest(r.administrativeFixtures??[])===s.administrativeSha256,'finalized source fixture/result/rejection/admin inventory differs')
   need(Array.isArray(sch.rounds)&&sch.rounds.length>0&&sch.rounds.length<=80&&sch.rounds.every((n,i)=>n===i+1)&&Array.isArray(sch.fixtures)&&sch.fixtures.length>0&&sch.fixtures.length<=4000,'full bounded contiguous source schedule required')
   const byId=new Map(),assigned=new Set(),partition=Object.fromEntries(categories.map(k=>[k,[]])),identities=new Map(),reports=[],pendingReports=[],unavailable=[]
   for(const f of sch.fixtures){fixture(f,sch.rounds);need(!byId.has(f.id),'duplicate source fixture');byId.set(f.id,f)}
   for(const name of new Set(sch.fixtures.flatMap(f=>[f.domaci,f.gostje])))clubs.push({sourceCompetitionId:`${s.staffel}:${s.season}`,season:s.season,name})
   const put=(f,kind)=>{need(byId.has(f.id)&&same(byId.get(f.id),f)&&!assigned.has(f.id),'partition overlap or foreign fixture');assigned.add(f.id);partition[kind].push(f.id)}
-  const documents=documentMap(stage),reviews=new Map(s.reviews.map(e=>[e.fixture.id,e]))
+  const localDocuments=documentMap(stage),affected=new Set(replay.nativeRoleReplay.affected.map(e=>e.sourceMatchId)),documentsFor=f=>affected.has(f.id)?replay.documents:localDocuments,reviews=new Map(s.reviews.map(e=>[e.fixture.id,e]))
   need(['reports','pendingReports','rejectedReports','cardEnvelopes'].every(k=>Array.isArray(r[k])),'complete report inventories required')
-  for(const entry of r.reports){const f=byId.get(entry?.fixture?.id);need(f?.rezultat!==null&&f&&!Object.hasOwn(f,'administrativeResult'),'complete report outside ordinary played set');cardEntry(entry,f,s.season,documents);reports.push(normalizeFussballReport(entry,f,s.season,identities));put(f,'complete')}
-  for(const entry of r.pendingReports){const f=byId.get(entry?.fixture?.id);need(f?.rezultat!==null&&f&&!Object.hasOwn(f,'administrativeResult'),'pending report outside ordinary played set');cardEntry(entry,f,s.season,documents);pendingReports.push(pendingHeader(entry,f,s.season,identities));put(f,'community-pending')}
+  for(const entry of r.reports){const f=byId.get(entry?.fixture?.id);need(f?.rezultat!==null&&f&&!Object.hasOwn(f,'administrativeResult'),'complete report outside ordinary played set');cardEntry(entry,f,s.season,documentsFor(f));reports.push(normalizeFussballReport(entry,f,s.season,identities));put(f,'complete')}
+  for(const entry of r.pendingReports){const f=byId.get(entry?.fixture?.id);need(f?.rezultat!==null&&f&&!Object.hasOwn(f,'administrativeResult'),'pending report outside ordinary played set');cardEntry(entry,f,s.season,documentsFor(f));pendingReports.push(pendingHeader(entry,f,s.season,identities));put(f,'community-pending')}
   need(same(r.cardEnvelopes,[...r.reports,...r.pendingReports].map(e=>e.result.cardEnvelope)),'source card envelope inventory differs')
   for(const rejection of [...r.rejectedReports,...(r.administrativeFixtures??[])]){
    const f=byId.get(rejection?.fixture?.id),review=reviews.get(f?.id);need(f&&review&&same(review.fixture,f),'unreviewed source defect or changed fixture');const expected=Object.hasOwn(f,'administrativeResult')?'reviewed-unknown-administrative-result':'reviewed-known-result-unavailable';need(review.kind===expected,'reviewed defect category differs')
-   unavailable.push(reviewedEntry(review,rejection,stage,documents));put(f,expected);reviews.delete(f.id)
+   unavailable.push(reviewedEntry(review,rejection,stage,documentsFor(f)));put(f,expected);reviews.delete(f.id)
   }
   need(reviews.size===0,'extra reviewed exclusion not in original inventories')
   for(const f of sch.fixtures)if(!assigned.has(f.id)){need(f.rezultat===null&&!Object.hasOwn(f,'administrativeResult')&&f.datum>=scope.asOfDate,'missing played/administrative/past fixture partition');put(f,'unplayed')}
@@ -167,8 +169,8 @@ function partitionState(state,c){
   const unscored={total:unplayed.length,past:unplayed.filter(f=>f.datum<scope.asOfDate).length,current:unplayed.filter(f=>f.datum===scope.asOfDate).length,future:unplayed.filter(f=>f.datum>scope.asOfDate).length,unknownDate:0}
   need(assigned.size===sch.fixtures.length&&cov?.sampled===false&&cov.expectedRounds===sch.rounds.length&&cov.capturedRounds===sch.rounds.length&&cov.fixtures===sch.fixtures.length&&cov.playedFixtures===played.length&&cov.attemptedReports===played.length&&cov.completeReports===r.reports.length&&cov.pendingReports===r.pendingReports.length&&cov.rejectedReports===r.rejectedReports.length&&(cov.administrativeFixtures??0)===admin.length&&same(cov.unscoredFixtures,unscored),'original full coverage differs from exact partition')
   const counts=Object.fromEntries(categories.map(k=>[k,partition[k].length])),inventory={scope:{stage:s.stage,staffel:s.staffel,season:s.season},fixtureInventorySha256:s.fixtureInventorySha256,rejectionsSha256:s.rejectionsSha256,administrativeSha256:s.administrativeSha256,partition,counts}
-  const sourceBundles=played.map(f=>originalReportBundle(f,documents))
-  seasons.push({code:`${s.staffel}:${s.season}`,season:s.season,cardPolicy:'community-v1',inventory,partitionSha256:digest(inventory),sourceDocumentInventorySha256:digest(stage.manifest.documents),sourceBundles,originalCoverage:structuredClone(cov),reports,pendingReports,cardEnvelopes:structuredClone(r.cardEnvelopes),unavailable,fixtures:structuredClone(sch.fixtures),identities:[...identities].map(([reg_st,source_id])=>({source_id,reg_st})).sort((a,b)=>a.source_id.localeCompare(b.source_id))})
+  const sourceBundles=played.map(f=>originalReportBundle(f,documentsFor(f)))
+  seasons.push({code:`${s.staffel}:${s.season}`,season:s.season,cardPolicy:'community-v1',inventory,partitionSha256:digest(inventory),sourceDocumentInventorySha256:digest(stage.manifest.documents),sourceBundles,nativeRoleReplay:structuredClone(replay.nativeRoleReplay),nativeRoleReplaySha256:replay.nativeRoleReplaySha256,originalCoverage:structuredClone(original.coverage),derivedCoverage:structuredClone(cov),reports,pendingReports,cardEnvelopes:structuredClone(r.cardEnvelopes),unavailable,fixtures:structuredClone(sch.fixtures),identities:[...identities].map(([reg_st,source_id])=>({source_id,reg_st})).sort((a,b)=>a.source_id.localeCompare(b.source_id))})
  }
  need(same(clubs.sort((a,b)=>canonical(a).localeCompare(canonical(b))),[...c.clubDescriptors].sort((a,b)=>canonical(a).localeCompare(canonical(b)))),'source club descriptor inventory differs')
  return seasons

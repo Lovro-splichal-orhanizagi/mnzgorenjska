@@ -14,7 +14,9 @@ test('current W producer refuses old V6 authority; TEST ONLY old-V6 body context
  const f=await syntheticCompletedSourceFixture();await assert.rejects(readFussballCompletedSourceV6(f.input),/reviewed V6 capture closure changed/);assert.equal(f.replays,0)
  const v=f.api.fussballCompletedV6RuntimeInventory();assert.ok(Object.keys(v).length>=31)
  for(const f of ['.github/workflows/preveri-fussball-dopolni.yml','scripts/fussball-archive-v6.mjs','scripts/dfb-artifacts.mjs','scripts/viri/fussball-statistika.mjs','scripts/policies/fussball-transport-v6.json'])assert.match(v[f],/^[a-f0-9]{64}$/)
- const c=JSON.parse(readFileSync(new URL('./policies/fussball-baden-native-composition.json',import.meta.url)));assert.equal(c.sourceRunId,null);assert.equal(c.sourceHead,null);assert.equal(c.seasons[1].resultSha256,null);assert.deepEqual(c.seasons[1].reviews,[])
+ // Historical TEST ONLY catalog: exact Git957de0524e0208bd30d898a48cd2b091b7a544f8
+ // scripts/policies/fussball-baden-native-composition.json; never production authority.
+ const c=JSON.parse(readFileSync(new URL('./vzorci/fussball-baden-native-catalog-unfinalized-957de052.json',import.meta.url)));assert.equal(c.status,'UNFINALIZED');assert.equal(c.sourceRunId,null);assert.equal(c.sourceHead,null);assert.equal(c.seasons[1].resultSha256,null);assert.deepEqual(c.seasons[1].reviews,[])
 })
 test('TEST ONLY synthetic hosted structure preserves private brand, copies and original freshness; no actual source proof',async()=>{
  const f=await syntheticCompletedSourceFixture(),p=await f.api.readFussballCompletedSourceV6(f.input)
