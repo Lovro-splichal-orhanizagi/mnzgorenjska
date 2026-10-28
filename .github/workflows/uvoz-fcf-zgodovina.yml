@@ -1109,3 +1109,86 @@ jobs:
           path: ${{ steps.operation.outputs.artifact_directory }}
           if-no-files-found: error
           retention-days: 30
+
+  fcf-draft-read-diagnostic:
+    if: github.ref == 'refs/heads/codex/fcf-staging-diagnostics-20261028' && inputs.mode == 'future-target-approval-stage' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect exact private draft with actual job token
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node <<'NODE'
+          const {execFileSync}=require('node:child_process');
+          const {createHash}=require('node:crypto');
+          const {writeFileSync}=require('node:fs');
+          const repository='Lovro-splichal-orhanizagi/mnzgorenjska',prefix=`repos/${repository}/`;
+          const tag='fcf-inventory-staging-v1',releaseId='416653899',assetId='683419140';
+          const expectedSha256='f5e6f2ead72af1ce71d86b16b76c75471ea4557dc71ebb59c00e0b405f292646',expectedSize=170921;
+          const stepName='Inspect exact private draft with actual job token',jobName='fcf-draft-read-diagnostic';
+          const runId=process.env.GITHUB_RUN_ID,attempt=process.env.GITHUB_RUN_ATTEMPT;
+          const report={schemaVersion:1,diagnosticOnly:true,repository,tag,assetId,expectedSha256,expectedSize,runId,attempt,calls:[],before:null,releasePages:0,releaseCount:0,releaseMatches:0,draftVisible:null,reviewedReleaseMatches:false,assetPages:0,assetCount:0,assetMatches:0,assetMetadataMatches:false,assetReadOk:null,assetSizeMatches:null,assetSha256Matches:null,after:null};
+          function get(path,label,binary=false){
+           try{
+            const b=execFileSync('gh',['api','--method','GET',prefix+path,...(binary?['-H','Accept: application/octet-stream']:[])],{timeout:10000,maxBuffer:8*1024*1024,stdio:['ignore','pipe','pipe']});
+            const value=binary?b:JSON.parse(b);report.calls.push({stage:label,ok:true});return value;
+           }catch{report.calls.push({stage:label,ok:false});return null;}
+          }
+          function status(v){return ['queued','waiting','pending','requested','in_progress','completed'].includes(v)?v:'unknown';}
+          function list(path,key,label,onPage){
+           const rows=[];let total;
+           for(let page=1;page<=10;page++){
+            const data=get(`${path}${path.includes('?')?'&':'?'}per_page=100&page=${page}`,label),batch=key?data?.[key]:data;
+            if(!Array.isArray(batch)||batch.length>100)return null;
+            onPage?.(batch.length);rows.push(...batch);
+            if(key){if(!Number.isSafeInteger(data.total_count)||data.total_count<0||total!==undefined&&data.total_count!==total)return null;total=data.total_count;if(rows.length===total)return rows;if(rows.length>total||batch.length<100)return null;}
+            else if(batch.length<100)return rows;
+           }
+           return null;
+          }
+          function snapshot(label){
+           const run=get(`actions/runs/${runId}`,label+'-run'),jobs=list(`actions/runs/${runId}/attempts/1/jobs`,'jobs',label+'-jobs');
+           const selected=jobs?.filter(j=>j.name===jobName)??[],job=selected.length===1?selected[0]:null,steps=job?.steps?.filter(s=>s.name===stepName)??[];
+           return {runReadOk:run!==null,jobsReadOk:jobs!==null,runBinding:run?.repository?.full_name===repository&&String(run.id)===runId&&run.run_attempt===1&&run.head_sha===process.env.GITHUB_SHA&&run.head_branch==='codex/fcf-staging-diagnostics-20261028'&&run.path==='.github/workflows/uvoz-fcf-zgodovina.yml'&&run.event==='workflow_dispatch',jobMatches:selected.length,jobBinding:!!job&&String(job.run_id)===runId&&job.run_attempt===1&&job.head_sha===process.env.GITHUB_SHA,stepMatches:steps.length,runStatus:status(run?.status),jobStatus:status(job?.status),stepStatus:status(steps.length===1?steps[0].status:null)};
+          }
+          const validContext=process.env.GITHUB_REPOSITORY===repository&&process.env.GITHUB_REF==='refs/heads/codex/fcf-staging-diagnostics-20261028'&&process.env.GITHUB_JOB===jobName&&/^[1-9]\d*$/.test(runId??'')&&attempt==='1';
+          report.contextMatches=validContext;
+          if(validContext){
+           report.before=snapshot('before');
+           const releases=list('releases',null,'release-list',n=>{report.releasePages++;report.releaseCount+=n;});
+           if(releases){
+            const matches=releases.filter(r=>r.tag_name===tag);report.releaseMatches=matches.length;report.draftVisible=matches.some(r=>r.draft===true);
+            const release=matches.length===1?matches[0]:null;report.reviewedReleaseMatches=!!release&&release.draft===true&&String(release.id)===releaseId;
+            if(report.reviewedReleaseMatches){
+             const assets=list(`releases/${releaseId}/assets`,null,'asset-list',n=>{report.assetPages++;report.assetCount+=n;});
+             if(assets){
+              const matches=assets.filter(a=>String(a.id)===assetId);report.assetMatches=matches.length;
+              const asset=matches.length===1?matches[0]:null;report.assetMetadataMatches=!!asset&&asset.state==='uploaded'&&asset.size===expectedSize;
+              if(report.assetMetadataMatches){
+               const bytes=get(`releases/assets/${assetId}`,'asset-read',true);report.assetReadOk=bytes!==null;
+               if(bytes){report.assetSizeMatches=bytes.length===expectedSize;report.assetSha256Matches=createHash('sha256').update(bytes).digest('hex')===expectedSha256;}
+              }
+             }
+            }
+           }
+           report.after=snapshot('after');
+          }
+          const text=JSON.stringify(report,null,2)+'\n';
+          writeFileSync('fcf-draft-read-diagnostic.json',text,{flag:'wx',mode:0o600});
+          process.stdout.write(text);
+          NODE
+      - name: Retain bounded draft diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-draft-read-diagnostic-${{ github.run_id }}-1
+          path: fcf-draft-read-diagnostic.json
+          if-no-files-found: error
+          retention-days: 7
