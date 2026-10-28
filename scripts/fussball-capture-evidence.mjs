@@ -1,5 +1,5 @@
 import {createHash} from 'node:crypto'
-import {mkdirSync,writeFileSync,appendFileSync,readFileSync,lstatSync,realpathSync} from 'node:fs'
+import {mkdirSync,writeFileSync,appendFileSync,readFileSync,lstatSync,realpathSync,existsSync} from 'node:fs'
 import {resolve,join,relative} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {isDeepStrictEqual} from 'node:util'
@@ -156,8 +156,9 @@ function persistCheckpoint(directory,exported){
  })
  return {version,proof:exported.proof,parentFiles}
 }
-function readCheckpoint(directory,checkpoint,options){
- requireProof(checkpoint&&Object.keys(checkpoint).sort().join(',')==='parentFiles,proof,version'&&[1,2,3,4].includes(checkpoint.version)&&isDeepStrictEqual(checkpoint.parentFiles,checkpointFiles(checkpoint.version)),'checkpoint fixed parent paths/version differ')
+function readCheckpoint(directory,checkpoint,options,{captureVersion=4}={}){
+ const allowed=captureVersion===5?[4]:[1,2,3]
+ requireProof(checkpoint&&Object.keys(checkpoint).sort().join(',')==='parentFiles,proof,version'&&allowed.includes(checkpoint.version)&&isDeepStrictEqual(checkpoint.parentFiles,checkpointFiles(checkpoint.version)),'checkpoint fixed parent paths/version differ')
  const parents=checkpoint.parentFiles.map(({metadataFile,zipFile})=>{
   const m=JSON.parse(readRegular(directory,metadataFile))
   requireProof(m&&Object.keys(m).sort().join(',')==='artifact,jobs,run','checkpoint parent metadata fields differ')
@@ -257,6 +258,7 @@ function readRegular(directory,path){
 export async function verifyFussballDirectory(directory,{collectFn=collectFussballSeason,requireCodeMatch=true}={}){
  const m=JSON.parse(readRegular(directory,'manifest.json'))
  if(m.version===5)return verifyFussballRetryDirectory(directory,m,{collectFn,requireCodeMatch})
+ requireProof(!Object.hasOwn(m,'retryPolicy')&&!Object.hasOwn(m,'outcomesSha256')&&!existsSync(join(directory,'outcomes.jsonl')),'legacy capture cannot carry retry policy/outcome evidence')
  requireProof([1,2,3,4].includes(m.version)&&m.provider==='fussball'&&m.success===true&&m.activationEligible===false,'incomplete or failed capture')
  requireProof(/^[a-f0-9]{64}$/.test(m.codeSha256??'')&&(!requireCodeMatch||m.codeSha256===fussballCaptureCodeSha256()),'capture code fingerprint differs')
  const options=validateFussballCaptureOptions(m.options),snapshot=m.snapshot
@@ -320,7 +322,7 @@ async function verifyFussballRetryDirectory(directory,m,{collectFn,requireCodeMa
  const closed=(v,keys)=>v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).sort().join(',')===keys.sort().join(',')
  requireProof(closed(m,['version','provider','createdAt','completedAt','options','codeSha256','success','error','snapshot','documents','resultSha256','activationEligible','retryPolicy','outcomesSha256','checkpoint',...(m.archiveParent?['archiveParent']:[])])&&m.provider==='fussball'&&m.success===true&&m.error===null&&m.activationEligible===false&&m.retryPolicy===FUSSBALL_V4_RETRY_POLICY.id,'closed successful v4 retry manifest required')
  requireProof(/^[a-f0-9]{64}$/.test(m.codeSha256??'')&&(!requireCodeMatch||m.codeSha256===fussballCaptureCodeSha256()),'retry capture code fingerprint differs')
- const options=validateFussballCaptureOptions(m.options),checkpoint=readCheckpoint(directory,m.checkpoint,options)
+ const options=validateFussballCaptureOptions(m.options),checkpoint=readCheckpoint(directory,m.checkpoint,options,{captureVersion:5})
  requireProof(m.checkpoint.version===4&&checkpoint.proof.preset==='baden-reviewed-transports-v4','v4 retry requires authenticated exact checkpoint')
  const current=options.staffel===checkpoint.proof.scope.staffel
  requireProof(current?!m.archiveParent:!!m.archiveParent,'retry stage/adjacent parent differs')

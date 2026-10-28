@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {readFileSync,writeFileSync,mkdtempSync,rmSync} from 'node:fs'
+import {readFileSync,writeFileSync,mkdtempSync,rmSync,unlinkSync} from 'node:fs'
 import {join} from 'node:path'
 import {tmpdir} from 'node:os'
 import {createHash} from 'node:crypto'
@@ -21,7 +21,20 @@ test('v4 schema5 counts failed retry, durably binds every outcome, and replays w
  const outcomes=readFileSync(join(output,'outcomes.jsonl')),rows=outcomes.toString().trim().split('\n').map(JSON.parse)
  assert.deepEqual(rows.map(r=>r.status),['failed','success']);assert.deepEqual(rows,m.snapshot.attempts);assert.equal(m.outcomesSha256,createHash('sha256').update(outcomes).digest('hex'))
  const verified=await verifyFussballDirectory(output,{collectFn:collector});assert.equal(verified.requests,2);assert.equal(verified.priorRequests,1517);assert.equal(verified.checkpointPreset,'baden-reviewed-transports-v4')
- const original=readFileSync(join(output,'manifest.json'))
+ const original=readFileSync(join(output,'manifest.json')),intents=readFileSync(join(output,'attempts.jsonl'))
+ // Reproduce the reviewer's exact refund: retain the genuine raw checkpoint,
+ // but remove failure1 and renumber success2 as1 under legacy schema4.
+ const downgraded=JSON.parse(original);downgraded.version=4;delete downgraded.retryPolicy;delete downgraded.outcomesSha256
+ const success={...downgraded.snapshot.attempts[1],number:1};downgraded.snapshot.requests=1;downgraded.snapshot.attempts=[success];downgraded.documents[0].originalReceipt.attempt=success
+ writeFileSync(join(output,'manifest.json'),JSON.stringify(downgraded)+'\n');writeFileSync(join(output,'attempts.jsonl'),JSON.stringify({number:1,url:seed,kind:'round',startedAt:null,status:'pending',error:null})+'\n');unlinkSync(join(output,'outcomes.jsonl'))
+ await assert.rejects(verifyFussballDirectory(output,{collectFn:collector}),/checkpoint.*version|legacy.*retry/)
+ writeFileSync(join(output,'manifest.json'),original);writeFileSync(join(output,'attempts.jsonl'),intents);writeFileSync(join(output,'outcomes.jsonl'),outcomes)
+ for(const mutate of [x=>{x.version=1},x=>{x.version=2},x=>{x.version=3},x=>{x.version=4},x=>{x.checkpoint.version=3},x=>{x.retryPolicy='unknown'},x=>{delete x.outcomesSha256}]){
+  const changed=JSON.parse(original);mutate(changed);writeFileSync(join(output,'manifest.json'),JSON.stringify(changed)+'\n');await assert.rejects(verifyFussballDirectory(output,{collectFn:collector}))
+ }
+ const legacyOutcomeOnly=JSON.parse(original);legacyOutcomeOnly.version=1;delete legacyOutcomeOnly.checkpoint;delete legacyOutcomeOnly.retryPolicy;delete legacyOutcomeOnly.outcomesSha256
+ writeFileSync(join(output,'manifest.json'),JSON.stringify(legacyOutcomeOnly)+'\n');await assert.rejects(verifyFussballDirectory(output,{collectFn:collector}),/legacy.*outcome/)
+ writeFileSync(join(output,'manifest.json'),original)
  for(const mutation of [
   x=>{x.snapshot.requests=1},x=>{x.snapshot.attempts[0].transportFailure.chain.cause.code='EPERM'},x=>{x.documents[0].originalReceipt.attempt.number=1},
  ]){const altered=JSON.parse(original);mutation(altered);writeFileSync(join(output,'manifest.json'),JSON.stringify(altered)+'\n');await assert.rejects(verifyFussballDirectory(output,{collectFn:collector}))}

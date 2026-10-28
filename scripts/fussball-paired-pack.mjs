@@ -32,13 +32,33 @@ export async function loadFussballPairedPack(directory,{candidate,now=Date.now,r
  proof(scopes[0].staffel!==scopes[1].staffel,'distinct current/archive staffel required')
  const manifests=['current','archive'].map(name=>JSON.parse(readPairedOriginal(directory,name+'/manifest.json')))
  const [cm,am]=manifests
- proof([1,4].includes(cm.version)&&am.version===3&&cm.success===true&&am.success===true,'successful ordinary/completed current and v3 archive required')
+ const v4=cm.version===5||am.version===5
+ proof(cm.success===true&&am.success===true,'successful paired captures required')
+ if(v4){
+  proof(cm.version===5&&am.version===5&&c.slug==='de-verbandsliga-baden'&&cardPolicy==='community-v1','schema5 requires exact reviewed Baden v4 pair')
+  for(const capture of manifests){
+   proof(capture.checkpoint?.version===4&&capture.checkpoint.proof?.preset==='baden-reviewed-transports-v4'&&capture.checkpoint.proof.priorRequests===1517&&capture.checkpoint.proof.totalRequestCap===5000&&capture.retryPolicy==='baden-v4-transient-v1'&&/^[a-f0-9]{64}$/.test(capture.outcomesSha256??''),'schema5 v4 checkpoint/retry policy/outcomes required')
+  }
+  proof(same(cm.checkpoint,am.checkpoint)&&same(cm.checkpoint.proof.scope,scopes[0]),'paired v4 raw checkpoint/scope differs')
+  for(const [i,name]of ['current','archive'].entries())proof(hash(readPairedOriginal(directory,name+'/outcomes.jsonl'))===manifests[i].outcomesSha256,'paired v4 outcome bytes differ')
+ }else{
+  proof([1,4].includes(cm.version)&&am.version===3,'successful ordinary/completed current and v3 archive required')
+  proof(manifests.every(m=>!Object.hasOwn(m,'retryPolicy')&&!Object.hasOwn(m,'outcomesSha256'))&&(cm.version!==4||[1,2,3].includes(cm.checkpoint?.version)),'legacy pair cannot carry v4 checkpoint/retry evidence')
+ }
  const time=typeof now==='function'?now():now,at=time instanceof Date?+time:time
  proof(Number.isFinite(at)&&Date.parse(cm.createdAt)<=Date.parse(cm.completedAt)&&Date.parse(cm.completedAt)<=Date.parse(am.createdAt)&&Date.parse(am.createdAt)<=Date.parse(am.completedAt)&&Date.parse(am.completedAt)<=at,'paired chronology differs')
  for(const [i,s]of scopes.entries())proof(['seedUrl','staffel','season'].every(k=>manifests[i].options?.[k]===s[k])&&manifests[i].options.reportLimit===null&&manifests[i].options.cardPolicy===cardPolicy,'capture scope/full intent differs')
  const seed=cm.documents.filter(d=>d.kind==='round'&&d.url===scopes[0].seedUrl)
  proof(seed.length===1,'exact current original seed required')
- const d=seed[0],parent=am.archiveParent,originalReceipt={version:1,document:documentReceipt(d),attempt:cm.snapshot.attempts.find(a=>a.url===d.url),capture:{createdAt:cm.createdAt,codeSha256:cm.codeSha256,staffel:scopes[0].staffel,season:scopes[0].season}}
+ const d=seed[0],parent=am.archiveParent
+ let attempt=cm.snapshot.attempts.find(a=>a.url===d.url)
+ if(v4){
+  const successes=cm.snapshot.attempts.filter(a=>a.url===d.url&&a.kind==='round'&&a.status==='success'&&a.httpStatus===200&&a.startedAt===d.capturedAt),numbered=cm.snapshot.attempts.filter(a=>a.number===d.originalReceipt?.attempt?.number)
+  proof(successes.length===1&&numbered.length===1&&same(successes[0],numbered[0]),'unique successful seed attempt-number receipt required')
+  attempt=successes[0]
+ }
+ const originalReceipt={version:1,document:documentReceipt(d),attempt,capture:{createdAt:cm.createdAt,codeSha256:cm.codeSha256,staffel:scopes[0].staffel,season:scopes[0].season}}
+ if(v4)proof(same(d.originalReceipt,originalReceipt),'current seed original receipt/body identity differs')
  proof(parent&&same(parent.current,scopes[0])&&same(parent.document,documentReceipt(d))&&same(parent.originalReceipt,originalReceipt),'archive parent does not belong to admitted current capture')
  const source=readPairedOriginal(directory,'current/'+d.file),parentBytes=readPairedOriginal(directory,'archive/'+parent.file)
  proof(source.length===d.bytes&&hash(source)===d.sha256&&source.equals(parentBytes),'archive parent original seed bytes differ')
@@ -48,7 +68,7 @@ export async function loadFussballPairedPack(directory,{candidate,now=Date.now,r
   proof(batch.provider==='fussball-public'&&batch.staffel===s.staffel&&batch.season===s.season&&batch.activationEligible===false&&batch.cardPolicy===cardPolicy,'verified native batch scope differs')
   seasons.push({code:i===0?c.source_league_code:c.archives[0].code,season:s.season,schedule:batch.schedule,reports:batch.reports,identities:batch.identities,...(cardPolicy?{cardPolicy,pendingReports:batch.pendingReports,cardEnvelopes:batch.cardEnvelopes}:{})})
  }
- const originals=['current','archive'].map(name=>['manifest.json','result.json','attempts.jsonl'].map(file=>[name+'/'+file,hash(readPairedOriginal(directory,name+'/'+file))]))
+ const originals=['current','archive'].map(name=>['manifest.json','result.json','attempts.jsonl',...(v4?['outcomes.jsonl']:[])].map(file=>[name+'/'+file,hash(readPairedOriginal(directory,name+'/'+file))]))
  return {version:1,candidate:c,seasons,captured_at:cm.createdAt,original_bytes_sha256:hash(canonical([['manifest.json',hash(readPairedOriginal(directory,'manifest.json'))],...originals]))}
 }
 

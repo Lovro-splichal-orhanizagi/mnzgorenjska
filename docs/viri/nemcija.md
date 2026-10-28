@@ -1166,3 +1166,10 @@ Focused genuine tests accept `FUSSBALL_V4_EVIDENCE_DIR` pointing to the retained
 run40614233934 directory containing `current-metadata.json`, `current.zip` and
 `current-manifest.json`; unconfigured CI explicitly skips only private-evidence
 cases. Source-free retry/refusal and caller-JSON boundary controls always run.
+
+Checkpoint version4 is accepted only with capture schema5; legacy schemas reject
+retry policy/outcome evidence. Paired transport staging supports only the exact
+reviewed Baden schema5+schema5 combination with the same authenticated v4 history
+and bound outcomes. Its archive seed receipt names the unique successful attempt
+(and original body hash), including success2 after failed connection1. Ordinary
+source, statistics and native admission still run independently before acceptance.
