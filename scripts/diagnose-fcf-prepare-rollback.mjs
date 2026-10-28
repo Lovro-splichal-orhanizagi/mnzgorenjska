@@ -126,12 +126,24 @@ try{
   if(main?.ref!=='refs/heads/main'||main?.object?.type!=='commit'||main.object.sha!==deployed)fail('main_identity_refused')
   result.mainSha=main.object.sha;result.identityVerified=true;result.status='identity_verified'
   if(mode==='--probe'){
+    if(typeof env.SUPABASE_DB_URL!=='string'||/[\u0000-\u0020\u007f]/.test(env.SUPABASE_DB_URL))fail('invalid_database_endpoint')
     let endpoint;try{endpoint=new URL(env.SUPABASE_DB_URL)}catch{fail('invalid_database_endpoint')}
+    const databasePath=/^postgres(?:ql)?:\/\/[^/?#]+(\/[^/?#]+)(?:\?[^#]*)?$/i.exec(env.SUPABASE_DB_URL)?.[1]
     if(!['postgres:','postgresql:'].includes(endpoint.protocol)||endpoint.hostname!=='127.0.0.1'||endpoint.port!=='5432'||
-      endpoint.hash||[...endpoint.searchParams].some(([key,value])=>key!=='sslmode'||!['disable','prefer','require'].includes(value)))fail('invalid_database_endpoint')
+      endpoint.hash||!databasePath||endpoint.searchParams.getAll('sslmode').length>1||
+      [...endpoint.searchParams].some(([key,value])=>key!=='sslmode'||!['disable','prefer','require'].includes(value)))fail('invalid_database_endpoint')
+    let databaseUser,databasePassword,databaseName
+    try{
+      databaseUser=decodeURIComponent(endpoint.username)
+      databasePassword=decodeURIComponent(endpoint.password)
+      databaseName=decodeURIComponent(databasePath.slice(1))
+    }catch{fail('invalid_database_endpoint')}
+    if(!databaseUser||!databaseName||[databaseUser,databasePassword,databaseName].some(value=>/[\u0000-\u001f\u007f]/.test(value)))fail('invalid_database_endpoint')
     // A fresh allowlist environment excludes every inherited PGSERVICE* setting.
-    const pgEnv={PATH:env.PATH,LANG:'C',LC_ALL:'C',PGDATABASE:env.SUPABASE_DB_URL,
-      PGHOSTADDR:'127.0.0.1',PGCONNECT_TIMEOUT:'15',PGPASSFILE:'/dev/null'}
+    // PGDATABASE is a literal database name; it does not expand a connection URI.
+    const pgEnv={PATH:env.PATH,LANG:'C',LC_ALL:'C',PGUSER:databaseUser,PGPASSWORD:databasePassword,
+      PGDATABASE:databaseName,PGHOST:'127.0.0.1',PGHOSTADDR:'127.0.0.1',PGPORT:'5432',
+      PGSSLMODE:endpoint.searchParams.get('sslmode')??'prefer',PGCONNECT_TIMEOUT:'15',PGPASSFILE:'/dev/null'}
     const child=spawnSync('psql',['-X','-w','-qAt','-v','ON_ERROR_STOP=1','-v','VERBOSITY=sqlstate','-v','SHOW_CONTEXT=never'],
       {env:pgEnv,input:sql,encoding:'utf8',timeout:35000,maxBuffer:64*1024,stdio:['pipe','pipe','pipe']})
     // No raw stdout/stderr, connection string, SQL input, DETAIL or CONTEXT escapes.
