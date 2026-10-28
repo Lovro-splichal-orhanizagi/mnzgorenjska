@@ -79,6 +79,7 @@ begin
  select *into m from matches where zapisnik_id=report or(round_id=r.id and home_team_id=h and away_team_id=a)for update;
  if m.id is not null then
   perform private_baden_history.require(m.round_id=r.id and m.home_team_id=h and m.away_team_id=a and m.imported_at is null and not m.kontumacija and not m.vir_brez_izida and not exists(select 1 from appearances where match_id=m.id)and not exists(select 1 from goals where match_id=m.id)
+   and(m.source_phase is null or m.source_phase is not distinct from e->>'sourcePhase')and(m.source_round is null or m.source_round is not distinct from(e->>'sourceRound')::int)
    and ((m.zapisnik_id=report and m.source_url=e->>'sourceUrl'and m.played_on=(e->>'playedOn')::date and m.home_goals is not distinct from(e->>'observedHomeScore')::int and m.away_goals is not distinct from(e->>'observedAwayScore')::int)
    or(m.zapisnik_id is null and m.source_url is null and m.statistics_status='available'and m.home_goals=0 and m.away_goals=0 and(m.played_on is null or m.played_on=(e->>'playedOn')::date))),'foreign or populated row; no cleanup');
  end if;
@@ -112,11 +113,22 @@ end$$;
 create function public.get_fussball_historical_preparation(p_competition_id bigint)returns jsonb language plpgsql stable security definer set search_path=public,pg_temp as $$
 #variable_conflict use_column
 
-declare c competitions;p private_baden_history.prepared;v jsonb;b jsonb;f jsonb;r rounds;m matches;history jsonb;cards jsonb;opening rounds;
+declare c competitions;p private_baden_history.prepared;v jsonb;b jsonb;f jsonb;r rounds;m matches;history jsonb;cards jsonb;cold jsonb;opening rounds;
 begin
  perform private_fussball.service();select *into c from competitions where id=p_competition_id;
  select *into p from private_baden_history.prepared where competition_id=c.id;select manifest into v from private_baden_history.catalog where manifest_sha256=p.manifest_sha256;
  perform private_baden_history.require(p.competition_id is not null and v is not null and not c.active and c.slug=v->>'slug'and c.source='fussball-public'and c.source_league_code=v->>'currentCode'and c.source_policy='fussball-community-cards-v1'and exists(select 1 from countries where id=c.country_id and code='DE')and not exists(select 1 from fantasy_teams where competition_id=c.id)and not exists(select 1 from fantasy_lineups l join rounds x on x.id=l.round_id where x.competition_id=c.id),'exact inactive no-user preparation required');
+ -- COLD pre-import boundary only. Later imports/runtime must use a separate
+ -- installed-history/cards context; this getter intentionally refuses them.
+ select jsonb_build_object(
+  'playerCount',(select count(*)from players where competition_id=c.id),
+  'importedMatchCount',(select count(*)from matches x join rounds q on q.id=x.round_id where q.competition_id=c.id and x.imported_at is not null),
+  'appearanceCount',(select count(*)from appearances x join matches z on z.id=x.match_id join rounds q on q.id=z.round_id where q.competition_id=c.id),
+  'goalCount',(select count(*)from goals x join matches z on z.id=x.match_id join rounds q on q.id=z.round_id where q.competition_id=c.id),
+  'playerScoreCount',(select count(*)from player_scores x join rounds q on q.id=x.round_id where q.competition_id=c.id),
+  'roundPointsCount',(select count(*)from tocke_krogov x join rounds q on q.id=x.round_id where q.competition_id=c.id)
+ )into cold;
+ perform private_baden_history.require(cold='{"playerCount":0,"importedMatchCount":0,"appearanceCount":0,"goalCount":0,"playerScoreCount":0,"roundPointsCount":0}'::jsonb,'cold pre-import preparation contains players/imported matches/individual statistics or points');
  perform private_baden_history.require(private_baden_history.sha(v)=p.manifest_sha256 and (v->>'currentFreshUntil')::timestamptz>clock_timestamp()and jsonb_array_length(p.bindings)=jsonb_array_length(v->'fixtures'),'compiled manifest/freshness/bindings drift');
  for b in select value from jsonb_array_elements(p.bindings)loop
   f:=b->'fixture';select *into r from rounds where id=(b->>'roundId')::bigint;select *into m from matches where id=(b->>'matchId')::bigint;
@@ -136,7 +148,7 @@ begin
  perform private_baden_history.require(opening.competition_id=c.id and opening.season='2026/27'and opening.number=(v->>'openingRound')::int and c.prvi_fantasy_krog=opening.number and opening.played_on=(v->>'firstFantasyPlayedOn')::date and opening.lineups_locked_at is null and opening.deadline_at>clock_timestamp(),'future unlocked exact opening required');
  history:=public.get_installed_historical_statistics_markers(c.id);cards:=public.check_fussball_card_readiness(c.id,v->>'currentCode');
  perform private_baden_history.require(history->>'policySha256'=private_baden_history.sha(v->'policy')and history->>'firstFantasyPlayedOn'=v->>'firstFantasyPlayedOn'and cards->>'installed'='true'and cards->>'enabled'='true'and cards->>'current_code'=v->>'currentCode'and cards->'archive_codes'=jsonb_build_array(v->>'archiveCode'),'both installed policy readbacks required');
- return jsonb_build_object('prepared',true,'competitionId',c.id,'active',false,'noUsers',true,'sourcePolicy',c.source_policy,'manifestSha256',p.manifest_sha256,'bindings',p.bindings,'bindingSha256',private_baden_history.sha(p.bindings),'history',history,'cards',cards,'policySha256',history->>'policySha256','markerInventorySha256',private_baden_history.sha(history->'markers'),'firstFantasyPlayedOn',history->>'firstFantasyPlayedOn','openingRoundId',opening.id);
+ return jsonb_build_object('prepared',true,'competitionId',c.id,'active',false,'noUsers',true,'coldState',cold,'sourcePolicy',c.source_policy,'manifestSha256',p.manifest_sha256,'bindings',p.bindings,'bindingSha256',private_baden_history.sha(p.bindings),'history',history,'cards',cards,'policySha256',history->>'policySha256','markerInventorySha256',private_baden_history.sha(history->'markers'),'firstFantasyPlayedOn',history->>'firstFantasyPlayedOn','openingRoundId',opening.id);
 end$$;
 create function public.prepare_fussball_historical_statistics(p_manifest text,p_sha256 text)returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
 #variable_conflict use_column

@@ -1,4 +1,6 @@
-// Task 2 only: inactive cold registration and atomic header/policy preparation.
+// Task 2 only: inactive COLD pre-import registration and atomic preparation.
+// This capability deliberately holds after any imports or activation. Task 3
+// runtime authority must be a separate source/catalog/native installed context.
 import {readFileSync} from 'node:fs'
 import {createHash} from 'node:crypto'
 import {isDeepStrictEqual} from 'node:util'
@@ -20,6 +22,7 @@ function manifest(proof){
 }
 function readback(v,m,id){
  need(v?.prepared===true&&v.competitionId===id&&v.active===false&&v.noUsers===true&&v.sourcePolicy===BADEN_CARDS,'actual inactive no-user prepared readback required')
+ need(isDeepStrictEqual(v.coldState,{playerCount:0,importedMatchCount:0,appearanceCount:0,goalCount:0,playerScoreCount:0,roundPointsCount:0}),'cold pre-import preparation requires no players/imported matches/individual statistics or points')
  need(v.firstFantasyPlayedOn===m.firstFantasyPlayedOn&&Number.isSafeInteger(v.openingRoundId)&&v.openingRoundId>0&&v.policySha256===sha(m.policy),'policy/cutoff/opening binding differs')
  need(Array.isArray(v.bindings)&&Array.isArray(v.history?.markers),'complete native binding and marker arrays required')
  need(v.manifestSha256===sha(m)&&v.bindingSha256===sha(v.bindings)&&v.markerInventorySha256===sha(v.history.markers),'full native inventory digest differs')
@@ -61,5 +64,6 @@ export async function prepareFussballNativeHistory({composition,transport}){
  receipts.set(receipt,{composition:again,transport,manifest:m,readback:observed});return receipt
 }
 export function getFussballNativePreparation(receipt){const s=receipts.get(receipt);need(s,'issuer-issued native preparation capability required');getFussballNativeComposition(s.composition);return {receipt,composition:s.composition,manifest:structuredClone(s.manifest),readback:structuredClone(s.readback)}}
-/** Every later import factory must cross this async source+DB boundary. */
+/** Revalidate only before the first import. Import/runtime/active-nightly phases
+ * need their own authenticated installed context; no phase flag bypasses cold. */
 export async function reauthenticateFussballNativePreparation(receipt){const s=receipts.get(receipt);need(s,'issuer-issued native preparation capability required');const p=await reauthenticateFussballNativeComposition(s.composition);need(isDeepStrictEqual(manifest(p),s.manifest),'source/catalog changed');const v=readback(await s.transport.readFussballHistory(receipt.competitionId),s.manifest,receipt.competitionId);need(isDeepStrictEqual(v,s.readback),'native preparation drift');return getFussballNativePreparation(receipt)}

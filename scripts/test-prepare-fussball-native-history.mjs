@@ -41,7 +41,7 @@ function issuerFixture(){
  const manifest=api.testManifest(token),id=77001
  const bindings=manifest.fixtures.map((fixture,n)=>({fixture,sourceMatchId:fixture.sourceMatchId,sourceCompetitionId:fixture.sourceCompetitionId,matchId:88001+n,roundId:99001+n,homeTeamId:66001,awayTeamId:66002}))
  const markers=manifest.policy.entries.map(e=>{const b=bindings.find(b=>b.sourceMatchId===e.sourceMatchId),{rawSha256,reasonCode,...fixture}=e;return {...Object.fromEntries(['matchId','roundId','homeTeamId','awayTeamId'].map(k=>[k,b[k]])),sourceMatchId:e.sourceMatchId,reportId:`de-fussball-${e.sourceMatchId}`,fixture,rawSha256,policyId:manifest.policy.id,policySha256:hash(manifest.policy),statisticsStatus:'unavailable_historical',importedAt:null,individualRowCount:0,voteCount:0}}).sort((a,b)=>a.sourceMatchId.localeCompare(b.sourceMatchId))
- const observation={prepared:true,competitionId:id,active:false,noUsers:true,sourcePolicy:history.BADEN_CARDS,manifestSha256:hash(manifest),bindings,bindingSha256:hash(bindings),history:{installed:true,policyId:manifest.policy.id,policySha256:hash(manifest.policy),firstFantasyPlayedOn:manifest.firstFantasyPlayedOn,markers},cards:{installed:true,enabled:true,current_code:history.BADEN_CURRENT,archive_codes:[history.BADEN_ARCHIVE],source_policy:history.BADEN_CARDS},policySha256:hash(manifest.policy),markerInventorySha256:hash(markers),firstFantasyPlayedOn:manifest.firstFantasyPlayedOn,openingRoundId:bindings.find(b=>b.fixture.season==='2026/27'&&b.fixture.round===manifest.openingRound).roundId}
+ const observation={prepared:true,competitionId:id,active:false,noUsers:true,coldState:{playerCount:0,importedMatchCount:0,appearanceCount:0,goalCount:0,playerScoreCount:0,roundPointsCount:0},sourcePolicy:history.BADEN_CARDS,manifestSha256:hash(manifest),bindings,bindingSha256:hash(bindings),history:{installed:true,policyId:manifest.policy.id,policySha256:hash(manifest.policy),firstFantasyPlayedOn:manifest.firstFantasyPlayedOn,markers},cards:{installed:true,enabled:true,current_code:history.BADEN_CURRENT,archive_codes:[history.BADEN_ARCHIVE],source_policy:history.BADEN_CARDS},policySha256:hash(manifest.policy),markerInventorySha256:hash(markers),firstFantasyPlayedOn:manifest.firstFantasyPlayedOn,openingRoundId:bindings.find(b=>b.fixture.season==='2026/27'&&b.fixture.round===manifest.openingRound).roundId}
  const transport={find:async c=>{calls.push('find');assert.equal(c.slug,history.BADEN_SLUG);return controls.existing??null},register:async c=>{calls.push('register');assert.equal(c.id,undefined);return id},prepareFussballHistory:async body=>{calls.push('prepare');assert.equal(body.manifest,history.badenCanonical(manifest));assert.equal(body.sha256,hash(manifest));const v=structuredClone(observation);controls.prepareMutation?.(v);return v},readFussballHistory:async cid=>{calls.push('read');assert.equal(cid,id);const v=structuredClone(observation);controls.readMutation?.(v);return v}}
  return {api,token,manifest,observation,transport,calls,controls}
 }
@@ -72,4 +72,17 @@ test('TEST ONLY existing active registration is rejected before preparation',asy
  const f=issuerFixture();f.controls.existing={id:77001,active:true,slug:history.BADEN_SLUG,source:'fussball-public',source_league_code:history.BADEN_CURRENT}
  await assert.rejects(f.api.prepareFussballNativeHistory({composition:f.token,transport:f.transport}),/inactive/)
  assert.deepEqual(f.calls,['source','find'])
+})
+
+test('TEST ONLY cold preparation issuer and reauthentication refuse ordinary individual-state drift',async()=>{
+ for(const key of ['playerCount','importedMatchCount','appearanceCount','goalCount','playerScoreCount','roundPointsCount']){
+  const initial=issuerFixture(),mutate=v=>{v.coldState[key]=1}
+  initial.controls.prepareMutation=mutate;initial.controls.readMutation=mutate
+  await assert.rejects(initial.api.prepareFussballNativeHistory({composition:initial.token,transport:initial.transport}),/cold pre-import/)
+  const raced=issuerFixture();raced.controls.readMutation=mutate
+  await assert.rejects(raced.api.prepareFussballNativeHistory({composition:raced.token,transport:raced.transport}),/cold pre-import/)
+  const later=issuerFixture(),receipt=await later.api.prepareFussballNativeHistory({composition:later.token,transport:later.transport})
+  later.controls.readMutation=mutate
+  await assert.rejects(later.api.reauthenticateFussballNativePreparation(receipt),/cold pre-import/)
+ }
 })
