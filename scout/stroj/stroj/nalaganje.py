@@ -137,6 +137,8 @@ from public.matches m
 join public.rounds r on r.id = m.round_id
 join public.competitions c on c.id = r.competition_id
 where m.zapisnik_id is not null and not m.kontumacija and not public.je_mladinski_slug(c.slug)
+  -- Elo potrebuje znan izid; uradni izidi brez statistik ostanejo vključeni.
+  and m.home_goals >= 0 and m.away_goals >= 0
 order by m.played_on nulls last, m.id
 """
 
