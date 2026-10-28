@@ -23,7 +23,7 @@ interface Povezava {
 // pod "Več": enajst enakovrednih povezav je pomenilo, da nobena ne izstopa.
 // Grb vodi domov, zato "Domov" ne potrebuje svoje povezave.
 /** Države, kjer zapisnik pozicij ne pozna in jih določi glasovanje (stran Pozicije v meniju). */
-const DRZAVE_Z_GLASOVANJEM = ['SI', 'HR', 'CZ', 'HU', 'AT', 'RS', 'RO', 'EE', 'PL', 'ES', 'LV', 'MK', 'GR', 'TR', 'UA', 'AM', 'AZ', 'DK', 'GB', 'MT', 'ME', 'BA', 'MD']
+const DRZAVE_Z_GLASOVANJEM = ['SI', 'HR', 'CZ', 'HU', 'AT', 'RS', 'RO', 'EE', 'PL', 'ES', 'LV', 'MK', 'GR', 'TR', 'UA', 'AM', 'AZ', 'DK', 'GB', 'MT', 'ME', 'BA', 'MD', 'HK', 'GI']
 
 const glavne: Povezava[] = [
   { pot: '/my-team', get naslov() { return t('aplikacija.meni.mojaEkipa') } },

@@ -16,7 +16,9 @@ const KLJUC = 'slff-drzava'
  * Cela oznaka ima prednost pred osnovo: `ro-MD` je Moldavija, čeprav je `ro`
  * Romunija, `sr-ME` Črna gora, `bs-BA` Bosna (gola `bs` ostane Hrvaška).
  * Angleščina ni država (tudi `en-GB` ima pol Evrope): Združeno kraljestvo
- * ugane le IP ali pas, Malto še `mt` ali `en-MT`. Ruščine ne preslikamo v Ukrajino.
+ * ugane le IP ali pas, Malto še `mt` ali `en-MT`, Gibraltar `en-GI`. Ruščine ne preslikamo v Ukrajino.
+ * Hongkong je `zh-HK` (ali kantonščina `yue`), gola kitajščina ne kaže nanj.
+ * JP, HK, TH in GI imajo angleški vmesnik (`JEZIK_DRZAVE`), lastnega slovarja ni.
  */
 const DRZAVE: Record<string, { jeziki: string[]; pasovi: string[] }> = {
   SI: { jeziki: ['sl'], pasovi: ['Europe/Ljubljana'] },
@@ -44,6 +46,10 @@ const DRZAVE: Record<string, { jeziki: string[]; pasovi: string[] }> = {
   ME: { jeziki: ['sr-me', 'sr-latn-me', 'sr-cyrl-me', 'cnr'], pasovi: ['Europe/Podgorica'] },
   BA: { jeziki: ['bs-ba', 'bs-latn-ba', 'hr-ba', 'sr-ba', 'sr-latn-ba', 'sr-cyrl-ba'], pasovi: ['Europe/Sarajevo'] },
   MD: { jeziki: ['ro-md', 'mo'], pasovi: ['Europe/Chisinau'] },
+  JP: { jeziki: ['ja'], pasovi: ['Asia/Tokyo'] },
+  HK: { jeziki: ['zh-hk', 'zh-hant-hk', 'yue', 'en-hk'], pasovi: ['Asia/Hong_Kong'] },
+  TH: { jeziki: ['th'], pasovi: ['Asia/Bangkok'] },
+  GI: { jeziki: ['en-gi'], pasovi: ['Europe/Gibraltar'] },
 }
 export const znaneDrzave = () => Object.keys(DRZAVE)
 
@@ -310,6 +316,7 @@ export function drzavaLige(slug: string | null | undefined): string | null {
 /** Jezik vmesnika za državo. */
 export const JEZIK_DRZAVE: Record<string, string> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', DE: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk',
   GR: 'el', TR: 'tr', UA: 'uk', AM: 'hy', AZ: 'az', DK: 'da', GB: 'en', MT: 'en', ME: 'sr', BA: 'hr', MD: 'ro',
+  JP: 'en', HK: 'en', TH: 'en', GI: 'en',
 }
 
 /** Država vstopne strani (`/at` → 'AT'), sicer null. */

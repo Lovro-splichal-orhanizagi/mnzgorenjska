@@ -144,6 +144,10 @@ jobs:
           - { drzava: ME, kos: 1, kosov: 1 }
           - { drzava: BA, kos: 1, kosov: 1 }
           - { drzava: MD, kos: 1, kosov: 1 }
+          - { drzava: JP, kos: 1, kosov: 1 }
+          - { drzava: HK, kos: 1, kosov: 1 }
+          - { drzava: TH, kos: 1, kosov: 1 }
+          - { drzava: GI, kos: 1, kosov: 1 }
     # Ime "uvoz HU" pri enem košu, "uvoz HU 2/3" pri več (cakaj-na-uvoze.mjs
     # pri skupnem viru gleda vse posle, ki se začnejo z "uvoz <država>").
     name: uvoz ${{ matrix.drzava }}${{ matrix.kosov > 1 && format(' {0}/{1}', matrix.kos, matrix.kosov) || '' }}

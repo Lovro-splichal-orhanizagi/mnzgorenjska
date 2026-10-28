@@ -86,7 +86,8 @@ function znamkaCommita() {
 
 /**
  * Različice `index.html` za kartico ob deljenju (sk.html, hr.html, cz.html, hu.html, at.html, rs.html, ro.html, ee.html, pl.html, es.html, lv.html, mk.html,
- * gr.html, tr.html, ua.html, am.html, az.html, dk.html, gb.html, mt.html, me.html, ba.html, md.html).
+ * gr.html, tr.html, ua.html, am.html, az.html, dk.html, gb.html, mt.html, me.html, ba.html, md.html, jp.html, hk.html,
+ * th.html, gi.html).
  *
  * Facebook, WhatsApp in iskalniki JS ne poženejo in vidijo le statični HTML —
  * slovenski. Klub, ki deli povezavo `slff.eu/club/…?t=sk-…`, bi objavil
@@ -142,6 +143,11 @@ function karticeDrzav() {
     { koda: 'me', jezik: 'sr-Latn', locale: 'sr_RS', n: aplikacijaSr.naslovStrani },
     { koda: 'ba', jezik: 'hr', locale: 'hr_HR', n: aplikacijaHr.naslovStrani },
     { koda: 'md', jezik: 'ro', locale: 'ro_RO', n: aplikacijaRo.naslovStrani },
+    // Japonska, Hongkong, Tajska, Gibraltar: angleški vmesnik (lastnega slovarja ni).
+    { koda: 'jp', jezik: 'en', locale: 'en_GB', n: aplikacijaEn.naslovStrani },
+    { koda: 'hk', jezik: 'en', locale: 'en_GB', n: aplikacijaEn.naslovStrani },
+    { koda: 'th', jezik: 'en', locale: 'en_GB', n: aplikacijaEn.naslovStrani },
+    { koda: 'gi', jezik: 'en', locale: 'en_GB', n: aplikacijaEn.naslovStrani },
   ]
   const zamenjaj = (html, datoteka, atribut, ime, vsebina) => {
     const re = new RegExp(`(<meta ${atribut}="${ime}" content=")[^"]*(")`)

@@ -130,7 +130,7 @@ tabelo šifer tam, ne tu.
 | Azerbajdžan | `docs/viri/azerbajdzan.md` | `pfl-az` |
 | Japonska | `docs/viri/japonska.md` | `jfl` |
 | Hongkong | `docs/viri/hongkong.md` | `hkfa` |
-| Tajska (brez aktivnih lig) | `docs/viri/tajska.md` | `thaileague` |
+| Tajska | `docs/viri/tajska.md` | `thaileague` |
 
 Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
 
@@ -151,8 +151,13 @@ Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
   svoj slovar preimenovanj; ob novi ligi preveri trke imen.
 - Koledarska sezona (EE, LV, UA): `competitions.sezona_koledarska`,
   `sezona_lige(liga)`, oznaka `'2026'` (glej `docs/viri/estonija.md`).
-- Lige z delitvijo sezone (Avstrija `+`, Madžarska felső/alsóház): delitev za
-  arhiv osnovne lige ne uvažaj, sicer pripelje igralce drugih skupin.
+- Lige z delitvijo sezone (Avstrija, Gibraltar in Hongkong `+`, Madžarska
+  felső/alsóház): delitev za arhiv osnovne lige ne uvažaj, sicer pripelje
+  igralce drugih skupin. Tekoči šifri se id skupin dopiše, ko jih zveza objavi
+  (`docs/viri/gibraltar.md`, `docs/viri/hongkong.md`).
+- Japonska, Hongkong, Tajska in Gibraltar imajo **angleški vmesnik brez
+  lastnega slovarja** (`JEZIK_DRZAVE` = `en`, angleška pošta z rokom v pasu
+  države, vstop `/jp`, `/hk`, `/th`, `/gi`); lige so neaktivne do uvoza.
 
 Država obiskovalca (katere lige vidi, ugib po IP/jeziku/pasu, tujec, vstopne
 strani `/si`, `/at` …, izbira države): `docs/drzava-obiskovalca.md`. Kratko:

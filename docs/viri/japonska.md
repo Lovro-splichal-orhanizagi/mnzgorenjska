@@ -7,9 +7,15 @@ Vir `jfl` (`scripts/viri/jfl.mjs`) bere **Japan Football League** (JFL,
 igralcev so japonska, kot jih objavi liga (priimek naprej, polna širina
 "Ｈｏｎｄａ ＦＣ" ostane).
 
-**Še manjka za vklop**: vmesnik (`src/i18n/ja/` ali angleščina za JP,
-`JEZIK_DRZAVE.JP`), kartica `jp.html` in Caddy, veja pošte, imena hišnih ekip,
-`JP` v matriki nočnega uvoza (`docs/nocni-uvoz.md`), `klub_stik.drzava`.
+**Država je pripravljena** (28. 10. 2026, migracija 20261028131500): angleški
+vmesnik (`JEZIK_DRZAVE.JP = 'en'`, japonskega slovarja ni), ugib po `ja` ali
+pasu `Asia/Tokyo`, vstop `slff.eu/jp`, kartica `jp.html` (Caddy, rezerva
+`:3201`, `vercel.json`), angleška pošta z rokom po japonsko (`Asia/Tokyo`),
+zastava, imena hišnih ekip in lastnikov (`IMENA_JP`, `ime_hisnega_lastnika`),
+`klub_stik.drzava` in `JP` v matriki nočnega uvoza (`docs/nocni-uvoz.md`).
+Liga ostane neaktivna do uvoza (arhiv → razpored → tekoča sezona → pozicije →
+cene) in vklopa v administraciji. Pozicije da vir (GK/DF/MF/FW), zato stran
+Pozicije v meniju za JP ni.
 Čas: liga igra ob 13:00–18:00 po japonsko, kar je **05:00–11:00 po
 ljubljansko** (poleti −7 h, pozimi −8 h) — rok kroga (`rok_pomak_ur` 6) pade
 na noč pred tekmo.

@@ -40,6 +40,10 @@ export function imeDrzave(koda: string): string {
   if (koda === 'ME') return t('aplikacija.izbiraDrzave.imena.ME')
   if (koda === 'BA') return t('aplikacija.izbiraDrzave.imena.BA')
   if (koda === 'MD') return t('aplikacija.izbiraDrzave.imena.MD')
+  if (koda === 'JP') return t('aplikacija.izbiraDrzave.imena.JP')
+  if (koda === 'HK') return t('aplikacija.izbiraDrzave.imena.HK')
+  if (koda === 'TH') return t('aplikacija.izbiraDrzave.imena.TH')
+  if (koda === 'GI') return t('aplikacija.izbiraDrzave.imena.GI')
   return koda
 }
 

@@ -2,10 +2,14 @@
 
 Vir `gfa` (`scripts/viri/gfa.mjs`) bere **gibraltarfa.com** (Gibraltar
 Football Association). Strani izriše strežnik (HTML, brez JSON-a in brez
-ključev). Država `GI` ("Gibraltar", vpiše jo migracija lig); vmesnik bi bil
-angleški (`en` obstaja), vstopne strani, kartice, pošte, ugiba države in vrstice
-v matriki nočnega uvoza pa **ni** — vse to pred vklopom. Šifra lige v bazi se
-začne z `gi-`.
+ključev). Država `GI` ("Gibraltar", vpiše jo migracija lig). **Država je
+pripravljena** (28. 10. 2026, migracija 20261028131500): angleški vmesnik
+(`JEZIK_DRZAVE.GI = 'en'`), ugib po `en-GI` ali pasu `Europe/Gibraltar`, vstop
+`slff.eu/gi`, kartica `gi.html` (Caddy, rezerva `:3201`, `vercel.json`),
+angleška pošta z rokom po gibraltarsko (= ljubljansko), zastava, imena hišnih
+ekip in lastnikov (`IMENA_GI`), `klub_stik.drzava`, stran Pozicije v meniju
+(vir pozicij ne da) in `GI` v matriki nočnega uvoza. Lige ostanejo neaktivne
+do uvoza in vklopa. Šifra lige v bazi se začne z `gi-`.
 
 - **Sezona je avgust–maj**: `"2026/27"` (iz datuma tekme).
 - **Šifra lige je pot tekmovanja** na strani, `<slug>-<id>`

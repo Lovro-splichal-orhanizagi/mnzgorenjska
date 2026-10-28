@@ -6,13 +6,15 @@ klubov) in Thai League 3 (raven 3, šest regij). Država `TH` ("ประเท�
 zveza `thaileague`, lige `th-t2` in `th-t3-<regija>` (migracija
 20261028121100), **neaktivne**; šifra lige se začne s `th-`.
 
-**Pred vklopom (ni narejeno):** vmesnik (angleški `en` bi zadoščal, tajskega
-ni), `TH` v `JEZIK_DRZAVE`, vstop `/th` in kartica, pošta, ugib države (pas
-`Asia/Bangkok`), imena hišnih ekip, `klub_stik.drzava`, vrstica v matriki
-nočnega uvoza (korak pdftotext za `TH`/`th-` je že v `uvoz-zapisnikov.yml` in
-`uvoz-lige.yml`). Tekme so v Ljubljani **dopoldne** (Bangkok UTC+7 brez
-poletnega časa: poleti −5 h, pozimi −6 h; 15:30 → 10:30 oziroma 9:30) —
-lastnik odloči, ali SLFF gre na Tajsko.
+**Država je pripravljena** (28. 10. 2026, migracija 20261028131500): angleški
+vmesnik (`JEZIK_DRZAVE.TH = 'en'`, tajskega slovarja ni), ugib po `th` ali
+pasu `Asia/Bangkok`, vstop `slff.eu/th`, kartica `th.html` (Caddy, rezerva
+`:3201`, `vercel.json`), angleška pošta z rokom po bangkoško, zastava, imena
+hišnih ekip in lastnikov (`IMENA_TH`), `klub_stik.drzava` in `TH` v matriki
+nočnega uvoza (posel ima pdftotext, kot `uvoz-lige.yml` za `th-`). Pozicije da
+zapisnik, zato strani Pozicije v meniju za TH ni. Lige ostanejo neaktivne do
+uvoza in vklopa. Tekme so v Ljubljani **dopoldne** (Bangkok UTC+7 brez
+poletnega časa: poleti −5 h, pozimi −6 h; 15:30 → 10:30 oziroma 9:30).
 
 ## Dostop in pravice
 
@@ -151,7 +153,7 @@ imena, 11 m, arhiv T2), besede z mesti in ikone tekme 38240 (pretvorba da
 shranjeno besedilo), najmanjši PDF z ikono rumenega kartona (tok strani),
 zavrnitve.
 
-## Uvoz (ko se lastnik odloči)
+## Uvoz
 
 ```bash
 gh workflow run uvoz-lige.yml -f liga=th-t3-north -f arhiv=209/1057 -f cene=true

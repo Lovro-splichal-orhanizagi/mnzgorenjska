@@ -173,6 +173,22 @@
       "destination": "/md.html"
     },
     {
+      "source": "/jp",
+      "destination": "/jp.html"
+    },
+    {
+      "source": "/hk",
+      "destination": "/hk.html"
+    },
+    {
+      "source": "/th",
+      "destination": "/th.html"
+    },
+    {
+      "source": "/gi",
+      "destination": "/gi.html"
+    },
+    {
       "source": "/((?!api/)(?!.*\\.).*)",
       "has": [
         {
@@ -435,6 +451,50 @@
         }
       ],
       "destination": "/md.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "jp-.*"
+        }
+      ],
+      "destination": "/jp.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "hk-.*"
+        }
+      ],
+      "destination": "/hk.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "th-.*"
+        }
+      ],
+      "destination": "/th.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "gi-.*"
+        }
+      ],
+      "destination": "/gi.html"
     },
     {
       "source": "/((?!api/)(?!.*\\.).*)",

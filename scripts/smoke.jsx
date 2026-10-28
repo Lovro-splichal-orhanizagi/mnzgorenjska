@@ -4119,6 +4119,17 @@ preveri(
   preveri('drzava: Malta po malteščini, en-MT ali pasu',
     D.ugibajDrzavo({ jeziki: ['mt-MT'] }) === 'MT' && D.ugibajDrzavo({ jeziki: ['en-MT'] }) === 'MT' &&
       D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Malta' }) === 'MT')
+  // Japonska, Hongkong, Tajska, Gibraltar: angleški vmesnik, ugib po jeziku ali pasu.
+  for (const [drz, liga] of [['JP', 'jp-jfl'], ['HK', 'hk-1-division'], ['TH', 'th-t2'], ['GI', 'gi-gfl']]) {
+    preveri(`jezik: ${drz} → en, vstop /${drz.toLowerCase()}`, zj({ drzava: drz }) === 'en' && D.JEZIK_DRZAVE[drz] === 'en' && D.drzavaLige(liga) === drz &&
+      drzavaVstopa(`/${drz.toLowerCase()}`) === drz)
+  }
+  preveri('drzava: JP (ja, Tokio), HK (zh-HK, ne gola zh), TH (th, Bangkok), GI (en-GI, pas)',
+    D.ugibajDrzavo({ jeziki: ['ja-JP'] }) === 'JP' && D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Asia/Tokyo' }) === 'JP' &&
+      D.ugibajDrzavo({ jeziki: ['zh-HK'] }) === 'HK' && D.ugibajDrzavo({ jeziki: ['zh-Hant-HK'] }) === 'HK' &&
+      D.ugibajDrzavo({ jeziki: ['zh-CN'] }) === null && D.ugibajDrzavo({ jeziki: ['zh-TW'], casovniPas: 'Asia/Hong_Kong' }) === 'HK' &&
+      D.ugibajDrzavo({ jeziki: ['th-TH'] }) === 'TH' && D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Asia/Bangkok' }) === 'TH' &&
+      D.ugibajDrzavo({ jeziki: ['en-GI'] }) === 'GI' && D.ugibajDrzavo({ jeziki: ['en-GB'], casovniPas: 'Europe/Gibraltar' }) === 'GI')
   // Cela oznaka ima prednost pred osnovo: sr-ME je Črna gora, sr-RS ostane Srbija.
   preveri('drzava: Črna gora (sr-ME, cnr, pas), Srbija ostane',
     D.ugibajDrzavo({ jeziki: ['sr-ME'] }) === 'ME' && D.ugibajDrzavo({ jeziki: ['sr-Latn-ME'] }) === 'ME' && D.ugibajDrzavo({ jeziki: ['cnr'] }) === 'ME' &&
@@ -6800,6 +6811,23 @@ preveri(
   let tuja = null
   try { H.tekmeLige('2048/2026-2027', strani) } catch (e) { tuja = e.message }
   preveri('hkfa: seznam drugega tekmovanja ustavi uvoz', /tekmovanja 2047/.test(tuja ?? ''))
+  // Delitev sezone: šifra našteje več leagueyear_id s `+`, vir prebere vse in jih zloži v iste kroge (tedne).
+  const vec = H.razbijKodo(' 2041 + 2060+2061/2026-2027 ')
+  let dvakrat = null
+  try { H.razbijKodo('2041+2041/2026-2027') } catch (e) { dvakrat = e.message }
+  const zdruzene = H.tekmeLige('2048+2047/2026-2027', strani)
+  const brani = []
+  const vecStrani = await vir.razporedVseStrani('2047+2041/2026-2027', async (url, ime) => {
+    brani.push(ime)
+    const m = url.match(/competition=(\d+)&page=(\d)/)
+    return m[1] === '2047' ? beri(`hk-hkfa-razpored-2047-${m[2]}.html`) : beri('hk-hkfa-razpored-2041-3.html')
+  })
+  preveri('hkfa: šifra z več id-ji (delitev sezone) — vse strani, ena liga, krogi so tedni',
+    vec.ly === '2041' && vec.lyji.join() === '2041,2060,2061' && vec.sezona === '2026/27' && /dvakrat/.test(dvakrat ?? '') &&
+    H.naslovStrani('2041+2060/2026-2027', 2, '2060') === 'https://www.hkfa.com/en/competitions/fixtures?competition=2060&page=2&year=2026-2027' &&
+    vir.naslovRazporeda('2041+2060/2026-2027') === 'https://www.hkfa.com/en/competitions/fixtures?competition=2041&page=1&year=2026-2027' &&
+    zdruzene.length === 91 && brani.includes('razpored-2047-2026-2027-1.html') && brani.includes('razpored-2041-2026-2027-1.html') &&
+    vecStrani.reduce((n, k) => n + k.tekme.length, 0) === 101 && new Set(vecStrani.map((k) => k.stevilka)).size === vecStrani.length)
   const hkpl = H.tekmeLige('2041/2026-2027', [H.seznamStrani(beri('hk-hkfa-razpored-2041-3.html'))])
   preveri('hkfa: HKPL — kitajska imena v seznamu dobijo angleška, "--:--" je ura brez vrednosti', hkpl.length === 10 &&
     hkpl.every((t) => /^[A-Za-z]/.test(t.domaci) && /^[A-Za-z]/.test(t.gostje)) && hkpl.filter((t) => t.ura === null).length === 5 &&
@@ -12769,6 +12797,12 @@ preveri(
   // Malta: angleščina, rok po malteško (= ljubljansko).
   const zMt = E.sestaviOpozorilo({ slug: 'mt-premier', oznaka: 'Premier', drzava: 'MT' }, { display_name: 'Joseph Borg', team_name: 'X', round_number: 5, deadline_at: rok, razlog })
   preveri('e-pošta MT: angleščina, rok po malteško', zMt.html.includes('Hi Joseph!') && zMt.html.includes('10:00') && zMt.naslov.includes('round 5'), zMt.naslov)
+  // Japonska, Hongkong, Tajska, Gibraltar: angleščina, rok v pasu države (08:00 UTC).
+  for (const [drz, ura] of [['JP', '17:00'], ['HK', '16:00'], ['TH', '15:00'], ['GI', '10:00']]) {
+    const l = { slug: `${drz.toLowerCase()}-liga`, oznaka: 'League', drzava: drz }
+    const zA = E.sestaviOpozorilo(l, { display_name: 'Ken', team_name: 'X', round_number: 5, deadline_at: rok, razlog })
+    preveri(`e-pošta ${drz}: angleščina, rok v pasu države`, zA.html.includes('Hi Ken!') && zA.html.includes(ura) && zA.naslov.includes('round 5'), E.izpisRoka(rok, l))
+  }
   // Črna gora, Bosna in Hercegovina, Moldavija: jezik sosede, rok v svojem pasu.
   for (const [drz, pozdravSosede, ura] of [['ME', 'Zdravo, Marko!', '10:00'], ['BA', 'Bok, Marko!', '10:00'], ['MD', 'Salut, Marko!', '11:00']]) {
     const l = { slug: `${drz.toLowerCase()}-liga`, oznaka: 'Liga', drzava: drz }

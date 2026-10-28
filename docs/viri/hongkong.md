@@ -1,12 +1,15 @@
 # Hongkong — vir `hkfa` (HKFA)
 
-Lige so vpisane **neaktivne** (migracija `20261028120500_hongkong_hkfa`); ali
-SLFF gre v Hongkong (angleški vmesnik brez vstopne strani `/hk`, kartice,
-pošte, ugiba države), odloči lastnik pred vklopom. Država `HK` ("Hong Kong"),
-zveza `hkfa`, šifra lige se začne s `hk-`. `HK` še **ni** v `JEZIK_DRZAVE`,
-`DRZAVE` (`src/lib/drzavaUgib.ts`), matriki nočnega uvoza
-(`docs/nocni-uvoz.md`), *Hisne ekipe* in *Uskladi pozicije* — vse to pred
-vklopom.
+Lige so vpisane **neaktivne** (migracija `20261028120500_hongkong_hkfa`).
+Država `HK` ("Hong Kong", v izbirniku 香港), zveza `hkfa`, šifra lige se
+začne s `hk-`. **Država je pripravljena** (28. 10. 2026, migracija
+20261028131500): angleški vmesnik (`JEZIK_DRZAVE.HK = 'en'`), ugib po `zh-HK`
+(`zh-Hant-HK`, `yue`, `en-HK`) ali pasu `Asia/Hong_Kong`, vstop `slff.eu/hk`,
+kartica `hk.html` (Caddy, rezerva `:3201`, `vercel.json`), angleška pošta z
+rokom po hongkonško, zastava (bauhinija), imena hišnih ekip in lastnikov
+(`IMENA_HK`), `klub_stik.drzava`, stran Pozicije v meniju (2nd in 3rd Division
+vratarja večinoma ne vpišeta) in `HK` v matriki nočnega uvoza. Lige ostanejo
+neaktivne do uvoza in vklopa.
 
 | slug | liga | raven | klubov 2026/27 | šifra 2026/27 | arhiv 2025/26 (osnovni del) |
 |---|---|---|---|---|---|
@@ -131,10 +134,21 @@ tekme · gole · postave po 11 (dodaj-ligo, 0c) z uvozom v lokalno bazo.
   *Championship* in *Challenging Group* (HKPL `2030`/`2032`, 2nd `2014`/`2015`,
   3rd `2016`/`2017`) — vsaka skupina je SVOJ leagueyear_id. Za arhiv
   uvažamo le osnovni del (CLAUDE.md, delitev sezone). 2nd in 3rd Division
-  2026/27 imata zdaj objavljenih 120 tekem (enkrat vsak z vsakim, 15 krogov);
-  če se spet razdelita, bo nadaljevanje sezone pod novima id-jema in šifre
-  lige ena sama ne pokrije — **lastnik odloči pred vklopom** (preklop šifre
-  sredi sezone ali vir z več id-ji).
+  2026/27 imata zdaj objavljenih 120 tekem (enkrat vsak z vsakim, 15 krogov).
+  **Tekoča šifra zato sme našteti več leagueyear_id s `+`** (kot `oefb`,
+  `gfa`): `<osnovni>+<championship>+<challenging>/<leto>`, npr.
+  `2048+2071+2072/2026-2027`. Vir prebere seznam vsakega id-ja posebej in
+  tekme zloži v iste kroge — krog je teden, zato zamika krogov ni (skupini
+  igrata isti teden v istem krogu, rok kroga velja za obe). Tekma tujega id-ja
+  v seznamu še vedno ustavi uvoz. **Kdaj in kaj dopisati:** ko HKFA objavi
+  skupine (izbirnik "Competition" na `/en/competitions/fixtures?year=2026-2027`;
+  2025/26 po osnovnem delu, HKPL ~marec, divizije po 15. krogu), pred prvo
+  tekmo skupin dopiši oba id-ja z migracijo:
+  `update competitions set source_league_code = '2048+<ch>+<cl>/2026-2027'
+  where slug = 'hk-2-division';` (enako za `hk-3-division` in, če se
+  razdeli, `hk-premier-league` / `hk-1-division`). Osnovnega id-ja ne briši
+  — odigrane tekme osnovnega dela ostanejo v razporedu (`razporedCel`).
+  Arhiv (`--liga`) ostane le osnovni del.
 - 1st Division 2026/27 ima objavljen razpored le do 20. 12.; drugi del pride
   pozneje (razpored je vedno svež).
 - HKPL: prihodnje tekme imajo v angleškem seznamu kitajska imena in pogosto
@@ -149,7 +163,7 @@ tekme · gole · postave po 11 (dodaj-ligo, 0c) z uvozom v lokalno bazo.
 - **Pokali**: Senior Shield, FA Cup, League Cup, Sapling/Community Cup.
 - Futsal (Jockey Club Futsal League) ni nogomet na velikem igrišču.
 
-## Uvoz (šele po odločitvi lastnika)
+## Uvoz
 
 Vrstni red kot povsod: arhiv → razpored → tekoča sezona → pozicije → cene,
 lige eno za drugo:
