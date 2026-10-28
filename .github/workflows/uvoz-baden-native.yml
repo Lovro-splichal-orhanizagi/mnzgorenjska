@@ -1,0 +1,112 @@
+name: Reviewed Baden V7 native launch
+run-name: Baden native launch (activation requested ${{ inputs.activate_if_ready }})
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact reviewed current main containing finalized catalog and operator code
+        type: string
+        required: true
+      derived_run:
+        description: Successful hosted Baden composition run at exactly expected_sha; owner catalog must already be installed
+        type: string
+        required: true
+      activate_if_ready:
+        description: Explicitly activate in this same run after all strict gates; false imports and stops at CHECK (no later receipt reuse)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: uvoz-lige-de-verbandsliga-baden
+  cancel-in-progress: false
+jobs:
+  rollout:
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.expected_sha == github.sha
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      DERIVED_RUN_ID: ${{ inputs.derived_run }}
+      ACTIVATE_IF_READY: ${{ inputs.activate_if_ready }}
+      FROZEN_DE77_DIRECTORY: frozen-de77
+      FROZEN_V6_DIRECTORY: frozen-v6
+      GH_TOKEN: ${{ github.token }}
+      NODE_OPTIONS: --max-old-space-size=6144
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          # Existing native CLI uses git ls-remote for its exact-main guard.
+          persist-credentials: true
+      - uses: actions/checkout@v4
+        with:
+          ref: de77b661cbc11d95256a500e57c2fdea861a0647
+          path: frozen-de77
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 4e1e7caac02aa6e12c789c7cea7aac699d3c2566
+          path: frozen-v6
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Authenticate exact caller main V7 source and stage single Baden locator (no DB keys)
+        run: node scripts/stage-baden-native-composition.mjs stage
+      - name: Coordinate older German writers
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --drzava DE --popravek --vir dfb
+      - name: Restore original-byte nightly cache
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-DE-bulk-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: zapisniki-DE-
+      - name: Cold register atomic policies bound seed archive current GK positions prices proof and CHECK
+        id: prepare
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          node scripts/bulk-league-rollout.mjs import --country DE --expected-sha "$EXPECTED_SHA" --candidate de-verbandsliga-baden
+          node scripts/stage-baden-native-composition.mjs require-import
+      - name: Persist exact-run verified nightly seed
+        if: steps.prepare.outputs.needs_seed_cache == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-DE-bulk-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Authenticate durable exact-run cache API receipt
+        if: steps.prepare.outputs.needs_seed_cache == 'true'
+        run: node scripts/bulk-seed-cache-receipt.mjs
+      - name: Same-run strict v2 admission activation and readback only when explicitly requested
+        if: inputs.activate_if_ready
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          node scripts/bulk-league-rollout.mjs activate --country DE --expected-sha "$EXPECTED_SHA" --candidate de-verbandsliga-baden
+          node scripts/stage-baden-native-composition.mjs require-active
+      - name: Mark interrupted native writes UNKNOWN without replay
+        if: always()
+        run: node --input-type=module -e "import {markInterrupted} from './scripts/provider-league-batch.mjs';for(const file of ['native-import-report.json','native-report.json'])markInterrupted('release/pl-de-bulk/'+file)"
+      - name: Retain partial checkpoints locator logs native seed cache and admission readback
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baden-native-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            release/pl-de-bulk/
+            scripts/.predpomnilnik/fussball-public/de-verbandsliga-baden/
+          include-hidden-files: true
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 90
