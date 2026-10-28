@@ -1,14 +1,37 @@
+import {isNativeError,isProxy} from 'node:util/types'
+
 // In-memory identity only; serialized flags never select the retry client.
 export const FUSSBALL_V4_RETRY_POLICY=Object.freeze({id:'baden-v4-transient-v1',maximumAttempts:3})
 const codes=new Set(['ETIMEDOUT','ENETUNREACH','ECONNRESET','EAI_AGAIN'])
 const own=(o,k)=>{const d=Object.getOwnPropertyDescriptor(o,k);return d&&Object.hasOwn(d,'value')?d.value:undefined}
+const nativeAccessor=(d,name,source)=>d&&d.enumerable===false&&d.configurable===true&&d.set===undefined&&typeof d.get==='function'&&!isProxy(d.get)&&Object.getPrototypeOf(d.get)===Function.prototype&&own(d.get,'name')===name&&own(d.get,'length')===0&&Function.prototype.toString.call(d.get)===source
+function transportErrorName(error){
+ if(!isNativeError(error)||isProxy(error))return null
+ const prototype=Object.getPrototypeOf(error)
+ const exact=p=>p===AggregateError.prototype?'AggregateError':p===TypeError.prototype?'TypeError':p===Error.prototype?'Error':null
+ const name=exact(prototype)
+ if(name)return name
+ if(!prototype||isProxy(prototype))return null
+ const parentName=exact(Object.getPrototypeOf(prototype)),keys=Reflect.ownKeys(prototype)
+ if(!parentName||keys.length<1||keys.length>2||!keys.includes('constructor'))return null
+ // Node 22's transparent native error shims use these exact accessors. Inspect
+ // descriptors/source only: never invoke constructor or marker getters. An
+ // identical structural clone may canonicalize; this grants bounded typed
+ // pre-response retries only, never source/native admission authority.
+ if(!nativeAccessor(Object.getOwnPropertyDescriptor(prototype,'constructor'),'get constructor',`get ['constructor']() {\n    return ${parentName};\n  }`))return null
+ if(keys.length===2){
+  const marker=keys.find(k=>k!=='constructor')
+  if(typeof marker!=='symbol'||marker.description!=='kIsNodeError'||Symbol.keyFor(marker)!==undefined||!nativeAccessor(Object.getOwnPropertyDescriptor(prototype,marker),'get [kIsNodeError]','get [kIsNodeError]() {\n    return true;\n  }'))return null
+ }
+ return parentName
+}
 export function fussballV4TransportFailure(error){
- if(!error||Object.getPrototypeOf(error)!==TypeError.prototype)return null
+ if(!isNativeError(error)||isProxy(error)||Object.getPrototypeOf(error)!==TypeError.prototype)return null
  const seen=new Set();let count=0
  const visit=(e,depth)=>{
-  if(!(e instanceof Error)||seen.has(e)||depth>4||++count>8)throw Error('unsupported')
+  if(!isNativeError(e)||isProxy(e)||seen.has(e)||depth>4||++count>8)throw Error('unsupported')
   seen.add(e)
-  const prototype=Object.getPrototypeOf(e),name=prototype===AggregateError.prototype?'AggregateError':prototype===TypeError.prototype?'TypeError':prototype===Error.prototype?'Error':null
+  const name=transportErrorName(e)
   if(!name)throw Error('unsupported')
   const code=own(e,'code'),cause=own(e,'cause'),errors=own(e,'errors')
   if(code!==undefined&&!codes.has(code))throw Error('unsupported')
