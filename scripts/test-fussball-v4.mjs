@@ -14,6 +14,7 @@ test('caller JSON cannot issue v4 cache authority or replace actual spent reques
 test('actual failed94th request is spent and all raw embedded history remains authenticated',actual,()=>{
  const parent=input(),proof=read(parent),documents=checkpoint.getFussballCheckpointDocuments(proof),bundle=checkpoint.exportFussballTransportCheckpoint(proof)
  assert.equal(proof.preset,'baden-reviewed-transports-v4');assert.equal(proof.priorRequests,1517);assert.equal(proof.totalRequestCap,5000)
+ assert.equal(proof.parents[0].requests,94);assert.equal(proof.parents[0].documentsCount,303)
  assert.equal(proof.documentsCount,691);assert.equal(documents.length,691);assert.equal(documents.some(d=>d.kind==='round'),false)
  assert.deepEqual(bundle.parents.map(p=>p.run.id),[40614233934]);assert.ok(bundle.parents[0].zipBytes.equals(parent.zipBytes))
  assert.equal(documents.find(d=>d.url.endsWith('/031DS4G7UK000000VS5489BUVUR5FS5A')).sha256,'f4c2cbcc835c09c0cd46befc002dda18c60e450375bea61e58c33649e0e7ba34')

@@ -317,16 +317,17 @@ export function readFussballTransportSuccessor(input){
 }
 
 // One fixed consumed v3 partial. All old readers/protocols above stay unchanged.
-const v4=freeze(JSON.parse(readFileSync(new URL('./policies/fussball-transport-v4.json',import.meta.url),'utf8')))
-export function reviewedFussballV4Parent(){return freeze(structuredClone(v4.parent))}
+let v4Registry
+function reviewedV4(){return v4Registry??=freeze(JSON.parse(readFileSync(new URL('./policies/fussball-transport-v4.json',import.meta.url),'utf8')))}
+export function reviewedFussballV4Parent(){return freeze(structuredClone(reviewedV4().parent))}
 export function exportFussballV4AccountedHistory(proof){
- const state=requireProof(proof)
+ const state=requireProof(proof),v4=reviewedV4()
  if(proof.preset!==v4.preset||!state.accounted)fail('reader-issued v4 history required')
  return Object.fromEntries(Object.entries(state.accounted).map(([name,p])=>[name,copyParent(p)]))
 }
 export function readFussballTransportV4(input){
  closed(input,['parent',...(Object.hasOwn(input??{},'now')?['now']:[])],'v4 input')
- const now=input.now??Date.now(),p=input.parent,pin=v4.parent
+ const v4=reviewedV4(),now=input.now??Date.now(),p=input.parent,pin=v4.parent
  if(!Number.isFinite(now)||v4.preset!=='baden-reviewed-transports-v4'||v4.priorRequests!==1517||v4.totalRequestCap!==5000||!same(v4.scope,registry.scope))fail('fixed1517/5000 v4 required')
  closed(p,['run','artifact','jobs','zipBytes'],'v4 raw parent')
  const {run:r,artifact:a,jobs:e,zipBytes}=p
