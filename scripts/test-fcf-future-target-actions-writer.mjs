@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 const load=()=>import('./fcf-future-target-actions.mjs')
-test('future writer exports bounded Actions entry and actual runtime closure',async()=>{const m=await load();assert.equal(typeof m.runFcfFutureTargetActions,'function');const h=m.fcfFutureTargetWriterHashes();assert.ok(h['scripts/fcf-future-target-actions.mjs']);assert.ok(h['scripts/premik-cene.mjs']);assert.ok(Object.keys(h).filter(p=>p.includes('supabase/migrations/')&&p.includes('future')).length===4)})
+test('future writer exports bounded Actions entry and actual runtime closure',async()=>{const m=await load();assert.equal(typeof m.runFcfFutureTargetActions,'function');const h=m.fcfFutureTargetWriterHashes();assert.ok(h['scripts/fcf-future-target-actions.mjs']);assert.ok(h['scripts/premik-cene.mjs']);assert.ok(Object.keys(h).filter(p=>p.includes('supabase/migrations/')&&p.includes('future')).length===5)})
 test('invalid execution refuses before any GitHub or database access',async()=>{const m=await load();let calls=0;await assert.rejects(m.runFcfFutureTargetActions({mode:'import',env:{},github:()=>{calls++},database:{mutate(){calls++}}}),/Actions/);assert.equal(calls,0)})
 import {writerFixture} from './fcf-future-actions-writer-test-fixture.mjs'
 import {readFileSync,writeFileSync,rmSync} from 'node:fs'

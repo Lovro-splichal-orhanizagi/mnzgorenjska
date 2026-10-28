@@ -1,7 +1,9 @@
+import {getFcfFutureTarget} from './fcf-future-target-catalog.mjs'
+import {fcfFutureProtocolForTarget} from './fcf-future-native-scope.mjs'
 // Pure future writer/approval RECORD authentication. No network/database/source
 // transport, native/source reader brands, launch or retry capability is issued.
 import {verifyArtifact,unpackVerifiedArchive,sha256} from './dfb-artifacts.mjs'
-const repository='Lovro-splichal-orhanizagi/mnzgorenjska',workflow='.github/workflows/uvoz-fcf-zgodovina.yml',slug='es-ct-tercera-g9',limit=8*1024*1024
+const repository='Lovro-splichal-orhanizagi/mnzgorenjska',workflow='.github/workflows/uvoz-fcf-zgodovina.yml',limit=8*1024*1024
 const rows={mapping:['fcf-future-current-target-mapping','Derive exact future FCF native mapping','Retain exact future FCF native mapping'],import:['fcf-future-current-target-imported','Import exact future FCF target offline','Retain exact future FCF target import'],price:['fcf-future-current-target-priced','Price exact future FCF target','Retain exact future FCF target pricing'],check:['fcf-future-current-target-checked','Check exact future FCF target release','Retain exact future FCF target check'],activate:['fcf-future-current-target-activated','Activate exact future FCF target','Retain exact future FCF target activation'],recover:['fcf-future-current-target-recovered','Read back exact future FCF target receipt','Retain exact future FCF target recovery']}
 const approvalStages=new Set(['mapping','cleanup-prepare','cleanup-apply','import','price','check','activate','recover'])
 const fail=m=>{throw Error(`FCF_FUTURE_STAGE: ${m}`)},id=x=>typeof x==='string'&&/^[1-9]\d{0,19}$/.test(x),hex=(x,n)=>typeof x==='string'&&new RegExp(`^[a-f0-9]{${n}}$`).test(x)
@@ -45,7 +47,8 @@ function parse(bytes){
 }
 export function readFcfFutureTargetStageArtifact(input={}){
  const {stage,targetSlug,expected:e}=input,c=fcfFutureTargetStageContract(stage)
- if(!c||targetSlug!==slug)fail('closed future G9 stage required')
+ const slug=getFcfFutureTarget({targetSlug}).targetSlug
+ if(!c)fail('closed future G9 stage required')
  const {bytes,identity,execution}=authenticate(input,c.job,c.steps,`fcf-future-target-${stage}-${slug}-${e?.runId}-1`),m=parse(bytes)
  if(!exact(m,['schemaVersion','kind','targetSlug','sourceCommit','execution','inputs','result','payloadText','payloadSha256'])||m.schemaVersion!==2||m.kind!==c.kind||m.targetSlug!==slug||m.sourceCommit!==e.commit||!same(m.execution,execution)||!object(e.inputs)||!object(m.inputs)||!same(m.inputs,e.inputs)||!object(m.result)||m.result.targetSlug!==slug)fail('exact future stage manifest/execution/input/result binding required')
  if(typeof m.payloadText!=='string'||!m.payloadText.length||Buffer.byteLength(m.payloadText)>limit||m.payloadText.charCodeAt(0)===0xfeff||Buffer.from(m.payloadText).toString('utf8')!==m.payloadText||!hex(m.payloadSha256,64)||sha256(Buffer.from(m.payloadText))!==m.payloadSha256)fail('exact bounded opaque payload TEXT/SHA required')
@@ -56,9 +59,10 @@ export function readFcfFutureTargetStageArtifact(input={}){
 export function readFcfFutureTargetApprovalArtifact(input={}){
  const e=input.expected,{bytes,identity}=authenticate(input,'future-target-approval',['Stage reviewed future FCF target approval','Retain reviewed future FCF target approval'],`fcf-future-target-approval-${e?.runId}-1`)
  if(!hex(e.rawSha256,64)||sha256(bytes)!==e.rawSha256)fail('exact root approval raw manifest SHA required')
- const a=parse(bytes)
+ const a=parse(bytes),slug=getFcfFutureTarget({targetSlug:a?.targetSlug}).targetSlug
  if(!exact(a,['schemaVersion','kind','stage','targetSlug','sourceCommit','source','originals','cleanup','mapping','previous','runtimeHashes','modelSha256'])||a.schemaVersion!==2||a.kind!=='fcf-future-current-target-approval'||!approvalStages.has(a.stage)||a.targetSlug!==slug||a.sourceCommit!==e.commit||!object(a.runtimeHashes)||!hex(a.modelSha256,64))fail('closed future target approval schema2/stage/target/commit required')
- if(a.source===null?!['cleanup-prepare','cleanup-apply','recover'].includes(a.stage):!object(a.source)||a.source.protocol!=='future-g9-after-six-v1')fail('future protocol data or explicit cleanup/recovery null source required')
+ if(a.source===null?!['cleanup-prepare','cleanup-apply','recover'].includes(a.stage):!object(a.source)||a.source.protocol!==fcfFutureProtocolForTarget(slug))fail('future protocol data or explicit cleanup/recovery null source required')
+ if(slug==='es-ct-segona-g1'&&(a.stage.startsWith('cleanup-')||a.source===null))fail('G1 requires its protocol/history and original APPLIED cleanup; no cleanup rerun')
  // Runtime/source/originals/cleanup semantics remain the independent Actions
  // reader/closure boundary; this authenticated record grants no such capability.
  return freeze({approval:a,artifact:identity})

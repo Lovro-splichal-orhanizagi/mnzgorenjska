@@ -5,7 +5,7 @@ import {resolve,join} from 'node:path'
 import {pathToFileURL} from 'node:url'
 import {formatFussballErrorDiagnostic} from './lib/fussball-error-diagnostic.mjs'
 import {execFileSync} from 'node:child_process'
-import {validateFussballCaptureOptions,verifyFussballDirectory,captureFussballDirectory} from './fussball-capture-evidence.mjs'
+import {validateFussballCaptureOptions,verifyFussballDirectory,captureFussballDirectory,loadFussballRetryCheckpoint} from './fussball-capture-evidence.mjs'
 import {fussballRoundScope} from './lib/fussball-capture.mjs'
 import {extractFussballSeasonLinks,fussballArchiveSeedAlias} from './fussball-season-links.mjs'
 import {GERMANY_BULK_CANDIDATES,validateGermanyCandidate} from './bulk-germany-source.mjs'
@@ -29,9 +29,10 @@ export function validateFussballSeasonPilot(e,{headSha}={}){
  const maxRequests=integer(e.MAX_REQUESTS,1,3000)
  const resumption=e.FUSSBALL_COMPLETION_PRESET==='baden-reviewed-transports-v2'
  const successor=e.FUSSBALL_COMPLETION_PRESET==='baden-reviewed-transports-v3'
- const completion=e.FUSSBALL_COMPLETION_PRESET==='baden-reviewed-transports-v1'||resumption||successor
+ const v4=e.FUSSBALL_COMPLETION_PRESET==='baden-reviewed-transports-v4'
+ const completion=e.FUSSBALL_COMPLETION_PRESET==='baden-reviewed-transports-v1'||resumption||successor||v4
  requireProof(!e.FUSSBALL_COMPLETION_PRESET||completion,'unknown reviewed completion preset')
- requireProof(!completion||e.ARCHIVE_JSON?.trim()&&maxRequests<=(successor?577:resumption?788:886),'completion requires the reviewed paired current allowance')
+ requireProof(!completion||e.ARCHIVE_JSON?.trim()&&maxRequests<=(v4?483:successor?577:resumption?788:886),'completion requires the reviewed paired current allowance')
  if(!e.ARCHIVE_JSON?.trim()){requireProof(!e.ROLLOUT_CANDIDATE,'rollout requires paired archive scope');return null}
  const workflow=completion?'preveri-fussball-dopolni.yml':'preveri-fussball-sezono.yml'
  requireProof(e.GITHUB_REPOSITORY===repository&&e.GITHUB_REF==='refs/heads/main'&&e.GITHUB_EVENT_NAME==='workflow_dispatch'&&e.GITHUB_WORKFLOW_REF===`${repository}/.github/workflows/${workflow}@refs/heads/main`&&e.GITHUB_RUN_ATTEMPT==='1'&&/^[1-9]\d*$/.test(e.GITHUB_RUN_ID??''),'exact repository main dispatch and first attempt required')
@@ -46,7 +47,7 @@ export function validateFussballSeasonPilot(e,{headSha}={}){
  if(Object.hasOwn(raw,'observedSeedUrl')){requireProof(typeof raw.observedSeedUrl==='string'&&raw.observedSeedUrl!==raw.seedUrl,'distinct observed menu seed required');fussballArchiveSeedAlias(archive,current)}
  // Initial361 plus two retained GitHub identity probes stay on the ledger.
  const priorRequests=integer(e.PRIOR_REQUESTS,363,5000),totalRequestCap=integer(e.TOTAL_REQUEST_CAP,1,5000)
- if(completion)requireProof(priorRequests===(successor?1423:resumption?1212:1114)&&totalRequestCap===5000&&e.ROLLOUT_CANDIDATE==='de-verbandsliga-baden','reviewed checkpoint ledger/candidate differs')
+ if(completion)requireProof(priorRequests===(v4?1517:successor?1423:resumption?1212:1114)&&totalRequestCap===5000&&e.ROLLOUT_CANDIDATE==='de-verbandsliga-baden','reviewed checkpoint ledger/candidate differs')
  requireProof(priorRequests+current.maxRequests+archive.maxRequests<=totalRequestCap,'cumulative reserved request budget exceeds cap')
  if(e.ROLLOUT_CANDIDATE){
   const candidates=GERMANY_BULK_CANDIDATES.filter(c=>c.slug===e.ROLLOUT_CANDIDATE)
@@ -62,7 +63,7 @@ export async function authorizeFussballSeasonArchive(directory,e,{headSha,collec
  const plan=validateFussballSeasonPilot(e,{headSha});requireProof(plan,'archive plan required')
  const verified=await verifyFussballDirectory(directory,{collectFn})
  const m=JSON.parse(readFileSync(join(directory,'manifest.json')))
- requireProof(m.version===(plan.checkpointPreset?4:1)&&m.options.reportLimit===null&&m.options.cardPolicy===plan.current.cardPolicy&&Object.entries(plan.current).every(([k,v])=>m.options[k]===v),'fresh full current capture scope/budget differs')
+ requireProof(m.version===(plan.checkpointPreset==='baden-reviewed-transports-v4'?5:plan.checkpointPreset?4:1)&&m.options.reportLimit===null&&m.options.cardPolicy===plan.current.cardPolicy&&Object.entries(plan.current).every(([k,v])=>m.options[k]===v),'fresh full current capture scope/budget differs')
  if(plan.checkpointPreset)requireProof(verified.checkpointPreset===plan.checkpointPreset&&verified.priorRequests===plan.priorRequests,'authenticated checkpoint ledger differs')
  const seed=m.documents.find(d=>d.kind==='round'&&d.url===plan.current.seedUrl)
  requireProof(seed,'current original seed document required')
@@ -77,7 +78,7 @@ export async function authorizeFussballSeasonArchive(directory,e,{headSha,collec
 export async function authorizeFussballRollout({currentDirectory,archiveDirectory,e,headSha,mainSha,now=Date.now()}={}, {loadCapture=loadFussballImportCapture,readManifest=directory=>JSON.parse(readFileSync(join(directory,'manifest.json')))}={}){
  const plan=validateFussballSeasonPilot(e,{headSha})
  requireProof(plan?.rolloutCandidate&&mainSha===e.EXPECTED_SHA,'explicit reviewed rollout selection and unchanged main required')
- for(const [directory,scope,current,version]of [[currentDirectory,plan.current,true,plan.checkpointPreset?4:1],[archiveDirectory,plan.archive,false,3]]){
+ for(const [directory,scope,current,version]of [[currentDirectory,plan.current,true,plan.checkpointPreset==='baden-reviewed-transports-v4'?5:plan.checkpointPreset?4:1],[archiveDirectory,plan.archive,false,plan.checkpointPreset==='baden-reviewed-transports-v4'?5:3]]){
   const m=readManifest(directory)
   requireProof(m.version===version&&m.success===true&&m.options?.reportLimit===null&&['seedUrl','staffel','season'].every(k=>m.options[k]===scope[k])&&m.options.cardPolicy===scope.cardPolicy,'handoff capture version/scope/full intent differs')
   const batch=await loadCapture(directory,{staffel:scope.staffel,season:scope.season,current,now,...(scope.cardPolicy?{cardPolicy:scope.cardPolicy}:{})})
@@ -114,9 +115,9 @@ async function main(args){
  if(a.observedSeedUrl){
   const m=JSON.parse(readFileSync(join(directory,'manifest.json'))),seed=m.documents.find(d=>d.kind==='round'&&d.url===result.current.seedUrl)
   const document=Object.fromEntries(['url','kind','sha256','bytes','status','contentType','capturedAt'].map(k=>[k,seed[k]]))
-  archiveParent={current:Object.fromEntries(['seedUrl','staffel','season'].map(k=>[k,result.current[k]])),observedSeedUrl:a.observedSeedUrl,document,bytes:readFileSync(join(directory,seed.file)),originalReceipt:{version:1,document,attempt:m.snapshot.attempts.find(attempt=>attempt.url===seed.url),capture:{createdAt:m.createdAt,codeSha256:m.codeSha256,staffel:m.options.staffel,season:m.options.season}}}
+  archiveParent={current:Object.fromEntries(['seedUrl','staffel','season'].map(k=>[k,result.current[k]])),observedSeedUrl:a.observedSeedUrl,document,bytes:readFileSync(join(directory,seed.file)),originalReceipt:{version:1,document,attempt:m.snapshot.attempts.find(attempt=>attempt.url===seed.url&&attempt.status==='success'&&attempt.startedAt===seed.capturedAt),capture:{createdAt:m.createdAt,codeSha256:m.codeSha256,staffel:m.options.staffel,season:m.options.season}}}
  }
- await captureFussballDirectory({directory:resolve('capture-archive'),options:{...a,reportLimit:null},archiveParent,onProgress:p=>console.log(JSON.stringify(p))})
+ await captureFussballDirectory({directory:resolve('capture-archive'),options:{...a,reportLimit:null},archiveParent,...(result.checkpointPreset==='baden-reviewed-transports-v4'?{retryProof:loadFussballRetryCheckpoint(resolve(directory))}:{}),onProgress:p=>console.log(JSON.stringify(p))})
  console.log(JSON.stringify(await runFussballCaptureCli(['verify','capture-archive'])))
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href)main(process.argv.slice(2)).catch(error=>{console.error(error.message);const diagnostic=formatFussballErrorDiagnostic(error);if(diagnostic)console.error(diagnostic);process.exitCode=1})

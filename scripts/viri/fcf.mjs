@@ -484,7 +484,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
       opozorila.push(`gol v ${x.minuta}. minuti (${x.ime}): stanje ${x.stanje.join(':')} ga pripiše nasprotniku — štet kot avtogol`)
     } else if (avtogol && za != null && za !== 1 - k.idx)
       opozorila.push(`avtogol v ${x.minuta}. minuti (${x.ime}): stanje ${x.stanje.join(':')} ga pripiše strelčevi ekipi`)
-    goli.push({ ...kdo(k.idx, k.i, x.minuta), avtogol, enajstmetrovka: !avtogol && x.vrsta === 'enajstmetrovka' })
+    goli.push({ ...kdo(k.idx, k.i, x.minuta), rezultat: [...x.stanje], avtogol, enajstmetrovka: !avtogol && x.vrsta === 'enajstmetrovka' })
   }
 
   const rumeni = []

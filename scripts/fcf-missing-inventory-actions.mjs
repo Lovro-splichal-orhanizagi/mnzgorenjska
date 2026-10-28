@@ -1,9 +1,10 @@
 import {readFcfSixApproval,readFcfSixHistoryWire} from './fcf-six-approval.mjs'
 import {readFcfSixAccounting} from './fcf-six-accounting.mjs'
 import {buildFcfSixContinuationPlan,fcfSixClaimRef} from './fcf-six-continuation-plan.mjs'
-import {readFcfFutureSourceApproval,readFcfPostSixHistoryWire} from './fcf-future-source-approval.mjs'
+import {readFcfFutureSourceApproval,readFcfPostSixHistoryWire,readFcfPostG9HistoryWire} from './fcf-future-source-approval.mjs'
+import {readFcfPostG9Accounting} from './fcf-post-g9-accounting.mjs'
 import {readFcfPostSixAccounting} from './fcf-post-six-accounting.mjs'
-import {buildFcfFutureSourcePlan,fcfFutureSourceClaimRef,FCF_FUTURE_SOURCE_PROTOCOL} from './fcf-future-source-plan.mjs'
+import {buildFcfFutureSourcePlan,buildFcfG1SourceContinuationPlan,fcfFutureSourceClaimRef,FCF_FUTURE_SOURCE_PROTOCOL,FCF_G1_SOURCE_PROTOCOL,isFcfFutureSourceProtocol,getFcfFutureSourcePlanScope} from './fcf-future-source-plan.mjs'
 import {readFcfFutureSourceCompletedChildArtifact,readFcfFutureSourceDiagnosticChildArtifact,readFcfFutureSourceFailedAuditChildArtifact,readFcfFutureSourceUnstartedChild,buildFcfFutureSourceFinalReceipt} from './fcf-future-source-admission.mjs'
 // Explicit root staging and read-only Actions control plane. Only capture can call FCF.
 import {execFileSync} from 'node:child_process'
@@ -43,7 +44,7 @@ export function readFcfInventoryApprovalArtifact({zipBytes,artifact,run,jobs,exp
  if('sha256:'+rawSha256(bytes)!==rootApprovalDigest)fail('staged approval differs from root input SHA')
  return readFcfInventoryApproval({bytes,sourceCommit:expected.sourceCommit,now})
 }
-async function approvalForProtocol(input){const parsed=jsonBytes(input.bytes,'root approval');return parsed.schemaVersion===4&&parsed.kind==='fcf-future-source-approval'?readFcfFutureSourceApproval(input):parsed.schemaVersion===3&&parsed.kind==='fcf-six-continuation-approval'?readFcfSixApproval(input):parsed.schemaVersion===2&&parsed.kind==='fcf-g9-held-parent-approval'?readFcfG9HeldParentApproval(input):readFcfInventoryApproval(input)}
+async function approvalForProtocol(input){const parsed=jsonBytes(input.bytes,'root approval');return (parsed.schemaVersion===4&&parsed.kind==='fcf-future-source-approval'||parsed.schemaVersion===5&&parsed.kind==='fcf-g1-source-continuation-approval')?readFcfFutureSourceApproval(input):parsed.schemaVersion===3&&parsed.kind==='fcf-six-continuation-approval'?readFcfSixApproval(input):parsed.schemaVersion===2&&parsed.kind==='fcf-g9-held-parent-approval'?readFcfG9HeldParentApproval(input):readFcfInventoryApproval(input)}
 async function approvalArtifactForProtocol(input){
  const {expected,rootApprovalDigest}=input
  if(expected?.runAttempt!=='1'||!artifactDigest(rootApprovalDigest))fail('attempt1 root approval digest required')
@@ -70,18 +71,19 @@ async function completedInput(ctx,env,targetSlug,prefix,consumption,continuation
 // metadata wrapper or caller assertions about a successful child.
 const rawBundle=value=>Object.fromEntries(['zipBytes','artifact','run','jobs','expected'].map(k=>[k,value[k]]))
 async function futureChild(ctx,env,consumption){
- const plan=ctx.a.plan,now=ctx.clock(),slug='es-ct-tercera-g9',job=selectedJob(ctx.b.jobs,'missing-inventory-g9')
- if(env.FCF_G9_AUDIT_ID){const c=await completedInput(ctx,env,slug,'G9',consumption);return readFcfFutureSourceCompletedChildArtifact({plan,consumptionProof:consumption,inventory:rawBundle(c.inventoryMetadata),audit:rawBundle(c.auditMetadata),now})}
- if(env.FCF_G9_DIAGNOSTIC_ID)return readFcfFutureSourceDiagnosticChildArtifact({plan,consumptionProof:consumption,diagnostic:rawBundle(await inventoryInput(ctx,env,slug,'G9',consumption)),now})
- if(env.FCF_G9_INVENTORY_ID)return readFcfFutureSourceFailedAuditChildArtifact({plan,consumptionProof:consumption,inventory:rawBundle(await inventoryInput(ctx,env,slug,'G9',consumption)),now})
+ const plan=ctx.a.plan,now=ctx.clock(),selected=getFcfFutureSourcePlanScope(plan),slug=selected.targetSlug,prefix=slug.endsWith('-g1')?'G1':'G9',job=selectedJob(ctx.b.jobs,selected.jobName)
+ if(env[`FCF_${prefix}_AUDIT_ID`]){const c=await completedInput(ctx,env,slug,prefix,consumption);return readFcfFutureSourceCompletedChildArtifact({plan,consumptionProof:consumption,inventory:rawBundle(c.inventoryMetadata),audit:rawBundle(c.auditMetadata),now})}
+ if(env[`FCF_${prefix}_DIAGNOSTIC_ID`])return readFcfFutureSourceDiagnosticChildArtifact({plan,consumptionProof:consumption,diagnostic:rawBundle(await inventoryInput(ctx,env,slug,prefix,consumption)),now})
+ if(env[`FCF_${prefix}_INVENTORY_ID`])return readFcfFutureSourceFailedAuditChildArtifact({plan,consumptionProof:consumption,inventory:rawBundle(await inventoryInput(ctx,env,slug,prefix,consumption)),now})
  return readFcfFutureSourceUnstartedChild({plan,consumptionProof:consumption,...ctx.b,expected:{runId:ctx.execution.runId,runAttempt:'1',sourceCommit:ctx.a.sourceCommit,jobId:String(job.id),planSha256:plan.planSha256},now})
 }
 function futureActionsScope(mode,env){
- if(env.FCF_INVENTORY_PRESET!==FCF_FUTURE_SOURCE_PROTOCOL)return
- const job={ 'approval-stage':'missing-inventory-approval',consume:'missing-inventory-consume',capture:'missing-inventory-g9',audit:'missing-inventory-g9',receipt:'missing-inventory-receipt'}[mode]
- if(!job||env.GITHUB_JOB!==job||['capture','audit'].includes(mode)&&env.FCF_INVENTORY_TARGET!=='es-ct-tercera-g9'||Object.entries(env).some(([k,v])=>v&&(/^FCF_G1_/.test(k)||/^FCF_.*SEED/.test(k)||mode==='capture'&&/^FCF_G9_/.test(k))))fail('exact future G9 job/target without seed or sibling evidence required')
+ if(!isFcfFutureSourceProtocol(env.FCF_INVENTORY_PRESET))return
+ const g1=env.FCF_INVENTORY_PRESET===FCF_G1_SOURCE_PROTOCOL,slug=g1?'es-ct-segona-g1':'es-ct-tercera-g9',prefix=g1?'G1':'G9',sibling=g1?'G9':'G1'
+ const job={ 'approval-stage':'missing-inventory-approval',consume:'missing-inventory-consume',capture:g1?'missing-inventory-g1':'missing-inventory-g9',audit:g1?'missing-inventory-g1':'missing-inventory-g9',receipt:'missing-inventory-receipt'}[mode]
+ if(!job||env.GITHUB_JOB!==job||['capture','audit'].includes(mode)&&env.FCF_INVENTORY_TARGET!==slug||Object.entries(env).some(([k,v])=>v&&(k.startsWith(`FCF_${sibling}_`)||/^FCF_.*SEED/.test(k)||mode==='capture'&&k.startsWith(`FCF_${prefix}_`))))fail('exact future source job/target without seed or sibling evidence required')
 }
-function exactActions(env){if(env.GITHUB_ACTIONS!=='true'||env.GITHUB_REPOSITORY!==repository||env.GITHUB_REF!=='refs/heads/main'||env.GITHUB_RUN_ATTEMPT!=='1'||!nativeId(env.GITHUB_RUN_ID)||!commitId(env.GITHUB_SHA)||!['g1-then-g9-missing-v1','g9-only-after-held-parent-v1','six-reviewed-continuation-v1',FCF_FUTURE_SOURCE_PROTOCOL].includes(env.FCF_INVENTORY_PRESET)||env.SUPABASE_SERVICE_ROLE_KEY||env.SUPABASE_DB_URL||env.SUPABASE_DB_PASSWORD||env.DATABASE_URL||env.PGPASSWORD)fail('exact no-DB Actions attempt1 required')}
+function exactActions(env){if(env.GITHUB_ACTIONS!=='true'||env.GITHUB_REPOSITORY!==repository||env.GITHUB_REF!=='refs/heads/main'||env.GITHUB_RUN_ATTEMPT!=='1'||!nativeId(env.GITHUB_RUN_ID)||!commitId(env.GITHUB_SHA)||!['g1-then-g9-missing-v1','g9-only-after-held-parent-v1','six-reviewed-continuation-v1',FCF_FUTURE_SOURCE_PROTOCOL,FCF_G1_SOURCE_PROTOCOL].includes(env.FCF_INVENTORY_PRESET)||env.SUPABASE_SERVICE_ROLE_KEY||env.SUPABASE_DB_URL||env.SUPABASE_DB_PASSWORD||env.DATABASE_URL||env.PGPASSWORD)fail('exact no-DB Actions attempt1 required')}
 function runningMain(env,b){const r=b.run;if(String(r?.id)!==env.GITHUB_RUN_ID||r.repository?.full_name!==repository||r.event!=='workflow_dispatch'||r.path!==workflow||r.head_branch!=='main'||r.head_sha!==env.GITHUB_SHA||r.run_attempt!==1||r.status!=='in_progress'||r.conclusion!==null)fail('actual running approved main required')}
 async function context({env,github,clock}){
  exactActions(env)
@@ -99,10 +101,11 @@ export async function runFcfMissingInventoryActions({argv,env=process.env,root=p
   await readFcfG9HeldParentApproval({bytes:Buffer.from(JSON.stringify(approval)),sourceCommit:approval.sourceCommit,github,now:clock()});const digest=writeJSON(resolve(f.output),approval);return{code:0,result:{output:resolve(f.output),digest:'sha256:'+digest,planSha256:plan.planSha256,claimRef:fcfG9HeldParentClaimRef(plan)}}
  }
  if(mode==='prepare-six-approval'){const f=args(argv.slice(1));exactKeys(f,['history-source','source-commit','ruleset-id','output'],'six approval flags');const history=jsonBytes(safeRead(resolve(f['history-source']),8388608),'six history references'),accountingProof=readFcfSixAccounting(await readFcfSixHistoryWire({source:history,github,now:clock()})),owner=await github(repo+`rulesets/${f['ruleset-id']}`),rulesetSnapshot=snapshotFcfInventoryRuleset({ruleset:owner,checkedUTC:new Date(clock()).toISOString(),now:clock()}),plan=buildFcfSixContinuationPlan({sourceCommit:f['source-commit'],accountingProof,rulesetSnapshotSha256:hash(rulesetSnapshot),now:clock()}),a={schemaVersion:3,kind:'fcf-six-continuation-approval',sourceCommit:f['source-commit'],plan,history,rulesetId:f['ruleset-id'],rulesetSnapshot};await readFcfSixApproval({bytes:Buffer.from(JSON.stringify(a)),sourceCommit:a.sourceCommit,github,now:clock()});const digest=writeJSON(resolve(f.output),a);return{code:0,result:{output:resolve(f.output),digest:'sha256:'+digest,planSha256:plan.planSha256,claimRef:fcfSixClaimRef(plan)}}}
- if(mode==='prepare-future-approval'){
+ if(mode==='prepare-future-approval'||mode==='prepare-g1-approval'){
+  const g1=mode==='prepare-g1-approval'
   const f=args(argv.slice(1));exactKeys(f,['history-source','source-commit','ruleset-id','output'],'future approval flags')
   if(!commitId(f['source-commit'])||!nativeId(f['ruleset-id']))fail('exact future reviewed commit/ruleset ID required')
-  const history=jsonBytes(safeRead(resolve(f['history-source']),8388608),'post-six history references'),accountingProof=readFcfPostSixAccounting(await readFcfPostSixHistoryWire({source:history,github,now:clock()})),owner=await github(repo+`rulesets/${f['ruleset-id']}`),rulesetSnapshot=snapshotFcfInventoryRuleset({ruleset:owner,checkedUTC:new Date(clock()).toISOString(),now:clock()}),plan=buildFcfFutureSourcePlan({sourceCommit:f['source-commit'],accountingProof,rulesetSnapshotSha256:hash(rulesetSnapshot),now:clock()}),a={schemaVersion:4,kind:'fcf-future-source-approval',sourceCommit:f['source-commit'],plan,history,rulesetId:f['ruleset-id'],rulesetSnapshot}
+  const history=jsonBytes(safeRead(resolve(f['history-source']),8388608),'post-six history references'),accountingProof=g1?readFcfPostG9Accounting(await readFcfPostG9HistoryWire({source:history,github,now:clock()})):readFcfPostSixAccounting(await readFcfPostSixHistoryWire({source:history,github,now:clock()})),owner=await github(repo+`rulesets/${f['ruleset-id']}`),rulesetSnapshot=snapshotFcfInventoryRuleset({ruleset:owner,checkedUTC:new Date(clock()).toISOString(),now:clock()}),plan=(g1?buildFcfG1SourceContinuationPlan:buildFcfFutureSourcePlan)({sourceCommit:f['source-commit'],accountingProof,rulesetSnapshotSha256:hash(rulesetSnapshot),now:clock()}),a={schemaVersion:g1?5:4,kind:g1?'fcf-g1-source-continuation-approval':'fcf-future-source-approval',sourceCommit:f['source-commit'],plan,history,rulesetId:f['ruleset-id'],rulesetSnapshot}
   await readFcfFutureSourceApproval({bytes:Buffer.from(JSON.stringify(a)),sourceCommit:a.sourceCommit,github,now:clock()})
   const digest=writeJSON(resolve(f.output),a);return{code:0,result:{output:resolve(f.output),digest:'sha256:'+digest,planSha256:plan.planSha256,claimRef:fcfFutureSourceClaimRef(plan)}}
  }
@@ -118,7 +121,7 @@ export async function runFcfMissingInventoryActions({argv,env=process.env,root=p
   if(String(job.run_id)!==env.GITHUB_RUN_ID||job.run_attempt!==1||job.head_sha!==env.GITHUB_SHA||job.status!=='in_progress'||job.conclusion!==null||steps?.length!==1||steps[0].status!=='in_progress'||steps[0].conclusion!==null)fail('actual current approval staging step required')
   const bytes=await readFcfDraftAsset({id:env.FCF_INVENTORY_ASSET_ID,digest:normalizeDigest(env.FCF_INVENTORY_ASSET_SHA),github,maximumBytes:8*1024*1024})
   const approved=await approvalForProtocol({bytes,sourceCommit:env.GITHUB_SHA,github,now:clock()})
-  if(env.FCF_INVENTORY_PRESET===FCF_FUTURE_SOURCE_PROTOCOL&&!isFcfFutureSourcePlan(approved.plan))fail('future root approval preset differs from selected protocol')
+  if(isFcfFutureSourceProtocol(env.FCF_INVENTORY_PRESET)&&approved.plan.preset!==env.FCF_INVENTORY_PRESET)fail('future root approval preset differs from selected protocol')
   writeFiles(join(root,'fcf-inventory-approval'),new Map([['manifest.json',bytes]]));outputs(env,{evidence_ready:'true',manifest_sha:rawSha256(bytes)});return{code:0}
  }
  let ctx
@@ -150,7 +153,7 @@ export async function runFcfMissingInventoryActions({argv,env=process.env,root=p
    else childRecords.push(readFcfMissingInventoryNotStartedChild({plan:ctx.a.plan,targetSlug:slug,...ctx.b,expected:{planSha256:ctx.a.plan.planSha256,jobId:String(job.id)},consumptionProof:consumption,now:clock()}))
   }
   const job=selectedJob(ctx.b.jobs,'missing-inventory-receipt'),manifest=(future?buildFcfFutureSourceFinalReceipt:buildFcfMissingInventoryFinalReceipt)({plan:ctx.a.plan,claimProof:claim,consumptionProof:consumption,childRecords,execution:{...ctx.execution,jobId:String(job.id)},now:clock()}),directory=join(root,'fcf-inventory-final');safeParent(directory);mkdirSync(directory,{mode:0o700});const manifestSHA=writeJSON(join(directory,'manifest.json'),manifest);outputs(env,{evidence_ready:'true',manifest_sha:manifestSHA});return{code:0}
- }catch(error){if(mode!=='receipt')throw error;const directory=join(root,'fcf-inventory-final');safeParent(directory);mkdirSync(directory,{mode:0o700});const future=env.FCF_INVENTORY_PRESET===FCF_FUTURE_SOURCE_PROTOCOL,manifestSHA=writeJSON(join(directory,'manifest.json'),{schemaVersion:future?4:1,kind:future?'fcf-future-source-final-receipt-diagnostic':'fcf-missing-inventory-final-receipt-diagnostic',status:'indeterminate',reason:'authentication-or-attempt-accounting-unavailable',...(future?{protocol:FCF_FUTURE_SOURCE_PROTOCOL,priorSourceGETs:37,newSourceGETs:null,maximumSourceGETs:478}:{}),actualSourceGETs:null,admissible:false});outputs(env,{evidence_ready:'true',manifest_sha:manifestSHA});return{code:0}}
+ }catch(error){if(mode!=='receipt')throw error;const directory=join(root,'fcf-inventory-final');safeParent(directory);mkdirSync(directory,{mode:0o700});const future=isFcfFutureSourceProtocol(env.FCF_INVENTORY_PRESET),manifestSHA=writeJSON(join(directory,'manifest.json'),{schemaVersion:future?4:1,kind:future?'fcf-future-source-final-receipt-diagnostic':'fcf-missing-inventory-final-receipt-diagnostic',status:'indeterminate',reason:'authentication-or-attempt-accounting-unavailable',...(future?{protocol:env.FCF_INVENTORY_PRESET,priorSourceGETs:env.FCF_INVENTORY_PRESET===FCF_FUTURE_SOURCE_PROTOCOL?37:ctx?.a.plan.priorSourceGETs??null,newSourceGETs:null,maximumSourceGETs:478}:{}),actualSourceGETs:null,admissible:false});outputs(env,{evidence_ready:'true',manifest_sha:manifestSHA});return{code:0}}
 }
 function activeCapture(ctx,env,name){const r=ctx.b.run,e=ctx.execution,j=selectedJob(ctx.b.jobs,name),current=j.steps?.filter(s=>s.name==='Capture missing target inventory');if(String(r.id)!==e.runId||r.repository?.full_name!==repository||r.event!=='workflow_dispatch'||r.path!==workflow||r.head_branch!=='main'||r.head_sha!==e.sourceCommit||r.run_attempt!==1||r.status!=='in_progress'||r.conclusion!==null||env.GITHUB_JOB!==(isFcfSixPlan(ctx.a.plan)?name==='missing-inventory-g9'?'missing-inventory-g1':'missing-inventory-g9':name)||String(j.run_id)!==e.runId||j.run_attempt!==1||j.head_sha!==e.sourceCommit||j.status!=='in_progress'||current?.length!==1||current[0].status!=='in_progress')fail('actual sole current reserved capture step required');return j}
 function childJob(slug){return`missing-inventory-${slug==='es-ct-segona-g1'?'g1':'g9'}`}

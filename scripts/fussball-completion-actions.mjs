@@ -5,17 +5,18 @@ import {mkdirSync,writeFileSync,readFileSync,lstatSync} from 'node:fs'
 import {resolve,join} from 'node:path'
 import {pathToFileURL} from 'node:url'
 import {GERMANY_BULK_CANDIDATES} from './bulk-germany-source.mjs'
-import {readFussballTransportCheckpoint,reviewedFussballCheckpointParents,readFussballTransportResumption,reviewedFussballResumptionParent,exportFussballTransportCheckpoint,readFussballTransportSuccessor,reviewedFussballSuccessorParents,exportFussballSuccessorAccountedHistory} from './fussball-checkpoint.mjs'
+import {readFussballTransportCheckpoint,reviewedFussballCheckpointParents,readFussballTransportResumption,reviewedFussballResumptionParent,exportFussballTransportCheckpoint,readFussballTransportSuccessor,reviewedFussballSuccessorParents,exportFussballSuccessorAccountedHistory,readFussballTransportV4,reviewedFussballV4Parent,exportFussballV4AccountedHistory} from './fussball-checkpoint.mjs'
 const repository='Lovro-splichal-orhanizagi/mnzgorenjska',workflow='.github/workflows/preveri-fussball-dopolni.yml'
-const legacyPreset='baden-reviewed-transports-v1',resumptionPreset='baden-reviewed-transports-v2',successorPreset='baden-reviewed-transports-v3',fail=message=>{throw Error(`fussball completion: ${message}`)}
+const legacyPreset='baden-reviewed-transports-v1',resumptionPreset='baden-reviewed-transports-v2',successorPreset='baden-reviewed-transports-v3',v4Preset='baden-reviewed-transports-v4',fail=message=>{throw Error(`fussball completion: ${message}`)}
 function completionScope(preset=legacyPreset){
  if(preset===legacyPreset)return {preset,priorRequests:1114,currentMaximum:886}
  if(preset===resumptionPreset)return {preset,priorRequests:1212,currentMaximum:788}
+ if(preset===v4Preset)return {preset,priorRequests:1517,currentMaximum:483}
  if(preset===successorPreset)return {preset,priorRequests:1423,currentMaximum:577}
  fail('unknown reviewed completion preset')
 }
-const parentPins=preset=>preset===successorPreset?reviewedFussballSuccessorParents():preset===resumptionPreset?[reviewedFussballResumptionParent()]:reviewedFussballCheckpointParents()
-const readParents=(parents,preset,now)=>preset===successorPreset?readFussballTransportSuccessor({current:parents[0],archive:parents[1],now}):preset===resumptionPreset?readFussballTransportResumption({parent:parents[0],now}):readFussballTransportCheckpoint({parents,now})
+const parentPins=preset=>preset===v4Preset?[reviewedFussballV4Parent()]:preset===successorPreset?reviewedFussballSuccessorParents():preset===resumptionPreset?[reviewedFussballResumptionParent()]:reviewedFussballCheckpointParents()
+const readParents=(parents,preset,now)=>preset===v4Preset?readFussballTransportV4({parent:parents[0],now}):preset===successorPreset?readFussballTransportSuccessor({current:parents[0],archive:parents[1],now}):preset===resumptionPreset?readFussballTransportResumption({parent:parents[0],now}):readFussballTransportCheckpoint({parents,now})
 const parentName=(p,preset)=>`${p.runId}${preset===successorPreset?`-${p.stage}`:''}`
 const sourceStep='Capture fresh rounds and missing originals without database credentials'
 const githubGet=(path,binary=false)=>{const bytes=execFileSync('gh',['api',`repos/${repository}/${path}`],{timeout:30000,maxBuffer:100*1024*1024+1});return binary?bytes:JSON.parse(bytes)}
@@ -23,7 +24,7 @@ function integer(value,max){if(typeof value!=='string'||!/^[1-9]\d*$/.test(value
 export function buildFussballCompletionEnvironment(env,{headSha}={}){
  if(env.GITHUB_ACTIONS!=='true'||env.GITHUB_REPOSITORY!==repository||env.GITHUB_REF!=='refs/heads/main'||env.GITHUB_EVENT_NAME!=='workflow_dispatch'||env.GITHUB_WORKFLOW_REF!==`${repository}/${workflow}@refs/heads/main`||env.GITHUB_RUN_ATTEMPT!=='1'||!/^[1-9]\d*$/.test(env.GITHUB_RUN_ID??'')||!/^[a-f0-9]{40}$/.test(env.EXPECTED_SHA??'')||env.EXPECTED_SHA!==env.GITHUB_SHA||headSha!==env.GITHUB_SHA)fail('exact reviewed main first-attempt manual completion required')
  const plan=completionScope(env.COMPLETION_PRESET)
- if([resumptionPreset,successorPreset].includes(plan.preset)&&(env.PRIOR_REQUESTS!==undefined&&env.PRIOR_REQUESTS!==String(plan.priorRequests)||env.TOTAL_REQUEST_CAP!==undefined&&env.TOTAL_REQUEST_CAP!=='5000'))fail('reviewed resumption ledger cannot be replaced')
+ if([resumptionPreset,successorPreset,v4Preset].includes(plan.preset)&&(env.PRIOR_REQUESTS!==undefined&&env.PRIOR_REQUESTS!==String(plan.priorRequests)||env.TOTAL_REQUEST_CAP!==undefined&&env.TOTAL_REQUEST_CAP!=='5000'))fail('reviewed resumption ledger cannot be replaced')
  const current=integer(env.COMPLETION_CURRENT_REQUESTS,plan.currentMaximum),archiveMaximum=integer(env.COMPLETION_ARCHIVE_REQUESTS,3000)
  if(plan.priorRequests+current+archiveMaximum>5000)fail('cumulative source allowance exceeded')
  const c=GERMANY_BULK_CANDIDATES.find(c=>c.slug==='de-verbandsliga-baden'),a=c.archives[0]
@@ -59,8 +60,12 @@ export async function downloadFussballCompletionParents(directory,{env=process.e
 // runs first; afterwards any unaccounted source-started/unknown completion run holds
 // this preset until its actual requests are explicitly accounted in new history.
 export async function assertFussballCompletionUnspent({env=process.env,headSha,github=githubGet,completionProof}={}){
- const e=buildFussballCompletionEnvironment(env,{headSha}),resumption=e.FUSSBALL_COMPLETION_PRESET===resumptionPreset,successor=e.FUSSBALL_COMPLETION_PRESET===successorPreset,strict=resumption||successor
- let accounted=null,successorHistory=null
+ const e=buildFussballCompletionEnvironment(env,{headSha}),resumption=e.FUSSBALL_COMPLETION_PRESET===resumptionPreset,successor=e.FUSSBALL_COMPLETION_PRESET===successorPreset,v4mode=e.FUSSBALL_COMPLETION_PRESET===v4Preset,strict=resumption||successor||v4mode
+ let accounted=null,successorHistory=null,v4History=null
+ if(v4mode){
+  v4History=exportFussballV4AccountedHistory(completionProof)
+  if(completionProof.preset!==v4Preset||completionProof.priorRequests!==1517||completionProof.totalRequestCap!==5000||completionProof.documentsCount!==691||!['seedUrl','staffel','season'].every(k=>completionProof.scope?.[k]===({seedUrl:e.SEED_URL,staffel:e.STAFFEL,season:e.SEASON})[k]))fail('authenticated exact v4 checkpoint required before source')
+ }
  if(successor){
   successorHistory=exportFussballSuccessorAccountedHistory(completionProof)
   if(completionProof.preset!==successorPreset||completionProof.priorRequests!==1423||completionProof.totalRequestCap!==5000||completionProof.documentsCount!==634||!['seedUrl','staffel','season'].every(k=>completionProof.scope?.[k]===({seedUrl:e.SEED_URL,staffel:e.STAFFEL,season:e.SEASON})[k]))fail('authenticated exact successor checkpoint required before source')
@@ -96,10 +101,19 @@ export async function assertFussballCompletionUnspent({env=process.env,headSha,g
  }
  if(runs.length!==total||!seen.has(own.id))fail('incomplete completion execution history')
  // V3 is one-use even if another dispatch was created after this execution.
- const earlier=runs.filter(r=>successor?r.id!==own.id:Date.parse(r.created_at)<Date.parse(own.created_at)||r.created_at===own.created_at&&r.id<own.id)
- let accountedSeen=false;const successorSeen=new Set()
+ const earlier=runs.filter(r=>successor||v4mode?r.id!==own.id:Date.parse(r.created_at)<Date.parse(own.created_at)||r.created_at===own.created_at&&r.id<own.id)
+ let accountedSeen=false;const successorSeen=new Set(),v4Seen=new Set()
  for(const r of earlier){
   if(r.status!=='completed'||r.run_attempt!==1)fail('older completion execution is still live or unknown')
+  if(v4History&&Object.values(v4History).some(p=>p.run.id===r.id)){
+   const records=Object.values(v4History).filter(p=>p.run.id===r.id)
+   const [run,j,...artifacts]=await Promise.all([github(`actions/runs/${r.id}`),jobs(r.id),...records.map(p=>github(`actions/artifacts/${p.artifact.id}`))])
+   if(r.conclusion!=='failure'||r.created_at!==run.created_at||r.head_sha!==run.head_sha||r.event!==run.event||r.head_branch!==run.head_branch)fail('v4 accounted history identity differs')
+   const parents=records.map((p,i)=>({run,jobs:j,artifact:artifacts[i],zipBytes:p.zipBytes}))
+   const proof=r.id===v4History.partial.run.id?readFussballTransportV4({parent:parents[0]}):r.id===v4History.current.run.id?readFussballTransportSuccessor({current:parents[0],archive:parents[1]}):readFussballTransportResumption({parent:parents[0]})
+   if(r.id===v4History.partial.run.id&&proof.documentsSha256!==completionProof.documentsSha256)fail('v4 actual partial history differs')
+   v4Seen.add(r.id);continue
+  }
   if(successorHistory&&[successorHistory.prior.run.id,successorHistory.current.run.id].includes(r.id)){
    const latest=r.id===successorHistory.current.run.id,records=latest?[successorHistory.current,successorHistory.archive]:[successorHistory.prior]
    const [run,j,...artifacts]=await Promise.all([github(`actions/runs/${r.id}`),jobs(r.id),...records.map(p=>github(`actions/artifacts/${p.artifact.id}`))])
@@ -125,6 +139,7 @@ export async function assertFussballCompletionUnspent({env=process.env,headSha,g
   if(steps.length!==1||steps[0].status!=='completed'||steps[0].conclusion!=='skipped')fail('reviewed checkpoint already source-started; account its requests before another execution')
  }
  if(strict){
+  if(v4mode&&v4Seen.size!==3)fail('authenticated v4 accounted runs missing from history')
   if(successor&&successorSeen.size!==2)fail('authenticated accounted parents missing from earlier workflow history')
   if(resumption&&!accountedSeen)fail('authenticated accounted parent missing from earlier workflow history')
   const current=await ownExecution()

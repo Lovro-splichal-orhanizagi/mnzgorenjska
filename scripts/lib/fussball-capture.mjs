@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import {FUSSBALL_V4_RETRY_POLICY,fussballV4TransportFailure} from './fussball-v4-retry.mjs'
 
 const BASE = 'https://www.fussball.de'
 const MIN_GAP_MS = 6000
@@ -130,7 +131,11 @@ export function createFussballCaptureClient({
   onDocument,
   cachedDocuments = [],
   onCachedDocument,
+  retryPolicy,
+  onOutcome,
 } = {}) {
+  if(retryPolicy!==undefined&&retryPolicy!==FUSSBALL_V4_RETRY_POLICY)throw fail('reader-selected fixed retry policy required')
+  if(onOutcome!==undefined&&(retryPolicy!==FUSSBALL_V4_RETRY_POLICY||typeof onOutcome!=='function'))throw fail('retry outcome callback requires fixed v4 policy')
   if (!Number.isInteger(maxRequests) || maxRequests < 1 || maxRequests > 4000)
     throw fail('request budget must be an integer from 1 to 4000')
   if (typeof fetchFn !== 'function' || typeof now !== 'function' || typeof sleep !== 'function')
@@ -175,7 +180,7 @@ export function createFussballCaptureClient({
     if (now() - lastStartedAt < MIN_GAP_MS) throw fail('pacing clock did not advance to the minimum request gap')
   }
 
-  const performRead = async (url, kind) => {
+  const performRead = async (url, kind, retryOrdinal=1) => {
     if (stoppedBy) throw fail(`client stopped after ${stoppedBy.message}`)
     let response = null
     try {
@@ -240,16 +245,29 @@ export function createFussballCaptureClient({
       const saved = { ...document, bytes: new Uint8Array(bytes) }
       cache.set(url, saved)
       attempt.status = 'success'
+      if(onOutcome)await onOutcome({...attempt})
       return { ...saved, bytes: new Uint8Array(saved.bytes) }
     } catch (error) {
       await cancelUnreadBody(response)
-      const terminal = stop(error)
+      if(retryPolicy!==FUSSBALL_V4_RETRY_POLICY){
+        const terminal=stop(error),attempt=attempts.at(-1)
+        if(attempt&&attempt.status!=='success'){attempt.status='failed';attempt.error=terminal.message}
+        throw terminal
+      }
       const attempt = attempts.at(-1)
+      const evidence=retryPolicy===FUSSBALL_V4_RETRY_POLICY&&response===null&&attempt?.status==='started'?fussballV4TransportFailure(error):null
       if (attempt && attempt.status !== 'success') {
         attempt.status = 'failed'
-        attempt.error = terminal.message
+        attempt.error = evidence?'connect failure':error.message
+        if(evidence)attempt.transportFailure=evidence
+        if(onOutcome&&attempt.startedAt){try{await onOutcome(structuredClone(attempt))}catch(outcomeError){throw stop(outcomeError)}}
       }
-      throw terminal
+      if(evidence&&retryOrdinal<3&&requestCount<maxRequests){
+        // Every retry is a new counted intent after its prior durable outcome.
+        try{await sleep(6000*retryOrdinal)}catch(backoffError){throw stop(backoffError)}
+        return performRead(url,kind,retryOrdinal+1)
+      }
+      throw stop(error)
     }
   }
 

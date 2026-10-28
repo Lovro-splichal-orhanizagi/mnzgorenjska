@@ -5,7 +5,7 @@ import {historicalStatisticsPolicySha256 as hash} from './lib/historical-statist
 import {validateFcfInventorySourcePlan,isFcfG9HeldParentPlan,isFcfIndependentSourcePlan,isFcfSixPlan,isFcfFutureSourcePlan,fcfInventorySeedBinding} from './fcf-inventory-source-protocol.mjs'
 import {FCF_INVENTORY_REPOSITORY as repository,FCF_INVENTORY_WORKFLOW as workflow,inventoryFail as fail,exactKeys,frozenJSON,rawSha256,nativeId,commitId,sha256Id,validUTC,jsonBytes,verifyInventoryExecution,readInventoryZip} from './fcf-missing-inventory-artifact.mjs'
 import {fcfG9HeldParentClaimRef} from './fcf-g9-held-parent-plan.mjs'
-import {FCF_FUTURE_SOURCE_PROTOCOL,fcfFutureSourceClaimRef} from './fcf-future-source-plan.mjs'
+import {isFcfFutureSourceProtocol,fcfFutureSourceClaimRef} from './fcf-future-source-plan.mjs'
 const claims=new WeakSet(),consumptions=new WeakSet()
 const equal=(a,b)=>hash(a)===hash(b)
 const visibleRuleKeys=['id','source','source_type','target','enforcement','conditions','rules','updated_at']
@@ -46,7 +46,7 @@ export function readFcfInventoryConsumptionArtifact({zipBytes,artifact,run,jobs,
  const binding=verifyInventoryExecution({artifact,run,jobs,expected,jobName:'missing-inventory-consume',stepNames:['Verify one-shot FCF inventory claim','Retain one-shot FCF inventory consumption'],artifactName:`fcf-inventory-consumption-${claimProof.runId}-1`,runPhase:'consumption-record'})
  const files=readInventoryZip({zipBytes,artifact,expected,members:{'manifest.json':8*1024*1024}}),manifest=jsonBytes(files.get('manifest.json'),'consumption manifest')
  exactKeys(manifest,['schemaVersion','kind','planSha256','claimRef','claimCommit','claimJsonSha256','seedBinding','sourceCommit','repository','workflow','runId','runAttempt','jobId','consumedUTC'],'consumption manifest')
- const future=claimProof.protocol===FCF_FUTURE_SOURCE_PROTOCOL,six=claimProof.protocol==='six-reviewed-continuation-v1'
+ const future=isFcfFutureSourceProtocol(claimProof.protocol),six=claimProof.protocol==='six-reviewed-continuation-v1'
  if(manifest.schemaVersion!==(future?4:six?3:claimProof.protocol?2:1)||manifest.kind!==(future?'fcf-future-source-consumed':six?'fcf-six-consumed':claimProof.protocol?'fcf-g9-held-parent-consumed':'fcf-missing-inventory-consumed')||manifest.planSha256!==claimProof.planSha256||manifest.claimRef!==claimProof.claimRef||manifest.claimCommit!==claimProof.claimCommit||manifest.claimJsonSha256!==claimProof.claimJsonSha256||!equal(manifest.seedBinding,claimProof.seedBinding)||manifest.sourceCommit!==claimProof.sourceCommit||manifest.repository!==repository||manifest.workflow!==workflow||manifest.runId!==claimProof.runId||manifest.runAttempt!=='1'||manifest.jobId!==expected.jobId||!validUTC(manifest.consumedUTC)||Date.parse(manifest.consumedUTC)<Date.parse(claimProof.claimedUTC)||Date.parse(manifest.consumedUTC)>now)fail('consumed plan/execution/claim/time differs')
  const proof=frozenJSON({kind:'fcf-missing-inventory-consumption-proof',...binding,planSha256:claimProof.planSha256,sourceCommit:claimProof.sourceCommit,claimRef:claimProof.claimRef,claimCommit:claimProof.claimCommit,claimJsonSha256:claimProof.claimJsonSha256,rulesetId:claimProof.rulesetId,consumedUTC:manifest.consumedUTC,maximumSourceGETs:claimProof.maximumSourceGETs,...(claimProof.protocol?{protocol:claimProof.protocol,accountingSha256:claimProof.accountingSha256,priorSourceGETs:claimProof.priorSourceGETs,maximumNewSourceGETs:claimProof.maximumNewSourceGETs,plannedCumulativeSourceGETs:claimProof.plannedCumulativeSourceGETs}:{})})
  consumptions.add(proof);return proof

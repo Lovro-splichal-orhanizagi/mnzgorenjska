@@ -34,8 +34,8 @@ test('all unrelated canonical facts and appearances remain identical, including 
   restored.domaci.rezerve.find(p => p.regSt === 31287135).preklopi = []
   restored.domaci.postava.find(p => p.regSt === 48680949).preklopi = []
   assert.deepEqual(restored, before)
-  assert.deepEqual(after.goli.map(g => [g.regSt, g.minuta]), [
-    [18906291, 13], [18681786, 38], [18486849, 79], [31287135, 87],
+  assert.deepEqual(after.goli.map(g => [g.regSt, g.minuta, g.rezultat]), [
+    [18906291, 13, [1, 0]], [18681786, 38, [1, 1]], [18486849, 79, [1, 2]], [31287135, 87, [2, 2]],
   ])
 })
 
@@ -54,6 +54,7 @@ for (const [name, change] of [
   ['source gains an entry', z => { z.domaci.rezerve.find(p => p.regSt === 31287135).preklopi = [75] }],
   ['source gains an exit', z => { z.domaci.postava.find(p => p.regSt === 48680949).preklopi = [75] }],
   ['changed goal clock', z => { z.goli[0].minuta = 12 }],
+  ['changed goal running score', z => { z.goli[0].rezultat[0] = 2 }],
   ['changed result', z => { z.rezultat.domaci = 3 }],
   ['changed unrelated player', z => { z.gostje.postava[0].st = 99 }],
   ['changed round', z => { z.krog = 3 }],

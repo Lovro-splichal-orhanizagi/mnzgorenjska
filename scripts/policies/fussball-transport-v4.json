@@ -1,0 +1,84 @@
+{
+  "preset": "baden-reviewed-transports-v4",
+  "workflow": ".github/workflows/preveri-fussball-dopolni.yml",
+  "priorRequests": 1517,
+  "totalRequestCap": 5000,
+  "scope": {
+    "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+    "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+    "season": "2026/27"
+  },
+  "parent": {
+    "runId": "40614233934",
+    "sourceCommit": "d26dcbae4012e61c520a96568001b1d582ebe0db",
+    "jobId": "122572856276",
+    "artifactId": "12784024960",
+    "artifactDigest": "sha256:58d409601f6f5629c1d2bc3f9f6326ca7048deda94b6937a6cc7b0780aca6662",
+    "artifactSize": 55160521,
+    "requests": 94,
+    "documentsCount": 303,
+    "options": {
+      "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+      "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+      "season": "2026/27",
+      "maxRequests": 577,
+      "reportLimit": null,
+      "asOfDate": "2026-10-28",
+      "cardPolicy": "community-v1"
+    },
+    "codeSha256": "6fea69031edd82a184743a3d5ff935467ca8ea27932076cd3f606b990b3ef461",
+    "createdAt": "2026-10-28T01:20:17.086Z",
+    "completedAt": "2026-10-28T01:29:36.785Z",
+    "manifestSha256": "305d3663764569940f7450c1a218426a92a0b707dc4f4dff1d1ee50f45e5c7e8",
+    "attemptsSha256": "03ced87bde63d5ed82cd03c558776c0298fa90973dcc41c1798608fe8ba6e642",
+    "progressSha256": "8e610e27e84beaa119d99ffa14000eff9ab85b72b06cc1ab16e51ff559184af4",
+    "terminal": {
+      "number": 94,
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/tzhzfgt8/type/font",
+      "kind": "font",
+      "startedAt": "2026-10-28T01:29:36.514Z",
+      "status": "failed",
+      "error": "fetch failed"
+    }
+  },
+  "documentsCount": 691,
+  "conflicts": [
+    {
+      "url": "https://www.fussball.de/spiel/vfr-mannheim-2-djk-fc-ziegelhausen-peterstal/-/spiel/031DS4G7UK000000VS5489BUVUR5FS5A",
+      "kind": "report",
+      "oldSha256": "d9de4b4bdbfa7027f487b895cb2f9f73e89cdf848b09741f428b2bf5a980be85",
+      "newSha256": "f4c2cbcc835c09c0cd46befc002dda18c60e450375bea61e58c33649e0e7ba34"
+    },
+    {
+      "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G7UK000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+      "kind": "lineup",
+      "oldSha256": "3992926a17230e9a39dd51f9f6fc475c22f795a18cd630b211d66817f0d9fe12",
+      "newSha256": "60da65445e8a1d039ea51aa0b732aa51de469029d7142d8ea99fead1973f6ea6"
+    },
+    {
+      "url": "https://www.fussball.de/spiel/djk-fc-ziegelhausen-peterstal-1fc-bruchsal-1899-ev/-/spiel/031DS4G74K000000VS5489BUVUR5FS5A",
+      "kind": "report",
+      "oldSha256": "bc609321b5b600a4ab8711ca4be57f9d33623a2c13c3010715664a39eaea2a73",
+      "newSha256": "ca6e43fa6148cd47d7b614fa09c2135ecf3250492b011897e12ec0995d03a7c7"
+    },
+    {
+      "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G74K000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+      "kind": "lineup",
+      "oldSha256": "b4ce1c8b7f661190712ae7af9d17891d4c753c01b11d508fdbb4a3cb6ba07892",
+      "newSha256": "5bc6c8f319cc0d7e5864533cf5f905e42fe407f9646e3e3f3f018714f1eada18"
+    },
+    {
+      "url": "https://www.fussball.de/spiel/fc-zuzenhausen-djk-fc-ziegelhausen-peterstal/-/spiel/031DS4G6GK000000VS5489BUVUR5FS5A",
+      "kind": "report",
+      "oldSha256": "ffc4bd8e6ba2c41fbb1616cadb2802374c8a633e945fd61a155b8e18218dcb12",
+      "newSha256": "03a95a332e536177574a68e9de8e95f5c19f3dd3aa9079fd27956e60ef0dc231"
+    },
+    {
+      "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G6GK000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+      "kind": "lineup",
+      "oldSha256": "5be22c5a60df746d4f3f317569a3a013c62a854ce7c4aca97049265a5e22915d",
+      "newSha256": "3e3d694e0595d64fe49b684cdc465a4a552742c310817dcd9ac6d32cfb09a7bb"
+    }
+  ],
+  "documentsSha256": "f69bf05ebc0ea5a57e8e1f448392e0a414b9502b0ba784be08fbf45ba23db29d"
+}

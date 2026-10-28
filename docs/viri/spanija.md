@@ -69,6 +69,8 @@ Server Components (`self.__next_f.push`), ki ga `drevoRsc` sestavi
   puščica `#0068A9`) in izstop (rdeča puščica). Vrsto gola (GOL, GOL PENAL,
   GOL EN PRÒPIA) in strelca da razdelek "Gols" s stanjem po golu; avtogol je
   pri strelcu v njegovi ekipi in šteje nasprotniku (stanje to preveri).
+  Vsak razčlenjen gol ohrani tudi kopijo tega uradnega stanja v
+  `rezultat: [domači, gostje]`; zaporednega izida ne izračunavamo na novo.
   Vrsto beremo le iz samostojne oznake ob igralcu v razdelku "Gols", ne iz
   imen igralcev, klubov ali legende. Regresija 4109643 (18. 10. 2026):
   Vila Penalba Pol, 54., je navaden `GOL`; priimek PENALBA ni enajstmetrovka.

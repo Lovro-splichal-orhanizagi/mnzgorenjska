@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 const SOURCE_PATH = ['', 'ca', 'competicio', 'acta', '4116202']
 const SOURCE_URL = 'https://www.fcf.cat/ca/competicio/acta/4116202'
 const SOURCE_SHA = 'ffe7a5e9dd542b92f2050e7357acf8d16a7f788acef3485ed8d193b2001a87f1'
-const CANONICAL_SHA = '27babb73fe4b30aa8828c7a9831455981bbea20482ba3ff2f2625333523eb0d6'
+const CANONICAL_SHA = '0abbed1f6484ffe80e7c6b9d2a4aa46ac4222a777732da8211572df51799eb2f'
 const sha256 = text => createHash('sha256').update(text).digest('hex')
 
 /** One reviewed source omission; a changed candidate requires a new evidence review. */
@@ -29,7 +29,7 @@ export function doplniCalongeMenjavo(z, { sourcePath, sourceSha256 } = {}) {
   }
   const incoming = unique(31287135, 'Bouhmara Boulhout Mohamed', false)
   const outgoing = unique(48680949, 'Adairak Dairak Mohamed', true)
-  // Bind all other parsed facts too, including score, every player/event and clocks13/87.
+  // Bind all other parsed facts too, including every goal's running score, player/event and clocks13/87.
   if (sha256(JSON.stringify({ ...z, zapisnikId: null, url: null })) !== CANONICAL_SHA) reject()
 
   incoming.preklopi = [75]

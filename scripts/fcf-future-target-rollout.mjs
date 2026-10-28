@@ -1,3 +1,5 @@
+import {getFcfFutureTarget} from './fcf-future-target-catalog.mjs'
+import {readFcfFutureNativeSource,requireFcfG1QuietInventory} from './fcf-future-native-scope.mjs'
 // Bounded inactive IMPORT composition only. No stage advance, chosen opening,
 // readiness installation, source retry, native write or activation capability.
 import {createHash} from 'node:crypto'
@@ -5,7 +7,7 @@ import {getFcfFutureCapturedTargetData} from './fcf-future-source-admission.mjs'
 import {compileFcfFutureTargetImportPacket,verifyFcfFutureTargetImportPacket} from './fcf-future-target-release.mjs'
 import {planFcfNativeTargetRows,verifyFcfNativeMappingProposal} from './fcf-target-native-plan.mjs'
 import {validateFcfTargetReleaseInventory} from './fcf-target-release.mjs'
-const slug='es-ct-tercera-g9',hash=text=>createHash('sha256').update(text).digest('hex'),limit=8*1024*1024
+const hash=text=>createHash('sha256').update(text).digest('hex'),limit=8*1024*1024
 const fail=m=>{throw Error(`FCF_FUTURE_ROLLOUT: ${m}`)}
 const baseFields=['targetSlug','sourceCommit','inventoryAdmission','databaseInventory','existingExceptionBindings','cleanupEvidence','execution']
 const wireFields=['schemaVersion','kind','targetSlug','sourceCommit','execution','targetPacketText','targetPacketSha256','inventoryBinding','cleanupBinding','identityPlan','readiness']
@@ -17,13 +19,15 @@ function execution(e,commit){
 }
 function context(input,extra){
  keys(input,[...baseFields,...extra,...(Object.hasOwn(input??{},'now')?['now']:[])],'future rollout input')
- if(input.targetSlug!==slug||!/^[a-f0-9]{40}$/.test(input.sourceCommit??'')||!Number.isSafeInteger((Object.hasOwn(input,'now')?input.now:Date.now())))fail('exact G9 writer SHA/current clock required')
- const e=execution(input.execution,input.sourceCommit),now=(Object.hasOwn(input,'now')?input.now:Date.now()),data=getFcfFutureCapturedTargetData({targetEvidence:input.inventoryAdmission,now}),b=data.binding
- if(data.targetSlug!==slug||data.competition.id!==797||b.protocol!=='future-g9-after-six-v1'||b.sourceClaimState!=='consumed'||b.priorSourceGETs!==37||b.newSourceGETs!==240||b.actualSourceGETs!==277||b.maximumSourceGETs!==478)fail('exact authenticated future G9 consumed37/240/277/478 source required')
- return {data,e,now,native:{targetSlug:slug,sourceData:data,databaseInventory:input.databaseInventory,existingExceptionBindings:input.existingExceptionBindings,writerCommit:input.sourceCommit,now}}
+ getFcfFutureTarget({targetSlug:input.targetSlug})
+ if(!/^[a-f0-9]{40}$/.test(input.sourceCommit??'')||!Number.isSafeInteger((Object.hasOwn(input,'now')?input.now:Date.now())))fail('exact G9 writer SHA/current clock required')
+ const e=execution(input.execution,input.sourceCommit),now=(Object.hasOwn(input,'now')?input.now:Date.now()),{data,target}=readFcfFutureNativeSource({targetSlug:input.targetSlug,inventoryAdmission:input.inventoryAdmission,now})
+ requireFcfG1QuietInventory({targetSlug:input.targetSlug,databaseInventory:input.databaseInventory})
+ return {data,target,e,now,native:{targetSlug:target.targetSlug,sourceData:data,databaseInventory:input.databaseInventory,existingExceptionBindings:input.existingExceptionBindings,writerCommit:input.sourceCommit,now}}
 }
-function packetInput(input,now){return {targetSlug:slug,sourceCommit:input.sourceCommit,targetEvidence:input.inventoryAdmission,cleanupEvidence:input.cleanupEvidence,databaseInventory:input.databaseInventory,now}}
+function packetInput(input,now){return {targetSlug:input.targetSlug,sourceCommit:input.sourceCommit,targetEvidence:input.inventoryAdmission,cleanupEvidence:input.cleanupEvidence,databaseInventory:input.databaseInventory,now}}
 function envelope(input,ctx,packet,mapping){
+ const slug=ctx.target.targetSlug
  const p=JSON.parse(packet.manifestText)
  if(p.cleanupBinding.phase!=='applied')fail('reader-issued APPLIED future cleanup required')
  const rollout={schemaVersion:3,kind:'fcf-future-current-target-import-rollout',targetSlug:slug,sourceCommit:input.sourceCommit,execution:ctx.e,targetPacketText:packet.manifestText,targetPacketSha256:packet.manifestSha256,inventoryBinding:ctx.data.binding,cleanupBinding:p.cleanupBinding,identityPlan:{mappingText:mapping.proposalText,mappingSha256:mapping.proposalSha256},readiness:null},rolloutText=JSON.stringify(rollout)
@@ -39,6 +43,7 @@ export function buildFcfFutureTargetImportRollout(input={}){
  return envelope(input,ctx,packet,mapping)
 }
 function currentImportState(ctx,originalInventory){
+ const slug=ctx.target.targetSlug
  // This is CURRENT read-only SQL scope, distinct from the packet's immutable
  // PRE-import observation. Import may grow selected IDs, never erase old ones.
  const {target}=validateFcfTargetReleaseInventory({targetSlug:slug,databaseInventory:ctx.native.databaseInventory,cleanupPhase:'applied',sourcePolicy:'es-fcf-six-reviewed-history-v1',now:ctx.now})
@@ -58,12 +63,12 @@ export function replayFcfFutureTargetImportRollout(input={}){
  if(typeof text!=='string'||!text.length||Buffer.byteLength(text)>limit||text.charCodeAt(0)===0xfeff||!/^[a-f0-9]{64}$/.test(expected??'')||hash(text)!==expected)fail('exact bounded future rollout TEXT/SHA required')
  let r;try{r=JSON.parse(text)}catch{fail('invalid future rollout JSON')}
  keys(r,wireFields,'future import rollout');keys(r.identityPlan,['mappingText','mappingSha256'],'identity plan')
- if(r.schemaVersion!==3||r.kind!=='fcf-future-current-target-import-rollout'||r.targetSlug!==slug||r.sourceCommit!==input.sourceCommit||r.readiness!==null||JSON.stringify(execution(r.execution,r.sourceCommit))!==JSON.stringify(ctx.e))fail('exact future import identity/null readiness/same actual execution required')
+ if(r.schemaVersion!==3||r.kind!=='fcf-future-current-target-import-rollout'||r.targetSlug!==ctx.target.targetSlug||r.sourceCommit!==input.sourceCommit||r.readiness!==null||JSON.stringify(execution(r.execution,r.sourceCommit))!==JSON.stringify(ctx.e))fail('exact future import identity/null readiness/same actual execution required')
  let originalPacket;try{originalPacket=JSON.parse(r.targetPacketText)}catch{fail('invalid original future import packet JSON')}
  // Verify immutable original packet bytes/source/cleanup at its original audit
  // timestamp and actual current clock. Stored inventory is a PRE-import image,
  // not evidence of the current SQL state or a refreshed capture timestamp.
- const packet=verifyFcfFutureTargetImportPacket({...packetInput(input,ctx.now),databaseInventory:originalPacket.databaseInventory,manifestText:r.targetPacketText,manifestSha256:r.targetPacketSha256})
+ const packet=verifyFcfFutureTargetImportPacket({...packetInput(input,ctx.now),databaseInventory:originalPacket.databaseInventory,...(ctx.target.competitionId===783?{currentDatabaseInventory:input.databaseInventory}:{}),manifestText:r.targetPacketText,manifestSha256:r.targetPacketSha256})
  currentImportState(ctx,originalPacket.databaseInventory)
  const mapping=verifyFcfNativeMappingProposal({...ctx.native,proposalText:r.identityPlan.mappingText,proposalSha256:r.identityPlan.mappingSha256})
  planFcfNativeTargetRows(ctx.native)

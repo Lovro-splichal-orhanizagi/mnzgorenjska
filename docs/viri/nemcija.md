@@ -1120,3 +1120,64 @@ Podprt ostane tudi argument poti pri neposrednem zagonu skripte. Brez obeh
 nastavitev se samo20 testov zunanjega zajema preskoči z izrecnim razlogom;
 dve preverbi zavrnitve praznih/izmišljenih dokazov vedno tečeta. Izrecno
 nastavljena napačna ali prazna pot povzroči napako, ne preskoka.
+
+### Baden: accounted continuation v4 / capture schema5
+
+Consumed v3 run40614233934 retained303 documents:93 successful new requests,
+210 reused originals, plus failed network attempt94. Archive and handoff jobs
+were actually skipped. The fixed new history therefore carries1517/5000 spent
+(1423+94), including the failed request; v3 cannot be reused. The new explicit
+`baden-reviewed-transports-v4` preset reserves at most483 current+3000 archive
+requests, including every retry. The frozen parent is artifact12784024960,
+ZIP SHA-256 `58d409601f6f5629c1d2bc3f9f6326ca7048deda94b6937a6cc7b0780aca6662`.
+The reader recursively authenticates the entire embedded v3/v2/v1 raw history,
+all94 intents/attempts,303 bodies and exact original receipts. Six explicitly
+bound report/lineup revisions supersede their older candidates; all691 candidate
+nonround documents still pass the ordinary strict pair-eligibility filter.
+Rejected/incomplete report bundles supply no cached report or lineup. Every
+round is fetched fresh. No source completeness or native authority follows
+from the checkpoint or its serialized public metadata.
+
+Only this preset uses capture schema5 and the fixed in-memory retry policy
+`baden-v4-transient-v1`. Both stages retain `outcomes.jsonl` and its manifest
+SHA-256, in addition to every original intent. There are at most three total
+attempts per unchanged URL/kind, each charged to the stage allowance; minimum
+host gap remains six seconds, with six/twelve-second retry backoffs. The client
+retries only a bounded closed `TypeError` transport cause/aggregate chain whose
+leaf codes are `ETIMEDOUT`, `ENETUNREACH`, `ECONNRESET` or `EAI_AGAIN`, before any
+HTTP response. Messages are not classification evidence. HTTP errors, redirects,
+challenges, body errors, unknown/truncated error chains and parser/privacy
+failures do not retry. An outcome must be durably appended before the next
+attempt. Exhaustion or journal failure stops the client.
+
+Schema5 replay reauthenticates the branded raw checkpoint, exact intent/outcome
+partition and contiguous same-URL groups, pacing/backoff, successful bodies and
+original receipts by successful attempt number. It reproduces transient failures
+with retained typed evidence through an offline fetch seam; no source fallback.
+Unrecovered/incomplete captures cannot pass successful replay. The archive also
+retains its ordinary adjacent-season parent proof and authenticates the same
+raw1517 history; current-season cached documents are never reused for archive.
+Ordinary/default capture schemas1–4 retain their existing byte contracts and
+first-error behavior. All normal statistical/card parsing and import refusals
+remain unchanged. Full archive, the separate administrative unknown-result HOLD,
+GK/pricing/legal15/deadline and native/historical gates remain required.
+
+Focused genuine tests accept `FUSSBALL_V4_EVIDENCE_DIR` pointing to the retained
+run40614233934 directory containing `current-metadata.json`, `current.zip` and
+`current-manifest.json`; unconfigured CI explicitly skips only private-evidence
+cases. Source-free retry/refusal and caller-JSON boundary controls always run.
+
+Checkpoint version4 is accepted only with capture schema5; legacy schemas reject
+retry policy/outcome evidence. Paired transport staging supports only the exact
+reviewed Baden schema5+schema5 combination with the same authenticated v4 history
+and bound outcomes. Its archive seed receipt names the unique successful attempt
+(and original body hash), including success2 after failed connection1. Ordinary
+source, statistics and native admission still run independently before acceptance.
+
+The first ordinary nightly may consume this exact verified schema5 pair from
+`bulk-seed`. Full paired replay/history/outcome checks remain mandatory; only
+current-season nonround originals are reused. Their original successful receipts
+remain flat and retain their actual attempt numbers. New network originals are
+matched by their unique successful numbered receipt, including after retries.
+The fresh nightly itself keeps ordinary schema2, first-error/no-retry behavior
+and existing request limits; checkpoint/retry authority is not inherited.

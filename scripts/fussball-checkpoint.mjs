@@ -315,3 +315,82 @@ export function readFussballTransportSuccessor(input){
  proofs.set(proof,{documents,parents:[copyParent(input.current),copyParent(input.archive)],accounted:{prior:copyParent(prior),current:copyParent(input.current),archive:copyParent(input.archive)}})
  return proof
 }
+
+// One fixed consumed v3 partial. All old readers/protocols above stay unchanged.
+let v4Registry
+function reviewedV4(){return v4Registry??=freeze(JSON.parse(readFileSync(new URL('./policies/fussball-transport-v4.json',import.meta.url),'utf8')))}
+export function reviewedFussballV4Parent(){return freeze(structuredClone(reviewedV4().parent))}
+export function exportFussballV4AccountedHistory(proof){
+ const state=requireProof(proof),v4=reviewedV4()
+ if(proof.preset!==v4.preset||!state.accounted)fail('reader-issued v4 history required')
+ return Object.fromEntries(Object.entries(state.accounted).map(([name,p])=>[name,copyParent(p)]))
+}
+export function readFussballTransportV4(input){
+ closed(input,['parent',...(Object.hasOwn(input??{},'now')?['now']:[])],'v4 input')
+ const v4=reviewedV4(),now=input.now??Date.now(),p=input.parent,pin=v4.parent
+ if(!Number.isFinite(now)||v4.preset!=='baden-reviewed-transports-v4'||v4.priorRequests!==1517||v4.totalRequestCap!==5000||!same(v4.scope,registry.scope))fail('fixed1517/5000 v4 required')
+ closed(p,['run','artifact','jobs','zipBytes'],'v4 raw parent')
+ const {run:r,artifact:a,jobs:e,zipBytes}=p
+ if(String(r?.id)!==pin.runId||r.run_attempt!==1||r.repository?.full_name!==repository||r.head_repository?.full_name!==repository||r.path!==v4.workflow||r.event!=='workflow_dispatch'||r.head_branch!=='main'||r.head_sha!==pin.sourceCommit||r.status!=='completed'||r.conclusion!=='failure'||!utc(r.updated_at)||Date.parse(r.updated_at)>now)fail('exact terminal failed v3 execution required')
+ if(String(a?.id)!==pin.artifactId||a.name!==`fussball-season-${pin.runId}`||a.digest!==pin.artifactDigest||a.size_in_bytes!==pin.artifactSize||typeof a.expired!=='boolean'||String(a.workflow_run?.id)!==pin.runId||a.workflow_run?.head_sha!==pin.sourceCommit||a.workflow_run?.head_branch!=='main'||!Buffer.isBuffer(zipBytes)||zipBytes.length!==pin.artifactSize||`sha256:${sha256(zipBytes)}`!==pin.artifactDigest)fail('exact v4 parent artifact bytes/identity required')
+ closed(e,['total_count','jobs'],'v4 jobs')
+ if(e.total_count!==3||e.jobs?.length!==3||new Set(e.jobs.map(j=>j.id)).size!==3||e.jobs.some(j=>String(j.run_id)!==pin.runId||j.run_attempt!==1||j.head_sha!==pin.sourceCommit||j.status!=='completed'))fail('complete v4 jobs required')
+ for(const [name,id,conclusion]of[['capture','122572856276','failure'],['archive','122576519792','skipped'],['handoff','122576520456','skipped']]){
+  const rows=e.jobs.filter(j=>j.name===name),j=rows[0]
+  if(rows.length!==1||String(j.id)!==id||j.conclusion!==conclusion||!Array.isArray(j.steps)||name!=='capture'&&j.steps.length)fail('v4 exact stage identity/state required')
+ }
+ const job=e.jobs.find(j=>j.name==='capture')
+ for(const [name,conclusion]of[
+  ['Validate exact reviewed completion scope and total5000 budget','success'],['Offline source and evidence checks','success'],['Authenticate only the exact reviewed source artifacts for the selected preset','success'],['Share host pacing with older nightly and bulk readers','success'],['Capture fresh rounds and missing originals without database credentials','failure'],['Independently replay only retained original documents','skipped'],['Authorize archive only from complete replayed current originals','skipped'],['Preserve source originals, checkpoint provenance and request journal','success'],
+ ]){const rows=job.steps.filter(s=>s.name===name);if(rows.length!==1||rows[0].status!=='completed'||rows[0].conclusion!==conclusion)fail('v4 source/replay/upload state differs')}
+ const files=unpackVerifiedArchive(zipBytes,pin.artifactDigest,'fussball-v4'),used=new Set(['manifest.json','attempts.jsonl','progress.jsonl'])
+ for(const [file,key]of[['manifest.json','manifestSha256'],['attempts.jsonl','attemptsSha256'],['progress.jsonl','progressSha256']])if(sha256(files.get(file))!==pin[key])fail('v4 exact manifest/journal/progress hashes required')
+ const m=parse(files.get('manifest.json'),'v4 manifest')
+ closed(m,['version','provider','createdAt','completedAt','options','codeSha256','success','error','snapshot','documents','resultSha256','activationEligible','checkpoint'],'v4 manifest')
+ if(m.version!==4||m.provider!=='fussball'||m.success!==false||m.error!=='fetch failed'||m.resultSha256!==null||m.activationEligible!==false||m.createdAt!==pin.createdAt||m.completedAt!==pin.completedAt||m.codeSha256!==pin.codeSha256||!same(m.options,pin.options)||Date.parse(m.completedAt)>now)fail('exact v3 partial manifest required')
+ const expectedFiles=checkpointV4EmbeddedPaths()
+ closed(m.checkpoint,['version','proof','parentFiles'],'v4 embedded checkpoint')
+ if(m.checkpoint.version!==3||!same(m.checkpoint.parentFiles,expectedFiles))fail('exact v3 embedded stage paths required')
+ const parents=expectedFiles.map(f=>{used.add(f.metadataFile);used.add(f.zipFile);const meta=parse(files.get(f.metadataFile),'v4 embedded metadata');closed(meta,['run','artifact','jobs'],'v4 embedded metadata');return{...meta,zipBytes:files.get(f.zipFile)}})
+ const oldProof=readFussballTransportSuccessor({current:parents[0],archive:parents[1],now}),oldHistory=exportFussballSuccessorAccountedHistory(oldProof)
+ if(!same(m.checkpoint.proof,oldProof)||oldProof.priorRequests+94!==1517)fail('v4 embedded proof/spent ledger differs')
+ const s=m.snapshot;closed(s,['requests','attempts','stopped','stopReason'],'v4 snapshot')
+ if(s.requests!==94||s.attempts?.length!==94||s.stopped!==true||s.stopReason!=='fetch failed'||m.documents?.length!==303||!same(s.attempts.at(-1),pin.terminal))fail('all94 spent attempts and303 bodies required')
+ const journal=lines(files.get('attempts.jsonl'),'v4 intents');lines(files.get('progress.jsonl'),'v4 progress')
+ if(journal.length!==94)fail('all94 intents required')
+ for(const [i,attempt]of s.attempts.entries()){
+  closed(attempt,['number','url','kind','startedAt','status','error',...(i<93?['httpStatus']:[])],'v4 attempt')
+  const j=journal[i];closed(j,['number','url','kind','startedAt','status','error'],'v4 intent')
+  if(attempt.number!==i+1||!utc(attempt.startedAt)||Date.parse(attempt.startedAt)<Date.parse(m.createdAt)||Date.parse(attempt.startedAt)>Date.parse(m.completedAt)||i&&Date.parse(attempt.startedAt)-Date.parse(s.attempts[i-1].startedAt)<6000||j.number!==attempt.number||j.url!==attempt.url||j.kind!==attempt.kind||j.startedAt!==null||j.status!=='pending'||j.error!==null||i<93&&(attempt.status!=='success'||attempt.error!==null||attempt.httpStatus!==200))fail('v4 ordered paced success/failure journals differ')
+ }
+ const old=new Map(getFussballCheckpointDocuments(oldProof).map(d=>[d.url,d])),selected=new Map(old),urls=new Set(),conflicts=new Map(v4.conflicts.map(c=>[c.url,c])),seen=new Set();let network=0,cached=0,rounds=0
+ for(const d of m.documents){
+  closed(d,['url','kind','bytes','sha256','status','contentType','capturedAt','file','origin','originalReceipt'],'v4 document')
+  const ext=d.kind==='font'?'woff':d.kind==='css'?'css':'html',bytes=files.get(d.file),{origin,originalReceipt,...descriptor}=d
+  if(urls.has(d.url)||!['round','report','lineup','css','font'].includes(d.kind)||d.status!==200||!utc(d.capturedAt)||d.file!==`documents/${d.sha256}.${ext}`||!bytes||bytes.length!==d.bytes||sha256(bytes)!==d.sha256)fail('v4 unique original body/path/hash differs')
+  urls.add(d.url);used.add(d.file)
+  if(origin==='cache'){
+   const prior=old.get(d.url);if(!prior||d.kind==='round')fail('v4 cached original absent from v3')
+   const {bytes:priorBytes,originalReceipt:priorReceipt,...priorDescriptor}=prior
+   if(!same(descriptor,{...priorDescriptor,bytes:priorBytes.length})||!same(originalReceipt,priorReceipt)||!bytes.equals(priorBytes))fail('v4 cached original/receipt differs')
+   cached++;continue
+  }
+  if(origin!=='network')fail('v4 document origin differs')
+  const attempt=s.attempts[network++]
+  if(attempt.status!=='success'||attempt.url!==d.url||attempt.kind!==d.kind||attempt.startedAt!==d.capturedAt||!same(originalReceipt,{version:1,document:receiptDocument(d),attempt,capture:{createdAt:m.createdAt,codeSha256:m.codeSha256,staffel:m.options.staffel,season:m.options.season}}))fail('v4 network body/flat receipt differs')
+  if(d.kind==='round'){
+   if(fussballRoundScope(d.url)?.staffel!==v4.scope.staffel||d.contentType.split(';')[0].trim().toLowerCase()!=='text/html'||/<title>\s*(?:Just a moment|Attention Required)|cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha/i.test(bytes.toString('utf8')))fail('v4 fresh round identity/MIME/challenge differs')
+   rounds++;continue
+  }
+  const prior=old.get(d.url)
+  if(prior){const conflict=conflicts.get(d.url);if(!conflict||conflict.kind!==d.kind||conflict.oldSha256!==prior.sha256||conflict.newSha256!==d.sha256||prior.bytes.equals(bytes))fail('v4 unknown revision conflict');seen.add(d.url)}
+  selected.set(d.url,{...structuredClone(descriptor),bytes:Buffer.from(bytes),originalReceipt:structuredClone(originalReceipt)})
+ }
+ if(network!==93||cached!==210||rounds!==30||seen.size!==6||conflicts.size!==6||files.size!==used.size||[...files.keys()].some(f=>!used.has(f)))fail('exact v4 body/request/conflict/member partition required')
+ const documents=[...selected.values()].sort((a,b)=>a.url<b.url?-1:a.url>b.url?1:0),documentsSha256=sha256(JSON.stringify(documents.map(({bytes,...d})=>({...d,bytes:bytes.length}))))
+ if(documents.length!==691||v4.documentsCount!==691||documentsSha256!==v4.documentsSha256)fail('fixed691 latest v4 candidates required')
+ createFussballCaptureClient({maxRequests:1,cachedDocuments:documents,fetchFn:()=>fail('v4 reader has no network')})
+ const proof=freeze({preset:v4.preset,scope:structuredClone(v4.scope),priorRequests:1517,totalRequestCap:5000,parents:[structuredClone(pin)],documentsSha256,documentsCount:691})
+ proofs.set(proof,{documents,parents:[copyParent(p)],accounted:{...oldHistory,partial:copyParent(p)}});return proof
+}
+function checkpointV4EmbeddedPaths(){return ['current','archive'].map(stage=>({runId:'40577717778',metadataFile:`checkpoint/parents/40577717778-${stage}.json`,zipFile:`checkpoint/parents/40577717778-${stage}.zip`}))}
