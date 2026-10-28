@@ -134,7 +134,10 @@ function administrativeScore(s,decode,html,row,id){
    if((m[0].match(/\sclass\s*=/gi)??[]).length!==1||!classTokens(m[0]).has('description'))fail('nepodprt ali dvoumen administrativni izid')
    return true
   })
-  .map(m=>element(html.slice(m.index),'description')).filter(description=>(court?/\(U\)/:/\([wW]\)/).test(text(description))):[]
+  .map(m=>element(html.slice(m.index),'description'))
+  // W inventory is rejection-only: nested tags can split the marker/label
+  // into whitespace, but cannot hide an extra conflicting description.
+  .filter(description=>court?/\(U\)/.test(text(description)):/\(w\)|wertungspielinstanz/i.test(text(description).replace(/\s/g,''))):[]
  const legend=court?/<div class="description">\(U\) Sportgerichtsurteil \(bestätigt\)<\/div>/g:valuation?/<div class="description">\(W\) Wertung Spielinstanz \(bestätigt\)<\/div>/g:/<div class="description">\(V\) Verwaltungsentscheid \(bestätigt\)<\/div>/g
  if(!match||(html.match(legend)??[]).length!==1||
     ((court||valuation)&&guardedDescriptions.length!==1)||

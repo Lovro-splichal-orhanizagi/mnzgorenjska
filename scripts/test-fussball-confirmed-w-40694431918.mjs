@@ -56,3 +56,8 @@ test('collector retains W as an administrative diagnostic with no report GET, in
  const result=await collectFussballSeason({seedUrl,staffel:proof.staffel,season:proof.season,client:{async read(url,kind){calls.push({url,kind});assert.equal(url,seedUrl);assert.equal(kind,'round');return {bytes:Buffer.from('TEST ONLY offline seed'),capturedAt:'2026-10-28T00:00:00Z'}}}},{inspectPage:()=>({url:seedUrl,fontIds:[],cssTemplate:'https://www.fussball.de/export.fontface/-/id/%ID%/type/css'}),parseRound:()=>parsed})
  assert.equal(calls.length,1);assert.equal(result.reports.length,0);assert.equal(result.coverage.playedFixtures,0);assert.equal(result.coverage.unscoredFixtures.total,0);assert.equal(result.coverage.administrativeFixtures,1);assert.equal(result.activationEligible,false);assert.deepEqual(result.administrativeFixtures,[{fixture:f,code:'FUSSBALL_ADMINISTRATIVE_RESULT_UNSUPPORTED',reason:'Administrative result retained without ordinary played statistics'}])
 })
+test('W rejection inventory catches split or spaced marker and conflicting decision labels beside the exact legend',()=>{
+ for(const body of ['(<span>W</span>) Wertung Spielinstanz (unbestätigt)','(<span>w</span>) Wertung Spielinstanz (unbestätigt)','( W ) Wertung Spielinstanz (unbestätigt)','(&nbsp;<b>W</b>&nbsp;) Wertung Spielinstanz (unbestätigt)','Wertung <span>Spielinstanz</span> (unbestätigt)','(X) Wertung Spielinstanz (unbestätigt)']){
+  assert.throws(()=>parse(html.replace(legend,legend+`<div class="description">${body}</div>`)),undefined,body)
+ }
+})
