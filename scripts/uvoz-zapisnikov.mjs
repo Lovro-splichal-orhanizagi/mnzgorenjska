@@ -1,3 +1,4 @@
+import {isFcfG1SupplementReport} from './lib/fcf-g1-supplement-installed.mjs'
 // Uvozi zapisnike MNZ Gorenjska v bazo.
 //
 // Uporaba:
@@ -107,16 +108,17 @@ const originalCompetition = await najdiTekmovanje(db, arg('tekmovanje', 'clani')
 // sezono pri Lendavi, arhiv pa pri Murski Soboti. `--vir mnzms` pove, od kod
 // brati, ne da bi se liga preselila.
 const virIme = arg('vir')
-const {competition:tekmovanje,installedHistoricalMarkers}=await loadHistoricalStatisticsImportContext(db,originalCompetition,{sourceOverride:virIme})
+const {competition:tekmovanje,installedHistoricalMarkers,installedG1Supplement}=await loadHistoricalStatisticsImportContext(db,originalCompetition,{sourceOverride:virIme})
 if(installedHistoricalMarkers && pocisti)throw Error('historical import: cleanup requires a separately reviewed atomic writer')
-if(installedHistoricalMarkers?.markers.some(m=>m.reportId===String(arg('zapisnik')))
+if((String(arg('zapisnik'))==='es4109409'&&isFcfG1SupplementReport({competition:tekmovanje,installedG1Supplement,id:arg('zapisnik')}))
+  || installedHistoricalMarkers?.markers.some(m=>m.reportId===String(arg('zapisnik')))
   || (tekmovanje.id===974&&tekmovanje.slug==='mt-nl2'&&tekmovanje.source==='mfa'
     &&tekmovanje.source_policy==='mt-mfa-nl2-reviewed-history-v1'&&tekmovanje.source_league_code==='6234492/2027'
     &&installedHistoricalMarkers?.markers.some(m=>m.reportId==='mt51962893')&&String(arg('zapisnik'))==='mt50920555')) {
   console.log('Historical report has explicit unavailable statistics; immutable installed marker retained without source reads or writes.')
   process.exit(0)
 }
-const vir = viraZa(tekmovanje,{installedHistoricalMarkers,db})
+const vir = viraZa(tekmovanje,{installedHistoricalMarkers,installedG1Supplement,db})
 if (virIme) console.log(`Vir povožen: ${virIme}`)
 const liga = arg('liga', sifraLige(tekmovanje, '1502'))
 // Arhiv (prejšnja sezona) igralca ne vrača med aktivne; nastop v tekoči sezoni ga.
@@ -768,7 +770,7 @@ let zapisniki = preberiPosamezniZapisnik
     ? await vir.zapisniki(liga, prenesi, { samoZapisnik, preskoci, sveziZapisniki,...(arg('dfb-pending')?{zberiNapake:true,onRejected:dfbPendingContext.reject}:{}) })
     : await vir.zapisniki(liga, prenesi)
 // Validate the complete loaded batch before deriving or writing any individual rows.
-for(const report of zapisniki)assertHistoricalReportImportable({competition:tekmovanje,report})
+for(const report of zapisniki)assertHistoricalReportImportable({competition:tekmovanje,report,installedG1Supplement})
 // Sources that do not implement traversal filtering retain the generic filter.
 if (samoZapisnik) zapisniki = zapisniki.filter((x) => String(x.id) === String(samoZapisnik))
 if (omeji) zapisniki = zapisniki.slice(0, omeji)

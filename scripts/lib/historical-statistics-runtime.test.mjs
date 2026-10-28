@@ -35,7 +35,7 @@ test('actual CLI installed single-report exits before factory/preparation/cache/
 test('actual loaded-batch guard refuses leaked unavailable ID before any individual writes',()=>{
  const body=importer.slice(importer.indexOf('// Validate the complete loaded batch'),importer.indexOf('// Sources that do not implement'))
  let writes=0
- assert.throws(()=>runInNewContext(`${body};write()`,{zapisniki:[{id:'unregistered',z:{}},{id:'es4109388',z:{}}],tekmovanje:{slug:'ordinary',source:'fcf'},assertHistoricalReportImportable,write(){writes++}}),/historical|fixture|policy/i)
+ assert.throws(()=>runInNewContext(`${body};write()`,{zapisniki:[{id:'unregistered',z:{}},{id:'es4109388',z:{}}],tekmovanje:{slug:'ordinary',source:'fcf'},installedG1Supplement:null,assertHistoricalReportImportable,write(){writes++}}),/historical|fixture|policy/i)
  assert.equal(writes,0)
 })
 test('actual schedule path skips initial raw/cache read for installed FCF wrapper',async()=>{

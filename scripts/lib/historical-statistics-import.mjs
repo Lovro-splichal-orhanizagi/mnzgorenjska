@@ -1,3 +1,4 @@
+import {isFcfG1SupplementCompetition,loadFcfG1InstalledSupplement,requireFcfG1InstalledSupplement,isFcfG1SupplementReport} from './fcf-g1-supplement-installed.mjs'
 import {assertMfaReportTiming} from '../viri/mfa-report-validation.mjs'
 import {FCF_SIX_SOURCE_POLICY,getFcfSixPolicy,validateFcfSixInstalledMarkers,classifyFcfSixHistoricalStatistics} from '../fcf-six-historical-policy.mjs'
 import {validateHnsWomenClubBindings} from '../viri/hns-zenske-binding.mjs'
@@ -20,7 +21,7 @@ export async function loadHistoricalStatisticsImportContext(db,original,{sourceO
     if(error||binding?.installed!==true||binding.enabled!==true||binding.source_policy!==FUSSBALL_COMMUNITY_SOURCE_POLICY||binding.current_code!==competition.source_league_code||!Array.isArray(binding.archive_codes))throw Error('community card import: exact installed enabled policy required')
     return {competition:{...competition,communityCardBinding:binding},installedHistoricalMarkers:null}
   }
-  if(competition.source_policy===FCF_SIX_SOURCE_POLICY){const {data,error}=await db.rpc('get_installed_fcf_six_statistics_markers',{p_competition_id:competition.id});if(error)throw Error(`six historical import: ${error.message}`);const installedHistoricalMarkers=validateFcfSixInstalledMarkers({competition,binding:data});return{competition:{...competition,firstFantasyPlayedOn:installedHistoricalMarkers.firstFantasyPlayedOn},installedHistoricalMarkers}}
+  if(competition.source_policy===FCF_SIX_SOURCE_POLICY){const {data,error}=await db.rpc('get_installed_fcf_six_statistics_markers',{p_competition_id:competition.id});if(error)throw Error(`six historical import: ${error.message}`);const installedHistoricalMarkers=validateFcfSixInstalledMarkers({competition,binding:data});const prepared={...competition,firstFantasyPlayedOn:installedHistoricalMarkers.firstFantasyPlayedOn};const installedG1Supplement=isFcfG1SupplementCompetition(prepared)?await loadFcfG1InstalledSupplement(db,prepared):null;return{competition:prepared,installedHistoricalMarkers,installedG1Supplement}}
   const policy=getHistoricalStatisticsPolicy(competition.slug)
   if(!policy && competition.source_policy==null)return {competition,installedHistoricalMarkers:null}
   if(!policy || competition.source!==policy.provider || competition.source_policy!==policy.sourcePolicy)throw Error('historical import: invalid competition/provider/policy tuple')
@@ -38,7 +39,9 @@ export async function loadHistoricalStatisticsImportContext(db,original,{sourceO
 }
 
 /** Before per-match derivation/writes: approved unavailable reports belong only to the atomic packet writer. */
-export function assertHistoricalReportImportable({competition,report}) {
+export function assertHistoricalReportImportable({competition,report,installedG1Supplement}) {
+  if(isFcfG1SupplementCompetition(competition))requireFcfG1InstalledSupplement({competition,installedG1Supplement})
+  if(competition.source==='fcf'&&String(report?.id)==='es4109409'){isFcfG1SupplementReport({competition,installedG1Supplement,id:report.id});throw Error('historical import: installed supplement cannot derive individual rows')}
   if(competition.source==='mfa'&&['mt50920555','mt51962893'].includes(String(report?.id)))throw Error('historical import: neither continuation segment may derive individual statistics')
   if(report?.statisticsStatus!=null && report.statisticsStatus!=='available')throw Error('historical import: unavailable/unknown statistics status cannot derive individual rows')
   if(report?.historicalStatistics!=null || !report?.z || typeof report.z!=='object')throw Error('historical import: unavailable or missing normal report body')
