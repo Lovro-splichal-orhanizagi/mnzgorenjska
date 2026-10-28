@@ -6581,6 +6581,156 @@ preveri(
     U.kratkoImeUs('Southern California Eagles') === 'Southern California Eagles')
 }
 
+// --- vir hkfa (Hongkong, strežniško izrisane strani hkfa.com, `__NUXT__`) ---------------
+{
+  const H = await import('./viri/hkfa.mjs')
+  const N = await import('./viri/nuxt.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const { ravenLige, koliko } = await import('./visja-liga.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  const vir = H.default
+  preveri('hkfa: vir je vpisan, 3 s, User-Agent SLFF, svoj fetch', viri.hkfa === vir && vir.drzava === 'HK' && vir.imaRegistracije === false &&
+    vir.premorMs >= 3000 && vir.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' && vir.fetch === H.hkfaFetch && vir.razporedCel === true)
+  let slaba = null
+  try { H.razbijKodo('2047') } catch (e) { slaba = e.message }
+  let slabaLeta = null
+  try { H.razbijKodo('2047/2026-2028') } catch (e) { slabaLeta = e.message }
+  preveri('hkfa: šifra <leagueyear_id>/<leto>, naslovi (GET), šifra zapisnika hk<id>', H.razbijKodo('2047/2026-2027').sezona === '2026/27' &&
+    H.razbijKodo('1949/2025-2026').prvoLeto === 2025 && /leagueyear_id/.test(slaba ?? '') && /leagueyear_id/.test(slabaLeta ?? '') &&
+    vir.naslovRazporeda('2047/2026-2027') === 'https://www.hkfa.com/en/competitions/fixtures?competition=2047&page=1&year=2026-2027' &&
+    H.naslovStrani('1949/2025-2026', 3) === 'https://www.hkfa.com/en/competitions/fixtures?competition=1949&page=3&year=2025-2026' &&
+    vir.naslovZapisnika(null, 'hk50154') === 'https://www.hkfa.com/en/competitions/result/50154/detail' &&
+    H.sifraZapisnika(50154) === 'hk50154' && H.sifraZapisnika('hk50154') === 'hk50154')
+
+  // __NUXT__ brez eval: parametri, prirejanja, Array(n), /, void 0; vse drugo pade.
+  const nx = N.preberiNuxt('<script>window.__NUXT__=(function(a,b,c,d){c[0]={x:a,"y":"A\\u002FB",z:void 0};d.k=b;return {data:[{t:c,o:d,n:-1.5e1,b:true}],e:null}}(1,"dva",Array(1),{}));</script>')
+  preveri('hkfa: __NUXT__ — razčlenjen brez izvajanja (parametri, prirejanja, Array(n), \\u002F)', nx.data[0].t[0].x === 1 && nx.data[0].t[0].y === 'A/B' &&
+    nx.data[0].o.k === 'dva' && nx.data[0].n === -15 && nx.data[0].b === true && nx.e === null && 'z' in nx.data[0].t[0])
+  const pade = (s) => { try { N.preberiNuxt(s); return false } catch (e) { return e instanceof N.NuxtNapaka } }
+  preveri('hkfa: __NUXT__ s klicem, operatorjem ali __proto__ ne izvede ničesar', pade('window.__NUXT__=(function(a){alert(1);return {}}(1))') &&
+    pade('window.__NUXT__=(function(a){return {x:a+1}}(1))') && pade('window.__NUXT__=(function(a){return {x:fetch("u")}}(1))') &&
+    pade('window.__NUXT__=(function(a){a.b=require("fs");return a}({}))') &&
+    !Object.prototype.hasOwnProperty.call(N.preberiNuxt('window.__NUXT__={__proto__:{p:1},q:2}'), '__proto__') &&
+    N.preberiNuxt('window.__NUXT__={__proto__:{p:1},q:2}').p === undefined && N.preberiNuxt('<html>brez stanja</html>') === null)
+
+  preveri('hkfa: čas Hongkong (UTC+8, brez poletnega) → Ljubljana', H.casLjubljana('2026-09-06', '15:30').ura === '09:30' &&
+    H.casLjubljana('2026-11-08', '15:30').ura === '08:30' && H.casLjubljana('2026-08-21', '20:00').ura === '14:00' &&
+    H.casLjubljana('2026-09-06', '05:00').datum === '2026-09-05' && H.casLjubljana('2026-09-06', '05:00').ura === '23:00' &&
+    H.casLjubljana('2027-05-22', '--:--').ura === null && H.casLjubljana('2027-05-22', '--:--').datum === '2027-05-22')
+  preveri('hkfa: krog = teden od tedna 1. avgusta (stalen), tekma pred njim krog 1', H.zacetekSezone(2026) === '2026-07-27' &&
+    H.krogIzDatuma('2026-07-27', 2026) === 1 && H.krogIzDatuma('2026-08-02', 2026) === 1 && H.krogIzDatuma('2026-08-03', 2026) === 2 &&
+    H.krogIzDatuma('2026-09-06', 2026) === 6 && H.krogIzDatuma('2026-07-01', 2026) === 1 && H.krogIzDatuma('2027-05-22', 2026) === 43)
+  preveri('hkfa: minuta — podaljšek odrezan, HT = 45, AM (po tekmi) = 90', H.minuta('90') === 90 && H.minuta('93') === 90 && H.minuta('HT') === 45 &&
+    H.minuta('ht') === 45 && H.minuta('AM') === 90 && H.minuta('') === null && H.minuta(null) === null && H.minuta('38') === 38)
+  preveri('hkfa: ime igralca — štiri oblike HKFA → "Priimek Ime"', H.imeIgralca('Chan, Yiu Yin') === 'Chan Yiu Yin' &&
+    H.imeIgralca('Cheung,Hoi Leong Harry') === 'Cheung Hoi Leong Harry' && H.imeIgralca('ANNAN Christian Kwesi') === 'Annan Christian Kwesi' &&
+    H.imeIgralca(' Santos Da Paixao Alysson Jordan') === 'Santos Da Paixao Alysson Jordan' && H.imeIgralca('TAYLOR Kieran Michael\t\t') === 'Taylor Kieran Michael' &&
+    H.imeIgralca('SANTOS DA PAIXAO Allan Aniz') === 'Santos Da Paixao Allan Aniz' && H.imeIgralca('Ng Man Hei') === 'Ng Man Hei')
+  preveri('hkfa: pozicija iz vpisane (G/GK vratar, DF/LB branilec, MF, FW)', ['G', 'GK', 'DF', 'LB', 'MF', 'FW', '', null].map(H.pozicija).join() ===
+    'GK,GK,DEF,DEF,MID,FWD,,')
+  preveri('hkfa: klub po club_id (kitajsko ime → angleško, preimenovan klub isti), kratko ime brez trka', H.imeKluba({ Club: { club_id: 2 }, TeamName: '南華' }) === 'South China' &&
+    H.imeKluba({ Club: { club_id: 302 }, TeamName: 'WSE' }) === 'Harmony' && H.imeKluba({ Club: { club_id: 9999 }, TeamName: ' New FC ' }) === 'New FC' &&
+    H.kratkoImeHk('Leaper FC') === 'Leaper' && H.kratkoImeHk('Tuen Mun F.C.') === 'Tuen Mun F.C.' && H.kratkoImeHk('Tuen Mun') === 'Tuen Mun' &&
+    H.kljucKlubaHk('Central & Western') === 'central and western' && H.kljucKlubaHk('Tuen Mun F.C.') !== H.kljucKlubaHk('Tuen Mun') &&
+    H.kljucKlubaHk("St. Joseph's") === 'st joseph s')
+  preveri('hkfa: raven — Premier League nad 1st, 1st nad 3rd Division', koliko(ravenLige({ slug: 'hk-premier-league' }), ravenLige({ slug: 'hk-1-division' })) === 1 &&
+    koliko(ravenLige({ slug: 'hk-1-division' }), ravenLige({ slug: 'hk-3-division' })) === 2 && koliko(ravenLige({ slug: 'hk-3-division' }), ravenLige({ slug: 'hk-2-division' })) === 0 &&
+    ravenLige({ slug: 'hk-x' }) === null)
+  preveri('hkfa: izziv, zavrnitev, predpomnilnik le za pravo stran', H.jeIzziv('<title>Just a moment...</title>') && !H.jeIzziv(beri('hk-hkfa-tekma-50154.html')) &&
+    H.jeZavrnitev(401) && H.jeZavrnitev(403) && H.jeZavrnitev(429) && !H.jeZavrnitev(404) &&
+    vir.zaPredpomnilnik(beri('hk-hkfa-tekma-50154.html')) && vir.zaPredpomnilnik(beri('hk-hkfa-razpored-2047-1.html')) &&
+    !vir.zaPredpomnilnik('<script>window.__NUXT__=(function(a){return {data:[{}]}}(1))</script>') && !vir.zaPredpomnilnik('') &&
+    vir.zavrnitev('x', 429).zavrnitev === true && !/eyJ[\w-]{10,}\./.test(beri('hk-hkfa-razpored-2047-1.html') + beri('hk-hkfa-tekma-50154.html')))
+
+  // Razpored 1st Division 2026/27 (2 strani, 94 vrstic): 3 prestavljene (status 3) izpadejo,
+  // nadomestne "1R"/"6R" so v tednu novega datuma.
+  const strani = [1, 2].map((p) => H.seznamStrani(beri(`hk-hkfa-razpored-2047-${p}.html`)))
+  const tekme = H.tekmeLige('2047/2026-2027', strani)
+  const krogi = H.razcleniRazpored('2047/2026-2027', strani)
+  const klubi = new Set(tekme.flatMap((t) => [t.domaci, t.gostje]))
+  preveri('hkfa: razpored 1st Division — 94 vrstic, 3 prestavljene izpadejo, 91 tekem, 53 odigranih, 14 klubov',
+    strani[0].skupaj === 94 && strani[0].vrstice.length + strani[1].vrstice.length === 94 && tekme.length === 91 &&
+    tekme.filter((t) => t.izid).length === 53 && klubi.size === 14 && !tekme.some((t) => [50153, 50155, 50243].includes(t.id)))
+  const r1 = tekme.find((t) => t.id === 50944)
+  preveri('hkfa: prestavljena tekma "1R" (6. 12.) je v krogu svojega tedna, ne v 1. krogu', r1.krogUradni === '1R' && r1.krog === 19 &&
+    r1.domaci === 'RCFC' && r1.gostje === 'Best Union Yuen Long' && r1.ura === '06:30' && krogi[0].stevilka === 6 && krogi[0].tekme.length === 5 &&
+    krogi.find((k) => k.stevilka === 19).tekme.length === 2 && krogi.every((k) => k.tekme.every((t) => t.hkId)))
+  let tuja = null
+  try { H.tekmeLige('2048/2026-2027', strani) } catch (e) { tuja = e.message }
+  preveri('hkfa: seznam drugega tekmovanja ustavi uvoz', /tekmovanja 2047/.test(tuja ?? ''))
+  const hkpl = H.tekmeLige('2041/2026-2027', [H.seznamStrani(beri('hk-hkfa-razpored-2041-3.html'))])
+  preveri('hkfa: HKPL — kitajska imena v seznamu dobijo angleška, "--:--" je ura brez vrednosti', hkpl.length === 10 &&
+    hkpl.every((t) => /^[A-Za-z]/.test(t.domaci) && /^[A-Za-z]/.test(t.gostje)) && hkpl.filter((t) => t.ura === null).length === 5 &&
+    hkpl.some((t) => t.domaci === 'Lee Man' && t.gostje === 'Eastern'))
+
+  // Zapisniki: XI 11 + 11, goli = izid, menjave z minuto, 990 minut na ekipo.
+  const minute = (z, i) => H.nastopi(z).filter((x) => x.ekipaIdx === i).reduce((s, x) => s + x.minute, 0)
+  const z = H.vZapisnik(beri('hk-hkfa-tekma-50154.html'), { id: 50154 })
+  preveri('hkfa: zapisnik Hoi King : Sham Shui Po 1:0 — 11 + 11, klop, gol, 10 menjav, 990 minut, popoln', z.zapisnikId === 'hk50154' &&
+    z.domaci.ime === 'Hoi King' && z.gostje.ime === 'Sham Shui Po' && z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.goli.length === 1 && z.goli[0].ime === 'Lau Ka Shing' && z.menjave.length === 10 && !z.nepopoln && z.opozorila.length === 0 &&
+    minute(z, 0) === 990 && minute(z, 1) === 990 && z.sezona === '2026/27' && z.datum === '2026-09-06' && z.ura === '09:30')
+  preveri('hkfa: igralec — šifra HKFA (reg_st), brez dresa, vratar iz vpisane pozicije, brez kapetana in rojstnih podatkov',
+    z.domaci.postava.every((i) => Number.isInteger(i.regSt) && i.regSt > 0 && i.st === null && !('kapetan' in i)) &&
+    z.domaci.postava.filter((i) => i.vratar).map((i) => i.ime).join() === 'Chan Ka Ho' && !/birth|dob|photo/i.test(JSON.stringify(z)))
+  preveri('hkfa: menjava rezerve, ki je že prišla v igro (vstop 39., izstop 81.)', z.menjave.some((m) => m.minuta === 39 && m.noter.ime === 'Melwani Gianni Giresh') &&
+    z.menjave.some((m) => m.minuta === 81 && m.ven.ime === 'Melwani Gianni Giresh') &&
+    H.nastopi(z).find((x) => x.ime === 'Melwani Gianni Giresh')?.minute === 42)
+  const og = H.vZapisnik(beri('hk-hkfa-tekma-48653.html'))
+  preveri('hkfa: avtogol (OG, side = ekipa strelca) šteje nasprotniku — 3:8, popoln', og.rezultat.gostje === 8 &&
+    og.goli.filter((g) => g.avtogol).length === 1 && og.goli.find((g) => g.avtogol).ekipaIdx === 0 && !og.nepopoln &&
+    og.goli.filter((g) => g.enajstmetrovka).length === 1 && og.zapisnikId === 'hk48653' && og.sezona === '2025/26')
+  const ht = H.vZapisnik(beri('hk-hkfa-tekma-46935.html'))
+  preveri('hkfa: menjava ob polčasu ("HT") je 45. minuta, ne izgubljena', ht.menjave.length === 9 && ht.menjave.filter((m) => m.minuta === 45).length >= 1 &&
+    ht.menjave.every((m) => m.minuta != null) && minute(ht, 0) === 990 && minute(ht, 1) === 990 && !ht.nepopoln)
+  const rk = H.vZapisnik(beri('hk-hkfa-tekma-50192.html'))
+  preveri('hkfa: rdeča kartona skrajšata minute (985, 971)', rk.rdeci.length === 2 && minute(rk, 0) === 985 && minute(rk, 1) === 971 && !rk.nepopoln)
+  const am = H.vZapisnik(beri('hk-hkfa-tekma-47109.html'))
+  preveri('hkfa: karton po tekmi ("AM") šteje, minut ne skrajša', am.rumeni.length === 6 && minute(am, 0) === 990 && minute(am, 1) === 990 &&
+    am.opozorila.length === 0)
+  const pen = H.vZapisnik(beri('hk-hkfa-tekma-49913.html'))
+  preveri('hkfa: HKPL 20:00 → 14:00, 11-metrovka je gol strelca', pen.ura === '14:00' && pen.goli.filter((g) => g.enajstmetrovka).map((g) => g.ime).join() === 'Okubo Yu' &&
+    H.nastopi(pen).find((x) => x.ime === 'Okubo Yu')?.goliIzEnajstmetrovke === 1)
+
+  // Nepopoln: sintetični zapisnik (navaden objekt `__NUXT__={…}`) z 10 začetniki in golom brez strelca.
+  const ig = (id, poz = '') => ({ Player: { player_id: id, PlayerName: `Igralec ${id}`, player_position: poz }, player_id: id, player_jersey: null })
+  const umetni = (domaci, dogodki, status = 1) => `<script>window.__NUXT__=${JSON.stringify({ data: [{ MatchData: {
+    match_id: 1, match_date: '2026-10-04', match_time: '15:30', match_status: status, home_score: 1, guest_score: 0,
+    team_home: { Club: { club_id: 2 }, TeamName: 'South China' }, team_guest: { Club: { club_id: 9 }, TeamName: 'Citizen' },
+    HomePlayers: domaci, GuestPlayers: Array.from({ length: 11 }, (_, i) => ig(200 + i, i ? '' : 'GK')),
+    HomeSubPlayers: [], GuestSubPlayers: [], MatchEvents: dogodki } }] })}</script>`
+  const deset = H.vZapisnik(umetni(Array.from({ length: 10 }, (_, i) => ig(100 + i)), [{ EventType: 'G', side: 'Home', min: '10', teamplayer_home: { player_id: 999 } }]))
+  preveri('hkfa: 10 začetnikov in gol brez strelca → nepopoln (NEPOPOLN prvo opozorilo)', deset.nepopoln && deset.opozorila[0].startsWith(H.NEPOPOLN) &&
+    /10 začetnikov/.test(deset.opozorila[0]) && /golov brez strelca/.test(deset.opozorila[0]))
+  const neodigrana = H.vZapisnik(umetni(Array.from({ length: 11 }, (_, i) => ig(100 + i)), [], 0))
+  const neznan = H.vZapisnik(umetni(Array.from({ length: 11 }, (_, i) => ig(100 + i)), [{ EventType: 'G', side: 'Home', min: '5', teamplayer_home: { player_id: 100 } }, { EventType: 'XYZ', side: 'Home', min: '7' }]))
+  preveri('hkfa: neodigrana tekma → null; neznan dogodek je opozorilo, zapisnik popoln', neodigrana === null && !neznan.nepopoln &&
+    neznan.opozorila.some((o) => /neznan dogodek "XYZ"/.test(o)))
+
+  // Uvoz prek vira (brez omrežja): zapisniki, kontumacija, zavrnitev.
+  const prenesi = async (url) => {
+    let m
+    if ((m = url.match(/competition=2047&page=(\d)/))) return beri(`hk-hkfa-razpored-2047-${m[1]}.html`)
+    if ((m = url.match(/result\/(\d+)\/detail/)) && m[1] === '50154') return beri('hk-hkfa-tekma-50154.html')
+    return '<script>window.__NUXT__=(function(a){return {data:[{}],fetch:{}}}(1))</script>'
+  }
+  const zs = await vir.zapisniki('2047/2026-2027', prenesi)
+  preveri('hkfa: zapisniki prek vira — le strani tekme, krog in sezona iz razporeda', zs.length === 1 && zs[0].id === 'hk50154' &&
+    zs[0].z.krog === 6 && zs[0].z.sezona === '2026/27' && zs[0].url === 'https://www.hkfa.com/en/competitions/result/50154/detail')
+  const prazna = '<script>window.__NUXT__=' + JSON.stringify({ data: [{ MatchData: { match_status: 1, home_score: 3, guest_score: 0, HomePlayers: [], GuestPlayers: [], HomeSubPlayers: [], GuestSubPlayers: [] } }] }) + '</script>'
+  const kont = await vir.kontumacije('x', async () => prazna, [{ stevilka: 7, tekme: [{ domaci: 'A', gostje: 'B', datum: '2026-09-13', hkId: 1, izid: { domaci: 3, gostje: 0 } },
+    { domaci: 'C', gostje: 'D', datum: '2026-09-13', hkId: 2, izid: { domaci: 2, gostje: 0 } }] }], '2026-10-28')
+  let zavrnjen = null
+  try { await vir.razporedVseStrani('2047/2026-2027', async () => { const e = new Error('403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+  let izziv = null
+  try { await vir.razporedVseStrani('2047/2026-2027', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  let napaka = null
+  try { await vir.razporedVseStrani('2047/2026-2027', async () => '<html>404</html>') } catch (e) { napaka = e }
+  preveri('hkfa: kontumacija 3:0 brez postav; 403 in izziv → HkfaZavrnitev (izhod 4), stran brez seznama ustavi uvoz',
+    kont.length === 1 && kont[0].domaci === 'A' && kont[0].krog === 7 &&
+    zavrnjen instanceof H.HkfaZavrnitev && zavrnjen.status === 403 && izziv instanceof H.HkfaZavrnitev && /ni stran seznama/.test(napaka?.message ?? ''))
+}
+
 // --- vir fsf (Ferski otoki, javni posrednik COMET na fsf.fo) -----------------------
 {
   const F = await import('./viri/fsf.mjs')

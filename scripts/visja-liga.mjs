@@ -205,6 +205,15 @@ export function ravenLige({ slug, name, zveza }) {
     if ((m = slug.match(/^fo-(\d)-deild/))) return abs(1 + Number(m[1]))
 }
 
+  // Hongkong (vir hkfa, stalna šifra igralca HKFA): Premier League 1,
+  // 1st Division 2, 2nd 3, 3rd 4.
+  if (slug.startsWith('hk-')) {
+    if (mladinska) return null
+    if (slug === 'hk-premier-league') return abs(1)
+    if ((m = slug.match(/^hk-(\d)-division/))) return abs(1 + Number(m[1]))
+    return null
+  }
+
   // Kazahstan (vir kff): Premier liga 1, Prva liga 2, Druga liga (obe
   // konferenci) 3. Šifra osebe KFF je ista v vseh ligah.
   if (slug.startsWith('kz-')) {

@@ -78,6 +78,7 @@ import nff from './nff.mjs'
 import kff from './kff.mjs'
 import pflAz from './pfl-az.mjs'
 import jfl from './jfl.mjs'
+import hkfa from './hkfa.mjs'
 
 const VIRI = {
   // Ukrajina: Profesionalna nogometna liga prek pfl.ua.
@@ -225,6 +226,9 @@ const VIRI = {
   // tekme (HTML, ista vsebina kot uradni PDF), brez šifer igralcev (ime + klub),
   // pozicije GK/DF/MF/FW iz postave, čas Tokio → Ljubljana.
   jfl,
+  // Hongkong (HKFA) prek strežniško izrisanih strani hkfa.com: stanje `__NUXT__`
+  // brez eval (`nuxt.mjs`), stalna šifra igralca, čas Asia/Hong_Kong, krog je teden.
+  hkfa,
 }
 
 /**

@@ -25,6 +25,7 @@ ABS_PIRAMIDE = [
     ("lt-", "lt-a-lyga", r"^lt-(\d)-lyga"),
     ("fo-", "fo-betri-deildin", r"^fo-(\d)-deild"),
     ("kz-", "kz-premier-liga", r"^kz-(\d)-liga"),
+    ("hk-", "hk-premier-league", r"^hk-(\d)-division"),
 ]
 
 
