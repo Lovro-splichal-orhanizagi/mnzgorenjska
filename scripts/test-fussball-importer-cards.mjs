@@ -68,7 +68,7 @@ for(const [player,minuteOff,minutes,teamMinutes]of [['Tobias Baumann',85,85,985]
  const start=source.indexOf('// --- seznam zapisnikov'),end=source.indexOf('// --- preračun točk po krogih')
  assert.ok(start>=0&&end>start)
  await runInNewContext(`(async()=>{${source.slice(start,end)};if(napak)throw Error('import failed')})()`,{
-  samoManjkajoce:false,completedReportIds,assertHistoricalReportImportable,skipIncompleteArchiveReport,isFussballCommunityCompetition,db,tekmovanje:competition,vir,liga:competition.source_league_code,
+  samoManjkajoce:false,completedReportIds,assertHistoricalReportImportable,skipIncompleteArchiveReport,isFussballCommunityCompetition,installedG1Supplement:undefined,db,tekmovanje:competition,vir,liga:competition.source_league_code,
   prenesi(){assert.fail('no source HTTP in capture-bound import')},arg:()=>null,samoZapisnik:null,preberiPosamezniZapisnik:null,omeji:null,tekocaSezona:true,virIme:null,unattributedYellowEvents,
   console:{log(){},warn(){},error(...args){throw Error(args.join(' '))}},process:{stdout:{write(){}}},Date,Set,Map,createHash,readdirSync,zaprtje,dodajStrelceSKlopi,MAPA:'memory',
   readFileSync:(path,...args)=>String(path)==='memory/odtisi-de-test-card-import.json'?fingerprint:readFileSync(path,...args),
