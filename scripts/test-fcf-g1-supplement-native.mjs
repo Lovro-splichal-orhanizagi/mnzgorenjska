@@ -47,3 +47,20 @@ test('activation5 replays private new source with unchanged16 keepers/prices/leg
  const changed=JSON.parse(a.activationText);changed.schemaVersion=4;const text=JSON.stringify(changed)
  const {createHash}=await import('node:crypto');assert.throws(()=>verifyFcfFutureTargetActivation({...f.input,activationText:text,activationSha256:createHash('sha256').update(text).digest('hex')}),/FCF_/)
 })
+
+test('actual retained-shaped placeholder maps existing native IDs and binds its entire row; drift never creates an anchor',enabled,async t=>{
+ const {base,data,execution}=await g1NativeBase(t,{...await options(),legacyPlaceholder:true}),m=base.databaseInventory.matches.find(m=>m.vir_brez_izida===true),b=buildFcfG1NativeSupplementBinding({data,databaseInventory:base.databaseInventory})
+ assert.equal(b.native.matchId,m.id);assert.equal(b.prelaunch.kind,'exact-legacy-placeholder-v1');assert.deepEqual(JSON.parse(b.prelaunch.beforeImageText),m)
+ const {createHash}=await import('node:crypto');assert.equal(b.prelaunch.beforeSha256,createHash('sha256').update(b.prelaunch.beforeImageText).digest('hex'))
+ const mapping=deriveFcfFutureTargetNativeMapping(base),r=buildFcfFutureTargetImportRollout({...base,execution,mappingText:mapping.proposalText,mappingSha256:mapping.proposalSha256})
+ assert.deepEqual(JSON.parse(r.rolloutText).supplementalBinding,b)
+ const after=structuredClone(base.databaseInventory),am=after.matches.find(x=>x.id===m.id)
+ Object.assign(am,{zapisnik_id:'es4109409',source_url:'https://www.fcf.cat/ca/competicio/acta/4109409',source_round:3,vir_brez_izida:false,home_goals:null,away_goals:null,statistics_status:'unavailable_historical',statistics_reason:'closed_official_result_and_individual_statistics_unavailable'})
+ after.supplementalMarker={binding:b,afterImage:structuredClone(am),receipt:{sourceFingerprintSha256:b.sourceFingerprintSha256}}
+ assert.deepEqual(buildFcfG1NativeSupplementBinding({data,databaseInventory:after}),b)
+ assert.deepEqual(replayFcfFutureTargetImportRollout({...base,databaseInventory:after,execution,...r}),r)
+ for(const mutate of [x=>x.played_on='2026-10-05',x=>x.home_team_id=x.away_team_id,x=>x.round_id++,x=>x.zapisnik_id='es4109410',x=>x.source_url='https://www.fcf.cat/ca/competicio/acta/4109409',x=>x.source_round=3,x=>x.vir_brez_izida=false,x=>x.home_goals=1,x=>x.imported_at='2026-10-28T00:00:00Z',x=>x.statistics_reason='foreign',x=>x.import_warnings=['foreign'],x=>delete x.source_phase]){
+  const d=structuredClone(base.databaseInventory);mutate(d.matches.find(x=>x.id===m.id));assert.throws(()=>buildFcfG1NativeSupplementBinding({data,databaseInventory:d}),/HOLD/)
+ }
+ for(const mutate of [d=>d.matches.push({...m,id:m.id+900000}),d=>d.matches.find(x=>x.id!==m.id).zapisnik_id='es4109409',d=>d.matches=d.matches.filter(x=>x.id!==m.id),d=>d.groups.find(g=>g.slug===base.targetSlug).active=true]){const d=structuredClone(base.databaseInventory);mutate(d);assert.throws(()=>buildFcfG1NativeSupplementBinding({data,databaseInventory:d}),/HOLD/)}
+})

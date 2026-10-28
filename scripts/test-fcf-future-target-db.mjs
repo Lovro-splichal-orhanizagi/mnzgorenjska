@@ -84,3 +84,10 @@ test('adding a URL after adapter construction cannot bypass native endpoint vali
  assert.throws(()=>db.receipt(slug),e=>/^FCF_FUTURE_DB:/.test(e.message)&&!e.message.includes('SECRET'))
  assert.equal(executions,0)
 })
+
+test('G1 readonly inventory carries installed supplement before-image binding for later replay',()=>{
+ const calls=[],binding={prelaunch:{kind:'exact-legacy-placeholder-v1',beforeImageText:'TEST ONLY full row',beforeSha256:'a'.repeat(64)}},marker={binding,afterImage:{id:123},receipt:{sourceFingerprintSha256:'b'.repeat(64)}}
+ const db=api.createFcfFutureTargetDatabase({targetSlug:'es-ct-segona-g1',env:{SUPABASE_DB_URL:'postgresql://local:test@127.0.0.1:5432/postgres'},execute:(_file,_args,o)=>{calls.push(o.input);return Buffer.from(JSON.stringify(o.input.includes('get_installed_fcf_g1_supplement')?marker:{players:[]}))}})
+ assert.deepEqual(db.inventory('es-ct-segona-g1',[]).supplementalMarker,marker)
+ assert.equal(calls.length,2);assert.match(calls[1],/BEGIN READ ONLY;[\s\S]*SET LOCAL ROLE service_role;[\s\S]*SELECT public.get_installed_fcf_g1_supplement\(\);[\s\S]*ROLLBACK;/)
+})
