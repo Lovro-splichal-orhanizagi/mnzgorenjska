@@ -17,8 +17,9 @@ on:
           - baden-reviewed-transports-v3
           - baden-reviewed-transports-v4
           - baden-reviewed-transports-v5
+          - baden-reviewed-archive-v6
       current_requests:
-        description: New current request ceiling (v1<=886 after1114; v2<=788 after1212; v3<=577 after1423; v4<=483 after1517; v5<=432 after1568, enter432 explicitly)
+        description: New current request ceiling (v1<=886 after1114; v2<=788 after1212; v3<=577 after1423; v4<=483 after1517; v5<=432 after1568, enter432 explicitly; archive-v6 must enter0)
         type: number
         default: 886
       archive_requests:
@@ -35,7 +36,7 @@ env:
   COMPLETION_ARCHIVE_REQUESTS: ${{ inputs.archive_requests }}
 jobs:
   capture:
-    if: github.ref == 'refs/heads/main'
+    if: inputs.checkpoint_preset != 'baden-reviewed-archive-v6' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     outputs:
@@ -80,7 +81,7 @@ jobs:
           retention-days: 90
   archive:
     needs: capture
-    if: github.ref == 'refs/heads/main' && needs.capture.result == 'success' && needs.capture.outputs.archive_allowed == 'true'
+    if: inputs.checkpoint_preset != 'baden-reviewed-archive-v6' && github.ref == 'refs/heads/main' && needs.capture.result == 'success' && needs.capture.outputs.archive_allowed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
@@ -112,7 +113,7 @@ jobs:
           retention-days: 90
   handoff:
     needs: [capture, archive]
-    if: github.ref == 'refs/heads/main' && needs.capture.result == 'success' && needs.archive.result == 'success'
+    if: inputs.checkpoint_preset != 'baden-reviewed-archive-v6' && github.ref == 'refs/heads/main' && needs.capture.result == 'success' && needs.archive.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -137,3 +138,63 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/fussball-completion-actions.mjs handoff current-capture archive-capture
+
+  archive-continuation:
+    if: inputs.checkpoint_preset == 'baden-reviewed-archive-v6' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: de77b661cbc11d95256a500e57c2fdea861a0647
+          path: frozen-de77
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate exact archive-only V6 scope and1838 spent budget
+        run: node scripts/fussball-archive-v6-actions.mjs validate
+      - name: Focused offline archive continuation checks
+        run: node --test scripts/test-fussball-archive-v6.mjs scripts/test-fussball-court-40641606028.mjs
+      - name: Authenticate actual V5 parents and execute frozen DE77 default verifier
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/fussball-archive-v6-actions.mjs parents continuation-input frozen-de77
+      - name: Exercise genuine retained originals offline before source
+        env:
+          FUSSBALL_V6_TEST_PARENTS: continuation-input
+          FUSSBALL_V6_TEST_FROZEN: frozen-de77
+        run: node --test scripts/test-fussball-archive-v6.mjs
+      - name: Share host pacing with older nightly and bulk readers
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/bulk-source-coordination.mjs
+      - name: Capture only fresh archive rounds and missing originals without database credentials
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/fussball-archive-v6-actions.mjs capture continuation-input frozen-de77 capture-archive-v6
+      - name: Reauthenticate detached originals and replay archive with no network
+        run: node scripts/fussball-archive-v6-actions.mjs verify continuation-input frozen-de77 capture-archive-v6
+      - name: Preserve V6 archive originals and all counted attempts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fussball-season-archive-v6-${{ github.run_id }}
+          path: capture-archive-v6/
+          if-no-files-found: ignore
+          retention-days: 90
+      - name: Preserve source-only attestation separately from immutable historical parents
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fussball-archive-v6-source-attestation-${{ github.run_id }}
+          path: archive-v6-source-attestation.json
+          if-no-files-found: ignore
+          retention-days: 90

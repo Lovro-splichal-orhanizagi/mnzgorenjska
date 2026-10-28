@@ -11,6 +11,54 @@ const maxArchive=100*1024*1024
 const fcfHistoryName=name=>name==='manifest.json'||/^acta-[1-9]\d{6}\.html$/.test(name)&&[[4109388,4109627],[4116188,4116427],[4118349,4118588]].some(([start,end])=>{const n=Number(name.slice(5,-5));return n>=start&&n<=end})
 export function github(path,binary=false){return execFileSync('gh',['api',`repos/${repository}/${path}`],{encoding:binary?undefined:'utf8',maxBuffer:maxArchive+1})}
 export const githubJson=path=>JSON.parse(github(path))
+// New archive-only schema6 profile. These limits never apply to legacy or
+// historical-current parents, whose 72MiB result /192MiB expansion stay fixed.
+export function unpackFussballV6Archive(bytes,digest){
+ if(!Buffer.isBuffer(bytes)||bytes.length>100*1024*1024||!/^sha256:[a-f0-9]{64}$/.test(digest??'')||`sha256:${sha256(bytes)}`!==digest)throw Error('V6 archive ZIP identity/size mismatch')
+ const dir=mkdtempSync(join(tmpdir(),'slff-fussball-v6-archive-'))
+ try{
+  const zip=join(dir,'source.zip');writeFileSync(zip,bytes)
+  const names=execFileSync('unzip',['-Z1',zip],{encoding:'utf8',maxBuffer:3*1024*1024}).trimEnd().split('\n')
+  const details=execFileSync('unzip',['-Z','-l',zip],{encoding:'utf8',maxBuffer:5*1024*1024}).split('\n')
+  if(!names.length||names.length>20006||new Set(names).size!==names.length)throw Error('V6 archive entry inventory differs')
+  const files=new Map();let total=0
+  for(const name of names){
+   if(!/^(?:manifest\.json|attempts\.jsonl|progress\.jsonl|outcomes\.jsonl|result\.json|archive-parent\/[a-f0-9]{64}\.html|documents\/[a-f0-9]{64}\.(?:html|css|woff))$/.test(name))throw Error('V6 archive unsafe entry')
+   const rows=details.filter(row=>row.endsWith(` ${name}`))
+   if(rows.length!==1||!/^-[rwxstST-]{9}\s/.test(rows[0]))throw Error('V6 archive entry must be regular and unique')
+   const bound=name==='result.json'?384*1024*1024:name.endsWith('.css')?64*1024:name.startsWith('documents/')||name.startsWith('archive-parent/')?8*1024*1024:16*1024*1024
+   const body=execFileSync('unzip',['-p',zip,name],{maxBuffer:bound+1});total+=body.length
+   if(body.length>bound||total>1024*1024*1024)throw Error('V6 archive profile size exceeded')
+   files.set(name,body)
+  }
+  return files
+ }finally{rmSync(dir,{recursive:true,force:true})}
+}
+// Detached actual V5 parents for the archive-only V6 profile. The old fixed
+// failed-parent formats above/below are deliberately not broadened.
+export function unpackFussballV6Parent(bytes,digest,stage){
+ if(!['current','archive'].includes(stage)||!Buffer.isBuffer(bytes)||bytes.length>maxArchive||`sha256:${sha256(bytes)}`!==digest)throw Error('V6 parent ZIP identity/size mismatch')
+ const dir=mkdtempSync(join(tmpdir(),'slff-fussball-v6-parent-'))
+ try{
+  const zip=join(dir,'source.zip');writeFileSync(zip,bytes)
+  const names=execFileSync('unzip',['-Z1',zip],{encoding:'utf8',maxBuffer:3*1024*1024}).trimEnd().split('\n')
+  const details=execFileSync('unzip',['-Z','-l',zip],{encoding:'utf8',maxBuffer:5*1024*1024}).split('\n')
+  if(names.length!==(stage==='current'?727:111)||new Set(names).size!==names.length)throw Error('V6 exact parent entry inventory differs')
+  const files=new Map();let total=0
+  for(const name of names){
+   const nested=/^checkpoint\/parents\/40633575248\.(?:json|zip)$/.test(name)
+   const parent=stage==='archive'&&/^archive-parent\/[a-f0-9]{64}\.html$/.test(name)
+   if(!nested&&!parent&&!(stage==='current'&&name==='result.json')&&!/^(?:manifest\.json|attempts\.jsonl|progress\.jsonl|outcomes\.jsonl|documents\/[a-f0-9]{64}\.(?:html|css|woff))$/.test(name))throw Error('V6 unsafe parent entry')
+   const rows=details.filter(row=>row.endsWith(` ${name}`))
+   if(rows.length!==1||!/^-[rwxstST-]{9}\s/.test(rows[0]))throw Error('V6 parent entry must be regular and unique')
+   const bound=name==='result.json'?72*1024*1024:nested?(name.endsWith('.zip')?60*1024*1024:1024*1024):name.endsWith('.css')?64*1024:name.startsWith('documents/')||parent?8*1024*1024:16*1024*1024
+   const body=execFileSync('unzip',['-p',zip,name],{maxBuffer:bound+1});total+=body.length
+   if(body.length>bound||total>192*1024*1024)throw Error('V6 parent expanded size exceeded')
+   files.set(name,body)
+  }
+  return files
+ }finally{rmSync(dir,{recursive:true,force:true})}
+}
 export function verifyArtifact(a,{runId,commit,name}){
  if(!a||!Number.isSafeInteger(a.id)||!id(a.id)||a.name!==name||a.expired!==false||!Number.isSafeInteger(a.size_in_bytes)||a.size_in_bytes<1||a.size_in_bytes>maxArchive||!/^sha256:[a-f0-9]{64}$/.test(a.digest??'')||String(a.workflow_run?.id)!==String(runId)||a.workflow_run?.head_sha!==commit)throw Error('Invalid artifact identity/digest')
  return {id:String(a.id),digest:a.digest,name:a.name,size:a.size_in_bytes}
