@@ -18,6 +18,7 @@ export function verifyArtifact(a,{runId,commit,name}){
 export function unpackVerifiedArchive(bytes,digest,kind){
  if(bytes.length>maxArchive||!/^sha256:[a-f0-9]{64}$/.test(digest??'')||`sha256:${sha256(bytes)}`!==digest)throw Error('Artifact ZIP digest mismatch')
  if(kind==='fussball-checkpoint')return unpackFussballCheckpoint(bytes)
+ if(kind==='fussball-v4')return unpackFussballV4(bytes)
  if(kind==='fussball-resumption')return unpackFussballResumption(bytes)
  if(kind==='fussball-successor-current'||kind==='fussball-successor-archive')return unpackFussballSuccessor(bytes,kind)
  const sixCleanup=kind==='fcf-six-cleanup-prepared'||kind==='fcf-six-cleanup-applied',cleanup=sixCleanup||kind==='fcf-cleanup-prepared'||kind==='fcf-cleanup-applied',fcf=kind==='fcf-history'||cleanup
@@ -133,6 +134,29 @@ function unpackFussballSuccessor(bytes,kind){
    const body=execFileSync('unzip',['-p',zip,name],{maxBuffer:bound+1})
    if(body.length>bound)throw Error('Successor artifact member size exceeded')
    total+=body.length;if(total>(current?192:32)*1024*1024)throw Error('Successor artifact expanded size exceeded')
+   files.set(name,body)
+  }
+  return files
+ }finally{rmSync(dir,{recursive:true,force:true})}
+}
+
+// Fixed consumed v3 partial: retain both embedded raw stages, no result.json.
+function unpackFussballV4(bytes){
+ const dir=mkdtempSync(join(tmpdir(),'slff-fussball-v4-'))
+ try{
+  const zip=join(dir,'source.zip');writeFileSync(zip,bytes)
+  const names=execFileSync('unzip',['-Z1',zip],{encoding:'utf8',maxBuffer:256*1024}).trimEnd().split('\n')
+  const details=execFileSync('unzip',['-Z','-l',zip],{encoding:'utf8',maxBuffer:512*1024}).split('\n')
+  if(names.length!==310||new Set(names).size!==310)throw Error('Invalid v4 artifact entry set')
+  const files=new Map();let total=0
+  for(const name of names){
+   const nested=/^checkpoint\/parents\/40577717778-(?:current|archive)\.(?:json|zip)$/.test(name)
+   if(!nested&&!/^(?:manifest\.json|attempts\.jsonl|progress\.jsonl|documents\/[a-f0-9]{64}\.(?:html|css|woff))$/.test(name))throw Error('Invalid v4 artifact path')
+   const rows=details.filter(row=>row.endsWith(` ${name}`))
+   if(rows.length!==1||!/^-[rwxstST-]{9}\s/.test(rows[0]))throw Error('V4 member must be regular')
+   const bound=nested?(name.endsWith('.zip')?60*1024*1024:1024*1024):name.endsWith('.css')?64*1024:name.startsWith('documents/')?8*1024*1024:16*1024*1024
+   const body=execFileSync('unzip',['-p',zip,name],{maxBuffer:bound+1});total+=body.length
+   if(body.length>bound||total>192*1024*1024)throw Error('V4 artifact size exceeded')
    files.set(name,body)
   }
   return files

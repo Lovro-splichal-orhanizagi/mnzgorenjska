@@ -3,13 +3,14 @@ import {mkdirSync,writeFileSync,appendFileSync,readFileSync,lstatSync,realpathSy
 import {resolve,join,relative} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {isDeepStrictEqual} from 'node:util'
+import {FUSSBALL_V4_RETRY_POLICY,restoreFussballV4TransportFailure} from './lib/fussball-v4-retry.mjs'
 import {createFussballCaptureClient} from './lib/fussball-capture.mjs'
 import {collectFussballSeason} from './fussball-season.mjs'
 import {extractFussballSeasonLinks,inspectFussballArchivePage,fussballArchiveSeedAlias} from './fussball-season-links.mjs'
 import {inspectFussballPage,fussballFontUrl} from './viri/fussball-discovery.mjs'
 import {inspectFussballLineup,razberiFantasyZapisnik} from './viri/fussball-statistika.mjs'
 import {zaprtje} from './odtis-kode.mjs'
-import {readFussballTransportCheckpoint,readFussballTransportResumption,readFussballTransportSuccessor,getFussballCheckpointDocuments,exportFussballTransportCheckpoint} from './fussball-checkpoint.mjs'
+import {readFussballTransportCheckpoint,readFussballTransportResumption,readFussballTransportSuccessor,readFussballTransportV4,getFussballCheckpointDocuments,exportFussballTransportCheckpoint} from './fussball-checkpoint.mjs'
 
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex')
 const json=value=>JSON.stringify(value)+'\n'
@@ -18,7 +19,7 @@ const extension=kind=>kind==='font'?'woff':kind==='css'?'css':'html'
 const root=fileURLToPath(new URL('../',import.meta.url))
 
 export function fussballCaptureCodeSha256(){
- const files=[...new Set([...zaprtje('scripts/fussball-capture-evidence.mjs'),'scripts/zajemi-fussball-sezono.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/vzorci/de-fussball-baden-archive-20261026.json','scripts/policies/fussball-transport-checkpoints.json','scripts/policies/fussball-transport-resumption.json','scripts/policies/fussball-transport-successor.json'])].sort()
+ const files=[...new Set([...zaprtje('scripts/fussball-capture-evidence.mjs'),'scripts/zajemi-fussball-sezono.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/vzorci/de-fussball-baden-archive-20261026.json','scripts/policies/fussball-transport-checkpoints.json','scripts/policies/fussball-transport-resumption.json','scripts/policies/fussball-transport-successor.json','scripts/policies/fussball-transport-v4.json'])].sort()
  return hash(files.map(file=>`${file}\0${hash(readFileSync(resolve(root,file)))}`).join('\n'))
 }
 export function validateFussballCaptureOptions(options){
@@ -36,7 +37,7 @@ export function validateFussballCaptureOptions(options){
 const receiptDocument=d=>Object.fromEntries(['url','kind','sha256','bytes','status','contentType','capturedAt'].map(k=>[k,d[k]]))
 function originalReceipt(d,m){
  if(d.originalReceipt)return d.originalReceipt
- return {version:1,document:receiptDocument(d),attempt:m.snapshot.attempts.find(a=>a.url===d.url),capture:{createdAt:m.createdAt,codeSha256:m.codeSha256,staffel:m.options.staffel,season:m.options.season}}
+ return {version:1,document:receiptDocument(d),attempt:m.snapshot.attempts.find(a=>a.url===d.url&&a.status==='success'&&a.startedAt===d.capturedAt),capture:{createdAt:m.createdAt,codeSha256:m.codeSha256,staffel:m.options.staffel,season:m.options.season}}
 }
 function checkOriginalReceipt(d,options){
  const r=d.originalReceipt,a=r?.attempt
@@ -93,9 +94,10 @@ function checkpointVersion(proof){
  if(proof.preset==='baden-reviewed-transports-v1')return 1
  if(proof.preset==='baden-reviewed-transports-v2')return 2
  if(proof.preset==='baden-reviewed-transports-v3')return 3
+ if(proof.preset==='baden-reviewed-transports-v4')return 4
  requireProof(false,'reviewed checkpoint preset required')
 }
-const checkpointFiles=version=>version===3
+const checkpointFiles=version=>version===4?[{runId:'40614233934',metadataFile:'checkpoint/parents/40614233934.json',zipFile:'checkpoint/parents/40614233934.zip'}]:version===3
  ?['current','archive'].map(stage=>({runId:'40577717778',metadataFile:`checkpoint/parents/40577717778-${stage}.json`,zipFile:`checkpoint/parents/40577717778-${stage}.zip`}))
  :(version===1?checkpointRuns:['40566792786']).map(runId=>({runId,metadataFile:`checkpoint/parents/${runId}.json`,zipFile:`checkpoint/parents/${runId}.zip`}))
 // Cache parseability only: no invented fixture/header and no schedule admission.
@@ -135,6 +137,12 @@ function eligibleCheckpointDocuments(documents,options){
 }
 function checkpointScope(proof,options){
  const version=checkpointVersion(proof)
+ if(version===4){
+  const current=['seedUrl','staffel','season'].every(k=>proof.scope?.[k]===options[k])
+  const archive=options.staffel==='02TGLSVQ1800000IVS5489BTVTLPPK10-G'&&options.season==='2025/26'&&options.seedUrl==='https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G'
+  requireProof(proof.priorRequests===1517&&proof.totalRequestCap===5000&&options.reportLimit===null&&options.cardPolicy==='community-v1'&&(current&&options.maxRequests<=483||archive&&options.maxRequests<=3000),'v4 fixed scope/allowance differs')
+  return
+ }
  requireProof(proof.priorRequests===({1:1114,2:1212,3:1423}[version])&&proof.totalRequestCap===5000&&['seedUrl','staffel','season'].every(k=>proof.scope?.[k]===options[k]),'checkpoint current scope/accounting differs')
  requireProof(options.reportLimit===null&&options.cardPolicy==='community-v1'&&options.maxRequests<=({1:886,2:788,3:577}[version]),'checkpoint requires full current community policy and reviewed request bound')
 }
@@ -149,18 +157,18 @@ function persistCheckpoint(directory,exported){
  return {version,proof:exported.proof,parentFiles}
 }
 function readCheckpoint(directory,checkpoint,options){
- requireProof(checkpoint&&Object.keys(checkpoint).sort().join(',')==='parentFiles,proof,version'&&[1,2,3].includes(checkpoint.version)&&isDeepStrictEqual(checkpoint.parentFiles,checkpointFiles(checkpoint.version)),'checkpoint fixed parent paths/version differ')
+ requireProof(checkpoint&&Object.keys(checkpoint).sort().join(',')==='parentFiles,proof,version'&&[1,2,3,4].includes(checkpoint.version)&&isDeepStrictEqual(checkpoint.parentFiles,checkpointFiles(checkpoint.version)),'checkpoint fixed parent paths/version differ')
  const parents=checkpoint.parentFiles.map(({metadataFile,zipFile})=>{
   const m=JSON.parse(readRegular(directory,metadataFile))
   requireProof(m&&Object.keys(m).sort().join(',')==='artifact,jobs,run','checkpoint parent metadata fields differ')
   return {...m,zipBytes:readRegular(directory,zipFile)}
  })
- const proof=checkpoint.version===1?readFussballTransportCheckpoint({parents,now:Date.now()}):checkpoint.version===2?readFussballTransportResumption({parent:parents[0],now:Date.now()}):readFussballTransportSuccessor({current:parents[0],archive:parents[1],now:Date.now()})
+ const proof=checkpoint.version===4?readFussballTransportV4({parent:parents[0],now:Date.now()}):checkpoint.version===1?readFussballTransportCheckpoint({parents,now:Date.now()}):checkpoint.version===2?readFussballTransportResumption({parent:parents[0],now:Date.now()}):readFussballTransportSuccessor({current:parents[0],archive:parents[1],now:Date.now()})
  requireProof(isDeepStrictEqual(checkpoint.proof,proof),'checkpoint persisted public proof differs from originals')
  checkpointScope(proof,options)
  return {proof,documents:new Map(eligibleCheckpointDocuments(getFussballCheckpointDocuments(proof),options).map(d=>[d.url,d]))}
 }
-export async function captureFussballDirectory({directory,options,fetchFn=globalThis.fetch,collectFn=collectFussballSeason,onProgress=()=>{},reuseDirectory,reuseBulkDirectory,loadBulkPack,archiveParent,completionProof}={}){
+export async function captureFussballDirectory({directory,options,fetchFn=globalThis.fetch,collectFn=collectFussballSeason,onProgress=()=>{},reuseDirectory,reuseBulkDirectory,loadBulkPack,archiveParent,completionProof,retryProof}={}){
  const createdAt=new Date().toISOString()
  const config=validateFussballCaptureOptions({...options,asOfDate:options?.asOfDate??createdAt.slice(0,10)}),codeSha256=fussballCaptureCodeSha256()
  let cachedDocuments=[]
@@ -168,6 +176,9 @@ export async function captureFussballDirectory({directory,options,fetchFn=global
  const mixed=!!(reuseDirectory||reuseBulkDirectory)
  requireProof(!(archiveParent&&mixed),'archive parent cannot mix cached captures')
  const completion=completionProof!==undefined
+ const v4Proof=completionProof?.preset==='baden-reviewed-transports-v4'?completionProof:retryProof
+ const retry=!!v4Proof
+ requireProof(!retryProof||!completion&&archiveParent&&!mixed,'v4 archive retry requires separate parent without reuse')
  requireProof(!(completion&&(mixed||archiveParent)),'checkpoint completion cannot mix reuse or archive parent')
  let checkpointExport
  if(completion){
@@ -178,7 +189,13 @@ export async function captureFussballDirectory({directory,options,fetchFn=global
   checkpointScope(checkpointExport.proof,config)
   cachedDocuments=eligibleCheckpointDocuments(cachedDocuments,config)
  }
- const withOrigins=mixed||completion
+ if(retry){
+  const proof=exportFussballTransportCheckpoint(v4Proof)
+  requireProof(proof.proof.preset==='baden-reviewed-transports-v4','retry requires branded v4 checkpoint')
+  checkpointScope(proof.proof,config)
+  checkpointExport=proof
+ }
+ const withOrigins=mixed||completion||retry
  const parent=archiveParent?archiveParentProof(archiveParent,config,archiveParent.bytes):null
  if(reuseDirectory){
   // A code update may reparse old original bytes for CACHE ADMISSION only. The
@@ -197,9 +214,10 @@ export async function captureFussballDirectory({directory,options,fetchFn=global
  const documents=[],urls=new Set();let client
  // A fresh directory prevents accidentally combining scopes or overwriting evidence.
  mkdirSync(directory);mkdirSync(join(directory,'documents'))
- const checkpoint=completion?persistCheckpoint(directory,checkpointExport):null
+ const checkpoint=completion||retry?persistCheckpoint(directory,checkpointExport):null
  if(parent){mkdirSync(join(directory,'archive-parent'));writeFileSync(join(directory,parent.file),Buffer.from(archiveParent.bytes))}
  writeFileSync(join(directory,'attempts.jsonl'),'');writeFileSync(join(directory,'progress.jsonl'),'')
+ if(retry)writeFileSync(join(directory,'outcomes.jsonl'),'')
  const saveDocument=(document,origin)=>{
    const bytes=Buffer.from(document.bytes)
    requireProof(hash(bytes)===document.sha256&&document.status===200&&!urls.has(document.url),'invalid or duplicate source document')
@@ -207,15 +225,16 @@ export async function captureFussballDirectory({directory,options,fetchFn=global
    writeFileSync(join(directory,file),bytes)
    documents.push({...document,bytes:bytes.length,file,...(withOrigins?{origin}: {})});urls.add(document.url)
  }
- client=createFussballCaptureClient({maxRequests:config.maxRequests,fetchFn,cachedDocuments,
+ client=createFussballCaptureClient({maxRequests:config.maxRequests,fetchFn,cachedDocuments,...(retry?{retryPolicy:FUSSBALL_V4_RETRY_POLICY,onOutcome:outcome=>appendFileSync(join(directory,'outcomes.jsonl'),json(outcome))}:{}),
   onAttempt:attempt=>appendFileSync(join(directory,'attempts.jsonl'),json(attempt)),
   onDocument:document=>saveDocument(document,'network'),onCachedDocument:document=>saveDocument(document,'cache')})
  let result=null,error=null
  try{result=await collectWithArchiveParent(collectFn,{...config,client,onProgress:async progress=>{appendFileSync(join(directory,'progress.jsonl'),json(progress));await onProgress(progress)}},parent)}catch(failure){error=failure}
  const raw=result===null?null:json(result)
  if(raw!==null)writeFileSync(join(directory,'result.json'),raw)
- const manifest={version:completion?4:parent?3:mixed?2:1,provider:'fussball',createdAt,completedAt:new Date().toISOString(),options:config,codeSha256,
+ const manifest={version:retry?5:completion?4:parent?3:mixed?2:1,provider:'fussball',createdAt,completedAt:new Date().toISOString(),options:config,codeSha256,
   success:error===null,error:error?.message??null,snapshot:client.snapshot(),documents,resultSha256:raw===null?null:hash(raw),activationEligible:false}
+ if(retry){manifest.retryPolicy=FUSSBALL_V4_RETRY_POLICY.id;manifest.outcomesSha256=hash(readFileSync(join(directory,'outcomes.jsonl')))}
  if(parent)manifest.archiveParent=parent
  if(checkpoint)manifest.checkpoint=checkpoint
  if(withOrigins)for(const d of documents)if(d.origin==='network')d.originalReceipt=originalReceipt(d,manifest)
@@ -237,6 +256,7 @@ function readRegular(directory,path){
 }
 export async function verifyFussballDirectory(directory,{collectFn=collectFussballSeason,requireCodeMatch=true}={}){
  const m=JSON.parse(readRegular(directory,'manifest.json'))
+ if(m.version===5)return verifyFussballRetryDirectory(directory,m,{collectFn,requireCodeMatch})
  requireProof([1,2,3,4].includes(m.version)&&m.provider==='fussball'&&m.success===true&&m.activationEligible===false,'incomplete or failed capture')
  requireProof(/^[a-f0-9]{64}$/.test(m.codeSha256??'')&&(!requireCodeMatch||m.codeSha256===fussballCaptureCodeSha256()),'capture code fingerprint differs')
  const options=validateFussballCaptureOptions(m.options),snapshot=m.snapshot
@@ -293,4 +313,80 @@ export async function verifyFussballDirectory(directory,{collectFn=collectFussba
  requireProof(replay.snapshot().requests===snapshot.requests&&usedCached.size===cached.length,'unused or missing source documents in replay')
  if(checkpoint)requireProof(usedNetwork.size===network.length&&network.every(d=>usedNetwork.has(d.url)),'unused or missing checkpoint network documents')
  return {verified:true,activationEligible:false,scope:result.scope,coverage:result.coverage,requests:snapshot.requests,resultSha256:m.resultSha256,codeSha256:m.codeSha256,...(checkpoint?{checkpointPreset:checkpoint.proof.preset,priorRequests:checkpoint.proof.priorRequests}:{})}
+}
+
+// New schema only: old v1-v4 replay byte contracts above are unchanged.
+async function verifyFussballRetryDirectory(directory,m,{collectFn,requireCodeMatch}){
+ const closed=(v,keys)=>v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).sort().join(',')===keys.sort().join(',')
+ requireProof(closed(m,['version','provider','createdAt','completedAt','options','codeSha256','success','error','snapshot','documents','resultSha256','activationEligible','retryPolicy','outcomesSha256','checkpoint',...(m.archiveParent?['archiveParent']:[])])&&m.provider==='fussball'&&m.success===true&&m.error===null&&m.activationEligible===false&&m.retryPolicy===FUSSBALL_V4_RETRY_POLICY.id,'closed successful v4 retry manifest required')
+ requireProof(/^[a-f0-9]{64}$/.test(m.codeSha256??'')&&(!requireCodeMatch||m.codeSha256===fussballCaptureCodeSha256()),'retry capture code fingerprint differs')
+ const options=validateFussballCaptureOptions(m.options),checkpoint=readCheckpoint(directory,m.checkpoint,options)
+ requireProof(m.checkpoint.version===4&&checkpoint.proof.preset==='baden-reviewed-transports-v4','v4 retry requires authenticated exact checkpoint')
+ const current=options.staffel===checkpoint.proof.scope.staffel
+ requireProof(current?!m.archiveParent:!!m.archiveParent,'retry stage/adjacent parent differs')
+ const parent=m.archiveParent?archiveParentProof(m.archiveParent,options,readRegular(directory,m.archiveParent.file),{persisted:true}):null
+ const start=Date.parse(m.createdAt),end=Date.parse(m.completedAt),s=m.snapshot
+ requireProof(Number.isFinite(start)&&Number.isFinite(end)&&start<=end&&end<=Date.now()&&options.asOfDate===m.options.asOfDate,'retry capture time differs')
+ requireProof(closed(s,['requests','attempts','stopped','stopReason'])&&s.stopped===false&&s.stopReason===null&&Number.isInteger(s.requests)&&s.requests>0&&s.requests<=options.maxRequests&&s.attempts?.length===s.requests,'retry exact counted snapshot required')
+ const outcomeRaw=readRegular(directory,'outcomes.jsonl'),journalRaw=readRegular(directory,'attempts.jsonl')
+ requireProof(hash(outcomeRaw)===m.outcomesSha256&&outcomeRaw.at(-1)===10&&journalRaw.at(-1)===10,'retry outcomes hash/complete journal differs')
+ const outcomes=outcomeRaw.toString().trimEnd().split('\n').map(JSON.parse),intents=journalRaw.toString().trimEnd().split('\n').map(JSON.parse)
+ requireProof(isDeepStrictEqual(outcomes,s.attempts)&&intents.length===s.requests,'every retry intent requires one exact outcome')
+ const successes=[],groups=new Set();let count=0,last=null
+ for(const [i,a]of outcomes.entries()){
+  const j=intents[i],success=a.status==='success'
+  requireProof(closed(a,['number','url','kind','startedAt','status','error',...(success?['httpStatus']:['transportFailure'])])&&closed(j,['number','url','kind','startedAt','status','error'])&&a.number===i+1&&j.number===a.number&&j.url===a.url&&j.kind===a.kind&&j.startedAt===null&&j.status==='pending'&&j.error===null,'retry closed ordered intent/outcome differs')
+  const t=Date.parse(a.startedAt)
+  requireProof(Number.isFinite(t)&&new Date(t).toISOString()===a.startedAt&&t>=start&&t<=end&&(!last||t-Date.parse(last.startedAt)>=6000),'retry actual pacing/time differs')
+  if(last?.status==='failed')requireProof(a.url===last.url&&a.kind===last.kind,'retry must retain same URL/kind after failure')
+  if(!last||last.status==='success'){requireProof(!groups.has(a.url),'retry noncontiguous/duplicate URL group');groups.add(a.url);count=1}else count++
+  requireProof(count<=3&&(!last||last.status!=='failed'||t-Date.parse(last.startedAt)>=6000*(count-1)),'retry exceeds attempts/backoff bound')
+  if(success){requireProof(a.error===null&&a.httpStatus===200,'retry success must be HTTP200');successes.push(a)}
+  else{requireProof(a.status==='failed'&&a.error==='connect failure'&&i<outcomes.length-1,'only recovered typed connect failures are admissible');restoreFussballV4TransportFailure(a.transportFailure)}
+  last=a
+ }
+ requireProof(outcomes.at(-1).status==='success'&&Array.isArray(m.documents)&&m.documents.length<=20000,'retry terminal/document inventory differs')
+ const network=m.documents.filter(d=>d.origin==='network'),cached=m.documents.filter(d=>d.origin==='cache'),documents=new Map()
+ requireProof(network.length===successes.length&&network.length+cached.length===m.documents.length,'retry success-body/failure partition differs')
+ for(const d of m.documents){
+  requireProof(closed(d,['url','kind','bytes','sha256','status','contentType','capturedAt','file','origin','originalReceipt'])&&['round','report','lineup','css','font'].includes(d.kind)&&d.status===200&&/^[a-f0-9]{64}$/.test(d.sha256)&&d.file===`documents/${d.sha256}.${extension(d.kind)}`&&!documents.has(d.url),'retry unique closed document identity/path differs')
+  checkOriginalReceipt(d,options)
+  const bytes=readRegular(directory,d.file)
+  requireProof(bytes.length===d.bytes&&hash(bytes)===d.sha256,'retry original body/hash differs')
+  if(d.origin==='network'){
+   const a=successes[network.indexOf(d)]
+   requireProof(a.url===d.url&&a.kind===d.kind&&a.startedAt===d.capturedAt&&isDeepStrictEqual(d.originalReceipt,{version:1,document:receiptDocument(d),attempt:a,capture:{createdAt:m.createdAt,codeSha256:m.codeSha256,staffel:options.staffel,season:options.season}}),'retry network original attempt-number receipt differs')
+  }else{
+   const original=checkpoint.documents.get(d.url)
+   requireProof(current&&d.kind!=='round'&&original&&isDeepStrictEqual(receiptDocument(d),{...receiptDocument(original),bytes:original.bytes.length})&&isDeepStrictEqual(d.originalReceipt,original.originalReceipt),'retry cached original receipt/identity differs')
+  }
+  documents.set(d.url,{...d,bytes})
+ }
+ const raw=readRegular(directory,'result.json').toString()
+ requireProof(hash(raw)===m.resultSha256,'retry result digest differs')
+ let clock=start,index=0;const usedCached=new Set(),usedNetwork=new Set()
+ const replay=createFussballCaptureClient({maxRequests:s.requests,retryPolicy:FUSSBALL_V4_RETRY_POLICY,cachedDocuments:cached.map(d=>documents.get(d.url)),onCachedDocument:d=>usedCached.add(d.url),now:()=>clock,sleep:async ms=>{clock+=ms},fetchFn:async url=>{
+  const a=outcomes[index++]
+  requireProof(a?.url===url,'retry replay URL/order differs')
+  // Source timings may include variable fetch durations; the raw paced starts
+  // remain independently checked above, and replay advances to each recorded start.
+  clock=Date.parse(a.startedAt)
+  if(a.status==='failed')throw restoreFussballV4TransportFailure(a.transportFailure)
+  const d=documents.get(url);requireProof(d,'retry replay missing original')
+  usedNetwork.add(url);return new Response(d.bytes,{status:200,headers:{'content-type':d.contentType}})
+ }})
+ const result=await collectWithArchiveParent(collectFn,{...options,client:replay,onProgress:()=>{}},parent)
+ requireProof(json(result)===raw&&index===s.requests&&replay.snapshot().requests===s.requests&&usedNetwork.size===network.length&&usedCached.size===cached.length,'retry full offline replay/body inventory differs')
+ return {verified:true,activationEligible:false,scope:result.scope,coverage:result.coverage,requests:s.requests,resultSha256:m.resultSha256,codeSha256:m.codeSha256,checkpointPreset:checkpoint.proof.preset,priorRequests:checkpoint.proof.priorRequests}
+}
+
+// Used only after independent current schema5 verification by the archive pilot.
+// Reauthenticates the embedded raw parent; no serialized proof grants authority.
+export function loadFussballRetryCheckpoint(directory){
+ const m=JSON.parse(readRegular(directory,'manifest.json'))
+ requireProof(m.version===5&&m.checkpoint?.version===4,'schema5 v4 checkpoint required')
+ const paths=checkpointFiles(4),parents=paths.map(p=>({...JSON.parse(readRegular(directory,p.metadataFile)),zipBytes:readRegular(directory,p.zipFile)}))
+ const proof=readFussballTransportV4({parent:parents[0]})
+ requireProof(isDeepStrictEqual(m.checkpoint.parentFiles,paths)&&isDeepStrictEqual(m.checkpoint.proof,proof),'embedded retry checkpoint differs')
+ return proof
 }
