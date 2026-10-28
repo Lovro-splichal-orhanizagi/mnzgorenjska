@@ -1,0 +1,20 @@
+# Baden V7 source continuation implementation plan
+
+Goal: authenticate the genuine failed V6 attempt and extend the private source ledger from1838 to1952/5000, then allow current0/archive1..3000 under a separate schema7/checkpoint6 source-only protocol. Root explicitly authorized this bounded inline implementation and one later independent review. No live source/network/DB/GitHub/write/dispatch/push is part of authoring.
+
+Base: `52fbe2b0812b35eb17ad6307572b8c94ca784c5f`; isolated worktree `worktrees/codex-baden-v7-source-continuation-20261028`, branch `codex/baden-v7-source-continuation-20261028`.
+
+Architecture: add an exact V7 policy and private capability module beside unchanged V6. A closed offline child executes the old V6 reader and failed replay under clean pinned4e code and the original DE77 default verifier. It authenticates all raw V5 parents and recursive five-run1838 history, then exact failed V6 metadata/ZIP/intents/outcomes/receipts/checkpoint/body usage/error/no result. Only that reader can issue the new1952 accounting/source capability. New capture and replay reuse the original client/typed retry/collector and detached current seed, with archive CSS/WOFF union only. Current/body clocks and old frozen semantics stay unchanged. Native source/composition bridge remains HOLD for a later completed-V7 bridge.
+
+Files: new `scripts/policies/fussball-transport-v7.json`, `scripts/fussball-v6-failed-replay.mjs`, `scripts/fussball-archive-v7.mjs`, `scripts/fussball-archive-v7-actions.mjs`, focused `scripts/test-fussball-archive-v7.mjs`; narrow version selector/workflow/CLI changes where required. Do not edit V6 implementation/policy to treat a failed capture as success. W parser is authored elsewhere and cherry-picked at most once as an explicit dependency.
+
+Constraints: consumed old claims are immutable; actual V6 run40694431918/source4e/archive job122837327122 failed after114 HTTP200 GETs and no result. Old1838+114=1952; cap5000; remaining3048; V7 reserve at most3000 → max4952. Actual retained current created2026-10-28T06:06:59.785Z, expires2026-10-29T06:06:59.785Z; no retimestamp/waiver. Original DE77 default verification and clean4e V6 fingerprints8b1c/9f77 remain mandatory. Cache only actual archive CSS/WOFF with validated original receipts, union old86 plus latest108 descriptors deduplicated by URL with exact latest preference; count/digest computed from retained evidence. Every new round/report/lineup request is fresh. Pacing6s, typed retries,100MiB artifact/384MiB result/1GiB expanded limits and immutable counted partial journals remain.
+
+Review focus: no copied proof authority; no reclassification of old W failure as success; exact runtime/job/artifact/journal/clock/body binding; no cache HTML; no hidden unaccounted sixth source attempt; no new current fetch; no nested ZIP growth; no native capability.
+
+- [x] Pin actual failed metadata/ZIP/manifest/journal/descriptor digests; record test RED for missing V7 APIs.
+- [x] Implement closed frozen4e authentication and expected-failure replay using real old collector/client/private base proof; derive1952 and exact resource union. Test genuine retained auth and drift rejection without source sockets.
+- [x] Implement source-only V7 allowance/private proof/resource/history getters, schema7 capture/checkpoint6 replay and failure retention with no native authority. Test copied proof, budget/current clock, fresh cache restrictions and counted failure using fake source transport only.
+- [x] Implement hosted first-attempt/main/caller/current-job/six-history no-unaccounted guard and narrow workflow/actions/CLI selectors with pinned DE77+4e inputs, always-upload partial artifacts. No public production proof/clock injection.
+- [x] Consume W parser commit once when reviewed/available; validate all30 retained raw rounds offline before any source operation; record dependency and intentionally new fingerprints.
+- [x] Run only necessary focused tests/syntax/diff checks, update ledger and commit bounded source-only work for independent review. No deployment or invocation.

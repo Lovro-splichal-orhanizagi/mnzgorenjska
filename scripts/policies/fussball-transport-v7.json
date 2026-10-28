@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "preset": "baden-reviewed-archive-v7",
+  "repository": "Lovro-splichal-orhanizagi/mnzgorenjska",
+  "workflow": ".github/workflows/preveri-fussball-dopolni.yml",
+  "priorRequests": 1952,
+  "totalRequestCap": 5000,
+  "archiveMaximum": 3000,
+  "sourceCommit": "de77b661cbc11d95256a500e57c2fdea861a0647",
+  "sourceCodeSha256": "dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528",
+  "sourceRunId": "40641606028",
+  "current": {
+    "stage": "current",
+    "runId": "40641606028",
+    "sourceCommit": "de77b661cbc11d95256a500e57c2fdea861a0647",
+    "artifactId": "12796721322",
+    "artifactSha256": "sha256:ee92e87a844d22b6c1359eeb24e8c4c3eaed4e65687819d6e36fc28a3da2d8c9",
+    "artifactBytes": 94166881,
+    "captureSuccess": true,
+    "createdAt": "2026-10-28T06:06:59.785Z",
+    "completedAt": "2026-10-28T06:23:33.769Z",
+    "codeSha256": "dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528",
+    "resultSha256": "1f2baf925e2778174941e29f76de84ba45865a2024930775fcc8511929610e37",
+    "requests": 166,
+    "networkDocuments": 164,
+    "cachedDocuments": 556,
+    "documents": 720,
+    "options": {
+      "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+      "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+      "season": "2026/27",
+      "maxRequests": 432,
+      "reportLimit": null,
+      "asOfDate": "2026-10-28",
+      "cardPolicy": "community-v1"
+    },
+    "hashes": {
+      "manifest.json": "c295b3fc1812a6e34c2d38bf441196a9bf638c053913776424846be33b4abc8f",
+      "attempts.jsonl": "60bfc373d123cb69aecd583f29e235b086ef89484e1cb6ef59dc177ce8ef712c",
+      "progress.jsonl": "70c095f6d447ccf83cb869a34a9375e4aecec0f31d9974bf3082572ca486fbcb",
+      "outcomes.jsonl": "9209716aacaf80d989db0b69853e7ede35c6a892ddaae4da56cd9b3e77208141"
+    },
+    "memberSizes": {
+      "attempts.jsonl": 28888,
+      "manifest.json": 857429,
+      "progress.jsonl": 12494,
+      "outcomes.jsonl": 35752,
+      "result.json": 67785002
+    }
+  },
+  "archive": {
+    "stage": "archive",
+    "runId": "40641606028",
+    "sourceCommit": "de77b661cbc11d95256a500e57c2fdea861a0647",
+    "artifactId": "12796389857",
+    "artifactSha256": "sha256:d7ea312ffba97814a472900ff97a22f1cf667d86a87060c18536773fa7900d26",
+    "artifactBytes": 56644604,
+    "captureSuccess": false,
+    "createdAt": "2026-10-28T06:26:01.316Z",
+    "completedAt": "2026-10-28T06:36:19.586Z",
+    "codeSha256": "dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528",
+    "resultSha256": null,
+    "requests": 104,
+    "networkDocuments": 104,
+    "cachedDocuments": 0,
+    "documents": 104,
+    "options": {
+      "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "staffel": "02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "season": "2025/26",
+      "maxRequests": 3000,
+      "reportLimit": null,
+      "asOfDate": "2026-10-28",
+      "cardPolicy": "community-v1"
+    },
+    "hashes": {
+      "manifest.json": "30b8cad21507eda01712f7621654957da67bee503486f0ca2bb2e28227f60c38",
+      "attempts.jsonl": "a473490af443c3edeaea75a931a9ab7be099b889b09658ed9bf7e3d18b9e29b9",
+      "progress.jsonl": "f96ca705c341c0f600c5b7f54d8c5a98a082fd58b97c0aa13ce9504210e35aa4",
+      "outcomes.jsonl": "cb0eceb1da112491c120ccbefc215acb1ffbc8209ff526011de885e7ee4e6995"
+    },
+    "memberSizes": {
+      "attempts.jsonl": 17795,
+      "manifest.json": 146584,
+      "outcomes.jsonl": 21851,
+      "progress.jsonl": 4128
+    }
+  },
+  "jobs": {
+    "capture": "122660803298",
+    "archive": "122667307017",
+    "handoff": "122671238974"
+  },
+  "archiveError": "fussball: nepodprt ali dvoumen administrativni izid",
+  "resourceCount": 170,
+  "resourceDescriptorSha256": "f5490c28d027ec38b6befd75dde562eb8ae50687ec085b74c390399ddc6f115f",
+  "oldArchiveRunId": "40577717778",
+  "compatibility": "baden-1952-after-failed-v6-v7",
+  "jobsSha256": "d15d63ee16093dee41ecb5abf46f2e0bbf027f11dda895e961aa5eaf1f9289bf",
+  "archiveLimits": {
+    "compressedBytes": 104857600,
+    "resultBytes": 402653184,
+    "expandedBytes": 1073741824
+  },
+  "basePriorRequests": 1838,
+  "latestRequests": 114,
+  "v6SourceCommit": "4e1e7caac02aa6e12c789c7cea7aac699d3c2566",
+  "v6CodeSha256": "8b1c4befedca7fc3e92a946b792a32e0ec166a33e870a9e47262211318554301",
+  "v6CaptureSha256": "9f779baf8822fe2c6cf64e3213eadc7612a9911ad826d8cc2965f7fbb517b864",
+  "failedV6": {
+    "runId": "40694431918",
+    "jobId": "122837327122",
+    "artifactId": "12819517946",
+    "artifactSha256": "sha256:dc9b2273d2d5ca26c9ffeb576d0f4a4deda935fe941e1aa4f2d09d8cd0e72719",
+    "artifactBytes": 1218385,
+    "jobsSha256": "3f3bea700579a598bafa262e4a47b70ead05be1bf3e8854ad5b5e3d44cb3ac8c",
+    "createdAt": "2026-10-28T13:17:34.498Z",
+    "completedAt": "2026-10-28T13:28:52.755Z",
+    "error": "fussball: nepodprt ali dvoumen administrativni izid",
+    "hashes": {
+      "manifest.json": "1be26666732d56ec15dd8e139819189f2bfb2bc0c245c3799bd09a40203de9d5",
+      "attempts.jsonl": "2e8643b74c360bd08f3a76672edd3cfb52d556b691034b54a425e9ae95f0a5f2",
+      "outcomes.jsonl": "a07f57ee75536e645000fe1531942e162ed40f94900d6a598203089e30a6a584",
+      "progress.jsonl": "9e21891c0947021e33fe3f461be841636cd8aaf79c2b55e450107cff954a34d4"
+    },
+    "failureRound": 29,
+    "failureMatchId": "02TNBSVEEG000000VS5489BUVSSD35NB",
+    "failureRoundSha256": "28b752208241779ae14554aac3475818a3183f65ad994c7b6504e4b7d646ca07"
+  }
+}
