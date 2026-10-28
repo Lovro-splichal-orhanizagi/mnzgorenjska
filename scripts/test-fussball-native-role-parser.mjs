@@ -47,3 +47,16 @@ test('pure inspector exposes defensive original-byte role DATA even when report 
  assert.equal(api.inspectFussballNativeRoleEvidence(lineup),null);assert.equal(api.inspectFussballNativeRoleEvidence(changed.replace(role,'<!--'+role+'-->')),null);assert.equal(api.inspectFussballNativeRoleEvidence(changed.replace(role,'<script>'+role+'</script>')),null)
  assert.throws(()=>parse(changed,{parser:()=>true}));assert.equal(api.inspectFussballNativeRoleEvidence(changed).originalLineupSha256,sha(changed));assert.throws(()=>api.inspectFussballNativeRoleEvidence({html:changed}))
 })
+
+test('PURE inspector cannot discover class/href names inside other attribute values or data-* names',()=>{
+ const inspect=api.inspectFussballNativeRoleEvidence,href=lineup.match(/href="(https:\/\/www\.fussball\.de\/spielerprofil\/[^\"]+)"/)[1]
+ for(const html of [changed.replace('class="player-wrapper home"','data-class="player-wrapper home"'),changed.replace('href="https://www.fussball.de/spielerprofil/','data-href="https://www.fussball.de/spielerprofil/'),`<a data-proof='class="player-wrapper home" href="${href}"'>${captain}${role}</a>`,`<div data-proof='<a class="player-wrapper home" href="${href}">${captain}${role}</a>'></div>`])assert.equal(inspect(html),null)
+})
+test('PURE inspector excludes inert and foreign namespace ancestry rather than trusting profile-looking anchors',()=>{
+ const inspect=api.inspectFussballNativeRoleEvidence,href=lineup.match(/href="(https:\/\/www\.fussball\.de\/spielerprofil\/[^\"]+)"/)[1],anchor=`<a class="player-wrapper home" href="${href}">${captain}${role}</a>`
+ assert.ok(inspect(anchor))
+ for(const tag of ['template','svg','math','noscript','head','svg:g'])assert.equal(inspect(`<${tag}>${anchor}</${tag}>`),null)
+ for(const wrapper of [`<svg><foreignObject>${anchor}</foreignObject></svg>`,`<div xmlns="http://www.w3.org/2000/svg">${anchor}</div>`,`<div xmlns:svg="http://www.w3.org/2000/svg">${anchor}</div>`])assert.equal(inspect(wrapper),null)
+ for(const tag of ['script','style','textarea','title','xmp','iframe','noembed','noframes'])assert.equal(inspect(`<${tag}>${anchor}</${tag}>`),null)
+ assert.equal(inspect(`<!--${anchor}-->`),null)
+})
