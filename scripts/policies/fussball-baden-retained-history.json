@@ -1,0 +1,1265 @@
+{
+  "version": 1,
+  "kind": "reviewed-retained-source-candidates",
+  "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+  "season": "2026/27",
+  "cardPolicy": "community-v1",
+  "capture": {
+    "manifestSha256": "52e755486bd2c8e90389a65264890634d6b617ecc5eeefed02013d1542e77e79",
+    "resultSha256": "c003298bab37251a3c9a8b9421395b0aa03568685fda022ed53d543350474e61",
+    "journalSha256": "c45e905e3e22e1634ab95afd2b4186752cfb3877310f794e03be6e64b77207f0",
+    "codeSha256": "f89e1f3a219af2c99ca140525862f94b9ebd6855e461692cd9f881aba15065a1"
+  },
+  "entries": [
+    {
+      "fixture": {
+        "id": "031DS4G7UK000000VS5489BUVUR5FS5A",
+        "zapisnikId": "de-fussball-031DS4G7UK000000VS5489BUVUR5FS5A",
+        "url": "https://www.fussball.de/spiel/vfr-mannheim-2-djk-fc-ziegelhausen-peterstal/-/spiel/031DS4G7UK000000VS5489BUVUR5FS5A",
+        "krog": 1,
+        "datum": "2026-08-15",
+        "ura": "12:00",
+        "domaci": "VfR Mannheim 2",
+        "gostje": "DJK/FC Ziegelhausen-Peterstal",
+        "rezultat": {
+          "domaci": 1,
+          "gostje": 1
+        }
+      },
+      "defect": {
+        "code": "FUSSBALL_REPORT_INVALID",
+        "reason": "fussball statistika: fussball: igralec brez profilne povezave",
+        "kind": "anonymous-starters"
+      },
+      "observedFontIds": [
+        "akmmq2ym",
+        "jsz72fyi",
+        "kdyu7rpx",
+        "l49se68b",
+        "l4lpz9kc",
+        "qw1vv5ro",
+        "ryuzhe7e",
+        "xy8eftfw",
+        "zuyk7j1o"
+      ],
+      "documents": [
+        {
+          "url": "https://www.fussball.de/spiel/vfr-mannheim-2-djk-fc-ziegelhausen-peterstal/-/spiel/031DS4G7UK000000VS5489BUVUR5FS5A",
+          "kind": "report",
+          "sha256": "d9de4b4bdbfa7027f487b895cb2f9f73e89cdf848b09741f428b2bf5a980be85",
+          "byteLength": 190344,
+          "file": "documents/d9de4b4bdbfa7027f487b895cb2f9f73e89cdf848b09741f428b2bf5a980be85.html",
+          "metadataSha256": "414328c9e831dfb9cb7d57c0412d512defcfd693eaff2e03fad8b2b0ee0a6756"
+        },
+        {
+          "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G7UK000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+          "kind": "lineup",
+          "sha256": "3992926a17230e9a39dd51f9f6fc475c22f795a18cd630b211d66817f0d9fe12",
+          "byteLength": 30999,
+          "file": "documents/3992926a17230e9a39dd51f9f6fc475c22f795a18cd630b211d66817f0d9fe12.html",
+          "metadataSha256": "ac13e68ed52f2db6d27b2e5f35ceaae4462b77f371e1189eaa3b56f3edb37d56"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/l49se68b/type/css",
+          "kind": "css",
+          "sha256": "a02af5ae02b1509313f54360d0b8afbb59e8176ade902cb6a179c8dc0ffa3bf6",
+          "byteLength": 308,
+          "file": "documents/a02af5ae02b1509313f54360d0b8afbb59e8176ade902cb6a179c8dc0ffa3bf6.css",
+          "metadataSha256": "c9f6114a070716dc6f42f4487fdcf07a6626edcc89e8124a3f6c6a742db3cd05"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/l49se68b/type/font",
+          "kind": "font",
+          "sha256": "8bdd5b521252b85bb8ed126cff8375e16514e26bbd89ffa7b19a46b46fd0acd0",
+          "byteLength": 2984,
+          "file": "documents/8bdd5b521252b85bb8ed126cff8375e16514e26bbd89ffa7b19a46b46fd0acd0.woff",
+          "metadataSha256": "c6a510be1f259c6f88e516f6479542d53f6e44c9b249452a63a172eeca1ec6aa"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/xy8eftfw/type/css",
+          "kind": "css",
+          "sha256": "3d3fd4da45588b5c6b339abfec18322d89f83aa1f396aba89a03d2e1f655b7c6",
+          "byteLength": 308,
+          "file": "documents/3d3fd4da45588b5c6b339abfec18322d89f83aa1f396aba89a03d2e1f655b7c6.css",
+          "metadataSha256": "66331c9af58aced73f5d1e323aa538772f2383e908f0d9ef95d3f7898b16bdcc"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/xy8eftfw/type/font",
+          "kind": "font",
+          "sha256": "f1cf4203f1b85497f7a072ad284624162023af55da3ecc4b1fa71d93ee97dd02",
+          "byteLength": 2984,
+          "file": "documents/f1cf4203f1b85497f7a072ad284624162023af55da3ecc4b1fa71d93ee97dd02.woff",
+          "metadataSha256": "6fc47c40afa4b4d197db18a3ea786182151aca48031517dd7bb2fbb3d6905c76"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/zuyk7j1o/type/css",
+          "kind": "css",
+          "sha256": "0b825827c62d92ac793d8cd97fc0fda611f0c89ee7864d7a324113fd4c568f78",
+          "byteLength": 308,
+          "file": "documents/0b825827c62d92ac793d8cd97fc0fda611f0c89ee7864d7a324113fd4c568f78.css",
+          "metadataSha256": "1e7c030ffd67c3050dfb52381afd90611bdc325823de440622ca1101545b88d6"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/zuyk7j1o/type/font",
+          "kind": "font",
+          "sha256": "cee438df87453aa8b1ea5b9ca6278a23c1f8ac2f52a1a740cfd68faf0e88afb7",
+          "byteLength": 114712,
+          "file": "documents/cee438df87453aa8b1ea5b9ca6278a23c1f8ac2f52a1a740cfd68faf0e88afb7.woff",
+          "metadataSha256": "bd7dcfa8780d6119197adf2cf45d788383c8fe6e2d293e5f109e2871994bd9ba"
+        }
+      ]
+    },
+    {
+      "fixture": {
+        "id": "031DS4G74K000000VS5489BUVUR5FS5A",
+        "zapisnikId": "de-fussball-031DS4G74K000000VS5489BUVUR5FS5A",
+        "url": "https://www.fussball.de/spiel/djk-fc-ziegelhausen-peterstal-1fc-bruchsal-1899-ev/-/spiel/031DS4G74K000000VS5489BUVUR5FS5A",
+        "krog": 2,
+        "datum": "2026-08-23",
+        "ura": "15:00",
+        "domaci": "DJK/FC Ziegelhausen-Peterstal",
+        "gostje": "1.FC Bruchsal 1899",
+        "rezultat": {
+          "domaci": 1,
+          "gostje": 3
+        }
+      },
+      "defect": {
+        "code": "FUSSBALL_REPORT_INVALID",
+        "reason": "fussball statistika: fussball: menjava brez obeh igralcev",
+        "kind": "anonymous-used-substitute"
+      },
+      "observedFontIds": [
+        "1ga9w9vu",
+        "2iraic65",
+        "4elcrxzh",
+        "71sd3rc7",
+        "82ol9rwv",
+        "i5ypr0ly",
+        "j92bq507",
+        "kymnjky7",
+        "shtbdwly"
+      ],
+      "documents": [
+        {
+          "url": "https://www.fussball.de/spiel/djk-fc-ziegelhausen-peterstal-1fc-bruchsal-1899-ev/-/spiel/031DS4G74K000000VS5489BUVUR5FS5A",
+          "kind": "report",
+          "sha256": "bc609321b5b600a4ab8711ca4be57f9d33623a2c13c3010715664a39eaea2a73",
+          "byteLength": 199612,
+          "file": "documents/bc609321b5b600a4ab8711ca4be57f9d33623a2c13c3010715664a39eaea2a73.html",
+          "metadataSha256": "011e2e56f6930071d6b33dd527c490bab112ee09df00270867cb5c013ac442fb"
+        },
+        {
+          "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G74K000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+          "kind": "lineup",
+          "sha256": "b4ce1c8b7f661190712ae7af9d17891d4c753c01b11d508fdbb4a3cb6ba07892",
+          "byteLength": 29422,
+          "file": "documents/b4ce1c8b7f661190712ae7af9d17891d4c753c01b11d508fdbb4a3cb6ba07892.html",
+          "metadataSha256": "c0b0f4a70ce872378927d06f8859b9747bb14b57664d17e2ab43a58e41e2cfe1"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/2iraic65/type/css",
+          "kind": "css",
+          "sha256": "85ce80a529b46c7ecfb09dddaacc3022f7ab666261e3b768466ab70267243ae2",
+          "byteLength": 308,
+          "file": "documents/85ce80a529b46c7ecfb09dddaacc3022f7ab666261e3b768466ab70267243ae2.css",
+          "metadataSha256": "11591f6b37b20f44a2dd5edbe9be61f735cfa6fb5d7c04afe06895aed56ae31c"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/2iraic65/type/font",
+          "kind": "font",
+          "sha256": "fa28f263dfddf026e2516924e801e5ee69b920c450a7b82fbcb927894b05a2c7",
+          "byteLength": 15360,
+          "file": "documents/fa28f263dfddf026e2516924e801e5ee69b920c450a7b82fbcb927894b05a2c7.woff",
+          "metadataSha256": "7293fb5f2ac7b837ca2450f0d7df75b976ee3e792316bdc98ce9e1961320608d"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/71sd3rc7/type/css",
+          "kind": "css",
+          "sha256": "bdbd159bcbca7c68e96a31d3af15b26070b6d93f93905579b85c495109e18df5",
+          "byteLength": 308,
+          "file": "documents/bdbd159bcbca7c68e96a31d3af15b26070b6d93f93905579b85c495109e18df5.css",
+          "metadataSha256": "10d226de30c626f83ef28016ff6dd31f604411469356ad3ceaa36b650bc868ba"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/71sd3rc7/type/font",
+          "kind": "font",
+          "sha256": "e0c2094f5e9b4800ebdb92ac3f3dd870e287225814605192762f654dfa783a28",
+          "byteLength": 114712,
+          "file": "documents/e0c2094f5e9b4800ebdb92ac3f3dd870e287225814605192762f654dfa783a28.woff",
+          "metadataSha256": "9d471473b6f5f4f7e1f6cbf5ce98856d51714c79d4abc7a7d15e78ea32e74333"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/82ol9rwv/type/css",
+          "kind": "css",
+          "sha256": "62aa922af05b2698bac8776b320c25aa2c421954b1d76c986cb1f6de2d69fb2e",
+          "byteLength": 308,
+          "file": "documents/62aa922af05b2698bac8776b320c25aa2c421954b1d76c986cb1f6de2d69fb2e.css",
+          "metadataSha256": "1e964fb027677137b86b259c3c52738664085d3ee9d5e4b8efbc5226c0c978c1"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/82ol9rwv/type/font",
+          "kind": "font",
+          "sha256": "3bcee2870830f7c0b45765d70fe84b089941a878e4cbf9cd15f5d24313885e6f",
+          "byteLength": 2988,
+          "file": "documents/3bcee2870830f7c0b45765d70fe84b089941a878e4cbf9cd15f5d24313885e6f.woff",
+          "metadataSha256": "8c986af661dc55910c482ee64db99043fa6ee14dfcf0b70e554470824a94b14c"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/shtbdwly/type/css",
+          "kind": "css",
+          "sha256": "bb5bc6d2248bbecafc2fc3999b806b363200fa53df2827dff74834f96bdc6e04",
+          "byteLength": 308,
+          "file": "documents/bb5bc6d2248bbecafc2fc3999b806b363200fa53df2827dff74834f96bdc6e04.css",
+          "metadataSha256": "b48397867b6ddc73bfff11bfe7d067beaed92bf42067a543a58acbb127741d31"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/shtbdwly/type/font",
+          "kind": "font",
+          "sha256": "5bf02fcd2340e393ee60d6b095001dc45ebf4b57b7d86890b3cda31a99d5026f",
+          "byteLength": 2988,
+          "file": "documents/5bf02fcd2340e393ee60d6b095001dc45ebf4b57b7d86890b3cda31a99d5026f.woff",
+          "metadataSha256": "6bf3f133ca4d59a42aecf977be99fcdfa72dc9abfb219dd6561009f36341f971"
+        }
+      ]
+    },
+    {
+      "fixture": {
+        "id": "031DS4G6GK000000VS5489BUVUR5FS5A",
+        "zapisnikId": "de-fussball-031DS4G6GK000000VS5489BUVUR5FS5A",
+        "url": "https://www.fussball.de/spiel/fc-zuzenhausen-djk-fc-ziegelhausen-peterstal/-/spiel/031DS4G6GK000000VS5489BUVUR5FS5A",
+        "krog": 3,
+        "datum": "2026-08-30",
+        "ura": "15:30",
+        "domaci": "FC Zuzenhausen",
+        "gostje": "DJK/FC Ziegelhausen-Peterstal",
+        "rezultat": {
+          "domaci": 0,
+          "gostje": 2
+        }
+      },
+      "defect": {
+        "code": "FUSSBALL_REPORT_INVALID",
+        "reason": "fussball statistika: fussball: menjava brez obeh igralcev",
+        "kind": "anonymous-used-substitute"
+      },
+      "observedFontIds": [
+        "gjk7kx7o",
+        "lvysqwg3",
+        "nw6t1gge",
+        "q0lgwmc6",
+        "r8s3c3vj",
+        "rqpn4rjv",
+        "vhol9uhu",
+        "wapxoapt",
+        "zjf9pyte"
+      ],
+      "documents": [
+        {
+          "url": "https://www.fussball.de/spiel/fc-zuzenhausen-djk-fc-ziegelhausen-peterstal/-/spiel/031DS4G6GK000000VS5489BUVUR5FS5A",
+          "kind": "report",
+          "sha256": "ffc4bd8e6ba2c41fbb1616cadb2802374c8a633e945fd61a155b8e18218dcb12",
+          "byteLength": 190874,
+          "file": "documents/ffc4bd8e6ba2c41fbb1616cadb2802374c8a633e945fd61a155b8e18218dcb12.html",
+          "metadataSha256": "0b113ab3fd5f09a252c70e619c7168c5251100484ee850f4ffc78dcd198560b2"
+        },
+        {
+          "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G6GK000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+          "kind": "lineup",
+          "sha256": "5be22c5a60df746d4f3f317569a3a013c62a854ce7c4aca97049265a5e22915d",
+          "byteLength": 28058,
+          "file": "documents/5be22c5a60df746d4f3f317569a3a013c62a854ce7c4aca97049265a5e22915d.html",
+          "metadataSha256": "a87806f2aafa0a5ffed9449d55ba5f2c21060ecd7a1d40a025bfb894584b7732"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/gjk7kx7o/type/css",
+          "kind": "css",
+          "sha256": "ef1647af03f857bfd585688fccfcc0f90f796c03c14d6a1b6f082bfe1ee941d2",
+          "byteLength": 308,
+          "file": "documents/ef1647af03f857bfd585688fccfcc0f90f796c03c14d6a1b6f082bfe1ee941d2.css",
+          "metadataSha256": "f2c9e1222ac6f01864df0f9ae33c3cbb363bc5589c9d1104c407962c52eb7650"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/gjk7kx7o/type/font",
+          "kind": "font",
+          "sha256": "901716260b70ee66b6856c80e5abdaea9065c7a08455c237a57d646f256732bf",
+          "byteLength": 2984,
+          "file": "documents/901716260b70ee66b6856c80e5abdaea9065c7a08455c237a57d646f256732bf.woff",
+          "metadataSha256": "eaaf2ad386a691e3bca7bfdab0be79f8dec612f3957da3d5798cd00241f416b8"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/lvysqwg3/type/css",
+          "kind": "css",
+          "sha256": "c8e49c8dc98559b793d1cd3f46e8ad5885ee4ad348c56fdb2458e2d6380353b9",
+          "byteLength": 308,
+          "file": "documents/c8e49c8dc98559b793d1cd3f46e8ad5885ee4ad348c56fdb2458e2d6380353b9.css",
+          "metadataSha256": "7c439d637068b3169b364943f2c4fda5a5fa863d28bc8e70881f12cfb98f209f"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/lvysqwg3/type/font",
+          "kind": "font",
+          "sha256": "2df852744e5642d52881d7fe96b7b6c69747b474b972a164f74698a837366ed1",
+          "byteLength": 2988,
+          "file": "documents/2df852744e5642d52881d7fe96b7b6c69747b474b972a164f74698a837366ed1.woff",
+          "metadataSha256": "d75ecc9e7674a4dfb314b8c13873072f47fe8162ee99248adb1cd8e481940c5c"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/nw6t1gge/type/css",
+          "kind": "css",
+          "sha256": "1e18f65b31e792c6fb5eb161824b958e73a1e0a7d068bf642f3373ab5ca3beef",
+          "byteLength": 308,
+          "file": "documents/1e18f65b31e792c6fb5eb161824b958e73a1e0a7d068bf642f3373ab5ca3beef.css",
+          "metadataSha256": "4e0d45f8113571c50ab91ae28d96de2d449b292246c3a64fb8b93be87ac11cc2"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/nw6t1gge/type/font",
+          "kind": "font",
+          "sha256": "4ba2847bac966580f06d080762e2d010e070a8cba9902c629395ae1748f6f68c",
+          "byteLength": 15356,
+          "file": "documents/4ba2847bac966580f06d080762e2d010e070a8cba9902c629395ae1748f6f68c.woff",
+          "metadataSha256": "17fe0447f936c7b750fa4bd03b359d3b14422037393e55c0cdad1cca3d17bd36"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/rqpn4rjv/type/css",
+          "kind": "css",
+          "sha256": "3e58ae8ef6d2d2c4de0ca38b13561c59df8c23eeaddd8b6f5db77f0555c62ddd",
+          "byteLength": 308,
+          "file": "documents/3e58ae8ef6d2d2c4de0ca38b13561c59df8c23eeaddd8b6f5db77f0555c62ddd.css",
+          "metadataSha256": "2c213e72f946ff6c0c4bc99c58f4c1cff42e36b4d8ee5dc3a31b038901485979"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/rqpn4rjv/type/font",
+          "kind": "font",
+          "sha256": "305e3b3f995ca467e5341bd4fc34cb3756d153e0cb5249aed7a7da7e9467a7eb",
+          "byteLength": 114716,
+          "file": "documents/305e3b3f995ca467e5341bd4fc34cb3756d153e0cb5249aed7a7da7e9467a7eb.woff",
+          "metadataSha256": "024cf40dac6d65a1986a473f69de53f56bd69e164fefbf0adfee8628f5c70896"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/wapxoapt/type/css",
+          "kind": "css",
+          "sha256": "de414e0d2968fa76ecde7e9d447eb361373b362c6f5d1515a34ec1446dc609e0",
+          "byteLength": 308,
+          "file": "documents/de414e0d2968fa76ecde7e9d447eb361373b362c6f5d1515a34ec1446dc609e0.css",
+          "metadataSha256": "e7f544d1bf903d3c4dfb2cafc1297df5c70eb6d041435046f55b42422740f9bb"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/wapxoapt/type/font",
+          "kind": "font",
+          "sha256": "db35e630f8c0bca315f93ae76c81e666f8501f63fc3760858656ca410a02635d",
+          "byteLength": 2984,
+          "file": "documents/db35e630f8c0bca315f93ae76c81e666f8501f63fc3760858656ca410a02635d.woff",
+          "metadataSha256": "ccbf5d3ba8a5d08dcc08eb352a9570c86e6574ee3b9608e99373077c92acc407"
+        }
+      ]
+    },
+    {
+      "fixture": {
+        "id": "031DS4G5R4000000VS5489BUVUR5FS5A",
+        "zapisnikId": "de-fussball-031DS4G5R4000000VS5489BUVUR5FS5A",
+        "url": "https://www.fussball.de/spiel/djk-fc-ziegelhausen-peterstal-vfr-gommersdorf/-/spiel/031DS4G5R4000000VS5489BUVUR5FS5A",
+        "krog": 4,
+        "datum": "2026-09-06",
+        "ura": "15:00",
+        "domaci": "DJK/FC Ziegelhausen-Peterstal",
+        "gostje": "VfR Gommersdorf",
+        "rezultat": {
+          "domaci": 2,
+          "gostje": 2
+        }
+      },
+      "defect": {
+        "code": "FUSSBALL_REPORT_INVALID",
+        "reason": "fussball statistika: fussball: menjava brez obeh igralcev",
+        "kind": "anonymous-used-substitute"
+      },
+      "observedFontIds": [
+        "01buuekl",
+        "0mwxl27w",
+        "2xp22lx0",
+        "en4b7ldo",
+        "fcg53nab",
+        "j3oxh4f6",
+        "koym116j",
+        "mzui9yz7",
+        "wcaywmbg"
+      ],
+      "documents": [
+        {
+          "url": "https://www.fussball.de/spiel/djk-fc-ziegelhausen-peterstal-vfr-gommersdorf/-/spiel/031DS4G5R4000000VS5489BUVUR5FS5A",
+          "kind": "report",
+          "sha256": "39e6c24184847bfccd0fbc6bf4a81f92abc507824564f87df8da783f6198b526",
+          "byteLength": 193406,
+          "file": "documents/39e6c24184847bfccd0fbc6bf4a81f92abc507824564f87df8da783f6198b526.html",
+          "metadataSha256": "2c62fc55b265802d254e952a93ef4373572fd7b0bc6ea2b5b1a801829e33b770"
+        },
+        {
+          "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G5R4000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+          "kind": "lineup",
+          "sha256": "62e6e194ba8f4092f8357504b3172b1a87ed9c0928af8845df5783918a5c606a",
+          "byteLength": 28768,
+          "file": "documents/62e6e194ba8f4092f8357504b3172b1a87ed9c0928af8845df5783918a5c606a.html",
+          "metadataSha256": "80bf77a7346cee81bd982e27fe5180d818a261b2467a91587b752f48b19ac9fe"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/01buuekl/type/css",
+          "kind": "css",
+          "sha256": "d8a0ca580d687c05f351be2c4013f0735e63995c59b2393fce8ba3b6abb8c2db",
+          "byteLength": 308,
+          "file": "documents/d8a0ca580d687c05f351be2c4013f0735e63995c59b2393fce8ba3b6abb8c2db.css",
+          "metadataSha256": "ccbb8295599f58cb61209c1068df3f281f09784bdabab796ad0ef81f35c45ba6"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/01buuekl/type/font",
+          "kind": "font",
+          "sha256": "e6dd00cf7dc9db6c02663973ff9b0e8b045920a24ba3db80c9170824e76a1f9f",
+          "byteLength": 2984,
+          "file": "documents/e6dd00cf7dc9db6c02663973ff9b0e8b045920a24ba3db80c9170824e76a1f9f.woff",
+          "metadataSha256": "c1659031222e52ccf403a021a447c4054b52a9556bba5453bc6e580be605c047"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/0mwxl27w/type/css",
+          "kind": "css",
+          "sha256": "5f564f12b190aaf40b4ed0ccd8b18061de2a40d02a4e1417b74c66d9045c8854",
+          "byteLength": 308,
+          "file": "documents/5f564f12b190aaf40b4ed0ccd8b18061de2a40d02a4e1417b74c66d9045c8854.css",
+          "metadataSha256": "c5a9ec66d0d584e3e7bda8f5139debcb6bc3a84bcede26a5c84e7df54706e7da"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/0mwxl27w/type/font",
+          "kind": "font",
+          "sha256": "3584ca3e53d8adc668e4f6a585e66dec2c9346115b6593b86a9cf442af4c0d4f",
+          "byteLength": 2988,
+          "file": "documents/3584ca3e53d8adc668e4f6a585e66dec2c9346115b6593b86a9cf442af4c0d4f.woff",
+          "metadataSha256": "802b456b361b06569af6ad7647ae422ab92bb36b7f1b4044f15bb51466c270f3"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/2xp22lx0/type/css",
+          "kind": "css",
+          "sha256": "fa3cbe8e1eaea01bdd5753a5d70f195031c695ea18602886e864d253628a4b7f",
+          "byteLength": 308,
+          "file": "documents/fa3cbe8e1eaea01bdd5753a5d70f195031c695ea18602886e864d253628a4b7f.css",
+          "metadataSha256": "a2caf489258d3aaefd695e4fe96c03f63c245ab0154ef5fc17048e73a2a2cfc5"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/2xp22lx0/type/font",
+          "kind": "font",
+          "sha256": "21c52e442544c4ff61cf997af0610fa841cdf2a55eafec63d62a01a824adc57b",
+          "byteLength": 114716,
+          "file": "documents/21c52e442544c4ff61cf997af0610fa841cdf2a55eafec63d62a01a824adc57b.woff",
+          "metadataSha256": "330be7ec1ff3dcf8c3acb2e89e01240e3da02dbb1911353ce20392e1a7c99966"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/en4b7ldo/type/css",
+          "kind": "css",
+          "sha256": "9f7564a2f3a046e76406e1e74d884c270e290d5a0cf0d44b3c79010b599b45b3",
+          "byteLength": 308,
+          "file": "documents/9f7564a2f3a046e76406e1e74d884c270e290d5a0cf0d44b3c79010b599b45b3.css",
+          "metadataSha256": "73b13d0df69a93a6085ee17e1463a098957ce0ef2bdaa41fc89f57394be3c7b8"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/en4b7ldo/type/font",
+          "kind": "font",
+          "sha256": "509cd240db925168194b82e86b11a1638089ba46c964eb48c8b7b5177f263db5",
+          "byteLength": 15348,
+          "file": "documents/509cd240db925168194b82e86b11a1638089ba46c964eb48c8b7b5177f263db5.woff",
+          "metadataSha256": "2006c7318ad16b3fe90ee57b68859a7a9abeeef22daa0ed6d4bdbd54e4582df3"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/fcg53nab/type/css",
+          "kind": "css",
+          "sha256": "853bb4cd5b5df6fbd7c697b51d60d8d7aa208fe4ead8696299bbb17c372fea81",
+          "byteLength": 308,
+          "file": "documents/853bb4cd5b5df6fbd7c697b51d60d8d7aa208fe4ead8696299bbb17c372fea81.css",
+          "metadataSha256": "327cc4220b19124ba18981b2a626cef12d537d16cf7ab8017381ea9ab2b685bc"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/fcg53nab/type/font",
+          "kind": "font",
+          "sha256": "6ecf6a60c65a8d4abdc5075130d1dca35ea681b15b121961c145445e0dae4866",
+          "byteLength": 2988,
+          "file": "documents/6ecf6a60c65a8d4abdc5075130d1dca35ea681b15b121961c145445e0dae4866.woff",
+          "metadataSha256": "921f2e5ccad44cc561f75d545bb33b217c38ec4a2c15a9473ffe96236af503e1"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/koym116j/type/css",
+          "kind": "css",
+          "sha256": "1fceb74a0763f7e677aafd3985e88e7614629057ee2595e5df1d6c9ccf11e22b",
+          "byteLength": 308,
+          "file": "documents/1fceb74a0763f7e677aafd3985e88e7614629057ee2595e5df1d6c9ccf11e22b.css",
+          "metadataSha256": "e029a1c0ad633b2a8cd7f515e0bbf18c1d0fe6b97fd84c77f8e45bf773aafffd"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/koym116j/type/font",
+          "kind": "font",
+          "sha256": "35e98b2838812b5ae4d8e1e74525a58d08d365d50d8d038c55458cb6f510d8ae",
+          "byteLength": 114716,
+          "file": "documents/35e98b2838812b5ae4d8e1e74525a58d08d365d50d8d038c55458cb6f510d8ae.woff",
+          "metadataSha256": "dddda0a7282b3c73ef47bd46a4c61f5ef5cbe72c4bf24845251c9830249596dc"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/wcaywmbg/type/css",
+          "kind": "css",
+          "sha256": "46b63e32fcf14ef2b57f8d62425276824be54685180b7aa71dbcf95b5900596e",
+          "byteLength": 308,
+          "file": "documents/46b63e32fcf14ef2b57f8d62425276824be54685180b7aa71dbcf95b5900596e.css",
+          "metadataSha256": "d58b3e31fca03f8a533e4d063bd7d4528a0e5b17b44f8bbbc2442a1b28bf5a99"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/wcaywmbg/type/font",
+          "kind": "font",
+          "sha256": "95dbd932d230be0738282aa6b26b88bb5c2d5165c8d29505437e0ba800d27088",
+          "byteLength": 114712,
+          "file": "documents/95dbd932d230be0738282aa6b26b88bb5c2d5165c8d29505437e0ba800d27088.woff",
+          "metadataSha256": "960679e7052a5e1f36f9ec09df925c6701e48b5ac7f363608da61a60ebd6743c"
+        }
+      ]
+    },
+    {
+      "fixture": {
+        "id": "031DS4G5K8000000VS5489BUVUR5FS5A",
+        "zapisnikId": "de-fussball-031DS4G5K8000000VS5489BUVUR5FS5A",
+        "url": "https://www.fussball.de/spiel/tsg-1862-09-weinheim-djk-fc-ziegelhausen-peterstal/-/spiel/031DS4G5K8000000VS5489BUVUR5FS5A",
+        "krog": 5,
+        "datum": "2026-09-12",
+        "ura": "14:00",
+        "domaci": "TSG 1862/09 Weinheim",
+        "gostje": "DJK/FC Ziegelhausen-Peterstal",
+        "rezultat": {
+          "domaci": 2,
+          "gostje": 3
+        }
+      },
+      "defect": {
+        "code": "FUSSBALL_REPORT_INVALID",
+        "reason": "fussball statistika: fussball: menjava brez obeh igralcev",
+        "kind": "anonymous-used-substitute-and-scorer"
+      },
+      "observedFontIds": [
+        "0456q483",
+        "0ho9ppmg",
+        "6ww41qda",
+        "95d94qk0",
+        "h1i5mrbm",
+        "jrfrvrh9",
+        "urngjrpl",
+        "w1zizlzd",
+        "xdh9ae07"
+      ],
+      "documents": [
+        {
+          "url": "https://www.fussball.de/spiel/tsg-1862-09-weinheim-djk-fc-ziegelhausen-peterstal/-/spiel/031DS4G5K8000000VS5489BUVUR5FS5A",
+          "kind": "report",
+          "sha256": "9754f31023300c553b3384044c434d357196df69442248637f65ffd6842ab34e",
+          "byteLength": 197396,
+          "file": "documents/9754f31023300c553b3384044c434d357196df69442248637f65ffd6842ab34e.html",
+          "metadataSha256": "7951e3b5a2ffab98fa66fc2545b42b137ad2f10f98d3ce0538261a675f9cac36"
+        },
+        {
+          "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G5K8000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+          "kind": "lineup",
+          "sha256": "f2ebc57a7a893a37d236c63eed572b60d99839b02635befdf6a7d9e48f155c21",
+          "byteLength": 28706,
+          "file": "documents/f2ebc57a7a893a37d236c63eed572b60d99839b02635befdf6a7d9e48f155c21.html",
+          "metadataSha256": "02b27f436840e37a0d8b31d1faa8625b505cc9637817c5497c717873b9767c79"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/0456q483/type/css",
+          "kind": "css",
+          "sha256": "3610d30708034a0c14a22ef74c8d82a6e48c1bc41bb9e073973b1fdeb62b47e0",
+          "byteLength": 308,
+          "file": "documents/3610d30708034a0c14a22ef74c8d82a6e48c1bc41bb9e073973b1fdeb62b47e0.css",
+          "metadataSha256": "4762ba5ff806a06a7ba30ae095adf1b146335bda523f07f08f0c81c3d8eba095"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/0456q483/type/font",
+          "kind": "font",
+          "sha256": "787b666de006207006ecc55d9fd5e98d6b0f69aa4bf2b1ba6993b8d4eb09c86d",
+          "byteLength": 15352,
+          "file": "documents/787b666de006207006ecc55d9fd5e98d6b0f69aa4bf2b1ba6993b8d4eb09c86d.woff",
+          "metadataSha256": "57a8765df5141987bdd4d4ca633fca6bfeaba4fabbdc53de5e6b4e05e22db69b"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/0ho9ppmg/type/css",
+          "kind": "css",
+          "sha256": "235df02f714a0f4203977f4dcf10cc137737b7b9c1e8c9088c0036a3a0d5d328",
+          "byteLength": 308,
+          "file": "documents/235df02f714a0f4203977f4dcf10cc137737b7b9c1e8c9088c0036a3a0d5d328.css",
+          "metadataSha256": "be1486515dc8e0b37d3a04b4da5859b0de1673d947b9d057169ea3213e370caf"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/0ho9ppmg/type/font",
+          "kind": "font",
+          "sha256": "ff09f143db77f57f57a5b78aa6ca58953a4a6f9a6fad94d5312749b1c2311ec7",
+          "byteLength": 114716,
+          "file": "documents/ff09f143db77f57f57a5b78aa6ca58953a4a6f9a6fad94d5312749b1c2311ec7.woff",
+          "metadataSha256": "e3d9bc8b17bd06171700722defe45d2a9463e45aee9b6527f12f8712e7a1acaf"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/6ww41qda/type/css",
+          "kind": "css",
+          "sha256": "e73489bf39056cad7a6586ef33f53d92054535ded61f7001ca18f34b80db43a0",
+          "byteLength": 308,
+          "file": "documents/e73489bf39056cad7a6586ef33f53d92054535ded61f7001ca18f34b80db43a0.css",
+          "metadataSha256": "49aa790260ef6c78e576ad316cdce511f0ed03898fe442cd4b9070b5e652d6f2"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/6ww41qda/type/font",
+          "kind": "font",
+          "sha256": "5ffed9781a30d2554c5ae6b0934b7a0c4a50e2c98eaaa486cbd3e3dc40b10e1c",
+          "byteLength": 114724,
+          "file": "documents/5ffed9781a30d2554c5ae6b0934b7a0c4a50e2c98eaaa486cbd3e3dc40b10e1c.woff",
+          "metadataSha256": "f00fe9e30e48bf0ca46091fa10f972efb17cd5f80ab4f455e73d43abde3f0caf"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/jrfrvrh9/type/css",
+          "kind": "css",
+          "sha256": "1422777867dc9332e4e9dd2f3f975e1010ed151e956a370daac1488a423ea84e",
+          "byteLength": 308,
+          "file": "documents/1422777867dc9332e4e9dd2f3f975e1010ed151e956a370daac1488a423ea84e.css",
+          "metadataSha256": "7aedc4ab7a3cf3ff416488d85ae43bd2e6021a847b7cd866ed7a698de9dca6d9"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/jrfrvrh9/type/font",
+          "kind": "font",
+          "sha256": "79d02e9f0a738fc9a0a50897f2ef9e012f9f3da88bef3a6a56236ce68973af25",
+          "byteLength": 114712,
+          "file": "documents/79d02e9f0a738fc9a0a50897f2ef9e012f9f3da88bef3a6a56236ce68973af25.woff",
+          "metadataSha256": "2e3bf4b8edab86f620c8289dc3dc2c8a5b33eaf3158a2a568355b845726c2ea0"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/urngjrpl/type/css",
+          "kind": "css",
+          "sha256": "3d0c85c7f6ec41ac8330fa0911bb77de63675c9ae42fd774b275af6a90bfe811",
+          "byteLength": 308,
+          "file": "documents/3d0c85c7f6ec41ac8330fa0911bb77de63675c9ae42fd774b275af6a90bfe811.css",
+          "metadataSha256": "bbd9452b82a7bdca967ee9b20c1f054b3c37ff3abb5d1469c2415f7dbcd720b2"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/urngjrpl/type/font",
+          "kind": "font",
+          "sha256": "eaf2402c95dd9169a2fe7b98880e6dc1f1887ac45bc243a5acc845de2dbdc7d0",
+          "byteLength": 2988,
+          "file": "documents/eaf2402c95dd9169a2fe7b98880e6dc1f1887ac45bc243a5acc845de2dbdc7d0.woff",
+          "metadataSha256": "4b9d5eccfb51f13643c6620f77d070d3c5e1d8addffa3c3232e5bef169284da8"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/xdh9ae07/type/css",
+          "kind": "css",
+          "sha256": "03b9098fab23a83e972ded03245231f026c1b830c81f09310a245c6238149ae4",
+          "byteLength": 308,
+          "file": "documents/03b9098fab23a83e972ded03245231f026c1b830c81f09310a245c6238149ae4.css",
+          "metadataSha256": "f5f47e5d508a238cf7da2bb7209c55654ad6a3412bceb1e26cfc00ce22cf79c1"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/xdh9ae07/type/font",
+          "kind": "font",
+          "sha256": "1559543c0a5d92a2fa58d28398967b51dd61815845787e1911155ad5ae4ee349",
+          "byteLength": 2984,
+          "file": "documents/1559543c0a5d92a2fa58d28398967b51dd61815845787e1911155ad5ae4ee349.woff",
+          "metadataSha256": "45337171424ea23cbdd6e8b6fb944da98ce4264c551a82687d9ba9abe86b64ec"
+        }
+      ]
+    },
+    {
+      "fixture": {
+        "id": "031DS4G4N0000000VS5489BUVUR5FS5A",
+        "zapisnikId": "de-fussball-031DS4G4N0000000VS5489BUVUR5FS5A",
+        "url": "https://www.fussball.de/spiel/djk-fc-ziegelhausen-peterstal-fv-fortuna-heddesheim/-/spiel/031DS4G4N0000000VS5489BUVUR5FS5A",
+        "krog": 6,
+        "datum": "2026-09-20",
+        "ura": "15:00",
+        "domaci": "DJK/FC Ziegelhausen-Peterstal",
+        "gostje": "FV Fortuna Heddesheim",
+        "rezultat": {
+          "domaci": 2,
+          "gostje": 4
+        }
+      },
+      "defect": {
+        "code": "FUSSBALL_REPORT_INVALID",
+        "reason": "fussball statistika: fussball: menjava brez obeh igralcev",
+        "kind": "anonymous-used-substitute"
+      },
+      "observedFontIds": [
+        "0456q483",
+        "4m27drse",
+        "fv5v2n21",
+        "j3oxh4f6",
+        "nw6t1gge",
+        "q8x8jndm",
+        "w0bdxf87",
+        "xdt8sgdd",
+        "zuyk7j1o"
+      ],
+      "documents": [
+        {
+          "url": "https://www.fussball.de/spiel/djk-fc-ziegelhausen-peterstal-fv-fortuna-heddesheim/-/spiel/031DS4G4N0000000VS5489BUVUR5FS5A",
+          "kind": "report",
+          "sha256": "37e54d95342caabcf697525c13ba82aec91050ada9e8f6018292f77f9bcbba89",
+          "byteLength": 201000,
+          "file": "documents/37e54d95342caabcf697525c13ba82aec91050ada9e8f6018292f77f9bcbba89.html",
+          "metadataSha256": "2b4a987d04e59bbffa5d566d623a2fc50e5c5a1cbc08943dc6078d9ab0976e3b"
+        },
+        {
+          "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G4N0000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+          "kind": "lineup",
+          "sha256": "2c5cbecf5c425579d7464783ce6a6fbdd8ceeb01bfb6032129c7f78046ac1718",
+          "byteLength": 29814,
+          "file": "documents/2c5cbecf5c425579d7464783ce6a6fbdd8ceeb01bfb6032129c7f78046ac1718.html",
+          "metadataSha256": "d59f0a87b985a54b3cbed3860a38a54a613a50d64090d5120cf260f0dd47b925"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/0456q483/type/css",
+          "kind": "css",
+          "sha256": "3610d30708034a0c14a22ef74c8d82a6e48c1bc41bb9e073973b1fdeb62b47e0",
+          "byteLength": 308,
+          "file": "documents/3610d30708034a0c14a22ef74c8d82a6e48c1bc41bb9e073973b1fdeb62b47e0.css",
+          "metadataSha256": "4762ba5ff806a06a7ba30ae095adf1b146335bda523f07f08f0c81c3d8eba095"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/0456q483/type/font",
+          "kind": "font",
+          "sha256": "787b666de006207006ecc55d9fd5e98d6b0f69aa4bf2b1ba6993b8d4eb09c86d",
+          "byteLength": 15352,
+          "file": "documents/787b666de006207006ecc55d9fd5e98d6b0f69aa4bf2b1ba6993b8d4eb09c86d.woff",
+          "metadataSha256": "57a8765df5141987bdd4d4ca633fca6bfeaba4fabbdc53de5e6b4e05e22db69b"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/4m27drse/type/css",
+          "kind": "css",
+          "sha256": "b7432277d961470459cdb02c354f9a5c3501b94b205e8a284a197c7a85c1e8d0",
+          "byteLength": 308,
+          "file": "documents/b7432277d961470459cdb02c354f9a5c3501b94b205e8a284a197c7a85c1e8d0.css",
+          "metadataSha256": "04475b1dfe7beaa3dd8cd4219a4811153479be6ec5a3023e27811aa21d936b0a"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/4m27drse/type/font",
+          "kind": "font",
+          "sha256": "4c66f71636934446e3af35b887428d1a46a856a7151433c3dad0a35060c2e32e",
+          "byteLength": 2988,
+          "file": "documents/4c66f71636934446e3af35b887428d1a46a856a7151433c3dad0a35060c2e32e.woff",
+          "metadataSha256": "c499e52f574c8f4264293f1ab589688f190342c568da09c1c40b18210523c333"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/fv5v2n21/type/css",
+          "kind": "css",
+          "sha256": "4c379b415fdf68a84610334c703837aee1100b9c3124e0ff9b0bb371f3085390",
+          "byteLength": 308,
+          "file": "documents/4c379b415fdf68a84610334c703837aee1100b9c3124e0ff9b0bb371f3085390.css",
+          "metadataSha256": "e99b3e0b49d2d151ece3bdce4ec5d952db869a6269ffd61c60ba5d035ad3bb39"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/fv5v2n21/type/font",
+          "kind": "font",
+          "sha256": "4cc4db21cfef70a28fb81ffbf960f01f64031be50047f94cf132de11b9b3f154",
+          "byteLength": 2984,
+          "file": "documents/4cc4db21cfef70a28fb81ffbf960f01f64031be50047f94cf132de11b9b3f154.woff",
+          "metadataSha256": "c557e7b8007eebb74d41d9172dbd016ca18cb408066a5c9a1729fdf568543763"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/nw6t1gge/type/css",
+          "kind": "css",
+          "sha256": "1e18f65b31e792c6fb5eb161824b958e73a1e0a7d068bf642f3373ab5ca3beef",
+          "byteLength": 308,
+          "file": "documents/1e18f65b31e792c6fb5eb161824b958e73a1e0a7d068bf642f3373ab5ca3beef.css",
+          "metadataSha256": "4e0d45f8113571c50ab91ae28d96de2d449b292246c3a64fb8b93be87ac11cc2"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/nw6t1gge/type/font",
+          "kind": "font",
+          "sha256": "4ba2847bac966580f06d080762e2d010e070a8cba9902c629395ae1748f6f68c",
+          "byteLength": 15356,
+          "file": "documents/4ba2847bac966580f06d080762e2d010e070a8cba9902c629395ae1748f6f68c.woff",
+          "metadataSha256": "17fe0447f936c7b750fa4bd03b359d3b14422037393e55c0cdad1cca3d17bd36"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/q8x8jndm/type/css",
+          "kind": "css",
+          "sha256": "951666ac7258bc4c32129ade8a037d6da899c5f9b873829091b928b3c4c82a04",
+          "byteLength": 308,
+          "file": "documents/951666ac7258bc4c32129ade8a037d6da899c5f9b873829091b928b3c4c82a04.css",
+          "metadataSha256": "0823babde2be60ec792fe1340fc6de1f050413ebad6548e3c0587926bf5caed4"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/q8x8jndm/type/font",
+          "kind": "font",
+          "sha256": "4a86024578f0cfa27ada58799cb6815800ad4136c11b368fb975210a8f651471",
+          "byteLength": 114724,
+          "file": "documents/4a86024578f0cfa27ada58799cb6815800ad4136c11b368fb975210a8f651471.woff",
+          "metadataSha256": "1cace706d13d1210fa769e2717a04d45d90d6899ce1e298db70bd4a79df9b67d"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/w0bdxf87/type/css",
+          "kind": "css",
+          "sha256": "0e944dce6e62b58867474536cd525f22c5482142bc068f3a371c1682cb0bfa19",
+          "byteLength": 308,
+          "file": "documents/0e944dce6e62b58867474536cd525f22c5482142bc068f3a371c1682cb0bfa19.css",
+          "metadataSha256": "523ec8c44ba9e21581540829f4949383c597db42af15cc5f093a16b78d0de02f"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/w0bdxf87/type/font",
+          "kind": "font",
+          "sha256": "476dcf0a125b84565fc69e18ccf1e6d3afbe3822d3da2d5a427501d5d3990a84",
+          "byteLength": 114716,
+          "file": "documents/476dcf0a125b84565fc69e18ccf1e6d3afbe3822d3da2d5a427501d5d3990a84.woff",
+          "metadataSha256": "581bfe2e27454abaddd221651042f70d3621fb54bd05cf0d848d4c61b29cfb5a"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/xdt8sgdd/type/css",
+          "kind": "css",
+          "sha256": "2fdb8366e33775cabd8c15d8dbdc3e428b0888f3a16a0006339010a1f5f438a1",
+          "byteLength": 308,
+          "file": "documents/2fdb8366e33775cabd8c15d8dbdc3e428b0888f3a16a0006339010a1f5f438a1.css",
+          "metadataSha256": "3ed6752bf2b875ace9e0a54c5153ca1d0826a690f4e8fc650f4a0f0762d43967"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/xdt8sgdd/type/font",
+          "kind": "font",
+          "sha256": "365a0e52334d4e1e90a744edea11a64c5b502cdd4c852cb71c5488d03de44b88",
+          "byteLength": 2984,
+          "file": "documents/365a0e52334d4e1e90a744edea11a64c5b502cdd4c852cb71c5488d03de44b88.woff",
+          "metadataSha256": "6fa5b6abb16e5587aa17603c2d672c2aec41b2fe7b02724491c70fa6ce0f734f"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/zuyk7j1o/type/css",
+          "kind": "css",
+          "sha256": "0b825827c62d92ac793d8cd97fc0fda611f0c89ee7864d7a324113fd4c568f78",
+          "byteLength": 308,
+          "file": "documents/0b825827c62d92ac793d8cd97fc0fda611f0c89ee7864d7a324113fd4c568f78.css",
+          "metadataSha256": "1e7c030ffd67c3050dfb52381afd90611bdc325823de440622ca1101545b88d6"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/zuyk7j1o/type/font",
+          "kind": "font",
+          "sha256": "cee438df87453aa8b1ea5b9ca6278a23c1f8ac2f52a1a740cfd68faf0e88afb7",
+          "byteLength": 114712,
+          "file": "documents/cee438df87453aa8b1ea5b9ca6278a23c1f8ac2f52a1a740cfd68faf0e88afb7.woff",
+          "metadataSha256": "bd7dcfa8780d6119197adf2cf45d788383c8fe6e2d293e5f109e2871994bd9ba"
+        }
+      ]
+    },
+    {
+      "fixture": {
+        "id": "031DS4G384000000VS5489BUVUR5FS5A",
+        "zapisnikId": "de-fussball-031DS4G384000000VS5489BUVUR5FS5A",
+        "url": "https://www.fussball.de/spiel/fc-zuzenhausen-vfr-mannheim-2/-/spiel/031DS4G384000000VS5489BUVUR5FS5A",
+        "krog": 9,
+        "datum": "2026-10-10",
+        "ura": "15:30",
+        "domaci": "FC Zuzenhausen",
+        "gostje": "VfR Mannheim 2",
+        "rezultat": {
+          "domaci": 1,
+          "gostje": 1
+        }
+      },
+      "defect": {
+        "code": "FUSSBALL_REPORT_INVALID",
+        "reason": "fussball statistika: fussball: gol neaktivnega igralca",
+        "kind": "same-clock-outgoing-scorer"
+      },
+      "observedFontIds": [
+        "4evelfk6",
+        "5311ly3a",
+        "ed2dhr1i",
+        "gjk7kx7o",
+        "kymnjky7",
+        "roenpjk8",
+        "vfy45jp6",
+        "w0bdxf87",
+        "wni4lh2q"
+      ],
+      "documents": [
+        {
+          "url": "https://www.fussball.de/spiel/fc-zuzenhausen-vfr-mannheim-2/-/spiel/031DS4G384000000VS5489BUVUR5FS5A",
+          "kind": "report",
+          "sha256": "6155208359fb05cf860698270bb5445236a9b92e253105fa6a65a4b70782425a",
+          "byteLength": 189424,
+          "file": "documents/6155208359fb05cf860698270bb5445236a9b92e253105fa6a65a4b70782425a.html",
+          "metadataSha256": "3797a4bfa1e67f53ddb4bcbe7b62ffc189738b8d7611d1208522e06187ee7478"
+        },
+        {
+          "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G384000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+          "kind": "lineup",
+          "sha256": "778a6bdaa0d9276c05bc8277d667fe66f40e661549321ee91f197e0840eefb38",
+          "byteLength": 29980,
+          "file": "documents/778a6bdaa0d9276c05bc8277d667fe66f40e661549321ee91f197e0840eefb38.html",
+          "metadataSha256": "67644dfe3a5d180a56c7ee2c82160af3d71978faa649243869a703b88ff06d69"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/5311ly3a/type/css",
+          "kind": "css",
+          "sha256": "fd50f0f5b935611a5f043f1186d326d603503f40bbb76005fd8e36b5c3d44600",
+          "byteLength": 308,
+          "file": "documents/fd50f0f5b935611a5f043f1186d326d603503f40bbb76005fd8e36b5c3d44600.css",
+          "metadataSha256": "27e9f1dae85d012ec930d347f374a60bcfe0ae244fd651f445c8555ee5002f3b"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/5311ly3a/type/font",
+          "kind": "font",
+          "sha256": "2418fab3f36a236df5a05049b81645003328c6667812e4c552eb212c67fe6c60",
+          "byteLength": 15360,
+          "file": "documents/2418fab3f36a236df5a05049b81645003328c6667812e4c552eb212c67fe6c60.woff",
+          "metadataSha256": "db2ecfbf904a84c1bd1692f29fcbe6bb0976a7e44234bbde868d11a9cfbc0eb0"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/gjk7kx7o/type/css",
+          "kind": "css",
+          "sha256": "ef1647af03f857bfd585688fccfcc0f90f796c03c14d6a1b6f082bfe1ee941d2",
+          "byteLength": 308,
+          "file": "documents/ef1647af03f857bfd585688fccfcc0f90f796c03c14d6a1b6f082bfe1ee941d2.css",
+          "metadataSha256": "f2c9e1222ac6f01864df0f9ae33c3cbb363bc5589c9d1104c407962c52eb7650"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/gjk7kx7o/type/font",
+          "kind": "font",
+          "sha256": "901716260b70ee66b6856c80e5abdaea9065c7a08455c237a57d646f256732bf",
+          "byteLength": 2984,
+          "file": "documents/901716260b70ee66b6856c80e5abdaea9065c7a08455c237a57d646f256732bf.woff",
+          "metadataSha256": "eaaf2ad386a691e3bca7bfdab0be79f8dec612f3957da3d5798cd00241f416b8"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/vfy45jp6/type/css",
+          "kind": "css",
+          "sha256": "cdf4f4e017344c49c33de0ba395ae1a572781f32c5a6706c1361c8a948d25272",
+          "byteLength": 308,
+          "file": "documents/cdf4f4e017344c49c33de0ba395ae1a572781f32c5a6706c1361c8a948d25272.css",
+          "metadataSha256": "cba8fc442b5aaf7cda08593b6d65c1c3e8caf37ff49e960f2733b1b93493f73a"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/vfy45jp6/type/font",
+          "kind": "font",
+          "sha256": "43ad57b6cec2361ed8c27301f4964e9a8a047ed0556816ae06b465abc9338b90",
+          "byteLength": 2988,
+          "file": "documents/43ad57b6cec2361ed8c27301f4964e9a8a047ed0556816ae06b465abc9338b90.woff",
+          "metadataSha256": "3ca5761f957208ec309e011eebc14255b322a69b8f5f5873fe8d9c7c56855eb1"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/w0bdxf87/type/css",
+          "kind": "css",
+          "sha256": "0e944dce6e62b58867474536cd525f22c5482142bc068f3a371c1682cb0bfa19",
+          "byteLength": 308,
+          "file": "documents/0e944dce6e62b58867474536cd525f22c5482142bc068f3a371c1682cb0bfa19.css",
+          "metadataSha256": "523ec8c44ba9e21581540829f4949383c597db42af15cc5f093a16b78d0de02f"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/w0bdxf87/type/font",
+          "kind": "font",
+          "sha256": "476dcf0a125b84565fc69e18ccf1e6d3afbe3822d3da2d5a427501d5d3990a84",
+          "byteLength": 114716,
+          "file": "documents/476dcf0a125b84565fc69e18ccf1e6d3afbe3822d3da2d5a427501d5d3990a84.woff",
+          "metadataSha256": "581bfe2e27454abaddd221651042f70d3621fb54bd05cf0d848d4c61b29cfb5a"
+        }
+      ]
+    },
+    {
+      "fixture": {
+        "id": "031DS4G3DC000000VS5489BUVUR5FS5A",
+        "zapisnikId": "de-fussball-031DS4G3DC000000VS5489BUVUR5FS5A",
+        "url": "https://www.fussball.de/spiel/sv-spielberg-ts-mosbach/-/spiel/031DS4G3DC000000VS5489BUVUR5FS5A",
+        "krog": 9,
+        "datum": "2026-10-10",
+        "ura": "15:30",
+        "domaci": "SV Spielberg",
+        "gostje": "TS Mosbach",
+        "rezultat": {
+          "domaci": 6,
+          "gostje": 0
+        }
+      },
+      "defect": {
+        "code": "FUSSBALL_REPORT_INVALID",
+        "reason": "fussball statistika: fussball: igralec brez profilne povezave",
+        "kind": "anonymous-starter"
+      },
+      "observedFontIds": [
+        "0r5aniro",
+        "1k89tjdz",
+        "cde86043",
+        "m3nvlsiw",
+        "oos4npti",
+        "oozt2pvo",
+        "rhqd2dn5",
+        "uwh4zvny",
+        "zsz37l8c"
+      ],
+      "documents": [
+        {
+          "url": "https://www.fussball.de/spiel/sv-spielberg-ts-mosbach/-/spiel/031DS4G3DC000000VS5489BUVUR5FS5A",
+          "kind": "report",
+          "sha256": "82a35fd2beccabfa4821bc178ae80a61c030535fdc8126ced3577278945e7287",
+          "byteLength": 196950,
+          "file": "documents/82a35fd2beccabfa4821bc178ae80a61c030535fdc8126ced3577278945e7287.html",
+          "metadataSha256": "e639a95e7d713691c1b0c82af510870ac47b8baf6ee7693da2df5e406b49985e"
+        },
+        {
+          "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G3DC000000VS5489BUVUR5FS5A",
+          "kind": "lineup",
+          "sha256": "927a7761a67c4928ac7b9e564a7365a3460bd40671762946b1d430777eef2ad0",
+          "byteLength": 26378,
+          "file": "documents/927a7761a67c4928ac7b9e564a7365a3460bd40671762946b1d430777eef2ad0.html",
+          "metadataSha256": "6a064cbfc97058371e362232d06581fdab3f696a133d02c771474a9385b8da46"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/1k89tjdz/type/css",
+          "kind": "css",
+          "sha256": "f5107f532e1d642e65e6649601adf8fed854db9cc9c646de8fef8a247af21eba",
+          "byteLength": 308,
+          "file": "documents/f5107f532e1d642e65e6649601adf8fed854db9cc9c646de8fef8a247af21eba.css",
+          "metadataSha256": "3a25bfab1f56e3abbce78394bee0f4bcda3647dde2741cd34bc44c2291fd113a"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/1k89tjdz/type/font",
+          "kind": "font",
+          "sha256": "9eed8c897b35af68c7993b53d262e5d021c6cc995e57ab4151a25d3f671e2393",
+          "byteLength": 2984,
+          "file": "documents/9eed8c897b35af68c7993b53d262e5d021c6cc995e57ab4151a25d3f671e2393.woff",
+          "metadataSha256": "c6aa65e0f9ee32a455d6fbef17e496f17368bad3d9106e799f5a9b1eb1840b50"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/cde86043/type/css",
+          "kind": "css",
+          "sha256": "b007e69e068bc9e66856d52f527b0f41455cff03f4e9be343dc039c8c1dce398",
+          "byteLength": 308,
+          "file": "documents/b007e69e068bc9e66856d52f527b0f41455cff03f4e9be343dc039c8c1dce398.css",
+          "metadataSha256": "bca8ba50eb6b6ee17b9418da560f5481f61abaa1333b617934f2444f9b703f11"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/cde86043/type/font",
+          "kind": "font",
+          "sha256": "a4edd71916546ed99ab70379dc7a7dbf0cc4533886f3d00e62aaee6f56d4dc88",
+          "byteLength": 2988,
+          "file": "documents/a4edd71916546ed99ab70379dc7a7dbf0cc4533886f3d00e62aaee6f56d4dc88.woff",
+          "metadataSha256": "e207e0ce03f17b9313f9c8e54f601258d6f587ad120384bfd22701e20546f1e9"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/m3nvlsiw/type/css",
+          "kind": "css",
+          "sha256": "8909c311242d994ab27420687800b33da8230a1caa3a5082135c67adf94651ef",
+          "byteLength": 308,
+          "file": "documents/8909c311242d994ab27420687800b33da8230a1caa3a5082135c67adf94651ef.css",
+          "metadataSha256": "5f274817c0b130e0c49d7921aa033ebcbe4c6f07740d8ddffca75c147e987da5"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/m3nvlsiw/type/font",
+          "kind": "font",
+          "sha256": "e93493a985b2c5d6a6904aa290599e06f11720819a49bbad76090d00b9816c64",
+          "byteLength": 114712,
+          "file": "documents/e93493a985b2c5d6a6904aa290599e06f11720819a49bbad76090d00b9816c64.woff",
+          "metadataSha256": "f36ac5f89161034122bafb3105b8c512899271fb93cbe3e703df2dc21cb1b21d"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/oos4npti/type/css",
+          "kind": "css",
+          "sha256": "a28052da21497c233276360cdae8e7836615762eed7ae5aafe7777db4649cd17",
+          "byteLength": 308,
+          "file": "documents/a28052da21497c233276360cdae8e7836615762eed7ae5aafe7777db4649cd17.css",
+          "metadataSha256": "da11a7c87f3ca4043df7bfd5bd0ff8c9ee588e0a8918066c192fd834c254125d"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/oos4npti/type/font",
+          "kind": "font",
+          "sha256": "7548cfa0a0049895e675aaec2ebac538f517324be16226c8afb9b3185ed61efc",
+          "byteLength": 114716,
+          "file": "documents/7548cfa0a0049895e675aaec2ebac538f517324be16226c8afb9b3185ed61efc.woff",
+          "metadataSha256": "192681623dcf97161de8b51208ae8e5c04c77717206edfa41c5c1f18132250ba"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/oozt2pvo/type/css",
+          "kind": "css",
+          "sha256": "9bf01c0818d3fc82b28d43515cf83fe449f6e610adcc9f4fed591f5adeb5d486",
+          "byteLength": 308,
+          "file": "documents/9bf01c0818d3fc82b28d43515cf83fe449f6e610adcc9f4fed591f5adeb5d486.css",
+          "metadataSha256": "4c05c333d6c025abca0f4254260dc0602950a9b7d590ee95e7abaa6c4f3f8a61"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/oozt2pvo/type/font",
+          "kind": "font",
+          "sha256": "767c6270d0f49692b7891a490f3a76bd1a4f9da42c35dc6b3368d3cdd2ae816b",
+          "byteLength": 15360,
+          "file": "documents/767c6270d0f49692b7891a490f3a76bd1a4f9da42c35dc6b3368d3cdd2ae816b.woff",
+          "metadataSha256": "09fdeddae47a4968861d0cdaba1ae808f0a19315d1eb0495b471f406a04a9b40"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/rhqd2dn5/type/css",
+          "kind": "css",
+          "sha256": "6108ebebdb28151d2c882415925cc6fc690a9d7c4050e15f108c730d05e138f0",
+          "byteLength": 308,
+          "file": "documents/6108ebebdb28151d2c882415925cc6fc690a9d7c4050e15f108c730d05e138f0.css",
+          "metadataSha256": "ff03aff8fe67c6360ecbf22f017927e973c3fbff5367d415cee7d28c9bd65672"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/rhqd2dn5/type/font",
+          "kind": "font",
+          "sha256": "ac0612206f4276f151d2459f0359c93c4d98a003dee584b0f15bf7a2d9ce5221",
+          "byteLength": 15360,
+          "file": "documents/ac0612206f4276f151d2459f0359c93c4d98a003dee584b0f15bf7a2d9ce5221.woff",
+          "metadataSha256": "a28439c1fe5a30e7094232a297423d7cf1191347ca1bb6ac6f5de8e5f2f72573"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/zsz37l8c/type/css",
+          "kind": "css",
+          "sha256": "81c45e693e122faebc4930f1545f24c77e8d79397e45a69b4a6f5231413150e7",
+          "byteLength": 308,
+          "file": "documents/81c45e693e122faebc4930f1545f24c77e8d79397e45a69b4a6f5231413150e7.css",
+          "metadataSha256": "20af4c79c152e4a8048ec0c71794c2869cdd0e311ecfa1405d1f124c80c5ad3b"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/zsz37l8c/type/font",
+          "kind": "font",
+          "sha256": "9f0b5638d1a3e85b12bdcd28861afd320edc31042bffaecea860a07dcef24e5e",
+          "byteLength": 114712,
+          "file": "documents/9f0b5638d1a3e85b12bdcd28861afd320edc31042bffaecea860a07dcef24e5e.woff",
+          "metadataSha256": "9d9b26dc525e6794e1992f72d5914eab0d1d646d291d4b4a4e8803daab231299"
+        }
+      ]
+    },
+    {
+      "fixture": {
+        "id": "031DS4G2N4000000VS5489BUVUR5FS5A",
+        "zapisnikId": "de-fussball-031DS4G2N4000000VS5489BUVUR5FS5A",
+        "url": "https://www.fussball.de/spiel/ts-mosbach-vfb-eppingen/-/spiel/031DS4G2N4000000VS5489BUVUR5FS5A",
+        "krog": 10,
+        "datum": "2026-10-18",
+        "ura": "15:00",
+        "domaci": "TS Mosbach",
+        "gostje": "VfB Eppingen",
+        "rezultat": {
+          "domaci": 1,
+          "gostje": 4
+        }
+      },
+      "defect": {
+        "code": "FUSSBALL_REPORT_INVALID",
+        "reason": "fussball statistika: fussball: gol neaktivnega igralca",
+        "kind": "same-clock-outgoing-scorer"
+      },
+      "observedFontIds": [
+        "4m27drse",
+        "6dp7ooob",
+        "8flvuhzg",
+        "9o8ucfdc",
+        "bjf4morj",
+        "dam5131j",
+        "l7zmqjah",
+        "xdh9ae07",
+        "yufei9fq"
+      ],
+      "documents": [
+        {
+          "url": "https://www.fussball.de/spiel/ts-mosbach-vfb-eppingen/-/spiel/031DS4G2N4000000VS5489BUVUR5FS5A",
+          "kind": "report",
+          "sha256": "ccf406e903aa165c8ae258f3360f9d9fcff9279f7dd1ef53717a6ebf874b52f1",
+          "byteLength": 194078,
+          "file": "documents/ccf406e903aa165c8ae258f3360f9d9fcff9279f7dd1ef53717a6ebf874b52f1.html",
+          "metadataSha256": "c5b8af6208f0954af76a79716e3c34ae9fbcc63c0e9384acca4805aff4f91426"
+        },
+        {
+          "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G2N4000000VS5489BUVUR5FS5A",
+          "kind": "lineup",
+          "sha256": "511c7db4452f44cff6172a5daad4cdc3620edca4d3e6564476dfe16899a6f112",
+          "byteLength": 25329,
+          "file": "documents/511c7db4452f44cff6172a5daad4cdc3620edca4d3e6564476dfe16899a6f112.html",
+          "metadataSha256": "c4a503f5a076446ea89f47278cb46630ca2c648cb5ce86c134f7b319239330c3"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/4m27drse/type/css",
+          "kind": "css",
+          "sha256": "b7432277d961470459cdb02c354f9a5c3501b94b205e8a284a197c7a85c1e8d0",
+          "byteLength": 308,
+          "file": "documents/b7432277d961470459cdb02c354f9a5c3501b94b205e8a284a197c7a85c1e8d0.css",
+          "metadataSha256": "04475b1dfe7beaa3dd8cd4219a4811153479be6ec5a3023e27811aa21d936b0a"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/4m27drse/type/font",
+          "kind": "font",
+          "sha256": "4c66f71636934446e3af35b887428d1a46a856a7151433c3dad0a35060c2e32e",
+          "byteLength": 2988,
+          "file": "documents/4c66f71636934446e3af35b887428d1a46a856a7151433c3dad0a35060c2e32e.woff",
+          "metadataSha256": "c499e52f574c8f4264293f1ab589688f190342c568da09c1c40b18210523c333"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/6dp7ooob/type/css",
+          "kind": "css",
+          "sha256": "6e9da312b0029d212a47fc5d04a29debc2339906827ced880eed63f5a28f72c6",
+          "byteLength": 308,
+          "file": "documents/6e9da312b0029d212a47fc5d04a29debc2339906827ced880eed63f5a28f72c6.css",
+          "metadataSha256": "9c0a15b12ae8e903287a70492d928966521f710baef683bf59cc80455f7821a9"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/6dp7ooob/type/font",
+          "kind": "font",
+          "sha256": "83ab18bc802347ff3a8f00d1a84ea08eaa20dd5ba0607bdaf4348089b7528ecf",
+          "byteLength": 114720,
+          "file": "documents/83ab18bc802347ff3a8f00d1a84ea08eaa20dd5ba0607bdaf4348089b7528ecf.woff",
+          "metadataSha256": "f3d81bfc82b1ea4b1f34c848318af36a02aa2cdce64053601976b32c177dd959"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/8flvuhzg/type/css",
+          "kind": "css",
+          "sha256": "c3de57fbd59d98d84eb2a38f32fdc6f5660dc4882c0d88d6c8af843792217183",
+          "byteLength": 308,
+          "file": "documents/c3de57fbd59d98d84eb2a38f32fdc6f5660dc4882c0d88d6c8af843792217183.css",
+          "metadataSha256": "b2f81e2e39efd5e56c009e4583cb9f1d9cf65fc536c07868a54a9fc34bfd9b58"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/8flvuhzg/type/font",
+          "kind": "font",
+          "sha256": "bee3d2f5dfee70a3b7d0342d1e00a23fc88c54710f5d32bb7c9c5f89a4529eb7",
+          "byteLength": 2984,
+          "file": "documents/bee3d2f5dfee70a3b7d0342d1e00a23fc88c54710f5d32bb7c9c5f89a4529eb7.woff",
+          "metadataSha256": "2508b5257b7bbc48321c076b8820d606ce0cbf78fef7d08ab6c86ea71f337df4"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/bjf4morj/type/css",
+          "kind": "css",
+          "sha256": "b3e3266a54fee80a8d3e89cb373648cefdc9fe8c1949bed7ab3e3b6dab9a3445",
+          "byteLength": 308,
+          "file": "documents/b3e3266a54fee80a8d3e89cb373648cefdc9fe8c1949bed7ab3e3b6dab9a3445.css",
+          "metadataSha256": "95d946440f0545954fcccf0db0beef350230270ca83a0300f3e1ac08a1ffa67e"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/bjf4morj/type/font",
+          "kind": "font",
+          "sha256": "820d4086d2e0a9b4de002a28e24239f58db046cf6c4b9b0e9954a0e32475601d",
+          "byteLength": 114712,
+          "file": "documents/820d4086d2e0a9b4de002a28e24239f58db046cf6c4b9b0e9954a0e32475601d.woff",
+          "metadataSha256": "683dc4c89d980addf7efb22221b886f469e5ac93a54cf90b1cc0ccee41018a73"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/l7zmqjah/type/css",
+          "kind": "css",
+          "sha256": "58b816074f67ed48dc701b1966352cca6d371de5b6586f85f2119f7765834936",
+          "byteLength": 308,
+          "file": "documents/58b816074f67ed48dc701b1966352cca6d371de5b6586f85f2119f7765834936.css",
+          "metadataSha256": "4ee426c1660e2b6d0d6a78dca7673c63be855ab11be40a1499bdca537ac29dd9"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/l7zmqjah/type/font",
+          "kind": "font",
+          "sha256": "d86e1242e47b381f7f334cdc166b9c7343c81d87d437998311bbeba938195861",
+          "byteLength": 15356,
+          "file": "documents/d86e1242e47b381f7f334cdc166b9c7343c81d87d437998311bbeba938195861.woff",
+          "metadataSha256": "17d90e447f41e9c0aee5f5472defd37c0305966ec56c1cb4c4537e6830a69df7"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/id/xdh9ae07/type/css",
+          "kind": "css",
+          "sha256": "03b9098fab23a83e972ded03245231f026c1b830c81f09310a245c6238149ae4",
+          "byteLength": 308,
+          "file": "documents/03b9098fab23a83e972ded03245231f026c1b830c81f09310a245c6238149ae4.css",
+          "metadataSha256": "f5f47e5d508a238cf7da2bb7209c55654ad6a3412bceb1e26cfc00ce22cf79c1"
+        },
+        {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/xdh9ae07/type/font",
+          "kind": "font",
+          "sha256": "1559543c0a5d92a2fa58d28398967b51dd61815845787e1911155ad5ae4ee349",
+          "byteLength": 2984,
+          "file": "documents/1559543c0a5d92a2fa58d28398967b51dd61815845787e1911155ad5ae4ee349.woff",
+          "metadataSha256": "45337171424ea23cbdd6e8b6fb944da98ce4264c551a82687d9ba9abe86b64ec"
+        }
+      ]
+    }
+  ]
+}
