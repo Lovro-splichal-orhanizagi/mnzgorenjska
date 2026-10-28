@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 const text=readFileSync(new URL('../.github/workflows/uvoz-fcf-zgodovina.yml',import.meta.url),'utf8'),jobs=Object.fromEntries([...text.matchAll(/^  ([a-z0-9-]+):\n([\s\S]*?)(?=^  [a-z0-9-]+:\n|$(?![\s\S]))/gm)].map(m=>[m[1],m[2]]))
 test('only source-free seed/approval/originals stages have bounded draft access',()=>{
- const writable=Object.entries(jobs).filter(([,body])=>/contents: write/.test(body)).map(([name])=>name).sort();assert.deepEqual(writable,['cleanup-originals','missing-inventory-approval','missing-inventory-seed','target-approval'])
+ const writable=Object.entries(jobs).filter(([,body])=>/contents: write/.test(body)).map(([name])=>name).sort();assert.deepEqual(writable,['cleanup-originals','future-target-approval','missing-inventory-approval','missing-inventory-seed','target-approval'])
  for(const name of writable)assert.doesNotMatch(jobs[name],/SUPABASE|SERVICE_ROLE|DEPLOY_SSH_KEY|--mode capture/)
  for(const name of['missing-inventory-consume','missing-inventory-g1','missing-inventory-g9','missing-inventory-receipt'])assert.doesNotMatch(jobs[name],/SUPABASE|SERVICE_ROLE|secrets\.|contents: write/)
 })
