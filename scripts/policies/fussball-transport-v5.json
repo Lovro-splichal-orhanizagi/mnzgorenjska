@@ -1,0 +1,49 @@
+{
+  "preset": "baden-reviewed-transports-v5",
+  "workflow": ".github/workflows/preveri-fussball-dopolni.yml",
+  "priorRequests": 1568,
+  "totalRequestCap": 5000,
+  "scope": {
+    "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+    "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+    "season": "2026/27"
+  },
+  "parent": {
+    "runId": "40633575248",
+    "sourceCommit": "d25c9b0bac906e2b9f7ad13e749a724e7b6fac77",
+    "jobId": "122635315475",
+    "archiveJobId": "122637455223",
+    "handoffJobId": "122637457829",
+    "artifactId": "12792682270",
+    "artifactDigest": "sha256:2594c73db26a0813ac95214bca3c50b6f01eda61938cc8b2c54457b69c629fb5",
+    "artifactSize": 55733892,
+    "requests": 51,
+    "documentsCount": 72,
+    "options": {
+      "seedUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+      "staffel": "03188V27L800000JVS5489BTVU7GTVLE-G",
+      "season": "2026/27",
+      "maxRequests": 483,
+      "reportLimit": null,
+      "asOfDate": "2026-10-28",
+      "cardPolicy": "community-v1"
+    },
+    "codeSha256": "3405a488465913bb31b4e390862fd7123a6d104c597fd973daf9e179fd167b9a",
+    "createdAt": "2026-10-28T04:41:58.739Z",
+    "completedAt": "2026-10-28T04:47:00.001Z",
+    "manifestSha256": "f8b08fe6833f1e7274e54018d525d9db94ee1f2d5d93b31d91c5c464771e448c",
+    "attemptsSha256": "a1535d92d4b593cc275b01857bbac2bb0ea14697040f9170d8d2280d50932a28",
+    "progressSha256": "1d584b7ec716f6460774a73d9001dc18084b88ed26bf6b128d8f3e62611eeec3",
+    "outcomesSha256": "98dea73f0fe9a7f88bf65c8fe4e8f2596f2914a1fd5e4dc218fd3cd729d0d6ff",
+    "terminal": {
+      "number": 51,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/spieltag/17/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+      "kind": "round",
+      "startedAt": "2026-10-28T04:46:59.748Z",
+      "status": "failed",
+      "error": "fetch failed"
+    }
+  },
+  "documentsCount": 725,
+  "documentsSha256": "98fc4a89f86afef24d8417afd000fb74ecab7f7f3fa5a41a01a65db3e01ce5c0"
+}

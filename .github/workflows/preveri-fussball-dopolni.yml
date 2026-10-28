@@ -16,8 +16,9 @@ on:
           - baden-reviewed-transports-v2
           - baden-reviewed-transports-v3
           - baden-reviewed-transports-v4
+          - baden-reviewed-transports-v5
       current_requests:
-        description: New current request ceiling (v1<=886 after1114; v2<=788 after1212; v3<=577 after1423; v4<=483 after1517, enter483 explicitly)
+        description: New current request ceiling (v1<=886 after1114; v2<=788 after1212; v3<=577 after1423; v4<=483 after1517; v5<=432 after1568, enter432 explicitly)
         type: number
         default: 886
       archive_requests:

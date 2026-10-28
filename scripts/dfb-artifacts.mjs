@@ -19,6 +19,7 @@ export function unpackVerifiedArchive(bytes,digest,kind){
  if(bytes.length>maxArchive||!/^sha256:[a-f0-9]{64}$/.test(digest??'')||`sha256:${sha256(bytes)}`!==digest)throw Error('Artifact ZIP digest mismatch')
  if(kind==='fussball-checkpoint')return unpackFussballCheckpoint(bytes)
  if(kind==='fussball-v4')return unpackFussballV4(bytes)
+ if(kind==='fussball-v5')return unpackFussballV4(bytes,true)
  if(kind==='fussball-resumption')return unpackFussballResumption(bytes)
  if(kind==='fussball-successor-current'||kind==='fussball-successor-archive')return unpackFussballSuccessor(bytes,kind)
  const sixCleanup=kind==='fcf-six-cleanup-prepared'||kind==='fcf-six-cleanup-applied',cleanup=sixCleanup||kind==='fcf-cleanup-prepared'||kind==='fcf-cleanup-applied',fcf=kind==='fcf-history'||cleanup
@@ -141,17 +142,18 @@ function unpackFussballSuccessor(bytes,kind){
 }
 
 // Fixed consumed v3 partial: retain both embedded raw stages, no result.json.
-function unpackFussballV4(bytes){
+function unpackFussballV4(bytes,v5=false){
  const dir=mkdtempSync(join(tmpdir(),'slff-fussball-v4-'))
  try{
   const zip=join(dir,'source.zip');writeFileSync(zip,bytes)
   const names=execFileSync('unzip',['-Z1',zip],{encoding:'utf8',maxBuffer:256*1024}).trimEnd().split('\n')
   const details=execFileSync('unzip',['-Z','-l',zip],{encoding:'utf8',maxBuffer:512*1024}).split('\n')
-  if(names.length!==310||new Set(names).size!==310)throw Error('Invalid v4 artifact entry set')
+  const count=v5?78:310
+  if(names.length!==count||new Set(names).size!==count)throw Error('Invalid fixed transport artifact entry set')
   const files=new Map();let total=0
   for(const name of names){
-   const nested=/^checkpoint\/parents\/40577717778-(?:current|archive)\.(?:json|zip)$/.test(name)
-   if(!nested&&!/^(?:manifest\.json|attempts\.jsonl|progress\.jsonl|documents\/[a-f0-9]{64}\.(?:html|css|woff))$/.test(name))throw Error('Invalid v4 artifact path')
+   const nested=(v5?/^checkpoint\/parents\/40614233934\.(?:json|zip)$/:/^checkpoint\/parents\/40577717778-(?:current|archive)\.(?:json|zip)$/).test(name)
+   if(!nested&&!(v5&&name==='outcomes.jsonl')&&!/^(?:manifest\.json|attempts\.jsonl|progress\.jsonl|documents\/[a-f0-9]{64}\.(?:html|css|woff))$/.test(name))throw Error('Invalid fixed transport artifact path')
    const rows=details.filter(row=>row.endsWith(` ${name}`))
    if(rows.length!==1||!/^-[rwxstST-]{9}\s/.test(rows[0]))throw Error('V4 member must be regular')
    const bound=nested?(name.endsWith('.zip')?60*1024*1024:1024*1024):name.endsWith('.css')?64*1024:name.startsWith('documents/')?8*1024*1024:16*1024*1024
