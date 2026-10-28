@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 5,
+  "kind": "fcf-future-source-execution-claim",
+  "accountingSha256": "1d41b14bb719da63f6e0c431186c1d34c234cad216f4ab292f962457ac8d58df",
+  "priorSourceGETs": 60,
+  "maximumNewSourceGETs": 240,
+  "plannedCumulativeSourceGETs": 300,
+  "repository": "Lovro-splichal-orhanizagi/mnzgorenjska",
+  "workflow": ".github/workflows/uvoz-fcf-zgodovina.yml",
+  "planSha256": "a9a3bb16634bcee8cef78dbb3326acdeab88204b1700c878c11a8f7d9e1b45fd",
+  "sourceCommit": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+  "runId": "40737060608",
+  "runAttempt": "1",
+  "preset": "future-g1-after-failed-g1-v1",
+  "maximumSourceGETs": 478,
+  "claimedUTC": "2026-10-28T17:40:18.779Z",
+  "rulesetSnapshot": {
+    "checkedUTC": "2026-10-28T17:31:52.503Z",
+    "ruleset": {
+      "id": 25355545,
+      "source": "Lovro-splichal-orhanizagi/mnzgorenjska",
+      "source_type": "Repository",
+      "target": "tag",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/tags/fcf-inventory-claim/*"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "update"
+        },
+        {
+          "type": "deletion"
+        }
+      ],
+      "updated_at": "2026-10-18T19:27:53.984Z",
+      "bypass_actors": []
+    }
+  }
+}
