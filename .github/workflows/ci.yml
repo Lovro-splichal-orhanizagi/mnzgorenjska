@@ -78,7 +78,7 @@ jobs:
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
 
       - name: Baden catalog owner and hosted native workflow (offline)
-        run: node --test scripts/test-install-baden-native-catalog.mjs scripts/test-stage-baden-native-composition.mjs scripts/test-fcf-g13-baden-compat.mjs
+        run: node --test scripts/test-install-baden-native-catalog.mjs scripts/test-stage-baden-native-composition.mjs scripts/test-fcf-g13-baden-compat.mjs scripts/test-baden-active-cache-refresh.mjs
 
       - name: Community card voting and provisional round UI (offline)
         run: |
@@ -112,6 +112,11 @@ jobs:
 
       - name: FCF six reviewed source/accounting/policy protocols (source-free)
         run: npm run test:fcf-six
+
+      # Retained private83 positives run with the explicit offline fixture;
+      # public CI runs the source-free route, schema and refusal controls.
+      - name: G1 remainder quarantine and source-history guards (source-free)
+        run: node --test scripts/test-fcf-g1-remainder*.mjs scripts/test-fcf-g1-quarantine-audit.mjs
 
       - name: FCF fresh-source future launch protocol (source-free)
         run: npm run test:fcf-future
