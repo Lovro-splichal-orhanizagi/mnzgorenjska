@@ -58,7 +58,7 @@ BEGIN
       WHERE n.nspname='scout' AND c.relkind IN('r','p') ORDER BY c.oid LOOP
       FOR a IN SELECT attname,atttypid FROM pg_attribute WHERE attrelid=t.oid AND attnum>0 AND NOT attisdropped
         AND attname IN('player_id','competition_id','team_id','podobni') ORDER BY attnum LOOP
-        IF a.atttypid<>CASE WHEN a.attname='podobni' THEN 'bigint[]'::regtype ELSE 'bigint'::regtype END THEN
+        IF a.atttypid<>(CASE WHEN a.attname='podobni' THEN 'bigint[]'::regtype ELSE 'bigint'::regtype END) THEN
           unsupported:=unsupported||jsonb_build_array(jsonb_build_object('schema',t.nspname,'table',t.relname,
             'column',a.attname,'type',format_type(a.atttypid,NULL)));
         ELSE
