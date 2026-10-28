@@ -2,7 +2,7 @@
 // are checked structurally; they are NOT authenticated reader capabilities.
 // No source requests, source admission, claim, launch choice or database writes.
 import {createHash} from 'node:crypto'
-import {deriveFcfInventoryHeader} from './fcf-missing-inventory-plan.mjs'
+import {deriveFcfFutureInventoryHeader} from './fcf-future-source-header.mjs'
 import {parseFcfFutureAuditDocument} from './fcf-current-source-proof.mjs'
 import {getFcfSixPolicy,FCF_SIX_SOURCE_POLICY,verifyFcfSixFreshHistoricalSource} from './fcf-six-historical-policy.mjs'
 import {validateFcfSingleReportSource,najvecStarost} from './viri/fcf.mjs'
@@ -44,7 +44,7 @@ function source(document,competition,now){
 export function proveFcfFutureSourceDocument({competition:c,document:d,now=Date.now()}){
  if(!record(c)||c.id!==797||c.slug!==slug||c.source!=='fcf'||c.source_policy!==FCF_SIX_SOURCE_POLICY||c.source_league_code!==code||c.active!==false||c.sezona_koledarska!==false||Object.hasOwn(c,'season')&&c.season!==season||!Number.isFinite(now)||!Number.isFinite(new Date(now).getTime()))fail('exact inactive G9 current source/policy/calendar/clock required')
  if(!record(d)||!nativeId(d.id)||Number(d.id)<4118349||Number(d.id)>4118588||!Number.isInteger(d.expectedSourceRound)||d.expectedSourceRound<1||d.expectedSourceRound>30)fail('exact G9 source ID and actual round1–30 required')
- const provenance=source(d,c,now),header=deriveFcfInventoryHeader({targetSlug:slug,id:d.id,bytes:Buffer.from(d.html,'utf8')})
+ const provenance=source(d,c,now),header=deriveFcfFutureInventoryHeader({targetSlug:slug,id:d.id,bytes:Buffer.from(d.html,'utf8')})
  // Preserve the shared current-season/source identity check for historical as
  // well as normal pages; no expired prelaunch-date or R6 choice is involved.
  const providerHeader=validateFcfSingleReportSource(d.html,code,{id:`es${d.id}`,tekmovanje:c,sezona:season,danes:now})

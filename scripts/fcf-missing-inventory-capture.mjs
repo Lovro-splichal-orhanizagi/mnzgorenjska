@@ -1,3 +1,4 @@
+import {deriveFcfFutureInventoryHeader,validateFcfFutureInventoryHeaders} from './fcf-future-source-header.mjs'
 import {getFcfSixPlanRetained} from './fcf-six-continuation-plan.mjs'
 import {deriveFcfSixInventoryHeader,validateFcfSixInventoryHeaders} from './fcf-six-source-proof.mjs'
 // Bounded byte-first collector. Native request is an explicit injected boundary.
@@ -38,7 +39,7 @@ export function sealFcfMissingInventoryChild({root,plan,targetSlug,execution}){
 }
 export async function collectFcfMissingInventoryChild({plan,targetSlug,seedEvidence,execution,consumptionProof,batchState,root,request,sourceSlotProof,pause=ms=>new Promise(r=>setTimeout(r,ms)),clock=Date.now,pauseFactor=1}){
  const children=validateFcfInventorySourcePlan({plan,expectedPlanSha256:plan?.planSha256,now:clock()}),child=children.find(c=>c.targetSlug===targetSlug),consumption=requireFcfInventoryConsumption(consumptionProof),g9=isFcfIndependentSourcePlan(plan),six=isFcfSixPlan(plan),future=isFcfFutureSourcePlan(plan),originals=six?getFcfSixPlanRetained(plan).map(d=>({id:d.id,bytes:d.bytesBuffer})):g9?[]:getFcfMissingInventorySeedOriginals(seedEvidence)
- const deriveFcfInventoryHeader=six?deriveFcfSixInventoryHeader:deriveLegacyHeader,validateFcfInventoryHeaders=six?validateFcfSixInventoryHeaders:validateLegacyHeaders
+ const deriveFcfInventoryHeader=future?deriveFcfFutureInventoryHeader:six?deriveFcfSixInventoryHeader:deriveLegacyHeader,validateFcfInventoryHeaders=future?validateFcfFutureInventoryHeaders:six?validateFcfSixInventoryHeaders:validateLegacyHeaders
  if(!child||typeof request!=='function'||typeof pause!=='function'||!Number.isFinite(pauseFactor)||pauseFactor<1||plan.limits.pauseMs*pauseFactor>2147483647||!isAbsolute(root??'')||resolve(root)!==root||!inspect(root,true))fail('exact bounded collector preflight required')
  exactKeys(execution,['repository','workflow','ref','sourceCommit','runId','runAttempt','jobId'],'capture execution')
  if(execution.repository!=='Lovro-splichal-orhanizagi/mnzgorenjska'||execution.workflow!=='.github/workflows/uvoz-fcf-zgodovina.yml'||execution.ref!=='refs/heads/main'||execution.sourceCommit!==plan.sourceCommit||execution.sourceCommit!==consumption.sourceCommit||execution.runId!==consumption.runId||execution.runAttempt!=='1'||!nativeId(execution.jobId)||(!g9&&(seedEvidence.binding.artifactDigest!==plan.seedBinding.artifactDigest||seedEvidence.binding.artifactId!==plan.seedBinding.artifactId))||consumption.planSha256!==plan.planSha256)fail('reserved execution/seed/consumption differs')
