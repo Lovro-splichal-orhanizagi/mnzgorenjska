@@ -14,7 +14,7 @@ function owned(){
 }
 test('owned offline clone: forward DDL and exact Baden preparation transaction',{skip:process.env.SLFF_BADEN_OWNED_SQL!=='1'},()=>{
  owned() // Must precede EACH mutating phase; all SQL here is one rollback phase.
- const migration=readFileSync(new URL('../supabase/migrations/20261028071000_baden_history_cards_composition.sql',import.meta.url),'utf8')
+ const migration=readFileSync(new URL('../supabase/migrations/20261028180000_baden_history_cards_composition.sql',import.meta.url),'utf8')
  const cases=readFileSync(new URL('../supabase/tests/baden-native-history.sql',import.meta.url),'utf8')
  const result=spawnSync('docker',['exec','-i','--user','postgres',name,'psql','-X','-U','supabase_admin','-d','postgres','-v','ON_ERROR_STOP=0'],{input:`BEGIN;\n${migration}\n${cases}\nROLLBACK;\n`,encoding:'utf8',maxBuffer:4*1024*1024})
  assert.equal(result.status,0,result.stderr);assert.doesNotMatch(result.stderr,/ERROR:|FATAL:/,result.stdout+'\n'+result.stderr)

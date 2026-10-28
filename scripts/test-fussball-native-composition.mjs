@@ -44,7 +44,7 @@ test('dedicated workflow is manual read-only and cannot perform football or nati
 
 test('explicit native bulk profile authenticates before filesystem/native use; legacy still follows admission file',async()=>{
  const {loadBulkPack}=await import('./bulk-source-packs.mjs')
- await assert.rejects(loadBulkPack('/definitely-missing',{profile:'germany-retained-fussball-native-v1',composition:{}}),/exact derived/)
+ await assert.rejects(loadBulkPack('/definitely-missing',{profile:'germany-retained-fussball-native-v1',composition:{}}),/reader-issued derived composition capability/)
  await assert.rejects(loadBulkPack('/definitely-missing'),/ENOENT/)
 })
 

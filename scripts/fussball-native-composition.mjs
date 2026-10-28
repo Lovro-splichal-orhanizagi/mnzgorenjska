@@ -42,7 +42,7 @@ function fixture(f,rounds){
  if(f.rezultat!==null){closed(f.rezultat,['domaci','gostje'],'closed official score required');need(Object.values(f.rezultat).every(n=>Number.isInteger(n)&&n>=0&&n<=99),'invalid official score')}
  if(Object.hasOwn(f,'administrativeResult')){
   const a=f.administrativeResult;closed(a,['schemaVersion','kind','marker','displayedScores'],'closed administrative source result required')
-  need(f.rezultat===null&&a.schemaVersion===1&&a.kind==='confirmed-administrative-decision'&&a.marker==='V'&&Array.isArray(a.displayedScores)&&a.displayedScores.length===2,'invalid unknown administrative result')
+  need(f.rezultat===null&&a.schemaVersion===1&&((a.kind==='confirmed-administrative-decision'&&a.marker==='V')||(a.kind==='confirmed-sports-court-decision'&&a.marker==='U'&&f.id==='02TNBSVIMS000000VS5489BUVSSD35NB'&&f.krog===21&&f.datum==='2026-03-31'&&same(a.displayedScores,[{domaci:4,gostje:1},{domaci:1,gostje:4}])))&&Array.isArray(a.displayedScores)&&a.displayedScores.length===2,'invalid unknown administrative result')
   for(const s of a.displayedScores){closed(s,['domaci','gostje'],'closed displayed score required');need(Object.values(s).every(n=>Number.isInteger(n)&&n>=0&&n<=99),'invalid displayed score')}
  }
 }

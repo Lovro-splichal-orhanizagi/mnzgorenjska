@@ -93,6 +93,7 @@ async function readCompetition(slug){
  const [{createClient},{tekmovanje},{fetchZaBazo}]=await Promise.all([import('@supabase/supabase-js'),import('./tekmovanje.mjs'),import('./prenos.mjs')])
  const db=createClient(process.env.SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false},global:{fetch:fetchZaBazo()}})
  const row=await tekmovanje(db,slug)
+ if(isBadenNativeCompetition(row)&&row.active===false&&process.env.SLFF_BULK_CAPTURE){const {loadBadenChildContext}=await import('./bulk-baden-native.mjs');return (await loadBadenChildContext(db,row)).competition}
  if(isBadenNativeCompetition(row)&&row.active===true){
   const cache=cacheRoot(slug),seedDirectory=existsSync(join(cache,'latest'))?join(cache,'latest','seed'):join(cache,'bulk-seed')
   return (await loadFussballNativeRuntimeSeed({competition:row,db,directory:seedDirectory})).competition

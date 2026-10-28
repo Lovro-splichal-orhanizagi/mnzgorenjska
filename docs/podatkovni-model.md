@@ -961,3 +961,32 @@ produkcijskih tabel. Izrecna aktivacija uporabi obstoječi
 `vklopi_ligo_sredi_sezone` in preveri `razlika=0` ter ponovno prebere stanje.
 Nordostov `varen_vklop_nemcije` se s tem ne spreminja. Postopek, izvorni
 manifest in Actions sta opisana v `docs/viri/nemcija.md`.
+
+### Sestavljena zgodovina FUSSBALL.DE Baden
+
+Pot `germany-retained-fussball-native-v1` uporablja isti
+`source_policy = 'fussball-community-cards-v1'` in dodatno nespremenljivo
+zgodovinsko politiko. `prepare_fussball_historical_statistics` pred uvozom
+atomarno pripravi obe politiki, dejanske povezave klubov/krogov/tekem in
+zgodovinske glave. Njegov COLD getter zahteva neaktivno prazno ligo brez
+uporabnikov; po običajnem uvozu velja ločen, samo bralni
+`get_fussball_historical_runtime`. Shranjen JSON sam ne podeli dovoljenja.
+
+Dokaz in `record_fussball_card_admission` v2 poleg izvornih zapisnikov,
+čakajočih kartonov, prihodnjega začetnega kroga in trajnega predpomnilnika
+vežeta `historicalPolicySha256`, `historicalInventorySha256`,
+`historicalHeaders`, `unknownResultHeaders`, `partitionCounts` in
+`compositionProofSha256`. Aktivacija pod istimi zaklepi in v isti transakciji
+zahteva obe dovoljenji ter nespremenjeno izvorno, domačo, kartonsko in cenovno
+stanje. V1 mešane zgodovine ne sprejme. Katalog za pravo ligo ostane
+UNFINALIZED do popolnega odobrenega arhiva in dejanskih dokazov.
+
+Vsaka izvorna tekma pripada natanko eni particiji: običajna popolna,
+čakajoča na kartone, še neodigrana, odobrena glava z znanim izidom ali
+odobrena administrativna glava z neznanim končnim izidom. Nedosegljive glave
+imajo `imported_at IS NULL` in nič individualnih vrstic ali kartonskih
+poročil. Administrativna V in točno odobrena sodna U odločitev ohranita oba
+prikazana para ločeno; oba domača gola sta NULL. Obstoječi javni prikaz kaže
+`—`; lestvica in Elo ne določita zmagovalca iz neznanega izida. Znani uradni
+izidi zgodovinskih glav in registriranih čakajočih kartonov štejejo v
+lestvico samo za natančno nameščeno Badenovo povezavo.

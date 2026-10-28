@@ -20,6 +20,7 @@ export async function loadHistoricalStatisticsImportContext(db,original,{sourceO
   if(original.slug==='de-verbandsliga-baden'&&original.source_policy===FUSSBALL_COMMUNITY_SOURCE_POLICY){
     if(sourceOverride||!isBadenNativeCompetition(competition))throw Error('Baden import: exact source/history/cards tuple required')
     const seedDirectory=nativeSeedDirectory??(competition.active===true&&process.env.SLFF_FUSSBALL_CAPTURE?join(process.env.SLFF_FUSSBALL_CAPTURE,'seed'):null)
+    if(!nativeComposition&&!nativePreparation&&!seedDirectory&&process.env.SLFF_BULK_CAPTURE){const {loadBadenChildContext}=await import('../bulk-baden-native.mjs');return loadBadenChildContext(db,competition)}
     if(seedDirectory){const loaded=await loadFussballNativeRuntimeSeed({competition,db,directory:seedDirectory,composition:nativeComposition});return {competition:loaded.competition,installedHistoricalMarkers:loaded.context}}
     return loadFussballNativeImportContext({competition,db,preparation:nativePreparation,composition:nativeComposition})
   }

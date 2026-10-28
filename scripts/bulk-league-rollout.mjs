@@ -1,4 +1,6 @@
 // Collect all selected sources first. Only replayed complete packs reach native writes.
+import {isBadenCompositionCandidate,loadBadenHostedComposition,loadBadenLaunchPack} from './bulk-baden-native.mjs'
+import {prepareFussballNativeHistory} from './prepare-fussball-native-history.mjs'
 import {createHash} from 'node:crypto'
 import {readFileSync,existsSync,mkdirSync,appendFileSync} from 'node:fs'
 import {resolve,join} from 'node:path'
@@ -48,7 +50,7 @@ function requireInactive(candidate,snapshot,{allowUninstalled=false}={}){
  if(snapshot.competition.active!==false||(community?!((allowUninstalled&&snapshot.competition.source_policy===null)||snapshot.competition.source_policy===FUSSBALL_COMMUNITY_SOURCE_POLICY):snapshot.competition.source_policy!==null)||snapshot.competition.date_only_deadline_policy!==null)throw hold('Inactive league with standard policies required.')
  if(!Array.isArray(snapshot.fantasy?.teams)||!Array.isArray(snapshot.fantasy?.lineups)||snapshot.fantasy.teams.length||snapshot.fantasy.lineups.length)throw hold('Existing or unproven fantasy data prevents mutation.')
 }
-export async function runBulkRollout({sourceReport,expectedSha,transport,guard,runCommand,loadPack,verifyNative,activationRunner=runBatch,onCheckpoint=async()=>{},now=()=>new Date(),importOnly=false,activationOnly=false,seedCacheReceipt,runId}){
+export async function runBulkRollout({sourceReport,expectedSha,transport,guard,runCommand,loadPack,verifyNative,activationRunner=runBatch,onCheckpoint=async()=>{},now=()=>new Date(),importOnly=false,activationOnly=false,seedCacheReceipt,runId,loadComposition=loadBadenHostedComposition,prepareComposition=prepareFussballNativeHistory,loadCompositionPack=loadBadenLaunchPack}){
  if(!sourceReport||sourceReport.expected_sha!==expectedSha||sourceReport.phase&&sourceReport.phase!=='source')throw Error('Source batch provenance differs.')
  selection(sourceReport.results.map(r=>r.candidate))
  if(typeof guard!=='function')throw Error('Exact main execution guard required.')
@@ -65,7 +67,26 @@ export async function runBulkRollout({sourceReport,expectedSha,transport,guard,r
   try{
    await ensureGuard()
    // Full byte replay precedes registration or any other mutation.
-   const pack=await loadPack(staged.directory,{candidate,now:now(),requireFresh:true})
+   const baden=staged.profile==='germany-retained-fussball-native-v1'
+   if(baden&&!isBadenCompositionCandidate(candidate))throw hold('Composition profile requires exact Baden candidate.')
+   let pack
+   if(baden){
+    const composition=await loadComposition(staged.directory)
+    if(!activationOnly){
+     const receipt={stage:'history-cards-prepare',status:'RUNNING',started_at:now().toISOString()};result.steps.push(receipt);await save()
+     const preparedTransport={...transport}
+     for(const name of ['register','prepareFussballHistory'])preparedTransport[name]=async(...args)=>{await ensureGuard();mutating=true;const answer=await transport[name](...args);mutating=false;return answer}
+     const preparation=await prepareComposition({composition,transport:preparedTransport})
+     candidate={...candidate,id:preparation.competitionId};result.candidate=candidate;result.profile=staged.profile
+     const competition=(await transport.snapshot(candidate)).competition
+     pack=await loadCompositionPack({competition,composition,preparation,db:transport,seedDirectory:join(staged.directory,'native-seed')})
+     receipt.status='COMPLETED';receipt.completed_at=now().toISOString();await save()
+    }else{
+     const found=await transport.find(candidate);if(!found)throw hold('Prepared Baden registration missing.')
+     candidate={...candidate,id:found.id};result.candidate=candidate;result.profile=staged.profile
+     pack=await loadCompositionPack({competition:(await transport.snapshot(candidate)).competition,composition,db:transport})
+    }
+   }else pack=await loadPack(staged.directory,{candidate,now:now(),requireFresh:true})
    if(!candidate.id){
     if(!transport.register)throw hold('Inactive registration route unavailable.','NEEDS_REGISTRATION')
     await ensureGuard();const found=await transport.find(candidate)
@@ -79,7 +100,7 @@ export async function runBulkRollout({sourceReport,expectedSha,transport,guard,r
    }
    const community=isFussballCommunityCandidate(candidate)
    requireInactive(candidate,await transport.snapshot(candidate),{allowUninstalled:!activationOnly})
-   if(community&&!activationOnly){
+   if(community&&!baden&&!activationOnly){
     if(typeof transport.installCommunityPolicy!=='function')throw hold('Installed community policy route unavailable.')
     await ensureGuard();requireInactive(candidate,await transport.snapshot(candidate),{allowUninstalled:true})
     const receipt={stage:'community-policy',status:'RUNNING',started_at:now().toISOString()};result.steps.push(receipt);await save()
@@ -111,6 +132,7 @@ export async function runBulkRollout({sourceReport,expectedSha,transport,guard,r
    // Detect any intervening native update; source verification is tied to this exact snapshot.
    const finalSnapshot=await transport.snapshot(candidate)
    if(hash(finalSnapshot)!==hash(snapshot))throw hold('Native snapshot changed after strict source proof.')
+   if(baden){result.native_check=inspectFussballCommunityReadiness({candidate,snapshot:finalSnapshot,state:await transport.state(candidate)})}
    if(importOnly){result.status='VERIFIED';result.directory=staged.directory;await save();continue}
    if(community){
     const state=await transport.state(candidate),readiness=inspectFussballCommunityReadiness({candidate,snapshot:finalSnapshot,state})
@@ -121,6 +143,7 @@ export async function runBulkRollout({sourceReport,expectedSha,transport,guard,r
     const receipt={stage:'community-admission',status:'RUNNING',started_at:now().toISOString()};result.steps.push(receipt);await save();mutating=true
     const registered=await transport.recordCommunityAdmission(candidate,admission)
     if(registered?.registered!==true||registered.manifest_sha256!==admission.sha256||registered.pending_inventory_sha256!==admission.manifest.pendingInventorySha256||registered.opening_round_id!==admission.openingRound.id)throw Error('Ambiguous community admission response.')
+    if(baden&&(registered.historical_policy_sha256!==result.proof.historicalPolicySha256||registered.historical_inventory_sha256!==result.proof.historicalInventorySha256))throw Error('Ambiguous composed history admission readback.')
     mutating=false;receipt.status='COMPLETED';receipt.completed_at=now().toISOString();result.community_admission={manifest:admission.manifest,sha256:admission.sha256,receipt:registered};await save()
     await guarded();const admittedSnapshot=await transport.snapshot(candidate),expectedSnapshot=structuredClone(finalSnapshot);expectedSnapshot.competition.prvi_fantasy_krog=admission.openingRound.number
     if(hash(admittedSnapshot)!==hash(expectedSnapshot))throw hold('Native community snapshot changed after admission.')
@@ -129,6 +152,8 @@ export async function runBulkRollout({sourceReport,expectedSha,transport,guard,r
     if(answer?.vklopljena===false){mutating=false;throw hold(answer.razlog??'Native community activation refused.')}
     result.readback=await transport.competition(candidate)
     if(answer?.vklopljena!==true||answer.razlika!==0||answer.prvi_krog!==admission.openingRound.number||result.readback?.active!==true||result.readback.prvi_fantasy_krog!==admission.openingRound.number||result.readback.source_policy!==FUSSBALL_COMMUNITY_SOURCE_POLICY)throw Error('Community activation result/readback differs; inspect persisted state.')
+    if(baden&&(answer.historical_policy_sha256!==result.proof.historicalPolicySha256||answer.historical_inventory_sha256!==result.proof.historicalInventorySha256||answer.composition_proof_sha256!==result.proof.compositionProofSha256))throw Error('Composed activation history/source readback differs.')
+    if(baden){const activeSnapshot=await transport.snapshot(candidate);const before=structuredClone(finalSnapshot.fussball_history),after=activeSnapshot.fussball_history;before.active=true;if(hash(after)!==hash(before))throw Error('Active Baden history/cards/source binding readback differs.')}
     mutating=false;activationReceipt.status='COMPLETED';activationReceipt.completed_at=now().toISOString();result.activation={status:'ACTIVE',first_round:admission.openingRound,...readiness,activation:answer};result.status='ACTIVE';await save();continue
    }
    const receipt={stage:'activate',status:'RUNNING',started_at:now().toISOString()};result.steps.push(receipt);await save()

@@ -12,7 +12,7 @@ function owned(){
 }
 test('owned offline rollback: distinct Baden BOUND getter accepts ordinary imports and refuses immutable drift',{skip:process.env.SLFF_BADEN_RUNTIME_OWNED_SQL!=='1'},()=>{
  const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8')
- const sql=['supabase/migrations/20261028071000_baden_history_cards_composition.sql','supabase/migrations/20261028072000_baden_history_runtime_context.sql','supabase/tests/baden-native-history.sql','supabase/tests/baden-native-runtime.sql'].map(read).join('\n')
+ const sql=['supabase/migrations/20261028180000_baden_history_cards_composition.sql','supabase/migrations/20261028181000_baden_history_runtime_context.sql','supabase/tests/baden-native-history.sql','supabase/tests/baden-native-runtime.sql'].map(read).join('\n')
  owned() // Immediately before the single mutating phase; ALL SQL rolls back.
  const result=spawnSync('docker',['exec','-i','--user','postgres',name,'psql','-X','-U','supabase_admin','-d','postgres','-v','ON_ERROR_STOP=0'],{input:'BEGIN;\n'+sql+'\nROLLBACK;\n',encoding:'utf8',maxBuffer:4*1024*1024})
  assert.equal(result.status,0,result.stderr);assert.doesNotMatch(result.stderr,/ERROR:|FATAL:/,result.stdout+'\n'+result.stderr)

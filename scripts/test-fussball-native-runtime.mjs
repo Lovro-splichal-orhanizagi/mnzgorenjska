@@ -189,7 +189,7 @@ test('TEST ONLY seed JSON cannot alter authenticated pack or original timestamp'
  await assert.rejects(f.api.loadFussballNativeRuntimeSeed({competition,db:f.db,directory:seed}),/manifest differs/)
 })
 test('Baden read-only SQL separates bound runtime from cold no-user/freshness gate',()=>{
- const sql=fs.readFileSync(new URL('../supabase/migrations/20261028072000_baden_history_runtime_context.sql',import.meta.url),'utf8')
+ const sql=fs.readFileSync(new URL('../supabase/migrations/20261028181000_baden_history_runtime_context.sql',import.meta.url),'utf8')
  assert.doesNotMatch(sql,/\b(insert|update|delete)\s+(into|from|public\.)/i)
  assert.doesNotMatch(sql,/not c\.active|currentFreshUntil|fantasy_teams|deadline_at>clock_timestamp/)
  for(const text of ['private_fussball.service()','private_baden_history.catalog','private_baden_history.prepared','m.imported_at is null','not exists(select 1 from appearances','not exists(select 1 from goals','not exists(select 1 from private_fussball.card_reports','public.get_installed_historical_statistics_markers','public.get_fussball_card_policy','to service_role'])assert.ok(sql.includes(text),text)

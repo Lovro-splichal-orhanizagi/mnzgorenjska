@@ -16,7 +16,7 @@ test('production catalog remains closed and empty SQL catalog has no runtime see
  assert.equal(c.status,'UNFINALIZED');assert.equal(c.nativePreparation,null)
  const {compiledBadenHistoricalPolicy}=await import('./lib/fussball-native-history-policy.mjs')
  assert.equal(compiledBadenHistoricalPolicy(),null)
- const sql=readFileSync(new URL('../supabase/migrations/20261028071000_baden_history_cards_composition.sql',import.meta.url),'utf8')
+ const sql=readFileSync(new URL('../supabase/migrations/20261028180000_baden_history_cards_composition.sql',import.meta.url),'utf8')
  assert.match(sql,/create table private_baden_history.catalog/)
  assert.doesNotMatch(sql,/insert into private_baden_history.catalog/i)
  assert.match(sql,/prepare_fussball_historical_statistics/)
