@@ -1,4 +1,14 @@
 import test from 'node:test'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import * as url from 'node:url'
+import * as germany from './bulk-germany-source.mjs'
+import * as nativeImport from './fussball-import.mjs'
+import * as captureEvidence from './fussball-capture-evidence.mjs'
+import * as communityPolicy from './fussball-community-policy.mjs'
+import * as bulkProof from './bulk-native-proof.mjs'
+import * as publicSource from './viri/fussball-public.mjs'
+import {nativeRuntimeFixture,isolatedTestModule} from './fussball-native-runtime-test-fixture.mjs'
 import assert from 'node:assert/strict'
 import {readFileSync,mkdtempSync,mkdirSync,writeFileSync,rmSync} from 'node:fs'
 import {tmpdir} from 'node:os'
@@ -32,11 +42,20 @@ test('ordinary native factory requires installed enabled exact policy and return
  }
  assert.throws(()=>createFussballPublicSource({competition:{...competition,source_policy:null},db,directory:'closed'}),/policy/)
 })
-test('bulk native factory returns pending cards and reserves every historical roster identity after native policy gate',async()=>{
- const db=database(),batch=pendingBatch(),pack={candidate,seasons:[{code,season:candidate.season,...batch}]}
- const source=createBulkCapturedSource({competition,db,directory:'closed-pack',loadPack:async()=>pack})
- const rows=await source.zapisniki(code);assert.equal(rows[0].statisticsPending,true);assert.ok(rows[0].cardEnvelope);assert.throws(()=>source.nastopi(rows[0].z))
- assert.equal(db.calls[0][0],'get_fussball_card_policy');assert.equal(db.calls.find(c=>c[0]==='fussball_reserve_player_ids')[1].p_source_ids.length,batch.cardEnvelopes[0].roster.length)
+test('bulk native factory returns pending cards and reserves every historical roster identity after private native policy gate',async t=>{
+ const f=nativeRuntimeFixture(t,competition),context=await f.context(),reservations=[]
+ const batch=pendingBatch(),identities=new Map(f.pack.seasons.flatMap(s=>s.identities.map(i=>[i.source_id,i.reg_st])))
+ const db={async rpc(name,args){assert.equal(name,'fussball_reserve_player_ids');reservations.push(args.p_source_ids);return {data:args.p_source_ids.map(source_id=>({source_id,reg_st:identities.get(source_id)}))}}}
+ const {createBulkCapturedSource:create}=isolatedTestModule('./viri/bulk-captured.mjs',{...bulkProof,...publicSource,...nativeImport,...f.api},['createBulkCapturedSource'])
+ assert.throws(()=>create({competition,db,directory:'closed-pack'}),/private prepared/)
+ const source=create({competition,db,directory:'closed-pack',installedHistoricalMarkers:context,loadPack:()=>assert.fail('untrusted caller pack cannot supply private runtime authority')})
+ const rows=await source.zapisniki(code),pending=rows.find(r=>r.id===batch.cardEnvelopes[0].reportId)
+ assert.equal(pending.statisticsPending,true);assert.ok(pending.cardEnvelope);assert.throws(()=>source.nastopi(pending.z))
+ assert.deepEqual(pending.cardEnvelope,batch.cardEnvelopes[0]);assert.ok(f.calls.includes('get_fussball_historical_runtime'))
+ assert.deepEqual(f.observed.cards,{installed:true,enabled:true,source_policy:policy,current_code:code,archive_codes:candidate.archives.map(a=>a.code)})
+ const expected=[...new Set(f.pack.seasons.find(s=>s.code===code).identities.map(i=>i.source_id))].sort()
+ assert.deepEqual([...reservations[0]].sort(),expected);assert.ok(batch.cardEnvelopes[0].roster.every(p=>reservations[0].includes(p.sourceId)))
+ assert.equal(Object.hasOwn(pending,'nastopi'),false);assert.equal(Object.hasOwn(pending.z,'goli'),false)
 })
 test('Germany collector passes explicit policy to both current and observed archive while strict candidate remains unchanged',async()=>{
  for(const c of [candidate,GERMANY_BULK_CANDIDATES[0]])for(const code of [c.source_league_code,...c.archives.map(a=>a.code)]){
@@ -44,12 +63,21 @@ test('Germany collector passes explicit policy to both current and observed arch
   await collectGermanySeason(t,c,{client:{},asOfDate:'2026-10-27',collectSeason:async options=>{assert.equal(options.cardPolicy,c===candidate?'community-v1':undefined);return {}}})
  }
 })
-test('nightly preserves pending-card original bytes and explicit policy across warm cache reuse',async()=>{
- const root=mkdtempSync(join(tmpdir(),'community-nightly-')),cacheDirectory=join(root,'cache'),calls=[],batch=pendingBatch()
- const row={...competition,active:true};assert.equal(assertFussballNightlyCompetition(row).communityCards,true)
- try{for(const name of ['one','two'])await prepareFussballNightly({candidate:row,directory:join(root,name),cacheDirectory,now:Date.parse('2026-10-27T12:00:00Z'),captureDirectory:async o=>{calls.push(o);assert.equal(o.options.cardPolicy,'community-v1');mkdirSync(o.directory);writeFileSync(join(o.directory,'manifest.json'),'original bytes')},loadCapture:async(d,o)=>{assert.equal(o.cardPolicy,'community-v1');return batch}})
- assert.equal(calls[1].reuseDirectory,join(cacheDirectory,'latest'));assert.throws(()=>assertFussballNightlyCompetition({...row,source_policy:null}),/policy/)
- }finally{rmSync(root,{recursive:true,force:true})}
+test('nightly preserves pending-card original bytes and explicit policy across bound seed warm cache reuse',async t=>{
+ const f=nativeRuntimeFixture(t,competition),context=await f.context(),root=f.directory,cacheDirectory=join(root,'cache'),calls=[]
+ const nightly=isolatedTestModule('./prepare-fussball-nightly.mjs',{...fs,...path,pathToFileURL:url.pathToFileURL,...germany,...nativeImport,...captureEvidence,...communityPolicy,...f.api,captureFussballNativeRuntimeDirectory:async o=>{calls.push(o);return f.api.captureFussballNativeRuntimeDirectory(o)}},['prepareFussballNightly','seedFussballNightly','assertFussballNightlyCompetition'])
+ f.controls.clock=Date.now()
+ await nightly.seedFussballNightly({candidate:competition,cacheDirectory,installedHistoricalMarkers:context})
+ f.observed.active=true
+ const row={...competition,active:true};assert.equal(nightly.assertFussballNightlyCompetition(row).communityCards,true)
+ for(const name of ['one','two']){
+  await nightly.prepareFussballNightly({candidate:row,db:f.db,directory:join(root,name),cacheDirectory,now:()=>f.controls.clock,fetchFn:async()=>new Response('TEST ONLY synthetic full schedule',{status:200,headers:{'content-type':'text/html'}})})
+  const manifest=JSON.parse(readFileSync(join(root,name,'native-runtime.json'))),report=manifest.documents.find(d=>d.url===pendingBatch().cardEnvelopes[0].sourceUrl)
+  assert.ok(report);assert.deepEqual(readFileSync(join(root,name,report.file)),read('report.html'))
+  assert.equal(manifest.code,code);assert.equal(JSON.parse(readFileSync(join(root,name,'result.json'))).cardPolicy,'community-v1')
+ }
+ assert.equal(calls[0].seedDirectory,join(cacheDirectory,'bulk-seed'));assert.equal(calls[1].reuseDirectory,join(cacheDirectory,'latest'));assert.equal(calls[1].seedDirectory,join(cacheDirectory,'latest','seed'))
+ assert.equal(f.observed.cards.source_policy,policy);assert.throws(()=>nightly.assertFussballNightlyCompetition({...row,source_policy:null}),/policy/)
 })
 const pilot=await import('./fussball-season-pilot.mjs')
 function pilotEnvironment(){const sha='a'.repeat(40),repo='Lovro-splichal-orhanizagi/mnzgorenjska',a=candidate.archives[0];return {SEED_URL:candidate.seedUrl,STAFFEL:code.split(':')[0],SEASON:candidate.season,MAX_REQUESTS:'1000',REPORTS:'all',ARCHIVE_JSON:JSON.stringify({seedUrl:a.seedUrl,staffel:a.code.split(':')[0],season:a.season,maxRequests:1000,observedSeedUrl:a.observedSeedUrl}),PRIOR_REQUESTS:'961',TOTAL_REQUEST_CAP:'5000',ROLLOUT_CANDIDATE:candidate.slug,EXPECTED_SHA:sha,GITHUB_SHA:sha,GITHUB_REF:'refs/heads/main',GITHUB_REPOSITORY:repo,GITHUB_RUN_ATTEMPT:'1',GITHUB_RUN_ID:'40000000000',GITHUB_EVENT_NAME:'workflow_dispatch',GITHUB_WORKFLOW_REF:repo+'/.github/workflows/preveri-fussball-sezono.yml@refs/heads/main'}}

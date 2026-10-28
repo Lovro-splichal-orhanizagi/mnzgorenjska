@@ -20,6 +20,7 @@ import { createHash } from 'node:crypto'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
 import {loadHistoricalStatisticsImportContext,assertHistoricalReportImportable,skipIncompleteArchiveReport} from './lib/historical-statistics-import.mjs'
+import {isBadenNativeCompetition} from './fussball-native-runtime.mjs'
 import { zaprtje } from './odtis-kode.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { vseVrstice } from './strani.mjs'
@@ -355,6 +356,10 @@ async function igralecId(
   polnoIme,
   { vratar, st, dvoumno = false, zasedeni = null, regSt = null, pozicija = null, opozorila = null, datum = null, tekma = null },
 ) {
+  // Baden archive supplies history, while only current reports establish active
+  // membership and goalkeeper position. A historic keeper is not a current GK.
+  const badenArchive=isBadenNativeCompetition(tekmovanje)&&!tekocaSezona
+  if(badenArchive){vratar=false;pozicija=null}
   // Oznaka vratarja iz enega zapisnika naredi vratarja le igralca, čigar
   // pozicije še ne poznamo (ali je ugibana). Znanega igralca iz polja ne
   // prekrsti: Labaška (Smrečany) je bil po eni oznaki vratar s 49 goli na 52
@@ -496,6 +501,7 @@ async function igralecId(
         reg_st: regSt,
         position: vratar ? 'GK' : pozicija,
         position_source: vratar || pozicija ? 'zapisnik' : 'neznano',
+        ...(badenArchive?{active:false}:{}),
       })
       .select('id')
       .single()

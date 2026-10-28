@@ -18,6 +18,7 @@ on:
           - baden-reviewed-transports-v4
           - baden-reviewed-transports-v5
           - baden-reviewed-archive-v6
+          - baden-reviewed-archive-v7
       current_requests:
         description: New current request ceiling (v1<=886 after1114; v2<=788 after1212; v3<=577 after1423; v4<=483 after1517; v5<=432 after1568, enter432 explicitly; archive-v6 must enter0)
         type: number
@@ -36,7 +37,7 @@ env:
   COMPLETION_ARCHIVE_REQUESTS: ${{ inputs.archive_requests }}
 jobs:
   capture:
-    if: inputs.checkpoint_preset != 'baden-reviewed-archive-v6' && github.ref == 'refs/heads/main'
+    if: inputs.checkpoint_preset != 'baden-reviewed-archive-v6' && inputs.checkpoint_preset != 'baden-reviewed-archive-v7' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     outputs:
@@ -81,7 +82,7 @@ jobs:
           retention-days: 90
   archive:
     needs: capture
-    if: inputs.checkpoint_preset != 'baden-reviewed-archive-v6' && github.ref == 'refs/heads/main' && needs.capture.result == 'success' && needs.capture.outputs.archive_allowed == 'true'
+    if: inputs.checkpoint_preset != 'baden-reviewed-archive-v6' && inputs.checkpoint_preset != 'baden-reviewed-archive-v7' && github.ref == 'refs/heads/main' && needs.capture.result == 'success' && needs.capture.outputs.archive_allowed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
@@ -113,7 +114,7 @@ jobs:
           retention-days: 90
   handoff:
     needs: [capture, archive]
-    if: inputs.checkpoint_preset != 'baden-reviewed-archive-v6' && github.ref == 'refs/heads/main' && needs.capture.result == 'success' && needs.archive.result == 'success'
+    if: inputs.checkpoint_preset != 'baden-reviewed-archive-v6' && inputs.checkpoint_preset != 'baden-reviewed-archive-v7' && github.ref == 'refs/heads/main' && needs.capture.result == 'success' && needs.archive.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -140,7 +141,7 @@ jobs:
         run: node scripts/fussball-completion-actions.mjs handoff current-capture archive-capture
 
   archive-continuation:
-    if: inputs.checkpoint_preset == 'baden-reviewed-archive-v6' && github.ref == 'refs/heads/main'
+    if: (inputs.checkpoint_preset == 'baden-reviewed-archive-v6' || inputs.checkpoint_preset == 'baden-reviewed-archive-v7') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
@@ -160,30 +161,37 @@ jobs:
         with:
           node-version: '22'
       - name: Validate exact archive-only V6 scope and1838 spent budget
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v6'
         run: node scripts/fussball-archive-v6-actions.mjs validate
       - name: Focused offline archive continuation checks
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v6'
         run: node --test scripts/test-fussball-archive-v6.mjs scripts/test-fussball-court-40641606028.mjs
       - name: Authenticate actual V5 parents and execute frozen DE77 default verifier
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v6'
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/fussball-archive-v6-actions.mjs parents continuation-input frozen-de77
       - name: Exercise genuine retained originals offline before source
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v6'
         env:
           FUSSBALL_V6_TEST_PARENTS: continuation-input
           FUSSBALL_V6_TEST_FROZEN: frozen-de77
         run: node --test scripts/test-fussball-archive-v6.mjs
       - name: Share host pacing with older nightly and bulk readers
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v6'
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/bulk-source-coordination.mjs
       - name: Capture only fresh archive rounds and missing originals without database credentials
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v6'
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/fussball-archive-v6-actions.mjs capture continuation-input frozen-de77 capture-archive-v6
       - name: Reauthenticate detached originals and replay archive with no network
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v6'
         run: node scripts/fussball-archive-v6-actions.mjs verify continuation-input frozen-de77 capture-archive-v6
       - name: Preserve V6 archive originals and all counted attempts
-        if: always()
+        if: always() && inputs.checkpoint_preset == 'baden-reviewed-archive-v6'
         uses: actions/upload-artifact@v4
         with:
           name: fussball-season-archive-v6-${{ github.run_id }}
@@ -191,10 +199,63 @@ jobs:
           if-no-files-found: ignore
           retention-days: 90
       - name: Preserve source-only attestation separately from immutable historical parents
-        if: always()
+        if: always() && inputs.checkpoint_preset == 'baden-reviewed-archive-v6'
         uses: actions/upload-artifact@v4
         with:
           name: fussball-archive-v6-source-attestation-${{ github.run_id }}
           path: archive-v6-source-attestation.json
+          if-no-files-found: ignore
+          retention-days: 90
+      - uses: actions/checkout@v4
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v7'
+        with:
+          ref: 4e1e7caac02aa6e12c789c7cea7aac699d3c2566
+          path: frozen-v6
+          persist-credentials: false
+      - name: Validate exact archive-only V7 scope and1952 spent budget
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v7'
+        run: node scripts/fussball-archive-v7-actions.mjs validate
+      - name: Focused offline V7 boundary checks
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v7'
+        run: node --test scripts/test-fussball-archive-v7.mjs
+      - name: Authenticate V5 current and exact failed V6 through clean frozen DE77 and4e
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v7'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/fussball-archive-v7-actions.mjs parents continuation-v7-input frozen-de77 frozen-v6
+      - name: Exercise genuine V7 ledger and resource boundaries offline
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v7'
+        env:
+          FUSSBALL_V7_TEST_INPUT: continuation-v7-input
+          FUSSBALL_V7_TEST_DE77: frozen-de77
+          FUSSBALL_V7_TEST_V6: frozen-v6
+        run: node --test scripts/test-fussball-archive-v7.mjs
+      - name: Share host pacing immediately before V7 source guard
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v7'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/bulk-source-coordination.mjs
+      - name: Capture V7 fresh archive only after authenticated1952 spent history
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v7'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/fussball-archive-v7-actions.mjs capture continuation-v7-input frozen-de77 frozen-v6 capture-archive-v7
+      - name: Reauthenticate V7 detached originals and replay without network
+        if: inputs.checkpoint_preset == 'baden-reviewed-archive-v7'
+        run: node scripts/fussball-archive-v7-actions.mjs verify continuation-v7-input frozen-de77 frozen-v6 capture-archive-v7
+      - name: Preserve V7 originals and every counted partial attempt
+        if: always() && inputs.checkpoint_preset == 'baden-reviewed-archive-v7'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fussball-season-archive-v7-${{ github.run_id }}
+          path: capture-archive-v7/
+          if-no-files-found: ignore
+          retention-days: 90
+      - name: Preserve V7 source-only attestation separately
+        if: always() && inputs.checkpoint_preset == 'baden-reviewed-archive-v7'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fussball-archive-v7-source-attestation-${{ github.run_id }}
+          path: archive-v7-source-attestation.json
           if-no-files-found: ignore
           retention-days: 90

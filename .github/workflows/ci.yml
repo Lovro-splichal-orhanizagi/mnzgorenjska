@@ -77,6 +77,9 @@ jobs:
       - name: German amateur source collection and offline evidence
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
 
+      - name: Baden catalog owner and hosted native workflow (offline)
+        run: node --test scripts/test-install-baden-native-catalog.mjs scripts/test-stage-baden-native-composition.mjs scripts/test-fcf-g13-baden-compat.mjs
+
       - name: Community card voting and provisional round UI (offline)
         run: |
           npx playwright install --with-deps chromium

@@ -1,5 +1,25 @@
 [
   [
+    "private_baden_history.club_bindings",
+    "competition_id",
+    "competitions"
+  ],
+  [
+    "private_baden_history.club_bindings",
+    "team_id",
+    "teams"
+  ],
+  [
+    "private_baden_history.prepared",
+    "competition_id",
+    "competitions"
+  ],
+  [
+    "private_baden_history.prepared",
+    "opening_round_id",
+    "rounds"
+  ],
+  [
     "private_dfb_pending.evidence",
     "competition_id",
     "competitions"

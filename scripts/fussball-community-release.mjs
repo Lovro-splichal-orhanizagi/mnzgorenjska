@@ -1,5 +1,6 @@
 // The reviewed community route keeps the ordinary readiness assessment intact.
 // It adds exact source/cache admission; it never rewrites native source policy.
+import {inspectBadenComposition} from './bulk-baden-native.mjs'
 import {createHash} from 'node:crypto'
 import {oceniPripravljenost,najcenejsiKader} from '../src/lib/pripravljenost.ts'
 import {validateGermanyCandidate} from './bulk-germany-source.mjs'
@@ -30,17 +31,18 @@ export function inspectFussballCommunityReadiness({candidate,snapshot,state}){
  return {assessment,cheapest_squad:najcenejsiKader(state.igralci)}
 }
 export function buildFussballCardAdmission({candidate,pack,snapshot,proof,seedCacheReceipt,expectedSha,runId,now=new Date()}){
- const binding=bound({candidate,snapshot}),time=+new Date(now)
- require(Number.isFinite(time)&&proof?.version===1&&proof.contract_id==='bulk-native-community-cards-v1'&&proof.expected_sha===expectedSha&&proof.snapshot_sha256===hash(snapshot)&&proof.pack_sha256===hash(pack)&&proof.schedule_complete===true&&proof.activationEligible===false&&proof.pending_inventory_sha256===binding.pending_inventory_sha256,'full native source proof/snapshot/pending inventory differs')
+ const binding=bound({candidate,snapshot}),time=+new Date(now),composition=pack?.profile==='germany-retained-fussball-native-v1'?inspectBadenComposition({candidate,pack,snapshot}):null
+ require(Number.isFinite(time)&&(composition?proof?.version===2&&proof.contract_id==='bulk-native-baden-composition-v2':proof?.version===1&&proof.contract_id==='bulk-native-community-cards-v1')&&proof.expected_sha===expectedSha&&proof.snapshot_sha256===hash(snapshot)&&proof.pack_sha256===hash(pack)&&proof.schedule_complete===true&&proof.activationEligible===false&&proof.pending_inventory_sha256===binding.pending_inventory_sha256,'full native source proof/snapshot/pending inventory differs')
  const receipt=seedCacheReceipt,cache=receipt?.cache
  require(/^[a-f0-9]{40}$/.test(expectedSha??'')&&/^[1-9]\d*$/.test(runId??'')&&receipt?.version===1&&receipt.expected_sha===expectedSha&&receipt.run_id===runId&&receipt.persisted===true&&Number.isSafeInteger(cache?.id)&&cache.id>0&&cache.key===`zapisniki-DE-bulk-${runId}-1`&&cache.ref==='refs/heads/main'&&typeof cache.version==='string'&&cache.version&&Number.isSafeInteger(cache.size_in_bytes)&&cache.size_in_bytes>0,'exact durable nightly cache receipt required')
  require(snapshot.season===candidate.season&&Array.isArray(snapshot.rounds)&&Array.isArray(snapshot.matches),'native opening inventory missing')
  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(time))
  const opening=snapshot.rounds.filter(r=>r.season===candidate.season&&Number.isFinite(Date.parse(r.deadline_at))&&Date.parse(r.deadline_at)>time&&r.played_on>=today&&r.lineups_locked_at==null).sort((a,b)=>a.number-b.number).find(r=>{
   const matches=snapshot.matches.filter(m=>m.round_id===r.id)
-  return matches.length>0&&matches.every(m=>!m.imported_at&&m.zapisnik_id==null&&m.home_goals===0&&m.away_goals===0&&m.statistics_status==='available'&&m.played_on>=today&&Array.isArray(m.appearance_rows)&&!m.appearance_rows.length&&Array.isArray(m.goal_rows)&&!m.goal_rows.length)
+  return matches.length>0&&matches.every(m=>!m.imported_at&&(composition?composition.bound.bindings.some(b=>b.matchId===m.id&&b.fixture.score===null&&!b.fixture.unavailable&&b.fixture.reportId===m.zapisnik_id):m.zapisnik_id==null)&&m.home_goals===0&&m.away_goals===0&&m.statistics_status==='available'&&m.played_on>=today&&Array.isArray(m.appearance_rows)&&!m.appearance_rows.length&&Array.isArray(m.goal_rows)&&!m.goal_rows.length)
  })
- require(opening,'untouched future opening round required')
+ require(opening&&(!composition||opening.id===composition.bound.openingRoundId&&opening.played_on===composition.bound.firstFantasyPlayedOn&&proof.openingRoundId===opening.id&&proof.firstFantasyPlayedOn===opening.played_on&&Date.parse(pack.currentFreshUntil)>time),'untouched exact future opening round and original source freshness required')
+ if(composition)require(['historicalPolicySha256','historicalInventorySha256','historicalHeaders','unknownResultHeaders','partitionCounts','compositionProofSha256'].every(k=>hash(proof[k])===hash(({historicalPolicySha256:composition.bound.policySha256,historicalInventorySha256:composition.bound.markerInventorySha256,historicalHeaders:composition.headers,unknownResultHeaders:composition.unknown,partitionCounts:composition.partitionCounts,compositionProofSha256:composition.compositionProofSha256})[k])),'composition proof/history binding differs')
  const playedReports=[]
  require(Array.isArray(pack.seasons)&&Array.isArray(binding.registered_reports),'full registered source report inventory missing')
  for(const scope of [{code:candidate.source_league_code,season:candidate.season},...candidate.archives]){
@@ -55,6 +57,6 @@ export function buildFussballCardAdmission({candidate,pack,snapshot,proof,seedCa
  }
  playedReports.sort((a,b)=>a.matchId-b.matchId)
  require(new Set(playedReports.map(r=>r.matchId)).size===playedReports.length&&playedReports.length===proof.reports&&playedReports.length===binding.registered_reports.length,'complete distinct played report inventory differs')
- const manifest={version:1,currentCode:candidate.source_league_code,archiveCodes:candidate.archives.map(a=>a.code),sourceProofSha256:hash(proof),nightlyCacheSha256:hash(receipt),pendingInventorySha256:binding.pending_inventory_sha256,playedReports,openingRoundId:opening.id}
+ const manifest={version:composition?2:1,...(composition?{historicalPolicySha256:proof.historicalPolicySha256,historicalInventorySha256:proof.historicalInventorySha256,historicalHeaders:proof.historicalHeaders,unknownResultHeaders:proof.unknownResultHeaders,partitionCounts:proof.partitionCounts,compositionProofSha256:proof.compositionProofSha256}:{}),currentCode:candidate.source_league_code,archiveCodes:candidate.archives.map(a=>a.code),sourceProofSha256:hash(proof),nightlyCacheSha256:hash(receipt),pendingInventorySha256:binding.pending_inventory_sha256,playedReports,openingRoundId:opening.id}
  return {manifest,sha256:canonicalFussballAdmissionSha256(manifest),openingRound:structuredClone(opening)}
 }

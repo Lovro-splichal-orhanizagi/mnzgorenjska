@@ -53,9 +53,10 @@ function validScore(score) {
 function validAdministrativeResult(value) {
   const closed = (object, keys) => object && typeof object === 'object' && !Array.isArray(object) &&
     Object.keys(object).length === keys.length && keys.every(key => Object.hasOwn(object, key))
-  return closed(value, ['schemaVersion', 'kind', 'marker', 'displayedScores']) && value.schemaVersion === 1 &&
+  return closed(value, ['schemaVersion', 'kind', 'marker', 'displayedScores', ...(value?.marker === 'W' ? ['rawMarker'] : [])]) && value.schemaVersion === 1 &&
     ((value.kind === 'confirmed-administrative-decision' && value.marker === 'V') ||
-     (value.kind === 'confirmed-sports-court-decision' && value.marker === 'U')) &&
+     (value.kind === 'confirmed-sports-court-decision' && value.marker === 'U') ||
+     (value.kind === 'confirmed-match-authority-decision' && value.marker === 'W' && ['w', 'W'].includes(value.rawMarker))) &&
     Array.isArray(value.displayedScores) && value.displayedScores.length === 2 &&
     value.displayedScores.every(score => closed(score, ['domaci', 'gostje']) && validScore(score))
 }

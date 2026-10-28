@@ -2,6 +2,8 @@ import {isFcfG1SupplementCompetition} from '../lib/fcf-g1-supplement-installed.m
 import {withFcfG1InstalledSupplement} from './fcf-g1-supplement-runtime.mjs'
 import {FCF_SIX_SOURCE_POLICY} from '../fcf-six-historical-policy.mjs'
 import {withFcfSixHistoricalStatistics} from './fcf-six-historical.mjs'
+import {withFussballHistoricalStatistics} from './fussball-historical.mjs'
+import {isBadenNativeCompetition,loadFussballNativeRuntimeCapture} from '../fussball-native-runtime.mjs'
 // Izbira vira podatkov po `competitions.source`.
 //
 // En vir = ena datoteka v tej mapi. Nov vir (druga zveza, druga država)
@@ -245,6 +247,13 @@ const VIRI = {
  */
 export function viraZa(tekmovanje, {installedHistoricalMarkers=null,installedG1Supplement=null,db=null}={}) {
   const ime = tekmovanje?.source ?? 'mnzg'
+  if(isBadenNativeCompetition(tekmovanje)){
+    const context=installedHistoricalMarkers??tekmovanje.fussballHistoricalContext
+    const base=process.env.SLFF_BULK_CAPTURE?createBulkCapturedSource({competition:tekmovanje,db,directory:process.env.SLFF_BULK_CAPTURE,installedHistoricalMarkers:context}):{...createFussballPublicSource({competition:tekmovanje,db,loadCapture:(directory,{staffel,season})=>loadFussballNativeRuntimeCapture({context,competition:tekmovanje,directory,code:staffel+':'+season})}),fussballHistoricalContext:context}
+    const wrapped=withFussballHistoricalStatistics(base,tekmovanje,{installedHistoricalMarkers:context})
+    wrapped.historicalSourceFiles=[...new Set(zaprtje('scripts/viri/fussball-historical.mjs'))]
+    return wrapped
+  }
   if (process.env.SLFF_BULK_CAPTURE) return createBulkCapturedSource({competition:tekmovanje,db,directory:process.env.SLFF_BULK_CAPTURE})
   const vir = ['fussball-public','dribl-public'].includes(ime) ? VIRI[ime]({competition:tekmovanje,db}) : VIRI[ime]
   if (!vir) {

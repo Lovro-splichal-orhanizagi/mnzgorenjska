@@ -37,7 +37,11 @@ export async function saveBulkAdmission(directory,admission){
  candidateScope(admission.candidate)
  atomicCheckpoint(resolve(directory)+'.admission.json',{...admission,code_sha256:codeHash()})
 }
-export async function loadBulkPack(directory,{candidate,competition,now=new Date(),requireFresh=true}={}){
+export async function loadBulkPack(directory,{candidate,competition,now=new Date(),requireFresh=true,profile,composition,preparation,context,db}={}){
+ if(profile==='germany-retained-fussball-native-v1'){
+  const {loadPreparedFussballNativePack}=await import('./fussball-native-runtime.mjs')
+  return loadPreparedFussballNativePack({competition,preparation,context,composition,db})
+ }
  const path=resolve(directory)+'.admission.json'
  if(!lstatSync(path).isFile()||lstatSync(path).isSymbolicLink()||lstatSync(path).size>128*1024)fail('Invalid source admission file.')
  const admission=JSON.parse(readFileSync(path,'utf8')),catalog=candidateScope(admission.candidate)

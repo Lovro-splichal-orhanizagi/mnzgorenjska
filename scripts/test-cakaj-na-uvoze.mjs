@@ -589,3 +589,38 @@ test('global maintenance enumerates the retained replay writer and hourly replay
  assert.doesNotMatch(workflow,/upload-artifact|zajemi-fussball|bulk-source-coordination|SLFF_FUSSBALL_CAPTURE/)
  assert.match(readFileSync(new URL('../.github/workflows/preveri-podatke.yml',import.meta.url),'utf8'),/workflows:.*Replay retained FUSSBALL cards/)
 })
+
+const badenNativeWorkflow='uvoz-baden-native.yml'
+const badenNativeTitle=activate=>`Baden native launch (activation requested ${activate})`
+test('Baden native writer is discovered in ordered and health inventories with fixed DE scope before registration',async()=>{
+ // Fixtures intentionally have no Baden competition: the fixed workflow/title
+ // establishes DE scope before COLD registration has created native IDs.
+ for(const activate of ['false','true']){
+  const runs={[badenNativeWorkflow]:[run(badenNativeTitle(activate))]}
+  for(const args of [['--drzava','DE'],['--popravek'],['--liga','de-regionalliga-nord']]){const r=await coordinate(args,runs);assert.equal(r.code,1);assert.ok(r.queried.includes(badenNativeWorkflow));assert.match(r.logs.join('\n'),/Pred mano teče še 1 uvozov/)}
+  for(const args of [['--drzava','ES'],['--liga','es-ct-primera-g1']])assert.equal((await coordinate(args,runs)).code,0)
+  const health=await coordinate(['--tece'],runs);assert.equal(health.code,3);assert.ok(health.queried.includes(badenNativeWorkflow));assert.equal((await coordinate(['--tece','--drzava','ES'],runs)).code,0)
+ }
+})
+test('Baden native title ambiguity holds conservatively while creation ordering and completed runs remain unchanged',async()=>{
+ for(const title of ['', 'Unknown historical title','Baden native launch (activation requested preview)','Baden native launch (activation requested true) foreign']){const runs={[badenNativeWorkflow]:[run(title)]};assert.equal((await coordinate(['--drzava','ES'],runs)).code,1);assert.equal((await coordinate(['--tece','--drzava','ES'],runs)).code,3)}
+ for(const patch of [{status:'queued'},{status:'waiting'},{status:'pending'},{status:'requested'},{databaseId:30,startedAt:'2026-10-17T09:59:59Z'}])assert.equal((await coordinate(['--drzava','DE'],{[badenNativeWorkflow]:[run(badenNativeTitle('false'),patch)]})).code,1)
+ for(const patch of [{databaseId:30},{databaseId:20},{status:'completed'}])assert.equal((await coordinate(['--drzava','DE'],{[badenNativeWorkflow]:[run(badenNativeTitle('true'),patch)]})).code,0)
+})
+test('Baden native waiting direction and old bulk crossing paths retain existing behavior',async()=>{
+ const own=['--drzava','DE','--popravek','--vir','dfb']
+ for(const [wf,title]of [['uvoz-lige.yml','Uvoz lige de-regionalliga-nord'],['zdruzi-klube.yml','Merge clubs'],['tedensko-cene.yml','Weekly prices']])assert.equal((await coordinate(own,{[wf]:[run(title)]})).code,1)
+ assert.equal((await coordinate(own,{'uvoz-lige.yml':[run('Uvoz lige es-ct-primera-g1')]})).code,0)
+ assert.equal((await coordinate(['--drzava','DE'],{'uvoz-pl-de-paketa.yml':[run('Bulk leagues DE')]})).code,1);assert.equal((await coordinate(['--drzava','ES'],{'uvoz-pl-de-paketa.yml':[run('Bulk leagues DE')]})).code,0)
+})
+test('Baden native older writer is visible to actual independent club-merge and weekly-price shell loops',async t=>{
+ const {spawnSync}=await import('node:child_process'),{mkdtempSync,writeFileSync,rmSync}=await import('node:fs'),{join}=await import('node:path'),{tmpdir}=await import('node:os'),dir=mkdtempSync(join(tmpdir(),'baden-global-wait-'));t.after(()=>rmSync(dir,{recursive:true,force:true}))
+ // External API is fake; the actual shell and actual jq ordering filter execute.
+ writeFileSync(join(dir,'gh'),`#!${process.execPath}\nconst{execFileSync}=require('node:child_process'),a=process.argv.slice(2),f=JSON.parse(process.env.COORDINATION_FIXTURE),data=a[1]==='view'?{startedAt:f.startedAt}:(a[a.indexOf('--workflow')+1]===f.workflow?f.runs:[]);process.stdout.write(execFileSync('jq',['-r',a[a.indexOf('--jq')+1]],{input:JSON.stringify(data),encoding:'utf8'}));\n`,{mode:0o755});writeFileSync(join(dir,'sleep'),'#!/bin/sh\nexit 79\n',{mode:0o755})
+ for(const wf of ['zdruzi-klube.yml','tedensko-cene.yml']){
+  const text=readFileSync(new URL(`../.github/workflows/${wf}`,import.meta.url),'utf8'),block=text.slice(text.indexOf('      - name: Pocakaj na starejse uvoze')).split('        run: |\n')[1].split('\n      - name:')[0],script=block.split('\n').filter(x=>x.startsWith('          ')).map(x=>x.slice(10)).join('\n')
+  for(const[patch,expected]of [[{},79],[{status:'queued'},79],[{displayTitle:'Unknown historical title'},79],[{databaseId:30},0],[{status:'completed'},0]]){
+   const r=spawnSync('bash',['-c',script],{cwd:dir,encoding:'utf8',timeout:10000,env:{...process.env,PATH:`${dir}:${process.env.PATH}`,GITHUB_RUN_ID:'20',GITHUB_REPOSITORY:'fixture/repo',COORDINATION_FIXTURE:JSON.stringify({startedAt,workflow:badenNativeWorkflow,runs:[run(badenNativeTitle('true'),patch)]})}});assert.equal(r.status,expected,`${wf}: ${r.stderr}`);if(expected===79)assert.match(r.stdout,/Pred mano tece se 1 uvozov/)
+  }
+ }
+})

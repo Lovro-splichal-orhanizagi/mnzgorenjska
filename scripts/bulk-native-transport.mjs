@@ -1,4 +1,5 @@
 // Actions-only wrapper; native readiness and activation remain the existing RPCs.
+import {isBadenCompositionCandidate} from './bulk-baden-native.mjs'
 import {parseFussballLeagueCode} from './fussball-import.mjs'
 import {isFussballCommunityCandidate,FUSSBALL_COMMUNITY_SOURCE_POLICY} from './fussball-community-policy.mjs'
 import {assertReviewedFussballCommunityCandidate} from './fussball-community-release.mjs'
@@ -23,10 +24,11 @@ export function createBulkTransport({url,key,base,fetch:request=globalThis.fetch
   const row=rows[0];if(['slug','source','source_league_code'].some(k=>row[k]!==c[k]))throw hold('Existing candidate registration identity differs.')
   await country(row.country_id,c.country_code);return row
  }
- return {...base,find,snapshot:async c=>{
+ return {...base,rpc:async(name,args)=>({data:await call('rpc/'+name,args)}),find,prepareFussballHistory:async({manifest,sha256})=>call('rpc/prepare_fussball_historical_statistics',{p_manifest:manifest,p_sha256:sha256}),readFussballHistory:async id=>call('rpc/get_fussball_historical_preparation',{p_competition_id:id}),snapshot:async c=>{
   const snapshot=await base.snapshot(c)
   await country(snapshot.competition.country_id,c.country_code)
   snapshot.competition.country_code=c.country_code
+  if(isBadenCompositionCandidate(c)&&snapshot.competition.source_policy===FUSSBALL_COMMUNITY_SOURCE_POLICY)snapshot.fussball_history=await call('rpc/get_fussball_historical_runtime',{p_competition_id:c.id})
   if(isFussballCommunityCandidate(c)&&snapshot.competition.source_policy===FUSSBALL_COMMUNITY_SOURCE_POLICY)snapshot.fussball_cards=await call('rpc/check_fussball_card_readiness',{p_competition_id:c.id,p_code:c.source_league_code})
   return snapshot
  },installCommunityPolicy:async c=>{

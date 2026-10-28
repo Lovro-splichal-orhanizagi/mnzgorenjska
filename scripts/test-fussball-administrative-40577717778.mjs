@@ -32,7 +32,7 @@ test('exact archived page preserves administrative pairs and all eight fixtures 
 
 test('special score cannot downgrade through altered marker, structure, mixed normal score or unbound fonts',()=>{
  const variants=[
-  special.replace('&nbsp;V&nbsp;','&nbsp;W&nbsp;'),special.replace('<span>&nbsp;V&nbsp;</span>',''),
+  special.replace('&nbsp;V&nbsp;','&nbsp;X&nbsp;'),special.replace('<span>&nbsp;V&nbsp;</span>',''),
   special.replace('<span>:</span>',''),special.replace('<span>:</span>','<span>:</span><span>:</span>'),
   special.replace('<span>&nbsp;V&nbsp;</span>','<span>&nbsp;V&nbsp;</span><span>&nbsp;V&nbsp;</span>'),
   special.replace('class="score-special"','class="score-special extra"'),
@@ -43,6 +43,7 @@ test('special score cannot downgrade through altered marker, structure, mixed no
  ]
  for(const replacement of variants)assert.throws(()=>parse(html.replace(special,replacement)),undefined,replacement)
  assert.throws(()=>parse(html.replace('(V) Verwaltungsentscheid (bestätigt)','(V) unknown decision')))
+ assert.throws(()=>parse(html.replace(special,special.replace('&nbsp;V&nbsp;','&nbsp;W&nbsp;')).replace('(W) Wertung Spielinstanz (bestätigt)','(W) unknown decision')))
  const broken={...fonts,'4m27drse':{...fonts['4m27drse'],bytes:Buffer.from('changed')}}
  assert.throws(()=>parse(html,broken),/hash|pisav/)
 })
