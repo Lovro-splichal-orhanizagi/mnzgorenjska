@@ -1,5 +1,7 @@
 // Fixed G1 byte-first remainder protocol. No native/DB authority is issued here.
 import {createHash} from 'node:crypto'
+import {assertReviewedFcfG1HistoricalZero,normalizeFcfG1CurrentSkippedJobs} from './fcf-g1-historical-zero-witness.mjs'
+import {assertFcfG1PrebudgetHistory} from './fcf-g1-prebudget-audit.mjs'
 import {mkdirSync,writeFileSync,appendFileSync,lstatSync,realpathSync,openSync,closeSync,fsyncSync,readFileSync} from 'node:fs'
 import {join,resolve,dirname,isAbsolute} from 'node:path'
 import {getFcfG1RemainderParent,reauthenticateFcfG1RemainderParent} from './fcf-g1-remainder-parent.mjs'
@@ -63,23 +65,21 @@ export function readFcfG1RemainderConsumption({claimProof,...input}){
 }
 const actor=a=>a?.login==='nejcar20'&&a.id===25134229
 const historyJobNames=['cache-export','missing-inventory-seed','missing-inventory-approval','missing-inventory-consume','missing-inventory-g1','missing-inventory-g9','missing-inventory-receipt','target-approval','cleanup-originals','target-mapping','cleanup-prepare','cleanup-apply','target-import','target-price','target-check','target-activate','target-recover','future-target-approval','missing-inventory']
-const zeroSteps=new Set(['Set up job','Checkout exact main','Node 22','Checkout immutable failed G1 verifier','Post Checkout immutable failed G1 verifier','Stage reviewed FCF inventory approval','Retain reviewed FCF inventory approval','Post Checkout exact main','Post Node 22','Complete job'])
-/** Pure refusal check only; returns no source/accounting capability. Every
- * unaccounted attempt needs the full reviewed inventory and conclusive zero. */
-export function assertFcfG1RemainderZeroSourceRun(h){
- if(!nativeId(String(h?.id))||h.repository?.full_name!==repository||h.path!==workflow||h.event!=='workflow_dispatch'||h.head_branch!=='main'||!commitId(h.head_sha)||!Number.isSafeInteger(h.run_attempt)||h.run_attempt<1||h.run_attempt>100||!Number.isSafeInteger(h.observedAttempt)||h.observedAttempt<1||h.observedAttempt>h.run_attempt||h.status!=='completed'||!['success','failure','cancelled','skipped'].includes(h.conclusion))fail('unaccounted live/incomplete/unknown FCF run held')
- if(!Array.isArray(h.jobs)||h.jobs.length!==historyJobNames.length||new Set(h.jobs.map(j=>j.name)).size!==h.jobs.length||new Set(h.jobs.map(j=>String(j.id))).size!==h.jobs.length||h.jobs.some(j=>!historyJobNames.includes(j.name)||!nativeId(String(j.id))||String(j.run_id)!==String(h.id)||j.run_attempt!==h.observedAttempt||j.head_sha!==h.head_sha||j.status!=='completed'||!Array.isArray(j.steps)))fail('incomplete or unknown FCF source job inventory held')
- for(const j of h.jobs){if(j.conclusion==='skipped'&&j.steps.every(s=>s.status==='completed'&&s.conclusion==='skipped'))continue;if(j.name!=='missing-inventory-approval'||!['success','failure'].includes(j.conclusion)||new Set(j.steps.map(s=>s.name)).size!==j.steps.length||j.steps.some(s=>s.status!=='completed'||!['success','failure','skipped'].includes(s.conclusion)||!zeroSteps.has(s.name)))fail('unaccounted consumed/source or unknown executed FCF step held')}
- for(const name of ['missing-inventory-g1','missing-inventory-g9'])if(h.jobs.find(j=>j.name===name).conclusion!=='skipped')fail('unaccounted executed FCF source held')
+function currentJobInventory(input,e){
+ const jobs=normalizeFcfG1CurrentSkippedJobs(input)
+ if(jobs.length!==historyJobNames.length||new Set(jobs.map(j=>j.name)).size!==jobs.length||new Set(jobs.map(j=>String(j.id))).size!==jobs.length||jobs.some(j=>!historyJobNames.includes(j.name)||!nativeId(String(j.id))||String(j.run_id)!==e.runId||j.run_attempt!==1||j.head_sha!==e.sourceCommit||!Array.isArray(j.steps)))fail('complete closed actual G1 job inventory required; held')
+ for(const other of jobs){if(['missing-inventory-g1','missing-inventory-approval','missing-inventory-consume'].includes(other.name))continue;if(!(other.status==='completed'&&other.conclusion==='skipped')&&!['queued','waiting','pending'].includes(other.status))fail('unexpected own source/native job executing; held')}
+ return jobs
 }
+/** Exact compiled historical witnesses only; unknown/new executions HOLD. */
+export function assertFcfG1RemainderZeroSourceRun(h){assertReviewedFcfG1HistoricalZero(h)}
 /** Private own-execution exclusion. It is issued only after complete actual
  * workflow history and current capture-step metadata have been authenticated. */
-export function readFcfG1RemainderRunningExecution({claimProof,consumptionProof,run,jobs,history}){
+export function readFcfG1RemainderRunningExecution({claimProof,consumptionProof,run,jobs,history,prebudgetProof}){
  const c=claims.get(claimProof),s=consumptions.get(consumptionProof);if(!c||!s||s.plan!==c.plan||s.execution.runId!==c.execution.runId)fail('private claim and consumption required')
- const jobNames=new Set(historyJobNames);if(!Array.isArray(jobs)||new Set(jobs.map(j=>j.name)).size!==jobs.length||jobs.some(j=>!jobNames.has(j.name)))fail('closed actual G1 job inventory required')
+ jobs=currentJobInventory(jobs,c.execution)
  const e=c.execution,j=jobs?.filter(j=>j.name==='missing-inventory-g1'),step=j?.[0]?.steps?.filter(s=>s.name==='Capture missing target inventory')
  if(String(run?.id)!==e.runId||run.repository?.full_name!==repository||run.path!==workflow||run.head_sha!==e.sourceCommit||run.head_branch!=='main'||run.event!=='workflow_dispatch'||run.run_attempt!==1||run.status!=='in_progress'||run.conclusion!==null||!actor(run.actor)||!actor(run.triggering_actor)||j?.length!==1||!nativeId(String(j[0].id))||String(j[0].run_id)!==e.runId||j[0].run_attempt!==1||j[0].head_sha!==e.sourceCommit||j[0].status!=='in_progress'||step?.length!==1||step[0].status!=='in_progress'||step[0].conclusion!==null)fail('actual own main attempt1 actors/capture required')
- for(const other of jobs){if(['missing-inventory-g1','missing-inventory-approval','missing-inventory-consume'].includes(other.name))continue;if(!(other.status==='completed'&&other.conclusion==='skipped')&&!['queued','waiting','pending'].includes(other.status))fail('unexpected own source/native job executing; held')}
  if(!Array.isArray(history)||history.some(r=>!nativeId(String(r?.id))))fail('complete actual FCF history required')
  const p=authority(c.plan),l=ledger(p.parentProof,p.appendProofs);if(!Array.isArray(l.parent.sourceReferences.accountedRunIds)||!l.parent.sourceReferences.accountedRunIds.includes('40737060608'))fail('private complete anchor run IDs required');const accounted=new Set([...l.parent.sourceReferences.accountedRunIds,...l.bindings.map(b=>b.runId)])
  // Only conclusively source-free skipped capture jobs may be unaccounted. A
@@ -87,11 +87,12 @@ export function readFcfG1RemainderRunningExecution({claimProof,consumptionProof,
  const unaccounted=new Map()
  for(const h of history){
   if(String(h.id)===e.runId){
-   const own=h.jobs?.filter(x=>x.name==='missing-inventory-g1'),active=own?.[0]?.steps?.filter(x=>x.name==='Capture missing target inventory')
+   const freshJobs=currentJobInventory(h.jobs,e),own=freshJobs?.filter(x=>x.name==='missing-inventory-g1'),active=own?.[0]?.steps?.filter(x=>x.name==='Capture missing target inventory')
    if(h.repository?.full_name!==repository||h.path!==workflow||h.event!=='workflow_dispatch'||h.head_branch!=='main'||h.head_sha!==e.sourceCommit||h.run_attempt!==1||h.observedAttempt!==1||h.status!=='in_progress'||h.conclusion!==null||!actor(h.actor)||!actor(h.triggering_actor)||own?.length!==1||String(own[0].id)!==String(j[0].id)||String(own[0].run_id)!==e.runId||own[0].run_attempt!==1||own[0].head_sha!==e.sourceCommit||own[0].status!=='in_progress'||active?.length!==1||active[0].status!=='in_progress'||active[0].conclusion!==null)fail('fresh actual private own execution differs; held')
    continue
   }
   if(accounted.has(String(h.id)))continue
+  if(h.path==='.github/workflows/fcf-javni-dokazi.yml'){if(!prebudgetProof||h.observedAttempt!==1)fail('unaccounted historical public-source scope held');assertFcfG1PrebudgetHistory({proof:prebudgetProof,run:h,jobs:h.jobs});continue}
   assertFcfG1RemainderZeroSourceRun(h)
   const observed=unaccounted.get(String(h.id))??[];observed.push(h);unaccounted.set(String(h.id),observed)
  }

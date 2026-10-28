@@ -4,6 +4,7 @@ import {execFileSync} from 'node:child_process'
 import {readFileSync,writeFileSync,mkdirSync,realpathSync,lstatSync,appendFileSync} from 'node:fs'
 import {join,resolve,dirname} from 'node:path'
 import {readFcfG1RemainderParent,getFcfG1RemainderParent} from './fcf-g1-remainder-parent.mjs'
+import {readFcfG1PrebudgetAudit} from './fcf-g1-prebudget-audit.mjs'
 import * as source from './fcf-g1-remainder-source.mjs'
 import {auditFcfG1QuarantineDocuments} from './fcf-g1-quarantine-audit.mjs'
 import {readFcfDraftAsset} from './fcf-missing-inventory-actions.mjs'
@@ -86,8 +87,8 @@ export async function runFcfG1RemainderActions({argv,env=process.env,root=proces
  if(mode==='capture'){
   if(env.GITHUB_JOB!=='missing-inventory-g1'||env.FCF_INVENTORY_TARGET!=='es-ct-segona-g1')fail('fixed G1 capture only')
   const sourceSlotProof=await waitForFcfInventorySourceSlot({execution:{...execution,startedUTC:b.run.run_started_at??b.run.created_at},listRuns:async(w,p)=>github(repo+`actions/workflows/${w}/runs?per_page=100&page=${p}`),listJobs:async(id,p)=>github(repo+`actions/runs/${id}/jobs?per_page=100&page=${p}`)})
-  await readiness({a,github,root});await claim(a.plan,execution,github);const actual=await bundle(github,execution.runId);running(env,actual)
-  const runningProof=source.readFcfG1RemainderRunningExecution({claimProof,consumptionProof,...actual,history:await history(github,parentProof)}),recheckExecution=async()=>{await readiness({a,github,root});await claim(a.plan,execution,github);const b=await bundle(github,execution.runId);running(env,b);source.readFcfG1RemainderRunningExecution({claimProof,consumptionProof,...b,history:await history(github,parentProof)})},result=await source.collectFcfG1Remainder({plan:a.plan,consumptionProof,runningProof,sourceSlotProof,root,request:sourceFetch,recheckExecution,...(pause?{pause}:{}),...(clock?{clock}:{})});output(env,{evidence_ready:'true',status:result.status,manifest_sha:result.manifestSHA});return{code:result.status==='inventory-complete'?0:1}
+  const prebudgetProof=await readFcfG1PrebudgetAudit({parentProof,github});await readiness({a,github,root});await claim(a.plan,execution,github);const actual=await bundle(github,execution.runId);running(env,actual)
+  const runningProof=source.readFcfG1RemainderRunningExecution({claimProof,consumptionProof,...actual,prebudgetProof,history:await history(github,parentProof)}),recheckExecution=async()=>{await readiness({a,github,root});await claim(a.plan,execution,github);const b=await bundle(github,execution.runId);running(env,b);source.readFcfG1RemainderRunningExecution({claimProof,consumptionProof,...b,prebudgetProof,history:await history(github,parentProof)})},result=await source.collectFcfG1Remainder({plan:a.plan,consumptionProof,runningProof,sourceSlotProof,root,request:sourceFetch,recheckExecution,...(pause?{pause}:{}),...(clock?{clock}:{})});output(env,{evidence_ready:'true',status:result.status,manifest_sha:result.manifestSHA});return{code:result.status==='inventory-complete'?0:1}
  }
  const prefix=mode==='audit'?'CURRENT':'G1',diagnostic=mode==='receipt'&&Boolean(env.FCF_G1_DIAGNOSTIC_ID),id=env[`FCF_${prefix}_${diagnostic?'DIAGNOSTIC':'INVENTORY'}_ID`],digest=env[`FCF_${prefix}_${diagnostic?'DIAGNOSTIC':'INVENTORY'}_DIGEST`]
  const childExpected={runId:execution.runId,runAttempt:'1',sourceCommit:a.sourceCommit,jobId:String(job(b.jobs,'missing-inventory-g1').id),artifactId:id,artifactDigest:normalize(digest),manifestSha256:env[`FCF_${prefix}_MANIFEST_SHA`],name:`fcf-missing-inventory-${diagnostic?'diagnostic-':''}es-ct-segona-g1-${execution.runId}-1`}
