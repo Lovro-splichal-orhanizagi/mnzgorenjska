@@ -1115,4 +1115,8 @@ zgodovine in kartonov. Vsa obstoječa vrata GK, cen, legal15 in prihodnjega roka
 ostanejo obvezna. Ta priprava ne porabi zahtevkov vira: ledger ostane1423/5000.
 
 Offline regresija uporablja dejanske ohranjene bajte; pot podaš izrecno:
-`node scripts/test-fussball-retained-history.mjs /pot/do/fussball-season-40577717778`.
+`FUSSBALL_RETAINED_HISTORY_DIR=/pot/do/fussball-season-40577717778 node --test scripts/test-fussball-retained-history.mjs`.
+Podprt ostane tudi argument poti pri neposrednem zagonu skripte. Brez obeh
+nastavitev se samo20 testov zunanjega zajema preskoči z izrecnim razlogom;
+dve preverbi zavrnitve praznih/izmišljenih dokazov vedno tečeta. Izrecno
+nastavljena napačna ali prazna pot povzroči napako, ne preskoka.

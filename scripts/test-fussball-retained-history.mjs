@@ -8,14 +8,22 @@ import {classifyRetainedFussballHistory,loadRetainedFussballHistory} from './fus
 import {buildFussballImportBatch} from './fussball-import.mjs'
 import {assertHistoricalReportImportable} from './lib/historical-statistics-import.mjs'
 
-const directory=process.argv[2]
-assert.ok(directory,'pass the retained fussball-season-40577717778 directory explicitly')
-const manifest=JSON.parse(readFileSync(join(directory,'manifest.json'))),result=JSON.parse(readFileSync(join(directory,'result.json')))
-const documents=new Map(manifest.documents.map(d=>[d.url,{...d,bytes:readFileSync(join(directory,d.file))}]))
+// CI globs this file without the separately retained artifact. Only those
+// genuine-evidence cases may skip; an explicitly configured bad path must fail.
+const directory=process.env.FUSSBALL_RETAINED_HISTORY_DIR??process.argv[2]
+let manifest,result,documents
+const retainedTest=(name,fn)=>test(name,{skip:directory===undefined?'set FUSSBALL_RETAINED_HISTORY_DIR or pass the retained fussball-season-40577717778 directory':false},()=>{
+ if(!documents){
+  manifest=JSON.parse(readFileSync(join(directory,'manifest.json')))
+  result=JSON.parse(readFileSync(join(directory,'result.json')))
+  documents=new Map(manifest.documents.map(d=>[d.url,{...d,bytes:readFileSync(join(directory,d.file))}]))
+ }
+ return fn()
+})
 const input=()=>({fixture:structuredClone(result.rejectedReports[0].fixture),rejection:structuredClone(result.rejectedReports[0]),documents:new Map(documents),firstFantasyPlayedOnCandidate:'2026-10-30'})
 const classify=change=>{const x=input();change?.(x);return classifyRetainedFussballHistory(x)}
 
-test('nine actual retained failures yield only official headers and no individual rows/native authority',()=>{
+retainedTest('nine actual retained failures yield only official headers and no individual rows/native authority',()=>{
  const packet=loadRetainedFussballHistory(directory,{firstFantasyPlayedOnCandidate:'2026-10-30'})
  assert.equal(packet.fixtures.length,9)
  assert.deepEqual(packet.fixtures.map(f=>[f.fixture.datum,f.fixture.krog,f.fixture.rezultat.domaci,f.fixture.rezultat.gostje]),[
@@ -36,14 +44,14 @@ test('nine actual retained failures yield only official headers and no individua
  assert.throws(()=>buildFussballImportBatch(result,manifest.options),/rejected reports/)
 })
 
-for(const field of ['id','zapisnikId','url','krog','datum','ura','domaci','gostje','rezultat'])test(`changed fixture ${field} cannot borrow a reviewed failure`,()=>{
+for(const field of ['id','zapisnikId','url','krog','datum','ura','domaci','gostje','rezultat'])retainedTest(`changed fixture ${field} cannot borrow a reviewed failure`,()=>{
  assert.throws(()=>classify(x=>{x.fixture[field]=field==='rezultat'?{domaci:0,gostje:0}:field==='krog'?2:'changed'}),/fixture/)
 })
-test('different or missing strict defect remains a hold',()=>{
+retainedTest('different or missing strict defect remains a hold',()=>{
  for(const key of ['code','reason'])assert.throws(()=>classify(x=>{x.rejection[key]='different'}),/defect/)
  assert.throws(()=>classify(x=>{x.rejection.fixture.domaci='other'}),/fixture/)
 })
-for(const kind of ['report','lineup','css','font'])test(`changed or missing ${kind} bytes and receipt fail closed`,()=>{
+for(const kind of ['report','lineup','css','font'])retainedTest(`changed or missing ${kind} bytes and receipt fail closed`,()=>{
  const url=[...documents].find(([,d])=>d.kind===kind&&(kind==='report'?d.url===result.rejectedReports[0].fixture.url:kind==='lineup'?d.url.includes(result.rejectedReports[0].fixture.id):true))?.[0]
  // Choose a document actually required by this report, independently read from descriptor.
  const descriptor=JSON.parse(readFileSync(new URL('./policies/fussball-baden-retained-history.json',import.meta.url)))
@@ -53,7 +61,7 @@ for(const kind of ['report','lineup','css','font'])test(`changed or missing ${ki
  assert.throws(()=>classify(x=>x.documents.delete(target)),/document/)
  assert.throws(()=>classify(x=>{const d=structuredClone(x.documents.get(target));d.originalReceipt.attempt.httpStatus=403;x.documents.set(target,d)}),/document/)
 })
-test('replacing failure bytes with a genuinely complete report cannot borrow review authority',()=>{
+retainedTest('replacing failure bytes with a genuinely complete report cannot borrow review authority',()=>{
  const complete=readFileSync(new URL('./vzorci/de-fussball-ilvesheim-main.html',import.meta.url))
  assert.throws(()=>classify(x=>{
   const url=x.fixture.url,d=structuredClone(x.documents.get(url))
@@ -62,19 +70,19 @@ test('replacing failure bytes with a genuinely complete report cannot borrow rev
   x.documents.set(url,d)
  }),/document/)
 })
-test('caller-provided statistics cannot decorate a reviewed rejection',()=>{
+retainedTest('caller-provided statistics cannot decorate a reviewed rejection',()=>{
  assert.throws(()=>classify(x=>{x.rejection.nastopi=[{minutes:90}]}),/defect/)
 })
-test('unknown match and administrative result cannot become reviewed known-score history',()=>{
+retainedTest('unknown match and administrative result cannot become reviewed known-score history',()=>{
  assert.throws(()=>classify(x=>{x.fixture.id='02TNBSVDG0000000VS5489BUVSSD35NB'}),/fixture/)
  assert.throws(()=>classify(x=>{x.fixture.administrativeResult={marker:'V'};x.fixture.rezultat=null}),/fixture/)
 })
-test('candidate cutoff is required, valid and strictly after the reviewed fixture',()=>{
+retainedTest('candidate cutoff is required, valid and strictly after the reviewed fixture',()=>{
  for(const date of [undefined,null,'2026-02-30','2026-08-14','2026-08-15'])assert.throws(()=>classify(x=>{x.firstFantasyPlayedOnCandidate=date}),/cutoff/)
  assert.equal(classify(x=>{x.firstFantasyPlayedOnCandidate='2026-08-16'}).nativeBindingRequired,true)
  assert.throws(()=>loadRetainedFussballHistory(directory,{firstFantasyPlayedOnCandidate:'2026-10-18'}),/cutoff/)
 })
-test('changed retained manifest, result or request journal cannot be re-certified',()=>{
+retainedTest('changed retained manifest, result or request journal cannot be re-certified',()=>{
  const temp=mkdtempSync(join(tmpdir(),'fussball-history-'))
  try{
   for(const file of ['manifest.json','result.json','attempts.jsonl'])cpSync(join(directory,file),join(temp,file))
@@ -84,4 +92,17 @@ test('changed retained manifest, result or request journal cannot be re-certifie
    writeFileSync(join(temp,file),original)
   }
  }finally{rmSync(temp,{recursive:true,force:true})}
+})
+
+// Always run without external retained files: fabricated input must never issue
+// even header-only source authority.
+test('empty or unknown source input cannot issue historical header authority',()=>{
+ for(const input of [undefined,{}, {fixture:{id:'unreviewed'},documents:new Map(),firstFantasyPlayedOnCandidate:'2026-10-30'}])
+  assert.throws(()=>classifyRetainedFussballHistory(input),/unreviewed or changed fixture/)
+})
+test('a known header and claimed defect cannot replace genuine retained document bytes',()=>{
+ const fixture={id:'031DS4G7UK000000VS5489BUVUR5FS5A',zapisnikId:'de-fussball-031DS4G7UK000000VS5489BUVUR5FS5A',url:'https://www.fussball.de/spiel/vfr-mannheim-2-djk-fc-ziegelhausen-peterstal/-/spiel/031DS4G7UK000000VS5489BUVUR5FS5A',krog:1,datum:'2026-08-15',ura:'12:00',domaci:'VfR Mannheim 2',gostje:'DJK/FC Ziegelhausen-Peterstal',rezultat:{domaci:1,gostje:1}}
+ const rejection={fixture,code:'FUSSBALL_REPORT_INVALID',reason:'fussball statistika: fussball: igralec brez profilne povezave'}
+ for(const documents of [new Map(),new Map([[fixture.url,{bytes:Buffer.alloc(0)}]]),new Map([[fixture.url,{bytes:Buffer.from('<html>claimed report</html>')} ]])])
+  assert.throws(()=>classifyRetainedFussballHistory({fixture,rejection,documents,firstFantasyPlayedOnCandidate:'2026-10-30'}),/document/)
 })

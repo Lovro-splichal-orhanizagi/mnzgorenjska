@@ -11,3 +11,5 @@ Interfaces: classifier consumes fixed reviewed source descriptor and captured do
 Native competition/club IDs and verified first fantasy date are unknown. Date input is a candidate cutoff only. Do not install a generic registry entry, wire runtime importer acceptance, infer source-club IDs from names, or present a complete archive policy. Administrative unknown-result archive fixture remains HOLD.
 
 Remaining integration: latest full capture/transport replay; complete archive audit; authenticated native tuple/cutoff; immutable generic policy and SQL preparation; community+history activation conjunction; pricing, GK, legal15 and real future deadline gates. Root owns release/review.
+
+4. Bounded harness correction: default glob invocation must run source-free refusal boundaries and explicitly skip only unconfigured external-artifact cases. Accept `FUSSBALL_RETAINED_HISTORY_DIR` or direct CLI path; configured invalid/empty paths fail. Helper/parser/policy behavior remains unchanged.
