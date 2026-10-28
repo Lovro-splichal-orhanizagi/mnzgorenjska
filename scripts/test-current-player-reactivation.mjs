@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
 import { createClient } from '@supabase/supabase-js'
+import {isBadenNativeCompetition} from './fussball-native-runtime.mjs'
 import { prestopSkladen } from './prestop.mjs'
 
 // Run the real identity/transfer/importer code. Only the external PostgREST
@@ -59,7 +60,7 @@ function importer({ team = 10404, current = true, overrides = {}, extraRows = []
   })
   const resolve = runInNewContext(`${helpers}
 (${body})`, {
-    db, igralci: new Map(), klubPoReg: new Map(), tekocaSezona: current,
+    isBadenNativeCompetition, db, igralci: new Map(), klubPoReg: new Map(), tekocaSezona: current,
     tekmovanje: { id: 1114, country_id: 44 }, POLJA_IGRALCA: fields,
     VRATAR_IZ_POLJA: 'v vratih, a vodimo ga v polju', prestopSkladen,
     nastopiIgralca: async () => history ?? [{ klub: 10404, tekma: 123, sezona: '2025/26', krog: 34, datum: '2026-05-16' }],
