@@ -6,7 +6,7 @@ import {readFileSync,lstatSync} from 'node:fs'
 import {join,resolve} from 'node:path'
 import {githubGetAdapter} from './stage-fussball-native-composition.mjs'
 import {loadFussballNativeComposition} from './fussball-native-composition.mjs'
-import {getFussballNativeRuntimeContext,loadFussballNativeImportContext,loadPreparedFussballNativePack,seedFussballNativeRuntime,loadFussballNativeRuntimeSeed} from './fussball-native-runtime.mjs'
+import {getFussballNativeRuntimeContext,loadFussballNativeImportContext,loadPreparedFussballNativePack,seedFussballNativeRuntime,loadFussballNativeRuntimeSeed,bindFussballHistoricalSchedule} from './fussball-native-runtime.mjs'
 import {BADEN_SLUG,BADEN_CURRENT,badenCanonical} from './lib/fussball-native-history-policy.mjs'
 import {najcenejsiKader} from '../src/lib/pripravljenost.ts'
 const sha=v=>createHash('sha256').update(badenCanonical(v)).digest('hex')
@@ -35,8 +35,12 @@ export async function loadBadenLaunchPack({competition,composition,preparation,d
 export function inspectBadenComposition({candidate,pack,snapshot,context=pack?.fussballHistoricalContext}){
  need(isBadenCompositionCandidate(candidate),'exact reviewed Baden candidate required')
  const state=getFussballNativeRuntimeContext(context,snapshot.competition),bound=state.state.readback
- const original=Object.fromEntries(Object.keys(state.pack).map(k=>[k,pack[k]]))
- need(same(original,state.pack)&&same(snapshot.fussball_history,bound)&&bound.active===false,'private source pack and actual combined native readback required')
+ const supplied=Object.fromEntries(Object.keys(state.pack).map(k=>[k,pack[k]]))
+ // Sealed source seasons have no schedule. Rebuild the exact prepared view
+ // from those originals and the private installed-marker binder, preserving
+ // source equality while checking every added schedule/header/marker field.
+ const expected={...state.pack,seasons:state.pack.seasons.map(season=>({...season,schedule:bindFussballHistoricalSchedule(context,snapshot.competition,season.code,[...new Set(season.fixtures.map(f=>f.krog))].sort((a,b)=>a-b).map(stevilka=>({stevilka,tekme:season.fixtures.filter(f=>f.krog===stevilka).map(f=>({...structuredClone(f),izid:f.rezultat?[f.rezultat.domaci,f.rezultat.gostje]:null,odigrana:f.rezultat!==null,kontumacija:false}))})))}))}
+ need(same(supplied,expected)&&same(snapshot.fussball_history,bound)&&bound.active===false,'private source pack and actual combined native readback required')
  need(bound.bindings.length===snapshot.matches.length,'exact native partition inventory required')
  const headers=bound.history.markers.map(marker=>{
   const match=snapshot.matches.find(m=>m.id===marker.matchId),binding=bound.bindings.find(b=>b.matchId===marker.matchId)
