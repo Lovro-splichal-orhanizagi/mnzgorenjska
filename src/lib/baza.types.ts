@@ -9967,6 +9967,15 @@ export type Database = {
           primer: string
         }[]
       }
+      preveri_podatke_del: {
+        Args: { p_del: string }
+        Returns: {
+          kljuc: string
+          koliko: number
+          opis: string
+          primer: string
+        }[]
+      }
       preveri_uradne_odsotnosti: { Args: never; Returns: number }
       preverjen_cakajoci_preklici: { Args: never; Returns: string[] }
       preverjen_ime_znacke: { Args: { p_ime: string }; Returns: string }
