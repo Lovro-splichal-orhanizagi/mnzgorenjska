@@ -1558,7 +1558,7 @@ preveri(
       })
       if (tabela === 'competitions')
         return odgovor(url.searchParams.has('slug') ? liga : [liga])
-      if (tabela === 'preveri_podatke') return odgovor([])
+      if (tabela === 'preveri_podatke_del') return odgovor([])
       // Zamujene tekme: privzeto jih ni. Preverba mora znati lociti "ni
       // zamud" od "poizvedba je padla", zato tu vrnemo prazen seznam in ne
       // napake — zamude imajo svojo trditev nize.
@@ -1684,7 +1684,7 @@ preveri(
     globalThis.fetch = async (vhod, moznosti) => {
       const zahteva = new Request(vhod, moznosti)
       const pot = new URL(zahteva.url).pathname
-      if (pot.endsWith('/rpc/preveri_podatke'))
+      if (pot.endsWith('/rpc/preveri_podatke_del'))
         return new Response('[]', { headers: { 'Content-Type': 'application/json' } })
       if (pot.endsWith('/competitions'))
         return new Response(JSON.stringify({ message: 'Branje lig ni uspelo' }), {
@@ -1701,6 +1701,28 @@ preveri(
   preveri('podatki: napaka branja lig konča nadzor z napako',
     zagon.status === 1 && zagon.stderr.includes('Branje lig ni uspelo'), zagon.stderr.trim())
   preveri('podatki: napaka branja lig nikoli ne izpiše uspeha', !zagon.stdout.includes('Vse v redu'))
+}
+
+// 504 prehoda (Cloudflare) iz lastnega API-ja je padec preverbe, ne "vir ne dela"
+// in ne "vse v redu": izhod 1, del imenovan, uspeha ni.
+{
+  const { spawnSync } = await import('node:child_process')
+  const zagon = spawnSync(process.execPath, ['--input-type=module', '-e', `
+    globalThis.fetch = async (vhod, moznosti) => {
+      const pot = new URL(new Request(vhod, moznosti).url).pathname
+      if (pot.endsWith('/rpc/preveri_podatke_del'))
+        return new Response('<html>504 Gateway Time-out</html>', { status: 504, headers: { 'Content-Type': 'text/html' } })
+      throw new Error('Nepričakovana zahteva: ' + pot)
+    }
+    await import(${JSON.stringify(new URL('./preveri-podatke.mjs', import.meta.url).href)})
+  `], {
+    encoding: 'utf8', timeout: 10000,
+    env: { PATH: process.env.PATH, SUPABASE_URL: 'http://127.0.0.1:54321',
+      SUPABASE_SERVICE_ROLE_KEY: 'preizkusni-kljuc' },
+  })
+  preveri('podatki: 504 pri delu preverbe konča nadzor z napako',
+    zagon.status === 1 && zagon.stderr.includes('del "postava"'), zagon.stderr.trim())
+  preveri('podatki: 504 pri delu preverbe nikoli ne izpiše uspeha', !zagon.stdout.includes('Vse v redu'))
 }
 
 // --- vabilo prijatelju ------------------------------------------------------
