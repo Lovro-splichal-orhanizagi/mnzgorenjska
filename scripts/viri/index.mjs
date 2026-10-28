@@ -76,6 +76,7 @@ import dbu from './dbu.mjs'
 import nff from './nff.mjs'
 import kff from './kff.mjs'
 import pflAz from './pfl-az.mjs'
+import hkfa from './hkfa.mjs'
 
 const VIRI = {
   // Ukrajina: Profesionalna nogometna liga prek pfl.ua.
@@ -216,6 +217,9 @@ const VIRI = {
   // Azerbajdžan: PFL (I in II Liqa) prek javnega API-ja pfl.az (razpored) in
   // zapisnikov PDF (pdftotext); brez šifer igralcev, vratar je prvi začetnik (namig).
   'pfl-az': pflAz,
+  // Hongkong (HKFA) prek strežniško izrisanih strani hkfa.com: stanje `__NUXT__`
+  // brez eval (`nuxt.mjs`), stalna šifra igralca, čas Asia/Hong_Kong, krog je teden.
+  hkfa,
 }
 
 /**
