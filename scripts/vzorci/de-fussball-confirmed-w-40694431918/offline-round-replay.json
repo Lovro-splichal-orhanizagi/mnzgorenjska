@@ -1,0 +1,439 @@
+{
+  "kind": "all-retained-archive-rounds-offline-replay-not-source-admission",
+  "sourceRunId": "40694431918",
+  "sourceCommit": "4e1e7caac02aa6e12c789c7cea7aac699d3c2566",
+  "sourceSuccess": false,
+  "manifestSha256": "1be26666732d56ec15dd8e139819189f2bfb2bc0c245c3799bd09a40203de9d5",
+  "verifiedDocuments": 138,
+  "newSourceRequests": 0,
+  "rounds": [
+    {
+      "round": 1,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/1/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "0bcaa1a8bedbf58d46e4d9adcaade5c8498f9b03c4694743948cd75e90dc70ac",
+      "bytes": 205819,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 2,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/2/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "75d98e13ded23b1f99760d6a7d16ac628da9fe78f4b35bacf30f3e0f3f115b45",
+      "bytes": 202316,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 3,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/3/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "015e876a88c922fc84118524d28bb68e3f044555a20006e8645d0ddde1b90ee1",
+      "bytes": 202597,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 4,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/4/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "f06b567721e604ef60096f2e25dd9118a5eb7aaa9ea9dcd518d944bb3c6dd5a7",
+      "bytes": 204867,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 5,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/5/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "e3f07db857b00625ba3059d33821fe390d6aef6e28173648cafd582e94732dc5",
+      "bytes": 205197,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 6,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/6/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "230895781e868823c986e95f7a3da62958f7e276611c2f946a04d1861ea9af4f",
+      "bytes": 205097,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 7,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/7/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "5b80ed698d54bd961291d9253918292cf4647e77ce5cc2720e7c884ccdf5c5f7",
+      "bytes": 202486,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 8,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/8/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "e725a982dbdb87e662a09bbcbd06ff2a7b17dfcc6bc76fc70318539140a70f50",
+      "bytes": 204769,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 9,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/9/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "40ce34381c70323831734b360286e935c57ec1ca694df688acf3537ee74d7abc",
+      "bytes": 201583,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 10,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/10/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "7e841ec18ba3ed5bcd60e0eb729fb63153c2d7901e2a0cd024f833537014cd76",
+      "bytes": 201568,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 11,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/11/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "4418506929bd17fbebb5134c6424b652a27a40fb6bcecf0a3b98240ed402b561",
+      "bytes": 204635,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 12,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/12/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "323f0abaa1132a271e5c4ffc82182deaf44f57ff208c77f13ef5983078dfb001",
+      "bytes": 205066,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 13,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/13/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "ce6f7f82d5c03565baeca82b234d7885c0715f0f614275da46855a4f161faf79",
+      "bytes": 202331,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 14,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/14/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "4a41ce944f5f301df70caa10ff8aeab2d1c0284ae7730d3f382652c9e1f65dae",
+      "bytes": 201905,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 15,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/15/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "7ce242e4b96eedf8fffc4cdef531fd32298f6d78cc901c138706e64e816917b5",
+      "bytes": 202040,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 16,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/16/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "8b36371ca754e3d69ed15042f784335ce07143b0c1682323f515630a72b77f7f",
+      "bytes": 201908,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 17,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/17/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "fe6e0b8bbb2e5f988b865280cd7382debaba7fc7cbfbec89e79a869ec9fc0590",
+      "bytes": 204534,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 18,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/18/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "7e834ba2f7ce55ff105149b61982fd9688a67cb9acc4dc17ea38ac6b989aa7fa",
+      "bytes": 205125,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 19,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/19/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "43c636406a2084a3a6d2fa2ad1d94e0b2aeb5d2322cf1ed480123d1b5dcf7f3a",
+      "bytes": 201791,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 20,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/20/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "0a0c8204608f5c0e54d423a9d9e948971981a36c9ca01f7dcde04cbd7180a485",
+      "bytes": 201869,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 21,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/21/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "ddc7ca4e8255d09ba037efe4f7dda714821961ae4d81ef9f71e41f83cc54005a",
+      "bytes": 201504,
+      "fixtures": 8,
+      "administrative": [
+        {
+          "id": "02TNBSVIMS000000VS5489BUVSSD35NB",
+          "result": null,
+          "administrativeResult": {
+            "schemaVersion": 1,
+            "kind": "confirmed-sports-court-decision",
+            "marker": "U",
+            "displayedScores": [
+              {
+                "domaci": 4,
+                "gostje": 1
+              },
+              {
+                "domaci": 1,
+                "gostje": 4
+              }
+            ]
+          }
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "round": 22,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/22/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "c1be53011146a98dd3d5d77e57fb45398e020cd6b4bd6340d9d442360ce02c6b",
+      "bytes": 201911,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 23,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/23/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "85fb14f068c1b4f62c15a8014cd6e11b1daf6bbb6666fb687892afc107c3210d",
+      "bytes": 201920,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 24,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/24/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "4b8bd36170b60cb31ab5871ef1363afe8aafd8b75244c4cedb01a0bbff69018e",
+      "bytes": 201794,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 25,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/25/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "78d8bcb0dafcd4bb8beee0dd428a1f1e6b9398a1b5cbbc00dab0e5a4bfc3894e",
+      "bytes": 204758,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 26,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/26/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "d83b3081572b9933a4d888dc612b6a567d25acc7ac9fe7299f57e218b0daede7",
+      "bytes": 205166,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 27,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/27/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "182470642a81e6e83aae9187ecadf8d035b56aaa1f1b808ac34fac9572520478",
+      "bytes": 205169,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 28,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/28/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "a1c33320111fc9d5f6fc74d014c879dcac6097420b6e9923cded5abe2fbee59c",
+      "bytes": 202395,
+      "fixtures": 8,
+      "administrative": [],
+      "status": "PASS"
+    },
+    {
+      "round": 29,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/spieltag/29/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "28b752208241779ae14554aac3475818a3183f65ad994c7b6504e4b7d646ca07",
+      "bytes": 201229,
+      "fixtures": 8,
+      "administrative": [
+        {
+          "id": "02TNBSVEEG000000VS5489BUVSSD35NB",
+          "result": null,
+          "administrativeResult": {
+            "schemaVersion": 1,
+            "kind": "confirmed-match-authority-decision",
+            "marker": "W",
+            "rawMarker": "w",
+            "displayedScores": [
+              {
+                "domaci": 3,
+                "gostje": 0
+              },
+              {
+                "domaci": 0,
+                "gostje": 3
+              }
+            ]
+          }
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "round": 30,
+      "url": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G",
+      "bodySha256": "de78990b8352485f185198457e5245ab050b98e43c782d6c68fb8fbe1b86009e",
+      "bytes": 201319,
+      "fixtures": 8,
+      "administrative": [
+        {
+          "id": "02TNBSVDG0000000VS5489BUVSSD35NB",
+          "result": null,
+          "administrativeResult": {
+            "schemaVersion": 1,
+            "kind": "confirmed-administrative-decision",
+            "marker": "V",
+            "displayedScores": [
+              {
+                "domaci": 0,
+                "gostje": 3
+              },
+              {
+                "domaci": 3,
+                "gostje": 0
+              }
+            ]
+          }
+        }
+      ],
+      "status": "PASS"
+    }
+  ],
+  "fixtureCount": 240,
+  "administrative": [
+    {
+      "id": "02TNBSVIMS000000VS5489BUVSSD35NB",
+      "zapisnikId": "de-fussball-02TNBSVIMS000000VS5489BUVSSD35NB",
+      "url": "https://www.fussball.de/spiel/spvgg-neckarelz-tsg-1862-09-weinheim/-/spiel/02TNBSVIMS000000VS5489BUVSSD35NB",
+      "krog": 21,
+      "datum": "2026-03-31",
+      "ura": "19:00",
+      "domaci": "SpVgg. Neckarelz",
+      "gostje": "TSG 1862/09 Weinheim",
+      "rezultat": null,
+      "administrativeResult": {
+        "schemaVersion": 1,
+        "kind": "confirmed-sports-court-decision",
+        "marker": "U",
+        "displayedScores": [
+          {
+            "domaci": 4,
+            "gostje": 1
+          },
+          {
+            "domaci": 1,
+            "gostje": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "02TNBSVEEG000000VS5489BUVSSD35NB",
+      "zapisnikId": "de-fussball-02TNBSVEEG000000VS5489BUVSSD35NB",
+      "url": "https://www.fussball.de/spiel/tsg-1862-09-weinheim-gu-tuerk-sv-pforzheim/-/spiel/02TNBSVEEG000000VS5489BUVSSD35NB",
+      "krog": 29,
+      "datum": "2026-05-25",
+      "ura": "17:00",
+      "domaci": "TSG 1862/09 Weinheim",
+      "gostje": "GU-Türk. SV Pforzheim zg.",
+      "rezultat": null,
+      "administrativeResult": {
+        "schemaVersion": 1,
+        "kind": "confirmed-match-authority-decision",
+        "marker": "W",
+        "rawMarker": "w",
+        "displayedScores": [
+          {
+            "domaci": 3,
+            "gostje": 0
+          },
+          {
+            "domaci": 0,
+            "gostje": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "02TNBSVDG0000000VS5489BUVSSD35NB",
+      "zapisnikId": "de-fussball-02TNBSVDG0000000VS5489BUVSSD35NB",
+      "url": "https://www.fussball.de/spiel/gu-tuerk-sv-pforzheim-1fc-bruchsal-1899-ev/-/spiel/02TNBSVDG0000000VS5489BUVSSD35NB",
+      "krog": 30,
+      "datum": "2026-05-30",
+      "ura": "15:00",
+      "domaci": "GU-Türk. SV Pforzheim zg.",
+      "gostje": "1.FC Bruchsal 1899",
+      "rezultat": null,
+      "administrativeResult": {
+        "schemaVersion": 1,
+        "kind": "confirmed-administrative-decision",
+        "marker": "V",
+        "displayedScores": [
+          {
+            "domaci": 0,
+            "gostje": 3
+          },
+          {
+            "domaci": 3,
+            "gostje": 0
+          }
+        ]
+      }
+    }
+  ],
+  "accounting": {
+    "prior": 1838,
+    "failedV6SuccessfulGETs": 114,
+    "cumulative": 1952,
+    "cap": 5000,
+    "remaining": 3048
+  },
+  "code": {
+    "captureFingerprint": "d207ddd977f879b7ad6e75f0efe0ce15dac398b01dcba0a87a59747bbd9a66af",
+    "archiveV6Fingerprint": "fd12cd79b4ee2adfda19d5121e86a90492a034a5194f546247024845f3347fd1",
+    "bodies": {
+      "scripts/viri/fussball.mjs": "c8125108416f2dcf7dc59170d57bb3769570fac06e6aa491513450a5ebac4c3e",
+      "scripts/fussball-season.mjs": "cfc24c25a10933dbcc81252291e26c7fc14954f25297023fabb788ecbfdf7177"
+    }
+  }
+}

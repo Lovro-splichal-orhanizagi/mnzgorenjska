@@ -119,12 +119,14 @@ function score(s,decode,allowUnplayed=false){
 }
 // Preserve display order only: neither pair establishes ordinary played statistics.
 function administrativeScore(s,decode,html,row,id){
- const court=/<span>&nbsp;U&nbsp;<\/span>/.test(s)
+ const court=/<span>&nbsp;U&nbsp;<\/span>/.test(s),valuation=/<span>&nbsp;[wW]&nbsp;<\/span>/.test(s)
  const shape=court?/^<td class="column-score">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/[A-Z0-9]{32}(?:#!\/section\/course)?"><span class="score-special"><span data-obfuscation="([a-z0-9]{8})">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>&nbsp;U&nbsp;<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><\/span><\/a>\s*<\/td>$/
   :/^<td class="column-score">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/[A-Z0-9]{32}"><span class="score-special"><span data-obfuscation="([a-z0-9]{8})">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>&nbsp;V&nbsp;<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><\/span><\/a>\s*<\/td>$/
- const match=shape.exec(s)
+ // W uses the same closed canonical href/score structure as V; only the
+ // witnessed literal marker changes. It does not acquire U's course suffix.
+ const match=(valuation&&!court?new RegExp(shape.source.replace('&nbsp;V&nbsp;','&nbsp;[wW]&nbsp;')):shape).exec(s)
  // Inventory containers before validating the one witnessed child shape.
- const courtDescriptions=court?[...html.matchAll(/<div\b[^>]*>/gi)]
+ const guardedDescriptions=(court||valuation)?[...html.matchAll(/<div\b[^>]*>/gi)]
   .filter(m=>{
    const classes=[...m[0].matchAll(/\sclass\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/gi)]
    if(!classes.some(c=>(c[1]??c[2]??c[3]).split(/\s+/).some(token=>token.toLowerCase()==='description')))return false
@@ -132,10 +134,10 @@ function administrativeScore(s,decode,html,row,id){
    if((m[0].match(/\sclass\s*=/gi)??[]).length!==1||!classTokens(m[0]).has('description'))fail('nepodprt ali dvoumen administrativni izid')
    return true
   })
-  .map(m=>element(html.slice(m.index),'description')).filter(description=>/\(U\)/.test(text(description))):[]
- const legend=court?/<div class="description">\(U\) Sportgerichtsurteil \(bestätigt\)<\/div>/g:/<div class="description">\(V\) Verwaltungsentscheid \(bestätigt\)<\/div>/g
+  .map(m=>element(html.slice(m.index),'description')).filter(description=>(court?/\(U\)/:/\([wW]\)/).test(text(description))):[]
+ const legend=court?/<div class="description">\(U\) Sportgerichtsurteil \(bestätigt\)<\/div>/g:valuation?/<div class="description">\(W\) Wertung Spielinstanz \(bestätigt\)<\/div>/g:/<div class="description">\(V\) Verwaltungsentscheid \(bestätigt\)<\/div>/g
  if(!match||(html.match(legend)??[]).length!==1||
-    (court&&courtDescriptions.length!==1)||
+    ((court||valuation)&&guardedDescriptions.length!==1)||
     (row.match(/\bscore-special\b/g)??[]).length!==1||/\bscore-(?:left|right)\b/.test(row))fail('nepodprt ali dvoumen administrativni izid')
  // Validate every row report reference, including malformed links that the
  // ordinary ID inventory cannot recognize. Only U admits the witnessed suffix.
@@ -148,7 +150,7 @@ function administrativeScore(s,decode,html,row,id){
  }
  const values=match.slice(2).map(value=>decode(`<span data-obfuscation="${match[1]}">${value}</span>`))
  if(values.some(value=>!/^\d{1,2}$/.test(value)))fail('neveljaven administrativni izid')
- return {schemaVersion:1,kind:court?'confirmed-sports-court-decision':'confirmed-administrative-decision',marker:court?'U':'V',displayedScores:[{domaci:+values[0],gostje:+values[1]},{domaci:+values[2],gostje:+values[3]}]}
+ return {schemaVersion:1,kind:court?'confirmed-sports-court-decision':valuation?'confirmed-match-authority-decision':'confirmed-administrative-decision',marker:court?'U':valuation?'W':'V',...(valuation?{rawMarker:s.match(/<span>&nbsp;([wW])&nbsp;<\/span>/)[1]}:{}),displayedScores:[{domaci:+values[0],gostje:+values[1]},{domaci:+values[2],gostje:+values[3]}]}
 }
 function liveScoreChildren(s){
  const html=element(s,'even'),start=html.indexOf('>')+1,end=html.lastIndexOf('</div>'),body=html.slice(start,end)

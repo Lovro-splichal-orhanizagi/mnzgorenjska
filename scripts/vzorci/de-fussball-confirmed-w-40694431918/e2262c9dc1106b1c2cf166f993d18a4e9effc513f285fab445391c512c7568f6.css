@@ -1,0 +1,10 @@
+@font-face {
+	font-family: font-yplak47e;
+	src: 
+		url('//www.fussball.de/export.fontface/-/format/woff/id/yplak47e/type/font') format('woff'),
+		url('//www.fussball.de/export.fontface/-/format/ttf/id/yplak47e/type/font') format('truetype');
+}
+
+.results-c-yplak47e {
+	font-family: font-yplak47e !important;
+}
