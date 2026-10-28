@@ -22,7 +22,8 @@ const json=v=>Buffer.from(JSON.stringify(v)+'\n'),repo='Lovro-splichal-orhanizag
 function synthetic(t){
  const root=fs.realpathSync(fs.mkdtempSync(join(tmpdir(),'completed-source7-TEST-ONLY-')));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));for(const name of ['de77','four-e'])fs.mkdirSync(join(root,name))
  const start=Date.now()-30000,stamp=n=>new Date(start+n*1000).toISOString(),policy=reviewedFussballArchiveV7(),controls={},calls=[]
- const run={id:Number(sourceRunId),run_attempt:1,status:'completed',conclusion:'success',head_sha:head,head_branch:'main',event:'workflow_dispatch',path:policy.workflow,repository:{full_name:repo},head_repository:{full_name:repo},created_at:stamp(0),updated_at:stamp(20)}
+ const reviewedActor={id:25134229,login:'nejcar20',type:'User'}
+ const run={actor:structuredClone(reviewedActor),triggering_actor:structuredClone(reviewedActor),id:Number(sourceRunId),run_attempt:1,status:'completed',conclusion:'success',head_sha:head,head_branch:'main',event:'workflow_dispatch',path:policy.workflow,repository:{full_name:repo},head_repository:{full_name:repo},created_at:stamp(0),updated_at:stamp(20)}
  const names=['Validate exact archive-only V7 scope and1952 spent budget','Focused offline V7 boundary checks',V7_FROZEN_AUTH_STEP,'Exercise genuine V7 ledger and resource boundaries offline','Share host pacing immediately before V7 source guard',V7_ARCHIVE_SOURCE_STEP,'Reauthenticate V7 detached originals and replay without network','Preserve V7 originals and every counted partial attempt','Preserve V7 source-only attestation separately']
  const job={id:9001,run_id:run.id,run_attempt:1,head_sha:head,name:'archive-continuation',status:'completed',conclusion:'success',started_at:stamp(0),completed_at:stamp(20),steps:names.map((name,i)=>({name,status:'completed',conclusion:'success',started_at:stamp(i+1),completed_at:stamp(i+2)}))},jobs={total_count:4,jobs:[...['capture','archive','handoff'].map((name,i)=>({id:9010+i,run_id:run.id,run_attempt:1,head_sha:head,name,status:'completed',conclusion:'skipped',steps:[]})),job]}
  const manifest={version:7,success:true,error:null,codeSha256:fussballArchiveV7CodeSha256(),createdAt:stamp(6),completedAt:stamp(7),checkpoint:{version:6,proof:{priorRequests:1952,currentRequests:0,totalRequestCap:5000,failedV6:{runId:policy.failedV6.runId}}}},result={version:1,activationEligible:false,TEST_ONLY_SYNTHETIC_SOURCE:true},verified={verified:true,sourceOnly:true,activationEligible:false,nativeAdmission:false,requests:3,priorRequests:1952,cumulativeRequests:1955,totalRequestCap:5000,resultSha256:sha256(json(result)),codeSha256:fussballArchiveV7CodeSha256(),current:{createdAt:policy.current.createdAt},administrativeFixtures:[]}
@@ -85,4 +86,14 @@ test('TEST ONLY hosted success authenticates genuine failed1952 parents through 
 test('actual default current-source freshness expires at original clock without GET or caller waiver',async t=>{
  const api=await import('./fussball-completed-source-v7.mjs');let calls=0;t.mock.method(Date,'now',()=>Date.parse('2026-10-29T06:06:59.786Z'))
  await assert.rejects(api.readFussballCompletedSourceV7({sourceRunId,frozenDirectory:'unused',v6FrozenDirectory:'unused',github:async()=>calls++}),/fresh|24|current|stale/i);assert.equal(calls,0)
+})
+
+for(const field of ['actor','triggering_actor'])for(const [name,change]of [['missing',r=>delete r[field]],['id',r=>r[field].id++],['login',r=>r[field].login='other'],['type',r=>r[field].type='Bot']])test('source7 exact reviewed '+field+' rejects '+name,async t=>{
+ const f=synthetic(t);change(f.run);await assert.rejects(f.api.readFussballCompletedSourceV7(f.input),/actor|caller/);assert.equal(f.calls.length,1)
+})
+test('source7 pins all34 source bodies including the helper executed by filename',async t=>{
+ const f=synthetic(t),inventory=f.api.fussballCompletedV7RuntimeInventory();assert.equal(Object.keys(inventory).length,34);assert.ok(inventory['scripts/fussball-v6-failed-replay.mjs']);await f.api.readFussballCompletedSourceV7(f.input);assert.ok(f.calls.includes(prefix+'contents/scripts/fussball-v6-failed-replay.mjs?ref='+head))
+})
+for(const kind of ['changed','missing'])test('source7 refuses '+kind+' remote executed replay helper',async t=>{
+ const f=synthetic(t);f.controls.change=(p,v)=>p.startsWith('contents/scripts/fussball-v6-failed-replay.mjs?')?(kind==='missing'?{type:'missing'}:{...v,content:Buffer.from('TEST ONLY changed replay body').toString('base64')}):v;await assert.rejects(f.api.readFussballCompletedSourceV7(f.input),/immutable producer/);assert.equal(f.replays,0)
 })

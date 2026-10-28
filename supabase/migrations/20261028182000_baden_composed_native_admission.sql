@@ -190,13 +190,12 @@ do $$declare d text;changed text;begin
 end$$;
 
 -- CHECK expressions initialize function ACLs even for ordinary known scores.
--- Grant only schema lookup and these boolean predicates to the actual importer.
+-- Grant only these predicate OIDs to both existing writer roles. Stored CHECK
+-- execution requires EXECUTE and must not widen private schema lookup.
 -- Private marker/catalog tables and all preparer/mutator functions stay closed.
-grant usage on schema private_baden_history,private_fcf_six_history to service_role;
-grant execute on function private_baden_history.unknown_result_allowed(bigint,bigint,bigint,text,text,date,text,text,text,integer),private_fcf_six_history.unknown_result_allowed(bigint,bigint,bigint,text,text,date,text,text,text,integer)to service_role;
+grant execute on function private_baden_history.unknown_result_allowed(bigint,bigint,bigint,text,text,date,text,text,text,integer),private_fcf_six_history.unknown_result_allowed(bigint,bigint,bigint,text,text,date,text,text,text,integer)to service_role,authenticated;
 do $$begin
  if to_regprocedure('private_fcf_g1_supplement.unknown_result_allowed(text,text,date,text,text,text,integer,integer,integer,timestamp with time zone,boolean,boolean,text[])')is not null then
-  grant usage on schema private_fcf_g1_supplement to service_role;
-  grant execute on function private_fcf_g1_supplement.unknown_result_allowed(text,text,date,text,text,text,integer,integer,integer,timestamptz,boolean,boolean,text[])to service_role;
+  grant execute on function private_fcf_g1_supplement.unknown_result_allowed(text,text,date,text,text,text,integer,integer,integer,timestamptz,boolean,boolean,text[])to service_role,authenticated;
  end if;
 end$$;

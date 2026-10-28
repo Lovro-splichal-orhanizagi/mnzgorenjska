@@ -215,18 +215,45 @@ do $$begin
  if not exists(select 1 from matches where id=970000001 and zapisnik_id='es4109409'and home_goals is null and away_goals is null)then raise exception 'TEST: Baden DDL dropped existing Spanish G1 NULL source';end if;
  if not exists(select 1 from private_fcf_g1_supplement.markers where match_id=970000001)then raise exception 'TEST: original installed Spanish G1 marker lost';end if;
 end$$;
--- Actual ordinary importer role: no trigger/privilege/constraint bypass.
+-- Stored CHECK OIDs need EXECUTE, never private schema lookup. Assert ACLs as
+-- the trusted fixture owner before switching into either legitimate writer.
+do $$declare writer text;ns text;helper oid;mutator oid;begin
+ foreach writer in array array['service_role','authenticated']loop
+  foreach ns in array array['private_baden_history','private_fcf_six_history','private_fcf_g1_supplement']loop
+   if has_schema_privilege(writer,ns,'USAGE')then raise exception 'TEST: private schema widened for %: %',writer,ns;end if;
+   select p.oid into strict helper from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname=ns and p.proname='unknown_result_allowed';
+   if not has_function_privilege(writer,helper,'EXECUTE')or has_function_privilege('anon',helper,'EXECUTE')then raise exception 'TEST: exact predicate ACL differs for %: %',writer,ns;end if;
+  end loop;
+  if exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace where(n.nspname='private_baden_history'and c.relname='catalog'or n.nspname='private_historical_statistics'and c.relname='markers')and has_table_privilege(writer,c.oid,'INSERT'))then raise exception 'TEST: private table mutation widened';end if;
+  select 'private_baden_history.check_launch(bigint,jsonb)'::regprocedure::oid into mutator;if has_function_privilege(writer,mutator,'EXECUTE')then raise exception 'TEST: private mutator widened';end if;
+ end loop;
+end$$;
+-- TEST ONLY identity uses ordinary signup/profile provisioning, existing admin
+-- RLS and actual auth.uid(). No policy, table role or trigger is bypassed.
+insert into auth.users(id,email)values('ba000000-0000-4000-8000-000000000007','baden-role-fixture@example.invalid');
+update profiles set is_admin=true where id='ba000000-0000-4000-8000-000000000007';
 insert into competitions(id,slug,name,short_name,source,source_league_code,country_id,active)overriding system value values(975000001,'zz-baden-service-write-probe','TEST ONLY service probe','TEST ONLY','fcf','TEST_ONLY',(select id from countries where code='DE'),false);
-insert into rounds(id,competition_id,season,number,played_on)overriding system value values(975000001,975000001,'2026/27',1,current_date+7);
+insert into rounds(id,competition_id,season,number,played_on)overriding system value values(975000001,975000001,'2026/27',1,current_date+7),(975000002,975000001,'2026/27',2,current_date+7);
 set local role service_role;
+set local request.jwt.claim.role='service_role';
 do $$declare accepted boolean;begin
  if current_user<>'service_role'then raise exception 'TEST: actual importer SQL role required';end if;
- if not has_function_privilege(current_user,'private_baden_history.unknown_result_allowed(bigint,bigint,bigint,text,text,date,text,text,text,integer)','EXECUTE')then raise exception 'TEST: Baden CHECK helper ACL missing';end if;
- if has_table_privilege(current_user,'private_baden_history.catalog','INSERT')or has_table_privilege(current_user,(select c.oid from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='private_historical_statistics'and c.relname='markers'),'INSERT')or has_function_privilege(current_user,'private_baden_history.check_launch(bigint,jsonb)','EXECUTE')then raise exception 'TEST: importer gained private mutation authority';end if;
  insert into public.matches(id,round_id,home_team_id,away_team_id,played_on,home_goals,away_goals)overriding system value values(975000001,975000001,970000001,970000002,current_date+7,0,0);
  update public.matches set home_goals=2,away_goals=1 where id=975000001;
  accepted:=false;begin update public.matches set home_goals=null where id=975000001;accepted:=true;exception when check_violation then null;end;if accepted then raise exception 'TEST: one-null importer write accepted';end if;
  accepted:=false;begin update public.matches set home_goals=null,away_goals=null where id=975000001;accepted:=true;exception when check_violation then null;end;if accepted then raise exception 'TEST: unreviewed both-null importer write accepted';end if;
 end$$;
 reset role;
-select 'BADEN_V7_SERVICE_ROLE_AND_G1_COEXISTENCE_PASS';
+set local request.jwt.claim.sub='ba000000-0000-4000-8000-000000000007';
+set local request.jwt.claim.role='authenticated';
+set local role authenticated;
+do $$declare accepted boolean;begin
+ if current_user<>'authenticated'or auth.uid()<>'ba000000-0000-4000-8000-000000000007'::uuid or not public.is_admin()then raise exception 'TEST: existing authenticated admin RLS required';end if;
+ insert into public.matches(id,round_id,home_team_id,away_team_id,played_on,home_goals,away_goals)overriding system value values(975000002,975000002,970000001,970000002,current_date+7,0,0);
+ update public.matches set home_goals=3,away_goals=1 where id=975000002;
+ if not exists(select 1 from public.matches where id=975000002 and home_goals=3 and away_goals=1)then raise exception 'TEST: authenticated ordinary INSERT/UPDATE failed';end if;
+ accepted:=false;begin update public.matches set home_goals=null where id=975000002;accepted:=true;exception when check_violation then null;end;if accepted then raise exception 'TEST: authenticated one-null write accepted';end if;
+ accepted:=false;begin update public.matches set home_goals=null,away_goals=null where id=975000002;accepted:=true;exception when check_violation then null;end;if accepted then raise exception 'TEST: authenticated foreign both-null write accepted';end if;
+end$$;
+reset role;
+select 'BADEN_V7_TWO_ROLES_CLOSED_SCHEMAS_AND_G1_COEXISTENCE_PASS';

@@ -25,11 +25,12 @@ function fresh(){assertFussballV6CurrentFresh(Date.now())}
  * data profile and workflow body. Source HEAD may differ from the writer HEAD. */
 export function fussballCompletedV7RuntimeInventory(){
  need(fussballCaptureCodeSha256()===underlyingCode&&fussballArchiveV7CodeSha256()===archiveCode,'reviewed V7 capture closure changed')
- const extra=['scripts/zajemi-fussball-sezono.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/vzorci/de-fussball-baden-archive-20261026.json',...['checkpoints','resumption','successor','v4','v5','v6','v7'].map(x=>`scripts/policies/fussball-transport-${x}.json`),policy.workflow]
+ const extra=['scripts/fussball-v6-failed-replay.mjs','scripts/zajemi-fussball-sezono.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/vzorci/de-fussball-baden-archive-20261026.json',...['checkpoints','resumption','successor','v4','v5','v6','v7'].map(x=>`scripts/policies/fussball-transport-${x}.json`),policy.workflow]
  const files=[...new Set([...zaprtje('scripts/fussball-archive-v7.mjs'),...zaprtje('scripts/fussball-archive-v7-actions.mjs'),...extra])].sort()
  return Object.fromEntries(files.map(file=>[file,sha256(readFileSync(new URL('../'+file,import.meta.url)))]))
 }
 function runIdentity(r,id){
+ need([r?.actor,r?.triggering_actor].every(a=>a?.id===25134229&&a.login==='nejcar20'&&a.type==='User'),'actual reviewed actor and triggering actor required')
  need(r?.id===Number(id)&&r.run_attempt===1&&r.status==='completed'&&r.conclusion==='success'&&/^[a-f0-9]{40}$/.test(r.head_sha??'')&&r.head_branch==='main'&&r.event==='workflow_dispatch'&&r.path===policy.workflow&&r.repository?.full_name===repo&&r.head_repository?.full_name===repo,'actual successful first-attempt main/manual V7 run required')
  need(stamp(r.created_at)<=stamp(r.updated_at)&&stamp(r.updated_at)<=Date.now(),'actual source run clock differs')
 }
