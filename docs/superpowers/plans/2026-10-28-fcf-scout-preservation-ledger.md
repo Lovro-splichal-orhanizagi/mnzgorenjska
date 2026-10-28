@@ -30,3 +30,21 @@ Result: four tests passed, zero failures/skips:
 - The unchanged additive G1 SQL projection executes its full relation/column/FK catalog checks successfully after the new migration; no registry expansion is needed.
 
 `node --check`, copied-body equivalence checks and `git diff --check` also passed. No broad SQL/npm suite, external network, SSH, environment-file read, production mutation, source capture, dispatch or push was performed. One combined independent review remains with root before rollout.
+
+## Combined-review P2: portable CI execution
+
+The combined review found that the new runner was local-only and absent from CI. This follow-up changes only the runner, `.github/workflows/ci.yml` and this ledger. Production SQL and Python remain unchanged.
+
+The existing `varnost` job now invokes all four focused tests after the existing future cleanup/projection/import/activation checks, with `FCF_SCOUT_CI_SQL_TEST=1`. The job runs for PRs and main. The runner requires `GITHUB_ACTIONS=true`, `RUNNER_ENVIRONMENT=github-hosted`, exact repository/workflow/job identity, the exact `ci.yml` workflow path and a PR merge or main CI ref. A requested CI mode outside this boundary fails before a client is launched; the intended CI job without explicit opt-in also fails instead of silently skipping. Ordinary local runs without opt-in may skip. The separately opted-in local mode still verifies the exact owned container ID/label/network/mounts/ports immediately before each transaction.
+
+CI uses fixed `/usr/bin/psql`, host `127.0.0.1`, port54322, database/user `postgres`, and the standard disposable password `postgres`; no URL or caller-supplied connection target is accepted. Its child process receives a new literal environment allowlist, not inherited `PGSERVICE`, `PGSERVICEFILE`, `PGHOSTADDR`, `PGOPTIONS`, pass-file, service-directory, HOME or psqlrc values. Explicit `-X`, noninteractive authentication, fixed empty pass-file/service-directory locations and connection timeout remain in force. Both modes require the final explicit rollback sentinel.
+
+Runner setup now checks whether preservation/G1 function signatures are installed before loading their migration definitions, so the same four assertions cover CI's already-migrated fresh database and the older owned clone. No production migration was made idempotent or altered for tests.
+
+Validation of this delta:
+
+- `node scripts/test-fcf-scout-preservation-sql.mjs --guard-self-test`: passed valid PR/main modes, rejected missing opt-in and each wrong CI identity/ref/event, rejected mixed/local-in-Actions modes, verified disabled ordinary local mode and the fixed fresh PostgreSQL environment. This mode launches no client or database connection.
+- `FCF_SCOUT_OWNED_SQL_TEST=1 node --test scripts/test-fcf-scout-preservation-sql.mjs`: four passed, zero skipped/failed, using the reverified exact disconnected owned clone with explicit rollback for each test.
+- `node --check`, Ruby YAML parsing/step placement assertions and `git diff --check`: passed.
+
+The hosted CI connection path has not been executed locally, and no local port54322 was contacted. PR and main CI are the remaining end-to-end verification of that route. No broad suites, push, network, SSH or environment-file reads were performed in this follow-up.
