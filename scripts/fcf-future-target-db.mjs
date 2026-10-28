@@ -13,16 +13,26 @@ export function createFcfFutureTargetDatabase(input={}){
  keys(input,Object.keys(input).filter(k=>['env','execute','network','targetSlug'].includes(k)),'database options')
  const {env=process.env,execute=execFileSync,network=globalThis.fetch,targetSlug='es-ct-tercera-g9'}=input,target=getFcfFutureTarget({targetSlug})
  if(typeof execute!=='function'||typeof network!=='function')fail('fixed database adapters required')
- if(env.SUPABASE_DB_URL){let u;try{u=new URL(env.SUPABASE_DB_URL)}catch{fail('invalid database endpoint')};if(!['postgres:','postgresql:'].includes(u.protocol)||u.hostname!=='127.0.0.1'||u.port!=='5432'||u.hash||[...u.searchParams].some(([k,v])=>k!=='sslmode'||!['disable','prefer','require'].includes(v)))fail('existing localhost5432 SSH tunnel required')}
+ let connection
+ if(env.SUPABASE_DB_URL){
+  let u;try{u=new URL(env.SUPABASE_DB_URL)}catch{fail('invalid database endpoint')}
+  if(!['postgres:','postgresql:'].includes(u.protocol)||u.hostname!=='127.0.0.1'||u.port!=='5432'||u.hash||[...u.searchParams].some(([k,v])=>k!=='sslmode'||!['disable','prefer','require'].includes(v)))fail('existing localhost5432 SSH tunnel required')
+  // PGDATABASE does not expand a connection URI. Decode individual libpq
+  // values; preserve the original database path rather than URL dot normalization.
+  const path=env.SUPABASE_DB_URL.trim().match(/^[^:]+:\/\/[^/?#]*(\/[^?#]*)?/)?.[1]??''
+  let components;try{components=[u.username,u.password,path.slice(1)].map(decodeURIComponent);if(components.some(v=>v.includes('\0')))throw Error()}catch{fail('invalid database endpoint encoding')}
+  const [PGUSER,PGPASSWORD,PGDATABASE]=components
+  connection={PGUSER,PGPASSWORD,PGDATABASE,PGHOST:'127.0.0.1',PGPORT:'5432',PGSSLMODE:u.searchParams.getAll('sslmode').at(-1)??'prefer'}
+ }
  const selected=s=>{if(s!==target.targetSlug)fail('exact selected future G9 required');return literal(s)}
  const privacy=values=>{if(!Array.isArray(values)||values.length>20000||new Set(values).size!==values.length||values.some(v=>typeof v!=='string'||!/^[a-f0-9]{64}$/.test(v)))fail('unique bounded privacy SHA keys required');return `ARRAY[${values.map(literal).join(',')}]::text[]`}
  function read(expression){
-  if(!env.SUPABASE_DB_URL)fail('existing database URL required')
+  if(!connection)fail('existing database URL required')
   // URI host validation alone does not constrain libpq's actual destination:
   // inherited hostaddr/service settings must not bypass the existing tunnel.
-  const readEnv={...env,PGDATABASE:env.SUPABASE_DB_URL,PGHOSTADDR:'127.0.0.1',PGCONNECT_TIMEOUT:'15'}
+  const readEnv={...env,...connection,PGHOSTADDR:'127.0.0.1',PGCONNECT_TIMEOUT:'15'}
   for(const key of ['PGSERVICE','PGSERVICEFILE','PGSYSCONFDIR'])delete readEnv[key]
-  let raw;try{raw=execute('psql',['-X','-qAt','-v','ON_ERROR_STOP=1'],{env:readEnv,input:`BEGIN READ ONLY;\nSET LOCAL ROLE service_role;\nSET LOCAL statement_timeout='180s';\nSELECT ${expression};\nROLLBACK;\n`,timeout:200000,maxBuffer:limit,stdio:['pipe','pipe','pipe']})}catch{fail('readonly database query failed')}
+  let raw;try{raw=execute('psql',['-X','-w','-qAt','-v','ON_ERROR_STOP=1'],{env:readEnv,input:`BEGIN READ ONLY;\nSET LOCAL ROLE service_role;\nSET LOCAL statement_timeout='180s';\nSELECT ${expression};\nROLLBACK;\n`,timeout:200000,maxBuffer:limit,stdio:['pipe','pipe','pipe']})}catch{fail('readonly database query failed')}
   try{const value=String(raw).trim();if(Buffer.byteLength(value)>limit)fail('readonly result bound exceeded');return JSON.parse(value)}catch{fail('invalid bounded readonly database result')}
  }
  function parameters(stage,p){
