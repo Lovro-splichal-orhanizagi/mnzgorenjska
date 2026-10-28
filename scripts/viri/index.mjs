@@ -76,6 +76,7 @@ import dbu from './dbu.mjs'
 import nff from './nff.mjs'
 import kff from './kff.mjs'
 import pflAz from './pfl-az.mjs'
+import jfl from './jfl.mjs'
 
 const VIRI = {
   // Ukrajina: Profesionalna nogometna liga prek pfl.ua.
@@ -216,6 +217,10 @@ const VIRI = {
   // Azerbajdžan: PFL (I in II Liqa) prek javnega API-ja pfl.az (razpored) in
   // zapisnikov PDF (pdftotext); brez šifer igralcev, vratar je prvi začetnik (namig).
   'pfl-az': pflAz,
+  // Japonska: Japan Football League (4. raven) prek jfl.or.jp — razpored in stran
+  // tekme (HTML, ista vsebina kot uradni PDF), brez šifer igralcev (ime + klub),
+  // pozicije GK/DF/MF/FW iz postave, čas Tokio → Ljubljana.
+  jfl,
 }
 
 /**

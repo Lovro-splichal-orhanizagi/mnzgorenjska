@@ -127,6 +127,7 @@ tabelo šifer tam, ne tu.
 | Kazahstan | `docs/viri/kazahstan.md` | `kff` |
 | Moldavija | `docs/viri/moldavija.md` | `fmf` |
 | Azerbajdžan | `docs/viri/azerbajdzan.md` | `pfl-az` |
+| Japonska | `docs/viri/japonska.md` | `jfl` |
 
 Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
 

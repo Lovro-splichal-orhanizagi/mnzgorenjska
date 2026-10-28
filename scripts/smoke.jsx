@@ -5139,6 +5139,110 @@ preveri(
     !A.default.zaPredpomnilnik('<html></html>', 'pfl-az-krogi-55-1.json') && !A.default.zaPredpomnilnik('', 'pfl-az-7249-x.txt'))
 }
 
+// --- vir jfl (Japonska, Japan Football League: razpored in stran tekme, HTML) ---
+{
+  const J = await import('./viri/jfl.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('jfl: vir je vpisan', viri.jfl === J.default && J.default.drzava === 'JP' && J.default.imaRegistracije === false &&
+    J.default.premorMs >= 3000 && J.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' && J.default.fetch === J.jflFetch)
+  let slabaKoda = false
+  try { J.razbijKodo('2026A001') } catch { slabaKoda = true }
+  preveri('jfl: šifra lige <stran>-<sezona>, naslovi, šifra zapisnika jp<id>', slabaKoda && J.razbijKodo(' 2591-2026A001 ').leto === 2026 &&
+    J.naslovRazporeda('2591-2026A001') === 'https://www.jfl.or.jp/jfl-pc/view/s.php?a=2591&f=2026A001_spc.html' &&
+    J.naslovTekme('/jfl-pc/view/s.php?a=2617&amp;f=2026A0010111_spc.html') === 'https://www.jfl.or.jp/jfl-pc/view/s.php?a=2617&f=2026A0010111_spc.html' &&
+    J.sifraZapisnika('2026A0010111') === 'jp2026A0010111' && J.sifraZapisnika('jp2026A0010111') === 'jp2026A0010111' &&
+    J.default.naslovZapisnika(null, 'jp2026A0010111') === 'http://data.jfl.or.jp/jfl-pc/pdf/2026A001/2026A0010111.pdf')
+  // Tokio je UTC+9 brez poletnega časa: poleti −7 h, pozimi −8 h do Ljubljane.
+  preveri('jfl: tokijski čas v ljubljanskega, minute', J.vLjubljano('2026-08-29', '14:00').ura === '07:00' &&
+    J.vLjubljano('2026-11-29', '13:00').ura === '05:00' && J.vLjubljano('2026-12-05', '03:00').datum === '2026-12-04' &&
+    J.vLjubljano('2026-12-05', null).datum === '2026-12-05' && J.vLjubljano('2026-12-05', null).ura === null && J.vLjubljano(null, '13:00').datum === null &&
+    J.minuta('29分') === 29 && J.minuta('90+4分') === 90 && J.minuta('45+2分') === 45 && J.minuta('試合後') === null && J.minuta('HT') === 45)
+  // Datum v razporedu je brez leta: jesensko-pomladna sezona julij–december prvo leto, sicer drugo.
+  const leta = J.letaSezone('<h2 class="title-red-new">第２８回 日本フットボールリーグ(2026-2027)</h2>')
+  const leta25 = J.letaSezone('<h2 class="title-red-new">第２７回 日本フットボールリーグ(2025)</h2>')
+  preveri('jfl: leto iz naslova sezone, oznaka 2026/27 oziroma koledarska 2025', J.datumVrstice('08月29日(土)', leta) === '2026-08-29' &&
+    J.datumVrstice('03月06日(土)', leta) === '2027-03-06' && J.datumVrstice('未定', leta) === null && J.oznakaSezone(leta) === '2026/27' &&
+    J.datumVrstice('11月23日(日)', leta25) === '2025-11-23' && J.oznakaSezone(leta25) === '2025')
+
+  const { tekme, sezona } = J.tekmeRazporeda('2591-2026A001', beri('jp-jfl-razpored-2591-2026A001.html'))
+  const razpored = J.razcleniRazpored(tekme)
+  const t1 = tekme[0]
+  const odpovedana = tekme.find((t) => t.id === '2026A0010918')
+  preveri('jfl: razpored — 30 krogov po 8, 16 klubov, 70 odigranih, 62 brez datuma (未定)', sezona === '2026/27' && razpored.length === 30 &&
+    razpored.every((k) => k.tekme.length === 8) && new Set(tekme.flatMap((t) => [t.domaci, t.gostje])).size === 16 &&
+    tekme.filter((t) => t.izid).length === 70 && tekme.filter((t) => !t.datum).length === 62 && tekme.filter((t) => !t.ura).length === 62)
+  preveri('jfl: tekma iz razporeda (ljubljanski čas, izid, stran tekme, PDF)', t1.id === '2026A0010111' && t1.krog === 1 && t1.datum === '2026-08-29' &&
+    t1.ura === '07:00' && t1.domaci === 'いわてグルージャ盛岡' && t1.gostje === 'ラインメール青森' && t1.izid?.domaci === 0 &&
+    /a=2617&f=2026A0010111_spc\.html$/.test(t1.povezava) && t1.pdf === 'http://data.jfl.or.jp/jfl-pc/pdf/2026A001/2026A0010111.pdf')
+  preveri('jfl: odpovedana tekma (中止, "&nbsp;-&nbsp;") ni odigrana, ostane v krogu', odpovedana && !odpovedana.izid && odpovedana.povezava &&
+    razpored[8].tekme.filter((t) => t.odigrana).length === 7)
+  let tujaSezona = false
+  try { J.tekmeRazporeda('2375-2025A001', beri('jp-jfl-razpored-2591-2026A001.html')) } catch { tujaSezona = true }
+  preveri('jfl: stran druge sezone (napačen a=) ustavi uvoz', tujaSezona)
+
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  const z = J.vZapisnik(beri('jp-jfl-tekma-2026A0010111-cas-kartoni.html'), { id: 'jp2026A0010111', krog: 1, sezona: '2026/27' })
+  const n = J.nastopi(z)
+  preveri('jfl: zapisnik — 11 + 11, izid, polčas, ljubljanski čas, pozicije, brez "(C)", brez opozoril', z.domaci.postava.length === 11 &&
+    z.gostje.postava.length === 11 && z.domaci.rezerve.length === 9 && z.rezultat.domaci === 0 && z.polcas?.gostje === 0 && z.datum === '2026-08-29' &&
+    z.ura === '07:00' && z.sezona === '2026/27' && z.domaci.postava[0].vratar && z.domaci.postava[0].pozicija === 'GK' &&
+    z.domaci.postava[1].pozicija === 'DEF' && z.domaci.postava[5].ime === '弓削 翼' && !z.nepopoln && !z.opozorila.length)
+  preveri('jfl: menjave (ven, nato noter) z minuto — 990 + 990, 10 s klopi', minute(n, 0) === 990 && minute(n, 1) === 990 &&
+    n.filter((x) => !x.zacetnik).length === 10 && n.find((x) => x.ime === '宮原 輝')?.minute === 63 &&
+    n.find((x) => x.ime === '秦 心太朗')?.minutaOd === 63 && n.find((x) => x.ime === '秦 心太朗')?.pozicija === 'MID' &&
+    !n.some((x) => x.ime === '植田 峻佑'))
+  preveri('jfl: rumeni kartoni po strani in dresu', z.rumeni.length === 3 && n.find((x) => x.ime === '佐久間 駿希')?.rumeni === 1 &&
+    n.find((x) => x.ime === '佐久間 駿希')?.ekipaIdx === 1)
+
+  const z2 = J.vZapisnik(beri('jp-jfl-tekma-2026A0010218-avtogol.html'), {})
+  const n2 = J.nastopi(z2)
+  preveri('jfl: avtogol (オウンゴール) brez strelca šteje ekipi, pri kateri je zapisan (2:1)', z2.goli.length === 3 &&
+    z2.goli.some((g) => g.avtogol && g.ekipaIdx === 1 && g.ime === null && g.minuta === 74) && !z2.nepopoln &&
+    n2.filter((x) => x.ekipaIdx === 0).reduce((a, x) => a + x.goli, 0) === 1 && n2.find((x) => x.ime === '峰田 祐哉')?.rumeni === 1)
+  const z3 = J.vZapisnik(beri('jp-jfl-tekma-2026A0010213-enajstmetrovka.html'), {})
+  preveri('jfl: gol iz 11 m "(PK)", ime brez oznake', J.nastopi(z3).find((x) => x.ime === '小堀 空')?.goliIzEnajstmetrovke === 1 && !z3.nepopoln)
+  const z4 = J.vZapisnik(beri('jp-jfl-tekma-2026A0010416-drugi-rumeni.html'), {})
+  const n4 = J.nastopi(z4)
+  preveri('jfl: drugi rumeni ("警告2") je 1 rumeni + 1 rdeči, 951 minut', n4.find((x) => x.ime === '小川 真輝')?.rumeni === 1 &&
+    n4.find((x) => x.ime === '小川 真輝')?.rdeci === 1 && n4.find((x) => x.ime === '小川 真輝')?.minute === 51 && minute(n4, 1) === 951 && !z4.nepopoln)
+  const z5 = J.vZapisnik(beri('jp-jfl-tekma-2026A0010412-rdeci.html'), {})
+  preveri('jfl: neposredni rdeči v 79. minuti, 979 minut', z5.rdeci.length === 1 && J.nastopi(z5).find((x) => x.ime === '森 夢真')?.minute === 79 &&
+    minute(J.nastopi(z5), 0) === 979)
+  const z6 = J.vZapisnik(beri('jp-jfl-tekma-2025A0011013-koledarska.html'), { sezona: '2025' })
+  preveri('jfl: arhiv 2025 (koledarska sezona) v isti obliki', z6.krog === 10 && z6.datum === '2025-05-31' && z6.ura === '06:00' &&
+    z6.domaci.postava.length === 11 && z6.gostje.postava.length === 11 && minute(J.nastopi(z6), 0) === 990 && !z6.nepopoln)
+  const okrnjena = beri('jp-jfl-tekma-2026A0010218-avtogol.html').replace(/<th> 19<\/th><td>内田 優晟<\/td>\s*<\/tr>/, '</tr>')
+  preveri('jfl: manjkajoč gol je nepopoln zapisnik', J.vZapisnik(okrnjena, {}).nepopoln && J.vZapisnik(okrnjena, {}).opozorila[0].startsWith(J.NEPOPOLN))
+  preveri('jfl: tekma v teku in odvzeta tekma nimata zapisnika', J.vZapisnik(beri('jp-jfl-tekma-2026A0010111-cas-kartoni.html').replace('【試合終了】', '【後半】'), {}) === null &&
+    J.vZapisnik(beri('jp-jfl-tekma-2026A0010111-cas-kartoni.html').replace('【試合終了】', '【没収試合】'), {}) === null)
+  preveri('jfl: v predpomnilniku ni trenerjev, sodnikov in kartonov osebja', !/監|主 審|観客|試合後/.test(beri('jp-jfl-tekma-2026A0010416-drugi-rumeni.html')) &&
+    !/監　督/.test(J.ocistiTekmo('<div class="detail"><div class="section"><h3>得　点</h3></div><div class="section"><h3>監　督</h3>X</div>')))
+  preveri('jfl: ključ in kratko ime kluba (polna širina)', J.kljucKlubaJp('Ｈｏｎｄａ ＦＣ') === 'honda fc' && J.kljucKlubaJp('Y.S.C.C.横浜') === J.kljucKlubaJp('Ｙ.Ｓ.Ｃ.Ｃ.横浜') &&
+    J.kratkoImeJp('Ｈｏｎｄａ ＦＣ') === 'Ｈｏｎｄａ' && J.kratkoImeJp('ＦＣマルヤス岡崎') === 'マルヤス岡崎' && J.kratkoImeJp('沖縄ＳＶ') === '沖縄ＳＶ')
+
+  const kont = [{ stevilka: 4, tekme: [{ domaci: 'A', gostje: 'B', datum: '2026-09-19', izid: { domaci: 3, gostje: 0 }, jflId: '2026A0010416', povezava: '/x' }] }]
+  const najdene = await J.default.kontumacije('2591-2026A001', async () => beri('jp-jfl-tekma-2026A0010416-drugi-rumeni.html').replace('【試合終了】', '【没収試合】'), kont, '2026-10-28')
+  preveri('jfl: kontumacije() označi odvzeto tekmo (没収)', najdene.length === 1 && najdene[0].krog === 4)
+
+  // Zavrnitev (401/403/429) ali izziv ustavi uvoz (izhod 4); stran tekme se vrne očiščena.
+  const pravi = globalThis.fetch
+  const poskusi = async (odgovor) => {
+    globalThis.fetch = async () => odgovor
+    try { return { r: await J.jflFetch('https://www.jfl.or.jp/jfl-pc/view/s.php?a=1') } } catch (e) { return { e } } finally { globalThis.fetch = pravi }
+  }
+  const z403 = await poskusi(new Response('', { status: 403 }))
+  const z429 = await poskusi(new Response('', { status: 429 }))
+  const izziv = await poskusi(new Response('<title>Just a moment...</title>', { status: 200 }))
+  const tekma = await poskusi(new Response(`<html><div class="detail">${beri('jp-jfl-tekma-2026A0010111-cas-kartoni.html').slice(20)}<div class="section"><h3>監　督</h3>X</div><div class="section"><h3>試合情報</h3>Y</div>`, { status: 200 }))
+  const telo = await tekma.r?.text()
+  preveri('jfl: 403, 429 in izziv so zavrnitev, stran tekme brez osebja', z403.e?.zavrnitev && z429.e?.zavrnitev && izziv.e?.zavrnitev &&
+    J.jeStranTekme(telo) && !/監|試合情報/.test(telo))
+  preveri('jfl: v predpomnilnik le razpored in končana tekma', J.default.zaPredpomnilnik(beri('jp-jfl-razpored-2591-2026A001.html')) &&
+    J.default.zaPredpomnilnik(beri('jp-jfl-tekma-2026A0010111-cas-kartoni.html')) && !J.default.zaPredpomnilnik('<html>napaka</html>') &&
+    !J.default.zaPredpomnilnik(beri('jp-jfl-tekma-2026A0010111-cas-kartoni.html').replace('【試合終了】', '【前半】')))
+}
+
 // --- soimenjak pri drugem klubu ni prestop (Petrović Lazar, fssid 10/2026) -------
 {
   const { prestopSkladen, trk, imataTrk } = await import('./prestop.mjs')
