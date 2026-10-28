@@ -693,4 +693,3 @@ revoke all on function private_fcf_future_projection.capture(text,text[])from pu
 revoke all on function private_fcf_future_activation.next_round(bigint,int,timestamptz),private_fcf_future_activation.after_image(bigint)from public,anon,authenticated,service_role;
 revoke all on function public.fcf_future_current_target_import(text,text),public.fcf_future_current_target_check(text,text,boolean),public.fcf_future_current_target_receipt(text)from public,anon,authenticated;
 grant execute on function public.fcf_future_current_target_import(text,text),public.fcf_future_current_target_check(text,text,boolean),public.fcf_future_current_target_receipt(text)to service_role;
-
