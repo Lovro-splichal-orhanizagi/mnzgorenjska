@@ -10,7 +10,11 @@ export function githubGetAdapter(token){
  need(typeof token==='string'&&token.length>0,'GitHub read token required')
  return async(path,binary=false)=>{
   need(typeof path==='string'&&path.startsWith(`repos/${repo}/`)&&!path.includes('..')&&!path.includes('\\')&&!path.includes('\n'),'own-repository GET only')
-  const bytes=execFileSync('gh',['api','--method','GET',path],{env:{...process.env,GH_TOKEN:token},timeout:60000,maxBuffer:(binary?512:8)*1024*1024+1})
+  const contents=path.startsWith(`repos/${repo}/contents/`),catalogRaw=binary&&contents
+  need(!catalogRaw||new RegExp(`^repos/${repo}/contents/scripts/policies/fussball-baden-native-composition\\.json\\?ref=[a-f0-9]{40}$`).test(path),'fixed immutable catalog raw GET only')
+  const media=contents?['--header',`Accept: application/vnd.github.${binary?'raw':'object'}+json`]:[]
+  const bytes=execFileSync('gh',['api','--method','GET',...media,path],{env:{...process.env,GH_TOKEN:token},timeout:60000,maxBuffer:(catalogRaw?4:binary?512:8)*1024*1024+1})
+  need(!catalogRaw||(Buffer.isBuffer(bytes)&&bytes.length<=4*1024*1024),'bounded raw catalog required')
   return binary?bytes:JSON.parse(bytes)
  }
 }
