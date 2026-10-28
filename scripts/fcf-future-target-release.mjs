@@ -1,5 +1,6 @@
+import {buildFcfG1NativeSupplementBinding,verifyFcfG1SupplementCanonical} from './fcf-g1-supplement-native.mjs'
 import {getFcfFutureTarget} from './fcf-future-target-catalog.mjs'
-import {readFcfFutureNativeSource,requireFcfFutureCurrentMarkers} from './fcf-future-native-scope.mjs'
+import {readFcfFutureNativeSource,requireFcfFutureCurrentMarkers,requireFcfFutureNativeWriter,isFcfG1SupplementNative,fcfFutureNativeVersions} from './fcf-future-native-scope.mjs'
 // Source-closed future IMPORT packet DATA only. No launch choice, writer,
 // native/readiness/activation authority, network or database client is issued.
 import {createHash} from 'node:crypto'
@@ -29,9 +30,10 @@ function cleanup(e,now){
  }
  return {phase:e.phase,sourceCommit:e.sourceCommit,preparedUTC:e.preparedUTC,beforeImageText:e.beforeImageText,beforeSha256:e.beforeSha256,policyHashes:structuredClone(e.policyHashes),originals:e.originals.map(({html,...descriptor})=>structuredClone(descriptor)),prepareArtifact:structuredClone(e.prepareArtifact),appliedReceipt:structuredClone(e.appliedReceipt)}
 }
-function historical(fixtures,originals,policy){
+function historical(fixtures,originals,policy,supplement){
  const slug=policy.competitionSlug
- const rows=fixtures.filter(f=>f.statisticsStatus==='unavailable_historical')
+ const rows=fixtures.filter(f=>f.statisticsStatus==='unavailable_historical'&&(!supplement||f.id!=='es4109409'))
+ if(supplement)verifyFcfG1SupplementCanonical(fixtures.find(f=>f.id==='es4109409'))
  if(!same(rows.map(f=>f.id.slice(2)).sort(),policy.entries.map(e=>e.sourceMatchId).sort()))fail('exact approved G9 historical canonical set required')
  for(const f of rows){
   const id=f.id.slice(2),d=originals.find(d=>d.sourceMatchId===id),e=policy.entries.find(e=>e.sourceMatchId===id),observation=f.source?.historicalObservation
@@ -45,19 +47,21 @@ function compile(input,auditedUTC,currentDatabaseInventory){
  const selected=getFcfFutureTarget({targetSlug}),slug=targetSlug,code=selected.sourceCode
  if(!commit(sourceCommit)||!Number.isSafeInteger(now)||!Number.isFinite(new Date(now).getTime()))fail('exact G9 reviewed writer SHA/current clock required')
  const {data}=readFcfFutureNativeSource({targetSlug,inventoryAdmission:targetEvidence,now}),binding=cleanup(cleanupEvidence,now),b=data.binding
+ requireFcfFutureNativeWriter({data,sourceCommit})
  requireFcfFutureCurrentMarkers({cleanupEvidence,data,databaseInventory:currentDatabaseInventory??databaseInventory})
  const {inventory,target}=validateFcfTargetReleaseInventory({targetSlug,databaseInventory,cleanupPhase:'applied',sourcePolicy:FCF_SIX_SOURCE_POLICY,now})
  auditedUTC??=new Date(now).toISOString()
  if(!validUTC(auditedUTC)||Date.parse(auditedUTC)>now||now-Date.parse(auditedUTC)>86400000)fail('original packet audit clock is stale/future')
  const fixtures=data.fixtures,policy=getFcfSixPolicy(slug)
  if(!Array.isArray(fixtures)||fixtures.length!==240||new Set(fixtures.map(f=>f.id)).size!==240||fixtures.some(f=>!/^es\d{7}$/.test(f.id)||Number(f.id.slice(2))<selected.start||Number(f.id.slice(2))>selected.end))fail('complete exact G9 canonical block required')
- historical(fixtures,binding.originals,policy)
+ historical(fixtures,binding.originals,policy,isFcfG1SupplementNative(data))
  const calendar=validateFcfCurrentReleaseCalendar(fixtures)
  if(!same(calendar.clubs,data.clubs)||!same(calendar.verifiedKeeperClubs,data.verifiedKeeperClubs))fail('authenticated complete clubs/keeper calendar differs')
  const byId=new Map(fixtures.map(f=>[f.id.slice(2),f]))
  if(target.nativeImportedIDs.some(id=>!byId.has(id)||byId.get(id).statisticsStatus==='pending'))fail('known native imported target report cannot be downgraded to pending')
  const canonical={sourceEvidence:structuredClone(b),competitionId:selected.competitionId,competitionSlug:slug,sourceCode:code,season,historicalCutline:cutline,policyId:policy.id,policySha256:fingerprint(policy),...calendar,fixtures}
- const manifest={schemaVersion:4,kind:'fcf-future-current-target-import',targetSlug,sourceCommit,auditedUTC,cleanupBinding:binding,databaseInventory:inventory,target:canonical},manifestText=JSON.stringify(manifest)
+ const supplemental=isFcfG1SupplementNative(data)?{supplementalBinding:buildFcfG1NativeSupplementBinding({data,databaseInventory:currentDatabaseInventory??databaseInventory})}:{}
+ const manifest={schemaVersion:fcfFutureNativeVersions(data).packet,kind:'fcf-future-current-target-import',targetSlug,sourceCommit,auditedUTC,cleanupBinding:binding,...supplemental,databaseInventory:inventory,target:canonical},manifestText=JSON.stringify(manifest)
  if(Buffer.byteLength(manifestText)>8*1024*1024)fail('bounded8MB future import packet required')
  return Object.freeze({manifestText,manifestSha256:hash(manifestText)})
 }
@@ -74,8 +78,9 @@ export function verifyFcfFutureTargetImportPacket(input){
  const {manifestText,manifestSha256,currentDatabaseInventory,...base}=input
  if(typeof manifestText!=='string'||!manifestText.length||Buffer.byteLength(manifestText)>8*1024*1024||manifestText.charCodeAt(0)===0xfeff||!sha(manifestSha256)||hash(manifestText)!==manifestSha256)fail('exact bounded future import packet TEXT/SHA required')
  let manifest;try{manifest=JSON.parse(manifestText)}catch{fail('invalid future import packet JSON')}
- keys(manifest,outer,'future import packet')
- if(manifest.schemaVersion!==4||manifest.kind!=='fcf-future-current-target-import'||manifest.targetSlug!==input.targetSlug)fail('separate future import packet schema4 required')
+ const {data}=readFcfFutureNativeSource({targetSlug:input.targetSlug,inventoryAdmission:input.targetEvidence,now:input.now??Date.now()})
+ keys(manifest,[...outer,...(isFcfG1SupplementNative(data)?['supplementalBinding']:[])],'future import packet')
+ if(manifest.schemaVersion!==fcfFutureNativeVersions(data).packet||manifest.kind!=='fcf-future-current-target-import'||manifest.targetSlug!==input.targetSlug)fail('separate future import packet schema4 required')
  const rebuilt=compile(base,manifest.auditedUTC,currentDatabaseInventory)
  if(rebuilt.manifestText!==manifestText||rebuilt.manifestSha256!==manifestSha256)fail('future import packet differs from independently authenticated current inputs')
  return rebuilt

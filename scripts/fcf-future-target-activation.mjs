@@ -1,4 +1,4 @@
-import {readFcfFutureNativeSource} from './fcf-future-native-scope.mjs'
+import {readFcfFutureNativeSource,requireFcfFutureNativeWriter,fcfFutureNativeVersions} from './fcf-future-native-scope.mjs'
 // Pure, source-closed future activation packet DATA. No transport, native writes,
 // Actions approval, SQL authentication or activation capability is issued.
 import {createHash} from 'node:crypto'
@@ -55,6 +55,7 @@ function context(input,extra=[]){
  const now=Object.hasOwn(input,'now')?input.now:Date.now()
  if(!hex(input.sourceCommit,40)||!Number.isSafeInteger(now)||!Number.isFinite(new Date(now).getTime()))fail('exact G9 reviewed writer/current clock required')
  const origin=execution(input.execution,input.sourceCommit),{data,target}=readFcfFutureNativeSource({targetSlug:input.targetSlug,inventoryAdmission:input.inventoryAdmission,now}),slug=target.targetSlug,cid=target.competitionId
+ requireFcfFutureNativeWriter({data,sourceCommit:input.sourceCommit})
  if(!isVerifiedFcfFutureSixCleanupEvidence(input.cleanupEvidence)||input.cleanupEvidence.phase!=='applied')fail('reader-issued APPLIED future cleanup required')
  const prices=projection(input.nativeProjection,now,target),r=input.importReceipt
  keys(r,['id','competition_id','inventory_key','packet_sha256','source_fingerprint','cleanup_before_sha256','imported_state_sha256','stage','activation_result','created_at','rolloutText','rolloutSha256','currentActive','currentStateSha256','canonicalVerified'],'actual import receipt readback')
@@ -77,7 +78,7 @@ function packet(input,ctx,auditedUTC,proposal){
  if(!validUTC(auditedUTC)||Date.parse(auditedUTC)>ctx.now||ctx.now-Date.parse(auditedUTC)>86400000)fail('original activation audit clock is stale/future')
  const launchProposal=proposal===undefined?selectFcfFutureLaunch(ctx.launchInput):verifyFcfFutureLaunch(ctx.launchInput,freeze(proposal))
  const readiness=buildFcfFutureTargetReadiness({targetSlug:slug,pricingSnapshot:input.nativeProjection.pricingSnapshot,replay:input.pricingReplay,modelSha256:fcfTargetPricingModelSha256(),sourceData:ctx.data,launchInput:ctx.launchInput,launchProposal,now:ctx.now})
- const manifest={schemaVersion:4,kind:'fcf-future-current-target-activation',targetSlug:slug,sourceCommit:input.sourceCommit,execution:ctx.origin,importReceiptId:String(input.importReceipt.id),importRolloutText:input.importReceipt.rolloutText,importRolloutSha256:input.importReceipt.rolloutSha256,nativeSnapshotText:input.nativeProjection.dependencySnapshotText,nativeSnapshotSha256:input.nativeProjection.dependencySnapshotSha256,launchProposal,readiness,auditedUTC},activationText=JSON.stringify(manifest)
+ const manifest={schemaVersion:fcfFutureNativeVersions(ctx.data).activation,kind:'fcf-future-current-target-activation',targetSlug:slug,sourceCommit:input.sourceCommit,execution:ctx.origin,importReceiptId:String(input.importReceipt.id),importRolloutText:input.importReceipt.rolloutText,importRolloutSha256:input.importReceipt.rolloutSha256,nativeSnapshotText:input.nativeProjection.dependencySnapshotText,nativeSnapshotSha256:input.nativeProjection.dependencySnapshotSha256,launchProposal,readiness,auditedUTC},activationText=JSON.stringify(manifest)
  if(Buffer.byteLength(activationText)>limit)fail('bounded8MiB future activation packet required')
  return Object.freeze({activationText,activationSha256:hash(activationText)})
 }
@@ -88,7 +89,7 @@ export function buildFcfFutureTargetActivation(input={}){
 export function verifyFcfFutureTargetActivation(input={}){
  const ctx=context(input,['activationText','activationSha256']),a=exactText(input.activationText,input.activationSha256,'future activation packet')
  keys(a,wire,'future activation packet')
- if(!object(a.launchProposal)||a.schemaVersion!==4||a.kind!=='fcf-future-current-target-activation'||a.targetSlug!==ctx.target.targetSlug||a.sourceCommit!==input.sourceCommit||!same(a.execution,ctx.origin))fail('exact saved activation identity/origin execution required')
+ if(!object(a.launchProposal)||a.schemaVersion!==fcfFutureNativeVersions(ctx.data).activation||a.kind!=='fcf-future-current-target-activation'||a.targetSlug!==ctx.target.targetSlug||a.sourceCommit!==input.sourceCommit||!same(a.execution,ctx.origin))fail('exact saved activation identity/origin execution required')
  const rebuilt=packet(input,ctx,a.auditedUTC,a.launchProposal)
  if(rebuilt.activationText!==input.activationText||rebuilt.activationSha256!==input.activationSha256)fail('activation packet differs from independently authenticated current inputs')
  return rebuilt

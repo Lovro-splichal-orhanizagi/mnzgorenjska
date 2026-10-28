@@ -1,5 +1,5 @@
 import {getFcfFutureTarget} from './fcf-future-target-catalog.mjs'
-import {readFcfFutureNativeSource,requireFcfFutureCurrentMarkers,requireFcfG1QuietInventory} from './fcf-future-native-scope.mjs'
+import {readFcfFutureNativeSource,requireFcfFutureCurrentMarkers,requireFcfG1QuietInventory,requireFcfFutureNativeWriter,fcfFutureNativeVersions,isFcfG1SupplementNative} from './fcf-future-native-scope.mjs'
 // Source-only future G9 adapter. These projections confer no native mutation,
 // cleanup, readiness, opening or activation authority. No transport is provided.
 import {createHash} from 'node:crypto'
@@ -20,6 +20,7 @@ function source(input){
  // Invoke the actual reader directly. No plain DATA, copied proof or callback
  // can replace its private capability, and freshness is checked on each entry.
  const {data}=readFcfFutureNativeSource({targetSlug:input.targetSlug,inventoryAdmission:input.inventoryAdmission,now:(Object.hasOwn(input,'now')?input.now:Date.now())})
+ requireFcfFutureNativeWriter({data,sourceCommit:input.sourceCommit})
  return data
 }
 function native(input){
@@ -40,7 +41,7 @@ export function loadFcfFutureTargetOfflineProvider(input={}){
  const {inventoryAdmission,sourceCommit}=input
  function checked(data,now){
   const policy=getFcfSixPolicy(slug),target={sourceEvidence:data.binding,competitionId:selected.competitionId,competitionSlug:slug,sourceCode:selected.sourceCode,season:'2026/27',historicalCutline:'2026-10-24',policyId:policy.id,policySha256:fingerprint(policy),...validateFcfCurrentReleaseCalendar(data.fixtures),fixtures:data.fixtures}
-  if(!packet||Object.keys(packet).sort().join(',')!=='auditedUTC,cleanupBinding,databaseInventory,kind,schemaVersion,sourceCommit,target,targetSlug'||packet.schemaVersion!==4||packet.kind!=='fcf-future-current-target-import'||packet.targetSlug!==slug||packet.sourceCommit!==sourceCommit||!validUTC(packet.auditedUTC)||Date.parse(packet.auditedUTC)>now||now-Date.parse(packet.auditedUTC)>86400000||fingerprint(packet.target)!==fingerprint(target))fail('packet differs from independently authenticated future target data')
+  if(!packet||Object.keys(packet).sort().join(',')!==['auditedUTC','cleanupBinding','databaseInventory','kind','schemaVersion','sourceCommit','target','targetSlug',...(isFcfG1SupplementNative(data)?['supplementalBinding']:[])].sort().join(',')||packet.schemaVersion!==fcfFutureNativeVersions(data).packet||packet.kind!=='fcf-future-current-target-import'||packet.targetSlug!==slug||packet.sourceCommit!==sourceCommit||!validUTC(packet.auditedUTC)||Date.parse(packet.auditedUTC)>now||now-Date.parse(packet.auditedUTC)>86400000||fingerprint(packet.target)!==fingerprint(target))fail('packet differs from independently authenticated future target data')
   return data
  }
  checked(data,now)
@@ -48,7 +49,7 @@ export function loadFcfFutureTargetOfflineProvider(input={}){
   // Loader input.now is only its initial audit clock. Each later method uses
   // invocation time and reauthenticates the SAME proof against the SAME packet.
   const now=Date.now()
-  return checked(source({targetSlug:slug,inventoryAdmission,now}),now)
+  return checked(source({targetSlug:slug,inventoryAdmission,sourceCommit,now}),now)
  }
  return Object.freeze({targetSlug:slug,competition:data.competition,sourceEvidence:data.binding,documents:data.documents,schedule:()=>current().fixtures,report:sourceMatchId=>{
   const fixture=current().fixtures.find(f=>f.id===sourceMatchId)
