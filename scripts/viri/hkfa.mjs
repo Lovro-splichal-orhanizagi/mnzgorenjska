@@ -13,7 +13,9 @@
 // 2026/27. leagueyear_id je id tekmovanja ENE sezone (izbirnik "Competition" na
 // /en/competitions/fixtures?year=<leto>); šifre po sezonah so v
 // docs/viri/hongkong.md. Delitev sezone (Championship/Challenging Group) je
-// svoje tekmovanje in se za arhiv ne uvaža (CLAUDE.md, delitev sezone).
+// svoje tekmovanje z novim leagueyear_id: tekoča šifra ga doda s `+`
+// (`2041+<championship>+<challenging>/2026-2027`, kot `oefb`/`gfa`), za arhiv
+// pa se ne uvaža (CLAUDE.md, delitev sezone).
 //
 // NASLOVI (vsi GET, HTML z `__NUXT__`):
 // - `/en/competitions/fixtures?competition=<ly>&page=<n>&year=<leto>` — seznam
@@ -61,22 +63,32 @@ const OSNOVNI = 'https://www.hkfa.com'
 const DOLZINA_TEKME = 90
 const PAS = 'Asia/Hong_Kong'
 
-/** "2047/2026-2027" → { ly: "2047", leto: "2026-2027", prvoLeto: 2026, sezona: "2026/27" }. */
+/**
+ * "2047/2026-2027" → { ly: "2047", lyji: ["2047"], leto: "2026-2027", prvoLeto: 2026, sezona: "2026/27" }.
+ * Liga, ki se med sezono razdeli (Championship / Challenging Group, vsaka
+ * skupina svoj leagueyear_id), našteje id-je s `+`: "2041+2060+2061/2026-2027"
+ * → lyji ["2041", "2060", "2061"] (kot `oefb` in `gfa`). Krog je teden, zato se
+ * tekme vseh skupin zložijo v iste kroge brez zamika.
+ */
 export function razbijKodo(koda) {
-  const m = String(koda ?? '').trim().match(/^(\d+)\/(\d{4})-(\d{4})$/)
-  if (!m || Number(m[3]) !== Number(m[2]) + 1) throw new Error(`hkfa: šifra lige je "<leagueyear_id>/<leto>" (npr. 2047/2026-2027), ne "${koda}"`)
-  return { ly: m[1], leto: `${m[2]}-${m[3]}`, prvoLeto: Number(m[2]), sezona: `${m[2]}/${m[3].slice(2)}` }
+  const m = String(koda ?? '').trim().match(/^(\d+(?:\s*\+\s*\d+)*)\/(\d{4})-(\d{4})$/)
+  if (!m || Number(m[3]) !== Number(m[2]) + 1)
+    throw new Error(`hkfa: šifra lige je "<leagueyear_id>[+<id skupine>…]/<leto>" (npr. 2047/2026-2027), ne "${koda}"`)
+  const lyji = m[1].split('+').map((x) => x.trim())
+  if (new Set(lyji).size !== lyji.length) throw new Error(`hkfa: šifra lige "${koda}" našteje isti leagueyear_id dvakrat`)
+  return { ly: lyji[0], lyji, leto: `${m[2]}-${m[3]}`, prvoLeto: Number(m[2]), sezona: `${m[2]}/${m[3].slice(2)}` }
 }
 
-export const naslovStrani = (koda, stran = 1) => {
-  const { ly, leto } = razbijKodo(koda)
+/** Stran seznama tekem tekmovanja `ly` (privzeto prvega v šifri). */
+export const naslovStrani = (koda, stran = 1, ly = razbijKodo(koda).ly) => {
+  const { leto } = razbijKodo(koda)
   return `${OSNOVNI}/en/competitions/fixtures?competition=${ly}&page=${stran}&year=${leto}`
 }
 export const naslovZapisnika = (id) => `${OSNOVNI}/en/competitions/result/${String(id).replace(/^hk/, '')}/detail`
 // Šifra zapisnika v bazi je `hk<id>`: match_id HKFA (46xxx–51xxx) je v razponu
 // drugih virov, `matches.zapisnik_id` pa je enoličen čez vse.
 export const sifraZapisnika = (id) => `hk${String(id).replace(/^hk/, '')}`
-const imeStrani = (koda, stran) => `razpored-${String(koda).replace(/[/:]/g, '-')}-${stran}.html`
+const imeStrani = (koda, stran, ly = razbijKodo(koda).ly) => `razpored-${ly}-${razbijKodo(koda).leto}-${stran}.html`
 const imeZapisnika = (id) => `tekma-${String(id).replace(/^hk/, '')}.html`
 
 // --- zavrnitev ------------------------------------------------------------------
@@ -265,12 +277,13 @@ const PREKINJENA = 4
  * novim id-jem, ko je znan nov datum.
  */
 export function tekmeLige(koda, strani) {
-  const { ly, prvoLeto } = razbijKodo(koda)
+  const { lyji, prvoLeto } = razbijKodo(koda)
   const vse = new Map()
   for (const s of strani) {
     for (const t of s.vrstice) {
       const tly = t.LeagueYear?.leagueyear_id
-      if (tly != null && String(tly) !== ly) throw new Error(`hkfa: seznam lige ${ly} vsebuje tekmo ${t.match_id} tekmovanja ${tly} — uvoz ustavljen`)
+      if (tly != null && !lyji.includes(String(tly)))
+        throw new Error(`hkfa: seznam lige ${lyji.join('+')} vsebuje tekmo ${t.match_id} tekmovanja ${tly} — uvoz ustavljen`)
       vse.set(t.match_id, t)
     }
   }
@@ -493,16 +506,22 @@ async function beri(prenesi, url, ime, sveze) {
   return html
 }
 
-/** Vse strani seznama lige (vedno sveže; stran brez seznama ustavi uvoz). */
+/**
+ * Vse strani seznama lige (vedno sveže; stran brez seznama ustavi uvoz) — za
+ * vsak leagueyear_id šifre posebej (osnovni del, nato skupine po delitvi).
+ */
 async function straniSeznama(koda, prenesi) {
   const strani = []
-  for (let s = 1; s <= 20; s++) {
-    const html = await beri(prenesi, naslovStrani(koda, s), imeStrani(koda, s), true)
-    const st = jeStranSeznama(html) ? seznamStrani(html) : null
-    if (!st) throw new Error(`hkfa: ${naslovStrani(koda, s)} ni stran seznama tekem — uvoz ustavljen`)
-    if (String(st.ly) !== razbijKodo(koda).ly) throw new Error(`hkfa: ${naslovStrani(koda, s)} vrne tekmovanje ${st.ly} — uvoz ustavljen`)
-    strani.push(st)
-    if (!st.vrstice.length || s * st.naStran >= st.skupaj) break
+  for (const ly of razbijKodo(koda).lyji) {
+    for (let s = 1; s <= 20; s++) {
+      const url = naslovStrani(koda, s, ly)
+      const html = await beri(prenesi, url, imeStrani(koda, s, ly), true)
+      const st = jeStranSeznama(html) ? seznamStrani(html) : null
+      if (!st) throw new Error(`hkfa: ${url} ni stran seznama tekem — uvoz ustavljen`)
+      if (String(st.ly) !== ly) throw new Error(`hkfa: ${url} vrne tekmovanje ${st.ly} — uvoz ustavljen`)
+      strani.push(st)
+      if (!st.vrstice.length || s * st.naStran >= st.skupaj) break
+    }
   }
   return strani
 }
