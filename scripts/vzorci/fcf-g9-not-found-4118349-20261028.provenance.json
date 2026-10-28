@@ -1,0 +1,11 @@
+{
+  "kind": "retained-public-FCF-parser-regression-fixture",
+  "sourceRunId": "40650815318",
+  "sourceArtifactId": "12806226342",
+  "sourceArtifactZipSha256": "7519bd387938d342262e62bb17b14f4735d81d27abac1e324f93a8e2ce545254",
+  "sourceMember": "acta-4118349.html",
+  "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4118349",
+  "sourceBodySha256": "bc366cd0179a14a5b5f1195deedf2104f953fef563482414e4b3c787105286e2",
+  "sourceBodyBytes": 115304,
+  "purpose": "Actual wrong-route not-found regression, portable without private local evidence paths. Fixtures confer no fresh source, import or activation authority. Any rewritten requested route in tests is synthetic."
+}

@@ -1,9 +1,8 @@
-// Scoped P1/P2 regressions only. Metadata/HTML are fake except one pinned local
-// retained G9 body. No private parent replay, source, network, DB or production IO.
+// Scoped P1/P2 regressions only. Metadata/HTML are fake except one pinned
+// repository G9 fixture. No private parent replay, source, network, DB or production IO.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
-import {execFileSync} from 'node:child_process'
 import {createHash} from 'node:crypto'
 import * as source from './fcf-g1-remainder-source.mjs'
 import {classifyFcfG1QuarantineDocument} from './fcf-g1-quarantine-audit.mjs'
@@ -29,5 +28,5 @@ test('P2 exact unique canonical route plus retained not-found marker is DATA; wr
  for(const raw of [notFound('4118349'),notFound('4109411',{c:undefined}),notFound('4109411',{foreign:{c:['','ca','competicio','acta','4118349']}}),notFound('4109411',{duplicate:{c:['','ca','competicio','acta','4109411']}}),notFound('4109411',{report:e('section','',{title:'Acta del partit'})}),Buffer.from('<title>Acta no trobada | FCF</title>'),notFound('4109411',{body:e('h1','Other error')})])assert.throws(()=>classifyFcfG1QuarantineDocument({id:'4109411',bytes:raw}),/FCF_G1_QUARANTINE/)
 })
 test('P2 actual retained wrong-route G9notfound cannot be classified as requested G1 DATA',()=>{
- const path='/Users/jernejjankocica/Projects/SLFF/league-rollout-evidence/2026-10-26-german-unlock-screen/g9-existing-claim-40650815318-da8516a6-20261028-attempt1/artifact-12806226342.zip',bytes=execFileSync('unzip',['-p',path,'acta-4118349.html']);assert.equal(createHash('sha256').update(bytes).digest('hex'),'bc366cd0179a14a5b5f1195deedf2104f953fef563482414e4b3c787105286e2');assert.throws(()=>classifyFcfG1QuarantineDocument({id:'4109411',bytes}),/route/);const rewritten=Buffer.from(bytes.toString().replaceAll('4118349','4109411'));const data=classifyFcfG1QuarantineDocument({id:'4109411',bytes:rewritten});assert.equal(data.classification,'official-not-found');assert.equal(data.admissible,false) // TEST ONLY rewritten route, never fresh source authority
+ const bytes=readFileSync(new URL('./vzorci/fcf-g9-not-found-4118349-20261028.html',import.meta.url));assert.equal(createHash('sha256').update(bytes).digest('hex'),'bc366cd0179a14a5b5f1195deedf2104f953fef563482414e4b3c787105286e2');assert.throws(()=>classifyFcfG1QuarantineDocument({id:'4109411',bytes}),/route/);const rewritten=Buffer.from(bytes.toString().replaceAll('4118349','4109411'));const data=classifyFcfG1QuarantineDocument({id:'4109411',bytes:rewritten});assert.equal(data.classification,'official-not-found');assert.equal(data.admissible,false) // TEST ONLY rewritten route, never fresh source authority
 })
