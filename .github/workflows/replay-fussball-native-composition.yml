@@ -1,0 +1,60 @@
+name: Replay derived Baden native composition
+run-name: Source partition only - Baden native preparation remains separate
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact reviewed current main SHA containing the finalized catalog
+        type: string
+        required: true
+      source_run:
+        description: Actual completed V6 archive source run; source head is independently authenticated
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fussball-baden-native-composition
+  cancel-in-progress: false
+jobs:
+  derive:
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.expected_sha == github.sha
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      SOURCE_RUN_ID: ${{ inputs.source_run }}
+      FROZEN_DE77_DIRECTORY: frozen-de77
+      NODE_OPTIONS: --max-old-space-size=6144
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: de77b661cbc11d95256a500e57c2fdea861a0647
+          path: frozen-de77
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Validate exact reviewed main and first attempt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/stage-fussball-native-composition.mjs validate
+      - name: Authenticate source certificate and derive exact Baden partition
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/stage-fussball-native-composition.mjs produce baden-native-composition
+      - name: Preserve derived Baden composition proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: fussball-native-composition-${{ github.run_id }}
+          path: baden-native-composition/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
