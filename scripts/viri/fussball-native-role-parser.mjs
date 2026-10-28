@@ -53,7 +53,9 @@ function liveNodes(html){
   need(end<html.length,'unterminated tag');const open=html.slice(start,end+1),token=tagToken(open)
   i=end+1;if(!token)continue;const {tag,attributes}=token
   if(token.closing){const n=stack.pop();need(n&&n.tag===tag,'unbalanced live markup');n.end=i;continue}
-  if(rawText.has(tag)){const close=new RegExp('</'+tag+'\\s*>','ig');close.lastIndex=i;const found=close.exec(html);need(found,'unterminated rawtext');i=close.lastIndex;continue}
+  const foreign=tag==='svg'||tag==='math'||stack.some(n=>n.tag==='svg'||n.tag==='math')
+  need(!token.selfClosing||voidTags.has(tag)||foreign,'self-closing nonvoid HTML tag')
+  if(rawText.has(tag)&&!token.selfClosing){const close=new RegExp('</'+tag+'\\s*>','ig');close.lastIndex=i;const found=close.exec(html);need(found,'unterminated rawtext');i=close.lastIndex;continue}
   const node={tag,attributes,start,open,end:i,parent:stack.at(-1)};nodes.push(node)
   if(!voidTags.has(tag)&&!token.selfClosing)stack.push(node)
  }

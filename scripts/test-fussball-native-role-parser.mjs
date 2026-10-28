@@ -60,3 +60,15 @@ test('PURE inspector excludes inert and foreign namespace ancestry rather than t
  for(const tag of ['script','style','textarea','title','xmp','iframe','noembed','noframes'])assert.equal(inspect(`<${tag}>${anchor}</${tag}>`),null)
  assert.equal(inspect(`<!--${anchor}-->`),null)
 })
+
+test('PURE inspector refuses self-closing nonvoid HTML context openers but preserves excluded foreign shapes',()=>{
+ const inspect=api.inspectFussballNativeRoleEvidence,href=lineup.match(/href="(https:\/\/www\.fussball\.de\/spielerprofil\/[^\"]+)"/)[1],anchor=`<a class="player-wrapper home" href="${href}">${captain}${role}</a>`
+ for(const opener of ['<template/>','<head/>','<noscript/>','<div xmlns="http://www.w3.org/2000/svg"/>'])assert.throws(()=>inspect(opener+anchor),e=>e.code==='FUSSBALL_NATIVE_ROLE_INVALID'&&/self-closing nonvoid HTML/.test(e.message))
+ assert.ok(inspect(`<div><svg><path d="x"/></svg>${anchor}</div>`));assert.ok(inspect(`<div><math><mi/></math>${anchor}</div>`))
+ assert.equal(inspect(`<svg><g/>${anchor}</svg>`),null);assert.equal(inspect(`<math><mi/>${anchor}</math>`),null)
+})
+
+test('PURE inspector preserves valid self-closing foreign rawtext elements without opening an HTML context',()=>{
+ const inspect=api.inspectFussballNativeRoleEvidence,href=lineup.match(/href="(https:\/\/www\.fussball\.de\/spielerprofil\/[^\"]+)"/)[1],anchor=`<a class="player-wrapper home" href="${href}">${captain}${role}</a>`
+ assert.ok(inspect(`<div><svg><script/><path/></svg>${anchor}</div>`));assert.equal(inspect(`<svg><script/>${anchor}</svg>`),null)
+})
