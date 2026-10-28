@@ -130,6 +130,7 @@ tabelo šifer tam, ne tu.
 | Azerbajdžan | `docs/viri/azerbajdzan.md` | `pfl-az` |
 | Japonska | `docs/viri/japonska.md` | `jfl` |
 | Hongkong | `docs/viri/hongkong.md` | `hkfa` |
+| Tajska (brez aktivnih lig) | `docs/viri/tajska.md` | `thaileague` |
 
 Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
 

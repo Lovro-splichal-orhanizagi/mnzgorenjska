@@ -5243,6 +5243,148 @@ preveri(
     !J.default.zaPredpomnilnik(beri('jp-jfl-tekma-2026A0010111-cas-kartoni.html').replace('【試合終了】', '【前半】')))
 }
 
+// --- vir thaileague (Tajska, Thai League 2 in 3: API + zapisniki PDF z ikonami) ----
+{
+  const H = await import('./viri/thaileague.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const { deflateSync } = await import('node:zlib')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('thaileague: vir je vpisan, 3 s, User-Agent SLFF, lasten fetch', viri.thaileague === H.default && H.default.drzava === 'TH' &&
+    H.default.imaRegistracije === false && H.default.premorMs >= 3000 && H.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' &&
+    H.default.razporedBrezUvodnegaPrenosa === true && typeof H.default.fetch === 'function')
+  let slabaKoda = false
+  try { H.razbijKodo('228') } catch { slabaKoda = true }
+  preveri('thaileague: šifra <turnir>/<stopnja>, naslovi API, šifra zapisnika th<id>', slabaKoda && H.razbijKodo(' 228/1204 ').stopnja === '1204' &&
+    H.default.naslovRazporeda('228/1204') === 'https://competition.tl.prod.c0d1um.io/thaileague/api/match-day-match-public/?tournament=228&stage=1204' &&
+    H.naslovTekem('228/1204', 2).endsWith('&page=2') &&
+    H.default.naslovZapisnika('228/1204', 'th37963') === 'https://competition.tl.prod.c0d1um.io/thaileague/api/exports-competition-match/?match_id=37963&type=match_summary_public&is_thai_language=false&tournament=228' &&
+    H.sifraZapisnika(37963) === 'th37963' && H.sifraZapisnika('th37963') === 'th37963')
+
+  const tekme = JSON.parse(beri('th-tl-tekme-228-1204.json')).results.map(H.tekma)
+  const razpored = H.razcleniRazpored(tekme)
+  preveri('thaileague: razpored T3 North 2026/27 — 22 krogov po 6, 12 klubov, 36 odigranih', razpored.length === 22 &&
+    razpored.every((k) => k.tekme.length === 6) && new Set(tekme.flatMap((t) => [t.domaci, t.gostje])).size === 12 &&
+    tekme.filter((t) => t.odigrana).length === 36 && tekme.every((t) => t.ura))
+  const t1 = tekme.find((t) => t.id === 37963)
+  // Bangkok je UTC+7 brez poletnega časa: poleti −5 h, pozimi −6 h do Ljubljane.
+  preveri('thaileague: tekma — krog, angleško ime kluba (presledki strnjeni), bangkoški čas v ljubljanskega, sezona', t1.krog === 1 &&
+    t1.domaci === 'CHIANGRAI TSC FC' && t1.gostje === 'Chiangmai FC' && t1.datumLokalno === '2026-09-19' && t1.uraLokalno === '15:30' &&
+    t1.datum === '2026-09-19' && t1.ura === '10:30' && t1.sezona === '2026/27' && t1.izid.domaci === 1 && t1.potrjen &&
+    H.tekma({ ...t1raw(), start_date: '2026-12-05', start_time: '18:00' }).ura === '12:00' &&
+    H.tekma({ ...t1raw(), start_date: '2026-09-20', start_time: '01:30' }).datum === '2026-09-19' &&
+    H.tekma({ ...t1raw(), tournament_name_en: 'BYD DOLPHIN LEAGUE III', start_date: '2026-01-24' }).sezona === '2025/26')
+  function t1raw() { return JSON.parse(beri('th-tl-tekme-228-1204.json')).results.find((t) => t.id === 37963) }
+  const k3 = JSON.parse(beri('th-tl-tekme-228-1208-krog3.json')).results.map(H.tekma)
+  preveri('thaileague: prestavljena tekma "3 (ตกค้าง)" ostane v 3. krogu, neodigrana brez izida', H.krogTekme('3 (ตกค้าง)') === 3 &&
+    k3.filter((t) => t.krog === 3).length === 6 && k3.filter((t) => !t.odigrana && !t.izid).length === 3)
+  preveri('thaileague: odpovedana tekma ni v razporedu', H.razcleniRazpored([{ ...t1, odpovedana: true }]).length === 0)
+  let tuja = false
+  try { await H.vseTekme('228/1205', async () => beri('th-tl-tekme-228-1204.json')) } catch { tuja = true }
+  preveri('thaileague: seznam tuje stopnje ustavi uvoz', tuja && (await H.vseTekme('228/1204', async () => beri('th-tl-tekme-228-1204.json'))).length === 132)
+
+  const druge = new Map(JSON.parse(beri('th-tl-tekme-druge.json')).results.map((t) => [t.id, H.tekma(t)]))
+  const T = (id) => tekme.find((t) => t.id === id) ?? druge.get(id)
+  const zap = (id) => H.vZapisnik(beri(`th-tl-zapisnik-${id}.txt`), T(id))
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  const z = zap(37963)
+  const n = H.nastopi(z)
+  preveri('thaileague: zapisnik 1:1 — 11 + 11, klop 12 + 9, 990 minut, popoln, brez opozoril', z.domaci.postava.length === 11 &&
+    z.gostje.postava.length === 11 && z.domaci.rezerve.length === 12 && z.gostje.rezerve.length === 9 && minute(n, 0) === 990 &&
+    minute(n, 1) === 990 && !z.nepopoln && z.opozorila.length === 0 && z.zapisnikId === 'th37963' && z.sezona === '2026/27' && z.krog === 1)
+  preveri('thaileague: avtogol "(OG)" pri strelčevi ekipi šteje nasprotniku, rumeni, menjava 90+4 je 90', z.goli.length === 2 &&
+    z.goli.find((g) => g.avtogol)?.ime === 'Thanadol Dumponngam' && z.goli.find((g) => g.avtogol).ekipaIdx === 0 &&
+    n.find((x) => x.ime === 'Thanadol Dumponngam')?.avtogoli === 1 && z.rumeni.length === 1 && z.rumeni[0].minuta === 85 &&
+    n.find((x) => x.ime === 'Thanawat Loedchai')?.minute === 90 && n.find((x) => x.ime === 'Natthaphon Fongsamut')?.minutaOd === 90)
+  preveri('thaileague: ime "tanawit kamjoi" → "Tanawit Kamjoi", vzdevek izpuščen, pozicije iz zapisnika, vratar GK v postavi', n.some((x) => x.ime === 'Tanawit Kamjoi' && x.minutaOd === 46) &&
+    n.filter((x) => x.vratar).map((x) => x.st).join() === '18,18' && n.find((x) => x.ime === 'Chatchai Nakwichit')?.pozicija === 'FWD' &&
+    n.find((x) => x.ime === 'Jirapat Kurasa')?.pozicija === 'MID' && n.find((x) => x.ime === 'Arucha Phodong')?.pozicija === 'DEF' &&
+    H.imeIgralca('ํSARAWUT  x') === 'Sarawut X' && z.menjave.filter((m) => m.ekipaIdx === 1).length === 5 && z.menjave.every((m) => m.noter.st && m.ven.st))
+
+  const z2 = zap(37982)
+  const n2 = H.nastopi(z2)
+  preveri('thaileague: rdeči brez opuščaja ("26", "90+3"), tudi rezervi; 926 minut', z2.rdeci.length === 3 && minute(n2, 0) === 926 &&
+    n2.find((x) => x.ime === 'Phonchai Sroiseesuk')?.minute === 26 && n2.find((x) => x.ime === 'Kitti Kinnonkok')?.minutaOd === 30 &&
+    n2.find((x) => x.ime === 'Kitti Kinnonkok')?.goli === 1 && !z2.nepopoln)
+  preveri('thaileague: prelomljeno ime (dres na sredini) — gol, rumeni in vstop', n2.find((x) => x.ime === 'Diego Patrocinio Nogueira Reis')?.goli === 1 &&
+    n2.find((x) => x.ime === 'Diego Patrocinio Nogueira Reis')?.rumeni === 1 && n2.find((x) => x.ime === 'Diego Patrocinio Nogueira Reis')?.minutaOd === 30)
+  const z3 = zap(38620)
+  preveri('thaileague: 11 m "(P)", hat-trick, 3:1', z3.goli.filter((g) => g.enajstmetrovka).length === 1 &&
+    H.nastopi(z3).find((x) => x.ime === 'Vincent Boesen')?.goli === 3 && H.nastopi(z3).find((x) => x.ime === 'Vincent Boesen')?.goliIzEnajstmetrovke === 1 && !z3.nepopoln)
+  const z4 = zap(36895)
+  preveri('thaileague: arhiv T2 2025/26 (pozimi −6 h, sezona iz datuma), rdeči v 56.', z4.sezona === '2025/26' && z4.datum === '2026-01-11' &&
+    z4.ura === '12:00' && z4.krog === 18 && minute(H.nastopi(z4), 1) === 956 && !z4.nepopoln)
+  preveri('thaileague: T2 2026/27 popoln', !zap(37686).nepopoln && minute(H.nastopi(zap(37686)), 0) === 990)
+
+  // PDF: besede z mesti (pdftotext -bbox) + ikone iz toka strani → besedilo zapisnika.
+  const bbox = beri('th-tl-bbox-38240.html')
+  const slike = JSON.parse(beri('th-tl-slike-38240.json'))
+  preveri('thaileague: bbox + ikone dajo shranjeno besedilo (stolpca po "[n] GK|DF|MF|FW", ne po "[28]" iz tabele dogodkov)',
+    H.vBesedilo(bbox, slike) === beri('th-tl-zapisnik-38240.txt') && !/Coach|Referee|Manager/.test(beri('th-tl-zapisnik-38240.txt')))
+  const z5 = zap(38240)
+  preveri('thaileague: prelom dogodkov v drugo vrstico ("68\'" + "90+1"), 11 + 11, 984 minut', !z5.nepopoln && z5.gostje.postava.length === 11 &&
+    minute(H.nastopi(z5), 1) === 984 && H.nastopi(z5).find((x) => x.ime === 'Adewumi Nicoholas Aladetimi Jr')?.rumeni === 1 &&
+    H.nastopi(z5).find((x) => x.ime === 'Adewumi Nicoholas Aladetimi Jr')?.minute === 90)
+  const brez = H.vBesedilo(bbox, slike.map((s) => (s.odtis === 'e418ff4d08ebdeb2' ? { ...s, odtis: '0000000000000000' } : s)))
+  const zb = H.vZapisnik(brez, T(38240))
+  preveri('thaileague: neznana ikona je nepopoln zapisnik (ne ugibamo)', zb.nepopoln && /neznana ikona \{\?0000000000000000\}/.test(zb.opozorila[0]) &&
+    !H.popolnZapisnik(brez) && H.popolnZapisnik(beri('th-tl-zapisnik-38240.txt')))
+  const brezIkon = H.vZapisnik(H.vBesedilo(bbox, []), T(38240))
+  preveri('thaileague: brez ikon (minute brez ikone) je nepopoln', brezIkon.nepopoln && /minuta brez ikone/.test(brezIkon.opozorila[0]))
+  const prazen = H.vZapisnik('', T(38240))
+  preveri('thaileague: brez zapisnika je nepopoln, izid ostane', prazen.nepopoln && prazen.rezultat.domaci === 2 && !prazen.domaci.postava.length &&
+    prazen.opozorila[0].startsWith(H.NEPOPOLN) && H.vZapisnik('', { ...T(38240), izid: null }) === null)
+  const pokvarjen = beri('th-tl-zapisnik-37963.txt').replace("{G} 3' ", '')
+  preveri('thaileague: manjkajoč gol (goli ≠ izid) je nepopoln', /goli iz zapisnika 0:1, izid 1:1/.test(H.vZapisnik(pokvarjen, T(37963)).opozorila[0]))
+
+  // Ikone iz toka strani: najmanjši PDF (cairo) s sliko rumenega kartona, narisano s cm/Do.
+  const pike = Buffer.from('eNrtzKERADAIxdC//46FbgKSQ1QVR3LRT6rCFff7o1czvuPj4+Pj4+Pj4+Pv8G3Ct2YmOS+dCA==', 'base64')
+  const tok = Buffer.from('1 0 0 -1 0 841 cm\nq\nBT (a \\) [b] /x Do) Tj ET\nQ q\n205.9 231.9 4.8 4.8 re W n\nq\n4.8 0 0 -4.8 205.94 236.7 cm\n/a0 gs /x10 Do\nQ\nQ\n')
+  const tokZ = deflateSync(tok)
+  const pdf = Buffer.concat([
+    Buffer.from('%PDF-1.5\n1 0 obj\n<< /Type /Pages /Kids [ 2 0 R ] /Count 1 >>\nendobj\n2 0 obj\n<< /Type /Page /Parent 1 0 R /MediaBox [ 0 0 595 841 ] /Contents 3 0 R /Resources 4 0 R >>\nendobj\n'),
+    Buffer.from(`3 0 obj\n<< /Length ${tokZ.length} /Filter /FlateDecode >>\nstream\n`), tokZ, Buffer.from('\nendstream\nendobj\n'),
+    Buffer.from('4 0 obj\n<< /XObject << /x10 10 0 R >> >>\nendobj\n'),
+    Buffer.from(`10 0 obj\n<< /Length 11 0 R /Filter /FlateDecode /Type /XObject /Subtype /Image /Width 32 /Height 32 /ColorSpace /DeviceRGB /BitsPerComponent 8 >>\nstream\n`), pike,
+    Buffer.from(`\nendstream\nendobj\n11 0 obj\n   ${pike.length}\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n`),
+  ])
+  const s = H.slikePdf(pdf)
+  preveri('thaileague: ikona iz toka strani — mesto (od vrha strani) in prstni odtis rumenega kartona', s.length === 1 && s[0].stran === 0 &&
+    Math.abs(s[0].x - 205.94) < 0.01 && Math.abs(s[0].y - 231.9) < 0.01 && Math.abs(s[0].y2 - 236.7) < 0.01 && H.IKONE[s[0].odtis] === 'Y')
+
+  // Zavrnitev (401/403/429) ali izziv ustavi uvoz (izhod 4); izvoz brez PDF je napaka, ki ne gre v predpomnilnik.
+  const poskusi = async (odgovori, url) => {
+    const vrsta = [...odgovori]
+    try { return { r: await H.thFetch(url, {}, { fetchFn: async () => vrsta.shift(), premorMs: 0, pdf: async () => 'BESEDILO' }) } } catch (e) { return { e } }
+  }
+  const izvoz = H.naslovIzvoza('228', 37963)
+  const z429 = await poskusi([new Response('', { status: 429 })], H.naslovTekem('228/1204'))
+  const z403 = await poskusi([new Response('{"pdf_url":"https://competition.tl.prod.c0d1um.io/media/tmp/x.pdf"}'), new Response('', { status: 403 })], izvoz)
+  const izziv = await poskusi([new Response('<title>Just a moment...</title>')], H.naslovTekem('228/1204'))
+  const brezPdf = await poskusi([new Response('{"detail":"Not found."}')], izvoz)
+  const tujPdf = await poskusi([new Response('{"pdf_url":"https://drugje.example/x.pdf"}')], izvoz)
+  const niPdf = await poskusi([new Response('{"pdf_url":"https://competition.tl.prod.c0d1um.io/media/tmp/x.pdf"}'), new Response('<html></html>')], izvoz)
+  const dober = await poskusi([new Response('{"pdf_url":"https://competition.tl.prod.c0d1um.io/media/tmp/x.pdf"}'), new Response('%PDF-1.5 ...')], izvoz)
+  preveri('thaileague: 429, 403 (tudi pri PDF) in izziv so zavrnitev; izvoz brez PDF, tuj naslov in ne-PDF so napaka; PDF → besedilo', z429.e?.zavrnitev &&
+    z403.e?.zavrnitev && izziv.e?.zavrnitev && brezPdf.e && !brezPdf.e.zavrnitev && tujPdf.e && niPdf.e && !niPdf.e.zavrnitev &&
+    (await dober.r?.text()) === 'BESEDILO')
+  preveri('thaileague: v predpomnilnik le seznam tekem in besedilo zapisnika', H.zaPredpomnilnik(beri('th-tl-tekme-228-1204.json'), 'th-tekme-228-1204-1.json') &&
+    !H.zaPredpomnilnik('{"detail":"x"}', 'th-tekme-228-1204-1.json') && H.zaPredpomnilnik(beri('th-tl-zapisnik-37963.txt'), 'th-zapisnik-37963.txt') &&
+    !H.zaPredpomnilnik('<html></html>', 'th-zapisnik-37963.txt'))
+
+  // zapisniki(): le odigrane in potrjene, nepopoln v 45 dneh sveže.
+  const brani = []
+  const prenesi = async (url, ime, sveze) => {
+    brani.push([ime, sveze])
+    if (ime.startsWith('th-tekme-')) return beri('th-tl-tekme-228-1204.json')
+    return ime === 'th-zapisnik-37963.txt' ? beri('th-tl-zapisnik-37963.txt') : ''
+  }
+  const zs = await H.default.zapisniki('228/1204', prenesi, { samoZapisnik: 'th37963' })
+  preveri('thaileague: zapisniki() — izbrana tekma, popoln iz predpomnilnika', zs.length === 1 && zs[0].id === 'th37963' && !zs[0].z.nepopoln &&
+    brani.filter(([i]) => i === 'th-zapisnik-37963.txt').length === 1)
+  preveri('thaileague: ključ in kratko ime kluba', H.kljucKlubaTh('CHIANGRAI  TSC  FC') === H.kljucKlubaTh('Chiangrai TSC FC') &&
+    H.kratkoImeTh('CHIANGRAI  TSC  FC') === 'CHIANGRAI TSC' && H.kratkoImeTh('FC YALA') === 'YALA' && H.kljucKlubaTh('เชียงใหม่ เอฟซี') === 'เชียงใหม่ เอฟซี')
+}
+
 // --- soimenjak pri drugem klubu ni prestop (Petrović Lazar, fssid 10/2026) -------
 {
   const { prestopSkladen, trk, imataTrk } = await import('./prestop.mjs')
