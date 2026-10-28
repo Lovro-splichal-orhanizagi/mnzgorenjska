@@ -118,3 +118,19 @@ test('U rejects conflicting row report anchors with unsupported href quoting',()
   `<a href='${base}'>unsupported syntax</a>`,
  ])assert.throws(()=>parse(html.replace(cell,cell+extra)))
 })
+
+test('U rejects conflicting description containers with alternate class quoting, spacing or case',()=>{
+ for(const attributes of ["class='description'",'class = "description"',"class = 'description'",'CLASS="description"','class="Description"']){
+  for(const body of ['(U) Sportgerichtsurteil (unbestätigt)','<span>(U)</span> Sportgerichtsurteil (<b>unbestätigt</b>)']){
+   const extra=`<div ${attributes}>${body}</div>`
+   assert.throws(()=>parse(html.replace(legend,legend+extra)),undefined,extra)
+  }
+ }
+})
+
+test('U rejects duplicate description class attributes instead of selecting one interpretation',()=>{
+ for(const attributes of ['class="other" class="description"','class="description" class="other"',"class='description' class=\"other\"",'class="description" class=other']){
+  const extra=`<div ${attributes}>(U) Sportgerichtsurteil (<b>unbestätigt</b>)</div>`
+  assert.throws(()=>parse(html.replace(legend,legend+extra)),undefined,extra)
+ }
+})

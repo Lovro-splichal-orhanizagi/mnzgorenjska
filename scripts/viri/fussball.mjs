@@ -124,8 +124,14 @@ function administrativeScore(s,decode,html,row,id){
   :/^<td class="column-score">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/[A-Z0-9]{32}"><span class="score-special"><span data-obfuscation="([a-z0-9]{8})">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>&nbsp;V&nbsp;<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><\/span><\/a>\s*<\/td>$/
  const match=shape.exec(s)
  // Inventory containers before validating the one witnessed child shape.
- const courtDescriptions=court?[...html.matchAll(/<div\b[^>]*>/g)]
-  .filter(m=>classTokens(m[0]).has('description'))
+ const courtDescriptions=court?[...html.matchAll(/<div\b[^>]*>/gi)]
+  .filter(m=>{
+   const classes=[...m[0].matchAll(/\sclass\s*=\s*(["'])(.*?)\1/gi)]
+   if(!classes.some(c=>c[2].split(/\s+/).some(token=>token.toLowerCase()==='description')))return false
+   // Loose inventory is rejection-only; the shared canonical readers stay closed.
+   if((m[0].match(/\sclass\s*=/gi)??[]).length!==1||!classTokens(m[0]).has('description'))fail('nepodprt ali dvoumen administrativni izid')
+   return true
+  })
   .map(m=>element(html.slice(m.index),'description')).filter(description=>/\(U\)/.test(text(description))):[]
  const legend=court?/<div class="description">\(U\) Sportgerichtsurteil \(bestätigt\)<\/div>/g:/<div class="description">\(V\) Verwaltungsentscheid \(bestätigt\)<\/div>/g
  if(!match||(html.match(legend)??[]).length!==1||
