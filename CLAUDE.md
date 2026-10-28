@@ -121,12 +121,16 @@ tabelo šifer tam, ne tu.
 | Islandija | `docs/viri/islandija.md` | `ksi` |
 | Ferski otoki | `docs/viri/ferski-otoki.md` | `fsf` |
 | ZDA | `docs/viri/zda.md` | `modular11` |
+| Gibraltar | `docs/viri/gibraltar.md` | `gfa` |
 | Avstralija (uvozni vmesnik; brez aktivnih lig) | `docs/viri/avstralija.md` | `dribl-public` |
 | Danska | `docs/viri/danska.md` | `dbu` |
 | Norveška | `docs/viri/norveska.md` | `nff` |
 | Kazahstan | `docs/viri/kazahstan.md` | `kff` |
 | Moldavija | `docs/viri/moldavija.md` | `fmf` |
 | Azerbajdžan | `docs/viri/azerbajdzan.md` | `pfl-az` |
+| Japonska | `docs/viri/japonska.md` | `jfl` |
+| Hongkong | `docs/viri/hongkong.md` | `hkfa` |
+| Tajska | `docs/viri/tajska.md` | `thaileague` |
 
 Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
 
@@ -147,8 +151,13 @@ Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
   svoj slovar preimenovanj; ob novi ligi preveri trke imen.
 - Koledarska sezona (EE, LV, UA): `competitions.sezona_koledarska`,
   `sezona_lige(liga)`, oznaka `'2026'` (glej `docs/viri/estonija.md`).
-- Lige z delitvijo sezone (Avstrija `+`, Madžarska felső/alsóház): delitev za
-  arhiv osnovne lige ne uvažaj, sicer pripelje igralce drugih skupin.
+- Lige z delitvijo sezone (Avstrija, Gibraltar in Hongkong `+`, Madžarska
+  felső/alsóház): delitev za arhiv osnovne lige ne uvažaj, sicer pripelje
+  igralce drugih skupin. Tekoči šifri se id skupin dopiše, ko jih zveza objavi
+  (`docs/viri/gibraltar.md`, `docs/viri/hongkong.md`).
+- Japonska, Hongkong, Tajska in Gibraltar imajo **angleški vmesnik brez
+  lastnega slovarja** (`JEZIK_DRZAVE` = `en`, angleška pošta z rokom v pasu
+  države, vstop `/jp`, `/hk`, `/th`, `/gi`); lige so neaktivne do uvoza.
 
 Država obiskovalca (katere lige vidi, ugib po IP/jeziku/pasu, tujec, vstopne
 strani `/si`, `/at` …, izbira države): `docs/drzava-obiskovalca.md`. Kratko:
@@ -173,7 +182,7 @@ dobi ceno iz tamkajšnje: percentil, prebran iz cene, vsaka raven višje zapre
 (`scripts/visja-liga.mjs`, `ovrednoti-igralce` izpiše seznam "Cena iz višje
 lige"). Raven lige je pravilo po šifri in imenu v `ravenLige`, ne stolpec:
 HR (državne lige, županijske po imenu le znotraj iste zveze), SK, HU, ES, EE,
-LV, TR (1. Lig nad 2. Lig nad 3. Lig nad PGL), UA, LT, GB, GR (znotraj iste zveze EPS), FO, IS, NO, KZ, MD po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
+LV, TR (1. Lig nad 2. Lig nad 3. Lig nad PGL), UA, LT, GB, GR (znotraj iste zveze EPS), FO, IS, NO, KZ, MD, HK po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
 z mladinskimi. Brez pravila (SI, RS, RO, PL, CZ, MK, ME, AZ) in brez šifer osebe ostane
 4.5. Ob novi ligi z novim poimenovanjem ravni preveri `ravenLige` (smoke).
 Na vklopljeni ligi pride do nove cene le **tedensko prevrednotenje** (največ

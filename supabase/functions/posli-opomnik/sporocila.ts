@@ -19,10 +19,12 @@ export type Jezik = 'sl' | 'sk' | 'hr' | 'cs' | 'hu' | 'de' | 'sr' | 'ro' | 'et'
  * Jezik države lige (enako kot `JEZIK_DRZAVE` v vmesniku). Združeno kraljestvo
  * in Malta dobita angleščino, Črna gora srbščino, Bosna in Hercegovina
  * hrvaščino, Moldavija romunščino (rok pa v svojem pasu, `PAS_DRZAVE`).
+ * Japonska, Hongkong, Tajska in Gibraltar dobijo angleščino (rok v svojem pasu).
  */
 export const JEZIK_DRZAVE: Record<string, Jezik> = {
   SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', DE: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk',
   GR: 'el', TR: 'tr', UA: 'uk', AM: 'hy', AZ: 'az', DK: 'da', GB: 'en', MT: 'en', ME: 'sr', BA: 'hr', MD: 'ro',
+  JP: 'en', HK: 'en', TH: 'en', GI: 'en',
 }
 /** Časovni pas, v katerem so roki lige. */
 export const PAS_DRZAVE: Record<string, string> = {
@@ -51,6 +53,10 @@ export const PAS_DRZAVE: Record<string, string> = {
   ME: 'Europe/Podgorica',
   BA: 'Europe/Sarajevo',
   MD: 'Europe/Chisinau',
+  JP: 'Asia/Tokyo',
+  HK: 'Asia/Hong_Kong',
+  TH: 'Asia/Bangkok',
+  GI: 'Europe/Gibraltar',
 }
 // Grščina s 24-urnim časom (`-u-hc-h23`): sama `el-GR` piše "11:00 π.μ.".
 const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE', pl: 'pl-PL', es: 'es-ES', lv: 'lv-LV', mk: 'mk-MK', el: 'el-GR-u-hc-h23', tr: 'tr-TR', uk: 'uk-UA', hy: 'hy-AM', az: 'az-Latn-AZ', da: 'da-DK', en: 'en-GB' }

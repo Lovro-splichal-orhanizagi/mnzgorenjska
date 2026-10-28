@@ -521,6 +521,86 @@ const IMENA_MD = [
   'Podgorenii FC', 'Prispa United', 'Prisaca FC', 'Ulița mare FC', 'Lunca Prutului FC',
 ]
 
+// Japonske lige: zabavna, izmišljena imena (angleško, vmesnik je angleški), brez imen pravih klubov.
+const IMENA_JP = [
+  'Mountain Foxes', 'Red-Crowned Cranes', 'Kingfisher FC', 'Heron Hill FC', 'Seagull Bay FC',
+  'Shiba Inu FC', 'Tanuki FC', 'Kitsune United', 'Tsuru FC', 'Koi Pond FC',
+  'Sakura Strollers', 'Momiji FC', 'Bamboo Grove FC', 'Onsen United', 'Ryokan FC',
+  'Ramen FC', 'Udon United', 'Soba FC', 'Takoyaki FC', 'Okonomiyaki United',
+  'Onigiri FC', 'Bento Box FC', 'Gyoza United', 'Yakitori FC', 'Matcha FC',
+  'Mochi United', 'Tempura FC', 'Katsu Curry FC', 'Natto Athletic', 'Miso Soup FC',
+  'Konbini FC', 'Bullet Train FC', 'Last Train Home FC', 'Izakaya XI', 'Karaoke FC',
+  'Sunday Legends', 'Saturday Heroes', 'Injury Time FC', 'Bench Warmers', 'Offside Trap FC',
+  'Ref Didn’t See It', 'Off the Crossbar', 'Corner Flag FC', 'Rainy Season FC', 'Typhoon United',
+  'Cherry Blossom XI', 'Golden Week FC', 'Obon Rovers', 'Summer Festival FC', 'Fireworks FC',
+  'Daruma FC', 'Lucky Cat FC', 'Origami United', 'Haiku FC', 'Paper Lantern FC',
+  'Vending Machine FC', 'Salaryman XI', 'Overtime United', 'Morning Commute FC', 'Night Market FC',
+  'Hot Spring Hares', 'Rice Field Rovers', 'Mountain Pass FC', 'Snow Country FC', 'Island Hoppers',
+  'Twelfth Man FC', 'Golden Boot FC', 'Hat-Trick Heroes', 'Clean Sheet Club', 'Nutmeg FC',
+  'Top Bins FC', 'Back Post FC', 'Long Ball FC', 'Five-a-Side Kings', 'The Old Guard',
+  'Cup Run Dreamers', 'Mid-Table Mediocrity', 'Promotion Chasers', 'Away Day Boys', 'Grass Roots United',
+]
+
+// Hongkonške lige: zabavna, izmišljena imena (angleško), brez imen pravih klubov.
+const IMENA_HK = [
+  'Victoria Harbour Herons', 'Lion Rock Lions', 'Lantau Buffaloes', 'Sea Eagles FC', 'Lamma Lizards',
+  'Peak Tram FC', 'Star Ferry FC', 'Ding Ding United', 'Minibus FC', 'Red Taxi Rovers',
+  'Dim Sum FC', 'Har Gow United', 'Siu Mai FC', 'Char Siu FC', 'Egg Tart United',
+  'Pineapple Bun FC', 'Milk Tea FC', 'Wonton Noodle FC', 'Congee United', 'Fish Ball FC',
+  'Curry Fish Ball FC', 'Egg Waffle United', 'Cha Chaan Teng XI', 'Claypot Rice FC', 'Roast Goose FC',
+  'Typhoon Shelter FC', 'Signal Eight United', 'Neon Sign FC', 'Night Market FC', 'Rooftop FC',
+  'Sunday Legends', 'Saturday Heroes', 'Injury Time FC', 'Bench Warmers', 'Offside Trap FC',
+  'Ref Didn’t See It', 'Off the Crossbar', 'Corner Flag FC', 'Artificial Turf FC', 'Humid Night FC',
+  'Dragon Boat FC', 'Mid-Autumn Lanterns', 'Mooncake United', 'Lunar New Year FC', 'Lucky Eight FC',
+  'Junk Boat Rovers', 'Island Line FC', 'Escalator United', 'Harbour View FC', 'Village House FC',
+  'Hiking Trail FC', 'Dragon’s Back FC', 'Big Wave Bay FC', 'Fishing Village FC', 'Wet Market FC',
+  'Twelfth Man FC', 'Golden Boot FC', 'Hat-Trick Heroes', 'Clean Sheet Club', 'Nutmeg FC',
+  'Top Bins FC', 'Back Post FC', 'Long Ball FC', 'Five-a-Side Kings', 'The Old Guard',
+  'Cup Run Dreamers', 'Mid-Table Mediocrity', 'Promotion Chasers', 'Away Day Boys', 'Grass Roots United',
+  'Sideline Uncles', 'Kaifong XI', 'Late Kick-Off FC', 'Rainstorm United', 'Mahjong Table FC',
+  'Bamboo Scaffold FC', 'Pak Choi United', 'Lemon Tea FC', 'Bubble Tea FC', 'Sea Breeze FC',
+]
+
+// Tajske lige: zabavna, izmišljena imena (angleško), brez imen pravih klubov.
+const IMENA_TH = [
+  'Giant Catfish FC', 'River Herons', 'Bay Dolphins', 'Water Buffaloes', 'Northern Elephants',
+  'Doi Hornbills', 'Gulf Seahorses', 'Paddy Field Frogs', 'Mangrove Crabs', 'Jungle Gibbons',
+  'Tuk Tuk FC', 'Songthaew United', 'Long-Tail Boat FC', 'Night Train FC', 'Floating Market FC',
+  'Som Tam FC', 'Pad Thai United', 'Tom Yum FC', 'Green Curry FC', 'Mango Sticky Rice FC',
+  'Khao Man Gai FC', 'Moo Ping United', 'Boat Noodle FC', 'Mookata FC', 'Thai Tea FC',
+  'Durian United', 'Coconut FC', 'Lychee FC', 'Rambutan Rovers', 'Street Food XI',
+  'Sunday Legends', 'Saturday Heroes', 'Injury Time FC', 'Bench Warmers', 'Offside Trap FC',
+  'Ref Didn’t See It', 'Off the Crossbar', 'Corner Flag FC', 'Rainy Season FC', 'Monsoon United',
+  'Songkran Splash FC', 'Loy Krathong FC', 'Lantern Festival FC', 'Temple Fair FC', 'Village Select XI',
+  'Hot Season FC', 'Cool Season United', 'Rice Harvest FC', 'Orchid FC', 'Lotus Pond FC',
+  'Muay Thai Kickers', 'Takraw Tricksters', 'Night Bazaar FC', 'Beach Road FC', 'Island Hoppers',
+  'Twelfth Man FC', 'Golden Boot FC', 'Hat-Trick Heroes', 'Clean Sheet Club', 'Nutmeg FC',
+  'Top Bins FC', 'Back Post FC', 'Long Ball FC', 'Five-a-Side Kings', 'The Old Guard',
+  'Cup Run Dreamers', 'Mid-Table Mediocrity', 'Promotion Chasers', 'Away Day Boys', 'Grass Roots United',
+  'Sideline Uncles', 'Motorbike Taxi FC', 'Seven Eleven XI', 'Hammock FC', 'Sabai Sabai FC',
+  'Mai Pen Rai United', 'Jasmine Rice FC', 'Pineapple FC', 'Sticky Rice United', 'Iced Coffee FC',
+]
+
+// Gibraltarske lige: zabavna, izmišljena imena (angleško in llanito), brez imen pravih klubov.
+const IMENA_GI = [
+  'Rock Apes', 'Barbary Macaques', 'Strait Dolphins', 'Levanter Gulls', 'Upper Rock Ravens',
+  'Catalan Bay Crabs', 'Eastern Beach Terns', 'Southern Ospreys', 'Windmill Hill Hares', 'Bay Seahorses',
+  'Calentita FC', 'Rosto United', 'Pan Dulce FC', 'Torta de Acelga FC', 'Fish and Chips FC',
+  'Full English FC', 'Tapas United', 'Churros FC', 'Café con Leche FC', 'Bollo FC',
+  'Main Street FC', 'Casemates XI', 'Grand Battery FC', 'Moorish Castle FC', 'Siege Tunnels FC',
+  'Cable Car FC', 'Frontier Queue FC', 'Runway Crossers', 'Ferry Port FC', 'Marina Bay FC',
+  'Sunday Legends', 'Saturday Heroes', 'Injury Time FC', 'Bench Warmers', 'Offside Trap FC',
+  'Ref Didn’t See It', 'Off the Crossbar', 'Corner Flag FC', 'Plastic Pitch Boys', 'Windy Night FC',
+  'Levanter Cloud FC', 'Poniente United', 'National Day FC', 'Llanito XI', 'Yanito United',
+  'Lighthouse FC', 'Harbour Wall FC', 'Dockyard FC', 'Tunnel Vision FC', 'Steps of the Rock',
+  'Twelfth Man FC', 'Golden Boot FC', 'Hat-Trick Heroes', 'Clean Sheet Club', 'Nutmeg FC',
+  'Top Bins FC', 'Back Post FC', 'Long Ball FC', 'Five-a-Side Kings', 'The Old Guard',
+  'Cup Run Dreamers', 'Mid-Table Mediocrity', 'Promotion Chasers', 'Away Day Boys', 'Grass Roots United',
+  'Sideline Dads', 'Tracksuit Managers', 'Last Orders FC', 'Cup of Tea FC', 'Pub Quiz Champions',
+  'Hoof It FC', 'Route One United', 'Parked Bus FC', 'Two Banks of Four', 'Worldie Merchants',
+  'Early Kick-Off FC', 'Wooden Spoon United', 'Hangover XI', 'Free Kick FC', 'Sea Breeze FC',
+]
+
 // Postave v mejah POZICIJE (vratar 1, branilci 3–5, vezisti 2–5, napadalci 1–3).
 const POSTAVE = [
   [4, 4, 2], [4, 3, 3], [3, 5, 2], [3, 4, 3], [5, 3, 2], [4, 5, 1], [5, 4, 1],
@@ -910,6 +990,7 @@ for (const l of seznam) {
   }
   const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS, RO: IMENA_RO, EE: IMENA_EE, PL: IMENA_PL, ES: IMENA_ES, LV: IMENA_LV, MK: IMENA_MK,
     GR: IMENA_GR, TR: IMENA_TR, UA: IMENA_UA, AM: IMENA_AM, AZ: IMENA_AZ, DK: IMENA_DK, GB: IMENA_GB, MT: IMENA_MT, ME: IMENA_ME, BA: IMENA_BA, MD: IMENA_MD,
+    JP: IMENA_JP, HK: IMENA_HK, TH: IMENA_TH, GI: IMENA_GI,
   }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
     .filter((i) => !zasedena.has(i.toLowerCase()))
 

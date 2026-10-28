@@ -72,10 +72,14 @@ import ffl from './ffl.mjs'
 import ksi from './ksi.mjs'
 import fsf from './fsf.mjs'
 import modular11 from './modular11.mjs'
+import gfa from './gfa.mjs'
 import dbu from './dbu.mjs'
 import nff from './nff.mjs'
 import kff from './kff.mjs'
 import pflAz from './pfl-az.mjs'
+import jfl from './jfl.mjs'
+import hkfa from './hkfa.mjs'
+import thaileague from './thaileague.mjs'
 
 const VIRI = {
   // Ukrajina: Profesionalna nogometna liga prek pfl.ua.
@@ -204,6 +208,9 @@ const VIRI = {
   // ZDA: USL League Two prek Modular11 (prvi vir zunaj Evrope); razpored je
   // GET seznam tekem divizije, zapisnik JSON v strani tekme, krog je teden.
   modular11,
+  // Gibraltar (GFA) prek gibraltarfa.com (HTML): šifra osebe iz profila, kartoni
+  // brez minute, drugi polčas pri viru zamaknjen za +45.
+  gfa,
   // Danska: Dansk Boldspil-Union prek dbu.dk/resultater (HTML), pulje po sezoni,
   // brez šifer igralcev (ime + klub); krogi iz datumov. Pisno dovoljenje DBU.
   dbu,
@@ -216,6 +223,17 @@ const VIRI = {
   // Azerbajdžan: PFL (I in II Liqa) prek javnega API-ja pfl.az (razpored) in
   // zapisnikov PDF (pdftotext); brez šifer igralcev, vratar je prvi začetnik (namig).
   'pfl-az': pflAz,
+  // Japonska: Japan Football League (4. raven) prek jfl.or.jp — razpored in stran
+  // tekme (HTML, ista vsebina kot uradni PDF), brez šifer igralcev (ime + klub),
+  // pozicije GK/DF/MF/FW iz postave, čas Tokio → Ljubljana.
+  jfl,
+  // Hongkong (HKFA) prek strežniško izrisanih strani hkfa.com: stanje `__NUXT__`
+  // brez eval (`nuxt.mjs`), stalna šifra igralca, čas Asia/Hong_Kong, krog je teden.
+  hkfa,
+  // Tajska: Thai League 2 in 3 prek javnega API-ja, ki ga kliče thaileague.co.th
+  // (razpored), in zapisnikov PDF (pdftotext + ikone dogodkov iz toka strani);
+  // brez šifer igralcev, pozicije iz zapisnika.
+  thaileague,
 }
 
 /**
