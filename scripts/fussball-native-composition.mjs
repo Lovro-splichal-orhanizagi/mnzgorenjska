@@ -1,5 +1,5 @@
 // Baden only. Source-only certificates never authorize an individual import.
-// The production catalog is deliberately UNFINALIZED. No native issuer lives here.
+// Catalog DATA and authenticated source proofs are separate. No native issuer lives here.
 import {readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from 'node:fs'
 import {join} from 'node:path'
 import {tmpdir} from 'node:os'
