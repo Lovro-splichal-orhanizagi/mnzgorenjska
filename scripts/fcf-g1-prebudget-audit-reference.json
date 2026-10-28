@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "kind": "fixed-pre-budget-seven-audit-reference",
+  "sourceReferencesSha256": "dade3b8711bbb6e864e727df6f8f9b8cc5dc7e21b6140e19f34563f37f54fa8d",
+  "run": {
+    "id": 39082161817,
+    "path": ".github/workflows/fcf-javni-dokazi.yml",
+    "head_sha": "000f2eccbff62f1b87afa406f637f6bf6c9e0a41",
+    "head_branch": "main",
+    "event": "workflow_dispatch",
+    "run_attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-10-18T00:16:31Z",
+    "updated_at": "2026-10-18T03:01:37Z",
+    "run_started_at": "2026-10-18T00:16:31Z",
+    "url": "https://api.github.com/repos/Lovro-splichal-orhanizagi/mnzgorenjska/actions/runs/39082161817",
+    "html_url": "https://github.com/Lovro-splichal-orhanizagi/mnzgorenjska/actions/runs/39082161817",
+    "repository": "Lovro-splichal-orhanizagi/mnzgorenjska",
+    "headRepository": "Lovro-splichal-orhanizagi/mnzgorenjska",
+    "actor": {
+      "id": 25134229,
+      "login": "nejcar20",
+      "type": "User"
+    },
+    "triggeringActor": {
+      "id": 25134229,
+      "login": "nejcar20",
+      "type": "User"
+    }
+  },
+  "jobs": [
+    {
+      "id": 117541170447,
+      "name": "dokazi",
+      "run_id": 39082161817,
+      "run_attempt": 1,
+      "head_sha": "000f2eccbff62f1b87afa406f637f6bf6c9e0a41",
+      "head_branch": "main",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-18T00:16:32Z",
+      "started_at": "2026-10-18T00:16:34Z",
+      "completed_at": "2026-10-18T03:01:36Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "number": 1,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-18T00:16:35Z",
+          "completed_at": "2026-10-18T00:16:35Z"
+        },
+        {
+          "name": "Prevzemi kodo",
+          "number": 2,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-18T00:16:35Z",
+          "completed_at": "2026-10-18T00:16:41Z"
+        },
+        {
+          "name": "Node 22",
+          "number": 3,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-18T00:16:41Z",
+          "completed_at": "2026-10-18T00:16:41Z"
+        },
+        {
+          "name": "Namesti odvisnosti brez skript",
+          "number": 4,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-18T00:16:41Z",
+          "completed_at": "2026-10-18T00:16:57Z"
+        },
+        {
+          "name": "Preveri omejitve brez omrezja",
+          "number": 5,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-18T00:16:57Z",
+          "completed_at": "2026-10-18T00:17:21Z"
+        },
+        {
+          "name": "Pocakaj na starejse ES vire in uvoze",
+          "number": 6,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-18T00:17:21Z",
+          "completed_at": "2026-10-18T03:01:06Z"
+        },
+        {
+          "name": "Zajemi samo sedem javnih zapisnikov",
+          "number": 7,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-18T03:01:06Z",
+          "completed_at": "2026-10-18T03:01:32Z"
+        },
+        {
+          "name": "Shrani samo lastne javne dokaze",
+          "number": 8,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-18T03:01:32Z",
+          "completed_at": "2026-10-18T03:01:33Z"
+        },
+        {
+          "name": "Post Node 22",
+          "number": 15,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-18T03:01:33Z",
+          "completed_at": "2026-10-18T03:01:33Z"
+        },
+        {
+          "name": "Post Prevzemi kodo",
+          "number": 16,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-18T03:01:33Z",
+          "completed_at": "2026-10-18T03:01:34Z"
+        },
+        {
+          "name": "Complete job",
+          "number": 17,
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-18T03:01:34Z",
+          "completed_at": "2026-10-18T03:01:34Z"
+        }
+      ]
+    }
+  ],
+  "artifact": {
+    "id": 12123222378,
+    "name": "fcf-javni-dokazi-39082161817-1",
+    "digest": "sha256:703d314dcb2e0a89d46be2ceaebc5515f48035c66f42c55c130ac2ce8056466c",
+    "expired": false,
+    "size_in_bytes": 318820,
+    "created_at": "2026-10-18T03:01:33Z",
+    "updated_at": "2026-10-18T03:01:33Z",
+    "workflow_run": {
+      "id": 39082161817,
+      "repository_id": 1348452092,
+      "head_repository_id": 1348452092,
+      "head_branch": "main",
+      "head_sha": "000f2eccbff62f1b87afa406f637f6bf6c9e0a41"
+    }
+  },
+  "manifestSha256": "3cec4ca21705dbd676f3d40d252f63859348c7805d8a1070e3a4426082753152",
+  "documents": [
+    {
+      "id": "4109388",
+      "bytes": 458406,
+      "sha256": "eb3b14de3d6077f4fb896cb4a4d2b96d76eb85db8853889e9871b7f74e73e770",
+      "attemptUTC": "2026-10-18T03:01:06.997Z",
+      "captureUTC": "2026-10-18T03:01:11.218Z"
+    },
+    {
+      "id": "4109643",
+      "bytes": 515763,
+      "sha256": "5fb700778027364c761045a738b897d68d12a69247fcae33c63aab4062471532",
+      "attemptUTC": "2026-10-18T03:01:11.244Z",
+      "captureUTC": "2026-10-18T03:01:14.850Z"
+    },
+    {
+      "id": "4109649",
+      "bytes": 200820,
+      "sha256": "553f4913d7e7524326634d7f484a34f5776c6991c47e048fcd9c669efde9779c",
+      "attemptUTC": "2026-10-18T03:01:14.864Z",
+      "captureUTC": "2026-10-18T03:01:18.209Z"
+    },
+    {
+      "id": "4116202",
+      "bytes": 491934,
+      "sha256": "ffe7a5e9dd542b92f2050e7357acf8d16a7f788acef3485ed8d193b2001a87f1",
+      "attemptUTC": "2026-10-18T03:01:18.215Z",
+      "captureUTC": "2026-10-18T03:01:21.757Z"
+    },
+    {
+      "id": "4116215",
+      "bytes": 466225,
+      "sha256": "5dd7e401c7929dd1f2b59d35d1f6e203e6306f2479238adcd8755180b9671a49",
+      "attemptUTC": "2026-10-18T03:01:21.770Z",
+      "captureUTC": "2026-10-18T03:01:25.309Z"
+    },
+    {
+      "id": "4118352",
+      "bytes": 476814,
+      "sha256": "1e8d50d487be699cac45c3c2dc4658d3a9b16983fd5203b5845dc1339fe7351c",
+      "attemptUTC": "2026-10-18T03:01:25.325Z",
+      "captureUTC": "2026-10-18T03:01:28.857Z"
+    },
+    {
+      "id": "4118358",
+      "bytes": 441280,
+      "sha256": "e69af6b2765dbed7ebe3b57535beb1ce259c7d77ed9cb7f90d9cb4998afd153a",
+      "attemptUTC": "2026-10-18T03:01:28.874Z",
+      "captureUTC": "2026-10-18T03:01:32.415Z"
+    }
+  ],
+  "anchor": {
+    "planSha256": "e0e902944cec4a3fc479b52bc11243bfeb7ab4dcbe115ee831299456b4d2a28c",
+    "planCreatedUTC": "2026-10-18T22:04:29.556Z",
+    "sourceCommit": "42879db003006f61feb4a36070e6ea2e584712ad",
+    "claim": {
+      "execution": {
+        "repository": "Lovro-splichal-orhanizagi/mnzgorenjska",
+        "workflow": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "ref": "refs/heads/main",
+        "sourceCommit": "42879db003006f61feb4a36070e6ea2e584712ad",
+        "runId": "39170648473",
+        "runAttempt": "1"
+      },
+      "expected": {
+        "claimCommit": "9a18df4a844b59bada6a1fc11bebb4c2f70ead0f",
+        "claimJsonSha256": "9b77ffdde34f623542ee36b8c3b1b2ce076b3f8217dd59903e7675b26a5befd4",
+        "rulesetId": "25355545",
+        "planSha256": "e0e902944cec4a3fc479b52bc11243bfeb7ab4dcbe115ee831299456b4d2a28c",
+        "sourceCommit": "42879db003006f61feb4a36070e6ea2e584712ad",
+        "runId": "39170648473",
+        "runAttempt": "1"
+      }
+    },
+    "seedBinding": {
+      "artifactId": "12151034288",
+      "artifactDigest": "sha256:da1824d1bd253a0e002aaf1557ccb550850616f87b33ed86a270fc0baec01a88",
+      "runId": "39169392573",
+      "runAttempt": "1",
+      "jobId": "117799106187",
+      "retentionCommit": "0730a43cd4b9268f1bb74fc0f85cc3234535f6dd",
+      "manifestSha256": "4245168dd940b830186cc0534a6b31de8ad3d60ea55d648e50c1883000e5c9e7",
+      "sourceCaptureCommit": "f7efba26c31f76372b5aab1e976061631fbaebda",
+      "originalManifestSha256": "08e25572fd373c3e5ee2a5314cc3d8a049a0ba56057cccff5b8191f88f9e666a"
+    },
+    "claimedUTC": "2026-10-18T22:06:40.156Z"
+  }
+}

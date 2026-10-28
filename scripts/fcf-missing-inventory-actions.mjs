@@ -95,6 +95,7 @@ async function context({env,github,clock}){
 }
 export async function runFcfMissingInventoryActions({argv,env=process.env,root=process.cwd(),github=gh,sourceFetch=(...a)=>fetch(...a),clock=Date.now,pause=ms=>new Promise(r=>setTimeout(r,ms))}){
  const mode=argv?.[0]
+ if(env.FCF_INVENTORY_PRESET==='g1-post83-remainder-quarantine-v1'||['prepare-g1-remainder-approval','g1-remainder-claim-template'].includes(mode)){const {runFcfG1RemainderActions}=await import('./fcf-g1-remainder-actions.mjs');return runFcfG1RemainderActions({argv,env,root,github,sourceFetch,clock,pause})}
  if(mode==='pack-seed'){const f=args(argv.slice(1));exactKeys(f,['originals-dir','source-commit','output'],'pack flags');return{code:0,result:await packFcfInventorySeed({originalsDir:resolve(f['originals-dir']),retentionCommit:f['source-commit'],output:resolve(f.output),now:clock()})}}
  if(mode==='prepare-g9-approval'){
   const f=args(argv.slice(1));exactKeys(f,['accounting-source','source-commit','ruleset-id','output'],'G9 approval flags')

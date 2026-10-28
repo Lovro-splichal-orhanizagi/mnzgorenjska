@@ -13,7 +13,7 @@ import {GERMANY_BULK_CANDIDATES} from './bulk-germany-source.mjs'
 import {normalizeFussballReport,parseFussballLeagueCode,fussballPlayerKey} from './fussball-import.mjs'
 import {validateFussballCardEnvelope} from './viri/fussball-card-envelope.mjs'
 import {BADEN_CURRENT,BADEN_ARCHIVE,BADEN_SLUG,BADEN_CARDS,badenCanonical,badenClubKey,compiledBadenHistoricalPolicy} from './lib/fussball-native-history-policy.mjs'
-const contexts=new WeakMap(),sha=v=>createHash('sha256').update(typeof v==='string'||Buffer.isBuffer(v)?v:badenCanonical(v)).digest('hex')
+const runtimeCaches=new WeakMap(),contexts=new WeakMap(),sha=v=>createHash('sha256').update(typeof v==='string'||Buffer.isBuffer(v)?v:badenCanonical(v)).digest('hex')
 const catalogBytes=readFileSync(new URL('./policies/fussball-baden-native-composition.json',import.meta.url)),catalog=JSON.parse(catalogBytes)
 const need=(ok,m)=>{if(!ok)throw Object.assign(Error('Baden runtime: '+m),{dataHold:true,reason_code:'FUSSBALL_NATIVE_RUNTIME_HOLD'})}
 export const isBadenNativeCompetition=c=>c?.slug===BADEN_SLUG&&c.source==='fussball-public'&&c.source_league_code===BADEN_CURRENT&&c.source_policy===BADEN_CARDS&&c.country_code==='DE'
@@ -148,6 +148,7 @@ export async function collectFussballNativeRuntime({context,competition,code,cli
  for(const item of seed.krogi)if(item.krog!==seed.krog)await page(item.url)
  const full=assembleFussballSchedule(pages,scope)
  const schedule=bindFussballHistoricalSchedule(context,competition,code,nativeSchedule(full)),reports=[],pendingReports=[],identities=new Map(),cardEnvelopes=[]
+ runtimeCaches.get(client)?.(full.fixtures)
  for(const round of schedule)for(const row of round.tekme){
   if(row.historicalMarker)continue
   if(row.rezultat===null){need(row.datum>=asOfDate,'past unplayed fixture without immutable review');continue}
@@ -209,14 +210,27 @@ function runtimeOriginal(d){
  need(r?.version===1&&same(r.document,documentReceipt(d))&&a?.status==='success'&&a.httpStatus===200&&a.error===null&&a.url===d.url&&a.kind===d.kind&&a.startedAt===d.capturedAt&&Number.isInteger(a.number)&&a.number>0&&c?.kind==='baden-marker-aware-runtime'&&c.codeSha256===runtimeCode()&&c.asOfDate===c.createdAt?.slice(0,10)&&Date.parse(c.createdAt)<=Date.parse(d.capturedAt)&&Date.parse(d.capturedAt)<=Date.parse(c.completedAt),'cached runtime original receipt differs')
  return r
 }
+// Only this native factory can enable retained HTML after full fresh rounds and
+// marker validation. All network reads use ONE real client's budget and pacing.
+const fixtureCacheHeader=f=>[f.id,f.zapisnikId,f.url,f.krog,f.datum,f.ura,f.domaci,f.gostje,f.rezultat,f.administrativeResult??null]
+function activeRuntimeClient(options,documents,baseline){
+ const html=documents.filter(d=>['report','lineup'].includes(d.kind)),urls=new Set(html.map(d=>d.url)),eligible=new Set()
+ const cached=createFussballCaptureClient({maxRequests:1,cachedDocuments:html,onCachedDocument:options.onCachedDocument,onAttempt:()=>need(false,'cache-only reader cannot issue a source request'),fetchFn:async()=>{throw Error('cache-only source request forbidden')}})
+ const network=createFussballCaptureClient({...options,cachedDocuments:documents.filter(d=>!['report','lineup'].includes(d.kind))})
+ const client={read(url,kind){const id=url.match(/\/spiel\/([A-Z0-9]{32})(?:\/ticker-id\/selectedTickerId)?$/)?.[1];return urls.has(url)&&eligible.has(id)&&['report','lineup'].includes(kind)?cached.read(url,kind):network.read(url,kind)},snapshot:()=>network.snapshot()}
+ const fixtures=baseline.fixtures??baseline.schedule.flatMap(r=>r.tekme),old=new Map(fixtures.map(f=>[f.id,f])),complete=new Set(baseline.reports.map(r=>r.id))
+ runtimeCaches.set(client,fixtures=>{eligible.clear();for(const f of fixtures)if(complete.has(f.zapisnikId)&&old.has(f.id)&&same(fixtureCacheHeader(old.get(f.id)),fixtureCacheHeader(f)))eligible.add(f.id)})
+ return client
+}
 /** Separate marker-aware capture format. Never call the frozen collector with
  * fake fixtures/HTML or disguise this as its complete ordinary capture. */
 export async function captureFussballNativeRuntimeDirectory({context,competition,directory,seedDirectory,reuseDirectory,code=BADEN_CURRENT,maxRequests=4000,asOfDate=new Date().toISOString().slice(0,10),fetchFn}={}){
  await loadFussballNativeRuntimeSeed({context,competition,directory:seedDirectory})
  const s=privateContext(context,competition),stage=originalSeason(s,code)
+ let baseline=s.pack.seasons.find(s=>s.code===code)
  const cached=new Map(stage.manifest.documents.filter(d=>d.kind!=='round').map(d=>[d.url,{...d,bytes:Buffer.from(stage.files.get(d.file))}]))
  if(reuseDirectory){
-  await loadFussballNativeRuntimeCapture({context,competition,directory:reuseDirectory,code,requireFresh:false})
+  baseline=await loadFussballNativeRuntimeCapture({context,competition,directory:reuseDirectory,code,requireFresh:false})
   const prior=JSON.parse(regular(reuseDirectory,'native-runtime.json'))
   for(const d of prior.documents)if(d.kind!=='round')cached.set(d.url,{...d,bytes:regular(reuseDirectory,d.file)})
  }
@@ -229,8 +243,11 @@ export async function captureFussballNativeRuntimeDirectory({context,competition
  }
  need(asOfDate===createdAt.slice(0,10),'capture as-of calendar must equal original current execution day')
  writeFileSync(join(directory,'attempts.jsonl'),'');writeFileSync(join(directory,'outcomes.jsonl'),'')
- const client=createFussballCaptureClient({maxRequests,...(fetchFn?{fetchFn}:{}),cachedDocuments,onAttempt:a=>appendFileSync(join(directory,'attempts.jsonl'),JSON.stringify(a)+'\n'),onDocument:d=>save(d,'network'),onCachedDocument:d=>save(d,'cache')})
- const batch=await collectFussballNativeRuntime({context,competition,code,client,asOfDate}),body=JSON.stringify(batch)+'\n'
+ const options={maxRequests,...(fetchFn?{fetchFn}:{}),onAttempt:a=>appendFileSync(join(directory,'attempts.jsonl'),JSON.stringify(a)+'\n'),onDocument:d=>save(d,'network'),onCachedDocument:d=>save(d,'cache')}
+ const client=s.state.readback.active===true?activeRuntimeClient(options,cachedDocuments,baseline):createFussballCaptureClient({...options,cachedDocuments})
+ let batch
+ try{batch=await collectFussballNativeRuntime({context,competition,code,client,asOfDate})}catch(error){writeFileSync(join(directory,'outcomes.jsonl'),client.snapshot().attempts.map(a=>JSON.stringify(a)+'\n').join(''));throw error}
+ const body=JSON.stringify(batch)+'\n'
  writeFileSync(join(directory,'result.json'),body,{flag:'wx'})
  const snapshot=client.snapshot(),completedAt=new Date().toISOString(),codeSha256=runtimeCode()
  writeFileSync(join(directory,'outcomes.jsonl'),snapshot.attempts.map(a=>JSON.stringify(a)+'\n').join(''))
@@ -273,6 +290,7 @@ export async function loadFussballNativeRuntimeCapture({context,competition,dire
  let clock=Date.parse(outcomes[0].startedAt),next=0
  const usedNetwork=new Set(),usedCached=new Set(),replay=createFussballCaptureClient({maxRequests:m.maxRequests,cachedDocuments:cached.map(d=>docs.get(d.url)),now:()=>clock,sleep:async ms=>{clock+=ms},onAttempt:p=>{need(same(p,intents[next]),'replayed intent differs');clock=Date.parse(outcomes[next++].startedAt)},onCachedDocument:d=>usedCached.add(d.url),onDocument:d=>{need(same(documentReceipt({...d,bytes:d.bytes.length}),documentReceipt({...docs.get(d.url),bytes:docs.get(d.url).bytes.length})),'replayed network receipt differs');usedNetwork.add(d.url)},fetchFn:async url=>{const d=docs.get(url);need(d?.origin==='network','runtime replay network original missing');return new Response(d.bytes,{status:d.status,headers:{'content-type':d.contentType}})}})
  const batch=await collectFussballNativeRuntime({context,competition,code,asOfDate:m.asOfDate,client:replay})
+ if(s.state.readback.active===true){const complete=new Set(batch.reports.map(r=>r.id));need(cached.filter(d=>['report','lineup'].includes(d.kind)).every(d=>complete.has('de-fussball-'+d.url.match(/\/spiel\/([A-Z0-9]{32})(?:\/ticker-id\/selectedTickerId)?$/)?.[1])),'active pending HTML must be freshly captured')}
  const bytes=regular(directory,'result.json');need(same(replay.snapshot(),snapshot)&&usedNetwork.size===network.length&&usedCached.size===cached.length&&sha(bytes)===m.resultSha256&&same(JSON.parse(bytes),batch),'complete runtime replay differs')
  return {...batch,provenance:{createdAt:m.createdAt,completedAt:m.completedAt,resultSha256:m.resultSha256,codeSha256:m.runtimeCodeSha256,requests:m.snapshot.requests,originalCurrentCreatedAt:s.pack.captured_at}}
 }

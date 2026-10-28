@@ -8,12 +8,13 @@ test('native composition exists and rejects copied source capabilities',async()=
  for(const name of ['partitionFussballNativeSource','buildFussballNativeComposition'])assert.throws(()=>api[name]({sourceEligible:true,nativeEligible:true}),/reader-issued/)
  assert.throws(()=>api.getFussballNativeComposition({registrationEligible:true}),/reader-issued/)
 })
-test('production catalog is explicitly unfinalized and cannot mint preparation authority',async()=>{
+test('catalog data cannot mint preparation authority and unfinalized clones are refused',async()=>{
  assert.ok(existsSync(new URL('./fussball-native-composition.mjs',import.meta.url)),'composition implementation missing')
  const api=await import('./fussball-native-composition.mjs'),catalog=JSON.parse(readFileSync(new URL('./policies/fussball-baden-native-composition.json',import.meta.url)))
- assert.equal(catalog.status,'UNFINALIZED');assert.equal(catalog.firstFantasyPlayedOn,null);assert.equal(catalog.clubDescriptors,null)
- assert.equal(catalog.seasons[0].reviews.length,9);assert.equal(catalog.seasons[1].fixtureInventorySha256,null)
- assert.throws(()=>api.validateFussballNativeCatalog(catalog),/UNFINALIZED/)
+ assert.equal(catalog.nativePreparation,null)
+ assert.throws(()=>api.validateFussballNativeCatalog({...structuredClone(catalog),status:'UNFINALIZED'}),/UNFINALIZED/)
+ assert.throws(()=>api.validateFussballNativeCatalog({...catalog,nativePreparation:{registrationEligible:true}}),/native preparation.*catalog authority/)
+ assert.throws(()=>api.getFussballNativeComposition(catalog),/reader-issued/)
  for(const key of ['skipIds','nativeBinding','sourceProof'])assert.throws(()=>api.validateFussballNativeCatalog({...catalog,[key]:[]}),/closed catalog/)
 })
 test('native hosted loader and CLI reject public overrides before any GET',async()=>{

@@ -1,0 +1,694 @@
+{
+  "version": 1,
+  "sourceCommit": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+  "runId": "40737060608",
+  "claimCommit": "60615f867fe575c5a7a63b7275e1f4eed05c09fc",
+  "claimJsonSha256": "0be564e78594bef674dca8b3f475c474118736e6de164c3cc08d9bc0009a17da",
+  "planSha256": "a9a3bb16634bcee8cef78dbb3326acdeab88204b1700c878c11a8f7d9e1b45fd",
+  "claimRef": "refs/tags/fcf-inventory-claim/g1-after-failed-1d41b14bb719da63f6e0c431186c1d34c234cad216f4ab292f962457ac8d58df",
+  "approvalSha256": "5af302ba1603f2ba07a5649f33fe5be8f1a0dcdce4b1dec01681237778f2f243",
+  "sourceReferencesSha256": "dade3b8711bbb6e864e727df6f8f9b8cc5dc7e21b6140e19f34563f37f54fa8d",
+  "completedUTC": "2026-10-28T18:12:12.702Z",
+  "firstSourceUTC": "2026-10-28T18:09:27.203Z",
+  "sourceFreshUntil": "2026-10-29T18:09:27.203Z",
+  "runtimeHashes": {
+    ".github/workflows/uvoz-fcf-zgodovina.yml": "bf4c366af18cc1803d1a623c0af160c9fa939a9629145b510516e041fdc6fab6",
+    "package-lock.json": "eabfd5f32e8c5f39378120789ff966c17d4775a3fdca9c39fb1ff308b3192ef1",
+    "package.json": "dd8ad4be71c2f7f8899ed5adf86d399c698b94c18c2c066bd0910b3598b8afd2",
+    "scripts/anonimizacija.mjs": "7c7630a464ccdcce2505e531425fcba04d82086ea855188a588e4a23c080f06e",
+    "scripts/dfb-artifacts.mjs": "df79a66b4125bf610e2c32c40bce3faa41c25f3ab6640655644f9d702dba42ce",
+    "scripts/fcf-current-source-proof.mjs": "25d7b322d5f58e7744c702113c86f55f5f82cb4a76853479d9eb5542e00329b6",
+    "scripts/fcf-final-audit.mjs": "bb7bb1482f09644a185a7ccab7084383c2ef19fa5fbd5a6ce49fa6056146da84",
+    "scripts/fcf-future-launch.mjs": "4bb852a717ce733e2f81f009b676c82998a0ca5d40d2a72cab38f557fbd7e46f",
+    "scripts/fcf-future-native-scope.mjs": "5850b054cc824e17cdf14f20a6dc521a83510cfbc859a3eff9f75cdb7f316177",
+    "scripts/fcf-future-readiness.mjs": "53fef89d3ffa43af67a1c64273af2354eb257d2be68a4229ba8ad90ff32e9e9c",
+    "scripts/fcf-future-source-admission.mjs": "4eae1cfc5ec01e714d88b66e5444f026fc34e31fa54e4c8afcc196e076c63893",
+    "scripts/fcf-future-source-approval.mjs": "3dcb939874e580f389323e211ca8a6ea7dd4c56b61b447bd496f02b22c779755",
+    "scripts/fcf-future-source-header.mjs": "8d7f5010d1449d4adb471c7eea0ab3ba1067d1de7f19a155eea00de32c49c8c0",
+    "scripts/fcf-future-source-plan.mjs": "8ac54f52aa9c129e4c8deeb9248867d4478f9168a10fc318eff0a4396d7555ba",
+    "scripts/fcf-future-source-proof.mjs": "21063740a87ae2518982e365a50bc7e02652bbbaeab9967411d1bc9ecd8274f0",
+    "scripts/fcf-future-target-actions.mjs": "6841f8edd4ab29e3513fe2fd29b937df6e4fe14a10f63b3855ff19e9c430324f",
+    "scripts/fcf-future-target-activation.mjs": "7b35b4affa77497290a22d3b2c4a8f4de06d30f321e6b75b772424e66698a76b",
+    "scripts/fcf-future-target-catalog.mjs": "a52fb9328e6f07b7de2e39d0a4f4585dbb1657b45ca98344c8638c4998825b06",
+    "scripts/fcf-future-target-child-offline.mjs": "ec02de47e91ef45e34b0e4f59a9338c625dedeb54147f29ed5dcf9d515c392ba",
+    "scripts/fcf-future-target-db.mjs": "20dfb7be7598bbade8c110fbdde12e5af9044a80d1fffec0c06c2d5f137304d8",
+    "scripts/fcf-future-target-native-adapter.mjs": "4d33620b49389d28bf26a0bd84385db07c4394d6abdb514550212572c312f73b",
+    "scripts/fcf-future-target-preload.mjs": "5226c0211ec208e530b86a233f8c84b21cc0aaccd86aa54cf94df3ddeae6a1a2",
+    "scripts/fcf-future-target-release.mjs": "54281f8106de41112f61583c7c422be5197a576d3f99abbf3ea4aba3ba2d6b74",
+    "scripts/fcf-future-target-rollout.mjs": "d83d01031d39b615eb6b5a5887099435ab942cf5162e535d5d574405b6efb118",
+    "scripts/fcf-future-target-source-wire.mjs": "60c8483a3af2b50abd3b6718b11fc5c242b5eaf880999782652077ada80de019",
+    "scripts/fcf-future-target-stage-evidence.mjs": "cc0a950229288b4cfe440cfa23f1177935e3aba4536d1ec47f3b31be0d2863c3",
+    "scripts/fcf-g1-4109409-policy.mjs": "43b440a13d38ff2ca878bccecfe2d24e3b5de83cbfeb8454e092b842a9f22606",
+    "scripts/fcf-g1-supplement-native.mjs": "96c562ce41fb0d18ccbbda040c6f438e8ff9d612c0f40acf5a08ab6b28974112",
+    "scripts/fcf-g9-held-parent-approval.mjs": "4ff8fd2ba9c989474218cedf183ab0586668b37c53c196b837a39f11bf1b91e3",
+    "scripts/fcf-g9-held-parent-plan.mjs": "29036f4438b213c0fad86b108592d9b17b7d915775be275cdabdb24b560cc172",
+    "scripts/fcf-held-parent-accounting.mjs": "6c655a97440b7191b8ef9688d07001a788e324a870ade5746f342714e9225f9f",
+    "scripts/fcf-historical-policy.mjs": "460afed6b728335cfce9567350a8d87cd9c3efee0418f3529c161244c3764406",
+    "scripts/fcf-historical-release.mjs": "aaf0f2ec37399c15bb42c2cabd38bed59e6fd6a116871ef35a22cee68c16092e",
+    "scripts/fcf-inventory-source-coordination.mjs": "bb43179620bb59e0bc7a370e55043eac3c1e72e02ee26c5abdd2b27508cd4033",
+    "scripts/fcf-inventory-source-protocol.mjs": "8371416a00504de1cd293f3a94950843ccec8ad68737ddbaea41923cd809d071",
+    "scripts/fcf-inventory-source-wire.mjs": "1599dfdb615d2f90f6c8d10bba7da90f148fbb2f61afe032a3a0bac626c66ccf",
+    "scripts/fcf-missing-inventory-actions.mjs": "7d66fdc875ba59fcce00f8ca831d1738cea6880da9dcb53df2ca503332d0bd57",
+    "scripts/fcf-missing-inventory-artifact.mjs": "2c9a4c6bd74d6e331b9f5870b1e26068b795982b991507ab50031c5fb72aca59",
+    "scripts/fcf-missing-inventory-capture.mjs": "969ef1f6f2153e64e4bde3c185e0a6ec1a7214b29c6ac0ea39542b52199012cb",
+    "scripts/fcf-missing-inventory-claim.mjs": "239dedbc778d1eb636d4cfebef8e13d1345c6c0ff2c2461a2981973debd2fa0c",
+    "scripts/fcf-missing-inventory-evidence.mjs": "83fe74dbaadc04f025220242ac9356abfd73afa31fd90d118750acc2500c3228",
+    "scripts/fcf-missing-inventory-plan.mjs": "d5116325faa9a1cc257aba9e0d6097ea7fd28afb987098c79c31fb6198c3f66d",
+    "scripts/fcf-post-g1-accounting.mjs": "270001b5c35fe589067ce680dc94622f7e39613e323cc4294fe1f3a0c3eda3ce",
+    "scripts/fcf-post-g9-accounting.mjs": "7766d22fba19f052f9a940fabdd450a2a672df5be8d2ef95b209011edbd3cad0",
+    "scripts/fcf-post-six-accounting.mjs": "dface63e3714643949a085653f2e0fad37d7b25b915086b9887f7bbbcbe824cf",
+    "scripts/fcf-six-accounting.mjs": "66f8bfa99ae139e1551dcdc3d5e7544ee844d4c304722dbf3a51899597552085",
+    "scripts/fcf-six-approval.mjs": "8164de5e3afce45b5d1b0363069ee8d419365950691c309b911284ef93045fdb",
+    "scripts/fcf-six-cleanup-evidence.mjs": "26b2053357abefe8184dea550f9730617e109d19399cb34a550829741373c374",
+    "scripts/fcf-six-continuation-plan.mjs": "6869a36acd8e96e58d2fc65aa3e4d7300d6566d2cb6e1e61589093fa9993d6dc",
+    "scripts/fcf-six-historical-policy.mjs": "34907066c20ab9d4576a39124f4efd29f2b43f37d207950279e2f4a9bfba2ce1",
+    "scripts/fcf-six-source-proof.mjs": "344e407f388ba12c5c7f9e65c4f2a69c7cdac2275c427482a676a0922d3c20a4",
+    "scripts/fcf-target-actions.mjs": "21e4f2bc669f3a8d8780064d92d6ba4c2fe8262c52bc8b89f40cddf2fb43475d",
+    "scripts/fcf-target-child-offline.mjs": "fa7938190fd2852bffb7558dbfe89ed2037772e41da219905196221a0918472b",
+    "scripts/fcf-target-db.mjs": "801314d417c4ee7e31ab32488fb0f14696fcc6d4d36e326bb35c71c1dc8afd52",
+    "scripts/fcf-target-evidence.mjs": "52e5a2672800626e197611756dccc9c14d0ab27d6674a1a24cc525f290c8a7e6",
+    "scripts/fcf-target-native-adapter.mjs": "3eb2c4bdea835924fc109409848ca7cccb9660770615860cfca881d4a2ed9cb8",
+    "scripts/fcf-target-native-plan.mjs": "79bde6a651d9416c408dc818a8029077dccfdbf738d1d689eae4c4ec60d2c6d3",
+    "scripts/fcf-target-offline.mjs": "8aeef540685c32691363a89991a1c9470e0223356821136a89c187faf556e4f3",
+    "scripts/fcf-target-preload.mjs": "cc75c2de954ec3a195191323873e9d75883ee6040e9ee017360db7b16f5c1933",
+    "scripts/fcf-target-pricing-model.mjs": "07280fca0f1de6db41d5ad8f8be58ea1a1f105850ecf00e8bfb4e6eaa9ffcf5a",
+    "scripts/fcf-target-readiness.mjs": "d236c881dde3b587d261a6eb8a2c582b585b84e071c91af43f3632ccc41d4041",
+    "scripts/fcf-target-release.mjs": "300e0e805d82ad45e036fa31cce66bb65530564469dec53f22a69aff5a38a3dd",
+    "scripts/fcf-target-rollout.mjs": "7e4de4b0dbdf5da1cf4dcf6ef850dac5c67b01e7736856287b2bd480829c0679",
+    "scripts/fcf-target-stage-evidence.mjs": "2f3e9c251d5bb8eb063c33d82eba0f04fbd594558bfc07ca6c353bd42e4ed148",
+    "scripts/klubi.mjs": "b1974c32ee3562cd7c57749951c3bbdafb8de27d26394d8f09ae55d169cd5e0a",
+    "scripts/lazni-vratarji.mjs": "2beb49b378f3d1192c8b9c88deae3421719206d4c6ea70002589822abb5cdfe9",
+    "scripts/lib/fcf-g1-supplement-installed.mjs": "4e4d4b285bf81a540e94dad83ac9b01cdd44e4ae8cc69123154141b5f19c94cb",
+    "scripts/lib/historical-statistics-import.mjs": "6318485d92eb00f388d7c5720e3215aeac2d05ce6298168d3f359af83cacb100",
+    "scripts/lib/historical-statistics-policy.mjs": "46dec05f104935ae2566ce592ff3f8fbcf20777173e1a3067641d060d444fe3d",
+    "scripts/ovrednoti-igralce.mjs": "6e1e823b4792b60a16080bf8998b496df268c0214fe12aca24fb98a834e62b8d",
+    "scripts/policies/fcf-g1-4109409-supplement.json": "3a867001b542012bc6672cec95dc211537ea82be4909b3a7a423841dff876781",
+    "scripts/policies/fcf-six-reviewed-exclusions.json": "77f56a26fc546e6fb1a632ca579e6daf9398e5a5cd3be2763e28311f8aef17c6",
+    "scripts/policies/historical-statistics-club-bindings.json": "745ab958da5a9631d1d7b4b79505124dfc8fdafe4b09bb67a781cae4e7da1223",
+    "scripts/policies/historical-statistics-exclusions.json": "9a94f73520bb5eb11093fd484feefff08edf81cb98a5b1b0e1065716a3066f1c",
+    "scripts/premik-cene.mjs": "c349ce12f4a0c52dc304ff56e8ad4b263c0a9dd55ef4e379d7b1a21537e00b51",
+    "scripts/prenos.mjs": "f06bd2923ee1a17cbc335e752e1a7082504a593991e40132587c664d0f2e006b",
+    "scripts/strani.mjs": "e0c9a7f9739e269a8bff6882f219903a990dad4cd1c6ec20956fe9ca589508c7",
+    "scripts/tekmovanje.mjs": "eb96599194da815c31bcfb5f07bc8eb62d59c931046652f8dead6417dc5981ca",
+    "scripts/ugani-pozicije.mjs": "3091807511fff0128330be2f213eda5e0be402ab98914b7c7a6da49168287af6",
+    "scripts/uvozi-fcf-cilj.mjs": "9e38f75b9d1adc426234a8375039578563bc82afc1106b8b018105a1c1258942",
+    "scripts/uvozi-fcf-prihodnji-cilj.mjs": "41412caaaf799b5c5e4c6d110dc166c0f6fea26202abb0bf54eac2e240c518eb",
+    "scripts/viri/facr.mjs": "aeeb715025bd23f0b2ab9422eb50467c099670d268cc0aeadab6372eb504099a",
+    "scripts/viri/fcf-calonge-pair.mjs": "2aaf4a9cd48da7af3b5b7879a1621240556bc7d4844770eb4f4c2193bb380c6f",
+    "scripts/viri/fcf-six-historical.mjs": "0a4063774b26880678a348a1724d9d0946394a898270dd0f0bc420a18ccfe546",
+    "scripts/viri/fcf.mjs": "bac99fe33b7eaea5ec771cf74505154c2d8bda3aeff8eb55e2632517131e5592",
+    "scripts/viri/frf.mjs": "587cdfefb831bd5f1e6817a898ab204113453b07b6fd0c39e660de04621be066",
+    "scripts/viri/hlf.mjs": "6f8dc7325e74b91ff49d123e0640287b2ef4c612cee47e758016b7b43d1f1cd7",
+    "scripts/viri/index.mjs": "5ecf43c854b2ce8b0412bd3e8f05152b90612e24db9301b0d36cd6714d2b4cd0",
+    "scripts/viri/zapisniki.mjs": "cc65847a106c9fe3eca54141526ede7f1bb9b276e42344c938b7d8f850c4a366",
+    "scripts/visja-liga.mjs": "b686d1c6d625a759c38d7711c9854860a6bbd432dcd0a9d8cec4f00a4745cfb4",
+    "scripts/vzorci/fcf-reviewed-history/receipts.json": "55712ae388b3b0b3accf39ff9fe6d98d0859bd411166a96d2b90a5cc3c4927c8",
+    "scripts/zapisnik.mjs": "e6c3f2b595350ef39ad1c0dd949dbc2e09b2d93891b7a99126b6c71fba700840",
+    "supabase/migrations/20261018232000_fcf_current_target_release.sql": "1b4ccf70f29577e37b11aec114cd6d626dd43f1192c9d410715d294f94b38839",
+    "supabase/migrations/20261019150000_fcf_six_reviewed_native.sql": "934fbef80e00b86d38b112f7237d4cba80903f7204fc94ad264dc5529512d42a",
+    "supabase/migrations/20261027210000_fcf_future_historical_cleanup.sql": "6f34fd36e7d907dbc6387d614baac242416a2f10dfe13eb490e1aa6386e6f30a",
+    "supabase/migrations/20261027211000_fcf_future_native_projection.sql": "d3f149af37b1a8cf43eaf02fdbd3ef5ba353dd1e3a1e5c54631323e2f4863506",
+    "supabase/migrations/20261027212000_fcf_future_native_import.sql": "7cc431188e30ac20b217df0bd05f404e593bd78673ba2c37bab622cc15382917",
+    "supabase/migrations/20261027213000_fcf_future_native_activation.sql": "4d6bcf411db4cf63a5b3395704e591c44eb76c23fdf7e7b602bdad74c42937bb",
+    "supabase/migrations/20261028042000_fcf_future_g1_native.sql": "2220a0214bee530f12ee9e841cdbe002c90660d81d85a86db4edcaa7229de870",
+    "supabase/migrations/20261028170000_fcf_g1_supplement_native.sql": "f89fbc5629d61f0eb022a30e3ce6476d0ffb21f336005f8f0cf4590581db6b2a"
+  },
+  "artifacts": [
+    {
+      "id": 12837343072,
+      "name": "fcf-inventory-approval-40737060608-1",
+      "digest": "sha256:cf57e7d5281fc0e793585dcc01e8125029ac1f259368aed488bfb32e9ade310a",
+      "size_in_bytes": 24080
+    },
+    {
+      "id": 12837623049,
+      "name": "fcf-inventory-consumption-40737060608-1",
+      "digest": "sha256:da058144bfb375b23deb5abe8549c453d8180d7bd00061c8cd0f42dd007addca",
+      "size_in_bytes": 617
+    },
+    {
+      "id": 12840546673,
+      "name": "fcf-missing-inventory-diagnostic-es-ct-segona-g1-40737060608-1",
+      "digest": "sha256:77c6e276d6331552b2c26e412b3196d8b95fcb0f9d9d9c6559e4cf666b1c4fe7",
+      "size_in_bytes": 996400
+    },
+    {
+      "id": 12838489841,
+      "name": "fcf-missing-inventory-final-40737060608-1",
+      "digest": "sha256:e94cd7d05bd367dac1f103ebb7b17e31ad31279a629e1bee0e97a674bf8e938d",
+      "size_in_bytes": 3362
+    }
+  ],
+  "prefix": [
+    {
+      "id": "4109388",
+      "sha256": "a873990c0a0d48c4a88eab64befb2df65804f3cd9dc2a116d9bf1c653711f548",
+      "byteLength": 428783,
+      "receiptSha256": "52bb8393401ec593b540403e9c95fdca6ed8685cb89849d39ce22c16b02a5788"
+    },
+    {
+      "id": "4109389",
+      "sha256": "0f52806dcf7b64eaafcf54a77bb13dea180d42e73ad0278f8baaec083a993fb5",
+      "byteLength": 438421,
+      "receiptSha256": "d486acc94bea9501cb3a56321e1920a143f42c62f96bae9fa180732045135aca"
+    },
+    {
+      "id": "4109390",
+      "sha256": "d8519a02fbf44a7add462a202b196211d0e14c6122086bb25893c7527a6a58f6",
+      "byteLength": 462554,
+      "receiptSha256": "c704c105ba10f25c65f2d17100cef858f7a230bab25e928d68e8c918f349179f"
+    },
+    {
+      "id": "4109391",
+      "sha256": "5f5db68bb02638d1c7374198fae0b23cae76879746cc1d2d1f03f9c4d2eeafb2",
+      "byteLength": 449465,
+      "receiptSha256": "e44ad0d5c69dc2496a96dcf4fe69051ef893286d204b849a0cd3a3c123171af5"
+    },
+    {
+      "id": "4109392",
+      "sha256": "5bbfd063e84d18a077db7b997a11da101900242c2bfc6f52c5eaac9a698be98d",
+      "byteLength": 415658,
+      "receiptSha256": "c2aee610e574a86c3e8883d5450ea8d71c356a7e40c69a93c7565a6370c02032"
+    },
+    {
+      "id": "4109393",
+      "sha256": "664d8ce166821751286cf2a86d74eb72a0a01f9c4337030911378ce18a29f377",
+      "byteLength": 460970,
+      "receiptSha256": "6f7bcea07661012edbe23c87c9222d1881af09956d790d2402f6b3d02911db5b"
+    },
+    {
+      "id": "4109394",
+      "sha256": "cee891e31c30ce0ba070415cd6c6444a5fb1448864e1584b8b5a9183f748db79",
+      "byteLength": 482177,
+      "receiptSha256": "0f8329900239241e73be7c4fe21acb8adc86261e209c8ec244639a06c973ff97"
+    },
+    {
+      "id": "4109395",
+      "sha256": "90d4b266fbbe398a3c295416572245ef39ae2552c45b386832e981de26ff7e6d",
+      "byteLength": 459926,
+      "receiptSha256": "d640723d20fd2c894a1bf9313191b942d601e5244ff26c977f30aee27ecc37d9"
+    },
+    {
+      "id": "4109396",
+      "sha256": "13abf86822b8a96b98a973ac3866ba3410eca7248f0ef1f2161d53d9c2b1ddcf",
+      "byteLength": 442763,
+      "receiptSha256": "0afbc3f099cb122482a2ef1c15bd011cb7e6e19a57437705b4072cf8c0ebcf08"
+    },
+    {
+      "id": "4109397",
+      "sha256": "c7b8001636f78e70d85c55108bc2b0258030ac48b6619907e13f4469a2c685f8",
+      "byteLength": 439514,
+      "receiptSha256": "8828faf7ac2c5af8d29df6a8b185247f49997f9dba401e1be1ad3807eae91cc6"
+    },
+    {
+      "id": "4109398",
+      "sha256": "bcc78d7ad8c3ec6405c3a6c1f43fb1cdaef66d89278f28e330e043930c9a1dc8",
+      "byteLength": 433593,
+      "receiptSha256": "65455cf179c42c9b95c248290311b160040ce99873cc4940abc0f75a9cf2404f"
+    },
+    {
+      "id": "4109399",
+      "sha256": "5bd1d641bab4a278e1cad486106e1c4799d0ce113704fee8f2dbcc596517fda6",
+      "byteLength": 449302,
+      "receiptSha256": "c5d6131b7d6d262bf197e83d90381fb71ebbaa7e256c033c90e1cc0040520ebc"
+    },
+    {
+      "id": "4109400",
+      "sha256": "dccdbcadbd508413a3dd9727368bba1e0c687572d68706b0d1b7d140c180c599",
+      "byteLength": 454130,
+      "receiptSha256": "f4d90ce0ba903dc2c73bb8febbb47846e4347afa78334d33829c6e4d66b39217"
+    },
+    {
+      "id": "4109401",
+      "sha256": "ee24131b7c48bb6a40ee7a58b02df8b375e23e1cd478b4347f548fe6ad4816e6",
+      "byteLength": 440254,
+      "receiptSha256": "d89bf23ba24bf6ffc34586861bf81dbf4db83374f7c1689c45747b58db0b19e0"
+    },
+    {
+      "id": "4109402",
+      "sha256": "ba503f4f47255abf226950c793b045e636f1c66a6885c3132a9b7417546f15c0",
+      "byteLength": 439738,
+      "receiptSha256": "18262c0dd3b9a1e3dfc2b654c98354be144810bfc90e129b187ba0e316fe7514"
+    },
+    {
+      "id": "4109403",
+      "sha256": "9ad1b7a32949fea6cd3671e8ea5a2b241a3d7493686546e4a4add6c4896c9c87",
+      "byteLength": 451178,
+      "receiptSha256": "6a5f55e73b835994aebf8cb111fb1e0e462916f0c94f850889e4032f7ae6ec13"
+    },
+    {
+      "id": "4109404",
+      "sha256": "675d44fb7c46692edfb73d48a5c2654c4335230aafb648b91757b091394b5282",
+      "byteLength": 170811,
+      "receiptSha256": "73d7bb96c0b2111e5d69b3d78ea8fbdda3268027bf8c64c58b9e2b59dbadbf01"
+    },
+    {
+      "id": "4109405",
+      "sha256": "46c9b12ea259d3f3594f19aaf270dbdf6c5f2dcc166b8a4c277a77453a85a36e",
+      "byteLength": 468029,
+      "receiptSha256": "5e24ef90bb8ed5e7e3155637fc535c43c3667b872ba1fc95470e4509eff939e8"
+    },
+    {
+      "id": "4109406",
+      "sha256": "32195ca1933848b6fd21be7415a9842074479022f77b805d857176ce17f05c9c",
+      "byteLength": 425761,
+      "receiptSha256": "4f91f117615301ee6d7ddd58e3c7817968c7c06a861dd78dcf4974503bb49417"
+    },
+    {
+      "id": "4109407",
+      "sha256": "434ff7c30164eb612761c2d419b41246f01def3177c0be55d7570f0292327da1",
+      "byteLength": 490089,
+      "receiptSha256": "244174773eeb763c80e56eacd701d5cbb7b7678b0fa5851d5f5f6fdbb12c235b"
+    },
+    {
+      "id": "4109408",
+      "sha256": "878e92846f80e6c08950ce1a35b334c37efce69ce0e4599df76a093dae1af165",
+      "byteLength": 456473,
+      "receiptSha256": "12d5144baa292c4854e1dee288ebeb8180c3959c1af14d162a10c2d082d52096"
+    },
+    {
+      "id": "4109409",
+      "sha256": "b32f8b1ccc5c3ee3534495ed8d7f5bd3300e3e908a755096917bd50b392611b7",
+      "byteLength": 171201,
+      "receiptSha256": "8d6031e62ec138d873e0376feeac4dedcd49ef0fcdd539b795d1b39ad15c33bd"
+    },
+    {
+      "id": "4109410",
+      "sha256": "7c2335342065b7e0a77b54be97fe544c3549e165bd504ef1197a2d377fbe4b28",
+      "byteLength": 171068,
+      "receiptSha256": "27f28f04b869198b0f6b4e618e7d55b2206503e48e6f0369e957a824c10917c7"
+    }
+  ],
+  "jobs": [
+    {
+      "id": 122988356353,
+      "name": "missing-inventory-approval",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "number": 1,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout exact main",
+          "number": 2,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Node 22",
+          "number": 3,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stage reviewed FCF inventory approval",
+          "number": 4,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Retain reviewed FCF inventory approval",
+          "number": 5,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Node 22",
+          "number": 9,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout exact main",
+          "number": 10,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "number": 11,
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 122988357895,
+      "name": "target-recover",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 122988358363,
+      "name": "future-target-approval",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 122988358567,
+      "name": "missing-inventory-seed",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 122988358583,
+      "name": "target-import",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 122988358638,
+      "name": "cache-export",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 122988358650,
+      "name": "target-activate",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 122988358665,
+      "name": "cleanup-apply",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 122988358674,
+      "name": "inputs.mode",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 122988358709,
+      "name": "target-approval",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 122988358738,
+      "name": "target-check",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 122988358796,
+      "name": "cleanup-prepare",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 122988424313,
+      "name": "cleanup-originals",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 122988430109,
+      "name": "target-price",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 122988446406,
+      "name": "target-mapping",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 122989866249,
+      "name": "missing-inventory-consume",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "number": 1,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout exact main",
+          "number": 2,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Node 22",
+          "number": 3,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify one-shot FCF inventory claim",
+          "number": 4,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Retain one-shot FCF inventory consumption",
+          "number": 5,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Node 22",
+          "number": 9,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout exact main",
+          "number": 10,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "number": 11,
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 122992253624,
+      "name": "missing-inventory-g1",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "number": 1,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout exact main",
+          "number": 2,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Node 22",
+          "number": 3,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Offline G1 source protocol checks",
+          "number": 4,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Capture missing target inventory",
+          "number": 5,
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Retain complete target inventory",
+          "number": 6,
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Retain failed target inventory diagnostic",
+          "number": 7,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Audit retained target inventory offline",
+          "number": 8,
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Retain target inventory offline audit",
+          "number": 9,
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Node 22",
+          "number": 17,
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Checkout exact main",
+          "number": 18,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "number": 19,
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 123008220019,
+      "name": "missing-inventory-receipt",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "number": 1,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout exact main",
+          "number": 2,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Node 22",
+          "number": 3,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Authenticate bounded parent accounting",
+          "number": 4,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Retain final FCF inventory receipt",
+          "number": 5,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Node 22",
+          "number": 9,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout exact main",
+          "number": 10,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "number": 11,
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 123008222027,
+      "name": "inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g1' || 'missing-inventory-g9'",
+      "run_id": 40737060608,
+      "run_attempt": 1,
+      "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    }
+  ]
+}

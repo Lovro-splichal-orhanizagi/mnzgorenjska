@@ -1,5 +1,5 @@
 // Baden only. Source-only certificates never authorize an individual import.
-// The production catalog is deliberately UNFINALIZED. No native issuer lives here.
+// Catalog DATA and authenticated source proofs are separate. No native issuer lives here.
 import {readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from 'node:fs'
 import {join} from 'node:path'
 import {tmpdir} from 'node:os'
@@ -185,8 +185,9 @@ function writerPack(proof,writerHead){const {derivedPackSha256,...base}=buildFus
 
 function hostedShape(input,fields){closed(input,fields,'exact derived run/head and repository GET adapter required');need(/^[1-9]\d{0,19}$/.test(input.derivedRunId??'')&&Number.isSafeInteger(Number(input.derivedRunId))&&/^[a-f0-9]{40}$/.test(input.derivedHead??'')&&typeof input.github==='function','exact derived run/head and repository GET adapter required')}
 function hostedApi(input){
+ const catalogPath=`contents/${catalogFile}?ref=${input.derivedHead}`;let catalogRaw=false
  const base=`actions/runs/${input.derivedRunId}`,allowed=new Set([base,base+'/attempts/1/jobs?per_page=100&page=1',base+'/artifacts?per_page=100&page=1','branches/main',...runtimeFiles.map(f=>`contents/${f}?ref=${input.derivedHead}`)])
- return {allow:p=>allowed.add(p),async get(p,binary=false){need(allowed.has(p),'GET outside fixed derived proof scope');let v;try{v=await input.github(prefix+p,binary)}catch{need(false,'authoritative derived GitHub GET unavailable')};if(binary){need(Buffer.isBuffer(v)&&v.length<=512*MiB,'bounded derived ZIP required');return Buffer.from(v)}return structuredClone(v)}}
+ return {allow:p=>allowed.add(p),allowCatalogRaw:()=>{catalogRaw=true},async get(p,binary=false){need(allowed.has(p)&&(!binary||!p.startsWith('contents/')||(catalogRaw&&p===catalogPath)),'GET outside fixed derived proof scope');let v;try{v=await input.github(prefix+p,binary)}catch{need(false,'authoritative derived GitHub GET unavailable')};if(binary){need(Buffer.isBuffer(v)&&v.length<=(p===catalogPath?4:512)*MiB,p===catalogPath?'bounded derived catalog required':'bounded derived ZIP required');return Buffer.from(v)}return structuredClone(v)}}
 }
 function hostedRun(run,input,terminal){
  need(run?.id===Number(input.derivedRunId)&&run.run_attempt===1&&run.head_sha===input.derivedHead&&run.head_branch==='main'&&run.event==='workflow_dispatch'&&run.path===workflow&&run.repository?.full_name===repo&&run.head_repository?.full_name===repo,'actual first-attempt own-repository main derived run required')
@@ -196,7 +197,18 @@ function hostedRun(run,input,terminal){
 async function installedRuntime(input,api){
  const main=await api.get('branches/main');need(main?.name==='main'&&main.commit?.sha===input.derivedHead,'derived head is no longer actual reviewed main')
  const runtime={}
- for(const file of runtimeFiles){const bytes=readFileSync(new URL('../'+file,import.meta.url)),remote=await api.get(`contents/${file}?ref=${input.derivedHead}`);need(remote?.type==='file'&&remote.path===file&&remote.encoding==='base64'&&remote.size===bytes.length&&bytes.length<=4*MiB&&typeof remote.content==='string'&&Buffer.from(remote.content,'base64').equals(bytes),'derived installed runtime differs from immutable approved head');runtime[file]=hash(bytes)}
+ for(const file of runtimeFiles){
+  const bytes=readFileSync(new URL('../'+file,import.meta.url)),path=`contents/${file}?ref=${input.derivedHead}`,remote=await api.get(path),why='derived installed runtime differs from immutable approved head'
+  need(remote?.type==='file'&&remote.path===file&&remote.size===bytes.length&&bytes.length<=4*MiB,why)
+  if(file===catalogFile&&bytes.length>MiB){
+   // GitHub object media omits inline contents above 1 MiB. Authenticate the
+   // immutable object before allowing this one fixed catalog raw request.
+   const blob=createHash('sha1').update(Buffer.from(`blob ${bytes.length}\0`)).update(bytes).digest('hex')
+   need(remote.encoding==='none'&&remote.content===''&&remote.sha===blob,why)
+   api.allowCatalogRaw();const raw=await api.get(path,true);need(raw.length===bytes.length&&raw.equals(bytes),why)
+  }else need(remote.encoding==='base64'&&typeof remote.content==='string'&&Buffer.from(remote.content,'base64').equals(bytes),why)
+  runtime[file]=hash(bytes)
+ }
  return runtime
 }
 function hostedJob(v,input){

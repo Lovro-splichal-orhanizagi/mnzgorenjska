@@ -31,9 +31,10 @@ export function nativeRuntimeFixture(t,competition){
  const session=(read,parsers,options)=>{
   const real=seasonApi.createFussballParserSession(read,parsers,options),source=pack.seasons.find(s=>s.season===options.season),staffel=source.code.split(':')[0],rounds=Array.from({length:Math.max(...source.fixtures.map(f=>f.krog))},(_,i)=>i+1)
   return {...real,async round(html,{url}){
-   assert.equal(html,'TEST ONLY synthetic full schedule')
-   const round=Number(url.match(/\/spieltag\/(\d+)\//)?.[1]??rounds[0]),fixtures=structuredClone(source.fixtures)
-   controls.scheduleMutation?.(fixtures)
+   const retained=controls.roundSchedules?.get(html)
+   if(!retained)assert.equal(html,'TEST ONLY synthetic full schedule')
+   const round=Number(url.match(/\/spieltag\/(\d+)\//)?.[1]??rounds[0]),fixtures=structuredClone(retained??source.fixtures)
+   if(!retained)controls.scheduleMutation?.(fixtures)
    return {info:{url},parsed:{sezona:source.season,krog:round,krogi:rounds.map(krog=>({krog,url:`https://www.fussball.de/spieltag/-/spieltag/${krog}/staffel/${staffel}`,izbran:krog===round})),tekme:fixtures.filter(f=>f.krog===round),prestavljene:[]}}
   }}
  }
@@ -47,7 +48,8 @@ export function nativeRuntimeFixture(t,competition){
  const directory=fs.mkdtempSync(join(tmpdir(),'baden-runtime-TEST-ONLY-'));t.after(()=>fs.rmSync(directory,{recursive:true,force:true}))
  async function context(){return (await api.loadFussballNativeImportContext({competition,composition:token,db})).installedHistoricalMarkers}
  function client(code){const source=pack.seasons.find(s=>s.code===code),stage=f.state.originals.stages[source.inventory.scope.stage],requests=[];return {requests,async read(url,kind){requests.push({url,kind});if(kind==='round')return {bytes:Buffer.from('TEST ONLY synthetic full schedule'),capturedAt:new Date().toISOString()};const d=stage.manifest.documents.find(d=>d.url===url);assert.ok(d,'TEST ONLY original source missing: '+url);return {...d,bytes:stage.files.get(d.file)}}}}
- return {api,f,pack,observed,controls,calls,db,token,context,client,directory}
+ function sourceResponse(url){if(url.includes('/spieltag/'))return new Response('TEST ONLY synthetic full schedule',{headers:{'content-type':'text/html'}});for(const stage of Object.values(f.state.originals.stages)){const d=stage.manifest.documents.find(d=>d.url===url);if(d)return new Response(stage.files.get(d.file),{headers:{'content-type':d.contentType}})}throw Error('TEST ONLY unexpected network route: '+url)}
+ return {api,f,pack,observed,controls,calls,db,token,context,client,directory,sourceResponse}
 }
 export function isolatedTestModule(file,deps,names){
  const path=new URL(file,import.meta.url),body=fs.readFileSync(path,'utf8').replace(/^import .*\n/gm,'').replaceAll('import.meta.url',JSON.stringify(path.href)).replace(/\bexport /g,'')+'\nreturn {'+names.join(',')+'};'

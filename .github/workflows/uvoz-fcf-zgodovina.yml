@@ -55,6 +55,7 @@ on:
           - future-g9-after-six-v1
           - future-g1-after-g9-v1
           - future-g1-after-failed-g1-v1
+          - g1-post83-remainder-quarantine-v1
       asset_id:
         description: Actual uploaded root draft release asset ID
         type: string
@@ -204,6 +205,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Checkout immutable failed G1 verifier
+        if: inputs.preset == 'g1-post83-remainder-quarantine-v1'
+        uses: actions/checkout@v4
+        with:
+          ref: 3ed1e852166398bb1429621a89c197ab6f77cb1e
+          path: .fcf-g1-frozen-parent
+          persist-credentials: false
       - name: Stage reviewed FCF inventory approval
         id: approval
         run: node scripts/fcf-missing-inventory-actions.mjs approval-stage
@@ -247,6 +255,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Checkout immutable failed G1 verifier
+        if: inputs.preset == 'g1-post83-remainder-quarantine-v1'
+        uses: actions/checkout@v4
+        with:
+          ref: 3ed1e852166398bb1429621a89c197ab6f77cb1e
+          path: .fcf-g1-frozen-parent
+          persist-credentials: false
       - name: Verify one-shot FCF inventory claim
         id: consume
         run: node scripts/fcf-missing-inventory-actions.mjs consume
@@ -264,7 +279,7 @@ jobs:
   missing-inventory-g1:
     name: ${{ inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g9' || 'missing-inventory-g1' }}
     needs: [missing-inventory-approval, missing-inventory-consume]
-    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && (inputs.preset == 'g1-then-g9-missing-v1' || inputs.preset == 'six-reviewed-continuation-v1' || inputs.preset == 'future-g1-after-g9-v1' || inputs.preset == 'future-g1-after-failed-g1-v1') && github.run_attempt == 1
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && (inputs.preset == 'g1-then-g9-missing-v1' || inputs.preset == 'six-reviewed-continuation-v1' || inputs.preset == 'future-g1-after-g9-v1' || inputs.preset == 'future-g1-after-failed-g1-v1' || inputs.preset == 'g1-post83-remainder-quarantine-v1') && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
@@ -299,6 +314,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Checkout immutable failed G1 verifier
+        if: inputs.preset == 'g1-post83-remainder-quarantine-v1'
+        uses: actions/checkout@v4
+        with:
+          ref: 3ed1e852166398bb1429621a89c197ab6f77cb1e
+          path: .fcf-g1-frozen-parent
+          persist-credentials: false
       - name: Offline G1 source protocol checks
         if: inputs.preset == 'future-g1-after-g9-v1' || inputs.preset == 'future-g1-after-failed-g1-v1'
         run: node --test scripts/test-fcf-g1-source-continuation.mjs scripts/test-fcf-g1-post-failure.mjs scripts/test-fcf-future-source-plan.mjs scripts/test-fcf-future-source-header.mjs
@@ -487,6 +509,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Checkout immutable failed G1 verifier
+        if: inputs.preset == 'g1-post83-remainder-quarantine-v1'
+        uses: actions/checkout@v4
+        with:
+          ref: 3ed1e852166398bb1429621a89c197ab6f77cb1e
+          path: .fcf-g1-frozen-parent
+          persist-credentials: false
       - name: Authenticate bounded parent accounting
         id: receipt
         run: node scripts/fcf-missing-inventory-actions.mjs receipt

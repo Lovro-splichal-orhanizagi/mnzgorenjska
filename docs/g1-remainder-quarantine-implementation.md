@@ -1,0 +1,33 @@
+# G1 remainder / quarantine source implementation
+
+Base: 7d347544ddada7f58561a33dd6f15208f35d9b1f. Scope: source-only fixed G1 remainder; no native bridge, SQL, activation, source invocation or publication.
+
+Authenticate the failed 3ed run through the separate private parent reader, retaining exact raw23 and prior83. Collect only4109411–4109627, serially at3seconds, no source retries. Semantic data defects are classified only by an explicit closed error vocabulary after complete raw retention; unsafe transport, unknown page/program errors and unknown accounting stop with retained diagnostics. Composite freshness remains bounded by the first original receipt; physical45minute window and24hour union freshness are separate.
+
+The new history-keyed protected claim namespace binds a private parent/append ledger. Every partial terminal link counts all initiated source requests; no refund or claim reuse. COMPLETE_QUARANTINE is review data only and always has all three admission flags false. Existing full240 protocols reject this plan. Original six and4109409 policies remain unchanged;4109410 approval is not an automatic native policy.
+
+Checks: focused raw classification, private parent83, fixed217 requests/no prefix refetch, multiple data defects, unsafe/program/clock/claim boundaries, exact append accounting/ZIP journals, old native reader refusal, explicit workflow route and no sibling capture. German source closure remains byte-identical.
+
+## Exact interfaces and route
+
+`fcf-g1-remainder-parent.mjs` is a separate dependency (original commit47bec173f0164fb0df9b73be953e9a509a5ca3cc). Its private83 proof is required; copied counters, JSON proof objects and raw reference DATA cannot authorize collection. `getFcfG1RemainderParent` runs its real freshness check before every new request; the fixed failed3ed lineage is reauthenticated before first GET and sealing. The original failure is never promoted to successful source evidence.
+
+`fcf-g1-remainder-source.mjs` builds closed plans and history-keyed `g1-quarantine-after-<ledgerSha256>` refs under the existing no-update/no-delete/no-bypass ruleset25355545. A fresh claim commits one JSON blob over the exact new main source SHA and run/attempt1. Consumption, actual root actor IDs, current capture step and source-slot capabilities must all match. Existing root staging uses schema7/preset `g1-post83-remainder-quarantine-v1`; the prior full240 schemas remain unchanged.
+
+The existing `uvoz-fcf-zgodovina.yml` workflow routes this preset to G1 only. Four source-only jobs additionally check out the fixed clean3ed verifier at `.fcf-g1-frozen-parent`; no new workflow/coordinator family is introduced. The CLI supports `prepare-g1-remainder-approval` with exact history-source/frozen-directory/source-commit/ruleset-id/main-ci-run-id/output flags and optional append-sources locator file; `g1-remainder-claim-template` creates local reviewable JSON only. It creates no Git objects, tag, upload or dispatch. The existing stage/consume/capture/audit/receipt commands select the new route only for its exact preset.
+
+The production Actions path uses real current main/CI/served/checkout checks and real GitHub metadata, never a caller success flag. It enumerates complete stable workflow pages and authenticates both actors as nejcar20/25134229. Only IDs from the private fixed anchor, independently authenticated terminal append links, and the actual private own claim/consumption/run can be excluded from the new-history guard. An unaccounted consumed/started source or unknown executed job/step holds. Recognized older preflight approval failures require both capture jobs conclusively skipped and a closed executed-step inventory. No SQL, service role, owner DB credentials or native write client is present.
+
+## Retention and append accounting
+
+Each attempted canonical GET has a fsynced immutable intent before transport and a matching outcome after it. Every complete raw body has its exact digest/length; bounded incomplete bodies are retained separately as partial binary diagnostics and cannot enter the logical prefix. No football retry is implemented. Complete recognized official-not-found and closed NULL layouts remain raw review facts and collection continues. Identity ambiguity, unknown status/layout, challenge, unsafe redirect/URL, non200, partial body, unexpected parser/program exception, clock or output failure stops. All conclusive attempts remain spent; missing intent/outcome accounting remains UNKNOWN, never zero.
+
+The new ZIP contains only newly retained source bodies, manifest and request journal. Original23 and earlier append ZIPs remain detached. Expanded union192MiB, raw2MiB, manifest8MiB, ZIP100MiB, serial3s pacing,90s timeout,45minute physical window and15s retention margin stay fixed; a conservative incompressible-byte reserve protects upload bounds. The composite deadline stays29Oct18:09:27.203Z even after multiple partial runs.
+
+`readFcfG1RemainderArtifact` authenticates actual run/job/artifact/ZIP/claim metadata, the closed member set, every ordered journal pair, original request receipts, body digests,3s pacing and windows. It issues only a private raw/quarantine proof. A partial link can be appended only after a terminal run and matching independently retained final receipt have been authenticated. The next plan counts every prior attempt, adds only complete recognized prefix bodies, hashes immutable raw/final bindings into a new ledger namespace, and fetches only the remaining fixed IDs. A failed request can require a fresh request for that same missing body and remains charged. No old claim is reused.
+
+`fcf-g1-quarantine-audit.mjs` emits review DATA for the whole ordered240 union. It reports typed defects, raw NULL facts, missing headers and calendar closure diagnostics. Its exact parser DATA error vocabulary is closed; no generic exception prefix is treated as a data defect. The original six and4109409 policies are called unchanged;4109410 remains an observed closed NULL review fact rather than a new native policy in this change. All outputs, including a structurally clean full batch, always set admissible/nativeAdmission/activationEligible false.
+
+## Remaining holds
+
+Independent review and actual merged/deployed final writer/main/CI/served/operator pins are required before any one-time invocation. GermanyM2 source chain must be terminal first. No invocation was performed here. After a genuine full batch, current-code full audit and separate resolution/approval of every exact unresolved report, calendar/native mapping, all source GK/prices/legal15, official future deadline and no-user admission gates remain required. This change supplies none of those native capabilities.
