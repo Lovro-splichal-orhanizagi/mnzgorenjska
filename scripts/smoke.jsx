@@ -4502,6 +4502,26 @@ preveri(
     preveri('hns trk: zapisniki() pošljejo ime iz razporeda',
       (await H.default.zapisniki('1', async (url) => (url.includes('/natjecanja/') ? beri('hns-natjecanje-trk.html') : beri('hns-tekma-11m.html'))))
         .every((x) => [x.z.domaci.ime, x.z.gostje.ime].includes('NK Polet (Skrad)')))
+    // Postave pred izidom: zapisnik v predpomnilniku ima drug izid kot razpored
+    // (Samoborski Otok : Novaki, 0:0 proti uradnim 5:1) → v 45 dneh beremo znova.
+    preveri('hns: izidSeUjema', H.izidSeUjema({ rezultat: { domaci: 5, gostje: 1 } }, { domaci: 5, gostje: 1 }) &&
+      !H.izidSeUjema({ rezultat: { domaci: 0, gostje: 0 } }, { domaci: 5, gostje: 1 }) && H.izidSeUjema({ rezultat: { domaci: 0, gostje: 0 } }, null))
+    const zdaj = Date.now
+    const sveze = async (cas) => {
+      Date.now = () => Date.parse(cas)
+      let n = 0
+      try {
+        await H.default.zapisniki('1', async (url, _ime, svez) => {
+          if (url.includes('/natjecanja/')) return beri('hns-natjecanje-trk.html')
+          if (svez) n++
+          return beri('hns-tekma-11m.html')
+        })
+      } finally { Date.now = zdaj }
+      return n
+    }
+    const nedavno = await sveze('2026-09-20T12:00:00Z'), staro = await sveze('2027-03-01T12:00:00Z')
+    preveri('hns: zapisnik z drugačnim izidom kot razpored se v 45 dneh prebere znova (pozneje ne)',
+      nedavno === 2 && staro === 0, `${nedavno} / ${staro}`)
   }
   {
     // mapaKlubov: natančno ime v abecedi vira. Slovenski `poenostavi` je

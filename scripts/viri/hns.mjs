@@ -463,6 +463,9 @@ export function sImenomIzRazporeda(z, t) {
 
 /** Dni od datuma tekme ('YYYY-MM-DD'); brez datuma 0, da se tekma prebere. */
 const starostDni = (datum) => (datum ? (Date.now() - Date.parse(`${datum}T00:00:00Z`)) / 86400000 : 0)
+/** Izid zapisnika je enak izidu razporeda (ali razpored izida nima). */
+export const izidSeUjema = (z, izid) =>
+  !izid || !z?.rezultat || (z.rezultat.domaci === izid.domaci && z.rezultat.gostje === izid.gostje)
 
 const vir = {
   ime: 'hns',
@@ -525,6 +528,13 @@ const vir = {
       // tudi mesec dni pozneje (NK Sokol : Nacional, hr-sm-1-znl, tekma
       // 6. 9., zapisnik po 18. 9.) in tak ni prišel nikoli.
       if (!z && starostDni(t.datum) <= 45) z = vZapisnik(await prenesi(url, ime, true), { id: t.id, url })
+      // Postave lahko zveza vnese pred izidom: stran v predpomnilniku ima
+      // postave in 0:0, razpored (bran vsakič znova) pa že pravi izid
+      // (NK Samoborski Otok : Novaki, 24. 10. 2026, uradno 5:1). Tak zapisnik
+      // ni popoln — preberemo ga znova.
+      else if (z && !izidSeUjema(z, t.izid) && starostDni(t.datum) <= 45) {
+        z = vZapisnik(await prenesi(url, ime, true), { id: t.id, url })
+      }
       if (z) out.push({ id: z.zapisnikId, z: sImenomIzRazporeda(z, t), url })
     }
     return out
