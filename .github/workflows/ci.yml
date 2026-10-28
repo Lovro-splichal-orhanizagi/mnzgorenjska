@@ -357,6 +357,10 @@ jobs:
           node --test scripts/test-fcf-future-native-projection-sql.mjs
           node --test scripts/test-fcf-future-native-import-sql.mjs
           node --test scripts/test-fcf-future-native-activation-sql.mjs
+      - name: FCF Scout snapshot preservation and phase rollback regressions
+        env:
+          FCF_SCOUT_CI_SQL_TEST: '1'
+        run: node --test scripts/test-fcf-scout-preservation-sql.mjs
       - name: Reviewed English source-calendar native regression
         run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/sfl-d1-calendar.sql
       - run: npm run test:varnost
