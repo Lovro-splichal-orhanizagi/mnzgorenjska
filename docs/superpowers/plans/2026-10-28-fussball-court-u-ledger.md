@@ -28,3 +28,9 @@ The same focused command now passes **16/16** (the prior 14 plus two new regress
 Scoped re-review found that unsupported `class='description'` and `class = "description"` containers still disappeared from the exact attribute reader. New alternate-attribute and duplicate-class regression groups first reproduced missing rejection failures. The local U-only inventory now recognizes quoted class attributes across quote, spacing and attribute-case variants before requiring the existing canonical class reader; unsupported syntax or multiple class assignments on a description container rejects. Shared `attr`, `classTokens` and `element` behavior and accepted source markup are unchanged. Nested/conflicting variants and duplicate class assignments are covered.
 
 Final focused command above passes **18/18** (prior 16 plus two groups). Capture closure fingerprint is now `eb927800eaccd3de7bba80f824aac6a411d8b45519c3cad6e5c8d6ce150c1730`, superseding the previous repair fingerprints. No source, network, DB, policy, push or other publication actions; accounting remains unchanged.
+
+## Unquoted class-assignment inventory follow-up
+
+The remaining review example used unquoted `class=description`. Existing regression groups now also exercise unquoted values, spaced/multiline assignments, uppercase assignment/value forms, multiline quoted values, and duplicate unquoted/mixed class assignments. Unquoted conflicting and duplicate cases reproduced RED before the fix. The local inventory recognizes double-quoted, single-quoted and unquoted HTML attribute values together; unsupported description forms still reject through the canonical-reader guard. Shared helpers and accepted U/V markup are unchanged.
+
+Focused suite remains **18/18 GREEN** with the expanded cases. Final capture closure fingerprint is `eac09a63170026bbdb51b3d4c6cd86f84f6c9c87df60d78b0b78486c48e33ca5`. No source, network, DB, policy or publication action; accounting remains unchanged.

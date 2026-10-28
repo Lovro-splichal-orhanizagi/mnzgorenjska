@@ -126,8 +126,8 @@ function administrativeScore(s,decode,html,row,id){
  // Inventory containers before validating the one witnessed child shape.
  const courtDescriptions=court?[...html.matchAll(/<div\b[^>]*>/gi)]
   .filter(m=>{
-   const classes=[...m[0].matchAll(/\sclass\s*=\s*(["'])(.*?)\1/gi)]
-   if(!classes.some(c=>c[2].split(/\s+/).some(token=>token.toLowerCase()==='description')))return false
+   const classes=[...m[0].matchAll(/\sclass\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/gi)]
+   if(!classes.some(c=>(c[1]??c[2]??c[3]).split(/\s+/).some(token=>token.toLowerCase()==='description')))return false
    // Loose inventory is rejection-only; the shared canonical readers stay closed.
    if((m[0].match(/\sclass\s*=/gi)??[]).length!==1||!classTokens(m[0]).has('description'))fail('nepodprt ali dvoumen administrativni izid')
    return true
