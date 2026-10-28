@@ -9,8 +9,16 @@ import {readFcfFutureNativeSource,requireFcfFutureCleanupIssuer,requireFcfFuture
 import {deriveFcfFutureTargetNativeMapping} from './fcf-future-target-native-adapter.mjs'
 import {buildFcfFutureTargetImportRollout,replayFcfFutureTargetImportRollout} from './fcf-future-target-rollout.mjs'
 import {buildFcfFutureTargetActivation,verifyFcfFutureTargetActivation} from './fcf-future-target-activation.mjs'
+import {createFcfFutureTargetDatabase} from './fcf-future-target-db.mjs'
 import {buildFcfG1NativeSupplementBinding} from './fcf-g1-supplement-native.mjs'
 const enabled={skip:['FCF_G1_POST_FAILURE_EVIDENCE_DIR','FCF_POST_SIX_EVIDENCE_DIR','FCF_FUTURE_SOURCE_EVIDENCE_DIR','FCF_SIX_ACCOUNTING_WIRE','FCF_SIX_ORIGINAL_AUTHORIZATION_WIRE','FCF_HISTORICAL_RETAINED_DIR'].every(k=>process.env[k])?false:'Explicit genuine retained ledger/original fixtures required; new controls synthetic'}
+// PostgreSQL jsonb emits object keys by UTF8 byte length, then byte value.
+// This models transport ordering only; scalar before-image TEXT stays untouched.
+const pgJsonb=x=>Array.isArray(x)?x.map(pgJsonb):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort((a,b)=>Buffer.byteLength(a)-Buffer.byteLength(b)||Buffer.compare(Buffer.from(a),Buffer.from(b))).map(k=>[k,pgJsonb(x[k])])):x
+function getterRoundtrip(d,marker){
+ const db=createFcfFutureTargetDatabase({targetSlug:'es-ct-segona-g1',env:{SUPABASE_DB_URL:'postgresql://local:test@127.0.0.1:5432/postgres'},execute:(_f,_a,o)=>Buffer.from(JSON.stringify(pgJsonb(o.input.includes('get_installed_fcf_g1_supplement')?marker:d)))})
+ return db.inventory('es-ct-segona-g1',[])
+}
 let history
 async function options(){if(!history){const f=postG1RetainedFixture();history=await readFcfPostG1HistoryWire({source:f.history,github:f.github,now:f.now})}return {postFailure:history}}
 test('new source capability derives original G9 cleanup issuer and enforces one final source/native writer',enabled,async t=>{
@@ -32,6 +40,9 @@ test('packet5/rollout4 preserve original six and add separate exact supplement; 
  assert.equal(v.supplementalBinding.policySha256,'a9141400858c80322b6cb12b13c54a5dde45e93f080b4fe0b644dce513657ee7');assert.deepEqual(v.supplementalBinding,p.supplementalBinding)
  assert.deepEqual(p.target.fixtures.filter(f=>f.statisticsStatus==='unavailable_historical').map(f=>f.id).sort(),['es4109388','es4109404','es4109409'])
  assert.deepEqual(replayFcfFutureTargetImportRollout({...base,execution,...r}),r)
+ const installed=getterRoundtrip(base.databaseInventory,{binding:p.supplementalBinding,afterImage:base.databaseInventory.matches.find(m=>m.zapisnik_id==='es4109409'),receipt:{sourceFingerprintSha256:data.binding.sourceFingerprintSha256}})
+ assert.notEqual(JSON.stringify(installed.supplementalMarker.binding),JSON.stringify(p.supplementalBinding))
+ assert.deepEqual(replayFcfFutureTargetImportRollout({...base,databaseInventory:installed,execution,...r}),r)
  for(const mutate of [d=>d.matches.find(m=>m.zapisnik_id==='es4109409').zapisnik_id=null,d=>d.rounds.find(r=>r.number===3).number=4,d=>d.supplementalMarker={binding:{},afterImage:{},receipt:{}},d=>d.installedMarkers[0].markers[0].homeTeamId++]){
   const x={...base,databaseInventory:structuredClone(base.databaseInventory)};mutate(x.databaseInventory);assert.throws(()=>deriveFcfFutureTargetNativeMapping(x),/FCF_/)
  }
@@ -56,9 +67,12 @@ test('actual retained-shaped placeholder maps existing native IDs and binds its 
  assert.deepEqual(JSON.parse(r.rolloutText).supplementalBinding,b)
  const after=structuredClone(base.databaseInventory),am=after.matches.find(x=>x.id===m.id)
  Object.assign(am,{zapisnik_id:'es4109409',source_url:'https://www.fcf.cat/ca/competicio/acta/4109409',source_round:3,vir_brez_izida:false,home_goals:null,away_goals:null,statistics_status:'unavailable_historical',statistics_reason:'closed_official_result_and_individual_statistics_unavailable'})
- after.supplementalMarker={binding:b,afterImage:structuredClone(am),receipt:{sourceFingerprintSha256:b.sourceFingerprintSha256}}
- assert.deepEqual(buildFcfG1NativeSupplementBinding({data,databaseInventory:after}),b)
- assert.deepEqual(replayFcfFutureTargetImportRollout({...base,databaseInventory:after,execution,...r}),r)
+ const transported=getterRoundtrip(after,{binding:b,afterImage:structuredClone(am),receipt:{sourceFingerprintSha256:b.sourceFingerprintSha256}})
+ assert.notEqual(JSON.stringify(transported.supplementalMarker.binding),JSON.stringify(b))
+ assert.equal(transported.supplementalMarker.binding.prelaunch.beforeImageText,b.prelaunch.beforeImageText)
+ assert.equal(JSON.stringify(buildFcfG1NativeSupplementBinding({data,databaseInventory:transported})),JSON.stringify(b))
+ assert.deepEqual(replayFcfFutureTargetImportRollout({...base,databaseInventory:transported,execution,...r}),r)
+ for(const mutate of [x=>x.extra=true,x=>x.native.homeTeamId++,x=>x.prelaunch.extra=true,x=>x.prelaunch.kind='foreign',x=>x.prelaunch.beforeImageText+=' ',x=>x.prelaunch.beforeSha256='0'.repeat(64)]){const d=structuredClone(transported);mutate(d.supplementalMarker.binding);assert.throws(()=>buildFcfG1NativeSupplementBinding({data,databaseInventory:d}),/drift/)}
  for(const mutate of [x=>x.played_on='2026-10-05',x=>x.home_team_id=x.away_team_id,x=>x.round_id++,x=>x.zapisnik_id='es4109410',x=>x.source_url='https://www.fcf.cat/ca/competicio/acta/4109409',x=>x.source_round=3,x=>x.vir_brez_izida=false,x=>x.home_goals=1,x=>x.imported_at='2026-10-28T00:00:00Z',x=>x.statistics_reason='foreign',x=>x.import_warnings=['foreign'],x=>delete x.source_phase]){
   const d=structuredClone(base.databaseInventory);mutate(d.matches.find(x=>x.id===m.id));assert.throws(()=>buildFcfG1NativeSupplementBinding({data,databaseInventory:d}),/HOLD/)
  }

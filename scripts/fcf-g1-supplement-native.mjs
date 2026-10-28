@@ -39,7 +39,15 @@ export function buildFcfG1NativeSupplementBinding({data,databaseInventory:d}){
  if(installed!=null){
   const {prelaunch:original,...identity}=installed.binding??{}
   if(!same(identity,binding)||installed.afterImage==null||!same(installed.afterImage,m)||!installed.receipt||installed.receipt.sourceFingerprintSha256!==binding.sourceFingerprintSha256)fail('immutable separate installed supplemental marker/receipt drift')
-  return structuredClone(installed.binding)
+  // jsonb getters reorder object keys. Rebuild the same constructor order,
+  // preserving original before-image TEXT bytes rather than serializing its row.
+  if(Object.hasOwn(installed.binding,'prelaunch')){
+   if(!original||Object.keys(original).sort().join(',')!=='beforeImageText,beforeSha256,kind'||original.kind!=='exact-legacy-placeholder-v1'||typeof original.beforeImageText!=='string'||Buffer.byteLength(original.beforeImageText)>8192||!/^[a-f0-9]{64}$/.test(original.beforeSha256??'')||createHash('sha256').update(original.beforeImageText).digest('hex')!==original.beforeSha256)fail('installed supplemental prelaunch drift')
+   let before;try{before=JSON.parse(original.beforeImageText)}catch{fail('installed supplemental prelaunch drift')}
+   if(!legacyPlaceholder(before)||before.id!==m.id||before.round_id!==m.round_id||before.home_team_id!==m.home_team_id||before.away_team_id!==m.away_team_id||before.played_on!==m.played_on)fail('installed supplemental prelaunch drift')
+   return {...binding,prelaunch:{kind:original.kind,beforeImageText:original.beforeImageText,beforeSha256:original.beforeSha256}}
+  }
+  return binding
  }
  return binding
 }
