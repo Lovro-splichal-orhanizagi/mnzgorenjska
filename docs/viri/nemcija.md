@@ -1173,3 +1173,11 @@ reviewed Baden schema5+schema5 combination with the same authenticated v4 histor
 and bound outcomes. Its archive seed receipt names the unique successful attempt
 (and original body hash), including success2 after failed connection1. Ordinary
 source, statistics and native admission still run independently before acceptance.
+
+The first ordinary nightly may consume this exact verified schema5 pair from
+`bulk-seed`. Full paired replay/history/outcome checks remain mandatory; only
+current-season nonround originals are reused. Their original successful receipts
+remain flat and retain their actual attempt numbers. New network originals are
+matched by their unique successful numbered receipt, including after retries.
+The fresh nightly itself keeps ordinary schema2, first-error/no-retry behavior
+and existing request limits; checkpoint/retry authority is not inherited.

@@ -49,13 +49,33 @@ export async function fussballBulkCacheDocuments(directory,{staffel,season,seedU
  requireProof(cardPolicy===undefined||cardPolicy==='community-v1','invalid card policy')
  const m=JSON.parse(readRegular(directory,'manifest.json'))
  const {loadGermanyPack}=await import('./bulk-germany-source.mjs')
- await (loadPack??loadGermanyPack)(directory,{candidate:m.candidate,requireFresh:false})
+ const verifiedPack=await (loadPack??loadGermanyPack)(directory,{candidate:m.candidate,requireFresh:false})
  requireProof(Boolean(m.candidate?.communityCards)===Boolean(cardPolicy),'bulk cache card policy differs')
  requireProof(m.candidate?.source_league_code===`${staffel}:${season}`&&m.candidate.seedUrl===seedUrl,'bulk cache current scope differs')
  if(m.provider==='germany-paired-fussball'){
   const current=JSON.parse(readRegular(directory,'current/manifest.json'))
-  requireProof([1,4].includes(current.version)&&current.options.staffel===staffel&&current.options.season===season&&current.options.seedUrl===seedUrl&&current.options.cardPolicy===cardPolicy,'paired cache current scope differs')
-  return current.documents.filter(d=>d.kind!=='round').map(d=>({...d,bytes:readRegular(directory,'current/'+d.file),originalReceipt:originalReceipt(d,current)}))
+  const v4=current.version===5
+  if(v4){
+   // Full paired replay above remains mandatory. This is only its narrow
+   // schema5 cache-consumer branch; metadata alone supplies no admission.
+   const archive=JSON.parse(readRegular(directory,'archive/manifest.json'))
+   requireProof(m.candidate.slug==='de-verbandsliga-baden'&&m.candidate.communityCards===true&&cardPolicy==='community-v1'&&verifiedPack?.candidate?.slug===m.candidate.slug&&verifiedPack.candidate.source_league_code===`${staffel}:${season}`&&verifiedPack.seasons?.some(s=>s.code===`${staffel}:${season}`),'verified Baden v4 paired cache required')
+   requireProof(archive.version===5&&[current,archive].every(c=>c.success===true&&c.checkpoint?.version===4&&c.checkpoint.proof?.preset==='baden-reviewed-transports-v4'&&c.checkpoint.proof.priorRequests===1517&&c.checkpoint.proof.totalRequestCap===5000&&c.retryPolicy===FUSSBALL_V4_RETRY_POLICY.id&&/^[a-f0-9]{64}$/.test(c.outcomesSha256??''))&&isDeepStrictEqual(current.checkpoint,archive.checkpoint),'exact schema5 paired cache history/policy required')
+   for(const [name,capture]of [['current',current],['archive',archive]])requireProof(hash(readRegular(directory,name+'/outcomes.jsonl'))===capture.outcomesSha256,'paired cache outcome bytes differ')
+  }
+  requireProof(([1,4].includes(current.version)||v4)&&current.options.staffel===staffel&&current.options.season===season&&current.options.seedUrl===seedUrl&&current.options.cardPolicy===cardPolicy,'paired cache current scope differs')
+  return current.documents.filter(d=>d.kind!=='round').map(d=>{
+   const bytes=readRegular(directory,'current/'+d.file)
+   if(v4){
+    checkOriginalReceipt(d,current.options)
+    requireProof(bytes.length===d.bytes&&hash(bytes)===d.sha256&&['network','cache'].includes(d.origin),'schema5 current cache original differs')
+    if(d.origin==='network'){
+     const attempts=current.snapshot.attempts.filter(a=>a.number===d.originalReceipt.attempt.number)
+     requireProof(attempts.length===1&&attempts[0].status==='success'&&attempts[0].httpStatus===200&&attempts[0].startedAt===d.capturedAt&&isDeepStrictEqual(attempts[0],d.originalReceipt.attempt),'schema5 cache requires actual unique successful numbered receipt')
+    }
+   }
+   return {...d,bytes,originalReceipt:originalReceipt(d,current)}
+  })
  }
  const docs=new Map(m.documents.map(d=>[d.url,d])),used=new Set()
  const result=await collectFn({staffel,season,seedUrl,...(cardPolicy?{cardPolicy}:{}),reportLimit:null,asOfDate:m.captured_at.slice(0,10),client:{read:async(url,kind)=>{
