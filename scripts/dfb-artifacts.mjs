@@ -19,6 +19,7 @@ export function unpackVerifiedArchive(bytes,digest,kind){
  if(bytes.length>maxArchive||!/^sha256:[a-f0-9]{64}$/.test(digest??'')||`sha256:${sha256(bytes)}`!==digest)throw Error('Artifact ZIP digest mismatch')
  if(kind==='fussball-checkpoint')return unpackFussballCheckpoint(bytes)
  if(kind==='fussball-resumption')return unpackFussballResumption(bytes)
+ if(kind==='fussball-successor-current'||kind==='fussball-successor-archive')return unpackFussballSuccessor(bytes,kind)
  const sixCleanup=kind==='fcf-six-cleanup-prepared'||kind==='fcf-six-cleanup-applied',cleanup=sixCleanup||kind==='fcf-cleanup-prepared'||kind==='fcf-cleanup-applied',fcf=kind==='fcf-history'||cleanup
  const cleanupName=name=>name==='manifest.json'||['fcf-cleanup-prepared','fcf-six-cleanup-prepared'].includes(kind)&&(name==='before-image.json'||(sixCleanup?['4109388','4109404','4116215','4118352','4118354','4118358']:['4109388','4116215','4118352','4118358']).some(id=>name===`acta-${id}.html`))
  const fcfName=name=>cleanup?cleanupName(name):fcfHistoryName(name)
@@ -110,4 +111,30 @@ export function downloadArtifact({runId,commit,name,kind,expectedId,expectedDige
 export function writeArtifact(files,dir){
  mkdirSync(dir,{recursive:true});if(readdirSync(dir).length)throw Error('Artifact target must be empty')
  for(const [name,bytes]of files)writeFileSync(join(dir,name),bytes)
+}
+
+// Two fixed latest-stage envelopes. Nested provenance stays raw for the v2 reader.
+function unpackFussballSuccessor(bytes,kind){
+ const current=kind==='fussball-successor-current',dir=mkdtempSync(join(tmpdir(),'slff-fussball-successor-'))
+ try{
+  const zip=join(dir,'source.zip');writeFileSync(zip,bytes)
+  const names=execFileSync('unzip',['-Z1',zip],{encoding:'utf8',maxBuffer:256*1024}).trimEnd().split('\n')
+  const details=execFileSync('unzip',['-Z','-l',zip],{encoding:'utf8',maxBuffer:512*1024}).split('\n')
+  if(!names.length||names.length>(current?670:9)||new Set(names).size!==names.length)throw Error('Invalid successor artifact entry set')
+  const files=new Map();let total=0
+  for(const name of names){
+   const nested=current&&/^checkpoint\/parents\/40566792786\.(?:json|zip)$/.test(name)
+   const parent=!current&&name==='archive-parent/7a0bb00b1aae60f61ec36985a3718d897f704dc4400255ff60896e2e653c4734.html'
+   const ordinary=/^(?:manifest\.json|attempts\.jsonl|progress\.jsonl|documents\/[a-f0-9]{64}\.(?:html|css|woff))$/.test(name)||current&&name==='result.json'
+   if(!nested&&!parent&&!ordinary)throw Error('Invalid successor artifact path')
+   const rows=details.filter(row=>row.endsWith(` ${name}`))
+   if(rows.length!==1||!/^-[rwxstST-]{9}\s/.test(rows[0]))throw Error('Successor artifact member must be regular, never symlink or directory')
+   const bound=name==='result.json'?72*1024*1024:nested?(name.endsWith('.zip')?16*1024*1024:1024*1024):name.endsWith('.css')?64*1024:name.startsWith('documents/')||parent?8*1024*1024:16*1024*1024
+   const body=execFileSync('unzip',['-p',zip,name],{maxBuffer:bound+1})
+   if(body.length>bound)throw Error('Successor artifact member size exceeded')
+   total+=body.length;if(total>(current?192:32)*1024*1024)throw Error('Successor artifact expanded size exceeded')
+   files.set(name,body)
+  }
+  return files
+ }finally{rmSync(dir,{recursive:true,force:true})}
 }
