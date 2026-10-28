@@ -44,11 +44,19 @@ insert into matches(id,round_id,home_team_id,away_team_id,played_on,zapisnik_id,
    case when f.played then 'https://datencenter.dfb.de/datencenter/regionalliga-nordost/'||case f.s when 0 then '2025-2026' else '2026-2027' end||'/test-'||f.report end,
    case when f.played then now() end
  from de_fixtures f join rounds r on r.id=-925000-f.s*100-f.round join de_clubs h on h.n=f.home join de_clubs a on a.n=f.away;
-insert into appearances(match_id,player_id,team_id,started,minutes_played,minute_on,minute_off,is_goalkeeper)
+create function pg_temp.de_insert_apps(seed boolean) returns void language sql as $$
+ insert into appearances(match_id,player_id,team_id,started,minutes_played,minute_on,minute_off,is_goalkeeper)
  select f.id,p.id,p.team_id,i<11,case when i<11 then 90 else 15 end,case when i<11 then 0 else 75 end,90,i=0
  from de_fixtures f cross join generate_series(0,1)side cross join generate_series(0,11)i
  join de_clubs t on t.n=case side when 0 then f.home else f.away end
- join players p on p.id=-924000-t.n*20-i where f.played;
+ join players p on p.id=-924000-t.n*20-i where f.played
+ and (f.id=(select min(id) from de_fixtures where played))=seed;
+$$;
+-- Fresh/rolled-back CI fixtures can leave empty-table planner statistics.
+-- Seed one real match with all triggers enabled before planning the bulk load.
+select pg_temp.de_insert_apps(true);
+analyze public.players,public.rounds,public.matches,public.appearances,public.goals,public.player_scores,public.statistika_igralcev;
+select pg_temp.de_insert_apps(false);
 create temporary table de_manifest(raw text);
 insert into de_manifest
 select jsonb_build_object('version',1,'slug','de-regionalliga-nordost','sourceCommit',repeat('a',40),'parserSha256',repeat('b',64),

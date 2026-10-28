@@ -25,6 +25,11 @@
     "rounds"
   ],
   [
+    "private_fcf_future_target_release.receipts",
+    "competition_id",
+    "competitions"
+  ],
+  [
     "private_fcf_six_target_release.club_bindings",
     "competition_id",
     "competitions"

@@ -1,7 +1,7 @@
 // Creates/replaces ONLY the exact owned local, no-network/no-port card test DB.
 // No .env, source requests, host databases or running developer stacks are used.
 import assert from 'node:assert/strict'
-import {execFileSync} from 'node:child_process'
+import {execFileSync,spawn} from 'node:child_process'
 import {appendFileSync,readFileSync,readdirSync,writeFileSync} from 'node:fs'
 import {fileURLToPath} from 'node:url'
 const container='slff-community-cards-20261027',owner='community-cards-20261027'
@@ -67,17 +67,17 @@ export function communityCloneTarget(env,source,target){
 }
 // A logical snapshot works while cron/net remain connected. Never disallow
 // source connections or terminate a worker: killing pg_net can crash the server.
-export function cloneCommunityCardDatabase(env,source,target){
+export async function cloneCommunityCardDatabase(env,source,target){
  const name=communityCloneTarget(env,source,target)
  const [state]=JSON.parse(docker(['inspect',name]))
  if(name===container)assert.equal(state.Config.Labels?.['slff.test.owner'],owner)
  else assert.equal(state.Config.Labels?.['com.supabase.cli.project'],'mnzgorenjska')
  const dump=`/tmp/${target}.dump`,list=`/tmp/${target}.list`
- const sql=(query,db='template1')=>docker(['exec','-i',name,'psql','-U','supabase_admin','-d',db,'-X','-qAt','-v','ON_ERROR_STOP=1'],{input:query,timeout:300000}).trim()
+ const sql=(query,db='template1',timeout=300000)=>docker(['exec','-i',name,'psql','-U','supabase_admin','-d',db,'-X','-qAt','-v','ON_ERROR_STOP=1'],{input:query,timeout}).trim()
  let created=false
- const cleanup=()=>{
+ const cleanup=async()=>{
   if(created){
-   assert.equal(sql(`select count(*)from pg_stat_activity where datname='${target}'and backend_type<>'client backend';`),'0','refusing to terminate database workers')
+   await waitForCommunityCloneWorkers(()=>JSON.parse(sql(`select coalesce(json_agg(json_build_object('pid',pid,'backend_type',backend_type,'state',state)), '[]'::json)from pg_stat_activity where datname='${target}'and backend_type<>'client backend';`,'template1',2000)))
    sql(`drop database ${target} with(force);`)
    created=false
   }
@@ -97,5 +97,63 @@ export function cloneCommunityCardDatabase(env,source,target){
   sql('create schema vault;',target)
   docker(['exec',name,'pg_restore','-U','supabase_admin','-d',target,'--exit-on-error','--single-transaction',`--use-list=${list}`,dump],{timeout:300000})
   return cleanup
- }catch(error){cleanup();throw error}
+ }catch(error){
+  try{await cleanup()}catch(cleanupError){throw new AggregateError([error,cleanupError],'community clone failed and cleanup refused',{cause:error})}
+  throw error
+ }
+}
+
+// Passive polling only: a transient backend may finish naturally. Persistent
+// workers keep the clone intact and retain their identity in the failure.
+export async function waitForCommunityCloneWorkers(readWorkers,{timeoutMs=5000,intervalMs=100}={}){
+ const deadline=Date.now()+timeoutMs
+ for(;;){
+  const workers=readWorkers()
+  if(workers.length===0)return
+  assert.ok(Date.now()<deadline,`refusing to terminate database workers: ${JSON.stringify(workers)}`)
+  await new Promise(resolve=>setTimeout(resolve,Math.min(intervalMs,Math.max(1,deadline-Date.now()))))
+ }
+}
+
+// Own only the spawned client process. Never signal PostgreSQL or find/kill
+// unrelated processes. Node's spawn deadline also covers missing chunk markers.
+export function communityTestSession(command,args,{timeoutMs=30000,closingInput=''}={}){
+ const child=spawn(command,args,{stdio:['pipe','pipe','pipe'],timeout:timeoutMs,killSignal:'SIGKILL'})
+ let stdout='',stderr='',spawnError
+ child.stdout.on('data',chunk=>{stdout+=chunk})
+ child.stderr.on('data',chunk=>{stderr+=chunk})
+ child.stdin.on('error',error=>{stderr+=`\nstdin: ${error.message}`})
+ child.on('error',error=>{spawnError=error})
+ const finished=new Promise(resolve=>child.once('close',(code,signal)=>resolve({code,signal,error:spawnError})))
+ return {
+  child,finished,get stdout(){return stdout},get stderr(){return stderr},
+  async waitFor(marker){
+   if(stdout.includes(marker))return
+   await new Promise((resolve,reject)=>{
+    const check=()=>{if(stdout.includes(marker)){child.stdout.off('data',check);resolve()}}
+    child.stdout.on('data',check)
+    finished.then(result=>{
+     child.stdout.off('data',check)
+     if(stdout.includes(marker))resolve()
+     else reject(Error(`owned session ended before ${marker}: ${JSON.stringify(result)}; stdout: ${stdout}; stderr: ${stderr}`))
+    })
+   })
+  },
+  async close(){
+   if(!child.stdin.destroyed&&!child.stdin.writableEnded)child.stdin.end(closingInput)
+   return finished
+  }
+ }
+}
+export async function cleanupCommunityTestSessions(cleanup,sessions){
+ const errors=[]
+ try{await cleanup?.()}catch(error){errors.push(error)}
+ const results=await Promise.allSettled(sessions.map(session=>session.close()))
+ for(let index=0;index<results.length;index++){
+  const result=results[index],session=sessions[index]
+  if(result.status==='rejected')errors.push(result.reason)
+  else if(result.value.signal||result.value.error)errors.push(Error(`owned session failed: ${JSON.stringify(result.value)}; stdout: ${session.stdout}; stderr: ${session.stderr}`))
+ }
+ if(errors.length===1)throw errors[0]
+ if(errors.length)throw new AggregateError(errors,'community fixture cleanup failed')
 }

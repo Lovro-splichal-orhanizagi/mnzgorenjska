@@ -44,3 +44,18 @@ export function classifyFcfSixHistoricalStatistics({competition,id,html}){const{
 export function verifyFcfSixInstalledHistoricalMarker({competition,marker:m}){const{p,e}=selection(competition,m?.sourceMatchId);if(!e||m.reportId!==`es${e.sourceMatchId}`||m.policyId!==p.id||m.policySha256!==hash(p)||m.rawSha256!==e.rawSha256||m.statisticsStatus!=='unavailable_historical'||m.importedAt!==null||m.individualRowCount!==0||hash(m.fixture)!==hash(fixtureFor(p,e))||['matchId','roundId','homeTeamId','awayTeamId'].some(k=>!Number.isSafeInteger(m[k])||m[k]<1)||m.homeTeamId===m.awayTeamId)fail('exact installed six marker differs');return envelope(p,e)}
 export function validateFcfSixInstalledMarkers({competition,binding}){const p=getFcfSixPolicy(competition?.slug);if(!p||competition.source_policy!==FCF_SIX_SOURCE_POLICY||binding?.installed!==true||binding.policyId!==p.id||binding.policySha256!==hash(p)||!/^\d{4}-\d\d-\d\d$/.test(binding.firstFantasyPlayedOn??'')||competition.firstFantasyPlayedOn!=null&&competition.firstFantasyPlayedOn!==binding.firstFantasyPlayedOn||!Array.isArray(binding.markers)||binding.markers.length!==p.entries.length||new Set(binding.markers.map(m=>m.sourceMatchId)).size!==p.entries.length||new Set(binding.markers.map(m=>m.matchId)).size!==p.entries.length)fail('complete installed six binding required');for(const marker of binding.markers)verifyFcfSixInstalledHistoricalMarker({competition:{...competition,firstFantasyPlayedOn:binding.firstFantasyPlayedOn},marker});return freeze(structuredClone(binding))}
 export function isFcfSixUnknownResultMarker(m){const p=getFcfSixPolicy('es-ct-segona-g1'),e=p.entries.find(e=>e.sourceMatchId==='4109404');return m?.sourceMatchId==='4109404'&&m.policyId===p.id&&m.policySha256===hash(p)&&m.rawSha256===e.rawSha256&&hash(m.fixture)===hash(fixtureFor(p,e))}
+
+/** Compare a newly fetched historical header with the immutable reviewed facts.
+ * This is an observation only: original cleanup bytes/receipts, execution/source
+ * authentication and installed-marker checks are still required elsewhere.
+ * Presentation changes never rewrite the original approved SHA or authorize a
+ * new exclusion. The legacy initial-install classifier remains byte-exact.
+ */
+export function verifyFcfSixFreshHistoricalSource(input){
+ if(!input||Object.getPrototypeOf(input)!==Object.prototype||Object.keys(input).sort().join(',')!=='html,id,targetSlug')fail('exact fresh historical observation input required')
+ const {targetSlug,id,html}=input,p=getFcfSixPolicy(targetSlug),e=p?.entries.find(e=>e.sourceMatchId===id)
+ if(!['es-ct-segona-g1','es-ct-tercera-g9'].includes(targetSlug)||typeof id!=='string'||!e||typeof html!=='string'||html.charCodeAt(0)===0xfeff||Buffer.byteLength(html)>2097152)fail('exact reviewed future-target historical report required')
+ const fixture=rawFixture(html,id,{slug:targetSlug})
+ if(hash(fixture)!==hash(fixtureFor(p,e)))fail('fresh historical factual identity differs from reviewed original')
+ return freeze({kind:'fcf-six-fresh-historical-observation',targetSlug,sourceMatchId:id,policyId:p.id,policySha256:hash(p),approvedOriginalSha256:e.rawSha256,freshRawSha256:createHash('sha256').update(html).digest('hex'),fixture})
+}
