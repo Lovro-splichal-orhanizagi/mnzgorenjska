@@ -10,7 +10,7 @@ import {extractFussballSeasonLinks,inspectFussballArchivePage,fussballArchiveSee
 import {inspectFussballPage,fussballFontUrl} from './viri/fussball-discovery.mjs'
 import {inspectFussballLineup,razberiFantasyZapisnik} from './viri/fussball-statistika.mjs'
 import {zaprtje} from './odtis-kode.mjs'
-import {readFussballTransportCheckpoint,readFussballTransportResumption,readFussballTransportSuccessor,readFussballTransportV4,getFussballCheckpointDocuments,exportFussballTransportCheckpoint} from './fussball-checkpoint.mjs'
+import {readFussballTransportCheckpoint,readFussballTransportResumption,readFussballTransportSuccessor,readFussballTransportV4,readFussballTransportV5,getFussballCheckpointDocuments,exportFussballTransportCheckpoint} from './fussball-checkpoint.mjs'
 
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex')
 const json=value=>JSON.stringify(value)+'\n'
@@ -19,7 +19,7 @@ const extension=kind=>kind==='font'?'woff':kind==='css'?'css':'html'
 const root=fileURLToPath(new URL('../',import.meta.url))
 
 export function fussballCaptureCodeSha256(){
- const files=[...new Set([...zaprtje('scripts/fussball-capture-evidence.mjs'),'scripts/zajemi-fussball-sezono.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/vzorci/de-fussball-baden-archive-20261026.json','scripts/policies/fussball-transport-checkpoints.json','scripts/policies/fussball-transport-resumption.json','scripts/policies/fussball-transport-successor.json','scripts/policies/fussball-transport-v4.json'])].sort()
+ const files=[...new Set([...zaprtje('scripts/fussball-capture-evidence.mjs'),'scripts/zajemi-fussball-sezono.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/vzorci/de-fussball-baden-archive-20261026.json','scripts/policies/fussball-transport-checkpoints.json','scripts/policies/fussball-transport-resumption.json','scripts/policies/fussball-transport-successor.json','scripts/policies/fussball-transport-v4.json','scripts/policies/fussball-transport-v5.json'])].sort()
  return hash(files.map(file=>`${file}\0${hash(readFileSync(resolve(root,file)))}`).join('\n'))
 }
 export function validateFussballCaptureOptions(options){
@@ -60,7 +60,7 @@ export async function fussballBulkCacheDocuments(directory,{staffel,season,seedU
    // schema5 cache-consumer branch; metadata alone supplies no admission.
    const archive=JSON.parse(readRegular(directory,'archive/manifest.json'))
    requireProof(m.candidate.slug==='de-verbandsliga-baden'&&m.candidate.communityCards===true&&cardPolicy==='community-v1'&&verifiedPack?.candidate?.slug===m.candidate.slug&&verifiedPack.candidate.source_league_code===`${staffel}:${season}`&&verifiedPack.seasons?.some(s=>s.code===`${staffel}:${season}`),'verified Baden v4 paired cache required')
-   requireProof(archive.version===5&&[current,archive].every(c=>c.success===true&&c.checkpoint?.version===4&&c.checkpoint.proof?.preset==='baden-reviewed-transports-v4'&&c.checkpoint.proof.priorRequests===1517&&c.checkpoint.proof.totalRequestCap===5000&&c.retryPolicy===FUSSBALL_V4_RETRY_POLICY.id&&/^[a-f0-9]{64}$/.test(c.outcomesSha256??''))&&isDeepStrictEqual(current.checkpoint,archive.checkpoint),'exact schema5 paired cache history/policy required')
+   requireProof(archive.version===5&&[current,archive].every(c=>c.success===true&&c.checkpoint?.version===4&&['baden-reviewed-transports-v4','baden-reviewed-transports-v5'].includes(c.checkpoint.proof?.preset)&&c.checkpoint.proof.priorRequests===(c.checkpoint.proof.preset==='baden-reviewed-transports-v5'?1568:1517)&&c.checkpoint.proof.totalRequestCap===5000&&c.retryPolicy===FUSSBALL_V4_RETRY_POLICY.id&&/^[a-f0-9]{64}$/.test(c.outcomesSha256??''))&&isDeepStrictEqual(current.checkpoint,archive.checkpoint),'exact schema5 paired cache history/policy required')
    for(const [name,capture]of [['current',current],['archive',archive]])requireProof(hash(readRegular(directory,name+'/outcomes.jsonl'))===capture.outcomesSha256,'paired cache outcome bytes differ')
   }
   requireProof(([1,4].includes(current.version)||v4)&&current.options.staffel===staffel&&current.options.season===season&&current.options.seedUrl===seedUrl&&current.options.cardPolicy===cardPolicy,'paired cache current scope differs')
@@ -114,10 +114,10 @@ function checkpointVersion(proof){
  if(proof.preset==='baden-reviewed-transports-v1')return 1
  if(proof.preset==='baden-reviewed-transports-v2')return 2
  if(proof.preset==='baden-reviewed-transports-v3')return 3
- if(proof.preset==='baden-reviewed-transports-v4')return 4
+ if(['baden-reviewed-transports-v4','baden-reviewed-transports-v5'].includes(proof.preset))return 4
  requireProof(false,'reviewed checkpoint preset required')
 }
-const checkpointFiles=version=>version===4?[{runId:'40614233934',metadataFile:'checkpoint/parents/40614233934.json',zipFile:'checkpoint/parents/40614233934.zip'}]:version===3
+const checkpointFiles=(version,preset)=>version===4?(preset==='baden-reviewed-transports-v5'?['40633575248']:['40614233934']).map(runId=>({runId,metadataFile:`checkpoint/parents/${runId}.json`,zipFile:`checkpoint/parents/${runId}.zip`})):version===3
  ?['current','archive'].map(stage=>({runId:'40577717778',metadataFile:`checkpoint/parents/40577717778-${stage}.json`,zipFile:`checkpoint/parents/40577717778-${stage}.zip`}))
  :(version===1?checkpointRuns:['40566792786']).map(runId=>({runId,metadataFile:`checkpoint/parents/${runId}.json`,zipFile:`checkpoint/parents/${runId}.zip`}))
 // Cache parseability only: no invented fixture/header and no schedule admission.
@@ -160,14 +160,15 @@ function checkpointScope(proof,options){
  if(version===4){
   const current=['seedUrl','staffel','season'].every(k=>proof.scope?.[k]===options[k])
   const archive=options.staffel==='02TGLSVQ1800000IVS5489BTVTLPPK10-G'&&options.season==='2025/26'&&options.seedUrl==='https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2526-baden/-/staffel/02TGLSVQ1800000IVS5489BTVTLPPK10-G'
-  requireProof(proof.priorRequests===1517&&proof.totalRequestCap===5000&&options.reportLimit===null&&options.cardPolicy==='community-v1'&&(current&&options.maxRequests<=483||archive&&options.maxRequests<=3000),'v4 fixed scope/allowance differs')
+  const v5=proof.preset==='baden-reviewed-transports-v5'
+  requireProof(proof.priorRequests===(v5?1568:1517)&&proof.totalRequestCap===5000&&options.reportLimit===null&&options.cardPolicy==='community-v1'&&(current&&options.maxRequests<=(v5?432:483)||archive&&options.maxRequests<=3000),'v4 fixed scope/allowance differs')
   return
  }
  requireProof(proof.priorRequests===({1:1114,2:1212,3:1423}[version])&&proof.totalRequestCap===5000&&['seedUrl','staffel','season'].every(k=>proof.scope?.[k]===options[k]),'checkpoint current scope/accounting differs')
  requireProof(options.reportLimit===null&&options.cardPolicy==='community-v1'&&options.maxRequests<=({1:886,2:788,3:577}[version]),'checkpoint requires full current community policy and reviewed request bound')
 }
 function persistCheckpoint(directory,exported){
- const version=checkpointVersion(exported.proof),parentFiles=checkpointFiles(version)
+ const version=checkpointVersion(exported.proof),parentFiles=checkpointFiles(version,exported.proof.preset)
  requireProof(exported.parents.length===parentFiles.length&&exported.parents.every((p,i)=>String(p.run.id)===parentFiles[i].runId),'checkpoint parent order differs')
  mkdirSync(join(directory,'checkpoint'));mkdirSync(join(directory,'checkpoint/parents'))
  exported.parents.forEach(({run,artifact,jobs,zipBytes},i)=>{
@@ -178,13 +179,13 @@ function persistCheckpoint(directory,exported){
 }
 function readCheckpoint(directory,checkpoint,options,{captureVersion=4}={}){
  const allowed=captureVersion===5?[4]:[1,2,3]
- requireProof(checkpoint&&Object.keys(checkpoint).sort().join(',')==='parentFiles,proof,version'&&allowed.includes(checkpoint.version)&&isDeepStrictEqual(checkpoint.parentFiles,checkpointFiles(checkpoint.version)),'checkpoint fixed parent paths/version differ')
+ requireProof(checkpoint&&Object.keys(checkpoint).sort().join(',')==='parentFiles,proof,version'&&allowed.includes(checkpoint.version)&&isDeepStrictEqual(checkpoint.parentFiles,checkpointFiles(checkpoint.version,checkpoint.proof?.preset)),'checkpoint fixed parent paths/version differ')
  const parents=checkpoint.parentFiles.map(({metadataFile,zipFile})=>{
   const m=JSON.parse(readRegular(directory,metadataFile))
   requireProof(m&&Object.keys(m).sort().join(',')==='artifact,jobs,run','checkpoint parent metadata fields differ')
   return {...m,zipBytes:readRegular(directory,zipFile)}
  })
- const proof=checkpoint.version===4?readFussballTransportV4({parent:parents[0],now:Date.now()}):checkpoint.version===1?readFussballTransportCheckpoint({parents,now:Date.now()}):checkpoint.version===2?readFussballTransportResumption({parent:parents[0],now:Date.now()}):readFussballTransportSuccessor({current:parents[0],archive:parents[1],now:Date.now()})
+ const proof=checkpoint.version===4?(checkpoint.proof?.preset==='baden-reviewed-transports-v5'?readFussballTransportV5:readFussballTransportV4)({parent:parents[0],now:Date.now()}):checkpoint.version===1?readFussballTransportCheckpoint({parents,now:Date.now()}):checkpoint.version===2?readFussballTransportResumption({parent:parents[0],now:Date.now()}):readFussballTransportSuccessor({current:parents[0],archive:parents[1],now:Date.now()})
  requireProof(isDeepStrictEqual(checkpoint.proof,proof),'checkpoint persisted public proof differs from originals')
  checkpointScope(proof,options)
  return {proof,documents:new Map(eligibleCheckpointDocuments(getFussballCheckpointDocuments(proof),options).map(d=>[d.url,d]))}
@@ -197,7 +198,7 @@ export async function captureFussballDirectory({directory,options,fetchFn=global
  const mixed=!!(reuseDirectory||reuseBulkDirectory)
  requireProof(!(archiveParent&&mixed),'archive parent cannot mix cached captures')
  const completion=completionProof!==undefined
- const v4Proof=completionProof?.preset==='baden-reviewed-transports-v4'?completionProof:retryProof
+ const v4Proof=['baden-reviewed-transports-v4','baden-reviewed-transports-v5'].includes(completionProof?.preset)?completionProof:retryProof
  const retry=!!v4Proof
  requireProof(!retryProof||!completion&&archiveParent&&!mixed,'v4 archive retry requires separate parent without reuse')
  requireProof(!(completion&&(mixed||archiveParent)),'checkpoint completion cannot mix reuse or archive parent')
@@ -212,7 +213,7 @@ export async function captureFussballDirectory({directory,options,fetchFn=global
  }
  if(retry){
   const proof=exportFussballTransportCheckpoint(v4Proof)
-  requireProof(proof.proof.preset==='baden-reviewed-transports-v4','retry requires branded v4 checkpoint')
+  requireProof(['baden-reviewed-transports-v4','baden-reviewed-transports-v5'].includes(proof.proof.preset),'retry requires branded v4 checkpoint')
   checkpointScope(proof.proof,config)
   checkpointExport=proof
  }
@@ -343,7 +344,7 @@ async function verifyFussballRetryDirectory(directory,m,{collectFn,requireCodeMa
  requireProof(closed(m,['version','provider','createdAt','completedAt','options','codeSha256','success','error','snapshot','documents','resultSha256','activationEligible','retryPolicy','outcomesSha256','checkpoint',...(m.archiveParent?['archiveParent']:[])])&&m.provider==='fussball'&&m.success===true&&m.error===null&&m.activationEligible===false&&m.retryPolicy===FUSSBALL_V4_RETRY_POLICY.id,'closed successful v4 retry manifest required')
  requireProof(/^[a-f0-9]{64}$/.test(m.codeSha256??'')&&(!requireCodeMatch||m.codeSha256===fussballCaptureCodeSha256()),'retry capture code fingerprint differs')
  const options=validateFussballCaptureOptions(m.options),checkpoint=readCheckpoint(directory,m.checkpoint,options,{captureVersion:5})
- requireProof(m.checkpoint.version===4&&checkpoint.proof.preset==='baden-reviewed-transports-v4','v4 retry requires authenticated exact checkpoint')
+ requireProof(m.checkpoint.version===4&&['baden-reviewed-transports-v4','baden-reviewed-transports-v5'].includes(checkpoint.proof.preset),'v4 retry requires authenticated exact checkpoint')
  const current=options.staffel===checkpoint.proof.scope.staffel
  requireProof(current?!m.archiveParent:!!m.archiveParent,'retry stage/adjacent parent differs')
  const parent=m.archiveParent?archiveParentProof(m.archiveParent,options,readRegular(directory,m.archiveParent.file),{persisted:true}):null
@@ -407,8 +408,8 @@ async function verifyFussballRetryDirectory(directory,m,{collectFn,requireCodeMa
 export function loadFussballRetryCheckpoint(directory){
  const m=JSON.parse(readRegular(directory,'manifest.json'))
  requireProof(m.version===5&&m.checkpoint?.version===4,'schema5 v4 checkpoint required')
- const paths=checkpointFiles(4),parents=paths.map(p=>({...JSON.parse(readRegular(directory,p.metadataFile)),zipBytes:readRegular(directory,p.zipFile)}))
- const proof=readFussballTransportV4({parent:parents[0]})
+ const paths=checkpointFiles(4,m.checkpoint.proof?.preset),parents=paths.map(p=>({...JSON.parse(readRegular(directory,p.metadataFile)),zipBytes:readRegular(directory,p.zipFile)}))
+ const proof=(m.checkpoint.proof?.preset==='baden-reviewed-transports-v5'?readFussballTransportV5:readFussballTransportV4)({parent:parents[0]})
  requireProof(isDeepStrictEqual(m.checkpoint.parentFiles,paths)&&isDeepStrictEqual(m.checkpoint.proof,proof),'embedded retry checkpoint differs')
  return proof
 }

@@ -8,7 +8,7 @@ test('future DB fixed readonly routing and player identity allowlist sanitation'
  const calls=[],env={SUPABASE_DB_URL:'postgresql://local:test@127.0.0.1:5432/postgres'},db=api.createFcfFutureTargetDatabase({env,execute:(file,args,options)=>{calls.push({file,args,options});return Buffer.from(JSON.stringify({players:[{id:1,competition_id:797,team_id:2,reg_st:3,full_name:'TEST',position:'GK',position_source:'zapisnik',anonimiziran_at:null,anonimiziran_razlog:null,anonimiziran_by:'PRIVATE ACTOR',profile_id:'PRIVATE PROFILE',nested:{secret:true}}]}))}})
  const inventory=db.inventory(slug,['a'.repeat(64)]);assert.equal(inventory.players[0].id,1);assert.equal(Object.hasOwn(inventory.players[0],'anonimiziran_by'),false);assert.equal(Object.hasOwn(inventory.players[0],'profile_id'),false);assert.equal(Object.hasOwn(inventory.players[0],'nested'),false)
  db.projection(slug,[]);db.pricingSnapshot(slug);db.receipt(slug)
- for(const c of calls){assert.equal(c.file,'psql');assert.match(c.options.input,/BEGIN READ ONLY;\nSET LOCAL ROLE service_role;/);assert.match(c.options.input,/ROLLBACK;/);assert.ok(!c.args.includes(env.SUPABASE_DB_URL));assert.equal(c.options.env.PGDATABASE,env.SUPABASE_DB_URL)}
+ for(const c of calls){assert.equal(c.file,'psql');assert.match(c.options.input,/BEGIN READ ONLY;\nSET LOCAL ROLE service_role;/);assert.match(c.options.input,/ROLLBACK;/);assert.ok(!c.args.includes(env.SUPABASE_DB_URL));assert.equal(c.options.env.PGDATABASE,'postgres')}
  assert.match(calls[0].options.input,/fcf_six_current_target_inventory/);assert.match(calls[1].options.input,/fcf_future_current_target_projection/);assert.match(calls[2].options.input,/fcf_six_current_target_pricing/);assert.match(calls[3].options.input,/fcf_future_current_target_receipt/)
  for(const s of ['es-ct-segona-g1','x\');DROP TABLE players;--'])assert.throws(()=>db.inventory(s,[]),/FCF_/)
  assert.throws(()=>db.inventory(slug,['unsafe']),/FCF_/);assert.throws(()=>api.createFcfFutureTargetDatabase({env:{SUPABASE_DB_URL:env.SUPABASE_DB_URL+'?host=foreign.example'}}),/FCF_/);assert.throws(()=>api.createFcfFutureTargetDatabase({env:{SUPABASE_DB_URL:'postgresql://secret@remote.example:5432/db'}}),/FCF_/)
@@ -36,6 +36,51 @@ test('readonly psql environment pins localhost hostaddr and drops inherited libp
   db.inventory(slug,[])
   assert.equal(passed.PGHOSTADDR,'127.0.0.1','libpq actual network destination must be the existing localhost tunnel')
   for(const key of ['PGSERVICE','PGSERVICEFILE','PGSYSCONFDIR'])assert.equal(Object.hasOwn(passed,key),false,`${key} must not supply an alternate service hostaddr`)
-  assert.equal(passed.PGDATABASE,env.SUPABASE_DB_URL);assert.equal(passed.PGCONNECT_TIMEOUT,'15');assert.equal(passed.PATH,env.PATH);assert.deepEqual(env,before,'caller environment remains unchanged')
+  assert.equal(passed.PGDATABASE,'postgres');assert.equal(passed.PGCONNECT_TIMEOUT,'15');assert.equal(passed.PATH,env.PATH);assert.deepEqual(env,before,'caller environment remains unchanged')
  }
+})
+
+test('readonly psql separates decoded URI credentials and database from inherited libpq overrides',()=>{
+ const uri='postgresql://read%2Brole%40local:p%40ss%3Aword%2F%25%2B@127.0.0.1:5432/fcf%2Fread%20db%2B%25?sslmode=require'
+ const env={SUPABASE_DB_URL:uri,PATH:'/synthetic/bin',PGUSER:'foreign-user',PGPASSWORD:'foreign-password',PGDATABASE:'foreign-database',PGHOST:'foreign.example',PGHOSTADDR:'203.0.113.77',PGPORT:'6543',PGSSLMODE:'disable',PGSERVICE:'foreign-service',PGSERVICEFILE:'/synthetic/foreign-pg_service.conf',PGSYSCONFDIR:'/synthetic/service-directory'},before={...env};let call
+ const db=api.createFcfFutureTargetDatabase({env,execute:(file,args,options)=>{call={file,args,options};return Buffer.from('{"receipt":"synthetic"}')}})
+ assert.deepEqual(db.receipt(slug),{receipt:'synthetic'})
+ assert.equal(call.file,'psql');assert.ok(call.args.includes('-w'),'psql must fail without prompting for a password')
+ assert.deepEqual(Object.fromEntries(['PGUSER','PGPASSWORD','PGDATABASE','PGHOST','PGHOSTADDR','PGPORT','PGSSLMODE'].map(k=>[k,call.options.env[k]])),{PGUSER:'read+role@local',PGPASSWORD:'p@ss:word/%+',PGDATABASE:'fcf/read db+%',PGHOST:'127.0.0.1',PGHOSTADDR:'127.0.0.1',PGPORT:'5432',PGSSLMODE:'require'})
+ for(const key of ['PGSERVICE','PGSERVICEFILE','PGSYSCONFDIR'])assert.equal(Object.hasOwn(call.options.env,key),false)
+ for(const secret of [uri,'read+role@local','p@ss:word/%+','fcf/read db+%'])assert.equal(JSON.stringify(call.args).includes(secret),false,'connection components must stay out of argv')
+ assert.equal(call.options.env.PGCONNECT_TIMEOUT,'15');assert.equal(call.options.env.PATH,env.PATH);assert.deepEqual(env,before)
+})
+test('readonly psql uses the URI SSL mode or libpq default instead of inherited SSL mode',()=>{
+ for(const [suffix,expected] of [['','prefer'],['?sslmode=disable','disable'],['?sslmode=prefer','prefer'],['?sslmode=require','require'],['?sslmode=disable&sslmode=require','require']]){
+  let passed
+  const db=api.createFcfFutureTargetDatabase({env:{SUPABASE_DB_URL:'postgresql://local:test@127.0.0.1:5432/postgres'+suffix,PGSSLMODE:'verify-full'},execute:(_file,_args,options)=>{passed=options.env;return Buffer.from('{}')}})
+  db.receipt(slug);assert.equal(passed.PGSSLMODE,expected)
+ }
+})
+test('malformed URI component encoding fails before readonly execution without exposing credentials',()=>{
+ let executions=0
+ for(const uri of ['postgresql://bad%ZZ:SECRET@127.0.0.1:5432/postgres','postgresql://local:SECRET%2@127.0.0.1:5432/postgres','postgresql://local:SECRET@127.0.0.1:5432/bad%FF','postgresql://local:SECRET%00@127.0.0.1:5432/postgres','postgresql://local:SECRET@127.0.0.1:5432/bad%00']){
+  assert.throws(()=>api.createFcfFutureTargetDatabase({env:{SUPABASE_DB_URL:uri},execute:()=>{executions++;return Buffer.from('{}')}}).receipt(slug),e=>/^FCF_FUTURE_DB:/.test(e.message)&&!e.message.includes('SECRET')&&!e.message.includes(uri))
+ }
+ assert.equal(executions,0)
+})
+
+test('readonly URI database paths and omitted components preserve literal libpq values',()=>{
+ for(const [uri,expected] of [
+  ['postgres://local:test@127.0.0.1:5432/read/../archive',{PGUSER:'local',PGPASSWORD:'test',PGDATABASE:'read/../archive'}],
+  ['postgresql://r%C3%A9ad:p%252F@127.0.0.1:5432/d%C3%A9b',{PGUSER:'réad',PGPASSWORD:'p%2F',PGDATABASE:'déb'}],
+  ['postgresql://127.0.0.1:5432',{PGUSER:'',PGPASSWORD:'',PGDATABASE:''}]
+ ]){
+  let passed
+  const db=api.createFcfFutureTargetDatabase({env:{SUPABASE_DB_URL:uri,PGUSER:'foreign-user',PGPASSWORD:'foreign-password',PGDATABASE:'foreign-database'},execute:(_file,_args,options)=>{passed=options.env;return Buffer.from('{}')}})
+  db.receipt(slug);assert.deepEqual(Object.fromEntries(['PGUSER','PGPASSWORD','PGDATABASE'].map(k=>[k,passed[k]])),expected)
+ }
+})
+test('adding a URL after adapter construction cannot bypass native endpoint validation',()=>{
+ const env={};let executions=0
+ const db=api.createFcfFutureTargetDatabase({env,execute:()=>{executions++;return Buffer.from('{}')}})
+ env.SUPABASE_DB_URL='postgresql://SECRET@foreign.example:6543/db'
+ assert.throws(()=>db.receipt(slug),e=>/^FCF_FUTURE_DB:/.test(e.message)&&!e.message.includes('SECRET'))
+ assert.equal(executions,0)
 })

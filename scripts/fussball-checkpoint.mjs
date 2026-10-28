@@ -394,3 +394,84 @@ export function readFussballTransportV4(input){
  proofs.set(proof,{documents,parents:[copyParent(p)],accounted:{...oldHistory,partial:copyParent(p)}});return proof
 }
 function checkpointV4EmbeddedPaths(){return ['current','archive'].map(stage=>({runId:'40577717778',metadataFile:`checkpoint/parents/40577717778-${stage}.json`,zipFile:`checkpoint/parents/40577717778-${stage}.zip`}))}
+
+// Fixed accounting successor to consumed V4. Capture schema5/checkpoint4 and
+// its bounded retry policy stay unchanged; only the authenticated history moves.
+let v5Registry
+function reviewedV5(){return v5Registry??=freeze(JSON.parse(readFileSync(new URL('./policies/fussball-transport-v5.json',import.meta.url),'utf8')))}
+export function reviewedFussballV5Parent(){return freeze(structuredClone(reviewedV5().parent))}
+export function exportFussballV5AccountedHistory(proof){
+ const state=requireProof(proof)
+ if(proof.preset!=='baden-reviewed-transports-v5'||!state.accounted)fail('reader-issued v5 history required')
+ return Object.fromEntries(Object.entries(state.accounted).map(([name,p])=>[name,copyParent(p)]))
+}
+export function readFussballTransportV5(input){
+ closed(input,['parent',...(Object.hasOwn(input??{},'now')?['now']:[])],'v5 input')
+ const v5=reviewedV5(),now=Object.hasOwn(input,'now')?input.now:Date.now(),p=input.parent,pin=v5.parent
+ if(!Number.isFinite(now)||v5.preset!=='baden-reviewed-transports-v5'||v5.priorRequests!==1568||v5.totalRequestCap!==5000||v5.documentsCount!==725||pin.requests!==51||pin.documentsCount!==72||!same(v5.scope,registry.scope))fail('fixed1568/5000 v5 required')
+ closed(p,['run','artifact','jobs','zipBytes'],'v5 raw parent')
+ const {run:r,artifact:a,jobs:e,zipBytes}=p
+ if(String(r?.id)!==pin.runId||r.run_attempt!==1||r.repository?.full_name!==repository||r.head_repository?.full_name!==repository||r.path!==v5.workflow||r.event!=='workflow_dispatch'||r.head_branch!=='main'||r.head_sha!==pin.sourceCommit||r.status!=='completed'||r.conclusion!=='failure'||!utc(r.updated_at)||Date.parse(r.updated_at)>now)fail('exact terminal failed v4 execution required')
+ if(String(a?.id)!==pin.artifactId||a.name!==`fussball-season-${pin.runId}`||a.digest!==pin.artifactDigest||a.size_in_bytes!==pin.artifactSize||typeof a.expired!=='boolean'||String(a.workflow_run?.id)!==pin.runId||a.workflow_run?.head_sha!==pin.sourceCommit||a.workflow_run?.head_branch!=='main'||!Buffer.isBuffer(zipBytes)||zipBytes.length!==pin.artifactSize||`sha256:${sha256(zipBytes)}`!==pin.artifactDigest)fail('exact v5 parent artifact bytes/identity required')
+ closed(e,['total_count','jobs'],'v5 jobs')
+ if(e.total_count!==3||!Array.isArray(e.jobs)||e.jobs.length!==3||new Set(e.jobs.map(j=>j.id)).size!==3||e.jobs.some(j=>String(j.run_id)!==pin.runId||j.run_attempt!==1||j.head_sha!==pin.sourceCommit||j.status!=='completed'))fail('complete v5 jobs required')
+ for(const [name,id,conclusion]of[['capture',pin.jobId,'failure'],['archive',pin.archiveJobId,'skipped'],['handoff',pin.handoffJobId,'skipped']]){
+  const rows=e.jobs.filter(j=>j.name===name),j=rows[0]
+  if(rows.length!==1||String(j.id)!==id||j.conclusion!==conclusion||!Array.isArray(j.steps)||name!=='capture'&&j.steps.length)fail('v5 exact stage identity/state required')
+ }
+ const job=e.jobs.find(j=>j.name==='capture')
+ for(const [name,conclusion]of[
+  ['Validate exact reviewed completion scope and total5000 budget','success'],['Offline source and evidence checks','success'],['Authenticate only the exact reviewed source artifacts for the selected preset','success'],['Share host pacing with older nightly and bulk readers','success'],['Capture fresh rounds and missing originals without database credentials','failure'],['Independently replay only retained original documents','skipped'],['Authorize archive only from complete replayed current originals','skipped'],['Preserve source originals, checkpoint provenance and request journal','success'],
+ ]){const rows=job.steps.filter(s=>s.name===name);if(rows.length!==1||rows[0].status!=='completed'||rows[0].conclusion!==conclusion)fail('v5 source/replay/upload state differs')}
+ const files=unpackVerifiedArchive(zipBytes,pin.artifactDigest,'fussball-v5'),used=new Set(['manifest.json','attempts.jsonl','progress.jsonl','outcomes.jsonl'])
+ for(const [file,key]of[['manifest.json','manifestSha256'],['attempts.jsonl','attemptsSha256'],['progress.jsonl','progressSha256'],['outcomes.jsonl','outcomesSha256']])if(!files.has(file)||sha256(files.get(file))!==pin[key])fail('v5 exact manifest/intent/progress/outcome hashes required')
+ const m=parse(files.get('manifest.json'),'v5 manifest')
+ closed(m,['version','provider','createdAt','completedAt','options','codeSha256','success','error','snapshot','documents','resultSha256','activationEligible','checkpoint','retryPolicy','outcomesSha256'],'v5 manifest')
+ if(m.version!==5||m.provider!=='fussball'||m.success!==false||m.error!=='fetch failed'||m.resultSha256!==null||m.activationEligible!==false||m.retryPolicy!=='baden-v4-transient-v1'||m.outcomesSha256!==pin.outcomesSha256||m.createdAt!==pin.createdAt||m.completedAt!==pin.completedAt||!utc(m.createdAt)||!utc(m.completedAt)||Date.parse(m.createdAt)>Date.parse(m.completedAt)||Date.parse(m.completedAt)>now||m.codeSha256!==pin.codeSha256||!same(m.options,pin.options))fail('exact failed schema5 v4 manifest required')
+ const path={runId:'40614233934',metadataFile:'checkpoint/parents/40614233934.json',zipFile:'checkpoint/parents/40614233934.zip'}
+ closed(m.checkpoint,['version','proof','parentFiles'],'v5 embedded checkpoint')
+ if(m.checkpoint.version!==4||!same(m.checkpoint.parentFiles,[path])||!files.has(path.metadataFile)||!files.has(path.zipFile))fail('exact embedded v4 parent required')
+ used.add(path.metadataFile);used.add(path.zipFile)
+ const metadata=parse(files.get(path.metadataFile),'v5 embedded metadata');closed(metadata,['run','artifact','jobs'],'v5 embedded metadata')
+ const oldProof=readFussballTransportV4({parent:{...metadata,zipBytes:files.get(path.zipFile)},now}),oldHistory=exportFussballV4AccountedHistory(oldProof)
+ if(!same(m.checkpoint.proof,oldProof)||oldProof.priorRequests+pin.requests!==1568)fail('v5 embedded proof/spent ledger differs')
+ const s=m.snapshot;closed(s,['requests','attempts','stopped','stopReason'],'v5 snapshot')
+ if(s.requests!==51||!Array.isArray(s.attempts)||s.attempts.length!==51||s.stopped!==true||s.stopReason!=='fetch failed'||!Array.isArray(m.documents)||m.documents.length!==72||!same(s.attempts.at(-1),pin.terminal))fail('all51 spent attempts and72 originals required')
+ const journal=lines(files.get('attempts.jsonl'),'v5 intents'),outcomes=lines(files.get('outcomes.jsonl'),'v5 outcomes');lines(files.get('progress.jsonl'),'v5 progress')
+ if(journal.length!==51||!same(outcomes,s.attempts))fail('all51 original intents and durable outcomes required')
+ for(const [i,attempt]of s.attempts.entries()){
+  closed(attempt,['number','url','kind','startedAt','status','error',...(i<50?['httpStatus']:[])],'v5 attempt')
+  const j=journal[i];closed(j,['number','url','kind','startedAt','status','error'],'v5 intent')
+  if(attempt.number!==i+1||!utc(attempt.startedAt)||Date.parse(attempt.startedAt)<Date.parse(m.createdAt)||Date.parse(attempt.startedAt)>Date.parse(m.completedAt)||i&&Date.parse(attempt.startedAt)-Date.parse(s.attempts[i-1].startedAt)<6000||j.number!==attempt.number||j.url!==attempt.url||j.kind!==attempt.kind||j.startedAt!==null||j.status!=='pending'||j.error!==null||i<50&&(attempt.status!=='success'||attempt.error!==null||attempt.httpStatus!==200))fail('v5 ordered paced success/failure journals differ')
+ }
+ const old=new Map(getFussballCheckpointDocuments(oldProof).map(d=>[d.url,d])),selected=new Map(old),urls=new Set();let network=0,cached=0,rounds=0
+ for(const d of m.documents){
+  closed(d,['url','kind','bytes','sha256','status','contentType','capturedAt','file','origin','originalReceipt'],'v5 document')
+  const ext=d.kind==='font'?'woff':d.kind==='css'?'css':'html',bytes=files.get(d.file),{origin,originalReceipt,...descriptor}=d
+  if(urls.has(d.url)||!['round','report','lineup','css','font'].includes(d.kind)||d.status!==200||!utc(d.capturedAt)||d.file!==`documents/${d.sha256}.${ext}`||!bytes||bytes.length!==d.bytes||sha256(bytes)!==d.sha256)fail('v5 unique original body/path/hash differs')
+  urls.add(d.url);used.add(d.file)
+  if(origin==='cache'){
+   const prior=old.get(d.url);if(!prior||d.kind==='round')fail('v5 cached original absent from v4')
+   const {bytes:priorBytes,originalReceipt:priorReceipt,...priorDescriptor}=prior
+   if(!same(descriptor,{...priorDescriptor,bytes:priorBytes.length})||!same(originalReceipt,priorReceipt)||!bytes.equals(priorBytes))fail('v5 cached original/receipt differs')
+   cached++;continue
+  }
+  if(origin!=='network')fail('v5 document origin differs')
+  const attempt=s.attempts[network++]
+  if(!attempt||attempt.status!=='success'||attempt.url!==d.url||attempt.kind!==d.kind||attempt.startedAt!==d.capturedAt||!same(originalReceipt,{version:1,document:receiptDocument(d),attempt,capture:{createdAt:m.createdAt,codeSha256:m.codeSha256,staffel:m.options.staffel,season:m.options.season}}))fail('v5 network body/flat receipt differs')
+  if(d.kind==='round'){
+   if(fussballRoundScope(d.url)?.staffel!==v5.scope.staffel||d.contentType.split(';')[0].trim().toLowerCase()!=='text/html'||/<title>\s*(?:Just a moment|Attention Required)|cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha/i.test(bytes.toString('utf8')))fail('v5 fresh round identity/MIME/challenge differs')
+   rounds++;continue
+  }
+  // This exact consumed run added34 new URLs and revised none. Any overlap,
+  // even identical bytes with a different receipt, needs a separately reviewed pin.
+  if(old.has(d.url))fail('v5 unreviewed revision/overlap')
+  selected.set(d.url,{...structuredClone(descriptor),bytes:Buffer.from(bytes),originalReceipt:structuredClone(originalReceipt)})
+ }
+ if(network!==50||cached!==22||rounds!==16||files.size!==used.size||[...files.keys()].some(f=>!used.has(f)))fail('exact v5 body/request/cache/member partition required')
+ const documents=[...selected.values()].sort((a,b)=>a.url<b.url?-1:a.url>b.url?1:0),documentsSha256=sha256(JSON.stringify(documents.map(({bytes,...d})=>({...d,bytes:bytes.length}))))
+ if(documents.length!==725||documentsSha256!==v5.documentsSha256)fail('fixed725 latest v5 candidates required')
+ createFussballCaptureClient({maxRequests:1,cachedDocuments:documents,fetchFn:()=>fail('v5 reader has no network')})
+ const proof=freeze({preset:v5.preset,scope:structuredClone(v5.scope),priorRequests:1568,totalRequestCap:5000,parents:[structuredClone(pin)],documentsSha256,documentsCount:725})
+ proofs.set(proof,{documents,parents:[copyParent(p)],accounted:{...oldHistory,latest:copyParent(p)}});return proof
+}

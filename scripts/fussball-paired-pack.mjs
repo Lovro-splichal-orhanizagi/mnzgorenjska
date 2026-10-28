@@ -37,7 +37,7 @@ export async function loadFussballPairedPack(directory,{candidate,now=Date.now,r
  if(v4){
   proof(cm.version===5&&am.version===5&&c.slug==='de-verbandsliga-baden'&&cardPolicy==='community-v1','schema5 requires exact reviewed Baden v4 pair')
   for(const capture of manifests){
-   proof(capture.checkpoint?.version===4&&capture.checkpoint.proof?.preset==='baden-reviewed-transports-v4'&&capture.checkpoint.proof.priorRequests===1517&&capture.checkpoint.proof.totalRequestCap===5000&&capture.retryPolicy==='baden-v4-transient-v1'&&/^[a-f0-9]{64}$/.test(capture.outcomesSha256??''),'schema5 v4 checkpoint/retry policy/outcomes required')
+   proof(capture.checkpoint?.version===4&&['baden-reviewed-transports-v4','baden-reviewed-transports-v5'].includes(capture.checkpoint.proof?.preset)&&capture.checkpoint.proof.priorRequests===(capture.checkpoint.proof.preset==='baden-reviewed-transports-v5'?1568:1517)&&capture.checkpoint.proof.totalRequestCap===5000&&capture.retryPolicy==='baden-v4-transient-v1'&&/^[a-f0-9]{64}$/.test(capture.outcomesSha256??''),'schema5 v4 checkpoint/retry policy/outcomes required')
   }
   proof(same(cm.checkpoint,am.checkpoint)&&same(cm.checkpoint.proof.scope,scopes[0]),'paired v4 raw checkpoint/scope differs')
   for(const [i,name]of ['current','archive'].entries())proof(hash(readPairedOriginal(directory,name+'/outcomes.jsonl'))===manifests[i].outcomesSha256,'paired v4 outcome bytes differ')
