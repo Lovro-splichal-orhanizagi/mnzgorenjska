@@ -30,7 +30,7 @@ test('closed catalog validator rejects incomplete finalized archive, arbitrary e
  assert.ok(existsSync(new URL('./fussball-native-composition.mjs',import.meta.url)))
  const {validateFussballNativeCatalog}=await import('./fussball-native-composition.mjs')
  const c=JSON.parse(readFileSync(new URL('./policies/fussball-baden-native-composition.json',import.meta.url)))
- c.status='FINALIZED';c.firstFantasyPlayedOn='2026-10-31'
+ c.status='FINALIZED';c.firstFantasyPlayedOn='2026-10-31';c.seasons[1].fixtureInventorySha256=null
  assert.throws(()=>validateFussballNativeCatalog(c),/catalog|inventory|club|run\/head/)
  c.nativePreparation={prepared:true,competitionId:1};assert.throws(()=>validateFussballNativeCatalog(c),/native preparation/)
 })
