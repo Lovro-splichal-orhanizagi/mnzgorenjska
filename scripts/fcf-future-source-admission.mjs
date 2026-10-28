@@ -1,9 +1,10 @@
+import {readFcfPostG1Accounting} from './fcf-post-g1-accounting.mjs'
 // Closed future target source-only admission. No source/GitHub/DB client, dispatch, native
 // import or launch permission. Raw evidence is authenticated before capabilities
 // are branded; source parsing and complete calendar/GK checks remain shared.
 import {readFcfPostG9Accounting} from './fcf-post-g9-accounting.mjs'
 import {readFcfPostSixAccounting} from './fcf-post-six-accounting.mjs'
-import {validateFcfFutureSourcePlan,isFcfFutureSourceProtocol,FCF_G1_SOURCE_PROTOCOL,getFcfFutureSourcePlanScope,fcfFutureSourceClaimRef} from './fcf-future-source-plan.mjs'
+import {validateFcfFutureSourcePlan,isFcfFutureSourceProtocol,FCF_G1_SOURCE_PROTOCOL,FCF_G1_POST_FAILURE_SOURCE_PROTOCOL,getFcfFutureSourceCleanupIssuer,getFcfFutureSourcePlanScope,fcfFutureSourceClaimRef} from './fcf-future-source-plan.mjs'
 import {readFcfInventoryExecutionClaim,readFcfInventoryConsumptionArtifact,requireFcfInventoryExecutionClaim,requireFcfInventoryConsumption} from './fcf-missing-inventory-claim.mjs'
 import {readFcfFutureSourceStagingArtifact,auditFcfFutureSourceOffline,getFcfFutureSourceStagedData,readFcfFutureSourceDiagnosticArtifact} from './fcf-missing-inventory-evidence.mjs'
 import {verifyInventoryExecution,readInventoryZip,jsonBytes,exactKeys,frozenJSON,validUTC,nativeId,inventoryFail as fail} from './fcf-missing-inventory-artifact.mjs'
@@ -134,7 +135,7 @@ function terminal(b,p){
  * No prior failed source bytes are reused as fresh target documents. */
 export function readFcfFutureCapturedTargetEvidence(input){
  exactKeys(input,['history','plan','claim','consumption','child','finalReceipt',...(Object.hasOwn(input??{},'now')?['now']:[])],'future captured target transport')
- const {plan,now=Date.now()}=input,accountingProof=(plan?.preset===FCF_G1_SOURCE_PROTOCOL?readFcfPostG9Accounting:readFcfPostSixAccounting)({...input.history,now})
+ const {plan,now=Date.now()}=input,accountingProof=(plan?.preset===FCF_G1_POST_FAILURE_SOURCE_PROTOCOL?readFcfPostG1Accounting:plan?.preset===FCF_G1_SOURCE_PROTOCOL?readFcfPostG9Accounting:readFcfPostSixAccounting)({...input.history,now})
  validateFcfFutureSourcePlan({plan,accountingProof,expectedPlanSha256:plan?.planSha256,now})
  exactKeys(input.claim,['execution','ref','claimCommit','claimBytes','rulesets','expected'],'future raw execution claim')
  const claimProof=readFcfInventoryExecutionClaim({...input.claim,plan,now}),consumption=bundle(input.consumption,'consumption'),consumptionProof=readFcfInventoryConsumptionArtifact({...consumption,claimProof,now}),p=scope(plan,consumptionProof,now)
@@ -160,7 +161,7 @@ export function getFcfFutureCapturedTargetData(input){
  if(!record?.stagingProof||!receipt||receipt.child!==child||!receipt.manifest.admissible)fail('matching completed future source/final capability required')
  if(Date.parse(receipt.manifest.completedUTC)>now||Date.parse(record.audit.auditedUTC)>now)fail('future final receipt/audit completion is after the getter clock')
  const data=getFcfFutureSourceStagedData({stagingProof:record.stagingProof,now})
- const binding={schemaVersion:1,kind:'fcf-future-source-admission',protocol:plan.preset,targetSlug,sourceCommit:plan.sourceCommit,planSha256:plan.planSha256,childPlanSha256:record.audit.childPlanSha256,sourceClaimState:'consumed',maximumSourceGETs:478,priorSourceGETs:plan.priorSourceGETs,newSourceGETs:240,actualSourceGETs:plan.plannedCumulativeSourceGETs,accountingBinding:clone(plan.accountingBinding),claimBinding:claimBinding(p),consumptionBinding:consumptionBinding(p),inventoryBinding:clone(data.binding),auditBinding:clone(record.auditBinding),finalReceiptBinding:clone(receipt.binding),policyHashes:clone(plan.policyHashes)}
+ const binding={schemaVersion:1,kind:'fcf-future-source-admission',protocol:plan.preset,targetSlug,sourceCommit:plan.sourceCommit,planSha256:plan.planSha256,childPlanSha256:record.audit.childPlanSha256,sourceClaimState:'consumed',maximumSourceGETs:478,priorSourceGETs:plan.priorSourceGETs,newSourceGETs:240,actualSourceGETs:plan.plannedCumulativeSourceGETs,accountingBinding:clone(plan.accountingBinding),claimBinding:claimBinding(p),consumptionBinding:consumptionBinding(p),inventoryBinding:clone(data.binding),auditBinding:clone(record.auditBinding),finalReceiptBinding:clone(receipt.binding),policyHashes:clone(plan.policyHashes),...(plan.preset===FCF_G1_POST_FAILURE_SOURCE_PROTOCOL?{supplementalPolicySha256:plan.supplementalPolicySha256,cleanupIssuerSourceCommit:getFcfFutureSourceCleanupIssuer(plan)}:{})}
  binding.sourceFingerprintSha256=hash({binding,documents:data.documents.map(d=>({id:d.id,expectedSourceRound:d.expectedSourceRound,receipt:d.receipt,lineage:d.lineage})),canonicalSha256:hash(data.fixtures),calendarSha256:hash({clubs:data.clubs,verifiedKeeperClubs:data.verifiedKeeperClubs})})
  return frozenJSON({evidenceKind:'fcf-future-captured-target',targetSlug,competition:clone(data.competition),documents:clone(data.documents),fixtures:clone(data.fixtures),clubs:clone(data.clubs),verifiedKeeperClubs:clone(data.verifiedKeeperClubs),binding})
 }

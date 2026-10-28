@@ -88,14 +88,14 @@ function readChild(input,diagnostic=false,future=false){
    if(reason){if(!validUTC(r.headersUTC)||!Number.isInteger(status)||status<100||status>599||typeof r.responseURL!=='string'||!r.responseURL||typeof r.redirected!=='boolean'||m.stopReason!==reason||doc.header!==null||!equal(doc.validation,{header:'not-run',earlyStrictCheck:'not-run',reason:null}))fail('refused diagnostic cannot claim a parsed header');continue}
   }
   let header
-  try{header=(future?deriveFcfFutureInventoryHeader:isFcfSixPlan(plan)?deriveFcfSixInventoryHeader:deriveFcfInventoryHeader)({targetSlug:child.targetSlug,id:doc.id,bytes})}catch(error){if(!diagnostic||original||doc.id!==child.fetchIds[m.actualSourceGETs-1])throw error;continue}
+  try{header=(future?deriveFcfFutureInventoryHeader:isFcfSixPlan(plan)?deriveFcfSixInventoryHeader:deriveFcfInventoryHeader)({targetSlug:child.targetSlug,id:doc.id,bytes,...(plan.preset==='future-g1-after-failed-g1-v1'?{protocol:plan.preset}:{})})}catch(error){if(!diagnostic||original||doc.id!==child.fetchIds[m.actualSourceGETs-1])throw error;continue}
   if(!equal(header,doc.header))fail('stored header differs from actual source')
   headers.push(header)
   const document=rawDocument(m,doc,bytes,original);if(!original)document.lineage={kind:'actions-artifact',verified:true,repository:'Lovro-splichal-orhanizagi/mnzgorenjska',workflow:'.github/workflows/uvoz-fcf-zgodovina.yml',runId:binding.runId,artifactId:binding.artifactId,artifactDigest:binding.artifactDigest,commit:binding.retentionCommit}
   documents.push(document)
  }
  if(files.size!==expectedNames.size||[...files.keys()].some(name=>!expectedNames.has(name)))fail('unreferenced or missing artifact member')
- (future?validateFcfFutureInventoryHeaders:isFcfSixPlan(plan)?validateFcfSixInventoryHeaders:validateFcfInventoryHeaders)({targetSlug:child.targetSlug,headers,complete:!diagnostic})
+ (future?validateFcfFutureInventoryHeaders:isFcfSixPlan(plan)?validateFcfSixInventoryHeaders:validateFcfInventoryHeaders)({targetSlug:child.targetSlug,headers,complete:!diagnostic,...(plan.preset==='future-g1-after-failed-g1-v1'?{protocol:plan.preset}:{})})
  return{future,manifest:clone(m),documents,binding,providerSafe,plan:isFcfIndependentSourcePlan(plan)?plan:clone(plan),consumption,child,now,input}
 }
 export function readFcfMissingInventoryStagingArtifact(input){const ctx=readChild(input),m=ctx.manifest,proof=frozenJSON({kind:'fcf-missing-inventory-staged-proof',targetSlug:m.targetSlug,planSha256:m.planSha256,statisticsAudit:'not-run',binding:clone(ctx.binding),actualSourceGETs:m.actualSourceGETs,firstSourceUTC:m.firstSourceUTC,lastCompletedUTC:m.lastCompletedUTC});stages.set(proof,ctx);return proof}
@@ -240,7 +240,7 @@ function futureSourceStagedData(stagingProof,now){
  if(!ctx||!Number.isFinite(now))fail('authenticated future staged inventory/current policies required')
  validateFcfInventorySourcePlan({plan:ctx.plan,expectedPlanSha256:ctx.manifest.planSha256,now})
  const m=ctx.manifest,selected=getFcfFutureSourcePlanScope(ctx.plan),competition={id:selected.competitionId,slug:selected.targetSlug,source:'fcf',source_policy:FCF_SIX_SOURCE_POLICY,source_league_code:selected.sourceCode,active:false,sezona_koledarska:false}
- const fixtures=ctx.documents.map(document=>proveFcfFutureSourceDocument({competition,document,now})),calendar=validateFcfCurrentReleaseCalendar(fixtures)
+ const fixtures=ctx.documents.map(document=>proveFcfFutureSourceDocument({competition,document,now,...(ctx.plan.preset==='future-g1-after-failed-g1-v1'?{protocol:ctx.plan.preset}:{})})),calendar=validateFcfCurrentReleaseCalendar(fixtures)
  return {ctx,m,competition,fixtures,calendar}
 }
 export function auditFcfFutureSourceOffline({stagingProof,policyHashes,now=Date.now()}){

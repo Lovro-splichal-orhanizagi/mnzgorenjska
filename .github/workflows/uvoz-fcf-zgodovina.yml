@@ -54,6 +54,7 @@ on:
           - six-reviewed-continuation-v1
           - future-g9-after-six-v1
           - future-g1-after-g9-v1
+          - future-g1-after-failed-g1-v1
       asset_id:
         description: Actual uploaded root draft release asset ID
         type: string
@@ -263,7 +264,7 @@ jobs:
   missing-inventory-g1:
     name: ${{ inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g9' || 'missing-inventory-g1' }}
     needs: [missing-inventory-approval, missing-inventory-consume]
-    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && (inputs.preset == 'g1-then-g9-missing-v1' || inputs.preset == 'six-reviewed-continuation-v1' || inputs.preset == 'future-g1-after-g9-v1') && github.run_attempt == 1
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && (inputs.preset == 'g1-then-g9-missing-v1' || inputs.preset == 'six-reviewed-continuation-v1' || inputs.preset == 'future-g1-after-g9-v1' || inputs.preset == 'future-g1-after-failed-g1-v1') && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
@@ -299,8 +300,8 @@ jobs:
         with:
           node-version: '22'
       - name: Offline G1 source protocol checks
-        if: inputs.preset == 'future-g1-after-g9-v1'
-        run: node --test scripts/test-fcf-g1-source-continuation.mjs scripts/test-fcf-future-source-plan.mjs scripts/test-fcf-future-source-header.mjs
+        if: inputs.preset == 'future-g1-after-g9-v1' || inputs.preset == 'future-g1-after-failed-g1-v1'
+        run: node --test scripts/test-fcf-g1-source-continuation.mjs scripts/test-fcf-g1-post-failure.mjs scripts/test-fcf-future-source-plan.mjs scripts/test-fcf-future-source-header.mjs
       - name: Capture missing target inventory
         id: capture
         run: node scripts/fcf-missing-inventory-actions.mjs capture
