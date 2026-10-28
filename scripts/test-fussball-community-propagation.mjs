@@ -71,7 +71,7 @@ test('nightly preserves pending-card original bytes and explicit policy across b
  f.observed.active=true
  const row={...competition,active:true};assert.equal(nightly.assertFussballNightlyCompetition(row).communityCards,true)
  for(const name of ['one','two']){
-  await nightly.prepareFussballNightly({candidate:row,db:f.db,directory:join(root,name),cacheDirectory,now:()=>f.controls.clock,fetchFn:async()=>new Response('TEST ONLY synthetic full schedule',{status:200,headers:{'content-type':'text/html'}})})
+  await nightly.prepareFussballNightly({candidate:row,db:f.db,directory:join(root,name),cacheDirectory,now:()=>f.controls.clock,fetchFn:async url=>f.sourceResponse(url)})
   const manifest=JSON.parse(readFileSync(join(root,name,'native-runtime.json'))),report=manifest.documents.find(d=>d.url===pendingBatch().cardEnvelopes[0].sourceUrl)
   assert.ok(report);assert.deepEqual(readFileSync(join(root,name,report.file)),read('report.html'))
   assert.equal(manifest.code,code);assert.equal(JSON.parse(readFileSync(join(root,name,'result.json'))).cardPolicy,'community-v1')

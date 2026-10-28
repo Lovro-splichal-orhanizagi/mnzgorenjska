@@ -28,7 +28,7 @@ test('TEST ONLY real capture client writes and immediately reloads successful ru
  await f.api.seedFussballNativeRuntime({context,competition,directory:seed})
  for(const source of f.pack.seasons){
   const requests=[],directory=join(f.directory,source.inventory.scope.stage),stage=f.f.state.originals.stages[source.inventory.scope.stage]
-  const batch=await f.api.captureFussballNativeRuntimeDirectory({context,competition,code:source.code,directory,seedDirectory:seed,fetchFn:async url=>{requests.push(url);return new Response('TEST ONLY synthetic full schedule',{status:200,headers:{'content-type':'text/html'}})}})
+  const batch=await f.api.captureFussballNativeRuntimeDirectory({context,competition,code:source.code,directory,seedDirectory:seed,fetchFn:async url=>{requests.push(url);return f.sourceResponse(url)}})
   assert.equal(requests[0],stage.result.scope.seedUrl)
   assert.deepEqual(await f.api.loadFussballNativeRuntimeCapture({context,competition,code:source.code,directory}),batch)
   const manifest=JSON.parse(fs.readFileSync(join(directory,'native-runtime.json')))
@@ -45,7 +45,7 @@ test('TEST ONLY relabeled manifest clocks cannot refresh old round receipts',asy
  const f=fixture(t),initial=await f.context(),seed=join(f.directory,'seed'),directory=join(f.directory,'runtime');f.controls.clock=Date.now()
  await f.api.seedFussballNativeRuntime({context:initial,competition,directory:seed});f.observed.active=true
  const {context}=await f.api.loadFussballNativeRuntimeSeed({competition,db:f.db,directory:seed})
- await f.api.captureFussballNativeRuntimeDirectory({context:initial,competition,directory,seedDirectory:seed,fetchFn:async()=>new Response('TEST ONLY synthetic full schedule',{status:200,headers:{'content-type':'text/html'}})})
+ await f.api.captureFussballNativeRuntimeDirectory({context:initial,competition,directory,seedDirectory:seed,fetchFn:async url=>f.sourceResponse(url)})
  const path=join(directory,'native-runtime.json'),manifest=JSON.parse(fs.readFileSync(path))
  await f.api.loadFussballNativeRuntimeCapture({context,competition,directory})
  f.controls.clock+=2*24*3600_000;manifest.createdAt=new Date(f.controls.clock).toISOString();manifest.completedAt=manifest.createdAt
@@ -57,7 +57,7 @@ test('TEST ONLY relabeled manifest clocks cannot refresh old round receipts',asy
 test('TEST ONLY real-client replay refuses missing/empty/altered journals and cached rounds; retained non-round dates survive reuse',async t=>{
  const f=fixture(t),initial=await f.context(),seed=join(f.directory,'seed'),directory=join(f.directory,'runtime');f.controls.clock=Date.now()
  await f.api.seedFussballNativeRuntime({context:initial,competition,directory:seed});f.observed.active=true
- const {context}=await f.api.loadFussballNativeRuntimeSeed({competition,db:f.db,directory:seed}),fetchFn=async()=>new Response('TEST ONLY synthetic full schedule',{status:200,headers:{'content-type':'text/html'}})
+ const {context}=await f.api.loadFussballNativeRuntimeSeed({competition,db:f.db,directory:seed}),fetchFn=async url=>f.sourceResponse(url)
  await f.api.captureFussballNativeRuntimeDirectory({context,competition,directory,seedDirectory:seed,fetchFn})
  const path=join(directory,'native-runtime.json'),original=JSON.parse(fs.readFileSync(path)),intentsPath=join(directory,'attempts.jsonl'),outcomesPath=join(directory,'outcomes.jsonl'),intents=fs.readFileSync(intentsPath),outcomes=fs.readFileSync(outcomesPath)
  fs.unlinkSync(intentsPath);await assert.rejects(f.api.loadFussballNativeRuntimeCapture({context,competition,directory}),/ENOENT/);fs.writeFileSync(intentsPath,intents)
