@@ -178,7 +178,7 @@ export async function readFussballRetainedAudit(input){
   unchangedCode();const expires=fresh(stages.current),counts=Object.fromEntries(Object.entries(stages).map(([s,v])=>[s,v.receipt.requests])),total=1568+counts.current+counts.archive
   need(total<=5000,'all actual source attempts exceed total5000')
   const proof=freeze({version:1,kind:'fussball-retained-source-audit',sourceRunId:runId,sourceHead,profile:preset,captureCodeSha256:captureFingerprint,currentCreatedAt:stages.current.manifest.createdAt,currentFreshUntil:new Date(expires).toISOString(),priorRequests:1568,requests:counts,cumulativeRequests:total,totalRequestCap:5000,artifacts:Object.fromEntries(Object.entries(stages).map(([s,v])=>[s,{id:v.artifact.id,name:v.artifact.name,digest:v.artifact.digest,size:v.zipBytes.length,resultSha256:v.manifest.resultSha256}])),handoff:{conclusion:jobs.handoff.conclusion,witness,nativeSideEffectsVerified:false},sourceEligible:true,nativeEligible:false,activationEligible:false})
-  capabilities.set(proof,{run,jobs:jobsEnvelope,stages,expires});return proof
+  capabilities.set(proof,{run,jobs:jobsEnvelope,inventory,stages,expires});return proof
  }finally{rmSync(temporary,{recursive:true,force:true})}
 }
 
@@ -187,5 +187,12 @@ export async function readFussballRetainedAudit(input){
 export function getFussballRetainedAudit(proof){
  const state=capabilities.get(proof);need(state,'reader-issued retained source capability required')
  need(Date.now()<=state.expires,'original current source freshness expired')
- return {proof,run:structuredClone(state.run),jobs:structuredClone(state.jobs),stages:Object.fromEntries(Object.entries(state.stages).map(([s,v])=>[s,{artifact:structuredClone(v.artifact),manifest:structuredClone(v.manifest),result:structuredClone(v.result),receipt:structuredClone(v.receipt),zipBytes:Buffer.from(v.zipBytes),files:new Map([...v.files].map(([name,bytes])=>[name,Buffer.from(bytes)]))}]))}
+ return {proof,run:structuredClone(state.run),jobs:structuredClone(state.jobs),inventory:structuredClone(state.inventory),stages:Object.fromEntries(Object.entries(state.stages).map(([s,v])=>[s,{artifact:structuredClone(v.artifact),manifest:structuredClone(v.manifest),result:structuredClone(v.result),receipt:structuredClone(v.receipt),zipBytes:Buffer.from(v.zipBytes),files:new Map([...v.files].map(([name,bytes])=>[name,Buffer.from(bytes)]))}]))}
+}
+
+/** Bounded wire view for hosted replay: avoid cloning expanded result/body maps
+ * merely to carry the unchanged ZIPs. This grants the same source-only scope. */
+export function getFussballRetainedAuditWire(proof){
+ const state=capabilities.get(proof);need(state,'reader-issued retained source capability required');need(Date.now()<=state.expires,'original current source freshness expired')
+ return {proof,run:structuredClone(state.run),jobs:structuredClone(state.jobs),inventory:structuredClone(state.inventory),stages:Object.fromEntries(Object.entries(state.stages).map(([s,v])=>[s,{artifact:structuredClone(v.artifact),zipBytes:Buffer.from(v.zipBytes)}]))}
 }
