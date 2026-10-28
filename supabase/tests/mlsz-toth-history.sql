@@ -27,6 +27,11 @@ begin
   insert into matches(id,round_id,home_team_id,away_team_id,home_goals,away_goals,played_on,zapisnik_id,source_url,imported_at)overriding system value values(mid,rid,ht,at,case when i=10 then 3 else 0 end,case when i=16 then 3 else 0 end,day,case i when 10 then '2079402' when 16 then '2079433' else (991000000+i)::text end,case i when 10 then 'https://adatbank.mlsz.hu/match/65/6/31904/10/2079402.html' when 16 then 'https://adatbank.mlsz.hu/match/65/6/31904/16/2079433.html' else 'https://fixture.invalid/toth/'||i end,clock_timestamp()-interval '1 day');
   insert into appearances(match_id,player_id,team_id,started,minute_on,minute_off,minutes_played,is_goalkeeper)
    select mid,p.pid,p.tid,true,0,90,90,p.n=1 from toth_players p where p.tid in(ht,at) and p.n<=case when i=16 and p.tid=ht then 8 else 11 end;
+  -- The first complete match seeds statistics for the remaining fixture writes.
+  -- Empty-table CI estimates otherwise repeatedly expand appearance_points.
+  if i=1 then
+   analyze public.players,public.rounds,public.matches,public.appearances,public.goals,public.player_scores,public.statistika_igralcev;
+  end if;
  end loop;
  insert into appearances(match_id,player_id,team_id,started,minute_on,minute_off,minutes_played,is_goalkeeper)
   select 622735,p.pid,p.tid,false,0,0,0,false from toth_players p where (p.idx=1 and p.n between 12 and 16) or (p.idx=2 and p.n between 12 and 17);
