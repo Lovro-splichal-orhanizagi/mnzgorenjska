@@ -20,10 +20,13 @@ test('parsed workflow exposes exactly the nine new future routes and preserves o
  assert.deepEqual(Object.keys(trigger),['workflow_dispatch']);assert.match(jobs['missing-inventory-consume'].if,/inputs.mode == 'missing-inventory'/);assert.equal(jobs['missing-inventory-consume'].if,"github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory'")
  assert.match(jobs['missing-inventory-g9'].if,/inputs.mode == 'missing-inventory'/);assert.match(jobs['missing-inventory-g9'].if,/github.run_attempt == 1/)
 })
-test('future approval is main/attempt1 GET-only staging with no DB/tunnel/write authority',()=>{
+test('future approval is main/attempt1 GET-only draft staging with push visibility and no DB/source authority',()=>{
  const job=jobs['future-target-approval'];assert.ok(job);assert.equal(job.name,'future-target-approval');assert.match(job.if,/github.ref == 'refs\/heads\/main'/);assert.match(job.if,/github.run_attempt == 1/);assert.match(job.if,/inputs.mode == 'future-target-approval-stage'/)
- assert.deepEqual(job.permissions,{contents:'read',actions:'read'});assert.doesNotMatch(JSON.stringify(job),/SUPABASE|SERVICE_ROLE|DEPLOY_SSH_KEY|DEPLOY_KNOWN_HOSTS|contents.*write/)
+ assert.deepEqual(doc.permissions,{contents:'read',actions:'read'});assert.deepEqual(job.permissions,{contents:'write',actions:'read'});assert.doesNotMatch(JSON.stringify(job),/SUPABASE|SERVICE_ROLE|DEPLOY_SSH_KEY|DEPLOY_KNOWN_HOSTS|secrets\.|fcf\.cat|fcfFetch|capture|consume/)
+ assert.equal(job.if,"github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.mode == 'future-target-approval-stage'")
  const op=operation(job);assert.equal(op.name,'Stage reviewed future FCF target approval');assert.equal(op.run,'node scripts/uvozi-fcf-prihodnji-cilj.mjs --mode approval-stage');assert.equal(op.env.GH_TOKEN,'${{ github.token }}');assert.equal(op.env.FCF_TARGET_ASSET_ID,'${{ inputs.asset_id }}');assert.equal(op.env.FCF_TARGET_ASSET_SHA256,'${{ inputs.asset_sha256 }}');assert.equal(retain(job).name,'Retain reviewed future FCF target approval')
+ assert.deepEqual(op.env,{GH_TOKEN:'${{ github.token }}',FCF_TARGET_ASSET_ID:'${{ inputs.asset_id }}',FCF_TARGET_ASSET_SHA256:'${{ inputs.asset_sha256 }}'})
+ for(const name of ['future-target','missing-inventory-consume','missing-inventory-g1','missing-inventory-g9','missing-inventory-receipt'])assert.deepEqual(jobs[name].permissions,{contents:'read',actions:'read'},name)
 })
 test('future operational job has the exact closed mode/API-job/step contracts',()=>{
  const job=jobs['future-target'];assert.ok(job);assert.equal(job.name,'${{ inputs.mode }}');assert.match(job.if,/github.ref == 'refs\/heads\/main'/);assert.match(job.if,/github.run_attempt == 1/)

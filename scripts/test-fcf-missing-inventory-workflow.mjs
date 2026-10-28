@@ -18,5 +18,6 @@ test('only source-free private draft staging jobs have contents write, and all c
   const job=jobs[name];assert.match(job,/needs: \[[^\n]*missing-inventory-approval/);assert.match(job,/permissions:\n      contents: read\n      actions: read/);assert.doesNotMatch(job,/contents: write|FCF_INVENTORY_ASSET_ID/)
   for(const key of['ID','DIGEST','MANIFEST_SHA'])assert.match(job,new RegExp(`FCF_APPROVAL_${key}: \\$\\{\\{ needs\\.missing-inventory-approval\\.outputs\\.`))
  }
- assert.equal([...text.matchAll(/contents: write/g)].length,4)
+ const writeJobs=Object.entries(jobs).filter(([,job])=>/^      contents: write$/m.test(job)).map(([name])=>name).sort()
+ assert.deepEqual(writeJobs,['missing-inventory-seed','missing-inventory-approval','target-approval','cleanup-originals','future-target-approval'].sort())
 })

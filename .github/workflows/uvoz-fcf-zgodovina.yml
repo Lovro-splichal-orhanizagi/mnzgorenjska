@@ -1015,7 +1015,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: read
+      # Reading private draft releases requires push access; this broker remains GET-only.
+      contents: write
       actions: read
     outputs:
       manifest_sha: ${{ steps.operation.outputs.manifest_sha }}
