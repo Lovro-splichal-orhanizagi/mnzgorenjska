@@ -3,7 +3,7 @@ import {mkdirSync,writeFileSync} from 'node:fs'
 import {spawnSync} from 'node:child_process'
 
 const env=process.env,repository='Lovro-splichal-orhanizagi/mnzgorenjska'
-const deployed='d25c9b0bac906e2b9f7ad13e749a724e7b6fac77'
+const deployed='de77b661cbc11d95256a500e57c2fdea861a0647'
 const branch='refs/heads/codex/g9-prepare-sql-diagnostic-20261028'
 const sha=value=>/^[a-f0-9]{40}$/.test(value??''),mode=process.argv[2]
 const result={schemaVersion:1,kind:'fcf-scout-readonly-inventory',nativeAuthority:false,
@@ -49,9 +49,11 @@ const sql=`BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;
 SET LOCAL statement_timeout='15s';
 SET LOCAL client_min_messages=warning;
 SET LOCAL row_security=off;
+SET LOCAL TIME ZONE 'UTC';
 DO $fcf_diagnostic$
 DECLARE t record; a record; predicate text; matching bigint;
-  refs jsonb:='[]'; unsupported jsonb:='[]'; diag_state text; diag_code text; diag_status text:='scout_inventory';
+  refs jsonb:='[]'; unsupported jsonb:='[]'; aggregate_metadata jsonb;
+  diag_state text; diag_code text; diag_status text:='scout_inventory';
 BEGIN
   BEGIN
     FOR t IN SELECT c.oid,n.nspname,c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
@@ -78,18 +80,38 @@ BEGIN
         END IF;
       END LOOP;
     END LOOP;
+    IF jsonb_array_length(unsupported)=0 THEN
+      WITH scoped AS (
+        SELECT l.* FROM scout.lige_moc l WHERE l.competition_id IN(783,790,797)
+      ), parents AS (
+        SELECT DISTINCT m.* FROM scout.modeli m JOIN scoped l ON l.model_id=m.id
+      )
+      SELECT jsonb_build_object(
+        'countsByCompetition',jsonb_build_object('783',count(*) FILTER(WHERE l.competition_id=783),
+          '790',count(*) FILTER(WHERE l.competition_id=790),'797',count(*) FILTER(WHERE l.competition_id=797)),
+        'totalRows',count(*),
+        'orphanParentRows',count(*) FILTER(WHERE NOT EXISTS(SELECT 1 FROM scout.modeli m WHERE m.id=l.model_id)),
+        'allVirBrez',coalesce(bool_and(l.vir IS NOT DISTINCT FROM 'brez'),false),
+        'allPrestopovZero',coalesce(bool_and(l.prestopov IS NOT DISTINCT FROM 0),false),
+        'allMocZeroFinite',coalesce(bool_and(l.moc IS NOT NULL AND l.moc=0 AND
+          l.moc NOT IN('NaN'::double precision,'Infinity'::double precision,'-Infinity'::double precision)),false),
+        'publishedParentRows',(SELECT count(*) FROM parents m WHERE m.objavljen IS TRUE),
+        'rowsSha256',encode(sha256(convert_to(coalesce(jsonb_agg(to_jsonb(l) ORDER BY l.model_id,l.competition_id),'[]'::jsonb)::text,'UTF8')),'hex'),
+        'modelParentsSha256',(SELECT encode(sha256(convert_to(coalesce(jsonb_agg(to_jsonb(m) ORDER BY m.id),'[]'::jsonb)::text,'UTF8')),'hex') FROM parents m)
+      ) INTO aggregate_metadata FROM scoped l;
+    END IF;
   EXCEPTION
     WHEN query_canceled THEN GET STACKED DIAGNOSTICS diag_state=RETURNED_SQLSTATE;
     WHEN OTHERS THEN GET STACKED DIAGNOSTICS diag_state=RETURNED_SQLSTATE;
   END;
   IF diag_state IS NOT NULL THEN
-    diag_status:='sql_error'; refs:='[]'; unsupported:='[]';
+    diag_status:='sql_error'; refs:='[]'; unsupported:='[]'; aggregate_metadata:=NULL;
     diag_code:=${caseExpression('diag_state',engineCodes,"'unclassified_sql_error'")};
   ELSIF jsonb_array_length(unsupported)>0 THEN
     diag_status:='unsupported_types';
   END IF;
   PERFORM set_config('slff.fcf_scout_diag',json_build_object('status',diag_status,'sqlstate',diag_state,
-    'code',diag_code,'references',refs,'unsupportedTypes',unsupported)::text,true);
+    'code',diag_code,'references',refs,'unsupportedTypes',unsupported,'aggregateMetadata',aggregate_metadata)::text,true);
 END;
 $fcf_diagnostic$;
 SELECT current_setting('slff.fcf_scout_diag');
@@ -140,7 +162,7 @@ try{
     result.rollbackConfirmed=true
     if(!/^\{[^\r\n]{1,49152}\}$/.test(lines[0]))fail('invalid_diagnostic_marker')
     const record=JSON.parse(lines[0])
-    if(!record||Object.keys(record).sort().join(',')!=='code,references,sqlstate,status,unsupportedTypes'||
+    if(!record||Object.keys(record).sort().join(',')!=='aggregateMetadata,code,references,sqlstate,status,unsupportedTypes'||
       !['scout_inventory','unsupported_types','sql_error'].includes(record.status)||
       !Array.isArray(record.references)||!Array.isArray(record.unsupportedTypes)||
       record.references.length+record.unsupportedTypes.length>128)fail('invalid_diagnostic_marker')
@@ -156,9 +178,23 @@ try{
     if(new Set(keys).size!==keys.length)fail('invalid_diagnostic_marker')
     if(record.status==='sql_error'){
       if(!/^[A-Z0-9]{5}$/.test(record.sqlstate??'')||
-        ![...Object.values(engineCodes),'unclassified_sql_error'].includes(record.code)||keys.length)fail('invalid_diagnostic_marker')
+        ![...Object.values(engineCodes),'unclassified_sql_error'].includes(record.code)||keys.length||record.aggregateMetadata!==null)fail('invalid_diagnostic_marker')
     }else if(record.sqlstate!==null||record.code!==null||
       (record.status==='unsupported_types')!==(record.unsupportedTypes.length>0))fail('invalid_diagnostic_marker')
+    const metadata=record.aggregateMetadata
+    if(record.status==='unsupported_types'&&metadata!==null)fail('invalid_diagnostic_marker')
+    if(record.status==='scout_inventory'){
+      if(!metadata||Object.keys(metadata).sort().join(',')!=='allMocZeroFinite,allPrestopovZero,allVirBrez,countsByCompetition,modelParentsSha256,orphanParentRows,publishedParentRows,rowsSha256,totalRows'||
+        !metadata.countsByCompetition||Object.keys(metadata.countsByCompetition).sort().join(',')!=='783,790,797'||
+        [...Object.values(metadata.countsByCompetition),metadata.totalRows,metadata.orphanParentRows,metadata.publishedParentRows]
+          .some(value=>!Number.isSafeInteger(value)||value<0)||
+        Object.values(metadata.countsByCompetition).reduce((sum,value)=>sum+value,0)!==metadata.totalRows||
+        metadata.orphanParentRows>metadata.totalRows||metadata.publishedParentRows>metadata.totalRows||
+        [metadata.allVirBrez,metadata.allPrestopovZero,metadata.allMocZeroFinite].some(value=>typeof value!=='boolean')||
+        [metadata.rowsSha256,metadata.modelParentsSha256].some(value=>typeof value!=='string'||!/^[a-f0-9]{64}$/.test(value)))fail('invalid_diagnostic_marker')
+      const strengthReference=record.references.find(row=>row.table==='lige_moc'&&row.column==='competition_id')
+      if((strengthReference?.matchingRows??0)!==metadata.totalRows)fail('invalid_diagnostic_marker')
+    }
     result.status=record.status;result.diagnostic=record
     if(record.status!=='scout_inventory')process.exitCode=1
   }

@@ -8,7 +8,7 @@ on:
         description: Exact deployed main SHA; must remain unchanged
         type: string
         required: true
-        default: d25c9b0bac906e2b9f7ad13e749a724e7b6fac77
+        default: de77b661cbc11d95256a500e57c2fdea861a0647
       expected_diagnostic_sha:
         description: Exact reviewed diagnostic branch commit
         type: string
@@ -59,7 +59,7 @@ jobs:
             echo 'FCF prepare diagnostic: tunnel setup failed.'
             exit 1
           fi
-      - name: Fixed Scout reference counts with unconditional rollback
+      - name: Fixed Scout counts and aggregate digests with unconditional rollback
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: node scripts/diagnose-fcf-prepare-rollback.mjs --scout-inventory
