@@ -41,7 +41,9 @@ export function buildFcfFutureTargetReadiness(input){
  const keys=['targetSlug','pricingSnapshot','replay','modelSha256','sourceData','launchInput','launchProposal',...(Object.hasOwn(input??{},'now')?['now']:[])]
  if(!object(input)||Object.keys(input).sort().join(',')!==keys.sort().join(','))fail('closed future readiness input required')
  const {targetSlug,pricingSnapshot,replay,modelSha256,sourceData,launchInput,launchProposal}=input,now=input.now===undefined?Date.now():input.now
- const selected=validateFcfFutureNativeSourceData({targetSlug,data:sourceData}),slug=targetSlug,code=selected.sourceCode,cid=selected.competitionId,protocol=sourceData.binding.protocol
+ let selected
+ try{selected=validateFcfFutureNativeSourceData({targetSlug,data:sourceData})}catch(cause){throw Error(`FCF_FUTURE_READINESS: ${cause.message}`,{cause})}
+ const slug=targetSlug,code=selected.sourceCode,cid=selected.competitionId,protocol=sourceData.binding.protocol
  if(!Number.isSafeInteger(now)||!Number.isFinite(new Date(now).getTime()))fail('exact G9 target/current helper clock required')
  const text=pricingSnapshot?.snapshotText,hash=pricingSnapshot?.snapshotSha256
  if(typeof text!=='string'||!text.length||Buffer.byteLength(text)>32*1024*1024||!hex(hash,64)||createHash('sha256').update(text).digest('hex')!==hash)fail('exact SQL dependency snapshot TEXT/SHA required')
