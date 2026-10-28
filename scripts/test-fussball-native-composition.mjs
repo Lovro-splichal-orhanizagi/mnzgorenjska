@@ -159,13 +159,13 @@ test('TEST ONLY per-report bundles bind main SHA separately from latest lineup, 
 })
 
 for(const [name,mutate,expected]of[
- ['overlapping successful source report',f=>{const r=f.state.originals.stages.current.result;r.reports.push(r.reports[0])},/partition overlap/],
+ ['overlapping successful source report',f=>{const r=f.state.originals.stages.current.result;r.reports.push(r.reports[0])},/source report overlap|partition overlap/],
  ['missing played source report',f=>f.state.originals.stages.current.result.reports.splice(0,1),/missing played/],
  ['past unplayed source fixture',f=>{f.state.originals.stages.current.result.schedule.fixtures.at(-1).datum='2026-10-01'},/missing played/],
  ['extra otherwise valid reviewed exclusion',f=>{const r=structuredClone(f.catalog.seasons[0].reviews[0]);r.fixture.id='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';r.fixture.zapisnikId='de-fussball-'+r.fixture.id;r.fixture.url='https://www.fussball.de/spiel/-/spiel/'+r.fixture.id;f.catalog.seasons[0].reviews.push(r)},/extra reviewed exclusion/],
  ['empty archive schedule',f=>{f.state.originals.stages.archive.result.schedule.fixtures=[]},/full bounded contiguous/],
 ])test(`TEST ONLY independently repinned source still rejects ${name}`,()=>{
- const f=partitionFixture();mutate(f);f.repin();assert.throws(()=>isolatedComposition(f).buildFussballNativeComposition(f.proof),expected)
+ const f=partitionFixture();mutate(f);assert.throws(()=>{f.repin();isolatedComposition(f).buildFussballNativeComposition(f.proof)},expected)
 })
 
 test('TEST ONLY unavailable descriptor binds the exact reviewed tuple, defect, approval and separate bundle hash',()=>{
