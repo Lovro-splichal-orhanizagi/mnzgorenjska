@@ -1,3 +1,4 @@
+import {getFcfFutureTarget} from './fcf-future-target-catalog.mjs'
 // Future-only child preload boundary. Reader-owned source is reauthenticated at
 // EVERY source request's actual clock; no stale provider/documents capability.
 import {readFileSync,lstatSync,realpathSync,existsSync,openSync,fstatSync,closeSync,constants} from 'node:fs'
@@ -31,7 +32,8 @@ export function installFcfFutureTargetChildOffline(input={}){
  if(typeof network!=='function'||!Number.isSafeInteger(now))fail('actual child clock/transport required')
  if(existsSync(resolve(dirname(fileURLToPath(import.meta.url)),'.predpomnilnik')))fail('source cache must be absent')
  const e=privateFile(env);keys(e,['wire','targetSlug','sourceCommit','targetPacketText','targetPacketSha256'],'parent envelope')
- if(e.targetSlug!=='es-ct-tercera-g9'||!/^[a-f0-9]{40}$/.test(e.sourceCommit??''))fail('future G9 selected writer scope required')
+ getFcfFutureTarget({targetSlug:e.targetSlug})
+ if(!/^[a-f0-9]{40}$/.test(e.sourceCommit??''))fail('future G9 selected writer scope required')
  const wire=decodeFcfTargetWire(e.wire),inventoryAdmission=readFcfFutureCapturedTargetEvidence({...wire,now}),provider=loadFcfFutureTargetOfflineProvider({targetSlug:e.targetSlug,sourceCommit:e.sourceCommit,inventoryAdmission,targetPacketText:e.targetPacketText,targetPacketSha256:e.targetPacketSha256,now})
  let base;try{base=new URL(env.SUPABASE_URL??env.VITE_SUPABASE_URL)}catch{fail('exact HTTPS database origin required')}
  if(base.protocol!=='https:'||base.username||base.password||base.port||base.pathname!=='/'||base.search||base.hash)fail('exact HTTPS database origin required')

@@ -1,3 +1,5 @@
+import {getFcfFutureTarget} from './fcf-future-target-catalog.mjs'
+import {fcfFutureProtocolForTarget} from './fcf-future-native-scope.mjs'
 // Separate fixed future G9 DB transport. No caller SQL, retry or legacy mutation.
 import {execFileSync} from 'node:child_process'
 import {createHash} from 'node:crypto'
@@ -8,11 +10,11 @@ function keys(x,fields,label){if(!x||Object.getPrototypeOf(x)!==Object.prototype
 function text(value,expected,label){if(typeof value!=='string'||!value.length||Buffer.byteLength(value)>8*1024*1024||value.charCodeAt(0)===0xfeff||!/^[a-f0-9]{64}$/.test(expected??'')||sha(value)!==expected)fail(`${label} exact bounded TEXT/SHA required`);let p;try{p=JSON.parse(value)}catch{fail(`${label} JSON required`)}return p}
 function ambiguous(){const e=Error('FCF_FUTURE_DB: ambiguous database response; read back receipt before retry');e.ambiguous=true;return e}
 export function createFcfFutureTargetDatabase(input={}){
- keys(input,Object.keys(input).filter(k=>['env','execute','network'].includes(k)),'database options')
- const {env=process.env,execute=execFileSync,network=globalThis.fetch}=input
+ keys(input,Object.keys(input).filter(k=>['env','execute','network','targetSlug'].includes(k)),'database options')
+ const {env=process.env,execute=execFileSync,network=globalThis.fetch,targetSlug='es-ct-tercera-g9'}=input,target=getFcfFutureTarget({targetSlug})
  if(typeof execute!=='function'||typeof network!=='function')fail('fixed database adapters required')
  if(env.SUPABASE_DB_URL){let u;try{u=new URL(env.SUPABASE_DB_URL)}catch{fail('invalid database endpoint')};if(!['postgres:','postgresql:'].includes(u.protocol)||u.hostname!=='127.0.0.1'||u.port!=='5432'||u.hash||[...u.searchParams].some(([k,v])=>k!=='sslmode'||!['disable','prefer','require'].includes(v)))fail('existing localhost5432 SSH tunnel required')}
- const selected=s=>{if(s!=='es-ct-tercera-g9')fail('exact selected future G9 required');return literal(s)}
+ const selected=s=>{if(s!==target.targetSlug)fail('exact selected future G9 required');return literal(s)}
  const privacy=values=>{if(!Array.isArray(values)||values.length>20000||new Set(values).size!==values.length||values.some(v=>typeof v!=='string'||!/^[a-f0-9]{64}$/.test(v)))fail('unique bounded privacy SHA keys required');return `ARRAY[${values.map(literal).join(',')}]::text[]`}
  function read(expression){
   if(!env.SUPABASE_DB_URL)fail('existing database URL required')
@@ -26,10 +28,11 @@ export function createFcfFutureTargetDatabase(input={}){
  function parameters(stage,p){
   const fields={prepare:['p_main_sha','p_policy_hashes'],apply:['p_main_sha','p_policy_hashes','p_before_sha','p_before_image_text'],import:['p_rollout_text','p_sha256'],check:['p_activation_text','p_sha256','p_activate']},names={prepare:'fcf_future_historical_six_prepare',apply:'fcf_future_historical_six_apply',import:'fcf_future_current_target_import',check:'fcf_future_current_target_check'}
   if(!Object.hasOwn(fields,stage))fail('closed future mutation stage required');keys(p,fields[stage],'mutation parameters')
+  if(['prepare','apply'].includes(stage)&&target.competitionId===783)fail('G1 cannot rerun all-six cleanup')
   if(['prepare','apply'].includes(stage)&&(!/^[a-f0-9]{40}$/.test(p.p_main_sha??'')||fingerprint(p.p_policy_hashes)!==fingerprint(fcfSixPolicyIdHashes())))fail('reviewed main SHA/immutable six policy hashes required')
   if(stage==='apply'){const before=text(p.p_before_image_text,p.p_before_sha,'cleanup before-image');if(before?.schemaVersion!==3)fail('future schema3 cleanup before-image required')}
-  if(stage==='import'){const r=text(p.p_rollout_text,p.p_sha256,'future import rollout');if(r.schemaVersion!==3||r.kind!=='fcf-future-current-target-import-rollout'||r.targetSlug!=='es-ct-tercera-g9')fail('separate future import rollout required')}
-  if(stage==='check'){const a=text(p.p_activation_text,p.p_sha256,'future activation packet');if(a.schemaVersion!==4||a.kind!=='fcf-future-current-target-activation'||a.targetSlug!=='es-ct-tercera-g9'||typeof p.p_activate!=='boolean')fail('separate future activation packet/boolean required')}
+  if(stage==='import'){const r=text(p.p_rollout_text,p.p_sha256,'future import rollout');if(r.schemaVersion!==3||r.kind!=='fcf-future-current-target-import-rollout'||r.targetSlug!==target.targetSlug)fail('separate future import rollout required');if(r.inventoryBinding&&(r.inventoryBinding.targetSlug!==targetSlug||r.inventoryBinding.protocol!==fcfFutureProtocolForTarget(targetSlug)))fail('cross-target import source binding');if(target.competitionId===783){const packet=text(r.targetPacketText,r.targetPacketSha256,'G1 import packet');if(packet.targetSlug!==targetSlug||packet.target?.competitionId!==783||packet.target?.sourceCode!==target.sourceCode||packet.target?.sourceEvidence?.protocol!==fcfFutureProtocolForTarget(targetSlug)||packet.target?.sourceEvidence?.targetSlug!==targetSlug||fingerprint(packet.target.sourceEvidence)!==fingerprint(r.inventoryBinding))fail('exact closed G1 packet/source/native tuple required')}}
+  if(stage==='check'){const a=text(p.p_activation_text,p.p_sha256,'future activation packet');if(a.schemaVersion!==4||a.kind!=='fcf-future-current-target-activation'||a.targetSlug!==target.targetSlug||typeof p.p_activate!=='boolean')fail('separate future activation packet/boolean required');if(target.competitionId===783){const r=text(a.importRolloutText,a.importRolloutSha256,'G1 original rollout');if(r.targetSlug!==targetSlug||r.inventoryBinding?.protocol!==fcfFutureProtocolForTarget(targetSlug)||r.inventoryBinding?.targetSlug!==targetSlug||a.launchProposal?.targetSlug!==targetSlug||a.launchProposal?.competitionId!==783||a.launchProposal?.sourceCode!==target.sourceCode)fail('exact G1 activation/import/source tuple required')}}
   return names[stage]
  }
  async function mutate(stage,p){

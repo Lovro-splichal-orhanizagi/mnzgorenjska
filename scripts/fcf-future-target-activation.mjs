@@ -1,3 +1,4 @@
+import {readFcfFutureNativeSource} from './fcf-future-native-scope.mjs'
 // Pure, source-closed future activation packet DATA. No transport, native writes,
 // Actions approval, SQL authentication or activation capability is issued.
 import {createHash} from 'node:crypto'
@@ -9,7 +10,7 @@ import {buildFcfFutureTargetReadiness} from './fcf-future-readiness.mjs'
 import {fcfTargetPricingModelSha256} from './fcf-target-pricing-model.mjs'
 import {historicalStatisticsPolicySha256 as fingerprint} from './lib/historical-statistics-policy.mjs'
 import {validUTC} from './fcf-missing-inventory-artifact.mjs'
-const slug='es-ct-tercera-g9',limit=8*1024*1024,hash=text=>createHash('sha256').update(text).digest('hex')
+const limit=8*1024*1024,hash=text=>createHash('sha256').update(text).digest('hex')
 const fail=m=>{throw Error(`FCF_FUTURE_ACTIVATION: ${m}`)}
 const fields=['targetSlug','sourceCommit','inventoryAdmission','cleanupEvidence','importReceipt','nativeProjection','pricingReplay','execution']
 const wire=['schemaVersion','kind','targetSlug','sourceCommit','execution','importReceiptId','importRolloutText','importRolloutSha256','nativeSnapshotText','nativeSnapshotSha256','launchProposal','readiness','auditedUTC']
@@ -29,7 +30,8 @@ function execution(e,commit){
  return {repository:e.repository,ref:e.ref,commit:e.commit,runId:e.runId,runAttempt:e.runAttempt}
 }
 const byId=rows=>rows.slice().sort((a,b)=>a.id-b.id)
-function projection(np,now){
+function projection(np,now,target){
+ const slug=target.targetSlug,cid=target.competitionId
  keys(np,['schemaVersion','kind','capturedUTC','method','databaseInventory','native','dependencySnapshotText','dependencySnapshotSha256','pricingSnapshot'],'SQL projection envelope')
  if(np.schemaVersion!==1||np.kind!=='fcf-future-native-projection'||np.method!=='explicitBEGIN_READ_ONLY_ROLLBACK'||now-stamp(np.capturedUTC,now,'SQL projection')>86400000||np.databaseInventory?.capturedUTC!==np.capturedUTC||np.databaseInventory?.method!==np.method)fail('fresh actual read-only SQL projection required')
  keys(np.pricingSnapshot,['snapshotText','snapshotSha256'],'SQL pricing snapshot')
@@ -41,7 +43,7 @@ function projection(np,now){
   if(!Object.hasOwn(dependency.shapes,name)||!Number.isSafeInteger(r.count)||r.count<0||!hex(r.rowsSha256,64)||typeof r.globalUser!=='boolean')fail('SQL relation count/hash/classification differs')
  }
  const d=np.databaseInventory,n=np.native,c=n?.competition
- if(!object(c)||c.id!==797||c.slug!==slug||c.source!=='fcf'||c.source_league_code!=='4118349-4118588'||c.source_policy!=='es-fcf-six-reviewed-history-v1'||c.active!==false||c.sezona_koledarska!==false||c.prvi_fantasy_krog!==1||!Array.isArray(n.rounds)||!Array.isArray(n.matches)||!Array.isArray(d.rounds)||!Array.isArray(d.matches)||!same(byId(n.rounds),byId(d.rounds))||!same(byId(n.matches),byId(d.matches)))fail('actual post-import inactive seed1 native/inventory projection differs')
+ if(!object(c)||c.id!==cid||c.slug!==slug||c.source!=='fcf'||c.source_league_code!==target.sourceCode||c.source_policy!=='es-fcf-six-reviewed-history-v1'||c.active!==false||c.sezona_koledarska!==false||c.prvi_fantasy_krog!==1||!Array.isArray(n.rounds)||!Array.isArray(n.matches)||!Array.isArray(d.rounds)||!Array.isArray(d.matches)||!same(byId(n.rounds),byId(d.rounds))||!same(byId(n.matches),byId(d.matches)))fail('actual post-import inactive seed1 native/inventory projection differs')
  const {capturedUTC,...privacy}=d.identityPrivacy??{}
  if(capturedUTC!==np.capturedUTC||!same(dependency.privacy,privacy))fail('SQL snapshot and mapper identity privacy differ')
  if(!hex(prices?.stateSha256,64)||!Array.isArray(prices.players)||!Array.isArray(d.players)||prices.players.length!==d.players.length)fail('complete current SQL player pricing state required')
@@ -51,12 +53,12 @@ function projection(np,now){
 function context(input,extra=[]){
  keys(input,[...fields,...extra,...(Object.hasOwn(input??{},'now')?['now']:[])],'future activation input')
  const now=Object.hasOwn(input,'now')?input.now:Date.now()
- if(input.targetSlug!==slug||!hex(input.sourceCommit,40)||!Number.isSafeInteger(now)||!Number.isFinite(new Date(now).getTime()))fail('exact G9 reviewed writer/current clock required')
- const origin=execution(input.execution,input.sourceCommit),data=getFcfFutureCapturedTargetData({targetEvidence:input.inventoryAdmission,now})
+ if(!hex(input.sourceCommit,40)||!Number.isSafeInteger(now)||!Number.isFinite(new Date(now).getTime()))fail('exact G9 reviewed writer/current clock required')
+ const origin=execution(input.execution,input.sourceCommit),{data,target}=readFcfFutureNativeSource({targetSlug:input.targetSlug,inventoryAdmission:input.inventoryAdmission,now}),slug=target.targetSlug,cid=target.competitionId
  if(!isVerifiedFcfFutureSixCleanupEvidence(input.cleanupEvidence)||input.cleanupEvidence.phase!=='applied')fail('reader-issued APPLIED future cleanup required')
- const prices=projection(input.nativeProjection,now),r=input.importReceipt
+ const prices=projection(input.nativeProjection,now,target),r=input.importReceipt
  keys(r,['id','competition_id','inventory_key','packet_sha256','source_fingerprint','cleanup_before_sha256','imported_state_sha256','stage','activation_result','created_at','rolloutText','rolloutSha256','currentActive','currentStateSha256','canonicalVerified'],'actual import receipt readback')
- if(!Number.isSafeInteger(r.id)||r.id<1||r.competition_id!==797||r.stage!=='imported'||r.currentActive!==false||r.canonicalVerified!==false||r.activation_result!==null||!hex(r.inventory_key,64)||!hex(r.imported_state_sha256,64)||r.currentStateSha256!==prices.stateSha256||r.source_fingerprint!==data.binding.sourceFingerprintSha256||r.cleanup_before_sha256!==input.cleanupEvidence.beforeSha256)fail('actual imported/inactive receipt and current source/cleanup/pricing state differ')
+ if(!Number.isSafeInteger(r.id)||r.id<1||r.competition_id!==cid||r.stage!=='imported'||r.currentActive!==false||r.canonicalVerified!==false||r.activation_result!==null||!hex(r.inventory_key,64)||!hex(r.imported_state_sha256,64)||r.currentStateSha256!==prices.stateSha256||r.source_fingerprint!==data.binding.sourceFingerprintSha256||r.cleanup_before_sha256!==input.cleanupEvidence.beforeSha256)fail('actual imported/inactive receipt and current source/cleanup/pricing state differ')
  stamp(r.created_at,now,'import receipt')
  const imported=exactText(r.rolloutText,r.rolloutSha256,'original import rollout')
  if(r.packet_sha256!==imported.targetPacketSha256||r.source_fingerprint!==imported.inventoryBinding?.sourceFingerprintSha256||r.cleanup_before_sha256!==imported.cleanupBinding?.beforeSha256)fail('saved import packet/source/cleanup receipt bindings differ')
@@ -67,10 +69,11 @@ function context(input,extra=[]){
  replayFcfFutureTargetImportRollout({targetSlug:slug,sourceCommit:imported.sourceCommit,inventoryAdmission:input.inventoryAdmission,cleanupEvidence:input.cleanupEvidence,databaseInventory:d,existingExceptionBindings:d.existingExceptionBindings,execution:imported.execution,rolloutText:r.rolloutText,rolloutSha256:r.rolloutSha256,now})
  const expected=data.fixtures.filter(f=>f.statisticsStatus==='available').map(f=>f.id.slice(2)).sort(),current=d.groups.find(g=>g.slug===slug).nativeImportedIDs.slice().sort()
  if(!same(current,expected))fail('complete actual normal-report import required before activation data')
- const mapping=JSON.parse(imported.identityPlan.mappingText),launchInput={targetSlug:slug,competitionId:797,sourceCode:'4118349-4118588',season:'2026/27',sourceFingerprintSha256:data.binding.sourceFingerprintSha256,writerCommit:input.sourceCommit,fixtures:data.fixtures,mapping:mapping.fixtures,native:input.nativeProjection.native,now}
- return {now,origin,data,launchInput}
+ const mapping=JSON.parse(imported.identityPlan.mappingText),launchInput={targetSlug:slug,competitionId:cid,sourceCode:target.sourceCode,season:'2026/27',sourceFingerprintSha256:data.binding.sourceFingerprintSha256,writerCommit:input.sourceCommit,fixtures:data.fixtures,mapping:mapping.fixtures,native:input.nativeProjection.native,now}
+ return {now,origin,data,launchInput,target}
 }
 function packet(input,ctx,auditedUTC,proposal){
+ const slug=ctx.target.targetSlug
  if(!validUTC(auditedUTC)||Date.parse(auditedUTC)>ctx.now||ctx.now-Date.parse(auditedUTC)>86400000)fail('original activation audit clock is stale/future')
  const launchProposal=proposal===undefined?selectFcfFutureLaunch(ctx.launchInput):verifyFcfFutureLaunch(ctx.launchInput,freeze(proposal))
  const readiness=buildFcfFutureTargetReadiness({targetSlug:slug,pricingSnapshot:input.nativeProjection.pricingSnapshot,replay:input.pricingReplay,modelSha256:fcfTargetPricingModelSha256(),sourceData:ctx.data,launchInput:ctx.launchInput,launchProposal,now:ctx.now})
@@ -85,7 +88,7 @@ export function buildFcfFutureTargetActivation(input={}){
 export function verifyFcfFutureTargetActivation(input={}){
  const ctx=context(input,['activationText','activationSha256']),a=exactText(input.activationText,input.activationSha256,'future activation packet')
  keys(a,wire,'future activation packet')
- if(!object(a.launchProposal)||a.schemaVersion!==4||a.kind!=='fcf-future-current-target-activation'||a.targetSlug!==slug||a.sourceCommit!==input.sourceCommit||!same(a.execution,ctx.origin))fail('exact saved activation identity/origin execution required')
+ if(!object(a.launchProposal)||a.schemaVersion!==4||a.kind!=='fcf-future-current-target-activation'||a.targetSlug!==ctx.target.targetSlug||a.sourceCommit!==input.sourceCommit||!same(a.execution,ctx.origin))fail('exact saved activation identity/origin execution required')
  const rebuilt=packet(input,ctx,a.auditedUTC,a.launchProposal)
  if(rebuilt.activationText!==input.activationText||rebuilt.activationSha256!==input.activationSha256)fail('activation packet differs from independently authenticated current inputs')
  return rebuilt
