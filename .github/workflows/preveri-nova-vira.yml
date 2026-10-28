@@ -1,101 +1,74 @@
-name: Preveri nova vira (brez baze)
+name: FCF prepare rollback diagnostic
+run-name: FCF prepare rollback diagnostic ${{ inputs.expected_diagnostic_sha }}
 
 on:
   workflow_dispatch:
     inputs:
-      vir:
-        description: Javni vir za celoten podatkovni audit
-        type: choice
-        options: [all, novanet, dfb]
-        default: all
-      sezona:
-        description: Tekoča sezona, arhiv ali obe
-        type: choice
-        options: [all, current, archive]
-        default: all
-  workflow_call:
-    inputs:
-      vir:
+      expected_main_sha:
+        description: Exact deployed main SHA; must remain unchanged
         type: string
-        default: all
-      sezona:
+        required: true
+        default: d25c9b0bac906e2b9f7ad13e749a724e7b6fac77
+      expected_diagnostic_sha:
+        description: Exact reviewed diagnostic branch commit
         type: string
-        default: all
+        required: true
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
-  novanet:
-    name: Zivi vir — novanet ${{ matrix.sezona }}
-    if: inputs.vir == 'all' || inputs.vir == 'novanet'
+  prepare-rollback:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
-    concurrency:
-      group: live-source-novanet-${{ github.ref }}
-      cancel-in-progress: false
-    strategy:
-      fail-fast: false
-      matrix:
-        sezona: ${{ fromJSON(inputs.sezona == 'current' && '["2026/27"]' || inputs.sezona == 'archive' && '["2025/26"]' || '["2026/27","2025/26"]') }}
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_MAIN_SHA: ${{ inputs.expected_main_sha }}
+      EXPECTED_DIAGNOSTIC_SHA: ${{ inputs.expected_diagnostic_sha }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout exact diagnostic commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Cela sezona — brez baze in brez servisnega kljuca
+      - name: Verify branch and live main pins before tunnel
+        run: node scripts/diagnose-fcf-prepare-rollback.mjs --identity
+      - name: Existing deploy tunnel for bounded rollback diagnostic
         env:
-          VIR: novanet
-          KODA: ${{ matrix.sezona == '2026/27' && 'galicia:22:26990830:27759837' || 'galicia:21:24123231:24820329' }}
-          SEZONA: ${{ matrix.sezona }}
-          MAPA: galicia-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}
-        run: node scripts/preveri-vir-sezono.mjs "$VIR" "$KODA" "$SEZONA" "audit/$MAPA"
-      - name: Dokazi in surovi dokumenti
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          diag_ssh_dir="$RUNNER_TEMP/fcf-prepare-diagnostic-ssh"
+          install -m 700 -d "$diag_ssh_dir"
+          trap 'rm -rf "$diag_ssh_dir"' EXIT
+          printf '%s\n' "$KLJUC" > "$diag_ssh_dir/id_ed25519"
+          chmod 600 "$diag_ssh_dir/id_ed25519"
+          printf '%s\n' "$ZNANI" > "$diag_ssh_dir/known_hosts"
+          if ! ssh -fN -i "$diag_ssh_dir/id_ed25519" \
+            -o UserKnownHostsFile="$diag_ssh_dir/known_hosts" -o StrictHostKeyChecking=yes \
+            -o BatchMode=yes -o ConnectTimeout=15 -o ExitOnForwardFailure=yes \
+            -o ServerAliveInterval=10 -o ServerAliveCountMax=1 \
+            -L 5432:127.0.0.1:5432 deploy@2.31.6.53 2>/dev/null; then
+            echo 'FCF prepare diagnostic: tunnel setup failed.'
+            exit 1
+          fi
+      - name: Fixed prepare call with unconditional rollback
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: node scripts/diagnose-fcf-prepare-rollback.mjs --probe
+      - name: Retain sanitized rollback diagnostic
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: vir-galicia-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}
-          path: audit/galicia-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}/
-          retention-days: 14
-
-  dfb:
-    name: Zivi vir — dfb
-    if: inputs.vir == 'all' || inputs.vir == 'dfb'
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    concurrency:
-      group: live-source-dfb-readonly
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Tekoča sezona — brez baze
-        if: ${{ always() && !cancelled() && (inputs.sezona == 'all' || inputs.sezona == 'current') }}
-        env:
-          KODA: regionalliga-nordost/2026-2027
-          SEZONA: 2026/27
-          MAPA: dfb-2026
-        run: node scripts/preveri-vir-sezono.mjs dfb "$KODA" "$SEZONA" "audit/$MAPA"
-      - name: Tekoča sezona — dokazi in surovi dokumenti
-        if: ${{ always() && (inputs.sezona == 'all' || inputs.sezona == 'current') }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: vir-dfb-2026
-          path: audit/dfb-2026/
-          retention-days: 14
-      - name: Arhiv sezona — brez baze
-        if: ${{ always() && !cancelled() && (inputs.sezona == 'all' || inputs.sezona == 'archive') }}
-        env:
-          KODA: regionalliga-nordost/2025-2026
-          SEZONA: 2025/26
-          MAPA: dfb-2025
-        run: node scripts/preveri-vir-sezono.mjs dfb "$KODA" "$SEZONA" "audit/$MAPA"
-      - name: Arhiv sezona — dokazi in surovi dokumenti
-        if: ${{ always() && (inputs.sezona == 'all' || inputs.sezona == 'archive') }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: vir-dfb-2025
-          path: audit/dfb-2025/
-          retention-days: 14
+          name: fcf-prepare-rollback-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-prepare-rollback/result.json
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 90
