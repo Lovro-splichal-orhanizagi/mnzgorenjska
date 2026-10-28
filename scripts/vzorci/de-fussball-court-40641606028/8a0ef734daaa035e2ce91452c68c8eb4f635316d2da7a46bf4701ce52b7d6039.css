@@ -1,0 +1,10 @@
+@font-face {
+	font-family: font-vvt92owy;
+	src: 
+		url('//www.fussball.de/export.fontface/-/format/woff/id/vvt92owy/type/font') format('woff'),
+		url('//www.fussball.de/export.fontface/-/format/ttf/id/vvt92owy/type/font') format('truetype');
+}
+
+.results-c-vvt92owy {
+	font-family: font-vvt92owy !important;
+}
