@@ -9,7 +9,8 @@ import {createHash} from 'node:crypto'
 import {isDeepStrictEqual} from 'node:util'
 import {normalizeFussballReport,parseFussballLeagueCode,fussballPlayerKey} from './fussball-import.mjs'
 import {validateFussballFixture} from './fussball-season.mjs'
-import {validateFussballCardEnvelope} from './viri/fussball-card-envelope.mjs'
+import {validateFussballNativeRoleEnvelope as validateFussballCardEnvelope,razberiNativeFantasyZapisnik} from './viri/fussball-native-role-parser.mjs'
+import {replayFussballNativeRoles} from './fussball-native-role-replay.mjs'
 import {inspectFussballPage,fussballFontUrl} from './viri/fussball-discovery.mjs'
 import {inspectFussballLineup,razberiFantasyZapisnik} from './viri/fussball-statistika.mjs'
 import {zaprtje} from './odtis-kode.mjs'
@@ -62,13 +63,14 @@ export function partitionFixture(){
    stage.files.set('result.json',json(r));stage.manifest.resultSha256=hash(stage.files.get('result.json'));s.resultSha256=stage.manifest.resultSha256;s.fixtureInventorySha256=digest(fixtures);s.rejectionsSha256=digest(r.rejectedReports);s.administrativeSha256=digest(r.administrativeFixtures??[])
    for(const name of new Set(fixtures.flatMap(f=>[f.domaci,f.gostje])))c.clubDescriptors.push({sourceCompetitionId:s.staffel+':'+s.season,season:s.season,name})
   }
+  const replay=replayFussballNativeRoles(stages);for(const s of c.seasons)s.nativeRoleReplaySha256=replay[s.stage].nativeRoleReplaySha256
  };fxt.repin();return fxt
 }
 export function isolatedComposition(f){
  const path=new URL('./fussball-native-composition.mjs',import.meta.url),code=readFileSync(path,'utf8').replace(/^import .*\n/gm,'').replaceAll('import.meta.url',JSON.stringify(path.href)).replace(/\bexport /g,'')+'\nreturn {partitionFussballNativeSource,buildFussballNativeComposition,validateFussballNativeCatalog,produceFussballNativeComposition,loadFussballNativeComposition,getFussballNativeComposition,reauthenticateFussballNativeComposition,reviewedEntry};'
  const getReplay=proof=>{if(proof!==f.proof)throw Error('TEST ONLY reader-issued capability required');return {...f.state,certificate:structuredClone(f.sourceCertificate)}},readSource=async input=>{if(Object.keys(input).sort().join(',')!=='frozenDirectory,github,sourceRunId,v6FrozenDirectory'||input.sourceRunId!==sourceReplayRunId||(input.frozenDirectory!=='TEST-ONLY-frozen'||input.v6FrozenDirectory!=='TEST-ONLY-4e'))throw Error('TEST ONLY exact source reader input required');f.sourceReads++;if(f.sourceFailure)throw Error('TEST ONLY source replay failed');return f.proof}
  const localRead=(url,...args)=>url instanceof URL&&url.href===catalogPath.href?json(f.catalog):readFileSync(url,...args)
- return new Function('readFileSync','writeFileSync','mkdirSync','mkdtempSync','rmSync','join','tmpdir','execFileSync','createHash','isDeepStrictEqual','readFussballCompletedSourceV7','getFussballCompletedSourceV7','fussballArchiveV7CodeSha256','zaprtje','normalizeFussballReport','parseFussballLeagueCode','fussballPlayerKey','validateFussballCardEnvelope','inspectFussballPage','fussballFontUrl','inspectFussballLineup','razberiFantasyZapisnik','validateFussballFixture',code)(localRead,writeFileSync,mkdirSync,mkdtempSync,rmSync,join,tmpdir,execFileSync,createHash,isDeepStrictEqual,readSource,getReplay,()=>f.catalog.captureCodeSha256,zaprtje,normalizeFussballReport,parseFussballLeagueCode,fussballPlayerKey,validateFussballCardEnvelope,inspectFussballPage,fussballFontUrl,inspectFussballLineup,razberiFantasyZapisnik,validateFussballFixture)
+ return new Function('readFileSync','writeFileSync','mkdirSync','mkdtempSync','rmSync','join','tmpdir','execFileSync','createHash','isDeepStrictEqual','readFussballCompletedSourceV7','getFussballCompletedSourceV7','fussballArchiveV7CodeSha256','zaprtje','normalizeFussballReport','parseFussballLeagueCode','fussballPlayerKey','validateFussballCardEnvelope','inspectFussballPage','fussballFontUrl','inspectFussballLineup','razberiFantasyZapisnik','validateFussballFixture','replayFussballNativeRoles',code)(localRead,writeFileSync,mkdirSync,mkdtempSync,rmSync,join,tmpdir,execFileSync,createHash,isDeepStrictEqual,readSource,getReplay,()=>f.catalog.captureCodeSha256,zaprtje,normalizeFussballReport,parseFussballLeagueCode,fussballPlayerKey,validateFussballCardEnvelope,inspectFussballPage,fussballFontUrl,inspectFussballLineup,razberiNativeFantasyZapisnik,validateFussballFixture,replayFussballNativeRoles)
 }
 export async function hostedDerivedFixture(t){
  const f=partitionFixture();f.api=isolatedComposition(f);f.root=mkdtempSync(join(tmpdir(),'baden-derived-TEST-ONLY-'));t.after(()=>rmSync(f.root,{recursive:true,force:true}));f.calls=[];f.controls={}
