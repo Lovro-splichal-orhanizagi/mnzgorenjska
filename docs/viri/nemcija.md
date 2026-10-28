@@ -1084,3 +1084,39 @@ V4 vstopa le v celotno parno izvorno in domačo preverbo; neposredni ročni
 uvoz ga ne sprejme kot navaden dokaz. Vratarji, cene, kader, zasebnost,
 prihodnji rok, celovitost statistik in obstoječe kartonsko glasovanje
 ostanejo obvezni. Ta sprememba ne dodaja zgodovinskih izjem ali aktivnih lig.
+
+### Baden: omejena priprava zadržanih zgodovinskih dokazov
+
+`scripts/fussball-retained-history.mjs` je samo **offline pripravljalni** vmesnik
+za devet konkretno pregledanih zavrnitev tekoče sezone v ohranjenem zajemu
+`fussball-season-40577717778`. Fiksni opis
+`scripts/policies/fussball-baden-retained-history.json` veže uradno glavo,
+Staffel/sezono, točen razlog zavrnitve, izvirna report/lineup HTML, opazovane
+ID-je pisav, dejansko ohranjene CSS/WOFF in izvirne prejemnice ter SHA-je
+manifesta, rezultata in dnevnika zahtevkov. Ponovno pokliče strogi razčlenjevalnik;
+spremenjeni bajti, drug razlog ali na novo razčlenljiv zapisnik ostanejo HOLD.
+Pisav, ki jih prvotni zbiralnik pred zavrnitvijo še ni potreboval in jih ni
+zajel, ne dopolnjuje. Ne potrjuje popolnosti individualnih podatkov.
+
+`loadRetainedFussballHistory(directory,{firstFantasyPlayedOnCandidate})`
+vrne samo točne uradne glave z `statisticsStatus='unavailable_historical'`,
+NULL statističnimi polji in `importedAt=null`. Kandidat datuma mora biti
+veljaven in strogo za vsako tekmo; **ni dokaz dejanskega prvega fantasy kroga**.
+Rezultat ima `nativeBindingRequired=true`, `activationEligible=false`.
+Ni nameščena politika, sposobnost za pisanje ali izčrpen arhivski register.
+Izvirni rezultat zbiralnika in običajni uvoznik ostaneta nespremenjena;
+običajni uvoz teh zavrnitev še vedno ne sprejme. Administrativni arhivski
+zapisnik z neznanim končnim izidom ostane ločen HOLD.
+
+Pred nadaljnjo integracijo so potrebni popoln aktualni ponovni zajem/preverba
+transporta, arhivski pregled, avtentične native identitete klubov/tekmovanja
+in prvi fantasy datum, nespremenljiva nameščena politika ter skupna SQL vrata
+zgodovine in kartonov. Vsa obstoječa vrata GK, cen, legal15 in prihodnjega roka
+ostanejo obvezna. Ta priprava ne porabi zahtevkov vira: ledger ostane1423/5000.
+
+Offline regresija uporablja dejanske ohranjene bajte; pot podaš izrecno:
+`FUSSBALL_RETAINED_HISTORY_DIR=/pot/do/fussball-season-40577717778 node --test scripts/test-fussball-retained-history.mjs`.
+Podprt ostane tudi argument poti pri neposrednem zagonu skripte. Brez obeh
+nastavitev se samo20 testov zunanjega zajema preskoči z izrecnim razlogom;
+dve preverbi zavrnitve praznih/izmišljenih dokazov vedno tečeta. Izrecno
+nastavljena napačna ali prazna pot povzroči napako, ne preskoka.
