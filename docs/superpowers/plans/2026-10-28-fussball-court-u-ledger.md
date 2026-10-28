@@ -16,3 +16,9 @@ node --test scripts/test-fussball-court-40641606028.mjs scripts/test-fussball-ad
 ```
 
 New capture closure fingerprint: `30ef88d89e76c3d3b721261aca4accceb52216585425da36e88c0e9d810b968c` (via `fussballCaptureCodeSha256()`). Old V5 closure remains `dc58eda97e30c20a313f9343574496d997b401f850ac0960c72bb36dc1975528`; no compatibility is claimed or installed. V5 current SUCCESS/archive FAILED and accounting `1838/5000` (`3162` remaining) are unchanged. Any accounted V6 continuation and explicit source-only compatibility require separate root integration work; this commit authorizes no source retry.
+
+## Scoped review follow-up
+
+Review of `ace4a656` identified two inventory gaps: an extra U description with nested markup was omitted by the flat-body pattern, and a single-quoted conflicting row report anchor was invisible to the double-quoted href inventory. Both new focused regressions first failed with `Missing expected exception`. The parser now inventories description containers with the existing class/element readers before enforcing the sole exact confirmed legend, and inventories anchor tags before requiring one supported double-quoted href and validating its report identity. Accepted U/V markup and result schema are unchanged.
+
+The same focused command now passes **16/16** (the prior 14 plus two new regression groups). No source/network, DB, policy or publication action. This follow-up supersedes the earlier repair fingerprint with `030a2ae148b83dda1d954ddf3921804002e13046b695c29da19300b59a8b24f2`. Accounting and V5 compatibility boundaries above remain unchanged.

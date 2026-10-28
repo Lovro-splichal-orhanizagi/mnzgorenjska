@@ -101,3 +101,20 @@ test('collector keeps U diagnostic on HOLD and does not treat its null score as 
  assert.equal(result.coverage.playedFixtures,0);assert.equal(result.coverage.unscoredFixtures.total,0)
  assert.equal(result.reports.length,0);assert.equal(calls.length,1)
 })
+
+test('U rejects an additional nested or malformed court description beside the exact confirmed legend',()=>{
+ for(const extra of [
+  '<div class="description">(U) Sportgerichtsurteil (<b>unbestätigt</b>)</div>',
+  '<div class="description"><span>(U)</span> Sportgerichtsurteil (bestätigt)</div>',
+  '<div class="description"><div>(U) Sportgerichtsurteil (bestätigt)</div></div>',
+ ])assert.throws(()=>parse(html.replace(legend,legend+extra)))
+})
+
+test('U rejects conflicting row report anchors with unsupported href quoting',()=>{
+ const base=cell.match(/href="([^"]+)"/)[1].replace('#!/section/course','')
+ for(const extra of [
+  `<a href='${base.replace(id,vId)}'>conflict</a>`,
+  `<a href=${base.replace(id,vId)}>conflict</a>`,
+  `<a href='${base}'>unsupported syntax</a>`,
+ ])assert.throws(()=>parse(html.replace(cell,cell+extra)))
+})
