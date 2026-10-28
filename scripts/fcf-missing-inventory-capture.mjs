@@ -91,10 +91,11 @@ export async function collectFcfMissingInventoryChild({plan,targetSlug,seedEvide
     journal.write('receipts.jsonl',Buffer.from(JSON.stringify(receipt)+'\n'),true)
     if(!body.complete)stop(body.reason)
     if(manifest.stopReason)break
-    const header=deriveFcfInventoryHeader({targetSlug,id,bytes});doc.header=header;doc.validation.header='valid'
+    const header=deriveFcfInventoryHeader({targetSlug,id,bytes,...(plan.preset==='future-g1-after-failed-g1-v1'?{protocol:plan.preset}:{})});doc.header=header;doc.validation.header='valid'
     journal.write('receipts.jsonl',Buffer.from(JSON.stringify({id,header})+'\n'),true)
-    validateFcfInventoryHeaders({targetSlug,headers:documents.filter(d=>d.header).map(d=>d.header),complete:false})
-    if(future&&getFcfSixPolicy(targetSlug).entries.some(e=>e.sourceMatchId===id)){verifyFcfSixFreshHistoricalSource({targetSlug,id,html:bytes.toString('utf8')});doc.validation.earlyStrictCheck='not-applicable-historical'}
+    validateFcfInventoryHeaders({targetSlug,headers:documents.filter(d=>d.header).map(d=>d.header),complete:false,...(plan.preset==='future-g1-after-failed-g1-v1'?{protocol:plan.preset}:{})})
+    if(plan.preset==='future-g1-after-failed-g1-v1'&&id==='4109409')doc.validation.earlyStrictCheck='not-applicable-supplemental'
+    else if(future&&getFcfSixPolicy(targetSlug).entries.some(e=>e.sourceMatchId===id)){verifyFcfSixFreshHistoricalSource({targetSlug,id,html:bytes.toString('utf8')});doc.validation.earlyStrictCheck='not-applicable-historical'}
     else if(g9&&['4118352','4118358'].includes(id)){classifyFcfHistoricalStatistics({competition:{slug:targetSlug,source:'fcf',source_policy:'es-fcf-reviewed-history-v1',firstFantasyPlayedOn:'2026-10-24'},id,html:bytes.toString('utf8')});doc.validation.earlyStrictCheck='not-applicable-historical'}
     else if(header.status==='published'){
      try{(future?parseFcfFutureAuditDocument:parseFcfCurrentAuditDocument)({id,competitionSlug:targetSlug,expectedSourceRound:header.round,html:bytes.toString('utf8'),receipt:sourceReceipt(receipt,bytes),now:clock()});doc.validation.earlyStrictCheck='passed'}catch{doc.validation.earlyStrictCheck='failed';doc.validation.reason='strict-normal-defect';stop('strict-normal-defect');break}
@@ -103,7 +104,7 @@ export async function collectFcfMissingInventoryChild({plan,targetSlug,seedEvide
    finally{lastCompletedUTC=time(clock);manifest.lastCompletedUTC=lastCompletedUTC;if(g9&&receipt.bodyState==='complete')await pause(plan.limits.pauseMs*pauseFactor)}
    if(manifest.stopReason)break
   }
-  if(!manifest.stopReason){validateFcfInventoryHeaders({targetSlug,headers:documents.map(d=>d.header),complete:true});if(manifest.actualSourceGETs!==child.maximumSourceGETs)fail('complete attempt count differs');manifest.status='inventory-complete'}
+  if(!manifest.stopReason){validateFcfInventoryHeaders({targetSlug,headers:documents.map(d=>d.header),complete:true,...(plan.preset==='future-g1-after-failed-g1-v1'?{protocol:plan.preset}:{})});if(manifest.actualSourceGETs!==child.maximumSourceGETs)fail('complete attempt count differs');manifest.status='inventory-complete'}
  }catch{stop('source-or-output-invalid')}
  manifest.endedUTC=time(clock)
  try{const sealed=sealFcfMissingInventoryChild({root,plan,targetSlug,execution});return frozenJSON({status:manifest.status,evidenceReady:safe,manifestSHA:sealed.manifestSHA,outputDirectory:sealed.outputDirectory,actualSourceGETs:manifest.actualSourceGETs,firstSourceUTC:manifest.firstSourceUTC,lastCompletedUTC:manifest.lastCompletedUTC,stopReason:manifest.stopReason})}catch{return frozenJSON({status:'failed',evidenceReady:false,manifestSHA:null,outputDirectory:outputPath,actualSourceGETs:manifest.actualSourceGETs,firstSourceUTC:manifest.firstSourceUTC,lastCompletedUTC:manifest.lastCompletedUTC,stopReason:manifest.stopReason??'output-write-failed'})}

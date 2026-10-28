@@ -1,7 +1,8 @@
+import {verifyFcfG1SupplementalObservation,getFcfG1SupplementalPolicy} from './fcf-g1-4109409-policy.mjs'
 // Future-only header DATA. Fresh approved historical facts are checked before
 // handling the single unknown official result; no admission/cleanup authority.
 import {getFcfFutureTarget} from './fcf-future-target-catalog.mjs'
-import {deriveFcfInventoryHeader} from './fcf-missing-inventory-plan.mjs'
+import {deriveFcfInventoryHeader,validateFcfInventoryHeaders} from './fcf-missing-inventory-plan.mjs'
 import {validateFcfSixInventoryHeaders} from './fcf-six-source-proof.mjs'
 import {getFcfSixPolicy,verifyFcfSixFreshHistoricalSource} from './fcf-six-historical-policy.mjs'
 import {glavaStrani,drevoRsc,elementi,jeElement,besedilo,tokRsc,vrsticeRsc,vrstaStrani,jeIzziv} from './viri/fcf.mjs'
@@ -32,15 +33,17 @@ function unknownResultSides(html,id,header){
 }
 
 export function deriveFcfFutureInventoryHeader(input){
- exactKeys(input,['targetSlug','id','bytes'],'future source header')
- const {targetSlug,id,bytes}=input
+ exactKeys(input,['targetSlug','id','bytes',...(Object.hasOwn(input??{},'protocol')?['protocol']:[])],'future source header')
+ const {targetSlug,id,bytes,protocol}=input
+ if(protocol!==undefined&&protocol!=='future-g1-after-failed-g1-v1')fail('explicit new supplemental source protocol required')
  getFcfFutureTarget({targetSlug,id})
  if(!Buffer.isBuffer(bytes)||!bytes.length||bytes.length>2097152)fail('bounded raw future header bytes required')
  const html=bytes.toString('utf8')
  if(html.charCodeAt(0)===0xfeff||!Buffer.from(html,'utf8').equals(bytes))fail('actual UTF8 future header bytes required')
+ if(protocol==='future-g1-after-failed-g1-v1'&&id==='4109409')return verifyFcfG1SupplementalObservation({targetSlug,id,html}).header
  const historical=getFcfSixPolicy(targetSlug).entries.some(e=>e.sourceMatchId===id)
  const observation=historical?verifyFcfSixFreshHistoricalSource({targetSlug,id,html}):null
- if(id!=='4109404')return deriveFcfInventoryHeader(input)
+ if(id!=='4109404')return deriveFcfInventoryHeader({targetSlug,id,bytes})
  // Only the immutable reviewed NULL-score fixture can reach this branch.
  // Keep observation hashes separate from the unchanged wire header shape.
  const f=observation.fixture,h=glavaStrani(html),{home,away}=unknownResultSides(html,id,h)
@@ -48,10 +51,15 @@ export function deriveFcfFutureInventoryHeader(input){
 }
 
 export function validateFcfFutureInventoryHeaders(input){
- exactKeys(input,['targetSlug','headers','complete'],'future header calendar')
+ exactKeys(input,['targetSlug','headers','complete',...(Object.hasOwn(input??{},'protocol')?['protocol']:[])],'future header calendar')
  getFcfFutureTarget({targetSlug:input.targetSlug})
  if(!Array.isArray(input.headers)||typeof input.complete!=='boolean')fail('future header array/completeness required')
  // Reuse six's structural unknown-score validation without changing any stored
  // status or NULL result. It supplies no individual-statistics interpretation.
- return validateFcfSixInventoryHeaders(input)
+ if(input.protocol===undefined)return validateFcfSixInventoryHeaders(input)
+ if(input.protocol!=='future-g1-after-failed-g1-v1'||input.targetSlug!=='es-ct-segona-g1')fail('exact supplemental G1 header protocol required')
+ const f=getFcfG1SupplementalPolicy().fixture
+ for(const h of input.headers){if(h.id!=='4109409'){validateFcfSixInventoryHeaders({targetSlug:input.targetSlug,headers:[h],complete:false});continue}if(h.targetSlug!==input.targetSlug||h.status!=='published-result-unavailable'||h.round!==f.sourceRound||h.playedOn!==f.playedOn||h.kickoff!==f.kickoff||h.homeGoals!==null||h.awayGoals!==null||h.home.sourceClubId!==f.homeSourceClubId||h.home.sourceCategoryId!==f.homeSourceCategoryId||h.away.sourceClubId!==f.awaySourceClubId||h.away.sourceCategoryId!==f.awaySourceCategoryId)fail('exact supplemental NULL header facts required')}
+ // Structural validation uses the same NULL-as-pending projection as the original six validator; returned wire headers remain unchanged.
+ return validateFcfInventoryHeaders({targetSlug:input.targetSlug,headers:input.headers.map(h=>h.status==='published-result-unavailable'?{...h,status:'pending'}:h),complete:input.complete})
 }

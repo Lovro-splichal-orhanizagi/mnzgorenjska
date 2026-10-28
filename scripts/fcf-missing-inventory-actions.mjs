@@ -1,10 +1,11 @@
+import {readFcfPostG1Accounting} from './fcf-post-g1-accounting.mjs'
 import {readFcfSixApproval,readFcfSixHistoryWire} from './fcf-six-approval.mjs'
 import {readFcfSixAccounting} from './fcf-six-accounting.mjs'
 import {buildFcfSixContinuationPlan,fcfSixClaimRef} from './fcf-six-continuation-plan.mjs'
-import {readFcfFutureSourceApproval,readFcfPostSixHistoryWire,readFcfPostG9HistoryWire} from './fcf-future-source-approval.mjs'
+import {readFcfFutureSourceApproval,readFcfPostSixHistoryWire,readFcfPostG9HistoryWire,readFcfPostG1HistoryWire} from './fcf-future-source-approval.mjs'
 import {readFcfPostG9Accounting} from './fcf-post-g9-accounting.mjs'
 import {readFcfPostSixAccounting} from './fcf-post-six-accounting.mjs'
-import {buildFcfFutureSourcePlan,buildFcfG1SourceContinuationPlan,fcfFutureSourceClaimRef,FCF_FUTURE_SOURCE_PROTOCOL,FCF_G1_SOURCE_PROTOCOL,isFcfFutureSourceProtocol,getFcfFutureSourcePlanScope} from './fcf-future-source-plan.mjs'
+import {buildFcfFutureSourcePlan,buildFcfG1SourceContinuationPlan,buildFcfG1PostFailureSourcePlan,fcfFutureSourceClaimRef,FCF_FUTURE_SOURCE_PROTOCOL,FCF_G1_SOURCE_PROTOCOL,FCF_G1_POST_FAILURE_SOURCE_PROTOCOL,isFcfG1FutureSourceProtocol,isFcfFutureSourceProtocol,getFcfFutureSourcePlanScope} from './fcf-future-source-plan.mjs'
 import {readFcfFutureSourceCompletedChildArtifact,readFcfFutureSourceDiagnosticChildArtifact,readFcfFutureSourceFailedAuditChildArtifact,readFcfFutureSourceUnstartedChild,buildFcfFutureSourceFinalReceipt} from './fcf-future-source-admission.mjs'
 // Explicit root staging and read-only Actions control plane. Only capture can call FCF.
 import {execFileSync} from 'node:child_process'
@@ -44,7 +45,7 @@ export function readFcfInventoryApprovalArtifact({zipBytes,artifact,run,jobs,exp
  if('sha256:'+rawSha256(bytes)!==rootApprovalDigest)fail('staged approval differs from root input SHA')
  return readFcfInventoryApproval({bytes,sourceCommit:expected.sourceCommit,now})
 }
-async function approvalForProtocol(input){const parsed=jsonBytes(input.bytes,'root approval');return (parsed.schemaVersion===4&&parsed.kind==='fcf-future-source-approval'||parsed.schemaVersion===5&&parsed.kind==='fcf-g1-source-continuation-approval')?readFcfFutureSourceApproval(input):parsed.schemaVersion===3&&parsed.kind==='fcf-six-continuation-approval'?readFcfSixApproval(input):parsed.schemaVersion===2&&parsed.kind==='fcf-g9-held-parent-approval'?readFcfG9HeldParentApproval(input):readFcfInventoryApproval(input)}
+async function approvalForProtocol(input){const parsed=jsonBytes(input.bytes,'root approval');return (parsed.schemaVersion===4&&parsed.kind==='fcf-future-source-approval'||parsed.schemaVersion===5&&parsed.kind==='fcf-g1-source-continuation-approval'||parsed.schemaVersion===6&&parsed.kind==='fcf-g1-post-failure-source-approval')?readFcfFutureSourceApproval(input):parsed.schemaVersion===3&&parsed.kind==='fcf-six-continuation-approval'?readFcfSixApproval(input):parsed.schemaVersion===2&&parsed.kind==='fcf-g9-held-parent-approval'?readFcfG9HeldParentApproval(input):readFcfInventoryApproval(input)}
 async function approvalArtifactForProtocol(input){
  const {expected,rootApprovalDigest}=input
  if(expected?.runAttempt!=='1'||!artifactDigest(rootApprovalDigest))fail('attempt1 root approval digest required')
@@ -79,11 +80,11 @@ async function futureChild(ctx,env,consumption){
 }
 function futureActionsScope(mode,env){
  if(!isFcfFutureSourceProtocol(env.FCF_INVENTORY_PRESET))return
- const g1=env.FCF_INVENTORY_PRESET===FCF_G1_SOURCE_PROTOCOL,slug=g1?'es-ct-segona-g1':'es-ct-tercera-g9',prefix=g1?'G1':'G9',sibling=g1?'G9':'G1'
+ const g1=isFcfG1FutureSourceProtocol(env.FCF_INVENTORY_PRESET),slug=g1?'es-ct-segona-g1':'es-ct-tercera-g9',prefix=g1?'G1':'G9',sibling=g1?'G9':'G1'
  const job={ 'approval-stage':'missing-inventory-approval',consume:'missing-inventory-consume',capture:g1?'missing-inventory-g1':'missing-inventory-g9',audit:g1?'missing-inventory-g1':'missing-inventory-g9',receipt:'missing-inventory-receipt'}[mode]
  if(!job||env.GITHUB_JOB!==job||['capture','audit'].includes(mode)&&env.FCF_INVENTORY_TARGET!==slug||Object.entries(env).some(([k,v])=>v&&(k.startsWith(`FCF_${sibling}_`)||/^FCF_.*SEED/.test(k)||mode==='capture'&&k.startsWith(`FCF_${prefix}_`))))fail('exact future source job/target without seed or sibling evidence required')
 }
-function exactActions(env){if(env.GITHUB_ACTIONS!=='true'||env.GITHUB_REPOSITORY!==repository||env.GITHUB_REF!=='refs/heads/main'||env.GITHUB_RUN_ATTEMPT!=='1'||!nativeId(env.GITHUB_RUN_ID)||!commitId(env.GITHUB_SHA)||!['g1-then-g9-missing-v1','g9-only-after-held-parent-v1','six-reviewed-continuation-v1',FCF_FUTURE_SOURCE_PROTOCOL,FCF_G1_SOURCE_PROTOCOL].includes(env.FCF_INVENTORY_PRESET)||env.SUPABASE_SERVICE_ROLE_KEY||env.SUPABASE_DB_URL||env.SUPABASE_DB_PASSWORD||env.DATABASE_URL||env.PGPASSWORD)fail('exact no-DB Actions attempt1 required')}
+function exactActions(env){if(env.GITHUB_ACTIONS!=='true'||env.GITHUB_REPOSITORY!==repository||env.GITHUB_REF!=='refs/heads/main'||env.GITHUB_RUN_ATTEMPT!=='1'||!nativeId(env.GITHUB_RUN_ID)||!commitId(env.GITHUB_SHA)||!['g1-then-g9-missing-v1','g9-only-after-held-parent-v1','six-reviewed-continuation-v1',FCF_FUTURE_SOURCE_PROTOCOL,FCF_G1_SOURCE_PROTOCOL,FCF_G1_POST_FAILURE_SOURCE_PROTOCOL].includes(env.FCF_INVENTORY_PRESET)||env.SUPABASE_SERVICE_ROLE_KEY||env.SUPABASE_DB_URL||env.SUPABASE_DB_PASSWORD||env.DATABASE_URL||env.PGPASSWORD)fail('exact no-DB Actions attempt1 required')}
 function runningMain(env,b){const r=b.run;if(String(r?.id)!==env.GITHUB_RUN_ID||r.repository?.full_name!==repository||r.event!=='workflow_dispatch'||r.path!==workflow||r.head_branch!=='main'||r.head_sha!==env.GITHUB_SHA||r.run_attempt!==1||r.status!=='in_progress'||r.conclusion!==null)fail('actual running approved main required')}
 async function context({env,github,clock}){
  exactActions(env)
@@ -101,11 +102,11 @@ export async function runFcfMissingInventoryActions({argv,env=process.env,root=p
   await readFcfG9HeldParentApproval({bytes:Buffer.from(JSON.stringify(approval)),sourceCommit:approval.sourceCommit,github,now:clock()});const digest=writeJSON(resolve(f.output),approval);return{code:0,result:{output:resolve(f.output),digest:'sha256:'+digest,planSha256:plan.planSha256,claimRef:fcfG9HeldParentClaimRef(plan)}}
  }
  if(mode==='prepare-six-approval'){const f=args(argv.slice(1));exactKeys(f,['history-source','source-commit','ruleset-id','output'],'six approval flags');const history=jsonBytes(safeRead(resolve(f['history-source']),8388608),'six history references'),accountingProof=readFcfSixAccounting(await readFcfSixHistoryWire({source:history,github,now:clock()})),owner=await github(repo+`rulesets/${f['ruleset-id']}`),rulesetSnapshot=snapshotFcfInventoryRuleset({ruleset:owner,checkedUTC:new Date(clock()).toISOString(),now:clock()}),plan=buildFcfSixContinuationPlan({sourceCommit:f['source-commit'],accountingProof,rulesetSnapshotSha256:hash(rulesetSnapshot),now:clock()}),a={schemaVersion:3,kind:'fcf-six-continuation-approval',sourceCommit:f['source-commit'],plan,history,rulesetId:f['ruleset-id'],rulesetSnapshot};await readFcfSixApproval({bytes:Buffer.from(JSON.stringify(a)),sourceCommit:a.sourceCommit,github,now:clock()});const digest=writeJSON(resolve(f.output),a);return{code:0,result:{output:resolve(f.output),digest:'sha256:'+digest,planSha256:plan.planSha256,claimRef:fcfSixClaimRef(plan)}}}
- if(mode==='prepare-future-approval'||mode==='prepare-g1-approval'){
-  const g1=mode==='prepare-g1-approval'
+ if(mode==='prepare-future-approval'||mode==='prepare-g1-approval'||mode==='prepare-g1-post-failure-approval'){
+  const postG1=mode==='prepare-g1-post-failure-approval',g1=mode==='prepare-g1-approval'
   const f=args(argv.slice(1));exactKeys(f,['history-source','source-commit','ruleset-id','output'],'future approval flags')
   if(!commitId(f['source-commit'])||!nativeId(f['ruleset-id']))fail('exact future reviewed commit/ruleset ID required')
-  const history=jsonBytes(safeRead(resolve(f['history-source']),8388608),'post-six history references'),accountingProof=g1?readFcfPostG9Accounting(await readFcfPostG9HistoryWire({source:history,github,now:clock()})):readFcfPostSixAccounting(await readFcfPostSixHistoryWire({source:history,github,now:clock()})),owner=await github(repo+`rulesets/${f['ruleset-id']}`),rulesetSnapshot=snapshotFcfInventoryRuleset({ruleset:owner,checkedUTC:new Date(clock()).toISOString(),now:clock()}),plan=(g1?buildFcfG1SourceContinuationPlan:buildFcfFutureSourcePlan)({sourceCommit:f['source-commit'],accountingProof,rulesetSnapshotSha256:hash(rulesetSnapshot),now:clock()}),a={schemaVersion:g1?5:4,kind:g1?'fcf-g1-source-continuation-approval':'fcf-future-source-approval',sourceCommit:f['source-commit'],plan,history,rulesetId:f['ruleset-id'],rulesetSnapshot}
+  const history=jsonBytes(safeRead(resolve(f['history-source']),8388608),'post-six history references'),accountingProof=postG1?readFcfPostG1Accounting(await readFcfPostG1HistoryWire({source:history,github,now:clock()})):g1?readFcfPostG9Accounting(await readFcfPostG9HistoryWire({source:history,github,now:clock()})):readFcfPostSixAccounting(await readFcfPostSixHistoryWire({source:history,github,now:clock()})),owner=await github(repo+`rulesets/${f['ruleset-id']}`),rulesetSnapshot=snapshotFcfInventoryRuleset({ruleset:owner,checkedUTC:new Date(clock()).toISOString(),now:clock()}),plan=(postG1?buildFcfG1PostFailureSourcePlan:g1?buildFcfG1SourceContinuationPlan:buildFcfFutureSourcePlan)({sourceCommit:f['source-commit'],accountingProof,rulesetSnapshotSha256:hash(rulesetSnapshot),now:clock()}),a={schemaVersion:postG1?6:g1?5:4,kind:postG1?'fcf-g1-post-failure-source-approval':g1?'fcf-g1-source-continuation-approval':'fcf-future-source-approval',sourceCommit:f['source-commit'],plan,history,rulesetId:f['ruleset-id'],rulesetSnapshot}
   await readFcfFutureSourceApproval({bytes:Buffer.from(JSON.stringify(a)),sourceCommit:a.sourceCommit,github,now:clock()})
   const digest=writeJSON(resolve(f.output),a);return{code:0,result:{output:resolve(f.output),digest:'sha256:'+digest,planSha256:plan.planSha256,claimRef:fcfFutureSourceClaimRef(plan)}}
  }

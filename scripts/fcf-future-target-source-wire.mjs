@@ -1,9 +1,10 @@
+import {readFcfPostG1Accounting} from './fcf-post-g1-accounting.mjs'
 // Fixed repository GET-only raw closed future-source transport. No source retry/claim/write.
-import {readFcfPostSixHistoryWire,readFcfPostG9HistoryWire} from './fcf-future-source-approval.mjs'
+import {readFcfPostSixHistoryWire,readFcfPostG9HistoryWire,readFcfPostG1HistoryWire} from './fcf-future-source-approval.mjs'
 import {getFcfFutureTarget} from './fcf-future-target-catalog.mjs'
 import {readFcfPostG9Accounting} from './fcf-post-g9-accounting.mjs'
 import {readFcfPostSixAccounting} from './fcf-post-six-accounting.mjs'
-import {validateFcfFutureSourcePlan,fcfFutureSourceClaimRef,FCF_G1_SOURCE_PROTOCOL,isFcfFutureSourceProtocol} from './fcf-future-source-plan.mjs'
+import {validateFcfFutureSourcePlan,fcfFutureSourceClaimRef,FCF_G1_SOURCE_PROTOCOL,FCF_G1_POST_FAILURE_SOURCE_PROTOCOL,isFcfG1FutureSourceProtocol,isFcfFutureSourceProtocol} from './fcf-future-source-plan.mjs'
 import {readFcfFutureCapturedTargetEvidence} from './fcf-future-source-admission.mjs'
 import {historicalStatisticsPolicySha256 as hash} from './lib/historical-statistics-policy.mjs'
 import {exactKeys,nativeId,commitId,sha256Id,artifactDigest,FCF_INVENTORY_REPOSITORY as repository,FCF_INVENTORY_WORKFLOW as workflow} from './fcf-missing-inventory-artifact.mjs'
@@ -11,7 +12,7 @@ const repo=`repos/${repository}/`,fail=m=>{throw Error(`FCF_FUTURE_SOURCE_WIRE: 
 function preflight(source,now){
  exactKeys(source,['protocol','history','plan','claim','consumption','child','finalReceipt'],'future source references')
  if(!isFcfFutureSourceProtocol(source.protocol)||!Number.isSafeInteger(now))fail('fixed future protocol/current clock required')
- const p=source.plan,{planSha256,...body}=p??{},g1=source.protocol===FCF_G1_SOURCE_PROTOCOL,target=getFcfFutureTarget({targetSlug:g1?'es-ct-segona-g1':'es-ct-tercera-g9'})
+ const p=source.plan,{planSha256,...body}=p??{},g1=isFcfG1FutureSourceProtocol(source.protocol),target=getFcfFutureTarget({targetSlug:g1?'es-ct-segona-g1':'es-ct-tercera-g9'})
  if(p?.schemaVersion!==1||p.kind!=='fcf-future-source-plan'||p.preset!==source.protocol||!commitId(p.sourceCommit)||!sha256Id(planSha256)||hash(body)!==planSha256||!sha256Id(p.historySha256)||(g1?!Number.isSafeInteger(p.priorSourceGETs)||p.priorSourceGETs<37:p.priorSourceGETs!==37)||p.maximumNewSourceGETs!==240||p.plannedCumulativeSourceGETs!==p.priorSourceGETs+240||p.plannedCumulativeSourceGETs>478||p.maximumCumulativeSourceGETs!==478||p.child?.targetSlug!==target.targetSlug||p.child.competitionId!==target.competitionId||p.child.sourceCode!==target.sourceCode)fail('exact future plan/hash/target/actual+240 scope required')
  exactKeys(source.claim,['execution','expected'],'current claim references');const {execution:e,expected:x}=source.claim
  exactKeys(e,['repository','workflow','ref','sourceCommit','runId','runAttempt'],'current claim execution');exactKeys(x,['claimCommit','claimJsonSha256','rulesetId','planSha256','sourceCommit','runId','runAttempt'],'current claim pins')
@@ -40,12 +41,12 @@ export async function readFcfFutureTargetSourceWire(input){
  }
  const get=async(path,binary=false)=>{
   if(typeof path!=='string'||!path.startsWith(repo))fail('fixed repository GET path required');const p=path.slice(repo.length),job=p.match(/^actions\/runs\/([1-9]\d{0,19})\/attempts\/([1-9]\d{0,19})\/jobs\?per_page=100&page=([1-9]\d{0,2})$/)
-  const allowed=job||/^actions\/runs\/[1-9]\d{0,19}$/.test(p)||/^actions\/artifacts\/[1-9]\d{0,19}(?:\/zip)?$/.test(p)||/^git\/(?:commits|trees|blobs)\/[a-f0-9]{40}$/.test(p)||/^git\/ref\/tags\/fcf-inventory-claim\/(?:g9-after-|six-after-|future-g9-after-|future-after-)?[a-f0-9]{64}$/.test(p)||/^rulesets\/[1-9]\d{0,19}$/.test(p)
+  const allowed=job||/^actions\/runs\/[1-9]\d{0,19}$/.test(p)||/^actions\/artifacts\/[1-9]\d{0,19}(?:\/zip)?$/.test(p)||/^git\/(?:commits|trees|blobs)\/[a-f0-9]{40}$/.test(p)||/^git\/ref\/tags\/fcf-inventory-claim\/(?:g9-after-|six-after-|future-g9-after-|future-after-|g1-after-failed-)?[a-f0-9]{64}$/.test(p)||/^rulesets\/[1-9]\d{0,19}$/.test(p)
   if(!allowed||binary!==p.endsWith('/zip'))fail('fixed GET path/binary ZIP representation required')
   if(job){const all=await jobs(job[1],job[2]),start=(Number(job[3])-1)*100;return {total_count:all.length,jobs:all.slice(start,start+100)}}
   const r=await github(path,binary);if(binary&&!Buffer.isBuffer(r))fail('actual binary ZIP bytes required');return r
  }
- const g1=source.protocol===FCF_G1_SOURCE_PROTOCOL,history=await (g1?readFcfPostG9HistoryWire:readFcfPostSixHistoryWire)({source:source.history,github:get,now}),proof=(g1?readFcfPostG9Accounting:readFcfPostSixAccounting)(history)
+ const g1=isFcfG1FutureSourceProtocol(source.protocol),history=await (source.protocol===FCF_G1_POST_FAILURE_SOURCE_PROTOCOL?readFcfPostG1HistoryWire:g1?readFcfPostG9HistoryWire:readFcfPostSixHistoryWire)({source:source.history,github:get,now}),proof=(source.protocol===FCF_G1_POST_FAILURE_SOURCE_PROTOCOL?readFcfPostG1Accounting:g1?readFcfPostG9Accounting:readFcfPostSixAccounting)(history)
  validateFcfFutureSourcePlan({plan:source.plan,accountingProof:proof,expectedPlanSha256:source.plan.planSha256,now})
  const x=source.claim.expected,ref=await get(repo+'git/ref/'+fcfFutureSourceClaimRef(source.plan).slice(5))
  if(ref?.object?.type!=='commit'||ref.object.sha!==x.claimCommit)fail('missing/moved current protected future claim ref')

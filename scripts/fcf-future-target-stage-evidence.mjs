@@ -1,5 +1,5 @@
 import {getFcfFutureTarget} from './fcf-future-target-catalog.mjs'
-import {fcfFutureProtocolForTarget} from './fcf-future-native-scope.mjs'
+import {isFcfFutureNativeProtocol} from './fcf-future-native-scope.mjs'
 // Pure future writer/approval RECORD authentication. No network/database/source
 // transport, native/source reader brands, launch or retry capability is issued.
 import {verifyArtifact,unpackVerifiedArchive,sha256} from './dfb-artifacts.mjs'
@@ -61,7 +61,7 @@ export function readFcfFutureTargetApprovalArtifact(input={}){
  if(!hex(e.rawSha256,64)||sha256(bytes)!==e.rawSha256)fail('exact root approval raw manifest SHA required')
  const a=parse(bytes),slug=getFcfFutureTarget({targetSlug:a?.targetSlug}).targetSlug
  if(!exact(a,['schemaVersion','kind','stage','targetSlug','sourceCommit','source','originals','cleanup','mapping','previous','runtimeHashes','modelSha256'])||a.schemaVersion!==2||a.kind!=='fcf-future-current-target-approval'||!approvalStages.has(a.stage)||a.targetSlug!==slug||a.sourceCommit!==e.commit||!object(a.runtimeHashes)||!hex(a.modelSha256,64))fail('closed future target approval schema2/stage/target/commit required')
- if(a.source===null?!['cleanup-prepare','cleanup-apply','recover'].includes(a.stage):!object(a.source)||a.source.protocol!==fcfFutureProtocolForTarget(slug))fail('future protocol data or explicit cleanup/recovery null source required')
+ if(a.source===null?!['cleanup-prepare','cleanup-apply','recover'].includes(a.stage):!object(a.source)||!isFcfFutureNativeProtocol(slug,a.source.protocol))fail('future protocol data or explicit cleanup/recovery null source required')
  if(slug==='es-ct-segona-g1'&&(a.stage.startsWith('cleanup-')||a.source===null))fail('G1 requires its protocol/history and original APPLIED cleanup; no cleanup rerun')
  // Runtime/source/originals/cleanup semantics remain the independent Actions
  // reader/closure boundary; this authenticated record grants no such capability.

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "es-ct-segona-g1-supplement-4109409-v1",
+  "provider": "fcf",
+  "competitionSlug": "es-ct-segona-g1",
+  "competitionId": 783,
+  "season": "2026/27",
+  "approvalReference": "call_7602c249643b4d43b097457adf63e128",
+  "approvedOriginalSha256": "b3737490800a28588fbc4b6eb1d06b26913dcb31149b5ee82a7ae96379d69871",
+  "approvedOriginalBytes": 171201,
+  "reasonCode": "closed_official_result_and_individual_statistics_unavailable",
+  "fixture": {
+    "sourceMatchId": "4109409",
+    "sourceCompetitionId": null,
+    "sourcePhase": null,
+    "sourceRound": 3,
+    "playedOn": "2026-10-04",
+    "kickoff": "17:00",
+    "season": "2026/27",
+    "homeSourceClubId": "21434932",
+    "homeSourceCategoryId": "21442320",
+    "awaySourceClubId": "5002",
+    "awaySourceCategoryId": "37524",
+    "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4109409",
+    "observedHomeScore": null,
+    "observedAwayScore": null
+  },
+  "homeName": "EMPURIABRAVA CASTELLO, C.F.",
+  "awayName": "BANYOLES, C.E.",
+  "goalEventCount": 0
+}

@@ -1,3 +1,5 @@
+import {isFcfG1SupplementCompetition} from '../lib/fcf-g1-supplement-installed.mjs'
+import {withFcfG1InstalledSupplement} from './fcf-g1-supplement-runtime.mjs'
 import {FCF_SIX_SOURCE_POLICY} from '../fcf-six-historical-policy.mjs'
 import {withFcfSixHistoricalStatistics} from './fcf-six-historical.mjs'
 // Izbira vira podatkov po `competitions.source`.
@@ -241,7 +243,7 @@ const VIRI = {
  *
  * @param {{ source?: string, slug?: string }} tekmovanje vrstica iz `competitions`
  */
-export function viraZa(tekmovanje, {installedHistoricalMarkers=null,db=null}={}) {
+export function viraZa(tekmovanje, {installedHistoricalMarkers=null,installedG1Supplement=null,db=null}={}) {
   const ime = tekmovanje?.source ?? 'mnzg'
   if (process.env.SLFF_BULK_CAPTURE) return createBulkCapturedSource({competition:tekmovanje,db,directory:process.env.SLFF_BULK_CAPTURE})
   const vir = ['fussball-public','dribl-public'].includes(ime) ? VIRI[ime]({competition:tekmovanje,db}) : VIRI[ime]
@@ -251,7 +253,12 @@ export function viraZa(tekmovanje, {installedHistoricalMarkers=null,db=null}={})
       `Tekmovanje "${tekmovanje?.slug ?? '?'}" navaja vir "${ime}", ki ga ne poznam. Znani viri: ${znani}.`,
     )
   }
-  if(tekmovanje?.source_policy===FCF_SIX_SOURCE_POLICY){const wrapped=withFcfSixHistoricalStatistics(vir,tekmovanje,{installedHistoricalMarkers});wrapped.historicalSourceFiles=[...new Set([...zaprtje('scripts/viri/fcf-six-historical.mjs'),...zaprtje('scripts/fcf-six-historical-policy.mjs')])];return wrapped}
+  if(tekmovanje?.source_policy===FCF_SIX_SOURCE_POLICY){
+    const supplement=isFcfG1SupplementCompetition(tekmovanje)?withFcfG1InstalledSupplement(vir,tekmovanje,{installedG1Supplement}):null
+    const wrapped=withFcfSixHistoricalStatistics(supplement?.provider??vir,tekmovanje,{installedHistoricalMarkers,...(supplement?{readBlock:supplement.readBlock}:{})})
+    wrapped.historicalSourceFiles=[...new Set([...zaprtje('scripts/viri/fcf-six-historical.mjs'),...zaprtje('scripts/fcf-six-historical-policy.mjs'),...(supplement?[...zaprtje('scripts/viri/fcf-g1-supplement-runtime.mjs'),'scripts/policies/fcf-g1-4109409-supplement.json']:[])])]
+    return wrapped
+  }
   const policy=getHistoricalStatisticsPolicy(tekmovanje?.slug)
   if(!policy && tekmovanje?.source_policy==null)return vir
   if(!policy || tekmovanje.source!==policy.provider || tekmovanje.source_policy!==policy.sourcePolicy)throw Error('historical provider: invalid competition/provider/policy tuple')

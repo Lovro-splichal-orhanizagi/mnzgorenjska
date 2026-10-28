@@ -1,3 +1,4 @@
+import {buildFcfG1NativeSupplementBinding} from './fcf-g1-supplement-native.mjs'
 import {FCF_SIX_SOURCE_POLICY,getFcfSixPolicy,validateFcfSixInstalledMarkers} from './fcf-six-historical-policy.mjs'
 // Pure proposal/row projections only. No admission, reader brand, transport, SQL
 // or executable writer. A caller-written sourceData object confers no authority;
@@ -84,6 +85,7 @@ function mapping(input={},auditedUTC){
   const matches=d.matches.filter(m=>m.round_id===round.id&&m.home_team_id===home&&m.away_team_id===away)
   if(matches.length!==1||usedMatches.has(matches[0].id)||matches[0].zapisnik_id!==null&&matches[0].zapisnik_id!==f.id)fail('native round/fixture sides do not resolve uniquely to actual DB fixture')
   const match=matches[0];usedMatches.add(match.id)
+  if(s.binding.protocol==='future-g1-after-failed-g1-v1'&&f.id==='es4109409'){const b=buildFcfG1NativeSupplementBinding({data:s,databaseInventory:d});if(match.id!==b.native.matchId||round.id!==b.native.roundId||home!==b.native.homeTeamId||away!==b.native.awayTeamId)fail('supplement native identity must equal persisted DB anchor')}
   const marker=policy.entries.find(e=>`es${e.sourceMatchId}`===f.id)
   if(marker?.sourceMatchId==='4109404'){
    if(f.homeGoals!==null||f.awayGoals!==null)fail('unknown historical source score must remain NULL')

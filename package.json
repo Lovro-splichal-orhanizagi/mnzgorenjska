@@ -54,7 +54,7 @@
     "test:dfb-nord-west-historical-sql": "node scripts/test-dfb-nord-west-historical-sql.mjs",
     "test:dfb-calendar-sql": "node scripts/test-dfb-calendar-release-sql.mjs",
     "test:fcf-six": "node --test scripts/test-fcf-six-historical-policy.mjs scripts/test-fcf-six-continuation.mjs scripts/test-fcf-six-capture.mjs scripts/test-fcf-six-cleanup-evidence.mjs scripts/test-fcf-six-target-downstream.mjs",
-    "test:fcf-future": "node --test scripts/test-fcf-future-*.mjs scripts/test-fcf-post-six-accounting.mjs scripts/test-fcf-g1-source-continuation.mjs scripts/test-fcf-g1-history-identity.mjs scripts/test-fcf-g1-native-continuation.mjs scripts/test-fcf-g1-native-sql.mjs",
+    "test:fcf-future": "node --test scripts/test-fcf-future-*.mjs scripts/test-fcf-post-six-accounting.mjs scripts/test-fcf-g1-source-continuation.mjs scripts/test-fcf-g1-history-identity.mjs scripts/test-fcf-g1-native-continuation.mjs scripts/test-fcf-g1-native-sql.mjs scripts/test-fcf-g1-post-failure.mjs scripts/test-fcf-g1-supplement-native.mjs scripts/test-fcf-g1-supplement-runtime.mjs",
     "test:fcf-six-native": "node --test scripts/test-fcf-six-native-sql.mjs",
     "test:mfa-nl-bootstrap": "node --test scripts/test-mfa-nl-bootstrap-sql.mjs scripts/test-mfa-nl-bootstrap-race.mjs",
     "test:mfa-nl-release": "node --test scripts/test-mfa-nl-release-sql.mjs scripts/test-mfa-nl-release-race.mjs",

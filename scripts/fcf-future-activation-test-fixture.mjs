@@ -11,13 +11,14 @@ import {deriveFcfFutureTargetNativeMapping,planFcfFutureNativeTargetImport} from
 import {buildFcfFutureTargetImportRollout} from './fcf-future-target-rollout.mjs'
 import {fcfTargetPricingModelSha256} from './fcf-target-pricing-model.mjs'
 const slug='es-ct-tercera-g9',writer='b'.repeat(40),ids=['4109388','4109404','4116215','4118352','4118354','4118358'],key=c=>`${c.sourceClubId}/${c.sourceCategoryId}`
-function cleanup(t){
- const old=sixCleanupFixture(t),backup=structuredClone(old.backup),prepared=structuredClone(old.prepare),applied=structuredClone(old.applyManifest)
+export function futureCleanupFixture(t,sourceCommit='a'.repeat(40)){
+ const replace=x=>{if(x==='a'.repeat(40))return sourceCommit;if(Array.isArray(x))return x.map(replace);if(x&&typeof x==='object'&&!Buffer.isBuffer(x))return Object.fromEntries(Object.entries(x).map(([k,v])=>[k,replace(v)]));return x}
+ const old=sixCleanupFixture(t),backup=replace(structuredClone(old.backup)),prepared=replace(structuredClone(old.prepare)),applied=replace(structuredClone(old.applyManifest))
  backup.schemaVersion=3;backup.competitions.forEach(c=>c.prvi_fantasy_krog=1)
  const beforeImageText=JSON.stringify(backup).replaceAll('"points":8.1','"points":8.10')
  Object.assign(prepared,{schemaVersion:3,kind:'fcf-future-exact-six-cleanup-prepared',beforeSha256:sha(beforeImageText)})
  const make=(kind,m,entries=[])=>{
-  const bytes=zip([{name:'manifest.json',body:Buffer.from(JSON.stringify(m))},...entries]),digest='sha256:'+sha(bytes),metadata=structuredClone(kind==='prepared'?old.input.prepareMetadata:old.input.appliedMetadata),expected={...old.input.expected[kind==='prepared'?'prepare':'applied'],artifactDigest:digest}
+  const bytes=zip([{name:'manifest.json',body:Buffer.from(JSON.stringify(m))},...entries]),digest='sha256:'+sha(bytes),metadata=replace(structuredClone(kind==='prepared'?old.input.prepareMetadata:old.input.appliedMetadata)),expected={...replace(old.input.expected[kind==='prepared'?'prepare':'applied']),artifactDigest:digest}
   Object.assign(metadata.artifact,{digest,size_in_bytes:bytes.length});metadata.jobs[0].name='future-'+metadata.jobs[0].name
   const names=kind==='prepared'?['Prepare exact future six FCF cleanup before-image','Retain exact future FCF cleanup before-image']:['Apply exact future six FCF cleanup','Retain exact future FCF cleanup receipt'];metadata.jobs[0].steps=names.map(name=>({name,status:'completed',conclusion:'success'}))
   return {bytes,metadata,expected}
@@ -66,7 +67,7 @@ export function changePrices(input,change){
  return refreshProjection(np)
 }
 export async function activationFixture(t){
- const wire=await futureAdmissionWire(t),inventoryAdmission=readFcfFutureCapturedTargetEvidence(wire),data=getFcfFutureCapturedTargetData({targetEvidence:inventoryAdmission,now:wire.now}),native=nativeInput(data,wire.now),proofs=cleanup(t)
+ const wire=await futureAdmissionWire(t),inventoryAdmission=readFcfFutureCapturedTargetEvidence(wire),data=getFcfFutureCapturedTargetData({targetEvidence:inventoryAdmission,now:wire.now}),native=nativeInput(data,wire.now),proofs=futureCleanupFixture(t)
  const base={targetSlug:slug,sourceCommit:writer,inventoryAdmission,databaseInventory:native.databaseInventory,existingExceptionBindings:native.existingExceptionBindings,now:wire.now},mapping=deriveFcfFutureTargetNativeMapping(base),rows=planFcfFutureNativeTargetImport(base),execution={repository:'Lovro-splichal-orhanizagi/mnzgorenjska',ref:'refs/heads/main',commit:writer,runId:'456',runAttempt:'1'}
  const original=buildFcfFutureTargetImportRollout({...base,mappingText:mapping.proposalText,mappingSha256:mapping.proposalSha256,cleanupEvidence:proofs.applied,execution}),rollout=JSON.parse(original.rolloutText),projected=pricing(rows),db=structuredClone(base.databaseInventory),players=JSON.parse(projected.pricingSnapshot.snapshotText).players
  db.existingExceptionBindings=structuredClone(native.existingExceptionBindings)

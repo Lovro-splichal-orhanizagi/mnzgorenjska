@@ -1,3 +1,4 @@
+import {getFcfG1SupplementalPolicy,verifyFcfG1SupplementalObservation,fcfG1SupplementalPolicySha256} from './fcf-g1-4109409-policy.mjs'
 import {getFcfFutureTarget} from './fcf-future-target-catalog.mjs'
 // Pure per-document closed G1/G9 canonicalization. Caller-authored receipt/lineage fields
 // are checked structurally; they are NOT authenticated reader capabilities.
@@ -42,12 +43,13 @@ function source(document,competition,now){
  * source.historicalObservation. The latter grants no installation authority:
  * authenticated new source evidence AND original cleanup proof remain separate.
  */
-export function proveFcfFutureSourceDocument({competition:c,document:d,now=Date.now()}){
+export function proveFcfFutureSourceDocument({competition:c,document:d,protocol,now=Date.now()}){
+ if(protocol!==undefined&&protocol!=='future-g1-after-failed-g1-v1')fail('explicit supplemental protocol required')
  let target;try{target=getFcfFutureTarget({targetSlug:c?.slug,competitionId:c?.id,sourceCode:c?.source_league_code})}catch{fail('exact inactive current source tuple required')}
  const slug=target.targetSlug,code=target.sourceCode
  if(!record(c)||c.id!==target.competitionId||c.slug!==slug||c.source!=='fcf'||c.source_policy!==FCF_SIX_SOURCE_POLICY||c.source_league_code!==code||c.active!==false||c.sezona_koledarska!==false||Object.hasOwn(c,'season')&&c.season!==season||!Number.isFinite(now)||!Number.isFinite(new Date(now).getTime()))fail('exact inactive G9 current source/policy/calendar/clock required')
  if(!record(d)||!nativeId(d.id)||Number(d.id)<target.start||Number(d.id)>target.end||!Number.isInteger(d.expectedSourceRound)||d.expectedSourceRound<1||d.expectedSourceRound>30)fail('exact G9 source ID and actual round1–30 required')
- const provenance=source(d,c,now),header=deriveFcfFutureInventoryHeader({targetSlug:slug,id:d.id,bytes:Buffer.from(d.html,'utf8')})
+ const provenance=source(d,c,now),header=deriveFcfFutureInventoryHeader({targetSlug:slug,id:d.id,bytes:Buffer.from(d.html,'utf8'),...(protocol?{protocol}:{})})
  // Preserve the shared current-season/source identity check for historical as
  // well as normal pages; no expired prelaunch-date or R6 choice is involved.
  const providerHeader=validateFcfSingleReportSource(d.html,code,{id:`es${d.id}`,tekmovanje:c,sezona:season,danes:now})
@@ -55,7 +57,11 @@ export function proveFcfFutureSourceDocument({competition:c,document:d,now=Date.
  if(header.round!==d.expectedSourceRound)fail('actual source round differs from inventory')
  const policy=getFcfSixPolicy(slug),entry=policy.entries.find(e=>e.sourceMatchId===d.id)
  let canonical
- if(entry){
+ if(protocol==='future-g1-after-failed-g1-v1'&&d.id==='4109409'){
+  const p=getFcfG1SupplementalPolicy(),observation=verifyFcfG1SupplementalObservation({targetSlug:slug,id:d.id,html:d.html})
+  provenance.supplementalObservation=observation
+  canonical={statisticsStatus:'unavailable_historical',statisticsReason:p.reasonCode,policyId:p.id,policySha256:fcfG1SupplementalPolicySha256(),sourceFixture:observation.fixture,report:null,appearances:null,goals:null}
+ }else if(entry){
   const observation=verifyFcfSixFreshHistoricalSource({targetSlug:slug,id:d.id,html:d.html})
   provenance.historicalObservation=observation
   canonical={statisticsStatus:'unavailable_historical',statisticsReason:entry.reasonCode,policyId:policy.id,policySha256:historicalStatisticsPolicySha256(policy),sourceFixture:observation.fixture,report:null,appearances:null,goals:null}

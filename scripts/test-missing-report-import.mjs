@@ -28,7 +28,7 @@ test('actual importer passes every completed ID to EPS before traversal while in
  const db={from(table){assert.equal(table,'matches');const query={select(){return query},eq(k,v){assert.equal(k,'rounds.competition_id');assert.equal(v,783);return query},not(){return query},lt(){assert.fail('Missing-only import must skip all completed reports, including recent ones')},order(){return query},range(){return query},then(resolve){resolve({data:rows,error:null})}};return query}}
  let observed=false
  const result=await runInNewContext(`(async()=>{${body};return zapisniki.map(r=>r.id)})()`,{
-  samoManjkajoce:true,completedReportIds,vseVrstice,db,tekmovanje:competition,liga:'epsana.gr:748',arg:()=>null,samoZapisnik:null,preberiPosamezniZapisnik:null,omeji:null,console:{log(){}},Date,Set,assertHistoricalReportImportable,
+  samoManjkajoce:true,completedReportIds,vseVrstice,installedG1Supplement:undefined,db,tekmovanje:competition,liga:'epsana.gr:748',arg:()=>null,samoZapisnik:null,preberiPosamezniZapisnik:null,omeji:null,console:{log(){}},Date,Set,assertHistoricalReportImportable,
   vir:{ime:'eps',async zapisniki(code,read,options){observed=true;assert.equal(options.preskoci.has('gr2-1'),true);assert.equal(options.preskoci.has('gr2-2'),false);return[{id:'gr2-2',z:{}}]}},prenesi:()=>assert.fail('Source boundary must be controlled by EPS')
  })
  assert.equal(observed,true);assert.deepEqual(Array.from(result),['gr2-2'])

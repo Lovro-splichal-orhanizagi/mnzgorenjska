@@ -220,7 +220,7 @@ function importerWiring({ provider = vir, selected = 'es4139542', season = '2026
     from() { calls.push(['write']); throw Error('simulated cleanup write boundary reached') },
   }
   return { calls, result: runInNewContext(script, {
-    assertHistoricalReportImportable, arg: name => name === 'zapisnik' ? selected : null, db, pocisti: cleanup,
+    assertHistoricalReportImportable, installedG1Supplement: undefined, arg: name => name === 'zapisnik' ? selected : null, db, pocisti: cleanup,
     vir: provider, tekmovanje: { ...competition(), id: 123 }, liga: competition().source_league_code,
     prenesi: transfer ?? (() => { throw Error('unexpected source traversal') }),
     preskoci: new Set(['old']), sveziZapisniki: new Set(['changed']), console: { log() {} },

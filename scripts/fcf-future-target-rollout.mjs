@@ -1,5 +1,5 @@
 import {getFcfFutureTarget} from './fcf-future-target-catalog.mjs'
-import {readFcfFutureNativeSource,requireFcfG1QuietInventory} from './fcf-future-native-scope.mjs'
+import {readFcfFutureNativeSource,requireFcfG1QuietInventory,requireFcfFutureNativeWriter,isFcfG1SupplementNative,fcfFutureNativeVersions} from './fcf-future-native-scope.mjs'
 // Bounded inactive IMPORT composition only. No stage advance, chosen opening,
 // readiness installation, source retry, native write or activation capability.
 import {createHash} from 'node:crypto'
@@ -22,6 +22,7 @@ function context(input,extra){
  getFcfFutureTarget({targetSlug:input.targetSlug})
  if(!/^[a-f0-9]{40}$/.test(input.sourceCommit??'')||!Number.isSafeInteger((Object.hasOwn(input,'now')?input.now:Date.now())))fail('exact G9 writer SHA/current clock required')
  const e=execution(input.execution,input.sourceCommit),now=(Object.hasOwn(input,'now')?input.now:Date.now()),{data,target}=readFcfFutureNativeSource({targetSlug:input.targetSlug,inventoryAdmission:input.inventoryAdmission,now})
+ requireFcfFutureNativeWriter({data,sourceCommit:input.sourceCommit})
  requireFcfG1QuietInventory({targetSlug:input.targetSlug,databaseInventory:input.databaseInventory})
  return {data,target,e,now,native:{targetSlug:target.targetSlug,sourceData:data,databaseInventory:input.databaseInventory,existingExceptionBindings:input.existingExceptionBindings,writerCommit:input.sourceCommit,now}}
 }
@@ -30,7 +31,7 @@ function envelope(input,ctx,packet,mapping){
  const slug=ctx.target.targetSlug
  const p=JSON.parse(packet.manifestText)
  if(p.cleanupBinding.phase!=='applied')fail('reader-issued APPLIED future cleanup required')
- const rollout={schemaVersion:3,kind:'fcf-future-current-target-import-rollout',targetSlug:slug,sourceCommit:input.sourceCommit,execution:ctx.e,targetPacketText:packet.manifestText,targetPacketSha256:packet.manifestSha256,inventoryBinding:ctx.data.binding,cleanupBinding:p.cleanupBinding,identityPlan:{mappingText:mapping.proposalText,mappingSha256:mapping.proposalSha256},readiness:null},rolloutText=JSON.stringify(rollout)
+ const rollout={schemaVersion:fcfFutureNativeVersions(ctx.data).rollout,kind:'fcf-future-current-target-import-rollout',targetSlug:slug,sourceCommit:input.sourceCommit,execution:ctx.e,targetPacketText:packet.manifestText,targetPacketSha256:packet.manifestSha256,inventoryBinding:ctx.data.binding,cleanupBinding:p.cleanupBinding,...(isFcfG1SupplementNative(ctx.data)?{supplementalBinding:p.supplementalBinding}:{}),identityPlan:{mappingText:mapping.proposalText,mappingSha256:mapping.proposalSha256},readiness:null},rolloutText=JSON.stringify(rollout)
  if(Buffer.byteLength(rolloutText)>limit)fail('bounded8MB future rollout required')
  return Object.freeze({rolloutText,rolloutSha256:hash(rolloutText)})
 }
@@ -62,8 +63,8 @@ export function replayFcfFutureTargetImportRollout(input={}){
  const ctx=context(input,['rolloutText','rolloutSha256']),text=input.rolloutText,expected=input.rolloutSha256
  if(typeof text!=='string'||!text.length||Buffer.byteLength(text)>limit||text.charCodeAt(0)===0xfeff||!/^[a-f0-9]{64}$/.test(expected??'')||hash(text)!==expected)fail('exact bounded future rollout TEXT/SHA required')
  let r;try{r=JSON.parse(text)}catch{fail('invalid future rollout JSON')}
- keys(r,wireFields,'future import rollout');keys(r.identityPlan,['mappingText','mappingSha256'],'identity plan')
- if(r.schemaVersion!==3||r.kind!=='fcf-future-current-target-import-rollout'||r.targetSlug!==ctx.target.targetSlug||r.sourceCommit!==input.sourceCommit||r.readiness!==null||JSON.stringify(execution(r.execution,r.sourceCommit))!==JSON.stringify(ctx.e))fail('exact future import identity/null readiness/same actual execution required')
+ keys(r,[...wireFields,...(isFcfG1SupplementNative(ctx.data)?['supplementalBinding']:[])],'future import rollout');keys(r.identityPlan,['mappingText','mappingSha256'],'identity plan')
+ if(r.schemaVersion!==fcfFutureNativeVersions(ctx.data).rollout||r.kind!=='fcf-future-current-target-import-rollout'||r.targetSlug!==ctx.target.targetSlug||r.sourceCommit!==input.sourceCommit||r.readiness!==null||JSON.stringify(execution(r.execution,r.sourceCommit))!==JSON.stringify(ctx.e))fail('exact future import identity/null readiness/same actual execution required')
  let originalPacket;try{originalPacket=JSON.parse(r.targetPacketText)}catch{fail('invalid original future import packet JSON')}
  // Verify immutable original packet bytes/source/cleanup at its original audit
  // timestamp and actual current clock. Stored inventory is a PRE-import image,

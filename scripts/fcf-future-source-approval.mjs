@@ -1,9 +1,10 @@
+import {readFcfPostG1Accounting} from './fcf-post-g1-accounting.mjs'
 // Repository GET-only historical transport and strict future root approval.
 // Returned approval is reviewed data; no capture, claim or target proof is issued.
 import {readFcfSixHistoryWire} from './fcf-six-approval.mjs'
 import {readFcfPostSixAccounting,fcfPostSixAccountingReferences} from './fcf-post-six-accounting.mjs'
-import {readFcfPostG9Accounting} from './fcf-post-g9-accounting.mjs'
-import {validateFcfFutureSourcePlan,FCF_FUTURE_SOURCE_PROTOCOL,FCF_G1_SOURCE_PROTOCOL} from './fcf-future-source-plan.mjs'
+import {readFcfPostG9Accounting,getFcfPostG9SourceHistory} from './fcf-post-g9-accounting.mjs'
+import {validateFcfFutureSourcePlan,FCF_FUTURE_SOURCE_PROTOCOL,FCF_G1_SOURCE_PROTOCOL,FCF_G1_POST_FAILURE_SOURCE_PROTOCOL} from './fcf-future-source-plan.mjs'
 import {snapshotFcfInventoryRuleset,verifyFcfInventoryRulesetSnapshot} from './fcf-missing-inventory-claim.mjs'
 import {historicalStatisticsPolicySha256 as hash} from './lib/historical-statistics-policy.mjs'
 import {exactKeys,inventoryFail as fail,jsonBytes,nativeId,commitId,sha256Id,artifactDigest,FCF_INVENTORY_REPOSITORY,FCF_INVENTORY_WORKFLOW} from './fcf-missing-inventory-artifact.mjs'
@@ -16,7 +17,7 @@ function repositoryGET(github){
  return (path,binary=false)=>{
   if(typeof path!=='string'||!path.startsWith(repo))fail('fixed repository GET required')
   const p=path.slice(repo.length)
-  const allowed=/^actions\/runs\/[1-9]\d{0,19}$/.test(p)||/^actions\/runs\/[1-9]\d{0,19}\/attempts\/[1-9]\d{0,19}\/jobs\?per_page=100&page=[1-9]\d{0,2}$/.test(p)||/^actions\/artifacts\/[1-9]\d{0,19}(?:\/zip)?$/.test(p)||/^git\/(?:commits|trees|blobs)\/[a-f0-9]{40}$/.test(p)||/^git\/ref\/tags\/fcf-inventory-claim\/(?:g9-after-|six-after-|future-g9-after-|future-after-)?[a-f0-9]{64}$/.test(p)||/^rulesets\/[1-9]\d{0,19}$/.test(p)
+  const allowed=/^actions\/runs\/[1-9]\d{0,19}$/.test(p)||/^actions\/runs\/[1-9]\d{0,19}\/attempts\/[1-9]\d{0,19}\/jobs\?per_page=100&page=[1-9]\d{0,2}$/.test(p)||/^actions\/artifacts\/[1-9]\d{0,19}(?:\/zip)?$/.test(p)||/^git\/(?:commits|trees|blobs)\/[a-f0-9]{40}$/.test(p)||/^git\/ref\/tags\/fcf-inventory-claim\/(?:g9-after-|six-after-|future-g9-after-|future-after-|g1-after-failed-)?[a-f0-9]{64}$/.test(p)||/^rulesets\/[1-9]\d{0,19}$/.test(p)
   if(!allowed||binary!==p.endsWith('/zip'))fail('fixed GitHub GET path/representation required')
   return github(path,binary)
  }
@@ -86,10 +87,10 @@ export async function readFcfPostSixHistoryWire({source,github,now=Date.now()}){
 export async function readFcfFutureSourceApproval({bytes,sourceCommit,github,now=Date.now()}){
  const a=jsonBytes(bytes,'future source approval')
  exactKeys(a,['schemaVersion','kind','sourceCommit','plan','history','rulesetId','rulesetSnapshot'],'future source approval')
- const g1=a.schemaVersion===5&&a.kind==='fcf-g1-source-continuation-approval'
- if((!g1&&(a.schemaVersion!==4||a.kind!=='fcf-future-source-approval'))||!commitId(sourceCommit)||a.sourceCommit!==sourceCommit||a.plan?.sourceCommit!==sourceCommit||!nativeId(a.rulesetId))fail('exact future source approval required')
- if(a.plan?.preset!==(g1?FCF_G1_SOURCE_PROTOCOL:FCF_FUTURE_SOURCE_PROTOCOL)||a.plan.maximumCumulativeSourceGETs!==478||a.plan.maximumNewSourceGETs!==240||!Number.isSafeInteger(a.plan.priorSourceGETs)||a.plan.priorSourceGETs<37||a.plan.plannedCumulativeSourceGETs!==a.plan.priorSourceGETs+240||a.plan.plannedCumulativeSourceGETs>478)fail('closed future plan exceeds478 source budget; HOLD awaiting budget approval')
- const proof=g1?readFcfPostG9Accounting(await readFcfPostG9HistoryWire({source:a.history,github,now})):readFcfPostSixAccounting(await readFcfPostSixHistoryWire({source:a.history,github,now}))
+ const postG1=a.schemaVersion===6&&a.kind==='fcf-g1-post-failure-source-approval',g1=a.schemaVersion===5&&a.kind==='fcf-g1-source-continuation-approval'
+ if((!postG1&&!g1&&(a.schemaVersion!==4||a.kind!=='fcf-future-source-approval'))||!commitId(sourceCommit)||a.sourceCommit!==sourceCommit||a.plan?.sourceCommit!==sourceCommit||!nativeId(a.rulesetId))fail('exact future source approval required')
+ if(a.plan?.preset!==(postG1?FCF_G1_POST_FAILURE_SOURCE_PROTOCOL:g1?FCF_G1_SOURCE_PROTOCOL:FCF_FUTURE_SOURCE_PROTOCOL)||a.plan.maximumCumulativeSourceGETs!==478||a.plan.maximumNewSourceGETs!==240||!Number.isSafeInteger(a.plan.priorSourceGETs)||a.plan.priorSourceGETs<37||a.plan.plannedCumulativeSourceGETs!==a.plan.priorSourceGETs+240||a.plan.plannedCumulativeSourceGETs>478)fail('closed future plan exceeds478 source budget; HOLD awaiting budget approval')
+ const proof=postG1?readFcfPostG1Accounting(await readFcfPostG1HistoryWire({source:a.history,github,now})):g1?readFcfPostG9Accounting(await readFcfPostG9HistoryWire({source:a.history,github,now})):readFcfPostSixAccounting(await readFcfPostSixHistoryWire({source:a.history,github,now}))
  const checkedUTC=a.rulesetSnapshot?.checkedUTC,approved=snapshotFcfInventoryRuleset({ruleset:a.rulesetSnapshot?.ruleset,checkedUTC,now})
  if(!same(approved,a.rulesetSnapshot)||String(approved.ruleset.id)!==a.rulesetId||hash(approved)!==a.plan.rulesetSnapshotSha256)fail('future approved root ruleset differs')
  const actual=await repositoryGET(github)(repo+`rulesets/${a.rulesetId}`)
@@ -139,5 +140,48 @@ export async function readFcfPostG9HistoryWire({source,github,now=Date.now()}){
  else child={inventory:await record(g.child.inventory),...(g.child.audit?{audit:await record(g.child.audit)}:{})}
  const wire={prior,latest:{plan:g.plan,claim:{...g.claim,ref,claimCommit:{commit,tree,blob},claimBytes:Buffer.from(blob.content,'base64'),rulesets:[rule]},consumption:await record(g.consumption),child,finalReceipt:await record(g.finalReceipt)},now}
  readFcfPostG9Accounting(wire)
+ return wire
+}
+
+// Exact second-generation history transport; prior source authority remains raw and recursively authenticated.
+function postG1Preflight(source,now){
+ exactKeys(source,['prior','latest'],'post-failed-G1 history references')
+ postG9Preflight(source.prior,now)
+ const g=source.latest,p=g?.plan,{planSha256,...body}=p??{}
+ exactKeys(g,['plan','claim','consumption','child','finalReceipt'],'post-failed-G1 terminal references')
+ if(p?.preset!==FCF_G1_SOURCE_PROTOCOL||p.schemaVersion!==1||p.kind!=='fcf-future-source-plan'||!sha256Id(planSha256)||hash(body)!==planSha256||p.priorSourceGETs!==38||p.maximumCumulativeSourceGETs!==478||p.maximumNewSourceGETs!==240||p.plannedCumulativeSourceGETs!==278||p.child?.targetSlug!=='es-ct-segona-g1'||p.child.competitionId!==783||p.child.sourceCode!=='4109388-4109627')fail('exact original G1 plan and spent38 history references required')
+ exactKeys(g.claim,['execution','expected'],'post-failed-G1 claim references')
+ const e=g.claim.execution,x=g.claim.expected
+ exactKeys(e,['repository','workflow','ref','sourceCommit','runId','runAttempt'],'post-failed-G1 execution references')
+ exactKeys(x,['claimCommit','claimJsonSha256','rulesetId','planSha256','sourceCommit','runId','runAttempt'],'post-failed-G1 claim pins')
+ if(e.repository!==FCF_INVENTORY_REPOSITORY||e.workflow!==FCF_INVENTORY_WORKFLOW||e.ref!=='refs/heads/main'||!commitId(p.sourceCommit)||e.sourceCommit!==p.sourceCommit||!nativeId(e.runId)||e.runAttempt!=='1'||x.sourceCommit!==p.sourceCommit||x.runId!==e.runId||x.runAttempt!=='1'||x.planSha256!==planSha256||!commitId(x.claimCommit)||!sha256Id(x.claimJsonSha256)||!nativeId(x.rulesetId))fail('exact post-failed-G1 protected claim execution pins required')
+ const pins=['runId','runAttempt','sourceCommit','jobId','artifactId','artifactDigest','manifestSha256','name'],records=[[g.consumption,'consumption',`fcf-inventory-consumption-${e.runId}-1`],[g.finalReceipt,'final',`fcf-missing-inventory-final-${e.runId}-1`]],c=g.child
+ if(Object.hasOwn(c??{},'unstarted')){exactKeys(c,['unstarted'],'post-failed-G1 skipped references');exactKeys(c.unstarted,['runId','runAttempt','sourceCommit','jobId','planSha256'],'post-failed-G1 skipped pins');if(c.unstarted.runId!==e.runId||c.unstarted.runAttempt!=='1'||c.unstarted.sourceCommit!==p.sourceCommit||c.unstarted.planSha256!==planSha256||!nativeId(c.unstarted.jobId))fail('exact skipped source execution pins required')}
+ else if(Object.hasOwn(c??{},'diagnostic')){exactKeys(c,['diagnostic'],'post-failed-G1 diagnostic references');records.push([c.diagnostic,'diagnostic',`fcf-missing-inventory-diagnostic-es-ct-segona-g1-${e.runId}-1`])}
+ else {exactKeys(c,Object.hasOwn(c??{},'audit')?['inventory','audit']:['inventory'],'post-failed-G1 capture references');records.push([c.inventory,'inventory',`fcf-missing-inventory-es-ct-segona-g1-${e.runId}-1`]);if(c.audit)records.push([c.audit,'audit',`fcf-missing-inventory-audit-es-ct-segona-g1-${e.runId}-1`])}
+ for(const [b,kind,name]of records){exactKeys(b,[...pins,...(['inventory','diagnostic'].includes(kind)?['planSha256','childPlanSha256']:[])],'post-failed-G1 artifact pins');if(b.runId!==e.runId||b.runAttempt!=='1'||b.sourceCommit!==p.sourceCommit||!nativeId(b.jobId)||!nativeId(b.artifactId)||!artifactDigest(b.artifactDigest)||!sha256Id(b.manifestSha256)||b.name!==name||['inventory','diagnostic'].includes(kind)&&(b.planSha256!==planSha256||b.childPlanSha256!==hash({...p.child,parentPlanSha256:planSha256})))fail('exact post-failed-G1 artifact/run/hash pins required')}
+ if(new Set(records.map(([b])=>b.artifactId)).size!==records.length)fail('distinct post-failed-G1 artifacts required')
+ return g
+}
+export async function readFcfPostG1HistoryWire({source,github,now=Date.now()}){
+ const g=postG1Preflight(source,now),transport=repositoryGET(github),get=(p,b=false)=>transport(repo+p,b)
+ const prior=await readFcfPostG9HistoryWire({source:source.prior,github:transport,now})
+ const old=readFcfPostG9Accounting(prior)
+ if(g.plan.historySha256!==hash(getFcfPostG9SourceHistory(old))||hash(g.plan.accountingBinding)!==hash(getFcfPostG9SourceHistory(old)))fail('post-failed-G1 original spent history differs')
+ const jobs=async expected=>{const out=[];let total;for(let page=1;page<=100;page++){const r=await get(`actions/runs/${expected.runId}/attempts/1/jobs?per_page=100&page=${page}`);if(!Number.isSafeInteger(r?.total_count)||r.total_count<0||!Array.isArray(r.jobs)||r.jobs.length>100||total!==undefined&&r.total_count!==total)fail('stable complete post-failed-G1 job pagination required');total=r.total_count;out.push(...r.jobs);if(new Set(out.map(j=>j?.id)).size!==out.length)fail('duplicate post-failed-G1 job identities');if(out.length===total)return out;if(out.length>total||r.jobs.length<100)fail('incomplete post-failed-G1 jobs')}fail('post-failed-G1 jobs bound exceeded')}
+ const record=async expected=>{const [artifact,run,js,zipBytes]=await Promise.all([get(`actions/artifacts/${expected.artifactId}`),get(`actions/runs/${expected.runId}`),jobs(expected),get(`actions/artifacts/${expected.artifactId}/zip`,true)]);return {zipBytes,artifact,run,jobs:js,expected}}
+ const x=g.claim.expected,ref=await get(`git/ref/tags/fcf-inventory-claim/future-after-${hash(getFcfPostG9SourceHistory(old))}`)
+ if(ref?.object?.type!=='commit'||ref.object.sha!==x.claimCommit)fail('actual protected post-failed-G1 claim ref required')
+ const commit=await get(`git/commits/${x.claimCommit}`);if(!commitId(commit?.tree?.sha))fail('actual post-failed-G1 claim tree required')
+ const tree=await get(`git/trees/${commit.tree.sha}`),entries=tree?.tree?.filter(e=>e.path==='.fcf-inventory-claim.json')
+ if(tree?.truncated!==false||entries?.length!==1||!commitId(entries[0].sha))fail('exact post-failed-G1 claim entry required')
+ const blob=await get(`git/blobs/${entries[0].sha}`),rule=await get(`rulesets/${x.rulesetId}`)
+ if(blob?.encoding!=='base64'||typeof blob.content!=='string'||blob.content.length>90000)fail('bounded post-failed-G1 claim blob required')
+ let child
+ if(g.child.unstarted)child={unstarted:{expected:g.child.unstarted,run:await get(`actions/runs/${x.runId}`),jobs:await jobs(g.child.unstarted)}}
+ else if(g.child.diagnostic)child={diagnostic:await record(g.child.diagnostic)}
+ else child={inventory:await record(g.child.inventory),...(g.child.audit?{audit:await record(g.child.audit)}:{})}
+ const wire={prior,latest:{plan:g.plan,claim:{...g.claim,ref,claimCommit:{commit,tree,blob},claimBytes:Buffer.from(blob.content,'base64'),rulesets:[rule]},consumption:await record(g.consumption),child,finalReceipt:await record(g.finalReceipt)},now}
+ readFcfPostG1Accounting(wire)
  return wire
 }
