@@ -1,3 +1,4 @@
+import {getFcfFutureSourcePlanScope} from './fcf-future-source-plan.mjs'
 import {deriveFcfFutureInventoryHeader,validateFcfFutureInventoryHeaders} from './fcf-future-source-header.mjs'
 import {proveFcfFutureSourceDocument} from './fcf-future-source-proof.mjs'
 import {validateFcfSingleReportSource} from './viri/fcf.mjs'
@@ -39,7 +40,7 @@ function readChild(input,diagnostic=false,future=false){
  const ids=[...child.fetchIds,...child.reuse.map(d=>d.id)],members={'manifest.json':plan.limits.maximumManifestBytes,...Object.fromEntries(ids.map(id=>[`acta-${id}.html`,plan.limits.maximumBodyBytes])),...(diagnostic?Object.fromEntries(child.fetchIds.map(id=>[`prefix-${id}.bin`,plan.limits.maximumBodyBytes])):{})},files=readInventoryZip({zipBytes,artifact,expected,members,allowMissing:diagnostic}),m=jsonBytes(files.get('manifest.json'),'inventory manifest')
  bindingMatches(m,child,input,consumption,future)
  if(m.status!==(diagnostic?'failed':'inventory-complete')||(diagnostic?!m.stopReason:m.stopReason!==null))fail('complete/diagnostic inventory status differs')
- if(!Array.isArray(m.attempts)||!Number.isInteger(m.actualSourceGETs)||m.actualSourceGETs<0||m.actualSourceGETs>child.maximumSourceGETs||m.actualSourceGETs!==m.attempts.length||!diagnostic&&m.actualSourceGETs!==child.maximumSourceGETs||m.priorSourceGETs!==(future?37:isFcfSixPlan(plan)?22+(child.targetSlug==='es-ct-segona-g1'?requireFcfSixSourceContinuation(input.continuationProof).actualSourceGETs:0):isFcfIndependentSourcePlan(plan)?16:child.targetSlug==='es-ct-segona-g1'?0:239)||m.priorSourceGETs+m.actualSourceGETs>((future||isFcfSixPlan(plan))?478:477)||!Array.isArray(m.documents)||m.documents.length!==240||!validUTC(m.startedUTC)||!validUTC(m.endedUTC)||Date.parse(m.startedUTC)>Date.parse(m.endedUTC)||Date.parse(m.endedUTC)>now)fail('inventory attempts/clock/closed membership differs')
+ if(!Array.isArray(m.attempts)||!Number.isInteger(m.actualSourceGETs)||m.actualSourceGETs<0||m.actualSourceGETs>child.maximumSourceGETs||m.actualSourceGETs!==m.attempts.length||!diagnostic&&m.actualSourceGETs!==child.maximumSourceGETs||m.priorSourceGETs!==(future?getFcfFutureSourcePlanScope(plan).priorSourceGETs:isFcfSixPlan(plan)?22+(child.targetSlug==='es-ct-segona-g1'?requireFcfSixSourceContinuation(input.continuationProof).actualSourceGETs:0):isFcfIndependentSourcePlan(plan)?16:child.targetSlug==='es-ct-segona-g1'?0:239)||m.priorSourceGETs+m.actualSourceGETs>((future||isFcfSixPlan(plan))?478:477)||!Array.isArray(m.documents)||m.documents.length!==240||!validUTC(m.startedUTC)||!validUTC(m.endedUTC)||Date.parse(m.startedUTC)>Date.parse(m.endedUTC)||Date.parse(m.endedUTC)>now)fail('inventory attempts/clock/closed membership differs')
  if(isFcfSixPlan(plan)&&child.targetSlug==='es-ct-segona-g1'&&m.sourceClearanceUTC!==requireFcfSixSourceContinuation(input.continuationProof).sourceClearanceUTC)fail('global six source window cannot restart');
  if(isFcfIndependentSourcePlan(plan)){if(!validUTC(m.sourceClearanceUTC)||Date.parse(m.sourceClearanceUTC)>Date.parse(m.startedUTC)||Date.parse(m.sourceClearanceUTC)<Date.parse(consumption.consumedUTC)||Date.parse(m.sourceClearanceUTC)<Date.parse(plan.createdUTC))fail('actual source clearance clock differs');if((!isFcfSixPlan(plan)||child.targetSlug==='es-ct-tercera-g9')&&input.continuationProof!==undefined||consumption.protocol!==plan.preset||consumption.accountingSha256!==hash(plan.accountingBinding))fail('new G9 requires its own accounted consumption without G1 continuation')}
  else if(child.targetSlug==='es-ct-tercera-g9'){const prior=requireFcfInventoryContinuation(input.continuationProof);if(prior.planSha256!==plan.planSha256||prior.runId!==expected.runId||prior.claimCommit!==consumption.claimCommit||prior.firstSourceUTC!==m.firstSourceUTC||Date.parse(m.startedUTC)<Date.parse(prior.lastCompletedUTC))fail('actual G1 clock/count continuation differs')}
@@ -231,21 +232,21 @@ export function readFcfSixTargetEvidence(input){exactKeys(input,['protocol','his
 // protocol. These proofs authorize neither a launch selection nor native writes.
 export function readFcfFutureSourceStagingArtifact(input){
  const ctx=readChild(input,false,true),m=ctx.manifest
- const proof=frozenJSON({kind:'fcf-future-source-staged-proof',targetSlug:m.targetSlug,planSha256:m.planSha256,statisticsAudit:'not-run',binding:clone(ctx.binding),priorSourceGETs:37,actualSourceGETs:m.actualSourceGETs,firstSourceUTC:m.firstSourceUTC,lastCompletedUTC:m.lastCompletedUTC})
+ const proof=frozenJSON({kind:'fcf-future-source-staged-proof',targetSlug:m.targetSlug,planSha256:m.planSha256,statisticsAudit:'not-run',binding:clone(ctx.binding),priorSourceGETs:m.priorSourceGETs,actualSourceGETs:m.actualSourceGETs,firstSourceUTC:m.firstSourceUTC,lastCompletedUTC:m.lastCompletedUTC})
  futureStages.set(proof,ctx);return proof
 }
 function futureSourceStagedData(stagingProof,now){
  const ctx=futureStages.get(stagingProof)
  if(!ctx||!Number.isFinite(now))fail('authenticated future staged inventory/current policies required')
  validateFcfInventorySourcePlan({plan:ctx.plan,expectedPlanSha256:ctx.manifest.planSha256,now})
- const m=ctx.manifest,competition={id:797,slug:'es-ct-tercera-g9',source:'fcf',source_policy:FCF_SIX_SOURCE_POLICY,source_league_code:'4118349-4118588',active:false,sezona_koledarska:false}
+ const m=ctx.manifest,selected=getFcfFutureSourcePlanScope(ctx.plan),competition={id:selected.competitionId,slug:selected.targetSlug,source:'fcf',source_policy:FCF_SIX_SOURCE_POLICY,source_league_code:selected.sourceCode,active:false,sezona_koledarska:false}
  const fixtures=ctx.documents.map(document=>proveFcfFutureSourceDocument({competition,document,now})),calendar=validateFcfCurrentReleaseCalendar(fixtures)
  return {ctx,m,competition,fixtures,calendar}
 }
 export function auditFcfFutureSourceOffline({stagingProof,policyHashes,now=Date.now()}){
  const {ctx,m,fixtures,calendar}=futureSourceStagedData(stagingProof,now)
  if(!equal(policyHashes,ctx.plan.policyHashes))fail('authenticated future staged inventory/current policies required')
- return frozenJSON({schemaVersion:2,kind:'fcf-future-source-offline-audit',status:'passed',targetSlug:m.targetSlug,sourceCommit:m.sourceCommit,planSha256:m.planSha256,childPlanSha256:m.childPlanSha256,auditedUTC:new Date(now).toISOString(),execution:clone(m.execution),inventoryBinding:clone(ctx.binding),policyHashes:clone(policyHashes),canonicalSha256:hash(fixtures),calendarSha256:hash(calendar),priorSourceGETs:37,newSourceGETs:m.actualSourceGETs,actualSourceGETs:37+m.actualSourceGETs})
+ return frozenJSON({schemaVersion:2,kind:'fcf-future-source-offline-audit',status:'passed',targetSlug:m.targetSlug,sourceCommit:m.sourceCommit,planSha256:m.planSha256,childPlanSha256:m.childPlanSha256,auditedUTC:new Date(now).toISOString(),execution:clone(m.execution),inventoryBinding:clone(ctx.binding),policyHashes:clone(policyHashes),canonicalSha256:hash(fixtures),calendarSha256:hash(calendar),priorSourceGETs:m.priorSourceGETs,newSourceGETs:m.actualSourceGETs,actualSourceGETs:m.priorSourceGETs+m.actualSourceGETs})
 }
 /** Detached re-audited staging data, never terminal target/native authority. */
 export function getFcfFutureSourceStagedData({stagingProof,now=Date.now()}){
@@ -254,5 +255,5 @@ export function getFcfFutureSourceStagedData({stagingProof,now=Date.now()}){
 }
 export function readFcfFutureSourceDiagnosticArtifact(input){
  const ctx=readChild(input,true,true),m=ctx.manifest
- return frozenJSON({kind:'fcf-future-source-diagnostic-proof',targetSlug:m.targetSlug,planSha256:m.planSha256,sourceCommit:m.sourceCommit,runId:ctx.binding.runId,runAttempt:'1',claimCommit:ctx.consumption.claimCommit,status:'failed',priorSourceGETs:37,newSourceGETs:m.actualSourceGETs,actualSourceGETs:37+m.actualSourceGETs,firstSourceUTC:m.firstSourceUTC,lastCompletedUTC:m.lastCompletedUTC,stopReason:m.stopReason,inventoryBinding:clone(ctx.binding),auditBinding:null,admissible:false})
+ return frozenJSON({kind:'fcf-future-source-diagnostic-proof',targetSlug:m.targetSlug,planSha256:m.planSha256,sourceCommit:m.sourceCommit,runId:ctx.binding.runId,runAttempt:'1',claimCommit:ctx.consumption.claimCommit,status:'failed',priorSourceGETs:m.priorSourceGETs,newSourceGETs:m.actualSourceGETs,actualSourceGETs:m.priorSourceGETs+m.actualSourceGETs,firstSourceUTC:m.firstSourceUTC,lastCompletedUTC:m.lastCompletedUTC,stopReason:m.stopReason,inventoryBinding:clone(ctx.binding),auditBinding:null,admissible:false})
 }

@@ -1,4 +1,5 @@
-// Pure per-document G9 canonicalization. Caller-authored receipt/lineage fields
+import {getFcfFutureTarget} from './fcf-future-target-catalog.mjs'
+// Pure per-document closed G1/G9 canonicalization. Caller-authored receipt/lineage fields
 // are checked structurally; they are NOT authenticated reader capabilities.
 // No source requests, source admission, claim, launch choice or database writes.
 import {createHash} from 'node:crypto'
@@ -9,7 +10,7 @@ import {validateFcfSingleReportSource,najvecStarost} from './viri/fcf.mjs'
 import {validUTC,frozenJSON} from './fcf-missing-inventory-artifact.mjs'
 import {historicalStatisticsPolicySha256} from './lib/historical-statistics-policy.mjs'
 
-const slug='es-ct-tercera-g9',code='4118349-4118588',season='2026/27'
+const season='2026/27'
 const repository='Lovro-splichal-orhanizagi/mnzgorenjska',workflow='.github/workflows/uvoz-fcf-zgodovina.yml'
 const fail=message=>{throw Error(`FCF_FUTURE_SOURCE_PROOF: ${message}`)}
 const record=x=>x!==null&&typeof x==='object'&&!Array.isArray(x)&&Object.getPrototypeOf(x)===Object.prototype
@@ -31,7 +32,7 @@ function source(document,competition,now){
 /**
  * Input is {competition,document,now?}; document has id (numeric source string),
  * expectedSourceRound, html, flat receipt and Actions-shaped lineage, as on the
- * existing pure document prover. Scope is only inactive G9/797 current2026/27.
+ * existing pure document prover. Scope is only the closed inactive G1/G9 current2026/27 tuples.
  * Every source observation is an actual <=24h capture with cacheMtimeUTC:null.
  * A firstFantasyPlayedOn field is neither required nor used. This function
  * cannot establish completeness of a240-fixture calendar or a future opening.
@@ -42,8 +43,10 @@ function source(document,competition,now){
  * authenticated new source evidence AND original cleanup proof remain separate.
  */
 export function proveFcfFutureSourceDocument({competition:c,document:d,now=Date.now()}){
- if(!record(c)||c.id!==797||c.slug!==slug||c.source!=='fcf'||c.source_policy!==FCF_SIX_SOURCE_POLICY||c.source_league_code!==code||c.active!==false||c.sezona_koledarska!==false||Object.hasOwn(c,'season')&&c.season!==season||!Number.isFinite(now)||!Number.isFinite(new Date(now).getTime()))fail('exact inactive G9 current source/policy/calendar/clock required')
- if(!record(d)||!nativeId(d.id)||Number(d.id)<4118349||Number(d.id)>4118588||!Number.isInteger(d.expectedSourceRound)||d.expectedSourceRound<1||d.expectedSourceRound>30)fail('exact G9 source ID and actual round1–30 required')
+ let target;try{target=getFcfFutureTarget({targetSlug:c?.slug,competitionId:c?.id,sourceCode:c?.source_league_code})}catch{fail('exact inactive current source tuple required')}
+ const slug=target.targetSlug,code=target.sourceCode
+ if(!record(c)||c.id!==target.competitionId||c.slug!==slug||c.source!=='fcf'||c.source_policy!==FCF_SIX_SOURCE_POLICY||c.source_league_code!==code||c.active!==false||c.sezona_koledarska!==false||Object.hasOwn(c,'season')&&c.season!==season||!Number.isFinite(now)||!Number.isFinite(new Date(now).getTime()))fail('exact inactive G9 current source/policy/calendar/clock required')
+ if(!record(d)||!nativeId(d.id)||Number(d.id)<target.start||Number(d.id)>target.end||!Number.isInteger(d.expectedSourceRound)||d.expectedSourceRound<1||d.expectedSourceRound>30)fail('exact G9 source ID and actual round1–30 required')
  const provenance=source(d,c,now),header=deriveFcfFutureInventoryHeader({targetSlug:slug,id:d.id,bytes:Buffer.from(d.html,'utf8')})
  // Preserve the shared current-season/source identity check for historical as
  // well as normal pages; no expired prelaunch-date or R6 choice is involved.
