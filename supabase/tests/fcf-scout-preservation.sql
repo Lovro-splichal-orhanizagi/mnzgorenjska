@@ -31,7 +31,22 @@ select pg_temp.scout_hold('update scout.lige_moc set vir=''piramida'' where mode
 select pg_temp.scout_hold('update scout.lige_moc set prestopov=1 where model_id=910000001 and competition_id=783','positive sample');
 select pg_temp.scout_hold('update scout.modeli set objavljen=false where id=910000001','unpublished parent');
 select pg_temp.scout_hold('alter table scout.lige_moc drop constraint lige_moc_model_id_fkey','missing model FK');
-select pg_temp.scout_hold('alter table scout.modeli disable trigger all;delete from scout.modeli where id=910000001','orphan model parent');
+-- An ordinary owner cannot create orphans under the validated immediate FK.
+-- Create a real orphan state with an unvalidated replacement; the earlier key
+-- invariant must reject it exactly. This does not reach the numeric parent guard.
+do $$declare football jsonb;scout_rows jsonb;begin
+ football:=private_fcf_six_history.capture();scout_rows:=pg_temp.scout_all();
+ begin
+  alter table scout.lige_moc drop constraint lige_moc_model_id_fkey;
+  delete from scout.modeli where id=910000001;
+  alter table scout.lige_moc add constraint lige_moc_model_id_fkey foreign key(model_id)references scout.modeli(id)on delete cascade not valid;
+  perform pg_temp.six_assert((select count(*)=9 from scout.lige_moc where competition_id in(783,790,797))and(select count(*)=2 from scout.modeli where id between 910000001 and 910000003)and(select count(*)=3 from scout.lige_moc l left join scout.modeli m on m.id=l.model_id where l.competition_id in(783,790,797)and m.id is null),'synthetic orphan state has nine children/two parents/three orphans');
+  begin perform pg_temp.scout_phase();raise exception 'SCOUT TEST: accepted orphan state';
+  exception when raise_exception then if sqlerrm<>'FCF_HISTORY: unreviewed Scout snapshot keys'then raise;end if;end;
+  raise exception 'EXPECTED ORPHAN FIXTURE ROLLBACK';
+ exception when raise_exception then if sqlerrm<>'EXPECTED ORPHAN FIXTURE ROLLBACK'then raise;end if;end;
+ perform pg_temp.six_assert(private_fcf_six_history.capture()=football and pg_temp.scout_all()=scout_rows and(select convalidated from pg_constraint where conrelid='scout.lige_moc'::regclass and conname='lige_moc_model_id_fkey'),'orphan-state rejection restores rows and validated FK');
+end$$;
 select pg_temp.scout_hold('alter table scout.lige_moc drop constraint lige_moc_pkey','missing matrix primary key');
 select pg_temp.scout_hold('alter table scout.lige_moc add column unreviewed text','unreviewed allowed shape');
 select pg_temp.scout_hold('alter table scout.modeli add column unreviewed text','unreviewed parent shape');

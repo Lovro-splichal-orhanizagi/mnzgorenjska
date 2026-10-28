@@ -48,3 +48,17 @@ Validation of this delta:
 - `node --check`, Ruby YAML parsing/step placement assertions and `git diff --check`: passed.
 
 The hosted CI connection path has not been executed locally, and no local port54322 was contacted. PR and main CI are the remaining end-to-end verification of that route. No broad suites, push, network, SSH or environment-file reads were performed in this follow-up.
+
+## Actual PR CI failure: ordinary-owner orphan fixture
+
+PR571 CI run `40643477174` executed all four new tests: the nine-row prepare, zero-reference cleanup and G1 catalog tests passed; test3 failed while setting up its orphan fixture. CI's nonsuperuser `postgres` cannot disable PostgreSQL's internal FK triggers with `ALTER TABLE scout.modeli DISABLE TRIGGER ALL`. The original owned-clone run used superuser `supabase_admin`, which permitted that fixture operation. Production guard behavior was not the failing assertion.
+
+The test-only correction drops the known fixture FK, deletes one of the three synthetic model parents, and reinstates the same FK `NOT VALID`. Before invoking the real phase, it explicitly proves nine target child rows, two model parents and three actual orphan rows. It then requires the exact `FCF_HISTORY: unreviewed Scout snapshot keys` exception and rolls back the nested fixture, checking restored native/Scout rows and the original validated FK. This exercises fail-closed orphan-state handling at the validated-key invariant; it does **not** claim numeric parent-count branch coverage. An ordinary owner cannot construct that orphan state while preserving the helper's validated immediate FK prerequisites. The other publication/matrix tests continue to cover reachable parent/matrix conditions.
+
+Validation: on the reverified exact disconnected owned clone, a separate rollback-only check temporarily assigned model-table ownership/Scout schema usage to the existing `postgres` role, asserted `rolsuper=false` after `SET LOCAL ROLE postgres`, reproduced the exact system-trigger permission failure and restored all ownership/grants with `ROLLBACK`. The changed test3 then passed:
+
+```sh
+FCF_SCOUT_OWNED_SQL_TEST=1 node --test --test-name-pattern='nine-row preservation' scripts/test-fcf-scout-preservation-sql.mjs
+```
+
+Result: one selected test passed, zero failures/skips; explicit outer rollback sentinel confirmed. `git diff --check` passed. Only the SQL fixture and ledger changed; production SQL, Python, runner, CI role/privileges and workflow are unchanged. The other suites were not rerun. No production retry, release controller/waiter restart, push, network, SSH or environment-file reads occurred.
