@@ -1,0 +1,155 @@
+name: Install reviewed immutable Baden native catalog
+run-name: Same-head owner catalog DATA only - no registration or import
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact reviewed deployed main writer SHA
+        type: string
+        required: true
+      derived_run:
+        description: Actual successful derived Baden composition run
+        type: string
+        required: true
+      main_ci_run_id:
+        description: Actual successful first-attempt push CI run at this writer
+        type: string
+        required: true
+      reviewed_asset_id:
+        description: Root-uploaded immutable JSON asset in private draft baden-native-staging-v1
+        type: string
+        required: true
+      reviewed_manifest_sha256:
+        description: Independently reviewed exact canonical native manifest SHA256
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: baden-native-catalog-owner-install
+  cancel-in-progress: false
+env:
+  EXPECTED_SHA: ${{ inputs.expected_sha }}
+  DERIVED_RUN_ID: ${{ inputs.derived_run }}
+  MAIN_CI_RUN_ID: ${{ inputs.main_ci_run_id }}
+  REVIEWED_ASSET_ID: ${{ inputs.reviewed_asset_id }}
+  REVIEWED_MANIFEST_SHA256: ${{ inputs.reviewed_manifest_sha256 }}
+  FROZEN_DE77_DIRECTORY: frozen-de77
+  FROZEN_V6_DIRECTORY: frozen-v6
+  MIGRACIJE_PREMOR: ${{ vars.MIGRACIJE_PREMOR }}
+  NODE_OPTIONS: --max-old-space-size=6144
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.expected_sha == github.sha && github.actor == 'nejcar20' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout exact reviewed writer
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Checkout frozen DE77
+        uses: actions/checkout@v4
+        with:
+          ref: de77b661cbc11d95256a500e57c2fdea861a0647
+          path: frozen-de77
+          persist-credentials: false
+      - name: Checkout frozen failed V6
+        uses: actions/checkout@v4
+        with:
+          ref: 4e1e7caac02aa6e12c789c7cea7aac699d3c2566
+          path: frozen-v6
+          persist-credentials: false
+      - name: Set up Node22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Authenticate source, root review, writer and deployed main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          command -v psql >/dev/null || { echo "::error::Missing PostgreSQL client; HOLD."; exit 1; }
+          node scripts/install-baden-native-catalog.mjs validate
+      - name: Preserve validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baden-catalog-validation-${{ github.run_id }}-1
+          path: baden-native-catalog-install/
+          if-no-files-found: warn
+          retention-days: 30
+  install:
+    needs: validate
+    if: needs.validate.result == 'success' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.expected_sha == github.sha && github.actor == 'nejcar20' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout exact reviewed writer
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Checkout frozen DE77
+        uses: actions/checkout@v4
+        with:
+          ref: de77b661cbc11d95256a500e57c2fdea861a0647
+          path: frozen-de77
+          persist-credentials: false
+      - name: Checkout frozen failed V6
+        uses: actions/checkout@v4
+        with:
+          ref: 4e1e7caac02aa6e12c789c7cea7aac699d3c2566
+          path: frozen-v6
+          persist-credentials: false
+      - name: Set up Node22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Validate again before owner connection
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          command -v psql >/dev/null || { echo "::error::Missing PostgreSQL client; HOLD."; exit 1; }
+          node scripts/install-baden-native-catalog.mjs validate
+      - name: Owner connection prerequisite
+        id: owner
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ "$MIGRACIJE_PREMOR" = "1" ] || [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Owner connection missing or migrations paused; HOLD."
+            exit 1
+          fi
+          case "$SUPABASE_DB_URL" in *@127.0.0.1*) echo "tunnel=yes" >> "$GITHUB_OUTPUT";; esac
+      # Same GHA-only loopback arrangement as CI, never a local credential path.
+      - name: Tunnel to owner database
+        if: steps.owner.outputs.tunnel == 'yes'
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Install reviewed immutable catalog once
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: node scripts/install-baden-native-catalog.mjs install
+      - name: Preserve owner installation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baden-catalog-owner-install-${{ github.run_id }}-1
+          path: baden-native-catalog-install/
+          if-no-files-found: warn
+          retention-days: 30
