@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "es-ct-segona-g1-supplement-4109410-v1",
+  "provider": "fcf",
+  "competitionSlug": "es-ct-segona-g1",
+  "competitionId": 783,
+  "season": "2026/27",
+  "approvalReference": "[\"request_user_input_async\",\"call_48f04eab8ab34261aff62a82494d538d\",0]",
+  "approvedOriginalSha256": "7c2335342065b7e0a77b54be97fe544c3549e165bd504ef1197a2d377fbe4b28",
+  "approvedOriginalBytes": 171068,
+  "reasonCode": "closed_official_result_and_individual_statistics_unavailable",
+  "fixture": {
+    "sourceMatchId": "4109410",
+    "sourceCompetitionId": null,
+    "sourcePhase": null,
+    "sourceRound": 3,
+    "playedOn": "2026-10-04",
+    "kickoff": "17:00",
+    "season": "2026/27",
+    "homeSourceClubId": "5056",
+    "homeSourceCategoryId": "33220",
+    "awaySourceClubId": "5227",
+    "awaySourceCategoryId": "34936",
+    "sourceUrl": "https://www.fcf.cat/ca/competicio/acta/4109410",
+    "observedHomeScore": null,
+    "observedAwayScore": null
+  },
+  "homeName": "BISBALENC, AT.",
+  "awayName": "SPORTING-VIDRERENCA, C.E.F",
+  "goalEventCount": 0
+}

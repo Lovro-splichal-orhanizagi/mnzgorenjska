@@ -116,7 +116,7 @@ jobs:
       # Retained private83 positives run with the explicit offline fixture;
       # public CI runs the source-free route, schema and refusal controls.
       - name: G1 remainder quarantine and source-history guards (source-free)
-        run: node --test scripts/test-fcf-g1-remainder*.mjs scripts/test-fcf-g1-quarantine-audit.mjs scripts/test-fcf-g1-prebudget-audit.mjs scripts/test-fcf-g1-historical-zero-witness.mjs
+        run: node --test scripts/test-fcf-g1-remainder*.mjs scripts/test-fcf-g1-quarantine-audit.mjs scripts/test-fcf-g1-prebudget-audit.mjs scripts/test-fcf-g1-historical-zero-witness.mjs scripts/test-fcf-g1-4109410-readiness.mjs
 
       - name: FCF fresh-source future launch protocol (source-free)
         run: npm run test:fcf-future

@@ -171,6 +171,15 @@ export function readFcfG1RemainderArtifact({plan,claimProof,consumptionProof,...
  const binding={runId:m.runId,sourceCommit:m.sourceCommit,artifactId:input.expected.artifactId,artifactDigest:input.expected.artifactDigest,manifestSha256:input.expected.manifestSha256,newSourceGETs:m.newSourceGETs,priorSourceGETs:m.priorSourceGETs,claimRef:m.claimRef,claimCommit:m.claimCommit,claimJsonSha256:m.claimJsonSha256},proof=Object.freeze({kind:'fcf-g1-remainder-raw-proof'});children.set(proof,{plan,manifest:m,documents:docs,binding});return proof
 }
 export function getFcfG1RemainderRawData(proof){const d=children.get(proof);if(!d)fail('private G1 raw quarantine proof required');authority(d.plan);if(Date.now()>Date.parse(d.plan.sourceFreshUntil))fail('original composite24h expired');const a=authority(d.plan),l=ledger(a.parentProof,a.appendProofs);return{manifest:structuredClone(d.manifest),binding:structuredClone(d.binding),documents:[...l.documents,...d.documents].map(cloneDoc),...flags}}
+// Separate finalization-gated read-only readiness interface. This never grants
+// the legacy full240/native admission capability or changes the raw source flags.
+export function getFcfG1FinalizedRemainderData(proof){
+ const data=getFcfG1RemainderRawData(proof),finalReceipt=finalized.get(proof),state=children.get(proof)
+ if(!finalReceipt||data.manifest.status!=='COMPLETE_QUARANTINE'||data.documents.length!==240)fail('private finalized complete240 remainder required for read-only readiness')
+ const p=getFcfG1RemainderParent(authority(state.plan).parentProof),g9=p.sourceReferences.prior.prior.latest.plan,oldG1=p.sourceReferences.prior.latest.plan
+ if(g9.preset!=='future-g9-after-six-v1'||g9.child?.targetSlug!=='es-ct-tercera-g9'||!commitId(g9.sourceCommit)||!commitId(oldG1.sourceCommit))fail('authenticated original G9 cleanup ancestry required')
+ return {...data,finalReceipt:structuredClone(finalReceipt),ancestry:{anchorLedgerSha256:p.ledgerSha256,cleanupIssuerSourceCommit:g9.sourceCommit,failedG1SourceCommit:oldG1.sourceCommit,prefixSourceCommit:p.sourceReferences.latest.plan.sourceCommit}}
+}
 export function buildFcfG1RemainderFinalReceipt({rawProof}){
  const d=children.get(rawProof);if(!d)fail('private raw remainder proof required')
  return frozenJSON({schemaVersion:1,kind:'fcf-g1-remainder-final-receipt',preset:FCF_G1_REMAINDER_PROTOCOL,planSha256:d.plan.planSha256,ledgerSha256:d.plan.ledgerSha256,child:d.binding,status:d.manifest.status,accountingKnown:true,priorSourceGETs:d.manifest.priorSourceGETs,newSourceGETs:d.manifest.newSourceGETs,actualSourceGETs:d.manifest.actualSourceGETs,maximumCumulativeSourceGETs:478,firstSourceUTC:d.plan.firstSourceUTC,sourceFreshUntil:d.plan.sourceFreshUntil,...flags})
