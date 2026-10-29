@@ -1,0 +1,16 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {createHash} from 'node:crypto'
+import {describeFcfG1DerivedScores,prepareFcfG1DerivedScores} from './fcf-g1-derived-scores.mjs'
+const sha=s=>createHash('sha256').update(s).digest('hex')
+function fixture(){
+ const rows=Array.from({length:924},(_,i)=>({round_id:1+i%30,player_id:1000+i,points:i%9,computed_at:'2026-10-29T00:00:00Z'})),expected=rows.map(({computed_at,...r})=>r),beforeImageText=JSON.stringify(rows),expectedBeforeText=JSON.stringify(expected)
+ const native={competition:{id:783},rounds:Array.from({length:30},(_,i)=>({id:i+1})),matches:Array.from({length:240},(_,i)=>({id:i+1})),dependencies:{complete:true,competitionUserRows:0,rounds:Array.from({length:30},(_,i)=>({roundId:i+1,userRows:rows.filter(r=>r.round_id===i+1).length,lineupRows:0,rosterRows:0,transferRows:0,chipRows:0})),matches:Array.from({length:240},(_,i)=>({matchId:i+1,userRows:0}))}}
+ const relations={'public.player_scores':{count:924,rowsSha256:sha(beforeImageText),globalUser:false},'public.fantasy_teams':{count:0,globalUser:true}},dependencySnapshotText=JSON.stringify({native,relations})
+ return {projection:{native,dependencySnapshotText,dependencySnapshotSha256:sha(dependencySnapshotText)},scoreBefore:{beforeImageText,beforeSha256:sha(beforeImageText),expectedBeforeText,expectedBeforeSha256:sha(expectedBeforeText),rulesSha256:'a'.repeat(64)}}
+}
+test('synthetic924 preparation retains full TEXT/hash and nonzero strict userRows without native authority',()=>{const f=fixture(),r=describeFcfG1DerivedScores(f);assert.equal(r.count,924);assert.equal(r.strictZeroAffectedUsersObserved,false);assert.equal(r.roundCounts.reduce((s,r)=>s+r.userRows,0),924);assert.equal(r.beforeImageText,f.scoreBefore.beforeImageText);assert.ok(Object.isFrozen(r))})
+test('score client rejects stale/extra/orphan rows, forged hashes and human or strict-counter drift',()=>{
+ for(const mutate of [f=>f.scoreBefore.beforeImageText+=' ',f=>f.scoreBefore.expectedBeforeText='[]',f=>f.projection.native.dependencies.rounds[0].userRows=0,f=>f.projection.native.dependencies.competitionUserRows=1,f=>f.projection.native.dependencies.matches[0].userRows=1,f=>{const r=JSON.parse(f.scoreBefore.beforeImageText);r[0].points=null;f.scoreBefore.beforeImageText=JSON.stringify(r);f.scoreBefore.beforeSha256=sha(f.scoreBefore.beforeImageText)},f=>f.projection.native.dependencies.rounds[1]=f.projection.native.dependencies.rounds[0]]){const f=fixture();mutate(f);assert.throws(()=>describeFcfG1DerivedScores(f))}
+})
+test('prepare client uses one parameterized readonly RPC and returns DATA only',async()=>{const f=fixture(),calls=[],r=await prepareFcfG1DerivedScores({query:async(...args)=>{calls.push(args);return {rows:[{preparation:{projection:f.projection,derivedScoresBefore:f.scoreBefore}}]}},privacyKeys:['TEST_ONLY']});assert.deepEqual(calls,[['select public.fcf_g1_derived_scores_prepare($1::text[]) as preparation',[['TEST_ONLY']]]]);assert.equal(r.derivedScoresBefore.count,924);assert.equal(r.nativeAdmission,false);assert.equal(r.activationEligible,false);assert.equal(r.admissible,false);await assert.rejects(prepareFcfG1DerivedScores({query:async()=>({rows:[]})}));await assert.rejects(prepareFcfG1DerivedScores({query:async()=>{throw Error('explicit readonly transaction required')}}),/readonly/)})

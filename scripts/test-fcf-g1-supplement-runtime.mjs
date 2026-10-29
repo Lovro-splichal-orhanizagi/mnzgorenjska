@@ -26,11 +26,11 @@ function installed({prelaunch=true,fingerprint='c'.repeat(64)}={}){
  const binding={schemaVersion:1,kind:'fcf-g1-native-supplement',policyId:p.id,policySha256:hash(p),approvalReference:p.approvalReference,approvedOriginalSha256:p.approvedOriginalSha256,fixture:structuredClone(p.fixture),native,sourceCommit:'b'.repeat(40),sourceFingerprintSha256:fingerprint,...(prelaunch?{prelaunch:{kind:'exact-legacy-placeholder-v1',beforeImageText,beforeSha256:createHash('sha256').update(beforeImageText).digest('hex')}}:{})}
  return {binding,afterImage,receipt:{schemaVersion:1,kind:'fcf-g1-supplement-installed',sourceCommit:binding.sourceCommit,sourceFingerprintSha256:fingerprint,policySha256:hash(p),beforeSha256:'d'.repeat(64),afterSha256:'e'.repeat(64)}}
 }
-function database(data=installed(),original=old()) {const calls=[];return{calls,async rpc(name,args){calls.push([name,args]);return {data:name==='get_installed_fcf_six_statistics_markers'?original:data,error:null}},from(){throw Error('SQL writes forbidden')}}}
+function database(data=installed(),original=old()) {const calls=[];return{calls,async rpc(name,args){calls.push([name,args]);return {data:name==='get_installed_fcf_six_statistics_markers'?original:name==='get_installed_fcf_g1_4109410_supplement'?null:data,error:null}},from(){throw Error('SQL writes forbidden')}}}
 async function loaded(data=installed(),c=competition){const db=database(data),context=await loadHistoricalStatisticsImportContext(db,c);return {...context,db}}
 const input=c=>({competition:c.competition,installedG1Supplement:c.installedG1Supplement})
 test('service loader/factory keep original G1 two markers and separate durable private supplement after launch',async()=>{
- const c=await loaded();assert.deepEqual(c.db.calls,[['get_installed_fcf_six_statistics_markers',{p_competition_id:783}],['get_installed_fcf_g1_supplement',undefined]])
+ const c=await loaded();assert.deepEqual(c.db.calls,[['get_installed_fcf_six_statistics_markers',{p_competition_id:783}],['get_installed_fcf_g1_supplement',undefined],['get_installed_fcf_g1_4109410_supplement',undefined]])
  assert.equal(c.installedHistoricalMarkers.markers.length,2);assert.deepEqual(c.installedHistoricalMarkers,old())
  const provider=viraZa(c.competition,c),read=()=>{throw Error('source forbidden')}
  assert.deepEqual(await provider.posamezniZapisnik(competition.source_league_code,{id:'es4109409'})(read),[])
@@ -94,7 +94,7 @@ test('actual raw full240 calendar retains verified NULL fixture and never reques
 test('normal CLI loader/destructure/direct guard and batch guard retain genuine context; ordinary errors remain strict',async()=>{
  const source=readFileSync(new URL('./uvoz-zapisnikov.mjs',import.meta.url),'utf8'),body=source.slice(source.indexOf('const originalCompetition'),source.indexOf('const liga =')),stop=Error('STOP'),db=database()
  await assert.rejects(()=>runInNewContext(`(async()=>{${body}})()`,{db,najdiTekmovanje:async()=>competition,arg:key=>key==='zapisnik'?'es4109409':null,pocisti:false,loadHistoricalStatisticsImportContext,isFcfG1SupplementReport,viraZa(){throw Error('factory reached')},console:{log(){}},process:{exit(code){assert.equal(code,0);throw stop}}}),e=>e===stop)
- assert.equal(db.calls.length,2)
+ assert.equal(db.calls.length,3)
  await assert.rejects(()=>runInNewContext(`(async()=>{${body}})()`,{db:database(null),najdiTekmovanje:async()=>competition,arg:key=>key==='zapisnik'?'es4109409':null,pocisti:false,loadHistoricalStatisticsImportContext,isFcfG1SupplementReport,viraZa(){throw Error('factory reached')},console:{log(){}},process:{exit(){throw Error('exit reached')}}}),/HOLD/)
  const c=await loaded();assert.throws(()=>assertHistoricalReportImportable({...input(c),report:{id:'es4109409',z:{}}}),/cannot derive/)
  assert.throws(()=>assertHistoricalReportImportable({competition:c.competition,report:{id:'es4109410',z:{}}}),/private context/)
