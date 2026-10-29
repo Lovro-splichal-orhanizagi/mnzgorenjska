@@ -7,16 +7,19 @@ import {execFileSync} from 'node:child_process'
 import {createHash} from 'node:crypto'
 import {isDeepStrictEqual} from 'node:util'
 import {readFussballCompletedSourceV7,getFussballCompletedSourceV7} from './fussball-completed-source-v7.mjs'
+import {readFussballBadenFreshPair,getFussballBadenFreshPair} from './fussball-baden-fresh-pair.mjs'
+import {fussballFreshPairCodeSha256} from './fussball-fresh-pair.mjs'
 import {fussballArchiveV7CodeSha256} from './fussball-archive-v7.mjs'
 import {zaprtje} from './odtis-kode.mjs'
 import {normalizeFussballReport,parseFussballLeagueCode,fussballPlayerKey} from './fussball-import.mjs'
 import {validateFussballNativeRoleEnvelope as validateFussballCardEnvelope,razberiNativeFantasyZapisnik as razberiFantasyZapisnik} from './viri/fussball-native-role-parser.mjs'
-import {replayFussballNativeRoles} from './fussball-native-role-replay.mjs'
+import {replayFussballNativeRoles,fussballNativeOriginalResultBytes as originalResultBytes} from './fussball-native-role-replay.mjs'
 import {inspectFussballPage,fussballFontUrl} from './viri/fussball-discovery.mjs'
 import {inspectFussballLineup} from './viri/fussball-statistika.mjs'
 import {validateFussballFixture} from './fussball-season.mjs'
 
 const profile='germany-retained-fussball-native-v1',sourcePolicy='fussball-community-cards-v1'
+const freshCatalogKind='baden-fussball-fresh-pair-native-catalog',freshSourceKind='authenticated-fussball-baden-fresh-pair-source'
 const repo='Lovro-splichal-orhanizagi/mnzgorenjska',prefix=`repos/${repo}/`,workflow='.github/workflows/replay-fussball-native-composition.yml'
 const validateStep='Validate exact reviewed main and first attempt',deriveStep='Authenticate source certificate and derive exact Baden partition',uploadStep='Preserve derived Baden composition proof'
 const catalogFile='scripts/policies/fussball-baden-native-composition.json'
@@ -53,9 +56,9 @@ function fixture(f,rounds){
 export function validateFussballNativeCatalog(c){
  closed(c,['version','kind','profile','status','sourcePolicy','approval','firstFantasyPlayedOn','sourceRunId','sourceHead','captureCodeSha256','clubDescriptors','nativePreparation','seasons'],'closed catalog required')
  need(c.nativePreparation===null,'native preparation cannot be supplied as catalog authority')
- need(c.version===1&&c.kind==='baden-fussball-native-catalog'&&c.profile===profile&&c.sourcePolicy===sourcePolicy&&c.captureCodeSha256===fussballArchiveV7CodeSha256()&&c.captureCodeSha256==='c730046b0a543bf7d9d1dc40f56ae857e5935dd81c0b1a5aff898adcce4b06ea','exact Baden catalog/source scope required')
+ need(c.version===1&&c.profile===profile&&c.sourcePolicy===sourcePolicy&&((c.kind==='baden-fussball-native-catalog'&&c.captureCodeSha256===fussballArchiveV7CodeSha256()&&c.captureCodeSha256==='c730046b0a543bf7d9d1dc40f56ae857e5935dd81c0b1a5aff898adcce4b06ea')||(c.kind===freshCatalogKind&&c.captureCodeSha256===fussballFreshPairCodeSha256()&&c.captureCodeSha256==='f9eeb9ecff417b24a599038ee1d0aa9f4c8fd09f8b47cdd71a6c79fb9e823dca')),'exact Baden catalog/source scope required')
  need(c.status==='FINALIZED','production catalog UNFINALIZED: exhaustive archive, immutable cutoff and source club descriptors required')
- need(/^[1-9]\d{0,15}$/.test(c.sourceRunId??'')&&/^[a-f0-9]{40}$/.test(c.sourceHead??''),'actual authenticated completed V7 run/head required')
+ need(/^[1-9]\d{0,15}$/.test(c.sourceRunId??'')&&/^[a-f0-9]{40}$/.test(c.sourceHead??''),'actual authenticated source run/head required')
  closed(c.approval,['reference','permissionTimestamp'],'closed approval reference required')
  need(c.approval.reference==='call_e8c944e47b7c42a38afa4f08fda48c23'&&(c.approval.permissionTimestamp===null||utc(c.approval.permissionTimestamp))&&date(c.firstFantasyPlayedOn),'reviewed catalog approval/cutoff required')
  need(Array.isArray(c.clubDescriptors)&&c.clubDescriptors.length>0&&c.clubDescriptors.length<=128,'complete source club descriptors required')
@@ -142,13 +145,15 @@ function cardEntry(entry,f,season,documents){
 }
 function partitionState(state,c){
  validateFussballNativeCatalog(c);fresh(state.proof.source)
+ const freshPair=c.kind===freshCatalogKind
+ need(state.proof.kind===(freshPair?freshSourceKind:'authenticated-completed-fussball-v7-source'),'source family differs from catalog')
  need(state.proof.source.sourceRunId===c.sourceRunId&&state.proof.source.sourceHead===c.sourceHead&&state.proof.source.captureCodeSha256===c.captureCodeSha256&&state.proof.source.nativeEligible===false&&state.proof.source.activationEligible===false,'source-only capability scope differs')
  const seasons=[],clubs=[],roleReplay=replayFussballNativeRoles(state.originals.stages)
  for(const s of c.seasons){
   const stage=state.originals.stages[s.stage],original=stage.result,replay=roleReplay[s.stage],r=replay.result,sch=r.schedule,scope=r.scope,cov=r.coverage
   need(s.nativeRoleReplaySha256===replay.nativeRoleReplaySha256,'finalized native role replay witness differs')
   need(stage.manifest.success===true&&stage.manifest.error===null&&stage.manifest.options.reportLimit===null&&scope?.provider==='fussball'&&scope.staffel===s.staffel&&scope.season===s.season&&scope.cardPolicy==='community-v1'&&sch?.staffel===s.staffel&&sch.season===s.season&&r.version===1&&r.activationEligible===false&&date(scope.asOfDate),'complete replayed seasonal scope required')
-  need(stage.manifest.resultSha256===s.resultSha256&&hash(stage.files.get('result.json'))===s.resultSha256&&digest(sch.fixtures)===s.fixtureInventorySha256&&digest(original.rejectedReports)===s.rejectionsSha256&&digest(r.administrativeFixtures??[])===s.administrativeSha256,'finalized source fixture/result/rejection/admin inventory differs')
+  need(stage.manifest.resultSha256===s.resultSha256&&hash(freshPair?originalResultBytes(stage):stage.files.get('result.json'))===s.resultSha256&&digest(sch.fixtures)===s.fixtureInventorySha256&&digest(original.rejectedReports)===s.rejectionsSha256&&digest(r.administrativeFixtures??[])===s.administrativeSha256,'finalized source fixture/result/rejection/admin inventory differs')
   need(Array.isArray(sch.rounds)&&sch.rounds.length>0&&sch.rounds.length<=80&&sch.rounds.every((n,i)=>n===i+1)&&Array.isArray(sch.fixtures)&&sch.fixtures.length>0&&sch.fixtures.length<=4000,'full bounded contiguous source schedule required')
   const byId=new Map(),assigned=new Set(),partition=Object.fromEntries(categories.map(k=>[k,[]])),identities=new Map(),reports=[],pendingReports=[],unavailable=[]
   for(const f of sch.fixtures){fixture(f,sch.rounds);need(!byId.has(f.id),'duplicate source fixture');byId.set(f.id,f)}
@@ -175,10 +180,12 @@ function partitionState(state,c){
  need(same(clubs.sort((a,b)=>canonical(a).localeCompare(canonical(b))),[...c.clubDescriptors].sort((a,b)=>canonical(a).localeCompare(canonical(b)))),'source club descriptor inventory differs')
  return seasons
 }
-function sourceState(proof){const state=getFussballCompletedSourceV7(proof);fresh(proof.source);return state}
+/** Dispatch preserves the actual private issuer; serialized source DATA is never authority. */
+export function getFussballNativeCompositionSource(proof){const state=proof?.kind===freshSourceKind?getFussballBadenFreshPair(proof):getFussballCompletedSourceV7(proof);fresh(state.proof.source);return state}
+function sourceState(proof){return getFussballNativeCompositionSource(proof)}
 export function partitionFussballNativeSource(proof){return freeze(partitionState(sourceState(proof),catalog))}
 export function buildFussballNativeComposition(proof){
- const state=getFussballCompletedSourceV7(proof),seasons=partitionState(state,catalog)
+ const state=sourceState(proof),seasons=partitionState(state,catalog)
  const pack={version:1,profile,sourcePolicy,source:structuredClone(proof),expectedSha:null,sourceHead:proof.source.sourceHead,replayHead:null,captureCodeSha256:proof.source.captureCodeSha256,captured_at:proof.source.currentCreatedAt,currentFreshUntil:proof.source.currentFreshUntil,originalBytesSha256:digest(proof.source.artifacts),sourceCertificateSha256:digest(state.certificate),catalogSha256:hash(catalogBytes),clubDescriptorsSha256:digest(catalog.clubDescriptors),policySha256:digest(catalog),firstFantasyPlayedOn:catalog.firstFantasyPlayedOn,seasons,nativeAdmission:false,registrationEligible:false,nativeImportEligible:false,activationEligible:false,actualReady:false,nativePreparation:null}
  return freeze({...pack,derivedPackSha256:digest(pack)})
 }
@@ -236,16 +243,24 @@ function unpackDerived(bytes){
  }catch(e){if(e.code==='FUSSBALL_NATIVE_COMPOSITION_HOLD')throw e;need(false,'bounded derived extraction failed')}finally{rmSync(root,{recursive:true,force:true})}
 }
 function parse(bytes){try{return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes))}catch{need(false,'invalid derived UTF8/JSON')}}
-function sourceInput(c,input){need(/^[1-9]\d{0,15}$/.test(c.sourceRunId??'')&&c.sourceRunId!==input.derivedRunId&&typeof input.frozenDirectory==='string'&&input.frozenDirectory.length>0&&typeof input.v6FrozenDirectory==='string'&&input.v6FrozenDirectory.length>0,'actual distinct V7 source run and frozen checkout required');return {sourceRunId:c.sourceRunId,frozenDirectory:input.frozenDirectory,v6FrozenDirectory:input.v6FrozenDirectory,github:input.github}}
+function sourceInput(c,input){need(/^[1-9]\d{0,15}$/.test(c.sourceRunId??'')&&c.sourceRunId!==input.derivedRunId&&typeof input.frozenDirectory==='string'&&input.frozenDirectory.length>0&&typeof input.v6FrozenDirectory==='string'&&input.v6FrozenDirectory.length>0,'actual distinct source run and compatibility checkout paths required');return {sourceRunId:c.sourceRunId,frozenDirectory:input.frozenDirectory,v6FrozenDirectory:input.v6FrozenDirectory,github:input.github}}
+/** Fixed compiled catalog selects the genuine reader. Compatibility checkout
+ * paths are unused by fresh-pair; they never supply an old current clock. */
+export async function readFussballNativeCompositionSource(input){
+ closed(input,['sourceRunId','frozenDirectory','v6FrozenDirectory','github'],'closed native source reader input required')
+ need(input.sourceRunId===catalog.sourceRunId,'compiled source run differs')
+ validateFussballNativeCatalog(catalog);sourceInput(input,input)
+ return catalog.kind===freshCatalogKind?readFussballBadenFreshPair({sourceRunId:input.sourceRunId,sourceHead:catalog.sourceHead,github:input.github}):readFussballCompletedSourceV7(input)
+}
 /** Hosted producer: only repository GETs and a new local output directory. It
  * reauthenticates the genuine source certificate before AND after derivation. */
 export async function produceFussballNativeComposition(input){
  hostedShape(input,['derivedRunId','derivedHead','sourceRunId','frozenDirectory','v6FrozenDirectory','github','directory']);need(typeof input.directory==='string'&&input.directory.length>0,'exclusive derived output directory required')
  const si=sourceInput(input,input),api=hostedApi(input),path=`actions/runs/${input.derivedRunId}`,run=await api.get(path);hostedRun(run,input,false)
- const runtime=await installedRuntime(input,api),source=await readFussballCompletedSourceV7(si),pack=writerPack(source,input.derivedHead),packBytes=json(pack),createdAt=new Date().toISOString()
+ const runtime=await installedRuntime(input,api),source=await readFussballNativeCompositionSource(si),pack=writerPack(source,input.derivedHead),packBytes=json(pack),createdAt=new Date().toISOString()
  need(Date.parse(createdAt)>=Date.parse(run.created_at),'derived proof predates run')
  const certificate={version:1,kind:'fussball-baden-derived-hosted-proof',repository:repo,profile,workflow,derivedRunId:input.derivedRunId,derivedHead:input.derivedHead,expectedSha:input.derivedHead,sourceRunId:input.sourceRunId,createdAt,runtime,runtimeSha256:digest(runtime),compositionCodeSha256:runtime['scripts/fussball-native-composition.mjs'],catalogSha256:pack.catalogSha256,policySha256:pack.policySha256,clubDescriptorsSha256:pack.clubDescriptorsSha256,source:pack.source,sourceCertificateSha256:pack.sourceCertificateSha256,originalBytesSha256:pack.originalBytesSha256,packBytes:packBytes.length,packSha256:hash(packBytes),derivedPackSha256:pack.derivedPackSha256,partitions:pack.seasons.map(s=>({inventory:s.inventory,partitionSha256:s.partitionSha256})),captured_at:pack.captured_at,currentFreshUntil:pack.currentFreshUntil,nativePreparation:null,nativeAdmission:false,registrationEligible:false,nativeImportEligible:false,activationEligible:false,actualReady:false}
- const again=await readFussballCompletedSourceV7(si);need(same(writerPack(again,input.derivedHead),pack),'source/certificate/partition changed during derivation')
+ const again=await readFussballNativeCompositionSource(si);need(same(writerPack(again,input.derivedHead),pack),'source/certificate/partition changed during derivation')
  need(same(await api.get(path),run)&&same(await installedRuntime(input,api),runtime),'derived main/runtime/run changed during derivation');fresh(again.source)
  const cert=json(certificate);need(cert.length<=MiB&&packBytes.length<=384*MiB,'bounded derived pack exceeded')
  mkdirSync(input.directory,{mode:0o700})
@@ -265,14 +280,14 @@ export async function loadFussballNativeComposition(input){
  closed(c,['version','kind','repository','profile','workflow','derivedRunId','derivedHead','expectedSha','sourceRunId','createdAt','runtime','runtimeSha256','compositionCodeSha256','catalogSha256','policySha256','clubDescriptorsSha256','source','sourceCertificateSha256','originalBytesSha256','packBytes','packSha256','derivedPackSha256','partitions','captured_at','currentFreshUntil','nativePreparation','nativeAdmission','registrationEligible','nativeImportEligible','activationEligible','actualReady'],'closed derived certificate required')
  need(c.version===1&&c.kind==='fussball-baden-derived-hosted-proof'&&c.repository===repo&&c.profile===profile&&c.workflow===workflow&&c.derivedRunId===input.derivedRunId&&c.derivedHead===input.derivedHead&&c.expectedSha===input.derivedHead&&same(c.runtime,runtime)&&c.runtimeSha256===digest(runtime)&&c.compositionCodeSha256===runtime['scripts/fussball-native-composition.mjs']&&c.nativePreparation===null&&c.nativeAdmission===false&&c.registrationEligible===false&&c.nativeImportEligible===false&&c.activationEligible===false&&c.actualReady===false,'derived certificate scope/runtime/eligibility differs')
  need(utc(c.createdAt)&&Date.parse(c.createdAt)>=Date.parse(steps[deriveStep].started_at)&&Date.parse(c.createdAt)<=apiEnd(steps[deriveStep].completed_at)&&files.get('pack.json').length===c.packBytes&&hash(files.get('pack.json'))===c.packSha256,'derived creation/pack bytes differ')
- const si=sourceInput(c,input),source=await readFussballCompletedSourceV7(si),rebuilt=writerPack(source,input.derivedHead)
+ const si=sourceInput(c,input),source=await readFussballNativeCompositionSource(si),rebuilt=writerPack(source,input.derivedHead)
  need(same(pack,rebuilt)&&c.catalogSha256===rebuilt.catalogSha256&&c.policySha256===rebuilt.policySha256&&c.clubDescriptorsSha256===rebuilt.clubDescriptorsSha256&&same(c.source,rebuilt.source)&&c.sourceCertificateSha256===rebuilt.sourceCertificateSha256&&c.originalBytesSha256===rebuilt.originalBytesSha256&&c.derivedPackSha256===rebuilt.derivedPackSha256&&same(c.partitions,rebuilt.seasons.map(s=>({inventory:s.inventory,partitionSha256:s.partitionSha256})))&&c.captured_at===source.source.currentCreatedAt&&c.currentFreshUntil===source.source.currentFreshUntil,'derived source/catalog/policy/partition differs from fresh authenticated rebuild')
- const again=await readFussballCompletedSourceV7(si);need(same(writerPack(again,input.derivedHead),rebuilt),'final source certificate/pack differs')
+ const again=await readFussballNativeCompositionSource(si);need(same(writerPack(again,input.derivedHead),rebuilt),'final source certificate/pack differs')
  need(same(await api.get(path),run)&&same(await api.get(path+'/attempts/1/jobs?per_page=100&page=1'),jobs)&&same(await api.get(path+'/artifacts?per_page=100&page=1'),inventory)&&same(await installedRuntime(input,api),runtime),'derived metadata/main/runtime drift');fresh(again.source)
  const proof=freeze({version:1,kind:'source-partition-verified-awaiting-native-preparation',profile,derivedRunId:input.derivedRunId,derivedHead:input.derivedHead,derivedArtifact:{id:artifact.id,digest:artifact.digest,size:artifact.size_in_bytes},derivedPackSha256:rebuilt.derivedPackSha256,compositionProofSha256:hash(files.get('composition.json')),catalogSha256:rebuilt.catalogSha256,policySha256:rebuilt.policySha256,clubDescriptorsSha256:rebuilt.clubDescriptorsSha256,currentCreatedAt:source.source.currentCreatedAt,currentFreshUntil:source.source.currentFreshUntil,nativeAdmission:false,registrationEligible:false,nativeImportEligible:false,activationEligible:false,actualReady:false,nativePreparation:null})
  capabilities.set(proof,{input:{...input},source:again,pack:rebuilt,certificate:c});return proof
 }
-export function getFussballNativeComposition(proof){const s=capabilities.get(proof);need(s,'reader-issued derived composition capability required');fresh(s.source.source);getFussballCompletedSourceV7(s.source);return {proof,sourceProof:s.source,pack:structuredClone(s.pack),certificate:structuredClone(s.certificate)}}
+export function getFussballNativeComposition(proof){const s=capabilities.get(proof);need(s,'reader-issued derived composition capability required');fresh(s.source.source);getFussballNativeCompositionSource(s.source);return {proof,sourceProof:s.source,pack:structuredClone(s.pack),certificate:structuredClone(s.certificate)}}
 /** Task 2 child factories and final proof MUST call this async boundary again.
  * A copied binding object is never accepted; actual native issuer is absent. */
 export async function reauthenticateFussballNativeComposition(proof){const s=capabilities.get(proof);need(s,'reader-issued derived composition capability required');fresh(s.source.source);return loadFussballNativeComposition(s.input)}

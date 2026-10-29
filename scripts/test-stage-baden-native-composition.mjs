@@ -49,3 +49,7 @@ test('existing exact-run cache API gate and actual bulk activation receipt rejec
  const source=fs.readFileSync(new URL('./bulk-league-rollout.mjs',import.meta.url),'utf8'),a=source.indexOf("    const persisted=JSON.parse"),b=source.indexOf("\n   }",a),body=source.slice(a,b),check=v=>new Function('readFileSync','join','directory','expectedSha','process',body)(()=>JSON.stringify(v),join,'TEST_ONLY',head,{env:{GITHUB_RUN_ID:runId}})
  check(receipt);for(const changed of [{...receipt,run_id:derived},{...receipt,persisted:false},{...receipt,expected_sha:'b'.repeat(40)}])assert.throws(()=>check(changed),/persisted before activation/)
 })
+
+// The production derived getter rechecks the real source issuer for BOTH kinds.
+test('authenticated fresh-pair composition stages with its honest source kind',async t=>{const f=fixture(t);f.state.sourceProof.kind='authenticated-fussball-baden-fresh-pair-source';const r=await f.api.stageBadenNativeComposition({env:f.env});assert.equal(r.status,'STAGED');assert.equal(r.nativeAdmission,false);assert.equal(r.activationEligible,false)})
+test('unknown source family refuses staging before any output',async t=>{const f=fixture(t);f.state.sourceProof.kind='copied-or-unknown-source';await assert.rejects(f.api.stageBadenNativeComposition({env:f.env}),/source family/);assert.equal(fs.existsSync(f.resolve('release')),false)})

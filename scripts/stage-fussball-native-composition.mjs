@@ -2,8 +2,7 @@
 import {fileURLToPath} from 'node:url'
 import {readFileSync} from 'node:fs'
 import {execFileSync} from 'node:child_process'
-import {readFussballCompletedSourceV7} from './fussball-completed-source-v7.mjs'
-import {validateFussballNativeCatalog,produceFussballNativeComposition} from './fussball-native-composition.mjs'
+import {readFussballNativeCompositionSource,validateFussballNativeCatalog,produceFussballNativeComposition} from './fussball-native-composition.mjs'
 const repo='Lovro-splichal-orhanizagi/mnzgorenjska',workflow='.github/workflows/replay-fussball-native-composition.yml'
 const need=(v,m)=>{if(!v)throw Object.assign(Error('Baden derived stage: '+m),{dataHold:true})}
 export function githubGetAdapter(token){
@@ -29,7 +28,7 @@ export async function stageFussballNativeComposition({command,directory,env}){
  const github=githubGetAdapter(env.GH_TOKEN),prefix=`repos/${repo}/`,run=await github(prefix+`actions/runs/${env.GITHUB_RUN_ID}`),main=await github(prefix+'branches/main')
  need(run.id===Number(env.GITHUB_RUN_ID)&&run.run_attempt===1&&run.head_sha===env.GITHUB_SHA&&run.head_branch==='main'&&run.path===workflow&&run.event==='workflow_dispatch'&&run.status==='in_progress'&&run.conclusion===null&&run.repository?.full_name===repo&&run.head_repository?.full_name===repo&&main.name==='main'&&main.commit?.sha===env.GITHUB_SHA,'actual derived run/main binding differs')
  if(command==='validate'){
-  await readFussballCompletedSourceV7({sourceRunId:env.SOURCE_RUN_ID,frozenDirectory:env.FROZEN_DE77_DIRECTORY,v6FrozenDirectory:env.FROZEN_V6_DIRECTORY,github})
+  await readFussballNativeCompositionSource({sourceRunId:env.SOURCE_RUN_ID,frozenDirectory:env.FROZEN_DE77_DIRECTORY,v6FrozenDirectory:env.FROZEN_V6_DIRECTORY,github})
   return {validated:true,actualReady:false,registrationEligible:false,nativeImportEligible:false,activationEligible:false}
  }
  return produceFussballNativeComposition({derivedRunId:env.GITHUB_RUN_ID,derivedHead:env.GITHUB_SHA,sourceRunId:env.SOURCE_RUN_ID,frozenDirectory:env.FROZEN_DE77_DIRECTORY,v6FrozenDirectory:env.FROZEN_V6_DIRECTORY,github,directory})
