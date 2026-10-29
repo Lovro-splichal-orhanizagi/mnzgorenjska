@@ -1,3 +1,4 @@
+import {formatFcfG9CalendarDiagnostic} from './capture-fcf-g9-calendar-probe.mjs'
 // All metadata/bodies are TEST ONLY fixtures. No live GH/source or native calls.
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -46,3 +47,24 @@ test('fixed serialized group permits only never-started queued sibling; stale pa
 })
 test('unknown queued sibling with any executed step is never considered zero',async t=>{const f=await fixture(t),queued={...structuredClone(f.run),id:606,status:'queued',conclusion:null};f.controls.change=(p,v)=>{if(p.includes('/workflows/fcf-javni-dokazi.yml/')){v.workflow_runs.push(queued);v.total_count++}return v};f.responses.set(prefix+'actions/runs/606',queued);f.responses.set(prefix+'actions/runs/606/attempts/1/jobs?per_page=100&page=1',{total_count:1,jobs:[{id:703,run_id:606,run_attempt:1,head_sha:head,name:'calendar-probe',status:'queued',conclusion:null,started_at:null,steps:[{name:'Capture one fixed G9 calendar resource',number:1,status:'completed',conclusion:'success'}]}]});await assert.rejects(f.execution(),/started|unknown/);assert.equal(f.sourceCalls,0)})
 test('serialization is one fixed workflow group with cancellation off and no Git mutation command',()=>{const w=fs.readFileSync(new URL('../.github/workflows/fcf-javni-dokazi.yml',import.meta.url),'utf8');assert.match(w,/concurrency:\s*\n\s+group: fcf-javni-dokazi\s*\n\s+cancel-in-progress: false/);const cli=fs.readFileSync(new URL('./capture-fcf-g9-calendar-probe.mjs',import.meta.url),'utf8');assert.doesNotMatch(cli,/--method','POST|git\/refs|git\/blobs|git\/trees|git\/commits/)})
+
+// Diagnostic DATA cannot become a counter/source capability or expose raw errors.
+test('early G9 diagnostics preserve only exact guard enums and bounded own-repository locators',()=>{
+ const endpoint='repos/Lovro-splichal-orhanizagi/mnzgorenjska/actions/workflows/uvoz-zapisnikov.yml/runs?per_page=100&page=3'
+ const known=formatFcfG9CalendarDiagnostic('EXECUTION',endpoint,Error('FCF_G9_PROBE_HOLD: live source/writer overlap held'))
+ assert.equal(known.phase,'EXECUTION');assert.equal(known.guard,'LIVE_SOURCE_WRITER_OVERLAP');assert.equal(known.lastGithubEndpoint,endpoint);assert.equal(known.diagnosticOnly,true);assert.equal(known.accountingKnown,false);assert.equal(known.nativeAdmission,false)
+ const secret=formatFcfG9CalendarDiagnostic('BAD SECRET','https://user:SECRET@host/',Object.assign(Error('SECRET'),{stderr:Buffer.from('SECRET HTTP 403')}))
+ assert.equal(secret.phase,'UNKNOWN');assert.equal(secret.guard,'UNKNOWN');assert.equal(secret.lastGithubEndpoint,null);assert.equal(secret.githubHttpStatus,403);assert.doesNotMatch(JSON.stringify(secret),/SECRET|password|user:|stderr/)
+})
+test('diagnostic-only upload preserves original probe artifact layout and existing step graph',()=>{
+ const cli=fs.readFileSync(new URL('./capture-fcf-g9-calendar-probe.mjs',import.meta.url),'utf8'),workflow=fs.readFileSync(new URL('../.github/workflows/fcf-javni-dokazi.yml',import.meta.url),'utf8')
+ assert.match(cli,/RUNNER_TEMP/);assert.match(cli,/fcf-g9-calendar-diagnostic\.jsonl/);assert.match(cli,/flag:'wx'/);assert.match(cli,/fsyncSync/);assert.match(workflow,/fcf-g9-calendar-diagnostic-/)
+ assert.match(workflow,/steps\.probe\.outputs\.evidence_ready == 'true'/);assert.match(workflow,/&& 'fcf-g9-calendar-probe'/);assert.equal((workflow.match(/- name: Retain G9 calendar probe originals/g)??[]).length,1)
+})
+test('early counter failure durably journals before any capture or checkout source output',async t=>{
+ const file=new URL('./capture-fcf-g9-calendar-probe.mjs',import.meta.url),directory=fs.mkdtempSync(join(tmpdir(),'g9-diagnostic-TEST-ONLY-'));t.after(()=>fs.rmSync(directory,{recursive:true,force:true}));let counter=0,capture=0;const logs=[]
+ const deps={execFileSync:()=>assert.fail('no GH or process in diagnostic refusal fixture'),appendFileSync:fs.appendFileSync,existsSync:fs.existsSync,writeFileSync:fs.writeFileSync,openSync:fs.openSync,fsyncSync:fs.fsyncSync,closeSync:fs.closeSync,realpathSync:fs.realpathSync,join,fileURLToPath:()=>file.pathname,readFcfG9CalendarCounter:async()=>{counter++;throw Error('FCF_G9_PROBE_HOLD: live source/writer overlap held')},readFcfG9CalendarProbe:()=>assert.fail('no prior probe'),readFcfG9CalendarExecution:()=>assert.fail('no execution'),captureFcfG9CalendarProbe:()=>{capture++;assert.fail('no capture')},process:{argv:['node','TEST-ONLY'],env:{RUNNER_TEMP:directory,G9_MODE:'g9-calendar-discovery-v1',GH_TOKEN:'TEST_ONLY_SECRET'}},console:{error:v=>logs.push(v)}}
+ const code=fs.readFileSync(file,'utf8').replace(/^import .*\n/gm,'').replaceAll('import.meta.url',JSON.stringify(file.href)).replace(/\bexport /g,'')+'\nreturn {runFcfG9CalendarProbe};',api=new Function(...Object.keys(deps),code)(...Object.values(deps))
+ await assert.rejects(api.runFcfG9CalendarProbe(),/live source/);const rows=fs.readFileSync(join(directory,'fcf-g9-calendar-diagnostic.jsonl'),'utf8').trim().split('\n').map(JSON.parse)
+ assert.equal(counter,1);assert.equal(capture,0);assert.equal(rows[0].phase,'ENVIRONMENT');assert.equal(rows.at(-1).phase,'COUNTER');assert.equal(rows.at(-1).guard,'LIVE_SOURCE_WRITER_OVERLAP');assert.equal(rows.at(-1).accountingKnown,false);assert.doesNotMatch(logs.join('\n'),/TEST_ONLY_SECRET/);assert.deepEqual(fs.readdirSync(directory),['fcf-g9-calendar-diagnostic.jsonl'])
+})
