@@ -6,7 +6,7 @@ import {readFileSync} from 'node:fs'
 import {historicalStatisticsPolicySha256 as hash} from './lib/historical-statistics-policy.mjs'
 import {inventoryFail as fail,rawSha256,frozenJSON,nativeId} from './fcf-missing-inventory-artifact.mjs'
 const bytes=readFileSync(new URL('./fcf-g1-historical-zero-registry.json',import.meta.url))
-if(rawSha256(bytes)!=='bfdcb8ebe713df1c06fa7077e0779f11641703ffd9e03ed5e516124671aa3ea8')fail('historical zero registry body changed; held')
+if(rawSha256(bytes)!=='4ce130c30f8b0ab73613b5cfa823fa94a563c23acd3d887c031bc0e76300e351')fail('historical zero registry body changed; held')
 const registry=frozenJSON(JSON.parse(bytes)),headerKeys=['id','path','event','head_branch','head_sha','run_attempt','observedAttempt','status','conclusion','actor','triggering_actor','display_title','workflow_id','repository','head_repository','created_at','run_started_at']
 function header(h){
  const value=Object.fromEntries(headerKeys.map(k=>[k,h[k]]))

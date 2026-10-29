@@ -18,3 +18,10 @@ test('current exact reviewed skipped-only aliases are DATA, and executed/unknown
  for(const change of [v=>{v[0].conclusion='success'},v=>{v[0].status='in_progress'},v=>{v[0].steps.push({name:'unknown source',status:'completed',conclusion:'success'})}]){const bad=structuredClone(jobs);change(bad);assert.throws(()=>normalizeFcfG1CurrentSkippedJobs(bad),/held/)}
  assert.equal(normalizeFcfG1CurrentSkippedJobs([{...jobs[0],name:aliases[0]+' '}])[0].name,aliases[0]+' ') // no broad expression recognition
 })
+test('exact actual preclaim exit13 run is zero only with its complete reviewed H1 execution',()=>{
+ const h=JSON.parse(readFileSync(new URL('./vzorci/fcf-g1-preclaim-cycle-zero-observation.json',import.meta.url)))
+ assert.equal(String(h.id),'40792858711');assert.equal(h.jobs.length,19)
+ assert.equal(h.jobs.filter(j=>j.conclusion==='skipped').length,17)
+ assert.doesNotThrow(()=>assertFcfG1RemainderZeroSourceRun(h))
+ for(const change of [v=>{v.id++},v=>{v.head_sha='b'.repeat(40)},v=>{v.observedAttempt=2},v=>{v.run_attempt=2},v=>{v.status='in_progress'},v=>{v.actor.id=1},v=>{v.jobs.pop()},v=>{v.jobs.find(j=>j.name==='missing-inventory-approval').steps.find(s=>s.name==='Stage reviewed FCF inventory approval').conclusion='success'},v=>{v.jobs.find(j=>j.name==='missing-inventory-consume').conclusion='success'},v=>{v.jobs.find(j=>j.name.includes('missing-inventory-g1')).steps=[{number:1,name:'Capture missing target inventory',status:'completed',conclusion:'success'}]}]){const bad=structuredClone(h);change(bad);assert.throws(()=>assertFcfG1RemainderZeroSourceRun(bad),/held/)}
+})

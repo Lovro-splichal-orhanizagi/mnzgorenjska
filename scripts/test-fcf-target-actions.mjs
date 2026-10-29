@@ -26,7 +26,7 @@ test('missing first-import artifact recovers only the immutable SQL envelope wit
 })
 test('writer closure is separate from original captured source and binds workflow/preloader/pricer/SQL',()=>{
  const h=fcfTargetWriterHashes(new URL('..',import.meta.url).pathname)
- for(const f of['.github/workflows/uvoz-fcf-zgodovina.yml','scripts/fcf-target-preload.mjs','scripts/ovrednoti-igralce.mjs','supabase/migrations/20261018232000_fcf_current_target_release.sql'])assert.match(h[f],/^[a-f0-9]{64}$/)
+ for(const f of['.github/workflows/uvoz-fcf-zgodovina.yml','scripts/fcf-target-preload.mjs','scripts/ovrednoti-igralce.mjs','supabase/migrations/20261018232000_fcf_current_target_release.sql','scripts/fcf-inventory-github.mjs'])assert.match(h[f],/^[a-f0-9]{64}$/)
 })
 test('all4 original packer retains genuine bytes without capture or database',{skip:!retained},t=>{
  const dir=realpathSync(mkdtempSync(join(tmpdir(),'fcf-original-pack-test-')));t.after(()=>rmSync(dir,{recursive:true,force:true}));const output=join(dir,'originals.zip'),r=packFcfTargetOriginals({originalsDir:realpathSync(retained),output}),files=unpackVerifiedArchive(readFileSync(output),'sha256:'+r.sha256,'fcf-cleanup-prepared')

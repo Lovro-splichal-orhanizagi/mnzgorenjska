@@ -109,10 +109,10 @@ test('actual command chain consumes an authenticated claim then retains a single
 // Execute the actual private transport with an in-memory child-process boundary.
 // This covers emitted CLI arguments without a subprocess, token, or HTTP request.
 const transport=(execute)=>{
- const source=readFileSync(new URL('./fcf-missing-inventory-actions.mjs',import.meta.url),'utf8')
- const start=source.indexOf('async function gh('),end=source.indexOf('\nexport async function readFcfDraftAsset',start)
+ const source=readFileSync(new URL('./fcf-inventory-github.mjs',import.meta.url),'utf8')
+ const start=source.indexOf('export async function getFcfInventoryGithub('),end=source.indexOf('\nexport async function readFcfDraftAsset',start)
  assert.ok(start>=0&&end>start)
- return runInNewContext(`${source.slice(start,end)};gh`,{repo:`repos/${repository}/`,execFileSync:execute,fail(message){throw Error('FCF_INVENTORY: '+message)}})
+ return runInNewContext(`${source.slice(start,end).replace('export ','')};getFcfInventoryGithub`,{repo:`repos/${repository}/`,execFileSync:execute,fail(message){throw Error('FCF_INVENTORY: '+message)}})
 }
 test('GitHub GET boundary requests Actions ZIP with GitHub JSON Accept and preserves binary bytes and bounds',async()=>{
  const zipBytes=Buffer.from([0x50,0x4b,3,4,0xff,0,0x80]),path=`repos/${repository}/actions/artifacts/12150332401/zip`
