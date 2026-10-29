@@ -1,6 +1,7 @@
 // Fixed G1 byte-first remainder protocol. No native/DB authority is issued here.
 import {createHash} from 'node:crypto'
-import {assertReviewedFcfG1HistoricalZero,normalizeFcfG1CurrentSkippedJobs} from './fcf-g1-historical-zero-witness.mjs'
+import {assertReviewedFcfG1HistoricalZero} from './fcf-g1-historical-zero-witness.mjs'
+import {verifyFcfG1CurrentJobInventory,verifyFcfG1TerminalJobInventory} from './fcf-g1-remainder-job-inventory.mjs'
 import {assertFcfG1PrebudgetHistory} from './fcf-g1-prebudget-audit.mjs'
 import {mkdirSync,writeFileSync,appendFileSync,lstatSync,realpathSync,openSync,closeSync,fsyncSync,readFileSync} from 'node:fs'
 import {join,resolve,dirname,isAbsolute} from 'node:path'
@@ -64,20 +65,13 @@ export function readFcfG1RemainderConsumption({claimProof,...input}){
  const proof=Object.freeze({kind:'fcf-g1-remainder-consumption-proof'});consumptions.set(proof,{...c,manifest:m,binding:structuredClone(input.expected)});return proof
 }
 const actor=a=>a?.login==='nejcar20'&&a.id===25134229
-const historyJobNames=['cache-export','missing-inventory-seed','missing-inventory-approval','missing-inventory-consume','missing-inventory-g1','missing-inventory-g9','missing-inventory-receipt','target-approval','cleanup-originals','target-mapping','cleanup-prepare','cleanup-apply','target-import','target-price','target-check','target-activate','target-recover','future-target-approval','missing-inventory']
-function currentJobInventory(input,e){
- const jobs=normalizeFcfG1CurrentSkippedJobs(input)
- if(jobs.length!==historyJobNames.length||new Set(jobs.map(j=>j.name)).size!==jobs.length||new Set(jobs.map(j=>String(j.id))).size!==jobs.length||jobs.some(j=>!historyJobNames.includes(j.name)||!nativeId(String(j.id))||String(j.run_id)!==e.runId||j.run_attempt!==1||j.head_sha!==e.sourceCommit||!Array.isArray(j.steps)))fail('complete closed actual G1 job inventory required; held')
- for(const other of jobs){if(['missing-inventory-g1','missing-inventory-approval','missing-inventory-consume'].includes(other.name))continue;if(!(other.status==='completed'&&other.conclusion==='skipped')&&!['queued','waiting','pending'].includes(other.status))fail('unexpected own source/native job executing; held')}
- return jobs
-}
 /** Exact compiled historical witnesses only; unknown/new executions HOLD. */
 export function assertFcfG1RemainderZeroSourceRun(h){assertReviewedFcfG1HistoricalZero(h)}
 /** Private own-execution exclusion. It is issued only after complete actual
  * workflow history and current capture-step metadata have been authenticated. */
 export function readFcfG1RemainderRunningExecution({claimProof,consumptionProof,run,jobs,history,prebudgetProof}){
  const c=claims.get(claimProof),s=consumptions.get(consumptionProof);if(!c||!s||s.plan!==c.plan||s.execution.runId!==c.execution.runId)fail('private claim and consumption required')
- jobs=currentJobInventory(jobs,c.execution)
+ const checked=verifyFcfG1CurrentJobInventory({run,jobs,execution:c.execution});if(checked.phase!=='capture')fail('actual capture inventory phase required');jobs=checked.jobs
  const e=c.execution,j=jobs?.filter(j=>j.name==='missing-inventory-g1'),step=j?.[0]?.steps?.filter(s=>s.name==='Capture missing target inventory')
  if(String(run?.id)!==e.runId||run.repository?.full_name!==repository||run.path!==workflow||run.head_sha!==e.sourceCommit||run.head_branch!=='main'||run.event!=='workflow_dispatch'||run.run_attempt!==1||run.status!=='in_progress'||run.conclusion!==null||!actor(run.actor)||!actor(run.triggering_actor)||j?.length!==1||!nativeId(String(j[0].id))||String(j[0].run_id)!==e.runId||j[0].run_attempt!==1||j[0].head_sha!==e.sourceCommit||j[0].status!=='in_progress'||step?.length!==1||step[0].status!=='in_progress'||step[0].conclusion!==null)fail('actual own main attempt1 actors/capture required')
  if(!Array.isArray(history)||history.some(r=>!nativeId(String(r?.id))))fail('complete actual FCF history required')
@@ -87,7 +81,7 @@ export function readFcfG1RemainderRunningExecution({claimProof,consumptionProof,
  const unaccounted=new Map()
  for(const h of history){
   if(String(h.id)===e.runId){
-   const freshJobs=currentJobInventory(h.jobs,e),own=freshJobs?.filter(x=>x.name==='missing-inventory-g1'),active=own?.[0]?.steps?.filter(x=>x.name==='Capture missing target inventory')
+   const freshInventory=verifyFcfG1CurrentJobInventory({run:h,jobs:h.jobs,execution:e});if(freshInventory.phase!=='capture')fail('fresh actual own capture phase differs; held');const freshJobs=freshInventory.jobs,own=freshJobs?.filter(x=>x.name==='missing-inventory-g1'),active=own?.[0]?.steps?.filter(x=>x.name==='Capture missing target inventory')
    if(h.repository?.full_name!==repository||h.path!==workflow||h.event!=='workflow_dispatch'||h.head_branch!=='main'||h.head_sha!==e.sourceCommit||h.run_attempt!==1||h.observedAttempt!==1||h.status!=='in_progress'||h.conclusion!==null||!actor(h.actor)||!actor(h.triggering_actor)||own?.length!==1||String(own[0].id)!==String(j[0].id)||String(own[0].run_id)!==e.runId||own[0].run_attempt!==1||own[0].head_sha!==e.sourceCommit||own[0].status!=='in_progress'||active?.length!==1||active[0].status!=='in_progress'||active[0].conclusion!==null)fail('fresh actual private own execution differs; held')
    continue
   }
@@ -148,6 +142,7 @@ export async function collectFcfG1Remainder({plan,consumptionProof,runningProof,
  * outcome and raw digest. A failed child grants only append/accounting authority. */
 export function readFcfG1RemainderArtifact({plan,claimProof,consumptionProof,...input}){
  const c=claims.get(claimProof),s=consumptions.get(consumptionProof);if(!c||!s||c.plan!==plan||s.plan!==plan||input.expected?.runId!==c.execution.runId||input.expected?.sourceCommit!==plan.sourceCommit||!actor(input.run?.actor)||!actor(input.run?.triggering_actor))fail('private same-plan claim/consumption required')
+ if(input.run?.status==='completed')verifyFcfG1TerminalJobInventory({run:input.run,jobs:input.jobs,execution:c.execution})
  const diagnostic=input.artifact?.name?.startsWith('fcf-missing-inventory-diagnostic-')
  verifyInventoryExecution({...input,jobName:'missing-inventory-g1',stepNames:[diagnostic?'Retain failed target inventory diagnostic':'Capture missing target inventory',diagnostic?'Retain failed target inventory diagnostic':'Retain complete target inventory'],artifactName:`fcf-missing-inventory-${diagnostic?'diagnostic-':''}${slug}-${c.execution.runId}-1`,runPhase:'inventory-record',jobPhase:diagnostic?'diagnostic':'captured-uploaded'})
  const members={'manifest.json':8388608,'attempts.ndjson':8388608,...Object.fromEntries(plan.fetchIds.flatMap(id=>[[`acta-${id}.html`,2097152],[`partial-acta-${id}.bin`,2097152]]))},files=readInventoryZip({...input,members,allowMissing:true}),m=jsonBytes(files.get('manifest.json'),'remainder raw'),journal=files.get('attempts.ndjson')
@@ -176,6 +171,7 @@ export function buildFcfG1RemainderFinalReceipt({rawProof}){
 }
 export function readFcfG1RemainderFinalReceipt({rawProof,...input}){
  const d=children.get(rawProof);if(!d||input.run?.status!=='completed'||!['success','failure'].includes(input.run?.conclusion)||String(input.run.id)!==d.binding.runId||input.expected?.sourceCommit!==d.plan.sourceCommit||!actor(input.run?.actor)||!actor(input.run?.triggering_actor))fail('private terminal raw child required')
+ verifyFcfG1TerminalJobInventory({run:input.run,jobs:input.jobs,execution:{repository,workflow,ref:'refs/heads/main',sourceCommit:d.plan.sourceCommit,runId:d.binding.runId,runAttempt:'1'}})
  verifyInventoryExecution({...input,jobName:'missing-inventory-receipt',stepNames:['Retain final FCF inventory receipt'],artifactName:`fcf-missing-inventory-final-${d.binding.runId}-1`,runPhase:'inventory-record'})
  const files=readInventoryZip({...input,members:{'manifest.json':8388608}}),m=jsonBytes(files.get('manifest.json'),'remainder final receipt');if(!same(m,buildFcfG1RemainderFinalReceipt({rawProof})))fail('actual final source accounting differs');finalized.set(rawProof,structuredClone(input.expected));return rawProof
 }
