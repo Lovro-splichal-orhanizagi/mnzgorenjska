@@ -2,7 +2,7 @@
 // synthetic source adapter and external GitHub/site/psql transports. No live IO.
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {readFileSync,writeFileSync,mkdirSync,existsSync,realpathSync} from 'node:fs'
+import {readFileSync,writeFileSync,mkdirSync,existsSync,realpathSync,readdirSync} from 'node:fs'
 import {join,resolve} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {createHash} from 'node:crypto'
@@ -13,7 +13,7 @@ const file=new URL('./install-baden-native-catalog.mjs',import.meta.url),workflo
 const repo='Lovro-splichal-orhanizagi/mnzgorenjska',prefix=`repos/${repo}/`,runId='40661111111',ciId='40662222222',assetId='40663333333'
 const actor=()=>({id:25134229,login:'nejcar20',type:'User'})
 function preparationAPI(f){
- const path=new URL('./prepare-fussball-native-history.mjs',import.meta.url),code=readFileSync(path,'utf8').replace(/^import .*\n/gm,'').replaceAll('import.meta.url',JSON.stringify(path.href)).replace(/\bexport /g,'')+'\nreturn {describeFussballNativePreparation};'
+ const path=new URL('./prepare-fussball-native-history.mjs',import.meta.url),code=readFileSync(path,'utf8').replace(/^import .*\n/gm,'').replaceAll('import.meta.url',JSON.stringify(path.href)).replace(/\bexport /g,'')+'\nreturn {describeFussballNativePreparation,describeIssuedFussballNativePreparation};'
  const localRead=(url,...a)=>url.href.endsWith('/policies/fussball-baden-native-composition.json')?Buffer.from(JSON.stringify(f.catalog)):readFileSync(url,...a)
  const keys=['BADEN_CURRENT','BADEN_ARCHIVE','BADEN_SLUG','BADEN_CARDS','badenCanonical','projectBadenHistoricalPolicy','badenClubKey']
  return new Function('readFileSync','createHash','isDeepStrictEqual','getFussballNativeComposition','reauthenticateFussballNativeComposition','validateFussballNativeCatalog',...keys,code)(localRead,createHash,isDeepStrictEqual,f.api.getFussballNativeComposition,f.api.reauthenticateFussballNativeComposition,f.api.validateFussballNativeCatalog,...keys.map(k=>history[k]))
@@ -36,16 +36,18 @@ async function fixture(t){
   else if(prior.some(x=>path===prefix+`actions/runs/${x.run.id}/attempts/1/jobs?per_page=100&page=1`))v=prior.find(x=>path===prefix+`actions/runs/${x.run.id}/attempts/1/jobs?per_page=100&page=1`).jobs
   else if(path===prefix+'releases?per_page=100&page=1')v=[release]
   else if(path===prefix+'actions/runs/40796083954/artifacts?per_page=100&page=1')v=controls.oldArtifacts??{total_count:0,artifacts:[]}
+  else if(path===prefix+'actions/runs/40807010095/artifacts?per_page=100&page=1')v=controls.oldH2Artifacts??{total_count:0,artifacts:[]}
   else if(path.startsWith(prefix+'contents/')&&path.endsWith('?ref=47d46f3a91813a7e720f3affccee056c1462ab07')){
    // TEST ONLY old H1 bodies copied exactly from Git47d46f3a; production witness pins SHA/length.
    const f=path.slice((prefix+'contents/').length).split('?')[0],v0=JSON.parse(readFileSync(new URL('./vzorci/baden-owner-skipped-h1-bodies.json',import.meta.url))).files[f],b=Buffer.from(v0);v={type:'file',path:f,encoding:'base64',size:b.length,content:b.toString('base64')}
   }
+  else if(path.startsWith(prefix+'contents/')&&path.endsWith('?ref=375249a9e3d33f970c6cb50b0eaba8689d3957ee')){const file=path.slice((prefix+'contents/').length).split('?')[0],b=Buffer.from(JSON.parse(readFileSync(new URL('./vzorci/baden-owner-skipped-h2-bodies.json',import.meta.url))).files[file]);v={type:'file',path:file,encoding:'base64',size:b.length,content:b.toString('base64')}}
   else if(path===prefix+'releases/901/assets?per_page=100&page=1')v=[asset]
   else if(path===prefix+'releases/assets/'+assetId)v=asset
   else return f.github(path,binary)
   return structuredClone(controls.change?.(path,v)??v)
  }
- const fetch=async(url,options)=>{calls.push({kind:'served',url,options});assert.equal(url,'https://slff.eu/');assert.equal(options.redirect,'error');assert.equal(options.headers['Cache-Control'],'no-cache');return {ok:true,status:200,text:async()=>controls.html??`<meta name="slff-commit" content="${derivedHead}">`}}
+ const fetch=async(url,options)=>{calls.push({kind:'served',url,options});assert.equal(url,'https://slff.eu/');assert.equal(options.redirect,'error');assert.equal(options.headers['Cache-Control'],'no-cache');return controls.served?controls.served(calls.filter(c=>c.kind==='served').length):{ok:true,status:200,text:async()=>controls.html??`<meta name="slff-commit" content="${derivedHead}">`}}
  const execute=(cmd,args,options={})=>{
   calls.push({kind:cmd,args,sql:options.input})
   if(cmd==='git')return derivedHead+'\n'
@@ -58,11 +60,13 @@ async function fixture(t){
  }
  const local=p=>typeof p==='string'&&!p.startsWith('/')?join(f.root,p):p
  const localRead=(p,...a)=>readFileSync(local(p),...a),localWrite=(p,...a)=>writeFileSync(local(p),...a),localMkdir=(p,...a)=>mkdirSync(local(p),...a),localExists=p=>existsSync(local(p))
- const load=async input=>{assert.equal(input.frozenDirectory,'frozen-de77');assert.equal(input.v6FrozenDirectory,'frozen-v6');return f.api.loadFussballNativeComposition({...input,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e'})}
+ const sourceRoot=fileURLToPath(new URL('../',import.meta.url)),localRealpath=p=>realpathSync(typeof p==='string'&&resolve(p)===resolve(sourceRoot)?f.root:local(p));let compositionChecks=0
+ const getComposition=proof=>{if(++compositionChecks===2&&controls.finalCapabilityFailure)throw Error('TEST_SECRET_FINAL_CAPABILITY');return f.api.getFussballNativeComposition(proof)}
+ const load=async input=>{calls.push({kind:'composition-load'});assert.equal(input.frozenDirectory,'frozen-de77');assert.equal(input.v6FrozenDirectory,'frozen-v6');return f.api.loadFussballNativeComposition({...input,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e'})}
  const process={env,argv:[],cwd:()=>fileURLToPath(new URL('../',import.meta.url)),exitCode:undefined}
- const code=readFileSync(file,'utf8').split('// CLI entry')[0].replace(/^import .*\n/gm,'').replaceAll('import.meta.url',JSON.stringify(file.href)).replace(/\bexport /g,'')+'\nreturn {runBadenNativeCatalogInstaller,installationSQL,catalogHoldDiagnostic};'
- const api=new Function('readFileSync','writeFileSync','mkdirSync','existsSync','realpathSync','join','resolve','fileURLToPath','createHash','execFileSync','githubGetAdapter','loadFussballNativeComposition','getFussballNativeComposition','describeFussballNativePreparation','fetch','process',code)(localRead,localWrite,localMkdir,localExists,realpathSync,join,resolve,fileURLToPath,createHash,execute,()=>github,load,f.api.getFussballNativeComposition,prep.describeFussballNativePreparation,fetch,process)
- return {f,api,env,calls,controls,prior,currentRun,ci,release,asset,description,cap,get ownerReads(){return ownerReads}}
+ const code=readFileSync(file,'utf8').split('// CLI entry')[0].replace(/^import .*\n/gm,'').replaceAll('import.meta.url',JSON.stringify(file.href)).replace(/\bexport /g,'')+'\nreturn {runBadenNativeCatalogInstaller,installationSQL,catalogHoldDiagnostic,preserveCatalogHoldDiagnostic:typeof preserveCatalogHoldDiagnostic===\'function\'?preserveCatalogHoldDiagnostic:undefined,verifyFinalIdentity:typeof verifyFinalIdentity===\'function\'?verifyFinalIdentity:undefined};'
+ const api=new Function('readFileSync','writeFileSync','mkdirSync','existsSync','realpathSync','join','resolve','fileURLToPath','createHash','execFileSync','githubGetAdapter','loadFussballNativeComposition','getFussballNativeComposition','describeFussballNativePreparation','describeIssuedFussballNativePreparation','fetch','process',code)(localRead,localWrite,localMkdir,localExists,localRealpath,join,resolve,fileURLToPath,createHash,execute,()=>github,load,getComposition,async proof=>{calls.push({kind:'full-description'});const value=await prep.describeFussballNativePreparation(proof);calls.push({kind:'full-description-completed'});return value},proof=>{calls.push({kind:'issued-description'});return prep.describeIssuedFussballNativePreparation(proof)},fetch,process)
+ return {f,api,prep,env,calls,controls,prior,currentRun,ci,release,asset,description,cap,get ownerReads(){return ownerReads}}
 }
 test('installer uses actual private hosted rebuild/describer and exact root asset before the only owner INSERT',async t=>{
  const f=await fixture(t),before=f.f.sourceReads
@@ -125,5 +129,43 @@ test('draft release listing requires unique fixed-tag draft and keeps publisher/
  for(const rows of [[],[{id:901,draft:false,tag_name:'baden-native-staging-v1'}],[{id:901,draft:true,tag_name:'baden-native-staging-v1'},{id:902,draft:true,tag_name:'baden-native-staging-v1'}]])await t.test(JSON.stringify(rows),async t=>{const f=await fixture(t);f.controls.change=(p,v)=>p===prefix+'releases?per_page=100&page=1'?rows:v;await assert.rejects(f.api.runBadenNativeCatalogInstaller({command:'validate'}));assert.equal(f.ownerReads,0)})
 })
 test('safe installer phase diagnostics retain bounded transport code through private loader refusal',async t=>{
- const f=await fixture(t);f.f.controls.change=(p,v)=>{if(p===prefix+'actions/artifacts/401/zip')throw Object.assign(Error('SECRET_SQL_TOKEN_MUST_NOT_PRINT'),{githubDiagnostic:'ARTIFACT_ZIP_TIMEOUT'});return v};await assert.rejects(f.api.runBadenNativeCatalogInstaller({command:'validate'}));assert.deepEqual(f.api.catalogHoldDiagnostic(),{status:'HOLD',phase:'COMPOSITION',code:'ARTIFACT_ZIP_TIMEOUT'});assert.ok(!JSON.stringify(f.api.catalogHoldDiagnostic()).includes('SECRET'));assert.equal(f.ownerReads,0)
+ const f=await fixture(t);f.f.controls.change=(p,v)=>{if(p===prefix+'actions/artifacts/401/zip')throw Object.assign(Error('SECRET_SQL_TOKEN_MUST_NOT_PRINT'),{githubDiagnostic:'ARTIFACT_ZIP_TIMEOUT'});return v};await assert.rejects(f.api.runBadenNativeCatalogInstaller({command:'validate'}));assert.deepEqual(f.api.catalogHoldDiagnostic(),{status:'HOLD',phase:'COMPOSITION',subphase:'COMPOSITION',code:'ARTIFACT_ZIP_TIMEOUT'});assert.ok(!JSON.stringify(f.api.catalogHoldDiagnostic()).includes('SECRET'));assert.equal(f.ownerReads,0)
+})
+
+test('final identity refusals retain exact closed subphase and safe diagnostic artifact before owner access',async t=>{
+ const runPath=prefix+`actions/runs/${runId}`,ciPath=prefix+`actions/runs/${ciId}`
+ const second=(target,change)=>f=>{f.controls.change=f.f.controls.change=(p,v)=>p===target&&f.calls.some(c=>c.kind==='full-description-completed')?change(v):v}
+ const good=()=>({ok:true,status:200,text:async()=>`<meta name="slff-commit" content="${derivedHead}">`})
+ const cases=[
+  ['CURRENT_RUN_ACTORS','CURRENT_RUN_ACTORS_REFUSED',second(runPath,v=>({...v,actor:{...v.actor,id:1}}))],
+  ['MAIN_HEAD','MAIN_HEAD_REFUSED',second(prefix+'branches/main',v=>({...v,commit:{...v.commit,sha:'c'.repeat(40)}}))],
+  ['CI_RESULT','CI_RESULT_REFUSED',second(ciPath,v=>({...v,conclusion:'failure'}))],
+  ['INSTALLER_BODY_CHECK','INSTALLER_BODY_CHECK_REFUSED',second(prefix+`contents/scripts/install-baden-native-catalog.mjs?ref=${derivedHead}`,v=>({...v,content:Buffer.from('TEST_SECRET_BAD_BODY').toString('base64')}))],
+  ['HISTORY_INVENTORY','HISTORY_INVENTORY_REFUSED',second(prefix+'actions/workflows/install-baden-native-catalog.yml/runs?event=workflow_dispatch&per_page=100&page=1',v=>({...v,total_count:2,workflow_runs:[...v.workflow_runs,v.workflow_runs[0]]}))],
+  ['SERVED_FETCH','OWN_FETCH_TIMEOUT',f=>{f.controls.served=n=>{if(n===2)throw Object.assign(Error('TEST_SECRET_TIMEOUT'),{name:'TimeoutError'});return good()}}],
+  ['SERVED_FETCH','OWN_FETCH_NETWORK_FAILED',f=>{f.controls.served=n=>{if(n===2)throw Error('TEST_SECRET_NETWORK');return good()}}],
+  ['SERVED_STATUS','OWN_FETCH_HTTP_503',f=>{f.controls.served=n=>n===2?{ok:false,status:503,text:async()=>{throw Error('must not read bad body')}}:good()}],
+  ['SERVED_BODY','OWN_FETCH_TIMEOUT',f=>{f.controls.served=n=>n===2?{ok:true,status:200,text:async()=>{throw Object.assign(Error('TEST_SECRET_BODY'),{name:'AbortError'})}}:good()}],
+  ['SERVED_COMMIT','SERVED_COMMIT_REFUSED',f=>{f.controls.served=n=>n===2?{ok:true,status:200,text:async()=>'<meta name="slff-commit" content="'+'b'.repeat(40)+'">'}:good()}],
+  ['FINAL_CAPABILITY','FINAL_CAPABILITY_REFUSED',f=>{f.controls.finalCapabilityFailure=true}],
+ ]
+ for(const [subphase,code,change]of cases)await t.test(subphase+' '+code,async t=>{
+  const f=await fixture(t);change(f);await assert.rejects(f.api.runBadenNativeCatalogInstaller({command:'validate'}))
+  const diagnostic=f.api.catalogHoldDiagnostic();assert.equal(diagnostic.phase,'FINAL_IDENTITY');assert.equal(diagnostic.subphase,subphase);assert.equal(diagnostic.code,code);assert.ok(!JSON.stringify(diagnostic).includes('TEST_SECRET'))
+  assert.equal(typeof f.api.preserveCatalogHoldDiagnostic,'function');f.api.preserveCatalogHoldDiagnostic();const directory=join(f.f.root,'baden-native-catalog-install'),raw=readFileSync(join(directory,'diagnostic.json'))
+  assert.deepEqual(JSON.parse(raw),diagnostic);assert.deepEqual(readdirSync(directory),['diagnostic.json']);f.api.preserveCatalogHoldDiagnostic();assert.deepEqual(readFileSync(join(directory,'diagnostic.json')),raw);assert.equal(f.ownerReads,0);assert.equal(f.calls.filter(c=>c.kind==='psql').length,0)
+ })
+})
+test('final identity comparison has its own closed reason without serializing compared values',async t=>{
+ const f=await fixture(t);assert.equal(typeof f.api.verifyFinalIdentity,'function');assert.throws(()=>f.api.verifyFinalIdentity({secret:'TEST_SECRET_FIRST'},{secret:'TEST_SECRET_FINAL'}));const d=f.api.catalogHoldDiagnostic();assert.equal(d.subphase,'FINAL_COMPARISON');assert.equal(d.code,'FINAL_COMPARISON_REFUSED');assert.ok(!JSON.stringify(d).includes('TEST_SECRET'))
+})
+test('issued initial description precedes asset GET and one full manifest reauthentication before final guards',async t=>{
+ const f=await fixture(t);await f.api.runBadenNativeCatalogInstaller({command:'validate'})
+ assert.deepEqual(f.calls.filter(c=>['composition-load','issued-description','full-description'].includes(c.kind)).map(c=>c.kind),['composition-load','issued-description','full-description'])
+ const issued=f.calls.findIndex(c=>c.kind==='issued-description'),asset=f.calls.findIndex(c=>c.kind==='gh'),full=f.calls.findIndex(c=>c.kind==='full-description'),served=f.calls.map((c,i)=>[c,i]).filter(([c])=>c.kind==='served').at(-1)[1];assert.ok(issued<asset&&asset<full&&full<served)
+ assert.equal(f.prep.describeIssuedFussballNativePreparation(f.cap).sha256,f.description.sha256);assert.throws(()=>f.prep.describeIssuedFussballNativePreparation({...f.cap}),/reader-issued/);assert.equal(f.ownerReads,0);assert.equal(f.calls.filter(c=>c.kind==='psql').length,0)
+})
+test('exact R2 skipped-owner history requires terminal execution, original bodies and zero artifacts',async t=>{
+ const actual=JSON.parse(readFileSync(new URL('./vzorci/baden-owner-skipped-h2-bodies.json',import.meta.url))),good=await fixture(t);good.prior.push({run:structuredClone(actual.run),jobs:structuredClone(actual.jobs)});await good.api.runBadenNativeCatalogInstaller({command:'validate'});assert.equal(good.ownerReads,0)
+ for(const mutate of [f=>{f.prior[0].jobs.jobs.find(j=>j.name==='validate').id++},f=>{f.prior[0].jobs.jobs.find(j=>j.name==='validate').steps.find(s=>s.name==='Authenticate source, root review, writer and deployed main').conclusion='success'},f=>{f.controls.oldH2Artifacts={total_count:1,artifacts:[{id:1}]}},f=>{f.prior[0].jobs.jobs.find(j=>j.name==='install').steps=[{name:'Owner connection prerequisite',status:'completed',conclusion:'skipped'}]},f=>{f.controls.change=(p,v)=>p.includes('/contents/')&&p.endsWith('?ref=375249a9e3d33f970c6cb50b0eaba8689d3957ee')?{...v,content:Buffer.from('wrong body').toString('base64')}:v}])await t.test(mutate.toString(),async t=>{const f=await fixture(t);f.prior.push({run:structuredClone(actual.run),jobs:structuredClone(actual.jobs)});mutate(f);await assert.rejects(f.api.runBadenNativeCatalogInstaller({command:'validate'}));assert.equal(f.ownerReads,0);assert.equal(f.calls.filter(c=>c.kind==='psql').length,0)})
 })

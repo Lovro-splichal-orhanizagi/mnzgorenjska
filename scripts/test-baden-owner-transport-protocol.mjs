@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import child from 'node:child_process'
 import {syncBuiltinESMExports} from 'node:module'
 import {fileURLToPath} from 'node:url'
-import {mkdtempSync,writeFileSync,readFileSync,rmSync} from 'node:fs'
+import {mkdtempSync,writeFileSync,readFileSync,rmSync,mkdirSync,symlinkSync,readdirSync,realpathSync} from 'node:fs'
 import {join} from 'node:path'
 import {tmpdir} from 'node:os'
 const prefix='repos/Lovro-splichal-orhanizagi/mnzgorenjska/',head='a'.repeat(40),secret='TEST_SECRET_MUST_NEVER_APPEAR'
@@ -18,8 +18,11 @@ if(process.argv[2]==='adapter'){
  test('physical GitHub adapter scopes 180s to artifact ZIP only and emits bounded safe failure codes',()=>{
   const r=JSON.parse(child.execFileSync(process.execPath,[fileURLToPath(import.meta.url),'adapter'],{encoding:'utf8'}));assert.equal(r.calls[0].timeout,180000);assert.deepEqual(r.calls[0].stdio,['ignore','pipe','pipe']);assert.equal(r.calls[0].maxBuffer,512*1024*1024+1);assert.equal(r.calls[1].timeout,60000);assert.equal(r.calls[2].timeout,60000);assert.equal(r.calls[2].maxBuffer,4*1024*1024+1);assert.deepEqual(r.errors.map(e=>e.githubDiagnostic),['ARTIFACT_ZIP_TIMEOUT','ARTIFACT_ZIP_BUFFER','ARTIFACT_ZIP_HTTP_404','ARTIFACT_ZIP_FAILED']);assert.ok(!JSON.stringify(r.errors).includes(secret))
  })
- test('physical installer CLI reports fixed phase/code while refusing pins before network or credentials',()=>{
-  const r=child.spawnSync(process.execPath,[fileURLToPath(new URL('./install-baden-native-catalog.mjs',import.meta.url)),'validate'],{encoding:'utf8',env:{...process.env,GITHUB_ACTIONS:'false',GH_TOKEN:secret,SUPABASE_DB_URL:secret}});assert.equal(r.status,1);assert.match(r.stderr,/"phase":"PINS"/);assert.match(r.stderr,/"code":"CHECK_REFUSED"/);assert.ok(!r.stderr.includes(secret));assert.equal(r.stdout,'')
+ test('physical installer CLI retains only safe failure DATA while refusing pins before network or credentials',t=>{
+  const root=realpathSync(mkdtempSync(join(tmpdir(),'baden-diagnostic-TEST-ONLY-')));t.after(()=>rmSync(root,{recursive:true,force:true}));mkdirSync(join(root,'scripts'));const original=new URL('./install-baden-native-catalog.mjs',import.meta.url),text=readFileSync(original,'utf8'),copy=join(root,'scripts/install-baden-native-catalog.mjs');writeFileSync(copy,text)
+  for(const match of text.matchAll(/^import .* from '(\.\/[^']+)'/gm)){const source=new URL(match[1],original);symlinkSync(fileURLToPath(source),join(root,'scripts',match[1].slice(2)))}
+  const r=child.spawnSync(process.execPath,[copy,'validate'],{cwd:root,encoding:'utf8',env:{PATH:'/usr/bin:/bin',GITHUB_ACTIONS:'false',GH_TOKEN:secret,SUPABASE_DB_URL:secret}});assert.equal(r.status,1);assert.match(r.stderr,/"phase":"PINS"/);assert.match(r.stderr,/"code":"PINS_REFUSED"/);assert.ok(!r.stderr.includes(secret));assert.equal(r.stdout,'')
+  const directory=join(root,'baden-native-catalog-install'),raw=readFileSync(join(directory,'diagnostic.json'),'utf8');assert.deepEqual(readdirSync(directory),['diagnostic.json']);assert.deepEqual(JSON.parse(raw),JSON.parse(r.stderr));assert.ok(!raw.includes(secret));const again=child.spawnSync(process.execPath,[copy,'validate'],{cwd:root,encoding:'utf8',env:{PATH:'/usr/bin:/bin',GITHUB_ACTIONS:'false'}});assert.equal(again.status,1);assert.equal(readFileSync(join(directory,'diagnostic.json'),'utf8'),raw)
  })
  test('derived ZIP compression6 preserves exact uncompressed certificate/pack and private hosted load gates',async t=>{
   const {hostedDerivedFixture,derivedRunId,derivedHead,hash}=await import('./fussball-native-composition-test-fixture.mjs'),f=await hostedDerivedFixture(t),root=mkdtempSync(join(tmpdir(),'baden-compressed-TEST-ONLY-'));t.after(()=>rmSync(root,{recursive:true,force:true}));for(const [name,b]of f.files)writeFileSync(join(root,name),b)

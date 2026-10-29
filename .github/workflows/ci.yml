@@ -78,7 +78,7 @@ jobs:
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
 
       - name: Baden catalog owner and hosted native workflow (offline)
-        run: node --test scripts/test-install-baden-native-catalog.mjs scripts/test-baden-owner-transport-protocol.mjs scripts/test-stage-baden-native-composition.mjs scripts/test-fcf-g13-baden-compat.mjs scripts/test-baden-active-cache-refresh.mjs
+        run: node --test scripts/test-install-baden-native-catalog.mjs scripts/test-baden-owner-transport-protocol.mjs scripts/test-prepare-fussball-issued-description.mjs scripts/test-stage-baden-native-composition.mjs scripts/test-fcf-g13-baden-compat.mjs scripts/test-baden-active-cache-refresh.mjs
 
       - name: Community card voting and provisional round UI (offline)
         run: |

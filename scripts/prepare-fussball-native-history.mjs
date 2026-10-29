@@ -41,12 +41,19 @@ function readback(v,m,id){
  }
  return structuredClone(v)
 }
-/** Review material for the later owner-only catalog migration. These returned
- * bytes never authorize a registration, database installation or import. */
+/** Canonical review DATA from an already issued private capability. The manifest
+ * getter enforces issuer identity and original freshness; this does not refresh
+ * hosted metadata or authorize registration, installation or import. */
+export function describeIssuedFussballNativePreparation(composition){
+ const m=manifest(composition),body=badenCanonical(m)
+ return freeze({manifest:body,sha256:sha(body),catalogStatus:'FINALIZED',nativeImportEligible:false,activationEligible:false})
+}
+/** Review material after full asynchronous source/composition reauthentication.
+ * These returned bytes never authorize a registration, installation or import. */
 export async function describeFussballNativePreparation(composition){
  getFussballNativeComposition(composition)
- const authenticated=await reauthenticateFussballNativeComposition(composition),m=manifest(authenticated),body=badenCanonical(m)
- return freeze({manifest:body,sha256:sha(body),catalogStatus:'FINALIZED',nativeImportEligible:false,activationEligible:false})
+ const authenticated=await reauthenticateFussballNativeComposition(composition)
+ return describeIssuedFussballNativePreparation(authenticated)
 }
 /** Requires a private actual completed-source/hosted-composition capability before
  * even find/register. No preparation capability is required to cold-register. */
