@@ -39,3 +39,25 @@ No dispatch until independent review and exact feature-branch PR CI are green. R
 Next code phase must consume the actual read-only native beforeimages, all-six/4109 proofs, source-backed club/side/round anchors and dependency snapshot. It needs a distinct composite301 native protocol/packet version and an additive9410 marker/receipt/NULL guard/install/readback contract; old300 packet5/same-writer/SQL17 remain strict. Full price replay, official native GK16, legal15/budget100/max3, no teams/votes/privacy conflict and future official deadline stay mandatory before any write. Current unresolved420/425 independently block admission.
 
 The old source API expires29Oct18:09:27.203Z unconditionally. There is no guaranteed timing for later native phases. If that clock is crossed, a new full240 capture would cost301+240=541>478 and is not authorized by177 remaining. A selective real replacement of the expired original23 while reusing only still-fresh original217 would cost at least23, but requires a new independently reviewed source kind with historical-accounting-only old authority, genuine new receipts and minimum real remaining-source time; it cannot use this API to retimestamp the parent or pretend old current bytes are fresh. Any such reservation must account for G9/probe attempts first and be separately reviewed/authorized by root. No renewal/refresh is implemented here.
+
+
+The additive G1 observer (`20261029130000`) requires the exact deployed 17+183
+projection body `ef80eb64…` and its stable/security-definer/search-path signature
+before DDL. Its private copy `a55fa3e6…` removes only the quiet-G9 prerequisite.
+The original projection and every mutator retain that prerequisite. The new
+public wrapper takes only privacy keys, fixes competition783, requires a read-only
+transaction, and grants EXECUTE only to service_role. It adds no tables or rows.
+
+After normal deployment, `vir=g1-native-readonly-main`, `diagnostika=true` selects
+the same diagnostic job on main. Set consumer SHA to the actual deployed main,
+consumer CI and main CI IDs to the same successful first-attempt push CI, and PR
+number to the empty string. Actual current main, served commit, root/manual run,
+closed job inventory and original source freshness remain required. The separate
+branch mode retains the original H5/open-PR guards. Both modes skip every public
+source/deploy/native job and issue no admission capability.
+
+SQL failures retain only a whitelisted SQLSTATE and exact known guard enum in the
+HOLD artifact. Unrecognized text becomes UNKNOWN; raw stderr is never retained.
+The earlier R40873423804 exception remains UNKNOWN. Its observed imported G9
+independently contradicts the old projection prerequisite; this is not a claim
+that the earlier exception was reproduced.

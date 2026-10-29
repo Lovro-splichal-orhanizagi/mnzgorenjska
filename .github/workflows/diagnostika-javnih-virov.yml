@@ -30,7 +30,7 @@ permissions:
 
 jobs:
   dokument:
-    if: inputs.vir != 'g1-native-readonly'
+    if: inputs.vir != 'g1-native-readonly' && inputs.vir != 'g1-native-readonly-main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     strategy:
@@ -121,7 +121,7 @@ jobs:
   # Root-reviewed branch consumer only. Every source/deploy job is skipped;
   # only this job receives the two named database tunnel credentials.
   preflight-g1-native:
-    if: github.event_name == 'workflow_dispatch' && inputs.vir == 'g1-native-readonly' && github.repository == 'Lovro-splichal-orhanizagi/mnzgorenjska' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20' && github.run_attempt == 1 && github.ref == 'refs/heads/codex-g1-301-native-preflight-20261029'
+    if: github.event_name == 'workflow_dispatch' && ((inputs.vir == 'g1-native-readonly' && github.ref == 'refs/heads/codex-g1-301-native-preflight-20261029') || (inputs.vir == 'g1-native-readonly-main' && github.ref == 'refs/heads/main')) && github.repository == 'Lovro-splichal-orhanizagi/mnzgorenjska' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20' && github.run_attempt == 1
     permissions:
       contents: write
       actions: read
@@ -129,6 +129,7 @@ jobs:
     timeout-minutes: 30
     env:
       GH_TOKEN: ${{ github.token }}
+      G1_PREFLIGHT_MODE: ${{ inputs.vir }}
       G1_PREFLIGHT_CONSUMER_SHA: ${{ inputs.g1_consumer_sha }}
       G1_PREFLIGHT_PR_NUMBER: ${{ inputs.g1_pr_number }}
       G1_PREFLIGHT_CONSUMER_CI_RUN_ID: ${{ inputs.g1_consumer_ci_run_id }}

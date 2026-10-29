@@ -14,7 +14,7 @@ on:
       vir:
         description: Javni vir za podatkovni audit
         type: choice
-        options: [all, novanet, dfb, g1-native-readonly]
+        options: [all, novanet, dfb, g1-native-readonly, g1-native-readonly-main]
         default: all
       sezona:
         description: Tekoča sezona, arhiv ali obe
@@ -26,16 +26,16 @@ on:
         type: boolean
         default: false
       g1_consumer_sha:
-        description: Reviewed G1 read-only consumer branch SHA
+        description: Reviewed G1 read-only consumer SHA (branch or deployed main)
         type: string
       g1_pr_number:
         description: Actual same-repository reviewed open PR number
         type: string
       g1_consumer_ci_run_id:
-        description: Successful first-attempt PR CI for that exact consumer SHA
+        description: Successful first-attempt PR CI; main mode uses the same production push CI
         type: string
       g1_main_ci_run_id:
-        description: Successful first-attempt production H5 push CI
+        description: Successful first-attempt production main push CI
         type: string
 
 permissions:
@@ -67,8 +67,8 @@ jobs:
       g1_consumer_ci_run_id: ${{ inputs.g1_consumer_ci_run_id || '' }}
       g1_main_ci_run_id: ${{ inputs.g1_main_ci_run_id || '' }}
     secrets:
-      g1_db_url: ${{ inputs.vir == 'g1-native-readonly' && secrets.SUPABASE_DB_URL || '' }}
-      g1_deploy_ssh_key: ${{ inputs.vir == 'g1-native-readonly' && secrets.DEPLOY_SSH_KEY || '' }}
+      g1_db_url: ${{ (inputs.vir == 'g1-native-readonly' || inputs.vir == 'g1-native-readonly-main') && secrets.SUPABASE_DB_URL || '' }}
+      g1_deploy_ssh_key: ${{ (inputs.vir == 'g1-native-readonly' || inputs.vir == 'g1-native-readonly-main') && secrets.DEPLOY_SSH_KEY || '' }}
 
   preveri:
     if: ${{ !inputs.diagnostika }}
@@ -138,7 +138,7 @@ jobs:
       # Retained private83 positives run with the explicit offline fixture;
       # public CI runs the source-free route, schema and refusal controls.
       - name: G1 remainder quarantine and source-history guards (source-free)
-        run: node --test scripts/test-fcf-g1-remainder*.mjs scripts/test-fcf-g1-quarantine-audit.mjs scripts/test-fcf-g1-prebudget-audit.mjs scripts/test-fcf-g1-historical-zero-witness.mjs scripts/test-fcf-g1-4109410-readiness.mjs scripts/test-fcf-g9-calendar-probe.mjs scripts/test-fcf-g1-native-preflight.mjs
+        run: node --test scripts/test-fcf-g1-remainder*.mjs scripts/test-fcf-g1-quarantine-audit.mjs scripts/test-fcf-g1-prebudget-audit.mjs scripts/test-fcf-g1-historical-zero-witness.mjs scripts/test-fcf-g1-4109410-readiness.mjs scripts/test-fcf-g9-calendar-probe.mjs scripts/test-fcf-g1-native-preflight.mjs scripts/test-fcf-g1-readonly-projection.mjs
 
       - name: FCF fresh-source future launch protocol (source-free)
         run: npm run test:fcf-future
@@ -384,7 +384,7 @@ jobs:
           FCF_HISTORY_DISPOSABLE_TEST: '1'
         run: |
           node --test scripts/test-fcf-future-historical-sql.mjs
-          node --test scripts/test-fcf-future-native-projection-sql.mjs
+          node --test scripts/test-fcf-future-native-projection-sql.mjs scripts/test-fcf-g1-readonly-projection-sql.mjs
           node --test scripts/test-fcf-future-native-import-sql.mjs
           node --test scripts/test-fcf-future-native-activation-sql.mjs
       - name: FCF Scout snapshot preservation and phase rollback regressions
