@@ -9,6 +9,17 @@ const sha=b=>createHash('sha256').update(b).digest('hex'),canonical=v=>JSON.stri
 const need=(ok,s)=>{if(!ok)throw Object.assign(Error('fussball native role replay: '+s),{code:'FUSSBALL_NATIVE_ROLE_REPLAY_HOLD',dataHold:true})}
 const stages=['current','archive'],resource=d=>['css','font'].includes(d.metadata.kind)
 const descriptor=d=>({stage:d.stage,url:d.metadata.url,kind:d.metadata.kind,sha256:sha(d.bytes),bytes:d.bytes.length,metadataSha256:digest(d.metadata),originalReceiptSha256:digest(d.metadata.originalReceipt??null)})
+// Fresh-pair retains a commitment, not a fabricated original result.json.
+export function fussballNativeOriginalResultBytes(stage){
+ if(stage.manifest?.version!==8&&!stage.files.has('result-commitment.json'))return stage.files.get('result.json')
+ const m=stage.manifest,leaf=stage.files.get('result-commitment.json')
+ need(m.version===8&&m.protocol==='baden-fresh-paired-transports-v1'&&Buffer.isBuffer(leaf)&&sha(leaf)===m.resultCommitmentSha256,'fresh semantic commitment bytes differ')
+ let c;try{c=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(leaf))}catch{need(false,'invalid fresh commitment JSON')}
+ const raw=Buffer.from(JSON.stringify(stage.result)+'\n')
+ need(c&&Object.getPrototypeOf(c)===Object.prototype&&same(Object.keys(c).sort(),['version','kind','resultSha256','semanticBytes','scope','coverage','sourceOnly','nativeAdmission','activationEligible'].sort()),'closed fresh semantic commitment required')
+ need(c.version===1&&c.kind==='fussball-full-semantic-result-commitment'&&c.sourceOnly===true&&c.nativeAdmission===false&&c.activationEligible===false&&c.resultSha256===m.resultSha256&&sha(raw)===c.resultSha256&&raw.length===c.semanticBytes&&same(c.scope,stage.result.scope)&&same(c.coverage,stage.result.coverage),'fresh full semantic commitment differs')
+ return raw
+}
 /** DATA only: this function cannot authenticate a source capability. The private
  * composer supplies reader-authenticated source stages and binds this witness. */
 export function replayFussballNativeRoles(input){
@@ -16,7 +27,7 @@ export function replayFussballNativeRoles(input){
  const locals={},global=new Map(),out={}
  for(const name of stages){
   const s=input[name];need(s?.files instanceof Map&&Array.isArray(s.manifest?.documents)&&s.result,'original stage required')
-  const raw=s.files.get('result.json');need(Buffer.isBuffer(raw)&&sha(raw)===s.manifest.resultSha256,'original result bytes differ')
+  const raw=fussballNativeOriginalResultBytes(s);need(Buffer.isBuffer(raw)&&sha(raw)===s.manifest.resultSha256,'original result bytes differ')
   let parsed;try{parsed=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(raw))}catch{need(false,'original result JSON differs')};need(same(parsed,s.result),'original result object differs')
   const docs=new Map();for(const d of s.manifest.documents){
    const b=s.files.get(d.file);need(!docs.has(d.url)&&Buffer.isBuffer(b)&&b.length===d.bytes&&sha(b)===d.sha256,'original document bytes or URL differ')

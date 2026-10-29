@@ -1,8 +1,25 @@
 name: FCF javni dokazi
-run-name: FCF sedem javnih zapisnikov ES
+run-name: ${{ inputs.mode == 'g9-calendar-discovery-v1' && 'FCF G9 calendar discovery ES' || 'FCF sedem javnih zapisnikov ES' }}
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        type: choice
+        options: [seven-acta, g9-calendar-discovery-v1]
+        default: seven-acta
+      expected_sha:
+        type: string
+        default: ''
+      main_ci_run_id:
+        type: string
+        default: ''
+      previous_probes:
+        type: string
+        default: '[]'
+      selected_url:
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -14,7 +31,7 @@ concurrency:
 
 jobs:
   dokazi:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (inputs.mode == '' || inputs.mode == 'seven-acta')
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
@@ -52,5 +69,41 @@ jobs:
         with:
           name: fcf-javni-dokazi-${{ github.run_id }}-${{ github.run_attempt }}
           path: fcf-javni-dokazi
+          if-no-files-found: error
+          retention-days: 90
+
+  calendar-probe:
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'g9-calendar-discovery-v1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Prevzemi kodo
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Namesti odvisnosti brez skript
+        run: npm ci --ignore-scripts
+      - name: Preveri G9 probe brez omrezja
+        run: node --test scripts/test-fcf-g9-calendar-probe.mjs
+      - name: Capture one fixed G9 calendar resource
+        id: probe
+        env:
+          GH_TOKEN: ${{ github.token }}
+          G9_MODE: ${{ inputs.mode }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          MAIN_CI_RUN_ID: ${{ inputs.main_ci_run_id }}
+          G9_PREVIOUS_PROBES: ${{ inputs.previous_probes }}
+          G9_SELECTED_URL: ${{ inputs.selected_url }}
+        run: node scripts/capture-fcf-g9-calendar-probe.mjs
+      - name: Retain G9 calendar probe originals
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-g9-calendar-probe-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-g9-calendar-probe
           if-no-files-found: error
           retention-days: 90

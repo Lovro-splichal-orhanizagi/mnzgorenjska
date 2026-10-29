@@ -5,8 +5,9 @@ import {isDeepStrictEqual as same} from 'node:util'
 import {readFileSync,writeFileSync,appendFileSync,mkdirSync,lstatSync} from 'node:fs'
 import {join} from 'node:path'
 import {reauthenticateFussballNativePreparation} from './prepare-fussball-native-history.mjs'
-import {getFussballNativeComposition,reauthenticateFussballNativeComposition,validateFussballNativeCatalog} from './fussball-native-composition.mjs'
-import {getFussballCompletedSourceV7} from './fussball-completed-source-v7.mjs'
+import {getFussballNativeComposition,getFussballNativeCompositionSource,reauthenticateFussballNativeComposition,validateFussballNativeCatalog} from './fussball-native-composition.mjs'
+import {fussballNativeOriginalResultBytes} from './fussball-native-role-replay.mjs'
+import {replayFussballFreshStage} from './fussball-fresh-pair.mjs'
 import {createFussballParserSession,assembleFussballSchedule,validateFussballFixture} from './fussball-season.mjs'
 import {createFussballCaptureClient} from './lib/fussball-capture.mjs'
 import {GERMANY_BULK_CANDIDATES} from './bulk-germany-source.mjs'
@@ -107,7 +108,7 @@ export function bindFussballHistoricalSchedule(context,competition,code,schedule
 }
 const nativeSchedule=season=>[...new Set(season.fixtures.map(f=>f.krog))].sort((a,b)=>a-b).map(stevilka=>({stevilka,tekme:season.fixtures.filter(f=>f.krog===stevilka).map(f=>({...structuredClone(f),izid:f.rezultat?[f.rezultat.domaci,f.rezultat.gostje]:null,odigrana:f.rezultat!==null,kontumacija:false}))}))
 function originalSeason(s,code){
- const source=s.pack.seasons.find(x=>x.code===code),originals=s.originals??getFussballCompletedSourceV7(s.sourceProof).originals.stages
+ const source=s.pack.seasons.find(x=>x.code===code),originals=s.originals??getFussballNativeCompositionSource(s.sourceProof).originals.stages
  const stage=originals[source?.inventory.scope.stage],candidate=GERMANY_BULK_CANDIDATES.find(c=>c.slug===BADEN_SLUG)
  const reviewed=code===candidate?.source_league_code?candidate:candidate?.archives.find(a=>a.code===code)
  need(source&&stage&&reviewed&&stage.result.scope.staffel+':'+stage.result.scope.season===code&&stage.result.scope.seedUrl===reviewed.seedUrl&&stage.manifest.options.seedUrl===reviewed.seedUrl,'authenticated canonical seasonal seed required')
@@ -163,7 +164,7 @@ export async function collectFussballNativeRuntime({context,competition,code,cli
 }
 function regular(root,path){need(typeof path==='string'&&!path.startsWith('/')&&!path.includes('\\')&&path.split('/').every(x=>x&&x!=='.'&&x!=='..'),'unsafe retained path');let current=root;need(lstatSync(current).isDirectory()&&!lstatSync(current).isSymbolicLink(),'regular retained directory required');for(const part of path.split('/')){current=join(current,part);need(!lstatSync(current).isSymbolicLink(),'retained symlink refused')}need(lstatSync(current).isFile(),'retained original missing');return readFileSync(current)}
 function seedState(s){
- const originals=s.originals??getFussballCompletedSourceV7(s.sourceProof).originals.stages
+ const originals=s.originals??getFussballNativeCompositionSource(s.sourceProof).originals.stages
  const files=new Map()
  for(const [stage,value]of Object.entries(originals))for(const [path,bytes]of value.files)files.set(stage+'/'+path,Buffer.from(bytes))
  const seal={version:1,kind:'baden-prepared-originals-seed',receipt:s.state.receipt,manifest:s.state.manifest,readback:s.state.readback,pack:s.pack,source:s.pack.source,sourceCertificateSha256:s.pack.sourceCertificateSha256,derivedPackSha256:s.pack.derivedPackSha256,captured_at:s.pack.captured_at,currentFreshUntil:s.pack.currentFreshUntil,files:[...files].map(([path,b])=>({path,bytes:b.length,sha256:sha(b)})).sort((a,b)=>a.path.localeCompare(b.path))}
@@ -195,10 +196,18 @@ export async function loadFussballNativeRuntimeSeed({context,competition,directo
  for(const d of seal.files){need(!files.has(d.path),'duplicate durable path');const bytes=regular(directory,d.path);need(bytes.length===d.bytes&&sha(bytes)===d.sha256,'durable original bytes missing or changed');files.set(d.path,bytes)}
  const originals={}
  for(const season of s.pack.seasons){
-  const stage=season.inventory.scope.stage,m=JSON.parse(regular(directory,stage+'/manifest.json')),resultBytes=regular(directory,stage+'/result.json'),pinned=catalog.seasons.find(x=>x.stage===stage)
+  const stage=season.inventory.scope.stage,m=JSON.parse(regular(directory,stage+'/manifest.json')),pinned=catalog.seasons.find(x=>x.stage===stage),stageFiles=new Map([...files].filter(([path])=>path.startsWith(stage+'/')).map(([path,b])=>[path.slice(stage.length+1),b]))
+  let result,resultBytes
+  if(catalog.kind==='baden-fussball-fresh-pair-native-catalog'||catalog.kind==='baden-fussball-completed-stages-native-catalog'&&stage==='current'){
+   need(seal.source?.kind===(catalog.kind==='baden-fussball-completed-stages-native-catalog'?'authenticated-fussball-baden-completed-stages-source':'authenticated-fussball-baden-fresh-pair-source')&&seal.source.source?.captureCodeSha256===catalog.captureCodeSha256,'durable fresh source family differs')
+   // Original Maps contain a commitment only. Rebuild full semantics with the
+   // fixed source-free replay, then bind its exact bytes; never invent a file.
+   result=(await replayFussballFreshStage({files:stageFiles,stage,codeSha256:catalog.captureCodeSha256})).result
+   resultBytes=fussballNativeOriginalResultBytes({manifest:m,result,files:stageFiles})
+  }else{if(catalog.kind==='baden-fussball-completed-stages-native-catalog')need(stage==='archive'&&m.version===7&&m.codeSha256===seal.source.source?.archiveCodeSha256&&seal.source.kind==='authenticated-fussball-baden-completed-stages-source','durable historical archive family differs');resultBytes=regular(directory,stage+'/result.json');result=JSON.parse(resultBytes)}
   need(pinned&&sha(resultBytes)===pinned.resultSha256&&m.resultSha256===pinned.resultSha256&&sha(m.documents)===season.sourceDocumentInventorySha256&&m.options.staffel+':'+m.options.season===season.code&&m.success===true&&(stage!=='current'||m.createdAt===s.pack.captured_at),'sealed original source provenance differs')
   for(const d of m.documents){const bytes=regular(directory,stage+'/'+d.file);need(bytes.length===d.bytes&&sha(bytes)===d.sha256&&files.has(stage+'/'+d.file),'complete sealed source original missing')}
-  originals[stage]={manifest:m,result:JSON.parse(resultBytes),files:new Map([...files].filter(([path])=>path.startsWith(stage+'/')).map(([path,b])=>[path.slice(stage.length+1),b]))}
+  originals[stage]={manifest:m,result,files:stageFiles}
  }
  privateContext(context,competition).originals=originals
  return {context,competition:{...competition,firstFantasyPlayedOn:s.state.readback.firstFantasyPlayedOn,communityCardBinding:structuredClone(s.state.readback.cards),fussballHistoricalContext:context},seal:structuredClone(seal)}

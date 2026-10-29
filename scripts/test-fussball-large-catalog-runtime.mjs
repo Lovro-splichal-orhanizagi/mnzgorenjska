@@ -12,7 +12,7 @@ const blob=b=>createHash('sha1').update(Buffer.from(`blob ${b.length}\0`)).updat
 if(process.argv[2]==='runtime'){
  // Small inline branch uses exact historical Git957de052 catalog bytes, while
  // every large/negative branch continues to use current production catalog DATA.
- const mode=process.argv[3],read=fs.readFileSync,path=fileURLToPath(new URL('../'+catalog,import.meta.url)),original=mode==='small'?read(new URL('./vzorci/fussball-baden-native-catalog-unfinalized-957de052.json',import.meta.url)):read(path),size=mode==='oversize'?4*MiB+1:mode==='small'?original.length:2*MiB
+ const mode=process.argv[3],read=fs.readFileSync,path=fileURLToPath(new URL('../'+catalog,import.meta.url)),original=mode==='small'?read(new URL('./vzorci/fussball-baden-native-catalog-unfinalized-957de052.json',import.meta.url)):read(path),size=mode==='oversize'?4*MiB+1:mode==='small'?original.length:Math.max(2*MiB,original.length)
  if(mode==='small')assert.ok(original.length<=MiB,'historical inline fixture must fit GitHub base64 limit')
  const bytes=Buffer.concat([original,Buffer.alloc(size-original.length,32)])
  fs.readFileSync=function(p,options){if(String(p)===path||(p instanceof URL&&fileURLToPath(p)===path))return typeof options==='string'||options?.encoding?bytes.toString():Buffer.from(bytes);return read.apply(this,arguments)}
@@ -31,13 +31,14 @@ if(process.argv[2]==='runtime'){
   }
   source++;throw Object.assign(Error('source boundary intentionally unavailable'),{code:'TEST_SOURCE_BOUNDARY'})
  }
- const current=JSON.parse(read(new URL('./policies/fussball-transport-v6.json',import.meta.url))).current,fixtureNow=Date.parse(current.completedAt)+1000,expiry=Date.parse(current.createdAt)+86400000,useFixtureClock=['valid','small'].includes(mode)
+ const compiled=JSON.parse(original),mixed=compiled.kind==='baden-fussball-completed-stages-native-catalog',current=mixed?JSON.parse(read(new URL('./fussball-baden-completed-stages.json',import.meta.url))):JSON.parse(read(new URL('./policies/fussball-transport-v6.json',import.meta.url))).current,fixtureNow=Date.parse(mixed?current.currentCreatedAt:current.completedAt)+1000,expiry=mixed?Date.parse(current.currentFreshUntil):Date.parse(current.createdAt)+86400000,useFixtureClock=['valid','small'].includes(mode)
  assert.ok(fixtureNow<=expiry,'fixture clock must remain inside original retained24h interval')
  if(useFixtureClock)mock.timers.enable({apis:['Date'],now:fixtureNow})
- let error;try{await produceFussballNativeComposition({derivedRunId:'123',derivedHead:head,sourceRunId:'124',frozenDirectory:'UNUSED',v6FrozenDirectory:'UNUSED',directory:'UNCREATED-large-catalog-test',github})}catch(e){error=e}finally{if(useFixtureClock)mock.timers.reset()}
+ const sourceRunId=['small','source'].includes(mode)?(compiled.sourceRunId==='124'?'125':'124'):compiled.sourceRunId
+ let error;try{await produceFussballNativeComposition({derivedRunId:'123',derivedHead:head,sourceRunId,frozenDirectory:'UNUSED',v6FrozenDirectory:'UNUSED',directory:'UNCREATED-large-catalog-test',github})}catch(e){error=e}finally{if(useFixtureClock)mock.timers.reset()}
  const clockRestored=!useFixtureClock||Date.now()!==fixtureNow
- if(useFixtureClock&&Date.now()>expiry){const {assertFussballV6CurrentFresh}=await import('./fussball-archive-v6.mjs');assert.throws(()=>assertFussballV6CurrentFresh(),/stale/)}
- console.log(JSON.stringify({code:error?.code,message:error?.message,raw,source,calls,clockRestored}));process.exit(0)
+ if(useFixtureClock&&!mixed&&Date.now()>expiry){const {assertFussballV6CurrentFresh}=await import('./fussball-archive-v6.mjs');assert.throws(()=>assertFussballV6CurrentFresh(),/stale/)}
+ console.log(JSON.stringify({code:error?.code,message:error?.message,raw,source,calls,clockRestored,sourceBoundaryCode:mixed?'BADEN_COMPLETED_STAGES_GET_CURRENT_R9_RUN':null}));process.exit(0)
 }else if(process.argv[2]==='adapter'){
  const calls=[];let payload=Buffer.from('{}')
  child.execFileSync=(file,args,options)=>{calls.push({file,args,maxBuffer:options.maxBuffer});return payload}
@@ -51,8 +52,14 @@ if(process.argv[2]==='runtime'){
  console.log(JSON.stringify(calls));process.exit(0)
 }else{
  const run=(kind,mode)=>JSON.parse(child.execFileSync(process.execPath,[fileURLToPath(import.meta.url),kind,...(mode?[mode]:[])],{encoding:'utf8',maxBuffer:MiB}))
- test('exported hosted producer accepts exact 1–4 MiB catalog raw bytes and preserves small inline path',()=>{
-  for(const mode of ['valid','small']){const r=run('runtime',mode);assert.ok(['TEST_SOURCE_BOUNDARY','FUSSBALL_COMPLETED_SOURCE_V7_HOLD'].includes(r.code),r.message);assert.equal(r.raw,mode==='small'?0:1);assert.equal(r.clockRestored,true)}
+ test('exported hosted producer accepts exact 1–4 MiB catalog raw bytes and preserves small inline transport before source authority',()=>{
+  const valid=run('runtime','valid');assert.ok((valid.sourceBoundaryCode?[valid.sourceBoundaryCode]:['TEST_SOURCE_BOUNDARY','FUSSBALL_COMPLETED_SOURCE_V7_HOLD']).includes(valid.code),valid.message);assert.equal(valid.source,1);assert.equal(valid.raw,1);assert.equal(valid.clockRestored,true)
+  // The historical inline catalog is deliberately unfinalized. Its metadata
+  // transport succeeds, then the compiled source pin must refuse the fake run.
+  const small=run('runtime','small');assert.equal(small.code,'FUSSBALL_NATIVE_COMPOSITION_HOLD');assert.match(small.message,/compiled source run differs/);assert.equal(small.raw,0);assert.equal(small.source,0);assert.equal(small.clockRestored,true);assert.ok(small.calls.some(([p,binary])=>p===repo+'contents/'+catalog+'?ref='+head&&!binary))
+ })
+ test('large catalog transport cannot authorize a different compiled source run',()=>{
+  const r=run('runtime','source');assert.equal(r.code,'FUSSBALL_NATIVE_COMPOSITION_HOLD');assert.match(r.message,/compiled source run differs/);assert.equal(r.raw,1);assert.equal(r.source,0)
  })
  test('large catalog metadata, immutable head and raw byte drift hold before source authority',()=>{
   for(const mode of ['head','type','path','size','sha','encoding','content','truncated','altered','oversize','rawoversize']){const r=run('runtime',mode);assert.equal(r.code,'FUSSBALL_NATIVE_COMPOSITION_HOLD',mode+': '+r.message);assert.equal(r.source,0);assert.equal(r.raw,['truncated','altered','rawoversize'].includes(mode)?1:0,mode)}

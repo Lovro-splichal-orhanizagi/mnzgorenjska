@@ -9,7 +9,14 @@ const fail=m=>{throw Error(`FCF_FUTURE_DB: ${m}`)},sha=t=>createHash('sha256').u
 function keys(x,fields,label){if(!x||Object.getPrototypeOf(x)!==Object.prototype||Object.keys(x).sort().join(',')!==fields.slice().sort().join(','))fail(`${label} closed fields required`)}
 function text(value,expected,label){if(typeof value!=='string'||!value.length||Buffer.byteLength(value)>8*1024*1024||value.charCodeAt(0)===0xfeff||!/^[a-f0-9]{64}$/.test(expected??'')||sha(value)!==expected)fail(`${label} exact bounded TEXT/SHA required`);let p;try{p=JSON.parse(value)}catch{fail(`${label} JSON required`)}return p}
 function ambiguous(){const e=Error('FCF_FUTURE_DB: ambiguous database response; read back receipt before retry');e.ambiguous=true;return e}
-export function createFcfFutureTargetDatabase(input={}){
+export function createFcfFutureTargetDatabase(input={}){return createDatabase(input,false)}
+// Fixed diagnostic facade: no mutation/receipt API and no caller SQL or mode.
+export function createFcfG1ReadOnlyDatabase(input={}){
+ keys(input,Object.keys(input).filter(k=>['env','execute'].includes(k)),'G1 readonly options')
+ const {inventory,projection,pricingSnapshot}=createDatabase({...input,targetSlug:'es-ct-segona-g1'},true)
+ return Object.freeze({inventory,projection,pricingSnapshot})
+}
+function createDatabase(input,g1Observer){
  keys(input,Object.keys(input).filter(k=>['env','execute','network','targetSlug'].includes(k)),'database options')
  const {env=process.env,execute=execFileSync,network=globalThis.fetch,targetSlug='es-ct-tercera-g9'}=input,target=getFcfFutureTarget({targetSlug})
  if(typeof execute!=='function'||typeof network!=='function')fail('fixed database adapters required')
@@ -32,7 +39,18 @@ export function createFcfFutureTargetDatabase(input={}){
   // inherited hostaddr/service settings must not bypass the existing tunnel.
   const readEnv={...env,...connection,PGHOSTADDR:'127.0.0.1',PGCONNECT_TIMEOUT:'15'}
   for(const key of ['PGSERVICE','PGSERVICEFILE','PGSYSCONFDIR'])delete readEnv[key]
-  let raw;try{raw=execute('psql',['-X','-w','-qAt','-v','ON_ERROR_STOP=1'],{env:readEnv,input:`BEGIN READ ONLY;\nSET LOCAL ROLE service_role;\nSET LOCAL statement_timeout='180s';\nSELECT ${expression};\nROLLBACK;\n`,timeout:200000,maxBuffer:limit,stdio:['pipe','pipe','pipe']})}catch{fail('readonly database query failed')}
+  let raw;try{raw=execute('psql',['-X','-w','-qAt','-v','ON_ERROR_STOP=1',...(g1Observer?['-v','VERBOSITY=verbose']:[])],{env:readEnv,input:`BEGIN READ ONLY;\nSET LOCAL ROLE service_role;\nSET LOCAL statement_timeout='180s';\nSELECT ${expression};\nROLLBACK;\n`,timeout:200000,maxBuffer:limit,stdio:['pipe','pipe','pipe']})}catch(cause){
+   if(!g1Observer)fail('readonly database query failed')
+   // Raw stderr stays in memory only. Never expose a message, URI or detail.
+   const raw=Buffer.isBuffer(cause?.stderr)?cause.stderr.toString('utf8'):typeof cause?.stderr==='string'?cause.stderr:''
+   const match=raw.match(/^ERROR:\s+([A-Z0-9]{5}): ([^\r\n]*)$/m),known={
+    'FCF_TARGET: unknown/missing relevant FK definition, validation or deferrability':'FK_CATALOG_DRIFT',
+    'FCF_TARGET: unknown relevant non-FK/Scout relation':'UNKNOWN_DEPENDENCY',
+    'FCF_TARGET: explicit readonly transaction required':'READONLY_REQUIRED'
+   },error=Error('FCF_FUTURE_DB: readonly database query failed')
+   const states=['P0001','42501','57014','55P03','42883','08001','08006','53200','54000','22P02','42P01','42703','0A000','25006','25P02']
+   error.readonlyDiagnostic=Object.freeze({sqlState:states.includes(match?.[1])?match[1]:'UNKNOWN',guard:known[match?.[2]]??'UNKNOWN'});throw error
+  }
   try{const value=String(raw).trim();if(Buffer.byteLength(value)>limit)fail('readonly result bound exceeded');return JSON.parse(value)}catch{fail('invalid bounded readonly database result')}
  }
  function parameters(stage,p){
@@ -58,5 +76,5 @@ export function createFcfFutureTargetDatabase(input={}){
   if(!result||typeof result!=='object'||Array.isArray(result))throw ambiguous()
   return result
  }
- return Object.freeze({inventory(s,k){const value=read(`public.fcf_six_current_target_inventory(${selected(s)},${privacy(k)})`);if(!value||!Array.isArray(value.players))fail('complete readonly player inventory required');const fields=['id','competition_id','team_id','reg_st','full_name','position','position_source','anonimiziran_at','anonimiziran_razlog'];return {...value,...(getFcfFutureTarget({targetSlug:s}).competitionId===783?{supplementalMarker:read('public.get_installed_fcf_g1_supplement()')}:{}),players:value.players.map(p=>Object.fromEntries(fields.filter(k=>Object.hasOwn(p,k)).map(k=>[k,p[k]]))) }},projection:(s,k)=>read(`public.fcf_future_current_target_projection(${selected(s)},${privacy(k)})`),pricingSnapshot:s=>read(`public.fcf_six_current_target_pricing(${selected(s)})`),receipt:s=>read(`public.fcf_future_current_target_receipt(${selected(s)})`),mutate})
+ return Object.freeze({inventory(s,k){const value=read(`public.fcf_six_current_target_inventory(${selected(s)},${privacy(k)})`);if(!value||!Array.isArray(value.players))fail('complete readonly player inventory required');const fields=['id','competition_id','team_id','reg_st','full_name','position','position_source','anonimiziran_at','anonimiziran_razlog'];return {...value,...(getFcfFutureTarget({targetSlug:s}).competitionId===783?{supplementalMarker:read('public.get_installed_fcf_g1_supplement()')}:{}),players:value.players.map(p=>Object.fromEntries(fields.filter(k=>Object.hasOwn(p,k)).map(k=>[k,p[k]]))) }},projection:(s,k)=>{const route=selected(s),keys=privacy(k);return read(g1Observer?`public.fcf_g1_readonly_projection(${keys})`:`public.fcf_future_current_target_projection(${route},${keys})`)},pricingSnapshot:s=>read(`public.fcf_six_current_target_pricing(${selected(s)})`),receipt:s=>read(`public.fcf_future_current_target_receipt(${selected(s)})`),mutate})
 }

@@ -1,0 +1,1465 @@
+{
+  "version": 1,
+  "kind": "fixed-baden-completed-stages-descriptor",
+  "repository": "Lovro-splichal-orhanizagi/mnzgorenjska",
+  "current": {
+    "name": "CURRENT_R9",
+    "run": {
+      "id": 40859714195,
+      "run_attempt": 1,
+      "head_sha": "f3669300087c5f8df926a599d86f03b1269215c5",
+      "head_branch": "main",
+      "path": ".github/workflows/preveri-baden-fresh-pair.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-10-29T10:42:48Z",
+      "repository": {
+        "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+      },
+      "head_repository": {
+        "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+      },
+      "actor": {
+        "id": 25134229,
+        "login": "nejcar20",
+        "type": "User"
+      },
+      "triggering_actor": {
+        "id": 25134229,
+        "login": "nejcar20",
+        "type": "User"
+      }
+    },
+    "jobs": {
+      "total_count": 1,
+      "jobs": [
+        {
+          "id": 123399564489,
+          "run_id": 40859714195,
+          "run_attempt": 1,
+          "head_sha": "f3669300087c5f8df926a599d86f03b1269215c5",
+          "name": "capture-pair",
+          "status": "completed",
+          "conclusion": "failure",
+          "steps": [
+            {
+              "number": 1,
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 2,
+              "name": "Checkout exact reviewed fixed writer",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 3,
+              "name": "Set up Node22",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 4,
+              "name": "Install locked dependencies",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 5,
+              "name": "Focused source-free fixed pair controls",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 6,
+              "name": "Capture fixed current then verified archive with counted retries",
+              "status": "completed",
+              "conclusion": "failure"
+            },
+            {
+              "number": 7,
+              "name": "Replay fresh paired originals without source network",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 8,
+              "name": "Preserve all originals, partial attempts and historical budget receipts",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 9,
+              "name": "Preserve separate source-only replay attestation",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 17,
+              "name": "Post Set up Node22",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 18,
+              "name": "Post Checkout exact reviewed fixed writer",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 19,
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    "artifact": {
+      "id": 12894726197,
+      "name": "baden-fresh-pair-40859714195",
+      "size_in_bytes": 10738760,
+      "digest": "sha256:c38a1ab44962431e206544bdb4eb6a8c925a5df9bd7245e97b36d0fe794139a9"
+    },
+    "manifestSha256": "75b58874ec02edf1399b9309cb0bb056ec9bd9477d0b7e7a91b0f5da36dfcfc6"
+  },
+  "archive": {
+    "name": "ARCHIVE_R7",
+    "run": {
+      "id": 40761564810,
+      "run_attempt": 1,
+      "head_sha": "7692cecffa8b9c747b4a76bd8367a1aa06bbc0b0",
+      "head_branch": "main",
+      "path": ".github/workflows/preveri-fussball-dopolni.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-28T20:15:01Z",
+      "repository": {
+        "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+      },
+      "head_repository": {
+        "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+      },
+      "actor": {
+        "id": 25134229,
+        "login": "nejcar20",
+        "type": "User"
+      },
+      "triggering_actor": {
+        "id": 25134229,
+        "login": "nejcar20",
+        "type": "User"
+      }
+    },
+    "jobs": {
+      "total_count": 4,
+      "jobs": [
+        {
+          "id": 123074576145,
+          "run_id": 40761564810,
+          "run_attempt": 1,
+          "head_sha": "7692cecffa8b9c747b4a76bd8367a1aa06bbc0b0",
+          "name": "archive-continuation",
+          "status": "completed",
+          "conclusion": "success",
+          "steps": [
+            {
+              "number": 1,
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 2,
+              "name": "Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 3,
+              "name": "Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 4,
+              "name": "Run actions/setup-node@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 5,
+              "name": "Validate exact archive-only V6 scope and1838 spent budget",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 6,
+              "name": "Focused offline archive continuation checks",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 7,
+              "name": "Authenticate actual V5 parents and execute frozen DE77 default verifier",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 8,
+              "name": "Exercise genuine retained originals offline before source",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 9,
+              "name": "Share host pacing with older nightly and bulk readers",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 10,
+              "name": "Capture only fresh archive rounds and missing originals without database credentials",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 11,
+              "name": "Reauthenticate detached originals and replay archive with no network",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 12,
+              "name": "Preserve V6 archive originals and all counted attempts",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 13,
+              "name": "Preserve source-only attestation separately from immutable historical parents",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "number": 14,
+              "name": "Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 15,
+              "name": "Validate exact archive-only V7 scope and1952 spent budget",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 16,
+              "name": "Focused offline V7 boundary checks",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 17,
+              "name": "Authenticate V5 current and exact failed V6 through clean frozen DE77 and4e",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 18,
+              "name": "Exercise genuine V7 ledger and resource boundaries offline",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 19,
+              "name": "Share host pacing immediately before V7 source guard",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 20,
+              "name": "Capture V7 fresh archive only after authenticated1952 spent history",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 21,
+              "name": "Reauthenticate V7 detached originals and replay without network",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 22,
+              "name": "Preserve V7 originals and every counted partial attempt",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 23,
+              "name": "Preserve V7 source-only attestation separately",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 43,
+              "name": "Post Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 44,
+              "name": "Post Run actions/setup-node@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 45,
+              "name": "Post Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 46,
+              "name": "Post Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "number": 47,
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 123074578799,
+          "run_id": 40761564810,
+          "run_attempt": 1,
+          "head_sha": "7692cecffa8b9c747b4a76bd8367a1aa06bbc0b0",
+          "name": "capture",
+          "status": "completed",
+          "conclusion": "skipped",
+          "steps": []
+        },
+        {
+          "id": 123074579476,
+          "run_id": 40761564810,
+          "run_attempt": 1,
+          "head_sha": "7692cecffa8b9c747b4a76bd8367a1aa06bbc0b0",
+          "name": "archive",
+          "status": "completed",
+          "conclusion": "skipped",
+          "steps": []
+        },
+        {
+          "id": 123074579538,
+          "run_id": 40761564810,
+          "run_attempt": 1,
+          "head_sha": "7692cecffa8b9c747b4a76bd8367a1aa06bbc0b0",
+          "name": "handoff",
+          "status": "completed",
+          "conclusion": "skipped",
+          "steps": []
+        }
+      ]
+    },
+    "artifact": {
+      "id": 12855646437,
+      "name": "fussball-season-archive-v7-40761564810",
+      "size_in_bytes": 81967319,
+      "digest": "sha256:1cbb22594ed2ffae99e747fb3e952a509b68dd15a7d3448e3dfafd4f5659c4dd"
+    },
+    "manifestSha256": "4adb5b868f916ae1e468b3d5ba7f3a2aed9cb66e618743d87b74163cb4b22012"
+  },
+  "cacheParents": [
+    {
+      "name": "DE77_ARCHIVE",
+      "run": {
+        "id": 40641606028,
+        "run_attempt": 1,
+        "head_sha": "de77b661cbc11d95256a500e57c2fdea861a0647",
+        "head_branch": "main",
+        "path": ".github/workflows/preveri-fussball-dopolni.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-28T06:04:01Z",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobs": {
+        "total_count": 3,
+        "jobs": [
+          {
+            "id": 122660803298,
+            "run_id": 40641606028,
+            "run_attempt": 1,
+            "head_sha": "de77b661cbc11d95256a500e57c2fdea861a0647",
+            "name": "capture",
+            "status": "completed",
+            "conclusion": "success",
+            "steps": [
+              {
+                "number": 1,
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 2,
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 3,
+                "name": "Run actions/setup-node@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 4,
+                "name": "Run npm ci --ignore-scripts",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 5,
+                "name": "Validate exact reviewed completion scope and total5000 budget",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 6,
+                "name": "Offline source and evidence checks",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 7,
+                "name": "Authenticate only the exact reviewed source artifacts for the selected preset",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 8,
+                "name": "Share host pacing with older nightly and bulk readers",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 9,
+                "name": "Capture fresh rounds and missing originals without database credentials",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 10,
+                "name": "Independently replay only retained original documents",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 11,
+                "name": "Authorize archive only from complete replayed current originals",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 12,
+                "name": "Preserve source originals, checkpoint provenance and request journal",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 23,
+                "name": "Post Run actions/setup-node@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 24,
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 25,
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
+          },
+          {
+            "id": 122667307017,
+            "run_id": 40641606028,
+            "run_attempt": 1,
+            "head_sha": "de77b661cbc11d95256a500e57c2fdea861a0647",
+            "name": "archive",
+            "status": "completed",
+            "conclusion": "failure",
+            "steps": [
+              {
+                "number": 1,
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 2,
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 3,
+                "name": "Run actions/setup-node@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 4,
+                "name": "Validate unchanged reviewed main and reserved allowances",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 5,
+                "name": "Run actions/download-artifact@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 6,
+                "name": "Share host pacing with older nightly and bulk readers",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 7,
+                "name": "Reauthenticate and replay current proof, bind adjacent archive, capture and replay",
+                "status": "completed",
+                "conclusion": "failure"
+              },
+              {
+                "number": 8,
+                "name": "Preserve separate archive originals and request journal",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 15,
+                "name": "Post Run actions/setup-node@v4",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 16,
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 17,
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
+          },
+          {
+            "id": 122671238974,
+            "run_id": 40641606028,
+            "run_attempt": 1,
+            "head_sha": "de77b661cbc11d95256a500e57c2fdea861a0647",
+            "name": "handoff",
+            "status": "completed",
+            "conclusion": "skipped",
+            "steps": []
+          }
+        ]
+      },
+      "artifact": {
+        "id": 12796389857,
+        "name": "fussball-season-archive-40641606028",
+        "size_in_bytes": 56644604,
+        "digest": "sha256:d7ea312ffba97814a472900ff97a22f1cf667d86a87060c18536773fa7900d26"
+      },
+      "manifestSha256": "30b8cad21507eda01712f7621654957da67bee503486f0ca2bb2e28227f60c38"
+    },
+    {
+      "name": "FAILED_V6_ARCHIVE",
+      "run": {
+        "id": 40694431918,
+        "run_attempt": 1,
+        "head_sha": "4e1e7caac02aa6e12c789c7cea7aac699d3c2566",
+        "head_branch": "main",
+        "path": ".github/workflows/preveri-fussball-dopolni.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-28T13:13:13Z",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobs": {
+        "total_count": 4,
+        "jobs": [
+          {
+            "id": 122837327122,
+            "run_id": 40694431918,
+            "run_attempt": 1,
+            "head_sha": "4e1e7caac02aa6e12c789c7cea7aac699d3c2566",
+            "name": "archive-continuation",
+            "status": "completed",
+            "conclusion": "failure",
+            "steps": [
+              {
+                "number": 1,
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 2,
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 3,
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 4,
+                "name": "Run actions/setup-node@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 5,
+                "name": "Validate exact archive-only V6 scope and1838 spent budget",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 6,
+                "name": "Focused offline archive continuation checks",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 7,
+                "name": "Authenticate actual V5 parents and execute frozen DE77 default verifier",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 8,
+                "name": "Exercise genuine retained originals offline before source",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 9,
+                "name": "Share host pacing with older nightly and bulk readers",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 10,
+                "name": "Capture only fresh archive rounds and missing originals without database credentials",
+                "status": "completed",
+                "conclusion": "failure"
+              },
+              {
+                "number": 11,
+                "name": "Reauthenticate detached originals and replay archive with no network",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 12,
+                "name": "Preserve V6 archive originals and all counted attempts",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 13,
+                "name": "Preserve source-only attestation separately from immutable historical parents",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 24,
+                "name": "Post Run actions/setup-node@v4",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 25,
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 26,
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 27,
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
+          },
+          {
+            "id": 122837329668,
+            "run_id": 40694431918,
+            "run_attempt": 1,
+            "head_sha": "4e1e7caac02aa6e12c789c7cea7aac699d3c2566",
+            "name": "archive",
+            "status": "completed",
+            "conclusion": "skipped",
+            "steps": []
+          },
+          {
+            "id": 122837330038,
+            "run_id": 40694431918,
+            "run_attempt": 1,
+            "head_sha": "4e1e7caac02aa6e12c789c7cea7aac699d3c2566",
+            "name": "capture",
+            "status": "completed",
+            "conclusion": "skipped",
+            "steps": []
+          },
+          {
+            "id": 122837330822,
+            "run_id": 40694431918,
+            "run_attempt": 1,
+            "head_sha": "4e1e7caac02aa6e12c789c7cea7aac699d3c2566",
+            "name": "handoff",
+            "status": "completed",
+            "conclusion": "skipped",
+            "steps": []
+          }
+        ]
+      },
+      "artifact": {
+        "id": 12819517946,
+        "name": "fussball-season-archive-v6-40694431918",
+        "size_in_bytes": 1218385,
+        "digest": "sha256:dc9b2273d2d5ca26c9ffeb576d0f4a4deda935fe941e1aa4f2d09d8cd0e72719"
+      },
+      "manifestSha256": "1be26666732d56ec15dd8e139819189f2bfb2bc0c245c3799bd09a40203de9d5"
+    }
+  ],
+  "archiveAttestation": {
+    "id": 12855951485,
+    "name": "fussball-archive-v7-source-attestation-40761564810",
+    "size_in_bytes": 1142,
+    "digest": "sha256:6895e2adea8bd12d9d5a74862ee14d677e99f90328259f7daea63a6c4182d8e5"
+  },
+  "pairManifestSha256": "a65cc15c52092d1ff930c34ad1503997b13cdf23a1ffd948a10b0be654e26020",
+  "currentResultSha256": "2b6718daf478f485edbf1de16d0099cb3cb7bd5ce6386366955114818886bef1",
+  "archiveResultSha256": "ccce549a679e9d44e2820ab8d769bc631f13fbb91e9b093c8bb5749522bb63fa",
+  "currentCodeSha256": "f9eeb9ecff417b24a599038ee1d0aa9f4c8fd09f8b47cdd71a6c79fb9e823dca",
+  "archiveCodeSha256": "c730046b0a543bf7d9d1dc40f56ae857e5935dd81c0b1a5aff898adcce4b06ea",
+  "currentCreatedAt": "2026-10-29T10:43:41.514Z",
+  "currentFreshUntil": "2026-10-30T10:43:41.514Z",
+  "accounting": {
+    "priorRequests": 3020,
+    "currentRequests": 587,
+    "archiveRequests": 0,
+    "cumulativeRequests": 3607,
+    "totalRequestCap": 5000
+  },
+  "runtime": {
+    "current": {
+      ".github/workflows/preveri-baden-fresh-pair.yml": "58c623a8c18b8bb318270345669a8fd3dc16db7662b05f614af85c8a45a8e38d",
+      ".github/workflows/preveri-fussball-dopolni.yml": "7994f6bdbd2181640fd0a15ee7cc1dc054d0649a94a9f9d1620497102f7b4e97",
+      "package-lock.json": "eabfd5f32e8c5f39378120789ff966c17d4775a3fdca9c39fb1ff308b3192ef1",
+      "package.json": "dd8ad4be71c2f7f8899ed5adf86d399c698b94c18c2c066bd0910b3598b8afd2",
+      "scripts/bulk-germany-source.mjs": "dc30ac9b031a460254cb447b65b04cca316565dc7fac9088781f4f6dc526771f",
+      "scripts/bulk-source-coordination.mjs": "21096d216ab7600e804433b5d18bbaddf03f77b2319d895581a8679177781c30",
+      "scripts/dfb-artifacts.mjs": "df79a66b4125bf610e2c32c40bce3faa41c25f3ab6640655644f9d702dba42ce",
+      "scripts/fussball-archive-v6.mjs": "c808eb9e4aa88b18267507d4cfc69d5c175416928c5266349a3ade0bb08762b9",
+      "scripts/fussball-archive-v7-actions.mjs": "bc2c41dc41ef5adc628cbede1a4e76f193bc2d5298e93cd089378f9ebc803704",
+      "scripts/fussball-archive-v7.mjs": "490e68dcbc3837ae57e40d69f466991a0346e3e28fdc73ed20bbad49b1cca8c2",
+      "scripts/fussball-capture-evidence.mjs": "557f1a806ec294d630707f117dbe84f353937002d02b51d1e4dd96710a92de39",
+      "scripts/fussball-checkpoint.mjs": "708bd407a828e2c3be2363259e0fa766a1b78b9b0f6121a0cd6c5c8355421335",
+      "scripts/fussball-community-policy.mjs": "f488394dadfdab25e1116fbb9c783e27af875cfa5864793f8633c4efa0a9ac75",
+      "scripts/fussball-fresh-pair-history.json": "4efbf821c7554b630769e70eef0afad13a2db9a7488f6a38e1c5ce2b76511a3a",
+      "scripts/fussball-fresh-pair.mjs": "8cb639f721923d1c903b2204c1c5c3c152054284c0319077b1dd955885b488f5",
+      "scripts/fussball-import.mjs": "80c955353d75f582b5e4c31ada947d0a804d6ec8180721b72d8a36b4b6ad65a7",
+      "scripts/fussball-paired-pack.mjs": "f779d5a50a5bca24431c35f3be8513ff29a5a41216afedf4f6d669311a1071cc",
+      "scripts/fussball-season-links.mjs": "d713a175a4711eb215c7176e50dc922fc74d02dcf06afb2352bd8f2ea3746c58",
+      "scripts/fussball-season.mjs": "cfc24c25a10933dbcc81252291e26c7fc14954f25297023fabb788ecbfdf7177",
+      "scripts/fussball-v6-failed-replay.mjs": "22574b1708eb78c7b7de6be52f8d55944e0790a3ac125108a8d3035adc782765",
+      "scripts/lib/fussball-capture.mjs": "8338bcb4eb8e8398d74b6d46912cf51e6708369ea54e7a5bf5c6134ccb4b6b4b",
+      "scripts/lib/fussball-error-diagnostic.mjs": "89b7cfdbbbf1501ae68ca7a9b7153caa915c6055b1471773d5dffe5875708bb7",
+      "scripts/lib/fussball-identity.mjs": "73ae40380be5acbce1ba3bc40b3061914913b500573fdeaaf5e0485e34f8dcdc",
+      "scripts/lib/fussball-v4-retry.mjs": "256b1f1f4a6e8429f641a786960450a72472a33394b4735a3500d728719326d7",
+      "scripts/odtis-kode.mjs": "288fc94ae312586619290df077cd5fd152a593708f869aa445900be5c86ed090",
+      "scripts/policies/fussball-transport-checkpoints.json": "8abfeaa4cf12d39dc35e5042d6ebe44668bda505faf5d3849f0fd97f9fedd8cb",
+      "scripts/policies/fussball-transport-resumption.json": "f327f58d14a2c6197be91d17e9323f37989d87cdcc3b2321d8fd28d41d9ca21f",
+      "scripts/policies/fussball-transport-successor.json": "49bd8cc32c263a208bf406c9b912f31005fb5ee6e79f44da04f6e26b02550123",
+      "scripts/policies/fussball-transport-v4.json": "ae0d4cfc3f1efc4b52bbcbc96e655adb36efeb62d6109c97c63071dba432dc91",
+      "scripts/policies/fussball-transport-v5.json": "fb407717003aae0a97086c89d61989088c075823dd43a4d832542da4f48af526",
+      "scripts/policies/fussball-transport-v6.json": "524175ac10eaba0de810275ccf2638e8a9d3d98f864f37217f927f3028dcdff6",
+      "scripts/policies/fussball-transport-v7.json": "57874bbdc537125c208c2b8836d0af9882b356a1d9b9d86a0bc2c137c36d6541",
+      "scripts/viri/fussball-card-envelope.mjs": "8685df5a7e486315d425c63c532ecca7274a2d2e93ecedc6064b5e5a3dfc845b",
+      "scripts/viri/fussball-datumski-glifi.json": "7abb8921dd8d575329990c406a15c8d6fd39f8e83ab7b9b0aaf9a27df7a22440",
+      "scripts/viri/fussball-discovery.mjs": "56621e4c58046a573c3dccc993590e34fec8f5d4bd2a4d262825376278ccfac2",
+      "scripts/viri/fussball-pisava.mjs": "64f7843bc297ced95e0a848e32d3f5eeeacce5234007ae9694e3e0a632c30dc6",
+      "scripts/viri/fussball-statistika.mjs": "9b1363b0f88c51ecc6ab766233380e6399194e9ec5f7b509620106a33a4fcaac",
+      "scripts/viri/fussball.mjs": "816617fbcbaa808a49955ff3174a729f505fdd9112dcd5aadaa55e1cc305793a",
+      "scripts/vzorci/de-fussball-baden-archive-20261026.json": "a58d1962d7d7ffd598e3254a74418879545737b5c39a800a98cabc7f164a8a97",
+      "scripts/zajemi-fussball-sezono.mjs": "f2ec0464bd143fb06d926d924a114e082dd5eb5b7f3e6f31fb4a66a7791bf59f",
+      "src/lib/nepripisaniRumeni.mjs": "e4b2cf88058a57d1da208f02f4cfb0b60a9c9fa59a8fb5869552c6ba4cdbff94"
+    },
+    "archive": {
+      ".github/workflows/preveri-fussball-dopolni.yml": "7994f6bdbd2181640fd0a15ee7cc1dc054d0649a94a9f9d1620497102f7b4e97",
+      "scripts/bulk-germany-source.mjs": "dc30ac9b031a460254cb447b65b04cca316565dc7fac9088781f4f6dc526771f",
+      "scripts/dfb-artifacts.mjs": "df79a66b4125bf610e2c32c40bce3faa41c25f3ab6640655644f9d702dba42ce",
+      "scripts/fussball-archive-v6.mjs": "c808eb9e4aa88b18267507d4cfc69d5c175416928c5266349a3ade0bb08762b9",
+      "scripts/fussball-archive-v7-actions.mjs": "bc2c41dc41ef5adc628cbede1a4e76f193bc2d5298e93cd089378f9ebc803704",
+      "scripts/fussball-archive-v7.mjs": "490e68dcbc3837ae57e40d69f466991a0346e3e28fdc73ed20bbad49b1cca8c2",
+      "scripts/fussball-capture-evidence.mjs": "557f1a806ec294d630707f117dbe84f353937002d02b51d1e4dd96710a92de39",
+      "scripts/fussball-checkpoint.mjs": "708bd407a828e2c3be2363259e0fa766a1b78b9b0f6121a0cd6c5c8355421335",
+      "scripts/fussball-community-policy.mjs": "f488394dadfdab25e1116fbb9c783e27af875cfa5864793f8633c4efa0a9ac75",
+      "scripts/fussball-import.mjs": "80c955353d75f582b5e4c31ada947d0a804d6ec8180721b72d8a36b4b6ad65a7",
+      "scripts/fussball-paired-pack.mjs": "f779d5a50a5bca24431c35f3be8513ff29a5a41216afedf4f6d669311a1071cc",
+      "scripts/fussball-season-links.mjs": "d713a175a4711eb215c7176e50dc922fc74d02dcf06afb2352bd8f2ea3746c58",
+      "scripts/fussball-season.mjs": "cfc24c25a10933dbcc81252291e26c7fc14954f25297023fabb788ecbfdf7177",
+      "scripts/fussball-v6-failed-replay.mjs": "22574b1708eb78c7b7de6be52f8d55944e0790a3ac125108a8d3035adc782765",
+      "scripts/lib/fussball-capture.mjs": "8338bcb4eb8e8398d74b6d46912cf51e6708369ea54e7a5bf5c6134ccb4b6b4b",
+      "scripts/lib/fussball-identity.mjs": "73ae40380be5acbce1ba3bc40b3061914913b500573fdeaaf5e0485e34f8dcdc",
+      "scripts/lib/fussball-v4-retry.mjs": "256b1f1f4a6e8429f641a786960450a72472a33394b4735a3500d728719326d7",
+      "scripts/odtis-kode.mjs": "288fc94ae312586619290df077cd5fd152a593708f869aa445900be5c86ed090",
+      "scripts/policies/fussball-transport-checkpoints.json": "8abfeaa4cf12d39dc35e5042d6ebe44668bda505faf5d3849f0fd97f9fedd8cb",
+      "scripts/policies/fussball-transport-resumption.json": "f327f58d14a2c6197be91d17e9323f37989d87cdcc3b2321d8fd28d41d9ca21f",
+      "scripts/policies/fussball-transport-successor.json": "49bd8cc32c263a208bf406c9b912f31005fb5ee6e79f44da04f6e26b02550123",
+      "scripts/policies/fussball-transport-v4.json": "ae0d4cfc3f1efc4b52bbcbc96e655adb36efeb62d6109c97c63071dba432dc91",
+      "scripts/policies/fussball-transport-v5.json": "fb407717003aae0a97086c89d61989088c075823dd43a4d832542da4f48af526",
+      "scripts/policies/fussball-transport-v6.json": "524175ac10eaba0de810275ccf2638e8a9d3d98f864f37217f927f3028dcdff6",
+      "scripts/policies/fussball-transport-v7.json": "57874bbdc537125c208c2b8836d0af9882b356a1d9b9d86a0bc2c137c36d6541",
+      "scripts/viri/fussball-card-envelope.mjs": "8685df5a7e486315d425c63c532ecca7274a2d2e93ecedc6064b5e5a3dfc845b",
+      "scripts/viri/fussball-datumski-glifi.json": "7abb8921dd8d575329990c406a15c8d6fd39f8e83ab7b9b0aaf9a27df7a22440",
+      "scripts/viri/fussball-discovery.mjs": "56621e4c58046a573c3dccc993590e34fec8f5d4bd2a4d262825376278ccfac2",
+      "scripts/viri/fussball-pisava.mjs": "64f7843bc297ced95e0a848e32d3f5eeeacce5234007ae9694e3e0a632c30dc6",
+      "scripts/viri/fussball-statistika.mjs": "9b1363b0f88c51ecc6ab766233380e6399194e9ec5f7b509620106a33a4fcaac",
+      "scripts/viri/fussball.mjs": "816617fbcbaa808a49955ff3174a729f505fdd9112dcd5aadaa55e1cc305793a",
+      "scripts/vzorci/de-fussball-baden-archive-20261026.json": "a58d1962d7d7ffd598e3254a74418879545737b5c39a800a98cabc7f164a8a97",
+      "scripts/zajemi-fussball-sezono.mjs": "f2ec0464bd143fb06d926d924a114e082dd5eb5b7f3e6f31fb4a66a7791bf59f",
+      "src/lib/nepripisaniRumeni.mjs": "e4b2cf88058a57d1da208f02f4cfb0b60a9c9fa59a8fb5869552c6ba4cdbff94"
+    }
+  },
+  "cacheOrigins": [
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/fub2ogh6/type/css",
+      "kind": "css",
+      "sha256": "73d309ea27fcbd74ddfccab2d0974a6655695aca0bb4fb9bfa7b4ccbdff4a6bb",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/fub2ogh6/type/font",
+      "kind": "font",
+      "sha256": "35b24673663396802ef9e9c356c8bf4e2ff75acfacee7f8ee1f956db129303d0",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/vxpnt4yx/type/css",
+      "kind": "css",
+      "sha256": "70468df306456c3bbaa083bae1d5bcf4a9bcf29c8e1e3a8ded6554cdfe3d2d1f",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/vxpnt4yx/type/font",
+      "kind": "font",
+      "sha256": "a4a6b07426c827e5327c756b56d94d0e4d529a042311695bfdbb11fed4af7541",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/v1dnhz3y/type/css",
+      "kind": "css",
+      "sha256": "59d2ab1a6f8213d74ac743c616bb17308b5139711a53b9a5c16215b9d68b8ebc",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/v1dnhz3y/type/font",
+      "kind": "font",
+      "sha256": "a86e193e0ba9fbf8dcce935ce4cd3c776b4d88f34f1759bb37d2856b7ea2e264",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/c2377b9r/type/css",
+      "kind": "css",
+      "sha256": "4158d08a44f81c603ae962a62e53bfcb8b930449b7264034a4d37e5bd91d6d4e",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/c2377b9r/type/font",
+      "kind": "font",
+      "sha256": "9819bf90cb45598052310333b1d2a1e2854cf279dfb61e92cdb0f723f4d8e4ca",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/c7loxm5f/type/css",
+      "kind": "css",
+      "sha256": "5f7695bb9ca5e00f683964da7a90bc9f2add712e5e781fd4df4e281d9d9b090a",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/c7loxm5f/type/font",
+      "kind": "font",
+      "sha256": "fa0c9ebd80affa4d6ced7e05432a626092e5910a1fe40c98fa1a14e70374977e",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/0i42hi7l/type/css",
+      "kind": "css",
+      "sha256": "1672455ed759dc4dde9688bf6078b7283685ff35421e4591d4db1e4de6c4d96d",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/0i42hi7l/type/font",
+      "kind": "font",
+      "sha256": "0ad391a09dcc57541c49fee1ca3762a4096c5604f5169eb04254f7cb0633519f",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/f9l9ucaz/type/css",
+      "kind": "css",
+      "sha256": "02180adc32cd697c3b3d449ad9b0368af1ae8f740caee937e8b9f23c8a398951",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/f9l9ucaz/type/font",
+      "kind": "font",
+      "sha256": "132ee1645d017f606a14dd98363bcd9362a2fb23df8a6b8aea12d656a2afe497",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/vvt92owy/type/css",
+      "kind": "css",
+      "sha256": "8a0ef734daaa035e2ce91452c68c8eb4f635316d2da7a46bf4701ce52b7d6039",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/vvt92owy/type/font",
+      "kind": "font",
+      "sha256": "7b1c2a99bb27952f011cf6562cacd33719a18c84d67ce79b6f769be9e025f99e",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/vod6140x/type/css",
+      "kind": "css",
+      "sha256": "257164c34a8e3b892112bfd971988b5ecf43ae7cf84a1cf16bad96f888032c19",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/vod6140x/type/font",
+      "kind": "font",
+      "sha256": "6e09b949aaca985b716bd8f54966d1d8db05aa22b4811d654954bcec74252f7f",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/zq0uyknn/type/css",
+      "kind": "css",
+      "sha256": "d75ba9f049fceba2d89d0ca3a6bad2be7103c0ab379ecd695b69e15d4ed8db6f",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/zq0uyknn/type/font",
+      "kind": "font",
+      "sha256": "ce536ef187dcca4eb6fc7df1b7ef982696b6b65f3dbde250a94e83ea7575bf6c",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/cknsvfo1/type/css",
+      "kind": "css",
+      "sha256": "c1e6fdbc9857a98656edd983df1a6ed8b68a6b291187b823b1d1089e0a34a3fb",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/cknsvfo1/type/font",
+      "kind": "font",
+      "sha256": "412f32feda2b1d62bcad4c2d5188dc816bebe27559ab6cc6e8fc3c05a64d3242",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/cwipumpj/type/css",
+      "kind": "css",
+      "sha256": "50b0e095d9353620c05e22311724390a93b673e1e7bb347f73ab2d79b86d96a9",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/cwipumpj/type/font",
+      "kind": "font",
+      "sha256": "9fc42786359a5f72cf0707aea6ee2e77436e57f3f788204320a04626e8cde600",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/255emmbv/type/css",
+      "kind": "css",
+      "sha256": "a07293a89bcfff985bec3756112b25782565e37aa21f931804c8e90116763c66",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/255emmbv/type/font",
+      "kind": "font",
+      "sha256": "bf227df4b29869018e3909a43c207b5db07263d56169bcde1596ba3870b87997",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/t2b9zdde/type/css",
+      "kind": "css",
+      "sha256": "ff09a4f96b337b17df72d0236f2356c499ed8a8244e3723cccaa00293cee2e80",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/t2b9zdde/type/font",
+      "kind": "font",
+      "sha256": "2e05f9a5cdd23d03ca5329900ce418417dbcd62aef55c3f8c010f4c82ea9b431",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/62tv0r6q/type/css",
+      "kind": "css",
+      "sha256": "9dec2b5931feb715829fcfdd1947576ac0090f38150debb158679046cbaa39be",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/62tv0r6q/type/font",
+      "kind": "font",
+      "sha256": "f0ad91bbf0cb3d39899742ff97901765b32aaf0550b9b0cd696af5b581957278",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/h1dkqnn8/type/css",
+      "kind": "css",
+      "sha256": "949f29b18158754a25dbeaedb4a8b4fc8942ee938dd9eae8ce97b78dcd6a3484",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/h1dkqnn8/type/font",
+      "kind": "font",
+      "sha256": "ec653a0363a847e5330c6d8c41d1543ae1ed130f7629943ee6350b85c176085a",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/yplak47e/type/css",
+      "kind": "css",
+      "sha256": "e2262c9dc1106b1c2cf166f993d18a4e9effc513f285fab445391c512c7568f6",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/yplak47e/type/font",
+      "kind": "font",
+      "sha256": "ff343436f548a43337feb239f4838c2d6fd5a74588bb16370f79665b9553df1b",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/ztjn23fz/type/css",
+      "kind": "css",
+      "sha256": "832fc635f19ca5eae07db8f4e43e38fa3105f3adf06fcf25198ed6cd0abc4029",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/ztjn23fz/type/font",
+      "kind": "font",
+      "sha256": "cbbe5d5de737e815060aab01f609c53bb275d4d79fc19a695f96a9f60fe1e09a",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/6f8vgj93/type/css",
+      "kind": "css",
+      "sha256": "aaedca2c6946695aea0cebebe641a9dbecefc851fb35bf64bb248ba8e67bd0d4",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/6f8vgj93/type/font",
+      "kind": "font",
+      "sha256": "ffafb55164f78ee66899a83d0a20d0883af3884d43cfa85190cc9952cffe7c58",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/5ndg5at0/type/css",
+      "kind": "css",
+      "sha256": "8beeb0af2ef75257c77c25240d642f14f771bfdf8d5b224fa70c7724d6042c88",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/5ndg5at0/type/font",
+      "kind": "font",
+      "sha256": "77076a77b4912f0c3157575f142330368776c938ca94cef94172ee3f3ba46546",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/5uvyjb02/type/css",
+      "kind": "css",
+      "sha256": "e09ff021888eb0566b052850f9e990b65bcaa5dfe7dab400fe6cfc0d8f2b02c2",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/5uvyjb02/type/font",
+      "kind": "font",
+      "sha256": "a7c1be943a556a4d5df0887d89b978be5d16715cef1ce02b9d8560cdb38f7da1",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/br5zl3a4/type/css",
+      "kind": "css",
+      "sha256": "83ca6cf93f00b1cd764978e6a32db9ffde9fbda19ff36566ca90f0515bb53ae9",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/br5zl3a4/type/font",
+      "kind": "font",
+      "sha256": "57018425b150f0da552e5fb7f70d8ee3da6a37443ae5339238840b7e38de48a9",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/2x437j53/type/css",
+      "kind": "css",
+      "sha256": "e04c79fbf3e09d52a41be4476ba43ca79a30f3df9599d61578663d45b84ad705",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/2x437j53/type/font",
+      "kind": "font",
+      "sha256": "5eb65e16951e9b5160fd0ce81778f8371ccc82cf4b40c3722345bc3fcf18ed5f",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/hqjlbax1/type/css",
+      "kind": "css",
+      "sha256": "8d9266374bc2bd5927078643b58a88ea6d273d27b3199065b0f1c6e29883c8ca",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/hqjlbax1/type/font",
+      "kind": "font",
+      "sha256": "3faf16b4e991078970700ef87505615bb4f5e75e08ba1aab0240d26af00d7f03",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/4ggx1o6y/type/css",
+      "kind": "css",
+      "sha256": "4a84576bd5eb887ef7445595bec943f0c38b7d46df1b5f008fbc53e55b55f623",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/4ggx1o6y/type/font",
+      "kind": "font",
+      "sha256": "6b27d8f1fdfdc2087115f93be9a794d34c522abc829262eec25803ecec546afe",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/m7lo76ty/type/css",
+      "kind": "css",
+      "sha256": "ae53d9417b7a5ddfbbf05d728fc60b5bf3098214ab1e5ca49a1c4e48d830122a",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/m7lo76ty/type/font",
+      "kind": "font",
+      "sha256": "121536de847a5446babab6a0b536af16c15a5bda056e2c5b28f84c6d41d3361b",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/tl7fjwwc/type/css",
+      "kind": "css",
+      "sha256": "8a2523f4ba83a3f5538ff0118b2e8263c5b4dcdb80f33640b2534c63327a27c6",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/tl7fjwwc/type/font",
+      "kind": "font",
+      "sha256": "b58291661a83c6e62517b5e5b3671991cbb9c2d6401673a0e88793e355072ce0",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/ui5fh0my/type/css",
+      "kind": "css",
+      "sha256": "35f095ec9c7c9fd157c1fe71f7eeedd7cc7a9a972fbba0541f7bb9726ff49f3a",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/ui5fh0my/type/font",
+      "kind": "font",
+      "sha256": "29f9bf4360d456c58cfde6d4bbb254150c92ba74c18ade8ca652cae81dca988a",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/gjiyr7ie/type/css",
+      "kind": "css",
+      "sha256": "9236cf6905c3da52a91942a32d99c4c2697ad0f53354ba3b8e18dc80ed27fd74",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/gjiyr7ie/type/font",
+      "kind": "font",
+      "sha256": "f32e0b37b325295f6ae650b396f24edf411fdf75dff1c7dd135678b2e9ffb235",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/d1r7dqc2/type/css",
+      "kind": "css",
+      "sha256": "b9311975149590f7adea017664e049b139a32f4d9ada371476bf0097387d7a6e",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/d1r7dqc2/type/font",
+      "kind": "font",
+      "sha256": "f423714f9708f46fb578cf4966afca0b2b492f5036f4356961de36dc60ae1f71",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/0049rxiv/type/css",
+      "kind": "css",
+      "sha256": "5d525b46af995f5aee4e09ef6ee8b42f49c739ebabee6cca96f54a6ebde65f8f",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/0049rxiv/type/font",
+      "kind": "font",
+      "sha256": "bae97d1941e9a38c31eb851bfb004fbcb72e5746316659f277354fa4775236ef",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/jatpt9hc/type/css",
+      "kind": "css",
+      "sha256": "8ce36b07d91d79322da4b10a6963577297d8c2284d6cd7a1b4060365ac7c82d0",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/jatpt9hc/type/font",
+      "kind": "font",
+      "sha256": "ac6bf29de3983a418515aa0fc0607ceab737fc280ce0825dc3ef2f3f1151047a",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/3c06zlaw/type/css",
+      "kind": "css",
+      "sha256": "4f63144987e1a2e278636146c74b0fba2011db237d6b6fb3657cf46511d72fdc",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/3c06zlaw/type/font",
+      "kind": "font",
+      "sha256": "5f56b0092ce8fac2c317690da36c8e9e1b7835c18550a5037dfb55a8ea2e79b8",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/lf941xko/type/css",
+      "kind": "css",
+      "sha256": "c5eb3a0ce0cd2c5992df664673f139c2fd721c43554bbcd805ee94564311cb88",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/lf941xko/type/font",
+      "kind": "font",
+      "sha256": "abe02bd9853541c8bf542e47a7314ceea1a7e0d432fbfa8a62bdda7c7212b69a",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/vyq0dzeh/type/css",
+      "kind": "css",
+      "sha256": "07c2e2cb53e0587c4a20364c244e66e0cdcd7add3b1710241d3c678be4ffda40",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/vyq0dzeh/type/font",
+      "kind": "font",
+      "sha256": "881b1eea8412e527c5bc685c62ea2136334a32b377eead03ef1ec5699319c20c",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/ycoz8iso/type/css",
+      "kind": "css",
+      "sha256": "20290e25f9937fc7349aea28ecf9251ffdeddac7e21b0f40a4d4e4bb81e0b165",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/ycoz8iso/type/font",
+      "kind": "font",
+      "sha256": "56a1a8205386f664668a0c86a4484c6e40f3a23c2e9256fd00699372f3148528",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/shtbdwly/type/css",
+      "kind": "css",
+      "sha256": "bb5bc6d2248bbecafc2fc3999b806b363200fa53df2827dff74834f96bdc6e04",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/shtbdwly/type/font",
+      "kind": "font",
+      "sha256": "5bf02fcd2340e393ee60d6b095001dc45ebf4b57b7d86890b3cda31a99d5026f",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/xdt8sgdd/type/css",
+      "kind": "css",
+      "sha256": "2fdb8366e33775cabd8c15d8dbdc3e428b0888f3a16a0006339010a1f5f438a1",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/xdt8sgdd/type/font",
+      "kind": "font",
+      "sha256": "365a0e52334d4e1e90a744edea11a64c5b502cdd4c852cb71c5488d03de44b88",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/tfbua7sj/type/css",
+      "kind": "css",
+      "sha256": "6ab4d144fca56de1f96ddb72d0ede5fec4c5eaa4dc6f5426193c2d8ed631b20e",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/tfbua7sj/type/font",
+      "kind": "font",
+      "sha256": "ccd6eacbb90c7765546820d8f00e6c753a0969b9a048355e5e1eedd07f45b12d",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/mggsfzgt/type/css",
+      "kind": "css",
+      "sha256": "140ed7a662fc1121b9b6d28a2d9cad9c9481ed0bd6a49accbb5e2424cbf86180",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/mggsfzgt/type/font",
+      "kind": "font",
+      "sha256": "461502320659a09b113f0206d3893efcdf390676f89a6969a74baf39961ec829",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/hdioaicj/type/css",
+      "kind": "css",
+      "sha256": "021846cc7d46ada42e1cd34ed1c5584f99af98edc1e65805cc188c4b9376ff98",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/hdioaicj/type/font",
+      "kind": "font",
+      "sha256": "42f713935b0c7360869f899f6956672d482a77597b7445e81329c938f751277b",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/o26n6umr/type/css",
+      "kind": "css",
+      "sha256": "8607610da372abaafcfec7b15adce8d7d9a027a99c4cd28e9819345e51a3e7d3",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/o26n6umr/type/font",
+      "kind": "font",
+      "sha256": "d93cd59fe2c82f1185330b2af6f2a339bd22604c390e14ec6a2b7d9eba09267c",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/ahhjwbeb/type/css",
+      "kind": "css",
+      "sha256": "6c05bd2232806cb1a6c6abbbcdeda2a28b60f9fd6f76f6d3f5dc5880b717c7fb",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/ahhjwbeb/type/font",
+      "kind": "font",
+      "sha256": "8783a9e6b1ad9a680cfe33a9ac05e54612e85d6cbf95545e9daa0bb6c592e7e6",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/kxif8s5f/type/css",
+      "kind": "css",
+      "sha256": "b6f37727687b809e1ea9469b6300303066b7c75a6f8f1a7d1355af3d6deedec1",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/kxif8s5f/type/font",
+      "kind": "font",
+      "sha256": "f02d4395de6d38ca598d34140daf3870a027fa503e55f217a88d73f6166f578f",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/fcg53nab/type/css",
+      "kind": "css",
+      "sha256": "853bb4cd5b5df6fbd7c697b51d60d8d7aa208fe4ead8696299bbb17c372fea81",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/fcg53nab/type/font",
+      "kind": "font",
+      "sha256": "6ecf6a60c65a8d4abdc5075130d1dca35ea681b15b121961c145445e0dae4866",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/66vc7om4/type/css",
+      "kind": "css",
+      "sha256": "aabe2220c027c3975eca6a435b82a97620b39888d18d6747d6c5e0512f2b0e28",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/66vc7om4/type/font",
+      "kind": "font",
+      "sha256": "2bf23823e2c2607cd35b819671c3c4ff41d77c3478fcec64fa249bf4e8b95317",
+      "parent": "FAILED_V6_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/6bnznb34/type/css",
+      "kind": "css",
+      "sha256": "04ad883986f6bb85cfe7450a7a4ecc864826f567f34f930d720fc88a741e89ae",
+      "parent": "DE77_ARCHIVE"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/6bnznb34/type/font",
+      "kind": "font",
+      "sha256": "20f3a60f6d14643d3b99a0d7d1cadf928ad803a1607f783ef4d35fbdbafaa12c",
+      "parent": "DE77_ARCHIVE"
+    }
+  ]
+}
