@@ -624,3 +624,12 @@ test('Baden native older writer is visible to actual independent club-merge and 
   }
  }
 })
+
+test('Baden fresh paired source is reciprocally visible with exact DE scope and unknown-title hold',async()=>{
+ const workflow='preveri-baden-fresh-pair.yml',title='Baden fresh paired source audit',runs={[workflow]:[run(title)]}
+ for(const args of [['--drzava','DE'],['--popravek'],['--liga','de-regionalliga-nord']]){const r=await coordinate(args,runs);assert.equal(r.code,1);assert.ok(r.queried.includes(workflow))}
+ for(const args of [['--drzava','ES'],['--liga','es-ct-primera-g1']])assert.equal((await coordinate(args,runs)).code,0)
+ assert.equal((await coordinate(['--tece'],runs)).code,3);assert.equal((await coordinate(['--tece','--drzava','ES'],runs)).code,0)
+ for(const title of ['', 'Unknown source', 'Baden fresh paired source audit foreign']){const r={[workflow]:[run(title)]};assert.equal((await coordinate(['--drzava','ES'],r)).code,1);assert.equal((await coordinate(['--tece','--drzava','ES'],r)).code,3)}
+ for(const patch of [{databaseId:30},{databaseId:20},{status:'completed'}])assert.equal((await coordinate(['--drzava','DE'],{[workflow]:[run(title,patch)]})).code,0)
+})

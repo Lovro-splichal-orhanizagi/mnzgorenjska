@@ -1,0 +1,457 @@
+{
+  "version": 1,
+  "kind": "fixed-baden-historical-budget-only",
+  "priorRequests": 3020,
+  "totalRequestCap": 5000,
+  "records": [
+    {
+      "name": "R7",
+      "run": {
+        "id": 40761564810,
+        "run_attempt": 1,
+        "head_sha": "7692cecffa8b9c747b4a76bd8367a1aa06bbc0b0",
+        "head_branch": "main",
+        "path": ".github/workflows/preveri-fussball-dopolni.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-28T20:15:01Z",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobs": {
+        "total_count": 4,
+        "jobs": [
+          {
+            "id": 123074576145,
+            "run_id": 40761564810,
+            "run_attempt": 1,
+            "head_sha": "7692cecffa8b9c747b4a76bd8367a1aa06bbc0b0",
+            "name": "archive-continuation",
+            "status": "completed",
+            "conclusion": "success",
+            "steps": [
+              {
+                "number": 1,
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 2,
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 3,
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 4,
+                "name": "Run actions/setup-node@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 5,
+                "name": "Validate exact archive-only V6 scope and1838 spent budget",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 6,
+                "name": "Focused offline archive continuation checks",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 7,
+                "name": "Authenticate actual V5 parents and execute frozen DE77 default verifier",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 8,
+                "name": "Exercise genuine retained originals offline before source",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 9,
+                "name": "Share host pacing with older nightly and bulk readers",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 10,
+                "name": "Capture only fresh archive rounds and missing originals without database credentials",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 11,
+                "name": "Reauthenticate detached originals and replay archive with no network",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 12,
+                "name": "Preserve V6 archive originals and all counted attempts",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 13,
+                "name": "Preserve source-only attestation separately from immutable historical parents",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 14,
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 15,
+                "name": "Validate exact archive-only V7 scope and1952 spent budget",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 16,
+                "name": "Focused offline V7 boundary checks",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 17,
+                "name": "Authenticate V5 current and exact failed V6 through clean frozen DE77 and4e",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 18,
+                "name": "Exercise genuine V7 ledger and resource boundaries offline",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 19,
+                "name": "Share host pacing immediately before V7 source guard",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 20,
+                "name": "Capture V7 fresh archive only after authenticated1952 spent history",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 21,
+                "name": "Reauthenticate V7 detached originals and replay without network",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 22,
+                "name": "Preserve V7 originals and every counted partial attempt",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 23,
+                "name": "Preserve V7 source-only attestation separately",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 43,
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 44,
+                "name": "Post Run actions/setup-node@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 45,
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 46,
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 47,
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
+          },
+          {
+            "id": 123074578799,
+            "run_id": 40761564810,
+            "run_attempt": 1,
+            "head_sha": "7692cecffa8b9c747b4a76bd8367a1aa06bbc0b0",
+            "name": "capture",
+            "status": "completed",
+            "conclusion": "skipped",
+            "steps": []
+          },
+          {
+            "id": 123074579476,
+            "run_id": 40761564810,
+            "run_attempt": 1,
+            "head_sha": "7692cecffa8b9c747b4a76bd8367a1aa06bbc0b0",
+            "name": "archive",
+            "status": "completed",
+            "conclusion": "skipped",
+            "steps": []
+          },
+          {
+            "id": 123074579538,
+            "run_id": 40761564810,
+            "run_attempt": 1,
+            "head_sha": "7692cecffa8b9c747b4a76bd8367a1aa06bbc0b0",
+            "name": "handoff",
+            "status": "completed",
+            "conclusion": "skipped",
+            "steps": []
+          }
+        ]
+      },
+      "jobsSha256": "4a530f566275d9a58eae19958bf05fdfdd034d7d2f252eceba70d210a3ee2143",
+      "artifact": {
+        "id": 12855951485,
+        "name": "fussball-archive-v7-source-attestation-40761564810",
+        "size_in_bytes": 1142,
+        "digest": "sha256:6895e2adea8bd12d9d5a74862ee14d677e99f90328259f7daea63a6c4182d8e5"
+      },
+      "requests": 2966
+    },
+    {
+      "name": "R8",
+      "run": {
+        "id": 40817930110,
+        "run_attempt": 1,
+        "head_sha": "9ec00d1ac4a065fbbd552696f80b089536b5ae1f",
+        "head_branch": "main",
+        "path": ".github/workflows/preveri-fussball-sezono.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-29T04:28:20Z",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobs": {
+        "total_count": 3,
+        "jobs": [
+          {
+            "id": 123263326537,
+            "run_id": 40817930110,
+            "run_attempt": 1,
+            "head_sha": "9ec00d1ac4a065fbbd552696f80b089536b5ae1f",
+            "name": "capture",
+            "status": "completed",
+            "conclusion": "failure",
+            "steps": [
+              {
+                "number": 1,
+                "name": "Set up job",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 2,
+                "name": "Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 3,
+                "name": "Run actions/setup-node@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 4,
+                "name": "Install locked dependencies for offline source and handoff checks",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 5,
+                "name": "Validate hosted scope and reserve both season budgets before requests",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 6,
+                "name": "Offline source and evidence checks",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 7,
+                "name": "Share host pacing with older nightly and bulk readers",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 8,
+                "name": "Capture ordinary public source, without database credentials",
+                "status": "completed",
+                "conclusion": "failure"
+              },
+              {
+                "number": 9,
+                "name": "Replay only retained original documents, without network",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 10,
+                "name": "Authorize archive only from independently replayed current originals",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 11,
+                "name": "Source bytes, request journal and coverage",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 21,
+                "name": "Post Run actions/setup-node@v4",
+                "status": "completed",
+                "conclusion": "skipped"
+              },
+              {
+                "number": 22,
+                "name": "Post Run actions/checkout@v4",
+                "status": "completed",
+                "conclusion": "success"
+              },
+              {
+                "number": 23,
+                "name": "Complete job",
+                "status": "completed",
+                "conclusion": "success"
+              }
+            ]
+          },
+          {
+            "id": 123265461972,
+            "run_id": 40817930110,
+            "run_attempt": 1,
+            "head_sha": "9ec00d1ac4a065fbbd552696f80b089536b5ae1f",
+            "name": "archive",
+            "status": "completed",
+            "conclusion": "skipped",
+            "steps": []
+          },
+          {
+            "id": 123265462786,
+            "run_id": 40817930110,
+            "run_attempt": 1,
+            "head_sha": "9ec00d1ac4a065fbbd552696f80b089536b5ae1f",
+            "name": "handoff",
+            "status": "completed",
+            "conclusion": "skipped",
+            "steps": []
+          }
+        ]
+      },
+      "jobsSha256": "a7956e10244d2cd746d6678da9d178dc2719762b9e95f7bb4ecce75d7ca3ff85",
+      "artifact": {
+        "id": 12873162747,
+        "name": "fussball-season-40817930110",
+        "size_in_bytes": 432220,
+        "digest": "sha256:707496a75f52a91419bb4c8eb50fc6fd6290fae19171c84272c56590691b99b8"
+      },
+      "requests": 54
+    }
+  ],
+  "R7AttestationSha256": "6d2b41aa7aa8ec9df3d80763400e1caf955b5088f4c67d9d53cb12acf9b85366",
+  "R8ManifestSha256": "987e1734998239bcf4f402280f29d2260fc4699ad31357a1c699e53b0b606411",
+  "R8JournalSha256": "e212b6ae87580dcc8d7758d7a3a44c07ca991c373e527d56dfa3769901c341f7",
+  "sourceFiles": {
+    ".github/workflows/preveri-fussball-dopolni.yml": "7994f6bdbd2181640fd0a15ee7cc1dc054d0649a94a9f9d1620497102f7b4e97",
+    "scripts/bulk-germany-source.mjs": "dc30ac9b031a460254cb447b65b04cca316565dc7fac9088781f4f6dc526771f",
+    "scripts/dfb-artifacts.mjs": "df79a66b4125bf610e2c32c40bce3faa41c25f3ab6640655644f9d702dba42ce",
+    "scripts/fussball-archive-v6.mjs": "c808eb9e4aa88b18267507d4cfc69d5c175416928c5266349a3ade0bb08762b9",
+    "scripts/fussball-archive-v7-actions.mjs": "bc2c41dc41ef5adc628cbede1a4e76f193bc2d5298e93cd089378f9ebc803704",
+    "scripts/fussball-archive-v7.mjs": "490e68dcbc3837ae57e40d69f466991a0346e3e28fdc73ed20bbad49b1cca8c2",
+    "scripts/fussball-capture-evidence.mjs": "557f1a806ec294d630707f117dbe84f353937002d02b51d1e4dd96710a92de39",
+    "scripts/fussball-checkpoint.mjs": "708bd407a828e2c3be2363259e0fa766a1b78b9b0f6121a0cd6c5c8355421335",
+    "scripts/fussball-community-policy.mjs": "f488394dadfdab25e1116fbb9c783e27af875cfa5864793f8633c4efa0a9ac75",
+    "scripts/fussball-import.mjs": "80c955353d75f582b5e4c31ada947d0a804d6ec8180721b72d8a36b4b6ad65a7",
+    "scripts/fussball-paired-pack.mjs": "f779d5a50a5bca24431c35f3be8513ff29a5a41216afedf4f6d669311a1071cc",
+    "scripts/fussball-season-links.mjs": "d713a175a4711eb215c7176e50dc922fc74d02dcf06afb2352bd8f2ea3746c58",
+    "scripts/fussball-season.mjs": "cfc24c25a10933dbcc81252291e26c7fc14954f25297023fabb788ecbfdf7177",
+    "scripts/fussball-v6-failed-replay.mjs": "22574b1708eb78c7b7de6be52f8d55944e0790a3ac125108a8d3035adc782765",
+    "scripts/lib/fussball-capture.mjs": "8338bcb4eb8e8398d74b6d46912cf51e6708369ea54e7a5bf5c6134ccb4b6b4b",
+    "scripts/lib/fussball-identity.mjs": "73ae40380be5acbce1ba3bc40b3061914913b500573fdeaaf5e0485e34f8dcdc",
+    "scripts/lib/fussball-v4-retry.mjs": "256b1f1f4a6e8429f641a786960450a72472a33394b4735a3500d728719326d7",
+    "scripts/odtis-kode.mjs": "288fc94ae312586619290df077cd5fd152a593708f869aa445900be5c86ed090",
+    "scripts/policies/fussball-transport-checkpoints.json": "8abfeaa4cf12d39dc35e5042d6ebe44668bda505faf5d3849f0fd97f9fedd8cb",
+    "scripts/policies/fussball-transport-resumption.json": "f327f58d14a2c6197be91d17e9323f37989d87cdcc3b2321d8fd28d41d9ca21f",
+    "scripts/policies/fussball-transport-successor.json": "49bd8cc32c263a208bf406c9b912f31005fb5ee6e79f44da04f6e26b02550123",
+    "scripts/policies/fussball-transport-v4.json": "ae0d4cfc3f1efc4b52bbcbc96e655adb36efeb62d6109c97c63071dba432dc91",
+    "scripts/policies/fussball-transport-v5.json": "fb407717003aae0a97086c89d61989088c075823dd43a4d832542da4f48af526",
+    "scripts/policies/fussball-transport-v6.json": "524175ac10eaba0de810275ccf2638e8a9d3d98f864f37217f927f3028dcdff6",
+    "scripts/policies/fussball-transport-v7.json": "57874bbdc537125c208c2b8836d0af9882b356a1d9b9d86a0bc2c137c36d6541",
+    "scripts/viri/fussball-card-envelope.mjs": "8685df5a7e486315d425c63c532ecca7274a2d2e93ecedc6064b5e5a3dfc845b",
+    "scripts/viri/fussball-datumski-glifi.json": "7abb8921dd8d575329990c406a15c8d6fd39f8e83ab7b9b0aaf9a27df7a22440",
+    "scripts/viri/fussball-discovery.mjs": "56621e4c58046a573c3dccc993590e34fec8f5d4bd2a4d262825376278ccfac2",
+    "scripts/viri/fussball-pisava.mjs": "64f7843bc297ced95e0a848e32d3f5eeeacce5234007ae9694e3e0a632c30dc6",
+    "scripts/viri/fussball-statistika.mjs": "9b1363b0f88c51ecc6ab766233380e6399194e9ec5f7b509620106a33a4fcaac",
+    "scripts/viri/fussball.mjs": "816617fbcbaa808a49955ff3174a729f505fdd9112dcd5aadaa55e1cc305793a",
+    "scripts/vzorci/de-fussball-baden-archive-20261026.json": "a58d1962d7d7ffd598e3254a74418879545737b5c39a800a98cabc7f164a8a97",
+    "scripts/zajemi-fussball-sezono.mjs": "f2ec0464bd143fb06d926d924a114e082dd5eb5b7f3e6f31fb4a66a7791bf59f",
+    "src/lib/nepripisaniRumeni.mjs": "e4b2cf88058a57d1da208f02f4cfb0b60a9c9fa59a8fb5869552c6ba4cdbff94"
+  }
+}
