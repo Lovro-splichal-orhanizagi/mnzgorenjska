@@ -56,6 +56,7 @@ on:
           - future-g1-after-g9-v1
           - future-g1-after-failed-g1-v1
           - g1-post83-remainder-quarantine-v1
+          - fcf-fixed-target-refresh800-v1
       asset_id:
         description: Actual uploaded root draft release asset ID
         type: string
@@ -181,7 +182,7 @@ jobs:
   # Source-free private draft bridge. Readers below authenticate its actual immutable ZIP.
   missing-inventory-approval:
     name: missing-inventory-approval
-    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && github.run_attempt == 1
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && inputs.preset != 'fcf-fixed-target-refresh800-v1' && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -468,7 +469,7 @@ jobs:
   missing-inventory-receipt:
     name: missing-inventory-receipt
     needs: [missing-inventory-approval, missing-inventory-consume, missing-inventory-g1, missing-inventory-g9]
-    if: always() && github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && github.run_attempt == 1
+    if: always() && github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && inputs.preset != 'fcf-fixed-target-refresh800-v1' && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -1144,3 +1145,42 @@ jobs:
           path: ${{ steps.operation.outputs.artifact_directory }}
           if-no-files-found: error
           retention-days: 30
+
+  # Additive source-only route; all legacy source/native jobs are skipped.
+  refresh800-capture:
+    name: refresh800-capture
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && inputs.preset == 'fcf-fixed-target-refresh800-v1' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies without scripts
+        run: npm ci --ignore-scripts
+      - name: Verify refresh800 source-free
+        run: node --test scripts/test-fcf-refresh800-contract.mjs scripts/test-fcf-refresh800-ledger.mjs scripts/test-fcf-refresh800-evidence.mjs scripts/test-fcf-refresh800-execution.mjs scripts/test-fcf-refresh800-capture.mjs scripts/test-fcf-refresh800-actions.mjs scripts/test-fcf-refresh800-workflow.mjs
+      - name: Capture fixed240 refresh800 originals
+        id: capture
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FCF_REFRESH800_ASSET_ID: ${{ inputs.asset_id }}
+          FCF_REFRESH800_ASSET_SHA: ${{ inputs.asset_sha256 }}
+        run: node scripts/fcf-refresh800-actions.mjs capture
+      - name: Retain refresh800 originals
+        if: always() && steps.capture.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-refresh800-${{ github.run_id }}-1
+          path: fcf-refresh800
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 90

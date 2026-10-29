@@ -1,6 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {readFileSync} from 'node:fs'
+import {readFileSync,mkdtempSync,mkdirSync,writeFileSync,rmSync} from 'node:fs'
+import {tmpdir} from 'node:os'
+import {join,dirname} from 'node:path'
+import {pathToFileURL} from 'node:url'
+import {gunzipSync} from 'node:zlib'
 import {assertFcfG1RemainderZeroSourceRun} from './fcf-g1-remainder-source.mjs'
 const observations=JSON.parse(readFileSync(new URL('./vzorci/fcf-g1-zero-history-observations.json',import.meta.url))).observations
 test('actual23 complete historical executions require body-bound zero witnesses, with no provider call',()=>{
@@ -12,11 +16,13 @@ test('historical head/run/branch/rerun/job/step/actor drift and any executed cap
  const capture=h.jobs.find(j=>j.name.includes('missing-inventory-g'));if(capture){const bad=structuredClone(h),j=bad.jobs.find(j=>j.id===capture.id);j.conclusion='success';j.steps=[{number:1,name:'Capture missing target inventory',status:'completed',conclusion:'success'}];assert.throws(()=>assertFcfG1RemainderZeroSourceRun(bad),/held/)}}
 })
 import {normalizeFcfG1CurrentSkippedJobs} from './fcf-g1-historical-zero-witness.mjs'
-test('current exact reviewed skipped-only aliases are DATA, and executed/unknown alias drift stays closed',()=>{
+test('original epoch skipped-only aliases remain exact and new current YAML is refused',async t=>{
+ const root=mkdtempSync(join(tmpdir(),'fcf-zero-original-epoch-'));t.after(()=>rmSync(root,{recursive:true,force:true}));for(const p of ['scripts/fcf-g1-historical-zero-witness.mjs','scripts/fcf-g1-historical-zero-registry.json','scripts/fcf-missing-inventory-artifact.mjs','scripts/lib/historical-statistics-policy.mjs','scripts/lib/fussball-native-history-policy.mjs','scripts/policies/historical-statistics-exclusions.json','scripts/policies/fussball-baden-native-composition.json']){const dest=join(root,p);mkdirSync(dirname(dest),{recursive:true});writeFileSync(dest,readFileSync(new URL('../'+p,import.meta.url)))}mkdirSync(join(root,'.github/workflows'),{recursive:true});writeFileSync(join(root,'.github/workflows/uvoz-fcf-zgodovina.yml'),gunzipSync(readFileSync(new URL('./vzorci/fcf-refresh800-history-workflow-22713112.yml.gz',import.meta.url))));const {normalizeFcfG1CurrentSkippedJobs:frozenNormalize}=await import(pathToFileURL(join(root,'scripts/fcf-g1-historical-zero-witness.mjs')).href);assert.throws(()=>normalizeFcfG1CurrentSkippedJobs([]),/held/)
+
  const aliases=["inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g9' || 'missing-inventory-g1'","inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g1' || 'missing-inventory-g9'",'inputs.mode'],jobs=aliases.map(name=>({name,status:'completed',conclusion:'skipped',steps:[]}))
- assert.deepEqual(normalizeFcfG1CurrentSkippedJobs(jobs).map(j=>j.name),['missing-inventory-g1','missing-inventory-g9','missing-inventory'])
- for(const change of [v=>{v[0].conclusion='success'},v=>{v[0].status='in_progress'},v=>{v[0].steps.push({name:'unknown source',status:'completed',conclusion:'success'})}]){const bad=structuredClone(jobs);change(bad);assert.throws(()=>normalizeFcfG1CurrentSkippedJobs(bad),/held/)}
- assert.equal(normalizeFcfG1CurrentSkippedJobs([{...jobs[0],name:aliases[0]+' '}])[0].name,aliases[0]+' ') // no broad expression recognition
+ assert.deepEqual(frozenNormalize(jobs).map(j=>j.name),['missing-inventory-g1','missing-inventory-g9','missing-inventory'])
+ for(const change of [v=>{v[0].conclusion='success'},v=>{v[0].status='in_progress'},v=>{v[0].steps.push({name:'unknown source',status:'completed',conclusion:'success'})}]){const bad=structuredClone(jobs);change(bad);assert.throws(()=>frozenNormalize(bad),/held/)}
+ assert.equal(frozenNormalize([{...jobs[0],name:aliases[0]+' '}])[0].name,aliases[0]+' ') // no broad expression recognition
 })
 test('exact actual preclaim exit13 run is zero only with its complete reviewed H1 execution',()=>{
  const h=JSON.parse(readFileSync(new URL('./vzorci/fcf-g1-preclaim-cycle-zero-observation.json',import.meta.url)))

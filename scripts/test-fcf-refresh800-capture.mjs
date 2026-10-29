@@ -1,0 +1,5 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {captureFcfRefresh800,retainFcfRefresh800Body} from './fcf-refresh800-capture.mjs'
+test('capture rejects fabricated execution before any provider request',async()=>{const saved=globalThis.fetch;let calls=0;globalThis.fetch=()=>{calls++;throw Error('network forbidden')};try{await assert.rejects(captureFcfRefresh800({executionProof:{},ledgerProof:{}}),/reader-issued/);assert.equal(calls,0)}finally{globalThis.fetch=saved}})
+test('bounded body transport retains exact bytes and refuses oversized completion',async()=>{const chunks=[Buffer.from('abc'),Buffer.from('def')],read=()=>new Response(new ReadableStream({start(c){for(const x of chunks)c.enqueue(x);c.close()}}));let retained=[];const result=await retainFcfRefresh800Body(read(),4,b=>retained.push(b));assert.equal(result.complete,false);assert.equal(result.bytes.toString(),'abcd');assert.equal(Buffer.concat(retained).toString(),'abcd');const good=await retainFcfRefresh800Body(read(),6,()=>{});assert.equal(good.complete,true);assert.equal(good.bytes.toString(),'abcdef')})

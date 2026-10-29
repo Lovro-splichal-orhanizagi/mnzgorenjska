@@ -1,0 +1,4 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+test('refresh uses additive existing workflow with old source/native jobs excluded and no database credentials',()=>{const y=readFileSync('.github/workflows/uvoz-fcf-zgodovina.yml','utf8');assert.match(y,/          - fcf-fixed-target-refresh800-v1/);const job=y.slice(y.indexOf('\n  refresh800-capture:'));assert.match(job,/inputs\.mode == 'missing-inventory'/);assert.match(job,/inputs\.preset == 'fcf-fixed-target-refresh800-v1'/);assert.match(job,/github\.run_attempt == 1/);assert.match(job,/scripts\/fcf-refresh800-actions\.mjs capture/);assert.match(job,/if: always\(\) && steps\.capture\.outputs\.evidence_ready == 'true'/);assert.doesNotMatch(job,/SUPABASE|SERVICE_ROLE|secrets\./);assert.equal((y.match(/inputs\.preset != 'fcf-fixed-target-refresh800-v1'/g)??[]).length,2)})
