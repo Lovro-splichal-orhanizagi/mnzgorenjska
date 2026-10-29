@@ -25,7 +25,8 @@ import { zahtevaBona } from './src/strani/AdminBoni'
 import { PREHODI, povzetekPostavk, stripePovezava, ZnackaStanja } from './src/strani/AdminVsaNarocila'
 import { vCente, varnoIme } from './src/strani/AdminIzdelki'
 import { EN, SL, TELEFON, cena, type Kljuc } from './src/besede'
-import { dodaj, kljuc, kosov, nastavi, odstrani, postnina, preberi, PRAZNA, skupaj } from './src/kosarica'
+import { BREZPLACNA_OD, dodaj, kljuc, kosov, nastavi, odstrani, postnina, preberi, PRAZNA, skupaj } from './src/kosarica'
+import { BREZPLACNA_OD as BREZPLACNA_OD_NAKUP, tarifeZa } from '../supabase/functions/trgovina-nakup/tarife'
 import { celicaCsv, doplacilo, letoNaprej, napakaImena, napakaPolja, oblikaSvg, stabilno, stevilka, veljavnaOblika } from './src/personalizacija'
 import { barveIzPolj, coneMotiva, kontrast, narisiKose, narisiMotiv, oblikujDatum, poljaCone, praznaCona, sirinaBesedila, velikostMm, zVgrajenoPisavo } from './src/risba'
 import { MOTIVI } from './src/motivi'
@@ -74,7 +75,7 @@ for (const [pot, vzorec, stran] of strani) {
 
 const pogoji = izris('/terms', '/terms', <Pogoji />)
 preveri('pogoji: prodajalec, register, telefon, ID za DDV, 14 dni, ZVPot-1, IRPS zavrnjen, brez ODR',
-  ['SPACE GUARDIAN', 'SI42765153', '9850538000', 'Okrožnem sodišču v Ljubljani', TELEFON, '14 dneh', 'ZVPot-1', 'ne pristaja', 'gov.si', 'Pogoji z dne 18. 10. 2026']
+  ['SPACE GUARDIAN', 'SI42765153', '9850538000', 'Okrožnem sodišču v Ljubljani', TELEFON, '14 dneh', 'ZVPot-1', 'ne pristaja', 'gov.si', 'Pogoji z dne 29. 10. 2026']
     .every((s) => pogoji.includes(s))
   && !/ec\.europa\.eu\/consumers\/odr/.test(pogoji) && !pogoji.includes('sodišče v Ljubljani'))
 preveri('pogoji: telefon prodajalca (pred živo prodajo)', /^\+386 [\d ]{6,}$/.test(TELEFON), 'manjka telefon prodajalca (pred živo prodajo)')
@@ -99,7 +100,13 @@ const izdelek: TIzdelek = {
   ],
 }
 const stran = renderToString(<StaticRouter location="/p/majica"><IzdelekView i={izdelek} /></StaticRouter>)
-preveri('izdelek: različice, razprodana onemogočena, cena', stran.includes('Črna / S') && /disabled=""[^>]*>Črna \/ M/.test(stran) && stran.includes('25,00') && !stran.includes('od 25'), stran.slice(0, 200))
+preveri('izdelek: barva in velikost ločeno, razprodana velikost onemogočena, cena', stran.includes('>Barva<') && stran.includes('>Črna<') && />S<\/button>/.test(stran)
+  && /disabled=""[^>]*>M<\/button>/.test(stran) && stran.includes('25,00') && !stran.includes('od 25'), stran.slice(0, 200))
+const dveBarvi = renderToString(<StaticRouter location="/p/majica"><IzdelekView i={{ ...izdelek, razlicice: [
+  ...izdelek.razlicice, { id: 3, oznaka_sl: 'Bela / S', oznaka_en: 'White / S', cena: 2500, na_voljo: 'ne' }] }} /></StaticRouter>)
+preveri('izdelek: prva prodajna barva izbrana, razprodana barva onemogočena, angleško ime barve le v en',
+  /aria-pressed="true"[^>]*>Črna</.test(dveBarvi) && /disabled=""[^>]*>Bela</.test(dveBarvi))
+preveri('izdelek: poštnina SI in EU ter prag brezplačne na strani izdelka', stran.includes('3,90') && stran.includes('9,90') && stran.includes('50,00'))
 
 preveri('cena: Intl v jeziku strani', cena(2500).replace(/\s/g, ' ') === '25,00 €', cena(2500))
 preveri('stripe: le https://checkout.stripe.com', stripeNaslov('https://checkout.stripe.com/c/pay/x') && !stripeNaslov('http://checkout.stripe.com/x')
@@ -155,6 +162,9 @@ preveri('kosarica: preberi zavrne smeti', preberi('{"postavke":[{"razlicica_id":
   && preberi('{"drzava":"US"}').drzava === 'SI' && preberi('{"drzava":"HR"}').drzava === 'HR'
   && preberi('{"postavke":[{"razlicica_id":3,"slug":"c","kolicina":1},{"razlicica_id":3,"slug":"c","kolicina":5}]}').postavke.length === 1
   && preberi('ni json').postavke.length === 0 && preberi(null).drzava === 'SI' && preberi('[1]').postavke.length === 0)
+preveri('brezplačna poštnina: isti prag v košarici in trgovina-nakup', BREZPLACNA_OD === BREZPLACNA_OD_NAKUP && BREZPLACNA_OD === 5000)
+preveri('brezplačna poštnina: tarife pod in nad pragom', tarifeZa('SI', true, 4999).join() === 'pismo_si,paket_si' && tarifeZa('SI', false, 5000).join() === 'brez_si'
+  && tarifeZa('HR', false, 9000).join() === 'brez_eu' && tarifeZa('HR', false).join() === 'paket_eu')
 preveri('kosarica: poštnina (pismo le v SI)', postnina('SI', true) === 150 && postnina('SI', false) === 390 && postnina('HR', true) === 990)
 const cista = ociscena({ postavke: [{ razlicica_id: 1, slug: 'majica', kolicina: 1 }, { razlicica_id: 2, slug: 'majica', kolicina: 1 }, { razlicica_id: 9, slug: 'ni', kolicina: 1 }], drzava: 'AT' }, { majica: izdelek, ni: null })
 preveri('kosarica: po zavrnitvi ostane le, kar je na voljo', cista.postavke.length === 1 && cista.postavke[0].razlicica_id === 1 && cista.drzava === 'AT')

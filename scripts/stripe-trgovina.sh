@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Katalog SLFF v Stripe (enak v testnem in živem načinu): tarife dostave
-# trgovine (pismo_si, paket_si, paket_eu) in preverjenih (postnina_si,
+# trgovine (pismo_si, paket_si, paket_eu, brezplačni brez_si in brez_eu) in preverjenih (postnina_si,
 # postnina_eu), cene po lookup_key (preverjeni, značka, Scout) in portal Scouta
 # (metadata app=slff-scout). Izdelek trgovine slff-shop ustvari trgovina-nakup
 # sama ob prvem nakupu.
@@ -55,6 +55,8 @@ done <<'TARIFE'
 slff-shop pismo_si 150 1 3 Pismo (Slovenija)
 slff-shop paket_si 390 2 4 Paket (Slovenija)
 slff-shop paket_eu 990 4 10 Paket (EU)
+slff-shop brez_si 0 2 4 Brezplačna dostava (Slovenija)
+slff-shop brez_eu 0 4 10 Brezplačna dostava (EU)
 slff postnina_si 200 0 0 Pošta (Slovenija)
 slff postnina_eu 400 0 0 Pošta (EU)
 TARIFE

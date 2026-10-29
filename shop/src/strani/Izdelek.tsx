@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { supabase, type Izdelek as TIzdelek, type Prvak } from '../baza'
+import { supabase, type Izdelek as TIzdelek, type Prvak, type Razlicica } from '../baza'
 import { cena, jezik, po, t, type Kljuc } from '../besede'
-import { dodaj, kljuc, NAJVEC, shrani, useKosarica } from '../kosarica'
+import { BREZPLACNA_OD, dodaj, kljuc, NAJVEC, postnina, shrani, useKosarica } from '../kosarica'
 import { useNaslov } from '../Okvir'
 import { doplacilo, napakaImena, normaliziraj, PISAVA, stevilka, velikostImena, type Personalizacija, type Vrsta } from '../personalizacija'
 import { Nalaganje, useSeja } from '../seja'
 import { Slika, ZnackaVoljo } from './Katalog'
 import { imaPredlogo, Konfigurator } from './Konfigurator'
+import { barvaRazlicice, velikostRazlicice } from '../mockup'
 
 /** Besedilo in številka čez sliko izdelka (hrbet majice), kot ju dobi tiskarna. */
 export function Predogled({ src, alt, ime, st }: { src?: string; alt: string; ime: string | null; st: number | null }) {
@@ -235,6 +236,23 @@ function MotiviKmalu({ i }: { i: TIzdelek }) {
   )
 }
 
+/** Oznake "Črna / M" (po slovenski oznaki, kot Konfigurator): barve in velikosti v vrstnem redu; null, če ni dvojna. */
+function dveIzbiri(rs: Razlicica[]): { barve: string[]; velikosti: string[] } | null {
+  if (rs.length < 2 || !rs.every((x) => x.oznaka_sl.includes(' / '))) return null
+  return { barve: [...new Set(rs.map((x) => barvaRazlicice(x.oznaka_sl)))], velikosti: [...new Set(rs.map((x) => velikostRazlicice(x.oznaka_sl)))] }
+}
+
+function Gumb({ izbran, onemogocen, onClick, children }: { izbran: boolean; onemogocen?: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button type="button" disabled={onemogocen} onClick={onClick} aria-pressed={izbran}
+      className={`min-h-11 min-w-11 rounded-xl border px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:line-through disabled:opacity-40 ${
+        izbran ? 'border-gnl-400 bg-gnl-400/15 text-gnl-200' : 'border-white/15 bg-white/5 text-slate-200 hover:border-white/30'
+      }`}>
+      {children}
+    </button>
+  )
+}
+
 function Navaden({ i }: { i: TIzdelek }) {
   const kosarica = useKosarica()
   const ime = po(i.ime_sl, i.ime_en)
@@ -243,6 +261,13 @@ function Navaden({ i }: { i: TIzdelek }) {
   const [izbrana, setIzbrana] = useState<number | null>(i.razlicice.length === 1 && prodajne.length === 1 ? prodajne[0].id : null)
   const [kolicina, setKolicina] = useState(1)
   const [slika, setSlika] = useState(0)
+  const dve = dveIzbiri(i.razlicice)
+  const najdi = (b: string | null, v: string | null) =>
+    i.razlicice.find((x) => barvaRazlicice(x.oznaka_sl) === b && velikostRazlicice(x.oznaka_sl) === v) ?? null
+  const naVoljo = (b: string | null, v: string | null) => (najdi(b, v)?.na_voljo ?? 'ne') !== 'ne'
+  // Barva je izbrana vnaprej (prva prodajna, kot v Konfiguratorju), da velikosti takoj povedo, kaj je razprodano.
+  const [barva, setBarva] = useState<string | null>(dve ? barvaRazlicice((prodajne[0] ?? i.razlicice[0]!).oznaka_sl) : null)
+  const [velikost, setVelikost] = useState<string | null>(null)
   /** Koliko kosov je zadnji klik res dodal (null = še ni klika). */
   const [dodano, setDodano] = useState<number | null>(null)
   const [izbira, setIzbira] = useState<Izbira>({ vnos: i.personalizacije.some((m) => m.obvezna) ? null : undefined, ime: null, st: null })
@@ -294,18 +319,46 @@ function Navaden({ i }: { i: TIzdelek }) {
             <p className="text-xs text-slate-500">{t('izdelek.zDdv')}</p>
           </div>
 
-          {i.razlicice.length > 1 && (
+          {dve ? (
+            <>
+              <fieldset className="space-y-2">
+                <legend className="text-sm font-semibold text-slate-300">{t('izdelek.barva')}</legend>
+                <div className="flex flex-wrap gap-2">
+                  {dve.barve.map((b, n) => (
+                    <Gumb key={b} izbran={b === barva} onemogocen={!dve.velikosti.some((v) => naVoljo(b, v))} onClick={() => {
+                      setBarva(b)
+                      // Velikost ostane, če jo nova barva ima; sicer jo kupec izbere znova.
+                      const v = velikost && naVoljo(b, velikost) ? velikost : null
+                      setVelikost(v)
+                      setIzbrana(najdi(b, v)?.id ?? null)
+                      // shortcut: slike sledijo vrstnemu redu barv le, ko jih je toliko kot barv.
+                      if (i.slike.length === dve.barve.length) setSlika(n)
+                      setDodano(null)
+                    }}>{po(b, barvaRazlicice(i.razlicice.find((x) => barvaRazlicice(x.oznaka_sl) === b)?.oznaka_en ?? b))}</Gumb>
+                  ))}
+                </div>
+              </fieldset>
+              <fieldset className="space-y-2">
+                <legend className="text-sm font-semibold text-slate-300">{t('izdelek.velikost')}</legend>
+                <div className="flex flex-wrap gap-2">
+                  {dve.velikosti.map((v) => (
+                    <Gumb key={v} izbran={v === velikost} onemogocen={!naVoljo(barva, v)} onClick={() => {
+                      setVelikost(v)
+                      setIzbrana(najdi(barva, v)?.id ?? null)
+                      setDodano(null)
+                    }}>{v}</Gumb>
+                  ))}
+                </div>
+              </fieldset>
+            </>
+          ) : i.razlicice.length > 1 && (
             <fieldset className="space-y-2">
               <legend className="text-sm font-semibold text-slate-300">{t('izdelek.izberi')}</legend>
               <div className="flex flex-wrap gap-2">
                 {i.razlicice.map((x) => (
-                  <button key={x.id} type="button" disabled={x.na_voljo === 'ne'} onClick={() => { setIzbrana(x.id); setDodano(null) }}
-                    aria-pressed={x.id === izbrana}
-                    className={`rounded-xl border px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:line-through disabled:opacity-40 ${
-                      x.id === izbrana ? 'border-gnl-400 bg-gnl-400/15 text-gnl-200' : 'border-white/15 bg-white/5 text-slate-200 hover:border-white/30'
-                    }`}>
+                  <Gumb key={x.id} izbran={x.id === izbrana} onemogocen={x.na_voljo === 'ne'} onClick={() => { setIzbrana(x.id); setDodano(null) }}>
                     {po(x.oznaka_sl, x.oznaka_en)}
-                  </button>
+                  </Gumb>
                 ))}
               </div>
             </fieldset>
@@ -318,13 +371,13 @@ function Navaden({ i }: { i: TIzdelek }) {
           {po(i.opis_sl, i.opis_en) && <p className="whitespace-pre-line leading-relaxed text-slate-300">{po(i.opis_sl, i.opis_en)}</p>}
 
           <ul className="space-y-1 text-sm text-slate-400">
-            {i.digitalni ? <><li>✓ {t('izdelek.digitalni')}</li><li>✓ {t('izdelek.bon')}</li></> : <li>✓ {t('izdelek.dostava')}</li>}
+            {i.digitalni ? <><li>✓ {t('izdelek.digitalni')}</li><li>✓ {t('izdelek.bon')}</li></> : <><li>✓ {t('izdelek.dostava')}</li><li>✓ {t('izdelek.postnina', { si: cena(postnina('SI', i.pismo)), eu: cena(postnina('AT', i.pismo)), od: cena(BREZPLACNA_OD) })}</li></>}
             {i.po_narocilu && <li>✓ {t('izdelek.poNarocilu')}</li>}
             {personaliziran ? <li className="text-amber-200">! {t('izdelek.brezOdstopa')}</li> : <li>✓ {t('izdelek.odstop')}</li>}
           </ul>
 
           <NakupnaVrstica kolicina={kolicina} setKolicina={setKolicina} najvec={najvec} dodano={dodano}
-            onemogoceno={!r || r.na_voljo === 'ne' || izbira.vnos === null} besedilo={r || prodajne.length === 0 ? t('izdelek.dodaj') : t('izdelek.izberi')} dodaj={vKosarico} />
+            onemogoceno={!r || r.na_voljo === 'ne' || izbira.vnos === null} besedilo={r || prodajne.length === 0 ? t('izdelek.dodaj') : t(dve ? 'izdelek.izberiVelikost' : 'izdelek.izberi')} dodaj={vKosarico} />
         </div>
       </div>
     </div>
