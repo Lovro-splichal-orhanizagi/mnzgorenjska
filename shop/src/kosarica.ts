@@ -57,6 +57,9 @@ export const skupaj = (k: Kosarica, cene: Record<string, number>): number =>
 
 export const kosov = (k: Kosarica): number => k.postavke.reduce((s, p) => s + p.kolicina, 0)
 
+/** Brezplačna poštnina od tega zneska izdelkov (centi, brez darilnih bonov). Kopija v trgovina-nakup/tarife.ts (smoke primerja). */
+export const BREZPLACNA_OD = 5000
+
 /** Privzete tarife (spec Dostava); prave so v Stripe, zato jih kažemo z "od". */
 export const postnina = (drzava: string, pismo: boolean): number => (drzava === 'SI' ? (pismo ? 150 : 390) : 990)
 

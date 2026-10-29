@@ -91,7 +91,9 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   načini plačila iz Stripe Dashboarda
   (API ne sprejme več `payment_method_types`; pustimo le kartico in denarnice,
   ker webhook zapiše le takojšnje plačilo), država dostave izbrana v košarici (`allowed_countries`), tarife po državi
-  (`pismo_si` le nalepke v SI, `paket_si`, `paket_eu`). `stripe-webhook` veja
+  (`pismo_si` le nalepke v SI, `paket_si`, `paket_eu`; od 50 € izdelkov brez darilnih bonov le
+  brezplačna `brez_si`/`brez_eu`, prag `BREZPLACNA_OD` v `tarife.ts` in `shop/src/kosarica.ts`, smoke ju
+  primerja; brez te tarife v Stripe ostane navadna poštnina). `stripe-webhook` veja
   `slff-shop` (`stripe-webhook/trgovina.ts`): plačano → naročilo + mail +
   Discord; poteklo → sprosti.
 - **Pošta**: `trgovina-posta` (Mailcow) — potrditev (z besedilom odstopa in

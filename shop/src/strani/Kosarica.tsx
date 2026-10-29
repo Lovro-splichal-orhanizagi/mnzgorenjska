@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase, type Izdelek } from '../baza'
 import { cena, imeDrzave, jezik, po, t, type Kljuc } from '../besede'
-import { EU27, izprazni, kljuc, nastavi, NAJVEC, odstrani, postnina, shrani, shraniPlacilo, skupaj, useKosarica, zadnjePlacilo, type Kosarica as TKosarica, type Postavka } from '../kosarica'
+import { BREZPLACNA_OD, EU27, izprazni, kljuc, nastavi, NAJVEC, odstrani, postnina, shrani, shraniPlacilo, skupaj, useKosarica, zadnjePlacilo, type Kosarica as TKosarica, type Postavka } from '../kosarica'
 import { doplacilo } from '../personalizacija'
 import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
@@ -173,6 +173,9 @@ export function Kosarica() {
   const vmesna = skupaj(k, cene)
   const pismo = k.postavke.every((p) => izdelki[p.slug]?.pismo === true || izdelki[p.slug]?.digitalni === true)
   const zBonom = k.postavke.some((p) => izdelki[p.slug]?.digitalni === true)
+  // Darilni boni ne štejejo v brezplačno poštnino (isto pravilo v trgovina-nakup).
+  const blago = k.postavke.reduce((s, p) => s + (izdelki[p.slug]?.digitalni ? 0 : (cene[kljuc(p)] ?? 0) * p.kolicina), 0)
+  const brezplacna = blago >= BREZPLACNA_OD
   const neveljavna = k.postavke.some((p) => (razlicica(izdelki, p.slug, p.razlicica_id)?.na_voljo ?? 'ne') === 'ne' || motivaNi(izdelki[p.slug], p))
   const drzave = EU27.map((d) => [d, imeDrzave(d)] as const).sort((a, b) => a[1].localeCompare(b[1], jezik))
 
@@ -247,10 +250,15 @@ export function Kosarica() {
             {!digitalno && (
               <div className="flex justify-between">
                 <dt className="text-slate-400">{t('kosarica.postnina')}</dt>
-                <dd className="tabular-nums">{t('kosarica.postninaOd', { cena: cena(postnina(k.drzava, pismo)) })}</dd>
+                <dd className={`tabular-nums ${brezplacna ? 'font-bold text-gnl-300' : ''}`}>
+                  {brezplacna ? t('kosarica.brezplacno') : t('kosarica.postninaOd', { cena: cena(postnina(k.drzava, pismo)) })}
+                </dd>
               </div>
             )}
           </dl>
+          {!digitalno && !brezplacna && (
+            <p className="rounded-lg bg-gnl-400/10 px-3 py-2 text-sm text-gnl-200">{t('kosarica.doBrezplacne', { cena: cena(BREZPLACNA_OD - blago) })}</p>
+          )}
           {!digitalno && <p className="text-xs leading-relaxed text-slate-500">{t('kosarica.postninaOpis')}</p>}
           {zBonom && <p className="text-xs leading-relaxed text-slate-500">{t('kosarica.bon')}</p>}
           <p className="text-xs leading-relaxed text-slate-500">{t('kosarica.koda')}</p>

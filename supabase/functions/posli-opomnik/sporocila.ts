@@ -2669,6 +2669,8 @@ export function sestaviIzstopKluba(
 // Brez čestitk za vsako ceno: pohvala le, če je ekipa zbrala največ v ligi.
 // Pivo (P.S.) le po krogu nad povprečjem in nikoli v mladinski ligi (mladim
 // brez piva; isto pravilo kot SQL `je_mladinski_slug`).
+// Po krogu brez piva P.S. o trgovini (shop.slff.eu), le lige v EU-27, kamor
+// pošiljamo, in nikoli mladim.
 
 export interface PregledKroga {
   display_name: string | null
@@ -2701,6 +2703,8 @@ const slMn = (n: number, ena: string, dve: string, tri: string, vec: string) => 
   return s === 1 ? ena : s === 2 ? dve : s === 3 || s === 4 ? tri : vec
 }
 
+const EU27_DOSTAVA = 'AT BE BG CY CZ DE DK EE ES FI FR GR HR HU IE IT LT LU LV MT NL PL PT RO SE SI SK'.split(' ')
+
 const jeMladinskiSlug = (slug: string) => /(^|-)(u19|mladinci)($|-)/.test(slug) || /^sml[0-9]/.test(slug)
 
 interface BesedilaPregleda {
@@ -2724,6 +2728,8 @@ interface BesedilaPregleda {
   lestvica: string
   potem: (povezava: string) => string
   pivo: string
+  /** P.S. o trgovini (shop.slff.eu) po krogu brez piva, le lige v EU (dostava) in nikoli mladim. */
+  trgovina: string
   odjava: string
   /** Dvoboj v mini ligi: oznaka, izid in nasprotnik povprečje lige. */
   dvoboj: string
@@ -2747,6 +2753,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Pripravi ekipo za ${k}. krog`,
     lestvica: 'celo lestvico', potem: (l) => `Ali poglej ${l}.`,
     pivo: 'P.S. SLFF je brezplačen in teče na pivu. Če ti je ta krog polepšal ponedeljek, nas počasti z enim, pa dobiš mesto na pivskem zidu:',
+    trgovina: 'P.S. Šal, majica ali kozarec z imenom tvoje ekipe? V trgovini SLFF je poštnina od 50 € brezplačna:',
     odjava: 'Ne želim več e-pošte',
     dvoboj: 'Dvoboj', izid: { zmaga: 'Zmaga', remi: 'Remi', poraz: 'Poraz' }, povprecjeLige: 'povprečje lige',
     napovedi: 'Napovedi', tocni: 'točni izidi',
@@ -2763,6 +2770,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Priprav tím na ${k}. kolo`,
     lestvica: 'celú tabuľku', potem: (l) => `Alebo si pozri ${l}.`,
     pivo: 'P.S. SLFF je zadarmo a beží na pive. Ak ti toto kolo spríjemnilo pondelok, pozvi nás na jedno a získaš miesto na pivnej stene:',
+    trgovina: 'P.S. Šál, tričko alebo pohár s menom tvojho tímu? V obchode SLFF je poštovné od 50 € zadarmo:',
     odjava: 'Nechcem už dostávať e-maily',
     dvoboj: 'Duel', izid: { zmaga: 'Výhra', remi: 'Remíza', poraz: 'Prehra' }, povprecjeLige: 'priemer ligy',
     napovedi: 'Tipy', tocni: 'presné výsledky',
@@ -2779,6 +2787,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Pripremi momčad za ${k}. kolo`,
     lestvica: 'cijelu ljestvicu', potem: (l) => `Ili pogledaj ${l}.`,
     pivo: 'P.S. SLFF je besplatan i radi na pivu. Ako ti je ovo kolo uljepšalo ponedjeljak, počasti nas jednim i dobij mjesto na pivskom zidu:',
+    trgovina: 'P.S. Šal, majica ili čaša s imenom tvoje momčadi? U trgovini SLFF dostava je besplatna od 50 €:',
     odjava: 'Ne želim više primati e-mailove',
     dvoboj: 'Dvoboj', izid: { zmaga: 'Pobjeda', remi: 'Neriješeno', poraz: 'Poraz' }, povprecjeLige: 'prosjek lige',
     napovedi: 'Prognoze', tocni: 'točni rezultati',
@@ -2795,6 +2804,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Připrav tým na ${k}. kolo`,
     lestvica: 'celý žebříček', potem: (l) => `Nebo se podívej na ${l}.`,
     pivo: 'P.S. SLFF je zdarma a běží na pivu. Jestli ti tohle kolo zpříjemnilo pondělí, kup nám jedno a získáš místo na pivní zdi:',
+    trgovina: 'P.S. Šála, tričko nebo sklenice se jménem tvého týmu? V obchodě SLFF je poštovné od 50 € zdarma:',
     odjava: 'Nechci už dostávat e-maily',
     dvoboj: 'Duel', izid: { zmaga: 'Výhra', remi: 'Remíza', poraz: 'Prohra' }, povprecjeLige: 'průměr ligy',
     napovedi: 'Tipy', tocni: 'přesné výsledky',
@@ -2813,6 +2823,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Csapat felkészítése: ${k}. forduló`,
     lestvica: 'a teljes tabellát', potem: (l) => `Vagy nézd meg ${l}.`,
     pivo: 'U.i. Az SLFF ingyenes, és sörből működik. Ha ez a forduló feldobta a hétfődet, hívj meg minket egyre, és felkerülsz a sörfalra:',
+    trgovina: 'U.i. Sál, póló vagy pohár a csapatod nevével? Az SLFF boltban 50 €-tól ingyenes a szállítás:',
     odjava: 'Nem kérek több e-mailt',
     dvoboj: 'Párharc', izid: { zmaga: 'Győzelem', remi: 'Döntetlen', poraz: 'Vereség' }, povprecjeLige: 'liga átlaga',
     napovedi: 'Tippek', tocni: 'pontos eredmények',
@@ -2829,6 +2840,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Team für Runde ${k} bereit machen`,
     lestvica: 'die ganze Tabelle', potem: (l) => `Oder schau dir ${l} an.`,
     pivo: 'PS: SLFF ist kostenlos und läuft mit Bier. Wenn dir diese Runde den Montag versüßt hat, spendier uns eins und hol dir einen Platz an der Bierwand:',
+    trgovina: 'PS: Schal, Shirt oder Glas mit dem Namen deines Teams? Im SLFF-Shop ist der Versand ab 50 € kostenlos:',
     odjava: 'Keine E-Mails mehr',
     dvoboj: 'Duell', izid: { zmaga: 'Sieg', remi: 'Remis', poraz: 'Niederlage' }, povprecjeLige: 'Ligaschnitt',
     napovedi: 'Tipps', tocni: 'exakte Ergebnisse',
@@ -2845,6 +2857,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Pripremi tim za ${k}. kolo`,
     lestvica: 'celu tabelu', potem: (l) => `Ili pogledaj ${l}.`,
     pivo: 'P.S. SLFF je besplatan i radi na pivu. Ako ti je ovo kolo ulepšalo ponedeljak, časti nas jednim i dobij mesto na pivskom zidu:',
+    trgovina: 'P.S. Šal, majica ili čaša sa imenom tvog tima? U SLFF prodavnici dostava je besplatna od 50 €:',
     odjava: 'Ne želim više da primam imejlove',
     dvoboj: 'Dvoboj', izid: { zmaga: 'Pobeda', remi: 'Nerešeno', poraz: 'Poraz' }, povprecjeLige: 'prosek lige',
     napovedi: 'Prognoze', tocni: 'tačni rezultati',
@@ -2861,6 +2874,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Pregătește echipa pentru etapa ${k}`,
     lestvica: 'tot clasamentul', potem: (l) => `Sau vezi ${l}.`,
     pivo: 'P.S. SLFF este gratuit și merge cu bere. Dacă etapa asta ți-a înseninat ziua de luni, fă-ne cinste cu una și primești un loc pe zidul berilor:',
+    trgovina: 'P.S. Fular, tricou sau pahar cu numele echipei tale? În magazinul SLFF livrarea este gratuită de la 50 €:',
     odjava: 'Nu mai vreau e-mailuri',
     dvoboj: 'Duel', izid: { zmaga: 'Victorie', remi: 'Egal', poraz: 'Înfrângere' }, povprecjeLige: 'media ligii',
     napovedi: 'Pronosticuri', tocni: 'scoruri exacte',
@@ -2877,6 +2891,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Valmista meeskond ${k}. vooruks ette`,
     lestvica: 'kogu edetabelit', potem: (l) => `Või vaata ${l}.`,
     pivo: 'P.S. SLFF on tasuta ja töötab õlle peal. Kui see voor tegi su esmaspäeva paremaks, osta meile üks ja saad koha õlleseinal:',
+    trgovina: 'P.S. Sall, särk või klaas sinu meeskonna nimega? SLFF-i poes on tarne alates 50 € tasuta:',
     odjava: 'Ma ei soovi enam kirju',
     dvoboj: 'Duell', izid: { zmaga: 'Võit', remi: 'Viik', poraz: 'Kaotus' }, povprecjeLige: 'liiga keskmine',
     napovedi: 'Ennustused', tocni: 'täpsed tulemused',
@@ -2893,6 +2908,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Przygotuj drużynę na ${k}. kolejkę`,
     lestvica: 'cały ranking', potem: (l) => `Albo zobacz ${l}.`,
     pivo: 'P.S. SLFF jest darmowy i działa na piwie. Jeśli ta kolejka umiliła ci poniedziałek, postaw nam jedno i zdobądź miejsce na ścianie piw:',
+    trgovina: 'P.S. Szalik, koszulka albo kufel z nazwą twojej drużyny? W sklepie SLFF dostawa od 50 € jest darmowa:',
     odjava: 'Nie chcę więcej e-maili',
     dvoboj: 'Pojedynek', izid: { zmaga: 'Wygrana', remi: 'Remis', poraz: 'Porażka' }, povprecjeLige: 'średnia ligi',
     napovedi: 'Typy', tocni: 'dokładne wyniki',
@@ -2909,6 +2925,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Prepara el equipo para la jornada ${k}`,
     lestvica: 'la clasificación completa', potem: (l) => `O mira ${l}.`,
     pivo: 'P. D. SLFF es gratis y funciona a base de cañas. Si esta jornada te ha alegrado el lunes, invítanos a una y consigue un sitio en el muro de cañas:',
+    trgovina: 'P. D. ¿Bufanda, camiseta o vaso con el nombre de tu equipo? En la tienda de SLFF el envío es gratis a partir de 50 €:',
     odjava: 'No quiero más correos',
     dvoboj: 'Duelo', izid: { zmaga: 'Victoria', remi: 'Empate', poraz: 'Derrota' }, povprecjeLige: 'media de la liga',
     napovedi: 'Pronósticos', tocni: 'resultados exactos',
@@ -2925,6 +2942,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Sagatavot komandu ${k}. kārtai`,
     lestvica: 'visu kopvērtējumu', potem: (l) => `Vai apskati ${l}.`,
     pivo: 'P.S. SLFF ir bez maksas un darbojas uz alus. Ja šī kārta tev padarīja pirmdienu labāku, uzsauc mums vienu un iegūsti vietu uz alus sienas:',
+    trgovina: 'P.S. Šalle, krekls vai glāze ar tavas komandas nosaukumu? SLFF veikalā piegāde no 50 € ir bez maksas:',
     odjava: 'Vairs nevēlos saņemt e-pastus',
     dvoboj: 'Duelis', izid: { zmaga: 'Uzvara', remi: 'Neizšķirts', poraz: 'Zaudējums' }, povprecjeLige: 'līgas vidējais',
     napovedi: 'Prognozes', tocni: 'precīzi rezultāti',
@@ -2941,6 +2959,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Подготви го тимот за ${k}. коло`,
     lestvica: 'целата табела', potem: (l) => `Или погледни ја ${l}.`,
     pivo: 'П.С. SLFF е бесплатен и работи на пиво. Ако ова коло ти го разубави понеделникот, почести нè со едно и добиј место на ѕидот на пива:',
+    trgovina: 'П.С. Шал, маица или чаша со името на твојот тим? Во продавницата на SLFF испораката е бесплатна од 50 €:',
     odjava: 'Не сакам повеќе да добивам пораки',
     dvoboj: 'Дуел', izid: { zmaga: 'Победа', remi: 'Нерешено', poraz: 'Пораз' }, povprecjeLige: 'просек на лигата',
     napovedi: 'Прогнози', tocni: 'точни резултати',
@@ -2957,6 +2976,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Ετοίμασε την ομάδα για την ${k}η αγωνιστική`,
     lestvica: 'ολόκληρη την κατάταξη', potem: (l) => `Ή δες ${l}.`,
     pivo: 'Υ.Γ. Το SLFF είναι δωρεάν και δουλεύει με μπίρα. Αν αυτή η αγωνιστική σού έφτιαξε τη Δευτέρα, κέρασέ μας μία και πάρε μια θέση στον τοίχο της μπίρας:',
+    trgovina: 'Υ.Γ. Κασκόλ, μπλουζάκι ή ποτήρι με το όνομα της ομάδας σου; Στο κατάστημα του SLFF η αποστολή είναι δωρεάν από 50 €:',
     odjava: 'Δεν θέλω άλλα email',
     dvoboj: 'Μονομαχία', izid: { zmaga: 'Νίκη', remi: 'Ισοπαλία', poraz: 'Ήττα' }, povprecjeLige: 'μέσος όρος λίγκας',
     napovedi: 'Προβλέψεις', tocni: 'ακριβή σκορ',
@@ -2973,6 +2993,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Takımını ${k}. haftaya hazırla`,
     lestvica: 'puan durumunun tamamına', potem: (l) => `Ya da ${l} göz at.`,
     pivo: 'Not: SLFF ücretsiz ve biraya çalışıyor. Bu hafta pazartesini güzelleştirdiyse bize bir bira ısmarla, bira duvarında yerini al:',
+    trgovina: 'Not: Takımının adını taşıyan atkı, tişört veya bardak? SLFF mağazasında 50 €’dan itibaren kargo ücretsiz:',
     odjava: 'Artık e-posta almak istemiyorum',
     dvoboj: 'Düello', izid: { zmaga: 'Galibiyet', remi: 'Beraberlik', poraz: 'Mağlubiyet' }, povprecjeLige: 'lig ortalaması',
     napovedi: 'Tahminler', tocni: 'tam skorlar',
@@ -2989,6 +3010,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Підготувати команду до ${k}-го туру`,
     lestvica: 'весь рейтинг', potem: (l) => `Або переглянь ${l}.`,
     pivo: 'P.S. SLFF безкоштовний і працює на пиві. Якщо цей тур зробив твій понеділок кращим, пригости нас кухлем і отримай місце на пивній стіні:',
+    trgovina: 'P.S. Шарф, футболка чи келих із назвою твоєї команди? У магазині SLFF доставка від 50 € безкоштовна:',
     odjava: 'Більше не хочу отримувати листи',
     dvoboj: 'Дуель', izid: { zmaga: 'Перемога', remi: 'Нічия', poraz: 'Поразка' }, povprecjeLige: 'середнє ліги',
     napovedi: 'Прогнози', tocni: 'точні рахунки',
@@ -3005,6 +3027,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Պատրաստիր թիմը տուր ${k}-ի համար`,
     lestvica: 'ամբողջ աղյուսակը', potem: (l) => `Կամ նայիր ${l}։`,
     pivo: 'Հ.Գ. SLFF-ն անվճար է և աշխատում է գարեջրով։ Եթե այս տուրը գեղեցկացրեց քո երկուշաբթին, հյուրասիրիր մեզ մեկ գարեջուր և տեղ ստացիր գարեջրի պատին:',
+    trgovina: 'Հ.Գ. Շարֆ, շապիկ կամ բաժակ քո թիմի անունով։ SLFF խանութում 50 €-ից առաքումն անվճար է՝',
     odjava: 'Այլևս չեմ ուզում նամակներ ստանալ',
     dvoboj: 'Մենամարտ', izid: { zmaga: 'Հաղթանակ', remi: 'Ոչ-ոքի', poraz: 'Պարտություն' }, povprecjeLige: 'լիգայի միջինը',
     napovedi: 'Կանխատեսումներ', tocni: 'ճշգրիտ հաշիվներ',
@@ -3021,6 +3044,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Komandanı tur ${k} üçün hazırla`,
     lestvica: 'bütün cədvələ', potem: (l) => `Və ya ${l} bax.`,
     pivo: 'P.S. SLFF pulsuzdur və pivə ilə işləyir. Bu tur bazar ertəni gözəlləşdiribsə, bizi birinə qonaq et və pivə divarında yer al:',
+    trgovina: 'P.S. Komandanın adı olan şərf, köynək və ya stəkan? SLFF mağazasında 50 €-dan çatdırılma pulsuzdur:',
     odjava: 'Daha məktub almaq istəmirəm',
     dvoboj: 'Duel', izid: { zmaga: 'Qələbə', remi: 'Heç-heçə', poraz: 'Məğlubiyyət' }, povprecjeLige: 'liqanın ortalaması',
     napovedi: 'Proqnozlar', tocni: 'dəqiq hesablar',
@@ -3037,6 +3061,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Gør holdet klar til ${k}. runde`,
     lestvica: 'hele ranglisten', potem: (l) => `Eller se ${l}.`,
     pivo: 'PS: SLFF er gratis og kører på øl. Gjorde denne runde din mandag bedre, så giv os en og få en plads på ølvæggen:',
+    trgovina: 'PS: Halstørklæde, T-shirt eller glas med dit holds navn? I SLFF-butikken er fragten gratis fra 50 €:',
     odjava: 'Jeg vil ikke have flere mails',
     dvoboj: 'Duel', izid: { zmaga: 'Sejr', remi: 'Uafgjort', poraz: 'Nederlag' }, povprecjeLige: 'ligaens gennemsnit',
     napovedi: 'Tips', tocni: 'præcise resultater',
@@ -3053,6 +3078,7 @@ const PREGLED: Record<Jezik, BesedilaPregleda> = {
     gumb: (k) => `Get your team ready for round ${k}`,
     lestvica: 'the full table', potem: (l) => `Or see ${l}.`,
     pivo: 'P.S. SLFF is free and runs on beer. If this round made your Monday better, buy us one and get a spot on the beer wall:',
+    trgovina: 'P.S. A scarf, T-shirt or glass with your team name? Shipping is free from €50 in the SLFF shop:',
     odjava: 'Stop these emails',
     dvoboj: 'Head-to-head', izid: { zmaga: 'Win', remi: 'Draw', poraz: 'Loss' }, povprecjeLige: 'league average',
     napovedi: 'Predictions', tocni: 'exact scores',
@@ -3115,6 +3141,8 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
   // Pivo le po dobrem krogu (točke in vsaj povprečje lige) in nikoli mladim.
   const dobrKrog = m.tocke > 0 && m.povprecje != null && m.tocke >= m.povprecje
   const pivo = dobrKrog && !jeMladinskiSlug(liga.slug)
+  // Sicer trgovina, a le, kamor pošiljamo (EU-27; seznam kot v trgovina-nakup/tarife.ts).
+  const trgovina = !pivo && !jeMladinskiSlug(liga.slug) && EU27_DOSTAVA.includes(liga.drzava ?? '')
 
   const ploscice: Vrstica[] = [
     { v: esc(st(m.tocke)), k: B.tocke },
@@ -3183,6 +3211,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
     gumb: { label: B.gumb(m.krog + 1), url: p.ekipa },
     potem: B.potem(povezava(B.lestvica, `${SITE}/table?t=${encodeURIComponent(liga.slug)}`)),
     ...(pivo ? { opomba: `${B.pivo} ${povezava('slff.eu/pivo', `${SITE}/pivo?src=mail-krog`)}` } : {}),
+    ...(trgovina ? { opomba: `${B.trgovina} ${povezava('shop.slff.eu', 'https://shop.slff.eu/?utm_source=slff&utm_medium=email')}` } : {}),
     zakaj: B.zakaj(ozn),
   }, p.odjava, B.odjava)
 }
