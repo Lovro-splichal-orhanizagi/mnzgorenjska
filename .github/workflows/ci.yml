@@ -100,7 +100,10 @@ jobs:
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
 
       - name: Baden catalog owner and hosted native workflow (offline)
-        run: node --test scripts/test-install-baden-native-catalog.mjs scripts/test-baden-owner-transport-protocol.mjs scripts/test-prepare-fussball-issued-description.mjs scripts/test-stage-baden-native-composition.mjs scripts/test-fcf-g13-baden-compat.mjs scripts/test-baden-active-cache-refresh.mjs
+        run: node --test scripts/test-baden-served-page.mjs scripts/test-install-baden-native-catalog.mjs scripts/test-baden-owner-transport-protocol.mjs scripts/test-prepare-fussball-issued-description.mjs scripts/test-stage-baden-native-composition.mjs scripts/test-fcf-g13-baden-compat.mjs scripts/test-baden-active-cache-refresh.mjs
+
+      - name: Exact H7 validation-only owner history (source-free)
+        run: node --test scripts/test-baden-owner-h7-history.mjs
 
       - name: Community card voting and provisional round UI (offline)
         run: |
@@ -138,7 +141,7 @@ jobs:
       # Retained private83 positives run with the explicit offline fixture;
       # public CI runs the source-free route, schema and refusal controls.
       - name: G1 remainder quarantine and source-history guards (source-free)
-        run: node --test scripts/test-fcf-g1-remainder*.mjs scripts/test-fcf-g1-quarantine-audit.mjs scripts/test-fcf-g1-prebudget-audit.mjs scripts/test-fcf-g1-historical-zero-witness.mjs scripts/test-fcf-g1-4109410-readiness.mjs scripts/test-fcf-g9-calendar-probe.mjs scripts/test-fcf-g1-native-preflight.mjs scripts/test-fcf-g1-readonly-projection.mjs
+        run: node --test scripts/test-fcf-g1-remainder*.mjs scripts/test-fcf-g1-quarantine-audit.mjs scripts/test-fcf-g1-prebudget-audit.mjs scripts/test-fcf-g1-historical-zero-witness.mjs scripts/test-fcf-g1-4109410-readiness.mjs scripts/test-fcf-g9-calendar-probe.mjs scripts/test-fcf-g9-pre-provider-zero.mjs scripts/test-fcf-g1-native-preflight.mjs scripts/test-fcf-g1-readonly-projection.mjs
 
       - name: FCF fresh-source future launch protocol (source-free)
         run: npm run test:fcf-future

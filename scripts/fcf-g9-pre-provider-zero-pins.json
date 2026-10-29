@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "kind": "fcf-g9-r1-pre-provider-zero-witness-v1",
+  "status": "FINALIZED",
+  "repository": "Lovro-splichal-orhanizagi/mnzgorenjska",
+  "run": {
+    "id": 40891667999,
+    "run_attempt": 1,
+    "head_sha": "6b795a57643fb074226ea5356d4a90c8ba9d0dc7",
+    "head_branch": "main",
+    "path": ".github/workflows/fcf-javni-dokazi.yml",
+    "event": "workflow_dispatch",
+    "status": "completed",
+    "conclusion": "failure",
+    "created_at": "2026-10-29T14:27:35Z",
+    "run_started_at": "2026-10-29T14:27:35Z",
+    "updated_at": "2026-10-29T14:29:30Z",
+    "actor": {
+      "login": "nejcar20",
+      "id": 25134229,
+      "type": "User"
+    },
+    "triggering_actor": {
+      "login": "nejcar20",
+      "id": 25134229,
+      "type": "User"
+    },
+    "repository": {
+      "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+    },
+    "head_repository": {
+      "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+    }
+  },
+  "workflowId": 388037031,
+  "captureJobId": 123509832634,
+  "jobsSha256": "5f24d8ad4355959f3f73bd766ef748a7b12c7a6d9d2d77116586d9dfead04da6",
+  "rawJobLog": {
+    "bytes": 24884,
+    "sha256": "f613e0376a17218c0776d325a979687ef281ae7bc9da341c9f2213186bdd189d"
+  },
+  "runtimeCodeSha256": "a968034c34e87fa33b535d1d347d967bc3b752cac75a6a68ca89fd3d566bb3ef",
+  "runtime": {
+    ".github/workflows/ci.yml": "99eaa3c14efb37d8c3ad2ce717feff8283e44e90f43a8070a69f94ac721b8536",
+    ".github/workflows/fcf-javni-dokazi.yml": "da88613bf283f39be142e26d81deb7fb16ab6c7089cba155dd214412ad21a0d1",
+    "package-lock.json": "eabfd5f32e8c5f39378120789ff966c17d4775a3fdca9c39fb1ff308b3192ef1",
+    "package.json": "dd8ad4be71c2f7f8899ed5adf86d399c698b94c18c2c066bd0910b3598b8afd2",
+    "scripts/capture-fcf-g9-calendar-probe.mjs": "ca5bf3e441586409f1b6d0c908c2286282d5b266c8de5512163d30b5e3010a1b",
+    "scripts/fcf-g1-historical-zero-witness.mjs": "ad5125f00f0bdd2cea13fcd019ef0ee36592550356474e5c6120cba924c8f0d9",
+    "scripts/fcf-g9-calendar-counter-pins.json": "9f93f13bbee9acdaf3531b7975df451d9a51d705261c6bfe5c1b1a451ef2f5e1",
+    "scripts/fcf-g9-calendar-links.mjs": "34ceacdfb79ae032e228b2f81b54b040818cb6bee466d64dfcb7eee816fb98e6",
+    "scripts/fcf-g9-calendar-probe.mjs": "334ac09afd0eaa2ce058509c9c0528fda62d3581c1436957c2176219f4ee8784",
+    "scripts/fcf-missing-inventory-artifact.mjs": "2c9a4c6bd74d6e331b9f5870b1e26068b795982b991507ab50031c5fb72aca59",
+    "scripts/fcf-six-historical-policy.mjs": "34907066c20ab9d4576a39124f4efd29f2b43f37d207950279e2f4a9bfba2ce1",
+    "scripts/klubi.mjs": "b1974c32ee3562cd7c57749951c3bbdafb8de27d26394d8f09ae55d169cd5e0a",
+    "scripts/lib/fcf-g1-supplement-installed.mjs": "4e4d4b285bf81a540e94dad83ac9b01cdd44e4ae8cc69123154141b5f19c94cb",
+    "scripts/lib/fussball-native-history-policy.mjs": "b1526e7e4600de5d96dd9370390904aea1d5e2409422b8a82ffc19d54786eb72",
+    "scripts/lib/historical-statistics-policy.mjs": "67ab1736b32ad865d73588b36024810eb7dce10b628e57106497233ff8126e0f",
+    "scripts/odtis-kode.mjs": "288fc94ae312586619290df077cd5fd152a593708f869aa445900be5c86ed090",
+    "scripts/strani.mjs": "e0c9a7f9739e269a8bff6882f219903a990dad4cd1c6ec20956fe9ca589508c7",
+    "scripts/viri/facr.mjs": "aeeb715025bd23f0b2ab9422eb50467c099670d268cc0aeadab6372eb504099a",
+    "scripts/viri/fcf-calonge-pair.mjs": "2aaf4a9cd48da7af3b5b7879a1621240556bc7d4844770eb4f4c2193bb380c6f",
+    "scripts/viri/fcf.mjs": "3069689ac29eff2426419ef4404e8da0b9ff99eed3eca6e88bc37ba027dc0674",
+    "scripts/viri/frf.mjs": "587cdfefb831bd5f1e6817a898ab204113453b07b6fd0c39e660de04621be066",
+    "scripts/viri/hlf.mjs": "6f8dc7325e74b91ff49d123e0640287b2ef4c612cee47e758016b7b43d1f1cd7",
+    "scripts/viri/zapisniki.mjs": "cc65847a106c9fe3eca54141526ede7f1bb9b276e42344c938b7d8f850c4a366",
+    "scripts/zapisnik.mjs": "e6c3f2b595350ef39ad1c0dd949dbc2e09b2d93891b7a99126b6c71fba700840"
+  },
+  "testBody": {
+    "path": "scripts/test-fcf-g9-calendar-probe.mjs",
+    "sha256": "08862674e909b313e474abd75298dc0ea7af2ea37902b7466defd8a138f00e4e"
+  },
+  "importData": {
+    "scripts/fcf-g9-calendar-counter-pins.json": "9f93f13bbee9acdaf3531b7975df451d9a51d705261c6bfe5c1b1a451ef2f5e1",
+    "scripts/fcf-g1-historical-zero-registry.json": "ad3d11bea137536204a7e0e7cc7ed3d9be925a038566c5875f0261081f0f099d",
+    "scripts/policies/fcf-six-reviewed-exclusions.json": "77f56a26fc546e6fb1a632ca579e6daf9398e5a5cd3be2763e28311f8aef17c6",
+    "scripts/policies/fcf-g1-4109409-supplement.json": "3a867001b542012bc6672cec95dc211537ea82be4909b3a7a423841dff876781",
+    "scripts/policies/historical-statistics-exclusions.json": "9a94f73520bb5eb11093fd484feefff08edf81cb98a5b1b0e1065716a3066f1c",
+    "scripts/policies/fussball-baden-native-composition.json": "faa0f9ee262d78ed1e312566cb2f31eed20fc5e080ba3225975e7a84c60f92a5"
+  },
+  "reviewSha256": "0ad28c773180f47554a0b51304ca897fbf9eff0812d9f98fc080cd522303e2fb",
+  "newSourceGETs": 0,
+  "spentDiscoveryAttempts": 1,
+  "originalException": "UNKNOWN",
+  "observedURLs": [],
+  "observedLinks": [],
+  "lastSourceEndedUTCAdvanced": false,
+  "currentGlobalCounterAuthority": false,
+  "nativeAdmission": false,
+  "activationEligible": false
+}

@@ -88,7 +88,7 @@ jobs:
       - name: Namesti odvisnosti brez skript
         run: npm ci --ignore-scripts
       - name: Preveri G9 probe brez omrezja
-        run: node --test scripts/test-fcf-g9-calendar-probe.mjs
+        run: node --test scripts/test-fcf-g9-calendar-probe.mjs scripts/test-fcf-g9-pre-provider-zero.mjs
       - name: Capture one fixed G9 calendar resource
         id: probe
         env:
@@ -103,7 +103,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fcf-g9-calendar-probe-${{ github.run_id }}-${{ github.run_attempt }}
-          path: fcf-g9-calendar-probe
+          name: ${{ steps.probe.outputs.evidence_ready == 'true' && format('fcf-g9-calendar-probe-{0}-{1}', github.run_id, github.run_attempt) || format('fcf-g9-calendar-diagnostic-{0}-{1}', github.run_id, github.run_attempt) }}
+          path: ${{ steps.probe.outputs.evidence_ready == 'true' && 'fcf-g9-calendar-probe' || format('{0}/fcf-g9-calendar-diagnostic.jsonl', runner.temp) }}
           if-no-files-found: error
           retention-days: 90
