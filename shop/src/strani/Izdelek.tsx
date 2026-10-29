@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase, type Izdelek as TIzdelek, type Prvak, type Razlicica } from '../baza'
 import { cena, jezik, po, t, type Kljuc } from '../besede'
-import { dodaj, kljuc, NAJVEC, postnina, shrani, useKosarica } from '../kosarica'
+import { BREZPLACNA_OD, dodaj, kljuc, NAJVEC, postnina, shrani, useKosarica } from '../kosarica'
 import { useNaslov } from '../Okvir'
 import { doplacilo, napakaImena, normaliziraj, PISAVA, stevilka, velikostImena, type Personalizacija, type Vrsta } from '../personalizacija'
 import { Nalaganje, useSeja } from '../seja'
@@ -365,7 +365,7 @@ function Navaden({ i }: { i: TIzdelek }) {
           {po(i.opis_sl, i.opis_en) && <p className="whitespace-pre-line leading-relaxed text-slate-300">{po(i.opis_sl, i.opis_en)}</p>}
 
           <ul className="space-y-1 text-sm text-slate-400">
-            {i.digitalni ? <><li>✓ {t('izdelek.digitalni')}</li><li>✓ {t('izdelek.bon')}</li></> : <><li>✓ {t('izdelek.dostava')}</li><li>✓ {t('izdelek.postnina', { si: cena(postnina('SI', i.pismo)), eu: cena(postnina('AT', i.pismo)) })}</li></>}
+            {i.digitalni ? <><li>✓ {t('izdelek.digitalni')}</li><li>✓ {t('izdelek.bon')}</li></> : <><li>✓ {t('izdelek.dostava')}</li><li>✓ {t('izdelek.postnina', { si: cena(postnina('SI', i.pismo)), eu: cena(postnina('AT', i.pismo)), od: cena(BREZPLACNA_OD) })}</li></>}
             {i.po_narocilu && <li>✓ {t('izdelek.poNarocilu')}</li>}
             {personaliziran ? <li className="text-amber-200">! {t('izdelek.brezOdstopa')}</li> : <li>✓ {t('izdelek.odstop')}</li>}
           </ul>

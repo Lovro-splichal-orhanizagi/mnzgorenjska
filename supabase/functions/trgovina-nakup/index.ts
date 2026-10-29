@@ -194,7 +194,10 @@ Deno.serve(async (req) => {
 
   try {
     const t: Record<string, string> = r.digitalno ? {} : await tarifeTrgovine()
-    const ponudba = drzava && !r.digitalno ? tarifeZa(drzava, r.pismo).map((k) => t[k]).filter((id): id is string => !!id) : []
+    const blago = r.postavke.reduce((s, p) => s + (p.digitalni ? 0 : (p.cena + (p.doplacilo ?? 0)) * p.kolicina), 0)
+    const tarifa = (b: number) => (drzava && !r.digitalno ? tarifeZa(drzava, r.pismo, b).map((k) => t[k]).filter((id): id is string => !!id) : [])
+    // Brez brezplačne tarife v Stripe (katalog še ni pognan) raje navadna poštnina kot nobena.
+    const ponudba = tarifa(blago).length ? tarifa(blago) : tarifa(0)
     const izdelekId = await izdelekTrgovine()
 
     const meta = { app: 'slff-shop', narocilo_id: String(r.narocilo_id), oznaka: r.javna_oznaka }

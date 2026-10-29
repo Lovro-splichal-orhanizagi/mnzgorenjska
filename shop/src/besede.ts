@@ -9,7 +9,7 @@ const PRODAJALEC = 'SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica 
 export const TELEFON = '+386 40 773 385'
 export const TELEFON_POVEZAVA = `tel:${TELEFON.replace(/\s/g, '')}`
 /** Datum različice pogojev; kopija v trgovina-posta/sporocila.ts (smoke primerja). */
-export const POGOJI_VERZIJA = '18. 10. 2026'
+export const POGOJI_VERZIJA = '29. 10. 2026'
 
 export const SL = {
   'app.ime': 'SLFF Trgovina',
@@ -143,7 +143,7 @@ export const SL = {
   'izdelek.zDdv': 'Cena vključuje DDV.',
   'izdelek.dostava': 'Pošiljamo s Pošto Slovenije v vse države EU.',
   'izdelek.odstop': '14 dni za odstop od nakupa brez navedbe razloga.',
-  'izdelek.postnina': 'Poštnina: Slovenija {si}, ostale države EU {eu}.',
+  'izdelek.postnina': 'Brezplačna poštnina od {od}, sicer Slovenija {si}, ostale države EU {eu}.',
   'izdelek.slika': 'Slika {n}',
   'izdelek.poNarocilu': 'Izdelamo po naročilu: na pošto ga oddamo v 1–2 tednih.',
   'izdelek.brezOdstopa': 'Personaliziranih izdelkov ni mogoče vrniti (izdelek po meri).',
@@ -183,6 +183,8 @@ export const SL = {
   'kosarica.drzava': 'Država dostave',
   'kosarica.postnina': 'Poštnina',
   'kosarica.postninaOd': 'od {cena}',
+  'kosarica.brezplacno': 'Brezplačno',
+  'kosarica.doBrezplacne': 'Še {cena} do brezplačne poštnine.',
   'kosarica.postninaOpis': 'Nalepke pošljemo v Sloveniji s pismom, vse ostalo kot paket Pošte Slovenije. Končno poštnino vidiš in izbereš ob plačilu.',
   'kosarica.ddv': 'Cene vključujejo DDV. Poštnino in DDV po državi dostave dokončno izračunamo ob plačilu.',
   'kosarica.placaj': 'Na plačilo',
@@ -263,7 +265,7 @@ export const SL = {
   'pogoji.s2.naslov': '2. Uporaba pogojev in sklenitev pogodbe',
   'pogoji.s2.besedilo': 'Pogoji veljajo za vse nakupe v spletni trgovini shop.slff.eu. Kupec je lahko potrošnik ali pravna oseba; določbe o odstopu, skladnosti blaga in reševanju sporov, ki se sklicujejo na potrošnike, veljajo za potrošnike.\n\nKupec izbere izdelke v košarici, izbere državo dostave in nadaljuje na plačilo. Pred plačilom vidi vse izdelke, ceno z DDV, poštnino in skupni znesek ter potrdi te pogoje. Pogodba je sklenjena, ko je plačilo uspešno. Potrditev naročila z vsemi podatki pošljemo na e-naslov, ki ga kupec navede ob plačilu.\n\nPogodbo sklepamo v slovenskem ali angleškem jeziku; velja jezik, izbran ob nakupu. Naročilo hranimo v elektronski obliki; prijavljen kupec ga vidi pod "Moja naročila", vsak kupec pa ga ima v potrditvenem e-sporočilu.',
   'pogoji.s3.naslov': '3. Cene',
-  'pogoji.s3.besedilo': 'Cene so v evrih in vključujejo DDV. DDV obračunamo po stopnji države dostave; znesek DDV je prikazan pred plačilom. Poštnina ni vključena v ceno izdelka in je prikazana pred plačilom.\n\nVelja cena, prikazana ob oddaji naročila. Če bi bila cena zaradi očitne napake napačna, kupca obvestimo in mu omogočimo, da naročilo potrdi po pravi ceni ali od njega odstopi s polnim vračilom plačila.\n\nPopuste dajemo s promocijskimi kodami, ki se vnesejo na strani za plačilo. Koda velja za izdelke in pogoje, navedene ob njej, ne velja za poštnino in je ni mogoče zamenjati za gotovino.\n\nDarilni bon je koda, ki jo po plačilu pošljemo po e-pošti; dostave ni. Velja 1 leto od nakupa za izdelke v trgovini (ne za poštnino in druge darilne bone), uporabi se enkrat in v celoti: če je nakup manjši od vrednosti bona, ostanek ne ostane. Bona ni mogoče zamenjati za gotovino. V enem naročilu je mogoče kupiti največ 5 bonov.',
+  'pogoji.s3.besedilo': 'Cene so v evrih in vključujejo DDV. DDV obračunamo po stopnji države dostave; znesek DDV je prikazan pred plačilom. Poštnina ni vključena v ceno izdelka in je prikazana pred plačilom; za naročila izdelkov v vrednosti 50 € ali več (brez darilnih bonov, pred popustom) je brezplačna.\n\nVelja cena, prikazana ob oddaji naročila. Če bi bila cena zaradi očitne napake napačna, kupca obvestimo in mu omogočimo, da naročilo potrdi po pravi ceni ali od njega odstopi s polnim vračilom plačila.\n\nPopuste dajemo s promocijskimi kodami, ki se vnesejo na strani za plačilo. Koda velja za izdelke in pogoje, navedene ob njej, ne velja za poštnino in je ni mogoče zamenjati za gotovino.\n\nDarilni bon je koda, ki jo po plačilu pošljemo po e-pošti; dostave ni. Velja 1 leto od nakupa za izdelke v trgovini (ne za poštnino in druge darilne bone), uporabi se enkrat in v celoti: če je nakup manjši od vrednosti bona, ostanek ne ostane. Bona ni mogoče zamenjati za gotovino. V enem naročilu je mogoče kupiti največ 5 bonov.',
   'pogoji.s4.naslov': '4. Plačilo',
   'pogoji.s4.besedilo': 'Plača se vnaprej s plačilno kartico. Kartico lahko uporabite tudi prek digitalne denarnice (na primer Apple Pay ali Google Pay), če jo plačilna stran ponudi. Plačilo obdeluje Stripe Payments Europe, Ltd.; podatkov plačilne kartice ne prejmemo in ne hranimo.\n\nIzdelke rezerviramo za približno 30 minut od začetka plačila. Če plačilo v tem času ni opravljeno, se naročilo prekliče in zaloga sprosti.',
   'pogoji.s5.naslov': '5. Dostava',
@@ -570,7 +572,7 @@ export const EN: Record<Kljuc, string> = {
   'izdelek.zDdv': 'Price includes VAT.',
   'izdelek.dostava': 'Shipped with Pošta Slovenije to all EU countries.',
   'izdelek.odstop': '14 days to withdraw from the purchase without giving a reason.',
-  'izdelek.postnina': 'Shipping: Slovenia {si}, other EU countries {eu}.',
+  'izdelek.postnina': 'Free shipping from {od}, otherwise Slovenia {si}, other EU countries {eu}.',
   'izdelek.slika': 'Image {n}',
   'izdelek.poNarocilu': 'Made to order: we hand it to the post within 1–2 weeks.',
   'izdelek.brezOdstopa': 'Personalised products cannot be returned (made to your specification).',
@@ -610,6 +612,8 @@ export const EN: Record<Kljuc, string> = {
   'kosarica.drzava': 'Delivery country',
   'kosarica.postnina': 'Shipping',
   'kosarica.postninaOd': 'from {cena}',
+  'kosarica.brezplacno': 'Free',
+  'kosarica.doBrezplacne': 'Add {cena} more for free shipping.',
   'kosarica.postninaOpis': 'Stickers ship as a letter within Slovenia, everything else as a Pošta Slovenije parcel. You see and choose the final shipping at checkout.',
   'kosarica.ddv': 'Prices include VAT. Shipping and VAT for the delivery country are finalised at checkout.',
   'kosarica.placaj': 'Checkout',
@@ -690,7 +694,7 @@ export const EN: Record<Kljuc, string> = {
   'pogoji.s2.naslov': '2. Scope and conclusion of the contract',
   'pogoji.s2.besedilo': 'These terms apply to all purchases in the online shop shop.slff.eu. The buyer can be a consumer or a legal entity; provisions on withdrawal, conformity of goods and dispute resolution that refer to consumers apply to consumers.\n\nThe buyer puts products in the cart, chooses the delivery country and proceeds to checkout. Before paying, the buyer sees all items, the price including VAT, shipping and the total, and accepts these terms. The contract is concluded when the payment succeeds. We send the order confirmation with all details to the email address the buyer gives at checkout.\n\nThe contract is concluded in Slovenian or English; the language chosen at checkout governs. We keep the order electronically; a signed-in buyer sees it under "My orders", and every buyer has it in the confirmation email.',
   'pogoji.s3.naslov': '3. Prices',
-  'pogoji.s3.besedilo': 'Prices are in euro and include VAT. VAT is charged at the rate of the delivery country; the VAT amount is shown before payment. Shipping is not included in the product price and is shown before payment.\n\nThe price shown when the order is placed applies. If a price is wrong due to an obvious error, we inform the buyer and let them confirm the order at the correct price or withdraw with a full refund.\n\nDiscounts are given with promotion codes entered on the payment page. A code applies to the products and conditions stated with it, does not apply to shipping and cannot be exchanged for cash.\n\nA gift card is a code we email after payment; there is no delivery. It is valid for 1 year from purchase for products in the shop (not for shipping or other gift cards) and is used once and in full: if the purchase is smaller than the card value, no balance remains. A gift card cannot be exchanged for cash. At most 5 gift cards can be bought in one order.',
+  'pogoji.s3.besedilo': 'Prices are in euro and include VAT. VAT is charged at the rate of the delivery country; the VAT amount is shown before payment. Shipping is not included in the product price and is shown before payment; it is free for orders of products worth €50 or more (excluding gift cards, before discounts).\n\nThe price shown when the order is placed applies. If a price is wrong due to an obvious error, we inform the buyer and let them confirm the order at the correct price or withdraw with a full refund.\n\nDiscounts are given with promotion codes entered on the payment page. A code applies to the products and conditions stated with it, does not apply to shipping and cannot be exchanged for cash.\n\nA gift card is a code we email after payment; there is no delivery. It is valid for 1 year from purchase for products in the shop (not for shipping or other gift cards) and is used once and in full: if the purchase is smaller than the card value, no balance remains. A gift card cannot be exchanged for cash. At most 5 gift cards can be bought in one order.',
   'pogoji.s4.naslov': '4. Payment',
   'pogoji.s4.besedilo': 'Payment is made in advance by card. You can also use your card through a digital wallet (such as Apple Pay or Google Pay) if the payment page offers it. Payments are processed by Stripe Payments Europe, Ltd.; we do not receive or store card details.\n\nItems are reserved for about 30 minutes from the start of checkout. If payment is not completed within that time, the order is cancelled and the stock released.',
   'pogoji.s5.naslov': '5. Delivery',
