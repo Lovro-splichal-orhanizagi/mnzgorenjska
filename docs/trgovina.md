@@ -96,6 +96,9 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   primerja; brez te tarife v Stripe ostane navadna poštnina). `stripe-webhook` veja
   `slff-shop` (`stripe-webhook/trgovina.ts`): plačano → naročilo + mail +
   Discord; poteklo → sprosti.
+- Statistika: isti Umami kot slff.eu (`shop/src/analitika.ts`, `VITE_UMAMI_ID` ob
+  gradnji), poti s predpono `/shop`, dogodki `trgovina-kosarica`, `trgovina-placilo`,
+  `trgovina-kupljeno`; zasebnost `racun.pravno.trgovinaKaj`.
 - **Pošta**: `trgovina-posta` (Mailcow) — potrditev (z besedilom odstopa in
   obrazcem, trajni nosilec) in "poslano" s sledilno številko. Kliče jo webhook
   (servisni ključ) ali admin. Potrditev navede personalizacijo in rok izdelave (1–2 tedna);

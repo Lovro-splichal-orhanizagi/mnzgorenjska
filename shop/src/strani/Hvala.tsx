@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import grb from '../../../public/logo/slff-grb.png'
+import { dogodek } from '../analitika'
 import { t } from '../besede'
 import { izprazni, shraniPlacilo, zadnjePlacilo } from '../kosarica'
 import { useNaslov } from '../Okvir'
@@ -21,6 +22,7 @@ export function Hvala() {
     if (oznaka && zadnjePlacilo()?.oznaka === oznaka) {
       izprazni()
       shraniPlacilo(null)
+      dogodek('trgovina-kupljeno')
     }
   }, [oznaka])
 
