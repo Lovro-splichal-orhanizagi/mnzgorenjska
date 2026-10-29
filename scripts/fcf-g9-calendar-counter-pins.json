@@ -1,0 +1,3596 @@
+{
+  "version": 1,
+  "kind": "fcf-g9-reviewed-terminal-counter-pins",
+  "status": "FINALIZED",
+  "terminalRunId": "40851165521",
+  "sourceCommit": "a31d439f64f9b610993264b7639a8a5cb2fc35ee",
+  "actualSourceGETs": 301,
+  "lastSourceEndedUTC": "2026-10-29T10:15:26.653Z",
+  "maximumCumulativeSourceGETs": 478,
+  "records": [
+    {
+      "run": {
+        "id": 40851165521,
+        "run_attempt": 1,
+        "head_sha": "a31d439f64f9b610993264b7639a8a5cb2fc35ee",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T09:38:01Z",
+        "run_started_at": "2026-10-29T09:38:01Z",
+        "updated_at": "2026-10-29T10:18:15Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "70d397acd93b286e97849e4d0c295a8deb94596e1740f5a20954ed50183b2628",
+      "artifacts": [
+        {
+          "id": 12890020331,
+          "name": "fcf-missing-inventory-audit-es-ct-segona-g1-40851165521-1",
+          "size": 21913,
+          "digest": "sha256:d1f17e9929dce2ec4a2e95f26fb655cc748904d49ba762cda120777cf95f2ac4",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 339284,
+              "sha256": "038c5b13e3e2dd6b629da8b9ce952678332d92a09a4a6947f3c52b05f7913ded"
+            }
+          ]
+        },
+        {
+          "id": 12889561425,
+          "name": "fcf-missing-inventory-es-ct-segona-g1-40851165521-1",
+          "size": 2343279,
+          "digest": "sha256:9332204e4993fa5d0d41c2af4ad5c9d98c602229693dcd06e5b81b15e96a6ec3",
+          "members": [
+            {
+              "path": "acta-4109559.html",
+              "bytes": 441508,
+              "sha256": "d7a7b14549fdc03bb25a2c61be5ee26f492a75cbb3ca4205c6e004c076bf5d25"
+            },
+            {
+              "path": "acta-4109560.html",
+              "bytes": 171037,
+              "sha256": "2d1259e42deac76fde3dd41cebb9e9a78fb40512b46dacd71da789e5c2d0c145"
+            },
+            {
+              "path": "acta-4109561.html",
+              "bytes": 170892,
+              "sha256": "6a4f5e2a3c736273252b48f5fcca76a2f35b11a67c998cf6217c9c98e617117c"
+            },
+            {
+              "path": "acta-4109562.html",
+              "bytes": 170993,
+              "sha256": "2f07ad0578c4b4728a3b3a7a568fc295c706d6fcd4075547a366740559f20c2e"
+            },
+            {
+              "path": "acta-4109563.html",
+              "bytes": 171146,
+              "sha256": "e8535c8ae032d547fa98e3999a73cf947244c3dd75245101dcd9c6e6fdb3686e"
+            },
+            {
+              "path": "acta-4109564.html",
+              "bytes": 170810,
+              "sha256": "de7864b2ca657379d859d47eaaca4a4561b63a201d4732300dfe87b5b5c781a5"
+            },
+            {
+              "path": "acta-4109565.html",
+              "bytes": 170871,
+              "sha256": "db9f3bd68789fe7cc356e034f514859089efce0e585b29b30bfb38b608a9429e"
+            },
+            {
+              "path": "acta-4109566.html",
+              "bytes": 170901,
+              "sha256": "19cfb16ecf5f0449ee98da20026245a56d18cedcf585e0e3645d9d35c019c017"
+            },
+            {
+              "path": "acta-4109567.html",
+              "bytes": 170827,
+              "sha256": "5253d4b35dc46a86fb35fad324eedcbd280effc5a75cba1a1c583597053ffaf3"
+            },
+            {
+              "path": "acta-4109568.html",
+              "bytes": 171128,
+              "sha256": "bce8ca5e35a83e19a74cab25e7be2a2b292ff3f459b95bb7c277bc7f56fb238a"
+            },
+            {
+              "path": "acta-4109569.html",
+              "bytes": 170941,
+              "sha256": "d930ae86fdb99728bed60dc0f033ba932e3037c23564536000aa210f22d8a9a3"
+            },
+            {
+              "path": "acta-4109570.html",
+              "bytes": 170943,
+              "sha256": "033886f30f896fb0019af5b3a7134d4627a50f07386a589b95939a4098f006d5"
+            },
+            {
+              "path": "acta-4109571.html",
+              "bytes": 171138,
+              "sha256": "839034cb7b7161a646a341bed56f189da5d93598635f04c33fc3d5d05ae02ca0"
+            },
+            {
+              "path": "acta-4109572.html",
+              "bytes": 170773,
+              "sha256": "97c59e7ee74510aeb9fd60b388b9d580f9182ed2e2a27633172579012a187131"
+            },
+            {
+              "path": "acta-4109573.html",
+              "bytes": 170889,
+              "sha256": "1673b9b048eb2e97f89f639ddbb44bd9b9510e0340b3b33e65af92b60bd5c270"
+            },
+            {
+              "path": "acta-4109574.html",
+              "bytes": 170883,
+              "sha256": "dde282bd3e01c4326b4038c6f6c09292baa7cc36fc440a617a60e6de5252952c"
+            },
+            {
+              "path": "acta-4109575.html",
+              "bytes": 170941,
+              "sha256": "d37f3c010e230ea0edde1b9c8c0d05cc44ef17f424cca2f8411cd302c307751e"
+            },
+            {
+              "path": "acta-4109576.html",
+              "bytes": 170938,
+              "sha256": "1e198094c5d233ef9574fc174241efbe3c1c97349dbbe3c6062d405403425fa0"
+            },
+            {
+              "path": "acta-4109577.html",
+              "bytes": 170996,
+              "sha256": "6662aec8cb292037a00d540d727e18171464cd605e24234d7d19b8e1ca2d133d"
+            },
+            {
+              "path": "acta-4109578.html",
+              "bytes": 171224,
+              "sha256": "fd1517e559e9ea802d5000fa75fdab8037ddfcd06d63ab2faaa528560dced209"
+            },
+            {
+              "path": "acta-4109579.html",
+              "bytes": 170881,
+              "sha256": "9ab6fe83295089e1101844bf841ec21b58454156aff9681e214fa750545a2228"
+            },
+            {
+              "path": "acta-4109580.html",
+              "bytes": 170762,
+              "sha256": "e949dfd1ff10cedf04539b851d3fbf3e1a36848905cc9afb561815e997fc7c89"
+            },
+            {
+              "path": "acta-4109581.html",
+              "bytes": 170951,
+              "sha256": "5bc808045692ad2117048d41a920dea3ea81588987bc54bbcc8a5053f0af23a5"
+            },
+            {
+              "path": "acta-4109582.html",
+              "bytes": 170953,
+              "sha256": "da0c0a004ce437fbb7f8198ec3d61f379bbb49a18a2d4ad6c242784da41735be"
+            },
+            {
+              "path": "acta-4109583.html",
+              "bytes": 170975,
+              "sha256": "7e92d102a5d084ae4816afb560ddab05fb7a1659c31c58153186bc58f34519d7"
+            },
+            {
+              "path": "acta-4109584.html",
+              "bytes": 170789,
+              "sha256": "078efed197369d91b43aeb4aa64b0bdfcd0af09f6f948164a1df4434bc6e6a20"
+            },
+            {
+              "path": "acta-4109585.html",
+              "bytes": 171025,
+              "sha256": "e0751c9abcee6c3fb467ed58c9d502d2bd692ff399445bfa5f6a2989a1ede918"
+            },
+            {
+              "path": "acta-4109588.html",
+              "bytes": 170823,
+              "sha256": "f6f91775b76a94d98aed893f1c811862d1d414a0d6eb62e314cbfb03a23e8ea3"
+            },
+            {
+              "path": "acta-4109589.html",
+              "bytes": 170873,
+              "sha256": "8b183e8464cbe25d17f2822020c0214661c6408c3da46784e37c6fbe3611dc53"
+            },
+            {
+              "path": "acta-4109586.html",
+              "bytes": 171189,
+              "sha256": "22ff48200ea2c4f9e6b4076df135d77d882cff62bf2ff2346e2cda6f981e8874"
+            },
+            {
+              "path": "acta-4109587.html",
+              "bytes": 170979,
+              "sha256": "722aae3c82fe61649b2258ab914019be1a78cd929eefb5239f642418101c1f31"
+            },
+            {
+              "path": "acta-4109590.html",
+              "bytes": 170977,
+              "sha256": "8d91bf4f251e4c574fbcd76c8b6f781ff67e35bcc0117d37197d03dcc024c94f"
+            },
+            {
+              "path": "acta-4109591.html",
+              "bytes": 170837,
+              "sha256": "6bb7deae3330402ae65c6d3751c9e215bf4ae8a79401c8cbf791e3fc74769d42"
+            },
+            {
+              "path": "acta-4109592.html",
+              "bytes": 170900,
+              "sha256": "485952a146db48d78a77a9e23d6ce6e38b619be075299d1653cef5dcf5109e42"
+            },
+            {
+              "path": "acta-4109593.html",
+              "bytes": 171270,
+              "sha256": "22951c0509dc870e6d56562079fbcd03842d37c368538aec8bc02631fefbcae3"
+            },
+            {
+              "path": "acta-4109594.html",
+              "bytes": 170972,
+              "sha256": "5978b548775e649b565e953c1ab775a25774f2c41a6b80eccfbdc1ffb77eb6df"
+            },
+            {
+              "path": "acta-4109595.html",
+              "bytes": 170891,
+              "sha256": "49f5e640a8dae359b3069619ccadb7b4cdef96561f49c6d7f785c54f997aa15f"
+            },
+            {
+              "path": "acta-4109596.html",
+              "bytes": 170878,
+              "sha256": "e6ffc8d7a7721e6c643eb5c8a30a1fa74f69f665ba4d089f3adf7204a0745b25"
+            },
+            {
+              "path": "acta-4109597.html",
+              "bytes": 170807,
+              "sha256": "d17f91bef85ee68ed39065590232910577ff612caab2c2722eab923f95abd52d"
+            },
+            {
+              "path": "acta-4109598.html",
+              "bytes": 171025,
+              "sha256": "0cd723536ac2bbc8c9c68403974813dc27bf21da46869f442e86cfaebc579cb0"
+            },
+            {
+              "path": "acta-4109599.html",
+              "bytes": 170915,
+              "sha256": "de7d1a466c5cedd002a8e9d17d9c3bbdebc8c2d687558cb3890ad67d4d9a0943"
+            },
+            {
+              "path": "acta-4109600.html",
+              "bytes": 170872,
+              "sha256": "03daf178deffeb490a482a3f3ad70630c2cd07e6e3af8571d823e83cc74329af"
+            },
+            {
+              "path": "acta-4109601.html",
+              "bytes": 171037,
+              "sha256": "59a597724ee937d456a639a1945e4960418d8f78caa4880ed0e92474b28476dc"
+            },
+            {
+              "path": "acta-4109602.html",
+              "bytes": 171061,
+              "sha256": "1793eb81759f832e8dd05edb81a14af716e71f9b28227f84a63e6fef90b8c639"
+            },
+            {
+              "path": "acta-4109603.html",
+              "bytes": 171010,
+              "sha256": "66b08d7da715be345f00efa826aac79f12e3f84d8e588466a4736be884321235"
+            },
+            {
+              "path": "acta-4109605.html",
+              "bytes": 170911,
+              "sha256": "cfa48a17200b5c8e9c9fe8d4fc2fa08adeb6c96b76255380e8f011cf4daec909"
+            },
+            {
+              "path": "acta-4109604.html",
+              "bytes": 170941,
+              "sha256": "22f53d93f56e694a7694c5688d2dd42001fc21ea7283180959935746e3e79f1c"
+            },
+            {
+              "path": "acta-4109606.html",
+              "bytes": 170827,
+              "sha256": "98085d0feb2adcf6b9b74929f5bd5336029458444210a1d99b331ba5a52dedd8"
+            },
+            {
+              "path": "acta-4109607.html",
+              "bytes": 170936,
+              "sha256": "93353bd937f85137f93eab8d283a34085e4d8e52c10a0145059b82cdd9ded720"
+            },
+            {
+              "path": "acta-4109608.html",
+              "bytes": 171169,
+              "sha256": "7465cf9d58c0d47d45d53a86fc986ced864c42acd88176858a38d238bffa0067"
+            },
+            {
+              "path": "acta-4109609.html",
+              "bytes": 170876,
+              "sha256": "f8ca912bcbee4631b437b9eb1e180abf10d53358cc02b3bde6da214cbef845e7"
+            },
+            {
+              "path": "acta-4109610.html",
+              "bytes": 171015,
+              "sha256": "60a99e772aaee5718226bf387a09b4fc5b3628bc80f407c72221c8802be99a2f"
+            },
+            {
+              "path": "acta-4109611.html",
+              "bytes": 170932,
+              "sha256": "5670a6f4d2a3b7b6171712a0d43903aae60fbe8798733c87e3ae6d1f216dc302"
+            },
+            {
+              "path": "acta-4109612.html",
+              "bytes": 170860,
+              "sha256": "9196304c6003e55b6250b705d5d1280fa0d77d20fd6baadd5aef0f89b2d9e23e"
+            },
+            {
+              "path": "acta-4109613.html",
+              "bytes": 171013,
+              "sha256": "c93c05b8b3db1e1d2c3afbb5c935ca5616522c94b44b8ebc829771eae0655fee"
+            },
+            {
+              "path": "acta-4109614.html",
+              "bytes": 170769,
+              "sha256": "9bfe3876e5e404ec650e3646c64dec7e4912a013c32e77831387a354b5237f8c"
+            },
+            {
+              "path": "acta-4109615.html",
+              "bytes": 170922,
+              "sha256": "f0c4f35acc8b59859e0b20e52605fc17ffa2c19b309cb3effb2f30d0de55b616"
+            },
+            {
+              "path": "acta-4109616.html",
+              "bytes": 171163,
+              "sha256": "a53009f7a0756d6471375f2d5a6efaa7c1a72c43ae0e2d8eca146a0d4a4938ee"
+            },
+            {
+              "path": "acta-4109617.html",
+              "bytes": 170908,
+              "sha256": "654c60a36957d209b48c683ee4b91d92a4aba344e1921a556db0f318f810b38b"
+            },
+            {
+              "path": "acta-4109618.html",
+              "bytes": 170858,
+              "sha256": "625c6cfcbacbac77cb3534581925ce2a33b368d0f1f642df4194fd2b087b21d3"
+            },
+            {
+              "path": "acta-4109619.html",
+              "bytes": 171064,
+              "sha256": "0b7f9788e8423dac0331ac4f937877a822e60b66a6794a1e2b91f4d72541d3dc"
+            },
+            {
+              "path": "acta-4109620.html",
+              "bytes": 170993,
+              "sha256": "ead57da3db68fd221c6a4b464235bdebced43c1a5fdaedd83bf8a44bda916bef"
+            },
+            {
+              "path": "acta-4109621.html",
+              "bytes": 170895,
+              "sha256": "7f5a8d880c7911d1b5c26d67bed94eb6fb15a5d1c03fc5dd205020a3df596158"
+            },
+            {
+              "path": "acta-4109622.html",
+              "bytes": 170870,
+              "sha256": "aba708c8484591328cfc420eceb43b2acd12da9a5869d485e3f57228df5b03ef"
+            },
+            {
+              "path": "acta-4109623.html",
+              "bytes": 171159,
+              "sha256": "04a22eefcf0002d11629d06030c3aafe2a07582ea088ae1dc69c6e8304ec2703"
+            },
+            {
+              "path": "acta-4109624.html",
+              "bytes": 170912,
+              "sha256": "2db59f97cf25a13160e8e1de0a05e0b900991f34bdda7766c1f1640e300ebf8e"
+            },
+            {
+              "path": "acta-4109625.html",
+              "bytes": 170914,
+              "sha256": "14684463e3a9225587d5390e862d6acdc6603b17be1808a471f66cde4c0cd16d"
+            },
+            {
+              "path": "acta-4109626.html",
+              "bytes": 170927,
+              "sha256": "bed0d6df118efa0fe0c9d050fa5df41bc344b0fe4319e45a2060149755848285"
+            },
+            {
+              "path": "acta-4109627.html",
+              "bytes": 170921,
+              "sha256": "95253d2a1af9e74c8d8f3a73406b2be84868c799cc7b4426a9ae29e90371e0bc"
+            },
+            {
+              "path": "attempts.ndjson",
+              "bytes": 62812,
+              "sha256": "e219720b10aa45e6d33592e227e1e96743d7a8395059dbdd83c652fc00471865"
+            },
+            {
+              "path": "manifest.json",
+              "bytes": 124265,
+              "sha256": "246eaaba0c495fea836a8be5107f27f162df21555d75311f115f61ea7284272d"
+            }
+          ]
+        },
+        {
+          "id": 12889347441,
+          "name": "fcf-missing-inventory-final-40851165521-1",
+          "size": 843,
+          "digest": "sha256:ccfd9ea41a0628b12123e88d284ae6de8ea1bed2f6ca9f038ed712d1e07d87a9",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 1314,
+              "sha256": "c714438d3a5d2338619c7954add838dd1fdd0ab59d7d558cc2792ef168628db8"
+            }
+          ]
+        },
+        {
+          "id": 12889006166,
+          "name": "fcf-inventory-consumption-40851165521-1",
+          "size": 665,
+          "digest": "sha256:8675846bb3b21a6b2244ead73bf8bab4d5e96b67c2dd4ecd7b3ed45f204ccfac",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 923,
+              "sha256": "27eec08a2b1c7f11f8da19631256f0a593e679a26143bbc63528949985006202"
+            }
+          ]
+        },
+        {
+          "id": 12886863743,
+          "name": "fcf-inventory-approval-40851165521-1",
+          "size": 46773,
+          "digest": "sha256:3327c47c356f01b7ae72c157445bbae4edd1260a9f4a75b27b5ddc7ce0b30001",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 486840,
+              "sha256": "f6182b8104910402fc227ab37c8b348ed1ef904ab0393385fe108c7192ff156b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": {
+        "id": 40737060608,
+        "run_attempt": 1,
+        "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-28T17:34:49Z",
+        "run_started_at": "2026-10-28T17:34:49Z",
+        "updated_at": "2026-10-28T18:12:17Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "ae0742e6b972af53d98c064293d74fbb3ab56cb9f16584ba3fa5a644865f7b89",
+      "artifacts": [
+        {
+          "id": 12837343072,
+          "name": "fcf-inventory-approval-40737060608-1",
+          "size": 24080,
+          "digest": "sha256:cf57e7d5281fc0e793585dcc01e8125029ac1f259368aed488bfb32e9ade310a",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 215209,
+              "sha256": "5af302ba1603f2ba07a5649f33fe5be8f1a0dcdce4b1dec01681237778f2f243"
+            }
+          ]
+        },
+        {
+          "id": 12837623049,
+          "name": "fcf-inventory-consumption-40737060608-1",
+          "size": 617,
+          "digest": "sha256:da058144bfb375b23deb5abe8549c453d8180d7bd00061c8cd0f42dd007addca",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 747,
+              "sha256": "6722a75ac4cf7568e5eb8d9dd512ac1895c713c871ca61d907b8bc39c37b02c5"
+            }
+          ]
+        },
+        {
+          "id": 12840546673,
+          "name": "fcf-missing-inventory-diagnostic-es-ct-segona-g1-40737060608-1",
+          "size": 996400,
+          "digest": "sha256:77c6e276d6331552b2c26e412b3196d8b95fcb0f9d9d9c6559e4cf666b1c4fe7",
+          "members": [
+            {
+              "path": "acta-4109388.html",
+              "bytes": 428783,
+              "sha256": "a873990c0a0d48c4a88eab64befb2df65804f3cd9dc2a116d9bf1c653711f548"
+            },
+            {
+              "path": "acta-4109389.html",
+              "bytes": 438421,
+              "sha256": "0f52806dcf7b64eaafcf54a77bb13dea180d42e73ad0278f8baaec083a993fb5"
+            },
+            {
+              "path": "acta-4109390.html",
+              "bytes": 462554,
+              "sha256": "d8519a02fbf44a7add462a202b196211d0e14c6122086bb25893c7527a6a58f6"
+            },
+            {
+              "path": "acta-4109391.html",
+              "bytes": 449465,
+              "sha256": "5f5db68bb02638d1c7374198fae0b23cae76879746cc1d2d1f03f9c4d2eeafb2"
+            },
+            {
+              "path": "acta-4109392.html",
+              "bytes": 415658,
+              "sha256": "5bbfd063e84d18a077db7b997a11da101900242c2bfc6f52c5eaac9a698be98d"
+            },
+            {
+              "path": "acta-4109393.html",
+              "bytes": 460970,
+              "sha256": "664d8ce166821751286cf2a86d74eb72a0a01f9c4337030911378ce18a29f377"
+            },
+            {
+              "path": "acta-4109394.html",
+              "bytes": 482177,
+              "sha256": "cee891e31c30ce0ba070415cd6c6444a5fb1448864e1584b8b5a9183f748db79"
+            },
+            {
+              "path": "acta-4109395.html",
+              "bytes": 459926,
+              "sha256": "90d4b266fbbe398a3c295416572245ef39ae2552c45b386832e981de26ff7e6d"
+            },
+            {
+              "path": "acta-4109396.html",
+              "bytes": 442763,
+              "sha256": "13abf86822b8a96b98a973ac3866ba3410eca7248f0ef1f2161d53d9c2b1ddcf"
+            },
+            {
+              "path": "acta-4109397.html",
+              "bytes": 439514,
+              "sha256": "c7b8001636f78e70d85c55108bc2b0258030ac48b6619907e13f4469a2c685f8"
+            },
+            {
+              "path": "acta-4109398.html",
+              "bytes": 433593,
+              "sha256": "bcc78d7ad8c3ec6405c3a6c1f43fb1cdaef66d89278f28e330e043930c9a1dc8"
+            },
+            {
+              "path": "acta-4109399.html",
+              "bytes": 449302,
+              "sha256": "5bd1d641bab4a278e1cad486106e1c4799d0ce113704fee8f2dbcc596517fda6"
+            },
+            {
+              "path": "acta-4109400.html",
+              "bytes": 454130,
+              "sha256": "dccdbcadbd508413a3dd9727368bba1e0c687572d68706b0d1b7d140c180c599"
+            },
+            {
+              "path": "acta-4109401.html",
+              "bytes": 440254,
+              "sha256": "ee24131b7c48bb6a40ee7a58b02df8b375e23e1cd478b4347f548fe6ad4816e6"
+            },
+            {
+              "path": "acta-4109402.html",
+              "bytes": 439738,
+              "sha256": "ba503f4f47255abf226950c793b045e636f1c66a6885c3132a9b7417546f15c0"
+            },
+            {
+              "path": "acta-4109403.html",
+              "bytes": 451178,
+              "sha256": "9ad1b7a32949fea6cd3671e8ea5a2b241a3d7493686546e4a4add6c4896c9c87"
+            },
+            {
+              "path": "acta-4109404.html",
+              "bytes": 170811,
+              "sha256": "675d44fb7c46692edfb73d48a5c2654c4335230aafb648b91757b091394b5282"
+            },
+            {
+              "path": "acta-4109405.html",
+              "bytes": 468029,
+              "sha256": "46c9b12ea259d3f3594f19aaf270dbdf6c5f2dcc166b8a4c277a77453a85a36e"
+            },
+            {
+              "path": "acta-4109406.html",
+              "bytes": 425761,
+              "sha256": "32195ca1933848b6fd21be7415a9842074479022f77b805d857176ce17f05c9c"
+            },
+            {
+              "path": "acta-4109407.html",
+              "bytes": 490089,
+              "sha256": "434ff7c30164eb612761c2d419b41246f01def3177c0be55d7570f0292327da1"
+            },
+            {
+              "path": "acta-4109408.html",
+              "bytes": 456473,
+              "sha256": "878e92846f80e6c08950ce1a35b334c37efce69ce0e4599df76a093dae1af165"
+            },
+            {
+              "path": "acta-4109409.html",
+              "bytes": 171201,
+              "sha256": "b32f8b1ccc5c3ee3534495ed8d7f5bd3300e3e908a755096917bd50b392611b7"
+            },
+            {
+              "path": "acta-4109410.html",
+              "bytes": 171068,
+              "sha256": "7c2335342065b7e0a77b54be97fe544c3549e165bd504ef1197a2d377fbe4b28"
+            },
+            {
+              "path": "manifest.json",
+              "bytes": 98665,
+              "sha256": "ca48685e15663bde86c38b4d010582b3c516b351b0f9bcd6b1041b3573283f71"
+            }
+          ]
+        },
+        {
+          "id": 12838489841,
+          "name": "fcf-missing-inventory-final-40737060608-1",
+          "size": 3362,
+          "digest": "sha256:e94cd7d05bd367dac1f103ebb7b17e31ad31279a629e1bee0e97a674bf8e938d",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 12179,
+              "sha256": "82d5f8f130c2408a4d2c21fd36170009e3a1cf11bfc4c7dbdf94605e33029d1a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": {
+        "id": 39170648473,
+        "run_attempt": 1,
+        "head_sha": "42879db003006f61feb4a36070e6ea2e584712ad",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-18T22:04:49Z",
+        "run_started_at": "2026-10-18T22:04:49Z",
+        "updated_at": "2026-10-18T22:53:58Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "1dca488fd60a26dd9acf775cdaa2d6cdf50e97e4e5b171612bcf86f861fcb0bc",
+      "artifacts": [
+        {
+          "id": 12152467795,
+          "name": "fcf-inventory-consumption-39170648473-1",
+          "size": 834,
+          "digest": "sha256:b1bd7eed32b1b7c8f63470642b8f328618b53d5ef5f05653f8804348c47ff3c6",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 1271,
+              "sha256": "ff83c4506975686aef79f720cd76a4254bd1df53904546f866f428af4da9f8c7"
+            }
+          ]
+        },
+        {
+          "id": 12153532999,
+          "name": "fcf-missing-inventory-final-39170648473-1",
+          "size": 1104,
+          "digest": "sha256:dd4d0a138da9921489dad1fc6ab29bb046cf0ff186214b3b59a3e6813fd0fa2a",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 3084,
+              "sha256": "1ae5d1b21fe9d5d3bc66f1073dbf14fe73bd64c23e955f4c925f77ae1fb0b4d9"
+            }
+          ]
+        },
+        {
+          "id": 12153840846,
+          "name": "fcf-missing-inventory-diagnostic-es-ct-segona-g1-39170648473-1",
+          "size": 790961,
+          "digest": "sha256:303d15eaffc5eafe32aa7df57ce6a2555e7114565b68f2c1d7a0a440b49c31e3",
+          "members": [
+            {
+              "path": "acta-4109388.html",
+              "bytes": 458406,
+              "sha256": "eb3b14de3d6077f4fb896cb4a4d2b96d76eb85db8853889e9871b7f74e73e770"
+            },
+            {
+              "path": "acta-4109389.html",
+              "bytes": 468044,
+              "sha256": "5f102da312280ff3f4ff5f65bf067e8f71e9f0301c5bae5b578d81ed02f93e97"
+            },
+            {
+              "path": "acta-4109390.html",
+              "bytes": 492177,
+              "sha256": "4c67b3016a28e57fe17962150568f0161803b5d5a58fe82591145cde39e5b05b"
+            },
+            {
+              "path": "acta-4109391.html",
+              "bytes": 479088,
+              "sha256": "9625262b639552cbf6effd97bc52a8324dc3e41f0f7911307edfeda2d19c9b50"
+            },
+            {
+              "path": "acta-4109392.html",
+              "bytes": 445281,
+              "sha256": "56d6285d4360cb2a17d04af0f178c44b71346dacaecd2d734a0ccbef2cc2cd57"
+            },
+            {
+              "path": "acta-4109394.html",
+              "bytes": 511800,
+              "sha256": "28e0779f0b5e3b3dd42c3ed51f7a9212e1174110e146f09bafc5a65214b30962"
+            },
+            {
+              "path": "acta-4109393.html",
+              "bytes": 490593,
+              "sha256": "e9a8136d3b44b90f6825b8f8f05245668835b9567aed4c32f90c3b3764a8b08d"
+            },
+            {
+              "path": "acta-4109395.html",
+              "bytes": 489549,
+              "sha256": "93c9440733d9fd575e75cfefcca7281edd5089aa1d1ba641de8ae81ce7243d12"
+            },
+            {
+              "path": "acta-4109396.html",
+              "bytes": 472386,
+              "sha256": "1f3a8af2b32d891ba23c79a421f37c1ba8f23d09d264f749cadfd97b46ef2b4d"
+            },
+            {
+              "path": "acta-4109397.html",
+              "bytes": 469137,
+              "sha256": "ff6342901730ad37a098df33ea50aa3aca1345ad3539a819574a996cd9b9d2ef"
+            },
+            {
+              "path": "acta-4109398.html",
+              "bytes": 463216,
+              "sha256": "64f3f1332f916c22894370f843dc12c0453f02eaf4e8c18487e037bae3d89555"
+            },
+            {
+              "path": "acta-4109399.html",
+              "bytes": 478925,
+              "sha256": "b2b4171754283dc5097c3633c4eec86a1574055bbf50e2611f058ee0944b2f6d"
+            },
+            {
+              "path": "acta-4109400.html",
+              "bytes": 483753,
+              "sha256": "4d02f1f6094f61f03e7fe89fb292a53a5fc6f9ae3720e6287ece4eaac6a8cd76"
+            },
+            {
+              "path": "acta-4109401.html",
+              "bytes": 469877,
+              "sha256": "0c46d668f2414660d9146d97b238307ec691e42902fe6dc66419a5c5e75b92a3"
+            },
+            {
+              "path": "acta-4109402.html",
+              "bytes": 469361,
+              "sha256": "cb81de8ae6782fbf79beefb5ac1d7721820da79fc2855d70fc179b276539327e"
+            },
+            {
+              "path": "acta-4109403.html",
+              "bytes": 480801,
+              "sha256": "3645b4dd955994e6c4ec6f254eb583b68eabcfffa2f9566dabbee6dee8a174bb"
+            },
+            {
+              "path": "acta-4109404.html",
+              "bytes": 200434,
+              "sha256": "1a42a49bd0b55d0bd3a654a6e15b65f430a2c132e28813899205d394f05244dc"
+            },
+            {
+              "path": "manifest.json",
+              "bytes": 86353,
+              "sha256": "cd066eb438cfc14063adf24866101b4cd24fc13052af8c308cc9058d8d9e5521"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": {
+        "id": 39178021024,
+        "run_attempt": 1,
+        "head_sha": "15bde29fecf5a2f110e140a0a728f2e5558e12e9",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-18T23:48:11Z",
+        "run_started_at": "2026-10-18T23:48:11Z",
+        "updated_at": "2026-10-18T23:52:03Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "eade05fa463b288fd85bc89a1ecd47d01f7748de5e921579d06bf91b32c510f8",
+      "artifacts": [
+        {
+          "id": 12155480417,
+          "name": "fcf-inventory-consumption-39178021024-1",
+          "size": 612,
+          "digest": "sha256:d9d70cd358829e194737947d8840aba488070e53068f98994ac32ff2bd4765f5",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 741,
+              "sha256": "6d3378ff580c69a168b8a92019537706d59cd69b011b0a6dde1924c93b66dd2c"
+            }
+          ]
+        },
+        {
+          "id": 12155740077,
+          "name": "fcf-missing-inventory-diagnostic-es-ct-tercera-g9-39178021024-1",
+          "size": 285028,
+          "digest": "sha256:01e03020c38a7f7591e3359a71302610c59f722eb69edc31b3e1a543d8d22337",
+          "members": [
+            {
+              "path": "acta-4118349.html",
+              "bytes": 479225,
+              "sha256": "97f6a9c2c622786242d2eb7fa482defb5c63893513a67a081b5de440650af6b1"
+            },
+            {
+              "path": "acta-4118351.html",
+              "bytes": 476923,
+              "sha256": "2965a5eb0662a18df23ab924f755ab216fd11f27c36cfee1e57cb5a48a3074af"
+            },
+            {
+              "path": "acta-4118350.html",
+              "bytes": 460824,
+              "sha256": "723aff020eff196a217a89975a651d419064218ef65a343ff918cb53c018fb02"
+            },
+            {
+              "path": "acta-4118352.html",
+              "bytes": 476814,
+              "sha256": "1e8d50d487be699cac45c3c2dc4658d3a9b16983fd5203b5845dc1339fe7351c"
+            },
+            {
+              "path": "acta-4118353.html",
+              "bytes": 495086,
+              "sha256": "21ecfae89643a6620a4008be1f878a1ae4736bdb0087b2c6acf0c358e4a09064"
+            },
+            {
+              "path": "acta-4118354.html",
+              "bytes": 455851,
+              "sha256": "f3789fc4103d36d2878a573b9574442d32ad491236f3b4d6fd380ea4aaa07556"
+            },
+            {
+              "path": "manifest.json",
+              "bytes": 65516,
+              "sha256": "57411963e5d0a98f8451a3c4c6f3ed1bdbc3d1a7bd05188f9f77f06a8aed4167"
+            }
+          ]
+        },
+        {
+          "id": 12155247162,
+          "name": "fcf-missing-inventory-final-39178021024-1",
+          "size": 1764,
+          "digest": "sha256:571bc8e76b6472c724f77da4e1196314b07bf75ad80e3c0f29f540300f59c981",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 4631,
+              "sha256": "18701a9b732865afc02f494a53b29af9fa446ffaf27e19d3e1b6b49d1c4846cc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": {
+        "id": 39169392573,
+        "run_attempt": 1,
+        "head_sha": "0730a43cd4b9268f1bb74fc0f85cc3234535f6dd",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-18T21:47:38Z",
+        "run_started_at": "2026-10-18T21:47:38Z",
+        "updated_at": "2026-10-18T21:47:53Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "27563a549cd3da5a6f23f03cab1693c64ae137a820039e327b870dd382e49c4e",
+      "artifacts": [
+        {
+          "id": 12151034288,
+          "name": "fcf-inventory-seed-39169392573-1",
+          "size": 155942,
+          "digest": "sha256:da1824d1bd253a0e002aaf1557ccb550850616f87b33ed86a270fc0baec01a88",
+          "members": [
+            {
+              "path": "acta-4118352.html",
+              "bytes": 476814,
+              "sha256": "1e8d50d487be699cac45c3c2dc4658d3a9b16983fd5203b5845dc1339fe7351c"
+            },
+            {
+              "path": "acta-4118358.html",
+              "bytes": 441280,
+              "sha256": "e69af6b2765dbed7ebe3b57535beb1ce259c7d77ed9cb7f90d9cb4998afd153a"
+            },
+            {
+              "path": "acta-4109388.html",
+              "bytes": 458406,
+              "sha256": "eb3b14de3d6077f4fb896cb4a4d2b96d76eb85db8853889e9871b7f74e73e770"
+            },
+            {
+              "path": "manifest.json",
+              "bytes": 2886,
+              "sha256": "4245168dd940b830186cc0534a6b31de8ad3d60ea55d648e50c1883000e5c9e7"
+            },
+            {
+              "path": "original-receipts.json",
+              "bytes": 210558,
+              "sha256": "08e25572fd373c3e5ee2a5314cc3d8a049a0ba56057cccff5b8191f88f9e666a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": {
+        "id": 39238757730,
+        "run_attempt": 1,
+        "head_sha": "e010bfc63eeb561116ff33293e6aabafb77d7168",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-19T10:37:17Z",
+        "run_started_at": "2026-10-19T10:37:17Z",
+        "updated_at": "2026-10-19T10:54:48Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "47bd277a160b0c3644cb8bf7da956194228176347e711d1ca1be715e27907c6a",
+      "artifacts": [
+        {
+          "id": 12179959409,
+          "name": "fcf-inventory-consumption-39238757730-1",
+          "size": 605,
+          "digest": "sha256:73ed80ab7c01119484ff4239d7bd5aa4926180f5bb7e8892acbb6a3a3f6173b4",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 731,
+              "sha256": "4196620e54a0f275f3d1ccbf3ce686c76a8913a9d21a13d4e1f3c28890cb9e1f"
+            }
+          ]
+        },
+        {
+          "id": 12180422913,
+          "name": "fcf-missing-inventory-diagnostic-es-ct-tercera-g9-39238757730-1",
+          "size": 782178,
+          "digest": "sha256:b64dc03b81efb30917639c2256db62e1a2f6eab6e00c442996a5575172e48a5b",
+          "members": [
+            {
+              "path": "acta-4118349.html",
+              "bytes": 479225,
+              "sha256": "97f6a9c2c622786242d2eb7fa482defb5c63893513a67a081b5de440650af6b1"
+            },
+            {
+              "path": "acta-4118351.html",
+              "bytes": 476923,
+              "sha256": "2965a5eb0662a18df23ab924f755ab216fd11f27c36cfee1e57cb5a48a3074af"
+            },
+            {
+              "path": "acta-4118350.html",
+              "bytes": 460824,
+              "sha256": "723aff020eff196a217a89975a651d419064218ef65a343ff918cb53c018fb02"
+            },
+            {
+              "path": "acta-4118352.html",
+              "bytes": 476814,
+              "sha256": "1e8d50d487be699cac45c3c2dc4658d3a9b16983fd5203b5845dc1339fe7351c"
+            },
+            {
+              "path": "acta-4118353.html",
+              "bytes": 495086,
+              "sha256": "21ecfae89643a6620a4008be1f878a1ae4736bdb0087b2c6acf0c358e4a09064"
+            },
+            {
+              "path": "acta-4118354.html",
+              "bytes": 455851,
+              "sha256": "f3789fc4103d36d2878a573b9574442d32ad491236f3b4d6fd380ea4aaa07556"
+            },
+            {
+              "path": "acta-4118355.html",
+              "bytes": 470470,
+              "sha256": "9517b6542545a30d0eeb22f2a773738ba6855a3b1f4c2cf0561f9873d4dd3589"
+            },
+            {
+              "path": "acta-4118356.html",
+              "bytes": 489092,
+              "sha256": "c228c82a90a22a1836ecf37d7d52aae2cdb22c785724584ba892556845326a74"
+            },
+            {
+              "path": "acta-4118357.html",
+              "bytes": 467522,
+              "sha256": "3ded43c4fd4dc58c748205b7ea707fce3c2a3026a52182b03ee3df766f52f11a"
+            },
+            {
+              "path": "acta-4118359.html",
+              "bytes": 381791,
+              "sha256": "5c5ab6e8b1029901c9b0067e43de62cb57f49a7c67fc1a80b859c45c2e0ca40b"
+            },
+            {
+              "path": "acta-4118358.html",
+              "bytes": 441280,
+              "sha256": "e69af6b2765dbed7ebe3b57535beb1ce259c7d77ed9cb7f90d9cb4998afd153a"
+            },
+            {
+              "path": "acta-4118360.html",
+              "bytes": 423408,
+              "sha256": "c933b3b7b9e5b1a83a7573840ebfbf8292561b58f099521bd3670bbe926d27d3"
+            },
+            {
+              "path": "acta-4118361.html",
+              "bytes": 441770,
+              "sha256": "b1560da2fc1145e2f243946f3d5c5b3ce48788a96cf9fc3e45389ce169194016"
+            },
+            {
+              "path": "acta-4118362.html",
+              "bytes": 420644,
+              "sha256": "0250bfcd3b11df60dfceb71c8b7854fd4a5bdd3b6d0c8c9a14eea8953b60e086"
+            },
+            {
+              "path": "acta-4118363.html",
+              "bytes": 460736,
+              "sha256": "1dd86138c48c7724af3e8aa6ccd3285057e45830fc520884633f709265e5f703"
+            },
+            {
+              "path": "acta-4118364.html",
+              "bytes": 483076,
+              "sha256": "827f73401b109f72361345175156ef367d7c68e703f131d7786b8adb7ab4ca87"
+            },
+            {
+              "path": "acta-4118365.html",
+              "bytes": 200653,
+              "sha256": "9fb95c2cdd259255fbbe2302988695281ef33421492bbc575e6a9626a3f0bfe8"
+            },
+            {
+              "path": "manifest.json",
+              "bytes": 85001,
+              "sha256": "40e347c1b396c7406655535383b107758d0fd2146f7bed17207ba866d2d22ffa"
+            }
+          ]
+        },
+        {
+          "id": 12181255579,
+          "name": "fcf-missing-inventory-diagnostic-es-ct-segona-g1-39238757730-1",
+          "size": 1016078,
+          "digest": "sha256:5a7c28a6af52f299df3eac0d22d7db82032aa574df4d8fd72852f026ad32d58d",
+          "members": [
+            {
+              "path": "acta-4109388.html",
+              "bytes": 458406,
+              "sha256": "eb3b14de3d6077f4fb896cb4a4d2b96d76eb85db8853889e9871b7f74e73e770"
+            },
+            {
+              "path": "acta-4109389.html",
+              "bytes": 468044,
+              "sha256": "5f102da312280ff3f4ff5f65bf067e8f71e9f0301c5bae5b578d81ed02f93e97"
+            },
+            {
+              "path": "acta-4109390.html",
+              "bytes": 492177,
+              "sha256": "4c67b3016a28e57fe17962150568f0161803b5d5a58fe82591145cde39e5b05b"
+            },
+            {
+              "path": "acta-4109391.html",
+              "bytes": 479088,
+              "sha256": "9625262b639552cbf6effd97bc52a8324dc3e41f0f7911307edfeda2d19c9b50"
+            },
+            {
+              "path": "acta-4109392.html",
+              "bytes": 445281,
+              "sha256": "56d6285d4360cb2a17d04af0f178c44b71346dacaecd2d734a0ccbef2cc2cd57"
+            },
+            {
+              "path": "acta-4109393.html",
+              "bytes": 490593,
+              "sha256": "e9a8136d3b44b90f6825b8f8f05245668835b9567aed4c32f90c3b3764a8b08d"
+            },
+            {
+              "path": "acta-4109394.html",
+              "bytes": 511800,
+              "sha256": "28e0779f0b5e3b3dd42c3ed51f7a9212e1174110e146f09bafc5a65214b30962"
+            },
+            {
+              "path": "acta-4109395.html",
+              "bytes": 489549,
+              "sha256": "93c9440733d9fd575e75cfefcca7281edd5089aa1d1ba641de8ae81ce7243d12"
+            },
+            {
+              "path": "acta-4109396.html",
+              "bytes": 472386,
+              "sha256": "1f3a8af2b32d891ba23c79a421f37c1ba8f23d09d264f749cadfd97b46ef2b4d"
+            },
+            {
+              "path": "acta-4109397.html",
+              "bytes": 469137,
+              "sha256": "ff6342901730ad37a098df33ea50aa3aca1345ad3539a819574a996cd9b9d2ef"
+            },
+            {
+              "path": "acta-4109398.html",
+              "bytes": 463216,
+              "sha256": "64f3f1332f916c22894370f843dc12c0453f02eaf4e8c18487e037bae3d89555"
+            },
+            {
+              "path": "acta-4109399.html",
+              "bytes": 478925,
+              "sha256": "b2b4171754283dc5097c3633c4eec86a1574055bbf50e2611f058ee0944b2f6d"
+            },
+            {
+              "path": "acta-4109400.html",
+              "bytes": 483753,
+              "sha256": "4d02f1f6094f61f03e7fe89fb292a53a5fc6f9ae3720e6287ece4eaac6a8cd76"
+            },
+            {
+              "path": "acta-4109401.html",
+              "bytes": 469877,
+              "sha256": "0c46d668f2414660d9146d97b238307ec691e42902fe6dc66419a5c5e75b92a3"
+            },
+            {
+              "path": "acta-4109402.html",
+              "bytes": 469361,
+              "sha256": "cb81de8ae6782fbf79beefb5ac1d7721820da79fc2855d70fc179b276539327e"
+            },
+            {
+              "path": "acta-4109403.html",
+              "bytes": 480801,
+              "sha256": "3645b4dd955994e6c4ec6f254eb583b68eabcfffa2f9566dabbee6dee8a174bb"
+            },
+            {
+              "path": "acta-4109404.html",
+              "bytes": 200434,
+              "sha256": "1a42a49bd0b55d0bd3a654a6e15b65f430a2c132e28813899205d394f05244dc"
+            },
+            {
+              "path": "acta-4109405.html",
+              "bytes": 497652,
+              "sha256": "abd4e2ac0a96b0138856e651f582aeddf06115648834a41ca7c5903c9332285a"
+            },
+            {
+              "path": "acta-4109407.html",
+              "bytes": 519712,
+              "sha256": "a83eab860c194194f43366c6d36d9a1e1c0b5ade5348e51960a2f832a2f4228b"
+            },
+            {
+              "path": "acta-4109406.html",
+              "bytes": 455384,
+              "sha256": "ba1cd549300524930127fe297ce5792c4df2a60eb35046bb654fb6b1d15bc0f0"
+            },
+            {
+              "path": "acta-4109408.html",
+              "bytes": 486096,
+              "sha256": "96358df6c16d3ea00089d0a663cb6ac9e22bb1ff11c11f8a9838fd8cc20d47f4"
+            },
+            {
+              "path": "acta-4109409.html",
+              "bytes": 200824,
+              "sha256": "fac49a388255a94b98caedf2c99716c9acd2b1db87e6f6342ca49a8717bbdc58"
+            },
+            {
+              "path": "manifest.json",
+              "bytes": 92513,
+              "sha256": "048040cd58eacf6cd938c4aff14445b95a402cec57352127cd038d4b6e194fb3"
+            }
+          ]
+        },
+        {
+          "id": 12180274909,
+          "name": "fcf-missing-inventory-final-39238757730-1",
+          "size": 6114,
+          "digest": "sha256:d1e1d0a16a250b599779f9c44f3a6f5da8a55807060921743597288a0c6e4126",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 49593,
+              "sha256": "38039bacfb2c8d509ac4852150b72534842f837f18c1792a0acbf32925364b68"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": {
+        "id": 40650815318,
+        "run_attempt": 1,
+        "head_sha": "da8516a66084926ebddd3f065fc90d85c2bdf9b9",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-28T07:33:10Z",
+        "run_started_at": "2026-10-28T07:33:10Z",
+        "updated_at": "2026-10-28T09:37:33Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "228f202bcd8277d8bbc5d30f6ba00955c2a5ca4ae9729fef6e3065c0856c613a",
+      "artifacts": [
+        {
+          "id": 12806226342,
+          "name": "fcf-missing-inventory-diagnostic-es-ct-tercera-g9-40650815318-1",
+          "size": 28069,
+          "digest": "sha256:7519bd387938d342262e62bb17b14f4735d81d27abac1e324f93a8e2ce545254",
+          "members": [
+            {
+              "path": "acta-4118349.html",
+              "bytes": 115304,
+              "sha256": "bc366cd0179a14a5b5f1195deedf2104f953fef563482414e4b3c787105286e2"
+            },
+            {
+              "path": "manifest.json",
+              "bytes": 54815,
+              "sha256": "77fbb0bc95c3510f33c58d65c131fe218c9d4bd4559c6fc1d2df5495dc2cbfee"
+            }
+          ]
+        },
+        {
+          "id": 12805961263,
+          "name": "fcf-inventory-consumption-40650815318-1",
+          "size": 616,
+          "digest": "sha256:e5257a0911391535e92b999a96e237e7098c2c602c803ec489d233e66833c1bf",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 747,
+              "sha256": "e8687a8e3248495d304ca41ba0bcff62446c14c14dd93a5b59bd84d716a85a7f"
+            }
+          ]
+        },
+        {
+          "id": 12806111598,
+          "name": "fcf-missing-inventory-final-40650815318-1",
+          "size": 1969,
+          "digest": "sha256:34ec02ce3df402156ddfc60e10762dc7f83f19978797cd756d59f7b6108db79e",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 5477,
+              "sha256": "1f00826746e16afbb93545b0d20850b2088488574c45daad65b4fd61a9365ab6"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": {
+        "id": 40675710752,
+        "run_attempt": 1,
+        "head_sha": "ec3405898b628f9e88b7a2908f5f21881ceb836f",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-28T10:53:48Z",
+        "run_started_at": "2026-10-28T10:53:48Z",
+        "updated_at": "2026-10-28T11:16:25Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "58a17bc944db4b76dde9e4e4ff8ca14024f8621b14b0389f6a4a6e1bc86cad05",
+      "artifacts": [
+        {
+          "id": 12812020476,
+          "name": "fcf-missing-inventory-diagnostic-es-ct-segona-g1-40675710752-1",
+          "size": 962679,
+          "digest": "sha256:d08cc7dde78d8b107423c9a389b47feeedb5e9870c9a55bfa689f13e4fbfbf25",
+          "members": [
+            {
+              "path": "acta-4109388.html",
+              "bytes": 428783,
+              "sha256": "a567c570549643099ef6b53c27dd29a9b40287189818592f7ea1ca34d5f4c133"
+            },
+            {
+              "path": "acta-4109389.html",
+              "bytes": 438421,
+              "sha256": "86dbb5f877841c4602be00a791e816c994a94d872702d3f9ead11a6365a63a8f"
+            },
+            {
+              "path": "acta-4109390.html",
+              "bytes": 462554,
+              "sha256": "12fd4954f264f395807b539c2e6de1f956f23b383293e690a9565746c5a297ec"
+            },
+            {
+              "path": "acta-4109391.html",
+              "bytes": 449465,
+              "sha256": "c424ecb0fbb679452641769c23e7a9680f40fd0a685c8e513b71103b10bbf7c5"
+            },
+            {
+              "path": "acta-4109392.html",
+              "bytes": 415658,
+              "sha256": "2a3d244b982716909ca4380b0fcff177e1eec76bdda79b4b40cb2201a4a571e0"
+            },
+            {
+              "path": "acta-4109393.html",
+              "bytes": 460970,
+              "sha256": "1ccd61d2dcf823db8627c93eb23446e63559c2948a3c4ffe0812aa74d9e7a51c"
+            },
+            {
+              "path": "acta-4109394.html",
+              "bytes": 482177,
+              "sha256": "9c1c7922b07bb5e2d3fc71fceb95523d5f4671d46fb2702375cfe2c12c842424"
+            },
+            {
+              "path": "acta-4109395.html",
+              "bytes": 459926,
+              "sha256": "41c25d03738d89bc2592f9240a6a544ed6e5aa1959d3df0a89a1319f5891accc"
+            },
+            {
+              "path": "acta-4109396.html",
+              "bytes": 442763,
+              "sha256": "78fd78b18bc8889dc4c34bd583d5aca57607011873bf0d5b8fc1a1edc3058820"
+            },
+            {
+              "path": "acta-4109397.html",
+              "bytes": 439514,
+              "sha256": "04fbb1dcd3445eeadcdc8cb31a52d34756235baa3f1ea39bdb9f2ac33f5deac4"
+            },
+            {
+              "path": "acta-4109398.html",
+              "bytes": 433593,
+              "sha256": "01585f472321f49f772dfab51920631dbfaeb7810db71cddd68e8e37779d92b7"
+            },
+            {
+              "path": "acta-4109399.html",
+              "bytes": 449302,
+              "sha256": "5d2a4d729f7817b4f95bebffec7039d3a98008fc24f7b381b6fa905dd3f467ad"
+            },
+            {
+              "path": "acta-4109400.html",
+              "bytes": 454130,
+              "sha256": "680af3a390bda6dfe7a5ce75fb59e2dd2731b176364b79db8031a5887d6059dc"
+            },
+            {
+              "path": "acta-4109401.html",
+              "bytes": 440254,
+              "sha256": "3cf32c872e5e190b661a2e6db16782387b7d92acafb09c558924e2e31c622a97"
+            },
+            {
+              "path": "acta-4109402.html",
+              "bytes": 439738,
+              "sha256": "bdafdc771eec57cdbf6d38c5de5cfc5bac541b89729f77ebe2a7ab3b452a1782"
+            },
+            {
+              "path": "acta-4109403.html",
+              "bytes": 451178,
+              "sha256": "e83a76970057cb37c59dc61b4e80016c98971abdb88d8ad8c8721ec8710112dc"
+            },
+            {
+              "path": "acta-4109404.html",
+              "bytes": 170811,
+              "sha256": "ac585e0016788224a45ee721e921f4ed8ec53c060e0ba99abddcb146ae85aca8"
+            },
+            {
+              "path": "acta-4109405.html",
+              "bytes": 468029,
+              "sha256": "139bb5a1002f35c5a9292ae5e336804dbf865427cf87afe663b6bcd36f1b4d0b"
+            },
+            {
+              "path": "acta-4109406.html",
+              "bytes": 425761,
+              "sha256": "7f604e14bb4e2bdbff3ced1278042e358c4c851cc420b64e1d9d902fb6950a4e"
+            },
+            {
+              "path": "acta-4109407.html",
+              "bytes": 490089,
+              "sha256": "1ba13d36e287de2b50f4e75c462c7e53588cdc7ab976d2198fbb784104913234"
+            },
+            {
+              "path": "acta-4109408.html",
+              "bytes": 456473,
+              "sha256": "31e21ef35d55d44cc887904f2a42fa243f506f1a0761845f87df497d75eb0619"
+            },
+            {
+              "path": "acta-4109409.html",
+              "bytes": 171201,
+              "sha256": "b3737490800a28588fbc4b6eb1d06b26913dcb31149b5ee82a7ae96379d69871"
+            },
+            {
+              "path": "manifest.json",
+              "bytes": 96599,
+              "sha256": "e74870fe936a43cca1cb8325ac82b1cac706365d5ae3082730f8bd273dd16afb"
+            }
+          ]
+        },
+        {
+          "id": 12811935003,
+          "name": "fcf-inventory-consumption-40675710752-1",
+          "size": 612,
+          "digest": "sha256:2a020387526be75ac572ca63a100c19834e611cdec2c84598c482879207ceb93",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 744,
+              "sha256": "9b6b90d3f20da2bf7eaaee7286285bec54de92a4e723345cec63be5fc1225c62"
+            }
+          ]
+        },
+        {
+          "id": 12812100410,
+          "name": "fcf-missing-inventory-final-40675710752-1",
+          "size": 2685,
+          "digest": "sha256:daa3b8e5154074b42101425434095b1e819ceae234d398d84aca3840da9b1ec8",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 8752,
+              "sha256": "a6a7282dd3eeeb9bbbbbe8e5941ab74396862c5140bf4fab36b5cca4ea99401b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": {
+        "id": 40819202548,
+        "run_attempt": 1,
+        "head_sha": "9ec00d1ac4a065fbbd552696f80b089536b5ae1f",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-29T04:41:57Z",
+        "run_started_at": "2026-10-29T04:41:57Z",
+        "updated_at": "2026-10-29T05:28:51Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "ba2400847be45da3123982487142841f671b5eec5713fc2af2ca969f2b4d1f6d",
+      "artifacts": [
+        {
+          "id": 12874579476,
+          "name": "fcf-inventory-consumption-40819202548-1",
+          "size": 666,
+          "digest": "sha256:2405108240eecf7c46f91ceb37d99fa2c63d55504622d6891742f58c7a815873",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 923,
+              "sha256": "788d500bed6a694b83a701859a1c8159b41deab6f3bd839bd4707207557094bf"
+            }
+          ]
+        },
+        {
+          "id": 12875716846,
+          "name": "fcf-missing-inventory-diagnostic-es-ct-segona-g1-40819202548-1",
+          "size": 5309351,
+          "digest": "sha256:fcd0834bf1f43e2458f5e62f25143178e21a3263387d5750d0d55fa29ded6662",
+          "members": [
+            {
+              "path": "acta-4109412.html",
+              "bytes": 467148,
+              "sha256": "3ebbd1d62f3565b4f2ee93e4dad985e76f5f298f7213877d52c4465398eae252"
+            },
+            {
+              "path": "acta-4109411.html",
+              "bytes": 443313,
+              "sha256": "877a7e6e5a7f43ca69e94dbcbf6331e1ee59bbc495cdf33b8396553381335d9d"
+            },
+            {
+              "path": "acta-4109414.html",
+              "bytes": 415621,
+              "sha256": "1b33171790f98ae739bcc19c47828120dc124a851a9353d5e5f912c6e8d8b9d7"
+            },
+            {
+              "path": "acta-4109413.html",
+              "bytes": 479812,
+              "sha256": "a554c1a9e90f161c3600a3af11561f7d5f955f18d70ea013f31f0652f75d0bdf"
+            },
+            {
+              "path": "acta-4109415.html",
+              "bytes": 465844,
+              "sha256": "38b3e3095892e3017cefb39c24f6cdf1762df1c3c0905d6a3bc217277ac3d0de"
+            },
+            {
+              "path": "acta-4109416.html",
+              "bytes": 445600,
+              "sha256": "85ad521ff26eb42ce4122467e9335a3e9c002ccdda288e42c0681008f45bfafd"
+            },
+            {
+              "path": "acta-4109417.html",
+              "bytes": 463608,
+              "sha256": "10ce6646dfdfa9bf48261228f4eef9bf406fae901df1c9e43d5700dc2e5b6c7b"
+            },
+            {
+              "path": "acta-4109418.html",
+              "bytes": 432123,
+              "sha256": "28626a24e9021111b3123675ce66f0158f7ec2d12bccd96e1eb4717d8541b258"
+            },
+            {
+              "path": "acta-4109419.html",
+              "bytes": 455651,
+              "sha256": "9ea575ace5254fb20832ab5cc946720bd23aa9ae21eb2d0b2d956695988a486c"
+            },
+            {
+              "path": "acta-4109420.html",
+              "bytes": 327315,
+              "sha256": "c498a51debf8ab1300ea1abbe3a651b71936e1ef9545d157320fbc32f6d0abc1"
+            },
+            {
+              "path": "acta-4109421.html",
+              "bytes": 457384,
+              "sha256": "ba4ba2d601ec7a5ac98da9308c742b484b5ecc69cf4cff0ee6e646b0026ab411"
+            },
+            {
+              "path": "acta-4109422.html",
+              "bytes": 453272,
+              "sha256": "d0398104daef0a1cee35606c146a1d03e84c62088bbd9ca749f297da4e594e4f"
+            },
+            {
+              "path": "acta-4109423.html",
+              "bytes": 446696,
+              "sha256": "a4bef9106cdf1b7ffd0c6d6afd347e35d018f2165570d2c560f4c7082a20530b"
+            },
+            {
+              "path": "acta-4109424.html",
+              "bytes": 402127,
+              "sha256": "3b179996e00696f2735d3c38999ed31c1dbe1ee936f982e62e43e53241122334"
+            },
+            {
+              "path": "acta-4109425.html",
+              "bytes": 331811,
+              "sha256": "3cc38b326399580acfa73d310a1259cce8db3efd774f63caf81ade9a3e20225f"
+            },
+            {
+              "path": "acta-4109426.html",
+              "bytes": 417667,
+              "sha256": "12b4d00953cb8ccd0e237dfd802b972b9c1904f330b4fe2b2eabb5bafe76ba67"
+            },
+            {
+              "path": "acta-4109428.html",
+              "bytes": 454118,
+              "sha256": "5a8d81109c01ae2d093722a22be274aef0eb73e76843150c74e1d308a72043f4"
+            },
+            {
+              "path": "acta-4109429.html",
+              "bytes": 411705,
+              "sha256": "f959e71cf7927ade80eb16bb9859978a1ae8670c6ffcb5801829f3ad53935610"
+            },
+            {
+              "path": "acta-4109427.html",
+              "bytes": 436549,
+              "sha256": "87a62214206391e7179b814105fcd932f13cdbaa6d4d3d7f2ff25abc29d1655a"
+            },
+            {
+              "path": "acta-4109430.html",
+              "bytes": 475740,
+              "sha256": "f56d3d57552de7815c945e314ee364fe5c9e2cd8d01ce651097dea6cafc34b15"
+            },
+            {
+              "path": "acta-4109431.html",
+              "bytes": 450011,
+              "sha256": "b59973d5065902dbeaa85be16b5fec9a6ea3767318e37ac703445e15cdbf48ed"
+            },
+            {
+              "path": "acta-4109432.html",
+              "bytes": 441744,
+              "sha256": "5ff4e8befba9b39ae3245a78656960779193f304e4f7418574fd9faa22de7adb"
+            },
+            {
+              "path": "acta-4109433.html",
+              "bytes": 455436,
+              "sha256": "ad240d2474ad1b247a6d22b2e8937bf2ccfc86a4aa2f2bf968c93f0c254ccbe9"
+            },
+            {
+              "path": "acta-4109434.html",
+              "bytes": 465015,
+              "sha256": "fb132e50596e76b6922741dac787b3dc41579ed00e5ee31c8d0327765051f119"
+            },
+            {
+              "path": "acta-4109435.html",
+              "bytes": 453115,
+              "sha256": "fd6d957b4e99ed0b21fd4d272d032dbc6f8e60dd652ff5991235893895278822"
+            },
+            {
+              "path": "acta-4109436.html",
+              "bytes": 170917,
+              "sha256": "442294da950e81822fc2ad5ae56c9719b7325bd034a516f8ef959d8a0f12b0c9"
+            },
+            {
+              "path": "acta-4109437.html",
+              "bytes": 170783,
+              "sha256": "e23144499edc31ef44685a648f91095235effca51f32127da51c4f2d3082d950"
+            },
+            {
+              "path": "acta-4109438.html",
+              "bytes": 170859,
+              "sha256": "1dc2987f468931f67412e39544c55f49aa21384e8d6e7566ed873d4bfc0d5e52"
+            },
+            {
+              "path": "acta-4109439.html",
+              "bytes": 171020,
+              "sha256": "d8d6c81e856d558c955bac87c10c26d62c0e5d7b5f59b78d32081202f38c0d17"
+            },
+            {
+              "path": "acta-4109440.html",
+              "bytes": 171085,
+              "sha256": "a170e5ba253968349b562dfd6bb686bafdaf46837ca641936a379d16092cfaf1"
+            },
+            {
+              "path": "acta-4109441.html",
+              "bytes": 170898,
+              "sha256": "8cb8bf0a677da4f9479a45098d571056fb224ea349ce88dfb9f68179ff56fba2"
+            },
+            {
+              "path": "acta-4109442.html",
+              "bytes": 170931,
+              "sha256": "a6846539ba7e0df87c86b4aafa89ef39097b7778209c4a01eef7db81d95023d0"
+            },
+            {
+              "path": "acta-4109443.html",
+              "bytes": 171052,
+              "sha256": "6c52f05edf3037794014fddfb747619bffb785aa9f7c47e1b1dee118fae3dcad"
+            },
+            {
+              "path": "acta-4109444.html",
+              "bytes": 170868,
+              "sha256": "61de582c8efc3d0b94c820e6d98583251fb52690aa0a03a2ad8b532efe88ddc6"
+            },
+            {
+              "path": "acta-4109445.html",
+              "bytes": 170789,
+              "sha256": "ad847679f01093d613a6b58c13212c324a6c4fce87e6281104b7f2660598124c"
+            },
+            {
+              "path": "acta-4109446.html",
+              "bytes": 170879,
+              "sha256": "c6b42d67f9bb114f02d19b3d1bc96f6b453117c6e62514bbc742a87a4a415204"
+            },
+            {
+              "path": "acta-4109447.html",
+              "bytes": 170853,
+              "sha256": "621cff44b38d19b33f0fd4b28d763ce27292caa9f49c7c890ffbe1ada26e0418"
+            },
+            {
+              "path": "acta-4109448.html",
+              "bytes": 171068,
+              "sha256": "1385ebbf491724e751400e4cfae5e0e38c5df7b85d819eace1335b0dbb1f8b49"
+            },
+            {
+              "path": "acta-4109449.html",
+              "bytes": 170903,
+              "sha256": "6dce92daf7a0bfdee8b2f89723740f2e72cfc4a450e3b6a4a261fbb394096e1c"
+            },
+            {
+              "path": "acta-4109450.html",
+              "bytes": 170981,
+              "sha256": "291d66a5497d9de2fb567566631f06bc393b5a81646e4f0130b00d3832800f84"
+            },
+            {
+              "path": "acta-4109451.html",
+              "bytes": 171232,
+              "sha256": "2465275e7f0d99a52d1ca51f768eba71aa885088248a0afc092d5fa290b6924e"
+            },
+            {
+              "path": "acta-4109452.html",
+              "bytes": 170833,
+              "sha256": "e0aa27af027bf512641d5120ed21845a33c951f810589643cadfeffc1b2652ad"
+            },
+            {
+              "path": "acta-4109453.html",
+              "bytes": 170985,
+              "sha256": "ff4cf107273df0787c2b1c2aa20833565d35a6af2fa13154c239000e850f2cd8"
+            },
+            {
+              "path": "acta-4109454.html",
+              "bytes": 170865,
+              "sha256": "aa7b62c074e0163988c2c629568752d7707d5d837dcdfc52fc5907ac955166d8"
+            },
+            {
+              "path": "acta-4109455.html",
+              "bytes": 170933,
+              "sha256": "2505d2090ed9912d38552346342301963749b2664cff01c978e4a8825c530a23"
+            },
+            {
+              "path": "acta-4109456.html",
+              "bytes": 170980,
+              "sha256": "e33c1d86dc002db9667b668a3ca8bad8a26e598b1306cd77dba61a9b37d64be1"
+            },
+            {
+              "path": "acta-4109457.html",
+              "bytes": 170982,
+              "sha256": "e85158b5e9c8ef296bd2f2e3224e40464398ecf5556d440da6fd6d10f4bd1bf3"
+            },
+            {
+              "path": "acta-4109458.html",
+              "bytes": 171146,
+              "sha256": "7c2f5baf2ac97c994d54dd8ab9f9a4540cc5a870331556fcb9ab85d368ea1a91"
+            },
+            {
+              "path": "acta-4109459.html",
+              "bytes": 170883,
+              "sha256": "e76675a2a3a557cdfc9e8f70e381aac6936b97377869c2553cc95ea3ac025965"
+            },
+            {
+              "path": "acta-4109460.html",
+              "bytes": 170760,
+              "sha256": "5a94467013cb55bc4012abf98ce0fdc0ec54f671a4532d0b4068a3878c26937f"
+            },
+            {
+              "path": "acta-4109461.html",
+              "bytes": 170871,
+              "sha256": "95ba6d7d0a3a7633ca45e8dee49d7ce0136a5a2324908b1f20853e656298f7b9"
+            },
+            {
+              "path": "acta-4109462.html",
+              "bytes": 170891,
+              "sha256": "07f33056a54d3bc5169a735b397377ee091ca39161d34a513d678dd17456678d"
+            },
+            {
+              "path": "acta-4109463.html",
+              "bytes": 170969,
+              "sha256": "417e88b84fad3ee105050a6289ff6ffdeadbacc484453c21b4a5ab581d56ff46"
+            },
+            {
+              "path": "acta-4109464.html",
+              "bytes": 170809,
+              "sha256": "946d3a0cb9c0e0b0085d449c3dff74b003af085c6cd0da14663120df92d4a6d2"
+            },
+            {
+              "path": "acta-4109465.html",
+              "bytes": 171029,
+              "sha256": "334b64d3f9833be63e3c78e46c81feef7d41b2085f5f91ca2e8aea20f415fd86"
+            },
+            {
+              "path": "acta-4109466.html",
+              "bytes": 171237,
+              "sha256": "53fbfa41861095efd7c1dd942cd8b430e97f09143eeddf1e1df21d476c194cf6"
+            },
+            {
+              "path": "acta-4109467.html",
+              "bytes": 170959,
+              "sha256": "1d42621cccbf695d8ff35f0830864d3a669f7cdc5e165f1926dd0b34f84db9e7"
+            },
+            {
+              "path": "acta-4109468.html",
+              "bytes": 170841,
+              "sha256": "15718025bf6e9562aa280c81f1200ed2c21d5ef551baed58ef7bbd05edd37364"
+            },
+            {
+              "path": "acta-4109469.html",
+              "bytes": 170917,
+              "sha256": "b376101f073814bed331b2f37d03bb6544885db059e5a3444151c86d100ff441"
+            },
+            {
+              "path": "acta-4109470.html",
+              "bytes": 171061,
+              "sha256": "9c0816d548a568784c17ad6306b54aae95e606d6026ff44638e8bdcd602704d9"
+            },
+            {
+              "path": "acta-4109471.html",
+              "bytes": 170829,
+              "sha256": "1e51cc5ca7668f52a4af3c4a456af651fb60ff0e32afdf2a03865df588865e24"
+            },
+            {
+              "path": "acta-4109472.html",
+              "bytes": 170832,
+              "sha256": "458463da4d6376f92e4b9f9ff273a799398be0f189b8ca62d634cf5e6e078fb6"
+            },
+            {
+              "path": "acta-4109473.html",
+              "bytes": 171230,
+              "sha256": "7c6182bae4ccba2b17191aa995db99e914922bcb8034ec7dafb4c741aed4aaf6"
+            },
+            {
+              "path": "acta-4109474.html",
+              "bytes": 171020,
+              "sha256": "3a6e4c7ae8478e15d42e4b57432b49e8f01dce3f398dd180869b14976aaba19f"
+            },
+            {
+              "path": "acta-4109475.html",
+              "bytes": 170875,
+              "sha256": "184f8940758119e08737e0e2dfbbfc9f0f5b7183ce55ebd5bdcd6d008d3830aa"
+            },
+            {
+              "path": "acta-4109476.html",
+              "bytes": 170858,
+              "sha256": "2200ff52a106666f11316e8ef59dcf9d8e348089fe20cb42a23e4a3c7663b6de"
+            },
+            {
+              "path": "acta-4109477.html",
+              "bytes": 170825,
+              "sha256": "78e997151144a303265991a42e75b72b6ed8aa0b6f137fc8d4b92411d5a26d7b"
+            },
+            {
+              "path": "acta-4109478.html",
+              "bytes": 170959,
+              "sha256": "f3a89f7abeb6954243812089c5b8a7ec4b7b3466a28770a918f0a131541b0756"
+            },
+            {
+              "path": "acta-4109479.html",
+              "bytes": 170845,
+              "sha256": "1c025779925cecd23370fac40bd72973cab68f66d7286a53150334c24f0efd7c"
+            },
+            {
+              "path": "acta-4109480.html",
+              "bytes": 170928,
+              "sha256": "419c7a675831b4450d6d739d8cd6b59045258b95d0b4ec9b0c38f0c5c07ff243"
+            },
+            {
+              "path": "acta-4109481.html",
+              "bytes": 171141,
+              "sha256": "ddf9cfb4e3ae17f55d4ac80e8b0d4aa3d09cbe98e84f390fbdbeffc44838f69c"
+            },
+            {
+              "path": "acta-4109482.html",
+              "bytes": 171005,
+              "sha256": "234703f6f076c935a2ee07814314f714af421d62e0638fbce5dd28f52ad32368"
+            },
+            {
+              "path": "acta-4109484.html",
+              "bytes": 170905,
+              "sha256": "a35f547aa87e121d4fe317f6aa331d40d5ad9c094a816e92d4a3bbf59a30c337"
+            },
+            {
+              "path": "acta-4109483.html",
+              "bytes": 170982,
+              "sha256": "5c558ca3b9a3451a19f2f0ea8c214271ebfab0bdb9489a875e135f82455c71aa"
+            },
+            {
+              "path": "acta-4109485.html",
+              "bytes": 170915,
+              "sha256": "1be16e8ae43eb3a42f56b819e0ada0d3d857891ad88969e5c8ae5b0e89a08e72"
+            },
+            {
+              "path": "acta-4109486.html",
+              "bytes": 170879,
+              "sha256": "3a0b4c5731fa5312ce3a6a00b361cb07d5400ee3e7805afb4713ee860b1c544c"
+            },
+            {
+              "path": "acta-4109487.html",
+              "bytes": 170958,
+              "sha256": "15d58a52a6552128a41036d43c48a22b332e70294a66d622653e6c1e28605adb"
+            },
+            {
+              "path": "acta-4109488.html",
+              "bytes": 171077,
+              "sha256": "4ec00b19d5ed6a64a1f780ee335576804b121d95f904ae6f89ed35da91fabbba"
+            },
+            {
+              "path": "acta-4109489.html",
+              "bytes": 170868,
+              "sha256": "886b4e49996102d4e2d5c96852f457cbf22a2f752d071427b083fa01a06b20a0"
+            },
+            {
+              "path": "acta-4109490.html",
+              "bytes": 171051,
+              "sha256": "bf70719833ac221abc657e455a325ce9bd01e0688df0cc7de04155ad3ed10f2c"
+            },
+            {
+              "path": "acta-4109491.html",
+              "bytes": 170888,
+              "sha256": "7db0f1ff82fc03cc4dc2acefa3afad2332a3e8ee016db3b01629b64295eeb708"
+            },
+            {
+              "path": "acta-4109493.html",
+              "bytes": 171027,
+              "sha256": "80d585b5b28bad2f2def56d26dd7aa0c52c45074edfa0536774b8a47bce7912b"
+            },
+            {
+              "path": "acta-4109492.html",
+              "bytes": 170844,
+              "sha256": "dafedc4ffb676026dac6d19d42dcd4609bf2309b5e319db70686314aa217544a"
+            },
+            {
+              "path": "acta-4109494.html",
+              "bytes": 170779,
+              "sha256": "9ae73f0f675d199a41866fd5da337b8dea88eded335fe4e3e9d9f2a1e39e5b1f"
+            },
+            {
+              "path": "acta-4109495.html",
+              "bytes": 170918,
+              "sha256": "2ed167fdf48ccddd2af9713bb22bb717c19283207c74492af9148cbcb7740185"
+            },
+            {
+              "path": "acta-4109496.html",
+              "bytes": 171177,
+              "sha256": "6788a83234c50fe1773333b0d3eba5aba910d0aa5bf2a82529b67a2d309c40dd"
+            },
+            {
+              "path": "acta-4109497.html",
+              "bytes": 170904,
+              "sha256": "2c376b8e02a5dbbdbb91f1a7a570bb87b3e695a0b0bde3065a48ad7f850ac620"
+            },
+            {
+              "path": "acta-4109498.html",
+              "bytes": 170886,
+              "sha256": "46d9c0873cf2512f3d4ad652c89766ac86bac5fc6ef23156093857d01f8acc42"
+            },
+            {
+              "path": "acta-4109499.html",
+              "bytes": 171056,
+              "sha256": "d7bdc66b93312803cc169eb903aeaf38b94fde2b55c6e1d5b09389362e1f5d74"
+            },
+            {
+              "path": "acta-4109500.html",
+              "bytes": 171015,
+              "sha256": "0bae4aed0b0651f9fbe526ff85a10ec02597774349360bf88bec4a67422a7464"
+            },
+            {
+              "path": "acta-4109501.html",
+              "bytes": 170867,
+              "sha256": "403a0db7257fb9fa9af94581ed1ce47b55382dfa7bded77c7c5497dd2ea830ed"
+            },
+            {
+              "path": "acta-4109502.html",
+              "bytes": 170812,
+              "sha256": "3acf5e699d60fd88b2a301d62f0245a420e2d35b7a1e871e79910ee95fcea25c"
+            },
+            {
+              "path": "acta-4109503.html",
+              "bytes": 171127,
+              "sha256": "84e9c2c34f11fbcd10bbff95712a2cfde234ee189dbab49b702b30700ba19e79"
+            },
+            {
+              "path": "acta-4109504.html",
+              "bytes": 170994,
+              "sha256": "f8c0c9ba8142b4686f99519a3b32dee7e3e7861fd9527dace7972692b9946923"
+            },
+            {
+              "path": "acta-4109505.html",
+              "bytes": 170898,
+              "sha256": "d5cb36a3298cff9bd25ec89829d6eef803bf188f50d2212224344d815554b1c3"
+            },
+            {
+              "path": "acta-4109506.html",
+              "bytes": 170871,
+              "sha256": "5a3f02258f89b7b0027b22f4890a839eff839a1d4a1fa88b05e0f42a53482e10"
+            },
+            {
+              "path": "acta-4109507.html",
+              "bytes": 170973,
+              "sha256": "6c4f57c36254621935c54d017aba786f86209cfcba4cd9c24a657f6f565972f2"
+            },
+            {
+              "path": "acta-4109508.html",
+              "bytes": 170904,
+              "sha256": "6cddb2a7e587e055ddfab1aaf1703515edde763dc2f801cc046189b6d78533fb"
+            },
+            {
+              "path": "acta-4109510.html",
+              "bytes": 170984,
+              "sha256": "09b0bd68bb7ecbb235adfed0a837203db5bd85fc414c077ea7038786d2534fc7"
+            },
+            {
+              "path": "acta-4109509.html",
+              "bytes": 170911,
+              "sha256": "6087c6e5e624880af77cc52c5a6ecb606e38cbc619dd0b742a94fb4230f45063"
+            },
+            {
+              "path": "acta-4109511.html",
+              "bytes": 170958,
+              "sha256": "bba06e55e40fb371e16c56ea5e00e544dbb19cf09fca96315651ba1a7f56d16d"
+            },
+            {
+              "path": "acta-4109512.html",
+              "bytes": 171017,
+              "sha256": "80e6b6f00f30e45f9383e1c9f543952900a1e575e4caffbb43f2a62f337d1928"
+            },
+            {
+              "path": "acta-4109513.html",
+              "bytes": 170910,
+              "sha256": "272a06b784047d1030898a7a6f8f06db533794c6bded2844244bf2e75dd9428e"
+            },
+            {
+              "path": "acta-4109514.html",
+              "bytes": 170869,
+              "sha256": "c5d69cd2359ff18927b42fd5abccf5e945483bbb275504ce1bd133b445d1fcc8"
+            },
+            {
+              "path": "acta-4109515.html",
+              "bytes": 170946,
+              "sha256": "2b984f26c8e8258d9fb702886b6d979e67421782bc8cf3593a2a35d74242ffd0"
+            },
+            {
+              "path": "acta-4109516.html",
+              "bytes": 170792,
+              "sha256": "398aa8a92a3b7717fc6090e988f7adce8506026778edd66e05418dc8cb6a3d5e"
+            },
+            {
+              "path": "acta-4109517.html",
+              "bytes": 170996,
+              "sha256": "9c12fcb9a9db9a151447282b1a9570137e64893009012f725ae61149b676d8fe"
+            },
+            {
+              "path": "acta-4109518.html",
+              "bytes": 170963,
+              "sha256": "bb7b00f986bf37b47c736ff213ee6227fe78f2da60f0b14cedde38c008d44d4c"
+            },
+            {
+              "path": "acta-4109519.html",
+              "bytes": 170904,
+              "sha256": "1441d17eb187c3dd9b13dc1f6528167b4521c1c34559d1fea7dc83f59b0dcfdb"
+            },
+            {
+              "path": "acta-4109520.html",
+              "bytes": 170846,
+              "sha256": "285748087c901b6c915e7c0d02c189b532b0a86640fc1b50608799aa0ab88d9d"
+            },
+            {
+              "path": "acta-4109521.html",
+              "bytes": 171227,
+              "sha256": "c43450bfb3b9fe4461eb07dda24eee2b95d38d56f9c3ec41e77aa95ac1158ec2"
+            },
+            {
+              "path": "acta-4109522.html",
+              "bytes": 170952,
+              "sha256": "48f103d481438c4aa7264fb3ce97fc39b050fc04b0218871ec87ca5a3362cf18"
+            },
+            {
+              "path": "acta-4109523.html",
+              "bytes": 170969,
+              "sha256": "1cd2e7064399674825d93df18345d58c9bf2abc35638fa63a6abf4a805f252c8"
+            },
+            {
+              "path": "acta-4109524.html",
+              "bytes": 170815,
+              "sha256": "d0e7a1e1dfafed86993f5a5f7707d40a328607632e0518c7a5ad741aa71f78b5"
+            },
+            {
+              "path": "acta-4109525.html",
+              "bytes": 171030,
+              "sha256": "3a1a4111b85f4aa19824f2c95e8a71fc97df47f3c22e504bb8cd6ae47f47dae4"
+            },
+            {
+              "path": "acta-4109526.html",
+              "bytes": 170961,
+              "sha256": "149b6cb094314986e32be566783a301812286422584046562963fa8945848fc2"
+            },
+            {
+              "path": "acta-4109527.html",
+              "bytes": 170838,
+              "sha256": "a5494413366fbbb032ddef4ca485ed440e98ad0b1da7bdf937f73f7997fc095f"
+            },
+            {
+              "path": "acta-4109528.html",
+              "bytes": 170946,
+              "sha256": "ca4ca23eadba2096d542ea99df219556275c1434ac9d5a403c30946f8cc4236e"
+            },
+            {
+              "path": "acta-4109529.html",
+              "bytes": 171117,
+              "sha256": "1cb6e31d6f2c2a708622fc6899d160ab4206fcff68a9227e4d1874435f432a41"
+            },
+            {
+              "path": "acta-4109530.html",
+              "bytes": 170998,
+              "sha256": "86244572dbd95c27cd937d4f97390cb928ddecb9e961ada91b44489e9c53568f"
+            },
+            {
+              "path": "acta-4109531.html",
+              "bytes": 170814,
+              "sha256": "807d83978b73811d233c6cf26daeb65d8b00b33e2b12d3f67adda125c0b0eb6a"
+            },
+            {
+              "path": "acta-4109532.html",
+              "bytes": 170820,
+              "sha256": "cd2f91d7b6d4df1c0ff51ef754f5d6ed41f6484dd0dfb680b3e80dbdb7f24ec6"
+            },
+            {
+              "path": "acta-4109533.html",
+              "bytes": 170811,
+              "sha256": "006dc093489d321790d8e9f3be3d1506039d5ccc356812b836fe52bae1c6a590"
+            },
+            {
+              "path": "acta-4109534.html",
+              "bytes": 170986,
+              "sha256": "825bf8f17d6a3f68394047f24f0630f702a84ec463b9a5a63c526564dfa41cdd"
+            },
+            {
+              "path": "acta-4109535.html",
+              "bytes": 170897,
+              "sha256": "45aa38eb426dd698e2547478ab268bc7d4f9b466529baaafc117a896b4fee96a"
+            },
+            {
+              "path": "acta-4109536.html",
+              "bytes": 170972,
+              "sha256": "ef68d9176aed721b67ab6e9f612ab675ec3121e6f4dfa5fd8f27cd82d51e9b87"
+            },
+            {
+              "path": "acta-4109537.html",
+              "bytes": 170928,
+              "sha256": "cac1516dd3fa1bd25407e01b45aa849e1c9f2de9f631ed5526ea1b1ac1adbe3a"
+            },
+            {
+              "path": "acta-4109538.html",
+              "bytes": 171301,
+              "sha256": "54574c17610f4e5a9a29886704e5d28a0f15c2403857f51b9d5d2a0b0b77d2ff"
+            },
+            {
+              "path": "acta-4109539.html",
+              "bytes": 170914,
+              "sha256": "eba48957b6ce52fb5d486c12c3d9a54942b053df1d00967d873f26d00d7d9dfb"
+            },
+            {
+              "path": "acta-4109540.html",
+              "bytes": 170929,
+              "sha256": "e66aac08e25f6fd2ca1efdaa7f2d0f780d7d693f660129f217fb426392a99641"
+            },
+            {
+              "path": "acta-4109541.html",
+              "bytes": 170865,
+              "sha256": "4d74bd1300221a54b94af8c2dbb2b23f556dbf98bac9c92ee37ce5380330b7bf"
+            },
+            {
+              "path": "acta-4109542.html",
+              "bytes": 170884,
+              "sha256": "76d8f401e66c2a6e6904686856baaf68e8a351af79770270469cbb7e3539f538"
+            },
+            {
+              "path": "acta-4109543.html",
+              "bytes": 170949,
+              "sha256": "ea07897e8d5cc56ca5fc8d1d3958685d8aa89d092588bd9678f96433a4a1e929"
+            },
+            {
+              "path": "acta-4109544.html",
+              "bytes": 170938,
+              "sha256": "84f7de0d3d153eaae11236538d048816759a532076ebc201b11e935188b5a2b3"
+            },
+            {
+              "path": "acta-4109545.html",
+              "bytes": 171034,
+              "sha256": "5c1e58076a03d77f3e4eb23940a0204ce782a7eb50e1a8848d90cfb413c5ed80"
+            },
+            {
+              "path": "acta-4109546.html",
+              "bytes": 171071,
+              "sha256": "723f8b6275c51d0b3410b74e4c37ac84a3153d784f609f54a734c1441e7add18"
+            },
+            {
+              "path": "acta-4109547.html",
+              "bytes": 170905,
+              "sha256": "6088fa5abdaabe634cac128c6db893ec0bc588d50b0643e5209992a476ce4289"
+            },
+            {
+              "path": "acta-4109548.html",
+              "bytes": 170828,
+              "sha256": "021faa2921f03997a1dd2f3760dbb5ad310319e349e1eccdd7a6ff228d68a575"
+            },
+            {
+              "path": "acta-4109549.html",
+              "bytes": 170833,
+              "sha256": "531c81117c89fe58ee93885a88d9bc9df5b4bc4d5cc35187bc04c55d6bf7b8dc"
+            },
+            {
+              "path": "acta-4109550.html",
+              "bytes": 170745,
+              "sha256": "3fedc735942808e42cd67db8cbb8c2ea07f9ec21f392c938e3252c16fb19027b"
+            },
+            {
+              "path": "acta-4109551.html",
+              "bytes": 171054,
+              "sha256": "2c1ab69a4376f3be178e1f20e5beaf4a45228e11e4890829f199a61aa987ad0a"
+            },
+            {
+              "path": "acta-4109552.html",
+              "bytes": 170979,
+              "sha256": "21aebe18343ef52a66b6aacbc80013d8317b2e096a89c82533ac7cdf91d38e8c"
+            },
+            {
+              "path": "acta-4109553.html",
+              "bytes": 171046,
+              "sha256": "c74b459f635058f0eb96f84e43e37ff5c53fb16ed2fb76390d48c9b0d915eab5"
+            },
+            {
+              "path": "acta-4109554.html",
+              "bytes": 170890,
+              "sha256": "17a26998ba28cece8084e288bfa311c2f907b7b58483bc8ca60f2eda6325b8df"
+            },
+            {
+              "path": "acta-4109555.html",
+              "bytes": 171198,
+              "sha256": "26fa7568cdcca9392a44b67c1b02e98eac25cbdd97976f6126aa920d15da75ef"
+            },
+            {
+              "path": "acta-4109556.html",
+              "bytes": 170901,
+              "sha256": "3f62baff413f14d3890c581584c85bbc53e2530203f3b8bdfd8e825425069eb9"
+            },
+            {
+              "path": "acta-4109557.html",
+              "bytes": 170783,
+              "sha256": "a3aad90a9e23f781664406dd1b0ca298e77025b713c8e06535ace9bff3cfc964"
+            },
+            {
+              "path": "acta-4109558.html",
+              "bytes": 170853,
+              "sha256": "36abb096c01062913b3c6adca9714d31317bc73b750ed785f00bb4237f508fe5"
+            },
+            {
+              "path": "acta-4109559.html",
+              "bytes": 441519,
+              "sha256": "4890b0570ac8d631ec3a7454b7ac88b91a4e937b85a336dee42e43aa755e75ae"
+            },
+            {
+              "path": "attempts.ndjson",
+              "bytes": 136115,
+              "sha256": "e335a83d4a7d396559f39ae9e5cf03a3cb887a4dd7b9865d62b362cc9710e7c0"
+            },
+            {
+              "path": "manifest.json",
+              "bytes": 266499,
+              "sha256": "435e67d5ab26a0a43331efe90ebf3db6a8fcfa3a4c2b5cfb80bc48032b152bd6"
+            }
+          ]
+        },
+        {
+          "id": 12875373223,
+          "name": "fcf-missing-inventory-final-40819202548-1",
+          "size": 841,
+          "digest": "sha256:9ed7fbc92035853d1f011eb650b81bee93a3df9d1e7f5219e180d5fcc5fd835f",
+          "members": [
+            {
+              "path": "manifest.json",
+              "bytes": 1313,
+              "sha256": "f00ebccdad6bee17f98604480b0e1a76f71dd35834d3ec64e3886ece4853f1af"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "receipt": {
+    "path": "12889347441/manifest.json",
+    "sha256": "c714438d3a5d2338619c7954add838dd1fdd0ab59d7d558cc2792ef168628db8"
+  },
+  "history": [
+    {
+      "kind": "accounted-protected-budget",
+      "run": {
+        "id": 40851165521,
+        "run_attempt": 1,
+        "head_sha": "a31d439f64f9b610993264b7639a8a5cb2fc35ee",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T09:38:01Z",
+        "run_started_at": "2026-10-29T09:38:01Z",
+        "updated_at": "2026-10-29T10:18:15Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "70d397acd93b286e97849e4d0c295a8deb94596e1740f5a20954ed50183b2628"
+    },
+    {
+      "kind": "accounted-protected-budget",
+      "run": {
+        "id": 40819202548,
+        "run_attempt": 1,
+        "head_sha": "9ec00d1ac4a065fbbd552696f80b089536b5ae1f",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-29T04:41:57Z",
+        "run_started_at": "2026-10-29T04:41:57Z",
+        "updated_at": "2026-10-29T05:28:51Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "ba2400847be45da3123982487142841f671b5eec5713fc2af2ca969f2b4d1f6d"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 40804241703,
+        "run_attempt": 1,
+        "head_sha": "375249a9e3d33f970c6cb50b0eaba8689d3957ee",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-10-29T02:05:04Z",
+        "run_started_at": "2026-10-29T02:05:04Z",
+        "updated_at": "2026-10-29T02:15:48Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "28f44ac6aa880255b6bebe54469854b0b33e719eeef317fba9fb0e7aa7ff3ec0"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 40792858711,
+        "run_attempt": 1,
+        "head_sha": "47d46f3a91813a7e720f3affccee056c1462ab07",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-29T00:15:29Z",
+        "run_started_at": "2026-10-29T00:15:29Z",
+        "updated_at": "2026-10-29T00:16:06Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "708ce58a8b495ebe0c61136bc5a1a23dfe3d1f5bfc1b73a85ee297b9d9b61c3f"
+    },
+    {
+      "kind": "accounted-protected-budget",
+      "run": {
+        "id": 40737060608,
+        "run_attempt": 1,
+        "head_sha": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-28T17:34:49Z",
+        "run_started_at": "2026-10-28T17:34:49Z",
+        "updated_at": "2026-10-28T18:12:17Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "ae0742e6b972af53d98c064293d74fbb3ab56cb9f16584ba3fa5a644865f7b89"
+    },
+    {
+      "kind": "accounted-protected-budget",
+      "run": {
+        "id": 40675710752,
+        "run_attempt": 1,
+        "head_sha": "ec3405898b628f9e88b7a2908f5f21881ceb836f",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-28T10:53:48Z",
+        "run_started_at": "2026-10-28T10:53:48Z",
+        "updated_at": "2026-10-28T11:16:25Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "58a17bc944db4b76dde9e4e4ff8ca14024f8621b14b0389f6a4a6e1bc86cad05"
+    },
+    {
+      "kind": "accounted-protected-budget",
+      "run": {
+        "id": 40650815318,
+        "run_attempt": 1,
+        "head_sha": "da8516a66084926ebddd3f065fc90d85c2bdf9b9",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-28T07:33:10Z",
+        "run_started_at": "2026-10-28T07:33:10Z",
+        "updated_at": "2026-10-28T09:37:33Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "228f202bcd8277d8bbc5d30f6ba00955c2a5ca4ae9729fef6e3065c0856c613a"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 40650283807,
+        "run_attempt": 1,
+        "head_sha": "da8516a66084926ebddd3f065fc90d85c2bdf9b9",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-28T07:28:18Z",
+        "run_started_at": "2026-10-28T07:28:18Z",
+        "updated_at": "2026-10-28T07:29:29Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "1e6df35613755ea6bc6d900275dd9c2358f927e025bc42a2f8a291fee15567e7"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 40650193248,
+        "run_attempt": 1,
+        "head_sha": "da8516a66084926ebddd3f065fc90d85c2bdf9b9",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-28T07:27:26Z",
+        "run_started_at": "2026-10-28T07:27:26Z",
+        "updated_at": "2026-10-28T07:28:03Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "309d9670353201b98e22fcd74af4461c814614eb722b7b27759c22da0ee5861c"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 40650041658,
+        "run_attempt": 1,
+        "head_sha": "da8516a66084926ebddd3f065fc90d85c2bdf9b9",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-28T07:26:03Z",
+        "run_started_at": "2026-10-28T07:26:03Z",
+        "updated_at": "2026-10-28T07:27:06Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "61169503f78261c4006c6f490e782d69673417f585c35ae923490ccc6d0fa90a"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 40649955400,
+        "run_attempt": 1,
+        "head_sha": "da8516a66084926ebddd3f065fc90d85c2bdf9b9",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-28T07:25:15Z",
+        "run_started_at": "2026-10-28T07:25:15Z",
+        "updated_at": "2026-10-28T07:25:48Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "2c92d8eafebbf6d7489d9187c944e8c79472c637b65041444fade706f59161b9"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 40633662266,
+        "run_attempt": 1,
+        "head_sha": "d25c9b0bac906e2b9f7ad13e749a724e7b6fac77",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-28T04:40:38Z",
+        "run_started_at": "2026-10-28T04:40:38Z",
+        "updated_at": "2026-10-28T04:41:54Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "9f8743ba323679bc3a06252232e4e520c43fef4bdd2cea9c8c74cbf528e281f8"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 40633582272,
+        "run_attempt": 1,
+        "head_sha": "d25c9b0bac906e2b9f7ad13e749a724e7b6fac77",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-28T04:39:50Z",
+        "run_started_at": "2026-10-28T04:39:50Z",
+        "updated_at": "2026-10-28T04:40:25Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "196fc9c0e34b97151dc062325c54ce256fa9301b26fd6e8df341ae1cca0c7ae6"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 40622904776,
+        "run_attempt": 1,
+        "head_sha": "ae4feb84a3d4fa0f6b211815137b7c1a0d19e575",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-28T02:46:36Z",
+        "run_started_at": "2026-10-28T02:46:36Z",
+        "updated_at": "2026-10-28T02:47:15Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "9fa6b30e04162c81425289552c95feb25fb3739d45ee7529926a89a80ca6d586"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 40615445293,
+        "run_attempt": 1,
+        "head_sha": "2dd96f460a71d8bf3931d63da368268e284259f5",
+        "head_branch": "codex/fcf-staging-diagnostics-20261028",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-28T01:30:24Z",
+        "run_started_at": "2026-10-28T01:30:24Z",
+        "updated_at": "2026-10-28T01:30:40Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "1dfe58f1275c05dba5ba4beec8d85827e46d8678b89534d027337706dad6f8c4"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 40615257497,
+        "run_attempt": 1,
+        "head_sha": "6bba44933224dcd93614c0d9571a798b0c839ff2",
+        "head_branch": "codex/fcf-staging-diagnostics-20261028",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-28T01:28:26Z",
+        "run_started_at": "2026-10-28T01:28:26Z",
+        "updated_at": "2026-10-28T01:28:38Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "dba7d2d5de2ce08983894714c7437a88e9543a63fc2115c6021bfb722a2e65f0"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 40614303052,
+        "run_attempt": 1,
+        "head_sha": "d26dcbae4012e61c520a96568001b1d582ebe0db",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-28T01:19:05Z",
+        "run_started_at": "2026-10-28T01:19:05Z",
+        "updated_at": "2026-10-28T01:19:40Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "ce5392b13fb299cdc89feaf804f2ad061941ddb426dbc544f920d1c19739d01f"
+    },
+    {
+      "kind": "accounted-protected-budget",
+      "run": {
+        "id": 39238757730,
+        "run_attempt": 1,
+        "head_sha": "e010bfc63eeb561116ff33293e6aabafb77d7168",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-19T10:37:17Z",
+        "run_started_at": "2026-10-19T10:37:17Z",
+        "updated_at": "2026-10-19T10:54:48Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "47bd277a160b0c3644cb8bf7da956194228176347e711d1ca1be715e27907c6a"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 39237480355,
+        "run_attempt": 1,
+        "head_sha": "3187347e17e9d5da854ef9ab03a24b0c8f1a440d",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-19T10:26:30Z",
+        "run_started_at": "2026-10-19T10:26:30Z",
+        "updated_at": "2026-10-19T10:27:05Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "0df7c22798aa68c2caccadeacd72b10f1e5692eeeb551be90dda9009ff0dc8ce"
+    },
+    {
+      "kind": "accounted-protected-budget",
+      "run": {
+        "id": 39178021024,
+        "run_attempt": 1,
+        "head_sha": "15bde29fecf5a2f110e140a0a728f2e5558e12e9",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-18T23:48:11Z",
+        "run_started_at": "2026-10-18T23:48:11Z",
+        "updated_at": "2026-10-18T23:52:03Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "eade05fa463b288fd85bc89a1ecd47d01f7748de5e921579d06bf91b32c510f8"
+    },
+    {
+      "kind": "accounted-protected-budget",
+      "run": {
+        "id": 39170648473,
+        "run_attempt": 1,
+        "head_sha": "42879db003006f61feb4a36070e6ea2e584712ad",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-18T22:04:49Z",
+        "run_started_at": "2026-10-18T22:04:49Z",
+        "updated_at": "2026-10-18T22:53:58Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "1dca488fd60a26dd9acf775cdaa2d6cdf50e97e4e5b171612bcf86f861fcb0bc"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 39170210064,
+        "run_attempt": 1,
+        "head_sha": "afffc5c9ca0a8828c54825578dcdfe8bb597ab3f",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-18T21:59:02Z",
+        "run_started_at": "2026-10-18T21:59:02Z",
+        "updated_at": "2026-10-18T21:59:44Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "288d8d987bbc7527cc2cbdec8279bbfd886d18a57c2e63339fe7c33c7cc22a26"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 39169546755,
+        "run_attempt": 1,
+        "head_sha": "0730a43cd4b9268f1bb74fc0f85cc3234535f6dd",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-18T21:49:46Z",
+        "run_started_at": "2026-10-18T21:49:46Z",
+        "updated_at": "2026-10-18T21:50:15Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "f2692f37c71adb049186e64ec289c1d4c71706e23c6d43dc2639a95cb3684877"
+    },
+    {
+      "kind": "accounted-protected-budget",
+      "run": {
+        "id": 39169392573,
+        "run_attempt": 1,
+        "head_sha": "0730a43cd4b9268f1bb74fc0f85cc3234535f6dd",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-18T21:47:38Z",
+        "run_started_at": "2026-10-18T21:47:38Z",
+        "updated_at": "2026-10-18T21:47:53Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "27563a549cd3da5a6f23f03cab1693c64ae137a820039e327b870dd382e49c4e"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 39167055657,
+        "run_attempt": 1,
+        "head_sha": "9326f442b6df13d92b7d72b5b8b58ae2ec164350",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-18T21:15:53Z",
+        "run_started_at": "2026-10-18T21:15:53Z",
+        "updated_at": "2026-10-18T21:18:37Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "7b6c0d976326075a9a1ff8c1391c94f371e3ee91d57699279bd2d69f8578ea45"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 39166847285,
+        "run_attempt": 1,
+        "head_sha": "9326f442b6df13d92b7d72b5b8b58ae2ec164350",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-18T21:13:09Z",
+        "run_started_at": "2026-10-18T21:13:09Z",
+        "updated_at": "2026-10-18T21:13:23Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "22026727e98f05e347fe18f19ca7d53eadfa58ddf7ce088edb486c33d2cfe960"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 39165063779,
+        "run_attempt": 1,
+        "head_sha": "ce061368abd47c64aab950be56bb8a24dd67ac53",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-18T20:49:27Z",
+        "run_started_at": "2026-10-18T20:49:27Z",
+        "updated_at": "2026-10-18T20:49:41Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "63b20288c2b9e8db8451e2c509224f6845a116f1fa0901b0fbc8cb8e03105dea"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 39162998072,
+        "run_attempt": 1,
+        "head_sha": "b149b21467f58fdb662b34b840c0bffffe48e61f",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-18T20:22:18Z",
+        "run_started_at": "2026-10-18T20:22:18Z",
+        "updated_at": "2026-10-18T20:25:35Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "1fde75c7d8cbf4783c076c7294f6939a29288818ea349336e4c82dc55818fe79"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 39160447076,
+        "run_attempt": 1,
+        "head_sha": "1e65ceb0340d103e487807012873ba92c04b7cbe",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-18T19:48:34Z",
+        "run_started_at": "2026-10-18T19:48:34Z",
+        "updated_at": "2026-10-18T19:50:15Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "9bca0e0b215b3e2b42afe29a32cfe6b8ff40183b91ac8382f4067e5ef434fede"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 39158858524,
+        "run_attempt": 1,
+        "head_sha": "a0918bb9536e6399f9a6473d749d9e2677d03563",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-18T19:27:35Z",
+        "run_started_at": "2026-10-18T19:27:35Z",
+        "updated_at": "2026-10-18T19:31:24Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "c968729f3489298722996b85c2b587f6631b40686a3dc164f344d5ebca6235bb"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 39144975051,
+        "run_attempt": 1,
+        "head_sha": "136d390f280d6bbf42c67057c273949190db8c80",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-18T16:26:06Z",
+        "run_started_at": "2026-10-18T16:26:06Z",
+        "updated_at": "2026-10-18T16:26:43Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "90d0188efa8fab4836864a1d492a11a999f2ec719457e2f6c9ec460d46bda924"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 39144792886,
+        "run_attempt": 1,
+        "head_sha": "136d390f280d6bbf42c67057c273949190db8c80",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-18T16:23:40Z",
+        "run_started_at": "2026-10-18T16:23:40Z",
+        "updated_at": "2026-10-18T16:25:37Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "01253cdc20f4a5f7a98a7adf4e75969374d6ce62081388c20dbc7fd1e42016c3"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 39144579321,
+        "run_attempt": 1,
+        "head_sha": "136d390f280d6bbf42c67057c273949190db8c80",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-18T16:20:50Z",
+        "run_started_at": "2026-10-18T16:20:50Z",
+        "updated_at": "2026-10-18T16:23:18Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "e0e936361a5eb91a2fb50aa01485fc7604ce7955472da6955483592ac39aa037"
+    },
+    {
+      "kind": "reviewed-zero",
+      "run": {
+        "id": 39139420211,
+        "run_attempt": 1,
+        "head_sha": "7d3b1411d19f33b6274d174021b3215aa53892b3",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-18T15:12:22Z",
+        "run_started_at": "2026-10-18T15:12:22Z",
+        "updated_at": "2026-10-18T15:12:58Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "e28b7b5194748db3c626f2a52e043d5d184460c96cfd02e2c6ad65d67e9d67de"
+    },
+    {
+      "kind": "exact-prebudget-seven",
+      "run": {
+        "id": 39082161817,
+        "run_attempt": 1,
+        "head_sha": "000f2eccbff62f1b87afa406f637f6bf6c9e0a41",
+        "head_branch": "main",
+        "path": ".github/workflows/fcf-javni-dokazi.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-18T00:16:31Z",
+        "run_started_at": "2026-10-18T00:16:31Z",
+        "updated_at": "2026-10-18T03:01:37Z",
+        "actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "triggering_actor": {
+          "login": "nejcar20",
+          "id": 25134229,
+          "type": "User"
+        },
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        }
+      },
+      "jobsSha256": "9fac2e6c26b6cb3008f14c68d04c42627db297f0325974477c4bab217509122b"
+    }
+  ],
+  "typedCounters": [
+    {
+      "path": "12889347441/manifest.json",
+      "fields": {
+        "kind": "fcf-g1-remainder-final-receipt",
+        "actualSourceGETs": 301,
+        "priorSourceGETs": 232,
+        "newSourceGETs": 69,
+        "maximumCumulativeSourceGETs": 478,
+        "accountingKnown": true
+      }
+    },
+    {
+      "path": "12838489841/manifest.json",
+      "fields": {
+        "kind": "fcf-future-source-final-receipt",
+        "actualSourceGETs": 83,
+        "priorSourceGETs": 60,
+        "newSourceGETs": 23,
+        "maximumSourceGETs": 478
+      }
+    },
+    {
+      "path": "12153532999/manifest.json",
+      "fields": {
+        "kind": "fcf-missing-inventory-final-receipt",
+        "actualSourceGETs": 16
+      }
+    },
+    {
+      "path": "12155247162/manifest.json",
+      "fields": {
+        "kind": "fcf-g9-held-parent-final-receipt",
+        "actualSourceGETs": 22,
+        "priorSourceGETs": 16,
+        "newSourceGETs": 6
+      }
+    },
+    {
+      "path": "12180274909/manifest.json",
+      "fields": {
+        "kind": "fcf-six-final-receipt",
+        "actualSourceGETs": 37,
+        "priorSourceGETs": 22,
+        "newSourceGETs": 15
+      }
+    },
+    {
+      "path": "12806111598/manifest.json",
+      "fields": {
+        "kind": "fcf-future-source-final-receipt",
+        "actualSourceGETs": 38,
+        "priorSourceGETs": 37,
+        "newSourceGETs": 1,
+        "maximumSourceGETs": 478
+      }
+    },
+    {
+      "path": "12812100410/manifest.json",
+      "fields": {
+        "kind": "fcf-future-source-final-receipt",
+        "actualSourceGETs": 60,
+        "priorSourceGETs": 38,
+        "newSourceGETs": 22,
+        "maximumSourceGETs": 478
+      }
+    },
+    {
+      "path": "12875373223/manifest.json",
+      "fields": {
+        "kind": "fcf-g1-remainder-final-receipt",
+        "actualSourceGETs": 232,
+        "priorSourceGETs": 83,
+        "newSourceGETs": 149,
+        "maximumCumulativeSourceGETs": 478,
+        "accountingKnown": true
+      }
+    }
+  ],
+  "reviewReference": "root accepted full private b365 terminal auth RESULT SHA88617f3c1e4e1fda78ea7f774d49a11ebc77c29bc27352bce7154678eed40b88; typed counter-only, historical7 outside original protected missing-only scope; no statistics/current authority"
+}

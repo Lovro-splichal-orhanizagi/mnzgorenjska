@@ -136,8 +136,9 @@ test('CLI metadata, all arguments, reruns and reducing/invalid pacing refuse bef
 test('actual manual workflow scopes credentials to successful source coordination and gates owned artifacts', t => {
   const path = new URL('../.github/workflows/fcf-javni-dokazi.yml', import.meta.url)
   assert.ok(existsSync(path), 'manual source workflow must exist')
-  const text = readFileSync(path, 'utf8'), steps = text.split(/^      - /m).slice(1)
-  assert.match(text, /workflow_dispatch:\s*\n/); assert.doesNotMatch(text, /schedule:|inputs:|workflow_run:|matrix:|continue-on-error|cache@|cache\/|pull_request:|push:/)
+  const text = readFileSync(path, 'utf8'), defaultJob = text.slice(text.indexOf('  dokazi:'),text.indexOf('\n  calendar-probe:')), steps = defaultJob.split(/^      - /m).slice(1)
+  assert.match(text, /workflow_dispatch:\s*\n/); assert.doesNotMatch(text, /schedule:|workflow_run:|matrix:|continue-on-error|cache@|cache\/|pull_request:|push:/)
+  assert.match(text, /options: \[seven-acta, g9-calendar-discovery-v1\]/); assert.match(text, /default: seven-acta/); assert.match(defaultJob, /inputs.mode == '' \|\| inputs.mode == 'seven-acta'/)
   assert.match(text, /timeout-minutes: 360/); assert.match(text, /if: github.ref == 'refs\/heads\/main'/)
   assert.match(text, /contents: read/); assert.match(text, /actions: read/)
   const wait = steps.find(s => s.includes('id: wait')), capture = steps.find(s => s.includes('id: capture')), upload = steps.find(s => s.includes('actions/upload-artifact'))
