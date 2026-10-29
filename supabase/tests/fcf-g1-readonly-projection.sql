@@ -2,6 +2,25 @@
 create function pg_temp.observer_assert(ok boolean,label text)returns void language plpgsql as $$begin if ok is distinct from true then raise exception 'G1 OBSERVER TEST: %',label;end if;end$$;
 -- A disposable reset has only empty target headers; refuse populated fixtures.
 select pg_temp.observer_assert(not exists(select 1 from matches m join rounds r on r.id=m.round_id where r.competition_id in(783,797))and not exists(select 1 from rounds where competition_id in(783,797)),'empty fresh-CI target headers required');
+-- Migration130900 allocates these seeded slugs using generated IDs, which need
+-- not equal the production IDs783/797 used by this isolated fixture. Preserve
+-- alternate empty headers; rename only their slugs until parent ROLLBACK.
+create temporary table observer_seed_headers as select *from competitions where(slug='es-ct-segona-g1'and id<>783)or(slug='es-ct-tercera-g9'and id<>797);
+do $$declare h record;f record;n bigint;begin
+ for h in select id from observer_seed_headers loop
+  for f in select ns.nspname,t.relname,a.attname,c.convalidated,cardinality(c.conkey)children,cardinality(c.confkey)parents,pa.attname parentcol from pg_constraint c join pg_class t on t.oid=c.conrelid join pg_namespace ns on ns.oid=t.relnamespace join pg_attribute a on a.attrelid=t.oid and a.attnum=c.conkey[1]join pg_attribute pa on pa.attrelid=c.confrelid and pa.attnum=c.confkey[1]where c.contype='f'and c.confrelid='public.competitions'::regclass loop
+   perform pg_temp.observer_assert(f.convalidated and f.children=1 and f.parents=1 and f.parentcol='id','supported competition FK required');
+   execute format('select count(*)from %I.%I where %I=$1',f.nspname,f.relname,f.attname)into n using h.id;
+   perform pg_temp.observer_assert(n=0,'seed header has existing dependency');
+  end loop;
+  for f in select ns.nspname,t.relname,a.attname from pg_attribute a join pg_class t on t.oid=a.attrelid join pg_namespace ns on ns.oid=t.relnamespace where t.relkind in('r','p')and a.attnum>0 and not a.attisdropped and(ns.nspname in('public','scout')or ns.nspname like 'private\_%'escape '\')and a.attname in('competition_id','insider_competition_id')loop
+   execute format('select count(*)from %I.%I where %I::text=$1::text',f.nspname,f.relname,f.attname)into n using h.id;
+   perform pg_temp.observer_assert(n=0,'seed header has existing direct dependency');
+  end loop;
+  perform pg_temp.observer_assert(not exists(select 1 from scout.dnevnik where parametri->>'competition_id'=h.id::text or parametri->>'selekcija'=h.id::text),'seed header has existing JSON dependency');
+ end loop;
+end$$;
+update competitions set slug='test-only-g1-observer-seeded-'||id where id in(select id from observer_seed_headers);
 insert into competitions(id,slug,name,short_name,source,source_league_code,sezona_koledarska,country_id,active,prvi_fantasy_krog,source_policy,rok_pomak_ur,date_only_deadline_policy)overriding system value
 values(783,'es-ct-segona-g1','TEST OBSERVER G1','TEST','fcf','4109388-4109627',false,(select id from countries where code='ES'),false,1,'es-fcf-six-reviewed-history-v1',6,null),
 (797,'es-ct-tercera-g9','TEST OBSERVER G9','TEST','fcf','4118349-4118588',false,(select id from countries where code='ES'),false,1,'es-fcf-six-reviewed-history-v1',6,null)
@@ -43,3 +62,18 @@ do $$declare p jsonb;b jsonb;begin begin
  perform pg_temp.observer_assert((p#>>'{native,dependencies,competitionUserRows}')::bigint=(b#>>'{native,dependencies,competitionUserRows}')::bigint+1,'actual G1 Scout audit increments the user counter');
  perform pg_temp.observer_assert((p->>'dependencySnapshotText')::jsonb#>>'{relations,scout.dnevnik,globalUser}'='true'and((p->>'dependencySnapshotText')::jsonb#>>'{relations,scout.dnevnik,count}')::bigint=((b->>'dependencySnapshotText')::jsonb#>>'{relations,scout.dnevnik,count}')::bigint+1,'actual G1 Scout audit relation is counted');
  raise exception 'EXPECTED ROLLBACK';exception when raise_exception then if SQLERRM<>'EXPECTED ROLLBACK'then raise;end if;end;end$$;
+
+-- All fixture changes already happened in the parent transaction. Switch only
+-- toward READ ONLY, then prove the public fixed-G1 wrapper as its real reader.
+-- This mode stays read-only until parent ROLLBACK; no fixture is committed.
+set local transaction_read_only=on;
+set local role service_role;
+with observed as materialized(select public.fcf_g1_readonly_projection(array[]::text[])p)
+select current_user='service_role'and current_setting('transaction_read_only')='on'and p#>>'{native,competition,id}'='783'and p#>>'{native,dependencies,complete}'='true'and jsonb_array_length(p#>'{native,rounds}')=30 and jsonb_array_length(p#>'{native,matches}')=240 as observer_service_pass from observed \gset
+\if :observer_service_pass
+\echo FCF_G1_READONLY_SERVICE_PASS
+\else
+\echo G1 service-role read-only wrapper failed
+\quit 1
+\endif
+reset role;

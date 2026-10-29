@@ -43,3 +43,11 @@ test('separate main-only diagnostic binds same deployed head/push CI and closed 
 test('both diagnostic modes skip public source job and default ten-job CI stays intact',()=>{
  const ci=read('.github/workflows/ci.yml'),child=read('.github/workflows/diagnostika-javnih-virov.yml');assert.match(ci,/g1-native-readonly-main/);assert.match(child,/inputs\.vir != 'g1-native-readonly-main'/);assert.match(child,/inputs\.vir == 'g1-native-readonly-main'.*github\.ref == 'refs\/heads\/main'/);assert.match(child,/G1_PREFLIGHT_MODE:/);assert.match(ci,/test-fcf-g1-readonly-projection\.mjs/);assert.match(ci,/test-fcf-g1-readonly-projection-sql\.mjs/)
 })
+
+// CI fixtures share one database and must not race the legacy G9 transaction.
+test('fresh SQL fixture isolates generated-ID seed headers and exercises real readonly service wrapper',()=>{
+ const sql=read('supabase/tests/fcf-g1-readonly-projection.sql'),ci=read('.github/workflows/ci.yml')
+ assert.ok(/node --test --test-concurrency=1 scripts\/test-fcf-future-native-projection-sql\.mjs scripts\/test-fcf-g1-readonly-projection-sql\.mjs/.test(ci))
+ assert.match(sql,/create temporary table observer_seed_headers/);assert.match(sql,/slug='es-ct-segona-g1'and id<>783/);assert.match(sql,/slug='es-ct-tercera-g9'and id<>797/);assert.match(sql,/pg_constraint/);assert.match(sql,/seed header has existing dependency/)
+ assert.doesNotMatch(sql,/delete from competitions/i);assert.match(sql,/set local transaction_read_only=on;\nset local role service_role;/);assert.match(sql,/public\.fcf_g1_readonly_projection\(array\[\]::text\[\]\)/)
+})

@@ -384,7 +384,7 @@ jobs:
           FCF_HISTORY_DISPOSABLE_TEST: '1'
         run: |
           node --test scripts/test-fcf-future-historical-sql.mjs
-          node --test scripts/test-fcf-future-native-projection-sql.mjs scripts/test-fcf-g1-readonly-projection-sql.mjs
+          node --test --test-concurrency=1 scripts/test-fcf-future-native-projection-sql.mjs scripts/test-fcf-g1-readonly-projection-sql.mjs
           node --test scripts/test-fcf-future-native-import-sql.mjs
           node --test scripts/test-fcf-future-native-activation-sql.mjs
       - name: FCF Scout snapshot preservation and phase rollback regressions
