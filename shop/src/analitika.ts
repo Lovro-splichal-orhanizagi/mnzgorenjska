@@ -25,7 +25,9 @@ export function ocisti(naslov: string): string {
 
 export function pripraviAnalitiko() {
   if (!ID || typeof document === 'undefined') return
-  window.slffTrgovinaPredPosiljanjem = (_vrsta, tovor) => ({ ...tovor, url: tovor.url && ocisti(tovor.url) })
+  // Tudi referrer: po /thanks bi sicer nosil oznako naročila.
+  const domaci = (r?: string) => (r && r.startsWith('https://shop.slff.eu') ? `https://shop.slff.eu${ocisti(r)}` : r)
+  window.slffTrgovinaPredPosiljanjem = (_vrsta, tovor) => ({ ...tovor, url: tovor.url && ocisti(tovor.url), referrer: domaci(tovor.referrer) })
   const s = document.createElement('script')
   s.defer = true
   s.src = `${GOSTITELJ}/s.js`
@@ -33,12 +35,17 @@ export function pripraviAnalitiko() {
   s.dataset.hostUrl = GOSTITELJ
   s.dataset.beforeSend = 'slffTrgovinaPredPosiljanjem'
   s.dataset.doNotTrack = 'true'
+  s.onload = () => cakajoci.splice(0).forEach(([ime, podatki]) => dogodek(ime, podatki))
   document.head.appendChild(s)
 }
 
-/** Dogodek v statistiki; tiho, če Umami ni naložen ali ga je blokator ustavil. */
+/** Dogodki pred naloženim Umamijem (zahvala po vrnitvi iz Stripe je prva stran). */
+const cakajoci: [string, Record<string, string | number> | undefined][] = []
+
+/** Dogodek v statistiki; počaka na Umami, tiho, če ga je blokator ustavil. */
 export function dogodek(ime: string, podatki?: Record<string, string | number>) {
   try {
-    window.umami?.track(ime, podatki)
+    if (window.umami) window.umami.track(ime, podatki)
+    else if (ID && cakajoci.length < 20) cakajoci.push([ime, podatki])
   } catch {}
 }
