@@ -102,6 +102,10 @@ const izdelek: TIzdelek = {
 const stran = renderToString(<StaticRouter location="/p/majica"><IzdelekView i={izdelek} /></StaticRouter>)
 preveri('izdelek: barva in velikost ločeno, razprodana velikost onemogočena, cena', stran.includes('>Barva<') && stran.includes('>Črna<') && />S<\/button>/.test(stran)
   && /disabled=""[^>]*>M<\/button>/.test(stran) && stran.includes('25,00') && !stran.includes('od 25'), stran.slice(0, 200))
+const dveBarvi = renderToString(<StaticRouter location="/p/majica"><IzdelekView i={{ ...izdelek, razlicice: [
+  ...izdelek.razlicice, { id: 3, oznaka_sl: 'Bela / S', oznaka_en: 'White / S', cena: 2500, na_voljo: 'ne' }] }} /></StaticRouter>)
+preveri('izdelek: prva prodajna barva izbrana, razprodana barva onemogočena, angleško ime barve le v en',
+  /aria-pressed="true"[^>]*>Črna</.test(dveBarvi) && /disabled=""[^>]*>Bela</.test(dveBarvi))
 preveri('izdelek: poštnina SI in EU ter prag brezplačne na strani izdelka', stran.includes('3,90') && stran.includes('9,90') && stran.includes('50,00'))
 
 preveri('cena: Intl v jeziku strani', cena(2500).replace(/\s/g, ' ') === '25,00 €', cena(2500))

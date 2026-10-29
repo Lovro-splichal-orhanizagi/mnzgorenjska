@@ -46,7 +46,7 @@
 // Objava: scripts/hetzner/objavi-funkcije.sh trgovina-nakup
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
-import { EU27, tarifeZa } from './tarife.ts'
+import { BREZPLACNA_OD, EU27, tarifeZa } from './tarife.ts'
 import { IZDELEK_TRGOVINE, seznamPostavk } from './izdelki.ts'
 import { jePlacanoAktivno } from '../_shared/trgovina-stanja.ts'
 
@@ -198,6 +198,8 @@ Deno.serve(async (req) => {
     const tarifa = (b: number) => (drzava && !r.digitalno ? tarifeZa(drzava, r.pismo, b).map((k) => t[k]).filter((id): id is string => !!id) : [])
     // Brez brezplačne tarife v Stripe (katalog še ni pognan) raje navadna poštnina kot nobena.
     const ponudba = tarifa(blago).length ? tarifa(blago) : tarifa(0)
+    if (blago >= BREZPLACNA_OD && drzava && !tarifa(blago).length)
+      console.error('trgovina-nakup: brezplačne tarife (brez_si, brez_eu) ni v Stripe, kupec plača poštnino; poženi scripts/stripe-trgovina.sh')
     const izdelekId = await izdelekTrgovine()
 
     const meta = { app: 'slff-shop', narocilo_id: String(r.narocilo_id), oznaka: r.javna_oznaka }

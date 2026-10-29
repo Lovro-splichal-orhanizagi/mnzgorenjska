@@ -8,6 +8,7 @@ import { doplacilo, napakaImena, normaliziraj, PISAVA, stevilka, velikostImena, 
 import { Nalaganje, useSeja } from '../seja'
 import { Slika, ZnackaVoljo } from './Katalog'
 import { imaPredlogo, Konfigurator } from './Konfigurator'
+import { barvaRazlicice, velikostRazlicice } from '../mockup'
 
 /** Besedilo in številka čez sliko izdelka (hrbet majice), kot ju dobi tiskarna. */
 export function Predogled({ src, alt, ime, st }: { src?: string; alt: string; ime: string | null; st: number | null }) {
@@ -235,11 +236,10 @@ function MotiviKmalu({ i }: { i: TIzdelek }) {
   )
 }
 
-/** Oznake "Črna / M": barva in velikost kot dve izbiri; null, če nimajo vse natanko dveh delov. */
-function dveIzbiri(rs: Razlicica[]): { deli: string[][]; barve: string[]; velikosti: string[] } | null {
-  const deli = rs.map((x) => po(x.oznaka_sl, x.oznaka_en).split(' / '))
-  if (rs.length < 2 || deli.some((d) => d.length !== 2)) return null
-  return { deli, barve: [...new Set(deli.map((d) => d[0]))], velikosti: [...new Set(deli.map((d) => d[1]))] }
+/** Oznake "Črna / M" (po slovenski oznaki, kot Konfigurator): barve in velikosti v vrstnem redu; null, če ni dvojna. */
+function dveIzbiri(rs: Razlicica[]): { barve: string[]; velikosti: string[] } | null {
+  if (rs.length < 2 || !rs.every((x) => x.oznaka_sl.includes(' / '))) return null
+  return { barve: [...new Set(rs.map((x) => barvaRazlicice(x.oznaka_sl)))], velikosti: [...new Set(rs.map((x) => velikostRazlicice(x.oznaka_sl)))] }
 }
 
 function Gumb({ izbran, onemogocen, onClick, children }: { izbran: boolean; onemogocen?: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -262,8 +262,11 @@ function Navaden({ i }: { i: TIzdelek }) {
   const [kolicina, setKolicina] = useState(1)
   const [slika, setSlika] = useState(0)
   const dve = dveIzbiri(i.razlicice)
-  // Ena sama barva je izbrana sama, da velikosti takoj povedo, kaj je razprodano.
-  const [barva, setBarva] = useState<string | null>(dve?.barve.length === 1 ? dve.barve[0] : null)
+  const najdi = (b: string | null, v: string | null) =>
+    i.razlicice.find((x) => barvaRazlicice(x.oznaka_sl) === b && velikostRazlicice(x.oznaka_sl) === v) ?? null
+  const naVoljo = (b: string | null, v: string | null) => (najdi(b, v)?.na_voljo ?? 'ne') !== 'ne'
+  // Barva je izbrana vnaprej (prva prodajna, kot v Konfiguratorju), da velikosti takoj povedo, kaj je razprodano.
+  const [barva, setBarva] = useState<string | null>(dve ? barvaRazlicice((prodajne[0] ?? i.razlicice[0]!).oznaka_sl) : null)
   const [velikost, setVelikost] = useState<string | null>(null)
   /** Koliko kosov je zadnji klik res dodal (null = še ni klika). */
   const [dodano, setDodano] = useState<number | null>(null)
@@ -317,34 +320,37 @@ function Navaden({ i }: { i: TIzdelek }) {
           </div>
 
           {dve ? (
-            ([['barva', dve.barve], ['velikost', dve.velikosti]] as const).map(([os, vrednosti]) => (
-              <fieldset key={os} className="space-y-2">
-                <legend className="text-sm font-semibold text-slate-300">{t(os === 'barva' ? 'izdelek.barva' : 'izdelek.velikost')}</legend>
+            <>
+              <fieldset className="space-y-2">
+                <legend className="text-sm font-semibold text-slate-300">{t('izdelek.barva')}</legend>
                 <div className="flex flex-wrap gap-2">
-                  {vrednosti.map((v, n) => {
-                    const b = os === 'barva' ? v : barva
-                    const vel = os === 'velikost' ? v : velikost
-                    const najdi = (bb: string | null, vv: string | null) =>
-                      i.razlicice.find((_, k) => dve.deli[k][0] === bb && dve.deli[k][1] === vv) ?? null
-                    // Velikost, ki je v izbrani barvi ni na voljo, je prečrtana; barva le, ko ni nobene velikosti.
-                    const onemogocen = os === 'velikost'
-                      ? barva !== null && (najdi(barva, v)?.na_voljo ?? 'ne') === 'ne'
-                      : !i.razlicice.some((x, k) => dve.deli[k][0] === v && x.na_voljo !== 'ne')
-                    return (
-                      <Gumb key={v} izbran={v === (os === 'barva' ? barva : velikost)} onemogocen={onemogocen} onClick={() => {
-                        if (os === 'barva') {
-                          setBarva(v)
-                          // shortcut: slike sledijo vrstnemu redu barv le, ko jih je toliko kot barv.
-                          if (i.slike.length === dve.barve.length) setSlika(n)
-                        } else setVelikost(v)
-                        setIzbrana(najdi(b, vel)?.id ?? null)
-                        setDodano(null)
-                      }}>{v}</Gumb>
-                    )
-                  })}
+                  {dve.barve.map((b, n) => (
+                    <Gumb key={b} izbran={b === barva} onemogocen={!dve.velikosti.some((v) => naVoljo(b, v))} onClick={() => {
+                      setBarva(b)
+                      // Velikost ostane, če jo nova barva ima; sicer jo kupec izbere znova.
+                      const v = velikost && naVoljo(b, velikost) ? velikost : null
+                      setVelikost(v)
+                      setIzbrana(najdi(b, v)?.id ?? null)
+                      // shortcut: slike sledijo vrstnemu redu barv le, ko jih je toliko kot barv.
+                      if (i.slike.length === dve.barve.length) setSlika(n)
+                      setDodano(null)
+                    }}>{po(b, barvaRazlicice(i.razlicice.find((x) => barvaRazlicice(x.oznaka_sl) === b)?.oznaka_en ?? b))}</Gumb>
+                  ))}
                 </div>
               </fieldset>
-            ))
+              <fieldset className="space-y-2">
+                <legend className="text-sm font-semibold text-slate-300">{t('izdelek.velikost')}</legend>
+                <div className="flex flex-wrap gap-2">
+                  {dve.velikosti.map((v) => (
+                    <Gumb key={v} izbran={v === velikost} onemogocen={!naVoljo(barva, v)} onClick={() => {
+                      setVelikost(v)
+                      setIzbrana(najdi(barva, v)?.id ?? null)
+                      setDodano(null)
+                    }}>{v}</Gumb>
+                  ))}
+                </div>
+              </fieldset>
+            </>
           ) : i.razlicice.length > 1 && (
             <fieldset className="space-y-2">
               <legend className="text-sm font-semibold text-slate-300">{t('izdelek.izberi')}</legend>
@@ -371,7 +377,7 @@ function Navaden({ i }: { i: TIzdelek }) {
           </ul>
 
           <NakupnaVrstica kolicina={kolicina} setKolicina={setKolicina} najvec={najvec} dodano={dodano}
-            onemogoceno={!r || r.na_voljo === 'ne' || izbira.vnos === null} besedilo={r || prodajne.length === 0 ? t('izdelek.dodaj') : t(dve ? (barva ? 'izdelek.izberiVelikost' : 'izdelek.izberiBarvo') : 'izdelek.izberi')} dodaj={vKosarico} />
+            onemogoceno={!r || r.na_voljo === 'ne' || izbira.vnos === null} besedilo={r || prodajne.length === 0 ? t('izdelek.dodaj') : t(dve ? 'izdelek.izberiVelikost' : 'izdelek.izberi')} dodaj={vKosarico} />
         </div>
       </div>
     </div>
