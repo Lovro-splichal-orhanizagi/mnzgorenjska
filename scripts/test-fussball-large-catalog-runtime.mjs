@@ -41,14 +41,14 @@ if(process.argv[2]==='runtime'){
  console.log(JSON.stringify({code:error?.code,message:error?.message,raw,source,calls,clockRestored,sourceBoundaryCode:mixed?'BADEN_COMPLETED_STAGES_GET_CURRENT_R9_RUN':null}));process.exit(0)
 }else if(process.argv[2]==='adapter'){
  const calls=[];let payload=Buffer.from('{}')
- child.execFileSync=(file,args,options)=>{calls.push({file,args,maxBuffer:options.maxBuffer});return payload}
+ child.execFileSync=(file,args,options)=>{calls.push({file,args,maxBuffer:options.maxBuffer});return Buffer.concat([Buffer.from('HTTP/2.0 200 OK\r\n\r\n'),payload])}
  syncBuiltinESMExports();const {githubGetAdapter}=await import('./stage-fussball-native-composition.mjs'),get=githubGetAdapter('TEST-ONLY')
  await get(repo+'contents/package-lock.json?ref='+head)
  payload=Buffer.from('raw');await get(repo+'contents/'+catalog+'?ref='+head,true)
  await get(repo+'actions/artifacts/123/zip',true)
  await assert.rejects(get(repo+'contents/package-lock.json?ref='+head,true),/fixed.*catalog/)
  await assert.rejects(get(repo+'contents/'+catalog+'?ref=main',true),/fixed.*catalog/)
- payload=Buffer.alloc(4*MiB+1);await assert.rejects(get(repo+'contents/'+catalog+'?ref='+head,true),/bounded.*catalog/)
+ payload=Buffer.alloc(4*MiB+1);await assert.rejects(get(repo+'contents/'+catalog+'?ref='+'b'.repeat(40),true),/bounded.*catalog/)
  console.log(JSON.stringify(calls));process.exit(0)
 }else{
  const run=(kind,mode)=>JSON.parse(child.execFileSync(process.execPath,[fileURLToPath(import.meta.url),kind,...(mode?[mode]:[])],{encoding:'utf8',maxBuffer:MiB}))
@@ -65,6 +65,6 @@ if(process.argv[2]==='runtime'){
   for(const mode of ['head','type','path','size','sha','encoding','content','truncated','altered','oversize','rawoversize']){const r=run('runtime',mode);assert.equal(r.code,'FUSSBALL_NATIVE_COMPOSITION_HOLD',mode+': '+r.message);assert.equal(r.source,0);assert.equal(r.raw,['truncated','altered','rawoversize'].includes(mode)?1:0,mode)}
  })
  test('GitHub adapter selects object/raw media and limits only fixed catalog raw reads to 4 MiB',()=>{
-  const calls=run('adapter');assert.ok(calls[0].args.includes('Accept: application/vnd.github.object+json'));assert.ok(calls[1].args.includes('Accept: application/vnd.github.raw+json'));assert.equal(calls[1].maxBuffer,4*MiB+1);assert.equal(calls[2].maxBuffer,512*MiB+1);assert.equal(calls.length,4)
+  const calls=run('adapter');assert.ok(calls[0].args.includes('Accept: application/vnd.github.object+json'));assert.ok(calls[1].args.includes('Accept: application/vnd.github.raw+json'));assert.equal(calls[1].maxBuffer,4*MiB+64*1024+1);assert.equal(calls[2].maxBuffer,512*MiB+64*1024+1);assert.equal(calls.length,4)
  })
 }
