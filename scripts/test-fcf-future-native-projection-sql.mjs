@@ -3,6 +3,7 @@ import test from 'node:test'
 import {readFileSync} from 'node:fs'
 import {execFileSync} from 'node:child_process'
 import {assertFcfDisposableTest} from './lib/fcf-disposable-test.mjs'
+import {fcfProjectionOptionalBadenCompatibilitySQL} from './lib/fcf-projection-optional-compat.mjs'
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8')
 const optional=(namespace,path)=>`select to_regnamespace('${namespace}') is null as missing \\gset\n\\if :missing\n${read(path)}\n\\endif\n`
 // The owned historical container predates these branch migrations. Reuse exact
@@ -21,8 +22,9 @@ for(const installed of [false,true])test(`native actual projection (${installed?
  const container=assertFcfDisposableTest()
  const migration=optional('private_fcf_future_projection','../supabase/migrations/20261027211000_fcf_future_native_projection.sql')
  // Optional legacy setup must retain the exact newest forward projection when
- // CI already contains Baden180/181/182. The migration is exact-body idempotent.
- const forward=`select to_regnamespace('private_baden_history') is not null as baden_forward \\gset\n\\if :baden_forward\n${read('../supabase/migrations/20261028183000_baden_fcf_projection_compat.sql')}\n\\endif\n`
+ // CI already contains Baden180/181/182 and may include exact9410.
+ // Preserve that complete protected epoch without rewriting its body.
+ const forward=`select to_regnamespace('private_baden_history') is not null as baden_forward \\gset\n\\if :baden_forward\n${fcfProjectionOptionalBadenCompatibilitySQL()}\n\\endif\n`
  const input='begin;\n'+optional('private_fcf_six_history','../supabase/migrations/20261019150000_fcf_six_reviewed_native.sql')+optional('private_fcf_future_history','../supabase/migrations/20261027210000_fcf_future_historical_cleanup.sql')+referenceSchema()+(installed?migration:'')+migration+forward+read('../supabase/tests/fcf-future-native-projection.sql')+'\nrollback;'
  execFileSync('docker',['exec','-i',container,'psql','-U','supabase_admin','-d',process.env.FCF_TARGET_TEST_DB??'postgres','-X','-q','-v','ON_ERROR_STOP=1'],{input,timeout:180000,maxBuffer:8*1024*1024})
 })
