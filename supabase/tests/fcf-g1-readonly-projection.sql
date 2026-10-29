@@ -34,7 +34,12 @@ select pg_temp.reject('select private_fcf_g1_readonly.capture(''es-ct-segona-g1'
 select 'FCF_G1_READONLY_OBSERVER_PASS';
 
 -- Observe real nonzero dependency rows rather than guessing all users are zero.
-do $$declare p jsonb;begin begin
- insert into scout.narocnine(team_id,country_id,paket,velja_do,pogoji_sprejeti_at)values(-931000,(select country_id from competitions where id=783),'preizkus',now()+interval'1 day',now());
- p:=pg_temp.capture();perform pg_temp.observer_assert((p#>>'{native,dependencies,competitionUserRows}')::bigint>0,'actual G1 Scout subscription is counted');
+do $$declare p jsonb;b jsonb;begin begin
+ b:=pg_temp.capture();
+ -- Real user:true audit relation. Nullable user_id is FK-valid by the retained
+ -- schema; the explicit competition JSON binds this row to target783.
+ insert into scout.dnevnik(team_id,vrsta,parametri)values(-931000,'igralec','{"competition_id":783}'::jsonb);
+ p:=pg_temp.capture();
+ perform pg_temp.observer_assert((p#>>'{native,dependencies,competitionUserRows}')::bigint=(b#>>'{native,dependencies,competitionUserRows}')::bigint+1,'actual G1 Scout audit increments the user counter');
+ perform pg_temp.observer_assert((p->>'dependencySnapshotText')::jsonb#>>'{relations,scout.dnevnik,globalUser}'='true'and((p->>'dependencySnapshotText')::jsonb#>>'{relations,scout.dnevnik,count}')::bigint=((b->>'dependencySnapshotText')::jsonb#>>'{relations,scout.dnevnik,count}')::bigint+1,'actual G1 Scout audit relation is counted');
  raise exception 'EXPECTED ROLLBACK';exception when raise_exception then if SQLERRM<>'EXPECTED ROLLBACK'then raise;end if;end;end$$;
