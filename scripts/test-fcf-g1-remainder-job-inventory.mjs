@@ -1,12 +1,23 @@
 // Actual retained16 preclaim metadata and explicitly modeled future17 capture.
 // These pure metadata checks issue no plan/claim/source/native capability.
-import test from 'node:test'
+import test,{after} from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync,writeFileSync,mkdtempSync,mkdirSync,cpSync,rmSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {pathToFileURL} from 'node:url'
-const api=await import('./fcf-g1-remainder-job-inventory.mjs').catch(()=>({})),fixture=JSON.parse(readFileSync(new URL('./vzorci/fcf-g1-preclaim-16-40804241703.json',import.meta.url))),execution={repository:fixture.run.repository.full_name,workflow:fixture.run.path,ref:'refs/heads/main',sourceCommit:fixture.run.head_sha,runId:String(fixture.run.id),runAttempt:'1'}
+import {createHash} from 'node:crypto'
+import {gunzipSync} from 'node:zlib'
+const currentApi=await import('./fcf-g1-remainder-job-inventory.mjs'),fixture=JSON.parse(readFileSync(new URL('./vzorci/fcf-g1-preclaim-16-40804241703.json',import.meta.url))),execution={repository:fixture.run.repository.full_name,workflow:fixture.run.path,ref:'refs/heads/main',sourceCommit:fixture.run.head_sha,runId:String(fixture.run.id),runAttempt:'1'}
+// TEST ONLY epoch tree: the production checker still reads its own immutable
+// relative workflow normally. Never mock fs or change the current checkout.
+const frozenWorkflow=gunzipSync(readFileSync(new URL('./vzorci/fcf-refresh800-history-workflow-22713112.yml.gz',import.meta.url))),frozenSHA='dd2447bc8a706d14e517bd4854adbda15f66b2f790d138e0f0fbe11e13e69af4',sha=b=>createHash('sha256').update(b).digest('hex')
+assert.equal(sha(frozenWorkflow),frozenSHA,'fixture must match the frozen production dependency pin')
+assert.ok(readFileSync(new URL('./fcf-g1-remainder-job-inventory.mjs',import.meta.url),'utf8').includes("workflowSHA='"+frozenSHA+"'"))
+const epoch=mkdtempSync(join(tmpdir(),'fcf-phase-original-epoch-'));after(()=>rmSync(epoch,{recursive:true,force:true}));mkdirSync(join(epoch,'scripts'));mkdirSync(join(epoch,'.github/workflows'),{recursive:true})
+for(const file of ['fcf-g1-remainder-job-inventory.mjs','fcf-missing-inventory-artifact.mjs'])cpSync(new URL('./'+file,import.meta.url),join(epoch,'scripts',file))
+writeFileSync(join(epoch,'.github/workflows/uvoz-fcf-zgodovina.yml'),frozenWorkflow)
+const api=await import(pathToFileURL(join(epoch,'scripts/fcf-g1-remainder-job-inventory.mjs')))
 const call=input=>{assert.equal(typeof api.verifyFcfG1CurrentJobInventory,'function');return api.verifyFcfG1CurrentJobInventory(input)},preclaim=()=>({run:structuredClone(fixture.run),jobs:structuredClone(fixture.jobs),execution:structuredClone(execution)})
 function capture(){
  const v=preclaim(),consume=v.jobs.find(j=>j.name==='missing-inventory-consume');consume.status='completed';consume.conclusion='success';consume.steps=consume.steps.filter(s=>['Verify one-shot FCF inventory claim','Retain one-shot FCF inventory consumption'].includes(s.name)).map(s=>({...s,status:'completed',conclusion:'success'}))
@@ -45,4 +56,9 @@ test('immutable workflow dependency-body drift refuses without caller graph/path
  for(const file of ['fcf-g1-remainder-job-inventory.mjs','fcf-missing-inventory-artifact.mjs'])cpSync(new URL('./'+file,import.meta.url),join(dir,'scripts',file))
  writeFileSync(join(dir,'.github/workflows/uvoz-fcf-zgodovina.yml'),'jobs:\n  missing-inventory-g1:\n    needs: []\n')
  const isolated=await import(pathToFileURL(join(dir,'scripts/fcf-g1-remainder-job-inventory.mjs')));assert.throws(()=>isolated.verifyFcfG1CurrentJobInventory(preclaim()),/workflow|dependency|held/)
+})
+
+test('current additive refresh800 workflow remains HOLD under the frozen production checker',()=>{
+ const current=readFileSync(new URL('../.github/workflows/uvoz-fcf-zgodovina.yml',import.meta.url));assert.notEqual(sha(current),frozenSHA)
+ for(const value of [preclaim(),capture()])assert.throws(()=>currentApi.verifyFcfG1CurrentJobInventory(value),/immutable workflow dependency body differs/)
 })
