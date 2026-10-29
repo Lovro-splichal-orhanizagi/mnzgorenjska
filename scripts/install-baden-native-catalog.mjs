@@ -7,7 +7,7 @@ import {createHash} from 'node:crypto'
 import {execFileSync} from 'node:child_process'
 import {githubGetAdapter} from './stage-fussball-native-composition.mjs'
 import {loadFussballNativeComposition,getFussballNativeComposition} from './fussball-native-composition.mjs'
-import {describeFussballNativePreparation} from './prepare-fussball-native-history.mjs'
+import {describeFussballNativePreparation,describeIssuedFussballNativePreparation} from './prepare-fussball-native-history.mjs'
 const repository='Lovro-splichal-orhanizagi/mnzgorenjska',prefix=`repos/${repository}/`,workflow='.github/workflows/install-baden-native-catalog.yml',releaseTag='baden-native-staging-v1',output='baden-native-catalog-install'
 const maximum=64*1024*1024,sha=b=>createHash('sha256').update(b).digest('hex'),json=v=>JSON.stringify(v)+'\n'
 const need=(v,m)=>{if(!v)throw Object.assign(Error('Baden catalog HOLD: '+m),{dataHold:true,code:'BADEN_CATALOG_INSTALL_HOLD'})}
@@ -16,10 +16,33 @@ const id=v=>typeof v==='string'&&/^[1-9]\d{0,15}$/.test(v)&&Number.isSafeInteger
 const owner=a=>a?.id===25134229&&a.login==='nejcar20'&&a.type==='User'
 // Exact historical validation-only R1; never evidence of owner installation.
 const skippedH1={runId:40796083954,head:'47d46f3a91813a7e720f3affccee056c1462ab07',validationJob:123192784514,installationJob:123193495657,files:{'scripts/install-baden-native-catalog.mjs':{bytes:18662,sha256:'a5f004f79bc6635b0392ed28711f5ec71fdd7d1d86ef8cf05833e34d4a84050e'},'.github/workflows/install-baden-native-catalog.yml':{bytes:6039,sha256:'65016f04f94512f234ac60f750c8f953cd38c1c51692e5ebef4235efe9de92f5'}}}
-let diagnostic={phase:'INPUT',code:'CHECK_REFUSED'}
-const phase=name=>{diagnostic={phase:name,code:'CHECK_REFUSED'}}
+const skippedH2={runId:40807010095,head:'375249a9e3d33f970c6cb50b0eaba8689d3957ee',validationJob:123228266804,installationJob:123238014953,executionSha256:'67fe73410321c692e230b2855e85323a90e2f0e886b2b66cbb634595b2a1d473',files:{'scripts/install-baden-native-catalog.mjs':{bytes:21041,sha256:'6a8d5e4387ced0c4c0f1084d3b38844472353be002204297b329f44c352d1175'},'.github/workflows/install-baden-native-catalog.yml':{bytes:6245,sha256:'9da40a55f63165c3bc5b7546684bca3c57cdc8e49d39a6db46ff9e22826e5772'}}}
+
+const phaseNames=new Set(['INPUT','PINS','IDENTITY','COMPOSITION','MANIFEST','REVIEWED_ASSET','MANIFEST_REAUTH','FINAL_IDENTITY','LOCAL_PREFLIGHT','OWNER_TRANSACTION'])
+const subphaseNames=new Set([...phaseNames,'MAIN_GET','MAIN_HEAD','CI_GET','CI_ID','CI_ATTEMPT','CI_HEAD','CI_REF','CI_WORKFLOW','CI_RESULT','CI_REPOSITORY','SERVED_FETCH','SERVED_STATUS','SERVED_BODY','SERVED_BOUND','SERVED_COMMIT','HISTORY_GET','HISTORY_INVENTORY','HISTORY_HEAD','HISTORY_CURRENT_HEAD','HISTORY_OWNER_SKIPPED','HISTORY_REVIEWED_PROFILE','HISTORY_EXECUTION_PROJECTION','HISTORY_ARTIFACTS_GET','HISTORY_ARTIFACTS_EMPTY','OWNER_VALIDATION_RESULT','OWNER_CRITICAL_STEP','MANIFEST_COMPARISON','MANIFEST_FRESHNESS','FINAL_COMPARISON','FINAL_CAPABILITY',...['CURRENT_RUN','HISTORY_RUN'].flatMap(p=>['GET','ID','ATTEMPT','HEAD','REF','WORKFLOW','REPOSITORY','ACTORS','STATE'].map(x=>p+'_'+x)),...['HISTORY','OWNER'].flatMap(p=>['JOBS_GET','JOBS_INVENTORY','JOB_IDENTITY','STEP_INVENTORY','JOB_PAIR'].map(x=>p+'_'+x)),...['','HISTORY_'].flatMap(p=>['INSTALLER_BODY','WORKFLOW_BODY'].flatMap(x=>['LOCAL_READ','GET','CHECK'].map(k=>p+x+'_'+k)))])
+let diagnostic={phase:'INPUT',subphase:'INPUT',code:'INPUT_REFUSED'}
+const phase=name=>{need(phaseNames.has(name),'closed diagnostic phase');diagnostic={phase:name,subphase:name,code:name+'_REFUSED'}}
+const at=name=>{need(subphaseNames.has(name),'closed diagnostic subphase');diagnostic={...diagnostic,subphase:name,code:name+'_REFUSED'}}
+const check=(name,value,message)=>{at(name);need(value,message)}
 const safeGetCode=v=>typeof v==='string'&&/^(ARTIFACT_ZIP|CONTENTS_RAW|CONTENTS_OBJECT|REPOSITORY_JSON)_(TIMEOUT|BUFFER|FAILED|HTTP_(401|403|404|429|500|502|503|504))$/.test(v)?v:'GITHUB_GET_FAILED'
-function catalogHoldDiagnostic(){return {status:'HOLD',phase:diagnostic.phase,code:diagnostic.code}}
+const ownFetchError=error=>{try{if(['TimeoutError','AbortError'].includes(error?.name))return 'OWN_FETCH_TIMEOUT'}catch{}return 'OWN_FETCH_NETWORK_FAILED'}
+function catalogHoldDiagnostic(){return {status:'HOLD',phase:diagnostic.phase,subphase:diagnostic.subphase,code:diagnostic.code}}
+// Failure DATA only. Never overwrite an existing diagnostic or create a success
+// manifest/preflight/write-intent. Wrong cwd/symlink/preexisting-file stays closed.
+function preserveCatalogHoldDiagnostic(){try{
+ const root=realpathSync(fileURLToPath(new URL('../',import.meta.url)));if(realpathSync(process.cwd())!==root)return
+ if(!existsSync(output))mkdirSync(output,{mode:0o700})
+ if(realpathSync(output)!==join(root,output))return
+ writeFileSync(join(output,'diagnostic.json'),json(catalogHoldDiagnostic()),{flag:'wx',mode:0o600})
+}catch{}}
+function verifyFinalIdentity(first,final){check('FINAL_COMPARISON',JSON.stringify(first)===JSON.stringify(final),'writer/root identity drift')}
+function skippedExecutionSha(r,v){
+ const header=Object.fromEntries(['id','run_attempt','head_sha','head_branch','path','event','status','conclusion'].map(k=>[k,r[k]]))
+ for(const k of ['repository','head_repository'])header[k]={full_name:r[k]?.full_name}
+ for(const k of ['actor','triggering_actor'])header[k]=Object.fromEntries(['id','login','type'].map(x=>[x,r[k]?.[x]]))
+ const jobs=v.jobs.map(j=>({...Object.fromEntries(['id','run_id','run_attempt','head_sha','name','status','conclusion'].map(k=>[k,j[k]])),steps:j.steps.map(s=>Object.fromEntries(['number','name','status','conclusion'].map(k=>[k,s[k]]))).sort((a,b)=>a.number-b.number)})).sort((a,b)=>a.id-b.id)
+ return sha(json({run:header,jobs}))
+}
 const write=(name,bytes)=>writeFileSync(join(output,name),bytes,{flag:'wx',mode:0o600})
 function pins(){
  const e=process.env
@@ -28,44 +51,53 @@ function pins(){
  need(realpathSync(process.cwd())===realpathSync(fileURLToPath(new URL('../',import.meta.url)))&&execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()===e.GITHUB_SHA,'exact installed writer checkout required')
  return {runId:e.GITHUB_RUN_ID,head:e.GITHUB_SHA,derivedRunId:e.DERIVED_RUN_ID,mainCiRunId:e.MAIN_CI_RUN_ID,assetId:e.REVIEWED_ASSET_ID,sha256:e.REVIEWED_MANIFEST_SHA256}
 }
-function runIdentity(r,p,id=p.runId){
- need(r?.id===Number(id)&&r.run_attempt===1&&r.head_sha===p.head&&r.head_branch==='main'&&r.path===workflow&&r.event==='workflow_dispatch'&&r.repository?.full_name===repository&&r.head_repository?.full_name===repository&&owner(r.actor)&&owner(r.triggering_actor),'actual root installer run/actor/triggering actor differs')
+function runIdentity(r,p,id=p.runId,context='CURRENT_RUN'){
+ check(context+'_ID',r?.id===Number(id),'actual root installer run ID differs')
+ check(context+'_ATTEMPT',r.run_attempt===1,'actual installer first attempt differs')
+ check(context+'_HEAD',r.head_sha===p.head,'actual installer writer differs')
+ check(context+'_REF',r.head_branch==='main','actual installer main ref differs')
+ check(context+'_WORKFLOW',r.path===workflow&&r.event==='workflow_dispatch','actual installer workflow/event differs')
+ check(context+'_REPOSITORY',r.repository?.full_name===repository&&r.head_repository?.full_name===repository,'actual installer repository differs')
+ check(context+'_ACTORS',owner(r.actor)&&owner(r.triggering_actor),'actual root actor/triggering actor differs')
 }
 const validationSteps=new Set(['Set up job','Checkout exact reviewed writer','Checkout frozen DE77','Checkout frozen failed V6','Set up Node22','Install locked dependencies','Authenticate source, root review, writer and deployed main','Preserve validation evidence','Post Set up Node22','Post Checkout frozen failed V6','Post Checkout frozen DE77','Post Checkout exact reviewed writer','Complete job'])
 const installSteps=new Set(['Set up job','Checkout exact reviewed writer','Checkout frozen DE77','Checkout frozen failed V6','Set up Node22','Install locked dependencies','Validate again before owner connection','Owner connection prerequisite','Tunnel to owner database','Install reviewed immutable catalog once','Preserve owner installation evidence','Post Set up Node22','Post Checkout frozen failed V6','Post Checkout frozen DE77','Post Checkout exact reviewed writer','Complete job'])
-function jobsShape(v,p,runId){
- need(v?.total_count===2&&Array.isArray(v.jobs)&&v.jobs.length===2&&new Set(v.jobs.map(j=>j.id)).size===2,'closed two-job installer inventory required')
- for(const j of v.jobs){need(Number.isSafeInteger(j.id)&&j.id>0&&['validate','install'].includes(j.name)&&j.run_id===Number(runId)&&j.run_attempt===1&&j.head_sha===p.head&&Array.isArray(j.steps),'actual known installer job required');const names=j.steps.map(s=>s.name);need(new Set(names).size===names.length&&j.steps.every(s=>(j.name==='validate'?validationSteps:installSteps).has(s.name)),'unknown installer step refuses nonconsumption witness')}
- need(v.jobs.filter(j=>j.name==='validate').length===1&&v.jobs.filter(j=>j.name==='install').length===1,'exact validation and owner jobs required');return {validation:v.jobs.find(j=>j.name==='validate'),installation:v.jobs.find(j=>j.name==='install')}
+function jobsShape(v,p,runId,context='HISTORY'){
+ check(context+'_JOBS_INVENTORY',v?.total_count===2&&Array.isArray(v.jobs)&&v.jobs.length===2&&new Set(v.jobs.map(j=>j.id)).size===2,'closed two-job installer inventory required')
+ for(const j of v.jobs){check(context+'_JOB_IDENTITY',Number.isSafeInteger(j.id)&&j.id>0&&['validate','install'].includes(j.name)&&j.run_id===Number(runId)&&j.run_attempt===1&&j.head_sha===p.head&&Array.isArray(j.steps),'actual known installer job required');const names=j.steps.map(s=>s.name);check(context+'_STEP_INVENTORY',new Set(names).size===names.length&&j.steps.every(s=>(j.name==='validate'?validationSteps:installSteps).has(s.name)),'unknown installer step refuses nonconsumption witness')}
+ check(context+'_JOB_PAIR',v.jobs.filter(j=>j.name==='validate').length===1&&v.jobs.filter(j=>j.name==='install').length===1,'exact validation and owner jobs required');return {validation:v.jobs.find(j=>j.name==='validate'),installation:v.jobs.find(j=>j.name==='install')}
 }
 async function history(get,p){
- const v=await get(prefix+`actions/workflows/install-baden-native-catalog.yml/runs?event=workflow_dispatch&per_page=100&page=1`)
- need(Number.isSafeInteger(v?.total_count)&&v.total_count>=1&&v.total_count<=100&&Array.isArray(v.workflow_runs)&&v.workflow_runs.length===v.total_count&&new Set(v.workflow_runs.map(r=>r.id)).size===v.total_count&&v.workflow_runs.filter(r=>r.id===Number(p.runId)).length===1,'complete bounded installer history required')
+ at('HISTORY_GET');const v=await get(prefix+`actions/workflows/install-baden-native-catalog.yml/runs?event=workflow_dispatch&per_page=100&page=1`)
+ check('HISTORY_INVENTORY',Number.isSafeInteger(v?.total_count)&&v.total_count>=1&&v.total_count<=100&&Array.isArray(v.workflow_runs)&&v.workflow_runs.length===v.total_count&&new Set(v.workflow_runs.map(r=>r.id)).size===v.total_count&&v.workflow_runs.filter(r=>r.id===Number(p.runId)).length===1,'complete bounded installer history required')
  for(const listed of v.workflow_runs){
-  need(/^[a-f0-9]{40}$/.test(listed.head_sha??''),'prior installer head missing');const prior={...p,head:listed.head_sha}
-  runIdentity(listed,prior,String(listed.id));if(listed.id===Number(p.runId)){need(listed.head_sha===p.head,'current history head drift');continue}
-  const r=await get(prefix+`actions/runs/${listed.id}`);runIdentity(r,prior,String(listed.id))
-  need(r.status==='completed'&&['failure','cancelled','timed_out'].includes(r.conclusion),'earlier live/success/unknown installer holds for reconciliation')
-  const {validation,installation}=jobsShape(await get(prefix+`actions/runs/${listed.id}/attempts/1/jobs?per_page=100&page=1`),prior,String(listed.id))
-  need(installation.status==='completed'&&installation.conclusion==='skipped'&&installation.steps.length===0&&validation.status==='completed'&&['failure','cancelled','timed_out'].includes(validation.conclusion)&&validation.steps.length>0&&validation.steps.every(s=>s.status==='completed'&&['success','failure','skipped','cancelled'].includes(s.conclusion)),'earlier owner job not explicitly skipped; permanent HOLD')
-  const known=r.id===skippedH1.runId
-  if(known){need(r.head_sha===skippedH1.head&&validation.id===skippedH1.validationJob&&installation.id===skippedH1.installationJob,'exact historical skipped-owner identity differs');const artifacts=await get(prefix+`actions/runs/${r.id}/artifacts?per_page=100&page=1`);need(artifacts?.total_count===0&&Array.isArray(artifacts.artifacts)&&artifacts.artifacts.length===0,'historical validation-only artifact inventory must be empty')}
-  for(const file of ['scripts/install-baden-native-catalog.mjs',workflow]){const bytes=readFileSync(new URL('../'+file,import.meta.url)),remote=await get(prefix+`contents/${file}?ref=${prior.head}`),body=Buffer.from(remote?.content??'','base64'),expected=known?skippedH1.files[file]:{bytes:bytes.length,sha256:sha(bytes)};need(remote?.type==='file'&&remote.path===file&&remote.encoding==='base64'&&remote.size===expected.bytes&&body.length===expected.bytes&&sha(body)===expected.sha256,'prior validation-only installer body differs')}
+  check('HISTORY_HEAD',/^[a-f0-9]{40}$/.test(listed.head_sha??''),'prior installer head missing');const prior={...p,head:listed.head_sha}
+  runIdentity(listed,prior,String(listed.id),'HISTORY_RUN');if(listed.id===Number(p.runId)){check('HISTORY_CURRENT_HEAD',listed.head_sha===p.head,'current history head drift');continue}
+  at('HISTORY_RUN_GET');const r=await get(prefix+`actions/runs/${listed.id}`);runIdentity(r,prior,String(listed.id),'HISTORY_RUN')
+  check('HISTORY_RUN_STATE',r.status==='completed'&&['failure','cancelled','timed_out'].includes(r.conclusion),'earlier live/success/unknown installer holds for reconciliation')
+  at('HISTORY_JOBS_GET');const jobs=await get(prefix+`actions/runs/${listed.id}/attempts/1/jobs?per_page=100&page=1`),{validation,installation}=jobsShape(jobs,prior,String(listed.id))
+  check('HISTORY_OWNER_SKIPPED',installation.status==='completed'&&installation.conclusion==='skipped'&&installation.steps.length===0&&validation.status==='completed'&&['failure','cancelled','timed_out'].includes(validation.conclusion)&&validation.steps.length>0&&validation.steps.every(s=>s.status==='completed'&&['success','failure','skipped','cancelled'].includes(s.conclusion)),'earlier owner job not explicitly skipped; permanent HOLD')
+  const known=[skippedH1,skippedH2].find(w=>r.id===w.runId)
+  if(known){check('HISTORY_REVIEWED_PROFILE',r.head_sha===known.head&&validation.id===known.validationJob&&installation.id===known.installationJob,'exact historical skipped-owner identity differs');if(known.executionSha256)check('HISTORY_EXECUTION_PROJECTION',skippedExecutionSha(r,jobs)===known.executionSha256,'exact reviewed historical execution differs');at('HISTORY_ARTIFACTS_GET');const artifacts=await get(prefix+`actions/runs/${r.id}/artifacts?per_page=100&page=1`);check('HISTORY_ARTIFACTS_EMPTY',artifacts?.total_count===0&&Array.isArray(artifacts.artifacts)&&artifacts.artifacts.length===0,'historical validation-only artifact inventory must be empty')}
+  for(const file of ['scripts/install-baden-native-catalog.mjs',workflow]){const label=file===workflow?'HISTORY_WORKFLOW_BODY':'HISTORY_INSTALLER_BODY';at(label+'_LOCAL_READ');const bytes=readFileSync(new URL('../'+file,import.meta.url));at(label+'_GET');const remote=await get(prefix+`contents/${file}?ref=${prior.head}`),body=Buffer.from(remote?.content??'','base64'),expected=known?known.files[file]:{bytes:bytes.length,sha256:sha(bytes)};check(label+'_CHECK',remote?.type==='file'&&remote.path===file&&remote.encoding==='base64'&&remote.size===expected.bytes&&body.length===expected.bytes&&sha(body)===expected.sha256,'prior validation-only installer body differs')}
  }
 }
 async function identity(get,p,beforeOwner=false){
- const r=await get(prefix+`actions/runs/${p.runId}`);runIdentity(r,p);need(r.status==='in_progress'&&r.conclusion===null,'actual installer must be running')
- const main=await get(prefix+'branches/main');need(main?.name==='main'&&main.commit?.sha===p.head,'actual main drift')
- const ci=await get(prefix+`actions/runs/${p.mainCiRunId}`)
- need(ci?.id===Number(p.mainCiRunId)&&ci.run_attempt===1&&ci.head_sha===p.head&&ci.head_branch==='main'&&ci.event==='push'&&ci.path==='.github/workflows/ci.yml'&&ci.status==='completed'&&ci.conclusion==='success'&&ci.repository?.full_name===repository&&ci.head_repository?.full_name===repository,'actual successful writer CI required')
- for(const file of ['scripts/install-baden-native-catalog.mjs',workflow]){const bytes=readFileSync(new URL('../'+file,import.meta.url)),remote=await get(prefix+`contents/${file}?ref=${p.head}`);need(remote?.type==='file'&&remote.path===file&&remote.encoding==='base64'&&remote.size===bytes.length&&Buffer.from(remote.content,'base64').equals(bytes),'installed installer/workflow body drift')}
- const response=await fetch('https://slff.eu/',{headers:{'Cache-Control':'no-cache'},redirect:'error',signal:AbortSignal.timeout(30000)});need(response.ok,'served writer unavailable');const html=await response.text();need(Buffer.byteLength(html)<=4*1024*1024,'bounded served HTML required')
- const matches=[...html.matchAll(/<meta\b[^>]*name=["']slff-commit["'][^>]*content=["']([a-f0-9]{40})["']/g)];need(matches.length===1&&matches[0][1]===p.head,'exact single served writer identity required')
+ at('CURRENT_RUN_GET');const r=await get(prefix+`actions/runs/${p.runId}`);runIdentity(r,p);check('CURRENT_RUN_STATE',r.status==='in_progress'&&r.conclusion===null,'actual installer must be running')
+ at('MAIN_GET');const main=await get(prefix+'branches/main');check('MAIN_HEAD',main?.name==='main'&&main.commit?.sha===p.head,'actual main drift')
+ at('CI_GET');const ci=await get(prefix+`actions/runs/${p.mainCiRunId}`)
+ check('CI_ID',ci?.id===Number(p.mainCiRunId),'actual CI ID differs');check('CI_ATTEMPT',ci.run_attempt===1,'actual CI first attempt differs');check('CI_HEAD',ci.head_sha===p.head,'actual writer CI differs');check('CI_REF',ci.head_branch==='main','actual CI main ref differs');check('CI_WORKFLOW',ci.event==='push'&&ci.path==='.github/workflows/ci.yml','actual push CI workflow differs');check('CI_RESULT',ci.status==='completed'&&ci.conclusion==='success','actual successful writer CI required');check('CI_REPOSITORY',ci.repository?.full_name===repository&&ci.head_repository?.full_name===repository,'actual CI repository differs')
+ for(const file of ['scripts/install-baden-native-catalog.mjs',workflow]){const label=file===workflow?'WORKFLOW_BODY':'INSTALLER_BODY';at(label+'_LOCAL_READ');const bytes=readFileSync(new URL('../'+file,import.meta.url));at(label+'_GET');const remote=await get(prefix+`contents/${file}?ref=${p.head}`);check(label+'_CHECK',remote?.type==='file'&&remote.path===file&&remote.encoding==='base64'&&remote.size===bytes.length&&Buffer.from(remote.content,'base64').equals(bytes),'installed installer/workflow body drift')}
+ at('SERVED_FETCH');let response;try{response=await fetch('https://slff.eu/',{headers:{'Cache-Control':'no-cache'},redirect:'error',signal:AbortSignal.timeout(30000)})}catch(error){diagnostic.code=ownFetchError(error);need(false,'served writer GET unavailable')}
+ at('SERVED_STATUS');if(!response.ok){diagnostic.code=Number.isInteger(response.status)&&response.status>=100&&response.status<=599?'OWN_FETCH_HTTP_'+response.status:'OWN_FETCH_HTTP_UNKNOWN';need(false,'served writer unavailable')}
+ at('SERVED_BODY');let html;try{html=await response.text()}catch(error){diagnostic.code=ownFetchError(error);need(false,'served writer body unavailable')}
+ check('SERVED_BOUND',Buffer.byteLength(html)<=4*1024*1024,'bounded served HTML required')
+ const matches=[...html.matchAll(/<meta\b[^>]*name=["']slff-commit["'][^>]*content=["']([a-f0-9]{40})["']/g)];check('SERVED_COMMIT',matches.length===1&&matches[0][1]===p.head,'exact single served writer identity required')
  await history(get,p)
  if(process.env.GITHUB_JOB==='install'){
-  const {validation,installation}=jobsShape(await get(prefix+`actions/runs/${p.runId}/attempts/1/jobs?per_page=100&page=1`),p,p.runId)
-  need(validation.status==='completed'&&validation.conclusion==='success'&&validation.steps.every(s=>s.status==='completed'&&['success','skipped'].includes(s.conclusion))&&validation.steps.filter(s=>s.name==='Authenticate source, root review, writer and deployed main'&&s.conclusion==='success').length===1&&installation.status==='in_progress'&&installation.conclusion===null,'successful credential-free validation job before owner job required')
-  if(beforeOwner)need(['Validate again before owner connection','Owner connection prerequisite'].every(name=>installation.steps.filter(s=>s.name===name&&s.status==='completed'&&s.conclusion==='success').length===1)&&installation.steps.filter(s=>s.name==='Install reviewed immutable catalog once'&&s.status==='in_progress'&&s.conclusion===null).length===1,'actual owner step and successful pre-connection guards required')
+  at('OWNER_JOBS_GET');const {validation,installation}=jobsShape(await get(prefix+`actions/runs/${p.runId}/attempts/1/jobs?per_page=100&page=1`),p,p.runId,'OWNER')
+  check('OWNER_VALIDATION_RESULT',validation.status==='completed'&&validation.conclusion==='success'&&validation.steps.every(s=>s.status==='completed'&&['success','skipped'].includes(s.conclusion))&&validation.steps.filter(s=>s.name==='Authenticate source, root review, writer and deployed main'&&s.conclusion==='success').length===1&&installation.status==='in_progress'&&installation.conclusion===null,'successful credential-free validation job before owner job required')
+  if(beforeOwner)check('OWNER_CRITICAL_STEP',['Validate again before owner connection','Owner connection prerequisite'].every(name=>installation.steps.filter(s=>s.name===name&&s.status==='completed'&&s.conclusion==='success').length===1)&&installation.steps.filter(s=>s.name==='Install reviewed immutable catalog once'&&s.status==='in_progress'&&s.conclusion===null).length===1,'actual owner step and successful pre-connection guards required')
  }
  return {runId:p.runId,head:p.head,mainCiRunId:p.mainCiRunId,served:p.head}
 }
@@ -85,12 +117,12 @@ async function authenticate(p,beforeOwner){
  const adapter=githubGetAdapter(process.env.GH_TOKEN),get=async(path,binary=false)=>{try{return await adapter(path,binary)}catch(error){diagnostic.code=safeGetCode(error?.githubDiagnostic);throw error}}
  phase('IDENTITY');const first=await identity(get,p,false)
  phase('COMPOSITION');const composition=await loadFussballNativeComposition({derivedRunId:p.derivedRunId,derivedHead:p.head,frozenDirectory:'frozen-de77',v6FrozenDirectory:'frozen-v6',github:get})
- phase('MANIFEST');const description=await describeFussballNativePreparation(composition)
+ phase('MANIFEST');const description=describeIssuedFussballNativePreparation(composition)
  phase('REVIEWED_ASSET');const asset=await reviewedAsset(get,p)
- need(description.catalogStatus==='FINALIZED'&&description.nativeImportEligible===false&&description.activationEligible===false&&typeof description.manifest==='string'&&Buffer.byteLength(description.manifest)<=maximum&&description.sha256===p.sha256&&sha(description.manifest)===p.sha256&&asset.bytes.equals(Buffer.from(description.manifest)),'independently reviewed DATA differs from genuine canonical source rebuild')
+ check('MANIFEST_COMPARISON',description.catalogStatus==='FINALIZED'&&description.nativeImportEligible===false&&description.activationEligible===false&&typeof description.manifest==='string'&&Buffer.byteLength(description.manifest)<=maximum&&description.sha256===p.sha256&&sha(description.manifest)===p.sha256&&asset.bytes.equals(Buffer.from(description.manifest)),'independently reviewed DATA differs from genuine canonical source rebuild')
  phase('MANIFEST_REAUTH');const again=await describeFussballNativePreparation(composition),state=getFussballNativeComposition(composition),manifest=JSON.parse(again.manifest)
- need(again.manifest===description.manifest&&again.sha256===description.sha256&&state.proof.derivedHead===p.head&&state.pack.expectedSha===p.head&&state.pack.replayHead===p.head&&manifest.currentFreshUntil===state.proof.currentFreshUntil&&Date.now()<Date.parse(manifest.currentFreshUntil),'source/manifest/writer freshness drift')
- phase('FINAL_IDENTITY');const final=await identity(get,p,beforeOwner);need(JSON.stringify(first)===JSON.stringify(final),'writer/root identity drift');getFussballNativeComposition(composition)
+ check('MANIFEST_FRESHNESS',again.manifest===description.manifest&&again.sha256===description.sha256&&state.proof.derivedHead===p.head&&state.pack.expectedSha===p.head&&state.pack.replayHead===p.head&&manifest.currentFreshUntil===state.proof.currentFreshUntil&&Date.now()<Date.parse(manifest.currentFreshUntil),'source/manifest/writer freshness drift')
+ phase('FINAL_IDENTITY');const final=await identity(get,p,beforeOwner);verifyFinalIdentity(first,final);at('FINAL_CAPABILITY');getFussballNativeComposition(composition)
  return {manifest:description.manifest,sha256:p.sha256,asset:{releaseId:asset.releaseId,assetId:asset.assetId,name:asset.name},identity:final}
 }
 function installationSQL(manifest,digest){
@@ -143,6 +175,6 @@ export async function runBadenNativeCatalogInstaller(input){
 }
 // CLI entry. No automatic invocation on import.
 if(process.argv[1]&&fileURLToPath(import.meta.url)===process.argv[1]){
- if(process.argv.length!==3){console.error('Baden catalog HOLD: exact validate/install command required');process.exitCode=1}
- else runBadenNativeCatalogInstaller({command:process.argv[2]}).then(v=>console.log(JSON.stringify(v))).catch(()=>{console.error(JSON.stringify(catalogHoldDiagnostic()));process.exitCode=1})
+ if(process.argv.length!==3){preserveCatalogHoldDiagnostic();console.error(JSON.stringify(catalogHoldDiagnostic()));process.exitCode=1}
+ else runBadenNativeCatalogInstaller({command:process.argv[2]}).then(v=>console.log(JSON.stringify(v))).catch(()=>{preserveCatalogHoldDiagnostic();console.error(JSON.stringify(catalogHoldDiagnostic()));process.exitCode=1})
 }
