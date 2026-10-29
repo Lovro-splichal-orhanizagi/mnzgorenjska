@@ -34,7 +34,12 @@ async function fixture(t){
   else if(path.startsWith(prefix+'actions/workflows/install-baden-native-catalog.yml/runs?'))v={total_count:1+prior.length,workflow_runs:[currentRun,...prior.map(x=>x.run)]}
   else if(prior.some(x=>path===prefix+`actions/runs/${x.run.id}`))v=prior.find(x=>path===prefix+`actions/runs/${x.run.id}`).run
   else if(prior.some(x=>path===prefix+`actions/runs/${x.run.id}/attempts/1/jobs?per_page=100&page=1`))v=prior.find(x=>path===prefix+`actions/runs/${x.run.id}/attempts/1/jobs?per_page=100&page=1`).jobs
-  else if(path===prefix+'releases/tags/baden-native-staging-v1')v=release
+  else if(path===prefix+'releases?per_page=100&page=1')v=[release]
+  else if(path===prefix+'actions/runs/40796083954/artifacts?per_page=100&page=1')v=controls.oldArtifacts??{total_count:0,artifacts:[]}
+  else if(path.startsWith(prefix+'contents/')&&path.endsWith('?ref=47d46f3a91813a7e720f3affccee056c1462ab07')){
+   // TEST ONLY old H1 bodies copied exactly from Git47d46f3a; production witness pins SHA/length.
+   const f=path.slice((prefix+'contents/').length).split('?')[0],v0=JSON.parse(readFileSync(new URL('./vzorci/baden-owner-skipped-h1-bodies.json',import.meta.url))).files[f],b=Buffer.from(v0);v={type:'file',path:f,encoding:'base64',size:b.length,content:b.toString('base64')}
+  }
   else if(path===prefix+'releases/901/assets?per_page=100&page=1')v=[asset]
   else if(path===prefix+'releases/assets/'+assetId)v=asset
   else return f.github(path,binary)
@@ -55,7 +60,7 @@ async function fixture(t){
  const localRead=(p,...a)=>readFileSync(local(p),...a),localWrite=(p,...a)=>writeFileSync(local(p),...a),localMkdir=(p,...a)=>mkdirSync(local(p),...a),localExists=p=>existsSync(local(p))
  const load=async input=>{assert.equal(input.frozenDirectory,'frozen-de77');assert.equal(input.v6FrozenDirectory,'frozen-v6');return f.api.loadFussballNativeComposition({...input,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e'})}
  const process={env,argv:[],cwd:()=>fileURLToPath(new URL('../',import.meta.url)),exitCode:undefined}
- const code=readFileSync(file,'utf8').split('// CLI entry')[0].replace(/^import .*\n/gm,'').replaceAll('import.meta.url',JSON.stringify(file.href)).replace(/\bexport /g,'')+'\nreturn {runBadenNativeCatalogInstaller,installationSQL};'
+ const code=readFileSync(file,'utf8').split('// CLI entry')[0].replace(/^import .*\n/gm,'').replaceAll('import.meta.url',JSON.stringify(file.href)).replace(/\bexport /g,'')+'\nreturn {runBadenNativeCatalogInstaller,installationSQL,catalogHoldDiagnostic};'
  const api=new Function('readFileSync','writeFileSync','mkdirSync','existsSync','realpathSync','join','resolve','fileURLToPath','createHash','execFileSync','githubGetAdapter','loadFussballNativeComposition','getFussballNativeComposition','describeFussballNativePreparation','fetch','process',code)(localRead,localWrite,localMkdir,localExists,realpathSync,join,resolve,fileURLToPath,createHash,execute,()=>github,load,f.api.getFussballNativeComposition,prep.describeFussballNativePreparation,fetch,process)
  return {f,api,env,calls,controls,prior,currentRun,ci,release,asset,description,cap,get ownerReads(){return ownerReads}}
 }
@@ -92,7 +97,8 @@ test('workflow scopes owner/tunnel secrets after read-only authentication and pi
  assert.match(w,/command -v psql/);assert.match(w,/workflow_dispatch:/);assert.match(w,/github.run_attempt == 1/);assert.match(w,/inputs.expected_sha == github.sha/);assert.match(w,/github.actor == 'nejcar20'/);assert.match(w,/contents: read/);assert.match(w,/actions: read/);assert.match(w,/cancel-in-progress: false/)
  for(const pin of ['de77b661cbc11d95256a500e57c2fdea861a0647','4e1e7caac02aa6e12c789c7cea7aac699d3c2566'])assert.ok(w.includes(pin))
  assert.ok(w.indexOf('catalog.mjs validate')<w.indexOf('secrets.SUPABASE_DB_URL'));assert.ok(w.indexOf('catalog.mjs validate')<w.indexOf('secrets.DEPLOY_SSH_KEY'));assert.match(w,/ExitOnForwardFailure=yes/);assert.match(w,/5432:127.0.0.1:5432 deploy@2.31.6.53/)
- assert.doesNotMatch(w,/SUPABASE_SERVICE_ROLE_KEY|actions: write|contents: write|schedule:|bulk-league-rollout|capture-archive|collect|--clobber/)
+ assert.match(w,/permissions:\n  contents: read\n  actions: read/);assert.equal((w.match(/      contents: write/g)??[]).length,2)
+ assert.doesNotMatch(w,/SUPABASE_SERVICE_ROLE_KEY|actions: write|schedule:|bulk-league-rollout|capture-archive|collect|--clobber/)
 })
 
 function skippedOwnerWitness(f){
@@ -107,4 +113,17 @@ test('only explicit closed skipped-owner witness permits retry after credential-
 
 test('saved preflight bytes and binding drift refuse before any owner access',async t=>{
  for(const name of ['manifest.json','preflight.json'])await t.test(name,async t=>{const f=await fixture(t);await f.api.runBadenNativeCatalogInstaller({command:'validate'});f.env.GITHUB_JOB='install';const path=join(f.f.root,'baden-native-catalog-install',name);if(name==='manifest.json')writeFileSync(path,f.description.manifest+'\n');else{const v=JSON.parse(readFileSync(path));v.binding.extra='foreign';writeFileSync(path,JSON.stringify(v))}await assert.rejects(f.api.runBadenNativeCatalogInstaller({command:'install'}),/reread drift/);assert.equal(f.ownerReads,0);assert.equal(f.calls.filter(c=>c.kind==='psql').length,0)})
+})
+
+function actualSkippedH1(f){const old=skippedOwnerWitness(f);old.run.id=40796083954;old.run.head_sha='47d46f3a91813a7e720f3affccee056c1462ab07';old.jobs.jobs.forEach(j=>{j.run_id=old.run.id;j.head_sha=old.run.head_sha});old.jobs.jobs[0].id=123192784514;old.jobs.jobs[1].id=123193495657;return old}
+test('fixed H1 R1 skipped-owner zero-artifact body witness supports only the actual historical validation',async t=>{
+ const f=await fixture(t);f.prior.push(actualSkippedH1(f));await f.api.runBadenNativeCatalogInstaller({command:'validate'});assert.equal(f.ownerReads,0)
+ for(const change of [f=>f.prior[0].run.id++,f=>f.prior[0].jobs.jobs[0].id++,f=>{f.controls.oldArtifacts={total_count:1,artifacts:[{id:1}]}},f=>{f.prior[0].jobs.jobs[1].steps=[{name:'Owner connection prerequisite',status:'completed',conclusion:'skipped'}]},f=>{f.controls.change=(p,v)=>p.includes('contents/')&&p.endsWith('?ref=47d46f3a91813a7e720f3affccee056c1462ab07')?{...v,content:Buffer.from('altered historical body').toString('base64')}:v}])await t.test(change.toString(),async t=>{const f=await fixture(t);f.prior.push(actualSkippedH1(f));change(f);await assert.rejects(f.api.runBadenNativeCatalogInstaller({command:'validate'}));assert.equal(f.ownerReads,0);assert.equal(f.calls.filter(c=>c.kind==='psql').length,0)})
+})
+test('draft release listing requires unique fixed-tag draft and keeps publisher/uploader/asset gates',async t=>{
+ const f=await fixture(t);await f.api.runBadenNativeCatalogInstaller({command:'validate'});assert.ok(f.calls.some(c=>c.path===prefix+'releases?per_page=100&page=1'));assert.ok(!f.calls.some(c=>c.path?.includes('/releases/tags/')))
+ for(const rows of [[],[{id:901,draft:false,tag_name:'baden-native-staging-v1'}],[{id:901,draft:true,tag_name:'baden-native-staging-v1'},{id:902,draft:true,tag_name:'baden-native-staging-v1'}]])await t.test(JSON.stringify(rows),async t=>{const f=await fixture(t);f.controls.change=(p,v)=>p===prefix+'releases?per_page=100&page=1'?rows:v;await assert.rejects(f.api.runBadenNativeCatalogInstaller({command:'validate'}));assert.equal(f.ownerReads,0)})
+})
+test('safe installer phase diagnostics retain bounded transport code through private loader refusal',async t=>{
+ const f=await fixture(t);f.f.controls.change=(p,v)=>{if(p===prefix+'actions/artifacts/401/zip')throw Object.assign(Error('SECRET_SQL_TOKEN_MUST_NOT_PRINT'),{githubDiagnostic:'ARTIFACT_ZIP_TIMEOUT'});return v};await assert.rejects(f.api.runBadenNativeCatalogInstaller({command:'validate'}));assert.deepEqual(f.api.catalogHoldDiagnostic(),{status:'HOLD',phase:'COMPOSITION',code:'ARTIFACT_ZIP_TIMEOUT'});assert.ok(!JSON.stringify(f.api.catalogHoldDiagnostic()).includes('SECRET'));assert.equal(f.ownerReads,0)
 })

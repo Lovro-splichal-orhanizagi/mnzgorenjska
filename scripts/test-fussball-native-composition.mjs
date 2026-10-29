@@ -39,7 +39,7 @@ test('dedicated workflow is manual read-only and cannot perform football or nati
  const path=new URL('../.github/workflows/replay-fussball-native-composition.yml',import.meta.url)
  assert.ok(existsSync(path),'derived workflow must exist')
  const w=readFileSync(path,'utf8')
- for(const re of [/workflow_dispatch:/,/contents: read/,/actions: read/,/github.run_attempt == 1/,/inputs.expected_sha == github.sha/,/npm ci --ignore-scripts/,/compression-level: 0/,/Preserve derived Baden composition proof/])assert.match(w,re)
+ for(const re of [/workflow_dispatch:/,/contents: read/,/actions: read/,/github.run_attempt == 1/,/inputs.expected_sha == github.sha/,/npm ci --ignore-scripts/,/compression-level: 6/,/Preserve derived Baden composition proof/])assert.match(w,re)
  assert.doesNotMatch(w,/secrets\.|SUPABASE|DATABASE|ssh |actions: write|contents: write|capture-current|capture-archive|dispatches|schedule:/)
 })
 

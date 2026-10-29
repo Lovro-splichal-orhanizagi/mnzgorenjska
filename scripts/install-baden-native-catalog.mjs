@@ -14,6 +14,12 @@ const need=(v,m)=>{if(!v)throw Object.assign(Error('Baden catalog HOLD: '+m),{da
 const closed=(v,keys)=>v&&Object.getPrototypeOf(v)===Object.prototype&&Object.keys(v).sort().join(',')===keys.slice().sort().join(',')
 const id=v=>typeof v==='string'&&/^[1-9]\d{0,15}$/.test(v)&&Number.isSafeInteger(Number(v))
 const owner=a=>a?.id===25134229&&a.login==='nejcar20'&&a.type==='User'
+// Exact historical validation-only R1; never evidence of owner installation.
+const skippedH1={runId:40796083954,head:'47d46f3a91813a7e720f3affccee056c1462ab07',validationJob:123192784514,installationJob:123193495657,files:{'scripts/install-baden-native-catalog.mjs':{bytes:18662,sha256:'a5f004f79bc6635b0392ed28711f5ec71fdd7d1d86ef8cf05833e34d4a84050e'},'.github/workflows/install-baden-native-catalog.yml':{bytes:6039,sha256:'65016f04f94512f234ac60f750c8f953cd38c1c51692e5ebef4235efe9de92f5'}}}
+let diagnostic={phase:'INPUT',code:'CHECK_REFUSED'}
+const phase=name=>{diagnostic={phase:name,code:'CHECK_REFUSED'}}
+const safeGetCode=v=>typeof v==='string'&&/^(ARTIFACT_ZIP|CONTENTS_RAW|CONTENTS_OBJECT|REPOSITORY_JSON)_(TIMEOUT|BUFFER|FAILED|HTTP_(401|403|404|429|500|502|503|504))$/.test(v)?v:'GITHUB_GET_FAILED'
+function catalogHoldDiagnostic(){return {status:'HOLD',phase:diagnostic.phase,code:diagnostic.code}}
 const write=(name,bytes)=>writeFileSync(join(output,name),bytes,{flag:'wx',mode:0o600})
 function pins(){
  const e=process.env
@@ -42,7 +48,9 @@ async function history(get,p){
   need(r.status==='completed'&&['failure','cancelled','timed_out'].includes(r.conclusion),'earlier live/success/unknown installer holds for reconciliation')
   const {validation,installation}=jobsShape(await get(prefix+`actions/runs/${listed.id}/attempts/1/jobs?per_page=100&page=1`),prior,String(listed.id))
   need(installation.status==='completed'&&installation.conclusion==='skipped'&&installation.steps.length===0&&validation.status==='completed'&&['failure','cancelled','timed_out'].includes(validation.conclusion)&&validation.steps.length>0&&validation.steps.every(s=>s.status==='completed'&&['success','failure','skipped','cancelled'].includes(s.conclusion)),'earlier owner job not explicitly skipped; permanent HOLD')
-  for(const file of ['scripts/install-baden-native-catalog.mjs',workflow]){const bytes=readFileSync(new URL('../'+file,import.meta.url)),remote=await get(prefix+`contents/${file}?ref=${prior.head}`);need(remote?.type==='file'&&remote.path===file&&remote.encoding==='base64'&&remote.size===bytes.length&&Buffer.from(remote.content,'base64').equals(bytes),'prior validation-only installer body differs')}
+  const known=r.id===skippedH1.runId
+  if(known){need(r.head_sha===skippedH1.head&&validation.id===skippedH1.validationJob&&installation.id===skippedH1.installationJob,'exact historical skipped-owner identity differs');const artifacts=await get(prefix+`actions/runs/${r.id}/artifacts?per_page=100&page=1`);need(artifacts?.total_count===0&&Array.isArray(artifacts.artifacts)&&artifacts.artifacts.length===0,'historical validation-only artifact inventory must be empty')}
+  for(const file of ['scripts/install-baden-native-catalog.mjs',workflow]){const bytes=readFileSync(new URL('../'+file,import.meta.url)),remote=await get(prefix+`contents/${file}?ref=${prior.head}`),body=Buffer.from(remote?.content??'','base64'),expected=known?skippedH1.files[file]:{bytes:bytes.length,sha256:sha(bytes)};need(remote?.type==='file'&&remote.path===file&&remote.encoding==='base64'&&remote.size===expected.bytes&&body.length===expected.bytes&&sha(body)===expected.sha256,'prior validation-only installer body differs')}
  }
 }
 async function identity(get,p,beforeOwner=false){
@@ -62,21 +70,27 @@ async function identity(get,p,beforeOwner=false){
  return {runId:p.runId,head:p.head,mainCiRunId:p.mainCiRunId,served:p.head}
 }
 async function reviewedAsset(get,p){
- const release=await get(prefix+'releases/tags/'+releaseTag);need(Number.isSafeInteger(release?.id)&&release.id>0&&release.draft===true&&release.tag_name===releaseTag,'exact private draft staging release required')
+ // Draft visibility requires push access; the by-tag API is for published releases.
+ const releases=[]
+ for(let page=1;page<=10;page++){const rows=await get(prefix+`releases?per_page=100&page=${page}`);need(Array.isArray(rows)&&rows.length<=100,'bounded private release inventory required');releases.push(...rows);if(rows.length<100)break;need(page<10,'private release inventory truncated')}
+ const matchesByTag=releases.filter(r=>r.tag_name===releaseTag),release=matchesByTag[0];need(matchesByTag.length===1&&Number.isSafeInteger(release?.id)&&release.id>0&&release.draft===true,'unique exact private draft staging release required')
  const assets=[]
  for(let page=1;page<=10;page++){const rows=await get(prefix+`releases/${release.id}/assets?per_page=100&page=${page}`);need(Array.isArray(rows)&&rows.length<=100,'bounded draft asset inventory required');assets.push(...rows);if(rows.length<100)break;need(page<10,'draft asset inventory truncated')}
  const name=`baden-native-catalog-${p.derivedRunId}-${p.sha256}.json`,matches=assets.filter(a=>a.name===name),asset=await get(prefix+'releases/assets/'+p.assetId)
  need(matches.length===1&&matches[0].id===Number(p.assetId)&&['id','name','state','size','url'].every(k=>matches[0][k]===asset[k])&&owner(matches[0].uploader)&&asset.name===name&&asset.state==='uploaded'&&owner(asset.uploader)&&Number.isSafeInteger(asset.size)&&asset.size>0&&asset.size<=maximum&&asset.url===`https://api.github.com/${prefix}releases/assets/${p.assetId}`,'unique root-uploaded reviewed manifest asset required')
- let bytes;try{bytes=execFileSync('gh',['api','--method','GET',prefix+'releases/assets/'+p.assetId,'-H','Accept: application/octet-stream'],{timeout:60000,maxBuffer:maximum+1,stdio:['ignore','pipe','pipe']})}catch{need(false,'reviewed asset GET unavailable')}
+ let bytes;try{bytes=execFileSync('gh',['api','--method','GET',prefix+'releases/assets/'+p.assetId,'-H','Accept: application/octet-stream'],{timeout:60000,maxBuffer:maximum+1,stdio:['ignore','pipe','pipe']})}catch{diagnostic.code='REVIEWED_ASSET_BINARY_GET_FAILED';need(false,'reviewed asset GET unavailable')}
  need(Buffer.isBuffer(bytes)&&bytes.length===asset.size&&sha(bytes)===p.sha256,'reviewed asset bytes/SHA differ');return {bytes,releaseId:release.id,assetId:p.assetId,name,sha256:p.sha256}
 }
 async function authenticate(p,beforeOwner){
- const get=githubGetAdapter(process.env.GH_TOKEN),first=await identity(get,p,false)
- const composition=await loadFussballNativeComposition({derivedRunId:p.derivedRunId,derivedHead:p.head,frozenDirectory:'frozen-de77',v6FrozenDirectory:'frozen-v6',github:get}),description=await describeFussballNativePreparation(composition),asset=await reviewedAsset(get,p)
+ const adapter=githubGetAdapter(process.env.GH_TOKEN),get=async(path,binary=false)=>{try{return await adapter(path,binary)}catch(error){diagnostic.code=safeGetCode(error?.githubDiagnostic);throw error}}
+ phase('IDENTITY');const first=await identity(get,p,false)
+ phase('COMPOSITION');const composition=await loadFussballNativeComposition({derivedRunId:p.derivedRunId,derivedHead:p.head,frozenDirectory:'frozen-de77',v6FrozenDirectory:'frozen-v6',github:get})
+ phase('MANIFEST');const description=await describeFussballNativePreparation(composition)
+ phase('REVIEWED_ASSET');const asset=await reviewedAsset(get,p)
  need(description.catalogStatus==='FINALIZED'&&description.nativeImportEligible===false&&description.activationEligible===false&&typeof description.manifest==='string'&&Buffer.byteLength(description.manifest)<=maximum&&description.sha256===p.sha256&&sha(description.manifest)===p.sha256&&asset.bytes.equals(Buffer.from(description.manifest)),'independently reviewed DATA differs from genuine canonical source rebuild')
- const again=await describeFussballNativePreparation(composition),state=getFussballNativeComposition(composition),manifest=JSON.parse(again.manifest)
+ phase('MANIFEST_REAUTH');const again=await describeFussballNativePreparation(composition),state=getFussballNativeComposition(composition),manifest=JSON.parse(again.manifest)
  need(again.manifest===description.manifest&&again.sha256===description.sha256&&state.proof.derivedHead===p.head&&state.pack.expectedSha===p.head&&state.pack.replayHead===p.head&&manifest.currentFreshUntil===state.proof.currentFreshUntil&&Date.now()<Date.parse(manifest.currentFreshUntil),'source/manifest/writer freshness drift')
- const final=await identity(get,p,beforeOwner);need(JSON.stringify(first)===JSON.stringify(final),'writer/root identity drift');getFussballNativeComposition(composition)
+ phase('FINAL_IDENTITY');const final=await identity(get,p,beforeOwner);need(JSON.stringify(first)===JSON.stringify(final),'writer/root identity drift');getFussballNativeComposition(composition)
  return {manifest:description.manifest,sha256:p.sha256,asset:{releaseId:asset.releaseId,assetId:asset.assetId,name:asset.name},identity:final}
 }
 function installationSQL(manifest,digest){
@@ -106,27 +120,29 @@ function ownerEnvironment(){
  return {PATH:process.env.PATH,HOME:process.env.HOME,LANG:'C.UTF-8',PGHOST:u.hostname,PGPORT:u.port||'5432',PGDATABASE:decodeURIComponent(u.pathname.slice(1)||'postgres'),PGUSER:decodeURIComponent(u.username),PGPASSWORD:decodeURIComponent(u.password),PGSSLMODE:u.searchParams.get('sslmode')||'prefer',PGCONNECT_TIMEOUT:'15',PGAPPNAME:'slff-baden-catalog-owner-install'}
 }
 export async function runBadenNativeCatalogInstaller(input){
+ phase('INPUT')
  need(closed(input,['command']),'closed input: command only; no IO/proof/clock overrides');need(['validate','install'].includes(input.command),'validate or install required')
- const p=pins();need(input.command!=='install'||process.env.GITHUB_JOB==='install','owner install job required')
+ phase('PINS');const p=pins();need(input.command!=='install'||process.env.GITHUB_JOB==='install','owner install job required')
  if(input.command==='install')need(existsSync(join(output,'preflight.json'))&&!existsSync(join(output,'write-intent.json')),'one-shot owner intent absent and successful local preflight required')
  const authenticated=await authenticate(p,input.command==='install'),binding={...p,...authenticated.asset}
  if(input.command==='validate'){
   mkdirSync(output,{mode:0o700});write('manifest.json',authenticated.manifest);write('preflight.json',json({binding,identity:authenticated.identity,sha256:authenticated.sha256,at:new Date().toISOString()}))
   return {status:'VALIDATED',sha256:p.sha256,nativeImportEligible:false,activationEligible:false}
  }
- const preflight=JSON.parse(readFileSync(join(output,'preflight.json'),'utf8'))
+ phase('LOCAL_PREFLIGHT');const preflight=JSON.parse(readFileSync(join(output,'preflight.json'),'utf8'))
  need(JSON.stringify(preflight.binding)===JSON.stringify(binding)&&readFileSync(join(output,'manifest.json')).equals(Buffer.from(authenticated.manifest)),'local preflight/manifest reread drift')
  write('write-intent.json',json({binding,sha256:p.sha256,at:new Date().toISOString(),status:'SENDING_ONCE_NO_RETRY'}))
  try{
-  const env=ownerEnvironment(),raw=execFileSync('psql',['-X','-qAt','-v','ON_ERROR_STOP=1'],{env,input:installationSQL(authenticated.manifest,p.sha256),encoding:'utf8',timeout:150000,maxBuffer:maximum+1024*1024,stdio:['pipe','pipe','pipe']}),v=JSON.parse(raw.trim())
+  phase('OWNER_TRANSACTION');const env=ownerEnvironment(),raw=execFileSync('psql',['-X','-qAt','-v','ON_ERROR_STOP=1'],{env,input:installationSQL(authenticated.manifest,p.sha256),encoding:'utf8',timeout:150000,maxBuffer:maximum+1024*1024,stdio:['pipe','pipe','pipe']}),v=JSON.parse(raw.trim())
   need(closed(v,['rows','sha256','manifest'])&&v.rows===1&&v.sha256===p.sha256&&v.manifest===authenticated.manifest,'exact committed catalog readback required')
   const result={status:'INSTALLED',binding,sha256:p.sha256,at:new Date().toISOString(),nativeImportEligible:false,activationEligible:false};write('result.json',json(result));return result
  }catch{
+  diagnostic.code='OWNER_OUTCOME_UNKNOWN'
   write('result.json',json({status:'UNKNOWN_PERMANENT_HOLD',binding,at:new Date().toISOString(),reason:'owner transaction or readback ambiguous; no automatic retry',nativeImportEligible:false,activationEligible:false}));need(false,'UNKNOWN owner outcome; permanent one-shot HOLD, reconcile read-only')
  }
 }
 // CLI entry. No automatic invocation on import.
 if(process.argv[1]&&fileURLToPath(import.meta.url)===process.argv[1]){
  if(process.argv.length!==3){console.error('Baden catalog HOLD: exact validate/install command required');process.exitCode=1}
- else runBadenNativeCatalogInstaller({command:process.argv[2]}).then(v=>console.log(JSON.stringify(v))).catch(()=>{console.error('Baden catalog HOLD; preserve evidence and reconcile before any owner retry');process.exitCode=1})
+ else runBadenNativeCatalogInstaller({command:process.argv[2]}).then(v=>console.log(JSON.stringify(v))).catch(()=>{console.error(JSON.stringify(catalogHoldDiagnostic()));process.exitCode=1})
 }

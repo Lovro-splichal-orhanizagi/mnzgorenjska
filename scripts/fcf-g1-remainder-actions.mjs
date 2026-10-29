@@ -7,7 +7,7 @@ import {readFcfG1RemainderParent,getFcfG1RemainderParent} from './fcf-g1-remaind
 import {readFcfG1PrebudgetAudit} from './fcf-g1-prebudget-audit.mjs'
 import * as source from './fcf-g1-remainder-source.mjs'
 import {auditFcfG1QuarantineDocuments} from './fcf-g1-quarantine-audit.mjs'
-import {readFcfDraftAsset} from './fcf-missing-inventory-actions.mjs'
+import {readFcfDraftAsset} from './fcf-inventory-github.mjs'
 import {snapshotFcfInventoryRuleset} from './fcf-missing-inventory-claim.mjs'
 import {waitForFcfInventorySourceSlot} from './fcf-inventory-source-coordination.mjs'
 import {historicalStatisticsPolicySha256 as hash} from './lib/historical-statistics-policy.mjs'

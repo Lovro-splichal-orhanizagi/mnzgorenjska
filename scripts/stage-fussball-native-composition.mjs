@@ -13,7 +13,11 @@ export function githubGetAdapter(token){
   const contents=path.startsWith(`repos/${repo}/contents/`),catalogRaw=binary&&contents
   need(!catalogRaw||new RegExp(`^repos/${repo}/contents/scripts/policies/fussball-baden-native-composition\\.json\\?ref=[a-f0-9]{40}$`).test(path),'fixed immutable catalog raw GET only')
   const media=contents?['--header',`Accept: application/vnd.github.${binary?'raw':'object'}+json`]:[]
-  const bytes=execFileSync('gh',['api','--method','GET',...media,path],{env:{...process.env,GH_TOKEN:token},timeout:60000,maxBuffer:(catalogRaw?4:binary?512:8)*1024*1024+1})
+  const artifactZip=binary&&new RegExp(`^repos/${repo}/actions/artifacts/[1-9]\\d{0,15}/zip$`).test(path),kind=artifactZip?'ARTIFACT_ZIP':contents?(binary?'CONTENTS_RAW':'CONTENTS_OBJECT'):'REPOSITORY_JSON'
+  let bytes;try{bytes=execFileSync('gh',['api','--method','GET',...media,path],{env:{...process.env,GH_TOKEN:token},stdio:['ignore','pipe','pipe'],timeout:artifactZip?180000:60000,maxBuffer:(catalogRaw?4:binary?512:8)*1024*1024+1})}catch(error){
+   const stderr=Buffer.isBuffer(error?.stderr)?error.stderr.subarray(0,4096).toString():typeof error?.stderr==='string'?error.stderr.slice(0,4096):'',http=stderr.match(/\(HTTP (401|403|404|429|500|502|503|504)\)/)?.[1],reason=error?.code==='ETIMEDOUT'?'TIMEOUT':error?.code==='ENOBUFS'?'BUFFER':http?'HTTP_'+http:'FAILED'
+   throw Object.assign(Error('Baden GitHub GET unavailable'),{code:'BADEN_GITHUB_GET_HOLD',githubDiagnostic:kind+'_'+reason})
+  }
   need(!catalogRaw||(Buffer.isBuffer(bytes)&&bytes.length<=4*1024*1024),'bounded raw catalog required')
   return binary?bytes:JSON.parse(bytes)
  }
