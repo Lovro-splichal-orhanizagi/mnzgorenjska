@@ -1,0 +1,63 @@
+name: Baden fixed fresh paired source audit
+run-name: Baden fresh paired source audit
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact reviewed deployed main writer
+        required: true
+        type: string
+      main_ci_run_id:
+        description: Actual successful push CI at that writer
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: uvoz-lige-de-verbandsliga-baden
+  cancel-in-progress: false
+jobs:
+  capture-pair:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      MAIN_CI_RUN_ID: ${{ inputs.main_ci_run_id }}
+      GH_TOKEN: ${{ github.token }}
+      NODE_OPTIONS: --max-old-space-size=6144
+    steps:
+      - name: Checkout exact reviewed fixed writer
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Node22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Focused source-free fixed pair controls
+        run: node --test scripts/test-fussball-fresh-pair.mjs
+      - name: Capture fixed current then verified archive with counted retries
+        run: node scripts/fussball-fresh-pair.mjs capture capture-fresh-pair
+      - name: Replay fresh paired originals without source network
+        run: node scripts/fussball-fresh-pair.mjs replay capture-fresh-pair
+      - name: Preserve all originals, partial attempts and historical budget receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baden-fresh-pair-${{ github.run_id }}
+          path: capture-fresh-pair/
+          if-no-files-found: ignore
+          compression-level: 6
+          retention-days: 90
+      - name: Preserve separate source-only replay attestation
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baden-fresh-pair-attestation-${{ github.run_id }}
+          path: fresh-pair-source-attestation.json
+          if-no-files-found: error
+          retention-days: 90

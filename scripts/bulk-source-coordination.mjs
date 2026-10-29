@@ -3,7 +3,17 @@
 import {execFileSync} from 'node:child_process'
 import {resolve} from 'node:path'
 import {fileURLToPath} from 'node:url'
-export const GERMAN_READERS=['preveri-fussball-vzorec.yml','preveri-fussball-sezono.yml','preveri-fussball-dopolni.yml','preveri-fussball-paket.yml','uvoz-pl-de-paketa.yml','uvoz-zapisnikov.yml']
+export const GERMAN_READERS=['uvoz-lige.yml','uvoz-fussball-public.yml','preveri-baden-fresh-pair.yml','preveri-fussball-vzorec.yml','preveri-fussball-sezono.yml','preveri-fussball-dopolni.yml','preveri-fussball-paket.yml','uvoz-pl-de-paketa.yml','uvoz-zapisnikov.yml']
+// These two workflow run-name grammars are fixed in their reviewed workflows.
+// A public FUSSBALL writer is German-only even if an input has a misleading slug.
+// Unknown titles/country codes never establish foreign or source-free scope.
+export function germanDirectReaderScope(path,title){
+ if(path?.endsWith('/uvoz-fussball-public.yml'))return /^Uvoz lige de-[a-z0-9]+(?:-[a-z0-9]+)* FUSSBALL public$/.test(title??'')?'DE':'UNKNOWN'
+ if(!path?.endsWith('/uvoz-lige.yml'))return null
+ const m=/^Uvoz lige ([a-z]{2})-[a-z0-9]+(?:-[a-z0-9]+)*$/.exec(title??'')
+ const known=new Set('SI HR AT IT HU RS BA MK ME RO MD BG CZ SK PL DE GB ES FR PT NL BE CH US CA AU NZ MT IS FO DK SE NO FI EE LV LT IE GE JP HK TH GI GR CY LU AL AZ AM UA TR LI'.toLowerCase().split(' '))
+ return !m||!known.has(m[1])?'UNKNOWN':m[1]==='de'?'DE':'NON_DE'
+}
 export function olderGermanReaders(runs,own){
  if(!Number.isSafeInteger(own.id)||!Number.isFinite(Date.parse(own.created_at)))throw Error('Unknown reader identity.')
  return runs.filter(r=>{
@@ -36,6 +46,7 @@ export async function waitForGermanSource({env=process.env,api,sleep=ms=>new Pro
   const blockers=olderGermanReaders(runs,own)
   const pending=[]
   for(const run of blockers){
+   if(germanDirectReaderScope(run.path,run.display_title)==='NON_DE')continue
    if(run.path?.endsWith('/uvoz-pl-de-paketa.yml')&&/^Bulk leagues PL$/.test(run.display_title??''))continue
    if(run.path?.endsWith('/uvoz-zapisnikov.yml')){
     const jobs=await api(`actions/runs/${run.id}/jobs?per_page=100&filter=latest`)
