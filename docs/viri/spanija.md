@@ -648,3 +648,29 @@ istega zagona, overjen z job/step/run/attempt/ZIP podatki ter ločenim root SHA
 izvirnega JSON. Zaščiten enkratni claim in odločitev root pred GET ostaneta
 obvezna. Podrobnosti in omejitev dejanskega Actions preverjanja so v
 [transportni meji](fcf-missing-inventory-admission.md#private-draft-transport-boundary-18-october-2026).
+
+### G9: ločena diagnostika in pregledani neuspešni prvi poskus
+
+Način `g9-calendar-discovery-v1` v `fcf-javni-dokazi.yml` pred branjem vira
+zapiše fazo preverjanja v ločen dnevnik v `RUNNER_TEMP`. Če izvirni source
+artefakt še ne obstaja, isti korak shrani `fcf-g9-calendar-diagnostic-*`;
+ta vsebuje le zaprte oznake faze/napake in naslove lastnega GitHub API.
+Diagnostika ne vsebuje surovega stderr ali žetonov ter ni dokaz števila
+zahtevkov, svežine, statistike ali pripravljenosti za vklop.
+
+Neuspešni zagon `40891667999`, attempt 1, je pregledana zgodovinska izjema:
+točni terminalni jobi, celoten izvirni dnevnik, vrstni red nalaganja pred
+čiščenjem ter nespremenjene runtime/import/test datoteke dokazujejo nič
+zahtevkov ponudniku. Sama odsotnost artefakta tega ne dokazuje. Bralnik
+`fcf-g9-pre-provider-zero.mjs` sprejme samo ta točni dokaz in ga pred izdajo
+zasebne zmožnosti ponovno preveri; prvotni vzrok napake ostane neznan.
+
+Zgodovinski račun ostane 301 od odobrenih največ 478 zahtevkov. Neuspešni
+zagon porabi enega od treh dovoljenih poskusov odkrivanja, zato ostaneta
+največ dva dejanska GET. Ne doda naslova, povezave ali nove ure vira. Prvi
+dejanski GET pri praznem seznamu izvirnih naslovov še vedno uporabi samo
+fiksni začetni naslov; nadaljevanje sme uporabiti le opaženo povezavo.
+Celotna sveža zgodovina zagonov, odsotnost sočasnih piscev, isti objavljeni
+main/CI/runtime in zaustavitev ob zavrnitvi ostanejo obvezni. Zgodovinski
+račun sam ne pomeni sveže globalne odobritve, novi probe pa ne dovoli
+uvoza ali vklopa G1/G9.
