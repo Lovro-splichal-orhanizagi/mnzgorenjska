@@ -1172,7 +1172,7 @@ jobs:
       - name: Install dependencies without scripts
         run: npm ci --ignore-scripts
       - name: Verify refresh800 source-free
-        run: node --test scripts/test-fcf-refresh800-contract.mjs scripts/test-fcf-refresh800-ledger.mjs scripts/test-fcf-refresh800-evidence.mjs scripts/test-fcf-refresh800-execution.mjs scripts/test-fcf-refresh800-capture.mjs scripts/test-fcf-refresh800-actions.mjs scripts/test-fcf-refresh800-workflow.mjs scripts/test-fcf-refresh800-revision.mjs scripts/test-fcf-refresh800-integration.mjs
+        run: node --test scripts/test-fcf-refresh800-contract.mjs scripts/test-fcf-refresh800-ledger.mjs scripts/test-fcf-refresh800-evidence.mjs scripts/test-fcf-refresh800-execution.mjs scripts/test-fcf-refresh800-capture.mjs scripts/test-fcf-refresh800-actions.mjs scripts/test-fcf-refresh800-workflow.mjs scripts/test-fcf-refresh800-revision.mjs scripts/test-fcf-refresh800-integration.mjs scripts/test-fcf-ownsite-transport.mjs
       - name: Reserve actual refresh800 execution
         id: reserve
         run: node scripts/fcf-refresh800-actions.mjs reserve

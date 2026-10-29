@@ -147,7 +147,7 @@ jobs:
         run: npm run test:fcf-future
 
       - name: FCF reusable refresh800 source-only contract (source-free)
-        run: node --test scripts/test-fcf-refresh800-contract.mjs scripts/test-fcf-refresh800-ledger.mjs scripts/test-fcf-refresh800-evidence.mjs scripts/test-fcf-refresh800-execution.mjs scripts/test-fcf-refresh800-capture.mjs scripts/test-fcf-refresh800-actions.mjs scripts/test-fcf-refresh800-workflow.mjs scripts/test-fcf-refresh800-revision.mjs scripts/test-fcf-refresh800-integration.mjs
+        run: node --test scripts/test-fcf-refresh800-contract.mjs scripts/test-fcf-refresh800-ledger.mjs scripts/test-fcf-refresh800-evidence.mjs scripts/test-fcf-refresh800-execution.mjs scripts/test-fcf-refresh800-capture.mjs scripts/test-fcf-refresh800-actions.mjs scripts/test-fcf-refresh800-workflow.mjs scripts/test-fcf-refresh800-revision.mjs scripts/test-fcf-refresh800-integration.mjs scripts/test-fcf-ownsite-transport.mjs
 
       - name: FCF native target offline planning (source-free)
         run: node --test scripts/test-fcf-target-native-plan.mjs scripts/test-fcf-target-native-adapter.mjs scripts/test-fcf-target-offline.mjs
