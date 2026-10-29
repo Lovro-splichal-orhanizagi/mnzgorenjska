@@ -1151,10 +1151,15 @@ jobs:
     name: refresh800-capture
     if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && inputs.preset == 'fcf-fixed-target-refresh800-v1' && github.run_attempt == 1
     runs-on: ubuntu-latest
-    timeout-minutes: 65
+    timeout-minutes: 105
     permissions:
-      contents: read
+      contents: write
       actions: read
+    # Private draft visibility requires push permission; transport is GET-only.
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FCF_REFRESH800_ASSET_ID: ${{ inputs.asset_id }}
+      FCF_REFRESH800_ASSET_SHA: ${{ inputs.asset_sha256 }}
     steps:
       - name: Checkout exact main
         uses: actions/checkout@v4
@@ -1167,7 +1172,21 @@ jobs:
       - name: Install dependencies without scripts
         run: npm ci --ignore-scripts
       - name: Verify refresh800 source-free
-        run: node --test scripts/test-fcf-refresh800-contract.mjs scripts/test-fcf-refresh800-ledger.mjs scripts/test-fcf-refresh800-evidence.mjs scripts/test-fcf-refresh800-execution.mjs scripts/test-fcf-refresh800-capture.mjs scripts/test-fcf-refresh800-actions.mjs scripts/test-fcf-refresh800-workflow.mjs
+        run: node --test scripts/test-fcf-refresh800-contract.mjs scripts/test-fcf-refresh800-ledger.mjs scripts/test-fcf-refresh800-evidence.mjs scripts/test-fcf-refresh800-execution.mjs scripts/test-fcf-refresh800-capture.mjs scripts/test-fcf-refresh800-actions.mjs scripts/test-fcf-refresh800-workflow.mjs scripts/test-fcf-refresh800-revision.mjs scripts/test-fcf-refresh800-integration.mjs
+      - name: Reserve actual refresh800 execution
+        id: reserve
+        run: node scripts/fcf-refresh800-actions.mjs reserve
+      - name: Retain refresh800 reservation
+        if: success() && steps.reserve.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-refresh800-reservation-${{ github.run_id }}-1
+          path: fcf-refresh800-reservation
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 90
+      - name: Wait for reviewed refresh800 protected claim
+        run: node scripts/fcf-refresh800-actions.mjs wait-claim
       - name: Capture fixed240 refresh800 originals
         id: capture
         env:
