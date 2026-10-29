@@ -62,5 +62,5 @@ jobs:
           name: fussball-native-composition-${{ github.run_id }}
           path: baden-native-composition/
           if-no-files-found: error
-          compression-level: 0
+          compression-level: 6
           retention-days: 30
