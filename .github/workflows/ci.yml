@@ -387,6 +387,12 @@ jobs:
           node --test --test-concurrency=1 scripts/test-fcf-future-native-projection-sql.mjs scripts/test-fcf-g1-readonly-projection-sql.mjs
           node --test scripts/test-fcf-future-native-import-sql.mjs
           node --test scripts/test-fcf-future-native-activation-sql.mjs
+      - name: G1 derived scores and durable9410 synthetic rollback (fresh GHA only)
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          SUPABASE_TEST_DB: postgres
+          FCF_G1_SCORES_CI_SQL_TEST: '1'
+        run: node --test scripts/test-fcf-g1-derived-scores.mjs scripts/test-fcf-g1-derived-scores-sql.mjs
       - name: FCF Scout snapshot preservation and phase rollback regressions
         env:
           FCF_SCOUT_CI_SQL_TEST: '1'
