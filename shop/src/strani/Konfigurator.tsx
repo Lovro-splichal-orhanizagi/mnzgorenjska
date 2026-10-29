@@ -8,6 +8,7 @@ import { supabase, type Cona, type Izdelek, type MoznostPolja, type MotivIzdelka
 import { cena, jezik, po, SL, t, type Kljuc } from '../besede'
 import { dodaj, kljuc, NAJVEC, shrani, useKosarica } from '../kosarica'
 import { barvaRazlicice, conaZa, Mockup, velikostRazlicice } from '../mockup'
+import { dogodek } from '../analitika'
 import { useNaslov } from '../Okvir'
 import { letoNaprej, napakaPolja, normaliziraj, type Personalizacija, type VrednostVnosa } from '../personalizacija'
 import { MOTIVI } from '../motivi'
@@ -299,6 +300,7 @@ export function Konfigurator({ i }: { i: Izdelek }) {
     const opis = [po(m.ime_sl, m.ime_en), ...opisi.filter((v) => v !== '')].join(' · ').slice(0, 120)
     const nova = dodaj(kosarica, r.id, kolicina, i.slug, vnos, opis, najvec, prikaz)
     shrani(nova)
+    dogodek('trgovina-kosarica', { izdelek: i.slug })
     setDodano(imam(nova) - imam(kosarica))
   }
 
