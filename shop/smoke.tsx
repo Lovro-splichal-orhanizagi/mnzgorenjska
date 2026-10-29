@@ -99,7 +99,9 @@ const izdelek: TIzdelek = {
   ],
 }
 const stran = renderToString(<StaticRouter location="/p/majica"><IzdelekView i={izdelek} /></StaticRouter>)
-preveri('izdelek: različice, razprodana onemogočena, cena', stran.includes('Črna / S') && /disabled=""[^>]*>Črna \/ M/.test(stran) && stran.includes('25,00') && !stran.includes('od 25'), stran.slice(0, 200))
+preveri('izdelek: barva in velikost ločeno, razprodana velikost onemogočena, cena', stran.includes('>Barva<') && stran.includes('>Črna<') && />S<\/button>/.test(stran)
+  && /disabled=""[^>]*>M<\/button>/.test(stran) && stran.includes('25,00') && !stran.includes('od 25'), stran.slice(0, 200))
+preveri('izdelek: poštnina SI in EU na strani izdelka', stran.includes('3,90') && stran.includes('9,90'))
 
 preveri('cena: Intl v jeziku strani', cena(2500).replace(/\s/g, ' ') === '25,00 €', cena(2500))
 preveri('stripe: le https://checkout.stripe.com', stripeNaslov('https://checkout.stripe.com/c/pay/x') && !stripeNaslov('http://checkout.stripe.com/x')
