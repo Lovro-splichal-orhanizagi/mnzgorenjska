@@ -6,7 +6,7 @@ import { BARVE, postavi, povezava, type Mail as Mail_, type Vrstica } from '../_
 
 /** Kopije iz shop/src/besede.ts (smoke primerja): funkcija se objavi brez shop/. */
 export const TELEFON = '+386 40 773 385'
-export const POGOJI_VERZIJA = '18. 10. 2026'
+export const POGOJI_VERZIJA = '29. 10. 2026'
 
 export interface Narocilo {
   javna_oznaka: string
