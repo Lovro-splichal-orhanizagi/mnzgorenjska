@@ -17,9 +17,9 @@ test('native source seam calls real private freshPAIR getter and rejects copied/
  for(const p of [{kind:freshSourceKind},{kind:freshSourceKind,source:{nativeEligible:true}},JSON.parse(JSON.stringify({kind:freshSourceKind,sourceOnly:true}))])assert.throws(()=>api.getFussballNativeCompositionSource(p),/reader-issued fresh paired/)
  for(const key of ['catalog','loader','clock','allowFreshPair']){let calls=0;await assert.rejects(api.readFussballNativeCompositionSource({sourceRunId:'99999999999',frozenDirectory:'unused',v6FrozenDirectory:'unused',github:async()=>{calls++},[key]:true}),/closed/);assert.equal(calls,0)}
 })
-test('unchanged compiled old catalog refuses substituting a new source run before source GET',async()=>{
- const compiled=JSON.parse(readFileSync(new URL('./policies/fussball-baden-native-composition.json',import.meta.url)));assert.equal(compiled.kind,'baden-fussball-native-catalog');assert.notEqual(compiled.captureCodeSha256,freshCode)
- let calls=0;await assert.rejects(api.readFussballNativeCompositionSource({sourceRunId:'99999999999',frozenDirectory:'unused',v6FrozenDirectory:'unused',github:async()=>{calls++}}),/compiled source run/);assert.equal(calls,0)
+test('compiled catalog refuses substituting a different source run before source GET',async()=>{
+ const compiled=JSON.parse(readFileSync(new URL('./policies/fussball-baden-native-composition.json',import.meta.url)));assert.equal(api.validateFussballNativeCatalog(compiled).kind,compiled.kind);assert.equal(compiled.nativePreparation,null)
+ let calls=0;await assert.rejects(api.readFussballNativeCompositionSource({sourceRunId:compiled.sourceRunId==='99999999999'?'99999999998':'99999999999',frozenDirectory:'unused',v6FrozenDirectory:'unused',github:async()=>{calls++}}),/compiled source run/);assert.equal(calls,0)
 })
 test('old TEST ONLY private source partition retains original five-way behavior and byte hashes',()=>{
  const f=partitionFixture(),before=Buffer.from(f.state.originals.stages.current.files.get('result.json')),pack=isolatedComposition(f).buildFussballNativeComposition(f.proof)
