@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url'
 import {createHash} from 'node:crypto'
 import {execFileSync} from 'node:child_process'
 import {githubGetAdapter} from './stage-fussball-native-composition.mjs'
+import {fetchBadenServedPage as fetch} from './lib/baden-served-page.mjs'
 import {loadFussballNativeComposition,getFussballNativeComposition} from './fussball-native-composition.mjs'
 import {describeFussballNativePreparation,describeIssuedFussballNativePreparation} from './prepare-fussball-native-history.mjs'
 const repository='Lovro-splichal-orhanizagi/mnzgorenjska',prefix=`repos/${repository}/`,workflow='.github/workflows/install-baden-native-catalog.yml',releaseTag='baden-native-staging-v1',output='baden-native-catalog-install'
@@ -100,7 +101,7 @@ async function identity(get,p,beforeOwner=false){
  for(const file of ['scripts/install-baden-native-catalog.mjs',workflow]){const label=file===workflow?'WORKFLOW_BODY':'INSTALLER_BODY';at(label+'_LOCAL_READ');const bytes=readFileSync(new URL('../'+file,import.meta.url));at(label+'_GET');const remote=await get(prefix+`contents/${file}?ref=${p.head}`);check(label+'_CHECK',remote?.type==='file'&&remote.path===file&&remote.encoding==='base64'&&remote.size===bytes.length&&Buffer.from(remote.content,'base64').equals(bytes),'installed installer/workflow body drift')}
  at('SERVED_FETCH');let response;try{response=await fetch('https://slff.eu/',{headers:{'Cache-Control':'no-cache'},redirect:'error',signal:AbortSignal.timeout(30000)})}catch(error){diagnostic.code=ownFetchError(error);need(false,'served writer GET unavailable')}
  at('SERVED_STATUS');if(!response.ok){diagnostic.code=Number.isInteger(response.status)&&response.status>=100&&response.status<=599?'OWN_FETCH_HTTP_'+response.status:'OWN_FETCH_HTTP_UNKNOWN';need(false,'served writer unavailable')}
- at('SERVED_BODY');let html;try{html=await response.text()}catch(error){diagnostic.code=ownFetchError(error);need(false,'served writer body unavailable')}
+ at('SERVED_BODY');let html;try{html=await response.text()}catch(error){if(error?.code==='OWN_FETCH_BODY_BOUND'){at('SERVED_BOUND');need(false,'bounded served HTML required')}diagnostic.code=ownFetchError(error);need(false,'served writer body unavailable')}
  check('SERVED_BOUND',Buffer.byteLength(html)<=4*1024*1024,'bounded served HTML required')
  const matches=[...html.matchAll(/<meta\b[^>]*name=["']slff-commit["'][^>]*content=["']([a-f0-9]{40})["']/g)];check('SERVED_COMMIT',matches.length===1&&matches[0][1]===p.head,'exact single served writer identity required')
  await history(get,p)

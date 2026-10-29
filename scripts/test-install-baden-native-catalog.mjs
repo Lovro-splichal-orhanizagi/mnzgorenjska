@@ -146,6 +146,7 @@ test('final identity refusals retain exact closed subphase and safe diagnostic a
   ['SERVED_FETCH','OWN_FETCH_NETWORK_FAILED',f=>{f.controls.served=n=>{if(n===2)throw Error('TEST_SECRET_NETWORK');return good()}}],
   ['SERVED_STATUS','OWN_FETCH_HTTP_503',f=>{f.controls.served=n=>n===2?{ok:false,status:503,text:async()=>{throw Error('must not read bad body')}}:good()}],
   ['SERVED_BODY','OWN_FETCH_TIMEOUT',f=>{f.controls.served=n=>n===2?{ok:true,status:200,text:async()=>{throw Object.assign(Error('TEST_SECRET_BODY'),{name:'AbortError'})}}:good()}],
+  ['SERVED_BOUND','SERVED_BOUND_REFUSED',f=>{f.controls.served=n=>n===2?{ok:true,status:200,text:async()=>{throw Object.assign(Error('TEST_SECRET_BODY_BOUND'),{code:'OWN_FETCH_BODY_BOUND'})}}:good()}],
   ['SERVED_COMMIT','SERVED_COMMIT_REFUSED',f=>{f.controls.served=n=>n===2?{ok:true,status:200,text:async()=>'<meta name="slff-commit" content="'+'b'.repeat(40)+'">'}:good()}],
   ['FINAL_CAPABILITY','FINAL_CAPABILITY_REFUSED',f=>{f.controls.finalCapabilityFailure=true}],
  ]
