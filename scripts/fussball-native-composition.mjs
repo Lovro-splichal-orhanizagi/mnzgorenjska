@@ -8,6 +8,7 @@ import {createHash} from 'node:crypto'
 import {isDeepStrictEqual} from 'node:util'
 import {readFussballCompletedSourceV7,getFussballCompletedSourceV7} from './fussball-completed-source-v7.mjs'
 import {readFussballBadenFreshPair,getFussballBadenFreshPair} from './fussball-baden-fresh-pair.mjs'
+import {readFussballBadenCompletedStages,getFussballBadenCompletedStages,fussballBadenCompletedStagesDescriptor} from './fussball-baden-completed-stages.mjs'
 import {fussballFreshPairCodeSha256} from './fussball-fresh-pair.mjs'
 import {fussballArchiveV7CodeSha256} from './fussball-archive-v7.mjs'
 import {zaprtje} from './odtis-kode.mjs'
@@ -19,12 +20,13 @@ import {inspectFussballLineup} from './viri/fussball-statistika.mjs'
 import {validateFussballFixture} from './fussball-season.mjs'
 
 const profile='germany-retained-fussball-native-v1',sourcePolicy='fussball-community-cards-v1'
+const completedCatalogKind='baden-fussball-completed-stages-native-catalog',completedSourceKind='authenticated-fussball-baden-completed-stages-source'
 const freshCatalogKind='baden-fussball-fresh-pair-native-catalog',freshSourceKind='authenticated-fussball-baden-fresh-pair-source'
 const repo='Lovro-splichal-orhanizagi/mnzgorenjska',prefix=`repos/${repo}/`,workflow='.github/workflows/replay-fussball-native-composition.yml'
 const validateStep='Validate exact reviewed main and first attempt',deriveStep='Authenticate source certificate and derive exact Baden partition',uploadStep='Preserve derived Baden composition proof'
 const catalogFile='scripts/policies/fussball-baden-native-composition.json'
 const catalogBytes=readFileSync(new URL('../'+catalogFile,import.meta.url)),catalog=JSON.parse(catalogBytes)
-const runtimeFiles=[...new Set([workflow,catalogFile,'package-lock.json',...zaprtje('scripts/fussball-native-composition.mjs'),...zaprtje('scripts/stage-fussball-native-composition.mjs')])].sort()
+const runtimeFiles=[...new Set([workflow,catalogFile,'scripts/fussball-baden-completed-stages.json','package-lock.json',...zaprtje('scripts/fussball-native-composition.mjs'),...zaprtje('scripts/stage-fussball-native-composition.mjs')])].sort()
 const capabilities=new WeakMap(),MiB=1024*1024,HASH=/^[a-f0-9]{64}$/
 const hash=b=>createHash('sha256').update(b).digest('hex')
 const canonical=v=>JSON.stringify(v,(_,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.fromEntries(Object.entries(x).sort(([a],[b])=>a.localeCompare(b))):x)
@@ -54,9 +56,10 @@ function fixture(f,rounds){
 /** Pure closed-schema validation confers no capability. Only the fixed file is
  * consumed by the private source/hosted builders; caller catalogs are never used. */
 export function validateFussballNativeCatalog(c){
+ const completedDescriptor=c?.kind===completedCatalogKind?fussballBadenCompletedStagesDescriptor():null
  closed(c,['version','kind','profile','status','sourcePolicy','approval','firstFantasyPlayedOn','sourceRunId','sourceHead','captureCodeSha256','clubDescriptors','nativePreparation','seasons'],'closed catalog required')
  need(c.nativePreparation===null,'native preparation cannot be supplied as catalog authority')
- need(c.version===1&&c.profile===profile&&c.sourcePolicy===sourcePolicy&&((c.kind==='baden-fussball-native-catalog'&&c.captureCodeSha256===fussballArchiveV7CodeSha256()&&c.captureCodeSha256==='c730046b0a543bf7d9d1dc40f56ae857e5935dd81c0b1a5aff898adcce4b06ea')||(c.kind===freshCatalogKind&&c.captureCodeSha256===fussballFreshPairCodeSha256()&&c.captureCodeSha256==='f9eeb9ecff417b24a599038ee1d0aa9f4c8fd09f8b47cdd71a6c79fb9e823dca')),'exact Baden catalog/source scope required')
+ need(c.version===1&&c.profile===profile&&c.sourcePolicy===sourcePolicy&&((c.kind==='baden-fussball-native-catalog'&&c.captureCodeSha256===fussballArchiveV7CodeSha256()&&c.captureCodeSha256==='c730046b0a543bf7d9d1dc40f56ae857e5935dd81c0b1a5aff898adcce4b06ea')||(c.kind===freshCatalogKind&&c.captureCodeSha256===fussballFreshPairCodeSha256()&&c.captureCodeSha256==='f9eeb9ecff417b24a599038ee1d0aa9f4c8fd09f8b47cdd71a6c79fb9e823dca')||(c.kind===completedCatalogKind&&c.captureCodeSha256===fussballFreshPairCodeSha256()&&c.captureCodeSha256===completedDescriptor.currentCodeSha256&&c.sourceRunId===String(completedDescriptor.current.run.id)&&c.sourceHead===completedDescriptor.current.run.head_sha)),'exact Baden catalog/source scope required')
  need(c.status==='FINALIZED','production catalog UNFINALIZED: exhaustive archive, immutable cutoff and source club descriptors required')
  need(/^[1-9]\d{0,15}$/.test(c.sourceRunId??'')&&/^[a-f0-9]{40}$/.test(c.sourceHead??''),'actual authenticated source run/head required')
  closed(c.approval,['reference','permissionTimestamp'],'closed approval reference required')
@@ -145,15 +148,15 @@ function cardEntry(entry,f,season,documents){
 }
 function partitionState(state,c){
  validateFussballNativeCatalog(c);fresh(state.proof.source)
- const freshPair=c.kind===freshCatalogKind
- need(state.proof.kind===(freshPair?freshSourceKind:'authenticated-completed-fussball-v7-source'),'source family differs from catalog')
+ const sourceKind=c.kind===completedCatalogKind?completedSourceKind:c.kind===freshCatalogKind?freshSourceKind:'authenticated-completed-fussball-v7-source'
+ need(state.proof.kind===sourceKind,'source family differs from catalog')
  need(state.proof.source.sourceRunId===c.sourceRunId&&state.proof.source.sourceHead===c.sourceHead&&state.proof.source.captureCodeSha256===c.captureCodeSha256&&state.proof.source.nativeEligible===false&&state.proof.source.activationEligible===false,'source-only capability scope differs')
  const seasons=[],clubs=[],roleReplay=replayFussballNativeRoles(state.originals.stages)
  for(const s of c.seasons){
   const stage=state.originals.stages[s.stage],original=stage.result,replay=roleReplay[s.stage],r=replay.result,sch=r.schedule,scope=r.scope,cov=r.coverage
   need(s.nativeRoleReplaySha256===replay.nativeRoleReplaySha256,'finalized native role replay witness differs')
   need(stage.manifest.success===true&&stage.manifest.error===null&&stage.manifest.options.reportLimit===null&&scope?.provider==='fussball'&&scope.staffel===s.staffel&&scope.season===s.season&&scope.cardPolicy==='community-v1'&&sch?.staffel===s.staffel&&sch.season===s.season&&r.version===1&&r.activationEligible===false&&date(scope.asOfDate),'complete replayed seasonal scope required')
-  need(stage.manifest.resultSha256===s.resultSha256&&hash(freshPair?originalResultBytes(stage):stage.files.get('result.json'))===s.resultSha256&&digest(sch.fixtures)===s.fixtureInventorySha256&&digest(original.rejectedReports)===s.rejectionsSha256&&digest(r.administrativeFixtures??[])===s.administrativeSha256,'finalized source fixture/result/rejection/admin inventory differs')
+  need(stage.manifest.resultSha256===s.resultSha256&&hash(stage.manifest.version===8?originalResultBytes(stage):stage.files.get('result.json'))===s.resultSha256&&digest(sch.fixtures)===s.fixtureInventorySha256&&digest(original.rejectedReports)===s.rejectionsSha256&&digest(r.administrativeFixtures??[])===s.administrativeSha256,'finalized source fixture/result/rejection/admin inventory differs')
   need(Array.isArray(sch.rounds)&&sch.rounds.length>0&&sch.rounds.length<=80&&sch.rounds.every((n,i)=>n===i+1)&&Array.isArray(sch.fixtures)&&sch.fixtures.length>0&&sch.fixtures.length<=4000,'full bounded contiguous source schedule required')
   const byId=new Map(),assigned=new Set(),partition=Object.fromEntries(categories.map(k=>[k,[]])),identities=new Map(),reports=[],pendingReports=[],unavailable=[]
   for(const f of sch.fixtures){fixture(f,sch.rounds);need(!byId.has(f.id),'duplicate source fixture');byId.set(f.id,f)}
@@ -181,7 +184,7 @@ function partitionState(state,c){
  return seasons
 }
 /** Dispatch preserves the actual private issuer; serialized source DATA is never authority. */
-export function getFussballNativeCompositionSource(proof){const state=proof?.kind===freshSourceKind?getFussballBadenFreshPair(proof):getFussballCompletedSourceV7(proof);fresh(state.proof.source);return state}
+export function getFussballNativeCompositionSource(proof){const state=proof?.kind===completedSourceKind?getFussballBadenCompletedStages(proof):proof?.kind===freshSourceKind?getFussballBadenFreshPair(proof):getFussballCompletedSourceV7(proof);fresh(state.proof.source);return state}
 function sourceState(proof){return getFussballNativeCompositionSource(proof)}
 export function partitionFussballNativeSource(proof){return freeze(partitionState(sourceState(proof),catalog))}
 export function buildFussballNativeComposition(proof){
@@ -250,7 +253,7 @@ export async function readFussballNativeCompositionSource(input){
  closed(input,['sourceRunId','frozenDirectory','v6FrozenDirectory','github'],'closed native source reader input required')
  need(input.sourceRunId===catalog.sourceRunId,'compiled source run differs')
  validateFussballNativeCatalog(catalog);sourceInput(input,input)
- return catalog.kind===freshCatalogKind?readFussballBadenFreshPair({sourceRunId:input.sourceRunId,sourceHead:catalog.sourceHead,github:input.github}):readFussballCompletedSourceV7(input)
+ return catalog.kind===completedCatalogKind?readFussballBadenCompletedStages({sourceRunId:input.sourceRunId,sourceHead:catalog.sourceHead,github:input.github}):catalog.kind===freshCatalogKind?readFussballBadenFreshPair({sourceRunId:input.sourceRunId,sourceHead:catalog.sourceHead,github:input.github}):readFussballCompletedSourceV7(input)
 }
 /** Hosted producer: only repository GETs and a new local output directory. It
  * reauthenticates the genuine source certificate before AND after derivation. */

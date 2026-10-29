@@ -198,13 +198,13 @@ export async function loadFussballNativeRuntimeSeed({context,competition,directo
  for(const season of s.pack.seasons){
   const stage=season.inventory.scope.stage,m=JSON.parse(regular(directory,stage+'/manifest.json')),pinned=catalog.seasons.find(x=>x.stage===stage),stageFiles=new Map([...files].filter(([path])=>path.startsWith(stage+'/')).map(([path,b])=>[path.slice(stage.length+1),b]))
   let result,resultBytes
-  if(catalog.kind==='baden-fussball-fresh-pair-native-catalog'){
-   need(seal.source?.kind==='authenticated-fussball-baden-fresh-pair-source'&&seal.source.source?.captureCodeSha256===catalog.captureCodeSha256,'durable fresh source family differs')
+  if(catalog.kind==='baden-fussball-fresh-pair-native-catalog'||catalog.kind==='baden-fussball-completed-stages-native-catalog'&&stage==='current'){
+   need(seal.source?.kind===(catalog.kind==='baden-fussball-completed-stages-native-catalog'?'authenticated-fussball-baden-completed-stages-source':'authenticated-fussball-baden-fresh-pair-source')&&seal.source.source?.captureCodeSha256===catalog.captureCodeSha256,'durable fresh source family differs')
    // Original Maps contain a commitment only. Rebuild full semantics with the
    // fixed source-free replay, then bind its exact bytes; never invent a file.
    result=(await replayFussballFreshStage({files:stageFiles,stage,codeSha256:catalog.captureCodeSha256})).result
    resultBytes=fussballNativeOriginalResultBytes({manifest:m,result,files:stageFiles})
-  }else{resultBytes=regular(directory,stage+'/result.json');result=JSON.parse(resultBytes)}
+  }else{if(catalog.kind==='baden-fussball-completed-stages-native-catalog')need(stage==='archive'&&m.version===7&&m.codeSha256===seal.source.source?.archiveCodeSha256&&seal.source.kind==='authenticated-fussball-baden-completed-stages-source','durable historical archive family differs');resultBytes=regular(directory,stage+'/result.json');result=JSON.parse(resultBytes)}
   need(pinned&&sha(resultBytes)===pinned.resultSha256&&m.resultSha256===pinned.resultSha256&&sha(m.documents)===season.sourceDocumentInventorySha256&&m.options.staffel+':'+m.options.season===season.code&&m.success===true&&(stage!=='current'||m.createdAt===s.pack.captured_at),'sealed original source provenance differs')
   for(const d of m.documents){const bytes=regular(directory,stage+'/'+d.file);need(bytes.length===d.bytes&&sha(bytes)===d.sha256&&files.has(stage+'/'+d.file),'complete sealed source original missing')}
   originals[stage]={manifest:m,result,files:stageFiles}
