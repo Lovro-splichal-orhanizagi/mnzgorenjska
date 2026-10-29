@@ -14,6 +14,7 @@ import { VarnaStran } from './src/App'
 import { homografija, matrika, trakoviValja } from './src/mockup'
 import { cenaKosa, Kosarica, motivaNi, ociscena, SlikaMotiva, stripeNaslov } from './src/strani/Kosarica'
 import { Hvala } from './src/strani/Hvala'
+import { ocisti as ocistiObisk } from './src/analitika'
 import { Narocila } from './src/strani/Narocila'
 import { Pogoji } from './src/strani/Pogoji'
 import { Odstop, mailOdstopa } from './src/strani/Odstop'
@@ -86,6 +87,9 @@ const katalog: IzdelekKataloga[] = [
   { slug: 'sal', ime_sl: 'Šal', ime_en: 'Scarf', kategorija: 'dodatki', slike: ['https://api.slff.eu/storage/v1/object/public/trgovina/sal/1.jpg'], cena_od: 2000, cena_do: 2400, na_voljo: 'ne' },
 ]
 const mreza = renderToString(<StaticRouter location="/"><MrezaIzdelkov izdelki={katalog} /></StaticRouter>)
+preveri('statistika: poti s predpono /shop, brez oznake naročila, utm ostane', ocistiObisk('https://shop.slff.eu/') === '/shop'
+  && ocistiObisk('https://shop.slff.eu/p/majica') === '/shop/p/majica' && ocistiObisk('https://shop.slff.eu/thanks?n=AB12CD') === '/shop/thanks'
+  && ocistiObisk('https://shop.slff.eu/?utm_source=slff&x=1') === '/shop?utm_source=slff')
 preveri('katalog: "od" le pri različnih cenah', mreza.includes('od 20,00') && !mreza.includes('od 25,00'))
 preveri('katalog: kartice s ceno, sliko ali grbom in značko', mreza.includes('Majica') && mreza.includes('25,00') && mreza.includes('/p/sal')
   && mreza.includes('sal/1.jpg') && mreza.includes('slff-grb') && mreza.includes(SL['voljo.malo']) && mreza.includes(SL['voljo.ne']), mreza.slice(0, 300))

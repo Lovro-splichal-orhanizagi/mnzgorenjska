@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { supabase, type Izdelek as TIzdelek, type Prvak, type Razlicica } from '../baza'
 import { cena, jezik, po, t, type Kljuc } from '../besede'
 import { BREZPLACNA_OD, dodaj, kljuc, NAJVEC, postnina, shrani, useKosarica } from '../kosarica'
+import { dogodek } from '../analitika'
 import { useNaslov } from '../Okvir'
 import { doplacilo, napakaImena, normaliziraj, PISAVA, stevilka, velikostImena, type Personalizacija, type Vrsta } from '../personalizacija'
 import { Nalaganje, useSeja } from '../seja'
@@ -288,6 +289,7 @@ function Navaden({ i }: { i: TIzdelek }) {
     const opis = [izbira.ime, izbira.st].filter((x) => x !== null && x !== '').join(' · ')
     const nova = dodaj(kosarica, r.id, kolicina, i.slug, vnos, opis || undefined, najvec)
     shrani(nova)
+    dogodek('trgovina-kosarica', { izdelek: i.slug })
     setDodano(imam(nova) - imam(kosarica))
   }
 

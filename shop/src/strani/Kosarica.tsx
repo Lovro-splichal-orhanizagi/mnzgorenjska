@@ -1,6 +1,7 @@
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { dogodek } from '../analitika'
 import { supabase, type Izdelek } from '../baza'
 import { cena, imeDrzave, jezik, po, t, type Kljuc } from '../besede'
 import { BREZPLACNA_OD, EU27, izprazni, kljuc, nastavi, NAJVEC, odstrani, postnina, shrani, shraniPlacilo, skupaj, useKosarica, zadnjePlacilo, type Kosarica as TKosarica, type Postavka } from '../kosarica'
@@ -123,6 +124,7 @@ export function Kosarica() {
     })
     const url = data?.url
     if (!error && url && stripeNaslov(url)) {
+      dogodek('trgovina-placilo')
       if (data.seja && data.oznaka) shraniPlacilo({ seja: data.seja, oznaka: data.oznaka })
       location.assign(url)
       return
