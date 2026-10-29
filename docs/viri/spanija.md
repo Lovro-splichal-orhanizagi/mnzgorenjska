@@ -651,6 +651,13 @@ obvezna. Podrobnosti in omejitev dejanskega Actions preverjanja so v
 
 ### G9: ločena diagnostika in pregledani neuspešni prvi poskus
 
+Nova, ločena pot [refresh800 z vsemi 240 zapisniki](../fcf-g9-native800-source.md)
+preveri celoten uradni koledar iz njihovih glav po zajemu. Zanjo ločen GET
+indeksa ni potreben. Vklop še vedno zahteva popoln koledar, uradne vratarje,
+svežino in vse poznejše podatkovne, cenovne ter časovne preglede. Spodnja
+pogodba stare diagnostike ostaja nespremenjena; nova pot ne ponaredi uspešnega
+probe ter ne izbriše prvega porabljenega poskusa ali zgodovinskih zahtevkov.
+
 Način `g9-calendar-discovery-v1` v `fcf-javni-dokazi.yml` pred branjem vira
 zapiše fazo preverjanja v ločen dnevnik v `RUNNER_TEMP`. Če izvirni source
 artefakt še ne obstaja, isti korak shrani `fcf-g9-calendar-diagnostic-*`;
