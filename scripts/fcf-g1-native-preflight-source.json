@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "kind": "fcf-g1-native-preflight-fixed-source301",
+  "targetSlug": "es-ct-segona-g1",
+  "competitionId": 783,
+  "season": "2026/27",
+  "sourceRunId": "40851165521",
+  "sourceCommit": "a31d439f64f9b610993264b7639a8a5cb2fc35ee",
+  "sourceActualGETs": 301,
+  "maximumCumulativeSourceGETs": 478,
+  "firstSourceUTC": "2026-10-28T18:09:27.203Z",
+  "sourceFreshUntil": "2026-10-29T18:09:27.203Z",
+  "approvalAssetId": "688044104",
+  "approvalSha256": "f6182b8104910402fc227ab37c8b348ed1ef904ab0393385fe108c7192ff156b",
+  "planSha256": "8415d15dc99d797b77ad11123f868d05526c0c62824fab0ede63b97916905cf8",
+  "claimCommit": "121d2fbc6ec16f38556ad495bda004e03dfb2250",
+  "claimJsonSha256": "8f03ec3e869cb8a6691c365d27ef6d26cf8c40e0c9d8c91f51825e12cd6183af",
+  "records": {
+    "claim": {
+      "execution": {
+        "repository": "Lovro-splichal-orhanizagi/mnzgorenjska",
+        "workflow": ".github/workflows/uvoz-fcf-zgodovina.yml",
+        "ref": "refs/heads/main",
+        "sourceCommit": "a31d439f64f9b610993264b7639a8a5cb2fc35ee",
+        "runId": "40851165521",
+        "runAttempt": "1"
+      }
+    },
+    "consumption": {
+      "runId": "40851165521",
+      "runAttempt": "1",
+      "sourceCommit": "a31d439f64f9b610993264b7639a8a5cb2fc35ee",
+      "jobId": "123371443405",
+      "artifactId": "12889006166",
+      "artifactDigest": "sha256:8675846bb3b21a6b2244ead73bf8bab4d5e96b67c2dd4ecd7b3ed45f204ccfac",
+      "manifestSha256": "27eec08a2b1c7f11f8da19631256f0a593e679a26143bbc63528949985006202",
+      "name": "fcf-inventory-consumption-40851165521-1"
+    },
+    "child": {
+      "runId": "40851165521",
+      "runAttempt": "1",
+      "sourceCommit": "a31d439f64f9b610993264b7639a8a5cb2fc35ee",
+      "jobId": "123383224896",
+      "artifactId": "12889561425",
+      "artifactDigest": "sha256:9332204e4993fa5d0d41c2af4ad5c9d98c602229693dcd06e5b81b15e96a6ec3",
+      "manifestSha256": "246eaaba0c495fea836a8be5107f27f162df21555d75311f115f61ea7284272d",
+      "name": "fcf-missing-inventory-es-ct-segona-g1-40851165521-1"
+    },
+    "finalReceipt": {
+      "runId": "40851165521",
+      "runAttempt": "1",
+      "sourceCommit": "a31d439f64f9b610993264b7639a8a5cb2fc35ee",
+      "jobId": "123387951474",
+      "artifactId": "12889347441",
+      "artifactDigest": "sha256:ccfd9ea41a0628b12123e88d284ae6de8ea1bed2f6ca9f038ed712d1e07d87a9",
+      "manifestSha256": "c714438d3a5d2338619c7954add838dd1fdd0ab59d7d558cc2792ef168628db8",
+      "name": "fcf-missing-inventory-final-40851165521-1"
+    }
+  },
+  "staged": {
+    "runId": "40851165521",
+    "runAttempt": "1",
+    "sourceCommit": "a31d439f64f9b610993264b7639a8a5cb2fc35ee",
+    "jobId": "123370704404",
+    "artifactId": "12886863743",
+    "artifactDigest": "sha256:3327c47c356f01b7ae72c157445bbae4edd1260a9f4a75b27b5ddc7ce0b30001",
+    "manifestSha256": "f6182b8104910402fc227ab37c8b348ed1ef904ab0393385fe108c7192ff156b",
+    "name": "fcf-inventory-approval-40851165521-1"
+  },
+  "audit": {
+    "runId": "40851165521",
+    "runAttempt": "1",
+    "sourceCommit": "a31d439f64f9b610993264b7639a8a5cb2fc35ee",
+    "jobId": "123383224896",
+    "artifactId": "12890020331",
+    "artifactDigest": "sha256:d1f17e9929dce2ec4a2e95f26fb655cc748904d49ba762cda120777cf95f2ac4",
+    "manifestSha256": "038c5b13e3e2dd6b629da8b9ce952678332d92a09a4a6947f3c52b05f7913ded",
+    "name": "fcf-missing-inventory-audit-es-ct-segona-g1-40851165521-1"
+  }
+}

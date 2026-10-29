@@ -7,12 +7,30 @@ on:
       vir:
         type: string
         default: all
+      g1_consumer_sha:
+        type: string
+        default: ''
+      g1_pr_number:
+        type: string
+        default: ''
+      g1_consumer_ci_run_id:
+        type: string
+        default: ''
+      g1_main_ci_run_id:
+        type: string
+        default: ''
+    secrets:
+      g1_db_url:
+        required: false
+      g1_deploy_ssh_key:
+        required: false
 
 permissions:
   contents: read
 
 jobs:
   dokument:
+    if: inputs.vir != 'g1-native-readonly'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     strategy:
@@ -98,3 +116,69 @@ jobs:
           name: diagnostic-${{ matrix.vir }}
           path: audit/document-${{ matrix.vir }}/
           retention-days: 14
+
+
+  # Root-reviewed branch consumer only. Every source/deploy job is skipped;
+  # only this job receives the two named database tunnel credentials.
+  preflight-g1-native:
+    if: github.event_name == 'workflow_dispatch' && inputs.vir == 'g1-native-readonly' && github.repository == 'Lovro-splichal-orhanizagi/mnzgorenjska' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20' && github.run_attempt == 1 && github.ref == 'refs/heads/codex-g1-301-native-preflight-20261029'
+    permissions:
+      contents: write
+      actions: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      G1_PREFLIGHT_CONSUMER_SHA: ${{ inputs.g1_consumer_sha }}
+      G1_PREFLIGHT_PR_NUMBER: ${{ inputs.g1_pr_number }}
+      G1_PREFLIGHT_CONSUMER_CI_RUN_ID: ${{ inputs.g1_consumer_ci_run_id }}
+      G1_PREFLIGHT_MAIN_CI_RUN_ID: ${{ inputs.g1_main_ci_run_id }}
+    steps:
+      - name: Checkout fixed reviewed consumer
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Checkout immutable failed G1 verifier
+        uses: actions/checkout@v4
+        with:
+          ref: 3ed1e852166398bb1429621a89c197ab6f77cb1e
+          path: .fcf-g1-frozen-parent
+          persist-credentials: false
+      - name: Check fixed writer before DB setup
+        run: node scripts/fcf-g1-native-preflight.mjs --check-writer
+      - name: Existing database tunnel decision
+        env:
+          SUPABASE_DB_URL: ${{ secrets.g1_db_url }}
+        run: |
+          test -n "$SUPABASE_DB_URL"
+          case "$SUPABASE_DB_URL" in *@127.0.0.1*) true;; *) exit 1;; esac
+      - name: Tunel do baze na VM
+        env:
+          KLJUC: ${{ secrets.g1_deploy_ssh_key }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Capture fixed G1 native inventory read-only
+        env:
+          SUPABASE_DB_URL: ${{ secrets.g1_db_url }}
+        run: node scripts/fcf-g1-native-preflight.mjs --capture
+      - name: Retain fixed G1 native preflight
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g1-native-readonly-${{ github.run_id }}-${{ github.run_attempt }}
+          path: g1-native-preflight/
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 30
