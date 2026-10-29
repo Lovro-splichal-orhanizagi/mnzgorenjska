@@ -3,17 +3,22 @@ name: Read-only Baden own-site transport diagnostic
 on:
   workflow_dispatch:
     inputs:
+      probe:
+        type: choice
+        default: long-block
+        options: [long-block, composition]
       expected_sha:
         type: string
         required: true
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: baden-own-site-readonly-diagnostic
   cancel-in-progress: false
 jobs:
   own-site-only:
-    if: github.ref == 'refs/heads/codex-baden-own-fetch-diagnostic-20261029' && github.event_name == 'workflow_dispatch' && github.run_attempt == 1 && inputs.expected_sha == github.sha && github.actor == 'nejcar20' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20'
+    if: inputs.probe == 'long-block' && github.ref == 'refs/heads/codex-baden-own-fetch-diagnostic-20261029' && github.event_name == 'workflow_dispatch' && github.run_attempt == 1 && inputs.expected_sha == github.sha && github.actor == 'nejcar20' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20'
     runs-on: ubuntu-latest
     timeout-minutes: 22
     strategy:
@@ -38,5 +43,48 @@ jobs:
         with:
           name: baden-own-fetch-${{ matrix.mode }}-${{ github.run_id }}-1
           path: baden-own-fetch-diagnostic.json
+          if-no-files-found: error
+          retention-days: 30
+  composition-only:
+    if: inputs.probe == 'composition' && github.ref == 'refs/heads/codex-baden-own-fetch-diagnostic-20261029' && github.event_name == 'workflow_dispatch' && github.run_attempt == 1 && inputs.expected_sha == github.sha && github.actor == 'nejcar20' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: a4d97017957347e7fccacc8c2e6c0c43a369899f
+          path: runtime-h7
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: de77b661cbc11d95256a500e57c2fdea861a0647
+          path: runtime-h7/frozen-de77
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 4e1e7caac02aa6e12c789c7cea7aac699d3c2566
+          path: runtime-h7/frozen-v6
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts
+        working-directory: runtime-h7
+      - name: Saved-source composition and exact own-fetch failure DATA only
+        working-directory: runtime-h7
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: node ../scripts/diagnose-baden-composition-fetch.mjs
+      - name: Retain safe composition boundary diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baden-composition-fetch-${{ github.run_id }}-1
+          path: baden-composition-fetch-diagnostic.json
           if-no-files-found: error
           retention-days: 30
