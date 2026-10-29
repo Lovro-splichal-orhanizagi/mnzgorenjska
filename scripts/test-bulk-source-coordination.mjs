@@ -30,3 +30,10 @@ test('fixed fresh paired Baden reader is visible to later source readers',async(
   return{total_count:found?1:0,workflow_runs:found?[{id:1,created_at:'2026-10-29T09:00:00Z',status:'in_progress',path:'.github/workflows/preveri-baden-fresh-pair.yml'}]:[]}
  }}),/Older German source readers/)
 })
+
+test('older direct German/unknown imports and retained writers wait while conclusive foreign direct import does not',async()=>{
+ for(const [workflow,title,wait]of [['uvoz-lige.yml','Uvoz lige de-regionalliga-nord',true],['uvoz-lige.yml','Unknown import',true],['uvoz-lige.yml','Uvoz lige zz-unknown',true],['uvoz-lige.yml','Uvoz lige es-ct-primera-g1',false],['uvoz-fussball-public.yml','Uvoz lige de-verbandsliga-baden FUSSBALL public',true],['uvoz-fussball-public.yml','Uvoz lige es-ct-primera-g1 FUSSBALL public',true]]){
+  const action=waitForGermanSource({env:{GITHUB_REPOSITORY:'owner/repo',GITHUB_RUN_ID:'2'},sleep:async()=>{},maxAttempts:1,api:async path=>{if(path==='actions/runs/2')return{id:2,run_attempt:1,created_at:'2026-10-29T10:00:00Z'};const found=path.includes('workflows/'+workflow+'/')&&path.includes('status=in_progress');return{total_count:found?1:0,workflow_runs:found?[{id:1,created_at:'2026-10-29T09:00:00Z',status:'in_progress',path:'.github/workflows/'+workflow,display_title:title}]:[]}}})
+  if(wait)await assert.rejects(action,/Older German/);else await action
+ }
+})
