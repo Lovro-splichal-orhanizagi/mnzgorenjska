@@ -52,11 +52,12 @@ select pg_temp.schema_hold('alter table fantasy_roster add column unknown_depend
 do $$declare p jsonb;begin
  if to_regclass('private_fcf_g1_9410.markers')is not null then
   p:=pg_temp.capture();
-  perform pg_temp.projection_assert((select encode(sha256(convert_to(prosrc,'UTF8')),'hex')='b0e18d2bffeb925df77cac1a027a04adf44e67fb61bd53154824a0d45457a511'from pg_proc where oid='private_fcf_future_projection.capture(text,text[])'::regprocedure),'optional compatibility leaves exact9410 body unchanged');
+  perform pg_temp.projection_assert((select encode(sha256(convert_to(prosrc,'UTF8')),'hex')='f607b30f1cfbad5b57d7259c6aa1c561c8de8ff78ccb40101446256d0954e5ea'from pg_proc where oid='private_fcf_future_projection.capture(text,text[])'::regprocedure),'optional compatibility leaves exact9410 body unchanged');
   perform pg_temp.projection_assert((p->>'dependencySnapshotText')::jsonb#>>'{relations,private_fcf_g1_9410.markers,count}'='0'and(p->>'dependencySnapshotText')::jsonb#>>'{relations,private_fcf_g1_9410.receipts,count}'='0'and(p->>'dependencySnapshotText')::jsonb#>>'{relations,private_fcf_g1_9410.markers,globalUser}'='false'and(p->>'dependencySnapshotText')::jsonb#>>'{relations,private_fcf_g1_9410.receipts,globalUser}'='false','complete9410 protected relation snapshots; never human dependency subtraction');
   perform pg_temp.schema_hold('alter table private_fcf_g1_9410.markers add column unexpected_dependency bigint','9410 marker shape drift');
   perform pg_temp.schema_hold('alter table private_fcf_g1_9410.receipts add column unexpected_dependency bigint','9410 receipt shape drift');
   perform pg_temp.schema_hold('create table public.projection_9410_unknown(receipt_id bigint references private_fcf_g1_9410.markers(match_id))','unknown9410 incoming FK');
+  perform pg_temp.schema_hold('create table public.projection_9410_unknown_receipt(receipt_id bigint references private_fcf_g1_9410.receipts(match_id))','unknown9410 receipt incoming FK');
   perform pg_temp.schema_hold('alter table private_baden_history.prepared add column unexpected_dependency text','preserved Baden shape guard');
   perform pg_temp.projection_assert(pg_temp.capture()->>'dependencySnapshotText'=p->>'dependencySnapshotText','all9410/Baden shape and FK probes roll back exactly');
  end if;
