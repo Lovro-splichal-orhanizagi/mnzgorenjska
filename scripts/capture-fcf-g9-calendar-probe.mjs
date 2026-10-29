@@ -15,11 +15,17 @@ const phases=['ENVIRONMENT','COUNTER','PRIOR_PROBE','EXECUTION','CAPTURE','COMPL
  'FCF_G9_PROBE_HOLD: typed actual final counter differs':'COUNTER_RECEIPT',
  'FCF_G9_PROBE_HOLD: actual main/CI differs':'MAIN_CI',
  'FCF_G9_PROBE_HOLD: actual root/main/manual/first-attempt run required':'RUN_IDENTITY',
- 'FCF_G9_PROBE_HOLD: actual served main differs':'SERVED_HEAD'
+ 'FCF_G9_PROBE_HOLD: actual served main differs':'SERVED_HEAD',
+ 'FCF_G9_PRE_PROVIDER_ZERO_HOLD: complete exact raw R1 job log required':'R1_RAW_LOG',
+ 'FCF_G9_PRE_PROVIDER_ZERO_HOLD: exact failed root/main/manual R1 run required':'R1_RUN',
+ 'FCF_G9_PRE_PROVIDER_ZERO_HOLD: complete exact terminal two-job graph required':'R1_JOB_GRAPH',
+ 'FCF_G9_PRE_PROVIDER_ZERO_HOLD: exact empty R1 artifact inventory required':'R1_ARTIFACTS',
+ 'FCF_G9_PRE_PROVIDER_ZERO_HOLD: frozen R1 runtime/import/test body drift':'R1_FROZEN_BODY',
+ 'FCF_G9_PRE_PROVIDER_ZERO_HOLD: late R1 terminal metadata drift':'R1_LATE_METADATA'
 }
 // Diagnostic DATA only: never count/zero/source evidence or an executable input.
 export function formatFcfG9CalendarDiagnostic(phase,lastGithubEndpoint,error=null){
- const endpoint=typeof lastGithubEndpoint==='string'&&lastGithubEndpoint.startsWith(prefix)&&lastGithubEndpoint.length<=2048&&/^actions\/(?:runs\/\d+(?:\/(?:attempts\/1\/jobs|artifacts)\?per_page=100&page=\d+)?|artifacts\/\d+(?:\/zip)?|workflows\/[A-Za-z0-9_-]+\.yml(?:\/runs\?per_page=100&page=\d+)?)$|^branches\/main$|^contents\/[A-Za-z0-9_.\/-]+\?ref=[a-f0-9]{40}$/.test(lastGithubEndpoint.slice(prefix.length))&&!lastGithubEndpoint.includes('..')?lastGithubEndpoint:null,status=String(error?.stderr??'').match(/\bHTTP ([1-5][0-9]{2})\b/)?.[1]
+ const endpoint=typeof lastGithubEndpoint==='string'&&lastGithubEndpoint.startsWith(prefix)&&lastGithubEndpoint.length<=2048&&/^actions\/(?:runs\/\d+(?:\/(?:attempts\/1\/jobs|artifacts)\?per_page=100&page=\d+)?|jobs\/\d+\/logs|artifacts\/\d+(?:\/zip)?|workflows\/[A-Za-z0-9_-]+\.yml(?:\/runs\?per_page=100&page=\d+)?)$|^branches\/main$|^contents\/[A-Za-z0-9_.\/-]+\?ref=[a-f0-9]{40}$/.test(lastGithubEndpoint.slice(prefix.length))&&!lastGithubEndpoint.includes('..')?lastGithubEndpoint:null,status=String(error?.stderr??'').match(/\bHTTP ([1-5][0-9]{2})\b/)?.[1]
  return {version:1,kind:'fcf-g9-calendar-diagnostic',UTC:new Date().toISOString(),phase:phases.includes(phase)?phase:'UNKNOWN',lastGithubEndpoint:endpoint,guard:Object.hasOwn(guards,error?.message)?guards[error.message]:'UNKNOWN',githubHttpStatus:status?Number(status):null,diagnosticOnly:true,accountingKnown:false,actualSourceGETs:null,nativeAdmission:false,activationEligible:false}
 }
 export async function runFcfG9CalendarProbe(){
