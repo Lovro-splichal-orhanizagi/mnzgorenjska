@@ -1,16 +1,18 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+const initialDateNow=Date.now
 const api=await import('./fussball-baden-completed-stages.mjs').catch(e=>{if(e.code==='ERR_MODULE_NOT_FOUND')return {};throw e})
 test('completed-stage reader exposes closed private source API without copied proof or clock authority',async t=>{
  // Fixed test time exercises fresh diagnostics independently of wall clock.
- const expiry=Date.parse('2026-10-30T10:43:41.514Z');t.mock.method(Date,'now',()=>expiry-1)
+ const expiry=Date.parse('2026-10-30T10:43:41.514Z');let clock=expiry-1;t.mock.method(Date,'now',()=>clock)
  assert.equal(typeof api.readFussballBadenCompletedStages,'function');assert.equal(typeof api.getFussballBadenCompletedStages,'function')
  assert.match(api.fussballBadenCompletedStagesCodeSha256(),/^[a-f0-9]{64}$/)
  await assert.rejects(api.readFussballBadenCompletedStages({sourceRunId:'40859714195',sourceHead:'f3669300087c5f8df926a599d86f03b1269215c5',github:()=>{throw Error('TEST_ONLY_SECRET')}}),e=>e.code==='BADEN_COMPLETED_STAGES_GET_CURRENT_R9_RUN'&&!e.message.includes('SECRET'))
  for(const p of [{},{kind:'authenticated-fussball-baden-completed-stages-source'},{sourceOnly:true,nativeAdmission:false}])assert.throws(()=>api.getFussballBadenCompletedStages(p),/PRIVATE_CAPABILITY/)
  for(const key of ['clock','now','proof','parser','archiveRunId','allowExpiredCurrent']){let calls=0;await assert.rejects(api.readFussballBadenCompletedStages({sourceRunId:'40859714195',sourceHead:'f3669300087c5f8df926a599d86f03b1269215c5',github:()=>{calls++},[key]:true}),/INPUT/);assert.equal(calls,0)}
- for(const time of [expiry,expiry+1]){t.mock.method(Date,'now',()=>time);let calls=0;await assert.rejects(api.readFussballBadenCompletedStages({sourceRunId:'40859714195',sourceHead:'f3669300087c5f8df926a599d86f03b1269215c5',github:()=>{calls++}}),/CURRENT_FRESHNESS/);assert.equal(calls,0)}
+ for(const time of [expiry,expiry+1]){clock=time;let calls=0;await assert.rejects(api.readFussballBadenCompletedStages({sourceRunId:'40859714195',sourceHead:'f3669300087c5f8df926a599d86f03b1269215c5',github:()=>{calls++}}),/CURRENT_FRESHNESS/);assert.equal(calls,0)}
 })
+test('test-local freshness clock restores Date.now after early checks',()=>assert.equal(Date.now,initialDateNow))
 import {readFileSync,writeFileSync} from 'node:fs'
 import {execFileSync} from 'node:child_process'
 import {join} from 'node:path'
