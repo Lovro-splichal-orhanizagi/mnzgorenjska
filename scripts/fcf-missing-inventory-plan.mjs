@@ -1,7 +1,7 @@
 // Fixed missing-body plan, genuine original seed and header-only proof. No transport.
 import {getHistoricalStatisticsPolicy,historicalStatisticsPolicySha256 as canonicalHash} from './lib/historical-statistics-policy.mjs'
 import {classifyFcfHistoricalStatistics} from './fcf-historical-policy.mjs'
-import {glavaStrani,drevoRsc,elementi,jeElement,besedilo,tokRsc,vrsticeRsc,vrstaStrani,jeIzziv} from './viri/fcf.mjs'
+import {glavaStrani,drevoRsc,elementi,jeElement,besedilo,tokRsc,vrsticeRsc,vrstaStrani,jeIzziv,isFcfActaSourceRoute} from './viri/fcf.mjs'
 import {inventoryFail as fail,exactKeys,frozenJSON,rawSha256,nativeId,commitId,sha256Id,artifactDigest,validUTC,jsonBytes,verifyInventoryExecution,readInventoryZip} from './fcf-missing-inventory-artifact.mjs'
 const sourceCaptureCommit='f7efba26c31f76372b5aab1e976061631fbaebda'
 const scopes=Object.freeze([
@@ -110,7 +110,7 @@ export function deriveFcfInventoryHeader({targetSlug,id,bytes}){
  try{roots=drevoRsc(html);header=glavaStrani(html);rawRows=vrsticeRsc(tokRsc(html))}catch{fail('unknown source header schema')}
  const routes=new Set(),stack=[...rawRows.values()]
  while(stack.length){const row=stack.pop();if(!row||typeof row!=='object')continue;if(!Array.isArray(row)&&Array.isArray(row.c)&&row.c[1]==='ca'&&row.c[2]==='competicio'&&row.c[3]==='acta')routes.add(JSON.stringify(row.c));stack.push(...Object.values(row).filter(v=>v&&typeof v==='object'))}
- if(JSON.stringify(rawRows.get('0')?.c)!==JSON.stringify(['','ca','competicio','acta',id])||routes.size!==1||![...routes].includes(JSON.stringify(['','ca','competicio','acta',id])))fail('actual route missing/conflicting/mismatched')
+ if(!isFcfActaSourceRoute(rawRows.get('0')?.c,id)||routes.size!==1||!isFcfActaSourceRoute(JSON.parse([...routes][0]),id))fail('actual route missing/conflicting/mismatched')
  if(header.sezona!=='2026/27'||header.tekmovanje!==(targetSlug.includes('segona')?'SEGONA CATALANA':'TERCERA CATALANA')||header.skupina!==`GRUP ${targetSlug.split('-g')[1]}`||!Number.isInteger(header.krog)||header.krog<1||header.krog>30||!actualDay(header.datum))fail('actual season/group/round/date differs')
  const statuses={'Acta Tancada':'published','Pendent':'pending','SUSPÈS':'suspended','AJORNAT':'postponed'},status=statuses[header.oznaka]
  if(!status||(status==='published')!==!!header.izid||header.izid&&(!Number.isSafeInteger(header.izid.domaci)||header.izid.domaci<0||!Number.isSafeInteger(header.izid.gostje)||header.izid.gostje<0))fail('unknown/incoherent match status/result')

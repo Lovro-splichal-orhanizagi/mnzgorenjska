@@ -1,5 +1,5 @@
 // Review DATA only. No source, DB, admission or activation capability is issued.
-import {vrstaStrani,jeIzziv,validateFcfSingleReportSource,drevoRsc,elementi,jeElement,besedilo,vrsticeRsc,tokRsc} from './viri/fcf.mjs'
+import {vrstaStrani,jeIzziv,validateFcfSingleReportSource,isFcfActaSourceRoute,drevoRsc,elementi,jeElement,besedilo,vrsticeRsc,tokRsc} from './viri/fcf.mjs'
 import {parseFcfFutureAuditDocument} from './fcf-current-source-proof.mjs'
 import {deriveFcfInventoryHeader,validateFcfInventoryHeaders} from './fcf-missing-inventory-plan.mjs'
 import {deriveFcfFutureInventoryHeader} from './fcf-future-source-header.mjs'
@@ -22,8 +22,8 @@ const dataErrors=new Set([
 ])
 function canonicalSourceRoute(html,id){
  const roots=drevoRsc(html),rows=vrsticeRsc(tokRsc(html)),routes=[],stack=[...rows.values()]
- while(stack.length){const x=stack.pop();if(!x||typeof x!=='object')continue;if(!Array.isArray(x)&&Array.isArray(x.c)&&x.c[1]==='ca'&&x.c[2]==='competicio'&&x.c[3]==='acta')routes.push(JSON.stringify(x.c));stack.push(...Object.values(x).filter(v=>v&&typeof v==='object'))}
- const expected=JSON.stringify(['','ca','competicio','acta',id]);if(JSON.stringify(rows.get('0')?.c)!==expected||routes.length!==1||routes[0]!==expected)fail('conflicting source route held')
+ while(stack.length){const x=stack.pop();if(!x||typeof x!=='object')continue;if(!Array.isArray(x)&&Array.isArray(x.c)&&x.c[1]==='ca'&&x.c[2]==='competicio'&&x.c[3]==='acta')routes.push(x.c);stack.push(...Object.values(x).filter(v=>v&&typeof v==='object'))}
+ if(!isFcfActaSourceRoute(rows.get('0')?.c,id)||routes.length!==1||!isFcfActaSourceRoute(routes[0],id))fail('conflicting source route held')
  return roots
 }
 function closedNullHeader(html,id,h){

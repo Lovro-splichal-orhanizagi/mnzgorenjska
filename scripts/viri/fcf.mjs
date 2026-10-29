@@ -687,7 +687,7 @@ function singleReportSourceContext(koda, { id, tekmovanje: c, sezona, danes = Da
     if (jeIzziv(html)) throw new FcfZavrnitev(`fcf: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
     const route = vrsticeRsc(tokRsc(html)).get('0')?.c
     const g = glavaStrani(html)
-    if (!Array.isArray(route) || JSON.stringify(route) !== JSON.stringify(['', 'ca', 'competicio', 'acta', String(numericId)]) ||
+    if (!isFcfActaSourceRoute(route, String(numericId)) ||
         !g || g.sezona !== sezona || g.tekmovanje !== expectedCompetition ||
         g.skupina !== expectedGroup || !g.domaci || !g.gostje ||
         /^undefined$/i.test(g.domaci) || /^undefined$/i.test(g.gostje) ||
@@ -702,6 +702,19 @@ function singleReportSourceContext(koda, { id, tekmovanje: c, sezona, danes = Da
 /** Pure version of the exact existing single-report identity validation. */
 export function validateFcfSingleReportSource(html, koda, options = {}) {
   return singleReportSourceContext(koda, options).validate(html)
+}
+
+/** Compare source identity without rewriting retained HTML or its raw digest.
+ * Next.js can retain only its internal bounded RSC union query on this ID. */
+export function isFcfActaSourceRoute(route, id) {
+  if (typeof id !== 'string' || !Number.isSafeInteger(Number(id)) || Number(id) < 1 || String(Number(id)) !== id ||
+      !Array.isArray(route) || route.length !== 5 || route[0] !== '' ||
+      route[1] !== 'ca' || route[2] !== 'competicio' || route[3] !== 'acta' || typeof route[4] !== 'string') return false
+  if (route[4] === id) return true
+  const prefix = `${id}?_rsc=`
+  if (!route[4].startsWith(prefix)) return false
+  const token = route[4].slice(prefix.length)
+  return token.length >= 1 && token.length <= 64 && !/[^A-Za-z0-9_-]/.test(token)
 }
 
 /** Validate synchronously before importer writes; returned reader touches only this acta. */

@@ -1,6 +1,6 @@
-// Offline boundary fixture: whitespace expands the same catalog DATA; no source
-// capability, freshness clock or catalog authority is substituted.
-import test from 'node:test'
+// Offline catalog-transport fixture only. Positive children use a test clock
+// inside the genuine original interval; the fake source never issues authority.
+import test,{mock} from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import child from 'node:child_process'
@@ -31,8 +31,13 @@ if(process.argv[2]==='runtime'){
   }
   source++;throw Object.assign(Error('source boundary intentionally unavailable'),{code:'TEST_SOURCE_BOUNDARY'})
  }
- let error;try{await produceFussballNativeComposition({derivedRunId:'123',derivedHead:head,sourceRunId:'124',frozenDirectory:'UNUSED',v6FrozenDirectory:'UNUSED',directory:'UNCREATED-large-catalog-test',github})}catch(e){error=e}
- console.log(JSON.stringify({code:error?.code,message:error?.message,raw,source,calls}));process.exit(0)
+ const current=JSON.parse(read(new URL('./policies/fussball-transport-v6.json',import.meta.url))).current,fixtureNow=Date.parse(current.completedAt)+1000,expiry=Date.parse(current.createdAt)+86400000,useFixtureClock=['valid','small'].includes(mode)
+ assert.ok(fixtureNow<=expiry,'fixture clock must remain inside original retained24h interval')
+ if(useFixtureClock)mock.timers.enable({apis:['Date'],now:fixtureNow})
+ let error;try{await produceFussballNativeComposition({derivedRunId:'123',derivedHead:head,sourceRunId:'124',frozenDirectory:'UNUSED',v6FrozenDirectory:'UNUSED',directory:'UNCREATED-large-catalog-test',github})}catch(e){error=e}finally{if(useFixtureClock)mock.timers.reset()}
+ const clockRestored=!useFixtureClock||Date.now()!==fixtureNow
+ if(useFixtureClock&&Date.now()>expiry){const {assertFussballV6CurrentFresh}=await import('./fussball-archive-v6.mjs');assert.throws(()=>assertFussballV6CurrentFresh(),/stale/)}
+ console.log(JSON.stringify({code:error?.code,message:error?.message,raw,source,calls,clockRestored}));process.exit(0)
 }else if(process.argv[2]==='adapter'){
  const calls=[];let payload=Buffer.from('{}')
  child.execFileSync=(file,args,options)=>{calls.push({file,args,maxBuffer:options.maxBuffer});return payload}
@@ -47,7 +52,7 @@ if(process.argv[2]==='runtime'){
 }else{
  const run=(kind,mode)=>JSON.parse(child.execFileSync(process.execPath,[fileURLToPath(import.meta.url),kind,...(mode?[mode]:[])],{encoding:'utf8',maxBuffer:MiB}))
  test('exported hosted producer accepts exact 1–4 MiB catalog raw bytes and preserves small inline path',()=>{
-  for(const mode of ['valid','small']){const r=run('runtime',mode);assert.ok(['TEST_SOURCE_BOUNDARY','FUSSBALL_COMPLETED_SOURCE_V7_HOLD'].includes(r.code),r.message);assert.equal(r.raw,mode==='small'?0:1)}
+  for(const mode of ['valid','small']){const r=run('runtime',mode);assert.ok(['TEST_SOURCE_BOUNDARY','FUSSBALL_COMPLETED_SOURCE_V7_HOLD'].includes(r.code),r.message);assert.equal(r.raw,mode==='small'?0:1);assert.equal(r.clockRestored,true)}
  })
  test('large catalog metadata, immutable head and raw byte drift hold before source authority',()=>{
   for(const mode of ['head','type','path','size','sha','encoding','content','truncated','altered','oversize','rawoversize']){const r=run('runtime',mode);assert.equal(r.code,'FUSSBALL_NATIVE_COMPOSITION_HOLD',mode+': '+r.message);assert.equal(r.source,0);assert.equal(r.raw,['truncated','altered','rawoversize'].includes(mode)?1:0,mode)}

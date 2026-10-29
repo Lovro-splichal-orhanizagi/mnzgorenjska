@@ -75,7 +75,7 @@ export function readFcfG1RemainderRunningExecution({claimProof,consumptionProof,
  const e=c.execution,j=jobs?.filter(j=>j.name==='missing-inventory-g1'),step=j?.[0]?.steps?.filter(s=>s.name==='Capture missing target inventory')
  if(String(run?.id)!==e.runId||run.repository?.full_name!==repository||run.path!==workflow||run.head_sha!==e.sourceCommit||run.head_branch!=='main'||run.event!=='workflow_dispatch'||run.run_attempt!==1||run.status!=='in_progress'||run.conclusion!==null||!actor(run.actor)||!actor(run.triggering_actor)||j?.length!==1||!nativeId(String(j[0].id))||String(j[0].run_id)!==e.runId||j[0].run_attempt!==1||j[0].head_sha!==e.sourceCommit||j[0].status!=='in_progress'||step?.length!==1||step[0].status!=='in_progress'||step[0].conclusion!==null)fail('actual own main attempt1 actors/capture required')
  if(!Array.isArray(history)||history.some(r=>!nativeId(String(r?.id))))fail('complete actual FCF history required')
- const p=authority(c.plan),l=ledger(p.parentProof,p.appendProofs);if(!Array.isArray(l.parent.sourceReferences.accountedRunIds)||!l.parent.sourceReferences.accountedRunIds.includes('40737060608'))fail('private complete anchor run IDs required');const accounted=new Set([...l.parent.sourceReferences.accountedRunIds,...l.bindings.map(b=>b.runId)])
+ const p=authority(c.plan),l=ledger(p.parentProof,p.appendProofs);if(!Array.isArray(l.parent.sourceReferences.accountedRunIds)||!l.parent.sourceReferences.accountedRunIds.includes('40737060608'))fail('private complete anchor run IDs required');const accounted=new Set([...l.parent.sourceReferences.accountedRunIds,...l.bindings.map(b=>b.runId)]),appended=new Map(l.bindings.map(b=>[b.runId,b])),seenAppends=new Set()
  // Only conclusively source-free skipped capture jobs may be unaccounted. A
  // completed/failed run is not assumed zero; unknown steps/jobs fail closed.
  const unaccounted=new Map()
@@ -85,11 +85,17 @@ export function readFcfG1RemainderRunningExecution({claimProof,consumptionProof,
    if(h.repository?.full_name!==repository||h.path!==workflow||h.event!=='workflow_dispatch'||h.head_branch!=='main'||h.head_sha!==e.sourceCommit||h.run_attempt!==1||h.observedAttempt!==1||h.status!=='in_progress'||h.conclusion!==null||!actor(h.actor)||!actor(h.triggering_actor)||own?.length!==1||String(own[0].id)!==String(j[0].id)||String(own[0].run_id)!==e.runId||own[0].run_attempt!==1||own[0].head_sha!==e.sourceCommit||own[0].status!=='in_progress'||active?.length!==1||active[0].status!=='in_progress'||active[0].conclusion!==null)fail('fresh actual private own execution differs; held')
    continue
   }
+  const prior=appended.get(String(h.id))
+  if(prior){
+   if(seenAppends.has(prior.runId)||h.repository?.full_name!==repository||h.path!==workflow||h.event!=='workflow_dispatch'||h.head_branch!=='main'||h.head_sha!==prior.sourceCommit||h.run_attempt!==1||h.observedAttempt!==1||h.status!=='completed'||!['success','failure'].includes(h.conclusion)||!actor(h.actor)||!actor(h.triggering_actor))fail('fresh authenticated append execution/attempt differs')
+   verifyFcfG1TerminalJobInventory({run:h,jobs:h.jobs,execution:{...e,sourceCommit:prior.sourceCommit,runId:prior.runId}});seenAppends.add(prior.runId);continue
+  }
   if(accounted.has(String(h.id)))continue
   if(h.path==='.github/workflows/fcf-javni-dokazi.yml'){if(!prebudgetProof||h.observedAttempt!==1)fail('unaccounted historical public-source scope held');assertFcfG1PrebudgetHistory({proof:prebudgetProof,run:h,jobs:h.jobs});continue}
   assertFcfG1RemainderZeroSourceRun(h)
   const observed=unaccounted.get(String(h.id))??[];observed.push(h);unaccounted.set(String(h.id),observed)
  }
+ if(seenAppends.size!==appended.size)fail('complete fresh append history required')
  for(const attempts of unaccounted.values()){const count=attempts[0].run_attempt;if(attempts.length!==count||new Set(attempts.map(h=>h.observedAttempt)).size!==count||attempts.some(h=>h.run_attempt!==count))fail('incomplete actual FCF attempt history held')}
 
 
