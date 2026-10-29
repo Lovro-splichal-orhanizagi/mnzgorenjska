@@ -12898,6 +12898,24 @@ preveri(
       !E.sestaviTedenskiPregled({ ...sk, slug: 'sk-u19-x' }, { ...krog, tocke: 50 }).html.includes('/pivo') &&
       E.sestaviTedenskiPregled(si, { ...krog, tocke: 50 }).html.includes('/pivo'))
 
+  // Trgovina: P.S. po krogu brez piva, le v EU (dostava) in nikoli mladim; nikoli skupaj s pivom.
+  const trg = 'shop.slff.eu/?utm_source=slff&amp;utm_medium=email'
+  preveri('e-pošta: tedenski pregled, trgovina po krogu brez piva, le EU, ne mladim',
+    tSk.html.includes(trg) && tSk.html.includes('V obchode SLFF') && !tSi.html.includes(trg) &&
+      E.sestaviTedenskiPregled(si, { ...krog, tocke: 3 }).html.includes('V trgovini SLFF') &&
+      !E.sestaviTedenskiPregled(rsL, { ...krog, tocke: 3 }).html.includes('shop.slff.eu') &&
+      !E.sestaviTedenskiPregled({ ...si, slug: 'mladinci' }, { ...krog, tocke: 3 }).html.includes('shop.slff.eu') &&
+      !E.sestaviTedenskiPregled({ ...si, drzava: null }, { ...krog, tocke: 3 }).html.includes('shop.slff.eu'))
+  for (const [liga, slo] of [
+    [hrL, slovenskoHr], [czL, slovenskoCs], [huL, slovenskoHu], [atL, slovenskoDe], [roL, slovenskoRo],
+    [eeL, slovenskoEt], [plL, slovenskoPl], [esL, slovenskoEs], [lvL, slovenskoLv],
+  ]) {
+    const m = E.sestaviTedenskiPregled(liga, { ...krog, tocke: 3 })
+    preveri(`e-pošta: tedenski pregled s trgovino ${liga.drzava}`,
+      m.html.includes(trg) && !slo.test(m.naslov + m.html.replace(/href="[^"]*"/g, '')) &&
+        !pomisljaj.test(m.naslov + brezNoge(m.html)), m.naslov)
+  }
+
   // Nova postavitev: vsak mail ima čistopis (z naslovom gumba, brez &amp;) in predglavo.
   const gumbUrl = (m) => m.html.match(/class="gumb-povezava" href="([^"]+)"/)?.[1]?.replaceAll('&amp;', '&')
   const vzorci = [oSl, oSk, oHr, oHr2, zSl, zSk, bSl, bSk, bEn, zSlE, zEnE, zivaSk, zivaEn, pSl, pSk, popHr, izHr, tSi, tSi1, tSk, tHr]
