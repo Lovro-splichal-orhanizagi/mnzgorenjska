@@ -9,9 +9,9 @@ test('source authority rejects public copied receipts and overrides before any G
  for(const change of [{requireCodeMatch:false},{requireFresh:false},{now:0},{producerHead:'a'.repeat(40)},{sourceRunId:null}])await assert.rejects(readFussballCompletedSourceV6({...input,...change}))
  assert.equal(calls,0)
 })
-test('current W producer refuses old V6 authority; TEST ONLY old-V6 body context retains full inventory and fixed profile',async()=>{
+test('current W producer refuses old V6 authority; TEST ONLY old-V6 body context retains full inventory and fixed profile',async t=>{
  assert.throws(()=>fussballCompletedV6RuntimeInventory(),/reviewed V6 capture closure changed/)
- const f=await syntheticCompletedSourceFixture();await assert.rejects(readFussballCompletedSourceV6(f.input),/reviewed V6 capture closure changed/);assert.equal(f.replays,0)
+ const f=await syntheticCompletedSourceFixture();try{t.mock.method(Date,'now',()=>f.now);await assert.rejects(readFussballCompletedSourceV6(f.input),/reviewed V6 capture closure changed/)}finally{t.mock.restoreAll()}assert.equal(f.replays,0)
  const v=f.api.fussballCompletedV6RuntimeInventory();assert.ok(Object.keys(v).length>=31)
  for(const f of ['.github/workflows/preveri-fussball-dopolni.yml','scripts/fussball-archive-v6.mjs','scripts/dfb-artifacts.mjs','scripts/viri/fussball-statistika.mjs','scripts/policies/fussball-transport-v6.json'])assert.match(v[f],/^[a-f0-9]{64}$/)
  // Historical TEST ONLY catalog: exact Git957de0524e0208bd30d898a48cd2b091b7a544f8
@@ -23,7 +23,7 @@ test('TEST ONLY synthetic hosted structure preserves private brand, copies and o
  assert.throws(()=>getFussballCompletedSourceV6(p),/reader-issued/);assert.equal(f.replays,1);assert.ok(f.calls.filter(p=>p.includes('/contents/')).every(p=>p.endsWith('?ref='+'e'.repeat(40))));assert.equal(p.source.priorRequests,1838);assert.equal(p.source.cumulativeRequests,1841);assert.equal(p.nativeAdmission,false);assert.equal(p.source.sourceHead,'e'.repeat(40));assert.equal(p.source.currentSourceHead,'de77b661cbc11d95256a500e57c2fdea861a0647');assert.equal(p.source.currentCreatedAt,'2026-10-28T06:06:59.785Z');assert.equal(p.source.currentFreshUntil,'2026-10-29T06:06:59.785Z')
  assert.throws(()=>f.api.getFussballCompletedSourceV6({...p}),/reader-issued/);assert.throws(()=>f.api.getFussballCompletedSourceV6(JSON.parse(JSON.stringify(p))),/reader-issued/)
  const state=f.api.getFussballCompletedSourceV6(p);state.originals.stages.current.files.get('result.json')[0]^=1;state.certificate.run.head_sha='x';assert.notDeepEqual(state,f.api.getFussballCompletedSourceV6(p));await f.api.reauthenticateFussballCompletedSourceV6(p);assert.equal(f.replays,2)
- const real=Date.now;Date.now=()=>Date.parse(p.source.currentFreshUntil)+1;try{assert.throws(()=>f.api.getFussballCompletedSourceV6(p),/stale/)}finally{Date.now=real}
+ const original=f.now;f.setNow(Date.parse(p.source.currentFreshUntil)+1);try{assert.throws(()=>f.api.getFussballCompletedSourceV6(p),/stale/)}finally{f.setNow(original)}
 })
 for(const [name,change]of [
  ['failed source run',f=>f.run.conclusion='failure'],['rerun',f=>f.run.run_attempt=2],['nonmanual source',f=>f.run.event='push'],['foreign source head repository',f=>f.run.head_repository.full_name='other/repo'],['future run metadata',f=>f.run.updated_at='2099-01-01T00:00:00Z'],
