@@ -143,11 +143,12 @@ function karticeDrzav() {
     { koda: 'me', jezik: 'sr-Latn', locale: 'sr_RS', n: aplikacijaSr.naslovStrani },
     { koda: 'ba', jezik: 'hr', locale: 'hr_HR', n: aplikacijaHr.naslovStrani },
     { koda: 'md', jezik: 'ro', locale: 'ro_RO', n: aplikacijaRo.naslovStrani },
-    // Japonska, Hongkong, Tajska, Gibraltar: angleški vmesnik (lastnega slovarja ni).
+    // Japonska, Hongkong, Tajska, Gibraltar, San Marino: angleški vmesnik (lastnega slovarja ni).
     { koda: 'jp', jezik: 'en', locale: 'en_GB', n: aplikacijaEn.naslovStrani },
     { koda: 'hk', jezik: 'en', locale: 'en_GB', n: aplikacijaEn.naslovStrani },
     { koda: 'th', jezik: 'en', locale: 'en_GB', n: aplikacijaEn.naslovStrani },
     { koda: 'gi', jezik: 'en', locale: 'en_GB', n: aplikacijaEn.naslovStrani },
+    { koda: 'sm', jezik: 'en', locale: 'en_GB', n: aplikacijaEn.naslovStrani },
   ]
   const zamenjaj = (html, datoteka, atribut, ime, vsebina) => {
     const re = new RegExp(`(<meta ${atribut}="${ime}" content=")[^"]*(")`)

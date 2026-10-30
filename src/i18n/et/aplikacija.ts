@@ -144,6 +144,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       HK: '香港',
       TH: 'ประเทศไทย',
       GI: 'Gibraltar',
+      SM: 'San Marino',
     },
     preklopi: 'Vaheta: {drzava}',
   },

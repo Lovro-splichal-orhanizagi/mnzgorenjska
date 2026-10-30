@@ -85,6 +85,7 @@ import pflAz from './pfl-az.mjs'
 import jfl from './jfl.mjs'
 import hkfa from './hkfa.mjs'
 import thaileague from './thaileague.mjs'
+import fsgc from './fsgc.mjs'
 
 const VIRI = {
   // Ukrajina: Profesionalna nogometna liga prek pfl.ua.
@@ -239,6 +240,9 @@ const VIRI = {
   // (razpored), in zapisnikov PDF (pdftotext + ikone dogodkov iz toka strani);
   // brez šifer igralcev, pozicije iz zapisnika.
   thaileague,
+  // San Marino (FSGC) prek fsgc.sm (HTML, ki ga izriše strežnik): šifra osebe
+  // iz povezave igralca, vloge iz postave, dogodki z minuto (tudi kartoni).
+  fsgc,
 }
 
 /**

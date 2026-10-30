@@ -157,6 +157,7 @@ export const aplikacija = {
       HK: '香港',
       TH: 'ประเทศไทย',
       GI: 'Gibraltar',
+      SM: 'San Marino',
     },
     preklopi: 'Preklopi na {drzava}',
   },

@@ -11,7 +11,7 @@ export function germanDirectReaderScope(path,title){
  if(path?.endsWith('/uvoz-fussball-public.yml'))return /^Uvoz lige de-[a-z0-9]+(?:-[a-z0-9]+)* FUSSBALL public$/.test(title??'')?'DE':'UNKNOWN'
  if(!path?.endsWith('/uvoz-lige.yml'))return null
  const m=/^Uvoz lige ([a-z]{2})-[a-z0-9]+(?:-[a-z0-9]+)*$/.exec(title??'')
- const known=new Set('SI HR AT IT HU RS BA MK ME RO MD BG CZ SK PL DE GB ES FR PT NL BE CH US CA AU NZ MT IS FO DK SE NO FI EE LV LT IE GE JP HK TH GI GR CY LU AL AZ AM UA TR LI'.toLowerCase().split(' '))
+ const known=new Set('SI HR AT IT HU RS BA MK ME RO MD BG CZ SK PL DE GB ES FR PT NL BE CH US CA AU NZ MT IS FO DK SE NO FI EE LV LT IE GE JP HK TH GI SM GR CY LU AL AZ AM UA TR LI'.toLowerCase().split(' '))
  return !m||!known.has(m[1])?'UNKNOWN':m[1]==='de'?'DE':'NON_DE'
 }
 export function olderGermanReaders(runs,own){
