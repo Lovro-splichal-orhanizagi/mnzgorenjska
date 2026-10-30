@@ -1,0 +1,184 @@
+{
+  "version": 1,
+  "kind": "reviewed-baden-r10-outside-profile-groups",
+  "groups": [
+    {
+      "workflow": ".github/workflows/sitemap.yml",
+      "sourceMode": "own-service-sitemap-only",
+      "events": [
+        "schedule",
+        "workflow_dispatch"
+      ],
+      "files": {
+        ".github/workflows/sitemap.yml": "4b3211e4d6f8f8867ba1742d4ec70aa7d62f0782257d908a50b137afb2317fc9",
+        "scripts/sitemap.mjs": "94a3bf33a743400c043a8ef5c08d94edd8db1a3da419c7796266060daa059eb3",
+        "scripts/strani.mjs": "e0c9a7f9739e269a8bff6882f219903a990dad4cd1c6ec20956fe9ca589508c7",
+        "scripts/razpored.mjs": "3074c9ca89ce3b5182a09410b280fa646891a5833388e2fe74ba31d8fdda1dee"
+      },
+      "jobName": "sitemap",
+      "stepNames": [
+        "Set up job",
+        "Run actions/checkout@v4",
+        "Run actions/setup-node@v4",
+        "Run npm ci --ignore-scripts",
+        "Sestavi",
+        "Prenesi na strežnik",
+        "Post Run actions/setup-node@v4",
+        "Post Run actions/checkout@v4",
+        "Complete job"
+      ],
+      "exampleRunIds": [
+        "41044555248",
+        "40861961620"
+      ]
+    },
+    {
+      "workflow": ".github/workflows/opozorila.yml",
+      "sourceMode": "own-service-notification-only",
+      "events": [
+        "schedule",
+        "workflow_dispatch"
+      ],
+      "files": {
+        ".github/workflows/opozorila.yml": "7c537722d66d49568a75bd27698288488e4c977ceca198cf1c98c2f1090c9699",
+        "scripts/posli-opomnike.mjs": "275f5d91973630f4a95dffab945100294bdbe76e542c249b855aa368d87a45ab",
+        "scripts/strani.mjs": "e0c9a7f9739e269a8bff6882f219903a990dad4cd1c6ec20956fe9ca589508c7",
+        "scripts/javi-napako.mjs": "8ed142cd3277f98eebbb337341f898e3202a8fa029dd2d92604513c307b5dc44"
+      },
+      "jobName": "opozori",
+      "stepNames": [
+        "Set up job",
+        "Run actions/checkout@v4",
+        "Run actions/setup-node@v4",
+        "Run npm ci --ignore-scripts",
+        "Poslji opozorila",
+        "Poslji opozorila (odsoten igralec v postavi)",
+        "Poslji push opomnike (ni ekipe)",
+        "Poslji dobrodoslico (registriran, brez ekipe)",
+        "Poslji opomnik brez ekipe",
+        "Poslji obvestilo o zivi ligi (zelje lig)",
+        "Javi padec na Discord",
+        "Post Run actions/setup-node@v4",
+        "Post Run actions/checkout@v4",
+        "Complete job"
+      ],
+      "exampleRunIds": [
+        "41030231050",
+        "41010199788",
+        "40989982397",
+        "40976421261",
+        "40962418313",
+        "40942228590",
+        "40917900603",
+        "40889801813",
+        "40857411598",
+        "40832927408",
+        "40808982725",
+        "40797028280",
+        "40788228827",
+        "40768552685"
+      ]
+    },
+    {
+      "workflow": ".github/workflows/zivost.yml",
+      "sourceMode": "own-service-health-only",
+      "events": [
+        "schedule",
+        "workflow_dispatch"
+      ],
+      "files": {
+        ".github/workflows/zivost.yml": "9160b689049a86276d6d7357e66345c444817bc8ee384627da3c66467e50de52"
+      },
+      "jobName": "zivost",
+      "stepNames": [
+        "Set up job",
+        "Preveri",
+        "Complete job"
+      ],
+      "exampleRunIds": [
+        "41012317215",
+        "40979658800",
+        "40951659074",
+        "40906120295",
+        "40846080003",
+        "40808646683",
+        "40788792727"
+      ]
+    },
+    {
+      "workflow": ".github/workflows/opomniki.yml",
+      "sourceMode": "own-service-notification-only",
+      "events": [
+        "schedule",
+        "workflow_dispatch"
+      ],
+      "files": {
+        ".github/workflows/opomniki.yml": "4a4f152b46a57839e14bfabde0495ef6cd17e28941f67d04a713973308ec1551",
+        "scripts/posli-opomnike.mjs": "275f5d91973630f4a95dffab945100294bdbe76e542c249b855aa368d87a45ab",
+        "scripts/strani.mjs": "e0c9a7f9739e269a8bff6882f219903a990dad4cd1c6ec20956fe9ca589508c7"
+      },
+      "jobName": "opomniki",
+      "stepNames": [
+        "Set up job",
+        "Run actions/checkout@v4",
+        "Run actions/setup-node@v4",
+        "Run npm ci --ignore-scripts",
+        "Posli opomnike po ligah",
+        "Post Run actions/setup-node@v4",
+        "Post Run actions/checkout@v4",
+        "Complete job"
+      ],
+      "exampleRunIds": [
+        "40899222486"
+      ]
+    }
+  ],
+  "ancestorCoverage": {
+    "complete": false,
+    "knownReferencedAncestors": [
+      {
+        "runId": "40416972177",
+        "head": "4486fc21502446e8bb2917bd5fccd77fd513bb76"
+      },
+      {
+        "runId": "40509926697",
+        "head": "bbc12335f5dcd6cae5761f7075de019aa23dd419"
+      },
+      {
+        "runId": "40531709101",
+        "head": "086021b26ee5d787c8897836d3366bd2d3e55202"
+      },
+      {
+        "runId": "40566792786",
+        "head": "78ef666fa2f61671e95892a315eb38cbc9c080d2"
+      },
+      {
+        "runId": "40577717778",
+        "head": "a4625c2e8a668686b961751108948321f26899fe"
+      },
+      {
+        "runId": "40614233934",
+        "head": "d26dcbae4012e61c520a96568001b1d582ebe0db"
+      },
+      {
+        "runId": "40633575248",
+        "head": "d25c9b0bac906e2b9f7ad13e749a724e7b6fac77"
+      },
+      {
+        "runId": "40641606028",
+        "head": "de77b661cbc11d95256a500e57c2fdea861a0647"
+      },
+      {
+        "runId": "40694431918",
+        "head": "4e1e7caac02aa6e12c789c7cea7aac699d3c2566"
+      }
+    ],
+    "unresolvedCarriedForwardRequests": 453,
+    "reviewedSingleGuard": {
+      "runId": "40416972177",
+      "head": "4486fc21502446e8bb2917bd5fccd77fd513bb76",
+      "status": "INDEPENDENT_REVIEWED_RERUN_PRECLUSION_ONLY",
+      "authorityForOtherAncestors": false
+    }
+  }
+}

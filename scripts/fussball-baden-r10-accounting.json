@@ -2203,23 +2203,5 @@
         "scripts/test-diagnose-g9-served-fetch.mjs": "9095054b721ba9bca10a1ad35062c281f5b7b5e8421850c74ba26673e95e6251"
       }
     }
-  },
-  "ordinaryWorkflows": [
-    ".github/workflows/fcf-javni-dokazi.yml",
-    ".github/workflows/hisne-ekipe.yml",
-    ".github/workflows/izdaja.yml",
-    ".github/workflows/opomniki.yml",
-    ".github/workflows/opozorila.yml",
-    ".github/workflows/ponovne-cene.yml",
-    ".github/workflows/preveri-podatke.yml",
-    ".github/workflows/preverjeni-preklici.yml",
-    ".github/workflows/scout-in-funkcije.yml",
-    ".github/workflows/sitemap.yml",
-    ".github/workflows/tedenski-pregled.yml",
-    ".github/workflows/trgovine.yml",
-    ".github/workflows/uvoz-fcf-zgodovina.yml",
-    ".github/workflows/zdruzi-klube.yml",
-    ".github/workflows/zivost.yml",
-    ".github/workflows/ci.yml"
-  ]
+  }
 }

@@ -8,8 +8,8 @@ import {createHash} from 'node:crypto'
 import {performance} from 'node:perf_hooks'
 import {isDeepStrictEqual as same} from 'node:util'
 import {readFussballBadenR10AccountingFoundation,getFussballBadenR10AccountingFoundation} from './fussball-baden-r10-foundation.mjs'
-import {germanDirectReaderScope} from './bulk-source-coordination.mjs'
 const policy=JSON.parse(readFileSync(new URL('./fussball-baden-r10-accounting.json',import.meta.url)))
+const exclusions=JSON.parse(readFileSync(new URL('./fussball-baden-r10-exclusions.json',import.meta.url)))
 const history=JSON.parse(readFileSync(new URL('./fussball-fresh-pair-history.json',import.meta.url)))
 const prefix=`repos/${policy.repository}/`,states=new WeakMap(),MiB=1024*1024
 const sha=b=>createHash('sha256').update(b).digest('hex')
@@ -28,8 +28,6 @@ function jobsProjection(v){
  return {total_count:v.total_count,jobs:v.jobs.map(j=>({...Object.fromEntries(['id','run_id','run_attempt','head_sha','name','status','conclusion'].map(k=>[k,j[k]])),
   steps:j.steps.map(s=>Object.fromEntries(['number','name','status','conclusion'].map(k=>[k,s[k]])))}))}
 }
-const relevant=r=>policy.records.some(p=>p.run.id===r.id)||!policy.ordinaryWorkflows.includes(r.path)&&germanDirectReaderScope(r.path,r.display_title)!=='NON_DE'||
- r.path==='.github/workflows/ci.yml'&&r.event==='workflow_dispatch'
 function inventoryIdentity(r){need(Number.isSafeInteger(r?.id)&&r.id>0&&Number.isSafeInteger(r.run_attempt)&&r.run_attempt>=1&&r.run_attempt<=16&&
  /^[a-f0-9]{40}$/.test(r.head_sha??'')&&r.repository?.full_name===policy.repository&&r.head_repository?.full_name===policy.repository&&
  typeof r.path==='string'&&r.path.startsWith('.github/workflows/')&&Number.isFinite(Date.parse(r.created_at))&&Date.parse(r.created_at)>=Date.parse(policy.since)&&Date.parse(r.created_at)<=Date.now(),'INVENTORY_IDENTITY')}
@@ -112,6 +110,17 @@ export async function readFussballBadenR10Budget(input){
  for(const path of ['actions/artifacts/12894726197','actions/artifacts/12894726197/zip'])allowed.add(path)
  const foundation=getFussballBadenR10AccountingFoundation(await readFussballBadenR10AccountingFoundation({github:get}))
  need(foundation.accounting.authenticatedMinimumSpent===3607,'FOUNDATION')
+ const ancestorCoverage={complete:false,reason:'PRE_R7_ANCESTOR_COVERAGE_NOT_CLOSED',ancestors:[],
+  unresolvedCarriedForwardRequests:exclusions.ancestorCoverage.unresolvedCarriedForwardRequests,
+  reviewedSingleGuard:structuredClone(exclusions.ancestorCoverage.reviewedSingleGuard),additionalRequests:null}
+ for(const p of exclusions.ancestorCoverage.knownReferencedAncestors){
+  const path='actions/runs/'+p.runId;allowed.add(path)
+  try{const r=await api(path);need(String(r?.id)===p.runId&&r.head_sha===p.head&&r.repository?.full_name===policy.repository&&
+   Number.isSafeInteger(r.run_attempt)&&r.run_attempt>=1&&r.run_attempt<=16&&Date.parse(r.created_at)<Date.parse(policy.since),'ANCESTOR_IDENTITY')
+   ancestorCoverage.ancestors.push({runId:p.runId,head:p.head,latestAttempt:r.run_attempt,additionalRequests:null,
+    retryPreclusionAuthenticated:false,reason:'FROZEN_GUARD_OR_ATTEMPT_ORIGINALS_REQUIRED'});mutable.set(path,r)
+  }catch(error){ancestorCoverage.ancestors.push({runId:p.runId,head:p.head,latestAttempt:null,additionalRequests:null,reason:error.code??'ANCESTOR_METADATA_UNAVAILABLE'})}
+ }
  const runtimeCache=new Set()
  const runtime=async head=>{
   if(runtimeCache.has(head))return
@@ -124,9 +133,39 @@ export async function readFussballBadenR10Budget(input){
   }
   runtimeCache.add(head)
  }
- for(const listed of first.filter(relevant)){
+ for(const listed of first){
   const p=policy.records.find(p=>p.run.id===listed.id),runId=String(listed.id)
   if(!p){
+   const groups=exclusions.groups.filter(g=>g.workflow===listed.path)
+   if(groups.length){
+    try{
+     need(listed.status==='completed'&&listed.run_attempt===1&&listed.head_branch==='main'&&groups.some(g=>g.events.includes(listed.event)),'EXCLUSION_EXECUTION')
+     const runPath=`actions/runs/${listed.id}`,jobsPath=runPath+'/attempts/1/jobs?per_page=100&page=1'
+     const run=await api(runPath),jobs=await api(jobsPath);need(same(runProjection(run),runProjection(listed)),'EXCLUSION_RUN')
+     jobsProjection(jobs)
+     let accepted=null
+     for(const group of groups){
+      need(['own-service-health-only','own-service-sitemap-only','own-service-notification-only'].includes(group.sourceMode),'EXCLUSION_SOURCE_MODE')
+      let matches=true
+      for(const[file,hash]of Object.entries(group.files)){
+       const path=`contents/${file}?ref=${run.head_sha}`;allowed.add(path);const v=await api(path)
+       if(v?.type!=='file'||v.path!==file||v.encoding!=='base64'||typeof v.content!=='string'||v.size>8*MiB||
+        Buffer.from(v.content,'base64').length!==v.size||sha(Buffer.from(v.content,'base64'))!==hash){matches=false;break}
+      }
+      if(!matches)continue
+      need(jobs.total_count===1&&jobs.jobs[0].name===group.jobName,'EXCLUSION_JOB_GRAPH')
+      const j=jobs.jobs[0];need(j.run_id===run.id&&j.run_attempt===1&&j.head_sha===run.head_sha&&j.status==='completed'&&
+       (j.conclusion==='skipped'&&j.steps.length===0||same(j.steps.map(s=>s.name),group.stepNames)&&
+        j.steps.every(s=>s.status==='completed'&&['success','failure','skipped','cancelled'].includes(s.conclusion))),'EXCLUSION_JOB_GRAPH')
+      accepted=group;break
+     }
+     need(accepted,'EXCLUSION_RUNTIME_BODY')
+     mutable.set(runPath,run);mutable.set(jobsPath,jobs)
+     executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'reviewed-own-service-group',
+      sourceMode:accepted.sourceMode,classification:'OUTSIDE_ORIGINAL_RESEARCH_PROFILE',newResearchRequests:0,physicalProviderAttempts:null})
+    }catch(error){blockers.push({runId,path:listed.path,reason:error.code??'EXCLUSION_EVIDENCE_UNAVAILABLE'})}
+    continue
+   }
    const attempts=[]
    for(let a=1;a<=listed.run_attempt;a++)try{const path=`actions/runs/${listed.id}/attempts/${a}/jobs?per_page=100&page=1`;const jobs=await api(path);jobsProjection(jobs);attempts.push({attempt:a,jobsRetained:true})}catch{attempts.push({attempt:a,jobsRetained:false})}
    blockers.push({runId,path:listed.path,reason:listed.status!=='completed'?'LIVE_EXECUTION':'UNREVIEWED_EXECUTION',attempts});continue
@@ -157,19 +196,21 @@ export async function readFussballBadenR10Budget(input){
  }
  for(const p of policy.records)if(!first.some(r=>r.id===p.run.id))blockers.push({runId:String(p.run.id),path:p.run.path,reason:'MISSING_REVIEWED_EXECUTION'})
  const fail=()=>{const error=Object.assign(Error('BADEN_R10_BUDGET_RECONCILIATION_HOLD'),{code:'BADEN_R10_BUDGET_RECONCILIATION_HOLD',dataHold:true,
-  blockers:structuredClone(blockers),audit:{executions:structuredClone(executions),adapterReads:structuredClone(reads),sourceOperationAuthorized:false}})
+  blockers:structuredClone([...blockers,{reason:ancestorCoverage.reason,ancestorRunIds:ancestorCoverage.ancestors.map(a=>a.runId),additionalRequests:null}]),
+  audit:{executions:structuredClone(executions),ancestorCoverage:structuredClone(ancestorCoverage),authenticatedMinimumSpent:3607,
+   freshAccountingKnown:false,adapterReads:structuredClone(reads),sourceOperationAuthorized:false}})
   Object.defineProperty(error,'originals',{value:copyFiles(originals)});throw error}
  if(blockers.length)fail()
- const last=await enumerate(api),firstRelevant=first.filter(relevant),lastRelevant=last.filter(relevant)
+ const last=await enumerate(api),firstRelevant=first,lastRelevant=last
  for(const r of lastRelevant)if(!firstRelevant.some(x=>x.id===r.id&&same(runProjection(x),runProjection(r))))blockers.push({runId:String(r.id),path:r.path,reason:'LATE_EXECUTION_DRIFT'})
  for(const r of firstRelevant)if(!lastRelevant.some(x=>x.id===r.id))blockers.push({runId:String(r.id),path:r.path,reason:'LATE_EXECUTION_MISSING'})
  for(const[path,v]of mutable)if(!same(await api(path),v))blockers.push({runId:path.match(/runs\/(\d+)/)?.[1]??null,path,reason:'LATE_METADATA_DRIFT'})
  // Mutable rechecks may take longer than a minute. Close the creation/rerun
  // window again AFTER them; verification time must not relabel an older scan.
- const sealRelevant=(await enumerate(api)).filter(relevant)
+ const sealRelevant=await enumerate(api)
  for(const r of sealRelevant)if(!firstRelevant.some(x=>x.id===r.id&&same(runProjection(x),runProjection(r))))blockers.push({runId:String(r.id),path:r.path,reason:'SEAL_EXECUTION_DRIFT'})
  for(const r of firstRelevant)if(!sealRelevant.some(x=>x.id===r.id))blockers.push({runId:String(r.id),path:r.path,reason:'SEAL_EXECUTION_MISSING'})
- if(blockers.length)fail()
+ if(blockers.length||!ancestorCoverage.complete)fail()
  const B=foundation.accounting.authenticatedMinimumSpent+executions.reduce((sum,e)=>sum+e.newResearchRequests,0)
  need(Number.isSafeInteger(B)&&B>=3607&&B+policy.currentMaximum<=policy.totalRequestCap,'RESERVATION_CAP')
  const verifiedAt=Date.now(),proof=freeze({version:1,kind:'authenticated-baden-r10-research-budget',
