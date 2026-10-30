@@ -2,31 +2,6 @@
 select pg_temp.g1_assert((select active from competitions where id=797)and(select count(*)from fantasy_teams where competition_id=797)=1 and(select count(*)from position_votes where voter_id='00000000-0000-4000-8000-000000007971')=1,'active G9 human/vote state survived actual G1 import');
 create temporary table launch_original as select v rollout,public.fcf_g1_native800_receipt()receipt from g1_rollout;
 select pg_temp.g1_assert((select activation_result->>'kind'='fcf-g1-native800-price-before'and activation_result->'offTargetPriors'=private_fcf_g1_native800.off_target_priors()and(activation_result#>>'{offTargetPriors,count}')::int>=1 from private_fcf_future_target_release.receipts where competition_id=783),'actual atomic server anchor before pricing');
--- TESTONLY diagnostic: no authority or production guard change. Flag order is
--- keys,schema,kind,rollout,fingerprint,binding,capture,ids,priors,protected.
-create temporary table g1_anchor_diagnostic_players as select id,to_jsonb(p)body from players p where competition_id=783;
-create function pg_temp.g1_anchor_diagnostic()returns jsonb language sql stable as $anchor_diagnostic$
-with facts as(select r.activation_result b,r.rollout_text::jsonb v,r.rollout_sha256,r.source_fingerprint,private_fcf_g1_native800.protected_target()actual_protected from private_fcf_future_target_release.receipts r where r.competition_id=783)
-select jsonb_build_object(
- 'keys',coalesce(private_fcf_future_import.keys(b,array['schemaVersion','kind','rolloutSha256','sourceFingerprintSha256','sourceBindingSha256','capture','targetPlayerIds','offTargetPriors','importedProtected']),false),
- 'schema',coalesce(b->'schemaVersion'='1'::jsonb,false),
- 'kind',coalesce(b->>'kind'='fcf-g1-native800-price-before',false),
- 'rollout',coalesce(b->>'rolloutSha256'=rollout_sha256,false),
- 'fingerprint',coalesce(b->>'sourceFingerprintSha256'=source_fingerprint,false),
- 'binding',coalesce(b->>'sourceBindingSha256'=encode(sha256(convert_to(private_fcf_future_import.canonical_json(v->'inventoryBinding'),'UTF8')),'hex'),false),
- 'capture',coalesce(b->'capture'=v#>'{inventoryBinding,currentCapture}',false),
- 'ids',coalesce(b->'targetPlayerIds'=(select coalesce(jsonb_agg(id order by id),'[]')from players where competition_id=783),false),
- 'priors',coalesce(b->'offTargetPriors'=private_fcf_g1_native800.off_target_priors(),false),
- 'protected',coalesce(b->'importedProtected'=actual_protected,false),
- 'competition',coalesce(b#>'{importedProtected,competition}'=actual_protected->'competition',false),
- 'rounds',coalesce(b#>'{importedProtected,rounds}'=actual_protected->'rounds',false),
- 'matches',coalesce(b#>'{importedProtected,matches}'=actual_protected->'matches',false),
- 'players',coalesce(b#>'{importedProtected,players}'=actual_protected->'players',false),
- 'appearances',coalesce(b#>'{importedProtected,appearances}'=actual_protected->'appearances',false),
- 'goals',coalesce(b#>'{importedProtected,goals}'=actual_protected->'goals',false))from facts
-$anchor_diagnostic$;
-create temporary table g1_anchor_diagnostic_before as select pg_temp.g1_anchor_diagnostic()d;
-
 savepoint native800_legacy_receipt;
 insert into private_fcf_future_target_release.receipts(competition_id,inventory_key,packet_sha256,packet_text,rollout_text,rollout_sha256,source_fingerprint,cleanup_before_sha256,imported_state_sha256,stage)select 797,repeat('e',64),pg_temp.g1_sha('{}'),'{}','{"kind":"TEST ONLY legacy unaffected"}',pg_temp.g1_sha('{"kind":"TEST ONLY legacy unaffected"}'),repeat('e',64),before_sha256,repeat('e',64),'imported'from private_fcf_future_history.cleanup_receipt;
 select pg_temp.g1_assert((select activation_result is null from private_fcf_future_target_release.receipts where competition_id=797),'legacy receipt insertion remains unchanged');
@@ -40,17 +15,6 @@ insert into fantasy_teams(owner_id,name,competition_id)values('00000000-0000-400
 with ranked as(select id,position,row_number()over(partition by team_id,position='GK'order by reg_st,id)n from players where competition_id=783)update players p set position=case when r.position='GK'then'GK'when r.n%10 between 1 and 4 then'DEF'when r.n%10 between 5 and 8 then'MID'else'FWD'end,value=case when r.n=2 then 9 else 4 end,value_start=case when r.n=2 then 9 else 4 end from ranked r where p.id=r.id;
 insert into position_priors(player_id,position,score,updated_at)select p.id,x.position,0.25,clock_timestamp()from players p cross join(values('GK'),('DEF'),('MID'),('FWD'))x(position)where p.competition_id=783 on conflict(player_id,position)do update set score=excluded.score,updated_at=excluded.updated_at;
 do $$declare r bigint;begin for r in select id from rounds where competition_id=783 loop perform recompute_round_scores(r);end loop;perform osvezi_statistiko_igralcev(array(select id from players where competition_id=783));end$$;
--- TESTONLY expected diagnostic stop, before the first postprice guard call.
-do $anchor_diagnostic_stop$declare post_components jsonb;pre_flags text;post_flags text;protected_flags text;fields text;diagnostic_message text;begin
- post_components:=pg_temp.g1_anchor_diagnostic();
- select string_agg(case when (facts.d->key_name)::boolean then '1'else '0'end,''order by ordinal)into pre_flags from g1_anchor_diagnostic_before facts cross join unnest(array['keys','schema','kind','rollout','fingerprint','binding','capture','ids','priors','protected'])with ordinality AS flag_order(key_name,ordinal);
- select string_agg(case when (facts.d->key_name)::boolean then '1'else '0'end,''order by ordinal)into post_flags from(select post_components d)facts cross join unnest(array['keys','schema','kind','rollout','fingerprint','binding','capture','ids','priors','protected'])with ordinality AS flag_order(key_name,ordinal);
- select string_agg(case when (facts.d->key_name)::boolean then '1'else '0'end,''order by ordinal)into protected_flags from(select post_components d)facts cross join unnest(array['competition','rounds','matches','players','appearances','goals'])with ordinality AS flag_order(key_name,ordinal);
- select coalesce(string_agg(changed_columns.key,','order by changed_columns.key),'none')into fields from(select distinct changed_field.key from g1_anchor_diagnostic_players before_player join players current_player on current_player.id=before_player.id cross join lateral jsonb_each(before_player.body) AS changed_field where changed_field.value is distinct from to_jsonb(current_player)->changed_field.key)changed_columns;
- diagnostic_message:='G1 TEST: anchor pre_'||pre_flags||' post_'||post_flags||' protected_'||protected_flags||' fields_'||fields;
- if length(diagnostic_message)>240 then diagnostic_message:='G1 TEST: anchor pre_'||pre_flags||' post_'||post_flags||' protected_'||protected_flags||' fields_many';end if;
- raise exception using message=diagnostic_message;
-end$anchor_diagnostic_stop$;
 create temporary table launch_squad(id bigint primary key,team bigint,position text);
 do $$declare pos text;n int;i int;pid bigint;begin for pos,n in select *from(values('GK',2),('DEF',5),('MID',5),('FWD',3))q loop for i in 1..n loop select p.id into pid from players p where competition_id=783 and active and p.position=pos and not exists(select 1 from launch_squad where id=p.id)and(select count(*)from launch_squad where team=p.team_id)<3 order by value,id limit 1;perform pg_temp.g1_assert(pid is not null,'synthetic legal15 player');insert into launch_squad select id,team_id,position from players where id=pid;end loop;end loop;end$$;
 create temporary table native800_ready(d jsonb);
@@ -64,11 +28,28 @@ do $$declare v jsonb;p jsonb;mp jsonb;projection jsonb;native jsonb;input jsonb;
 end$$;
 select pg_temp.g1_assert((select(d->>'nativeSnapshotText')::jsonb#>'{privacy,checkedKeys}'=((d#>>'{originalImport,rolloutText}')::jsonb->>'targetPacketText')::jsonb#>'{databaseInventory,identityPrivacy,checkedKeys}'from native800_ready),'postprice prepared privacy keys retain actual original native country/source identity');
 create function pg_temp.g1_launch_gate(activate boolean)returns jsonb language plpgsql as $$declare d jsonb;v jsonb;s jsonb;t text;begin select x.d into d from native800_ready x;v:=(d#>>'{originalImport,rolloutText}')::jsonb;s:=pg_temp.g1_attest(v,'check')::jsonb;s:=s||jsonb_build_object('kind','fcf-g1-native800-launch-stage-attestation','stage',case when activate then'activate'else'check'end,'readinessSha256',pg_temp.g1_sha(d::text));t:=s::text;return public.fcf_g1_native800_launch(d::text,pg_temp.g1_sha(d::text),activate,t,pg_temp.g1_sha(t));end$$;
+-- TESTONLY bounded stage/case diagnostics; expected guards remain exact.
+create function pg_temp.g1_launch_failure(tag text,inner_state text,inner_message text)returns void language plpgsql as $g1_case_error$declare safe_message text;begin
+ if tag!~'^[A-Za-z0-9_ -]{1,60}$'or inner_state!~'^[A-Z0-9]{5}$'then raise exception 'G1 TEST: invalid fixed launch diagnostic';end if;
+ safe_message:=case when octet_length(inner_message)<=140 and inner_message~'^(FCF_TARGET:|FCF_G1_9410:|FCF_G1_SUPPLEMENT:|HISTORICAL_POLICY:|G1 TEST:)[A-Za-z0-9_ .,:;/()=-]{1,140}$'then inner_message else 'REDACTED'end;
+ raise exception 'G1 TEST: case_% INNER_% REASON_%',tag,inner_state,safe_message;
+end$g1_case_error$;
+create function pg_temp.g1_launch_positive(phase text)returns jsonb language plpgsql as $g1_positive_phase$declare result jsonb;begin
+ case phase
+  when 'postprice_check'then select pg_temp.g1_check(rollout_row.v)into result from g1_rollout rollout_row;
+  when 'drycheck'then result:=pg_temp.g1_launch_gate(false);
+  when 'activate'then result:=pg_temp.g1_launch_gate(true);
+  when 'retry'then result:=pg_temp.g1_launch_gate(true);
+  when 'readback'then result:=public.fcf_g1_native800_launch_receipt();
+  else raise exception 'G1 TEST: unknown fixed positive phase';
+ end case;return result;
+exception when others then perform pg_temp.g1_launch_failure('positive '||phase,SQLSTATE,SQLERRM);return null;
+end$g1_positive_phase$;
 create temporary table launch_before as select private_fcf_g1_native800.launch_after_image(783)state,(select to_jsonb(r)from private_fcf_future_target_release.receipts r where competition_id=783)receipt;
-select pg_temp.g1_assert(pg_temp.g1_check(v)->>'canonicalVerified'='true','G1 import-state check accepts verified postprice state')from g1_rollout;
-select pg_temp.g1_assert(pg_temp.g1_launch_gate(false)->>'stage'='checked','actual postprice drycheck');
+select pg_temp.g1_assert(pg_temp.g1_launch_positive('postprice_check')->>'canonicalVerified'='true','G1 import-state check accepts verified postprice state')from g1_rollout;
+select pg_temp.g1_assert(pg_temp.g1_launch_positive('drycheck')->>'stage'='checked','actual postprice drycheck');
 select pg_temp.g1_assert(private_fcf_g1_native800.launch_after_image(783)=(select state from launch_before)and(select to_jsonb(r)from private_fcf_future_target_release.receipts r where competition_id=783)=(select receipt from launch_before),'drycheck makes no durable writes');
-create function pg_temp.g1_launch_mutant(command text,label text,expected_error text default null)returns void language plpgsql as $$declare baseline jsonb;receipt jsonb;begin baseline:=private_fcf_g1_native800.launch_after_image(783);select to_jsonb(r)into receipt from private_fcf_future_target_release.receipts r where competition_id=783;begin execute command;perform pg_temp.g1_launch_gate(true);raise exception 'NATIVE800 LAUNCH TEST: accepted %',label;exception when others then if(sqlerrm not like'FCF_TARGET:%'and sqlerrm not like'HISTORICAL_POLICY:%')or(expected_error is not null and sqlerrm<>expected_error)then raise;end if;end;perform pg_temp.g1_assert(private_fcf_g1_native800.launch_after_image(783)=baseline and(select to_jsonb(r)from private_fcf_future_target_release.receipts r where competition_id=783)=receipt,'refusal rolls back all mutation and attempted launch: '||label);end$$;
+create function pg_temp.g1_launch_mutant(command text,label text,expected_error text default null)returns void language plpgsql as $$declare baseline jsonb;receipt jsonb;begin baseline:=private_fcf_g1_native800.launch_after_image(783);select to_jsonb(r)into receipt from private_fcf_future_target_release.receipts r where competition_id=783;begin execute command;perform pg_temp.g1_launch_gate(true);raise exception 'NATIVE800 LAUNCH TEST: accepted %',label;exception when others then if(sqlerrm not like'FCF_TARGET:%'and sqlerrm not like'HISTORICAL_POLICY:%')or(expected_error is not null and sqlerrm<>expected_error)then perform pg_temp.g1_launch_failure('negative '||label,SQLSTATE,SQLERRM);end if;end;perform pg_temp.g1_assert(private_fcf_g1_native800.launch_after_image(783)=baseline and(select to_jsonb(r)from private_fcf_future_target_release.receipts r where competition_id=783)=receipt,'refusal rolls back all mutation and attempted launch: '||label);end$$;
 -- Coherently reprepare actual NULL state so this tests the COMPLETE-deadline
 -- gate itself, not merely an old optimistic-concurrency snapshot hash.
 select pg_temp.g1_launch_mutant($null_deadline$update rounds set deadline_at=null where competition_id=783 and number=1;update native800_ready n set d=n.d||jsonb_build_object('nativeSnapshotText',fresh.p->>'dependencySnapshotText','nativeSnapshotSha256',fresh.p->>'dependencySnapshotSha256','pricingSnapshotText',fresh.p#>>'{pricingSnapshot,snapshotText}','pricingSnapshotSha256',fresh.p#>>'{pricingSnapshot,snapshotSha256}')from(select private_fcf_g1_readonly.capture('es-ct-segona-g1',array(select jsonb_array_elements_text(((select d->>'nativeSnapshotText'from native800_ready)::jsonb)#>'{privacy,checkedKeys}')))p)fresh;$null_deadline$,'coherent NULL historical deadline','FCF_TARGET: complete current native round dates/deadlines');
@@ -88,12 +69,12 @@ select pg_temp.g1_assert(not has_function_privilege('anon','public.fcf_g1_native
 -- The trigger is present in a coherently refreshed current snapshot, so this
 -- negative must reach the actual activation writes and detect foreign effects.
 select pg_temp.g1_launch_mutant($foreign_trigger$create function pg_temp.g1_foreign_write()returns trigger language plpgsql as 'begin if new.id=783 then update public.fantasy_teams set name=''TEST ONLY illegal G1 side effect''where competition_id=797;end if;return new;end';create trigger TEST_ONLY_g1_foreign_write after update on public.competitions for each row execute function pg_temp.g1_foreign_write();update native800_ready n set d=n.d||jsonb_build_object('nativeSnapshotText',fresh.p->>'dependencySnapshotText','nativeSnapshotSha256',fresh.p->>'dependencySnapshotSha256','pricingSnapshotText',fresh.p#>>'{pricingSnapshot,snapshotText}','pricingSnapshotSha256',fresh.p#>>'{pricingSnapshot,snapshotSha256}')from(select private_fcf_g1_readonly.capture('es-ct-segona-g1',array(select jsonb_array_elements_text(((select d->>'nativeSnapshotText'from native800_ready)::jsonb)#>'{privacy,checkedKeys}')))p)fresh;$foreign_trigger$,'coherent actual foreign user mutation','FCF_TARGET: G1 check/activation preserves G9 afterimage/receipt');
-select pg_temp.g1_assert(pg_temp.g1_launch_gate(true)->>'stage'='activated','actual atomic activated intended opening');
-select pg_temp.g1_assert(pg_temp.g1_launch_gate(true)->>'readbackOnly'='true','exact activated retry is readback only');
+select pg_temp.g1_assert(pg_temp.g1_launch_positive('activate')->>'stage'='activated','actual atomic activated intended opening');
+select pg_temp.g1_assert(pg_temp.g1_launch_positive('retry')->>'readbackOnly'='true','exact activated retry is readback only');
 select pg_temp.g1_assert((select active and prvi_fantasy_krog=(d#>>'{launchProposal,roundNumber}')::int from competitions cross join native800_ready where id=783),'actual selected round/active');
 savepoint native800_launch_readonly;
 set local transaction_read_only=on;
-select pg_temp.g1_assert(public.fcf_g1_native800_launch_receipt()->>'stage'='activated'and public.fcf_g1_native800_launch_receipt()->>'readinessSha256'=(select pg_temp.g1_sha(d::text)from native800_ready),'actual explicit READ ONLY current complete launch receipt');
+select pg_temp.g1_assert(pg_temp.g1_launch_positive('readback')->>'stage'='activated'and pg_temp.g1_launch_positive('readback')->>'readinessSha256'=(select pg_temp.g1_sha(d::text)from native800_ready),'actual explicit READ ONLY current complete launch receipt');
 rollback to savepoint native800_launch_readonly;
 select pg_temp.g1_assert((select active from competitions where id=797)and(select count(*)from fantasy_teams where competition_id=797)=2 and(select count(*)from position_votes where voter_id='00000000-0000-4000-8000-000000007971')=1,'active G9 and legitimate between-stage humans/votes preserved through G1 activation');
 select 'FCF_G1_NATIVE800_LAUNCH_PASS';
