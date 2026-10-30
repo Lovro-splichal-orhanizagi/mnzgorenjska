@@ -18,6 +18,7 @@ import {replayFussballNativeRoles,fussballNativeOriginalResultBytes as originalR
 import {inspectFussballPage,fussballFontUrl} from './viri/fussball-discovery.mjs'
 import {inspectFussballLineup} from './viri/fussball-statistika.mjs'
 import {validateFussballFixture} from './fussball-season.mjs'
+import {fetchBadenServedPage} from './lib/baden-served-page.mjs'
 
 const profile='germany-retained-fussball-native-v1',sourcePolicy='fussball-community-cards-v1'
 const completedCatalogKind='baden-fussball-completed-stages-native-catalog',completedSourceKind='authenticated-fussball-baden-completed-stages-source'
@@ -26,9 +27,10 @@ const repo='Lovro-splichal-orhanizagi/mnzgorenjska',prefix=`repos/${repo}/`,work
 const validateStep='Validate exact reviewed main and first attempt',deriveStep='Authenticate source certificate and derive exact Baden partition',uploadStep='Preserve derived Baden composition proof'
 const dualEpochSource={runId:'40990176474',head:'e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d'}
 const dualEpochCompatibilityFile='scripts/policies/baden-native-dual-epoch-compatibility.json'
-const dualEpochCurrentFiles=['.github/workflows/uvoz-baden-native.yml',dualEpochCompatibilityFile,'scripts/stage-baden-native-composition.mjs','scripts/bulk-baden-native.mjs','scripts/bulk-offline-network.mjs','scripts/fussball-native-composition.mjs']
+const dualEpochCurrentFiles=['.github/workflows/uvoz-baden-native.yml',dualEpochCompatibilityFile,'scripts/stage-baden-native-composition.mjs','scripts/bulk-baden-native.mjs','scripts/bulk-offline-network.mjs','scripts/fussball-native-composition.mjs','scripts/lib/baden-served-page.mjs']
 const catalogFile='scripts/policies/fussball-baden-native-composition.json'
 const catalogBytes=readFileSync(new URL('../'+catalogFile,import.meta.url)),catalog=JSON.parse(catalogBytes)
+const servedPageHelper='scripts/lib/baden-served-page.mjs'
 const runtimeFiles=[...new Set([workflow,catalogFile,'scripts/fussball-baden-completed-stages.json','package-lock.json',...zaprtje('scripts/fussball-native-composition.mjs'),...zaprtje('scripts/stage-fussball-native-composition.mjs')])].sort()
 const capabilities=new WeakMap(),MiB=1024*1024,HASH=/^[a-f0-9]{64}$/
 const hash=b=>createHash('sha256').update(b).digest('hex')
@@ -199,10 +201,11 @@ export function buildFussballNativeComposition(proof){
 function writerPack(proof,writerHead){const {derivedPackSha256,...base}=buildFussballNativeComposition(proof);const pack={...base,expectedSha:writerHead,replayHead:writerHead};return freeze({...pack,derivedPackSha256:digest(pack)})}
 
 function isDualEpoch(input){return Object.hasOwn(input??{},'consumerHead')}
+function producerRuntimeFiles(input){return isDualEpoch(input)?runtimeFiles.filter(file=>file!==servedPageHelper):runtimeFiles}
 function hostedShape(input,fields){const extended=isDualEpoch(input);closed(input,extended?[...fields,'consumerHead']:fields,'exact derived run/head and repository GET adapter required');need(/^[1-9]\d{0,19}$/.test(input.derivedRunId??'')&&Number.isSafeInteger(Number(input.derivedRunId))&&/^[a-f0-9]{40}$/.test(input.derivedHead??'')&&typeof input.github==='function','exact derived run/head and repository GET adapter required');if(extended)need(input.derivedRunId===dualEpochSource.runId&&input.derivedHead===dualEpochSource.head&&/^[a-f0-9]{40}$/.test(input.consumerHead??'')&&input.consumerHead!==input.derivedHead,'only the reviewed e925 source epoch may use a separate current consumer head')}
 function hostedApi(input){
  const catalogPath=`contents/${catalogFile}?ref=${input.derivedHead}`;let catalogRaw=false
- const base=`actions/runs/${input.derivedRunId}`,allowed=new Set([base,base+'/attempts/1/jobs?per_page=100&page=1',base+'/artifacts?per_page=100&page=1','branches/main',...runtimeFiles.map(f=>`contents/${f}?ref=${input.derivedHead}`)])
+ const base=`actions/runs/${input.derivedRunId}`,allowed=new Set([base,base+'/attempts/1/jobs?per_page=100&page=1',base+'/artifacts?per_page=100&page=1','branches/main',...producerRuntimeFiles(input).map(f=>`contents/${f}?ref=${input.derivedHead}`)])
  if(isDualEpoch(input)){const env=process.env;for(const path of [`actions/runs/${env.GITHUB_RUN_ID}`,`actions/workflows/ci.yml/runs?branch=main&event=push&per_page=100&page=1`])allowed.add(path);for(const file of dualEpochCurrentFiles)allowed.add(`contents/${file}?ref=${input.consumerHead}`)}
  return {allow:p=>allowed.add(p),allowCatalogRaw:()=>{catalogRaw=true},async get(p,binary=false){need(allowed.has(p)&&(!binary||!p.startsWith('contents/')||(catalogRaw&&p===catalogPath)),'GET outside fixed derived proof scope');let v;try{v=await input.github(prefix+p,binary)}catch{need(false,'authoritative derived GitHub GET unavailable')};if(binary){need(Buffer.isBuffer(v)&&v.length<=(p===catalogPath?4:512)*MiB,p===catalogPath?'bounded derived catalog required':'bounded derived ZIP required');return Buffer.from(v)}return structuredClone(v)}}
 }
@@ -215,7 +218,7 @@ function hostedRun(run,input,terminal){
 async function installedRuntime(input,api){
  const expectedMain=isDualEpoch(input)?input.consumerHead:input.derivedHead,main=await api.get('branches/main');need(main?.name==='main'&&main.commit?.sha===expectedMain,'current writer main differs')
  const runtime={}
- for(const file of runtimeFiles){
+ for(const file of producerRuntimeFiles(input)){
   const bytes=readFileSync(new URL('../'+file,import.meta.url)),path=`contents/${file}?ref=${input.derivedHead}`,remote=await api.get(path),why='derived installed runtime differs from immutable approved head'
   need(remote?.type==='file'&&remote.path===file&&remote.size>0&&remote.size<=4*MiB&&(remote.size===bytes.length||isDualEpoch(input)&&file==='scripts/fussball-native-composition.mjs'),why)
   let sourceBytes
@@ -243,10 +246,12 @@ function hostedArtifact(a,input,steps){
 }
 function rootActor(a){return a?.id===25134229&&a.login==='nejcar20'&&a.type==='User'}
 async function servedCurrentHead(head){
- let response;try{response=await globalThis.fetch('https://slff.eu/',{headers:{'Cache-Control':'no-cache'},credentials:'omit',redirect:'error',signal:AbortSignal.timeout(30000)})}catch{need(false,'current served writer fetch unavailable')}
- need(response?.ok===true,'current served writer unavailable');const reader=response.body?.getReader();need(reader&&typeof reader.read==='function','bounded served writer body required');const chunks=[];let size=0
- try{for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;need(size<=4*MiB,'served writer body exceeds bound');chunks.push(Buffer.from(value))}}catch(error){if(error?.dataHold)throw error;need(false,'bounded served writer body unavailable')}finally{await reader.cancel().catch(()=>{})}
- const html=Buffer.concat(chunks).toString('utf8'),matches=[...html.matchAll(/<meta\b[^>]*name=["']slff-commit["'][^>]*content=["']([a-f0-9]{40})["']/g)];need(matches.length===1&&matches[0][1]===head,'exact current served writer identity required')
+ const safeCodes=new Set(['OWN_FETCH_TIMEOUT','OWN_FETCH_BODY_BOUND','OWN_FETCH_NETWORK_FAILED']);let response
+ try{response=await fetchBadenServedPage('https://slff.eu/',{headers:{'Cache-Control':'no-cache'},redirect:'error',signal:AbortSignal.timeout(30000)})}catch(error){const code=safeCodes.has(error?.code)?` (${error.code})`:'';need(false,`current served writer fetch unavailable${code}`)}
+ need(response?.ok===true,'current served writer unavailable');let html
+ try{html=await response.text()}catch(error){const code=safeCodes.has(error?.code)?` (${error.code})`:'';need(false,`bounded served writer body unavailable${code}`)}
+ need(Buffer.byteLength(html,'utf8')<=4*MiB,'served writer body exceeds bound')
+ const matches=[...html.matchAll(/<meta\b[^>]*name=["']slff-commit["'][^>]*content=["']([a-f0-9]{40})["']/g)];need(matches.length===1&&matches[0][1]===head,'exact current served writer identity required')
 }
 async function currentConsumerIdentity(input,api){
  const env=process.env,workflowPath='.github/workflows/uvoz-baden-native.yml',ciList='actions/workflows/ci.yml/runs?branch=main&event=push&per_page=100&page=1'

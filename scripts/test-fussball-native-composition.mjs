@@ -1,8 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {existsSync,readFileSync} from 'node:fs'
+import {EventEmitter} from 'node:events'
 import {execFileSync} from 'node:child_process'
 import {zaprtje} from './odtis-kode.mjs'
+import {fetchBadenServedPage} from './lib/baden-served-page.mjs'
 
 test('native composition exists and rejects copied source capabilities',async()=>{
  assert.ok(existsSync(new URL('./fussball-native-composition.mjs',import.meta.url)),'Task 1 composition contract must exist')
@@ -97,6 +99,7 @@ test('TEST ONLY hosted derived reader issues only cold preparation scope after i
  const f=await hostedDerivedFixture(t),before=f.sourceReads,p=await f.api.loadFussballNativeComposition({derivedRunId,derivedHead,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e',github:f.github})
  assert.equal(f.sourceReads-before,2);assert.equal(p.kind,'source-partition-verified-awaiting-native-preparation');assert.equal(p.registrationEligible,false);assert.equal(p.nativeImportEligible,false);assert.equal(p.activationEligible,false);assert.equal(p.actualReady,false)
  const state=f.api.getFussballNativeComposition(p);assert.equal(state.pack.sourceHead,'b'.repeat(40));assert.equal(state.pack.replayHead,derivedHead);assert.equal(state.pack.expectedSha,derivedHead);assert.equal(state.pack.nativeAdmission,false);state.pack.seasons=[];assert.equal(f.api.getFussballNativeComposition(p).pack.seasons.length,2)
+ assert.ok(f.calls.some(c=>c.path.includes(`contents/scripts/lib/baden-served-page.mjs?ref=${derivedHead}`)),'same-head producer closure must pin the fresh served transport')
  assert.throws(()=>f.api.getFussballNativeComposition({...p}),/reader-issued/)
  const reread=await f.api.reauthenticateFussballNativeComposition(p);assert.notEqual(reread,p);assert.equal(f.sourceReads-before,4)
 })
@@ -104,12 +107,13 @@ test('TEST ONLY hosted derived reader issues only cold preparation scope after i
 test('TEST ONLY dual epoch accepts only the exact e925 source reader under an independently authenticated newer consumer',async t=>{
  const f=await hostedDerivedFixture(t);f.enableDualEpoch();const input={derivedRunId,derivedHead,consumerHead:f.dual.head,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e',github:f.github}
  const oldReader=oldCompositionReaderFixture().toString('utf8'),oldClosure=zaprtje('scripts/fussball-native-composition.mjs',path=>path==='scripts/fussball-native-composition.mjs'?oldReader:readFileSync(path,'utf8'))
- assert.deepEqual(zaprtje('scripts/fussball-native-composition.mjs'),oldClosure,'dual epoch must preserve the captured producer runtime file set')
+ assert.ok(zaprtje('scripts/fussball-native-composition.mjs').includes('scripts/lib/baden-served-page.mjs'),'current producer closure must include its served-page helper')
+ assert.deepEqual(zaprtje('scripts/fussball-native-composition.mjs').filter(path=>path!=='scripts/lib/baden-served-page.mjs'),oldClosure,'reviewed e925 producer closure remains exact; dual-epoch current helper is pinned independently')
  const p=await f.api.loadFussballNativeComposition(input),state=f.api.getFussballNativeComposition(p)
  assert.equal(p.derivedHead,derivedHead);assert.equal(p.nativeImportEligible,false);assert.equal(p.activationEligible,false)
  assert.equal(state.certificate.runtime['scripts/fussball-native-composition.mjs'],'355f939012163817f01df3af46966af8899102ef6eb0e702cd5e0dd131d68d75')
  assert.equal(state.pack.expectedSha,derivedHead);assert.equal(state.pack.replayHead,derivedHead);assert.equal(state.pack.derivedPackSha256,JSON.parse(f.files.get('pack.json')).derivedPackSha256)
- assert.ok(f.calls.some(c=>c.path.includes('/branches/main')));assert.ok(f.calls.some(c=>c.path.includes('actions/workflows/ci.yml/runs')));assert.ok(f.calls.some(c=>c.path.includes('contents/scripts/fussball-native-composition.mjs?ref='+f.dual.head)))
+ assert.ok(f.calls.some(c=>c.path.includes('/branches/main')));assert.ok(f.calls.some(c=>c.path.includes('actions/workflows/ci.yml/runs')));assert.ok(f.calls.some(c=>c.path.includes('contents/scripts/fussball-native-composition.mjs?ref='+f.dual.head)));assert.ok(f.calls.some(c=>c.path.includes('contents/scripts/lib/baden-served-page.mjs?ref='+f.dual.head)))
 })
 test('TEST ONLY dual epoch accepts actual GitHub CI and final job timestamps in the same second',async t=>{
  const f=await hostedDerivedFixture(t);f.enableDualEpoch();f.dual.ci.updated_at=f.dual.ci.updated_at.replace(/\.\d{3}Z$/,'Z');f.dual.ciJobs.jobs.at(-1).completed_at=f.dual.ci.updated_at
@@ -119,17 +123,23 @@ test('TEST ONLY dual epoch accepts actual GitHub CI and final job timestamps in 
  await assert.rejects(f.api.loadFussballNativeComposition(input),/CI job graph/)
 })
 test('TEST ONLY installed offline guard admits only the fixed served marker and composition path',async t=>{
- const oldFetch=globalThis.fetch,oldUrl=process.env.SUPABASE_URL,calls=[];let servedHead='c'.repeat(40)
+ const oldFetch=globalThis.fetch,oldUrl=process.env.SUPABASE_URL,calls=[],httpsCalls=[],https=await import('node:https'),oldGet=https.default.get;let servedHead='c'.repeat(40)
  globalThis.fetch=async(input,init)=>{calls.push({url:String(input),init});return {ok:true,body:{getReader(){let sent=false;return {async read(){if(sent)return {done:true};sent=true;return {done:false,value:Buffer.from(`<meta name="slff-commit" content="${servedHead}">`)}},async cancel(){}}}}}}
  process.env.SUPABASE_URL='https://db.example.test'
  try{
   await import(`./bulk-offline-network.mjs?test=${Date.now()}`);const guarded=globalThis.fetch
   assert.throws(()=>guarded('https://slff.eu/private',{headers:{'Cache-Control':'no-cache'},credentials:'omit',redirect:'error'}),/refused/)
   assert.throws(()=>guarded('https://evil.example/',{headers:{'Cache-Control':'no-cache'},credentials:'omit',redirect:'error'}),/refused/)
-  const f=await hostedDerivedFixture(t);f.enableDualEpoch();servedHead=f.dual.head;f.fetch=guarded;f.api=isolatedComposition(f,{env:f.dual.env})
+  https.default.get=(target,options,callback)=>{httpsCalls.push({target:String(target),options});const request={once(){return request},setTimeout(){},destroy(){}};queueMicrotask(()=>{const response=new EventEmitter();response.statusCode=200;callback(response);queueMicrotask(()=>{response.emit('data',Buffer.from(`<meta name="slff-commit" content="${servedHead}">`));response.emit('end')})});return request}
+  const f=await hostedDerivedFixture(t);f.enableDualEpoch();servedHead=f.dual.head;f.fetch=guarded;f.fetchBadenServedPage=fetchBadenServedPage;f.api=isolatedComposition(f,{env:f.dual.env})
   await f.api.loadFussballNativeComposition({derivedRunId,derivedHead,consumerHead:f.dual.head,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e',github:f.github})
-  assert.equal(calls.length,2);for(const call of calls){assert.equal(call.url,'https://slff.eu/');assert.equal(call.init.method,'GET');assert.equal(call.init.credentials,'omit');assert.equal(call.init.redirect,'error')}
- }finally{globalThis.fetch=oldFetch;if(oldUrl===undefined)delete process.env.SUPABASE_URL;else process.env.SUPABASE_URL=oldUrl}
+  assert.equal(calls.length,0,'composition must not use global fetch through the offline wrapper')
+  assert.equal(httpsCalls.length,2);for(const call of httpsCalls){assert.equal(call.target,'https://slff.eu/');assert.equal(call.options.agent,false);assert.equal(call.options.rejectUnauthorized,true);assert.equal(call.options.headers['Cache-Control'],'no-cache');assert.equal(call.options.headers.Connection,'close')}
+ }finally{https.default.get=oldGet;globalThis.fetch=oldFetch;if(oldUrl===undefined)delete process.env.SUPABASE_URL;else process.env.SUPABASE_URL=oldUrl}
+})
+test('TEST ONLY current served transport exposes only its safe helper failure code',async t=>{
+ const f=await hostedDerivedFixture(t);f.enableDualEpoch();f.fetchBadenServedPage=async()=>{throw Object.assign(Error('SECRET request detail'),{code:'OWN_FETCH_NETWORK_FAILED'})};f.api=isolatedComposition(f,{env:f.dual.env})
+ await assert.rejects(f.api.loadFussballNativeComposition({derivedRunId,derivedHead,consumerHead:f.dual.head,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e',github:f.github}),e=>e.code==='FUSSBALL_NATIVE_COMPOSITION_HOLD'&&e.message.includes('OWN_FETCH_NETWORK_FAILED')&&!e.message.includes('SECRET'))
 })
 for(const [name,mutate]of[
  ['consumer run head',f=>f.dual.run.head_sha='d'.repeat(40)],
@@ -145,6 +155,7 @@ for(const [name,mutate]of[
  ['current CI job completed after run',f=>f.dual.ciJobs.jobs[0].completed_at=new Date(Date.parse(f.dual.ci.updated_at)+10000).toISOString()],
  ['current workflow body',f=>{f.controls.change=(path,v)=>path.includes('contents/.github/workflows/uvoz-baden-native.yml?ref='+f.dual.head)?{...v,content:Buffer.from('TEST ONLY changed workflow').toString('base64')}:v}],
  ['current reader body',f=>{f.controls.change=(path,v)=>path.includes('contents/scripts/fussball-native-composition.mjs?ref='+f.dual.head)?{...v,content:Buffer.from('TEST ONLY changed reader').toString('base64')}:v}],
+ ['current served transport body',f=>{f.controls.change=(path,v)=>path.includes('contents/scripts/lib/baden-served-page.mjs?ref='+f.dual.head)?{...v,content:Buffer.from('TEST ONLY changed transport').toString('base64')}:v}],
  ['compatibility DATA body',f=>{f.controls.change=(path,v)=>path.includes('contents/scripts/policies/baden-native-dual-epoch-compatibility.json?ref='+f.dual.head)?{...v,content:Buffer.from('{}').toString('base64')}:v}],
  ['served commit marker',f=>{f.controls.servedWrong=true}],
  ['source reader body',f=>{f.controls.change=(path,v)=>path.includes('contents/scripts/fussball-native-composition.mjs?ref='+derivedHead)?{...v,content:Buffer.from('TEST ONLY tampered source body').toString('base64')}:v}],

@@ -23,7 +23,7 @@ export function nativeG9Documents(variant='good'){
   documents.push({id,html})
  }}return variant==='missing'?documents.slice(0,-1):documents
 }
-export function isolatedNativeG9Tree(t){const root=mkdtempSync(join(tmpdir(),'g9-native800-SYNTHETIC-')),paths=new Set([...fcfRefresh800RuntimeFiles().map(x=>x.path),...zaprtje('scripts/fcf-g9-native800-source.mjs'),...zaprtje('scripts/fcf-refresh800-test-fixture.mjs'),'scripts/fcf-g9-native800-fixture-runner.mjs']);t.after(()=>rmSync(root,{recursive:true,force:true}));for(const path of paths){const dest=join(root,path);mkdirSync(dirname(dest),{recursive:true});writeFileSync(dest,readFileSync(path))}
+export function isolatedNativeG9Tree(t){const root=mkdtempSync(join(tmpdir(),'g9-native800-SYNTHETIC-')),paths=new Set([...fcfRefresh800RuntimeFiles().map(x=>x.path),...zaprtje('scripts/fcf-g9-native800-source.mjs'),...zaprtje('scripts/fcf-g9-native800-child-offline.mjs'),...zaprtje('scripts/fcf-refresh800-test-fixture.mjs'),'scripts/fcf-g9-native800-fixture-runner.mjs']);t.after(()=>rmSync(root,{recursive:true,force:true}));for(const path of paths){const dest=join(root,path);mkdirSync(dirname(dest),{recursive:true});writeFileSync(dest,readFileSync(path))}
  // Explicit frozen pre409925 ledger epoch plus synthetic historical accounting.
  // Production CURRENT ledger always requires409925; no production bypass.
  // ZIP/claim/private WeakMap/getCaptured/source bytes remain unchanged.
