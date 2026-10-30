@@ -3,7 +3,7 @@
 Vir `fsgc` (`scripts/viri/fsgc.mjs`) bere **fsgc.sm** (Federazione
 Sammarinese Giuoco Calcio). Strani izriše strežnik (CMS Studio99, HTML brez
 JSON-a in brez ključev). Država `SM` ("San Marino") in liga se vpišeta z
-migracijo `20261030143100_sanmarino_fsgc`. **Država je pripravljena** kot
+migracijo `20261030211100_sanmarino_fsgc`. **Država je pripravljena** kot
 JP, HK, TH in GI: angleški vmesnik brez lastnega slovarja
 (`JEZIK_DRZAVE.SM = 'en'`), ugib po `it-SM` ali pasu `Europe/San_Marino`
 (gola `it` ne kaže nanj), vstop `slff.eu/sm`, kartica `sm.html` (Caddy,
@@ -98,7 +98,7 @@ vira).
 
 ## Liga
 
-Vpisana je ena liga (migracija `20261030143100_sanmarino_fsgc`),
+Vpisana je ena liga (migracija `20261030211100_sanmarino_fsgc`),
 **neaktivna**, zveza `fsgc`:
 
 | liga | klubov | tekoča 2026/27 | arhiv 2025/26 | arhiv 2024/25 |
