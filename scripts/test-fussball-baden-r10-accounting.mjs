@@ -246,3 +246,17 @@ test('TEST ONLY restricted census reconciles real native originals into distinct
 test('native remainder reader refuses serialized counters and caller caps before own GitHub IO',async()=>{
  assert.equal(typeof api.readFussballBadenNativeRemainingBudget,'function');for(const key of ['remainingRequests','maxRequests','priorRequests','proof','clock']){let calls=0;await assert.rejects(api.readFussballBadenNativeRemainingBudget({github:async()=>calls++,[key]:1000}),/INPUT/);assert.equal(calls,0)}
 })
+
+test('TEST ONLY full ledger never infers native zero from a missing or partial capture graph',{skip:!E},async t=>{
+ const native=await refreshFixture(t),base=retained();t.mock.method(Date,'now',()=>native.f.clock);t.mock.method(globalThis,'fetch',()=>{throw Error('TEST ONLY network forbidden')});base.controls.reviewedOnly=true;base.controls.inventory=rows=>[...rows,native.run];const names=[...readFileSync(new URL('./../.github/workflows/refresh-baden-r10-native.yml',import.meta.url),'utf8').matchAll(/^\s+- name: (.+)$/gm)].map(m=>m[1]),jobPath=prefix+`actions/runs/${native.runId}/attempts/1/jobs?per_page=100&page=1`,stamp=new Date(native.f.clock).toISOString()
+ let graph,completeTerminal;const github=async(p,binary=false)=>p.startsWith(prefix+'actions/workflows/refresh-baden-r10-native.yml/runs?')?{total_count:1,workflow_runs:[native.run]}:p===jobPath?structuredClone(graph):p===prefix+'actions/runs/'+native.runId?structuredClone(native.run):native.responses.has(p)?native.github(p,binary):base.github(p,binary)
+ for(const status of ['in_progress','completed'])for(const mutation of ['missing-capture','missing-prior','reordered','partial']){
+  native.run.status=status;native.run.conclusion=status==='completed'?'failure':null;const b=names.indexOf('Prepare private fixed5000 native remainder');graph={total_count:1,jobs:[{id:8801,name:'refresh',run_id:native.run.id,run_attempt:1,head_sha:native.head,status,steps:names.map((name,i)=>({number:i+1,name,status:status==='completed'||i<b?'completed':i===b?'in_progress':'queued',conclusion:status==='completed'?(i<b?'success':i===b?'failure':i===names.length-1?'success':'skipped'):i<b?'success':null,started_at:status==='completed'?(i<=b||i===names.length-1?stamp:null):i<=b?stamp:null,completed_at:status==='completed'?(i<=b||i===names.length-1?stamp:null):i<b?stamp:null}))}]};const steps=graph.jobs[0].steps;if(status==='completed')completeTerminal=structuredClone(graph)
+  if(mutation==='missing-capture')steps.splice(steps.findIndex(s=>s.name==='Capture fixed Baden native refresh'),1)
+  if(mutation==='missing-prior')steps.shift()
+  if(mutation==='reordered')[steps[0],steps[1]]=[steps[1],steps[0]]
+  if(mutation==='partial')steps.splice(6)
+  await assert.rejects(api.readFussballBadenNativeRemainingBudget({github}),e=>{assert.ok(e.blockers?.some(b=>b.runId===native.runId&&b.reason.includes('GRAPH')),status+' '+mutation);assert.ok(!e.audit?.executions.some(x=>x.runId===native.runId&&x.newResearchRequests===0));return true})
+ }
+ graph=completeTerminal;const proof=await api.readFussballBadenNativeRemainingBudget({github}),value=api.getFussballBadenNativeRemainingBudget(proof),execution=value.executions.find(e=>e.runId===native.runId);assert.equal(execution.classification,'ACTUAL_SOURCE_STEP_UNEXECUTED');assert.equal(execution.newResearchRequests,0);assert.equal(value.budget.priorRequests,3607);assert.equal(native.fetches,0)
+})
