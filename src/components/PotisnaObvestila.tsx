@@ -87,19 +87,16 @@ export type DovoljenjePush = 'granted' | 'denied' | 'prompt'
  * shrani žeton. Brez podpore ali brez Firebase vrne `denied`.
  */
 export async function registrirajPush(vprasaj: boolean): Promise<DovoljenjePush> {
-  const d = await registriraj(vprasaj)
-  if (vprasaj) zabeleziKorak(d === 'granted' ? 'push_dovoljeno' : 'push_zavrnjeno')
-  return d
-}
-
-async function registriraj(vprasaj: boolean): Promise<DovoljenjePush> {
   if (!pushPodprt()) return 'denied'
   try {
     // V brskalniku se vprašanje ne sme izgubiti za uvozom Firebase (Safari
     // dovoli requestPermission le neposredno ob kliku), zato najprej to.
     if (!jeNativno()) {
       let d = Notification.permission
-      if (d === 'default' && vprasaj) d = await Notification.requestPermission()
+      if (d === 'default' && vprasaj) {
+        d = await Notification.requestPermission()
+        zabeleziKorak(d === 'granted' ? 'push_dovoljeno' : 'push_zavrnjeno')
+      }
       if (d !== 'granted') return d === 'denied' ? 'denied' : 'prompt'
       const registracija = await pripraviSplet()
       const { token } = await FirebaseMessaging.getToken({ serviceWorkerRegistration: registracija })
@@ -107,8 +104,10 @@ async function registriraj(vprasaj: boolean): Promise<DovoljenjePush> {
       return 'granted'
     }
     let { receive } = await FirebaseMessaging.checkPermissions()
-    if (receive !== 'granted' && receive !== 'denied' && vprasaj)
-      ({ receive } = await FirebaseMessaging.requestPermissions())
+    if (receive !== 'granted' && receive !== 'denied' && vprasaj) {
+      ;({ receive } = await FirebaseMessaging.requestPermissions())
+      zabeleziKorak(receive === 'granted' ? 'push_dovoljeno' : 'push_zavrnjeno')
+    }
     if (receive !== 'granted') return receive === 'denied' ? 'denied' : 'prompt'
     const { token } = await FirebaseMessaging.getToken()
     await shrani(token)
