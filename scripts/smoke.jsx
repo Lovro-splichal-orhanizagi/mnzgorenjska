@@ -73,6 +73,7 @@ import { veljavenOsnutek } from '../src/lib/osnutek'
 import { krogKoncan, mestoVLigi, igralciPregleda, postaviPregled, oznakaPremika, imeDatotekePregleda, KVADRAT, SIRINA_P, VISINA_P, ROB_P } from '../src/lib/tedenskiPregled'
 import { jeDoberKrog, povprecjeKroga } from '../src/lib/pivoNavdusenje'
 import { trgovinaTelefona } from '../src/lib/pozivi'
+import { APP_STORE } from '../src/components/Trgovine'
 import { parsirajZapisnik, nastopi, dodajStrelceSKlopi } from './zapisnik.mjs'
 import { poZvezah, ustreza, pokaziZvezo, ustrezaRavni, privzetoRazprte } from '../src/components/IzbirnikLige'
 import { dovoljZaIskanje, ujemaIme, opisIgralca, potIgralca, izDrugihLig } from '../src/lib/iskanjeIgralcev'
@@ -3321,7 +3322,7 @@ preveri(
 
   // Okno "Časti pivo" le po dobrem krogu.
   preveri('poziv: Android dobi Google Play, namizje nič', /play\.google/.test(trgovinaTelefona('Mozilla/5.0 (Linux; Android 14)', 5) ?? '') && trgovinaTelefona('Mozilla/5.0 (Windows NT 10.0)', 0) === null)
-  preveri('poziv: iPad v Safariju (Macintosh z dotikom) je iOS', trgovinaTelefona('Mozilla/5.0 (Macintosh; Intel Mac OS X)', 5) === trgovinaTelefona('Mozilla/5.0 (iPhone)', 5))
+  preveri('poziv: iPhone in iPad (Macintosh z dotikom) dobita App Store, Mac brez dotika nič', trgovinaTelefona('Mozilla/5.0 (iPhone)', 5) === APP_STORE && trgovinaTelefona('Mozilla/5.0 (Macintosh; Intel Mac OS X)', 5) === APP_STORE && trgovinaTelefona('Mozilla/5.0 (Macintosh; Intel Mac OS X)', 0) === null)
   preveri('pivo: napredek na lestvici je dober krog', jeDoberKrog(5, 30, 2))
   preveri('pivo: nad povprečjem brez premika je dober krog', jeDoberKrog(31, 30, 0) && jeDoberKrog(31, 30, null))
   preveri('pivo: padec ali povprečje nista dober krog', !jeDoberKrog(30, 30, 0) && !jeDoberKrog(10, 30, -3) && !jeDoberKrog(0, -1, null))

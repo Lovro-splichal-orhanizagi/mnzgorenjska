@@ -131,6 +131,8 @@ export default function PivoOkno() {
   }, [odprto])
 
   if (!povod || !ustreza) return null
+  // Liga se lahko zamenja po odprtju (poslušalec ima staro): pivo nikoli v mladinski ligi ali aplikaciji.
+  if (vrsta === 'pivo' && (jeNativno() || jeMladinskiSlug(slug))) return null
   if (vrsta !== 'pivo') return <PozivVsebina vrsta={vrsta} okno={okno} zapri={zapri} odkloni={odkloni} />
 
   return (
