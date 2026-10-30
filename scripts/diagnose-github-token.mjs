@@ -3,9 +3,10 @@ import {execFileSync} from 'node:child_process'
 import {createHash} from 'node:crypto'
 import {writeFileSync} from 'node:fs'
 import {readFcfG9ArchivedR1Log} from './fcf-g9-archived-r1-log.mjs'
+import {getFcfInventoryGithub} from './fcf-inventory-github.mjs'
 
 const repo='repos/Lovro-splichal-orhanizagi/mnzgorenjska'
-const result={diagnostic:'github-archived-r1-log-readonly-v3',mergeable:false,execution:null,ghVersion:null,apiCalls:[],failure:null}
+const result={diagnostic:'github-archived-r1-log-readonly-v4-production-transport',mergeable:false,execution:null,ghVersion:null,apiCalls:[],failure:null}
 const safeHash=b=>createHash('sha256').update(b).digest('hex')
 const releasePath=`${repo}/releases/416653899`,assetListPrefix=releasePath+'/assets?per_page=100&page=',rawAssetPath=`${repo}/releases/assets/690729624`
 
@@ -43,7 +44,7 @@ function safeFailure(error){
 }
 function get(endpoint,{accept,binary=false,maxBytes=1024*1024}={}){
  const page=typeof endpoint==='string'&&endpoint.startsWith(assetListPrefix)?endpoint.slice(assetListPrefix.length):''
- const allowed=endpoint==='rate_limit'||endpoint===releasePath||/^(?:[1-9]|10)$/.test(page)||endpoint===rawAssetPath
+ const allowed=endpoint==='rate_limit'||endpoint===releasePath||/^(?:[1-9]|10)$/.test(page)
  if(!allowed)throw Error('fixed diagnostic GitHub path refused')
  if(result.apiCalls.length>=13)throw Error('fixed API call budget exceeded')
  const args=['api','--method','GET',endpoint]
@@ -86,8 +87,19 @@ async function main(){
   result.core={limit:core.limit,remaining:core.remaining,reset:core.reset,used:core.used}
   if(core.remaining===0)result.failure={stage:'rate_limit',category:'primary_rate_limit'}
   if(!result.failure){
-   const bytes=await readFcfG9ArchivedR1Log({github:async(endpoint,binary=false)=>{const response=get(endpoint,{binary,accept:binary?'application/octet-stream':undefined,maxBytes:binary?24885:1024*1024});return binary?response:json(response)}})
-   result.archivedR1Log={verified:true,releaseIdentityVerified:true,assetMembershipVerified:true,rootUploaderVerified:true,rawDigestVerified:true,bytes:bytes.length,sha256:safeHash(bytes)}
+   const bytes=await readFcfG9ArchivedR1Log({github:async(endpoint,binary=false)=>{
+    if(!binary){const response=get(endpoint,{maxBytes:1024*1024});return json(response)}
+    if(endpoint!==rawAssetPath||result.apiCalls.length>=13)throw Error('fixed production binary request refused')
+    const record={endpoint,method:'GET',transport:'production-getFcfInventoryGithub',status:null,bytes:null,sha256:null,acceptHeader:'application/octet-stream',error:null}
+    result.apiCalls.push(record)
+    try{
+     const response=await getFcfInventoryGithub(endpoint,true)
+     record.status=200;record.bytes=response.length;record.sha256=safeHash(response)
+     if(!Buffer.isBuffer(response)||response.length>24885){record.error={kind:'fixed_binary_response_bound_exceeded'};throw Error('bounded production binary response required')}
+     return response
+    }catch(error){record.status=Number.isInteger(error?.status)?error.status:null;if(!record.error)record.error={kind:'production_binary_transport_failed'};record.error.status=record.status;throw Error('production binary transport failed safely')}
+   }})
+   result.archivedR1Log={transport:'production-getFcfInventoryGithub',verified:true,releaseIdentityVerified:true,assetMembershipVerified:true,rootUploaderVerified:true,rawDigestVerified:true,bytes:bytes.length,sha256:safeHash(bytes)}
   }
  }catch(error){const last=result.apiCalls.at(-1);classify(last?.endpoint||'diagnostic',error,last?.error)}
 }
