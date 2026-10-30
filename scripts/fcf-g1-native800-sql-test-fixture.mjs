@@ -40,7 +40,7 @@ create temporary table g9_existing_scores as select ps.round_id,ps.player_id,to_
 DO $g9_roster$declare ts bigint[];q record;tid bigint;pid bigint;bench bigint;g9match bigint;home bigint;away bigint;goal_team bigint;home_score int;away_score int;begin
  select array_agg(team_id order by team_id)into ts from(select distinct team_id from(select m.home_team_id team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=797 and r.season='2026/27' union select m.away_team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=797 and r.season='2026/27')x)y;
  if coalesce(cardinality(ts),0)<5 then raise exception 'G1 TEST: five existing G9 fixture clubs required for ordinary synthetic legal15';end if;
- for q in select *from(values(1,'GK',8::numeric),(2,'DEF',7),(3,'FWD',8),(4,'GK',6),(5,'DEF',4.5),(6,'FWD',4.5),(7,'DEF',7),(8,'MID',4.5),(9,'FWD',4.5),(10,'DEF',4.5),(11,'MID',9),(12,'MID',4.5),(13,'DEF',4.5),(14,'MID',6),(15,'MID',4.5),(16,'MID',4.5))v(slot,position,value)order by slot loop
+ for q in select *from(values(1,'GK',8::numeric),(2,'DEF',7),(3,'FWD',8),(4,'GK',6),(5,'DEF',4.5),(6,'FWD',4.5),(7,'DEF',4.5),(8,'MID',4.5),(9,'FWD',4.5),(10,'DEF',4.5),(11,'MID',9),(12,'MID',4.5),(13,'DEF',4.5),(14,'MID',6),(15,'MID',4.5),(16,'MID',4.5))v(slot,position,value)order by slot loop
   tid:=ts[case when q.slot=16 then 1 else ceil(q.slot/3.0)::int end];
   insert into players(competition_id,team_id,first_name,last_name,full_name,position,position_source,active,value,value_start)
    values(797,tid,'TEST ONLY','G9 roster '||q.slot,'TEST ONLY G9 roster '||q.slot,q.position,'zapisnik',true,q.value,q.value)returning id into pid;
