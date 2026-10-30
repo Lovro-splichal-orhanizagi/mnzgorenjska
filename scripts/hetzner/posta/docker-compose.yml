@@ -24,5 +24,6 @@ services:
     env_file: .env
     volumes:
       - ./app:/app:ro
+      - ./data:/data  # sponzorji.jsonl (scripts/posli-enega.mjs); lastnik uid 1000: mkdir data && chown 1000 data
     mem_limit: 128m
     cpus: 0.5
