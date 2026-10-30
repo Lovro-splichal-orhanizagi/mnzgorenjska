@@ -8,7 +8,8 @@ import {fileURLToPath} from 'node:url'
 import http from 'node:http'
 import https from 'node:https'
 import {syncBuiltinESMExports} from 'node:module'
-import {getFcfInventoryGithub,readFcfDraftAsset} from './fcf-inventory-github.mjs'
+import {readFcfDraftAsset} from './fcf-inventory-github.mjs'
+import {getFcfReliableGithub} from './lib/fcf-reliable-github.mjs'
 import {readFcfRefresh800Ledger} from './fcf-refresh800-contract.mjs'
 import {jsonBytes,exactKeys} from './fcf-missing-inventory-artifact.mjs'
 import {readFcfG9Native800Source,getFcfG9Native800Source,FCF_G9_NATIVE800_PROTOCOL} from './fcf-g9-native800-source.mjs'
@@ -71,7 +72,7 @@ export function createFcfG9Native800OfflineProvider(input={}){
 
 async function authenticatedProvider(e,env){
  need(typeof env.GH_TOKEN==='string'&&env.GH_TOKEN.length>0,'workflow GitHub token required for source reauthentication')
- const locator=captureLocator(e.captureLocator),github=getFcfInventoryGithub,approvalBytes=await readFcfDraftAsset({id:locator.approval.assetId,digest:locator.approval.assetDigest,github,maximumBytes:8*1024*1024}),approval=jsonBytes(approvalBytes,'approved refresh800 root approval')
+ const locator=captureLocator(e.captureLocator),github=getFcfReliableGithub,approvalBytes=await readFcfDraftAsset({id:locator.approval.assetId,digest:locator.approval.assetDigest,github,maximumBytes:8*1024*1024}),approval=jsonBytes(approvalBytes,'approved refresh800 root approval')
  keys(approval,['schemaVersion','kind','profileSha256','plan','rulesetSnapshot','runtimeFiles','workflowJobNames','mainCiRunId','probeLocators','refreshLocators'],'root refresh800 approval')
  need(approval.kind==='fcf-refresh800-root-approval'&&approval.schemaVersion===1&&approval.plan?.target?.targetSlug===slug&&approval.plan?.target?.calendarAuthority==='full-report-derived-240-v1'&&approval.plan?.sourceCommit===locator.sourceCommit&&Array.isArray(approval.probeLocators)&&Array.isArray(approval.refreshLocators)&&approval.refreshLocators.length<20&&!approval.refreshLocators.some(x=>x.runId===locator.runId),'approved fixed G9 full-report capture plan and prior locators required')
  const ledgerProof=await readFcfRefresh800Ledger({github,probeLocators:approval.probeLocators,refreshLocators:[...approval.refreshLocators,locator]}),sourceProof=readFcfG9Native800Source({ledgerProof,runId:locator.runId})
