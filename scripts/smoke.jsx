@@ -12956,6 +12956,26 @@ preveri(
   preveri('pivo 7 dni: SQL izpusti mladinske lige, odjavljene in hišne ekipe, enkrat na človeka',
     ['je_mladinski_slug', 'brez_opomnikov', 'hisna', "'pivo-7dni'"].every((x) => migPivo.includes(x)))
   preveri('pivo 7 dni: urnik izklopljen do objave funkcije', !/^\s*schedule:/m.test(tokPivo) && /workflow_dispatch:/.test(tokPivo))
+
+  // Anketa plačila (SLF-211): sl/en/de/hr, ostali jeziki angleško; odjava v nogi, glavi in čistopisu.
+  const ankete = pivoLige.map((l) => [l, E.sestaviAnketoPlacila(l, { display_name: 'Ana Novak' })])
+  const slabaAnketa = ankete.find(([l, m]) => {
+    const j = E.jezikAnkete(l)
+    return !['sl', 'en', 'de', 'hr'].includes(j) || (E.jezikLige(l) !== j && j !== 'en') ||
+      m.odjava !== `https://slff.eu/reminders?t=${l.slug}` || !m.html.includes(`href="${m.odjava}"`) ||
+      !m.besedilo.includes(`: ${m.odjava}\n`) || !m.besedilo.includes('Ana,') ||
+      (j !== 'sl' && slovensko.test(brezPovezav(m.naslov + m.html)))
+  })
+  preveri('e-pošta: anketa plačila (jezik ali angleščina, odjava, brez slovenščine v tujih)', !slabaAnketa,
+    slabaAnketa ? `${slabaAnketa[0].drzava}: ${slabaAnketa[1].naslov}` : '')
+  const migAnketa = readFileSync(new URL('../supabase/migrations/20261030120000_anketa_placila.sql', import.meta.url), 'utf8')
+  const fnAnketa = readFileSync(new URL('../supabase/functions/posli-opomnik/index.ts', import.meta.url), 'utf8')
+  preveri('anketa plačila: SQL izpusti odjavljene in že poslane; naslovi le za service_role',
+    ['prejemniki_ankete', 'brez_opomnikov', "'anketa-placila'", 'to service_role'].every((x) => migAnketa.includes(x)) &&
+      !/to (anon|authenticated)/.test(migAnketa))
+  // Lovro, 30. 10. 2026: le izbrani v administraciji, strežnik nikogar ne izbere sam.
+  preveri('anketa plačila: brez izračunane kohorte, le user_ids',
+    !/kandidati_za_anketo/.test(migAnketa + fnAnketa) && fnAnketa.includes("vrsta === 'anketa-placila' && Array.isArray(vhod.user_ids)"))
 }
 
 // --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------

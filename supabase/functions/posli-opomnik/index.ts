@@ -38,6 +38,8 @@ import {
   sestaviPoznavalca,
   sestaviPushOpomnik,
   sestaviPivo7dni,
+  sestaviAnketoPlacila,
+  jezikAnkete,
   sestaviNovostMiniLig,
   sestaviOpozoriloOdsotnih,
   sestaviTedenskiPregled,
@@ -48,7 +50,7 @@ import {
 import { posljiPush, pushNastavljen, type Obvestilo } from './push.ts'
 import nodemailer from 'npm:nodemailer@6.9.16'
 
-const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni'] as const
+const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'anketa-placila'] as const
 type Vrsta = (typeof VRSTE)[number]
 
 // Besedila so v `sporocila.ts`, v jeziku DRŽAVE LIGE (slovaška liga →
@@ -89,6 +91,8 @@ interface Zahteva {
   najvec?: number
   // Največ poslanih v tem klicu (dnevna kvota ponudnika); ostali naslednji dan.
   najvec_poslati?: number
+  // 'anketa-placila' iz administracije: natanko odkljukani uporabniki (do 20).
+  user_ids?: string[]
 }
 
 interface Uporabnik {
@@ -255,6 +259,79 @@ Deno.serve(async (req) => {
     }
     return json({ kandidati_stevilo: kand.length, poslano, preskoceno: kand.length - poslano })
   }
+
+  // `anketa-placila` (SLF-211): enkratna anketa natanko tistim, ki jih admin
+  // odkljuka v administraciji (`user_ids`, do 20); največ 10 na klic, 20 skupaj
+  // (email_log). Admin naslove že vidi v tabeli, odgovor pa vrne le števila in
+  // razloge preskoka.
+  if (vrsta === 'anketa-placila' && Array.isArray(vhod.user_ids)) {
+    const suhoA = suho !== false
+    const ids = [...new Set(vhod.user_ids.filter((x) => typeof x === 'string'))]
+    if (!ids.length || ids.length > 20) return json({ error: 'Izberi od 1 do 20 uporabnikov.' }, 400)
+    if (!SMTP_PASS && !suhoA) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
+    const db = createClient(SUPABASE_URL, SERVICE_KEY)
+    const poslanih = async () => {
+      const { data, error } = await db.rpc('anketa_placila_poslanih')
+      if (error) throw new Error(error.message)
+      return Number(data ?? 0)
+    }
+    const prej = await poslanih().catch((e) => e as Error)
+    if (prej instanceof Error) return json({ error: prej.message }, 500)
+    const { data, error } = await db.rpc('prejemniki_ankete', { p_ids: ids, p_competition_id: competition_id ?? null })
+    if (error) return json({ error: error.message }, 500)
+    const vsi = ((data ?? []) as Array<{
+      user_id: string; email: string; display_name: string | null
+      competition_id: number; liga_slug: string; liga_oznaka: string; liga_drzava: string | null
+      razlog: string | null
+    }>).map((u) => (!u.razlog && !u.liga_slug ? { ...u, razlog: 'ni_lige' } : u)) // brez lige bi odjava dobila ?t=null
+    const preskoceni: Record<string, number> = {}
+    for (const u of vsi) if (u.razlog) preskoceni[u.razlog] = (preskoceni[u.razlog] ?? 0) + 1
+    const neznanih = ids.length - vsi.length
+    if (neznanih) preskoceni.ni_racuna = neznanih
+    const kand = vsi.filter((u) => !u.razlog)
+    const jeziki: Record<string, number> = {}
+    for (const u of kand) {
+      const j = jezikAnkete({ drzava: u.liga_drzava })
+      jeziki[j] = (jeziki[j] ?? 0) + 1
+    }
+    const povzetek = { izbranih: ids.length, kandidati_stevilo: kand.length, preskoceni, jeziki, ze_poslanih: prej }
+    if (suhoA) return json({ suho: true, ...povzetek })
+    // 20 skupaj (SLF-211); funkcija ima 60 s, mail traja ~4 s, zato 10 na klic.
+    const prostih = Math.max(0, 20 - prej)
+    let poslano = 0
+    let napak = 0
+    for (const u of kand.slice(0, Math.min(prostih, 10))) {
+      if (poslano + napak > 0) await new Promise((r) => setTimeout(r, 500))
+      const liga: Liga = { slug: u.liga_slug, oznaka: u.liga_oznaka, drzava: u.liga_drzava }
+      const sporocilo = await sOdjavo(db, u.user_id, sestaviAnketoPlacila(liga, { display_name: u.display_name }))
+      const rez = await poslji(EMAIL_FROM, u.email, sporocilo, Deno.env.get('EMAIL_REPLY_TO'))
+      if (rez.napaka) napak++
+      else poslano++
+      const { error: logErr } = await db.from('email_log').insert({
+        user_id: u.user_id,
+        email: u.email,
+        vrsta,
+        competition_id: u.competition_id,
+        resend_id: rez.id ?? null,
+        napaka: rez.napaka ?? null,
+      })
+      if (logErr) return json({ error: `email_log: ${logErr.message}`, poslano, napak }, 500)
+    }
+    // Poslano potrdi email_log, ne števec v zanki.
+    const potem = await poslanih().catch(() => null)
+    return json({
+      ...povzetek,
+      poslano,
+      napak,
+      // Neuspeli ostanejo izbrani za ponovni poskus (največ trije, glej SQL).
+      ostalo: Math.max(0, Math.min(kand.length, prostih) - poslano),
+      cez_mejo: kand.length > prostih,
+      ze_poslanih: potem,
+    })
+  }
+
+  // Brez izbora ni ankete: strežnik nikogar ne izbere sam (Lovro, 30. 10. 2026).
+  if (vrsta === 'anketa-placila') return json({ error: 'Anketa gre le izbranim v administraciji (user_ids).' }, 400)
 
   // `novost-mini-lige`: enkratno obvestilo o dvobojih in napovedih v mini
   // ligah (26. 10. 2026), vsem z nehišno ekipo (`kandidati_za_novost_mini_lig`).
