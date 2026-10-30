@@ -174,6 +174,7 @@ export default function App() {
               <Route path="/hk" element={<VstopDrzave drzava="HK" />} />
               <Route path="/th" element={<VstopDrzave drzava="TH" />} />
               <Route path="/gi" element={<VstopDrzave drzava="GI" />} />
+              <Route path="/sm" element={<VstopDrzave drzava="SM" />} />
               <Route path="/si" element={<VstopDrzave drzava="SI" />} />
               <Route path="/my-team" element={<MojaEkipa />} />
               <Route path="/assists" element={<Glasovanje />} />

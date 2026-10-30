@@ -189,6 +189,10 @@
       "destination": "/gi.html"
     },
     {
+      "source": "/sm",
+      "destination": "/sm.html"
+    },
+    {
       "source": "/((?!api/)(?!.*\\.).*)",
       "has": [
         {
@@ -495,6 +499,17 @@
         }
       ],
       "destination": "/gi.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "sm-.*"
+        }
+      ],
+      "destination": "/sm.html"
     },
     {
       "source": "/((?!api/)(?!.*\\.).*)",

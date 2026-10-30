@@ -69,11 +69,13 @@ Angleščina ni država (tudi `en-GB` ne): Združeno kraljestvo ugane le IP ali
 pas `Europe/London`, Malto še `mt`/`en-MT`, Gibraltar `en-GI` ali pas
 `Europe/Gibraltar`. Japonska je `ja` ali `Asia/Tokyo`, Hongkong `zh-HK`
 (`zh-Hant-HK`, `yue`, `en-HK`) ali `Asia/Hong_Kong` — gola `zh` ne kaže nanj —,
-Tajska `th` ali `Asia/Bangkok`. Ruski brskalnik ne kaže na
+Tajska `th` ali `Asia/Bangkok`, San Marino `it-SM` ali `Europe/San_Marino`
+(gola `it` ne kaže nanj). Ruski brskalnik ne kaže na
 Ukrajino. Države z lastnim vmesnikom in pošto: SI, SK, HR, CZ, HU, AT in DE (de),
 RS (sr), RO, EE (et), PL, ES, LV, MK, GR (el), TR, UA (uk), AM (hy), AZ, DK
 (da); z jezikom sosede: GB in MT (en), ME (sr), BA (hr), MD (ro); z
 angleškim vmesnikom brez lastnega slovarja (28. 10. 2026): JP, HK, TH, GI
+in SM (30. 10. 2026)
 (pošta angleška, rok v pasu države). Vse imajo
 vstop `/<koda države>`, kartico `<koda>.html` in vrstico v matriki nočnega
 uvoza (`docs/nocni-uvoz.md`); lige novih držav ostanejo neaktivne, dokler jih
