@@ -512,13 +512,13 @@ jobs:
         if: steps.baza.outputs.gremo == 'da'
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-        run: npx --yes supabase@2.117.0 db push --db-url "$SUPABASE_DB_URL" --dry-run
+        run: npx --yes supabase@2.117.0 db push --db-url "$SUPABASE_DB_URL" --include-all --dry-run
 
       - name: Uveljavi migracije
         if: steps.baza.outputs.gremo == 'da'
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-        run: npx --yes supabase@2.117.0 db push --db-url "$SUPABASE_DB_URL" --yes
+        run: npx --yes supabase@2.117.0 db push --db-url "$SUPABASE_DB_URL" --include-all --yes
 
       # Nove tabele dobijo bralne pravice za agente (agent_bralec), zaprte
       # tabele in stolpci ostanejo zaprti (docs/agenti-baza.md).
