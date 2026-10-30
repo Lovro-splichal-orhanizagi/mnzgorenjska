@@ -55,7 +55,7 @@ poletnega časa: poleti −5 h, pozimi −6 h; 15:30 → 10:30 oziroma 9:30).
 | th-t3-west | 12 | `228/1209` | `209/1061` |
 | th-t3-south | 10 | `228/1210` | `209/1062` |
 
-Skupaj 103 klubi (T1 dodana 30. 10. 2026, migracija 20261030111100). T3 2025/26 ima pod istim turnirjem še končnico
+Skupaj 103 klubi (T1 dodana 30. 10. 2026, migracija 20261030144100). T3 2025/26 ima pod istim turnirjem še končnico
 (`CHAMPIONSHIP`, `CHAMPIONS LEAGUE GROUP A–C`) — ne uvažamo je. T2 2025/26
 ima še `Play-Off Round` (stopnja 1195) — prav tako ne.
 
