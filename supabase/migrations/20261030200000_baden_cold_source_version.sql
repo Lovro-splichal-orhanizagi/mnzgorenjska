@@ -33,19 +33,20 @@ do $vfcf$declare b text;p text;d text;begin select prosrc into strict b from pg_
 do $vfcf$declare b text;p text;d text;begin
  select prosrc into strict b from pg_proc where oid='private_fcf_g1_native800.capture_current(text,text[])'::regprocedure;
  if encode(sha256(convert_to(b,'UTF8')),'hex')<>'6c2ee0c988ce39132bce48d3f3ef0c629e186cfd8e16629162ec8fac25d26f50' then raise exception 'BADEN_VERSION: exact G1 FCF predecessor required';end if;
- p:=replace(b,
+ p:=replace(b,E'\nbegin\n',E'\nbegin\n'||$addition$ -- Exact owner-only Baden append-only selected source version.
+ registry:=registry||'{"private_baden_transition.versions":{"where":"true","user":false,"round":"false","match":"false"}}'::jsonb;
+ shapes:=shapes||'{"private_baden_transition.versions":[["competition_id","bigint"],["manifest","jsonb"],["manifest_sha256","text"],["bindings","jsonb"],["opening_round_id","bigint"],["old_manifest_sha256","text"],["before_image_text","text"],["before_sha256","text"],["after_state","jsonb"],["source_binding","jsonb"],["committed_at","timestamp with time zone"],["singleton","boolean"]]}'::jsonb;
+ expected_fk:=expected_fk||'[{"rel":"private_baden_transition.versions","parent":"competitions","deferred":false,"validated":true,"deferrable":false,"definition":"FOREIGN KEY (competition_id) REFERENCES competitions(id)"},{"rel":"private_baden_transition.versions","parent":"rounds","deferred":false,"validated":true,"deferrable":false,"definition":"FOREIGN KEY (opening_round_id) REFERENCES rounds(id)"}]'::jsonb;
+$addition$);
+ p:=replace(p,
  $old_fk$c.confrelid in('private_fcf_g1_9410.markers'::regclass,'private_fcf_g1_9410.receipts'::regclass)$old_fk$,
  $new_fk$c.confrelid in('private_fcf_g1_9410.markers'::regclass,'private_fcf_g1_9410.receipts'::regclass,'private_baden_transition.versions'::regclass)$new_fk$);
  p:=replace(p,
  $marker$ -- Removed cleanup goal identities retain target/match association for deleted$marker$,
- $splice$ -- Exact owner-only Baden append-only selected source version.
- registry:=registry||'{"private_baden_transition.versions":{"where":"true","user":false,"round":"false","match":"false"}}'::jsonb;
- shapes:=shapes||'{"private_baden_transition.versions":[["competition_id","bigint"],["manifest","jsonb"],["manifest_sha256","text"],["bindings","jsonb"],["opening_round_id","bigint"],["old_manifest_sha256","text"],["before_image_text","text"],["before_sha256","text"],["after_state","jsonb"],["source_binding","jsonb"],["committed_at","timestamp with time zone"],["singleton","boolean"]]}'::jsonb;
- expected_fk:=expected_fk||'[{"rel":"private_baden_transition.versions","parent":"competitions","deferred":false,"validated":true,"deferrable":false,"definition":"FOREIGN KEY (competition_id) REFERENCES competitions(id)"},{"rel":"private_baden_transition.versions","parent":"rounds","deferred":false,"validated":true,"deferrable":false,"definition":"FOREIGN KEY (opening_round_id) REFERENCES rounds(id)"}]'::jsonb;
- -- New version JSON cannot introduce hidden Spanish identity dependencies.
+ $splice$ -- New version JSON cannot introduce hidden Spanish identity dependencies.
  perform private_fcf_six_target_release.require(not exists(select 1 from private_baden_transition.versions v cross join lateral jsonb_array_elements(v.bindings)b left join public.matches m on m.id=(b->>'matchId')::bigint left join public.rounds r on r.id=m.round_id where v.competition_id<>1132 or r.competition_id is distinct from 1132 or (b->>'roundId')::bigint<>r.id or m.home_team_id<>(b->>'homeTeamId')::bigint or m.away_team_id<>(b->>'awayTeamId')::bigint),'closed non-FCF Baden version source/native joins');
 $splice$ || $marker$ -- Removed cleanup goal identities retain target/match association for deleted$marker$);
- if encode(sha256(convert_to(p,'UTF8')),'hex')<>'3834f8c15b468a353aae2cd7db7e8b7a0384d918b81d8c077d0d10731d5059ad' then raise exception 'BADEN_VERSION: exact protected G1 FCF extension required';end if;
+ if encode(sha256(convert_to(p,'UTF8')),'hex')<>'82b3767a9c776c25ac9fa21b109eba5280f825d203767d12cacec48a0915724f' then raise exception 'BADEN_VERSION: exact protected G1 FCF extension required';end if;
  d:=pg_get_functiondef('private_fcf_g1_native800.capture_current(text,text[])'::regprocedure);execute replace(d,b,p);
 end$vfcf$;
 

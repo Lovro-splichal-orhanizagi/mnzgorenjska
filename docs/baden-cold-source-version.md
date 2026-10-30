@@ -42,3 +42,13 @@ Before production, the genuine M2 bridge must prove activation and restart/night
 ## Actual owner identity
 
 Hosted observation `41083538210` verified that the scratch `postgres` login owns the three private schemas but is not a superuser; `supabase_admin` is a superuser. The writer therefore requires a direct fixed-name session and either actual superuser status or the exact transition namespace owner OID. An absent role/schema, service identity, switched role or SECURITY DEFINER identity substitution cannot supply ownership. This observation describes the hosted scratch database only; production identity and the complete transition still require their own validation.
+
+## G1 FK metadata ordering correction
+
+Root's actual hosted diagnostic41123035183 (b551) completed the fresh migrations and nine owner checks, then the first G1 DB projection capture refused its exact FK catalog guard. The reviewed6a splice placed the versions registry/shapes/two-FK additions after the original expected-FK normalization and catalog equality check. Matching SQL/JS hashes therefore did not establish correct execution order.
+
+The unapplied200000 owner migration now injects only the identical metadata addition immediately after the first BEGIN, before normalization/checking. The version JSON/source-native guard stays at the later cleanup marker. All original G1 predicates, exact FK definitions, reverse-parent scope, old three capture extensions and applied160000 migration remain unchanged. No allowlist is broadened.
+
+The immutable G1 base remains `6c2ee0c988ce39132bce48d3f3ef0c629e186cfd8e16629162ec8fac25d26f50`. The corrected extended body digest is `82b3767a9c776c25ac9fa21b109eba5280f825d203767d12cacec48a0915724f`, consistently pinned in migration, independent JS profile and tests. The former `3834f8c15b468a353aae2cd7db7e8b7a0384d918b81d8c077d0d10731d5059ad` is the superseded late-metadata body, not a compatibility result.
+
+Offline RED→GREEN checks decode the actual SQL literal replacements independently, require all three additions before both FK normalization/equality checks, retain the late source/native guard, and round-trip back to the exact6c base. Metadata/guard payload hashes pin the reviewed definitions. Affected pure checks:22PASS,0FAIL,0SKIP. No local SQL, source, GHA, push or production operation was run; actual hosted capture compatibility still requires root review and a new authorized diagnostic. Source clocks and M1's2026-10-30T23:00:00Z cutoff are unchanged.
