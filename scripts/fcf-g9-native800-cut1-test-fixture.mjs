@@ -1,3 +1,4 @@
+import {testNative800LaunchStages} from './fcf-g9-native800-launch-test-fixture.mjs'
 import {testNative800SourceStages} from './fcf-g9-native800-bridge-test-fixture.mjs'
 // TEST ONLY synthetic SQL and APPLIED-cleanup records; no actual DB/history authority.
 // This helper runs only inside an isolated copied tree with a TEST ONLY cleanup reader.
@@ -67,4 +68,5 @@ async function runReadiness(proof,data,f,imported){
  const alteredBinding=JSON.parse(imported.rolloutText);alteredBinding.inventoryBinding.unapprovedHistoryMarker='TEST ONLY';const alteredText=JSON.stringify(alteredBinding),alteredSha=sha(alteredText),alteredReceipt={...importReceipt,rolloutText:alteredText,rolloutSha256:alteredSha},alteredInput={...input,originalRolloutText:alteredText,originalRolloutSha256:alteredSha,importReceipt:alteredReceipt}
  assert.throws(()=>buildFcfG9Native800Readiness(alteredInput),/full source\/capture binding differs/)
  assert.throws(()=>buildFcfG9Native800Readiness({...input,sourceProof:clone(proof)}));assert.equal(bySource.size,240)
+ await testNative800LaunchStages(proof,result,f.execution)
 }

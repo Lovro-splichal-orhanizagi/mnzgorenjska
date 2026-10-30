@@ -1,3 +1,4 @@
+import {getFcfG9Native800LaunchStageAttestation,describeFcfG9Native800LaunchReadback} from './fcf-g9-native800-launch-stage.mjs'
 import {getFcfG9Native800StageAttestation,describeFcfG9Native800Readback} from './fcf-g9-native800-stage.mjs'
 import {getFcfFutureTarget} from './fcf-future-target-catalog.mjs'
 import {isFcfFutureNativeProtocol} from './fcf-future-native-scope.mjs'
@@ -27,7 +28,10 @@ export function createFcfG9Native800BridgeDatabase(input={}){
  keys(input,Object.hasOwn(input,'env')?['env']:[],'G9 native800 bridge options')
  return createDatabase({...input,targetSlug:'es-ct-tercera-g9'},false,false,true)
 }
-function createDatabase(input,g1Observer,g9Preparation=false,g9Bridge=false){
+export function createFcfG9Native800LaunchDatabase(input={}){
+ keys(input,Object.hasOwn(input,'env')?['env']:[],'G9 native800 launch options');return createDatabase({...input,targetSlug:'es-ct-tercera-g9'},false,false,false,true)
+}
+function createDatabase(input,g1Observer,g9Preparation=false,g9Bridge=false,g9Launch=false){
  keys(input,Object.keys(input).filter(k=>['env','execute','network','targetSlug'].includes(k)),'database options')
  const {env=process.env,execute=execFileSync,network=globalThis.fetch,targetSlug='es-ct-tercera-g9'}=input,target=getFcfFutureTarget({targetSlug})
  if(typeof execute!=='function'||typeof network!=='function')fail('fixed database adapters required')
@@ -50,7 +54,7 @@ function createDatabase(input,g1Observer,g9Preparation=false,g9Bridge=false){
   // inherited hostaddr/service settings must not bypass the existing tunnel.
   const readEnv={...env,...connection,PGHOSTADDR:'127.0.0.1',PGCONNECT_TIMEOUT:'15'}
   for(const key of ['PGSERVICE','PGSERVICEFILE','PGSYSCONFDIR'])delete readEnv[key]
-  let raw;try{raw=execute('psql',['-X','-w','-qAt','-v','ON_ERROR_STOP=1',...(g1Observer?['-v','VERBOSITY=verbose']:[])],{env:readEnv,input:`BEGIN READ ONLY;\nSET LOCAL ROLE service_role;\nSET LOCAL statement_timeout='180s';\nSELECT ${expression};\nROLLBACK;\n`,timeout:200000,maxBuffer:limit,stdio:['pipe','pipe','pipe']})}catch(cause){
+  let raw;try{raw=execute('psql',['-X','-w','-qAt','-v','ON_ERROR_STOP=1',...(g1Observer?['-v','VERBOSITY=verbose']:[])],{env:readEnv,input:`BEGIN READ ONLY;\nSET LOCAL ROLE service_role;\nSET LOCAL statement_timeout='180s';\nSELECT ${expression};\nROLLBACK;\n`,timeout:200000,maxBuffer:g9Launch?67108864:limit,stdio:['pipe','pipe','pipe']})}catch(cause){
    if(!g1Observer)fail('readonly database query failed')
    // Raw stderr stays in memory only. Never expose a message, URI or detail.
    const raw=Buffer.isBuffer(cause?.stderr)?cause.stderr.toString('utf8'):typeof cause?.stderr==='string'?cause.stderr:''
@@ -62,7 +66,19 @@ function createDatabase(input,g1Observer,g9Preparation=false,g9Bridge=false){
    const states=['P0001','42501','57014','55P03','42883','08001','08006','53200','54000','22P02','42P01','42703','0A000','25006','25P02']
    error.readonlyDiagnostic=Object.freeze({sqlState:states.includes(match?.[1])?match[1]:'UNKNOWN',guard:known[match?.[2]]??'UNKNOWN'});throw error
   }
-  try{const value=String(raw).trim();if(Buffer.byteLength(value)>limit)fail('readonly result bound exceeded');return JSON.parse(value)}catch{fail('invalid bounded readonly database result')}
+  try{const value=String(raw).trim();if(Buffer.byteLength(value)>(g9Launch?67108864:limit))fail('readonly result bound exceeded');return JSON.parse(value)}catch{fail('invalid bounded readonly database result')}
+ }
+ if(g9Launch){
+  async function stage(activate,input){
+   keys(input,['stageProof'],'native800 launch mutation');const s=getFcfG9Native800LaunchStageAttestation(input.stageProof),e=s.execution
+   if(env.GITHUB_ACTIONS!=='true'||env.GITHUB_REPOSITORY!==e.repository||env.GITHUB_REF!=='refs/heads/main'||env.GITHUB_SHA!==e.commit||env.GITHUB_RUN_ID!==e.runId||env.GITHUB_RUN_ATTEMPT!=='1'||env.GITHUB_EVENT_NAME!=='workflow_dispatch'||env.GITHUB_JOB!==(activate?'native800-activate':'native800-check')||env.GITHUB_WORKFLOW_REF!==e.repository+'/.github/workflows/fcf-native800.yml@refs/heads/main')fail('exact current main native800 launch execution required')
+   let origin;try{origin=new URL(env.SUPABASE_URL??env.VITE_SUPABASE_URL)}catch{fail('native800 launch database HTTPS origin required')}
+   if(origin.protocol!=='https:'||origin.username||origin.password||origin.port||origin.pathname!=='/'||origin.search||origin.hash||!env.SUPABASE_SERVICE_ROLE_KEY)fail('fixed native800 launch database origin/service key required')
+   let response;try{response=await network(new URL('/rest/v1/rpc/fcf_native800_launch',origin).href,{method:'POST',redirect:'manual',headers:{apikey:env.SUPABASE_SERVICE_ROLE_KEY,Authorization:'Bearer '+env.SUPABASE_SERVICE_ROLE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_readiness_text:s.readinessText,p_sha256:s.readinessSha256,p_activate:activate,p_stage_text:s.attestationText,p_stage_sha256:s.attestationSha256}),signal:AbortSignal.timeout(200000)})}catch{throw ambiguous()}
+   if(response.status>=300&&response.status<400)fail('native800 launch database redirect refused');if(response.status>=500)throw ambiguous();if(!response.ok)fail('native800 launch transaction refused HTTP'+response.status)
+   try{const b=Buffer.from(await response.arrayBuffer());if(b.length>limit)throw Error();const r=JSON.parse(b.toString('utf8'));if(!r||typeof r!=='object'||Array.isArray(r))throw Error();return r}catch{throw ambiguous()}
+  }
+  return Object.freeze({dryCheck:input=>stage(false,input),activate:input=>stage(true,input),receipt:()=>read("public.fcf_native800_launch_receipt('es-ct-tercera-g9')"),readback(input){keys(input,['readinessText','readinessSha256'],'launch readback input');return describeFcfG9Native800LaunchReadback({...input,receipt:read("public.fcf_native800_launch_receipt('es-ct-tercera-g9')")})}})
  }
  if(g9Bridge){
   async function stage(mode,input){
