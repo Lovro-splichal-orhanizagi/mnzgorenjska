@@ -266,6 +266,8 @@ async function obvestiPotrjene(service: SupabaseClient): Promise<Response> {
   let poslano = 0
   const napake: string[] = []
   for (const v of (data ?? []) as Neobvescen[]) {
+    // Sestavi pred zakupom: napaka tu ne sme pustiti zakupljenega, neposlanega.
+    const s = sestaviPotrjen(v)
     // Hkratni klici (vsaka potrditev v adminu sproži enega) dobijo isti
     // seznam; pošlje le tisti, ki zahtevek zakupi.
     const { data: zakupljen, error: eZakup } = await service.rpc('prevzem_zakupi_obvestilo', { p_zahtevek_id: v.zahtevek_id })
@@ -274,7 +276,6 @@ async function obvestiPotrjene(service: SupabaseClient): Promise<Response> {
       continue
     }
     if (!zakupljen) continue
-    const s = sestaviPotrjen(v)
     let napaka: string | null = null
     let id: string | null = null
     try {
@@ -293,7 +294,8 @@ async function obvestiPotrjene(service: SupabaseClient): Promise<Response> {
     await service.from('email_log').insert({ email: v.email, vrsta: 'prevzem-potrjen', resend_id: id, napaka })
     if (napaka) {
       napake.push(`zahtevek ${v.zahtevek_id}: ${napaka}`)
-      await service.rpc('prevzem_sprosti_obvestilo', { p_zahtevek_id: v.zahtevek_id })
+      const { error: eSprosti } = await service.rpc('prevzem_sprosti_obvestilo', { p_zahtevek_id: v.zahtevek_id })
+      if (eSprosti) napake.push(`zahtevek ${v.zahtevek_id}: ni sproščen (${eSprosti.message})`)
     } else poslano++
   }
   return json({ poslano, napake })

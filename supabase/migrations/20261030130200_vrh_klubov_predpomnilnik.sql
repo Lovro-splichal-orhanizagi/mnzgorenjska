@@ -3,7 +3,7 @@
 -- Madžarska 5 s, Avstrija 8 s, anon pa ima 3 s — obiskovalec je dobil 500.
 -- Seštevki se spremenijo le z uvozom, zato jih vsako uro izračuna pg_cron v
 -- `vrh_klubov_predpomnilnik`, funkcija pa bere od tam. Česar ni (nova
--- država, drug prag, zastarelo več kot 3 ure), izračuna sproti kot prej.
+-- država, drug prag, zastarelo več kot 2 uri), izračuna sproti kot prej.
 
 -- Izračun je nespremenjen, le pod novim imenom in zaprt za vmesnik.
 create or replace function public.vrh_klubov_drzave_izracun(
@@ -164,7 +164,7 @@ begin
    where p.drzava = p_drzava
      and p.po_krogu = coalesce(p_na_krog, false)
      and p.najmanj = greatest(coalesce(p_najmanj_krogov, 1), 1)
-     and p.izracunano_at > now() - interval '3 hours';
+     and p.izracunano_at > now() - interval '2 hours';
   if v is null then
     return query select * from vrh_klubov_drzave_izracun(p_drzava, p_koliko, p_na_krog, p_najmanj_krogov);
     return;
