@@ -10,6 +10,7 @@ import {atomicCheckpoint} from './provider-league-batch.mjs'
 import {githubGetAdapter} from './stage-fussball-native-composition.mjs'
 import {loadFussballNativeComposition,getFussballNativeComposition} from './fussball-native-composition.mjs'
 const repo='Lovro-splichal-orhanizagi/mnzgorenjska',workflow='.github/workflows/uvoz-baden-native.yml',slug='de-verbandsliga-baden',profile='germany-retained-fussball-native-v1'
+const sourceHead='e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d'
 const hash=v=>createHash('sha256').update(JSON.stringify(v)).digest('hex')
 const need=(ok,m)=>{if(!ok)throw Object.assign(Error('Baden native staging: '+m),{dataHold:true})}
 const root=()=>resolve('release/pl-de-bulk')
@@ -33,15 +34,15 @@ export async function stageBadenNativeComposition(input={}){
  const github=githubGetAdapter(env.GH_TOKEN??env.GITHUB_TOKEN),base=`repos/${repo}/`,path=base+'actions/runs/'+env.GITHUB_RUN_ID
  const run=await github(path);runIdentity(run,env)
  const main=await github(base+'branches/main');need(main?.name==='main'&&main.commit?.sha===env.EXPECTED_SHA,'current main differs')
- const composition=await loadFussballNativeComposition({derivedRunId:env.DERIVED_RUN_ID,derivedHead:env.EXPECTED_SHA,frozenDirectory,v6FrozenDirectory,github}),state=getFussballNativeComposition(composition)
- need(state.proof.derivedRunId===env.DERIVED_RUN_ID&&state.proof.derivedHead===env.EXPECTED_SHA&&state.pack.profile===profile&&state.pack.expectedSha===env.EXPECTED_SHA&&state.pack.replayHead===env.EXPECTED_SHA&&['authenticated-completed-fussball-v7-source','authenticated-fussball-baden-fresh-pair-source','authenticated-fussball-baden-completed-stages-source'].includes(state.sourceProof.kind)&&Date.parse(state.pack.currentFreshUntil)>Date.now()&&state.proof.currentFreshUntil===state.pack.currentFreshUntil,'private composition/source family/head/original freshness differs')
+ const composition=await loadFussballNativeComposition({derivedRunId:env.DERIVED_RUN_ID,derivedHead:sourceHead,consumerHead:env.EXPECTED_SHA,frozenDirectory,v6FrozenDirectory,github}),state=getFussballNativeComposition(composition)
+ need(state.proof.derivedRunId===env.DERIVED_RUN_ID&&state.proof.derivedHead===sourceHead&&state.pack.profile===profile&&state.pack.expectedSha===sourceHead&&state.pack.replayHead===sourceHead&&['authenticated-completed-fussball-v7-source','authenticated-fussball-baden-fresh-pair-source','authenticated-fussball-baden-completed-stages-source'].includes(state.sourceProof.kind)&&Date.parse(state.pack.currentFreshUntil)>Date.now()&&state.proof.currentFreshUntil===state.pack.currentFreshUntil,'private composition/source family/head/original freshness differs')
  need(same(await github(path),run)&&same(await github(base+'branches/main'),main),'native caller/main changed during authentication')
  const candidates=selectBulkCandidates('DE',slug);need(candidates.length===1,'fixed single reviewed Baden candidate required')
  need(!existsSync(root()),'existing output changed during private authentication')
  mkdirSync(resolve('release'),{recursive:true});regularDirectory(resolve('release'));mkdirSync(root())
  atomicCheckpoint(join(root(),'staging.json'),{version:1,status:'RUNNING',expected_sha:env.EXPECTED_SHA,derived_run_id:env.DERIVED_RUN_ID,activate_if_ready:env.ACTIVATE_IF_READY==='true'})
  const directory=join(root(),'packs',slug);mkdirSync(directory,{recursive:true})
- const locator={derivedRunId:env.DERIVED_RUN_ID,derivedHead:env.EXPECTED_SHA,frozenDirectory,v6FrozenDirectory};writeFileSync(join(directory,'baden-native-locator.json'),JSON.stringify(locator)+'\n',{flag:'wx',mode:0o600})
+ const locator={consumerHead:env.EXPECTED_SHA,derivedRunId:env.DERIVED_RUN_ID,derivedHead:sourceHead,frozenDirectory,v6FrozenDirectory};writeFileSync(join(directory,'baden-native-locator.json'),JSON.stringify(locator)+'\n',{flag:'wx',mode:0o600})
  const report={version:1,phase:'source',expected_sha:env.EXPECTED_SHA,scope_sha256:hash(candidates),status:'STAGED',results:[{candidate:candidates[0],slug,directory,profile,status:'STAGED'}],host_stops:{},infrastructure_stop:null}
  atomicCheckpoint(join(root(),'source-report.json'),report);atomicCheckpoint(join(root(),'staging.json'),{version:1,status:'STAGED',expected_sha:env.EXPECTED_SHA,derived_run_id:env.DERIVED_RUN_ID,activate_if_ready:env.ACTIVATE_IF_READY==='true'})
  return {status:'STAGED',slug,expectedSha:env.EXPECTED_SHA,derivedRunId:env.DERIVED_RUN_ID,activateIfReady:env.ACTIVATE_IF_READY==='true',nativeAdmission:false,activationEligible:false}

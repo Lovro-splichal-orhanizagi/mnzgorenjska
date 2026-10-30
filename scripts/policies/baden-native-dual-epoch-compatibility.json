@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "kind": "baden-native-dual-epoch-compatibility",
+  "sourceRunId": "40990176474",
+  "sourceHead": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+  "sourceReaderSha256": "355f939012163817f01df3af46966af8899102ef6eb0e702cd5e0dd131d68d75",
+  "consumerReaderSha256": "ff0c69c219016a2caf894086ede5c99588576788fac6639342791708103f80e3"
+}

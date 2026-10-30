@@ -1,6 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {existsSync,readFileSync} from 'node:fs'
+import {execFileSync} from 'node:child_process'
+import {zaprtje} from './odtis-kode.mjs'
 
 test('native composition exists and rejects copied source capabilities',async()=>{
  assert.ok(existsSync(new URL('./fussball-native-composition.mjs',import.meta.url)),'Task 1 composition contract must exist')
@@ -98,6 +100,33 @@ test('TEST ONLY hosted derived reader issues only cold preparation scope after i
  assert.throws(()=>f.api.getFussballNativeComposition({...p}),/reader-issued/)
  const reread=await f.api.reauthenticateFussballNativeComposition(p);assert.notEqual(reread,p);assert.equal(f.sourceReads-before,4)
 })
+
+test('TEST ONLY dual epoch accepts only the exact e925 source reader under an independently authenticated newer consumer',async t=>{
+ const f=await hostedDerivedFixture(t);f.enableDualEpoch();const input={derivedRunId,derivedHead,consumerHead:f.dual.head,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e',github:f.github}
+ const oldReader=execFileSync('git',['show','e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d:scripts/fussball-native-composition.mjs'],{encoding:'utf8'}),oldClosure=zaprtje('scripts/fussball-native-composition.mjs',path=>path==='scripts/fussball-native-composition.mjs'?oldReader:readFileSync(path,'utf8'))
+ assert.deepEqual(zaprtje('scripts/fussball-native-composition.mjs'),oldClosure,'dual epoch must preserve the captured producer runtime file set')
+ const p=await f.api.loadFussballNativeComposition(input),state=f.api.getFussballNativeComposition(p)
+ assert.equal(p.derivedHead,derivedHead);assert.equal(p.nativeImportEligible,false);assert.equal(p.activationEligible,false)
+ assert.equal(state.certificate.runtime['scripts/fussball-native-composition.mjs'],'355f939012163817f01df3af46966af8899102ef6eb0e702cd5e0dd131d68d75')
+ assert.equal(state.pack.expectedSha,derivedHead);assert.equal(state.pack.replayHead,derivedHead);assert.equal(state.pack.derivedPackSha256,JSON.parse(f.files.get('pack.json')).derivedPackSha256)
+ assert.ok(f.calls.some(c=>c.path.includes('/branches/main')));assert.ok(f.calls.some(c=>c.path.includes('actions/workflows/ci.yml/runs')));assert.ok(f.calls.some(c=>c.path.includes('contents/scripts/fussball-native-composition.mjs?ref='+f.dual.head)))
+})
+for(const [name,mutate]of[
+ ['consumer run head',f=>f.dual.run.head_sha='d'.repeat(40)],
+ ['consumer actor',f=>f.dual.run.actor.login='not-root'],
+ ['consumer attempt',f=>f.dual.env.GITHUB_RUN_ATTEMPT='2'],
+ ['consumer event',f=>f.dual.env.GITHUB_EVENT_NAME='push'],
+ ['current main',f=>f.main.commit.sha='d'.repeat(40)],
+ ['pinned source run actor',f=>f.run.actor.login='not-root'],
+ ['current CI conclusion',f=>f.dual.ci.conclusion='failure'],
+ ['current workflow body',f=>{f.controls.change=(path,v)=>path.includes('contents/.github/workflows/uvoz-baden-native.yml?ref='+f.dual.head)?{...v,content:Buffer.from('TEST ONLY changed workflow').toString('base64')}:v}],
+ ['current reader body',f=>{f.controls.change=(path,v)=>path.includes('contents/scripts/fussball-native-composition.mjs?ref='+f.dual.head)?{...v,content:Buffer.from('TEST ONLY changed reader').toString('base64')}:v}],
+ ['compatibility DATA body',f=>{f.controls.change=(path,v)=>path.includes('contents/scripts/policies/baden-native-dual-epoch-compatibility.json?ref='+f.dual.head)?{...v,content:Buffer.from('{}').toString('base64')}:v}],
+ ['served commit marker',f=>{f.controls.servedWrong=true}],
+ ['source reader body',f=>{f.controls.change=(path,v)=>path.includes('contents/scripts/fussball-native-composition.mjs?ref='+derivedHead)?{...v,content:Buffer.from('TEST ONLY tampered source body').toString('base64')}:v}],
+ ['expired source lease',f=>{f.state.proof.source.currentFreshUntil='2000-01-01T00:00:00.000Z'}],
+ ['altered immutable manifest binding',f=>f.recertify(c=>c.catalogSha256='0'.repeat(64))],
+])test(`TEST ONLY dual epoch refuses ${name}`,async t=>{const f=await hostedDerivedFixture(t);f.enableDualEpoch();mutate(f);await assert.rejects(f.api.loadFussballNativeComposition({derivedRunId,derivedHead,consumerHead:f.dual.head,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e',github:f.github}))})
 
 for(const [name,change]of[
  ['wrong run repository',f=>f.run.head_repository.full_name='other/repo'],
