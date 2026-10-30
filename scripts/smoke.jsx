@@ -13002,6 +13002,11 @@ preveri(
       fnAnketa.indexOf("rpc('anketa_placila_zasedi'") < fnAnketa.lastIndexOf('const rez = await poslji(EMAIL_FROM, u.email, sporocilo') &&
       ['create unique index', 'pg_advisory_xact_lock', 'to service_role'].every((x) => migAnketa50.includes(x)) &&
       !/to (anon|authenticated)/.test(migAnketa50))
+  // Lovro, 30. 10. 2026: ne 5 klikov za 50 mailov. En klik pošlje vse, a le odkljukane (brez kohorte).
+  const adminSrc = readFileSync(new URL('../src/pages/Administracija.tsx', import.meta.url), 'utf8')
+  preveri('anketa plačila: en klik pošlje vse odkljukane, z omejenim številom krogov',
+    adminSrc.includes('for (let krog = 0; krog < 8; krog++)') && adminSrc.includes('izberi vse prikazane') &&
+      adminSrc.includes('user_ids: izbraniAnketa, suho: false'))
 }
 
 // --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------

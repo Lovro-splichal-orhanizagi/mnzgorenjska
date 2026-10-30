@@ -344,23 +344,34 @@ export default function Administracija() {
     }
   }
 
+  // En klik pošlje vse: funkcija ima 60 s in pošlje največ 10 na klic, zato
+  // brskalnik kliče znova, dokler kaj ostane in se kaj premakne. Ustavi se ob
+  // napaki, meji 50 ali klicu brez napredka (zasedeni, ponesrečeni).
   async function posljiAnketo() {
     setNapaka(null)
     setPosiljam(true)
+    let poslano = 0
+    let napak = 0
     try {
-      const { data, error } = await supabase.functions.invoke('posli-opomnik', {
-        body: { vrsta: 'anketa-placila', competition_id: tekmovanjeId, user_ids: izbraniAnketa, suho: false },
-      })
-      if (error) throw new Error(await napakaFunkcije(error))
-      if (data?.error) throw new Error(data.error)
-      setSporocilo(
-        `Anketa: poslano ${data.poslano}, napak ${data.napak}` +
-          (data.ostalo ? `, še ${data.ostalo} (pritisni znova)` : '') +
-          (data.zasedenih ? `, ${data.zasedenih} že v teku drugje (preskočeni)` : '') +
-          (data.cez_mejo ? ', meja 50 dosežena' : '') +
-          `. V email_log skupaj ${data.ze_poslanih ?? '?'} uspešnih.`,
-      )
-      if (!data.ostalo) setIzbraniAnketa([])
+      for (let krog = 0; krog < 8; krog++) {
+        const { data, error } = await supabase.functions.invoke('posli-opomnik', {
+          body: { vrsta: 'anketa-placila', competition_id: tekmovanjeId, user_ids: izbraniAnketa, suho: false },
+        })
+        if (error) throw new Error(await napakaFunkcije(error))
+        if (data?.error) throw new Error(data.error)
+        poslano += data.poslano ?? 0
+        napak += data.napak ?? 0
+        const konec = !data.ostalo || data.cez_mejo || !data.poslano
+        setSporocilo(
+          `Anketa: poslano ${poslano}, napak ${napak}` +
+            (data.ostalo ? (konec ? `, ostalo ${data.ostalo}` : `, pošiljam še ${data.ostalo} …`) : '') +
+            (data.zasedenih ? `, ${data.zasedenih} že v teku drugje (preskočeni)` : '') +
+            (data.cez_mejo ? ', meja 50 dosežena' : '') +
+            `. V email_log skupaj ${data.ze_poslanih ?? '?'} uspešnih.`,
+        )
+        if (!data.ostalo) setIzbraniAnketa([])
+        if (konec) break
+      }
     } catch (e) {
       setNapaka(`Pošiljanje ankete ni uspelo: ${(e as Error)?.message ?? e}`)
     } finally {
@@ -1038,6 +1049,22 @@ export default function Administracija() {
                       >
                         📋 Anketa ({izbraniAnketa.length}/50)
                       </button>
+                      <button
+                        onClick={() => {
+                          setPredogledAnkete(null)
+                          setIzbraniAnketa((s) => {
+                            const novi = seznam
+                              .filter((u) => u.email && !s.includes(u.user_id))
+                              .map((u) => u.user_id)
+                            return [...s, ...novi].slice(0, 50)
+                          })
+                        }}
+                        disabled={posiljam || izbraniAnketa.length >= 50}
+                        className="text-xs text-slate-400 underline hover:text-gnl-300 disabled:opacity-50"
+                        title="Doda vse vrstice tega filtra (vse strani) do 50"
+                      >
+                        izberi vse prikazane
+                      </button>
                       {izbraniAnketa.length > 0 && (
                         <button
                           onClick={() => setIzbraniAnketa([])}
@@ -1082,7 +1109,7 @@ export default function Administracija() {
                         {Object.entries(predogledAnkete.jeziki ?? {})
                           .map(([j, n]) => `${j} ${n}`)
                           .join(', ') || '—'}
-                        . Že poslanih {predogledAnkete.ze_poslanih}/{predogledAnkete.meja ?? 50}; en klic pošlje največ 10.
+                        . Že poslanih {predogledAnkete.ze_poslanih}/{predogledAnkete.meja ?? 50}; pošilja po 10, en klik pošlje vse.
                       </Potrditev>
                     )}
 
