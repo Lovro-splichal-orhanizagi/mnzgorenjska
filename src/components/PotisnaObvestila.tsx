@@ -17,12 +17,12 @@
 // obvestila odpre pot iz `data.url`.
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Capacitor } from '@capacitor/core'
 import { App } from '@capacitor/app'
 import { FirebaseMessaging } from '@capacitor-firebase/messaging'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
-import { jeNativno } from '../lib/platforma'
+import { jeNativno, platforma } from '../lib/platforma'
+import { zabeleziKorak } from '../lib/lijak'
 import { varnaPot } from '../lib/prijava'
 import { t } from '../i18n'
 
@@ -77,8 +77,7 @@ function pripraviSplet(): Promise<ServiceWorkerRegistration> {
 }
 
 async function shrani(token: string) {
-  const platforma = jeNativno() ? (Capacitor.getPlatform() === 'ios' ? 'ios' : 'android') : 'web'
-  await supabase.rpc('shrani_push_zeton', { p_zeton: token, p_platforma: platforma })
+  await supabase.rpc('shrani_push_zeton', { p_zeton: token, p_platforma: platforma() })
 }
 
 export type DovoljenjePush = 'granted' | 'denied' | 'prompt'
@@ -88,6 +87,12 @@ export type DovoljenjePush = 'granted' | 'denied' | 'prompt'
  * shrani žeton. Brez podpore ali brez Firebase vrne `denied`.
  */
 export async function registrirajPush(vprasaj: boolean): Promise<DovoljenjePush> {
+  const d = await registriraj(vprasaj)
+  if (vprasaj) zabeleziKorak(d === 'granted' ? 'push_dovoljeno' : 'push_zavrnjeno')
+  return d
+}
+
+async function registriraj(vprasaj: boolean): Promise<DovoljenjePush> {
   if (!pushPodprt()) return 'denied'
   try {
     // V brskalniku se vprašanje ne sme izgubiti za uvozom Firebase (Safari
@@ -159,7 +164,9 @@ export default function PotisnaObvestila() {
       // Gradnja 1 (iOS in Android 1.0) je brez Firebase: žetona ne dobi, pas bi lagal.
       if (jeNativno() && Number((await App.getInfo()).build) < PUSH_OD_GRADNJE) return
       const { data } = await supabase.from('profiles').select('brez_push').eq('id', uporabnik).maybeSingle()
-      if (!data?.brez_push) setPas(true)
+      if (data?.brez_push) return
+      setPas(true)
+      zabeleziKorak('push_pas')
     })
   }, [uporabnik])
 
@@ -187,6 +194,7 @@ export default function PotisnaObvestila() {
           className="gumb-tih min-h-[44px] px-3 py-2"
           onClick={() => {
             zapomniZaprtje()
+            zabeleziKorak('push_pas_zaprt')
             setPas(false)
           }}
         >
