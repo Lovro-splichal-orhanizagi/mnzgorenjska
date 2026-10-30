@@ -8,7 +8,7 @@ import {readFcfRefresh800ReservationArtifact} from './fcf-refresh800-evidence.mj
 import {captureFcfRefresh800} from './fcf-refresh800-capture.mjs'
 import {fcfRefresh800RuntimeFiles} from './fcf-refresh800-runtime.mjs'
 import {snapshotFcfInventoryRuleset} from './fcf-missing-inventory-claim.mjs'
-import {getFcfInventoryGithub as github} from './fcf-inventory-github.mjs'
+import {getFcfReliableGithub as github} from './lib/fcf-reliable-github.mjs'
 import {historicalStatisticsPolicySha256 as hash} from './lib/historical-statistics-policy.mjs'
 import {exactKeys,frozenJSON} from './fcf-missing-inventory-artifact.mjs'
 export const FCF_REFRESH800_WORKFLOW_JOBS=Object.freeze(['cache-export','missing-inventory-seed','missing-inventory-approval','missing-inventory-consume','missing-inventory-g1','missing-inventory-g9','missing-inventory-receipt','target-approval','cleanup-originals','target-mapping','cleanup-prepare','cleanup-apply','target-import','target-price','target-check','target-activate','target-recover','future-target-approval','missing-inventory','refresh800-capture'])
