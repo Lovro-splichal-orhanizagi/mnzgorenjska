@@ -16,3 +16,12 @@ test('changed executed code, added test module and workflow alter the vector; in
  for(const tree of [[...rows,rows[0]],rows.filter(r=>r.path!==workflow),[{...rows[0],mode:'120000'},...rows.slice(1)],[{...rows[0],type:'tree'},...rows.slice(1)]])await assert.rejects(read(tree))
  await assert.rejects(api.readBadenR10RuntimeVector({github:async p=>p.includes('/git/commits/')?{sha:head,tree:{sha:treeSha}}:{sha:treeSha,truncated:true,tree:rows},head,workflow}))
 })
+
+test('German CI projection ignores only compiled known outside bytes; unknown FCF code cannot hide a source call',()=>{
+ const w='.github/workflows/ci.yml',base=[{path:w,type:'blob',mode:'100644',sha:'a'.repeat(40),size:1},{path:'scripts/test-fussball-guard.mjs',type:'blob',mode:'100644',sha:'b'.repeat(40),size:2},{path:'scripts/test-fcf-known.mjs',type:'blob',mode:'100644',sha:'c'.repeat(40),size:3}],known={'scripts/test-fcf-known.mjs':['c'.repeat(40),'d'.repeat(40)]}
+ const digest=rows=>api.badenR10VectorDigest(rows,w,'german-ci',known).vectorSha256
+ assert.equal(digest(base),digest(base.map(e=>e.path.includes('fcf-')?{...e,sha:'d'.repeat(40)}:e)))
+ assert.notEqual(digest(base),digest(base.map(e=>e.path.includes('fcf-')?{...e,sha:'e'.repeat(40)}:e)))
+ assert.notEqual(digest(base),digest([...base,{path:'scripts/test-unreviewed.mjs',type:'blob',mode:'100644',sha:'f'.repeat(40),size:4}]))
+ assert.notEqual(digest(base),digest(base.map(e=>e.path.includes('fussball')?{...e,sha:'e'.repeat(40)}:e)))
+})

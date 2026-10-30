@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync,existsSync,writeFileSync} from 'node:fs'
 import {join} from 'node:path'
+import {badenR10HistoryFamilies} from './fussball-baden-r10-history.mjs'
 import {execFileSync} from 'node:child_process'
 const api=await import('./fussball-baden-r10-accounting.mjs').catch(e=>{if(e.code==='ERR_MODULE_NOT_FOUND')return {};throw e})
 const prefix='repos/Lovro-splichal-orhanizagi/mnzgorenjska/'
@@ -47,13 +48,29 @@ function retained(){
   const jobs=load(D,`jobs-${id}-1-page1.json`),job=jobs.jobs.find(j=>j.name==='uvoz DE')
   set('actions/jobs/'+job.id+'/logs',readFileSync(join(D,`de-nightly-${id}.log`)))
  }
- for(const p of JSON.parse(readFileSync(new URL('./fussball-baden-r10-exclusions.json',import.meta.url))).ancestorCoverage.knownReferencedAncestors)
-  set('actions/runs/'+p.runId,load(D,'ancestor-live-'+p.runId+'.json'))
+ const H=join(D,'closure-groups'),C=join(D,'checkout-closure'),P=join(E,'evidence/baden-pre-r7-family-closure-20261030'),pre=load(P,'PROVENANCE.json')
+ for(const w of badenR10HistoryFamilies){
+  const first=load(H,'history-'+w+'.json');for(let page=1;page<=Math.max(1,Math.ceil(first.total_count/100));page++){
+   const v=page===1?first:load(H,'history-'+w+'-page'+page+'.json');set(`actions/workflows/${w}/runs?per_page=100&page=${page}`,v)
+   for(const r of v.workflow_runs)if(!responses.has(prefix+'actions/runs/'+r.id))set('actions/runs/'+r.id,r)
+  }
+ }
+ for(const r of pre.olderRuns){set('actions/runs/'+r.runId,load(P,r.finalRunFile));for(const a of r.attempts)set(`actions/runs/${r.runId}/attempts/${a.attempt}/jobs?per_page=100&page=1`,load(P,a.jobsFile))}
+ for(const name of existsSync(C)?execFileSync('ls',[C],{encoding:'utf8'}).trim().split('\n'):[]){
+  if(/^run-\d+\.json$/.test(name))set('actions/runs/'+name.slice(4,-5),load(C,name))
+  if(/^jobs-\d+-\d+-page1\.json$/.test(name)){const[id,attempt]=name.slice(5,-5).split('-');set(`actions/runs/${id}/attempts/${attempt}/jobs?per_page=100&page=1`,load(C,name))}
+  if(/^commit-[a-f0-9]{40}\.json$/.test(name))set('git/commits/'+name.slice(7,-5),load(C,name))
+  if(/^tree-[a-f0-9]{40}\.json$/.test(name))set('git/trees/'+name.slice(5,-5)+'?recursive=1',load(C,name))
+  if(/^(?:build|scout)-\d+-\d+\.log$/.test(name))set('actions/jobs/'+name.split('-')[2].slice(0,-4)+'/logs',readFileSync(join(C,name)))
+ }
  let scan=0
  return {calls,controls,runs,github:async(path,binary=false)=>{
   calls.push({path,binary});let v
+  if(responses.has(path)&&(path.includes('/git/commits/')||path.includes('/git/trees/'))){v=responses.get(path);v=controls.change?.(path,v,binary)??v;return structuredClone(v)}
   if(immutableTestCache.has(path)){v=immutableTestCache.get(path);v=controls.change?.(path,v,binary)??v;return structuredClone(v)}
-  if(path.startsWith(prefix+'actions/runs?created=')){
+  if(path.startsWith(prefix+'actions/workflows/')&&controls.reviewedOnly){
+   const w=path.slice((prefix+'actions/workflows/').length).split('/')[0],page=Number(new URL('https://api.invalid/'+path).searchParams.get('page')),ids=new Set(JSON.parse(readFileSync(new URL('./fussball-baden-r10-accounting.json',import.meta.url))).records.map(p=>p.run.id)),all=[...responses.entries()].filter(([p])=>p.startsWith(prefix+'actions/workflows/'+w+'/runs?')).flatMap(([,v])=>v.workflow_runs).filter(r=>r.created_at<'2026-10-28T20:15:01Z'||ids.has(r.id));v={total_count:all.length,workflow_runs:all.slice((page-1)*100,page*100)}
+  }else if(path.startsWith(prefix+'actions/runs?created=')){
    const page=Number(new URL('https://api.invalid/'+path).searchParams.get('page'));if(page===1)scan++
    const base=controls.reviewedOnly?runs.filter(r=>JSON.parse(readFileSync(new URL('./fussball-baden-r10-accounting.json',import.meta.url))).records.some(p=>p.run.id===r.id)||JSON.parse(readFileSync(new URL('./fussball-baden-r10-exclusions.json',import.meta.url))).groups.some(g=>g.workflow===r.path)):runs;const list=controls.inventory?.(structuredClone(base),scan)??base;v={total_count:list.length,workflow_runs:list.slice((page-1)*100,page*100)}
   }else if(path.startsWith(prefix+'git/commits/')){
@@ -79,8 +96,7 @@ test('genuine snapshot classifies exact55 and24 body-bound service runs but hold
   assert.equal(v.executions.filter(x=>x.kind==='reviewed-own-service-group').length,24)
   assert.equal(v.executions.find(x=>x.runId==='40859714195').alreadyAccountedRequests,587)
   const n=v.executions.find(x=>x.runId==='41011276709');assert.equal(n.physicalProviderAttempts,null);assert.equal(n.redirectVisibility,'NOT_JOURNALED')
-  assert.equal(v.ancestorCoverage.complete,false);assert.equal(v.ancestorCoverage.ancestors.length,9)
-  assert.ok(e.blockers.some(b=>b.reason==='PRE_R7_ANCESTOR_COVERAGE_NOT_CLOSED'))
+  assert.equal(v.ancestorCoverage.complete,true);assert.ok(v.ancestorCoverage.olderRuns.length>=21)
   assert.ok(v.executions.some(x=>x.kind==='reviewed-content-vector-group'))
   if(process.env.FUSSBALL_R10_REVIEW_FIX_RESULT_DIR)writeFileSync(join(process.env.FUSSBALL_R10_REVIEW_FIX_RESULT_DIR,'PARTIAL-COVERAGE-HOLD.json'),JSON.stringify({status:'HOLD',blockers:e.blockers,executions:v.executions,ancestorCoverage:v.ancestorCoverage,authenticatedMinimumSpent:v.authenticatedMinimumSpent,freshAccountingKnown:false,sourceOperationAuthorized:false,networkGETs:0,providerGETs:0},null,2)+'\n')
   return true
@@ -91,13 +107,13 @@ test('service group can authenticate different-head matching critical bytes with
  const f=retained();f.controls.reviewedOnly=true
  const target=f.runs.find(r=>r.path.endsWith('/zivost.yml')),head='5f7a0f00b96f31fdb7cd385140494dfe4f89eb6f'
  // TEST ONLY metadata variation; both workflow bodies are genuine Git objects.
- f.controls.inventory=rows=>rows.map(r=>r.id===target.id?{...r,head_sha:head}:r)
+ f.controls.inventory=rows=>[...rows.map(r=>r.id===target.id?{...r,head_sha:head}:r),{...structuredClone(rows.find(r=>r.id===40859714195)),id:99999900003}]
  f.controls.change=(path,v)=>path===prefix+'actions/runs/'+target.id?{...v,head_sha:head}:
   path===prefix+`actions/runs/${target.id}/attempts/1/jobs?per_page=100&page=1`?{...v,jobs:v.jobs.map(j=>({...j,head_sha:head}))}:v
  await assert.rejects(api.readFussballBadenR10Budget({github:f.github}),e=>{
   assert.ok(e.audit.executions.some(x=>x.runId===String(target.id)&&x.kind==='reviewed-own-service-group'))
   assert.equal(e.blockers.some(b=>b.runId===String(target.id)),false)
-  return e.blockers.some(b=>b.reason==='PRE_R7_ANCESTOR_COVERAGE_NOT_CLOSED')
+  return e.audit.ancestorCoverage.complete===true
  })
 })
 test('ordinary or foreign labels cannot hide an unknown executed HEAD/body or changed job source mode',{skip:!E},async t=>{
@@ -117,9 +133,8 @@ test('pre-R7 run rerun is observed outside the created-at census and never assum
  t.mock.method(Date,'now',()=>Date.parse('2026-10-30T13:10:00.000Z'))
  const f=retained();f.controls.reviewedOnly=true;f.controls.change=(path,v)=>path===prefix+'actions/runs/40416972177'?{...v,run_attempt:2,updated_at:'2026-10-30T13:00:00Z'}:v
  await assert.rejects(api.readFussballBadenR10Budget({github:f.github}),e=>{
-  const a=e.audit?.ancestorCoverage?.ancestors?.find(a=>a.runId==='40416972177')
-  assert.equal(a?.latestAttempt,2);assert.equal(a.additionalRequests,null)
-  return e.blockers.some(b=>b.reason==='PRE_R7_ANCESTOR_COVERAGE_NOT_CLOSED')
+  assert.equal(e.audit.ancestorCoverage.complete,false);assert.equal(e.audit.ancestorCoverage.runId,'40416972177')
+  return e.blockers.some(b=>b.reason==='BADEN_HISTORY_LATEST_ATTEMPT_DRIFT')
  })
 })
 test('unknown failed research, rerun, live source and late inventory drift remain exact execution HOLDs',{skip:!E},async t=>{
@@ -178,4 +193,14 @@ test('content groups reject changed critical code, DE input and executed CI rese
   }
   await assert.rejects(api.readFussballBadenR10Budget({github:f.github}),e=>{return e.blockers?.some(b=>b.runId===String(target.id)&&b.reason.includes(mode==='code'?'UNREVIEWED_EXECUTED_VECTOR':mode==='country'?'FOREIGN_INPUT_SCOPE':'RESEARCH_JOBS_NOT_SKIPPED'))})
  }
+})
+
+test('TEST ONLY closed reduced census issues a private 60-second budget with live historical retry closure',{skip:!E},async t=>{
+ let clock=Date.parse('2026-10-30T13:10:00Z');t.mock.method(Date,'now',()=>clock)
+ t.mock.method(globalThis,'fetch',()=>{throw Error('TEST ONLY network forbidden')})
+ const f=retained();f.controls.reviewedOnly=true
+ const proof=await api.readFussballBadenR10Budget({github:f.github}),data=api.getFussballBadenR10Budget(proof)
+ assert.equal(data.budget.priorRequests,3607);assert.equal(data.budget.cumulativeReserved,4387);assert.equal(data.sourceOperationAuthorized,false)
+ assert.throws(()=>api.getFussballBadenR10Budget(structuredClone(proof)),/PRIVATE_CAPABILITY/)
+ clock+=60000;assert.throws(()=>api.getFussballBadenR10Budget(proof),/EXPIRED/)
 })
