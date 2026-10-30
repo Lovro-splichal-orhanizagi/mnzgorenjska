@@ -25,12 +25,18 @@ export const javnaOdobritev = (akcija) => akcija === 'zgodba'
 const POLJA = ['zadeva', 'akcija', 'cilj', 'verzija', 'prejemniki', 'platforme', 'tveganje', 'potece']
 const OBVEZNA = ['zadeva', 'akcija', 'cilj', 'verzija', 'tveganje', 'potece']
 
-// Kartica gre v Discord: brez naslovov, žetonov ali ključev.
+// Kartica gre v Discord: brez naslovov, žetonov ali ključev. To je varnostna mreža, ne zagotovilo:
+// izvajalec v kartico piše le število prejemnikov, nikoli naslovov ali vsebine .env.
 const SKRIVNO = [
   [/[^\s@<>]+@[^\s@<>]+\.[a-z]{2,}/i, 'e-poštni naslov'],
-  [/\b(ghp|gho|github_pat|sk|xox[abp]|eyJ)[A-Za-z0-9_\-.]{12,}/, 'žeton'],
-  [/[A-Za-z0-9+_\-]{41,}/, 'dolg niz (ključ?)'],
+  [/:\/\/[^\s/:@]+:[^\s/@]+@/, 'geslo v naslovu URL'],
+  [/\b(ghp_|gho_|ghs_|ghu_|github_pat_|sk-|sk_live_|sk_test_|re_|xox[abprs]-)[A-Za-z0-9_\-]{8,}/, 'žeton'],
+  [/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/, 'žeton JWT'],
+  [/[A-Za-z0-9_-]{23,28}\.[A-Za-z0-9_-]{6,7}\.[A-Za-z0-9_-]{27,}/, 'žeton Discord bota'],
+  [/\b(api[_-]?key|token|secret|password|geslo)\s*[=:]\s*\S{6,}/i, 'ključ'],
 ]
+// Dolg niz brez ločil je verjetno ključ; SHA commita (40) ali sha256 (64) je dovoljen.
+const dolgKljuc = (s) => (s.match(/[A-Za-z0-9+]{32,}/g) ?? []).some((m) => !/^([0-9a-f]{40}|[0-9a-f]{64})$/i.test(m))
 
 export function preveriZahtevo(z) {
   const napake = []
@@ -41,8 +47,11 @@ export function preveriZahtevo(z) {
   if (z.verzija && !/^[0-9a-f]{7,64}$/.test(z.verzija)) napake.push('verzija mora biti SHA commita ali sha256 vsebine')
   if (z.potece && Number.isNaN(Date.parse(z.potece))) napake.push('potece ni datum ISO')
   for (const k of POLJA) {
-    if (k === 'verzija' || typeof z[k] !== 'string') continue
+    if (z[k] == null) continue
+    if (typeof z[k] !== 'string') { napake.push(`${k} mora biti besedilo`); continue }
+    if (k === 'verzija') continue
     for (const [re, kaj] of SKRIVNO) if (re.test(z[k])) napake.push(`${k} vsebuje ${kaj}; to ne sme v Discord`)
+    if (dolgKljuc(z[k])) napake.push(`${k} vsebuje dolg niz (ključ?); to ne sme v Discord`)
   }
   return napake
 }
@@ -67,48 +76,57 @@ export function kartica(z) {
   return { koda: k, besedilo: vrstice.filter(Boolean).join('\n') }
 }
 
-// Prenos, ki ga desk zapiše na zadevo:
+// Prenos, ki ga desk zapiše na zadevo. Komentar je natanko teh štirih vrstic, nič drugega:
 //   [odobritev] ODOBRIM SLF-211-merge-deploy-1a2b3c4d
 //   odobril: Lovro, discord 123456789012345678
 //   sporocilo: 1300000000000000000
 //   cas: 2026-10-30T11:00:00Z
+// Prilepljen blok v daljšem komentarju (npr. "[desk] … in Discord: …") ni prenos.
+const PRENOS = /^\[odobritev\] (ODOBRIM|ZAVRNEM) (SLF-\d+-[a-z-]+-[0-9a-f]{8})\r?\nodobril: ([^,\n]+), discord (\d{17,20})\r?\nsporocilo: (\d{17,20})\r?\ncas: (\S+)\s*$/
+
 export function razcleniPrenos(body) {
-  const m = /^\[odobritev\]\s+(ODOBRIM|ZAVRNEM)\s+(\S+)\s*$/m.exec(body)
-  if (!m) return null
-  const polje = (ime) => new RegExp(`^${ime}:\\s*(.+?)\\s*$`, 'm').exec(body)?.[1]
-  const odobril = polje('odobril')
-  return {
-    odlocitev: m[1],
-    koda: m[2],
-    ime: odobril?.split(',')[0].trim(),
-    discord: /discord\s+(\d{17,20})\b/.exec(odobril ?? '')?.[1],
-    sporocilo: /^\d{17,20}$/.test(polje('sporocilo') ?? '') ? polje('sporocilo') : undefined,
-    cas: polje('cas'),
-  }
+  const m = PRENOS.exec(body ?? '')
+  if (!m || Number.isNaN(Date.parse(m[6]))) return null
+  return { odlocitev: m[1], koda: m[2], ime: m[3].trim(), discord: m[4], sporocilo: m[5], cas: m[6] }
 }
+
+// Agent ne more odobriti: prenos mora zapisati človeški račun (desk ali odbor).
+const cloveski = (c) => Boolean(c.authorUserId) && !c.authorAgentId && (c.authorType == null || c.authorType === 'user')
+const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 export function preveri(z, komentarji, { odobritelji = [], zdaj = new Date() } = {}) {
   const napake = preveriZahtevo(z)
   if (napake.length) return { ok: false, razlog: `zahteva ni veljavna: ${napake.join('; ')}` }
   const k = koda(z)
-  const porabljena = komentarji.some((c) => new RegExp(`^\\[odobritev-porabljena\\]\\s+${k}\\b`, 'm').test(c.body ?? ''))
+  const sme = (discord) => javnaOdobritev(z.akcija) || odobritelji.includes(discord)
+  const porabljena = komentarji.some((c) => new RegExp(`^\\[odobritev-porabljena\\]\\s+${escape(k)}\\b`, 'm').test(c.body ?? ''))
   if (porabljena) return { ok: false, koda: k, razlog: 'koda je že porabljena; za ponovitev je potrebna nova kartica' }
-  const prenosi = komentarji
-    .map((c) => ({ c, p: razcleniPrenos(c.body ?? '') }))
-    .filter(({ p }) => p)
+
+  // Zavrnitev konča kodo ne glede na vrstni red; za nadaljevanje je potrebna nova kartica.
+  // Človeški komentar, ki omenja ZAVRNEM <koda>, a ni veljaven prenos, kodo prav tako ustavi (varno).
+  const zavrnjeno = new RegExp(`\\bZAVRNEM\\s+${escape(k)}(?![0-9a-f])`)
+  for (const c of komentarji.filter((c) => cloveski(c) && zavrnjeno.test(c.body ?? ''))) {
+    const p = razcleniPrenos(c.body)
+    if (p && p.odlocitev === 'ZAVRNEM' && p.koda === k && sme(p.discord)) {
+      return { ok: true, odlocitev: 'ZAVRNEM', koda: k, komentar: c.id, odobril: p.ime, discord: p.discord, sporocilo: p.sporocilo, cas: p.cas }
+    }
+    return { ok: false, koda: k, razlog: `${c.id}: koda je zavrnjena ali sporna (ZAVRNEM); potrebna je nova kartica` }
+  }
+
+  const prenosi = komentarji.filter(cloveski).map((c) => ({ c, p: razcleniPrenos(c.body) })).filter(({ p }) => p)
   const zavrnitve = []
+  for (const c of komentarji) {
+    if (!cloveski(c) && /^\[odobritev\]/.test(c.body ?? '')) zavrnitve.push(`${c.id}: prenos ni zapisal človeški račun`)
+  }
   for (const { c, p } of [...prenosi].sort((a, b) => Date.parse(b.c.createdAt) - Date.parse(a.c.createdAt))) {
     const razlog = (r) => zavrnitve.push(`${c.id}: ${r}`)
     if (p.koda !== k) { razlog(`koda ${p.koda} ne ustreza trenutni zahtevi (${k}); stara ali tuja kartica`); continue }
-    // Agent ne more odobriti: prenos mora zapisati človeški račun (desk ali odbor).
-    if (!c.authorUserId || c.authorAgentId) { razlog('prenos ni zapisal človeški račun'); continue }
-    if (!p.discord || !p.sporocilo || !p.cas || Number.isNaN(Date.parse(p.cas))) { razlog('manjka discord ID, ID sporočila ali čas'); continue }
     if (prenosi.some((o) => o.p.sporocilo === p.sporocilo && o.p.koda !== p.koda)) { razlog('isto sporočilo je uporabljeno za drugo kodo'); continue }
     if (Date.parse(p.cas) > Date.parse(z.potece) || zdaj.getTime() > Date.parse(z.potece)) { razlog('kartica je potekla'); continue }
-    if (!javnaOdobritev(z.akcija) && !odobritelji.includes(p.discord)) { razlog(`discord ${p.discord} ne sme odobriti akcije ${z.akcija}`); continue }
+    if (!sme(p.discord)) { razlog(`discord ${p.discord} ne sme odobriti akcije ${z.akcija}`); continue }
     return { ok: true, odlocitev: p.odlocitev, koda: k, komentar: c.id, odobril: p.ime, discord: p.discord, sporocilo: p.sporocilo, cas: p.cas }
   }
-  return { ok: false, koda: k, razlog: zavrnitve.length ? zavrnitve.join(' | ') : 'ni prenosa odobritve za to kodo' }
+  return { ok: false, koda: k, razlog: zavrnitve.length ? zavrnitve.join(' | ') : 'ni veljavnega prenosa odobritve za to kodo' }
 }
 
 function main(argv) {

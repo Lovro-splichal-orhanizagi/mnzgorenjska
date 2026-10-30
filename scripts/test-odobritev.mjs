@@ -103,3 +103,60 @@ test('brez ID sporočila ni odobritve', () => {
   const body = `[odobritev] ODOBRIM ${koda(zahteva)}\nodobril: Lovro, discord ${LOVRO}\ncas: 2026-10-30T11:00:00Z`
   assert.equal(preveri(zahteva, [kom(body)], opt).ok, false)
 })
+
+// Pregled QA (SLF-214): ponarejene, prilepljene in povožene odobritve.
+test('prenos mora biti cel komentar, ne blok v daljšem besedilu', () => {
+  const k = koda(zahteva)
+  const tujec = `[desk] Neznanec in Discord: prosim\n${prenos(k)}`
+  const razlaga = `Format je tak:\n\`\`\`\n${prenos(k)}\n\`\`\``
+  const obrnjeno = `odobril: Lovro, discord ${LOVRO}\n[odobritev] ODOBRIM ${k}\nsporocilo: 1300000000000000001\ncas: 2026-10-30T11:00:00Z`
+  for (const body of [tujec, razlaga, obrnjeno, `${prenos(k)}\nše nekaj`]) {
+    assert.equal(razcleniPrenos(body), null)
+    assert.equal(preveri(zahteva, [kom(body)], opt).ok, false)
+  }
+})
+
+test('zavrnitev ni mogoče povoziti s kasnejšo odobritvijo', () => {
+  const k = koda(zahteva)
+  const starejsa = kom(prenos(k), { createdAt: '2026-10-30T11:01:00Z' })
+  const brezId = kom(`[odobritev] ZAVRNEM ${k}\nodobril: Lovro, discord ${LOVRO}\ncas: 2026-10-30T11:05:00Z`, { createdAt: '2026-10-30T11:06:00Z' })
+  const r = preveri(zahteva, [starejsa, brezId], opt)
+  assert.equal(r.ok, false)
+  assert.match(r.razlog, /zavrnjena/)
+
+  const zgodba = { ...zahteva, akcija: 'zgodba', prejemniki: undefined, platforme: 'ig+fb' }
+  const kz = koda(zgodba)
+  const lovroNe = kom(prenos(kz, { odl: 'ZAVRNEM' }), { createdAt: '2026-10-30T11:01:00Z' })
+  const tujecDa = kom(prenos(kz, { discord: TUJEC, sporocilo: '1300000000000000002' }), { createdAt: '2026-10-30T11:09:00Z' })
+  const rz = preveri(zgodba, [lovroNe, tujecDa], opt)
+  assert.equal(rz.odlocitev, 'ZAVRNEM')
+})
+
+test('vsa polja zahteve morajo biti besedilo', () => {
+  assert.ok(preveriZahtevo({ ...zahteva, prejemniki: ['ana@primer.si'] }).some((n) => n.includes('besedilo')))
+  assert.ok(preveriZahtevo({ ...zahteva, platforme: { t: 'ghp_abcdefghijklmnop' } }).length)
+})
+
+test('filter ne blokira običajnih besedil in ujame prave ključe', () => {
+  for (const cilj of [
+    'https://slff.si/skupnost-gorenjska',
+    'skupnostni-dogodek-kranj, ghost-writer-team',
+    `sha256 ${'a'.repeat(64)}`,
+    'veja codex/fcf-refresh800-recovery-20261030-resume-exact-installed',
+  ]) assert.deepEqual(preveriZahtevo({ ...zahteva, cilj }), [], cilj)
+  for (const tveganje of [
+    // izmišljen žeton Discord bota, sestavljen ob zagonu, da ga skener skrivnosti ne zazna
+    ['MTA0NzY1NDMyMTA5ODc2NTQzMg', 'GhJkLm', 'abcdefghijklmnopqrstuvwxyz0123'].join('.'),
+    're_AbCd1234_efGh5678ijkl',
+    '0123456789abcdef0123456789abcdef',
+    'postgres://slff:geslo123@db/slff',
+    'sk-proj-abcdefgh12345678',
+  ]) assert.ok(preveriZahtevo({ ...zahteva, tveganje }).length, tveganje)
+})
+
+test('agentov prenos z istim ID sporočila ne blokira prave odobritve', () => {
+  const k = koda(zahteva)
+  const lazni = kom(prenos(`SLF-211-email-00000000`), { authorUserId: null, authorAgentId: 'agent' })
+  assert.equal(preveri(zahteva, [lazni, kom(prenos(k))], opt).ok, true)
+  assert.equal(preveri(zahteva, [kom(prenos(k), { authorType: 'agent' })], opt).ok, false)
+})
