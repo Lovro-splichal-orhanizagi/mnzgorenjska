@@ -71,7 +71,7 @@ jobs:
           printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
           ssh -fN -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
-      - name: Read fixed G9 preparation twice then recheck GH-only live epoch
+      - name: Read fixed G9 preparation twice then observe GH-only state again
         env:
           GH_TOKEN: ${{ github.token }}
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
