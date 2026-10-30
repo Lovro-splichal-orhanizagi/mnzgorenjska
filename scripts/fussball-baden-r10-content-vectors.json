@@ -119,7 +119,8 @@
       "6fb9ec5f0bef34720f90600fdfb24aac3f8f6950"
     ],
     "scout/stroj/stroj/elo.py": [
-      "1593fd7447da057bd6a4f54862849b7a6b85fd06"
+      "1593fd7447da057bd6a4f54862849b7a6b85fd06",
+      "172347d189b0a78f388e78f80899aab19453a655"
     ],
     "scout/stroj/stroj/indeks.py": [
       "402ab93e9fa4a96339ca13aa76eca8adf03b1099"
@@ -157,7 +158,8 @@
       "19b80f846fcffbeda1afbcb871a0c2946877dd0e"
     ],
     "scout/stroj/tests/test_elo.py": [
-      "fb723642eedac12186edfd2f383e551110f02ce0"
+      "fb723642eedac12186edfd2f383e551110f02ce0",
+      "1fbf6a0d8846740f08bf35919a8f7cddab067da9"
     ],
     "scout/stroj/tests/test_indeks.py": [
       "951ef9fca3d6f55ce759446a5739cb4d52b06a2c"
@@ -389,7 +391,8 @@
       "ddda4faf7447ecda8107f0cf0085ab89887b528a",
       "eeda38d21aa6e0d71fa0537ddbc736bf74b8e7c4",
       "e615d64fd5da8c76207e8c780b9f1c5dbc9aefe2",
-      "874e36f9a20938281a9e0f63c16d44beae826183"
+      "874e36f9a20938281a9e0f63c16d44beae826183",
+      "2c4e546af19e63e389ba63f0db886285b8b912c4"
     ],
     "scripts/fcf-future-target-native-adapter.mjs": [
       "c64e53fb3e714a793d18c17d7de492a58e709bc1",
@@ -446,7 +449,8 @@
       "614b37a87157824a4e7e2ea5f283cd8fd8bc17cf"
     ],
     "scripts/fcf-g1-native-preflight.mjs": [
-      "4b6a631b98e4ae2e5c2c765f8f23dd90eee180c7"
+      "4b6a631b98e4ae2e5c2c765f8f23dd90eee180c7",
+      "bcc4e68f1e7a9c334d6a0fd56ef354f92f0a3a4a"
     ],
     "scripts/fcf-g1-native-readiness-test-fixture.mjs": [
       "c4d1620195b3f81842df3aeb1f8f3cb7bc0367b4"
@@ -541,7 +545,8 @@
     ],
     "scripts/fcf-g9-native800-cut1-test-fixture.mjs": [
       "0fe0b12312b78c7d82211ea81c56061cd339472c",
-      "44d34835b44ba85611e8702377fc546ee40de862"
+      "44d34835b44ba85611e8702377fc546ee40de862",
+      "118974406fbbadec237c12c262ea236dd726786d"
     ],
     "scripts/fcf-g9-native800-fixture-runner.mjs": [
       "3898e66ff21ab5cbc40ba544dd91377a7e34c083",
@@ -697,16 +702,20 @@
       "d0fb947a9d18cb7853ef1aa9b773d005911d20c8"
     ],
     "scripts/fcf-refresh800-capture.mjs": [
-      "2ee9364f75995f56613cd8673e29de0520ae427e"
+      "2ee9364f75995f56613cd8673e29de0520ae427e",
+      "4e4dc05cd5bb474d26d3e8213e520bcdf74ee63c"
     ],
     "scripts/fcf-refresh800-contract.mjs": [
-      "2bb1fe80de756bf9afe745358fe5b4f73ef63a6e"
+      "2bb1fe80de756bf9afe745358fe5b4f73ef63a6e",
+      "7c991ce83815d8139f529213d72cb8c048d20ede"
     ],
     "scripts/fcf-refresh800-evidence.mjs": [
       "ee2eeebdb9a8f42e2cbf50f1a4fa41613709bb3c"
     ],
     "scripts/fcf-refresh800-execution.mjs": [
-      "99c47d072844e135b7f8c4e5f540d3d1a37a8128"
+      "99c47d072844e135b7f8c4e5f540d3d1a37a8128",
+      "d2b2bde4b90c24875bcde7e27ff9b52d4a548271",
+      "3eb54de0581cdf9423efff81c1e0a6911cc0c85f"
     ],
     "scripts/fcf-refresh800-ledger.mjs": [
       "7438e74a59e50ddbbb8d1591816c3561d243feeb",
@@ -722,7 +731,8 @@
       "5625f890af8bfb83852999a3e205c78746d7f100"
     ],
     "scripts/fcf-refresh800-test-fixture.mjs": [
-      "6fe67019759c315029971f92fda14d2af63305d8"
+      "6fe67019759c315029971f92fda14d2af63305d8",
+      "1345e7f7ce8e495c43ebc9d3f46a415de880dfe2"
     ],
     "scripts/fcf-release-test-fixture.mjs": [
       "06f5bb6fd1d1d0e8931240af96131547d4bc6ca9"
@@ -841,7 +851,8 @@
     ],
     "scripts/hetzner/html/streznik.mjs": [
       "1077ec60a2c00b569bcf4057cc215a6c27a49693",
-      "d7e2a8061caa8c0bf07f2526201724a94850843e"
+      "d7e2a8061caa8c0bf07f2526201724a94850843e",
+      "27ed480c57d3cbd7ee76890c820edd50bf7cb341"
     ],
     "scripts/hetzner/info-v-discord.py": [
       "cb395a98d88f2443f9e16ae436823dc9d692fb8e"
@@ -853,10 +864,12 @@
       "856ddb5c9e6c1c6c2eeb589387af57591237e642"
     ],
     "scripts/hetzner/objavi-objave.sh": [
-      "7ac8c84fbe00026906759ba00f39386992a6c452"
+      "7ac8c84fbe00026906759ba00f39386992a6c452",
+      "a4b43dfb2f2666c9a3216ca91ec3a326686945f3"
     ],
     "scripts/hetzner/objavi-posto.sh": [
-      "77bb77a59f8238e98e16f06048ca33073928070f"
+      "77bb77a59f8238e98e16f06048ca33073928070f",
+      "115ba216f6b9c08e8c03a57c60ecaf0b3a3116c0"
     ],
     "scripts/hetzner/objavi-predogledi.sh": [
       "b1c2717fa2c78b1b95c46e3019ff725264ec39f6"
@@ -887,7 +900,8 @@
     ],
     "scripts/hisne-ekipe.mjs": [
       "00463e7251461bc2f747f3b12a2390409e0b8042",
-      "d5bfd47c013d48e77ffda97087198f12a5cb475d"
+      "d5bfd47c013d48e77ffda97087198f12a5cb475d",
+      "a184f5f3cf391475d0f222e521822814d650d1f0"
     ],
     "scripts/hkratnost.mjs": [
       "addb597818336a419bb4fe3b518f4ce9addd1a63"
@@ -980,7 +994,8 @@
       "92063d2fd4b882a8d4a463e8a29aba9c1760d599"
     ],
     "scripts/lib/fcf-projection-optional-compat.mjs": [
-      "d0ef40977799ef4eae10e4214e334c7ce321ca86"
+      "d0ef40977799ef4eae10e4214e334c7ce321ca86",
+      "39920b29bfa7202814f99c1e0c62e7b7b414ead3"
     ],
     "scripts/lib/fcf-served-commit.mjs": [
       "cb8c61105f4ab3720d8c104caa70f948568535a1"
@@ -1090,10 +1105,12 @@
       "847f781a1ffe11fc635a873b28d015d66ff1208c",
       "1884e0290ae4b52d3e9bfce710b5020c445c3098",
       "133dab3cd5ec8c5be3cc540f998bb86f94e8f7e7",
-      "cda3bcffc2b0ef661366c23bdc5cec35a244ebd2"
+      "cda3bcffc2b0ef661366c23bdc5cec35a244ebd2",
+      "93f8c7a1eca4c82e591525dffb5435d53af06fff"
     ],
     "scripts/posli-popravek-pozicij.mjs": [
-      "feb2d27b43758b9715203a940159b6aabb2e5141"
+      "feb2d27b43758b9715203a940159b6aabb2e5141",
+      "3bf9d8c94467b0554c6ce995ef9f7b309336a8a4"
     ],
     "scripts/posta-klubom.mjs": [
       "92bc73d277137483f4612a15ee72619bd512bb5b",
@@ -1245,7 +1262,15 @@
       "dce672942159df0f1f2f54edfee9d3f859f2ee4c",
       "ee4175ffbb0c7c5a8703878a9edb02aa3785cfc6",
       "167fa36b079f9b768afd0a61e9527ef8696d73d9",
-      "c011bd414fca815c3ae5e6c7b32d75d62755a54b"
+      "c011bd414fca815c3ae5e6c7b32d75d62755a54b",
+      "f287aa31efe31f1b4db896ca151fa07d19a4bcca",
+      "b0d8782087b5ad38ed3cc32ca1387450fbdb024c",
+      "95e8131985e86540d24a4cca20918f161eeb23a4",
+      "d55dc8115f7ffed335db575d1d268fe2fe06d49c",
+      "8483cd5d2793bf950522513a3cf45e3d379dbc58",
+      "5fcd13cce0bca646ec07d763505037aa1abb4497",
+      "df9ea7ebeee15d5d6c3e8aac66c94a25d9ca0234",
+      "74c97d9c6c4bee16250309b5e48d28a150a526ac"
     ],
     "scripts/srbija-blok.mjs": [
       "0d8e46eeed3ed347b2deb1401ee135e78088b201"
@@ -1566,7 +1591,8 @@
       "eb9777a30ca4c9575d867699622f7c3618b1bfdf"
     ],
     "scripts/test-fcf-g1-native-preflight.mjs": [
-      "3e6f5bf7ae5e8630fa856dd6d3b49bdedf08ccba"
+      "3e6f5bf7ae5e8630fa856dd6d3b49bdedf08ccba",
+      "17ef3bbf6181816d44f0658e32c6c97d6a9d0122"
     ],
     "scripts/test-fcf-g1-native-sql.mjs": [
       "3f1f6d545fd740af755e4fbd2f85f8d513c345a4"
@@ -1584,7 +1610,8 @@
       "d4493ab2f6bf91ffc882f4aba5b3ec8dd2f89816"
     ],
     "scripts/test-fcf-g1-readonly-projection.mjs": [
-      "6a8533b94bda48e8bfc1534ae1c6b1a0e383443f"
+      "6a8533b94bda48e8bfc1534ae1c6b1a0e383443f",
+      "f8b885df6ddbe748bf0454e641d48042edab1f70"
     ],
     "scripts/test-fcf-g1-remainder-append-149.mjs": [
       "8e0c1ac0e723be18a7f4a52018e45fad81da72bc"
@@ -1597,10 +1624,12 @@
       "52bbac7760d965bbe78edbc4fe1d2eb1a5231d73"
     ],
     "scripts/test-fcf-g1-remainder-g9-native800-bridge.mjs": [
-      "df8a8830402cbe666666534f5eddbc4937b62e36"
+      "df8a8830402cbe666666534f5eddbc4937b62e36",
+      "ba682bb6b143932d1b5d3c14d9d55fa21d4f2a29"
     ],
     "scripts/test-fcf-g1-remainder-g9-native800-child-offline.mjs": [
-      "7c43d71b9b49eb67ad3403783b219f66aa9457f7"
+      "7c43d71b9b49eb67ad3403783b219f66aa9457f7",
+      "afad06813a42a774d4335ca3dd0e9b0119590f7e"
     ],
     "scripts/test-fcf-g1-remainder-g9-native800-controller.mjs": [
       "dbc3079b7651a74a4a5333bafb81b3831f49821f",
@@ -1643,7 +1672,8 @@
       "dec187807e16df2ae0bb0f0ab8f6eddf31b06e6d"
     ],
     "scripts/test-fcf-g1-remainder-review-fix.mjs": [
-      "97e5a5f7dc598ba83bbe463703871727e052d10c"
+      "97e5a5f7dc598ba83bbe463703871727e052d10c",
+      "336341f9188fd4ff0787830c85f5787182e6a19a"
     ],
     "scripts/test-fcf-g1-remainder-routing.mjs": [
       "65b4f41dc0e13c94e5b7d3365dcf1a5307a314ac"
@@ -1711,7 +1741,8 @@
       "84560fd3fe2de7529a1011d2683fa7fcd37e7d58"
     ],
     "scripts/test-fcf-g9-native800-bridge-sql.mjs": [
-      "1b7d4a6cd1d4d1a70190ef75fc75e7944fe35f40"
+      "1b7d4a6cd1d4d1a70190ef75fc75e7944fe35f40",
+      "31d917bdfc86609854409d0eb4376841e7917033"
     ],
     "scripts/test-fcf-g9-native800-launch-sql.mjs": [
       "465c80f9152df3fb64894fa9e1d833a6879cde80"
@@ -1755,7 +1786,8 @@
       "fdd3d0bea4f3c2e980442ec6b00187e370689ee5"
     ],
     "scripts/test-fcf-inventory-binary-escape.mjs": [
-      "dc4998e1ae9b46ad17b4d8d5dfb30008d8757f1d"
+      "dc4998e1ae9b46ad17b4d8d5dfb30008d8757f1d",
+      "107bb21b8de49bbcde3b1fdc80bcf1ee8301488c"
     ],
     "scripts/test-fcf-inventory-source-coordination.mjs": [
       "ead1c32379607052eb3af1ef69345c16814bc1dd",
@@ -1812,7 +1844,8 @@
       "b1d815c576382795c0b74ceafc9ef7568a30a83e"
     ],
     "scripts/test-fcf-refresh800-execution.mjs": [
-      "1c390235bd480dc92e7a1a003e7ca0455cb21f32"
+      "1c390235bd480dc92e7a1a003e7ca0455cb21f32",
+      "adc702953c189d02610be30c5e97ecd91388902b"
     ],
     "scripts/test-fcf-refresh800-integration.mjs": [
       "8c16341555a9e9e76b7a78a782dcda97af86685d",
@@ -2404,7 +2437,8 @@
       "0d1eb0401bf324cfbf97992cb80a837158b55b0c",
       "2e05393841862b6add89adedb2a1254b5245ac64",
       "ae51f2d85cee01d4689d13db3b290be851ae3dd6",
-      "11796e78e13bd88bdaf242e9ae6ce674df0f70ce"
+      "11796e78e13bd88bdaf242e9ae6ce674df0f70ce",
+      "e3d4a96fef0e399da97ba98f06137203cc50ebe9"
     ],
     "scripts/viri/isthmian-reviewed-history-skip.test.mjs": [
       "92637c4825da904b14db408129f324277e2dab5c"
@@ -2436,7 +2470,8 @@
     ],
     "scripts/viri/mascot.mjs": [
       "77130db400523d820e51d494130fc599789d5add",
-      "5e4d0fb2887d13f1145d75ea73d0a3551dbadb11"
+      "5e4d0fb2887d13f1145d75ea73d0a3551dbadb11",
+      "863b6fbfb2a5dc76334ca3153b0b1fe6d339093f"
     ],
     "scripts/viri/mfa-historical.mjs": [
       "018f6b48e70f2b4c632d00d28a17d01b6dacb122"
@@ -2461,7 +2496,8 @@
       "6b03d6b68a29421c36d2eb473619113167b17129",
       "eb25c05d7abcc78c5a230c217318e1e273ffa2f0",
       "fba8844cf1c6bbb5cb1691a8754fef0ca283b81a",
-      "1c3439d4bb25d6d9c3e3b7346175bb7829916ba2"
+      "1c3439d4bb25d6d9c3e3b7346175bb7829916ba2",
+      "c97e9051ddf99a212da5cf3f8244f1abede5de4a"
     ],
     "scripts/viri/mnzce.mjs": [
       "65b48350ab2796fba8033f981da01b505a89d903"
@@ -2634,7 +2670,10 @@
     "shop/smoke.tsx": [
       "af76bcd6947b53895f8cdc220ca8a9d27097ac1b",
       "faeb8ba5d41e10219566af3f129a04765dada26f",
-      "fc311be3cf64d2b59aef3ac5fa8aeda8e3a20eae"
+      "fc311be3cf64d2b59aef3ac5fa8aeda8e3a20eae",
+      "60e83e22d3595a75d8981ef472b143460a29faf8",
+      "779b4885a152ab4c3263c0432b1c555c5ca05f0d",
+      "d6eaea0aff363681167f545ed86e79f2b93dfd39"
     ],
     "shop/src/App.tsx": [
       "76ea54631766e5765ea62ec8cbb3a5604729e2b2"
@@ -2643,14 +2682,17 @@
       "90976fd51849b03526d798063d827ab87e18ad72"
     ],
     "shop/src/analitika.ts": [
-      "7e12f79a715cd6dc12c81c5ad2816b3d5fb3611d"
+      "7e12f79a715cd6dc12c81c5ad2816b3d5fb3611d",
+      "1f901c519b7cc9c5bb458d5576ac64964cb509bd"
     ],
     "shop/src/baza.ts": [
       "89f2aa243401a37d5b49261aedbd6994a0e1d23e"
     ],
     "shop/src/besede.ts": [
       "a5485ddac02142b91d61cf46769e0fee34c753c0",
-      "00061314001412dfa02ac37db33d0f4452365e07"
+      "00061314001412dfa02ac37db33d0f4452365e07",
+      "651fe74ccdf99734c91124f724a5defac279e162",
+      "90089a61cf2f66c80dda782f44c736573a9f1ce1"
     ],
     "shop/src/kosarica.ts": [
       "c0692030e6b3b0498f45a6317f20563149768e3b",
@@ -2700,7 +2742,10 @@
     "shop/src/strani/Izdelek.tsx": [
       "e1c7c0b445174a35dc365eaa84ae705cae36f0c1",
       "ba11a4526f99c2e8e6f3e27565fc2bd23479e4fa",
-      "1bb735ec699a73968007fbee93e54e926e068e80"
+      "1bb735ec699a73968007fbee93e54e926e068e80",
+      "36c3693f75a06365d562d225e242257372d0d1a7",
+      "e413814b20d08b604eb336073cc4745e9bfebe7c",
+      "69ad0d0ab13d74636ca8582ab6142807604831ae"
     ],
     "shop/src/strani/Katalog.tsx": [
       "08945422d5de46c04edb7253e0f073996caee038"
@@ -2712,7 +2757,8 @@
     "shop/src/strani/Kosarica.tsx": [
       "2fe71ded5c33dc2dcdacbdffc376f947a708e2e6",
       "d3dcf7817e0bd56135f7bf9fb0bbc141a9531287",
-      "f070f15d89b0da886fba4fe0d9e7df83e87b6ad0"
+      "f070f15d89b0da886fba4fe0d9e7df83e87b6ad0",
+      "da240d75acb6894973d918470ec5132422e75981"
     ],
     "shop/src/strani/Narocila.tsx": [
       "04892a05dce8bac3a81ce9b263b9a1fea81b7569"
@@ -2742,7 +2788,8 @@
       "f80aa2a0e0ddbf7d8c75232ca5daf313462e3dcb",
       "3f3c1291b53875f347e048e763c89f14af1b3e8f",
       "c8f3c4d582bd506149fe4d76de9b8890b6af85a0",
-      "b485dd89eec5a49a6e141fbe19bdcc769ca3aec9"
+      "b485dd89eec5a49a6e141fbe19bdcc769ca3aec9",
+      "c4d1a195abb9212dad38e13997230c9a6a5166ea"
     ],
     "src/components/Avatar.tsx": [
       "590d2fab04b0791b7e4cc784da56a85a671bc09e"
@@ -2804,7 +2851,8 @@
     ],
     "src/components/IzbiraDrzave.tsx": [
       "492df20a72a7ea1e96a9de06cfe3e2f9b36f19df",
-      "818c9814c5d0cfd33ccc9e787394f35d1b7e143e"
+      "818c9814c5d0cfd33ccc9e787394f35d1b7e143e",
+      "1f1609427ef0d9f7f702e2c5b884b398bb132aa8"
     ],
     "src/components/IzbiraJezika.tsx": [
       "da3b2355183a514759f0fc03c22beac99910bf74"
@@ -3006,7 +3054,8 @@
     ],
     "src/components/admin/KlubiStiki.tsx": [
       "d6c2ebff77b6bfab879e92696332de02875b0cdc",
-      "cbb792efedeac2e54f2b07df0b4d4895c887426b"
+      "cbb792efedeac2e54f2b07df0b4d4895c887426b",
+      "df9011677d14a33888a5d1b1983004cc3f0e502c"
     ],
     "src/components/admin/KlubskiRacuni.tsx": [
       "60514dda36b80a98239c392d544f3d2c1d2b4b01",
@@ -3016,7 +3065,8 @@
       "aa9c78d18f6ca5d3835dd6c5724c8a0776d62999",
       "f4771a5c632d50a34bc43e4fcf283f8d7a3d2d1e",
       "3d0a1240d51c71193c357d3c52f3f6b9e53558f4",
-      "e61f5145ba2891c3392e93161bb064139d2de8ee"
+      "e61f5145ba2891c3392e93161bb064139d2de8ee",
+      "27ce7220c7986d1f24c8e03fe832da94107d37b9"
     ],
     "src/components/admin/OmejitveUporabnikov.tsx": [
       "6f2d8583814da4b13553e9ec5fc8c170007bb251"
@@ -3076,7 +3126,8 @@
       "2cb493930cdd5a08441931116a607fcf07a5ad4a",
       "3ff6f6c86efcac8145b79ffe7b1f693ce9b0e64b",
       "054e53f10e8a946caa9274f604f6d648064596c2",
-      "5fd4074f7a3dc56d01ce385822c6952182f0e285"
+      "5fd4074f7a3dc56d01ce385822c6952182f0e285",
+      "2cd83c9b00bc5f82210eb01d7b6277164f75ec51"
     ],
     "src/i18n/az/domov.ts": [
       "2cc0c9af7115dc55ffb9e9f87f42580932d64923",
@@ -3126,7 +3177,8 @@
       "97889f8dd853abbe3d45fc33ecb58305185be7b7",
       "144aaa2f367b458993a06bebb5203104a2df9ab7",
       "251dc937eb188c5977f654007c5df0b288f23c3b",
-      "d607cb3843214f75bbc0da1322cf4aa9b3a2cf43"
+      "d607cb3843214f75bbc0da1322cf4aa9b3a2cf43",
+      "6f9acfbc22bffa9e37e41debfc0ce8c74ffcb986"
     ],
     "src/i18n/cs/domov.ts": [
       "ef6fe5610d1b7270be06e36482e5b4ae12f4c890",
@@ -3176,7 +3228,8 @@
       "a14dd8ab0263c1c09074596267448c74b38d270f",
       "1a0ee93fcbddb8384f60ff1524e1ea1db3cd4ac9",
       "2687249486f15cf337aceae986fcf0902b00071c",
-      "39324fb62d27827ee0c2b56a1142dcccb7a17189"
+      "39324fb62d27827ee0c2b56a1142dcccb7a17189",
+      "4e4812b884a6164b1cc1fd9077f83f610cd7e337"
     ],
     "src/i18n/da/domov.ts": [
       "8fc019072fd28e025d121ad16f208bcc850bd83e",
@@ -3226,7 +3279,8 @@
       "05a508cd3a25afad06f553f50b3b675d48e8a5eb",
       "26c911414067928d06da7e108c86f8973105a20c",
       "8f57e13483fd66b50b68d0796028bdea860493e1",
-      "b63eca33658b00656fde8dcc4bf1b8b1b901ed10"
+      "b63eca33658b00656fde8dcc4bf1b8b1b901ed10",
+      "b9ff31fd73cfe978932a12fd31acc141ef073258"
     ],
     "src/i18n/de/domov.ts": [
       "4a60b7bc058146df353d6c43130eeb9a447f853d",
@@ -3276,7 +3330,8 @@
       "b79976d6fb3957a0eef18ed721470646144eeadc",
       "56970369958f28ec3df36670f8b712fd2d127bc5",
       "9950b7739873777e720bde90ea48caf327fa0f12",
-      "b93d9a1c08c030f80ba91aa5a27ed7e5fc220cfc"
+      "b93d9a1c08c030f80ba91aa5a27ed7e5fc220cfc",
+      "712eff03c2daea35d5ee4945d443c88bb1b0064d"
     ],
     "src/i18n/el/domov.ts": [
       "ec584d0618492a30dc74464190800a37ecb2cc65",
@@ -3326,7 +3381,8 @@
       "6f4bbe0324a4fd8128c5a4c23dbbe547764fe649",
       "7141f2fdb443a93c5bdbe63bd38663447ba07e5d",
       "50048db175c63eb1c225f42baec7a4c80d9ee840",
-      "a17b3f92b725cbe98e2df8ffbb4bfd2bb107c47d"
+      "a17b3f92b725cbe98e2df8ffbb4bfd2bb107c47d",
+      "12df3cf42d8618b65f99ef1f90f118b12c0deea0"
     ],
     "src/i18n/en/domov.ts": [
       "61dc6b0eb16426e7f63da03d7f40360b296c80fc",
@@ -3376,7 +3432,8 @@
       "cddd2beaccfe8a34251e0163615a181537be7d78",
       "a088a0853cea42e2b2850f484c742cc1ef6ee153",
       "7ad40640c2b16f2369d98365be5b94787e7d4e79",
-      "8c3f3fb8ca38e01f9bef3c2ba7763b6efd20f14f"
+      "8c3f3fb8ca38e01f9bef3c2ba7763b6efd20f14f",
+      "0bd734dc77c0311332be8278f0c42bbaeef20b19"
     ],
     "src/i18n/es/domov.ts": [
       "11191a800652ea3809f7af2f75031d864a10292e",
@@ -3426,7 +3483,8 @@
       "8f285052016b5d67c2dcb06e0909e9fe019d9ab2",
       "f5db2618548f3271d2c1563a480b37172d0fe17e",
       "4779e08197d588b0bf46389fc8fb96e670135f45",
-      "559b07c731983920fefe0ca28ae0876edeb17f00"
+      "559b07c731983920fefe0ca28ae0876edeb17f00",
+      "84a87f88d9c7cadcd463f5e52c357521f5735626"
     ],
     "src/i18n/et/domov.ts": [
       "73467834424ab7c5ab108719a9eb39e05778013e",
@@ -3476,7 +3534,8 @@
       "371b33bd178b3afac521f9866b45473542deff57",
       "2f8c1a5e461403497e940572f6a9dff5c533df1a",
       "fb7cf0b1effe3f42069734d59a339c352882ced6",
-      "4251ecaecdcfb663c9de6e81e09472254bf50f60"
+      "4251ecaecdcfb663c9de6e81e09472254bf50f60",
+      "345053d714e9a8b965ffb879014f0671b3629c76"
     ],
     "src/i18n/hr/domov.ts": [
       "c3020a205adf2f452e603a7b69e8955d7fa99e02",
@@ -3526,7 +3585,8 @@
       "f3b728bed372b4948184a4a02c32b48bd1cf7462",
       "4aaf2e9af01755d8b54abaf1264de0d5a834b24f",
       "7db1da8571dd23c0cc7fe3be93456b23788ca426",
-      "7255f5c90b9ec91dc9a48f21ea39cb5e451d273e"
+      "7255f5c90b9ec91dc9a48f21ea39cb5e451d273e",
+      "132e8eda64ffaa35c057acf30fc2b0a8937ddde5"
     ],
     "src/i18n/hu/domov.ts": [
       "26557e51336b9a2496660611c6e38a9055c4c4d2",
@@ -3576,7 +3636,8 @@
       "cc57db5f1c71ab20ce847faeaba244bad2c5f0c4",
       "4993c25b850a24944350d7bf9ad2e7acbdd1c2fa",
       "ea9cab173c656a32378cff28c83396ba1b35a7c0",
-      "836d2c4cd39b9f7abaa76249df932443cbb45903"
+      "836d2c4cd39b9f7abaa76249df932443cbb45903",
+      "3bfc7187c7d6450d7fe82fd1e21406e94389dc15"
     ],
     "src/i18n/hy/domov.ts": [
       "7a7bbf2c6ffe6c0a368bd70e7fe90fab63a118ae",
@@ -3632,7 +3693,8 @@
       "93666aacac9f16ef2be2af55dce62e42c54c5a6f",
       "4a3c56f810e913e2a0965a7c394e8799992fca4f",
       "3fed61760813b2b9a00054a529519afc75b8349c",
-      "b86e882509029ba5fdb386f4ffca2e3cc66a5c51"
+      "b86e882509029ba5fdb386f4ffca2e3cc66a5c51",
+      "2c9c6e13b646d972a11078bb7a751c226800d9b9"
     ],
     "src/i18n/lv/domov.ts": [
       "50f2d4f1e78cd36d5e169027fe8a552762ddf796",
@@ -3682,7 +3744,8 @@
       "2fa8a7ec675187400c55dba0c4c43a40b6d21248",
       "fc127fdf6231ade5c86559a78707585cbe2a0f12",
       "2648ab6d44ba4ebb6e086308adb3ec7783d082b8",
-      "14d786046820d68397dd039084b0fc93779c2dbe"
+      "14d786046820d68397dd039084b0fc93779c2dbe",
+      "19e7e78f62acbbc26439c5d1b4e3ebfa50dba172"
     ],
     "src/i18n/mk/domov.ts": [
       "7be924c0e3ea0fd1716e8d304e6debbea1088847",
@@ -3732,7 +3795,8 @@
       "424e1e42bdc993f1cf04a2477a6e5d101d6c7338",
       "e4c21fd9662cbbce99c32e00c89242fe17bdeed1",
       "ad4d9a5077eea5c4c6800a4aaca96156e756852b",
-      "eeb2967a7930f735800ab5416462393a742af707"
+      "eeb2967a7930f735800ab5416462393a742af707",
+      "d6fa2a02a5f80225f6c0dc83e78a2678eb12c5aa"
     ],
     "src/i18n/pl/domov.ts": [
       "a8c34e91134206dfe1a81006b41e367ac536880f",
@@ -3782,7 +3846,8 @@
       "b771d434adc23fe3cdf8eeea465cc21233dbdfc0",
       "6b39249b698885f7f527e1feb994d2e4610f9ede",
       "a2bdb6d7d11ce813de29543abd8782c6e4847a9e",
-      "5cf1a8c3f6133c0a0f430a793ef1a296a8b86350"
+      "5cf1a8c3f6133c0a0f430a793ef1a296a8b86350",
+      "903d04236bcb20beb3bc072f7bb84b51a47b6d4b"
     ],
     "src/i18n/ro/domov.ts": [
       "47ddffb464ff1c3eed5bc519dc97497211753ef2",
@@ -3832,7 +3897,8 @@
       "89a51294193ec436da741cc93146ffbbf4cd5cba",
       "f19a73787954d59b85ad01d34a16546a1e8b7d4f",
       "dba28263a8032707a8949bfb5f6f7e96ab7cec61",
-      "e23ae43baaf147e1211b91b77b1cc866290ec843"
+      "e23ae43baaf147e1211b91b77b1cc866290ec843",
+      "78d1a1fec5e034edfa3ba3e4d5e1712c28b3b2e7"
     ],
     "src/i18n/sk/domov.ts": [
       "80e6edce3e4d9708946c4556cb569e0dfb48a495",
@@ -3882,7 +3948,8 @@
       "d0e143e418332da0593e09d395cec7ade2a6d56f",
       "fb919720b1cd7720edcb6ed546fa7c4957e7e8f8",
       "fb0ecbc7c5cfe328603e5311a6d71a382f2af9ff",
-      "d5b1d7a4684024b84c7b437ee4f0d349d8e6a533"
+      "d5b1d7a4684024b84c7b437ee4f0d349d8e6a533",
+      "a92c5e961c8553cbca9153fdcd69425cffccf0b2"
     ],
     "src/i18n/sl/domov.ts": [
       "1254758ea1fd725e62baf78366ffb5e56159e46f",
@@ -3932,7 +3999,8 @@
       "eb04776fcc55d733685ee0ead05c955bd3b489a4",
       "b084265570b3880680279fd608db59de8653f50a",
       "585c1ee52ef9f3c36e8ed0a595b66c3eeb68acaf",
-      "f7e26c48daa595495e7fa0d8345c7cd5f665b5ec"
+      "f7e26c48daa595495e7fa0d8345c7cd5f665b5ec",
+      "6b9be1d2540be01a51afab481ef96e466e25ed8d"
     ],
     "src/i18n/sr/domov.ts": [
       "fb1dd2f42c0d9a86e10cd4e1ba10f6578449eb7d",
@@ -3982,7 +4050,8 @@
       "1e8014e1f9a873d199522444a49b84acbaa9e2e6",
       "a450cc0488ed7669ef82c8433986f2f07bd3b437",
       "6816d8e223fd94a836ce222a3dc2a798f6ee1a29",
-      "07058d3908d609f11edf7040cfcec5c464ea29c7"
+      "07058d3908d609f11edf7040cfcec5c464ea29c7",
+      "ef488bcdbf38c7695f4d12a2b942444f74bf0b68"
     ],
     "src/i18n/tr/domov.ts": [
       "00a985466a211ba53f7b9a648efa930eb08f7ca8",
@@ -4032,7 +4101,8 @@
       "819ba133821fbc09fe35ddb2612f29f67b61ff15",
       "340efa05aecf7e8fce4cc59e80790f7e258157da",
       "d7ffe28b57e04421b6d777d87658fe06f338e147",
-      "01b1ea9be8fe52fee95cfef3f5d6c0d6266b0656"
+      "01b1ea9be8fe52fee95cfef3f5d6c0d6266b0656",
+      "f774444c099ad0dc3e8b0692707c23f45a967a2b"
     ],
     "src/i18n/uk/domov.ts": [
       "c2764425f27473c5f76589004c3a70319b21cde5",
@@ -4104,7 +4174,8 @@
     ],
     "src/lib/drzavaUgib.ts": [
       "8dc597d6c23a16043fb76307ebe2edcb93255cb9",
-      "be9dc1d66f407fb66746ac94057285e1d536016a"
+      "be9dc1d66f407fb66746ac94057285e1d536016a",
+      "d469410a374861adc08197265f5c445e0ec27261"
     ],
     "src/lib/drzavna.ts": [
       "3a8f915846d332a0d207ba18060176b0fceb982c"
@@ -4172,7 +4243,8 @@
     "src/lib/obiski.ts": [
       "16f073c979bbcbba107e62527e0ed942a3d20c0d",
       "2113eee47e1f190364799dabc5d14269079245d0",
-      "a140124ada30daa4371c56930ae68aa05f08815f"
+      "a140124ada30daa4371c56930ae68aa05f08815f",
+      "146e0e917e27d30227a7f8a3a4fa2143e36efab6"
     ],
     "src/lib/odsotni.ts": [
       "64464046345647e85681ff452222faeba35a048e"
@@ -4285,7 +4357,10 @@
       "f0d385de6ace6975bd0d8d96afa419e47a5e5f80",
       "00a70924d62a7e2f151ecbd6b4f3ae5ea6086bd5",
       "0db326aeb57b6166b2a31c23478e1d7aa25edbdc",
-      "70d87991b544ec8642dc32229cbe61a7aa3300a5"
+      "70d87991b544ec8642dc32229cbe61a7aa3300a5",
+      "6f2bbb7eb76e39a62d4833b06c7067137effec42",
+      "6fc099d26535961eb0a527acd46a5ed83bf3d32f",
+      "4bf3a882b4efb127385b3fcfd3d1b6b0077b4103"
     ],
     "src/pages/Domov.tsx": [
       "a7fbecd025844cda43041a7a18238b86bb422dee",
@@ -4433,7 +4508,12 @@
       "57c3675b32743fc384634240690e701451c636c6",
       "31fb6d9a3cedb7adc32b97ee1ff51549ec5e1a51",
       "a0208bdbdbbf2c31aa465c591b99116ce291ca26",
-      "49fe1ba8a254029b07624ab503c28118a57dc388"
+      "49fe1ba8a254029b07624ab503c28118a57dc388",
+      "3bbde24f746505a5036692ddbaa16aa9b2b76f07",
+      "90595ddc0d8242ca52c62a17546010af2fa1186e",
+      "2a06a3f5f49fc1d051f1f716460fde009e99d633",
+      "141e048088af7e2a08ec8551f84cf58934a7bf1a",
+      "7899bbb2625ac70ad56e2bfff2644d7d546589bb"
     ],
     "supabase/functions/posli-opomnik/push.ts": [
       "e5d125f222bd980f53aa11f2e257772ea1746b1e"
@@ -4447,12 +4527,16 @@
       "648da6238021a5e6e993e03b69dcf567fda074c9",
       "b5e9f333b916d622c312f6e64a3dda03ff758322",
       "2faa374c6142947f6bcc187c7dba28ed7402923c",
-      "281da8ce20e7524029d1e3250db6a14ecc4d1811"
+      "281da8ce20e7524029d1e3250db6a14ecc4d1811",
+      "73def54970a880e32022daf5e5ae2537ccc2edb9",
+      "a28ea294aed5697275a30e9ffb904e9d28869d9b",
+      "e9043efc22de80f8dc31a90e13b07c01c631ffbb"
     ],
     "supabase/functions/posli-prevzem/index.ts": [
       "dabb08a041745b5a7c672c83037014f02bc5b2c8",
       "393dfc7e9bb3e4779f4e8c8fd4999f310f69bfc7",
-      "aac822680fc5eb262af610fb593832b9eac52e5e"
+      "aac822680fc5eb262af610fb593832b9eac52e5e",
+      "465168315fc9288405e2afe0c51b9b437f8075c0"
     ],
     "supabase/functions/preverjen-placilo/index.ts": [
       "e479bdecb9532c5710a395432a6295e1327e0c09"
@@ -4482,7 +4566,8 @@
     ],
     "supabase/functions/trgovina-nakup/index.ts": [
       "211ec6dc49a76429ee0ba37a29153082a8235ed9",
-      "6872ced651191a6b8548d07b1f6e49f30e5012e3"
+      "6872ced651191a6b8548d07b1f6e49f30e5012e3",
+      "0e89255d0ff383df4d5be57d89d89034c2789560"
     ],
     "supabase/functions/trgovina-nakup/izdelki.ts": [
       "bede823ea84a00e026855f031d9d71a6cf214dbf"
@@ -5735,16 +5820,20 @@
       "10579e7d4b4a954ce702f48d04065bdf228559f0"
     ],
     "supabase/migrations/20261029141000_fcf_g1_9410_durable.sql": [
-      "d7f9ed6b319aa94f59107500c833c9dbd08661f8"
+      "d7f9ed6b319aa94f59107500c833c9dbd08661f8",
+      "c09dee02ac9df19307b3c9568b42e9ea1c7843fd"
     ],
     "supabase/migrations/20261030045000_fcf_g9_native800_bridge.sql": [
-      "58ce15e4028d3b8aa94174293e6e18e6895d0f4a"
+      "58ce15e4028d3b8aa94174293e6e18e6895d0f4a",
+      "6154e34b5c58f3970a589cd27c5c0a526d6d686e"
     ],
     "supabase/migrations/20261030053000_fcf_g9_native800_launch.sql": [
       "408b0ec7aff217be156839ffd7029c34bc8d612b"
     ],
     "supabase/migrations/20261030120000_anketa_placila.sql": [
-      "e5ad80123234c9e0152373014444080124cfce90"
+      "e5ad80123234c9e0152373014444080124cfce90",
+      "d1b8270b210afc1fb9c05be6cd11527ae7597517",
+      "1aad66d141377cfeefd43651b94f887ec7423436"
     ],
     "supabase/migrations/20261030130000_lestvica_filter_lige.sql": [
       "0d23bd1d6b8f588e21bb68e3a6a06471e8b11829"
@@ -5753,7 +5842,8 @@
       "5ce5fbeecf49bc3f645ad71ff56b63091034a83e"
     ],
     "supabase/migrations/20261030130200_vrh_klubov_predpomnilnik.sql": [
-      "8d41fa6bff58d6cf88d1577ede46ca92fda2c09b"
+      "8d41fa6bff58d6cf88d1577ede46ca92fda2c09b",
+      "e1b2fba098885b8ddabbd2b015e53e30550523a3"
     ],
     "supabase/seed.sql": [
       "47678fa22a86491f9a4c6441dd90f3e07c7bf77d"
@@ -5812,7 +5902,8 @@
     ],
     "supabase/tests/fcf-future-native-projection.sql": [
       "2dd50d3ad452544cbb312dac5d2d47e2fe62f835",
-      "910bd7b140b17ecec3b3587f0e844c1c4643e9ab"
+      "910bd7b140b17ecec3b3587f0e844c1c4643e9ab",
+      "fed00fd883173f87c131754b1da212996dc16daf"
     ],
     "supabase/tests/fcf-g1-derived-scores-9410.sql": [
       "fe227ab7ba66922d620510b97435804695e66a9e"
@@ -5822,7 +5913,8 @@
     ],
     "supabase/tests/fcf-g1-readonly-projection.sql": [
       "dea2ae057d99236a00a0a8189ec6db8ef138201b",
-      "fab3a6b715a0978eedcfb9fdfbe9c6103e15570f"
+      "fab3a6b715a0978eedcfb9fdfbe9c6103e15570f",
+      "60f6b1899c6febbb3cc71dbc78450d1448d20be5"
     ],
     "supabase/tests/fcf-g1-supplement-native.sql": [
       "7135f9de644f5437d3feb150bd05cd59fb6e257f"
@@ -5839,7 +5931,8 @@
       "5e15c3b7d4a293a692329442c145debba6c86e56"
     ],
     "supabase/tests/fcf-g9-native800-bridge.sql": [
-      "4b58c805f3a607e32c4ec07477f52b695b995092"
+      "4b58c805f3a607e32c4ec07477f52b695b995092",
+      "e368b5b2067dc543628365f355e51c3a1a299ecd"
     ],
     "supabase/tests/fcf-g9-native800-launch.sql": [
       "1895631ebd2db5f0136197e859a830027a865d10"
@@ -5978,7 +6071,8 @@
     ],
     "vite.config.js": [
       "48e81f4cbeb1dd33032571d21e9c316b4bb31480",
-      "4b70dfa6ee68e36d3f8df39d87364548624582c1"
+      "4b70dfa6ee68e36d3f8df39d87364548624582c1",
+      "b8e12dc1d2602d34fa3a463c3dfabd1be6de62db"
     ],
     "src/components/JavneMiniLige.tsx": [
       "4d2f6a650206d9ca82fdbc3645621a9202b61779"
@@ -5995,6 +6089,833 @@
     ],
     "supabase/migrations/20261025093100_rs_zona_centar_fantomski_krogi.sql": [
       "086f23571d51f9a1148c1c1fcabcd0bcaaf0dd77"
+    ],
+    "scripts/posli-enega.mjs": [
+      "b0057ebf824c9175cb4925d22de93f4a17474be8"
+    ],
+    "scripts/odobritev.mjs": [
+      "aa90548d0ee06f24cf3d62568794308fb94396b9",
+      "d1896c8d8ebc8f670c953b92f5127fc18a0d2e2e"
+    ],
+    "scripts/test-odobritev.mjs": [
+      "ba84fa8dc6adc39413d614dcba6d8ad2593d1407",
+      "56ee2c6f623b85382a5349483367e0dc0538677e"
+    ],
+    "supabase/migrations/20261030130000_anketa_placila_50.sql": [
+      "a409a02b15dd997f8f78fea1f76c9d6e7bed400e"
+    ],
+    "scripts/viri/fsgc.mjs": [
+      "1c16277c0047d8393dcc43c74c31f2cbdfb36d22"
+    ],
+    "supabase/migrations/20261030143100_sanmarino_fsgc.sql": [
+      "359f4f64e7ad025671fddbfd3d2baab2a4cb7c4a"
+    ],
+    "scripts/objava-reel.mjs": [
+      "0cdb88af40b27a9a872e17fac9dcfa7827a8c0db",
+      "5824922eacdbc0e3a804dfdb11deb0e060420799",
+      "4214ac1776ca1d3bec5bfedf84cd57135fd81a90"
+    ],
+    "scripts/test-objava-reel.mjs": [
+      "15fa4500363145786d09b1def4a8804da7c8a22e",
+      "eea36232f306e9a38c321325b14b472c009454d3",
+      "11e38050c49e5f0a399c2c331e5d1fd49196f054"
+    ],
+    "scripts/anketa-placila.mjs": [
+      "70320dea51aadc0107a7875c6c5bcc014d29610e"
+    ],
+    "supabase/migrations/20261030144100_tajska_t1.sql": [
+      "3bd37eaa1eb3eb01b54d0651c48c016133842ea8"
+    ],
+    "scripts/klic-opomnika.mjs": [
+      "0177746c94cbd6c26d5c4faa046cdc10506c7361"
+    ],
+    "scripts/test-klic-opomnika.mjs": [
+      "65acf587d799e6e228c3cb3e0541a4545e877529"
+    ],
+    "supabase/migrations/20261030111100_tajska_t1.sql": [
+      "3bd37eaa1eb3eb01b54d0651c48c016133842ea8"
+    ]
+  },
+  "ciOutsideReview": {
+    "sha256": "7ba9021d6b08dbfbc94866b9a519527f23634af4f90f075d180f312c4c5c160c",
+    "rows": [
+      {
+        "path": "scripts/fcf-refresh800-execution.mjs",
+        "blob": "d2b2bde4b90c24875bcde7e27ff9b52d4a548271",
+        "bodySha256": "4ca509d0ab3d8e55d33b47fe074d4576d8d0d2bbdb07a7b10e9957bfe9ef2422",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Spanish FCF orchestration/ledger; CI runs fixture modes. Served marker GET is fixed own-site https://slff.eu/, not a football provider."
+      },
+      {
+        "path": "scripts/fcf-refresh800-test-fixture.mjs",
+        "blob": "1345e7f7ce8e495c43ebc9d3f46a415de880dfe2",
+        "bodySha256": "b11a8a0b53122dcd8d8f1f4eb784569528b4ea5a7aa90a8049cd680f06bbbf9c",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Source-free FCF fixture/contract test code; injected synthetic source responses or invalid-proof refusal, no physical provider fetch."
+      },
+      {
+        "path": "scripts/test-fcf-refresh800-execution.mjs",
+        "blob": "adc702953c189d02610be30c5e97ecd91388902b",
+        "bodySha256": "bc6fa658d0aaba164516c2666324288aae624507df86b682a414e5a645fb64db",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Source-free FCF fixture/contract test code; injected synthetic source responses or invalid-proof refusal, no physical provider fetch."
+      },
+      {
+        "path": "supabase/migrations/20261029141000_fcf_g1_9410_durable.sql",
+        "blob": "c09dee02ac9df19307b3c9568b42e9ea1c7843fd",
+        "bodySha256": "fb8a697e6548cb8cfa4768a9ddb7e26f9430fbf01f9c4976ef3a520f4dbdcd56",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Static SQL policy/fixture or local database test; FCF URLs are source metadata, not HTTP execution."
+      },
+      {
+        "path": "scripts/hetzner/objavi-posto.sh",
+        "blob": "115ba216f6b9c08e8c03a57c60ecaf0b3a3116c0",
+        "bodySha256": "ae87552a2002ce4975457cd9a02db0c289ec9b0d0d1d562a3cd98af6b2956156",
+        "status": "DEPLOYMENT_OR_LOCAL_SERVER_PATH",
+        "reason": "Deployment/own-server scripts use SSH or serve/read own app paths; no football source provider."
+      },
+      {
+        "path": "scripts/posli-enega.mjs",
+        "blob": "b0057ebf824c9175cb4925d22de93f4a17474be8",
+        "bodySha256": "325a1e61aa772c44c34bb102db11ee878a2f56322dbe0d7f9f33b1b71cfecfed",
+        "status": "NOTIFICATION_OR_APPLICATION_BACKEND",
+        "reason": "Notification/SMTP/push or own Supabase application path; no FUSSBALL provider route."
+      },
+      {
+        "path": "scripts/smoke.jsx",
+        "blob": "f287aa31efe31f1b4db896ca151fa07d19a4bcca",
+        "bodySha256": "1428cd8f9b9d64986bd0eb42d30b31a52808607eb504533c095b1a983451b0db",
+        "status": "CI_FIXTURE_ONLY_NO_PROVIDER_REQUEST",
+        "reason": "FCF URL construction/local sample-HTML parsing plus static DFB event fixture; both exact test blocks are identical across the eight bodies and contain no fetch call. No live source transport in smoke."
+      },
+      {
+        "path": "scripts/viri/mascot.mjs",
+        "blob": "863b6fbfb2a5dc76334ca3153b0b1fe6d339093f",
+        "bodySha256": "4a5b8a4813df375a3abba6fbda637d59f88eec733e508a684df749f350c33aa8",
+        "status": "NON_GERMAN_PROVIDER_PATH",
+        "reason": "Source-specific transport/data is for a different provider/country (mascotnet.com; slff.eu); www.${domena}); no German FUSSBALL report endpoint or call path in this body."
+      },
+      {
+        "path": "scripts/odobritev.mjs",
+        "blob": "aa90548d0ee06f24cf3d62568794308fb94396b9",
+        "bodySha256": "4abb3cd7af946f2c84490da5f10917fb8646f07deeec484201790d341cbeaf1b",
+        "status": "LOCAL_APPROVAL_ARTIFACT_PATH",
+        "reason": "Approval/document validation and local fixtures; no FUSSBALL transport."
+      },
+      {
+        "path": "scripts/test-odobritev.mjs",
+        "blob": "ba84fa8dc6adc39413d614dcba6d8ad2593d1407",
+        "bodySha256": "5ca2bd19471ff4b96923cb0c2031a90ec2bbb8b68a2570a1d8ad0abba13f90dc",
+        "status": "LOCAL_APPROVAL_ARTIFACT_PATH",
+        "reason": "Approval/document validation and local fixtures; no FUSSBALL transport."
+      },
+      {
+        "path": "scripts/smoke.jsx",
+        "blob": "b0d8782087b5ad38ed3cc32ca1387450fbdb024c",
+        "bodySha256": "21c346aadc8edad1d5241905ddeea2971ddfe69c10bba6c07d64b1a1194a563b",
+        "status": "CI_FIXTURE_ONLY_NO_PROVIDER_REQUEST",
+        "reason": "FCF URL construction/local sample-HTML parsing plus static DFB event fixture; both exact test blocks are identical across the eight bodies and contain no fetch call. No live source transport in smoke."
+      },
+      {
+        "path": "src/pages/Administracija.tsx",
+        "blob": "6f2bbb7eb76e39a62d4833b06c7067137effec42",
+        "bodySha256": "3892fa9b01ac6f5435eed529d5583adcbbdac6242ca5c8bb728de356489df85c",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "supabase/functions/posli-opomnik/index.ts",
+        "blob": "3bbde24f746505a5036692ddbaa16aa9b2b76f07",
+        "bodySha256": "5f595b8992f7718b54ecd9f293f75dea1f6be819db67244bc15e710bd3ce2c23",
+        "status": "NOTIFICATION_OR_APPLICATION_BACKEND",
+        "reason": "Notification/SMTP/push or own Supabase application path; no FUSSBALL provider route."
+      },
+      {
+        "path": "supabase/migrations/20261030130000_anketa_placila_50.sql",
+        "blob": "a409a02b15dd997f8f78fea1f76c9d6e7bed400e",
+        "bodySha256": "387d30f27d2d1ed99bf665a2f02d90d8cf5849908556c8b4955905272d25d69e",
+        "status": "NON_PROVIDER_SQL_OR_OTHER_COUNTRY_FIXTURE",
+        "reason": "Static schema/policy/fixture body; any source URL is data for a non-German provider, not HTTP."
+      },
+      {
+        "path": "scripts/hetzner/html/streznik.mjs",
+        "blob": "27ed480c57d3cbd7ee76890c820edd50bf7cb341",
+        "bodySha256": "11dad40db04e76aa263df122d5f73a2df98dbf57821d4f91e22abef3e184cd35",
+        "status": "DEPLOYMENT_OR_LOCAL_SERVER_PATH",
+        "reason": "Deployment/own-server scripts use SSH or serve/read own app paths; no football source provider."
+      },
+      {
+        "path": "scripts/hisne-ekipe.mjs",
+        "blob": "a184f5f3cf391475d0f222e521822814d650d1f0",
+        "bodySha256": "576bdfe6a21beabb8b2ef5660aac68b54c539893031bb37824d5e3d43e49073b",
+        "status": "APPLICATION_DATABASE_PATH",
+        "reason": "Team/app database path; no football source fetch."
+      },
+      {
+        "path": "scripts/smoke.jsx",
+        "blob": "95e8131985e86540d24a4cca20918f161eeb23a4",
+        "bodySha256": "dd8338b5dbb212a4df7409d5c80636e0b05b6bcc82de2e9653b0f52ab1eac3d7",
+        "status": "CI_FIXTURE_ONLY_NO_PROVIDER_REQUEST",
+        "reason": "FCF URL construction/local sample-HTML parsing plus static DFB event fixture; both exact test blocks are identical across the eight bodies and contain no fetch call. No live source transport in smoke."
+      },
+      {
+        "path": "scripts/viri/fsgc.mjs",
+        "blob": "1c16277c0047d8393dcc43c74c31f2cbdfb36d22",
+        "bodySha256": "99143cefa38b6513957833f4196190a024d94601683847fd10a2fd5d883af8b1",
+        "status": "NON_GERMAN_PROVIDER_PATH",
+        "reason": "Source-specific transport/data is for a different provider/country (slff.eu); www.fsgc.sm); no German FUSSBALL report endpoint or call path in this body."
+      },
+      {
+        "path": "scripts/viri/index.mjs",
+        "blob": "e3d4a96fef0e399da97ba98f06137203cc50ebe9",
+        "bodySha256": "7093ed5a485954d447d3b51409daa11978883c863e60f8407a5b2fdfd4fc32b6",
+        "status": "GERMAN_SOURCE_REGISTRY_ONLY_REVIEWED_SEPARATELY",
+        "reason": "Provider registry/import wiring only; no fetch/request transport in body. German-specific diff separately root-reviewed in merge 78cb9f080fd07141b63f96392dd13aeaccca6fb9; importing registry in CI does not request source pages."
+      },
+      {
+        "path": "src/App.tsx",
+        "blob": "c4d1a195abb9212dad38e13997230c9a6a5166ea",
+        "bodySha256": "fe44a7d6d7bbfa22da70a00794c578ebc29d2055cb5ec727415ae4bb009ca05d",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "src/components/IzbiraDrzave.tsx",
+        "blob": "1f1609427ef0d9f7f702e2c5b884b398bb132aa8",
+        "bodySha256": "b7c5051347db3c09618de8cb430d31e9cf736eef6a854c4bdc11c267cb473c06",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "src/components/admin/KlubiStiki.tsx",
+        "blob": "df9011677d14a33888a5d1b1983004cc3f0e502c",
+        "bodySha256": "792effa93da561e8b7005d7cd3d39d0763c5a12c98eb48c725bd38bd1053427d",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "src/components/admin/Lijak.tsx",
+        "blob": "27ce7220c7986d1f24c8e03fe832da94107d37b9",
+        "bodySha256": "5f774a9e4206a318f5faea8ea60a46be2db91e41c0c01508f313a6b2a88018de",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "src/i18n/az/aplikacija.ts",
+        "blob": "2cd83c9b00bc5f82210eb01d7b6277164f75ec51",
+        "bodySha256": "ff4ad56fc2320f58c9c0efc26e42a19281d597e48b416205785ea6fb9cd54e41",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/cs/aplikacija.ts",
+        "blob": "6f9acfbc22bffa9e37e41debfc0ce8c74ffcb986",
+        "bodySha256": "ec21618e2fd31ea83a032f7d7e5320eb9b675a55456f82ce3e587a27208c859c",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/da/aplikacija.ts",
+        "blob": "4e4812b884a6164b1cc1fd9077f83f610cd7e337",
+        "bodySha256": "45b311df757f056cd89afc1f2fcd89ba7e9d89423fca50989acdcbea9f0f0df8",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/de/aplikacija.ts",
+        "blob": "b9ff31fd73cfe978932a12fd31acc141ef073258",
+        "bodySha256": "25a8c0a96342a85a94870203ad4a201736a1feb5443498226f2201190fd062b1",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/el/aplikacija.ts",
+        "blob": "712eff03c2daea35d5ee4945d443c88bb1b0064d",
+        "bodySha256": "f98491178e1b27c10db3e4bcc66492cf519896a8f72090294e0ae3013e77be43",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/en/aplikacija.ts",
+        "blob": "12df3cf42d8618b65f99ef1f90f118b12c0deea0",
+        "bodySha256": "6f5348ca5e79061d0a9bb7ba7a1c4dbb89bf61ac14b7e3caf42126edb705743e",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/es/aplikacija.ts",
+        "blob": "0bd734dc77c0311332be8278f0c42bbaeef20b19",
+        "bodySha256": "ba13bfd58d1c708e8ce345327207ef7a76c29a91fa2bc58fa8608789ac76e1c2",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/et/aplikacija.ts",
+        "blob": "84a87f88d9c7cadcd463f5e52c357521f5735626",
+        "bodySha256": "b79d74cee5a64730f9fd1eabdf3e75e3382659f5c30012a9a73de58fcd286be1",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/hr/aplikacija.ts",
+        "blob": "345053d714e9a8b965ffb879014f0671b3629c76",
+        "bodySha256": "997dd3d3b7cdd29d8245a7725ee911f498ad19904c53a27b2174869b2443a980",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/hu/aplikacija.ts",
+        "blob": "132e8eda64ffaa35c057acf30fc2b0a8937ddde5",
+        "bodySha256": "e7040986dc610c05df1cbe97d05a474505f5458a9462f138d4c33aa9a5c98151",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/hy/aplikacija.ts",
+        "blob": "3bfc7187c7d6450d7fe82fd1e21406e94389dc15",
+        "bodySha256": "b68dee57936bb63a2a7e260bdf79cfc6417dad274b95512cd2888a191f66e3cd",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/lv/aplikacija.ts",
+        "blob": "2c9c6e13b646d972a11078bb7a751c226800d9b9",
+        "bodySha256": "99cf1643a5d1ea5c3496a4e724d33bc80816ce23e39fed879a56ca588a2ada6d",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/mk/aplikacija.ts",
+        "blob": "19e7e78f62acbbc26439c5d1b4e3ebfa50dba172",
+        "bodySha256": "5b474474cfa7dd6e63e5f20731f76a2808a79ad6763921b85f898ca945b91dc6",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/pl/aplikacija.ts",
+        "blob": "d6fa2a02a5f80225f6c0dc83e78a2678eb12c5aa",
+        "bodySha256": "a2d7eef14796d489bd3f9c23e40fade5b3ab3815c0400c1c5a97acfc4fae1e00",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/ro/aplikacija.ts",
+        "blob": "903d04236bcb20beb3bc072f7bb84b51a47b6d4b",
+        "bodySha256": "dfc6f227dd42a09405416727067f81bf7897b6003f2d153480563f9e8b1ab514",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/sk/aplikacija.ts",
+        "blob": "78d1a1fec5e034edfa3ba3e4d5e1712c28b3b2e7",
+        "bodySha256": "b8c83f5af03640262822a837a5c52d6692d7b669cb0b00bfe6be5e0b02504dcb",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/sl/aplikacija.ts",
+        "blob": "a92c5e961c8553cbca9153fdcd69425cffccf0b2",
+        "bodySha256": "6af88623b72e39259a4fd9c6f2e2a76098afd58c1c403f955cbccf3edb96a11e",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/sr/aplikacija.ts",
+        "blob": "6b9be1d2540be01a51afab481ef96e466e25ed8d",
+        "bodySha256": "e8f64b86280a54568af71177d0a89eefcdb44fe6537b68b4f0b5ab42d687d0f2",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/tr/aplikacija.ts",
+        "blob": "ef488bcdbf38c7695f4d12a2b942444f74bf0b68",
+        "bodySha256": "4dc8b97e0e12b74c7caa66090fb9e6b08432c46780d99ff9c3a9da9bdd8efa30",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/i18n/uk/aplikacija.ts",
+        "blob": "f774444c099ad0dc3e8b0692707c23f45a967a2b",
+        "bodySha256": "b106d33bd6190a5fb85a070534f8767747876c889390d603718c4f67815fdec8",
+        "status": "STATIC_TRANSLATION_TEXT",
+        "reason": "Translation dictionary only; no source call path."
+      },
+      {
+        "path": "src/lib/drzavaUgib.ts",
+        "blob": "d469410a374861adc08197265f5c445e0ec27261",
+        "bodySha256": "7eecea4d78d0bf791eb79c2f719c0597f225e5ba6f391340d5dce5ee8e720198",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "src/lib/obiski.ts",
+        "blob": "146e0e917e27d30227a7f8a3a4fa2143e36efab6",
+        "bodySha256": "406139ad2de2140f13e34d02921c3c83186d2a8db34135b59173087706a5dfb8",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "supabase/functions/posli-opomnik/sporocila.ts",
+        "blob": "73def54970a880e32022daf5e5ae2537ccc2edb9",
+        "bodySha256": "546b05023ff3521377e549e84c42b5dfd7f00e6c203710f406ff1b680cc1f33f",
+        "status": "NOTIFICATION_OR_APPLICATION_BACKEND",
+        "reason": "Notification/SMTP/push or own Supabase application path; no FUSSBALL provider route."
+      },
+      {
+        "path": "supabase/migrations/20261030143100_sanmarino_fsgc.sql",
+        "blob": "359f4f64e7ad025671fddbfd3d2baab2a4cb7c4a",
+        "bodySha256": "c179ff11762868fd575aadfdee88eebf167cc6081d2124ff950809996aed2424",
+        "status": "NON_PROVIDER_SQL_OR_OTHER_COUNTRY_FIXTURE",
+        "reason": "Static schema/policy/fixture body; any source URL is data for a non-German provider, not HTTP."
+      },
+      {
+        "path": "vite.config.js",
+        "blob": "b8e12dc1d2602d34fa3a463c3dfabd1be6de62db",
+        "bodySha256": "57a0859a13001d6215471f80410d4c9a0ec8bf0709f740722e92ea8e7f1646de",
+        "status": "BUILD_CONFIGURATION",
+        "reason": "Build/test configuration; no provider request."
+      },
+      {
+        "path": "scout/stroj/stroj/elo.py",
+        "blob": "172347d189b0a78f388e78f80899aab19453a655",
+        "bodySha256": "f6cc137b9b860df202beb5bbdb31428eec30f95c69c3276433b7f9dd37738b06",
+        "status": "LOCAL_SCOUT_CODE",
+        "reason": "Python Elo/model/test body is local computation; no source HTTP path."
+      },
+      {
+        "path": "scout/stroj/tests/test_elo.py",
+        "blob": "1fbf6a0d8846740f08bf35919a8f7cddab067da9",
+        "bodySha256": "550d8a9902397fa8b516dd1ee5962ce2545be3f188a0302ecf3bf4472f59dc5d",
+        "status": "LOCAL_SCOUT_CODE",
+        "reason": "Python Elo/model/test body is local computation; no source HTTP path."
+      },
+      {
+        "path": "scripts/hetzner/objavi-objave.sh",
+        "blob": "a4b43dfb2f2666c9a3216ca91ec3a326686945f3",
+        "bodySha256": "63969ac6a90f12a780b90de0ddfe53a27ab63a368547646224704567ca7178c1",
+        "status": "DEPLOYMENT_OR_LOCAL_SERVER_PATH",
+        "reason": "Deployment/own-server scripts use SSH or serve/read own app paths; no football source provider."
+      },
+      {
+        "path": "scripts/objava-reel.mjs",
+        "blob": "0cdb88af40b27a9a872e17fac9dcfa7827a8c0db",
+        "bodySha256": "1de475e0c5cd17dce62bf3e6a183042b11df73306572960758e0c20e79e0fcfa",
+        "status": "SOCIAL_PUBLICATION_TEST_OR_API",
+        "reason": "Social publishing uses Meta/own media endpoints; tests use fake fetches. Not football source capture."
+      },
+      {
+        "path": "scripts/test-objava-reel.mjs",
+        "blob": "15fa4500363145786d09b1def4a8804da7c8a22e",
+        "bodySha256": "c702fde32f27135211986d733097a4472de285f7145f9a2b6348383aa5fbcd3f",
+        "status": "SOCIAL_PUBLICATION_TEST_OR_API",
+        "reason": "Social publishing uses Meta/own media endpoints; tests use fake fetches. Not football source capture."
+      },
+      {
+        "path": "scripts/anketa-placila.mjs",
+        "blob": "70320dea51aadc0107a7875c6c5bcc014d29610e",
+        "bodySha256": "513b58e0b112178eb0a68837d151220071d4ec9aad6edb8a2b6203e3c6874e97",
+        "status": "PAYMENT_APPLICATION_BACKEND",
+        "reason": "Payment/registration database path; no source collection."
+      },
+      {
+        "path": "scripts/smoke.jsx",
+        "blob": "d55dc8115f7ffed335db575d1d268fe2fe06d49c",
+        "bodySha256": "9c66730dc8f11eb486920ce9796cce8a403f2f9648c8541ff2800c1cff2a179b",
+        "status": "CI_FIXTURE_ONLY_NO_PROVIDER_REQUEST",
+        "reason": "FCF URL construction/local sample-HTML parsing plus static DFB event fixture; both exact test blocks are identical across the eight bodies and contain no fetch call. No live source transport in smoke."
+      },
+      {
+        "path": "supabase/functions/posli-opomnik/index.ts",
+        "blob": "90595ddc0d8242ca52c62a17546010af2fa1186e",
+        "bodySha256": "ebb627fd151629918a1d59d70e49b9c177e0d47c5a11f2a0c7bef92f2f2519bf",
+        "status": "NOTIFICATION_OR_APPLICATION_BACKEND",
+        "reason": "Notification/SMTP/push or own Supabase application path; no FUSSBALL provider route."
+      },
+      {
+        "path": "supabase/functions/posli-opomnik/sporocila.ts",
+        "blob": "a28ea294aed5697275a30e9ffb904e9d28869d9b",
+        "bodySha256": "9ae7f6124fedb388eef4f9bded5f6ebe117c2704a001442266fd7359e8da6fd6",
+        "status": "NOTIFICATION_OR_APPLICATION_BACKEND",
+        "reason": "Notification/SMTP/push or own Supabase application path; no FUSSBALL provider route."
+      },
+      {
+        "path": "supabase/migrations/20261030120000_anketa_placila.sql",
+        "blob": "d1b8270b210afc1fb9c05be6cd11527ae7597517",
+        "bodySha256": "712594e3415741423803f8609bf84a3f6cef9a2391e12868be73e0806b44fd46",
+        "status": "NON_PROVIDER_SQL_OR_OTHER_COUNTRY_FIXTURE",
+        "reason": "Static schema/policy/fixture body; any source URL is data for a non-German provider, not HTTP."
+      },
+      {
+        "path": "scripts/objava-reel.mjs",
+        "blob": "5824922eacdbc0e3a804dfdb11deb0e060420799",
+        "bodySha256": "98df70f9e4cb777ebb852d4e3a30970f952d94e38276782213ef38b72331ca7e",
+        "status": "SOCIAL_PUBLICATION_TEST_OR_API",
+        "reason": "Social publishing uses Meta/own media endpoints; tests use fake fetches. Not football source capture."
+      },
+      {
+        "path": "scripts/test-objava-reel.mjs",
+        "blob": "eea36232f306e9a38c321325b14b472c009454d3",
+        "bodySha256": "8b6c5a77825b43194282796532299809450c39e50ef0fade5a43d74befb5d169",
+        "status": "SOCIAL_PUBLICATION_TEST_OR_API",
+        "reason": "Social publishing uses Meta/own media endpoints; tests use fake fetches. Not football source capture."
+      },
+      {
+        "path": "scripts/test-fcf-g1-readonly-projection.mjs",
+        "blob": "f8b885df6ddbe748bf0454e641d48042edab1f70",
+        "bodySha256": "74014a0c11f4f222cba440610286b9b42d72304647480569d018812289c0029d",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Source-free FCF fixture/contract test code; injected synthetic source responses or invalid-proof refusal, no physical provider fetch."
+      },
+      {
+        "path": "supabase/tests/fcf-g1-readonly-projection.sql",
+        "blob": "60f6b1899c6febbb3cc71dbc78450d1448d20be5",
+        "bodySha256": "c741d52d93d656626ca61ca4c802992f8b3aa737c2fd8a002c15f0999e82d791",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Static SQL policy/fixture or local database test; FCF URLs are source metadata, not HTTP execution."
+      },
+      {
+        "path": "scripts/fcf-g1-native-preflight.mjs",
+        "blob": "bcc4e68f1e7a9c334d6a0fd56ef354f92f0a3a4a",
+        "bodySha256": "9c2607b361ac3b7a892ac416032ebb7b970a69bc5ebb1ccc13f9bb16cfe86962",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Spanish FCF preflight uses own-GitHub/own-site/database reads; no fcf.cat source fetch in the preflight CI path."
+      },
+      {
+        "path": "scripts/test-fcf-g1-native-preflight.mjs",
+        "blob": "17ef3bbf6181816d44f0658e32c6c97d6a9d0122",
+        "bodySha256": "b9d9e9db779ca84f0c693c63ffd083dfb459e913b20a0f0384396fcd0d338b79",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Source-free FCF fixture/contract test code; injected synthetic source responses or invalid-proof refusal, no physical provider fetch."
+      },
+      {
+        "path": "scripts/smoke.jsx",
+        "blob": "8483cd5d2793bf950522513a3cf45e3d379dbc58",
+        "bodySha256": "d1bcf1a0fd9986fc530d38502ffb278185c0ebef154b36b8a08ebd73db5e28b6",
+        "status": "CI_FIXTURE_ONLY_NO_PROVIDER_REQUEST",
+        "reason": "FCF URL construction/local sample-HTML parsing plus static DFB event fixture; both exact test blocks are identical across the eight bodies and contain no fetch call. No live source transport in smoke."
+      },
+      {
+        "path": "scripts/viri/mlsz.mjs",
+        "blob": "c97e9051ddf99a212da5cf3f8244f1abede5de4a",
+        "bodySha256": "34ad6a15139f0cf61c2d7a3357c7bf0385af4120d4a5b28f616ba9c66e8a6260",
+        "status": "NON_GERMAN_PROVIDER_PATH",
+        "reason": "Source-specific transport/data is for a different provider/country (adatbank.mlsz.hu; slff.eu)); no German FUSSBALL report endpoint or call path in this body."
+      },
+      {
+        "path": "scripts/fcf-refresh800-capture.mjs",
+        "blob": "4e4dc05cd5bb474d26d3e8213e520bcdf74ee63c",
+        "bodySha256": "734cab8fce970eeb1ab158a7d55a709ad0079b4c19a75e022fc880ffff33bd4c",
+        "status": "SEPARATE_SPAIN800_SOURCE_PROFILE",
+        "reason": "Live FCF/Catalonia capture is a separate Spain800 capability; not German FUSSBALL5000. CI unit path rejects fabricated proof before fetch; no CI live capture."
+      },
+      {
+        "path": "scripts/fcf-refresh800-contract.mjs",
+        "blob": "7c991ce83815d8139f529213d72cb8c048d20ede",
+        "bodySha256": "2bbd968c548a8ea26866172def6d6b5d29fb45664d18f47362e888d008c2e5c3",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Source-free FCF fixture/contract test code; injected synthetic source responses or invalid-proof refusal, no physical provider fetch."
+      },
+      {
+        "path": "scripts/fcf-refresh800-execution.mjs",
+        "blob": "3eb54de0581cdf9423efff81c1e0a6911cc0c85f",
+        "bodySha256": "e2975e6b22670fc6d2f3462f4d5215ab54b43fe7bd59777d8f474b2109bf3951",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Spanish FCF orchestration/ledger; CI runs fixture modes. Served marker GET is fixed own-site https://slff.eu/, not a football provider."
+      },
+      {
+        "path": "supabase/functions/posli-opomnik/index.ts",
+        "blob": "2a06a3f5f49fc1d051f1f716460fde009e99d633",
+        "bodySha256": "69eaebe6c647588cd70a5c20f2ead217b5fceeb8f2bd9fce1c59d958c87cebaa",
+        "status": "NOTIFICATION_OR_APPLICATION_BACKEND",
+        "reason": "Notification/SMTP/push or own Supabase application path; no FUSSBALL provider route."
+      },
+      {
+        "path": "scripts/smoke.jsx",
+        "blob": "5fcd13cce0bca646ec07d763505037aa1abb4497",
+        "bodySha256": "b5067e64db8e137149864d6848476488206039441ba1bcab4f2c8d0a9c0cbebb",
+        "status": "CI_FIXTURE_ONLY_NO_PROVIDER_REQUEST",
+        "reason": "FCF URL construction/local sample-HTML parsing plus static DFB event fixture; both exact test blocks are identical across the eight bodies and contain no fetch call. No live source transport in smoke."
+      },
+      {
+        "path": "src/pages/Administracija.tsx",
+        "blob": "6fc099d26535961eb0a527acd46a5ed83bf3d32f",
+        "bodySha256": "b5bc80f0b368c4b24b3bb341909051f9ce62e2255d30b5189e69bc756c0aea25",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "supabase/functions/posli-opomnik/index.ts",
+        "blob": "141e048088af7e2a08ec8551f84cf58934a7bf1a",
+        "bodySha256": "c1f3d3bad7631409977dd59fde719f807b09a073f173b3d12f8554d5636beadc",
+        "status": "NOTIFICATION_OR_APPLICATION_BACKEND",
+        "reason": "Notification/SMTP/push or own Supabase application path; no FUSSBALL provider route."
+      },
+      {
+        "path": "scripts/test-fcf-g1-remainder-review-fix.mjs",
+        "blob": "336341f9188fd4ff0787830c85f5787182e6a19a",
+        "bodySha256": "8ce650ffd6177bf2ac93453a35ccd321a62150e69ce996a98c46939727a6360b",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Source-free FCF fixture/contract test code; injected synthetic source responses or invalid-proof refusal, no physical provider fetch."
+      },
+      {
+        "path": "supabase/migrations/20261030144100_tajska_t1.sql",
+        "blob": "3bd37eaa1eb3eb01b54d0651c48c016133842ea8",
+        "bodySha256": "37f0ee1d4413cebd941616c9acfbc175581c5e4f1ebf2b3bdb4a821c485dcead",
+        "status": "NON_PROVIDER_SQL_OR_OTHER_COUNTRY_FIXTURE",
+        "reason": "Static schema/policy/fixture body; any source URL is data for a non-German provider, not HTTP."
+      },
+      {
+        "path": "scripts/klic-opomnika.mjs",
+        "blob": "0177746c94cbd6c26d5c4faa046cdc10506c7361",
+        "bodySha256": "0c6505aa6b0c98540b057723e1fc5fc328db539347d890153d3668fae1b996bf",
+        "status": "NOTIFICATION_OR_APPLICATION_BACKEND",
+        "reason": "Notification/SMTP/push or own Supabase application path; no FUSSBALL provider route."
+      },
+      {
+        "path": "scripts/posli-opomnike.mjs",
+        "blob": "93f8c7a1eca4c82e591525dffb5435d53af06fff",
+        "bodySha256": "4662f0ed2cae32752d040ac804dd29641c7335dc17299027e1d20dcea5d13784",
+        "status": "NOTIFICATION_OR_APPLICATION_BACKEND",
+        "reason": "Notification/SMTP/push or own Supabase application path; no FUSSBALL provider route."
+      },
+      {
+        "path": "scripts/posli-popravek-pozicij.mjs",
+        "blob": "3bf9d8c94467b0554c6ce995ef9f7b309336a8a4",
+        "bodySha256": "23d539b4e6a14d6d2ded1e255b053bee1c5e66c5831142eb516073374ad67818",
+        "status": "NOTIFICATION_OR_APPLICATION_BACKEND",
+        "reason": "Notification/SMTP/push or own Supabase application path; no FUSSBALL provider route."
+      },
+      {
+        "path": "scripts/test-klic-opomnika.mjs",
+        "blob": "65acf587d799e6e228c3cb3e0541a4545e877529",
+        "bodySha256": "6954842ce0c4dcc747a8110093d5755ce233b1eb76f5dc3d1858dab670e3277e",
+        "status": "LOCAL_LOOPBACK_TRANSPORT_TEST",
+        "reason": "Test targets fixed 127.0.0.1 ephemeral server only."
+      },
+      {
+        "path": "supabase/migrations/20261030111100_tajska_t1.sql",
+        "blob": "3bd37eaa1eb3eb01b54d0651c48c016133842ea8",
+        "bodySha256": "37f0ee1d4413cebd941616c9acfbc175581c5e4f1ebf2b3bdb4a821c485dcead",
+        "status": "NON_PROVIDER_SQL_OR_OTHER_COUNTRY_FIXTURE",
+        "reason": "Static schema/policy/fixture body; any source URL is data for a non-German provider, not HTTP."
+      },
+      {
+        "path": "scripts/smoke.jsx",
+        "blob": "df9ea7ebeee15d5d6c3e8aac66c94a25d9ca0234",
+        "bodySha256": "2ec64adf26fb7eb465a593b95670b691e78abc0a076424b5fd8685763f9bc276",
+        "status": "CI_FIXTURE_ONLY_NO_PROVIDER_REQUEST",
+        "reason": "FCF URL construction/local sample-HTML parsing plus static DFB event fixture; both exact test blocks are identical across the eight bodies and contain no fetch call. No live source transport in smoke."
+      },
+      {
+        "path": "scripts/fcf-future-target-db.mjs",
+        "blob": "2c4e546af19e63e389ba63f0db886285b8b912c4",
+        "bodySha256": "b90e2da2d8f5d94baae3bffd3951153c59c385e9c692105bb2709ff7f8412926",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Spanish FCF Supabase RPC/database adapter; not provider HTTP."
+      },
+      {
+        "path": "scripts/fcf-g9-native800-cut1-test-fixture.mjs",
+        "blob": "118974406fbbadec237c12c262ea236dd726786d",
+        "bodySha256": "0d846b3e0ca110826976413c74994682c2877a48df63c4f7fbf51342e565cdc6",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Source-free FCF fixture/contract test code; injected synthetic source responses or invalid-proof refusal, no physical provider fetch."
+      },
+      {
+        "path": "scripts/test-fcf-g1-remainder-g9-native800-bridge.mjs",
+        "blob": "ba682bb6b143932d1b5d3c14d9d55fa21d4f2a29",
+        "bodySha256": "da98074c59799fca9b26c6ef33d70958e34781d7fdd8f26516fcb7ed1c207cdd",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Source-free FCF fixture/contract test code; injected synthetic source responses or invalid-proof refusal, no physical provider fetch."
+      },
+      {
+        "path": "scripts/test-fcf-g9-native800-bridge-sql.mjs",
+        "blob": "31d917bdfc86609854409d0eb4376841e7917033",
+        "bodySha256": "03a5a8dc5cdacc98d90cc5ee12611e265e6a724b6fa0b237ee2130e13a0e12ad",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Source-free FCF fixture/contract test code; injected synthetic source responses or invalid-proof refusal, no physical provider fetch."
+      },
+      {
+        "path": "supabase/migrations/20261030045000_fcf_g9_native800_bridge.sql",
+        "blob": "6154e34b5c58f3970a589cd27c5c0a526d6d686e",
+        "bodySha256": "8bc409ce6542186aa6eecb49e7d791c85326820007a5901f896192c6508601c1",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Static SQL policy/fixture or local database test; FCF URLs are source metadata, not HTTP execution."
+      },
+      {
+        "path": "supabase/tests/fcf-g9-native800-bridge.sql",
+        "blob": "e368b5b2067dc543628365f355e51c3a1a299ecd",
+        "bodySha256": "f8904af61d74770e9a0a31665b88515b8c29c22c609f7b73d3ab321e7b30b941",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Static SQL policy/fixture or local database test; FCF URLs are source metadata, not HTTP execution."
+      },
+      {
+        "path": "scripts/lib/fcf-projection-optional-compat.mjs",
+        "blob": "39920b29bfa7202814f99c1e0c62e7b7b414ead3",
+        "bodySha256": "2f5db7508ee0d689dd97c2f10785af741ff2ff387e2c09716a9539d8c38fc1fc",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Source-free FCF fixture/contract test code; injected synthetic source responses or invalid-proof refusal, no physical provider fetch."
+      },
+      {
+        "path": "supabase/tests/fcf-future-native-projection.sql",
+        "blob": "fed00fd883173f87c131754b1da212996dc16daf",
+        "bodySha256": "e08ee3e344a593680a0b9431c20c0ee7e60150fa330939b3a9e6edb2bf6cc341",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Static SQL policy/fixture or local database test; FCF URLs are source metadata, not HTTP execution."
+      },
+      {
+        "path": "supabase/functions/posli-opomnik/index.ts",
+        "blob": "7899bbb2625ac70ad56e2bfff2644d7d546589bb",
+        "bodySha256": "7457c257197715897d63915df6fb77ae58bbcd1a47b8687638855ae82f87a92f",
+        "status": "NOTIFICATION_OR_APPLICATION_BACKEND",
+        "reason": "Notification/SMTP/push or own Supabase application path; no FUSSBALL provider route."
+      },
+      {
+        "path": "supabase/migrations/20261030120000_anketa_placila.sql",
+        "blob": "1aad66d141377cfeefd43651b94f887ec7423436",
+        "bodySha256": "f08e4c780a2342489733042146f1fbe2dcc83976fca63685b551f6d5c125946c",
+        "status": "NON_PROVIDER_SQL_OR_OTHER_COUNTRY_FIXTURE",
+        "reason": "Static schema/policy/fixture body; any source URL is data for a non-German provider, not HTTP."
+      },
+      {
+        "path": "scripts/test-fcf-g1-remainder-g9-native800-child-offline.mjs",
+        "blob": "afad06813a42a774d4335ca3dd0e9b0119590f7e",
+        "bodySha256": "3a4f6b9669fd8b99a8c10e08ba0d176828023bd414868f244c7c686943c01626",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Source-free FCF fixture/contract test code; injected synthetic source responses or invalid-proof refusal, no physical provider fetch."
+      },
+      {
+        "path": "scripts/odobritev.mjs",
+        "blob": "d1896c8d8ebc8f670c953b92f5127fc18a0d2e2e",
+        "bodySha256": "c3aeeb71814d917d0c49b21a78934adab2ee42f1e528da29883d210093f73433",
+        "status": "LOCAL_APPROVAL_ARTIFACT_PATH",
+        "reason": "Approval/document validation and local fixtures; no FUSSBALL transport."
+      },
+      {
+        "path": "scripts/test-odobritev.mjs",
+        "blob": "56ee2c6f623b85382a5349483367e0dc0538677e",
+        "bodySha256": "098d0b1325e6f8e50e881b815fc536080604a7e54b7850b6b6291782f0c494f8",
+        "status": "LOCAL_APPROVAL_ARTIFACT_PATH",
+        "reason": "Approval/document validation and local fixtures; no FUSSBALL transport."
+      },
+      {
+        "path": "scripts/test-fcf-inventory-binary-escape.mjs",
+        "blob": "107bb21b8de49bbcde3b1fdc80bcf1ee8301488c",
+        "bodySha256": "f2393f9646038b032d019aaee7ba292e4fe6e48f899b08bd923e3093a5927fe7",
+        "status": "SEPARATE_SPAIN800_OR_SOURCEFREE_CI_TEST",
+        "reason": "Source-free FCF fixture/contract test code; injected synthetic source responses or invalid-proof refusal, no physical provider fetch."
+      },
+      {
+        "path": "scripts/objava-reel.mjs",
+        "blob": "4214ac1776ca1d3bec5bfedf84cd57135fd81a90",
+        "bodySha256": "21abe3cc22d05d753c0cd3b0a3d4b668366bf8a36f9db2fb31bc39374e1056fe",
+        "status": "SOCIAL_PUBLICATION_TEST_OR_API",
+        "reason": "Social publishing uses Meta/own media endpoints; tests use fake fetches. Not football source capture."
+      },
+      {
+        "path": "scripts/test-objava-reel.mjs",
+        "blob": "11e38050c49e5f0a399c2c331e5d1fd49196f054",
+        "bodySha256": "156c965c5f91c1cadb851edac49c8b1462389137298707308acd424134a442a9",
+        "status": "SOCIAL_PUBLICATION_TEST_OR_API",
+        "reason": "Social publishing uses Meta/own media endpoints; tests use fake fetches. Not football source capture."
+      },
+      {
+        "path": "scripts/smoke.jsx",
+        "blob": "74c97d9c6c4bee16250309b5e48d28a150a526ac",
+        "bodySha256": "5565979d7e1dcd55187d1c9a892313c4990a74af346e8f4ce9e4f0acdd1ac02d",
+        "status": "CI_FIXTURE_ONLY_NO_PROVIDER_REQUEST",
+        "reason": "FCF URL construction/local sample-HTML parsing plus static DFB event fixture; both exact test blocks are identical across the eight bodies and contain no fetch call. No live source transport in smoke."
+      },
+      {
+        "path": "src/pages/Administracija.tsx",
+        "blob": "4bf3a882b4efb127385b3fcfd3d1b6b0077b4103",
+        "bodySha256": "c88627d14ced00d3871e91a90f839b1d0a339a61851f83eb63b4952f81a7cd40",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "shop/smoke.tsx",
+        "blob": "60e83e22d3595a75d8981ef472b143460a29faf8",
+        "bodySha256": "d8fac936699e282f3616636fc8c46180ccd0319b477be98d6b4d44aac52067e5",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "shop/src/besede.ts",
+        "blob": "651fe74ccdf99734c91124f724a5defac279e162",
+        "bodySha256": "97458aea33ab0144a725c36cd9bbd202e40a5ba986736051d85be45af40fcb20",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "shop/src/strani/Izdelek.tsx",
+        "blob": "36c3693f75a06365d562d225e242257372d0d1a7",
+        "bodySha256": "8716593a4ef26a4e5a796410c7841aeb03ceb3c433255a16198426f3d5c9fbcc",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "supabase/functions/posli-opomnik/sporocila.ts",
+        "blob": "e9043efc22de80f8dc31a90e13b07c01c631ffbb",
+        "bodySha256": "419090d1d69f522dda0f44b72e0afdf90734f93cf2a2b4700413cc84ffa084ed",
+        "status": "NOTIFICATION_OR_APPLICATION_BACKEND",
+        "reason": "Notification/SMTP/push or own Supabase application path; no FUSSBALL provider route."
+      },
+      {
+        "path": "shop/smoke.tsx",
+        "blob": "779b4885a152ab4c3263c0432b1c555c5ca05f0d",
+        "bodySha256": "f9ada6d60f46e1ac2fc870c30aba6db9136e9badd6451d293fcc6c93436a8311",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "shop/src/analitika.ts",
+        "blob": "1f901c519b7cc9c5bb458d5576ac64964cb509bd",
+        "bodySha256": "ea2882a8b02067389fb0123e76ab4b3e6ff6293a8ac35f92c2066fa252643c22",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "shop/src/strani/Izdelek.tsx",
+        "blob": "e413814b20d08b604eb336073cc4745e9bfebe7c",
+        "bodySha256": "75eed5b459f98b7621f286bb0ae49924b17f61a2ab2ae6378793da420bf72612",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "shop/src/strani/Kosarica.tsx",
+        "blob": "da240d75acb6894973d918470ec5132422e75981",
+        "bodySha256": "60fd15026236f05f1f7ba07dfeb510e79f6b8b3f28e133d39ded02aabc2fef81",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "shop/smoke.tsx",
+        "blob": "d6eaea0aff363681167f545ed86e79f2b93dfd39",
+        "bodySha256": "0e8ff36367aab0ad0560b2cba0253c0c3c3a9922137e9e93aecfc7c9c3851732",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "shop/src/besede.ts",
+        "blob": "90089a61cf2f66c80dda782f44c736573a9f1ce1",
+        "bodySha256": "9f0ef4e11df085225aa6ff25b0a0f697135c4bf8423d840e918e201bed4243cd",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "shop/src/strani/Izdelek.tsx",
+        "blob": "69ad0d0ab13d74636ca8582ab6142807604831ae",
+        "bodySha256": "798224fc29256ef63ce05e816248f8d8794fe1be1913f9ff270c0e7bb88bf956",
+        "status": "APPLICATION_OR_SHOP_BACKEND_CALLS",
+        "reason": "UI/storefront calls own Supabase/SLFF application endpoints or renders data; not FUSSBALL source capture."
+      },
+      {
+        "path": "supabase/functions/trgovina-nakup/index.ts",
+        "blob": "0e89255d0ff383df4d5be57d89d89034c2789560",
+        "bodySha256": "e1d24b24dc74e90726684d2b8946720476bdf7763cb495623c1d2f31167674c1",
+        "status": "NOTIFICATION_OR_APPLICATION_BACKEND",
+        "reason": "Notification/SMTP/push or own Supabase application path; no FUSSBALL provider route."
+      }
     ]
   },
   "ciGermanCode": {
@@ -6032,7 +6953,18 @@
       "77f0e3519cd070eba36e40e705eb54a1c1a30d81",
       "1ea1e3f1069198d91772dc50e3f3cb0f33d0678c",
       "379aa97f39ec77f4aa143ba90395d2a872bd015d",
-      "c22d9fb4d9773c604ae8c2a2116ce5ff0be0de89"
+      "c22d9fb4d9773c604ae8c2a2116ce5ff0be0de89",
+      "1d81ee59751f19314e526c523eb6a1c9b0e29803",
+      "6cba38ca4245ede7b1c4fc4711a36cff2d03227c",
+      "6ccf940ca9edd035953bd7fc84ff5c1983b971b1",
+      "92d9b48766d4e1b1946ffd716061c42f5f6febe6",
+      "ae84bf7567dd9fd20dbd421e50df1e7677c7fabf",
+      "c2ba12c8531597c87fbe2ee4fc069a88e9d5d083",
+      "c96a0f628e023e248976d872252cd152c738259f",
+      "dbe4a3485d315718e029759cb0f12e3c7fa93c19",
+      "e20fbb849ae64d68c4640e848d1c668996959576",
+      "f19c95c51e65e3805944e59cce45ba008b656f74",
+      "fe24b62aefb8bb3147ec1105ad949c9a20c6b364"
     ],
     "package-lock.json": [
       "0070330ab6671bfab1d03fc499d884e48c65040b"
@@ -6067,7 +6999,10 @@
       "11ed8ddd5d28d629074a205bcda3205bd5f92c7a",
       "360aad50f3fcb96af275087cabb7d3de828c84a3",
       "0b28546535d655f2c0231b61e1db248a09b35791",
-      "d6f5d05cb81d2f69bc3fe4e552a90dc4565be1b3"
+      "d6f5d05cb81d2f69bc3fe4e552a90dc4565be1b3",
+      "549dafcc12493ca25a1dcfebf397ad6b5883dc8f",
+      "aa1dfbb04535b89f2e2abcff2bf449ab4cefde8d",
+      "c7def7ac06eb2a454841303f5b5cf5bddcb44a40"
     ],
     "scripts/bulk-baden-native.mjs": [
       "c1b29ba8e53ef0dffc83caf5fdf6bebfb5c1fe7c",
@@ -7046,6 +7981,357 @@
     ],
     "scripts/zajemi-fussball-vzorec.mjs": [
       "16d2d068ba32be09eb88b2a33e2ee0e3d9a520dc"
+    ]
+  },
+  "ciScoutCode": {
+    ".github/workflows/scout-in-funkcije.yml": [
+      "f2f1ef1f00f907d1d4b6f4a710a9d214ad3fe385"
+    ],
+    "scout/stroj/pyproject.toml": [
+      "5b5b5c55f8075ebd0b93bba26c4d6248c1dfdd92"
+    ],
+    "scout/stroj/stroj/__init__.py": [
+      "49f0ee25a644cea54e4e3312f0ef3c843f358281"
+    ],
+    "scout/stroj/stroj/__main__.py": [
+      "6e11502099b85c2d1be912e862c450d7028f719c"
+    ],
+    "scout/stroj/stroj/backtest.py": [
+      "6fb9ec5f0bef34720f90600fdfb24aac3f8f6950"
+    ],
+    "scout/stroj/stroj/elo.py": [
+      "1593fd7447da057bd6a4f54862849b7a6b85fd06"
+    ],
+    "scout/stroj/stroj/indeks.py": [
+      "402ab93e9fa4a96339ca13aa76eca8adf03b1099"
+    ],
+    "scout/stroj/stroj/kazalniki.py": [
+      "07c1a4e59b6142fd723e7670cee5680c2ffe3059"
+    ],
+    "scout/stroj/stroj/moc_lig.py": [
+      "1a31964197739428f4c71db7d090e1c94fb8d944"
+    ],
+    "scout/stroj/stroj/nalaganje.py": [
+      "118d3153e9559fc45aaa66539296cbd79eb63021",
+      "507cfaea6027cc84302e69111dae70b94401a6d4"
+    ],
+    "scout/stroj/stroj/pisanje.py": [
+      "064a857c77e14118add7a731a02f335a59e306f8"
+    ],
+    "scout/stroj/stroj/podobnost.py": [
+      "d5fdd0ebf9fecb5459baf352dfa7098601c22f6f"
+    ],
+    "scout/stroj/stroj/ravni.py": [
+      "9c3abd3df79cf59c2d7baf2cae9051116f9fff8f",
+      "b3e3f4c974cff7dd77728429e68122bfcc04c133"
+    ],
+    "scout/stroj/stroj/vrzeli.py": [
+      "bff758b0c07e6efe142affc8b8d60a5ad93adaf4"
+    ],
+    "scout/stroj/tests/pomoc.py": [
+      "241500cafaa92450275a3c7d34556b6e15573aca"
+    ],
+    "scout/stroj/tests/test_backtest.py": [
+      "2dfeb1d63dc7f0686621f9ea87c63e518787d580"
+    ],
+    "scout/stroj/tests/test_baza.py": [
+      "19b80f846fcffbeda1afbcb871a0c2946877dd0e"
+    ],
+    "scout/stroj/tests/test_elo.py": [
+      "fb723642eedac12186edfd2f383e551110f02ce0"
+    ],
+    "scout/stroj/tests/test_indeks.py": [
+      "951ef9fca3d6f55ce759446a5739cb4d52b06a2c"
+    ],
+    "scout/stroj/tests/test_kazalniki.py": [
+      "94f7ca31ec0ffe25a541db149ebf864159e5b4e6"
+    ],
+    "scout/stroj/tests/test_moc_lig.py": [
+      "146f81cf6d0cfd1a6a16f4bbc6ac89a83a63e923"
+    ],
+    "scout/stroj/tests/test_nalaganje.py": [
+      "1426a675c815f99ca76b42652934c008b0270c32"
+    ],
+    "scout/stroj/tests/test_pisanje.py": [
+      "ac7dcc0c6a2f088b0d58b1da248d901e580ec843"
+    ],
+    "scout/stroj/tests/test_podobnost.py": [
+      "886fd81c9d9c74b0160543450350b74477cd0624"
+    ],
+    "scout/stroj/tests/test_ravni.py": [
+      "3438601e8795640f65348bbacdd04ab10d10fe27",
+      "1cc93602128a39140b08159555d46996acdab7ec"
+    ],
+    "scout/stroj/tests/test_vrzeli.py": [
+      "81a9096a071658180ae6850d2d937c64408b49ce"
+    ],
+    "scout/stroj/tests/test_zagon.py": [
+      "e01c6ba0f16c59ad0d739656a76f73757ee28eef"
+    ],
+    "scripts/visja-liga.mjs": [
+      "4f31fd2693744d01beea8b08d34dda68b3596ab5",
+      "83de37a954003c8f21501f19603b61efbfb51c4b"
+    ]
+  },
+  "ciCriticalSupplement": {
+    "UTC": "2026-10-30T15:09:48.825785+00:00",
+    "result": "PASS_FOR_EXACT_HISTORICAL_CI_CLASSIFICATION_ONLY",
+    "scope": "16 retained path/body versions with authenticated checkout bindings; normal CI research jobs must remain conclusively skipped",
+    "files": [
+      {
+        "path": ".github/workflows/ci.yml",
+        "blob": "1d81ee59751f19314e526c523eb6a1c9b0e29803",
+        "bodySha256": "dccf1aef07eafed00126e665ff71d351fbb6dee07f6ee2771a50887b5d6b69d4",
+        "bindings": [
+          {
+            "runId": "40966817216",
+            "checkout": "399a0f4562943a1e4b4232fef296e3c83927304f"
+          },
+          {
+            "runId": "40964153735",
+            "checkout": "a87870071da43d89fb2ebfc7947197b11080b50b"
+          },
+          {
+            "runId": "40962506127",
+            "checkout": "a2e4378f8039c30f4c51ff45241a65202e0a9940"
+          }
+        ]
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "blob": "6cba38ca4245ede7b1c4fc4711a36cff2d03227c",
+        "bodySha256": "cbdd50eae71f3d2fdc86d1b7f1aac60cb1991646872229dc7d0a75634da19b6b",
+        "bindings": [
+          {
+            "runId": "40978692137",
+            "checkout": "b29639bcaa0094a4903e56206a5bbe1e0d1cf247"
+          },
+          {
+            "runId": "40976559777",
+            "checkout": "382391653dda41ca2217c5cde1a3331f887a1457"
+          }
+        ]
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "blob": "6ccf940ca9edd035953bd7fc84ff5c1983b971b1",
+        "bodySha256": "03dbedcc3da5289dbb3cbeee7d12dc9cc2456ea8fa2c8c7a92af25ef79549a3b",
+        "bindings": [
+          {
+            "runId": "40968317831",
+            "checkout": "beff6ca44572532e8cf1ee9a3763a12415ca4723"
+          }
+        ]
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "blob": "92d9b48766d4e1b1946ffd716061c42f5f6febe6",
+        "bodySha256": "c1bb67d45faf5dc7b0df603bc94abdad55f0bedb7d423a5d49a5217b7bb66090",
+        "bindings": [
+          {
+            "runId": "40975914861",
+            "checkout": "f099711904257caa458fa703959eb90863fa5a1d"
+          },
+          {
+            "runId": "40975738228",
+            "checkout": "5fed5b55fb7fd4c030793ea41ab904e894445648"
+          },
+          {
+            "runId": "40973685788",
+            "checkout": "3e059bec76ecbe3f0f5cca8ccf5db7f23b012c20"
+          },
+          {
+            "runId": "40972586817",
+            "checkout": "f9a4631a918cc2393b6c61be529dc25eb87315d7"
+          },
+          {
+            "runId": "40969935010",
+            "checkout": "50493e3e8f9e0d9652fee2d748755fdfe3f6a212"
+          }
+        ]
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "blob": "ae84bf7567dd9fd20dbd421e50df1e7677c7fabf",
+        "bodySha256": "ad4d13a87fa5f1629ef15b4b049594e2ea3e214c35fd4a0c4a179b2b7da5b100",
+        "bindings": [
+          {
+            "runId": "40962703883",
+            "checkout": "f599ef6f5c2621a32ca9b9463dcac4d0728c1e40"
+          }
+        ]
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "blob": "c2ba12c8531597c87fbe2ee4fc069a88e9d5d083",
+        "bodySha256": "87dd4d16667f445d4d0bc548111f1330dd97921ffd72bdd0bbfd040006b01fb7",
+        "bindings": [
+          {
+            "runId": "40956585378",
+            "checkout": "efce04b1c4e39e89f0eb092c85527d5cf0935b78"
+          }
+        ]
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "blob": "c96a0f628e023e248976d872252cd152c738259f",
+        "bodySha256": "aefd4eeadfd576059ef032e5f56b29af15602dfc0c931d20d2e19b0dbbb82690",
+        "bindings": [
+          {
+            "runId": "40868065586",
+            "checkout": "6a4ca046c98e63dc24483a9b4050b1f317b8c17f"
+          },
+          {
+            "runId": "40865410011",
+            "checkout": "1260c9d1311ba65e0c1455132314a63b43245fce"
+          }
+        ]
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "blob": "dbe4a3485d315718e029759cb0f12e3c7fa93c19",
+        "bodySha256": "22c8440ea7ea3f46fc65f3f24b8ca12082a39d87eec61ac5a4de27ddeff6ad6f",
+        "bindings": [
+          {
+            "runId": "41005682450",
+            "checkout": "910c52ab252acb4d7d933af5467cf9dd667dafc3"
+          },
+          {
+            "runId": "41005087411",
+            "checkout": "352e8a80a01faace6835a6e5b935fa2aec97f003"
+          }
+        ]
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "blob": "e20fbb849ae64d68c4640e848d1c668996959576",
+        "bodySha256": "064863608d2dbb15bd268e56e330be77d1b3a4921f56c37913ff71128dd3196c",
+        "bindings": [
+          {
+            "runId": "41004325585",
+            "checkout": "315f2310719fb566b7bf0d9fafc6da640f0bc899"
+          },
+          {
+            "runId": "41003085708",
+            "checkout": "9a4084a3ad679c5ab31d0ee647e3ea921a30548e"
+          },
+          {
+            "runId": "41001751848",
+            "checkout": "54989c4d83cd362054c31fd547123939d1c032b0"
+          },
+          {
+            "runId": "41000354513",
+            "checkout": "3dead6f6b26669cf7872bea217c6a98927a7fd8b"
+          },
+          {
+            "runId": "40999162187",
+            "checkout": "3ce00ccfd470169e90a6ef155296f9b30978f752"
+          }
+        ]
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "blob": "f19c95c51e65e3805944e59cce45ba008b656f74",
+        "bodySha256": "d033040d3706cc235bbb5b305fa829f34c8fdc27be772f13ca0d0c9bc88809b7",
+        "bindings": [
+          {
+            "runId": "40965769704",
+            "checkout": "069dba9cc1043bf5451ebddb131fcfdfe98d0a73"
+          }
+        ]
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "blob": "fe24b62aefb8bb3147ec1105ad949c9a20c6b364",
+        "bodySha256": "0d53fb365b144a1981d5d7ca1202b028a2777bdffc3d529469cfa6803aa0bfd0",
+        "bindings": [
+          {
+            "runId": "40880844388",
+            "checkout": "ddd00624090b3a430bcb712712f42f9411dd1bf9"
+          }
+        ]
+      },
+      {
+        "path": "package.json",
+        "blob": "549dafcc12493ca25a1dcfebf397ad6b5883dc8f",
+        "bodySha256": "36ddfab22dfc5d6aeb4cf3229198f636348d75bff4aaa5be8a7872d384be0c42",
+        "bindings": [
+          {
+            "runId": "41025478190",
+            "checkout": "8a40f34829e24bbf4e01806cfd72ec8626596c5c"
+          },
+          {
+            "runId": "41025224255",
+            "checkout": "2a85d84539297cfdaccbec972cbcf1f83e65889a"
+          },
+          {
+            "runId": "41024670745",
+            "checkout": "9d57e5ae1a14ef27a440850f98590e488e612d09"
+          }
+        ]
+      },
+      {
+        "path": "package.json",
+        "blob": "aa1dfbb04535b89f2e2abcff2bf449ab4cefde8d",
+        "bodySha256": "19dc439adafc4ec265af10b1b76051d9c62692516eaa74668d6318b33722079c",
+        "bindings": [
+          {
+            "runId": "40830018386",
+            "checkout": "0d5d822f8944f940966dd13d258be16e8735a056"
+          }
+        ]
+      },
+      {
+        "path": "package.json",
+        "blob": "c7def7ac06eb2a454841303f5b5cf5bddcb44a40",
+        "bodySha256": "7d3ce234a56874fd4798c6cade6e7ff5d2c2e7d6258a656096296d297f6dc59d",
+        "bindings": [
+          {
+            "runId": "41039672074",
+            "checkout": "50ede210ea5f6362f8c367265e7a56b2c9d0ff92"
+          },
+          {
+            "runId": "41038981556",
+            "checkout": "c3773192f183067b5ff7c53356f1172575a0ce0f"
+          }
+        ]
+      },
+      {
+        "path": "supabase/functions/posli-prevzem/index.ts",
+        "blob": "465168315fc9288405e2afe0c51b9b437f8075c0",
+        "bodySha256": "803b170bdf443bfa8c5e4e6f826b5e7c870cb1ceaddcfb07b86bd4abfe9561f3",
+        "bindings": [
+          {
+            "runId": "41053080584",
+            "checkout": "92d2ea888d18f93d7dec23f30a9c15242f6ee849"
+          }
+        ]
+      },
+      {
+        "path": "supabase/migrations/20261030130200_vrh_klubov_predpomnilnik.sql",
+        "blob": "e1b2fba098885b8ddabbd2b015e53e30550523a3",
+        "bodySha256": "19133a6b23257bb22acfe19f809d4fa74fe29eaa6ef4e4f0e71676c6a3500914",
+        "bindings": [
+          {
+            "runId": "41053080584",
+            "checkout": "92d2ea888d18f93d7dec23f30a9c15242f6ee849"
+          }
+        ]
+      }
+    ],
+    "findings": [
+      "11 exactCIworkflow deltas add/remove source-free tests/scratch SQL tests or own-build env, adjust FCF readonly choice/secret expression and concurrency flags; no new German research command",
+      "3 packageJSON deltas add own reel/approval test aliases or reminder unit test in historical test list; no new German capture CLI",
+      "posli-prevzem edge body is ownSupabase RPC and SMTP/SLFF links only; CI deployment is not football collection",
+      "vrh_klubov cache SQL aggregates existing DB rows and schedules ownSQL; no external source transport"
+    ],
+    "physicalProviderAttempts": null,
+    "sourceCaptureAuthority": false,
+    "productionCodeApproval": false,
+    "required": [
+      "exact actualcheckout immutabletree/body bindings",
+      "normalCI complete graph with source jobs skipped",
+      "unknown new execution/vector/mode still HOLD"
     ]
   },
   "ciDeltaReview": {
@@ -11323,6 +12609,457 @@
       "exampleRunIds": [
         "41046997772",
         "41046950587"
+      ]
+    },
+    {
+      "workflow": ".github/workflows/zdruzi-klube.yml",
+      "projection": "all",
+      "mode": "own-db-club-merge",
+      "vectors": [
+        {
+          "vectorSha256": "7f884bf187fa56e36bca2cc983f16e3b9be6e6d643c3ca1e05418e6adc65f0f1",
+          "files": 1865
+        },
+        {
+          "vectorSha256": "ba02e7ff07d26480bd73939000bbc33879c6a3a30abb03d698626eaadc1e0b06",
+          "files": 1865
+        },
+        {
+          "vectorSha256": "10dbdfea19d1bf5c97b4d02a9f57bc758457ca420f1e09bcdbc1925e64263ca0",
+          "files": 1862
+        },
+        {
+          "vectorSha256": "77c7d957295af60578e6dde204b309946c730ba84eebead87396c787abdc936c",
+          "files": 1862
+        },
+        {
+          "vectorSha256": "4b821cd91590ee22aafc1cab70393557d5eeb80ab98ed84679a33a2243c15835",
+          "files": 1862
+        },
+        {
+          "vectorSha256": "47409d73eb3c37f79b36b169c8a4a528bfea7ed68ae2c9a8cbd6cd6ef8188dc4",
+          "files": 1862
+        },
+        {
+          "vectorSha256": "0efa5350cae1f3da020b5a4d50cab51d056821c8207f396a2a75b8e66448164e",
+          "files": 1838
+        },
+        {
+          "vectorSha256": "f6d503b18f0071494c68985a1c7d0553683f8d983873308831298bf77c48b5a6",
+          "files": 1837
+        },
+        {
+          "vectorSha256": "955558d78ea48f9dbfc776f269d30dbe3988629cd03f1ce89ee5d2c4d45c2c9a",
+          "files": 1825
+        },
+        {
+          "vectorSha256": "e388274be1395028068fbbe995e3e756b380c48ad3ec580053737069a919da0c",
+          "files": 1779
+        },
+        {
+          "vectorSha256": "b9e4a5c6ed94c39b69e23258c8dd18ba3713577efb600383e60ff468a2da5ef6",
+          "files": 1778
+        },
+        {
+          "vectorSha256": "b4794e9f00ee044b2e942c32e47117b2bdbcc219861dd28723e9ed5161e0206a",
+          "files": 1773
+        },
+        {
+          "vectorSha256": "16a6394bbf9b2227d96d38bd4f7094bd1b396cb931ac0f8f37076efb594bda8b",
+          "files": 1773
+        },
+        {
+          "vectorSha256": "553bc2775f950b3aec0816bfeee41e1e42c44c9229abfd88cfff081df12fcb29",
+          "files": 1773
+        },
+        {
+          "vectorSha256": "b787e4415d0be55a4afaf993fda2d8a90d94d42fee95b1731a01e5b957384c17",
+          "files": 1771
+        },
+        {
+          "vectorSha256": "c52048831f6769e595b452f96f470c36b770b2d626e69455a7711aa2f04ce0f0",
+          "files": 1750
+        },
+        {
+          "vectorSha256": "91af88a07a384e827fe6cb79772f262ef10774fff60fb118ae42282381d7b929",
+          "files": 1746
+        },
+        {
+          "vectorSha256": "b9d09a6bf7fbeb9d43f46b45840e31c7613a6e9e8becbd1e356b0734b2077503",
+          "files": 1744
+        },
+        {
+          "vectorSha256": "b5a98aeeb80bb67863349016246efc5fa9f1fe4a491a87c8cc6800ed1210a9c7",
+          "files": 1741
+        },
+        {
+          "vectorSha256": "0c48b1b463f0365960088f6e4562286d165750f65f8bcdb5469ed83a53b5ed43",
+          "files": 1738
+        },
+        {
+          "vectorSha256": "5df0483ff24ffa082a885868f537f37ad159d4b90ba1fe468cd5241b7d3fea5b",
+          "files": 1733
+        },
+        {
+          "vectorSha256": "fe9a582cd2c2e7844490eb22e4dc77baae9a23617318830bf44b9a89fc7414bc",
+          "files": 1718
+        },
+        {
+          "vectorSha256": "5f79f1ff2f03389981d9be74faab40cf7eb663eef83daf31298ca72f6d4cb2a0",
+          "files": 1718
+        },
+        {
+          "vectorSha256": "07841e789fb6bc53e98c844a6d1ab5d2ea144a53750c7b645b3efebf03069d24",
+          "files": 1677
+        },
+        {
+          "vectorSha256": "fd9c6c72f1793109873b196aee9d0604c5533276f6bf01f5adcf194cc0db079e",
+          "files": 1662
+        },
+        {
+          "vectorSha256": "41121e2222e7e9a720d658598815607a100aa727e7d4514422fbc6a24afd0eb0",
+          "files": 1652
+        },
+        {
+          "vectorSha256": "bacdc761352e17919688e7663ae913a38cbd2d227c641857cedba0ac92c6066f",
+          "files": 1649
+        },
+        {
+          "vectorSha256": "dc6feff009ae4e13e604de6c92256e44af5597ae089284d4f037593cbe7ac9f9",
+          "files": 1648
+        },
+        {
+          "vectorSha256": "e004fc49f194a5acdea266ef0121159368565dc2145a09a3f6d160f1f8a52bf5",
+          "files": 1644
+        },
+        {
+          "vectorSha256": "9460962014f7d21e8d9ebd7988d2f7037dfcee0943391b21d2b7832a1c9369d7",
+          "files": 1642
+        },
+        {
+          "vectorSha256": "8101a7f0c7b643c81c7ad73c6fed05a04d5d04b0b772324caa57764066fe6ba6",
+          "files": 1626
+        },
+        {
+          "vectorSha256": "6e98be44c8975c08358009af7739de332e7bca81893c2a3e293afefeaed7f167",
+          "files": 1621
+        },
+        {
+          "vectorSha256": "e3ec9d87e614c21b5e7296b34752de6ba7570e8375a986a3340ccf1fd3f0dfd8",
+          "files": 1614
+        },
+        {
+          "vectorSha256": "8416d06dda471862b68c891abbd7bc0e9acf22c279d78de266c2657a98428a72",
+          "files": 1550
+        },
+        {
+          "vectorSha256": "fccd70af143a36c93f471dc6cafba83d361b12660ab82a0b617e9e58bd4a5c1b",
+          "files": 1549
+        },
+        {
+          "vectorSha256": "e6ea2a3a60ac363a457a4c6bc690a08a6d334ca9db0bac6a39dd3bb25f4ea2fc",
+          "files": 1546
+        },
+        {
+          "vectorSha256": "9792fb38edd52653476dbd81c0fe7b7f38855ae9811b4608e739509cd2964fc2",
+          "files": 1544
+        },
+        {
+          "vectorSha256": "41a795231296e22026a895c935ce96bcf228d9e77427c1fe728a268bd8ebde96",
+          "files": 1543
+        },
+        {
+          "vectorSha256": "c9e341954b64aca26b853c4197b42484fb43cdacd7e567dcc11557543811da45",
+          "files": 1538
+        },
+        {
+          "vectorSha256": "c9bfac86066497092e24cfd501fb8517b9b782d7bc4a9319b57e6a85bb565d89",
+          "files": 1533
+        },
+        {
+          "vectorSha256": "00faaef5481264c757951a2a934ecae018fafe9a562d0335a063ded883c6fb23",
+          "files": 1533
+        },
+        {
+          "vectorSha256": "8a85f38d7bd84b302c60341b7d17eaa6a05a398768e8e3f0d31894a26f8ddef3",
+          "files": 1531
+        },
+        {
+          "vectorSha256": "7cc1b6219774d10eaadbcacb26f43d792eb81b5a41cc915e61a71c43da00e6b7",
+          "files": 1529
+        },
+        {
+          "vectorSha256": "223ac9c3a6703c3b5e72614d6f19b4c5d4acfbaa54eea63a0b66db2beac7cc0e",
+          "files": 1508
+        },
+        {
+          "vectorSha256": "3e3bf6408f0b03e464ef548e26fca3eee3868ef7f5ff8a6ab97c01e6216eb29f",
+          "files": 1505
+        },
+        {
+          "vectorSha256": "2bd18652bf413cc722e7cccfa954461d58702df4b09a5c7a5d8ba8833de4e415",
+          "files": 1505
+        },
+        {
+          "vectorSha256": "020f286eeb4336e5841c60d1ab8fc056d71ca9d6268d79b6cf3a020cc15b879e",
+          "files": 1509
+        },
+        {
+          "vectorSha256": "dfdebbadc5e990bf769bae17878c53f93341e8975ca9a248d11814b9c02133ef",
+          "files": 1508
+        },
+        {
+          "vectorSha256": "04bc1d3be7243801a0e77d978181f1891b81e122fe8dae25ef6c1e17d7349369",
+          "files": 1505
+        },
+        {
+          "vectorSha256": "fe55001991f3ed11a6a669c6a9de43831244440c0614733feba4c3c071df9519",
+          "files": 1502
+        },
+        {
+          "vectorSha256": "93f5915e5e6c64c9adc896b681c2576255ece063aab4ec2fee4113622e1e52fa",
+          "files": 1502
+        },
+        {
+          "vectorSha256": "3b2c3f9d18193b84cf2a716c4654c7f2a2a0741e4b2049e7f71835011078303c",
+          "files": 1502
+        },
+        {
+          "vectorSha256": "0b5bf86d409b015881a7b72a356846fcd86c96a678613d9a56d2544d704c08e6",
+          "files": 1502
+        },
+        {
+          "vectorSha256": "c2171b40f48e38076a49d317cdfcd3406b62b292ebe1d2a4d6fd6b2254974c87",
+          "files": 1499
+        },
+        {
+          "vectorSha256": "8f3fbd5fa07a5cab6f79cef2740b9ea72104e95d50f8639d7a039ab470f2449f",
+          "files": 1498
+        },
+        {
+          "vectorSha256": "ada44c392d5a6373301a07a95da5ea9aa9bd830073729b84c08af8321c8e2211",
+          "files": 1498
+        },
+        {
+          "vectorSha256": "ffb10442ef265c12cd02f2b2137dcf89fe8aa360a44e5726c1c273bba5464db6",
+          "files": 1494
+        },
+        {
+          "vectorSha256": "b51cd53d27d47c289c5e899047a1e5953657213f3a5b1a808cde05886e1ea20d",
+          "files": 1491
+        },
+        {
+          "vectorSha256": "8e932e36cf98df3d89b8c8f2b30624e134c3e54926f9aa4ce1c7c01e07dc88bf",
+          "files": 1491
+        },
+        {
+          "vectorSha256": "d20d91607315c2c4c89b88b06235770a2da995f8c29b0eea7342402c5a06e700",
+          "files": 1491
+        },
+        {
+          "vectorSha256": "3eae1b03310f9a03b0e96752365f17c80cfea81486c806750b05262388e3c73e",
+          "files": 1486
+        },
+        {
+          "vectorSha256": "fd362346b83bb4a26349af783f38d5b1241ddde8424c35559fc5df948f440abb",
+          "files": 1475
+        },
+        {
+          "vectorSha256": "bdc9f832fb262b3f34faaeedb97ad660682f91175363b70e8a009d6831b32b38",
+          "files": 1475
+        },
+        {
+          "vectorSha256": "f0a1c6bcedcf9a448ac3aedc6a7878858bf55c41a679c080665bbbcf33f4d6dc",
+          "files": 1475
+        },
+        {
+          "vectorSha256": "7e5d2a6980088e5715bfb1c0442388d74b3dfd8054e48b7a593b2ea2f569e179",
+          "files": 1453
+        },
+        {
+          "vectorSha256": "998b78c0d6d41cf1e899d58261a5e0ec07dead34eb5851e2a5b00e9657f7ab2c",
+          "files": 1450
+        },
+        {
+          "vectorSha256": "7534ba98c8f26af6c40cde0a498b3fe94922394e1acfc409b0549d12fde3d5a0",
+          "files": 1449
+        },
+        {
+          "vectorSha256": "7d8833a201d17db060865c093b26b728b4b33aca91429ae0dc467e28a9c02cc2",
+          "files": 1442
+        },
+        {
+          "vectorSha256": "bcd375d0f5528c23120722ffcefda98c672aaf8f6e4df63688604f7363e9baa9",
+          "files": 1440
+        },
+        {
+          "vectorSha256": "a0cb2ed2358cec086c6915cd4195722e9f4f96b98a81b034cddccd6687952150",
+          "files": 1440
+        },
+        {
+          "vectorSha256": "3beeaf3fbea8d5225165361ab3851b8ca40bce8b6cac7bec33b0b71eab1ca1c6",
+          "files": 1435
+        },
+        {
+          "vectorSha256": "38bbfe9bc7ef0451d5f60c94a1646a4e547287e72bbd634ee20e78b554b7ecce",
+          "files": 1435
+        },
+        {
+          "vectorSha256": "25a323721aeb0610146722359802808423eba87ef1342fe7a3ce03bf1e9c9022",
+          "files": 1433
+        },
+        {
+          "vectorSha256": "e1f6370afca91d9173801a5c1a49f6efc64d374c01f7012a5c4a5b9e1db66da2",
+          "files": 1430
+        },
+        {
+          "vectorSha256": "24436b049f2b70ce865e4fa1e9059e47a4185e3d0961bc933097d09df819d539",
+          "files": 1430
+        },
+        {
+          "vectorSha256": "ef6d7aeaba2fdfabfcc8904dde6b89b0ba73a7917e27929799c0caf686ac78af",
+          "files": 1430
+        },
+        {
+          "vectorSha256": "dea803353a3adac06b04b2dac035789c3109de1e5c85aea2c0b9116c1aa28139",
+          "files": 1404
+        },
+        {
+          "vectorSha256": "c3fd978604f5d138d6b75b27a68c014de13c541769cb582af6acb7bfec926c90",
+          "files": 1394
+        },
+        {
+          "vectorSha256": "d3e890ed0924edbe64cc136e8fd7a2e19a1958938ea5ca43c80868bef412a645",
+          "files": 1389
+        },
+        {
+          "vectorSha256": "5fa4f9036d4c25a36970e4afc2728f2b80ac56361334b677412214cc2e5a7064",
+          "files": 1382
+        },
+        {
+          "vectorSha256": "a38f7ff7f0e268ec06d58b167a8d5dc36b452288551a88812bfc45a5a587793d",
+          "files": 1378
+        },
+        {
+          "vectorSha256": "48e379b3140df1438e0ba1bc97043bd9a20a820b832b2d6657d9ae8b93244061",
+          "files": 1377
+        },
+        {
+          "vectorSha256": "eaa768f4cecb99c444d1adea087a0dee2259cee3b569dd0a38f7eecb6ab72dc2",
+          "files": 1373
+        },
+        {
+          "vectorSha256": "23f1b0f7b5a88cb5fa69697785fec4079be5161c0889ff89879a87626ac75c2c",
+          "files": 1373
+        },
+        {
+          "vectorSha256": "26350cc50dd78e409c2a343b19a1f167a4b17c912bed027865e4952b70cd7e5d",
+          "files": 1372
+        },
+        {
+          "vectorSha256": "e3a9e33133b80850375e90f11b90dc0f67e911652bd9ad3ce6f8a3a4d05cd679",
+          "files": 1363
+        },
+        {
+          "vectorSha256": "7d635a4f2de10a3f7d8220bd288ef4d73be2ca9755470f0099b3b9f34a1acffc",
+          "files": 1358
+        },
+        {
+          "vectorSha256": "eb89c9ea493882a892cd579877c73b5bdf430ff9f2a92cd44e06ac0ec0f4a4e0",
+          "files": 1357
+        },
+        {
+          "vectorSha256": "83ac62c3d5aa232d97ad94cddb604ce2abdc8e09ad361da4411d6c0e0998f6f6",
+          "files": 1357
+        },
+        {
+          "vectorSha256": "df9a577c8b7e73c4b0fb6db3e91576db6bac91810a9d9d091573b116de121c1c",
+          "files": 1353
+        },
+        {
+          "vectorSha256": "ec06c2ffde1f8f9e773f1348c7ca8237ab5e8b5044f198bacb63f2f5e7224c0f",
+          "files": 1352
+        },
+        {
+          "vectorSha256": "ccab92afba699f04c1a4903e6c954dc3bcb2476ca97f4f22a71b9d53095675cc",
+          "files": 1352
+        },
+        {
+          "vectorSha256": "d55706c3d0f585ba184d886b46e75235b498b43a2905bf0fc5e86867303e0317",
+          "files": 1348
+        },
+        {
+          "vectorSha256": "98a917dcc0121c239c2f6aa8cca97e61e17ac5af0920cba9eca82b1c1eec6ca8",
+          "files": 1337
+        },
+        {
+          "vectorSha256": "6b67d4bbff728bd72e18ab1e5023675e48f796fee40764fe3c0bb657ae12769f",
+          "files": 1337
+        },
+        {
+          "vectorSha256": "581db7b9392d819f0684c5332aa395176db51453af48c31357158f5b878484e9",
+          "files": 1336
+        },
+        {
+          "vectorSha256": "d319405779f02f3e38637700ac9cdc1667dd28838d2de7e233be6a4f6d3ff2a7",
+          "files": 1335
+        },
+        {
+          "vectorSha256": "138ef2d132d2cc9295fec5e5621f341bc27fdca13a03017281071afd3602a1c3",
+          "files": 1335
+        },
+        {
+          "vectorSha256": "95b16e9ab396486ae70b078443325c2470de70c7c9e470be2bfc0b3021b6fd72",
+          "files": 1335
+        },
+        {
+          "vectorSha256": "a052607b46ae4c407ad731a699a2ba07a0cc6ab7d303b995d8d805181a7ac246",
+          "files": 1326
+        },
+        {
+          "vectorSha256": "f4eb92cf80d8717a99472c2515422ccd7597723d36da0e467a062c750c6d45eb",
+          "files": 1324
+        },
+        {
+          "vectorSha256": "837c4ea88635874be411d2cc30e551a2ff89c2d19e9fd96530645ee1b2c6ca47",
+          "files": 1324
+        },
+        {
+          "vectorSha256": "a871022955261b448d866ebce5f4ee61a11d874c2cad1f1c5f87fd8d49303dee",
+          "files": 1317
+        },
+        {
+          "vectorSha256": "58d8987512b1603d41fb46979b8ade450022d39117f50c48b58fad8c3d43be75",
+          "files": 1316
+        },
+        {
+          "vectorSha256": "452710e6ca616d28049ace94ceedc6bb3249e613937cf5e25c7db05e6bd1b796",
+          "files": 1315
+        }
+      ],
+      "jobNames": [
+        "fcf-g13",
+        "zdruzi"
+      ],
+      "allowedSteps": {
+        "zdruzi": [
+          "Complete job",
+          "Pocakaj na starejse uvoze",
+          "Post Run actions/checkout@v4",
+          "Post Run actions/setup-node@v4",
+          "Run actions/checkout@v4",
+          "Run actions/setup-node@v4",
+          "Run npm ci --ignore-scripts",
+          "Set up job",
+          "Zdruzi"
+        ],
+        "fcf-g13": []
+      },
+      "sourceJobs": [
+        "fcf-g13"
+      ],
+      "exampleRunIds": [
+        "41015173935"
       ]
     }
   ]

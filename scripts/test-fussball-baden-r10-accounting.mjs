@@ -61,6 +61,7 @@ function retained(){
   if(/^jobs-\d+-\d+-page1\.json$/.test(name)){const[id,attempt]=name.slice(5,-5).split('-');set(`actions/runs/${id}/attempts/${attempt}/jobs?per_page=100&page=1`,load(C,name))}
   if(/^commit-[a-f0-9]{40}\.json$/.test(name))set('git/commits/'+name.slice(7,-5),load(C,name))
   if(/^tree-[a-f0-9]{40}\.json$/.test(name))set('git/trees/'+name.slice(5,-5)+'?recursive=1',load(C,name))
+  if(name==='de-nightly-41060320786.log')set('actions/jobs/124078176581/logs',readFileSync(join(C,name)))
   if(/^(?:build|scout)-\d+-\d+\.log$/.test(name))set('actions/jobs/'+name.split('-')[2].slice(0,-4)+'/logs',readFileSync(join(C,name)))
  }
  let scan=0
@@ -92,8 +93,12 @@ test('genuine snapshot classifies exact55 and24 body-bound service runs but hold
   const v=e.audit
   assert.equal(v.authenticatedMinimumSpent,3607);assert.equal(v.freshAccountingKnown,false)
   assert.equal(v.executions.filter(x=>x.kind==='regular-dfb-nightly').length,3)
+  assert.equal(v.executions.filter(x=>x.kind==='regular-dfb-nightly-active-foreign').length,1)
   assert.equal(v.executions.filter(x=>x.kind==='native-before-individual-import').length,3)
   assert.equal(v.executions.filter(x=>x.kind==='reviewed-own-service-group').length,24)
+  assert.equal(v.executions.filter(x=>x.kind==='reviewed-independent-fcf-before-source').length,2)
+  assert.equal(v.executions.filter(x=>x.kind==='authenticated-independent-fcf-mode').length,4)
+  assert.equal(e.blockers.some(b=>b.reason==='BADEN_R10_BUDGET_GROUP_ATTEMPT'),false)
   assert.equal(v.executions.find(x=>x.runId==='40859714195').alreadyAccountedRequests,587)
   const n=v.executions.find(x=>x.runId==='41011276709');assert.equal(n.physicalProviderAttempts,null);assert.equal(n.redirectVisibility,'NOT_JOURNALED')
   assert.equal(v.ancestorCoverage.complete,true);assert.ok(v.ancestorCoverage.olderRuns.length>=21)
@@ -203,4 +208,32 @@ test('TEST ONLY closed reduced census issues a private 60-second budget with liv
  assert.equal(data.budget.priorRequests,3607);assert.equal(data.budget.cumulativeReserved,4387);assert.equal(data.sourceOperationAuthorized,false)
  assert.throws(()=>api.getFussballBadenR10Budget(structuredClone(proof)),/PRIVATE_CAPABILITY/)
  clock+=60000;assert.throws(()=>api.getFussballBadenR10Budget(proof),/EXPIRED/)
+})
+
+test('existing exact FCF zero witness and skipped club repair cannot accept another head or executed source step',{skip:!E},async t=>{
+ t.mock.method(Date,'now',()=>Date.parse('2026-10-30T13:10:00Z'))
+ for(const mode of ['fcf-head','fcf-step','club-step']){
+  const f=retained();f.controls.reviewedOnly=true;const id=mode==='club-step'?41015173935:40792858711,target=structuredClone(f.runs.find(r=>r.id===id)),head='0'.repeat(40)
+  f.controls.inventory=rows=>[...rows,{...target,...(mode==='fcf-head'?{head_sha:head}:{})}]
+  f.controls.change=(p,v)=>{
+   if(mode==='fcf-head'&&p===prefix+'actions/runs/'+id)return {...v,head_sha:head}
+   if(p===prefix+`actions/runs/${id}/attempts/1/jobs?per_page=100&page=1`)return {...v,jobs:v.jobs.map(j=>mode==='fcf-head'?{...j,head_sha:head}:mode==='club-step'&&j.name==='fcf-g13'?{...j,conclusion:'success'}:mode==='fcf-step'&&j.steps.length?{...j,steps:[...j.steps,{number:99,name:'TEST ONLY unexpected provider command',status:'completed',conclusion:'success'}]}:j)}
+   return v
+  }
+  await assert.rejects(api.readFussballBadenR10Budget({github:f.github}),e=>e.blockers?.some(b=>b.runId===String(id)&&b.reason.includes(mode==='club-step'?'CLUB_REPAIR_NOT_SKIPPED':'FCF_ZERO_WITNESS_HOLD')))
+ }
+})
+
+test('fixed FCF mode rejects changed provider URL bytes, frozen verifier bytes and another actual attempt',{skip:!E},async t=>{
+ t.mock.method(Date,'now',()=>Date.parse('2026-10-30T13:10:00Z'))
+ for(const mode of ['url','frozen','attempt']){
+  const f=retained();f.controls.reviewedOnly=true;const id=40851165521,target=structuredClone(f.runs.find(r=>r.id===id));f.controls.inventory=rows=>[...rows,{...target,...(mode==='attempt'?{run_attempt:2}:{})}]
+  f.controls.change=(p,v)=>{
+   if(mode==='url'&&p.includes('contents/scripts/fcf-g1-remainder-source.mjs?ref='))return {...v,content:Buffer.from('TEST ONLY provider URL changed to https://www.fussball.de/').toString('base64')}
+   if(mode==='frozen'&&p.includes('contents/scripts/fcf-future-source-plan.mjs?ref=3ed1'))return {...v,content:Buffer.from('TEST ONLY changed frozen code').toString('base64')}
+   if(mode==='attempt'&&p===prefix+'actions/runs/'+id)return {...v,run_attempt:2}
+   return v
+  }
+  await assert.rejects(api.readFussballBadenR10Budget({github:f.github}),e=>e.blockers?.some(b=>b.runId===String(id)&&b.reason.includes(mode==='attempt'?'FCF_MODE_EVIDENCE_HOLD':'FCF_MODE_RUNTIME_BODY')))
+ }
 })

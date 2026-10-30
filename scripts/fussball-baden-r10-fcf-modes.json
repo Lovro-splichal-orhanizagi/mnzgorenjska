@@ -1,0 +1,262 @@
+{
+  "version": 1,
+  "kind": "fixed-authenticated-independent-fcf-modes",
+  "records": [
+    {
+      "mode": "fixed-g1-remainder",
+      "history": {
+        "kind": "fixed-separate-profile",
+        "run": {
+          "id": 40851165521,
+          "run_attempt": 1,
+          "head_sha": "a31d439f64f9b610993264b7639a8a5cb2fc35ee",
+          "head_branch": "main",
+          "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+          "event": "workflow_dispatch",
+          "status": "completed",
+          "conclusion": "success",
+          "created_at": "2026-10-29T09:38:01Z",
+          "run_started_at": "2026-10-29T09:38:01Z",
+          "updated_at": "2026-10-29T10:18:15Z",
+          "actor": {
+            "login": "nejcar20",
+            "id": 25134229,
+            "type": "User"
+          },
+          "triggering_actor": {
+            "login": "nejcar20",
+            "id": 25134229,
+            "type": "User"
+          },
+          "repository": {
+            "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+          },
+          "head_repository": {
+            "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+          }
+        },
+        "jobsSha256": "70d397acd93b286e97849e4d0c295a8deb94596e1740f5a20954ed50183b2628"
+      },
+      "runtime": {
+        "a31d439f64f9b610993264b7639a8a5cb2fc35ee": {
+          ".github/workflows/uvoz-fcf-zgodovina.yml": "dd2447bc8a706d14e517bd4854adbda15f66b2f790d138e0f0fbe11e13e69af4",
+          "scripts/fcf-missing-inventory-actions.mjs": "5bd74217f48be50b72ede6f7d31e7dae3d887ccf4fba0249aeb0c4819b681012",
+          "scripts/fcf-g1-remainder-actions.mjs": "02436b8313fffb9046746da5ca126213b1e60c75154322e96b3ff94e9191c481",
+          "scripts/fcf-g1-remainder-source.mjs": "caa919fc11ff30768685f2b6faae1a0de5de8b07d4ce343f9858b444a9debdfc",
+          "scripts/fcf-g1-remainder-parent.mjs": "baebde267ae96f5229c2aa8a835691bad6ea8ff881a6209adb86b1bd51880fb8",
+          "scripts/fcf-g1-remainder-parent-reference.json": "36083cb8f71038636e338238796d63f162ff6875beb3d1c2a866afad5e627c11",
+          "scripts/fcf-g1-quarantine-audit.mjs": "f24e9a2cd15cb4acca1dc6d165452a3fb4356a8169f4ffc2d3f4cfa0c9ee0b19",
+          "scripts/fcf-inventory-source-coordination.mjs": "bb43179620bb59e0bc7a370e55043eac3c1e72e02ee26c5abdd2b27508cd4033"
+        },
+        "3ed1e852166398bb1429621a89c197ab6f77cb1e": {
+          "scripts/fcf-future-source-plan.mjs": "8ac54f52aa9c129e4c8deeb9248867d4478f9168a10fc318eff0a4396d7555ba",
+          "scripts/fcf-missing-inventory-artifact.mjs": "2c9a4c6bd74d6e331b9f5870b1e26068b795982b991507ab50031c5fb72aca59"
+        }
+      },
+      "fixedVerifier": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "hosts": [
+        "www.fcf.cat"
+      ],
+      "scope": "Independent fixed Spain/Catalonia source profile, outside original fixed Baden FUSSBALL validation ledger. Actual provider traffic remains null; no Spanish counter enters German B.",
+      "physicalProviderAttempts": null
+    },
+    {
+      "mode": "fixed-g1-remainder",
+      "history": {
+        "kind": "fixed-separate-profile",
+        "run": {
+          "id": 40819202548,
+          "run_attempt": 1,
+          "head_sha": "9ec00d1ac4a065fbbd552696f80b089536b5ae1f",
+          "head_branch": "main",
+          "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+          "event": "workflow_dispatch",
+          "status": "completed",
+          "conclusion": "failure",
+          "created_at": "2026-10-29T04:41:57Z",
+          "run_started_at": "2026-10-29T04:41:57Z",
+          "updated_at": "2026-10-29T05:28:51Z",
+          "actor": {
+            "login": "nejcar20",
+            "id": 25134229,
+            "type": "User"
+          },
+          "triggering_actor": {
+            "login": "nejcar20",
+            "id": 25134229,
+            "type": "User"
+          },
+          "repository": {
+            "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+          },
+          "head_repository": {
+            "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+          }
+        },
+        "jobsSha256": "ba2400847be45da3123982487142841f671b5eec5713fc2af2ca969f2b4d1f6d"
+      },
+      "runtime": {
+        "9ec00d1ac4a065fbbd552696f80b089536b5ae1f": {
+          ".github/workflows/uvoz-fcf-zgodovina.yml": "dd2447bc8a706d14e517bd4854adbda15f66b2f790d138e0f0fbe11e13e69af4",
+          "scripts/fcf-missing-inventory-actions.mjs": "5bd74217f48be50b72ede6f7d31e7dae3d887ccf4fba0249aeb0c4819b681012",
+          "scripts/fcf-g1-remainder-actions.mjs": "8bb548dbaa45c69450054b9a36a7a76022b672bdf2e8f7eeb00677c1c29386b8",
+          "scripts/fcf-g1-remainder-source.mjs": "5d93b3abac02cac0e8e1a4ef803a1bcd15d58a3ebd6d07e8d0d258b57fe69e5e",
+          "scripts/fcf-g1-remainder-parent.mjs": "baebde267ae96f5229c2aa8a835691bad6ea8ff881a6209adb86b1bd51880fb8",
+          "scripts/fcf-g1-remainder-parent-reference.json": "36083cb8f71038636e338238796d63f162ff6875beb3d1c2a866afad5e627c11",
+          "scripts/fcf-g1-quarantine-audit.mjs": "82db3e2ad46c060d6fa6adaf6d49a0f6a1bd316ca18c8890206d44b6cb845c8b",
+          "scripts/fcf-inventory-source-coordination.mjs": "bb43179620bb59e0bc7a370e55043eac3c1e72e02ee26c5abdd2b27508cd4033"
+        },
+        "3ed1e852166398bb1429621a89c197ab6f77cb1e": {
+          "scripts/fcf-future-source-plan.mjs": "8ac54f52aa9c129e4c8deeb9248867d4478f9168a10fc318eff0a4396d7555ba",
+          "scripts/fcf-missing-inventory-artifact.mjs": "2c9a4c6bd74d6e331b9f5870b1e26068b795982b991507ab50031c5fb72aca59"
+        }
+      },
+      "fixedVerifier": "3ed1e852166398bb1429621a89c197ab6f77cb1e",
+      "hosts": [
+        "www.fcf.cat"
+      ],
+      "scope": "Independent fixed Spain/Catalonia source profile, outside original fixed Baden FUSSBALL validation ledger. Actual provider traffic remains null; no Spanish counter enters German B.",
+      "physicalProviderAttempts": null
+    },
+    {
+      "mode": "fixed-g9-calendar",
+      "history": {
+        "kind": "fixed-separate-profile",
+        "run": {
+          "id": 40891667999,
+          "run_attempt": 1,
+          "head_sha": "6b795a57643fb074226ea5356d4a90c8ba9d0dc7",
+          "head_branch": "main",
+          "path": ".github/workflows/fcf-javni-dokazi.yml",
+          "event": "workflow_dispatch",
+          "status": "completed",
+          "conclusion": "failure",
+          "created_at": "2026-10-29T14:27:35Z",
+          "run_started_at": "2026-10-29T14:27:35Z",
+          "updated_at": "2026-10-29T14:29:30Z",
+          "actor": {
+            "login": "nejcar20",
+            "id": 25134229,
+            "type": "User"
+          },
+          "triggering_actor": {
+            "login": "nejcar20",
+            "id": 25134229,
+            "type": "User"
+          },
+          "repository": {
+            "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+          },
+          "head_repository": {
+            "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+          }
+        },
+        "jobsSha256": "5f24d8ad4355959f3f73bd766ef748a7b12c7a6d9d2d77116586d9dfead04da6"
+      },
+      "runtime": {
+        "6b795a57643fb074226ea5356d4a90c8ba9d0dc7": {
+          ".github/workflows/ci.yml": "99eaa3c14efb37d8c3ad2ce717feff8283e44e90f43a8070a69f94ac721b8536",
+          ".github/workflows/fcf-javni-dokazi.yml": "da88613bf283f39be142e26d81deb7fb16ab6c7089cba155dd214412ad21a0d1",
+          "package-lock.json": "eabfd5f32e8c5f39378120789ff966c17d4775a3fdca9c39fb1ff308b3192ef1",
+          "package.json": "dd8ad4be71c2f7f8899ed5adf86d399c698b94c18c2c066bd0910b3598b8afd2",
+          "scripts/capture-fcf-g9-calendar-probe.mjs": "ca5bf3e441586409f1b6d0c908c2286282d5b266c8de5512163d30b5e3010a1b",
+          "scripts/fcf-g1-historical-zero-witness.mjs": "ad5125f00f0bdd2cea13fcd019ef0ee36592550356474e5c6120cba924c8f0d9",
+          "scripts/fcf-g9-calendar-counter-pins.json": "9f93f13bbee9acdaf3531b7975df451d9a51d705261c6bfe5c1b1a451ef2f5e1",
+          "scripts/fcf-g9-calendar-links.mjs": "34ceacdfb79ae032e228b2f81b54b040818cb6bee466d64dfcb7eee816fb98e6",
+          "scripts/fcf-g9-calendar-probe.mjs": "334ac09afd0eaa2ce058509c9c0528fda62d3581c1436957c2176219f4ee8784",
+          "scripts/fcf-missing-inventory-artifact.mjs": "2c9a4c6bd74d6e331b9f5870b1e26068b795982b991507ab50031c5fb72aca59",
+          "scripts/fcf-six-historical-policy.mjs": "34907066c20ab9d4576a39124f4efd29f2b43f37d207950279e2f4a9bfba2ce1",
+          "scripts/klubi.mjs": "b1974c32ee3562cd7c57749951c3bbdafb8de27d26394d8f09ae55d169cd5e0a",
+          "scripts/lib/fcf-g1-supplement-installed.mjs": "4e4d4b285bf81a540e94dad83ac9b01cdd44e4ae8cc69123154141b5f19c94cb",
+          "scripts/lib/fussball-native-history-policy.mjs": "b1526e7e4600de5d96dd9370390904aea1d5e2409422b8a82ffc19d54786eb72",
+          "scripts/lib/historical-statistics-policy.mjs": "67ab1736b32ad865d73588b36024810eb7dce10b628e57106497233ff8126e0f",
+          "scripts/odtis-kode.mjs": "288fc94ae312586619290df077cd5fd152a593708f869aa445900be5c86ed090",
+          "scripts/strani.mjs": "e0c9a7f9739e269a8bff6882f219903a990dad4cd1c6ec20956fe9ca589508c7",
+          "scripts/viri/facr.mjs": "aeeb715025bd23f0b2ab9422eb50467c099670d268cc0aeadab6372eb504099a",
+          "scripts/viri/fcf-calonge-pair.mjs": "2aaf4a9cd48da7af3b5b7879a1621240556bc7d4844770eb4f4c2193bb380c6f",
+          "scripts/viri/fcf.mjs": "3069689ac29eff2426419ef4404e8da0b9ff99eed3eca6e88bc37ba027dc0674",
+          "scripts/viri/frf.mjs": "587cdfefb831bd5f1e6817a898ab204113453b07b6fd0c39e660de04621be066",
+          "scripts/viri/hlf.mjs": "6f8dc7325e74b91ff49d123e0640287b2ef4c612cee47e758016b7b43d1f1cd7",
+          "scripts/viri/zapisniki.mjs": "cc65847a106c9fe3eca54141526ede7f1bb9b276e42344c938b7d8f850c4a366",
+          "scripts/zapisnik.mjs": "e6c3f2b595350ef39ad1c0dd949dbc2e09b2d93891b7a99126b6c71fba700840",
+          "scripts/fcf-g1-historical-zero-registry.json": "ad3d11bea137536204a7e0e7cc7ed3d9be925a038566c5875f0261081f0f099d",
+          "scripts/policies/fcf-six-reviewed-exclusions.json": "77f56a26fc546e6fb1a632ca579e6daf9398e5a5cd3be2763e28311f8aef17c6",
+          "scripts/policies/fcf-g1-4109409-supplement.json": "3a867001b542012bc6672cec95dc211537ea82be4909b3a7a423841dff876781",
+          "scripts/policies/historical-statistics-exclusions.json": "9a94f73520bb5eb11093fd484feefff08edf81cb98a5b1b0e1065716a3066f1c",
+          "scripts/policies/fussball-baden-native-composition.json": "faa0f9ee262d78ed1e312566cb2f31eed20fc5e080ba3225975e7a84c60f92a5",
+          "scripts/test-fcf-g9-calendar-probe.mjs": "08862674e909b313e474abd75298dc0ea7af2ea37902b7466defd8a138f00e4e"
+        }
+      },
+      "fixedVerifier": null,
+      "hosts": [
+        "www.fcf.cat"
+      ],
+      "scope": "Independent fixed Spain/Catalonia source profile, outside original fixed Baden FUSSBALL validation ledger. Actual provider traffic remains null; no Spanish counter enters German B.",
+      "physicalProviderAttempts": null
+    },
+    {
+      "mode": "fixed-refresh800-reserve",
+      "history": {
+        "kind": "fixed-separate-profile",
+        "run": {
+          "id": 40992533637,
+          "run_attempt": 1,
+          "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+          "head_branch": "main",
+          "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+          "event": "workflow_dispatch",
+          "status": "completed",
+          "conclusion": "failure",
+          "created_at": "2026-10-30T02:35:02Z",
+          "run_started_at": "2026-10-30T02:35:02Z",
+          "updated_at": "2026-10-30T02:36:19Z",
+          "actor": {
+            "login": "nejcar20",
+            "id": 25134229,
+            "type": "User"
+          },
+          "triggering_actor": {
+            "login": "nejcar20",
+            "id": 25134229,
+            "type": "User"
+          },
+          "repository": {
+            "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+          },
+          "head_repository": {
+            "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+          }
+        },
+        "jobsSha256": "f3bbc7f64827006750c31570f74f31114985566d8840b624e05fd49c1fd48e5b"
+      },
+      "runtime": {
+        "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d": {
+          ".github/workflows/uvoz-fcf-zgodovina.yml": "bc862683697364306984524fb16610d2edba4f2d90f74c1bed37d16f705534ff",
+          "scripts/fcf-refresh800-actions.mjs": "848d82fe4be120848f2334c6aa116ff0b3e49b3880206e36287a7188e5775702",
+          "scripts/fcf-refresh800-capture.mjs": "84ae995b547cdebc6d2abfbab4622b4c7772b6e2ee6b1083a1095ec940d72e4f",
+          "scripts/fcf-refresh800-contract.mjs": "c3c13c44758d7add414c96a0cafc465b50695d16518120061c4c090a5ebf4267",
+          "scripts/fcf-refresh800-execution.mjs": "ec871fd3e7f387a6d1342e64e3fecfa8333ed3c0364a5c94ed6eb2e8f3c5943f",
+          "scripts/fcf-refresh800-runtime.mjs": "19f6f880f5855811f72c7ec46c6505f2dba6d575a147bc92cc99db2340467fe3",
+          "scripts/test-fcf-refresh800-contract.mjs": "553dafab6e4299d63a2bb11cca4639d294f10114cb508d3467412100d8026b49",
+          "scripts/test-fcf-refresh800-ledger.mjs": "da414e6b6fa334047293b2519b5ce6f81862cc8564387eb599d88330f887a0e4",
+          "scripts/test-fcf-refresh800-evidence.mjs": "927c9fdb482a4b35aded3ebe0c281d374a44a54bd86243c664cce656b761214c",
+          "scripts/test-fcf-refresh800-execution.mjs": "82e9193215b4a17aa3e94f2ba09152ad347433773e5b530476d07b542b3b0691",
+          "scripts/test-fcf-refresh800-capture.mjs": "173eed67d05a783d4c8eed1ba31605084e5f8def5c95c0a31757c63dc7f84128",
+          "scripts/test-fcf-refresh800-actions.mjs": "52a62387c35ee6ae9f56d2081cc64961fbb476b3b05d5516c506b523162288fd",
+          "scripts/test-fcf-refresh800-workflow.mjs": "f6d920d0524a88ffa2970fcb6265cb2a844850b2a7a6a0074820d6a439c8c4ea",
+          "scripts/test-fcf-refresh800-revision.mjs": "fcefcd09a2a9c9e9a8f564e0cfa8acb6844dbd5ae541b6b1ca3b6c3d457d4a78",
+          "scripts/test-fcf-refresh800-integration.mjs": "aef8d92f05bb84badf9dfe8b01469af40fff0691c5bea517ea3b59a152e24e28",
+          "scripts/test-fcf-ownsite-transport.mjs": "8f9da7720001671f9b0dde033fc0ce270bbb4a4fd8e23c69cddef97512be0a71",
+          "scripts/fcf-refresh800-test-fixture.mjs": "c433011b30a299f2237fdff6f9d4522722f1ead24e55f2e8656433d90554835f",
+          "scripts/fcf-ownsite-test-fixture.mjs": "864883d2879ed6f91d9981037ebdaad2863011d42ba8570e33610fd367091a2c"
+        }
+      },
+      "fixedVerifier": null,
+      "hosts": [
+        "www.fcf.cat"
+      ],
+      "scope": "Independent fixed Spain/Catalonia source profile, outside original fixed Baden FUSSBALL validation ledger. Actual provider traffic remains null; no Spanish counter enters German B.",
+      "physicalProviderAttempts": null
+    }
+  ]
+}

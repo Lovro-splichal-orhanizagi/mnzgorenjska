@@ -8,11 +8,16 @@ import {createHash} from 'node:crypto'
 import {performance} from 'node:perf_hooks'
 import {isDeepStrictEqual as same} from 'node:util'
 import {readFussballBadenR10AccountingFoundation,getFussballBadenR10AccountingFoundation} from './fussball-baden-r10-foundation.mjs'
+import {badenR10NightlyPins,badenR10NightlyProjection,badenR10NightlyRunProjection} from './fussball-baden-r10-nightly.mjs'
+import {readFcfFrozenContentBytes} from './fcf-frozen-content-bytes.mjs'
+import {assertFcfRefresh800History} from './fcf-refresh800-ledger.mjs'
+import {assertReviewedFcfG1HistoricalZero} from './fcf-g1-historical-zero-witness.mjs'
 import {readBadenR10FamilyHistory} from './fussball-baden-r10-history.mjs'
 import {readBadenR10CiCheckout} from './fussball-baden-r10-checkout.mjs'
 import {readBadenR10RuntimeVector} from './fussball-baden-r10-runtime-vector.mjs'
 const policy=JSON.parse(readFileSync(new URL('./fussball-baden-r10-accounting.json',import.meta.url)))
 const exclusions=JSON.parse(readFileSync(new URL('./fussball-baden-r10-exclusions.json',import.meta.url)))
+const fcfModes=JSON.parse(readFileSync(new URL('./fussball-baden-r10-fcf-modes.json',import.meta.url)))
 const contentGroups=JSON.parse(readFileSync(new URL('./fussball-baden-r10-content-vectors.json',import.meta.url)))
 const history=JSON.parse(readFileSync(new URL('./fussball-fresh-pair-history.json',import.meta.url)))
 const prefix=`repos/${policy.repository}/`,states=new WeakMap(),MiB=1024*1024
@@ -95,7 +100,7 @@ function nightlyScope(bytes,p,jobs){
 export async function readFussballBadenR10Budget(input){
  need(closed(input,['github'])&&typeof input.github==='function','INPUT')
  need(policy.kind==='fixed-baden-r10-research-execution-accounting'&&policy.totalRequestCap===5000&&policy.currentMaximum===780&&policy.archiveMaximum===0,'FIXED_POLICY')
- const originals=new Map(),reads=[],allowed=new Set(),mutable=new Map();let retained=0
+ const originals=new Map(),reads=[],allowed=new Set(),mutable=new Map(),mutableProjection=new Map(),nightlyClosed=new Set(),closedModes=new Set();let retained=0
  const get=async(path,binary=false)=>{
   need(typeof path==='string'&&path.startsWith(prefix)&&allowed.has(path.slice(prefix.length)),'GET_SCOPE')
   if(!binary&&(/\/git\/(?:commits|trees)\//.test(path)||/\/contents\/.+\?ref=[a-f0-9]{40}$/.test(path))&&originals.has(path))return parse(originals.get(path))
@@ -124,6 +129,9 @@ export async function readFussballBadenR10Budget(input){
  need(foundation.accounting.authenticatedMinimumSpent===3607,'FOUNDATION')
  for(const o of ancestorCoverage.observations)mutable.set(o.path.slice(prefix.length),o.value)
  delete ancestorCoverage.observations
+ const censusProjection=r=>(nightlyClosed.has(String(r.id))||closedModes.has(String(r.id)))?badenR10NightlyRunProjection(runProjection(r)):runProjection(r)
+ const familyProjection=families=>families.map(f=>({...f,runs:f.runs.map(r=>(nightlyClosed.has(String(r.id))||closedModes.has(String(r.id)))?badenR10NightlyRunProjection(r):r)}))
+ const fcfRuntimeCache=new Set()
  const runtimeCache=new Set()
  const vectorCache=new Map()
  const vector=async(head,workflow,projection='all')=>{
@@ -145,12 +153,25 @@ export async function readFussballBadenR10Budget(input){
  for(const listed of first){
   const p=policy.records.find(p=>p.run.id===listed.id),runId=String(listed.id)
   if(!p){
+   if(listed.path==='.github/workflows/uvoz-zapisnikov.yml'){
+    try{
+     need(listed.run_attempt===1,'NIGHTLY_ATTEMPT')
+     const runPath=`actions/runs/${runId}`,jobsPath=runPath+'/attempts/1/jobs?per_page=100&page=1',run=await api(runPath),jobs=await api(jobsPath),pins=badenR10NightlyPins()
+     need(same(badenR10NightlyRunProjection(runProjection(run)),badenR10NightlyRunProjection(runProjection(listed)))&&run.head_branch==='main'&&['schedule','workflow_dispatch'].includes(run.event),'NIGHTLY_RUN')
+     const projected=badenR10NightlyProjection(run,jobs),head=run.head_sha,cp='git/commits/'+head;allowed.add(cp);const commit=await api(cp);need(commit?.sha===head&&/^[a-f0-9]{40}$/.test(commit.tree?.sha??''),'NIGHTLY_COMMIT')
+     for(const[file,digest]of Object.entries(pins.files)){const path=`contents/${file}?ref=${head}`;allowed.add(path);const v=await api(path);need(v?.type==='file'&&v.path===file&&v.encoding==='base64'&&typeof v.content==='string'&&v.size<=8*MiB&&Buffer.from(v.content,'base64').length===v.size&&sha(Buffer.from(v.content,'base64'))===digest,'NIGHTLY_COUNTRY_GUARD_BODY')}
+     const de=projected.deJob,lp='actions/jobs/'+de.id+'/logs';allowed.add(lp);const log=await api(lp,true),scope=nightlyScope(log,{deJobId:de.id,logSha256:sha(log)},jobs)
+     nightlyClosed.add(runId);mutable.set(runPath,run);mutable.set(jobsPath,jobs);mutableProjection.set(runPath,r=>badenR10NightlyRunProjection(runProjection(r)));mutableProjection.set(jobsPath,j=>badenR10NightlyProjection(run,j))
+     executions.push({runId,runAttempt:1,head,path:run.path,kind:'regular-dfb-nightly-active-foreign',classification:'OUTSIDE_ORIGINAL_RESEARCH_PROFILE',newResearchRequests:0,physicalProviderAttempts:null,redirectVisibility:'NOT_JOURNALED',deJobId:de.id,deLogSha256:sha(log),countryProjection:projected,...scope})
+    }catch(error){blockers.push({runId,path:listed.path,reason:error.code??'NIGHTLY_EVIDENCE_HOLD'})}
+    continue
+   }
    const content=contentGroups.groups.find(g=>g.workflow===listed.path&&(g.mode!=='automatic-build-sql'||['push','pull_request'].includes(listed.event)))
    if(content){
     try{
-     need(listed.run_attempt===1&&listed.status==='completed'&&['success','failure','cancelled','skipped','timed_out','action_required','neutral','stale'].includes(listed.conclusion),'GROUP_ATTEMPT')
+     need(listed.run_attempt===1&&['queued','pending','waiting','in_progress','completed'].includes(listed.status)&&(listed.status!=='completed'||['success','failure','cancelled','skipped','timed_out','action_required','neutral','stale'].includes(listed.conclusion)),'GROUP_ATTEMPT')
      const runPath=`actions/runs/${listed.id}`,jobsPath=runPath+'/attempts/1/jobs?per_page=100&page=1',run=await api(runPath),jobs=await api(jobsPath)
-     need(same(runProjection(run),runProjection(listed)),'GROUP_RUN');jobsProjection(jobs)
+     need(same(badenR10NightlyRunProjection(runProjection(run)),badenR10NightlyRunProjection(runProjection(listed))),'GROUP_RUN');jobsProjection(jobs)
      let checkout=run.head_sha
      let checkoutEvidence=null
      if(['automatic-build-sql','automatic-scout-sql'].includes(content.mode)&&run.event==='pull_request'&&jobs.total_count>0){
@@ -158,14 +179,15 @@ export async function readFussballBadenR10Budget(input){
       checkout=checkoutEvidence.checkoutHead
      }
      const footprint=await vector(checkout,run.path,content.projection??'all')
-     need(content.vectors.some(v=>v.vectorSha256===footprint.vectorSha256)||content.projection==='german-ci'&&footprint.reviewedCriticalBytes,'UNREVIEWED_EXECUTED_VECTOR')
+     need(content.vectors.some(v=>v.vectorSha256===footprint.vectorSha256)||content.projection==='german-ci'&&footprint.reviewedCriticalBytes||content.projection==='scout-ci'&&footprint.reviewedScoutCriticalBytes,'UNREVIEWED_EXECUTED_VECTOR')
      const names=jobs.jobs.map(j=>j.name).sort()
-     need(jobs.jobs.every(j=>j.run_id===run.id&&j.run_attempt===1&&j.head_sha===run.head_sha&&j.status==='completed'&&content.jobNames.includes(j.name)&&
-      new Set(j.steps.map(s=>s.number)).size===j.steps.length&&j.steps.every(s=>s.status==='completed'&&content.allowedSteps[j.name]?.includes(s.name))),'GROUP_COMPLETE_GRAPH')
+     need(jobs.jobs.every(j=>j.run_id===run.id&&j.run_attempt===1&&j.head_sha===run.head_sha&&['queued','pending','waiting','in_progress','completed'].includes(j.status)&&content.jobNames.includes(j.name)&&
+      new Set(j.steps.map(s=>s.number)).size===j.steps.length&&j.steps.every(s=>['queued','pending','waiting','in_progress','completed'].includes(s.status)&&content.allowedSteps[j.name]?.includes(s.name))),'GROUP_COMPLETE_GRAPH')
      if(content.mode==='automatic-build-sql'){
       const emptyCancelled=run.status==='completed'&&run.conclusion==='cancelled'&&jobs.total_count===0
       need(emptyCancelled||same(names,content.jobNames)&&content.sourceJobs.every(name=>jobs.jobs.some(j=>j.name===name&&j.status==='completed'&&j.conclusion==='skipped'&&j.steps.length===0)),'RESEARCH_JOBS_NOT_SKIPPED')
-     }else need((['automatic-scout-sql','own-app-release'].includes(content.mode)||jobs.total_count===1)&&same(names,content.jobNames),'GROUP_COMPLETE_GRAPH')
+     }else need((['automatic-scout-sql','own-app-release','own-db-club-merge'].includes(content.mode)||jobs.total_count===1)&&same(names,content.jobNames),'GROUP_COMPLETE_GRAPH')
+     if(content.mode==='own-db-club-merge')need(content.sourceJobs.every(name=>jobs.jobs.some(j=>j.name===name&&j.status==='completed'&&j.conclusion==='skipped'&&j.steps.length===0)),'CLUB_REPAIR_NOT_SKIPPED')
      let inputSlug=null
      if(content.mode==='foreign-guarded-import'){
       const match=/^Uvoz lige ([a-z]{2}-[a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(run.display_title??'')
@@ -175,8 +197,8 @@ export async function readFussballBadenR10Budget(input){
       // every quoted --tekmovanje argument. The reviewed adapter blob rejects
       // non-de slugs before any FUSSBALL transport, including @vir overrides.
      }
-     mutable.set(runPath,run);mutable.set(jobsPath,jobs)
-     executions.push({runId,runAttempt:1,head:run.head_sha,checkoutHead:checkout,path:run.path,kind:'reviewed-content-vector-group',
+     closedModes.add(runId);mutable.set(runPath,run);mutable.set(jobsPath,jobs);mutableProjection.set(runPath,r=>badenR10NightlyRunProjection(runProjection(r)));mutableProjection.set(jobsPath,v=>{const p=jobsProjection(v);need(p.total_count===jobs.total_count&&p.jobs.every(j=>content.jobNames.includes(j.name)&&j.steps.every(s=>content.allowedSteps[j.name]?.includes(s.name)))&&content.sourceJobs.every(name=>p.jobs.some(j=>j.name===name&&j.status==='completed'&&j.conclusion==='skipped'&&j.steps.length===0)||jobs.total_count===0),'CLOSED_MODE_GRAPH_DRIFT');return {total_count:p.total_count,jobs:p.jobs.map(j=>content.sourceJobs.includes(j.name)?j:Object.fromEntries(['id','run_id','run_attempt','head_sha','name'].map(k=>[k,j[k]])))}})
+     executions.push({runId,runAttempt:1,head:run.head_sha,checkoutHead:jobs.total_count===0?null:checkout,reviewedPlannedHead:jobs.total_count===0?checkout:null,path:run.path,kind:'reviewed-content-vector-group',
       checkoutEvidence,sourceMode:content.mode,classification:'OUTSIDE_ORIGINAL_RESEARCH_PROFILE',inputSlug,contentVector:footprint.vectorSha256,
       newResearchRequests:0,physicalProviderAttempts:null})
     }catch(error){blockers.push({runId,path:listed.path,reason:error.code??'GROUP_EVIDENCE_UNAVAILABLE'})}
@@ -210,6 +232,24 @@ export async function readFussballBadenR10Budget(input){
      executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'reviewed-own-service-group',
       sourceMode:accepted.sourceMode,classification:'OUTSIDE_ORIGINAL_RESEARCH_PROFILE',newResearchRequests:0,physicalProviderAttempts:null})
     }catch(error){blockers.push({runId,path:listed.path,reason:error.code??'EXCLUSION_EVIDENCE_UNAVAILABLE'})}
+    continue
+   }
+   const fcf=fcfModes.records.find(r=>String(r.history.run.id)===runId)
+   if(fcf){
+    try{
+     const runPath=`actions/runs/${runId}`,jobsPath=runPath+'/attempts/1/jobs?per_page=100&page=1',run=await api(runPath),jobs=await api(jobsPath);jobsProjection(jobs);need(same(runProjection(run),runProjection(listed)),'FCF_MODE_LISTED');assertFcfRefresh800History({history:[fcf.history],actual:[{listed,run,jobs:jobs.jobs}]})
+     for(const[head,files]of Object.entries(fcf.runtime)){
+      if(fcfRuntimeCache.has(head))continue
+      const cp='git/commits/'+head;allowed.add(cp);const commit=await api(cp);need(commit?.sha===head&&/^[a-f0-9]{40}$/.test(commit.tree?.sha??''),'FCF_MODE_COMMIT')
+      for(const[file,digest]of Object.entries(files))try{await readFcfFrozenContentBytes({path:file,commit:head,expectedSha256:digest,github:async(path,binary=false)=>{need(path.startsWith(prefix)&&(/^[a-zA-Z0-9_./-]+\?ref=[a-f0-9]{40}$/.test(path.slice(prefix.length))||/^git\/blobs\/[a-f0-9]{40}$/.test(path.slice(prefix.length))),'FCF_BODY_SCOPE');allowed.add(path.slice(prefix.length));return get(path,binary)}})}catch{need(false,'FCF_MODE_RUNTIME_BODY')}
+      fcfRuntimeCache.add(head)
+     }
+     mutable.set(runPath,run);mutable.set(jobsPath,jobs);executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-independent-fcf-mode',sourceMode:fcf.mode,fixedVerifier:fcf.fixedVerifier,providerHosts:fcf.hosts,classification:'OUTSIDE_ORIGINAL_RESEARCH_PROFILE',newResearchRequests:0,physicalProviderAttempts:null})
+    }catch(error){blockers.push({runId,path:listed.path,reason:error.code??'FCF_MODE_EVIDENCE_HOLD'})}
+    continue
+   }
+   if(['40792858711','40804241703'].includes(runId)){
+    try{const runPath=`actions/runs/${runId}`,jobsPath=runPath+'/attempts/1/jobs?per_page=100&page=1',run=await api(runPath),jobs=await api(jobsPath);jobsProjection(jobs);need(same(runProjection(run),runProjection(listed)),'FCF_ZERO_RUN');assertReviewedFcfG1HistoricalZero({...run,jobs:jobs.jobs,observedAttempt:1});mutable.set(runPath,run);mutable.set(jobsPath,jobs);executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'reviewed-independent-fcf-before-source',classification:'OUTSIDE_ORIGINAL_RESEARCH_PROFILE',newResearchRequests:0,physicalProviderAttempts:null})}catch(error){blockers.push({runId,path:listed.path,reason:error.code??'FCF_ZERO_WITNESS_HOLD'})}
     continue
    }
    const attempts=[]
@@ -249,17 +289,17 @@ export async function readFussballBadenR10Budget(input){
  if(blockers.length||!ancestorCoverage.complete)fail()
  const last=await enumerate(api),firstRelevant=first,lastRelevant=last
  for(const r of ancestorCoverage.overlapRuns)if(!lastRelevant.some(x=>x.id===r.id))lastRelevant.push(r)
- for(const r of lastRelevant)if(!firstRelevant.some(x=>x.id===r.id&&same(runProjection(x),runProjection(r))))blockers.push({runId:String(r.id),path:r.path,reason:'LATE_EXECUTION_DRIFT'})
+ for(const r of lastRelevant)if(!firstRelevant.some(x=>x.id===r.id&&same(censusProjection(x),censusProjection(r))))blockers.push({runId:String(r.id),path:r.path,reason:'LATE_EXECUTION_DRIFT'})
  for(const r of firstRelevant)if(!lastRelevant.some(x=>x.id===r.id))blockers.push({runId:String(r.id),path:r.path,reason:'LATE_EXECUTION_MISSING'})
- for(const[path,v]of mutable)if(!same(await api(path),v))blockers.push({runId:path.match(/runs\/(\d+)/)?.[1]??null,path,reason:'LATE_METADATA_DRIFT'})
+ for(const[path,v]of mutable)try{if(!same(mutableProjection.has(path)?mutableProjection.get(path)(await api(path)):await api(path),mutableProjection.has(path)?mutableProjection.get(path)(v):v))blockers.push({runId:path.match(/runs\/(\d+)/)?.[1]??null,path,reason:'LATE_METADATA_DRIFT'})}catch(error){blockers.push({runId:path.match(/runs\/(\d+)/)?.[1]??null,path,reason:error.code??'LATE_METADATA_UNAVAILABLE'})}
  // Mutable rechecks may take longer than a minute. Close the creation/rerun
  // window again AFTER them; verification time must not relabel an older scan.
  const sealedHistory=await historyRead()
- if(!same(sealedHistory.families,ancestorCoverage.families))blockers.push({reason:'UNFILTERED_HISTORY_SEAL_DRIFT'})
- for(const r of sealedHistory.overlapRuns)if(!firstRelevant.some(x=>x.id===r.id&&same(runProjection(x),runProjection(r))))blockers.push({runId:String(r.id),reason:'OLDER_RERUN_SEAL_DRIFT'})
+ if(!same(familyProjection(sealedHistory.families),familyProjection(ancestorCoverage.families)))blockers.push({reason:'UNFILTERED_HISTORY_SEAL_DRIFT'})
+ for(const r of sealedHistory.overlapRuns)if(!firstRelevant.some(x=>x.id===r.id&&same(censusProjection(x),censusProjection(r))))blockers.push({runId:String(r.id),reason:'OLDER_RERUN_SEAL_DRIFT'})
  const sealRelevant=await enumerate(api)
  for(const r of ancestorCoverage.overlapRuns)if(!sealRelevant.some(x=>x.id===r.id))sealRelevant.push(r)
- for(const r of sealRelevant)if(!firstRelevant.some(x=>x.id===r.id&&same(runProjection(x),runProjection(r))))blockers.push({runId:String(r.id),path:r.path,reason:'SEAL_EXECUTION_DRIFT'})
+ for(const r of sealRelevant)if(!firstRelevant.some(x=>x.id===r.id&&same(censusProjection(x),censusProjection(r))))blockers.push({runId:String(r.id),path:r.path,reason:'SEAL_EXECUTION_DRIFT'})
  for(const r of firstRelevant)if(!sealRelevant.some(x=>x.id===r.id))blockers.push({runId:String(r.id),path:r.path,reason:'SEAL_EXECUTION_MISSING'})
  if(blockers.length||!ancestorCoverage.complete)fail()
  const B=foundation.accounting.authenticatedMinimumSpent+executions.reduce((sum,e)=>sum+e.newResearchRequests,0)
