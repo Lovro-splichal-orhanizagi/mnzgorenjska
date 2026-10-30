@@ -1,6 +1,7 @@
 // Genuine retained historical metadata/source DATA; only the current run and
 // changed local writer bytes are synthetic. No Git object dependency or live IO.
 import test from 'node:test'
+import * as ownerRecovery from './lib/baden-owner-forward-recovery.mjs'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {createHash} from 'node:crypto'
@@ -9,7 +10,7 @@ const file=new URL('./install-baden-native-catalog.mjs',import.meta.url),fixture
 function harness(selected=fixture.rows){
  const rows=structuredClone(selected),current={...structuredClone(rows[0].run),id:currentId,head_sha:currentHead,status:'in_progress',conclusion:null},currentBytes=Buffer.from('TEST ONLY changed current writer; never production runtime'),bodies=structuredClone(fixture.files),calls=[]
  const code=readFileSync(file,'utf8').split('// CLI entry')[0].replace(/^import .*\n/gm,'').replaceAll('import.meta.url',JSON.stringify(file.href)).replace(/\bexport /g,'')+'\nreturn {history,skippedExecutionSha};'
- const api=new Function('readFileSync','createHash',code)(()=>currentBytes,createHash)
+ const api=new Function('readFileSync','createHash','ownerRecovery',code)(()=>currentBytes,createHash,ownerRecovery)
  const get=async path=>{calls.push(path);if(path.startsWith(repo+'actions/workflows/install-baden-native-catalog.yml/runs?'))return {total_count:rows.length+1,workflow_runs:[current,...rows.map(x=>x.run)]}
   for(const row of rows){if(path===repo+`actions/runs/${row.run.id}`)return row.run;if(path===repo+`actions/runs/${row.run.id}/attempts/1/jobs?per_page=100&page=1`)return row.jobs;if(path===repo+`actions/runs/${row.run.id}/artifacts?per_page=100&page=1`)return row.artifacts}
   if(path.startsWith(repo+'contents/')){const name=path.slice((repo+'contents/').length).split('?')[0],b=Buffer.from(bodies[name]);return {type:'file',path:name,encoding:'base64',size:b.length,content:b.toString('base64')}}

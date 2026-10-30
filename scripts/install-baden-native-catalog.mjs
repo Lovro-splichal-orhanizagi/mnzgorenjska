@@ -4,6 +4,7 @@ import {readFileSync,writeFileSync,mkdirSync,existsSync,realpathSync} from 'node
 import {join,resolve} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {createHash} from 'node:crypto'
+import * as ownerRecovery from './lib/baden-owner-forward-recovery.mjs'
 import {execFileSync} from 'node:child_process'
 import {githubGetAdapter} from './stage-fussball-native-composition.mjs'
 import {fetchBadenServedPage as fetch} from './lib/baden-served-page.mjs'
@@ -27,8 +28,8 @@ const skippedH7=[
  {runId:40955216891,head:'a4d97017957347e7fccacc8c2e6c0c43a369899f',validationJob:123733448770,installationJob:123741524776,executionSha256:'b7a502581619e5133f5019371cbbd72c357c752df6f1144f2b40b09a271fd4cf',files:skippedH7Files,validationArtifact:{id:12934925393,name:'baden-catalog-validation-40955216891-1',size:236,digest:'sha256:73e2002306066159006c349260f256c42e205716d5192a5d98ef6140c79fb5a1'}}
 ]
 
-const phaseNames=new Set(['INPUT','PINS','IDENTITY','COMPOSITION','MANIFEST','REVIEWED_ASSET','MANIFEST_REAUTH','FINAL_IDENTITY','LOCAL_PREFLIGHT','OWNER_TRANSACTION'])
-const subphaseNames=new Set([...phaseNames,'MAIN_GET','MAIN_HEAD','CI_GET','CI_ID','CI_ATTEMPT','CI_HEAD','CI_REF','CI_WORKFLOW','CI_RESULT','CI_REPOSITORY','SERVED_FETCH','SERVED_STATUS','SERVED_BODY','SERVED_BOUND','SERVED_COMMIT','HISTORY_GET','HISTORY_INVENTORY','HISTORY_HEAD','HISTORY_CURRENT_HEAD','HISTORY_OWNER_SKIPPED','HISTORY_REVIEWED_PROFILE','HISTORY_EXECUTION_PROJECTION','HISTORY_ARTIFACTS_GET','HISTORY_ARTIFACTS_EMPTY','HISTORY_REVIEWED_ARTIFACT','OWNER_VALIDATION_RESULT','OWNER_CRITICAL_STEP','MANIFEST_COMPARISON','MANIFEST_FRESHNESS','FINAL_COMPARISON','FINAL_CAPABILITY',...['CURRENT_RUN','HISTORY_RUN'].flatMap(p=>['GET','ID','ATTEMPT','HEAD','REF','WORKFLOW','REPOSITORY','ACTORS','STATE'].map(x=>p+'_'+x)),...['HISTORY','OWNER'].flatMap(p=>['JOBS_GET','JOBS_INVENTORY','JOB_IDENTITY','STEP_INVENTORY','JOB_PAIR'].map(x=>p+'_'+x)),...['','HISTORY_'].flatMap(p=>['INSTALLER_BODY','WORKFLOW_BODY'].flatMap(x=>['LOCAL_READ','GET','CHECK'].map(k=>p+x+'_'+k)))])
+const phaseNames=new Set(['INPUT','PINS','IDENTITY','COMPOSITION','MANIFEST','REVIEWED_ASSET','MANIFEST_REAUTH','FINAL_IDENTITY','LOCAL_PREFLIGHT','OWNER_PREFLIGHT','OWNER_TRANSACTION'])
+const subphaseNames=new Set([...phaseNames,'MAIN_GET','MAIN_HEAD','CI_GET','CI_ID','CI_ATTEMPT','CI_HEAD','CI_REF','CI_WORKFLOW','CI_RESULT','CI_REPOSITORY','SERVED_FETCH','SERVED_STATUS','SERVED_BODY','SERVED_BOUND','SERVED_COMMIT','HISTORY_GET','HISTORY_INVENTORY','HISTORY_HEAD','HISTORY_CURRENT_HEAD','HISTORY_OWNER_SKIPPED','HISTORY_REVIEWED_PROFILE','HISTORY_EXECUTION_PROJECTION','HISTORY_ARTIFACTS_GET','HISTORY_ARTIFACTS_EMPTY','HISTORY_REVIEWED_ARTIFACT','HISTORY_RECONCILED_OWNER','OWNER_VALIDATION_RESULT','OWNER_CRITICAL_STEP','MANIFEST_COMPARISON','MANIFEST_FRESHNESS','FINAL_COMPARISON','FINAL_CAPABILITY',...['CURRENT_RUN','HISTORY_RUN'].flatMap(p=>['GET','ID','ATTEMPT','HEAD','REF','WORKFLOW','REPOSITORY','ACTORS','STATE'].map(x=>p+'_'+x)),...['HISTORY','OWNER'].flatMap(p=>['JOBS_GET','JOBS_INVENTORY','JOB_IDENTITY','STEP_INVENTORY','JOB_PAIR'].map(x=>p+'_'+x)),...['','HISTORY_'].flatMap(p=>['INSTALLER_BODY','WORKFLOW_BODY'].flatMap(x=>['LOCAL_READ','GET','CHECK'].map(k=>p+x+'_'+k)))])
 let diagnostic={phase:'INPUT',subphase:'INPUT',code:'INPUT_REFUSED'}
 const phase=name=>{need(phaseNames.has(name),'closed diagnostic phase');diagnostic={phase:name,subphase:name,code:name+'_REFUSED'}}
 const at=name=>{need(subphaseNames.has(name),'closed diagnostic subphase');diagnostic={...diagnostic,subphase:name,code:name+'_REFUSED'}}
@@ -77,6 +78,7 @@ function jobsShape(v,p,runId,context='HISTORY'){
  check(context+'_JOB_PAIR',v.jobs.filter(j=>j.name==='validate').length===1&&v.jobs.filter(j=>j.name==='install').length===1,'exact validation and owner jobs required');return {validation:v.jobs.find(j=>j.name==='validate'),installation:v.jobs.find(j=>j.name==='install')}
 }
 async function history(get,p){
+ const recovered=[]
  at('HISTORY_GET');const v=await get(prefix+`actions/workflows/install-baden-native-catalog.yml/runs?event=workflow_dispatch&per_page=100&page=1`)
  check('HISTORY_INVENTORY',Number.isSafeInteger(v?.total_count)&&v.total_count>=1&&v.total_count<=100&&Array.isArray(v.workflow_runs)&&v.workflow_runs.length===v.total_count&&new Set(v.workflow_runs.map(r=>r.id)).size===v.total_count&&v.workflow_runs.filter(r=>r.id===Number(p.runId)).length===1,'complete bounded installer history required')
  for(const listed of v.workflow_runs){
@@ -85,6 +87,7 @@ async function history(get,p){
   at('HISTORY_RUN_GET');const r=await get(prefix+`actions/runs/${listed.id}`);runIdentity(r,prior,String(listed.id),'HISTORY_RUN')
   check('HISTORY_RUN_STATE',r.status==='completed'&&['failure','cancelled','timed_out'].includes(r.conclusion),'earlier live/success/unknown installer holds for reconciliation')
   at('HISTORY_JOBS_GET');const jobs=await get(prefix+`actions/runs/${listed.id}/attempts/1/jobs?per_page=100&page=1`),{validation,installation}=jobsShape(jobs,prior,String(listed.id))
+  if(r.id===ownerRecovery.BADEN_RECONCILED_FAILED_RUN){at('HISTORY_RECONCILED_OWNER');recovered.push(await ownerRecovery.authenticateBadenReconciledFailure({get,run:r,jobs}));continue}
   check('HISTORY_OWNER_SKIPPED',installation.status==='completed'&&installation.conclusion==='skipped'&&installation.steps.length===0&&validation.status==='completed'&&['failure','cancelled','timed_out'].includes(validation.conclusion)&&validation.steps.length>0&&validation.steps.every(s=>s.status==='completed'&&['success','failure','skipped','cancelled'].includes(s.conclusion)),'earlier owner job not explicitly skipped; permanent HOLD')
   const known=[skippedH1,skippedH2,...skippedH7].find(w=>r.id===w.runId)
   if(known){check('HISTORY_REVIEWED_PROFILE',r.head_sha===known.head&&validation.id===known.validationJob&&installation.id===known.installationJob,'exact historical skipped-owner identity differs');if(known.executionSha256)check('HISTORY_EXECUTION_PROJECTION',skippedExecutionSha(r,jobs)===known.executionSha256,'exact reviewed historical execution differs');at('HISTORY_ARTIFACTS_GET');const artifacts=await get(prefix+`actions/runs/${r.id}/artifacts?per_page=100&page=1`);if(known.validationArtifact){
@@ -92,25 +95,26 @@ async function history(get,p){
   }else check('HISTORY_ARTIFACTS_EMPTY',artifacts?.total_count===0&&Array.isArray(artifacts.artifacts)&&artifacts.artifacts.length===0,'historical validation-only artifact inventory must be empty')}
   for(const file of ['scripts/install-baden-native-catalog.mjs',workflow]){const label=file===workflow?'HISTORY_WORKFLOW_BODY':'HISTORY_INSTALLER_BODY';at(label+'_LOCAL_READ');const bytes=readFileSync(new URL('../'+file,import.meta.url));at(label+'_GET');const remote=await get(prefix+`contents/${file}?ref=${prior.head}`),body=Buffer.from(remote?.content??'','base64'),expected=known?known.files[file]:{bytes:bytes.length,sha256:sha(bytes)};check(label+'_CHECK',remote?.type==='file'&&remote.path===file&&remote.encoding==='base64'&&remote.size===expected.bytes&&body.length===expected.bytes&&sha(body)===expected.sha256,'prior validation-only installer body differs')}
  }
+ return recovered
 }
 async function identity(get,p,beforeOwner=false){
  at('CURRENT_RUN_GET');const r=await get(prefix+`actions/runs/${p.runId}`);runIdentity(r,p);check('CURRENT_RUN_STATE',r.status==='in_progress'&&r.conclusion===null,'actual installer must be running')
  at('MAIN_GET');const main=await get(prefix+'branches/main');check('MAIN_HEAD',main?.name==='main'&&main.commit?.sha===p.head,'actual main drift')
  at('CI_GET');const ci=await get(prefix+`actions/runs/${p.mainCiRunId}`)
  check('CI_ID',ci?.id===Number(p.mainCiRunId),'actual CI ID differs');check('CI_ATTEMPT',ci.run_attempt===1,'actual CI first attempt differs');check('CI_HEAD',ci.head_sha===p.head,'actual writer CI differs');check('CI_REF',ci.head_branch==='main','actual CI main ref differs');check('CI_WORKFLOW',ci.event==='push'&&ci.path==='.github/workflows/ci.yml','actual push CI workflow differs');check('CI_RESULT',ci.status==='completed'&&ci.conclusion==='success','actual successful writer CI required');check('CI_REPOSITORY',ci.repository?.full_name===repository&&ci.head_repository?.full_name===repository,'actual CI repository differs')
- for(const file of ['scripts/install-baden-native-catalog.mjs',workflow]){const label=file===workflow?'WORKFLOW_BODY':'INSTALLER_BODY';at(label+'_LOCAL_READ');const bytes=readFileSync(new URL('../'+file,import.meta.url));at(label+'_GET');const remote=await get(prefix+`contents/${file}?ref=${p.head}`);check(label+'_CHECK',remote?.type==='file'&&remote.path===file&&remote.encoding==='base64'&&remote.size===bytes.length&&Buffer.from(remote.content,'base64').equals(bytes),'installed installer/workflow body drift')}
+ for(const file of ['scripts/install-baden-native-catalog.mjs',workflow,'scripts/lib/baden-owner-forward-recovery.mjs']){const label=file===workflow?'WORKFLOW_BODY':'INSTALLER_BODY';at(label+'_LOCAL_READ');const bytes=readFileSync(new URL('../'+file,import.meta.url));at(label+'_GET');const remote=await get(prefix+`contents/${file}?ref=${p.head}`);check(label+'_CHECK',remote?.type==='file'&&remote.path===file&&remote.encoding==='base64'&&remote.size===bytes.length&&Buffer.from(remote.content,'base64').equals(bytes),'installed installer/workflow body drift')}
  at('SERVED_FETCH');let response;try{response=await fetch('https://slff.eu/',{headers:{'Cache-Control':'no-cache'},redirect:'error',signal:AbortSignal.timeout(30000)})}catch(error){diagnostic.code=ownFetchError(error);need(false,'served writer GET unavailable')}
  at('SERVED_STATUS');if(!response.ok){diagnostic.code=Number.isInteger(response.status)&&response.status>=100&&response.status<=599?'OWN_FETCH_HTTP_'+response.status:'OWN_FETCH_HTTP_UNKNOWN';need(false,'served writer unavailable')}
  at('SERVED_BODY');let html;try{html=await response.text()}catch(error){if(error?.code==='OWN_FETCH_BODY_BOUND'){at('SERVED_BOUND');need(false,'bounded served HTML required')}diagnostic.code=ownFetchError(error);need(false,'served writer body unavailable')}
  check('SERVED_BOUND',Buffer.byteLength(html)<=4*1024*1024,'bounded served HTML required')
  const matches=[...html.matchAll(/<meta\b[^>]*name=["']slff-commit["'][^>]*content=["']([a-f0-9]{40})["']/g)];check('SERVED_COMMIT',matches.length===1&&matches[0][1]===p.head,'exact single served writer identity required')
- await history(get,p)
+ const recoveredHistory=await history(get,p)
  if(process.env.GITHUB_JOB==='install'){
   at('OWNER_JOBS_GET');const {validation,installation}=jobsShape(await get(prefix+`actions/runs/${p.runId}/attempts/1/jobs?per_page=100&page=1`),p,p.runId,'OWNER')
   check('OWNER_VALIDATION_RESULT',validation.status==='completed'&&validation.conclusion==='success'&&validation.steps.every(s=>s.status==='completed'&&['success','skipped'].includes(s.conclusion))&&validation.steps.filter(s=>s.name==='Authenticate source, root review, writer and deployed main'&&s.conclusion==='success').length===1&&installation.status==='in_progress'&&installation.conclusion===null,'successful credential-free validation job before owner job required')
   if(beforeOwner)check('OWNER_CRITICAL_STEP',['Validate again before owner connection','Owner connection prerequisite'].every(name=>installation.steps.filter(s=>s.name===name&&s.status==='completed'&&s.conclusion==='success').length===1)&&installation.steps.filter(s=>s.name==='Install reviewed immutable catalog once'&&s.status==='in_progress'&&s.conclusion===null).length===1,'actual owner step and successful pre-connection guards required')
  }
- return {runId:p.runId,head:p.head,mainCiRunId:p.mainCiRunId,served:p.head}
+ return {runId:p.runId,head:p.head,mainCiRunId:p.mainCiRunId,served:p.head,recoveredHistory}
 }
 async function reviewedAsset(get,p){
  // Draft visibility requires push access; the by-tag API is for published releases.
@@ -174,12 +178,20 @@ export async function runBadenNativeCatalogInstaller(input){
  }
  phase('LOCAL_PREFLIGHT');const preflight=JSON.parse(readFileSync(join(output,'preflight.json'),'utf8'))
  need(JSON.stringify(preflight.binding)===JSON.stringify(binding)&&readFileSync(join(output,'manifest.json')).equals(Buffer.from(authenticated.manifest)),'local preflight/manifest reread drift')
+ phase('OWNER_PREFLIGHT');const env=ownerEnvironment(),owner={user:env.PGUSER,database:env.PGDATABASE};let preflightRaw
+ try{preflightRaw=execFileSync('psql',['-X','-qAt','-v','ON_ERROR_STOP=1','-v','VERBOSITY=sqlstate','-v','SHOW_CONTEXT=never'],{env,input:ownerRecovery.badenOwnerReadOnlyPreflightSQL(authenticated.manifest,p.sha256),encoding:'utf8',timeout:45000,maxBuffer:64*1024,stdio:['pipe','pipe','pipe']})}catch(error){write('owner-process.json',json(ownerRecovery.safeBadenOwnerProcessResult(error,'PREFLIGHT_PROCESS')));need(false,'owner readonly preflight process failed before write intent')}
+ let ownerObservation
+ try{ownerObservation=ownerRecovery.safeBadenOwnerPreflightObservation(JSON.parse(preflightRaw.trim()))}catch{write('owner-process.json',json(ownerRecovery.safeBadenOwnerProcessResult({status:0,stdout:preflightRaw},'PREFLIGHT_PARSE')));need(false,'owner readonly preflight JSON failed before write intent')}
+ const ownerProof=json({kind:'baden-owner-readonly-preflight',binding,identity:authenticated.identity,observation:ownerObservation,observationSha256:sha(json(ownerObservation)),at:new Date().toISOString()});write('owner-readonly-preflight.json',ownerProof)
+ need(readFileSync(join(output,'owner-readonly-preflight.json'),'utf8')===ownerProof,'saved readonly owner preflight drift');ownerRecovery.assertBadenOwnerReadOnlyPreflight(ownerObservation,owner)
  write('write-intent.json',json({binding,sha256:p.sha256,at:new Date().toISOString(),status:'SENDING_ONCE_NO_RETRY'}))
+ let raw,completed=false,ownerStage='SQL'
  try{
-  phase('OWNER_TRANSACTION');const env=ownerEnvironment(),raw=execFileSync('psql',['-X','-qAt','-v','ON_ERROR_STOP=1'],{env,input:installationSQL(authenticated.manifest,p.sha256),encoding:'utf8',timeout:150000,maxBuffer:maximum+1024*1024,stdio:['pipe','pipe','pipe']}),v=JSON.parse(raw.trim())
+  phase('OWNER_TRANSACTION');raw=execFileSync('psql',['-X','-qAt','-v','ON_ERROR_STOP=1','-v','VERBOSITY=sqlstate','-v','SHOW_CONTEXT=never'],{env,input:installationSQL(authenticated.manifest,p.sha256),encoding:'utf8',timeout:150000,maxBuffer:maximum+1024*1024,stdio:['pipe','pipe','pipe']});completed=true;ownerStage='READBACK_PARSE';const v=JSON.parse(raw.trim());ownerStage='READBACK_MATCH'
   need(closed(v,['rows','sha256','manifest'])&&v.rows===1&&v.sha256===p.sha256&&v.manifest===authenticated.manifest,'exact committed catalog readback required')
   const result={status:'INSTALLED',binding,sha256:p.sha256,at:new Date().toISOString(),nativeImportEligible:false,activationEligible:false};write('result.json',json(result));return result
- }catch{
+ }catch(error){
+  write('owner-process.json',json(ownerRecovery.safeBadenOwnerProcessResult(completed?{status:0,stdout:raw}:error,ownerStage)))
   diagnostic.code='OWNER_OUTCOME_UNKNOWN'
   write('result.json',json({status:'UNKNOWN_PERMANENT_HOLD',binding,at:new Date().toISOString(),reason:'owner transaction or readback ambiguous; no automatic retry',nativeImportEligible:false,activationEligible:false}));need(false,'UNKNOWN owner outcome; permanent one-shot HOLD, reconcile read-only')
  }

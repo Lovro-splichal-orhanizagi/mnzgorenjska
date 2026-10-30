@@ -49,6 +49,11 @@ create function pg_temp.schema_hold(command text,pattern text)returns void langu
 select pg_temp.schema_hold('create table public.observer_unknown(player_id bigint references players(id))','unknown/missing relevant FK');
 select pg_temp.schema_hold('create table public.observer_unknown(round_id bigint)','unknown');
 select pg_temp.schema_hold('alter table public.fantasy_roster add column unknown_dependency bigint','shape');
+-- Both empty-child9410 FK parents are catalog dependencies, even without rows.
+do $$begin if to_regclass('private_fcf_g1_9410.markers')is not null then
+ perform pg_temp.schema_hold('create table public.observer_9410_unknown(receipt_id bigint references private_fcf_g1_9410.markers(match_id))','unknown/missing relevant FK');
+ perform pg_temp.schema_hold('create table public.observer_9410_unknown_receipt(receipt_id bigint references private_fcf_g1_9410.receipts(match_id))','unknown/missing relevant FK');
+end if;end$$;
 select pg_temp.reject('select private_fcf_g1_readonly.capture(''es-ct-segona-g1'',array[null]::text[])','privacy');
 select 'FCF_G1_READONLY_OBSERVER_PASS';
 

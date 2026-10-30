@@ -18,11 +18,11 @@ import {fussballNativeOriginalResultBytes} from './fussball-native-role-replay.m
 import {replayFussballFreshStage} from './fussball-fresh-pair.mjs'
 import {GERMANY_BULK_CANDIDATES} from './bulk-germany-source.mjs'
 const runtimePath=new URL('./fussball-native-runtime.mjs',import.meta.url)
-export function nativeRuntimeFixture(t,competition,{freshPair=false,completedStages=false}={}){
- const f=partitionFixture(),candidate=GERMANY_BULK_CANDIDATES.find(c=>c.slug===policy.BADEN_SLUG)
+export function nativeRuntimeFixture(t,competition,{freshPair=false,completedStages=false,clock}={}){
+ const f=partitionFixture({now:clock??Date.now()}),candidate=GERMANY_BULK_CANDIDATES.find(c=>c.slug===policy.BADEN_SLUG)
  for(const stage of Object.values(f.state.originals.stages)){const scope=stage.result.scope,seedUrl=scope.season==='2026/27'?candidate.seedUrl:candidate.archives[0].seedUrl;scope.seedUrl=seedUrl;stage.manifest.options={...stage.manifest.options,staffel:scope.staffel,season:scope.season,seedUrl}}
  f.repin();for(const stage of Object.values(f.state.originals.stages))stage.files.set('manifest.json',json(stage.manifest))
- const composition=isolatedComposition(f),pack=structuredClone(composition.buildFussballNativeComposition(f.proof)),compiledPolicy=policy.projectBadenHistoricalPolicy(f.catalog),token=Object.freeze({TEST_ONLY:true}),controls={},calls=[]
+ const composition=isolatedComposition(f),pack=structuredClone(composition.buildFussballNativeComposition(f.proof)),compiledPolicy=policy.projectBadenHistoricalPolicy(f.catalog),token=Object.freeze({TEST_ONLY:true}),controls=clock===undefined?{}:{clock},calls=[]
  if(freshPair||completedStages){
   const code='f9eeb9ecff417b24a599038ee1d0aa9f4c8fd09f8b47cdd71a6c79fb9e823dca'
   f.catalog.kind=completedStages?'baden-fussball-completed-stages-native-catalog':'baden-fussball-fresh-pair-native-catalog';f.catalog.captureCodeSha256=code;f.proof.kind=completedStages?'authenticated-fussball-baden-completed-stages-source':'authenticated-fussball-baden-fresh-pair-source';f.proof.version=completedStages?9:8;f.proof.source.captureCodeSha256=code

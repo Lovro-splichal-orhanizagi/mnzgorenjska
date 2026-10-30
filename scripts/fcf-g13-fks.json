@@ -50,6 +50,26 @@
     "competitions"
   ],
   [
+    "private_fcf_g1_9410.markers",
+    "match_id",
+    "matches"
+  ],
+  [
+    "private_fcf_g1_9410.markers",
+    "round_id",
+    "rounds"
+  ],
+  [
+    "private_fcf_g1_9410.markers",
+    "home_team_id",
+    "teams"
+  ],
+  [
+    "private_fcf_g1_9410.markers",
+    "away_team_id",
+    "teams"
+  ],
+  [
     "private_fcf_g1_supplement.markers",
     "away_team_id",
     "teams"

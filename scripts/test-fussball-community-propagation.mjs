@@ -64,15 +64,18 @@ test('Germany collector passes explicit policy to both current and observed arch
  }
 })
 test('nightly preserves pending-card original bytes and explicit policy across bound seed warm cache reuse',async t=>{
- const f=nativeRuntimeFixture(t,competition),context=await f.context(),root=f.directory,cacheDirectory=join(root,'cache'),calls=[]
+ // TEST ONLY coherent synthetic source and runtime clocks, away from UTC
+ // midnight; real-client pacing must not depend on the CI wall-clock start.
+ const f=nativeRuntimeFixture(t,competition,{clock:Date.parse('2026-10-29T12:00:00.000Z')}),context=await f.context(),root=f.directory,cacheDirectory=join(root,'cache'),calls=[]
  const nightly=isolatedTestModule('./prepare-fussball-nightly.mjs',{...fs,...path,pathToFileURL:url.pathToFileURL,...germany,...nativeImport,...captureEvidence,...communityPolicy,...f.api,captureFussballNativeRuntimeDirectory:async o=>{calls.push(o);return f.api.captureFussballNativeRuntimeDirectory(o)}},['prepareFussballNightly','seedFussballNightly','assertFussballNightlyCompetition'])
- f.controls.clock=Date.now()
  await nightly.seedFussballNightly({candidate:competition,cacheDirectory,installedHistoricalMarkers:context})
  f.observed.active=true
  const row={...competition,active:true};assert.equal(nightly.assertFussballNightlyCompetition(row).communityCards,true)
  for(const name of ['one','two']){
   await nightly.prepareFussballNightly({candidate:row,db:f.db,directory:join(root,name),cacheDirectory,now:()=>f.controls.clock,fetchFn:async url=>f.sourceResponse(url)})
   const manifest=JSON.parse(readFileSync(join(root,name,'native-runtime.json'))),report=manifest.documents.find(d=>d.url===pendingBatch().cardEnvelopes[0].sourceUrl)
+  const rounds=manifest.documents.filter(d=>d.kind==='round')
+  assert.ok(rounds.length>0);assert.ok(rounds.every(d=>d.origin==='network'&&d.capturedAt.slice(0,10)===manifest.asOfDate))
   assert.ok(report);assert.deepEqual(readFileSync(join(root,name,report.file)),read('report.html'))
   assert.equal(manifest.code,code);assert.equal(JSON.parse(readFileSync(join(root,name,'result.json'))).cardPolicy,'community-v1')
  }

@@ -146,7 +146,7 @@ jobs:
           install -m 700 -d ~/.ssh
           printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
-          ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+          ssh -fN -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -L 5432:127.0.0.1:5432 deploy@2.31.6.53
       - name: Install reviewed immutable catalog once
         env:
           GH_TOKEN: ${{ github.token }}

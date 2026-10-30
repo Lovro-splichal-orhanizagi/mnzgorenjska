@@ -1,3 +1,4 @@
+import {withFcfG1Installed4109410} from './fcf-g1-9410-runtime.mjs'
 import {isFcfG1SupplementCompetition} from '../lib/fcf-g1-supplement-installed.mjs'
 import {withFcfG1InstalledSupplement} from './fcf-g1-supplement-runtime.mjs'
 import {FCF_SIX_SOURCE_POLICY} from '../fcf-six-historical-policy.mjs'
@@ -264,8 +265,9 @@ export function viraZa(tekmovanje, {installedHistoricalMarkers=null,installedG1S
   }
   if(tekmovanje?.source_policy===FCF_SIX_SOURCE_POLICY){
     const supplement=isFcfG1SupplementCompetition(tekmovanje)?withFcfG1InstalledSupplement(vir,tekmovanje,{installedG1Supplement}):null
-    const wrapped=withFcfSixHistoricalStatistics(supplement?.provider??vir,tekmovanje,{installedHistoricalMarkers,...(supplement?{readBlock:supplement.readBlock}:{})})
-    wrapped.historicalSourceFiles=[...new Set([...zaprtje('scripts/viri/fcf-six-historical.mjs'),...zaprtje('scripts/fcf-six-historical-policy.mjs'),...(supplement?[...zaprtje('scripts/viri/fcf-g1-supplement-runtime.mjs'),'scripts/policies/fcf-g1-4109409-supplement.json']:[])])]
+    const extra=supplement?withFcfG1Installed4109410(supplement.provider,tekmovanje,{readBlock:supplement.readBlock}):null
+    const wrapped=withFcfSixHistoricalStatistics(extra?.provider??supplement?.provider??vir,tekmovanje,{installedHistoricalMarkers,...(extra?{readBlock:extra.readBlock}:supplement?{readBlock:supplement.readBlock}:{})})
+    wrapped.historicalSourceFiles=[...new Set([...zaprtje('scripts/viri/fcf-six-historical.mjs'),...zaprtje('scripts/fcf-six-historical-policy.mjs'),...(supplement?[...zaprtje('scripts/viri/fcf-g1-supplement-runtime.mjs'),'scripts/policies/fcf-g1-4109409-supplement.json',...zaprtje('scripts/viri/fcf-g1-9410-runtime.mjs'),'scripts/policies/fcf-g1-4109410-supplement.json']:[])])]
     return wrapped
   }
   const policy=getHistoricalStatisticsPolicy(tekmovanje?.slug)

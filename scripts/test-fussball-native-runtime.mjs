@@ -55,7 +55,9 @@ test('TEST ONLY relabeled manifest clocks cannot refresh old round receipts',asy
  await assert.rejects(f.api.loadFussballNativeRuntimeCapture({context,competition,directory}),/receipt|interval/i)
 })
 test('TEST ONLY real-client replay refuses missing/empty/altered journals and cached rounds; retained non-round dates survive reuse',async t=>{
- const f=fixture(t),initial=await f.context(),seed=join(f.directory,'seed'),directory=join(f.directory,'runtime');f.controls.clock=Date.now()
+ // TEST ONLY coherent synthetic source and runtime clocks. Original metadata
+ // is constructed at this epoch, not relabeled after capture.
+ const f=nativeRuntimeFixture(t,competition,{clock:Date.parse('2026-10-29T12:00:00.000Z')}),initial=await f.context(),seed=join(f.directory,'seed'),directory=join(f.directory,'runtime')
  await f.api.seedFussballNativeRuntime({context:initial,competition,directory:seed});f.observed.active=true
  const {context}=await f.api.loadFussballNativeRuntimeSeed({competition,db:f.db,directory:seed}),fetchFn=async url=>f.sourceResponse(url)
  await f.api.captureFussballNativeRuntimeDirectory({context,competition,directory,seedDirectory:seed,fetchFn})
@@ -75,6 +77,8 @@ test('TEST ONLY real-client replay refuses missing/empty/altered journals and ca
  f.controls.clock+=6000;const reused=join(f.directory,'reused')
  await f.api.captureFussballNativeRuntimeDirectory({context,competition,directory:reused,seedDirectory:join(directory,'seed'),reuseDirectory:directory,fetchFn})
  const later=JSON.parse(fs.readFileSync(join(reused,'native-runtime.json')))
+ const freshRounds=later.documents.filter(d=>d.kind==='round')
+ assert.ok(freshRounds.length>0);assert.ok(freshRounds.every(d=>d.origin==='network'&&d.capturedAt.slice(0,10)===later.asOfDate&&Date.parse(d.capturedAt)>Date.parse(original.completedAt)))
  for(const d of later.documents.filter(d=>d.origin==='cache')){const previous=original.documents.find(p=>p.url===d.url);assert.equal(d.capturedAt,previous.capturedAt);assert.deepEqual(d.originalReceipt,previous.originalReceipt)}
  function jsonLines(values){return Buffer.from(values.map(v=>JSON.stringify(v)+'\n').join(''))}
 })
