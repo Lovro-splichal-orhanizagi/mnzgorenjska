@@ -395,7 +395,9 @@
   trgovina, preverjeni, ponovne cene). Delovni tok *Porocilo lijaka*
   (`scripts/porocilo-lijaka.mjs`, 07:00 UTC) ga pošlje na Discord
   (`DISCORD_WEBHOOK_LIJAK`, sicer kanal tedenskega poročila) in z ⚠ označi
-  najšibkejši prehod. Nov korak lijaka, ki naj bo v poročilu, dodaj v `sestavi()`
+  najšibkejši prehod. Sporočilu pripne grafa (`scripts/lijak-grafi.mjs`,
+  `@napi-rs/canvas`): lijak skupine in trende zadnjih 14 dni (14 klicev
+  funkcije). Nov korak lijaka, ki naj bo v poročilu, dodaj v `sestavi()`
 - `trgovine_dnevno` (trgovina `ios`/`android`, dan, `skupaj`, `novi`) in
   `trgovine_stanje` (zadnje stanje različice iOS) → namestitve aplikacije.
   Piše le delovni tok *Trgovine* (`scripts/trgovine.mjs`, vsak dan 07:30 UTC,

@@ -9,6 +9,7 @@
 //   SUPABASE_SERVICE_ROLE_KEY=... node scripts/porocilo-lijaka.mjs [--dan 2026-10-29]
 //   ... --discord        pošlje na Discord (sicer samo izpiše)
 import { createClient } from '@supabase/supabase-js'
+import { writeFileSync } from 'node:fs'
 
 const BASE = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321'
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -16,15 +17,19 @@ const WEBHOOK = process.env.DISCORD_WEBHOOK_LIJAK || process.env.DISCORD_WEBHOOK
 const naDiscord = process.argv.includes('--discord')
 const i = process.argv.indexOf('--dan')
 const dan = i > 0 ? process.argv[i + 1] : undefined
+const DNI_TRENDA = 14
 
-async function poslji(content) {
-  if (!naDiscord) return console.log(content)
+/** `slike`: { ime.png: Buffer } — Discord jih pripne istemu sporočilu. */
+async function poslji(content, slike = {}) {
+  if (!naDiscord) {
+    for (const [ime, png] of Object.entries(slike)) writeFileSync(ime, png)
+    return console.log(content + (Object.keys(slike).length ? `\n\n(slike: ${Object.keys(slike).join(', ')})` : ''))
+  }
   if (!WEBHOOK) return console.log('Ni DISCORD_WEBHOOK_LIJAK — ne pošiljam.\n\n' + content)
-  const r = await fetch(WEBHOOK, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content: content.slice(0, 1990) }),
-  })
+  const telo = new FormData()
+  telo.append('payload_json', JSON.stringify({ content: content.slice(0, 1990) }))
+  Object.entries(slike).forEach(([ime, png], j) => telo.append(`files[${j}]`, new Blob([png], { type: 'image/png' }), ime))
+  const r = await fetch(WEBHOOK, { method: 'POST', body: telo })
   if (!r.ok) throw new Error(`Discord ${r.status}`)
 }
 
@@ -91,7 +96,24 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   try {
     const { data, error } = await db.rpc('porocilo_lijaka', dan ? { p_dan: dan } : {})
     if (error) throw new Error(error.message)
-    await poslji(sestavi(data))
+    // Trendi: isto poročilo za 13 dni nazaj (vsak klic ~50 ms).
+    const dnevi = [data]
+    for (let n = 1; n < DNI_TRENDA; n++) {
+      const d = new Date(`${data.dan}T12:00:00Z`)
+      d.setUTCDate(d.getUTCDate() - n)
+      const { data: prej, error: e } = await db.rpc('porocilo_lijaka', { p_dan: d.toISOString().slice(0, 10) })
+      if (e) throw new Error(e.message)
+      dnevi.unshift(prej)
+    }
+    // Grafi so dodatek: če risanje pade, gre vsaj besedilo.
+    let slike = {}
+    try {
+      const { grafLijaka, grafTrendov } = await import('./lijak-grafi.mjs')
+      slike = { 'lijak.png': grafLijaka(data.skupina), 'trendi.png': grafTrendov(dnevi) }
+    } catch (e) {
+      console.error('Grafi:', e.message)
+    }
+    await poslji(sestavi(data), slike)
   } catch (e) {
     console.error(e.message)
     // Tiho odpovedano poročilo je slabše od nobenega: povej na Discord.
