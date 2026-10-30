@@ -10870,7 +10870,10 @@ export type Database = {
           zahtevek_id: number
         }[]
       }
-      zabelezi_korak: { Args: { p_korak: string }; Returns: undefined }
+      zabelezi_korak: {
+        Args: { p_korak: string; p_osebno?: boolean; p_platforma?: string }
+        Returns: undefined
+      }
       zabelezi_obisk: { Args: { p_stran: string }; Returns: undefined }
       zabelezi_povabilo: { Args: { p_koda: string }; Returns: boolean }
       zabelezi_sponzorja: {

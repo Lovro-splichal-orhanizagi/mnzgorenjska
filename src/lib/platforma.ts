@@ -14,6 +14,10 @@ export const SHEMA = 'eu.slff.app'
 /** Ali stran teče v mobilni aplikaciji (iOS, Android), ne v brskalniku. */
 export const jeNativno = (): boolean => Capacitor.isNativePlatform()
 
+/** 'ios', 'android' ali 'web' (tudi brskalnik na telefonu). */
+export const platforma = (): 'ios' | 'android' | 'web' =>
+  jeNativno() ? (Capacitor.getPlatform() === 'ios' ? 'ios' : 'android') : 'web'
+
 /**
  * Povezava na trgovino SLFF (meni in noga). Na spletu v istem zavihku (naša
  * stran), v aplikaciji v sistemskem brskalniku kot Facebook v nogi, da

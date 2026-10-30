@@ -1,0 +1,38 @@
+name: Porocilo lijaka
+
+# Vsako jutro na Discord: kje se ljudje ustavijo in koliko denarja pride
+# (scripts/porocilo-lijaka.mjs, funkcija porocilo_lijaka). Ob 7:00 UTC, ko so
+# vcerajsnji obiski in koraki ze zapisani.
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      dan:
+        description: 'Dan (YYYY-MM-DD), privzeto vceraj'
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  porocilo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: node --test scripts/test-porocilo-lijaka.mjs
+      - name: Porocilo lijaka
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Lasten kanal, ce je nastavljen; sicer kanal tedenskega porocila.
+          DISCORD_WEBHOOK_LIJAK: ${{ secrets.DISCORD_WEBHOOK_LIJAK }}
+          DISCORD_WEBHOOK_TEDENSKO: ${{ secrets.DISCORD_WEBHOOK_TEDENSKO }}
+          DAN: ${{ inputs.dan }}
+        run: node scripts/porocilo-lijaka.mjs --discord ${DAN:+--dan "$DAN"}

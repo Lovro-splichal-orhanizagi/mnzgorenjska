@@ -9,11 +9,12 @@
 # skripta ga ne piše in ne bere.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
-DATOTEKE=(scripts/objave.mjs scripts/objave-glasba)
+DATOTEKE=(scripts/objave.mjs scripts/objava-reel.mjs scripts/objave-glasba)
 if [[ -n $(git status --porcelain -- "${DATOTEKE[@]}" scripts/hetzner/objave) ]]; then
   echo "Uncommitted changes in the posts script; publish only what is on main."; exit 1
 fi
 node --check scripts/objave.mjs
+node --check scripts/objava-reel.mjs
 SUPABASE_JS=$(node -p "require('./package-lock.json').packages['node_modules/@supabase/supabase-js'].version")
 PLAYWRIGHT=$(node -p "require('./package-lock.json').packages['node_modules/playwright'].version")
 SLIKA=mcr.microsoft.com/playwright:v$PLAYWRIGHT-noble
@@ -30,7 +31,7 @@ ssh SLFF "test -f $CILJ/.env || { echo 'Manjka $CILJ/.env (ustvari ga lastnik, g
 rsync -aR "${DATOTEKE[@]}" "SLFF:$CILJ/app.novo/"
 rsync -a scripts/hetzner/objave/docker-compose.yml scripts/hetzner/objave/Dockerfile "SLFF:$CILJ/"
 ssh SLFF "cd $CILJ && docker pull -q $SLIKA >/dev/null \
-  && mkdir -p mediji && chmod 755 . mediji && chown \$(docker run --rm $SLIKA id -u pwuser):\$(docker run --rm $SLIKA id -g pwuser) mediji \
+  && mkdir -p mediji rocni && chmod 755 . mediji && chmod 700 rocni && chown \$(docker run --rm $SLIKA id -u pwuser):\$(docker run --rm $SLIKA id -g pwuser) mediji rocni \
   && chmod -R a+rX app.novo \
   && docker run --rm -v $CILJ/app.novo:/app -w /app $SLIKA \
        sh -c 'npm install --no-save --no-package-lock --omit=dev --ignore-scripts --loglevel=error @supabase/supabase-js@$SUPABASE_JS playwright@$PLAYWRIGHT && chmod -R a+rX node_modules' \

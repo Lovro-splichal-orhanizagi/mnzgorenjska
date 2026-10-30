@@ -3,7 +3,7 @@
 // (ni plačilo).
 import { t } from '../i18n'
 
-const INSTAGRAM = 'https://www.instagram.com/slff.eu'
+export const INSTAGRAM = 'https://www.instagram.com/slff.eu'
 
 export default function Instagram() {
   return (
