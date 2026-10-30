@@ -41,7 +41,8 @@ begin
                      'osnutek_brez_prijave', 'osnutek_shranjen', 'igralec_cta', 'kartica_deljena',
                      'pivo_okno', 'pivo_okno_ekipa', 'pivo_okno_krog', 'pivo_klik_ekipa', 'pivo_klik_krog',
                      'pivo_okno_zaprto', 'push_pas', 'push_pas_zaprt', 'push_dovoljeno', 'push_zavrnjeno',
-                     'aplikacija_odprta') then
+                     'aplikacija_odprta', 'poziv_aplikacija', 'poziv_aplikacija_klik',
+                     'poziv_sledi', 'poziv_sledi_klik', 'poziv_zaprt') then
     return;
   end if;
 
