@@ -1,4 +1,45 @@
 -- NEVER MERGE. Disposable hosted DB only; synthetic source-free G1/G9 geometry.
+-- Print only bounded aggregate facts and exact competition routing headers.
+-- This precedes the strict guard so a fresh disposable run identifies the
+-- specific state mismatch without exposing any user or football row content.
+BEGIN READ ONLY;
+SELECT 'SCRATCH_STATE_DIAGNOSTIC ' || jsonb_build_object(
+  'badenVersionCount',(SELECT count(*) FROM private_baden_transition.versions),
+  'badenVersionKindCount',(SELECT count(*) FROM private_baden_transition.versions
+                           WHERE source_binding->>'kind'='baden-cold-source-binding-DATA'),
+  'badenCatalogCount',(SELECT count(*) FROM private_baden_history.catalog),
+  'headers',(SELECT coalesce(jsonb_agg(jsonb_build_object(
+      'id',c.id,'slug',c.slug,'source',c.source,
+      'sourceLeagueCode',c.source_league_code,'countryCode',co.code,
+      'active',c.active,'firstRound',c.prvi_fantasy_krog,
+      'offset',c.rok_pomak_ur,'calendar',c.sezona_koledarska,
+      'sourcePolicy',c.source_policy) ORDER BY c.id),'[]'::jsonb)
+    FROM competitions c LEFT JOIN countries co ON co.id=c.country_id
+    WHERE c.id IN (783,797) OR c.slug IN ('es-ct-segona-g1','es-ct-tercera-g9')),
+  'exactHeaderCount',(SELECT count(*) FROM competitions c JOIN countries co ON co.id=c.country_id
+    WHERE (c.id=783 AND c.slug='es-ct-segona-g1' AND c.source_league_code='4109388-4109627'
+           OR c.id=797 AND c.slug='es-ct-tercera-g9' AND c.source_league_code='4118349-4118588')
+      AND co.code='ES' AND c.source='fcf' AND c.source_policy IS NULL
+      AND NOT c.active AND NOT c.sezona_koledarska AND c.prvi_fantasy_krog=1
+      AND c.rok_pomak_ur=6 AND c.date_only_deadline_policy IS NULL),
+  'dateOnlyPolicyNullFixedIdCount',(SELECT count(*) FROM competitions
+                                    WHERE id IN (783,797) AND date_only_deadline_policy IS NULL),
+  'roundsFixedIdCount',(SELECT count(*) FROM rounds WHERE competition_id IN (783,797)),
+  'roundsTargetSlugCount',(SELECT count(*) FROM rounds r JOIN competitions c ON c.id=r.competition_id
+                           WHERE c.slug IN ('es-ct-segona-g1','es-ct-tercera-g9')),
+  'playersFixedIdCount',(SELECT count(*) FROM players WHERE competition_id IN (783,797)),
+  'playersTargetSlugCount',(SELECT count(*) FROM players p JOIN competitions c ON c.id=p.competition_id
+                            WHERE c.slug IN ('es-ct-segona-g1','es-ct-tercera-g9')),
+  'fantasyTeamsFixedIdCount',(SELECT count(*) FROM fantasy_teams WHERE competition_id IN (783,797)),
+  'installedPoliciesFixedIdCount',(SELECT count(*) FROM private_historical_statistics.installed_policies
+                                    WHERE competition_id IN (783,797)),
+  'futureReceiptsFixedIdCount',(SELECT count(*) FROM private_fcf_future_target_release.receipts
+                                 WHERE competition_id IN (783,797)),
+  'teamIdCollisionCount',(SELECT count(*) FROM teams WHERE id BETWEEN 971000 AND 971115),
+  'roundIdCollisionCount',(SELECT count(*) FROM rounds WHERE id BETWEEN 972000 AND 972130),
+  'matchIdCollisionCount',(SELECT count(*) FROM matches WHERE id BETWEEN 973000 AND 974239)
+)::text;
+ROLLBACK;
 BEGIN;
 DO $seed$
 DECLARE changed integer;
