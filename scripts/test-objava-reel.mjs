@@ -32,13 +32,14 @@ const sonda = (spremembe = {}) => async () => ({
 const ENV = { META_PAGE_TOKEN: 'skrivni-zeton', META_PAGE_ID: '111', META_IG_USER_ID: '222', OBJAVE_MEDIJI_URL: 'https://slff.eu/objave-mediji', DISCORD_OBJAVE_WEBHOOK: 'https://discord.test/hook' }
 
 /** Ponarejen Graph API: računi, kvota, IG reel, FB reel, HEAD javnega videa, Discord. */
-function meta({ povezanIg = '222', kvota = 3, igNapaka = null, velikost = VIDEO.length } = {}) {
+function meta({ povezanIg = '222', kvota = 3, igNapaka = null, velikost = VIDEO.length, headPade = false } = {}) {
   const klici = []
   const f = async (url, o = {}) => {
     const u = new URL(url)
     const telo = o.body ? Object.fromEntries(new URLSearchParams(o.body)) : null
     klici.push({ metoda: o.method ?? 'GET', pot: u.pathname, telo, url })
     const j = (x, ok = true) => ({ ok, status: ok ? 200 : 400, json: async () => x, headers: new Headers() })
+    if (u.host === 'slff.eu' && headPade) throw new Error('fetch failed')
     if (u.host === 'slff.eu') return { ok: true, status: 200, headers: new Headers({ 'content-length': String(velikost) }) }
     if (u.host === 'discord.test') return { ok: true, status: 204 }
     if (u.host === 'rupload.facebook.com') return j({ success: true })
@@ -155,7 +156,9 @@ test('osnutek delavca v ±60 min in brez baze ustavi', async () => {
   await R.blizuDelavca(db([], meje), ZDAJ)
   assert.equal(+ZDAJ - Date.parse(meje.od), 2 * 3600e3)
   assert.equal(Date.parse(meje.do) - +ZDAJ, 3600e3)
-  await assert.rejects(R.rocniReel({ tar: t, platforme: ['ig'], suho: true, env: ENV, mapa: m, zasebno: zas(m), db: db([{ id: 19, vrsta: 'pravila', objava_ob: '2026-10-30T13:40:00Z' }]), f: meta().f, sonda: sonda(), zdaj: ZDAJ, log: tiho }), /worker post #19 \(pravila\) is due at 14:40/)
+  await assert.rejects(R.rocniReel({ tar: t, platforme: ['ig'], suho: true, env: ENV, mapa: m, zasebno: zas(m), db: db([{ id: 19, vrsta: 'pravila', objava_ob: '2026-10-30T13:40:00Z' }]), f: meta().f, sonda: sonda(), zdaj: ZDAJ, log: tiho }), /worker post #19 \(pravila\) is due at 14:40; try more than 60 min/)
+  // Zamujen osnutek: počakaj, dokler ga delavec ne more več objaviti (2 h po roku).
+  await assert.rejects(R.rocniReel({ tar: t, platforme: ['ig'], suho: true, env: ENV, mapa: m, zasebno: zas(m), db: db([{ id: 20, vrsta: 'pravila', objava_ob: '2026-10-30T11:30:00Z' }]), f: meta().f, sonda: sonda(), zdaj: ZDAJ, log: tiho }), /due at 12:30; it may still go out late, so wait until 14:30/)
   await assert.rejects(R.rocniReel({ tar: t, platforme: ['ig'], suho: true, env: ENV, mapa: m, zasebno: zas(m), db: null, f: meta().f, sonda: sonda(), zdaj: ZDAJ, log: tiho }), /no database/)
 })
 
@@ -203,6 +206,11 @@ test('javni URL ne vrne videa: nič k Meti', async () => {
   await assert.rejects(R.rocniReel({ tar: await tar({ 'reel.mp4': VIDEO, 'caption.txt': NAPIS }), platforme: ['ig'], suho: false, env: ENV, mapa: m, zasebno: zas(m), db: db(), f, sonda: sonda(), zdaj: ZDAJ, log: tiho }), /public video URL/)
   assert.ok(!klici.some((k) => k.metoda === 'POST'))
   assert.deepEqual(await readdir(join(m, 'rocni')).catch(() => []), [])
+  // Tudi omrežna napaka pri HEAD ne pusti javne datoteke.
+  const m2 = await mapa(); const o2 = meta({ headPade: true })
+  await assert.rejects(R.rocniReel({ tar: await tar({ 'reel.mp4': VIDEO, 'caption.txt': NAPIS }), platforme: ['ig'], suho: false, env: ENV, mapa: m2, zasebno: zas(m2), db: db(), f: o2.f, sonda: sonda(), zdaj: ZDAJ, log: tiho }), /public video URL .*fetch failed/)
+  assert.ok(!o2.klici.some((k) => k.metoda === 'POST'))
+  assert.deepEqual(await readdir(join(m2, 'rocni')).catch(() => []), [])
 })
 
 test('meja 0 ustavi, neveljavna meja pade', async () => {

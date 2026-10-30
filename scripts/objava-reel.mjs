@@ -289,7 +289,14 @@ export async function rocniReel({ tar, platforme, suho, env, mapa, zasebno, db, 
   log(`daily limit: ${danes} of ${meja} custom reels used today`)
   if (!db) zavrni('cannot check worker drafts (no database)')
   const delavec = await blizuDelavca(db, zdaj)
-  if (delavec) zavrni(`worker post #${delavec.id} (${delavec.vrsta}) is due at ${new Date(delavec.objava_ob).toLocaleTimeString('en-GB', { timeZone: 'Europe/Ljubljana', hour: '2-digit', minute: '2-digit' })}; try more than 60 min away from it`)
+  if (delavec) {
+    const ob = new Date(delavec.objava_ob)
+    const ura = (d) => d.toLocaleTimeString('en-GB', { timeZone: 'Europe/Ljubljana', hour: '2-digit', minute: '2-digit' })
+    const nasvet = ob <= zdaj
+      ? `it may still go out late, so wait until ${ura(new Date(+ob + Math.max(OKNO_DELAVCA, OBJAVA_ZAMUDA)))}`
+      : 'try more than 60 min away from it'
+    zavrni(`worker post #${delavec.id} (${delavec.vrsta}) is due at ${ura(ob)}; ${nasvet}`)
+  }
   if (suho) {
     log(`dry run: would publish to ${platforme.join(' + ')}; nothing published, nothing recorded`)
     return { suho: true, video: podatki, napis, racuni }
@@ -308,7 +315,7 @@ export async function rocniReel({ tar, platforme, suho, env, mapa, zasebno, db, 
     await chmod(pot, 0o644)
     const url = javniUrl(pot, mapa, env.OBJAVE_MEDIJI_URL || 'https://slff.eu/objave-mediji')
     // Meta video prenese z javnega naslova; brez njega bi padla šele po minutah.
-    const h = await f(url, { method: 'HEAD' })
+    const h = await f(url, { method: 'HEAD' }).catch((e) => ({ ok: false, status: e.message }))
     if (!h.ok || Number(h.headers.get('content-length')) !== video.length) {
       await rm(mapaReela, { recursive: true, force: true })
       throw new Error(`public video URL does not serve the file (${h.status})`)
