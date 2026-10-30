@@ -26,6 +26,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
+      - run: node --test scripts/test-porocilo-lijaka.mjs
       - name: Porocilo lijaka
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
