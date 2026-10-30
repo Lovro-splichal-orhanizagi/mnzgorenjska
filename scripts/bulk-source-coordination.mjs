@@ -3,7 +3,7 @@
 import {execFileSync} from 'node:child_process'
 import {resolve} from 'node:path'
 import {fileURLToPath} from 'node:url'
-export const GERMAN_READERS=['uvoz-lige.yml','uvoz-fussball-public.yml','preveri-baden-fresh-pair.yml','preveri-fussball-vzorec.yml','preveri-fussball-sezono.yml','preveri-fussball-dopolni.yml','preveri-fussball-paket.yml','uvoz-pl-de-paketa.yml','uvoz-zapisnikov.yml']
+export const GERMAN_READERS=['uvoz-lige.yml','uvoz-fussball-public.yml','preveri-baden-fresh-pair.yml','preveri-baden-r10-current.yml','preveri-fussball-vzorec.yml','preveri-fussball-sezono.yml','preveri-fussball-dopolni.yml','preveri-fussball-paket.yml','uvoz-pl-de-paketa.yml','uvoz-zapisnikov.yml']
 // These two workflow run-name grammars are fixed in their reviewed workflows.
 // A public FUSSBALL writer is German-only even if an input has a misleading slug.
 // Unknown titles/country codes never establish foreign or source-free scope.

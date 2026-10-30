@@ -37,3 +37,6 @@ test('older direct German/unknown imports and retained writers wait while conclu
   if(wait)await assert.rejects(action,/Older German/);else await action
  }
 })
+test('active older current-only R10 blocks a later German reader',async()=>{
+ await assert.rejects(waitForGermanSource({env:{GITHUB_REPOSITORY:'owner/repo',GITHUB_RUN_ID:'2'},sleep:async()=>{},maxAttempts:1,api:async p=>p==='actions/runs/2'?{id:2,run_attempt:1,created_at:'2026-10-30T16:00:00Z'}:{total_count:p.includes('workflows/preveri-baden-r10-current.yml/')&&p.includes('status=in_progress')?1:0,workflow_runs:p.includes('workflows/preveri-baden-r10-current.yml/')&&p.includes('status=in_progress')?[{id:1,run_attempt:1,created_at:'2026-10-30T15:59:00Z',status:'in_progress',path:'.github/workflows/preveri-baden-r10-current.yml'}]:[]}}),/Older German/)
+})
