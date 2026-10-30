@@ -414,6 +414,12 @@ jobs:
           SUPABASE_TEST_DB: postgres
           FCF_G9_NATIVE800_BRIDGE_CI_SQL_TEST: '1'
         run: node --test scripts/test-fcf-g9-native800-bridge-sql.mjs
+      - name: G9 native800 final postprice launch (fresh hosted GHA only)
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          SUPABASE_TEST_DB: postgres
+          FCF_G9_NATIVE800_LAUNCH_CI_SQL_TEST: '1'
+        run: node --test scripts/test-fcf-g9-native800-launch-sql.mjs
       - name: Baden owner production readonly preflight (dedicated fresh GHA DB only)
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
