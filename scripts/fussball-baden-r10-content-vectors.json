@@ -1,0 +1,1582 @@
+{
+  "version": 1,
+  "kind": "reviewed-baden-r10-executed-content-vectors",
+  "projection": "all tracked JS/TS/shell/Python/SQL plus package files and exact executed workflow; documentation and other workflow programs excluded",
+  "guardedForeignAdapterBlob": "b909a89841b6efa55cb4ce66b82eddf8d04e82e6",
+  "groups": [
+    {
+      "workflow": ".github/workflows/preveri-podatke.yml",
+      "mode": "data-validation-oefb",
+      "vectors": [
+        {
+          "vectorSha256": "ba2d4f662fce92f16cb055d3946cd351cf5eb8dbef486052424657472a01a09e",
+          "files": 1856
+        },
+        {
+          "vectorSha256": "bd2d63b536befc219045986c3c4cf4dfa42697e807d987e9d1d03b42801d209f",
+          "files": 1856
+        },
+        {
+          "vectorSha256": "c387d338800cb6262854f1b9812fcc2c4bc804e8daf2df155ce1394fea28f0b3",
+          "files": 1853
+        },
+        {
+          "vectorSha256": "6dd3a44387ce535d9a89dd99c208f83831370bb51724c5a43411b35f4c7a76a7",
+          "files": 1853
+        },
+        {
+          "vectorSha256": "eadfd31fae4614ab8c54f207eeec430e9065f23b5c7898d8b01bdd8dd5f4fde0",
+          "files": 1853
+        },
+        {
+          "vectorSha256": "3fe7658a62ffa484ae94e14eb31ebe091014bef6e7d18d753ad3dfd474dbc1f6",
+          "files": 1853
+        },
+        {
+          "vectorSha256": "e41deab73f2a3ac54ee9c094905fd5dfc795828b3560540adbdb85c2601c1a44",
+          "files": 1829
+        },
+        {
+          "vectorSha256": "7bccf2330085ea5e6dd7a2eb8e7ead1391533e3e9e273a888a10906139d9a8bd",
+          "files": 1828
+        },
+        {
+          "vectorSha256": "5cb50bc3277121828cabb559a1ecdfeac38c904d25f8bf072b22cb0883a9b608",
+          "files": 1816
+        },
+        {
+          "vectorSha256": "77d0c92370e3e7f7bfaec4fde6c70169dd99ddba3ae259240e05a4a46811e9a7",
+          "files": 1770
+        },
+        {
+          "vectorSha256": "8e3b7b1cb34fbdbbc9133b514332fce414363de3e926c9a00ee423b9d4649f28",
+          "files": 1769
+        },
+        {
+          "vectorSha256": "8ff522bae157e4d1949726ba5fba2d6c8253520726e7f7cce51bb9e036f1ad2b",
+          "files": 1764
+        },
+        {
+          "vectorSha256": "f8a3109c730740be56630fcce20dba685dc4da37ca1b0814c427fafffd20f71d",
+          "files": 1764
+        },
+        {
+          "vectorSha256": "761d3e40142f638735960a8aa97f6882ce548d7ed257924d99c4954ee4ed23e0",
+          "files": 1764
+        },
+        {
+          "vectorSha256": "b3052ad4dc972ba80e5143365953d5e2780d6a1bd62924ad3b568424c5710087",
+          "files": 1762
+        },
+        {
+          "vectorSha256": "0e20826a9d880befdd05d87e76f1a24f1388bfa1c90cce831b1a1ba25e494100",
+          "files": 1741
+        },
+        {
+          "vectorSha256": "4f3e8db6ea6f8328ef860ae109f654b00a52aacee617ff3cda25eb9c5d7ac6cd",
+          "files": 1737
+        },
+        {
+          "vectorSha256": "4a400640b9d353486a83c568e3bda4910843f25d7ef6ef8d9500692b4fe84401",
+          "files": 1735
+        },
+        {
+          "vectorSha256": "9481f0e01bc43bca124d2c495e9cc2eca70bc429d46fc933bea8c8357d577f5d",
+          "files": 1732
+        },
+        {
+          "vectorSha256": "b101e1c350766572fc473fab25299ebee0dfcb584f8fe868b0404aa9e1202e61",
+          "files": 1729
+        },
+        {
+          "vectorSha256": "246d26fc7d60e8a32e79f8f6ee8a8533bc6f3c44b5286dee0e2ce326a09f5396",
+          "files": 1724
+        },
+        {
+          "vectorSha256": "d237103da69174d8bebcaf65e0c4945b3c1ed64cf220b79ca35bd2a59faa799e",
+          "files": 1709
+        },
+        {
+          "vectorSha256": "7b56318755a6c60b7ed47e05b55c48a09a77b65bd10de70a5b048cc0211e817d",
+          "files": 1709
+        },
+        {
+          "vectorSha256": "626aa2939e4c586af72d036a5f5cbd9ecfc4d4145dbaf5babe4a2c98f153afb7",
+          "files": 1668
+        },
+        {
+          "vectorSha256": "0024a3745ad8521195a664674fa42e4d71fdb6cc2eee7a3142ec6437d6661488",
+          "files": 1653
+        },
+        {
+          "vectorSha256": "e2d068a441699832905db501f091c02db33f5d43b54968f8d47ef34ef29abc96",
+          "files": 1643
+        },
+        {
+          "vectorSha256": "fdd8daeebc0cd32087172c767ffb329d8849e22dd2cdb6df0335deb51a0ae0f0",
+          "files": 1640
+        },
+        {
+          "vectorSha256": "ff5258f58c61a2a7b17d15690c0c3d6d456a0e1359b02285855e0da84d4799bf",
+          "files": 1639
+        },
+        {
+          "vectorSha256": "35cbeb8ce3f94b72bfd635c5b99a91e9432e51469a6949543cc5af4f26ffc63b",
+          "files": 1635
+        },
+        {
+          "vectorSha256": "2ff202bb50cebf50f53a9d2887f5751c74b97b783d895068fe42131ef636e429",
+          "files": 1633
+        },
+        {
+          "vectorSha256": "1f9476632e00b2e6161b7509775c4001a579410d67a608294a45cba4ff617a59",
+          "files": 1617
+        },
+        {
+          "vectorSha256": "821ce3a547ec9a764f5cbc577724e4d4c6409ee40742f9a691814829b815a86a",
+          "files": 1612
+        },
+        {
+          "vectorSha256": "81a7aa70d9ac9d3a2187bc7f3cf32d546b7880701d4f50d793100d4e7bf17474",
+          "files": 1605
+        },
+        {
+          "vectorSha256": "4d3af02dadd92238750898ba8dde4bd87b453875ee7888078c081e69514c6405",
+          "files": 1541
+        },
+        {
+          "vectorSha256": "ef1e8f0e705f5fe72860e8283111e18ed299f470339c973394ca9a7b1d64b012",
+          "files": 1540
+        },
+        {
+          "vectorSha256": "491da461f030c951517dd85f54aa7e78fd4ca1d36b515536d708a0a39fe7c223",
+          "files": 1537
+        },
+        {
+          "vectorSha256": "b8d652d337d90cee7da488022b41d4ef9aabc7fab6a0eb08276b03eb8bee0823",
+          "files": 1535
+        },
+        {
+          "vectorSha256": "5388ded513e9d561a0313655ce1f028cde63afd5ea3543521d8fffd46dd39c19",
+          "files": 1534
+        },
+        {
+          "vectorSha256": "fb4dc1bab3a138e135e1ffed1e4d83080644ef0d3ceaece559fef562ceeb28f2",
+          "files": 1529
+        },
+        {
+          "vectorSha256": "79f25f935786bfb876b62655566bb45b58f2bd24304bd2e66ec9728bd75ffd7f",
+          "files": 1524
+        },
+        {
+          "vectorSha256": "27a54186e73604f48c87a93e5b780a70def28c7db7234b3e6a11b6764dca2acb",
+          "files": 1524
+        },
+        {
+          "vectorSha256": "168939f43345bf3b2add378a4e0a98f5648503b5ae0c9889e2d8527258da14a5",
+          "files": 1522
+        },
+        {
+          "vectorSha256": "d21de47c631f26ec0ccc177dd5e797a2c5ef381daf7d8c2dda96a2c293f4231c",
+          "files": 1520
+        },
+        {
+          "vectorSha256": "bf04a9575df940f5ce592a42818959d485fe9a9c759545fb9418adbcc46775d5",
+          "files": 1499
+        },
+        {
+          "vectorSha256": "56576f1b3f320670bad4882404bcf6e3c0c49ee475de9c4fd89015d5345ac4ea",
+          "files": 1496
+        },
+        {
+          "vectorSha256": "11d549711842e7b765d84f7a865cff118c970689fcb259cfe0f65c14b430f407",
+          "files": 1496
+        },
+        {
+          "vectorSha256": "d2b80d658a97044c1bb36f59d391eb6e4b0e7e485e9b7eff01fc64b7e1fa040e",
+          "files": 1500
+        },
+        {
+          "vectorSha256": "8cc9d0d0ca9d4547bc96315b369809a31fc31e6a6c9b62d0d78a0c27f867dfab",
+          "files": 1499
+        },
+        {
+          "vectorSha256": "0a12460f61977fa132ce0111fc0fd79640ceacb43383716bd1a3e0037bb373de",
+          "files": 1496
+        },
+        {
+          "vectorSha256": "7814a5d1e4de8480fd1a045b59f60b8b6ba88a2efff9f11ee4a659b02b7ef9d2",
+          "files": 1493
+        },
+        {
+          "vectorSha256": "67323c627acce3e237a0deab976a6de73200991edcebfcf1b0bcc4001cd29a6b",
+          "files": 1493
+        },
+        {
+          "vectorSha256": "81417945d842b23eee37a0f05525e04ceb665025a045643f5e15fede8125658e",
+          "files": 1493
+        },
+        {
+          "vectorSha256": "15c54953b94b9d810121bf6924e376b5ebcf383cf423f688bcce72e58d3fe7ff",
+          "files": 1493
+        },
+        {
+          "vectorSha256": "900f43bf5f9db7cf9f0381648a0561bd36eb8df96b02e4901c8a851b8552f9b6",
+          "files": 1490
+        },
+        {
+          "vectorSha256": "dccdc5b813d812f9d91f182de5d3ea4353ac4d4a3d53fcb607d69e24ce9dda6d",
+          "files": 1489
+        },
+        {
+          "vectorSha256": "efb1d60d52ca2d49800f48a9d366f52184f6c89001a62b984c469f2e329412f3",
+          "files": 1489
+        },
+        {
+          "vectorSha256": "aef4879d4c52c2e29700a97d10cea5b027a9208523332b3303b8dc502a708771",
+          "files": 1485
+        },
+        {
+          "vectorSha256": "8904cfe60bf927deff12c9f0c0c6a61892e340e59548277586a3c78136675f13",
+          "files": 1482
+        },
+        {
+          "vectorSha256": "dbf8a0ed67a29ba93382cd51c900d325f6d6500b8e9d553912aa65af8933213d",
+          "files": 1482
+        },
+        {
+          "vectorSha256": "35dde98b07012c2931472471224b94f9c3e27d9932c1095e0a42c83bb3917ecc",
+          "files": 1482
+        },
+        {
+          "vectorSha256": "89b4b86dba63af0feaf4a28ba8ede33595995b752006abc8282d2a91c15a9fd2",
+          "files": 1477
+        },
+        {
+          "vectorSha256": "c039c276006894a89e24911356936b27b5aeceb3296f892cfd4953beec38ca4d",
+          "files": 1466
+        },
+        {
+          "vectorSha256": "2b43ffd1f313f68c86a3422b72c939db56a46523e3c6af276157b28715e8ccee",
+          "files": 1466
+        },
+        {
+          "vectorSha256": "fffd249d8da094026556861b19eda9ca36f93be0da4bc8ff3bcf70be16d27271",
+          "files": 1466
+        },
+        {
+          "vectorSha256": "ca99acf3799d6ae3eb74fefdf1ebb5ca10e6bf7c62eb6949b6f1ae756355194f",
+          "files": 1444
+        },
+        {
+          "vectorSha256": "3c98962cace2f59bae6841233f3a11d98e2270c42497dbb42c181c11e813080d",
+          "files": 1441
+        },
+        {
+          "vectorSha256": "590bf9147ba996d3539c49e93c4aa9142a233e2a59c17e2561db41237f5c8f6b",
+          "files": 1440
+        },
+        {
+          "vectorSha256": "baaeaa4bc41a7138fe965076f48636b68a4eb01472cac6f8d5c7884320329773",
+          "files": 1433
+        },
+        {
+          "vectorSha256": "402cd100a973d906042fe5e07ca6e514b2b4d13df1dc38e6d9f5c835ad2f3638",
+          "files": 1431
+        },
+        {
+          "vectorSha256": "f3ee4f2cd76ed10402660df33aefd729a41846bf9032b1e17580e572c8582e60",
+          "files": 1431
+        },
+        {
+          "vectorSha256": "9c3dc5eece70f805dea4fe839c4e99967dfb40e7a3ef0fb3c8a350f51a56db76",
+          "files": 1426
+        },
+        {
+          "vectorSha256": "f02046564426a9852ad12c17f6a5ff09dc3d1b77c0c04947800bd5301aecb995",
+          "files": 1426
+        },
+        {
+          "vectorSha256": "1ac4cdf5c7aa20590ea7a7f3fdfe6e29a329488da7eb8e8c462c28e036159e84",
+          "files": 1424
+        },
+        {
+          "vectorSha256": "9d6cc1f315bbfc0e20038e8c916ac634b32d1a89717299345331e62791a2bdfd",
+          "files": 1421
+        },
+        {
+          "vectorSha256": "096af67a8c1f3f1e14cf2f7c6bb7fb2b626a1f770539e1c1b74faaf54e897de3",
+          "files": 1421
+        },
+        {
+          "vectorSha256": "6fa12fddfed21e5d94d0fef70926dcd2a696f53d69394176e1438e9f91ea6292",
+          "files": 1421
+        },
+        {
+          "vectorSha256": "e0c0df5ff6525722624c8e6ccc213391b2d91976f5fafba156909b4a630fdc03",
+          "files": 1395
+        },
+        {
+          "vectorSha256": "e69649af0e0eaea6ef14141ff2b329b1d4dd3ad7b232f3e45142e12b121e4b9d",
+          "files": 1385
+        },
+        {
+          "vectorSha256": "f0a21f18bffaab2537ccb2ece2687d7a087f923c251d2e12c0e208c2912d10fd",
+          "files": 1380
+        },
+        {
+          "vectorSha256": "ba6d17d680c8c369cb8b4838da900bd84cf2ffcf719752e680b4a87c6cca0e5e",
+          "files": 1373
+        },
+        {
+          "vectorSha256": "1dea1df8de0682312a556d5a3bcd971eb0dd0d7eb2f28362a77328adcc99cd2a",
+          "files": 1369
+        },
+        {
+          "vectorSha256": "6fb014c6d9be0c49d6974c1b0736873b365f1eae6b03287639fedac319488c90",
+          "files": 1368
+        },
+        {
+          "vectorSha256": "9bd0c7363129a78ca837c71cfd36285b5e665f6648b90cc1da02775a65610e2d",
+          "files": 1364
+        },
+        {
+          "vectorSha256": "8f3147cb50302876df152e3df15ca0fb72e169d63df1c7696b832cfe24861581",
+          "files": 1364
+        },
+        {
+          "vectorSha256": "3f48a6eeb543eef83c7786a591bf4d61775dd304a68438d927e729967d28db5c",
+          "files": 1363
+        },
+        {
+          "vectorSha256": "d55c69ddf39b83db51c7425874509f39a4740a654d3c13124a4821d2ace96861",
+          "files": 1354
+        },
+        {
+          "vectorSha256": "c5b012ffc7f4d9f7e7b029078e2856ea0cebe284ec8d56c9ceba7c1722e74bd0",
+          "files": 1349
+        },
+        {
+          "vectorSha256": "aa06af9ad6e89f452034743fa9b790ae10417edfb4b8e46e9d5f4ac853543ee7",
+          "files": 1348
+        },
+        {
+          "vectorSha256": "6be87185a556ef37e13157f712c13c218b245bb335822696c2580372bbe145a2",
+          "files": 1348
+        },
+        {
+          "vectorSha256": "09a2a169c4c4ca076f50053ff0663c99b1b99e307bc0b7d034921442ba83aae9",
+          "files": 1344
+        },
+        {
+          "vectorSha256": "d76487fe8886a8c2f56e93da55318973aafe4e2209578512f9cf651507c70c62",
+          "files": 1343
+        },
+        {
+          "vectorSha256": "41a70bde62a3a5eaff6982d96ccbb485355a884f7521e7c4f593257dd6f6066a",
+          "files": 1343
+        },
+        {
+          "vectorSha256": "277209aa92c73f9d66ec715ce63f10f38df088354f57cc6d74f2e3cdceae5c7a",
+          "files": 1339
+        },
+        {
+          "vectorSha256": "ff0cc086cc3bd0f7da4e965f6a804eefe55d02290722c0e807d6282a1f242866",
+          "files": 1328
+        },
+        {
+          "vectorSha256": "3abd408553c344da27c0229f0ea636fc5bdc06f4ea4c5714af2b04cc69f0cd06",
+          "files": 1328
+        },
+        {
+          "vectorSha256": "32558f979e86e64c7438e7184505fbef358973d5f179c46b0e551295b2e5030a",
+          "files": 1327
+        },
+        {
+          "vectorSha256": "0b5975bd80e163c3534fd357e7a936709e447efa6d7b294b365542e58811d983",
+          "files": 1326
+        },
+        {
+          "vectorSha256": "1170fb8f6931ffb1e2ba334270981f2d5daed3431515f0425e21d77fa352264f",
+          "files": 1326
+        },
+        {
+          "vectorSha256": "3de3809b3aed97036e0b9df8d07d21b8d4be77bf7f94f71279ff8525a25e1b79",
+          "files": 1326
+        },
+        {
+          "vectorSha256": "d4ca9790cc1e5612797c21cc47b0310ff0fd74a00a139524cadb0b7d3adf9f20",
+          "files": 1317
+        },
+        {
+          "vectorSha256": "d4911abb53251f47eee422b2700029ac7490ab3b0e000aac00735cd1880f2103",
+          "files": 1315
+        },
+        {
+          "vectorSha256": "52f66eb94785105d4270853a7e0c6eb24701d039764d295b9564c30065066c1b",
+          "files": 1315
+        },
+        {
+          "vectorSha256": "def3afd4df4c54f45fd811929b8112f8d073a83dd7919fde84499a985b132520",
+          "files": 1308
+        },
+        {
+          "vectorSha256": "4b934d51dffca95ddec4fe7fe754462d0fc9beaa77c55b9d7a8870318923d2d5",
+          "files": 1307
+        },
+        {
+          "vectorSha256": "2dcc07c21942e4bcfb744ae3a656e00a8561cdf7b97c5fab17d0529c836fb7a3",
+          "files": 1306
+        }
+      ],
+      "jobNames": [
+        "preveri"
+      ],
+      "allowedSteps": {
+        "preveri": [
+          "Ali je ta seznam že javljen",
+          "Ali uvoz ravno piše",
+          "Complete job",
+          "Izid",
+          "Javi na Discord",
+          "Nove faze avstrijskih lig",
+          "Post Run actions/checkout@v4",
+          "Post Run actions/setup-node@v4",
+          "Run actions/checkout@v4",
+          "Run actions/setup-node@v4",
+          "Run npm ci --ignore-scripts",
+          "Set up job",
+          "Trditve o podatkih",
+          "Zapomni si javljeni seznam"
+        ]
+      },
+      "sourceJobs": [],
+      "exampleRunIds": [
+        "41052914001",
+        "41052478099",
+        "41051986545",
+        "41051444924",
+        "41051051050",
+        "41051001101",
+        "41050519228",
+        "41049979162",
+        "41049173936",
+        "41049078087",
+        "41049045108",
+        "41049021309",
+        "41048851476",
+        "41048209991",
+        "41047460688",
+        "41047277581",
+        "41046619027",
+        "41045607213",
+        "41045522074",
+        "41045047194",
+        "41044985967",
+        "41044884335",
+        "41044001730",
+        "41043875880",
+        "41043171514",
+        "41043149456",
+        "41042521455",
+        "41042004777",
+        "41041555153",
+        "41041272065",
+        "41041143499",
+        "41040571055",
+        "41040245143",
+        "41039555908",
+        "41038576995",
+        "41038365463",
+        "41032794884",
+        "41011272502",
+        "40976868798",
+        "40948353904",
+        "40933700511",
+        "40932347683",
+        "40931976515",
+        "40930019736",
+        "40913292200",
+        "40906930176",
+        "40905148652",
+        "40903583463",
+        "40901514648",
+        "40900613997",
+        "40898818677",
+        "40898756041",
+        "40898301356",
+        "40896222225",
+        "40895934494",
+        "40894171523",
+        "40892550771",
+        "40890909493",
+        "40889752393",
+        "40887461175",
+        "40886086383",
+        "40885234394",
+        "40884561156",
+        "40884105349",
+        "40883511450",
+        "40882758268",
+        "40882598389",
+        "40882327075",
+        "40881014840",
+        "40880828828",
+        "40880003818",
+        "40879513965",
+        "40879416787",
+        "40833880657",
+        "40797920587",
+        "40793656950",
+        "40792719950",
+        "40792598277",
+        "40791054280",
+        "40790895412",
+        "40789791828",
+        "40789643597",
+        "40788918698",
+        "40788491245",
+        "40787713361",
+        "40787467164",
+        "40787395204",
+        "40786524485",
+        "40786002731",
+        "40785499645",
+        "40785258969",
+        "40784441862",
+        "40783983347",
+        "40782999659",
+        "40782763196",
+        "40781913378",
+        "40781026775",
+        "40780962828",
+        "40779870310",
+        "40778829040",
+        "40778535743",
+        "40777620176",
+        "40776688066",
+        "40776451256",
+        "40775526908",
+        "40769633324",
+        "40766571153",
+        "40762137087"
+      ]
+    },
+    {
+      "workflow": ".github/workflows/uvoz-lige.yml",
+      "mode": "foreign-guarded-import",
+      "vectors": [
+        {
+          "vectorSha256": "9c938c55edc84c5f023319a691bd96dd594d0f842fc97352d7956bff98b79888",
+          "files": 1856
+        },
+        {
+          "vectorSha256": "4f9bd2916769aa8896759c9093f58016af4c8ea6d45088d81a91c684b1f47a9f",
+          "files": 1856
+        },
+        {
+          "vectorSha256": "76992d32dac732b84a1e46f0f3d96745acf0c59406192106922e4cef1d64d393",
+          "files": 1853
+        },
+        {
+          "vectorSha256": "769913a22340156b361aeefd8f69daf0937149c8040710f228015745310959e9",
+          "files": 1853
+        },
+        {
+          "vectorSha256": "d6ad3b5a150037ccd9aafe379fd4a56fcbc012e5339eeea1493d644b55b7a9ba",
+          "files": 1853
+        },
+        {
+          "vectorSha256": "03e1e85295228eec5d734ae8e06ca2716cf9baed14a6454e6cce34018a82e4e4",
+          "files": 1853
+        },
+        {
+          "vectorSha256": "b7f64cf13ae0d50e313fd9a6358fda4587ff3b61165c9964b181d040bcf6ddc5",
+          "files": 1829
+        },
+        {
+          "vectorSha256": "f5790d87b575a84d8e86774ffa37c3531e50b02c88b36d6432a79d32da2088af",
+          "files": 1828
+        },
+        {
+          "vectorSha256": "2cfcb7021c77bc9a587aed6506ce876626e64162dc4335821e03c488256234b7",
+          "files": 1816
+        },
+        {
+          "vectorSha256": "e2f292bd2fde8a8bcf0469ec7fe98b6146ae0c4cd26569cdfc2d19fe0ba65da6",
+          "files": 1770
+        },
+        {
+          "vectorSha256": "3c02e81fb9844658f517d14c94a21dc283dd64052e751eaef5f2f40cbcdda9c0",
+          "files": 1769
+        },
+        {
+          "vectorSha256": "9eea9d8fd394f2738ef59703a8a1c867b5175df67eb23bf87e7a8bdb10cb31f0",
+          "files": 1764
+        },
+        {
+          "vectorSha256": "9ca1943d36039f2e4023dbf2f4ed1f105f6dee14cb12ae730c4bbf7dd3e5a655",
+          "files": 1764
+        },
+        {
+          "vectorSha256": "ffc9b4bfeb3684536a784963bdcba853462bb5b01f1bd9d5aad08a05dc262d2d",
+          "files": 1764
+        },
+        {
+          "vectorSha256": "aea9a45ba9ea5e81335692bbc3d4bee65ba3a93e28a5d43cefcd5269a4b85b93",
+          "files": 1762
+        },
+        {
+          "vectorSha256": "af732a97fd226c3e14d02fc894ea931319ab6012c42cb470f5d0e1ca218ce699",
+          "files": 1741
+        },
+        {
+          "vectorSha256": "df64c76f7455ad7542dfd4620f23b1c830e2c748e9c12a42994a0cca0a1d5904",
+          "files": 1737
+        },
+        {
+          "vectorSha256": "a96287a8101c91e9b03182837fd83904d8b15c3ae59a0d8b4cde5efedc1967d5",
+          "files": 1735
+        },
+        {
+          "vectorSha256": "e29ab729ff3bcae100c81ef7799828ee77a14766a5c60930ce105e92143ed645",
+          "files": 1732
+        },
+        {
+          "vectorSha256": "111470da9699edca0dba235273b66e19505f074537fd41dcd229c0229495a55b",
+          "files": 1729
+        },
+        {
+          "vectorSha256": "331b5cce33d72cde9e560820a7da87a335b919c069e3c22ee7e156bf2e554965",
+          "files": 1724
+        },
+        {
+          "vectorSha256": "f797d61c69e41da236a8c8ca248a1e8bf41a7c5f35284aa87fedf0257df47fcb",
+          "files": 1709
+        },
+        {
+          "vectorSha256": "6c2aa2ecd188934a125f70745ad6a41a202bd323d774c0fc52fe3d3a13c57127",
+          "files": 1709
+        },
+        {
+          "vectorSha256": "81da7872422e92baa9767d47b7595a91bac9298650e02c4fbd605d4746ae45bd",
+          "files": 1668
+        },
+        {
+          "vectorSha256": "d0eaab00a07242021484136165e48eb580575d4444545170617ba952028945bb",
+          "files": 1653
+        },
+        {
+          "vectorSha256": "99df276a55991b2f906cdf98e6e3a3670519f8e51733175b1641c8de8a6a0e80",
+          "files": 1643
+        },
+        {
+          "vectorSha256": "149f781ff99dce3f5661695a2e1e0bc9a2ec7bc050ecd517c985cd84210760c7",
+          "files": 1640
+        },
+        {
+          "vectorSha256": "efcc23839b569fa774fd74b63846b6815261825f11043297b6080e3e89096b9e",
+          "files": 1639
+        },
+        {
+          "vectorSha256": "8e58f5559b8f73f551f60b7876c7fdb69be6f7ae4665167d2f04c20b28322bb8",
+          "files": 1635
+        },
+        {
+          "vectorSha256": "889beb268adae8ba9bad555169dbd913a57a70bcde42aaa27d086a3df0f7aa0f",
+          "files": 1633
+        },
+        {
+          "vectorSha256": "3dd7099f8c2c3b12fdc3f5ba7360feefac771e38c79bc21d8d5b9e7600d9362f",
+          "files": 1617
+        },
+        {
+          "vectorSha256": "85ae9de1b2a3a55c3e7943bf961a4368c1aa0afd08faa729ca92dbd88dc040e1",
+          "files": 1612
+        },
+        {
+          "vectorSha256": "13751e230c6207e7f7c626d61be48b1d41bf7bfab03eef711a153206ccc79bde",
+          "files": 1605
+        },
+        {
+          "vectorSha256": "2f014274877392e09971af59a8b9041ed1547a6c677db794d55668d5a66d2d03",
+          "files": 1541
+        },
+        {
+          "vectorSha256": "5cb08966e6d7cb27056b39307dc40e0906089bab17386a81fc65ea4ed004abbd",
+          "files": 1540
+        },
+        {
+          "vectorSha256": "f368005b3b918b4c43960d90a1014cdc6a975331b219e9db4af93df2f9809a7c",
+          "files": 1537
+        },
+        {
+          "vectorSha256": "854d50e47c52bcae51b9ab145fa1109d79a4f79180f706146782191e77212652",
+          "files": 1535
+        },
+        {
+          "vectorSha256": "6646e8282889978502a3617de4d1b364504cea167ad411a32b58a0771abdc8f4",
+          "files": 1534
+        },
+        {
+          "vectorSha256": "e1f038e9d378e19f3f59f6e89f0d6fc05f8aca1a0d04899b7db6f213ca77dee5",
+          "files": 1529
+        },
+        {
+          "vectorSha256": "d88c62c70c3a97d07edf650091ef9a905416241150fe9a4545fceaa7192507b9",
+          "files": 1524
+        },
+        {
+          "vectorSha256": "a4c35d10c88c551de7b322b05fb5eba2d4a7150ff09a53bb3e4fbdce4b0aac49",
+          "files": 1524
+        },
+        {
+          "vectorSha256": "cfb898ef236681bcb4f6e3a79a92b4ece3ef3aef6d9921be1475d50e041ff630",
+          "files": 1522
+        },
+        {
+          "vectorSha256": "118395c07d4f76bb1d325aa1c03d9a246b17a77177b847e202d4116307855c07",
+          "files": 1520
+        }
+      ],
+      "jobNames": [
+        "uvoz"
+      ],
+      "allowedSteps": {
+        "uvoz": [
+          "Ali je liga pripravljena na vklop",
+          "Arhiv prejsnjih sezon",
+          "Chromium za vir hlf",
+          "Complete job",
+          "Ena tekma tekoce sezone",
+          "Objavi FCF predpomnilnik za nocni ES uvoz",
+          "Osvezi izbrane FCF zapisnike",
+          "Pocakaj na starejse uvoze",
+          "Post Run actions/checkout@v4",
+          "Post Run actions/setup-node@v4",
+          "Pozicije in cene",
+          "Predpomnilnik FCF osvezitve",
+          "Predpomnilnik zapisnikov",
+          "Predpona drzave",
+          "Preveri, da liga obstaja",
+          "Razpored in zapisniki tekoce sezone",
+          "Require dedicated HNS women release workflow",
+          "Run actions/checkout@v4",
+          "Run actions/setup-node@v4",
+          "Run npm ci --ignore-scripts",
+          "Set up job",
+          "Shrani predpomnilnik zapisnikov",
+          "Shrani revizijo FCF osvezitve",
+          "Sprozi vrsto Avstrije",
+          "pdftotext za vire fmf, pfl-az in thaileague"
+        ]
+      },
+      "sourceJobs": [],
+      "exampleRunIds": [
+        "41052579338",
+        "41051990373",
+        "41051549281",
+        "41051097647",
+        "41051005350",
+        "41050548792",
+        "41050086972",
+        "41049267928",
+        "41049103148",
+        "41049046527",
+        "41048237342",
+        "41047542214",
+        "41047465320",
+        "41046709719",
+        "41045710514",
+        "41045636089",
+        "41045098214",
+        "41045098405",
+        "41044999604",
+        "41044141824",
+        "41044067515",
+        "41043947769",
+        "41043259336",
+        "41043179445",
+        "41042574631",
+        "41042027711",
+        "41041637581",
+        "41041383792",
+        "41041182324",
+        "41040581635",
+        "41040345128",
+        "41039643756",
+        "41038628528",
+        "41038432173",
+        "41038317061",
+        "41038275548",
+        "41038233299",
+        "41038192486",
+        "40932578329",
+        "40929450428",
+        "40928932703",
+        "40907041100",
+        "40903681343",
+        "40900621011",
+        "40898457652",
+        "40896280807",
+        "40895985025",
+        "40894327221",
+        "40892679127",
+        "40891005240",
+        "40889889782",
+        "40887614550",
+        "40886197227",
+        "40885269599",
+        "40884700027",
+        "40884179656",
+        "40883524784",
+        "40882652041",
+        "40881106182",
+        "40880830202",
+        "40880090544",
+        "40879790019",
+        "40879463664",
+        "40878046408",
+        "40877602838",
+        "40877591850",
+        "40877580561",
+        "40792805225",
+        "40791151368",
+        "40790968106",
+        "40789888847",
+        "40789702319",
+        "40788586866",
+        "40787735391",
+        "40787572268",
+        "40786621953",
+        "40786110366",
+        "40785553337",
+        "40785307705",
+        "40784544008",
+        "40783986048",
+        "40783093655",
+        "40782872198",
+        "40782017542",
+        "40781054144",
+        "40781039306",
+        "40779981610",
+        "40778879001",
+        "40778577882",
+        "40777694359",
+        "40776789928",
+        "40776563353",
+        "40775552363",
+        "40774796756",
+        "40774709526",
+        "40774618583",
+        "40774526480",
+        "40762241841"
+      ]
+    },
+    {
+      "workflow": ".github/workflows/ci.yml",
+      "mode": "automatic-build-sql",
+      "vectors": [
+        {
+          "vectorSha256": "55e754868c9e5d3161b7f52709ad6e266bfa0dd3c3970d5b355b12e3bd9eaaf9",
+          "files": 1856
+        },
+        {
+          "vectorSha256": "3215d9f6193521f288aa369a462ba630e7f319a2093cad1d1905d2467901c36a",
+          "files": 1856
+        },
+        {
+          "vectorSha256": "9137d55667482d5c5b8f6ea4a959923ef80706d23f9ee0aef7467a33c0e63eef",
+          "files": 1853
+        },
+        {
+          "vectorSha256": "ae32f7fe412b608a68963247cfbf679671bb652fa89618faaac76b370349e838",
+          "files": 1853
+        },
+        {
+          "vectorSha256": "ff1bd8779f086de741bbb3e82521647428b48128d8b2f8b37f1bc21f8f11d385",
+          "files": 1853
+        },
+        {
+          "vectorSha256": "1b7c996a647ecfee0f3125744772ef495eefc343f407ef76812f906115cb1bb5",
+          "files": 1853
+        },
+        {
+          "vectorSha256": "ed5384150ce2a9e28b2b0460d580c82f4c050e472ada5bd5237ded86a8b31b3a",
+          "files": 1829
+        },
+        {
+          "vectorSha256": "c43f267fdad56f5278a17f37254fd7c0a04c1ff26c53bf5ef377e36d35f90ee9",
+          "files": 1828
+        },
+        {
+          "vectorSha256": "ea1303903729110dee602efd35b18fcc58a1d9e0b96f5f3dd59c2660155fa9c4",
+          "files": 1816
+        },
+        {
+          "vectorSha256": "4dc710747232713b596918a7773ac02e6d0b8e9b06397336af293598bacb8e24",
+          "files": 1770
+        },
+        {
+          "vectorSha256": "8bbbf86799692b2c7af97ea47c35b960e87a93f6f367d0144c43e1e024d163c2",
+          "files": 1769
+        },
+        {
+          "vectorSha256": "e35a6cb42955facb95ab9d59578e0223255615bdbf1b6ea8b69b3b9a138c7670",
+          "files": 1764
+        },
+        {
+          "vectorSha256": "1cc4ee013143fdecdc53980f55af67cb53a772dcbcf7f9af87b39ba4b53aed32",
+          "files": 1764
+        },
+        {
+          "vectorSha256": "063f61a16cc693a2d2978eaff188d5c29409c7e450d04259fd9acfddb73511b4",
+          "files": 1764
+        },
+        {
+          "vectorSha256": "bd4cef6c4233943f0e21510d95436b63d38820a2816016705ba22ad53d7c79f6",
+          "files": 1762
+        },
+        {
+          "vectorSha256": "ed3b8cddc4cae30e48a8df16fe3d7697f73898da4bfe809712f12d475b8cf3a1",
+          "files": 1741
+        },
+        {
+          "vectorSha256": "b2be4c3a4f9fcf5259f24712c5dfc0cded1789aee2e1d944befa22a8cd605aa6",
+          "files": 1737
+        },
+        {
+          "vectorSha256": "6adb5505663fa0b292d35af888dcf8d3232648e0a60e27f9c5fdee953508e94f",
+          "files": 1735
+        },
+        {
+          "vectorSha256": "49d5f609cbc14f06664898d62e2b4030431af297cd2c091ec2365a9312383397",
+          "files": 1732
+        },
+        {
+          "vectorSha256": "bbb69f676a161eea753180a630644c322e71685542dead282c9dc93aab70a3f3",
+          "files": 1729
+        },
+        {
+          "vectorSha256": "44366e20bf8562195794ab4154ad940b95edb29c65dd19831d28664ac6f804d0",
+          "files": 1724
+        },
+        {
+          "vectorSha256": "0c8dbef5df5232bcbbdbc07d04e584076b3c3da2854e9b77b6f330ecc98c8aa2",
+          "files": 1709
+        },
+        {
+          "vectorSha256": "fae287cbf818be48d5893beb7d4ef327153cb36849c57460888e1258e6fabeb3",
+          "files": 1709
+        },
+        {
+          "vectorSha256": "d82d1ebad26e1f03eab0de46b6da0d4ac599745b7d3d7baee99e096d24c4eed4",
+          "files": 1668
+        },
+        {
+          "vectorSha256": "044adbff5c1f4901270ed0514823d7977b84c21e57edb25729742b55271e1cd0",
+          "files": 1653
+        },
+        {
+          "vectorSha256": "7cc5b388680544b8f8e94691884fdd30e5e94ebb8a08dbee24315c52dcca6ff9",
+          "files": 1643
+        },
+        {
+          "vectorSha256": "cd89d72fb76db50e14e97b589827d1c0fc7935cd7265c1cdd8653bbe821329bb",
+          "files": 1640
+        },
+        {
+          "vectorSha256": "9b2fd5054b2c772f3f3d642bdefa86f730dbbf474c5888521038b65603f70746",
+          "files": 1639
+        },
+        {
+          "vectorSha256": "e713de2f3367effd1efdaf74f9b0faa338aa58f678bbe42635d04f5439ddfe4d",
+          "files": 1635
+        },
+        {
+          "vectorSha256": "59c5d2538b618343833f0b03d54135d969f26bf24b9c3890699059332bbe5e36",
+          "files": 1633
+        },
+        {
+          "vectorSha256": "a7126dc6bf73fc58bc824657dcc9645813b25d3d20c2b6708e38d1f7a7a2f815",
+          "files": 1617
+        },
+        {
+          "vectorSha256": "0f1e83bc315ff55c0d92161c541766f9ca5f3bb53cd4dd5c61a931e7f6b666e4",
+          "files": 1612
+        },
+        {
+          "vectorSha256": "d952f20bfd681b8bf3b35a41e22925c338fa9835471e48e982b116cceaf49275",
+          "files": 1605
+        },
+        {
+          "vectorSha256": "649abcc80f145ee0753190d10e5980642ad0f98f19b1385bfc08d618870f1f60",
+          "files": 1541
+        },
+        {
+          "vectorSha256": "d939c429c1eee6560fe789c3176ec0bb281f7796f4bfc5fad18ce7189e28a0c1",
+          "files": 1540
+        },
+        {
+          "vectorSha256": "50ce870cca04a64224ea990be7bce01a5822caeff6944d20d4651ae09dbcaabf",
+          "files": 1537
+        },
+        {
+          "vectorSha256": "2fe749a02cac3dfb122d5b1a8059bde828b1a2684ff70fcd5bc2d829a32f5b70",
+          "files": 1535
+        },
+        {
+          "vectorSha256": "1d871d7a9a12a861aa59a0706f9288fffae52ac82917520491dee5f7580ffa4a",
+          "files": 1534
+        },
+        {
+          "vectorSha256": "a4b8fcd94a646dbbe458b0198c3c98e6791d8bb252444140641919fbd7bc2a64",
+          "files": 1534
+        },
+        {
+          "vectorSha256": "23311cbe323941e52a68566c3a25ce16a3f58ba5ab407e7300750d4f1e70322d",
+          "files": 1534
+        },
+        {
+          "vectorSha256": "be34df50f79507bc5082f28f005490a9ff31be757ec86437276b92e846a0339b",
+          "files": 1529
+        },
+        {
+          "vectorSha256": "cfb46c6187ebc5fa4d2b76091373896a5a8073f5a0a5fa678abcc62d585a8def",
+          "files": 1524
+        },
+        {
+          "vectorSha256": "3097bc9f83b4fd88ece127f38cd5cc9a5c8e235addbbab711f7f5540e4decfbb",
+          "files": 1524
+        },
+        {
+          "vectorSha256": "c71b3dc1a6d2b03c7f1d2954c8f5febe615f58b58b0dbe711f6e8e7c062c6a94",
+          "files": 1522
+        },
+        {
+          "vectorSha256": "cda6625060360f673cac7e0775fe5a07eb1d0859a46994983a5b455028fcf5aa",
+          "files": 1520
+        },
+        {
+          "vectorSha256": "e01ea9c40b9025a710c378757f458311815134d1ae5d7eb507027951a07296e0",
+          "files": 1499
+        },
+        {
+          "vectorSha256": "54fe3604ebb1a4185d093ad204d802094d06768ab2111158b661143f28b4aa20",
+          "files": 1496
+        },
+        {
+          "vectorSha256": "874df32b14b92f949179068934ac720f26f8d28e84058ee165b8ad7bd9ee7a21",
+          "files": 1496
+        },
+        {
+          "vectorSha256": "148583fa8ec7816e0c859fdbd186074e3e942f5fbc0a9a270467beefcd79734b",
+          "files": 1500
+        },
+        {
+          "vectorSha256": "fd36360914f9925389b582bd7629d46021e3074ec0afd4a7efbe61c978952f9e",
+          "files": 1499
+        },
+        {
+          "vectorSha256": "43b185201211ff8daf6ae12fbb232cc41cf69c0518ad8edfa7e1629672a362f7",
+          "files": 1496
+        },
+        {
+          "vectorSha256": "205444de06950d48eb0923ad390e092f4b29e922fd357ca88414c03034b16245",
+          "files": 1493
+        },
+        {
+          "vectorSha256": "5b90b5f0d00606a9590de94bc09f143e7795a70e51f1bde34a3a674f3752fd4a",
+          "files": 1493
+        },
+        {
+          "vectorSha256": "3632f201be084d189716d9847dbcea255231b6ece23ca1d1afc9924847c34c2f",
+          "files": 1493
+        },
+        {
+          "vectorSha256": "b1aef812d137c907f2f53c5270ff250ceebf1a8e4bb69c779310c8474055acab",
+          "files": 1493
+        },
+        {
+          "vectorSha256": "423d80980e2d8372cd32ccf929e90d384c032d1a2beea61815bc99542cb243bd",
+          "files": 1490
+        },
+        {
+          "vectorSha256": "79184d52ef9a03d01e9ac3525b8cf3498399170e606cafe24e424891685bd2d4",
+          "files": 1489
+        },
+        {
+          "vectorSha256": "1be0909a0b47306204730f48a936ed8fbbfab9b039175e28944a256bfccfd1ac",
+          "files": 1489
+        },
+        {
+          "vectorSha256": "ba8b15748eccbaf16e716ae4da0308218d608daa9a012c74fcc94536f0214cc5",
+          "files": 1485
+        },
+        {
+          "vectorSha256": "2b23a48c4d476fa69f38f58c66c8448d2b801b81a41b96cd87e3d793747d9d03",
+          "files": 1482
+        },
+        {
+          "vectorSha256": "04bf5c5df140690ea2c232109eea2ff7d6f65968b5f5a575b6152133cf2f14ba",
+          "files": 1482
+        },
+        {
+          "vectorSha256": "6b00bc1d22e5f642ba161c90c10aaa8af5ae0efcbe312f911f1de0ef0898153a",
+          "files": 1482
+        },
+        {
+          "vectorSha256": "310d4f08324582dbb4f6645791a68f9b22c08b00c84d7c494867ba5fb4626eb6",
+          "files": 1477
+        },
+        {
+          "vectorSha256": "0a00afd32e3567686283514ce99d465bd83771d37f0c7b1e45f10080469d2ea4",
+          "files": 1466
+        },
+        {
+          "vectorSha256": "25efc114380f386c2629f3601c22e1e6637449cafe7bddc698f71ba7b72c34dc",
+          "files": 1466
+        },
+        {
+          "vectorSha256": "04b674307313b77445c58f356ffb420c9dea5d364401ed492dbcae027eeac201",
+          "files": 1466
+        },
+        {
+          "vectorSha256": "7fcd99fdf961e3aa8627d3d3097a8230b86e23fd75483694793aaf2b5f9145a3",
+          "files": 1444
+        },
+        {
+          "vectorSha256": "5e5d19332bb4ff92ab48f137d700eaf21af96967c33d091172c64190a78ef8a7",
+          "files": 1441
+        },
+        {
+          "vectorSha256": "4c4e725a5a2ce654ad882dbda0ac69bab18a222b03435b9df2f0c3ac4dfa8238",
+          "files": 1440
+        },
+        {
+          "vectorSha256": "f3b4b1504a4b5be0b8b83eec1ed8c0731dc0a990bcacf4d60864a41e41ba04dc",
+          "files": 1433
+        },
+        {
+          "vectorSha256": "c9e164728b5f286e532ca2ad780ab50cba124179d972fff401f5984a6d2f21ab",
+          "files": 1431
+        },
+        {
+          "vectorSha256": "8d1a2f87c074f6a2a35d892ea336d436b954928e0568feec4ff36c6a7887eeed",
+          "files": 1431
+        },
+        {
+          "vectorSha256": "36f8768d69fd060affa38accd4c5fa14fe4c5c88073f76c68307a28e63fb9322",
+          "files": 1426
+        },
+        {
+          "vectorSha256": "e101d4cfb3d9771673e7923119b4dacdaacadb1162a4977ffd13d529e5405dcd",
+          "files": 1426
+        },
+        {
+          "vectorSha256": "0a3bc348bbce20025fa44c6e2aced9aad8da54da17cb158a2465fb4baebc3fef",
+          "files": 1424
+        },
+        {
+          "vectorSha256": "13c0cd65cb4089b8f7b90c16a897a7aabdb7d63de097f8f829a5220fbdc640ff",
+          "files": 1421
+        },
+        {
+          "vectorSha256": "eb2d9652c09e27f523c135c0166d5da09b1c4018123f5498d746ffdfa6ccb20b",
+          "files": 1421
+        },
+        {
+          "vectorSha256": "c43ced170f53f793f654e931eaae0c66ad92203a009fa0b59ba2ff7254828cd0",
+          "files": 1421
+        },
+        {
+          "vectorSha256": "9fc31f8858bd03137df4db53a77141c2ed6d9677fd4530a1096d6d086276a681",
+          "files": 1395
+        },
+        {
+          "vectorSha256": "46384f9d6cb17c763ab0d64d636e48e54d77378f85757a36d3d4ad177e61c762",
+          "files": 1385
+        },
+        {
+          "vectorSha256": "fbc98b920c9347410dc1e5047ea876eb8740a19864f0d5415c823ece4652f2b1",
+          "files": 1380
+        },
+        {
+          "vectorSha256": "4ba75f4cdc5724dc44b9895894994d4e8baeb28500115e180eb78be625ece015",
+          "files": 1373
+        },
+        {
+          "vectorSha256": "d8fd10ce47e729d3e872f3223b0021c321a17cc2a8ae27081842b9411be6b1c2",
+          "files": 1369
+        },
+        {
+          "vectorSha256": "a86bace2114bf098e390a9b9ad04c2d31be8afaae5021fd56cfaf16151be2158",
+          "files": 1368
+        },
+        {
+          "vectorSha256": "dde84efb2b29ccf503c8443830f5b712b8237234fcbeca0937704bfb5c4fa77d",
+          "files": 1364
+        },
+        {
+          "vectorSha256": "bd801ebee3ab7928d1611b804a9152f6181ad67aa5b54b367c000075fca9eb0a",
+          "files": 1364
+        },
+        {
+          "vectorSha256": "371f8b66cbe11b429927e2678cc2a3e3625b2d84153fe7b2841f419454e3fd47",
+          "files": 1363
+        },
+        {
+          "vectorSha256": "cb6e9e928719e39cc40a91aa9d2a2866857039a1df0d2171cc9a508f26d46d0e",
+          "files": 1354
+        },
+        {
+          "vectorSha256": "08eab8a3d65bb1b15b4d9b0611fe1c77c184dea9be377c4a79ab58f05a3c59a6",
+          "files": 1349
+        },
+        {
+          "vectorSha256": "d27c8fec32928ab09ac97f40c0418cade17d3e0a19acde3e3932db9c37698435",
+          "files": 1348
+        },
+        {
+          "vectorSha256": "26b45173508904135b54af1b219ee020e76b7c456e6a92b1de96447ac351301c",
+          "files": 1348
+        },
+        {
+          "vectorSha256": "870df121142d0701c4207ece4729d116b9e9ac3d4b93d736356d5ef772667be4",
+          "files": 1344
+        },
+        {
+          "vectorSha256": "18bb45a4c135400e72e3d1e1bafccc704d5ec7c22ffd03c76b8648fbd4b078a6",
+          "files": 1343
+        },
+        {
+          "vectorSha256": "8ef0a1c87412e09525e8b252160aff5dcf2e5550f6bd41e0a31e9dd57d951af6",
+          "files": 1343
+        },
+        {
+          "vectorSha256": "4f4c432917e6c29d151e9e1bd66f36c12ece83e591bb74262d9da2e02f08571e",
+          "files": 1339
+        },
+        {
+          "vectorSha256": "a95bf39f636cf70bc8c1c473ed2a11705591f17bb1e3c6146d3cc2eb7dae0b3e",
+          "files": 1328
+        },
+        {
+          "vectorSha256": "e31f1dd43ff4ba0629e96ce7fec753f12a8dd46c2392ac9198536bae7bf91c10",
+          "files": 1328
+        },
+        {
+          "vectorSha256": "bbe953f1be455e411a6d14e261998e08474bea3cdebf5d204d0a5b18672578bd",
+          "files": 1327
+        },
+        {
+          "vectorSha256": "22c274900e7a901dbca71b85404b9ddeca6ca4223647b784ab9cea5ae7fbeaf0",
+          "files": 1326
+        },
+        {
+          "vectorSha256": "1720f75f36b52cca8f35324227f6a0445cf056429eb83d8cbc10ddd071855cb7",
+          "files": 1326
+        },
+        {
+          "vectorSha256": "29259d2e9cfc6b4bc6353220360e19e038bbec5c78976121da596315e0c2c867",
+          "files": 1326
+        },
+        {
+          "vectorSha256": "08f22ff882062926eda4060593a197541e41084f1deff5c4642c3fedbaa85a9a",
+          "files": 1317
+        },
+        {
+          "vectorSha256": "ece0a73c2c40ac63f4c4255605b16a9e260869523020182eb1d23aedef9f9968",
+          "files": 1315
+        },
+        {
+          "vectorSha256": "9ea825f5b002ce0d63e29670714b5f3d2ceb76cebb8bac3a5c1d54e7e22e3357",
+          "files": 1315
+        },
+        {
+          "vectorSha256": "c271c32d150e0125b322a3e0530ba6bb5da2c5ba4058a0b6cdbc9729ba761a69",
+          "files": 1308
+        },
+        {
+          "vectorSha256": "be0ef940bea3b0f337b702ee2884199ae0edc988f8f55606624cdc2a2fbaa5a0",
+          "files": 1307
+        },
+        {
+          "vectorSha256": "bb778d682b9b197b1798fbc72d6bda3247fc260405d58ee30b0119d144671d20",
+          "files": 1306
+        }
+      ],
+      "jobNames": [
+        "Je nova različica res v zraku?",
+        "Migracije baze",
+        "Objava Club na Hetzner VM",
+        "Objava Trgovine na Hetzner VM",
+        "Objava na Hetzner VM",
+        "Objava na Vercel",
+        "Pravice in roki v svezi bazi",
+        "Tipi, build, izris",
+        "diagnostika-virov",
+        "novi-viri"
+      ],
+      "allowedSteps": {
+        "Tipi, build, izris": [
+          "Baden catalog owner and hosted native workflow (offline)",
+          "Build",
+          "Community card voting and provisional round UI (offline)",
+          "Complete job",
+          "Country preview and Polish report diagnostics (source-free)",
+          "DFB current pending report isolation (source-free)",
+          "Exact H7 validation-only owner history (source-free)",
+          "Existing leagues batch catch-up (source-free)",
+          "FCF closed evidence and current-only packet",
+          "FCF fresh-source future launch protocol (source-free)",
+          "FCF inventory binary GitHub transport (source-free)",
+          "FCF missing inventory and authenticated target admission (source-free)",
+          "FCF native target offline planning (source-free)",
+          "FCF reusable refresh800 source-only contract (source-free)",
+          "FCF six reviewed source/accounting/policy protocols (source-free)",
+          "G1 remainder quarantine and source-history guards (source-free)",
+          "German amateur source collection and offline evidence",
+          "Germany activation manifest",
+          "HNS public parser, packet, runtime and activation guards",
+          "Izris vseh strani + pravila",
+          "Nadzorovana FCF osvezitev",
+          "OTA svežnj",
+          "Poland and Germany complete bulk rollout (source-free)",
+          "Post Run actions/checkout@v4",
+          "Post Run actions/setup-node@v4",
+          "Preverjen vklop Katalonije",
+          "Provider batch and Dribl source diagnostics (source-free)",
+          "Run actions/checkout@v4",
+          "Run actions/setup-node@v4",
+          "Run npm ci --ignore-scripts",
+          "Scout",
+          "Set up job",
+          "Slike za predogled",
+          "Strežnik HTML",
+          "Tipi",
+          "Trgovina"
+        ],
+        "Pravice in roki v svezi bazi": [
+          "Baden owner production readonly preflight (dedicated fresh GHA DB only)",
+          "BiH one-time prelaunch deadline configuration rollback",
+          "Community card voting, real retained report replay and atomic scoring",
+          "Complete job",
+          "DFB current pending evidence, finality and repair rollback",
+          "Dribl tenant-scoped source identity reservation",
+          "FCF G13 atomic repair and concurrent foreign keys",
+          "FCF Scout snapshot preservation and phase rollback regressions",
+          "FCF future historical cleanup preserves inactive opening state",
+          "FCF native target import, pricing gate and independent activation",
+          "FCF six reviewed native cleanup and independent target activation",
+          "FUSSBALL exact source identity reservation and collision rollback",
+          "G1 derived scores and durable9410 synthetic rollback (fresh GHA only)",
+          "G9 native800 coherent score preparation (fresh hosted GHA only)",
+          "G9 native800 final postprice launch (fresh hosted GHA only)",
+          "G9 native800 import-state bridge (fresh hosted GHA only)",
+          "Generate database types from the fresh migration chain",
+          "Germany activation guard in fresh database",
+          "Guarded cross-club identity correction",
+          "HNS canonical release, target ACLs and waiting writers",
+          "Legacy appearance receipt JSON NULL compatibility rollback",
+          "MFA Challenge four-report cleanup and release rollback regression",
+          "MFA NL closed archive bootstrap rollback regression",
+          "MFA NL closed source/import/prices/release rollback regression",
+          "MFA reviewed two-report cleanup and release rollback regression",
+          "MLSZ authoritative card clock and legacy NULL gate rollback",
+          "MLSZ reviewed historical cleanup and activation",
+          "MLSZ source identity and Baranya exact archive inventories rollback",
+          "Ordinary match writes under the real importer role",
+          "Pest C exact historical cleanup and fresh release rollback",
+          "Post Run actions/checkout@v4",
+          "Post Run actions/setup-node@v4",
+          "Preserve generated database types",
+          "Regional DFB gate and concurrent writes",
+          "Reviewed English source-calendar native regression",
+          "Reviewed FCF cleanup, waiting writers and exact TEXT transport",
+          "Reviewed Romanian and Moldovan incomplete report admission rollback",
+          "Reviewed existing league history cleanup, pricing and activation rollback",
+          "Reviewed historical statistics and concurrent fixture identities",
+          "Run actions/checkout@v4",
+          "Run actions/setup-node@v4",
+          "Run npm ci --ignore-scripts",
+          "Run npm run preizkus-objav",
+          "Run npm run preizkus-zamrznitve",
+          "Run npm run test:socasnost",
+          "Run npm run test:varnost",
+          "Run npx --yes supabase@2.117.0 db start",
+          "Run npx --yes supabase@2.117.0 stop --no-backup",
+          "Set up job",
+          "Toth exact two-report archive cleanup and fresh release rollback"
+        ],
+        "diagnostika-virov": [],
+        "novi-viri": [],
+        "Je nova različica res v zraku?": [
+          "Complete job",
+          "Počakaj na deploy in preveri commit",
+          "Set up job"
+        ],
+        "Objava Trgovine na Hetzner VM": [
+          "Build",
+          "Complete job",
+          "Je nova različica v zraku?",
+          "Post Run actions/checkout@v4",
+          "Post Run actions/setup-node@v4",
+          "Prenos in preklop",
+          "Run actions/checkout@v4",
+          "Run actions/setup-node@v4",
+          "Run npm ci --ignore-scripts",
+          "Set up job"
+        ],
+        "Migracije baze": [
+          "Ali je baza nastavljena?",
+          "Complete job",
+          "Katere migracije čakajo",
+          "Post Run actions/checkout@v4",
+          "Pravice agentov",
+          "Run actions/checkout@v4",
+          "Set up job",
+          "Tunel do baze na VM",
+          "Uveljavi migracije"
+        ],
+        "Objava na Hetzner VM": [
+          "Build",
+          "Complete job",
+          "Post Run actions/checkout@v4",
+          "Post Run actions/setup-node@v4",
+          "Prenos in preklop",
+          "Run actions/checkout@v4",
+          "Run actions/setup-node@v4",
+          "Run npm ci --ignore-scripts",
+          "Set up job"
+        ],
+        "Objava Club na Hetzner VM": [
+          "Build",
+          "Complete job",
+          "Je nova različica v zraku?",
+          "Post Run actions/checkout@v4",
+          "Post Run actions/setup-node@v4",
+          "Prenos in preklop",
+          "Run actions/checkout@v4",
+          "Run actions/setup-node@v4",
+          "Run npm ci --ignore-scripts",
+          "Set up job"
+        ],
+        "Objava na Vercel": [
+          "Ali so skrivnosti nastavljene?",
+          "Complete job",
+          "Namesti Vercel CLI",
+          "Objavi v produkcijo",
+          "Post Run actions/checkout@v4",
+          "Post Run actions/setup-node@v4",
+          "Preveri dostop (samo diagnostika)",
+          "Run actions/checkout@v4",
+          "Run actions/setup-node@v4",
+          "Set up job"
+        ]
+      },
+      "sourceJobs": [
+        "novi-viri",
+        "diagnostika-virov"
+      ],
+      "exampleRunIds": [
+        "41052563166",
+        "41050813781",
+        "41050722168",
+        "41050355806",
+        "41046932230",
+        "41044271424",
+        "41044115368",
+        "41043685694",
+        "41042341606",
+        "41041286662",
+        "41041259816",
+        "41040785165",
+        "41039672074",
+        "41038981556",
+        "41038593760",
+        "41038324864",
+        "41038055001",
+        "41036573516",
+        "41036291805",
+        "41035512154",
+        "41034901712",
+        "41025478190",
+        "41025224255",
+        "41025170451",
+        "41024670745",
+        "41023011850",
+        "41019426336",
+        "41015173142",
+        "41015153317",
+        "41011954807",
+        "41011685432",
+        "41010264157",
+        "41005682450",
+        "41005087411",
+        "41004325585",
+        "41003085708",
+        "41001751848",
+        "41000354513",
+        "40999162187",
+        "40998171538",
+        "40989827972",
+        "40988254410",
+        "40978692137",
+        "40976559777",
+        "40975914861",
+        "40975738228",
+        "40973685788",
+        "40972586817",
+        "40969935010",
+        "40968869885",
+        "40968317831",
+        "40967918321",
+        "40966827099",
+        "40966817216",
+        "40966754724",
+        "40966281930",
+        "40965769704",
+        "40964216858",
+        "40964153735",
+        "40964135949",
+        "40962986329",
+        "40962703883",
+        "40962506127",
+        "40961989441",
+        "40959250773",
+        "40956585378",
+        "40904404582",
+        "40901627194",
+        "40886943693",
+        "40884572817",
+        "40880844388",
+        "40868065586",
+        "40865410011",
+        "40857011036",
+        "40849734549",
+        "40837646559",
+        "40833186755",
+        "40833058416",
+        "40831642555",
+        "40830622134",
+        "40830018386",
+        "40815741227",
+        "40814176919",
+        "40808563980",
+        "40801698702",
+        "40799630707",
+        "40799030853",
+        "40794571495",
+        "40790513424",
+        "40788415105",
+        "40787500409",
+        "40786429754",
+        "40785431536",
+        "40782909731",
+        "40781229599",
+        "40777038273"
+      ]
+    }
+  ]
+}

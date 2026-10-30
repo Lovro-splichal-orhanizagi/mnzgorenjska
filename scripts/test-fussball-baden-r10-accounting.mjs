@@ -24,6 +24,7 @@ test('budget enumeration refuses incomplete or duplicate pages before historical
 
 const E=process.env.FUSSBALL_R10_FOUNDATION_EVIDENCE
 const D=E&&join(E,'evidence/baden-r10-budget-reconciliation-20261030')
+const immutableTestCache=new Map()
 function retained(){
  const responses=new Map(),calls=[],controls={},r9=join(E,'baden-fresh-pair-40859714195-terminal-20261029-attempt1')
  const load=(root,p)=>JSON.parse(readFileSync(join(root,p))),set=(p,v)=>responses.set(prefix+p,v)
@@ -35,7 +36,7 @@ function retained(){
  const runs=Array.from({length:5},(_,i)=>load(D,`all-runs-page${i+1}.json`).workflow_runs).flat()
  for(const r of runs){
   set('actions/runs/'+r.id,r)
-  const job=join(D,`jobs-${r.id}-1-page1.json`),inventory=join(D,`artifacts-${r.id}.json`)
+  const job=existsSync(join(D,`jobs-${r.id}-1-page1.json`))?join(D,`jobs-${r.id}-1-page1.json`):join(D,'closure-groups',`jobs-${r.id}-1-page1.json`),inventory=join(D,`artifacts-${r.id}.json`)
   if(existsSync(job))set(`actions/runs/${r.id}/attempts/1/jobs?per_page=100&page=1`,JSON.parse(readFileSync(job)))
   if(existsSync(inventory))set(`actions/runs/${r.id}/artifacts?per_page=100&page=1`,JSON.parse(readFileSync(inventory)))
  }
@@ -51,14 +52,18 @@ function retained(){
  let scan=0
  return {calls,controls,runs,github:async(path,binary=false)=>{
   calls.push({path,binary});let v
+  if(immutableTestCache.has(path)){v=immutableTestCache.get(path);v=controls.change?.(path,v,binary)??v;return structuredClone(v)}
   if(path.startsWith(prefix+'actions/runs?created=')){
    const page=Number(new URL('https://api.invalid/'+path).searchParams.get('page'));if(page===1)scan++
    const base=controls.reviewedOnly?runs.filter(r=>JSON.parse(readFileSync(new URL('./fussball-baden-r10-accounting.json',import.meta.url))).records.some(p=>p.run.id===r.id)||JSON.parse(readFileSync(new URL('./fussball-baden-r10-exclusions.json',import.meta.url))).groups.some(g=>g.workflow===r.path)):runs;const list=controls.inventory?.(structuredClone(base),scan)??base;v={total_count:list.length,workflow_runs:list.slice((page-1)*100,page*100)}
   }else if(path.startsWith(prefix+'git/commits/')){
-   const head=path.slice((prefix+'git/commits/').length),tree=execFileSync('git',['show','-s','--format=%T',head],{encoding:'utf8'}).trim();v={sha:head,tree:{sha:tree}}
+   const head=path.slice((prefix+'git/commits/').length),tree=execFileSync('git',['show','-s','--format=%T',head],{encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim();v={sha:head,tree:{sha:tree}}
+  }else if(path.startsWith(prefix+'git/trees/')){
+   const tree=path.slice((prefix+'git/trees/').length).split('?')[0],lines=execFileSync('git',['-c','core.quotepath=false','ls-tree','-rl','--full-tree',tree],{encoding:'utf8',maxBuffer:16*1024*1024}).trim().split('\n');v={sha:tree,truncated:false,tree:lines.map(line=>{const m=line.match(/^(\d+) (\w+) ([a-f0-9]{40})\s+(\d+)\t(.+)$/);assert.ok(m);return {mode:m[1],type:m[2],sha:m[3],size:Number(m[4]),path:m[5]}})}
   }else if(path.startsWith(prefix+'contents/')){
    const[file,head]=path.slice((prefix+'contents/').length).split('?ref='),b=execFileSync('git',['show',head+':'+file],{maxBuffer:8*1024*1024});v={type:'file',path:file,size:b.length,encoding:'base64',content:b.toString('base64')}
   }else{assert.ok(responses.has(path),'retained own GET '+path);v=responses.get(path)}
+  if(path.startsWith(prefix+'git/')||path.startsWith(prefix+'contents/'))immutableTestCache.set(path,v)
   v=controls.change?.(path,v,binary)??v;return Buffer.isBuffer(v)?Buffer.from(v):structuredClone(v)
  }}
 }
@@ -76,7 +81,7 @@ test('genuine snapshot classifies exact55 and24 body-bound service runs but hold
   const n=v.executions.find(x=>x.runId==='41011276709');assert.equal(n.physicalProviderAttempts,null);assert.equal(n.redirectVisibility,'NOT_JOURNALED')
   assert.equal(v.ancestorCoverage.complete,false);assert.equal(v.ancestorCoverage.ancestors.length,9)
   assert.ok(e.blockers.some(b=>b.reason==='PRE_R7_ANCESTOR_COVERAGE_NOT_CLOSED'))
-  assert.ok(e.blockers.some(b=>b.path==='.github/workflows/uvoz-lige.yml'))
+  assert.ok(v.executions.some(x=>x.kind==='reviewed-content-vector-group'))
   if(process.env.FUSSBALL_R10_REVIEW_FIX_RESULT_DIR)writeFileSync(join(process.env.FUSSBALL_R10_REVIEW_FIX_RESULT_DIR,'PARTIAL-COVERAGE-HOLD.json'),JSON.stringify({status:'HOLD',blockers:e.blockers,executions:v.executions,ancestorCoverage:v.ancestorCoverage,authenticatedMinimumSpent:v.authenticatedMinimumSpent,freshAccountingKnown:false,sourceOperationAuthorized:false,networkGETs:0,providerGETs:0},null,2)+'\n')
   return true
  })
@@ -157,4 +162,20 @@ test('execution created during late mutable rechecks prevents budget issuance',{
   const r=structuredClone(rows.find(r=>r.id===40859714195));r.id=99999900002;return [r,...rows]
  }
  await assert.rejects(api.readFussballBadenR10Budget({github:f.github}),e=>e.blockers?.some(b=>b.runId==='99999900002'))
+})
+
+test('content groups reject changed critical code, DE input and executed CI research job',{skip:!E},async t=>{
+ t.mock.method(Date,'now',()=>Date.parse('2026-10-30T13:10:00Z'))
+ for(const mode of ['code','country','source-job']){
+  const f=retained(),target=f.runs.find(r=>r.status==='completed'&&(mode==='country'?r.path.endsWith('/uvoz-lige.yml'):mode==='source-job'?r.path.endsWith('/ci.yml')&&r.event==='push':r.path.endsWith('/preveri-podatke.yml')))
+  const baseIds=new Set(JSON.parse(readFileSync(new URL('./fussball-baden-r10-accounting.json',import.meta.url))).records.map(p=>p.run.id))
+  f.controls.inventory=rows=>rows.filter(r=>baseIds.has(r.id)||r.id===target.id).map(r=>r.id===target.id&&mode==='country'?{...r,display_title:'Uvoz lige de-verbandsliga-baden'}:r)
+  f.controls.change=(path,v)=>{
+   if(mode==='code'&&path.includes('/git/trees/'))return {...v,tree:v.tree.map(e=>e.path==='scripts/viri/fussball-public.mjs'?{...e,sha:'0'.repeat(40)}:e)}
+   if(mode==='country'&&path===prefix+'actions/runs/'+target.id)return {...v,display_title:'Uvoz lige de-verbandsliga-baden'}
+   if(mode==='source-job'&&path===prefix+`actions/runs/${target.id}/attempts/1/jobs?per_page=100&page=1`)return {...v,jobs:v.jobs.map(j=>j.name==='novi-viri'?{...j,conclusion:'success'}:j)}
+   return v
+  }
+  await assert.rejects(api.readFussballBadenR10Budget({github:f.github}),e=>{return e.blockers?.some(b=>b.runId===String(target.id)&&b.reason.includes(mode==='code'?'UNREVIEWED_EXECUTED_VECTOR':mode==='country'?'FOREIGN_INPUT_SCOPE':'RESEARCH_JOBS_NOT_SKIPPED'))})
+ }
 })

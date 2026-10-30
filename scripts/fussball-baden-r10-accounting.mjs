@@ -8,8 +8,10 @@ import {createHash} from 'node:crypto'
 import {performance} from 'node:perf_hooks'
 import {isDeepStrictEqual as same} from 'node:util'
 import {readFussballBadenR10AccountingFoundation,getFussballBadenR10AccountingFoundation} from './fussball-baden-r10-foundation.mjs'
+import {readBadenR10RuntimeVector} from './fussball-baden-r10-runtime-vector.mjs'
 const policy=JSON.parse(readFileSync(new URL('./fussball-baden-r10-accounting.json',import.meta.url)))
 const exclusions=JSON.parse(readFileSync(new URL('./fussball-baden-r10-exclusions.json',import.meta.url)))
+const contentGroups=JSON.parse(readFileSync(new URL('./fussball-baden-r10-content-vectors.json',import.meta.url)))
 const history=JSON.parse(readFileSync(new URL('./fussball-fresh-pair-history.json',import.meta.url)))
 const prefix=`repos/${policy.repository}/`,states=new WeakMap(),MiB=1024*1024
 const sha=b=>createHash('sha256').update(b).digest('hex')
@@ -94,6 +96,7 @@ export async function readFussballBadenR10Budget(input){
  const originals=new Map(),reads=[],allowed=new Set(),mutable=new Map();let retained=0
  const get=async(path,binary=false)=>{
   need(typeof path==='string'&&path.startsWith(prefix)&&allowed.has(path.slice(prefix.length)),'GET_SCOPE')
+  if(!binary&&/\/git\/(?:commits|trees)\//.test(path)&&originals.has(path))return parse(originals.get(path))
   need(reads.length<1600,'GET_BOUND');const started=performance.now();let v
   try{v=await input.github(path,binary);reads.push({path,binary,status:'OK',elapsedMs:Math.round(performance.now()-started)})}
   catch{reads.push({path,binary,status:'GET_FAILED',elapsedMs:Math.round(performance.now()-started)});throw Object.assign(Error('BADEN_R10_BUDGET_GET_HOLD'),{code:'BADEN_R10_BUDGET_GET_HOLD',dataHold:true,githubPath:path})}
@@ -122,6 +125,12 @@ export async function readFussballBadenR10Budget(input){
   }catch(error){ancestorCoverage.ancestors.push({runId:p.runId,head:p.head,latestAttempt:null,additionalRequests:null,reason:error.code??'ANCESTOR_METADATA_UNAVAILABLE'})}
  }
  const runtimeCache=new Set()
+ const vectorCache=new Map()
+ const vector=async(head,workflow)=>{
+  const key=head+'\0'+workflow;if(vectorCache.has(key))return vectorCache.get(key)
+  const v=await readBadenR10RuntimeVector({head,workflow,github:async(path,binary=false)=>{need(path.startsWith(prefix)&&/^git\/(?:commits\/[a-f0-9]{40}|trees\/[a-f0-9]{40}\?recursive=1)$/.test(path.slice(prefix.length)),'VECTOR_SCOPE');allowed.add(path.slice(prefix.length));return get(path,binary)}})
+  vectorCache.set(key,v);return v
+ }
  const runtime=async head=>{
   if(runtimeCache.has(head))return
   const p=policy.runtimes[head];need(p,'UNREVIEWED_RUNTIME');const commitPath='git/commits/'+head;allowed.add(commitPath)
@@ -136,6 +145,45 @@ export async function readFussballBadenR10Budget(input){
  for(const listed of first){
   const p=policy.records.find(p=>p.run.id===listed.id),runId=String(listed.id)
   if(!p){
+   const content=contentGroups.groups.find(g=>g.workflow===listed.path&&(g.mode!=='automatic-build-sql'||['push','pull_request'].includes(listed.event)))
+   if(content){
+    try{
+     need(listed.run_attempt===1&&listed.status==='completed'&&['success','failure','cancelled','skipped','timed_out','action_required','neutral','stale'].includes(listed.conclusion),'GROUP_ATTEMPT')
+     const runPath=`actions/runs/${listed.id}`,jobsPath=runPath+'/attempts/1/jobs?per_page=100&page=1',run=await api(runPath),jobs=await api(jobsPath)
+     need(same(runProjection(run),runProjection(listed)),'GROUP_RUN');jobsProjection(jobs)
+     let checkout=run.head_sha
+     if(content.mode==='automatic-build-sql'&&run.event==='pull_request'){
+      const refs=run.referenced_workflows,pr=run.pull_requests
+      need(Array.isArray(refs)&&refs.length===2&&Array.isArray(pr)&&pr.length===1&&Number.isSafeInteger(pr[0].number)&&
+       refs.every(r=>/^[a-f0-9]{40}$/.test(r.sha)&&r.sha===refs[0].sha&&r.ref===`refs/pull/${pr[0].number}/merge`)&&
+       refs.every(r=>r.path.startsWith(policy.repository+'/.github/workflows/')),'PR_EXECUTED_MERGE_BINDING')
+      checkout=refs[0].sha
+     }
+     const footprint=await vector(checkout,run.path)
+     need(content.vectors.some(v=>v.vectorSha256===footprint.vectorSha256),'UNREVIEWED_EXECUTED_VECTOR')
+     const names=jobs.jobs.map(j=>j.name).sort()
+     need(jobs.jobs.every(j=>j.run_id===run.id&&j.run_attempt===1&&j.head_sha===run.head_sha&&j.status==='completed'&&content.jobNames.includes(j.name)&&
+      new Set(j.steps.map(s=>s.number)).size===j.steps.length&&j.steps.every(s=>s.status==='completed'&&content.allowedSteps[j.name]?.includes(s.name))),'GROUP_COMPLETE_GRAPH')
+     if(content.mode==='automatic-build-sql'){
+      const emptyCancelled=run.status==='completed'&&run.conclusion==='cancelled'&&jobs.total_count===0
+      need(emptyCancelled||same(names,content.jobNames)&&content.sourceJobs.every(name=>jobs.jobs.some(j=>j.name===name&&j.status==='completed'&&j.conclusion==='skipped'&&j.steps.length===0)),'RESEARCH_JOBS_NOT_SKIPPED')
+     }else need(jobs.total_count===1&&same(names,content.jobNames),'GROUP_COMPLETE_GRAPH')
+     let inputSlug=null
+     if(content.mode==='foreign-guarded-import'){
+      const match=/^Uvoz lige ([a-z]{2}-[a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(run.display_title??'')
+      need(run.event==='workflow_dispatch'&&run.head_branch==='main'&&match&& !match[1].startsWith('de-'),'FOREIGN_INPUT_SCOPE')
+      inputSlug=match[1]
+      // The authenticated workflow binds this same inputs.liga to LIGA and
+      // every quoted --tekmovanje argument. The reviewed adapter blob rejects
+      // non-de slugs before any FUSSBALL transport, including @vir overrides.
+     }
+     mutable.set(runPath,run);mutable.set(jobsPath,jobs)
+     executions.push({runId,runAttempt:1,head:run.head_sha,checkoutHead:checkout,path:run.path,kind:'reviewed-content-vector-group',
+      sourceMode:content.mode,classification:'OUTSIDE_ORIGINAL_RESEARCH_PROFILE',inputSlug,contentVector:footprint.vectorSha256,
+      newResearchRequests:0,physicalProviderAttempts:null})
+    }catch(error){blockers.push({runId,path:listed.path,reason:error.code??'GROUP_EVIDENCE_UNAVAILABLE'})}
+    continue
+   }
    const groups=exclusions.groups.filter(g=>g.workflow===listed.path)
    if(groups.length){
     try{
