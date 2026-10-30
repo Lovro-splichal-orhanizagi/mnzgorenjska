@@ -42,6 +42,10 @@ JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
 ```
 
 Build vzame `.env.production`, zato aplikacija teče proti produkcijski bazi.
+Grbov (`dist/grbi`, 140 MB) in OTA svežnjev (`dist/app`) aplikacija ne
+potrebuje — grbe bere s slff.eu (`naslovSlike`). `izdaja.yml` ju pred
+`cap sync` izbriše (paket ~5 MB namesto 134 MB); pri ročni gradnji za trgovino
+naredi isto (`rm -rf dist/grbi dist/app`).
 Ikona: maskota (`public/logo/slff-maskota.png`) na kremni podlagi, brez kroga —
 obliko da sistem (Android adaptivna ikona, iOS zaobljen kvadrat). Plasti so v
 `assets/` (`icon-foreground.png` maskota v višini 720/1024, da vrček ostane v
