@@ -31,6 +31,35 @@ insert into position_priors(player_id,position,score)select min(id),'MID',0.5 fr
 -- Deliberately noncanonical OFFTARGET G9 score remains full exact beforeimage DATA.
 insert into player_scores(round_id,player_id,points,computed_at)select(select min(id)from rounds where competition_id=797),(select min(id)from players where competition_id=797),6.5,'2026-10-01T12:00Z'where exists(select 1 from players where competition_id=797)on conflict(round_id,player_id)do update set points=6.5,computed_at='2026-10-01T12:00Z';
 
+-- TEST ONLY: the unchanged G9 competition activation trigger requires an
+-- ordinary legal squad, pricing spread, substitute appearance and scorer link.
+-- Construct these disposable G9 prerequisites before the actual G1 writer
+-- runs; they are fixture data and are rolled back with this hosted test.
+create temporary table g9_synthetic_roster(slot int primary key,player_id bigint,team_id bigint,position text,value numeric);
+DO $g9_roster$declare ts bigint[];q record;tid bigint;pid bigint;bench bigint;g9match bigint;home bigint;away bigint;goal_team bigint;home_score int;away_score int;begin
+ if exists(select 1 from players where competition_id=797)then raise exception 'G1 TEST: synthetic G9 fixture requires empty target roster';end if;
+ select array_agg(team_id order by team_id)into ts from(select distinct team_id from(select m.home_team_id team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=797 and r.season='2026/27' union select m.away_team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=797 and r.season='2026/27')x)y;
+ if coalesce(cardinality(ts),0)<5 then raise exception 'G1 TEST: five existing G9 fixture clubs required for ordinary synthetic legal15';end if;
+ for q in select *from(values(1,'GK',8::numeric),(2,'DEF',7),(3,'FWD',8),(4,'GK',6),(5,'DEF',4.5),(6,'FWD',4.5),(7,'DEF',7),(8,'MID',4.5),(9,'FWD',4.5),(10,'DEF',4.5),(11,'MID',9),(12,'MID',4.5),(13,'DEF',4.5),(14,'MID',6),(15,'MID',4.5),(16,'MID',4.5))v(slot,position,value)order by slot loop
+  tid:=ts[case when q.slot=16 then 1 else ceil(q.slot/3.0)::int end];
+  insert into players(competition_id,team_id,first_name,last_name,full_name,position,position_source,active,value,value_start)
+   values(797,tid,'TEST ONLY','G9 roster '||q.slot,'TEST ONLY G9 roster '||q.slot,q.position,'zapisnik',true,q.value,q.value)returning id into pid;
+  insert into g9_synthetic_roster values(q.slot,pid,tid,q.position,q.value);
+ end loop;
+ if(select count(*)from g9_synthetic_roster where slot<=15 and position='GK')<>2 or(select count(*)from g9_synthetic_roster where slot<=15 and position='DEF')<>5 or(select count(*)from g9_synthetic_roster where slot<=15 and position='MID')<>5 or(select count(*)from g9_synthetic_roster where slot<=15 and position='FWD')<>3 then raise exception 'G1 TEST: synthetic G9 roster is not legal 15';end if;
+ if(select count(*)from g9_synthetic_roster where value=4.5)<>10 or(select max(value)from g9_synthetic_roster)<8 or public.najcenejsi_kader(public.stanje_lige(797)->'igralci')>100 then raise exception 'G1 TEST: synthetic G9 pricing guard prerequisites';end if;
+ select player_id,team_id into bench,tid from g9_synthetic_roster where slot=16;
+ select m.id,m.home_team_id,m.away_team_id,m.home_goals,m.away_goals into g9match,home,away,home_score,away_score from matches m join rounds r on r.id=m.round_id where r.competition_id=797 and r.season='2026/27'and( m.home_team_id=tid or m.away_team_id=tid)and not exists(select 1 from appearances a where a.match_id=m.id and a.player_id=bench)order by m.id limit 1;
+ if g9match is null then raise exception 'G1 TEST: synthetic G9 substitute match unavailable';end if;
+ insert into appearances(match_id,player_id,team_id,started,minute_on,minute_off,minutes_played,is_goalkeeper,clean_sheet,goals_conceded)
+  values(g9match,bench,tid,false,60,90,30,false,false,0);
+ goal_team:=case when home=tid then home else away end;
+ insert into goals(match_id,scorer_id,team_id,minute,is_own_goal,is_penalty,score_home,score_away)
+  values(g9match,bench,goal_team,75,false,false,home_score+case when goal_team=home then 1 else 0 end,away_score+case when goal_team=away then 1 else 0 end);
+ update matches set home_goals=home_score+case when home=goal_team then 1 else 0 end,away_goals=away_score+case when away=goal_team then 1 else 0 end where id=g9match;
+ if not exists(select 1 from appearances a join goals g on g.match_id=a.match_id and g.scorer_id=a.player_id where a.match_id=g9match and a.player_id=bench and not a.started)then raise exception 'G1 TEST: synthetic G9 scorer/substitute link missing';end if;
+end$g9_roster$;
+
 -- TEST ONLY actual lower-level release authorization creates an already-active
 -- off-target G9 state; it is not a claim of genuine G9 launch/readiness.
 select private_historical_statistics.authorize_release(797,(select policy_id from private_historical_statistics.installed_policies where competition_id=797),(select policy_sha256 from private_historical_statistics.installed_policies where competition_id=797),repeat('d',64));update competitions set active=true where id=797;
