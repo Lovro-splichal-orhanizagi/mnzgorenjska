@@ -52,7 +52,7 @@ select pg_temp.schema_hold('alter table fantasy_roster add column unknown_depend
 do $$declare p jsonb;begin
  if to_regclass('private_fcf_g1_9410.markers')is not null then
   p:=pg_temp.capture();
-  perform pg_temp.projection_assert((select encode(sha256(convert_to(prosrc,'UTF8')),'hex')='f607b30f1cfbad5b57d7259c6aa1c561c8de8ff78ccb40101446256d0954e5ea'from pg_proc where oid='private_fcf_future_projection.capture(text,text[])'::regprocedure),'optional compatibility leaves exact9410 body unchanged');
+  perform pg_temp.projection_assert((select encode(sha256(convert_to(prosrc,'UTF8')),'hex')in('f607b30f1cfbad5b57d7259c6aa1c561c8de8ff78ccb40101446256d0954e5ea','f7af97dc63d994598df0e93fb7dac134200da97d2b7e0f71cf5d2aff96eab05c')from pg_proc where oid='private_fcf_future_projection.capture(text,text[])'::regprocedure),'optional compatibility leaves exact9410 body unchanged');
   perform pg_temp.projection_assert((p->>'dependencySnapshotText')::jsonb#>>'{relations,private_fcf_g1_9410.markers,count}'='0'and(p->>'dependencySnapshotText')::jsonb#>>'{relations,private_fcf_g1_9410.receipts,count}'='0'and(p->>'dependencySnapshotText')::jsonb#>>'{relations,private_fcf_g1_9410.markers,globalUser}'='false'and(p->>'dependencySnapshotText')::jsonb#>>'{relations,private_fcf_g1_9410.receipts,globalUser}'='false','complete9410 protected relation snapshots; never human dependency subtraction');
   perform pg_temp.schema_hold('alter table private_fcf_g1_9410.markers add column unexpected_dependency bigint','9410 marker shape drift');
   perform pg_temp.schema_hold('alter table private_fcf_g1_9410.receipts add column unexpected_dependency bigint','9410 receipt shape drift');
