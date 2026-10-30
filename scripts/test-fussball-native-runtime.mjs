@@ -194,3 +194,19 @@ test('TEST ONLY fixed native runtime parses original captain keeper role bytes a
  assert.throws(()=>validateFussballCardEnvelope(e));duplicate=true
  await assert.rejects(f.api.collectFussballNativeRuntime({context,competition,code,client,asOfDate:'2026-10-28'}),/duplicate|vratar|goalkeeper/)
 })
+
+test('TEST ONLY fixed fixture clock survives a far-later host clock and real original24h expiry still holds',async t=>{
+ const clock=Date.parse('2026-10-29T12:00:00.000Z');
+ t.mock.method(Date,'now',()=>Date.parse('2035-01-01T00:00:00.000Z'));
+ const f=nativeRuntimeFixture(t,competition,{clock}),context=await f.context();
+ assert.equal(f.f.proof.source.currentCreatedAt,'2026-10-29T11:59:00.000Z');
+ const originalUntil=f.f.proof.source.currentFreshUntil;
+ assert.equal(originalUntil,'2026-10-30T11:59:00.000Z');
+ assert.equal(f.api.getFussballNativeRuntimeContext(context,competition).pack.currentFreshUntil,originalUntil);
+ const SyntheticDate=class extends Date{static now(){return f.controls.clock}},composition=isolatedComposition(f.f,{Date:SyntheticDate});
+ assert.equal(composition.buildFussballNativeComposition(f.f.proof).currentFreshUntil,originalUntil);
+ f.controls.clock=Date.parse(originalUntil)+1;
+ assert.throws(()=>composition.buildFussballNativeComposition(f.f.proof),/original current freshness expired or differs/);
+ assert.equal(f.f.proof.source.currentFreshUntil,originalUntil,'TEST ONLY advancing observation cannot renew original receipts');
+ assert.equal(f.controls.expired,undefined,'real freshness check, not synthetic expired stub');
+});
