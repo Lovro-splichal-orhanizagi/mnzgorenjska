@@ -289,7 +289,7 @@ create or replace function private_fussball.admission_state(cid bigint)returns t
 ';
 -- Mutation authority is session/role ownership, never a caller-set JWT/GUC.
 create function private_baden_transition.owner_only()returns void language plpgsql security invoker set search_path=pg_catalog as $$begin
- if current_user<>session_user or current_user not in('postgres','supabase_admin')or not exists(select 1 from pg_roles where rolname=session_user and rolsuper)then raise exception 'BADEN_VERSION: actual super owner session required'using errcode='42501';end if;
+ if current_user<>session_user or current_user not in('postgres','supabase_admin')or not exists(select 1 from pg_roles r cross join pg_namespace n where r.rolname=session_user and n.nspname='private_baden_transition'and(r.rolsuper or n.nspowner=r.oid))then raise exception 'BADEN_VERSION: actual super or schema owner session required'using errcode='42501';end if;
 end$$;
 create function private_baden_transition.state()returns jsonb language plpgsql volatile security invoker set search_path=public,pg_temp set timezone='UTC' as $$declare t record;n bigint;h text;rels jsonb:='{}';cat jsonb;target jsonb;begin
  for t in select ns.nspname,c.relname from pg_class c join pg_namespace ns on ns.oid=c.relnamespace where c.relkind in('r','p')and(ns.nspname in('public','scout')or ns.nspname like'private\_%'escape'\'or(ns.nspname='auth'and c.relname='users'))and not(ns.nspname='private_baden_transition'and c.relname='versions')order by ns.nspname,c.relname loop
