@@ -24,6 +24,9 @@ const completedCatalogKind='baden-fussball-completed-stages-native-catalog',comp
 const freshCatalogKind='baden-fussball-fresh-pair-native-catalog',freshSourceKind='authenticated-fussball-baden-fresh-pair-source'
 const repo='Lovro-splichal-orhanizagi/mnzgorenjska',prefix=`repos/${repo}/`,workflow='.github/workflows/replay-fussball-native-composition.yml'
 const validateStep='Validate exact reviewed main and first attempt',deriveStep='Authenticate source certificate and derive exact Baden partition',uploadStep='Preserve derived Baden composition proof'
+const dualEpochSource={runId:'40990176474',head:'e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d'}
+const dualEpochCompatibilityFile='scripts/policies/baden-native-dual-epoch-compatibility.json'
+const dualEpochCurrentFiles=['.github/workflows/uvoz-baden-native.yml',dualEpochCompatibilityFile,'scripts/stage-baden-native-composition.mjs','scripts/bulk-baden-native.mjs','scripts/bulk-offline-network.mjs','scripts/fussball-native-composition.mjs']
 const catalogFile='scripts/policies/fussball-baden-native-composition.json'
 const catalogBytes=readFileSync(new URL('../'+catalogFile,import.meta.url)),catalog=JSON.parse(catalogBytes)
 const runtimeFiles=[...new Set([workflow,catalogFile,'scripts/fussball-baden-completed-stages.json','package-lock.json',...zaprtje('scripts/fussball-native-composition.mjs'),...zaprtje('scripts/stage-fussball-native-composition.mjs')])].sort()
@@ -195,31 +198,35 @@ export function buildFussballNativeComposition(proof){
 
 function writerPack(proof,writerHead){const {derivedPackSha256,...base}=buildFussballNativeComposition(proof);const pack={...base,expectedSha:writerHead,replayHead:writerHead};return freeze({...pack,derivedPackSha256:digest(pack)})}
 
-function hostedShape(input,fields){closed(input,fields,'exact derived run/head and repository GET adapter required');need(/^[1-9]\d{0,19}$/.test(input.derivedRunId??'')&&Number.isSafeInteger(Number(input.derivedRunId))&&/^[a-f0-9]{40}$/.test(input.derivedHead??'')&&typeof input.github==='function','exact derived run/head and repository GET adapter required')}
+function isDualEpoch(input){return Object.hasOwn(input??{},'consumerHead')}
+function hostedShape(input,fields){const extended=isDualEpoch(input);closed(input,extended?[...fields,'consumerHead']:fields,'exact derived run/head and repository GET adapter required');need(/^[1-9]\d{0,19}$/.test(input.derivedRunId??'')&&Number.isSafeInteger(Number(input.derivedRunId))&&/^[a-f0-9]{40}$/.test(input.derivedHead??'')&&typeof input.github==='function','exact derived run/head and repository GET adapter required');if(extended)need(input.derivedRunId===dualEpochSource.runId&&input.derivedHead===dualEpochSource.head&&/^[a-f0-9]{40}$/.test(input.consumerHead??'')&&input.consumerHead!==input.derivedHead,'only the reviewed e925 source epoch may use a separate current consumer head')}
 function hostedApi(input){
  const catalogPath=`contents/${catalogFile}?ref=${input.derivedHead}`;let catalogRaw=false
  const base=`actions/runs/${input.derivedRunId}`,allowed=new Set([base,base+'/attempts/1/jobs?per_page=100&page=1',base+'/artifacts?per_page=100&page=1','branches/main',...runtimeFiles.map(f=>`contents/${f}?ref=${input.derivedHead}`)])
+ if(isDualEpoch(input)){const env=process.env;for(const path of [`actions/runs/${env.GITHUB_RUN_ID}`,`actions/workflows/ci.yml/runs?branch=main&event=push&per_page=100&page=1`])allowed.add(path);for(const file of dualEpochCurrentFiles)allowed.add(`contents/${file}?ref=${input.consumerHead}`)}
  return {allow:p=>allowed.add(p),allowCatalogRaw:()=>{catalogRaw=true},async get(p,binary=false){need(allowed.has(p)&&(!binary||!p.startsWith('contents/')||(catalogRaw&&p===catalogPath)),'GET outside fixed derived proof scope');let v;try{v=await input.github(prefix+p,binary)}catch{need(false,'authoritative derived GitHub GET unavailable')};if(binary){need(Buffer.isBuffer(v)&&v.length<=(p===catalogPath?4:512)*MiB,p===catalogPath?'bounded derived catalog required':'bounded derived ZIP required');return Buffer.from(v)}return structuredClone(v)}}
 }
 function hostedRun(run,input,terminal){
  need(run?.id===Number(input.derivedRunId)&&run.run_attempt===1&&run.head_sha===input.derivedHead&&run.head_branch==='main'&&run.event==='workflow_dispatch'&&run.path===workflow&&run.repository?.full_name===repo&&run.head_repository?.full_name===repo,'actual first-attempt own-repository main derived run required')
+ if(isDualEpoch(input))need(rootActor(run.actor)&&rootActor(run.triggering_actor),'pinned e925 derived run must be the reviewed root run')
  need(terminal?run.status==='completed'&&run.conclusion==='success':run.status==='in_progress'&&run.conclusion===null,'derived run execution state differs')
  need(utc(run.created_at)&&utc(run.updated_at)&&Date.parse(run.created_at)<=Date.parse(run.updated_at)&&Date.parse(run.updated_at)<=Date.now(),'derived run timestamps differ')
 }
 async function installedRuntime(input,api){
- const main=await api.get('branches/main');need(main?.name==='main'&&main.commit?.sha===input.derivedHead,'derived head is no longer actual reviewed main')
+ const expectedMain=isDualEpoch(input)?input.consumerHead:input.derivedHead,main=await api.get('branches/main');need(main?.name==='main'&&main.commit?.sha===expectedMain,'current writer main differs')
  const runtime={}
  for(const file of runtimeFiles){
   const bytes=readFileSync(new URL('../'+file,import.meta.url)),path=`contents/${file}?ref=${input.derivedHead}`,remote=await api.get(path),why='derived installed runtime differs from immutable approved head'
-  need(remote?.type==='file'&&remote.path===file&&remote.size===bytes.length&&bytes.length<=4*MiB,why)
+  need(remote?.type==='file'&&remote.path===file&&remote.size>0&&remote.size<=4*MiB&&(remote.size===bytes.length||isDualEpoch(input)&&file==='scripts/fussball-native-composition.mjs'),why)
+  let sourceBytes
   if(file===catalogFile&&bytes.length>MiB){
    // GitHub object media omits inline contents above 1 MiB. Authenticate the
    // immutable object before allowing this one fixed catalog raw request.
    const blob=createHash('sha1').update(Buffer.from(`blob ${bytes.length}\0`)).update(bytes).digest('hex')
    need(remote.encoding==='none'&&remote.content===''&&remote.sha===blob,why)
    api.allowCatalogRaw();const raw=await api.get(path,true);need(raw.length===bytes.length&&raw.equals(bytes),why)
-  }else need(remote.encoding==='base64'&&typeof remote.content==='string'&&Buffer.from(remote.content,'base64').equals(bytes),why)
-  runtime[file]=hash(bytes)
+  }else {need(remote.encoding==='base64'&&typeof remote.content==='string',why);sourceBytes=Buffer.from(remote.content,'base64');need(sourceBytes.length===remote.size,why);if(!sourceBytes.equals(bytes))need(isDualEpoch(input)&&file==='scripts/fussball-native-composition.mjs'&&input.derivedRunId===dualEpochSource.runId&&input.derivedHead===dualEpochSource.head&&createHash('sha256').update(sourceBytes).digest('hex')==='355f939012163817f01df3af46966af8899102ef6eb0e702cd5e0dd131d68d75',why)}
+  runtime[file]=hash(sourceBytes??bytes)
  }
  return runtime
 }
@@ -233,6 +240,33 @@ function hostedJob(v,input){
 function hostedArtifact(a,input,steps){
  need(Number.isSafeInteger(a?.id)&&a.id>0&&a.name===`fussball-native-composition-${input.derivedRunId}`&&a.expired===false&&Number.isSafeInteger(a.size_in_bytes)&&a.size_in_bytes>0&&a.size_in_bytes<=512*MiB&&/^sha256:[a-f0-9]{64}$/.test(a.digest??'')&&a.workflow_run?.id===Number(input.derivedRunId)&&a.workflow_run.head_sha===input.derivedHead&&a.workflow_run.head_branch==='main','exact immutable derived artifact required')
  need(utc(a.created_at)&&utc(a.updated_at)&&Date.parse(a.created_at)>=Date.parse(steps[uploadStep].started_at)&&Date.parse(a.created_at)<=Date.parse(a.updated_at)&&Date.parse(a.updated_at)<=apiEnd(steps[uploadStep].completed_at),'derived artifact timestamps differ')
+}
+function rootActor(a){return a?.id===25134229&&a.login==='nejcar20'&&a.type==='User'}
+async function servedCurrentHead(head){
+ let response;try{response=await globalThis.fetch('https://slff.eu/',{headers:{'Cache-Control':'no-cache'},credentials:'omit',redirect:'error',signal:AbortSignal.timeout(30000)})}catch{need(false,'current served writer fetch unavailable')}
+ need(response?.ok===true,'current served writer unavailable');const reader=response.body?.getReader();need(reader&&typeof reader.read==='function','bounded served writer body required');const chunks=[];let size=0
+ try{for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;need(size<=4*MiB,'served writer body exceeds bound');chunks.push(Buffer.from(value))}}catch(error){if(error?.dataHold)throw error;need(false,'bounded served writer body unavailable')}finally{await reader.cancel().catch(()=>{})}
+ const html=Buffer.concat(chunks).toString('utf8'),matches=[...html.matchAll(/<meta\b[^>]*name=["']slff-commit["'][^>]*content=["']([a-f0-9]{40})["']/g)];need(matches.length===1&&matches[0][1]===head,'exact current served writer identity required')
+}
+async function currentConsumerIdentity(input,api){
+ const env=process.env,workflowPath='.github/workflows/uvoz-baden-native.yml',ciList='actions/workflows/ci.yml/runs?branch=main&event=push&per_page=100&page=1'
+ need(env.GITHUB_ACTIONS==='true'&&env.GITHUB_REPOSITORY===repo&&env.GITHUB_REF==='refs/heads/main'&&env.GITHUB_WORKFLOW_REF===repo+'/'+workflowPath+'@refs/heads/main'&&env.GITHUB_EVENT_NAME==='workflow_dispatch'&&env.GITHUB_RUN_ATTEMPT==='1'&&env.GITHUB_JOB==='rollout'&&env.GITHUB_SHA===input.consumerHead&&env.EXPECTED_SHA===input.consumerHead&&/^[1-9]\d{0,15}$/.test(env.GITHUB_RUN_ID??''),'root manual first-attempt current Baden consumer required')
+ const runPath=`actions/runs/${env.GITHUB_RUN_ID}`,run=await api.get(runPath)
+ need(run?.id===Number(env.GITHUB_RUN_ID)&&run.run_attempt===1&&run.head_sha===input.consumerHead&&run.head_branch==='main'&&run.event==='workflow_dispatch'&&run.path===workflowPath&&run.status==='in_progress'&&run.conclusion===null&&run.repository?.full_name===repo&&run.head_repository?.full_name===repo&&rootActor(run.actor)&&rootActor(run.triggering_actor)&&utc(run.created_at)&&utc(run.updated_at)&&Date.parse(run.created_at)<=Date.parse(run.updated_at)&&Date.parse(run.updated_at)<=Date.now(),'actual root current consumer run identity differs')
+ const main=await api.get('branches/main');need(main?.name==='main'&&main.commit?.sha===input.consumerHead,'current consumer main changed')
+ const listed=await api.get(ciList),matches=listed?.workflow_runs?.filter(r=>r?.head_sha===input.consumerHead&&r.head_branch==='main'&&r.event==='push'&&r.path==='.github/workflows/ci.yml'&&r.run_attempt===1&&r.status==='completed'&&r.conclusion==='success'&&r.repository?.full_name===repo&&r.head_repository?.full_name===repo&&rootActor(r.actor)&&rootActor(r.triggering_actor))??[]
+ need(matches.length===1&&listed.total_count>=matches.length,'unique successful current writer CI required');const ci=matches[0],ciPath=`actions/runs/${ci.id}`,jobsPath=ciPath+'/attempts/1/jobs?per_page=100&page=1';api.allow(ciPath);api.allow(jobsPath)
+ const ciDetail=await api.get(ciPath),jobs=await api.get(jobsPath)
+ need(ciDetail?.id===ci.id&&ciDetail.head_sha===input.consumerHead&&ciDetail.run_attempt===1&&ciDetail.head_branch==='main'&&ciDetail.event==='push'&&ciDetail.path==='.github/workflows/ci.yml'&&ciDetail.status==='completed'&&ciDetail.conclusion==='success'&&ciDetail.repository?.full_name===repo&&ciDetail.head_repository?.full_name===repo&&rootActor(ciDetail.actor)&&rootActor(ciDetail.triggering_actor),'actual successful current writer CI differs')
+ need(utc(run.created_at)&&utc(run.updated_at)&&utc(ciDetail.created_at)&&utc(ciDetail.updated_at)&&Date.parse(ciDetail.created_at)<=Date.parse(ciDetail.updated_at)&&Date.parse(ciDetail.updated_at)<=Date.parse(run.created_at),'current writer CI must finish before manual consumer run')
+ const expectedJobs=new Map([['Pravice in roki v svezi bazi','success'],['Tipi, build, izris','success'],['novi-viri','skipped'],['diagnostika-virov','skipped'],['Migracije baze','success'],['Objava na Vercel','success'],['Objava Trgovine na Hetzner VM','success'],['Objava na Hetzner VM','success'],['Objava Club na Hetzner VM','success'],['Je nova različica res v zraku?','success']])
+ const jobIds=new Set(),jobNames=new Set();need(jobs?.total_count===expectedJobs.size&&jobs.jobs?.length===expectedJobs.size&&jobs.jobs.every(j=>{const conclusion=expectedJobs.get(j.name);if(!conclusion||jobNames.has(j.name)||!Number.isSafeInteger(j.id)||j.id<=0||jobIds.has(j.id)||j.run_id!==ci.id||j.run_attempt!==1||j.head_sha!==input.consumerHead||j.status!=='completed'||j.conclusion!==conclusion||!utc(j.completed_at)||Date.parse(j.completed_at)>apiEnd(ciDetail.updated_at)||(j.started_at!=null&&(!utc(j.started_at)||Date.parse(j.started_at)>apiEnd(ciDetail.updated_at))))return false;jobNames.add(j.name);jobIds.add(j.id);return true})&&jobNames.size===expectedJobs.size,'exact current writer CI job graph required')
+ for(const file of dualEpochCurrentFiles){const path=`contents/${file}?ref=${input.consumerHead}`;api.allow(path);const body=await api.get(path),local=readFileSync(new URL('../'+file,import.meta.url));need(local.length<=4*MiB&&body?.type==='file'&&body.path===file&&body.encoding==='base64'&&body.size===local.length&&typeof body.content==='string'&&body.content.length<=6*MiB&&Buffer.from(body.content,'base64').equals(local),'current consumer checkout body differs from authenticated main')}
+ let compatibility;try{compatibility=JSON.parse(readFileSync(new URL('../'+dualEpochCompatibilityFile,import.meta.url),'utf8'))}catch{need(false,'reviewed dual-epoch compatibility DATA required')}
+ closed(compatibility,['schemaVersion','kind','sourceRunId','sourceHead','sourceReaderSha256','consumerReaderSha256'],'closed dual-epoch compatibility DATA required')
+ const consumerReader=readFileSync(new URL('../scripts/fussball-native-composition.mjs',import.meta.url));need(compatibility.schemaVersion===1&&compatibility.kind==='baden-native-dual-epoch-compatibility'&&compatibility.sourceRunId===dualEpochSource.runId&&compatibility.sourceHead===dualEpochSource.head&&compatibility.sourceReaderSha256==='355f939012163817f01df3af46966af8899102ef6eb0e702cd5e0dd131d68d75'&&compatibility.consumerReaderSha256===hash(consumerReader),'reviewed dual-epoch reader body hash differs')
+ await servedCurrentHead(input.consumerHead)
+ return {run,main,ci:ciDetail,jobs}
 }
 function unpackDerived(bytes){
  const root=mkdtempSync(join(tmpdir(),'slff-baden-derived-')),path=join(root,'derived.zip')
@@ -273,7 +307,7 @@ export async function produceFussballNativeComposition(input){
 /** Rebuild from independently reauthenticated source bytes; no serialized pack
  * or source-only eligibility boolean can confer this private preparation scope. */
 export async function loadFussballNativeComposition(input){
- hostedShape(input,['derivedRunId','derivedHead','frozenDirectory','v6FrozenDirectory','github']);const api=hostedApi(input),path=`actions/runs/${input.derivedRunId}`,run=await api.get(path);hostedRun(run,input,true)
+ hostedShape(input,['derivedRunId','derivedHead','frozenDirectory','v6FrozenDirectory','github']);const api=hostedApi(input),consumerBefore=isDualEpoch(input)?await currentConsumerIdentity(input,api):null,path=`actions/runs/${input.derivedRunId}`,run=await api.get(path);hostedRun(run,input,true)
  const runtime=await installedRuntime(input,api),jobs=await api.get(path+'/attempts/1/jobs?per_page=100&page=1'),steps=hostedJob(jobs,input),inventory=await api.get(path+'/artifacts?per_page=100&page=1')
  need(inventory?.total_count===1&&inventory.artifacts?.length===1,'exact derived artifact inventory required');hostedArtifact(inventory.artifacts[0],input,steps)
  const artifactPath=`actions/artifacts/${inventory.artifacts[0].id}`;api.allow(artifactPath);api.allow(artifactPath+'/zip')
@@ -286,7 +320,7 @@ export async function loadFussballNativeComposition(input){
  const si=sourceInput(c,input),source=await readFussballNativeCompositionSource(si),rebuilt=writerPack(source,input.derivedHead)
  need(same(pack,rebuilt)&&c.catalogSha256===rebuilt.catalogSha256&&c.policySha256===rebuilt.policySha256&&c.clubDescriptorsSha256===rebuilt.clubDescriptorsSha256&&same(c.source,rebuilt.source)&&c.sourceCertificateSha256===rebuilt.sourceCertificateSha256&&c.originalBytesSha256===rebuilt.originalBytesSha256&&c.derivedPackSha256===rebuilt.derivedPackSha256&&same(c.partitions,rebuilt.seasons.map(s=>({inventory:s.inventory,partitionSha256:s.partitionSha256})))&&c.captured_at===source.source.currentCreatedAt&&c.currentFreshUntil===source.source.currentFreshUntil,'derived source/catalog/policy/partition differs from fresh authenticated rebuild')
  const again=await readFussballNativeCompositionSource(si);need(same(writerPack(again,input.derivedHead),rebuilt),'final source certificate/pack differs')
- need(same(await api.get(path),run)&&same(await api.get(path+'/attempts/1/jobs?per_page=100&page=1'),jobs)&&same(await api.get(path+'/artifacts?per_page=100&page=1'),inventory)&&same(await installedRuntime(input,api),runtime),'derived metadata/main/runtime drift');fresh(again.source)
+ need(same(await api.get(path),run)&&same(await api.get(path+'/attempts/1/jobs?per_page=100&page=1'),jobs)&&same(await api.get(path+'/artifacts?per_page=100&page=1'),inventory)&&same(await installedRuntime(input,api),runtime),'derived metadata/main/runtime drift');if(consumerBefore){const after=await currentConsumerIdentity(input,api);need(same(after,consumerBefore),'current consumer identity changed during source authentication')}fresh(again.source)
  const proof=freeze({version:1,kind:'source-partition-verified-awaiting-native-preparation',profile,derivedRunId:input.derivedRunId,derivedHead:input.derivedHead,derivedArtifact:{id:artifact.id,digest:artifact.digest,size:artifact.size_in_bytes},derivedPackSha256:rebuilt.derivedPackSha256,compositionProofSha256:hash(files.get('composition.json')),catalogSha256:rebuilt.catalogSha256,policySha256:rebuilt.policySha256,clubDescriptorsSha256:rebuilt.clubDescriptorsSha256,currentCreatedAt:source.source.currentCreatedAt,currentFreshUntil:source.source.currentFreshUntil,nativeAdmission:false,registrationEligible:false,nativeImportEligible:false,activationEligible:false,actualReady:false,nativePreparation:null})
  capabilities.set(proof,{input:{...input},source:again,pack:rebuilt,certificate:c});return proof
 }

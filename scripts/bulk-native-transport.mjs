@@ -4,12 +4,22 @@ import {parseFussballLeagueCode} from './fussball-import.mjs'
 import {isFussballCommunityCandidate,FUSSBALL_COMMUNITY_SOURCE_POLICY} from './fussball-community-policy.mjs'
 import {assertReviewedFussballCommunityCandidate} from './fussball-community-release.mjs'
 const hold=message=>Object.assign(Error(message),{dataHold:true,reason_code:'REGISTRATION_SCOPE_HOLD'})
+const failures=new WeakMap(),safeCodes=new Set(['ECONNRESET','ECONNREFUSED','ECONNABORTED','EPIPE','ETIMEDOUT','ENOTFOUND','EAI_AGAIN','ENETUNREACH','EHOSTUNREACH','UND_ERR_SOCKET','UND_ERR_CONNECT_TIMEOUT','UND_ERR_HEADERS_TIMEOUT','UND_ERR_BODY_TIMEOUT','UND_ERR_ABORTED','CERT_HAS_EXPIRED','DEPTH_ZERO_SELF_SIGNED_CERT','UNABLE_TO_VERIFY_LEAF_SIGNATURE','ERR_TLS_CERT_ALTNAME_INVALID','ABORT_ERR'])
+function causeCodes(error){const codes=[],seen=new Set();function visit(e,depth){if(!e||typeof e!=='object'||depth>8||seen.has(e))return;seen.add(e);if(safeCodes.has(e.code)&&!codes.includes(e.code))codes.push(e.code);if(['TimeoutError','AbortError'].includes(e.name)){const code=e.name==='TimeoutError'?'TIMEOUT_ERROR':'ABORT_ERROR';if(!codes.includes(code))codes.push(code)}visit(e.cause,depth+1);if(Array.isArray(e.errors))for(const nested of e.errors.slice(0,8))visit(nested,depth+1)}visit(error,0);return codes}
+// Diagnostics describe this process's actual failure only. Never serialize an
+// Error, request URL/query/headers/body, or arbitrary nested cause message.
+export function describeNativeTransportFailure(error){return error&&typeof error==='object'&&failures.has(error)?structuredClone(failures.get(error)):null}
+function operation(path){if(path.startsWith('competitions?'))return 'find-competition';if(path.startsWith('countries?'))return 'find-country';return {'rpc/prepare_fussball_historical_statistics':'prepare-history','rpc/get_fussball_historical_preparation':'read-history-preparation','rpc/get_fussball_historical_runtime':'read-history-runtime'}[path]??'other-native'}
 export function createBulkTransport({url,key,base,fetch:request=globalThis.fetch}){
  const origin=new URL('/rest/v1/',url)
  async function call(path,body){
-  const r=await request(new URL(path,origin),{method:body?'POST':'GET',headers:{apikey:key,authorization:`Bearer ${key}`,'content-type':'application/json',prefer:'return=representation'},...(body?{body:JSON.stringify(body)}:{}),redirect:'error',signal:AbortSignal.timeout(60000)})
-  if(!r.ok)throw Error(`Native batch database HTTP ${r.status}.`)
-  return r.json()
+  const started=performance.now(),method=body?'POST':'GET';let phase='fetch',httpStatus=null
+  try{
+   const r=await request(new URL(path,origin),{method,headers:{apikey:key,authorization:`Bearer ${key}`,'content-type':'application/json',prefer:'return=representation'},...(body?{body:JSON.stringify(body)}:{}),redirect:'error',signal:AbortSignal.timeout(60000)})
+   httpStatus=r.status;phase='http-status'
+   if(!r.ok)throw Error(`Native batch database HTTP ${r.status}.`)
+   phase='body-json';return await r.json()
+  }catch(error){if(error&&typeof error==='object')failures.set(error,{operation:operation(path),method,phase,httpStatus,elapsedMs:Math.round(performance.now()-started),causeCodes:causeCodes(error)});throw error}
  }
  async function country(id,code){
   const q=new URLSearchParams({select:'id,code',...(id?{id:`eq.${id}`}:{code:`eq.${code}`}),limit:'2'})

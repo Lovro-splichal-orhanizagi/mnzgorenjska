@@ -17,8 +17,8 @@ export async function loadBadenHostedComposition(directory,{env=process.env,gith
  try{stat=lstatSync(path)}catch{need(false,'hosted composition locator missing')}
  need(stat.isFile()&&!stat.isSymbolicLink()&&stat.size<=4096,'regular bounded hosted locator required')
  const locator=JSON.parse(readFileSync(path,'utf8'))
- need(same(Object.keys(locator).sort(),['derivedHead','derivedRunId','frozenDirectory','v6FrozenDirectory'].sort())&&/^[a-f0-9]{40}$/.test(locator.derivedHead)&&/^[1-9]\d{0,19}$/.test(locator.derivedRunId)&&typeof locator.frozenDirectory==='string'&&locator.frozenDirectory.length>0&&typeof locator.v6FrozenDirectory==='string'&&locator.v6FrozenDirectory.length>0,'exact hosted composition locators required')
- need(env.GITHUB_ACTIONS==='true'&&env.GITHUB_REPOSITORY==='Lovro-splichal-orhanizagi/mnzgorenjska'&&env.GITHUB_SHA===locator.derivedHead,'installed exact derived runtime required')
+ need(same(Object.keys(locator).sort(),['consumerHead','derivedHead','derivedRunId','frozenDirectory','v6FrozenDirectory'].sort())&&locator.derivedHead==='e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d'&&/^[a-f0-9]{40}$/.test(locator.consumerHead)&&/^[1-9]\d{0,19}$/.test(locator.derivedRunId)&&typeof locator.frozenDirectory==='string'&&locator.frozenDirectory.length>0&&typeof locator.v6FrozenDirectory==='string'&&locator.v6FrozenDirectory.length>0,'exact hosted dual-epoch composition locators required')
+ need(env.GITHUB_ACTIONS==='true'&&env.GITHUB_REPOSITORY==='Lovro-splichal-orhanizagi/mnzgorenjska'&&env.GITHUB_SHA===locator.consumerHead,'installed exact current consumer runtime required')
  return loadFussballNativeComposition({...locator,frozenDirectory:resolve(locator.frozenDirectory),v6FrozenDirectory:resolve(locator.v6FrozenDirectory),github:github??githubGetAdapter(env.GH_TOKEN??env.GITHUB_TOKEN)})
 }
 export async function loadBadenChildContext(db,competition,directory=process.env.SLFF_BULK_CAPTURE){
