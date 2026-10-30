@@ -70,6 +70,11 @@ test('TEST ONLY preparation progress identifies failure after committed preparat
  assert.ok(events.some(e=>e.phase==='prepare-history'&&e.status==='COMPLETED'))
  assert.ok(!events.some(e=>e.phase==='read-preparation'))
 })
+test('TEST ONLY failed checkpoint reporting preserves the original preparation failure',async()=>{
+ const f=issuerFixture(),original=Error('fetch failed'),observer=Error('checkpoint unavailable')
+ f.transport.prepareFussballHistory=async()=>{throw original}
+ await assert.rejects(f.api.prepareFussballNativeHistory({composition:f.token,transport:f.transport,onProgress:async e=>{if(e.status==='FAILED')throw observer}}),e=>e===original)
+})
 test('TEST ONLY private issuer rejects native binding/policy/marker/hash drift',async()=>{
  const mutations=[v=>{v.prepared=false},v=>{v.active=true},v=>{v.noUsers=false},v=>{v.policySha256='0'.repeat(64)},v=>{v.cards.archive_codes=[]},v=>{v.bindingSha256='0'.repeat(64)},v=>{v.bindings[0].fixture.homeName='foreign';v.bindingSha256=hash(v.bindings)},v=>{v.history.markers[0].fixture.administrativeResult={displayedScores:[]};v.markerInventorySha256=hash(v.history.markers)},v=>{v.history.markers[0].voteCount=1;v.markerInventorySha256=hash(v.history.markers)},v=>{v.history.markers[0].importedAt=new Date().toISOString();v.markerInventorySha256=hash(v.history.markers)},v=>{v.history.markers[0].matchId++;v.markerInventorySha256=hash(v.history.markers)}]
  for(const mutate of mutations){const f=issuerFixture();f.controls.prepareMutation=mutate;await assert.rejects(f.api.prepareFussballNativeHistory({composition:f.token,transport:f.transport}),/Baden preparation:/)}

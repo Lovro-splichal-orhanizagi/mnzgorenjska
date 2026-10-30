@@ -60,7 +60,7 @@ export async function describeFussballNativePreparation(composition){
 export async function prepareFussballNativeHistory({composition,transport,onProgress=async()=>{}}){
  getFussballNativeComposition(composition)
  need(typeof onProgress==='function','preparation progress observer required')
- const phase=async(name,action)=>{await onProgress({phase:name,status:'RUNNING'});let answer;try{answer=await action()}catch(error){await onProgress({phase:name,status:'FAILED'});throw error}await onProgress({phase:name,status:'COMPLETED'});return answer}
+ const phase=async(name,action)=>{await onProgress({phase:name,status:'RUNNING'});let answer;try{answer=await action()}catch(error){try{await onProgress({phase:name,status:'FAILED'})}catch{/* Preserve the operation's original failure and safe transport diagnostic. */}throw error}await onProgress({phase:name,status:'COMPLETED'});return answer}
  const authenticated=await phase('source-reauthenticate-before',()=>reauthenticateFussballNativeComposition(composition)),m=manifest(authenticated)
  need(transport&&['find','register','prepareFussballHistory','readFussballHistory'].every(k=>typeof transport[k]==='function'),'native preparation transport required')
  let c=await phase('find-registration',()=>transport.find(candidate))
