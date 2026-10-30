@@ -167,7 +167,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Gizlilik ve kullanım koşulları',
-    zadnjaSprememba: 'Son güncelleme: 16 Ekim 2026',
+    zadnjaSprememba: 'Son güncelleme: 30 Ekim 2026',
     kajJeNaslov: 'SLFF nedir',
     kajJe:
       'SLFF (Sunday League Fantasy Football), yerel amatör futbol ligleri için taraftarlar tarafından yapılmış bir fantezi ligdir. Gönüllüler tarafından yürütülür ve bölgesel futbol federasyonları, ulusal futbol federasyonu ya da kulüplerle bağlantılı değildir. Oyun ücretsizdir; bahis ya da ödül yoktur.',
@@ -181,7 +181,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Bildirimler için cihaz anahtarı.</b> Mobil uygulamada bildirimlere izin verirsen, haftanın son tarihinden önce sana hatırlatma göndermek için kullandığımız bir anahtarı saklarız. Çıkış yaptığında silinir.',
     neHranimo:
-      'Telefon numaranı ya da kart bilgilerini saklamayız; adresini sadece basılı rozet sipariş edersen saklarız (aşağıya bak). Takip çerezleri ya da reklam araçları kullanmayız. Tarayıcın giriş oturumunu, açarsan yardım sohbetindeki konuşmanın kimliğini ve bir sayfanın iki kez sayılmasını önleyen oturum işaretlerini saklar. Hangi sayfanın kaç kişi tarafından açıldığı sadece günlük toplam olarak tutulur; adın, hesabın, cihazın ya da IP adresin olmadan. Genel ziyaret istatistiklerini (hangi sayfalar, ziyaretçilerin nereden geldiği, cihaz türü ve ülke, takım kurmak gibi birkaç işlem) kendi sunucumuzdaki <b>Umami</b> kaydeder: çerez yok, IP adresi saklanmaz ve ziyaretler hesabına bağlanmaz. Tarayıcında "Do Not Track" açıksa hiçbir şey kaydedilmez.',
+      'Telefon numaranı ya da kart bilgilerini saklamayız; adresini sadece basılı rozet sipariş edersen saklarız (aşağıya bak). Takip çerezleri ya da reklam araçları kullanmayız. Tarayıcın giriş oturumunu, açarsan yardım sohbetindeki konuşmanın kimliğini ve bir sayfanın iki kez sayılmasını önleyen oturum işaretlerini saklar. Hangi sayfanın kaç kişi tarafından açıldığı sadece günlük toplam olarak tutulur; adın, hesabın, cihazın ya da IP adresin olmadan. Genel ziyaret istatistiklerini (hangi sayfalar, ziyaretçilerin nereden geldiği, cihaz türü ve ülke, takım kurmak gibi birkaç işlem) kendi sunucumuzdaki <b>Umami</b> kaydeder: çerez yok, IP adresi saklanmaz ve ziyaretler hesabına bağlanmaz. Tarayıcında "Do Not Track" açıksa hiçbir şey kaydedilmez. Giriş yaptığında oyundaki birkaç adımı (ör. takım kurma, uygulamayı açma, bildirim kararı, kapatılan pencere) hesabınla birlikte kaydederiz; böylece oyunun nerede takıldığını görürüz. Bunları 90 gün saklarız, hesapla birlikte silinirler ve “Do Not Track” açıkken hiçbir şey kaydetmeyiz.',
     dostopNaslov: 'Verilere kimler erişebilir',
     dostop:
       'Veriler <b>Hetzner</b> üzerindeki kendi sunucumuzda (Almanya, AB) saklanır; sunucuya giden trafik <b>Cloudflare</b> üzerinden geçer (sitenin korunması ve sunulması). Onay ve şifre sıfırlama e-postaları kendi posta sunucumuzdan (yine Hetzner’de), mobil uygulamadaki bildirimler ise <b>Google Firebase Cloud Messaging</b> üzerinden gönderilir (sadece cihaz anahtarı ve bildirim metni). Sağ alt köşedeki yardım sohbeti <b>HelpStack</b> üzerinde çalışır: oraya yazdıklarını ve giriş yaptıysan kime cevap verdiğimizi bilmemiz için görünen adını alır. Sohbetteki asistan sana yardım ederken hangi sayfada ve hangi ligde olduğunu ve takımının geçerli olup olmadığını da görebilir. E-posta adresini aktarmayız. Verilerini başka kimseyle paylaşmayız ve satmayız.',

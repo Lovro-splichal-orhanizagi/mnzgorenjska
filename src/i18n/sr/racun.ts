@@ -174,7 +174,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   // Privatnost i uslovi. <b> je podebljano, ostale oznake su linkovi.
   pravno: {
     naslov: 'Privatnost i uslovi',
-    zadnjaSprememba: 'Poslednja izmena: 16. oktobra 2026.',
+    zadnjaSprememba: 'Poslednja izmena: 30. oktobra 2026.',
     kajJeNaslov: 'Šta je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je navijačka fantasy liga za amaterske fudbalske lige. Vodimo je amaterski i nije povezana sa Fudbalskim savezom Srbije (FSS), regionalnim i okružnim fudbalskim savezima niti sa klubovima. Igra je besplatna, bez novčanih uloga i nagrada.',
@@ -188,7 +188,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Token uređaja za obaveštenja.</b> Ako u mobilnoj aplikaciji dozvoliš obaveštenja, čuvamo token preko kog ti šaljemo podsetnik pre roka za kolo. Pri odjavi ga brišemo.',
     neHranimo:
-      'Ne čuvamo broj telefona ni podatke platne kartice, a adresu samo ako naručiš štampanu značku (vidi niže). Ne koristimo kolačiće za praćenje ni reklamne alate. U pregledaču su sačuvani tvoja sesija prijave, oznaka razgovora u četu za pomoć ako ga otvoriš i oznake sesije kojima posetu stranici brojimo samo jednom. Koliko je ljudi otvorilo koju stranicu čuvamo samo kao dnevni zbir, bez tvog imena, naloga, uređaja ili IP adrese. Opštu statistiku poseta (koje stranice, odakle posetioci dolaze, vrsta uređaja i država, nekoliko radnji poput sastavljanja tima) beleži <b>Umami</b> na našem serveru: bez kolačića, IP adresu ne čuva i posetu ne povezuje sa tvojim nalogom. Ako pregledač ima uključenu opciju „Ne prati“, ne beleži se ništa.',
+      'Ne čuvamo broj telefona ni podatke platne kartice, a adresu samo ako naručiš štampanu značku (vidi niže). Ne koristimo kolačiće za praćenje ni reklamne alate. U pregledaču su sačuvani tvoja sesija prijave, oznaka razgovora u četu za pomoć ako ga otvoriš i oznake sesije kojima posetu stranici brojimo samo jednom. Koliko je ljudi otvorilo koju stranicu čuvamo samo kao dnevni zbir, bez tvog imena, naloga, uređaja ili IP adrese. Opštu statistiku poseta (koje stranice, odakle posetioci dolaze, vrsta uređaja i država, nekoliko radnji poput sastavljanja tima) beleži <b>Umami</b> na našem serveru: bez kolačića, IP adresu ne čuva i posetu ne povezuje sa tvojim nalogom. Ako pregledač ima uključenu opciju „Ne prati“, ne beleži se ništa. Kad si prijavljen, nekoliko koraka u igri (npr. sastavljanje ekipe, otvaranje aplikacije, odluka o obaveštenjima, zatvoren prozor) beležimo uz tvoj nalog da vidimo gde igra zapinje. Čuvamo ih 90 dana, brišu se sa nalogom, a uz „Ne prati” ništa ne beležimo.',
     dostopNaslov: 'Kome su podaci dostupni',
     dostop:
       'Podaci su sačuvani na našem serveru kod provajdera <b>Hetzner</b> (Nemačka, EU), a saobraćaj do njega ide preko <b>Cloudflarea</b> (zaštita i isporuka stranice). Imejlovi za potvrdu i postavljanje nove lozinke idu sa našeg mejl servera (takođe Hetzner), obaveštenja u mobilnoj aplikaciji preko <b>Google Firebase Cloud Messaginga</b> (samo token uređaja i tekst obaveštenja). Čet za pomoć u donjem desnom uglu radi preko <b>HelpStacka</b>: tamo ide ono što u njega napišeš i, ako si prijavljen, tvoje ime za prikaz, da znamo kome odgovaramo. Kada ti pomoćnik u četu pomaže, može da vidi i na kojoj si stranici i u kojoj ligi i da li je tvoj tim ispravan. Imejl adresu mu ne prosleđujemo. Nikome drugom podatke ne prosleđujemo i ne prodajemo ih.',

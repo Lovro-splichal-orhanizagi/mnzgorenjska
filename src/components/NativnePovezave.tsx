@@ -13,6 +13,7 @@ import { Browser } from '@capacitor/browser'
 import { supabase } from '../lib/supabase'
 import { jeNativno, SHEMA } from '../lib/platforma'
 import { varnaPot } from '../lib/prijava'
+import { zabeleziKorak } from '../lib/lijak'
 
 export default function NativnePovezave() {
   const navigate = useNavigate()
@@ -24,6 +25,7 @@ export default function NativnePovezave() {
 
   useEffect(() => {
     if (!jeNativno()) return
+    zabeleziKorak('aplikacija_odprta')
     // Hladen zagon sproži appUrlOpen in getLaunchUrl z istim naslovom.
     const obdelani = new Set<string>()
     async function odpri(naslov: string) {

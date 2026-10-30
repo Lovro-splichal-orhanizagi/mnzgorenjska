@@ -63,6 +63,10 @@ export default function PivoOkno() {
     !BREZ_OKNA.some((p) => pathname.startsWith(p))
 
   const zapri = () => setPovod(null)
+  const odkloni = () => {
+    zabeleziKorak('pivo_okno_zaprto')
+    zapri()
+  }
 
   function odpri(p: PovodPiva, zamik: number) {
     return window.setTimeout(() => {
@@ -109,7 +113,7 @@ export default function PivoOkno() {
   useEffect(() => {
     if (!odprto) return
     okno.current?.focus()
-    const tipka = (e: KeyboardEvent) => e.key === 'Escape' && zapri()
+    const tipka = (e: KeyboardEvent) => e.key === 'Escape' && odkloni()
     window.addEventListener('keydown', tipka)
     return () => window.removeEventListener('keydown', tipka)
   }, [odprto])
@@ -119,7 +123,7 @@ export default function PivoOkno() {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 pb-[max(1rem,var(--dno))] pt-[max(1rem,var(--vrh))] backdrop-blur"
-      onClick={(e) => e.target === e.currentTarget && zapri()}
+      onClick={(e) => e.target === e.currentTarget && odkloni()}
     >
       <div
         ref={okno}
@@ -130,7 +134,7 @@ export default function PivoOkno() {
         className="pivo-okno relative w-full max-w-sm overflow-hidden rounded-2xl border border-amber-300/30 bg-slate-900 p-5 text-center shadow-2xl shadow-amber-500/10 outline-none"
       >
         <button
-          onClick={() => zapri()}
+          onClick={() => odkloni()}
           aria-label={t('aplikacija.pivo.okno.kasneje')}
           className="absolute right-1 top-1 flex h-11 w-11 items-center justify-center rounded-full text-xl text-slate-400 hover:bg-white/10 hover:text-white"
         >
@@ -185,13 +189,13 @@ export default function PivoOkno() {
           {t('aplikacija.pivo.gumb')}
         </a>
         <div className="mt-3 flex justify-center gap-4 text-xs text-slate-400">
-          <button onClick={() => zapri()} className="underline hover:text-white">
+          <button onClick={() => odkloni()} className="underline hover:text-white">
             {t('aplikacija.pivo.okno.kasneje')}
           </button>
           <button
             onClick={() => {
               utisajPivoOkno(120)
-              zapri()
+              odkloni()
             }}
             className="underline hover:text-white"
           >
