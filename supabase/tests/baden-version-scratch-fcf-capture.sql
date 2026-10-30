@@ -76,12 +76,14 @@ BEGIN
     INTO dependent_count USING ARRAY[752,766,783,797]::bigint[];
   IF dependent_count<>0 THEN RAISE EXCEPTION 'SCRATCH: dependent rows prevent header rekey'; END IF;
  END LOOP;
- UPDATE competitions SET id=-971783 WHERE id=783;
- UPDATE competitions SET id=-971797 WHERE id=797;
- UPDATE competitions SET id=783 WHERE id=752;
- UPDATE competitions SET id=797 WHERE id=766;
- UPDATE competitions SET id=752 WHERE id=-971783;
- UPDATE competitions SET id=766 WHERE id=-971797;
+ -- GENERATED ALWAYS IDs cannot be updated. Recreate only the four witnessed,
+ -- dependency-free rows from their complete preserved records, using the same
+ -- OVERRIDING mechanism as the existing fresh-schema FCF fixtures.
+ DELETE FROM competitions WHERE id IN(752,766,783,797);
+ INSERT INTO competitions OVERRIDING SYSTEM VALUE
+ SELECT (jsonb_populate_record(NULL::public.competitions,
+          b.header||jsonb_build_object('id',b.new_id))).*
+ FROM scratch_header_rekey b;
  IF EXISTS(SELECT 1 FROM scratch_header_rekey b LEFT JOIN competitions c ON c.id=b.new_id
            WHERE c.id IS NULL OR to_jsonb(c)-'id' IS DISTINCT FROM b.header)
     OR EXISTS(SELECT 1 FROM competitions WHERE id IN(-971783,-971797))
