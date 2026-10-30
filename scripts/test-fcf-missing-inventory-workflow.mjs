@@ -18,7 +18,9 @@ test('private draft bridges and explicit GET-only refresh have contents write; l
   const job=jobs[name];assert.match(job,/needs: \[[^\n]*missing-inventory-approval/);assert.match(job,/permissions:\n      contents: read\n      actions: read/);assert.doesNotMatch(job,/contents: write|FCF_INVENTORY_ASSET_ID/)
   for(const key of['ID','DIGEST','MANIFEST_SHA'])assert.match(job,new RegExp(`FCF_APPROVAL_${key}: \\$\\{\\{ needs\\.missing-inventory-approval\\.outputs\\.`))
  }
- assert.match(jobs['refresh800-capture'],/Private draft visibility requires push permission; transport is GET-only/);assert.doesNotMatch(jobs['refresh800-capture'],/SUPABASE|SERVICE_ROLE|secrets\./);assert.match(readFileSync(new URL('./fcf-inventory-github.mjs',import.meta.url),'utf8'),/\['api','--method','GET'/)
+ assert.match(jobs['refresh800-capture'],/Private draft visibility requires push permission; transport is GET-only/);assert.doesNotMatch(jobs['refresh800-capture'],/SUPABASE|SERVICE_ROLE|secrets\./)
+ const transport=readFileSync(new URL('./fcf-inventory-github.mjs',import.meta.url),'utf8'),getStart=transport.indexOf('export async function getFcfInventoryGithub('),getEnd=transport.indexOf('\nexport async function readFcfDraftAsset',getStart),getSource=transport.slice(getStart,getEnd)
+ assert.ok(getStart>=0&&getEnd>getStart,'fixed inventory GET transport exists');assert.match(getSource,/!path\.startsWith\(repo\).*path\.includes\('\.\.'\)/);assert.ok(getSource.includes("'--method'")&&getSource.includes("'GET'"));assert.doesNotMatch(getSource,/['"](?:POST|PATCH|PUT|DELETE)['"]/)
  const writeJobs=Object.entries(jobs).filter(([,job])=>/^      contents: write$/m.test(job)).map(([name])=>name).sort()
  assert.deepEqual(writeJobs,['missing-inventory-seed','missing-inventory-approval','target-approval','cleanup-originals','future-target-approval','refresh800-capture'].sort())
 })

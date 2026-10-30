@@ -34,6 +34,7 @@ try{
   assert.equal(r.calls.filter(x=>x[0]==='api'&&x[1]==='--help').length,1,'binary capability is inspected once and cached')
   const gets=r.calls.filter(x=>x.includes('--method'));assert.equal(gets.length,3)
   const endpoint=x=>x[x.indexOf('--method')+2]
+  assert.ok(gets.every(x=>x[x.indexOf('--method')+1]==='GET'),'every production API request uses GET')
   const binaries=gets.filter(x=>endpoint(x)===binaryA||endpoint(x)===binaryB);assert.equal(binaries.length,2)
   assert.ok(binaries.every(x=>x.includes('Accept: application/octet-stream')))
   assert.ok(binaries.every(x=>x.includes('--allow-escape-sequences')===support),'escape flag is used only when local help advertises it')
