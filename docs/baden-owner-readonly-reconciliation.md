@@ -46,3 +46,11 @@ native clearance. Duplicate/wrong-slug rows still hold. Before the first psql
 call, connection.json retains ONLY hostKind(loopback/remote), configuredPort,
 sslMode and workflowTunnelLocalPort5432. It retains no host/URI/user/password and
 does not change the connection or tunnel mapping.
+
+The metadata extension adds current role/database and recovery state. It exposes
+pg_db_role_setting only for current/global role/database scopes and only the two
+read-only GUC names, with Boolean values. pg_file_settings exposes only
+default_transaction_read_only name/Boolean/applied fields. Catalog constraint
+and trigger definitions are scoped to private_baden_history.catalog; trigger
+function identity is retained without function body, other relation data, file
+paths, setting arrays or raw errors. No connection/read-only control changes.
