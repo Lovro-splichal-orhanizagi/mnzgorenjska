@@ -12969,14 +12969,13 @@ preveri(
   preveri('e-pošta: anketa plačila (jezik ali angleščina, odjava, brez slovenščine v tujih)', !slabaAnketa,
     slabaAnketa ? `${slabaAnketa[0].drzava}: ${slabaAnketa[1].naslov}` : '')
   const migAnketa = readFileSync(new URL('../supabase/migrations/20261030120000_anketa_placila.sql', import.meta.url), 'utf8')
-  // Dokler je ne premaknemo v .github/workflows (agentni žeton nima pravice `workflow`), leži v scripts/.
-  const tokAnketa = ['../.github/workflows/anketa-placila.yml', './anketa-placila.workflow.yml'].map((p) => {
-    try { return readFileSync(new URL(p, import.meta.url), 'utf8') } catch { return '' }
-  }).find(Boolean) ?? ''
-  preveri('anketa plačila: SQL izpusti odjavljene, admine, hišne, mladinske; naslovi le za service_role',
-    ['je_mladinski_slug', 'brez_opomnikov', 'is_admin', 'hisna', "'anketa-placila'", 'to service_role'].every((x) => migAnketa.includes(x)) &&
+  const fnAnketa = readFileSync(new URL('../supabase/functions/posli-opomnik/index.ts', import.meta.url), 'utf8')
+  preveri('anketa plačila: SQL izpusti odjavljene in že poslane; naslovi le za service_role',
+    ['prejemniki_ankete', 'brez_opomnikov', "'anketa-placila'", 'to service_role'].every((x) => migAnketa.includes(x)) &&
       !/to (anon|authenticated)/.test(migAnketa))
-  preveri('anketa plačila: le ročni zagon, privzeto suho', !/^\s*schedule:/m.test(tokAnketa) && /default: 'true'/.test(tokAnketa))
+  // Lovro, 30. 10. 2026: le izbrani v administraciji, strežnik nikogar ne izbere sam.
+  preveri('anketa plačila: brez izračunane kohorte, le user_ids',
+    !/kandidati_za_anketo/.test(migAnketa + fnAnketa) && fnAnketa.includes("vrsta === 'anketa-placila' && Array.isArray(vhod.user_ids)"))
 }
 
 // --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------

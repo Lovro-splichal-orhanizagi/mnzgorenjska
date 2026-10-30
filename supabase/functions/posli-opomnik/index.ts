@@ -40,7 +40,6 @@ import {
   sestaviPivo7dni,
   sestaviAnketoPlacila,
   jezikAnkete,
-  jezikLige,
   sestaviNovostMiniLig,
   sestaviOpozoriloOdsotnih,
   sestaviTedenskiPregled,
@@ -92,8 +91,6 @@ interface Zahteva {
   najvec?: number
   // Največ poslanih v tem klicu (dnevna kvota ponudnika); ostali naslednji dan.
   najvec_poslati?: number
-  // 'anketa-placila': odtis kohorte iz suhega teka; brez ujemanja ni pošiljanja.
-  kohorta?: string
   // 'anketa-placila' iz administracije: natanko odkljukani uporabniki (do 20).
   user_ids?: string[]
 }
@@ -263,13 +260,10 @@ Deno.serve(async (req) => {
     return json({ kandidati_stevilo: kand.length, poslano, preskoceno: kand.length - poslano })
   }
 
-  // `anketa-placila` (SLF-211): enkratna anketa največ 20 aktivnim iz različnih
-  // držav (`kandidati_za_anketo`). Naslovi ostanejo tu: suhi tek vrne le
-  // državo, jezik, dneve in dejanja ter odtis kohorte (sha-256 urejenih id-jev,
-  // 12 znakov). Pošiljanje zahteva isti odtis, torej natanko kohorto, ki jo je
-  // človek videl; največ 10 na klic, 2 s razmika, 20 skupaj (email_log).
-  // Z `user_ids` (izbor v administraciji) pošlje natanko izbranim; admin naslove
-  // že vidi v tabeli, odgovor pa vrne le števila in razloge preskoka.
+  // `anketa-placila` (SLF-211): enkratna anketa natanko tistim, ki jih admin
+  // odkljuka v administraciji (`user_ids`, do 20); največ 10 na klic, 20 skupaj
+  // (email_log). Admin naslove že vidi v tabeli, odgovor pa vrne le števila in
+  // razloge preskoka.
   if (vrsta === 'anketa-placila' && Array.isArray(vhod.user_ids)) {
     const suhoA = suho !== false
     const ids = [...new Set(vhod.user_ids.filter((x) => typeof x === 'string'))]
@@ -329,67 +323,15 @@ Deno.serve(async (req) => {
       ...povzetek,
       poslano,
       napak,
-      ostalo: Math.max(0, kand.length - poslano - napak),
+      // Neuspeli ostanejo izbrani za ponovni poskus (največ trije, glej SQL).
+      ostalo: Math.max(0, Math.min(kand.length, prostih) - poslano),
       cez_mejo: kand.length > prostih,
       ze_poslanih: potem,
     })
   }
 
-  if (vrsta === 'anketa-placila') {
-    // Brez izrecnega `suho: false` je suhi tek.
-    const suhoA = suho !== false
-    if (!jeStroj) return json({ error: 'Anketo pošlje samo delovni tok (servisni ključ).' }, 403)
-    if (!SMTP_PASS && !suhoA) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
-    const db = createClient(SUPABASE_URL, SERVICE_KEY)
-    const poslanih = async () => {
-      const { data, error } = await db.rpc('anketa_placila_poslanih')
-      if (error) throw new Error(error.message)
-      return Number(data ?? 0)
-    }
-    const prej = await poslanih().catch((e) => e as Error)
-    if (prej instanceof Error) return json({ error: prej.message }, 500)
-    const { data, error } = await db.rpc('kandidati_za_anketo', { p_najvec: Math.max(0, 20 - prej) })
-    if (error) return json({ error: error.message }, 500)
-    const kand = (data ?? []) as Array<{
-      user_id: string; email: string; display_name: string | null
-      competition_id: number; liga_slug: string; liga_oznaka: string; liga_drzava: string | null
-      aktivnih_dni: number; dejanj: number
-    }>
-    const odtis = await odtisKohorte(kand.map((u) => u.user_id))
-    const predogled = kand.map((u) => ({
-      drzava: u.liga_drzava,
-      jezik: jezikAnkete({ drzava: u.liga_drzava }),
-      prevod: jezikAnkete({ drzava: u.liga_drzava }) === jezikLige({ drzava: u.liga_drzava }),
-      aktivnih_dni: u.aktivnih_dni,
-      dejanj: u.dejanj,
-    }))
-    if (suhoA) return json({ suho: true, ze_poslanih: prej, kandidati_stevilo: kand.length, kohorta: odtis, predogled })
-    if (!kand.length) return json({ ze_poslanih: prej, kandidati_stevilo: 0, poslano: 0 })
-    if (vhod.kohorta !== odtis)
-      return json({ error: 'Kohorta se ne ujema s suhim tekom; najprej suhi tek in potrditev.', kohorta: odtis }, 409)
-    let poslano = 0
-    let napak = 0
-    for (const u of kand.slice(0, Math.min(vhod.najvec_poslati ?? 10, 10))) {
-      if (poslano + napak > 0) await new Promise((r) => setTimeout(r, 2000))
-      const liga: Liga = { slug: u.liga_slug, oznaka: u.liga_oznaka, drzava: u.liga_drzava }
-      const sporocilo = await sOdjavo(db, u.user_id, sestaviAnketoPlacila(liga, { display_name: u.display_name }))
-      const rez = await poslji(EMAIL_FROM, u.email, sporocilo, Deno.env.get('EMAIL_REPLY_TO'))
-      if (rez.napaka) napak++
-      else poslano++
-      const { error: logErr } = await db.from('email_log').insert({
-        user_id: u.user_id,
-        email: u.email,
-        vrsta,
-        competition_id: u.competition_id,
-        resend_id: rez.id ?? null,
-        napaka: rez.napaka ?? null,
-      })
-      // Brez zapisa bi naslednji zagon istemu človeku poslal še enkrat.
-      if (logErr) return json({ error: `email_log: ${logErr.message}`, poslano, napak }, 500)
-    }
-    const potem = await poslanih().catch(() => null)
-    return json({ kandidati_stevilo: kand.length, poslano, napak, ze_poslanih: potem })
-  }
+  // Brez izbora ni ankete: strežnik nikogar ne izbere sam (Lovro, 30. 10. 2026).
+  if (vrsta === 'anketa-placila') return json({ error: 'Anketa gre le izbranim v administraciji (user_ids).' }, 400)
 
   // `novost-mini-lige`: enkratno obvestilo o dvobojih in napovedih v mini
   // ligah (26. 10. 2026), vsem z nehišno ekipo (`kandidati_za_novost_mini_lig`).
@@ -1003,13 +945,6 @@ async function sOdjavo(db: any, userId: string, s: Sporocilo): Promise<Sporocilo
     // V čistopisu je odjava vrstica "<oznaka>: <url>" v nogi.
     besedilo: s.besedilo.split(`: ${s.odjava}\n`).join(`: ${nova}\n`),
   }
-}
-
-/** Kratek odtis množice id-jev (vrstni red ni pomemben); nič ne razkrije. */
-async function odtisKohorte(ids: string[]): Promise<string> {
-  const b = new TextEncoder().encode([...ids].sort().join(','))
-  const h = new Uint8Array(await crypto.subtle.digest('SHA-256', b))
-  return [...h].map((x) => x.toString(16).padStart(2, '0')).join('').slice(0, 12)
 }
 
 /** Zadeva maila kot naslov obvestila, predglava kot njegovo besedilo. */

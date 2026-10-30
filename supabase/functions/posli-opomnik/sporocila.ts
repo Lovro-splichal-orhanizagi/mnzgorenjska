@@ -3691,7 +3691,7 @@ export function sestaviPivo7dni(liga: Liga, meta: { display_name: string | null 
 }
 
 // --- anketa: kaj bi plačal (SLF-211) -----------------------------------------
-// Enkraten oseben mail 20 aktivnim uporabnikom (`kandidati_za_anketo`). Brez
+// Enkraten oseben mail do 20 uporabnikom, ki jih izbere admin (`prejemniki_ankete`). Brez
 // gumba in brez oblike obvestila: odgovor na mail JE odgovor na anketo (gre na
 // `EMAIL_REPLY_TO`). Besedilo je Lovrovo (SLF-208, 30. 10. 2026); jezik brez
 // prevoda dobi angleščino, suhi tek to pokaže pred pošiljanjem.
