@@ -2,6 +2,31 @@
 select pg_temp.g1_assert((select active from competitions where id=797)and(select count(*)from fantasy_teams where competition_id=797)=1 and(select count(*)from position_votes where voter_id='00000000-0000-4000-8000-000000007971')=1,'active G9 human/vote state survived actual G1 import');
 create temporary table launch_original as select v rollout,public.fcf_g1_native800_receipt()receipt from g1_rollout;
 select pg_temp.g1_assert((select activation_result->>'kind'='fcf-g1-native800-price-before'and activation_result->'offTargetPriors'=private_fcf_g1_native800.off_target_priors()and(activation_result#>>'{offTargetPriors,count}')::int>=1 from private_fcf_future_target_release.receipts where competition_id=783),'actual atomic server anchor before pricing');
+-- TESTONLY diagnostic: no authority or production guard change. Flag order is
+-- keys,schema,kind,rollout,fingerprint,binding,capture,ids,priors,protected.
+create temporary table g1_anchor_diagnostic_players as select id,to_jsonb(p)body from players p where competition_id=783;
+create function pg_temp.g1_anchor_diagnostic()returns jsonb language sql stable as $anchor_diagnostic$
+with facts as(select r.activation_result b,r.rollout_text::jsonb v,r.rollout_sha256,r.source_fingerprint,private_fcf_g1_native800.protected_target()actual_protected from private_fcf_future_target_release.receipts r where r.competition_id=783)
+select jsonb_build_object(
+ 'keys',coalesce(private_fcf_future_import.keys(b,array['schemaVersion','kind','rolloutSha256','sourceFingerprintSha256','sourceBindingSha256','capture','targetPlayerIds','offTargetPriors','importedProtected']),false),
+ 'schema',coalesce(b->'schemaVersion'='1'::jsonb,false),
+ 'kind',coalesce(b->>'kind'='fcf-g1-native800-price-before',false),
+ 'rollout',coalesce(b->>'rolloutSha256'=rollout_sha256,false),
+ 'fingerprint',coalesce(b->>'sourceFingerprintSha256'=source_fingerprint,false),
+ 'binding',coalesce(b->>'sourceBindingSha256'=encode(sha256(convert_to(private_fcf_future_import.canonical_json(v->'inventoryBinding'),'UTF8')),'hex'),false),
+ 'capture',coalesce(b->'capture'=v#>'{inventoryBinding,currentCapture}',false),
+ 'ids',coalesce(b->'targetPlayerIds'=(select coalesce(jsonb_agg(id order by id),'[]')from players where competition_id=783),false),
+ 'priors',coalesce(b->'offTargetPriors'=private_fcf_g1_native800.off_target_priors(),false),
+ 'protected',coalesce(b->'importedProtected'=actual_protected,false),
+ 'competition',coalesce(b#>'{importedProtected,competition}'=actual_protected->'competition',false),
+ 'rounds',coalesce(b#>'{importedProtected,rounds}'=actual_protected->'rounds',false),
+ 'matches',coalesce(b#>'{importedProtected,matches}'=actual_protected->'matches',false),
+ 'players',coalesce(b#>'{importedProtected,players}'=actual_protected->'players',false),
+ 'appearances',coalesce(b#>'{importedProtected,appearances}'=actual_protected->'appearances',false),
+ 'goals',coalesce(b#>'{importedProtected,goals}'=actual_protected->'goals',false))from facts
+$anchor_diagnostic$;
+create temporary table g1_anchor_diagnostic_before as select pg_temp.g1_anchor_diagnostic()d;
+
 savepoint native800_legacy_receipt;
 insert into private_fcf_future_target_release.receipts(competition_id,inventory_key,packet_sha256,packet_text,rollout_text,rollout_sha256,source_fingerprint,cleanup_before_sha256,imported_state_sha256,stage)select 797,repeat('e',64),pg_temp.g1_sha('{}'),'{}','{"kind":"TEST ONLY legacy unaffected"}',pg_temp.g1_sha('{"kind":"TEST ONLY legacy unaffected"}'),repeat('e',64),before_sha256,repeat('e',64),'imported'from private_fcf_future_history.cleanup_receipt;
 select pg_temp.g1_assert((select activation_result is null from private_fcf_future_target_release.receipts where competition_id=797),'legacy receipt insertion remains unchanged');
@@ -15,6 +40,17 @@ insert into fantasy_teams(owner_id,name,competition_id)values('00000000-0000-400
 with ranked as(select id,position,row_number()over(partition by team_id,position='GK'order by reg_st,id)n from players where competition_id=783)update players p set position=case when r.position='GK'then'GK'when r.n%10 between 1 and 4 then'DEF'when r.n%10 between 5 and 8 then'MID'else'FWD'end,value=case when r.n=2 then 9 else 4 end,value_start=case when r.n=2 then 9 else 4 end from ranked r where p.id=r.id;
 insert into position_priors(player_id,position,score,updated_at)select p.id,x.position,0.25,clock_timestamp()from players p cross join(values('GK'),('DEF'),('MID'),('FWD'))x(position)where p.competition_id=783 on conflict(player_id,position)do update set score=excluded.score,updated_at=excluded.updated_at;
 do $$declare r bigint;begin for r in select id from rounds where competition_id=783 loop perform recompute_round_scores(r);end loop;perform osvezi_statistiko_igralcev(array(select id from players where competition_id=783));end$$;
+-- TESTONLY expected diagnostic stop, before the first postprice guard call.
+do $anchor_diagnostic_stop$declare post_components jsonb;pre_flags text;post_flags text;protected_flags text;fields text;diagnostic_message text;begin
+ post_components:=pg_temp.g1_anchor_diagnostic();
+ select string_agg(case when (facts.d->key_name)::boolean then '1'else '0'end,''order by ordinal)into pre_flags from g1_anchor_diagnostic_before facts cross join unnest(array['keys','schema','kind','rollout','fingerprint','binding','capture','ids','priors','protected'])with ordinality AS flag_order(key_name,ordinal);
+ select string_agg(case when (facts.d->key_name)::boolean then '1'else '0'end,''order by ordinal)into post_flags from(select post_components d)facts cross join unnest(array['keys','schema','kind','rollout','fingerprint','binding','capture','ids','priors','protected'])with ordinality AS flag_order(key_name,ordinal);
+ select string_agg(case when (facts.d->key_name)::boolean then '1'else '0'end,''order by ordinal)into protected_flags from(select post_components d)facts cross join unnest(array['competition','rounds','matches','players','appearances','goals'])with ordinality AS flag_order(key_name,ordinal);
+ select coalesce(string_agg(changed_columns.key,','order by changed_columns.key),'none')into fields from(select distinct changed_field.key from g1_anchor_diagnostic_players before_player join players current_player on current_player.id=before_player.id cross join lateral jsonb_each(before_player.body) AS changed_field where changed_field.value is distinct from to_jsonb(current_player)->changed_field.key)changed_columns;
+ diagnostic_message:='G1 TEST: anchor pre_'||pre_flags||' post_'||post_flags||' protected_'||protected_flags||' fields_'||fields;
+ if length(diagnostic_message)>240 then diagnostic_message:='G1 TEST: anchor pre_'||pre_flags||' post_'||post_flags||' protected_'||protected_flags||' fields_many';end if;
+ raise exception using message=diagnostic_message;
+end$anchor_diagnostic_stop$;
 create temporary table launch_squad(id bigint primary key,team bigint,position text);
 do $$declare pos text;n int;i int;pid bigint;begin for pos,n in select *from(values('GK',2),('DEF',5),('MID',5),('FWD',3))q loop for i in 1..n loop select p.id into pid from players p where competition_id=783 and active and p.position=pos and not exists(select 1 from launch_squad where id=p.id)and(select count(*)from launch_squad where team=p.team_id)<3 order by value,id limit 1;perform pg_temp.g1_assert(pid is not null,'synthetic legal15 player');insert into launch_squad select id,team_id,position from players where id=pid;end loop;end loop;end$$;
 create temporary table native800_ready(d jsonb);
