@@ -78,7 +78,7 @@ export async function runBulkRollout({sourceReport,expectedSha,transport,guard,r
      const preparedTransport={...transport}
      for(const name of ['register','prepareFussballHistory'])preparedTransport[name]=async(...args)=>{await ensureGuard();mutating=true;const answer=await transport[name](...args);mutating=false;return answer}
      const onProgress=async({phase,status})=>{
-      if(!['source-reauthenticate-before','find-registration','register','prepare-history','source-reauthenticate-after','read-preparation'].includes(phase)||!['RUNNING','COMPLETED','FAILED'].includes(status))throw Error('Invalid native preparation progress.')
+      if(!['source-reauthenticate-before','find-registration','register','prepare-history','read-existing-preparation','source-reauthenticate-after','read-preparation'].includes(phase)||!['RUNNING','COMPLETED','FAILED'].includes(status))throw Error('Invalid native preparation progress.')
       receipt.preparation_phases??=[]
       if(status==='RUNNING')receipt.preparation_phases.push({phase,status,started_at:now().toISOString()})
       else {const running=receipt.preparation_phases.at(-1);if(running?.phase!==phase||running.status!=='RUNNING')throw Error('Invalid native preparation progress order.');running.status=status;running.completed_at=now().toISOString()}

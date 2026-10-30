@@ -66,7 +66,12 @@ export async function prepareFussballNativeHistory({composition,transport,onProg
  let c=await phase('find-registration',()=>transport.find(candidate))
  if(c)need(c.active===false&&c.source==='fussball-public'&&c.slug===BADEN_SLUG&&c.source_league_code===BADEN_CURRENT,'exact inactive native registration required')
  const id=c?.id??await phase('register',()=>transport.register(candidate));need(Number.isSafeInteger(id)&&id>0,'actual registered competition ID required')
- const body=badenCanonical(m),prepared=readback(await phase('prepare-history',()=>transport.prepareFussballHistory({manifest:body,sha256:sha(body)})),m,id)
+ // An installed policy is only a hint to use the strict cold getter. The
+ // getter and readback must prove the whole original manifest, all bindings,
+ // zero individuals/users and future opening; a failed read never writes.
+ const body=badenCanonical(m),prepared=readback(c?.source_policy===BADEN_CARDS
+  ?await phase('read-existing-preparation',()=>transport.readFussballHistory(id))
+  :await phase('prepare-history',()=>transport.prepareFussballHistory({manifest:body,sha256:sha(body)})),m,id)
  const again=await phase('source-reauthenticate-after',()=>reauthenticateFussballNativeComposition(authenticated));need(isDeepStrictEqual(manifest(again),m),'source/catalog changed during preparation')
  const observed=readback(await phase('read-preparation',()=>transport.readFussballHistory(id)),m,id);need(isDeepStrictEqual(observed,prepared),'native preparation changed after commit')
  const receipt=freeze({version:1,kind:'baden-native-history-cards-prepared',competitionId:id,bindingSha256:observed.bindingSha256,policySha256:observed.policySha256,markerInventorySha256:observed.markerInventorySha256,firstFantasyPlayedOn:observed.firstFantasyPlayedOn,openingRoundId:observed.openingRoundId,manifestSha256:observed.manifestSha256,nativeImportEligible:false,activationEligible:false,actualReady:false})

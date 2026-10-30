@@ -75,6 +75,20 @@ test('TEST ONLY failed checkpoint reporting preserves the original preparation f
  f.transport.prepareFussballHistory=async()=>{throw original}
  await assert.rejects(f.api.prepareFussballNativeHistory({composition:f.token,transport:f.transport,onProgress:async e=>{if(e.status==='FAILED')throw observer}}),e=>e===original)
 })
+test('TEST ONLY exact installed cold preparation resumes through reads without repeating a mutation',async()=>{
+ const f=issuerFixture();f.controls.existing={id:77001,active:false,slug:history.BADEN_SLUG,source:'fussball-public',source_league_code:history.BADEN_CURRENT,source_policy:history.BADEN_CARDS}
+ const receipt=await f.api.prepareFussballNativeHistory({composition:f.token,transport:f.transport})
+ assert.equal(receipt.competitionId,77001);assert.deepEqual(f.calls,['source','find','read','source','read'])
+ assert.deepEqual(f.api.getFussballNativePreparation(receipt).readback,f.observation)
+})
+test('TEST ONLY installed preparation drift or lost read never falls back to a mutation',async()=>{
+ for(const mutate of [v=>{v.manifestSha256='0'.repeat(64)},v=>{v.coldState.playerCount=1}]){
+  const f=issuerFixture();f.controls.existing={id:77001,active:false,slug:history.BADEN_SLUG,source:'fussball-public',source_league_code:history.BADEN_CURRENT,source_policy:history.BADEN_CARDS};f.controls.readMutation=mutate
+  await assert.rejects(f.api.prepareFussballNativeHistory({composition:f.token,transport:f.transport}),/Baden preparation:/);assert.deepEqual(f.calls,['source','find','read'])
+ }
+ const f=issuerFixture(),failure=Error('fetch failed');f.controls.existing={id:77001,active:false,slug:history.BADEN_SLUG,source:'fussball-public',source_league_code:history.BADEN_CURRENT,source_policy:history.BADEN_CARDS};f.transport.readFussballHistory=async()=>{f.calls.push('read');throw failure}
+ await assert.rejects(f.api.prepareFussballNativeHistory({composition:f.token,transport:f.transport}),e=>e===failure);assert.deepEqual(f.calls,['source','find','read'])
+})
 test('TEST ONLY private issuer rejects native binding/policy/marker/hash drift',async()=>{
  const mutations=[v=>{v.prepared=false},v=>{v.active=true},v=>{v.noUsers=false},v=>{v.policySha256='0'.repeat(64)},v=>{v.cards.archive_codes=[]},v=>{v.bindingSha256='0'.repeat(64)},v=>{v.bindings[0].fixture.homeName='foreign';v.bindingSha256=hash(v.bindings)},v=>{v.history.markers[0].fixture.administrativeResult={displayedScores:[]};v.markerInventorySha256=hash(v.history.markers)},v=>{v.history.markers[0].voteCount=1;v.markerInventorySha256=hash(v.history.markers)},v=>{v.history.markers[0].importedAt=new Date().toISOString();v.markerInventorySha256=hash(v.history.markers)},v=>{v.history.markers[0].matchId++;v.markerInventorySha256=hash(v.history.markers)}]
  for(const mutate of mutations){const f=issuerFixture();f.controls.prepareMutation=mutate;await assert.rejects(f.api.prepareFussballNativeHistory({composition:f.token,transport:f.transport}),/Baden preparation:/)}
