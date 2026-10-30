@@ -1,6 +1,6 @@
 // Collect all selected sources first. Only replayed complete packs reach native writes.
 import {isBadenCompositionCandidate,loadBadenHostedComposition,loadBadenLaunchPack} from './bulk-baden-native.mjs'
-import {prepareFussballNativeHistory} from './prepare-fussball-native-history.mjs'
+import {prepareFussballNativeHistory} from './fussball-baden-native-dispatch.mjs'
 import {describeNativeTransportFailure} from './bulk-native-transport.mjs'
 import {createHash} from 'node:crypto'
 import {readFileSync,existsSync,mkdirSync,appendFileSync} from 'node:fs'

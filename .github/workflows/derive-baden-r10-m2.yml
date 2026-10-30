@@ -1,0 +1,42 @@
+name: Derive reviewed Baden R10 M2
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha: {required: true, type: string}
+      main_ci_run_id: {required: true, type: string}
+      source_run_id: {required: true, type: string}
+      source_head: {required: true, type: string}
+permissions: {contents: read, actions: read}
+concurrency: {group: baden-r10-m2-derive, cancel-in-progress: false}
+jobs:
+  derive:
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      MAIN_CI_RUN_ID: ${{ inputs.main_ci_run_id }}
+      SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      SOURCE_HEAD: ${{ inputs.source_head }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ github.sha }}', persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm ci --ignore-scripts
+      - name: Validate root main and first attempt
+        run: node --test scripts/test-fussball-baden-r10-m2.mjs
+      - name: Authenticate R10 originals and derive canonical M2
+        run: node scripts/stage-baden-r10-m2.mjs derive
+      - name: Preserve R10 derived originals
+        uses: actions/upload-artifact@v4
+        with:
+          name: baden-r10-derived-${{ github.run_id }}-1
+          path: |
+            baden-r10-derived/catalog.json
+            baden-r10-derived/pack.json
+            baden-r10-derived/manifest.json
+            baden-r10-derived/certificate.json
+          if-no-files-found: error
+          retention-days: 90

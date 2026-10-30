@@ -1,0 +1,61 @@
+name: Transition reviewed Baden R10 M2 once
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha: {required: true, type: string}
+      main_ci_run_id: {required: true, type: string}
+      source_run_id: {required: true, type: string}
+      source_head: {required: true, type: string}
+      derived_run_id: {required: true, type: string}
+      derived_head: {required: true, type: string}
+      review_release_id: {required: true, type: string}
+      review_asset_id: {required: true, type: string}
+permissions: {contents: read, actions: read}
+concurrency: {group: baden-r10-owner-transition, cancel-in-progress: false}
+env:
+  EXPECTED_SHA: ${{ inputs.expected_sha }}
+  MAIN_CI_RUN_ID: ${{ inputs.main_ci_run_id }}
+  SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+  SOURCE_HEAD: ${{ inputs.source_head }}
+  DERIVED_RUN_ID: ${{ inputs.derived_run_id }}
+  DERIVED_HEAD: ${{ inputs.derived_head }}
+  REVIEW_RELEASE_ID: ${{ inputs.review_release_id }}
+  REVIEW_ASSET_ID: ${{ inputs.review_asset_id }}
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ github.sha }}', persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm ci --ignore-scripts
+      - name: Authenticate reviewed R10 M2 without owner credentials
+        env: {GH_TOKEN: '${{ github.token }}'}
+        run: node scripts/stage-baden-r10-m2.mjs validate-owner
+  owner:
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ github.sha }}', persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm ci --ignore-scripts
+      - name: Transition reviewed M2 once
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: node scripts/stage-baden-r10-m2.mjs transition-owner
+      - name: Preserve owner intent and exact readback
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baden-r10-owner-${{ github.run_id }}-1
+          path: ${{ runner.temp }}/baden-r10-owner
+          if-no-files-found: error
+          retention-days: 90

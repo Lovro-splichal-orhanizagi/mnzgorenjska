@@ -6,7 +6,7 @@ import {validateHnsWomenClubBindings} from '../viri/hns-zenske-binding.mjs'
 import {assertHnsWomenOfflineAuthority} from '../hr-zenske-offline.mjs'
 import {getHistoricalStatisticsPolicy,validateInstalledHistoricalStatisticsMarkers,classifyHistoricalStatistics} from './historical-statistics-policy.mjs'
 import {isFussballCommunityCompetition,FUSSBALL_COMMUNITY_SOURCE_POLICY} from '../fussball-community-policy.mjs'
-import {isBadenNativeCompetition,loadFussballNativeImportContext,loadFussballNativeRuntimeSeed,getFussballNativeRuntimeContext} from '../fussball-native-runtime.mjs'
+import {isBadenNativeCompetition,loadFussballNativeImportContext,loadFussballNativeRuntimeSeed,getFussballNativeRuntimeContext} from '../fussball-baden-native-dispatch.mjs'
 import {join} from 'node:path'
 
 // A typed pending-card archive is imported as an official fixture plus private

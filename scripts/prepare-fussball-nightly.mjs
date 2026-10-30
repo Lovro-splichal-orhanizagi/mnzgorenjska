@@ -10,7 +10,7 @@ import {captureFussballDirectory} from './fussball-capture-evidence.mjs'
 import {loadFussballImportCapture,parseFussballLeagueCode} from './fussball-import.mjs'
 
 import {isFussballCommunityCandidate,isFussballCommunityCompetition,fussballCardPolicyForCandidate} from './fussball-community-policy.mjs'
-import {isBadenNativeCompetition,loadFussballNativeRuntimeSeed,seedFussballNativeRuntime,captureFussballNativeRuntimeDirectory} from './fussball-native-runtime.mjs'
+import {isBadenNativeCompetition,loadFussballNativeRuntimeSeed,seedFussballNativeRuntime,captureFussballNativeRuntimeDirectory} from './fussball-baden-native-dispatch.mjs'
 const fail=message=>Object.assign(new Error(`fussball nightly: ${message}`),{exitCode:1,dataHold:true})
 const proof=(ok,message)=>{if(!ok)throw fail(message)}
 const time=now=>{const value=typeof now==='function'?now():now,n=value instanceof Date?value.getTime():value;proof(Number.isFinite(n),'invalid clock');return n}

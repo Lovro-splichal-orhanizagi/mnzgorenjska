@@ -22,7 +22,7 @@ const exclusions=JSON.parse(readFileSync(new URL('./fussball-baden-r10-exclusion
 const fcfModes=JSON.parse(readFileSync(new URL('./fussball-baden-r10-fcf-modes.json',import.meta.url)))
 const contentGroups=JSON.parse(readFileSync(new URL('./fussball-baden-r10-content-vectors.json',import.meta.url)))
 const history=JSON.parse(readFileSync(new URL('./fussball-fresh-pair-history.json',import.meta.url)))
-const prefix=`repos/${policy.repository}/`,states=new WeakMap(),MiB=1024*1024
+const prefix=`repos/${policy.repository}/`,states=new WeakMap(),nativeStates=new WeakMap(),MiB=1024*1024
 const sha=b=>createHash('sha256').update(b).digest('hex')
 const canonical=v=>JSON.stringify(v,(_,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.fromEntries(Object.keys(x).sort().map(k=>[k,x[k]])):x)
 const parse=b=>JSON.parse(new TextDecoder('utf8',{fatal:true}).decode(b))
@@ -99,7 +99,7 @@ function nightlyScope(bytes,p,jobs){
 /** No caller count, serialized receipt, parser, clock or source-run exemption.
  * Unknown executions produce exact HOLD diagnostics, never a partial B proof.
  */
-export async function readFussballBadenR10Budget(input){
+async function reconcileBudget(input,nativeRemainder=false){
  need(closed(input,['github'])&&typeof input.github==='function','INPUT')
  need(policy.kind==='fixed-baden-r10-research-execution-accounting'&&policy.totalRequestCap===5000&&policy.currentMaximum===780&&policy.archiveMaximum===0,'FIXED_POLICY')
  const originals=new Map(),reads=[],allowed=new Set(),mutable=new Map(),mutableProjection=new Map(),nightlyClosed=new Set(),closedModes=new Set();let retained=0
@@ -320,12 +320,15 @@ export async function readFussballBadenR10Budget(input){
  for(const r of firstRelevant)if(!sealRelevant.some(x=>x.id===r.id))blockers.push({runId:String(r.id),path:r.path,reason:'SEAL_EXECUTION_MISSING'})
  if(blockers.length||!ancestorCoverage.complete)fail()
  const B=foundation.accounting.authenticatedMinimumSpent+executions.reduce((sum,e)=>sum+e.newResearchRequests,0)
- need(Number.isSafeInteger(B)&&B>=3607&&B+policy.currentMaximum<=policy.totalRequestCap,'RESERVATION_CAP')
- const verifiedAt=Date.now(),proof=freeze({version:1,kind:'authenticated-baden-r10-research-budget',
-  budget:{priorRequests:B,currentMaximum:780,archiveMaximum:0,cumulativeReserved:B+780,totalRequestCap:5000},
+ need(Number.isSafeInteger(B)&&B>=3607&&B+(nativeRemainder?0:policy.currentMaximum)<=policy.totalRequestCap,'RESERVATION_CAP')
+ const verifiedAt=Date.now(),proof=freeze({version:1,kind:nativeRemainder?'authenticated-baden-native-research-remainder':'authenticated-baden-r10-research-budget',
+  budget:nativeRemainder?{priorRequests:B,remainingRequests:5000-B,totalRequestCap:5000}:{priorRequests:B,currentMaximum:780,archiveMaximum:0,cumulativeReserved:B+780,totalRequestCap:5000},
   verifiedAt:new Date(verifiedAt).toISOString(),expiresAt:new Date(verifiedAt+60000).toISOString(),sourceOperationAuthorized:false,nativeAdmission:false,activationEligible:false})
- states.set(proof,{input,executions,originals,reads,foundation:foundation.certificate,scopeRuling:policy.scopeRuling});return proof
+ ;(nativeRemainder?nativeStates:states).set(proof,{input,executions,originals,reads,foundation:foundation.certificate,scopeRuling:policy.scopeRuling});return proof
 }
+export const readFussballBadenR10Budget=input=>reconcileBudget(input,false)
+export const readFussballBadenNativeRemainingBudget=input=>reconcileBudget(input,true)
+export function getFussballBadenNativeRemainingBudget(proof){const s=nativeStates.get(proof);need(s,'PRIVATE_NATIVE_REMAINDER');need(Date.now()>=Date.parse(proof.verifiedAt)&&Date.now()<Date.parse(proof.expiresAt),'EXPIRED');return {...structuredClone(proof),executions:structuredClone(s.executions),originals:copyFiles(s.originals),certificate:{scopeRuling:s.scopeRuling,historicalFoundation:structuredClone(s.foundation),adapterReads:structuredClone(s.reads),adapterCallsAreNotProviderRequests:true}}}
 export function getFussballBadenR10Budget(proof){
  const s=states.get(proof);need(s,'PRIVATE_CAPABILITY');need(Date.now()>=Date.parse(proof.verifiedAt)&&Date.now()<Date.parse(proof.expiresAt),'EXPIRED')
  return {...structuredClone(proof),executions:structuredClone(s.executions),originals:copyFiles(s.originals),

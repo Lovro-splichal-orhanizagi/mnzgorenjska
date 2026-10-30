@@ -8,8 +8,8 @@ import {isFussballCommunityCandidate,FUSSBALL_COMMUNITY_SOURCE_POLICY} from './f
 import {validateGermanyCandidate} from './bulk-germany-source.mjs'
 import {validateFussballNativeRoleEnvelope as validateFussballCardEnvelope,replayFussballNativeRoleEnvelope as replayFussballCardEnvelope} from './viri/fussball-native-role-parser.mjs'
 import {inspectBadenComposition} from './bulk-baden-native.mjs'
-import {reauthenticateFussballNativeComposition} from './fussball-native-composition.mjs'
-import {reauthenticateFussballNativeRuntimeContext} from './fussball-native-runtime.mjs'
+import {reauthenticateHostedBadenComposition as reauthenticateFussballNativeComposition} from './fussball-baden-native-dispatch.mjs'
+import {reauthenticateFussballNativeRuntimeContext} from './fussball-baden-native-dispatch.mjs'
 import {rokKroga} from './razporedi.mjs'
 const digest=x=>createHash('sha256').update(JSON.stringify(x)).digest('hex')
 const hold=message=>{throw Object.assign(Error(`bulk native proof: ${message}`),{dataHold:true})}
@@ -132,7 +132,7 @@ export function verifyBulkNative({candidate,pack,snapshot,receipts,expectedSha,n
  const composition=pack.profile==='germany-retained-fussball-native-v1'?inspectBadenComposition({candidate,pack,snapshot}):null
  const scopes=assertBulkCandidate(candidate,pack.candidate),community=communityBinding(candidate,snapshot);nativeScope(candidate,snapshot,community,composition);pricing(receipts,candidate,snapshot,expectedSha,now)
  const captured=Date.parse(pack?.captured_at)
- require(pack?.version===1&&/^[a-f0-9]{64}$/.test((composition?pack.originalBytesSha256:pack.original_bytes_sha256)??'')&&Number.isFinite(captured)&&captured<=+now&&+now-captured<=24*3600_000,'original-byte source pack is missing, future or older than 24 hours')
+ require((pack?.version===1||composition&&pack?.version===10&&pack.kind==='baden-r10-derived-composition')&&/^[a-f0-9]{64}$/.test((composition?pack.originalBytesSha256:pack.original_bytes_sha256)??'')&&Number.isFinite(captured)&&captured<=+now&&+now-captured<=24*3600_000,'original-byte source pack is missing, future or older than 24 hours')
  require(Array.isArray(pack.seasons)&&pack.seasons.length===scopes.length&&new Set(pack.seasons.map(s=>s.code)).size===scopes.length,'source season inventory differs')
  const usedRounds=new Set(),usedMatches=new Set(),usedReports=new Set(),currentClubs=new Set(),currentKeepers=new Map(),registeredMatches=new Set(),pendingMatches=new Set();let reportCount=0,fixtureCount=0,pendingCount=0
  const teamsFor=name=>{const rows=snapshot.teams.filter(t=>clubKey(t.name)===clubKey(name));require(clubKey(name)&&rows.length===1,'source club absent or ambiguous in native mapping');return rows[0].id}

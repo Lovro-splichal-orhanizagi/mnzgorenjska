@@ -2,17 +2,19 @@
 // hosted reader and independently re-read installed database context.
 import {createHash} from 'node:crypto'
 import {isDeepStrictEqual as same} from 'node:util'
-import {readFileSync,lstatSync} from 'node:fs'
+import {readFileSync,lstatSync,existsSync} from 'node:fs'
 import {join,resolve} from 'node:path'
 import {githubGetAdapter} from './stage-fussball-native-composition.mjs'
+import {loadBadenR10NativeLocator} from './stage-baden-r10-native.mjs'
 import {loadFussballNativeComposition} from './fussball-native-composition.mjs'
-import {getFussballNativeRuntimeContext,loadFussballNativeImportContext,loadPreparedFussballNativePack,seedFussballNativeRuntime,loadFussballNativeRuntimeSeed,bindFussballHistoricalSchedule} from './fussball-native-runtime.mjs'
+import {getFussballNativeRuntimeContext,loadFussballNativeImportContext,loadPreparedFussballNativePack,seedFussballNativeRuntime,loadFussballNativeRuntimeSeed,bindFussballHistoricalSchedule} from './fussball-baden-native-dispatch.mjs'
 import {BADEN_SLUG,BADEN_CURRENT,badenCanonical} from './lib/fussball-native-history-policy.mjs'
 import {najcenejsiKader} from '../src/lib/pripravljenost.ts'
 const sha=v=>createHash('sha256').update(badenCanonical(v)).digest('hex')
 const need=(ok,m)=>{if(!ok)throw Object.assign(Error('Baden native launch: '+m),{dataHold:true,reason_code:'BADEN_COMPOSITION_HOLD'})}
 export const isBadenCompositionCandidate=c=>c?.slug===BADEN_SLUG&&c.source==='fussball-public'&&c.source_league_code===BADEN_CURRENT&&c.country_code==='DE'
 export async function loadBadenHostedComposition(directory,{env=process.env,github}={}){
+ if(existsSync(join(resolve(directory),'baden-r10-native-locator.json')))return loadBadenR10NativeLocator(directory,{github})
  const path=join(resolve(directory),'baden-native-locator.json');let stat
  try{stat=lstatSync(path)}catch{need(false,'hosted composition locator missing')}
  need(stat.isFile()&&!stat.isSymbolicLink()&&stat.size<=4096,'regular bounded hosted locator required')

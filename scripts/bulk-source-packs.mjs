@@ -39,7 +39,7 @@ export async function saveBulkAdmission(directory,admission){
 }
 export async function loadBulkPack(directory,{candidate,competition,now=new Date(),requireFresh=true,profile,composition,preparation,context,db}={}){
  if(profile==='germany-retained-fussball-native-v1'){
-  const {loadPreparedFussballNativePack}=await import('./fussball-native-runtime.mjs')
+  const {loadPreparedFussballNativePack}=await import('./fussball-baden-native-dispatch.mjs')
   return loadPreparedFussballNativePack({competition,preparation,context,composition,db})
  }
  const path=resolve(directory)+'.admission.json'

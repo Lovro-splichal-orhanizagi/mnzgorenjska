@@ -2,7 +2,7 @@
 import {assertBulkCandidate,bulkClubKey,bulkAppearances} from '../bulk-native-proof.mjs'
 import {reserveFussballIdentities,reviewedFussballCommunityCompetition,assertFussballCommunityScope} from './fussball-public.mjs'
 import {fussballPlayerKey} from '../fussball-import.mjs'
-import {isBadenNativeCompetition,loadPreparedFussballNativePack,getFussballNativeRuntimeContext} from '../fussball-native-runtime.mjs'
+import {isBadenNativeCompetition,loadPreparedFussballNativePack,getFussballNativeRuntimeContext} from '../fussball-baden-native-dispatch.mjs'
 const proof=(ok,message)=>{if(!ok)throw Error(`bulk captured: ${message}`)}
 const countries={pzpn:'PL',wmzpn:'PL','fussball-public':'DE'}
 export function createBulkCapturedSource({competition,db,directory=process.env.SLFF_BULK_CAPTURE,loadPack,installedHistoricalMarkers=null}={}){

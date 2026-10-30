@@ -1,4 +1,4 @@
-import {bindFussballHistoricalSchedule,getFussballNativeRuntimeContext,reauthenticateFussballNativeRuntimeContext} from '../fussball-native-runtime.mjs'
+import {bindFussballHistoricalSchedule,getFussballNativeRuntimeContext,reauthenticateFussballNativeRuntimeContext} from '../fussball-baden-native-dispatch.mjs'
 /** Base must use the prepared loader/runtime orchestrator, which excludes
  * markers before parsing. Filtering a strict collector's output is forbidden. */
 export function withFussballHistoricalStatistics(base,competition,{installedHistoricalMarkers}={}){

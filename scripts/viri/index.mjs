@@ -4,7 +4,7 @@ import {withFcfG1InstalledSupplement} from './fcf-g1-supplement-runtime.mjs'
 import {FCF_SIX_SOURCE_POLICY} from '../fcf-six-historical-policy.mjs'
 import {withFcfSixHistoricalStatistics} from './fcf-six-historical.mjs'
 import {withFussballHistoricalStatistics} from './fussball-historical.mjs'
-import {isBadenNativeCompetition,loadFussballNativeRuntimeCapture} from '../fussball-native-runtime.mjs'
+import {isBadenNativeCompetition,loadFussballNativeRuntimeCapture} from '../fussball-baden-native-dispatch.mjs'
 // Izbira vira podatkov po `competitions.source`.
 //
 // En vir = ena datoteka v tej mapi. Nov vir (druga zveza, druga država)
