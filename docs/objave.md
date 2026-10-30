@@ -128,7 +128,7 @@ nadoknadi.
   `docker exec slff-objave node scripts/objava-reel.mjs --zapisi`. Discord dobi
   povezavi ali napako;
   **ni samodejne ponovitve**. Zaklep `.zaklep` prepreči hkratni objavi.
-  Preizkus: `npm run test:objava-reel` (korak v CI doda človek: žeton agenta ne sme spreminjati workflowov).
+  Preizkus: `node --test scripts/test-objava-reel.mjs` (korak v CI doda človek: žeton agenta ne sme spreminjati workflowov).
 - **Ura objave je naključna** (lastnik: naj bo videti kot človek):
   `casObjave(osnova, razpon, zdaj, rng)` — osnova (pon 10:00, čet 18:00,
   mejnik `objavaMejnika`) + enakomeren odmik iz `TERMINI[slot].razpon`
