@@ -5,6 +5,7 @@ import {readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from 'node:fs'
 import {join,dirname} from 'node:path'
 import {tmpdir} from 'node:os'
 import {fcfRefresh800RuntimeFiles} from './fcf-refresh800-runtime.mjs'
+import {fcfG1Native800RuntimeFiles} from './fcf-g1-native800-operator.mjs'
 import {zaprtje} from './odtis-kode.mjs'
 import {sixTestSchedule} from './fcf-six-test-fixture.mjs'
 import {syntheticFcfRaw} from './fcf-release-test-fixture.mjs'
@@ -23,7 +24,7 @@ export function native800Documents(variant='good'){
   documents.push({id,html})
  }}return documents
 }
-export function isolatedNative800Tree(t){const root=mkdtempSync(join(tmpdir(),'g1-native800-SYNTHETIC-')),paths=new Set([...fcfRefresh800RuntimeFiles().map(x=>x.path),...zaprtje('scripts/fcf-g1-native800-source.mjs'),...zaprtje('scripts/fcf-refresh800-test-fixture.mjs'),'scripts/fcf-g1-native800-fixture-runner.mjs']);t.after(()=>rmSync(root,{recursive:true,force:true}));for(const path of paths){const dest=join(root,path);mkdirSync(dirname(dest),{recursive:true});writeFileSync(dest,readFileSync(path))}
+export function isolatedNative800Tree(t){const root=mkdtempSync(join(tmpdir(),'g1-native800-SYNTHETIC-')),paths=new Set([...fcfRefresh800RuntimeFiles().map(x=>x.path),...fcfG1Native800RuntimeFiles().map(x=>x.path),...zaprtje('scripts/fcf-g1-native800-source.mjs'),...zaprtje('scripts/fcf-g1-native800-chain-test-fixture.mjs'),...zaprtje('scripts/fcf-refresh800-test-fixture.mjs'),'scripts/fcf-g1-native800-fixture-runner.mjs']);t.after(()=>rmSync(root,{recursive:true,force:true}));for(const path of paths){const dest=join(root,path);mkdirSync(dirname(dest),{recursive:true});writeFileSync(dest,readFileSync(path))}
  // Explicit frozen pre409925 ledger epoch plus synthetic historical accounting.
  // Production CURRENT ledger always requires409925; no production bypass.
  // ZIP/claim/private WeakMap/getCaptured/source bytes remain unchanged.
