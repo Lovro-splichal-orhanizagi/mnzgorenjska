@@ -37,20 +37,44 @@ insert into player_scores(round_id,player_id,points,computed_at)select(select mi
 create temporary table g9_synthetic_roster(slot int primary key,player_id bigint,team_id bigint,position text,value numeric);
 create temporary table g9_existing_players as select id,to_jsonb(p) as row from players p where competition_id=797;
 create temporary table g9_existing_scores as select ps.round_id,ps.player_id,to_jsonb(ps) as row from player_scores ps join players p on p.id=ps.player_id where p.competition_id=797;
-DO $g9_roster$declare ts bigint[];q record;tid bigint;pid bigint;bench bigint;g9match bigint;home bigint;away bigint;goal_team bigint;home_score int;away_score int;begin
- select array_agg(team_id order by team_id)into ts from(select distinct team_id from(select m.home_team_id team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=797 and r.season='2026/27' union select m.away_team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=797 and r.season='2026/27')x)y;
- if coalesce(cardinality(ts),0)<>16 then raise exception 'G1 TEST: exactly sixteen existing G9 fixture clubs required';end if;
+create temporary table g9_existing_teams as select t.id,to_jsonb(t) as row from teams t where t.id in(select m.home_team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=797 and r.season='2026/27' union select m.away_team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=797 and r.season='2026/27');
+create temporary table g9_synthetic_clubs(id bigint primary key);
+DO $g9_roster$declare ts bigint[];q record;tid bigint;pid bigint;bench bigint;g9match bigint;home bigint;away bigint;goal_team bigint;home_score int;away_score int;country bigint;prices jsonb;cost numeric;i int;begin
+ if exists(select 1 from teams where id between 994000001 and 994000010)then raise exception 'G1 TEST: synthetic G9 club ID collision';end if;
+ select country_id into country from competitions where id=797;
+ for i in 1..10 loop insert into teams(id,name,short_name,country_id)overriding system value values(994000000+i,'TEST ONLY G9 club '||i,'G9T'||i,country);insert into g9_synthetic_clubs values(994000000+i);end loop;
+ select array_agg(team_id order by team_id)into ts from(select distinct team_id from(select m.home_team_id team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=797 and r.season='2026/27' union select m.away_team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=797 and r.season='2026/27' union select id from g9_synthetic_clubs)x)y;
+ if coalesce(cardinality(ts),0)<>16 then raise exception 'G1 TEST: synthetic G9 club fixture must contain sixteen IDs';end if;
  for q in select *from(values(1,'GK',8::numeric),(2,'DEF',7),(3,'FWD',8),(4,'GK',6),(5,'DEF',4.5),(6,'FWD',4.5),(7,'DEF',4.5),(8,'MID',4.5),(9,'FWD',4.5),(10,'DEF',4.5),(11,'MID',9),(12,'MID',4.5),(13,'DEF',4.5),(14,'MID',6),(15,'MID',4.5),(16,'MID',4.5))v(slot,position,value)order by slot loop
   tid:=ts[q.slot];
   insert into players(competition_id,team_id,first_name,last_name,full_name,position,position_source,active,value,value_start)
    values(797,tid,'TEST ONLY','G9 roster '||q.slot,'TEST ONLY G9 roster '||q.slot,q.position,'zapisnik',true,q.value,q.value)returning id into pid;
   insert into g9_synthetic_roster values(q.slot,pid,tid,q.position,q.value);
  end loop;
- insert into position_priors(player_id,position,score)select player_id,'MID',0.5 from g9_synthetic_roster where slot=1 on conflict(player_id,position)do nothing;
+ insert into position_priors(player_id,position,score)select player_id,'MID',0.5 from g9_synthetic_roster where slot=8 on conflict(player_id,position)do nothing;
+ -- The retained six-game fixture has 93 active default-priced G9 players.
+ -- Add enough test-only ordinary-price DATA to satisfy the real 70% default cap.
+ for i in 1..40 loop
+  tid:=ts[((i-1)%16)+1];
+  insert into players(competition_id,team_id,first_name,last_name,full_name,position,position_source,active,value,value_start)
+   values(797,tid,'TEST ONLY','G9 price spread '||i,'TEST ONLY G9 price spread '||i,'MID','zapisnik',true,5+(i%4)*0.5,5+(i%4)*0.5);
+ end loop;
+ -- Give the designated substitute's sixteenth synthetic club a disposable
+ -- scoring match. This leaves the retained six-match rows and scores intact.
+ insert into rounds(id,competition_id,season,number,played_on,deadline_at)overriding system value
+  values(996000007,797,'2026/27',7,'2026-10-31',now()+interval '8 days');
+ insert into matches(id,round_id,home_team_id,away_team_id,played_on,home_goals,away_goals,source_url)overriding system value
+  select 995000007,996000007,team_id,(select team_id from g9_synthetic_roster where slot=1),'2026-10-31',0,0,'https://fixture.invalid/G1-TEST-ONLY-G9'
+  from g9_synthetic_roster where slot=16;
  if(select count(*)from g9_synthetic_roster where slot<=15 and position='GK')<>2 or(select count(*)from g9_synthetic_roster where slot<=15 and position='DEF')<>5 or(select count(*)from g9_synthetic_roster where slot<=15 and position='MID')<>5 or(select count(*)from g9_synthetic_roster where slot<=15 and position='FWD')<>3 then raise exception 'G1 TEST: synthetic G9 roster is not legal 15';end if;
- if(select count(*)from g9_synthetic_roster)<>16 or exists(select 1 from g9_synthetic_roster s join g9_existing_players e on e.id=s.player_id)or(select count(*)from players where competition_id=797)<>(select count(*)from g9_existing_players)+16 or exists(select 1 from g9_existing_players e left join players p on p.id=e.id where p.id is null or to_jsonb(p) is distinct from e.row)then raise exception 'G1 TEST: append-only synthetic G9 roster changed existing players';end if;
- if(select count(*)from g9_synthetic_roster where value=4.5)<>10 or(select max(value)from g9_synthetic_roster)<8 then raise exception 'G1 TEST: synthetic G9 pricing spread is invalid';end if;
- if(select (st->>'klubov')::int from(select public.stanje_lige(797)st)x)<>16 or public.najcenejsi_kader(public.stanje_lige(797)->'igralci')is null or public.najcenejsi_kader(public.stanje_lige(797)->'igralci')>100 or(select (st->>'najvisja_cena')::numeric from(select public.stanje_lige(797)st)x)<8 or coalesce((select (st->>'privzetih')::numeric/nullif((st->>'aktivnih')::numeric,0)from(select public.stanje_lige(797)st)x),1)>0.7 or(select (st->>'golov_brez_nastopa')::int from(select public.stanje_lige(797)st)x)<>0 then raise exception 'G1 TEST: append-only G9 seed does not satisfy actual legal15 price preconditions';end if;
+ if(select count(*)from g9_synthetic_roster)<>16 or exists(select 1 from g9_synthetic_roster s join g9_existing_players e on e.id=s.player_id)or(select count(*)from players where competition_id=797)<>(select count(*)from g9_existing_players)+56 or exists(select 1 from g9_existing_players e left join players p on p.id=e.id where p.id is null or to_jsonb(p) is distinct from e.row)then raise exception 'G1 TEST: append-only synthetic G9 roster changed existing players';end if;
+ prices:=public.stanje_lige(797);cost:=public.najcenejsi_kader(prices->'igralci');
+ if(prices->>'klubov')::int<>16 then raise exception 'G1 TEST: G9 active club count is not sixteen';end if;
+ if cost is null then raise exception 'G1 TEST: G9 legal15 cannot be assembled';end if;
+ if cost>100 then raise exception 'G1 TEST: G9 legal15 exceeds budget';end if;
+ if(prices->>'najvisja_cena')::numeric<8 then raise exception 'G1 TEST: G9 highest player price is below varied-price threshold';end if;
+ if coalesce((prices->>'privzetih')::numeric/nullif((prices->>'aktivnih')::numeric,0),1)>0.7 then raise exception 'G1 TEST: G9 default-price fraction exceeds threshold';end if;
+ if(prices->>'golov_brez_nastopa')::int<>0 then raise exception 'G1 TEST: G9 scorer lacks an appearance';end if;
  select player_id,team_id into bench,tid from g9_synthetic_roster where slot=16;
  select m.id,m.home_team_id,m.away_team_id,m.home_goals,m.away_goals into g9match,home,away,home_score,away_score from matches m join rounds r on r.id=m.round_id where r.competition_id=797 and r.season='2026/27'and( m.home_team_id=tid or m.away_team_id=tid)and not exists(select 1 from appearances a join players p on p.id=a.player_id where a.match_id=m.id and p.competition_id=797)and not exists(select 1 from player_scores ps join players p on p.id=ps.player_id where ps.round_id=r.id and p.competition_id=797)order by m.id limit 1;
  if g9match is null then raise exception 'G1 TEST: synthetic G9 substitute match unavailable';end if;
@@ -62,6 +86,7 @@ DO $g9_roster$declare ts bigint[];q record;tid bigint;pid bigint;bench bigint;g9
  update matches set home_goals=home_score+case when home=goal_team then 1 else 0 end,away_goals=away_score+case when away=goal_team then 1 else 0 end where id=g9match;
  if not exists(select 1 from appearances a join goals g on g.match_id=a.match_id and g.scorer_id=a.player_id where a.match_id=g9match and a.player_id=bench and not a.started)then raise exception 'G1 TEST: synthetic G9 scorer/substitute link missing';end if;
  if exists(select 1 from g9_existing_scores e left join player_scores ps on ps.round_id=e.round_id and ps.player_id=e.player_id where ps.round_id is null or to_jsonb(ps) is distinct from e.row)then raise exception 'G1 TEST: synthetic G9 preexisting scores changed';end if;
+ if exists(select 1 from g9_existing_teams e left join teams t on t.id=e.id where t.id is null or to_jsonb(t) is distinct from e.row)then raise exception 'G1 TEST: synthetic G9 clubs changed existing teams';end if;
 end$g9_roster$;
 
 -- TEST ONLY actual lower-level release authorization creates an already-active
