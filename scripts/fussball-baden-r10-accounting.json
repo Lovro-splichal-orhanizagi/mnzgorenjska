@@ -1,0 +1,2225 @@
+{
+  "version": 1,
+  "kind": "fixed-baden-r10-research-execution-accounting",
+  "repository": "Lovro-splichal-orhanizagi/mnzgorenjska",
+  "since": "2026-10-28T20:15:01Z",
+  "totalRequestCap": 5000,
+  "currentMaximum": 780,
+  "archiveMaximum": 0,
+  "profile": "Existing fixed Baden FUSSBALL validation/capture research ledger; not ordinary operational DFB Regionalliga ingestion.",
+  "scopeRuling": "Root instruction 2026-10-30: independently scoped regular DFB league ingestion is OUTSIDE_ORIGINAL_RESEARCH_PROFILE; retain real network and redirect-visibility limitations. Never exclude FUSSBALL research or unknown Baden paths.",
+  "records": [
+    {
+      "run": {
+        "id": 40761564810,
+        "run_attempt": 1,
+        "head_sha": "7692cecffa8b9c747b4a76bd8367a1aa06bbc0b0",
+        "head_branch": "main",
+        "path": ".github/workflows/preveri-fussball-dopolni.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-28T20:15:01Z",
+        "display_title": "FUSSBALL Baden reviewed transport completion",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "4a530f566275d9a58eae19958bf05fdfdd034d7d2f252eceba70d210a3ee2143",
+      "kind": "already-accounted",
+      "accountedRequests": 1014
+    },
+    {
+      "run": {
+        "id": 40769474791,
+        "run_attempt": 1,
+        "head_sha": "7692cecffa8b9c747b4a76bd8367a1aa06bbc0b0",
+        "head_branch": "main",
+        "path": ".github/workflows/replay-fussball-cards.yml",
+        "event": "schedule",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-28T21:08:51Z",
+        "display_title": "FUSSBALL card replay DE all",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "6ec29c3443c802065289c79928d4f98b13b7752e5d29d4ed6bba93a1993c95f5",
+      "kind": "retained-card-replay"
+    },
+    {
+      "run": {
+        "id": 40792196434,
+        "run_attempt": 1,
+        "head_sha": "47d46f3a91813a7e720f3affccee056c1462ab07",
+        "head_branch": "main",
+        "path": ".github/workflows/replay-fussball-native-composition.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T00:09:35Z",
+        "display_title": "Source partition only - Baden native preparation remains separate",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "2366ac61c8ee05d10e98f43210633374b3ce9238e836d0d706b51d36be54d15e",
+      "kind": "derived-offline-originals"
+    },
+    {
+      "run": {
+        "id": 40796083954,
+        "run_attempt": 1,
+        "head_sha": "47d46f3a91813a7e720f3affccee056c1462ab07",
+        "head_branch": "main",
+        "path": ".github/workflows/install-baden-native-catalog.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-29T00:45:04Z",
+        "display_title": "Same-head owner catalog DATA only - no registration or import",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "b715848f7b390fb9450898925b1cc83919f8d7d411a6404ee675cfefb59a27d3",
+      "kind": "owner-catalog-offline-originals"
+    },
+    {
+      "run": {
+        "id": 40797805655,
+        "run_attempt": 1,
+        "head_sha": "47d46f3a91813a7e720f3affccee056c1462ab07",
+        "head_branch": "main",
+        "path": ".github/workflows/replay-fussball-cards.yml",
+        "event": "schedule",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T01:01:16Z",
+        "display_title": "FUSSBALL card replay DE all",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "85cf68f9431b7f928319f597aff0c0dbec540cf7a429304d4bbc5e64ce8b5e96",
+      "kind": "retained-card-replay"
+    },
+    {
+      "run": {
+        "id": 40803519891,
+        "run_attempt": 1,
+        "head_sha": "375249a9e3d33f970c6cb50b0eaba8689d3957ee",
+        "head_branch": "main",
+        "path": ".github/workflows/replay-fussball-native-composition.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T01:57:47Z",
+        "display_title": "Source partition only - Baden native preparation remains separate",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "f1b19bdedb1409c0eded4a4075870dc9210c6fe115d392c8adbf28c6d6a00f67",
+      "kind": "derived-offline-originals"
+    },
+    {
+      "run": {
+        "id": 40807010095,
+        "run_attempt": 1,
+        "head_sha": "375249a9e3d33f970c6cb50b0eaba8689d3957ee",
+        "head_branch": "main",
+        "path": ".github/workflows/install-baden-native-catalog.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-29T02:33:01Z",
+        "display_title": "Same-head owner catalog DATA only - no registration or import",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "7add10e5403f5af8c57cbf84849f41b3b55e85b4861f6617cf4faf86fb8259d2",
+      "kind": "owner-catalog-offline-originals"
+    },
+    {
+      "run": {
+        "id": 40817930110,
+        "run_attempt": 1,
+        "head_sha": "9ec00d1ac4a065fbbd552696f80b089536b5ae1f",
+        "head_branch": "main",
+        "path": ".github/workflows/preveri-fussball-sezono.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-29T04:28:20Z",
+        "display_title": "FUSSBALL season 03188V27L800000JVS5489BTVU7GTVLE-G 2026/27",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "a7956e10244d2cd746d6678da9d178dc2719762b9e95f7bb4ecce75d7ca3ff85",
+      "kind": "already-accounted",
+      "accountedRequests": 54
+    },
+    {
+      "run": {
+        "id": 40833782400,
+        "run_attempt": 1,
+        "head_sha": "9ec00d1ac4a065fbbd552696f80b089536b5ae1f",
+        "head_branch": "main",
+        "path": ".github/workflows/replay-fussball-cards.yml",
+        "event": "schedule",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T07:10:57Z",
+        "display_title": "FUSSBALL card replay DE all",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "03f722f0803604bec5b94bfb676bdc4e4faa5a8a74e281a02586e4d43c19f3cf",
+      "kind": "retained-card-replay"
+    },
+    {
+      "run": {
+        "id": 40859714195,
+        "run_attempt": 1,
+        "head_sha": "f3669300087c5f8df926a599d86f03b1269215c5",
+        "head_branch": "main",
+        "path": ".github/workflows/preveri-baden-fresh-pair.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-29T10:42:48Z",
+        "display_title": "Baden fresh paired source audit",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "16bbb6225edd8845afa1d131cda20b9d55ab335743b052c4797b697741fe81ae",
+      "kind": "already-accounted",
+      "accountedRequests": 587
+    },
+    {
+      "run": {
+        "id": 40865798117,
+        "run_attempt": 1,
+        "head_sha": "f3669300087c5f8df926a599d86f03b1269215c5",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-zapisnikov.yml",
+        "event": "schedule",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-29T11:29:36Z",
+        "display_title": "Uvoz zapisnikov",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 19360231,
+          "login": "lukazlatecan",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 19360231,
+          "login": "lukazlatecan",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "7ed7bc88b22bd301a30d65f2de529853b592fcbd2642b8f5d806191aca670d8f",
+      "kind": "regular-dfb-nightly",
+      "logSha256": "b2369cbf28e4c09b45e9b5af0fc86ec389c3f2b93fa5d6defd63242513f6e20f",
+      "deJobId": 123420178240
+    },
+    {
+      "run": {
+        "id": 40873423804,
+        "run_attempt": 1,
+        "head_sha": "4ac04bfa586492554f581f35788560cfc564e008",
+        "head_branch": "codex-g1-301-native-preflight-20261029",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-29T12:27:36Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "3d08e2aaa8833b27dbb2c94714a4b938168d13814ddc4881d18fa67e70fdddd3",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 40884594936,
+        "run_attempt": 1,
+        "head_sha": "f3669300087c5f8df926a599d86f03b1269215c5",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-zapisnikov.yml",
+        "event": "schedule",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-29T13:43:42Z",
+        "display_title": "Uvoz zapisnikov",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "20a5abc89af89245b0eea91273460bb512f85788ed368d71ccd4bdae60cebe70",
+      "kind": "regular-dfb-nightly",
+      "logSha256": "8488c4fe94226fc77200f8e067447e5db1039befe803027443ec534fa32f64dc",
+      "deJobId": 123534998290
+    },
+    {
+      "run": {
+        "id": 40889358866,
+        "run_attempt": 1,
+        "head_sha": "6b795a57643fb074226ea5356d4a90c8ba9d0dc7",
+        "head_branch": "main",
+        "path": ".github/workflows/replay-fussball-native-composition.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T14:13:34Z",
+        "display_title": "Source partition only - Baden native preparation remains separate",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "19be9275e891d8ddb9b566a75ac936c2fc90127f71fa4f40b6444cdc2058fddb",
+      "kind": "derived-offline-originals"
+    },
+    {
+      "run": {
+        "id": 40890901911,
+        "run_attempt": 1,
+        "head_sha": "6b795a57643fb074226ea5356d4a90c8ba9d0dc7",
+        "head_branch": "main",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T14:23:00Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "878cea5cb0bf720c236f5fa2c459a7d6f9f3419a609c3d2e7d98f74b2c09313b",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 40891425726,
+        "run_attempt": 1,
+        "head_sha": "6b795a57643fb074226ea5356d4a90c8ba9d0dc7",
+        "head_branch": "main",
+        "path": ".github/workflows/replay-fussball-cards.yml",
+        "event": "schedule",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T14:26:08Z",
+        "display_title": "FUSSBALL card replay DE all",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "ac6ec2c81f4c620e091dadeb7b48f9e18a0e9e4176f445c4e544684529112013",
+      "kind": "retained-card-replay"
+    },
+    {
+      "run": {
+        "id": 40904767571,
+        "run_attempt": 1,
+        "head_sha": "a4d97017957347e7fccacc8c2e6c0c43a369899f",
+        "head_branch": "main",
+        "path": ".github/workflows/replay-fussball-native-composition.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T15:45:25Z",
+        "display_title": "Source partition only - Baden native preparation remains separate",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "c9c973c082c6996cadd5bf7d1ff8dce4f055799cab39905a59c9981bea631cba",
+      "kind": "derived-offline-originals"
+    },
+    {
+      "run": {
+        "id": 40930656425,
+        "run_attempt": 1,
+        "head_sha": "a4d97017957347e7fccacc8c2e6c0c43a369899f",
+        "head_branch": "main",
+        "path": ".github/workflows/install-baden-native-catalog.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-29T18:25:24Z",
+        "display_title": "Same-head owner catalog DATA only - no registration or import",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "7a4159259a30e59aefaca517984465713de14cb3c7e781a77e4614549f60533c",
+      "kind": "owner-catalog-offline-originals"
+    },
+    {
+      "run": {
+        "id": 40948205073,
+        "run_attempt": 1,
+        "head_sha": "a4d97017957347e7fccacc8c2e6c0c43a369899f",
+        "head_branch": "main",
+        "path": ".github/workflows/replay-fussball-cards.yml",
+        "event": "schedule",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T20:20:52Z",
+        "display_title": "FUSSBALL card replay DE all",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "6eeb1377fc77dd252c3017387935c2532ce6fde9633af47c34777b35bd3ffc09",
+      "kind": "retained-card-replay"
+    },
+    {
+      "run": {
+        "id": 40955216891,
+        "run_attempt": 1,
+        "head_sha": "a4d97017957347e7fccacc8c2e6c0c43a369899f",
+        "head_branch": "main",
+        "path": ".github/workflows/install-baden-native-catalog.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-29T21:08:37Z",
+        "display_title": "Same-head owner catalog DATA only - no registration or import",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "a0d57c54b06f11ac112e818da1a45da1f67d133c2b070df5e9afb14d8dbf93c5",
+      "kind": "owner-catalog-offline-originals"
+    },
+    {
+      "run": {
+        "id": 40959156428,
+        "run_attempt": 1,
+        "head_sha": "dcb7c7b905bab1aae4ce9fe54c917170cc72b32d",
+        "head_branch": "codex-baden-own-fetch-diagnostic-20261029",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T21:36:03Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "0750b2f85221f4661a384978f70d8158078144260c7edf46e9c70bec804ab384",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 40962867845,
+        "run_attempt": 1,
+        "head_sha": "12960ee8365781003f07d34ff537eab00a891edd",
+        "head_branch": "codex-baden-own-fetch-diagnostic-20261029",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T22:03:36Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "a6b6f7d1f0a48f6835a88c312529c576cb482f2d8b0a7721e30620454e77f812",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 40967952619,
+        "run_attempt": 1,
+        "head_sha": "b91c52f7c8004402b2aa9127a9469c2bef390423",
+        "head_branch": "main",
+        "path": ".github/workflows/replay-fussball-native-composition.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T22:42:59Z",
+        "display_title": "Source partition only - Baden native preparation remains separate",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "93980d6a12eb99518eb9092df4273c5055448bf6873e52507b2198dd77aa114e",
+      "kind": "derived-offline-originals"
+    },
+    {
+      "run": {
+        "id": 40969041702,
+        "run_attempt": 1,
+        "head_sha": "2d5dbc3fb4a38d8bcd342c9016f80abec57af947",
+        "head_branch": "main",
+        "path": ".github/workflows/replay-fussball-native-composition.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T22:51:49Z",
+        "display_title": "Source partition only - Baden native preparation remains separate",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "14074aad71d9c51efe05fce293e877113827a58c832232f166b024658fdeb4f4",
+      "kind": "derived-offline-originals"
+    },
+    {
+      "run": {
+        "id": 40971795981,
+        "run_attempt": 1,
+        "head_sha": "2d5dbc3fb4a38d8bcd342c9016f80abec57af947",
+        "head_branch": "main",
+        "path": ".github/workflows/install-baden-native-catalog.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-29T23:14:50Z",
+        "display_title": "Same-head owner catalog DATA only - no registration or import",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "5d67a27ea3eacdf4345f0b9e372a6e99b87c8f33c347d33d5c2cba27fa31195d",
+      "kind": "owner-catalog-offline-originals"
+    },
+    {
+      "run": {
+        "id": 40976762196,
+        "run_attempt": 1,
+        "head_sha": "2d5dbc3fb4a38d8bcd342c9016f80abec57af947",
+        "head_branch": "main",
+        "path": ".github/workflows/replay-fussball-cards.yml",
+        "event": "schedule",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-29T23:59:26Z",
+        "display_title": "FUSSBALL card replay DE all",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "05cab9d62fc2dc182b6d8a52f286430c35d00ff2a526515b2586d84120a6eaf7",
+      "kind": "retained-card-replay"
+    },
+    {
+      "run": {
+        "id": 40981131218,
+        "run_attempt": 1,
+        "head_sha": "62f6fe9ea248f5adafe2a487b8162a9028b09193",
+        "head_branch": "codex/baden-owner-reconcile-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T00:40:12Z",
+        "display_title": "Fixed failed owner40971795981 read-only facts - no retry",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "1c3114fabdf8bbdbf42417f08324915f64c91e5a3ac7c4fe9a6854810d497656",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 40982708093,
+        "run_attempt": 1,
+        "head_sha": "7ad1f36a9cdd4727a68716f67cc00b9d6edb290d",
+        "head_branch": "codex/baden-owner-reconcile-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T00:55:30Z",
+        "display_title": "Fixed failed owner40971795981 read-only facts - no retry",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "8cf2fae70ecae03f313ee28c342b8abf8f6cd225c7b533d450802107f0f3571a",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 40982961791,
+        "run_attempt": 1,
+        "head_sha": "1fa55eb284a8a94f66c5f524d9bd301b447887cc",
+        "head_branch": "codex/baden-install-sql-disposable-probe-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T00:58:04Z",
+        "display_title": "Exact2d5 installer SQL in isolated PostgreSQL17 only",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "cb6e39215c7fa596a47220ace70cd67b958dd93b766bbc0dba6947ec2b100727",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 40983656379,
+        "run_attempt": 1,
+        "head_sha": "85a130cd8ea657f9189d1c37a0f978b0d5f7bf73",
+        "head_branch": "codex/baden-owner-reconcile-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T01:04:50Z",
+        "display_title": "Fixed failed owner40971795981 read-only facts - no retry",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "2c12eee95ec30a3df06772d54b2334132f4f8066991cc1bc24f20e57e08db4d6",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 40990176474,
+        "run_attempt": 1,
+        "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+        "head_branch": "main",
+        "path": ".github/workflows/replay-fussball-native-composition.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T02:10:54Z",
+        "display_title": "Source partition only - Baden native preparation remains separate",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "4b120e20eff954537e22b6c601d067a7064cc8d59861bf87aa45d389705409c0",
+      "kind": "derived-offline-originals"
+    },
+    {
+      "run": {
+        "id": 40992542234,
+        "run_attempt": 1,
+        "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+        "head_branch": "main",
+        "path": ".github/workflows/install-baden-native-catalog.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T02:35:07Z",
+        "display_title": "Same-head owner catalog DATA only - no registration or import",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "94b0102c6fc0ed324dc4e29f8b544b36b79e54598238e192ae73453b0ceab5bf",
+      "kind": "owner-catalog-offline-originals"
+    },
+    {
+      "run": {
+        "id": 40994196833,
+        "run_attempt": 1,
+        "head_sha": "383f910ca38232b5e98e3eb23f4e56b151a97fbe",
+        "head_branch": "codex-github-token-diagnostic-e925-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T02:52:35Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "70637ed7141aab9d540df3e8f23decd906e999172d6122a0d946049ade664a75",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 40996883123,
+        "run_attempt": 1,
+        "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-baden-native.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-30T03:21:05Z",
+        "display_title": "Baden native launch (activation requested true)",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "d85f02ad0ead4b344174f9cc675e539da02147519c9e40a2b67427d016070aa3",
+      "kind": "native-before-individual-import",
+      "artifact": {
+        "id": 12952553352,
+        "name": "baden-native-40996883123-1",
+        "size_in_bytes": 7147,
+        "digest": "sha256:079e9588eac1b427cacfb9c53f90af084f1f1be56d5eceec9f5455e0279b18f5"
+      },
+      "reportSha256": "743f5d2f8c40c534e031309e78fe2dd750272ca826d258860d5ac136d84a0172"
+    },
+    {
+      "run": {
+        "id": 40998257883,
+        "run_attempt": 1,
+        "head_sha": "a0fe137503561b98917a31d8aa5f44c7dc0d19d4",
+        "head_branch": "codex-github-token-diagnostic-e925-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T03:35:43Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "cc5b77a40ce069b81e95319342ab7cafa8c8e926d2af9d46dfe0a168042d9fc0",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 40998611873,
+        "run_attempt": 1,
+        "head_sha": "5d2d909080ef6de6a0443d9b2d95c633365991a0",
+        "head_branch": "codex-github-token-diagnostic-e925-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T03:39:36Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "42891f76009a9e632bc24302c8c936fc9e3878d1ae5f81325985086c525ea3b9",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 40999314697,
+        "run_attempt": 1,
+        "head_sha": "b97ea297c2bc39c29efe694997635a75bde8714e",
+        "head_branch": "codex-github-token-diagnostic-e925-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T03:47:21Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "7f4177ac1b70f3f7e37736d0ba2f89b43cd4028ec06a1383a59614e76e46e5c9",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 41001335992,
+        "run_attempt": 1,
+        "head_sha": "b70d165a2269f244c0dfe77eefc1723c67e64e95",
+        "head_branch": "codex/baden-native-reconcile-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-30T04:09:44Z",
+        "display_title": "Fixed failed native40996883123 read-only facts - no retry",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "4f833d7f06dd986df37bbf8fb7b4c31bf0575038072c3717dae5738ce869c0a6",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 41001795245,
+        "run_attempt": 1,
+        "head_sha": "c7d66b29e88b6d375237293de5cd84099badf286",
+        "head_branch": "codex/baden-native-reconcile-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-30T04:14:34Z",
+        "display_title": "Fixed failed native40996883123 read-only facts - no retry",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "add2c032e89d85a595d686a68f9b618174f8b50b6e28cdad18db09a6dcecc21c",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 41002125116,
+        "run_attempt": 1,
+        "head_sha": "a2f992dd34fc05d489f4e01c4b3d3558c9b3e191",
+        "head_branch": "codex/baden-native-reconcile-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T04:18:06Z",
+        "display_title": "Fixed failed native40996883123 read-only facts - no retry",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "5c45eed85c81760d4dc7ede05933ccb54d8e0f20208fe4da6a5e842f83544622",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 41002473384,
+        "run_attempt": 1,
+        "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-baden-native.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-30T04:21:51Z",
+        "display_title": "Baden native launch (activation requested true)",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "0f7b313aff3ce5bd2882c7d234e25d6c149ce4931832770185510c7ce7177902",
+      "kind": "native-before-individual-import",
+      "artifact": {
+        "id": 12955226825,
+        "name": "baden-native-41002473384-1",
+        "size_in_bytes": 7147,
+        "digest": "sha256:b7a7741a450cedcd3d0bfba7385f31e4ae46ff9e39292edb2512502fedf27be3"
+      },
+      "reportSha256": "264207508ce12609f75c22a7692ec73706ca2bff713b9b55afa1a2a8173488da"
+    },
+    {
+      "run": {
+        "id": 41006750518,
+        "run_attempt": 1,
+        "head_sha": "5eb717b7e1e98c0d2b21ff86089681857e72f49f",
+        "head_branch": "codex/baden-native-https-probe-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T05:08:30Z",
+        "display_title": "Fixed failed native41002473384 HTTPS reads - no writer or retry",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "3cf36a7cabbae898a810d687548785e7d7ff243213f993b51d6b77893c3cb70a",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 41007328010,
+        "run_attempt": 1,
+        "head_sha": "1d78ba0194aac9d741f97b99cdb9e75c39c34616",
+        "head_branch": "codex/g9-native800-targeted-sql-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-30T05:14:38Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "11d239fc7673acab506e4655cd144fa94358f515cedec2729320ee0df4a71762",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 41008560988,
+        "run_attempt": 1,
+        "head_sha": "914e0b26b630c893eabc2ea909d3673aa76bac59",
+        "head_branch": "codex/g9-native800-targeted-sql-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T05:27:41Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "0269347691399ba28e223e33e327b9cd9a2fc56565ee83569280e1f8fecaeb2f",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 41010316119,
+        "run_attempt": 1,
+        "head_sha": "f76d772d087f74fde75927f1ebfa3ea5e427823f",
+        "head_branch": "codex/g9-native800-targeted-sql-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-30T05:46:50Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "088d7600e94fb939f655d7af2b70ce08b60103d01c756561f3a42f7c21c77c4f",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 41010620913,
+        "run_attempt": 1,
+        "head_sha": "d7ae61c65a6d7d12375eb3b61572fe7c6c5e519f",
+        "head_branch": "codex/g9-native800-targeted-sql-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-30T05:50:10Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "b7aa6fb9108ef7fa27324d220b9a6299afa1aa774e8854a068bdedd3b71d7615",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 41011167711,
+        "run_attempt": 1,
+        "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+        "head_branch": "main",
+        "path": ".github/workflows/replay-fussball-cards.yml",
+        "event": "schedule",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T05:56:07Z",
+        "display_title": "FUSSBALL card replay DE all",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "66e9aa82ad0785e1cd9712fb2037d75a595904b098845b57dea91cee35bea01a",
+      "kind": "retained-card-replay"
+    },
+    {
+      "run": {
+        "id": 41011276709,
+        "run_attempt": 1,
+        "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-zapisnikov.yml",
+        "event": "schedule",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-30T05:57:18Z",
+        "display_title": "Uvoz zapisnikov",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 19360231,
+          "login": "lukazlatecan",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 19360231,
+          "login": "lukazlatecan",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "a5a332baf443d549d104f01937cdd0d1e5e13b0a94e7b2008a99e09035d28c4f",
+      "kind": "regular-dfb-nightly",
+      "logSha256": "2cc71f3f227ca5dac86a0ad1ec9ae365fdfd21b250220c015bd06343aaefec26",
+      "deJobId": 123917490306
+    },
+    {
+      "run": {
+        "id": 41011950632,
+        "run_attempt": 1,
+        "head_sha": "4937642e0f624b70a85a092f5eb74152ff67a112",
+        "head_branch": "codex/g9-native800-targeted-sql-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-30T06:04:31Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "2d19921ee12016b5a9dc3ad14d4fcf7106048a237021f659a9f0e8f54e00a00e",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 41014610806,
+        "run_attempt": 1,
+        "head_sha": "a760cfaea30c458d38886273f65f232fedd08edf",
+        "head_branch": "main",
+        "path": ".github/workflows/uvoz-baden-native.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-30T06:31:48Z",
+        "display_title": "Baden native launch (activation requested true)",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "fdb6da8e5ed151f73ad25f5c458d82be9743028065d137f11d4f881276fe21e3",
+      "kind": "native-before-individual-import",
+      "artifact": {
+        "id": 12960568119,
+        "name": "baden-native-41014610806-1",
+        "size_in_bytes": 7539,
+        "digest": "sha256:7f53cdd6f441cebb4f5cbf05dd3464fd97af2814f221e375bac2affaeee0558e"
+      },
+      "reportSha256": "134d3ba5b94c118a0988f2a1082a084b07e65fae70dafddd3900a45fb3621117"
+    },
+    {
+      "run": {
+        "id": 41014723220,
+        "run_attempt": 1,
+        "head_sha": "ba84eaae25b1ac4e94e0a2b002974d1b4aff4496",
+        "head_branch": "codex/g9-native800-targeted-sql-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-30T06:32:59Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "0ddf8025d54a43e5e9d03f7202d5c53fa8e933ae9ed76e523c81da0b9a532379",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 41016741044,
+        "run_attempt": 1,
+        "head_sha": "43334cea9628f5b6e7ce1bb247a0472604cbd382",
+        "head_branch": "codex/g9-native800-targeted-sql-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T06:53:27Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "f20842609491180c1871def7d87d4f3906c046da257fd8f01f6fb99b61176ac4",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 41019852942,
+        "run_attempt": 1,
+        "head_sha": "841c3452d9dc7eaeea4898447d5cf70cfbeb1c99",
+        "head_branch": "codex/g9-native800-readonly-preflight-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-30T07:24:02Z",
+        "display_title": "Fixed G9 read-only SQL and actual800 accounting costs",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "54f7ed9d7b4c517a0e165e920fb3432050987e405ca1d7e49ddc0f3498dce3a9",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 41022979439,
+        "run_attempt": 1,
+        "head_sha": "03712d1aa108a44dd3c207730f98003af7531ab0",
+        "head_branch": "codex-g9-served-fetch-diagnostic-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-30T07:54:43Z",
+        "display_title": "CI",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "e8516b71d24c57233ebc026b0bda1c19c8d6787fbfc3d52388b79706549d4502",
+      "kind": "reviewed-source-free-diagnostic"
+    },
+    {
+      "run": {
+        "id": 41046716043,
+        "run_attempt": 1,
+        "head_sha": "841c3452d9dc7eaeea4898447d5cf70cfbeb1c99",
+        "head_branch": "codex/g9-native800-readonly-preflight-20261030",
+        "path": ".github/workflows/ci.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-30T11:15:00Z",
+        "display_title": "Fixed G9 read-only SQL and actual800 accounting costs",
+        "repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "head_repository": {
+          "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+        },
+        "actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        },
+        "triggering_actor": {
+          "id": 25134229,
+          "login": "nejcar20",
+          "type": "User"
+        }
+      },
+      "jobsSha256": "de8f96f20b106d6ff5df70b68dfef9e9d327e26603b8b0ee434714863d4eafb5",
+      "kind": "reviewed-source-free-diagnostic"
+    }
+  ],
+  "runtimes": {
+    "7692cecffa8b9c747b4a76bd8367a1aa06bbc0b0": {
+      "tree": "8e33a86dfd8f9b9e67d06b4572663bb7071ffe4a",
+      "files": {
+        ".github/workflows/replay-fussball-cards.yml": "6c71e2b66a64877badcfb5dbdbbad0ec75cb48722c5b80d4ee380aea1d6b8860",
+        "scripts/cakaj-na-uvoze.mjs": "fb5efd189def06faf33e19d2e10ca1f9affc2ba232f20031c0095ef9cb535748",
+        "scripts/replay-fussball-cards.mjs": "ee8a323e842f6595e47447768d2b1c4965c8f1f57c068b92ede4eb5eb5eeda7f"
+      }
+    },
+    "47d46f3a91813a7e720f3affccee056c1462ab07": {
+      "tree": "5dde810f8dceb725522298d5f4e52504c9120a91",
+      "files": {
+        ".github/workflows/replay-fussball-native-composition.yml": "1e460a4087bf14dbafd58d44953fb5484fafd65bbefc31ad090313b0568cb3a9",
+        "scripts/dfb-artifacts.mjs": "df79a66b4125bf610e2c32c40bce3faa41c25f3ab6640655644f9d702dba42ce",
+        "scripts/fussball-archive-v6.mjs": "c808eb9e4aa88b18267507d4cfc69d5c175416928c5266349a3ade0bb08762b9",
+        "scripts/fussball-archive-v7.mjs": "490e68dcbc3837ae57e40d69f466991a0346e3e28fdc73ed20bbad49b1cca8c2",
+        "scripts/fussball-completed-source-v6.mjs": "8df4ab7c48fb40da61cb6b52f66fd26ed31f74b7795887688028398c2f58390d",
+        "scripts/fussball-completed-source-v7.mjs": "636b720391f1dbb828585352987c5f679ae9385085ec174a659360b63ab6480c",
+        "scripts/fussball-native-composition.mjs": "56c52740de7ee001cc823d27cb09d9ef9e5f22a98c91d3e3191bbc3019136058",
+        "scripts/stage-fussball-native-composition.mjs": "eef47b0feee81a80223b01e1fe52b68a4a4d0198798d232f5514de433f8a5a73",
+        ".github/workflows/install-baden-native-catalog.yml": "65016f04f94512f234ac60f750c8f953cd38c1c51692e5ebef4235efe9de92f5",
+        "scripts/install-baden-native-catalog.mjs": "a5f004f79bc6635b0392ed28711f5ec71fdd7d1d86ef8cf05833e34d4a84050e",
+        "scripts/prepare-fussball-native-history.mjs": "04de5501d34b5d668021c6e5955e4b4b3b48c855faf61a17b64910109c94d530",
+        ".github/workflows/replay-fussball-cards.yml": "6c71e2b66a64877badcfb5dbdbbad0ec75cb48722c5b80d4ee380aea1d6b8860",
+        "scripts/cakaj-na-uvoze.mjs": "fb5efd189def06faf33e19d2e10ca1f9affc2ba232f20031c0095ef9cb535748",
+        "scripts/replay-fussball-cards.mjs": "ee8a323e842f6595e47447768d2b1c4965c8f1f57c068b92ede4eb5eb5eeda7f"
+      }
+    },
+    "375249a9e3d33f970c6cb50b0eaba8689d3957ee": {
+      "tree": "82e9500d4bf835c720139fd404aa8b6f97fb0d41",
+      "files": {
+        ".github/workflows/replay-fussball-native-composition.yml": "9d221897f5570324d988092564d210d3aefc36be9ddba8ca46b44675d5a93cb4",
+        "scripts/dfb-artifacts.mjs": "df79a66b4125bf610e2c32c40bce3faa41c25f3ab6640655644f9d702dba42ce",
+        "scripts/fussball-archive-v6.mjs": "c808eb9e4aa88b18267507d4cfc69d5c175416928c5266349a3ade0bb08762b9",
+        "scripts/fussball-archive-v7.mjs": "490e68dcbc3837ae57e40d69f466991a0346e3e28fdc73ed20bbad49b1cca8c2",
+        "scripts/fussball-completed-source-v6.mjs": "8df4ab7c48fb40da61cb6b52f66fd26ed31f74b7795887688028398c2f58390d",
+        "scripts/fussball-completed-source-v7.mjs": "636b720391f1dbb828585352987c5f679ae9385085ec174a659360b63ab6480c",
+        "scripts/fussball-native-composition.mjs": "56c52740de7ee001cc823d27cb09d9ef9e5f22a98c91d3e3191bbc3019136058",
+        "scripts/stage-fussball-native-composition.mjs": "a7e2cc0081ded48361a784eedb3ff1325e4c2aa1f6b68baf45ed4387c468f5fc",
+        ".github/workflows/install-baden-native-catalog.yml": "9da40a55f63165c3bc5b7546684bca3c57cdc8e49d39a6db46ff9e22826e5772",
+        "scripts/install-baden-native-catalog.mjs": "6a8d5e4387ced0c4c0f1084d3b38844472353be002204297b329f44c352d1175",
+        "scripts/prepare-fussball-native-history.mjs": "04de5501d34b5d668021c6e5955e4b4b3b48c855faf61a17b64910109c94d530"
+      }
+    },
+    "9ec00d1ac4a065fbbd552696f80b089536b5ae1f": {
+      "tree": "02a866337f19a2cbcbbc39c4fe5112d8324e7118",
+      "files": {
+        ".github/workflows/replay-fussball-cards.yml": "6c71e2b66a64877badcfb5dbdbbad0ec75cb48722c5b80d4ee380aea1d6b8860",
+        "scripts/cakaj-na-uvoze.mjs": "fb5efd189def06faf33e19d2e10ca1f9affc2ba232f20031c0095ef9cb535748",
+        "scripts/replay-fussball-cards.mjs": "ee8a323e842f6595e47447768d2b1c4965c8f1f57c068b92ede4eb5eb5eeda7f"
+      }
+    },
+    "f3669300087c5f8df926a599d86f03b1269215c5": {
+      "tree": "1420ce1dba3d51d4bd09da0523f85da64e02b23e",
+      "files": {
+        ".github/workflows/uvoz-zapisnikov.yml": "176bf6614a21a577a753367eb48e242972ec8caab0b76f455f857d24316393d6",
+        "scripts/aktivna-tekmovanja.mjs": "0898415bae566ee482c100cdcdc465787abe5fcd19eecc632aa91ee371cc0ac6",
+        "scripts/nocni-kosi.mjs": "d8239e12de90cb16fc77c9e09d4bcd3a51bc2e538fb12cb1732d84d5e5b5c24a",
+        "scripts/nocni-uvoz.sh": "ea3fcd3d6c450f48287dda052fbe63b4eb6e69c0f91e9bc60ae94f7087fd34b7",
+        "scripts/prenos.mjs": "f06bd2923ee1a17cbc335e752e1a7082504a593991e40132587c664d0f2e006b",
+        "scripts/uvoz-delegiranja.mjs": "01b28153a28e9a14978d08958e7a1c6e076d31675c761263f3189cc691ffffc5",
+        "scripts/uvoz-razporeda.mjs": "4430041f982abbddacde9c0e53e72a33f05305e3cd029f2237dd1d12d667ec1c",
+        "scripts/uvoz-registracij.mjs": "10362ef85633b23d05c4228c23d03d2f50c3caf659f6829fec408f5a62b0bf33",
+        "scripts/uvoz-zapisnikov.mjs": "f2bceee41c81b9e2febe1f1c535b254c42ce6a6726890ff7315a5650a97f09a2",
+        "scripts/viri/dfb.mjs": "5d446ef1cbee885d7a0bc37ed395124533a055a9b4e439d32f1356f0730cb6ef",
+        "scripts/viri/index.mjs": "38ee97d8292de500c185995164751a94ac73f6d7134f1c40d041d65afac0db63"
+      }
+    },
+    "4ac04bfa586492554f581f35788560cfc564e008": {
+      "tree": "72aa740a088c30b57f1d866286a38d02ffb13322",
+      "files": {
+        ".github/workflows/ci.yml": "aefd4eeadfd576059ef032e5f56b29af15602dfc0c931d20d2e19b0dbbb82690",
+        ".github/workflows/diagnostika-javnih-virov.yml": "bf8a4fe55f6432f0a01fa6f8dfbfb4ae30c778063f8d2ebfed89325776337da8",
+        "scripts/fcf-g1-native-preflight.mjs": "9c2607b361ac3b7a892ac416032ebb7b970a69bc5ebb1ccc13f9bb16cfe86962"
+      }
+    },
+    "6b795a57643fb074226ea5356d4a90c8ba9d0dc7": {
+      "tree": "50f204c73e06ef4b9421aa06e133fc6d767e6f75",
+      "files": {
+        ".github/workflows/replay-fussball-native-composition.yml": "9d221897f5570324d988092564d210d3aefc36be9ddba8ca46b44675d5a93cb4",
+        "scripts/dfb-artifacts.mjs": "df79a66b4125bf610e2c32c40bce3faa41c25f3ab6640655644f9d702dba42ce",
+        "scripts/fussball-archive-v6.mjs": "c808eb9e4aa88b18267507d4cfc69d5c175416928c5266349a3ade0bb08762b9",
+        "scripts/fussball-archive-v7.mjs": "490e68dcbc3837ae57e40d69f466991a0346e3e28fdc73ed20bbad49b1cca8c2",
+        "scripts/fussball-baden-completed-stages.mjs": "f591726ef7277d77c32a2d8eeb3bacfe75c2bbf72b1b4d9da093d8d5f239ec25",
+        "scripts/fussball-baden-fresh-pair.mjs": "3e994daf9f8c514ae7a786ffcdcc7d7ebde157f4ea28270c78705e036a575093",
+        "scripts/fussball-completed-source-v6.mjs": "8df4ab7c48fb40da61cb6b52f66fd26ed31f74b7795887688028398c2f58390d",
+        "scripts/fussball-completed-source-v7.mjs": "636b720391f1dbb828585352987c5f679ae9385085ec174a659360b63ab6480c",
+        "scripts/fussball-fresh-pair.mjs": "8cb639f721923d1c903b2204c1c5c3c152054284c0319077b1dd955885b488f5",
+        "scripts/fussball-native-composition.mjs": "355f939012163817f01df3af46966af8899102ef6eb0e702cd5e0dd131d68d75",
+        "scripts/stage-fussball-native-composition.mjs": "55ae152e2a65ada14232d9f2f5e7574670d622c0f92bef3718b24145ffe7c7de",
+        ".github/workflows/ci.yml": "99eaa3c14efb37d8c3ad2ce717feff8283e44e90f43a8070a69f94ac721b8536",
+        ".github/workflows/diagnostika-javnih-virov.yml": "3609be1a62a0e337319a527e46fb0330ce990e608d5034905d2d20d28f28e3ab",
+        "scripts/fcf-g1-native-preflight.mjs": "8f3ceee035270a0889e3f3d5ec9ebd13955e219a88a18b17e715af42a2cd5485",
+        ".github/workflows/replay-fussball-cards.yml": "6c71e2b66a64877badcfb5dbdbbad0ec75cb48722c5b80d4ee380aea1d6b8860",
+        "scripts/cakaj-na-uvoze.mjs": "03e99469b77068ae11f3d0101f76e50a122ffdb69419009b1cf4e4c4d3d9e70e",
+        "scripts/replay-fussball-cards.mjs": "ee8a323e842f6595e47447768d2b1c4965c8f1f57c068b92ede4eb5eb5eeda7f"
+      }
+    },
+    "a4d97017957347e7fccacc8c2e6c0c43a369899f": {
+      "tree": "1b7bbfbf84713e718f2f1a9e6847ecc0062bd5c6",
+      "files": {
+        ".github/workflows/replay-fussball-native-composition.yml": "9d221897f5570324d988092564d210d3aefc36be9ddba8ca46b44675d5a93cb4",
+        "scripts/dfb-artifacts.mjs": "df79a66b4125bf610e2c32c40bce3faa41c25f3ab6640655644f9d702dba42ce",
+        "scripts/fussball-archive-v6.mjs": "c808eb9e4aa88b18267507d4cfc69d5c175416928c5266349a3ade0bb08762b9",
+        "scripts/fussball-archive-v7.mjs": "490e68dcbc3837ae57e40d69f466991a0346e3e28fdc73ed20bbad49b1cca8c2",
+        "scripts/fussball-baden-completed-stages.mjs": "f591726ef7277d77c32a2d8eeb3bacfe75c2bbf72b1b4d9da093d8d5f239ec25",
+        "scripts/fussball-baden-fresh-pair.mjs": "3e994daf9f8c514ae7a786ffcdcc7d7ebde157f4ea28270c78705e036a575093",
+        "scripts/fussball-completed-source-v6.mjs": "8df4ab7c48fb40da61cb6b52f66fd26ed31f74b7795887688028398c2f58390d",
+        "scripts/fussball-completed-source-v7.mjs": "636b720391f1dbb828585352987c5f679ae9385085ec174a659360b63ab6480c",
+        "scripts/fussball-fresh-pair.mjs": "8cb639f721923d1c903b2204c1c5c3c152054284c0319077b1dd955885b488f5",
+        "scripts/fussball-native-composition.mjs": "355f939012163817f01df3af46966af8899102ef6eb0e702cd5e0dd131d68d75",
+        "scripts/stage-fussball-native-composition.mjs": "97ea4af1a1a50886e4f143eb33efec313c0cfbf7f93e4385916d559d6584a665",
+        ".github/workflows/install-baden-native-catalog.yml": "9da40a55f63165c3bc5b7546684bca3c57cdc8e49d39a6db46ff9e22826e5772",
+        "scripts/install-baden-native-catalog.mjs": "8a46c53daf7ac7863164eace4ddebb28ff51d34d99feb97dad15f68dda83c463",
+        "scripts/prepare-fussball-native-history.mjs": "bb7e71418f90122f5a25c01a6e51953dcf7d9d7c29fddc50bce201ba2a0f83d0",
+        ".github/workflows/replay-fussball-cards.yml": "6c71e2b66a64877badcfb5dbdbbad0ec75cb48722c5b80d4ee380aea1d6b8860",
+        "scripts/cakaj-na-uvoze.mjs": "03e99469b77068ae11f3d0101f76e50a122ffdb69419009b1cf4e4c4d3d9e70e",
+        "scripts/replay-fussball-cards.mjs": "ee8a323e842f6595e47447768d2b1c4965c8f1f57c068b92ede4eb5eb5eeda7f"
+      }
+    },
+    "dcb7c7b905bab1aae4ce9fe54c917170cc72b32d": {
+      "tree": "9be9050103648cb8b49a5856de7d624147181187",
+      "files": {
+        ".github/workflows/ci.yml": "8e76610ef6e1817e666d510be23c9eecf0e7f8cc9b547f118f0c2c1e17c79edf",
+        "scripts/diagnose-baden-own-fetch.mjs": "8fd87251bc7553b264fe33bd06118187b61de83927404390d5615b93c1ad0bbe"
+      }
+    },
+    "12960ee8365781003f07d34ff537eab00a891edd": {
+      "tree": "ee6a4731987477ffc7767f9aa0e350d266ccfc28",
+      "files": {
+        ".github/workflows/ci.yml": "bbb653af9a0e370d1416472f0dd64b852beb1156c5bb19dc11c110dfcdd3f87d",
+        "scripts/diagnose-baden-composition-fetch.mjs": "12cf4402705866c4e9f7aa88e3d45be689282832a19025068947a8ce63f55f06",
+        "scripts/diagnose-baden-own-fetch.mjs": "8fd87251bc7553b264fe33bd06118187b61de83927404390d5615b93c1ad0bbe"
+      }
+    },
+    "b91c52f7c8004402b2aa9127a9469c2bef390423": {
+      "tree": "73ce85d9ecc70ca4a8e65cc05c0fe9e97626dc3d",
+      "files": {
+        ".github/workflows/replay-fussball-native-composition.yml": "9d221897f5570324d988092564d210d3aefc36be9ddba8ca46b44675d5a93cb4",
+        "scripts/dfb-artifacts.mjs": "df79a66b4125bf610e2c32c40bce3faa41c25f3ab6640655644f9d702dba42ce",
+        "scripts/fussball-archive-v6.mjs": "c808eb9e4aa88b18267507d4cfc69d5c175416928c5266349a3ade0bb08762b9",
+        "scripts/fussball-archive-v7.mjs": "490e68dcbc3837ae57e40d69f466991a0346e3e28fdc73ed20bbad49b1cca8c2",
+        "scripts/fussball-baden-completed-stages.mjs": "f591726ef7277d77c32a2d8eeb3bacfe75c2bbf72b1b4d9da093d8d5f239ec25",
+        "scripts/fussball-baden-fresh-pair.mjs": "3e994daf9f8c514ae7a786ffcdcc7d7ebde157f4ea28270c78705e036a575093",
+        "scripts/fussball-completed-source-v6.mjs": "8df4ab7c48fb40da61cb6b52f66fd26ed31f74b7795887688028398c2f58390d",
+        "scripts/fussball-completed-source-v7.mjs": "636b720391f1dbb828585352987c5f679ae9385085ec174a659360b63ab6480c",
+        "scripts/fussball-fresh-pair.mjs": "8cb639f721923d1c903b2204c1c5c3c152054284c0319077b1dd955885b488f5",
+        "scripts/fussball-native-composition.mjs": "355f939012163817f01df3af46966af8899102ef6eb0e702cd5e0dd131d68d75",
+        "scripts/lib/baden-served-page.mjs": "636ecd9744679e4d12a16a82a6b0729df38ac95b48cea88c88c8aa99f5617877",
+        "scripts/stage-fussball-native-composition.mjs": "97ea4af1a1a50886e4f143eb33efec313c0cfbf7f93e4385916d559d6584a665"
+      }
+    },
+    "2d5dbc3fb4a38d8bcd342c9016f80abec57af947": {
+      "tree": "a70e8d1fa8a9512fabb85903b1cfb447bff97aa0",
+      "files": {
+        ".github/workflows/replay-fussball-native-composition.yml": "9d221897f5570324d988092564d210d3aefc36be9ddba8ca46b44675d5a93cb4",
+        "scripts/dfb-artifacts.mjs": "df79a66b4125bf610e2c32c40bce3faa41c25f3ab6640655644f9d702dba42ce",
+        "scripts/fussball-archive-v6.mjs": "c808eb9e4aa88b18267507d4cfc69d5c175416928c5266349a3ade0bb08762b9",
+        "scripts/fussball-archive-v7.mjs": "490e68dcbc3837ae57e40d69f466991a0346e3e28fdc73ed20bbad49b1cca8c2",
+        "scripts/fussball-baden-completed-stages.mjs": "f591726ef7277d77c32a2d8eeb3bacfe75c2bbf72b1b4d9da093d8d5f239ec25",
+        "scripts/fussball-baden-fresh-pair.mjs": "3e994daf9f8c514ae7a786ffcdcc7d7ebde157f4ea28270c78705e036a575093",
+        "scripts/fussball-completed-source-v6.mjs": "8df4ab7c48fb40da61cb6b52f66fd26ed31f74b7795887688028398c2f58390d",
+        "scripts/fussball-completed-source-v7.mjs": "636b720391f1dbb828585352987c5f679ae9385085ec174a659360b63ab6480c",
+        "scripts/fussball-fresh-pair.mjs": "8cb639f721923d1c903b2204c1c5c3c152054284c0319077b1dd955885b488f5",
+        "scripts/fussball-native-composition.mjs": "355f939012163817f01df3af46966af8899102ef6eb0e702cd5e0dd131d68d75",
+        "scripts/lib/baden-served-page.mjs": "636ecd9744679e4d12a16a82a6b0729df38ac95b48cea88c88c8aa99f5617877",
+        "scripts/stage-fussball-native-composition.mjs": "97ea4af1a1a50886e4f143eb33efec313c0cfbf7f93e4385916d559d6584a665",
+        ".github/workflows/install-baden-native-catalog.yml": "9da40a55f63165c3bc5b7546684bca3c57cdc8e49d39a6db46ff9e22826e5772",
+        "scripts/install-baden-native-catalog.mjs": "17ec18184138d80edd9b33c5b19c8e01c138cefda2adb0a975c93ddd3420186e",
+        "scripts/prepare-fussball-native-history.mjs": "bb7e71418f90122f5a25c01a6e51953dcf7d9d7c29fddc50bce201ba2a0f83d0",
+        ".github/workflows/replay-fussball-cards.yml": "6c71e2b66a64877badcfb5dbdbbad0ec75cb48722c5b80d4ee380aea1d6b8860",
+        "scripts/cakaj-na-uvoze.mjs": "03e99469b77068ae11f3d0101f76e50a122ffdb69419009b1cf4e4c4d3d9e70e",
+        "scripts/replay-fussball-cards.mjs": "ee8a323e842f6595e47447768d2b1c4965c8f1f57c068b92ede4eb5eb5eeda7f"
+      }
+    },
+    "62f6fe9ea248f5adafe2a487b8162a9028b09193": {
+      "tree": "25528aeb9b5ed7ac92ae4a1bca06780ca329691d",
+      "files": {
+        ".github/workflows/ci.yml": "f1d61752b0224f0dfd401b30f5db93f078f9c1c8631395149fe89c6ff8e8d452",
+        "scripts/baden-owner-readonly-reconcile.mjs": "4f2b8929a5c0421609de40989cacce9bdbdada32e1e5432d6a809fde3e06eb83",
+        "scripts/test-baden-owner-readonly-reconcile.mjs": "c920c1c20add22966a5acf758d0f908774b8831e0aaf4bc0edd60d65f0b002cf"
+      }
+    },
+    "7ad1f36a9cdd4727a68716f67cc00b9d6edb290d": {
+      "tree": "b6fe9a99340d12a027716f2d381f9728d49ed997",
+      "files": {
+        ".github/workflows/ci.yml": "f1d61752b0224f0dfd401b30f5db93f078f9c1c8631395149fe89c6ff8e8d452",
+        "scripts/baden-owner-readonly-reconcile.mjs": "972d95c2c87107aced0fad96b54fa7bb463a3a4be323492fac5093f5ade9824c",
+        "scripts/test-baden-owner-readonly-reconcile.mjs": "dd28be6d220842415c515d8c9eb2bdfbeaee5369248c4909610e5e30f859ae02"
+      }
+    },
+    "1fa55eb284a8a94f66c5f524d9bd301b447887cc": {
+      "tree": "603bf930ae9a9f608b8583c7de91ea31c90b5ff6",
+      "files": {
+        ".github/workflows/ci.yml": "8e1a620af20cffddec7160115d56e205ba3a5acfe84c9506a643c10fe3c4fe73",
+        "scripts/baden-install-sql-disposable-probe.mjs": "b816d87c28796189c71860f7391e8619e7943156f0cb51e37b3abe5a96d9601d",
+        "scripts/test-baden-install-sql-disposable-probe.mjs": "4eb50c0ace353e91cb089ecaeffbe6059337b6068d95128f5e64143b15665788"
+      }
+    },
+    "85a130cd8ea657f9189d1c37a0f978b0d5f7bf73": {
+      "tree": "e291c4124430eee129d78e06ca2015208cab2fe0",
+      "files": {
+        ".github/workflows/ci.yml": "f1d61752b0224f0dfd401b30f5db93f078f9c1c8631395149fe89c6ff8e8d452",
+        "scripts/baden-owner-readonly-reconcile.mjs": "64dba3d9b9752c27ecc253d9c3c2d14f2a1423f42f67d239e2b69937ed4ef865",
+        "scripts/test-baden-owner-readonly-reconcile.mjs": "494eee65c6072a212a36953a6464140a0601e2c0669eeb5f07f6c308dce3f8e9"
+      }
+    },
+    "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d": {
+      "tree": "5c44f8f718624c21d4fc47c168ca3074bedb2fb3",
+      "files": {
+        ".github/workflows/replay-fussball-native-composition.yml": "9d221897f5570324d988092564d210d3aefc36be9ddba8ca46b44675d5a93cb4",
+        "scripts/dfb-artifacts.mjs": "df79a66b4125bf610e2c32c40bce3faa41c25f3ab6640655644f9d702dba42ce",
+        "scripts/fussball-archive-v6.mjs": "c808eb9e4aa88b18267507d4cfc69d5c175416928c5266349a3ade0bb08762b9",
+        "scripts/fussball-archive-v7.mjs": "490e68dcbc3837ae57e40d69f466991a0346e3e28fdc73ed20bbad49b1cca8c2",
+        "scripts/fussball-baden-completed-stages.mjs": "f591726ef7277d77c32a2d8eeb3bacfe75c2bbf72b1b4d9da093d8d5f239ec25",
+        "scripts/fussball-baden-fresh-pair.mjs": "3e994daf9f8c514ae7a786ffcdcc7d7ebde157f4ea28270c78705e036a575093",
+        "scripts/fussball-completed-source-v6.mjs": "8df4ab7c48fb40da61cb6b52f66fd26ed31f74b7795887688028398c2f58390d",
+        "scripts/fussball-completed-source-v7.mjs": "636b720391f1dbb828585352987c5f679ae9385085ec174a659360b63ab6480c",
+        "scripts/fussball-fresh-pair.mjs": "8cb639f721923d1c903b2204c1c5c3c152054284c0319077b1dd955885b488f5",
+        "scripts/fussball-native-composition.mjs": "355f939012163817f01df3af46966af8899102ef6eb0e702cd5e0dd131d68d75",
+        "scripts/lib/baden-served-page.mjs": "636ecd9744679e4d12a16a82a6b0729df38ac95b48cea88c88c8aa99f5617877",
+        "scripts/stage-fussball-native-composition.mjs": "97ea4af1a1a50886e4f143eb33efec313c0cfbf7f93e4385916d559d6584a665",
+        ".github/workflows/install-baden-native-catalog.yml": "6de672a2b88fc9c12622528f487889d11c7d5f8549b0c0b9812073548020dc57",
+        "scripts/install-baden-native-catalog.mjs": "59b50e254363cba141f2bcec970e384475cc8eca99450a670a3f0c9c70eff035",
+        "scripts/prepare-fussball-native-history.mjs": "bb7e71418f90122f5a25c01a6e51953dcf7d9d7c29fddc50bce201ba2a0f83d0",
+        ".github/workflows/uvoz-baden-native.yml": "7bb5e645662a570227e987468f3a8133c7b5dec7596fed62ef60309c2d92d170",
+        "scripts/bulk-league-rollout.mjs": "e71984cd39286e7ccfbd36ffd7c160c314452bb65415b4414f6b0d3b5c79b537",
+        "scripts/bulk-offline-network.mjs": "98977cec08b025a367042bfbfc9838ee25a0592caacc2a627500a86065adb6bd",
+        "scripts/stage-baden-native-composition.mjs": "b7b53e3cf4b49d4e35c9b675850d09cc12a10ea345ed9594c979fb886ee767ef",
+        ".github/workflows/replay-fussball-cards.yml": "6c71e2b66a64877badcfb5dbdbbad0ec75cb48722c5b80d4ee380aea1d6b8860",
+        "scripts/cakaj-na-uvoze.mjs": "03e99469b77068ae11f3d0101f76e50a122ffdb69419009b1cf4e4c4d3d9e70e",
+        "scripts/replay-fussball-cards.mjs": "ee8a323e842f6595e47447768d2b1c4965c8f1f57c068b92ede4eb5eb5eeda7f",
+        ".github/workflows/uvoz-zapisnikov.yml": "176bf6614a21a577a753367eb48e242972ec8caab0b76f455f857d24316393d6",
+        "scripts/aktivna-tekmovanja.mjs": "0898415bae566ee482c100cdcdc465787abe5fcd19eecc632aa91ee371cc0ac6",
+        "scripts/nocni-kosi.mjs": "d8239e12de90cb16fc77c9e09d4bcd3a51bc2e538fb12cb1732d84d5e5b5c24a",
+        "scripts/nocni-uvoz.sh": "ea3fcd3d6c450f48287dda052fbe63b4eb6e69c0f91e9bc60ae94f7087fd34b7",
+        "scripts/prenos.mjs": "f06bd2923ee1a17cbc335e752e1a7082504a593991e40132587c664d0f2e006b",
+        "scripts/uvoz-delegiranja.mjs": "01b28153a28e9a14978d08958e7a1c6e076d31675c761263f3189cc691ffffc5",
+        "scripts/uvoz-razporeda.mjs": "4430041f982abbddacde9c0e53e72a33f05305e3cd029f2237dd1d12d667ec1c",
+        "scripts/uvoz-registracij.mjs": "10362ef85633b23d05c4228c23d03d2f50c3caf659f6829fec408f5a62b0bf33",
+        "scripts/uvoz-zapisnikov.mjs": "f2bceee41c81b9e2febe1f1c535b254c42ce6a6726890ff7315a5650a97f09a2",
+        "scripts/viri/dfb.mjs": "5d446ef1cbee885d7a0bc37ed395124533a055a9b4e439d32f1356f0730cb6ef",
+        "scripts/viri/index.mjs": "b0d85f74be63ac8b03ba069fa1631c3f89855cda6b57adcfaed6447676049fcc"
+      }
+    },
+    "383f910ca38232b5e98e3eb23f4e56b151a97fbe": {
+      "tree": "840d42d8fd2b87acbeec44ec7cb6326caa128ae8",
+      "files": {
+        ".github/workflows/ci.yml": "666ee24b566272d45ecf3ca89ca7eb0d1f9e48af00c0960f82da4e0b96645c0a",
+        "scripts/diagnose-github-token.mjs": "524ab08be2eb271793dab3255e841d6c24d4ffe887984dc6231be91e5341d46a"
+      }
+    },
+    "a0fe137503561b98917a31d8aa5f44c7dc0d19d4": {
+      "tree": "6b57b5c0718ed716fa2bd799340ffdc7efc80693",
+      "files": {
+        ".github/workflows/ci.yml": "666ee24b566272d45ecf3ca89ca7eb0d1f9e48af00c0960f82da4e0b96645c0a",
+        "scripts/diagnose-github-token.mjs": "74e194b9f32ab38e65c2fcc83040839c283e6ec5b94afa1916c9062fa0037c68"
+      }
+    },
+    "5d2d909080ef6de6a0443d9b2d95c633365991a0": {
+      "tree": "b0ef0dd60256056ebb72c468c7abee2972a623ff",
+      "files": {
+        ".github/workflows/ci.yml": "666ee24b566272d45ecf3ca89ca7eb0d1f9e48af00c0960f82da4e0b96645c0a",
+        "scripts/diagnose-github-token.mjs": "d265fe5a2cde74af89f928fd62371ac810081e70848f5067aee7b4c3664d49ba"
+      }
+    },
+    "b97ea297c2bc39c29efe694997635a75bde8714e": {
+      "tree": "c81dff708b11b5483e76b481c4f3d54305f29eef",
+      "files": {
+        ".github/workflows/ci.yml": "666ee24b566272d45ecf3ca89ca7eb0d1f9e48af00c0960f82da4e0b96645c0a",
+        "scripts/diagnose-github-token.mjs": "5bc4b34ca9326e354a5246d54f770def2925e3ee6bcbe2db3b83886ac01d9b23"
+      }
+    },
+    "b70d165a2269f244c0dfe77eefc1723c67e64e95": {
+      "tree": "cc140d48de54252a0db3f55074522d4ec9d7d54f",
+      "files": {
+        ".github/workflows/ci.yml": "8e8a68ae2a6f52a6deb1cffc1e302f92eed7d7a1e2ae13ba65d35addb589793a",
+        "scripts/baden-native-readonly-reconcile.mjs": "1cb7151e1bcbab56529b76a07358575399ba079e2efc1ba9ff402a2efffb9871",
+        "scripts/test-baden-native-readonly-reconcile.mjs": "6458a98a05763d753e2309694170e924a5d5f2e987d8f77556378a2bf73ab3d3"
+      }
+    },
+    "c7d66b29e88b6d375237293de5cd84099badf286": {
+      "tree": "f3be6f8946be37baba09b40c0117bf126ca1f51e",
+      "files": {
+        ".github/workflows/ci.yml": "8e8a68ae2a6f52a6deb1cffc1e302f92eed7d7a1e2ae13ba65d35addb589793a",
+        "scripts/baden-native-readonly-reconcile.mjs": "ae385b5b75c91192a39d0cc7cd69e85fe6621e2c46a6ca45421bdb349690a044",
+        "scripts/test-baden-native-readonly-reconcile.mjs": "90c8be3cd730e6a01ef30eaf1fe61b312300ee2dcab0cb0af4e68d75210a46cb"
+      }
+    },
+    "a2f992dd34fc05d489f4e01c4b3d3558c9b3e191": {
+      "tree": "f17a050d757cffa0c8340c1c2e1f83cfb91fcd3a",
+      "files": {
+        ".github/workflows/ci.yml": "8e8a68ae2a6f52a6deb1cffc1e302f92eed7d7a1e2ae13ba65d35addb589793a",
+        "scripts/baden-native-readonly-reconcile.mjs": "469aef1a658139ef526e4e77cf06401473c065a95ccac1e2151a292a2b617bbb",
+        "scripts/test-baden-native-readonly-reconcile.mjs": "be37d75e81807d9980b28b289b0ff4b85acb1558e3496bdcb9232c9d8bbe964d"
+      }
+    },
+    "5eb717b7e1e98c0d2b21ff86089681857e72f49f": {
+      "tree": "b465f85914002bca5528aa3a68a2eb9a7c914ff7",
+      "files": {
+        ".github/workflows/ci.yml": "93075d737d960ae0c1a7d47b8f005ec3141df502ecd7599293077ae959031fdb",
+        "scripts/baden-native-https-probe.mjs": "4a0f73dec26d3546a5b32af4fbf0cf46d100be27bc323ca380faf6bfadb258b5",
+        "scripts/test-baden-native-https-probe.mjs": "f02213b2c1dc08eee293372dc1c18f009398a32d49c939e872be04608342034a"
+      }
+    },
+    "1d78ba0194aac9d741f97b99cdb9e75c39c34616": {
+      "tree": "32d933d7ecbf65171e8192afe7fe814746f27d9b",
+      "files": {
+        ".github/workflows/ci.yml": "489c2feb09af8a958db3901e4fa1403c3fd6ee9901718d9a02ba96178aedaeec",
+        "scripts/test-fcf-g1-remainder-g9-native800-prepare-sql.mjs": "a000b5d0794ed5389744a8cf32a1d08abe81053cb24f33e933824bd470a29914",
+        "scripts/test-fcf-g9-native800-bridge-sql.mjs": "dfab5379c0644d309e3fae3a259786f8e09a66239e9b0a281a8700397d63e3da"
+      }
+    },
+    "914e0b26b630c893eabc2ea909d3673aa76bac59": {
+      "tree": "54ac7f50e0f2ae41ac712e0842c2afa555d1a4c5",
+      "files": {
+        ".github/workflows/ci.yml": "489c2feb09af8a958db3901e4fa1403c3fd6ee9901718d9a02ba96178aedaeec",
+        "scripts/test-fcf-g1-remainder-g9-native800-prepare-sql.mjs": "a000b5d0794ed5389744a8cf32a1d08abe81053cb24f33e933824bd470a29914",
+        "scripts/test-fcf-g9-native800-bridge-sql.mjs": "74e0e299abcda8767b0bc43eb2e0715f1d1f3bf694fe8ac09affea94d08e5a6e"
+      }
+    },
+    "f76d772d087f74fde75927f1ebfa3ea5e427823f": {
+      "tree": "58e2af8994c7283df3208eac2e7c7858639bb018",
+      "files": {
+        ".github/workflows/ci.yml": "c45cf483e88afb753a4a76b7ee9b28d70705ebf06c5de696f2cda44619dc976d",
+        "scripts/test-fcf-g1-remainder-g9-native800-prepare-sql.mjs": "a000b5d0794ed5389744a8cf32a1d08abe81053cb24f33e933824bd470a29914",
+        "scripts/test-fcf-g9-native800-bridge-sql.mjs": "74e0e299abcda8767b0bc43eb2e0715f1d1f3bf694fe8ac09affea94d08e5a6e",
+        "scripts/test-fcf-g9-native800-launch-sql.mjs": "447391d21e5fad19c1e42dc262958594614e054d91b9129d2f5125cdd66bb4cc"
+      }
+    },
+    "d7ae61c65a6d7d12375eb3b61572fe7c6c5e519f": {
+      "tree": "c088b7354d4b14b363341d7182d0b5269bce160e",
+      "files": {
+        ".github/workflows/ci.yml": "b5bd94b0528136ecc17869332b083a67f5ffdfea62ae8b8bfa60a0e5195d35f7",
+        "scripts/test-fcf-g1-remainder-g9-native800-prepare-sql.mjs": "a000b5d0794ed5389744a8cf32a1d08abe81053cb24f33e933824bd470a29914",
+        "scripts/test-fcf-g9-native800-bridge-sql.mjs": "74e0e299abcda8767b0bc43eb2e0715f1d1f3bf694fe8ac09affea94d08e5a6e",
+        "scripts/test-fcf-g9-native800-launch-sql.mjs": "447391d21e5fad19c1e42dc262958594614e054d91b9129d2f5125cdd66bb4cc"
+      }
+    },
+    "4937642e0f624b70a85a092f5eb74152ff67a112": {
+      "tree": "1ffbf24444934c97c728f827f5df5f05fc12c49a",
+      "files": {
+        ".github/workflows/ci.yml": "b5bd94b0528136ecc17869332b083a67f5ffdfea62ae8b8bfa60a0e5195d35f7",
+        "scripts/test-fcf-g1-remainder-g9-native800-prepare-sql.mjs": "a000b5d0794ed5389744a8cf32a1d08abe81053cb24f33e933824bd470a29914",
+        "scripts/test-fcf-g9-native800-bridge-sql.mjs": "74e0e299abcda8767b0bc43eb2e0715f1d1f3bf694fe8ac09affea94d08e5a6e",
+        "scripts/test-fcf-g9-native800-launch-sql.mjs": "10d88502469e42a8bc44ab55b92b9cabe0cf2369a0d787e1d491baf5d3589725"
+      }
+    },
+    "a760cfaea30c458d38886273f65f232fedd08edf": {
+      "tree": "70a793ef57bcecb4760974a8cc50bc5c559adebe",
+      "files": {
+        ".github/workflows/uvoz-baden-native.yml": "1730e24bbbf0e708584b549ee5216aac21f48f2e1edc7eb0f517356c771e5b5e",
+        "scripts/bulk-league-rollout.mjs": "c2c142a09d85f487d79783858d903af6abe285aeddb2999bd3c65e7683510649",
+        "scripts/bulk-offline-network.mjs": "b25369f9302b6a89cacc97961961db99a4a4fba73a4299dbe7bf815187d86a5c",
+        "scripts/dfb-artifacts.mjs": "df79a66b4125bf610e2c32c40bce3faa41c25f3ab6640655644f9d702dba42ce",
+        "scripts/fussball-archive-v6.mjs": "c808eb9e4aa88b18267507d4cfc69d5c175416928c5266349a3ade0bb08762b9",
+        "scripts/fussball-archive-v7.mjs": "490e68dcbc3837ae57e40d69f466991a0346e3e28fdc73ed20bbad49b1cca8c2",
+        "scripts/fussball-baden-completed-stages.mjs": "f591726ef7277d77c32a2d8eeb3bacfe75c2bbf72b1b4d9da093d8d5f239ec25",
+        "scripts/fussball-baden-fresh-pair.mjs": "3e994daf9f8c514ae7a786ffcdcc7d7ebde157f4ea28270c78705e036a575093",
+        "scripts/fussball-completed-source-v6.mjs": "8df4ab7c48fb40da61cb6b52f66fd26ed31f74b7795887688028398c2f58390d",
+        "scripts/fussball-completed-source-v7.mjs": "636b720391f1dbb828585352987c5f679ae9385085ec174a659360b63ab6480c",
+        "scripts/fussball-fresh-pair.mjs": "8cb639f721923d1c903b2204c1c5c3c152054284c0319077b1dd955885b488f5",
+        "scripts/fussball-native-composition.mjs": "2aa66d519725d4a1b46fb7c457827a32fa1365b3c85e7815535f5774eb337770",
+        "scripts/lib/baden-served-page.mjs": "636ecd9744679e4d12a16a82a6b0729df38ac95b48cea88c88c8aa99f5617877",
+        "scripts/prepare-fussball-native-history.mjs": "8ffd677c81ac4d4e986ab395947bab821b7bc3348a213cf260d262ded4c3d17c",
+        "scripts/stage-baden-native-composition.mjs": "6716f5608cba3b5444f466c5176b258272d61b5e6341de832644ecd6dd107111"
+      }
+    },
+    "ba84eaae25b1ac4e94e0a2b002974d1b4aff4496": {
+      "tree": "fabf4997f5ff13f695e68533529517f133d9609a",
+      "files": {
+        ".github/workflows/ci.yml": "b5bd94b0528136ecc17869332b083a67f5ffdfea62ae8b8bfa60a0e5195d35f7",
+        "scripts/test-fcf-g1-remainder-g9-native800-prepare-sql.mjs": "a000b5d0794ed5389744a8cf32a1d08abe81053cb24f33e933824bd470a29914",
+        "scripts/test-fcf-g9-native800-bridge-sql.mjs": "74e0e299abcda8767b0bc43eb2e0715f1d1f3bf694fe8ac09affea94d08e5a6e",
+        "scripts/test-fcf-g9-native800-launch-sql.mjs": "7a51f319652f17b1a9b59575926dbf687f5c79c0444918a04c3c67d781d53de4"
+      }
+    },
+    "43334cea9628f5b6e7ce1bb247a0472604cbd382": {
+      "tree": "31b0f5c978fe518f1ecb85655be51a2fcb4a88b5",
+      "files": {
+        ".github/workflows/ci.yml": "b5bd94b0528136ecc17869332b083a67f5ffdfea62ae8b8bfa60a0e5195d35f7",
+        "scripts/test-fcf-g1-remainder-g9-native800-prepare-sql.mjs": "a000b5d0794ed5389744a8cf32a1d08abe81053cb24f33e933824bd470a29914",
+        "scripts/test-fcf-g9-native800-bridge-sql.mjs": "74e0e299abcda8767b0bc43eb2e0715f1d1f3bf694fe8ac09affea94d08e5a6e",
+        "scripts/test-fcf-g9-native800-launch-sql.mjs": "62cfef48379c11db5e128f9c0ac50100c5a36f53b1a15470f8918ba404e4f732"
+      }
+    },
+    "841c3452d9dc7eaeea4898447d5cf70cfbeb1c99": {
+      "tree": "bca7db319e9c7ab2451f76c09ff557ccbf6b2aa4",
+      "files": {
+        ".github/workflows/ci.yml": "680e6eda0c004d793dec60046ad7eb578a9b8775ac0b28238e269e01cadd8ac9",
+        "scripts/fcf-g9-native800-readonly-preflight.mjs": "e8d3fa6c6b5d0809dcfe37c8a69412b59ec7d46900526aaa2923c1c7423a2ee8",
+        "scripts/test-fcf-g1-remainder-native800-runtime-tree.mjs": "044fec39b4f66bce814eaef26013913e9f423b5974bafaaa91ca768aa38528c7",
+        "scripts/test-fcf-g9-native800-readonly-preflight.mjs": "564601571813365fd672d5ede45ae69de7090e8657046dcaafa6da5fa0690461"
+      }
+    },
+    "03712d1aa108a44dd3c207730f98003af7531ab0": {
+      "tree": "30f2d5b4ca8cb3a0e38e92a5a4eb5003eda7bc5a",
+      "files": {
+        ".github/workflows/ci.yml": "6758915e7e9426eea57a1ff545082428c077c6a0eab72685f937dfaeda6badfd",
+        "scripts/diagnose-g9-served-fetch.mjs": "3bf54ddc6acafba7831050c9506f02615413e5c0ec191e8185cd002f343497a0",
+        "scripts/test-diagnose-g9-served-fetch.mjs": "9095054b721ba9bca10a1ad35062c281f5b7b5e8421850c74ba26673e95e6251"
+      }
+    }
+  },
+  "ordinaryWorkflows": [
+    ".github/workflows/fcf-javni-dokazi.yml",
+    ".github/workflows/hisne-ekipe.yml",
+    ".github/workflows/izdaja.yml",
+    ".github/workflows/opomniki.yml",
+    ".github/workflows/opozorila.yml",
+    ".github/workflows/ponovne-cene.yml",
+    ".github/workflows/preveri-podatke.yml",
+    ".github/workflows/preverjeni-preklici.yml",
+    ".github/workflows/scout-in-funkcije.yml",
+    ".github/workflows/sitemap.yml",
+    ".github/workflows/tedenski-pregled.yml",
+    ".github/workflows/trgovine.yml",
+    ".github/workflows/uvoz-fcf-zgodovina.yml",
+    ".github/workflows/zdruzi-klube.yml",
+    ".github/workflows/zivost.yml",
+    ".github/workflows/ci.yml"
+  ]
+}
