@@ -3690,6 +3690,119 @@ export function sestaviPivo7dni(liga: Liga, meta: { display_name: string | null 
   }, p.odjava)
 }
 
+// --- anketa: kaj bi plačal (SLF-211) -----------------------------------------
+// Enkraten oseben mail 20 aktivnim uporabnikom (`kandidati_za_anketo`). Brez
+// gumba in brez oblike obvestila: odgovor na mail JE odgovor na anketo (gre na
+// `EMAIL_REPLY_TO`). Besedilo je Lovrovo (SLF-208, 30. 10. 2026); jezik brez
+// prevoda dobi angleščino, suhi tek to pokaže pred pošiljanjem.
+
+interface BesedilaAnkete {
+  zadeva: string
+  zdravo: string
+  uvod: string
+  prosnja: string
+  vprasanja: [string, string, string]
+  konec: string
+  podpis: string
+  zakaj: string
+  odjava: string
+}
+
+const ANKETA_PLACILA: Partial<Record<Jezik, BesedilaAnkete>> = {
+  en: {
+    zadeva: 'Your honest take on SLFF?',
+    zdravo: 'Hi',
+    uvod: 'you\'ve been one of the people really taking part in SLFF lately. Thank you — your view matters to us.',
+    prosnja: 'We\'re exploring ways to keep the core fantasy game free while making it better. Could you reply with three quick thoughts?',
+    vprasanja: [
+      'What would you miss most if SLFF weren\'t here?',
+      'Is there an optional feature you\'d genuinely pay for? Which one, and roughly how much?',
+      'Would you ever choose to pay simply to help keep SLFF running? "No" is a useful answer too.',
+    ],
+    konec: 'Nothing is changing or going away; we want your honest view.',
+    podpis: 'Thanks,\nthe SLFF team',
+    zakaj: 'We send this once, only to a few players who are active on slff.eu.',
+    odjava: 'Don\'t email me again',
+  },
+  sl: {
+    zadeva: 'Tvoje iskreno mnenje o SLFF?',
+    zdravo: 'Živjo',
+    uvod: 'si eden izmed igralcev, ki zadnje čase res aktivno sodelujejo v SLFF. Hvala — tvoje mnenje nam je pomembno.',
+    prosnja: 'Razmišljamo, kako osnovno fantasy igro ohraniti brezplačno in jo hkrati izboljšati. Bi nam z odgovorom na ta mail zaupal tri kratke misli?',
+    vprasanja: [
+      'Kaj bi ti najbolj manjkalo, če SLFF ne bi bilo?',
+      'Je kakšna izbirna funkcija, za katero bi res plačal? Katera in približno koliko?',
+      'Bi se kdaj odločil plačati preprosto zato, da SLFF še naprej deluje? Tudi »ne« je koristen odgovor.',
+    ],
+    konec: 'Nič se ne spreminja in nič ne izginja; zanima nas tvoje iskreno mnenje.',
+    podpis: 'Hvala,\nekipa SLFF',
+    zakaj: 'Ta mail pošljemo enkrat, le nekaj igralcem, ki so aktivni na slff.eu.',
+    odjava: 'Ne pošiljajte mi več mailov',
+  },
+  de: {
+    zadeva: 'Deine ehrliche Meinung zu SLFF?',
+    zdravo: 'Hallo',
+    uvod: 'du gehörst zu den Menschen, die in letzter Zeit richtig bei SLFF mitmachen. Danke — deine Meinung ist uns wichtig.',
+    prosnja: 'Wir überlegen, wie wir das Fantasy-Kernspiel kostenlos halten und zugleich besser machen können. Würdest du uns per Antwort drei kurze Gedanken schicken?',
+    vprasanja: [
+      'Was würdest du am meisten vermissen, wenn es SLFF nicht gäbe?',
+      'Gibt es eine optionale Funktion, für die du wirklich bezahlen würdest? Welche, und ungefähr wie viel?',
+      'Würdest du jemals einfach bezahlen, damit SLFF weiterläuft? „Nein“ ist ebenfalls eine hilfreiche Antwort.',
+    ],
+    konec: 'Nichts ändert sich und nichts verschwindet; wir möchten deine ehrliche Meinung.',
+    podpis: 'Danke,\ndas SLFF-Team',
+    zakaj: 'Diese E-Mail senden wir einmal und nur an wenige Spieler, die auf slff.eu aktiv sind.',
+    odjava: 'Keine E-Mails mehr',
+  },
+  hr: {
+    zadeva: 'Tvoje iskreno mišljenje o SLFF-u?',
+    zdravo: 'Bok',
+    uvod: 'jedan si od ljudi koji su u zadnje vrijeme stvarno aktivni u SLFF-u. Hvala ti — tvoje mišljenje nam je važno.',
+    prosnja: 'Razmišljamo kako zadržati osnovnu fantasy igru besplatnom i istovremeno je poboljšati. Možeš li nam odgovorom na ovaj mail poslati tri kratke misli?',
+    vprasanja: [
+      'Što bi ti najviše nedostajalo da SLFF ne postoji?',
+      'Postoji li neka dodatna, neobavezna funkcija za koju bi doista platio/platila? Koja i otprilike koliko?',
+      'Bi li ikad odlučio/odlučila platiti samo da SLFF nastavi raditi? I »ne« je koristan odgovor.',
+    ],
+    konec: 'Ništa se ne mijenja niti nestaje; zanima nas tvoje iskreno mišljenje.',
+    podpis: 'Hvala,\ntim SLFF-a',
+    zakaj: 'Ovaj mail šaljemo jednom, samo nekolicini igrača aktivnih na slff.eu.',
+    odjava: 'Ne šaljite mi više mailove',
+  },
+}
+
+/** Jezik ankete: jezik lige, če ima prevod, sicer angleščina. */
+export const jezikAnkete = (liga: Pick<Liga, 'drzava'>): Jezik =>
+  ANKETA_PLACILA[jezikLige(liga)] ? jezikLige(liga) : 'en'
+
+export function sestaviAnketoPlacila(liga: Liga, meta: { display_name: string | null }): Sporocilo {
+  const j = jezikAnkete(liga)
+  const B = ANKETA_PLACILA[j]!
+  const odjava = povezave(liga.slug).odjava
+  const prvo = meta.display_name?.trim().split(' ')[0]
+  const zdravo = prvo ? `${B.zdravo} ${prvo},` : `${B.zdravo},`
+  const p = (t: string) => `<p style="margin: 0 0 14px;">${esc(t).replaceAll('\n', '<br>')}</p>`
+  const html = `<!doctype html>
+<html lang="${j}"><head><meta charset="utf-8"><title>${esc(B.zadeva)}</title></head>
+<body style="margin: 0; padding: 16px; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 22px; color: #0f172a;">
+<div style="max-width: 560px;">
+${p(zdravo)}
+${p(B.uvod)}
+${p(B.prosnja)}
+<ol style="margin: 0 0 14px; padding-left: 22px;">${B.vprasanja.map((v) => `<li style="margin: 0 0 6px;">${esc(v)}</li>`).join('')}</ol>
+${p(B.konec)}
+${p(B.podpis)}
+<p style="margin: 24px 0 0; font-size: 12px; line-height: 18px; color: #5b6b63;">${esc(B.zakaj)}<br><a href="${esc(odjava)}" style="color: #5b6b63;">${esc(B.odjava)}</a></p>
+</div>
+</body></html>`
+  const besedilo = [
+    zdravo, '', B.uvod, '', B.prosnja, '',
+    ...B.vprasanja.map((v, i) => `${i + 1}. ${v}`), '',
+    B.konec, '', B.podpis, '', '--', B.zakaj, `${B.odjava}: ${odjava}`, '',
+  ].join('\n')
+  return { naslov: B.zadeva, html, besedilo, predglava: B.uvod, odjava }
+}
+
 // --- novost: dvoboji in napovedi v mini ligah --------------------------------
 // Enkratni mail (26. 10. 2026) vsem z nehišno ekipo (`kandidati_za_novost_mini_lig`).
 // Kdor je že v mini ligi z vsaj dvema ekipama, dobi "Odpri mini ligo", ostali

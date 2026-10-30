@@ -12956,6 +12956,27 @@ preveri(
   preveri('pivo 7 dni: SQL izpusti mladinske lige, odjavljene in hišne ekipe, enkrat na človeka',
     ['je_mladinski_slug', 'brez_opomnikov', 'hisna', "'pivo-7dni'"].every((x) => migPivo.includes(x)))
   preveri('pivo 7 dni: urnik izklopljen do objave funkcije', !/^\s*schedule:/m.test(tokPivo) && /workflow_dispatch:/.test(tokPivo))
+
+  // Anketa plačila (SLF-211): sl/en/de/hr, ostali jeziki angleško; odjava v nogi, glavi in čistopisu.
+  const ankete = pivoLige.map((l) => [l, E.sestaviAnketoPlacila(l, { display_name: 'Ana Novak' })])
+  const slabaAnketa = ankete.find(([l, m]) => {
+    const j = E.jezikAnkete(l)
+    return !['sl', 'en', 'de', 'hr'].includes(j) || (E.jezikLige(l) !== j && j !== 'en') ||
+      m.odjava !== `https://slff.eu/reminders?t=${l.slug}` || !m.html.includes(`href="${m.odjava}"`) ||
+      !m.besedilo.includes(`: ${m.odjava}\n`) || !m.besedilo.includes('Ana,') ||
+      (j !== 'sl' && slovensko.test(brezPovezav(m.naslov + m.html)))
+  })
+  preveri('e-pošta: anketa plačila (jezik ali angleščina, odjava, brez slovenščine v tujih)', !slabaAnketa,
+    slabaAnketa ? `${slabaAnketa[0].drzava}: ${slabaAnketa[1].naslov}` : '')
+  const migAnketa = readFileSync(new URL('../supabase/migrations/20261030120000_anketa_placila.sql', import.meta.url), 'utf8')
+  // Dokler je ne premaknemo v .github/workflows (agentni žeton nima pravice `workflow`), leži v scripts/.
+  const tokAnketa = ['../.github/workflows/anketa-placila.yml', './anketa-placila.workflow.yml'].map((p) => {
+    try { return readFileSync(new URL(p, import.meta.url), 'utf8') } catch { return '' }
+  }).find(Boolean) ?? ''
+  preveri('anketa plačila: SQL izpusti odjavljene, admine, hišne, mladinske; naslovi le za service_role',
+    ['je_mladinski_slug', 'brez_opomnikov', 'is_admin', 'hisna', "'anketa-placila'", 'to service_role'].every((x) => migAnketa.includes(x)) &&
+      !/to (anon|authenticated)/.test(migAnketa))
+  preveri('anketa plačila: le ročni zagon, privzeto suho', !/^\s*schedule:/m.test(tokAnketa) && /default: 'true'/.test(tokAnketa))
 }
 
 // --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------
