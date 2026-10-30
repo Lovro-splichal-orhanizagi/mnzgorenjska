@@ -1,0 +1,20 @@
+# Independent retained Baden archive reader
+
+`readFussballBadenRetainedArchive({github})` authenticates the existing genuine R7 archive from run40761564810/head7692cecffa8b9c747b4a76bd8367a1aa06bbc0b0. The only injected dependency is the existing own-GitHub GET adapter. All paths, run/job projections, original ZIP digests, complete R7 artifact inventory, separate attestation and producer-runtime file hashes are fixed by the unchanged completed-stages descriptor. Both DE77_ARCHIVE and FAILED_V6_ARCHIVE parent originals are authenticated independently, including source capture windows, pinned manifests and the network receipts for all94 cached CSS/font documents. Missing, malformed, changed, expired hosted artifacts or late metadata drift refuse a proof; failures do not expose adapter error text.
+
+The reader replays the actual1106 documents with the unchanged parser, counted retry transport and frozen original attempt clock:1014 attempts, including2 recovered failures;1012 original network documents and94 genuine cache originals;30 rounds,240 fixtures,237 ordinary played fixtures plus3 administrative fixtures. The complete replayed semantic result must equal the retained raw result bytes/SHA. No football requests are sent. Replay time is the original journal's clock, never a renewed source clock or a caller override.
+
+The new private WeakMap capability has kind `authenticated-baden-retained-archive`. `getFussballBadenRetainedArchive(proof)` rejects copies/serialized claims and returns defensive copies of the source, archive originals/results, both cache-parent originals and certificate. Flags remain `archiveOnly:true`, `sourceOnly:true`, `currentAuthority:false`, `freshAdjacencyValidated:false`, `nativeAdmission:false`, `activationEligible:false`. The certificate retains original hosted metadata and producer fingerprints, both parent lineages, immutable raw artifact digests, the separate historical attestation and cache-origin digest. Original `archiveCreatedAt` and `archiveCompletedAt` are unchanged. Historical2966 is the attested expenditure at R7, **not a fresh cumulative budget**.
+
+This reader neither loads R9 nor invokes a CURRENT reader. The old full V7 continuation verifier and old completed-stages CURRENT freshness guard remain unchanged. The existing completed-stages archive-only replay has no wall-clock archive TTL; its fixture-before-current-date check is made independent here by the stricter condition that all archive fixtures precede the archive's own original capture date. Hosted artifact availability/expiry and source-capture chronology still apply. This is independent historical archive authentication, not renewed V7 continuation or current authority.
+
+A future R10 reader must separately authenticate its genuine fresh CURRENT execution/complete originals and prove the fresh current seed's visible previous-season menu resolves to this archive's exact season/staffel (including the existing reviewed seed-alias rules). It must combine a fresh independently reconciled budget with the new current's actual clock. This capability supplies neither that adjacency nor capture, native preparation, owner transition, D/M replacement, deployment or activation authority. Existing readers, source profiles and producer runtime closures are unchanged.
+
+Focused verification (offline genuine retained evidence; never provider/SQL):
+
+```sh
+FUSSBALL_RETAINED_ARCHIVE_EVIDENCE=/absolute/path/to/2026-10-26-german-unlock-screen \
+  node --test scripts/test-fussball-baden-retained-archive.mjs
+```
+
+The retained adapter uses existing raw files and local historical git objects for authentic producer bodies. Without the explicit evidence directory, genuine original replay tests are visibly skipped; the portable closed-input/private-capability controls still run. No test input or production API accepts a clock, counter, proof JSON, archive locator or parser override. Test clock mutations are confined to test code and test refusal of future hosted timestamps.
