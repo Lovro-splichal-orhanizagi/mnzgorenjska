@@ -32,6 +32,19 @@ function captureLocator(locator){
  need(/^[1-9]\d{0,19}$/.test(locator.runId??'')&&hex(locator.sourceCommit,40)&&/^[1-9]\d{0,19}$/.test(locator.artifactId??'')&&/^sha256:[a-f0-9]{64}$/.test(locator.artifactDigest??'')&&hex(locator.manifestSha256)&&/^[1-9]\d{0,19}$/.test(locator.approval.assetId??'')&&/^sha256:[a-f0-9]{64}$/.test(locator.approval.assetDigest??'')&&locator.disposition==='capture','complete typed terminal capture locator required')
  return locator
 }
+function assertHostedNative800Price(env,nativeExecutionCommit){
+ need(env.GITHUB_ACTIONS==='true'&&env.GITHUB_REPOSITORY==='Lovro-splichal-orhanizagi/mnzgorenjska'&&env.GITHUB_REF==='refs/heads/main'&&env.GITHUB_WORKFLOW_REF==='Lovro-splichal-orhanizagi/mnzgorenjska/.github/workflows/fcf-native800.yml@refs/heads/main'&&env.GITHUB_JOB==='native800-price'&&env.GITHUB_EVENT_NAME==='workflow_dispatch'&&env.GITHUB_RUN_ATTEMPT==='1'&&/^[1-9]\d{0,19}$/.test(env.GITHUB_RUN_ID??'')&&env.GITHUB_SHA===nativeExecutionCommit&&env.GITHUB_ACTOR==='nejcar20'&&env.GITHUB_ACTOR_ID==='25134229','exact root-dispatched G9 native800 price workflow/run required')
+ if(env.GITHUB_TRIGGERING_ACTOR!==undefined||env.GITHUB_TRIGGERING_ACTOR_ID!==undefined)need(env.GITHUB_TRIGGERING_ACTOR==='nejcar20'&&env.GITHUB_TRIGGERING_ACTOR_ID==='25134229','exact root-triggered G9 native800 price run required')
+ const scripts=dirname(fileURLToPath(import.meta.url)),script=resolve(process.argv[1]??''),args=process.argv.slice(2)
+ if(script===resolve(scripts,'ugani-pozicije.mjs'))need(JSON.stringify(args)===JSON.stringify(['--tekmovanje',slug,'--pisi']),'only exact G9 position-write CLI invocation allowed')
+ else if(script===resolve(scripts,'ovrednoti-igralce.mjs')){
+  const base=['--tekmovanje',slug,'--sezona','2026/27']
+  if(args.length===base.length+1&&args.slice(0,base.length).join('\0')===base.join('\0')&&args.at(-1)==='--pisi')return
+  const planPath=args.at(-1),privatePath=env.FCF_G9_NATIVE800_OFFLINE_FILE
+  need(args.length===base.length+2&&args.slice(0,base.length).join('\0')===base.join('\0')&&args[base.length]==='--release-plan'&&typeof planPath==='string'&&resolve(planPath)===planPath&&typeof privatePath==='string'&&dirname(planPath)===dirname(privatePath)&&planPath===resolve(dirname(privatePath),'g9-native800-price-replay.json')&&!existsSync(planPath),'only G9 season replay to the private owner file is allowed')
+  const dir=lstatSync(dirname(privatePath));need(dir.isDirectory()&&(dir.mode&0o077)===0&&dir.uid===process.getuid()&&realpathSync(dirname(privatePath))===dirname(privatePath),'owner-only canonical price replay directory required')
+ }else fail('only exact native800 G9 position/pricing CLI entrypoints allowed')
+}
 function checkedRollout({sourceProof,rolloutText,rolloutSha256,nativeExecutionCommit}){
  const source=getFcfG9Native800Source(sourceProof);need(hex(nativeExecutionCommit,40),'separate exact native execution commit required')
  need(typeof rolloutText==='string'&&Buffer.byteLength(rolloutText)>0&&Buffer.byteLength(rolloutText)<=32*1024*1024&&hex(rolloutSha256)&&sha(rolloutText)===rolloutSha256,'exact bounded original rollout TEXT/SHA required')
@@ -68,7 +81,8 @@ async function authenticatedProvider(e,env){
 export async function installFcfG9Native800ChildOffline(){
  if(existsSync(resolve(dirname(fileURLToPath(import.meta.url)),'.predpomnilnik')))fail('source cache must be absent')
  const env=process.env,e=privateFile(env);keys(e,['schemaVersion','kind','captureLocator','nativeExecutionCommit','originalRolloutText','originalRolloutSha256'],'G9 owner-only parent envelope')
- need(e.schemaVersion===1&&e.kind==='fcf-g9-native800-offline-child'&&hex(e.nativeExecutionCommit,40)&&env.GITHUB_SHA===e.nativeExecutionCommit,'exact current G9 native execution commit required')
+ need(e.schemaVersion===1&&e.kind==='fcf-g9-native800-offline-child'&&hex(e.nativeExecutionCommit,40),'exact G9 offline parent envelope required')
+ assertHostedNative800Price(env,e.nativeExecutionCommit)
  const provider=await authenticatedProvider(e,env)
  let base;try{base=new URL(env.SUPABASE_URL??env.VITE_SUPABASE_URL)}catch{fail('exact HTTPS database origin required')}
  if(base.protocol!=='https:'||base.username||base.password||base.port||base.pathname!=='/'||base.search||base.hash)fail('exact HTTPS database origin required')
@@ -79,10 +93,15 @@ export async function installFcfG9Native800ChildOffline(){
   const m=u.pathname.match(/^\/rest\/v1\/([a-z_]+)$/),method=options.method??input?.method??'GET'
   if(!m||!tables.has(m[1]))fail('only ordinary inactive position/pricing REST tables allowed; no RPC')
   if(!['GET','HEAD'].includes(method)&&!(m[1]==='players'&&method==='PATCH'||m[1]==='position_priors'&&['POST','DELETE'].includes(method)))fail('only ordinary position/pricing operations allowed')
+  if(m[1]==='players'&&method==='PATCH'){
+   const params=[...u.searchParams.keys()],ids=u.searchParams.getAll('id'),cids=u.searchParams.getAll('competition_id')
+   if(params.some(k=>!['id','competition_id'].includes(k))||ids.length!==1||!/^eq\.[1-9]\d{0,19}$/.test(ids[0])||cids.length>1||cids.length===1&&cids[0]!=='eq.797')fail('G9 player PATCH requires one exact id and no foreign competition filter')
+   if(cids.length===0)u.searchParams.append('competition_id','eq.797')
+  }
   return {u,method,table:m[1]}
  }
  async function db(input,options={}){
-  const {method,table}=destination(input,options)
+  const {method,table,u}=destination(input,options)
   if(method==='PATCH'||method==='POST'){
    let body=options.body;if(body===undefined&&input instanceof Request)body=await input.clone().text()
    if(typeof body!=='string'||Buffer.byteLength(body)>2*1024*1024)fail('bounded ordinary pricing/position JSON body required')
@@ -93,7 +112,7 @@ export async function installFcfG9Native800ChildOffline(){
     if(Object.hasOwn(parsed,'position')&&!['GK','DEF','MID','FWD'].includes(parsed.position)||Object.hasOwn(parsed,'position_source')&&parsed.position_source!=='ugibanje')fail('ordinary guessed position fields required')
    }else if(!Array.isArray(parsed)||!parsed.length||parsed.length>200||parsed.some(p=>!p||Object.keys(p).sort().join(',')!=='player_id,position,score,updated_at'||!Number.isSafeInteger(p.player_id)||p.player_id<1||!['GK','DEF','MID','FWD'].includes(p.position)||!Number.isFinite(p.score)||p.score<0||p.score>1||typeof p.updated_at!=='string'||!Number.isFinite(Date.parse(p.updated_at))))fail('ordinary bounded position-prior upsert required')
   }
-  return network(input,{...options,redirect:'manual'})
+  return network(table==='players'&&method==='PATCH'?u.href:input,{...options,redirect:'manual'})
  }
  const documents=new Map(provider.documents.map(d=>[d.sourceUrl,d.html])),offline=fcfOfflineFetch(documents,db),network=globalThis.fetch
  globalThis.fetch=async(input,options={})=>{
