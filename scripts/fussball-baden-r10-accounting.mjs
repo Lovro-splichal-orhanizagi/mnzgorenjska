@@ -164,6 +164,11 @@ export async function readFussballBadenR10Budget(input){
  for(const r of lastRelevant)if(!firstRelevant.some(x=>x.id===r.id&&same(runProjection(x),runProjection(r))))blockers.push({runId:String(r.id),path:r.path,reason:'LATE_EXECUTION_DRIFT'})
  for(const r of firstRelevant)if(!lastRelevant.some(x=>x.id===r.id))blockers.push({runId:String(r.id),path:r.path,reason:'LATE_EXECUTION_MISSING'})
  for(const[path,v]of mutable)if(!same(await api(path),v))blockers.push({runId:path.match(/runs\/(\d+)/)?.[1]??null,path,reason:'LATE_METADATA_DRIFT'})
+ // Mutable rechecks may take longer than a minute. Close the creation/rerun
+ // window again AFTER them; verification time must not relabel an older scan.
+ const sealRelevant=(await enumerate(api)).filter(relevant)
+ for(const r of sealRelevant)if(!firstRelevant.some(x=>x.id===r.id&&same(runProjection(x),runProjection(r))))blockers.push({runId:String(r.id),path:r.path,reason:'SEAL_EXECUTION_DRIFT'})
+ for(const r of firstRelevant)if(!sealRelevant.some(x=>x.id===r.id))blockers.push({runId:String(r.id),path:r.path,reason:'SEAL_EXECUTION_MISSING'})
  if(blockers.length)fail()
  const B=foundation.accounting.authenticatedMinimumSpent+executions.reduce((sum,e)=>sum+e.newResearchRequests,0)
  need(Number.isSafeInteger(B)&&B>=3607&&B+policy.currentMaximum<=policy.totalRequestCap,'RESERVATION_CAP')

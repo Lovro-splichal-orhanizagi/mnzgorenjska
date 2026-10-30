@@ -110,3 +110,12 @@ test('late changed metadata is retained alongside the initial original when reco
   return true
  })
 })
+test('execution created during late mutable rechecks prevents budget issuance',{skip:!E},async t=>{
+ t.mock.method(Date,'now',()=>Date.parse('2026-10-30T12:30:00.000Z'))
+ const f=retained();f.controls.inventory=(rows,scan)=>{
+  if(scan<3)return rows
+  // TEST ONLY unknown source execution appearing after the second inventory.
+  const r=structuredClone(rows.find(r=>r.id===40859714195));r.id=99999900002;return [r,...rows]
+ }
+ await assert.rejects(api.readFussballBadenR10Budget({github:f.github}),e=>e.blockers?.some(b=>b.runId==='99999900002'))
+})
