@@ -3,7 +3,7 @@
 // gradnika, torej brez tujih piškotkov. V aplikaciji ostane (ni plačilo).
 import { t } from '../i18n'
 
-const FACEBOOK = 'https://www.facebook.com/profile.php?id=61594859747409'
+export const FACEBOOK = 'https://www.facebook.com/profile.php?id=61594859747409'
 
 export default function Facebook() {
   return (

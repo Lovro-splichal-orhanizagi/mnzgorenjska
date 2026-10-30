@@ -24,6 +24,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'Tagasi avalehele',
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  poziv: {
+    kasneje: 'Võib-olla hiljem',
+    aplikacija: { naslov: 'SLFF taskus 📱', besedilo: 'Meeldetuletus enne tähtaega, sinu meeskonna punktid pärast mänge ja kiirem tee koosseisuni, rakenduses.', googlePlay: 'Laadi Google Playst', appStore: 'Laadi App Store’ist' },
+    sledi: { naslov: 'Ole meiega 🙌', besedilo: 'Vooru meeskonnad, nädala mängijad ja uudised sinu liigast, esmalt meie profiilidel.', instagram: 'Jälgi Instagramis', facebook: 'Meeldi Facebookis' },
+  },
   pivo: {
     gumb: 'Osta meile õlu',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
