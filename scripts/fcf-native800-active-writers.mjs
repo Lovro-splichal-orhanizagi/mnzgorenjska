@@ -3,13 +3,15 @@ import {FCF_INVENTORY_COORDINATION_FAMILY} from './fcf-inventory-source-coordina
 
 const repository='Lovro-splichal-orhanizagi/mnzgorenjska'
 export const NATIVE800_ACTIVE_WRITER_STATUSES=Object.freeze(['in_progress','queued','requested','waiting','pending'])
-const writerWorkflows=new Set([...FCF_INVENTORY_COORDINATION_FAMILY,'fcf-native800.yml'])
+export const NATIVE800_CLOSED_WORKFLOW_PATHS=Object.freeze(['.github/workflows/fcf-native800.yml','.github/workflows/fcf-g1-native800.yml'])
+const writerWorkflows=new Set([...FCF_INVENTORY_COORDINATION_FAMILY,...NATIVE800_CLOSED_WORKFLOW_PATHS.map(p=>p.slice('.github/workflows/'.length))])
+const nativeWorkflows=new Set(NATIVE800_CLOSED_WORKFLOW_PATHS)
 const need=(value,code)=>{if(!value)throw Object.assign(Error('FCF_NATIVE800_ACTIVE_WRITERS: '+code),{activeWriterCode:code})}
 const validSha=value=>typeof value==='string'&&/^[a-f0-9]{40}$/.test(value)
 const rootActor=value=>value?.id===25134229&&value.login==='nejcar20'&&value.type==='User'
 
 function validateOwnRun(run){
- need(run&&Number.isSafeInteger(run.id)&&run.id>0&&run.run_attempt===1&&validSha(run.head_sha)&&run.path==='.github/workflows/fcf-native800.yml'&&run.status==='in_progress'&&run.event==='workflow_dispatch'&&run.head_branch==='main'&&run.repository?.full_name===repository&&run.head_repository?.full_name===repository&&rootActor(run.actor)&&rootActor(run.triggering_actor),'INVALID_CURRENT_NATIVE_RUN')
+ need(run&&Number.isSafeInteger(run.id)&&run.id>0&&run.run_attempt===1&&validSha(run.head_sha)&&nativeWorkflows.has(run.path)&&run.status==='in_progress'&&run.event==='workflow_dispatch'&&run.head_branch==='main'&&run.repository?.full_name===repository&&run.head_repository?.full_name===repository&&rootActor(run.actor)&&rootActor(run.triggering_actor),'INVALID_CURRENT_NATIVE_RUN')
 }
 function validateListedRun(run,status){
  need(run&&Number.isSafeInteger(run.id)&&run.id>0&&Number.isSafeInteger(run.run_attempt)&&run.run_attempt>0&&validSha(run.head_sha)&&run.status===status&&run.repository?.full_name===repository&&run.head_repository?.full_name===repository,'INVALID_RUN_IDENTITY')
@@ -46,7 +48,7 @@ export async function assertNative800NoActiveWriters({github,ownRun}){
  for(const status of NATIVE800_ACTIVE_WRITER_STATUSES){
   for(const {run,path} of await statusRuns(github,status,seen)){
    if(!writerWorkflows.has(path))continue
-   const isOwn=path==='fcf-native800.yml'&&run.id===ownRun.id&&run.run_attempt===ownRun.run_attempt&&run.head_sha===ownRun.head_sha&&run.status===ownRun.status&&run.event===ownRun.event&&run.head_branch===ownRun.head_branch&&run.repository?.full_name===ownRun.repository.full_name&&run.head_repository?.full_name===ownRun.head_repository.full_name&&rootActor(run.actor)&&rootActor(run.triggering_actor)
+   const isOwn=run.path===ownRun.path&&nativeWorkflows.has(ownRun.path)&&run.id===ownRun.id&&run.run_attempt===ownRun.run_attempt&&run.head_sha===ownRun.head_sha&&run.status===ownRun.status&&run.event===ownRun.event&&run.head_branch===ownRun.head_branch&&run.repository?.full_name===ownRun.repository.full_name&&run.head_repository?.full_name===ownRun.head_repository.full_name&&rootActor(run.actor)&&rootActor(run.triggering_actor)
    if(isOwn)continue
    writerRuns.push(run)
   }
