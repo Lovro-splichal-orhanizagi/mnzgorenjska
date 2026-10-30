@@ -45,7 +45,7 @@ jobs:
       - name: Install locked dependencies without scripts
         run: npm ci --ignore-scripts
       - name: Source-free read-only boundary tests
-        run: node --test scripts/test-fcf-g9-native800-readonly-preflight.mjs scripts/test-fcf-g1-remainder-native800-runtime-tree.mjs
+        run: node --test scripts/test-fcf-g9-readonly-github.mjs scripts/test-fcf-g9-native800-readonly-preflight.mjs scripts/test-fcf-g1-remainder-native800-runtime-tree.mjs
       - name: Observe rate budget then authenticate root runtime main CI and served before credentials
         env:
           GH_TOKEN: ${{ github.token }}
