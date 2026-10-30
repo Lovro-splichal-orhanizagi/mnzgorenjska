@@ -1,3 +1,4 @@
+import {getFcfG9Native800StageAttestation,describeFcfG9Native800Readback} from './fcf-g9-native800-stage.mjs'
 import {getFcfFutureTarget} from './fcf-future-target-catalog.mjs'
 import {isFcfFutureNativeProtocol} from './fcf-future-native-scope.mjs'
 // Separate fixed future G9 DB transport. No caller SQL, retry or legacy mutation.
@@ -21,7 +22,12 @@ export function createFcfG9Native800PreparationDatabase(input={}){
  keys(input,Object.hasOwn(input,'env')?['env']:[],'G9 native800 preparation options')
  return createDatabase({...input,targetSlug:'es-ct-tercera-g9'},false,true)
 }
-function createDatabase(input,g1Observer,g9Preparation=false){
+// Fixed native800 bridge. No CLI or operator approval issuer; cut3 runner absent.
+export function createFcfG9Native800BridgeDatabase(input={}){
+ keys(input,Object.hasOwn(input,'env')?['env']:[],'G9 native800 bridge options')
+ return createDatabase({...input,targetSlug:'es-ct-tercera-g9'},false,false,true)
+}
+function createDatabase(input,g1Observer,g9Preparation=false,g9Bridge=false){
  keys(input,Object.keys(input).filter(k=>['env','execute','network','targetSlug'].includes(k)),'database options')
  const {env=process.env,execute=execFileSync,network=globalThis.fetch,targetSlug='es-ct-tercera-g9'}=input,target=getFcfFutureTarget({targetSlug})
  if(typeof execute!=='function'||typeof network!=='function')fail('fixed database adapters required')
@@ -57,6 +63,19 @@ function createDatabase(input,g1Observer,g9Preparation=false){
    error.readonlyDiagnostic=Object.freeze({sqlState:states.includes(match?.[1])?match[1]:'UNKNOWN',guard:known[match?.[2]]??'UNKNOWN'});throw error
   }
   try{const value=String(raw).trim();if(Buffer.byteLength(value)>limit)fail('readonly result bound exceeded');return JSON.parse(value)}catch{fail('invalid bounded readonly database result')}
+ }
+ if(g9Bridge){
+  async function stage(mode,input){
+   keys(input,['stageProof'],'native800 bridge input');const a=getFcfG9Native800StageAttestation(input.stageProof),e=a.execution
+   if(a.stage!==mode||env.GITHUB_ACTIONS!=='true'||env.GITHUB_REPOSITORY!==e.repository||env.GITHUB_REF!==e.ref||env.GITHUB_SHA!==e.commit||env.GITHUB_RUN_ID!==e.runId||env.GITHUB_RUN_ATTEMPT!=='1'||env.GITHUB_EVENT_NAME!=='workflow_dispatch'||env.GITHUB_JOB!=='native800-'+mode||env.GITHUB_WORKFLOW_REF!==e.repository+'/.github/workflows/fcf-native800.yml@refs/heads/main')fail('actual fixed native800 main workflow epoch required; future operator approval gates remain mandatory')
+   let origin;try{origin=new URL(env.SUPABASE_URL??env.VITE_SUPABASE_URL)}catch{fail('fixed native800 database origin required')}
+   if(origin.protocol!=='https:'||origin.username||origin.password||origin.port||origin.pathname!=='/'||origin.search||origin.hash||!env.SUPABASE_SERVICE_ROLE_KEY)fail('fixed native800 database HTTPS/service identity required')
+   const name=mode==='import'?'fcf_native800_import':'fcf_native800_check',parameters={p_rollout_text:a.rolloutText,p_sha256:a.rolloutSha256,p_stage_text:a.attestationText,p_stage_sha256:a.attestationSha256,...(mode==='check'?{p_activate:false}:{})}
+   let response;try{response=await network(new URL('/rest/v1/rpc/'+name,origin).href,{method:'POST',redirect:'manual',headers:{apikey:env.SUPABASE_SERVICE_ROLE_KEY,Authorization:'Bearer '+env.SUPABASE_SERVICE_ROLE_KEY,'Content-Type':'application/json'},body:JSON.stringify(parameters),signal:AbortSignal.timeout(200000)})}catch{throw ambiguous()}
+   if(response.status>=300&&response.status<400)fail('native800 database redirect refused');if(response.status>=500)throw ambiguous();if(!response.ok)fail('native800 database transaction refused HTTP'+response.status)
+   try{const b=Buffer.from(await response.arrayBuffer());if(b.length>limit)throw Error();const value=JSON.parse(b.toString('utf8'));if(!value||typeof value!=='object'||Array.isArray(value))throw Error();return value}catch{throw ambiguous()}
+  }
+  return Object.freeze({import:input=>stage('import',input),check:input=>stage('check',input),receipt:()=>read("public.fcf_native800_receipt('es-ct-tercera-g9')"),readback(input){keys(input,['rolloutText','rolloutSha256'],'native800 readback input');return describeFcfG9Native800Readback({...input,receipt:read("public.fcf_native800_receipt('es-ct-tercera-g9')")})}})
  }
  if(g9Preparation)return Object.freeze({prepare(input={}){
   keys(input,Object.hasOwn(input,'privacyKeys')?['privacyKeys']:[],'G9 native800 preparation input');const checked=privacy(input.privacyKeys??[])

@@ -1,3 +1,4 @@
+import {testNative800SourceStages} from './fcf-g9-native800-bridge-test-fixture.mjs'
 // TEST ONLY synthetic SQL and APPLIED-cleanup records; no actual DB/history authority.
 // This helper runs only inside an isolated copied tree with a TEST ONLY cleanup reader.
 import assert from 'node:assert/strict'
@@ -30,6 +31,7 @@ export async function runCut1(proof,data){
  for(const modify of [i=>i.sourceProof=clone(proof),i=>i.cleanupEvidence=clone(f.cleanup),i=>i.execution={...f.execution,ref:'refs/heads/other'},i=>i.nativePreparation={...i.nativePreparation,nativeAdmission:true},i=>i.now=Date.now()]){const i={...input};modify(i);assert.throws(()=>buildFcfG9Native800ImportRollout(i))}
  for(const mutate of [e=>e.phase='prepared',e=>e.sourceCommit='c'.repeat(40),e=>e.originals[5].receipt.rawSha256='c'.repeat(64),e=>e.appliedReceipt.markers.pop(),e=>e.beforeImageText+=' ']){const e=clone(f.cleanup);mutate(e);assert.throws(()=>buildFcfG9Native800ImportRollout({...input,cleanupEvidence:TEST_ONLY_issueApplied(e)}))}
  for(const mutate of [d=>d.groups.find(g=>g.slug===slug).nativeImportedIDs=[data.fixtures.find(f=>f.statisticsStatus==='pending').id.slice(2)],d=>d.matches.find(m=>m.id===306166).home_team_id=8304,d=>d.existingExceptionBindings[0].canonical_names=['wrong'],d=>d.identityPrivacy.checkedKeys=[]]){const p=clone(f.p);mutate(p.databaseInventory);if(p.databaseInventory.identityPrivacy.checkedKeys.length===0){const dep=JSON.parse(p.dependencySnapshotText);dep.privacy.checkedKeys=[];p.dependencySnapshotText=JSON.stringify(dep);p.dependencySnapshotSha256=sha(p.dependencySnapshotText)}assert.throws(()=>buildFcfG9Native800ImportRollout({...input,nativePreparation:{...input.nativePreparation,projection:p}}))}
+ await testNative800SourceStages(proof,a,input)
  assert.throws(()=>verifyFcfG9Native800ImportRollout({...input,rolloutText:a.rolloutText+' ',rolloutSha256:a.rolloutSha256}));const changed=JSON.parse(a.rolloutText);changed.inventoryBinding.protocol='six-reviewed-continuation-v1';const text=JSON.stringify(changed);assert.throws(()=>verifyFcfG9Native800ImportRollout({...input,rolloutText:text,rolloutSha256:sha(text)}))
  await runReadiness(proof,data,f,a)
 }

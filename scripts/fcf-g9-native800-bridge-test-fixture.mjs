@@ -1,0 +1,20 @@
+// TEST ONLY: uses real private semantic getter over isolated SYNTHETIC history.
+// Physical Supabase transport is mocked; no current/native/operator authority.
+import assert from 'node:assert/strict'
+import {readFcfG9Native800StageAttestation,getFcfG9Native800StageAttestation} from './fcf-g9-native800-stage.mjs'
+import {createFcfG9Native800BridgeDatabase} from './fcf-future-target-db.mjs'
+export async function testNative800SourceStages(sourceProof,rollout,input){
+ const raw={sourceProof,rolloutText:rollout.rolloutText,rolloutSha256:rollout.rolloutSha256,stage:'import',execution:input.execution},proof=readFcfG9Native800StageAttestation(raw),data=getFcfG9Native800StageAttestation(proof),counter=JSON.parse(data.attestationText).counter
+ assert.equal(counter.actualSourceGETs,541);assert.equal(data.nativeAdmission,false);assert.throws(()=>getFcfG9Native800StageAttestation(structuredClone(proof)));for(const change of [x=>x.sourceProof={},x=>x.stage='activate',x=>x.execution={...x.execution,runAttempt:'2'},x=>x.rolloutSha256='f'.repeat(64),x=>x.now=0]){const p={...raw};change(p);assert.throws(()=>readFcfG9Native800StageAttestation(p))}
+ const check=readFcfG9Native800StageAttestation({...raw,stage:'check',execution:{...input.execution,runId:'457'}}),env={SUPABASE_URL:'https://synthetic.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'TEST_ONLY',GITHUB_ACTIONS:'true',GITHUB_REPOSITORY:input.execution.repository,GITHUB_REF:'refs/heads/main',GITHUB_SHA:input.execution.commit,GITHUB_RUN_ID:input.execution.runId,GITHUB_RUN_ATTEMPT:'1',GITHUB_EVENT_NAME:'workflow_dispatch',GITHUB_JOB:'native800-import',GITHUB_WORKFLOW_REF:input.execution.repository+'/.github/workflows/fcf-native800.yml@refs/heads/main'},original=globalThis.fetch,calls=[]
+ try{globalThis.fetch=async(url,options)=>{calls.push({url,options});return new Response('{"stage":"imported"}')};const db=createFcfG9Native800BridgeDatabase({env});assert.deepEqual(Object.keys(db),['import','check','receipt','readback']);assert.deepEqual(await db.import({stageProof:proof}),{stage:'imported'});assert.equal(calls.length,1);assert.match(calls[0].url,/\/rpc\/fcf_native800_import$/);assert.equal(calls[0].options.method,'POST');assert.equal(calls[0].options.redirect,'manual');assert.equal(JSON.parse(calls[0].options.body).p_stage_text,data.attestationText);assert.equal(JSON.parse(calls[0].options.body).p_activate,undefined)
+  for(const value of [{stageProof:structuredClone(proof)},{stageProof:proof,activate:true},{stageProof:check}])await assert.rejects(db.import(value));await assert.rejects(createFcfG9Native800BridgeDatabase({env:{...env,GITHUB_RUN_ID:'999'}}).import({stageProof:proof}));assert.equal(calls.length,1)
+  const checkDb=createFcfG9Native800BridgeDatabase({env:{...env,GITHUB_JOB:'native800-check',GITHUB_RUN_ID:'457'}});await checkDb.check({stageProof:check});assert.equal(JSON.parse(calls[1].options.body).p_activate,false);assert.match(calls[1].url,/\/rpc\/fcf_native800_check$/)
+  let unknownCalls=0;globalThis.fetch=async()=>{unknownCalls++;throw Error('TEST_ONLY_SECRET_TRANSPORT')};const unknown=createFcfG9Native800BridgeDatabase({env});await assert.rejects(unknown.import({stageProof:proof}),e=>e.ambiguous===true&&!e.message.includes('SECRET'));assert.equal(unknownCalls,1,'no automatic retry after an unknown transport outcome')
+  for(const options of [{execute:()=>{}},{network:()=>{}},{sql:'DELETE'},{targetSlug:'es-ct-segona-g1'}])assert.throws(()=>createFcfG9Native800BridgeDatabase(options))
+ }finally{globalThis.fetch=original}
+}
+import cp from 'node:child_process'
+import {syncBuiltinESMExports} from 'node:module'
+import {createFcfG9Native800PreparationDatabase} from './fcf-future-target-db.mjs'
+export function native800PostImportPreparationSQL(){const original=cp.execFileSync;let sql;try{cp.execFileSync=(command,args,options)=>{assert.equal(command,'psql');sql=options.input;return Buffer.from('{}')};syncBuiltinESMExports();createFcfG9Native800PreparationDatabase({env:{SUPABASE_DB_URL:'postgresql://test:test@127.0.0.1:5432/postgres'}}).prepare({privacyKeys:[]});return sql}finally{cp.execFileSync=original;syncBuiltinESMExports()}}
