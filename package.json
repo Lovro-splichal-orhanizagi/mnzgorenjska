@@ -10,6 +10,7 @@
     "test": "node scripts/e2e.mjs",
     "test:varnost": "node scripts/test-varnost.mjs",
     "test:socasnost": "node scripts/test-socasnost.mjs",
+    "test:odobritev": "node --test scripts/test-odobritev.mjs",
     "db:reset": "supabase db reset",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
