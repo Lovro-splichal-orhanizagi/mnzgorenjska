@@ -100,10 +100,13 @@ jobs:
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
 
       - name: Baden catalog owner and hosted native workflow (offline)
-        run: node --test scripts/test-baden-served-page.mjs scripts/test-install-baden-native-catalog.mjs scripts/test-baden-owner-forward-recovery.mjs scripts/test-baden-owner-transport-protocol.mjs scripts/test-prepare-fussball-issued-description.mjs scripts/test-stage-baden-native-composition.mjs scripts/test-fcf-g13-baden-compat.mjs scripts/test-baden-active-cache-refresh.mjs scripts/test-baden-fcf-projection-sql.mjs
+        run: node --test scripts/test-baden-served-page.mjs scripts/test-install-baden-native-catalog.mjs scripts/test-baden-owner-forward-recovery.mjs scripts/test-baden-owner-transport-protocol.mjs scripts/test-prepare-fussball-issued-description.mjs scripts/test-prepare-fussball-native-history.mjs scripts/test-stage-baden-native-composition.mjs scripts/test-fcf-g13-baden-compat.mjs scripts/test-baden-active-cache-refresh.mjs scripts/test-baden-fcf-projection-sql.mjs
 
       - name: Exact H7 validation-only owner history (source-free)
         run: node --test scripts/test-baden-owner-h7-history.mjs
+
+      - name: FCF inventory binary GitHub transport (source-free)
+        run: node scripts/test-fcf-inventory-binary-escape.mjs
 
       - name: Community card voting and provisional round UI (offline)
         run: |
@@ -399,6 +402,12 @@ jobs:
           SUPABASE_TEST_DB: postgres
           FCF_G1_SCORES_CI_SQL_TEST: '1'
         run: node --test scripts/test-fcf-g1-derived-scores.mjs scripts/test-fcf-g1-derived-scores-sql.mjs
+      - name: G9 native800 coherent score preparation (fresh hosted GHA only)
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          SUPABASE_TEST_DB: postgres
+          FCF_G9_NATIVE800_PREPARE_CI_SQL_TEST: '1'
+        run: node --test scripts/test-fcf-g1-remainder-g9-native800-prepare-sql.mjs
       - name: Baden owner production readonly preflight (dedicated fresh GHA DB only)
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska

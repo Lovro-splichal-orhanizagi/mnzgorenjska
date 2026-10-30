@@ -8,7 +8,7 @@ on:
         type: string
         required: true
       derived_run:
-        description: Successful hosted Baden composition run at exactly expected_sha; owner catalog must already be installed
+        description: Exact successful e925 Baden composition run 40990176474; current writer is separately pinned by expected_sha and must match installed runtime
         type: string
         required: true
       activate_if_ready:

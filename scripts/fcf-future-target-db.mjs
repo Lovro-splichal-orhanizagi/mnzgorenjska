@@ -16,7 +16,12 @@ export function createFcfG1ReadOnlyDatabase(input={}){
  const {inventory,projection,pricingSnapshot}=createDatabase({...input,targetSlug:'es-ct-segona-g1'},true)
  return Object.freeze({inventory,projection,pricingSnapshot})
 }
-function createDatabase(input,g1Observer){
+// Fixed G9 preparation only: no caller SQL, target, clock, execute or network override.
+export function createFcfG9Native800PreparationDatabase(input={}){
+ keys(input,Object.hasOwn(input,'env')?['env']:[],'G9 native800 preparation options')
+ return createDatabase({...input,targetSlug:'es-ct-tercera-g9'},false,true)
+}
+function createDatabase(input,g1Observer,g9Preparation=false){
  keys(input,Object.keys(input).filter(k=>['env','execute','network','targetSlug'].includes(k)),'database options')
  const {env=process.env,execute=execFileSync,network=globalThis.fetch,targetSlug='es-ct-tercera-g9'}=input,target=getFcfFutureTarget({targetSlug})
  if(typeof execute!=='function'||typeof network!=='function')fail('fixed database adapters required')
@@ -53,6 +58,13 @@ function createDatabase(input,g1Observer){
   }
   try{const value=String(raw).trim();if(Buffer.byteLength(value)>limit)fail('readonly result bound exceeded');return JSON.parse(value)}catch{fail('invalid bounded readonly database result')}
  }
+ if(g9Preparation)return Object.freeze({prepare(input={}){
+  keys(input,Object.hasOwn(input,'privacyKeys')?['privacyKeys']:[],'G9 native800 preparation input');const checked=privacy(input.privacyKeys??[])
+  // One SELECT snapshot: the existing stable projection and both exact complete
+  // score vectors observe the same SQL statement, never sequential RPC clocks.
+  const scope=cid=>`(select jsonb_build_object('competitionId',${cid},'roundIds',(select coalesce(jsonb_agg(id order by id),'[]')from public.rounds where competition_id=${cid}),'playerIds',(select coalesce(jsonb_agg(id order by id),'[]')from public.players where competition_id=${cid}),'count',jsonb_array_length(rows),'snapshotText',rows::text,'snapshotSha256',encode(sha256(convert_to(rows::text,'UTF8')),'hex'))from(select coalesce(jsonb_agg(to_jsonb(ps)order by to_jsonb(ps)::text collate "C"),'[]'::jsonb)rows from public.player_scores ps where ps.round_id in(select id from public.rounds where competition_id=${cid})or ps.player_id in(select id from public.players where competition_id=${cid}))scores)`
+  return read(`(WITH projection AS MATERIALIZED(SELECT public.fcf_future_current_target_projection('es-ct-tercera-g9',${checked})p),scores AS MATERIALIZED(SELECT ${scope(797)}g9,${scope(783)}g1)SELECT jsonb_build_object('projection',p,'scoreBeforeimages',jsonb_build_object('selectedG9',g9||jsonb_build_object('roundCounts',(select jsonb_agg(jsonb_build_object('roundId',r.id,'scoreRows',(select count(*)from public.player_scores ps where ps.round_id=r.id),'priceChangeRows',(select count(*)from public.price_changes pc where pc.round_id=r.id))order by r.id)from public.rounds r where r.competition_id=797)),'offTargetG1',g1))FROM projection CROSS JOIN scores)`)
+ }})
  function parameters(stage,p){
   const fields={prepare:['p_main_sha','p_policy_hashes'],apply:['p_main_sha','p_policy_hashes','p_before_sha','p_before_image_text'],import:['p_rollout_text','p_sha256'],check:['p_activation_text','p_sha256','p_activate']},names={prepare:'fcf_future_historical_six_prepare',apply:'fcf_future_historical_six_apply',import:'fcf_future_current_target_import',check:'fcf_future_current_target_check'}
   if(!Object.hasOwn(fields,stage))fail('closed future mutation stage required');keys(p,fields[stage],'mutation parameters')

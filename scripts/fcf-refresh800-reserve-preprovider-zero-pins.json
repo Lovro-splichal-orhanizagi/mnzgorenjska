@@ -1,0 +1,675 @@
+{
+  "schemaVersion": 1,
+  "kind": "refresh800-reserve-preprovider-zero",
+  "status": "REVIEWED_EXACT_RUN_ONLY",
+  "run": {
+    "id": 40992533637,
+    "run_attempt": 1,
+    "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+    "head_branch": "main",
+    "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+    "event": "workflow_dispatch",
+    "status": "completed",
+    "conclusion": "failure",
+    "created_at": "2026-10-30T02:35:02Z",
+    "run_started_at": "2026-10-30T02:35:02Z",
+    "updated_at": "2026-10-30T02:36:19Z",
+    "actor": {
+      "login": "nejcar20",
+      "id": 25134229,
+      "type": "User"
+    },
+    "triggering_actor": {
+      "login": "nejcar20",
+      "id": 25134229,
+      "type": "User"
+    },
+    "repository": {
+      "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+    },
+    "head_repository": {
+      "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+    }
+  },
+  "jobProjection": [
+    {
+      "id": 123858086774,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "refresh800-capture",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-30T02:35:06Z",
+          "completed_at": "2026-10-30T02:35:07Z"
+        },
+        {
+          "number": 2,
+          "name": "Checkout exact main",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-30T02:35:07Z",
+          "completed_at": "2026-10-30T02:35:11Z"
+        },
+        {
+          "number": 3,
+          "name": "Node 22",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-30T02:35:11Z",
+          "completed_at": "2026-10-30T02:35:12Z"
+        },
+        {
+          "number": 4,
+          "name": "Install dependencies without scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-30T02:35:12Z",
+          "completed_at": "2026-10-30T02:35:32Z"
+        },
+        {
+          "number": 5,
+          "name": "Verify refresh800 source-free",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-30T02:35:32Z",
+          "completed_at": "2026-10-30T02:35:37Z"
+        },
+        {
+          "number": 6,
+          "name": "Reserve actual refresh800 execution",
+          "status": "completed",
+          "conclusion": "failure",
+          "started_at": "2026-10-30T02:35:37Z",
+          "completed_at": "2026-10-30T02:36:17Z"
+        },
+        {
+          "number": 7,
+          "name": "Retain refresh800 reservation",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-10-30T02:36:17Z",
+          "completed_at": "2026-10-30T02:36:17Z"
+        },
+        {
+          "number": 8,
+          "name": "Wait for reviewed refresh800 protected claim",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-10-30T02:36:17Z",
+          "completed_at": "2026-10-30T02:36:17Z"
+        },
+        {
+          "number": 9,
+          "name": "Capture fixed240 refresh800 originals",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-10-30T02:36:17Z",
+          "completed_at": "2026-10-30T02:36:17Z"
+        },
+        {
+          "number": 10,
+          "name": "Retain refresh800 originals",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-10-30T02:36:17Z",
+          "completed_at": "2026-10-30T02:36:17Z"
+        },
+        {
+          "number": 19,
+          "name": "Post Node 22",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-10-30T02:36:17Z",
+          "completed_at": "2026-10-30T02:36:17Z"
+        },
+        {
+          "number": 20,
+          "name": "Post Checkout exact main",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-30T02:36:17Z",
+          "completed_at": "2026-10-30T02:36:17Z"
+        },
+        {
+          "number": 21,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-30T02:36:17Z",
+          "completed_at": "2026-10-30T02:36:17Z"
+        }
+      ]
+    },
+    {
+      "id": 123858088042,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "target-import",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858088288,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "target-check",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858088351,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "target-approval",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858088374,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "target-mapping",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858088388,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "missing-inventory-approval",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858088398,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "missing-inventory-consume",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858088442,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "cleanup-apply",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858088443,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g9' || 'missing-inventory-g1'",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858088470,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "cache-export",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858088481,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "target-price",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858088537,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "cleanup-prepare",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858089020,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "future-target-approval",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858089114,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "inputs.preset == 'six-reviewed-continuation-v1' && 'missing-inventory-g1' || 'missing-inventory-g9'",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858089280,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "inputs.mode",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858089355,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "missing-inventory-seed",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858089382,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "missing-inventory-receipt",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858116125,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "target-activate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858119750,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "cleanup-originals",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "id": 123858126282,
+      "run_id": 40992533637,
+      "run_attempt": 1,
+      "head_sha": "e925dcbcd8b087dd3f6ec4c58a7cc07e515ae75d",
+      "name": "target-recover",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    }
+  ],
+  "approvalAssetId": "690671037",
+  "approvalSha256": "e9b7d58e47239cd6d19109e43af49e4980b62b6339d21a1879c5b2a7fdb72a51",
+  "runtimeFiles": [
+    {
+      "path": ".github/workflows/uvoz-fcf-zgodovina.yml",
+      "sha256": "bc862683697364306984524fb16610d2edba4f2d90f74c1bed37d16f705534ff"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "eabfd5f32e8c5f39378120789ff966c17d4775a3fdca9c39fb1ff308b3192ef1"
+    },
+    {
+      "path": "package.json",
+      "sha256": "dd8ad4be71c2f7f8899ed5adf86d399c698b94c18c2c066bd0910b3598b8afd2"
+    },
+    {
+      "path": "scripts/fcf-current-source-proof.mjs",
+      "sha256": "25d7b322d5f58e7744c702113c86f55f5f82cb4a76853479d9eb5542e00329b6"
+    },
+    {
+      "path": "scripts/fcf-final-audit.mjs",
+      "sha256": "bb7bb1482f09644a185a7ccab7084383c2ef19fa5fbd5a6ce49fa6056146da84"
+    },
+    {
+      "path": "scripts/fcf-frozen-content-bytes.mjs",
+      "sha256": "01eb6f398ff8a32ac7656232a51476bd16222d82b4c9a8eb40b7ce41e4dc2e74"
+    },
+    {
+      "path": "scripts/fcf-future-source-admission.mjs",
+      "sha256": "4eae1cfc5ec01e714d88b66e5444f026fc34e31fa54e4c8afcc196e076c63893"
+    },
+    {
+      "path": "scripts/fcf-future-source-header.mjs",
+      "sha256": "8d7f5010d1449d4adb471c7eea0ab3ba1067d1de7f19a155eea00de32c49c8c0"
+    },
+    {
+      "path": "scripts/fcf-future-source-plan.mjs",
+      "sha256": "8ac54f52aa9c129e4c8deeb9248867d4478f9168a10fc318eff0a4396d7555ba"
+    },
+    {
+      "path": "scripts/fcf-future-source-proof.mjs",
+      "sha256": "21063740a87ae2518982e365a50bc7e02652bbbaeab9967411d1bc9ecd8274f0"
+    },
+    {
+      "path": "scripts/fcf-future-target-catalog.mjs",
+      "sha256": "a52fb9328e6f07b7de2e39d0a4f4585dbb1657b45ca98344c8638c4998825b06"
+    },
+    {
+      "path": "scripts/fcf-g1-4109409-policy.mjs",
+      "sha256": "43b440a13d38ff2ca878bccecfe2d24e3b5de83cbfeb8454e092b842a9f22606"
+    },
+    {
+      "path": "scripts/fcf-g1-4109410-policy.mjs",
+      "sha256": "f356b41f1aa076e12b55b4dee315dec67ab2cb2b54e310fdc94fcb0caaccf260"
+    },
+    {
+      "path": "scripts/fcf-g1-historical-zero-registry.json",
+      "sha256": "ad3d11bea137536204a7e0e7cc7ed3d9be925a038566c5875f0261081f0f099d"
+    },
+    {
+      "path": "scripts/fcf-g1-historical-zero-witness.mjs",
+      "sha256": "ad5125f00f0bdd2cea13fcd019ef0ee36592550356474e5c6120cba924c8f0d9"
+    },
+    {
+      "path": "scripts/fcf-g1-quarantine-audit.mjs",
+      "sha256": "f24e9a2cd15cb4acca1dc6d165452a3fb4356a8169f4ffc2d3f4cfa0c9ee0b19"
+    },
+    {
+      "path": "scripts/fcf-g9-calendar-counter-pins.json",
+      "sha256": "9f93f13bbee9acdaf3531b7975df451d9a51d705261c6bfe5c1b1a451ef2f5e1"
+    },
+    {
+      "path": "scripts/fcf-g9-calendar-links.mjs",
+      "sha256": "34ceacdfb79ae032e228b2f81b54b040818cb6bee466d64dfcb7eee816fb98e6"
+    },
+    {
+      "path": "scripts/fcf-g9-calendar-probe.mjs",
+      "sha256": "37a0fc6a506fedb4b5a7039db69aebef233c2f856260204e1cf1d1de4f6f656a"
+    },
+    {
+      "path": "scripts/fcf-g9-held-parent-plan.mjs",
+      "sha256": "29036f4438b213c0fad86b108592d9b17b7d915775be275cdabdb24b560cc172"
+    },
+    {
+      "path": "scripts/fcf-g9-native800-classifier.mjs",
+      "sha256": "dafe5133f49e037fd919eab8e6bcafbb6e2cfc1b21968ac2d1d64844dd34fda2"
+    },
+    {
+      "path": "scripts/fcf-g9-pre-provider-zero-pins.json",
+      "sha256": "58b05af904493f8a225bb690ee73345aac03ea8f872b1801adb51e622a4fc294"
+    },
+    {
+      "path": "scripts/fcf-g9-pre-provider-zero.mjs",
+      "sha256": "5825ed790b857a1b56bc6f52be26ffc13b86812869855d5c85f5c3d36293fe92"
+    },
+    {
+      "path": "scripts/fcf-held-parent-accounting.mjs",
+      "sha256": "6c655a97440b7191b8ef9688d07001a788e324a870ade5746f342714e9225f9f"
+    },
+    {
+      "path": "scripts/fcf-historical-policy.mjs",
+      "sha256": "460afed6b728335cfce9567350a8d87cd9c3efee0418f3529c161244c3764406"
+    },
+    {
+      "path": "scripts/fcf-historical-release.mjs",
+      "sha256": "aaf0f2ec37399c15bb42c2cabd38bed59e6fd6a116871ef35a22cee68c16092e"
+    },
+    {
+      "path": "scripts/fcf-inventory-github.mjs",
+      "sha256": "7af7024a9e4e8816279a66eca0c6623c4ec4f039a8735bf02f61124423a4f4ac"
+    },
+    {
+      "path": "scripts/fcf-inventory-source-coordination.mjs",
+      "sha256": "bb43179620bb59e0bc7a370e55043eac3c1e72e02ee26c5abdd2b27508cd4033"
+    },
+    {
+      "path": "scripts/fcf-inventory-source-protocol.mjs",
+      "sha256": "8371416a00504de1cd293f3a94950843ccec8ad68737ddbaea41923cd809d071"
+    },
+    {
+      "path": "scripts/fcf-missing-inventory-artifact.mjs",
+      "sha256": "2c9a4c6bd74d6e331b9f5870b1e26068b795982b991507ab50031c5fb72aca59"
+    },
+    {
+      "path": "scripts/fcf-missing-inventory-claim.mjs",
+      "sha256": "239dedbc778d1eb636d4cfebef8e13d1345c6c0ff2c2461a2981973debd2fa0c"
+    },
+    {
+      "path": "scripts/fcf-missing-inventory-evidence.mjs",
+      "sha256": "83fe74dbaadc04f025220242ac9356abfd73afa31fd90d118750acc2500c3228"
+    },
+    {
+      "path": "scripts/fcf-missing-inventory-plan.mjs",
+      "sha256": "4ef43d9785d46d5398bc09a5503d2b5bf7e06d2a382622bb83a99b9b237b5030"
+    },
+    {
+      "path": "scripts/fcf-post-g1-accounting.mjs",
+      "sha256": "270001b5c35fe589067ce680dc94622f7e39613e323cc4294fe1f3a0c3eda3ce"
+    },
+    {
+      "path": "scripts/fcf-post-g9-accounting.mjs",
+      "sha256": "7766d22fba19f052f9a940fabdd450a2a672df5be8d2ef95b209011edbd3cad0"
+    },
+    {
+      "path": "scripts/fcf-post-six-accounting.mjs",
+      "sha256": "dface63e3714643949a085653f2e0fad37d7b25b915086b9887f7bbbcbe824cf"
+    },
+    {
+      "path": "scripts/fcf-refresh800-actions.mjs",
+      "sha256": "848d82fe4be120848f2334c6aa116ff0b3e49b3880206e36287a7188e5775702"
+    },
+    {
+      "path": "scripts/fcf-refresh800-capture.mjs",
+      "sha256": "84ae995b547cdebc6d2abfbab4622b4c7772b6e2ee6b1083a1095ec940d72e4f"
+    },
+    {
+      "path": "scripts/fcf-refresh800-contract.mjs",
+      "sha256": "c3c13c44758d7add414c96a0cafc465b50695d16518120061c4c090a5ebf4267"
+    },
+    {
+      "path": "scripts/fcf-refresh800-evidence.mjs",
+      "sha256": "f3102618beec7e172583333314388971cc41036564392297d2fccf27e912df6a"
+    },
+    {
+      "path": "scripts/fcf-refresh800-execution.mjs",
+      "sha256": "ec871fd3e7f387a6d1342e64e3fecfa8333ed3c0364a5c94ed6eb2e8f3c5943f"
+    },
+    {
+      "path": "scripts/fcf-refresh800-ledger.mjs",
+      "sha256": "04397841533e9a604a13ec13da49f621c4ca454cab90e0ea3cb54fe39a42e08a"
+    },
+    {
+      "path": "scripts/fcf-refresh800-runtime.mjs",
+      "sha256": "19f6f880f5855811f72c7ec46c6505f2dba6d575a147bc92cc99db2340467fe3"
+    },
+    {
+      "path": "scripts/fcf-six-accounting.mjs",
+      "sha256": "66f8bfa99ae139e1551dcdc3d5e7544ee844d4c304722dbf3a51899597552085"
+    },
+    {
+      "path": "scripts/fcf-six-continuation-plan.mjs",
+      "sha256": "6869a36acd8e96e58d2fc65aa3e4d7300d6566d2cb6e1e61589093fa9993d6dc"
+    },
+    {
+      "path": "scripts/fcf-six-historical-policy.mjs",
+      "sha256": "34907066c20ab9d4576a39124f4efd29f2b43f37d207950279e2f4a9bfba2ce1"
+    },
+    {
+      "path": "scripts/fcf-six-source-proof.mjs",
+      "sha256": "344e407f388ba12c5c7f9e65c4f2a69c7cdac2275c427482a676a0922d3c20a4"
+    },
+    {
+      "path": "scripts/klubi.mjs",
+      "sha256": "b1974c32ee3562cd7c57749951c3bbdafb8de27d26394d8f09ae55d169cd5e0a"
+    },
+    {
+      "path": "scripts/lib/baden-served-page.mjs",
+      "sha256": "636ecd9744679e4d12a16a82a6b0729df38ac95b48cea88c88c8aa99f5617877"
+    },
+    {
+      "path": "scripts/lib/fcf-g1-supplement-installed.mjs",
+      "sha256": "4e4d4b285bf81a540e94dad83ac9b01cdd44e4ae8cc69123154141b5f19c94cb"
+    },
+    {
+      "path": "scripts/lib/fcf-served-commit.mjs",
+      "sha256": "0e391933fd69084c77b40c6f2dfd9b9dff909c7db3ce446f9dbb67576b387e1c"
+    },
+    {
+      "path": "scripts/lib/fussball-native-history-policy.mjs",
+      "sha256": "b1526e7e4600de5d96dd9370390904aea1d5e2409422b8a82ffc19d54786eb72"
+    },
+    {
+      "path": "scripts/lib/historical-statistics-policy.mjs",
+      "sha256": "67ab1736b32ad865d73588b36024810eb7dce10b628e57106497233ff8126e0f"
+    },
+    {
+      "path": "scripts/odtis-kode.mjs",
+      "sha256": "288fc94ae312586619290df077cd5fd152a593708f869aa445900be5c86ed090"
+    },
+    {
+      "path": "scripts/policies/fcf-g1-4109409-supplement.json",
+      "sha256": "3a867001b542012bc6672cec95dc211537ea82be4909b3a7a423841dff876781"
+    },
+    {
+      "path": "scripts/policies/fcf-g1-4109410-supplement.json",
+      "sha256": "302b20dc1cbd3fcc9997fde1384e2e1602dd52bd2df1ba36c4b5c2a60bb682ac"
+    },
+    {
+      "path": "scripts/policies/fcf-six-reviewed-exclusions.json",
+      "sha256": "77f56a26fc546e6fb1a632ca579e6daf9398e5a5cd3be2763e28311f8aef17c6"
+    },
+    {
+      "path": "scripts/policies/fussball-baden-native-composition.json",
+      "sha256": "faa0f9ee262d78ed1e312566cb2f31eed20fc5e080ba3225975e7a84c60f92a5"
+    },
+    {
+      "path": "scripts/policies/historical-statistics-exclusions.json",
+      "sha256": "9a94f73520bb5eb11093fd484feefff08edf81cb98a5b1b0e1065716a3066f1c"
+    },
+    {
+      "path": "scripts/strani.mjs",
+      "sha256": "e0c9a7f9739e269a8bff6882f219903a990dad4cd1c6ec20956fe9ca589508c7"
+    },
+    {
+      "path": "scripts/viri/facr.mjs",
+      "sha256": "aeeb715025bd23f0b2ab9422eb50467c099670d268cc0aeadab6372eb504099a"
+    },
+    {
+      "path": "scripts/viri/fcf-calonge-pair.mjs",
+      "sha256": "2aaf4a9cd48da7af3b5b7879a1621240556bc7d4844770eb4f4c2193bb380c6f"
+    },
+    {
+      "path": "scripts/viri/fcf.mjs",
+      "sha256": "3069689ac29eff2426419ef4404e8da0b9ff99eed3eca6e88bc37ba027dc0674"
+    },
+    {
+      "path": "scripts/viri/frf.mjs",
+      "sha256": "587cdfefb831bd5f1e6817a898ab204113453b07b6fd0c39e660de04621be066"
+    },
+    {
+      "path": "scripts/viri/hlf.mjs",
+      "sha256": "6f8dc7325e74b91ff49d123e0640287b2ef4c612cee47e758016b7b43d1f1cd7"
+    },
+    {
+      "path": "scripts/viri/zapisniki.mjs",
+      "sha256": "cc65847a106c9fe3eca54141526ede7f1bb9b276e42344c938b7d8f850c4a366"
+    },
+    {
+      "path": "scripts/zapisnik.mjs",
+      "sha256": "e6c3f2b595350ef39ad1c0dd949dbc2e09b2d93891b7a99126b6c71fba700840"
+    }
+  ],
+  "testFiles": [
+    {
+      "path": "scripts/test-fcf-refresh800-contract.mjs",
+      "sha256": "553dafab6e4299d63a2bb11cca4639d294f10114cb508d3467412100d8026b49"
+    },
+    {
+      "path": "scripts/test-fcf-refresh800-ledger.mjs",
+      "sha256": "da414e6b6fa334047293b2519b5ce6f81862cc8564387eb599d88330f887a0e4"
+    },
+    {
+      "path": "scripts/test-fcf-refresh800-evidence.mjs",
+      "sha256": "927c9fdb482a4b35aded3ebe0c281d374a44a54bd86243c664cce656b761214c"
+    },
+    {
+      "path": "scripts/test-fcf-refresh800-execution.mjs",
+      "sha256": "82e9193215b4a17aa3e94f2ba09152ad347433773e5b530476d07b542b3b0691"
+    },
+    {
+      "path": "scripts/test-fcf-refresh800-capture.mjs",
+      "sha256": "173eed67d05a783d4c8eed1ba31605084e5f8def5c95c0a31757c63dc7f84128"
+    },
+    {
+      "path": "scripts/test-fcf-refresh800-actions.mjs",
+      "sha256": "52a62387c35ee6ae9f56d2081cc64961fbb476b3b05d5516c506b523162288fd"
+    },
+    {
+      "path": "scripts/test-fcf-refresh800-workflow.mjs",
+      "sha256": "f6d920d0524a88ffa2970fcb6265cb2a844850b2a7a6a0074820d6a439c8c4ea"
+    },
+    {
+      "path": "scripts/test-fcf-refresh800-revision.mjs",
+      "sha256": "fcefcd09a2a9c9e9a8f564e0cfa8acb6844dbd5ae541b6b1ca3b6c3d457d4a78"
+    },
+    {
+      "path": "scripts/test-fcf-refresh800-integration.mjs",
+      "sha256": "aef8d92f05bb84badf9dfe8b01469af40fff0691c5bea517ea3b59a152e24e28"
+    },
+    {
+      "path": "scripts/test-fcf-ownsite-transport.mjs",
+      "sha256": "8f9da7720001671f9b0dde033fc0ce270bbb4a4fd8e23c69cddef97512be0a71"
+    },
+    {
+      "path": "scripts/fcf-refresh800-test-fixture.mjs",
+      "sha256": "c433011b30a299f2237fdff6f9d4522722f1ead24e55f2e8656433d90554835f"
+    },
+    {
+      "path": "scripts/fcf-ownsite-test-fixture.mjs",
+      "sha256": "864883d2879ed6f91d9981037ebdaad2863011d42ba8570e33610fd367091a2c"
+    }
+  ],
+  "prior": {
+    "actualSourceGETs": 301,
+    "lastSourceEndedUTC": "2026-10-29T10:15:26.653Z",
+    "historySha256": "8d96ff7b162783bf1c57190d5ba9d8feb672a68487e92a4ed2333cf6022eda01",
+    "probeAttempts": 1
+  },
+  "reviewEvidence": {
+    "briefSha256": "3127350c8915cc07735882631790bc43f61abf1daae724ca5ab4e863063694e5",
+    "pinsSha256": "249a1eef2e297f5c64faf72798353df69789d66a24027b9b02ed6e662b27e7ba",
+    "terminalRunRawSha256": "95d6d880ea3398a05b732d03f188980b87604cf8e911309b4612ce436b7071db",
+    "terminalJobsRawSha256": "fe339b552bcbe7324f3695547b4d4ee94f694c3ce3c320fb2907092914448054"
+  }
+}

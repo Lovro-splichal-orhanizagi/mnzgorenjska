@@ -110,21 +110,21 @@ test('actual command chain consumes an authenticated claim then retains a single
 // This covers emitted CLI arguments without a subprocess, token, or HTTP request.
 const transport=(execute)=>{
  const source=readFileSync(new URL('./fcf-inventory-github.mjs',import.meta.url),'utf8')
- const start=source.indexOf('export async function getFcfInventoryGithub('),end=source.indexOf('\nexport async function readFcfDraftAsset',start)
+ const start=source.indexOf('let allowsEscapeSequences=null'),end=source.indexOf('\nexport async function readFcfDraftAsset',start)
  assert.ok(start>=0&&end>start)
  return runInNewContext(`${source.slice(start,end).replace('export ','')};getFcfInventoryGithub`,{repo:`repos/${repository}/`,execFileSync:execute,fail(message){throw Error('FCF_INVENTORY: '+message)}})
 }
 test('GitHub GET boundary requests Actions ZIP with GitHub JSON Accept and preserves binary bytes and bounds',async()=>{
  const zipBytes=Buffer.from([0x50,0x4b,3,4,0xff,0,0x80]),path=`repos/${repository}/actions/artifacts/12150332401/zip`
  let request
- const github=transport((command,args,options)=>{request={command,args:Array.from(args),options};return zipBytes})
+ const github=transport((command,args,options)=>{if(args[1]==='--help')return Buffer.from('older gh api help with no escape option');request={command,args:Array.from(args),options};return zipBytes})
  assert.equal(await github(path,true),zipBytes)
  assert.equal(request.command,'gh');assert.deepEqual(request.args,['api','--method','GET',path,'-H','Accept: application/vnd.github+json'])
  assert.equal(request.options.maxBuffer,100*1024*1024+1);assert.equal(request.options.timeout,60000);assert.deepEqual(Array.from(request.options.stdio),['ignore','pipe','pipe'])
 })
 test('GitHub GET boundary preserves release-asset octet-stream and JSON metadata behavior',async()=>{
  const bytes=Buffer.from([0xff,0,0x80]),paths=[`repos/${repository}/releases/assets/22`,`repos/${repository}/actions/artifacts/12150332401`],calls=[]
- const github=transport((command,args,options)=>{calls.push(Array.from(args));if(args[3]===paths[0]){assert.equal(options.maxBuffer,100*1024*1024+1);return bytes}assert.equal(options.maxBuffer,8*1024*1024+1);return Buffer.from('{"id":12150332401}')})
+ const github=transport((command,args,options)=>{if(args[1]==='--help')return Buffer.from('older gh api help with no escape option');calls.push(Array.from(args));if(args[args.indexOf('--method')+2]===paths[0]){assert.equal(options.maxBuffer,100*1024*1024+1);return bytes}assert.equal(options.maxBuffer,8*1024*1024+1);return Buffer.from('{"id":12150332401}')})
  assert.equal(await github(paths[0],true),bytes);assert.equal((await github(paths[1])).id,12150332401)
  assert.deepEqual(calls,[['api','--method','GET',paths[0],'-H','Accept: application/octet-stream'],['api','--method','GET',paths[1]]])
 })
@@ -136,7 +136,7 @@ test('GitHub GET boundary rejects foreign and malformed API paths before executi
 test('GitHub GET boundary keeps sanitized failures and exact 404 classification',async()=>{
  const path=`repos/${repository}/actions/artifacts/1/zip`
  for(const status of [404,415]){
-  const github=transport(()=>{const e=Error('private details');e.stderr=Buffer.from('HTTP '+status);throw e})
+  const github=transport((command,args)=>{if(args[1]==='--help')return Buffer.from('older gh api help with no escape option');const e=Error('private details');e.stderr=Buffer.from('HTTP '+status);throw e})
   await assert.rejects(()=>github(path,true),e=>e.message==='FCF_INVENTORY: authenticated GitHub GET failed'&&e.status===(status===404?404:undefined))
  }
 })

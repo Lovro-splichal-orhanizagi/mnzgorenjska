@@ -11,11 +11,11 @@ test('production preparation rejects copied and serialized capabilities before n
  }
  assert.equal(calls,0)
 })
-test('production catalog remains closed and empty SQL catalog has no runtime seed or approval override',async()=>{
+test('finalized production catalog remains DATA and SQL catalog has no built-in runtime seed',async()=>{
  const c=JSON.parse(readFileSync(new URL('./policies/fussball-baden-native-composition.json',import.meta.url)))
- assert.equal(c.status,'UNFINALIZED');assert.equal(c.nativePreparation,null)
- const {compiledBadenHistoricalPolicy}=await import('./lib/fussball-native-history-policy.mjs')
- assert.equal(compiledBadenHistoricalPolicy(),null)
+ assert.equal(c.status,'FINALIZED');assert.equal(c.nativePreparation,null)
+ const {compiledBadenHistoricalPolicy,projectBadenHistoricalPolicy}=await import('./lib/fussball-native-history-policy.mjs')
+ assert.deepEqual(compiledBadenHistoricalPolicy(),projectBadenHistoricalPolicy(c))
  const sql=readFileSync(new URL('../supabase/migrations/20261028180000_baden_history_cards_composition.sql',import.meta.url),'utf8')
  assert.match(sql,/create table private_baden_history.catalog/)
  assert.doesNotMatch(sql,/insert into private_baden_history.catalog/i)
@@ -35,7 +35,7 @@ function issuerFixture(){
  const code=readFileSync(path,'utf8').replace(/^import .*\n/gm,'').replaceAll('import.meta.url',JSON.stringify(path.href)).replace(/\bexport /g,'')+'\nreturn {prepareFussballNativeHistory,getFussballNativePreparation,reauthenticateFussballNativePreparation,testManifest:manifest};'
  const localRead=(url,...args)=>url.href.endsWith('/policies/fussball-baden-native-composition.json')?Buffer.from(JSON.stringify(f.catalog)):readFileSync(url,...args)
  const get=p=>{if(p!==token)throw Error('TEST ONLY reader-issued capability required');return {pack:structuredClone(pack)}}
- const reauth=async p=>{get(p);calls.push('source');if(controls.sourceFailure)throw Error('TEST ONLY replay failure');return token}
+ const reauth=async p=>{get(p);calls.push('source');if(controls.sourceFailure||controls.sourceFailureAt===calls.filter(c=>c==='source').length)throw Error('TEST ONLY replay failure');return token}
  const keys=['BADEN_CURRENT','BADEN_ARCHIVE','BADEN_SLUG','BADEN_CARDS','badenCanonical','projectBadenHistoricalPolicy','badenClubKey']
  const api=new Function('readFileSync','createHash','isDeepStrictEqual','getFussballNativeComposition','reauthenticateFussballNativeComposition','validateFussballNativeCatalog',...keys,code)(localRead,createHash,isDeepStrictEqual,get,reauth,isolatedComposition(f).validateFussballNativeCatalog,...keys.map(k=>history[k]))
  const manifest=api.testManifest(token),id=77001
@@ -61,6 +61,33 @@ test('TEST ONLY source reauthentication failure prevents native registration',as
  const f=issuerFixture();f.controls.sourceFailure=true
  await assert.rejects(f.api.prepareFussballNativeHistory({composition:f.token,transport:f.transport}),/replay failure/)
  assert.deepEqual(f.calls,['source'])
+})
+test('TEST ONLY preparation progress identifies failure after committed preparation without retry',async()=>{
+ const f=issuerFixture(),events=[];f.controls.sourceFailureAt=2
+ await assert.rejects(f.api.prepareFussballNativeHistory({composition:f.token,transport:f.transport,onProgress:async e=>events.push(e)}),/replay failure/)
+ assert.deepEqual(f.calls,['source','find','register','prepare','source'])
+ assert.deepEqual(events.at(-1),{phase:'source-reauthenticate-after',status:'FAILED'})
+ assert.ok(events.some(e=>e.phase==='prepare-history'&&e.status==='COMPLETED'))
+ assert.ok(!events.some(e=>e.phase==='read-preparation'))
+})
+test('TEST ONLY failed checkpoint reporting preserves the original preparation failure',async()=>{
+ const f=issuerFixture(),original=Error('fetch failed'),observer=Error('checkpoint unavailable')
+ f.transport.prepareFussballHistory=async()=>{throw original}
+ await assert.rejects(f.api.prepareFussballNativeHistory({composition:f.token,transport:f.transport,onProgress:async e=>{if(e.status==='FAILED')throw observer}}),e=>e===original)
+})
+test('TEST ONLY exact installed cold preparation resumes through reads without repeating a mutation',async()=>{
+ const f=issuerFixture();f.controls.existing={id:77001,active:false,slug:history.BADEN_SLUG,source:'fussball-public',source_league_code:history.BADEN_CURRENT,source_policy:history.BADEN_CARDS}
+ const receipt=await f.api.prepareFussballNativeHistory({composition:f.token,transport:f.transport})
+ assert.equal(receipt.competitionId,77001);assert.deepEqual(f.calls,['source','find','read','source','read'])
+ assert.deepEqual(f.api.getFussballNativePreparation(receipt).readback,f.observation)
+})
+test('TEST ONLY installed preparation drift or lost read never falls back to a mutation',async()=>{
+ for(const mutate of [v=>{v.manifestSha256='0'.repeat(64)},v=>{v.coldState.playerCount=1}]){
+  const f=issuerFixture();f.controls.existing={id:77001,active:false,slug:history.BADEN_SLUG,source:'fussball-public',source_league_code:history.BADEN_CURRENT,source_policy:history.BADEN_CARDS};f.controls.readMutation=mutate
+  await assert.rejects(f.api.prepareFussballNativeHistory({composition:f.token,transport:f.transport}),/Baden preparation:/);assert.deepEqual(f.calls,['source','find','read'])
+ }
+ const f=issuerFixture(),failure=Error('fetch failed');f.controls.existing={id:77001,active:false,slug:history.BADEN_SLUG,source:'fussball-public',source_league_code:history.BADEN_CURRENT,source_policy:history.BADEN_CARDS};f.transport.readFussballHistory=async()=>{f.calls.push('read');throw failure}
+ await assert.rejects(f.api.prepareFussballNativeHistory({composition:f.token,transport:f.transport}),e=>e===failure);assert.deepEqual(f.calls,['source','find','read'])
 })
 test('TEST ONLY private issuer rejects native binding/policy/marker/hash drift',async()=>{
  const mutations=[v=>{v.prepared=false},v=>{v.active=true},v=>{v.noUsers=false},v=>{v.policySha256='0'.repeat(64)},v=>{v.cards.archive_codes=[]},v=>{v.bindingSha256='0'.repeat(64)},v=>{v.bindings[0].fixture.homeName='foreign';v.bindingSha256=hash(v.bindings)},v=>{v.history.markers[0].fixture.administrativeResult={displayedScores:[]};v.markerInventorySha256=hash(v.history.markers)},v=>{v.history.markers[0].voteCount=1;v.markerInventorySha256=hash(v.history.markers)},v=>{v.history.markers[0].importedAt=new Date().toISOString();v.markerInventorySha256=hash(v.history.markers)},v=>{v.history.markers[0].matchId++;v.markerInventorySha256=hash(v.history.markers)}]

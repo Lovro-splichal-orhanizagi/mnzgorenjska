@@ -1,3 +1,4 @@
+import {freezeRefresh800PreReserveTestEpoch} from './fcf-refresh800-reserve-zero-test-fixture.mjs'
 // TEST ONLY: constructed source pages and a separately isolated synthetic
 // accounting seed. No real source/history authority or private originals.
 import {readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from 'node:fs'
@@ -23,9 +24,10 @@ export function native800Documents(variant='good'){
  }}return documents
 }
 export function isolatedNative800Tree(t){const root=mkdtempSync(join(tmpdir(),'g1-native800-SYNTHETIC-')),paths=new Set([...fcfRefresh800RuntimeFiles().map(x=>x.path),...zaprtje('scripts/fcf-g1-native800-source.mjs'),...zaprtje('scripts/fcf-refresh800-test-fixture.mjs'),'scripts/fcf-g1-native800-fixture-runner.mjs']);t.after(()=>rmSync(root,{recursive:true,force:true}));for(const path of paths){const dest=join(root,path);mkdirSync(dirname(dest),{recursive:true});writeFileSync(dest,readFileSync(path))}
- // ONLY this historical-accounting dependency is substituted. Production598
- // ledger/ZIP/claim/private WeakMap/getCaptured and new source bytes are copied
- // unchanged. This synthetic seed is not actual historical/current authority.
+ // Explicit frozen pre409925 ledger epoch plus synthetic historical accounting.
+ // Production CURRENT ledger always requires409925; no production bypass.
+ // ZIP/claim/private WeakMap/getCaptured/source bytes remain unchanged.
+ freezeRefresh800PreReserveTestEpoch(root)
  writeFileSync(join(root,'scripts/fcf-g9-calendar-probe.mjs'),`const states=new WeakMap();export async function readFcfG9CalendarCounter(){const p=Object.freeze({kind:'TEST ONLY synthetic accounting'});states.set(p,{actualSourceGETs:301,maximumCumulativeSourceGETs:478,probeAttempts:1,lastSourceEndedUTC:'2026-10-28T18:09:27.203Z',continuationAllowed:true,history:[],preProviderZeroWitness:{newSourceGETs:0,spentDiscoveryAttempts:1}});return p}export function getFcfG9CalendarCounter(p){if(!states.has(p))throw Error('test accounting brand');return structuredClone(states.get(p))}export async function readFcfG9CalendarProbe(){throw Error('no synthetic probe supported')}\n`)
  return root
 }
