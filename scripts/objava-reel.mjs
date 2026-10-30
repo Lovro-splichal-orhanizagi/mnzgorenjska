@@ -6,10 +6,11 @@
 //
 // Na VM to kliče `ssh slff-ops post-custom reel [ig|fb|both] [--dry] < reel.tar`.
 // Tar ima natanko dve datoteki: en video `*.mp4` in `caption.txt` (UTF-8).
-// Pred objavo preveri video (ffprobe: H.264, AAC, 9:16, 3–90 s, ≤ 100 MB),
+// Pred objavo preveri video (ffprobe: H.264 yuv420p, AAC, 9:16, 3–90 s, ≤ 100 MB),
 // napis (≤ 2200 znakov, ≤ 30 ključnikov, ≤ 20 omemb), račune (stran in
 // Instagram sta povezana, kvota Instagrama), dnevno mejo ročnih reelov
-// (`ROCNI_REEL_NA_DAN`, privzeto 2) in da ni osnutka delavca v ±60 min.
+// (`ROCNI_REEL_NA_DAN`, privzeto 2, 0 ustavi) in da ni osnutka delavca 2 h nazaj
+// ali 60 min naprej.
 // `--dry` naredi vse preverbe (tudi branje računov), a nič ne objavi in nič ne zapiše.
 // Javno (Caddy /objave-mediji/) je le objavljeni video /mediji/rocni/<id>/reel.mp4.
 // Zapisi, zaklep in začasna datoteka so v zasebni mapi `ROCNI_MAPA` (/rocni):
@@ -20,7 +21,7 @@ import { resolve, join } from 'node:path'
 import { mkdir, readFile, writeFile, appendFile, open, rm, chmod } from 'node:fs/promises'
 import { spawn } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
-import { objaviInstagramReel, objaviFacebookReel, javniUrl, metaNastavljena, datumLj } from './objave.mjs'
+import { objaviInstagramReel, objaviFacebookReel, javniUrl, metaNastavljena, datumLj, OBJAVA_ZAMUDA } from './objave.mjs'
 
 export const NAJVEC_TAR = 120 * 1024 * 1024
 export const NAJVEC_VIDEO = 100 * 1024 * 1024
@@ -148,6 +149,8 @@ export function preveriVideo(video, sonda) {
   if (a.length > 1) zavrni(`video has ${a.length} audio tracks (max 1)`)
   const [s] = v
   if (s.codec_name !== 'h264') zavrni(`video codec is ${s.codec_name} (needs H.264)`)
+  // Reel sprejme le 4:2:0; drugače Meta zavrne šele po nalaganju in poskus šteje v mejo.
+  if (!['yuv420p', 'yuvj420p'].includes(s.pix_fmt)) zavrni(`video pixel format is ${s.pix_fmt ?? 'unknown'} (needs yuv420p)`)
   if (a.length && a[0].codec_name !== 'aac') zavrni(`audio codec is ${a[0].codec_name} (needs AAC)`)
   // Zasukan posnetek (telefon): širina in višina, kot ju vidi gledalec.
   const zasuk = Math.abs(Number(s.side_data_list?.find((x) => x.rotation != null)?.rotation ?? s.tags?.rotate ?? 0)) % 180 === 90
@@ -206,11 +209,12 @@ export function zadnjaStanja(besedilo) {
 /** Koliko poskusov pri Meti je bilo danes (ljubljanski dan); vsak šteje, tudi neuspel. */
 export const danesPoskusov = (zapisi, zdaj) => zapisi.filter((z) => z.meta && datumLj(new Date(z.zacetek)) === datumLj(zdaj)).length
 
-/** Osnutek delavca, ki se objavlja ali se bo v OKNO_DELAVCA (prej ali pozneje), ali null. */
+/** Osnutek delavca, ki se objavlja ali se bo v OKNO_DELAVCA, ali null. Nazaj gleda vsaj
+ * OBJAVA_ZAMUDA, ker delavec zamujen osnutek objavi še toliko pozneje (npr. po izpadu). */
 export async function blizuDelavca(db, zdaj) {
   const { data, error } = await db.from('objave').select('id, slot, vrsta, stanje, objava_ob')
     .in('stanje', ['osnutek', 'objavljanje'])
-    .gte('objava_ob', new Date(+zdaj - OKNO_DELAVCA).toISOString())
+    .gte('objava_ob', new Date(+zdaj - Math.max(OKNO_DELAVCA, OBJAVA_ZAMUDA)).toISOString())
     .lte('objava_ob', new Date(+zdaj + OKNO_DELAVCA).toISOString())
   if (error) throw new Error(`objave: ${error.message}`)
   return data?.[0] ?? null
@@ -277,7 +281,9 @@ export async function rocniReel({ tar, platforme, suho, env, mapa, zasebno, db, 
   log(`accounts: Instagram @${racuni.ig}, Facebook page "${racuni.stran}"${racuni.kvota ? `, IG quota ${racuni.kvota} in 24 h` : ''}`)
   const zapisiPot = join(zasebno, 'objave.jsonl')
   const zapisi = zadnjaStanja(await readFile(zapisiPot, 'utf8').catch(() => ''))
-  const meja = Number(env.ROCNI_REEL_NA_DAN) || NA_DAN
+  // 0 ustavi ročne reele; prazno ali manjkajoče je privzeto.
+  const meja = (env.ROCNI_REEL_NA_DAN ?? '') === '' ? NA_DAN : Number(env.ROCNI_REEL_NA_DAN)
+  if (!Number.isInteger(meja) || meja < 0) zavrni(`ROCNI_REEL_NA_DAN must be a whole number ≥ 0`)
   const danes = danesPoskusov(zapisi, zdaj)
   if (danes >= meja) zavrni(`daily limit: ${danes} of ${meja} custom reels already today`)
   log(`daily limit: ${danes} of ${meja} custom reels used today`)
@@ -303,7 +309,10 @@ export async function rocniReel({ tar, platforme, suho, env, mapa, zasebno, db, 
     const url = javniUrl(pot, mapa, env.OBJAVE_MEDIJI_URL || 'https://slff.eu/objave-mediji')
     // Meta video prenese z javnega naslova; brez njega bi padla šele po minutah.
     const h = await f(url, { method: 'HEAD' })
-    if (!h.ok || Number(h.headers.get('content-length')) !== video.length) throw new Error(`public video URL does not serve the file (${h.status})`)
+    if (!h.ok || Number(h.headers.get('content-length')) !== video.length) {
+      await rm(mapaReela, { recursive: true, force: true })
+      throw new Error(`public video URL does not serve the file (${h.status})`)
+    }
     const zapis = {
       id, zacetek: zdaj.toISOString(), meta: true, platforme, stanje: 'objavljanje',
       video_sha256: createHash('sha256').update(video).digest('hex'), video: podatki,

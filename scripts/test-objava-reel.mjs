@@ -24,7 +24,7 @@ async function tar(datoteke, mozn = []) {
 const sonda = (spremembe = {}) => async () => ({
   format: { duration: '12.000000', ...spremembe.format },
   streams: [
-    { codec_type: 'video', codec_name: 'h264', width: 720, height: 1280, avg_frame_rate: '30/1', ...spremembe.video },
+    { codec_type: 'video', codec_name: 'h264', pix_fmt: 'yuv420p', width: 720, height: 1280, avg_frame_rate: '30/1', ...spremembe.video },
     ...(spremembe.brezZvoka ? [] : [{ codec_type: 'audio', codec_name: 'aac', ...spremembe.audio }]),
   ],
 })
@@ -60,8 +60,8 @@ function meta({ povezanIg = '222', kvota = 3, igNapaka = null, velikost = VIDEO.
   return { f, klici }
 }
 
-const db = (vrstice = []) => {
-  const q = { select: () => q, in: () => q, gte: () => q, lte: () => q, then: (ok) => ok({ data: vrstice, error: null }) }
+const db = (vrstice = [], meje = {}) => {
+  const q = { select: () => q, in: () => q, gte: (_, v) => { meje.od = v; return q }, lte: (_, v) => { meje.do = v; return q }, then: (ok) => ok({ data: vrstice, error: null }) }
   return { from: () => q }
 }
 
@@ -112,6 +112,8 @@ test('video: Pivkov 720x1280 H.264/AAC 12 s gre, ostalo pade', async () => {
   const pade = async (sp, vzorec, v = VIDEO) => assert.throws(() => R.preveriVideo(v, sp), vzorec)
   await pade(await sonda({ video: { codec_name: 'hevc' } })(), /needs H\.264/)
   await pade(await sonda({ audio: { codec_name: 'opus' } })(), /needs AAC/)
+  await pade(await sonda({ video: { pix_fmt: 'yuv444p' } })(), /needs yuv420p/)
+  assert.equal(R.preveriVideo(VIDEO, await sonda({ video: { pix_fmt: 'yuvj420p' } })()).sirina, 720)
   await pade(await sonda({ video: { width: 1080, height: 1350 } })(), /not vertical 9:16/)
   await pade(await sonda({ video: { width: 360, height: 640 } })(), /at least 540x960/)
   await pade(await sonda({ format: { duration: '2.5' } })(), /needs 3–90 s/)
@@ -148,6 +150,11 @@ test('računi: nepovezan Instagram, napačno ime, polna kvota, brez ključev', a
 test('osnutek delavca v ±60 min in brez baze ustavi', async () => {
   const t = await tar({ 'reel.mp4': VIDEO, 'caption.txt': NAPIS })
   const m = await mapa()
+  // Nazaj 2 h: delavec zamujen osnutek objavi še do OBJAVA_ZAMUDA pozneje.
+  const meje = {}
+  await R.blizuDelavca(db([], meje), ZDAJ)
+  assert.equal(+ZDAJ - Date.parse(meje.od), 2 * 3600e3)
+  assert.equal(Date.parse(meje.do) - +ZDAJ, 3600e3)
   await assert.rejects(R.rocniReel({ tar: t, platforme: ['ig'], suho: true, env: ENV, mapa: m, zasebno: zas(m), db: db([{ id: 19, vrsta: 'pravila', objava_ob: '2026-10-30T13:40:00Z' }]), f: meta().f, sonda: sonda(), zdaj: ZDAJ, log: tiho }), /worker post #19 \(pravila\) is due at 14:40/)
   await assert.rejects(R.rocniReel({ tar: t, platforme: ['ig'], suho: true, env: ENV, mapa: m, zasebno: zas(m), db: null, f: meta().f, sonda: sonda(), zdaj: ZDAJ, log: tiho }), /no database/)
 })
@@ -195,6 +202,17 @@ test('javni URL ne vrne videa: nič k Meti', async () => {
   const m = await mapa(); const { f, klici } = meta({ velikost: 5 })
   await assert.rejects(R.rocniReel({ tar: await tar({ 'reel.mp4': VIDEO, 'caption.txt': NAPIS }), platforme: ['ig'], suho: false, env: ENV, mapa: m, zasebno: zas(m), db: db(), f, sonda: sonda(), zdaj: ZDAJ, log: tiho }), /public video URL/)
   assert.ok(!klici.some((k) => k.metoda === 'POST'))
+  assert.deepEqual(await readdir(join(m, 'rocni')).catch(() => []), [])
+})
+
+test('meja 0 ustavi, neveljavna meja pade', async () => {
+  const t = await tar({ 'reel.mp4': VIDEO, 'caption.txt': NAPIS })
+  const m = await mapa()
+  const teci = (meja) => R.rocniReel({ tar: t, platforme: ['ig'], suho: true, env: { ...ENV, ROCNI_REEL_NA_DAN: meja }, mapa: m, zasebno: zas(m), db: db(), f: meta().f, sonda: sonda(), zdaj: ZDAJ, log: tiho })
+  await assert.rejects(teci('0'), /daily limit: 0 of 0/)
+  await assert.rejects(teci('-1'), /whole number/)
+  await assert.rejects(teci('dva'), /whole number/)
+  assert.equal((await teci('')).suho, true)
 })
 
 test('hkratna objava: zaklep zavrne drugo', async () => {
