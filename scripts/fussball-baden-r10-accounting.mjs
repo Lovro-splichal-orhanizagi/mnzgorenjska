@@ -8,6 +8,8 @@ import {createHash} from 'node:crypto'
 import {performance} from 'node:perf_hooks'
 import {isDeepStrictEqual as same} from 'node:util'
 import {readFussballBadenR10AccountingFoundation,getFussballBadenR10AccountingFoundation} from './fussball-baden-r10-foundation.mjs'
+import {R10_WORKFLOW,r10RunIdentity,r10PreSourcePhase,r10AuthenticateRuntime} from './fussball-baden-r10-contract.mjs'
+import {readFussballBadenR10CurrentAccounting,getFussballBadenR10CurrentAccounting} from './fussball-baden-r10-current-reader.mjs'
 import {badenR10NightlyPins,badenR10NightlyProjection,badenR10NightlyRunProjection} from './fussball-baden-r10-nightly.mjs'
 import {readFcfFrozenContentBytes} from './fcf-frozen-content-bytes.mjs'
 import {assertFcfRefresh800History} from './fcf-refresh800-ledger.mjs'
@@ -153,6 +155,21 @@ export async function readFussballBadenR10Budget(input){
  for(const listed of first){
   const p=policy.records.find(p=>p.run.id===listed.id),runId=String(listed.id)
   if(!p){
+   if(listed.path===R10_WORKFLOW){
+    try{
+     const runPath=`actions/runs/${runId}`,jobsPath=runPath+'/attempts/1/jobs?per_page=100&page=1',run=await api(runPath),jobs=await api(jobsPath);need(same(runProjection(run),runProjection(listed)),'R10_LISTED_EXECUTION')
+     const gh=async(path,binary=false)=>{need(path.startsWith(prefix)&&!path.includes('..')&&!/[\\\r\n]/.test(path),'R10_AUTH_SCOPE');allowed.add(path.slice(prefix.length));return get(path,binary)}
+     if(run.status==='in_progress'){
+      r10RunIdentity(run,run.head_sha,runId);r10PreSourcePhase(jobs,run);const runtime=await r10AuthenticateRuntime(gh,run.head_sha)
+      executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-before-source',classification:'EXACT_BUDGET_PHASE_CAPTURE_UNEXECUTED',runtimeSha256:runtime.codeSha256,newResearchRequests:0,physicalProviderAttempts:null})
+     }else{
+      const a=getFussballBadenR10CurrentAccounting(await readFussballBadenR10CurrentAccounting({github:gh,sourceRunId:runId,sourceHead:run.head_sha}));need(a.accounting.known&&a.accounting.pendingAttempts===0,'R10_CURRENT_ACCOUNTING')
+      executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-current-attempts',classification:'ACTUAL_COUNTED_CURRENT_EXECUTION',newResearchRequests:a.accounting.requests,successfulAttempts:a.accounting.successfulAttempts,failedAttempts:a.accounting.failedAttempts,pendingAttempts:0,artifact:a.certificate.artifact,sourceRefusal:a.stage.snapshot.attempts.some(x=>[401,403,429].includes(x.httpStatus))})
+     }
+     mutable.set(runPath,run);mutable.set(jobsPath,jobs)
+    }catch(error){blockers.push({runId,path:listed.path,reason:error.code??'R10_EXECUTION_ACCOUNTING_HOLD'})}
+    continue
+   }
    if(listed.path==='.github/workflows/uvoz-zapisnikov.yml'){
     try{
      need(listed.run_attempt===1,'NIGHTLY_ATTEMPT')

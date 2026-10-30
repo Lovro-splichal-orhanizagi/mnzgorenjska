@@ -3,6 +3,8 @@
 import {createHash} from 'node:crypto'
 import {readFileSync} from 'node:fs'
 const compiled=JSON.parse(readFileSync(new URL('./fussball-baden-r10-content-vectors.json',import.meta.url))),compiledOutside=compiled.ciOutsideCode??{}
+const localCiPaths=['scripts/fussball-baden-r10-contract.mjs','scripts/fussball-baden-r10-current.mjs','scripts/fussball-baden-r10-current-reader.mjs','scripts/test-fussball-baden-r10-current.mjs','scripts/test-fussball-baden-r10-current-reader.mjs','scripts/fussball-baden-r10-accounting.mjs','scripts/fussball-baden-r10-history.mjs','scripts/fussball-baden-r10-runtime-vector.mjs','scripts/fussball-baden-retained-archive.mjs','scripts/test-fussball-baden-retained-archive.mjs','scripts/fussball-baden-r10-accounting.json','scripts/fussball-baden-r10-exclusions.json','scripts/fussball-baden-r10-content-vectors.json','scripts/fussball-baden-r10-fcf-modes.json','scripts/fussball-baden-r10-nightly.json'];
+const localCiBytes=Object.fromEntries(localCiPaths.map(path=>{let b;try{b=readFileSync(new URL('../'+path,import.meta.url))}catch{return [path,null]}return [path,createHash('sha1').update('blob '+b.length+'\0').update(b).digest('hex')]}))
 const prefix='repos/Lovro-splichal-orhanizagi/mnzgorenjska/',hex=v=>typeof v==='string'&&/^[a-f0-9]{40}$/.test(v)
 const need=(v,m)=>{if(!v)throw Object.assign(Error('BADEN_RUNTIME_VECTOR_'+m),{code:'BADEN_RUNTIME_VECTOR_'+m,dataHold:true})}
 export const badenR10CriticalCodePath=(path,workflow)=>path===workflow||['package.json','package-lock.json','fastlane/Fastfile'].includes(path)||!path.startsWith('.github/')&&/\.(?:[cm]?[jt]sx?|sh|py|sql|rb|toml|gradle)$/.test(path)
@@ -13,7 +15,7 @@ export function badenR10VectorDigest(rows,workflow,projection='all',outsideCode=
  need(rows.filter(e=>select(e.path,workflow,e)).every(e=>e.type==='blob'),'CRITICAL_TYPE')
  const selected=rows.filter(e=>select(e.path,workflow,e)).map(e=>({path:e.path,mode:e.mode,sha:e.sha,size:e.size})).sort((a,b)=>a.path<b.path?-1:a.path>b.path?1:0)
  need(selected.some(e=>e.path===workflow)&&selected.every(e=>['100644','100755'].includes(e.mode)&&hex(e.sha)&&Number.isSafeInteger(e.size)&&e.size>=0),'CRITICAL_INVENTORY')
- return {vectorSha256:createHash('sha256').update(JSON.stringify(selected)).digest('hex'),files:selected.length,reviewedScoutCriticalBytes:projection==='scout-ci'&&selected.every(e=>compiled.ciScoutCode?.[e.path]?.includes(e.sha)||outsideCode[e.path]?.includes(e.sha)),reviewedCriticalBytes:projection==='german-ci'&&selected.every(e=>compiled.ciGermanCode?.[e.path]?.includes(e.sha))&&(compiled.ciRequiredPaths??[]).every(p=>selected.some(e=>e.path===p))}
+ return {vectorSha256:createHash('sha256').update(JSON.stringify(selected)).digest('hex'),files:selected.length,reviewedScoutCriticalBytes:projection==='scout-ci'&&selected.every(e=>compiled.ciScoutCode?.[e.path]?.includes(e.sha)||outsideCode[e.path]?.includes(e.sha)),reviewedCriticalBytes:projection==='german-ci'&&selected.every(e=>(compiled.ciGermanCode?.[e.path]?.includes(e.sha)||localCiBytes[e.path]===e.sha))&&(compiled.ciRequiredPaths??[]).every(p=>selected.some(e=>e.path===p))}
 }
 export async function readBadenR10RuntimeVector(input){
  need(input&&Object.getPrototypeOf(input)===Object.prototype&&['github,head,workflow','github,head,projection,workflow'].includes(Object.keys(input).sort().join(','))&&typeof input.github==='function'&&hex(input.head)&&/^\.github\/workflows\/[a-z0-9-]+\.yml$/.test(input.workflow??''),'INPUT')

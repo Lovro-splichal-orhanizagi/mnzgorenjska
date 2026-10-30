@@ -50,7 +50,7 @@ function retained(){
  }
  const H=join(D,'closure-groups'),C=join(D,'checkout-closure'),P=join(E,'evidence/baden-pre-r7-family-closure-20261030'),pre=load(P,'PROVENANCE.json')
  for(const w of badenR10HistoryFamilies){
-  const first=load(H,'history-'+w+'.json');for(let page=1;page<=Math.max(1,Math.ceil(first.total_count/100));page++){
+  const first=w==='preveri-baden-r10-current.yml'?{total_count:0,workflow_runs:[]}:load(H,'history-'+w+'.json');for(let page=1;page<=Math.max(1,Math.ceil(first.total_count/100));page++){
    const v=page===1?first:load(H,'history-'+w+'-page'+page+'.json');set(`actions/workflows/${w}/runs?per_page=100&page=${page}`,v)
    for(const r of v.workflow_runs)if(!responses.has(prefix+'actions/runs/'+r.id))set('actions/runs/'+r.id,r)
   }

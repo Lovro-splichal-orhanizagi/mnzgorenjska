@@ -1,0 +1,68 @@
+name: Baden R10 fixed current and retained R7 audit
+run-name: Baden R10 current-only source audit
+# External operational gate: root must validate the cold owner-version route and
+# M2/native handoff before any dispatch. This workflow grants no native/activation.
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact reviewed deployed main producer
+        required: true
+        type: string
+      main_ci_run_id:
+        description: Actual successful first-attempt push CI at that main
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: uvoz-lige-de-verbandsliga-baden
+  cancel-in-progress: false
+jobs:
+  current-source:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      MAIN_CI_RUN_ID: ${{ inputs.main_ci_run_id }}
+      GH_TOKEN: ${{ github.token }}
+      NODE_OPTIONS: --max-old-space-size=6144
+    steps:
+      - name: Checkout exact reviewed R10 producer
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Set up Node22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Focused source-free R10 controls
+        run: node --test scripts/test-fussball-baden-r10-current.mjs scripts/test-fussball-baden-r10-current-reader.mjs
+      - name: Prepare private current-only budget lease
+        shell: bash
+        run: |
+          node scripts/fussball-baden-r10-current.mjs broker capture-r10-current > "$RUNNER_TEMP/r10-broker.log" 2>&1 &
+          for attempt in $(seq 1 2400); do
+            test -f "$RUNNER_TEMP/baden-r10-$GITHUB_RUN_ID.sock.ready" && exit 0
+            kill -0 $! 2>/dev/null || { cat "$RUNNER_TEMP/r10-broker.log"; exit 1; }
+            sleep 2
+          done
+          exit 1
+      - name: Capture fixed current only using private lease
+        run: node scripts/fussball-baden-r10-current.mjs capture
+      - name: Replay and seal new current originals
+        run: node scripts/fussball-baden-r10-current.mjs replay capture-r10-current
+      - name: Retain every original, failed and pending attempt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baden-r10-current-${{ github.run_id }}-1
+          path: capture-r10-current/
+          if-no-files-found: ignore
+          retention-days: 90
+          compression-level: 6
