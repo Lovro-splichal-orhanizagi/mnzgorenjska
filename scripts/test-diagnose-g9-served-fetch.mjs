@@ -42,3 +42,16 @@ test('marker uniqueness is checked across the full streamed body and chunk bound
   assert.equal(result.markerCount, 2)
   assert.equal(result.marker, null)
 })
+
+test('30-second deadline errors retain TimeoutError without raw exception text', () => {
+  const projected = safeError(new DOMException('sensitive deadline detail', 'TimeoutError'))
+  assert.equal(projected.name, 'TimeoutError')
+  assert.doesNotMatch(JSON.stringify(projected), /sensitive|deadline detail/)
+})
+
+test('successful timing includes streamed body completion', async () => {
+  const started = Date.now()
+  const result = await ownFetch(async () => ({ status: 200, body: Readable.from((async function* () { await new Promise(resolve => setTimeout(resolve, 30)); yield Buffer.from('ok') })()) }))
+  assert.ok(result.elapsedMs >= 25)
+  assert.ok(result.elapsedMs <= Date.now() - started)
+})

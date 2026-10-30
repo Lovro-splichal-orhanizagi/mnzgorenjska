@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { setTimeout as delay } from 'node:timers/promises'
 
 export const OWN_URL = 'https://slff.eu/'
 export const MAX_BYTES = 4 * 1024 * 1024
@@ -14,7 +13,7 @@ export function fixedRequestOptions() {
 
 export function safeError(error) {
   const allowed = value => typeof value === 'string' && SAFE_CODES.has(value) ? value : null
-  return { name: ['TypeError', 'Error', 'AbortError'].includes(error?.name) ? error.name : 'Error', code: allowed(error?.code), causeCode: allowed(error?.cause?.code) }
+  return { name: ['TypeError', 'Error', 'AbortError', 'TimeoutError'].includes(error?.name) ? error.name : 'Error', code: allowed(error?.code), causeCode: allowed(error?.cause?.code) }
 }
 
 export async function readBoundedResponse(response, elapsedMs) {
@@ -44,14 +43,15 @@ export async function ownFetch(fetchImpl = globalThis.fetch) {
   const started = Date.now()
   try {
     const response = await fetchImpl(OWN_URL, fixedRequestOptions())
-    return await readBoundedResponse(response, Date.now() - started)
+    const outcome = await readBoundedResponse(response, Date.now() - started)
+    return { ...outcome, elapsedMs: Date.now() - started }
   } catch (error) {
     return { status: null, ok: false, bytes: null, sha256: null, markerCount: 0, marker: null, elapsedMs: Date.now() - started, error: safeError(error) }
   }
 }
 
 function gh(path) {
-  const output = execFileSync('gh', ['api', path], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1024 * 1024 })
+  const output = execFileSync('gh', ['api', path], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1024 * 1024, timeout: 60000 })
   return JSON.parse(output)
 }
 
