@@ -31,7 +31,7 @@ jobs:
           FCF_G9_NATIVE800_PREPARE_CI_SQL_TEST: '1'
           FCF_G9_NATIVE800_BRIDGE_CI_SQL_TEST: '1'
           FCF_G9_NATIVE800_LAUNCH_CI_SQL_TEST: '1'
-        run: node --test scripts/test-fcf-g1-remainder-g9-native800-prepare-sql.mjs scripts/test-fcf-g9-native800-bridge-sql.mjs scripts/test-fcf-g9-native800-launch-sql.mjs
+        run: node --test --test-concurrency=1 scripts/test-fcf-g1-remainder-g9-native800-prepare-sql.mjs scripts/test-fcf-g9-native800-bridge-sql.mjs scripts/test-fcf-g9-native800-launch-sql.mjs
       - name: Remove ephemeral hosted DB
         if: always()
         run: npx --yes supabase@2.117.0 stop --no-backup
