@@ -10143,6 +10143,17 @@ preveri(
   const t1 = tm.find((x) => x.igra === 2001)
   preveri('mascot: tekma razporeda epsm (datum s povezave, ure ni)', t1?.krog === 1 && t1.domaci === 'ΑΣΤΡΑΠΗ ΜΕΣΑΙΟΥ' && t1.gostje === 'ΘΡΙΑΜΒΟΣ ΠΑΡΘΕΝΙΟΥ' &&
     t1.izid?.domaci === 0 && t1.izid?.gostje === 2 && t1.datum === '2026-09-27' && t1.ura === null && !t1.brezBorbe)
+  // 29. 10. 2026: epsm je zamenjal predlogo analitike (an-round > an-match, naslov v mn2-hero-title);
+  // stara predloga je zgoraj, nova vzorec s krogi 1, 2 in 6 (6. krog ima neodigrane tekme "– : –").
+  const rn = beri('gr-mascot-razpored-epsm-analitika-2026-10.html')
+  const tn = M.tekmeRazporeda(rn)
+  preveri('mascot: razpored epsm, nova predloga analitike — 3 krogi, 21 tekem, liga preverjena po naslovu', tn.length === 21 &&
+    [...new Set(tn.map((x) => x.krog))].join() === '1,2,6' && M.jeStranLige(rn, 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ') && !M.jeStranLige(rn, 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ') &&
+    M.zaPredpomnilnik(rn, M.imeRazporeda('epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ')))
+  const n1 = tn.find((x) => x.igra === 2001)
+  preveri('mascot: tekma nove predloge epsm (izid, datum, ura, igrišče; neodigrana brez izida)', n1?.krog === 1 && n1.domaci === 'ΑΣΤΡΑΠΗ ΜΕΣΑΙΟΥ' && n1.gostje === 'ΘΡΙΑΜΒΟΣ ΠΑΡΘΕΝΙΟΥ' &&
+    n1.izid?.domaci === 0 && n1.izid?.gostje === 2 && n1.datum === '2026-09-27' && n1.ura === '17:00' && n1.opomba === 'ΜΕΣΑΙΟΥ' && !n1.brezBorbe &&
+    tn.filter((x) => x.krog === 6 && !x.izid).length >= 1 && tn.filter((x) => !x.izid).every((x) => x.igra && x.krog === 6))
   const ra = beri('gr-mascot-razpored-epsachaias-a-1.html')
   const ta = M.tekmeRazporeda(ra)
   const tr = ta.find((x) => x.igra === 1005)
