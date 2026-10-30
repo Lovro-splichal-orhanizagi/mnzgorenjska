@@ -37,7 +37,7 @@ const KORAKI: [string, string][] = [
 /** Imena strani iz `zabelezi_obisk()` v človeška. */
 const STRANI: Record<string, string> = {
   domov: 'Domov',
-  vstop_drzave: 'Vstop države (/si, /sk, /hr, /cz, /hu, /at, /de, /rs, /ro, /ee, /pl, /es, /lv, /mk, /gr, /tr, /ua, /am, /az, /dk, /gb, /mt, /me, /ba, /md, /jp, /hk, /th, /gi)',
+  vstop_drzave: 'Vstop države (/si, /sk, /hr, /cz, /hu, /at, /de, /rs, /ro, /ee, /pl, /es, /lv, /mk, /gr, /tr, /ua, /am, /az, /dk, /gb, /mt, /me, /ba, /md, /jp, /hk, /th, /gi, /sm)',
   moja_ekipa: 'Moja ekipa',
   igralci: 'Igralci',
   igralec: 'Igralec',

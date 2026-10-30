@@ -601,6 +601,26 @@ const IMENA_GI = [
   'Early Kick-Off FC', 'Wooden Spoon United', 'Hangover XI', 'Free Kick FC', 'Sea Breeze FC',
 ]
 
+// Sanmarinske lige: zabavna, izmišljena imena (angleško z italijanskim pridihom, vmesnik je
+// angleški), brez imen pravih klubov in oseb.
+const IMENA_SM = [
+  'Titano Hawks', 'Three Towers FC', 'Monte Titano Rovers', 'Guaita Guardians', 'Cesta Climbers',
+  'Montale Mountaineers', 'Rocca Ravens', 'Funivia FC', 'Borgo Maggiore Badgers', 'Piazza della Libertà XI',
+  'Piadina FC', 'Torta Tre Monti United', 'Cappelletti FC', 'Tagliatelle Rovers', 'Gelato FC',
+  'Espresso XI', 'Cappuccino United', 'Biscotti FC', 'Tiramisù United', 'Lasagne FC',
+  'Polenta Power', 'Pecorino FC', 'Sangiovese Sippers', 'Moscato FC', 'Aperitivo United',
+  'Dolce Vita FC', 'Bella Figura XI', 'Mamma Mia FC', 'Che Bello United', 'Andiamo FC',
+  'Sunday Legends', 'Saturday Heroes', 'Injury Time FC', 'Bench Warmers', 'Offside Trap FC',
+  'Ref Didn’t See It', 'Off the Crossbar', 'Corner Flag FC', 'Foggy Summit FC', 'Hilltop United',
+  'Crossbow Archers', 'Medieval Days FC', 'Stamp Collectors XI', 'Postcard FC', 'Old Town Walls FC',
+  'Serenissima Strollers', 'Microstate Marvels', 'Smallest Republic FC', 'Ten Square Miles FC', 'Panorama FC',
+  'Twelfth Man FC', 'Golden Boot FC', 'Hat-Trick Heroes', 'Clean Sheet Club', 'Nutmeg FC',
+  'Top Bins FC', 'Back Post FC', 'Long Ball FC', 'Five-a-Side Kings', 'The Old Guard',
+  'Cup Run Dreamers', 'Mid-Table Mediocrity', 'Promotion Chasers', 'Away Day Boys', 'Grass Roots United',
+  'Catenaccio Club', 'Trequartista FC', 'Libero Lovers', 'Fantasista XI', 'Regista United',
+  'Gegenpress Granny', 'Parked Bus FC', 'Rabona Rovers', 'Panenka FC', 'Sea Breeze FC',
+]
+
 // Postave v mejah POZICIJE (vratar 1, branilci 3–5, vezisti 2–5, napadalci 1–3).
 const POSTAVE = [
   [4, 4, 2], [4, 3, 3], [3, 5, 2], [3, 4, 3], [5, 3, 2], [4, 5, 1], [5, 4, 1],
@@ -990,7 +1010,7 @@ for (const l of seznam) {
   }
   const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS, RO: IMENA_RO, EE: IMENA_EE, PL: IMENA_PL, ES: IMENA_ES, LV: IMENA_LV, MK: IMENA_MK,
     GR: IMENA_GR, TR: IMENA_TR, UA: IMENA_UA, AM: IMENA_AM, AZ: IMENA_AZ, DK: IMENA_DK, GB: IMENA_GB, MT: IMENA_MT, ME: IMENA_ME, BA: IMENA_BA, MD: IMENA_MD,
-    JP: IMENA_JP, HK: IMENA_HK, TH: IMENA_TH, GI: IMENA_GI,
+    JP: IMENA_JP, HK: IMENA_HK, TH: IMENA_TH, GI: IMENA_GI, SM: IMENA_SM,
   }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
     .filter((i) => !zasedena.has(i.toLowerCase()))
 

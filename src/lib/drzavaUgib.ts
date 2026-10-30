@@ -18,7 +18,8 @@ const KLJUC = 'slff-drzava'
  * Angleščina ni država (tudi `en-GB` ima pol Evrope): Združeno kraljestvo
  * ugane le IP ali pas, Malto še `mt` ali `en-MT`, Gibraltar `en-GI`. Ruščine ne preslikamo v Ukrajino.
  * Hongkong je `zh-HK` (ali kantonščina `yue`), gola kitajščina ne kaže nanj.
- * JP, HK, TH in GI imajo angleški vmesnik (`JEZIK_DRZAVE`), lastnega slovarja ni.
+ * San Marino je `it-SM` ali pas `Europe/San_Marino` (gola `it` ne kaže nanj).
+ * JP, HK, TH, GI in SM imajo angleški vmesnik (`JEZIK_DRZAVE`), lastnega slovarja ni.
  */
 const DRZAVE: Record<string, { jeziki: string[]; pasovi: string[] }> = {
   SI: { jeziki: ['sl'], pasovi: ['Europe/Ljubljana'] },
@@ -50,6 +51,7 @@ const DRZAVE: Record<string, { jeziki: string[]; pasovi: string[] }> = {
   HK: { jeziki: ['zh-hk', 'zh-hant-hk', 'yue', 'en-hk'], pasovi: ['Asia/Hong_Kong'] },
   TH: { jeziki: ['th'], pasovi: ['Asia/Bangkok'] },
   GI: { jeziki: ['en-gi'], pasovi: ['Europe/Gibraltar'] },
+  SM: { jeziki: ['it-sm'], pasovi: ['Europe/San_Marino'] },
 }
 export const znaneDrzave = () => Object.keys(DRZAVE)
 
@@ -316,7 +318,7 @@ export function drzavaLige(slug: string | null | undefined): string | null {
 /** Jezik vmesnika za državo. */
 export const JEZIK_DRZAVE: Record<string, string> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', DE: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk',
   GR: 'el', TR: 'tr', UA: 'uk', AM: 'hy', AZ: 'az', DK: 'da', GB: 'en', MT: 'en', ME: 'sr', BA: 'hr', MD: 'ro',
-  JP: 'en', HK: 'en', TH: 'en', GI: 'en',
+  JP: 'en', HK: 'en', TH: 'en', GI: 'en', SM: 'en',
 }
 
 /** Država vstopne strani (`/at` → 'AT'), sicer null. */

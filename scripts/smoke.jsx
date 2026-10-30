@@ -4123,8 +4123,8 @@ preveri(
   preveri('drzava: Malta po malteščini, en-MT ali pasu',
     D.ugibajDrzavo({ jeziki: ['mt-MT'] }) === 'MT' && D.ugibajDrzavo({ jeziki: ['en-MT'] }) === 'MT' &&
       D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Malta' }) === 'MT')
-  // Japonska, Hongkong, Tajska, Gibraltar: angleški vmesnik, ugib po jeziku ali pasu.
-  for (const [drz, liga] of [['JP', 'jp-jfl'], ['HK', 'hk-1-division'], ['TH', 'th-t2'], ['GI', 'gi-gfl']]) {
+  // Japonska, Hongkong, Tajska, Gibraltar, San Marino: angleški vmesnik, ugib po jeziku ali pasu.
+  for (const [drz, liga] of [['JP', 'jp-jfl'], ['HK', 'hk-1-division'], ['TH', 'th-t2'], ['GI', 'gi-gfl'], ['SM', 'sm-campionato']]) {
     preveri(`jezik: ${drz} → en, vstop /${drz.toLowerCase()}`, zj({ drzava: drz }) === 'en' && D.JEZIK_DRZAVE[drz] === 'en' && D.drzavaLige(liga) === drz &&
       drzavaVstopa(`/${drz.toLowerCase()}`) === drz)
   }
@@ -4134,6 +4134,9 @@ preveri(
       D.ugibajDrzavo({ jeziki: ['zh-CN'] }) === null && D.ugibajDrzavo({ jeziki: ['zh-TW'], casovniPas: 'Asia/Hong_Kong' }) === 'HK' &&
       D.ugibajDrzavo({ jeziki: ['th-TH'] }) === 'TH' && D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Asia/Bangkok' }) === 'TH' &&
       D.ugibajDrzavo({ jeziki: ['en-GI'] }) === 'GI' && D.ugibajDrzavo({ jeziki: ['en-GB'], casovniPas: 'Europe/Gibraltar' }) === 'GI')
+  preveri('drzava: San Marino (it-SM ali pas), gola it ne',
+    D.ugibajDrzavo({ jeziki: ['it-SM'] }) === 'SM' && D.ugibajDrzavo({ jeziki: ['it-IT'], casovniPas: 'Europe/San_Marino' }) === 'SM' &&
+      D.ugibajDrzavo({ jeziki: ['it-IT'], casovniPas: 'Europe/Rome' }) === null)
   // Cela oznaka ima prednost pred osnovo: sr-ME je Črna gora, sr-RS ostane Srbija.
   preveri('drzava: Črna gora (sr-ME, cnr, pas), Srbija ostane',
     D.ugibajDrzavo({ jeziki: ['sr-ME'] }) === 'ME' && D.ugibajDrzavo({ jeziki: ['sr-Latn-ME'] }) === 'ME' && D.ugibajDrzavo({ jeziki: ['cnr'] }) === 'ME' &&
@@ -6594,6 +6597,120 @@ preveri(
     G.kljucKlubaGi('Lynx FC Reserves') !== G.kljucKlubaGi('Lynx FC') &&
     G.kratkoImeGi("St Joseph's FC") === "St Joseph's" && G.kratkoImeGi('FC Hound Dogs') === 'Hound Dogs' &&
     G.kratkoImeGi('Mons Calpe Sports Club Reserves') === 'Mons Calpe Res.' && G.kratkoImeGi('Lincoln Red Imps FC Reserves') === 'Lincoln Red Imps Res.')
+}
+
+// --- vir fsgc (San Marino, fsgc.sm) -------------------------------------------------
+{
+  const S = await import('./viri/fsgc.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  const vir = S.default
+  const KODA = 'campionato-sammarinese-1/48'
+  preveri('fsgc: vir je vpisan, 3 s, User-Agent SLFF', viri.fsgc === vir && vir.drzava === 'SM' && vir.imaRegistracije === false &&
+    vir.premorMs >= 3000 && vir.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' && vir.razporedBrezUvodnegaPrenosa === true)
+  let slabaSifra = null
+  try { S.razbijKodo('48') } catch (e) { slabaSifra = e.message }
+  preveri('fsgc: šifra <slug>-<id>/<season_id>, naslovi prvenstva in tekme, šifra zapisnika sm<id>',
+    vir.naslovRazporeda(KODA) === 'https://www.fsgc.sm/it/campionato/campionato-sammarinese/1?season_id=48' &&
+    vir.naslovZapisnika(KODA, 'sm1807') === 'https://www.fsgc.sm/it/partita/m/1807' && S.sifraZapisnika('1807') === 'sm1807' &&
+    S.razbijKodo('campionato-sammarinese-1/19').sezona === '19' && /season_id/.test(slabaSifra ?? ''))
+  preveri("fsgc: čas, minute (90' + 2' → 90), sezona avg–maj",
+    S.casVira('28/08/2026\n21:15').datum === '2026-08-28' && S.casVira('28/08/2026 21:15').ura === '21:15' && S.casVira('TBD').datum === null &&
+    S.minutaVira('90&#039; + 2&#039;') === 90 && S.minutaVira("45' + 1'") === 45 && S.minutaVira("8'") === 8 &&
+    S.sezonaIzDatuma('2026-08-28') === '2026/27' && S.sezonaIzDatuma('2027-04-25') === '2026/27')
+  preveri('fsgc: ime "Priimek Ime" iz prikaza in sluga (naglasi, apostrof, dvodelni priimek)',
+    S.imeIgralca('M. De Angelis', 'de-angelis-mirco') === 'De Angelis Mirco' && S.imeIgralca("N. D'addario", 'daddario-nicola') === "D'addario Nicola" &&
+    S.imeIgralca('G. De Nicolò', 'de-nicolo-giovanni') === 'De Nicolò Giovanni' && S.imeIgralca('A. Garcia Rufer', 'garcia-rufer-augusto') === 'Garcia Rufer Augusto')
+
+  const razpored = beri('sm-fsgc-razpored-1-48.html')
+  const vrstice = S.vrsticeRazporeda(razpored)
+  preveri('fsgc: razpored — 30 krogov po 8 tekem, 16 klubov, 48 odigranih, TBD brez datuma, izbrana sezona 48',
+    vrstice.length === 240 && new Set(vrstice.map((t) => t.krog)).size === 30 && new Set(vrstice.flatMap((t) => [t.domaci, t.gostje])).size === 16 &&
+    vrstice.filter((t) => t.izid).length === 48 && vrstice.every((t) => t.id) && S.izbranaSezona(razpored) === '48' &&
+    vrstice[0].domaci === 'Folgore' && vrstice[0].izid?.domaci === 5 && vrstice[0].datum === '2026-08-28' && vrstice[0].ura === '21:15' &&
+    vrstice.filter((t) => t.krog === 30).every((t) => t.datum === null && !t.izid))
+
+  const z = S.vZapisnik(beri('sm-fsgc-tekma-1807.html'), { id: '1807' })
+  const n = S.nastopi(z)
+  const minute = (idx) => n.filter((x) => x.ekipaIdx === idx).reduce((a, x) => a + x.minute, 0)
+  preveri('fsgc: tekma 1807 — 5:0, 11 + 11 z enim vratarjem, pozicije iz vloge, goli = izid, 990 + 990 minut, šifra osebe',
+    z && !z.nepopoln && z.rezultat.domaci === 5 && z.rezultat.gostje === 0 && z.datum === '2026-08-28' && z.ura === '21:15' && z.krog === 1 &&
+    z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.domaci.postava.filter((i) => i.vratar).length === 1 && z.domaci.postava.every((i) => ['GK', 'DEF', 'MID', 'FWD'].includes(i.pozicija)) &&
+    z.goli.filter((g) => g.ekipaIdx === 0 && !g.avtogol).length === 5 && minute(0) === 990 && minute(1) === 990 &&
+    z.domaci.postava.find((i) => i.regSt === 94)?.ime === 'De Angelis Mirco' && z.opozorila.length === 0, z?.opozorila.join(' | '))
+  const og = S.vZapisnik(beri('sm-fsgc-tekma-1812-avtogol.html'))
+  const ogGol = og.goli.find((g) => g.avtogol)
+  preveri('fsgc: avtogol je v stolpcu ekipe, ki ji šteje — strelec je gost (ekipaIdx 1), domačim 4:0',
+    !og.nepopoln && ogGol?.ekipaIdx === 1 && ogGol.regSt === 947 && ogGol.minuta === 35 &&
+    og.goli.filter((g) => (g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx) === 0).length === 4, og.opozorila.join(' | '))
+  const pen = S.vZapisnik(beri('sm-fsgc-tekma-1816-11m.html'))
+  const zg = S.vZapisnik(beri('sm-fsgc-tekma-1810-zgresena-11m.html'))
+  preveri('fsgc: gol iz enajstmetrovke in zgrešena enajstmetrovka (penalties_missed)',
+    pen.goli.some((g) => g.enajstmetrovka && g.regSt === 790 && g.minuta === 32) &&
+    zg.zgresene.some((x) => x.regSt === 911 && x.minuta === 81) && S.nastopi(zg).find((x) => x.regSt === 911)?.zgreseneEnajstmetrovke === 1)
+  const dr = S.vZapisnik(beri('sm-fsgc-tekma-1819-drugi-rumeni.html'))
+  const drN = S.nastopi(dr).find((x) => x.rdeci)
+  preveri('fsgc: drugi rumeni = 1 rumeni + 1 rdeči z minuto, izključeni igra do 85.',
+    dr.rdeci.length === 1 && dr.rdeci[0].minuta === 85 && drN?.rumeni === 1 && drN.minutaDo === 85 && drN.minute === 85, JSON.stringify(drN))
+  const rd = S.vZapisnik(beri('sm-fsgc-tekma-1853-rdeci.html'))
+  preveri('fsgc: rdeči v 34. minuti — ekipa ima 990 − 56 minut',
+    rd.rdeci.length === 1 && S.nastopi(rd).filter((x) => x.ekipaIdx === rd.rdeci[0].ekipaIdx).reduce((a, x) => a + x.minute, 0) === 934)
+  const tr = S.vZapisnik(beri('sm-fsgc-tekma-1817-karton-trenerja.html'))
+  preveri('fsgc: karton trenerju (/allenatore/) ni igralčev in ne da opozorila', !tr.nepopoln && tr.opozorila.length === 0 &&
+    tr.rumeni.every((k) => k.regSt != null), tr.opozorila.join(' | '))
+  const dv = S.vZapisnik(beri('sm-fsgc-tekma-1834-podvojena-menjava.html'))
+  preveri('fsgc: ista menjava dvakrat ob isti minuti — druga preskočena, zapisnik popoln',
+    !dv.nepopoln && dv.opozorila.some((o) => /vpisana dvakrat/.test(o)) && S.nastopi(dv).filter((x) => x.ekipaIdx === 1).reduce((a, x) => a + x.minute, 0) === 990)
+  const ds = S.vZapisnik(beri('sm-fsgc-tekma-1823-menjava-dvakrat.html'))
+  preveri('fsgc: isti igralec gre ven dvakrat (27. in 71.) — nepopoln', ds.nepopoln && ds.opozorila[0].startsWith(S.NEPOPOLN) &&
+    ds.opozorila.some((o) => /gre ven, a ni na igrišču/.test(o)))
+  const tuj = S.vZapisnik(beri('sm-fsgc-tekma-931-tuja-rezerva.html'))
+  preveri('fsgc: "Entra" igralca nasprotnika — izstopni gre ven, vstopni brez nastopa, le opozorilo',
+    !tuj.nepopoln && tuj.opozorila.some((o) => /\(noter\) ni med rezervami/.test(o)) &&
+    tuj.menjave.some((m) => m.ekipaIdx === 1 && m.minuta === 75 && m.noter.regSt === null && m.ven.regSt === 524))
+  const gk = S.vZapisnik(beri('sm-fsgc-tekma-970-dva-vratarja.html'))
+  preveri('fsgc: dva Portiere v začetni enajsterici — opozorilo (uvoz oznako prezre)', gk.domaci.postava.filter((i) => i.vratar).length === 2 &&
+    gk.opozorila.some((o) => /vratarjev v postavi je 2/.test(o)))
+  const klop = S.vZapisnik(beri('sm-fsgc-tekma-944-rdeci-na-klopi.html'))
+  preveri('fsgc: rdeči neuporabljene rezerve — karton zapisan, nastopa ni', klop.rdeci.length === 1 && !S.nastopi(klop).some((x) => x.rdeci))
+  const neodigrana = beri('sm-fsgc-tekma-1860-neodigrana.html')
+  preveri('fsgc: neodigrana tekma ni zapisnik in ne gre v predpomnilnik, cela gre',
+    S.jeStranZapisnika(neodigrana) && S.vZapisnik(neodigrana) === null && !vir.zaPredpomnilnik(neodigrana) &&
+    vir.zaPredpomnilnik(beri('sm-fsgc-tekma-1807.html')) && vir.zaPredpomnilnik(razpored) && !vir.zaPredpomnilnik('<html></html>'))
+
+  // zapisniki() in razpored na vzorcih: tekma, ki je ni v vzorcih, je neodigrana stran.
+  const vzorci = { 1807: 'sm-fsgc-tekma-1807.html', 1812: 'sm-fsgc-tekma-1812-avtogol.html', 1823: 'sm-fsgc-tekma-1823-menjava-dvakrat.html' }
+  const prenesi = async (url) => {
+    if (url.includes('/campionato/')) return razpored
+    const ime = vzorci[url.match(/(\d+)$/)?.[1]]
+    return ime ? beri(ime) : neodigrana
+  }
+  const zs = await vir.zapisniki(KODA, prenesi)
+  preveri('fsgc: zapisniki() — šifra sm<id>, ime kluba in krog iz razporeda, neodigrane preskočene',
+    zs.length === 3 && zs.every((x) => /^sm\d+$/.test(x.id) && x.z.zapisnikId === x.id) &&
+    zs.find((x) => x.id === 'sm1812')?.z.domaci.ime === 'Juvenes Dogana' && zs.find((x) => x.id === 'sm1807')?.z.krog === 1 &&
+    zs.find((x) => x.id === 'sm1823')?.z.nepopoln === true, zs.map((x) => x.id).join())
+  const krogi = await vir.razporedVseStrani(KODA, prenesi)
+  preveri('fsgc: razpored — 30 krogov, 240 tekem, odigrana z izidom, TBD brez datuma',
+    krogi.length === 30 && krogi.reduce((a, k) => a + k.tekme.length, 0) === 240 &&
+    krogi[0].tekme[0].odigrana && krogi[0].tekme[0].fsgcId === '1807' && krogi[29].tekme.every((t) => t.datum === null && !t.odigrana))
+  let drugaSezona = null
+  try { await vir.razporedVseStrani('campionato-sammarinese-1/19', prenesi) } catch (e) { drugaSezona = e }
+  preveri('fsgc: stran kaže drugo sezono, kot je zahtevana — uvoz ustavljen', /kaže sezono 48, ne 19/.test(drugaSezona?.message ?? ''))
+
+  let zavrnjen = null
+  try { await vir.zapisniki(KODA, async () => { const e = new Error('HTTP 403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+  let izziv = null
+  try { await vir.zapisniki(KODA, async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  let napaka = null
+  try { await vir.zapisniki(KODA, async () => '<html>Pagina non trovata</html>') } catch (e) { napaka = e }
+  preveri('fsgc: 401/403/429 in izziv vržejo FsgcZavrnitev (izhod 4), napačna stran ustavi uvoz, "recaptcha_error" ni izziv',
+    zavrnjen instanceof S.FsgcZavrnitev && zavrnjen.status === 403 && izziv instanceof S.FsgcZavrnitev && vir.zavrnitev('x', 429).zavrnitev === true &&
+    S.jeZavrnitev(401) && S.jeZavrnitev(429) && !S.jeZavrnitev(404) && /ni stran prvenstva/.test(napaka?.message ?? '') &&
+    !S.jeIzziv('{"recaptcha_error":"Errore Recaptcha"}') && S.jeIzziv('<div class="cf-turnstile"></div>'))
+  preveri('fsgc: ključ in kratko ime kluba', S.kljucKlubaSm('Juvenes Dogana') === 'juvenes dogana' && S.kljucKlubaSm('JUVENES DOGANA') === 'juvenes dogana' &&
+    S.kratkoImeSm('San Marino Academy') === 'SM Academy' && S.kratkoImeSm('Tre Fiori') === 'Tre Fiori')
 }
 
 // --- vir modular11 (ZDA, USL League Two) --------------------------------------------
@@ -12839,8 +12956,8 @@ preveri(
   // Malta: angleščina, rok po malteško (= ljubljansko).
   const zMt = E.sestaviOpozorilo({ slug: 'mt-premier', oznaka: 'Premier', drzava: 'MT' }, { display_name: 'Joseph Borg', team_name: 'X', round_number: 5, deadline_at: rok, razlog })
   preveri('e-pošta MT: angleščina, rok po malteško', zMt.html.includes('Hi Joseph!') && zMt.html.includes('10:00') && zMt.naslov.includes('round 5'), zMt.naslov)
-  // Japonska, Hongkong, Tajska, Gibraltar: angleščina, rok v pasu države (08:00 UTC).
-  for (const [drz, ura] of [['JP', '17:00'], ['HK', '16:00'], ['TH', '15:00'], ['GI', '10:00']]) {
+  // Japonska, Hongkong, Tajska, Gibraltar, San Marino: angleščina, rok v pasu države (08:00 UTC).
+  for (const [drz, ura] of [['JP', '17:00'], ['HK', '16:00'], ['TH', '15:00'], ['GI', '10:00'], ['SM', '10:00']]) {
     const l = { slug: `${drz.toLowerCase()}-liga`, oznaka: 'League', drzava: drz }
     const zA = E.sestaviOpozorilo(l, { display_name: 'Ken', team_name: 'X', round_number: 5, deadline_at: rok, razlog })
     preveri(`e-pošta ${drz}: angleščina, rok v pasu države`, zA.html.includes('Hi Ken!') && zA.html.includes(ura) && zA.naslov.includes('round 5'), E.izpisRoka(rok, l))

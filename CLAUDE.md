@@ -122,6 +122,7 @@ tabelo šifer tam, ne tu.
 | Ferski otoki | `docs/viri/ferski-otoki.md` | `fsf` |
 | ZDA | `docs/viri/zda.md` | `modular11` |
 | Gibraltar | `docs/viri/gibraltar.md` | `gfa` |
+| San Marino | `docs/viri/sanmarino.md` | `fsgc` |
 | Avstralija (uvozni vmesnik; brez aktivnih lig) | `docs/viri/avstralija.md` | `dribl-public` |
 | Danska | `docs/viri/danska.md` | `dbu` |
 | Norveška | `docs/viri/norveska.md` | `nff` |
@@ -155,9 +156,10 @@ Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
   felső/alsóház): delitev za arhiv osnovne lige ne uvažaj, sicer pripelje
   igralce drugih skupin. Tekoči šifri se id skupin dopiše, ko jih zveza objavi
   (`docs/viri/gibraltar.md`, `docs/viri/hongkong.md`).
-- Japonska, Hongkong, Tajska in Gibraltar imajo **angleški vmesnik brez
-  lastnega slovarja** (`JEZIK_DRZAVE` = `en`, angleška pošta z rokom v pasu
-  države, vstop `/jp`, `/hk`, `/th`, `/gi`); lige so neaktivne do uvoza.
+- Japonska, Hongkong, Tajska, Gibraltar in San Marino imajo **angleški
+  vmesnik brez lastnega slovarja** (`JEZIK_DRZAVE` = `en`, angleška pošta z
+  rokom v pasu države, vstop `/jp`, `/hk`, `/th`, `/gi`, `/sm`); lige so
+  neaktivne do uvoza.
 
 Država obiskovalca (katere lige vidi, ugib po IP/jeziku/pasu, tujec, vstopne
 strani `/si`, `/at` …, izbira države): `docs/drzava-obiskovalca.md`. Kratko:

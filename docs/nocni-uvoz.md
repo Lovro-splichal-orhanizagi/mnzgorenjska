@@ -16,7 +16,8 @@ celotni državi. To ni nočni uvoz in ne odkriva še neregistriranih lig.
 mora v matriko, sicer se njene vklopljene lige ponoči ne uvažajo — brez
 napake. Število košev države je `KOSOV` v `nocni-kosi.mjs` in ista številka v
 matriki (smoke ju primerja): GR 6, AT 4, HR 3, HU 3, SK 2, RS 2, SI 2, ostale 1
-(tudi JP, HK, TH in GI, dodane 28. 10. 2026; TH ima v poslu še pdftotext).
+(tudi JP, HK, TH in GI, dodane 28. 10. 2026, in SM, dodan 30. 10. 2026; TH ima v
+poslu še pdftotext).
 
 Zakaj (meritev 11.–13. 10. 2026): posel AT (162 vklopljenih lig, ~4–6 minut
 na ligo) je v 240 minutah obdelal 42 lig in GitHub ga je preklical — **vsak
