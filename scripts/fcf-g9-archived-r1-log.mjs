@@ -13,18 +13,23 @@ export async function readFcfG9ArchivedR1Log(input){
  need(input&&Object.getPrototypeOf(input)===Object.prototype&&Object.keys(input).length===1&&Object.hasOwn(input,'github')&&typeof input.github==='function','closed github-only input required')
  const {github}=input
  const releasePath=prefix+`releases/${archivePins.releaseId}`
- const membersPath=releasePath+'/assets?per_page=100&page=1'
  const rawPath=prefix+`releases/assets/${archivePins.assetId}`
- let release,assets
+ let release
  try{release=await github(releasePath)}catch{fail('fixed draft release metadata GET failed')}
  need(release&&Object.getPrototypeOf(release)===Object.prototype&&release.id===archivePins.releaseId&&release.tag_name===archivePins.tag&&release.draft===true&&release.url===archivePins.releaseUrl&&release.assets_url===archivePins.assetsUrl,'exact private draft release identity and API URLs required')
- try{assets=await github(membersPath)}catch{fail('fixed draft release asset membership GET failed')}
- need(Array.isArray(assets)&&assets.length<100,'complete bounded release membership list required')
- const matches=assets.filter(asset=>asset?.id===archivePins.assetId)
- need(matches.length===1,'exact archived R1 asset membership required')
- const asset=matches[0]
- const expectedDownload=`https://github.com/${archivePins.repository}/releases/download/${archivePins.tag}/${archivePins.name}`
- need(asset&&Object.getPrototypeOf(asset)===Object.prototype&&asset.id===archivePins.assetId&&asset.name===archivePins.name&&asset.state==='uploaded'&&asset.size===archivePins.bytes&&asset.digest===`sha256:${archivePins.digest}`&&asset.url===api+`/releases/assets/${archivePins.assetId}`&&asset.browser_download_url===expectedDownload&&asset.uploader?.id===archivePins.uploaderId,'exact root-uploaded archived R1 asset metadata required')
+ const seen=new Set();let found=null
+ for(let page=1;page<=10;page++){
+  const membersPath=releasePath+`/assets?per_page=100&page=${page}`
+  let assets
+  try{assets=await github(membersPath)}catch{fail('fixed draft release asset membership GET failed')}
+  need(Array.isArray(assets)&&assets.length<=100,'bounded release asset membership page required')
+  for(const member of assets){need(member&&Object.getPrototypeOf(member)===Object.prototype&&Number.isSafeInteger(member.id)&&member.id>0&&!seen.has(member.id),'unique release asset IDs required');seen.add(member.id);if(member.id===archivePins.assetId)found=member}
+  if(assets.length<100)break
+  if(page===10)fail('complete release asset membership exceeds bounded pages')
+ }
+ need(found,'exact archived R1 asset membership required')
+ const asset=found
+ need(asset.name===archivePins.name&&asset.state==='uploaded'&&asset.size===archivePins.bytes&&asset.digest===`sha256:${archivePins.digest}`&&asset.url===api+`/releases/assets/${archivePins.assetId}`&&asset.uploader?.id===archivePins.uploaderId,'exact root-uploaded archived R1 asset metadata required')
  let bytes
  try{bytes=await github(rawPath,true)}catch{fail('fixed archived R1 asset bytes GET failed')}
  need(Buffer.isBuffer(bytes)&&bytes.length===archivePins.bytes&&sha(bytes)===archivePins.digest,'exact archived R1 job log bytes/digest required')
