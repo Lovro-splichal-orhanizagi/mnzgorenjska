@@ -1,6 +1,7 @@
 // Collect all selected sources first. Only replayed complete packs reach native writes.
 import {isBadenCompositionCandidate,loadBadenHostedComposition,loadBadenLaunchPack} from './bulk-baden-native.mjs'
 import {prepareFussballNativeHistory} from './prepare-fussball-native-history.mjs'
+import {describeNativeTransportFailure} from './bulk-native-transport.mjs'
 import {createHash} from 'node:crypto'
 import {readFileSync,existsSync,mkdirSync,appendFileSync} from 'node:fs'
 import {resolve,join} from 'node:path'
@@ -76,7 +77,14 @@ export async function runBulkRollout({sourceReport,expectedSha,transport,guard,r
      const receipt={stage:'history-cards-prepare',status:'RUNNING',started_at:now().toISOString()};result.steps.push(receipt);await save()
      const preparedTransport={...transport}
      for(const name of ['register','prepareFussballHistory'])preparedTransport[name]=async(...args)=>{await ensureGuard();mutating=true;const answer=await transport[name](...args);mutating=false;return answer}
-     const preparation=await prepareComposition({composition,transport:preparedTransport})
+     const onProgress=async({phase,status})=>{
+      if(!['source-reauthenticate-before','find-registration','register','prepare-history','source-reauthenticate-after','read-preparation'].includes(phase)||!['RUNNING','COMPLETED','FAILED'].includes(status))throw Error('Invalid native preparation progress.')
+      receipt.preparation_phases??=[]
+      if(status==='RUNNING')receipt.preparation_phases.push({phase,status,started_at:now().toISOString()})
+      else {const running=receipt.preparation_phases.at(-1);if(running?.phase!==phase||running.status!=='RUNNING')throw Error('Invalid native preparation progress order.');running.status=status;running.completed_at=now().toISOString()}
+      await save()
+     }
+     const preparation=await prepareComposition({composition,transport:preparedTransport,onProgress})
      candidate={...candidate,id:preparation.competitionId};result.candidate=candidate;result.profile=staged.profile
      const competition=(await transport.snapshot(candidate)).competition
      pack=await loadCompositionPack({competition,composition,preparation,db:transport,seedDirectory:join(staged.directory,'native-seed')})
@@ -168,6 +176,7 @@ export async function runBulkRollout({sourceReport,expectedSha,transport,guard,r
    mutating=false
    receipt.status='COMPLETED';receipt.completed_at=now().toISOString();result.status='ACTIVE'
   }catch(error){
+   const diagnostic=describeNativeTransportFailure(error);if(diagnostic)result.transport_failure=diagnostic
    if(error.writeNotStarted===true){mutating=false;const running=result.steps.findLast(s=>s.status==='RUNNING');if(running)running.status=error.dataHold?'HOLD':'FAILED'}
    result.reason=error.message;result.reason_code=error.reason_code??'INFRASTRUCTURE_STOP'
    if(mutating){result.status='UNKNOWN';report.infrastructure_stop='Ambiguous native write; no automatic replay.';const running=result.steps.findLast(s=>s.status==='RUNNING');if(running)running.status='UNKNOWN';try{result.readback=await transport.competition(candidate)}catch{result.readback_error='Readback unavailable.'}}

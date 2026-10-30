@@ -57,16 +57,18 @@ export async function describeFussballNativePreparation(composition){
 }
 /** Requires a private actual completed-source/hosted-composition capability before
  * even find/register. No preparation capability is required to cold-register. */
-export async function prepareFussballNativeHistory({composition,transport}){
+export async function prepareFussballNativeHistory({composition,transport,onProgress=async()=>{}}){
  getFussballNativeComposition(composition)
- const authenticated=await reauthenticateFussballNativeComposition(composition),m=manifest(authenticated)
+ need(typeof onProgress==='function','preparation progress observer required')
+ const phase=async(name,action)=>{await onProgress({phase:name,status:'RUNNING'});let answer;try{answer=await action()}catch(error){await onProgress({phase:name,status:'FAILED'});throw error}await onProgress({phase:name,status:'COMPLETED'});return answer}
+ const authenticated=await phase('source-reauthenticate-before',()=>reauthenticateFussballNativeComposition(composition)),m=manifest(authenticated)
  need(transport&&['find','register','prepareFussballHistory','readFussballHistory'].every(k=>typeof transport[k]==='function'),'native preparation transport required')
- let c=await transport.find(candidate)
+ let c=await phase('find-registration',()=>transport.find(candidate))
  if(c)need(c.active===false&&c.source==='fussball-public'&&c.slug===BADEN_SLUG&&c.source_league_code===BADEN_CURRENT,'exact inactive native registration required')
- const id=c?.id??await transport.register(candidate);need(Number.isSafeInteger(id)&&id>0,'actual registered competition ID required')
- const body=badenCanonical(m),prepared=readback(await transport.prepareFussballHistory({manifest:body,sha256:sha(body)}),m,id)
- const again=await reauthenticateFussballNativeComposition(authenticated);need(isDeepStrictEqual(manifest(again),m),'source/catalog changed during preparation')
- const observed=readback(await transport.readFussballHistory(id),m,id);need(isDeepStrictEqual(observed,prepared),'native preparation changed after commit')
+ const id=c?.id??await phase('register',()=>transport.register(candidate));need(Number.isSafeInteger(id)&&id>0,'actual registered competition ID required')
+ const body=badenCanonical(m),prepared=readback(await phase('prepare-history',()=>transport.prepareFussballHistory({manifest:body,sha256:sha(body)})),m,id)
+ const again=await phase('source-reauthenticate-after',()=>reauthenticateFussballNativeComposition(authenticated));need(isDeepStrictEqual(manifest(again),m),'source/catalog changed during preparation')
+ const observed=readback(await phase('read-preparation',()=>transport.readFussballHistory(id)),m,id);need(isDeepStrictEqual(observed,prepared),'native preparation changed after commit')
  const receipt=freeze({version:1,kind:'baden-native-history-cards-prepared',competitionId:id,bindingSha256:observed.bindingSha256,policySha256:observed.policySha256,markerInventorySha256:observed.markerInventorySha256,firstFantasyPlayedOn:observed.firstFantasyPlayedOn,openingRoundId:observed.openingRoundId,manifestSha256:observed.manifestSha256,nativeImportEligible:false,activationEligible:false,actualReady:false})
  receipts.set(receipt,{composition:again,transport,manifest:m,readback:observed});return receipt
 }
