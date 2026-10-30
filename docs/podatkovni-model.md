@@ -387,6 +387,18 @@
   **Nova stran se ne šteje sama**: dodaj jo v `PO_POTI`/`PO_PREDPONI` in v
   seznam v `zabelezi_obisk()`, sicer se zapis tiho zavrže. Oboje skupaj kaže
   razdelek *Kje ljudje obtičijo* v adminu (`src/components/admin/Lijak.tsx`)
+- `dejanja_uporabnikov` (od 30. 10. 2026) → koraki lijaka prijavljenega z
+  njegovim id-jem in platformo (`web`/`ios`/`android`), da se vidi, kje se
+  posameznik ustavi. Piše ga `zabelezi_korak(korak, platforma, osebno)`: le
+  ob `p_osebno` (odjemalec brez "Ne sledi"), isti korak istega človeka največ
+  enkrat na minuto; neprijavljeni ostanejo le v `lijak_dnevno` (brez oznake
+  naprave, zato brez soglasja). Brez pravic za anon/authenticated, zaprto za
+  agente (`agent.zaprte_tabele`), pg_cron `dejanja-90-dni` briše starejše od
+  90 dni, z računom izgine (`on delete cascade`). Opisano v zasebnosti
+  (`racun.zasebnost…neHranimo`). Koraki poleg lijaka: `pivo_okno_zaprto`,
+  `push_pas`, `push_pas_zaprt`, `push_dovoljeno`, `push_zavrnjeno`,
+  `aplikacija_odprta`. Nov korak = `KorakLijaka` v `src/lib/lijak.ts` in
+  seznam v `zabelezi_korak()`
 - `trgovine_dnevno` (trgovina `ios`/`android`, dan, `skupaj`, `novi`) in
   `trgovine_stanje` (zadnje stanje različice iOS) → namestitve aplikacije.
   Piše le delovni tok *Trgovine* (`scripts/trgovine.mjs`, vsak dan 07:30 UTC,

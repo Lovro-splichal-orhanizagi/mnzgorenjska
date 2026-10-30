@@ -174,7 +174,7 @@ export const racun = {
   // Zasebnost in pogoji. <b> je krepko, ostale oznake so povezave.
   pravno: {
     naslov: 'Zasebnost in pogoji',
-    zadnjaSprememba: 'Zadnja sprememba: 16. oktober 2026',
+    zadnjaSprememba: 'Zadnja sprememba: 30. oktober 2026',
     kajJeNaslov: 'Kaj je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je navijaška fantasy liga za slovenske medobčinske nogometne lige. Vodimo jo ljubiteljsko in ni povezana z medobčinskimi nogometnimi zvezami, NZS ali s klubi. Igra je brezplačna in brez denarnih vložkov ali nagrad.',
@@ -188,7 +188,7 @@ export const racun = {
     podatkiNaprava:
       '<b>Žeton naprave za obvestila.</b> Če v mobilni aplikaciji dovoliš obvestila, shranimo žeton, prek katerega ti pošljemo opomnik pred rokom kroga. Ob odjavi ga izbrišemo.',
     neHranimo:
-      'Telefonske številke in podatkov plačilne kartice ne hranimo, naslova pa le, če naročiš natisnjeno značko (glej spodaj). Piškotkov za sledenje in oglaševalskih orodij ne uporabljamo. V brskalniku so shranjeni tvoja prijavna seja, oznaka pogovora v klepetu za pomoč, če ga odpreš, in oznake seje, s katerimi preštejemo obisk strani le enkrat. Koliko ljudi je odprlo katero stran, štejemo le kot dnevni seštevek — brez tvojega imena, računa, naprave ali naslova IP. Splošno statistiko obiska (katere strani, od kod obiskovalci pridejo, vrsta naprave in država, nekaj dejanj, kot je sestava ekipe) beleži <b>Umami</b> na našem strežniku: brez piškotkov, naslova IP ne shrani in obiska ne poveže s tvojim računom. Če ima brskalnik vklopljeno možnost »Ne sledi«, se ne beleži nič.',
+      'Telefonske številke in podatkov plačilne kartice ne hranimo, naslova pa le, če naročiš natisnjeno značko (glej spodaj). Piškotkov za sledenje in oglaševalskih orodij ne uporabljamo. V brskalniku so shranjeni tvoja prijavna seja, oznaka pogovora v klepetu za pomoč, če ga odpreš, in oznake seje, s katerimi preštejemo obisk strani le enkrat. Koliko ljudi je odprlo katero stran, štejemo le kot dnevni seštevek — brez tvojega imena, računa, naprave ali naslova IP. Splošno statistiko obiska (katere strani, od kod obiskovalci pridejo, vrsta naprave in država, nekaj dejanj, kot je sestava ekipe) beleži <b>Umami</b> na našem strežniku: brez piškotkov, naslova IP ne shrani in obiska ne poveže s tvojim računom. Če ima brskalnik vklopljeno možnost »Ne sledi«, se ne beleži nič. Ko si prijavljen, nekaj korakov v igri (npr. sestava ekipe, odprtje aplikacije, odločitev o obvestilih, zaprto okno) zapišemo skupaj s tvojim računom, da vidimo, kje se igra zatakne. Hranimo jih 90 dni, z izbrisom računa izginejo, ob »Ne sledi« jih ne beležimo.',
     dostopNaslov: 'Komu so podatki dostopni',
     dostop:
       'Podatki so na našem strežniku pri ponudniku <b>Hetzner</b> (Nemčija, EU), promet do njega gre prek <b>Cloudflare</b> (zaščita in dostava strani). Potrditvena in ponastavitvena pošta gre prek našega poštnega strežnika (prav tako Hetzner), obvestila v mobilni aplikaciji prek <b>Google Firebase Cloud Messaging</b> (le žeton naprave in besedilo obvestila). Klepet za pomoč v spodnjem desnem kotu teče prek <b>HelpStack</b>: tja gre to, kar vanj napišeš, in — če si prijavljen — tvoje prikazno ime, da vemo, komu odgovarjamo. Ko ti pomočnik v klepetu pomaga, lahko pogleda tudi, na kateri strani in v kateri ligi si ter ali je tvoja ekipa veljavna. E-pošte mu ne posredujemo. Nikomur drugemu podatkov ne posredujemo in jih ne prodajamo.',
