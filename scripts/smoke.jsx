@@ -12995,7 +12995,7 @@ preveri(
   preveri('anketa plačila: brez izračunane kohorte, le user_ids',
     !/kandidati_za_anketo/.test(migAnketa + fnAnketa) && fnAnketa.includes("vrsta === 'anketa-placila' && Array.isArray(vhod.user_ids)"))
   // ~50 izbranih (Lovro, 30. 10. 2026): pred mailom zasedba pod zaklepom, en uspeh ali tek na človeka.
-  const migAnketa50 = readFileSync(new URL('../supabase/migrations/20261030130000_anketa_placila_50.sql', import.meta.url), 'utf8')
+  const migAnketa50 = readFileSync(new URL('../supabase/migrations/20261030190000_anketa_placila_50.sql', import.meta.url), 'utf8')
   preveri('anketa plačila: meja 50, 10 na klic, zasedba pred pošiljanjem',
     fnAnketa.includes('const ANKETA_MEJA = 50') && fnAnketa.includes('Math.min(prostih, 10)') &&
       fnAnketa.indexOf("rpc('anketa_placila_zasedi'") > -1 &&
