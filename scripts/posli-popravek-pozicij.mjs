@@ -14,6 +14,7 @@
 //   ... SUHO=false node scripts/posli-popravek-pozicij.mjs                  # poslje
 //   ... IGRALCI=1,2,3 ...                                                   # drug seznam
 import { createClient } from '@supabase/supabase-js'
+import { klicSPonovitvami, bralniFetch } from './klic-opomnika.mjs'
 
 // Lazni vratarji, popravljeni 29. 9. 2026.
 const POPRAVLJENI_2026_09_29 = [
@@ -32,7 +33,7 @@ const igralci = process.env.IGRALCI
   ? process.env.IGRALCI.split(',').map((s) => Number(s.trim())).filter(Number.isInteger)
   : POPRAVLJENI_2026_09_29
 
-const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
+const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: bralniFetch() } })
 const { data: vrstice, error } = await db
   .from('players').select('competition_id, competitions(slug)').in('id', igralci)
 if (error) { console.error(error.message); process.exit(1) }
@@ -44,7 +45,7 @@ console.log(`POPRAVEK POZICIJ â€” ${igralci.length} igralcev, ${lige.size} lig â
 let skupaj = 0
 let padlo = 0
 for (const [id, slug] of lige) {
-  const odgovor = await fetch(`${BASE}/functions/v1/posli-opomnik`, {
+  const odgovor = await klicSPonovitvami(fetch, `${BASE}/functions/v1/posli-opomnik`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${SERVICE}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ competition_id: id, vrsta: 'popravek-pozicije', player_ids: igralci, suho, najvec: 25 }),
