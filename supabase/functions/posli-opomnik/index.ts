@@ -279,11 +279,11 @@ Deno.serve(async (req) => {
     if (prej instanceof Error) return json({ error: prej.message }, 500)
     const { data, error } = await db.rpc('prejemniki_ankete', { p_ids: ids, p_competition_id: competition_id ?? null })
     if (error) return json({ error: error.message }, 500)
-    const vsi = (data ?? []) as Array<{
+    const vsi = ((data ?? []) as Array<{
       user_id: string; email: string; display_name: string | null
       competition_id: number; liga_slug: string; liga_oznaka: string; liga_drzava: string | null
       razlog: string | null
-    }>
+    }>).map((u) => (!u.razlog && !u.liga_slug ? { ...u, razlog: 'ni_lige' } : u)) // brez lige bi odjava dobila ?t=null
     const preskoceni: Record<string, number> = {}
     for (const u of vsi) if (u.razlog) preskoceni[u.razlog] = (preskoceni[u.razlog] ?? 0) + 1
     const neznanih = ids.length - vsi.length
