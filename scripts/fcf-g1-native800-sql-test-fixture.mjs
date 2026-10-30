@@ -36,7 +36,7 @@ insert into player_scores(round_id,player_id,points,computed_at)select(select mi
 -- runs; they are fixture data and are rolled back with this hosted test.
 create temporary table g9_synthetic_roster(slot int primary key,player_id bigint,team_id bigint,position text,value numeric);
 create temporary table g9_existing_players as select id,to_jsonb(p) as row from players p where competition_id=797;
-create temporary table g9_existing_scores as select ps.id,to_jsonb(ps) as row from player_scores ps join players p on p.id=ps.player_id where p.competition_id=797;
+create temporary table g9_existing_scores as select ps.round_id,ps.player_id,to_jsonb(ps) as row from player_scores ps join players p on p.id=ps.player_id where p.competition_id=797;
 DO $g9_roster$declare ts bigint[];q record;tid bigint;pid bigint;bench bigint;g9match bigint;home bigint;away bigint;goal_team bigint;home_score int;away_score int;begin
  select array_agg(team_id order by team_id)into ts from(select distinct team_id from(select m.home_team_id team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=797 and r.season='2026/27' union select m.away_team_id from matches m join rounds r on r.id=m.round_id where r.competition_id=797 and r.season='2026/27')x)y;
  if coalesce(cardinality(ts),0)<5 then raise exception 'G1 TEST: five existing G9 fixture clubs required for ordinary synthetic legal15';end if;
@@ -61,7 +61,7 @@ DO $g9_roster$declare ts bigint[];q record;tid bigint;pid bigint;bench bigint;g9
   values(g9match,bench,goal_team,75,false,false,home_score+case when goal_team=home then 1 else 0 end,away_score+case when goal_team=away then 1 else 0 end);
  update matches set home_goals=home_score+case when home=goal_team then 1 else 0 end,away_goals=away_score+case when away=goal_team then 1 else 0 end where id=g9match;
  if not exists(select 1 from appearances a join goals g on g.match_id=a.match_id and g.scorer_id=a.player_id where a.match_id=g9match and a.player_id=bench and not a.started)then raise exception 'G1 TEST: synthetic G9 scorer/substitute link missing';end if;
- if exists(select 1 from g9_existing_scores e left join player_scores ps on ps.id=e.id where ps.id is null or to_jsonb(ps) is distinct from e.row)then raise exception 'G1 TEST: synthetic G9 preexisting scores changed';end if;
+ if exists(select 1 from g9_existing_scores e left join player_scores ps on ps.round_id=e.round_id and ps.player_id=e.player_id where ps.round_id is null or to_jsonb(ps) is distinct from e.row)then raise exception 'G1 TEST: synthetic G9 preexisting scores changed';end if;
 end$g9_roster$;
 
 -- TEST ONLY actual lower-level release authorization creates an already-active
