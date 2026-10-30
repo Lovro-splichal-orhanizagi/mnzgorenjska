@@ -111,6 +111,13 @@ test('TEST ONLY dual epoch accepts only the exact e925 source reader under an in
  assert.equal(state.pack.expectedSha,derivedHead);assert.equal(state.pack.replayHead,derivedHead);assert.equal(state.pack.derivedPackSha256,JSON.parse(f.files.get('pack.json')).derivedPackSha256)
  assert.ok(f.calls.some(c=>c.path.includes('/branches/main')));assert.ok(f.calls.some(c=>c.path.includes('actions/workflows/ci.yml/runs')));assert.ok(f.calls.some(c=>c.path.includes('contents/scripts/fussball-native-composition.mjs?ref='+f.dual.head)))
 })
+test('TEST ONLY dual epoch accepts actual GitHub CI and final job timestamps in the same second',async t=>{
+ const f=await hostedDerivedFixture(t);f.enableDualEpoch();f.dual.ci.updated_at=f.dual.ci.updated_at.replace(/\.\d{3}Z$/,'Z');f.dual.ciJobs.jobs.at(-1).completed_at=f.dual.ci.updated_at
+ const input={derivedRunId,derivedHead,consumerHead:f.dual.head,frozenDirectory:'TEST-ONLY-frozen',v6FrozenDirectory:'TEST-ONLY-4e',github:f.github}
+ await f.api.loadFussballNativeComposition(input)
+ f.dual.ciJobs.jobs.at(-1).completed_at=new Date(Date.parse(f.dual.ci.updated_at)+1000).toISOString()
+ await assert.rejects(f.api.loadFussballNativeComposition(input),/CI job graph/)
+})
 test('TEST ONLY installed offline guard admits only the fixed served marker and composition path',async t=>{
  const oldFetch=globalThis.fetch,oldUrl=process.env.SUPABASE_URL,calls=[];let servedHead='c'.repeat(40)
  globalThis.fetch=async(input,init)=>{calls.push({url:String(input),init});return {ok:true,body:{getReader(){let sent=false;return {async read(){if(sent)return {done:true};sent=true;return {done:false,value:Buffer.from(`<meta name="slff-commit" content="${servedHead}">`)}},async cancel(){}}}}}}
