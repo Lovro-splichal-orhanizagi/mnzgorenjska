@@ -387,6 +387,17 @@
   **Nova stran se ne šteje sama**: dodaj jo v `PO_POTI`/`PO_PREDPONI` in v
   seznam v `zabelezi_obisk()`, sicer se zapis tiho zavrže. Oboje skupaj kaže
   razdelek *Kje ljudje obtičijo* v adminu (`src/components/admin/Lijak.tsx`)
+- **Dnevno poročilo lijaka** (od 30. 10. 2026): servisna `porocilo_lijaka(dan)`
+  vrne jsonb s seštevki za en dan (obiski, koraki, registracije, nove ekipe
+  in primerjava s povprečjem 7 dni), skupino registriranih pred 15–21 dnevi
+  (ekipa → 1. krog → 2. krog iz `fantasy_lineups`, aktivni zadnji teden po
+  `auth.sessions`, push, mini liga, povabila) in denar zadnjih 30 dni (piva,
+  trgovina, preverjeni, ponovne cene). Delovni tok *Porocilo lijaka*
+  (`scripts/porocilo-lijaka.mjs`, 07:00 UTC) ga pošlje na Discord
+  (`DISCORD_WEBHOOK_LIJAK`, sicer kanal tedenskega poročila) in z ⚠ označi
+  najšibkejši prehod. Sporočilu pripne grafa (`scripts/lijak-grafi.mjs`,
+  `@napi-rs/canvas`): lijak skupine in trende zadnjih 14 dni (14 klicev
+  funkcije). Nov korak lijaka, ki naj bo v poročilu, dodaj v `sestavi()`
 - `trgovine_dnevno` (trgovina `ios`/`android`, dan, `skupaj`, `novi`) in
   `trgovine_stanje` (zadnje stanje različice iOS) → namestitve aplikacije.
   Piše le delovni tok *Trgovine* (`scripts/trgovine.mjs`, vsak dan 07:30 UTC,
