@@ -30,7 +30,7 @@ function get(endpoint,{accept,binary=false,maxBytes=1024*1024}={}){
  const record={endpoint,method:'GET',status:null,bytes:null,sha256:null,error:null}
  result.apiCalls.push(record)
  try{
-  const body=execFileSync('gh',args,{encoding:binary?null:'buffer',maxBuffer:maxBytes+1,timeout:30000,stdio:['ignore','pipe','pipe']})
+  const body=execFileSync('gh',args,{encoding:null,maxBuffer:maxBytes+1,timeout:30000,stdio:['ignore','pipe','pipe']})
   const bytes=Buffer.isBuffer(body)?body:Buffer.from(body)
   if(bytes.length>maxBytes)throw Object.assign(new Error('bounded response exceeded'),{code:'ENOBUFS',stdout:bytes,stderr:Buffer.alloc(0)})
   record.status=200;record.bytes=bytes.length;record.sha256=safeHash(bytes)

@@ -32,6 +32,9 @@ else{process.stderr.write('unexpected fixed-path invocation');process.exit(2)}
  }catch(error){rmSync(dir,{recursive:true,force:true});throw error}
 }
 try{
+ const realChild=execFileSync(process.execPath,['-e',"process.stdout.write(JSON.stringify({transport:'child-process-buffer',ok:true}))"],{encoding:null,stdio:['ignore','pipe','pipe']})
+ assert.ok(Buffer.isBuffer(realChild),'encoding:null must return a Buffer from real execFileSync')
+ assert.deepEqual(JSON.parse(realChild.toString('utf8')),{transport:'child-process-buffer',ok:true})
  const zero=execute('quota-zero')
  assert.equal(zero.json.core.remaining,0);assert.equal(zero.json.failure.category,'primary_rate_limit');assert.equal(zero.calls.length,1)
  const denied=execute('release-403')
@@ -45,6 +48,6 @@ try{
  assert.doesNotMatch(JSON.stringify(bounded.json)+bounded.stdout,/synthetic-body|synthetic-token/)
  const gated=execute('quota-zero',{GITHUB_ACTOR_ID:'0'})
  assert.equal(gated.json.failure.category,'gate_failed');assert.equal(gated.calls.length,0)
- process.stdout.write('4 synthetic diagnostic cases passed; fixed GET calls only\n')
+ process.stdout.write('execFileSync Buffer contract and 4 synthetic diagnostic cases passed; fixed GET calls only\n')
  for(const item of [zero,denied,bounded,gated])rmSync(item.dir,{recursive:true,force:true})
 }catch(error){process.stderr.write('synthetic diagnostic test failed\n');throw error}
