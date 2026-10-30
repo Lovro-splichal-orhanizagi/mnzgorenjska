@@ -35,3 +35,10 @@ test('response body is streamed and hard-limited at 4 MiB', async () => {
   assert.equal(result.error.code, 'BODY_LIMIT')
   assert.equal(result.bytes, null)
 })
+
+test('marker uniqueness is checked across the full streamed body and chunk boundaries', async () => {
+  const marker = '<meta name="slff-commit" content="' + 'b'.repeat(40) + '">'
+  const result = await ownFetch(async () => ({ status: 200, body: Readable.from([Buffer.from('x'.repeat(5000) + marker.slice(0, 25)), Buffer.from(marker.slice(25) + 'y'.repeat(5000) + marker)]) }))
+  assert.equal(result.markerCount, 2)
+  assert.equal(result.marker, null)
+})

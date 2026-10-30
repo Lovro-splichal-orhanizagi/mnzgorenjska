@@ -20,16 +20,24 @@ export function safeError(error) {
 export async function readBoundedResponse(response, elapsedMs) {
   const hash = createHash('sha256')
   let bytes = 0
-  const markerText = []
+  let markerCarry = ''
+  let markerCount = 0
+  let marker = null
+  const markerPattern = /<meta\s+name=["']slff-commit["']\s+content=["']([0-9a-f]{40})["']\s*\/?\s*>/gi
   for await (const chunk of response.body) {
     bytes += chunk.length
     if (bytes > MAX_BYTES) throw Object.assign(new Error('response body limit'), { code: 'BODY_LIMIT' })
     hash.update(chunk)
-    if (markerText.reduce((n, x) => n + x.length, 0) < 4096) markerText.push(chunk.toString('utf8'))
+    const text = markerCarry + chunk.toString('utf8')
+    for (const match of text.matchAll(markerPattern)) {
+      if (match.index + match[0].length > markerCarry.length) {
+        markerCount += 1
+        marker = match[1]
+      }
+    }
+    markerCarry = text.slice(-256)
   }
-  const text = markerText.join('').slice(0, 4096)
-  const markers = [...text.matchAll(/<meta\s+name=["']slff-commit["']\s+content=["']([0-9a-f]{40})["']\s*\/?\s*>/gi)].map(m => m[1])
-  return { status: response.status, ok: response.status >= 200 && response.status < 300, bytes, sha256: hash.digest('hex'), markerCount: markers.length, marker: markers.length === 1 ? markers[0] : null, elapsedMs }
+  return { status: response.status, ok: response.status >= 200 && response.status < 300, bytes, sha256: hash.digest('hex'), markerCount, marker: markerCount === 1 ? marker : null, elapsedMs }
 }
 
 export async function ownFetch(fetchImpl = globalThis.fetch) {
