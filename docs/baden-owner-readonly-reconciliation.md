@@ -39,3 +39,10 @@ nativeAdmission=false, activationEligible=false and automaticRetry=false.
 
 The failed write remains UNKNOWN until independently reviewed read-only evidence
 resolves it. No database, transport or installer fix is inferred by this probe.
+
+Pre-registration competition absence is valid: zero rows return competition:null
+and competitionState:ABSENT; one observed row is PRESENT_REQUIRES_REVIEW, never
+native clearance. Duplicate/wrong-slug rows still hold. Before the first psql
+call, connection.json retains ONLY hostKind(loopback/remote), configuredPort,
+sslMode and workflowTunnelLocalPort5432. It retains no host/URI/user/password and
+does not change the connection or tunnel mapping.
