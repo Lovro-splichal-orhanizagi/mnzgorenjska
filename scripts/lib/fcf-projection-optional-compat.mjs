@@ -30,7 +30,7 @@ ${legacy}
 
 // Exact additional schema epoch only, no applied migration rewrite.
 export function fcfProjectionOptionalBadenCompatibilitySQL(){
- const migration=readFileSync(new URL('../../supabase/migrations/20261030143000_baden_cold_source_version.sql',import.meta.url),'utf8'),part=migration.split('do $vfcf$')[1],hashes=[...part.matchAll(/<>'([a-f0-9]{64})'/g)].map(m=>m[1]);if(hashes.length!==2)throw Error('missing exact Baden version projection profile');
+ const migration=readFileSync(new URL('../../supabase/migrations/20261030200000_baden_cold_source_version.sql',import.meta.url),'utf8'),part=migration.split('do $vfcf$')[1],hashes=[...part.matchAll(/<>'([a-f0-9]{64})'/g)].map(m=>m[1]);if(hashes.length!==2)throw Error('missing exact Baden version projection profile');
  return `select encode(sha256(convert_to(prosrc,'UTF8')),'hex')='${hashes[1]}' as fcf_exact_baden_version from pg_proc where oid='private_fcf_future_projection.capture(text,text[])'::regprocedure \\gset
 \\if :fcf_exact_baden_version
 do $versionepoch$begin
