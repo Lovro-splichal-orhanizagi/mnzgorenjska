@@ -59,7 +59,8 @@ napaka strežnika in se nikoli ne shrani v predpomnilnik.
 - **Kontumacija**: 3:0 (0:0) brez postav (Zala I 2025/26 tri). Razpored jo
   označi (pri obeh praznih postavah po tednu dni, kot hns), zapisnik vrne null.
 - Vzdevka kluba: `ZVFC` (2025/26) = `Zalaszentgróti VFC` (2026/27);
-  `Vácrátót KSE` (od 25. 10. 2026) = `Vácrátóti KSE` (Pest IV. Észak).
+  `Vácrátót KSE` (od 25. 10. 2026) = `Vácrátóti KSE` (Pest IV. Észak);
+  `GÜL BABA CELTIC FK` (od 28. 10. 2026) = `GB CELTIC FK` (BLSZ IV. 1.).
   Novo ime podvoji vse tekme kluba in nočni uvoz pade na
   `matches_zapisnik_id_key`; vzdevek dodaj v `ISTI_KLUB_HU`, dvojnik združi
   z *Zdruzi podvojena kluba*.
