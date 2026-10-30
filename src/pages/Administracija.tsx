@@ -1110,6 +1110,9 @@ export default function Administracija() {
                           .map(([j, n]) => `${j} ${n}`)
                           .join(', ') || '—'}
                         . Že poslanih {predogledAnkete.ze_poslanih}/{predogledAnkete.meja ?? 50}; pošilja po 10, en klik pošlje vse.
+                        {' '}Pošiljatelj: {predogledAnkete.posiljatelj ?? 'SLFF <info@slff.eu>'}
+                        {predogledAnkete.posiljatelj_pripravljen === false &&
+                          ' — še ni nastavljen, zato strežnik ne bo poslal nič.'}
                       </Potrditev>
                     )}
 

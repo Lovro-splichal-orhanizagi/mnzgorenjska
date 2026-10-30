@@ -12999,9 +12999,14 @@ preveri(
   preveri('anketa plačila: meja 50, 10 na klic, zasedba pred pošiljanjem',
     fnAnketa.includes('const ANKETA_MEJA = 50') && fnAnketa.includes('Math.min(prostih, 10)') &&
       fnAnketa.indexOf("rpc('anketa_placila_zasedi'") > -1 &&
-      fnAnketa.indexOf("rpc('anketa_placila_zasedi'") < fnAnketa.lastIndexOf('const rez = await poslji(EMAIL_FROM, u.email, sporocilo') &&
+      fnAnketa.indexOf("rpc('anketa_placila_zasedi'") < fnAnketa.lastIndexOf('const rez = await poslji(ANKETA_FROM, u.email, sporocilo') &&
       ['create unique index', 'pg_advisory_xact_lock', 'to service_role'].every((x) => migAnketa50.includes(x)) &&
       !/to (anon|authenticated)/.test(migAnketa50))
+  // Lovro, 30. 10. 2026: anketa le od info@slff.eu, z lastno prijavo; brez gesla nič, ne noreply@.
+  const anketaBlok = fnAnketa.slice(fnAnketa.indexOf("vrsta === 'anketa-placila' && Array.isArray"), fnAnketa.indexOf("if (vrsta === 'anketa-placila') return json"))
+  preveri('anketa plačila: pošiljatelj info@slff.eu, brez nadomestnega From ali reply-to',
+    fnAnketa.includes("const ANKETA_FROM = 'SLFF <info@slff.eu>'") && fnAnketa.includes("auth: { user: 'info@slff.eu', pass: INFO_SMTP_PASS }") &&
+      anketaBlok.includes('if (!infoPripravljen && !suhoA)') && !anketaBlok.includes('EMAIL_FROM') && !anketaBlok.includes('EMAIL_REPLY_TO'))
   // Lovro, 30. 10. 2026: ne 5 klikov za 50 mailov. En klik pošlje vse, a le odkljukane (brez kohorte).
   const adminSrc = readFileSync(new URL('../src/pages/Administracija.tsx', import.meta.url), 'utf8')
   preveri('anketa plačila: en klik pošlje vse odkljukane, z omejenim številom krogov',
