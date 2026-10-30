@@ -21,7 +21,7 @@ on:
         default: false
 permissions: {}
 concurrency:
-  group: fcf-native800-fixed-g1
+  group: fcf-native800-fixed-g9
   cancel-in-progress: false
 env:
   FCF_G1_NATIVE800_BOOTSTRAP_ID: ${{ inputs.bootstrap_asset_id }}
