@@ -109,13 +109,15 @@ nadoknadi.
   scripts/objava-reel.mjs <ig|fb|both> [--dry]` (vrstico v ovoju `slff-ops`
   doda lastnik VM; ovoj ni v gitu). Tar ima natanko en `*.mp4` in
   `caption.txt` (UTF-8), nič drugega (`._*` in `.DS_Store` se preskočijo).
-  Preverbe pred objavo: video s ffprobe (H.264, AAC ali brez zvoka, 9:16,
+  Preverbe pred objavo: video s ffprobe (H.264 yuv420p, AAC ali brez zvoka, 9:16,
   vsaj 540 × 960, 23–60 fps, 3–90 s, ≤ 100 MB), napis (≤ 2200 znakov, ≤ 30
   ključnikov, ≤ 20 omemb), računi (stran `META_PAGE_ID` je povezana z
   `META_IG_USER_ID`, ime = `OBJAVE_IG_RACUN`, če je nastavljen, kvota
   Instagrama), dnevna meja `ROCNI_REEL_NA_DAN` (privzeto 2 na ljubljanski
-  dan; šteje vsak poskus pri Meti, tudi neuspel) in **ni osnutka delavca
-  v ±60 min** (`osnutek`/`objavljanje` v `objave`; brez baze zavrne).
+  dan, 0 ustavi; šteje vsak poskus pri Meti, tudi neuspel) in **ni osnutka
+  delavca 2 h nazaj ali 60 min naprej** (`osnutek`/`objavljanje` v `objave`;
+  nazaj 2 h, ker delavec zamujen osnutek objavi do `OBJAVA_ZAMUDA` pozneje;
+  brez baze zavrne).
   `--dry` naredi vse to (Meta le bere) in nič ne objavi ne zapiše. Objava:
   video v `/mediji/rocni/<datum>-<naključno>/reel.mp4`, preverba javnega
   naslova (HEAD, velikost), nato Instagram in Facebook kot pri delavcu
