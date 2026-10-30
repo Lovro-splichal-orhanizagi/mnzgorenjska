@@ -35,10 +35,10 @@ function originals(stage,main,lineup,fonts,id){
  return {rows,all}
 }
 const descriptor=d=>({url:d.url,kind:d.kind,sha256:d.sha256,byteLength:d.bytes,file:d.file,metadataSha256:digest(d),metadata:structuredClone(d)})
-export function partitionFixture(){
+export function partitionFixture({now=Date.now()}={}){
  // Exact historical Git957de052 DATA seeds this explicitly old-V7 synthetic fixture.
  const c=JSON.parse(readFileSync(new URL('./vzorci/fussball-baden-native-catalog-unfinalized-957de052.json',import.meta.url))),stages={};c.sourceRunId=sourceReplayRunId;c.sourceHead='b'.repeat(40);c.status='FINALIZED';c.firstFantasyPlayedOn='2026-10-31';c.clubDescriptors=[]
- for(const s of c.seasons){s.reviews=[];const createdAt=new Date(Date.now()-60000).toISOString();stages[s.stage]={manifest:{success:true,error:null,createdAt,options:{reportLimit:null},documents:[]},files:new Map(),result:{version:1,activationEligible:false,scope:{provider:'fussball',staffel:s.staffel,season:s.season,seedUrl:'https://www.fussball.de/spieltag/-/staffel/'+s.staffel,asOfDate:'2026-10-28',cardPolicy:'community-v1'},schedule:{staffel:s.staffel,season:s.season,rounds:Array.from({length:9},(_,i)=>i+1),fixtures:[]},reports:[],pendingReports:[],rejectedReports:[],cardEnvelopes:[]}}}
+ for(const s of c.seasons){s.reviews=[];const createdAt=new Date(now-60000).toISOString();stages[s.stage]={manifest:{success:true,error:null,createdAt,options:{reportLimit:null},documents:[]},files:new Map(),result:{version:1,activationEligible:false,scope:{provider:'fussball',staffel:s.staffel,season:s.season,seedUrl:'https://www.fussball.de/spieltag/-/staffel/'+s.staffel,asOfDate:'2026-10-28',cardPolicy:'community-v1'},schedule:{staffel:s.staffel,season:s.season,rounds:Array.from({length:9},(_,i)=>i+1),fixtures:[]},reports:[],pendingReports:[],rejectedReports:[],cardEnvelopes:[]}}}
  const current=stages.current,archive=stages.archive,m=JSON.parse(read('de-fussball-zapisnik.json')),fonts=Object.fromEntries(Object.entries(m.fonts).map(([id,f])=>[id,{bytes:read(f.file),sha256:f.sha256}])),id='031EQBPLF4000000VS5489BTVUS470OH'
  const main=read('de-fussball-ilvesheim-main.html').toString(),lineup=read('de-fussball-ilvesheim-lineup.html').toString(),complete=razberiFantasyZapisnik(main,lineup,{fonts,id,lineupId:id,season:'2026/27',cardPolicy:'community-v1'})
  originals(current,main,lineup,fonts,id);const f=sourceFixture(complete);current.result.schedule.fixtures.push(f);current.result.reports.push({fixture:structuredClone(f),result:complete})
