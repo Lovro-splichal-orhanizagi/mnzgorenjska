@@ -51,6 +51,7 @@ The metadata extension adds current role/database and recovery state. It exposes
 pg_db_role_setting only for current/global role/database scopes and only the two
 read-only GUC names, with Boolean values. pg_file_settings exposes only
 default_transaction_read_only name/Boolean/applied fields. Catalog constraint
-and trigger definitions are scoped to private_baden_history.catalog; trigger
-function identity is retained without function body, other relation data, file
+definitions and trigger name/type/enabled/function identity are scoped to
+private_baden_history.catalog. Trigger definitions/arguments are omitted, as are
+function bodies, other relation data, file
 paths, setting arrays or raw errors. No connection/read-only control changes.
