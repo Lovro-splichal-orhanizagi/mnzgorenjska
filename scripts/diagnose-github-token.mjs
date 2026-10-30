@@ -2,13 +2,12 @@
 import {execFileSync} from 'node:child_process'
 import {createHash} from 'node:crypto'
 import {writeFileSync} from 'node:fs'
+import {readFcfG9ArchivedR1Log} from './fcf-g9-archived-r1-log.mjs'
 
 const repo='repos/Lovro-splichal-orhanizagi/mnzgorenjska'
-const releaseId=416653899,assetId=690671037
-const expectedAssetSha='e9b7d58e47239cd6d19109e43af49e4980b62b6339d21a1879c5b2a7fdb72a51'
-const expectedAssetBytes=17582
-const result={diagnostic:'github-token-readonly-v1',mergeable:false,execution:null,apiCalls:[],failure:null}
+const result={diagnostic:'github-archived-r1-log-readonly-v2',mergeable:false,execution:null,apiCalls:[],failure:null}
 const safeHash=b=>createHash('sha256').update(b).digest('hex')
+const releasePath=`${repo}/releases/416653899`,assetListPrefix=releasePath+'/assets?per_page=100&page=',rawAssetPath=`${repo}/releases/assets/690729624`
 
 function gate(){
  const expected={GITHUB_EVENT_NAME:'workflow_dispatch',GITHUB_REF:'refs/heads/codex-github-token-diagnostic-e925-20261030',GITHUB_ACTOR:'nejcar20',GITHUB_ACTOR_ID:'25134229',GITHUB_TRIGGERING_ACTOR:'nejcar20',GITHUB_RUN_ATTEMPT:'1',GITHUB_REPOSITORY:'Lovro-splichal-orhanizagi/mnzgorenjska'}
@@ -24,7 +23,10 @@ function safeFailure(error){
  return {status,processCode:Number.isInteger(error?.status)?error.status:null,signal:typeof error?.signal==='string'?error.signal:null,code,stderrBytes:stderr.length,stderrSha256:safeHash(stderr)}
 }
 function get(endpoint,{accept,binary=false,maxBytes=1024*1024}={}){
- if(result.apiCalls.length>=5)throw Error('fixed API call budget exceeded')
+ const page=typeof endpoint==='string'&&endpoint.startsWith(assetListPrefix)?endpoint.slice(assetListPrefix.length):''
+ const allowed=endpoint==='rate_limit'||endpoint===releasePath||/^(?:[1-9]|10)$/.test(page)||endpoint===rawAssetPath
+ if(!allowed)throw Error('fixed diagnostic GitHub path refused')
+ if(result.apiCalls.length>=13)throw Error('fixed API call budget exceeded')
  const args=['api','--method','GET',endpoint]
  if(accept)args.push('-H',`Accept: ${accept}`)
  const record={endpoint,method:'GET',status:null,bytes:null,sha256:null,error:null}
@@ -41,13 +43,14 @@ function get(endpoint,{accept,binary=false,maxBytes=1024*1024}={}){
  }
 }
 function json(bytes){try{return JSON.parse(bytes.toString('utf8'))}catch{throw Error('GitHub response was not valid JSON')}}
-function classify(stage,error){
- const s=error?.safe||{}
+function classify(stage,error,recordError=null){
+ const s=error?.safe||recordError||{}
  let category='transport_or_process_failure'
  if(s.status===401)category='unauthenticated'
  else if(s.status===403)category=result.core?.remaining===0?'primary_rate_limit':'forbidden_or_secondary_limit'
  else if(s.status===404)category='private_asset_or_not_found'
  else if(s.status===429)category='rate_limited'
+ else if(typeof error?.message==='string'&&error.message.startsWith('FCF_G9_ARCHIVED_R1_LOG:'))category='archive_validation_failed'
  result.failure={stage,category,...s}
 }
 async function main(){
@@ -62,24 +65,10 @@ async function main(){
   result.core={limit:core.limit,remaining:core.remaining,reset:core.reset,used:core.used}
   if(core.remaining===0)result.failure={stage:'rate_limit',category:'primary_rate_limit'}
   if(!result.failure){
-   const release=json(get(`${repo}/releases/${releaseId}`,{maxBytes:256*1024}))
-   result.release={id:release?.id??null,tag:typeof release?.tag_name==='string'?release.tag_name:null,draft:release?.draft??null}
-   if(release?.id!==releaseId||release?.tag_name!=='fcf-inventory-staging-v1'||release?.draft!==true)result.failure={stage:'release_metadata',category:'release_identity_mismatch'}
+   const bytes=await readFcfG9ArchivedR1Log({github:async(endpoint,binary=false)=>{const response=get(endpoint,{binary,accept:binary?'application/octet-stream':undefined,maxBytes:binary?24885:1024*1024});return binary?response:json(response)}})
+   result.archivedR1Log={verified:true,releaseIdentityVerified:true,assetMembershipVerified:true,rootUploaderVerified:true,rawDigestVerified:true,bytes:bytes.length,sha256:safeHash(bytes)}
   }
-  if(!result.failure){
-   const asset=json(get(`${repo}/releases/assets/${assetId}`,{accept:'application/vnd.github+json',maxBytes:256*1024}))
-   result.assetMetadata={id:asset?.id??null,state:asset?.state??null,size:asset?.size??null,digest:asset?.digest??null}
-   if(asset?.id!==assetId||asset?.state!=='uploaded'||asset?.size!==expectedAssetBytes||asset?.digest!==`sha256:${expectedAssetSha}`)result.failure={stage:'asset_metadata',category:'asset_identity_mismatch'}
-  }
-  if(!result.failure){
-   const raw=get(`${repo}/releases/assets/${assetId}`,{accept:'application/octet-stream',binary:true,maxBytes:expectedAssetBytes+1})
-   result.assetBytes={bytes:raw.length,sha256:safeHash(raw),matchesExpected:raw.length===expectedAssetBytes&&safeHash(raw)===expectedAssetSha}
-   if(!result.assetBytes.matchesExpected)result.failure={stage:'asset_bytes',category:'asset_digest_mismatch'}
-  }
-  // Optional fifth fixed GET, only after all four primary checks pass. Retain
-  // only byte count and digest; never persist or print the old job log itself.
-  if(!result.failure){try{const log=get(`${repo}/actions/jobs/123509832634/logs`,{binary:true,maxBytes:2*1024*1024});result.oldR1JobLog={bytes:log.length,sha256:safeHash(log)}}catch(error){classify('old_r1_job_log',error)}}
- }catch(error){classify(result.apiCalls.at(-1)?.endpoint||'diagnostic',error)}
+ }catch(error){const last=result.apiCalls.at(-1);classify(last?.endpoint||'diagnostic',error,last?.error)}
 }
 await main()
 writeFileSync('github-token-diagnostic.json',JSON.stringify(result,null,2)+'\n',{mode:0o600})
