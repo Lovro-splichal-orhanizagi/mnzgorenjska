@@ -356,7 +356,8 @@ export default function Administracija() {
       setSporocilo(
         `Anketa: poslano ${data.poslano}, napak ${data.napak}` +
           (data.ostalo ? `, še ${data.ostalo} (pritisni znova)` : '') +
-          (data.cez_mejo ? ', meja 20 dosežena' : '') +
+          (data.zasedenih ? `, ${data.zasedenih} že v teku drugje (preskočeni)` : '') +
+          (data.cez_mejo ? ', meja 50 dosežena' : '') +
           `. V email_log skupaj ${data.ze_poslanih ?? '?'} uspešnih.`,
       )
       if (!data.ostalo) setIzbraniAnketa([])
@@ -1033,9 +1034,9 @@ export default function Administracija() {
                         onClick={pripraviAnketo}
                         disabled={posiljam || !izbraniAnketa.length || predogledAnkete != null}
                         className="gumb-tih text-xs disabled:opacity-50"
-                        title="Anketa 'kaj bi plačal' odkljukanim (največ 20, enkrat na človeka)"
+                        title="Anketa 'kaj bi plačal' odkljukanim (največ 50, enkrat na človeka)"
                       >
-                        📋 Anketa ({izbraniAnketa.length}/20)
+                        📋 Anketa ({izbraniAnketa.length}/50)
                       </button>
                       {izbraniAnketa.length > 0 && (
                         <button
@@ -1081,7 +1082,7 @@ export default function Administracija() {
                         {Object.entries(predogledAnkete.jeziki ?? {})
                           .map(([j, n]) => `${j} ${n}`)
                           .join(', ') || '—'}
-                        . Že poslanih {predogledAnkete.ze_poslanih}/20; en klic pošlje največ 10.
+                        . Že poslanih {predogledAnkete.ze_poslanih}/{predogledAnkete.meja ?? 50}; en klic pošlje največ 10.
                       </Potrditev>
                     )}
 
@@ -1112,7 +1113,7 @@ export default function Administracija() {
                                   checked={izbraniAnketa.includes(u.user_id)}
                                   disabled={
                                     !u.email ||
-                                    (!izbraniAnketa.includes(u.user_id) && izbraniAnketa.length >= 20)
+                                    (!izbraniAnketa.includes(u.user_id) && izbraniAnketa.length >= 50)
                                   }
                                   onChange={(e) => {
                                     setPredogledAnkete(null)
