@@ -94,6 +94,8 @@ interface Zahteva {
   najvec_poslati?: number
   // 'anketa-placila': odtis kohorte iz suhega teka; brez ujemanja ni pošiljanja.
   kohorta?: string
+  // 'anketa-placila' iz administracije: natanko odkljukani uporabniki (do 20).
+  user_ids?: string[]
 }
 
 interface Uporabnik {
@@ -266,6 +268,73 @@ Deno.serve(async (req) => {
   // državo, jezik, dneve in dejanja ter odtis kohorte (sha-256 urejenih id-jev,
   // 12 znakov). Pošiljanje zahteva isti odtis, torej natanko kohorto, ki jo je
   // človek videl; največ 10 na klic, 2 s razmika, 20 skupaj (email_log).
+  // Z `user_ids` (izbor v administraciji) pošlje natanko izbranim; admin naslove
+  // že vidi v tabeli, odgovor pa vrne le števila in razloge preskoka.
+  if (vrsta === 'anketa-placila' && Array.isArray(vhod.user_ids)) {
+    const suhoA = suho !== false
+    const ids = [...new Set(vhod.user_ids.filter((x) => typeof x === 'string'))]
+    if (!ids.length || ids.length > 20) return json({ error: 'Izberi od 1 do 20 uporabnikov.' }, 400)
+    if (!SMTP_PASS && !suhoA) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
+    const db = createClient(SUPABASE_URL, SERVICE_KEY)
+    const poslanih = async () => {
+      const { data, error } = await db.rpc('anketa_placila_poslanih')
+      if (error) throw new Error(error.message)
+      return Number(data ?? 0)
+    }
+    const prej = await poslanih().catch((e) => e as Error)
+    if (prej instanceof Error) return json({ error: prej.message }, 500)
+    const { data, error } = await db.rpc('prejemniki_ankete', { p_ids: ids, p_competition_id: competition_id ?? null })
+    if (error) return json({ error: error.message }, 500)
+    const vsi = (data ?? []) as Array<{
+      user_id: string; email: string; display_name: string | null
+      competition_id: number; liga_slug: string; liga_oznaka: string; liga_drzava: string | null
+      razlog: string | null
+    }>
+    const preskoceni: Record<string, number> = {}
+    for (const u of vsi) if (u.razlog) preskoceni[u.razlog] = (preskoceni[u.razlog] ?? 0) + 1
+    const neznanih = ids.length - vsi.length
+    if (neznanih) preskoceni.ni_racuna = neznanih
+    const kand = vsi.filter((u) => !u.razlog)
+    const jeziki: Record<string, number> = {}
+    for (const u of kand) {
+      const j = jezikAnkete({ drzava: u.liga_drzava })
+      jeziki[j] = (jeziki[j] ?? 0) + 1
+    }
+    const povzetek = { izbranih: ids.length, kandidati_stevilo: kand.length, preskoceni, jeziki, ze_poslanih: prej }
+    if (suhoA) return json({ suho: true, ...povzetek })
+    // 20 skupaj (SLF-211); funkcija ima 60 s, mail traja ~4 s, zato 10 na klic.
+    const prostih = Math.max(0, 20 - prej)
+    let poslano = 0
+    let napak = 0
+    for (const u of kand.slice(0, Math.min(prostih, 10))) {
+      if (poslano + napak > 0) await new Promise((r) => setTimeout(r, 500))
+      const liga: Liga = { slug: u.liga_slug, oznaka: u.liga_oznaka, drzava: u.liga_drzava }
+      const sporocilo = await sOdjavo(db, u.user_id, sestaviAnketoPlacila(liga, { display_name: u.display_name }))
+      const rez = await poslji(EMAIL_FROM, u.email, sporocilo, Deno.env.get('EMAIL_REPLY_TO'))
+      if (rez.napaka) napak++
+      else poslano++
+      const { error: logErr } = await db.from('email_log').insert({
+        user_id: u.user_id,
+        email: u.email,
+        vrsta,
+        competition_id: u.competition_id,
+        resend_id: rez.id ?? null,
+        napaka: rez.napaka ?? null,
+      })
+      if (logErr) return json({ error: `email_log: ${logErr.message}`, poslano, napak }, 500)
+    }
+    // Poslano potrdi email_log, ne števec v zanki.
+    const potem = await poslanih().catch(() => null)
+    return json({
+      ...povzetek,
+      poslano,
+      napak,
+      ostalo: Math.max(0, kand.length - poslano - napak),
+      cez_mejo: kand.length > prostih,
+      ze_poslanih: potem,
+    })
+  }
+
   if (vrsta === 'anketa-placila') {
     // Brez izrecnega `suho: false` je suhi tek.
     const suhoA = suho !== false

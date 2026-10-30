@@ -155,6 +155,11 @@ export default function Administracija() {
   // je drugo.
   const [kandidatiOpomnika, setKandidatiOpomnika] = useState<number | null>(null)
   const [potrjujemPreracun, setPotrjujemPreracun] = useState(false)
+  // Anketa "kaj bi plačal" (SLF-211): admin odkljuka vrstice, strežnik pošlje.
+  // Izbor ostane ob menjavi lige (id-ji so računi, ne ekipe), da se da zbrati
+  // ljudi iz več lig. Naslovi gredo iz baze naravnost v mail, ne prek brskalnika.
+  const [izbraniAnketa, setIzbraniAnketa] = useState<string[]>([])
+  const [predogledAnkete, setPredogledAnkete] = useState<any | null>(null)
   const [preracunavam, setPreracunavam] = useState(false)
   // Sprememba igralca čaka na potrditev: pozicija povozi glasovanje, klub
   // spremeni kvoto v kadrih — oboje na en klik po nesreči.
@@ -174,6 +179,7 @@ export default function Administracija() {
   // Ob menjavi lige odpadejo vsa odprta vprašanja — veljala so za prejšnjo.
   useEffect(() => {
     setKandidatiOpomnika(null)
+    setPredogledAnkete(null)
     setPotrjujemPreracun(false)
     setCakaIgralec(null)
   }, [tekmovanjeId])
@@ -314,6 +320,50 @@ export default function Administracija() {
       setNapaka(`Pošiljanje ni uspelo: ${(e as Error)?.message ?? e}`)
     } finally {
       setKandidatiOpomnika(null)
+      setPosiljam(false)
+    }
+  }
+
+  // Suhi tek ankete: koliko izbranih dobi mail, koliko jih strežnik preskoči
+  // (odjavljen, že dobil …) in v katerih jezikih. Šele nato vprašanje.
+  async function pripraviAnketo() {
+    setNapaka(null)
+    setSporocilo(null)
+    setPosiljam(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('posli-opomnik', {
+        body: { vrsta: 'anketa-placila', competition_id: tekmovanjeId, user_ids: izbraniAnketa, suho: true },
+      })
+      if (error) throw new Error(await napakaFunkcije(error))
+      if (data?.error) throw new Error(data.error)
+      setPredogledAnkete(data)
+    } catch (e) {
+      setNapaka(`Predogled ankete ni uspel: ${(e as Error)?.message ?? e}`)
+    } finally {
+      setPosiljam(false)
+    }
+  }
+
+  async function posljiAnketo() {
+    setNapaka(null)
+    setPosiljam(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('posli-opomnik', {
+        body: { vrsta: 'anketa-placila', competition_id: tekmovanjeId, user_ids: izbraniAnketa, suho: false },
+      })
+      if (error) throw new Error(await napakaFunkcije(error))
+      if (data?.error) throw new Error(data.error)
+      setSporocilo(
+        `Anketa: poslano ${data.poslano}, napak ${data.napak}` +
+          (data.ostalo ? `, še ${data.ostalo} (pritisni znova)` : '') +
+          (data.cez_mejo ? ', meja 20 dosežena' : '') +
+          `. V email_log skupaj ${data.ze_poslanih ?? '?'} uspešnih.`,
+      )
+      if (!data.ostalo) setIzbraniAnketa([])
+    } catch (e) {
+      setNapaka(`Pošiljanje ankete ni uspelo: ${(e as Error)?.message ?? e}`)
+    } finally {
+      setPredogledAnkete(null)
       setPosiljam(false)
     }
   }
@@ -979,6 +1029,22 @@ export default function Administracija() {
                       >
                         ✉️ Mailto (BCC)
                       </a>
+                      <button
+                        onClick={pripraviAnketo}
+                        disabled={posiljam || !izbraniAnketa.length || predogledAnkete != null}
+                        className="gumb-tih text-xs disabled:opacity-50"
+                        title="Anketa 'kaj bi plačal' odkljukanim (največ 20, enkrat na človeka)"
+                      >
+                        📋 Anketa ({izbraniAnketa.length}/20)
+                      </button>
+                      {izbraniAnketa.length > 0 && (
+                        <button
+                          onClick={() => setIzbraniAnketa([])}
+                          className="text-xs text-slate-400 underline hover:text-gnl-300"
+                        >
+                          počisti izbor
+                        </button>
+                      )}
                       <button onClick={naloziUporabnike} className="text-xs text-slate-400 underline hover:text-gnl-300">
                         osveži
                       </button>
@@ -998,10 +1064,32 @@ export default function Administracija() {
                       </Potrditev>
                     )}
 
+                    {predogledAnkete != null && (
+                      <Potrditev
+                        potrdi={posljiAnketo}
+                        preklici={() => setPredogledAnkete(null)}
+                        zaseden={posiljam}
+                        gumb="Da, pošlji anketo"
+                      >
+                        Izbranih {predogledAnkete.izbranih}, mail dobi{' '}
+                        <strong>{predogledAnkete.kandidati_stevilo}</strong>
+                        {Object.keys(predogledAnkete.preskoceni ?? {}).length > 0 &&
+                          ` (preskočeni: ${Object.entries(predogledAnkete.preskoceni)
+                            .map(([k, n]) => `${k.replace(/_/g, ' ')} ${n}`)
+                            .join(', ')})`}
+                        . Jeziki:{' '}
+                        {Object.entries(predogledAnkete.jeziki ?? {})
+                          .map(([j, n]) => `${j} ${n}`)
+                          .join(', ') || '—'}
+                        . Že poslanih {predogledAnkete.ze_poslanih}/20; en klic pošlje največ 10.
+                      </Potrditev>
+                    )}
+
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs sm:text-sm">
                         <thead>
                           <tr className="text-left text-slate-500">
+                            <th className="pb-2 pr-2" title="Izbor za anketo">📋</th>
                             <th className="pb-2 pr-2">Uporabnik</th>
                             <th className="pb-2 pr-2">E-pošta</th>
                             <th className="pb-2 pr-2" title="Države lig, v katerih ima ekipe; brez ekipe jezik ob registraciji">
@@ -1017,6 +1105,25 @@ export default function Administracija() {
                         <tbody>
                           {naStrani.map((u) => (
                             <tr key={u.user_id} className="border-t border-white/5 align-top">
+                              <td className="py-1.5 pr-2">
+                                <input
+                                  type="checkbox"
+                                  aria-label="Izberi za anketo"
+                                  checked={izbraniAnketa.includes(u.user_id)}
+                                  disabled={
+                                    !u.email ||
+                                    (!izbraniAnketa.includes(u.user_id) && izbraniAnketa.length >= 20)
+                                  }
+                                  onChange={(e) => {
+                                    setPredogledAnkete(null)
+                                    setIzbraniAnketa((s) =>
+                                      e.target.checked
+                                        ? [...s, u.user_id]
+                                        : s.filter((x) => x !== u.user_id),
+                                    )
+                                  }}
+                                />
+                              </td>
                               <td className="py-1.5 pr-2 font-semibold">
                                 {urediUporabnik?.user_id === u.user_id ? (
                                   <VrsticaZaUrejanje
