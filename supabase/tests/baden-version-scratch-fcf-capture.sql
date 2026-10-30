@@ -41,6 +41,52 @@ SELECT 'SCRATCH_STATE_DIAGNOSTIC ' || jsonb_build_object(
 )::text;
 ROLLBACK;
 BEGIN;
+-- TEST ONLY: actual fresh-run diagnostic 41119907523 proves the catalog's
+-- auto IDs differ from the fixed production IDs. Preserve all four headers
+-- while swapping their IDs only after checking every actual incoming FK.
+CREATE TEMP TABLE scratch_header_rekey AS
+SELECT c.id old_id, m.new_id, to_jsonb(c)-'id' header
+FROM competitions c JOIN (VALUES
+  (752::bigint,783::bigint,'es-ct-segona-g1','fcf','4109388-4109627'),
+  (766::bigint,797::bigint,'es-ct-tercera-g9','fcf','4118349-4118588'),
+  (783::bigint,752::bigint,'hr-u19-2nl-centar','hns','114985034'),
+  (797::bigint,766::bigint,'hr-bj-u19-sjever','hns','114681204')
+)m(old_id,new_id,slug,source,code)
+ON c.id=m.old_id AND c.slug=m.slug AND c.source=m.source
+ AND c.source_league_code=m.code AND NOT c.active AND c.source_policy IS NULL;
+DO $rekey$
+DECLARE dependency record; dependent_count bigint;
+BEGIN
+ IF (SELECT count(*) FROM scratch_header_rekey)<>4
+    OR EXISTS(SELECT 1 FROM competitions WHERE id IN(-971783,-971797))
+ THEN RAISE EXCEPTION 'SCRATCH: exact four witnessed empty-header mappings required'; END IF;
+ FOR dependency IN
+  SELECT ns.nspname,t.relname,a.attname,cardinality(fk.conkey) children,
+         cardinality(fk.confkey) parents,pa.attname parent_column
+  FROM pg_constraint fk JOIN pg_class t ON t.oid=fk.conrelid
+  JOIN pg_namespace ns ON ns.oid=t.relnamespace
+  JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=fk.conkey[1]
+  JOIN pg_attribute pa ON pa.attrelid=fk.confrelid AND pa.attnum=fk.confkey[1]
+  WHERE fk.contype='f' AND fk.confrelid='public.competitions'::regclass
+ LOOP
+  IF dependency.children<>1 OR dependency.parents<>1 OR dependency.parent_column<>'id'
+  THEN RAISE EXCEPTION 'SCRATCH: unsupported competition FK before header rekey'; END IF;
+  EXECUTE format('SELECT count(*) FROM %I.%I WHERE %I=ANY($1)',
+    dependency.nspname,dependency.relname,dependency.attname)
+    INTO dependent_count USING ARRAY[752,766,783,797]::bigint[];
+  IF dependent_count<>0 THEN RAISE EXCEPTION 'SCRATCH: dependent rows prevent header rekey'; END IF;
+ END LOOP;
+ UPDATE competitions SET id=-971783 WHERE id=783;
+ UPDATE competitions SET id=-971797 WHERE id=797;
+ UPDATE competitions SET id=783 WHERE id=752;
+ UPDATE competitions SET id=797 WHERE id=766;
+ UPDATE competitions SET id=752 WHERE id=-971783;
+ UPDATE competitions SET id=766 WHERE id=-971797;
+ IF EXISTS(SELECT 1 FROM scratch_header_rekey b LEFT JOIN competitions c ON c.id=b.new_id
+           WHERE c.id IS NULL OR to_jsonb(c)-'id' IS DISTINCT FROM b.header)
+    OR EXISTS(SELECT 1 FROM competitions WHERE id IN(-971783,-971797))
+ THEN RAISE EXCEPTION 'SCRATCH: header fields or exact rekey membership changed'; END IF;
+END $rekey$;
 DO $seed$
 DECLARE changed integer;
 BEGIN
