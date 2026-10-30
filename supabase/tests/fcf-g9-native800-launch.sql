@@ -2,8 +2,8 @@
 create temporary table launch_original as select rollout,public.fcf_native800_receipt('es-ct-tercera-g9')receipt from fcf_target_packets;
 select pg_temp.six_assert((select activation_result->>'kind'='fcf-native800-price-before'and activation_result->'offTargetPriors'=private_fcf_native800.off_target_priors()and(activation_result#>>'{offTargetPriors,count}')::int>=1 from private_fcf_future_target_release.receipts where competition_id=797),'actual atomic server anchor before pricing');
 savepoint native800_legacy_receipt;
-insert into private_fcf_future_target_release.receipts(competition_id,inventory_key,packet_sha256,packet_text,rollout_text,rollout_sha256,source_fingerprint,cleanup_before_sha256,imported_state_sha256,stage)select 790,repeat('e',64),pg_temp.native800_sha('{}'),'{}','{"kind":"TEST ONLY legacy unaffected"}',pg_temp.native800_sha('{"kind":"TEST ONLY legacy unaffected"}'),repeat('e',64),before_sha256,repeat('e',64),'imported'from private_fcf_future_history.cleanup_receipt;
-select pg_temp.six_assert((select activation_result is null from private_fcf_future_target_release.receipts where competition_id=790),'legacy receipt insertion remains unchanged');
+insert into private_fcf_future_target_release.receipts(competition_id,inventory_key,packet_sha256,packet_text,rollout_text,rollout_sha256,source_fingerprint,cleanup_before_sha256,imported_state_sha256,stage)select 783,repeat('e',64),pg_temp.native800_sha('{}'),'{}','{"kind":"TEST ONLY legacy unaffected"}',pg_temp.native800_sha('{"kind":"TEST ONLY legacy unaffected"}'),repeat('e',64),before_sha256,repeat('e',64),'imported'from private_fcf_future_history.cleanup_receipt;
+select pg_temp.six_assert((select activation_result is null from private_fcf_future_target_release.receipts where competition_id=783),'legacy receipt insertion remains unchanged');
 rollback to savepoint native800_legacy_receipt;
 -- Deliberate stock-shaped positions/prices/target priors; position trigger uses
 -- ordinary authoritative scoring. Off-target priors are never touched here.
