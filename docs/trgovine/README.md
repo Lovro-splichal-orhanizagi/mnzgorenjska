@@ -323,4 +323,5 @@ few days after the first installs.
   push doesn't exist yet.
 - After confirming a new e-mail address the app always opens My Team (the
   original page from before registration is not remembered across devices).
-- iPad: the app is iPhone-only; it runs on iPad in iPhone mode.
+- iPad: universal since 30 Oct 2026 (full screen); App Store needs 13" iPad
+  screenshots (2064×2752) in `posnetki/ipad`.

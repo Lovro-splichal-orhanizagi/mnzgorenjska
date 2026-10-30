@@ -90,6 +90,9 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run build
+      # Gradnja v trgovini mora klicati sedanji strežnik (build 3 je kazal na Supabase Cloud).
+      - name: Kaže na api.slff.eu?
+        run: grep -rqF 'https://api.slff.eu' dist/assets && ! grep -rqE '[a-z]{20}\.supabase\.co' dist
       - run: npx cap sync ios
 
       - name: Ključ App Store Connect
@@ -171,6 +174,9 @@ jobs:
           java-version: '21'
       - run: npm ci --ignore-scripts
       - run: npm run build
+      # Gradnja v trgovini mora klicati sedanji strežnik (build 3 je kazal na Supabase Cloud).
+      - name: Kaže na api.slff.eu?
+        run: grep -rqF 'https://api.slff.eu' dist/assets && ! grep -rqE '[a-z]{20}\.supabase\.co' dist
       - run: npx cap sync android
 
       - name: Številka in različica
