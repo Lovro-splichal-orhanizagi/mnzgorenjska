@@ -100,7 +100,7 @@ jobs:
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
 
       - name: Baden catalog owner and hosted native workflow (offline)
-        run: node --test scripts/test-baden-served-page.mjs scripts/test-install-baden-native-catalog.mjs scripts/test-baden-owner-transport-protocol.mjs scripts/test-prepare-fussball-issued-description.mjs scripts/test-stage-baden-native-composition.mjs scripts/test-fcf-g13-baden-compat.mjs scripts/test-baden-active-cache-refresh.mjs scripts/test-baden-fcf-projection-sql.mjs
+        run: node --test scripts/test-baden-served-page.mjs scripts/test-install-baden-native-catalog.mjs scripts/test-baden-owner-forward-recovery.mjs scripts/test-baden-owner-transport-protocol.mjs scripts/test-prepare-fussball-issued-description.mjs scripts/test-stage-baden-native-composition.mjs scripts/test-fcf-g13-baden-compat.mjs scripts/test-baden-active-cache-refresh.mjs scripts/test-baden-fcf-projection-sql.mjs
 
       - name: Exact H7 validation-only owner history (source-free)
         run: node --test scripts/test-baden-owner-h7-history.mjs
@@ -399,6 +399,12 @@ jobs:
           SUPABASE_TEST_DB: postgres
           FCF_G1_SCORES_CI_SQL_TEST: '1'
         run: node --test scripts/test-fcf-g1-derived-scores.mjs scripts/test-fcf-g1-derived-scores-sql.mjs
+      - name: Baden owner production readonly preflight (dedicated fresh GHA DB only)
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          BADEN_PREFLIGHT_TEST_DB: slff_baden_preflight_test
+          BADEN_OWNER_PREFLIGHT_CI_SQL_TEST: '1'
+        run: node --test scripts/test-baden-owner-preflight-sql.mjs
       - name: FCF Scout snapshot preservation and phase rollback regressions
         env:
           FCF_SCOUT_CI_SQL_TEST: '1'
