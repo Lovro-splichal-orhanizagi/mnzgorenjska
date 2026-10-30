@@ -399,6 +399,12 @@ jobs:
           SUPABASE_TEST_DB: postgres
           FCF_G1_SCORES_CI_SQL_TEST: '1'
         run: node --test scripts/test-fcf-g1-derived-scores.mjs scripts/test-fcf-g1-derived-scores-sql.mjs
+      - name: G9 native800 coherent score preparation (fresh hosted GHA only)
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          SUPABASE_TEST_DB: postgres
+          FCF_G9_NATIVE800_PREPARE_CI_SQL_TEST: '1'
+        run: node --test scripts/test-fcf-g1-remainder-g9-native800-prepare-sql.mjs
       - name: Baden owner production readonly preflight (dedicated fresh GHA DB only)
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
