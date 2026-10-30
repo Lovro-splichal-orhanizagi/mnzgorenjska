@@ -29,6 +29,11 @@ export type KorakLijaka =
   | 'push_dovoljeno'
   | 'push_zavrnjeno'
   | 'aplikacija_odprta'
+  | 'poziv_aplikacija'
+  | 'poziv_aplikacija_klik'
+  | 'poziv_sledi'
+  | 'poziv_sledi_klik'
+  | 'poziv_zaprt'
 
 export function zabeleziKorak(korak: KorakLijaka) {
   const kljuc = `slff-lijak-${korak}-${new Date().toISOString().slice(0, 10)}`
