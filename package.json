@@ -27,6 +27,7 @@
     "preizkus-borze": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-borze.sql",
     "preizkus-brez-ekipe": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-brez-ekipe.sql",
     "preizkus-zamrznitve": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-zamrznitve.sql",
+    "test:objava-reel": "node --test scripts/test-objava-reel.mjs",
     "preizkus-objav": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-objav.sql",
     "preizkusi": "npm run preizkus-pravic && npm run preizkus-borze && npm run preizkus-zamrznitve && npm run preizkus-objav && npm run preizkus-opozoril && npm run preizkus-brez-ekipe && npm run preizkus-zivosti && npm run preizkus-tock-krogov && npm run preizkus-statistike",
     "preizkus-tock-krogov": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-tock-krogov.sql",
