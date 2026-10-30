@@ -256,7 +256,24 @@ test('TEST ONLY full ledger never infers native zero from a missing or partial c
   if(mutation==='missing-prior')steps.shift()
   if(mutation==='reordered')[steps[0],steps[1]]=[steps[1],steps[0]]
   if(mutation==='partial')steps.splice(6)
-  await assert.rejects(api.readFussballBadenNativeRemainingBudget({github}),e=>{assert.ok(e.blockers?.some(b=>b.runId===native.runId&&b.reason.includes('GRAPH')),status+' '+mutation);assert.ok(!e.audit?.executions.some(x=>x.runId===native.runId&&x.newResearchRequests===0));return true})
+  await assert.rejects(api.readFussballBadenNativeRemainingBudget({github}),e=>{assert.ok(e.blockers?.some(b=>b.runId===native.runId&&(b.reason.includes('GRAPH')||status==='in_progress'&&b.reason.includes('PRIVATE_PREPARE'))),status+' '+mutation);assert.ok(!e.audit?.executions.some(x=>x.runId===native.runId&&x.newResearchRequests===0));return true})
  }
  graph=completeTerminal;const proof=await api.readFussballBadenNativeRemainingBudget({github}),value=api.getFussballBadenNativeRemainingBudget(proof),execution=value.executions.find(e=>e.runId===native.runId);assert.equal(execution.classification,'ACTUAL_SOURCE_STEP_UNEXECUTED');assert.equal(execution.newResearchRequests,0);assert.equal(value.budget.priorRequests,3607);assert.equal(native.fetches,0)
+})
+import {isolateR10} from './fussball-baden-r10-m2-test-fixture.mjs'
+async function privateTestLedger(refresh){
+ // TEST ONLY copy of real reconciliation with the same copied prepare issuer's
+ // opaque verifier. Every other function and immutable receipt stays real.
+ const body=readFileSync(new URL('./fussball-baden-r10-accounting.mjs',import.meta.url),'utf8'),deps={}
+ for(const m of body.matchAll(/^import \{([^}]+)\} from '([^']+)'$/gm)){const ns=await import(m[2].startsWith('.')?new URL(m[2],import.meta.url).href:m[2]);for(const raw of m[1].split(',')){const [name,alias]=raw.trim().split(/\s+as\s+/);deps[alias??name]=ns[name]}}
+ return isolateR10('./fussball-baden-r10-accounting.mjs',{...deps,authenticateBadenR10PreparingPrefix:refresh.api.authenticateBadenR10PreparingPrefix,beginBadenR10PreparingReconciliation:refresh.api.beginBadenR10PreparingReconciliation},['readFussballBadenNativeRemainingBudget','getFussballBadenNativeRemainingBudget'])
+}
+test('TEST ONLY complete real ledger accepts solely its private own preparing prefix; unrelated active, copied and burned control HOLD',{skip:!E},async t=>{
+ for(const foreign of [false,true]){
+  const f=await refreshFixture(t),base=retained(),ledger=await privateTestLedger(f),other={...structuredClone(f.run),id:99999999993};t.mock.method(Date,'now',()=>f.f.clock);base.controls.reviewedOnly=true;base.controls.inventory=rows=>[...rows,f.run,...(foreign?[other]:[])];f.controls.jobs=value=>{const j=value.jobs[0],i=j.steps.findIndex(s=>s.name==='Prepare private fixed5000 native remainder');j.steps=j.steps.slice(0,i+1).map((s,i)=>({...s,number:i+2}));j.steps.unshift({number:1,name:'Set up job',status:'in_progress',conclusion:null,started_at:j.steps[0].started_at,completed_at:null});j.steps.push({number:22,name:'Post Set up Node',status:'pending',conclusion:null,started_at:null,completed_at:null});return value}
+  const github=async(p,binary=false)=>{if(p.startsWith(prefix+'actions/workflows/refresh-baden-r10-native.yml/runs?'))return{total_count:foreign?2:1,workflow_runs:[f.run,...(foreign?[other]:[])]};for(const run of[f.run,...(foreign?[other]:[])]){if(p===prefix+'actions/runs/'+run.id)return structuredClone(run);if(p===prefix+`actions/runs/${run.id}/attempts/1/jobs?per_page=100&page=1`){const j=f.job();j.jobs[0].run_id=run.id;return j}}try{return await f.github(p,binary)}catch(error){if(!error.message.startsWith('TEST ONLY unexpected own GET '))throw error;return base.github(p,binary)}}
+  f.controls.github=github;f.controls.getBudget=ledger.getFussballBadenNativeRemainingBudget;f.controls.readBudget=input=>ledger.readFussballBadenNativeRemainingBudget(input)
+  if(foreign)await assert.rejects(f.prepare(),e=>e.blockers?.some(b=>b.runId===String(other.id)&&b.reason.includes('ACTUAL_ROOT_RUN')))
+  else{const lease=await f.prepare();assert.equal(f.api.getBadenR10RefreshLease(lease).sourceOperationAuthorized,false);assert.equal(JSON.parse(readFileSync(join(f.directory,'prepare-seal.json'))).verifiedAt,new Date(f.f.clock).toISOString());await assert.rejects(ledger.readFussballBadenNativeRemainingBudget({github,refreshPreparation:structuredClone(f.controls.token)}),/PRIVATE_PREPARING_TOKEN/);await assert.rejects(ledger.readFussballBadenNativeRemainingBudget({github,refreshPreparation:f.controls.token}),/PRIVATE_PREPARING_TOKEN/)}assert.equal(f.fetches,0)
+ }
 })

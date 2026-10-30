@@ -10,6 +10,7 @@ import {isDeepStrictEqual as same} from 'node:util'
 import {readFussballBadenR10AccountingFoundation,getFussballBadenR10AccountingFoundation} from './fussball-baden-r10-foundation.mjs'
 import {R10_WORKFLOW,r10RunIdentity,r10PreSourcePhase,r10AuthenticateRuntime} from './fussball-baden-r10-contract.mjs'
 import {readFussballBadenR10CurrentAccounting,getFussballBadenR10CurrentAccounting} from './fussball-baden-r10-current-reader.mjs'
+import {authenticateBadenR10PreparingPrefix,beginBadenR10PreparingReconciliation} from './fussball-baden-r10-refresh.mjs'
 import {R10_REFRESH_WORKFLOW,refreshRun,refreshPhase,refreshJobs,refreshUnexecuted,authenticateRefreshRuntime} from './fussball-baden-r10-refresh-contract.mjs'
 import {readBadenR10RefreshAccounting,getBadenR10RefreshAccounting} from './fussball-baden-r10-refresh-reader.mjs'
 import {badenR10ClosedModes,authenticateClosedBadenR10Mode,closedBadenR10Jobs,authenticateBadenR10CachedNightlyRuntime,inspectBadenR10CachedNightlyLog} from './fussball-baden-r10-mode-accounting.mjs'
@@ -103,7 +104,7 @@ function nightlyScope(bytes,p,jobs){
  * Unknown executions produce exact HOLD diagnostics, never a partial B proof.
  */
 async function reconcileBudget(input,nativeRemainder=false){
- need(closed(input,['github'])&&typeof input.github==='function','INPUT')
+ need((closed(input,['github'])||nativeRemainder&&closed(input,['github','refreshPreparation']))&&typeof input.github==='function','INPUT');const ownPreparation=input.refreshPreparation?beginBadenR10PreparingReconciliation(input.refreshPreparation,{github:input.github}):null
  need(policy.kind==='fixed-baden-r10-research-execution-accounting'&&policy.totalRequestCap===5000&&policy.currentMaximum===780&&policy.archiveMaximum===0,'FIXED_POLICY')
  const originals=new Map(),reads=[],allowed=new Set(),mutable=new Map(),mutableProjection=new Map(),nightlyClosed=new Set(),closedModes=new Set();let retained=0
  const get=async(path,binary=false)=>{
@@ -163,14 +164,23 @@ async function reconcileBudget(input,nativeRemainder=false){
     continue
    }
    if(listed.path===R10_REFRESH_WORKFLOW){
-    try{const runPath=`actions/runs/${runId}`,jobsPath=runPath+'/attempts/1/jobs?per_page=100&page=1',run=await api(runPath),jobs=await api(jobsPath);need(same(runProjection(run),runProjection(listed)),'REFRESH_LISTED');const gh=async(path,binary=false)=>{need(path.startsWith(prefix)&&!path.includes('..')&&!/[\\\r\n]/.test(path),'REFRESH_SCOPE');allowed.add(path.slice(prefix.length));return get(path,binary)};refreshRun(run,run.head_sha,runId,run.status==='completed');const job=refreshJobs(jobs,run),capture=job.steps.find(s=>s.name==='Capture fixed Baden native refresh');if(run.status==='in_progress'){refreshPhase(jobs,run,'budget');const runtime=await authenticateRefreshRuntime(gh,run.head_sha);executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-native-before-source',classification:'EXACT_BUDGET_PHASE_CAPTURE_UNEXECUTED',runtimeSha256:runtime.codeSha256,newResearchRequests:0,physicalProviderAttempts:null})}else if(capture.status==='completed'&&capture.conclusion==='skipped'&&capture.started_at===null){refreshUnexecuted(jobs,run);const runtime=await authenticateRefreshRuntime(gh,run.head_sha);executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-native-unexecuted',classification:'ACTUAL_SOURCE_STEP_UNEXECUTED',runtimeSha256:runtime.codeSha256,newResearchRequests:0,physicalProviderAttempts:null})}else{const a=getBadenR10RefreshAccounting(await readBadenR10RefreshAccounting({github:gh,refreshRunId:runId,refreshHead:run.head_sha}));executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-native-attempts',classification:'ACTUAL_COUNTED_NATIVE_REFRESH',newResearchRequests:a.accounting.requests,authenticatedPriorRequests:a.manifest.priorRequests??a.manifest.accounting?.priorRequests,successfulAttempts:a.accounting.successfulAttempts,failedAttempts:a.accounting.failedAttempts,pendingAttempts:0,artifact:a.certificate.artifact,sourceRefusal:a.manifest.snapshot.attempts.some(x=>[401,403,429].includes(x.httpStatus))})}mutable.set(runPath,run);mutable.set(jobsPath,jobs)}catch(error){blockers.push({runId,path:listed.path,reason:error.code??'REFRESH_ACCOUNTING_HOLD'})}
+    try{
+     const runPath=`actions/runs/${runId}`,jobsPath=runPath+'/attempts/1/jobs?per_page=100&page=1',run=await api(runPath),jobs=await api(jobsPath);need(same(runProjection(run),runProjection(listed)),'REFRESH_LISTED');const gh=async(path,binary=false)=>{need(path.startsWith(prefix)&&!path.includes('..')&&!/[\\\r\n]/.test(path),'REFRESH_SCOPE');allowed.add(path.slice(prefix.length));return get(path,binary)};refreshRun(run,run.head_sha,runId,run.status==='completed')
+     if(run.status==='in_progress'){
+      need(nativeRemainder&&input.refreshPreparation,'ACTIVE_REFRESH_REQUIRES_PRIVATE_PREPARE');const runtime=await authenticateRefreshRuntime(gh,run.head_sha),witness=authenticateBadenR10PreparingPrefix(input.refreshPreparation,{github:input.github,run,jobs,runtime});executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-native-before-source',classification:'PRIVATE_OWN_PREPARING_CAUSAL_PREFIX',runtimeSha256:runtime.codeSha256,jobId:witness.jobId,newResearchRequests:0,physicalProviderAttempts:null});mutableProjection.set(runPath,runProjection);mutableProjection.set(jobsPath,value=>authenticateBadenR10PreparingPrefix(input.refreshPreparation,{github:input.github,run,jobs:value,runtime}))
+     }else{
+      const job=refreshJobs(jobs,run),capture=job.steps.find(s=>s.name==='Capture fixed Baden native refresh');if(capture.status==='completed'&&capture.conclusion==='skipped'){
+       refreshUnexecuted(jobs,run);const runtime=await authenticateRefreshRuntime(gh,run.head_sha);executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-native-unexecuted',classification:'ACTUAL_SOURCE_STEP_UNEXECUTED',runtimeSha256:runtime.codeSha256,newResearchRequests:0,physicalProviderAttempts:null})
+      }else{const a=getBadenR10RefreshAccounting(await readBadenR10RefreshAccounting({github:gh,refreshRunId:runId,refreshHead:run.head_sha}));executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-native-attempts',classification:'ACTUAL_COUNTED_NATIVE_REFRESH',newResearchRequests:a.accounting.requests,authenticatedPriorRequests:a.manifest.priorRequests??a.manifest.accounting?.priorRequests,successfulAttempts:a.accounting.successfulAttempts,failedAttempts:a.accounting.failedAttempts,pendingAttempts:0,artifact:a.certificate.artifact,sourceRefusal:a.manifest.snapshot.attempts.some(x=>[401,403,429].includes(x.httpStatus))})}
+     }mutable.set(runPath,run);mutable.set(jobsPath,jobs)
+    }catch(error){blockers.push({runId,path:listed.path,reason:error.code??'REFRESH_ACCOUNTING_HOLD'})}
     continue
    }
    if(listed.path===R10_WORKFLOW){
     try{
      const runPath=`actions/runs/${runId}`,jobsPath=runPath+'/attempts/1/jobs?per_page=100&page=1',run=await api(runPath),jobs=await api(jobsPath);need(same(runProjection(run),runProjection(listed)),'R10_LISTED_EXECUTION')
      const gh=async(path,binary=false)=>{need(path.startsWith(prefix)&&!path.includes('..')&&!/[\\\r\n]/.test(path),'R10_AUTH_SCOPE');allowed.add(path.slice(prefix.length));return get(path,binary)}
-     if(run.status==='in_progress'){
+     if(run.status==='in_progress'){need(!nativeRemainder,'FOREIGN_ACTIVE_CURRENT_HOLD');
       r10RunIdentity(run,run.head_sha,runId);r10PreSourcePhase(jobs,run);const runtime=await r10AuthenticateRuntime(gh,run.head_sha)
       executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-before-source',classification:'EXACT_BUDGET_PHASE_CAPTURE_UNEXECUTED',runtimeSha256:runtime.codeSha256,newResearchRequests:0,physicalProviderAttempts:null})
      }else{
@@ -311,6 +321,7 @@ async function reconcileBudget(input,nativeRemainder=false){
    executions.push(e)
   }catch(error){blockers.push({runId,path:listed.path,reason:error.code??'INVALID_EXECUTION_EVIDENCE'})}
  }
+ if(ownPreparation&&!executions.some(e=>e.runId===ownPreparation.runId&&e.jobId===ownPreparation.jobId&&e.classification==='PRIVATE_OWN_PREPARING_CAUSAL_PREFIX'))blockers.push({runId:ownPreparation.runId,reason:'MISSING_PRIVATE_OWN_PREPARING_EXECUTION'})
  for(const p of policy.records)if(!first.some(r=>r.id===p.run.id))blockers.push({runId:String(p.run.id),path:p.run.path,reason:'MISSING_REVIEWED_EXECUTION'})
  const fail=()=>{const error=Object.assign(Error('BADEN_R10_BUDGET_RECONCILIATION_HOLD'),{code:'BADEN_R10_BUDGET_RECONCILIATION_HOLD',dataHold:true,
   blockers:structuredClone([...blockers,...(ancestorCoverage.complete?[]:[{reason:ancestorCoverage.reason,runId:ancestorCoverage.runId,additionalRequests:null}])]),
@@ -337,6 +348,7 @@ async function reconcileBudget(input,nativeRemainder=false){
  const B=foundation.accounting.authenticatedMinimumSpent+executions.reduce((sum,e)=>sum+e.newResearchRequests,0)
  if(!executions.every(e=>e.authenticatedPriorRequests==null||B>=e.authenticatedPriorRequests+e.newResearchRequests))blockers.push({reason:'HISTORICAL_CHARGE_REGRESSION'});
  if(!(Number.isSafeInteger(B)&&B>=3607&&B+(nativeRemainder?0:policy.currentMaximum)<=policy.totalRequestCap))blockers.push({reason:'RESERVATION_CAP'});if(blockers.length)fail()
+ if(input.refreshPreparation)authenticateBadenR10PreparingPrefix(input.refreshPreparation,{github:input.github})
  const verifiedAt=Date.now(),proof=freeze({version:1,kind:nativeRemainder?'authenticated-baden-native-research-remainder':'authenticated-baden-r10-research-budget',
   budget:nativeRemainder?{priorRequests:B,remainingRequests:5000-B,totalRequestCap:5000}:{priorRequests:B,currentMaximum:780,archiveMaximum:0,cumulativeReserved:B+780,totalRequestCap:5000},
   verifiedAt:new Date(verifiedAt).toISOString(),expiresAt:new Date(verifiedAt+60000).toISOString(),sourceOperationAuthorized:false,nativeAdmission:false,activationEligible:false})
