@@ -105,6 +105,9 @@ jobs:
       - name: Exact H7 validation-only owner history (source-free)
         run: node --test scripts/test-baden-owner-h7-history.mjs
 
+      - name: FCF inventory binary GitHub transport (source-free)
+        run: node scripts/test-fcf-inventory-binary-escape.mjs
+
       - name: Community card voting and provisional round UI (offline)
         run: |
           npx playwright install --with-deps chromium
