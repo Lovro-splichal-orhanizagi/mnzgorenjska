@@ -1,0 +1,33 @@
+// Fixed G1 native800 preparation DATA. The database query is a separate
+// explicit readonly snapshot; this module never issues admission authority.
+import {createHash} from 'node:crypto'
+import {exactKeys,frozenJSON} from './fcf-missing-inventory-artifact.mjs'
+const slug='es-ct-segona-g1',sha=t=>createHash('sha256').update(t).digest('hex'),need=(v,m)=>{if(!v)throw Error('FCF_G1_NATIVE800_PREPARE: '+m)},hex=v=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v)
+function text(t,h,label){need(typeof t==='string'&&Buffer.byteLength(t)>1&&Buffer.byteLength(t)<=33554432&&hex(h)&&sha(t)===h,`exact bounded ${label} TEXT/SHA`);try{return JSON.parse(t)}catch{need(false,`valid ${label} JSON`)}}
+function ids(a){return Array.isArray(a)&&a.every(x=>Number.isSafeInteger(x)&&x>0)&&new Set(a).size===a.length&&a.every((x,i)=>i===0||x>a[i-1])}
+export function describeFcfG1Native800Preparation(input){
+ exactKeys(input,['projection','scoreBeforeimages'],'G1 coherent preparation envelope');const {projection:p,scoreBeforeimages:s}=input
+ exactKeys(p,['schemaVersion','kind','capturedUTC','method','databaseInventory','native','dependencySnapshotText','dependencySnapshotSha256','pricingSnapshot'],'G1 SQL projection')
+ const stamp=Date.parse(p.capturedUTC);need(p.schemaVersion===1&&p.kind==='fcf-future-native-projection'&&p.method==='explicitBEGIN_READ_ONLY_ROLLBACK'&&Number.isFinite(stamp)&&stamp<=Date.now()&&Date.now()-stamp<=300000,'fresh coherent explicit readonly G1 projection')
+ const dep=text(p.dependencySnapshotText,p.dependencySnapshotSha256,'dependency snapshot'),price=p.pricingSnapshot,d=p.databaseInventory,n=p.native
+ exactKeys(dep,['schemaVersion','classification','native','catalog','shapes','relations','goalAssociations','privacy','pricingSnapshotText'],'full SQL dependency snapshot');exactKeys(price,['snapshotText','snapshotSha256'],'SQL pricing snapshot');text(price.snapshotText,price.snapshotSha256,'pricing snapshot')
+ need(dep.schemaVersion===1&&dep.classification==='fcf-future-projection-current-v1'&&JSON.stringify(dep.native)===JSON.stringify(n)&&dep.pricingSnapshotText===price.snapshotText&&Array.isArray(dep.catalog)&&dep.catalog.length>0&&dep.shapes&&Object.keys(dep.shapes).length>0&&Array.isArray(dep.goalAssociations)&&dep.relations&&Object.keys(dep.relations).length>0,'complete native/catalog/shape/relation/price beforeimage')
+ need(n?.competition?.id===783&&n.competition.slug===slug&&n.competition.active===false&&n.dependencies?.complete===true&&n.dependencies.competitionUserRows===0&&n.rounds?.length===30&&n.matches?.length===240,'selected inactive G1/full dependency scope/human0')
+ need(d?.capturedUTC===p.capturedUTC&&d.method===p.method&&JSON.stringify(d.rounds?.toSorted((a,b)=>a.id-b.id))===JSON.stringify(n.rounds?.toSorted((a,b)=>a.id-b.id))&&JSON.stringify(d.matches?.toSorted((a,b)=>a.id-b.id))===JSON.stringify(n.matches?.toSorted((a,b)=>a.id-b.id))&&Array.isArray(d.players),'inventory and native rows must be one coherent SQL observation')
+ need(new Set(n.rounds.map(r=>r.id)).size===30&&n.rounds.every(r=>r.competition_id===783)&&new Set(n.matches.map(m=>m.id)).size===240&&n.matches.every(m=>n.rounds.some(r=>r.id===m.round_id)),'full unique actual G1 round/match identities')
+ const counts=n.dependencies;need(Array.isArray(counts.rounds)&&counts.rounds.length===30&&new Set(counts.rounds.map(r=>r.roundId)).size===30&&counts.rounds.every(r=>n.rounds.some(x=>x.id===r.roundId)&&['lineupRows','rosterRows','transferRows','chipRows'].every(k=>r[k]===0)&&Number.isSafeInteger(r.userRows)&&r.userRows>=0)&&Array.isArray(counts.matches)&&counts.matches.length===240&&new Set(counts.matches.map(m=>m.matchId)).size===240&&counts.matches.every(m=>n.matches.some(x=>x.id===m.matchId)&&['userRows','appearances','goals'].every(k=>Number.isSafeInteger(m[k])&&m[k]>=0)),'typed strict selected G1 counters; never subtract derived rows')
+ const relations=Object.values(dep.relations),humans=relations.filter(r=>r.globalUser===true);need(humans.length>0&&humans.every(r=>r.count===0)&&relations.every(r=>typeof r.globalUser==='boolean'&&Number.isSafeInteger(r.count)&&r.count>=0&&hex(r.rowsSha256)),'closed complete row hashes and actual human0; preserve all nonhuman counts')
+ const privacy={...d.identityPrivacy};delete privacy.capturedUTC;need(JSON.stringify(dep.privacy)===JSON.stringify(privacy),'full country privacy observation must match dependency snapshot')
+ exactKeys(s,['selectedG1','offTargetG9'],'both exact dynamic score beforeimages')
+ for(const [key,cid]of [['selectedG1',783],['offTargetG9',797]]){
+  const x=s[key];exactKeys(x,['competitionId','roundIds','playerIds','count','snapshotText','snapshotSha256',...(cid===783?['roundCounts']:[])],'exact score state');const rows=text(x.snapshotText,x.snapshotSha256,key+' score vector')
+  need(x.competitionId===cid&&ids(x.roundIds)&&ids(x.playerIds)&&Array.isArray(rows)&&Number.isSafeInteger(x.count)&&x.count===rows.length,'fixed complete typed score scope/vector/count')
+  const seen=new Set();for(const row of rows){exactKeys(row,['round_id','player_id','points','computed_at'],'full actual score row');const k=row.round_id+'/'+row.player_id;need(x.roundIds.includes(row.round_id)&&x.playerIds.includes(row.player_id)&&typeof row.points==='number'&&Number.isFinite(row.points)&&typeof row.computed_at==='string'&&Number.isFinite(Date.parse(row.computed_at))&&!seen.has(k),'score row scope/identity/statistic/date');seen.add(k)}
+  if(cid===783){
+   need(JSON.stringify(x.roundIds)===JSON.stringify(n.rounds.map(r=>r.id).sort((a,b)=>a-b))&&JSON.stringify(x.playerIds)===JSON.stringify(d.players.map(r=>r.id).sort((a,b)=>a-b))&&dep.relations['public.player_scores']?.count===x.count&&dep.relations['public.player_scores']?.rowsSha256===x.snapshotSha256,'selected G1 score vector equals exact projection relation/scope')
+   need(Array.isArray(x.roundCounts)&&x.roundCounts.length===30&&new Set(x.roundCounts.map(r=>r.roundId)).size===30,'all exact G1 nonhuman round contributions')
+   for(const r of x.roundCounts){exactKeys(r,['roundId','scoreRows','priceChangeRows'],'G1 round contributions');need(n.rounds.some(y=>y.id===r.roundId)&&[r.scoreRows,r.priceChangeRows].every(v=>Number.isSafeInteger(v)&&v>=0)&&r.scoreRows===rows.filter(y=>y.round_id===r.roundId).length&&counts.rounds.find(y=>y.roundId===r.roundId).userRows===r.scoreRows+r.priceChangeRows,'literal strict G1 round counters equal actual contributions with human0')}
+  }
+ }
+ return frozenJSON({projection:structuredClone(p),scoreBeforeimages:structuredClone(s),admissible:false,nativeAdmission:false,activationEligible:false})
+}
