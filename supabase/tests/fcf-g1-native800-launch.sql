@@ -28,36 +28,72 @@ do $$declare v jsonb;p jsonb;mp jsonb;projection jsonb;native jsonb;input jsonb;
 end$$;
 select pg_temp.g1_assert((select(d->>'nativeSnapshotText')::jsonb#>'{privacy,checkedKeys}'=((d#>>'{originalImport,rolloutText}')::jsonb->>'targetPacketText')::jsonb#>'{databaseInventory,identityPrivacy,checkedKeys}'from native800_ready),'postprice prepared privacy keys retain actual original native country/source identity');
 create function pg_temp.g1_launch_gate(activate boolean)returns jsonb language plpgsql as $$declare d jsonb;v jsonb;s jsonb;t text;begin select x.d into d from native800_ready x;v:=(d#>>'{originalImport,rolloutText}')::jsonb;s:=pg_temp.g1_attest(v,'check')::jsonb;s:=s||jsonb_build_object('kind','fcf-g1-native800-launch-stage-attestation','stage',case when activate then'activate'else'check'end,'readinessSha256',pg_temp.g1_sha(d::text));t:=s::text;return public.fcf_g1_native800_launch(d::text,pg_temp.g1_sha(d::text),activate,t,pg_temp.g1_sha(t));end$$;
+-- TESTONLY bounded stage/case diagnostics; expected guards remain exact.
+create function pg_temp.g1_launch_failure(tag text,inner_state text,inner_message text)returns void language plpgsql as $g1_case_error$declare safe_message text;begin
+ if tag!~'^[A-Za-z0-9_ -]{1,60}$'or inner_state!~'^[A-Z0-9]{5}$'then raise exception 'G1 TEST: invalid fixed launch diagnostic';end if;
+ safe_message:=case when octet_length(inner_message)<=140 and inner_message~'^(FCF_TARGET:|FCF_G1_9410:|FCF_G1_SUPPLEMENT:|HISTORICAL_POLICY:|G1 TEST:)[A-Za-z0-9_ .,:;/()=-]{1,140}$'then inner_message else 'REDACTED'end;
+ raise exception 'G1 TEST: case_% INNER_% REASON_%',tag,inner_state,safe_message;
+end$g1_case_error$;
+create function pg_temp.g1_launch_positive(phase text)returns jsonb language plpgsql as $g1_positive_phase$declare result jsonb;begin
+ case phase
+  when 'postprice_check'then select pg_temp.g1_check(rollout_row.v)into result from g1_rollout rollout_row;
+  when 'drycheck'then result:=pg_temp.g1_launch_gate(false);
+  when 'activate'then result:=pg_temp.g1_launch_gate(true);
+  when 'retry'then result:=pg_temp.g1_launch_gate(true);
+  when 'readback'then result:=public.fcf_g1_native800_launch_receipt();
+  else raise exception 'G1 TEST: unknown fixed positive phase';
+ end case;return result;
+exception when others then perform pg_temp.g1_launch_failure('positive '||phase,SQLSTATE,SQLERRM);return null;
+end$g1_positive_phase$;
 create temporary table launch_before as select private_fcf_g1_native800.launch_after_image(783)state,(select to_jsonb(r)from private_fcf_future_target_release.receipts r where competition_id=783)receipt;
-select pg_temp.g1_assert(pg_temp.g1_check(v)->>'canonicalVerified'='true','G1 import-state check accepts verified postprice state')from g1_rollout;
-select pg_temp.g1_assert(pg_temp.g1_launch_gate(false)->>'stage'='checked','actual postprice drycheck');
+select pg_temp.g1_assert(pg_temp.g1_launch_positive('postprice_check')->>'canonicalVerified'='true','G1 import-state check accepts verified postprice state')from g1_rollout;
+select pg_temp.g1_assert(pg_temp.g1_launch_positive('drycheck')->>'stage'='checked','actual postprice drycheck');
 select pg_temp.g1_assert(private_fcf_g1_native800.launch_after_image(783)=(select state from launch_before)and(select to_jsonb(r)from private_fcf_future_target_release.receipts r where competition_id=783)=(select receipt from launch_before),'drycheck makes no durable writes');
-create function pg_temp.g1_launch_mutant(command text,label text,expected_error text default null)returns void language plpgsql as $$declare baseline jsonb;receipt jsonb;begin baseline:=private_fcf_g1_native800.launch_after_image(783);select to_jsonb(r)into receipt from private_fcf_future_target_release.receipts r where competition_id=783;begin execute command;perform pg_temp.g1_launch_gate(true);raise exception 'NATIVE800 LAUNCH TEST: accepted %',label;exception when others then if(sqlerrm not like'FCF_TARGET:%'and sqlerrm not like'HISTORICAL_POLICY:%')or(expected_error is not null and sqlerrm<>expected_error)then raise;end if;end;perform pg_temp.g1_assert(private_fcf_g1_native800.launch_after_image(783)=baseline and(select to_jsonb(r)from private_fcf_future_target_release.receipts r where competition_id=783)=receipt,'refusal rolls back all mutation and attempted launch: '||label);end$$;
--- Coherently reprepare actual NULL state so this tests the COMPLETE-deadline
--- gate itself, not merely an old optimistic-concurrency snapshot hash.
-select pg_temp.g1_launch_mutant($null_deadline$update rounds set deadline_at=null where competition_id=783 and number=1;update native800_ready n set d=n.d||jsonb_build_object('nativeSnapshotText',fresh.p->>'dependencySnapshotText','nativeSnapshotSha256',fresh.p->>'dependencySnapshotSha256','pricingSnapshotText',fresh.p#>>'{pricingSnapshot,snapshotText}','pricingSnapshotSha256',fresh.p#>>'{pricingSnapshot,snapshotSha256}')from(select private_fcf_g1_readonly.capture('es-ct-segona-g1',array(select jsonb_array_elements_text(((select d->>'nativeSnapshotText'from native800_ready)::jsonb)#>'{privacy,checkedKeys}')))p)fresh;$null_deadline$,'coherent NULL historical deadline','FCF_TARGET: complete current native round dates/deadlines');
+-- TESTONLY: every case still aborts its mutation subtransaction. Unexpected
+-- refusals/acceptances are retained as safe diagnostics, never accepted.
+create temporary table g1_launch_negative_mismatches(label text,sql_state text,reason text,accepted boolean);
+create function pg_temp.g1_launch_mutant(command text,label text,expected_error text default null)returns void language plpgsql as $g1_negative_collector$
+declare baseline jsonb;receipt jsonb;mismatch boolean:=false;accepted boolean:=false;actual_state text;actual_reason text;begin
+ baseline:=private_fcf_g1_native800.launch_after_image(783);select to_jsonb(r)into receipt from private_fcf_future_target_release.receipts r where competition_id=783;
+ begin
+  execute command;perform pg_temp.g1_launch_gate(true);accepted:=true;
+  raise exception 'G1 TEST: accepted negative';
+ exception when others then
+  actual_state:=SQLSTATE;
+  actual_reason:=case when octet_length(SQLERRM)<=240 and SQLERRM~'^(FCF_TARGET:|FCF_G1_9410:|FCF_G1_SUPPLEMENT:|HISTORICAL_POLICY:|G1 TEST:)[A-Za-z0-9_ .,:;/()=-]{1,240}$'then SQLERRM else 'REDACTED'end;
+  mismatch:=accepted or(SQLERRM not like'FCF_TARGET:%'and SQLERRM not like'HISTORICAL_POLICY:%')or(expected_error is not null and SQLERRM<>expected_error);
+ end;
+ -- This assertion is outside the caught subtransaction and remains fatal.
+ perform pg_temp.g1_assert(private_fcf_g1_native800.launch_after_image(783)=baseline and(select to_jsonb(r)from private_fcf_future_target_release.receipts r where competition_id=783)=receipt,'refusal rolls back all mutation and attempted launch: '||label);
+ if mismatch then insert into g1_launch_negative_mismatches values(label,actual_state,actual_reason,accepted);end if;
+end$g1_negative_collector$;
+-- Coherently reprepare actual NULL state. The server import anchor correctly
+-- refuses this round drift before the later complete-deadline gate.
+select pg_temp.g1_launch_mutant($null_deadline$update rounds set deadline_at=null where competition_id=783 and number=1;update native800_ready n set d=n.d||jsonb_build_object('nativeSnapshotText',fresh.p->>'dependencySnapshotText','nativeSnapshotSha256',fresh.p->>'dependencySnapshotSha256','pricingSnapshotText',fresh.p#>>'{pricingSnapshot,snapshotText}','pricingSnapshotSha256',fresh.p#>>'{pricingSnapshot,snapshotSha256}')from(select private_fcf_g1_readonly.capture('es-ct-segona-g1',array(select jsonb_array_elements_text(((select d->>'nativeSnapshotText'from native800_ready)::jsonb)#>'{privacy,checkedKeys}')))p)fresh;$null_deadline$,'coherent NULL historical deadline','FCF_TARGET: exact server-anchored original nonG9 priors/scope/source epoch before pricing; caller hash is insufficient');
 select pg_temp.g1_launch_mutant('update players set value=value+0.5 where id=(select min(id)from players where competition_id=783)','price drift');
 select pg_temp.g1_launch_mutant('update native800_ready set d=jsonb_set(d,''{modelSha256}'',to_jsonb(repeat(''e'',64)))','model drift');
 select pg_temp.g1_launch_mutant('update native800_ready set d=jsonb_set(d,''{pricingReplayText}'',to_jsonb(''{}''::text))','replay drift');
-select pg_temp.g1_launch_mutant('update player_scores set points=points+1 where round_id in(select id from rounds where competition_id=797)','G1 score drift');
-select pg_temp.g1_launch_mutant('update player_scores set points=points+1 where round_id in(select id from rounds where competition_id=783)','G9 derived score drift');
+select pg_temp.g1_launch_mutant('update player_scores set points=points+1 where round_id in(select id from rounds where competition_id=797)','G9 score drift');
+select pg_temp.g1_launch_mutant('update player_scores set points=points+1 where round_id in(select id from rounds where competition_id=783)','G1 derived score drift');
 select pg_temp.g1_launch_mutant('update position_priors set score=0.6 where not exists(select 1 from players where id=position_priors.player_id and competition_id=783)','server-anchored foreign prior drift');
 select pg_temp.g1_launch_mutant('update position_priors set score=0.6 where player_id in(select id from players where competition_id=783)','fresh target prior snapshot drift');
 select pg_temp.g1_launch_mutant('create table public.native800_launch_unknown(player_id bigint)','unknown dependency');
 select pg_temp.g1_launch_mutant('create trigger native800_test_extra before insert on private_fcf_future_target_release.receipts for each row execute function private_fcf_native800.price_anchor()','unknown receipt trigger');
-select pg_temp.g1_launch_mutant('insert into auth.users(id)values(''11111111-1111-4111-8111-111111111111'');insert into fantasy_teams(owner_id,name,competition_id)values(''11111111-1111-4111-8111-111111111111'',''TEST ONLY native800 human'',783)','human team');
+select pg_temp.g1_launch_mutant('insert into auth.users(id,raw_user_meta_data)values(''11111111-1111-4111-8111-111111111111'',''{"display_name":"TEST ONLY selected G1 human"}''::jsonb);insert into fantasy_teams(owner_id,name,competition_id)values(''11111111-1111-4111-8111-111111111111'',''TEST ONLY native800 human'',783)','human team');
 select pg_temp.g1_launch_mutant('update rounds set lineups_locked_at=clock_timestamp()where id=(select(d#>>''{launchProposal,roundId}'')::bigint from native800_ready)','selected lock');
 select pg_temp.g1_launch_mutant('update native800_ready set d=jsonb_set(d,''{launchProposal,roundNumber}'',''30'')','frozen proposal');
 select pg_temp.g1_assert(not has_function_privilege('anon','public.fcf_g1_native800_launch(text,text,boolean,text,text)','execute')and not has_function_privilege('authenticated','public.fcf_g1_native800_launch(text,text,boolean,text,text)','execute')and has_function_privilege('service_role','public.fcf_g1_native800_launch(text,text,boolean,text,text)','execute')and not has_function_privilege('service_role','private_fcf_g1_native800.price_before(jsonb,text)','execute'),'strict public/service and private trigger ACL');
 -- The trigger is present in a coherently refreshed current snapshot, so this
 -- negative must reach the actual activation writes and detect foreign effects.
 select pg_temp.g1_launch_mutant($foreign_trigger$create function pg_temp.g1_foreign_write()returns trigger language plpgsql as 'begin if new.id=783 then update public.fantasy_teams set name=''TEST ONLY illegal G1 side effect''where competition_id=797;end if;return new;end';create trigger TEST_ONLY_g1_foreign_write after update on public.competitions for each row execute function pg_temp.g1_foreign_write();update native800_ready n set d=n.d||jsonb_build_object('nativeSnapshotText',fresh.p->>'dependencySnapshotText','nativeSnapshotSha256',fresh.p->>'dependencySnapshotSha256','pricingSnapshotText',fresh.p#>>'{pricingSnapshot,snapshotText}','pricingSnapshotSha256',fresh.p#>>'{pricingSnapshot,snapshotSha256}')from(select private_fcf_g1_readonly.capture('es-ct-segona-g1',array(select jsonb_array_elements_text(((select d->>'nativeSnapshotText'from native800_ready)::jsonb)#>'{privacy,checkedKeys}')))p)fresh;$foreign_trigger$,'coherent actual foreign user mutation','FCF_TARGET: G1 check/activation preserves G9 afterimage/receipt');
-select pg_temp.g1_assert(pg_temp.g1_launch_gate(true)->>'stage'='activated','actual atomic activated intended opening');
-select pg_temp.g1_assert(pg_temp.g1_launch_gate(true)->>'readbackOnly'='true','exact activated retry is readback only');
+select 'G1_NEGATIVE_MISMATCHES '||coalesce(jsonb_agg(jsonb_build_object('label',label,'sqlState',sql_state,'reason',reason,'accepted',accepted)order by label),'[]'::jsonb)::text from g1_launch_negative_mismatches;
+select pg_temp.g1_assert(not exists(select 1 from g1_launch_negative_mismatches),'negative collector mismatches');
+select pg_temp.g1_assert(pg_temp.g1_launch_positive('activate')->>'stage'='activated','actual atomic activated intended opening');
+select pg_temp.g1_assert(pg_temp.g1_launch_positive('retry')->>'readbackOnly'='true','exact activated retry is readback only');
 select pg_temp.g1_assert((select active and prvi_fantasy_krog=(d#>>'{launchProposal,roundNumber}')::int from competitions cross join native800_ready where id=783),'actual selected round/active');
 savepoint native800_launch_readonly;
 set local transaction_read_only=on;
-select pg_temp.g1_assert(public.fcf_g1_native800_launch_receipt()->>'stage'='activated'and public.fcf_g1_native800_launch_receipt()->>'readinessSha256'=(select pg_temp.g1_sha(d::text)from native800_ready),'actual explicit READ ONLY current complete launch receipt');
+select pg_temp.g1_assert(pg_temp.g1_launch_positive('readback')->>'stage'='activated'and pg_temp.g1_launch_positive('readback')->>'readinessSha256'=(select pg_temp.g1_sha(d::text)from native800_ready),'actual explicit READ ONLY current complete launch receipt');
 rollback to savepoint native800_launch_readonly;
 select pg_temp.g1_assert((select active from competitions where id=797)and(select count(*)from fantasy_teams where competition_id=797)=2 and(select count(*)from position_votes where voter_id='00000000-0000-4000-8000-000000007971')=1,'active G9 and legitimate between-stage humans/votes preserved through G1 activation');
 select 'FCF_G1_NATIVE800_LAUNCH_PASS';
