@@ -55,6 +55,7 @@ test('TEST ONLY relabeled manifest clocks cannot refresh old round receipts',asy
  await assert.rejects(f.api.loadFussballNativeRuntimeCapture({context,competition,directory}),/receipt|interval/i)
 })
 test('TEST ONLY real-client replay refuses missing/empty/altered journals and cached rounds; retained non-round dates survive reuse',async t=>{
+ t.mock.method(Date,'now',()=>Date.parse('2026-10-29T12:00:00.000Z'))
  // TEST ONLY coherent synthetic source and runtime clocks. Original metadata
  // is constructed at this epoch, not relabeled after capture.
  const f=nativeRuntimeFixture(t,competition,{clock:Date.parse('2026-10-29T12:00:00.000Z')}),initial=await f.context(),seed=join(f.directory,'seed'),directory=join(f.directory,'runtime')

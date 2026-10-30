@@ -1,0 +1,63 @@
+name: Counted fixed5000 Baden R10 native refresh
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha: {required: true, type: string}
+      main_ci_run_id: {required: true, type: string}
+permissions: {contents: read, actions: read}
+concurrency: {group: uvoz-lige-de-verbandsliga-baden, cancel-in-progress: false}
+jobs:
+  refresh:
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1 && github.sha == inputs.expected_sha
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      MAIN_CI_RUN_ID: ${{ inputs.main_ci_run_id }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Checkout fixed main
+        uses: actions/checkout@v4
+        with: {ref: '${{ github.sha }}', persist-credentials: false}
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Restore reviewed native seed
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-DE-r10-refresh-${{ github.run_id }}-1
+          restore-keys: zapisniki-DE-
+      - name: Prepare private fixed5000 native remainder
+        run: |
+          set -euo pipefail
+          node scripts/stage-baden-r10-refresh.mjs broker > "$RUNNER_TEMP/baden-r10-refresh-broker.log" 2>&1 &
+          for i in $(seq 1 180); do
+            test -f "$RUNNER_TEMP/baden-r10-refresh-$GITHUB_RUN_ID.sock.ready" && exit 0
+            kill -0 $! 2>/dev/null || exit 1
+            sleep 5
+          done
+          exit 1
+      - name: Capture fixed Baden native refresh
+        run: node scripts/stage-baden-r10-refresh.mjs capture
+      - name: Verify counted native refresh originals
+        run: node scripts/stage-baden-r10-refresh.mjs replay
+      - name: Publish exact native refresh cache
+        run: node scripts/stage-baden-r10-refresh.mjs publish-cache
+      - name: Preserve durable native refresh cache
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-DE-r10-refresh-${{ github.run_id }}-1
+      - name: Retain all counted attempts and partial originals
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baden-r10-refresh-${{ github.run_id }}-1
+          path: baden-r10-refresh/
+          if-no-files-found: error
+          retention-days: 90

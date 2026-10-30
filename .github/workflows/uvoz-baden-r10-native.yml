@@ -1,0 +1,110 @@
+name: Reviewed Baden R10 M2 native launch
+run-name: Baden R10 native launch (activation requested ${{ inputs.activate_if_ready }})
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact reviewed current main containing finalized catalog and operator code
+        type: string
+        required: true
+      main_ci_run_id: {required: true, type: string}
+      source_run_id: {required: true, type: string}
+      source_head: {required: true, type: string}
+      derived_run_id: {required: true, type: string}
+      derived_head: {required: true, type: string}
+      review_release_id: {required: true, type: string}
+      review_asset_id: {required: true, type: string}
+      activate_if_ready:
+        description: Explicitly activate in this same run after all strict gates; false imports and stops at CHECK (no later receipt reuse)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: uvoz-lige-de-verbandsliga-baden
+  cancel-in-progress: false
+jobs:
+  rollout:
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.expected_sha == github.sha
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      MAIN_CI_RUN_ID: ${{ inputs.main_ci_run_id }}
+      DERIVED_RUN_ID: ${{ inputs.derived_run_id }}
+      DERIVED_HEAD: ${{ inputs.derived_head }}
+      SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      SOURCE_HEAD: ${{ inputs.source_head }}
+      REVIEW_RELEASE_ID: ${{ inputs.review_release_id }}
+      REVIEW_ASSET_ID: ${{ inputs.review_asset_id }}
+      ACTIVATE_IF_READY: ${{ inputs.activate_if_ready }}
+      GH_TOKEN: ${{ github.token }}
+      NODE_OPTIONS: --max-old-space-size=6144
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          # Existing native CLI uses git ls-remote for its exact-main guard.
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Stage root reviewed R10 M2 without DB keys
+        run: node scripts/stage-baden-r10-m2.mjs stage-native
+      - name: Coordinate older German writers
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --drzava DE --popravek --vir dfb
+      - name: Restore original-byte nightly cache
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-DE-bulk-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: zapisniki-DE-
+      - name: Import reviewed M2 native composition
+        id: prepare
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          node scripts/bulk-league-rollout.mjs import --country DE --expected-sha "$EXPECTED_SHA" --candidate de-verbandsliga-baden
+          node scripts/stage-baden-r10-m2.mjs require-import
+      - name: Persist exact-run verified nightly seed
+        if: steps.prepare.outputs.needs_seed_cache == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-DE-bulk-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Authenticate durable exact-run cache API receipt
+        if: steps.prepare.outputs.needs_seed_cache == 'true'
+        run: node scripts/bulk-seed-cache-receipt.mjs
+      - name: Admit and activate reviewed M2 in the same run
+        if: inputs.activate_if_ready
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          export BADEN_R10_PHASE=activate
+          node scripts/bulk-league-rollout.mjs activate --country DE --expected-sha "$EXPECTED_SHA" --candidate de-verbandsliga-baden
+          node scripts/stage-baden-r10-m2.mjs require-active
+      - name: Mark interrupted native writes UNKNOWN without replay
+        if: always()
+        run: node --input-type=module -e "import {markInterrupted} from './scripts/provider-league-batch.mjs';for(const file of ['native-import-report.json','native-report.json'])markInterrupted('release/pl-de-bulk/'+file)"
+      - name: Retain partial checkpoints locator logs native seed cache and admission readback
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baden-r10-native-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            release/pl-de-bulk/
+            scripts/.predpomnilnik/fussball-public/de-verbandsliga-baden/
+          include-hidden-files: true
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 90

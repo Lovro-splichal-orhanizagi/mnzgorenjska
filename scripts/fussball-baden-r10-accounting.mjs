@@ -10,6 +10,9 @@ import {isDeepStrictEqual as same} from 'node:util'
 import {readFussballBadenR10AccountingFoundation,getFussballBadenR10AccountingFoundation} from './fussball-baden-r10-foundation.mjs'
 import {R10_WORKFLOW,r10RunIdentity,r10PreSourcePhase,r10AuthenticateRuntime} from './fussball-baden-r10-contract.mjs'
 import {readFussballBadenR10CurrentAccounting,getFussballBadenR10CurrentAccounting} from './fussball-baden-r10-current-reader.mjs'
+import {R10_REFRESH_WORKFLOW,refreshRun,refreshPhase,refreshJobs,authenticateRefreshRuntime} from './fussball-baden-r10-refresh-contract.mjs'
+import {readBadenR10RefreshAccounting,getBadenR10RefreshAccounting} from './fussball-baden-r10-refresh-reader.mjs'
+import {badenR10ClosedModes,authenticateClosedBadenR10Mode,closedBadenR10Jobs,authenticateBadenR10CachedNightlyRuntime,inspectBadenR10CachedNightlyLog} from './fussball-baden-r10-mode-accounting.mjs'
 import {badenR10NightlyPins,badenR10NightlyProjection,badenR10NightlyRunProjection} from './fussball-baden-r10-nightly.mjs'
 import {readFcfFrozenContentBytes} from './fcf-frozen-content-bytes.mjs'
 import {assertFcfRefresh800History} from './fcf-refresh800-ledger.mjs'
@@ -155,6 +158,14 @@ async function reconcileBudget(input,nativeRemainder=false){
  for(const listed of first){
   const p=policy.records.find(p=>p.run.id===listed.id),runId=String(listed.id)
   if(!p){
+   if(Object.hasOwn(badenR10ClosedModes,listed.path)){
+    try{const runPath=`actions/runs/${runId}`,jobsPath=runPath+'/attempts/1/jobs?per_page=100&page=1',run=await api(runPath),jobs=await api(jobsPath);need(same(runProjection(run),runProjection(listed)),'R10_CLOSED_LISTED');const gh=async(path,binary=false)=>{need(path.startsWith(prefix)&&/^git\/(?:commits\/[a-f0-9]{40}|trees\/[a-f0-9]{40}\?recursive=1)$/.test(path.slice(prefix.length)),'R10_CLOSED_SCOPE');allowed.add(path.slice(prefix.length));return get(path,binary)},mode=await authenticateClosedBadenR10Mode({github:gh,run,jobs});executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-closed-operation',...mode});closedModes.add(runId);mutable.set(runPath,run);mutable.set(jobsPath,jobs);mutableProjection.set(runPath,r=>badenR10NightlyRunProjection(runProjection(r)));mutableProjection.set(jobsPath,v=>closedBadenR10Jobs(run,v))}catch(error){blockers.push({runId,path:listed.path,reason:error.code??'R10_CLOSED_MODE_HOLD'})}
+    continue
+   }
+   if(listed.path===R10_REFRESH_WORKFLOW){
+    try{const runPath=`actions/runs/${runId}`,jobsPath=runPath+'/attempts/1/jobs?per_page=100&page=1',run=await api(runPath),jobs=await api(jobsPath);need(same(runProjection(run),runProjection(listed)),'REFRESH_LISTED');const gh=async(path,binary=false)=>{need(path.startsWith(prefix)&&!path.includes('..')&&!/[\\\r\n]/.test(path),'REFRESH_SCOPE');allowed.add(path.slice(prefix.length));return get(path,binary)};refreshRun(run,run.head_sha,runId,run.status==='completed');const job=refreshJobs(jobs,run),capture=job.steps.find(s=>s.name==='Capture fixed Baden native refresh');if(run.status==='in_progress'){refreshPhase(jobs,run,'budget');const runtime=await authenticateRefreshRuntime(gh,run.head_sha);executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-native-before-source',classification:'EXACT_BUDGET_PHASE_CAPTURE_UNEXECUTED',runtimeSha256:runtime.codeSha256,newResearchRequests:0,physicalProviderAttempts:null})}else if(!capture||capture.status==='completed'&&capture.conclusion==='skipped'&&!capture.started_at){need(job.status==='completed'&&job.steps.every(s=>s.status==='completed')&&!job.steps.some(s=>s.name==='Capture fixed Baden native refresh'&&s.started_at),'REFRESH_UNEXECUTED_GRAPH');const runtime=await authenticateRefreshRuntime(gh,run.head_sha);executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-native-unexecuted',classification:'ACTUAL_SOURCE_STEP_UNEXECUTED',runtimeSha256:runtime.codeSha256,newResearchRequests:0,physicalProviderAttempts:null})}else{const a=getBadenR10RefreshAccounting(await readBadenR10RefreshAccounting({github:gh,refreshRunId:runId,refreshHead:run.head_sha}));executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-native-attempts',classification:'ACTUAL_COUNTED_NATIVE_REFRESH',newResearchRequests:a.accounting.requests,authenticatedPriorRequests:a.manifest.priorRequests??a.manifest.accounting?.priorRequests,successfulAttempts:a.accounting.successfulAttempts,failedAttempts:a.accounting.failedAttempts,pendingAttempts:0,artifact:a.certificate.artifact,sourceRefusal:a.manifest.snapshot.attempts.some(x=>[401,403,429].includes(x.httpStatus))})}mutable.set(runPath,run);mutable.set(jobsPath,jobs)}catch(error){blockers.push({runId,path:listed.path,reason:error.code??'REFRESH_ACCOUNTING_HOLD'})}
+    continue
+   }
    if(listed.path===R10_WORKFLOW){
     try{
      const runPath=`actions/runs/${runId}`,jobsPath=runPath+'/attempts/1/jobs?per_page=100&page=1',run=await api(runPath),jobs=await api(jobsPath);need(same(runProjection(run),runProjection(listed)),'R10_LISTED_EXECUTION')
@@ -164,7 +175,7 @@ async function reconcileBudget(input,nativeRemainder=false){
       executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-before-source',classification:'EXACT_BUDGET_PHASE_CAPTURE_UNEXECUTED',runtimeSha256:runtime.codeSha256,newResearchRequests:0,physicalProviderAttempts:null})
      }else{
       const a=getFussballBadenR10CurrentAccounting(await readFussballBadenR10CurrentAccounting({github:gh,sourceRunId:runId,sourceHead:run.head_sha}));need(a.accounting.known&&a.accounting.pendingAttempts===0,'R10_CURRENT_ACCOUNTING')
-      executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-current-attempts',classification:'ACTUAL_COUNTED_CURRENT_EXECUTION',newResearchRequests:a.accounting.requests,successfulAttempts:a.accounting.successfulAttempts,failedAttempts:a.accounting.failedAttempts,pendingAttempts:0,artifact:a.certificate.artifact,sourceRefusal:a.stage.snapshot.attempts.some(x=>[401,403,429].includes(x.httpStatus))})
+      executions.push({runId,runAttempt:1,head:run.head_sha,path:run.path,kind:'authenticated-r10-current-attempts',classification:'ACTUAL_COUNTED_CURRENT_EXECUTION',newResearchRequests:a.accounting.requests,authenticatedPriorRequests:a.manifest.priorRequests??a.manifest.accounting?.priorRequests,successfulAttempts:a.accounting.successfulAttempts,failedAttempts:a.accounting.failedAttempts,pendingAttempts:0,artifact:a.certificate.artifact,sourceRefusal:a.stage.snapshot.attempts.some(x=>[401,403,429].includes(x.httpStatus))})
      }
      mutable.set(runPath,run);mutable.set(jobsPath,jobs)
     }catch(error){blockers.push({runId,path:listed.path,reason:error.code??'R10_EXECUTION_ACCOUNTING_HOLD'})}
@@ -176,10 +187,13 @@ async function reconcileBudget(input,nativeRemainder=false){
      const runPath=`actions/runs/${runId}`,jobsPath=runPath+'/attempts/1/jobs?per_page=100&page=1',run=await api(runPath),jobs=await api(jobsPath),pins=badenR10NightlyPins()
      need(same(badenR10NightlyRunProjection(runProjection(run)),badenR10NightlyRunProjection(runProjection(listed)))&&run.head_branch==='main'&&['schedule','workflow_dispatch'].includes(run.event),'NIGHTLY_RUN')
      const projected=badenR10NightlyProjection(run,jobs),head=run.head_sha,cp='git/commits/'+head;allowed.add(cp);const commit=await api(cp);need(commit?.sha===head&&/^[a-f0-9]{40}$/.test(commit.tree?.sha??''),'NIGHTLY_COMMIT')
-     for(const[file,digest]of Object.entries(pins.files)){const path=`contents/${file}?ref=${head}`;allowed.add(path);const v=await api(path);need(v?.type==='file'&&v.path===file&&v.encoding==='base64'&&typeof v.content==='string'&&v.size<=8*MiB&&Buffer.from(v.content,'base64').length===v.size&&sha(Buffer.from(v.content,'base64'))===digest,'NIGHTLY_COUNTRY_GUARD_BODY')}
-     const de=projected.deJob,lp='actions/jobs/'+de.id+'/logs';allowed.add(lp);const log=await api(lp,true),scope=nightlyScope(log,{deJobId:de.id,logSha256:sha(log)},jobs)
+     let originalRuntime=true
+     for(const[file,digest]of Object.entries(pins.files)){const path=`contents/${file}?ref=${head}`;allowed.add(path);const v=await api(path);need(v?.type==='file'&&v.path===file&&v.encoding==='base64'&&typeof v.content==='string'&&v.size<=8*MiB&&Buffer.from(v.content,'base64').length===v.size&&typeof v.content==='string','NIGHTLY_COUNTRY_GUARD_BODY');if(sha(Buffer.from(v.content,'base64'))!==digest)originalRuntime=false}
+     const de=projected.deJob,lp='actions/jobs/'+de.id+'/logs';allowed.add(lp);const log=await api(lp,true);let scope
+     if(originalRuntime)scope=nightlyScope(log,{deJobId:de.id,logSha256:sha(log)},jobs)
+     else {const gh=async(path,binary=false)=>{need(path.startsWith(prefix)&&!path.includes('..'),'NIGHTLY_R10_SCOPE');allowed.add(path.slice(prefix.length));return get(path,binary)},runtime=await authenticateBadenR10CachedNightlyRuntime({github:gh,run,pinnedFiles:Object.keys(pins.files)});try{scope=nightlyScope(log,{deJobId:de.id,logSha256:sha(log)},jobs)}catch{const cache=inspectBadenR10CachedNightlyLog(log,de),parent=getBadenR10RefreshAccounting(await readBadenR10RefreshAccounting({github:gh,refreshRunId:cache.refreshRunId,refreshHead:cache.refreshHead}));need(parent.manifest.success===true&&parent.manifest.currentCreatedAt===cache.currentCreatedAt&&parent.manifest.currentFreshUntil===cache.currentFreshUntil,'NIGHTLY_R10_AUTHENTICATED_PARENT');scope={source:'dfb-and-authenticated-r10-cache',leagueSlugs:['de-regionalliga-west','de-regionalliga-nord','de-regionalliga-suedwest','de-regionalliga-bayern','de-regionalliga-nordost','de-verbandsliga-baden'],cacheParentRunId:cache.refreshRunId,cacheParentHead:cache.refreshHead,newBadenSourceAttempts:0,physicalProviderAttempts:null,redirectVisibility:'NOT_JOURNALED'}}scope.runtime=runtime}
      nightlyClosed.add(runId);mutable.set(runPath,run);mutable.set(jobsPath,jobs);mutableProjection.set(runPath,r=>badenR10NightlyRunProjection(runProjection(r)));mutableProjection.set(jobsPath,j=>badenR10NightlyProjection(run,j))
-     executions.push({runId,runAttempt:1,head,path:run.path,kind:'regular-dfb-nightly-active-foreign',classification:'OUTSIDE_ORIGINAL_RESEARCH_PROFILE',newResearchRequests:0,physicalProviderAttempts:null,redirectVisibility:'NOT_JOURNALED',deJobId:de.id,deLogSha256:sha(log),countryProjection:projected,...scope})
+     executions.push({runId,runAttempt:1,head,path:run.path,kind:scope.cacheParentRunId?'nightly-dfb-and-counted-r10-cache':'regular-dfb-nightly-active-foreign',classification:scope.cacheParentRunId?'AUTHENTICATED_REUSE_ALREADY_COUNTED_CURRENT':'OUTSIDE_ORIGINAL_RESEARCH_PROFILE',newResearchRequests:0,physicalProviderAttempts:null,redirectVisibility:'NOT_JOURNALED',deJobId:de.id,deLogSha256:sha(log),countryProjection:projected,...scope})
     }catch(error){blockers.push({runId,path:listed.path,reason:error.code??'NIGHTLY_EVIDENCE_HOLD'})}
     continue
    }
@@ -303,6 +317,7 @@ async function reconcileBudget(input,nativeRemainder=false){
   audit:{executions:structuredClone(executions),ancestorCoverage:structuredClone(ancestorCoverage),authenticatedMinimumSpent:3607,
    freshAccountingKnown:false,adapterReads:structuredClone(reads),sourceOperationAuthorized:false}})
   Object.defineProperty(error,'originals',{value:copyFiles(originals)});throw error}
+ for(const e of executions)if(e.cacheParentRunId&&!executions.some(p=>p.runId===e.cacheParentRunId&&p.kind==='authenticated-r10-native-attempts'))blockers.push({runId:e.runId,reason:'MISSING_COUNTED_CACHE_PARENT',parentRunId:e.cacheParentRunId});
  if(blockers.length||!ancestorCoverage.complete)fail()
  const last=await enumerate(api),firstRelevant=first,lastRelevant=last
  for(const r of ancestorCoverage.overlapRuns)if(!lastRelevant.some(x=>x.id===r.id))lastRelevant.push(r)
@@ -320,7 +335,8 @@ async function reconcileBudget(input,nativeRemainder=false){
  for(const r of firstRelevant)if(!sealRelevant.some(x=>x.id===r.id))blockers.push({runId:String(r.id),path:r.path,reason:'SEAL_EXECUTION_MISSING'})
  if(blockers.length||!ancestorCoverage.complete)fail()
  const B=foundation.accounting.authenticatedMinimumSpent+executions.reduce((sum,e)=>sum+e.newResearchRequests,0)
- need(Number.isSafeInteger(B)&&B>=3607&&B+(nativeRemainder?0:policy.currentMaximum)<=policy.totalRequestCap,'RESERVATION_CAP')
+ if(!executions.every(e=>e.authenticatedPriorRequests==null||B>=e.authenticatedPriorRequests+e.newResearchRequests))blockers.push({reason:'HISTORICAL_CHARGE_REGRESSION'});
+ if(!(Number.isSafeInteger(B)&&B>=3607&&B+(nativeRemainder?0:policy.currentMaximum)<=policy.totalRequestCap))blockers.push({reason:'RESERVATION_CAP'});if(blockers.length)fail()
  const verifiedAt=Date.now(),proof=freeze({version:1,kind:nativeRemainder?'authenticated-baden-native-research-remainder':'authenticated-baden-r10-research-budget',
   budget:nativeRemainder?{priorRequests:B,remainingRequests:5000-B,totalRequestCap:5000}:{priorRequests:B,currentMaximum:780,archiveMaximum:0,cumulativeReserved:B+780,totalRequestCap:5000},
   verifiedAt:new Date(verifiedAt).toISOString(),expiresAt:new Date(verifiedAt+60000).toISOString(),sourceOperationAuthorized:false,nativeAdmission:false,activationEligible:false})

@@ -1,3 +1,4 @@
+import {assertBadenR10CurrentBatch} from '../fussball-baden-r10-refresh.mjs'
 // Native import from an explicitly supplied, complete original-byte capture.
 // Public source collection is handled separately, without database credentials.
 import {loadFussballImportCapture,parseFussballLeagueCode} from '../fussball-import.mjs'
@@ -55,6 +56,7 @@ export function createFussballPublicSource({competition,db,directory=process.env
   boundCode=code
   loaded??=(async()=>{await assertFussballCommunityScope(db,competition,code);return loadCapture(directory,{...scope,current,...(cardPolicy?{cardPolicy}:{})})})()
   const batch=await loaded
+  if(batch.provenance?.kind==='baden-r10-counted-native-refresh')assertBadenR10CurrentBatch(batch)
   requireProof(batch.provider==='fussball-public'&&batch.staffel===scope.staffel&&batch.season===scope.season&&batch.activationEligible===false&&batch.cardPolicy===cardPolicy&&(!community?!(batch.pendingReports?.length):Array.isArray(batch.pendingReports)&&Array.isArray(batch.cardEnvelopes)),'capture batch scope differs')
   return batch
  }

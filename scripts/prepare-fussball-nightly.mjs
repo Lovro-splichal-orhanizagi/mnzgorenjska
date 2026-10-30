@@ -10,6 +10,7 @@ import {captureFussballDirectory} from './fussball-capture-evidence.mjs'
 import {loadFussballImportCapture,parseFussballLeagueCode} from './fussball-import.mjs'
 
 import {isFussballCommunityCandidate,isFussballCommunityCompetition,fussballCardPolicyForCandidate} from './fussball-community-policy.mjs'
+import {loadBadenR10RefreshDirectory} from './fussball-baden-r10-refresh.mjs'
 import {isBadenNativeCompetition,loadFussballNativeRuntimeSeed,seedFussballNativeRuntime,captureFussballNativeRuntimeDirectory} from './fussball-baden-native-dispatch.mjs'
 const fail=message=>Object.assign(new Error(`fussball nightly: ${message}`),{exitCode:1,dataHold:true})
 const proof=(ok,message)=>{if(!ok)throw fail(message)}
@@ -65,6 +66,14 @@ export async function prepareFussballNightly({candidate,directory,maxRequests=40
  if(isBadenNativeCompetition(candidate)){
   const seedDirectory=existsSync(latest)?join(latest,'seed'):seed
   const loaded=await loadFussballNativeRuntimeSeed({context:installedHistoricalMarkers,competition:candidate,db,directory:seedDirectory})
+  if(loaded.context?.kind==='baden-r10-active-native-context'){
+   proof(existsSync(latest),'R10 requires a completed authenticated counted refresh; no unbudgeted nightly source fallback')
+   const batch=await loadBadenR10RefreshDirectory({context:loaded.context,competition:loaded.competition,directory:latest})
+   proof(batch.provenance.createdAt.slice(0,10)===asOfDate,'R10 native rounds must have been actually captured today')
+   cpSync(latest,directory,{recursive:true,errorOnExist:true,force:false})
+   console.log('BADEN_R10_AUTHENTICATED_CACHE '+JSON.stringify({kind:'counted-refresh-cache-consumption',refreshRunId:batch.provenance.refreshRunId,refreshHead:batch.provenance.refreshHead,currentCreatedAt:batch.provenance.createdAt,currentFreshUntil:batch.provenance.currentFreshUntil,newResearchSourceAttempts:0}))
+   return {directory:resolve(directory),source_league_code:reviewed.source_league_code,...scope,reports:batch.reports.length,pendingReports:batch.pendingReports.length,provenance:batch.provenance}
+  }
   const batch=await captureFussballNativeRuntimeDirectory({context:loaded.context,competition:loaded.competition,directory,seedDirectory,...(existsSync(latest)?{reuseDirectory:latest}:{}),maxRequests,asOfDate,...(fetchFn?{fetchFn}:{})})
   rmSync(next,{recursive:true,force:true});cpSync(directory,next,{recursive:true});rmSync(previous,{recursive:true,force:true})
   if(existsSync(latest))renameSync(latest,previous)

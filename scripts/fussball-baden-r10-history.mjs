@@ -2,7 +2,7 @@
 // requests remain in the accepted 3020 receipt; this module never refunds them.
 import {isDeepStrictEqual as same} from 'node:util'
 const repository='Lovro-splichal-orhanizagi/mnzgorenjska',prefix='repos/'+repository+'/',boundary='2026-10-28T20:15:01Z',cut=Date.parse(boundary)
-export const badenR10HistoryFamilies=Object.freeze(['preveri-fussball-vzorec.yml','preveri-fussball-sezono.yml','preveri-fussball-dopolni.yml','preveri-fussball-paket.yml','preveri-baden-fresh-pair.yml','preveri-baden-r10-current.yml','uvoz-fussball-public.yml','uvoz-pl-de-paketa.yml','preveri-nova-vira.yml','diagnostika-javnih-virov.yml','uvoz-lige.yml','uvoz-zapisnikov.yml','ci.yml'])
+export const badenR10HistoryFamilies=Object.freeze(['preveri-fussball-vzorec.yml','preveri-fussball-sezono.yml','preveri-fussball-dopolni.yml','preveri-fussball-paket.yml','preveri-baden-fresh-pair.yml','preveri-baden-r10-current.yml','derive-baden-r10-m2.yml','transition-baden-r10-m2.yml','uvoz-baden-r10-native.yml','refresh-baden-r10-native.yml','uvoz-fussball-public.yml','uvoz-pl-de-paketa.yml','preveri-nova-vira.yml','diagnostika-javnih-virov.yml','uvoz-lige.yml','uvoz-zapisnikov.yml','ci.yml'])
 const need=(v,c,id)=>{if(!v)throw Object.assign(Error('BADEN_HISTORY_'+c),{code:'BADEN_HISTORY_'+c,dataHold:true,runId:id==null?null:String(id)})}
 const before=t=>Number.isFinite(Date.parse(t))&&Date.parse(t)<cut
 const projection=r=>Object.fromEntries(['id','run_attempt','head_sha','path','created_at','updated_at','status','conclusion'].map(k=>[k,r[k]]))

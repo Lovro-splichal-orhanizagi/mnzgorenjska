@@ -50,7 +50,7 @@ function retained(){
  }
  const H=join(D,'closure-groups'),C=join(D,'checkout-closure'),P=join(E,'evidence/baden-pre-r7-family-closure-20261030'),pre=load(P,'PROVENANCE.json')
  for(const w of badenR10HistoryFamilies){
-  const first=w==='preveri-baden-r10-current.yml'?{total_count:0,workflow_runs:[]}:load(H,'history-'+w+'.json');for(let page=1;page<=Math.max(1,Math.ceil(first.total_count/100));page++){
+  const first=['preveri-baden-r10-current.yml','derive-baden-r10-m2.yml','transition-baden-r10-m2.yml','uvoz-baden-r10-native.yml','refresh-baden-r10-native.yml'].includes(w)?{total_count:0,workflow_runs:[]}:load(H,'history-'+w+'.json');for(let page=1;page<=Math.max(1,Math.ceil(first.total_count/100));page++){
    const v=page===1?first:load(H,'history-'+w+'-page'+page+'.json');set(`actions/workflows/${w}/runs?per_page=100&page=${page}`,v)
    for(const r of v.workflow_runs)if(!responses.has(prefix+'actions/runs/'+r.id))set('actions/runs/'+r.id,r)
   }
@@ -236,4 +236,13 @@ test('fixed FCF mode rejects changed provider URL bytes, frozen verifier bytes a
   }
   await assert.rejects(api.readFussballBadenR10Budget({github:f.github}),e=>e.blockers?.some(b=>b.runId===String(id)&&b.reason.includes(mode==='attempt'?'FCF_MODE_EVIDENCE_HOLD':'FCF_MODE_RUNTIME_BODY')))
  }
+})
+import {refreshFixture} from './fussball-baden-r10-refresh-test-fixture.mjs'
+test('TEST ONLY restricted census reconciles real native originals into distinct fresh5000 remainder without trusting artifact B',{skip:!E},async t=>{
+ const native=await refreshFixture(t,{prior:3607,fail:'connect'}),lease=await native.prepare();native.setCapture();await native.api.captureBadenR10Refresh({lease});native.finish();t.mock.method(Date,'now',()=>native.f.clock);t.mock.method(globalThis,'fetch',()=>{throw Error('TEST ONLY all network blocked')});const base=retained();base.controls.reviewedOnly=true;base.controls.inventory=rows=>[...rows,native.run]
+ const github=async(p,binary=false)=>p.startsWith(prefix+'actions/workflows/refresh-baden-r10-native.yml/runs?')?{total_count:1,workflow_runs:[native.run]}:native.responses.has(p)?native.github(p,binary):base.github(p,binary)
+ const proof=await api.readFussballBadenNativeRemainingBudget({github}),value=api.getFussballBadenNativeRemainingBudget(proof),execution=value.executions.find(e=>e.runId===native.runId);assert.equal(execution.newResearchRequests,native.fetches);assert.equal(execution.failedAttempts,1);assert.equal(value.budget.priorRequests,3607+native.fetches);assert.equal(value.budget.remainingRequests,5000-value.budget.priorRequests);assert.throws(()=>api.getFussballBadenR10Budget(proof),/PRIVATE_CAPABILITY/);assert.throws(()=>api.getFussballBadenNativeRemainingBudget(structuredClone(proof)),/PRIVATE_NATIVE_REMAINDER/);assert.equal(value.sourceOperationAuthorized,false)
+})
+test('native remainder reader refuses serialized counters and caller caps before own GitHub IO',async()=>{
+ assert.equal(typeof api.readFussballBadenNativeRemainingBudget,'function');for(const key of ['remainingRequests','maxRequests','priorRequests','proof','clock']){let calls=0;await assert.rejects(api.readFussballBadenNativeRemainingBudget({github:async()=>calls++,[key]:1000}),/INPUT/);assert.equal(calls,0)}
 })
