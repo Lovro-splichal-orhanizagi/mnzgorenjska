@@ -8,7 +8,9 @@
 #   app/node_modules/ (playwright, @supabase/supabase-js)
 #   mediji/              prosojnice osnutkov (JPEG) in reeli (reel.mp4, naslovnica.jpg),
 #                        <teden>-<slot>-<naključno>/…;
-#                        javno prek Caddyja: https://slff.eu/objave-mediji/… (Meta jih prebere)
+#                        javno prek Caddyja: https://slff.eu/objave-mediji/… (Meta jih prebere);
+#                        ročni reeli (objava-reel.mjs) v mediji/rocni/<datum>-<naključno>/reel.mp4
+#   rocni/               zasebno: zapisi ročnih reelov (objave.jsonl), zaklep; NI javno
 # Objava: scripts/hetzner/objavi-objave.sh. CI tega ne objavi.
 # Dnevnik: docker logs slff-objave. Preizkus brez pisanja:
 #   docker compose run --rm objave node scripts/objave.mjs --slot pon --suho --mapa /mediji/suho
@@ -30,11 +32,13 @@ services:
       # Stran s prosojnicami (/objava); mora biti objavljena različica s to potjo.
       OBJAVE_URL: https://slff.eu
       OBJAVE_MAPA: /mediji
+      ROCNI_MAPA: /rocni
       TZ: Europe/Ljubljana
     env_file: .env
     volumes:
       - ./app:/app:ro
       - ./mediji:/mediji
+      - ./rocni:/rocni
     shm_size: 512m
     mem_limit: 1536m
     cpus: 1.0

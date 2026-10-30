@@ -23,6 +23,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     opis: 'Link może być nieaktualny albo w adresie jest literówka.',
     nazaj: 'Wróć na stronę główną',
   },
+  poziv: {
+    kasneje: 'Może później',
+    aplikacija: { naslov: 'SLFF w kieszeni 📱', besedilo: 'Przypomnienie przed terminem, punkty twojej drużyny po meczach i szybsza droga do składu, w aplikacji.', googlePlay: 'Pobierz z Google Play', appStore: 'Pobierz z App Store' },
+    sledi: { naslov: 'Bądź z nami 🙌', besedilo: 'Drużyny kolejki, piłkarze tygodnia i nowości z twojej ligi, najpierw na naszych profilach.', instagram: 'Obserwuj na Instagramie', facebook: 'Polub na Facebooku' },
+  },
   pivo: {
     gumb: 'Postaw nam piwo',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */

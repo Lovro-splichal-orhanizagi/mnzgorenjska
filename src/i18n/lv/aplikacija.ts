@@ -23,6 +23,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     opis: 'Saite, iespējams, ir novecojusi, vai adresē ir drukas kļūda.',
     nazaj: 'Atpakaļ uz sākumlapu',
   },
+  poziv: {
+    kasneje: 'Varbūt vēlāk',
+    aplikacija: { naslov: 'SLFF kabatā 📱', besedilo: 'Atgādinājums pirms termiņa, tavas komandas punkti pēc spēlēm un ātrāks ceļš uz sastāvu, lietotnē.', googlePlay: 'Lejupielādēt no Google Play', appStore: 'Lejupielādēt no App Store' },
+    sledi: { naslov: 'Esi ar mums 🙌', besedilo: 'Kārtas komandas, nedēļas spēlētāji un jaunumi no tavas līgas, vispirms mūsu profilos.', instagram: 'Seko Instagram', facebook: 'Atzīmē “patīk” Facebook' },
+  },
   pivo: {
     gumb: 'Uzsauc mums alu',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
