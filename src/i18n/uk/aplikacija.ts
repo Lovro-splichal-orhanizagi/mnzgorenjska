@@ -24,6 +24,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'На головну сторінку',
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  poziv: {
+    kasneje: 'Можливо, пізніше',
+    aplikacija: { naslov: 'SLFF у кишені 📱', besedilo: 'Нагадування перед дедлайном, очки твоєї команди після матчів і швидший шлях до складу, у застосунку.', googlePlay: 'Завантажити з Google Play', appStore: 'Завантажити з App Store' },
+    sledi: { naslov: 'Будь з нами 🙌', besedilo: 'Команди туру, гравці тижня та новини твоєї ліги, спершу на наших сторінках.', instagram: 'Стеж в Instagram', facebook: 'Вподобай у Facebook' },
+  },
   pivo: {
     gumb: 'Пригости нас пивом',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */

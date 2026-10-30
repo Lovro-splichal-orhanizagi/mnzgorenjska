@@ -171,7 +171,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Privaatsus ja tingimused',
-    zadnjaSprememba: 'Viimati muudetud: 16. oktoober 2026',
+    zadnjaSprememba: 'Viimati muudetud: 30. oktoober 2026',
     kajJeNaslov: 'Mis on SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) on fännide tehtud fantaasialiiga kohalikele amatöörliigadele. Seda veavad vabatahtlikud ja see pole seotud piirkondlike jalgpalliliitude, riikliku jalgpalliliidu ega klubidega. Mäng on tasuta, ilma panuste ja auhindadeta.',
@@ -185,7 +185,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Seadme tunnus teavituste jaoks.</b> Kui lubad mobiilirakenduses teavitused, hoiame tunnust, millega saadame sulle enne vooru tähtaega meeldetuletuse. See kustutatakse väljalogimisel.',
     neHranimo:
-      'Me ei hoia sinu telefoninumbrit ega kaardiandmeid; aadressi hoiame ainult siis, kui tellid trükitud märgi (vt allpool). Me ei kasuta jälgimisküpsiseid ega reklaamitööriistu. Sinu brauser hoiab sinu sisselogimise seanssi, abivestluse vestluse tunnust, kui selle avad, ja seansimärke, mis hoiavad ära lehe kahekordse loendamise. Kui palju inimesi millist lehte avas, hoitakse ainult päeva kogusummana, ilma sinu nime, konto, seadme või IP-aadressita. Üldist külastusstatistikat (millised lehed, kust külastajad tulevad, seadme tüüp ja riik, mõned tegevused, näiteks meeskonna kokkupanek) kogub <b>Umami</b> meie oma serveris: küpsisteta, IP-aadressi hoidmata ja külastusi sinu kontoga sidumata. Kui sinu brauseris on sisse lülitatud "Do Not Track", ei salvestata midagi.',
+      'Me ei hoia sinu telefoninumbrit ega kaardiandmeid; aadressi hoiame ainult siis, kui tellid trükitud märgi (vt allpool). Me ei kasuta jälgimisküpsiseid ega reklaamitööriistu. Sinu brauser hoiab sinu sisselogimise seanssi, abivestluse vestluse tunnust, kui selle avad, ja seansimärke, mis hoiavad ära lehe kahekordse loendamise. Kui palju inimesi millist lehte avas, hoitakse ainult päeva kogusummana, ilma sinu nime, konto, seadme või IP-aadressita. Üldist külastusstatistikat (millised lehed, kust külastajad tulevad, seadme tüüp ja riik, mõned tegevused, näiteks meeskonna kokkupanek) kogub <b>Umami</b> meie oma serveris: küpsisteta, IP-aadressi hoidmata ja külastusi sinu kontoga sidumata. Kui sinu brauseris on sisse lülitatud "Do Not Track", ei salvestata midagi. Kui oled sisse logitud, salvestame mõned sammud mängus (nt meeskonna koostamine, rakenduse avamine, otsus teavituste kohta, suletud aken) koos sinu kontoga, et näha, kus mäng takerdub. Hoiame neid 90 päeva, need kustuvad koos kontoga ja „Ära jälgi“ korral ei salvesta me midagi.',
     dostopNaslov: 'Kellel on andmetele juurdepääs',
     dostop:
       'Andmeid hoitakse meie oma serveris ettevõttes <b>Hetzner</b> (Saksamaa, EL); liiklus käib läbi <b>Cloudflare</b>’i (kaitse ja lehe edastamine). Kinnitus- ja parooli lähtestamise kirjad saadetakse meie oma meiliserverist (samuti Hetzneris) ja mobiilirakenduse teavitused läbi <b>Google Firebase Cloud Messaging</b>’u (ainult seadme tunnus ja teavituse tekst). Abivestlus all paremas nurgas töötab teenusel <b>HelpStack</b>: see saab, mida sinna kirjutad, ja kui oled sisse logitud, sinu kuvatava nime, et teaksime, kellele vastame. Kui vestluse assistent sind aitab, näeb ta ka, millisel lehel ja millises liigas oled ning kas sinu meeskond vastab reeglitele. Sinu e-posti aadressi me edasi ei anna. Me ei jaga sinu andmeid kellegi teisega ega müü neid.',
