@@ -50,6 +50,9 @@ import {
 import { posljiPush, pushNastavljen, type Obvestilo } from './push.ts'
 import nodemailer from 'npm:nodemailer@6.9.16'
 
+// Anketa plačila (SLF-211): Lovro, 30. 10. 2026, okoli 50 ročno izbranih.
+const ANKETA_MEJA = 50
+
 const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'anketa-placila'] as const
 type Vrsta = (typeof VRSTE)[number]
 
@@ -91,7 +94,7 @@ interface Zahteva {
   najvec?: number
   // Največ poslanih v tem klicu (dnevna kvota ponudnika); ostali naslednji dan.
   najvec_poslati?: number
-  // 'anketa-placila' iz administracije: natanko odkljukani uporabniki (do 20).
+  // 'anketa-placila' iz administracije: natanko odkljukani uporabniki (do ANKETA_MEJA).
   user_ids?: string[]
 }
 
@@ -261,14 +264,18 @@ Deno.serve(async (req) => {
   }
 
   // `anketa-placila` (SLF-211): enkratna anketa natanko tistim, ki jih admin
-  // odkljuka v administraciji (`user_ids`, do 20); največ 10 na klic, 20 skupaj
-  // (email_log). Admin naslove že vidi v tabeli, odgovor pa vrne le števila in
+  // odkljuka v administraciji (`user_ids`, do ANKETA_MEJA); največ 10 na klic,
+  // ANKETA_MEJA skupaj (email_log). Admin naslove že vidi v tabeli, odgovor pa vrne le števila in
   // razloge preskoka.
   if (vrsta === 'anketa-placila' && Array.isArray(vhod.user_ids)) {
     const suhoA = suho !== false
     const ids = [...new Set(vhod.user_ids.filter((x) => typeof x === 'string'))]
-    if (!ids.length || ids.length > 20) return json({ error: 'Izberi od 1 do 20 uporabnikov.' }, 400)
-    if (!SMTP_PASS && !suhoA) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
+    if (!ids.length || ids.length > ANKETA_MEJA) return json({ error: `Izberi od 1 do ${ANKETA_MEJA} uporabnikov.` }, 400)
+    // Anketa gre samo od info@slff.eu (Lovro, 30. 10. 2026), z lastno prijavo v nabiralnik
+    // info@; brez nje ne pošlje nič (ne noreply@, ne reply-to kot nadomestek).
+    const infoPripravljen = !!INFO_SMTP_PASS
+    if (!infoPripravljen && !suhoA)
+      return json({ error: 'Pošiljatelj info@slff.eu ni nastavljen (INFO_SMTP_PASS). Nič ni poslano.' }, 500)
     const db = createClient(SUPABASE_URL, SERVICE_KEY)
     const poslanih = async () => {
       const { data, error } = await db.rpc('anketa_placila_poslanih')
@@ -294,27 +301,31 @@ Deno.serve(async (req) => {
       const j = jezikAnkete({ drzava: u.liga_drzava })
       jeziki[j] = (jeziki[j] ?? 0) + 1
     }
-    const povzetek = { izbranih: ids.length, kandidati_stevilo: kand.length, preskoceni, jeziki, ze_poslanih: prej }
+    const povzetek = { posiljatelj: ANKETA_FROM, posiljatelj_pripravljen: infoPripravljen, izbranih: ids.length, kandidati_stevilo: kand.length, preskoceni, jeziki, ze_poslanih: prej, meja: ANKETA_MEJA }
     if (suhoA) return json({ suho: true, ...povzetek })
-    // 20 skupaj (SLF-211); funkcija ima 60 s, mail traja ~4 s, zato 10 na klic.
-    const prostih = Math.max(0, 20 - prej)
+    // ANKETA_MEJA skupaj (SLF-211); funkcija ima 60 s, mail traja ~4 s, zato 10 na klic.
+    const prostih = Math.max(0, ANKETA_MEJA - prej)
     let poslano = 0
     let napak = 0
+    let zasedenih = 0
     for (const u of kand.slice(0, Math.min(prostih, 10))) {
       if (poslano + napak > 0) await new Promise((r) => setTimeout(r, 500))
       const liga: Liga = { slug: u.liga_slug, oznaka: u.liga_oznaka, drzava: u.liga_drzava }
       const sporocilo = await sOdjavo(db, u.user_id, sestaviAnketoPlacila(liga, { display_name: u.display_name }))
-      const rez = await poslji(EMAIL_FROM, u.email, sporocilo, Deno.env.get('EMAIL_REPLY_TO'))
+      // Zasedba pod zaklepom (SQL): sočasen klic istemu ne pošlje še enkrat, meja velja za vse klice.
+      const { data: zid, error: zErr } = await db.rpc('anketa_placila_zasedi', {
+        p_user_id: u.user_id, p_email: u.email, p_competition_id: u.competition_id, p_meja: ANKETA_MEJA,
+      })
+      if (zErr) return json({ error: `email_log: ${zErr.message}`, poslano, napak }, 500)
+      if (Number(zid) === -1) break
+      if (Number(zid) === 0) { zasedenih++; continue }
+      const rez = await poslji(ANKETA_FROM, u.email, sporocilo, undefined, smtpInfo)
       if (rez.napaka) napak++
       else poslano++
-      const { error: logErr } = await db.from('email_log').insert({
-        user_id: u.user_id,
-        email: u.email,
-        vrsta,
-        competition_id: u.competition_id,
-        resend_id: rez.id ?? null,
-        napaka: rez.napaka ?? null,
-      })
+      const { error: logErr } = await db.from('email_log')
+        .update({ resend_id: rez.id ?? null, napaka: rez.napaka ?? null, poslano_at: new Date().toISOString() })
+        .eq('id', Number(zid))
+      // Vrstica ostane 'poteka': človek je blokiran, raje kot da dobi dva maila.
       if (logErr) return json({ error: `email_log: ${logErr.message}`, poslano, napak }, 500)
     }
     // Poslano potrdi email_log, ne števec v zanki.
@@ -323,8 +334,9 @@ Deno.serve(async (req) => {
       ...povzetek,
       poslano,
       napak,
+      zasedenih,
       // Neuspeli ostanejo izbrani za ponovni poskus (največ trije, glej SQL).
-      ostalo: Math.max(0, Math.min(kand.length, prostih) - poslano),
+      ostalo: Math.max(0, Math.min(kand.length, prostih) - poslano - zasedenih),
       cez_mejo: kand.length > prostih,
       ze_poslanih: potem,
     })
@@ -1002,15 +1014,28 @@ const smtp = nodemailer.createTransport({
   auth: { user: Deno.env.get('SMTP_USER') ?? 'noreply@slff.eu', pass: Deno.env.get('SMTP_PASS') },
 })
 
+// Anketa plačila (SLF-211) gre od info@slff.eu: lastna prijava, ker Mailcow zahteva,
+// da je From isti kot prijavljeni nabiralnik. Odgovori pridejo naravnost v info@.
+const ANKETA_FROM = 'SLFF <info@slff.eu>'
+const INFO_SMTP_PASS = Deno.env.get('INFO_SMTP_PASS')
+const smtpInfo = nodemailer.createTransport({
+  host: Deno.env.get('SMTP_HOST') ?? 'mail.slff.eu',
+  port: 465,
+  secure: true,
+  pool: true,
+  auth: { user: 'info@slff.eu', pass: INFO_SMTP_PASS },
+})
+
 /** `id` je Message-ID; v email_log gre v stolpec `resend_id` (ime iz časa Resenda). */
 async function poslji(
   from: string,
   to: string,
   s: Sporocilo,
   replyTo?: string,
+  prek = smtp,
 ): Promise<{ id?: string; napaka?: string }> {
   try {
-    const r = await smtp.sendMail({
+    const r = await prek.sendMail({
       from, to, subject: s.naslov, text: s.besedilo, html: s.html,
       ...(replyTo ? { replyTo } : {}),
       // Odjava z enim klikom v poštnem odjemalcu vodi na isto stran.
