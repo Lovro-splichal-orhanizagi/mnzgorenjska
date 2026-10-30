@@ -12,7 +12,8 @@ private-draft asset metadata/raw bytes before owner credentials. It reauthentica
 before readback. All gh transport uses explicit GET only. No source/private-proof
 rebuild, installation, mutation, retry, native import or activation is invoked.
 
-The GHA-only psql primitive accepts only three fixed modes. It removes inherited
+The GHA-only psql primitive accepts three fixed forced-read-only modes and one
+fixed natural-defaults mode. It removes inherited
 PG options, requires default_transaction_read_only=on through PGOPTIONS, and uses
 separate BEGIN REPEATABLE READ READ ONLY/ROLLBACK transactions with bounded
 connection/statement/lock/process/output limits. It supplies no connection URL
@@ -55,3 +56,11 @@ definitions and trigger name/type/enabled/function identity are scoped to
 private_baden_history.catalog. Trigger definitions/arguments are omitted, as are
 function bodies, other relation data, file
 paths, setting arrays or raw errors. No connection/read-only control changes.
+
+The natural-defaults connection uses the original2d5 owner environment derivation
+and application_name, with PGOPTIONS absent. Its SQL still begins an explicit
+repeatable-read READ ONLY transaction and rolls back. Only the single
+default_transaction_read_only pg_settings row (name/setting/reset_val/boot_val/
+source) and fixed role/database/recovery/read-only facts are retained in
+natural-defaults.json. Transaction read-only must be on; the natural session
+default may be on or off. Other three modes retain forced PGOPTIONS unchanged.
