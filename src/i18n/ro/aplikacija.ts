@@ -24,6 +24,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'Înapoi la pagina principală',
   },
   /** Buton de susținere (components/Pivo.tsx). */
+  poziv: {
+    kasneje: 'Poate mai târziu',
+    aplikacija: { naslov: 'SLFF în buzunar 📱', besedilo: 'Memento înainte de termen, punctele echipei tale după meciuri și drum mai rapid spre formație, în aplicație.', googlePlay: 'Descarcă din Google Play', appStore: 'Descarcă din App Store' },
+    sledi: { naslov: 'Fii alături de noi 🙌', besedilo: 'Echipele etapei, jucătorii săptămânii și noutăți din liga ta, întâi pe profilurile noastre.', instagram: 'Urmărește pe Instagram', facebook: 'Apreciază pe Facebook' },
+  },
   pivo: {
     gumb: 'Fă-ne cinste cu o bere',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */

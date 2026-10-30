@@ -1,3 +1,6 @@
+// Okno ob dobri volji. Kateri poziv pokaže (aplikacija, sledi, pivo) in da je
+// okno največ eno na 7 dni, odloči lib/pozivi.ts; tu sta povoda in pivo.
+//
 // Okno "Časti pivo": prijavljenemu na spletu se pokaže največ vsakih 14 dni,
 // in to le ob dobri volji (lib/pivoNavdusenje.ts): po shranjeni ekipi za
 // naslednji krog in ob prvem obisku po dobrem krogu. Do 10/2026 je prišlo
@@ -19,6 +22,8 @@ import { jeNativno } from '../lib/platforma'
 import { zabeleziKorak } from '../lib/lijak'
 import { najdiDoberKrog, poslusajPovode, type PovodPiva } from '../lib/pivoNavdusenje'
 import { zeVprasan } from './PrviObisk'
+import { izberiPoziv, oznaciOkno, utisajPoziv, type Poziv } from '../lib/pozivi'
+import PozivVsebina from './PozivVsebina'
 import { stevilo, t } from '../i18n'
 
 const KLJUC = 'slff-pivo-okno-do'
@@ -50,30 +55,37 @@ export default function PivoOkno() {
   const { slug, id: ligaId } = useTekmovanje()
   const { pathname } = useLocation()
   const [povod, setPovod] = useState<PovodPiva | null>(null)
+  const [vrsta, setVrsta] = useState<Poziv>('pivo')
   const odprto = povod != null
   const okno = useRef<HTMLDivElement | null>(null)
   const uporabnik = session?.user.id ?? null
 
+  // Pogoji vseh pozivov; pivo ima še svoje (splet, ne mladinska liga).
   const ustreza =
-    !jeNativno() &&
     Boolean(session) &&
     Date.now() - Date.parse(session?.user.created_at ?? '') > 3 * DAN &&
-    !jeMladinskiSlug(slug) &&
     zeVprasan() &&
     !BREZ_OKNA.some((p) => pathname.startsWith(p))
+  const pivoMogoce = () => !jeNativno() && !jeMladinskiSlug(slug) && !utisano()
 
   const zapri = () => setPovod(null)
   const odkloni = () => {
-    zabeleziKorak('pivo_okno_zaprto')
+    if (vrsta !== 'pivo') utisajPoziv(vrsta, 60)
+    zabeleziKorak(vrsta === 'pivo' ? 'pivo_okno_zaprto' : 'poziv_zaprt')
     zapri()
   }
 
   function odpri(p: PovodPiva, zamik: number) {
     return window.setTimeout(() => {
-      if (utisano()) return
-      utisajPivoOkno(14) // osvežitev strani ga ne prikliče znova
-      zabeleziKorak('pivo_okno')
-      zabeleziKorak(p.vrsta === 'ekipa' ? 'pivo_okno_ekipa' : 'pivo_okno_krog')
+      const v = izberiPoziv(pivoMogoce())
+      if (!v) return
+      oznaciOkno() // osvežitev strani ga ne prikliče znova
+      if (v === 'pivo') {
+        utisajPivoOkno(14)
+        zabeleziKorak('pivo_okno')
+        zabeleziKorak(p.vrsta === 'ekipa' ? 'pivo_okno_ekipa' : 'pivo_okno_krog')
+      } else zabeleziKorak(v === 'aplikacija' ? 'poziv_aplikacija' : 'poziv_sledi')
+      setVrsta(v)
       setPovod(p)
     }, zamik)
   }
@@ -83,7 +95,7 @@ export default function PivoOkno() {
     if (!ustreza || odprto) return
     let id: number | undefined
     const stop = poslusajPovode((p) => {
-      if (utisano()) return
+      if (!izberiPoziv(pivoMogoce())) return
       window.clearTimeout(id)
       id = odpri(p, ZAMIK_EKIPA_MS)
     })
@@ -95,7 +107,7 @@ export default function PivoOkno() {
 
   // Povod "krog": ob prvem obisku po končanem krogu, če je bil dober.
   useEffect(() => {
-    if (!ustreza || odprto || utisano() || !uporabnik || ligaId == null) return
+    if (!ustreza || odprto || !izberiPoziv(pivoMogoce()) || !uporabnik || ligaId == null) return
     let velja = true
     let id: number | undefined
     najdiDoberKrog(uporabnik, ligaId)
@@ -119,6 +131,7 @@ export default function PivoOkno() {
   }, [odprto])
 
   if (!povod || !ustreza) return null
+  if (vrsta !== 'pivo') return <PozivVsebina vrsta={vrsta} okno={okno} zapri={zapri} odkloni={odkloni} />
 
   return (
     <div
