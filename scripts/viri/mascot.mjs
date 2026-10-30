@@ -22,8 +22,10 @@
 // enako. Ker so v šifri grške črke, `sifra()` iz `zapisniki.mjs` ni enolična
 // (vse grške črke postanejo `_`): vir zato svojih datotek ne imenuje po njej.
 //
-// RAZPORED: `table_analytika.asp` (epsm, Krf, Lezbos) ali `table.asp` (ostale)
-// — krogi "N<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ", tekma "Domači - Gostje", izid, pri nekaterih
+// RAZPORED: `table_analytika.asp` (epsm, Ahaja, Krf, Lezbos) ali `table.asp`
+// (ostale). Epsm in Ahaja imata od 30. 10. 2026 novo predlogo (`an-round`,
+// `tekmeAnalitike`, ime lige v `mn2-hero-title`); Ahajin `table.asp` od takrat
+// pokaže le lestvico. Ostale: krogi "N<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ", tekma "Domači - Gostje", izid, pri nekaterih
 // datum in ura (atenski čas → ljubljanski −1 h), povezava
 // `game.asp?game_number=N&match_date=dd.mm.yyyy`. Številka tekme je enolična
 // znotraj domene in sezone (vsaka liga ima svoj tisočak), zato je šifra
@@ -62,7 +64,7 @@ const mapa = () => process.env.SLFF_MASCOT_MAPA || 'scripts/.predpomnilnik/masco
  */
 export const DOMENE = {
   'epsm.gr': { zveza: 'mak', ime: 'ΕΠΣ Μακεδονίας', kraj: 'Θεσσαλονίκη', analitika: true },
-  'epsachaias.gr': { zveza: 'ach', ime: 'ΕΠΣ Αχαΐας', kraj: 'Αχαΐα', analitika: false, menjava: 'noter-ven' },
+  'epsachaias.gr': { zveza: 'ach', ime: 'ΕΠΣ Αχαΐας', kraj: 'Αχαΐα', analitika: true, menjava: 'noter-ven' },
   'epspellas.gr': { zveza: 'pel', ime: 'ΕΠΣ Πέλλας', kraj: 'Πέλλα', analitika: false },
   'epsdramas.gr': { zveza: 'dra', ime: 'ΕΠΣ Δράμας', kraj: 'Δράμα', analitika: false },
   'epskozanis.gr': { zveza: 'koz', ime: 'ΕΠΣ Κοζάνης', kraj: 'Κοζάνη', analitika: false },
@@ -261,7 +263,7 @@ export function kratkoImeGr(polno) {
 export function naslovStrani(html) {
   const s = brezSkript(html)
   const out = []
-  for (const m of s.matchAll(/class="[^"]*(?:owl-slide-title|entry-title)[^"]*"[^>]*>([\s\S]*?)<\/h[1-6]>/g)) out.push(besedilo(m[1]))
+  for (const m of s.matchAll(/class="[^"]*(?:owl-slide-title|entry-title|mn2-hero-title)[^"]*"[^>]*>([\s\S]*?)<\/h[1-6]>/g)) out.push(besedilo(m[1]))
   const i = s.search(/class="site-content|<main/)
   const h3 = i < 0 ? null : s.slice(i).match(/<h3[^>]*>([\s\S]*?)<\/h3>/)
   if (h3) out.push(besedilo(h3[1]))
@@ -343,6 +345,7 @@ export function vrsticaTekme(html) {
  */
 export function tekmeRazporeda(html) {
   const s = brezSkript(html)
+  if (/class="an-round"/.test(s)) return tekmeAnalitike(s)
   const zacetki = ['schedule-card', 'schedule-container', 'epsm-rounds-board', 'ΑΝΑΛΥΤΙΚΑ ΟΙ ΑΓΩΝΙΣΤΙΚΕΣ', 'ΑΝΑΛΥΤΙΚΟ ΠΡΟΓΡΑΜΜΑ'].map((x) => s.indexOf(x)).filter((x) => x >= 0)
   if (!zacetki.length) return []
   const od = Math.min(...zacetki)
@@ -382,6 +385,50 @@ export function tekmeRazporeda(html) {
     if (moznosti.length !== 1) throw new Error(`mascot: tekme "${t.deli.join(' - ')}" (${t.krog}. krog) ne znam razdeliti na klube — uvoz ustavljen`)
     ;[t.domaci, t.gostje] = moznosti[0]
     delete t.deli
+  }
+  return out
+}
+
+/**
+ * Nova predloga `table_analytika.asp` (epsm in Ahaja od 30. 10. 2026): krog je
+ * `<section class="an-round">` z glavo "Nη ΑΓΩΝΙΣΤΙΚΗ" (brez `<sup>`), tekma
+ * `an-match` s polji `an-home`, `an-score` ("0 - 2", neodigrana "– : –"),
+ * `an-away` in `an-meta` ("27.09.2026 17.00 | igrišče" in povezava na tekmo).
+ */
+function tekmeAnalitike(s) {
+  const polje = (blok, razred) => blok.match(new RegExp(`class="${razred}"[^>]*>([\\s\\S]*?)</div>`))?.[1]
+  const out = []
+  const videni = new Set()
+  for (const r of s.split(/<section class="an-round"/).slice(1)) {
+    const krog = Number(besedilo(polje(r, 'an-round-head')).match(/^(\d+)\s*η\s+ΑΓΩΝΙΣΤΙΚΗ/)?.[1])
+    if (!krog) throw new Error('mascot: krog brez številke v razporedu — stran se je spremenila? Uvoz ustavljen')
+    if (videni.has(krog)) throw new Error(`mascot: krog ${krog} je v razporedu dvakrat — stran se je spremenila? Uvoz ustavljen`)
+    videni.add(krog)
+    const klubi = new Set()
+    for (const m of r.split(/<div class="an-match/).slice(1)) {
+      const domaci = besedilo(polje(m, 'an-team an-home'))
+      const gostje = besedilo(polje(m, 'an-team an-away'))
+      if (!domaci || !gostje) continue
+      for (const k of [domaci, gostje]) {
+        if (klubi.has(kljucKlubaGr(k))) throw new Error(`mascot: klub "${k}" igra v ${krog}. krogu dvakrat — uvoz ustavljen`)
+        klubi.add(kljucKlubaGr(k))
+      }
+      const rez = besedilo(m.match(/class="an-score[^"]*"[^>]*>([\s\S]*?)<\/div>/)?.[1]).match(/^(\d+)\s*[-–]\s*(\d+)\b/)
+      const povezava = m.match(/game_number=(\d+)/)
+      const meta = besedilo(String(polje(m, 'an-meta') ?? '').replace(/<a[\s\S]*?<\/a>/g, ''))
+      const [kdaj, ...kje] = meta.split('|')
+      out.push({
+        krog,
+        domaci,
+        gostje,
+        izid: rez ? { domaci: Number(rez[1]), gostje: Number(rez[2]) } : null,
+        igra: povezava ? Number(povezava[1]) : null,
+        datum: datumIz(kdaj),
+        ura: uraIz(kdaj.match(/\d{4}\s+(\d{1,2}[.:]\d{2})/)?.[1]),
+        brezBorbe: BREZ_BORBE.test(besedilo(m)),
+        opomba: kje.join('|').trim() || null,
+      })
+    }
   }
   return out
 }

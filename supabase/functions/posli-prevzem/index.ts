@@ -20,7 +20,8 @@
 //
 // `{"obvesti": true}` (kdorkoli, tudi brez prijave): vsem potrjenim, še
 // neobveščenim igralcem pošlje "profil je potrjen" s povezavo na profil
-// (`prevzem_neobvesceni`, nato `prevzem_obvescen`) — vsak zahtevek enkrat,
+// (`prevzem_neobvesceni`, pred pošiljanjem `prevzem_zakupi_obvestilo`, ob
+// napaki `prevzem_sprosti_obvestilo`) — vsak zahtevek enkrat, tudi ob hkratnih klicih,
 // zato je klic brez prijave neškodljiv. Vmesnik ga sproži po potrditvi.
 
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.45.4'
@@ -265,7 +266,16 @@ async function obvestiPotrjene(service: SupabaseClient): Promise<Response> {
   let poslano = 0
   const napake: string[] = []
   for (const v of (data ?? []) as Neobvescen[]) {
+    // Sestavi pred zakupom: napaka tu ne sme pustiti zakupljenega, neposlanega.
     const s = sestaviPotrjen(v)
+    // Hkratni klici (vsaka potrditev v adminu sproži enega) dobijo isti
+    // seznam; pošlje le tisti, ki zahtevek zakupi.
+    const { data: zakupljen, error: eZakup } = await service.rpc('prevzem_zakupi_obvestilo', { p_zahtevek_id: v.zahtevek_id })
+    if (eZakup) {
+      napake.push(`zahtevek ${v.zahtevek_id}: ${eZakup.message}`)
+      continue
+    }
+    if (!zakupljen) continue
     let napaka: string | null = null
     let id: string | null = null
     try {
@@ -282,11 +292,11 @@ async function obvestiPotrjene(service: SupabaseClient): Promise<Response> {
       napaka = String(e)
     }
     await service.from('email_log').insert({ email: v.email, vrsta: 'prevzem-potrjen', resend_id: id, napaka })
-    if (napaka) napake.push(`zahtevek ${v.zahtevek_id}: ${napaka}`)
-    else {
-      await service.rpc('prevzem_obvescen', { p_zahtevek_id: v.zahtevek_id })
-      poslano++
-    }
+    if (napaka) {
+      napake.push(`zahtevek ${v.zahtevek_id}: ${napaka}`)
+      const { error: eSprosti } = await service.rpc('prevzem_sprosti_obvestilo', { p_zahtevek_id: v.zahtevek_id })
+      if (eSprosti) napake.push(`zahtevek ${v.zahtevek_id}: ni sproščen (${eSprosti.message})`)
+    } else poslano++
   }
   return json({ poslano, napake })
 }

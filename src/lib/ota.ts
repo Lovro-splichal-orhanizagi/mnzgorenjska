@@ -19,7 +19,7 @@ interface Najnovejsa {
 
 let tece = false
 
-async function preveri(): Promise<void> {
+async function preveri(obZagonu = false): Promise<void> {
   if (tece) return
   tece = true
   try {
@@ -33,8 +33,13 @@ async function preveri(): Promise<void> {
     const { bundles } = await CapacitorUpdater.list()
     const ze = bundles.find((b) => b.version === n.version && b.status === 'success')
     const svezenj = ze ?? (await CapacitorUpdater.download({ url: n.url, version: n.version, checksum: n.checksum }))
-    // Zamenja se, ko gre aplikacija v ozadje — ne sredi urejanja ekipe.
-    await CapacitorUpdater.next({ id: svezenj.id })
+    // Vgrajena koda iz trgovine je lahko tedne stara in kliče strežnik, ki ga
+    // ni več (App Review 30. 10. 2026: build 3 je kazal na Supabase Cloud).
+    // Sveža namestitev zato ob zagonu takoj preklopi; sicer se zamenja, ko gre
+    // aplikacija v ozadje — ne sredi urejanja ekipe.
+    const { bundle } = await CapacitorUpdater.current()
+    if (obZagonu && bundle.id === 'builtin') await CapacitorUpdater.set({ id: svezenj.id })
+    else await CapacitorUpdater.next({ id: svezenj.id })
   } catch {
     // Brez omrežja ali pokvarjen prenos: ostanemo na sedanji različici.
   } finally {
@@ -46,7 +51,7 @@ export function pripraviOta(): void {
   if (!jeNativno()) return
   // Ta različica se je zagnala — brez tega bi jo vtičnik čez 10 s zavrnil.
   void CapacitorUpdater.notifyAppReady()
-  void preveri()
+  void preveri(true)
   void App.addListener('appStateChange', ({ isActive }) => {
     if (isActive) void preveri()
   })

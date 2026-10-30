@@ -1,0 +1,25 @@
+// Source-stage attestation only, not native operator/root/runtime approval.
+// The future operator must enforce its independent live execution gates.
+import {createHash} from 'node:crypto'
+import {getFcfG9Native800Source} from './fcf-g9-native800-source.mjs'
+import {exactKeys,frozenJSON} from './fcf-missing-inventory-artifact.mjs'
+import {historicalStatisticsPolicySha256 as hash} from './lib/historical-statistics-policy.mjs'
+const states=new WeakMap(),sha=t=>createHash('sha256').update(t).digest('hex'),need=(v,m)=>{if(!v)throw Error('FCF_NATIVE800_STAGE: '+m)},fields=['sourceProof','rolloutText','rolloutSha256','stage','execution']
+function actual(input){
+ const d=getFcfG9Native800Source(input.sourceProof);need(typeof input.rolloutText==='string'&&Buffer.byteLength(input.rolloutText)<=8388608&&sha(input.rolloutText)===input.rolloutSha256,'exact bounded original rollout TEXT/SHA');const v=JSON.parse(input.rolloutText),p=JSON.parse(v.targetPacketText)
+ need(['import','check'].includes(input.stage)&&v.schemaVersion===1&&v.kind==='fcf-native800-import-rollout'&&v.protocol==='fcf-native800-v1'&&v.targetSlug==='es-ct-tercera-g9'&&v.readiness===null&&sha(v.targetPacketText)===v.targetPacketSha256&&hash(v.inventoryBinding)===hash(d.binding)&&hash(p.target.sourceEvidence)===hash(d.binding)&&hash(p.target.fixtures)===hash(d.fixtures),'actual private new800 source must equal the complete original packet/capture')
+ const e=input.execution;exactKeys(e,['repository','ref','commit','runId','runAttempt'],'native execution DATA');need(e.repository==='Lovro-splichal-orhanizagi/mnzgorenjska'&&e.ref==='refs/heads/main'&&e.commit===v.sourceCommit&&/^[a-f0-9]{40}$/.test(e.commit)&&typeof e.runId==='string'&&/^[1-9]\d{0,19}$/.test(e.runId)&&e.runAttempt==='1'&&(input.stage!=='import'||hash(e)===hash(v.execution)),'fixed main/attempt1 native execution DATA')
+ return {schemaVersion:1,kind:'fcf-native800-stage-attestation',stage:input.stage,targetSlug:v.targetSlug,sourceCommit:v.sourceCommit,execution:structuredClone(e),rolloutSha256:input.rolloutSha256,sourceBindingSha256:hash(d.binding),counter:d.currentCounter}
+}
+export function readFcfG9Native800StageAttestation(input){exactKeys(input,fields,'source-stage input');const data=actual(input),proof=Object.freeze({kind:'fcf-native800-private-source-stage',admissible:false,nativeAdmission:false,activationEligible:false});states.set(proof,{input:{...input,execution:structuredClone(input.execution)},data});return proof}
+export function getFcfG9Native800StageAttestation(proof){const s=states.get(proof);need(s,'private actual source-stage attestation required');const current=actual(s.input);need(hash(current)===hash(s.data),'source/counter/stage changed; obtain a fresh attestation without changing source clocks');const attestationText=JSON.stringify(current);return frozenJSON({attestationText,attestationSha256:sha(attestationText),stage:current.stage,execution:current.execution,rolloutText:s.input.rolloutText,rolloutSha256:s.input.rolloutSha256,admissible:false,nativeAdmission:false,activationEligible:false})}
+// Descriptive recovery DATA; COMMITTED means this exact saved SQL transaction,
+// never permission to retry, advance a stage, import another payload or activate.
+export function describeFcfG9Native800Readback(input){
+ exactKeys(input,['rolloutText','rolloutSha256','receipt'],'native800 readback input');need(typeof input.rolloutText==='string'&&Buffer.byteLength(input.rolloutText)<=8388608&&sha(input.rolloutText)===input.rolloutSha256,'original bounded rollout TEXT/SHA for readback');const v=JSON.parse(input.rolloutText)
+ need(v.kind==='fcf-native800-import-rollout'&&v.protocol==='fcf-native800-v1'&&v.targetSlug==='es-ct-tercera-g9','original native800 G9 rollout required')
+ const flags={writeAllowed:false,admissible:false,nativeAdmission:false,activationEligible:false},r=input.receipt;if(r===null)return frozenJSON({outcome:'UNKNOWN',...flags})
+ exactKeys(r,['schemaVersion','kind','receiptId','competitionId','targetSlug','stage','rolloutText','rolloutSha256','targetPacketSha256','sourceFingerprintSha256','importedStateSha256','currentStateSha256','currentActive','canonicalVerified','admissible','nativeAdmission','activationEligible'],'exact native800 committed receipt')
+ need(r.schemaVersion===1&&r.kind==='fcf-native800-import-receipt'&&typeof r.receiptId==='string'&&/^[1-9]\d*$/.test(r.receiptId)&&r.competitionId===797&&r.targetSlug===v.targetSlug&&r.stage==='imported'&&r.rolloutText===input.rolloutText&&r.rolloutSha256===input.rolloutSha256&&r.targetPacketSha256===v.targetPacketSha256&&r.sourceFingerprintSha256===v.inventoryBinding.sourceFingerprintSha256&&/^[a-f0-9]{64}$/.test(r.importedStateSha256)&&r.currentStateSha256===r.importedStateSha256&&['currentActive','canonicalVerified','admissible','nativeAdmission','activationEligible'].every(k=>r[k]===false),'exact original committed payload and unchanged SQL readback; all other outcomes HOLD')
+ return frozenJSON({outcome:'COMMITTED',receipt:structuredClone(r),...flags})
+}

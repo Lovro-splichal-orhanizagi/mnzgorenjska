@@ -1,0 +1,307 @@
+name: Reviewed fixed G9 native800 operator
+run-name: G9 native800 import price check and optional activation
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact reviewed current main
+        type: string
+        required: true
+      bootstrap_asset_id:
+        description: Immutable G9 capture and original APPLIED cleanup locator asset
+        type: string
+        required: true
+      bootstrap_asset_digest:
+        description: Exact sha256 digest of bootstrap bytes
+        type: string
+        required: true
+      activate_if_ready:
+        description: Root explicitly requests same-run activation after strict gates
+        type: boolean
+        default: false
+permissions: {}
+concurrency:
+  group: fcf-native800-fixed-g9
+  cancel-in-progress: false
+env:
+  FCF_NATIVE800_BOOTSTRAP_ID: ${{ inputs.bootstrap_asset_id }}
+  FCF_NATIVE800_BOOTSTRAP_DIGEST: ${{ inputs.bootstrap_asset_digest }}
+  FCF_NATIVE800_ACTIVATE: ${{ inputs.activate_if_ready }}
+jobs:
+  native800-import:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.expected_sha == github.sha && github.actor == 'nejcar20' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20'
+    outputs:
+      manifest_sha: ${{ steps.operation.outputs.manifest_sha }}
+    permissions:
+      contents: write # Required only for GET visibility of private draft assets.
+      actions: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact native800 main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Node22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Authenticate exact native800 epoch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/fcf-native800-operator.mjs authenticate
+      - name: Owner read-only connection prerequisite
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          MIGRACIJE_PREMOR: ${{ vars.MIGRACIJE_PREMOR }}
+        run: |
+          command -v psql >/dev/null || exit 1
+          [ "$MIGRACIJE_PREMOR" != '1' ] && [ -n "$SUPABASE_DB_URL" ] || exit 1
+          case "$SUPABASE_DB_URL" in *@127.0.0.1:5432/*) ;; *) exit 1;; esac
+      - name: Tunnel for fixed read-only SQL projection
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Read-only native800 preview
+        id: preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: node scripts/fcf-native800-operator.mjs preview
+      - name: Retain native800 preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: native800-preview-${{ github.run_id }}-1
+          path: native800-preview/manifest.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Execute native800 import
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/fcf-native800-operator.mjs import
+      - name: Retain native800 import
+        uses: actions/upload-artifact@v4
+        with:
+          name: native800-import-${{ github.run_id }}-1
+          path: native800-import/manifest.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Retain native800 import partial outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native800-import-partial-${{ github.run_id }}-1
+          path: native800-import/
+          if-no-files-found: warn
+          retention-days: 30
+  native800-price:
+    needs: native800-import
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.expected_sha == github.sha && github.actor == 'nejcar20' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20'
+    outputs:
+      manifest_sha: ${{ steps.operation.outputs.manifest_sha }}
+    permissions:
+      contents: write # Required only for GET visibility of private draft assets.
+      actions: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact native800 main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Node22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Authenticate exact native800 epoch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/fcf-native800-operator.mjs authenticate
+      - name: Owner read-only connection prerequisite
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          MIGRACIJE_PREMOR: ${{ vars.MIGRACIJE_PREMOR }}
+        run: |
+          command -v psql >/dev/null || exit 1
+          [ "$MIGRACIJE_PREMOR" != '1' ] && [ -n "$SUPABASE_DB_URL" ] || exit 1
+          case "$SUPABASE_DB_URL" in *@127.0.0.1:5432/*) ;; *) exit 1;; esac
+      - name: Tunnel for fixed read-only SQL projection
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Execute native800 price
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FCF_NATIVE800_PREVIOUS_SHA: ${{ needs.native800-import.outputs.manifest_sha }}
+        run: node scripts/fcf-native800-operator.mjs price
+      - name: Retain native800 price
+        uses: actions/upload-artifact@v4
+        with:
+          name: native800-price-${{ github.run_id }}-1
+          path: native800-price/manifest.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Retain native800 price partial outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native800-price-partial-${{ github.run_id }}-1
+          path: native800-price/
+          if-no-files-found: warn
+          retention-days: 30
+  native800-check:
+    needs: native800-price
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.expected_sha == github.sha && github.actor == 'nejcar20' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20'
+    outputs:
+      manifest_sha: ${{ steps.operation.outputs.manifest_sha }}
+    permissions:
+      contents: write # Required only for GET visibility of private draft assets.
+      actions: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact native800 main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Node22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Authenticate exact native800 epoch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/fcf-native800-operator.mjs authenticate
+      - name: Owner read-only connection prerequisite
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          MIGRACIJE_PREMOR: ${{ vars.MIGRACIJE_PREMOR }}
+        run: |
+          command -v psql >/dev/null || exit 1
+          [ "$MIGRACIJE_PREMOR" != '1' ] && [ -n "$SUPABASE_DB_URL" ] || exit 1
+          case "$SUPABASE_DB_URL" in *@127.0.0.1:5432/*) ;; *) exit 1;; esac
+      - name: Tunnel for fixed read-only SQL projection
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Execute native800 check
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FCF_NATIVE800_PREVIOUS_SHA: ${{ needs.native800-price.outputs.manifest_sha }}
+        run: node scripts/fcf-native800-operator.mjs check
+      - name: Retain native800 check
+        uses: actions/upload-artifact@v4
+        with:
+          name: native800-check-${{ github.run_id }}-1
+          path: native800-check/manifest.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Retain native800 check partial outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native800-check-partial-${{ github.run_id }}-1
+          path: native800-check/
+          if-no-files-found: warn
+          retention-days: 30
+  native800-activate:
+    needs: native800-check
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.expected_sha == github.sha && github.actor == 'nejcar20' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20' && inputs.activate_if_ready
+    permissions:
+      contents: write # Required only for GET visibility of private draft assets.
+      actions: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact native800 main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Node22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Authenticate exact native800 epoch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/fcf-native800-operator.mjs authenticate
+      - name: Owner read-only connection prerequisite
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          MIGRACIJE_PREMOR: ${{ vars.MIGRACIJE_PREMOR }}
+        run: |
+          command -v psql >/dev/null || exit 1
+          [ "$MIGRACIJE_PREMOR" != '1' ] && [ -n "$SUPABASE_DB_URL" ] || exit 1
+          case "$SUPABASE_DB_URL" in *@127.0.0.1:5432/*) ;; *) exit 1;; esac
+      - name: Tunnel for fixed read-only SQL projection
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
+      - name: Execute native800 activate
+        id: operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FCF_NATIVE800_PREVIOUS_SHA: ${{ needs.native800-check.outputs.manifest_sha }}
+        run: node scripts/fcf-native800-operator.mjs activate
+      - name: Retain native800 activate
+        uses: actions/upload-artifact@v4
+        with:
+          name: native800-activate-${{ github.run_id }}-1
+          path: native800-activate/manifest.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Retain native800 activate partial outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native800-activate-partial-${{ github.run_id }}-1
+          path: native800-activate/
+          if-no-files-found: warn
+          retention-days: 30

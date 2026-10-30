@@ -10113,9 +10113,10 @@ preveri(
   const k = M.razberiKodo('epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ')
   let neznana = null
   try { M.razberiKodo('epsath.gr:Α ΚΑΤΗΓΟΡΙΑ') } catch (e) { neznana = e.message }
-  preveri('mascot: šifra lige in naslovi (analitika pri epsm, table.asp drugje)', k.domena === 'epsm.gr' && k.diorganosi === 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ' && k.zveza === 'mak' &&
+  preveri('mascot: šifra lige in naslovi (analitika pri epsm in Ahaji, table.asp drugje)', k.domena === 'epsm.gr' && k.diorganosi === 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ' && k.zveza === 'mak' &&
     V.naslovRazporeda('epsm.gr:Α1 ΕΡΑΣΙΤΕΧΝΙΚΗ') === 'https://www.epsm.gr/table_analytika.asp?diorganosi=%CE%911%20%CE%95%CE%A1%CE%91%CE%A3%CE%99%CE%A4%CE%95%CE%A7%CE%9D%CE%99%CE%9A%CE%97' &&
-    V.naslovRazporeda('epsachaias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ').startsWith('https://www.epsachaias.gr/table.asp?diorganosi=') &&
+    V.naslovRazporeda('epsachaias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ').startsWith('https://www.epsachaias.gr/table_analytika.asp?diorganosi=') &&
+    V.naslovRazporeda('epsdramas.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)').startsWith('https://www.epsdramas.gr/table.asp?diorganosi=') &&
     M.naslovTekme('epsm.gr', 2018, '2026-10-10') === 'https://www.epsm.gr/game.asp?game_number=2018&match_date=10.10.2026' && /ne poznam/.test(neznana ?? ''))
   preveri('mascot: šifra zapisnika ima zvezo in sezono (številke tekem se vsako sezono ponovijo)', M.sifraZapisnika('epsm.gr', 2018, '2026-10-10') === 'gr-mak-2026-2018' &&
     M.sifraZapisnika('epsm.gr', 2018, '2027-04-10') === 'gr-mak-2026-2018' && M.sifraZapisnika('epsachaias.gr', 1002, '2027-09-27') === 'gr-ach-2027-1002' &&
@@ -10163,6 +10164,23 @@ preveri(
     new Set(tl.map((x) => x.krog)).size === 21 && new Set(tl.flatMap((x) => [x.domaci, x.gostje])).size === 8 && tl.filter((x) => x.izid).length === 4 &&
     tl[0].domaci === 'ΑΙΓΕΑΣ ΠΛΩΜΑΡΙΟΥ' && tl[0].gostje === 'Ε.Μ.Α.Σ ΦΙΛΙΑΣ' && tl[0].izid?.domaci === 4 && tl[0].igra === 1001 && tl[0].ura === '16:00' &&
     tl.every((x) => x.datum) && M.jeStranLige(rl, 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΟΜΙΛΟΣ ΛΕΣΒΟΥ)'))
+  // Nova predloga (epsm in Ahaja od 30. 10. 2026): an-round/an-match, ime lige v mn2-hero-title.
+  const rmn = beri('gr-mascot-razpored-epsm-a-1-an.html')
+  const tmn = M.tekmeRazporeda(rmn)
+  const t1n = tmn.find((x) => x.igra === 2001)
+  preveri('mascot: nova predloga epsm — 26 krogov, 182 tekem, 14 klubov, vsaka s povezavo, imena kot v stari, liga po naslovu',
+    tmn.length === 182 && new Set(tmn.map((x) => x.krog)).size === 26 && new Set(tmn.flatMap((x) => [x.domaci, x.gostje])).size === 14 &&
+    tmn.every((x) => x.igra) && tmn.filter((x) => x.izid).length === 35 && !tmn.some((x) => x.brezBorbe) &&
+    tm.filter((x) => x.igra).every((x) => tmn.some((y) => y.igra === x.igra && y.krog === x.krog && y.domaci === x.domaci && y.gostje === x.gostje)) &&
+    t1n?.izid?.domaci === 0 && t1n.izid.gostje === 2 && t1n.datum === '2026-09-27' && t1n.ura === '17:00' && t1n.opomba === 'ΜΕΣΑΙΟΥ' &&
+    tmn.find((x) => x.igra === 2182)?.izid === null && M.jeStranLige(rmn, 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ') && !M.jeStranLige(rmn, 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ') &&
+    M.zaPredpomnilnik(rmn, 'mascot-razpored-mak-x.html'))
+  const ran = beri('gr-mascot-razpored-epsachaias-a-1-an.html')
+  const tan = M.tekmeRazporeda(ran)
+  preveri('mascot: nova predloga Ahaje — 18 krogov, 90 tekem, isti klubi in tekme kot table.asp, liga po naslovu',
+    tan.length === 90 && new Set(tan.map((x) => x.krog)).size === 18 && tan.every((x) => x.igra) && tan.filter((x) => x.izid).length === 25 &&
+    ta.filter((x) => x.igra).every((x) => tan.some((y) => y.igra === x.igra && y.domaci === x.domaci && y.gostje === x.gostje)) &&
+    tan.find((x) => x.igra === 1002)?.ura === '19:30' && M.jeStranLige(ran, 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ'))
   const vrsta = (d, g) => `<i onclick="location.href='game.asp?game_number=1'"></i>\n${d} - ${g}&nbsp;&nbsp;&nbsp;1 - 0\n<font>ΗΜ: 10.10.2026 16:00</font><br>`
   const vezaj = M.tekmeRazporeda(`<div>ΑΝΑΛΥΤΙΚΟ ΠΡΟΓΡΑΜΜΑ <b>1<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ</b><br>${vrsta('ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ', 'ΑΧΑΙΚΗ')}${vrsta('ΦΑΡΑΙΚΟΣ', 'ΘΥΕΛΛΑ')}<b>2<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ</b><br>${vrsta('ΑΧΑΙΚΗ', 'ΦΑΡΑΙΚΟΣ')}${vrsta('ΘΥΕΛΛΑ', 'ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ')}</div>`)
   preveri('mascot: vrstica brez ločila — ime z " - " se razdeli po klubih, ki jih razpored pozna', vezaj.length === 4 &&
@@ -12956,6 +12974,26 @@ preveri(
   preveri('pivo 7 dni: SQL izpusti mladinske lige, odjavljene in hišne ekipe, enkrat na človeka',
     ['je_mladinski_slug', 'brez_opomnikov', 'hisna', "'pivo-7dni'"].every((x) => migPivo.includes(x)))
   preveri('pivo 7 dni: urnik izklopljen do objave funkcije', !/^\s*schedule:/m.test(tokPivo) && /workflow_dispatch:/.test(tokPivo))
+
+  // Anketa plačila (SLF-211): sl/en/de/hr, ostali jeziki angleško; odjava v nogi, glavi in čistopisu.
+  const ankete = pivoLige.map((l) => [l, E.sestaviAnketoPlacila(l, { display_name: 'Ana Novak' })])
+  const slabaAnketa = ankete.find(([l, m]) => {
+    const j = E.jezikAnkete(l)
+    return !['sl', 'en', 'de', 'hr'].includes(j) || (E.jezikLige(l) !== j && j !== 'en') ||
+      m.odjava !== `https://slff.eu/reminders?t=${l.slug}` || !m.html.includes(`href="${m.odjava}"`) ||
+      !m.besedilo.includes(`: ${m.odjava}\n`) || !m.besedilo.includes('Ana,') ||
+      (j !== 'sl' && slovensko.test(brezPovezav(m.naslov + m.html)))
+  })
+  preveri('e-pošta: anketa plačila (jezik ali angleščina, odjava, brez slovenščine v tujih)', !slabaAnketa,
+    slabaAnketa ? `${slabaAnketa[0].drzava}: ${slabaAnketa[1].naslov}` : '')
+  const migAnketa = readFileSync(new URL('../supabase/migrations/20261030120000_anketa_placila.sql', import.meta.url), 'utf8')
+  const fnAnketa = readFileSync(new URL('../supabase/functions/posli-opomnik/index.ts', import.meta.url), 'utf8')
+  preveri('anketa plačila: SQL izpusti odjavljene in že poslane; naslovi le za service_role',
+    ['prejemniki_ankete', 'brez_opomnikov', "'anketa-placila'", 'to service_role'].every((x) => migAnketa.includes(x)) &&
+      !/to (anon|authenticated)/.test(migAnketa))
+  // Lovro, 30. 10. 2026: le izbrani v administraciji, strežnik nikogar ne izbere sam.
+  preveri('anketa plačila: brez izračunane kohorte, le user_ids',
+    !/kandidati_za_anketo/.test(migAnketa + fnAnketa) && fnAnketa.includes("vrsta === 'anketa-placila' && Array.isArray(vhod.user_ids)"))
 }
 
 // --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------

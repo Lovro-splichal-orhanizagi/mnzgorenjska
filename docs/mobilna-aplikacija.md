@@ -15,7 +15,9 @@ jo zapakira (`webDir: dist`), `ios/` in `android/` sta v gitu.
 - Računa v trgovinah sta **podjetniška**, `eu.slff.app`, ime "SLFF".
 - Objava **po vsem svetu**; tujec dobi angleški vmesnik kot na spletu.
 - **Administracija samo na spletu** — v aplikaciji ni ne povezave ne poti.
-- Samo iPhone in pokončno (brez posnetkov za iPad).
+- iPhone pokončno, iPad v vseh smereh čez cel zaslon (od 30. 10. 2026; prej
+  samo iPhone, kar je iPadOS 27 pokazal v ozkem oknu). Trgovina zato zahteva
+  še posnetke iPada 13" (2064 × 2752, `docs/trgovine/posnetki/ipad`).
 - **Najnižji iOS je 18.4.** Xcode 27 je del Swift WebKita (`callAsyncJavaScript`,
   ki ga uporablja OTA vtičnik) preselil v `WebKit.framework`; aplikacija z
   nižjim ciljem se poveže na `/usr/lib/swift/libswiftWebKit.dylib`, ki ga
@@ -24,6 +26,11 @@ jo zapakira (`webDir: dist`), `ios/` in `android/` sta v gitu.
 - **OTA brez Capgo strežnika**: `statsUrl`, `updateUrl`, `channelUrl` so prazni
   (`capacitor.config.ts`) — privzeto vtičnik pošilja statistiko in napake
   WebViewa na plugin.capgo.app.
+- **Vgrajena koda zastara.** Gradnja v trgovini nosi kodo z dneva gradnje;
+  build 3 (4. 10.) je zato kazal na ugasnjeni Supabase Cloud in App Review se
+  po prijavi ni nikamor premaknil (30. 10. 2026). Sveža namestitev ob zagonu
+  OTA uveljavi takoj (`src/lib/ota.ts`), `izdaja.yml` pa zavrne sveženj, ki ne
+  kaže na `api.slff.eu`.
 
 ## Gradnja
 
@@ -35,6 +42,10 @@ JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
 ```
 
 Build vzame `.env.production`, zato aplikacija teče proti produkcijski bazi.
+Grbov (`dist/grbi`, 140 MB) in OTA svežnjev (`dist/app`) aplikacija ne
+potrebuje — grbe bere s slff.eu (`naslovSlike`). `izdaja.yml` ju pred
+`cap sync` izbriše (paket ~5 MB namesto 134 MB); pri ročni gradnji za trgovino
+naredi isto (`rm -rf dist/grbi dist/app`).
 Ikona: maskota (`public/logo/slff-maskota.png`) na kremni podlagi, brez kroga —
 obliko da sistem (Android adaptivna ikona, iOS zaobljen kvadrat). Plasti so v
 `assets/` (`icon-foreground.png` maskota v višini 720/1024, da vrček ostane v
