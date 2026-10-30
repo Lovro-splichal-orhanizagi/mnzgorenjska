@@ -387,6 +387,29 @@
   **Nova stran se ne šteje sama**: dodaj jo v `PO_POTI`/`PO_PREDPONI` in v
   seznam v `zabelezi_obisk()`, sicer se zapis tiho zavrže. Oboje skupaj kaže
   razdelek *Kje ljudje obtičijo* v adminu (`src/components/admin/Lijak.tsx`)
+- **Dnevno poročilo lijaka** (od 30. 10. 2026): servisna `porocilo_lijaka(dan)`
+  vrne jsonb s seštevki za en dan (obiski, koraki, registracije, nove ekipe
+  in primerjava s povprečjem 7 dni), skupino registriranih pred 15–21 dnevi
+  (ekipa → 1. krog → 2. krog iz `fantasy_lineups`, aktivni zadnji teden po
+  `auth.sessions`, push, mini liga, povabila) in denar zadnjih 30 dni (piva,
+  trgovina, preverjeni, ponovne cene). Delovni tok *Porocilo lijaka*
+  (`scripts/porocilo-lijaka.mjs`, 07:00 UTC) ga pošlje na Discord
+  (`DISCORD_WEBHOOK_LIJAK`, sicer kanal poročil `DISCORD_WEBHOOK_TEDENSKO`) in z ⚠ označi
+  najšibkejši prehod. Sporočilu pripne grafa (`scripts/lijak-grafi.mjs`,
+  `@napi-rs/canvas`): lijak skupine in trende zadnjih 14 dni (14 klicev
+  funkcije). Nov korak lijaka, ki naj bo v poročilu, dodaj v `sestavi()`
+- `dejanja_uporabnikov` (od 30. 10. 2026) → koraki lijaka prijavljenega z
+  njegovim id-jem in platformo (`web`/`ios`/`android`), da se vidi, kje se
+  posameznik ustavi. Piše ga `zabelezi_korak(korak, platforma, osebno)`: le
+  ob `p_osebno` (odjemalec brez "Ne sledi"), isti korak istega človeka največ
+  enkrat na minuto; neprijavljeni ostanejo le v `lijak_dnevno` (brez oznake
+  naprave, zato brez soglasja). Brez pravic za anon/authenticated, zaprto za
+  agente (`agent.zaprte_tabele`), pg_cron `dejanja-90-dni` briše starejše od
+  90 dni, z računom izgine (`on delete cascade`). Opisano v zasebnosti
+  (`racun.zasebnost…neHranimo`). Koraki poleg lijaka: `pivo_okno_zaprto`,
+  `push_pas`, `push_pas_zaprt`, `push_dovoljeno`, `push_zavrnjeno`,
+  `aplikacija_odprta`. Nov korak = `KorakLijaka` v `src/lib/lijak.ts` in
+  seznam v `zabelezi_korak()`
 - `trgovine_dnevno` (trgovina `ios`/`android`, dan, `skupaj`, `novi`) in
   `trgovine_stanje` (zadnje stanje različice iOS) → namestitve aplikacije.
   Piše le delovni tok *Trgovine* (`scripts/trgovine.mjs`, vsak dan 07:30 UTC,

@@ -30,6 +30,11 @@ export const aplikacija = {
     nazaj: 'Nazaj na začetno stran',
   },
   /** Gumb za podporo: naslovnica in noga vsake strani (components/Pivo.tsx). */
+  poziv: {
+    kasneje: 'Mogoče kasneje',
+    aplikacija: { naslov: 'SLFF v žepu 📱', besedilo: 'Opomnik pred rokom, točke tvoje ekipe po tekmah in hitrejša pot do postave, v aplikaciji.', googlePlay: 'Prenesi z Google Play', appStore: 'Prenesi iz App Store' },
+    sledi: { naslov: 'Bodi zraven 🙌', besedilo: 'Ekipe kroga, igralci tedna in novosti iz tvoje lige, najprej na naših profilih.', instagram: 'Sledi na Instagramu', facebook: 'Všečkaj na Facebooku' },
+  },
   pivo: {
     gumb: 'Časti pivo',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */

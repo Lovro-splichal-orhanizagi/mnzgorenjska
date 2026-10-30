@@ -6,7 +6,7 @@ const shapes={
  'private_fcf_g1_9410.receipts':[['match_id','bigint'],['after_image','jsonb'],['receipt','jsonb']],
 }
 const fks=[['private_fcf_g1_9410.markers','matches','match_id','id'],['private_fcf_g1_9410.markers','rounds','round_id','id'],['private_fcf_g1_9410.markers','teams','home_team_id','id'],['private_fcf_g1_9410.markers','teams','away_team_id','id'],['private_fcf_g1_9410.receipts','private_fcf_g1_9410.markers','match_id','match_id']].map(([rel,parent,col,key])=>({rel,parent,deferred:false,validated:true,deferrable:false,definition:`FOREIGN KEY (${col}) REFERENCES ${parent}(${key})`}))
-export function fcfProjectionOptionalBadenCompatibilitySQL(){
+function legacyOptionalSQL(){
  const legacy=readFileSync(new URL('../../supabase/migrations/20261028183000_baden_fcf_projection_compat.sql',import.meta.url),'utf8')
  return `select encode(sha256(convert_to(prosrc,'UTF8')),'hex')='f607b30f1cfbad5b57d7259c6aa1c561c8de8ff78ccb40101446256d0954e5ea' as fcf_exact9410 from pg_proc where oid='private_fcf_future_projection.capture(text,text[])'::regprocedure \\gset
 \\if :fcf_exact9410
@@ -24,6 +24,21 @@ begin
 end $exact9410$;
 \\else
 ${legacy}
+\\endif
+`
+}
+
+// Exact additional schema epoch only, no applied migration rewrite.
+export function fcfProjectionOptionalBadenCompatibilitySQL(){
+ const migration=readFileSync(new URL('../../supabase/migrations/20261030200000_baden_cold_source_version.sql',import.meta.url),'utf8'),part=migration.split('do $vfcf$')[1],hashes=[...part.matchAll(/<>'([a-f0-9]{64})'/g)].map(m=>m[1]);if(hashes.length!==2)throw Error('missing exact Baden version projection profile');
+ return `select encode(sha256(convert_to(prosrc,'UTF8')),'hex')='${hashes[1]}' as fcf_exact_baden_version from pg_proc where oid='private_fcf_future_projection.capture(text,text[])'::regprocedure \\gset
+\\if :fcf_exact_baden_version
+do $versionepoch$begin
+ perform private_fcf_six_target_release.require(to_regclass('private_baden_transition.versions')is not null,'complete append-only Baden version schema required');
+ perform private_baden_transition.closure();
+end$versionepoch$;
+\\else
+${legacyOptionalSQL()}
 \\endif
 `
 }

@@ -72,6 +72,8 @@ import { jeMojaEkipa } from '../src/components/ImeEkipe'
 import { veljavenOsnutek } from '../src/lib/osnutek'
 import { krogKoncan, mestoVLigi, igralciPregleda, postaviPregled, oznakaPremika, imeDatotekePregleda, KVADRAT, SIRINA_P, VISINA_P, ROB_P } from '../src/lib/tedenskiPregled'
 import { jeDoberKrog, povprecjeKroga } from '../src/lib/pivoNavdusenje'
+import { trgovinaTelefona } from '../src/lib/pozivi'
+import { APP_STORE } from '../src/components/Trgovine'
 import { parsirajZapisnik, nastopi, dodajStrelceSKlopi } from './zapisnik.mjs'
 import { poZvezah, ustreza, pokaziZvezo, ustrezaRavni, privzetoRazprte } from '../src/components/IzbirnikLige'
 import { dovoljZaIskanje, ujemaIme, opisIgralca, potIgralca, izDrugihLig } from '../src/lib/iskanjeIgralcev'
@@ -3319,6 +3321,8 @@ preveri(
   preveri('pregled: oznake premika', oznakaPremika(2).besedilo === '▲ 2' && oznakaPremika(-1).besedilo === '▼ 1' && oznakaPremika(0).besedilo === '=' && oznakaPremika(null) === null)
 
   // Okno "Časti pivo" le po dobrem krogu.
+  preveri('poziv: Android dobi Google Play, namizje nič', /play\.google/.test(trgovinaTelefona('Mozilla/5.0 (Linux; Android 14)', 5) ?? '') && trgovinaTelefona('Mozilla/5.0 (Windows NT 10.0)', 0) === null)
+  preveri('poziv: iPhone in iPad (Macintosh z dotikom) dobita App Store, Mac brez dotika nič', trgovinaTelefona('Mozilla/5.0 (iPhone)', 5) === APP_STORE && trgovinaTelefona('Mozilla/5.0 (Macintosh; Intel Mac OS X)', 5) === APP_STORE && trgovinaTelefona('Mozilla/5.0 (Macintosh; Intel Mac OS X)', 0) === null)
   preveri('pivo: napredek na lestvici je dober krog', jeDoberKrog(5, 30, 2))
   preveri('pivo: nad povprečjem brez premika je dober krog', jeDoberKrog(31, 30, 0) && jeDoberKrog(31, 30, null))
   preveri('pivo: padec ali povprečje nista dober krog', !jeDoberKrog(30, 30, 0) && !jeDoberKrog(10, 30, -3) && !jeDoberKrog(0, -1, null))
@@ -12994,6 +12998,24 @@ preveri(
   // Lovro, 30. 10. 2026: le izbrani v administraciji, strežnik nikogar ne izbere sam.
   preveri('anketa plačila: brez izračunane kohorte, le user_ids',
     !/kandidati_za_anketo/.test(migAnketa + fnAnketa) && fnAnketa.includes("vrsta === 'anketa-placila' && Array.isArray(vhod.user_ids)"))
+  // ~50 izbranih (Lovro, 30. 10. 2026): pred mailom zasedba pod zaklepom, en uspeh ali tek na človeka.
+  const migAnketa50 = readFileSync(new URL('../supabase/migrations/20261030190000_anketa_placila_50.sql', import.meta.url), 'utf8')
+  preveri('anketa plačila: meja 50, 10 na klic, zasedba pred pošiljanjem',
+    fnAnketa.includes('const ANKETA_MEJA = 50') && fnAnketa.includes('Math.min(prostih, 10)') &&
+      fnAnketa.indexOf("rpc('anketa_placila_zasedi'") > -1 &&
+      fnAnketa.indexOf("rpc('anketa_placila_zasedi'") < fnAnketa.lastIndexOf('const rez = await poslji(ANKETA_FROM, u.email, sporocilo') &&
+      ['create unique index', 'pg_advisory_xact_lock', 'to service_role'].every((x) => migAnketa50.includes(x)) &&
+      !/to (anon|authenticated)/.test(migAnketa50))
+  // Lovro, 30. 10. 2026: anketa le od info@slff.eu, z lastno prijavo; brez gesla nič, ne noreply@.
+  const anketaBlok = fnAnketa.slice(fnAnketa.indexOf("vrsta === 'anketa-placila' && Array.isArray"), fnAnketa.indexOf("if (vrsta === 'anketa-placila') return json"))
+  preveri('anketa plačila: pošiljatelj info@slff.eu, brez nadomestnega From ali reply-to',
+    fnAnketa.includes("const ANKETA_FROM = 'SLFF <info@slff.eu>'") && fnAnketa.includes("auth: { user: 'info@slff.eu', pass: INFO_SMTP_PASS }") &&
+      anketaBlok.includes('if (!infoPripravljen && !suhoA)') && !anketaBlok.includes('EMAIL_FROM') && !anketaBlok.includes('EMAIL_REPLY_TO'))
+  // Lovro, 30. 10. 2026: ne 5 klikov za 50 mailov. En klik pošlje vse, a le odkljukane (brez kohorte).
+  const adminSrc = readFileSync(new URL('../src/pages/Administracija.tsx', import.meta.url), 'utf8')
+  preveri('anketa plačila: en klik pošlje vse odkljukane, z omejenim številom krogov',
+    adminSrc.includes('for (let krog = 0; krog < 8; krog++)') && adminSrc.includes('izberi vse prikazane') &&
+      adminSrc.includes('user_ids: izbraniAnketa, suho: false'))
 }
 
 // --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------

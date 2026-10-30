@@ -3,6 +3,7 @@
 // enkrat na dan, da osvežitev strani ne napihne številk.
 import { supabase } from './supabase'
 import { dogodek } from './analitika'
+import { platforma } from './platforma'
 
 export type KorakLijaka =
   | 'prazna_ekipa'
@@ -22,6 +23,17 @@ export type KorakLijaka =
   | 'pivo_okno_krog'
   | 'pivo_klik_ekipa'
   | 'pivo_klik_krog'
+  | 'pivo_okno_zaprto'
+  | 'push_pas'
+  | 'push_pas_zaprt'
+  | 'push_dovoljeno'
+  | 'push_zavrnjeno'
+  | 'aplikacija_odprta'
+  | 'poziv_aplikacija'
+  | 'poziv_aplikacija_klik'
+  | 'poziv_sledi'
+  | 'poziv_sledi_klik'
+  | 'poziv_zaprt'
 
 export function zabeleziKorak(korak: KorakLijaka) {
   const kljuc = `slff-lijak-${korak}-${new Date().toISOString().slice(0, 10)}`
@@ -31,7 +43,9 @@ export function zabeleziKorak(korak: KorakLijaka) {
   } catch {}
   dogodek(korak)
   // Klic se izvede šele ob then — `void supabase.rpc(…)` ne pošlje ničesar.
-  supabase.rpc('zabelezi_korak', { p_korak: korak }).then(
+  // Prijavljenemu baza zapiše korak še osebno (dejanja_uporabnikov), razen ob "Ne sledi".
+  const osebno = typeof navigator === 'undefined' || navigator.doNotTrack !== '1'
+  supabase.rpc('zabelezi_korak', { p_korak: korak, p_platforma: platforma(), p_osebno: osebno }).then(
     () => {},
     () => {},
   )

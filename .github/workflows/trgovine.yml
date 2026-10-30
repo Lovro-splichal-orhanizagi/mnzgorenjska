@@ -33,4 +33,5 @@ jobs:
           ASC_VENDOR: ${{ vars.ASC_VENDOR }}
           PLAY_SERVICE_ACCOUNT: ${{ secrets.PLAY_SERVICE_ACCOUNT }}
           PLAY_BUCKET: ${{ vars.PLAY_BUCKET }}
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          # Kanal poročil, ne napak: mejniki in stanje iOS niso alarm.
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_TEDENSKO }}
