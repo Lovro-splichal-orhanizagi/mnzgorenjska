@@ -34,18 +34,9 @@ jobs:
         run: node --test scripts/test-baden-cold-source-version.mjs scripts/test-baden-cold-source-version-sql.mjs
       - name: Full fresh migration chain in hosted scratch database
         run: npx --yes supabase@2.117.0 db start
-      - name: Observe actual scratch sessions role attributes and schema ownership only
-        run: |
-          for owner_role in supabase_admin postgres; do
-            docker exec -i supabase_db_mnzgorenjska psql -U "$owner_role" -d postgres -X -v ON_ERROR_STOP=1 <<'SQL'
-          SELECT current_user,session_user,current_setting('role') AS selected_role,
-            r.rolsuper,r.rolcreaterole,r.rolcreatedb,r.rolbypassrls,r.rolinherit,
-            has_schema_privilege(current_user,'private_baden_transition','USAGE') AS transition_usage,
-            has_schema_privilege(current_user,'private_baden_transition','CREATE') AS transition_create
-            FROM pg_roles r WHERE r.rolname=current_user;
-          SELECT nspname,pg_get_userbyid(nspowner) AS actual_schema_owner
-            FROM pg_namespace WHERE nspname IN('private_baden_transition','private_baden_history','private_fussball');
-          SELECT rolname,rolsuper,rolcreaterole,rolcreatedb,rolbypassrls,rolinherit
-            FROM pg_roles WHERE rolname IN('postgres','supabase_admin','authenticator','service_role');
-          SQL
-          done
+      - name: Actual owner transition role rollback concurrency and conservation SQL
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          BADEN_COLD_VERSION_FULL_CI_SQL_TEST: '1'
+          BADEN_COLD_VERSION_DISPOSABLE_FULL_DB: '1'
+        run: node --test scripts/test-baden-cold-source-version-sql.mjs
