@@ -4,7 +4,8 @@
 // Preverjeni), 2 vsi. Vsak nov posnetek čaka na pregled; javno in klubom v
 // SLFF Club se pokaže šele odobren. Zavrnitev potrebuje razlog (vidi ga
 // lastnik). Tri prijave vrnejo posnetek v pregled. Izbris odstrani posnetek
-// tudi iz Cloudflare Stream (funkcija posnetki-igralca).
+// tudi pri ponudniku (R2 ali Stream; funkcija posnetki-igralca). Zasedenost
+// R2: nad 8 GB Discord, nad 9 GB se nalaganje ustavi (10 GB je brezplačnih).
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { ogledi as naloziOglede, posnetki as klic, trajanjeBesedilo, type Ogled } from '../../lib/izlozba'
@@ -35,10 +36,21 @@ const STIKALO = [
   ['2', 'V živo (vsi)'],
 ] as const
 
+interface Prostor {
+  zasedeno: number
+  opozorilo: number
+  meja: number
+  posnetkov: number
+  za_brisanje: number
+}
+
+const gb = (b: number) => (b / 1e9).toLocaleString('sl-SI', { maximumFractionDigits: 2 })
+
 const cas = (d: string) => new Date(d).toLocaleString('sl-SI', { dateStyle: 'short', timeStyle: 'short' })
 
 export default function Posnetki() {
   const [stikalo, setStikalo] = useState<string | null>(null)
+  const [prostor, setProstor] = useState<Prostor | null>(null)
   const [vrstice, setVrstice] = useState<Vrstica[]>([])
   const [oglediV, setOglediV] = useState<Map<number, Ogled>>(new Map())
   const [predvajam, setPredvajam] = useState<number | null>(null)
@@ -48,12 +60,14 @@ export default function Posnetki() {
   const [dela, setDela] = useState(false)
 
   const nalozi = useCallback(async () => {
-    const [n, p] = await Promise.all([
+    const [n, p, pr] = await Promise.all([
       supabase.from('settings').select('value').eq('key', 'posnetki_igralcev').maybeSingle(),
       supabase.rpc('admin_posnetki'),
+      supabase.rpc('admin_posnetki_prostor'),
     ])
     if (p.error) return setNapaka(p.error.message)
     setStikalo(String(n.data?.value ?? '0'))
+    setProstor(((pr.data ?? [])[0] as Prostor | undefined) ?? null)
     const v = (p.data ?? []) as Vrstica[]
     setVrstice(v)
     setOglediV(await naloziOglede(v.filter((x) => x.stanje === 'pripravljen').map((x) => x.id).slice(0, 12)))
@@ -119,6 +133,28 @@ export default function Posnetki() {
         </button>
       </div>
 
+      {prostor && (
+        <div className="kartica space-y-2 p-3 text-sm">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <span className="font-semibold">Prostor v R2</span>
+            <span className="tabular-nums">
+              {gb(prostor.zasedeno)} GB od 10 GB · {prostor.posnetkov} posnetkov
+              {prostor.za_brisanje > 0 && ` · ${prostor.za_brisanje} čaka na izbris`}
+            </span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-white/10">
+            <div
+              className={`h-full rounded-full ${prostor.zasedeno >= prostor.meja ? 'bg-rose-500' : prostor.zasedeno >= prostor.opozorilo ? 'bg-amber-400' : 'bg-gnl-400'}`}
+              style={{ width: `${Math.min(100, (prostor.zasedeno / 1e10) * 100)}%` }}
+            />
+          </div>
+          <p className="text-xs text-slate-400">
+            Opozorilo na Discord pri {gb(prostor.opozorilo)} GB, nalaganje se ustavi pri {gb(prostor.meja)} GB
+            {prostor.zasedeno >= prostor.meja && ' — nalaganje je ustavljeno'}.
+          </p>
+        </div>
+      )}
+
       {napaka && <p className="text-sm text-rose-400">{napaka}</p>}
       {obvestilo && <p className="text-sm text-gnl-300">{obvestilo}</p>}
 
@@ -172,7 +208,17 @@ export default function Posnetki() {
                     </button>
                   </div>
                 </div>
-                {predvajam === v.id && o?.predvajaj && (
+                {predvajam === v.id && o?.predvajaj && o.tip === 'video' && (
+                  <video
+                    src={o.predvajaj}
+                    poster={o.slika ?? undefined}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="aspect-video w-full max-w-xl rounded-xl bg-black"
+                  />
+                )}
+                {predvajam === v.id && o?.predvajaj && o.tip === 'iframe' && (
                   <div className="relative aspect-video max-w-xl overflow-hidden rounded-xl bg-black">
                     <iframe
                       src={`${o.predvajaj}&autoplay=true`}
@@ -184,7 +230,7 @@ export default function Posnetki() {
                   </div>
                 )}
                 {o && !o.predvajaj && v.stanje === 'pripravljen' && (
-                  <p className="text-xs text-slate-500">Preizkusni način (brez Cloudflare): predvajanja ni.</p>
+                  <p className="text-xs text-slate-500">Preizkusni način ali ponudnik ni nastavljen: predvajanja ni.</p>
                 )}
                 <form
                   className="flex gap-2"

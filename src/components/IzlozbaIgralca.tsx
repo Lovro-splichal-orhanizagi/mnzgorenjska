@@ -17,10 +17,12 @@ import { BARVE, pozabiPreverjene, pripraviPasico, type Barva } from '../lib/prev
 import {
   NAJVEC_POSNETKOV,
   mocProfila,
-  napakaVidea,
+  naloziPut,
   naloziVStream,
   ogledi as naloziOglede,
   pocakajObdelavo,
+  pripraviVideo,
+  type PripravljenVideo,
   posnetki as klic,
   trajanjeBesedilo,
   vrhOdstotek,
@@ -499,6 +501,23 @@ function Okvir({
   lastnik: boolean
 }) {
   const trajanje = trajanjeBesedilo(posnetek.trajanje)
+  if (predvaja && ogled?.predvajaj && ogled.tip === 'video') {
+    // R2: podpisan naslov naravnost na R2; brskalnik sam bere po delih (Range).
+    return (
+      <div className="izlozba-okvir relative aspect-video overflow-hidden rounded-2xl">
+        <video
+          src={ogled.predvajaj}
+          poster={ogled.slika ?? undefined}
+          controls
+          autoPlay
+          playsInline
+          preload="metadata"
+          aria-label={posnetek.naslov}
+          className="absolute inset-0 h-full w-full bg-black object-contain"
+        />
+      </div>
+    )
+  }
   if (predvaja && ogled?.predvajaj) {
     return (
       <div className="izlozba-okvir relative aspect-video overflow-hidden rounded-2xl">
@@ -878,6 +897,8 @@ function OknoNalaganja({
 }) {
   const [naslov, setNaslov] = useState('')
   const [datoteka, setDatoteka] = useState<File | null>(null)
+  const [video, setVideo] = useState<PripravljenVideo | null>(null)
+  const [preverjam, setPreverjam] = useState(false)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [faza, setFaza] = useState<'izbira' | 'nalaganje' | 'obdelava'>('izbira')
   const [odstotek, setOdstotek] = useState(0)
@@ -892,31 +913,61 @@ function OknoNalaganja({
 
   async function izberi(f: File) {
     setNapaka(null)
-    const k = await napakaVidea(f)
-    if (k) {
+    setPreverjam(true)
+    const p = await pripraviVideo(f)
+    setPreverjam(false)
+    if ('napaka' in p) {
       setDatoteka(null)
-      return setNapaka(t(k))
+      setVideo(null)
+      return setNapaka(t(p.napaka))
     }
     setDatoteka(f)
+    setVideo(p)
     if (!naslov.trim()) setNaslov(f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 60))
   }
 
   async function poslji(e: React.FormEvent) {
     e.preventDefault()
-    if (!datoteka) return setNapaka(t('igralci.izlozba.napakaVrsta'))
+    if (!datoteka || !video) return setNapaka(t('igralci.izlozba.napakaVrsta'))
     if (!naslov.trim()) return setNapaka(t('igralci.izlozba.napakaNaslov'))
     setNapaka(null)
     setFaza('nalaganje')
-    const r = await klic<{ id: number; uploadURL?: string; test?: boolean }>({
+    type Put = { url: string; glave: Record<string, string> }
+    const r = await klic<{ id: number; ponudnik?: string; uploadURL?: string; video?: Put; slika?: Put }>({
       akcija: 'nalozi',
       player_id: igralecId,
       naslov: naslov.trim(),
+      vrsta: video.vrsta,
+      velikost: datoteka.size,
+      trajanje: Math.round(video.trajanje * 10) / 10,
+      vrsta_slike: video.slika.type || 'image/jpeg',
+      velikost_slike: video.slika.size,
     })
     if (!r.data) {
       setFaza('izbira')
       return setNapaka(r.napaka ?? t('igralci.izlozba.napaka'))
     }
     const id = r.data.id
+    if (r.data.ponudnik === 'r2' && r.data.video && r.data.slika) {
+      // R2: video in plakat na podpisana PUT, nato potrditev (HEAD v funkciji).
+      const [okVideo, okSlika] = await Promise.all([
+        naloziPut(r.data.video.url, datoteka, r.data.video.glave, setOdstotek),
+        naloziPut(r.data.slika.url, video.slika, r.data.slika.glave),
+      ])
+      if (!okVideo || !okSlika) {
+        await klic({ akcija: 'izbrisi', id })
+        setFaza('izbira')
+        return setNapaka(t('igralci.izlozba.napaka'))
+      }
+      setFaza('obdelava')
+      const p = await klic<{ stanje: string }>({ akcija: 'potrdi', id })
+      if (p.data?.stanje !== 'pripravljen') {
+        setFaza('izbira')
+        await naSpremembo()
+        return setNapaka(p.napaka ?? t('igralci.izlozba.napakaVidea'))
+      }
+      return naKoncano(id)
+    }
     if (r.data.uploadURL) {
       const ok = await naloziVStream(r.data.uploadURL, datoteka, setOdstotek)
       if (!ok) {
@@ -949,11 +1000,11 @@ function OknoNalaganja({
         </div>
         <button
           type="button"
-          disabled={zaseden}
+          disabled={zaseden || preverjam}
           onClick={() => vhod.current?.click()}
           className="izlozba-prazno flex w-full flex-col items-center justify-center gap-1 rounded-2xl px-4 py-6 text-center"
         >
-          <span className="text-sm font-bold text-white">{datoteka ? datoteka.name : t('igralci.izlozba.izberiVideo')}</span>
+          <span className="text-sm font-bold text-white">{preverjam ? t('igralci.izlozba.preverjam') : datoteka ? datoteka.name : t('igralci.izlozba.izberiVideo')}</span>
           {datoteka && (
             <span className="text-xs tabular-nums text-slate-400">{stevilo(datoteka.size / 1024 / 1024, { maximumFractionDigits: 1 })} MB</span>
           )}
@@ -961,7 +1012,7 @@ function OknoNalaganja({
         <input
           ref={vhod}
           type="file"
-          accept="video/mp4,video/quicktime,video/webm,video/*"
+          accept="video/mp4,video/quicktime,video/webm,.mp4,.m4v,.mov,.webm"
           className="sr-only"
           tabIndex={-1}
           onChange={(e) => {

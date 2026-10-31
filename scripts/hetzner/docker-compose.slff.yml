@@ -90,7 +90,14 @@ services:
       SHOP_URL: ${SHOP_URL:-https://shop.slff.eu}
       TRGOVINA_TARIFE: ${TRGOVINA_TARIFE:-}
       EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
-      # posnetki-igralca: Cloudflare Stream (izložba preverjenih igralcev; docs/podatkovni-model.md, Izložba)
+      # posnetki-igralca: ponudnik novih posnetkov r2 | stream | test (privzeto r2, če so R2_*)
+      POSNETKI_PONUDNIK: ${POSNETKI_PONUDNIK:-}
+      # Cloudflare R2 (zasebno vedro, podpisani PUT/GET; docs/podatkovni-model.md, Izložba)
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:-}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
+      R2_BUCKET: ${R2_BUCKET:-slff-posnetki}
+      # Cloudflare Stream (izložba preverjenih igralcev; docs/podatkovni-model.md, Izložba)
       CF_ACCOUNT_ID: ${CF_ACCOUNT_ID:-}
       CF_STREAM_TOKEN: ${CF_STREAM_TOKEN:-}
       CF_STREAM_DOMAIN: ${CF_STREAM_DOMAIN:-}

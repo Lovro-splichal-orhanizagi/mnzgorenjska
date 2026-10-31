@@ -3813,20 +3813,26 @@ export type Database = {
         Row: {
           created_at: string
           izbrisi_po: string
+          ponudnik: string
           poskusov: number
           stream_uid: string
+          velikost: number
         }
         Insert: {
           created_at?: string
           izbrisi_po?: string
+          ponudnik?: string
           poskusov?: number
           stream_uid: string
+          velikost?: number
         }
         Update: {
           created_at?: string
           izbrisi_po?: string
+          ponudnik?: string
           poskusov?: number
           stream_uid?: string
+          velikost?: number
         }
         Relationships: []
       }
@@ -3838,6 +3844,7 @@ export type Database = {
           igralec: number
           izpostavljen: boolean
           naslov: string
+          ponudnik: string
           pregled: string
           pregledal: string | null
           pregledan_at: string | null
@@ -3847,6 +3854,9 @@ export type Database = {
           trajanje: number | null
           updated_at: string
           user_id: string | null
+          velikost: number | null
+          velikost_slike: number | null
+          vrsta: string | null
           vrstni_red: number
         }
         Insert: {
@@ -3856,6 +3866,7 @@ export type Database = {
           igralec: number
           izpostavljen?: boolean
           naslov: string
+          ponudnik?: string
           pregled?: string
           pregledal?: string | null
           pregledan_at?: string | null
@@ -3865,6 +3876,9 @@ export type Database = {
           trajanje?: number | null
           updated_at?: string
           user_id?: string | null
+          velikost?: number | null
+          velikost_slike?: number | null
+          vrsta?: string | null
           vrstni_red?: number
         }
         Update: {
@@ -3874,6 +3888,7 @@ export type Database = {
           igralec?: number
           izpostavljen?: boolean
           naslov?: string
+          ponudnik?: string
           pregled?: string
           pregledal?: string | null
           pregledan_at?: string | null
@@ -3883,6 +3898,9 @@ export type Database = {
           trajanje?: number | null
           updated_at?: string
           user_id?: string | null
+          velikost?: number | null
+          velikost_slike?: number | null
+          vrsta?: string | null
           vrstni_red?: number
         }
         Relationships: [
@@ -8600,6 +8618,16 @@ export type Database = {
           trajanje: number
         }[]
       }
+      admin_posnetki_prostor: {
+        Args: never
+        Returns: {
+          meja: number
+          opozorilo: number
+          posnetkov: number
+          za_brisanje: number
+          zasedeno: number
+        }[]
+      }
       admin_potrjeni_poznavalci: {
         Args: never
         Returns: {
@@ -10146,6 +10174,7 @@ export type Database = {
           igralec: number
           izpostavljen: boolean
           naslov: string
+          ponudnik: string
           pregled: string
           pregledal: string | null
           pregledan_at: string | null
@@ -10155,6 +10184,9 @@ export type Database = {
           trajanje: number | null
           updated_at: string
           user_id: string | null
+          velikost: number | null
+          velikost_slike: number | null
+          vrsta: string | null
           vrstni_red: number
         }
         SetofOptions: {
@@ -10171,7 +10203,7 @@ export type Database = {
       posnetki_izbrisi: { Args: { p_id: number }; Returns: string }
       posnetki_izpostavi: { Args: { p_id: number }; Returns: undefined }
       posnetki_nastavi_uid: {
-        Args: { p_id: number; p_uid: string }
+        Args: { p_id: number; p_ponudnik?: string; p_uid: string }
         Returns: undefined
       }
       posnetki_pocisti: { Args: never; Returns: number }
@@ -10179,6 +10211,30 @@ export type Database = {
       posnetki_pripravi: {
         Args: { p_naslov: string; p_player_id: number }
         Returns: number
+      }
+      posnetki_r2_meje: {
+        Args: never
+        Returns: {
+          meja: number
+          opozorilo: number
+        }[]
+      }
+      posnetki_r2_opozorilo: { Args: never; Returns: undefined }
+      posnetki_r2_potrjen: {
+        Args: { p_uid: string; p_velikost: number; p_velikost_slike: number }
+        Returns: undefined
+      }
+      posnetki_r2_prostor: { Args: never; Returns: number }
+      posnetki_r2_rezerviraj: {
+        Args: {
+          p_id: number
+          p_trajanje: number
+          p_uid: string
+          p_velikost: number
+          p_velikost_slike: number
+          p_vrsta: string
+        }
+        Returns: undefined
       }
       posnetki_razvrsti: { Args: { p_ids: number[] }; Returns: undefined }
       posnetki_stream_stanje: {
@@ -10189,13 +10245,21 @@ export type Database = {
         Args: { p_id: number; p_naslov: string }
         Returns: undefined
       }
-      posnetki_za_brisanje: { Args: { p_najvec?: number }; Returns: string[] }
+      posnetki_za_brisanje: {
+        Args: { p_najvec?: number }
+        Returns: {
+          ponudnik: string
+          stream_uid: string
+        }[]
+      }
       posnetki_za_ogled: {
         Args: { p_ids: number[] }
         Returns: {
           id: number
+          ponudnik: string
           stream_uid: string
           urejanje: boolean
+          vrsta: string
         }[]
       }
       postava_kroga: {
@@ -10749,8 +10813,10 @@ export type Database = {
           id: number
           izpostavljen: boolean
           naslov: string
+          ponudnik: string
           stream_uid: string
           trajanje: number
+          vrsta: string
         }[]
       }
       scout_preklici_privolitev: {

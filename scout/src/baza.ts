@@ -82,6 +82,8 @@ export interface PosnetekIgralca {
   naslov: string
   izpostavljen: boolean
   trajanje: number | null
+  /** "video": podpisan naslov R2 za <video>; "iframe": predvajalnik Streama. */
+  tip: 'video' | 'iframe' | null
   predvajaj: string | null
   slika: string | null
 }

@@ -834,60 +834,119 @@
   - **Moderacija:** vsak nov posnetek `caka`; javno in klubom šele `odobren` in
     `pripravljen`. Administracija → Igralci → *Posnetki*: stikalo, predvajanje,
     odobri, zavrni z razlogom, izbriši, "Počisti zdaj". Discord (`trg_posnetki_na_discord`,
-    webhook iz Vaulta kot `trg_prevzem_na_discord`): ko Stream posnetek obdela
+    webhook iz Vaulta kot `trg_prevzem_na_discord`): ko je posnetek naložen (R2) ali obdelan (Stream)
     in čaka na pregled ter ob prijavi.
-  - **Cloudflare Stream** (videov ni na našem disku): funkcija
+  - **Ponudnik** (migracija 20261031223100): videov ni na našem disku. Vsak
+    posnetek ima `ponudnik` (`r2`, `stream` ali `test`); nov posnetek gre k
+    ponudniku iz env `POSNETKI_PONUDNIK` (`r2` | `stream` | `test`; brez nje
+    `r2`, če so nastavljeni `R2_*`, sicer `stream`, če so `CF_*`, sicer `test`
+    ob `POSNETKI_TEST=1`). Obstoječi posnetki ostanejo pri svojem ponudniku in
+    se predvajajo tudi po menjavi (oba ponudnika morata ostati nastavljena,
+    dokler obstaja kak njun posnetek). Brez ponudnika `nalozi` vrne 503
+    (`posnetki-izklopljeno`); ogled, izbris in čiščenje delajo naprej.
+  - **Cloudflare R2** (zdaj; do 10 GB brezplačno, prenos brez plačila):
+    zasebno vedro (`R2_BUCKET`, privzeto `slff-posnetki`), ključa
+    `posnetki/<uid>` (video) in `posnetki/<uid>-slika` (plakat), uid `r2-<uuid>`.
+    Brskalnik video preveri sam (mp4, mov, webm; do 100 MB; do 3 min iz
+    metapodatkov) in iz enega okvirja nariše plakat (JPEG do 1 MB). Če videa ne
+    zna prebrati (HEVC v namiznem Chromu), pokaže navodilo za MP4/H.264 oziroma
+    iPhone »Najbolj združljivo«. Funkcija (`nalozi`) rezervira prostor
+    (`posnetki_r2_rezerviraj`, zaklep) in vrne dva podpisana PUT (15 min; SigV4 v
+    poizvedbi, `r2.ts`, smoke z uradnim primerom AWS) s podpisanima
+    `Content-Type` in `Content-Length`, zato ključa, vrste in velikosti ni mogoče
+    spremeniti. Po nalaganju `potrdi`: HEAD obeh predmetov (vrsta, velikost),
+    `posnetki_r2_potrjen` → `pripravljen`, posnetek čaka na pregled (Discord kot
+    pri Streamu); neujemanje je `napaka`. Trajanje je klientovo (iz
+    metapodatkov), strežnik ga ne preveri. Ogled: podpisan GET (2 uri) **naravnost
+    na R2** (`<račun>.r2.cloudflarestorage.com`, ne prek slff.eu), le za uid-je iz
+    `posnetki_za_ogled`; navaden `<video>` s plakatom, Range dela.
+    **Prostor:** `posnetki_r2_prostor()` = posnetki in plakati v R2 ter vrsta
+    brisanja; nad 9 GB `posnetki_r2_rezerviraj` zavrne (`posnetki-prostor`,
+    "nalaganje začasno ustavljeno"), pri 8 GB enkrat Discord
+    (`posnetki_r2_opozorilo`, `settings.posnetki_r2_opozorjeno`, ponastavi se pod
+    7,5 GB). Zasedenost je v Administracija → Posnetki.
+  - **Cloudflare Stream** (pozneje, ko bo nekaj plačnikov): funkcija
     `posnetki-igralca` ustvari Direct Creator Upload (`maxDurationSeconds: 180`,
-    osnovno nalaganje do 200 MB, `requireSignedURLs: true`, naslov velja 1 uro),
+    `requireSignedURLs: true`, naslov velja 1 uro; vmesnik omeji na 100 MB),
     brskalnik video pošlje naravnost v Stream. Stanje pride z webhookom
     (`Webhook-Signature`, HMAC-SHA256 nad `time.telo`, 5 min; `stream.ts`, smoke)
     ali z vprašanjem `stanje` (rezerva). Ogled: podpisan žeton RS256 (2 uri) s
     ključem Streama le za uid-je iz `posnetki_za_ogled` z glavo klicatelja;
     neodobren ali izbrisan posnetek žetona ne dobi. Predvajalnik je iframe
     Streama (`customer-<koda>.cloudflarestream.com/<žeton>/iframe`).
-    **Preizkusni način** (lokalno, CI): brez `CF_*` in z `POSNETKI_TEST=1`
-    nalaganje dobi uid `test-…`, `stanje` takoj vrne `pripravljen`, ogled je brez
-    naslovov (plakat). Brez obojega funkcija vrne 503 (`posnetki-izklopljeno`).
-  - **Brisanje:** lastnik ali admin → vrstica takoj, video v Streamu takoj (ob
-    napaki vrsta). `prevzem_odstrani_predstavitev` (preklic profila,
-    anonimizacija, izbris računa) in kaskada igralca izbrišeta vrstice; sprožilec
-    uid vpiše v `posnetki_brisanje`. Pravica, ki ne velja več, posnetke skrije
-    takoj (pravilo); `posnetki_pocisti()` jih izbriše: zadnja pravica
-    `preklican` (vračilo, spor, odvzem) ob naslednjem čiščenju, potek po 30 dneh
-    (`brez_pravice_od`). Še: nedokončana nalaganja po 3 urah, napake po 7 dneh,
-    zavrnjeni 14 dni po odločitvi. Čiščenje in praznjenje vrste: delovni tok
-    *Posnetki: čiščenje* (`posnetki-pocisti.yml`, vsako uro, `{"akcija":"pocisti"}`
-    s servisnim ključem; 404/503 pred objavo je le opozorilo).
-  - **Vklop (lastnik):**
-    1. Cloudflare (račun, ki ima slff.eu) → Stream → vklop naročnine.
-    2. API žeton (My Profile → API Tokens → Custom): *Account → Stream → Edit*,
-       le račun SLFF. Account ID je v pregledu računa; koda naročnika je v
-       Stream → katerikoli video → Embed (`customer-<koda>.cloudflarestream.com`).
-    3. Podpisni ključ: `curl -X POST https://api.cloudflare.com/client/v4/accounts/<ACC>/stream/keys -H "Authorization: Bearer <ŽETON>"`
-       → `result.id` je `CF_STREAM_KEY_ID`, `result.jwk` (base64) je `CF_STREAM_KEY_JWK`.
-    4. Webhook: `curl -X PUT https://api.cloudflare.com/client/v4/accounts/<ACC>/stream/webhook -H "Authorization: Bearer <ŽETON>" -H 'Content-Type: application/json' -d '{"notificationUrl":"https://api.slff.eu/functions/v1/posnetki-igralca"}'`
-       → `result.secret` je `CF_STREAM_WEBHOOK_SECRET`.
+  - **Preizkusni način** (lokalno, CI): `POSNETKI_PONUDNIK=test` ali brez
+    `R2_*`/`CF_*` in z `POSNETKI_TEST=1`: nalaganje dobi uid `test-…`, `stanje`
+    takoj vrne `pripravljen`, ogled je brez naslovov (plakat).
+  - **Brisanje:** lastnik ali admin → vrstica takoj, video pri ponudniku takoj
+    (R2: video in plakat; ob napaki vrsta). `prevzem_odstrani_predstavitev`
+    (preklic profila, anonimizacija, izbris računa) in kaskada igralca izbrišeta
+    vrstice; sprožilec uid, ponudnika in velikost vpiše v `posnetki_brisanje`
+    (velikost šteje v prostor R2, dokler izbris ne uspe). Pravica, ki ne velja
+    več, posnetke skrije takoj (pravilo); `posnetki_pocisti()` jih izbriše:
+    zadnja pravica `preklican` (vračilo, spor, odvzem) ob naslednjem čiščenju,
+    potek po 30 dneh (`brez_pravice_od`). Še: nedokončana nalaganja po 3 urah,
+    napake po 7 dneh, zavrnjeni 14 dni po odločitvi. Čiščenje in praznjenje
+    vrste: delovni tok *Posnetki: čiščenje* (`posnetki-pocisti.yml`, vsako uro,
+    `{"akcija":"pocisti"}` s servisnim ključem; 404/503 pred objavo je le opozorilo).
+  - **Vklop R2 (lastnik):**
+    1. Cloudflare (račun, ki ima slff.eu) → R2 Object Storage → vklop (brezplačni
+       paket; zahteva plačilno sredstvo, do 10 GB in 1 M zapisov/10 M branj na
+       mesec brez stroškov).
+    2. R2 → Create bucket `slff-posnetki` (lokacija samodejno ali EU), **brez**
+       javnega dostopa in brez r2.dev domene.
+    3. Bucket → Settings → CORS policy:
+       ```json
+       [{"AllowedOrigins": ["https://slff.eu", "https://club.slff.eu", "capacitor://localhost", "https://localhost"],
+         "AllowedMethods": ["GET", "PUT", "HEAD"],
+         "AllowedHeaders": ["content-type"],
+         "ExposeHeaders": ["ETag", "Content-Length", "Content-Range", "Accept-Ranges"],
+         "MaxAgeSeconds": 3600}]
+       ```
+       (zadnja dva izvora sta aplikacija na iOS in Androidu).
+    4. R2 → Manage R2 API Tokens → Create API token: *Object Read & Write*,
+       **Apply to specific buckets only: `slff-posnetki`**, brez roka ali z
+       dolgim rokom. Shrani Access Key ID in Secret Access Key (prikažeta se
+       enkrat); Account ID je na strani R2.
     5. Na strežniku v `/opt/supabase/.env` (chmod 600, nikoli v git):
-       `CF_ACCOUNT_ID`, `CF_STREAM_TOKEN`, `CF_STREAM_DOMAIN=customer-<koda>.cloudflarestream.com`,
-       `CF_STREAM_WEBHOOK_SECRET`, `CF_STREAM_KEY_ID`, `CF_STREAM_KEY_JWK`,
-       neobvezno `POSNETKI_ORIGINS=slff.eu,club.slff.eu` (predvajanje le na teh
-       domenah; v aplikaciji Capacitor preveri, sicer pusti prazno). Novi
+       `POSNETKI_PONUDNIK=r2`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
+       `R2_SECRET_ACCESS_KEY`, `R2_BUCKET=slff-posnetki`. Novi
        `scripts/hetzner/docker-compose.slff.yml` prenesi v `/opt/supabase/`
        (compose ni v CI), nato
        `cd /opt/supabase && docker compose -f docker-compose.yml -f docker-compose.slff.yml up -d functions`.
     6. Po združitvi (migracijo uveljavi CI): `scripts/hetzner/objavi-funkcije.sh posnetki-igralca`
-       (ena funkcija na klic; `_shared` gre zraven). Preveri webhook brez JWT:
+       (ena funkcija na klic). Stara funkcija ne pozna nove oblike vrste brisanja,
+       zato jo objavi takoj po združitvi.
+    7. Administracija → Igralci → *Posnetki*: stikalo 1, preizkus s
+       preizkuševalcem (nalaganje mp4 in .mov z iPhona, pregled, ogled na
+       telefonu in računalniku, prijava, izbris; v R2 izgineta video in plakat),
+       nato 2.
+  - **Prehod na Stream (pozneje):** R2 ostane nastavljen (stari posnetki se
+    predvajajo iz R2). Nato:
+    1. Cloudflare → Stream → vklop naročnine.
+    2. API žeton (My Profile → API Tokens → Custom): *Account → Stream → Edit*,
+       le račun SLFF. Koda naročnika je v Stream → katerikoli video → Embed
+       (`customer-<koda>.cloudflarestream.com`).
+    3. Podpisni ključ: `curl -X POST https://api.cloudflare.com/client/v4/accounts/<ACC>/stream/keys -H "Authorization: Bearer <ŽETON>"`
+       → `result.id` je `CF_STREAM_KEY_ID`, `result.jwk` (base64) je `CF_STREAM_KEY_JWK`.
+    4. Webhook: `curl -X PUT https://api.cloudflare.com/client/v4/accounts/<ACC>/stream/webhook -H "Authorization: Bearer <ŽETON>" -H 'Content-Type: application/json' -d '{"notificationUrl":"https://api.slff.eu/functions/v1/posnetki-igralca"}'`
+       → `result.secret` je `CF_STREAM_WEBHOOK_SECRET`.
+    5. V `/opt/supabase/.env`: `CF_ACCOUNT_ID`, `CF_STREAM_TOKEN`,
+       `CF_STREAM_DOMAIN=customer-<koda>.cloudflarestream.com`,
+       `CF_STREAM_WEBHOOK_SECRET`, `CF_STREAM_KEY_ID`, `CF_STREAM_KEY_JWK`,
+       neobvezno `POSNETKI_ORIGINS=slff.eu,club.slff.eu`, in
+       **`POSNETKI_PONUDNIK=stream`**; nato `up -d functions` kot zgoraj.
+    6. Preveri webhook brez JWT:
        `curl -s -o /dev/null -w '%{http_code}' -X POST https://api.slff.eu/functions/v1/posnetki-igralca -H 'Webhook-Signature: time=1,sig1=x' -d '{}'`
        mora vrniti 400 (podpis), ne 401.
-    7. Administracija → Igralci → *Posnetki*: stikalo 1, preizkus s
-       preizkuševalcem (nalaganje, pregled, ogled, izbris; v Streamu se video
-       izbriše), nato 2. SLFF Club posnetke prikaže brez lastne objave funkcij
-       (aplikacija se objavi z `SCOUT_OBJAVA=1`).
-  - **Stroški Streama** (cenik 2026: 5 $ na 1000 shranjenih minut na mesec,
-    1 $ na 1000 predvajanih minut, kodiranje in nalaganje brez plačila):
-    6 posnetkov × največ 3 min = največ 18 min na igralca; 100 preverjenih
-    igralcev ≈ 1800 min ≈ 9 $/mesec shrambe, 10 000 ogledov po 1 min ≈ 10 $.
-    Najmanjši paket je 1000 min (5 $).
+    7. Neobvezno: stare posnetke prenese le ponovno nalaganje (selitve ni);
+       ko v R2 ni več posnetkov (Administracija → Posnetki, prostor 0), lahko
+       `R2_*` odstraniš.
+  - **Stroški:** R2 do 10 GB na mesec brezplačno (nad tem ~0,015 $/GB), prenos
+    brez plačila; 100 MB na posnetek in 6 posnetkov = do 600 MB na igralca,
+    meja 9 GB zadošča za ~15 polnih izložb ali ~90 posnetkov po 100 MB (običajen
+    30-sekundni posnetek s telefona ima 15–60 MB). Stream (cenik 2026, preveri):
+    5 $ na 1000 shranjenih minut na mesec, 1 $ na 1000 predvajanih minut;
+    najmanjši paket 5 $.
 - **Uradne odsotnosti** (migracija 20261012135100): potrjeni igralec (lastnik
   potrjenega `zahtevki_igralca`, tudi za povezane vrstice) sam javi odsotnost
   (`objavi_uradno_odsotnost`: vrsta `poskodba`/`bolezen`/`dopust`/`kazen`/`drugo`,

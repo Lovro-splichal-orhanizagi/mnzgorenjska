@@ -58,6 +58,7 @@ import {
 import { tockeZaNastop, razloziTocke } from '../src/lib/tockovanje'
 import { veljavenPodpis } from '../supabase/functions/stripe-webhook/podpis.ts'
 import { veljavenPodpisStream, podpisiZeton, stanjeIzStreama } from '../supabase/functions/posnetki-igralca/stream.ts'
+import { podpisanNaslov, r2Naslov, kljucVidea, kljucSlike } from '../supabase/functions/posnetki-igralca/r2.ts'
 import { scoutPostavkeVeljajo, scoutCeneNarocnine } from '../supabase/functions/stripe-webhook/scout.ts'
 import { trgovinaIzSeje, napacnaTarifa, novaKoda, idKupona, enoteBonov, kodeSeje, zgostiKodo, IZDELEK_TRGOVINE as IZDELEK_BONOV } from '../supabase/functions/stripe-webhook/trgovina.ts'
 import { IZDELEK_TRGOVINE, seznamPostavk } from '../supabase/functions/trgovina-nakup/izdelki.ts'
@@ -14025,6 +14026,34 @@ preveri(
   preveri('stream: stanje videa',
     stanjeIzStreama({ readyToStream: true }) === 'pripravljen' && stanjeIzStreama({ status: { state: 'error' } }) === 'napaka'
     && stanjeIzStreama({ status: { state: 'inprogress' } }) === 'obdelava' && stanjeIzStreama(null) === null)
+}
+
+{
+  // R2 (posnetki-igralca/r2.ts): SigV4 v poizvedbi. Uradni primer AWS
+  // (S3 "Authenticating Requests: Using Query Parameters", GET test.txt).
+  const aws = await podpisanNaslov({
+    dostopniKljuc: 'AKIAIOSFODNN7EXAMPLE',
+    skrivniKljuc: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+    regija: 'us-east-1',
+    gostitelj: 'examplebucket.s3.amazonaws.com',
+    pot: '/test.txt',
+    metoda: 'GET',
+    traja: 86400,
+    zdaj: new Date('2013-05-24T00:00:00Z'),
+  })
+  preveri('r2: podpis SigV4 se ujema z uradnim primerom AWS',
+    aws.endsWith('X-Amz-Signature=aeeed9bbccd4d02ee5c0109b86d86835f995330da4c265957d157751f604d404'), aws)
+  const r2 = { racun: 'acc123', dostopniKljuc: 'AK', skrivniKljuc: 'SK', vedro: 'slff-posnetki' }
+  const put = new URL(await r2Naslov(r2, kljucVidea('r2-abc'), 'PUT', 900, { 'Content-Type': 'video/mp4', 'Content-Length': '1234' }))
+  preveri('r2: PUT na vedro v slogu poti, podpisani vrsta in velikost, 15 min',
+    put.host === 'acc123.r2.cloudflarestorage.com' && put.pathname === '/slff-posnetki/posnetki/r2-abc'
+    && put.searchParams.get('X-Amz-SignedHeaders') === 'content-length;content-type;host'
+    && put.searchParams.get('X-Amz-Expires') === '900' && /\/auto\/s3\/aws4_request$/.test(put.searchParams.get('X-Amz-Credential') ?? ''))
+  const a = await r2Naslov(r2, kljucSlike('r2-abc'), 'GET', 7200)
+  const b = await r2Naslov(r2, kljucSlike('r2-abc'), 'HEAD', 7200)
+  preveri('r2: sličica ima svoj ključ, metoda je v podpisu',
+    new URL(a).pathname.endsWith('/posnetki/r2-abc-slika')
+    && new URL(a).searchParams.get('X-Amz-Signature') !== new URL(b).searchParams.get('X-Amz-Signature'))
 }
 
 {

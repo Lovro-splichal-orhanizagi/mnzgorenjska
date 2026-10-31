@@ -1,10 +1,11 @@
-name: 'Posnetki: čiščenje in brisanje v Streamu'
+name: 'Posnetki: čiščenje in brisanje pri ponudniku'
 
-# Izložba preverjenih igralcev (posnetki v Cloudflare Stream). Funkcija
+# Izložba preverjenih igralcev (posnetki v Cloudflare R2 ali Stream). Funkcija
 # posnetki-igralca (akcija pocisti) pokliče `posnetki_pocisti()` (nedokončana
 # nalaganja, napake, zavrnjeni po 14 dneh, preklicana pravica takoj, potekla
 # po 30 dneh) in izprazni vrsto `posnetki_brisanje` (izbris videov v Streamu,
-# tudi po preklicu profila, anonimizaciji in izbrisu računa).
+# tudi po preklicu profila, anonimizaciji in izbrisu računa; R2: video in
+# plakat, Stream: video).
 on:
   schedule:
     - cron: '23 * * * *'

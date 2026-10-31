@@ -277,7 +277,7 @@ plačila) in `…-faza3b-aplikacija.md` (scout.slff.eu). Migracije
   preverjen, polnoleten, brez mladinske vrstice). Le takrat stran igralca
   pokliče funkcijo `posnetki-igralca` (`akcija: scout`) → `scout_posnetki`
   skozi `scout.dostop` (`dnevnik.vrsta = 'posnetki'`, meja 300) in
-  `scout.vidni`; žetoni za ogled veljajo 2 uri. Igralec na svoji izložbi
+  `scout.vidni`; podpisani naslovi (R2 ali Stream, po ponudniku posnetka) veljajo 2 uri. Igralec na svoji izložbi
   vidi le števili odprtij profila (`vrsta = 'igralec'`, zadnjih 30 dni, brez
   lastnega kluba) in različnih klubov, nikoli kateri. Vse:
   `docs/podatkovni-model.md` (*Izložba preverjenega igralca*).
