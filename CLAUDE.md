@@ -261,6 +261,12 @@ to področje. Bistvo, ki ga je treba vedeti vedno:
 - Plačila (preverjeni igralci, Stripe): stikalo `preverjeni_racuni`, webhook
   `stripe-webhook`, **preklic naročnine mora biti vedno mogoč**; vse v
   `docs/podatkovni-model.md` (*Preverjeni igralci*).
+- **Izložba preverjenega igralca** (posnetki v Cloudflare Stream, nikoli na
+  našem disku): eno pravilo `izlozba_dovoljena()` (stikalo
+  `posnetki_igralcev`, `je_preverjen`, brez mladinske ali anonimizirane
+  vrstice osebe); vsak posnetek najprej čaka na pregled (Administracija →
+  Posnetki); žetone za ogled izda le funkcija `posnetki-igralca`. Vklop,
+  skrivnosti, brisanje in stroški: `docs/podatkovni-model.md` (*Izložba*).
 
 ## Pregledane zgodovinske vrzeli
 

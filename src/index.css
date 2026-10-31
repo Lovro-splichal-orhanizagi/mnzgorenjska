@@ -283,3 +283,109 @@ body:has(#chat-widget-bubble) [data-podpora] {
 .driver-popover.slff-vodic .driver-popover-arrow-side-right { border-top-color: transparent; border-bottom-color: transparent; border-left-color: transparent; }
 .driver-popover.slff-vodic .driver-popover-arrow-side-top { border-bottom-color: transparent; border-left-color: transparent; border-right-color: transparent; }
 .driver-popover.slff-vodic .driver-popover-arrow-side-bottom { border-top-color: transparent; border-left-color: transparent; border-right-color: transparent; }
+
+/* Izložba preverjenega igralca (IzlozbaIgralca.tsx). --poudarek je barva
+   profila (profil_igralca_plus.barva), privzeto zelena SLFF. Zlata je
+   rezervirana za "Odprt za prestop". */
+.izlozba {
+  --zlato-1: #f7dc8c;
+  --zlato-2: #c99a2e;
+}
+.izlozba-pasica-privzeta {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 44px, transparent 44px 88px),
+    radial-gradient(120% 160% at 12% -10%, color-mix(in srgb, var(--poudarek) 55%, transparent), transparent 62%),
+    linear-gradient(180deg, #0c2a20, #020617);
+}
+.izlozba-pasica-senca {
+  background: linear-gradient(180deg, rgba(2, 6, 23, 0) 35%, rgba(2, 6, 23, 0.55) 70%, rgb(2, 6, 23) 100%);
+}
+.izlozba-gumb-pasica {
+  background: rgba(2, 6, 23, 0.55);
+  backdrop-filter: blur(6px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+.izlozba-gumb-pasica:focus-within { outline: 2px solid var(--poudarek); outline-offset: 2px; }
+.izlozba-foto {
+  box-shadow: 0 0 0 4px rgb(2, 6, 23), 0 0 0 6px var(--poudarek), 0 18px 40px -12px rgba(0, 0, 0, 0.8);
+}
+.izlozba-zlato {
+  color: #1d1504;
+  background: linear-gradient(135deg, var(--zlato-1), var(--zlato-2));
+  box-shadow: 0 6px 18px -8px rgba(247, 220, 140, 0.7);
+}
+.izlozba-okvir {
+  background: #0b1220;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 34px 80px -36px color-mix(in srgb, var(--poudarek) 70%, transparent);
+}
+.izlozba-okvir:focus-visible, .izlozba-plosca:focus-visible, .izlozba-prazno:focus-visible {
+  outline: 2px solid var(--poudarek);
+  outline-offset: 3px;
+}
+.izlozba-poster {
+  background:
+    radial-gradient(90% 120% at 80% 110%, color-mix(in srgb, var(--poudarek) 35%, transparent), transparent 60%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0 22px, transparent 22px 44px),
+    linear-gradient(160deg, #10241d, #070d1a);
+}
+.izlozba-gumb-predvajaj {
+  display: inline-flex;
+  height: 4rem;
+  width: 4rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: #020617;
+  font-size: 2rem;
+  font-weight: 900;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.7);
+  transition: transform 150ms ease;
+}
+.group:hover .izlozba-gumb-predvajaj { transform: translate(-50%, -50%) scale(1.06); }
+.izlozba-prazno .izlozba-gumb-predvajaj, .izlozba-ponudba .izlozba-gumb-predvajaj { transform: none; }
+.izlozba-plosca {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.izlozba-plosca-izbrana { box-shadow: inset 0 0 0 2px var(--poudarek); }
+.izlozba-prazno {
+  border: 1.5px dashed rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.025);
+  transition: border-color 150ms ease;
+}
+.izlozba-prazno:hover { border-color: var(--poudarek); }
+.izlozba-stevilke {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.izlozba-stevilke > div + div { box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.08); }
+.izlozba-kazalnik {
+  padding-left: 0.75rem;
+  box-shadow: inset 3px 0 0 var(--poudarek);
+}
+.izlozba-plosca-lastnika {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.izlozba-moc { background: var(--poudarek); }
+.izlozba-ponudba {
+  --poudarek: #34d399;
+  --zlato-1: #f7dc8c;
+  --zlato-2: #c99a2e;
+  background: linear-gradient(180deg, rgba(247, 220, 140, 0.07), rgba(255, 255, 255, 0.02));
+  box-shadow: inset 0 0 0 1px rgba(247, 220, 140, 0.28);
+}
+.izlozba-ponudba-okvir {
+  background:
+    radial-gradient(90% 140% at 50% 120%, rgba(52, 211, 153, 0.35), transparent 60%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 30px, transparent 30px 60px),
+    linear-gradient(160deg, #10241d, #070d1a);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+@media (prefers-reduced-motion: reduce) {
+  .izlozba-gumb-predvajaj, .izlozba-prazno { transition: none; }
+}
+.izlozba-cena-mobilno > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.5rem; text-align: left; }

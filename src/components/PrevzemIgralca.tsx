@@ -46,10 +46,16 @@ export default function PrevzemIgralca({
   slugLige,
   anonimiziran,
   naLastnika,
+  vIzlozbi = false,
+  ponudbaIzlozbe = false,
 }: {
   igralecId: number
   slugLige: string | undefined
   anonimiziran: boolean
+  /** Glava strani je izložba: pasica in opis sta že tam. */
+  vIzlozbi?: boolean
+  /** Lastnik bi z nakupom dobil izložbo (polnoleten, stikalo vklopljeno). */
+  ponudbaIzlozbe?: boolean
   /** Pove strani, ali je prijavljeni potrjeni lastnik profila (kartica). */
   naLastnika?: (jeLastnik: boolean) => void
 }) {
@@ -131,7 +137,7 @@ export default function PrevzemIgralca({
     <section className="space-y-3" aria-label={t('igralci.prevzem.oznaka')}>
       {/* predstavitev potrjenega igralca */}
       {potrjen && (
-        <PredstavitevIgralca potrdil={potrjen.potrdil} profil={profil}>
+        <PredstavitevIgralca potrdil={potrjen.potrdil} profil={vIzlozbi && profil ? { ...profil, opis: null } : profil}>
           {jeLastnik && (
             <button onClick={() => setUrejam((u) => !u)} className="gumb-tih text-sm">
               {t('igralci.prevzem.uredi')}
@@ -163,7 +169,14 @@ export default function PrevzemIgralca({
 
       {/* preverjen igralec: dodatki, ponudba ali urejanje (vidno le pri stikalu) */}
       {potrjen && (
-        <PreverjeniProfil igralecId={igralecId} glavni={potrjen.glavni} jeLastnik={jeLastnik} urejam={urejam} />
+        <PreverjeniProfil
+          igralecId={igralecId}
+          glavni={potrjen.glavni}
+          jeLastnik={jeLastnik}
+          urejam={urejam}
+          vIzlozbi={vIzlozbi}
+          ponudbaIzlozbe={ponudbaIzlozbe}
+        />
       )}
 
       {jeLastnik && urejam && potrjen && (

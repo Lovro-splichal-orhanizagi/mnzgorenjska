@@ -30,6 +30,8 @@ import ZnakPreverjen from '../components/ZnakPreverjen'
 import PrevzemIgralca from '../components/PrevzemIgralca'
 import UradneOdsotnostiIgralca from '../components/UradnaOdsotnost'
 import KarticaIgralca from '../components/KarticaIgralca'
+import IzlozbaIgralca from '../components/IzlozbaIgralca'
+import { naloziIzlozbo, type Izlozba } from '../lib/izlozba'
 import { jeMladinskiSlug, useFotografija } from '../lib/prevzem'
 import { dosezkiNastopa, odstotekIzbranosti } from '../lib/karticaIgralca'
 import {
@@ -136,6 +138,9 @@ export default function Igralec() {
   const [ekipVLigi, setEkipVLigi] = useState<number | null>(null)
   // Potrjeni lastnik profila deli "svojo" kartico.
   const [jeLastnik, setJeLastnik] = useState(false)
+  // Izložba preverjenega polnoletnega igralca (posnetki); null brez nje.
+  const [izlozba, setIzlozba] = useState<Izlozba | null>(null)
+  const osveziIzlozbo = async () => setIzlozba(await naloziIzlozbo(igralecId))
   // "Ime Priimek (Klub)": isto ime v drugem klubu je drug igralec.
   useNaslov(
     igralec
@@ -172,6 +177,8 @@ export default function Igralec() {
               .eq('voter_id', uporabnikId)
               .maybeSingle()
           : Promise.resolve({ data: null }),
+        // Izložba gre z glavo, da stran ob prikazu ne skoči.
+        naloziIzlozbo(igralecId),
       ])
       const { data: p, error } = await supabase
         .from('player_overview')
@@ -194,7 +201,7 @@ export default function Igralec() {
       const ligaId = p.competition_id ?? 0
 
       const [
-        [{ data: g }, { data: zac }, raz, { data: moj }],
+        [{ data: g }, { data: zac }, raz, { data: moj }, izl],
         { data: tek },
         [tekocaSez, ss, c, zk],
       ] = await Promise.all([
@@ -309,6 +316,7 @@ export default function Igralec() {
       setMojGlas((moj?.position as Pozicija | null) ?? null)
 
       setRazlage(raz)
+      setIzlozba(izl)
       setNalaganje(false)
     }
     nalozi()
@@ -473,13 +481,47 @@ export default function Igralec() {
     ? Number(zadnjaSprememba.new_value) - Number(zadnjaSprememba.old_value)
     : 0
 
+  // Cena: v glavi ali v izložbi (desno ob imenu).
+  const blokCene = !gost && (
+    <div className="text-right">
+      <div className="text-xl font-black tabular-nums text-gnl-300 sm:text-2xl">
+        {formatirajCeno(igralec.value)}
+      </div>
+      <div className="whitespace-nowrap text-xs text-slate-500">
+        {t('igralci.profil.cena')}
+        {premik !== 0 && (
+          <span className={premik > 0 ? 'text-gnl-300' : 'text-rose-400'}>
+            {' '}
+            {premik > 0 ? '▲' : '▼'} {formatirajPremik(premik)}
+          </span>
+        )}
+      </div>
+      <RazlagaCene cena={igralec.value} izhodisce={izhodisce} />
+    </div>
+  )
+  // Preverjen polnoleten igralec: izložba (posnetki, pasica, opis) namesto glave.
+  const zIzlozbo = !!izlozba?.dovoljena && !anonimiziran
+
   return (
     <div className="space-y-6">
       <Link to={`/players${vLigo}`} className="inline-flex min-h-11 items-center text-sm text-slate-400 hover:text-white">
         {t('igralci.profil.vsiIgralci')}
       </Link>
 
-      {/* glava */}
+      {zIzlozbo && izlozba ? (
+        <div className="-mt-3">
+          <IzlozbaIgralca
+            izlozba={izlozba}
+            igralec={{ ...igralec, full_name: prikazniIme(igralec.full_name) }}
+            liga={vsaTekmovanja.find((tm) => tm.id === igralec.competition_id)?.name ?? null}
+            slugLige={slugLige}
+            gost={gost}
+            desno={blokCene || undefined}
+            naSpremembo={osveziIzlozbo}
+          />
+        </div>
+      ) : (
+      /* glava */
       <div className="-mt-3 flex items-center gap-3 sm:gap-4">
         {/* Potrjen igralec s fotografijo: fotografija namesto grba kluba. */}
         <span className="sm:hidden">
@@ -513,24 +555,9 @@ export default function Igralec() {
           </p>
           {naZeljoKluba && <p className="text-xs text-slate-500">{t('skupno.naZeljoKluba')}</p>}
         </div>
-        {!gost && (
-        <div className="text-right">
-          <div className="text-xl font-black tabular-nums text-gnl-300 sm:text-2xl">
-            {formatirajCeno(igralec.value)}
-          </div>
-          <div className="whitespace-nowrap text-xs text-slate-500">
-            {t('igralci.profil.cena')}
-            {premik !== 0 && (
-              <span className={premik > 0 ? 'text-gnl-300' : 'text-rose-400'}>
-                {' '}
-                {premik > 0 ? '▲' : '▼'} {formatirajPremik(premik)}
-              </span>
-            )}
-          </div>
-          <RazlagaCene cena={igralec.value} izhodisce={izhodisce} />
-        </div>
-        )}
+        {blokCene}
       </div>
+      )}
       {!gost && <PonovnaCena igralecId={igralec.id} />}
 
       {/* Deljena povezava na igralca vodi v igro: dodaj ga v svojo ekipo (tudi brez računa). */}
@@ -570,6 +597,8 @@ export default function Igralec() {
         slugLige={slugLige}
         anonimiziran={anonimiziran}
         naLastnika={setJeLastnik}
+        vIzlozbi={zIzlozbo}
+        ponudbaIzlozbe={!!izlozba && izlozba.lastnik && !izlozba.dovoljena && izlozba.vidi && izlozba.odrasla}
       />
 
       {/* številke — tekoča sezona; seštevek vseh sezon je drugotna vrstica */}
@@ -583,6 +612,8 @@ export default function Igralec() {
         {zgodovina.filter(s => s.season !== sezonsko?.season).map(s => (
           <PokritostStatistike key={s.season} podatki={s} />
         ))}
+        {/* V izložbi so številke sezone že na vrhu. */}
+        {!zIzlozbo && (
         <div className="kartica grid grid-cols-4 divide-x divide-white/10">
           <Stevilka
             oznaka={t('igralci.profil.stevilke.tocke')}
@@ -592,6 +623,7 @@ export default function Igralec() {
           <Stevilka oznaka={t('igralci.profil.stevilke.golov')} vrednost={brezOpazovanj ? '—' : (sezonsko ?? igralec).goals ?? 0} />
           <Stevilka oznaka={t('igralci.profil.stevilke.minut')} vrednost={brezOpazovanj ? '—' : (sezonsko ?? igralec).minutes ?? 0} />
         </div>
+        )}
         {sezonsko && !zgodovina.some(s => brezPreverjenihNastopov(s, igralec.matches)) && (
           <p className="text-xs text-slate-500">
             {t('igralci.profil.skupajVseSezone', {

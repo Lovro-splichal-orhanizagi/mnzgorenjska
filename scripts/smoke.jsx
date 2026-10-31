@@ -57,6 +57,7 @@ import {
 } from '../src/lib/pravila'
 import { tockeZaNastop, razloziTocke } from '../src/lib/tockovanje'
 import { veljavenPodpis } from '../supabase/functions/stripe-webhook/podpis.ts'
+import { veljavenPodpisStream, podpisiZeton, stanjeIzStreama } from '../supabase/functions/posnetki-igralca/stream.ts'
 import { scoutPostavkeVeljajo, scoutCeneNarocnine } from '../supabase/functions/stripe-webhook/scout.ts'
 import { trgovinaIzSeje, napacnaTarifa, novaKoda, idKupona, enoteBonov, kodeSeje, zgostiKodo, IZDELEK_TRGOVINE as IZDELEK_BONOV } from '../supabase/functions/stripe-webhook/trgovina.ts'
 import { IZDELEK_TRGOVINE, seznamPostavk } from '../supabase/functions/trgovina-nakup/izdelki.ts'
@@ -67,7 +68,7 @@ import { JEZIKI_NAKUPA, jezikNakupa, STRIPE_LOKALE, BESEDILA_NAKUPA } from '../s
 import { BESEDILA as trgovinaBesedilaMaila } from '../supabase/functions/trgovina-posta/besedila.ts'
 import { EU27 as trgovinaEU27, tarifeZa } from '../supabase/functions/trgovina-nakup/tarife.ts'
 import { preberiVnos as vnosBona } from '../supabase/functions/trgovina-boni/vnos.ts'
-import { createHmac } from 'node:crypto'
+import { createHmac, createVerify, generateKeyPairSync } from 'node:crypto'
 import { sestejOdKroga } from '../src/lib/lestvica'
 import { zdruziNavijace } from '../src/lib/navijaci'
 import { TabelaNavijacev, KlubMedNavijaci, IzbiraKluba } from '../src/components/NavijaciKlubov'
@@ -14000,6 +14001,30 @@ preveri(
   preveri('stripe: star podpis pade', !(await veljavenPodpis(`t=${t},v1=${v1}`, telo, skr, t + 301)))
   preveri('stripe: druga skrivnost pade', !(await veljavenPodpis(`t=${t},v1=${v1}`, telo, 'whsec_drug', t)))
   preveri('stripe: brez glave pade', !(await veljavenPodpis(null, telo, skr, t)))
+}
+
+{
+  // Cloudflare Stream (posnetki-igralca): webhook "time=…,sig1=…" in RS256 žeton za ogled.
+  const skr = 'stream_smoke_skrivnost'
+  const telo = '{"uid":"abc123def456","readyToStream":true}'
+  const t = 1760000000
+  const sig = createHmac('sha256', skr).update(`${t}.${telo}`).digest('hex')
+  preveri('stream: veljaven podpis gre', await veljavenPodpisStream(`time=${t},sig1=${sig}`, telo, skr, t + 10))
+  preveri('stream: spremenjeno telo pade', !(await veljavenPodpisStream(`time=${t},sig1=${sig}`, telo + ' ', skr, t)))
+  preveri('stream: star podpis pade', !(await veljavenPodpisStream(`time=${t},sig1=${sig}`, telo, skr, t + 301)))
+  preveri('stream: brez skrivnosti pade', !(await veljavenPodpisStream(`time=${t},sig1=${sig}`, telo, '', t)))
+  preveri('stream: brez glave pade', !(await veljavenPodpisStream(null, telo, skr, t)))
+  const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
+  const zeton = await podpisiZeton('abc123def456', 'kid1', privateKey.export({ format: 'jwk' }), 7200, t)
+  const [g, b, p] = zeton.split('.')
+  const iz64 = (s) => JSON.parse(Buffer.from(s, 'base64url').toString())
+  preveri('stream: žeton ima uid, kid in rok',
+    iz64(g).alg === 'RS256' && iz64(g).kid === 'kid1' && iz64(b).sub === 'abc123def456' && iz64(b).exp === t + 7200)
+  preveri('stream: podpis žetona se preveri z javnim ključem',
+    createVerify('RSA-SHA256').update(`${g}.${b}`).verify(publicKey, Buffer.from(p, 'base64url')))
+  preveri('stream: stanje videa',
+    stanjeIzStreama({ readyToStream: true }) === 'pripravljen' && stanjeIzStreama({ status: { state: 'error' } }) === 'napaka'
+    && stanjeIzStreama({ status: { state: 'inprogress' } }) === 'obdelava' && stanjeIzStreama(null) === null)
 }
 
 {

@@ -90,6 +90,14 @@ services:
       SHOP_URL: ${SHOP_URL:-https://shop.slff.eu}
       TRGOVINA_TARIFE: ${TRGOVINA_TARIFE:-}
       EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
+      # posnetki-igralca: Cloudflare Stream (izložba preverjenih igralcev; docs/podatkovni-model.md, Izložba)
+      CF_ACCOUNT_ID: ${CF_ACCOUNT_ID:-}
+      CF_STREAM_TOKEN: ${CF_STREAM_TOKEN:-}
+      CF_STREAM_DOMAIN: ${CF_STREAM_DOMAIN:-}
+      CF_STREAM_WEBHOOK_SECRET: ${CF_STREAM_WEBHOOK_SECRET:-}
+      CF_STREAM_KEY_ID: ${CF_STREAM_KEY_ID:-}
+      CF_STREAM_KEY_JWK: ${CF_STREAM_KEY_JWK:-}
+      POSNETKI_ORIGINS: ${POSNETKI_ORIGINS:-}
   db:
     image: supabase/postgres:17.6.1.166
     # Docker da /dev/shm 64 MB; vzporedne poizvedbe ga presežejo ("could not

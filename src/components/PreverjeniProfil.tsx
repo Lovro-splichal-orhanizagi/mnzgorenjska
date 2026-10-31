@@ -24,6 +24,7 @@ import {
   type Statistika,
 } from '../lib/preverjeni'
 import { Link } from './Povezava'
+import { PonudbaIzlozbe } from './IzlozbaIgralca'
 
 interface Plus {
   player_id: number
@@ -58,11 +59,17 @@ export default function PreverjeniProfil({
   glavni,
   jeLastnik,
   urejam,
+  vIzlozbi = false,
+  ponudbaIzlozbe = false,
 }: {
   igralecId: number
   glavni: number
   jeLastnik: boolean
   urejam: boolean
+  /** Pasica in opis sta v izložbi na vrhu strani. */
+  vIzlozbi?: boolean
+  /** Nad nakupom pokaži, kaj prinese izložba (posnetki, SLFF Club). */
+  ponudbaIzlozbe?: boolean
 }) {
   const [plus, setPlus] = useState<Plus | null | undefined>(undefined)
   const [lastnik, setLastnik] = useState<{ vidi: boolean; preverjen: boolean; vir: string | null } | null>(null)
@@ -105,12 +112,13 @@ export default function PreverjeniProfil({
   const kupuje = lastnik?.vidi && !lastnik.preverjen && !jeNativno()
   return (
     <>
-      {plus && <Prikaz plus={plus} igralecId={igralecId} />}
+      {plus && <Prikaz plus={plus} igralecId={igralecId} vIzlozbi={vIzlozbi} />}
       {placano && lastnik?.vidi && (lastnik.preverjen || !jeNativno()) && (
         <p className="kartica p-3 text-sm text-sky-200">
           {t(lastnik.preverjen ? 'igralci.preverjen.ponudba.uspeh' : 'igralci.preverjen.ponudba.obdeluje')}
         </p>
       )}
+      {kupuje && !placano && ponudbaIzlozbe && <PonudbaIzlozbe />}
       {kupuje && !placano && <Ponudba igralecId={igralecId} />}
       {lastnik?.preverjen && lastnik.vir === 'letna' && !jeNativno() && <Narocnina igralecId={igralecId} />}
       {lastnik?.preverjen && urejam && (
@@ -128,21 +136,24 @@ export default function PreverjeniProfil({
   )
 }
 
-function Prikaz({ plus, igralecId }: { plus: Plus; igralecId: number }) {
+function Prikaz({ plus, igralecId, vIzlozbi }: { plus: Plus; igralecId: number; vIzlozbi: boolean }) {
   const barva = plus.barva ? BARVE[plus.barva as Barva] : undefined
-  const pasica = naslovFotografije(plus.pasica)
+  const pasica = vIzlozbi ? null : naslovFotografije(plus.pasica)
+  const opis = vIzlozbi ? null : plus.opis
   const povezave = [
     plus.youtube && { naslov: NASLOV.youtube(plus.youtube), besedilo: `${t('igralci.preverjen.youtube')}: @${plus.youtube}` },
     plus.x && { naslov: NASLOV.x(plus.x), besedilo: `${t('igralci.preverjen.x')}: @${plus.x}` },
     plus.splet && { naslov: plus.splet, besedilo: plus.splet.replace(/^https:\/\//, '') },
   ].filter((p): p is { naslov: string; besedilo: string } => !!p)
+  // V izložbi brez preostalih dodatkov ni česa pokazati.
+  if (vIzlozbi && !plus.sporocilo && plus.tekma_id == null && !plus.statistika && !povezave.length) return null
   return (
     <div className="kartica space-y-3 overflow-hidden p-0" style={barva ? { borderColor: barva } : undefined}>
       {pasica && (
         <img src={pasica} alt="" width={1200} height={400} loading="lazy" className="aspect-[3/1] w-full object-cover" />
       )}
       <div className="space-y-2 px-3 pb-3 first:pt-3">
-        {plus.opis && <p className="whitespace-pre-line break-words text-sm text-slate-200">{plus.opis}</p>}
+        {opis && <p className="whitespace-pre-line break-words text-sm text-slate-200">{opis}</p>}
         {plus.sporocilo && (
           <blockquote className="border-l-2 pl-2 text-sm italic text-slate-300" style={barva ? { borderColor: barva } : undefined}>
             <span className="block text-xs not-italic text-slate-500">{t('igralci.preverjen.sporocilo')}</span>"{plus.sporocilo}"
