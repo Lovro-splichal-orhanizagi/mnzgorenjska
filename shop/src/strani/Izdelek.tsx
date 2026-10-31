@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase, type Izdelek as TIzdelek, type Prvak, type Razlicica } from '../baza'
-import { cena, jezik, po, t, type Kljuc } from '../besede'
+import { cena, jezik, pr, t, type Kljuc } from '../besede'
+import { lokalizirajIzdelek } from '../prevodi'
 import { BREZPLACNA_OD, dodaj, kljuc, NAJVEC, postnina, shrani, useKosarica } from '../kosarica'
 import { dogodek } from '../analitika'
 import { useNaslov } from '../Okvir'
@@ -83,7 +84,7 @@ function Obrazec({ i, javi }: { i: TIzdelek; javi: (iz: Izbira) => void }) {
     if (zPrvakom) {
       if (p) {
         v.prvak = { mini_liga_id: p.mini_liga_id, sezona: p.sezona }
-        besedilo = jezik === 'en' ? p.besedilo_en : p.besedilo_sl
+        besedilo = jezik === 'sl' ? p.besedilo_sl : p.besedilo_en
       } else manjka ||= ima('prvak')!.obvezna
     }
     if (zZnacko) {
@@ -220,8 +221,8 @@ export function IzdelekView({ i }: { i: TIzdelek }) {
 }
 
 function MotiviKmalu({ i }: { i: TIzdelek }) {
-  const ime = po(i.ime_sl, i.ime_en)
-  useNaslov(ime, po(i.opis_sl, i.opis_en).slice(0, 160) || undefined)
+  const ime = pr(i, 'ime')
+  useNaslov(ime, pr(i, 'opis').slice(0, 160) || undefined)
   return (
     <div className="space-y-6">
       <Link to="/" className="povezava text-sm">← {t('izdelek.nazaj')}</Link>
@@ -256,7 +257,7 @@ function Gumb({ izbran, onemogocen, onClick, children }: { izbran: boolean; onem
 
 function Navaden({ i }: { i: TIzdelek }) {
   const kosarica = useKosarica()
-  const ime = po(i.ime_sl, i.ime_en)
+  const ime = pr(i, 'ime')
   const prodajne = i.razlicice.filter((r) => r.na_voljo !== 'ne')
   // Ena sama različica (šal, skodelica) je izbrana sama.
   const [izbrana, setIzbrana] = useState<number | null>(i.razlicice.length === 1 && prodajne.length === 1 ? prodajne[0].id : null)
@@ -274,7 +275,7 @@ function Navaden({ i }: { i: TIzdelek }) {
   const [izbira, setIzbira] = useState<Izbira>({ vnos: i.personalizacije.some((m) => m.obvezna) ? null : undefined, ime: null, st: null })
   const najvec = i.personalizacije.some((m) => m.vrsta === 'znacka') ? 1 : i.digitalni ? 5 : NAJVEC
   const personaliziran = i.personalizacije.length > 0
-  useNaslov(ime, po(i.opis_sl, i.opis_en).slice(0, 160) || undefined)
+  useNaslov(ime, pr(i, 'opis').slice(0, 160) || undefined)
   const r = i.razlicice.find((x) => x.id === izbrana) ?? null
   const cenaOd = Math.min(...i.razlicice.map((x) => x.cena))
   const enaCena = i.razlicice.every((x) => x.cena === cenaOd)
@@ -336,7 +337,7 @@ function Navaden({ i }: { i: TIzdelek }) {
                       // shortcut: slike sledijo vrstnemu redu barv le, ko jih je toliko kot barv.
                       if (i.slike.length === dve.barve.length) setSlika(n)
                       setDodano(null)
-                    }}>{po(b, barvaRazlicice(i.razlicice.find((x) => barvaRazlicice(x.oznaka_sl) === b)?.oznaka_en ?? b))}</Gumb>
+                    }}>{barvaRazlicice(pr(i.razlicice.find((x) => barvaRazlicice(x.oznaka_sl) === b) ?? { oznaka_sl: b, oznaka_en: b }, 'oznaka'))}</Gumb>
                   ))}
                 </div>
               </fieldset>
@@ -359,7 +360,7 @@ function Navaden({ i }: { i: TIzdelek }) {
               <div className="flex flex-wrap gap-2">
                 {i.razlicice.map((x) => (
                   <Gumb key={x.id} izbran={x.id === izbrana} onemogocen={x.na_voljo === 'ne'} onClick={() => { setIzbrana(x.id); setDodano(null) }}>
-                    {po(x.oznaka_sl, x.oznaka_en)}
+                    {pr(x, 'oznaka')}
                   </Gumb>
                 ))}
               </div>
@@ -370,7 +371,7 @@ function Navaden({ i }: { i: TIzdelek }) {
 
           {personaliziran && <Obrazec i={i} javi={setIzbira} />}
 
-          {po(i.opis_sl, i.opis_en) && <p className="whitespace-pre-line leading-relaxed text-slate-300">{po(i.opis_sl, i.opis_en)}</p>}
+          {pr(i, 'opis') && <p className="whitespace-pre-line leading-relaxed text-slate-300">{pr(i, 'opis')}</p>}
 
           <ul className="space-y-1 text-sm text-slate-400">
             {i.digitalni ? <><li>✓ {t('izdelek.digitalni')}</li><li>✓ {t('izdelek.bon')}</li></> : <><li>✓ {t('izdelek.dostava')}</li><li>✓ {t('izdelek.postnina', { si: cena(postnina('SI', i.pismo)), eu: cena(postnina('AT', i.pismo)), od: cena(BREZPLACNA_OD) })}</li></>}
@@ -393,9 +394,9 @@ export function Izdelek() {
   useNaslov(i === null || napaka ? t('izdelek.ni') : null)
 
   useEffect(() => {
-    void supabase.rpc('trgovina_izdelek', { p_slug: slug }).then(({ data, error }) => {
+    void supabase.rpc('trgovina_izdelek', { p_slug: slug, p_jezik: jezik }).then(({ data, error }) => {
       setNapaka(Boolean(error))
-      setI(error ? null : ((data as unknown as TIzdelek | null) ?? null))
+      setI(error || !data ? null : lokalizirajIzdelek(data as unknown as TIzdelek))
     })
   }, [slug])
 

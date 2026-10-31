@@ -4,6 +4,7 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../../src/lib/baza.types'
 import type { Moznost } from './personalizacija'
+import type { Jezik } from './jezik'
 
 export const supabase = createClient<Database>(
   import.meta.env.VITE_SUPABASE_URL ?? '',
@@ -12,6 +13,9 @@ export const supabase = createClient<Database>(
 )
 
 export type Voljo = 'da' | 'malo' | 'ne'
+
+/** Prevodi vrstice v jezike razen sl/en (stolpec prevodi): {de: {ime, opis}} …; beri s pr() iz besede.ts. */
+export type Prevodi = Partial<Record<string, { ime?: string; opis?: string; oznaka?: string; primeri?: PrimerMotiva[] }>>
 export type Kategorija = 'oblacila' | 'dodatki' | 'dom' | 'nalepke'
 
 /** trgovina_katalog() */
@@ -19,6 +23,7 @@ export interface IzdelekKataloga {
   slug: string
   ime_sl: string
   ime_en: string
+  prevodi?: Prevodi | null
   kategorija: Kategorija
   slike: string[]
   cena_od: number
@@ -34,6 +39,7 @@ export interface Razlicica {
   id: number
   oznaka_sl: string
   oznaka_en: string
+  prevodi?: Prevodi | null
   cena: number
   na_voljo: Voljo
 }
@@ -45,6 +51,7 @@ export interface Izdelek {
   ime_en: string
   opis_sl: string
   opis_en: string
+  prevodi?: Prevodi | null
   kategorija: Kategorija
   slike: string[]
   pismo: boolean
@@ -109,6 +116,7 @@ interface MotivOsnova {
   ime_en: string
   opis_sl: string
   opis_en: string
+  prevodi?: Prevodi | null
   cona: string
   polja: PoljeMotiva[]
   sheme: ShemaMotiva[]
@@ -132,7 +140,7 @@ export interface Cona {
 
 /** Element trgovina_motivi(): le aktivni izdelki (lahko prazno). */
 export interface MotivKataloga extends MotivOsnova {
-  izdelki: { slug: string; ime_sl: string; ime_en: string; postopek: string | null; doplacilo: number; cena_od: number; cone: Cona[] }[]
+  izdelki: { slug: string; ime_sl: string; ime_en: string; prevodi?: Prevodi | null; postopek: string | null; doplacilo: number; cena_od: number; cone: Cona[] }[]
 }
 
 /** Shranjena personalizacija postavke (trgovina.personaliziraj). */
@@ -224,7 +232,7 @@ export interface PostavkaTiska {
   /** Cone nosilca (mere v mm); null pri stari obliki. */
   cone?: Cona[] | null
   /** Jezik naročila: stalni napisi in datum motiva. */
-  jezik?: 'sl' | 'en'
+  jezik?: Jezik
 }
 
 /** trgovina_admin_serija(id) */
@@ -291,7 +299,7 @@ export interface NarociloAdmin {
   email: string | null
   ime: string | null
   naslov: Naslov | null
-  jezik: 'sl' | 'en'
+  jezik: Jezik
   znesek_postavke: number | null
   znesek_dostava: number | null
   znesek_ddv: number | null
@@ -348,6 +356,7 @@ export interface IzdelekAdmin {
   ime_en: string
   opis_sl: string
   opis_en: string
+  prevodi?: Prevodi | null
   kategorija: Kategorija
   slike: string[]
   tax_code: string

@@ -572,6 +572,30 @@ export type Database = {
         }
         Relationships: []
       }
+      dejanja_uporabnikov: {
+        Row: {
+          created_at: string
+          dejanje: string
+          id: number
+          platforma: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dejanje: string
+          id?: never
+          platforma?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dejanje?: string
+          id?: never
+          platforma?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_log: {
         Row: {
           competition_id: number | null
@@ -2784,7 +2808,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          id?: number
+          id?: never
           odstranjena_at?: string | null
           razlog: string
           user_id: string
@@ -2793,7 +2817,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          id?: number
+          id?: never
           odstranjena_at?: string | null
           razlog?: string
           user_id?: string
@@ -3352,7 +3376,6 @@ export type Database = {
           user_id: string
           vrsta: string
         }
-        ComputedFields: never
         Insert: {
           asistent_id?: number | null
           competition_id: number
@@ -5733,6 +5756,30 @@ export type Database = {
           },
         ]
       }
+      vrh_klubov_predpomnilnik: {
+        Row: {
+          drzava: string
+          izracunano_at: string
+          najmanj: number
+          po_krogu: boolean
+          vrstice: Json
+        }
+        Insert: {
+          drzava: string
+          izracunano_at?: string
+          najmanj: number
+          po_krogu: boolean
+          vrstice: Json
+        }
+        Update: {
+          drzava?: string
+          izracunano_at?: string
+          najmanj?: number
+          po_krogu?: boolean
+          vrstice?: Json
+        }
+        Relationships: []
+      }
       zadrzani_padci: {
         Row: {
           created_at: string
@@ -6328,7 +6375,6 @@ export type Database = {
       }
       fantasy_round_points: {
         Row: {
-          statistics_pending: boolean | null
           competition_id: number | null
           fantasy_team_id: number | null
           penalty: number | null
@@ -6336,115 +6382,10 @@ export type Database = {
           round_id: number | null
           round_number: number | null
           season: string | null
+          statistics_pending: boolean | null
           transfers: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fantasy_teams_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "competitions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fantasy_teams_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "competitions_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fantasy_teams_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "lestvica_drzavna"
-            referencedColumns: ["competition_id"]
-          },
-          {
-            foreignKeyName: "fantasy_teams_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "objava_lige"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_points_izracun"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_team_budget"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_team_standings"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_team_wealth"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_teams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "lestvica_drzavna"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "mini_liga_lestvica"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_points_izracun"
-            referencedColumns: ["round_id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "naslednji_krog"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "rounds"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "zadnji_odigrani_krog"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       fantasy_round_points_izracun: {
         Row: {
@@ -6490,7 +6431,6 @@ export type Database = {
       }
       fantasy_round_standings: {
         Row: {
-          statistics_pending: boolean | null
           competition_id: number | null
           fantasy_team_id: number | null
           owner_id: string | null
@@ -6501,116 +6441,11 @@ export type Database = {
           round_id: number | null
           round_number: number | null
           season: string | null
+          statistics_pending: boolean | null
           team_name: string | null
           transfers: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fantasy_teams_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "competitions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fantasy_teams_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "competitions_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fantasy_teams_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "lestvica_drzavna"
-            referencedColumns: ["competition_id"]
-          },
-          {
-            foreignKeyName: "fantasy_teams_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "objava_lige"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_points_izracun"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_team_budget"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_team_standings"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_team_wealth"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_teams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "lestvica_drzavna"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "mini_liga_lestvica"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_points_izracun"
-            referencedColumns: ["round_id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "naslednji_krog"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "rounds"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tocke_krogov_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "zadnji_odigrani_krog"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       fantasy_team_budget: {
         Row: {
@@ -6654,7 +6489,6 @@ export type Database = {
       }
       fantasy_team_standings: {
         Row: {
-          statistics_pending: boolean | null
           best_round: number | null
           competition_id: number | null
           fantasy_team_id: number | null
@@ -6663,6 +6497,7 @@ export type Database = {
           owner_name: string | null
           owner_registered_at: string | null
           rounds_played: number | null
+          statistics_pending: boolean | null
           team_created_at: string | null
           team_name: string | null
           total_points: number | null
@@ -8375,15 +8210,6 @@ export type Database = {
       }
     }
     Functions: {
-      fussball_round_has_pending: { Args: { p_round_id: number }; Returns: boolean }
-      match_fussball_card_votes: {
-        Args: { p_match_id: number }
-        Returns: Json
-      }
-      vote_fussball_card: {
-        Args: { p_event_id: number; p_player_id: number }
-        Returns: Json
-      }
       adaptivni_prag: {
         Args: { p_player_id: number; p_position: string }
         Returns: number
@@ -8877,6 +8703,16 @@ export type Database = {
           z_veljavno_ekipo: number
         }[]
       }
+      anketa_placila_poslanih: { Args: never; Returns: number }
+      anketa_placila_zasedi: {
+        Args: {
+          p_competition_id: number
+          p_email: string
+          p_meja: number
+          p_user_id: string
+        }
+        Returns: number
+      }
       anonimizacijski_kljuc: { Args: { p: string }; Returns: string }
       anonimiziraj_igralca: {
         Args: { p_player_id: number; p_razlog?: string }
@@ -8898,6 +8734,19 @@ export type Database = {
           p_before_sha: string
           p_main_sha: string
           p_policy_hashes: Json
+        }
+        Returns: Json
+      }
+      apply_fussball_card_report: {
+        Args: {
+          p_code: string
+          p_competition_id: number
+          p_goli: Json
+          p_match_id: number
+          p_nastopi: Json
+          p_resolution_sha: string
+          p_revision_sha: string
+          p_warnings: string[]
         }
         Returns: Json
       }
@@ -8959,12 +8808,20 @@ export type Database = {
       }
       asistenca_odprta: { Args: { p_goal_id: number }; Returns: boolean }
       asistence_odprte_do: { Args: { p_match_id: number }; Returns: string }
+      baden_known_native_result: {
+        Args: { p_match_id: number }
+        Returns: boolean
+      }
       begin_reviewed_existing_prices: {
         Args: { p_main_sha: string; p_policy_sha: string; p_slug: string }
         Returns: Json
       }
       check_fcf_current_target: {
         Args: { p_activate?: boolean; p_rollout_text: string; p_sha256: string }
+        Returns: Json
+      }
+      check_fussball_card_readiness: {
+        Args: { p_code: string; p_competition_id: number }
         Returns: Json
       }
       check_hns_women_release: {
@@ -9016,7 +8873,30 @@ export type Database = {
           user_id: string
         }[]
       }
+      complete_dfb_pending_report: {
+        Args: {
+          p_code: string
+          p_competition_id: number
+          p_match_id: number
+          p_report_id: string
+          p_sha256: string
+          p_warnings: string[]
+        }
+        Returns: boolean
+      }
       dan_kroga: { Args: { p_round_id: number }; Returns: string }
+      defer_fussball_card_replay: {
+        Args: {
+          p_code: string
+          p_competition_id: number
+          p_match_id: number
+          p_reason: string
+          p_resolution_sha: string
+          p_revision_sha: string
+        }
+        Returns: boolean
+      }
+      dfb_round_has_pending: { Args: { p_round_id: number }; Returns: boolean }
       dribl_reserve_player_ids: {
         Args: { p_source_ids: string[] }
         Returns: {
@@ -9042,6 +8922,82 @@ export type Database = {
         Args: { p_krog?: number; p_liga: number }
         Returns: Json
       }
+      fcf_future_current_target_check: {
+        Args: {
+          p_activate?: boolean
+          p_activation_text: string
+          p_sha256: string
+        }
+        Returns: Json
+      }
+      fcf_future_current_target_import: {
+        Args: { p_rollout_text: string; p_sha256: string }
+        Returns: Json
+      }
+      fcf_future_current_target_projection: {
+        Args: { p_privacy_keys: string[]; p_slug: string }
+        Returns: Json
+      }
+      fcf_future_current_target_receipt: {
+        Args: { p_slug: string }
+        Returns: Json
+      }
+      fcf_future_historical_six_apply: {
+        Args: {
+          p_before_image_text: string
+          p_before_sha: string
+          p_main_sha: string
+          p_policy_hashes: Json
+        }
+        Returns: Json
+      }
+      fcf_future_historical_six_prepare: {
+        Args: { p_main_sha: string; p_policy_hashes: Json }
+        Returns: Json
+      }
+      fcf_future_historical_six_restore: {
+        Args: { p_before_sha: string }
+        Returns: Json
+      }
+      fcf_g1_derived_scores_prepare: {
+        Args: { p_privacy_keys: string[] }
+        Returns: Json
+      }
+      fcf_g1_native800_check: {
+        Args: {
+          p_activate: boolean
+          p_rollout_text: string
+          p_sha256: string
+          p_stage_sha256: string
+          p_stage_text: string
+        }
+        Returns: Json
+      }
+      fcf_g1_native800_import: {
+        Args: {
+          p_rollout_text: string
+          p_sha256: string
+          p_stage_sha256: string
+          p_stage_text: string
+        }
+        Returns: Json
+      }
+      fcf_g1_native800_launch: {
+        Args: {
+          p_activate: boolean
+          p_readiness_text: string
+          p_sha256: string
+          p_stage_sha256: string
+          p_stage_text: string
+        }
+        Returns: Json
+      }
+      fcf_g1_native800_launch_receipt: { Args: never; Returns: Json }
+      fcf_g1_native800_receipt: { Args: never; Returns: Json }
+      fcf_g1_readonly_projection: {
+        Args: { p_privacy_keys: string[] }
+        Returns: Json
+      }
       fcf_historical_six_apply: {
         Args: {
           p_before_image_text: string
@@ -9059,6 +9015,37 @@ export type Database = {
         Args: { p_before_sha: string }
         Returns: Json
       }
+      fcf_native800_check: {
+        Args: {
+          p_activate: boolean
+          p_rollout_text: string
+          p_sha256: string
+          p_stage_sha256: string
+          p_stage_text: string
+        }
+        Returns: Json
+      }
+      fcf_native800_import: {
+        Args: {
+          p_rollout_text: string
+          p_sha256: string
+          p_stage_sha256: string
+          p_stage_text: string
+        }
+        Returns: Json
+      }
+      fcf_native800_launch: {
+        Args: {
+          p_activate: boolean
+          p_readiness_text: string
+          p_sha256: string
+          p_stage_sha256: string
+          p_stage_text: string
+        }
+        Returns: Json
+      }
+      fcf_native800_launch_receipt: { Args: { p_slug: string }; Returns: Json }
+      fcf_native800_receipt: { Args: { p_slug: string }; Returns: Json }
       fcf_six_current_target_check: {
         Args: { p_activate?: boolean; p_rollout_text: string; p_sha256: string }
         Returns: Json
@@ -9086,6 +9073,14 @@ export type Database = {
           source_id: string
         }[]
       }
+      fussball_round_has_pending: {
+        Args: { p_round_id: number }
+        Returns: boolean
+      }
+      get_dfb_pending_reports: {
+        Args: { p_code: string; p_competition_id: number }
+        Returns: Json
+      }
       get_fcf_current_target_inventory: {
         Args: { p_privacy_keys: string[]; p_slug: string }
         Returns: Json
@@ -9094,10 +9089,33 @@ export type Database = {
         Args: { p_slug: string }
         Returns: Json
       }
+      get_fussball_card_policy: {
+        Args: { p_competition_id: number }
+        Returns: Json
+      }
+      get_fussball_card_replay_jobs: {
+        Args: {
+          p_code: string
+          p_competition_id: number
+          p_limit?: number
+          p_match_id?: number
+        }
+        Returns: Json
+      }
+      get_fussball_historical_preparation: {
+        Args: { p_competition_id: number }
+        Returns: Json
+      }
+      get_fussball_historical_runtime: {
+        Args: { p_competition_id: number }
+        Returns: Json
+      }
       get_hns_women_import_context: {
         Args: { p_competition_id: number }
         Returns: Json
       }
+      get_installed_fcf_g1_4109410_supplement: { Args: never; Returns: Json }
+      get_installed_fcf_g1_supplement: { Args: never; Returns: Json }
       get_installed_fcf_six_statistics_markers: {
         Args: { p_competition_id: number }
         Returns: Json
@@ -9152,6 +9170,14 @@ export type Database = {
       ime_za_primerjavo: { Args: { p: string }; Returns: string }
       import_fcf_current_target: {
         Args: { p_rollout_text: string; p_sha256: string }
+        Returns: Json
+      }
+      install_fussball_card_policy: {
+        Args: {
+          p_archive_codes: string[]
+          p_competition_id: number
+          p_current_code: string
+        }
         Returns: Json
       }
       is_admin: { Args: never; Returns: boolean }
@@ -9253,6 +9279,19 @@ export type Database = {
           jezik: string
           push_vklop: boolean
           user_id: string
+        }[]
+      }
+      kandidati_za_novost_mini_lig: {
+        Args: { p_najvec?: number }
+        Returns: {
+          competition_id: number
+          display_name: string
+          email: string
+          liga_drzava: string
+          liga_oznaka: string
+          liga_slug: string
+          user_id: string
+          v_mini_ligi: boolean
         }[]
       }
       kandidati_za_opomnik: {
@@ -9558,6 +9597,20 @@ export type Database = {
         }[]
       }
       liga: { Args: { liga: string }; Returns: Json }
+      mark_dfb_report_pending: {
+        Args: {
+          p_code: string
+          p_competition_id: number
+          p_fixture: Json
+          p_observed_at: string
+          p_raw_base64: string
+          p_reason: string
+          p_sha256: string
+          p_status: string
+        }
+        Returns: Json
+      }
+      match_fussball_card_votes: { Args: { p_match_id: number }; Returns: Json }
       meje_borze: {
         Args: never
         Returns: {
@@ -9780,6 +9833,7 @@ export type Database = {
         Returns: undefined
       }
       osvezi_tocke_krogov: { Args: { p_krogi: number[] }; Returns: undefined }
+      osvezi_vrh_klubov: { Args: never; Returns: number }
       osvezi_vse_tocke_krogov: { Args: never; Returns: undefined }
       osvezi_vso_statistiko_igralcev: { Args: never; Returns: undefined }
       oznaci_odhod_igralca: {
@@ -9882,6 +9936,7 @@ export type Database = {
           vrsta: string
         }[]
       }
+      porocilo_lijaka: { Args: { p_dan?: string }; Returns: Json }
       postava_kroga: {
         Args: { p_round: number; p_team: number }
         Returns: {
@@ -9906,6 +9961,19 @@ export type Database = {
         }[]
       }
       povzetek_rasti: { Args: never; Returns: string }
+      prejemniki_ankete: {
+        Args: { p_competition_id: number; p_ids: string[] }
+        Returns: {
+          competition_id: number
+          display_name: string
+          email: string
+          liga_drzava: string
+          liga_oznaka: string
+          liga_slug: string
+          razlog: string
+          user_id: string
+        }[]
+      }
       preklici_moj_zahtevek: { Args: { p_id: number }; Returns: undefined }
       prepare_dfb_historical_statistics: {
         Args: { p_manifest: string; p_sha256: string }
@@ -9913,6 +9981,10 @@ export type Database = {
       }
       prepare_fcf_historical_cleanup: {
         Args: { p_main_sha: string; p_policy_hashes: Json }
+        Returns: Json
+      }
+      prepare_fussball_historical_statistics: {
+        Args: { p_manifest: string; p_sha256: string }
         Returns: Json
       }
       prepare_hns_women_release: {
@@ -10132,9 +10204,17 @@ export type Database = {
         Args: { p_player_id: number; p_user: string }
         Returns: number
       }
+      prevzem_sprosti_obvestilo: {
+        Args: { p_zahtevek_id: number }
+        Returns: undefined
+      }
       prevzem_zahtevek_igralca: {
         Args: { p_player_id: number }
         Returns: number
+      }
+      prevzem_zakupi_obvestilo: {
+        Args: { p_zahtevek_id: number }
+        Returns: boolean
       }
       prevzem_zeton_hash: { Args: { p_zeton: string }; Returns: string }
       prevzem_zeton_podatki: {
@@ -10237,6 +10317,15 @@ export type Database = {
         }
         Returns: Json
       }
+      record_fussball_card_admission: {
+        Args: {
+          p_code: string
+          p_competition_id: number
+          p_manifest: Json
+          p_sha256: string
+        }
+        Returns: Json
+      }
       record_mfa_challenge_reviewed_prices: {
         Args: { p_main_sha: string }
         Returns: Json
@@ -10264,6 +10353,16 @@ export type Database = {
       }
       record_reviewed_existing_prices: {
         Args: { p_main_sha: string; p_policy_sha: string; p_slug: string }
+        Returns: Json
+      }
+      register_fussball_card_report: {
+        Args: {
+          p_candidates: Json
+          p_code: string
+          p_competition_id: number
+          p_envelope: Json
+          p_match_id: number
+        }
         Returns: Json
       }
       release_mlsz_reviewed_history: {
@@ -10591,6 +10690,15 @@ export type Database = {
       tekme_kluba: { Args: { klub: string; liga?: string }; Returns: Json }
       tekmovanje_id: { Args: { p_slug: string }; Returns: number }
       tekoca_sezona: { Args: { p_datum?: string }; Returns: string }
+      tocke_napovedi: {
+        Args: {
+          p_doma: number
+          p_gostje: number
+          p_izid_doma: number
+          p_izid_gostje: number
+        }
+        Returns: number
+      }
       tocke_za_nastop:
         | {
             Args: {
@@ -10626,15 +10734,6 @@ export type Database = {
             }
             Returns: number
           }
-      tocke_napovedi: {
-        Args: {
-          p_doma: number
-          p_gostje: number
-          p_izid_doma: number
-          p_izid_gostje: number
-        }
-        Returns: number
-      }
       trgovina_admin_boni: { Args: never; Returns: Json }
       trgovina_admin_izdelki: { Args: never; Returns: Json }
       trgovina_admin_motivi: { Args: never; Returns: Json }
@@ -10699,13 +10798,16 @@ export type Database = {
         }
         Returns: string
       }
-      trgovina_izdelek: { Args: { p_slug: string }; Returns: Json }
-      trgovina_katalog: { Args: never; Returns: Json }
+      trgovina_izdelek: {
+        Args: { p_jezik?: string; p_slug: string }
+        Returns: Json
+      }
+      trgovina_katalog: { Args: { p_jezik?: string }; Returns: Json }
       trgovina_moja_narocila: { Args: never; Returns: Json }
       trgovina_moja_postava: { Args: { p_team_id: number }; Returns: Json }
       trgovina_moja_znacka: { Args: never; Returns: Json }
       trgovina_moji_prvaki: { Args: never; Returns: Json }
-      trgovina_motivi: { Args: never; Returns: Json }
+      trgovina_motivi: { Args: { p_jezik?: string }; Returns: Json }
       trgovina_narocilo_seje: {
         Args: { p_checkout: string; p_odjemalec: string; p_user: string }
         Returns: Json
@@ -10817,6 +10919,10 @@ export type Database = {
       vidi_ponovno_ceno: { Args: never; Returns: boolean }
       vidi_preverjene: { Args: never; Returns: boolean }
       vklopi_ligo_sredi_sezone: { Args: { p_slug: string }; Returns: Json }
+      vote_fussball_card: {
+        Args: { p_event_id: number; p_player_id: number }
+        Returns: Json
+      }
       voter_weight: { Args: { p_voter_id: string }; Returns: number }
       vrh_drzave: {
         Args: { p_drzava: string; p_koliko?: number }
@@ -10838,6 +10944,29 @@ export type Database = {
         }[]
       }
       vrh_klubov_drzave: {
+        Args: {
+          p_drzava: string
+          p_koliko?: number
+          p_na_krog?: boolean
+          p_najmanj_krogov?: number
+        }
+        Returns: {
+          competition_short: string
+          competition_slug: string
+          goli: number
+          igralcev: number
+          krogov: number
+          mesto: number
+          na_krog: number
+          season: string
+          team_id: number
+          team_logo: string
+          team_name: string
+          team_short: string
+          tocke: number
+        }[]
+      }
+      vrh_klubov_drzave_izracun: {
         Args: {
           p_drzava: string
           p_koliko?: number

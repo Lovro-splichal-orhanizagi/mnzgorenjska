@@ -10,6 +10,20 @@
   src: url('./motivi/anton.ttf') format('truetype');
   font-display: block;
 }
+/* Pisave, ki jih Anton nima (scripts/trgovina-pisave.py): naložijo se le, ko jih
+   besedilo motiva potrebuje (unicode-range). */
+@font-face {
+  font-family: 'SLFF Motivi Dodatek';
+  src: url('./motivi/dodatek.ttf') format('truetype');
+  font-display: block;
+  unicode-range: U+0370-045F, U+0490-049F, U+018F, U+0259, U+2212;
+}
+@font-face {
+  font-family: 'SLFF Motivi Armenscina';
+  src: url('./motivi/dodatek-hy.ttf') format('truetype');
+  font-display: block;
+  unicode-range: U+0531-058F;
+}
 
 /* Videz je prepis slff.eu (src/index.css) in Scouta: ozadje, kartica, gumbi.
    Ob spremembi tam popravi tudi tu. */

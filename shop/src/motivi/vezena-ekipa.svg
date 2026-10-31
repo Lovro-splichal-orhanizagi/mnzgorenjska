@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 50" width="100mm" height="50mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="spredaj">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 50" width="100mm" height="50mm" font-family="Anton, 'SLFF Motivi Dodatek', 'SLFF Motivi Armenscina', Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="spredaj">
   <text x="50" y="27" font-size="22" letter-spacing=".8" data-polje="ime" data-velike data-sirina="92" data-sredina data-barva="1">DINAMO KAVČ</text>
   <path d="M14 33 H38 M62 33 H86" fill="none" data-crta="2" stroke-width="1.4" stroke-linecap="round"/>
   <text x="50" y="45.5" font-size="13" data-polje="stevilka" data-ce="stevilka" data-barva="2">10</text>

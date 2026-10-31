@@ -5,9 +5,15 @@
 // (4 koti) in senčenjem fotografije (svetlost × tisk), kot mockup v trgovini.
 //
 // Uporaba (potrebuje rsvg-convert in magick):
-//   npx vite-node scripts/trgovina-hero.mjs                 # vse slike
+//   npx vite-node scripts/trgovina-hero.mjs                 # vse slike (slovensko)
 //   npx vite-node scripts/trgovina-hero.mjs igrisce         # le ena
+//   npx vite-node scripts/trgovina-hero.mjs --jezik de      # v jeziku (de, hr … ali vsi)
 //   npx vite-node scripts/trgovina-hero.mjs --pregled x.jpg # še kontaktni list
+//
+// Jeziki: napisi motiva so v jeziku (motivi/napisi.ts), primer je domač
+// (prevodi.<jezik>.primeri iz migracije 20261031150100_trgovina_jeziki). Slovenska
+// slika je hero-<scena>.webp (2000 px in -1000), druge hero-<scena>-<jezik>.webp
+// (le 1000 px); Katalog in vitrina vzameta sliko jezika, brez nje angleško.
 //
 // vite-node zato, ker predloge motivov pridejo kot `?raw` uvozi.
 // Izvirne fotografije scen (prazen nosilec, brez napisov) so v
@@ -18,6 +24,7 @@ import { execFileSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { narisiMotiv } from '../shop/src/risba.ts'
+import { JEZIKI } from '../shop/src/jezik.ts'
 
 const R = new URL('..', import.meta.url).pathname
 const IZHOD = join(R, 'shop/nosilci')
@@ -36,6 +43,11 @@ const sql = readFileSync(join(R, 'supabase/migrations/20261019080000_trgovina_mo
 const seme = Object.fromEntries([...sql.slice(sql.indexOf('insert into trgovina.motivi (slug'))
   .matchAll(/^\('([a-z0-9-]+)',[\s\S]*?\n '[a-z]+',\n '\[[\s\S]*?\]',\n '(\[[\s\S]*?\])',\n '(\[[\s\S]*?\])',/gm)]
   .map((m) => [m[1], { sheme: JSON.parse(m[2]), primeri: JSON.parse(m[3]) }]))
+// Primeri drugih jezikov: prevodi motiva v migraciji jezikov.
+const sqlJ = readFileSync(join(R, 'supabase/migrations/20261031150100_trgovina_jeziki.sql'), 'utf8')
+const prevodi = Object.fromEntries([...sqlJ.matchAll(/^update trgovina\.motivi set prevodi = \$p\$(.*?)\$p\$::jsonb,[\s\S]*?where slug = '([a-z0-9-]+)';/gm)]
+  .map((m) => [m[2], JSON.parse(m[1])]))
+const primeriJezika = (slug, jezik) => (jezik === 'sl' ? seme[slug].primeri : prevodi[slug]?.[jezik]?.primeri)
 
 /**
  * Scene. `primer`: [motiv, polja izmišljenega primera iz semena, shema].
@@ -71,10 +83,14 @@ const SCENE = [
   },
 ]
 
-function izdelaj(s) {
+function izdelaj(s0, jezik) {
+  // Druge jezike rišemo le v 1000 px (brez srcset): slik je 19-krat toliko.
+  const s = jezik === 'sl' ? s0 : { ...s0, ime: `${s0.ime}-${jezik}`, sirina: Math.min(s0.sirina, 1000) }
   const [slug, i, shema] = s.primer
   const m = seme[slug]
   if (!m) throw new Error(`motiva ${slug} ni v semenu`)
+  const primeri = primeriJezika(slug, jezik)
+  if (!primeri?.[i]) throw new Error(`motiv ${slug} nima primera ${i} v jeziku ${jezik}`)
   const barve = m.sheme.find((x) => x.kljuc === shema).barve
   const vir = join(R, s.vir)
   const [sw] = magick(vir, '-format', '%w', 'info:').toString().split(' ').map(Number)
@@ -84,7 +100,7 @@ function izdelaj(s) {
   // Tisk 2× večji od cone, da je po perspektivi še oster.
   const W = Math.round(2 * Math.max(tr[0] - tl[0], br[0] - bl[0])), H = Math.round(2 * Math.max(bl[1] - tl[1], br[1] - tr[1]))
   const p = (n) => join(tmp, `${s.ime}-${n}`)
-  writeFileSync(p('m.svg'), narisiMotiv(slug, m.primeri[i].polja, barve, 'hrbet', { sirina: 300, visina: 400 }))
+  writeFileSync(p('m.svg'), narisiMotiv(slug, primeri[i].polja, barve, 'hrbet', { sirina: 300, visina: 400 }, { jezik }))
   execFileSync('rsvg-convert', ['-w', String(W), '-h', String(H), '-o', p('m.png'), p('m.svg')], { env })
   magick(vir, '-filter', 'Lanczos', '-resize', `${s.sirina}x`, p('o.png'))
   const [ow, oh] = magick(p('o.png'), '-format', '%w %h', 'info:').toString().split(' ').map(Number)
@@ -101,18 +117,22 @@ function izdelaj(s) {
     '(', '+clone', '-fill', s.ton, '-colorize', '100', ')', '-compose', 'Multiply', '-composite', p('s.png'))
   magick(p('t.png'), p('s.png'), '-compose', 'Multiply', '-composite', '(', p('t.png'), '-alpha', 'extract', ')', '-compose', 'CopyOpacity', '-composite', p('ts.png'))
   const izhod = join(IZHOD, `${s.ime}.webp`)
-  magick(p('o.png'), p('ts.png'), '-compose', 'Over', '-composite', '-quality', '82', '-define', 'webp:method=6', izhod)
+  magick(p('o.png'), p('ts.png'), '-compose', 'Over', '-composite', '-quality', jezik === 'sl' ? '82' : '74', '-define', 'webp:method=6', izhod)
   // Manjša različica za telefone (srcset).
-  if (s.sirina > 1200) magick(izhod, '-resize', '1000x', '-quality', '80', join(IZHOD, `${s.ime}-1000.webp`))
+  if (s.sirina > 1200) magick(izhod, '-resize', '1000x', '-quality', jezik === 'sl' ? '80' : '72', '-define', 'webp:method=6', join(IZHOD, `${s.ime}-1000.webp`))
   return izhod
 }
 
 const args = process.argv.slice(2)
 const pi = args.indexOf('--pregled')
 const pregled = pi >= 0 ? args.splice(pi, 2)[1] : null
+const ji = args.indexOf('--jezik')
+const jezik = ji >= 0 ? args.splice(ji, 2)[1] : 'sl'
+const jeziki = jezik === 'vsi' ? JEZIKI.filter((j) => j !== 'sl') : [jezik]
+if (!jeziki.every((j) => JEZIKI.includes(j))) throw new Error(`neznan jezik ${jezik}`)
 const izbrane = SCENE.filter((s) => !args.length || args.some((a) => s.ime.includes(a)))
 try {
-  const slike = izbrane.map((s) => { const f = izdelaj(s); console.log('ok', f); return f })
+  const slike = jeziki.flatMap((j) => izbrane.map((s) => { const f = izdelaj(s, j); console.log('ok', f); return f }))
   if (pregled) magick(...slike.map((f) => ['(', f, '-resize', 'x600', ')']), '+append', '-quality', '85', pregled)
 } finally {
   rmSync(tmp, { recursive: true, force: true })

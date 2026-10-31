@@ -3,7 +3,7 @@
 // Začetek plačila v trgovini (shop.slff.eu). Kliče brskalnik, kot gost ali
 // prijavljen (Bearer <access_token>; neveljaven žeton = gost):
 //
-//   {"postavke": [{"razlicica_id": 1, "kolicina": 2, "personalizacija"?: {…}}], "jezik": "sl"|"en",
+//   {"postavke": [{"razlicica_id": 1, "kolicina": 2, "personalizacija"?: {…}}], "jezik": "sl"|"en"|… (shop/src/jezik.ts),
 //    "drzava": "SI" (ni potrebna, če so vse postavke digitalne), "prejsnja"?: "cs_…",
 //    "brez_odstopa"?: true (obvezno, če je v košarici personaliziran izdelek)}
 //     → {"url": "<Checkout>", "seja": "cs_…", "oznaka": "<javna oznaka>"}
@@ -48,6 +48,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import { BREZPLACNA_OD, EU27, tarifeZa } from './tarife.ts'
 import { IZDELEK_TRGOVINE, seznamPostavk } from './izdelki.ts'
+import { BESEDILA_NAKUPA, jezikNakupa, STRIPE_LOKALE } from './besedila.ts'
 import { jePlacanoAktivno } from '../_shared/trgovina-stanja.ts'
 
 const CORS = {
@@ -143,7 +144,7 @@ Deno.serve(async (req) => {
   const vhod = ((await req.json().catch(() => null)) ?? {}) as {
     postavke?: unknown; jezik?: string; drzava?: unknown; prejsnja?: unknown; brez_odstopa?: unknown
   }
-  const jezik = vhod.jezik === 'en' ? 'en' : 'sl'
+  const jezik = jezikNakupa(vhod.jezik)
   const drzava = typeof vhod.drzava === 'string' && EU27.includes(vhod.drzava) ? vhod.drzava : null
   if (vhod.drzava != null && !drzava) return json({ error: 'Dostava le v EU.', hint: 'trgovina-vnos' }, 400)
   const service = createClient(URL_, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
@@ -210,7 +211,7 @@ Deno.serve(async (req) => {
       customer_creation: 'if_required',
       customer_email: user?.email,
       client_reference_id: user?.id,
-      locale: jezik,
+      locale: STRIPE_LOKALE[jezik],
       // Stripe zahteva vsaj 30 min od nastanka seje; minuta rezerve za pot zahteve.
       expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
       success_url: `${SHOP}/thanks?n=${encodeURIComponent(r.javna_oznaka)}`,
@@ -218,12 +219,13 @@ Deno.serve(async (req) => {
     }
     // Potrditev pogojev zahteva naslov pogojev v Stripe → Public details (STRIPE_TOS=1,
     // kot pri preverjenih); sicer le besedilo nad gumbom, pogoji so povezani že v košarici.
-    const pogoji = jezik === 'en' ? `[terms of sale](${SHOP}/terms)` : `[pogoji prodaje](${SHOP}/terms)`
+    const b = BESEDILA_NAKUPA[jezik]
+    const pogoji = `[${b.pogoji}](${SHOP}/terms)`
     if (Deno.env.get('STRIPE_TOS') === '1') {
       polja['consent_collection[terms_of_service]'] = 'required'
-      polja['custom_text[terms_of_service_acceptance][message]'] = jezik === 'en' ? `I agree to the ${pogoji}.` : `Strinjam se s ${pogoji}.`
+      polja['custom_text[terms_of_service_acceptance][message]'] = b.strinjam.replace('{pogoji}', pogoji)
     } else {
-      polja['custom_text[submit][message]'] = jezik === 'en' ? `By paying you accept the ${pogoji}.` : `S plačilom sprejmete ${pogoji}.`
+      polja['custom_text[submit][message]'] = b.placilo.replace('{pogoji}', pogoji)
     }
     // Brez dostave (sami boni) Stripe Tax potrebuje naslov za račun.
     if (r.digitalno) polja.billing_address_collection = 'required'

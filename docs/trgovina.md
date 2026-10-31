@@ -9,7 +9,8 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
 
 - **Aplikacija** `shop/` (Vite + React + TS, videz slff.eu): `npm run dev:shop`
   (5175), `build:shop` → `dist-shop/`, `smoke:shop`. Nizi v
-  `shop/src/besede.ts` (sl, en; `TELEFON`, `POGOJI_VERZIJA`). Poti: `/`,
+  `shop/src/besede.ts` (SL, `TELEFON`, `POGOJI_VERZIJA`), drugi jeziki v
+  `shop/src/jeziki/<jezik>.ts` (glej *Jeziki*). Poti: `/`,
   `/p/:slug`, `/cart`, `/thanks`, `/orders`, `/terms`, `/withdrawal`,
   `/login`, `/admin`.
 - **Baza**: zaprta shema `trgovina` (migracija `20261018170000_trgovina.sql`):
@@ -327,7 +328,7 @@ pomnoži s svetlostjo fotografije.
 `cone.kljuc` je v `agent.odprti_stolpci`): datoteke za vsako neprazno cono,
 ime `<oznaka>-<cona>-<postopek>-<postavka>`, vse z vgrajeno pisavo Anton. Mere
 so iz posnetka postavke, barve iz posnetka (dres) ali sheme, stalni napisi in
-datum v **jeziku naročila** (`trgovina.narocila.jezik`, sl|en s check; pogled
+datum v **jeziku naročila** (`trgovina.narocila.jezik`, jeziki trgovine s check; pogled
 `trgovina.tisk.jezik`). Po postopku:
 
 | postopek | datoteke |
@@ -362,14 +363,59 @@ prizorov še nimajo (miza v gostilni s kozarcem in podstavki, stena z uokvirjeni
 plakatom): kartica v katalogu pokaže živi mockup prvega primera.
 
 ```bash
-npx vite-node scripts/trgovina-hero.mjs                  # vse
+npx vite-node scripts/trgovina-hero.mjs                  # vse (slovensko)
+npx vite-node scripts/trgovina-hero.mjs --jezik vsi      # vsi drugi jeziki
 npx vite-node scripts/trgovina-hero.mjs gostilna --pregled /tmp/p.jpg
 ```
+
+V drugih jezikih so napisi motiva v jeziku in primer domač (`prevodi.<jezik>.primeri`
+iz migracije `20261031150100_trgovina_jeziki`); slika je `…-<jezik>.webp`, le 1000 px
+(skupaj ~4 MB za 19 jezikov). `slikaJezika()` (besede.ts) izbere sliko jezika.
 
 Potrebuje `rsvg-convert` in `magick`. Skripta sama nastavi fontconfig na
 `shop/src/motivi` in `PANGOCAIRO_BACKEND=fc` (brez tega pango na macOS tiho
 vzame Impact). Nov prizor = fotografija v `scripts/trgovina-hero/`, vrstica v
 `SCENE` (koti v px izvirnika, `ton` = svetloba prizora) in pogled rezultata od blizu.
+
+## Jeziki
+
+Trgovina govori vse jezike slff.eu (`shop/src/jezik.ts`: sl, en, az, cs, da, de, el,
+es, et, hr, hu, hy, lv, mk, pl, ro, sk, sr, tr, uk).
+
+- **Izbira**: `?lang=` (povezave s slff.eu ga dodajo, `povezavaTrgovine(jezik)`),
+  nato shranjena izbira (`slff-shop-jezik`), prvi podprt jezik brskalnika, sicer
+  angleščina. `?lang=` se zapomni in izgine iz naslova. Izbirnik v glavi
+  (`IzbiraJezika`) stran naloži znova.
+- **Slovar**: slovenščina je v svežnju, drugi jeziki so kosi (`naloziSlovar` pred
+  prvim izrisom). `Record<Kljuc, string>`: manjkajoč ključ javi typecheck; smoke
+  preveri `{parametre}`, prazne nize ter odstavke pogojev in vrstice obrazca za
+  odstop v vseh jezikih. Nov niz = vseh 20 datotek.
+- **Pravno besedilo** (`pogoji.*`, `odstop.*`) je zvest prevod slovenskega. Ob
+  spremembi pogojev popravi vse jezike, `POGOJI_VERZIJA` in kopijo v
+  `trgovina-posta/besedila.ts` (smoke primerja `pogoji.s6.besedilo` in
+  `odstop.vzorec` z vsemi slovarji).
+- **Baza**: `izdelki`, `razlicice`, `motivi` imajo `prevodi`
+  (`{"de": {"ime", "opis" | "oznaka", "primeri"?}}`; sl in en ostaneta v stolpcih).
+  Polja, sheme in možnosti motivov imajo prevode v vrstici (`oznaka_de`,
+  `ime_de`, `privzeto_de`, `moznosti_de` = slogani v jeziku; baza sprejme niz iz
+  katerega koli `moznosti*`). Javni RPC `trgovina_katalog/izdelek/motivi` sprejmejo
+  `p_jezik` in vrnejo le prevode tega jezika. Vmesnik bere `pr(vrstica, 'ime')`,
+  motiv ob nalaganju `lokalizirajMotiv` (domači primeri, privzeto, slogani). Brez
+  prevoda velja angleščina. Nov izdelek v adminu ima le sl/en: prevode doda
+  migracija (adminskega urejanja prevodov še ni).
+- **Naročilo**: `narocila.jezik` je jezik strani; ime postavke, opis motiva in krog
+  (`besedilo_kroga`) so v tem jeziku, prav tako mail (`trgovina-posta/besedila.ts`)
+  in Stripe Checkout (`trgovina-nakup/besedila.ts`; az, hy, mk, sr, uk Stripe nima:
+  `auto`). Besedilo prvaka je angleško v vseh jezikih razen slovenščine.
+- **Motivi**: stalni napisi so v `shop/src/motivi/napisi.ts` (`data-napis` v
+  predlogi zamenja slovenski napis), datum po Intl (slovenščina z rodilnikom).
+  Anton ima le latinico: cirilico, grščino, ə in znak minus riše `dodatek.ttf` (Fira
+  Sans Extra Condensed ExtraBold), armenščino `dodatek-hy.ttf` (Noto Sans Armenian
+  ExtraBold), obe OFL, podmnožica in navpično raztegnjeni na višino Antonovih
+  velikih črk (`scripts/trgovina-pisave.py`, zapiše tudi širine za `risba.ts`).
+  Stran jih naloži le po potrebi (`unicode-range`), `zVgrajenoPisavo` ju vgradi le,
+  ko ju besedilo potrebuje. Besedilo motiva sprejme te pisave (`CRKE_MOTIVA` ↔
+  `trgovina.vrednost_polja`).
 
 ## Objava
 

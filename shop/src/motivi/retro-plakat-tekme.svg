@@ -1,27 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 297 420" width="297mm" height="420mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="plakat">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 297 420" width="297mm" height="420mm" font-family="Anton, 'SLFF Motivi Dodatek', 'SLFF Motivi Armenscina', Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="plakat">
   <defs><pattern id="pike" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r=".9" data-barva="t" opacity=".09"/><circle cx="4.5" cy="4.5" r=".9" data-barva="t" opacity=".09"/></pattern>
   <clipPath id="list"><rect x="12" y="44" width="273" height="186"/></clipPath></defs>
   <rect width="297" height="420" data-barva="s"/>
   <rect width="297" height="420" fill="url(#pike)"/>
   <path clip-path="url(#list)" d="M148.5 140 L548.5 140.0 L545.1 192.2Z M148.5 140 L534.9 243.5 L518.1 293.1Z M148.5 140 L494.9 340.0 L465.8 383.5Z M148.5 140 L431.3 422.8 L392.0 457.3Z M148.5 140 L348.5 486.4 L301.6 509.6Z M148.5 140 L252.0 526.4 L200.7 536.6Z M148.5 140 L148.5 540.0 L96.3 536.6Z M148.5 140 L45.0 526.4 L-4.6 509.6Z M148.5 140 L-51.5 486.4 L-95.0 457.3Z M148.5 140 L-134.3 422.8 L-168.8 383.5Z M148.5 140 L-197.9 340.0 L-221.1 293.1Z M148.5 140 L-237.9 243.5 L-248.1 192.2Z M148.5 140 L-251.5 140.0 L-248.1 87.8Z M148.5 140 L-237.9 36.5 L-221.1 -13.1Z M148.5 140 L-197.9 -60.0 L-168.8 -103.5Z M148.5 140 L-134.3 -142.8 L-95.0 -177.3Z M148.5 140 L-51.5 -206.4 L-4.6 -229.6Z M148.5 140 L45.0 -246.4 L96.3 -256.6Z M148.5 140 L148.5 -260.0 L200.7 -256.6Z M148.5 140 L252.0 -246.4 L301.6 -229.6Z M148.5 140 L348.5 -206.4 L392.0 -177.3Z M148.5 140 L431.3 -142.8 L465.8 -103.5Z M148.5 140 L494.9 -60.0 L518.1 -13.1Z M148.5 140 L534.9 36.5 L545.1 87.8Z" data-barva="1" opacity=".22"/>
   <rect x="12" y="12" width="273" height="30" data-barva="t"/>
-  <text x="148.5" y="34.6" font-size="19" letter-spacing="6" data-barva="s" data-en="THE BIG DERBY">VELIKI DERBI</text>
+  <text data-sirina="243.1" data-napis="derbi" x="148.5" y="34.6" font-size="19" letter-spacing="6" data-barva="s">VELIKI DERBI</text>
   <path d="M38.00 21.00 L36.52 24.96 L32.29 25.15 L35.60 27.78 L34.47 31.85 L38.00 29.52 L41.53 31.85 L40.40 27.78 L43.71 25.15 L39.48 24.96Z" data-barva="1"/><path d="M259.00 21.00 L257.52 24.96 L253.29 25.15 L256.60 27.78 L255.47 31.85 L259.00 29.52 L262.53 31.85 L261.40 27.78 L264.71 25.15 L260.48 24.96Z" data-barva="1"/>
   <circle cx="148.5" cy="140" r="90" data-barva="t"/>
   <circle cx="148.5" cy="140" r="84" data-barva="1"/>
   <circle cx="148.5" cy="140" r="78" fill="none" data-crta="s" stroke-width="1.2"/>
-  <text x="148.5" y="82" font-size="8" letter-spacing="3.5" data-barva="s" data-en="FULL TIME">KONČNI IZID</text>
+  <text data-sirina="110.4" data-napis="koncniIzid" x="148.5" y="82" font-size="8" letter-spacing="3.5" data-barva="s">KONČNI IZID</text>
   <text x="134.5" y="175" font-size="88" text-anchor="end" data-polje="goli_domaci" data-barva="s" data-crta="t" stroke-width="5" paint-order="stroke">3</text>
   <text x="148.5" y="168" font-size="60" data-barva="s" data-crta="t" stroke-width="4" paint-order="stroke">:</text>
   <text x="162.5" y="175" font-size="88" text-anchor="start" data-polje="goli_gostje" data-barva="s" data-crta="t" stroke-width="5" paint-order="stroke">2</text>
   <path d="M114.5 196 H182.5" fill="none" data-crta="s" stroke-width="1"/>
   <text x="148.5" y="262" font-size="40" letter-spacing=".6" data-polje="domaci" data-velike data-sirina="262" data-vrstice="2" data-sredina data-barva="t">NK ZGORNJA VAS</text>
   <path d="M78 279 H118 M179 279 H219" fill="none" data-crta="1" stroke-width="1.2"/>
-  <text x="148.5" y="283.4" font-size="12" letter-spacing="4" data-barva="1" data-en="VS">PROTI</text>
+  <text data-sirina="65.1" data-napis="proti" x="148.5" y="283.4" font-size="12" letter-spacing="4" data-barva="1">PROTI</text>
   <text x="148.5" y="318" font-size="40" letter-spacing=".6" data-polje="gostje" data-velike data-sirina="262" data-vrstice="2" data-sredina data-barva="t">ŠD SPODNJI KONEC</text>
   <rect x="0" y="334" width="297" height="7" data-barva="1"/><rect x="0" y="343.5" width="297" height="3.5" data-barva="t"/><rect x="0" y="349.5" width="297" height="7" data-barva="1"/>
   <text x="148.5" y="377" font-size="15" letter-spacing="1.4" data-polje="datum" data-oblika="datum-dan" data-velike data-sirina="262" data-barva="t">NEDELJA, 17. MAJA 2026</text>
   <text x="148.5" y="392" font-size="9" letter-spacing="2.2" data-polje="igrisce" data-velike data-sirina="262" data-ce="igrisce" data-barva="1">IGRIŠČE ZA GASILSKIM</text>
-  <text x="148.5" y="405" font-size="6" letter-spacing="2.6" data-barva="t" data-en="FREE ENTRY · CHEER LOUD · SLFF">VSTOP PROST · NAVIJAJ GLASNO · SLFF</text>
+  <text data-sirina="261.4" data-napis="vstop" x="148.5" y="405" font-size="6" letter-spacing="2.6" data-barva="t">VSTOP PROST · NAVIJAJ GLASNO · SLFF</text>
   <rect x="5" y="5" width="287" height="410" fill="none" data-crta="t" stroke-width="1.6"/>
 </svg>
