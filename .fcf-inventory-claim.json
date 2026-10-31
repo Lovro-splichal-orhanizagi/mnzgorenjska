@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "kind": "fcf-refresh800-one-shot-claim",
+  "runId": "41211310129",
+  "runAttempt": "1",
+  "sourceCommit": "5e5a3ea5949f8b772cdc163543fb7af98328a026",
+  "planSha256": "04a5a17535630d1cbf500693405b5419fd5dc1af91d3cc83c1c15972c06832d9",
+  "approvalSha256": "602e25754cdd91f3a1c6b3b83edd711342067ea8bb62cf8332192821cc993821",
+  "profileSha256": "4b379dadb577fc0269dad744782faebb9c771fd3c7de13e492595fbac0584eeb",
+  "claimedUTC": "2026-10-31T14:46:25.220Z"
+}
