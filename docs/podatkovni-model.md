@@ -812,7 +812,7 @@
     produkciji (države z največ mladinskimi vrsticami): 35 ms. Uporabljajo ga
     javno branje, nalaganje, žetoni, SLFF Club in prijave.
   - **Tabele** (zaprte, `agent.zaprte_tabele`): `posnetki_igralca` (ključ glavna
-    vrstica; `stream_uid`, naslov ≤ 60 skozi `prepovedane_besede`, `vrstni_red`,
+    vrstica v stolpcu `igralec`, brez tujega ključa in ne `player_id`: zaklenjene izdaje FCF preverjajo točen katalog relacij na igralce, osirotele vrstice pobere čiščenje; `stream_uid`, naslov ≤ 60 skozi `prepovedane_besede`, `vrstni_red`,
     `izpostavljen` (en na igralca), `stanje` `nalaganje`/`obdelava`/`pripravljen`/`napaka`,
     `pregled` `caka`/`odobren`/`zavrnjen` z razlogom, `trajanje`,
     `brez_pravice_od`), `posnetki_brisanje` (uid-ji za izbris v Streamu),

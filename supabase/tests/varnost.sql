@@ -5737,7 +5737,7 @@ select pg_temp.preveri('izlozba: lastnik vidi svoje (vsi v pregledu, prvi izpost
      from izlozba_igralca(-947001) j));
 reset role;
 create temporary table iz as
-select array_agg(id order by id) as ids from posnetki_igralca where player_id = -947001;
+select array_agg(id order by id) as ids from posnetki_igralca where igralec = -947001;
 grant select on iz to anon, authenticated;
 -- Servis: uid in obdelava (Stream).
 select posnetki_nastavi_uid(i, 'test-izlozba-' || -i) from iz, unnest(iz.ids) i;
@@ -5797,13 +5797,13 @@ select posnetki_razvrsti((select array(select unnest(ids) order by 1 desc) from 
 select posnetki_izpostavi((select ids[3] from iz));
 select pg_temp.pade('izlozba: žaljiv nov naslov pade', $$select posnetki_uredi((select ids[1] from iz), 'shit')$$);
 select pg_temp.zavrnjeno('izlozba: lastnik ne piše tabele neposredno',
-  $$update posnetki_igralca set pregled = 'odobren' where player_id = -947001$$);
+  $$update posnetki_igralca set pregled = 'odobren' where igralec = -947001$$);
 select pg_temp.pade('izlozba: lastnik svojega posnetka ne prijavi', $$select prijavi_posnetek((select ids[1] from iz), 'x')$$);
 reset role;
 select pg_temp.preveri('izlozba: lastnik ureja naslov, vrstni red in izpostavljen (le en)',
   (select naslov = 'Prosti strel' from posnetki_igralca where id = (select ids[1] from iz))
   and (select vrstni_red = 5 from posnetki_igralca where id = (select ids[1] from iz))
-  and (select array_agg(id) = array[(select ids[3] from iz)] from posnetki_igralca where player_id = -947001 and izpostavljen));
+  and (select array_agg(id) = array[(select ids[3] from iz)] from posnetki_igralca where igralec = -947001 and izpostavljen));
 
 -- Prijave: tri različne prijave vrnejo posnetek v pregled.
 select set_config('request.jwt.claim.sub','',true);
@@ -5845,7 +5845,7 @@ select pg_temp.preveri('izlozba: lastnik izbriše, dobi uid',
 reset role;
 select pg_temp.preveri('izlozba: izbris gre v vrsto Streama, izpostavljen preide na odobrenega',
   exists (select 1 from posnetki_brisanje where stream_uid = 'test-izlozba-' || -(select ids[3] from iz))
-  and (select array_agg(id) = array[(select ids[1] from iz)] from posnetki_igralca where player_id = -947001 and izpostavljen)
+  and (select array_agg(id) = array[(select ids[1] from iz)] from posnetki_igralca where igralec = -947001 and izpostavljen)
   and (select 'test-izlozba-' || -(select ids[3] from iz)) in (select posnetki_za_brisanje(50)));
 select posnetki_brisanje_izid('test-izlozba-' || -(select ids[3] from iz), true);
 select pg_temp.preveri('izlozba: uspešen izbris v Streamu počisti vrsto',
@@ -5861,11 +5861,11 @@ select pg_temp.preveri('izlozba: potekla pravica takoj skrije izložbo in žeton
 reset role;
 select posnetki_pocisti();
 select pg_temp.preveri('izlozba: čiščenje potekle pravice počaka 30 dni',
-  (select count(*) = 5 and bool_and(brez_pravice_od is not null) from posnetki_igralca where player_id = -947001));
-update posnetki_igralca set brez_pravice_od = now() - interval '31 days' where player_id = -947001;
+  (select count(*) = 5 and bool_and(brez_pravice_od is not null) from posnetki_igralca where igralec = -947001));
+update posnetki_igralca set brez_pravice_od = now() - interval '31 days' where igralec = -947001;
 select posnetki_pocisti();
 select pg_temp.preveri('izlozba: po 30 dneh izbris in uid-ji v vrsti',
-  not exists (select 1 from posnetki_igralca where player_id = -947001)
+  not exists (select 1 from posnetki_igralca where igralec = -947001)
   and (select count(*) = 5 from posnetki_brisanje where stream_uid like 'test-izlozba-%'));
 
 -- Preklicana pravica: čiščenje izbriše takoj. Preklic profila: takoj.
@@ -5876,11 +5876,11 @@ select posnetki_pripravi(-947006, 'Preklic');
 reset role;
 select posnetki_pocisti();
 select pg_temp.preveri('izlozba: veljavna pravica ostane po čiščenju',
-  exists (select 1 from posnetki_igralca where player_id = -947006 and brez_pravice_od is null));
+  exists (select 1 from posnetki_igralca where igralec = -947006 and brez_pravice_od is null));
 update preverjeni_racuni set status = 'preklican', updated_at = now() where player_id = -947006 and status = 'aktiven';
 select posnetki_pocisti();
 select pg_temp.preveri('izlozba: preklicana pravica izbriše posnetke ob čiščenju',
-  not exists (select 1 from posnetki_igralca where player_id = -947006));
+  not exists (select 1 from posnetki_igralca where igralec = -947006));
 
 -- SLFF Club: posnetki prek scout.dostop in scout.vidni (K1 ima sedež kluba -913001).
 reset role;
@@ -5889,9 +5889,9 @@ set local role authenticated;
 select posnetki_pripravi(-947008, 'Za klube');
 select posnetki_pripravi(-947008, 'V pregledu');
 reset role;
-select posnetki_nastavi_uid(id, 'test-scout-' || -id) from posnetki_igralca where player_id = -947008;
-select posnetki_stream_stanje('test-scout-' || -id, 'pripravljen', 30) from posnetki_igralca where player_id = -947008;
-update posnetki_igralca set pregled = 'odobren' where player_id = -947008 and naslov = 'Za klube';
+select posnetki_nastavi_uid(id, 'test-scout-' || -id) from posnetki_igralca where igralec = -947008;
+select posnetki_stream_stanje('test-scout-' || -id, 'pripravljen', 30) from posnetki_igralca where igralec = -947008;
+update posnetki_igralca set pregled = 'odobren' where igralec = -947008 and naslov = 'Za klube';
 insert into scout.indeks (model_id, player_id, skupina, indeks, percentil, zaupanje)
 select s3.model, -947008, 'MID', 1, 93, 0.9 from s3;
 update scout.narocnine set velja_do = now() + interval '7 days', zaprt_at = null where team_id = -913001;
@@ -5919,7 +5919,7 @@ reset role;
 -- Preklic profila (prevzem_odstrani_predstavitev) izbriše posnetke takoj.
 select prevzem_odstrani_predstavitev(-947008);
 select pg_temp.preveri('izlozba: preklic profila izbriše posnetke, uid-ji v vrsto',
-  not exists (select 1 from posnetki_igralca where player_id = -947008)
+  not exists (select 1 from posnetki_igralca where igralec = -947008)
   and (select count(*) = 2 from posnetki_brisanje where stream_uid like 'test-scout-%'));
 select set_config('request.jwt.claim.sub','',true);
 

@@ -106,12 +106,14 @@ revoke all on function public.posnetki_pravica_velja(bigint) from public, anon, 
 -- --------------------------------------------------------------------------
 create table public.posnetki_igralca (
   id            bigint generated always as identity primary key,
-  -- Glavna vrstica potrjenega zahtevka (kot profil_igralca). Brez tujega
-  -- ključa na players: izdaje FCF preverjajo točen katalog FK na players.
+  -- Glavna vrstica potrjenega zahtevka (kot profil_igralca). Ime ni
+  -- `player_id` in ni tujega ključa na players: izdaje FCF preverjajo točen
+  -- katalog relacij na igralce (zaklenjene migracije); posnetki visijo na
+  -- potrjenem zahtevku, ki ga FCF pozna.
   -- Izbris igralca kaskadno izbriše zahtevek, sprožilec
   -- prevzem_izbris_zahtevka pa prek prevzem_odstrani_predstavitev posnetke;
   -- osirotele vrstice pobere še posnetki_pocisti().
-  player_id     bigint not null,
+  igralec       bigint not null,
   user_id       uuid references public.profiles on delete set null,
   -- Cloudflare Stream uid (v preizkusnem načinu "test-…"); null do nalaganja.
   stream_uid    text unique check (stream_uid is null or stream_uid ~ '^[A-Za-z0-9_-]{8,64}$'),
@@ -132,8 +134,8 @@ create table public.posnetki_igralca (
 );
 comment on table public.posnetki_igralca is
   'Video posnetki izložbe preverjenega igralca (Cloudflare Stream uid). Zaprto; vse prek funkcij izlozba_*/posnetki_*.';
-create unique index posnetki_igralca_en_izpostavljen on public.posnetki_igralca (player_id) where izpostavljen;
-create index posnetki_igralca_igralec on public.posnetki_igralca (player_id, vrstni_red);
+create unique index posnetki_igralca_en_izpostavljen on public.posnetki_igralca (igralec) where izpostavljen;
+create index posnetki_igralca_igralec on public.posnetki_igralca (igralec, vrstni_red);
 create index posnetki_igralca_caka on public.posnetki_igralca (created_at) where pregled = 'caka';
 
 -- Uid-ji, ki jih je treba izbrisati v Streamu (vrstica posnetka je že proč).
@@ -238,10 +240,10 @@ begin
     return new;
   end if;
   if tg_table_name = 'posnetki_igralca' then
-    v_player := new.player_id;
+    v_player := new.igralec;
     v_naslov := new.naslov;
   else
-    select p.player_id, p.naslov into v_player, v_naslov from posnetki_igralca p where p.id = new.posnetek_id;
+    select p.igralec, p.naslov into v_player, v_naslov from posnetki_igralca p where p.id = new.posnetek_id;
   end if;
   select coalesce(p.first_name || ' ' || p.last_name, p.full_name), t.name, c.name
     into v_igralec, v_klub, v_liga
@@ -334,7 +336,7 @@ begin
            order by x.izpostavljen desc, x.vrstni_red, x.id), '[]'::jsonb)
     into v_posnetki
     from posnetki_igralca x
-   where x.player_id = v_glavni
+   where x.igralec = v_glavni
      and (v_lastnik or (x.stanje = 'pripravljen' and x.pregled = 'odobren'));
 
   -- Privolitev iz SLFF Club le pri "odprt za prestop" (kot klubom).
@@ -392,10 +394,10 @@ as $$
   ), o as materialized (
     select g.player_id, is_admin() as admin, je_lastnik_profila(g.player_id) as lastnik,
            izlozba_dovoljena(g.player_id) as dovoljena
-      from (select distinct player_id from x) g
+      from (select distinct igralec as player_id from x) g
   )
   select x.id, x.stream_uid, o.admin or o.lastnik
-    from x join o on o.player_id = x.player_id
+    from x join o on o.player_id = x.igralec
    where o.admin
       or o.lastnik
       or (o.dovoljena and x.stanje = 'pripravljen' and x.pregled = 'odobren')
@@ -425,16 +427,16 @@ begin
   end if;
   -- En lastnik naenkrat (dva zavihka): zaklep vrstic posnetkov igralca.
   perform 1 from zahtevki_igralca where player_id = v_glavni and status = 'potrjen' for update;
-  if (select count(*) from posnetki_igralca where player_id = v_glavni) >= 6 then
+  if (select count(*) from posnetki_igralca where igralec = v_glavni) >= 6 then
     raise exception 'Največ 6 posnetkov.' using hint = 'posnetki-polno';
   end if;
   if (select count(*) from posnetki_nalaganja where user_id = auth.uid() and created_at > now() - interval '24 hours') >= 12 then
     raise exception 'Danes si naložil že dovolj posnetkov.' using hint = 'posnetki-meja';
   end if;
-  insert into posnetki_igralca (player_id, user_id, naslov, vrstni_red, izpostavljen)
+  insert into posnetki_igralca (igralec, user_id, naslov, vrstni_red, izpostavljen)
   values (v_glavni, auth.uid(), coalesce(p_naslov, ''),
-          coalesce((select max(vrstni_red) + 1 from posnetki_igralca where player_id = v_glavni), 0),
-          not exists (select 1 from posnetki_igralca where player_id = v_glavni and izpostavljen))
+          coalesce((select max(vrstni_red) + 1 from posnetki_igralca where igralec = v_glavni), 0),
+          not exists (select 1 from posnetki_igralca where igralec = v_glavni and izpostavljen))
   returning id into v_id;
   insert into posnetki_nalaganja (user_id) values (auth.uid());
   return v_id;
@@ -449,7 +451,7 @@ declare
   x posnetki_igralca;
 begin
   select * into x from posnetki_igralca where id = p_id;
-  if not found or not je_lastnik_profila(x.player_id) then
+  if not found or not je_lastnik_profila(x.igralec) then
     raise insufficient_privilege using message = 'Posnetek ni tvoj.';
   end if;
   return x;
@@ -473,7 +475,7 @@ declare
   x posnetki_igralca := posnetek_lastnika(p_id);
 begin
   update posnetki_igralca set izpostavljen = false, updated_at = now()
-   where player_id = x.player_id and izpostavljen and id <> p_id;
+   where igralec = x.igralec and izpostavljen and id <> p_id;
   update posnetki_igralca set izpostavljen = true, updated_at = now() where id = p_id;
 end;
 $$;
@@ -489,7 +491,7 @@ begin
     raise exception 'Neveljaven vrstni red.';
   end if;
   x := posnetek_lastnika(p_ids[1]);
-  if exists (select 1 from posnetki_igralca y where y.id = any (p_ids) and y.player_id <> x.player_id)
+  if exists (select 1 from posnetki_igralca y where y.id = any (p_ids) and y.igralec <> x.igralec)
      or (select count(*) from posnetki_igralca y where y.id = any (p_ids)) <> cardinality(p_ids) then
     raise insufficient_privilege using message = 'Posnetek ni tvoj.';
   end if;
@@ -518,7 +520,7 @@ begin
   delete from posnetki_igralca where id = p_id;
   if x.izpostavljen then
     update posnetki_igralca set izpostavljen = true, updated_at = now()
-     where id = (select id from posnetki_igralca where player_id = x.player_id
+     where id = (select id from posnetki_igralca where igralec = x.igralec
                   order by (pregled = 'odobren') desc, vrstni_red, id limit 1);
   end if;
   return x.stream_uid;
@@ -544,10 +546,10 @@ begin
     raise insufficient_privilege using message = 'Za prijavo se je treba prijaviti.';
   end if;
   select * into x from posnetki_igralca where id = p_id;
-  if not found or x.pregled <> 'odobren' or x.stanje <> 'pripravljen' or not izlozba_dovoljena(x.player_id) then
+  if not found or x.pregled <> 'odobren' or x.stanje <> 'pripravljen' or not izlozba_dovoljena(x.igralec) then
     raise exception 'Posnetka ni.';
   end if;
-  if je_lastnik_profila(x.player_id) then
+  if je_lastnik_profila(x.igralec) then
     raise exception 'Svojega posnetka ne moreš prijaviti.';
   end if;
   if exists (select 1 from prijave_posnetkov where posnetek_id = p_id and user_id = auth.uid() and resena_at is null) then
@@ -606,7 +608,7 @@ declare
   v_n int := 0;
   v_k int;
 begin
-  delete from posnetki_igralca x where not exists (select 1 from players p where p.id = x.player_id);
+  delete from posnetki_igralca x where not exists (select 1 from players p where p.id = x.igralec);
   get diagnostics v_k = row_count; v_n := v_n + v_k;
   delete from posnetki_igralca where stanje = 'nalaganje' and created_at < now() - interval '3 hours';
   get diagnostics v_k = row_count; v_n := v_n + v_k;
@@ -617,17 +619,17 @@ begin
 
   -- Pravica spet velja: števec 30 dni se ustavi.
   update posnetki_igralca x set brez_pravice_od = null
-   where x.brez_pravice_od is not null and posnetki_pravica_velja(x.player_id);
+   where x.brez_pravice_od is not null and posnetki_pravica_velja(x.igralec);
   -- Zadnja pravica preklicana (vračilo, spor, odvzem, preklic profila): takoj.
   -- (Zadnja vrstica `potekel` ali aktivna s preteklim rokom je potek.)
   delete from posnetki_igralca x
-   where not posnetki_pravica_velja(x.player_id)
-     and coalesce((select r.status from preverjeni_racuni r where r.player_id = x.player_id
+   where not posnetki_pravica_velja(x.igralec)
+     and coalesce((select r.status from preverjeni_racuni r where r.player_id = x.igralec
                     order by r.updated_at desc, r.id desc limit 1), 'preklican') = 'preklican';
   get diagnostics v_k = row_count; v_n := v_n + v_k;
   -- Potekla pravica: skrit takoj (pravilo), izbris po 30 dneh.
   update posnetki_igralca x set brez_pravice_od = now()
-   where x.brez_pravice_od is null and not posnetki_pravica_velja(x.player_id);
+   where x.brez_pravice_od is null and not posnetki_pravica_velja(x.igralec);
   delete from posnetki_igralca where brez_pravice_od < now() - interval '30 days';
   get diagnostics v_k = row_count; v_n := v_n + v_k;
 
@@ -682,11 +684,11 @@ begin
     raise insufficient_privilege using message = 'Samo administrator.';
   end if;
   return query
-  select x.id, x.player_id, p.full_name::text, t.name::text, c.name::text, pf.display_name::text,
+  select x.id, x.igralec, p.full_name::text, t.name::text, c.name::text, pf.display_name::text,
          x.naslov, x.stanje, x.pregled, x.razlog, x.trajanje, x.created_at, x.pregledan_at,
-         coalesce(pr.n, 0)::int, coalesce(pr.razlogi, '{}'), posnetki_pravica_velja(x.player_id)
+         coalesce(pr.n, 0)::int, coalesce(pr.razlogi, '{}'), posnetki_pravica_velja(x.igralec)
     from posnetki_igralca x
-    join players p on p.id = x.player_id
+    join players p on p.id = x.igralec
     left join teams t on t.id = p.team_id
     left join competitions c on c.id = p.competition_id
     left join profiles pf on pf.id = x.user_id
@@ -753,7 +755,7 @@ begin
   return query
   select x.id, x.naslov, x.izpostavljen, x.trajanje, x.stream_uid
     from posnetki_igralca x
-   where x.player_id = v_glavni and x.stanje = 'pripravljen' and x.pregled = 'odobren' and x.stream_uid is not null
+   where x.igralec = v_glavni and x.stanje = 'pripravljen' and x.pregled = 'odobren' and x.stream_uid is not null
    order by x.izpostavljen desc, x.vrstni_red, x.id;
 end;
 $$;
@@ -774,7 +776,7 @@ begin
   if v_j is not null and izlozba_dovoljena(p_player_id) then
     v_j := v_j || jsonb_build_object('posnetkov', (
       select count(*) from posnetki_igralca x
-       where x.player_id = (select z.player_id from zahtevki_igralca z where z.id = prevzem_zahtevek_igralca(p_player_id))
+       where x.igralec = (select z.player_id from zahtevki_igralca z where z.id = prevzem_zahtevek_igralca(p_player_id))
          and x.stanje = 'pripravljen' and x.pregled = 'odobren' and x.stream_uid is not null));
   end if;
   return v_j;
@@ -792,7 +794,7 @@ as $$
 begin
   delete from profil_igralca where player_id = p_player_id;
   delete from profil_igralca_plus where player_id = p_player_id;
-  delete from posnetki_igralca where player_id = p_player_id;
+  delete from posnetki_igralca where igralec = p_player_id;
   delete from scout.privolitve where player_id = p_player_id;
   update preverjeni_racuni set status = 'preklican', updated_at = now()
    where player_id = p_player_id and status = 'aktiven';

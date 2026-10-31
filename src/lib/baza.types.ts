@@ -3835,9 +3835,9 @@ export type Database = {
           brez_pravice_od: string | null
           created_at: string
           id: number
+          igralec: number
           izpostavljen: boolean
           naslov: string
-          player_id: number
           pregled: string
           pregledal: string | null
           pregledan_at: string | null
@@ -3853,9 +3853,9 @@ export type Database = {
           brez_pravice_od?: string | null
           created_at?: string
           id?: never
+          igralec: number
           izpostavljen?: boolean
           naslov: string
-          player_id: number
           pregled?: string
           pregledal?: string | null
           pregledan_at?: string | null
@@ -3871,9 +3871,9 @@ export type Database = {
           brez_pravice_od?: string | null
           created_at?: string
           id?: never
+          igralec?: number
           izpostavljen?: boolean
           naslov?: string
-          player_id?: number
           pregled?: string
           pregledal?: string | null
           pregledan_at?: string | null
@@ -10143,9 +10143,9 @@ export type Database = {
           brez_pravice_od: string | null
           created_at: string
           id: number
+          igralec: number
           izpostavljen: boolean
           naslov: string
-          player_id: number
           pregled: string
           pregledal: string | null
           pregledan_at: string | null
