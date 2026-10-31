@@ -13394,13 +13394,13 @@ preveri(
   }
   const k = (drzava) => ({ drzava, team_id: 2002, liga_slug: 'x-liga', ime_lige: 'Kärntner Liga', klub: 'St. Veit SC' })
   const p = { igralcev: 19, naj: 'Sebastian Weiss', tocke: 55, ekip: 7 }
-  for (const drzava of ['AT', 'EE', 'HR', 'HU', 'RS']) {
+  for (const drzava of ['AT', 'BA', 'EE', 'GI', 'GR', 'HK', 'HR', 'HU', 'JP', 'LV', 'MD', 'ME', 'MK', 'MT', 'RO', 'RS', 'TH']) {
     for (const vrsta of ['prvi', 'opomnik']) {
       for (const pp of [p, { ...p, naj: null, ekip: 0 }]) {
         const b = besedilo(k(drzava), pp, vrsta)
         const vse = `${b.zadeva}\n${b.telo}`
         preveri(`pošta klubom: ${drzava} ${vrsta} brez ostankov`, !/[{}]|undefined|null|NaN/.test(vse) && vse.includes('https://slff.eu/club/2002?t=x-liga'), vse.slice(0, 80))
-        if (drzava === 'EE') preveri(`pošta klubom: EE ${vrsta} brez pomišljajev`, !/[–—]/.test(vse))
+        if (drzava !== 'AT') preveri(`pošta klubom: ${drzava} ${vrsta} brez pomišljajev`, !/[–—]/.test(vse))
         const m = sporocilo({ na: 'klub@example.com', zadeva: b.zadeva, telo: b.telo, odjava: b.odjava, jezik: b.jezik, id: 'x' })
         const glava = m.match(/^Subject: (.*(?:\r\n .*)*)/m)[1]
         const nazaj = glava.split('\r\n ').map((w) => w.match(/^=\?UTF-8\?B\?(.*)\?=$/)).map((x, i) => (x ? Buffer.from(x[1], 'base64').toString() : glava.split('\r\n ')[i])).join('')
@@ -13415,6 +13415,24 @@ preveri(
     }
   }
   preveri('pošta klubom: država brez besedil ne dobi nič', besedilo(k('SI'), p, 'prvi') === null)
+  for (const d of ['SK', 'GB', 'DE', 'PL', 'DK', 'ES']) preveri(`pošta klubom: ${d} brez samodejne pošte`, besedilo(k(d), p, 'prvi') === null && !vOknu(d, new Date('2026-10-12T10:00:00Z')))
+  {
+    // Vir točk: domena zveze lige (federations.site_url), brez nje privzeta domena države.
+    const { domenaVira } = await import('./posta-klubom.mjs')
+    const privzeto = { BA: 'nfsbih.ba', GI: 'gibraltarfa.com', GR: 'epo.gr', HK: 'hkfa.com', JP: 'jfl.or.jp', LV: 'lff.lv', MD: 'fmf.md',
+      ME: 'fscg.me', MK: 'ffm.mk', MT: 'mfa.com.mt', RO: 'hailafotbal.ro', TH: 'thaileague.co.th' }
+    for (const [d, dom] of Object.entries(privzeto)) preveri(`pošta klubom: ${d} privzeti vir`, besedilo(k(d), p, 'prvi').telo.includes(` ${dom}.`))
+    preveri('pošta klubom: vir iz zveze lige', domenaVira('https://www.epspeir.gr/') === 'epspeir.gr' && domenaVira('https://www.frf-ajf.ro/arges') === 'frf-ajf.ro' &&
+      domenaVira(null) === null && besedilo({ ...k('GR'), vir: 'epspeir.gr' }, p, 'prvi').telo.includes('στο epspeir.gr.'))
+    // Množina: romunsko "de" od 20, latvijsko/makedonsko ednina na 1 in 21 (ne 11), angleško decimalna pika.
+    const t = (d, n, tt) => besedilo(k(d), { ...p, igralcev: n, tocke: tt }, 'prvi').telo
+    preveri('pošta klubom: RO množina', t('RO', 1, 1).includes('deja 1 jucător de la') && t('RO', 19, 2).includes('19 jucători') &&
+      t('RO', 20, 55).includes('20 de jucători') && t('RO', 19, 55).includes('55 de puncte') && t('RO', 19, 1).includes('1 punct.') && t('RO', 19, 112).includes('112 puncte'))
+    preveri('pošta klubom: LV in MK množina', t('LV', 21, 11).includes('21 spēlētājs') && t('LV', 11, 1).includes('11 spēlētāji') && t('LV', 2, 11).includes('11 punkti') &&
+      t('MK', 1, 21).includes('1 играч од') && t('MK', 5, 21).includes('21 поен.') && t('MK', 11, 3).includes('11 играчи'))
+    preveri('pošta klubom: EN ednina in pika', t('MT', 1, 1).includes('has 1 player in') && t('MT', 2, 7.5).includes('with 7.5 points') && t('GI', 2, 1).includes('with 1 point.'))
+    preveri('pošta klubom: BA nogomet, ME fudbal', t('BA', 3, 3).includes('fantasy nogometne igre') && t('ME', 3, 3).includes('fantasy fudbalske igre') && t('BA', 3, 3).includes('3 boda'))
+  }
   {
     // Hrvaščina in srbščina: število igralcev in točk v pravem sklonu, srbski vir po ligi.
     const hr = (n, t) => besedilo(k('HR'), { ...p, igralcev: n, tocke: t }, 'prvi').telo
@@ -13431,6 +13449,11 @@ preveri(
     ['AT', '2026-10-26T06:30:00Z', false], ['AT', '2026-10-26T07:00:00Z', true], ['EE', '2026-10-12T05:30:00Z', true],
     ['EE', '2026-10-12T15:30:00Z', false], ['SI', '2026-10-12T10:00:00Z', false],
     ['HR', '2026-10-12T06:30:00Z', true], ['HU', '2026-10-12T15:59:00Z', true], ['RS', '2026-10-12T16:00:00Z', false],
+    // 12. 10. 2026 (pon.): Tokio UTC+9, Hongkong/Bangkok UTC+8/+7, Bukarešta/Kišinjev/Riga/Atene UTC+3, Malta/Gibraltar UTC+2.
+    ['JP', '2026-10-11T23:00:00Z', true], ['JP', '2026-10-12T09:00:00Z', false], ['HK', '2026-10-12T00:00:00Z', true], ['TH', '2026-10-12T00:30:00Z', false],
+    ['TH', '2026-10-12T10:59:00Z', true], ['RO', '2026-10-12T05:00:00Z', true], ['MD', '2026-10-12T04:59:00Z', false], ['LV', '2026-10-12T14:59:00Z', true],
+    ['GR', '2026-10-12T15:00:00Z', false], ['MT', '2026-10-12T06:00:00Z', true], ['GI', '2026-10-12T05:59:00Z', false], ['BA', '2026-10-12T15:59:00Z', true],
+    ['ME', '2026-10-12T16:00:00Z', false], ['MK', '2026-10-17T10:00:00Z', true], ['JP', '2026-10-17T23:00:00Z', false],
   ]
   for (const [d, t, ok] of okno) preveri(`pošta klubom: okno ${d} ${t}`, vOknu(d, new Date(t)) === ok)
 
@@ -13551,15 +13574,19 @@ preveri(
     ], new Set(['at-a']), zdaj, [a])
     preveri('pošta klubom: pošta drugega pošiljatelja SLFF zapre opomnik', z.length === 0)
   }
-  for (const drzava of ['AT', 'EE', 'HR', 'HU', 'RS']) {
+  for (const drzava of ['AT', 'BA', 'EE', 'GI', 'GR', 'HK', 'HR', 'HU', 'JP', 'LV', 'MD', 'ME', 'MK', 'MT', 'RO', 'RS', 'TH']) {
     for (const vrsta of ['prvi', 'opomnik']) {
       const bl = besedilo(k(drzava), p, vrsta, lovro).telo
       preveri(`pošta klubom: ${drzava} ${vrsta} podpis Lovro`, /\nLovro\nslff\.eu/.test(bl) && !bl.includes('Luka'))
       const be = besedilo(k(drzava), p, vrsta, klubi).telo
       const ekipa = { AT: ['wir sind das Team von SLFF', 'Das SLFF-Team'], EE: ['Oleme SLFF-i meeskond.', 'SLFF meeskond'], HR: ['mi smo tim SLFF-a', 'SLFF tim'],
-        HU: ['Az SLFF csapata vagyunk.', 'Az SLFF csapata'], RS: ['mi smo tim SLFF-a', 'SLFF tim'] }[drzava]
+        HU: ['Az SLFF csapata vagyunk.', 'Az SLFF csapata'], RS: ['mi smo tim SLFF-a', 'SLFF tim'],
+        BA: ['mi smo tim SLFF-a', 'SLFF tim'], ME: ['mi smo tim SLFF-a', 'SLFF tim'], RO: ['Suntem echipa SLFF', 'Echipa SLFF'], MD: ['Suntem echipa SLFF', 'Echipa SLFF'],
+        LV: ['Mēs esam SLFF komanda. SLFF ir', 'SLFF komanda'], MK: ['ние сме тимот на SLFF', 'Тимот на SLFF'], GR: ['Είμαστε η ομάδα του SLFF', 'Η ομάδα του SLFF'],
+        MT: ["We're the team behind SLFF", 'The SLFF team'], HK: ["We're the team behind SLFF", 'The SLFF team'], GI: ["We're the team behind SLFF", 'The SLFF team'],
+        JP: ["We're the team behind SLFF", 'The SLFF team'], TH: ["We're the team behind SLFF", 'The SLFF team'] }[drzava]
       preveri(`pošta klubom: ${drzava} ${vrsta} besedilo ekipe`, (vrsta === 'opomnik' || be.includes(ekipa[0])) && be.includes(`\n${ekipa[1]}\nslff.eu`) &&
-        !/Luka|Ekipa SLFF|undefined/.test(be) && !/\b(ich bin|Olen |ja sam|vagyok az)/.test(be))
+        !/Luka|Ekipa SLFF|undefined/.test(be) && !/\b(ich bin|Olen |ja sam|vagyok az|Sunt |Esmu |I'm |Revin |atgādinu)|јас сум|се надоврзувам |Είμαι |Επανέρχομαι /.test(be))
       if (drzava === 'HU') preveri(`pošta klubom: HU ${vrsta} pozdrav ekipe v množini`, be.startsWith('Jó napot kívánunk!\n') && bl.startsWith('Jó napot kívánok!\n'))
       if (drzava === 'EE' && vrsta === 'prvi') preveri('pošta klubom: EE ekipa "SLFF on tasuta"', be.includes('Oleme SLFF-i meeskond. SLFF on tasuta') && bl.includes('SLFF-ist. See on tasuta'))
     }

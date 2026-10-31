@@ -9,7 +9,9 @@ Actions (dnevniki javnega repozitorija bi pokazali naslove): kontejner
 node:22-alpine, omrežje gostitelja kot `slff-html`) poganja
 `scripts/posta-klubom.mjs --zanka`. Vsakih 10 minut pošlje vsak dejaven
 pošiljatelj največ dva maila (med vsemi maili 60–150 s), le v oknu države
-prejemnika (08–18, pon–sob; krajevni čas: AT, EE, HR, HU, RS — `OKNA`) in
+prejemnika (08–18, pon–sob; krajevni čas: AT, BA, EE, GI, GR, HK, HR, HU,
+JP, LV, MD, ME, MK, MT, RO, RS, TH — `OKNA`; SK, GB in države s pravilom
+privolitve DE, PL, DK, ES samodejne pošte nimajo) in
 vsak do svoje dnevne meje. **Dejanski pretok:** razmik 60–150 s je skupen
 vsem pošiljateljem, zato gre največ okoli 34 mailov na uro oziroma okoli 340 na
 dan (10-urno okno) skupaj, tudi ko so vsi štirje ogreti na 100.
@@ -59,8 +61,12 @@ kluba v 3 dneh zabeleži** z `node scripts/stiki-klubov.mjs zabelezi --za
 <naslov> --vrsta odgovor --poslal <ime> --opomba "…"`: pregled pred opomnikom
 gleda le INBOX in Junk, zato odgovor, premaknjen v drugo mapo ali arhiviran,
 ne ustavi opomnika. Številke v mailu so sveže;
-besedila (nemška, estonska, hrvaška, madžarska, srbska v latinici) so v
-skripti in ne trdijo, da imamo dovoljenje zveze. Mail je
+besedila (nemška, estonska, hrvaška, madžarska, srbska v latinici,
+bosanska/črnogorska ijekavica, romunska za RO in MD, latvijska, makedonska v
+cirilici, grška, angleška za MT, HK, GI, JP, TH) so v skripti in ne trdijo,
+da imamo dovoljenje zveze. Novejša besedila vir točk vzamejo iz zveze lige
+(`federations.site_url`, npr. epspeir.gr, frf-ajf.ro), brez nje iz privzete
+domene države v `BESEDILA`. Mail je
 `multipart/alternative`: najprej text/plain (ta gre tudi v `klub_stik_posta`),
 nato lahek HTML iz istega besedila (`vHtml`, videti kot osebni mail, brez
 glave in gumba). Opomnik ni odgovor v isti niti, ker se Message-ID prvega
