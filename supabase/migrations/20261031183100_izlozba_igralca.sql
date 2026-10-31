@@ -106,8 +106,12 @@ revoke all on function public.posnetki_pravica_velja(bigint) from public, anon, 
 -- --------------------------------------------------------------------------
 create table public.posnetki_igralca (
   id            bigint generated always as identity primary key,
-  -- Glavna vrstica potrjenega zahtevka (kot profil_igralca).
-  player_id     bigint not null references public.players on delete cascade,
+  -- Glavna vrstica potrjenega zahtevka (kot profil_igralca). Brez tujega
+  -- ključa na players: izdaje FCF preverjajo točen katalog FK na players.
+  -- Izbris igralca kaskadno izbriše zahtevek, sprožilec
+  -- prevzem_izbris_zahtevka pa prek prevzem_odstrani_predstavitev posnetke;
+  -- osirotele vrstice pobere še posnetki_pocisti().
+  player_id     bigint not null,
   user_id       uuid references public.profiles on delete set null,
   -- Cloudflare Stream uid (v preizkusnem načinu "test-…"); null do nalaganja.
   stream_uid    text unique check (stream_uid is null or stream_uid ~ '^[A-Za-z0-9_-]{8,64}$'),
@@ -602,6 +606,8 @@ declare
   v_n int := 0;
   v_k int;
 begin
+  delete from posnetki_igralca x where not exists (select 1 from players p where p.id = x.player_id);
+  get diagnostics v_k = row_count; v_n := v_n + v_k;
   delete from posnetki_igralca where stanje = 'nalaganje' and created_at < now() - interval '3 hours';
   get diagnostics v_k = row_count; v_n := v_n + v_k;
   delete from posnetki_igralca where stanje = 'napaka' and updated_at < now() - interval '7 days';
