@@ -242,7 +242,7 @@ slff.eu
     zadeva: ekip >= 5 ? `${klub}: vaši igrači su već u fantasy momčadima (${ekip})` : `${klub} u fantasy igri: kako stoje vaši igrači`,
     telo: `Poštovani,
 
-kratko se javljam ${ekipa ? 'na našu' : 'na moju'} prethodnu poruku: igrači kluba ${klub} su u igri i skupljaju bodove${ekip >= 5 ? `, a fantasy momčadi s njima već ima ${ekip}` : ''}${naj ? `. Dosad najbolji: ${naj}` : ''}.
+kratko se javljam${ekipa ? 'o na našu' : ' na moju'} prethodnu poruku: igrači kluba ${klub} su u igri i skupljaju bodove${ekip >= 5 ? `, a fantasy momčadi s njima već ima ${ekip}` : ''}${naj ? `. Dosad najbolji: ${naj}` : ''}.
 ${url}
 
 Ako vam to odgovara za klupsku grupu ili Facebook, drago nam je. Ovo ${ekipa ? 'nam' : 'mi'} je posljednja poruka o tome; za pitanja ili želje dovoljan je kratak odgovor.
@@ -288,7 +288,7 @@ slff.eu
     zadeva: ekip >= 5 ? `${klub}: Vaši igrači su već u fantasy timovima (${ekip})` : `${klub} u fantasy igri: kako stoje Vaši igrači`,
     telo: `Poštovani,
 
-kratko se javljam povodom ${ekipa ? 'naše' : 'moje'} prethodne poruke: igrači kluba ${klub} su u igri i skupljaju poene${ekip >= 5 ? `, a fantasy timova sa njima već ima ${ekip}` : ''}${naj ? `. Do sada najbolji: ${naj}` : ''}.
+kratko se javljam${ekipa ? 'o povodom naše' : ' povodom moje'} prethodne poruke: igrači kluba ${klub} su u igri i skupljaju poene${ekip >= 5 ? `, a fantasy timova sa njima već ima ${ekip}` : ''}${naj ? `. Do sada najbolji: ${naj}` : ''}.
 ${url}
 
 Ako Vam to odgovara za klupsku grupu ili Fejsbuk, drago nam je. Ovo ${ekipa ? 'nam' : 'mi'} je poslednja poruka o tome; za pitanja ili želje dovoljan je kratak odgovor.
@@ -345,8 +345,8 @@ slff.eu
   }
 }
 
-// Spodnja besedila vir točk vzamejo iz `k.vir` (domena zveze lige iz
-// federations.site_url; brez zveze privzeta domena države v BESEDILA).
+// Spodnja besedila vir točk vzamejo iz `k.vir`: domena competitions.vir_url (navedba
+// lige, kot VirPodatkov.tsx), sicer federations.site_url, sicer privzeta domena v BESEDILA.
 
 // Bosanščina (BA) in črnogorščina (ME): ijekavica, latinica; BA "nogomet", ME "fudbal".
 function ijekavsko(k, p, vrsta, url, po) {
@@ -381,10 +381,10 @@ slff.eu
     zadeva: ekip >= 5 ? `${klub}: Vaši igrači su već u fantasy timovima (${ekip})` : `${klub} u fantasy igri: kako stoje Vaši igrači`,
     telo: `Poštovani,
 
-kratko se javljam povodom ${ekipa ? 'naše' : 'moje'} prethodne poruke: igrači kluba ${klub} su u igri i skupljaju bodove${ekip >= 5 ? `, a fantasy timova sa njima već ima ${ekip}` : ''}${naj ? `. Dosad najbolji: ${naj}` : ''}.
+kratko se javljam${ekipa ? 'o povodom naše' : ' povodom moje'} prethodne poruke: igrači kluba ${klub} su u igri i skupljaju bodove${ekip >= 5 ? `, a fantasy timova sa njima već ima ${ekip}` : ''}${naj ? `. Dosad najbolji: ${naj}` : ''}.
 ${url}
 
-Ako Vam to odgovara za klupsku grupu ili Facebook, drago nam je. Ovo ${ekipa ? 'nam' : 'mi'} je posljednja poruka o tome; za pitanja ili želje dovoljan je kratak odgovor.
+Ako Vam to odgovara za klupsku grupu ili Facebook, drago ${ekipa ? 'nam' : 'mi'} je. Ovo ${ekipa ? 'nam' : 'mi'} je posljednja poruka o tome; za pitanja ili želje dovoljan je kratak odgovor.
 
 Srdačan pozdrav
 ${podpis}
@@ -434,7 +434,7 @@ slff.eu
 ${ekipa ? 'Revenim pe scurt la mesajul nostru anterior' : 'Revin pe scurt la mesajul meu anterior'}: jucătorii de la ${klub} sunt în joc și adună puncte${ekip >= 5 ? `, iar acum apar deja în ${roStevilo(ekip, 'echipă', 'echipe')} fantasy` : ''}${naj ? `. Cel mai bun până acum: ${naj}` : ''}.
 ${url}
 
-Dacă se potrivește pentru grupul clubului sau pentru Facebook, ne bucurăm. Acesta este ultimul ${ekipa ? 'nostru' : 'meu'} mesaj pe această temă; pentru întrebări sau dorințe este suficient un răspuns scurt.
+Dacă se potrivește pentru grupul clubului sau pentru Facebook, ${ekipa ? 'ne bucurăm' : 'mă bucur'}. Acesta este ultimul ${ekipa ? 'nostru' : 'meu'} mesaj pe această temă; pentru întrebări sau dorințe este suficient un răspuns scurt.
 
 Cu stimă
 ${podpis}
@@ -483,10 +483,10 @@ slff.eu
     zadeva: ekip >= 5 ? `Kluba ${klub} spēlētāji jau ir ${komandas}` : `Klubs ${klub} fantāzijas spēlē: kā veicas Jūsu spēlētājiem`,
     telo: `Labdien!
 
-Īsi ${ekipa ? 'atgādinām par mūsu' : 'atgādinu par manu'} iepriekšējo vēstuli: ${ekip >= 5 ? `kluba ${klub} spēlētāji jau ir ${komandas}` : `kluba ${klub} spēlētāji ir spēlē un krāj punktus`}${naj ? ` (līdz šim labākais: ${naj})` : ''}.
+Īsi ${ekipa ? 'atgādinām par mūsu' : 'atgādinu par savu'} iepriekšējo vēstuli: ${ekip >= 5 ? `kluba ${klub} spēlētāji jau ir ${komandas}` : `kluba ${klub} spēlētāji ir spēlē un krāj punktus`}${naj ? ` (līdz šim labākais: ${naj})` : ''}.
 ${url}
 
-Ja tas der kluba grupai vai Facebook, mēs būsim priecīgi. Šī ir ${ekipa ? 'mūsu' : 'mana'} pēdējā vēstule par šo tēmu; jautājumu vai vēlmju gadījumā pietiek ar īsu atbildi.
+Ja tas der kluba grupai vai Facebook, ${ekipa ? 'mēs būsim priecīgi' : 'es būšu priecīgs'}. Šī ir ${ekipa ? 'mūsu' : 'mana'} pēdējā vēstule par šo tēmu; jautājumu vai vēlmju gadījumā pietiek ar īsu atbildi.
 
 Ar cieņu
 ${podpis}
@@ -495,12 +495,12 @@ slff.eu
   }
 }
 
-// Makedonščina (cirilica), vikanje (Вие).
+// Makedonščina (cirilica), vikanje (Вие). Za številom števna oblika ("55 поена", "7 тима"), ljudje v množini ("19 играчи").
 function makedonsko(k, p, vrsta, url, po) {
   const { ime_lige: liga, klub, vir } = k
   const ekipa = po.ekipa
   const podpis = ekipa ? 'Тимот на SLFF' : po.ime
-  const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} ${ednina(p.tocke, 'поен', 'поени')}` : null
+  const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} ${ednina(p.tocke, 'поен', 'поена')}` : null
   const igraci = `${p.igralcev} ${ednina(p.igralcev, 'играч', 'играчи')}`
   if (vrsta === 'prvi') {
     return {
@@ -523,7 +523,7 @@ slff.eu
     }
   }
   const ekip = p.ekip ?? 0
-  const timovi = `${ekip} фантази ${ednina(ekip, 'тим', 'тимови')}`
+  const timovi = `${ekip} фантази ${ednina(ekip, 'тим', 'тима')}`
   return {
     zadeva: ekip >= 5 ? `${klub}: Вашите играчи се веќе во ${timovi}` : `${klub} во фантази играта: како стојат Вашите играчи`,
     telo: `Почитувани,
@@ -585,7 +585,7 @@ slff.eu
 }
 
 // Angleščina (en-GB; MT, HK, GI, JP, TH): decimalna pika. Ne "amaterske lige",
-// ker sta Thai League in HKPL poklicni.
+// ker sta Thai League in HKPL poklicni ("leagues like yours").
 function anglesko(k, p, vrsta, url, po) {
   const { ime_lige: liga, klub, vir } = k
   const ekipa = po.ekipa
@@ -597,7 +597,7 @@ function anglesko(k, p, vrsta, url, po) {
       zadeva: `${klub}: ${igralcev} already in fantasy football (${liga})`,
       telo: `Hello,
 
-${ekipa ? "We're the team behind SLFF" : `I'm ${po.ime} from SLFF`}, a free fantasy football game for the leagues the big fantasy games leave out. ${liga} has just joined, and the points come from the official match reports on ${vir}.
+${ekipa ? "We're the team behind SLFF" : `I'm ${po.ime} from SLFF`}, a free fantasy football game for leagues like yours. ${liga} has just joined, and the points come from the official match reports on ${vir}.
 
 ${klub} already has ${igralcev} in the game${naj ? `, the best so far: ${naj}` : ''}. Your club page with stats and a ready-made image to share:
 ${url}
@@ -620,7 +620,7 @@ slff.eu
 Just a quick follow-up to ${ekipa ? 'our' : 'my'} last message: ${ekip >= 5 ? `${klub} players are now in ${ekip} fantasy teams` : `${klub} players are in the game and picking up points`}${naj ? `, the best so far being ${naj}` : ''}.
 ${url}
 
-If it suits your club group or Facebook page, we would be delighted. This is ${ekipa ? 'our' : 'my'} last message about it; for questions or requests, a short reply is enough.
+If it suits your club group or Facebook page, ${ekipa ? 'we' : 'I'} would be delighted. This is ${ekipa ? 'our' : 'my'} last message about it; for questions or requests, a short reply is enough.
 
 Kind regards
 ${podpis}
@@ -994,7 +994,8 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
   if (!aktivni.length) throw new NapakaPrijave('vsi pošiljatelji imajo zavrnjeno prijavo')
   // Danes poslano po pošiljatelju (klub_stik_posta.poslal, dunajski dan).
   const danes = new Map(POSILJATELJI.map((po) => [po.kljuc, 0]))
-  for (const r of preveri(await db.from('klub_stik_posta').select('poslal, poslano_at').in('poslal', POSILJATELJI.map((po) => po.poslal)).in('vrsta', ['prvi', 'opomnik']).gte('poslano_at', vceraj))) {
+  for (const r of await vseVrstice((od, do_) => db.from('klub_stik_posta').select('id, poslal, poslano_at').in('poslal', POSILJATELJI.map((po) => po.poslal))
+    .in('vrsta', ['prvi', 'opomnik']).gte('poslano_at', vceraj).order('id').range(od, do_))) {
     if (danDunaj(new Date(r.poslano_at)) !== danDunaj(zdaj)) continue
     const po = POSILJATELJI.find((x) => x.poslal === r.poslal)
     danes.set(po.kljuc, danes.get(po.kljuc) + 1)
@@ -1013,7 +1014,9 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
     if (!suho) return false
   }
 
-  const lige = preveri(await db.from('competitions').select('id, slug, name, active, federations(site_url)'))
+  const lige = await vseVrstice((od, do_) =>
+    db.from('competitions').select('id, slug, name, active, vir_url, federations(site_url)').order('id').range(od, do_),
+  )
   const poSlugu = new Map(lige.map((l) => [l.slug, l]))
   const aktivne = new Set(lige.filter((l) => l.active).map((l) => l.slug))
   const vsi = await vseVrstice((od, do_) =>
@@ -1050,7 +1053,7 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
       )) ekipe.add(r.fantasy_team_id)
     }
     const ime = naj ? `${poId.get(naj.id).first_name ?? ''} ${poId.get(naj.id).last_name ?? ''}`.trim() : null
-    return { igralcev: st.length, naj: ime || null, tocke: naj?.points ?? 0, ekip: ekipe.size, ime_lige: liga.name, vir: domenaVira(liga.federations?.site_url) }
+    return { igralcev: st.length, naj: ime || null, tocke: naj?.points ?? 0, ekip: ekipe.size, ime_lige: liga.name, vir: domenaVira(liga.vir_url) ?? domenaVira(liga.federations?.site_url) }
   }
 
   // Vrstica, ki je ne smemo poslati znova, ostane zunaj vrste z opombo za človeka.

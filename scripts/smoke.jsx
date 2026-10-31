@@ -13424,12 +13424,24 @@ preveri(
     for (const [d, dom] of Object.entries(privzeto)) preveri(`pošta klubom: ${d} privzeti vir`, besedilo(k(d), p, 'prvi').telo.includes(` ${dom}.`))
     preveri('pošta klubom: vir iz zveze lige', domenaVira('https://www.epspeir.gr/') === 'epspeir.gr' && domenaVira('https://www.frf-ajf.ro/arges') === 'frf-ajf.ro' &&
       domenaVira(null) === null && besedilo({ ...k('GR'), vir: 'epspeir.gr' }, p, 'prvi').telo.includes('στο epspeir.gr.'))
+    // ro-sb-superliga: bere hailafotbal.ro (vir_url), zveza ajf-sibiu pa kaže na frf-ajf.ro; navedba lige zmaga.
+    const virLige = (l) => domenaVira(l.vir_url) ?? domenaVira(l.federations?.site_url)
+    const sb = virLige({ vir_url: 'https://hailafotbal.ro/rezultate/judetean/sibiu/fotbal/2026-2027/superliga/sezon-regular/serie-1', federations: { site_url: 'https://www.frf-ajf.ro/sibiu' } })
+    preveri('pošta klubom: vir_url lige pred zvezo', sb === 'hailafotbal.ro' && virLige({ vir_url: null, federations: { site_url: 'https://www.frf-ajf.ro/arges' } }) === 'frf-ajf.ro' &&
+      besedilo({ ...k('RO'), liga_slug: 'ro-sb-superliga', vir: sb }, p, 'prvi').telo.includes('de pe hailafotbal.ro.') && !besedilo({ ...k('RO'), vir: sb }, p, 'prvi').telo.includes('frf-ajf'), sb)
+    // Osebni pošiljatelj v ednini, ekipa v množini.
+    const [, lovroPo, , klubiPo] = (await import('./posta-klubom.mjs')).POSILJATELJI
+    const op = (d, po) => besedilo(k(d), p, 'opomnik', po).telo
+    preveri('pošta klubom: opomnik ednina/množina', op('RO', lovroPo).includes('mă bucur') && op('RO', klubiPo).includes('ne bucurăm') &&
+      op('LV', lovroPo).includes('atgādinu par savu') && op('LV', lovroPo).includes('es būšu priecīgs') && op('MT', lovroPo).includes('I would be delighted') &&
+      op('MT', klubiPo).includes('we would be delighted') && op('BA', lovroPo).includes('drago mi je') && op('BA', klubiPo).includes('kratko se javljamo povodom naše') &&
+      op('HR', klubiPo).includes('kratko se javljamo na našu') && op('RS', lovroPo).includes('kratko se javljam povodom moje') && op('MK', klubiPo).includes('7 фантази тима'))
     // Množina: romunsko "de" od 20, latvijsko/makedonsko ednina na 1 in 21 (ne 11), angleško decimalna pika.
     const t = (d, n, tt) => besedilo(k(d), { ...p, igralcev: n, tocke: tt }, 'prvi').telo
     preveri('pošta klubom: RO množina', t('RO', 1, 1).includes('deja 1 jucător de la') && t('RO', 19, 2).includes('19 jucători') &&
       t('RO', 20, 55).includes('20 de jucători') && t('RO', 19, 55).includes('55 de puncte') && t('RO', 19, 1).includes('1 punct.') && t('RO', 19, 112).includes('112 puncte'))
     preveri('pošta klubom: LV in MK množina', t('LV', 21, 11).includes('21 spēlētājs') && t('LV', 11, 1).includes('11 spēlētāji') && t('LV', 2, 11).includes('11 punkti') &&
-      t('MK', 1, 21).includes('1 играч од') && t('MK', 5, 21).includes('21 поен.') && t('MK', 11, 3).includes('11 играчи'))
+      t('MK', 1, 21).includes('1 играч од') && t('MK', 5, 21).includes('21 поен.') && t('MK', 5, 55).includes('55 поена.') && t('MK', 11, 3).includes('11 играчи'))
     preveri('pošta klubom: EN ednina in pika', t('MT', 1, 1).includes('has 1 player in') && t('MT', 2, 7.5).includes('with 7.5 points') && t('GI', 2, 1).includes('with 1 point.'))
     preveri('pošta klubom: BA nogomet, ME fudbal', t('BA', 3, 3).includes('fantasy nogometne igre') && t('ME', 3, 3).includes('fantasy fudbalske igre') && t('BA', 3, 3).includes('3 boda'))
   }
