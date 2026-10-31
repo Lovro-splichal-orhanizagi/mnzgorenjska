@@ -8367,6 +8367,24 @@ preveri(
   preveri('nsfbih: izid, zelena miza, neodigrana', N.izidIz('<b>7:0</b> ').izid?.domaci === 7 && !N.izidIz('<b>7:0</b>').zelenaMiza &&
     N.izidIz('<b>3:0</b> * ').zelenaMiza && N.izidIz(' - ').izid === null)
 
+  // Pošta klubom: seznam /klubovi/<liga> → šifre klubov, stran kluba → "E-mail" (ne naslov zveze v nogi).
+  const seznamBa = N.klubiLige(beri('ba-nsfbih-klubovi-wwin-prva-liga-fbih.html'))
+  preveri('nsfbih: seznam klubov lige (16, ime kot na razporedu)', seznamBa.length === 16 &&
+    seznamBa.some((x) => x.id === '415' && x.ime === 'FK BUDUĆNOST') && seznamBa.some((x) => x.ime === 'FK RADNIK (H)') &&
+    N.naslovKlubaBa('wwin-prva-liga-fbih/2026-27', '415') === 'https://www.nsfbih.ba/klubovi/wwin-prva-liga-fbih/415', seznamBa.length)
+  const brezNaslova = N.klubiLige(beri('ba-nsfbih-klubovi-wwin-prva-liga-fbih.html').replace('<div class="title">FK BUDUĆNOST</div>', ''))
+  const igman = seznamBa.find((x) => x.ime === 'FK IGMAN')
+  preveri('nsfbih: kartica brez naslova ne vzame imena naslednjega kluba', brezNaslova.length === 15 &&
+    !brezNaslova.some((x) => x.id === '415') && brezNaslova.find((x) => x.ime === 'FK IGMAN')?.id === igman?.id, brezNaslova.length)
+  const klubBa = beri('ba-nsfbih-klub-wwin-prva-liga-fbih-415.html')
+  preveri('nsfbih: naslov kluba iz vrstice E-mail, ne federacija@ iz noge; seznam ni stran kluba',
+    N.emailKluba(klubBa) === 'klub@example.com' && N.emailKluba(klubBa.replace(/<a href="mailto:klub@[^<]*<\/a>/, '')) === null &&
+    N.emailKluba(beri('ba-nsfbih-klubovi-wwin-prva-liga-fbih.html')) === undefined)
+  preveri('nsfbih: naslov zveze v vrstici E-mail ni naslov kluba', N.emailKluba(klubBa.replaceAll('klub@example.com', 'federacija@nsfbih.ba')) === null &&
+    N.emailKluba(klubBa.replaceAll('klub@example.com', 'info@nfsbih.ba')) === null)
+  preveri('nsfbih: obrazec z reCAPTCHA ni izziv, stran Cloudflare je', !N.jeIzziv(klubBa + '<div class="g-recaptcha"></div>') &&
+    N.jeIzziv('<title>Just a moment...</title>') && N.jeIzziv('<script src="/cdn-cgi/challenge-platform/h/b"></script>'))
+
   const stran = beri('ba-nsfbih-liga-druga-liga-fbih-jug.html')
   const t = N.tekmeStrani(stran)
   preveri('nsfbih: stran lige — 16 krogov po 6 tekem, 13 klubov, 48 odigranih, vse z uro', t.length === 96 && new Set(t.map((x) => x.krog)).size === 16 &&
