@@ -61,7 +61,10 @@ import { scoutPostavkeVeljajo, scoutCeneNarocnine } from '../supabase/functions/
 import { trgovinaIzSeje, napacnaTarifa, novaKoda, idKupona, enoteBonov, kodeSeje, zgostiKodo, IZDELEK_TRGOVINE as IZDELEK_BONOV } from '../supabase/functions/stripe-webhook/trgovina.ts'
 import { IZDELEK_TRGOVINE, seznamPostavk } from '../supabase/functions/trgovina-nakup/izdelki.ts'
 import { sestaviMail as trgovinaMail, TELEFON as trgovinaTelefonMail, POGOJI_VERZIJA as trgovinaVerzijaMail } from '../supabase/functions/trgovina-posta/sporocila.ts'
-import { SL as trgovinaSL, EN as trgovinaEN, TELEFON as trgovinaTelefon, POGOJI_VERZIJA as trgovinaVerzija } from '../shop/src/besede.ts'
+import { SL as trgovinaSL, slovar as trgovinaSlovar, TELEFON as trgovinaTelefon, POGOJI_VERZIJA as trgovinaVerzija } from '../shop/src/besede.ts'
+import { JEZIKI as trgovinaJeziki } from '../shop/src/jezik.ts'
+import { JEZIKI_NAKUPA, jezikNakupa, STRIPE_LOKALE, BESEDILA_NAKUPA } from '../supabase/functions/trgovina-nakup/besedila.ts'
+import { BESEDILA as trgovinaBesedilaMaila } from '../supabase/functions/trgovina-posta/besedila.ts'
 import { EU27 as trgovinaEU27, tarifeZa } from '../supabase/functions/trgovina-nakup/tarife.ts'
 import { preberiVnos as vnosBona } from '../supabase/functions/trgovina-boni/vnos.ts'
 import { createHmac } from 'node:crypto'
@@ -14013,10 +14016,38 @@ preveri(
   preveri('trgovina mail: telefon in različica pogojev kot v trgovini', trgovinaTelefonMail === trgovinaTelefon && trgovinaVerzijaMail === trgovinaVerzija)
   // Trajni nosilec: potrditev nosi celoten pouk o odstopu in vzorčni obrazec v jeziku naročila.
   const enP = trgovinaMail('potrditev', { ...n, jezik: 'en' }, 'https://shop.slff.eu')
+  const trgovinaEN = await trgovinaSlovar('en')
   preveri('trgovina mail: pouk o odstopu, obrazec, pogoji z dne, telefon (sl, en)',
     [[sl, trgovinaSL, 'Pogoji z dne'], [enP, trgovinaEN, 'Terms dated']].every(([m, B, z]) =>
       B['pogoji.s6.besedilo'].split('\n\n').every((o) => m.besedilo.includes(o)) &&
       m.besedilo.includes(B['odstop.vzorec']) && m.besedilo.includes(`${z} ${trgovinaVerzija}`) && m.besedilo.includes(trgovinaTelefon)))
+  // Vsi jeziki trgovine: mail ima pouk o odstopu in obrazec dobesedno iz slovarja trgovine,
+  // vse tri vrste brez nezamenjanih {…}, z zneskom v jeziku; nakup pozna iste jezike.
+  const napakeMailov = []
+  for (const j of trgovinaJeziki) {
+    const B = await trgovinaSlovar(j)
+    const bes = trgovinaBesedilaMaila[j]
+    if (!bes) { napakeMailov.push(`${j}: ni besedil`); continue }
+    if (bes.odstopBesedilo !== B['pogoji.s6.besedilo'] || bes.vzorec !== B['odstop.vzorec']) napakeMailov.push(`${j}: pravno besedilo ni kopija slovarja`)
+    const pm = trgovinaMail('potrditev', { ...n, jezik: j }, 'https://shop.slff.eu')
+    const om = trgovinaMail('poslano', { ...n, jezik: j, stanje: 'poslano' }, 'https://shop.slff.eu')
+    const bm = trgovinaMail('bon', { ...n, jezik: j }, 'https://shop.slff.eu', [{ koda: 'SLFF-ABCD-EFGH', znesek: 2000, velja_do: '2027-10-18T10:00:00Z' }])
+    for (const [ime, m] of [['potrditev', pm], ['poslano', om], ['bon', bm]]) {
+      if (/\{[a-z]\}/.test(m.besedilo + m.naslov + m.html)) napakeMailov.push(`${j}/${ime}: nezamenjan {…}`)
+      if (!m.html.includes(`lang="${j}"`)) napakeMailov.push(`${j}/${ime}: lang`)
+    }
+    if (!pm.besedilo.includes(B['odstop.vzorec']) || !pm.besedilo.includes(trgovinaTelefon) || !pm.besedilo.includes(trgovinaVerzija) || !pm.naslov.includes('AB12CD34'))
+      napakeMailov.push(`${j}: potrditev brez obrazca, telefona, različice pogojev ali oznake`)
+    if (!/53[,.]90/.test(pm.besedilo)) napakeMailov.push(`${j}: znesek`)
+    if (!bm.besedilo.includes('SLFF-ABCD-EFGH') || !om.besedilo.includes('RR123456789SI')) napakeMailov.push(`${j}: koda bona ali sledilna`)
+    if (j !== 'sl' && /Pozdravljeni|naročilo/.test(om.besedilo)) napakeMailov.push(`${j}: slovenščina v mailu`)
+    const nb = BESEDILA_NAKUPA[j]
+    if (!nb || !nb.strinjam.includes('{pogoji}') || !nb.placilo.includes('{pogoji}') || !nb.pogoji.trim() || !STRIPE_LOKALE[j]) napakeMailov.push(`${j}: nakup`)
+  }
+  preveri('trgovina mail in nakup: vsi jeziki trgovine (pravno besedilo = slovar, brez {…}, zneski, Stripe)', napakeMailov.length === 0, napakeMailov.slice(0, 6).join(' / '))
+  preveri('trgovina nakup: jeziki = jeziki trgovine, neznan → sl, Stripe brez nepodprtih',
+    JSON.stringify([...JEZIKI_NAKUPA].sort()) === JSON.stringify([...trgovinaJeziki].sort()) && jezikNakupa('xx') === 'sl' && jezikNakupa('de') === 'de'
+      && STRIPE_LOKALE.uk === 'auto' && STRIPE_LOKALE.de === 'de')
 
   // Personalizacija in boni (trgovina-posta, stripe-webhook/trgovina.ts, trgovina-nakup/izdelki.ts).
   const np = {

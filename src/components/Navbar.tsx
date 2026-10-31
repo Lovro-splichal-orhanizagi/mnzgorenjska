@@ -10,7 +10,7 @@ import { potrdiZapustitev } from '../lib/neshranjeno'
 import { jeNativno, povezavaTrgovine } from '../lib/platforma'
 import IzbirnikLige from './IzbirnikLige'
 import { odpriPodporo } from './Podpora'
-import { t } from '../i18n'
+import { jezikSlovarja, t } from '../i18n'
 
 interface Povezava {
   pot: string
@@ -215,7 +215,7 @@ export default function Navbar() {
             ))}
             {/* Pri 1024 px bi trgovina izbirniku lige vzela skoraj ves prostor
                 (grščina se prelije čez rob), zato je zgoraj šele od xl, prej v "Več". */}
-            <a {...povezavaTrgovine()} className={`${slog({ isActive: false })} hidden xl:inline`}>
+            <a {...povezavaTrgovine(jezikSlovarja())} className={`${slog({ isActive: false })} hidden xl:inline`}>
               {t('aplikacija.meni.trgovina')}
               {' '}
               {novo}
@@ -261,7 +261,7 @@ export default function Navbar() {
                     </NavLink>
                   ))}
                   <a
-                    {...povezavaTrgovine()}
+                    {...povezavaTrgovine(jezikSlovarja())}
                     role="menuitem"
                     className={`${vrsticaMenija} xl:hidden`}
                     onClick={() => setVecOdprt(false)}
@@ -411,7 +411,7 @@ export default function Navbar() {
                   {p.pot === '/assists' && znacka(cakaGlasov)}
                 </NavLink>
               ))}
-              <a {...povezavaTrgovine()} className={slogMobilni({ isActive: false })} onClick={() => setOdprt(false)}>
+              <a {...povezavaTrgovine(jezikSlovarja())} className={slogMobilni({ isActive: false })} onClick={() => setOdprt(false)}>
                 {t('aplikacija.meni.trgovina')}
                 {' '}
                 {novo}

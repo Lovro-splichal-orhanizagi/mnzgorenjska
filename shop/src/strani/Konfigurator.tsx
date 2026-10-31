@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase, type Cona, type Izdelek, type MoznostPolja, type MotivIzdelka, type PoljeMotiva, type Postava, type PrimerMotiva, type Prvak } from '../baza'
-import { cena, jezik, po, SL, t, type Kljuc } from '../besede'
+import { cena, jezik, pr, SL, t, type Kljuc } from '../besede'
 import { dodaj, kljuc, NAJVEC, shrani, useKosarica } from '../kosarica'
 import { barvaRazlicice, conaZa, Mockup, velikostRazlicice } from '../mockup'
 import { dogodek } from '../analitika'
@@ -34,7 +34,7 @@ export function prikazVrednosti(p: PoljeMotiva, v: unknown): string {
   if (v === null || v === undefined) return ''
   if (typeof v === 'object') return String((v as { ekipa?: unknown }).ekipa ?? '')
   const o = (p.moznosti ?? []).map(moznost).find((x) => x.kljuc === String(v))
-  return o ? po(o.ime_sl, o.ime_en) : String(v)
+  return o ? pr(o, 'ime') : String(v)
 }
 
 /** Polja, ki jih kupec ne vpiše, ampak izbere iz svojega računa. */
@@ -123,8 +123,8 @@ export function Konfigurator({ i }: { i: Izdelek }) {
   const { seja } = useSeja()
   const uid = seja?.user.id ?? null
   const [iskanje, setIskanje] = useSearchParams()
-  const ime = po(i.ime_sl, i.ime_en)
-  useNaslov(ime, po(i.opis_sl, i.opis_en).slice(0, 160) || undefined)
+  const ime = pr(i, 'ime')
+  useNaslov(ime, pr(i, 'opis').slice(0, 160) || undefined)
 
   const zacetni = motivi.find((m) => m.slug === iskanje.get('motiv')) ?? motivi[0]!
   const [slug, setSlug] = useState(zacetni.slug)
@@ -240,7 +240,7 @@ export function Konfigurator({ i }: { i: Izdelek }) {
   const izbranaEkipa = (p: PoljeMotiva) =>
     Array.isArray(ekipe) ? ekipe.find((e) => String(e.id) === vrednosti[p.kljuc] && !e.mladinska && !ekipaPrevelika(e.name, p.max)) : undefined
   const izbranPrvak = (p: PoljeMotiva) => (vrednosti[p.kljuc] && Array.isArray(prvaki) ? prvaki[Number(vrednosti[p.kljuc])] : undefined)
-  const besediloPrvaka = (x: Prvak) => (jezik === 'en' ? x.besedilo_en : x.besedilo_sl)
+  const besediloPrvaka = (x: Prvak) => (jezik === 'sl' ? x.besedilo_sl : x.besedilo_en)
   const napake: Record<string, Kljuc | null> = Object.fromEntries(m.polja.map((p) => {
     const v = vrednosti[p.kljuc] ?? ''
     const drugo = p.razlicna_od ? vrednosti[p.razlicna_od] : undefined
@@ -297,7 +297,7 @@ export function Konfigurator({ i }: { i: Izdelek }) {
     if (!r || !vnos) return
     const k0 = kljuc({ razlicica_id: r.id, personalizacija: vnos })
     const imam = (k: typeof kosarica) => k.postavke.find((p) => kljuc(p) === k0)?.kolicina ?? 0
-    const opis = [po(m.ime_sl, m.ime_en), ...opisi.filter((v) => v !== '')].join(' · ').slice(0, 120)
+    const opis = [pr(m, 'ime'), ...opisi.filter((v) => v !== '')].join(' · ').slice(0, 120)
     const nova = dodaj(kosarica, r.id, kolicina, i.slug, vnos, opis, najvec, prikaz)
     shrani(nova)
     dogodek('trgovina-kosarica', { izdelek: i.slug })
@@ -318,14 +318,14 @@ export function Konfigurator({ i }: { i: Izdelek }) {
   const conaPogleda = (k: string): Cona => conaZa(cone, k, barva) ?? cone[0]!
   const glavna = conaPogleda(m.cona)
   const vidna = conaPogleda(pogled)
-  const imeMotiva = po(m.ime_sl, m.ime_en)
+  const imeMotiva = pr(m, 'ime')
   const alt = t('motiv.alt', { motiv: imeMotiva, izdelek: ime })
   const obrnjeno = pogledi.length > 1 && pogled !== pogledi[0]
   const zShemo = m.sheme.length > 1
   const zRazlicico = dvojne || i.razlicice.length > 1
   const imeRazlicice = (oznaka: string) => {
     const x = i.razlicice.find((y) => y.oznaka_sl === oznaka)
-    return po(oznaka, x?.oznaka_en ?? oznaka)
+    return x ? pr(x, 'oznaka') : oznaka
   }
   const naslovRazlicice = dvojne ? t('motiv.korak.nosilec') : barvna ? t('motiv.barva') : zCono ? t('motiv.format') : t('motiv.velikost')
   // Vzorec dresa: sličice v trenutnih barvah, brez napisov.
@@ -398,15 +398,15 @@ export function Konfigurator({ i }: { i: Izdelek }) {
                           izbran ? 'border-gnl-400 bg-gnl-400/10 ring-2 ring-gnl-400/40' : 'border-white/10 bg-white/[0.03] hover:border-white/30'}`}>
                         <Mockup cona={c} svg={sliciceSvg[x.slug]?.svg ?? null} podlaga={sliciceSvg[x.slug]?.podlaga} barva={barva} alt="" povecava={1.9}
                           className="transition duration-300 group-hover:scale-[1.03] motion-reduce:transition-none" />
-                        <span className={`block truncate px-2.5 py-2 text-sm font-bold ${izbran ? 'text-gnl-200' : 'text-slate-200'}`}>{po(x.ime_sl, x.ime_en)}</span>
+                        <span className={`block truncate px-2.5 py-2 text-sm font-bold ${izbran ? 'text-gnl-200' : 'text-slate-200'}`}>{pr(x, 'ime')}</span>
                       </button>
                     )
                   })}
                 </div>
-                <p className="text-sm leading-relaxed text-slate-400">{po(m.opis_sl, m.opis_en)}</p>
+                <p className="text-sm leading-relaxed text-slate-400">{pr(m, 'opis')}</p>
               </Korak>
             )}
-            {motivi.length === 1 && <p className="text-sm leading-relaxed text-slate-400">{po(m.opis_sl, m.opis_en)}</p>}
+            {motivi.length === 1 && <p className="text-sm leading-relaxed text-slate-400">{pr(m, 'opis')}</p>}
 
             <Korak n={korak++} naslov={t('motiv.korak.polja')}>
               <div className="kartica grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
@@ -421,10 +421,10 @@ export function Konfigurator({ i }: { i: Izdelek }) {
             </Korak>
 
             {zShemo && (
-              <Korak n={korak++} naslov={t('motiv.korak.shema')} dodatno={<span className="text-sm text-slate-400">{po(m.sheme.find((s) => s.kljuc === shema)?.ime_sl ?? '', m.sheme.find((s) => s.kljuc === shema)?.ime_en ?? '')}</span>}>
+              <Korak n={korak++} naslov={t('motiv.korak.shema')} dodatno={<span className="text-sm text-slate-400">{pr(m.sheme.find((s) => s.kljuc === shema) ?? {}, 'ime')}</span>}>
                 <div className="flex flex-wrap gap-3" role="radiogroup" aria-label={t('motiv.korak.shema')}>
                   {m.sheme.map((s) => (
-                    <button key={s.kljuc} type="button" role="radio" aria-checked={s.kljuc === shema} aria-label={po(s.ime_sl, s.ime_en)} title={po(s.ime_sl, s.ime_en)}
+                    <button key={s.kljuc} type="button" role="radio" aria-checked={s.kljuc === shema} aria-label={pr(s, 'ime')} title={pr(s, 'ime')}
                       onClick={() => setShema(s.kljuc)}
                       className={`relative h-12 w-12 overflow-hidden rounded-full transition ${s.kljuc === shema ? 'ring-2 ring-gnl-400 ring-offset-2 ring-offset-slate-950' : 'ring-1 ring-white/20 hover:ring-white/50'}`}
                       style={{ background: `conic-gradient(${s.barve[0]} 0 50%, ${s.barve[1] ?? s.barve[0]} 50% 75%, ${s.barve[2] ?? s.barve[0]} 75% 100%)` }} />
@@ -439,12 +439,12 @@ export function Konfigurator({ i }: { i: Izdelek }) {
                   <div className="space-y-4">
                     {barve.length > 0 && (
                       <fieldset className="space-y-2">
-                        <legend className="text-sm text-slate-400">{t('motiv.barva')}: <span className="font-semibold text-slate-200">{po(barva, barvaRazlicice(i.razlicice.find((x) => barvaRazlicice(x.oznaka_sl) === barva)?.oznaka_en ?? barva))}</span></legend>
+                        <legend className="text-sm text-slate-400">{t('motiv.barva')}: <span className="font-semibold text-slate-200">{barvaRazlicice(pr(i.razlicice.find((x) => barvaRazlicice(x.oznaka_sl) === barva) ?? { oznaka_sl: barva, oznaka_en: barva }, 'oznaka'))}</span></legend>
                         <div className="flex gap-3">
                           {barve.map((b) => {
-                            const en = barvaRazlicice(i.razlicice.find((x) => barvaRazlicice(x.oznaka_sl) === b)?.oznaka_en ?? b)
+                            const ime = barvaRazlicice(pr(i.razlicice.find((x) => barvaRazlicice(x.oznaka_sl) === b) ?? { oznaka_sl: b, oznaka_en: b }, 'oznaka'))
                             return (
-                              <button key={b} type="button" aria-pressed={b === barva} aria-label={po(b, en)} title={po(b, en)} onClick={() => { setBarva(b); setDodano(null) }}
+                              <button key={b} type="button" aria-pressed={b === barva} aria-label={ime} title={ime} onClick={() => { setBarva(b); setDodano(null) }}
                                 className={`h-10 w-10 rounded-full border border-white/25 transition ${b === barva ? 'ring-2 ring-gnl-400 ring-offset-2 ring-offset-slate-950' : 'hover:scale-105'}`}
                                 style={{ background: VZOREC[b] ?? '#64748b' }} />
                             )
@@ -579,7 +579,7 @@ export function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, p
   const max = p.max ?? (p.vrsta === 'ekipa' ? 24 : 12)
   const oznaka = (
     <span className="flex flex-wrap items-baseline gap-2 text-sm font-semibold text-slate-300">
-      {po(p.oznaka_sl, p.oznaka_en)}
+      {pr(p, 'oznaka')}
       {!p.obvezno && <span className="text-xs font-normal text-slate-500">{t('pers.neobvezno')}</span>}
     </span>
   )
@@ -603,7 +603,7 @@ export function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, p
         {!uid ? prijava : ekipe === null ? <Nalaganje /> : ekipe === 'napaka' ? <p className="opozorilo">{t('napaka.nalaganje')}</p> : seznam!.length === 0
           ? <p className="text-sm text-slate-400">{t('motiv.niEkip')}</p>
           : (
-            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={po(p.oznaka_sl, p.oznaka_en)}>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={pr(p, 'oznaka')}>
               {seznam!.map((e) => {
                 const ne = e.mladinska || ekipaPrevelika(e.name, 24)
                 return (
@@ -639,7 +639,7 @@ export function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, p
         {!uid ? prijava : seznam === null ? <Nalaganje /> : seznam === 'napaka' ? <p className="opozorilo">{t('napaka.nalaganje')}</p> : seznam.length === 0
           ? <p className="text-sm text-slate-400">{ekipa ? t('motiv.niEkip') : t('pers.niPrvak')}</p>
           : (
-            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={po(p.oznaka_sl, p.oznaka_en)}>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={pr(p, 'oznaka')}>
               {ekipa
                 ? (seznam as MojaEkipa[]).map((e) => {
                   const dolga = ekipaPrevelika(e.name, max)
@@ -672,11 +672,11 @@ export function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, p
     return (
       <fieldset className={`space-y-2 ${sirok}`}>
         <legend className="flex flex-wrap items-baseline gap-2 text-sm font-semibold text-slate-300">
-          {po(p.oznaka_sl, p.oznaka_en)}
-          {izbrana && <span className="font-normal text-slate-400">{po(izbrana.ime_sl, izbrana.ime_en)}</span>}
+          {pr(p, 'oznaka')}
+          {izbrana && <span className="font-normal text-slate-400">{pr(izbrana, 'ime')}</span>}
           {!p.obvezno && <span className="text-xs font-normal text-slate-500">{t('pers.neobvezno')}</span>}
         </legend>
-        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={po(p.oznaka_sl, p.oznaka_en)}>
+        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={pr(p, 'oznaka')}>
           {!p.obvezno && (
             <button type="button" role="radio" aria-checked={vrednost === ''} aria-label={t('motiv.brezBarve')} title={t('motiv.brezBarve')} onClick={() => nastavi('')}
               className={`grid h-9 w-9 place-items-center rounded-full border border-white/25 bg-slate-900 text-slate-400 transition ${vrednost === '' ? 'ring-2 ring-gnl-400 ring-offset-2 ring-offset-slate-950' : 'hover:scale-105'}`}>
@@ -686,7 +686,7 @@ export function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, p
           {paleta.map((x) => {
             // Zasedena barva ostane v vrstnem redu tipkovnice in pove, zakaj je ni mogoče izbrati.
             const zasedena = drugo === x.kljuc
-            const ime = po(x.ime_sl, x.ime_en)
+            const ime = pr(x, 'ime')
             return (
               <button key={x.kljuc} type="button" role="radio" aria-checked={vrednost === x.kljuc} aria-disabled={zasedena || undefined}
                 aria-label={zasedena ? `${ime}: ${t('motiv.napaka.razlicni')}` : ime} title={zasedena ? t('motiv.napaka.razlicni') : ime}
@@ -707,12 +707,12 @@ export function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, p
       return (
         <div className={`space-y-2 ${sirok}`}>
           {oznaka}
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6" role="radiogroup" aria-label={po(p.oznaka_sl, p.oznaka_en)}>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6" role="radiogroup" aria-label={pr(p, 'oznaka')}>
             {moznosti.map((x) => (
               <button key={x.kljuc} type="button" role="radio" aria-checked={vrednost === x.kljuc} onClick={() => nastavi(x.kljuc)}
                 className={`overflow-hidden rounded-xl border p-1.5 text-center text-[11px] font-semibold leading-tight transition ${vrednost === x.kljuc ? izbranGumb : `${prostGumb} ${okvir}`}`}>
                 {slicice[x.kljuc] && <img src={slicice[x.kljuc]} alt="" className="mx-auto aspect-[4/5] w-full rounded-lg object-cover" />}
-                <span className="mt-1 block break-words">{po(x.ime_sl, x.ime_en)}</span>
+                <span className="mt-1 block break-words">{pr(x, 'ime')}</span>
               </button>
             ))}
           </div>
@@ -727,7 +727,7 @@ export function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, p
           <select id={id} value={vrednost} onChange={(e) => nastavi(e.target.value)} aria-required={p.obvezno}
             className={`polje w-full ${manjka ? 'border-rose-400/60' : ''}`}>
             {!p.obvezno || !vrednost ? <option value="">—</option> : null}
-            {moznosti.map((x) => <option key={x.kljuc} value={x.kljuc}>{po(x.ime_sl, x.ime_en)}</option>)}
+            {moznosti.map((x) => <option key={x.kljuc} value={x.kljuc}>{pr(x, 'ime')}</option>)}
           </select>
         </label>
       )
@@ -735,11 +735,11 @@ export function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, p
     return (
       <div className={`space-y-2 ${sirok}`}>
         {oznaka}
-        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={po(p.oznaka_sl, p.oznaka_en)}>
+        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={pr(p, 'oznaka')}>
           {moznosti.map((x) => (
             <button key={x.kljuc} type="button" role="radio" aria-checked={vrednost === x.kljuc} onClick={() => nastavi(vrednost === x.kljuc && !p.obvezno ? '' : x.kljuc)}
               className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold ${vrednost === x.kljuc ? izbranGumb : `${prostGumb} ${okvir}`}`}>
-              {po(x.ime_sl, x.ime_en)}
+              {pr(x, 'ime')}
             </button>
           ))}
         </div>
@@ -755,7 +755,7 @@ export function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, p
         <span className="flex items-baseline justify-between gap-2">{oznaka}</span>
         <span className="flex items-center gap-3">
           <input type="range" min={p.min} max={99} value={Number.isFinite(n) && vrednost !== '' ? n : Number(p.privzeto ?? p.min)} onChange={(e) => nastavi(e.target.value)}
-            aria-label={po(p.oznaka_sl, p.oznaka_en)} className={`h-2 w-full cursor-pointer accent-gnl-400 ${vrednost === '' ? 'opacity-40' : ''}`} />
+            aria-label={pr(p, 'oznaka')} className={`h-2 w-full cursor-pointer accent-gnl-400 ${vrednost === '' ? 'opacity-40' : ''}`} />
           <input id={id} value={vrednost} onChange={(e) => nastavi(e.target.value)} inputMode="numeric" maxLength={2} autoComplete="off"
             aria-invalid={Boolean(napaka) || manjka} aria-required={p.obvezno} aria-describedby={`${id}-namig`}
             className={`polje w-16 text-center tabular-nums ${napaka || manjka ? 'border-rose-400/60' : ''}`} />

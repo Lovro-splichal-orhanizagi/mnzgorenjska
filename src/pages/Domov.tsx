@@ -25,7 +25,7 @@ import Odstevanje from '../components/Odstevanje'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
 import type { IgralecEnajsterice } from '../components/EnajstericaNaIgriscu'
 import type { Pozicija } from '../lib/tipi'
-import { t, tx, datum } from '../i18n'
+import { jezikSlovarja, t, tx, datum } from '../i18n'
 import Sponzor from '../components/Sponzor'
 
 /** Kar liga čaka od skupnosti (asistence, pozicije). */
@@ -553,7 +553,7 @@ export default function Domov() {
           </span>
           <h2 className="text-2xl font-black leading-tight text-white sm:text-3xl">{t('domov.trgovina.naslov')}</h2>
           <p className="max-w-md text-slate-300">{t('domov.trgovina.opis')}</p>
-          <a {...povezavaTrgovine()} className="gumb-glavni inline-flex">
+          <a {...povezavaTrgovine(jezikSlovarja())} className="gumb-glavni inline-flex">
             {t('domov.trgovina.gumb')}
           </a>
         </div>
@@ -561,7 +561,7 @@ export default function Domov() {
           {(['majica', 'pulover', 'sal', 'kapa'] as const).map((izdelek) => (
             <li key={izdelek}>
               <a
-                {...povezavaTrgovine()}
+                {...povezavaTrgovine(jezikSlovarja())}
                 className="kartica-hover block h-full overflow-hidden rounded-xl border border-white/10 bg-white/[0.04]"
               >
                 <img

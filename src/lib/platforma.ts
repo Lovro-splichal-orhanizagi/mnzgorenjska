@@ -22,11 +22,12 @@ export const platforma = (): 'ios' | 'android' | 'web' =>
  * Povezava na trgovino SLFF (meni in noga). Na spletu v istem zavihku (naša
  * stran), v aplikaciji v sistemskem brskalniku kot Facebook v nogi, da
  * WebView ne zapusti aplikacije. Fizično blago trgovini dovolita mimo IAP.
+ * `jezik` (jezik slff.eu) gre v ?lang=, da trgovina govori isti jezik.
  */
-export const povezavaTrgovine = () =>
-  jeNativno()
-    ? { href: 'https://shop.slff.eu', target: '_blank', rel: 'noopener noreferrer' }
-    : { href: 'https://shop.slff.eu' }
+export const povezavaTrgovine = (jezik?: string) => {
+  const href = `https://shop.slff.eu${jezik ? `/?lang=${encodeURIComponent(jezik)}` : ''}`
+  return jeNativno() ? { href, target: '_blank', rel: 'noopener noreferrer' } : { href }
+}
 
 /** Enkrat ob zagonu: vrstica stanja in Androidov gumb nazaj. */
 export function pripraviNativno(): void {

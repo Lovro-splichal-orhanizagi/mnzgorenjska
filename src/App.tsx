@@ -83,7 +83,7 @@ function StaraPot({ na }: { na: string }) {
   const { search, hash } = useLocation()
   return <Navigate to={{ pathname: na.replace(':id', id ?? ''), search, hash }} replace />
 }
-import { t } from './i18n'
+import { jezikSlovarja, t } from './i18n'
 
 function NiStrani() {
   useNaslov(t('aplikacija.niStrani.naslov'))
@@ -235,7 +235,7 @@ export default function App() {
               </div>
             )}
             <div className="mb-3">
-              <a {...povezavaTrgovine()} className="underline hover:text-slate-200">
+              <a {...povezavaTrgovine(jezikSlovarja())} className="underline hover:text-slate-200">
                 <span aria-hidden>🛍️ </span>
                 {t('aplikacija.meni.trgovina')}
               </a>

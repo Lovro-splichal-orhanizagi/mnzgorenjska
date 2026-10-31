@@ -475,7 +475,9 @@ zaloga se odšteje le ob plačilu, rezervacija drži 35 min. CI jo objavi ob
 `SHOP_OBJAVA=1`; funkcije, Stripe tarife in živi ključ so ročni. Vse:
 `docs/trgovina.md`.
 Motivi po meri (nosilci, cone, predloge, tisk, slike s prizori, nov motiv):
-`docs/trgovina.md` (*Motivi*).
+`docs/trgovina.md` (*Motivi*). Trgovina govori vse jezike slff.eu (slovar na jezik
+v `shop/src/jeziki/`, prevodi v bazi v `prevodi`, mail in Stripe v jeziku naročila):
+**nov niz trgovine dodaj v vseh 20 jezikov**; `docs/trgovina.md` (*Jeziki*).
 
 ## Poti
 
