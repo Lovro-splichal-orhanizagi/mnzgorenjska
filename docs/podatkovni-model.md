@@ -783,6 +783,111 @@
       besedilo odpovedi.
     - **Portal v živem načinu**: preklic naročnine ob koncu obdobja (v
       testnem je tako nastavljen; ponovi v živem).
+- **Izložba preverjenega igralca** (posnetki, migracija 20261031183100): preverjen
+  polnoleten igralec ima na vrhu `/player/<id>` izložbo (`IzlozbaIgralca.tsx`):
+  pasica, fotografija, ime s kljukico, pozicija · klub · liga · letnik, zlati
+  "Odprt za prestop" in regije (iz `scout.privolitve`, le pri odprt za prestop,
+  kot klubom), velik izpostavljeni posnetek, do 6 posnetkov z naslovom, številke
+  sezone (tekme, goli, asistence, fantasy točke; gost jih ne vidi), pozitiven
+  kazalnik Scouta (le vrh 25/10/5 % iz zadnjega objavljenega modela prek
+  `scout.vidni`, zaupanje ≥ 0,5; "kazalniki iz podatkov tekem"), O meni
+  (`profil_igralca_plus.opis`, sicer `profil_igralca.opis`) in opomba "prikazan
+  skavtom v omrežju SLFF Club" (država odprta, brez ugovora). Lastnik isto
+  stran ureja na mestu (pasica, opis, dodaj/preimenuj/premakni/izpostavi/izbriši
+  posnetek), vidi moč profila z naslednjim korakom in **oglede skavtov**:
+  odprtja profila v SLFF Club zadnjih 30 dni iz obstoječega `scout.dnevnik`
+  (`vrsta = 'igralec'`, vrstice osebe, brez lastnega kluba) — le števili
+  (odprtij, različnih klubov), nikoli kateri klub. Lastnik potrjenega,
+  polnoletnega profila brez pravice vidi ponudbo (`PonudbaIzlozbe` nad nakupom;
+  v aplikaciji skrita kot nakup).
+  - **Pravilo (eno, v SQL):** `izlozba_dovoljena(igralec)` = `vidi_posnetke()`
+    (stikalo `posnetki_igralcev`: 0 nihče, 1 admin in `testerji`, 2 vsi) AND
+    `je_preverjen(igralec)` (vsebuje stikalo `preverjeni_racuni`, 18+ ob nakupu)
+    AND `izlozba_odrasla_oseba(igralec)`: potrjen zahtevek; nobena vrstica osebe
+    (glavna in `povezani_igralci`) ni v mladinski ligi (`je_mladinski_slug`) ali
+    anonimizirana (`anonimiziran_at` ali ključ v `anonimizirani_igralci`); v
+    državi ni mladinske vrstice z istim `full_name` ali `reg_st` (Scoutov ključ
+    osebe; izjema kot v Scoutu: privolitev lastnika s polnoletno letnico odpre
+    ujemanje po ključu, lastnih mladinskih vrstic pa nikoli). Izmerjeno na
+    produkciji (države z največ mladinskimi vrsticami): 35 ms. Uporabljajo ga
+    javno branje, nalaganje, žetoni, SLFF Club in prijave.
+  - **Tabele** (zaprte, `agent.zaprte_tabele`): `posnetki_igralca` (ključ glavna
+    vrstica; `stream_uid`, naslov ≤ 60 skozi `prepovedane_besede`, `vrstni_red`,
+    `izpostavljen` (en na igralca), `stanje` `nalaganje`/`obdelava`/`pripravljen`/`napaka`,
+    `pregled` `caka`/`odobren`/`zavrnjen` z razlogom, `trajanje`,
+    `brez_pravice_od`), `posnetki_brisanje` (uid-ji za izbris v Streamu),
+    `prijave_posnetkov`, `posnetki_nalaganja` (meja 12 na dan).
+  - **RPC:** javno `izlozba_igralca(igralec)` (jsonb; tujec le, če pravilo velja,
+    sicer null; lastnik vedno, z `dovoljena`, `vidi`, `odrasla`, svojimi
+    posnetki v vseh stanjih in razlogom zavrnitve), `posnetki_za_ogled(ids[])`
+    (uid-ji, ki jih klicatelj sme gledati: lastnik svoje, admin vse, ostali
+    odobrene in obdelane); lastnik `posnetki_pripravi` (pravilo, največ 6,
+    meja), `posnetki_uredi`, `posnetki_razvrsti`, `posnetki_izpostavi`,
+    `posnetki_izbrisi` (tudi admin); `prijavi_posnetek` (prijavljen, ne lastnik;
+    tri odprte prijave posnetek vrnejo v pregled); admin `admin_posnetki`,
+    `admin_odloci_posnetek` (zavrnitev z razlogom, reši prijave); servis
+    `posnetki_nastavi_uid`, `posnetki_stream_stanje`, `posnetki_pocisti`,
+    `posnetki_za_brisanje`, `posnetki_brisanje_izid`. SLFF Club:
+    `scout_posnetki(igralec)` skozi `scout.dostop` (`dnevnik.vrsta = 'posnetki'`,
+    meja drugih klicev) in `scout.vidni`; `scout_igralec` doda `posnetkov`
+    (aplikacija posnetke naloži le takrat).
+  - **Moderacija:** vsak nov posnetek `caka`; javno in klubom šele `odobren` in
+    `pripravljen`. Administracija → Igralci → *Posnetki*: stikalo, predvajanje,
+    odobri, zavrni z razlogom, izbriši, "Počisti zdaj". Discord (`trg_posnetki_na_discord`,
+    webhook iz Vaulta kot `trg_prevzem_na_discord`): ko Stream posnetek obdela
+    in čaka na pregled ter ob prijavi.
+  - **Cloudflare Stream** (videov ni na našem disku): funkcija
+    `posnetki-igralca` ustvari Direct Creator Upload (`maxDurationSeconds: 180`,
+    osnovno nalaganje do 200 MB, `requireSignedURLs: true`, naslov velja 1 uro),
+    brskalnik video pošlje naravnost v Stream. Stanje pride z webhookom
+    (`Webhook-Signature`, HMAC-SHA256 nad `time.telo`, 5 min; `stream.ts`, smoke)
+    ali z vprašanjem `stanje` (rezerva). Ogled: podpisan žeton RS256 (2 uri) s
+    ključem Streama le za uid-je iz `posnetki_za_ogled` z glavo klicatelja;
+    neodobren ali izbrisan posnetek žetona ne dobi. Predvajalnik je iframe
+    Streama (`customer-<koda>.cloudflarestream.com/<žeton>/iframe`).
+    **Preizkusni način** (lokalno, CI): brez `CF_*` in z `POSNETKI_TEST=1`
+    nalaganje dobi uid `test-…`, `stanje` takoj vrne `pripravljen`, ogled je brez
+    naslovov (plakat). Brez obojega funkcija vrne 503 (`posnetki-izklopljeno`).
+  - **Brisanje:** lastnik ali admin → vrstica takoj, video v Streamu takoj (ob
+    napaki vrsta). `prevzem_odstrani_predstavitev` (preklic profila,
+    anonimizacija, izbris računa) in kaskada igralca izbrišeta vrstice; sprožilec
+    uid vpiše v `posnetki_brisanje`. Pravica, ki ne velja več, posnetke skrije
+    takoj (pravilo); `posnetki_pocisti()` jih izbriše: zadnja pravica
+    `preklican` (vračilo, spor, odvzem) ob naslednjem čiščenju, potek po 30 dneh
+    (`brez_pravice_od`). Še: nedokončana nalaganja po 3 urah, napake po 7 dneh,
+    zavrnjeni 14 dni po odločitvi. Čiščenje in praznjenje vrste: delovni tok
+    *Posnetki: čiščenje* (`posnetki-pocisti.yml`, vsako uro, `{"akcija":"pocisti"}`
+    s servisnim ključem; 404/503 pred objavo je le opozorilo).
+  - **Vklop (lastnik):**
+    1. Cloudflare (račun, ki ima slff.eu) → Stream → vklop naročnine.
+    2. API žeton (My Profile → API Tokens → Custom): *Account → Stream → Edit*,
+       le račun SLFF. Account ID je v pregledu računa; koda naročnika je v
+       Stream → katerikoli video → Embed (`customer-<koda>.cloudflarestream.com`).
+    3. Podpisni ključ: `curl -X POST https://api.cloudflare.com/client/v4/accounts/<ACC>/stream/keys -H "Authorization: Bearer <ŽETON>"`
+       → `result.id` je `CF_STREAM_KEY_ID`, `result.jwk` (base64) je `CF_STREAM_KEY_JWK`.
+    4. Webhook: `curl -X PUT https://api.cloudflare.com/client/v4/accounts/<ACC>/stream/webhook -H "Authorization: Bearer <ŽETON>" -H 'Content-Type: application/json' -d '{"notificationUrl":"https://api.slff.eu/functions/v1/posnetki-igralca"}'`
+       → `result.secret` je `CF_STREAM_WEBHOOK_SECRET`.
+    5. Na strežniku v `/opt/supabase/.env` (chmod 600, nikoli v git):
+       `CF_ACCOUNT_ID`, `CF_STREAM_TOKEN`, `CF_STREAM_DOMAIN=customer-<koda>.cloudflarestream.com`,
+       `CF_STREAM_WEBHOOK_SECRET`, `CF_STREAM_KEY_ID`, `CF_STREAM_KEY_JWK`,
+       neobvezno `POSNETKI_ORIGINS=slff.eu,club.slff.eu` (predvajanje le na teh
+       domenah; v aplikaciji Capacitor preveri, sicer pusti prazno). Novi
+       `scripts/hetzner/docker-compose.slff.yml` prenesi v `/opt/supabase/`
+       (compose ni v CI), nato
+       `cd /opt/supabase && docker compose -f docker-compose.yml -f docker-compose.slff.yml up -d functions`.
+    6. Po združitvi (migracijo uveljavi CI): `scripts/hetzner/objavi-funkcije.sh posnetki-igralca`
+       (ena funkcija na klic; `_shared` gre zraven). Preveri webhook brez JWT:
+       `curl -s -o /dev/null -w '%{http_code}' -X POST https://api.slff.eu/functions/v1/posnetki-igralca -H 'Webhook-Signature: time=1,sig1=x' -d '{}'`
+       mora vrniti 400 (podpis), ne 401.
+    7. Administracija → Igralci → *Posnetki*: stikalo 1, preizkus s
+       preizkuševalcem (nalaganje, pregled, ogled, izbris; v Streamu se video
+       izbriše), nato 2. SLFF Club posnetke prikaže brez lastne objave funkcij
+       (aplikacija se objavi z `SCOUT_OBJAVA=1`).
+  - **Stroški Streama** (cenik 2026: 5 $ na 1000 shranjenih minut na mesec,
+    1 $ na 1000 predvajanih minut, kodiranje in nalaganje brez plačila):
+    6 posnetkov × največ 3 min = največ 18 min na igralca; 100 preverjenih
+    igralcev ≈ 1800 min ≈ 9 $/mesec shrambe, 10 000 ogledov po 1 min ≈ 10 $.
+    Najmanjši paket je 1000 min (5 $).
 - **Uradne odsotnosti** (migracija 20261012135100): potrjeni igralec (lastnik
   potrjenega `zahtevki_igralca`, tudi za povezane vrstice) sam javi odsotnost
   (`objavi_uradno_odsotnost`: vrsta `poskodba`/`bolezen`/`dopust`/`kazen`/`drugo`,

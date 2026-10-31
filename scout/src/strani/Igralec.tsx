@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { supabase, type Podoben, type ProfilIgralca, type SezonaIgralca, type Skupina } from '../baza'
+import { supabase, type Podoben, type PosnetekIgralca, type ProfilIgralca, type SezonaIgralca, type Skupina } from '../baza'
 import { napaka, odstotek, stevilo, t, type Kljuc } from '../besede'
 import { Nalaganje } from '../seja'
 import { MALO_PODATKOV } from './Iskanje'
@@ -116,6 +116,8 @@ export function Igralec() {
         {napakaA && <p className="opozorilo">{napakaA}</p>}
       </header>
 
+      {(p.posnetkov ?? 0) > 0 && <Posnetki igralecId={p.player_id} />}
+
       {p.privolitev && (
         <section className="space-y-1 rounded-2xl border border-gnl-400/30 bg-gnl-400/10 p-4 text-sm text-slate-200">
           <p className="font-bold text-gnl-300">{t('igralec.odprt')}</p>
@@ -183,5 +185,94 @@ export function Igralec() {
         )}
       </section>
     </div>
+  )
+}
+
+/**
+ * Posnetki izložbe (izpostavljeni prvi). Funkcija posnetki-igralca kliče
+ * `scout_posnetki` z glavo seje (scout.dostop: dnevnik in meja, scout.vidni)
+ * in vrne kratkožive podpisane naslove Cloudflare Stream.
+ */
+function Posnetki({ igralecId }: { igralecId: number }) {
+  const [posnetki, setPosnetki] = useState<PosnetekIgralca[] | null>(null)
+  const [napakaP, setNapakaP] = useState(false)
+  const [izbran, setIzbran] = useState<number | null>(null)
+  const [predvaja, setPredvaja] = useState(false)
+
+  useEffect(() => {
+    let velja = true
+    setPosnetki(null)
+    setIzbran(null)
+    setPredvaja(false)
+    void supabase.functions
+      .invoke('posnetki-igralca', { body: { akcija: 'scout', player_id: igralecId } })
+      .then(({ data, error }) => {
+        if (!velja) return
+        if (error) setNapakaP(true)
+        else setPosnetki(((data as { posnetki?: PosnetekIgralca[] } | null)?.posnetki ?? []) as PosnetekIgralca[])
+      })
+    return () => {
+      velja = false
+    }
+  }, [igralecId])
+
+  if (napakaP) return <p className="text-sm text-slate-400">{t('igralec.posnetkiNapaka')}</p>
+  if (!posnetki?.length) return null
+  const a = posnetki.find((x) => x.id === izbran) ?? posnetki[0]
+  return (
+    <section className="space-y-3">
+      <div>
+        <h2 className="text-lg font-bold text-slate-100">{t('igralec.posnetki')}</h2>
+        <p className="text-xs text-slate-400">{t('igralec.posnetkiOpis')}</p>
+      </div>
+      <div className="relative aspect-video overflow-hidden rounded-2xl bg-slate-900 ring-1 ring-white/10">
+        {predvaja && a.predvajaj ? (
+          <iframe
+            src={`${a.predvajaj}&autoplay=true`}
+            title={a.naslov}
+            className="absolute inset-0 h-full w-full border-0"
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+          />
+        ) : (
+          <button
+            type="button"
+            disabled={!a.predvajaj}
+            onClick={() => setPredvaja(true)}
+            aria-label={t('igralec.predvajaj', { naslov: a.naslov })}
+            className="group absolute inset-0 block"
+          >
+            {a.slika && <img src={a.slika} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+            <span className="absolute inset-0 bg-gradient-to-t from-slate-950/70 to-transparent" aria-hidden="true" />
+            <span className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-950 shadow-lg transition group-hover:scale-105" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="24" height="24"><path d="M8 5.5v13l11-6.5z" fill="currentColor" /></svg>
+            </span>
+          </button>
+        )}
+      </div>
+      <p className="font-semibold text-slate-100">{a.naslov}</p>
+      {posnetki.length > 1 && (
+        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {posnetki.map((x) => (
+            <li key={x.id}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIzbran(x.id)
+                  setPredvaja(true)
+                }}
+                aria-pressed={x.id === a.id}
+                className={`block w-full overflow-hidden rounded-xl text-left ring-1 ${x.id === a.id ? 'ring-2 ring-gnl-400' : 'ring-white/10'}`}
+              >
+                <span className="relative block aspect-video bg-slate-900">
+                  {x.slika && <img src={x.slika} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
+                </span>
+                <span className="block truncate px-2 py-1.5 text-xs font-semibold text-slate-200">{x.naslov}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }

@@ -1,0 +1,36 @@
+name: 'Posnetki: čiščenje in brisanje v Streamu'
+
+# Izložba preverjenih igralcev (posnetki v Cloudflare Stream). Funkcija
+# posnetki-igralca (akcija pocisti) pokliče `posnetki_pocisti()` (nedokončana
+# nalaganja, napake, zavrnjeni po 14 dneh, preklicana pravica takoj, potekla
+# po 30 dneh) in izprazni vrsto `posnetki_brisanje` (izbris videov v Streamu,
+# tudi po preklicu profila, anonimizaciji in izbrisu računa).
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: posnetki-pocisti
+  cancel-in-progress: false
+
+jobs:
+  pocisti:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Počisti posnetke
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        # Funkcija še ni objavljena (404) ali Stream še ni nastavljen (503): opozorilo, ne napaka.
+        run: |
+          KODA=$(curl -sS -o /tmp/odgovor.json -w '%{http_code}' -X POST "$SUPABASE_URL/functions/v1/posnetki-igralca" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H 'Content-Type: application/json' \
+            -d '{"akcija":"pocisti"}')
+          echo "HTTP $KODA"
+          if [ "$KODA" = 404 ] || [ "$KODA" = 503 ]; then echo "::warning::posnetki-igralca ni objavljen ali Stream ni nastavljen"; exit 0; fi
+          [ "$KODA" = 200 ] && cat /tmp/odgovor.json

@@ -272,6 +272,16 @@ plačila) in `…-faza3b-aplikacija.md` (scout.slff.eu). Migracije
   `ids` je psql spremenljivka z vsemi vrsticami osebe (izbrane kot pri
   anonimizaciji), npr. `psql -v ids='{101,202}'`.
 
+- **Posnetki igralca** (migracija 20261031183100): `scout_igralec` doda
+  `posnetkov` (odobreni posnetki izložbe, če velja `izlozba_dovoljena`:
+  preverjen, polnoleten, brez mladinske vrstice). Le takrat stran igralca
+  pokliče funkcijo `posnetki-igralca` (`akcija: scout`) → `scout_posnetki`
+  skozi `scout.dostop` (`dnevnik.vrsta = 'posnetki'`, meja 300) in
+  `scout.vidni`; žetoni za ogled veljajo 2 uri. Igralec na svoji izložbi
+  vidi le števili odprtij profila (`vrsta = 'igralec'`, zadnjih 30 dni, brez
+  lastnega kluba) in različnih klubov, nikoli kateri. Vse:
+  `docs/podatkovni-model.md` (*Izložba preverjenega igralca*).
+
 - **Merilo faze 3** (5 poskusnih klubov tedensko):
 
   ```sql

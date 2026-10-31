@@ -72,6 +72,18 @@ export interface ProfilIgralca {
   /** Le pri "odprt za prestop"; stika ni (faza 4). */
   privolitev: { letnik: number; regije: string[] } | null
   sezone: SezonaIgralca[] | null
+  /** Odobreni posnetki izložbe preverjenega polnoletnega igralca (le, če jih ima). */
+  posnetkov?: number
+}
+
+/** Posnetek izložbe s podpisanima naslovoma (funkcija posnetki-igralca). */
+export interface PosnetekIgralca {
+  id: number
+  naslov: string
+  izpostavljen: boolean
+  trajanje: number | null
+  predvajaj: string | null
+  slika: string | null
 }
 
 /** scout_klub(): statistika na tekmo; ciste je delež 0..1. */

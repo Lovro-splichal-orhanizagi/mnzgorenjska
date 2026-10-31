@@ -5615,6 +5615,314 @@ select pg_temp.preveri('agent: privzeto le branje',
   exists (select 1 from pg_db_role_setting s join pg_roles r on r.oid = s.setrole
           where r.rolname = 'agent_bralec' and 'default_transaction_read_only=on' = any(s.setconfig)));
 
+-- --------------------------------------------------------------------------
+-- Izložba preverjenega igralca (migracija 20261031183100): pravilo prikaza
+-- (stikalo, pravica, le polnoletni), moderacija, žetoni, prijave, brisanje,
+-- čiščenje in SLFF Club. A (…01) ima odraslo vrstico -947001; B (…02) ima
+-- povezano mladinsko vrstico; C (…03) ima soimenjaka v mladinski ligi;
+-- D (…04) je v Scoutovem modelu; T (…05) je tujec.
+-- --------------------------------------------------------------------------
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+insert into auth.users(id,email,raw_user_meta_data,created_at) values
+ ('f7a10000-0000-4000-8000-000000000001','izlozba-a@example.invalid','{"display_name":"IzlozbaA"}',now()),
+ ('f7a10000-0000-4000-8000-000000000002','izlozba-b@example.invalid','{"display_name":"IzlozbaB"}',now()),
+ ('f7a10000-0000-4000-8000-000000000003','izlozba-c@example.invalid','{"display_name":"IzlozbaC"}',now()),
+ ('f7a10000-0000-4000-8000-000000000004','izlozba-d@example.invalid','{"display_name":"IzlozbaD"}',now()),
+ ('f7a10000-0000-4000-8000-000000000005','izlozba-t@example.invalid','{"display_name":"IzlozbaT"}',now()),
+ ('f7a10000-0000-4000-8000-000000000006','izlozba-t2@example.invalid','{"display_name":"IzlozbaT2"}',now()),
+ ('f7a10000-0000-4000-8000-000000000007','izlozba-t3@example.invalid','{"display_name":"IzlozbaT3"}',now());
+insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
+values (-947100, 'test-izlozba-u19', 'Izložba U19', 'IU19', false, (select id from countries where code='SI'), 'mnzg');
+insert into players(id, team_id, competition_id, first_name, last_name, full_name, position, position_source, value, value_start, active) overriding system value
+values (-947001, -913002, -913001, 'Izlozba', 'Odrasli', 'Izlozba Odrasli', 'MID', 'admin', 6, 6, true),
+       (-947003, -913002, -913001, 'Izlozba', 'Mladi', 'Izlozba Mladi', 'MID', 'admin', 6, 6, true),
+       (-947004, -913002, -947100, 'Izlozba', 'Mladi', 'Izlozba Mladi', 'MID', 'admin', 6, 6, true),
+       (-947006, -913002, -913001, 'Izlozba', 'Soimenjak', 'Izlozba Soimenjak', 'MID', 'admin', 6, 6, true),
+       (-947007, -913003, -947100, 'Izlozba', 'Soimenjak', 'Izlozba Soimenjak', 'MID', 'admin', 6, 6, true),
+       (-947008, -913002, -913001, 'Izlozba', 'Scout', 'Izlozba Scout', 'MID', 'admin', 6, 6, true);
+insert into zahtevki_igralca(id, player_id, user_id, status, potrdil, decided_at) overriding system value
+values (-947001, -947001, 'f7a10000-0000-4000-8000-000000000001', 'potrjen', 'admin', now()),
+       (-947003, -947003, 'f7a10000-0000-4000-8000-000000000002', 'potrjen', 'admin', now()),
+       (-947006, -947006, 'f7a10000-0000-4000-8000-000000000003', 'potrjen', 'admin', now()),
+       (-947008, -947008, 'f7a10000-0000-4000-8000-000000000004', 'potrjen', 'admin', now());
+insert into povezani_igralci (player_id, zahtevek_id) values (-947004, -947003);
+insert into preverjeni_racuni (user_id, player_id, vir, star_vsaj_18)
+select ('f7a10000-0000-4000-8000-00000000000' || n)::uuid, p, 'rocno', null
+  from (values (1, -947001), (2, -947003), (3, -947006), (4, -947008)) v(n, p);
+update settings set value = '2' where key = 'preverjeni_racuni';
+insert into settings(key, value) values ('posnetki_igralcev', '0')
+  on conflict (key) do update set value = '0';
+
+select pg_temp.preveri('izlozba: pravice funkcij (javno branje, ostalo zaprto)',
+  has_function_privilege('anon', 'public.izlozba_igralca(bigint)', 'EXECUTE')
+  and has_function_privilege('anon', 'public.posnetki_za_ogled(bigint[])', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.posnetki_pripravi(bigint, text)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.prijavi_posnetek(bigint, text)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.scout_posnetki(bigint)', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'public.posnetki_nastavi_uid(bigint, text)', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'public.posnetki_stream_stanje(text, text, numeric)', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'public.posnetki_pocisti()', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'public.posnetki_za_brisanje(integer)', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'public.izlozba_odrasla_oseba(bigint)', 'EXECUTE')
+  and has_function_privilege('service_role', 'public.posnetki_pocisti()', 'EXECUTE')
+  and exists (select 1 from agent.zaprte_tabele where tabela = 'public.posnetki_igralca')
+  and exists (select 1 from agent.zaprte_tabele where tabela = 'public.prijave_posnetkov'));
+
+-- Stikalo 0: nihče nič, tudi lastnik ne nalaga.
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('izlozba: stikalo 0 skrije izložbo, lastnik dobi le ponudbo',
+  not izlozba_dovoljena(-947001)
+  and (select not (j->>'dovoljena')::boolean and not (j->>'vidi')::boolean and (j->>'odrasla')::boolean
+         from izlozba_igralca(-947001) j));
+select pg_temp.napaka('izlozba: stikalo 0 lastnik ne nalaga',
+  $$select posnetki_pripravi(-947001, 'Gol iz kota')$$, 'posnetki-pravica');
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('izlozba: stikalo 0 anonimni ne vidi ničesar', izlozba_igralca(-947001) is null);
+select pg_temp.zavrnjeno('izlozba: brskalnik ne bere tabele posnetkov', $$select * from posnetki_igralca$$);
+select pg_temp.zavrnjeno('izlozba: brskalnik ne bere vrste brisanja', $$select * from posnetki_brisanje$$);
+reset role;
+
+-- Stikalo 2: pravilo (preverjen + polnoleten).
+update settings set value = '2' where key = 'posnetki_igralcev';
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('izlozba: preverjen odrasel igralec ima izložbo',
+  izlozba_dovoljena(-947001) and (select (j->>'dovoljena')::boolean and not (j->>'lastnik')::boolean
+                                       and jsonb_array_length(j->'posnetki') = 0 and j->'ogledi' = 'null'::jsonb
+                                    from izlozba_igralca(-947001) j));
+select pg_temp.preveri('izlozba: povezana mladinska vrstica izloči osebo (obe vrstici)',
+  not izlozba_dovoljena(-947003) and not izlozba_dovoljena(-947004) and izlozba_igralca(-947004) is null);
+select pg_temp.preveri('izlozba: soimenjak v mladinski ligi izloči osebo',
+  not izlozba_dovoljena(-947006));
+select pg_temp.preveri('izlozba: nepotrjen in nepreverjen igralec nimata izložbe',
+  not izlozba_dovoljena(-913010) and izlozba_igralca(-913010) is null);
+reset role;
+insert into scout.privolitve (player_id, odprt_za_prestop, letnik, regije) values (-947006, true, 1995, '{}');
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('izlozba: polnoletna letnica odpre ujemanje po ključu (kot Scout), ne lastne mladinske vrstice',
+  izlozba_dovoljena(-947006) and not izlozba_dovoljena(-947003)
+  and (select (j->'privolitev'->>'letnik') = '1995' from izlozba_igralca(-947006) j));
+reset role;
+insert into scout.privolitve (player_id, odprt_za_prestop, letnik, regije) values (-947003, true, 1995, '{}');
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000002',true);
+set local role authenticated;
+select pg_temp.preveri('izlozba: lastnik z mladinsko vrstico ostane brez (tudi z letnico), ponudba ve zakaj',
+  not izlozba_dovoljena(-947003)
+  and (select (j->>'lastnik')::boolean and not (j->>'dovoljena')::boolean and not (j->>'odrasla')::boolean
+         from izlozba_igralca(-947003) j));
+select pg_temp.napaka('izlozba: mladinski igralec ne nalaga',
+  $$select posnetki_pripravi(-947003, 'Gol')$$, 'posnetki-pravica');
+reset role;
+
+-- Nalaganje: le lastnik, največ 6, naslov brez žaljivk.
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000005',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('izlozba: tujec ne nalaga na tuj profil', $$select posnetki_pripravi(-947001, 'Vdor')$$);
+reset role;
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.pade('izlozba: žaljiv naslov pade', $$select posnetki_pripravi(-947001, 'ti si kurac')$$);
+select posnetki_pripravi(-947001, '  Gol   iz kota ') from generate_series(1, 6);
+select pg_temp.napaka('izlozba: sedmi posnetek pade', $$select posnetki_pripravi(-947001, 'Sedmi')$$, 'posnetki-polno');
+select pg_temp.preveri('izlozba: lastnik vidi svoje (vsi v pregledu, prvi izpostavljen, naslov strnjen)',
+  (select jsonb_array_length(j->'posnetki') = 6
+          and (j->'posnetki'->0->>'izpostavljen')::boolean and (j->'posnetki'->0->>'naslov') = 'Gol iz kota'
+          and (select bool_and(e->>'pregled' = 'caka' and e->>'stanje' = 'nalaganje') from jsonb_array_elements(j->'posnetki') e)
+          and (j->>'lastnik')::boolean and j->'ogledi' is not null
+     from izlozba_igralca(-947001) j));
+reset role;
+create temporary table iz as
+select array_agg(id order by id) as ids from posnetki_igralca where player_id = -947001;
+grant select on iz to anon, authenticated;
+-- Servis: uid in obdelava (Stream).
+select posnetki_nastavi_uid(i, 'test-izlozba-' || -i) from iz, unnest(iz.ids) i;
+select pg_temp.pade('izlozba: uid se ne prepiše', $$select posnetki_nastavi_uid((select ids[1] from iz), 'test-drugi-uid')$$);
+select posnetki_stream_stanje('test-izlozba-' || -i, 'obdelava', null) from iz, unnest(iz.ids) i;
+select posnetki_stream_stanje('test-izlozba-' || -(select ids[1] from iz), 'pripravljen', 42.37);
+select posnetki_stream_stanje('test-izlozba-' || -(select ids[1] from iz), 'obdelava', null);
+
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('izlozba: posnetek v pregledu ni javen in nima žetona',
+  (select jsonb_array_length(j->'posnetki') = 0 from izlozba_igralca(-947001) j)
+  and not exists (select 1 from posnetki_za_ogled((select ids from iz))));
+reset role;
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('izlozba: lastnik dobi žeton tudi v pregledu; pripravljen ne pade nazaj',
+  (select count(*) = 6 from posnetki_za_ogled((select ids from iz)))
+  and (select (j->'posnetki'->0->>'stanje') = 'pripravljen' and (j->'posnetki'->0->>'trajanje')::numeric = 42.4
+         from izlozba_igralca(-947001) j));
+select pg_temp.zavrnjeno('izlozba: lastnik ne odobri sam', $$select admin_odloci_posnetek((select ids[1] from iz), true)$$);
+select pg_temp.zavrnjeno('izlozba: lastnik ne vidi vrste admina', $$select * from admin_posnetki()$$);
+reset role;
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000005',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('izlozba: tujec ne preimenuje', $$select posnetki_uredi((select ids[1] from iz), 'Vdor')$$);
+select pg_temp.zavrnjeno('izlozba: tujec ne briše', $$select posnetki_izbrisi((select ids[1] from iz))$$);
+select pg_temp.zavrnjeno('izlozba: tujec ne razvršča', $$select posnetki_razvrsti((select ids from iz))$$);
+reset role;
+
+-- Admin: zavrnitev z razlogom, odobritev.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('izlozba: admin vidi posnetke v pregledu',
+  (select count(*) = 6 from admin_posnetki() where player_id = -947001 and pregled = 'caka'));
+select pg_temp.pade('izlozba: zavrnitev brez razloga pade', $$select admin_odloci_posnetek((select ids[2] from iz), false)$$);
+select admin_odloci_posnetek((select ids[1] from iz), true);
+select admin_odloci_posnetek((select ids[2] from iz), false, 'Ni nogomet.');
+reset role;
+select posnetki_stream_stanje('test-izlozba-' || -(select ids[2] from iz), 'pripravljen', 10);
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('izlozba: odobren in obdelan posnetek je javen, zavrnjen ne; razlog le lastniku',
+  (select jsonb_array_length(j->'posnetki') = 1 and (j->'posnetki'->0->>'id')::bigint = (select ids[1] from iz)
+          and j->'posnetki'->0->'razlog' = 'null'::jsonb
+     from izlozba_igralca(-947001) j)
+  and (select array_agg(id) = array[(select ids[1] from iz)] from posnetki_za_ogled((select ids from iz))));
+reset role;
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('izlozba: lastnik vidi razlog zavrnitve',
+  (select e->>'razlog' = 'Ni nogomet.' from izlozba_igralca(-947001) j, jsonb_array_elements(j->'posnetki') e
+    where (e->>'id')::bigint = (select ids[2] from iz)));
+-- Lastnik: naslov, vrstni red, izpostavljen.
+select posnetki_uredi((select ids[1] from iz), 'Prosti strel');
+select posnetki_razvrsti((select array(select unnest(ids) order by 1 desc) from iz));
+select posnetki_izpostavi((select ids[3] from iz));
+select pg_temp.pade('izlozba: žaljiv nov naslov pade', $$select posnetki_uredi((select ids[1] from iz), 'shit')$$);
+select pg_temp.zavrnjeno('izlozba: lastnik ne piše tabele neposredno',
+  $$update posnetki_igralca set pregled = 'odobren' where player_id = -947001$$);
+select pg_temp.pade('izlozba: lastnik svojega posnetka ne prijavi', $$select prijavi_posnetek((select ids[1] from iz), 'x')$$);
+reset role;
+select pg_temp.preveri('izlozba: lastnik ureja naslov, vrstni red in izpostavljen (le en)',
+  (select naslov = 'Prosti strel' from posnetki_igralca where id = (select ids[1] from iz))
+  and (select vrstni_red = 5 from posnetki_igralca where id = (select ids[1] from iz))
+  and (select array_agg(id) = array[(select ids[3] from iz)] from posnetki_igralca where player_id = -947001 and izpostavljen));
+
+-- Prijave: tri različne prijave vrnejo posnetek v pregled.
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.zavrnjeno('izlozba: anonimni ne prijavlja', $$select prijavi_posnetek((select ids[1] from iz), 'x')$$);
+reset role;
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000005',true);
+set local role authenticated;
+select prijavi_posnetek((select ids[1] from iz), 'Neprimerno');
+select pg_temp.pade('izlozba: isti posnetek dvakrat ne', $$select prijavi_posnetek((select ids[1] from iz), 'Spet')$$);
+select pg_temp.pade('izlozba: posnetka v pregledu ni mogoče prijaviti', $$select prijavi_posnetek((select ids[4] from iz), 'x')$$);
+reset role;
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000006',true);
+set local role authenticated;
+select prijavi_posnetek((select ids[1] from iz), null);
+reset role;
+select pg_temp.preveri('izlozba: dve prijavi posnetka ne skrijeta',
+  (select pregled = 'odobren' from posnetki_igralca where id = (select ids[1] from iz)));
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000007',true);
+set local role authenticated;
+select prijavi_posnetek((select ids[1] from iz), null);
+reset role;
+select pg_temp.preveri('izlozba: tretja prijava vrne posnetek v pregled',
+  (select pregled = 'caka' from posnetki_igralca where id = (select ids[1] from iz)));
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('izlozba: admin vidi prijave',
+  (select prijav = 3 and razlogi_prijav = array['Neprimerno'] from admin_posnetki() where id = (select ids[1] from iz)));
+select admin_odloci_posnetek((select ids[1] from iz), true);
+reset role;
+select pg_temp.preveri('izlozba: odločitev reši prijave',
+  not exists (select 1 from prijave_posnetkov where posnetek_id = (select ids[1] from iz) and resena_at is null));
+
+-- Brisanje: lastnik → uid v vrsto; izpostavljen preide na naslednjega.
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('izlozba: lastnik izbriše, dobi uid',
+  posnetki_izbrisi((select ids[3] from iz)) = 'test-izlozba-' || -(select ids[3] from iz));
+reset role;
+select pg_temp.preveri('izlozba: izbris gre v vrsto Streama, izpostavljen preide na odobrenega',
+  exists (select 1 from posnetki_brisanje where stream_uid = 'test-izlozba-' || -(select ids[3] from iz))
+  and (select array_agg(id) = array[(select ids[1] from iz)] from posnetki_igralca where player_id = -947001 and izpostavljen)
+  and (select 'test-izlozba-' || -(select ids[3] from iz)) in (select posnetki_za_brisanje(50)));
+select posnetki_brisanje_izid('test-izlozba-' || -(select ids[3] from iz), true);
+select pg_temp.preveri('izlozba: uspešen izbris v Streamu počisti vrsto',
+  not exists (select 1 from posnetki_brisanje where stream_uid = 'test-izlozba-' || -(select ids[3] from iz)));
+
+-- Potek pravice: skrito takoj, izbris po 30 dneh.
+update preverjeni_racuni set velja_do = now() - interval '1 minute', updated_at = now()
+ where player_id = -947001 and status = 'aktiven';
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('izlozba: potekla pravica takoj skrije izložbo in žetone',
+  izlozba_igralca(-947001) is null and not exists (select 1 from posnetki_za_ogled((select ids from iz))));
+reset role;
+select posnetki_pocisti();
+select pg_temp.preveri('izlozba: čiščenje potekle pravice počaka 30 dni',
+  (select count(*) = 5 and bool_and(brez_pravice_od is not null) from posnetki_igralca where player_id = -947001));
+update posnetki_igralca set brez_pravice_od = now() - interval '31 days' where player_id = -947001;
+select posnetki_pocisti();
+select pg_temp.preveri('izlozba: po 30 dneh izbris in uid-ji v vrsti',
+  not exists (select 1 from posnetki_igralca where player_id = -947001)
+  and (select count(*) = 5 from posnetki_brisanje where stream_uid like 'test-izlozba-%'));
+
+-- Preklicana pravica: čiščenje izbriše takoj. Preklic profila: takoj.
+reset role;
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000003',true);
+set local role authenticated;
+select posnetki_pripravi(-947006, 'Preklic');
+reset role;
+select posnetki_pocisti();
+select pg_temp.preveri('izlozba: veljavna pravica ostane po čiščenju',
+  exists (select 1 from posnetki_igralca where player_id = -947006 and brez_pravice_od is null));
+update preverjeni_racuni set status = 'preklican', updated_at = now() where player_id = -947006 and status = 'aktiven';
+select posnetki_pocisti();
+select pg_temp.preveri('izlozba: preklicana pravica izbriše posnetke ob čiščenju',
+  not exists (select 1 from posnetki_igralca where player_id = -947006));
+
+-- SLFF Club: posnetki prek scout.dostop in scout.vidni (K1 ima sedež kluba -913001).
+reset role;
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000004',true);
+set local role authenticated;
+select posnetki_pripravi(-947008, 'Za klube');
+select posnetki_pripravi(-947008, 'V pregledu');
+reset role;
+select posnetki_nastavi_uid(id, 'test-scout-' || -id) from posnetki_igralca where player_id = -947008;
+select posnetki_stream_stanje('test-scout-' || -id, 'pripravljen', 30) from posnetki_igralca where player_id = -947008;
+update posnetki_igralca set pregled = 'odobren' where player_id = -947008 and naslov = 'Za klube';
+insert into scout.indeks (model_id, player_id, skupina, indeks, percentil, zaupanje)
+select s3.model, -947008, 'MID', 1, 93, 0.9 from s3;
+update scout.narocnine set velja_do = now() + interval '7 days', zaprt_at = null where team_id = -913001;
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('izlozba: klub vidi le odobrene posnetke vidnega igralca',
+  (select array_agg(naslov) = array['Za klube'] from scout_posnetki(-947008))
+  and (select (j->>'posnetkov')::int = 1 from scout_igralec(-947008) j));
+select pg_temp.preveri('izlozba: klub ne dobi posnetkov igralca brez izložbe ali zunaj modela',
+  not exists (select 1 from scout_posnetki(-947003)) and not exists (select 1 from scout_posnetki(-947001)));
+reset role;
+select pg_temp.preveri('izlozba: klic posnetkov je v dnevniku',
+  (select count(*) = 3 from scout.dnevnik where vrsta = 'posnetki' and team_id = -913001));
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000005',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('izlozba: brez sedeža ni posnetkov', $$select * from scout_posnetki(-947008)$$);
+reset role;
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000004',true);
+set local role authenticated;
+select pg_temp.preveri('izlozba: lastnik vidi števila ogledov klubov in pozitiven kazalnik',
+  (select (j->'ogledi'->>'ogledov')::int >= 1 and (j->'ogledi'->>'klubov')::int = 1 and (j->>'mreza')::boolean
+          and (j->'scout'->>'percentil')::int = 93 and not (j->'ogledi' ? 'klubi')
+     from izlozba_igralca(-947008) j));
+reset role;
+-- Preklic profila (prevzem_odstrani_predstavitev) izbriše posnetke takoj.
+select prevzem_odstrani_predstavitev(-947008);
+select pg_temp.preveri('izlozba: preklic profila izbriše posnetke, uid-ji v vrsto',
+  not exists (select 1 from posnetki_igralca where player_id = -947008)
+  and (select count(*) = 2 from posnetki_brisanje where stream_uid like 'test-scout-%'));
+select set_config('request.jwt.claim.sub','',true);
+
 do $$
 declare v_napak int;
 begin

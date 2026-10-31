@@ -17,6 +17,7 @@ import SamodejniPoznavalci from '../components/admin/SamodejniPoznavalci'
 import KlubskiRacuni from '../components/admin/KlubskiRacuni'
 import Prevzemi from '../components/admin/Prevzemi'
 import Preverjeni from '../components/admin/Preverjeni'
+import Posnetki from '../components/admin/Posnetki'
 import PonovneCene from '../components/admin/PonovneCene'
 import PrijaveMiniLig from '../components/admin/PrijaveMiniLig'
 import OmejitveUporabnikov from '../components/admin/OmejitveUporabnikov'
@@ -748,6 +749,7 @@ export default function Administracija() {
         { id: 'popravki', naslov: 'Popravki podatkov' },
         { id: 'prevzemi', naslov: 'Prevzemi profilov' },
         { id: 'preverjeni', naslov: 'Preverjeni' },
+        { id: 'posnetki', naslov: 'Posnetki' },
         { id: 'ponovne-cene', naslov: 'Ponovne cene (plačljivo)' },
       ],
     },
@@ -880,6 +882,9 @@ export default function Administracija() {
             </Razdelek>
             <Razdelek id="preverjeni">
               <Preverjeni />
+            </Razdelek>
+            <Razdelek id="posnetki">
+              <Posnetki />
             </Razdelek>
             <Razdelek id="ponovne-cene">
               <PonovneCene />
