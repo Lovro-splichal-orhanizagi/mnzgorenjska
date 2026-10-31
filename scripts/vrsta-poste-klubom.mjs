@@ -4,6 +4,7 @@
 //   node scripts/vrsta-poste-klubom.mjs --drzava AT              # načrt (le številke)
 //   node scripts/vrsta-poste-klubom.mjs --drzava EE --pisi [--poslji-od 2027-03-01T08:00:00Z]
 //   node scripts/vrsta-poste-klubom.mjs --drzava HU --suho --koda 67/20/33915 [--najvec 5]
+//   node scripts/vrsta-poste-klubom.mjs --drzava BA --suho --koda wwin-prva-liga-fbih/2026-27 [--najvec 5]
 //     (brez baze: prebere ligo in nekaj strani klubov, izpiše zakrite naslove)
 //
 // Naslov je **le uradni naslov kluba**, nikoli osebni naslov funkcionarja:
@@ -20,10 +21,14 @@
 //   kroga. Crawl-delay 1 (beremo po 1,5 s); ostanek "Too many connections"
 //   ni stran kluba — umik in ponovitev, nato klub preskočimo (brez vrstice,
 //   da ga naslednji zagon prebere znova). Le aktivne lige.
+// - BA: nsfbih.ba/klubovi/<liga>/<id> → vrstica "E-mail" tabele kluba (ne
+//   naslov zveze v nogi). Šifro kluba da seznam /klubovi/<liga> (isti slug
+//   kot šifra lige), ime kluba je ime z razporeda. Le aktivne lige vira
+//   nsfbih (ne nfsbih), 3 s med stranmi (vir.premorMs).
 // - HR, RS: uradnega naslova kluba vir ne objavi (Semafor ima pri klubu le
 //   naslov in stadion, fsb/fss.rs nič); ŽNS ga imajo le v PDF "adresar
 //   klubova" — ni podprto.
-// 403, 429 ali izziv ustavi branje takoj (izhod 2) — ne obhajamo.
+// 401, 403, 429 ali izziv ustavi branje takoj (izhod 2) — ne obhajamo.
 // Teče na strežniku (docker compose run --rm posta …, scripts/hetzner/posta/).
 //
 // En naslov = en klub (prednost ima prva ekipa pred rezervno), klub brez
@@ -39,6 +44,7 @@ import { mapaKlubov, razpakiraj } from './klubi.mjs'
 import oefb, { naslovRazporeda as razporedAt, predhodniPodatki, imeEkipe, kljucKlubaAt } from './viri/oefb.mjs'
 import jalgpall, { naslovRazporeda as razporedEe, jeIzziv } from './viri/jalgpall.mjs'
 import mlsz, { naslovKroga, naslovKluba, ekipeLige, emailKluba, UMIK_MS } from './viri/mlsz.mjs'
+import nsfbih, { naslovKlubov, naslovKlubaBa, klubiLige, emailKluba as emailKlubaBa, jeIzziv as jeIzzivBa } from './viri/nsfbih.mjs'
 import { OD, stareZaOpomnik } from './posta-klubom.mjs'
 
 const arg = (ime) => {
@@ -49,8 +55,8 @@ const drzava = arg('--drzava')
 const pisi = process.argv.includes('--pisi')
 const posljiOd = arg('--poslji-od') || null
 const env = process.env
-if (!['AT', 'EE', 'HU'].includes(drzava)) {
-  console.error('Uporaba: --drzava AT|EE|HU [--pisi] [--poslji-od <ISO>]  (HR in RS: vir naslovov klubov ne objavi)')
+if (!['AT', 'EE', 'HU', 'BA'].includes(drzava)) {
+  console.error('Uporaba: --drzava AT|EE|HU|BA [--pisi] [--poslji-od <ISO>]  (HR in RS: vir naslovov klubov ne objavi)')
   process.exit(1)
 }
 if (posljiOd && Number.isNaN(Date.parse(posljiOd))) {
@@ -60,11 +66,11 @@ if (posljiOd && Number.isNaN(Date.parse(posljiOd))) {
 const IZPUSTI = new Set(['at-bundesliga', 'at-2-liga', 'hu-nb1', 'hu-nb2'])
 const REZERVA = /(\b1[b-d]\b|\(1b\)|\bII+\b|Juniors|Amateure|\bU2[0-3]\b)/
 const VELJAVEN = /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i
-const vir = { AT: oefb, EE: jalgpall, HU: mlsz }[drzava]
+const vir = { AT: oefb, EE: jalgpall, HU: mlsz, BA: nsfbih }[drzava]
 
-// 403/429 ustavi takoj, brez ponovitve (prenesiSPonovitvami bi 429 ponovil).
+// 401/403/429 ustavi takoj, brez ponovitve (prenesiSPonovitvami bi 429 ponovil).
 class Zavrnitev extends Error {}
-const izziv = (t) => /<title>\s*(Just a moment|Attention Required)|cf_chl_opt|cf-turnstile/i.test(t) || (drzava === 'EE' && jeIzziv(t))
+const izziv = (t) => /<title>\s*(Just a moment|Attention Required)|cf_chl_opt|cf-turnstile/i.test(t) || (drzava === 'EE' && jeIzziv(t)) || (drzava === 'BA' && jeIzzivBa(t))
 async function stran(url) {
   let o
   try {
@@ -73,7 +79,7 @@ async function stran(url) {
       premorMs: vir.premorMs,
       fetchFn: async (u, m) => {
         const r = await fetch(u, m)
-        if (r.status === 403 || r.status === 429) throw new Zavrnitev(`${r.status}`)
+        if (r.status === 401 || r.status === 403 || r.status === 429) throw new Zavrnitev(`${r.status}`)
         return r
       },
     })
@@ -102,22 +108,24 @@ async function stranHu(url, prava) {
 }
 const ekipeHu = async (koda) => ekipeLige(await stranHu(naslovKroga(koda, 1), (h) => ekipeLige(h).length > 0))
 const naslovHu = async (koda, id) => emailKluba(await stranHu(naslovKluba(koda, id), (h) => emailKluba(h) !== undefined))
+const ekipeBa = async (koda) => klubiLige(await stran(naslovKlubov(koda)))
+const naslovBa = async (koda, id) => emailKlubaBa(await stran(naslovKlubaBa(koda, id)))
 
 // Preizkus brez baze (bere le javne strani, naslove zakrije).
 if (process.argv.includes('--suho')) {
   const koda = arg('--koda')
-  if (drzava !== 'HU' || !koda) {
-    console.error('--suho zna le: --drzava HU --suho --koda <évad/sz/verseny> [--najvec 5]')
+  if (!['HU', 'BA'].includes(drzava) || !koda) {
+    console.error('--suho zna le: --drzava HU|BA --suho --koda <évad/sz/verseny | slug/sezona> [--najvec 5]')
     process.exit(1)
   }
-  const ekipe = await ekipeHu(koda)
+  const ekipe = await (drzava === 'HU' ? ekipeHu : ekipeBa)(koda)
   let najdenih = 0
   for (const e of ekipe.slice(0, Number(arg('--najvec') ?? 5))) {
-    const email = await naslovHu(koda, e.id)
+    const email = await (drzava === 'HU' ? naslovHu : naslovBa)(koda, e.id)
     if (email) najdenih++
     console.log(`${e.ime}\t${email === undefined ? '? (ni strani kluba)' : email ? email.replace(/^(.)[^@]*/, '$1***') : '-'}`)
   }
-  console.log(`\nHU ${koda}: ekip ${ekipe.length}, prebranih ${Math.min(ekipe.length, Number(arg('--najvec') ?? 5))}, z naslovom ${najdenih}`)
+  console.log(`\n${drzava} ${koda}: ekip ${ekipe.length}, prebranih ${Math.min(ekipe.length, Number(arg('--najvec') ?? 5))}, z naslovom ${najdenih}`)
   process.exit(0)
 }
 
@@ -174,6 +182,7 @@ if (drzava === 'EE') {
 // --- lige, klubi, igralci z nastopi ---------------------------------------------
 let q = db.from('competitions').select('id, slug, active, source_league_code').like('slug', `${drzava.toLowerCase()}-%`).order('slug')
 if (drzava !== 'EE') q = q.eq('active', true)
+if (drzava === 'BA') q = q.eq('source', 'nsfbih') // državna WWIN liga BiH (nfsbih) naslovov klubov ne objavi
 const lige = preveri(await q)
 const obstojeci = await vseVrstice((od, do_) =>
   db.from('klub_stik').select('id, team_id, email, drzava, v_vrsti, posiljatelj, stanje, opomba').order('id').range(od, do_),
@@ -184,7 +193,7 @@ const zasedeni = new Set(obstojeci.map((s) => s.email?.toLowerCase()).filter(Boo
 const poKljucu = drzava === 'EE' ? await mapaKlubov(db, jalgpall) : null
 
 const klubi = [] // { team_id, klub, liga_slug, igralcev, email, vir_url, profi }
-const naslovDrustva = new Map() // AT: šifra društva → naslov (rezerva in prva ekipa delita društvo)
+const naslovDrustva = new Map() // AT: šifra društva → naslov (rezerva in prva ekipa delita društvo); BA: šifra kluba → naslov
 for (const l of lige) {
   if (!l.source_league_code) continue
   const profi = IZPUSTI.has(l.slug)
@@ -198,7 +207,7 @@ for (const l of lige) {
   const beri = ekipe.filter((e) => profi || (!imaVrstico.has(e.team_id) && igralcev.get(e.team_id)))
   if (!beri.length) continue
 
-  const html = drzava === 'HU' ? null : await stran(drzava === 'AT' ? razporedAt(l.source_league_code.split('+')[0]) : razporedEe(l.source_league_code))
+  const html = drzava === 'HU' || drzava === 'BA' ? null : await stran(drzava === 'AT' ? razporedAt(l.source_league_code.split('+')[0]) : razporedEe(l.source_league_code))
   const povezave = new Map() // ključ kluba → šifra društva (AT), naslov strani ekipe (EE) ali šifra ekipe (HU)
   if (drzava === 'HU') {
     const ekipeVira = await ekipeHu(l.source_league_code)
@@ -207,6 +216,13 @@ for (const l of lige) {
       continue
     }
     for (const x of ekipeVira) povezave.set(mlsz.kljucKluba(x.ime), x.id)
+  } else if (drzava === 'BA') {
+    const ekipeVira = await ekipeBa(l.source_league_code)
+    if (!ekipeVira.length) {
+      console.log(`${l.slug}\t(seznam klubov ni prebran — liga preskočena)`)
+      continue
+    }
+    for (const x of ekipeVira) povezave.set(nsfbih.kljucKluba(x.ime), x.id)
   } else if (drzava === 'AT') {
     for (const p of predhodniPodatki(html ?? ''))
       for (const t of [...(p.ergebnisse ?? []), ...(p.spiele ?? [])])
@@ -240,6 +256,18 @@ for (const l of lige) {
         virUrl = naslovKluba(l.source_league_code, id)
         email = await naslovHu(l.source_league_code, id)
         if (email === undefined) {
+          console.log(`${l.slug}\t${e.name}\t? (ni strani kluba — naslednjič)`)
+          continue
+        }
+      }
+    } else if (drzava === 'BA') {
+      const id = povezave.get(nsfbih.kljucKluba(e.name))
+      if (id) {
+        virUrl = naslovKlubaBa(l.source_league_code, id)
+        if (!naslovDrustva.has(id)) naslovDrustva.set(id, await naslovBa(l.source_league_code, id))
+        email = naslovDrustva.get(id)
+        if (email === undefined) {
+          naslovDrustva.delete(id)
           console.log(`${l.slug}\t${e.name}\t? (ni strani kluba — naslednjič)`)
           continue
         }
@@ -280,9 +308,10 @@ if (!pisi) {
   process.exit(0)
 }
 
+const opomba = drzava === 'BA' ? 'vir: federacija; nsfbih klub stran' : null
 const vrstice = [
-  ...[...novi.values()].map((k) => ({ team_id: k.team_id, klub: k.klub, drzava, liga_slug: k.liga_slug, email: k.email, vir_url: k.vir_url, stanje: 'nov', v_vrsti: true, posiljatelj: OD, poslji_od: posljiOd })),
-  ...brezNaslova.map((k) => ({ team_id: k.team_id, klub: k.klub, drzava, liga_slug: k.liga_slug, email: null, vir_url: k.vir_url, stanje: 'ni_maila', v_vrsti: false, posiljatelj: OD, poslji_od: null })),
+  ...[...novi.values()].map((k) => ({ team_id: k.team_id, klub: k.klub, drzava, liga_slug: k.liga_slug, email: k.email, vir_url: k.vir_url, stanje: 'nov', v_vrsti: true, posiljatelj: OD, poslji_od: posljiOd, opomba })),
+  ...brezNaslova.map((k) => ({ team_id: k.team_id, klub: k.klub, drzava, liga_slug: k.liga_slug, email: null, vir_url: k.vir_url, stanje: 'ni_maila', v_vrsti: false, posiljatelj: OD, poslji_od: null, opomba })),
 ]
 for (let i = 0; i < vrstice.length; i += 100) preveri(await db.from('klub_stik').insert(vrstice.slice(i, i + 100)))
 for (let i = 0; i < nasi.length; i += 100)

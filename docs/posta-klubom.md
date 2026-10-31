@@ -105,6 +105,18 @@ pogleda, ali teče ali čaka uvoz, ki bere jalgpall.ee (*Uvoz lige ee-…*, pose
 Ne zaganjaj ga tik pred uvozom Estonije. `--suho` na posta-klubom izpiše
 naslednje maile brez pošiljanja.
 
+**BA** (`--drzava BA`, 31. 10. 2026): le aktivne lige vira `nsfbih` (Prva in
+Druga liga FBiH, juniori; državna WWIN liga BiH z `nfsbih` naslovov ne
+objavi). Seznam `nsfbih.ba/klubovi/<slug>` (isti slug kot šifra lige) da
+šifro kluba, klub se ujame po ključu imena (`kljucKlubaBa`, isto ime kot na
+razporedu, npr. "FK RADNIK (H)"); naslov je vrstica "E-mail" tabele na
+`/klubovi/<slug>/<id>`, ne `federacija@nsfbih.ba` v nogi. Gmail je v redu,
+če ga zveza vodi kot naslov kluba. 3 s med stranmi, 401/403/429 ali izziv
+ustavi (izhod 2); nove vrstice dobijo `opomba` "vir: federacija; nsfbih klub
+stran". Preizkus brez baze: `--drzava BA --suho --koda
+wwin-prva-liga-fbih/2026-27 --najvec 5`. Neaktivne lige polnjenje preskoči,
+zato BA najde klube šele po vklopu.
+
 **HR in RS polnjenje nima** (pregled 15. 10. 2026): Semafor pri klubu
 (`/klubovi/<id>/`) kaže le naslov in stadion, fsb.org.rs in fss.rs naslovov
 klubov ne objavljata. ŽNS jih objavijo v PDF "Adresar klubova" (zns.hr: 1. in

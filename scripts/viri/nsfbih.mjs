@@ -108,6 +108,31 @@ export const kljucKlubaBa = (ime) =>
 /** Kratko ime je polno ime: brez oblike bi se klubi zgoraj zlili. */
 export const kratkoImeBa = (polno) => imeKluba(polno)
 
+// --- strani klubov (pošta klubom, vrsta-poste-klubom.mjs) -----------------------
+
+/** Seznam klubov lige `/klubovi/<slug>` (isti slug kot `/takmicenja/<slug>`). */
+export const naslovKlubov = (koda) => `${OSNOVNI}/klubovi/${razberiKodo(koda).slug}`
+export const naslovKlubaBa = (koda, id) => `${naslovKlubov(koda)}/${id}`
+
+/** Klubi s seznama: [{ id, ime }] (ime kot na strani lige, "FK RADNIK (H)"). */
+export function klubiLige(html) {
+  const out = new Map()
+  for (const m of String(html ?? '').matchAll(/<a href="\/klubovi\/[a-z0-9-]+\/(\d+)">[\s\S]*?<div class="title">([^<]*)<\/div>/g))
+    if (!out.has(m[1])) out.set(m[1], { id: m[1], ime: imeKluba(m[2]) })
+  return [...out.values()]
+}
+
+/**
+ * Naslov iz vrstice "E-mail" tabele kluba (ne naslov zveze v nogi) ali null.
+ * `undefined`, če to ni stran kluba (ni vrstice "Naziv kluba").
+ */
+export function emailKluba(html) {
+  const h = String(html ?? '')
+  if (!/<td[^>]*>\s*Naziv kluba\s*<\/td>/.test(h)) return undefined
+  const celica = h.match(/<td[^>]*>\s*E-mail\s*<\/td>\s*<td>([\s\S]*?)<\/td>/)?.[1] ?? ''
+  return besedilo(celica).match(/[^\s<>"':]+@[^\s<>"']+\.[a-z]{2,}/i)?.[0].toLowerCase() ?? null
+}
+
 // --- stran lige ----------------------------------------------------------------
 
 /** Je stran res stran lige (zavihek razporeda s krogi)? */
