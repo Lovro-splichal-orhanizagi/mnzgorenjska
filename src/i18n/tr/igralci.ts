@@ -310,7 +310,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       dostavaEu: 'Başka bir AB ülkesi',
       obdeluje: 'Ödeme hâlâ işleniyor. Ödemeyi aldığımızda rozet görünecek.',
       narocninaNaslov: 'Abonelik (doğrulanmış oyuncu)',
-      narocninaApp: 'Aboneliğini slff.eu üzerinden yönet.',
       pogoji: '<pogoji>Satın alma koşulları</pogoji> · Satıcı: Space Guardian d.o.o.',
     },
     napake: {

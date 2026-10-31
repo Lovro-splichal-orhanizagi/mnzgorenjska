@@ -310,7 +310,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       dostavaEu: 'Başqa AB ölkəsi',
       obdeluje: 'Ödəniş hələ emal olunur. Onu alan kimi nişan görünəcək.',
       narocninaNaslov: 'Abunə (təsdiqlənmiş oyunçu)',
-      narocninaApp: 'Abunəni slff.eu saytında idarə et.',
       pogoji: '<pogoji>Alış şərtləri</pogoji> · Satıcı: Space Guardian d.o.o.',
     },
     napake: {

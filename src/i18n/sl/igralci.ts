@@ -312,7 +312,6 @@ export const igralci = {
       dostavaEu: 'Druga država EU',
       obdeluje: 'Plačilo se še obdeluje. Značka se prikaže, ko ga prejmemo.',
       narocninaNaslov: 'Naročnina (preverjen igralec)',
-      narocninaApp: 'Naročnino upravljaš na slff.eu.',
       pogoji: '<pogoji>Pogoji nakupa</pogoji> · Prodajalec: Space Guardian d.o.o.',
     },
     napake: {

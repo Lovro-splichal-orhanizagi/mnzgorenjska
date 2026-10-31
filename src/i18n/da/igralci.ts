@@ -310,7 +310,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       dostavaEu: 'Et andet EU-land',
       obdeluje: 'Betalingen behandles stadig. Badget vises, så snart vi har modtaget den.',
       narocninaNaslov: 'Abonnement (verificeret spiller)',
-      narocninaApp: 'Administrer dit abonnement på slff.eu.',
       pogoji: '<pogoji>Købsbetingelser</pogoji> · Sælger: Space Guardian d.o.o.',
     },
     napake: {

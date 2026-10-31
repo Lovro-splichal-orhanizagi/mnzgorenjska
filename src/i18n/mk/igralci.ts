@@ -310,7 +310,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       dostavaEu: 'Друга земја од ЕУ',
       obdeluje: 'Плаќањето сè уште се обработува. Значката ќе се појави кога ќе го примиме.',
       narocninaNaslov: 'Претплата (проверен играч)',
-      narocninaApp: 'Со претплатата управуваш на slff.eu.',
       pogoji: '<pogoji>Услови за купување</pogoji> · Продавач: Space Guardian d.o.o.',
     },
     napake: {
