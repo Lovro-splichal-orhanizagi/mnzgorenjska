@@ -5660,7 +5660,7 @@ select pg_temp.preveri('izlozba: pravice funkcij (javno branje, ostalo zaprto)',
   and not has_function_privilege('anon', 'public.posnetki_pripravi(bigint, text)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.prijavi_posnetek(bigint, text)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.scout_posnetki(bigint)', 'EXECUTE')
-  and not has_function_privilege('authenticated', 'public.posnetki_nastavi_uid(bigint, text)', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'public.posnetki_nastavi_uid(bigint, text, text)', 'EXECUTE')
   and not has_function_privilege('authenticated', 'public.posnetki_stream_stanje(text, text, numeric)', 'EXECUTE')
   and not has_function_privilege('authenticated', 'public.posnetki_pocisti()', 'EXECUTE')
   and not has_function_privilege('authenticated', 'public.posnetki_za_brisanje(integer)', 'EXECUTE')
@@ -5846,7 +5846,7 @@ reset role;
 select pg_temp.preveri('izlozba: izbris gre v vrsto Streama, izpostavljen preide na odobrenega',
   exists (select 1 from posnetki_brisanje where stream_uid = 'test-izlozba-' || -(select ids[3] from iz))
   and (select array_agg(id) = array[(select ids[1] from iz)] from posnetki_igralca where igralec = -947001 and izpostavljen)
-  and (select 'test-izlozba-' || -(select ids[3] from iz)) in (select posnetki_za_brisanje(50)));
+  and (select 'test-izlozba-' || -(select ids[3] from iz)) in (select stream_uid from posnetki_za_brisanje(50)));
 select posnetki_brisanje_izid('test-izlozba-' || -(select ids[3] from iz), true);
 select pg_temp.preveri('izlozba: uspešen izbris v Streamu počisti vrsto',
   not exists (select 1 from posnetki_brisanje where stream_uid = 'test-izlozba-' || -(select ids[3] from iz)));
@@ -5922,6 +5922,89 @@ select pg_temp.preveri('izlozba: preklic profila izbriše posnetke, uid-ji v vrs
   not exists (select 1 from posnetki_igralca where igralec = -947008)
   and (select count(*) = 2 from posnetki_brisanje where stream_uid like 'test-scout-%'));
 select set_config('request.jwt.claim.sub','',true);
+
+-- --------------------------------------------------------------------------
+-- Posnetki v R2 (migracija 20261031223100): ponudnik na posnetku,
+-- rezervacija prostora, potrditev, meja 9 GB, opozorilo 8 GB, brisanje.
+-- A (…01, -947001) dobi pravico nazaj.
+-- --------------------------------------------------------------------------
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+update preverjeni_racuni set velja_do = null, updated_at = now() where player_id = -947001 and status = 'aktiven';
+delete from posnetki_brisanje where ponudnik = 'r2';
+select pg_temp.preveri('r2: pravice (servisne funkcije zaprte, prostor le adminu)',
+  not has_function_privilege('authenticated', 'public.posnetki_r2_rezerviraj(bigint, text, text, bigint, bigint, numeric)', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'public.posnetki_r2_potrjen(text, bigint, bigint)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.posnetki_r2_prostor()', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'public.posnetki_nastavi_uid(bigint, text, text)', 'EXECUTE')
+  and has_function_privilege('service_role', 'public.posnetki_r2_rezerviraj(bigint, text, text, bigint, bigint, numeric)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.admin_posnetki_prostor()', 'EXECUTE'));
+
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+create temporary table r2 as select posnetki_pripravi(-947001, 'R2 gol') as id, posnetki_pripravi(-947001, 'R2 drugi') as id2;
+select pg_temp.zavrnjeno('r2: lastnik ne rezervira sam',
+  $$select posnetki_r2_rezerviraj((select id from r2), 'r2-vdor-0000000', 'video/mp4', 10, 10, 10)$$);
+select pg_temp.zavrnjeno('r2: lastnik ne vidi prostora', $$select * from admin_posnetki_prostor()$$);
+reset role;
+grant select on r2 to anon, authenticated;
+
+select pg_temp.pade('r2: posnetek nad 100 MB pade',
+  $$select posnetki_r2_rezerviraj((select id from r2), 'r2-velik-000000', 'video/mp4', 104857601, 1000, 30)$$);
+select pg_temp.pade('r2: nedovoljena vrsta pade',
+  $$select posnetki_r2_rezerviraj((select id from r2), 'r2-vrsta-000000', 'video/x-msvideo', 1000, 1000, 30)$$);
+select posnetki_r2_rezerviraj((select id from r2), 'r2-test-00000001', 'video/mp4', 50000000, 40000, 42.04);
+select pg_temp.preveri('r2: rezervacija zapiše ponudnika, vrsto, velikosti in trajanje; prostor šteje',
+  (select ponudnik = 'r2' and vrsta = 'video/mp4' and velikost = 50000000 and velikost_slike = 40000 and trajanje = 42.0
+          and stanje = 'nalaganje' from posnetki_igralca where id = (select id from r2))
+  and posnetki_r2_prostor() = 50040000);
+select pg_temp.pade('r2: uid se ne prepiše', $$select posnetki_r2_rezerviraj((select id from r2), 'r2-drugi-000000', 'video/mp4', 10, 10, 10)$$);
+select posnetki_r2_potrjen('r2-test-00000001', 49000000, 39000);
+select pg_temp.preveri('r2: potrditev zapiše dejanski velikosti, posnetek gre v pregled',
+  (select stanje = 'pripravljen' and pregled = 'caka' and velikost = 49000000 from posnetki_igralca where id = (select id from r2)));
+update posnetki_igralca set pregled = 'odobren' where id = (select id from r2);
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('r2: odobren posnetek dobi naslov za ogled s ponudnikom r2',
+  (select ponudnik = 'r2' and vrsta = 'video/mp4' and stream_uid = 'r2-test-00000001'
+     from posnetki_za_ogled(array[(select id from r2)])));
+reset role;
+
+-- Meja 9 GB in opozorilo 8 GB (velik posnetek v vrsti brisanja zaseda prostor).
+update settings set value = '0' where key = 'posnetki_r2_opozorjeno';
+insert into posnetki_brisanje (stream_uid, ponudnik, velikost, izbrisi_po) values ('r2-velik-v-vrsti', 'r2', 8100000000, 'infinity');
+select posnetki_r2_potrjen('r2-test-00000001', 49000000, 39000);
+select pg_temp.preveri('r2: nad 8 GB se opozorilo zapiše enkrat',
+  (select value = '1' from settings where key = 'posnetki_r2_opozorjeno'));
+select pg_temp.napaka('r2: nad 9 GB se nalaganje ustavi',
+  $$select posnetki_r2_rezerviraj((select id2 from r2), 'r2-test-00000002', 'video/mp4', 900000000, 1000, 30)$$, 'posnetki-prostor');
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('r2: admin vidi zasedenost',
+  (select zasedeno = 8149039000 and opozorilo = 8000000000 and meja = 9000000000 and posnetkov = 1 and za_brisanje = 1
+     from admin_posnetki_prostor()));
+reset role;
+delete from posnetki_brisanje where stream_uid = 'r2-velik-v-vrsti';
+select posnetki_r2_opozorilo();
+select pg_temp.preveri('r2: pod 7,5 GB se opozorilo ponastavi',
+  (select value = '0' from settings where key = 'posnetki_r2_opozorjeno'));
+select posnetki_r2_rezerviraj((select id2 from r2), 'r2-test-00000002', 'video/webm', 900000000 / 10, 1000, 30);
+
+-- Brisanje: vrsta dobi ponudnika in velikost (video + sličica).
+select set_config('request.jwt.claim.sub','f7a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select posnetki_izbrisi((select id from r2));
+reset role;
+select pg_temp.preveri('r2: izbris gre v vrsto s ponudnikom in velikostjo, prostor ostane do izbrisa v R2',
+  (select ponudnik = 'r2' and velikost = 49039000 from posnetki_brisanje where stream_uid = 'r2-test-00000001')
+  and (select array_agg(ponudnik) = array['r2'] from posnetki_za_brisanje(200) where stream_uid = 'r2-test-00000001')
+  and posnetki_r2_prostor() = 49039000 + 90001000);
+select posnetki_brisanje_izid('r2-test-00000001', true);
+select prevzem_odstrani_predstavitev(-947001);
+select pg_temp.preveri('r2: preklic profila pošlje tudi posnetke R2 v vrsto',
+  exists (select 1 from posnetki_brisanje where stream_uid = 'r2-test-00000002' and ponudnik = 'r2' and velikost = 90001000));
+select pg_temp.preveri('r2: preizkusni in Stream uid ostaneta na svojem ponudniku',
+  not exists (select 1 from posnetki_brisanje where stream_uid like 'test-%' and ponudnik = 'r2'));
 
 do $$
 declare v_napak int;

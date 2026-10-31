@@ -226,7 +226,17 @@ function Posnetki({ igralecId }: { igralecId: number }) {
         <p className="text-xs text-slate-400">{t('igralec.posnetkiOpis')}</p>
       </div>
       <div className="relative aspect-video overflow-hidden rounded-2xl bg-slate-900 ring-1 ring-white/10">
-        {predvaja && a.predvajaj ? (
+        {predvaja && a.predvajaj && a.tip === 'video' ? (
+          <video
+            src={a.predvajaj}
+            poster={a.slika ?? undefined}
+            controls
+            autoPlay
+            playsInline
+            aria-label={a.naslov}
+            className="absolute inset-0 h-full w-full bg-black object-contain"
+          />
+        ) : predvaja && a.predvajaj ? (
           <iframe
             src={`${a.predvajaj}&autoplay=true`}
             title={a.naslov}

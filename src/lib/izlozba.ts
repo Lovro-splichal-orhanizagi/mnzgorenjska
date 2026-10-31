@@ -37,16 +37,24 @@ export interface Izlozba {
   najvec?: number
 }
 
-/** Naslova za ogled (podpisan žeton, ~2 uri); v preizkusnem načinu null. */
+/**
+ * Naslova za ogled (~2 uri): `video` je podpisan naslov R2 za <video>,
+ * `iframe` predvajalnik Streama; v preizkusnem načinu null.
+ */
 export interface Ogled {
   id: number
+  tip: 'video' | 'iframe' | null
   predvajaj: string | null
   slika: string | null
 }
 
 export const NAJVEC_POSNETKOV = 6
-export const NAJVEC_BAJTOV = 200 * 1024 * 1024
+/** 100 MB na posnetek (R2: 10 GB brezplačnega prostora mora zadoščati). */
+export const NAJVEC_BAJTOV = 100 * 1024 * 1024
 export const NAJVEC_SEKUND = 180
+/** Vrste, ki jih sprejme R2 (in Stream); .mov je video/quicktime. */
+export const VRSTE_VIDEA = ['video/mp4', 'video/quicktime', 'video/webm'] as const
+export type VrstaVidea = (typeof VRSTE_VIDEA)[number]
 
 export async function naloziIzlozbo(igralecId: number): Promise<Izlozba | null> {
   const { data, error } = await supabase.rpc('izlozba_igralca', { p_player_id: igralecId })
@@ -73,6 +81,9 @@ const HINTI: Record<string, Kljuc> = {
   'posnetki-meja': 'igralci.izlozba.napakaMeja',
   'posnetki-naslov': 'igralci.izlozba.napakaNaslov',
   'posnetki-izklopljeno': 'igralci.izlozba.napakaIzklopljeno',
+  'posnetki-prostor': 'igralci.izlozba.napakaProstor',
+  'posnetki-vrsta': 'igralci.izlozba.napakaVrsta',
+  'posnetki-velikost': 'igralci.izlozba.napakaVelikost',
   'plus-znaki': 'igralci.preverjen.napake.znaki',
 }
 
@@ -90,30 +101,88 @@ export async function ogledi(ids: number[]): Promise<Map<number, Ogled>> {
   return m
 }
 
-/** Dolžina videa v sekundah iz metapodatkov (null, če brskalnik ne zna). */
-export function dolzinaVidea(datoteka: File): Promise<number | null> {
+/** Vrsta videa iz datoteke (brskalnik včasih pusti prazno, npr. .mov). */
+export function vrstaVidea(datoteka: File): VrstaVidea | null {
+  const t = datoteka.type.toLowerCase()
+  if ((VRSTE_VIDEA as readonly string[]).includes(t)) return t as VrstaVidea
+  if (t) return null
+  const k = datoteka.name.toLowerCase().split('.').pop()
+  return k === 'mp4' || k === 'm4v' ? 'video/mp4' : k === 'mov' ? 'video/quicktime' : k === 'webm' ? 'video/webm' : null
+}
+
+export interface PripravljenVideo {
+  vrsta: VrstaVidea
+  trajanje: number
+  /** Plakat (sličica) iz okvirja videa, JPEG do ~100 kB. */
+  slika: Blob
+}
+
+/**
+ * Preveri video v brskalniku (vrsta, ≤ 100 MB, ≤ 3 min iz metapodatkov) in
+ * iz enega okvirja nariše plakat. Brskalnik, ki videa ne zna dekodirati
+ * (HEVC v namiznem Chromu), vrne `napakaFormat` z navodilom za MP4/H.264.
+ */
+export function pripraviVideo(datoteka: File): Promise<PripravljenVideo | { napaka: Kljuc }> {
+  const vrsta = vrstaVidea(datoteka)
+  if (!vrsta) return Promise.resolve({ napaka: 'igralci.izlozba.napakaVrsta' })
+  if (datoteka.size > NAJVEC_BAJTOV) return Promise.resolve({ napaka: 'igralci.izlozba.napakaVelikost' })
   return new Promise((resolve) => {
     const v = document.createElement('video')
     const url = URL.createObjectURL(datoteka)
-    const konec = (d: number | null) => {
+    let koncano = false
+    const konec = (izid: PripravljenVideo | { napaka: Kljuc }) => {
+      if (koncano) return
+      koncano = true
       URL.revokeObjectURL(url)
-      resolve(d)
+      v.removeAttribute('src')
+      v.load()
+      resolve(izid)
     }
-    v.preload = 'metadata'
-    v.onloadedmetadata = () => konec(Number.isFinite(v.duration) ? v.duration : null)
-    v.onerror = () => konec(null)
-    setTimeout(() => konec(null), 8000)
+    const format = () => konec({ napaka: 'igralci.izlozba.napakaFormat' })
+    v.muted = true
+    v.playsInline = true
+    v.preload = 'auto'
+    v.onerror = format
+    v.onloadedmetadata = () => {
+      if (!Number.isFinite(v.duration) || !v.videoWidth) return format()
+      if (v.duration > NAJVEC_SEKUND + 0.5) return konec({ napaka: 'igralci.izlozba.napakaDolzina' })
+      v.currentTime = Math.min(1, v.duration / 3)
+    }
+    v.onseeked = () => {
+      const sirina = Math.min(640, v.videoWidth)
+      const platno = document.createElement('canvas')
+      platno.width = sirina
+      platno.height = Math.round((v.videoHeight / v.videoWidth) * sirina)
+      const ctx = platno.getContext('2d')
+      if (!ctx) return format()
+      ctx.drawImage(v, 0, 0, platno.width, platno.height)
+      platno.toBlob(
+        (slika) => (slika ? konec({ vrsta, trajanje: v.duration, slika }) : format()),
+        'image/jpeg',
+        0.82,
+      )
+    }
+    setTimeout(format, 15000)
     v.src = url
   })
 }
 
-/** Preverba pred nalaganjem; vrne ključ napake ali null. */
-export async function napakaVidea(datoteka: File): Promise<Kljuc | null> {
-  if (!datoteka.type.startsWith('video/')) return 'igralci.izlozba.napakaVrsta'
-  if (datoteka.size > NAJVEC_BAJTOV) return 'igralci.izlozba.napakaVelikost'
-  const d = await dolzinaVidea(datoteka)
-  if (d != null && d > NAJVEC_SEKUND + 0.5) return 'igralci.izlozba.napakaDolzina'
-  return null
+/** PUT na podpisan naslov R2 (vrsta je podpisana, velikost nastavi brskalnik). */
+export function naloziPut(
+  naslov: string,
+  telo: Blob,
+  glave: Record<string, string>,
+  napredek?: (odstotek: number) => void,
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('PUT', naslov)
+    for (const [k, v] of Object.entries(glave)) xhr.setRequestHeader(k, v)
+    if (napredek) xhr.upload.onprogress = (e) => e.lengthComputable && napredek(Math.round((e.loaded / e.total) * 100))
+    xhr.onload = () => resolve(xhr.status >= 200 && xhr.status < 300)
+    xhr.onerror = () => resolve(false)
+    xhr.send(telo)
+  })
 }
 
 /** Neposredno nalaganje v Stream (multipart, polje "file") z napredkom. */
