@@ -34,4 +34,30 @@ async function produce(t,{plan,prior,c,synthetic,github}){const f=epochFixture({
 
 import {readFcfRefresh800ReservationArtifact} from './fcf-refresh800-evidence.mjs'
 import {waitFcfRefresh800Claim} from './fcf-refresh800-execution.mjs'
+test('terminal receipt inside GitHub completion second retains its original millisecond clock',async t=>{
+ t.mock.timers.enable({apis:['Date'],now:Date.parse('2026-10-31T14:53:20.039Z')})
+ const f=await terminal(t),original=f.github
+ for(const completed_at of ['2026-10-31T15:09:17Z','2026-10-31T15:09:17.539Z']){
+  const github=async(p,b)=>{const x=await original(p,b);if(p.includes('/attempts/1/jobs?'))x.jobs[0].steps[0].completed_at=completed_at;return x}
+  const r=await readFcfRefresh800TerminalAccounting({...f,github})
+  assert.equal(r.lastSourceEndedUTC,'2026-10-31T15:09:17.539Z')
+  assert.equal(r.actualSourceGETs,541)
+  assert.equal(r.nativeAdmission,false)
+ }
+})
+test('completion precision never admits a receipt in the following second or after a precise timestamp',async t=>{
+ t.mock.timers.enable({apis:['Date'],now:Date.parse('2026-10-31T14:53:20.039Z')})
+ const f=await terminal(t),original=f.github
+ for(const completed_at of ['2026-10-31T15:09:16Z','2026-10-31T15:09:17.000Z','2026-10-31T15:09:17.538Z']){
+  const github=async(p,b)=>{const x=await original(p,b);if(p.includes('/attempts/1/jobs?'))x.jobs[0].steps[0].completed_at=completed_at;return x}
+  await assert.rejects(readFcfRefresh800TerminalAccounting({...f,github}),/chronology/)
+ }
+})
+test('first millisecond of the next second is outside GitHub completion interval',async t=>{
+ t.mock.timers.enable({apis:['Date'],now:Date.parse('2026-10-31T14:53:20.500Z')})
+ const f=await terminal(t),original=f.github
+ assert.equal(JSON.parse(f.files.get('manifest.json')).accounting.lastSourceEndedUTC,'2026-10-31T15:09:18.000Z')
+ const github=async(p,b)=>{const x=await original(p,b);if(p.includes('/attempts/1/jobs?'))x.jobs[0].steps[0].completed_at='2026-10-31T15:09:17Z';return x}
+ await assert.rejects(readFcfRefresh800TerminalAccounting({...f,github}),/chronology/)
+})
 test('actual waiting reservation ZIP supplies reproducible root claim DATA; bounded missing-claim wait never reaches source',async t=>{t.mock.timers.enable({apis:['Date'],now:Date.now()});const f=await unstarted(t,{live:true}),r=await readFcfRefresh800ReservationArtifact(f);assert.equal(r.reservation.runId,f.locator.runId);assert.equal(r.reservation.planSha256,r.epoch.plan.planSha256);const original=f.github;let polls=0;const github=async(p,b)=>{if(p.includes('git/ref/tags/fcf-inventory-claim/')){polls++;throw Object.assign(Error('missing protected claim'),{status:404})}return original(p,b)};await assert.rejects(waitFcfRefresh800Claim({github,locator:f.locator,maximumWaitMs:100,pause:async ms=>t.mock.timers.tick(ms)}),/wait expired/);assert.equal(polls,2)})
