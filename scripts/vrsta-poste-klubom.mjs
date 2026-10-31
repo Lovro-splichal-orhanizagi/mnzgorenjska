@@ -287,7 +287,12 @@ const profiNaslovi = new Set(klubi.filter((k) => k.profi && k.email).map((k) => 
 const novi = new Map()
 const brez = []
 let izlocenih = 0
-for (const k of klubi.filter((k) => !k.profi).sort((a, b) => Number(REZERVA.test(a.klub)) - Number(REZERVA.test(b.klub)) || b.igralcev - a.igralcev)) {
+// Članska liga pred mladinsko (-u19-): mail ne sme kazati na ligo mladoletnih, če ima klub člane.
+const mladinska = (k) => Number(/-u19-/.test(k.liga_slug))
+const videni = new Set()
+for (const k of klubi.filter((k) => !k.profi).sort((a, b) => Number(REZERVA.test(a.klub)) - Number(REZERVA.test(b.klub)) || mladinska(a) - mladinska(b) || b.igralcev - a.igralcev)) {
+  if (videni.has(k.team_id)) continue // ista ekipa v dveh ligah: velja prva po vrstnem redu
+  videni.add(k.team_id)
   if (!k.email) brez.push(k)
   else if (profiNaslovi.has(k.email) || zasedeni.has(k.email)) izlocenih++
   else if (!novi.has(k.email)) novi.set(k.email, k)
