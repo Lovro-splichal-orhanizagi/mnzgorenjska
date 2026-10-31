@@ -2,6 +2,7 @@
 #   docker-compose.yml   ta datoteka
 #   Dockerfile           python:3.12.7-slim-bookworm + paket iz app/
 #   .env                 SCOUT_DB_URL=postgresql://scout_stroj:<geslo vloge>@127.0.0.1:5432/postgres
+#                        DISCORD_WEBHOOK=<webhook> (neobvezno: padel dnevni zagon javi na Discord)
 #                        (chmod 600, ustvari lastnik, NI v gitu)
 #   app/                 scout/stroj/ brez testov (objavi-scout.sh)
 # Objava: scripts/hetzner/objavi-scout.sh. CI tega ne objavi.
