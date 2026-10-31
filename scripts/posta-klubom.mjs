@@ -85,7 +85,7 @@ const DAN = 86400e3
 export const OKNA = {
   AT: 'Europe/Vienna', BA: 'Europe/Sarajevo', EE: 'Europe/Tallinn', GI: 'Europe/Gibraltar', GR: 'Europe/Athens', HK: 'Asia/Hong_Kong',
   HR: 'Europe/Zagreb', HU: 'Europe/Budapest', JP: 'Asia/Tokyo', LV: 'Europe/Riga', MD: 'Europe/Chisinau', ME: 'Europe/Podgorica',
-  MK: 'Europe/Skopje', MT: 'Europe/Malta', RO: 'Europe/Bucharest', RS: 'Europe/Belgrade', TH: 'Asia/Bangkok',
+  MK: 'Europe/Skopje', MT: 'Europe/Malta', RO: 'Europe/Bucharest', RS: 'Europe/Belgrade', TH: 'Asia/Bangkok', UA: 'Europe/Kyiv',
 }
 
 /** Je čas `zdaj` v oknu države (08–18, pon–sob, krajevni čas)? */
@@ -629,6 +629,55 @@ slff.eu
   }
 }
 
+// Ukrajinščina: prejemniki so večinoma poklicni klubi (UPL, Perša/Druha liha),
+// zato "ліги, як Ваша", ne amaterske. Ime lige za dvopičjem (sklon), vikanje z
+// veliko (Ви, Ваш). Število: 1/21 бал, 2–4 бали, 5+ балів, decimalno "7,5 бала".
+const ukBali = (n) => (Number.isInteger(Number(n ?? 0)) ? slovansko(n, 'бал', 'бали', 'балів') : 'бала')
+
+function ukrajinsko(k, p, vrsta, url, po) {
+  const { ime_lige: liga, klub, vir } = k
+  const ekipa = po.ekipa
+  const podpis = ekipa ? 'Команда SLFF' : po.ime
+  const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} ${ukBali(p.tocke)}` : null
+  const gravciv = `${p.igralcev} ${slovansko(p.igralcev, 'гравець', 'гравці', 'гравців')}`
+  if (vrsta === 'prvi') {
+    return {
+      zadeva: `${klub}: уже ${gravciv} у фентезі-футболі (${liga})`,
+      telo: `Добрий день!
+
+${ekipa ? 'Ми команда SLFF. SLFF є безкоштовною грою' : `Мене звати ${po.ime}, я з SLFF. Це безкоштовна гра`} у фентезі-футбол для таких ліг, як Ваша. Нещодавно до гри додано лігу: ${liga}. Бали нараховуються за офіційними протоколами матчів на сайті ${vir}.
+
+У грі вже ${gravciv} клубу ${klub}${naj ? `, найкращий наразі: ${naj}` : ''}. Сторінка клубу зі статистикою та готовим зображенням для поширення:
+${url}
+
+Якщо Вам подобається, поділіться посиланням у клубній групі або у Facebook. Після кожного туру видно, хто набирає бали.
+
+Якщо гравець не хоче бути в грі під своїм ім'ям або Ви не бажаєте отримувати листи, достатньо короткої відповіді.
+
+З повагою
+${podpis}
+slff.eu
+`,
+    }
+  }
+  const ekip = p.ekip ?? 0
+  const komandah = `${ekip} фентезі-${slovansko(ekip, 'команді', 'командах', 'командах')}`
+  return {
+    zadeva: ekip >= 5 ? `${klub}: Ваші гравці вже у ${komandah}` : `${klub} у фентезі-грі: як справи у Ваших гравців`,
+    telo: `Добрий день!
+
+${ekipa ? 'Коротко нагадуємо про наш' : 'Коротко нагадую про мій'} попередній лист: гравці клубу ${klub} у грі й набирають бали${ekip >= 5 ? `, і вже є у ${komandah}` : ''}${naj ? `. Найкращий наразі: ${naj}` : ''}.
+${url}
+
+Якщо це підходить для клубної групи або Facebook, ${ekipa ? 'ми будемо раді' : 'я буду радий'}. Це ${ekipa ? 'наш' : 'мій'} останній лист на цю тему; для питань чи побажань достатньо короткої відповіді.
+
+З повагою
+${podpis}
+slff.eu
+`,
+  }
+}
+
 // `vir`: privzeta domena, ko liga nima zveze s site_url (le besedila s `k.vir`).
 const BESEDILA = {
   AT: { sestavi: nemsko, odjava: 'Abmelden', jezik: 'de' },
@@ -648,6 +697,7 @@ const BESEDILA = {
   RO: { sestavi: romunsko, odjava: 'Dezabonare', jezik: 'ro', vir: 'hailafotbal.ro' },
   RS: { sestavi: srbsko, odjava: 'Odjava', jezik: 'sr-Latn' },
   TH: { sestavi: anglesko, odjava: 'Unsubscribe', jezik: 'en-GB', vir: 'thaileague.co.th' },
+  UA: { sestavi: ukrajinsko, odjava: 'Відписатися', jezik: 'uk', vir: 'upl.ua' },
 }
 
 /** Domena za navedbo vira iz federations.site_url ("https://www.epspeir.gr/" → "epspeir.gr"), sicer null. */
