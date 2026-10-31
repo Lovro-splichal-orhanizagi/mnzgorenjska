@@ -11,6 +11,8 @@ def elo(tekme: Tabela, k: float = 20.0, domaci: float = 60.0) -> dict[tuple[int,
     r: dict[tuple[int, int, int], float] = {}
     for liga, leto, d, g, dg, gg in zip(*(tekme[c].tolist() for c in (
             "competition_id", "leto", "home_team_id", "away_team_id", "home_goals", "away_goals"))):
+        if dg is None or gg is None:  # neodigrana ali preložena tekma (SQL_TEKME jih že izloči)
+            continue
         kd, kg = (liga, leto, d), (liga, leto, g)
         rd, rg = r.get(kd, ZACETEK), r.get(kg, ZACETEK)
         pricakovano = 1 / (1 + 10 ** ((rg - rd - domaci) / 400))

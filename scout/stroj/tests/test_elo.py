@@ -20,6 +20,12 @@ def test_vsaka_liga_sezona_zacne_pri_1500():
     assert r[(2, 2026, 10)] < 1500  # domači remi brez upoštevanja lanske zmage
 
 
+def test_tekma_brez_izida_ne_steje():
+    # NULL goli pridejo kot object; 28.–30. 10. 2026 je TypeError ustavil stroj
+    t = _tekme([(1, 2025, 10, 20, 2, 0), (1, 2025, 10, 20, None, None), (1, 2025, 20, 10, None, 1)])
+    assert elo(t) == elo(_tekme([(1, 2025, 10, 20, 2, 0)]))
+
+
 def test_elo_rel():
     s = {"competition_id": np.array([1, 1]), "leto": np.array([2025, 2025]), "team_id": np.array([10, 99])}
     assert elo_rel(s, {(1, 2025, 10): 1700.0}).tolist() == [0.5, 0.0]
