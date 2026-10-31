@@ -7,6 +7,11 @@ on:
         description: Exact reviewed current main SHA
         type: string
         required: true
+      restore_by_utc:
+        description: Optional earlier absolute restore cutoff (YYYY-MM-DDTHH:MM:SSZ), at most 330 minutes from arming
+        type: string
+        required: false
+        default: ''
 permissions: {}
 concurrency:
   group: import-maintenance-window
@@ -21,6 +26,7 @@ jobs:
     outputs:
       paused_utc: ${{ steps.pause.outputs.paused_utc }}
       restore_deadline_utc: ${{ steps.arm.outputs.restore_deadline_utc }}
+      deadline_epoch: ${{ steps.arm.outputs.deadline_epoch }}
       restored_utc: ${{ steps.restore.outputs.restored_utc }}
     env:
       GH_TOKEN: ${{ github.token }}
@@ -32,6 +38,7 @@ jobs:
         id: arm
         env:
           EXPECTED_SHA: ${{ inputs.expected_sha }}
+          RESTORE_BY_UTC: ${{ inputs.restore_by_utc }}
         shell: bash
         run: |
           set -euo pipefail
@@ -44,9 +51,17 @@ jobs:
             }
           armed_epoch=$(date -u +%s)
           deadline_epoch=$((armed_epoch + 330 * 60))
+          if [[ -n "$RESTORE_BY_UTC" ]]; then
+            [[ "$RESTORE_BY_UTC" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] || exit 1
+            requested_epoch=$(date -u -d "$RESTORE_BY_UTC" +%s)
+            [[ "$(date -u -d "@$requested_epoch" +%FT%TZ)" == "$RESTORE_BY_UTC" ]] || exit 1
+            (( requested_epoch > armed_epoch && requested_epoch <= deadline_epoch )) || exit 1
+            deadline_epoch=$requested_epoch
+          fi
           deadline_utc=$(date -u -d "@$deadline_epoch" +%FT%TZ)
           {
             printf 'armed_epoch=%s\n' "$armed_epoch"
+            printf 'deadline_epoch=%s\n' "$deadline_epoch"
             printf 'restore_deadline_utc=%s\n' "$deadline_utc"
             printf 'restore_needed=true\n'
           } >> "$GITHUB_OUTPUT"
@@ -74,11 +89,11 @@ jobs:
       - name: Hold until operator restores or absolute deadline
         timeout-minutes: 335
         env:
-          ARMED_EPOCH: ${{ steps.arm.outputs.armed_epoch }}
+          DEADLINE_EPOCH: ${{ steps.arm.outputs.deadline_epoch }}
         shell: bash
         run: |
           set -euo pipefail
-          deadline_epoch=$((ARMED_EPOCH + 330 * 60))
+          deadline_epoch=$DEADLINE_EPOCH
           while (( $(date -u +%s) < deadline_epoch )); do
             workflow=$(timeout 30s gh api "repos/$GH_REPO/actions/workflows/$TARGET_WORKFLOW_ID")
             state=$(jq -er --arg path "$TARGET_WORKFLOW_PATH" --argjson id "$TARGET_WORKFLOW_ID" \
