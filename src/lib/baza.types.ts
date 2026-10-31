@@ -3887,48 +3887,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "posnetki_igralca_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "krog_najboljsi"
-            referencedColumns: ["player_id"]
-          },
-          {
-            foreignKeyName: "posnetki_igralca_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "player_overview"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "posnetki_igralca_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "player_season_standings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "posnetki_igralca_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "player_standings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "posnetki_igralca_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "posnetki_igralca_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "pozicije_v_cakanju"
-            referencedColumns: ["player_id"]
-          },
-          {
             foreignKeyName: "posnetki_igralca_pregledal_fkey"
             columns: ["pregledal"]
             isOneToOne: false
