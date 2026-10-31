@@ -1,0 +1,137 @@
+name: Import maintenance window
+run-name: Bounded scheduled import pause and automatic restore
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact reviewed current main SHA
+        type: string
+        required: true
+permissions: {}
+concurrency:
+  group: import-maintenance-window
+  cancel-in-progress: false
+jobs:
+  maintenance-window:
+    if: github.repository == 'Lovro-splichal-orhanizagi/mnzgorenjska' && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.expected_sha == github.sha && github.actor == 'nejcar20' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20'
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      actions: write
+    outputs:
+      paused_utc: ${{ steps.pause.outputs.paused_utc }}
+      restore_deadline_utc: ${{ steps.arm.outputs.restore_deadline_utc }}
+      restored_utc: ${{ steps.restore.outputs.restored_utc }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: Lovro-splichal-orhanizagi/mnzgorenjska
+      TARGET_WORKFLOW_ID: '344577571'
+      TARGET_WORKFLOW_PATH: .github/workflows/uvoz-zapisnikov.yml
+    steps:
+      - name: Verify active fixed target and arm restoration before mutation
+        id: arm
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ && "$EXPECTED_SHA" == "$GITHUB_SHA" ]]
+          workflow=$(timeout 30s gh api "repos/$GH_REPO/actions/workflows/$TARGET_WORKFLOW_ID")
+          jq -e --arg path "$TARGET_WORKFLOW_PATH" --argjson id "$TARGET_WORKFLOW_ID" \
+            '.id == $id and .path == $path and .state == "active"' <<< "$workflow" >/dev/null || {
+              printf '::error::Fixed target must match ID/path and be active; refusing to override a pre-existing pause.\n'
+              exit 1
+            }
+          armed_epoch=$(date -u +%s)
+          deadline_epoch=$((armed_epoch + 330 * 60))
+          deadline_utc=$(date -u -d "@$deadline_epoch" +%FT%TZ)
+          {
+            printf 'armed_epoch=%s\n' "$armed_epoch"
+            printf 'restore_deadline_utc=%s\n' "$deadline_utc"
+            printf 'restore_needed=true\n'
+          } >> "$GITHUB_OUTPUT"
+          {
+            printf '### Import maintenance window\n\n'
+            printf 'Fixed target: %s (%s).\n\n' "$TARGET_WORKFLOW_PATH" "$TARGET_WORKFLOW_ID"
+            printf 'Restoration armed at %s; restore deadline %s.\n\n' "$(date -u -d "@$armed_epoch" +%FT%TZ)" "$deadline_utc"
+            printf 'Only future triggers are paused. Existing queued and running imports are left to finish.\n'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Disable future triggers once and verify paused state
+        id: pause
+        shell: bash
+        run: |
+          set -euo pipefail
+          # No retry: an ambiguous request must proceed directly to restoration.
+          timeout 30s gh api --method PUT "repos/$GH_REPO/actions/workflows/$TARGET_WORKFLOW_ID/disable"
+          workflow=$(timeout 30s gh api "repos/$GH_REPO/actions/workflows/$TARGET_WORKFLOW_ID")
+          jq -e --arg path "$TARGET_WORKFLOW_PATH" --argjson id "$TARGET_WORKFLOW_ID" \
+            '.id == $id and .path == $path and .state == "disabled_manually"' <<< "$workflow" >/dev/null
+          paused_utc=$(date -u +%FT%TZ)
+          printf 'paused_utc=%s\n' "$paused_utc" >> "$GITHUB_OUTPUT"
+          printf '\nVerified disabled_manually at %s.\n' "$paused_utc" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Hold until operator restores or absolute deadline
+        timeout-minutes: 335
+        env:
+          ARMED_EPOCH: ${{ steps.arm.outputs.armed_epoch }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          deadline_epoch=$((ARMED_EPOCH + 330 * 60))
+          while (( $(date -u +%s) < deadline_epoch )); do
+            workflow=$(timeout 30s gh api "repos/$GH_REPO/actions/workflows/$TARGET_WORKFLOW_ID")
+            state=$(jq -er --arg path "$TARGET_WORKFLOW_PATH" --argjson id "$TARGET_WORKFLOW_ID" \
+              'select(.id == $id and .path == $path) | .state' <<< "$workflow")
+            if [[ "$state" == active ]]; then
+              printf '\nOperator restoration observed at %s.\n' "$(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            [[ "$state" == disabled_manually ]]
+            remaining=$((deadline_epoch - $(date -u +%s)))
+            (( remaining > 0 )) || break
+            (( remaining > 60 )) && remaining=60
+            sleep "$remaining"
+          done
+          printf '\nAbsolute hold deadline reached at %s; restoring now.\n' "$(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Always restore armed target and verify active state
+        id: restore
+        if: always() && steps.arm.outputs.restore_needed == 'true'
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          set -euo pipefail
+          endpoint="repos/$GH_REPO/actions/workflows/$TARGET_WORKFLOW_ID"
+          # Every enable attempt requires a fresh, confirmed disabled state.
+          # An unknown API outcome only permits another read, never a blind retry.
+          for attempt in 1 2 3; do
+            if workflow=$(timeout 30s gh api "$endpoint"); then
+              state=$(jq -er --arg path "$TARGET_WORKFLOW_PATH" --argjson id "$TARGET_WORKFLOW_ID" \
+                'select(.id == $id and .path == $path) | .state' <<< "$workflow") || state=unknown
+              if [[ "$state" == active ]]; then
+                restored_utc=$(date -u +%FT%TZ)
+                printf 'restored_utc=%s\n' "$restored_utc" >> "$GITHUB_OUTPUT"
+                printf '\nVerified active at %s.\n' "$restored_utc" >> "$GITHUB_STEP_SUMMARY"
+                exit 0
+              fi
+              if [[ "$state" == disabled_manually ]]; then
+                timeout 30s gh api --method PUT "$endpoint/enable" || true
+              else
+                printf '::error::Unexpected target identity/state; restoration cannot yet be confirmed.\n'
+              fi
+            fi
+            sleep 10
+          done
+          # Confirm the last mutation without issuing any additional write.
+          if workflow=$(timeout 30s gh api "$endpoint") && \
+            jq -e --arg path "$TARGET_WORKFLOW_PATH" --argjson id "$TARGET_WORKFLOW_ID" \
+              '.id == $id and .path == $path and .state == "active"' <<< "$workflow" >/dev/null; then
+            restored_utc=$(date -u +%FT%TZ)
+            printf 'restored_utc=%s\n' "$restored_utc" >> "$GITHUB_OUTPUT"
+            printf '\nVerified active at %s.\n' "$restored_utc" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          printf '\nRESTORATION FAILED: could not verify active at %s. Operator action required.\n' "$(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
+          printf '::error::Could not confirm fixed import workflow is active; operator must restore it immediately.\n'
+          exit 1
