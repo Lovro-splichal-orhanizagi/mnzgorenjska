@@ -29,7 +29,7 @@ select pg_temp.nl_assert(not exists(select 1 from private_historical_statistics.
 select pg_temp.nl_refuses('select public.prepare_mfa_nl_reviewed_bootstrap(972,repeat(''e'',40),pg_temp.nl_sha(974))');
 select pg_temp.nl_refuses('select public.prepare_mfa_nl_reviewed_bootstrap(974,''wrong'',pg_temp.nl_sha(974))');
 select pg_temp.nl_refuses('select public.prepare_mfa_nl_reviewed_bootstrap(974,repeat(''e'',40),repeat(''0'',64))');
-select pg_temp.nl_refuses('select private_mfa_nl_history.prepare_core(974,repeat(''e'',40),pg_temp.nl_sha(974),''2026-11-01T10:00Z'')');
+select pg_temp.nl_refuses('select private_mfa_nl_history.prepare_core(974,repeat(''e'',40),pg_temp.nl_sha(974),''2027-05-01T10:00Z'')');
 -- Deleted votes are activity even if no current vote row remains.
 savepoint fantasy_activity;
 insert into auth.users(id,email,raw_user_meta_data,created_at)values('f0000000-0000-0000-0000-000000000974','bootstrap974@example.test','{"display_name":"Bootstrap fixture"}',now());

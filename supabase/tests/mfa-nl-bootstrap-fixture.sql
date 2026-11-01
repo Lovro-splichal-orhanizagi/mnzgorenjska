@@ -9,15 +9,15 @@ insert into teams(id,name,country_id)overriding system value
 select id,name,(select id from countries where code='MT')from(values
 (9909731,'NLI bootstrap home'),(9909732,'NLI bootstrap away'),(9909741,'NLII bootstrap home'),(9909742,'NLII bootstrap away'))v(id,name);
 insert into rounds(id,competition_id,season,number,played_on,deadline_at)overriding system value
-select cid*10000+n,cid,'2026/27',n,case n when 1 then'2026-10-10'::date else'2026-11-01'::date end,
-case n when 1 then'2026-10-10T10:00Z'::timestamptz else'2026-11-01T10:00Z'::timestamptz end
+select cid*10000+n,cid,'2026/27',n,case n when 1 then'2026-10-10'::date else'2027-05-01'::date end,
+case n when 1 then'2026-10-10T10:00Z'::timestamptz else'2027-05-01T10:00Z'::timestamptz end
 from(values(973),(974))v(cid)cross join generate_series(1,2)n;
 insert into players(competition_id,team_id,reg_st,first_name,last_name,full_name,position,position_source,active)
 select cid,t.id,t.id*100+n,'Fixture',n::text,'Fixture '||t.id||' '||n,case n when 1 then'GK'else'DEF'end,'zapisnik',true
 from(values(973),(974))v(cid)join teams t on t.id between 9900000+cid*10+1 and 9900000+cid*10+2 cross join generate_series(1,11)n;
 insert into matches(id,round_id,home_team_id,away_team_id,played_on,zapisnik_id,source_url,imported_at)overriding system value
 select cid*10000+n,cid*10000+n,9900000+cid*10+1,9900000+cid*10+2,
-case n when 1 then'2026-10-10'::date else'2026-11-01'::date end,
+case n when 1 then'2026-10-10'::date else'2027-05-01'::date end,
 case n when 1 then'mt'||(91000000+cid)end,
 case n when 1 then'https://matchcentre.mfa.com.mt/match/'||(91000000+cid)end,
 case n when 1 then now()end from(values(973),(974))v(cid)cross join generate_series(1,2)n;

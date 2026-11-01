@@ -23,7 +23,7 @@ select cid,t.id,t.id*100+n,'Fixture',n::text,'Fixture '||t.id||' '||n,case n whe
 from(values(973),(974))v(cid)join teams t on t.id between 9900000+cid*10+1 and 9900000+cid*10+6 cross join generate_series(1,16)n
 where not exists(select 1 from players p where p.competition_id=cid and p.reg_st=t.id*100+n);
 insert into matches(round_id,home_team_id,away_team_id,played_on,zapisnik_id,source_url,imported_at)
-select cid*10000+rn,9900000+cid*10+n,9900000+cid*10+n+1,case rn when 1 then'2026-10-10'::date else'2026-11-01'::date end,
+select cid*10000+rn,9900000+cid*10+n,9900000+cid*10+n+1,case rn when 1 then'2026-10-10'::date else'2027-05-01'::date end,
 case rn when 1 then'mt'||(92000000+cid*10+n)end,case rn when 1 then'https://matchcentre.mfa.com.mt/match/'||(92000000+cid*10+n)end,case rn when 1 then now()end
 from(values(973),(974))v(cid)cross join(values(3),(5))x(n)cross join generate_series(1,2)rn;
 analyze players;analyze matches;
@@ -36,10 +36,10 @@ select p.competition_id*10000+1,p.id,p.team_id,false,30,60,90,false from players
 -- The source contract accessor must work before an installed bootstrap exists.
 do $$declare doc jsonb;sha text;begin
  doc:=jsonb_build_object('schemaVersion',1,'competitionId',973,'policyId','mt-nl1-reviewed-history-2026-10-21-v1','policySha256',pg_temp.nl_sha(973),'archiveSeason','2025/26','currentSeason','2026/27','expectedArchiveRounds',4,'expectedCurrentFixtureCount',1,'expectedCurrentClubCount',2,
- 'opening',jsonb_build_object('round',2,'playedOn','2026-11-01','deadlineAt','2026-11-01T10:00:00Z'),
+ 'opening',jsonb_build_object('round',2,'playedOn','2027-05-01','deadlineAt','2027-05-01T10:00:00Z'),
  'sourceArtifact',jsonb_build_object('runId','1','artifactId','2','digest','sha256:'||repeat('f',64),'commit',repeat('e',40),'workflow','.github/workflows/synthetic-fixture.yml','branch','synthetic-not-approval','name','synthetic-not-approval'),
  'reports',jsonb_build_array(jsonb_build_object('reportId','mt90000973','season','2025/26','round',3,'playedOn','2025-11-01','homeName','NLI bootstrap home','awayName','NLI bootstrap away','homeGoals',2,'awayGoals',1,'statisticsStatus','unavailable_historical')),
- 'currentFixtures',jsonb_build_array(jsonb_build_object('sourceMatchId','94009731','round',2,'playedOn','2026-11-01','homeName','NLI bootstrap home','awayName','NLI bootstrap away','played',false)));
+ 'currentFixtures',jsonb_build_array(jsonb_build_object('sourceMatchId','94009731','round',2,'playedOn','2027-05-01','homeName','NLI bootstrap home','awayName','NLI bootstrap away','played',false)));
  sha:=encode(sha256(convert_to(private_mfa_nl_history.canonical_json(doc),'UTF8')),'hex');
  begin
   insert into private_mfa_nl_history.source_contract values(973,sha,doc);
@@ -64,7 +64,7 @@ analyze appearances;analyze goals;
 create temporary table nl_release_contracts as
 select cid,jsonb_build_object('schemaVersion',1,'competitionId',cid,'policyId','mt-nl'||(cid-972)||'-reviewed-history-2026-10-21-v1','policySha256',pg_temp.nl_sha(cid),'archiveSeason','2025/26','currentSeason','2026/27',
 'expectedArchiveRounds',(select count(*)from rounds where competition_id=cid and season='2025/26'),'expectedCurrentFixtureCount',6,'expectedCurrentClubCount',6,
-'opening',jsonb_build_object('round',2,'playedOn','2026-11-01','deadlineAt','2026-11-01T10:00:00Z'),
+'opening',jsonb_build_object('round',2,'playedOn','2027-05-01','deadlineAt','2027-05-01T10:00:00Z'),
 'sourceArtifact',jsonb_build_object('runId','1','artifactId','2','digest','sha256:'||repeat('f',64),'commit',repeat('e',40),'workflow','.github/workflows/synthetic-fixture.yml','branch','synthetic-not-approval','name','synthetic-not-approval'),
 'reports',(select jsonb_agg(jsonb_build_object('reportId',m.zapisnik_id,'season',r.season,'round',r.number,'playedOn',m.played_on,'homeName',h.name,'awayName',a.name,'homeGoals',m.home_goals,'awayGoals',m.away_goals,'statisticsStatus',m.statistics_status)order by r.season,r.number,m.zapisnik_id)from matches m join rounds r on r.id=m.round_id join teams h on h.id=m.home_team_id join teams a on a.id=m.away_team_id where r.competition_id=cid and m.zapisnik_id is not null),
 'currentFixtures',(select jsonb_agg(jsonb_build_object('sourceMatchId',coalesce(substring(m.zapisnik_id from 3),(94000000+cid*10+m.home_team_id%10)::text),'round',r.number,'playedOn',m.played_on,'homeName',h.name,'awayName',a.name,'played',m.imported_at is not null)order by r.number,m.id)from matches m join rounds r on r.id=m.round_id join teams h on h.id=m.home_team_id join teams a on a.id=m.away_team_id where r.competition_id=cid and r.season='2026/27'))as document from(values(973),(974))v(cid);
