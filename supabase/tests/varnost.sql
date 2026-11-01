@@ -1815,7 +1815,7 @@ select pg_temp.preveri('uradno: ni držalo z datumom tekme',
      from uradne_odsotnosti_view where player_id = -913006 order by id desc limit 1));
 select pg_temp.preveri('uradno: preverba je idempotentna', preveri_uradne_odsotnosti() = 0);
 
--- Preverba podatkov po delih (20261028100000): vsak del teče, zbir je enak delom.
+-- Preverba podatkov po delih (20261101100000): vsak del teče, zbir je enak delom.
 select pg_temp.preveri('preverba po delih: vsi deli tečejo, preveri_podatke() je njihov zbir',
   (select count(*) from preveri_podatke()) =
   (select count(*) from unnest(array['postava','menjave','goli-in-datumi','tocke','cene']) d,

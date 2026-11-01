@@ -3,7 +3,7 @@
 // `preveri_podatke()` kot en sam klic je z rastjo podatkov presegel 30 s, ki jih
 // Cloudflare pred api.slff.eu dovoli odgovoru (504), tudi ko baza sama še tece
 // (statement_timeout servisne vloge je 60 s). Zato kličemo dele
-// (`preveri_podatke_del`, migracija 20261028100000) vsakega posebej: vsak mora
+// (`preveri_podatke_del`, migracija 20261101100000) vsakega posebej: vsak mora
 // ostati daleč pod mejo, padec pa imenuje del.
 export const DELI_PREVERB = ['postava', 'menjave', 'goli-in-datumi', 'tocke', 'cene']
 
