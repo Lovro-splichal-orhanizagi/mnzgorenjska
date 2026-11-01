@@ -9,9 +9,10 @@ create function pg_temp.zavrni(q text,expected text)returns void language plpgsq
 end$$;
 create temporary table fx(key text primary key,value bigint);
 
--- 1. Odvezava: sintetična pripravljena native liga z eno označbo.
+-- 1. Odvezava: sintetična pripravljena native liga kot Baden v produkciji: tekoča
+-- označena tekma z izidom ter arhivska sezona z označeno tekmo BREZ izida.
 do $$
-declare de bigint:=(select id from countries where code='DE');cid bigint;home bigint;away bigint;rid bigint;rid2 bigint;mid bigint;r jsonb;
+declare de bigint:=(select id from countries where code='DE');cid bigint;home bigint;away bigint;rid bigint;rid2 bigint;ra bigint;mid bigint;mida bigint;r jsonb;def text:=(select pg_get_constraintdef(oid) from pg_constraint where conname='paired_result_availability' and conrelid='public.matches'::regclass);
 begin
  perform set_config('request.jwt.claim.role','service_role',true);
  insert into competitions(slug,name,short_name,country_id,source,source_league_code,active)values('de-path-b-detach','Detach fixture','Detach',de,'fussball-public',repeat('F',32)||'-G:2026/27',false)returning id into cid;
@@ -25,16 +26,27 @@ begin
  insert into private_historical_statistics.markers(competition_id,source_match_id,source_report_id,fixture,raw_sha256,round_id,home_team_id,away_team_id)values(cid,repeat('H',32),'de-fussball-'||repeat('H',32),'{}',repeat('b',64),rid,home,away);
  alter table public.matches disable trigger protect_historical_statistics_match;
  insert into matches(round_id,home_team_id,away_team_id,home_goals,away_goals,played_on,zapisnik_id,statistics_status,statistics_reason)values(rid,home,away,2,1,current_date-7,'de-fussball-'||repeat('H',32),'unavailable_historical','anonymous-starter')returning id into mid;
+ -- Archive 2025/26: one ordinary fixture and one marked fixture with an UNKNOWN
+ -- result (prod 736036). Reproduce prod: such a row exists, and any update is
+ -- checked by paired_result_availability (re-added NOT VALID, so it still bites).
+ insert into rounds(competition_id,season,number,played_on,deadline_at)values(cid,'2025/26',21,current_date-220,clock_timestamp()-interval'220 days')returning id into ra;
+ insert into matches(round_id,home_team_id,away_team_id,home_goals,away_goals,played_on,zapisnik_id)values(ra,away,home,1,0,current_date-220,'de-fussball-'||repeat('J',32));
+ insert into private_historical_statistics.markers(competition_id,source_match_id,source_report_id,fixture,raw_sha256,round_id,home_team_id,away_team_id)values(cid,repeat('I',32),'de-fussball-'||repeat('I',32),'{}',repeat('b',64),ra,home,away);
+ alter table public.matches drop constraint paired_result_availability;
+ insert into matches(round_id,home_team_id,away_team_id,home_goals,away_goals,played_on,zapisnik_id,statistics_status,statistics_reason)values(ra,home,away,null,null,current_date-220,'de-fussball-'||repeat('I',32),'unavailable_historical','administrative-final-result-unknown')returning id into mida;
+ execute 'alter table public.matches add constraint paired_result_availability '||def||' not valid';
+ perform pg_temp.zavrni(format('update matches set statistics_status=%L,statistics_reason=null where id=%s','available',mida),'paired_result_availability');
  alter table public.matches enable trigger protect_historical_statistics_match;
  insert into private_baden_history.prepared values(cid,repeat('c',64),'[]',rid2);
  perform pg_temp.zavrni(format('delete from private_baden_history.prepared where competition_id=%s',cid),'immutable');
  perform pg_temp.zavrni(format('delete from private_historical_statistics.markers where competition_id=%s',cid),'immutable marker');
  r:=private_fussball.detach_native_current_only('de-path-b-detach');
- perform pg_temp.ok(r->>'detached'='true' and (r->>'markers')::int=1 and (r->>'matches')::int=1,'detach summary '||r::text);
+ perform pg_temp.ok(r->>'detached'='true' and (r->>'markers')::int=2 and (r->>'matches')::int=1 and (r->>'archive_matches')::int=2 and (r->>'archive_rounds')::int=1,'detach summary '||r::text);
+ perform pg_temp.ok(not exists(select 1 from rounds where competition_id=cid and season='2025/26') and exists(select 1 from rounds where id=rid2),'archive season removed, current kept');
  perform pg_temp.ok(not exists(select 1 from private_baden_history.prepared where competition_id=cid) and not exists(select 1 from private_historical_statistics.installed_policies where competition_id=cid) and not exists(select 1 from private_historical_statistics.markers where competition_id=cid),'native state removed');
  perform pg_temp.ok((select statistics_status='available' and statistics_reason is null and home_goals=2 and imported_at is null from matches where id=mid),'match kept as unimported official fixture');
  perform pg_temp.ok((select archive_codes='{}' from private_fussball.card_policies where competition_id=cid),'current-only card policy');
- perform pg_temp.ok((select jsonb_array_length(state->'markers')=1 and state->'prepared'->>'opening_round_id'=rid2::text from private_fussball.detached_native_state where tekmovanje=cid),'dropped state retained');
+ perform pg_temp.ok((select jsonb_array_length(state->'markers')=2 and jsonb_array_length(state->'archive_matches')=2 and jsonb_array_length(state->'archive_rounds')=1 and state->'prepared'->>'opening_round_id'=rid2::text from private_fussball.detached_native_state where tekmovanje=cid),'dropped state retained');
  perform pg_temp.ok((select bool_and(tgenabled='O') from pg_trigger where tgname in('baden_prepared_immutable','baden_installed_immutable','baden_history_marker_guard','protect_historical_statistics_match')),'guards re-enabled');
  perform pg_temp.ok(private_fussball.detach_native_current_only('de-path-b-detach')->>'detached'='false','second detach is a no-op');
 end$$;
