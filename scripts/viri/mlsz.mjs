@@ -488,9 +488,11 @@ export function nastopi(z) {
 // poznamo. Dodaj le videne: "ZVFC" (2025/26) je "Zalaszentgróti VFC" (2026/27),
 // isti grb (EgyesuletLogo 6/5490). "Vácrátót KSE" (razpored od 25. 10. 2026)
 // je "Vácrátóti KSE" iz Pest IV. Észak; novo ime je podvojilo vse tekme kluba.
+// "GÜL BABA CELTIC FK" (razpored BP IV/1) je "GB CELTIC FK" iz zapisnikov.
 const ISTI_KLUB_HU = {
   zvfc: 'zalaszentgróti vfc',
   'vácrátót kse': 'vácrátóti kse',
+  'gül baba celtic fk': 'gb celtic fk',
 }
 
 const kljucBrezVzdevka = (ime) =>
