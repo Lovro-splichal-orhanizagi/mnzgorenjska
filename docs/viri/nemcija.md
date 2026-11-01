@@ -1193,10 +1193,12 @@ dosegljiv kader, nedotaknjen prihodnji prvi krog, vklop in javno branje.
 
 - **Migracija `20261101150100_fussball_tekoca_pot`** odveže Baden od enkratne
   verige: izbriše `private_baden_history.prepared`, nameščeno zgodovinsko
-  politiko in njenih 56 označb ter morebitno sprejemnico kartonov; 56 tekem
-  (47 arhiv, 9 tekoča) spet dobi `statistics_status='available'` brez
-  nastopov, kartonska politika dobi `archive_codes='{}'`. Prej shranjeno stanje
-  je v `private_fussball.detached_native_state`. Tekme, krogi, klubi in
+  politiko in njenih 56 označb ter morebitno sprejemnico kartonov. Arhivska
+  sezona 2025/26 (30 krogov, 240 tekem brez nastopov; tri brez izida) se
+  izbriše, ker je pot B nima; 9 označenih tekem tekoče sezone (z uradnim
+  izidom) dobi `statistics_status='available'` brez nastopov in jih uvoz poti B
+  uvozi ali pusti izrecno neznane. Kartonska politika dobi `archive_codes='{}'`. Prej shranjeno stanje
+  je v `private_fussball.detached_native_state`. Tekme in krogi tekoče sezone, klubi in
   `private_baden_history.catalog/club_bindings` ostanejo. Skripte enkratne
   verige ostanejo v repozitoriju, za Baden pa se ne uporabljajo več.
 - **Kartonska politika brez arhiva** (`install_fussball_card_policy(..., '{}')`)

@@ -6,9 +6,12 @@
 --    zgodovinska politika in njene označbe (56 vrstic) ter morebitna stara
 --    sprejemnica kartonov. Vse se pred brisanjem shrani v
 --    private_fussball.detached_native_state (za pregled ali ročno obnovo).
---    Tekme/krogi ostanejo; 56 tekem iz označb dobi spet statistics_status
---    'available' brez nastopov (nobena nima uvoženih podatkov). Kartonska
---    politika ostane, le brez arhivskih šifer (archive_codes = '{}').
+--    Arhivska sezona (vsi krogi in tekme, ki niso tekoča sezona) se izbriše:
+--    pot B arhiva nima, tri arhivske tekme brez izida pa bi brez označb kršile
+--    paired_result_availability. Tekme tekoče sezone ostanejo; njihove označene
+--    tekme (vse z uradnim izidom) dobijo 'available' brez nastopov in jih nato
+--    uvoz poti B uvozi ali izrecno pusti neznane. Kartonska politika ostane,
+--    le brez arhivskih šifer (archive_codes = '{}').
 -- 2. install_fussball_card_policy sprejme tudi prazen arhiv (pot B).
 -- 3. vklopi_fussball_tekoco: servisni vklop lige poti B. Neznani zapisniki
 --    (zavrnjeni pri viru) ostanejo neuvoženi in morajo biti izrecno našteti;
@@ -25,7 +28,7 @@ revoke all on private_fussball.detached_native_state from public,anon,authentica
 -- Izvede se enkrat spodaj; brez pripravljene native vezave ne naredi ničesar.
 create function private_fussball.detach_native_current_only(p_slug text) returns jsonb language plpgsql set search_path=public,pg_temp as $$
 #variable_conflict use_column
-declare c competitions; n_markers integer; n_matches integer;
+declare c competitions; n_markers integer; n_matches integer; n_archive_matches integer; n_archive_rounds integer; v_season text;
 begin
  select * into c from competitions where slug=p_slug and source='fussball-public' and source_policy='fussball-community-cards-v1';
  if c.id is null or not exists(select 1 from private_baden_history.prepared where competition_id=c.id) then return jsonb_build_object('detached',false); end if;
@@ -33,6 +36,10 @@ begin
   or exists(select 1 from private_fussball.card_reports where competition_id=c.id)
   or exists(select 1 from appearances a join matches m on m.id=a.match_id join rounds r on r.id=m.round_id where r.competition_id=c.id)
  then raise exception 'FUSSBALL_PATH_B: detach requires inactive league without fantasy teams, card reports or appearances'; end if;
+ v_season:=split_part(c.source_league_code,':',2);
+ if exists(select 1 from matches m join rounds r on r.id=m.round_id where r.competition_id=c.id and r.season=v_season and m.statistics_status='unavailable_historical' and (m.home_goals is null or m.away_goals is null))
+  or exists(select 1 from fantasy_lineups l join rounds r on r.id=l.round_id where r.competition_id=c.id and r.season<>v_season)
+ then raise exception 'FUSSBALL_PATH_B: current marked fixtures need an official result and archive rounds no fantasy rows'; end if;
  insert into private_fussball.detached_native_state(tekmovanje,state) values(c.id,jsonb_build_object(
   'reason','owner decision 2026-11-01: current-only path B',
   'prepared',(select to_jsonb(p) from private_baden_history.prepared p where p.competition_id=c.id),
@@ -43,7 +50,9 @@ begin
   'card_admission',(select to_jsonb(a) from private_fussball.card_admissions a where a.competition_id=c.id),
   'prvi_fantasy_krog',c.prvi_fantasy_krog,
   'unavailable_matches',(select coalesce(jsonb_agg(jsonb_build_object('id',m.id,'zapisnik_id',m.zapisnik_id,'statistics_status',m.statistics_status,'statistics_reason',m.statistics_reason) order by m.id),'[]')
-   from matches m join rounds r on r.id=m.round_id where r.competition_id=c.id and m.statistics_status='unavailable_historical')));
+   from matches m join rounds r on r.id=m.round_id where r.competition_id=c.id and m.statistics_status='unavailable_historical'),
+  'archive_rounds',(select coalesce(jsonb_agg(to_jsonb(r) order by r.id),'[]') from rounds r where r.competition_id=c.id and r.season<>v_season),
+  'archive_matches',(select coalesce(jsonb_agg(to_jsonb(m) order by m.id),'[]') from matches m join rounds r on r.id=m.round_id where r.competition_id=c.id and r.season<>v_season)));
  execute 'alter table private_baden_history.prepared disable trigger baden_prepared_immutable';
  execute 'alter table private_historical_statistics.installed_policies disable trigger baden_installed_immutable';
  execute 'alter table private_historical_statistics.markers disable trigger baden_history_marker_guard';
@@ -54,6 +63,10 @@ begin
  get diagnostics n_markers=row_count;
  delete from private_historical_statistics.installed_policies where competition_id=c.id;
  delete from private_baden_history.prepared where competition_id=c.id;
+ delete from matches m using rounds r where r.id=m.round_id and r.competition_id=c.id and r.season<>v_season;
+ get diagnostics n_archive_matches=row_count;
+ delete from rounds r where r.competition_id=c.id and r.season<>v_season;
+ get diagnostics n_archive_rounds=row_count;
  update matches m set statistics_status='available',statistics_reason=null from rounds r
   where r.id=m.round_id and r.competition_id=c.id and m.statistics_status='unavailable_historical';
  get diagnostics n_matches=row_count;
@@ -62,7 +75,7 @@ begin
  execute 'alter table private_historical_statistics.markers enable trigger baden_history_marker_guard';
  execute 'alter table public.matches enable trigger protect_historical_statistics_match';
  update private_fussball.card_policies set archive_codes='{}' where competition_id=c.id;
- return jsonb_build_object('detached',true,'competition_id',c.id,'markers',n_markers,'matches',n_matches);
+ return jsonb_build_object('detached',true,'competition_id',c.id,'markers',n_markers,'matches',n_matches,'archive_matches',n_archive_matches,'archive_rounds',n_archive_rounds);
 end$$;
 revoke all on function private_fussball.detach_native_current_only(text) from public,anon,authenticated,service_role;
 select private_fussball.detach_native_current_only('de-verbandsliga-baden');
