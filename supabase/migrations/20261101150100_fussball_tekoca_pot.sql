@@ -15,7 +15,7 @@
 --    statistik ne ugibamo.
 
 create table private_fussball.detached_native_state(
- competition_id bigint primary key references public.competitions(id),
+ competition_id bigint primary key, -- brez FK: FCF varovala zaprejo seznam FK na competitions
  detached_at timestamptz not null default clock_timestamp(),
  state jsonb not null
 );
