@@ -23,6 +23,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import nodemailer from 'npm:nodemailer@6.9.16'
 import { type Bon, type Narocilo, sestaviMail } from './sporocila.ts'
 import { jePlacanoAktivno } from '../_shared/trgovina-stanja.ts'
+import { sledi } from '../_shared/napake.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -44,6 +45,8 @@ const smtp = nodemailer.createTransport({
 function json(obj: unknown, status = 200) {
   return new Response(JSON.stringify(obj), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
 }
+
+sledi('trgovina-posta')
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })

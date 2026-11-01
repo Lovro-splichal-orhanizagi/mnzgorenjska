@@ -10,6 +10,10 @@ interface ImportMetaEnv {
   readonly VITE_UMAMI_ID?: string
   /** "1": na slff.eu API na istem izvoru (Caddy), glej lib/supabase.ts. */
   readonly VITE_API_ISTI_IZVOR?: string
+  /** Bugsink DSN (https://<ključ>@slff.eu/n/<projekt>); brez njega sledenja napak ni. Ključ je javen (le sprejem). */
+  readonly VITE_NAPAKE_DSN?: string
+  /** Okolje v Bugsinku: production (privzeto) ali staging. */
+  readonly VITE_NAPAKE_OKOLJE?: string
 }
 
 interface ImportMeta {

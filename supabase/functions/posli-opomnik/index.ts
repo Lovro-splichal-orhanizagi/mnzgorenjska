@@ -49,6 +49,7 @@ import {
 } from './sporocila.ts'
 import { posljiPush, pushNastavljen, type Obvestilo } from './push.ts'
 import nodemailer from 'npm:nodemailer@6.9.16'
+import { sledi } from '../_shared/napake.ts'
 
 // Anketa plačila (SLF-211): Lovro, 30. 10. 2026, okoli 50 ročno izbranih.
 const ANKETA_MEJA = 50
@@ -116,6 +117,8 @@ interface Uporabnik {
   deadline_at?: string | null
   razlog?: string | null
 }
+
+sledi('posli-opomnik')
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })

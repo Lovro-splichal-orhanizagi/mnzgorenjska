@@ -19,6 +19,7 @@
 // privzeto https://club.slff.eu). Objava: scripts/hetzner/objavi-funkcije.sh scout-placilo
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
+import { sledi } from '../_shared/napake.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -48,6 +49,8 @@ async function stripe<T>(pot: string, polja?: Polja): Promise<T> {
 function json(obj: unknown, status = 200) {
   return new Response(JSON.stringify(obj), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
 }
+
+sledi('scout-placilo')
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })

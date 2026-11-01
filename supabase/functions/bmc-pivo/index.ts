@@ -23,6 +23,7 @@
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import { ocistiSporocilo } from './sporocilo.ts'
+import { sledi } from '../_shared/napake.ts'
 
 interface Dogodek {
   type?: string
@@ -93,6 +94,8 @@ async function zapisi(d: Dogodek): Promise<string | null> {
     : await baza.from('piva').upsert(vrstica, { onConflict: 'zunanji_id', ignoreDuplicates: true })
   return error ? error.message : null
 }
+
+sledi('bmc-pivo')
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('POST only', { status: 405 })
