@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
-import { preveriLigo, izberiPrviKrog, pripraviBatch, aktivirajBatch, preberiPosnetek, preberiVse, kanonicno, sha256, KATALONSKE_LIGE } from './vklopi-katalonijo.mjs'
+import { preveriLigo, izberiPrviKrog, pripraviBatch, aktivirajBatch, preberiPosnetek, preberiVse, kanonicno, sha256, KATALONSKE_LIGE, QUARTA_LIGE, QUARTA_BREZ_MENJAV } from './vklopi-katalonijo.mjs'
 
 const NOW = Date.parse('2026-10-17T12:00:00Z')
 const COMMIT = 'a'.repeat(40)
@@ -34,7 +34,7 @@ test('real-shaped complete 16-club league passes actual roster readiness and sel
 for (const [name, mutate, reason] of [
   ['wrong source', s => s.competition.source = 'fas', /obseg/],
   ['wrong country', s => s.competition.country_code = 'DE', /obseg/],
-  ['Quarta', s => s.competition.slug = 'es-ct-quarta-g1', /obseg/],
+  ['unlisted Quarta group', s => s.competition.slug = 'es-ct-quarta-g9', /obseg/],
   ['wrong season', s => s.season = '2025/26', /sezon/],
   ['already active', s => s.competition.active = true, /aktivna/],
   ['239 fixtures', s => s.matches.pop(), /240|krog/],
@@ -292,4 +292,69 @@ test('present report ids belong to the configured block; imported URLs identify 
   assert.match(check(s).tezave.join(' '), /identitet/)
   const t = liga(); t.matches[0].source_url = 'https://www.fcf.cat/ca/competicio/acta/9999999'
   assert.match(check(t).tezave.join(' '), /identitet/)
+})
+
+// Quarta (owner decision 2026-11-01): clubs record no substitutions, starters
+// keep 90, a bench scorer enters at his goal. n clubs, byes when odd.
+export function quarta(n = 15, slug = 'es-ct-quarta-g1') {
+  const R = n % 2 ? 2 * n : 2 * (n - 1), k = Math.floor(n / 2), half = R / 2, played = 6
+  const competition = { id: 9, slug, source: 'fcf', source_league_code: '4139542-4139800', active: false, country_code: 'ES', sezona_koledarska: false, prvi_fantasy_krog: 1 }
+  const players = Array.from({ length: n * 15 }, (_, i) => ({ id: i + 1, competition_id: 9, team_id: Math.floor(i / 15) + 1, active: true, position: i % 15 === 0 || i % 15 === 14 ? 'GK' : i % 15 <= 5 ? 'DEF' : i % 15 <= 10 ? 'MID' : 'FWD', value: i === 0 ? 12 : 5 + i % 2 }))
+  const rounds = Array.from({ length: R }, (_, i) => ({ id: i + 1, number: i + 1, competition_id: 9, season: '2026/27', deadline_at: i < played ? `2026-10-0${i + 1}T12:00:00Z` : '2026-10-25T12:00:00Z' }))
+  const matches = [], appearances = [], goals = [], ring = Array.from({ length: n + n % 2 }, (_, i) => i + 1), size = ring.length
+  for (let leg = 0; leg < 2; leg++) for (let r = 0; r < half; r++) {
+    const round = leg * half + r + 1, imported = round <= played
+    for (let i = 0; i < size / 2; i++) {
+      let [home, away] = [ring[i], ring[size - 1 - i]]; if (home > n || away > n) continue; if (leg) [home, away] = [away, home]
+      const id = matches.length + 1
+      matches.push({ id, round_id: round, home_team_id: home, away_team_id: away, home_goals: 0, away_goals: 0, played_on: imported ? `2026-10-0${round}` : '2026-10-25', imported_at: imported ? '2026-10-07T12:00:00Z' : null, zapisnik_id: `es${4139542 + id - 1}`, kontumacija: false, vir_brez_izida: false, import_warnings: [] })
+      if (imported) for (const team of [home, away]) for (let j = 0; j < 11; j++) appearances.push({ id: appearances.length + 1, match_id: id, player_id: (team - 1) * 15 + j + 1, team_id: team, started: true, is_goalkeeper: j === 0, minute_on: 0, minute_off: 90, minutes_played: 90, goals: 0, own_goals: 0, penalties_scored: 0, penalties_missed: 0, penalties_saved: 0, yellow_cards: 0, red_cards: 0, goals_conceded: 0, clean_sheet: true })
+    }
+    ring.splice(1, 0, ring.pop())
+  }
+  // One bench scorer, exactly as the fcf parser stores him.
+  const m = matches[0], a = { ...appearances[0], id: appearances.length + 1, match_id: m.id, player_id: (m.home_team_id - 1) * 15 + 13, team_id: m.home_team_id, started: false, is_goalkeeper: false, minute_on: 76, minute_off: 90, minutes_played: 14, goals: 1 }
+  appearances.push(a); m.home_goals = 1; m.import_warnings = ['strelec Bench Scorer je na klopi, vstopa zapisnik nima — vstop postavljen na 76. minuto']
+  goals.push({ id: 1, match_id: m.id, scorer_id: a.player_id, team_id: a.team_id, minute: 76, is_own_goal: false, is_penalty: false, score_home: 1, score_away: 0 })
+  for (const x of appearances) if (x.match_id === m.id && x.team_id === m.away_team_id) { x.goals_conceded = 1; x.clean_sheet = false }
+  const active = players.map(({ id, team_id, position, value }) => ({ id, team_id, position, value }))
+  const state = { aktivnih: players.length, privzetih: 0, klubov: n, najvisja_cena: 12, po_pozicijah: { GK: 2 * n, DEF: 5 * n, MID: 5 * n, FWD: 3 * n }, nastopov_s_klopi: 1, golov_brez_nastopa: 0, krogov_tekoce: R, igralci: active }
+  return { competition, season: '2026/27', rounds, matches, appearances, goals, players, state }
+}
+test('Quarta: exactly the 20 named groups, never in the default upper batch', async () => {
+  assert.equal(QUARTA_LIGE.length, 20)
+  assert.deepEqual(QUARTA_LIGE.filter(s => KATALONSKE_LIGE.includes(s)), [])
+  for (const g of [9, 11, 12, 15, 24, 33]) assert.ok(!QUARTA_LIGE.includes(`es-ct-quarta-g${g}`))
+  await assert.rejects(pripraviBatch({ slugs: ['es-ct-quarta-g9'], sourceCommit: COMMIT, read: async () => quarta(), now: () => NOW }), /obseg/)
+  const b = await pripraviBatch({ slugs: ['es-ct-quarta-g1'], sourceCommit: COMMIT, read: async () => quarta(), now: () => NOW })
+  assert.equal(b.manifest.quartaPolicy, QUARTA_BREZ_MENJAV); assert.equal(b.leagues[0].quality.pripravljena, true, b.leagues[0].quality.tezave.join(' '))
+  assert.equal((await pripraviBatch({ slugs: ['es-ct-primera-g1'], sourceCommit: COMMIT, read: async () => liga(), now: () => NOW })).manifest.quartaPolicy, undefined)
+})
+for (const n of [12, 14, 15, 16]) test(`Quarta with ${n} clubs and no substitutions passes under the accepted policy`, () => {
+  const r = check(quarta(n)); assert.equal(r.pripravljena, true, r.tezave.join(' ')); assert.equal(r.prviKrog.number, 7); assert.equal(r.menjave, QUARTA_BREZ_MENJAV)
+  assert.equal(r.counts.perRound, Math.floor(n / 2))
+})
+test('the no-substitution exemption stays Quarta-only: an upper group still needs bench proof and has no accepted warnings', () => {
+  const s = quarta(16); s.competition.slug = 'es-ct-primera-g1'
+  const t = check(s).tezave.join(' ')
+  assert.match(t, /ni dokaza nastopa s klopi/); assert.match(t, /opozorila/)
+})
+for (const [name, mutate, reason] of [
+  ['13 clubs', s => { const drop = new Set(s.matches.filter(m => m.home_team_id === 15 || m.away_team_id === 15).map(m => m.id)); s.matches = s.matches.filter(m => !drop.has(m.id)); s.appearances = s.appearances.filter(a => !drop.has(a.match_id)) }, /krog|tekem|klub/],
+  ['a fixture missing', s => s.matches.pop(), /tekem|krog/],
+  ['bench-scorer warning with no matching entry', s => { s.appearances.at(-1).minute_on = 70; s.appearances.at(-1).minutes_played = 20 }, /opozorila/],
+  ['bench-scorer warning on the wrong match', s => { s.matches[1].import_warnings = s.matches[0].import_warnings }, /opozorila/],
+  ['bench-scorer warning counted twice', s => { s.matches[0].import_warnings = [...s.matches[0].import_warnings, ...s.matches[0].import_warnings] }, /opozorila/],
+  ['score mismatch warning', s => s.matches[2].import_warnings = ['goli iz zapisnika (2:2) se ne ujemajo z izidom 3:0'], /opozorila/],
+  ['missing lineup', s => { s.appearances = s.appearances.filter(a => !(a.match_id === s.matches[3].id && a.team_id === s.matches[3].home_team_id)) }, /XI|vratar/],
+  ['no starting goalkeeper', s => { for (const a of s.appearances) if (a.team_id === 2) a.is_goalkeeper = false }, /vratar/],
+  ['overdue missing report', s => s.matches.find(m => !m.imported_at).played_on = '2026-10-13', /zamud/],
+  ['unaffordable roster', s => { for (const p of s.state.igralci) p.value = 12; for (const p of s.players) p.value = 12 }, /kader/],
+  ['nobody ever off the bench', s => s.state.nastopov_s_klopi = 0, /klopi/],
+  ['already active', s => s.competition.active = true, /aktivna/],
+]) test(`Quarta blocks ${name}`, () => { const s = quarta(); mutate(s); const r = check(s); assert.equal(r.pripravljena, false); assert.match(r.tezave.join(' '), reason) })
+test('Quarta activation re-checks the bye-round first round right before the RPC', async () => {
+  const s = quarta(15), db = database(s), opts = { db, slugs: [s.competition.slug], sourceCommit: COMMIT, read: async () => structuredClone(s), now: () => NOW, env: ACTIONS }
+  const approved = await pripraviBatch(opts), result = await aktivirajBatch({ ...opts, approvedSha: approved.sha256 })
+  assert.equal(result.results[0].prviKrog, 7); assert.deepEqual(db.mutations, [{ name: 'vklopi_ligo_sredi_sezone', args: { p_slug: 'es-ct-quarta-g1' } }])
 })
