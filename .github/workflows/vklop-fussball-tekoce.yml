@@ -1,0 +1,67 @@
+name: Vklop FUSSBALL lige samo s tekočo sezono
+run-name: Vklop FUSSBALL ${{ inputs.liga }}
+on:
+  workflow_dispatch:
+    inputs:
+      liga:
+        description: Inactive current-only German league (path B), already imported
+        type: string
+        required: true
+      import_run:
+        description: Successful uvoz-fussball-public.yml run of this league (preview + nightly seed receipt)
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: uvoz-lige-${{ inputs.liga }}
+  cancel-in-progress: false
+jobs:
+  activate:
+    # The live switch: owner account, first attempt, no source requests.
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1 && github.actor == 'nejcar20' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20'
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      LIGA: ${{ inputs.liga }}
+      IMPORT_RUN: ${{ inputs.import_run }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Admit the league's successful import, its preview and persisted nightly seed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node --input-type=module -e 'if(!/^[1-9]\d{0,14}$/.test(process.env.IMPORT_RUN))throw Error("Invalid import run")'
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$IMPORT_RUN" > import-run.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$IMPORT_RUN/artifacts?per_page=100" > import-artifacts.json
+          node --input-type=module -e 'import {readFileSync} from "node:fs";import {admitFussballImportRun} from "./scripts/fussball-import-actions.mjs";console.log(JSON.stringify(admitFussballImportRun(JSON.parse(readFileSync("import-run.json")),JSON.parse(readFileSync("import-artifacts.json")),{repository:process.env.GITHUB_REPOSITORY,runId:process.env.IMPORT_RUN,slug:process.env.LIGA})))'
+          gh run download "$IMPORT_RUN" --repo "$GITHUB_REPOSITORY" --name "fussball-import-$IMPORT_RUN" --dir import
+          node --input-type=module -e 'import {readFileSync} from "node:fs";const r=JSON.parse(readFileSync("import/seed-cache-receipt.json"));if(r.persisted!==true||r.run_id!==process.env.IMPORT_RUN)throw Error("Nightly seed of this import was not persisted")'
+      - name: Wait for older writers of this league
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --liga "$LIGA" --najvec 120
+      - name: Fresh database checks, service activation and public readback
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SLFF_PUBLIC_URL: ${{ vars.VITE_SUPABASE_URL }}
+          SLFF_PUBLIC_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        run: node scripts/preveri-fussball-uvoz.mjs activate --slug "$LIGA" --preview import/preview.json | tee activation.json
+      - name: Activation result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fussball-activation-${{ github.run_id }}
+          path: activation.json
+          if-no-files-found: ignore
+          retention-days: 90

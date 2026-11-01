@@ -1,6 +1,7 @@
 // Native import from an explicitly supplied, complete original-byte capture.
 // Public source collection is handled separately, without database credentials.
 import {loadFussballImportCapture,parseFussballLeagueCode} from '../fussball-import.mjs'
+import {loadFussballCurrentOnlyCapture} from '../fussball-tekoca-pot.mjs'
 
 import {GERMANY_BULK_CANDIDATES,validateGermanyCandidate} from '../bulk-germany-source.mjs'
 import {isFussballCommunityCompetition,isFussballCommunityCandidate,FUSSBALL_COMMUNITY_CARD_POLICY,FUSSBALL_COMMUNITY_SOURCE_POLICY} from '../fussball-community-policy.mjs'
@@ -36,11 +37,15 @@ export async function assertFussballCommunityScope(db,competition,code){
  if(!reviewed)return
  requireProof(db&&typeof db.rpc==='function'&&Number.isSafeInteger(competition.id)&&competition.id>0,'installed card policy requires native database scope')
  const {data,error}=await db.rpc('get_fussball_card_policy',{p_competition_id:competition.id})
- const archives=reviewed.archives.map(a=>a.code)
+ // Path B (current-only) installs the policy with no archive codes at all.
+ const archives=competition.fussball_current_only===true?[]:reviewed.archives.map(a=>a.code)
  requireProof(!error&&data?.installed===true&&data.enabled===true&&data.source_policy===FUSSBALL_COMMUNITY_SOURCE_POLICY&&data.current_code===competition.source_league_code&&Array.isArray(data.archive_codes)&&JSON.stringify([...data.archive_codes].sort())===JSON.stringify([...archives].sort())&&(code===data.current_code||data.archive_codes.includes(code)),'exact installed enabled card policy scope required')
 }
 
-export function createFussballPublicSource({competition,db,directory=process.env.SLFF_FUSSBALL_CAPTURE,archiveCode=process.env.SLFF_FUSSBALL_ARCHIVE_CODE,loadCapture=loadFussballImportCapture}={}){
+export function createFussballPublicSource({competition,db,directory=process.env.SLFF_FUSSBALL_CAPTURE,archiveCode=process.env.SLFF_FUSSBALL_ARCHIVE_CODE,loadCapture}={}){
+ const currentOnly=competition?.fussball_current_only===true
+ requireProof(!currentOnly||!archiveCode,'current-only league has no archive season')
+ loadCapture??=currentOnly?(dir,options)=>loadFussballCurrentOnlyCapture(dir,{...options,unknownBefore:competition.fussball_unknown_before??undefined}):loadFussballImportCapture
  requireProof(competition?.source==='fussball-public'&&Number.isSafeInteger(competition.country_id)&&competition.country_id>0&&competition.country_code==='DE'&&/^de-/.test(competition.slug??''),'invalid competition/provider/policy scope')
  const community=reviewedFussballCommunityCompetition(competition),cardPolicy=community?FUSSBALL_COMMUNITY_CARD_POLICY:undefined
  const currentScope=parseFussballLeagueCode(competition.source_league_code)

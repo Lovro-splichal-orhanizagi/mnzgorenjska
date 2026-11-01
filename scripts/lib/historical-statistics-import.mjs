@@ -18,7 +18,8 @@ export function skipIncompleteArchiveReport({competition,report,currentSeason}){
 /** Normal CLI cannot bootstrap or recover partial policies; dedicated packet writers do that atomically. */
 export async function loadHistoricalStatisticsImportContext(db,original,{sourceOverride=null,nativePreparation=null,nativeComposition=null,nativeSeedDirectory=null}={}) {
   const competition={...original,...(sourceOverride?{source:sourceOverride}:{})}
-  if(original.slug==='de-verbandsliga-baden'&&original.source_policy===FUSSBALL_COMMUNITY_SOURCE_POLICY){
+  // Detached current-only Baden (path B) uses the ordinary community route below.
+  if(original.slug==='de-verbandsliga-baden'&&original.source_policy===FUSSBALL_COMMUNITY_SOURCE_POLICY&&original.fussball_current_only!==true){
     if(sourceOverride||!isBadenNativeCompetition(competition))throw Error('Baden import: exact source/history/cards tuple required')
     const seedDirectory=nativeSeedDirectory??(competition.active===true&&process.env.SLFF_FUSSBALL_CAPTURE?join(process.env.SLFF_FUSSBALL_CAPTURE,'seed'):null)
     if(!nativeComposition&&!nativePreparation&&!seedDirectory&&process.env.SLFF_BULK_CAPTURE){const {loadBadenChildContext}=await import('../bulk-baden-native.mjs');return loadBadenChildContext(db,competition)}
