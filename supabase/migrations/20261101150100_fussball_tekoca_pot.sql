@@ -15,7 +15,7 @@
 --    statistik ne ugibamo.
 
 create table private_fussball.detached_native_state(
- competition_id bigint primary key, -- brez FK: FCF varovala zaprejo seznam FK na competitions
+ tekmovanje bigint primary key, -- id tekmovanja; brez FK in brez stolpca *_id, ker FCF varovala zaprejo seznam takih relacij
  detached_at timestamptz not null default clock_timestamp(),
  state jsonb not null
 );
@@ -33,7 +33,7 @@ begin
   or exists(select 1 from private_fussball.card_reports where competition_id=c.id)
   or exists(select 1 from appearances a join matches m on m.id=a.match_id join rounds r on r.id=m.round_id where r.competition_id=c.id)
  then raise exception 'FUSSBALL_PATH_B: detach requires inactive league without fantasy teams, card reports or appearances'; end if;
- insert into private_fussball.detached_native_state(competition_id,state) values(c.id,jsonb_build_object(
+ insert into private_fussball.detached_native_state(tekmovanje,state) values(c.id,jsonb_build_object(
   'reason','owner decision 2026-11-01: current-only path B',
   'prepared',(select to_jsonb(p) from private_baden_history.prepared p where p.competition_id=c.id),
   'installed_policy',(select to_jsonb(i) from private_historical_statistics.installed_policies i where i.competition_id=c.id),

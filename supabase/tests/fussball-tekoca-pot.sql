@@ -34,7 +34,7 @@ begin
  perform pg_temp.ok(not exists(select 1 from private_baden_history.prepared where competition_id=cid) and not exists(select 1 from private_historical_statistics.installed_policies where competition_id=cid) and not exists(select 1 from private_historical_statistics.markers where competition_id=cid),'native state removed');
  perform pg_temp.ok((select statistics_status='available' and statistics_reason is null and home_goals=2 and imported_at is null from matches where id=mid),'match kept as unimported official fixture');
  perform pg_temp.ok((select archive_codes='{}' from private_fussball.card_policies where competition_id=cid),'current-only card policy');
- perform pg_temp.ok((select jsonb_array_length(state->'markers')=1 and state->'prepared'->>'opening_round_id'=rid2::text from private_fussball.detached_native_state where competition_id=cid),'dropped state retained');
+ perform pg_temp.ok((select jsonb_array_length(state->'markers')=1 and state->'prepared'->>'opening_round_id'=rid2::text from private_fussball.detached_native_state where tekmovanje=cid),'dropped state retained');
  perform pg_temp.ok((select bool_and(tgenabled='O') from pg_trigger where tgname in('baden_prepared_immutable','baden_installed_immutable','baden_history_marker_guard','protect_historical_statistics_match')),'guards re-enabled');
  perform pg_temp.ok(private_fussball.detach_native_current_only('de-path-b-detach')->>'detached'='false','second detach is a no-op');
 end$$;
