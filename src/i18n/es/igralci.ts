@@ -312,7 +312,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       dostavaEu: 'Otro país de la UE',
       obdeluje: 'El pago aún se está procesando. El check aparecerá cuando lo recibamos.',
       narocninaNaslov: 'Suscripción (jugador verificado)',
-      narocninaApp: 'Gestiona tu suscripción en slff.eu.',
       pogoji: '<pogoji>Condiciones de compra</pogoji> · Vendedor: Space Guardian d.o.o.',
     },
     napake: {

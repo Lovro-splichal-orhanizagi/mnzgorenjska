@@ -310,7 +310,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       dostavaEu: 'Άλλη χώρα της ΕΕ',
       obdeluje: 'Η πληρωμή επεξεργάζεται ακόμα. Το σήμα θα εμφανιστεί μόλις τη λάβουμε.',
       narocninaNaslov: 'Συνδρομή (επαληθευμένος παίκτης)',
-      narocninaApp: 'Διαχειρίσου τη συνδρομή σου στο slff.eu.',
       pogoji: '<pogoji>Όροι αγοράς</pogoji> · Πωλητής: Space Guardian d.o.o.',
     },
     napake: {

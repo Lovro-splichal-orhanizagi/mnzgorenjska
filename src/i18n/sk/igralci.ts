@@ -314,7 +314,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       dostavaEu: 'Iná krajina EÚ',
       obdeluje: 'Platba sa ešte spracúva. Odznak sa zobrazí, keď ju prijmeme.',
       narocninaNaslov: 'Predplatné (overený hráč)',
-      narocninaApp: 'Predplatné spravuješ na slff.eu.',
       pogoji: '<pogoji>Podmienky kúpy</pogoji> · Predávajúci: Space Guardian d.o.o.',
     },
     napake: {

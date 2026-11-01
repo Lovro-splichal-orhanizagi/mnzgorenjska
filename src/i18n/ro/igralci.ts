@@ -312,7 +312,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       dostavaEu: 'Altă țară din UE',
       obdeluje: 'Plata este încă în procesare. Bifa apare după ce o primim.',
       narocninaNaslov: 'Abonament (jucător verificat)',
-      narocninaApp: 'Abonamentul îl gestionezi pe slff.eu.',
       pogoji: '<pogoji>Condiții de cumpărare</pogoji> · Vânzător: Space Guardian d.o.o.',
     },
     napake: {

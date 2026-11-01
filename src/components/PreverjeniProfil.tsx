@@ -371,19 +371,19 @@ function Narocnina({ igralecId }: { igralecId?: number }) {
 
 /**
  * Naročnina na strani Račun: vsak z aktivno naročnino jo lahko prekliče,
- * ne glede na stikalo in profil. V aplikaciji le opomba (nakup in portal sta
- * na spletu).
+ * ne glede na stikalo in profil. V aplikaciji nič: Apple ne dovoli napotkov
+ * na plačila zunaj trgovine (nakup in portal sta na spletu).
  */
 export function UpravljanjeNarocnine() {
   const [ima, setIma] = useState(false)
   useEffect(() => {
     void supabase.rpc('preverjen_moje_narocnine').then(({ data }) => setIma(!!data?.length))
   }, [])
-  if (!ima) return null
+  if (!ima || jeNativno()) return null
   return (
     <section className="kartica space-y-2 p-4">
       <h2 className="text-lg font-bold">{t('igralci.preverjen.ponudba.narocninaNaslov')}</h2>
-      {jeNativno() ? <p className="text-sm text-slate-300">{t('igralci.preverjen.ponudba.narocninaApp')}</p> : <Narocnina />}
+      <Narocnina />
     </section>
   )
 }

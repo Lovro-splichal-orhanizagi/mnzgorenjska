@@ -315,7 +315,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       dostavaEu: 'Cita ES valsts',
       obdeluje: 'Maksājums vēl tiek apstrādāts. Ķeksītis parādīsies, kad to saņemsim.',
       narocninaNaslov: 'Abonements (pārbaudīts spēlētājs)',
-      narocninaApp: 'Abonementu pārvaldi slff.eu.',
       pogoji: '<pogoji>Pirkuma noteikumi</pogoji> · Pārdevējs: Space Guardian d.o.o.',
     },
     napake: {

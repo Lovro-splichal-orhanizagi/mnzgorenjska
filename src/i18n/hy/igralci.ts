@@ -311,7 +311,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       dostavaEu: 'ԵՄ այլ երկիր',
       obdeluje: 'Վճարումը դեռ մշակվում է։ Նշանը կհայտնվի, երբ այն ստանանք։',
       narocninaNaslov: 'Բաժանորդագրություն (հաստատված խաղացող)',
-      narocninaApp: 'Բաժանորդագրությունը կառավարիր slff.eu կայքում։',
       pogoji: '<pogoji>Գնման պայմաններ</pogoji> · Վաճառող՝ Space Guardian d.o.o.',
     },
     napake: {
