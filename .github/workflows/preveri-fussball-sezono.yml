@@ -18,7 +18,7 @@ on:
       max_requests:
         description: Total request ceiling, including CSS/fonts and failures (1–3000)
         type: number
-        default: 1000
+        default: 700
       reports:
         description: all, or an explicit nonnegative report sample count
         type: string
@@ -28,7 +28,7 @@ on:
         type: string
         default: ''
       prior_requests:
-        description: Already spent cumulative website requests (paired pilot minimum 363)
+        description: Already spent cumulative website requests (paired pilot minimum 363; current-only = actual ledger, e.g. Baden 3607)
         type: number
         default: 363
       total_request_cap:
@@ -40,7 +40,7 @@ on:
         type: string
         default: ''
       rollout_candidate:
-        description: Optional exact reviewed German slug; after both complete audits dispatch the separately gated native rollout
+        description: Optional exact reviewed German slug. With archive_json, dispatch the paired native rollout; without it, a current-only (path B) capture for uvoz-fussball-public.yml
         type: string
         default: ''
 permissions:

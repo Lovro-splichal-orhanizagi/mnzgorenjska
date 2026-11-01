@@ -11260,6 +11260,10 @@ export type Database = {
       vidi_ponovno_ceno: { Args: never; Returns: boolean }
       vidi_posnetke: { Args: never; Returns: boolean }
       vidi_preverjene: { Args: never; Returns: boolean }
+      vklopi_fussball_tekoco: {
+        Args: { p_manifest: Json; p_slug: string }
+        Returns: Json
+      }
       vklopi_ligo_sredi_sezone: { Args: { p_slug: string }; Returns: Json }
       vote_fussball_card: {
         Args: { p_event_id: number; p_player_id: number }

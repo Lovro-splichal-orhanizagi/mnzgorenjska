@@ -17,7 +17,7 @@ import {BADEN_CURRENT,BADEN_ARCHIVE,BADEN_SLUG,BADEN_CARDS,badenCanonical,badenC
 const runtimeCaches=new WeakMap(),contexts=new WeakMap(),sha=v=>createHash('sha256').update(typeof v==='string'||Buffer.isBuffer(v)?v:badenCanonical(v)).digest('hex')
 const catalogBytes=readFileSync(new URL('./policies/fussball-baden-native-composition.json',import.meta.url)),catalog=JSON.parse(catalogBytes)
 const need=(ok,m)=>{if(!ok)throw Object.assign(Error('Baden runtime: '+m),{dataHold:true,reason_code:'FUSSBALL_NATIVE_RUNTIME_HOLD'})}
-export const isBadenNativeCompetition=c=>c?.slug===BADEN_SLUG&&c.source==='fussball-public'&&c.source_league_code===BADEN_CURRENT&&c.source_policy===BADEN_CARDS&&c.country_code==='DE'
+export const isBadenNativeCompetition=c=>c?.slug===BADEN_SLUG&&c.source==='fussball-public'&&c.source_league_code===BADEN_CURRENT&&c.source_policy===BADEN_CARDS&&c.country_code==='DE'&&c.fussball_current_only!==true
 function tuple(c,id){need(isBadenNativeCompetition(c)&&c.id===id&&Number.isSafeInteger(c.country_id)&&c.country_id>0,'exact prepared native competition required')}
 /** Only Task 2's issuer, after its source AND complete native readback, grants
  * this context. Plain RPC results and serialized cache summaries never do. */
