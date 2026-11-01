@@ -9,7 +9,7 @@ import * as policy from './lib/fussball-native-history-policy.mjs'
 const competition={id:77001,country_id:66,country_code:'DE',slug:policy.BADEN_SLUG,source:'fussball-public',source_league_code:policy.BADEN_CURRENT,source_policy:policy.BADEN_CARDS,date_only_deadline_policy:null,active:false}
 const json=p=>JSON.parse(readFileSync(p,'utf8'))
 async function setup(t){
- const f=nativeRuntimeFixture(t,competition);f.controls.clock=Date.now()
+ const f=nativeRuntimeFixture(t,competition,{clock:Date.parse('2026-10-29T12:00:00.000Z')})
  const initial=await f.context(),seed=join(f.directory,'seed');await f.api.seedFussballNativeRuntime({context:initial,competition,directory:seed})
  const originalSeal=readFileSync(join(seed,'native-history-seed.json')),originalFiles=new Map(json(join(seed,'native-history-seed.json')).files.map(d=>[d.path,readFileSync(join(seed,d.path))]))
  f.observed.active=true;f.controls.expired=true
