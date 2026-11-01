@@ -2,6 +2,7 @@
 // strani pokaže prijazno sporočilo. Podrobnosti (sled sklada) le v razvoju.
 import { Component, type ReactNode, type ErrorInfo } from 'react'
 import { t } from '../i18n'
+import { prijaviNapako } from '../lib/sledenjeNapak'
 
 interface Stanje {
   napaka: Error | null
@@ -23,6 +24,7 @@ export default class NapakaOprijem extends Component<
     // Naj bo tudi v konzoli, ne le v DOM-u — za primer, ko admin
     // pogleda skozi devtools.
     console.error('NapakaOprijem:', napaka, info)
+    prijaviNapako(napaka, 'NapakaOprijem')
   }
 
   render() {

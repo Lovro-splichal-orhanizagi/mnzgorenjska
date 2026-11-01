@@ -1,0 +1,44 @@
+# Bugsink (sledenje napakam, SLF-245) on the VM: /opt/napake/docker-compose.yml + /opt/napake/.env.
+# One container (web + snappea worker), SQLite in ./data: no Redis, no load on supabase-db
+# (98 % CPU at the time of writing), ~150-250 MB RAM. Setup and rules: docs/napake.md.
+#   cd /opt/napake && docker compose up -d
+# The UI is NOT on the internet: ssh -L 3110:localhost:3110 slff, then http://localhost:3110.
+# Only the ingest endpoint is public, via Caddy at slff.eu/n/api/<projekt>/envelope/.
+services:
+  bugsink:
+    image: bugsink/bugsink:2.6.2
+    container_name: bugsink
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:3110:8000
+    volumes:
+      - ./data:/data  # db.sqlite3 (+ snappea.sqlite3); varnostna.sh backs up /opt/napake/data
+    environment:
+      SECRET_KEY: ${BUGSINK_SECRET_KEY}  # openssl rand -base64 50
+      BASE_URL: http://localhost:3110  # links in alert mails open through the ssh tunnel
+      SITE_TITLE: SLFF napake
+      BEHIND_PLAIN_HTTP_PROXY: "true"
+      # No X-Forwarded-For: Caddy also strips it, so remote_addr is the docker gateway, never a visitor IP.
+      USE_X_FORWARDED_FOR: "false"
+      SINGLE_TEAM: "true"
+      USER_REGISTRATION: CB_NOBODY
+      # Retention: 30 days and at most 5000 events per project (Bugsink evicts the least relevant first).
+      MAX_EVENT_AGE_DAYS: 30
+      MAX_RETENTION_PER_PROJECT_EVENT_COUNT: 5000
+      # A crash loop in the app must not fill the disk or eat the CPU.
+      MAX_EVENT_SIZE: 262144
+      MAX_EVENTS_PER_PROJECT_PER_5_MINUTES: 300
+      MAX_EVENTS_PER_PROJECT_PER_HOUR: 1500
+      MAX_EVENTS_PER_MONTH: 200000
+      SNAPPEA_NUM_WORKERS: 1
+      GUNICORN_CMD_ARGS: --workers=2
+      # Alerts (new issue, regression, unmute) by mail via Mailcow, like the edge functions.
+      EMAIL_HOST: ${SMTP_HOST}
+      EMAIL_PORT: 465
+      EMAIL_USE_TLS: "false"
+      EMAIL_USE_SSL: "true"
+      EMAIL_HOST_USER: ${SMTP_USER}
+      EMAIL_HOST_PASSWORD: ${SMTP_PASS}
+      DEFAULT_FROM_EMAIL: SLFF napake <noreply@slff.eu>
+    mem_limit: 320m
+    cpus: 0.5
