@@ -24,7 +24,7 @@ const competition={id:77001,country_id:66,country_code:'DE',slug:policy.BADEN_SL
 const fixture=t=>nativeRuntimeFixture(t,competition)
 
 test('TEST ONLY real capture client writes and immediately reloads successful runtime; both canonical seeds are bound',async t=>{
- const f=fixture(t),context=await f.context(),seed=join(f.directory,'seed');f.controls.clock=Date.now()
+ const f=nativeRuntimeFixture(t,competition,{clock:Date.parse('2026-10-29T12:00:00.000Z')}),context=await f.context(),seed=join(f.directory,'seed')
  await f.api.seedFussballNativeRuntime({context,competition,directory:seed})
  for(const source of f.pack.seasons){
   const requests=[],directory=join(f.directory,source.inventory.scope.stage),stage=f.f.state.originals.stages[source.inventory.scope.stage]
@@ -42,7 +42,7 @@ test('TEST ONLY canonical season seed comes from sealed originals rather than th
  for(const source of f.pack.seasons){const client=f.client(source.code);await f.api.collectFussballNativeRuntime({context,competition,code:source.code,client,asOfDate:'2026-10-28'});assert.equal(client.requests[0].url,f.f.state.originals.stages[source.inventory.scope.stage].result.scope.seedUrl)}
 })
 test('TEST ONLY relabeled manifest clocks cannot refresh old round receipts',async t=>{
- const f=fixture(t),initial=await f.context(),seed=join(f.directory,'seed'),directory=join(f.directory,'runtime');f.controls.clock=Date.now()
+ const f=nativeRuntimeFixture(t,competition,{clock:Date.parse('2026-10-29T12:00:00.000Z')}),initial=await f.context(),seed=join(f.directory,'seed'),directory=join(f.directory,'runtime')
  await f.api.seedFussballNativeRuntime({context:initial,competition,directory:seed});f.observed.active=true
  const {context}=await f.api.loadFussballNativeRuntimeSeed({competition,db:f.db,directory:seed})
  await f.api.captureFussballNativeRuntimeDirectory({context:initial,competition,directory,seedDirectory:seed,fetchFn:async url=>f.sourceResponse(url)})
