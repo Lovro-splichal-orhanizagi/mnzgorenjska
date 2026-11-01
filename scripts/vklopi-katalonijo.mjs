@@ -1,4 +1,5 @@
-// Narrow, two-phase release of the 27 imported upper Catalan groups.
+// Narrow, two-phase release of the 27 imported upper Catalan groups and the
+// 20 named Quarta groups (owner decision 2026-11-01, see QUARTA_BREZ_MENJAV).
 // One coordinated ES Actions run: prepare (default), then activate with the
 // reviewed batch SHA on the SAME commit. No prices, positions or imports change.
 // The existing RPC does not atomically compare this manifest: the guarantee is
@@ -13,6 +14,14 @@ import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost.
 
 export const KATALONSKE_LIGE = ['es-ct-elit', ...['primera', 'segona', 'tercera'].flatMap((level, i) =>
   Array.from({ length: [3, 6, 17][i] }, (_, n) => `es-ct-${level}-g${n + 1}`))]
+// Quarta clubs do not record substitutions. Accepted policy (as fsb, nff, fcf
+// parser `z.brezMenjav`): starters keep full minutes, a bench player without a
+// recorded entry has no appearance, a bench scorer enters at his goal. Only
+// these named groups; they must be listed explicitly, never by default.
+export const QUARTA_LIGE = [1, 2, 3, 4, 5, 6, 7, 8, 10, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 32].map(n => `es-ct-quarta-g${n}`)
+export const QUARTA_BREZ_MENJAV = 'fcf-quarta-no-substitutions-full-minutes-2026-11-01'
+const DOVOLJENE_LIGE = [...KATALONSKE_LIGE, ...QUARTA_LIGE]
+const BENCH_SCORER = /^strelec .+ je na klopi, vstopa zapisnik nima — vstop postavljen na (\d+)\. minuto$/
 const REPOSITORY = 'Lovro-splichal-orhanizagi/mnzgorenjska'
 const PERMISSION_DATE = '2026-10-17'
 const fail = message => { throw new Error(`Vklop Katalonije: ${message}`) }
@@ -95,11 +104,13 @@ export function izberiPrviKrog(s, now) {
   const last = Math.max(0, ...played.filter(n => gap === null || n < gap || laterCount > 2))
   return future.find(r => r.number > last) ?? null
 }
-function futureProblems(s, round, now) {
+// Double round robin; an odd club count gives every club one bye per leg.
+const razpored = n => ({ rounds: n % 2 ? 2 * n : 2 * (n - 1), matches: n * (n - 1), perRound: Math.floor(n / 2) })
+function futureProblems(s, round, now, perRound = 8) {
   const problems = []
   if (!round || timestamp(round.deadline_at) <= now) return ['Ni prihodnjega prvega kroga z veljavnim rokom.']
   const games = s.matches.filter(m => m.round_id === round.id), ids = new Set(games.map(m => m.id))
-  if (games.length !== 8) problems.push('Prvi fantasy krog nima 8 tekem.')
+  if (games.length !== perRound) problems.push(`Prvi fantasy krog nima ${perRound} tekem.`)
   if (s.appearances.some(a => ids.has(a.match_id))) problems.push('Prvi fantasy krog že ima nastop.')
   const today = new Date(now).toISOString().slice(0, 10)
   if (games.some(m => !validDate(m.played_on) || m.played_on <= today)) problems.push('Datum tekme prvega fantasy kroga ni po današnjem UTC dnevu.')
@@ -109,18 +120,21 @@ function futureProblems(s, round, now) {
 export function preveriLigo(s, now = Date.now(), { allowActive = false } = {}) {
   const problems = [], add = text => problems.push(text)
   const { competition: c, rounds, matches, appearances, goals, players, state } = s
-  if (!KATALONSKE_LIGE.includes(c.slug) || c.source !== 'fcf' || c.country_code !== 'ES' || c.sezona_koledarska !== false) add('Nedovoljen obseg: samo 27 zgornjih FCF skupin ES.')
+  const quarta = QUARTA_LIGE.includes(c.slug)
+  if (!DOVOLJENE_LIGE.includes(c.slug) || c.source !== 'fcf' || c.country_code !== 'ES' || c.sezona_koledarska !== false) add('Nedovoljen obseg: samo 27 zgornjih FCF skupin ES in imenovane skupine Quarta.')
   if (c.active !== false && !allowActive) add('Liga je že aktivna.')
   if (s.season !== currentSeason(now)) add('Napačna tekoča sezona.')
   for (const [name, data] of Object.entries({ rounds, matches, appearances, goals, players })) {
     if (data.some(x => !integer(x.id, 1)) || new Set(data.map(x => x.id)).size !== data.length) add(`${name}: neveljavna ali podvojena identiteta.`)
   }
   const roundMap = new Map(rounds.map(r => [r.id, r]))
-  if (rounds.length !== 30 || new Set(rounds.map(r => r.number)).size !== 30 || rounds.some(r => !integer(r.number, 1, 30) || r.competition_id !== c.id || r.season !== s.season)) add('Razpored potrebuje 30 enoličnih krogov tekoče sezone te lige.')
-  if (rounds.some(r => !Number.isFinite(timestamp(r.deadline_at)))) add('Vsi krogi potrebujejo veljaven rok.')
   const clubs = new Set(matches.flatMap(m => [m.home_team_id, m.away_team_id]))
-  if (matches.length !== 240 || clubs.size !== 16 || [...clubs].some(id => !integer(id, 1))) add('Razpored potrebuje 240 tekem in 16 klubov.')
-  if (new Set(matches.map(m => `${m.home_team_id}/${m.away_team_id}`)).size !== 240 || matches.some(m => m.home_team_id === m.away_team_id)) add('Razpored potrebuje 240 različnih usmerjenih parov.')
+  // Upper groups have exactly 16 clubs; Quarta groups 12–16 (byes when odd).
+  const n = quarta && clubs.size >= 12 && clubs.size <= 16 ? clubs.size : 16, plan = razpored(n)
+  if (rounds.length !== plan.rounds || new Set(rounds.map(r => r.number)).size !== plan.rounds || rounds.some(r => !integer(r.number, 1, plan.rounds) || r.competition_id !== c.id || r.season !== s.season)) add(`Razpored potrebuje ${plan.rounds} enoličnih krogov tekoče sezone te lige.`)
+  if (rounds.some(r => !Number.isFinite(timestamp(r.deadline_at)))) add('Vsi krogi potrebujejo veljaven rok.')
+  if (matches.length !== plan.matches || clubs.size !== n || [...clubs].some(id => !integer(id, 1))) add(`Razpored potrebuje ${plan.matches} tekem in ${n} klubov.`)
+  if (new Set(matches.map(m => `${m.home_team_id}/${m.away_team_id}`)).size !== plan.matches || matches.some(m => m.home_team_id === m.away_team_id)) add(`Razpored potrebuje ${plan.matches} različnih usmerjenih parov.`)
   // Generic schedule imports do not assign a report id until the report is
   // imported. Fixture completeness is independently bound by database ids,
   // directed pairs and per-round participants; only present reports have ids.
@@ -143,7 +157,7 @@ export function preveriLigo(s, now = Date.now(), { allowActive = false } = {}) {
   if (!validBlock || new Set(reports.map(m => m.zapisnik_id)).size !== reports.length || reports.some(invalidReport) || matches.some(m => m.imported_at && m.zapisnik_id == null)) add('Neveljavna/podvojena identiteta zapisnika FCF.')
   for (const r of rounds) {
     const ms = matches.filter(m => m.round_id === r.id)
-    if (ms.length !== 8 || new Set(ms.flatMap(m => [m.home_team_id, m.away_team_id])).size !== 16) add(`Krog ${r.number} nima 8 disjunktnih tekem 16 klubov.`)
+    if (ms.length !== plan.perRound || new Set(ms.flatMap(m => [m.home_team_id, m.away_team_id])).size !== 2 * plan.perRound) add(`Krog ${r.number} nima ${plan.perRound} disjunktnih tekem ${2 * plan.perRound} klubov.`)
   }
   const matchMap = new Map(matches.map(m => [m.id, m])), playerMap = new Map(players.map(p => [p.id, p]))
   const appMap = new Map(), appsByMatch = new Map(), goalsByMatch = new Map(), keeperClubs = new Set(), benchClubs = new Set()
@@ -171,13 +185,23 @@ export function preveriLigo(s, now = Date.now(), { allowActive = false } = {}) {
     if (!goalsByMatch.has(g.match_id)) goalsByMatch.set(g.match_id, [])
     goalsByMatch.get(g.match_id).push(g)
   }
+  // Quarta only: the policy's own warning is accepted when the stored rows show
+  // exactly it — a non-starter entering at his first goal of that match.
+  const benchUsed = new Set()
+  const benchScorer = (w, matchId) => {
+    const minute = Number(BENCH_SCORER.exec(w)?.[1] ?? NaN)
+    const a = (appsByMatch.get(matchId) ?? []).find(a => !a.started && a.minute_on === minute && !benchUsed.has(a.id) &&
+      Math.min(...(goalsByMatch.get(matchId) ?? []).filter(g => g.scorer_id === a.player_id).map(g => g.minute)) === minute)
+    if (a) benchUsed.add(a.id)
+    return Boolean(a)
+  }
   let fullRounds = 0
-  for (const r of rounds) if (matches.filter(m => m.round_id === r.id && m.imported_at).length === 8) fullRounds++
+  for (const r of rounds) if (matches.filter(m => m.round_id === r.id && m.imported_at).length === plan.perRound) fullRounds++
   if (!fullRounds) add('Ni niti enega v celoti uvoženega kroga.')
   for (const m of matches) {
     if (!roundMap.has(m.round_id)) add(`Tekma ${m.id}: napačen krog.`)
     if (!validDate(m.played_on)) add(`Tekma ${m.id}: neveljaven datum.`)
-    if (!Array.isArray(m.import_warnings) || m.import_warnings.length) add(`Tekma ${m.id}: nerešena uvozna opozorila.`)
+    if (!Array.isArray(m.import_warnings) || m.import_warnings.some(w => !(quarta && benchScorer(w, m.id)))) add(`Tekma ${m.id}: nerešena uvozna opozorila.`)
     if (typeof m.kontumacija !== 'boolean' || typeof m.vir_brez_izida !== 'boolean') add(`Tekma ${m.id}: neznano stanje statistike.`)
     if (m.imported_at !== null && !Number.isFinite(timestamp(m.imported_at))) add(`Tekma ${m.id}: neveljaven čas uvoza.`)
     if (!m.imported_at && !m.kontumacija && !m.vir_brez_izida && validDate(m.played_on) && now - Date.parse(`${m.played_on}T23:59:59.999Z`) > 48 * 3600000) add(`Tekma ${m.id}: zamuda zapisnika nad 48 ur po koncu UTC dneva.`)
@@ -200,18 +224,19 @@ export function preveriLigo(s, now = Date.now(), { allowActive = false } = {}) {
   }
   for (const club of clubs) {
     if (!keeperClubs.has(club)) add(`Klub ${club}: ni izrecnega začetnega vratarja.`)
-    if (!benchClubs.has(club)) add(`Klub ${club}: ni dokaza nastopa s klopi.`)
+    // Quarta clubs record no substitutions (QUARTA_BREZ_MENJAV): no bench proof exists.
+    if (!quarta && !benchClubs.has(club)) add(`Klub ${club}: ni dokaza nastopa s klopi.`)
   }
   const active = players.filter(p => p.active)
-  if (active.some(p => !clubs.has(p.team_id) || !['GK', 'DEF', 'MID', 'FWD'].includes(p.position) || p.value === null || !Number.isFinite(Number(p.value)) || Number(p.value) <= 0) || new Set(active.map(p => p.team_id)).size !== 16) add('Aktivni igralci/cene/pozicije/klubi niso popolni.')
+  if (active.some(p => !clubs.has(p.team_id) || !['GK', 'DEF', 'MID', 'FWD'].includes(p.position) || p.value === null || !Number.isFinite(Number(p.value)) || Number(p.value) <= 0) || new Set(active.map(p => p.team_id)).size !== n) add('Aktivni igralci/cene/pozicije/klubi niso popolni.')
   const roster = active.map(({ id, team_id, position, value }) => ({ id, team_id, position, value }))
   const positions = Object.fromEntries(['GK', 'DEF', 'MID', 'FWD'].map(p => [p, active.filter(a => a.position === p).length]))
   if (!state || state.privzetih !== active.filter(p => Number(p.value) === 4.5).length || Number(state.najvisja_cena) !== Math.max(0, ...active.map(p => Number(p.value))) || state.klubov !== new Set(active.map(p => p.team_id)).size || kanonicno(state.po_pozicijah) !== kanonicno(positions) || kanonicno(rows(state.igralci ?? [])) !== kanonicno(rows(roster)) || state.aktivnih !== active.length || state.krogov_tekoce !== rounds.length) add('Stanje pripravljenosti in prebrani igralci/krogi se ne ujemajo.')
   const readiness = oceniPripravljenost({ aktivnih: state?.aktivnih ?? 0, privzetih: state?.privzetih ?? 0, klubov: state?.klubov ?? 0, najvisjaCena: Number(state?.najvisja_cena ?? 0), poPozicijah: state?.po_pozicijah ?? {}, nastopovSKlopi: state?.nastopov_s_klopi ?? 0, golovBrezNastopa: state?.golov_brez_nastopa ?? 0, krogovTekoce: state?.krogov_tekoce ?? 0, igralci: state?.igralci })
   problems.push(...readiness.tezave.map(t => `${t.kljuc}: ${t.kaj}`))
   const prviKrog = izberiPrviKrog(s, now)
-  problems.push(...futureProblems(s, prviKrog, now))
-  return { pripravljena: !problems.length, tezave: [...new Set(problems)], prviKrog, counts: { rounds: rounds.length, matches: matches.length, clubs: clubs.size, appearances: appearances.length, goals: goals.length, imported: matches.filter(m => m.imported_at).length, fullRounds }, najcenejsiKader: najcenejsiKader(state?.igralci ?? []), odstotekPrivzetih: readiness.odstotekPrivzetih }
+  problems.push(...futureProblems(s, prviKrog, now, plan.perRound))
+  return { pripravljena: !problems.length, tezave: [...new Set(problems)], prviKrog, ...quarta && { menjave: QUARTA_BREZ_MENJAV }, counts: { rounds: rounds.length, matches: matches.length, clubs: clubs.size, perRound: plan.perRound, appearances: appearances.length, goals: goals.length, imported: matches.filter(m => m.imported_at).length, fullRounds }, najcenejsiKader: najcenejsiKader(state?.igralci ?? []), odstotekPrivzetih: readiness.odstotekPrivzetih }
 }
 function normalizedSnapshot(s) {
   return { ...s, rounds: rows(s.rounds), matches: rows(s.matches), appearances: rows(s.appearances), goals: rows(s.goals), players: rows(s.players), state: { ...s.state, igralci: rows(s.state.igralci ?? []) } }
@@ -222,7 +247,7 @@ function leagueManifest(snapshot, sourceCommit, now) {
   return { slug: snapshot.competition.slug, manifest, sha256: sha256(kanonicno(manifest)), quality }
 }
 function checkedSlugs(slugs) {
-  if (!Array.isArray(slugs) || !slugs.length || new Set(slugs).size !== slugs.length || slugs.some(s => !KATALONSKE_LIGE.includes(s))) fail('Nedovoljen ali podvojen obseg lig.')
+  if (!Array.isArray(slugs) || !slugs.length || new Set(slugs).size !== slugs.length || slugs.some(s => !DOVOLJENE_LIGE.includes(s))) fail('Nedovoljen ali podvojen obseg lig.')
   return [...slugs].sort()
 }
 export async function pripraviBatch({ db, slugs = KATALONSKE_LIGE, sourceCommit, read = slug => preberiPosnetek(db, slug), now = Date.now }) {
@@ -237,7 +262,8 @@ export async function pripraviBatch({ db, slugs = KATALONSKE_LIGE, sourceCommit,
       leagues.push({ slug, sha256: null, quality: { pripravljena: false, tezave: [`Branje ni popolno: ${e.message}`] } })
     }
   }
-  const manifest = { version: 1, operation: 'verified-fcf-upper-groups', country: 'ES', sourceCommit, permissionConfirmed: PERMISSION_DATE, requested,
+  const quarta = requested.some(s => QUARTA_LIGE.includes(s))
+  const manifest = { version: 1, operation: 'verified-fcf-upper-groups', ...quarta && { quartaPolicy: QUARTA_BREZ_MENJAV }, country: 'ES', sourceCommit, permissionConfirmed: PERMISSION_DATE, requested,
     leagues: leagues.map(l => ({ slug: l.slug, competitionId: l.manifest?.snapshot.competition.id ?? null, sha256: l.sha256, quality: l.quality })) }
   return { manifest, sha256: sha256(kanonicno(manifest)), leagues }
 }
@@ -257,7 +283,7 @@ export async function aktivirajBatch({ db, slugs, sourceCommit, approvedSha, rea
       const snapshot = await read(league.slug), fresh = leagueManifest(snapshot, sourceCommit, now())
       if (!fresh.quality.pripravljena || fresh.sha256 !== league.sha256) fail(`${league.slug}: stanje/SHA se je spremenilo pred vklopom.`)
       // Time can advance during a full reread: check it once more at the RPC boundary.
-      const first = izberiPrviKrog(snapshot, now()), temporal = futureProblems(snapshot, first, now())
+      const first = izberiPrviKrog(snapshot, now()), temporal = futureProblems(snapshot, first, now(), fresh.quality.counts.perRound)
       if (first?.id !== fresh.quality.prviKrog?.id || temporal.length) fail(`${league.slug}: spremenjen rok/datum: ${temporal.join(' ')}`)
       const response = await rpc(db, 'vklopi_ligo_sredi_sezone', { p_slug: league.slug })
       if (response.vklopljena !== true || response.prvi_krog !== first.number) fail(`${league.slug}: RPC ni potrdil pričakovanega kroga: ${JSON.stringify(response)}`)
