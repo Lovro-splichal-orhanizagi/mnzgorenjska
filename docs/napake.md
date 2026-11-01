@@ -60,7 +60,9 @@ ssh slff "cd /opt/napake && docker compose up -d && docker exec -it bugsink bugs
 #    ekipa slff; projekta slff-web (1) in slff-funkcije (2); obvestila: nova težava, regresija, odmik utišanja;
 #    člani projekta s "Send email alerts" (ali Discord webhook projekta, če ga lastnik želi).
 # 3. Caddy: blok @napake iz scripts/hetzner/Caddyfile -> caddy validate && systemctl reload caddy
-# 4. Repo spremenljivka VITE_NAPAKE_DSN = https://<ključ slff-web>@slff.eu/n/1 (ključ je javen, le sprejem)
+# 4. .github/workflows/ci.yml, korak Build spletne strani (agentov žeton ne sme v workflowe):
+#      VITE_NAPAKE_DSN: ${{ vars.VITE_NAPAKE_DSN }}
+#    Repo spremenljivka VITE_NAPAKE_DSN = https://<ključ slff-web>@slff.eu/n/1 (ključ je javen, le sprejem)
 #    /opt/supabase/.env: NAPAKE_DSN=https://<ključ slff-funkcije>@slff.eu/n/2, nato up funkcij
 # 5. Agentska pot: scripts/hetzner/napake-stat.sh -> /usr/local/bin/ ; v ovoju slff-ops:
 #    napake) exec /usr/local/bin/napake-stat.sh "$@" ;;
