@@ -13,7 +13,7 @@ on:
         type: string
         required: true
       expected_sha:
-        description: 'Exact reviewed 40-character current main SHA; stop if main changes'
+        description: 'Exact reviewed 40-character main SHA; later main is accepted only without new migrations'
         type: string
         required: true
       max_requests:
@@ -38,6 +38,8 @@ jobs:
       MAX_REQUESTS: ${{ inputs.max_requests }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -54,9 +56,9 @@ jobs:
           node --input-type=module <<'JS'
           import {execFileSync} from 'node:child_process'
           import {readFileSync,existsSync} from 'node:fs'
-          import {assertBatchExecution,parseArguments,selectProviderCandidates} from './scripts/provider-league-batch.mjs'
+          import {assertBatchExecution,parseArguments,readMainState,selectProviderCandidates} from './scripts/provider-league-batch.mjs'
           const options=parseArguments(['--lige',process.env.LIGE,'--expected-sha',process.env.EXPECTED_SHA,'--max-requests',process.env.MAX_REQUESTS])
-          assertBatchExecution({expectedSha:options.expectedSha,headSha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),mainSha:execFileSync('git',['ls-remote','--exit-code','origin','refs/heads/main'],{encoding:'utf8',timeout:30000}).split(/\s/)[0],envFileExists:existsSync('.env')})
+          assertBatchExecution({expectedSha:options.expectedSha,headSha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),...readMainState(options.expectedSha),envFileExists:existsSync('.env')})
           const selected=selectProviderCandidates(JSON.parse(readFileSync('scripts/policies/existing-league-candidates-20261018.json','utf8')),options.slugs)
           if (!['mlsz','eps'].includes(process.env.PROVIDER) || selected.some(c=>c.source!==process.env.PROVIDER) || process.env.PROVIDER==='eps' && options.maxRequests<=6) throw Error('Provider selection or EPS allowance differs.')
           JS

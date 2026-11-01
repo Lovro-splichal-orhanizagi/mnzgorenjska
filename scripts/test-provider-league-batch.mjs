@@ -89,6 +89,14 @@ test('CLI accepts explicit tuples only on first Actions attempt at exact main',(
  assertBatchExecution({expectedSha:sha,headSha:sha,mainSha:sha,env,envFileExists:false})
  for(const patch of [{mainSha:'b'.repeat(40)},{envFileExists:true},{env:{...env,GITHUB_RUN_ATTEMPT:'2'}}])assert.throws(()=>assertBatchExecution({expectedSha:sha,headSha:sha,mainSha:sha,env,envFileExists:false,...patch}))
 })
+test('main advancing during the nightly wait does not void the reviewed batch (run 41242628536)',()=>{
+ const env={GITHUB_ACTIONS:'true',GITHUB_REF:'refs/heads/main',GITHUB_SHA:sha,GITHUB_REPOSITORY:'Lovro-splichal-orhanizagi/mnzgorenjska',GITHUB_RUN_ID:'41242628536',GITHUB_RUN_ATTEMPT:'1',SUPABASE_URL:'https://fixture.invalid',SUPABASE_SERVICE_ROLE_KEY:'fixture'}
+ const later='c'.repeat(40),base={expectedSha:sha,headSha:sha,mainSha:later,env,envFileExists:false}
+ assertBatchExecution({...base,mainDrift:{ancestor:true,changed:['src/components/PreverjeniProfil.tsx','supabase/functions/posnetki-igralca/index.ts']}})
+ for(const mainDrift of [undefined,{ancestor:true,changed:['src/a.ts','supabase/migrations/20261101000100_x.sql']},{ancestor:false,changed:['src/a.ts']},{ancestor:true,changed:[]}])
+  assert.throws(()=>assertBatchExecution({...base,mainDrift}),/exact reviewed SHA/)
+ assert.throws(()=>assertBatchExecution({...base,headSha:later,mainDrift:{ancestor:true,changed:['src/a.ts']}}),/exact reviewed SHA/)
+})
 
 test('activation runs native apply only after strict proof and records exact readback',async()=>{
  const h=harness(),states=new Map(),contract={id:'fixture-v1',source:'mlsz',host:h.cs[0].host,verify:()=>true,capture:async({candidate,expectedSha,audit})=>({contract_id:'fixture-v1',expected_sha:expectedSha,candidate,snapshot_sha256:audit.snapshot_sha256,captured_at:new Date().toISOString(),schedule_complete:true,archives:candidate.archives,archive_collisions:[],keeper_basis:'reviewed-fixture',original_bytes_sha256:'b'.repeat(64)})}
