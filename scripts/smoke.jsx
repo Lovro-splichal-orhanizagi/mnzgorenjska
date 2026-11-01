@@ -4752,7 +4752,7 @@ preveri(
     M.kratkoImeHu('swisspor LENTI TE ') === 'Swisspor Lenti' && M.kratkoImeHu('ZVFC') === 'ZVFC' && M.kratkoImeHu('Semjénháza Se') === 'Semjénháza')
   preveri('mlsz: ključ kluba (velikost črk, naglasi, vzdevek)',
     M.kljucKlubaHu('KISKANIZSAI SÁSKÁK') === M.kljucKlubaHu('Kiskanizsai Sáskák') && M.kljucKlubaHu('Hévíz SK') !== M.kljucKlubaHu('Heviz SK') &&
-    M.kljucKlubaHu('ZVFC') === M.kljucKlubaHu('Zalaszentgróti VFC') && M.kljucKlubaHu('Vácrátót KSE') === M.kljucKlubaHu('Vácrátóti KSE'))
+    M.kljucKlubaHu('ZVFC') === M.kljucKlubaHu('Zalaszentgróti VFC') && M.kljucKlubaHu('Vácrátót KSE') === M.kljucKlubaHu('Vácrátóti KSE') && M.kljucKlubaHu('GÜL BABA CELTIC FK') === M.kljucKlubaHu('GB CELTIC FK'))
 
   // Stran kroga: Zala I 2025/26, 7. krog — pod razporedom kroga je še razpored
   // ene ekipe čez vso sezono (tudi 2090965 iz 7. kroga, ki se ne sme podvojiti).
