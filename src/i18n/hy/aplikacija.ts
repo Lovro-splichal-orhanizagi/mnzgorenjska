@@ -39,6 +39,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'SLFF-ն անվճար է՝ առանց գովազդի, խաղադրույքների և բաժանորդագրության։ Ցավոք, սերվերը ոգևորությամբ չի աշխատում։ Մեկ գարեջուրն օգնում է վճարել սերվերի և փոստի համար, իսկ քո անունը կհայտնվի գարեջրի պատին։',
       kasneje: 'Գուցե հաջորդ անգամ',
       zeSem: 'Արդեն հյուրասիրել եմ 🍻',
+      jokNaslov: "Չէէէ՜։ Իսկապե՞ս գնում ես 😭",
+      jokBesedilo: "Ամբողջ շաբաթ այստեղ ծնկաչոք եմ։ Ծնկներս ցավում են, գավաթը դատարկ է։ Միայն մեկ գարեջուր, ու կդադարեմ լացել, խոստանում եմ։ 🥺",
+      jokGumb: "Լավ, մի՛ լացիր 🍺",
+      jokZapri: "Թող լացի",
       /** Okno po shranjeni ekipi za naslednji krog. */
       ekipaNaslov: '{krog}-րդ տուրի թիմդ պատրաստ է! 🍺',
       /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
