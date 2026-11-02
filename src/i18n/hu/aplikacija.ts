@@ -39,6 +39,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'Az SLFF ingyenes: nincs reklám, nincs fogadás, nincs előfizetés. A szerver sajnos nem lelkesedésből megy. Egy sör segít fizetni a szervert és a levelezést, a neved pedig felkerül a sörfalra.',
       kasneje: 'Talán legközelebb',
       zeSem: 'Már meghívtalak 🍻',
+      jokNaslov: "Neeee! Tényleg elmész? 😭",
+      jokBesedilo: "Egész héten itt térdelek. Fáj a térdem, üres a korsóm. Csak egy sör, és abbahagyom a sírást, ígérem. 🥺",
+      jokGumb: "Jól van, ne sírj 🍺",
+      jokZapri: "Hadd sírjon",
       /** Okno po shranjeni ekipi za naslednji krog. */
       ekipaNaslov: 'A csapatod kész a(z) {krog}. fordulóra! 🍺',
       /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */

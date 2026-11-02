@@ -10,10 +10,14 @@
 // uporabnika), zato si zapomnimo le na napravi: klik na pivo kjerkoli utiša
 // okno za 60 dni, "Sem že častil" za 120, zapiranje za 14.
 //
+// Pivko kleči in prosi. Prvi poskus zapiranja (✕, ozadje, Esc, "Mogoče
+// naslednjič") okna ne zapre, ampak Pivko zajoka; šele drugi ga zapre. Klik
+// na pivo iz joka gre na BMC kot `okno-jok`, da vidimo, ali solze delujejo.
+//
 // Ne v aplikaciji (trgovini, glej Pivo.tsx), ne v mladinski ligi (mladim brez
 // piva), ne prvi dan računa, ne čez okno prvega obiska in ne na straneh, kjer
 // človek nekaj ureja ali bere pogoje.
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -56,6 +60,7 @@ export default function PivoOkno() {
   const { pathname } = useLocation()
   const [povod, setPovod] = useState<PovodPiva | null>(null)
   const [vrsta, setVrsta] = useState<Poziv>('pivo')
+  const [joka, setJoka] = useState(false)
   const odprto = povod != null
   const okno = useRef<HTMLDivElement | null>(null)
   const uporabnik = session?.user.id ?? null
@@ -68,12 +73,16 @@ export default function PivoOkno() {
     !BREZ_OKNA.some((p) => pathname.startsWith(p))
   const pivoMogoce = () => !jeNativno() && !jeMladinskiSlug(slug) && !utisano()
 
-  const zapri = () => setPovod(null)
-  const odkloni = () => {
+  const zapri = () => {
+    setPovod(null)
+    setJoka(false)
+  }
+  const koncaj = () => {
     if (vrsta !== 'pivo') utisajPoziv(vrsta, 60)
     zabeleziKorak(vrsta === 'pivo' ? 'pivo_okno_zaprto' : 'poziv_zaprt')
     zapri()
   }
+  const odkloni = () => (vrsta === 'pivo' && !joka ? setJoka(true) : koncaj())
 
   function odpri(p: PovodPiva, zamik: number) {
     return window.setTimeout(() => {
@@ -128,7 +137,7 @@ export default function PivoOkno() {
     const tipka = (e: KeyboardEvent) => e.key === 'Escape' && odkloni()
     window.addEventListener('keydown', tipka)
     return () => window.removeEventListener('keydown', tipka)
-  }, [odprto])
+  }, [odprto, joka])
 
   if (!povod || !ustreza) return null
   // Liga se lahko zamenja po odprtju (poslušalec ima staro): pivo nikoli v mladinski ligi ali aplikaciji.
@@ -146,7 +155,7 @@ export default function PivoOkno() {
         aria-modal="true"
         aria-labelledby="pivo-okno-naslov"
         tabIndex={-1}
-        className="pivo-okno relative w-full max-w-sm overflow-hidden rounded-2xl border border-amber-300/30 bg-slate-900 p-5 text-center shadow-2xl shadow-amber-500/10 outline-none"
+        className={`${joka ? 'pivo-okno-tresi' : 'pivo-okno'} relative w-full max-w-sm overflow-hidden rounded-2xl border border-amber-300/30 bg-slate-900 p-5 text-center shadow-2xl shadow-amber-500/10 outline-none`}
       >
         <button
           onClick={() => odkloni()}
@@ -156,26 +165,30 @@ export default function PivoOkno() {
           <span aria-hidden>✕</span>
         </button>
 
-        {/* Mehurčki se dvigajo pred maskoto Pivkom, ki prileti in nazdravlja. */}
+        {/* Pivko prikleči in moleduje med mehurčki; ob zapiranju joka in solze letijo.
+            Obe sliki sta v DOM, da je jok naložen, preden ga rabimo. */}
         <div aria-hidden className="relative mx-auto -mt-2 h-52 w-52">
-          {[12, 30, 52, 70, 86].map((x, i) => (
+          {(joka ? [[22, -40], [30, -70], [70, 40], [78, 70]] : [[12, 0], [30, 0], [52, 0], [70, 0], [86, 0]]).map(([x, smer], i) => (
             <span
-              key={x}
-              className="pivo-mehurcek absolute bottom-6 z-10 h-4 w-4 rounded-full bg-amber-300/80 ring-1 ring-amber-100/50"
-              style={{ left: `${x}%`, animationDelay: `${i * 0.45}s` }}
+              key={`${joka}-${x}`}
+              className={`${joka ? 'pivo-solza top-10 h-3 w-3 bg-sky-300' : 'pivo-mehurcek bottom-6 h-4 w-4 bg-amber-300/80 ring-1 ring-amber-100/50'} absolute z-10 rounded-full`}
+              style={{ left: `${x}%`, animationDelay: `${i * (joka ? 0.2 : 0.45)}s`, '--solza-x': `${smer}px` } as CSSProperties}
             />
           ))}
-          <img src="/logo/maskota/manager.svg" alt="" className="pivo-maskota relative h-full w-full" />
+          <img src="/logo/maskota/prosi.svg" alt="" className={`pivo-prosi relative h-full w-full ${joka ? 'hidden' : ''}`} />
+          <img src="/logo/maskota/joka.svg" alt="" className={`pivo-jok relative h-full w-full ${joka ? '' : 'hidden'}`} />
         </div>
 
         <h2 id="pivo-okno-naslov" className="mt-2 text-xl font-black naslov">
-          {povod.vrsta === 'krog'
+          {joka
+            ? t('aplikacija.pivo.okno.jokNaslov')
+            : povod.vrsta === 'krog'
             ? t('aplikacija.pivo.okno.krogNaslov', { krog: povod.krog })
             : povod.krog != null
               ? t('aplikacija.pivo.okno.ekipaNaslov', { krog: povod.krog })
               : t('aplikacija.pivo.okno.naslov')}
         </h2>
-        {povod.vrsta === 'krog' && (
+        {!joka && povod.vrsta === 'krog' && (
           <p className="mt-1 text-sm font-bold text-amber-200">
             {povod.premik != null && povod.premik >= 1
               ? t('aplikacija.pivo.okno.krogMesta', { n: povod.premik })
@@ -185,11 +198,11 @@ export default function PivoOkno() {
                 })}
           </p>
         )}
-        <p className="mt-2 text-sm text-slate-300">{t('aplikacija.pivo.okno.besedilo')}</p>
+        <p className="mt-2 text-sm text-slate-300">{t(joka ? 'aplikacija.pivo.okno.jokBesedilo' : 'aplikacija.pivo.okno.besedilo')}</p>
         <p className="mt-2 text-xs text-amber-100/80">{t('aplikacija.pivo.okno.zid')}</p>
 
         <a
-          href={`/pivo?src=okno-${povod.vrsta}`}
+          href={`/pivo?src=okno-${joka ? 'jok' : povod.vrsta}`}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => {
@@ -201,16 +214,16 @@ export default function PivoOkno() {
           className="pivo-gumb mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 px-4 py-3 text-base font-black text-amber-950 shadow-lg shadow-amber-500/30 ring-1 ring-amber-200/60 hover:from-amber-200 hover:to-amber-400"
         >
           <span aria-hidden className="animiraj-pivo inline-block text-lg">🍺</span>
-          {t('aplikacija.pivo.gumb')}
+          {t(joka ? 'aplikacija.pivo.okno.jokGumb' : 'aplikacija.pivo.gumb')}
         </a>
         <div className="mt-3 flex justify-center gap-4 text-xs text-slate-400">
           <button onClick={() => odkloni()} className="underline hover:text-white">
-            {t('aplikacija.pivo.okno.kasneje')}
+            {t(joka ? 'aplikacija.pivo.okno.jokZapri' : 'aplikacija.pivo.okno.kasneje')}
           </button>
           <button
             onClick={() => {
               utisajPivoOkno(120)
-              odkloni()
+              koncaj()
             }}
             className="underline hover:text-white"
           >
