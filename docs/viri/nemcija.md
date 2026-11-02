@@ -1214,6 +1214,15 @@ dosegljiv kader, nedotaknjen prihodnji prvi krog, vklop in javno branje.
   praznim `archive_json` zajame samo tekočo sezono in pred prvim zahtevkom
   preveri `prior_requests + max_requests <= total_request_cap` (največ 5000).
   `prior_requests` je dejanska skupna poraba (Baden 1. 11.: 3607).
+- **Nadaljevanje po prekinitvi** (`resume_runs`, 2. 11. 2026): ko zajem pade na
+  transportni napaki (Baden 2. 11.: `ETIMEDOUT` po 378 in po 200 zahtevkih),
+  naslednji zajem iste lige z `resume_runs=<id>,<id>` vzame izvirnike neuspelih
+  zajemov iz zadnjih 24 ur (le uspešno prebrani 200, zapisan poskus, nespremenjeni
+  bajti; razporedi vedno sveži) in bere le manjkajoče. Njihovi zahtevki morajo
+  biti že v `prior_requests`. Izid je navaden mešani zajem (v2), ki ga preverba in
+  uvoz ponovita brez sprememb; ovoj je `scripts/fussball-resume-capture.mjs`,
+  pripeta zajemna koda ostane nespremenjena. Nikoli za 403/429/izziv: to ni
+  transportna napaka in zajem se ustavi.
 - **Uvoz** (`uvoz-fussball-public.yml`, samo lastnik `nejcar20`) sprejme audit
   istega commita ali starejšega `main`, če je novejši njegov potomec brez
   sprememb `supabase/migrations/` (pravilo iz #644; zajemna koda se mora še
