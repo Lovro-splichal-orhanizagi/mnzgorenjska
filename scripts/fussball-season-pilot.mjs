@@ -116,13 +116,13 @@ export async function captureFussballSeasonCurrent(directory,e,{headSha,captureD
  if(plan?.resumeRuns)return resumeDirectory({directory,options,resumeDirectories:plan.resumeRuns.map(id=>resolve('resume',id)),onProgress:p=>console.log(JSON.stringify(p))})
  return captureDirectory({directory,options,onProgress:p=>console.log(JSON.stringify(p)),...(completionProof?{completionProof}:{})})
 }
-/** Admits only failed first-attempt main dispatches of this workflow and downloads their originals. */
+/** Admits only finished first-attempt main dispatches of this workflow and downloads their originals. */
 export async function downloadFussballResumeRuns(e,{headSha,github,download}={}){
  const plan=validateFussballSeasonPilot(e,{headSha})
  requireProof(plan?.resumeRuns,'no resume runs selected')
  for(const id of plan.resumeRuns){
   const run=await github(`repos/${repository}/actions/runs/${id}`)
-  requireProof(run?.id===Number(id)&&run.path==='.github/workflows/preveri-fussball-sezono.yml'&&run.event==='workflow_dispatch'&&run.head_branch==='main'&&run.head_repository?.full_name===repository&&run.run_attempt===1&&run.status==='completed'&&run.conclusion==='failure'&&run.display_title===`FUSSBALL season ${plan.current.staffel} ${plan.current.season}`,'resume run must be a failed main capture of this scope')
+  requireProof(run?.id===Number(id)&&run.path==='.github/workflows/preveri-fussball-sezono.yml'&&run.event==='workflow_dispatch'&&run.head_branch==='main'&&run.head_repository?.full_name===repository&&run.run_attempt===1&&run.status==='completed'&&['failure','success'].includes(run.conclusion)&&run.display_title===`FUSSBALL season ${plan.current.staffel} ${plan.current.season}`,'resume run must be a finished main capture of this scope')
   const artifacts=(await github(`repos/${repository}/actions/runs/${id}/artifacts?per_page=100`))?.artifacts?.filter(a=>a.name===`fussball-season-${id}`)
   requireProof(artifacts?.length===1&&artifacts[0].expired===false&&artifacts[0].workflow_run?.id===Number(id),'resume run must keep exactly one unexpired capture artifact')
   await download(id,resolve('resume',id))
