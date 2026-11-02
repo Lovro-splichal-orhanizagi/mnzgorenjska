@@ -64,7 +64,10 @@ test('path B resume reuses originals of a transport-failed capture and replays a
   const again=await captureFussballResumeDirectory({directory:chained,options,resumeDirectories:[failed],collectFn,fetchFn})
   assert.deepEqual(again.documents.filter(d=>d.origin==='cache').map(d=>d.originalReceipt),m.documents.filter(d=>d.origin==='cache').map(d=>d.originalReceipt))
 
-  await assert.rejects(captureFussballResumeDirectory({directory:join(parent,'from-success'),options,resumeDirectories:[resumed],collectFn,fetchFn}),/failed ordinary capture/)
+  // A complete capture (refused by the import only for a newer migration) also resumes: no report is reread.
+  const again2=[],fromComplete=await captureFussballResumeDirectory({directory:join(parent,'from-success'),options,resumeDirectories:[resumed],collectFn,fetchFn:async url=>{again2.push(url);return fetchFn(url)}})
+  assert.equal(fromComplete.success,true);assert.ok(!again2.includes(reportUrl)&&!again2.includes(lineupUrl))
+  assert.equal((await verifyFussballDirectory(join(parent,'from-success'),{collectFn})).verified,true)
   const config={...options,cardPolicy:undefined}
   assert.throws(()=>fussballPartialCaptureDocuments([failed],{...config,season:'2025/26'}),/scope/)
   assert.throws(()=>fussballPartialCaptureDocuments([failed],config,{now:Date.parse(JSON.parse(readFileSync(join(failed,'manifest.json'))).createdAt)+25*3600_000}),/24 hours/)
@@ -99,6 +102,6 @@ test('resume download admits only failed first-attempt main captures of the same
  const downloaded=[]
  assert.deepEqual(await downloadFussballResumeRuns(e,{headSha:sha,github:github(run),download:async id=>downloaded.push(id)}),['41404256292'])
  assert.deepEqual(downloaded,['41404256292'])
- for(const change of [{conclusion:'success'},{path:'.github/workflows/preveri-fussball-dopolni.yml'},{run_attempt:2},{head_branch:'other'},{display_title:'FUSSBALL season X 2026/27'}])
-  await assert.rejects(downloadFussballResumeRuns(e,{headSha:sha,github:github({...run,...change}),download:async()=>assert.fail('no download')}),/failed main capture/)
+ for(const change of [{conclusion:'cancelled'},{path:'.github/workflows/preveri-fussball-dopolni.yml'},{run_attempt:2},{head_branch:'other'},{display_title:'FUSSBALL season X 2026/27'}])
+  await assert.rejects(downloadFussballResumeRuns(e,{headSha:sha,github:github({...run,...change}),download:async()=>assert.fail('no download')}),/finished main capture/)
 })

@@ -1,6 +1,6 @@
 // Path B resume: a current-only capture that reuses originals retained by earlier
-// FAILED captures of the same full scope (a transport error mid-season), instead
-// of reading them again. Only exact successful network reads (HTTP 200, the
+// captures of the same full scope (a transport error mid-season, or a complete
+// capture the import can no longer admit), instead of reading them again. Only exact successful network reads (HTTP 200, the
 // journaled attempt, unchanged bytes) from the last 24 hours enter; schedules are
 // always read fresh. The output is an ordinary mixed (v2) capture with flat
 // original receipts, so `verifyFussballDirectory` and the import replay it
@@ -38,12 +38,15 @@ export function fussballPartialCaptureDocuments(directories,config,{now=new Date
  const byUrl=new Map()
  for(const directory of directories){
   const m=JSON.parse(readRegular(directory,'manifest.json')),created=Date.parse(m.createdAt)
-  requireProof([1,2].includes(m.version)&&m.provider==='fussball'&&m.success===false&&m.activationEligible===false&&m.resultSha256===null&&m.snapshot?.stopped===true,'resume parent must be a failed ordinary capture')
+  // A transport-failed capture, or a complete one whose import was refused only
+  // because main has since gained a migration (same originals, fresh schedule).
+  const complete=m.success===true&&m.error===null&&/^[a-f0-9]{64}$/.test(m.resultSha256??'')&&m.snapshot?.stopped===false
+  requireProof([1,2].includes(m.version)&&m.provider==='fussball'&&m.activationEligible===false&&(complete||m.success===false&&m.resultSha256===null&&m.snapshot?.stopped===true),'resume parent must be an ordinary capture, failed or complete')
   requireProof(['seedUrl','staffel','season'].every(k=>m.options?.[k]===config[k])&&m.options.reportLimit===null&&m.options.cardPolicy===config.cardPolicy,'resume parent scope/full intent differs')
   requireProof(Number.isFinite(created)&&created<=now&&now-created<=24*3600_000,'resume parent is older than 24 hours')
   // Only a transport error (no HTTP response) is resumed; a refusal or challenge stops the source.
   const last=m.snapshot.attempts?.at(-1)
-  requireProof(last?.status==='failed'&&!Object.hasOwn(last,'httpStatus')&&!/HTTP|challenge|redirect/i.test(`${m.error} ${last.error}`),'resume only after a transport error, never after a refusal')
+  requireProof(complete||last?.status==='failed'&&!Object.hasOwn(last,'httpStatus')&&!/HTTP|challenge|redirect/i.test(`${m.error} ${last.error}`),'resume only after a transport error, never after a refusal')
   requireProof(Array.isArray(m.documents)&&m.documents.length<=20000&&Array.isArray(m.snapshot.attempts),'bounded resume inventory differs')
   for(const d of m.documents){
    if(d.kind==='round')continue
