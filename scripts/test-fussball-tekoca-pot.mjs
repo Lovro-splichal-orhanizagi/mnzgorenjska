@@ -14,6 +14,7 @@ import {fussballTekocaPot} from './tekmovanje.mjs'
 import {isBadenNativeCompetition} from './fussball-native-runtime.mjs'
 import {prepareFussballNightly,seedFussballNightly} from './prepare-fussball-nightly.mjs'
 import {createFussballPublicSource} from './viri/fussball-public.mjs'
+import {viraZa} from './viri/index.mjs'
 
 const read=name=>readFileSync(new URL(`./vzorci/${name}`,import.meta.url))
 const manifest=JSON.parse(read('de-fussball-zapisnik.json'))
@@ -203,4 +204,12 @@ test('real capture code: a path-B capture seeds, and a mixed nightly capture re-
   writeFileSync(join(root,'latest','current',JSON.parse(readFileSync(join(root,'latest','current','manifest.json'))).documents.find(d=>d.kind==='report').file),'tampered')
   await assert.rejects(loadBulkPack(join(root,'latest')),/differs/)
  }finally{rmSync(root,{recursive:true,force:true})}
+})
+
+test('source picker gives a current-only community league the plain public source, not the old Baden history (run 41437691462)',()=>{
+ const db={rpc:async()=>({data:null,error:null})}
+ const vir=viraZa(row({fussball_unknown_before:'9999-12-31'}),{db})
+ assert.equal(typeof vir.razporedVseStrani,'function');assert.equal(vir.historicalSourceFiles,undefined)
+ // Without the current-only mark the old reviewed policy still has no generic adapter.
+ assert.throws(()=>viraZa(row({fussball_current_only:false}),{db}),/historical provider|native|exact|runtime/)
 })
