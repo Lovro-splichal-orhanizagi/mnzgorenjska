@@ -50,6 +50,7 @@ import novanet from './novanet.mjs'
 import dfb from './dfb.mjs'
 import {createBulkCapturedSource} from './bulk-captured.mjs'
 import {createFussballPublicSource} from './fussball-public.mjs'
+import {isFussballCommunityCompetition} from '../fussball-community-policy.mjs'
 import {createDriblPublicSource} from './dribl-public.mjs'
 import {withDfbHistoricalStatistics} from './dfb-historical.mjs'
 import {withFcfHistoricalStatistics} from './fcf-historical.mjs'
@@ -267,6 +268,10 @@ export function viraZa(tekmovanje, {installedHistoricalMarkers=null,installedG1S
       `Tekmovanje "${tekmovanje?.slug ?? '?'}" navaja vir "${ime}", ki ga ne poznam. Znani viri: ${znani}.`,
     )
   }
+  // Pot B: liga samo s tekočo sezono nima arhiva in ne označb (uvozni kontekst ji
+  // jih ne da); vir fussball-public sam zavrne arhiv. Baden ima sicer vgrajeno
+  // zgodovinsko politiko stare verige, ki bi tu brez prilagojevalnika padla.
+  if (isFussballCommunityCompetition(tekmovanje) && tekmovanje.fussball_current_only === true) return vir
   if(tekmovanje?.source_policy===FCF_SIX_SOURCE_POLICY){
     const supplement=isFcfG1SupplementCompetition(tekmovanje)?withFcfG1InstalledSupplement(vir,tekmovanje,{installedG1Supplement}):null
     const extra=supplement?withFcfG1Installed4109410(supplement.provider,tekmovanje,{readBlock:supplement.readBlock}):null
