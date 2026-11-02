@@ -61,7 +61,6 @@ env:
   TOTAL_REQUEST_CAP: ${{ inputs.total_request_cap }}
   EXPECTED_SHA: ${{ inputs.expected_sha }}
   ROLLOUT_CANDIDATE: ${{ inputs.rollout_candidate }}
-  RESUME_RUNS: ${{ inputs.resume_runs }}
 jobs:
   capture:
     if: github.ref == 'refs/heads/main'
@@ -88,12 +87,16 @@ jobs:
         if: inputs.resume_runs != ''
         env:
           GH_TOKEN: ${{ github.token }}
+          RESUME_RUNS: ${{ inputs.resume_runs }}
         run: node scripts/fussball-season-pilot.mjs resume-runs
       - name: Share host pacing with older nightly and bulk readers
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/bulk-source-coordination.mjs
       - name: Capture ordinary public source, without database credentials
+        # Only here and in the download step: offline tests spawn the CLI with the job env.
+        env:
+          RESUME_RUNS: ${{ inputs.resume_runs }}
         run: node scripts/fussball-season-pilot.mjs capture-current capture
       - name: Replay only retained original documents, without network
         run: node scripts/zajemi-fussball-sezono.mjs verify capture
