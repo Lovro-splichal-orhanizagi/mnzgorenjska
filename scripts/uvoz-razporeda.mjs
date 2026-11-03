@@ -393,6 +393,14 @@ for (const k of veljavni) {
       console.error(`  krog ${k.stevilka}: rok ni posodobljen — ${eRok.message}`)
       process.exitCode = 1
     }
+  } else if (vir.ocenjeniDatumi && obstoj.lineups_locked_at && obstoj.datum_ocenjen && !k.ocenjen) {
+    // Ocenjen krog je vir objavil šele po roku (ffl: krog pokaže, ko se začne).
+    // Rok zaklenjenega kroga ostane, oznaka ocene pa ne velja več.
+    const { error: eOcena } = await db.from('rounds').update({ datum_ocenjen: false }).eq('id', krogId)
+    if (eOcena) {
+      console.error(`  krog ${k.stevilka}: oznaka ocene ni počiščena — ${eOcena.message}`)
+      process.exitCode = 1
+    }
   }
 
   for (const t of k.tekme) {
