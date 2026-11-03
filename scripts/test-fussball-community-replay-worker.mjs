@@ -35,7 +35,18 @@ test('ten total jobs remain fair between exact current/archive scopes and never 
 })
 test('disabled or uninstalled plain competition has no jobs; foreign installed scope fails before job access',async()=>{
  for(const db of [database({policyPatch:{enabled:false}}),database({rowPatch:{source_policy:null}})]){assert.equal((await api.runFussballCardReplayWorker({db,runId:'2'})).processed,0);assert.ok(!db.calls.some(([n])=>n==='get_fussball_card_replay_jobs'))}
- for(const patch of [{installed:false},{current_code:'foreign'},{archive_codes:[]},{source_policy:null}]){const db=database({policyPatch:patch});await assert.rejects(api.runFussballCardReplayWorker({db,runId:'2'}));assert.ok(!db.calls.some(([n])=>n==='get_fussball_card_replay_jobs'))}
+ for(const patch of [{installed:false},{current_code:'foreign'},{archive_codes:['foreign']},{source_policy:null}]){const db=database({policyPatch:patch});await assert.rejects(api.runFussballCardReplayWorker({db,runId:'2'}));assert.ok(!db.calls.some(([n])=>n==='get_fussball_card_replay_jobs'))}
+})
+test('a current-only league (empty archive codes) replays the current season only',async()=>{
+ const jobs=[{match_id:1,revision_sha256:'a'.repeat(64),resolution_sha256:'b'.repeat(64)}],db=database({policyPatch:{archive_codes:[]},jobs:{[code]:jobs}}),seen=[]
+ const r=await api.runFussballCardReplayWorker({db,runId:'7',processJob:async job=>{seen.push(job.code);return {status:'APPLIED'}}})
+ assert.equal(r.scopes,1);assert.deepEqual(seen,[code])
+ assert.ok(db.calls.filter(([n])=>n==='get_fussball_card_replay_jobs').every(([,a])=>a.p_code===code))
+})
+test('the failure log names our own fixed errors and only the class of anything else',()=>{
+ assert.equal(api.safeReplayError(Error('FUSSBALL card worker: competition lookup failed')),'FUSSBALL card worker: competition lookup failed')
+ assert.equal(api.safeReplayError(new TypeError('secret-token https://x')),'Unexpected TypeError.')
+ assert.equal(api.safeReplayError('boom'),'Unexpected error.')
 })
 test('corrupt originals and an ambiguous apply are fatal and cannot continue or retry',async()=>{
  for(const corruption of [true,false]){
