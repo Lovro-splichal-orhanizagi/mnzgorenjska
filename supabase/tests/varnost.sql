@@ -1820,8 +1820,16 @@ select pg_temp.preveri('preverba po delih: vsi deli tečejo, preveri_podatke() j
   (select count(*) from preveri_podatke()) =
   (select count(*) from unnest(array['postava','menjave','goli-in-datumi','tocke','cene']) d,
           lateral preveri_podatke_del(d)));
-select pg_temp.zavrnjeno('preverba po delih: neznan del je napaka',
-  $q$select * from preveri_podatke_del('ni-dela')$q$);
+do $q$
+declare v_napaka boolean := false;
+begin
+  begin
+    perform * from preveri_podatke_del('ni-dela');
+  exception when raise_exception then v_napaka := true;
+  end;
+  perform pg_temp.preveri('preverba po delih: neznan del je napaka', v_napaka);
+end;
+$q$;
 
 -- Zaprta pred tekmo: brez opomina.
 select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000001',true);
