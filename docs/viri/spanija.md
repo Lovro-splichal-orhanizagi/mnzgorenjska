@@ -115,6 +115,25 @@ Server Components (`self.__next_f.push`), ki ga `drevoRsc` sestavi
   Regresija `scripts/test-fcf-calendar.mjs` uporablja tri pristne glave iz
   zgodovinskega predpomnilnika brez dokazane svežine; celotni testni
   koledar in odgovor povratne tekme v 5. krogu sta izrecno sintetična.
+- **Mešan povratni par kot stanje vira** (`uskladiMesaniPar`, od 3. 11. 2026):
+  FCF tekmo prvega dela, odigrano ali prestavljeno z obrnjenim domačinom,
+  vpiše v zapisnik povratnega kroga in mu da krog prvega dela; prvotni
+  zapisnik ostane v istem krogu brez izida s preteklim datumom (Quarta g7:
+  4145928 "Acta Tancada" 4. 10. brez izida, 4146048 krog 3, 7:1, 7. 10.;
+  g5 krog 1/14; g22 4149517 je FCF pozneje sam prestavil v krog 16 z datumom
+  kroga). Pri vsakem številu klubov (tudi liho, prosti krog) blok to uskladi
+  le, ko je to edino neskladje popolnega dvokrožnega koledarja (vse smeri
+  enolične, vsi krogi; en krog s tekmo preveč, zrcalni krog ± pol sezone brez
+  natanko tega para) in je zastarel natanko en član: brez izida, datum pred
+  današnjim in strogo pred datumom drugega člana. Ta gre v zrcalni krog z
+  najpogostejšim datumom tega kroga (začasno, dokler ga vir ne objavi; ura
+  prazna), drugi ostane. Uvoz razporeda nato neuvoženo vrstico prvotnega
+  zapisnika v zdaj polnem krogu odstrani (obstoječe "razpored nima več").
+  Enakih ali manjkajočih datumov in odigranega zastarelega člana ne ugibamo:
+  zunaj obnove para blok ostane, kot je bil, v obnovi para (240 tekem) pa se
+  uvoz ustavi kot doslej. Obnova para zdaj ne pade takoj, ko sta oba člana
+  sveža, ampak preda odločitev tej uskladitvi; predpomnilnik zamenja šele po
+  uspešni uskladitvi.
 - **Prenos praznega HTTP 200**: `fcfFetch` naredi največ dva izvorna
   zahtevka. Le prvi odgovor z natanko 0 znaki, statusom 200 in brez
   preusmeritve na izvirni niz
