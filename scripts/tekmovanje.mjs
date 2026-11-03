@@ -69,7 +69,24 @@ export async function tekmovanje(db, slug = slugTekmovanja()) {
       throw new Error(`${data.source} country: country lookup failed${countryError ? ': ' + countryError.message : ''}`)
     country = { country_code: row.code }
   }
-  return { ...data, ...country, sezona_koledarska: !eKol && Boolean(kol?.sezona_koledarska) }
+  const pot = data.source === 'fussball-public' ? await fussballTekocaPot(db, data) : {}
+  return { ...data, ...country, ...pot, sezona_koledarska: !eKol && Boolean(kol?.sezona_koledarska) }
+}
+
+/**
+ * FUSSBALL pot B: kartonska politika brez arhiva pomeni ligo samo s tekočo
+ * sezono (migracija 20261101150100). Neznani zapisniki so dovoljeni le pred
+ * prvim fantasy krogom; na vklopljeni ligi pred njegovim datumom. Brez
+ * servisnega ključa ali politike ostane liga na strogi poti.
+ */
+export async function fussballTekocaPot(db, c) {
+  if (c.source_policy !== 'fussball-community-cards-v1') return {}
+  const { data: p, error } = await db.rpc('get_fussball_card_policy', { p_competition_id: c.id })
+  if (error || p?.installed !== true || p.enabled !== true || p.current_code !== c.source_league_code || !Array.isArray(p.archive_codes) || p.archive_codes.length) return {}
+  if (!c.active) return { fussball_current_only: true, fussball_unknown_before: '9999-12-31' }
+  const { data: r, error: eR } = await db.from('rounds').select('played_on')
+    .eq('competition_id', c.id).eq('season', c.source_league_code.split(':')[1]).eq('number', c.prvi_fantasy_krog).maybeSingle()
+  return { fussball_current_only: true, fussball_unknown_before: !eR && /^\d{4}-\d\d-\d\d$/.test(r?.played_on ?? '') ? r.played_on : null }
 }
 
 /**

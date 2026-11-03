@@ -381,8 +381,29 @@ Dosedanje ročno shranjevanje predpomnilnika tudi ob napaki ostaja.
 ## Preverjen vklop zgornjih katalonskih lig (17. 10. 2026)
 
 Vklop pokriva natanko 27 že uvoženih skupin: `es-ct-elit`, Primera 1–3,
-Segona 1–6 in Tercera 1–17. Quarta zaradi manjkajočih menjav ostaja zunaj;
-FAS in Novanet imata ločena postopka. Obstoječih cen in pozicij ne spreminja.
+Segona 1–6 in Tercera 1–17 (privzeto, prazen `lige`) ter **20 imenovanih skupin
+Quarta** (`QUARTA_LIGE`: grup 1–8, 10, 13, 14, 16–23, 32), ki jih je treba v
+`lige` našteti izrecno. FAS in Novanet imata ločena postopka. Obstoječih cen in
+pozicij ne spreminja.
+
+**Quarta brez menjav** (odločitev lastnika 1. 11. 2026,
+`QUARTA_BREZ_MENJAV`): klubi menjav ne vpisujejo, zato velja isto sprejeto
+pravilo kot pri `fsb`/`nff` (`z.brezMenjav`): začetnik 90 minut, rezerva brez
+vpisanega vstopa nastopa nima, strelec s klopi vstopi ob svojem golu. Za Quarta
+zato odpade le dokaz nastopa s klopi **po klubu**, opozorilo `strelec … je na
+klopi, vstopa zapisnik nima — vstop postavljen na N. minuto` pa je sprejeto le,
+če ima tekma nezačetnika z vstopom N in njegov prvi gol na tekmi v minuti N
+(vsak nastop enkrat). Vse drugo ostane strogo: XI in izrecni vratar, goli =
+izid, nobeno drugo opozorilo (neujemanje golov, manjkajoča postava blokira),
+zamuda zapisnika, cene, kader, prihodnji prvi krog, readback in skupni
+`nastopov_s_klopi > 0` (preveri ga tudi baza). Skupine imajo 12–16 klubov:
+dvokrožni razpored, pri lihem številu prost krog (15 klubov: 30 krogov po 7
+tekem; 14: 26 po 7; 12: 22 po 6). Paket z Quarta nosi `quartaPolicy`, liga
+`quality.menjave`. Grup 9, 11, 12, 15, 24+ niso na seznamu.
+
+Pred pripravo vsako ligo osveži (ena liga na zagon; uvozi Španije tečejo po
+vrsti prek `cakaj-na-uvoze`, ki čaka največ 120 min, zato pošiljaj po 3–4):
+`gh workflow run uvoz-lige.yml --ref main -f liga=es-ct-quarta-g1 -f cene=true`.
 
 Ročni tok `vklop-katalonije.yml` privzeto **samo pripravi** paket. V enem
 usklajenem zagonu države ES prebere celotne tekoče kroge, tekme, nastope

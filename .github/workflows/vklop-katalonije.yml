@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       lige:
-        description: Opcijski seznam zgornjih FCF skupin, ločen z vejicami (prazno vseh 27)
+        description: Opcijski seznam FCF skupin, ločen z vejicami (prazno vseh 27 zgornjih; Quarta le izrecno po imenu)
         type: string
         required: false
       activate:

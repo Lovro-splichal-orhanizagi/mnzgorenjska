@@ -286,6 +286,8 @@ jobs:
         run: node --test scripts/test-mfa-reviewed-history-sql.mjs
       - name: Ordinary match writes under the real importer role
         run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/match-result-check-acl.sql
+      - name: FUSSBALL path B detach and current-only activation
+        run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/fussball-tekoca-pot.sql
       - name: Guarded cross-club identity correction
         run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/zlite-identity-repair.sql
       - name: HNS canonical release, target ACLs and waiting writers

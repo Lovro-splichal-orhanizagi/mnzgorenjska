@@ -45,6 +45,11 @@ export const aplikacija = {
       besedilo: 'Lej, kako zabavno igrico smo naredili. Če bi nas srečal po tekmi, bi nam sigurno dal za pivo. SLFF ostaja brezplačen, brez oglasov in stav, tvoje ime pa pristane na pivskem zidu.',
       kasneje: 'Mogoče naslednjič',
       zeSem: 'Sem že častil 🍻',
+      /** Pivko zajoka ob prvem poskusu zapiranja okna; drugi ga zapre. */
+      jokNaslov: "Neeee! Res greš? 😭",
+      jokBesedilo: "Ves teden klečim tu. Kolena me bolijo, vrček je prazen. Eno samo pivo in neham jokat, obljubim. 🥺",
+      jokGumb: "Dobro no, nehaj jokat 🍺",
+      jokZapri: "Naj kar joka",
       /** Okno po shranjeni ekipi za naslednji krog. */
       ekipaNaslov: 'Ekipa za {krog}. krog je pripravljena! 🍺',
       /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */

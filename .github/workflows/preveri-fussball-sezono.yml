@@ -18,7 +18,7 @@ on:
       max_requests:
         description: Total request ceiling, including CSS/fonts and failures (1–3000)
         type: number
-        default: 1000
+        default: 700
       reports:
         description: all, or an explicit nonnegative report sample count
         type: string
@@ -28,7 +28,7 @@ on:
         type: string
         default: ''
       prior_requests:
-        description: Already spent cumulative website requests (paired pilot minimum 363)
+        description: Already spent cumulative website requests (paired pilot minimum 363; current-only = actual ledger, e.g. Baden 3607)
         type: number
         default: 363
       total_request_cap:
@@ -40,7 +40,11 @@ on:
         type: string
         default: ''
       rollout_candidate:
-        description: Optional exact reviewed German slug; after both complete audits dispatch the separately gated native rollout
+        description: Optional exact reviewed German slug. With archive_json, dispatch the paired native rollout; without it, a current-only (path B) capture for uvoz-fussball-public.yml
+        type: string
+        default: ''
+      resume_runs:
+        description: Path B only. Comma-separated failed capture runs of this scope (last 24 h) whose saved originals are reused; their requests must already be in prior_requests
         type: string
         default: ''
 permissions:
@@ -79,11 +83,20 @@ jobs:
         run: node scripts/fussball-season-pilot.mjs validate
       - name: Offline source and evidence checks
         run: node --test scripts/lib/fussball-capture.test.mjs scripts/test-fussball*.mjs
+      - name: Download originals of the failed captures this run resumes
+        if: inputs.resume_runs != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESUME_RUNS: ${{ inputs.resume_runs }}
+        run: node scripts/fussball-season-pilot.mjs resume-runs
       - name: Share host pacing with older nightly and bulk readers
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/bulk-source-coordination.mjs
       - name: Capture ordinary public source, without database credentials
+        # Only here and in the download step: offline tests spawn the CLI with the job env.
+        env:
+          RESUME_RUNS: ${{ inputs.resume_runs }}
         run: node scripts/fussball-season-pilot.mjs capture-current capture
       - name: Replay only retained original documents, without network
         run: node scripts/zajemi-fussball-sezono.mjs verify capture

@@ -17,10 +17,10 @@ select pg_temp.nl_refuses('select public.check_mfa_nl_reviewed_release(974,repea
 select pg_temp.nl_refuses('select public.get_mfa_nl_reviewed_release_receipt(974)');
 -- A later pending round isolates provenance from immutable opening-image checks.
 savepoint pending_schedule_provenance;
-insert into rounds(id,competition_id,season,number,played_on,deadline_at)overriding system value values(9740003,974,'2026/27',3,'2026-11-08','2026-11-08T10:00Z');
-insert into matches(id,round_id,home_team_id,away_team_id,played_on,source_url)overriding system value values(9740099,9740003,9909741,9909742,'2026-11-08','https://api.mfa.com.mt/api/competitions/6234492/standings?season=2027');
+insert into rounds(id,competition_id,season,number,played_on,deadline_at)overriding system value values(9740003,974,'2026/27',3,'2027-05-08','2027-05-08T10:00Z');
+insert into matches(id,round_id,home_team_id,away_team_id,played_on,source_url)overriding system value values(9740099,9740003,9909741,9909742,'2027-05-08','https://api.mfa.com.mt/api/competitions/6234492/standings?season=2027');
 do $$declare d jsonb;u text;begin
- select jsonb_set(jsonb_set(document,'{currentFixtures}',(document->'currentFixtures')||jsonb_build_array(jsonb_build_object('sourceMatchId','94009999','round',3,'playedOn','2026-11-08','homeName',(select name from teams where id=9909741),'awayName',(select name from teams where id=9909742),'played',false))),'{expectedCurrentFixtureCount}','7')into d from nl_release_contracts where cid=974;
+ select jsonb_set(jsonb_set(document,'{currentFixtures}',(document->'currentFixtures')||jsonb_build_array(jsonb_build_object('sourceMatchId','94009999','round',3,'playedOn','2027-05-08','homeName',(select name from teams where id=9909741),'awayName',(select name from teams where id=9909742),'played',false))),'{expectedCurrentFixtureCount}','7')into d from nl_release_contracts where cid=974;
  perform private_mfa_nl_history.coverage(974,d,clock_timestamp());
  update matches set source_url=null where id=9740099;
  perform private_mfa_nl_history.coverage(974,d,clock_timestamp());
@@ -34,7 +34,7 @@ rollback to savepoint pending_schedule_provenance;
 do $$declare changed jsonb;begin
  for changed in select jsonb_set(document,path,value)from nl_release_contracts cross join(values
  ('{reports,0,homeGoals}'::text[],'9'::jsonb),('{reports,0,reportId}','"mt999999999"'),('{reports,0,homeName}','"Wrong club"'),
- ('{currentFixtures,0,round}','99'),('{expectedArchiveRounds}','999'),('{expectedCurrentFixtureCount}','7'),('{expectedCurrentClubCount}','7'),('{sourceArtifact,commit}','"wrong"'),('{opening,deadlineAt}','"2026-11-01T11:00:00Z"'),('{opening,round}','3'))v(path,value)where cid=974 loop
+ ('{currentFixtures,0,round}','99'),('{expectedArchiveRounds}','999'),('{expectedCurrentFixtureCount}','7'),('{expectedCurrentClubCount}','7'),('{sourceArtifact,commit}','"wrong"'),('{opening,deadlineAt}','"2027-05-01T11:00:00Z"'),('{opening,round}','3'))v(path,value)where cid=974 loop
   begin
    insert into private_mfa_nl_history.source_contract values(974,encode(sha256(convert_to(private_mfa_nl_history.canonical_json(changed),'UTF8')),'hex'),changed);
    perform pg_temp.nl_refuses(format('select public.get_mfa_nl_reviewed_source_state(974,%L,%L)',repeat('e',40),encode(sha256(convert_to(private_mfa_nl_history.canonical_json(changed),'UTF8')),'hex')));
@@ -72,7 +72,7 @@ select pg_temp.nl_refuses('select public.record_mfa_nl_reviewed_prices(974,repea
 create temporary table nl_previews as select cid,public.check_mfa_nl_reviewed_release(cid,repeat('e',40),pg_temp.nl_contract_sha(cid))as result from nl_source_states;
 select pg_temp.nl_refuses('update competitions set active=true where id=974');
 select pg_temp.nl_refuses('select public.check_mfa_nl_reviewed_release(974,repeat(''e'',40),pg_temp.nl_contract_sha(974),repeat(''0'',64),true)');
-select pg_temp.nl_refuses('select private_mfa_nl_history.release_core(974,repeat(''e'',40),pg_temp.nl_contract_sha(974),null,false,''2026-11-01T10:00Z'')');
+select pg_temp.nl_refuses('select private_mfa_nl_history.release_core(974,repeat(''e'',40),pg_temp.nl_contract_sha(974),null,false,''2027-05-01T10:00Z'')');
 savepoint repriced_same_state;
 select public.record_mfa_nl_reviewed_prices(974,repeat('e',40),pg_temp.nl_contract_sha(974));
 select pg_temp.nl_refuses(format('select public.check_mfa_nl_reviewed_release(974,%L,%L,%L,true)',repeat('e',40),pg_temp.nl_contract_sha(974),result->>'previewSha256'))from nl_previews where cid=974;
@@ -95,7 +95,7 @@ update appearances set minute_off=89 where id=(select min(a.id)from appearances 
 select pg_temp.nl_refuses('select public.get_mfa_nl_reviewed_source_state(974,repeat(''e'',40),pg_temp.nl_contract_sha(974))');
 rollback to savepoint bad_minutes;
 savepoint extra_pending;
-insert into matches(round_id,home_team_id,away_team_id,played_on)values(9740002,9909742,9909743,'2026-11-01');
+insert into matches(round_id,home_team_id,away_team_id,played_on)values(9740002,9909742,9909743,'2027-05-01');
 select pg_temp.nl_refuses('select public.get_mfa_nl_reviewed_source_state(974,repeat(''e'',40),pg_temp.nl_contract_sha(974))');
 rollback to savepoint extra_pending;
 savepoint source_drift;

@@ -289,6 +289,14 @@ ponovitvi izvirnih bajtov. `replay-fussball-cards.yml` vsako uro obdela največ
 10 predlogov brez branja nogometnih strani. Delni zajem ali napaka javne
 identitete še vedno prepreči vklop; podrobnosti v `docs/viri/nemcija.md`.
 
+**Pot B (od 1. 11. 2026)**: nemška liga FUSSBALL gre v igro samo s tekočo
+sezono — kartonska politika z `archive_codes='{}'` (`fussball_current_only` v
+`tekmovanje()`), zajem s skupnim proračunom (`preveri-fussball-sezono.yml`),
+`uvoz-fussball-public.yml` (tudi nočni predpomnilnik) in `vklop-fussball-tekoce.yml`
+(`vklopi_fussball_tekoco`). Zavrnjen zapisnik pred prvim krogom ostane neznan
+(brez statistik); Baden je odvezan od enkratne verige (migracija
+`20261101150100`). Podrobnosti v `docs/viri/nemcija.md` (*Pot B*).
+
 `matches.statistics_status = 'unavailable_historical'` ohrani uradni izid,
 vendar nima nastopov/golov in `imported_at` ostane NULL. Izjeme so omejene
 na točne identitete in SHA v `scripts/policies/historical-statistics-exclusions.json`;

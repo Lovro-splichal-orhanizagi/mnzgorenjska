@@ -10,15 +10,24 @@ import {captureFussballDirectory} from './fussball-capture-evidence.mjs'
 import {loadFussballImportCapture,parseFussballLeagueCode} from './fussball-import.mjs'
 
 import {isFussballCommunityCandidate,isFussballCommunityCompetition,fussballCardPolicyForCandidate} from './fussball-community-policy.mjs'
+import {loadFussballCurrentOnlyCapture,loadFussballCurrentOnlyCache,writeFussballCurrentOnlyCache} from './fussball-tekoca-pot.mjs'
 import {isBadenNativeCompetition,loadFussballNativeRuntimeSeed,seedFussballNativeRuntime,captureFussballNativeRuntimeDirectory} from './fussball-native-runtime.mjs'
 const fail=message=>Object.assign(new Error(`fussball nightly: ${message}`),{exitCode:1,dataHold:true})
 const proof=(ok,message)=>{if(!ok)throw fail(message)}
 const time=now=>{const value=typeof now==='function'?now():now,n=value instanceof Date?value.getTime():value;proof(Number.isFinite(n),'invalid clock');return n}
 const cacheRoot=slug=>resolve('scripts/.predpomnilnik/fussball-public',slug)
 
-export async function seedFussballNightly({candidate,bulkDirectory,cacheDirectory,loadPack=loadGermanyPack,installedHistoricalMarkers=candidate?.fussballHistoricalContext}={}){
+export async function seedFussballNightly({candidate,bulkDirectory,cacheDirectory,loadPack=loadGermanyPack,loadCurrentOnlyCache,installedHistoricalMarkers=candidate?.fussballHistoricalContext}={}){
  proof(candidate?.active===false,'initial cache seed requires inactive competition')
  const reviewed=assertFussballNightlyCompetition({...candidate,active:true})
+ if(candidate.fussball_current_only===true){
+  // Path B: the verified current-only audit capture itself seeds the nightly.
+  const cache=cacheDirectory??cacheRoot(reviewed.slug),seed=join(cache,'bulk-seed'),next=join(cache,'bulk-seed-next')
+  mkdirSync(cache,{recursive:true});proof(lstatSync(cache).isDirectory()&&!lstatSync(cache).isSymbolicLink(),'cache root must be regular directory')
+  rmSync(next,{recursive:true,force:true});writeFussballCurrentOnlyCache(bulkDirectory,next,reviewed);await (loadCurrentOnlyCache??loadFussballCurrentOnlyCache)(next,{candidate:reviewed})
+  rmSync(seed,{recursive:true,force:true});renameSync(next,seed)
+  return {directory:resolve(seed),source_league_code:reviewed.source_league_code,seeded:true,currentOnly:true}
+ }
  if(isBadenNativeCompetition(candidate)){
   const cache=cacheDirectory??cacheRoot(reviewed.slug),seed=join(cache,'bulk-seed'),next=join(cache,'bulk-seed-next')
   mkdirSync(cache,{recursive:true});proof(lstatSync(cache).isDirectory()&&!lstatSync(cache).isSymbolicLink(),'cache root must be regular directory')
@@ -50,7 +59,7 @@ function stoppedCapture(directory){
   return s.isFile()&&!s.isSymbolicLink()&&JSON.parse(readFileSync(file,'utf8')).snapshot?.stopped===true
  }catch{return false}
 }
-export async function prepareFussballNightly({candidate,directory,maxRequests=4000,now=Date.now,captureDirectory=captureFussballDirectory,loadCapture=loadFussballImportCapture,fetchFn,cacheDirectory,installedHistoricalMarkers=candidate?.fussballHistoricalContext,db}={}){
+export async function prepareFussballNightly({candidate,directory,maxRequests=4000,now=Date.now,captureDirectory=captureFussballDirectory,loadCapture=loadFussballImportCapture,loadCurrentOnly,loadCurrentOnlyPack,fetchFn,cacheDirectory,installedHistoricalMarkers=candidate?.fussballHistoricalContext,db}={}){
  const reviewed=assertFussballNightlyCompetition(candidate),scope=parseFussballLeagueCode(reviewed.source_league_code)
  proof(typeof directory==='string'&&directory.length>0&&!existsSync(directory),'output must identify a new capture directory')
  proof(Number.isInteger(maxRequests)&&maxRequests>=1&&maxRequests<=4000,'request budget must be 1..4000')
@@ -62,6 +71,23 @@ export async function prepareFussballNightly({candidate,directory,maxRequests=40
  proof(lstatSync(cache).isDirectory()&&!lstatSync(cache).isSymbolicLink(),'cache root must be a regular directory')
  if(!existsSync(latest)&&existsSync(previous))renameSync(previous,latest)
  if(existsSync(latest))proof(lstatSync(latest).isDirectory()&&!lstatSync(latest).isSymbolicLink(),'latest cache must be a regular directory')
+ if(candidate.fussball_current_only===true){
+  // Path B keeps every cache in the current-only wrapper, so UNKNOWN pre-opening
+  // reports stay admissible; after the opening a rejection still stops the run.
+  const reuse=existsSync(latest)?latest:existsSync(seed)?seed:null
+  try{
+   await captureDirectory({directory,options:{seedUrl:reviewed.seedUrl,...scope,maxRequests,reportLimit:null,asOfDate,...(cardPolicy?{cardPolicy}:{})},...(fetchFn?{fetchFn}:{}),...(reuse?{reuseBulkDirectory:reuse,loadBulkPack:dir=>(loadCurrentOnlyPack??loadFussballCurrentOnlyCache)(dir,{candidate:reviewed})}:{})})
+   const batch=await (loadCurrentOnly??loadFussballCurrentOnlyCapture)(directory,{...scope,current:true,now:time(now),...(cardPolicy?{cardPolicy}:{}),unknownBefore:candidate.fussball_unknown_before??undefined})
+   proof(batch?.provider==='fussball-public'&&batch.staffel===scope.staffel&&batch.season===scope.season&&batch.cardPolicy===cardPolicy&&Array.isArray(batch.reports)&&batch.reports.length+(batch.pendingReports?.length??0)>0&&Array.isArray(batch.schedule)&&batch.schedule.length>0,'fresh complete current-only capture proof missing or wrong scope')
+   rmSync(next,{recursive:true,force:true});writeFussballCurrentOnlyCache(directory,next,reviewed);rmSync(previous,{recursive:true,force:true})
+   if(existsSync(latest))renameSync(latest,previous)
+   renameSync(next,latest);rmSync(previous,{recursive:true,force:true});rmSync(seed,{recursive:true,force:true})
+   return {directory:resolve(directory),source_league_code:reviewed.source_league_code,...scope,reports:batch.reports.length,pendingReports:batch.pendingReports?.length??0,unknownReports:batch.unknownReports?.length??0,provenance:batch.provenance}
+  }catch(error){
+   if(stoppedCapture(directory)||error.sourceStop)throw Object.assign(new Error(`fussball nightly source stopped: ${error.message}`),{sourceStop:true,exitCode:4})
+   throw Object.assign(error,{exitCode:1,dataHold:true})
+  }
+ }
  if(isBadenNativeCompetition(candidate)){
   const seedDirectory=existsSync(latest)?join(latest,'seed'):seed
   const loaded=await loadFussballNativeRuntimeSeed({context:installedHistoricalMarkers,competition:candidate,db,directory:seedDirectory})
