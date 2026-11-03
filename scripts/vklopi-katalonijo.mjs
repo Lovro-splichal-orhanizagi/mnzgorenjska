@@ -29,6 +29,9 @@ const BENCH_SCORER = /^strelec .+ je na klopi, vstopa zapisnik nima — vstop po
 const KRATKA_POSTAVA = /^.+: v postavi je (\d+) igralcev namesto 11$/
 // D: kontumacija, kjer akta nima postave ene ali obeh ekip.
 const KONTUMACIJA_BREZ_POSTAVE = /^zapisnik nepopoln: .+ — brez postave$/
+// B (lastnik 2026-11-03): uradni administrativni izid 3:0/0:3 ob drugačnih golih
+// akte. Lestvica ohrani uradni izid, točke igralcev ostanejo iz akte.
+const ADMINISTRATIVNI_IZID = /^goli iz zapisnika \((\d+):(\d+)\) se ne ujemajo z izidom (\d+):(\d+)$/
 const REPOSITORY = 'Lovro-splichal-orhanizagi/mnzgorenjska'
 const PERMISSION_DATE = '2026-10-17'
 const fail = message => { throw new Error(`Vklop Katalonije: ${message}`) }
@@ -221,6 +224,22 @@ export function preveriLigo(s, now = Date.now(), { allowActive = false } = {}) {
     if (team !== undefined) shortXi.add(`${m.id}/${team}`)
     return team !== undefined
   }
+  // B: opozorilo parserja sprejeto le, ko je shranjen izid natanko 3:0/0:3,
+  // goli akte so drugačni in shranjeni goli po upravičencu so natanko goli akte.
+  // Kontumacija (brez postav) gre po D, ne po B.
+  const adminScore = new Map(), creditedScore = m => {
+    const gs = goalsByMatch.get(m.id) ?? [], credited = gs.map(g => g.is_own_goal ? (g.team_id === m.home_team_id ? m.away_team_id : m.home_team_id) : g.team_id)
+    return [credited.filter(id => id === m.home_team_id).length, credited.filter(id => id === m.away_team_id).length]
+  }
+  const adminWarning = (w, m) => {
+    const x = ADMINISTRATIVNI_IZID.exec(w)?.slice(1).map(Number)
+    if (!pravila || !x || !m.imported_at || m.kontumacija !== false) return false
+    if (adminScore.has(m.id)) return adminScore.set(m.id, null) && false // dvojno opozorilo ni sprejeto
+    const [a, b, home, away] = x, [ch, ca] = creditedScore(m)
+    if (home !== m.home_goals || away !== m.away_goals || !(home === 3 && away === 0 || home === 0 && away === 3) || a === home && b === away || ch !== a || ca !== b) return false
+    adminScore.set(m.id, [a, b])
+    return true
+  }
   // D: kontumacija brez nastopov sme imeti samo opozorila 'brez postave'.
   const forfeitOnly = m => pravila && m.kontumacija === true && !appsByMatch.has(m.id) && Array.isArray(m.import_warnings) && m.import_warnings.length > 0 &&
     m.import_warnings.length <= 2 && new Set(m.import_warnings).size === m.import_warnings.length && m.import_warnings.every(w => KONTUMACIJA_BREZ_POSTAVE.test(w))
@@ -235,7 +254,7 @@ export function preveriLigo(s, now = Date.now(), { allowActive = false } = {}) {
     if (!roundMap.has(m.round_id)) add(`Tekma ${m.id}: napačen krog.`)
     if (!validDate(m.played_on)) add(`Tekma ${m.id}: neveljaven datum.`)
     if (forfeitOnly(m)) note(`Tekma ${m.id}: kontumacija brez postave — opozorila 'zapisnik nepopoln … brez postave' sprejeta.`)
-    else if (!Array.isArray(m.import_warnings) || m.import_warnings.some(w => !(quarta && benchScorer(w, m.id)) && !shortWarning(w, m))) add(`Tekma ${m.id}: nerešena uvozna opozorila.`)
+    else if (!Array.isArray(m.import_warnings) || m.import_warnings.some(w => !(quarta && benchScorer(w, m.id)) && !shortWarning(w, m) && !adminWarning(w, m))) add(`Tekma ${m.id}: nerešena uvozna opozorila.`)
     if (typeof m.kontumacija !== 'boolean' || typeof m.vir_brez_izida !== 'boolean') add(`Tekma ${m.id}: neznano stanje statistike.`)
     if (m.imported_at !== null && !Number.isFinite(timestamp(m.imported_at))) add(`Tekma ${m.id}: neveljaven čas uvoza.`)
     if (!m.imported_at && !m.kontumacija && !m.vir_brez_izida && validDate(m.played_on) && now - Date.parse(`${m.played_on}T23:59:59.999Z`) > 48 * 3600000) add(`Tekma ${m.id}: zamuda zapisnika nad 48 ur po koncu UTC dneva.`)
@@ -248,8 +267,9 @@ export function preveriLigo(s, now = Date.now(), { allowActive = false } = {}) {
       else if (starters.length !== 11) add(`Tekma ${m.id}/${team}: XI ni natanko 11.`)
       if (starters.filter(a => a.is_goalkeeper === true).length !== 1) add(`Tekma ${m.id}/${team}: začetni vratar ni natanko eden.`)
     }
-    const credited = gs.map(g => g.is_own_goal ? (g.team_id === m.home_team_id ? m.away_team_id : m.home_team_id) : g.team_id)
-    if (credited.filter(id => id === m.home_team_id).length !== m.home_goals || credited.filter(id => id === m.away_team_id).length !== m.away_goals) add(`Tekma ${m.id}: goli po upravičencu niso izid.`)
+    const [creditedHome, creditedAway] = creditedScore(m), admin = adminScore.get(m.id)
+    if (admin) note(`Tekma ${m.id}: uradni administrativni izid ${m.home_goals}:${m.away_goals}, gol iz akte ${admin[0]}:${admin[1]} — lestvica uradni izid, točke iz akte.`)
+    else if (creditedHome !== m.home_goals || creditedAway !== m.away_goals) add(`Tekma ${m.id}: goli po upravičencu niso izid.`)
     for (const a of aps) {
       const own = gs.filter(g => g.scorer_id === a.player_id && g.is_own_goal).length
       const scored = gs.filter(g => g.scorer_id === a.player_id && !g.is_own_goal).length
