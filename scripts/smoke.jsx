@@ -10926,6 +10926,24 @@ preveri(
   } finally {
     rmSync(mapa, { recursive: true, force: true })
   }
+  // Ocenjen naslednji krog: druga polovica je zrcalo prve (scripts/test-ffl-ocenjen-krog.mjs ima več primerov).
+  const dvokrozna = (odigranih) => {
+    // 6 klubov, krožna metoda, krog vsako soboto od 2026-08-01, 13:00.
+    const prva = [[[1, 6], [2, 5], [3, 4]], [[6, 4], [5, 3], [1, 2]], [[2, 6], [3, 1], [4, 5]], [[6, 5], [1, 4], [2, 3]], [[3, 6], [4, 2], [5, 1]]]
+    const vsi = [...prva, ...prva.map((p) => p.map(([a, b]) => [b, a]))]
+    return vsi.slice(0, odigranih).flatMap((pari, i) => pari.map(([a, b]) => ({
+      krog: i + 1, datum: new Date(Date.parse('2026-08-01T12:00:00Z') + 7 * i * 864e5).toISOString().slice(0, 10), ura: '13:00',
+      domaci: `K${a}`, domaciId: a, gostje: `K${b}`, gostjeId: b, izid: { domaci: 1, gostje: 0 },
+    })))
+  }
+  const oc = L.ocenjenKrog(dvokrozna(7), { danes: '2026-09-14' }) // 7. krog 12. 9.
+  preveri('ffl: ocenjen 8. krog — obrnjeni pari 3. kroga, +7 dni, ocenjen; vir piše datum_ocenjen', L.default.ocenjeniDatumi === true &&
+    oc.krog?.stevilka === 8 && oc.krog.ocenjen === true && oc.krog.tekme.map((t) => `${t.domaci}-${t.gostje}`).join(' ') === 'K6-K2 K1-K3 K5-K4' &&
+    oc.krog.tekme.every((t) => t.datum === '2026-09-19' && t.ura === '13:00' && !t.odigrana && !t.izid))
+  preveri('ffl: brez ocene v prvi polovici, po premoru in na vzorcu 837 (11 od 13 krogov)',
+    /še ni začela/.test(L.ocenjenKrog(dvokrozna(5), { danes: '2026-09-01' }).razlog) &&
+    /miruje/.test(L.ocenjenKrog(dvokrozna(7), { danes: '2026-09-25' }).razlog) &&
+    L.razporedZOceno(l837.tekme, { danes: '2026-10-15' }).ocenjen === null)
 }
 
 // --- vir hoff-km (Ukrajina, Hmeljnicka oblast, hoff.km.ua) -----------------------
