@@ -27,6 +27,7 @@
 // nje le tedenski zagon, največ za `--najvec` na teden.
 import {isFussballCommunityCompetition} from './fussball-community-policy.mjs'
 import { createClient } from '@supabase/supabase-js'
+import { bralniFetch } from './klic-opomnika.mjs'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fcfTargetPricingModelSha256 } from './fcf-target-pricing-model.mjs'
 import { tekmovanje as najdiTekmovanje } from './tekmovanje.mjs'
@@ -104,7 +105,8 @@ if (!SERVICE) {
   console.error('Manjka SUPABASE_SERVICE_ROLE_KEY (npx supabase status)')
   process.exit(1)
 }
-const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
+// Branje ob prekinjeni povezavi (ECONNRESET) ponovimo; pisanje ne (SLF-65).
+const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: bralniFetch() } })
 
 const sezona = arg('sezona')
 // Tedenski zagon: cene ne postavi na novo, ampak jih priblizuje izracunani —
