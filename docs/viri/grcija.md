@@ -173,12 +173,21 @@ Vpisanih je 31 lig (migracija 20261016090300), **neaktivnih**, brez arhiva:
 | gr-ima-a | `eps-imathias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ ΚΑΤΗΓΟΡΙΑ ΚΑΝΟΝΙΚΗ ΠΕΡΙΟΔΟΣ` | 14 | 28 / 28 | 27/28 | 56/56 | 56/56 |
 | gr-ima-b | `eps-imathias.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ ΚΑΤΗΓΟΡΙΑ ΚΑΝΟΝΙΚΗ ΠΕΡΙΟΔΟΣ` | 12 | 18 / 18 | 18/18 | 36/36 | 36/36 |
 
-**Ni vpisano** (15. 10. 2026): Thesprotia (epsthesprotias.gr, Α:
-6 klubov, nič odigranega) in Preveza-Lefkada (epsprevezas-lefkadas.gr, Α nič
-odigranega, Β 1. in 2. skupina brez razporeda) nimata nobene lige; Ahaja Γ
-1. in 2. skupina, Pela Β 1. in 2. skupina in Imatija Γ (brez razporeda) še
-nič odigranega. Vpiši jih, ko `node scripts/mascot-lige.mjs <domena>
---preveri` pokaže zapisnike. Mlajše kategorije, ženske, pokali in play-off /
+Vpisane 4. 11. 2026 (migracija 20261104175100, **neaktivne**; zveze
+`eps-thes` in `eps-pl` dodane):
+
+| liga | šifra (`<domena>:<diorganosi>`) | klubov | stanje 4. 11. 2026 |
+|---|---|---|---|
+| gr-ach-g-1 / -g-2 | `epsachaias.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ` / `2ος ΟΜΙΛΟΣ` | 9 / 9 | ~3 krogi, zapisniki polni (Ahaja brez klopi) |
+| gr-pel-b-1 / -b-2 | `epspellas.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ` / `2ος ΟΜΙΛΟΣ` | 8 / 7 | ~3 krogi, XI 11/11, klop, menjave |
+| gr-pl-a | `epsprevezas-lefkadas.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)` | 9 | 2 kroga, zapisnik ni preverjen |
+| gr-pl-b-1 | `epsprevezas-lefkadas.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ (ΠΡΩΤΑΘΛΗΜΑ)` | 11 | 1 krog, zapisnik ni preverjen |
+| gr-thes-a | `epsthesprotias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ` | 6 | 1 krog, zapisnik ni preverjen |
+
+Preveza in Thesprotia pred uvozom: `node scripts/mascot-lige.mjs <domena>
+--preveri` (zapisniki, menjave, `an-round`). **Ni vpisano**: Preveza-Lefkada
+Β 2. skupina (nič odigranega, brez datumov) in Imatija Γ — vpiši, ko
+`--preveri` pokaže zapisnike. Mlajše kategorije, ženske, pokali in play-off /
 play-out (zakomentirani vnosi menija) niso vpisani.
 
 Uvoz (ena za drugo, brez arhiva): `gh workflow run uvoz-lige.yml -f
@@ -331,18 +340,29 @@ klubih in je šibek (3–6); vsak arhiv ima ena sama liga. Arhiv Aten in Evbeje:
 svoja tekmovanja — za arhiv jih ne uvažaj. Vsak arhiv preštej pred uvozom
 (arhivski zapisnik Pireja 2025/26 se razčleni enako kot tekoči).
 
-**Ni vpisano** (15. 10. 2026): Halkidika (`epshalkidikis.gr:110`, `112`),
-Kikladi (`epskyklades.gr:520`, `521`) in Hios (`epsxiou.gr:384`, `385`) — le
-izidi, brez postav (0 od 4 vzorčnih); Ftiotida (`epsf.gr:13`, `14`, `15`) —
-postave brez menjav (11 od 12 zapisnikov), strelci s klopi brez vstopa.
-Skupine vpisanih zvez brez odigrane tekme: Argolida Α2 (`epsarg.gr:1043`,
-`1044`), Arkadija Β (`epsarkadias.gr:223`), Zahodna Atika Β (`epsda.gr:279`),
-Dodekanez Β in Γ (`epsdod.gr:496`, `497`, `501`, `498`, `499`) — vpiši, ko
-se prvi zapisniki razčlenijo. Lakonija (`epslak.gr:407`, `408`) še nima
-odigrane tekme; Kilkis in Mesenija sezone 2026/27 na strani še nimata. Γ
-Εθνική na straneh zvez (raven 3, vodi jo EPO) ni vpisana. Evbeja Γ 4.
-skupina (`epsevias.gr:278`) ni vpisana: en sam poln zapisnik, brez menjav —
-vpiši, ko se menjave pokažejo. Mladinske (Κ12–Κ17) niso vpisane.
+Vpisane 4. 11. 2026 (migracija 20261104175300, **neaktivne**, brez arhiva —
+nove skupine; uvoz brez `arhiv`, s `cene`):
+
+| liga | tekoča 2026/27 | klubov | stanje 4. 11. 2026 |
+|---|---|---|---|
+| gr-arg-a2-1 / -a2-2 | `epsarg.gr:1043` / `1044` | 11 / 10 | 2 kroga, postave 11 + klop |
+| gr-ark-b | `epsarkadias.gr:223` | 9 | 3 krogi, polni |
+| gr-da-b | `epsda.gr:279` | 11 | 3 krogi, polni |
+| gr-dod-b-1 / -b-2 / -b-3 | `epsdod.gr:496` / `497` / `501` | 12 / 12 / 8 | 1 krog (B3 začne 7. 11.); B2 en zapisnik enostranski |
+| gr-ev-g-4 | `epsevias.gr:278` | 9 | 4 krogi, menjave so zdaj vpisane |
+| gr-ana-u17-a / -u17-b (Κ17) | `epsana.gr:751` / `752` | 12 / 13 | 4 krogi; najstarejši zapisniki polni, zadnji še prazni — pred uvozom `--preveri` |
+
+**Ni vpisano** (4. 11. 2026): Dodekanez Γ (`epsdod.gr:498`, `499` — en sam
+prazen zapisnik oz. nič odigranega), Evbeja Κ16 (`epsevias.gr:293`, prva
+faza se končuje). **Zveze, ki jih še ne beremo** — vpis le z odobritvijo
+lastnika (pogojev zveze nismo pregledali kot pri ostalih): Lakonija
+(`epslak.gr:407`, `408`, sezona teče, zapisniki polni), Hios
+(`epsxiou.gr:384` — od novembra objavlja postave; `385`), Ftiotida
+(`epsf.gr:13`, `14`, `15` — postave brez menjav, strelci s klopi brez
+vstopa), Halkidika (`epshalkidikis.gr:110`, `112`) in Kikladi
+(`epskyklades.gr:520`, `521`) — le izidi (15. 10. 2026). Kilkis in Mesenija
+sezone 2026/27 na strani še nimata. Γ Εθνική na straneh zvez (raven 3, vodi
+jo EPO) ni vpisana. Ostale mladinske (Κ12–Κ16) niso vpisane.
 
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=gr-peir-a-1 -f
 arhiv=epspeir.gr:605 -f cene=true`. Arhiv 240 zapisnikov po 3 s je okoli
