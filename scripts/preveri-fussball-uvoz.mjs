@@ -67,7 +67,7 @@ export async function runFussballImportCli(args){
  if(mode==='preview'){
   const batch=await previewFussballImport(resolve(options.capture),options.code)
   writeFileSync(options.output,JSON.stringify(batch)+'\n',{flag:'wx'})
-  return {verified:true,activationEligible:false,staffel:batch.staffel,season:batch.season,reports:batch.reports.length,pendingReports:batch.pendingReports?.length??0,unknownReports:batch.unknownReports?.length??0,players:batch.identities.length,provenance:batch.provenance}
+  return {verified:true,activationEligible:false,staffel:batch.staffel,season:batch.season,reports:batch.reports.length,pendingReports:batch.pendingReports?.length??0,unknownReports:batch.unknownReports?.length??0,administrativeReports:batch.administrativeReports?.length??0,players:batch.identities.length,provenance:batch.provenance}
  }
  const db=await writer()
  if(mode==='activate')return activateFussballCurrentOnly(db,{slug:options.slug,batch:JSON.parse(readFileSync(options.preview,'utf8'))})
