@@ -180,3 +180,25 @@ prepiše, igralcev ne aktivira in statistik tekem ne spreminja. To ni
 splošno pravilo za dres 20. Po uvozu novih zapisnikov preveri aktivnega
 vratarja vsakega trenutnega kluba in na neaktivni ligi znova izračunaj cene.
 Registracija kandidata v običajnem paketu sama lige ne vklopi.
+
+## Nove lige (4. 11. 2026, migracija 20261104176100)
+
+Vpisanih 7 lig, **neaktivne**, brez uvoza. Šifra je pulja osnovnega dela
+(Grundspil); pulje nadaljevanja (prvenstvena/obstanek, pomladni del) se
+dopišejo s `+`, ko jih DBU objavi. Vratar je le namig dresa 1 (kot drugod).
+Postave preverjene na enem zapisniku (Superliga, A-Liga Kvinder, U19 Ligaen,
+U19 Divisionen); 1. division in U17 imata isto predlogo (nepreverjeno).
+
+| liga | šifra 2026/27 | klubov | opomba |
+|---|---|---|---|
+| dk-superliga | `506118` | 12 | 1. raven (odločitev lastnika ob vklopu) |
+| dk-1-division | `507530` | 12 | 2. raven |
+| dk-kvinder-a-liga | `508850` | 10 | ženske; nekatera imena "Ukendt" |
+| dk-u19-ligaen | `508670` | 16 | |
+| dk-u19-divisionen | `508669` | 16 | |
+| dk-u17-ligaen | `508668` | 16 | |
+| dk-u17-divisionen | `508667` | 16 | |
+
+Arhiv 2025/26 ni določen. Ni vpisano: B-Liga Kvinder (række 134813) in U19
+Piger Liga (række 135100) — id pulje ni na strani række (najdi ga na strani
+kluba).
