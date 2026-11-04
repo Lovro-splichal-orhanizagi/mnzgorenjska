@@ -1,0 +1,60 @@
+{
+  "runId": 41805924672,
+  "captureCodeSha256": "3473ac914e562d49a1a1ee633b8c8c2e559d21a010c44737f0beeb6aebbd7856",
+  "captureError": "fussball: neveljavna tekma kroga",
+  "seedUrl": "https://www.fussball.de/spieltag/kreisliga-mannheim-kreis-mannheim-kreisliga-herren-saison2627-baden/-/staffel/031EKNM2HG00000LVS5489BUVUR5FS5A-G",
+  "staffel": "031EKNM2HG00000LVS5489BUVUR5FS5A-G",
+  "season": "2026/27",
+  "documents": [
+    {
+      "url": "https://www.fussball.de/spieltag/kreisliga-mannheim-kreis-mannheim-kreisliga-herren-saison2627-baden/-/staffel/031EKNM2HG00000LVS5489BUVUR5FS5A-G",
+      "kind": "round",
+      "bytes": 200377,
+      "sha256": "6a552b35f6b57ef76e0138df1a695cab02ea2ed1aacb10062171398548329fa5",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-11-04T09:17:20.236Z",
+      "file": "documents/6a552b35f6b57ef76e0138df1a695cab02ea2ed1aacb10062171398548329fa5.html"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/xte27ssa/type/css",
+      "kind": "css",
+      "bytes": 308,
+      "sha256": "bf64cc38f97d2058187cabee8f64377bc5d928d77e8f8ecd2a3d9f6f457be886",
+      "status": 200,
+      "contentType": "text/css; charset=UTF-8",
+      "capturedAt": "2026-11-04T09:17:26.237Z",
+      "file": "documents/bf64cc38f97d2058187cabee8f64377bc5d928d77e8f8ecd2a3d9f6f457be886.css"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/xte27ssa/type/font",
+      "kind": "font",
+      "bytes": 8984,
+      "sha256": "9fad009e7532b0ab8c90e64bf2e24cd93be866066d69f62c47d67a48199aa8b1",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-11-04T09:17:32.239Z",
+      "file": "documents/9fad009e7532b0ab8c90e64bf2e24cd93be866066d69f62c47d67a48199aa8b1.woff"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/qri0492y/type/css",
+      "kind": "css",
+      "bytes": 308,
+      "sha256": "59e8f1ec2d548bed5bf3bb9510b7ef8f57a852d9fd4ddbfe9030226f038a652a",
+      "status": 200,
+      "contentType": "text/css; charset=UTF-8",
+      "capturedAt": "2026-11-04T09:17:38.241Z",
+      "file": "documents/59e8f1ec2d548bed5bf3bb9510b7ef8f57a852d9fd4ddbfe9030226f038a652a.css"
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/qri0492y/type/font",
+      "kind": "font",
+      "bytes": 2988,
+      "sha256": "5fb259cd681b4de96641cdda11300f787eb3e144d91c482c56ceed949f934ff0",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-11-04T09:17:44.243Z",
+      "file": "documents/5fb259cd681b4de96641cdda11300f787eb3e144d91c482c56ceed949f934ff0.woff"
+    }
+  ]
+}

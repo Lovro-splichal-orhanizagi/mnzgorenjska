@@ -1248,3 +1248,32 @@ Nočni uvoz (vrstica DE) za aktivno ligo poti B bere ovoj predpomnilnika:
 strani krogov vsakič sveže, popolne zapisnike iz predpomnilnika, nove zapisnike
 sveže (meja 3000). SQL regresija: `supabase/tests/fussball-tekoca-pot.sql`;
 brez omrežja: `node --test scripts/test-fussball-tekoca-pot.mjs`.
+
+### Opaženi obliki strani krogov (4. 11. 2026)
+
+- **V s pripono `#!/section/course`** (Oberliga Schleswig-Holstein 2026/27,
+  zajem `41804947752`, 10. krog, FC Kilia Kiel – 1.FC Phönix Lübeck II):
+  povezava vrstice z `V` (Verwaltungsentscheid, potrjeno) ima isto pripono kot
+  že podprti `U`. Razčlenjevalnik jo zdaj sprejme tudi pri `V` in vrne
+  `confirmed-administrative-decision` s prikazanima izidoma v objavljenem
+  vrstnem redu (5:0, 0:5) in `rezultat: null`. Vsa ostala varovala (ena
+  legenda, ena oznaka, zaprta oblika izida, vezana pisava, ista šifra tekme v
+  vseh povezavah vrstice) ostanejo. `W` pripone ne dobi, ker je nismo opazili.
+- **Prost klub s povezavo na članek** (Kreisliga Mannheim 2026/27, zajem
+  `41805924672`, 11. krog, SC Olympia Neulußheim): vrstica `spielfrei` ima
+  eno celico `fixture-media-info` z ikono `icon-article fixture-info` in
+  povezavo `/spiel/<slug kluba>/-/spiel/<šifra>`. Izvzame se samo ta točna
+  celica, če je slug začetek sluga edinega kluba vrstice; ostanek vrstice mora
+  ustrezati dosedanji obliki prostega kluba (prazen datum ali le datum, prazen
+  izid, brez drugega kluba ali povezave na zapisnik). Vrstica ostane prost klub.
+
+Izvirne strani, CSS in pisave so v `scripts/vzorci/de-fussball-administrative-41804947752/`
+in `scripts/vzorci/de-fussball-bye-media-41805924672/`, preizkus brez omrežja
+`node --test scripts/test-fussball-observed-20261104.mjs`.
+
+Pozor: sprememba `scripts/viri/fussball.mjs` spremeni prstni odtis zajemne
+kode. Pripete datoteke enkratne Badenove verige (`fussball-fresh-pair-history.json`,
+`fussball-baden-completed-stages.json`, V7) ga zato zavrnejo — pot B jih ne
+uporablja. Uvoz poti B (`buildFussballImportBatch`) tekme z
+`administrativeResult` še vedno zavrne, zato Schleswig-Holstein (U in V) po
+uspešnem zajemu še ni uvozljiv brez ločene pregledane politike.
