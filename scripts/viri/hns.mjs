@@ -296,7 +296,8 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
   const r1 = glava.match(/<li class="res1">\s*(\d+)\s*</)?.[1]
   const r2 = glava.match(/<li class="res2">\s*(\d+)\s*</)?.[1]
   if (r1 == null || r2 == null) return null
-  const ime = (k) => besedilo(glava.match(new RegExp(`<li class="${k}">[\\s\\S]*?<div class="title">([^<]*)<`))?.[1])
+  // Ime je golo besedilo ali (mladinske lige) povezava na klub: <div class="title"><a …>NK X</a></div>.
+  const ime = (k) => besedilo(glava.match(new RegExp(`<li class="${k}">[\\s\\S]*?<div class="title">([\\s\\S]*?)</div>`))?.[1])
   const naslov = besedilo(glava.match(/<div class="competition-title"><h2>([\s\S]*?)<\/h2>/)?.[1])
   const { datum } = datumUra(glava.match(/<div class="facility">([^<]*)</)?.[1])
 
@@ -304,6 +305,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
   const iDoma = sestava.indexOf('homeTeam playerslist')
   const iGost = sestava.indexOf('awayTeam playerslist')
   if (iDoma < 0 || iGost < 0) return null
+  if (!ime('club1') || !ime('club2')) return null
   const ekipe = [
     { ime: ime('club1'), ...igralciEkipe(sestava.slice(iDoma, iGost)) },
     { ime: ime('club2'), ...igralciEkipe(sestava.slice(iGost)) },
