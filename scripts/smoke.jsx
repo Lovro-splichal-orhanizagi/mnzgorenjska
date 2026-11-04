@@ -8561,6 +8561,15 @@ preveri(
     F.default.naslovRazporeda('wwin-liga-bih/54152223') === 'https://www.nfsbih.ba/takmicenja/nogomet-muskarci/wwin-liga-bih?view=fixtures&id=54152223' &&
     F.default.naslovZapisnika('wwin-liga-bih/54152223', 'ba54152314') === 'https://www.nfsbih.ba/takmicenja/nogomet-muskarci/wwin-liga-bih?view=match&id=54152314' &&
     F.sifraZapisnika(54152314) === 'ba54152314' && /<slug>\/<id tekmovanja>/.test(slaba ?? ''))
+  // Ženske lige so pod /takmicenja/nogomet-zene/ (razdelek spredaj v šifri).
+  const kz = F.razberiKodo('nogomet-zene/premijer-zenska-liga-bih/54336938')
+  let slabRazdelek = null
+  try { F.razberiKodo('nogomet-futsal/premijer-liga/54336938') } catch (e) { slabRazdelek = e.message }
+  preveri('nfsbih: ženska liga (razdelek nogomet-zene v šifri), moška ostane pod nogomet-muskarci', kz.razdelek === 'nogomet-zene' &&
+    kz.slug === 'premijer-zenska-liga-bih' && kz.id === '54336938' && k.razdelek === 'nogomet-muskarci' &&
+    F.default.naslovRazporeda('nogomet-zene/premijer-zenska-liga-bih/54336938') === 'https://www.nfsbih.ba/takmicenja/nogomet-zene/premijer-zenska-liga-bih?view=fixtures&id=54336938' &&
+    F.default.naslovZapisnika('nogomet-zene/premijer-zenska-liga-bih/54336938', 'ba54336981') === 'https://www.nfsbih.ba/takmicenja/nogomet-zene/premijer-zenska-liga-bih?view=match&id=54336981' &&
+    !!slabRazdelek)
 
   const stran = beri('ba-nfsbih-razpored-54152223.html')
   const t = F.tekmeStrani(stran)
@@ -9773,6 +9782,11 @@ preveri(
   preveri('fsb: isto ime, drug klub (po ligi)', F.imeKluba('BORAC', 'zonska-liga-beograd') === 'BORAC (Ostružnica)' &&
     F.imeKluba('BORAC', 'prva-beogradska-liga-grupa-b') === 'BORAC' &&
     F.kljucKlubaRs(F.imeKluba('OMLADINAC', 'zonska-liga-beograd')) !== F.kljucKlubaRs(F.imeKluba('OMLADINAC', 'prva-beogradska-liga-grupa-c-2')))
+  preveri('fsb: kadeti — Treća liga ima kraj kot omladinske (Ostružnica, Dobanovci, Veliko Polje), Druga ne',
+    F.imeKluba('BORAC', 'treca-liga-kadeta-beograda-2026-27') === 'BORAC (Ostružnica)' &&
+    F.imeKluba('JEDINSTVO', 'treca-liga-kadeta-beograda-2026-27') === F.imeKluba('JEDINSTVO', 'druga-omladinska-liga-beograda-2026-27') &&
+    F.imeKluba('OMLADINAC', 'treca-liga-kadeta-beograda-2026-27') === F.imeKluba('OMLADINAC', 'zonska-liga-beograd') &&
+    F.imeKluba('BSK', 'druga-liga-kadeta-beograda-2026-27') === 'BSK')
   preveri('fsb: nižje lige — kraj ima klub nižje lige, isti v vseh treh sezonah',
     F.imeKluba('SLOGA', 'opstinska-liga-obrenovac') === 'SLOGA (Ratari)' &&
     F.imeKluba('SLOGA', 'opstinska-liga-obrenovac-2024-2025') === 'SLOGA (Ratari)' &&
