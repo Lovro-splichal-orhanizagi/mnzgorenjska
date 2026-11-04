@@ -1272,8 +1272,14 @@ in `scripts/vzorci/de-fussball-bye-media-41805924672/`, preizkus brez omrežja
 `node --test scripts/test-fussball-observed-20261104.mjs`.
 
 Pozor: sprememba `scripts/viri/fussball.mjs` spremeni prstni odtis zajemne
-kode. Pripete datoteke enkratne Badenove verige (`fussball-fresh-pair-history.json`,
-`fussball-baden-completed-stages.json`, V7) ga zato zavrnejo — pot B jih ne
-uporablja. Uvoz poti B (`buildFussballImportBatch`) tekme z
+kode. Enkratna Badenova veriga (`fussball-fresh-pair-history.json`,
+`fussball-baden-completed-stages.json`, V7, domača sestava) je pripeta na stare
+bajte (main `80406b24`, SHA-256 `816617fb…`) in trenutno kodo zavrne — pot B je
+ne uporablja; pripetih datotek in zapisov zagonov nismo spreminjali. Po vzorcu
+#582/V6 `scripts/test-fussball-pinned-authority-refusal.mjs` dokaže zavrnitev,
+srečne poti verige pa tečejo v izrecnem TEST ONLY kontekstu
+(`scripts/lib/test-only-pinned-fussball.mjs`), ki branje te ene datoteke prek
+`node:fs` zamenja s shranjenimi starimi bajti
+(`scripts/vzorci/test-only-fussball-mjs-816617fb/`). Uvoz poti B (`buildFussballImportBatch`) tekme z
 `administrativeResult` še vedno zavrne, zato Schleswig-Holstein (U in V) po
 uspešnem zajemu še ni uvozljiv brez ločene pregledane politike.
