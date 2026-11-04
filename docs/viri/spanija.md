@@ -267,6 +267,24 @@ grup 4 in 5 (kot 1–6) **nobena**.
 | es-ct-quarta-g22 | 16 | `4149516-4149755` | ne | — (TODO) |
 | es-ct-quarta-g23 | 16 | `4149756-4149995` | ne | — (TODO) |
 | es-ct-quarta-g32 | 12 | `4136953-4137084` | ne | — (TODO) |
+| es-ct-quarta-g9 | 16 | `4146391-4146630` | ne | — (TODO) |
+| es-ct-quarta-g11 | 16 | `4146871-4147110` | ne | — (TODO) |
+| es-ct-quarta-g12 | 16 | `4147111-4147350` | ne | — (TODO) |
+| es-ct-quarta-g15 | 16 | `4147835-4148074` | ne | — (TODO) |
+| es-ct-quarta-g24 | 16 | `4149996-4150236` | ne | — (TODO) |
+| es-ct-quarta-g25 | 16 | `4150238-4150477` | ne | — (TODO) |
+| es-ct-quarta-g27 | 16 | `4150719-4150958` | ne | — (TODO) |
+| es-ct-quarta-g28 | 16 | `4150959-4151198` | ne | — (TODO) |
+| es-ct-quarta-g33 | 12 | `4136821-4136952` | ne | — (TODO) |
+| es-ct-quarta-g34 | 12 | `4136689-4136820` | ne | — (TODO) |
+
+Zadnjih 10 vrstic: migracija 20261104176300 (4. 11. 2026), **neaktivne**.
+Meje grup 24, 25, 27, 28 so preverjene 4. 11. (prva/zadnja šifra in soseda
+zunaj: `4150237` in `4150478` sta prazni, `4150719` je grup 27 1. krog,
+`4151199` prazna). Postave preverjene: g9, g12, g15, g24, g25, g27, g28 (11 +
+11, vratar); g11, g33, g34 še ne (pred uvozom `catalanske-lige.mjs <od>
+--preveri`). Grup 26 (vrzel pri `4150478`, `4150490`, `4150715–6`) in 29–31
+niso najdene. Vklop le skozi `vklop-katalonije` (QUARTA_LIGE ostaja nespremenjen).
 
 **Quarta grup 7+** (pregled 13.–14. 10. 2026, migracija 20261014093100): grup
 7–23 ležijo strnjeno v `4145911-4149995` (po 240 šifer, 30 krogov, 16 klubov,

@@ -400,6 +400,11 @@ pojasni rdeči karton), 2092 menjav, 7350 nastopov, vsi s šifro, 0 opozoril.
 | liga | klubov | tekoča 2026/27 | arhiv 2025/26 |
 |---|---|---|---|
 | ua-upl | 16 | `432` | `428` (16 klubov, 240 tekem) |
+| ua-upl-2 | 16 | `433` | — (ni določen) |
+
+`ua-upl-2` (rezervna liga UPL, migracija 20261104176100, **neaktivna**) ima
+isti koledar in zapisnike (vzorec 16364: začetna postava + klop). Pred uvozom
+preveri iste zadržke kot pri ua-upl (tekme brez datuma ali zapisnika).
 
 Uvoz: `gh workflow run uvoz-lige.yml -f liga=ua-upl -f arhiv=428 -f
 cene=true`. Arhiv 240 zapisnikov po 3 s je ~15 minut.
