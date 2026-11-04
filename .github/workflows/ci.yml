@@ -158,6 +158,9 @@ jobs:
       - name: HNS public parser, packet, runtime and activation guards
         run: npm run test:hns-women
 
+      - name: HNS report club names
+        run: node --test scripts/test-hns-ime-kluba.mjs
+
       - name: Tipi
         run: npx tsc --noEmit
 
