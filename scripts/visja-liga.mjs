@@ -23,7 +23,7 @@
 
 /** Mladinska liga po šifri (isto pravilo kot `jeMladinskiSlug` v src/lib/prevzem.ts). */
 export function jeMladinska(slug) {
-  return /(^|-)(u19|mladinci)($|-)/.test(slug) || /^sml[0-9]/.test(slug)
+  return /(^|-)(u1[4-9]|mladinci|kadeti|kadetki|kadetska|juniori)($|-)/.test(slug) || /^sml[0-9]/.test(slug)
 }
 
 // Hrvaške regijske lige: raven znotraj zveze po imenu. 4. NL (Rijeka, Sisak)
