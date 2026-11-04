@@ -455,3 +455,32 @@ potrjeno, da je isti. RADNIČKI (Obrenovac), BUDUĆNOST (Dobanovci), DUNAV
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=rs-u19-srbija -f
 arhiv=omladinska-liga-srbije-25-26 -f cene=true`; fssid brez arhiva. Seznam
 je v PR.
+
+## Srbija — kadeti (U17), mlađi omladinci (U18) in ženske lige
+
+Migracija 20261104174300 (odobritev lastnika 4. 11. 2026), devet lig,
+**neaktivnih**. Mladinske `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`;
+ženske kot člani fss (1, 6).
+
+| liga | vir | šifra 2026/27 | klubov | opomba |
+|---|---|---|---|---|
+| rs-zene-superliga | fss | `super-liga-srbije-z-26-27` | 8 | vratar s prvaliga.rs morda manjka (opozorilo, glasovanje) |
+| rs-zene-prva | fss | `prva-liga-srbije-z-26-27` | 9 | isto |
+| rs-u17-srbija | fss | `kadetska-liga-srbije-26-27` | 14 | arhiv `kadetska-liga-srbije-25-26` (nepreverjen) |
+| rs-u18-bg | fsb | `liga-mladjih-omladinaca-beograda-2026-27` | 16 | |
+| rs-u17-bg-1 | fsb | `prva-liga-kadeta-beograda-2026-27` | 14 | RADNIČKI brez kraja (= članski, Obrenovac?) ni preverjen |
+| rs-u17-bg-2 | fsb | `druga-liga-kadeta-beograda-2026-27` | 14 | BSK = Borča, BUDUĆNOST = Dobanovci (članska) |
+| rs-u17-bg-3 | fsb | `treca-liga-kadeta-beograda-2026-27` | 15 | `IME_V_LIGI`: BORAC (Ostružnica), JEDINSTVO (Dobanovci), OMLADINAC (Veliko Polje) |
+| rs-u17-vojvodina | fssid | `76002700-76002881` | 14 | FSV; datumi ocenjeni |
+| rs-u17-zapad | fssid | `75910179-75910418` | 16 | FSRZS; datumi ocenjeni |
+
+Meje blokov fssid so preverjene 4. 11. 2026 (zadnja šifra obstaja, naslednja
+"Utakmica ne postoji"). **Ni vpisano**: Druga kadetska Vojvodine Sever
+(76059057) in Jug (76060043) — šifra za 12-klubskim blokom še obstaja, meje
+niso znane; Druga kadetska "Zapadno-moravska" (75932006, pri 13 klubih zadnje
+šifre ni), "Kolubarsko-mačvanska" (75918864) in "Podunavsko-šumadijska"
+(75915926) — število klubov ni znano. Meje naj najde `node
+scripts/srbija-blok.mjs <šifra>`. Druga liga za žene FSB
+(`druga-liga-za-zene-fsb`) ni vpisana: stran nima sezone v naslovu in je
+`fsb` ne prebere. Fssid lige imajo kot omladinske le ocenjene datume — pred
+vklopom preveri `datum_ocenjen` (glej rs-bg-lazarevac-1).
