@@ -74,6 +74,15 @@ test('path B resume reuses originals of a transport-failed capture and replays a
   const refused=join(parent,'refused')
   await assert.rejects(captureFussballDirectory({directory:refused,options,collectFn,fetchFn:async url=>url===lineupUrl?new Response('slow down',{status:429}):fetchFn(url)}),/429/)
   assert.throws(()=>fussballPartialCaptureDocuments([refused],config),/refusal/)
+  // A transient gateway error (502/503/504) is resumable like a timeout; 403 is not.
+  for(const status of [502,503,504]){
+   const gw=join(parent,`gateway-${status}`)
+   await assert.rejects(captureFussballDirectory({directory:gw,options,collectFn,fetchFn:async url=>url===lineupUrl?new Response('bad gateway',{status}):fetchFn(url)}),new RegExp(String(status)))
+   assert.ok(fussballPartialCaptureDocuments([gw],config).some(d=>d.kind==='report'))
+  }
+  const forbidden=join(parent,'forbidden')
+  await assert.rejects(captureFussballDirectory({directory:forbidden,options,collectFn,fetchFn:async url=>url===lineupUrl?new Response('no',{status:403}):fetchFn(url)}),/403/)
+  assert.throws(()=>fussballPartialCaptureDocuments([forbidden],config),/refusal/)
   const fm=JSON.parse(readFileSync(join(failed,'manifest.json'))),report=fm.documents.find(d=>d.kind==='report')
   writeFileSync(join(failed,report.file),'changed')
   await assert.rejects(captureFussballResumeDirectory({directory:join(parent,'changed'),options,resumeDirectories:[failed],collectFn,fetchFn}),/bytes differ/)
