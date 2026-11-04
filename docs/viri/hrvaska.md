@@ -177,6 +177,50 @@ arhiv=100454960 -f cene=true`; liga brez arhiva brez `arhiv`. Pred uvozom
 poženi `node scripts/hrvaske-lige.mjs` za trke imen (mladinske ekipe nosijo
 ime kluba) in po uvozu *Grbi klubov* z `vir = hns`.
 
+**Kadetske lige (U17) in FNL Hvar** (migracija 20261104173100, 28 lig,
+**neaktivnih**): lastnik je 4. 11. 2026 odobril U16/U17. Šifre nosijo `u17`,
+da jih `je_mladinski_slug` (PR #668) prepozna — **pred uvozom mora biti #668
+združen**, sicer `ravenLige` kadetsko ligo bere kot člansko. Sezona teče, zato
+je `prvi_fantasy_krog` prvi krog brez odigrane tekme (razpored 4. 11.), vklopna
+skripta ga ob vklopu postavi na prvi prihodnji krog; `rok_pomak_ur = 2`.
+Preverjen zapisnik ima pilot NLK 2 (tekma `114649994`: 37 vrstic postave,
+13 menjav, goli, avtogol, kartoni); ostale so iste oblike kot žive U19.
+**Brez menjav** (ZNS ne vpisuje): ZG ×3, Zadar A/B, KZŽ, Međimurje. Arhiva
+2025/26 kadetov pregled ni iskal — poišči ga po imenu (`hrvaske-lige.mjs`
+mladinske izpusti, zato ročno na Semaforju) ali uvozi brez arhiva.
+
+| liga | klubov | tekoča 2026/27 | zveza |
+|---|---|---|---|
+| hr-u17-1hnl | 16 | `114526396` | hns |
+| hr-u17-2nl-a / -b | 14 / 14 | `114771650` / `114771674` | hns |
+| hr-u17-nlk2 (pilot) | 14 | `114526618` | hns |
+| hr-u17-1nl-istok / 2nl-istok | 9 / 11 | `114866519` / `114874642` | hns |
+| hr-u17-1nl-centar / 2nl / 3nl | 16 / 14 / 9 | `114974130` / `114979194` / `114992094` | hns |
+| hr-u17-1nl-rijeka | 12 | `115052610` | hns |
+| hr-u17-1nl-sjever | 10 | `115344430` | hns |
+| hr-u17-1nl-split / 2nl-split | 13 / 13 | `116560790` / `116564705` | hns |
+| hr-zg-u17-1znl / 1a-znl / 2znl | 15 / 13 / 9 | `114507631` / `114638882` / `114507637` | zns-zagreb |
+| hr-zz-u17-1liga / 2liga-a / 2liga-b | 8 / 8 / 7 | `114785966` / `114787002` / `114787296` | zns-zagrebacka |
+| hr-bp-u17 | 13 | `115136220` | zns-brod |
+| hr-zd-u17-a / -b | 10 / 10 | `116261333` / `116262343` | zns-zadar |
+| hr-kz-u17 | 12 | `115644941` | zns-krapina-zagorje |
+| hr-du-u17 | 8 | `116842055` | zns-dubrovnik |
+| hr-st-u17-1liga / 2liga | 6 / 9 | `116887160` / `117635351` | zns-split |
+| hr-mz-u17 | 6 | `115952721` | zns-medimurje |
+| hr-hv-fnl (zimska, članska) | 9 | `119844748` | zns-split |
+
+Izpuščeno 4. 11.: VS kadeti A/B, Bjelovar kadeti, Koprivnica U-17,
+Međimurje U-19, Virovitica U-19 (jesen končana, pomladnega razporeda še ni;
+VS B ima tri istoimenska tekmovanja, odigrano le `115426213`), Split juniori
+NSŽSD (5 klubov), Prva HNLŽ kadetkinje in Međimurska liga žene (ženske gredo
+prek `hr-hnlz-v1`), Baranja, Požega, Lika (2–4 klubi).
+
+**Stran "iz tehničkih razloga trenutno nedostupna".** Semafor ob
+preobremenitvi vrne HTTP 200 s 114-bajtno stranjo namesto zapisnika (4. 11.
+2026). `hnsFetch` jo prepozna (`jeTehnicnaNedostopnost`) in vrne 503, ki ga
+skupni prenos ponovi; po zadnjem poskusu je to napaka strani, ne zavrnitev
+vira, in nikoli ne gre v predpomnilnik (`test-hns-transport.mjs`).
+
 Klubi se ujemajo le znotraj države vira (`mapaKlubov` po `vir.drzava`):
 "NK Polet" ali "NK Mladost" je v Sloveniji in na Hrvaškem drug klub. Ključ
 kluba ohrani ć in đ, ki ju slovenski `poenostavi` zavrže — tudi natančno ime

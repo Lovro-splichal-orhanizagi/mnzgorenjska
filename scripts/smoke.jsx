@@ -898,6 +898,17 @@ preveri(
     preveri('zapisnik LJ: datum je datum TEKME, ne kroga', z.datum === '2026-09-04', String(z.datum))
     const n = nastopi(z)
     preveri('zapisnik LJ: nastopi za obe ekipi', (n?.length ?? 0) >= 22, String(n?.length))
+
+    // Ljubljanske lige U15 (2011, 2012) polčasa ne vpisujejo: "TEKMA: Slovan -
+    // Šmartno 1 : 4". Prej je bil tak zapisnik null in liga brez statistike.
+    const brezPolcasa = parsirajZapisnik(
+      vzorec('zapisnik-ljubljana-2003.html').replace('TEKMA: Ljubljana - Dragomer 1 : 1 (0 : 1)', 'TEKMA: Ljubljana - Dragomer 1 : 1'),
+      { zapisnikId: '157904' })
+    preveri('zapisnik LJ U15: brez polčasa se razčleni',
+      brezPolcasa?.rezultat?.domaci === 1 && brezPolcasa?.rezultat?.gostje === 1 && brezPolcasa?.polcas === null &&
+        brezPolcasa?.domaci?.postava?.length === 11 && brezPolcasa?.menjave?.length === z.menjave?.length,
+      JSON.stringify(brezPolcasa?.rezultat))
+    preveri('zapisnik LJ: polčas ostane, kjer je', z.polcas?.domaci === 0 && z.polcas?.gostje === 1, JSON.stringify(z.polcas))
   }
 
   // Celje — tretja zveza na istem CMS-u. Sezono pise z DVEMA stevkama
@@ -3018,6 +3029,22 @@ preveri(
   preveri('NZS: zapisnik stoji pod stranjo tekme',
     nzs.naslovZapisnika('prva-liga-telemach:25', 'fc-koper-dns-mura-1snl2223-2023-05-20-201500') ===
       'https://www.nzs.si/klubi/moski/prva-liga-telemach/tekme/fc-koper-dns-mura-1snl2223-2023-05-20-201500/zapisnik')
+
+  // Ženske lige so pod /klubi/zenski/, šifra ima predpono `zenski/`.
+  preveri('NZS ženske: šifra s predpono se razbije',
+    razbijKodo('zenski/liga-deklet-u17:22').pot === 'liga-deklet-u17' &&
+    razbijKodo('zenski/liga-deklet-u17:22').sezona === '22' &&
+    razbijKodo('zenski/liga-deklet-u17').spol === 'zenski' && razbijKodo('1-skl').spol === 'moski')
+  preveri('NZS ženske: seznam tekem pod /klubi/zenski/',
+    nzs.naslovSeznamaTekem('zenski/zenska-nogometna-liga-triglav') ===
+      'https://www.nzs.si/klubi/zenski/zenska-nogometna-liga-triglav/tekme?page=0%2C0',
+    nzs.naslovSeznamaTekem('zenski/zenska-nogometna-liga-triglav'))
+  preveri('NZS ženske: zapisnik pod /klubi/zenski/',
+    nzs.naslovZapisnika('zenski/liga-deklet-u15-vzhod', 'dns-mura-nk-malecnik-du15v2627-2026-10-04-110000') ===
+      'https://www.nzs.si/klubi/zenski/liga-deklet-u15-vzhod/tekme/dns-mura-nk-malecnik-du15v2627-2026-10-04-110000/zapisnik')
+  preveri('NZS ženske: šifre tekem tudi s strani ženske lige',
+    sifreTekem('<a href="/klubi/zenski/liga-deklet-u15-vzhod/tekme/dns-mura-nk-malecnik-du15v2627-2026-10-04-110000">x</a>')[0] ===
+      'dns-mura-nk-malecnik-du15v2627-2026-10-04-110000')
 
   const sifre = sifreTekem(html)
   preveri('NZS: stran seznama da deset tekem', sifre.length === 10, String(sifre.length))

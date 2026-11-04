@@ -39,6 +39,20 @@ export function jeIzziv(html) {
   return IZZIV_ALI_PRIJAVA.test(String(html ?? ''))
 }
 
+// Semafor ob preobremenitvi vrne HTTP 200 s kratko stranjo (114 bajtov, 4. 11.
+// 2026) "Stranica je iz tehničkih razloga trenutno nedostupna" namesto
+// zapisnika. To ni zavrnitev (ni 403/429/izziv) in ni prazna tekma: ponovni
+// zahtevek čez nekaj sekund vrne cel zapisnik. Brez varovala bi uvoz stran
+// razčlenil kot tekmo brez postav.
+const TEHNICNA_NEDOSTOPNOST = /tehni[čc]kih\s+razloga\s+trenutno\s+nedostupna/i
+const NAJVECJA_STRAN_NEDOSTOPNOSTI = 4096
+
+/** Je telo kratka stran "iz tehničkih razloga trenutno nedostupna"? */
+export function jeTehnicnaNedostopnost(html) {
+  const s = String(html ?? '')
+  return s.length <= NAJVECJA_STRAN_NEDOSTOPNOSTI && TEHNICNA_NEDOSTOPNOST.test(s)
+}
+
 /** HNS zahteve ostanejo javne, počasne in brez samodejnega sledenja preusmeritvam. */
 export async function hnsFetch(url, options = {}) {
   let parsed
@@ -76,6 +90,17 @@ export async function hnsFetch(url, options = {}) {
     if (jeIzziv(html)) {
       try { await response.body?.cancel() } catch {}
       throw new HnsZavrnitev(`hns: ${url} vrne izziv ali prijavo — uvoz ustavljen`, response.status)
+    }
+    // Prehodna motnja: klicatelj dobi 503, ki ga skupni prenos ponovi
+    // (`jePrehodenStatus`), po zadnjem poskusu pa velja kot napaka strani,
+    // ne kot zavrnitev vira — in nikoli ne pride v predpomnilnik.
+    if (jeTehnicnaNedostopnost(html)) {
+      try { await response.body?.cancel() } catch {}
+      return new Response(html, {
+        status: 503,
+        statusText: 'HNS tehnicna nedostopnost',
+        headers: { 'content-type': 'text/html; charset=utf-8', 'x-slff-hns-nedostopno': '1' },
+      })
     }
     return response
   } catch (error) {
@@ -477,6 +502,8 @@ const vir = {
   imaRegistracije: false,
   fetch: hnsFetch,
   jeIzziv,
+  // Varovalo za predpomnilnik, če bi stran nedostopnosti prišla mimo `fetch`.
+  zaPredpomnilnik: (besedilo) => !jeTehnicnaNedostopnost(besedilo),
   zavrnitev: (sporocilo, status = null) => new HnsZavrnitev(sporocilo, status),
 
   naslovRazporeda: naslovTekmovanja,
