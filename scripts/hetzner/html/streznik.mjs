@@ -42,7 +42,7 @@ export const prikazniIme = (polno) => {
   return deli.length < 2 ? String(polno ?? '') : deli.slice(1).join(' ') + ' ' + deli[0]
 }
 /** Mladinska liga po šifri (kot `jeMladinskiSlug` v src/lib/prevzem.ts in SQL `je_mladinski_slug`). */
-export const jeMladinska = (slug) => !!slug && (/(^|-)(u19|mladinci)($|-)/.test(slug) || /^sml[0-9]/.test(slug))
+export const jeMladinska = (slug) => !!slug && (/(^|-)(u1[4-9]|mladinci|kadeti|kadetki|kadetska|juniori)($|-)/.test(slug) || /^sml[0-9]/.test(slug))
 
 /**
  * Slika za predogled povezave (og:image) iz strežnika slik
