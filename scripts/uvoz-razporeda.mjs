@@ -21,7 +21,7 @@ import { viraZa } from './viri/index.mjs'
 import {loadHistoricalStatisticsImportContext} from './lib/historical-statistics-import.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { sifra } from './viri/zapisniki.mjs'
-import { razcleniRazpored, sezonaIz, oznakaBrezIzida, tekmaDrugegaKroga, odvecneVrsticePara, preberiKontumacije, krogiZDatumomNazaj } from './razpored.mjs'
+import { razcleniRazpored, sezonaIz, oznakaBrezIzida, tekmaDrugegaKroga, odvecneVrsticePara, preberiKontumacije, krogiZDatumomNazaj, uskladiOpozorilaRazporeda } from './razpored.mjs'
 import { rokKroga } from './razporedi.mjs'
 import {persistHnsWomenRound} from './hr-zenske-import.mjs'
 import { vseVrstice } from './strani.mjs'
@@ -317,7 +317,7 @@ if (idKrogov.length) {
   const vrstice = await vseVrstice((od, do_) =>
     db
       .from('matches')
-      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida, zapisnik_id, home_goals, away_goals')
+      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida, zapisnik_id, home_goals, away_goals, import_warnings')
       .in('round_id', idKrogov)
       .order('id')
       .range(od, do_),
@@ -331,6 +331,10 @@ if (idKrogov.length) {
     }
   }
 }
+// Opozorila, ki jih vir doda vrstici razporeda (FUSSBALL pot B: administrativni
+// izid U/V/W brez izida). Viri brez `scheduleImportWarnings` jih ne pišejo.
+const opozorilaRazporeda = (t, obstojeca) =>
+  vir.scheduleImportWarnings ? uskladiOpozorilaRazporeda(obstojeca, vir.scheduleImportWarnings(t), vir.scheduleWarningPrefix) : null
 const istiCas = (a, b) => (a == null || b == null ? a == b : new Date(a).getTime() === new Date(b).getTime())
 
 // Ali vir za minulo tekmo pravi, da je brez izida — zveza jo je prestavila,
@@ -472,6 +476,16 @@ for (const k of veljavni) {
           brezIzidaOznacenih++
         }
       }
+      // Uvožene tekme ne spreminjamo: zapisnik je že dal izid in nastope.
+      const opozorila = opozorilaRazporeda(t, obstojeca.import_warnings)
+      if (obstojeca.imported_at) {
+        if (vir.scheduleImportWarnings?.(t).length)
+          console.log(`::warning::${t.domaci} : ${t.gostje}: vir kaže administrativni izid, tekma pa je že uvožena — preveri ročno.`)
+      } else if (opozorila) {
+        const { error } = await db.from('matches').update({ import_warnings: opozorila }).eq('id', obstojeca.id).is('imported_at', null)
+        if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
+        else console.log(`  opozorila razporeda: ${t.domaci} : ${t.gostje}  ${opozorila.join(' / ') || '(odstranjena)'}`)
+      }
       continue
     }
 
@@ -502,6 +516,7 @@ for (const k of veljavni) {
       }
     }
 
+    const opozorilaNove = opozorilaRazporeda(t, [])
     const { data: nova, error } = await db
       .from('matches')
       .insert({
@@ -513,9 +528,10 @@ for (const k of veljavni) {
         ...(vir.scheduleMatchSourceFields?.(t)??{}),
         kontumacija: !!t.kontumacija,
         vir_brez_izida: brezIzidaPriViru(t) === true,
+        ...(opozorilaNove ? { import_warnings: opozorilaNove } : {}),
         ...(t.kontumacija && t.izid ? { home_goals: t.izid.domaci, away_goals: t.izid.gostje } : {}),
       })
-      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida, home_goals, away_goals')
+      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida, home_goals, away_goals, import_warnings')
       .single()
     if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
     else {

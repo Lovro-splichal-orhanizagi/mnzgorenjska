@@ -250,3 +250,21 @@ export async function preberiKontumacije(vir, liga, prenesiKrog, krogi, danes, l
     return []
   }
 }
+
+/**
+ * Opozorila, ki jih vir doda tekmi iz razporeda (FUSSBALL pot B: administrativni
+ * izid). Vir ima svojo predpono; tuja opozorila ostanejo, njegova se zamenjajo.
+ * Vrne novo tabelo ali `null`, če se nič ne spremeni (vsak zapis v `matches`
+ * preračuna točke kroga).
+ *
+ * @param {string[]|null|undefined} obstojeca
+ * @param {string[]} zelena
+ * @param {string} predpona
+ */
+export function uskladiOpozorilaRazporeda(obstojeca, zelena, predpona) {
+  if (typeof predpona !== 'string' || !predpona || !Array.isArray(zelena) || zelena.some((w) => typeof w !== 'string' || !w.startsWith(predpona)))
+    throw new Error('opozorila razporeda: neveljavna predpona ali opozorilo')
+  const stara = Array.isArray(obstojeca) ? obstojeca : []
+  const nova = [...stara.filter((w) => !String(w).startsWith(predpona)), ...zelena]
+  return JSON.stringify(nova) === JSON.stringify(stara) ? null : nova
+}

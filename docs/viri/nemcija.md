@@ -1280,6 +1280,36 @@ ne uporablja; pripetih datotek in zapisov zagonov nismo spreminjali. Po vzorcu
 srečne poti verige pa tečejo v izrecnem TEST ONLY kontekstu
 (`scripts/lib/test-only-pinned-fussball.mjs`), ki branje te ene datoteke prek
 `node:fs` zamenja s shranjenimi starimi bajti
-(`scripts/vzorci/test-only-fussball-mjs-816617fb/`). Uvoz poti B (`buildFussballImportBatch`) tekme z
-`administrativeResult` še vedno zavrne, zato Schleswig-Holstein (U in V) po
-uspešnem zajemu še ni uvozljiv brez ločene pregledane politike.
+(`scripts/vzorci/test-only-fussball-mjs-816617fb/`). Strogi `buildFussballImportBatch`
+(domača veriga) tekme z `administrativeResult` še vedno zavrne; pot B jih od
+4. 11. 2026 uvozi po spodnjem pravilu.
+
+### Administrativni izid na poti B (odločitev lastnika 4. 11. 2026)
+
+Tekma z `U` (Sportgerichtsurteil), `V` (Verwaltungsentscheid) ali `W` (Wertung
+Spielinstanz) se na ligi poti B uvozi kot **uradna odločitev brez izida**:
+brez postav, nastopov, golov in kartonov, zato nihče ne dobi fantasy točk.
+Prikazana para (`displayedScores`) ostaneta le v vrstnem redu vira — katerega
+je zveza potrdila, ne ugibamo (podobno pravilu B za Katalonijo, a brez izida).
+
+- `scripts/fussball-tekoca-pot.mjs`: vrstica mora imeti točno obliko
+  razčlenjevalnika (W z `rawMarker`, U/V brez), `rezultat: null`, ujemati se
+  mora z `administrativeFixtures` in `coverage.administrativeFixtures` zajema
+  in ne sme imeti zapisnika (popolnega, čakajočega ali zavrnjenega) — sicer
+  uvoz pade. Velja pred vklopom in po njem (meja `unknownBefore` je ne
+  zadeva), zato nova odločitev nočnega uvoza ne ustavi.
+- V bazi: `imported_at` NULL, `home_goals`/`away_goals` 0, `kontumacija` false,
+  `vir_brez_izida` true (minula tekma brez izida), `statistics_status`
+  `available`, brez `appearances`/`goals`; lestvica lige je ne šteje.
+  `import_warnings` = `FUSSBALL_ADMINISTRATIVE_RESULT_V1 <U|V|W> <kind>;
+  prikazano a:b | c:d (vrstni red vira, …)` — piše ga `uvoz-razporeda`
+  (`scheduleImportWarnings` vira, le na neuvoženi tekmi).
+- Vklop: minula vrstica gre v `unknownReports` manifesta s `score: null` in
+  razlogom `FUSSBALL_ADMINISTRATIVE_RESULT_<U|V|W>`; `vklopi_fussball_tekoco`
+  jo sprejme kot izrecno neznano (brez spremembe SQL).
+- Odločitev na že uvoženi tekmi `uvoz-razporeda` ne spremeni, le opozori
+  (`::warning::`) za ročni pregled.
+
+Preizkus brez omrežja (resnični vrstici U in V iz zajema `41804947752`):
+`node --test scripts/test-fussball-administrative-path-b.mjs`; SQL v
+`supabase/tests/fussball-tekoca-pot.sql`.
