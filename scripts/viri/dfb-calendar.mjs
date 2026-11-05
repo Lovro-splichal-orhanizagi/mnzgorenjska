@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs'
 import {createHash} from 'node:crypto'
 const sha=raw=>createHash('sha256').update(raw).digest('hex')
 const fail=message=>{throw Error(`DFB calendar: ${message}`)}
-export const receiptSha256='e5940813944dced7845c3e6ca1eb87868ff4e241b82e24676e3f3aa1569c97b3'
+export const receiptSha256='8f8f58e1fa0aa951e720adca67da156ca8dbd13dafb60cedb9771234a9915043'
 const raw=readFileSync(new URL('./dfb-calendar-receipts.json',import.meta.url))
 if(sha(raw)!==receiptSha256)fail('reviewed receipt SHA mismatch')
 const receipt=JSON.parse(raw)

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Factual published calendar orientations; offline parser support only, no release or statistics authority.",
-  "observedAt": "2026-10-18T15:33:12.673Z",
+  "observedAt": "2026-11-05T06:41:19.235Z",
   "seasons": [
     {
       "code": "regionalliga-nord/2026-2027",
@@ -99,6 +99,54 @@
                   "url": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/SV-Todesfelde",
                   "sha256": "687aa36eb4be3887faf75bbf6f3028f50785594e3541f11f56457022a57f807c",
                   "capturedAt": "2026-10-17T17:13:26.713Z"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "fixtures": [
+            {
+              "id": "2423184",
+              "round": 12,
+              "home": "SV Werder Bremen II",
+              "away": "Hamburger SV II",
+              "homeSourceClubId": "sv-werder-bremen-ii",
+              "awaySourceClubId": "hamburger-sv-ii-944",
+              "witnesses": [
+                {
+                  "club": "sv-werder-bremen-ii",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/sv-werder-bremen-ii",
+                  "sha256": "a7eb67b44a665862d7f601761bc5cb14198d8e381cdcb323d71510e41a094fb5",
+                  "capturedAt": "2026-11-05T06:41:17.146Z"
+                },
+                {
+                  "club": "hamburger-sv-ii-944",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/hamburger-sv-ii-944",
+                  "sha256": "6502a4f6ec22c1910561a2774ac41f2289c192c66b56cfcae75af69b4fe058ea",
+                  "capturedAt": "2026-11-05T06:41:19.235Z"
+                }
+              ]
+            },
+            {
+              "id": "2423251",
+              "round": 19,
+              "home": "SV Werder Bremen II",
+              "away": "Hamburger SV II",
+              "homeSourceClubId": "sv-werder-bremen-ii",
+              "awaySourceClubId": "hamburger-sv-ii-944",
+              "witnesses": [
+                {
+                  "club": "sv-werder-bremen-ii",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/sv-werder-bremen-ii",
+                  "sha256": "a7eb67b44a665862d7f601761bc5cb14198d8e381cdcb323d71510e41a094fb5",
+                  "capturedAt": "2026-11-05T06:41:17.146Z"
+                },
+                {
+                  "club": "hamburger-sv-ii-944",
+                  "url": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/hamburger-sv-ii-944",
+                  "sha256": "6502a4f6ec22c1910561a2774ac41f2289c192c66b56cfcae75af69b4fe058ea",
+                  "capturedAt": "2026-11-05T06:41:19.235Z"
                 }
               ]
             }
