@@ -72,11 +72,11 @@ if (vrsta === 'dobrodoslica' || vrsta === 'brez-ekipe' || vrsta === 'liga-zivi' 
   let ostane = Number(process.env.NAJVEC_DOBRODOSLIC ?? 60)
   let poslano = 0
   for (;;) {
-    const o = await fetch(`${BASE}/functions/v1/posli-opomnik`, {
+    const o = await sPonovitvijo(() => fetch(`${BASE}/functions/v1/posli-opomnik`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${SERVICE}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ vrsta, suho, najvec_poslati: Math.min(10, ostane) }),
-    })
+    }))
     const izid = await o.json().catch(() => ({}))
     if (!o.ok) { console.error(`${vrsta.toUpperCase()} NAPAKA ${o.status}: ${izid.error ?? ''}`); process.exit(1) }
     if (suho) { console.log(`${vrsta.toUpperCase()} — suhi tek: ${izid.kandidati_stevilo} kandidatov.`); process.exit(0) }
@@ -123,7 +123,24 @@ async function nepopolneNove(ligaId) {
   }).length
 }
 
-const poklici = (liga, najvecPoslati) =>
+// Prekinjena povezava (ECONNRESET) je 5. 11. dvakrat zapored ustavila cel
+// zagon sredi seznama lig, ostale lige pa so ostale brez opozorila. Ponovni
+// klic ne podvaja (glej KOS zgoraj), zato poskusimo se dvakrat; potem ligo
+// stejemo med padle in gremo naprej.
+async function sPonovitvijo(klic) {
+  for (let poskus = 1; ; poskus++) {
+    try {
+      return await klic()
+    } catch (e) {
+      const razlog = e.cause?.code ?? e.cause?.message ?? e.message
+      if (poskus >= 3) return new Response(JSON.stringify({ error: `povezava: ${razlog}` }), { status: 599 })
+      console.error(`  povezava prekinjena (${razlog}), ponovim čez ${5 * poskus} s`)
+      await new Promise((r) => setTimeout(r, 5000 * poskus))
+    }
+  }
+}
+
+const poklici = (liga, najvecPoslati) => sPonovitvijo(() =>
   fetch(`${BASE}/functions/v1/posli-opomnik`, {
     method: 'POST',
     headers: {
@@ -137,7 +154,7 @@ const poklici = (liga, najvecPoslati) =>
       ...(poUrniku ? { najvec: liga.meja } : {}),
       ...(najvecPoslati != null ? { najvec_poslati: najvecPoslati } : {}),
     }),
-  })
+  }))
 
 for (const liga of lige ?? []) {
   liga.meja = NAJVEC_NA_LIGO
