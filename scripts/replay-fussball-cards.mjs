@@ -16,7 +16,7 @@ function reviewed(slug){
  require(candidates.length<=16&&(!slug||candidates.some(c=>c.slug===slug)),'unknown or unbounded reviewed selection')
  return candidates.filter(c=>!slug||c.slug===slug).map(c=>validateGermanyCandidate(c))
 }
-async function rpc(db,name,args){const {data,error}=await db.rpc(name,args);if(error)throw Error('FUSSBALL card worker database operation failed');return data}
+async function rpc(db,name,args){const {data,error}=await db.rpc(name,args);if(error)throw Error('FUSSBALL card worker: database operation failed');return data}
 async function scopesFor(db,slug){
  const scopes=[];let competitions=0
  for(const c of reviewed(slug)){
@@ -35,10 +35,10 @@ async function scopesFor(db,slug){
  }
  return {scopes,competitions}
 }
-// Only our own fixed-text errors are echoed; anything else (database, network, parser) is reduced to its class name so no payload or secret can leak.
+// Only our own fixed-text errors (worker and requireProof runtime ones) are echoed; anything else (database, network, parser) is reduced to its class name so no payload or secret can leak.
 export function safeReplayError(error){
  const message=typeof error?.message==='string'?error.message:''
- return message.startsWith('FUSSBALL card worker: ')&&message.length<=200&&/^[\x20-\x7e]+$/.test(message)?message:'Unexpected '+(typeof error?.name==='string'&&/^[A-Za-z]{1,40}$/.test(error.name)?error.name:'error')+'.'
+ return /^FUSSBALL card (worker|runtime): /.test(message)&&message.length<=200&&/^[\x20-\x7e]+$/.test(message)?message:'Unexpected '+(typeof error?.name==='string'&&/^[A-Za-z]{1,40}$/.test(error.name)?error.name:'error')+'.'
 }
 export async function runFussballCardReplayWorker({db,slug,maxJobs=10,runId,processJob=processFussballCardJob}={}){
  require(db&&typeof db.rpc==='function'&&typeof db.from==='function'&&Number.isSafeInteger(maxJobs)&&maxJobs>=1&&maxJobs<=10&&/^[1-9]\d{0,15}$/.test(runId??''),'bounded native worker scope required')

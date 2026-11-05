@@ -47,6 +47,12 @@ test('the failure log names our own fixed errors and only the class of anything 
  assert.equal(api.safeReplayError(Error('FUSSBALL card worker: competition lookup failed')),'FUSSBALL card worker: competition lookup failed')
  assert.equal(api.safeReplayError(new TypeError('secret-token https://x')),'Unexpected TypeError.')
  assert.equal(api.safeReplayError('boom'),'Unexpected error.')
+ assert.equal(api.safeReplayError(Error('FUSSBALL card runtime: atomic apply receipt differs')),'FUSSBALL card runtime: atomic apply receipt differs')
+ assert.equal(api.safeReplayError(Error('get_fussball_card_replay_jobs: secret-token')),'Unexpected Error.')
+})
+test('a database error on a replay RPC is logged with the fixed worker message, not its database text',async()=>{
+ const db=database({jobs:{[code]:[]}}),rpc=db.rpc;db.rpc=async(name,args)=>name==='get_fussball_card_replay_jobs'?{data:null,error:{message:'secret-token'}}:rpc(name,args)
+ await assert.rejects(api.runFussballCardReplayWorker({db,runId:'7'}),e=>api.safeReplayError(e)==='FUSSBALL card worker: database operation failed')
 })
 test('corrupt originals and an ambiguous apply are fatal and cannot continue or retry',async()=>{
  for(const corruption of [true,false]){
