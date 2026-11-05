@@ -34,3 +34,8 @@ node scripts/hisne-ekipe.mjs --odstrani --pisi             # vse SK hišne ekipe
 
 Hišna ekipa, ki ji igralec odide, postane neveljavna in ostane brez točk;
 skripta jih ob zagonu našteje.
+
+**Več lig naenkrat:** vnos `liga` (in `--liga`) sprejme slugove, ločene z
+vejico, vse iz izbrane države (`--drzava HU --liga a,b,c`). Ne sproži po enega
+zagona na ligo: skupina `hisne-ekipe` obdrži samo najnovejši čakajoči zagon,
+starejše GitHub prekine (`cancelled`, brez dnevnika, nič ne javi napake).
