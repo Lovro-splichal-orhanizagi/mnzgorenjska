@@ -105,6 +105,13 @@ razpored kratko — vir vzame ime iz razporeda.
 |---|---|---|---|
 | az-liqa1 | 10 | `53` | `49` |
 | az-liqa2 | 12 | `55` | `50` |
+| az-premyer-liqa | 12 | `52` | — |
+| az-evezediciler | 12 | `54` | — |
+
+`az-premyer-liqa` (1. raven) in `az-evezediciler` (Əvəzedicilər Liqası,
+rezervne ekipe U22) sta vpisani 4. 11. 2026 (migracija 20261104176500),
+**neaktivni**. V rezervni ligi so tudi tekme s statusom 4 in 5 (prestavljena
+oz. razveljavljena?) — vir jih šteje kot neodigrane (`jeOdigrana` = status 3).
 
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=az-liqa2 -f
 arhiv=50 -f cene=true`. Arhiv ~160 protokolov po 3 s je ~10 minut.

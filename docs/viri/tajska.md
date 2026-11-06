@@ -138,10 +138,14 @@ ni napisana).
 
 Odigranih 2026/27 do 28. 10.: T3 184 (vse potrjene), T2 72.
 
-## Ženske in mladi (za pozneje)
+## Ženske in mladi
 
-Isti API ima **Thai Women's League 1 in 2** (2026/27: turnirja 232, 233) in
-**PEA U-21 Youngster League** (229); 2025/26 še "Thailand Semi-Pro League
+Vpisani (4. 11. 2026, migracija 20261104176500, **neaktivni**):
+`th-women-1` (`232/1222`, 8 klubov, 56 tekem) in `th-women-2` (`233/1226`,
+7 klubov, 42 tekem); arhiv ni določen. **PEA U-21 Youngster League** (229,
+skupini A `1211` in B `1212`) ni vpisana: medskupinske tekme so v ločeni
+stopnji `1213`, vir pa bere eno stopnjo na šifro (potrebna podpora več
+stopenj). Isti API ima še 2025/26 še "Thailand Semi-Pro League
 2026" (223, koledarska, regije North … South — 4. raven moških, morda za
 pozneje). Pokali (FA Cup, Muang Thai Cup) niso lige.
 

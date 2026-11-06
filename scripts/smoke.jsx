@@ -898,6 +898,17 @@ preveri(
     preveri('zapisnik LJ: datum je datum TEKME, ne kroga', z.datum === '2026-09-04', String(z.datum))
     const n = nastopi(z)
     preveri('zapisnik LJ: nastopi za obe ekipi', (n?.length ?? 0) >= 22, String(n?.length))
+
+    // Ljubljanske lige U15 (2011, 2012) polčasa ne vpisujejo: "TEKMA: Slovan -
+    // Šmartno 1 : 4". Prej je bil tak zapisnik null in liga brez statistike.
+    const brezPolcasa = parsirajZapisnik(
+      vzorec('zapisnik-ljubljana-2003.html').replace('TEKMA: Ljubljana - Dragomer 1 : 1 (0 : 1)', 'TEKMA: Ljubljana - Dragomer 1 : 1'),
+      { zapisnikId: '157904' })
+    preveri('zapisnik LJ U15: brez polčasa se razčleni',
+      brezPolcasa?.rezultat?.domaci === 1 && brezPolcasa?.rezultat?.gostje === 1 && brezPolcasa?.polcas === null &&
+        brezPolcasa?.domaci?.postava?.length === 11 && brezPolcasa?.menjave?.length === z.menjave?.length,
+      JSON.stringify(brezPolcasa?.rezultat))
+    preveri('zapisnik LJ: polčas ostane, kjer je', z.polcas?.domaci === 0 && z.polcas?.gostje === 1, JSON.stringify(z.polcas))
   }
 
   // Celje — tretja zveza na istem CMS-u. Sezono pise z DVEMA stevkama
@@ -3018,6 +3029,22 @@ preveri(
   preveri('NZS: zapisnik stoji pod stranjo tekme',
     nzs.naslovZapisnika('prva-liga-telemach:25', 'fc-koper-dns-mura-1snl2223-2023-05-20-201500') ===
       'https://www.nzs.si/klubi/moski/prva-liga-telemach/tekme/fc-koper-dns-mura-1snl2223-2023-05-20-201500/zapisnik')
+
+  // Ženske lige so pod /klubi/zenski/, šifra ima predpono `zenski/`.
+  preveri('NZS ženske: šifra s predpono se razbije',
+    razbijKodo('zenski/liga-deklet-u17:22').pot === 'liga-deklet-u17' &&
+    razbijKodo('zenski/liga-deklet-u17:22').sezona === '22' &&
+    razbijKodo('zenski/liga-deklet-u17').spol === 'zenski' && razbijKodo('1-skl').spol === 'moski')
+  preveri('NZS ženske: seznam tekem pod /klubi/zenski/',
+    nzs.naslovSeznamaTekem('zenski/zenska-nogometna-liga-triglav') ===
+      'https://www.nzs.si/klubi/zenski/zenska-nogometna-liga-triglav/tekme?page=0%2C0',
+    nzs.naslovSeznamaTekem('zenski/zenska-nogometna-liga-triglav'))
+  preveri('NZS ženske: zapisnik pod /klubi/zenski/',
+    nzs.naslovZapisnika('zenski/liga-deklet-u15-vzhod', 'dns-mura-nk-malecnik-du15v2627-2026-10-04-110000') ===
+      'https://www.nzs.si/klubi/zenski/liga-deklet-u15-vzhod/tekme/dns-mura-nk-malecnik-du15v2627-2026-10-04-110000/zapisnik')
+  preveri('NZS ženske: šifre tekem tudi s strani ženske lige',
+    sifreTekem('<a href="/klubi/zenski/liga-deklet-u15-vzhod/tekme/dns-mura-nk-malecnik-du15v2627-2026-10-04-110000">x</a>')[0] ===
+      'dns-mura-nk-malecnik-du15v2627-2026-10-04-110000')
 
   const sifre = sifreTekem(html)
   preveri('NZS: stran seznama da deset tekem', sifre.length === 10, String(sifre.length))
@@ -8534,6 +8561,15 @@ preveri(
     F.default.naslovRazporeda('wwin-liga-bih/54152223') === 'https://www.nfsbih.ba/takmicenja/nogomet-muskarci/wwin-liga-bih?view=fixtures&id=54152223' &&
     F.default.naslovZapisnika('wwin-liga-bih/54152223', 'ba54152314') === 'https://www.nfsbih.ba/takmicenja/nogomet-muskarci/wwin-liga-bih?view=match&id=54152314' &&
     F.sifraZapisnika(54152314) === 'ba54152314' && /<slug>\/<id tekmovanja>/.test(slaba ?? ''))
+  // Ženske lige so pod /takmicenja/nogomet-zene/ (razdelek spredaj v šifri).
+  const kz = F.razberiKodo('nogomet-zene/premijer-zenska-liga-bih/54336938')
+  let slabRazdelek = null
+  try { F.razberiKodo('nogomet-futsal/premijer-liga/54336938') } catch (e) { slabRazdelek = e.message }
+  preveri('nfsbih: ženska liga (razdelek nogomet-zene v šifri), moška ostane pod nogomet-muskarci', kz.razdelek === 'nogomet-zene' &&
+    kz.slug === 'premijer-zenska-liga-bih' && kz.id === '54336938' && k.razdelek === 'nogomet-muskarci' &&
+    F.default.naslovRazporeda('nogomet-zene/premijer-zenska-liga-bih/54336938') === 'https://www.nfsbih.ba/takmicenja/nogomet-zene/premijer-zenska-liga-bih?view=fixtures&id=54336938' &&
+    F.default.naslovZapisnika('nogomet-zene/premijer-zenska-liga-bih/54336938', 'ba54336981') === 'https://www.nfsbih.ba/takmicenja/nogomet-zene/premijer-zenska-liga-bih?view=match&id=54336981' &&
+    !!slabRazdelek)
 
   const stran = beri('ba-nfsbih-razpored-54152223.html')
   const t = F.tekmeStrani(stran)
@@ -9746,6 +9782,11 @@ preveri(
   preveri('fsb: isto ime, drug klub (po ligi)', F.imeKluba('BORAC', 'zonska-liga-beograd') === 'BORAC (Ostružnica)' &&
     F.imeKluba('BORAC', 'prva-beogradska-liga-grupa-b') === 'BORAC' &&
     F.kljucKlubaRs(F.imeKluba('OMLADINAC', 'zonska-liga-beograd')) !== F.kljucKlubaRs(F.imeKluba('OMLADINAC', 'prva-beogradska-liga-grupa-c-2')))
+  preveri('fsb: kadeti — Treća liga ima kraj kot omladinske (Ostružnica, Dobanovci, Veliko Polje), Druga ne',
+    F.imeKluba('BORAC', 'treca-liga-kadeta-beograda-2026-27') === 'BORAC (Ostružnica)' &&
+    F.imeKluba('JEDINSTVO', 'treca-liga-kadeta-beograda-2026-27') === F.imeKluba('JEDINSTVO', 'druga-omladinska-liga-beograda-2026-27') &&
+    F.imeKluba('OMLADINAC', 'treca-liga-kadeta-beograda-2026-27') === F.imeKluba('OMLADINAC', 'zonska-liga-beograd') &&
+    F.imeKluba('BSK', 'druga-liga-kadeta-beograda-2026-27') === 'BSK')
   preveri('fsb: nižje lige — kraj ima klub nižje lige, isti v vseh treh sezonah',
     F.imeKluba('SLOGA', 'opstinska-liga-obrenovac') === 'SLOGA (Ratari)' &&
     F.imeKluba('SLOGA', 'opstinska-liga-obrenovac-2024-2025') === 'SLOGA (Ratari)' &&

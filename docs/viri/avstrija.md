@@ -238,10 +238,46 @@ Europacup-Playoffom, KFV, OÖFV, SFV, StFV, VFV).
 - Nižje lige mešajo prve in druge ekipe (1b, Juniors, "II"); vpisane so, ker
   v njih igrajo prve ekipe.
 
-Izpuščeno: Reserve lige (BFV, KFV, NÖFV …), štajerske `IB Ligen` (IB
-MitteWest, IB GLO — druge ekipe), mladinske (U…, Unter …, JHG, OPO/MPO/UPO),
-ženske, futsal, pokali, Relegation/Entscheidungsspiel/Play-Off, šolski
-turnirji, legende, Salzburger `Reserven`.
+Izpuščeno v migraciji 20261009230000: Reserve lige (BFV, KFV, NÖFV …),
+štajerske `IB Ligen` (IB MitteWest, IB GLO — druge ekipe), mladinske (U…,
+Unter …, JHG, OPO/MPO/UPO), ženske, futsal, pokali,
+Relegation/Entscheidungsspiel/Play-Off, šolski turnirji, legende, Salzburger
+`Reserven`.
+
+**Rezervne, ženske in mladinske lige** (migracija 20261104172100, 80 lig, vse
+**neaktivne**; lastnik odobril 4. 11. 2026): 43 rezervnih (Reserve BFV, NÖFV,
+OÖFV, SFV, TFV; koroške Challenge; štajerski IB MitteWest in IB GLO; OÖ 2.
+Klasse 1b), Wiener Stadtliga U23, 25 ženskih 11 na 11 (zveza `oefb`: Frauen
+Bundesliga, Future League, 2. Frauen Bundesliga; ostale deželne) in 11
+mladinskih (ÖFB Jugendliga U18/U16/U15 in Jugendregionalliga U18/U16 pod
+`oefb`, Dunaj WFV-Liga U18/U17, A- in B-Liga U18, Štajerska LK U18, Tirol
+U16). Šifre mladinskih imajo starostni del `u1x` (`je_mladinski_slug`).
+Arhivi so v `scripts/avstrija-lige.txt`; v `scripts/avstrija-vrsta.txt` jih
+**ni** — vrsta bi ligo uvozila in tudi vklopila, uvoz in vklop pa sta
+odločitev za pomlad (zimski premor).
+
+- Rezervne ekipe nosijo ime prve ekipe in si z njo delijo klub; igralci so po
+  tekmovanjih. Vzorci 4. 11. 2026 (NÖ GL West Reserve, NÖ Frauen LL,
+  Frauengruppe Mostviertel in Weinviertel): 11 + 11, klop, strelci, menjave.
+- **Brez arhiva** (ÖFB za 2025/26 kaže na drugo tekmovanje): Burgenlandliga
+  Reserve (→ Regionalliga Ost), Challenge Region Villach (→ Regionalliga
+  Mitte, nova liga), Stmk. Frauen Unterliga (→ Steirer-Cup), OÖ 2. Klasse 1b
+  (→ 2. Klasse Nordost, večinoma prve ekipe). Cene teh lig ostanejo 4.5, dokler
+  tekoča sezona ne nabere minut.
+- Frauengruppe Mostviertel ima le 6 ekip (večinoma druge ekipe, trikrat vsak
+  z vsakim) — na meji.
+- Izpuščene: Wiener Frauen Landesliga (Grunddurchgang 11 krogov do 15. 11.) in
+  Frauen Vorarlbergliga (9 krogov do 8. 11.) — pomladanska faza bo svoje
+  tekmovanje z novo šifro, takrat ju vpiši s to šifro (arhiv `226649`,
+  `226854`); Kärnten Frauen Kleinfeldliga (mali nogomet); "Herbst" mladinske
+  skupine (končajo jeseni); U14 in mlajše.
+- Zadnji jesenski krog (nato premor do marca): večina rezervnih in deželnih
+  ženskih lig 6.–8. 11.; BFV LL Reserve, BFV 2. Kl. Nord Res., NÖ 1. Kl. Ost
+  in West Res., Wien A-/B-Liga U18 13.–15. 11.; Frauen Bundesliga, Future
+  League, 2. FBL, Salzburger Frauenliga, Jugendregionalliga 20.–22. 11.;
+  Stadtliga U23, Jugendliga, WFV-Liga U18/U17 27.–29. 11.; KFV Challenge
+  (razen West), Stmk. IB, NÖ Frauen GL, OÖ, Stmk., Tirol, Wien (1. Kl.,
+  Newcomer) ženske že 23. 10.–1. 11., Challenge Villach 11. 10.
 
 | liga | klubov | tekoča 2026/27 | arhiv (2025/26; pri ≤ 10 klubih še 2024/25) |
 |---|---|---|---|

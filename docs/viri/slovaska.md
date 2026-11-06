@@ -191,3 +191,29 @@ Jezik vmesnika sledi državi lige (`src/i18n/sk/`, `JEZIK_DRZAVE`), razen izbire
 jezika in tujca (glej *Prevodi*); šifra lige
 zunaj Slovenije se začne s kodo države (`sk-…`), da jezik ob nalaganju ve,
 katero državo gleda.
+
+## Slovaška — ženske, U17/U16 in U15
+
+Migracija 20261104174100 (odobritev lastnika 4. 11. 2026), 30 lig,
+**neaktivnih**, arhivi 2025/26 še niso poiskani (`scripts/slovaske-lige.mjs`
+ženske, WU in mladší dorast izpusti z `IZPUSTI`/`DORAST`). Ženske lige kot
+člani (`prvi_fantasy_krog = 1`, `rok_pomak_ur = 6`), mladinske 2 in 2. Slug
+mladinske lige nosi starostno oznako kot svoj del (`sk-sfz-zeny-u19-…`, ne
+`wu19`), da ga ujame pravilo mladinskih lig.
+
+- **Ženske**: `sk-sfz-zeny-1liga` (Orange liga, del "Základná časť" — nadstavba
+  bo nov del kot pri Niké ligi), `sk-sfz-zeny-2liga`; WU19
+  `sk-sfz-zeny-u19-1liga-zapad`, `-vychod` (ligaški del ZČ),
+  `sk-sfz-zeny-u19-2liga-zapad`. Ženski klubi so isti klubi (`teams`) kot
+  moški, igralke ločene po ligi.
+- **U17/U16** (mladší dorast): državna I. liga U17 in U16 (istih 14 akademij),
+  II. liga U17 Západ/Východ, BFZ III. in IV. A/B/C, SsFZ III. Sever/Juh, VsFZ
+  III. A/B, ZsFZ III. SZ/JV, ObFZ Trnava IV. U17.
+- **U15** (starší žiaci): državna I. liga Západ/Stred/Východ (Západ kaže 21
+  ekip — morda dvojne ekipe; preveri ob uvozu razporeda), BFZ II., SsFZ II.
+  A–D, VsFZ II., ZsFZ II.
+
+Izpuščeno: BFZ WU19 (3 klubi), SsFZ WU19 (5), ObFZ Banská Bystrica U17 (brez
+tekem), U14 in mlajši, VsFZ/ZsFZ III. liga U15 (nepreverjene). Postave so
+preverjene na Orange ligi, državni U17 in BFZ U17 (11 + klop, ISSF, dogodki).
+Šifre so v migraciji.

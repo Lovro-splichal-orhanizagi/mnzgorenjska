@@ -1,5 +1,9 @@
 // Offline catalog-transport fixture only. Positive children use a test clock
 // inside the genuine original interval; the fake source never issues authority.
+// TEST ONLY (#582/V6 pattern): happy paths read the pinned historical
+// scripts/viri/fussball.mjs bytes (main 80406b24, sha256 816617fb…).
+import {usePinnedFussballBytes} from './lib/test-only-pinned-fussball.mjs'
+usePinnedFussballBytes()
 import test,{mock} from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
