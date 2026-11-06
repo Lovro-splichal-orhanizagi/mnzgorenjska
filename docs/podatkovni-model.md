@@ -1063,6 +1063,24 @@
   Omejeni računi ne kupujejo (`zavrni_omejenega`). Tabela je zaprta (tudi za
   agente); stran bere le `ponovna_cena_stanje`. Administracija → Igralci →
   Ponovne cene (stikalo, predlogi, potrditev, zavrnitev). V aplikaciji ga ni.
+- **Dnevna triaža admin vrst** (migracija 20261103090100, SLF-260):
+  `dnevna_triaza(p_suho)` (pg_cron `dnevna-triaza`, 7.07 UTC) razvrsti vse
+  čakajoče prevzeme, prijave lažnih profilov, odprte klubske zahtevke in
+  prošnje za poznavalca, zapiše `triaza_teki` / `triaza_postavke` (zaprti,
+  admin bere `admin_triaza`, `admin_triaza_postavke`, suhi tek
+  `admin_triaza_predogled`) in na Discord pošlje le števila. Dejanja le, če je
+  `triaza_samodejno` true (privzeto false): prevzem potrdi (`soigralci`) le z
+  zapisanima potrditvama dveh soigralcev, ki sta še potrjena in z vabilom
+  nepovezana s prosilcem ali med seboj (`triaza_dokaz_soigralcev`), in šele
+  po `triaza_zadrzanje_dni` (3) od oddaje ali prej, če je po oddaji na novo
+  kvalificiran prijatelj; povabilo samo ni dokaz, brez dokaza se ne zgodi nič.
+  Spor, prijava, mladinec brez "vsaj 16", skrito ime in omejen račun ostanejo
+  adminu. Klubski `polno`/`brez_kluba` dobi račun po pravilu
+  `uveljavi_klubski_racun` (nikoli po preklicu), zahtevek, ki ga je prehitel
+  račun istega kluba, se zapre; nov naslov in poznavalci so vedno adminovi.
+  En pravi tek na dan (ponovni klic vrne povzetek), vsako dejanje v svojem
+  podbloku, `admin_triaza_razveljavi` vrne prevzem v čakanje oz. prekliče
+  izdani račun in odpre zahtevek.
 - **Klubski računi** (migracija 20261013201100, spec
   `docs/superpowers/specs/2026-10-13-klubski-racuni-design.md`): klub dobi
   račun, ko se prijavi s **potrjenim** uradnim naslovom iz `klub_stik`
