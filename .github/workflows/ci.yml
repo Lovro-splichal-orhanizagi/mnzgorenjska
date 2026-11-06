@@ -161,6 +161,19 @@ jobs:
       - name: HNS public parser, packet, runtime and activation guards
         run: npm run test:hns-women
 
+      # Nove izvorno-proste teste dodaj v scripts/test-dodatni.txt (ena pot na
+      # vrstico), NE v package.json: package.json je v pripetem zaprtju
+      # fussball-fresh-pair (fussballFreshPairCodeSha256), vsak njegov popravek
+      # premakne zgoščeno vrednost in porušiti hosted-pair teste.
+      - name: Dodatni testi iz scripts/test-dodatni.txt (source-free)
+        run: |
+          files=$(grep -vE '^\s*(#|$)' scripts/test-dodatni.txt || true)
+          if [ -z "$files" ]; then echo "Seznam je prazen"; exit 0; fi
+          missing=0
+          for f in $files; do [ -f "$f" ] || { echo "Manjka: $f"; missing=1; }; done
+          [ "$missing" = 0 ] || exit 1
+          node --test $files
+
       - name: HNS report club names
         run: node --test scripts/test-hns-ime-kluba.mjs
 
