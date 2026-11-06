@@ -1,6 +1,6 @@
 -- objava_dosezki je 5. 11. 2026 trikrat padla z "upstream request timeout" (SLF-305,
 -- četrtkova objava je izpadla): prehod je klic odrezal pri ~30 s, statement_timeout
--- za service_role je 60 s. Rezultat je enak, manj je dela:
+-- za service_role je 60 s. Manj je dela, rezultat je enak razen pri vratarjih (spodaj):
 -- * tocke le od šestih točk naprej (pod šest ni ne najvec_tock ne rekorda),
 -- * goli le za igralce z največ točkami, ne za vseh 208 tisoč vrstic tedna,
 -- * prejšnji krogi rekorda enkrat na krog, ne enkrat na igralca,
@@ -60,7 +60,7 @@ as $$
   ),
   -- Rekord lige v sezoni: več točk kot kdorkoli v prejšnjih (vsaj štirih) krogih.
   -- Prejšnji krogi se preberejo enkrat na krog, ne enkrat na igralca.
-  prejsnji as (
+  prejsnji as materialized (
     select k.round_id, pr.prej
       from krogi k
       cross join lateral (

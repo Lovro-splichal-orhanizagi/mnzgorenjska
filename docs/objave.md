@@ -173,7 +173,8 @@ nadoknadi.
     ni (vklop lige nima časa), mini lig tudi ne.
   - Hitrost: prehod klic reže pri ~30 s (SLF-305), zato `objava_dosezki` računa
     gole le za igralce z največ točkami, prejšnje kroge enkrat na krog in zgodovino
-    le vratarjem s čisto mrežo v oknu; preizkus na produkciji 3 do 5 s.
+    le vratarjem s čisto mrežo v oknu; preizkus na produkciji okoli 3 s, a je del
+    poskusov presegel bralno mejo 5 s (cel čas prvega klica ni izmerjen).
   - `objava_dejstva` (stari ponedeljek in četrtek) ostane v bazi, a je
     `objave.mjs` ne kliče več.
   **Objava le slavi** (lastnik, 15. 10. 2026): padca cene in slabih predstav
