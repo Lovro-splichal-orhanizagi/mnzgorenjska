@@ -1,0 +1,56 @@
+name: Replay retained FUSSBALL source audit
+run-name: Source-only retained Baden audit replay
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact reviewed current main SHA; source head remains DE77
+        type: string
+        required: true
+      source_run:
+        description: Fixed original Baden V5 source run
+        type: choice
+        options:
+          - '40641606028'
+        default: '40641606028'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fussball-retained-source-replay
+  cancel-in-progress: false
+jobs:
+  replay:
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.expected_sha == github.sha && inputs.source_run == '40641606028'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      SOURCE_RUN_ID: ${{ inputs.source_run }}
+      NODE_OPTIONS: --max-old-space-size=6144
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Validate exact reviewed main and first attempt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/stage-fussball-retained-audit.mjs validate
+      - run: npm ci --ignore-scripts
+      - name: Authenticate and replay original paired source bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/stage-fussball-retained-audit.mjs produce retained-audit-replay
+      - name: Preserve source-only replay certificate
+        uses: actions/upload-artifact@v4
+        with:
+          name: fussball-source-replay-${{ github.run_id }}
+          path: retained-audit-replay/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
