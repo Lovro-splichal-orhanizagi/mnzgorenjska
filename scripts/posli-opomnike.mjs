@@ -24,7 +24,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { vseVrstice } from './strani.mjs'
-import { klicSPonovitvami, bralniFetch } from './klic-opomnika.mjs'
+import { klicSPonovitvami } from './klic-opomnika.mjs'
+import { fetchZaBazo } from './prenos.mjs'
 
 function izEnv() {
   try {
@@ -64,7 +65,7 @@ const dni = Number(process.env.DNI ?? 2)
 // naslednjem zagonu (poslani so tri dni zaščiteni z `nedavni_opomnik`).
 let proracun = Number(process.env.NAJVEC_POSLATI ?? 90)
 
-const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: bralniFetch() } })
+const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: fetchZaBazo() } })
 
 // Dobrodošlica ni vezana na ligo: kosi po 10, dokler je kaj kandidatov ali do
 // NAJVEC_DOBRODOSLIC na zagon (urni zagon: zaostanek ~500 gre v pol dneva).
@@ -140,6 +141,12 @@ const poklici = (liga, najvecPoslati) =>
     }),
   })
 
+// Ob pravem izpadu povezave bi vsaka liga porabila vse ponovitve (nejasna napaka
+// ~2 min), lig pa je prek 900: po tolikšnem številu lig zapored z omrežno
+// napako korak ustavimo (naslednji urni zagon nadaljuje).
+const NAJVEC_NAPAK_ZAPORED = 5
+let napakZapored = 0
+
 for (const liga of lige ?? []) {
   // Ena liga, ki ji klic ne uspe tudi po ponovitvah, ne sme ustaviti ostalih:
   // zabeležimo jo in korak na koncu vseeno konča z napako.
@@ -147,6 +154,7 @@ for (const liga of lige ?? []) {
     liga.meja = NAJVEC_NA_LIGO
     const poKosih = sProracunom && !suho
     let odgovor = await poklici(liga, poKosih ? Math.min(KOS, proracun) : sProracunom ? proracun : null)
+    napakZapored = 0 // odgovor je prišel, omrežje dela
     let izid = await odgovor.json().catch(() => ({}))
     // Nad mejo: preštejemo nove nepopolne ekipe (le takrat, ne vsako uro za
     // vsako ligo) in poskusimo enkrat znova z višjo mejo.
@@ -219,6 +227,10 @@ for (const liga of lige ?? []) {
   } catch (e) {
     console.error(`  ${liga.slug.padEnd(14)} NAPAKA KLICA: ${e.message}${e.cause?.code ? ` (${e.cause.code})` : ''}`)
     padlo++
+    if (++napakZapored >= NAJVEC_NAPAK_ZAPORED) {
+      console.error(`::error::${napakZapored} lig zapored brez povezave s funkcijo; ustavljam, ostale lige pridejo ob naslednjem zagonu.`)
+      break
+    }
   }
 }
 

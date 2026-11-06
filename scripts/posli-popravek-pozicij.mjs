@@ -14,7 +14,8 @@
 //   ... SUHO=false node scripts/posli-popravek-pozicij.mjs                  # poslje
 //   ... IGRALCI=1,2,3 ...                                                   # drug seznam
 import { createClient } from '@supabase/supabase-js'
-import { klicSPonovitvami, bralniFetch } from './klic-opomnika.mjs'
+import { klicSPonovitvami } from './klic-opomnika.mjs'
+import { fetchZaBazo } from './prenos.mjs'
 
 // Lazni vratarji, popravljeni 29. 9. 2026.
 const POPRAVLJENI_2026_09_29 = [
@@ -33,7 +34,7 @@ const igralci = process.env.IGRALCI
   ? process.env.IGRALCI.split(',').map((s) => Number(s.trim())).filter(Number.isInteger)
   : POPRAVLJENI_2026_09_29
 
-const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: bralniFetch() } })
+const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: fetchZaBazo() } })
 const { data: vrstice, error } = await db
   .from('players').select('competition_id, competitions(slug)').in('id', igralci)
 if (error) { console.error(error.message); process.exit(1) }

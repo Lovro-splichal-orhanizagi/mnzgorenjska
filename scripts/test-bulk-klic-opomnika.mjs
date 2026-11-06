@@ -2,10 +2,10 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import http from 'node:http'
 import { spawn } from 'node:child_process'
-import { klicSPonovitvami, bralniFetch } from './klic-opomnika.mjs'
+import { klicSPonovitvami, ZAMIK_NEJASNO_MS } from './klic-opomnika.mjs'
 
 const reset = () => Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' }) })
-const tih = { log: () => {}, zamiki: [0, 0] }
+const tih = { log: () => {}, zamiki: [0, 0], zamikNejasno: 0 }
 
 test('ECONNRESET: klic ponovimo in vrnemo odgovor', async () => {
   let klici = 0
@@ -28,15 +28,29 @@ test('HTTP odgovor (tudi 409/500) in neomrežna napaka se ne ponovita', async ()
   assert.equal(klici, 2)
 })
 
+test('ECONNRESET (nejasno): počakamo dlje od omejitve funkcije; ECONNREFUSED: kratek premor', async () => {
+  const premori = []
+  const log = (v) => premori.push(v)
+  let n = 0
+  await klicSPonovitvami(async () => { if (++n < 2) throw reset(); return {} }, 'u', {}, { log, zamiki: [2000, 6000], zamikNejasno: 0 })
+  n = 0
+  const zavrnjeno = () => Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('x'), { code: 'ECONNREFUSED' }) })
+  await klicSPonovitvami(async () => { if (++n < 2) throw zavrnjeno(); return {} }, 'u', {}, { log, zamiki: [0, 0], zamikNejasno: 65000 })
+  assert.match(premori[0], /čez 0 s: ECONNRESET/)
+  assert.match(premori[1], /čez 0 s: ECONNREFUSED/)
+  // Privzeti premor po nejasni napaki mora presegati 60 s omejitve funkcije.
+  assert.ok(ZAMIK_NEJASNO_MS > 60000)
+})
+
 // Skripta zares, proti lokalnemu strežniku, ki prvi klic funkcije prekine.
-async function zazeni(vedenje, { resetLig = 0 } = {}) {
+async function zazeni(vedenje, { resetLig = 0, lige = 2 } = {}) {
   const klici = []
   let branja = 0
   const streznik = http.createServer((req, res) => {
     if (req.url.startsWith('/rest/v1/competitions')) {
       if (++branja <= resetLig) return req.socket.resetAndDestroy()
       res.setHeader('content-type', 'application/json')
-      return res.end(JSON.stringify([{ id: 1, slug: 'liga-a', name: 'A' }, { id: 2, slug: 'liga-b', name: 'B' }]))
+      return res.end(JSON.stringify(Array.from({ length: lige }, (_, i) => ({ id: i + 1, slug: `liga-${'abcdefghij'[i]}`, name: String(i) }))))
     }
     let telo = ''
     req.on('data', (d) => { telo += d })
@@ -81,23 +95,17 @@ test('skripta: liga, ki pada ves cas, ne ustavi drugih, korak pa konca z napako'
   assert.match(r.out, /Lig z napako: 1/)
 })
 
+test('skripta: 5 lig zapored brez povezave ustavi korak (izpad povezave ne traja ur)', async () => {
+  const r = await zazeni(() => true, { lige: 8 })
+  assert.equal(r.koda, 1, r.out)
+  assert.equal(r.klici.length, 5 * 3, r.out)
+  assert.match(r.out, /5 lig zapored brez povezave/)
+  assert.match(r.out, /Lig z napako: 5/)
+})
+
 test('skripta: prekinjeno branje seznama lig se ponovi', async () => {
   const r = await zazeni(() => false, { resetLig: 1 })
   assert.equal(r.koda, 0, r.out)
   assert.equal(r.branja, 2)
   assert.deepEqual(r.klici, [1, 2])
-})
-
-test('bralniFetch: GET se ponovi, POST ne', async () => {
-  const og = globalThis.fetch
-  let klici = 0
-  globalThis.fetch = async () => { if (++klici < 2) throw reset(); return { ok: true } }
-  try {
-    const f = bralniFetch({ log: () => {}, zamiki: [0, 0] })
-    assert.deepEqual(await f('u', { method: 'GET' }), { ok: true })
-    assert.equal(klici, 2)
-    klici = 0
-    await assert.rejects(f('u', { method: 'POST' }), /fetch failed/)
-    assert.equal(klici, 1)
-  } finally { globalThis.fetch = og }
 })

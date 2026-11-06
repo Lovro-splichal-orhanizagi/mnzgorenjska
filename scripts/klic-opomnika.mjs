@@ -6,38 +6,42 @@
 //
 // Ponovimo samo to, kar je `fetch` zavrgel (omrežje, ne HTTP odgovor): status
 // 4xx/5xx funkcija vrne po svoji presoji (409 = varovalka na ligo) in ga
-// ponovitev ne sme preglasiti. Ponovitev ne podvoji pošte: funkcija po vsakem
-// prejemniku zapiše `email_log`, kandidate pa izbere brez že obveščenih, zato
-// pri ECONNRESET, kjer ne vemo, ali je zahtevek dosegel funkcijo, ponovni klic
-// ne more obvestiti nikogar, ki je bil že obveščen (največ tistega, ki je bil
-// ob prekinitvi v teku).
+// ponovitev ne sme preglasiti.
+//
+// Pri ECONNRESET ne vemo, ali je zahtevek dosegel funkcijo. Če jo je in še
+// pošilja, bi takojšnja ponovitev istim prejemnikom poslala drugič: `opozorilo`
+// in `opozorilo-odsotni` kandidatov ne preverjata znova ob vsakem prejemniku.
+// Zato po nejasni napaki počakamo dlje od omejitve funkcije (60 s, glej
+// posli-opomnike.mjs); do takrat je prvi klic končan in je `email_log` že
+// zapisan, ponovni klic pa kandidate izbere brez že obveščenih. Kratek premor
+// zadostuje le tam, kjer zahtevek zagotovo ni dosegel funkcije (povezave ni
+// bilo).
 import { jePrehodnaNapaka } from './prenos.mjs'
 
-// Premori pred 2. in 3. poskusom; trije poskusi skupaj.
-// `OPOMNIK_ZAMIKI_MS` (npr. "0,0") je za preizkus.
-export const ZAMIKI_KLICA_MS = process.env.OPOMNIK_ZAMIKI_MS
-  ? process.env.OPOMNIK_ZAMIKI_MS.split(',').map(Number)
-  : [2000, 6000]
+const NEDOSEGLJIVO = /^(ECONNREFUSED|ENOTFOUND|EAI_AGAIN|EHOSTUNREACH|ENETUNREACH|UND_ERR_CONNECT_TIMEOUT)$/
+
+// Premori pred 2. in 3. poskusom, ko zahtevek funkcije zagotovo ni dosegel.
+// `OPOMNIK_ZAMIKI_MS` (npr. "0,0") je za preizkus in velja tudi za nejasne napake.
+const IZ_ENV = process.env.OPOMNIK_ZAMIKI_MS?.split(',').map(Number)
+export const ZAMIKI_KLICA_MS = IZ_ENV ?? [2000, 6000]
+export const ZAMIK_NEJASNO_MS = IZ_ENV ? Math.max(...IZ_ENV) : 65000
 const cakaj = (ms) => new Promise((r) => setTimeout(r, ms))
 
 export async function klicSPonovitvami(
   fetchFn,
   url,
   init,
-  { zamiki = ZAMIKI_KLICA_MS, log = (v) => console.log(v) } = {},
+  { zamiki = ZAMIKI_KLICA_MS, zamikNejasno = ZAMIK_NEJASNO_MS, log = (v) => console.log(v) } = {},
 ) {
   for (let poskus = 0; ; poskus++) {
     try {
       return await fetchFn(url, init)
     } catch (e) {
       if (!jePrehodnaNapaka(e) || poskus >= zamiki.length) throw e
-      log(`  ponovim klic (${poskus + 2}/${zamiki.length + 1}) čez ${zamiki[poskus] / 1000} s: ${e.cause?.code ?? e.message}`)
-      await cakaj(zamiki[poskus])
+      const koda = String(e.cause?.code ?? e.code ?? '')
+      const zamik = NEDOSEGLJIVO.test(koda) ? zamiki[poskus] : zamikNejasno
+      log(`  ponovim klic (${poskus + 2}/${zamiki.length + 1}) čez ${zamik / 1000} s: ${koda || e.message}`)
+      await cakaj(zamik)
     }
   }
 }
-
-// `fetch` za Supabase odjemalca, ki bere: GET/HEAD je varno ponoviti. Pisanja
-// (POST/PATCH/DELETE) ostanejo en sam poskus, da se vrstica ne vpiše dvakrat.
-export const bralniFetch = (opcije = {}) => (url, init) =>
-  klicSPonovitvami(fetch, url, init, ['GET', 'HEAD'].includes((init?.method ?? 'GET').toUpperCase()) ? opcije : { ...opcije, zamiki: [] })
