@@ -339,6 +339,50 @@ export function vrsticaTekme(html) {
 }
 
 /**
+ * Predloga `table_analytika.asp` epsm od 29. 10. 2026 ("an-round" > "an-match"):
+ * krog v `an-round-head`, ekipi v `an-home`/`an-away`, izid v `an-score`
+ * ("– : –" in razred `pending` za neodigrano), "datum ura | igrišče" v
+ * `an-meta` in povezava `game.asp?game_number=`. Isti zapis kot `vrsticaTekme`.
+ */
+function tekmeAnalitike(s) {
+  const out = []
+  const videni = new Set()
+  for (const blok of s.split(/<section[^>]*class="an-round"[^>]*>/).slice(1)) {
+    const krog = Number(blok.match(/class="an-round-head"[^>]*>\s*<strong>\s*(\d+)\s*η/)?.[1])
+    if (!krog) continue
+    if (videni.has(krog)) throw new Error(`mascot: krog ${krog} je v razporedu dvakrat — stran se je spremenila? Uvoz ustavljen`)
+    videni.add(krog)
+    const klubi = new Set()
+    for (const vrsta of blok.split(/(?=<div class="an-match")/).slice(1)) {
+      const polje = (r) => besedilo(vrsta.match(new RegExp(String.raw`class="${r}"[^>]*>([\s\S]*?)</div>`))?.[1])
+      const domaci = polje('an-team an-home')
+      const gostje = polje('an-team an-away')
+      if (!domaci || !gostje) continue
+      for (const k of [domaci, gostje]) {
+        if (klubi.has(kljucKlubaGr(k))) throw new Error(`mascot: klub "${k}" igra v ${krog}. krogu dvakrat — uvoz ustavljen`)
+        klubi.add(kljucKlubaGr(k))
+      }
+      const izid = polje('an-score(?: [a-z-]+)*').match(/^(\d+)\s*[-–]\s*(\d+)$/)
+      const meta = besedilo(vrsta.match(/class="an-meta"[^>]*>([\s\S]*?)(?:<a\b|<\/div>)/)?.[1])
+      const [cas, ...kraj] = meta.split('|').map((x) => x.trim())
+      const igra = vrsta.match(/game_number=(\d+)/)?.[1]
+      out.push({
+        krog,
+        domaci,
+        gostje,
+        izid: izid ? { domaci: Number(izid[1]), gostje: Number(izid[2]) } : null,
+        igra: igra ? Number(igra) : null,
+        datum: datumIz(cas),
+        ura: uraIz(cas.match(/\d{4}\s+(\d{1,2}[.:]\d{2})/)?.[1]),
+        brezBorbe: BREZ_BORBE.test(vrsta),
+        opomba: kraj.filter(Boolean).join(' ') || null,
+      })
+    }
+  }
+  return out
+}
+
+/**
  * Vse tekme razporeda: [{ krog, domaci, gostje, izid, igra, datum, ura (atenska),
  * brezBorbe }]. Krogi so "N<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ" v delu strani s celim
  * razporedom (pred njim so na `table.asp` zadnji in naslednji krog).
