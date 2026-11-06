@@ -8220,7 +8220,11 @@ preveri(
     preveri('dbu: trki imen — FC Roskilde z dvema id-jema je trk; Holstebro B 6038 in 6068 ni (IME_EKIPE)',
       trki.length === 1 && trki[0].kljuc === 'fc roskilde' && trki[0].ekipe.map((e) => e.id).sort().join() === '18483,99999' &&
       D.trkiEkip([{ pulja: '508657', html: holstebro(6038, 508657) }, { pulja: '499769', html: holstebro(6068, 499769) }, { pulja: '473829', html: holstebro(6038, 473829) }]).length === 0 &&
-      D.trkiEkip([{ pulja: '508657', html: holstebro(6038, 508657) }, { pulja: '499768', html: holstebro(7777, 499768) }]).length === 1)
+      D.trkiEkip([{ pulja: '508657', html: holstebro(6038, 508657) }, { pulja: '499768', html: holstebro(7777, 499768) }]).length === 1 &&
+      // isti klub v članih, U19 in U17 ni trk; dve ekipi iste selekcije (U19 Ligaen + Divisionen) sta
+      D.trkiEkip([{ pulja: '508656', html: holstebro(1, 508656) }, { pulja: '508670', html: holstebro(2, 508670) }, { pulja: '508668', html: holstebro(3, 508668) }]).length === 0 &&
+      D.trkiEkip([{ pulja: '508670', html: holstebro(2, 508670) }, { pulja: '508669', html: holstebro(4, 508669) }]).length === 1 &&
+      ['508850', '508670', '508669', '508668', '508667'].every((p) => D.DBU_PULJE['2026/27'].includes(p)))
     let trk = null
     console.warn = () => {}
     try { await D.default.zapisniki('508656', async (url, ime) => (ime === 'pulje-499769.html' ? drugaEkipa : ime.startsWith('pulje-') ? prog : beri('dk-dbu-kamp-308808.html'))) } catch (e) { trk = e }

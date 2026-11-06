@@ -93,8 +93,11 @@ strežnika, ASP.NET/Umbraco).
   faze), sicer se uvoz ustavi; uvoz zapisnikov prebere programe vseh pulj iz
   `DBU_PULJE` (sosednje iz predpomnilnika) in se ustavi, če ima isto ime
   (ključ kluba po `IME_EKIPE`) dva id-ja ekipe (`trkiEkip`) — trk reši vpis v
-  `IME_EKIPE`. **Nova sezona**: nove pulje najprej v `DBU_PULJE`, nato
-  migracija s šiframi.
+  `IME_EKIPE`. Klub je v bazi en sam ne glede na selekcijo, zato trk
+  štejejo le ekipe **iste selekcije** (`SELEKCIJA_PULJE`: ženske, U19, U17,
+  ostalo člani); AaB člani, U19 in U17 niso trk. **Nova sezona**: nove pulje
+  najprej v `DBU_PULJE` (in selekcijo v `SELEKCIJA_PULJE`, če ni članska),
+  nato migracija s šiframi.
 - Šifra zapisnika v bazi je `dk<številka tekme>`.
 - **Predpomnilnik**: v `zaPredpomnilnik` gre le program pulje in stran tekme
   z obema postavama, dogodki in goli = izid. Nepopolna stran zato ob vsakem
@@ -198,6 +201,12 @@ U19 Divisionen); 1. division in U17 imata isto predlogo (nepreverjeno).
 | dk-u19-divisionen | `508669` | 16 | |
 | dk-u17-ligaen | `508668` | 16 | |
 | dk-u17-divisionen | `508667` | 16 | |
+
+Pulje A-Liga Kvinder, U19 in U17 so od 6. 11. 2026 v `DBU_PULJE` (uvoz se je
+5. 11. ustavil: "pulja … ni v DBU_PULJE"). Superliga (`506118`) in 1. division
+(`507530`) še nista — vpiši ju ob vklopu. Trki imen čez vse pulje: 33 imen z
+različnim id-jem ekipe so bila vsa med selekcijami (člani / ženske / U19 /
+U17), znotraj selekcije nobenega.
 
 Arhiv 2025/26 ni določen. Ni vpisano: B-Liga Kvinder (række 134813) in U19
 Piger Liga (række 135100) — id pulje ni na strani række (najdi ga na strani
