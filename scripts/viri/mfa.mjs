@@ -43,6 +43,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { nastopi as nastopiPoSifri } from './oefb.mjs'
 import {normalizeMfaNl2Continuation,mfaFixtureOrder} from './mfa-nl2-continuation.mjs'
+import {assertMfaReportTiming} from './mfa-report-validation.mjs'
 
 const API = 'https://api.mfa.com.mt/api'
 const OSNOVNI = 'https://matchcentre.mfa.com.mt'
@@ -572,9 +573,12 @@ const vir = {
     return razcleniRazpored(await vseTekme(koda, prenesi))
   },
 
-  async zapisniki(koda, prenesi, { zdaj = Date.now(), mapa, preskoci = new Set() } = {}) {
+  // `strogo` (zgodovinski pregledani izdaji): zapisnik brez minute ostane napaka.
+  // Sicer ga preskocimo in navedemo, da se preostala liga uvozi; minute ne ugibamo.
+  async zapisniki(koda, prenesi, { zdaj = Date.now(), mapa, preskoci = new Set(), strogo = false } = {}) {
     const { sezona } = razbijKodo(koda)
     const out = []
+    const brezMinute = []
     for (const { krog, t } of krogiSezone(await vseTekme(koda, prenesi, { mapa }))) {
       if (cancelledMtarfaFixture(t)) continue
       if (t.status !== 'PLAYED') continue
@@ -600,7 +604,17 @@ const vir = {
       z.krog = krog
       z.sezona = sezonaIz(sezona)
       z.datum ??= datum
+      if (!strogo) {
+        try { assertMfaReportTiming(z) } catch (e) {
+          brezMinute.push(`${z.zapisnikId} (${z.url}): ${e.message.replace(/^MFA report validation: /, '')}`)
+          continue
+        }
+      }
       out.push({ id: z.zapisnikId, z, url: z.url })
+    }
+    if (brezMinute.length) {
+      console.warn(`mfa ${koda}: ${brezMinute.length} zapisnikov preskočenih, ker vir ne objavlja minute dogodka:`)
+      for (const v of brezMinute) console.warn(`  - ${v}`)
     }
     return out
   },
