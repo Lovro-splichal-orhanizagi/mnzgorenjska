@@ -171,6 +171,9 @@ nadoknadi.
     igralec enkrat (vrstni red hat-trick, največ točk, rekord, vratar, niz,
     skok), skupnost na konec; **brez dosežka igralca ni osnutka**. Novih lig
     ni (vklop lige nima časa), mini lig tudi ne.
+  - Hitrost: prehod klic reže pri ~30 s (SLF-305), zato `objava_dosezki` računa
+    gole le za igralce z največ točkami, prejšnje kroge enkrat na krog in zgodovino
+    le vratarjem s čisto mrežo v oknu; preizkus na produkciji ~3 s.
   - `objava_dejstva` (stari ponedeljek in četrtek) ostane v bazi, a je
     `objave.mjs` ne kliče več.
   **Objava le slavi** (lastnik, 15. 10. 2026): padca cene in slabih predstav
