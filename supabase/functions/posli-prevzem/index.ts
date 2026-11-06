@@ -27,6 +27,7 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.45.4'
 import nodemailer from 'npm:nodemailer@6.9.16'
 import { postavi } from '../_shared/mail.ts'
+import { sledi } from '../_shared/napake.ts'
 
 interface Vrstica {
   zahtevek_id: number
@@ -300,6 +301,8 @@ async function obvestiPotrjene(service: SupabaseClient): Promise<Response> {
   }
   return json({ poslano, napake })
 }
+
+sledi('posli-prevzem')
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })

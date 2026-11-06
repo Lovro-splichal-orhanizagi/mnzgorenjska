@@ -7,6 +7,7 @@ import { jezikSlovarja, naloziSlovar, t } from './i18n'
 import { pripraviNativno } from './lib/platforma'
 import { pripraviOta } from './lib/ota'
 import { pripraviAnalitiko } from './lib/analitika'
+import { pripraviSledenjeNapak } from './lib/sledenjeNapak'
 
 // Prosojnice objav (scripts/objave.mjs) so brez glave, noge in okna prvega obiska.
 const Objava = lazy(() => import('./pages/Objava'))
@@ -14,6 +15,7 @@ const Objava = lazy(() => import('./pages/Objava'))
 pripraviNativno()
 pripraviOta()
 pripraviAnalitiko()
+pripraviSledenjeNapak()
 
 // Po objavi nove različice starih kosov (strani, slovarji) na strežniku ni
 // več: zavihek, odprt pred objavo, ob prvem prehodu dobi 404. Stran se naloži
