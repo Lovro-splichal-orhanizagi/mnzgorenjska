@@ -51,8 +51,13 @@ function viden(cilj: string): Element {
   return vsi.find((el) => el.getClientRects().length > 0) ?? vsi[0] ?? document.body
 }
 
-/** Odprto okno (izbira lige, podatki o igralcu …) — vodič počaka nanj. */
-const odprtoOkno = () => document.querySelector('[aria-modal="true"]') != null
+/**
+ * Odprto okno (izbira lige, podatki o igralcu …) — vodič počaka nanj. Izbira
+ * lige se pokaže šele po zamiku, zato PrviObisk že prej pusti oznako.
+ */
+const odprtoOkno = () =>
+  document.querySelector('[aria-modal="true"]') != null ||
+  document.documentElement.hasAttribute('data-prvi-obisk')
 
 /**
  * Začne vodič, ko je stran pripravljena in ni odprtega okna (počaka največ
@@ -64,7 +69,13 @@ export function zacniVodic(ligaId: number): () => void {
   let casovnik = 0
   const poskusi = () => {
     if (preklicano || vodic) return
-    if (odprtoOkno() || !document.querySelector('[data-pomoc="sestavi-mi"]')) {
+    // Okno čaka brez omejitve (izbira lige lahko traja); strani, ki ni
+    // pripravljena, damo pol minute.
+    if (odprtoOkno()) {
+      casovnik = window.setTimeout(poskusi, 1000)
+      return
+    }
+    if (!document.querySelector('[data-pomoc="sestavi-mi"]')) {
       if (++poskusov < 30) casovnik = window.setTimeout(poskusi, 1000)
       return
     }
