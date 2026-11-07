@@ -66,7 +66,7 @@ test('initial inactive bulk import can seed original bytes before first active n
 test('source failure snapshot sets non-retry exit 4; semantic failure cannot authorize import',async()=>{
  const f=setup()
  try{
-  const captureDirectory=async()=>{mkdirSync(f.directory);writeFileSync(join(f.directory,'manifest.json'),JSON.stringify({snapshot:{stopped:true}}));throw Error('capture terminal failure')}
+  const captureDirectory=async()=>{mkdirSync(f.directory);writeFileSync(join(f.directory,'manifest.json'),JSON.stringify({snapshot:{stopped:true,stopReason:'fussball capture: source request failed (HTTP 429)'}}));throw Error('fussball capture: source request failed (HTTP 429)')}
   await assert.rejects(api.prepareFussballNightly({candidate:row,directory:f.directory,cacheDirectory:join(f.root,'cache'),now,captureDirectory,loadCapture:f.loadCapture}),e=>e.sourceStop===true&&e.exitCode===4)
   assert.equal(f.calls.length,0,'failed source never reaches native loader')
  }finally{f.clean()}
@@ -74,6 +74,16 @@ test('source failure snapshot sets non-retry exit 4; semantic failure cannot aut
  try{
   await assert.rejects(api.prepareFussballNightly({candidate:row,directory:held.directory,cacheDirectory:join(held.root,'cache'),now,captureDirectory:held.captureDirectory,loadCapture:async()=>{throw Error('incomplete full-season coverage')}}),e=>e.exitCode===1&&!e.sourceStop)
  }finally{held.clean()}
+})
+test('transport failure fails this league only: exit 1, no source stop, real cause in the message',async()=>{
+ const f=setup()
+ try{
+  const captureDirectory=async()=>{mkdirSync(f.directory);writeFileSync(join(f.directory,'manifest.json'),JSON.stringify({snapshot:{stopped:true,stopReason:'fetch failed'}}));throw Error('fetch failed')}
+  await assert.rejects(api.prepareFussballNightly({candidate:row,directory:f.directory,cacheDirectory:join(f.root,'cache'),now,captureDirectory,loadCapture:f.loadCapture}),e=>e.exitCode===1&&!e.sourceStop&&e.message==='fetch failed')
+  rmSync(f.directory,{recursive:true,force:true})
+  const challenge=async()=>{mkdirSync(f.directory);writeFileSync(join(f.directory,'manifest.json'),JSON.stringify({snapshot:{stopped:true,stopReason:'fussball capture: source challenge detected'}}));throw Error('fussball capture: source challenge detected')}
+  await assert.rejects(api.prepareFussballNightly({candidate:row,directory:f.directory,cacheDirectory:join(f.root,'cache'),now,captureDirectory:challenge,loadCapture:f.loadCapture}),e=>e.exitCode===4&&e.sourceStop===true&&/source refused: .*challenge/.test(e.message))
+ }finally{f.clean()}
 })
 test('installed source collector distinguishes actual refused response from semantic HTML failure',async()=>{
  for(const status of [403,200]){
