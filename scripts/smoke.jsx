@@ -10298,10 +10298,10 @@ preveri(
   const k = M.razberiKodo('epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ')
   let neznana = null
   try { M.razberiKodo('epsath.gr:Α ΚΑΤΗΓΟΡΙΑ') } catch (e) { neznana = e.message }
-  preveri('mascot: šifra lige in naslovi (analitika pri epsm in Ahaji, table.asp drugje)', k.domena === 'epsm.gr' && k.diorganosi === 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ' && k.zveza === 'mak' &&
+  preveri('mascot: šifra lige in naslovi (analitika povsod razen Thesprotija)', k.domena === 'epsm.gr' && k.diorganosi === 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ' && k.zveza === 'mak' &&
     V.naslovRazporeda('epsm.gr:Α1 ΕΡΑΣΙΤΕΧΝΙΚΗ') === 'https://www.epsm.gr/table_analytika.asp?diorganosi=%CE%911%20%CE%95%CE%A1%CE%91%CE%A3%CE%99%CE%A4%CE%95%CE%A7%CE%9D%CE%99%CE%9A%CE%97' &&
     V.naslovRazporeda('epsachaias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ').startsWith('https://www.epsachaias.gr/table_analytika.asp?diorganosi=') &&
-    V.naslovRazporeda('epsdramas.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)').startsWith('https://www.epsdramas.gr/table.asp?diorganosi=') &&
+    V.naslovRazporeda('epsdramas.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)').startsWith('https://www.epsdramas.gr/table_analytika.asp?diorganosi=') && V.naslovRazporeda('epsthesprotias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ').startsWith('https://www.epsthesprotias.gr/table.asp?diorganosi=') &&
     M.naslovTekme('epsm.gr', 2018, '2026-10-10') === 'https://www.epsm.gr/game.asp?game_number=2018&match_date=10.10.2026' && /ne poznam/.test(neznana ?? ''))
   preveri('mascot: šifra zapisnika ima zvezo in sezono (številke tekem se vsako sezono ponovijo)', M.sifraZapisnika('epsm.gr', 2018, '2026-10-10') === 'gr-mak-2026-2018' &&
     M.sifraZapisnika('epsm.gr', 2018, '2027-04-10') === 'gr-mak-2026-2018' && M.sifraZapisnika('epsachaias.gr', 1002, '2027-09-27') === 'gr-ach-2027-1002' &&
@@ -10366,6 +10366,21 @@ preveri(
     tan.length === 90 && new Set(tan.map((x) => x.krog)).size === 18 && tan.every((x) => x.igra) && tan.filter((x) => x.izid).length === 25 &&
     ta.filter((x) => x.igra).every((x) => tan.some((y) => y.igra === x.igra && y.domaci === x.domaci && y.gostje === x.gostje)) &&
     tan.find((x) => x.igra === 1002)?.ura === '19:30' && M.jeStranLige(ran, 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ'))
+  // 6. 11. 2026: še pet domen (Pela, Drama, Kozani, Imatija, Preveza-Lefkada) je table.asp zamenjalo z analitiko.
+  for (const [ime, liga, n, krogov, klubov, odigranih, domena] of [
+    ['epspellas-b-1', 'Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ', 56, 14, 8, 9, 'epspellas.gr'],
+    ['epsdramas-a', 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)', 132, 22, 12, 41, 'epsdramas.gr'],
+    ['epskozanis-a', 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)', 110, 22, 11, 25, 'epskozanis.gr'],
+    ['eps-imathias-a', 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ ΚΑΤΗΓΟΡΙΑ ΚΑΝΟΝΙΚΗ ΠΕΡΙΟΔΟΣ', 182, 26, 14, 48, 'eps-imathias.gr'],
+    ['epsprevezas-a', 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)', 72, 18, 9, 8, 'epsprevezas-lefkadas.gr'],
+  ]) {
+    const h = beri(`gr-mascot-razpored-${ime}-an.html`)
+    const t = M.tekmeRazporeda(h)
+    preveri(`mascot: nova predloga ${domena} — ${n} tekem, ${krogov} krogov, ${klubov} klubov, vsaka s povezavo, bere se z analitike`,
+      t.length === n && new Set(t.map((x) => x.krog)).size === krogov && new Set(t.flatMap((x) => [x.domaci, x.gostje])).size === klubov &&
+      t.every((x) => x.igra) && t.filter((x) => x.izid).length === odigranih && !t.some((x) => x.brezBorbe) &&
+      M.jeStranLige(h, liga) && M.naslovRazporeda(`${domena}:X`).includes('/table_analytika.asp'))
+  }
   const vrsta = (d, g) => `<i onclick="location.href='game.asp?game_number=1'"></i>\n${d} - ${g}&nbsp;&nbsp;&nbsp;1 - 0\n<font>ΗΜ: 10.10.2026 16:00</font><br>`
   const vezaj = M.tekmeRazporeda(`<div>ΑΝΑΛΥΤΙΚΟ ΠΡΟΓΡΑΜΜΑ <b>1<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ</b><br>${vrsta('ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ', 'ΑΧΑΙΚΗ')}${vrsta('ΦΑΡΑΙΚΟΣ', 'ΘΥΕΛΛΑ')}<b>2<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ</b><br>${vrsta('ΑΧΑΙΚΗ', 'ΦΑΡΑΙΚΟΣ')}${vrsta('ΘΥΕΛΛΑ', 'ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ')}</div>`)
   preveri('mascot: vrstica brez ločila — ime z " - " se razdeli po klubih, ki jih razpored pozna', vezaj.length === 4 &&
