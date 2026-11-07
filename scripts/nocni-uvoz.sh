@@ -53,11 +53,13 @@ uvozi() {
   if [ "$3" = fussball-public ]; then
     # Capture/replay the complete current source before any native write. Source
     # refusals stop this provider for the run; no second attempt or fallback.
-    node scripts/bulk-source-coordination.mjs </dev/null || return 4
+    # Only exit 4 of the capture is a refusal; the reader gate (GitHub API) and a
+    # transport or parse failure fail this league alone, retried at the end.
+    node scripts/bulk-source-coordination.mjs </dev/null || return 1
     local capture_dir
     capture_dir=$(mktemp -d)
-    rmdir "$capture_dir" || return 4
-    teci node scripts/prepare-fussball-nightly.mjs --tekmovanje "$liga" --output "$capture_dir" --max-requests 3000 || return 4
+    rmdir "$capture_dir" || return 1
+    teci node scripts/prepare-fussball-nightly.mjs --tekmovanje "$liga" --output "$capture_dir" --max-requests 3000 || { [ "$zadnji_izhod" = 4 ] && return 4; return 1; }
     export SLFF_FUSSBALL_CAPTURE="$capture_dir"
   fi
   # Izhod 3: klub manjka v razporedu (izstop?) — odloči človek, liga ni padla.

@@ -53,10 +53,17 @@ export function assertFussballNightlyCompetition(row){
  // updates. Initial bulk admission separately requires both complete seasons.
  return validateGermanyCandidate(matches[0])
 }
-function stoppedCapture(directory){
+// Only a real refusal (HTTP 403/429, a challenge page, a refused redirect) stops
+// the source for the night. A transport failure ("fetch failed", timeout) or a
+// semantic parse error fails this league alone; its own message stays in the log.
+const REFUSAL=/\(HTTP (?:403|429)\)|source challenge detected|redirect refused/
+function sourceRefusal(directory,error){
+ if(error?.sourceStop===true)return true
  try{
   const file=join(directory,'manifest.json'),s=lstatSync(file)
-  return s.isFile()&&!s.isSymbolicLink()&&JSON.parse(readFileSync(file,'utf8')).snapshot?.stopped===true
+  if(!s.isFile()||s.isSymbolicLink())return false
+  const snapshot=JSON.parse(readFileSync(file,'utf8')).snapshot
+  return snapshot?.stopped===true&&REFUSAL.test(`${snapshot.stopReason??''} ${error?.message??''}`)
  }catch{return false}
 }
 export async function prepareFussballNightly({candidate,directory,maxRequests=4000,now=Date.now,captureDirectory=captureFussballDirectory,loadCapture=loadFussballImportCapture,loadCurrentOnly,loadCurrentOnlyPack,fetchFn,cacheDirectory,installedHistoricalMarkers=candidate?.fussballHistoricalContext,db}={}){
@@ -84,7 +91,7 @@ export async function prepareFussballNightly({candidate,directory,maxRequests=40
    renameSync(next,latest);rmSync(previous,{recursive:true,force:true});rmSync(seed,{recursive:true,force:true})
    return {directory:resolve(directory),source_league_code:reviewed.source_league_code,...scope,reports:batch.reports.length,pendingReports:batch.pendingReports?.length??0,unknownReports:batch.unknownReports?.length??0,administrativeReports:batch.administrativeReports?.length??0,provenance:batch.provenance}
   }catch(error){
-   if(stoppedCapture(directory)||error.sourceStop)throw Object.assign(new Error(`fussball nightly source stopped: ${error.message}`),{sourceStop:true,exitCode:4})
+   if(sourceRefusal(directory,error))throw Object.assign(new Error(`fussball nightly source refused: ${error.message}`),{sourceStop:true,exitCode:4})
    throw Object.assign(error,{exitCode:1,dataHold:true})
   }
  }
@@ -109,7 +116,7 @@ export async function prepareFussballNightly({candidate,directory,maxRequests=40
   renameSync(next,latest);rmSync(previous,{recursive:true,force:true});rmSync(seed,{recursive:true,force:true})
   return {directory:resolve(directory),source_league_code:reviewed.source_league_code,...scope,reports:batch.reports.length,...(cardPolicy?{pendingReports:batch.pendingReports.length}:{}),provenance:batch.provenance}
  }catch(error){
-  if(stoppedCapture(directory)||error.sourceStop)throw Object.assign(new Error(`fussball nightly source stopped: ${error.message}`),{sourceStop:true,exitCode:4})
+  if(sourceRefusal(directory,error))throw Object.assign(new Error(`fussball nightly source refused: ${error.message}`),{sourceStop:true,exitCode:4})
   throw Object.assign(error,{exitCode:1,dataHold:true})
  }
 }
