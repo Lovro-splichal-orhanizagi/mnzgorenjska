@@ -22,6 +22,30 @@ export function olderGermanReaders(runs,own){
   return r.id!==own.id&&r.status!=='completed'&&earlier
  })
 }
+// GitHub run lists shift while sibling readers start or finish, so one pass can
+// look torn (changed total_count, short page). That says nothing about the source:
+// list again a few times, and still refuse a gate whose inventory never settles.
+async function enumerateGermanReaders(api,sleep,tries=3){
+ for(let t=1;;t++){
+  try{
+   const runs=[]
+    for(const workflow of GERMAN_READERS){
+     for(const status of ['queued','in_progress','waiting','pending','requested']){
+      let total=null,received=0;const seen=new Set()
+      for(let page=1;page<=10;page++){
+      const data=await api(`actions/workflows/${workflow}/runs?status=${status}&per_page=100&page=${page}`)
+      if(!Array.isArray(data.workflow_runs)||!Number.isSafeInteger(data.total_count)||data.total_count<0||data.total_count>1000||total!==null&&total!==data.total_count||data.workflow_runs.length!==Math.min(100,data.total_count-received)||new Set(data.workflow_runs.map(r=>r.id)).size!==data.workflow_runs.length||data.workflow_runs.some(r=>seen.has(r.id)||!Number.isSafeInteger(r.id)))throw Error('Incomplete reader enumeration.')
+      total=data.total_count;received+=data.workflow_runs.length
+      for(const run of data.workflow_runs){seen.add(run.id);runs.push(run)}
+      if(received===total)break
+      if(page===10)throw Error('Reader inventory exceeds bounded enumeration.')
+      }
+     }
+    }
+   return runs
+  }catch(e){if(e.message!=='Incomplete reader enumeration.'||t>=tries)throw e;await sleep(5000)}
+ }
+}
 export async function waitForGermanSource({env=process.env,api,sleep=ms=>new Promise(r=>setTimeout(r,ms)),maxAttempts=40}={}){
  const repository=env.GITHUB_REPOSITORY,id=env.GITHUB_RUN_ID
  if(!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository??'')||! /^[1-9]\d*$/.test(id??''))throw Error('Actions reader identity required.')
@@ -29,20 +53,7 @@ export async function waitForGermanSource({env=process.env,api,sleep=ms=>new Pro
  const own=await api(`actions/runs/${id}`)
  if(own.id!==Number(id)||own.run_attempt!==1||env.GITHUB_RUN_ATTEMPT&&env.GITHUB_RUN_ATTEMPT!=='1')throw Error('Source reruns are forbidden; dispatch a new reviewed run.')
  for(let attempt=0;attempt<maxAttempts;attempt++){
-  const runs=[]
-  for(const workflow of GERMAN_READERS){
-   for(const status of ['queued','in_progress','waiting','pending','requested']){
-    let total=null,received=0;const seen=new Set()
-    for(let page=1;page<=10;page++){
-    const data=await api(`actions/workflows/${workflow}/runs?status=${status}&per_page=100&page=${page}`)
-    if(!Array.isArray(data.workflow_runs)||!Number.isSafeInteger(data.total_count)||data.total_count<0||data.total_count>1000||total!==null&&total!==data.total_count||data.workflow_runs.length!==Math.min(100,data.total_count-received)||new Set(data.workflow_runs.map(r=>r.id)).size!==data.workflow_runs.length||data.workflow_runs.some(r=>seen.has(r.id)||!Number.isSafeInteger(r.id)))throw Error('Incomplete reader enumeration.')
-    total=data.total_count;received+=data.workflow_runs.length
-    for(const run of data.workflow_runs){seen.add(run.id);runs.push(run)}
-    if(received===total)break
-    if(page===10)throw Error('Reader inventory exceeds bounded enumeration.')
-    }
-   }
-  }
+  const runs=await enumerateGermanReaders(api,sleep)
   const blockers=olderGermanReaders(runs,own)
   const pending=[]
   for(const run of blockers){
