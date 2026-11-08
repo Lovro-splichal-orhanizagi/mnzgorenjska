@@ -14,6 +14,10 @@ export const domov: NonNullable<Prevod['domov']> = {
     zamudniki: '<krepko>Nokavēji startu?</krepko> <lestvica>Kopvērtējumā</lestvica> tu sacenties no tās kārtas, kurā pievienojies.',
     sestaviEkipo: 'Sastādīt komandu',
     rezultati: 'Rezultāti un sastāvi',
+    // Trajna vrstica s značkama trgovin v uvodu (components/ZnackeTrgovin.tsx).
+    aplikacija: 'SLFF lietotne: bez maksas Android un iPhone',
+    znackaAppStore: 'Lejupielādēt App Store',
+    znackaGooglePlay: 'Pieejams Google Play',
   },
   asistence: {
     cakajo: {
