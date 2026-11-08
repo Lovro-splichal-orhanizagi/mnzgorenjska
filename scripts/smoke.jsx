@@ -78,7 +78,9 @@ import { veljavenOsnutek } from '../src/lib/osnutek'
 import { krogKoncan, mestoVLigi, igralciPregleda, postaviPregled, oznakaPremika, imeDatotekePregleda, KVADRAT, SIRINA_P, VISINA_P, ROB_P } from '../src/lib/tedenskiPregled'
 import { jeDoberKrog, povprecjeKroga } from '../src/lib/pivoNavdusenje'
 import { trgovinaTelefona } from '../src/lib/pozivi'
-import { APP_STORE } from '../src/components/Trgovine'
+import Trgovine, { APP_STORE, GOOGLE_PLAY } from '../src/components/Trgovine'
+import Facebook from '../src/components/Facebook'
+import Instagram from '../src/components/Instagram'
 import { parsirajZapisnik, nastopi, dodajStrelceSKlopi } from './zapisnik.mjs'
 import { poZvezah, ustreza, pokaziZvezo, ustrezaRavni, privzetoRazprte } from '../src/components/IzbirnikLige'
 import { dovoljZaIskanje, ujemaIme, opisIgralca, potIgralca, izDrugihLig } from '../src/lib/iskanjeIgralcev'
@@ -3355,6 +3357,15 @@ preveri(
   // Okno "Časti pivo" le po dobrem krogu.
   preveri('poziv: Android dobi Google Play, namizje nič', /play\.google/.test(trgovinaTelefona('Mozilla/5.0 (Linux; Android 14)', 5) ?? '') && trgovinaTelefona('Mozilla/5.0 (Windows NT 10.0)', 0) === null)
   preveri('poziv: iPhone in iPad (Macintosh z dotikom) dobita App Store, Mac brez dotika nič', trgovinaTelefona('Mozilla/5.0 (iPhone)', 5) === APP_STORE && trgovinaTelefona('Mozilla/5.0 (Macintosh; Intel Mac OS X)', 5) === APP_STORE && trgovinaTelefona('Mozilla/5.0 (Macintosh; Intel Mac OS X)', 0) === null)
+  // Noga in Nastavitve: obe povezavi na trgovini morata biti v izrisu (SLF-343).
+  const trgovine = renderToString(<Trgovine />)
+  preveri('trgovine: App Store je nastavljen na objavljeni vnos', APP_STORE === 'https://apps.apple.com/app/id6818746153', String(APP_STORE))
+  preveri('trgovine: izris ima Google Play in App Store', trgovine.includes(`href="${GOOGLE_PLAY}"`) && trgovine.includes('href="https://apps.apple.com/app/id6818746153"'), trgovine)
+  // Noga: družabni omrežji samo kot ikoni, ime ostane za bralnik zaslona (SLF-343).
+  for (const [ime, el] of [['Facebook', <Facebook />], ['Instagram', <Instagram />]]) {
+    const html = renderToString(el)
+    preveri(`noga: ${ime} je ikona z imenom za bralnik`, /aria-label="[^"]+"/.test(html) && !html.replace(/<[^>]*>/g, '').trim(), html)
+  }
   preveri('pivo: napredek na lestvici je dober krog', jeDoberKrog(5, 30, 2))
   preveri('pivo: nad povprečjem brez premika je dober krog', jeDoberKrog(31, 30, 0) && jeDoberKrog(31, 30, null))
   preveri('pivo: padec ali povprečje nista dober krog', !jeDoberKrog(30, 30, 0) && !jeDoberKrog(10, 30, -3) && !jeDoberKrog(0, -1, null))
