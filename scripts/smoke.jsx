@@ -79,6 +79,7 @@ import { krogKoncan, mestoVLigi, igralciPregleda, postaviPregled, oznakaPremika,
 import { jeDoberKrog, povprecjeKroga } from '../src/lib/pivoNavdusenje'
 import { trgovinaTelefona } from '../src/lib/pozivi'
 import Trgovine, { APP_STORE, GOOGLE_PLAY } from '../src/components/Trgovine'
+import AppPromo, { APP_PROMO_DO, appPromoAktivna } from '../src/components/AppPromo'
 import Facebook from '../src/components/Facebook'
 import Instagram from '../src/components/Instagram'
 import { parsirajZapisnik, nastopi, dodajStrelceSKlopi } from './zapisnik.mjs'
@@ -3361,6 +3362,11 @@ preveri(
   const trgovine = renderToString(<Trgovine />)
   preveri('trgovine: App Store je nastavljen na objavljeni vnos', APP_STORE === 'https://apps.apple.com/app/id6818746153', String(APP_STORE))
   preveri('trgovine: izris ima Google Play in App Store', trgovine.includes(`href="${GOOGLE_PLAY}"`) && trgovine.includes('href="https://apps.apple.com/app/id6818746153"'), trgovine)
+  // Promocija aplikacij na naslovnici: 48 ur, nato se trgovina sama vrne; v aplikaciji je ni.
+  const promo = renderToString(<AppPromo />)
+  preveri('promo: kartica ima obe povezavi na trgovini', promo.includes(`href="${GOOGLE_PLAY}"`) && promo.includes(`href="${APP_STORE}"`), promo)
+  preveri('promo: aktivna pred koncem, neaktivna ob koncu in po njem', appPromoAktivna(APP_PROMO_DO - 1, false) && !appPromoAktivna(APP_PROMO_DO, false) && !appPromoAktivna(APP_PROMO_DO + 86400000, false))
+  preveri('promo: v aplikaciji je ni', !appPromoAktivna(APP_PROMO_DO - 1, true))
   // Noga: družabni omrežji samo kot ikoni, ime ostane za bralnik zaslona (SLF-343).
   for (const [ime, el] of [['Facebook', <Facebook />], ['Instagram', <Instagram />]]) {
     const html = renderToString(el)

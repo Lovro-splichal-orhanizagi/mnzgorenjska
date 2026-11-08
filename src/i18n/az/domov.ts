@@ -173,6 +173,12 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaWildcard: 'Wildcard: komandanı pulsuz yenidən qur',
     pravilaKlopPlus: 'Ehtiyat+: ehtiyat oyunçuların da xal toplayır',
   },
+  // Časovno omejena kartica z aplikacijama namesto trgovine (AppPromo.tsx).
+  appPromo: {
+    oznaka: 'Yeni · SLFF tətbiqi',
+    naslov: 'SLFF artıq tətbiqdir',
+    opis: 'Komandanı qur, xalları canlı izlə və son tarixdən əvvəl xatırlatma al. Android və iPhone üçün pulsuzdur.',
+  },
   trgovina: {
     oznaka: 'Yeni · SLFF Mağaza',
     naslov: 'Rəsmi SLFF geyimi',

@@ -175,6 +175,12 @@ export const domov = {
     pravilaWildcard: 'Wildcard: ekipo sestaviš na novo brez kazni',
     pravilaKlopPlus: 'Klop+: točke šteje tudi klop',
   },
+  // Časovno omejena kartica z aplikacijama namesto trgovine (AppPromo.tsx).
+  appPromo: {
+    oznaka: 'Novo · Aplikacija SLFF',
+    naslov: 'SLFF je zdaj tudi aplikacija',
+    opis: 'Sestavi ekipo, spremljaj točke v živo in prejmi obvestila pred rokom. Brezplačno za Android in iPhone.',
+  },
   // Kartica trgovine na naslovnici (shop.slff.eu), le standardni izdelki.
   trgovina: {
     oznaka: 'Novo · SLFF Trgovina',

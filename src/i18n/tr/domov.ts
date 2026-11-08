@@ -173,6 +173,12 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaWildcard: 'Joker: takımını ücretsiz baştan kur',
     pravilaKlopPlus: 'Yedek+: yedeklerin de puan alır',
   },
+  // Časovno omejena kartica z aplikacijama namesto trgovine (AppPromo.tsx).
+  appPromo: {
+    oznaka: 'Yeni · SLFF uygulaması',
+    naslov: 'SLFF artık bir uygulama',
+    opis: 'Takımını kur, puanları canlı takip et ve son tarihten önce hatırlatma al. Android ve iPhone için ücretsiz.',
+  },
   trgovina: {
     oznaka: 'Yeni · SLFF Mağaza',
     naslov: 'Resmî SLFF ürünleri',
