@@ -4,8 +4,7 @@ import { jeNativno } from '../lib/platforma'
 import { t } from '../i18n'
 
 export const GOOGLE_PLAY = 'https://play.google.com/store/apps/details?id=eu.slff.app'
-/** App Store še ni objavljen: ko je, sem naslov in gumb se pokaže sam. */
-export const APP_STORE: string | null = null
+export const APP_STORE = 'https://apps.apple.com/app/id6818746153'
 
 const SLOG =
   'inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/5 px-3.5 py-1.5 text-sm font-semibold text-slate-100 ring-1 ring-white/15 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gnl-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950'
