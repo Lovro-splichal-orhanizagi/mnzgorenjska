@@ -173,6 +173,12 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaWildcard: 'Wildcard: byg dit hold om gratis',
     pravilaKlopPlus: 'Bænk+: også bænken scorer point',
   },
+  // Časovno omejena kartica z aplikacijama namesto trgovine (AppPromo.tsx).
+  appPromo: {
+    oznaka: 'Nyt · SLFF-appen',
+    naslov: 'SLFF er nu også en app',
+    opis: 'Sammensæt dit hold, følg point live og få en påmindelse før fristen. Gratis til Android og iPhone.',
+  },
   trgovina: {
     oznaka: 'Nyhed · SLFF Butik',
     naslov: 'Officielt SLFF-udstyr',

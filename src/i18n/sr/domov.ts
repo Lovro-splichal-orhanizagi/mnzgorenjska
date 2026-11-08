@@ -174,6 +174,12 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaWildcard: 'Wildcard: rebuild your team for free',
     pravilaKlopPlus: 'Bench+: your bench scores too',
   },
+  // Časovno omejena kartica z aplikacijama namesto trgovine (AppPromo.tsx).
+  appPromo: {
+    oznaka: 'Novo · SLFF aplikacija',
+    naslov: 'SLFF je sada i aplikacija',
+    opis: 'Sastavi tim, prati bodove uživo i primi podsetnik pre roka. Besplatno za Android i iPhone.',
+  },
   trgovina: {
     oznaka: 'Novo · SLFF Prodavnica',
     naslov: 'Zvanična SLFF oprema',

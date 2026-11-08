@@ -173,6 +173,12 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaWildcard: 'Wildcard: վերակազմիր թիմդ անվճար',
     pravilaKlopPlus: 'Նստարան+: նստարանն էլ է միավորներ վաստակում',
   },
+  // Časovno omejena kartica z aplikacijama namesto trgovine (AppPromo.tsx).
+  appPromo: {
+    oznaka: 'Նոր · SLFF հավելված',
+    naslov: 'SLFF-ն այժմ նաև հավելված է',
+    opis: 'Կազմիր քո թիմը, հետևիր միավորներին ուղիղ եթերում և ստացիր հիշեցում վերջնաժամկետից առաջ։ Անվճար Android-ի և iPhone-ի համար։',
+  },
   trgovina: {
     oznaka: 'Նոր · SLFF խանութ',
     naslov: 'SLFF-ի պաշտոնական հանդերձանք',

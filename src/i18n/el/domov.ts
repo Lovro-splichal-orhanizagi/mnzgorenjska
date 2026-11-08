@@ -173,6 +173,12 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaWildcard: 'Wildcard: ξαναφτιάξε την ομάδα σου δωρεάν',
     pravilaKlopPlus: 'Πάγκος+: μετράει και ο πάγκος σου',
   },
+  // Časovno omejena kartica z aplikacijama namesto trgovine (AppPromo.tsx).
+  appPromo: {
+    oznaka: 'Νέο · εφαρμογή SLFF',
+    naslov: 'Το SLFF είναι πλέον και εφαρμογή',
+    opis: 'Φτιάξε την ομάδα σου, δες τους πόντους ζωντανά και πάρε υπενθύμιση πριν από την προθεσμία. Δωρεάν για Android και iPhone.',
+  },
   trgovina: {
     oznaka: 'Νέο · Κατάστημα SLFF',
     naslov: 'Επίσημος εξοπλισμός SLFF',
