@@ -1,11 +1,9 @@
 // Polskie tłumaczenie publicznej strony Zweryfikowany profil zawodnika (źródło: src/i18n/sl/preverjeni.ts).
-import type { Prevod } from '../jedro.ts'
-
-export const preverjeni: NonNullable<Prevod['preverjeni']> = {
+export const preverjeni = {
   naslov: 'Zweryfikowany profil zawodnika',
-  opis: 'Niebieski znaczek, baner, opis, linki i do 6 sprawdzonych klipów na twoim profilu zawodnika w SLFF.',
-  glava: 'Twoja piłka. Twój profil. Twój zasięg.',
-  uvod: 'Zweryfikowany profil to twoja strona zawodnika w SLFF: niebieski znaczek przy nazwisku, baner, opis, linki i klipy twoich akcji.',
+  opis: 'Zweryfikowany profil ze statystykami z protokołów i maksymalnie 6 nagraniami twoich najlepszych akcji. Pokaż się graczom fantasy, trenerom i skautom.',
+  glava: 'Twój futbol zasługuje, by go zobaczono.',
+  uvod: 'Stwórz zweryfikowany profil ze statystykami z protokołów i maksymalnie sześcioma nagraniami swoich najlepszych akcji. Pokaż, co potrafisz, graczom fantasy i udostępnij profil trenerom i skautom także poza swoją ligą.',
   noga: 'Zweryfikowany profil zawodnika',
   vec: 'Więcej o zweryfikowanym profilu →',
   nalaga: 'Wczytuję …',
@@ -14,29 +12,82 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
     ime: 'Imię i nazwisko',
     klub: 'Pozycja · Klub',
     opis: 'Napisz tu, kim jesteś, gdzie grasz i co cię napędza.',
-    posnetek: 'Klip {n}',
+    highlighti: 'Najlepsze akcje',
+    posnetek: 'Akcja {n}',
     alt: 'Boisko SLFF',
+  },
+  nizje: {
+    naslov: 'Stworzone dla zawodników niższych lig',
+    besedilo: 'SLFF łączy oficjalne protokoły niższych lig, grę fantasy i twój profil zawodnika. Twoje mecze, gole i minuty już tu są. Zweryfikowany profil dodaje do nich twoją historię i nagrania, żeby zauważono cię także poza twoją ligą.',
   },
   kaj: {
     naslov: 'Co dostajesz',
     kljukica: 'Niebieski znaczek przy twoim nazwisku wszędzie w grze.',
-    profil: 'Bogatszy baner, opis i linki (YouTube, X, strona internetowa) oraz wiadomość do kibiców.',
-    posnetki: 'Do 6 klipów na górze profilu. Każdy klip najpierw sprawdza zespół SLFF.',
-    ogledi: 'Zbiorcze zestawienie wyświetleń skautów na twoim profilu, tam gdzie dostępny jest SLFF Scout.',
+    profil: 'Własny baner i kolor profilu, dłuższy opis i linki (YouTube, X, strona).',
+    vzdevek: 'Twój pseudonim przy nazwisku na listach zawodników, na stronie klubu i w minilidze.',
+    izpostavljeno: 'Przypnij na górze profilu swój najlepszy mecz lub statystykę sezonu: gole, asysty, punkty …',
+    sporocilo: 'Krótka wiadomość dla kibiców, którą widzi każdy, kto otworzy twój profil.',
+    znacka: 'Drukowana odznaka z twoim nazwiskiem na torbę lub kurtkę, jako dodatek do zakupu.',
+    posnetki: 'Do 6 nagrań twoich najlepszych akcji na górze profilu. Każde nagranie najpierw sprawdza zespół SLFF.',
+    ogledi: 'Ile wyświetleń od skautów ma twój profil w SLFF Scout, tam gdzie jest dostępny.',
     izbranost: 'Ile drużyn fantasy cię wybrało i które to są.',
+    naslovi: {
+      kljukica: 'Niebieski znaczek',
+      posnetki: 'Do 6 najlepszych akcji',
+      profil: 'Baner i kolor po twojemu',
+      vzdevek: 'Pseudonim na listach',
+      izpostavljeno: 'Wyróżniony mecz lub statystyka',
+      sporocilo: 'Wiadomość dla kibiców',
+      znacka: 'Drukowana odznaka',
+      ogledi: 'Wyświetlenia skautów',
+      izbranost: 'Kto cię wybrał',
+    },
+  },
+  scout: {
+    naslov: 'Czym jest SLFF Scout?',
+    opis: 'SLFF Scout to narzędzie dla klubów, które szukają zawodników. Z publicznych protokołów lig seniorskich pokazuje wskaźniki takie jak minuty, gole i droga przez kolejne sezony. O zawodniku zawsze decyduje człowiek w klubie.',
+    ogledi: 'Gdy klub otworzy twój profil w Scoucie, liczy się to jako wyświetlenie. Widzisz łączną liczbę wyświetleń, ale nie nazwy klubów.',
+    vec: 'Więcej o Scoucie i twoich prawach',
+  },
+  prihaja: {
+    naslov: 'Wkrótce',
+    oznaka: 'Wkrótce',
+    story: {
+      naslov: 'Twój profil w relacji',
+      opis: 'Gotowy obraz twojego profilu do relacji na Instagramie, który udostępniasz jednym dotknięciem.',
+    },
+    evropa: {
+      naslov: 'Przed graczami w całej Europie',
+      opis: 'Zweryfikowane profile będą pokazywane graczom fantasy we wszystkich ligach SLFF w Europie.',
+    },
   },
   koraki: {
     naslov: 'Jak go zdobyć',
-    poisci: { naslov: 'Znajdź swój profil', opis: 'Znajdź siebie wśród zawodników swojej ligi.' },
+    poisci: {
+      naslov: 'Znajdź swój profil',
+      opis: 'Znajdź siebie wśród zawodników swojej ligi.',
+    },
     prevzemi: {
       naslov: 'Przejmij go i poczekaj na potwierdzenie',
       opis: 'Kliknij „To ja”. Gdy cię potwierdzimy, możesz bezpłatnie dodać też zdjęcie.',
     },
-    izberi: { naslov: 'Wybierz roczny lub dożywotni', opis: 'Zakup odbywa się online.' },
-    uredi: { naslov: 'Edytuj i pokaż', opis: 'Dodaj baner, opis, linki i klipy.' },
+    izberi: {
+      naslov: 'Wybierz roczny lub dożywotni',
+      opis: 'Zakup odbywa się online.',
+    },
+    uredi: {
+      naslov: 'Edytuj i pokaż',
+      opis: 'Dodaj baner, opis, linki i klipy.',
+    },
   },
   cena: {
     naslov: 'Cena',
+    ali: 'lub {cena}',
+    letna: 'Rocznie',
+    letnaOpis: 'Subskrypcję możesz anulować w każdej chwili.',
+    zaVedno: 'Na zawsze',
+    zaVednoOpis: 'Jednorazowa płatność, bez subskrypcji.',
+    najugodneje: 'Najkorzystniej',
   },
   cta: {
     poisci: 'Znajdź swój profil',

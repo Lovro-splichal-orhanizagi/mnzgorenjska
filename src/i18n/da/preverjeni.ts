@@ -1,11 +1,9 @@
 // Dansk oversættelse: `preverjeni` (izvor: src/i18n/sl/preverjeni.ts).
-import type { Prevod } from '../jedro.ts'
-
-export const preverjeni: NonNullable<Prevod['preverjeni']> = {
+export const preverjeni = {
   naslov: 'Verificeret spillerprofil',
-  opis: 'Blåt flueben, banner, beskrivelse, links og op til 6 gennemgåede klip på din spillerprofil i SLFF.',
-  glava: 'Din fodbold. Din profil. Din rækkevidde.',
-  uvod: 'En verificeret profil er din spillerside i SLFF: blåt flueben ved navnet, banner, beskrivelse, links og klip af dine øjeblikke.',
+  opis: 'En verificeret profil med dine kampstatistikker og op til 6 klip af dine bedste aktioner. Vis dig frem for fantasyspillere, trænere og spejdere.',
+  glava: 'Din fodbold fortjener at blive set.',
+  uvod: 'Byg en verificeret profil med dine kampstatistikker og op til seks klip af dine bedste aktioner. Vis fantasyspillere, hvad du kan, og del din profil med trænere og spejdere uden for din række.',
   noga: 'Verificeret spillerprofil',
   vec: 'Mere om den verificerede profil →',
   nalaga: 'Indlæser …',
@@ -14,29 +12,82 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
     ime: 'Fornavn og efternavn',
     klub: 'Position · Klub',
     opis: 'Fortæl her, hvem du er, hvor du spiller, og hvad der driver dig.',
-    posnetek: 'Klip {n}',
+    highlighti: 'Highlights',
+    posnetek: 'Highlight {n}',
     alt: 'SLFF-bane',
+  },
+  nizje: {
+    naslov: 'Lavet til spillere i de lavere rækker',
+    besedilo: 'SLFF forbinder officielle kamprapporter fra de lavere rækker, fantasyspillet og din spillerprofil. Dine kampe, mål og minutter er her allerede. En verificeret profil tilføjer din historie og dine highlights, så du bliver set uden for din række.',
   },
   kaj: {
     naslov: 'Det får du',
     kljukica: 'Et blåt flueben ved dit navn overalt i spillet.',
-    profil: 'Et rigere banner, beskrivelse og links (YouTube, X, hjemmeside) og en besked til fansene.',
-    posnetki: 'Op til 6 klip øverst på profilen. Hvert klip gennemgås først af SLFF-teamet.',
-    ogledi: 'Samlet overblik over scouts’ visninger af din profil, hvor SLFF Scout er tilgængelig.',
+    profil: 'Dit eget banner og profilfarve, en længere beskrivelse og links (YouTube, X, hjemmeside).',
+    vzdevek: 'Dit kælenavn ved dit navn på spillerlister, på klubsiden og i miniligaer.',
+    izpostavljeno: 'Fastgør din bedste kamp eller en sæsonstatistik øverst på profilen: mål, assists, point …',
+    sporocilo: 'En kort besked til fansene, som alle, der åbner din profil, kan se.',
+    znacka: 'Et trykt emblem med dit navn til tasken eller jakken, som tilkøb.',
+    posnetki: 'Op til 6 highlights af dine bedste aktioner øverst på profilen. SLFF-teamet gennemgår hvert klip først.',
+    ogledi: 'Hvor mange visninger fra spejdere din profil får i SLFF Scout, hvor det er tilgængeligt.',
     izbranost: 'Hvor mange fantasy-hold der valgte dig, og hvilke det er.',
+    naslovi: {
+      kljukica: 'Blåt flueben',
+      posnetki: 'Op til 6 highlights',
+      profil: 'Banner og farve efter din smag',
+      vzdevek: 'Kælenavn på lister',
+      izpostavljeno: 'Fremhævet kamp eller statistik',
+      sporocilo: 'Besked til fansene',
+      znacka: 'Trykt emblem',
+      ogledi: 'Spejdervisninger',
+      izbranost: 'Hvem valgte dig',
+    },
+  },
+  scout: {
+    naslov: 'Hvad er SLFF Scout?',
+    opis: 'SLFF Scout er et værktøj for klubber, der leder efter spillere. Ud fra offentlige kamprapporter fra seniorrækker viser det nøgletal som minutter, mål og karriereforløb over sæsoner. Det er altid et menneske i klubben, der beslutter.',
+    ogledi: 'Når en klub åbner din profil i Scout, tæller det som en visning. Du ser det samlede antal visninger, ikke klubbernes navne.',
+    vec: 'Mere om Scout og dine rettigheder',
+  },
+  prihaja: {
+    naslov: 'Snart',
+    oznaka: 'På vej',
+    story: {
+      naslov: 'Din profil i en story',
+      opis: 'Et færdigt billede af din profil til en Instagram-story, delt med ét tryk.',
+    },
+    evropa: {
+      naslov: 'Foran spillere i hele Europa',
+      opis: 'Verificerede profiler vil blive vist for fantasyspillere i alle SLFF-rækker i Europa.',
+    },
   },
   koraki: {
     naslov: 'Sådan får du den',
-    poisci: { naslov: 'Find din profil', opis: 'Find dig selv blandt spillerne i din liga.' },
+    poisci: {
+      naslov: 'Find din profil',
+      opis: 'Find dig selv blandt spillerne i din liga.',
+    },
     prevzemi: {
       naslov: 'Gør krav på den, og vent på bekræftelse',
       opis: 'Tryk på »Det er mig«. Når vi har bekræftet dig, kan du også uploade et billede uden betaling.',
     },
-    izberi: { naslov: 'Vælg årlig eller for altid', opis: 'Købet foregår online.' },
-    uredi: { naslov: 'Rediger og vis frem', opis: 'Tilføj banner, beskrivelse, links og klip.' },
+    izberi: {
+      naslov: 'Vælg årlig eller for altid',
+      opis: 'Købet foregår online.',
+    },
+    uredi: {
+      naslov: 'Rediger og vis frem',
+      opis: 'Tilføj banner, beskrivelse, links og klip.',
+    },
   },
   cena: {
     naslov: 'Pris',
+    ali: 'eller {cena}',
+    letna: 'Årligt',
+    letnaOpis: 'Abonnementet kan opsiges når som helst.',
+    zaVedno: 'For altid',
+    zaVednoOpis: 'Én betaling, intet abonnement.',
+    najugodneje: 'Bedste værdi',
   },
   cta: {
     poisci: 'Find din profil',

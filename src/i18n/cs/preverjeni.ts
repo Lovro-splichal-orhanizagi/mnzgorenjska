@@ -1,11 +1,9 @@
 // Český překlad veřejné stránky Ověřený hráčský profil (zdroj: src/i18n/sl/preverjeni.ts).
-import type { Prevod } from '../jedro.ts'
-
-export const preverjeni: NonNullable<Prevod['preverjeni']> = {
+export const preverjeni = {
   naslov: 'Ověřený hráčský profil',
-  opis: 'Modrá fajfka, banner, popis, odkazy a až 6 zkontrolovaných klipů na tvém hráčském profilu ve SLFF.',
-  glava: 'Tvůj fotbal. Tvůj profil. Tvůj dosah.',
-  uvod: 'Ověřený profil je tvá hráčská stránka ve SLFF: modrá fajfka u jména, banner, popis, odkazy a klipy tvých akcí.',
+  opis: 'Ověřený profil se statistikami ze zápisů a až 6 videi tvých nejlepších akcí. Ukaž se hráčům fantasy hry, trenérům a skautům.',
+  glava: 'Tvůj fotbal si zaslouží, aby ho bylo vidět.',
+  uvod: 'Vytvoř si ověřený profil se statistikami ze zápisů a až šesti videi svých nejlepších akcí. Ukaž, co umíš, hráčům fantasy hry a profil sdílej s trenéry a skauty i mimo svou soutěž.',
   noga: 'Ověřený hráčský profil',
   vec: 'Více o ověřeném profilu →',
   nalaga: 'Nahrávám …',
@@ -14,29 +12,82 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
     ime: 'Jméno a příjmení',
     klub: 'Pozice · Klub',
     opis: 'Tady napiš, kdo jsi, kde hraješ a co tě žene.',
-    posnetek: 'Klip {n}',
+    highlighti: 'Nejlepší akce',
+    posnetek: 'Akce {n}',
     alt: 'Hřiště SLFF',
+  },
+  nizje: {
+    naslov: 'Vytvořeno pro hráče nižších soutěží',
+    besedilo: 'SLFF propojuje oficiální zápisy nižších soutěží, fantasy hru a tvůj hráčský profil. Tvoje zápasy, góly a minuty už tu jsou. Ověřený profil k nim přidá tvůj příběh a videa, aby si tě všimli i mimo tvou soutěž.',
   },
   kaj: {
     naslov: 'Co získáš',
     kljukica: 'Modrá fajfka u tvého jména všude ve hře.',
-    profil: 'Bohatší banner, popis a odkazy (YouTube, X, webová stránka) a vzkaz fanouškům.',
-    posnetki: 'Až 6 klipů nahoře na profilu. Každý klip nejdřív zkontroluje tým SLFF.',
-    ogledi: 'Souhrn zobrazení skautů na tvém profilu, tam kde je dostupný SLFF Scout.',
+    profil: 'Vlastní banner a barva profilu, delší popis a odkazy (YouTube, X, web).',
+    vzdevek: 'Tvoje přezdívka u jména v seznamech hráčů, na stránce klubu a v minilize.',
+    izpostavljeno: 'Připni na vrch profilu svůj nejlepší zápas nebo statistiku sezóny: góly, asistence, body …',
+    sporocilo: 'Krátká zpráva fanouškům, kterou uvidí každý, kdo otevře tvůj profil.',
+    znacka: 'Vytištěný odznak s tvým jménem na tašku nebo bundu, jako doplněk k nákupu.',
+    posnetki: 'Až 6 videí tvých nejlepších akcí v horní části profilu. Každé video nejprve zkontroluje tým SLFF.',
+    ogledi: 'Kolik zobrazení od skautů má tvůj profil v SLFF Scout, kde je dostupný.',
     izbranost: 'Kolik fantasy týmů tě vybralo a které to jsou.',
+    naslovi: {
+      kljukica: 'Modrá fajfka',
+      posnetki: 'Až 6 nejlepších akcí',
+      profil: 'Banner a barva podle tebe',
+      vzdevek: 'Přezdívka v seznamech',
+      izpostavljeno: 'Zvýrazněný zápas nebo statistika',
+      sporocilo: 'Zpráva fanouškům',
+      znacka: 'Vytištěný odznak',
+      ogledi: 'Zobrazení skautů',
+      izbranost: 'Kdo si tě vybral',
+    },
+  },
+  scout: {
+    naslov: 'Co je SLFF Scout?',
+    opis: 'SLFF Scout je nástroj pro kluby, které hledají hráče. Z veřejných zápisů seniorských soutěží ukazuje ukazatele jako minuty, góly a cestu přes sezóny. O hráči vždy rozhoduje člověk v klubu.',
+    ogledi: 'Když klub ve Scoutu otevře tvůj profil, počítá se to jako zobrazení. Vidíš celkový počet zobrazení, ne názvy klubů.',
+    vec: 'Více o Scoutu a tvých právech',
+  },
+  prihaja: {
+    naslov: 'Brzy',
+    oznaka: 'Připravujeme',
+    story: {
+      naslov: 'Tvůj profil ve story',
+      opis: 'Hotový obrázek tvého profilu pro Instagram story, který sdílíš jedním klepnutím.',
+    },
+    evropa: {
+      naslov: 'Před hráči po celé Evropě',
+      opis: 'Ověřené profily se budou zobrazovat hráčům fantasy hry ve všech soutěžích SLFF po Evropě.',
+    },
   },
   koraki: {
     naslov: 'Jak na to',
-    poisci: { naslov: 'Najdi svůj profil', opis: 'Najdi se mezi hráči své ligy.' },
+    poisci: {
+      naslov: 'Najdi svůj profil',
+      opis: 'Najdi se mezi hráči své ligy.',
+    },
     prevzemi: {
       naslov: 'Převezmi ho a počkej na potvrzení',
       opis: 'Klepni na „To jsem já“. Jakmile tě potvrdíme, můžeš zdarma nahrát i fotku.',
     },
-    izberi: { naslov: 'Vyber roční nebo doživotní', opis: 'Nákup probíhá na webu.' },
-    uredi: { naslov: 'Uprav a ukaž', opis: 'Přidej banner, popis, odkazy a klipy.' },
+    izberi: {
+      naslov: 'Vyber roční nebo doživotní',
+      opis: 'Nákup probíhá na webu.',
+    },
+    uredi: {
+      naslov: 'Uprav a ukaž',
+      opis: 'Přidej banner, popis, odkazy a klipy.',
+    },
   },
   cena: {
     naslov: 'Cena',
+    ali: 'nebo {cena}',
+    letna: 'Ročně',
+    letnaOpis: 'Předplatné můžeš kdykoli zrušit.',
+    zaVedno: 'Navždy',
+    zaVednoOpis: 'Jednorázová platba, bez předplatného.',
+    najugodneje: 'Nejvýhodnější',
   },
   cta: {
     poisci: 'Najdi svůj profil',

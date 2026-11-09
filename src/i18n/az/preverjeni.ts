@@ -1,11 +1,9 @@
 // Azərbaycan dilinə tərcümə: `preverjeni` (izvor: src/i18n/sl/preverjeni.ts).
-import type { Prevod } from '../jedro.ts'
-
-export const preverjeni: NonNullable<Prevod['preverjeni']> = {
+export const preverjeni = {
   naslov: 'Təsdiqlənmiş oyunçu profili',
-  opis: 'SLFF-dəki oyunçu profilində mavi işarə, banner, təsvir, keçidlər və 6-ya qədər yoxlanmış video.',
-  glava: 'Sənin futbolun. Sənin profilin. Sənin auditoriyan.',
-  uvod: 'Təsdiqlənmiş profil SLFF-dəki oyunçu səhifəndir: adının yanında mavi işarə, banner, təsvir, keçidlər və anlarının videoları.',
+  opis: 'Protokollardan statistika və ən yaxşı anlarından 6 videoya qədər olan təsdiqlənmiş profil. Özünü fantaziya oyunçularına, məşqçilərə və skautlara göstər.',
+  glava: 'Sənin futbolun görünməyə layiqdir.',
+  uvod: 'Protokollardan statistika və ən yaxşı anlarından altı videoya qədər olan təsdiqlənmiş profil yarat. Fantaziya oyunçularına nə bacardığını göstər, profilini liqandan kənardakı məşqçi və skautlarla da paylaş.',
   noga: 'Təsdiqlənmiş oyunçu profili',
   vec: 'Təsdiqlənmiş profil haqqında daha çox →',
   nalaga: 'Yüklənir …',
@@ -14,29 +12,82 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
     ime: 'Ad və soyad',
     klub: 'Mövqe · Klub',
     opis: 'Burada kim olduğunu, harada oynadığını və səni nəyin sürüklədiyini yaz.',
-    posnetek: 'Video {n}',
+    highlighti: 'Ən yaxşı anlar',
+    posnetek: 'An {n}',
     alt: 'SLFF meydançası',
+  },
+  nizje: {
+    naslov: 'Aşağı liqa oyunçuları üçün yaradılıb',
+    besedilo: 'SLFF aşağı liqaların rəsmi protokollarını, fantaziya oyununu və oyunçu profilini birləşdirir. Matçların, qolların və dəqiqələrin artıq buradadır. Təsdiqlənmiş profil onlara hekayəni və videolarını əlavə edir ki, liqandan kənarda da diqqət çəkəsən.',
   },
   kaj: {
     naslov: 'Nə əldə edirsən',
     kljukica: 'Oyunun hər yerində adının yanında mavi işarə.',
-    profil: 'Daha zəngin banner, təsvir və keçidlər (YouTube, X, sayt) və azarkeşlərə mesaj.',
-    posnetki: 'Profilin yuxarısında 6-ya qədər video. Hər videoya əvvəlcə SLFF komandası baxır.',
-    ogledi: 'Profilindəki skaut baxışlarının ümumi icmalı, SLFF Scout-un mövcud olduğu yerlərdə.',
+    profil: 'Öz bannerin və profil rəngin, daha uzun təsvir və keçidlər (YouTube, X, veb-sayt).',
+    vzdevek: 'Oyunçu siyahılarında, klub səhifəsində və mini liqalarda adının yanında ləqəbin.',
+    izpostavljeno: 'Ən yaxşı oyununu və ya mövsüm statistikasını profilin yuxarısına bərkit: qollar, ötürmələr, xallar …',
+    sporocilo: 'Profilini açan hər kəsin gördüyü azarkeşlərə qısa mesaj.',
+    znacka: 'Alışa əlavə olaraq çanta və ya gödəkçə üçün adın yazılmış çap nişanı.',
+    posnetki: 'Profilin yuxarısında ən yaxşı anlarından 6 videoya qədər. Hər videonu əvvəlcə SLFF komandası yoxlayır.',
+    ogledi: 'Profilinin SLFF Scout-da, mövcud olduğu yerlərdə, neçə skaut baxışı aldığı.',
     izbranost: 'Neçə fantasy komandasının səni seçdiyi və hansılar olduğu.',
+    naslovi: {
+      kljukica: 'Mavi işarə',
+      posnetki: '6 ən yaxşı ana qədər',
+      profil: 'Banner və rəng öz zövqünlə',
+      vzdevek: 'Siyahılarda ləqəb',
+      izpostavljeno: 'Seçilmiş oyun və ya statistika',
+      sporocilo: 'Azarkeşlərə mesaj',
+      znacka: 'Çap nişanı',
+      ogledi: 'Skaut baxışları',
+      izbranost: 'Səni kim seçib',
+    },
+  },
+  scout: {
+    naslov: 'SLFF Scout nədir?',
+    opis: 'SLFF Scout oyunçu axtaran klublar üçün alətdir. Böyüklər liqalarının açıq protokollarından dəqiqələr, qollar və mövsümlər üzrə yol kimi göstəriciləri göstərir. Qərarı həmişə klubdakı insan verir.',
+    ogledi: 'Klub Scout-da profilini açanda bu, baxış sayılır. Baxışların ümumi sayını görürsən, klubların adlarını yox.',
+    vec: 'Scout və hüquqların haqqında ətraflı',
+  },
+  prihaja: {
+    naslov: 'Tezliklə',
+    oznaka: 'Tezliklə',
+    story: {
+      naslov: 'Profilin story-də',
+      opis: 'Profilinin Instagram story üçün hazır şəkli, bir toxunuşla paylaşılır.',
+    },
+    evropa: {
+      naslov: 'Bütün Avropada oyunçuların qarşısında',
+      opis: 'Təsdiqlənmiş profillər Avropadakı bütün SLFF liqalarında fantaziya oyunçularına göstəriləcək.',
+    },
   },
   koraki: {
     naslov: 'Necə əldə etmək olar',
-    poisci: { naslov: 'Profilini tap', opis: 'Liqanın oyunçuları arasında özünü tap.' },
+    poisci: {
+      naslov: 'Profilini tap',
+      opis: 'Liqanın oyunçuları arasında özünü tap.',
+    },
     prevzemi: {
       naslov: 'Onu götür və təsdiqi gözlə',
       opis: '“Bu mənəm” düyməsinə bas. Səni təsdiqlədikdən sonra ödənişsiz şəkil də yükləyə bilərsən.',
     },
-    izberi: { naslov: 'İllik və ya həmişəlik seç', opis: 'Alış onlayn edilir.' },
-    uredi: { naslov: 'Düzənlə və göstər', opis: 'Banner, təsvir, keçidlər və videolar əlavə et.' },
+    izberi: {
+      naslov: 'İllik və ya həmişəlik seç',
+      opis: 'Alış onlayn edilir.',
+    },
+    uredi: {
+      naslov: 'Düzənlə və göstər',
+      opis: 'Banner, təsvir, keçidlər və videolar əlavə et.',
+    },
   },
   cena: {
     naslov: 'Qiymət',
+    ali: 'və ya {cena}',
+    letna: 'İllik',
+    letnaOpis: 'Abunəliyi istənilən vaxt ləğv edə bilərsən.',
+    zaVedno: 'Ömürlük',
+    zaVednoOpis: 'Bir dəfəlik ödəniş, abunəliksiz.',
+    najugodneje: 'Ən sərfəli',
   },
   cta: {
     poisci: 'Profilini tap',
