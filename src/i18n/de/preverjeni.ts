@@ -2,9 +2,9 @@
 // Preise und Verlängerung kommen aus dem Kauf (`igralci.preverjen.ponudba.*`), hier nicht.
 export const preverjeni = {
   naslov: 'Verifiziertes Spielerprofil',
-  opis: 'Blauer Haken, Banner, Beschreibung, Links und bis zu 6 geprüfte Clips auf deinem Spielerprofil in SLFF.',
+  opis: 'Blauer Haken, Banner, Beschreibung, Links und bis zu 6 geprüfte Fußball-Highlights auf deinem Spielerprofil in SLFF.',
   glava: 'Dein Fußball. Dein Profil. Deine Reichweite.',
-  uvod: 'Ein verifiziertes Profil ist deine Spielerseite in SLFF: mit blauem Haken neben dem Namen, Banner, Beschreibung, Links und Clips deiner besten Aktionen.',
+  uvod: 'Ein verifiziertes Profil ist deine Spielerseite in SLFF: mit blauem Haken neben dem Namen, Banner, Beschreibung, Links und Fußball-Highlights deiner besten Momente.',
   noga: 'Verifiziertes Spielerprofil',
   vec: 'Mehr zum verifizierten Profil →',
   nalaga: 'Wird geladen …',
@@ -13,16 +13,20 @@ export const preverjeni = {
     ime: 'Vor- und Nachname',
     klub: 'Position · Verein',
     opis: 'Erzähl hier, wer du bist, wo du spielst und was dich antreibt.',
-    posnetek: 'Clip {n}',
+    posnetek: 'Highlight {n}',
     alt: 'SLFF-Spielfeld',
   },
   kaj: {
     naslov: 'Was du bekommst',
-    kljukica: 'Ein blauer Haken neben deinem Namen überall im Spiel.',
+    kljukica: 'Verifizierte Identität',
+    kljukicaOpis: 'Ein blauer Haken neben deinem Namen überall im Spiel.',
+    izbranost: 'Sieh, welche Fantasy-Teams dich gewählt haben',
+    izbranostOpis: 'In deinem eigenen Profil siehst du die Namen der Fantasy-Teams, die dich gewählt haben. Nur Teamnamen.',
+    posnetki: 'Bis zu 6 Fußball-Highlights',
+    posnetkiOpis: 'Tore, Paraden und Spielmomente ganz oben in deinem Profil. Jedes Highlight prüft das SLFF-Team, bevor es angezeigt wird.',
+    dodatno: 'Und außerdem',
     profil: 'Ein aufwendigerer Banner, Beschreibung und Links (YouTube, X, Website) sowie eine Nachricht an die Fans.',
-    posnetki: 'Bis zu 6 Clips ganz oben in deinem Profil. Jeden Clip prüft zuerst das SLFF-Team.',
     ogledi: 'Eine Gesamtübersicht, wie oft Scouts dein Profil angesehen haben, wo SLFF Scout verfügbar ist.',
-    izbranost: 'Wie viele Fantasy-Teams dich gewählt haben und welche Teams das sind.',
   },
   koraki: {
     naslov: 'So kommst du dazu',
@@ -32,10 +36,20 @@ export const preverjeni = {
       opis: 'Tippe auf „Das bin ich“. Sobald wir dich bestätigt haben, kannst du auch ohne Zahlung ein Foto hochladen.',
     },
     izberi: { naslov: 'Wähle jährlich oder lebenslang', opis: 'Der Kauf läuft online.' },
-    uredi: { naslov: 'Gestalten und zeigen', opis: 'Füge Banner, Beschreibung, Links und Clips hinzu.' },
+    uredi: { naslov: 'Gestalten und zeigen', opis: 'Füge Banner, Beschreibung, Links und Highlights hinzu.' },
   },
-  cena: {
-    naslov: 'Preis',
+  pripravi: {
+    oznaka: 'In Vorbereitung',
+    naslov: 'Woran wir arbeiten',
+    uvod: 'Ideen in Vorbereitung. Sie sind heute nicht Teil des verifizierten Profils und können sich ändern.',
+    story: {
+      naslov: 'Deine Highlights in Instagram Stories',
+      opis: 'Wenn du zustimmst, zeigen wir deine Highlights in der SLFF-Instagram-Story, bis zu 3 im Monat und erst nach Prüfung durch SLFF. Du bekommst einen Bericht darüber, wie viele Menschen sie erreicht hat.',
+    },
+    igralci: {
+      naslov: 'Deine Highlights vor Fantasy-Spielern',
+      opis: 'Deine Highlights den SLFF-Fantasy-Spielern in den Ligen zeigen, die wir unterstützen.',
+    },
   },
   cta: {
     poisci: 'Finde dein Profil',
@@ -45,7 +59,7 @@ export const preverjeni = {
     preveri: 'Mein Spielerprofil verifizieren',
     preveriOpis: 'Jahresabo oder einmaliger Lebenszeit-Kauf.',
     profil: 'Zu deinem Profil',
-    preverjen: 'Dein Profil ist verifiziert. Gestalte es und zeig deine Clips.',
+    preverjen: 'Dein Profil ist verifiziert. Gestalte es und zeig deine Highlights.',
     brezPonudbe: 'Verifizierte Profile gibt es für volljährige Spieler mit sichtbarem Namen.',
   },
 }

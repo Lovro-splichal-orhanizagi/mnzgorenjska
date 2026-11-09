@@ -2,9 +2,9 @@
 // Ceny a obnova prichádzajú z nákupu (`igralci.preverjen.ponudba.*`), tu ich nie je.
 export const preverjeni = {
   naslov: 'Overený profil hráča',
-  opis: 'Modrá fajka, banner, popis, odkazy a až 6 skontrolovaných klipov na tvojom hráčskom profile v SLFF.',
+  opis: 'Modrá fajka, banner, popis, odkazy a až 6 skontrolovaných futbalových highlightov na tvojom hráčskom profile v SLFF.',
   glava: 'Tvoj futbal. Tvoj profil. Tvoj dosah.',
-  uvod: 'Overený profil je tvoja stránka hráča v SLFF: modrá fajka pri mene, banner, popis, odkazy a klipy tvojich akcií.',
+  uvod: 'Overený profil je tvoja stránka hráča v SLFF: modrá fajka pri mene, banner, popis, odkazy a futbalové highlighty tvojich najlepších momentov.',
   noga: 'Overený profil hráča',
   vec: 'Viac o overenom profile →',
   nalaga: 'Načítava sa …',
@@ -13,16 +13,20 @@ export const preverjeni = {
     ime: 'Meno a priezvisko',
     klub: 'Pozícia · Klub',
     opis: 'Tu povedz, kto si, kde hráš a čo ťa poháňa.',
-    posnetek: 'Klip {n}',
+    posnetek: 'Highlight {n}',
     alt: 'Ihrisko SLFF',
   },
   kaj: {
     naslov: 'Čo získaš',
-    kljukica: 'Modrá fajka pri tvojom mene všade v hre.',
+    kljukica: 'Overená identita',
+    kljukicaOpis: 'Modrá fajka pri tvojom mene všade v hre.',
+    izbranost: 'Pozri si, ktoré fantasy tímy ťa vybrali',
+    izbranostOpis: 'Na svojom profile vidíš názvy fantasy tímov, ktoré ťa vybrali. Iba názvy tímov.',
+    posnetki: 'Až 6 futbalových highlightov',
+    posnetkiOpis: 'Góly, zákroky a momenty zo zápasov na vrchu profilu. Každý highlight pred zobrazením skontroluje tím SLFF.',
+    dodatno: 'A navyše',
     profil: 'Bohatší banner, popis a odkazy (YouTube, X, webová stránka) a odkaz fanúšikom.',
-    posnetki: 'Až 6 klipov na vrchu profilu. Každý klip najprv skontroluje tím SLFF.',
     ogledi: 'Celkový prehľad zobrazení skautov na tvojom profile, kde je dostupný SLFF Scout.',
-    izbranost: 'Koľko fantasy tímov ťa vybralo a ktoré tímy to sú.',
   },
   koraki: {
     naslov: 'Ako sa k nemu dostať',
@@ -32,10 +36,20 @@ export const preverjeni = {
       opis: 'Stlač „To som ja“. Keď ťa potvrdíme, môžeš bez platenia nahrať aj fotku.',
     },
     izberi: { naslov: 'Vyber ročné alebo doživotné', opis: 'Nákup prebieha online.' },
-    uredi: { naslov: 'Uprav a ukáž', opis: 'Pridaj banner, popis, odkazy a klipy.' },
+    uredi: { naslov: 'Uprav a ukáž', opis: 'Pridaj banner, popis, odkazy a highlighty.' },
   },
-  cena: {
-    naslov: 'Cena',
+  pripravi: {
+    oznaka: 'Pripravujeme',
+    naslov: 'Na čom pracujeme',
+    uvod: 'Nápady v príprave. Dnes nie sú súčasťou overeného profilu a môžu sa zmeniť.',
+    story: {
+      naslov: 'Tvoje highlighty v Instagram Stories',
+      opis: 'Ak budeš súhlasiť, tvoje highlighty ukážeme v Instagram Story SLFF, najviac 3 za mesiac a až po kontrole SLFF. Dostaneš správu o tom, koľko ľudí zasiahli.',
+    },
+    igralci: {
+      naslov: 'Tvoje highlighty pred fantasy hráčmi',
+      opis: 'Ukázanie tvojich highlightov fantasy hráčom SLFF v ligách, ktoré podporujeme.',
+    },
   },
   cta: {
     poisci: 'Nájdi svoj profil',
@@ -45,7 +59,7 @@ export const preverjeni = {
     preveri: 'Overiť môj hráčsky profil',
     preveriOpis: 'Ročné predplatné alebo jednorazový doživotný nákup.',
     profil: 'Prejsť na svoj profil',
-    preverjen: 'Tvoj profil je overený. Uprav ho a ukáž klipy.',
+    preverjen: 'Tvoj profil je overený. Uprav ho a ukáž svoje highlighty.',
     brezPonudbe: 'Overené profily sú pre plnoletých hráčov so zobrazeným menom.',
   },
 }

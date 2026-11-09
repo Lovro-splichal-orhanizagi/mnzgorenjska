@@ -1,8 +1,9 @@
 // Javna stran Preverjeni igralski profil (`/verified`): kaj preverjen profil
-// prinese, kako do njega in kaj je v tvojem primeru naslednji korak. Nakup je
-// na strani igralca (`PreverjeniProfil`), tu je le en gumb nanj. V aplikaciji
-// ni ne cene ne gumba za nakup (Apple ne dovoli napotkov na plačila zunaj
-// trgovine), kot drugod (`jeNativno()`).
+// prinese (tri uvrščene koristi), kako do njega in kaj je v tvojem primeru
+// naslednji korak. Nakup je na strani igralca (`PreverjeniProfil`), tu je le
+// en gumb nanj in ob njem obstoječi nizi s cenama. V aplikaciji ni ne cene ne
+// gumba za nakup (Apple ne dovoli napotkov na plačila zunaj trgovine), kot
+// drugod (`jeNativno()`). "V pripravi" je načrt, ne obljuba nakupa.
 import { useEffect, useState, type CSSProperties } from "react";
 import { Link } from "../components/Povezava";
 import { Kljukica } from "../components/ZnakPreverjen";
@@ -14,6 +15,12 @@ import { jeNativno } from "../lib/platforma";
 import { jeMladinskiSlug } from "../lib/prevzem";
 import { useTekmovanje, zLigo } from "../lib/tekmovanje";
 import { t, tx } from "../i18n";
+
+/**
+ * Razdelek "V pripravi" (načrt, ne del nakupa). Ena konstanta: `false` ga
+ * odstrani s strani, nizi `preverjeni.pripravi.*` pa lahko ostanejo.
+ */
+const V_PRIPRAVI = true;
 
 /** Kje je obiskovalec na poti do preverjenega profila. */
 type Stanje =
@@ -121,12 +128,27 @@ export default function Preverjeni() {
     stanje.vrsta !== "brezPonudbe" &&
     stanje.vrsta !== "nalaga";
 
+  // Tri koristi po vrsti pomembnosti. Izbranost je le, ko je v bazi živa.
   const koristi = [
-    t("preverjeni.kaj.kljukica"),
-    t("preverjeni.kaj.profil"),
-    t("preverjeni.kaj.posnetki"),
-    t("preverjeni.kaj.ogledi"),
-    ...(izbranost ? [t("preverjeni.kaj.izbranost")] : []),
+    {
+      k: "kljukica",
+      naslov: t("preverjeni.kaj.kljukica"),
+      opis: t("preverjeni.kaj.kljukicaOpis"),
+    },
+    ...(izbranost
+      ? [
+          {
+            k: "izbranost",
+            naslov: t("preverjeni.kaj.izbranost"),
+            opis: t("preverjeni.kaj.izbranostOpis"),
+          },
+        ]
+      : []),
+    {
+      k: "posnetki",
+      naslov: t("preverjeni.kaj.posnetki"),
+      opis: t("preverjeni.kaj.posnetkiOpis"),
+    },
   ];
   const koraki = [
     "poisci",
@@ -136,8 +158,8 @@ export default function Preverjeni() {
   ] as const;
 
   return (
-    <div className="space-y-10 sm:space-y-14">
-      <section className="grid items-center gap-6 lg:grid-cols-2 lg:gap-10">
+    <div className="space-y-12 sm:space-y-16">
+      <section className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
         <div className="space-y-4">
           <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-sky-300">
             <Kljukica velikost={16} />
@@ -150,31 +172,51 @@ export default function Preverjeni() {
             {t("preverjeni.uvod")}
           </p>
           <Cta stanje={stanje} />
+          {ponudba && prodaja && <Cene />}
         </div>
         <PrimerProfila />
       </section>
 
       {stanje.vrsta !== "brezPonudbe" && (
-        <section aria-labelledby="preverjeni-kaj" className="space-y-3">
-          <h2 id="preverjeni-kaj" className="text-xl font-black naslov">
+        <section aria-labelledby="preverjeni-kaj" className="space-y-5">
+          <h2 id="preverjeni-kaj" className="text-2xl font-black naslov">
             {t("preverjeni.kaj.naslov")}
           </h2>
-          <ul className="divide-y divide-white/10 border-y border-white/10">
-            {koristi.map((k) => (
+          <ol className="grid gap-4 md:grid-cols-3">
+            {koristi.map((k, n) => (
               <li
-                key={k}
-                className="flex gap-3 py-3 text-sm text-slate-200 sm:text-base"
+                key={k.k}
+                className={`relative overflow-hidden rounded-2xl p-5 ${
+                  n === 0
+                    ? "bg-gradient-to-br from-sky-500/15 to-white/[0.03] ring-1 ring-sky-300/30"
+                    : "bg-white/[0.04] ring-1 ring-white/10"
+                }`}
               >
                 <span
-                  className="mt-0.5 font-black text-gnl-300"
+                  className="block text-5xl font-black leading-none text-gnl-500/60 naslov"
                   aria-hidden="true"
                 >
-                  ✓
+                  {n + 1}
                 </span>
-                {k}
+                <h3 className="mt-3 flex items-start gap-2 text-lg font-black leading-snug text-slate-50">
+                  {k.k === "kljukica" && (
+                    <span className="mt-0.5 shrink-0">
+                      <Kljukica velikost={22} />
+                    </span>
+                  )}
+                  {k.naslov}
+                </h3>
+                <p className="mt-1.5 text-sm text-slate-300">{k.opis}</p>
               </li>
             ))}
-          </ul>
+          </ol>
+          <p className="grid gap-1 text-sm text-slate-400 sm:grid-cols-2 sm:gap-6">
+            <span className="sm:col-span-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+              {t("preverjeni.kaj.dodatno")}
+            </span>
+            <span>{t("preverjeni.kaj.profil")}</span>
+            <span>{t("preverjeni.kaj.ogledi")}</span>
+          </p>
         </section>
       )}
 
@@ -213,38 +255,82 @@ export default function Preverjeni() {
         </section>
       )}
 
-      {prodaja && ponudba && (
-        <section
-          aria-labelledby="preverjeni-cena"
-          className="space-y-2 border-t border-white/10 pt-6"
-        >
-          <h2 id="preverjeni-cena" className="text-xl font-black naslov">
-            {t("preverjeni.cena.naslov")}
-          </h2>
-          <p className="text-lg font-bold text-slate-100">
-            {t("igralci.preverjen.ponudba.letna")}{" "}
-            <span className="font-normal text-slate-400">·</span>{" "}
-            {t("igralci.preverjen.ponudba.dozivljenjska")}
-          </p>
-          <p className="text-sm text-slate-300">
-            {t("igralci.izlozba.ponudba.opomba")}
-          </p>
-          <p className="text-xs text-slate-400">
-            {tx(
-              "igralci.preverjen.ponudba.pogoji",
-              {},
-              {
-                pogoji: (v) => (
-                  <a href="/legal#placljivo" className="text-sky-300 underline">
-                    {v}
-                  </a>
-                ),
-              },
-            )}
-          </p>
-        </section>
-      )}
+      {V_PRIPRAVI && stanje.vrsta !== "brezPonudbe" && <VPripravi />}
     </div>
+  );
+}
+
+/**
+ * Cene ob glavnem gumbu: obstoječa niza iz nakupa, brez novega besedila o
+ * podaljšanju ali pogojih. Pravo ceno in pogoje pokaže blagajna.
+ */
+function Cene() {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+        {t("preverjeni.naslov")}
+      </p>
+      <p className="flex flex-wrap items-baseline gap-x-2 text-lg font-bold text-slate-50">
+        <span>{t("igralci.preverjen.ponudba.letna")}</span>
+        <span className="font-normal text-slate-500" aria-hidden="true">
+          ·
+        </span>
+        <span>{t("igralci.preverjen.ponudba.dozivljenjska")}</span>
+      </p>
+      <p className="text-sm text-slate-300">
+        {t("igralci.izlozba.ponudba.opomba")}
+      </p>
+      <p className="text-xs text-slate-400">
+        {tx(
+          "igralci.preverjen.ponudba.pogoji",
+          {},
+          {
+            pogoji: (v) => (
+              <a href="/legal#placljivo" className="text-sky-300 underline">
+                {v}
+              </a>
+            ),
+          },
+        )}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Načrt, ne nakup: vidno označen, ločen od koristi in brez cene, roka ali
+ * zagotovila. Instagram zgodbe so po privolitvi in po pregledu SLFF.
+ */
+function VPripravi() {
+  return (
+    <section
+      aria-labelledby="preverjeni-pripravi"
+      className="space-y-4 rounded-2xl border border-dashed border-white/20 bg-slate-900/40 p-5 sm:p-6"
+    >
+      <div className="space-y-1.5">
+        <p className="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-200">
+          {t("preverjeni.pripravi.oznaka")}
+        </p>
+        <h2 id="preverjeni-pripravi" className="text-xl font-black naslov">
+          {t("preverjeni.pripravi.naslov")}
+        </h2>
+        <p className="text-sm text-slate-400">
+          {t("preverjeni.pripravi.uvod")}
+        </p>
+      </div>
+      <ul className="grid gap-4 sm:grid-cols-2">
+        {(["story", "igralci"] as const).map((k) => (
+          <li key={k} className="space-y-1 border-l-2 border-white/15 pl-4">
+            <h3 className="font-bold text-slate-100">
+              {t(`preverjeni.pripravi.${k}.naslov`)}
+            </h3>
+            <p className="text-sm text-slate-300">
+              {t(`preverjeni.pripravi.${k}.opis`)}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -325,69 +411,98 @@ function Cta({ stanje }: { stanje: Stanje }) {
 }
 
 /**
- * Primer postavitve preverjenega profila: ista kljukica, pasica, avatar,
- * opis, povezave in ploščice posnetkov kot v izložbi, a brez izmišljenih
- * podatkov: slika je igrišče SLFF, grb je naš, besedila so označena kot primer.
+ * Primer preverjenega profila: temno zeleno igrišče SLFF, velik portret
+ * (silhueta, ne obraz), ista kljukica kot v izložbi in ploščica posnetka kot
+ * v videoigralcu. Brez izmišljenih imen, ekip, števil, logov klubov ali blagovnih
+ * znamk: slika je naše igrišče, grb naš, besedila so označena kot primer.
  */
 function PrimerProfila() {
   return (
     <figure className="m-0 space-y-2">
       <div
         aria-hidden="true"
-        className="izlozba izlozba-okvir overflow-hidden rounded-2xl"
+        className="izlozba izlozba-okvir overflow-hidden rounded-3xl"
         style={{ "--poudarek": "#34d399" } as CSSProperties}
       >
-        <div className="relative aspect-[3/1]">
-          <picture>
-            <source srcSet="/foto/igrisce.webp" type="image/webp" />
-            <img
-              src="/foto/igrisce.jpg"
-              alt=""
-              width={1200}
-              height={400}
-              className="h-full w-full object-cover"
-            />
-          </picture>
-          <div className="izlozba-pasica-senca absolute inset-0" />
-        </div>
-        <div className="relative -mt-8 space-y-3 px-4 pb-4">
-          <div className="flex items-end gap-3">
-            <img
-              src="/logo/slff-grb.png"
-              alt=""
-              width={64}
-              height={64}
-              className="izlozba-foto h-16 w-16 shrink-0 rounded-full bg-slate-900 object-contain p-1"
-            />
-            <div className="min-w-0 pb-0.5">
-              <p className="flex min-w-0 items-center gap-1.5 text-lg font-black text-white">
+        {/* Igrišče: črte, krog in dva loka na temno zeleni podlagi. */}
+        <div className="izlozba-pasica-privzeta relative overflow-hidden px-5 pb-5 pt-6 sm:px-7 sm:pt-8">
+          <svg
+            viewBox="0 0 400 220"
+            preserveAspectRatio="xMidYMid slice"
+            className="absolute inset-0 h-full w-full opacity-[0.18]"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="2"
+          >
+            <rect x="12" y="12" width="376" height="196" rx="4" />
+            <path d="M200 12v196" />
+            <circle cx="200" cy="110" r="38" />
+            <path d="M12 62h52v96H12M388 62h-52v96h52" />
+          </svg>
+          <div className="relative flex items-center gap-4 sm:gap-5">
+            <div className="izlozba-foto relative h-24 w-24 shrink-0 overflow-hidden rounded-full bg-gradient-to-b from-slate-700 to-slate-900 sm:h-32 sm:w-32">
+              <svg
+                viewBox="0 0 96 96"
+                className="h-full w-full"
+                fill="#94a3b8"
+                fillOpacity="0.55"
+              >
+                <circle cx="48" cy="38" r="17" />
+                <path d="M14 96c2-22 16-34 34-34s32 12 34 34z" />
+              </svg>
+            </div>
+            <div className="min-w-0 space-y-1">
+              <p className="flex min-w-0 items-center gap-1.5 text-xl font-black text-white sm:text-2xl">
                 <span className="truncate">{t("preverjeni.primer.ime")}</span>
-                <Kljukica velikost={20} />
+                <Kljukica velikost={24} />
               </p>
-              <p className="truncate text-xs text-slate-300">
+              <p className="truncate text-sm text-slate-300">
                 {t("preverjeni.primer.klub")}
+              </p>
+              <p className="line-clamp-2 text-xs text-slate-300 sm:text-sm">
+                {t("preverjeni.primer.opis")}
               </p>
             </div>
           </div>
-          <p className="text-sm text-slate-200">
-            {t("preverjeni.primer.opis")}
-          </p>
-          <ul className="flex flex-wrap gap-3 text-sm text-gnl-300">
-            <li>{t("igralci.preverjen.youtube")}</li>
-            <li>{t("igralci.preverjen.x")}</li>
-          </ul>
+        </div>
+        {/* Ploščica posnetka kot v izložbi: poster, gumb predvajaj, vrstica napredka. */}
+        <div className="space-y-2 p-3 sm:p-4">
+          <div className="relative aspect-video overflow-hidden rounded-xl">
+            <picture>
+              <source srcSet="/foto/igrisce.webp" type="image/webp" />
+              <img
+                src="/foto/igrisce.jpg"
+                alt=""
+                width={1200}
+                height={400}
+                className="h-full w-full object-cover"
+              />
+            </picture>
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-slate-950/30" />
+            <span className="izlozba-gumb-predvajaj absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <svg viewBox="0 0 24 24" width="26" height="26">
+                <path d="M8 5.5v13l11-6.5z" fill="currentColor" />
+              </svg>
+            </span>
+            <span className="absolute bottom-2.5 left-3 text-xs font-semibold text-white">
+              {t("preverjeni.primer.posnetek", { n: 1 })}
+            </span>
+            <span className="absolute inset-x-0 bottom-0 h-1 bg-white/25">
+              <span className="block h-full w-1/3 bg-gnl-400" />
+            </span>
+          </div>
           <div className="grid grid-cols-3 gap-2">
-            {[1, 2, 3].map((n) => (
+            {[2, 3, 4].map((n) => (
               <div
                 key={n}
-                className="izlozba-poster relative flex aspect-video items-center justify-center rounded-xl"
+                className="izlozba-poster relative flex aspect-video items-center justify-center rounded-lg"
               >
-                <span className="izlozba-gumb-predvajaj !h-9 !w-9">
-                  <svg viewBox="0 0 24 24" width="16" height="16">
+                <span className="izlozba-gumb-predvajaj !h-7 !w-7">
+                  <svg viewBox="0 0 24 24" width="12" height="12">
                     <path d="M8 5.5v13l11-6.5z" fill="currentColor" />
                   </svg>
                 </span>
-                <span className="absolute bottom-1 left-2 hidden text-[10px] font-semibold text-slate-200 sm:block">
+                <span className="absolute bottom-1 left-1.5 hidden text-[10px] font-semibold text-slate-200 sm:block">
                   {t("preverjeni.primer.posnetek", { n })}
                 </span>
               </div>

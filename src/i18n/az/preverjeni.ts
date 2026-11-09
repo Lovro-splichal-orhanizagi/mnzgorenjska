@@ -3,9 +3,9 @@ import type { Prevod } from '../jedro.ts'
 
 export const preverjeni: NonNullable<Prevod['preverjeni']> = {
   naslov: 'Təsdiqlənmiş oyunçu profili',
-  opis: 'SLFF-dəki oyunçu profilində mavi işarə, banner, təsvir, keçidlər və 6-ya qədər yoxlanmış video.',
+  opis: 'SLFF-dəki oyunçu profilində mavi işarə, banner, təsvir, keçidlər və 6-ya qədər yoxlanmış futbol videosu: qollar, xilasetmələr, oyun anları.',
   glava: 'Sənin futbolun. Sənin profilin. Sənin auditoriyan.',
-  uvod: 'Təsdiqlənmiş profil SLFF-dəki oyunçu səhifəndir: adının yanında mavi işarə, banner, təsvir, keçidlər və anlarının videoları.',
+  uvod: 'Təsdiqlənmiş profil SLFF-dəki oyunçu səhifəndir: adının yanında mavi işarə, banner, təsvir, keçidlər və ən yaxşı futbol anlarının videoları.',
   noga: 'Təsdiqlənmiş oyunçu profili',
   vec: 'Təsdiqlənmiş profil haqqında daha çox →',
   nalaga: 'Yüklənir …',
@@ -14,16 +14,20 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
     ime: 'Ad və soyad',
     klub: 'Mövqe · Klub',
     opis: 'Burada kim olduğunu, harada oynadığını və səni nəyin sürüklədiyini yaz.',
-    posnetek: 'Video {n}',
+    posnetek: 'An {n}',
     alt: 'SLFF meydançası',
   },
   kaj: {
     naslov: 'Nə əldə edirsən',
-    kljukica: 'Oyunun hər yerində adının yanında mavi işarə.',
+    kljukica: 'Təsdiqlənmiş kimlik',
+    kljukicaOpis: 'Oyunun hər yerində adının yanında mavi işarə.',
+    izbranost: 'Səni hansı fantasy komandalarının seçdiyini gör',
+    izbranostOpis: 'Öz profilində səni seçən fantasy komandalarının adlarını görürsən. Yalnız komanda adları.',
+    posnetki: 'Futbolun 6-ya qədər ən yaxşı anı',
+    posnetkiOpis: 'Qollar, xilasetmələr və oyun anları profilin yuxarısında. Hər videonu göstərilməzdən əvvəl SLFF komandası yoxlayır.',
+    dodatno: 'Bundan əlavə',
     profil: 'Daha zəngin banner, təsvir və keçidlər (YouTube, X, sayt) və azarkeşlərə mesaj.',
-    posnetki: 'Profilin yuxarısında 6-ya qədər video. Hər videoya əvvəlcə SLFF komandası baxır.',
     ogledi: 'Profilindəki skaut baxışlarının ümumi icmalı, SLFF Scout-un mövcud olduğu yerlərdə.',
-    izbranost: 'Neçə fantasy komandasının səni seçdiyi və hansılar olduğu.',
   },
   koraki: {
     naslov: 'Necə əldə etmək olar',
@@ -33,10 +37,20 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
       opis: '“Bu mənəm” düyməsinə bas. Səni təsdiqlədikdən sonra ödənişsiz şəkil də yükləyə bilərsən.',
     },
     izberi: { naslov: 'İllik və ya həmişəlik seç', opis: 'Alış onlayn edilir.' },
-    uredi: { naslov: 'Düzənlə və göstər', opis: 'Banner, təsvir, keçidlər və videolar əlavə et.' },
+    uredi: { naslov: 'Düzənlə və göstər', opis: 'Banner, təsvir, keçidlər və ən yaxşı anların videolarını əlavə et.' },
   },
-  cena: {
-    naslov: 'Qiymət',
+  pripravi: {
+    oznaka: 'Növbəti',
+    naslov: 'Üzərində işlədiklərimiz',
+    uvod: 'Hazırlıq mərhələsində olan ideyalar. Bu gün təsdiqlənmiş profilin hissəsi deyillər və dəyişə bilər.',
+    story: {
+      naslov: 'Ən yaxşı anların Instagram Story-lərdə',
+      opis: 'Razılaşsan, ən yaxşı anlarını SLFF-in Instagram Story-sində təqdim edirik, ayda 3-ə qədər və yalnız SLFF yoxlamasından sonra. Neçə nəfərə çatdığı barədə hesabat alırsan.',
+    },
+    igralci: {
+      naslov: 'Ən yaxşı anların fantasy oyunçularının qarşısında',
+      opis: 'Videolarının dəstəklədiyimiz liqalarda SLFF fantasy oyunçularına göstərilməsi.',
+    },
   },
   cta: {
     poisci: 'Profilini tap',
@@ -46,7 +60,7 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
     preveri: 'Oyunçu profilimi təsdiqlə',
     preveriOpis: 'İllik abunə və ya birdəfəlik həmişəlik alış.',
     profil: 'Profilinə keç',
-    preverjen: 'Profilin təsdiqlənib. Onu düzənlə və videolar göstər.',
+    preverjen: 'Profilin təsdiqlənib. Onu düzənlə və ən yaxşı anlarını göstər.',
     brezPonudbe: 'Təsdiqlənmiş profillər adı göstərilən yetkinlik yaşına çatmış oyunçular üçündür.',
   },
 }
