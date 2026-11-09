@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import { Link } from '../components/Povezava'
 import { useNaslov, useNoindex } from '../lib/naslov'
@@ -9,7 +9,6 @@ import { useAuth } from '../lib/useAuth'
 import {
   prikazniIme,
   razredPozicije,
-  KRATKA_POZICIJA,
   IME_POZICIJE,
   formatirajTocke,
   formatirajCeno,
@@ -29,18 +28,12 @@ import FotoIgralca from '../components/FotoIgralca'
 import ZnakPreverjen from '../components/ZnakPreverjen'
 import PrevzemIgralca from '../components/PrevzemIgralca'
 import IzbranostIgralca from '../components/IzbranostIgralca'
-import UradneOdsotnostiIgralca from '../components/UradnaOdsotnost'
+import Razpolozljivost from '../components/Razpolozljivost'
 import KarticaIgralca from '../components/KarticaIgralca'
 import IzlozbaIgralca from '../components/IzlozbaIgralca'
 import { naloziIzlozbo, type Izlozba } from '../lib/izlozba'
 import { jeMladinskiSlug, useFotografija } from '../lib/prevzem'
 import { dosezkiNastopa, odstotekIzbranosti } from '../lib/karticaIgralca'
-import {
-  VRSTE,
-  VrsticaPorocila,
-  type Porocilo,
-  type VrstaPorocila,
-} from '../components/Odsotnost'
 import { naloziRazlage, type Razlaga } from '../lib/razlagaTock'
 import { SeznamPostavk, RazlagaCene } from '../components/Razlaga'
 import type { Pozicija } from '../lib/tipi'
@@ -73,8 +66,6 @@ interface Sezonsko {
   goals: number | null
   minutes: number | null
 }
-
-const POZICIJE: Pozicija[] = ['GK', 'DEF', 'MID', 'FWD']
 
 /** Naslov razdelka — enak povsod na strani. */
 const NASLOV = 'mb-2 text-base font-bold text-slate-100'
@@ -122,16 +113,7 @@ export default function Igralec() {
   }, [igralec?.id, igralec?.full_name])
   const [izhodisce, setIzhodisce] = useState<number | null>(null)
   const [zadnjiKrog, setZadnjiKrog] = useState(0)
-  const [tekme, setTekme] = useState<any[]>([])
-  const [glasovi, setGlasovi] = useState<Record<string, number>>({})
-  const [mojGlas, setMojGlas] = useState<Pozicija | null>(null)
-  const [sporocilo, setSporocilo] = useState<string | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
-  // odsotnosti in poškodbe tega igralca
-  const [porocila, setPorocila] = useState<Porocilo[]>([])
-  const [vrstaPorocila, setVrstaPorocila] = useState<VrstaPorocila>('poskodba')
-  const [besediloPorocila, setBesediloPorocila] = useState('')
-  const [posiljamPorocilo, setPosiljamPorocilo] = useState(false)
   const [nalaganje, setNalaganje] = useState(true)
   // Za kartico: v koliko ekipah je igralec.
   const [ekipZIgralcem, setEkipZIgralcem] = useState<number | null>(null)
@@ -158,10 +140,6 @@ export default function Igralec() {
       // ligo ali klub, takoj za njim v enem krogu. Prej je bilo devet
       // zaporednih korakov (~670 ms).
       const poIdju = Promise.all([
-        supabase
-          .from('position_vote_counts')
-          .select('position, votes')
-          .eq('player_id', igralecId),
         // Za crto rabimo izhodiscno ceno.
         supabase
           .from('players')
@@ -170,14 +148,6 @@ export default function Igralec() {
           .maybeSingle(),
         // Razlaga točk po krogih; tekma nosi še izid in klube za kartico.
         naloziRazlage(igralecId),
-        uporabnikId
-          ? supabase
-              .from('position_votes')
-              .select('position')
-              .eq('player_id', igralecId)
-              .eq('voter_id', uporabnikId)
-              .maybeSingle()
-          : Promise.resolve({ data: null }),
         // Izložba gre z glavo, da stran ob prikazu ne skoči.
         naloziIzlozbo(igralecId),
       ])
@@ -202,21 +172,10 @@ export default function Igralec() {
       const ligaId = p.competition_id ?? 0
 
       const [
-        [{ data: g }, { data: zac }, raz, { data: moj }, izl],
-        { data: tek },
+        [{ data: zac }, raz, izl],
         [tekocaSez, ss, c, zk],
       ] = await Promise.all([
         poIdju,
-        // Naslednje tekme kluba — pomaga pri odločitvi, koga vzeti.
-        p.team_id
-          ? supabase
-              .from('prihodnje_tekme')
-              .select('round_number, played_on, opponent_id, opponent_short, opponent_name, opponent_logo, doma')
-              .eq('competition_id', ligaId)
-              .eq('team_id', p.team_id)
-              .order('played_on')
-              .limit(5)
-          : Promise.resolve({ data: [] }),
         // Trenutna sezona — nanjo filtriramo številke, cene in zadnji krog.
         supabase
           .from('sezone')
@@ -308,14 +267,6 @@ export default function Igralec() {
       )
       setIzhodisce(zac?.value_start != null ? Number(zac.value_start) : null)
       setZadnjiKrog(Number((zk as any)?.number ?? 0))
-      setTekme((tek ?? []) as any[])
-      setGlasovi(
-        Object.fromEntries(
-          ((g ?? []) as any[]).map((v) => [String(v.position), Number(v.votes)]),
-        ),
-      )
-      setMojGlas((moj?.position as Pozicija | null) ?? null)
-
       setRazlage(raz)
       setIzlozba(izl)
       setNalaganje(false)
@@ -325,117 +276,6 @@ export default function Igralec() {
       preklican = true
     }
   }, [igralecId, uporabnikId])
-
-  // Poročila o odsotnosti in poškodbah — ločena poizvedba, da počasnejši
-  // pogled ne zadržuje profila igralca.
-  useEffect(() => {
-    if (!igralecId) return
-    let preklican = false
-    supabase
-      .from('player_reports_view')
-      .select('*')
-      .eq('player_id', igralecId)
-      .order('created_at', { ascending: false })
-      .limit(20)
-      .then(({ data }) => {
-        if (!preklican) setPorocila((data ?? []) as Porocilo[])
-      })
-    return () => {
-      preklican = true
-    }
-  }, [igralecId])
-
-  async function objaviPorocilo(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    if (!session) return
-    const vsebina = besediloPorocila.trim()
-    if (!vsebina) return
-    setPosiljamPorocilo(true)
-    setNapaka(null)
-    const { data, error } = await supabase
-      .from('player_reports')
-      .insert({
-        player_id: igralecId,
-        user_id: session.user.id,
-        kind: vrstaPorocila,
-        content: vsebina,
-      })
-      .select('id')
-      .single()
-    setPosiljamPorocilo(false)
-    if (error) return setNapaka(prevediNapako(error.message))
-    if (data)
-      setPorocila((prej) => [
-        {
-          id: data.id,
-          player_id: igralecId,
-          user_id: session.user.id,
-          kind: vrstaPorocila,
-          content: vsebina,
-          created_at: new Date().toISOString(),
-        },
-        ...prej,
-      ])
-    setBesediloPorocila('')
-  }
-
-  async function izbrisiPorocilo(id: number) {
-    const { error } = await supabase.from('player_reports').delete().eq('id', id)
-    if (error) return setNapaka(prevediNapako(error.message))
-    setPorocila((prej) => prej.filter((p) => p.id !== id))
-  }
-
-  // Zaporedna številka branja po glasu: dva hitra klika (DEF, nato MID)
-  // sprožita dve branji in počasnejše prvo bi sicer povozilo drugo.
-  const branjeGlasov = useRef(0)
-
-  async function glasuj(pozicija: Pozicija) {
-    if (!session) return
-    setNapaka(null)
-    const { error } = await supabase
-      .from('position_votes')
-      .upsert(
-        {
-          player_id: igralecId,
-          voter_id: session.user.id,
-          position: pozicija,
-        },
-        { onConflict: 'player_id,voter_id' },
-      )
-    if (error) return setNapaka(prevediNapako(error.message))
-
-    // Glas je en sam (upsert na player_id,voter_id): ob premisleku se prestavi,
-    // ne prišteje. Brez odštevanja prejšnjega bi po nekaj klikih vsaka pozicija
-    // kazala svoj števec, kot da smo glasovali za vse — dokler strani ne osvežiš.
-    const prejsnji = mojGlas
-    setMojGlas(pozicija)
-    setGlasovi((prej) => {
-      if (prejsnji === pozicija) return prej
-      const nov = { ...prej, [pozicija]: (prej[pozicija] ?? 0) + 1 }
-      if (prejsnji) nov[prejsnji] = Math.max(0, (nov[prejsnji] ?? 0) - 1)
-      return nov
-    })
-    setSporocilo(t('igralci.profil.hvalaGlas'))
-
-    // Pravo stanje vseeno preberemo iz baze: medtem je lahko glasoval še kdo,
-    // uteži pa niso vse enake, zato ocene ne gre puščati na naši aritmetiki.
-    const to = ++branjeGlasov.current
-    const [{ data: p }, { data: g }] = await Promise.all([
-      supabase.from('player_overview').select('*').eq('id', igralecId).maybeSingle(),
-      supabase
-        .from('position_vote_counts')
-        .select('position, votes')
-        .eq('player_id', igralecId),
-    ])
-    if (to !== branjeGlasov.current) return
-    if (p) setIgralec(p as Profil)
-    if (g)
-      setGlasovi(
-        Object.fromEntries(
-          (g as any[]).map((v) => [String(v.position), Number(v.votes)]),
-        ),
-      )
-  }
 
   // Kartica igralca: zadnji nastop tekoče sezone, tekma in v koliko ekipah je.
   const zadnjiNastop = sezonsko ? razlage.find((r) => r.season === sezonsko.season) ?? null : null
@@ -642,209 +482,31 @@ export default function Igralec() {
         )}
       </div>
 
-      {/* pozicija — s hitrim glasovanjem, brez preskoka na /pozicije */}
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className={`znacka ${razredPozicije(igralec.position)}`}>
-            {(igralec.position && IME_POZICIJE[igralec.position]) ??
-              t('igralci.profil.pozicijaNeznana')}
-          </span>
-          {igralec.position_source === 'zapisnik' && (
-            <span className="text-xs text-slate-500">
-              {t('igralci.profil.izZapisnika')}
-            </span>
-          )}
-        </div>
-
-        {igralec.position_source !== 'zapisnik' && (
-          <>
-            <p className="text-xs text-slate-400">
-              {session
-                ? t('igralci.profil.glasujVprasanje')
-                : t('igralci.profil.glasujPrijavljeni')}
-            </p>
-            <div className="grid grid-cols-4 gap-2 sm:max-w-md">
-              {POZICIJE.map((p) => {
-                const izbran = mojGlas === p
-                const glasov = glasovi[p] ?? 0
-                return (
-                  <button
-                    key={p}
-                    onClick={() => glasuj(p)}
-                    disabled={!session}
-                    aria-pressed={izbran}
-                    className={`relative rounded-lg px-2 py-1.5 text-sm font-semibold transition disabled:opacity-40 ${
-                      izbran
-                        ? 'ring-2 ring-gnl-400'
-                        : 'ring-1 ring-white/10 hover:ring-white/30'
-                    } poz-${p}`}
-                  >
-                    <span className="flex items-center justify-center gap-1">
-                      {KRATKA_POZICIJA[p]}
-                      {glasov > 0 && (
-                        <span className="tabular-nums opacity-70">
-                          {glasov}
-                        </span>
-                      )}
-                      {izbran && <span aria-hidden="true">✓</span>}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-            {!session && (
-              <p className="text-xs text-slate-500">
-                {tx('igralci.profil.zaGlasovanjePrijava', {}, {
-                  povezava: (b) => (
-                    <Link to={prijava} className="underline">
-                      {b}
-                    </Link>
-                  ),
-                })}
-              </p>
-            )}
-            <p className="hidden text-[11px] text-slate-500 sm:block">
-              {tx('igralci.profil.podrobenPregled', {}, {
-                povezava: (b) => (
-                  <Link to={`/positions${vLigo}`} className="underline hover:text-gnl-300">
-                    {b}
-                  </Link>
-                ),
-              })}
-            </p>
-          </>
+      {/* pozicija: glasovanje je na strani Pozicije, tu le povezava, dokler ni potrjena */}
+      <section className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className={`znacka ${razredPozicije(igralec.position)}`}>
+          {(igralec.position && IME_POZICIJE[igralec.position]) ??
+            t('igralci.profil.pozicijaNeznana')}
+        </span>
+        {igralec.position_source === 'zapisnik' ? (
+          <span className="text-xs text-slate-500">{t('igralci.profil.izZapisnika')}</span>
+        ) : (
+          igralec.team_id && (
+            <Link
+              to={`/positions?t=${encodeURIComponent(slugLige ?? '')}&klub=${igralec.team_id}&igralec=${igralec.id}`}
+              className="inline-flex min-h-11 items-center text-xs text-gnl-300 hover:underline"
+            >
+              {t('igralci.profil.potrdiPozicijo')}
+            </Link>
+          )
         )}
-        {sporocilo && <p className="text-sm text-gnl-300">{sporocilo}</p>}
-      </section>
-
-      {/* prihodnji nasprotniki */}
-      {tekme.length > 0 && (
-        <section>
-          <h2 className={NASLOV}>{t('igralci.profil.naslednjeTekme')}</h2>
-          <ul className="flex flex-wrap gap-x-4 gap-y-2">
-            {tekme.map((tk, n) => (
-              <li
-                key={n}
-                className="flex items-center gap-1.5 text-sm"
-                title={t(tk.doma ? 'igralci.profil.tekmaDoma' : 'igralci.profil.tekmaVGosteh', {
-                  krog: tk.round_number,
-                  nasprotnik: tk.opponent_name,
-                })}
-              >
-                <Grb
-                  ime={tk.opponent_name}
-                  kratko={tk.opponent_short}
-                  logo={tk.opponent_logo}
-                  velikost={20}
-                />
-                {tk.opponent_id ? (
-                  <Link to={zLigo(`/club/${tk.opponent_id}`, slugLige)} className="max-w-[12rem] truncate font-semibold hover:text-gnl-300 hover:underline">
-                    {tk.opponent_name ?? tk.opponent_short}
-                  </Link>
-                ) : (
-                  <span className="max-w-[12rem] truncate font-semibold">{tk.opponent_name ?? tk.opponent_short}</span>
-                )}
-                {/* Polno ime in "doma"/"v gosteh": kratici "JM G" nihče ni razumel. */}
-                <span
-                  className={`text-xs ${tk.doma ? 'text-gnl-300' : 'text-slate-500'}`}
-                >
-                  {tk.doma ? t('igralci.info.doma') : t('igralci.info.vGosteh')}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {/* uradne odsotnosti potrjenega igralca: le informacija, kot poročila spodaj */}
-      <UradneOdsotnostiIgralca igralecId={igralec.id} />
-
-      {/* odsotnosti in poškodbe — informativno, ne vpliva na sestavo ekipe */}
-      <section>
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className={NASLOV}>{t('igralci.odsotnosti.naslov')}</h2>
-          <Link to={`/absences${vLigo}`} className="text-xs text-gnl-300 hover:underline">
-            {t('igralci.profil.vsaPorocila')}
+        {igralec.team_id && (
+          <Link
+            to={zLigo(`/club/${igralec.team_id}`, slugLige)}
+            className="inline-flex min-h-11 items-center text-xs text-gnl-300 hover:underline sm:ml-auto"
+          >
+            {t('igralci.profil.klubTekme')}
           </Link>
-        </div>
-
-        {porocila.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            {t('igralci.profil.niPorocil')}
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {porocila.map((p) => (
-              <VrsticaPorocila
-                key={p.id}
-                porocilo={p}
-                naIzbris={
-                  session?.user?.id === p.user_id
-                    ? () => izbrisiPorocilo(p.id)
-                    : undefined
-                }
-              />
-            ))}
-          </ul>
-        )}
-
-        {session ? (
-          <form onSubmit={objaviPorocilo} className="mt-3 space-y-2">
-            <div className="flex flex-wrap gap-1.5">
-              {VRSTE.map((v) => (
-                <button
-                  key={v.kljuc}
-                  type="button"
-                  onClick={() => setVrstaPorocila(v.kljuc)}
-                  className={`znacka transition ${
-                    vrstaPorocila === v.kljuc
-                      ? 'bg-gnl-500 text-slate-950'
-                      : 'bg-white/5 text-slate-300 hover:bg-white/10'
-                  }`}
-                >
-                  <span aria-hidden="true">{v.ikona}</span> {v.oznaka}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <input
-                value={besediloPorocila}
-                onChange={(e) => setBesediloPorocila(e.target.value)}
-                maxLength={500}
-                placeholder={t('igralci.profil.porociloPrimer')}
-                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 px-3 py-1.5 text-sm"
-              />
-              <button
-                type="submit"
-                disabled={posiljamPorocilo || !besediloPorocila.trim()}
-                className="gumb-glavni px-3 py-1.5 text-sm"
-              >
-                {t('igralci.odsotnosti.objavi')}
-              </button>
-            </div>
-            <p className="hidden text-[11px] text-slate-400 sm:block">
-              {t('igralci.profil.samoInformacija')}
-            </p>
-          </form>
-        ) : (
-          <p className="mt-2 text-xs text-slate-500">
-            {tx('igralci.profil.zaObjavoPrijava', {}, {
-              povezava: (b) => (
-                <Link to={prijava} className="underline hover:text-gnl-300">
-                  {b}
-                </Link>
-              ),
-            })}
-          </p>
-        )}
-        {session && !anonimiziran && (
-          <div className="mt-3">
-            <PopravekIgralca
-              igralecId={igralec.id}
-              pozicija={(igralec.position as Pozicija | null) ?? null}
-              aktiven={igralec.active !== false}
-            />
-          </div>
         )}
       </section>
 
@@ -900,46 +562,6 @@ export default function Igralec() {
               )
             })}
           </ul>
-        </section>
-      )}
-
-      {/* kartica za objavo — za igralca, starše in navijače; pod statistiko,
-          da na telefonu ne odrine podatkov za cel zaslon */}
-      {smeKartico && (zadnjiNastop || (sezonsko && (sezonsko.matches ?? 0) > 0)) && (
-        <section>
-          <h2 className={NASLOV}>
-            {jeLastnik ? t('igralci.profil.deliSvojoKartico') : t('igralci.profil.deliKartico')}
-          </h2>
-          <KarticaIgralca
-            podatki={{
-              ime: igralec.first_name ?? '',
-              priimek: igralec.last_name ?? prikazniIme(igralec.full_name),
-              stevilka: igralec.shirt_number ?? null,
-              pozicija: igralec.position ?? null,
-              klub: igralec.team_name ?? '',
-              klubKratko: igralec.team_short ?? null,
-              grb: igralec.team_logo ?? null,
-              liga: vsaTekmovanja.find((tm) => tm.id === igralec.competition_id)?.name ?? '',
-              krog: zadnjiNastop?.number ?? null,
-              tocke: zadnjiNastop ? zadnjiNastop.skupaj : Number(sezonsko?.points ?? 0),
-              dosezki: zadnjiNastop ? dosezkiNastopa(zadnjiNastop.nastop, igralec.position ?? null) : [],
-              nastop: zadnjiNastop?.nastop ?? null,
-              tekma: zadnjiNastop?.tekma ?? null,
-              sezona: sezonsko
-                ? {
-                    tocke: Number(sezonsko.points ?? 0),
-                    tekem: Number(sezonsko.matches ?? 0),
-                    golov: Number(sezonsko.goals ?? 0),
-                  }
-                : null,
-              cena: igralec.value != null ? Number(igralec.value) : null,
-              premikCene: premik,
-              izbran: odstotekIzbranosti(ekipZIgralcem, ekipVLigi),
-              naslov: povezavaKartice,
-            }}
-            fotografija={fotoProfila}
-            povezava={povezavaKartice}
-          />
         </section>
       )}
 
@@ -1029,6 +651,58 @@ export default function Igralec() {
               )
             })}
           </ul>
+        </section>
+      )}
+
+
+      {/* razpoložljivost: uradno stanje in poročila skupnosti, obrazca zaprta */}
+      <Razpolozljivost igralecId={igralec.id} vLigo={vLigo} nazaj={lokacija.pathname + lokacija.search} />
+
+      {!anonimiziran && (
+        <PopravekIgralca
+          igralecId={igralec.id}
+          pozicija={(igralec.position as Pozicija | null) ?? null}
+          aktiven={igralec.active !== false}
+        />
+      )}
+
+      {/* kartica za objavo — za igralca, starše in navijače; pod statistiko,
+          da na telefonu ne odrine podatkov za cel zaslon */}
+      {smeKartico && (zadnjiNastop || (sezonsko && (sezonsko.matches ?? 0) > 0)) && (
+        <section>
+          <h2 className={NASLOV}>
+            {jeLastnik ? t('igralci.profil.deliSvojoKartico') : t('igralci.profil.deliKartico')}
+          </h2>
+          <KarticaIgralca
+            podatki={{
+              ime: igralec.first_name ?? '',
+              priimek: igralec.last_name ?? prikazniIme(igralec.full_name),
+              stevilka: igralec.shirt_number ?? null,
+              pozicija: igralec.position ?? null,
+              klub: igralec.team_name ?? '',
+              klubKratko: igralec.team_short ?? null,
+              grb: igralec.team_logo ?? null,
+              liga: vsaTekmovanja.find((tm) => tm.id === igralec.competition_id)?.name ?? '',
+              krog: zadnjiNastop?.number ?? null,
+              tocke: zadnjiNastop ? zadnjiNastop.skupaj : Number(sezonsko?.points ?? 0),
+              dosezki: zadnjiNastop ? dosezkiNastopa(zadnjiNastop.nastop, igralec.position ?? null) : [],
+              nastop: zadnjiNastop?.nastop ?? null,
+              tekma: zadnjiNastop?.tekma ?? null,
+              sezona: sezonsko
+                ? {
+                    tocke: Number(sezonsko.points ?? 0),
+                    tekem: Number(sezonsko.matches ?? 0),
+                    golov: Number(sezonsko.goals ?? 0),
+                  }
+                : null,
+              cena: igralec.value != null ? Number(igralec.value) : null,
+              premikCene: premik,
+              izbran: odstotekIzbranosti(ekipZIgralcem, ekipVLigi),
+              naslov: povezavaKartice,
+            }}
+            fotografija={fotoProfila}
+            povezava={povezavaKartice}
+          />
         </section>
       )}
 
