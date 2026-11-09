@@ -31,6 +31,9 @@ import IzbranostIgralca from '../components/IzbranostIgralca'
 import Razpolozljivost from '../components/Razpolozljivost'
 import KarticaIgralca from '../components/KarticaIgralca'
 import IzlozbaIgralca from '../components/IzlozbaIgralca'
+import MesecniOgledi from '../components/MesecniOgledi'
+import PosljiSporocilo from '../components/PosljiSporocilo'
+import { zabeleziOgledProfila } from '../lib/ogledi'
 import { naloziIzlozbo, type Izlozba } from '../lib/izlozba'
 import { jeMladinskiSlug, useFotografija } from '../lib/prevzem'
 import { dosezkiNastopa, odstotekIzbranosti } from '../lib/karticaIgralca'
@@ -96,6 +99,10 @@ export default function Igralec() {
   const [cene, setCene] = useState<any[]>([])
   // Ime je skrito na željo kluba (ugovor), ne zaradi neaktivnosti.
   const [naZeljoKluba, setNaZeljoKluba] = useState(false)
+  // Ogled za mesečno statistiko preverjenega profila; po seji, da baza ve, ali je prijavljen.
+  useEffect(() => {
+    if (!nalaganjeSeje) zabeleziOgledProfila(igralecId)
+  }, [igralecId, nalaganjeSeje])
   useEffect(() => {
     setNaZeljoKluba(false)
     if (!igralec?.id || !String(igralec.full_name ?? '').startsWith('#')) return
@@ -448,6 +455,12 @@ export default function Igralec() {
 
       {/* Izbranost: le za preverjene (baza drugim vrne prazno), brez mladinskih lig */}
       {smeKartico && <IzbranostIgralca igralecId={igralec.id} />}
+
+      {/* Sporočilo lastniku profila: kdo sme, odloči baza (le odrasli, ne lastnik sam) */}
+      {smeKartico && !jeLastnik && <PosljiSporocilo igralecId={igralec.id} prijava={prijava} />}
+
+      {/* Mesečna statistika: le preverjenemu lastniku (baza drugim vrne prazno) */}
+      {jeLastnik && smeKartico && <MesecniOgledi igralecId={igralec.id} />}
 
       {/* številke — tekoča sezona; seštevek vseh sezon je drugotna vrstica */}
       <div className="space-y-2">

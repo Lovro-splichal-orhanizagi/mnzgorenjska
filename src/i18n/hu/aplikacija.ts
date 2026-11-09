@@ -91,6 +91,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     izbrisRacuna: 'Fiók törlése',
     nastavitve: 'Fiókbeállítások',
     mojProfil: 'Saját profil',
+    sporocila: 'Üzenetek',
     povabi: 'Hívd meg egy barátod',
     pomoc: 'Súgó',
     trgovina: 'Bolt',
