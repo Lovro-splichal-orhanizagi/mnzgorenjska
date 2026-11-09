@@ -11,10 +11,13 @@
 
 create table public.ogledi_profila_dnevno (
   dan date not null default current_date,
-  player_id bigint not null references public.players on delete cascade,
+  -- Glavna vrstica potrjenega zahtevka. Ime ni `player_id` in ni tujega ključa
+  -- na players: izdaje FCF preverjajo točen katalog relacij na igralce
+  -- (kot posnetki_igralca). Vrstice izbrisanega igralca so le osirotela števila.
+  igralec bigint not null,
   vir text not null check (vir in ('igra', 'gost', 'povezava')),
   stevilo int not null default 0,
-  primary key (player_id, dan, vir)
+  primary key (igralec, dan, vir)
 );
 
 comment on table public.ogledi_profila_dnevno is
@@ -44,8 +47,8 @@ begin
     return;
   end if;
   v_vir := case when p_od_zunaj then 'povezava' when auth.uid() is not null then 'igra' else 'gost' end;
-  insert into ogledi_profila_dnevno (player_id, vir, stevilo) values (v_glavni, v_vir, 1)
-  on conflict (player_id, dan, vir) do update set stevilo = ogledi_profila_dnevno.stevilo + 1;
+  insert into ogledi_profila_dnevno (igralec, vir, stevilo) values (v_glavni, v_vir, 1)
+  on conflict (igralec, dan, vir) do update set stevilo = ogledi_profila_dnevno.stevilo + 1;
 end;
 $$;
 revoke all on function public.zabelezi_ogled_profila(bigint, boolean) from public;
@@ -77,7 +80,7 @@ begin
            sum(o.stevilo) filter (where o.vir = 'gost')::int as gost,
            sum(o.stevilo) filter (where o.vir = 'povezava')::int as povezava
       from ogledi_profila_dnevno o
-     where o.player_id = v_glavni and o.dan >= v_od
+     where o.igralec = v_glavni and o.dan >= v_od
      group by 1
   ), klubi as (
     select date_trunc('month', d.created_at)::date as m, count(*)::int as scout

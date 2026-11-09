@@ -2798,66 +2798,23 @@ export type Database = {
       ogledi_profila_dnevno: {
         Row: {
           dan: string
-          player_id: number
+          igralec: number
           stevilo: number
           vir: string
         }
         Insert: {
           dan?: string
-          player_id: number
+          igralec: number
           stevilo?: number
           vir: string
         }
         Update: {
           dan?: string
-          player_id?: number
+          igralec?: number
           stevilo?: number
           vir?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "ogledi_profila_dnevno_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "krog_najboljsi"
-            referencedColumns: ["player_id"]
-          },
-          {
-            foreignKeyName: "ogledi_profila_dnevno_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "player_overview"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ogledi_profila_dnevno_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "player_season_standings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ogledi_profila_dnevno_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "player_standings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ogledi_profila_dnevno_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ogledi_profila_dnevno_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "pozicije_v_cakanju"
-            referencedColumns: ["player_id"]
-          },
-        ]
+        Relationships: []
       }
       omejitve_uporabnikov: {
         Row: {
