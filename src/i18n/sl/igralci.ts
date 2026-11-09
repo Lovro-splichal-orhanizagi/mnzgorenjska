@@ -328,7 +328,7 @@ export const igralci = {
       cena: '9,99 € na leto ali 29 € za vedno',
       letna: '9,99 € na leto',
       dozivljenjska: '29 € za vedno',
-      znacka: '+ natisnjena značka z imenom (5 €, poštnina 2 € SI / 4 € EU, le EU)',
+      znacka: '+ natisnjen plakat 40 × 60 cm s tvojim imenom, poslan na dom (EU), v ceni',
       imeNaZnacki: 'Ime na znački (do 30 znakov)',
       star18: 'Potrjujem, da sem star vsaj 18 let.',
       odpoved: 'Strinjam se, da se vsebina zagotovi takoj, in s tem izgubim pravico do odstopa v 14 dneh.',
@@ -712,5 +712,9 @@ export const igralci = {
       v_delu: 'Tvoj highlight video je v izdelavi.',
       oddan: 'Tvoj highlight video je gotov.',
     },
+  },
+  // Plakat 40 × 60 cm za tisk (lib/zgodbe narisiPlakat).
+  plakat: {
+    oznaka: 'Preverjeni igralec',
   },
 }

@@ -125,6 +125,8 @@ export default function Preverjeni() {
     "kljukica",
     "posnetki",
     "highlight",
+    // Plakat je del doživljenjskega nakupa: le kjer je nakup odprt (ne v aplikaciji).
+    ...(ponudba ? (["plakat"] as const) : []),
     "vzdevek",
     "profil",
     "izpostavljeno",

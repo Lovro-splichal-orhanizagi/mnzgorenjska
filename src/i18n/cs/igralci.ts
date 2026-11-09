@@ -330,7 +330,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       cena: '9,99 € ročně nebo 29 € navždy',
       letna: '9,99 € ročně',
       dozivljenjska: '29 € navždy',
-      znacka: '+ tištěný odznak se jménem (5 €, poštovné 2 € SI / 4 € EU, jen EU)',
+      znacka: '+ vytištěný plakát 40 × 60 cm s tvým jménem, poslaný domů (EU), v ceně',
       imeNaZnacki: 'Jméno na odznaku (až 30 znaků)',
       star18: 'Potvrzuji, že je mi alespoň 18 let.',
       odpoved: 'Souhlasím, že obsah bude poskytnut okamžitě, a tím ztrácím právo odstoupit od smlouvy do 14 dnů.',
@@ -705,5 +705,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       v_delu: 'Tvoje highlight video se připravuje.',
       oddan: 'Tvoje highlight video je hotové.',
     },
+  },
+  plakat: {
+    oznaka: 'Ověřený hráč',
   },
 }

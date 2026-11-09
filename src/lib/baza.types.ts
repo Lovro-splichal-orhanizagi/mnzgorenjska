@@ -2603,6 +2603,50 @@ export type Database = {
           },
         ]
       }
+      narocila_plakatov: {
+        Row: {
+          created_at: string
+          id: number
+          igralec: number
+          naslov: Json
+          opomba: string | null
+          poslano_at: string | null
+          status: string
+          stripe_checkout_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          igralec: number
+          naslov: Json
+          opomba?: string | null
+          poslano_at?: string | null
+          status?: string
+          stripe_checkout_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          igralec?: number
+          naslov?: Json
+          opomba?: string | null
+          poslano_at?: string | null
+          status?: string
+          stripe_checkout_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "narocila_plakatov_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       narocila_znack: {
         Row: {
           created_at: string
@@ -8711,6 +8755,20 @@ export type Database = {
           vrsta: string
         }[]
       }
+      admin_narocila_plakatov: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          eposta: string
+          id: number
+          igralec: number
+          ime: string
+          naslov: Json
+          opomba: string
+          poslano_at: string
+          status: string
+        }[]
+      }
       admin_narocila_znack: {
         Args: never
         Returns: {
@@ -8727,6 +8785,10 @@ export type Database = {
           pravica_status: string
           status: string
         }[]
+      }
+      admin_nastavi_narocilo_plakata: {
+        Args: { p_id: number; p_opomba?: string; p_status: string }
+        Returns: undefined
       }
       admin_nastavi_narocilo_znacke: {
         Args: { p_id: number; p_opomba?: string; p_status: string }
@@ -10373,6 +10435,10 @@ export type Database = {
       oznaci_odhod_igralca: {
         Args: { p_odsel: boolean; p_player_id: number }
         Returns: undefined
+      }
+      plakat_iz_placila: {
+        Args: { p_checkout: string; p_naslov: Json }
+        Returns: string
       }
       podeli_samodejne_poznavalce: { Args: never; Returns: number }
       podpora_brez_sumnikov: { Args: { t: string }; Returns: string }

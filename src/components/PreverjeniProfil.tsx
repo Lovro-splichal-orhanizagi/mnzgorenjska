@@ -256,14 +256,10 @@ async function placilo(telo: Record<string, unknown>): Promise<{ url?: string; n
 
 function Ponudba({ igralecId, fokus = false }: { igralecId: number; fokus?: boolean }) {
   const [vir, setVir] = useState<'letna' | 'dozivljenjska'>('letna')
-  const [znacka, setZnacka] = useState(false)
-  const [dostava, setDostava] = useState<'si' | 'eu'>('si')
-  const [ime, setIme] = useState('')
   const [star18, setStar18] = useState(false)
   const [odpoved, setOdpoved] = useState(false)
   const [dela, setDela] = useState(false)
   const [napaka, setNapaka] = useState<string | null>(null)
-  const zZnacko = vir === 'dozivljenjska' && znacka
   // Izrecna povezava oznake z izbiro: klik na besedilo (ceno, državo) izbere.
   const idp = useId()
   // Odprto iz predogleda: predogled izgine, zato fokus na naslov nakupa.
@@ -279,9 +275,6 @@ function Ponudba({ igralecId, fokus = false }: { igralecId: number; fokus?: bool
       akcija: 'checkout',
       player_id: igralecId,
       vir,
-      znacka: zZnacko,
-      dostava: zZnacko ? dostava : undefined,
-      ime_na_znacki: zZnacko ? ime : undefined,
       star_vsaj_18: star18,
       odpoved_pravici: odpoved,
       jezik: jezikSlovarja(),
@@ -305,34 +298,8 @@ function Ponudba({ igralecId, fokus = false }: { igralecId: number; fokus?: bool
           </label>
         ))}
       </fieldset>
-      {vir === 'dozivljenjska' && (
-        <div className="space-y-1 pl-5">
-          <label htmlFor={`${idp}-znacka`} className="flex cursor-pointer items-center gap-2">
-            <input id={`${idp}-znacka`} type="checkbox" checked={znacka} onChange={(e) => setZnacka(e.target.checked)} />
-            <span>{t('igralci.preverjen.ponudba.znacka')}</span>
-          </label>
-          {znacka && (
-            <div className="flex flex-wrap gap-3">
-              {(['si', 'eu'] as const).map((d) => (
-                <label key={d} htmlFor={`${idp}-${d}`} className="flex cursor-pointer items-center gap-1">
-                  <input id={`${idp}-${d}`} type="radio" name="dostava-znacke" checked={dostava === d} onChange={() => setDostava(d)} />
-                  {t(d === 'si' ? 'igralci.preverjen.ponudba.dostavaSi' : 'igralci.preverjen.ponudba.dostavaEu')}
-                </label>
-              ))}
-            </div>
-          )}
-          {znacka && (
-            <input
-              value={ime}
-              onChange={(e) => setIme(e.target.value)}
-              maxLength={30}
-              aria-label={t('igralci.preverjen.ponudba.imeNaZnacki')}
-              placeholder={t('igralci.preverjen.ponudba.imeNaZnacki')}
-              className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-1.5 sm:max-w-xs"
-            />
-          )}
-        </div>
-      )}
+      {/* Plakat 40 × 60 cm je v ceni doživljenjske; naslov pobere Stripe. */}
+      {vir === 'dozivljenjska' && <p className="pl-5 text-amber-100">{t('igralci.preverjen.ponudba.znacka')}</p>}
       <label htmlFor={`${idp}-star18`} className="flex cursor-pointer items-start gap-2">
         <input id={`${idp}-star18`} type="checkbox" className="mt-1" checked={star18} onChange={(e) => setStar18(e.target.checked)} />
         <span>{t('igralci.preverjen.ponudba.star18')}</span>
@@ -352,7 +319,7 @@ function Ponudba({ igralecId, fokus = false }: { igralecId: number; fokus?: bool
       </p>
       <button
         type="button"
-        disabled={dela || !star18 || !odpoved || (zZnacko && !ime.trim())}
+        disabled={dela || !star18 || !odpoved}
         onClick={() => void kupi()}
         className="gumb-glavni text-sm disabled:opacity-50"
       >

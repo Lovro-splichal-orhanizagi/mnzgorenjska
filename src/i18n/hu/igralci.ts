@@ -326,7 +326,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       cena: 'Évi 9,99 € vagy örökre 29 €',
       letna: 'Évi 9,99 €',
       dozivljenjska: 'Örökre 29 €',
-      znacka: '+ nyomtatott jelvény a neveddel (5 €, postaköltség 2 € SI / 4 € EU, csak EU)',
+      znacka: '+ nyomtatott 40 × 60 cm-es plakát a neveddel, hazaküldve (EU), az árban',
       imeNaZnacki: 'Név a jelvényen (legfeljebb 30 karakter)',
       star18: 'Megerősítem, hogy legalább 18 éves vagyok.',
       odpoved: 'Hozzájárulok, hogy a tartalmat azonnal megkapjam, és ezzel elveszítem a 14 napos elállási jogomat.',
@@ -701,5 +701,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       v_delu: 'A highlight videód készül.',
       oddan: 'A highlight videód elkészült.',
     },
+  },
+  plakat: {
+    oznaka: 'Hitelesített játékos',
   },
 }

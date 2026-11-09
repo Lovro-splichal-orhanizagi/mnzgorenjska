@@ -326,7 +326,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       cena: '€9.99 a year or €29 forever',
       letna: '€9.99 a year',
       dozivljenjska: '€29 forever',
-      znacka: '+ printed badge with your name (€5, postage €2 SI / €4 EU, EU only)',
+      znacka: '+ a printed 40 × 60 cm poster with your name, sent to your home (EU), included',
       imeNaZnacki: 'Name on the badge (up to 30 characters)',
       star18: 'I confirm that I am at least 18 years old.',
       odpoved: 'I agree that the content is provided immediately and that I thereby lose my 14-day right of withdrawal.',
@@ -701,5 +701,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       v_delu: 'Your highlight video is being edited.',
       oddan: 'Your highlight video is ready.',
     },
+  },
+  plakat: {
+    oznaka: 'Verified player',
   },
 }

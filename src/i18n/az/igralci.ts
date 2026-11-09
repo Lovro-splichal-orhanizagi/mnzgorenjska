@@ -326,7 +326,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       cena: 'İldə 9,99 € və ya həmişəlik 29 €',
       letna: 'İldə 9,99 €',
       dozivljenjska: 'Həmişəlik 29 €',
-      znacka: '+ adın yazılmış çap nişanı (5 €, poçt 2 € SI / 4 € AB, yalnız AB)',
+      znacka: '+ adınla çap olunmuş 40 × 60 sm poster, evinə göndərilir (AB), qiymətə daxil',
       imeNaZnacki: 'Nişandakı ad (30 simvola qədər)',
       star18: 'Ən azı 18 yaşım olduğunu təsdiqləyirəm.',
       odpoved: 'Məzmunun dərhal təqdim olunmasına razıyam və bununla 14 günlük imtina hüququmu itirdiyimi qəbul edirəm.',
@@ -701,5 +701,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       v_delu: 'Highlight videon hazırlanır.',
       oddan: 'Highlight videon hazırdır.',
     },
+  },
+  plakat: {
+    oznaka: 'Təsdiqlənmiş oyunçu',
   },
 }

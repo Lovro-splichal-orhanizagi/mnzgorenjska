@@ -669,6 +669,11 @@
   - Lastnik potrjenega profila, ki ni preverjen, pri vklopljenem stikalu
     vidi nakup (spodaj); v aplikaciji je skrit (`jeNativno`, pravila trgovin).
   - **Faza 2: Stripe Checkout** (testni način, migracija 20261012210100).
+    **Od 9. 11. 2026 namesto značke plakat 40 × 60 cm** ob doživljenjskem nakupu (v ceni,
+    EU): Checkout vedno pobere naslov, webhook kliče `plakat_iz_placila`, tabela
+    `narocila_plakatov` (brez tujih ključev na players/preverjeni_racuni zaradi kataloga
+    FCF), admin Preverjeni → Plakati (datoteka za tisk 200 dpi iz `cv_igralca`). Spodnji
+    opis značke velja za stara naročila.
     Kartica "Preveri profil": letno (9,99 €) ali za vedno (29 €), pri
     doživljenjski še "+ natisnjena značka" (5 €, poštnina 2 € SI / 4 € EU)
     z izbiro dostave "Slovenija / druga država EU" (seja dobi le to tarifo in

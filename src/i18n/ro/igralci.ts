@@ -328,7 +328,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       cena: '9,99 € pe an sau 29 € pentru totdeauna',
       letna: '9,99 € pe an',
       dozivljenjska: '29 € pentru totdeauna',
-      znacka: '+ insignă tipărită cu numele (5 €, poștă 2 € SI / 4 € UE, doar UE)',
+      znacka: '+ poster tipărit 40 × 60 cm cu numele tău, trimis acasă (UE), inclus în preț',
       imeNaZnacki: 'Numele pe insignă (până la 30 de caractere)',
       star18: 'Confirm că am cel puțin 18 ani.',
       odpoved: 'Sunt de acord ca acest conținut să fie furnizat imediat și astfel îmi pierd dreptul de retragere de 14 zile.',
@@ -703,5 +703,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       v_delu: 'Videoclipul tău highlight este în lucru.',
       oddan: 'Videoclipul tău highlight este gata.',
     },
+  },
+  plakat: {
+    oznaka: 'Jucător verificat',
   },
 }
