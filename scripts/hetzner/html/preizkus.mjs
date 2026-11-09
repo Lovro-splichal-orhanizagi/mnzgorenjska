@@ -55,7 +55,7 @@ const BESEDE = {
     'igralci.preverjen.znacka': 'Preverjen igralec',
     'preverjeni.naslov': 'Preverjeni igralski profil',
     'preverjeni.opis': 'Modra kljukica in posnetki.',
-    'preverjeni.glava': 'Tvoj nogomet. Tvoj profil. Tvoj doseg.',
+    'preverjeni.glava': 'Tvoj nogomet si zasluži, da ga vidijo.',
     'preverjeni.uvod': 'Tvoja stran igralca.',
     'preverjeni.cta.poisci': 'Poišči svoj profil',
     'preverjeni.kaj.kljukica': 'Modra kljukica.',
@@ -329,7 +329,7 @@ for (const pot of ['/player/9', '/player/abc']) {
   const html = izrisi(PREDLOGA, v, prevajalnik(BESEDE, 'sl'))
   assert.equal(v.kanonicni, 'https://slff.eu/verified')
   assert.match(html, /<title>Preverjeni igralski profil · SLFF<\/title>/)
-  assert.match(html, /<h1>Tvoj nogomet\. Tvoj profil\. Tvoj doseg\.<\/h1>/)
+  assert.match(html, /<h1>Tvoj nogomet si zasluži, da ga vidijo\.<\/h1>/)
   assert.match(html, /<a href="\/players">Poišči svoj profil<\/a>/)
   assert.ok(html.includes('rel="canonical" href="https://slff.eu/verified"'))
   assert.ok(readFileSync(new URL('../Caddyfile', import.meta.url), 'utf8').match(/@html_strani \{[^}]*path [^\n]* \/verified /), '@html_strani brez /verified')
