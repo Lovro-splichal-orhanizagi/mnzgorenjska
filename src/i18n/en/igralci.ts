@@ -3,8 +3,7 @@ import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
   izbranost: {
-    naslovSvoj: 'Your reach',
-    naslovTuj: 'Selected by',
+    naslovTuj: 'Picked by teams',
     opis: 'How many fantasy teams had this player in the last locked round of each league. House teams do not count.',
     vrstica: '{n} of {ekip} teams · {odstotek}%',
     posnetek: 'After the round {krog} deadline, {datum}',
@@ -14,6 +13,20 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     seznam: 'Teams that pick you',
     seznamOpis: 'Every team that has you after the latest deadline. Their other players stay private.',
     vec: 'Show more',
+    zgodba: 'Your game reaches beyond the pitch',
+    naslovReflektor: 'See who picked you this matchday',
+    stevecOznaka: 'Fantasy teams that picked you',
+    virEna: '{liga} · season {sezona} · after the round {krog} deadline, {datum}',
+    virVec: 'Total across {n} leagues, each after its latest deadline',
+    razisci: 'Explore teams',
+    predogled: {
+      naslov: 'Unlock your player profile',
+      korist1: 'See how many fantasy teams picked you and which teams they are',
+      korist2: 'Showcase your best clips',
+      korist3: 'Make your profile yours',
+      opomba: 'Only you will see which teams have you. Their other players stay private.',
+      cta: 'Verify my player profile',
+    },
   },
   krog: 'Round {krog}',
   vrstePorocil: {
@@ -306,7 +319,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'The website must be an https:// address (up to 200 characters).',
     ponudba: {
-      izbranost: 'Selection stats: how many fantasy teams pick you in each league, plus selection for every player. Other users cannot see them.',
       naslov: 'Get verified',
       opis: 'A blue check next to your name everywhere in the game, your nickname in lists, a longer bio, YouTube, X and a website, a banner and profile colour, a highlighted match or stat and a message to fans.',
       cena: '€9.99 a year or €29 forever',

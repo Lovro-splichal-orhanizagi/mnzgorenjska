@@ -1,8 +1,7 @@
 // Nizi za področje `igralci` (glej src/i18n/index.tsx).
 export const igralci = {
   izbranost: {
-    naslovSvoj: 'Tvoj doseg',
-    naslovTuj: 'Izbranost',
+    naslovTuj: 'Izbrali so ga',
     opis: 'V koliko fantasy ekipah je igralec v zadnjem zaklenjenem krogu vsake lige. Hišne ekipe ne štejejo.',
     vrstica: '{n} od {ekip} ekip · {odstotek} %',
     posnetek: 'Po roku {krog}. kroga, {datum}',
@@ -12,6 +11,20 @@ export const igralci = {
     seznam: 'Ekipe, ki te imajo',
     seznamOpis: 'Vse ekipe, ki te imajo po zadnjem roku. Ostali igralci teh ekip ostanejo zasebni.',
     vec: 'Pokaži več',
+    zgodba: 'Tvoja igra seže čez igrišče',
+    naslovReflektor: 'Poglej, kdo te je izbral ta krog',
+    stevecOznaka: 'Fantasy ekipe, ki so te izbrale',
+    virEna: '{liga} · sezona {sezona} · po roku {krog}. kroga, {datum}',
+    virVec: 'Skupaj v {n} ligah, vsaka po zadnjem roku',
+    razisci: 'Razišči ekipe',
+    predogled: {
+      naslov: 'Odkleni svoj igralski profil',
+      korist1: 'Poglej, koliko fantasy ekip te je izbralo in katere so',
+      korist2: 'Pokaži svoje najboljše posnetke',
+      korist3: 'Naredi profil po svoje',
+      opomba: 'Katere ekipe te imajo, boš videl le ti. Njihovi ostali igralci ostanejo zasebni.',
+      cta: 'Preveri moj igralski profil',
+    },
   },
   krog: '{krog}. krog',
   vrstePorocil: {
@@ -308,7 +321,6 @@ export const igralci = {
     },
     napakaSplet: 'Spletna stran mora biti naslov https:// (do 200 znakov).',
     ponudba: {
-      izbranost: 'Izbranost: v koliko fantasy ekipah si v vsaki ligi in izbranost vseh igralcev. Drugi uporabniki tega ne vidijo.',
       naslov: 'Preveri profil',
       opis: 'Modra kljukica ob tvojem imenu povsod v igri, vzdevek na seznamih, daljši opis, YouTube, X in spletna stran, pasica in barva profila, izpostavljena tekma ali statistika in sporočilo navijačem.',
       cena: '9,99 € na leto ali 29 € za vedno',

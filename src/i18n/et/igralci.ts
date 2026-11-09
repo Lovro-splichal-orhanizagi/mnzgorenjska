@@ -3,8 +3,7 @@ import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
   izbranost: {
-    naslovSvoj: 'Sinu ulatus',
-    naslovTuj: 'Valituks',
+    naslovTuj: 'Valinud meeskonnad',
     opis: 'Mitmes fantaasiameeskonnas oli mängija iga liiga viimases lukustatud voorus. Majameeskondi ei arvestata.',
     vrstica: '{n} / {ekip} meeskonda · {odstotek}%',
     posnetek: 'Pärast {krog}. vooru tähtaega, {datum}',
@@ -14,6 +13,20 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     seznam: 'Meeskonnad, kus sa oled',
     seznamOpis: 'Kõik meeskonnad, kus sa oled pärast viimast tähtaega. Nende teised mängijad jäävad privaatseks.',
     vec: 'Näita rohkem',
+    zgodba: 'Sinu mäng ulatub väljakust kaugemale',
+    naslovReflektor: 'Vaata, kes sind selles voorus valis',
+    stevecOznaka: 'Fantasy-meeskonnad, kes sind valisid',
+    virEna: '{liga} · hooaeg {sezona} · pärast {krog}. vooru tähtaega, {datum}',
+    virVec: 'Kokku {n} liigas, igaüks pärast viimast tähtaega',
+    razisci: 'Avasta meeskondi',
+    predogled: {
+      naslov: 'Ava oma mängijaprofiil',
+      korist1: 'Vaata, mitu fantasy-meeskonda sind valis ja millised need on',
+      korist2: 'Näita oma parimaid klippe',
+      korist3: 'Tee profiil enda omaks',
+      opomba: 'Ainult sina näed, millistes meeskondades sa oled. Nende teised mängijad jäävad privaatseks.',
+      cta: 'Kinnita minu mängijaprofiil',
+    },
   },
   krog: '{krog}. voor',
   vrstePorocil: {
@@ -306,7 +319,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Veebileht peab olema https:// aadress (kuni 200 tähemärki).',
     ponudba: {
-      izbranost: 'Valik: mitmes fantaasiameeskonnas sa igas liigas oled ja kõigi mängijate valik. Teised kasutajad seda ei näe.',
       naslov: 'Kinnita profiil',
       opis: 'Sinine linnuke su nime juures kõikjal mängus, hüüdnimi nimekirjades, pikem tutvustus, YouTube, X ja veebileht, kaanepilt ja profiili värv, esile tõstetud mäng või statistika ning sõnum fännidele.',
       cena: '9,99 € aastas või 29 € igaveseks',

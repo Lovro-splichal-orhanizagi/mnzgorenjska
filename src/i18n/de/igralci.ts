@@ -3,8 +3,7 @@ import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
   izbranost: {
-    naslovSvoj: 'Deine Reichweite',
-    naslovTuj: 'Ausgewählt',
+    naslovTuj: 'Von Teams gewählt',
     opis: 'In wie vielen Fantasy-Teams der Spieler in der letzten gesperrten Runde jeder Liga stand. Hausteams zählen nicht.',
     vrstica: '{n} von {ekip} Teams · {odstotek} %',
     posnetek: 'Nach der Frist der {krog}. Runde, {datum}',
@@ -14,6 +13,20 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     seznam: 'Teams, die dich haben',
     seznamOpis: 'Alle Teams, die dich nach der letzten Deadline haben. Ihre übrigen Spieler bleiben privat.',
     vec: 'Mehr anzeigen',
+    zgodba: 'Dein Spiel reicht über den Platz hinaus',
+    naslovReflektor: 'Sieh, wer dich an diesem Spieltag gewählt hat',
+    stevecOznaka: 'Fantasy-Teams, die dich gewählt haben',
+    virEna: '{liga} · Saison {sezona} · nach der Frist von Runde {krog}, {datum}',
+    virVec: 'Gesamt in {n} Ligen, jeweils nach der letzten Frist',
+    razisci: 'Teams entdecken',
+    predogled: {
+      naslov: 'Schalte dein Spielerprofil frei',
+      korist1: 'Sieh, wie viele Fantasy-Teams dich gewählt haben und welche',
+      korist2: 'Zeig deine besten Clips',
+      korist3: 'Mach dein Profil zu deinem',
+      opomba: 'Nur du siehst, welche Teams dich haben. Ihre anderen Spieler bleiben privat.',
+      cta: 'Mein Spielerprofil verifizieren',
+    },
   },
   krog: '{krog}. Runde',
   vrstePorocil: {
@@ -306,7 +319,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Die Website muss eine https://-Adresse sein (bis 200 Zeichen).',
     ponudba: {
-      izbranost: 'Auswahl: in wie vielen Fantasy-Teams du in jeder Liga bist, dazu die Auswahl aller Spieler. Andere Nutzer sehen das nicht.',
       naslov: 'Profil verifizieren',
       opis: 'Ein blaues Häkchen neben deinem Namen überall im Spiel, dein Spitzname in Listen, eine längere Beschreibung, YouTube, X und Website, Banner und Profilfarbe, ein hervorgehobenes Spiel oder eine Statistik und eine Nachricht an die Fans.',
       cena: '9,99 € pro Jahr oder 29 € für immer',

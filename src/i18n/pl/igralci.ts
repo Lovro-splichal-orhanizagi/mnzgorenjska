@@ -3,8 +3,7 @@ import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
   izbranost: {
-    naslovSvoj: 'Twój zasięg',
-    naslovTuj: 'Wybór',
+    naslovTuj: 'Wybrany przez drużyny',
     opis: 'W ilu drużynach fantasy był zawodnik w ostatniej zablokowanej kolejce każdej ligi. Drużyny domowe się nie liczą.',
     vrstica: '{n} z {ekip} drużyn · {odstotek}%',
     posnetek: 'Po terminie {krog}. kolejki, {datum}',
@@ -14,6 +13,20 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     seznam: 'Drużyny, które cię mają',
     seznamOpis: 'Wszystkie drużyny, które mają cię po ostatnim terminie. Pozostali zawodnicy tych drużyn pozostają prywatni.',
     vec: 'Pokaż więcej',
+    zgodba: 'Twoja gra sięga poza boisko',
+    naslovReflektor: 'Zobacz, kto wybrał cię w tej kolejce',
+    stevecOznaka: 'Drużyny fantasy, które cię wybrały',
+    virEna: '{liga} · sezon {sezona} · po terminie {krog}. kolejki, {datum}',
+    virVec: 'Łącznie w {n} ligach, każda po ostatnim terminie',
+    razisci: 'Przeglądaj drużyny',
+    predogled: {
+      naslov: 'Odblokuj swój profil zawodnika',
+      korist1: 'Zobacz, ile drużyn fantasy cię wybrało i które to są',
+      korist2: 'Pokaż swoje najlepsze klipy',
+      korist3: 'Zrób profil po swojemu',
+      opomba: 'Tylko ty zobaczysz, które drużyny cię mają. Ich pozostali zawodnicy pozostają prywatni.',
+      cta: 'Zweryfikuj mój profil zawodnika',
+    },
   },
   krog: '{krog}. kolejka',
   vrstePorocil: {
@@ -310,7 +323,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Strona internetowa musi być adresem https:// (do 200 znaków).',
     ponudba: {
-      izbranost: 'Wybór: w ilu drużynach fantasy jesteś w każdej lidze oraz wybór wszystkich zawodników. Inni użytkownicy tego nie widzą.',
       naslov: 'Zweryfikuj profil',
       opis: 'Niebieski znaczek przy twoim nazwisku wszędzie w grze, pseudonim na listach, dłuższy opis, YouTube, X i strona internetowa, baner i kolor profilu, wyróżniony mecz lub statystyka oraz wiadomość do kibiców.',
       cena: '9,99 € rocznie lub 29 € na zawsze',

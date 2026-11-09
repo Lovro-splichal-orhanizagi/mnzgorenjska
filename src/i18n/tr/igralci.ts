@@ -3,8 +3,7 @@ import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
   izbranost: {
-    naslovSvoj: 'Erişimin',
-    naslovTuj: 'Seçilme',
+    naslovTuj: 'Takımlar seçti',
     opis: 'Oyuncunun her ligin son kilitlenen haftasında kaç fantezi takımda olduğu. Ev takımları sayılmaz.',
     vrstica: '{ekip} takımdan {n} · %{odstotek}',
     posnetek: '{krog}. hafta son tarihinden sonra, {datum}',
@@ -14,6 +13,20 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     seznam: 'Seni seçen takımlar',
     seznamOpis: 'Son kapanıştan sonra seni kadrosunda tutan tüm takımlar. Diğer oyuncuları gizli kalır.',
     vec: 'Daha fazla göster',
+    zgodba: 'Oyunun sahanın ötesine uzanıyor',
+    naslovReflektor: 'Bu hafta seni kimin seçtiğini gör',
+    stevecOznaka: 'Seni seçen fantasy takımları',
+    virEna: '{liga} · {sezona} sezonu · {krog}. hafta son tarihinden sonra, {datum}',
+    virVec: '{n} ligde toplam, her biri son tarihinden sonra',
+    razisci: 'Takımları keşfet',
+    predogled: {
+      naslov: 'Oyuncu profilinin kilidini aç',
+      korist1: 'Kaç fantasy takımının seni seçtiğini ve hangileri olduğunu gör',
+      korist2: 'En iyi kliplerini sergile',
+      korist3: 'Profilini kendine göre yap',
+      opomba: 'Seni hangi takımların aldığını yalnızca sen görürsün. Diğer oyuncuları gizli kalır.',
+      cta: 'Oyuncu profilimi doğrula',
+    },
   },
   krog: '{krog}. hafta',
   vrstePorocil: {
@@ -306,7 +319,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Web sitesi https:// ile başlayan bir adres olmalı (en fazla 200 karakter).',
     ponudba: {
-      izbranost: 'Seçilme: her ligde kaç fantezi takımda olduğun ve tüm oyuncuların seçilme oranı. Diğer kullanıcılar bunu görmez.',
       naslov: 'Doğrulanmış oyuncu ol',
       opis: 'Oyunun her yerinde adının yanında mavi onay işareti, listelerde lakabın, uzun biyografi, YouTube, X ve web sitesi, kapak görseli ve profil rengi, öne çıkan bir maç veya istatistik ve taraftarlara bir mesaj.',
       cena: 'Yıllık 9,99 € veya ömür boyu 29 €',

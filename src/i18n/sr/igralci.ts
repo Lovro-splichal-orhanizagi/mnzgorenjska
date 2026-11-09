@@ -3,8 +3,7 @@ import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
   izbranost: {
-    naslovSvoj: 'Tvoj doseg',
-    naslovTuj: 'Izabranost',
+    naslovTuj: 'Izabrali su ga timovi',
     opis: 'U koliko je fantasy timova igrač u poslednjem zaključanom kolu svake lige. Kućni timovi se ne broje.',
     vrstica: '{n} od {ekip} timova · {odstotek} %',
     posnetek: 'Posle roka {krog}. kola, {datum}',
@@ -14,6 +13,20 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     seznam: 'Timovi koji te imaju',
     seznamOpis: 'Svi timovi koji te imaju posle poslednjeg roka. Ostali igrači tih timova ostaju privatni.',
     vec: 'Prikaži više',
+    zgodba: 'Tvoja igra seže van terena',
+    naslovReflektor: 'Pogledaj ko te izabrao ovog kola',
+    stevecOznaka: 'Fantasy timovi koji su te izabrali',
+    virEna: '{liga} · sezona {sezona} · posle roka {krog}. kola, {datum}',
+    virVec: 'Ukupno u {n} liga, svaka posle poslednjeg roka',
+    razisci: 'Istraži timove',
+    predogled: {
+      naslov: 'Otključaj svoj igrački profil',
+      korist1: 'Pogledaj koliko te fantasy timova izabralo i koji su to',
+      korist2: 'Pokaži svoje najbolje snimke',
+      korist3: 'Uredi profil po svom',
+      opomba: 'Koji te timovi imaju, vidiš samo ti. Njihovi ostali igrači ostaju privatni.',
+      cta: 'Verifikuj moj igrački profil',
+    },
   },
   krog: '{krog}. kolo',
   vrstePorocil: {
@@ -308,7 +321,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Veb sajt mora biti adresa https:// (do 200 znakova).',
     ponudba: {
-      izbranost: 'Izabranost: u koliko si fantasy timova u svakoj ligi i izabranost svih igrača. Drugi korisnici to ne vide.',
       naslov: 'Proveri profil',
       opis: 'Plava kvačica pored tvog imena svuda u igri, nadimak na spiskovima, duži opis, YouTube, X i veb sajt, naslovna slika i boja profila, istaknuta utakmica ili statistika i poruka navijačima.',
       cena: '9,99 € godišnje ili 29 € zauvek',

@@ -3,8 +3,7 @@ import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
   izbranost: {
-    naslovSvoj: 'Tvůj dosah',
-    naslovTuj: 'Výběr',
+    naslovTuj: 'Vybrali ho týmy',
     opis: 'V kolika fantasy týmech je hráč v posledním uzamčeném kole každé ligy. Domácí týmy se nepočítají.',
     vrstica: '{n} z {ekip} týmů · {odstotek} %',
     posnetek: 'Po uzávěrce {krog}. kola, {datum}',
@@ -14,6 +13,20 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     seznam: 'Týmy, které tě mají',
     seznamOpis: 'Všechny týmy, které tě mají po poslední uzávěrce. Ostatní hráči těchto týmů zůstávají soukromí.',
     vec: 'Zobrazit další',
+    zgodba: 'Tvoje hra sahá za hřiště',
+    naslovReflektor: 'Podívej se, kdo tě vybral v tomto kole',
+    stevecOznaka: 'Fantasy týmy, které tě vybraly',
+    virEna: '{liga} · sezóna {sezona} · po uzávěrce {krog}. kola, {datum}',
+    virVec: 'Celkem v {n} ligách, každá po poslední uzávěrce',
+    razisci: 'Prozkoumat týmy',
+    predogled: {
+      naslov: 'Odemkni svůj hráčský profil',
+      korist1: 'Podívej se, kolik fantasy týmů tě vybralo a které to jsou',
+      korist2: 'Ukaž svoje nejlepší klipy',
+      korist3: 'Udělej si profil po svém',
+      opomba: 'Které týmy tě mají, uvidíš jen ty. Jejich ostatní hráči zůstávají soukromí.',
+      cta: 'Ověřit můj hráčský profil',
+    },
   },
   krog: '{krog}. kolo',
   vrstePorocil: {
@@ -310,7 +323,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Webová stránka musí být adresa https:// (do 200 znaků).',
     ponudba: {
-      izbranost: 'Výběr: v kolika fantasy týmech jsi v každé lize a výběr všech hráčů. Ostatní uživatelé to nevidí.',
       naslov: 'Ověřit profil',
       opis: 'Modrá fajfka u tvého jména všude ve hře, přezdívka v seznamech, delší popis, YouTube, X a webová stránka, banner a barva profilu, zvýrazněný zápas nebo statistika a vzkaz fanouškům.',
       cena: '9,99 € ročně nebo 29 € navždy',
