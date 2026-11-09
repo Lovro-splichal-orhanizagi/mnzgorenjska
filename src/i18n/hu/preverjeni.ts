@@ -31,6 +31,7 @@ export const preverjeni = {
     posnetki: 'Legfeljebb 6 videó a legjobb megmozdulásaidról a profilod tetején. Minden videót először az SLFF csapata ellenőriz.',
     ogledi: 'Hány megtekintést kapott a profilod megfigyelőktől az SLFF Scoutban, ahol elérhető.',
     izbranost: 'Hány fantasy csapat választott, és melyek azok.',
+    predTekmo: 'Minden meccs előtt jelentés: mindkét csapat formája, az ellenfél góllövői, egymás elleni meccsek és a saját formád.',
     naslovi: {
       kljukica: 'Kék pipa',
       posnetki: 'Legfeljebb 6 legjobb megmozdulás',
@@ -41,6 +42,7 @@ export const preverjeni = {
       znacka: 'Nyomtatott kitűző',
       ogledi: 'Megfigyelői megtekintések',
       izbranost: 'Kik választottak',
+      predTekmo: 'Meccs előtti jelentés',
     },
   },
   scout: {

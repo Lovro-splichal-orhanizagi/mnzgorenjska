@@ -31,6 +31,7 @@ export const preverjeni = {
     posnetki: 'Până la 6 clipuri cu cele mai bune faze ale tale în partea de sus a profilului. Echipa SLFF verifică mai întâi fiecare clip.',
     ogledi: 'Câte vizualizări de la scouteri are profilul tău în SLFF Scout, acolo unde este disponibil.',
     izbranost: 'Câte echipe fantasy te-au ales și care sunt acestea.',
+    predTekmo: 'Înaintea fiecărui meci un raport: forma ambelor echipe, marcatorii adversarului, meciurile directe și forma ta.',
     naslovi: {
       kljukica: 'Bifă albastră',
       posnetki: 'Până la 6 faze de top',
@@ -41,6 +42,7 @@ export const preverjeni = {
       znacka: 'Insignă tipărită',
       ogledi: 'Vizualizări scouteri',
       izbranost: 'Cine te-a ales',
+      predTekmo: 'Raport înainte de meci',
     },
   },
   scout: {

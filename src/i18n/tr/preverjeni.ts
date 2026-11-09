@@ -32,6 +32,7 @@ export const preverjeni = {
     posnetki: 'Profilinin en üstünde en iyi anlarından 6 videoya kadar. Her videoyu önce SLFF ekibi inceler.',
     ogledi: 'Profilinin SLFF Scout\'ta, mevcut olduğu yerlerde, kaç scout görüntülemesi aldığı.',
     izbranost: 'Kaç fantasy takımının seni seçtiği ve bu takımların hangileri olduğu.',
+    predTekmo: 'Her maçtan önce bir rapor: iki takımın formu, rakibin golcüleri, aralarındaki maçlar ve kendi formun.',
     naslovi: {
       kljukica: 'Mavi tik',
       posnetki: '6 en iyi ana kadar',
@@ -42,6 +43,7 @@ export const preverjeni = {
       znacka: 'Basılı rozet',
       ogledi: 'Scout görüntülemeleri',
       izbranost: 'Seni kim seçti',
+      predTekmo: 'Maç öncesi rapor',
     },
   },
   scout: {

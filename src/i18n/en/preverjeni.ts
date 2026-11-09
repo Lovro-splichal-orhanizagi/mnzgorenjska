@@ -32,6 +32,7 @@ export const preverjeni = {
     posnetki: 'Up to 6 highlights of your best moments at the top of your profile. The SLFF team reviews every clip first.',
     ogledi: 'How many scout views your profile gets in SLFF Scout, where it is available.',
     izbranost: 'How many fantasy teams picked you and which teams they are.',
+    predTekmo: 'A report before every match: both teams\' form, the opponent\'s scorers, head to head and your own form.',
     naslovi: {
       kljukica: 'Blue tick',
       posnetki: 'Up to 6 highlights',
@@ -42,6 +43,7 @@ export const preverjeni = {
       znacka: 'Printed badge',
       ogledi: 'Scout views',
       izbranost: 'Who picked you',
+      predTekmo: 'Pre-match report',
     },
   },
   scout: {

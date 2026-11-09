@@ -32,6 +32,7 @@ export const preverjeni = {
     posnetki: 'Až 6 videí tvojich najlepších akcií v hornej časti profilu. Každé video najprv skontroluje tím SLFF.',
     ogledi: 'Koľko zobrazení od skautov má tvoj profil v SLFF Scout, kde je dostupný.',
     izbranost: 'Koľko fantasy tímov ťa vybralo a ktoré tímy to sú.',
+    predTekmo: 'Pred každým zápasom správa: forma oboch tímov, strelci súpera, vzájomné zápasy a tvoja forma.',
     naslovi: {
       kljukica: 'Modrá fajka',
       posnetki: 'Až 6 najlepších akcií',
@@ -42,6 +43,7 @@ export const preverjeni = {
       znacka: 'Vytlačený odznak',
       ogledi: 'Zobrazenia skautov',
       izbranost: 'Kto si ťa vybral',
+      predTekmo: 'Správa pred zápasom',
     },
   },
   scout: {

@@ -32,6 +32,7 @@ export const preverjeni = {
     posnetki: 'Hasta 6 vídeos de tus mejores jugadas en la parte superior del perfil. El equipo de SLFF revisa antes cada vídeo.',
     ogledi: 'Cuántas visitas de ojeadores recibe tu perfil en SLFF Scout, donde está disponible.',
     izbranost: 'Cuántos equipos fantasy te eligieron y cuáles son.',
+    predTekmo: 'Antes de cada partido, un informe: forma de ambos equipos, goleadores del rival, enfrentamientos directos y tu propia forma.',
     naslovi: {
       kljukica: 'Insignia azul',
       posnetki: 'Hasta 6 mejores jugadas',
@@ -42,6 +43,7 @@ export const preverjeni = {
       znacka: 'Insignia impresa',
       ogledi: 'Visitas de ojeadores',
       izbranost: 'Quién te eligió',
+      predTekmo: 'Informe previo al partido',
     },
   },
   scout: {

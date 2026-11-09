@@ -31,6 +31,7 @@ export const preverjeni = {
     posnetki: 'Do 6 nagrań twoich najlepszych akcji na górze profilu. Każde nagranie najpierw sprawdza zespół SLFF.',
     ogledi: 'Ile wyświetleń od skautów ma twój profil w SLFF Scout, tam gdzie jest dostępny.',
     izbranost: 'Ile drużyn fantasy cię wybrało i które to są.',
+    predTekmo: 'Przed każdym meczem raport: forma obu drużyn, strzelcy rywala, mecze bezpośrednie i twoja forma.',
     naslovi: {
       kljukica: 'Niebieski znaczek',
       posnetki: 'Do 6 najlepszych akcji',
@@ -41,6 +42,7 @@ export const preverjeni = {
       znacka: 'Drukowana odznaka',
       ogledi: 'Wyświetlenia skautów',
       izbranost: 'Kto cię wybrał',
+      predTekmo: 'Raport przed meczem',
     },
   },
   scout: {

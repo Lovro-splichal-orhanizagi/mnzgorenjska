@@ -129,6 +129,7 @@ export default function Preverjeni() {
     "izpostavljeno",
     "sporocilo",
     "ogledi",
+    "predTekmo",
     ...(izbranost ? (["izbranost"] as const) : []),
     // Značka je dodatek k nakupu: le kjer je nakup odprt (ne v aplikaciji).
     ...(ponudba ? (["znacka"] as const) : []),

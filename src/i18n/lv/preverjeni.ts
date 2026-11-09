@@ -31,6 +31,7 @@ export const preverjeni = {
     posnetki: 'Līdz 6 video ar tavām labākajām epizodēm profila augšā. Katru video vispirms pārbauda SLFF komanda.',
     ogledi: 'Cik skautu skatījumu tavam profilam ir SLFF Scout, kur tas ir pieejams.',
     izbranost: 'Cik fantasy komandu tevi izvēlējās un kuras tās ir.',
+    predTekmo: 'Pirms katras spēles pārskats: abu komandu forma, pretinieka vārtu guvēji, savstarpējās spēles un tava forma.',
     naslovi: {
       kljukica: 'Zilā ķeksīte',
       posnetki: 'Līdz 6 labākajām epizodēm',
@@ -41,6 +42,7 @@ export const preverjeni = {
       znacka: 'Drukāta nozīmīte',
       ogledi: 'Skautu skatījumi',
       izbranost: 'Kas tevi izvēlējās',
+      predTekmo: 'Pārskats pirms spēles',
     },
   },
   scout: {

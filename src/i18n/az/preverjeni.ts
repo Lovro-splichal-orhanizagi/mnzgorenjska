@@ -31,6 +31,7 @@ export const preverjeni = {
     posnetki: 'Profilin yuxarısında ən yaxşı anlarından 6 videoya qədər. Hər videonu əvvəlcə SLFF komandası yoxlayır.',
     ogledi: 'Profilinin SLFF Scout-da, mövcud olduğu yerlərdə, neçə skaut baxışı aldığı.',
     izbranost: 'Neçə fantasy komandasının səni seçdiyi və hansılar olduğu.',
+    predTekmo: 'Hər oyundan əvvəl hesabat: hər iki komandanın forması, rəqibin qol vuranları, qarşılıqlı oyunlar və öz forman.',
     naslovi: {
       kljukica: 'Mavi işarə',
       posnetki: '6 ən yaxşı ana qədər',
@@ -41,6 +42,7 @@ export const preverjeni = {
       znacka: 'Çap nişanı',
       ogledi: 'Skaut baxışları',
       izbranost: 'Səni kim seçib',
+      predTekmo: 'Oyundan əvvəl hesabat',
     },
   },
   scout: {

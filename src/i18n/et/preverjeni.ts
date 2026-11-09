@@ -31,6 +31,7 @@ export const preverjeni = {
     posnetki: 'Kuni 6 klippi sinu parimatest hetkedest profiili ülaosas. SLFF-i meeskond vaatab iga klipi esmalt üle.',
     ogledi: 'Mitu skautide vaatamist su profiil SLFF Scoutis saab, kus see on saadaval.',
     izbranost: 'Mitu fantasy-meeskonda sind valis ja millised need on.',
+    predTekmo: 'Enne iga mängu ülevaade: mõlema meeskonna vorm, vastase väravalööjad, omavahelised mängud ja sinu enda vorm.',
     naslovi: {
       kljukica: 'Sinine linnuke',
       posnetki: 'Kuni 6 parimat hetke',
@@ -41,6 +42,7 @@ export const preverjeni = {
       znacka: 'Trükitud märk',
       ogledi: 'Skautide vaatamised',
       izbranost: 'Kes sind valis',
+      predTekmo: 'Mängueelne ülevaade',
     },
   },
   scout: {

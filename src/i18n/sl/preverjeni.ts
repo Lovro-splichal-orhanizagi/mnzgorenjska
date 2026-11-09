@@ -32,6 +32,7 @@ export const preverjeni = {
     posnetki: 'Do 6 posnetkov tvojih najboljših potez na vrhu profila. Vsak posnetek najprej pregleda ekipa SLFF.',
     ogledi: 'Koliko ogledov skavtov ima tvoj profil v SLFF Scoutu, kjer je na voljo.',
     izbranost: 'Koliko fantasy ekip te je izbralo in katere ekipe so to.',
+    predTekmo: 'Pred vsako tekmo poročilo: forma obeh ekip, nasprotnikovi strelci, medsebojne tekme in tvoja forma.',
     naslovi: {
       kljukica: 'Modra kljukica',
       posnetki: 'Do 6 najboljših potez',
@@ -42,6 +43,7 @@ export const preverjeni = {
       znacka: 'Natisnjena značka',
       ogledi: 'Ogledi skavtov',
       izbranost: 'Kdo te je izbral',
+      predTekmo: 'Poročilo pred tekmo',
     },
   },
   scout: {

@@ -10582,6 +10582,11 @@ export type Database = {
         }[]
       }
       povzetek_rasti: { Args: never; Returns: string }
+      pred_tekmo: { Args: { p_player_id: number }; Returns: Json }
+      pred_tekmo_forma: {
+        Args: { p_ekipa: number; p_liga: number; p_sezona: string }
+        Returns: Json
+      }
       prejemniki_ankete: {
         Args: { p_competition_id: number; p_ids: string[] }
         Returns: {

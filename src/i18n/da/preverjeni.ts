@@ -31,6 +31,7 @@ export const preverjeni = {
     posnetki: 'Op til 6 highlights af dine bedste aktioner øverst på profilen. SLFF-teamet gennemgår hvert klip først.',
     ogledi: 'Hvor mange visninger fra spejdere din profil får i SLFF Scout, hvor det er tilgængeligt.',
     izbranost: 'Hvor mange fantasy-hold der valgte dig, og hvilke det er.',
+    predTekmo: 'En rapport før hver kamp: begge holds form, modstanderens målscorere, indbyrdes opgør og din egen form.',
     naslovi: {
       kljukica: 'Blåt flueben',
       posnetki: 'Op til 6 highlights',
@@ -41,6 +42,7 @@ export const preverjeni = {
       znacka: 'Trykt emblem',
       ogledi: 'Spejdervisninger',
       izbranost: 'Hvem valgte dig',
+      predTekmo: 'Rapport før kampen',
     },
   },
   scout: {

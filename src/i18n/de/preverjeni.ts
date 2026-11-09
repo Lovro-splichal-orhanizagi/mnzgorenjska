@@ -32,6 +32,7 @@ export const preverjeni = {
     posnetki: 'Bis zu 6 Highlights deiner besten Aktionen ganz oben im Profil. Jeden Clip prüft zuerst das SLFF-Team.',
     ogledi: 'Wie viele Scout-Aufrufe dein Profil in SLFF Scout hat, wo es verfügbar ist.',
     izbranost: 'Wie viele Fantasy-Teams dich gewählt haben und welche Teams das sind.',
+    predTekmo: 'Vor jedem Spiel ein Bericht: Form beider Teams, Torschützen des Gegners, direkter Vergleich und deine eigene Form.',
     naslovi: {
       kljukica: 'Blauer Haken',
       posnetki: 'Bis zu 6 Highlights',
@@ -42,6 +43,7 @@ export const preverjeni = {
       znacka: 'Gedruckter Anstecker',
       ogledi: 'Scout-Aufrufe',
       izbranost: 'Wer dich gewählt hat',
+      predTekmo: 'Bericht vor dem Spiel',
     },
   },
   scout: {

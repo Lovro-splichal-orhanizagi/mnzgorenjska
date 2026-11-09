@@ -32,6 +32,7 @@ import Razpolozljivost from '../components/Razpolozljivost'
 import KarticaIgralca from '../components/KarticaIgralca'
 import IzlozbaIgralca from '../components/IzlozbaIgralca'
 import MesecniOgledi from '../components/MesecniOgledi'
+import PredTekmo from '../components/PredTekmo'
 import PosljiSporocilo from '../components/PosljiSporocilo'
 import { zabeleziOgledProfila } from '../lib/ogledi'
 import { naloziIzlozbo, type Izlozba } from '../lib/izlozba'
@@ -458,6 +459,9 @@ export default function Igralec() {
 
       {/* Sporočilo lastniku profila: kdo sme, odloči baza (le odrasli, ne lastnik sam) */}
       {smeKartico && !jeLastnik && <PosljiSporocilo igralecId={igralec.id} prijava={prijava} />}
+
+      {/* Pred tekmo: le preverjenemu lastniku pred tekmo v 10 dneh (baza drugim vrne prazno) */}
+      {jeLastnik && smeKartico && <PredTekmo igralecId={igralec.id} />}
 
       {/* Mesečna statistika: le preverjenemu lastniku (baza drugim vrne prazno) */}
       {jeLastnik && smeKartico && <MesecniOgledi igralecId={igralec.id} />}
