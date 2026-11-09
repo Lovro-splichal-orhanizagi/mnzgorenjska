@@ -43,11 +43,11 @@ values (936201, 936101, 'e3600000-0000-4000-8000-000000000001', 'potrjen', 'admi
        (936205, 936107, 'e3600000-0000-4000-8000-000000000005', 'potrjen', 'admin', now());
 insert into povezani_igralci (player_id, zahtevek_id)
 values (936102, 936201), (936103, 936201), (936108, 936205);
-insert into preverjeni_racuni (user_id, player_id, vir, status, velja_do, star_vsaj_18)
-values ('e3600000-0000-4000-8000-000000000001', 936101, 'rocno', 'aktiven', null, null),
-       ('e3600000-0000-4000-8000-000000000003', 936105, 'letna', 'preklican', now() + interval '6 months', true),
-       ('e3600000-0000-4000-8000-000000000004', 936106, 'letna', 'aktiven', now() - interval '1 day', true),
-       ('e3600000-0000-4000-8000-000000000005', 936107, 'rocno', 'aktiven', null, null);
+insert into preverjeni_racuni (user_id, player_id, vir, status, velja_do, star_vsaj_18, odpoved_pravici)
+values ('e3600000-0000-4000-8000-000000000001', 936101, 'rocno', 'aktiven', null, null, null),
+       ('e3600000-0000-4000-8000-000000000003', 936105, 'letna', 'preklican', now() + interval '6 months', true, true),
+       ('e3600000-0000-4000-8000-000000000004', 936106, 'letna', 'aktiven', now() - interval '1 day', true, true),
+       ('e3600000-0000-4000-8000-000000000005', 936107, 'rocno', 'aktiven', null, null, null);
 
 insert into rounds (id, season, number, deadline_at, lineups_locked_at, competition_id) overriding system value
 values (936301, '2099/00', 3, now() - interval '2 days', now() - interval '2 days', 936001),
