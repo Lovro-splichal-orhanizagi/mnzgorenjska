@@ -415,3 +415,13 @@ body:has(#chat-widget-bubble) [data-podpora] {
   .izlozba-gumb-predvajaj, .izlozba-prazno { transition: none; }
 }
 .izlozba-cena-mobilno > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.5rem; text-align: left; }
+
+/* Reflektor izbranosti (SLF-360): temno zeleno igrišče pod identiteto igralca. */
+.izbranost-reflektor {
+  background-color: #0b3d2a;
+  background-image:
+    radial-gradient(120% 80% at 100% 0%, rgba(52, 211, 153, 0.22), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0 12.5%, transparent 12.5% 25%);
+  background-size: 100% 100%, 100% 25%;
+  box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.25);
+}

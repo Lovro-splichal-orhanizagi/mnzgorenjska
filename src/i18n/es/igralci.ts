@@ -3,8 +3,7 @@ import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
   izbranost: {
-    naslovSvoj: 'Tu alcance',
-    naslovTuj: 'Elegido por',
+    naslovTuj: 'Elegido por equipos',
     opis: 'En cuántos equipos fantasy estuvo el jugador en la última jornada cerrada de cada liga. Los equipos de la casa no cuentan.',
     vrstica: '{n} de {ekip} equipos · {odstotek} %',
     posnetek: 'Tras el cierre de la jornada {krog}, {datum}',
@@ -14,6 +13,20 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     seznam: 'Equipos que te tienen',
     seznamOpis: 'Todos los equipos que te tienen tras el último cierre. Sus demás jugadores siguen siendo privados.',
     vec: 'Mostrar más',
+    zgodba: 'Tu juego va más allá del campo',
+    naslovReflektor: 'Mira quién te eligió en esta jornada',
+    stevecOznaka: 'Equipos fantasy que te eligieron',
+    virEna: '{liga} · temporada {sezona} · tras el cierre de la jornada {krog}, {datum}',
+    virVec: 'Total en {n} ligas, cada una tras su último cierre',
+    razisci: 'Explorar equipos',
+    predogled: {
+      naslov: 'Desbloquea tu perfil de jugador',
+      korist1: 'Mira cuántos equipos fantasy te eligieron y cuáles son',
+      korist2: 'Muestra tus mejores clips',
+      korist3: 'Haz tuyo tu perfil',
+      opomba: 'Solo tú verás qué equipos te tienen. Sus demás jugadores siguen siendo privados.',
+      cta: 'Verificar mi perfil de jugador',
+    },
   },
   krog: 'Jornada {krog}',
   vrstePorocil: {
@@ -308,7 +321,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'El sitio web debe ser una dirección https:// (hasta 200 caracteres).',
     ponudba: {
-      izbranost: 'Selección: en cuántos equipos fantasy estás en cada liga y la selección de todos los jugadores. Los demás usuarios no la ven.',
       naslov: 'Verifica tu perfil',
       opis: 'Un check azul junto a tu nombre en todo el juego, tu apodo en las listas, una descripción más larga, YouTube, X y sitio web, banner y color del perfil, un partido o estadística destacada y un mensaje a la afición.',
       cena: '9,99 € al año o 29 € para siempre',

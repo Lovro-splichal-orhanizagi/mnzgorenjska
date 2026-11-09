@@ -3,8 +3,7 @@ import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
   izbranost: {
-    naslovSvoj: 'Əhatən',
-    naslovTuj: 'Seçilmə',
+    naslovTuj: 'Komandalar seçib',
     opis: 'Oyunçunun hər liqanın son bağlanmış turunda neçə fantasy komandada olduğu. Ev komandaları sayılmır.',
     vrstica: '{ekip} komandadan {n} · {odstotek}%',
     posnetek: '{krog}-ci turun son tarixindən sonra, {datum}',
@@ -14,6 +13,20 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     seznam: 'Səni seçən komandalar',
     seznamOpis: 'Son müddətdən sonra səni heyətində saxlayan bütün komandalar. Onların digər oyunçuları gizli qalır.',
     vec: 'Daha çox göstər',
+    zgodba: 'Oyunun meydançadan kənara çıxır',
+    naslovReflektor: 'Bu turda səni kimin seçdiyinə bax',
+    stevecOznaka: 'Səni seçən fantasy komandaları',
+    virEna: '{liga} · {sezona} mövsümü · {krog}. turun son tarixindən sonra, {datum}',
+    virVec: '{n} liqada cəmi, hər biri son tarixdən sonra',
+    razisci: 'Komandalara bax',
+    predogled: {
+      naslov: 'Oyunçu profilinin kilidini aç',
+      korist1: 'Neçə fantasy komandasının səni seçdiyinə və hansılar olduğuna bax',
+      korist2: 'Ən yaxşı kliplərini göstər',
+      korist3: 'Profilini özünküləşdir',
+      opomba: 'Hansı komandaların səni seçdiyini yalnız sən görəcəksən. Onların digər oyunçuları gizli qalır.',
+      cta: 'Oyunçu profilimi təsdiqlə',
+    },
   },
   krog: 'Tur {krog}',
   vrstePorocil: {
@@ -306,7 +319,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Sayt https:// ünvanı olmalıdır (200 simvola qədər).',
     ponudba: {
-      izbranost: 'Seçilmə: hər liqada neçə fantasy komandada olduğun və bütün oyunçuların seçilməsi. Digər istifadəçilər bunu görmür.',
       naslov: 'Təsdiqlən',
       opis: 'Oyunun hər yerində adının yanında mavi işarə, siyahılarda ləqəbin, daha uzun təsvir, YouTube, X və sayt, banner və profil rəngi, önə çıxan oyun və ya statistika və azarkeşlərə mesaj.',
       cena: 'İldə 9,99 € və ya həmişəlik 29 €',

@@ -600,6 +600,7 @@ export default function Igralec() {
         naLastnika={setJeLastnik}
         vIzlozbi={zIzlozbo}
         ponudbaIzlozbe={!!izlozba && izlozba.lastnik && !izlozba.dovoljena && izlozba.vidi && izlozba.odrasla}
+        odrasel={smeKartico}
       />
 
       {/* Izbranost: le za preverjene (baza drugim vrne prazno), brez mladinskih lig */}

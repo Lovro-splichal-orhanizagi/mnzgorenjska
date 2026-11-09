@@ -3,8 +3,7 @@ import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
   izbranost: {
-    naslovSvoj: 'Tava sasniedzamība',
-    naslovTuj: 'Izvēle',
+    naslovTuj: 'Izvēlējušās komandas',
     opis: 'Cik fantāzijas komandās spēlētājs bija katras līgas pēdējā slēgtajā kārtā. Mājas komandas netiek skaitītas.',
     vrstica: '{n} no {ekip} komandām · {odstotek}%',
     posnetek: 'Pēc {krog}. kārtas termiņa, {datum}',
@@ -14,6 +13,20 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     seznam: 'Komandas, kurās tu esi',
     seznamOpis: 'Visas komandas, kurās tu esi pēc pēdējā termiņa. Pārējie to spēlētāji paliek privāti.',
     vec: 'Rādīt vairāk',
+    zgodba: 'Tava spēle sniedzas tālāk par laukumu',
+    naslovReflektor: 'Skaties, kas tevi izvēlējās šajā kārtā',
+    stevecOznaka: 'Fantasy komandas, kas tevi izvēlējās',
+    virEna: '{liga} · sezona {sezona} · pēc {krog}. kārtas termiņa, {datum}',
+    virVec: 'Kopā {n} līgās, katra pēc pēdējā termiņa',
+    razisci: 'Apskatīt komandas',
+    predogled: {
+      naslov: 'Atbloķē savu spēlētāja profilu',
+      korist1: 'Skaties, cik fantasy komandu tevi izvēlējās un kuras tās ir',
+      korist2: 'Parādi savus labākos klipus',
+      korist3: 'Padari profilu par savu',
+      opomba: 'Tikai tu redzēsi, kurās komandās tu esi. To pārējie spēlētāji paliek privāti.',
+      cta: 'Apstiprināt manu spēlētāja profilu',
+    },
   },
   krog: '{krog}. kārta',
   vrstePorocil: {
@@ -311,7 +324,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Tīmekļa vietnei jābūt https:// adresei (līdz 200 rakstzīmēm).',
     ponudba: {
-      izbranost: 'Izvēle: cik fantāzijas komandās tu esi katrā līgā un visu spēlētāju izvēle. Citi lietotāji to neredz.',
       naslov: 'Pārbaudīt profilu',
       opis: 'Zils ķeksītis pie tava vārda visur spēlē, iesauka sarakstos, garāks apraksts, YouTube, X un tīmekļa vietne, vāka attēls un profila krāsa, izcelta spēle vai statistika un ziņa līdzjutējiem.',
       cena: '9,99 € gadā vai 29 € uz visiem laikiem',

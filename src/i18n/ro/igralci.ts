@@ -3,8 +3,7 @@ import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
   izbranost: {
-    naslovSvoj: 'Raza ta',
-    naslovTuj: 'Selecție',
+    naslovTuj: 'Ales de echipe',
     opis: 'În câte echipe fantasy a fost jucătorul în ultima etapă blocată a fiecărei ligi. Echipele casei nu se numără.',
     vrstica: '{n} din {ekip} echipe · {odstotek}%',
     posnetek: 'După termenul etapei {krog}, {datum}',
@@ -14,6 +13,20 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     seznam: 'Echipe care te au',
     seznamOpis: 'Toate echipele care te au după ultimul termen. Ceilalți jucători din aceste echipe rămân privați.',
     vec: 'Arată mai mult',
+    zgodba: 'Jocul tău ajunge dincolo de teren',
+    naslovReflektor: 'Vezi cine te-a ales în această etapă',
+    stevecOznaka: 'Echipe fantasy care te-au ales',
+    virEna: '{liga} · sezonul {sezona} · după termenul etapei {krog}, {datum}',
+    virVec: 'Total în {n} ligi, fiecare după ultimul termen',
+    razisci: 'Explorează echipele',
+    predogled: {
+      naslov: 'Deblochează-ți profilul de jucător',
+      korist1: 'Vezi câte echipe fantasy te-au ales și care sunt acestea',
+      korist2: 'Prezintă cele mai bune clipuri',
+      korist3: 'Fă profilul al tău',
+      opomba: 'Doar tu vei vedea ce echipe te au. Ceilalți jucători ai lor rămân privați.',
+      cta: 'Verifică profilul meu de jucător',
+    },
   },
   krog: 'Etapa {krog}',
   vrstePorocil: {
@@ -308,7 +321,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Site-ul web trebuie să fie o adresă https:// (cel mult 200 de caractere).',
     ponudba: {
-      izbranost: 'Selecție: în câte echipe fantasy ești în fiecare ligă și selecția tuturor jucătorilor. Ceilalți utilizatori nu o văd.',
       naslov: 'Verifică profilul',
       opis: 'O bifă albastră lângă numele tău peste tot în joc, porecla în liste, o descriere mai lungă, YouTube, X și site web, banner și culoarea profilului, un meci sau o statistică evidențiată și un mesaj pentru fani.',
       cena: '9,99 € pe an sau 29 € pentru totdeauna',

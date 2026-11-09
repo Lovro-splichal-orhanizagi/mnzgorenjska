@@ -3,8 +3,7 @@ import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
   izbranost: {
-    naslovSvoj: 'Din rækkevidde',
-    naslovTuj: 'Valgt af',
+    naslovTuj: 'Valgt af hold',
     opis: 'Hvor mange fantasyhold der havde spilleren i den seneste låste runde i hver liga. Husets hold tæller ikke.',
     vrstica: '{n} af {ekip} hold · {odstotek} %',
     posnetek: 'Efter fristen for {krog}. runde, {datum}',
@@ -14,6 +13,20 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     seznam: 'Hold, der har dig',
     seznamOpis: 'Alle hold, der har dig efter seneste deadline. Deres øvrige spillere forbliver private.',
     vec: 'Vis flere',
+    zgodba: 'Dit spil rækker ud over banen',
+    naslovReflektor: 'Se, hvem der valgte dig i denne runde',
+    stevecOznaka: 'Fantasy-hold, der valgte dig',
+    virEna: '{liga} · sæson {sezona} · efter fristen for runde {krog}, {datum}',
+    virVec: 'I alt i {n} ligaer, hver efter seneste frist',
+    razisci: 'Udforsk hold',
+    predogled: {
+      naslov: 'Lås din spillerprofil op',
+      korist1: 'Se, hvor mange fantasy-hold der valgte dig, og hvilke det er',
+      korist2: 'Vis dine bedste klip',
+      korist3: 'Gør profilen til din egen',
+      opomba: 'Kun du kan se, hvilke hold der har dig. Deres andre spillere forbliver private.',
+      cta: 'Bekræft min spillerprofil',
+    },
   },
   krog: '{krog}. runde',
   vrstePorocil: {
@@ -306,7 +319,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Hjemmesiden skal være en https://-adresse (op til 200 tegn).',
     ponudba: {
-      izbranost: 'Udvælgelse: hvor mange fantasyhold du er på i hver liga, plus udvælgelse for alle spillere. Andre brugere kan ikke se det.',
       naslov: 'Bliv verificeret',
       opis: 'Et blåt flueben ved dit navn overalt i spillet, dit kaldenavn i listerne, en længere præsentation, YouTube, X og en hjemmeside, et banner og en profilfarve, en fremhævet kamp eller statistik og en besked til fansene.',
       cena: '9,99 € om året eller 29 € for altid',

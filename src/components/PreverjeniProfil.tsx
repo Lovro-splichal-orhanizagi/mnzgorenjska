@@ -26,6 +26,7 @@ import {
 import { Link } from './Povezava'
 import { PonudbaIzlozbe } from './IzlozbaIgralca'
 import { pozabiIzbranost } from '../lib/izbranost'
+import { PredogledPreverjanja } from './IzbranostIgralca'
 
 interface Plus {
   player_id: number
@@ -62,6 +63,7 @@ export default function PreverjeniProfil({
   urejam,
   vIzlozbi = false,
   ponudbaIzlozbe = false,
+  odrasel = false,
 }: {
   igralecId: number
   glavni: number
@@ -71,11 +73,14 @@ export default function PreverjeniProfil({
   vIzlozbi?: boolean
   /** Nad nakupom pokaži, kaj prinese izložba (posnetki, SLFF Club). */
   ponudbaIzlozbe?: boolean
+  /** Odrasla liga, ne anonimiziran: nakup začne predogled koristi. */
+  odrasel?: boolean
 }) {
   const [plus, setPlus] = useState<Plus | null | undefined>(undefined)
   const [lastnik, setLastnik] = useState<{ vidi: boolean; preverjen: boolean; vir: string | null } | null>(null)
   // Vrnitev s Checkout (`?placilo=uspeh`): webhook pravico zapiše v nekaj sekundah.
   const placano = new URLSearchParams(useLocation().search).get('placilo') === 'uspeh'
+  const [odprtNakup, setOdprtNakup] = useState(false)
 
   const nalozi = useCallback(async () => {
     const [{ data }, vidi, prev, pravica] = await Promise.all([
@@ -122,8 +127,9 @@ export default function PreverjeniProfil({
           {t(lastnik.preverjen ? 'igralci.preverjen.ponudba.uspeh' : 'igralci.preverjen.ponudba.obdeluje')}
         </p>
       )}
-      {kupuje && !placano && ponudbaIzlozbe && <PonudbaIzlozbe />}
-      {kupuje && !placano && <Ponudba igralecId={igralecId} />}
+      {kupuje && !placano && odrasel && !odprtNakup && <PredogledPreverjanja naPreveri={() => setOdprtNakup(true)} />}
+      {kupuje && !placano && (!odrasel || odprtNakup) && ponudbaIzlozbe && <PonudbaIzlozbe />}
+      {kupuje && !placano && (!odrasel || odprtNakup) && <Ponudba igralecId={igralecId} />}
       {lastnik?.preverjen && lastnik.vir === 'letna' && !jeNativno() && <Narocnina igralecId={igralecId} />}
       {lastnik?.preverjen && urejam && (
         <Urejevalnik
@@ -282,7 +288,6 @@ function Ponudba({ igralecId }: { igralecId: number }) {
     <div className="kartica space-y-2 border-sky-400/30 p-3 text-sm">
       <h3 className="font-bold text-sky-200">{t('igralci.preverjen.ponudba.naslov')}</h3>
       <p className="text-slate-300">{t('igralci.preverjen.ponudba.opis')}</p>
-      <p className="text-slate-300">{t('igralci.preverjen.ponudba.izbranost')}</p>
       <fieldset className="space-y-1">
         {(['letna', 'dozivljenjska'] as const).map((v) => (
           <label key={v} htmlFor={`${idp}-${v}`} className="flex cursor-pointer items-center gap-2">

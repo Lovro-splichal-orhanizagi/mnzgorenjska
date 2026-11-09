@@ -3,8 +3,7 @@ import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
   izbranost: {
-    naslovSvoj: 'Az elérésed',
-    naslovTuj: 'Kiválasztottság',
+    naslovTuj: 'Csapatok választották',
     opis: 'Hány fantasy csapatban szerepelt a játékos az egyes ligák utolsó lezárt fordulójában. A házi csapatok nem számítanak.',
     vrstica: '{n} / {ekip} csapat · {odstotek}%',
     posnetek: 'A(z) {krog}. forduló határideje után, {datum}',
@@ -14,6 +13,20 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     seznam: 'Csapatok, amelyekben benne vagy',
     seznamOpis: 'Minden csapat, amelyben benne vagy a legutóbbi határidő után. A csapatok többi játékosa privát marad.',
     vec: 'Továbbiak',
+    zgodba: 'A játékod túlmutat a pályán',
+    naslovReflektor: 'Nézd meg, ki választott ebben a fordulóban',
+    stevecOznaka: 'Fantasy csapatok, amelyek választottak',
+    virEna: '{liga} · {sezona} szezon · a(z) {krog}. forduló határideje után, {datum}',
+    virVec: 'Összesen {n} ligában, mindegyik a legutóbbi határidő után',
+    razisci: 'Csapatok felfedezése',
+    predogled: {
+      naslov: 'Oldd fel a játékosprofilodat',
+      korist1: 'Nézd meg, hány fantasy csapat választott, és melyek azok',
+      korist2: 'Mutasd meg a legjobb klipjeidet',
+      korist3: 'Tedd a profilt a sajátoddá',
+      opomba: 'Csak te látod, mely csapatokban vagy. A többi játékosuk privát marad.',
+      cta: 'Játékosprofilom ellenőrzése',
+    },
   },
   krog: '{krog}. forduló',
   vrstePorocil: {
@@ -306,7 +319,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'A weboldal csak https:// cím lehet (legfeljebb 200 karakter).',
     ponudba: {
-      izbranost: 'Kiválasztottság: hány fantasy csapatban vagy ligánként, és minden játékos kiválasztottsága. Más felhasználók ezt nem látják.',
       naslov: 'Profil ellenőrzése',
       opis: 'Kék pipa a neved mellett mindenhol a játékban, beceneved a listákon, hosszabb bemutatkozás, YouTube, X és weboldal, borítókép és profilszín, kiemelt mérkőzés vagy statisztika és üzenet a szurkolóknak.',
       cena: 'Évi 9,99 € vagy örökre 29 €',
