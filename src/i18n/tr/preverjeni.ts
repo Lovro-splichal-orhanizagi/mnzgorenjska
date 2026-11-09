@@ -2,9 +2,9 @@
 // Fiyatlar ve yenileme satın alma kısmından gelir (`igralci.preverjen.ponudba.*`), burada yoktur.
 export const preverjeni = {
   naslov: 'Doğrulanmış oyuncu profili',
-  opis: 'SLFF oyuncu profilinde mavi tik, kapak görseli, biyografi, bağlantılar ve incelenmiş 6\'ya kadar klip.',
+  opis: 'SLFF oyuncu profilinde mavi tik, kapak görseli, biyografi, bağlantılar ve incelenmiş 6\'ya kadar futbol özeti: goller, kurtarışlar, maç anları.',
   glava: 'Senin futbolun. Senin profilin. Senin erişimin.',
-  uvod: 'Doğrulanmış profil, SLFF\'teki oyuncu sayfandır: adının yanında mavi tik, kapak görseli, biyografi, bağlantılar ve hamlelerinin klipleri.',
+  uvod: 'Doğrulanmış profil, SLFF\'teki oyuncu sayfandır: adının yanında mavi tik, kapak görseli, biyografi, bağlantılar ve en iyi anlarının futbol özetleri.',
   noga: 'Doğrulanmış oyuncu profili',
   vec: 'Doğrulanmış profil hakkında daha fazla →',
   nalaga: 'Yükleniyor …',
@@ -13,16 +13,20 @@ export const preverjeni = {
     ime: 'Ad ve soyad',
     klub: 'Mevki · Kulüp',
     opis: 'Burada kim olduğunu, nerede oynadığını ve seni neyin harekete geçirdiğini anlat.',
-    posnetek: 'Klip {n}',
+    posnetek: 'Özet {n}',
     alt: 'SLFF sahası',
   },
   kaj: {
     naslov: 'Ne kazanırsın',
-    kljukica: 'Oyunun her yerinde adının yanında mavi tik.',
+    kljukica: 'Doğrulanmış kimlik',
+    kljukicaOpis: 'Oyunun her yerinde adının yanında mavi tik.',
+    izbranost: 'Hangi fantasy takımlarının seni seçtiğini gör',
+    izbranostOpis: 'Kendi profilinde seni seçen fantasy takımlarının adlarını görürsün. Yalnızca takım adları.',
+    posnetki: '6\'ya kadar futbol özeti',
+    posnetkiOpis: 'Goller, kurtarışlar ve maç anları profilinin en üstünde. Her özeti gösterilmeden önce SLFF ekibi inceler.',
+    dodatno: 'Ayrıca',
     profil: 'Daha zengin kapak görseli, biyografi ve bağlantılar (YouTube, X, web sitesi) ile taraftarlara mesaj.',
-    posnetki: 'Profilinin en üstünde 6\'ya kadar klip. Her klibi önce SLFF ekibi inceler.',
     ogledi: 'SLFF Scout\'un bulunduğu yerlerde, profilindeki scout görüntülenmelerinin toplam özeti.',
-    izbranost: 'Kaç fantasy takımının seni seçtiği ve bu takımların hangileri olduğu.',
   },
   koraki: {
     naslov: 'Nasıl alınır',
@@ -32,10 +36,20 @@ export const preverjeni = {
       opis: '“Bu benim” düğmesine bas. Seni onayladıktan sonra ödeme yapmadan fotoğraf da yükleyebilirsin.',
     },
     izberi: { naslov: 'Yıllık veya ömür boyu seç', opis: 'Satın alma internet üzerinden yapılır.' },
-    uredi: { naslov: 'Düzenle ve göster', opis: 'Kapak görseli, biyografi, bağlantılar ve klipler ekle.' },
+    uredi: { naslov: 'Düzenle ve göster', opis: 'Kapak görseli, biyografi, bağlantılar ve maç özetleri ekle.' },
   },
-  cena: {
-    naslov: 'Fiyat',
+  pripravi: {
+    oznaka: 'Sırada',
+    naslov: 'Üzerinde çalıştıklarımız',
+    uvod: 'Hazırlık aşamasındaki fikirler. Bugün doğrulanmış profilin parçası değiller ve değişebilir.',
+    story: {
+      naslov: 'Özetlerin Instagram Hikayelerinde',
+      opis: 'Evet dersen, özetlerini SLFF\'in Instagram hikayesinde öne çıkarırız: ayda en fazla 3 ve yalnızca SLFF incelemesinden sonra. Kaç kişiye ulaştığına dair rapor alırsın.',
+    },
+    igralci: {
+      naslov: 'Özetlerin fantasy oyuncularının önünde',
+      opis: 'Özetlerini desteklediğimiz liglerde SLFF fantasy oyuncularına gösterme.',
+    },
   },
   cta: {
     poisci: 'Profilini bul',
@@ -45,7 +59,7 @@ export const preverjeni = {
     preveri: 'Oyuncu profilimi doğrula',
     preveriOpis: 'Yıllık abonelik veya tek seferlik ömür boyu satın alma.',
     profil: 'Profiline git',
-    preverjen: 'Profilin doğrulandı. Düzenle ve kliplerini göster.',
+    preverjen: 'Profilin doğrulandı. Düzenle ve en iyi anlarını göster.',
     brezPonudbe: 'Doğrulanmış profiller, adı görünen reşit oyuncular içindir.',
   },
 }

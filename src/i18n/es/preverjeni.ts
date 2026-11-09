@@ -2,9 +2,9 @@
 // Los precios y la renovación vienen de la compra (`igralci.preverjen.ponudba.*`), aquí no están.
 export const preverjeni = {
   naslov: 'Perfil de jugador verificado',
-  opis: 'Una insignia azul, banner, descripción, enlaces y hasta 6 clips revisados en tu perfil de jugador de SLFF.',
+  opis: 'Una insignia azul, banner, descripción, enlaces y hasta 6 jugadas destacadas revisadas (goles, paradas, momentos de partido) en tu perfil de jugador de SLFF.',
   glava: 'Tu fútbol. Tu perfil. Tu alcance.',
-  uvod: 'Un perfil verificado es tu página de jugador en SLFF: con una insignia azul junto al nombre, banner, descripción, enlaces y clips de tus mejores jugadas.',
+  uvod: 'Un perfil verificado es tu página de jugador en SLFF: con una insignia azul junto al nombre, banner, descripción, enlaces y jugadas destacadas de tus mejores momentos.',
   noga: 'Perfil de jugador verificado',
   vec: 'Más sobre el perfil verificado →',
   nalaga: 'Cargando …',
@@ -13,16 +13,20 @@ export const preverjeni = {
     ime: 'Nombre y apellidos',
     klub: 'Posición · Club',
     opis: 'Cuenta aquí quién eres, dónde juegas y qué te mueve.',
-    posnetek: 'Clip {n}',
+    posnetek: 'Jugada {n}',
     alt: 'Campo de SLFF',
   },
   kaj: {
     naslov: 'Qué obtienes',
-    kljukica: 'Una insignia azul junto a tu nombre en todo el juego.',
+    kljukica: 'Identidad verificada',
+    kljukicaOpis: 'Una insignia azul junto a tu nombre en todo el juego.',
+    izbranost: 'Mira qué equipos fantasy te eligieron',
+    izbranostOpis: 'En tu propio perfil ves los nombres de los equipos fantasy que te eligieron. Solo nombres de equipos.',
+    posnetki: 'Hasta 6 jugadas destacadas',
+    posnetkiOpis: 'Goles, paradas y momentos de partido en lo más alto de tu perfil. El equipo de SLFF revisa cada jugada destacada antes de mostrarla.',
+    dodatno: 'Y además',
     profil: 'Un banner más completo, descripción y enlaces (YouTube, X, sitio web), además de un mensaje a la afición.',
-    posnetki: 'Hasta 6 clips en lo más alto de tu perfil. Cada clip lo revisa primero el equipo de SLFF.',
     ogledi: 'Un resumen total de las visitas de ojeadores a tu perfil, donde SLFF Scout esté disponible.',
-    izbranost: 'Cuántos equipos fantasy te eligieron y cuáles son.',
   },
   koraki: {
     naslov: 'Cómo conseguirlo',
@@ -32,10 +36,20 @@ export const preverjeni = {
       opis: 'Pulsa «Soy yo». Cuando te confirmemos, también podrás subir una foto sin pagar.',
     },
     izberi: { naslov: 'Elige anual o de por vida', opis: 'La compra se hace online.' },
-    uredi: { naslov: 'Edita y presume', opis: 'Añade banner, descripción, enlaces y clips.' },
+    uredi: { naslov: 'Edita y presume', opis: 'Añade banner, descripción, enlaces y jugadas destacadas.' },
   },
-  cena: {
-    naslov: 'Precio',
+  pripravi: {
+    oznaka: 'Próximamente',
+    naslov: 'En qué estamos trabajando',
+    uvod: 'Ideas en preparación. Hoy no forman parte del perfil verificado y pueden cambiar.',
+    story: {
+      naslov: 'Tus jugadas destacadas en las historias de Instagram',
+      opis: 'Si aceptas, mostramos tus jugadas destacadas en la historia de Instagram de SLFF, hasta 3 al mes y solo tras la revisión de SLFF. Recibes un informe de a cuánta gente llegó.',
+    },
+    igralci: {
+      naslov: 'Tus jugadas destacadas ante los jugadores de fantasy',
+      opis: 'Mostrar tus jugadas destacadas a los jugadores de fantasy de SLFF en las ligas que cubrimos.',
+    },
   },
   cta: {
     poisci: 'Busca tu perfil',
@@ -45,7 +59,7 @@ export const preverjeni = {
     preveri: 'Verificar mi perfil de jugador',
     preveriOpis: 'Suscripción anual o compra única de por vida.',
     profil: 'Ir a tu perfil',
-    preverjen: 'Tu perfil está verificado. Edítalo y muestra tus clips.',
+    preverjen: 'Tu perfil está verificado. Edítalo y presume de tus mejores jugadas.',
     brezPonudbe: 'Los perfiles verificados son para jugadores mayores de edad con el nombre visible.',
   },
 }

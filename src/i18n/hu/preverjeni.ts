@@ -3,9 +3,9 @@ import type { Prevod } from '../jedro.ts'
 
 export const preverjeni: NonNullable<Prevod['preverjeni']> = {
   naslov: 'Ellenőrzött játékosprofil',
-  opis: 'Kék pipa, borítókép, bemutatkozás, linkek és legfeljebb 6 ellenőrzött videó a játékosprofilodon az SLFF-ben.',
+  opis: 'Kék pipa, borítókép, bemutatkozás, linkek és legfeljebb 6 ellenőrzött focis highlight a játékosprofilodon az SLFF-ben.',
   glava: 'A te futballod. A te profilod. A te elérésed.',
-  uvod: 'Az ellenőrzött profil a te játékosoldalad az SLFF-ben: kék pipa a neved mellett, borítókép, bemutatkozás, linkek és videók a megmozdulásaidról.',
+  uvod: 'Az ellenőrzött profil a te játékosoldalad az SLFF-ben: kék pipa a neved mellett, borítókép, bemutatkozás, linkek és focis highlightok a legjobb pillanataidról.',
   noga: 'Ellenőrzött játékosprofil',
   vec: 'Többet az ellenőrzött profilról →',
   nalaga: 'Betöltés …',
@@ -14,16 +14,20 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
     ime: 'Név',
     klub: 'Poszt · Klub',
     opis: 'Itt mesélj magadról: ki vagy, hol játszol és mi hajt.',
-    posnetek: '{n}. videó',
+    posnetek: '{n}. highlight',
     alt: 'SLFF pálya',
   },
   kaj: {
     naslov: 'Mit kapsz',
-    kljukica: 'Kék pipa a neved mellett mindenhol a játékban.',
+    kljukica: 'Ellenőrzött személyazonosság',
+    kljukicaOpis: 'Kék pipa a neved mellett mindenhol a játékban.',
+    izbranost: 'Nézd meg, mely fantasy csapatok választottak',
+    izbranostOpis: 'A saját profilodon látod azoknak a fantasy csapatoknak a nevét, amelyek választottak. Csak a csapatnevek.',
+    posnetki: 'Legfeljebb 6 focis highlight',
+    posnetkiOpis: 'Gólok, védések és meccspillanatok a profilod tetején. Minden highlightot az SLFF csapata ellenőriz, mielőtt megjelenik.',
+    dodatno: 'Ezen kívül',
     profil: 'Gazdagabb borítókép, bemutatkozás és linkek (YouTube, X, weboldal), valamint üzenet a szurkolóknak.',
-    posnetki: 'Legfeljebb 6 videó a profilod tetején. Minden videót először az SLFF csapata ellenőriz.',
     ogledi: 'Összesített kimutatás a megfigyelők profilmegtekintéseiről ott, ahol az SLFF Scout elérhető.',
-    izbranost: 'Hány fantasy csapat választott, és melyek azok.',
   },
   koraki: {
     naslov: 'Hogyan juthatsz hozzá',
@@ -33,10 +37,20 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
       opis: 'Nyomd meg az „Ez vagyok én” gombot. A jóváhagyás után fizetés nélkül fotót is feltölthetsz.',
     },
     izberi: { naslov: 'Válassz éves vagy örökös csomagot', opis: 'A vásárlás online történik.' },
-    uredi: { naslov: 'Szerkeszd és mutasd meg', opis: 'Add hozzá a borítóképet, a bemutatkozást, a linkeket és a videókat.' },
+    uredi: { naslov: 'Szerkeszd és mutasd meg', opis: 'Add hozzá a borítóképet, a bemutatkozást, a linkeket és a highlightokat.' },
   },
-  cena: {
-    naslov: 'Ár',
+  pripravi: {
+    oznaka: 'Következik',
+    naslov: 'Min dolgozunk',
+    uvod: 'Készülő ötletek. Ma még nem részei az ellenőrzött profilnak, és változhatnak.',
+    story: {
+      naslov: 'A highlightjaid az Instagram Storyban',
+      opis: 'Ha beleegyezel, a highlightjaidat bemutatjuk az SLFF Instagram Storyjában, havonta legfeljebb 3-at, és csak az SLFF ellenőrzése után. Jelentést kapsz arról, hány emberhez jutott el.',
+    },
+    igralci: {
+      naslov: 'A highlightjaid a fantasy játékosok előtt',
+      opis: 'A highlightjaid megmutatása az SLFF fantasy játékosainak az általunk támogatott bajnokságokban.',
+    },
   },
   cta: {
     poisci: 'Keresd meg a profilodat',
@@ -46,7 +60,7 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
     preveri: 'Játékosprofilom ellenőrzése',
     preveriOpis: 'Éves előfizetés vagy egyszeri örökös vásárlás.',
     profil: 'Ugrás a profilodra',
-    preverjen: 'A profilod ellenőrzött. Szerkeszd, és mutasd meg a videóidat.',
+    preverjen: 'A profilod ellenőrzött. Szerkeszd, és mutasd meg a highlightjaidat.',
     brezPonudbe: 'Az ellenőrzött profil a megjelenített névvel rendelkező nagykorú játékosoknak szól.',
   },
 }

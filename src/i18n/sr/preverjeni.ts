@@ -2,9 +2,9 @@
 // Cene i obnova dolaze iz kupovine (`igralci.preverjen.ponudba.*`), ovde ih nema.
 export const preverjeni = {
   naslov: 'Proveren profil igrača',
-  opis: 'Plava kvačica, naslovna slika, opis, linkovi i do 6 pregledanih snimaka na tvom profilu igrača u SLFF-u.',
+  opis: 'Plava kvačica, naslovna slika, opis, linkovi i do 6 pregledanih fudbalskih highlightsa na tvom profilu igrača u SLFF-u.',
   glava: 'Tvoj fudbal. Tvoj profil. Tvoj domet.',
-  uvod: 'Proveren profil je tvoja stranica igrača u SLFF-u: plava kvačica uz ime, naslovna slika, opis, linkovi i snimci tvojih poteza.',
+  uvod: 'Proveren profil je tvoja stranica igrača u SLFF-u: plava kvačica uz ime, naslovna slika, opis, linkovi i fudbalski highlightsi tvojih najboljih trenutaka.',
   noga: 'Proveren profil igrača',
   vec: 'Više o proverenom profilu →',
   nalaga: 'Učitavanje …',
@@ -13,16 +13,20 @@ export const preverjeni = {
     ime: 'Ime i prezime',
     klub: 'Pozicija · Klub',
     opis: 'Ovde reci ko si, gde igraš i šta te pokreće.',
-    posnetek: 'Snimak {n}',
+    posnetek: 'Highlight {n}',
     alt: 'Igralište SLFF-a',
   },
   kaj: {
     naslov: 'Šta dobijaš',
-    kljukica: 'Plava kvačica uz tvoje ime svuda u igri.',
+    kljukica: 'Proveren identitet',
+    kljukicaOpis: 'Plava kvačica uz tvoje ime svuda u igri.',
+    izbranost: 'Vidi koji su te fantasy timovi izabrali',
+    izbranostOpis: 'Na svom profilu vidiš imena fantasy timova koji su te izabrali. Samo imena timova.',
+    posnetki: 'Do 6 fudbalskih highlightsa',
+    posnetkiOpis: 'Golovi, odbrane i trenuci sa utakmica na vrhu profila. Svaki highlight pre prikaza pregleda tim SLFF-a.',
+    dodatno: 'Uz to',
     profil: 'Bogatija naslovna slika, opis i linkovi (YouTube, X, veb sajt) i poruka navijačima.',
-    posnetki: 'Do 6 snimaka na vrhu profila. Svaki snimak prvo pregleda tim SLFF-a.',
     ogledi: 'Ukupan pregled prikaza skauta na tvom profilu, gde je dostupan SLFF Scout.',
-    izbranost: 'Koliko te fantasy timova izabralo i koji su to timovi.',
   },
   koraki: {
     naslov: 'Kako do njega',
@@ -32,10 +36,20 @@ export const preverjeni = {
       opis: 'Pritisni „Ovo sam ja“. Kad te potvrdimo, možeš i bez plaćanja da otpremiš fotografiju.',
     },
     izberi: { naslov: 'Izaberi godišnje ili doživotno', opis: 'Kupovina je na internetu.' },
-    uredi: { naslov: 'Uredi i pokaži', opis: 'Dodaj naslovnu sliku, opis, linkove i snimke.' },
+    uredi: { naslov: 'Uredi i pokaži', opis: 'Dodaj naslovnu sliku, opis, linkove i highlightse.' },
   },
-  cena: {
-    naslov: 'Cena',
+  pripravi: {
+    oznaka: 'Šta dolazi',
+    naslov: 'Na čemu radimo',
+    uvod: 'Ideje u pripremi. Danas nisu deo proverenog profila i mogu se promeniti.',
+    story: {
+      naslov: 'Tvoji highlightsi u Instagram Storyjima',
+      opis: 'Ako pristaneš, tvoje highlightse objavićemo u Instagram Storyju SLFF-a, do 3 mesečno i tek nakon pregleda SLFF-a. Dobićeš izveštaj o tome koliko je ljudi dosegao.',
+    },
+    igralci: {
+      naslov: 'Tvoji highlightsi pred fantasy igračima',
+      opis: 'Prikaz tvojih highlightsa fantasy igračima SLFF-a u ligama koje podržavamo.',
+    },
   },
   cta: {
     poisci: 'Pronađi svoj profil',
@@ -45,7 +59,7 @@ export const preverjeni = {
     preveri: 'Proveri moj profil igrača',
     preveriOpis: 'Godišnja pretplata ili jednokratna doživotna kupovina.',
     profil: 'Idi na svoj profil',
-    preverjen: 'Tvoj profil je proveren. Uredi ga i pokaži snimke.',
+    preverjen: 'Tvoj profil je proveren. Uredi ga i pokaži svoje highlightse.',
     brezPonudbe: 'Provereni profili su za punoletne igrače sa prikazanim imenom.',
   },
 }

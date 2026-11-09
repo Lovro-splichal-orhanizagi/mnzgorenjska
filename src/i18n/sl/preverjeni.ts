@@ -2,9 +2,9 @@
 // Cene pridejo iz nakupa (`igralci.preverjen.ponudba.*`), tu jih ni.
 export const preverjeni = {
   naslov: 'Preverjeni igralski profil',
-  opis: 'Modra kljukica, pasica, opis, povezave in do 6 pregledanih posnetkov na tvojem profilu igralca v SLFF.',
+  opis: 'Modra kljukica, pasica, opis, povezave in do 6 pregledanih posnetkov najboljših potez na tvojem profilu igralca v SLFF.',
   glava: 'Tvoj nogomet. Tvoj profil. Tvoj doseg.',
-  uvod: 'Preverjen profil je tvoja stran igralca v SLFF: modra kljukica ob imenu, pasica, opis, povezave in posnetki tvojih potez.',
+  uvod: 'Preverjen profil je tvoja stran igralca v SLFF: modra kljukica ob imenu, pasica, opis, povezave in posnetki tvojih najboljših potez.',
   noga: 'Preverjeni igralski profil',
   vec: 'Več o preverjenem profilu →',
   nalaga: 'Nalagam …',
@@ -18,11 +18,15 @@ export const preverjeni = {
   },
   kaj: {
     naslov: 'Kaj dobiš',
-    kljukica: 'Modra kljukica ob tvojem imenu povsod v igri.',
+    kljukica: 'Preverjena identiteta',
+    kljukicaOpis: 'Modra kljukica ob tvojem imenu povsod v igri.',
+    izbranost: 'Poglej, katere fantasy ekipe so te izbrale',
+    izbranostOpis: 'Na svojem profilu vidiš imena fantasy ekip, ki so te izbrale. Samo imena ekip.',
+    posnetki: 'Do 6 posnetkov najboljših potez',
+    posnetkiOpis: 'Goli, obrambe in prizori s tekem na vrhu profila. Vsak posnetek pred prikazom pregleda ekipa SLFF.',
+    dodatno: 'Poleg tega',
     profil: 'Bogatejša pasica, opis in povezave (YouTube, X, spletna stran) ter sporočilo navijačem.',
-    posnetki: 'Do 6 posnetkov na vrhu profila. Vsak posnetek najprej pregleda ekipa SLFF.',
     ogledi: 'Skupni pregled ogledov skavtov na tvojem profilu, kjer je SLFF Scout na voljo.',
-    izbranost: 'Koliko fantasy ekip te je izbralo in katere ekipe so to.',
   },
   koraki: {
     naslov: 'Kako do njega',
@@ -32,10 +36,20 @@ export const preverjeni = {
       opis: 'Pritisni »To sem jaz«. Ko te potrdimo, lahko brez plačila naložiš tudi fotografijo.',
     },
     izberi: { naslov: 'Izberi letno ali doživljenjsko', opis: 'Nakup je na spletu.' },
-    uredi: { naslov: 'Uredi in pokaži', opis: 'Dodaj pasico, opis, povezave in posnetke.' },
+    uredi: { naslov: 'Uredi in pokaži', opis: 'Dodaj pasico, opis, povezave in posnetke najboljših potez.' },
   },
-  cena: {
-    naslov: 'Cena',
+  pripravi: {
+    oznaka: 'V pripravi',
+    naslov: 'Na čem delamo',
+    uvod: 'Ideje v pripravi. Danes niso del preverjenega profila in se lahko spremenijo.',
+    story: {
+      naslov: 'Tvoji posnetki v zgodbah na Instagramu',
+      opis: 'Če se strinjaš, tvoje posnetke najboljših potez objavimo v zgodbi SLFF na Instagramu, do 3 na mesec in šele po pregledu SLFF. O doseženem občinstvu dobiš poročilo.',
+    },
+    igralci: {
+      naslov: 'Tvoji posnetki pred fantasy igralci',
+      opis: 'Prikaz tvojih posnetkov fantasy igralcem SLFF v ligah, ki jih podpiramo.',
+    },
   },
   cta: {
     poisci: 'Poišči svoj profil',
@@ -45,7 +59,7 @@ export const preverjeni = {
     preveri: 'Preveri moj igralski profil',
     preveriOpis: 'Letna naročnina ali enkraten doživljenjski nakup.',
     profil: 'Pojdi na svoj profil',
-    preverjen: 'Tvoj profil je preverjen. Uredi ga in pokaži posnetke.',
+    preverjen: 'Tvoj profil je preverjen. Uredi ga in pokaži svoje poteze.',
     brezPonudbe: 'Preverjeni profili so za polnoletne igralce s prikazanim imenom.',
   },
 }
