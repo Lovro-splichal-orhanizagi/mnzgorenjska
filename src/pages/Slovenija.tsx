@@ -11,6 +11,8 @@ import { useTekmovanje, zLigo } from '../lib/tekmovanje'
 import VrhDrzave from '../components/VrhDrzave'
 import VrhKlubov from '../components/VrhKlubov'
 import LestvicaNapovediDrzave from '../components/LestvicaNapovediDrzave'
+import { Zavihki, PloscaZavihkov } from '../components/Zavihki'
+import { jeVStarosti, naslovStarosti, starostIzNaslova, type Starost } from '../lib/starost'
 import {
   razvrsti,
   zMesti,
@@ -45,10 +47,37 @@ export default function Slovenija() {
     else novo.set('pogled', k)
     setIskanje(novo, { replace: true })
   }
+  // Starostna skupina je v naslovu (`?starost=mladi`), kakor zavihek: pogled
+  // se deli in preživi osvežitev. Kopija parametrov ohrani ligo (`t`) in zavihek.
+  const starost = starostIzNaslova(iskanje.get('starost'))
+  const setStarost = (s: Starost) => setIskanje(naslovStarosti(iskanje, s))
+  // Starostna skupina lige po šifri; null = še ni (ali je ni).
+  const [skupine, setSkupine] = useState<Map<string, string | null> | null>(null)
+  const [skupineNapaka, setSkupineNapaka] = useState(false)
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [seNiPripravljena, setSeNiPripravljena] = useState(false)
-  useNaslov(t('lestvice.slovenija.naslovStrani'))
+  useNaslov(t(starost === 'mladi' ? 'lestvice.slovenija.naslovStraniMladi' : 'lestvice.slovenija.naslovStrani'))
+
+  useEffect(() => {
+    let veljavno = true
+    supabase
+      .from('competitions_view')
+      .select('slug, starostna_skupina')
+      .eq('active', true)
+      .then(({ data, error }) => {
+        if (!veljavno) return
+        if (error || !data) {
+          // Neuspeh ni "vse je glavna": ekip brez znane skupine ne uvrščamo nikamor.
+          setSkupineNapaka(true)
+          return
+        }
+        setSkupine(new Map(data.map((l) => [l.slug as string, l.starostna_skupina as string | null])))
+      })
+    return () => {
+      veljavno = false
+    }
+  }, [])
 
   useEffect(() => {
     let veljavno = true
@@ -96,15 +125,22 @@ export default function Slovenija() {
   // DRŽAVE, ki jo obiskovalec gleda — Slovenec slovaških ekip ne vidi. Filter
   // je tu in ne v poizvedbi, da stran ne pade, če koda pride pred migracijo.
   const { tekmovanja, drzava } = useTekmovanje()
+  // Ekipe v ligah druge starostne skupine ali neznane skupine niso med njimi:
+  // glava strani trdi, da so skupine ločene, zato jih tudi ta zavihek loči.
   const vrstice = useMemo(() => {
     const lige = new Set(tekmovanja.map((l) => l.slug))
-    return lige.size ? vseVrsticeDrzav.filter((v) => v.competition_slug != null && lige.has(v.competition_slug)) : vseVrsticeDrzav
-  }, [vseVrsticeDrzav, tekmovanja])
+    return vseVrsticeDrzav.filter(
+      (v) =>
+        v.competition_slug != null &&
+        (lige.size === 0 || lige.has(v.competition_slug)) &&
+        jeVStarosti(skupine?.get(v.competition_slug), starost),
+    )
+  }, [vseVrsticeDrzav, tekmovanja, skupine, starost])
 
   const urejene = useMemo(() => zMesti(razvrsti(vrstice, kako), kako), [vrstice, kako])
   const skupaj = useMemo(() => povzetek(vrstice), [vrstice])
 
-  if (nalaganje) return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
+  if (nalaganje || (skupine === null && !skupineNapaka && zavihek === 'ekipe')) return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
   if (napaka) return <p className="text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>
   if (seNiPripravljena)
     return (
@@ -120,35 +156,69 @@ export default function Slovenija() {
     <div className="space-y-6">
       <h1 className="text-2xl font-black naslov sm:text-3xl">{t('lestvice.slovenija.naslov')}</h1>
 
-      <div className="flex gap-1 border-b border-white/10">
-        {(
-          [
-            ['ekipe', t('lestvice.slovenija.zavihekEkipe')],
-            ['igralci', t('lestvice.slovenija.zavihekIgralci')],
-            ['klubi', t('lestvice.slovenija.zavihekKlubi')],
-            ['napovedi', t('lestvice.napovedi.napovedi')],
-          ] as const
-        ).map(([k, naslov]) => (
-          <button
-            key={k}
-            onClick={() => setZavihek(k)}
-            className={`-mb-px min-w-0 flex-1 truncate border-b-2 px-2 py-2.5 text-center text-sm font-bold sm:flex-none sm:px-4 ${
-              zavihek === k
-                ? 'border-gnl-400 text-gnl-200'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
+      {/* Starostna skupina: glavna lestvica (člani + U19) in lestvica mladih
+          (U18 in mlajši) se ne mešata; povezava vodi iz enega pogleda v drugega. */}
+      <section aria-labelledby="starost-opis" className="space-y-3">
+        <Zavihki
+          id="starost"
+          oznaka={t('lestvice.slovenija.skupinaOznaka')}
+          zavihki={[
+            { kljuc: 'glavna', naslov: t('lestvice.slovenija.skupinaGlavna') },
+            { kljuc: 'mladi', naslov: <><span aria-hidden>🌱 </span>{t('lestvice.slovenija.skupinaMladi')}</> },
+          ]}
+          izbran={starost}
+          naIzbiro={setStarost}
+          razredSeznama="grid grid-cols-2 gap-1 rounded-xl bg-white/5 p-1"
+          razredZavihka={(aktiven) =>
+            `min-h-11 rounded-lg px-3 py-2 text-center text-sm font-bold transition ${
+              aktiven ? 'bg-gnl-500 text-slate-950' : 'text-slate-300 hover:bg-white/5 hover:text-white'
+            }`
+          }
+        />
+        <div className="rounded-xl border border-gnl-400/30 bg-gnl-500/10 px-3 py-2.5 sm:px-4">
+          <p id="starost-opis" className="text-sm text-gnl-100">
+            {t(starost === 'mladi' ? 'lestvice.slovenija.mladiOpis' : 'lestvice.slovenija.glavnaOpis')}
+          </p>
+          <Link
+            to={{ search: `?${naslovStarosti(iskanje, starost === 'mladi' ? 'glavna' : 'mladi')}` }}
+            className="mt-1 inline-block text-sm font-semibold text-gnl-300 underline hover:text-gnl-200"
           >
-            {naslov}
-          </button>
-        ))}
-      </div>
+            {t(starost === 'mladi' ? 'lestvice.slovenija.mladiPovezava' : 'lestvice.slovenija.glavnaPovezava')}
+          </Link>
+        </div>
+      </section>
 
+      <Zavihki
+        id="pogled"
+        oznaka={t('lestvice.slovenija.naslovStrani')}
+        zavihki={[
+          { kljuc: 'ekipe', naslov: t('lestvice.slovenija.zavihekEkipe') },
+          { kljuc: 'igralci', naslov: t('lestvice.slovenija.zavihekIgralci') },
+          { kljuc: 'klubi', naslov: t('lestvice.slovenija.zavihekKlubi') },
+          { kljuc: 'napovedi', naslov: t('lestvice.napovedi.napovedi') },
+        ]}
+        izbran={zavihek}
+        naIzbiro={setZavihek}
+        razredSeznama="flex gap-1 border-b border-white/10"
+        razredZavihka={(aktiven) =>
+          `-mb-px min-w-0 flex-1 truncate border-b-2 px-2 py-2.5 text-center text-sm font-bold sm:flex-none sm:px-4 ${
+            aktiven
+              ? 'border-gnl-400 text-gnl-200'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`
+        }
+      />
+
+      <PloscaZavihkov id="pogled" izbran={zavihek} className="space-y-6">
       {zavihek === 'igralci' ? (
-        <VrhDrzave drzava={drzava} />
+        <VrhDrzave drzava={drzava} starost={starost} />
       ) : zavihek === 'klubi' ? (
-        <VrhKlubov drzava={drzava} />
+        <VrhKlubov drzava={drzava} starost={starost} />
       ) : zavihek === 'napovedi' ? (
         <LestvicaNapovediDrzave drzava={drzava} />
+      ) : skupineNapaka ? (
+        // Skupin lig ni mogoče prebrati: brez njih ekip ne moremo ločiti, zato ne pokažemo nobene.
+        <p className="text-sm text-slate-400">{t('lestvice.slovenija.pripravlja')}</p>
       ) : (
         <>
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -249,6 +319,7 @@ export default function Slovenija() {
           )}
         </>
       )}
+      </PloscaZavihkov>
 
       <p className="text-xs text-slate-500">
         <Link to="/standings" className="underline hover:text-slate-300">

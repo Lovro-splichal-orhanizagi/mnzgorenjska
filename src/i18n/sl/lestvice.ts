@@ -130,6 +130,23 @@ export const lestvice = {
     napovediOcenjenih: 'Ocenjenih napovedi: {n}',
     vrhNapovedi: 'Najboljši napovedovalci',
     vrhNapovediVse: 'Cela lestvica napovedi',
+    naslovStraniMladi: 'Državna lestvica — mladi (U18 in mlajši)',
+    skupinaOznaka: 'Starostna skupina lig',
+    skupinaGlavna: 'Člani in U19',
+    skupinaMladi: 'U18 in mlajši',
+    glavnaOpis:
+      'Ta lestvica vsebuje samo članske lige in lige U19. Lige U18 in mlajših (kadeti, U15 …) imajo svojo lestvico, da se mladi ne merijo z odraslimi.',
+    glavnaPovezava: 'Najboljši mladi igralci →',
+    mladiOpis:
+      'Samo lige U18 in mlajših (kadeti U17, U15 …): tu se med seboj merijo mladi zvezdniki. Uvrstitev velja za ligo, ne za starost posameznega igralca.',
+    mladiPovezava: '← Člani in U19',
+    vrhNaslovMladi: 'Kdo je najboljši mladi igralec?',
+    vrhUvodGlavna: 'Najboljših {n} v ligah članov in U19 · sezona {sezona}',
+    vrhUvodMladi: 'Najboljših {n} v ligah U18 in mlajših · sezona {sezona}',
+    vrhPrazenMladi: 'V ligah U18 in mlajših še ni odigranih tekem v tekoči sezoni.',
+    vrhSezona: 'sezona {sezona}',
+    mladiOpomba:
+      'Uvrstitev velja za ligo (U18 in mlajši), ne za starost igralca. Isti igralec lahko nastopa tudi v starejši ligi, kjer ima ločeno uvrstitev.',
   },
 
   miniLige: {

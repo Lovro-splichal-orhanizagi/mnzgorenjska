@@ -121,6 +121,23 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napovediOcenjenih: 'Afgjorte tips: {n}',
     vrhNapovedi: 'Bedste tippere',
     vrhNapovediVse: 'Hele tipstabellen',
+    naslovStraniMladi: 'Landsrangliste · unge spillere (U18 og yngre)',
+    skupinaOznaka: 'Ligaens aldersgruppe',
+    skupinaGlavna: 'Senior og U19',
+    skupinaMladi: 'U18 og yngre',
+    glavnaOpis:
+      'Denne rangliste dækker kun senior- og U19-ligaer. Ligaer for U18 og yngre (U17, U15 …) har deres egen rangliste, så unge spillere ikke måles mod voksne.',
+    glavnaPovezava: 'Bedste unge spillere →',
+    mladiOpis:
+      'Kun ligaer for U18 og yngre (U17, U15 …): de unge talenter dyster mod hinanden. Gruppen hører til ligaen, ikke til en enkelt spillers alder.',
+    mladiPovezava: '← Senior og U19',
+    vrhNaslovMladi: 'Hvem er den bedste unge spiller?',
+    vrhUvodGlavna: 'Top {n} i senior- og U19-ligaer · sæson {sezona}',
+    vrhUvodMladi: 'Top {n} i ligaer for U18 og yngre · sæson {sezona}',
+    vrhPrazenMladi: 'Der er endnu ikke spillet nogen kampe i denne sæson i ligaer for U18 og yngre.',
+    vrhSezona: 'sæson {sezona}',
+    mladiOpomba:
+      'Gruppen hører til ligaen (U18 og yngre), ikke til spillerens alder. Samme spiller kan også optræde i en ældre liga, hvor vedkommende har en separat rangliste.',
   },
 
   miniLige: {
