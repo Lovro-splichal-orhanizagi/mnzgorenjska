@@ -116,6 +116,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     vrhOpomba:
       'A pontokban nincsenek benne a gólpasszok: ezeket szavazás erősíti meg, ami a legtöbb bajnokságban még el sem indult, így a bajnokságok nem lennének egyenlő helyzetben. A bajnokságok eddig különböző számú fordulót játszottak.',
     vrhPrazno: 'Ebben a szezonban még nem játszottak mérkőzést.',
+    napovediUvod: 'Az összes liga legjobb tippelői. Pontos eredmény 3 pont, helyes kimenetel 1.',
+    napovediSezona: 'Szezon',
+    napovedi7dni: 'Elmúlt 7 nap',
+    napovediPrazno7: 'Az elmúlt 7 napban még nincs kiértékelt tipp.',
+    napovediOcenjenih: 'Kiértékelt tippek: {n}',
+    vrhNapovedi: 'Legjobb tippelők',
+    vrhNapovediVse: 'Teljes tipptabella',
   },
 
   miniLige: {
