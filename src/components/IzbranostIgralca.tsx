@@ -55,12 +55,22 @@ const svez = (v: IzbranostLige) =>
 function Reflektor({ igralecId, vrstice }: { igralecId: number; vrstice: IzbranostLige[] }) {
   const id = useId()
   const seznam = useRef<HTMLHeadingElement>(null)
+  const okvir = useRef<HTMLElement>(null)
   // Ekipe v različnih ligah so različne ekipe: vsota ne šteje dvakrat.
   const stete = vrstice.filter((v) => odstotek(v.owners, v.ekip) != null)
   const skupaj = stete.reduce((s, v) => s + (v.owners ?? 0), 0)
   const ena = stete.length === 1 ? stete[0] : null
   const [ekipe, setEkipe] = useState<EkipaZIgralcem[]>([])
   const [nalaga, setNalaga] = useState(false)
+  // Po "Pokaži več" gre fokus na prvo novo ekipo: gumb ob zadnji strani
+  // izgine in fokus bi sicer padel na telo strani.
+  const [fokus, setFokus] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (fokus == null) return
+    okvir.current?.querySelector<HTMLElement>(`[data-ekipa="${fokus}"]`)?.focus()
+    setFokus(null)
+  }, [fokus, ekipe])
 
   useEffect(() => {
     let velja = true
@@ -77,11 +87,12 @@ function Reflektor({ igralecId, vrstice }: { igralecId: number; vrstice: Izbrano
     void ekipeZIgralcem(igralecId, ekipe.length).then((v) => {
       setEkipe((prej) => [...prej, ...v])
       setNalaga(false)
+      if (v[0]) setFokus(v[0].fantasy_team_id)
     })
   }
 
   return (
-    <section aria-labelledby={id} className="izbranost-reflektor space-y-4 rounded-2xl p-4 sm:p-5">
+    <section ref={okvir} aria-labelledby={id} className="izbranost-reflektor space-y-4 rounded-2xl p-4 sm:p-5">
       <div className="space-y-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-gnl-300">{t('igralci.izbranost.zgodba')}</p>
         <h2 id={id} className="text-lg font-black text-white sm:text-xl">
@@ -147,6 +158,7 @@ function Reflektor({ igralecId, vrstice }: { igralecId: number; vrstice: Izbrano
                     <li key={e.fantasy_team_id}>
                       <Link
                         to={zLigo(`/team/${e.fantasy_team_id}`, e.competition_slug)}
+                        data-ekipa={e.fantasy_team_id}
                         className="inline-flex min-h-9 items-center rounded-full bg-white/10 px-3 text-sm font-medium text-gnl-200 hover:bg-white/15 hover:underline"
                       >
                         {e.ime}
