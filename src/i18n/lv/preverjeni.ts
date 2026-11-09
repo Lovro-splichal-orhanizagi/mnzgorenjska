@@ -37,7 +37,6 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
   },
   cena: {
     naslov: 'Cena',
-    obnova: 'Gada abonements tiek atjaunots. Pārvaldi vai atcel to Stripe portālā.',
   },
   cta: {
     poisci: 'Atrodi savu profilu',

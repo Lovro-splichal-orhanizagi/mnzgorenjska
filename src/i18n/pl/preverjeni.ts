@@ -37,7 +37,6 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
   },
   cena: {
     naslov: 'Cena',
-    obnova: 'Roczna subskrypcja odnawia się automatycznie. Zarządzasz nią lub anulujesz ją w portalu Stripe.',
   },
   cta: {
     poisci: 'Znajdź swój profil',

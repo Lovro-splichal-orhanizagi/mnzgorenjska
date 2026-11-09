@@ -37,7 +37,6 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
   },
   cena: {
     naslov: 'Գին',
-    obnova: 'Տարեկան բաժանորդագրությունը թարմացվում է։ Այն կառավարում կամ չեղարկում ես Stripe-ի պորտալով։',
   },
   cta: {
     poisci: 'Գտիր քո պրոֆիլը',

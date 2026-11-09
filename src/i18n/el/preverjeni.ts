@@ -37,7 +37,6 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
   },
   cena: {
     naslov: 'Τιμή',
-    obnova: 'Η ετήσια συνδρομή ανανεώνεται. Τη διαχειρίζεσαι ή την ακυρώνεις μέσω της πύλης Stripe.',
   },
   cta: {
     poisci: 'Βρες το προφίλ σου',

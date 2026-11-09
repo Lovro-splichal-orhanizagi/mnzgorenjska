@@ -37,7 +37,6 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
   },
   cena: {
     naslov: 'Цена',
-    obnova: 'Годишната претплата се обновува. Ја управуваш или ја откажуваш преку порталот Stripe.',
   },
   cta: {
     poisci: 'Најди го својот профил',

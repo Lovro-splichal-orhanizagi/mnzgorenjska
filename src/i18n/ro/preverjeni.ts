@@ -37,7 +37,6 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
   },
   cena: {
     naslov: 'Preț',
-    obnova: 'Abonamentul anual se reînnoiește. Îl gestionezi sau îl anulezi prin portalul Stripe.',
   },
   cta: {
     poisci: 'Găsește-ți profilul',

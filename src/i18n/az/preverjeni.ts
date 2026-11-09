@@ -37,7 +37,6 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
   },
   cena: {
     naslov: 'Qiymət',
-    obnova: 'İllik abunə yenilənir. Onu Stripe portalı vasitəsilə idarə edir və ya ləğv edirsən.',
   },
   cta: {
     poisci: 'Profilini tap',

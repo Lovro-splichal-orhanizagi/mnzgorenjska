@@ -37,7 +37,6 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
   },
   cena: {
     naslov: 'Ár',
-    obnova: 'Az éves előfizetés megújul. A Stripe portálján kezelheted vagy mondhatod le.',
   },
   cta: {
     poisci: 'Keresd meg a profilodat',

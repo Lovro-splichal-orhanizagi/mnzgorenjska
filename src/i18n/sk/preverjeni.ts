@@ -36,7 +36,6 @@ export const preverjeni = {
   },
   cena: {
     naslov: 'Cena',
-    obnova: 'Ročné predplatné sa obnovuje. Spravuješ alebo zrušíš ho cez portál Stripe.',
   },
   cta: {
     poisci: 'Nájdi svoj profil',

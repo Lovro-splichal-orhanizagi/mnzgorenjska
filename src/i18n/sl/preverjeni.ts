@@ -1,5 +1,5 @@
 // Javna stran Preverjeni igralski profil (`/verified`, pages/Preverjeni.tsx).
-// Cene in obnova pridejo iz nakupa (`igralci.preverjen.ponudba.*`), tu jih ni.
+// Cene pridejo iz nakupa (`igralci.preverjen.ponudba.*`), tu jih ni.
 export const preverjeni = {
   naslov: 'Preverjeni igralski profil',
   opis: 'Modra kljukica, pasica, opis, povezave in do 6 pregledanih posnetkov na tvojem profilu igralca v SLFF.',
@@ -36,7 +36,6 @@ export const preverjeni = {
   },
   cena: {
     naslov: 'Cena',
-    obnova: 'Letna naročnina se obnavlja. Upravljaš ali prekličeš jo prek portala Stripe.',
   },
   cta: {
     poisci: 'Poišči svoj profil',

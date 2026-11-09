@@ -227,9 +227,6 @@ export default function Preverjeni() {
             {t("igralci.preverjen.ponudba.dozivljenjska")}
           </p>
           <p className="text-sm text-slate-300">
-            {t("preverjeni.cena.obnova")}
-          </p>
-          <p className="text-sm text-slate-300">
             {t("igralci.izlozba.ponudba.opomba")}
           </p>
           <p className="text-xs text-slate-400">

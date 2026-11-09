@@ -37,7 +37,6 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
   },
   cena: {
     naslov: 'Hind',
-    obnova: 'Aastatellimus uueneb. Haldad või tühistad seda Stripe’i portaalis.',
   },
   cta: {
     poisci: 'Leia oma profiil',

@@ -36,7 +36,6 @@ export const preverjeni = {
   },
   cena: {
     naslov: 'Cijena',
-    obnova: 'Godišnja pretplata se obnavlja. Upravljaš njome ili je otkazuješ putem portala Stripe.',
   },
   cta: {
     poisci: 'Pronađi svoj profil',

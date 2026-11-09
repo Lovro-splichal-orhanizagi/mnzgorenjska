@@ -37,7 +37,6 @@ export const preverjeni: NonNullable<Prevod['preverjeni']> = {
   },
   cena: {
     naslov: 'Cena',
-    obnova: 'Roční předplatné se obnovuje. Spravuješ nebo rušíš ho přes portál Stripe.',
   },
   cta: {
     poisci: 'Najdi svůj profil',

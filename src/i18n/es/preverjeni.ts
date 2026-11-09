@@ -36,7 +36,6 @@ export const preverjeni = {
   },
   cena: {
     naslov: 'Precio',
-    obnova: 'La suscripción anual se renueva automáticamente. La gestionas o la cancelas desde el portal de Stripe.',
   },
   cta: {
     poisci: 'Busca tu perfil',

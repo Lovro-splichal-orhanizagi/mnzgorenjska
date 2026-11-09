@@ -36,7 +36,6 @@ export const preverjeni = {
   },
   cena: {
     naslov: 'Price',
-    obnova: 'The annual subscription renews automatically. You manage or cancel it through the Stripe portal.',
   },
   cta: {
     poisci: 'Find your profile',

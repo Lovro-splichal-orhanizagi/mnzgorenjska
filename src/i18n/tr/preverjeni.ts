@@ -36,7 +36,6 @@ export const preverjeni = {
   },
   cena: {
     naslov: 'Fiyat',
-    obnova: 'Yıllık abonelik otomatik yenilenir. Stripe portalı üzerinden yönetir veya iptal edersin.',
   },
   cta: {
     poisci: 'Profilini bul',

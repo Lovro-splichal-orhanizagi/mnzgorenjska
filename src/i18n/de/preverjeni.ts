@@ -36,7 +36,6 @@ export const preverjeni = {
   },
   cena: {
     naslov: 'Preis',
-    obnova: 'Das Jahresabo verlängert sich automatisch. Du verwaltest oder kündigst es über das Stripe-Portal.',
   },
   cta: {
     poisci: 'Finde dein Profil',
