@@ -10,7 +10,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     posnetek: 'Pärast {krog}. vooru tähtaega, {datum}',
     podPragom: 'Peidetud, kuni voorus on vähemalt 5 meeskonda.',
     brezKroga: 'Ühtegi vooru pole veel lukustatud.',
-    ekipe: 'Meeskondade nimesid ei näita: koosseisu näeb ainult meeskonna omanik.',
+    ekipe: 'Milliste meeskondade koosseisus mängija on, näeb ainult mängija ise oma profiilil.',
+    seznam: 'Meeskonnad, kus sa oled',
+    seznamOpis: 'Kõik meeskonnad, kus sa oled pärast viimast tähtaega. Nende teised mängijad jäävad privaatseks.',
+    vec: 'Näita rohkem',
   },
   krog: '{krog}. voor',
   vrstePorocil: {

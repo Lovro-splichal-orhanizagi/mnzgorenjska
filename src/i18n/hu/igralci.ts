@@ -10,7 +10,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     posnetek: 'A(z) {krog}. forduló határideje után, {datum}',
     podPragom: 'Rejtett, amíg a fordulóban nincs legalább 5 csapat.',
     brezKroga: 'Még nincs lezárt forduló.',
-    ekipe: 'A csapatneveket nem mutatjuk: a keretet csak a csapat tulajdonosa látja.',
+    ekipe: 'Hogy mely csapatok választották, csak a játékos látja a saját profilján.',
+    seznam: 'Csapatok, amelyekben benne vagy',
+    seznamOpis: 'Minden csapat, amelyben benne vagy a legutóbbi határidő után. A csapatok többi játékosa privát marad.',
+    vec: 'Továbbiak',
   },
   krog: '{krog}. forduló',
   vrstePorocil: {

@@ -9146,6 +9146,18 @@ export type Database = {
         Args: { p_krog?: number; p_liga: number }
         Returns: Json
       }
+      ekipe_z_igralcem: {
+        Args: { p_koliko?: number; p_od?: number; p_player_id: number }
+        Returns: {
+          competition_id: number
+          competition_slug: string
+          fantasy_team_id: number
+          ime: string
+          krog: number
+          liga: string
+          skupaj: number
+        }[]
+      }
       fcf_future_current_target_check: {
         Args: {
           p_activate?: boolean

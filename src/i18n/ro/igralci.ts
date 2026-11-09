@@ -10,7 +10,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     posnetek: 'După termenul etapei {krog}, {datum}',
     podPragom: 'Ascuns până când etapa are cel puțin 5 echipe.',
     brezKroga: 'Nicio etapă nu este încă blocată.',
-    ekipe: 'Nu afișăm numele echipelor: lotul unei echipe îl vede doar proprietarul ei.',
+    ekipe: 'Ce echipe îl au pe jucător vede doar jucătorul, pe propriul profil.',
+    seznam: 'Echipe care te au',
+    seznamOpis: 'Toate echipele care te au după ultimul termen. Ceilalți jucători din aceste echipe rămân privați.',
+    vec: 'Arată mai mult',
   },
   krog: 'Etapa {krog}',
   vrstePorocil: {

@@ -10,7 +10,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     posnetek: 'Nach der Frist der {krog}. Runde, {datum}',
     podPragom: 'Verborgen, bis eine Runde mindestens 5 Teams hat.',
     brezKroga: 'Noch keine Runde gesperrt.',
-    ekipe: 'Teamnamen zeigen wir nicht: den Kader sieht nur der Besitzer des Teams.',
+    ekipe: 'Welche Teams einen Spieler haben, sieht nur der Spieler selbst auf seinem Profil.',
+    seznam: 'Teams, die dich haben',
+    seznamOpis: 'Alle Teams, die dich nach der letzten Deadline haben. Ihre übrigen Spieler bleiben privat.',
+    vec: 'Mehr anzeigen',
   },
   krog: '{krog}. Runde',
   vrstePorocil: {
