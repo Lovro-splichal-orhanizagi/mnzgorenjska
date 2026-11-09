@@ -42,7 +42,7 @@ import { izvor } from '../lib/platforma'
 import { naTrgu } from '../lib/osnutek'
 import { zabeleziKorak } from '../lib/lijak'
 import PopravekIgralca from '../components/PopravekIgralca'
-import PonovnaCena from '../components/PonovnaCena'
+import { usePonovnaCena, PonovnaCenaAkcija, PonovnaCenaPovratno, PonovnaCenaOkno } from '../components/PonovnaCena'
 import { prevediNapako } from '../lib/napake'
 import { NalaganjeZaBralnik, Skelet } from '../components/Skelet'
 import GumbGoogle from '../components/GumbGoogle'
@@ -83,6 +83,7 @@ export default function Igralec() {
   const gost = !nalaganjeSeje && !session
   const { vsaTekmovanja } = useTekmovanje()
   const [igralec, setIgralec] = useState<Profil | null>(null)
+  const ponovnaCena = usePonovnaCena(gost ? undefined : igralec?.id)
   // Fotografija s profila potrjenega igralca je privzeta slika na kartici za deljenje.
   const fotoProfila = useFotografija(igralec?.id ?? null)
   // Številke tekoče sezone; `igralec` (player_overview) je seštevek vseh sezon.
@@ -338,6 +339,7 @@ export default function Igralec() {
         )}
       </div>
       <RazlagaCene cena={igralec.value} izhodisce={izhodisce} />
+      <PonovnaCenaAkcija krmilo={ponovnaCena} />
     </div>
   )
   // Preverjen polnoleten igralec: izložba (posnetki, pasica, opis) namesto glave.
@@ -399,7 +401,8 @@ export default function Igralec() {
         {blokCene}
       </div>
       )}
-      {!gost && <PonovnaCena igralecId={igralec.id} />}
+      <PonovnaCenaPovratno krmilo={ponovnaCena} />
+      <PonovnaCenaOkno krmilo={ponovnaCena} />
 
       {/* Deljena povezava na igralca vodi v igro: dodaj ga v svojo ekipo (tudi brez računa). */}
       {slugLige && naTrgu(igralec) && !String(igralec.full_name ?? '').startsWith('#') && (
