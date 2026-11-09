@@ -674,6 +674,9 @@ export default function Igralci() {
                 <td className="px-2 py-2 text-right tabular-nums text-slate-400">
                   {brezPreverjenihNastopov(sezonaPodatki, i.matches) ? '—' : i.goals}
                 </td>
+                <td className="px-2 py-2 text-right tabular-nums text-slate-400">
+                  {brezPreverjenihNastopov(sezonaPodatki, i.matches) ? '—' : i.clean_sheets}
+                </td>
                 <td className="hidden px-2 py-2 text-right tabular-nums text-slate-400 sm:table-cell">
                   {brezPreverjenihNastopov(sezonaPodatki, i.matches) ? '—' : i.minutes}
                 </td>
