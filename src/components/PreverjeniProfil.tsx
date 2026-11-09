@@ -4,7 +4,7 @@
 // pokaže nakup (Stripe Checkout prek funkcije `preverjen-placilo`, le na
 // spletu), preverjenemu urejevalnik in pri letni naročnini portal Stripe.
 // Kaj kdo vidi, odloči baza (`je_preverjen`, `vidi_preverjene`).
-import { useCallback, useEffect, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
@@ -129,7 +129,7 @@ export default function PreverjeniProfil({
       )}
       {kupuje && !placano && odrasel && !odprtNakup && <PredogledPreverjanja naPreveri={() => setOdprtNakup(true)} />}
       {kupuje && !placano && (!odrasel || odprtNakup) && ponudbaIzlozbe && <PonudbaIzlozbe />}
-      {kupuje && !placano && (!odrasel || odprtNakup) && <Ponudba igralecId={igralecId} />}
+      {kupuje && !placano && (!odrasel || odprtNakup) && <Ponudba igralecId={igralecId} fokus={odprtNakup} />}
       {lastnik?.preverjen && lastnik.vir === 'letna' && !jeNativno() && <Narocnina igralecId={igralecId} />}
       {lastnik?.preverjen && urejam && (
         <Urejevalnik
@@ -252,7 +252,7 @@ async function placilo(telo: Record<string, unknown>): Promise<{ url?: string; n
   return { napaka: sporocilo ? prevediNapako(sporocilo) : t('igralci.preverjen.ponudba.napaka') }
 }
 
-function Ponudba({ igralecId }: { igralecId: number }) {
+function Ponudba({ igralecId, fokus = false }: { igralecId: number; fokus?: boolean }) {
   const [vir, setVir] = useState<'letna' | 'dozivljenjska'>('letna')
   const [znacka, setZnacka] = useState(false)
   const [dostava, setDostava] = useState<'si' | 'eu'>('si')
@@ -264,6 +264,11 @@ function Ponudba({ igralecId }: { igralecId: number }) {
   const zZnacko = vir === 'dozivljenjska' && znacka
   // Izrecna povezava oznake z izbiro: klik na besedilo (ceno, državo) izbere.
   const idp = useId()
+  // Odprto iz predogleda: predogled izgine, zato fokus na naslov nakupa.
+  const naslov = useRef<HTMLHeadingElement>(null)
+  useEffect(() => {
+    if (fokus) naslov.current?.focus()
+  }, [fokus])
 
   async function kupi() {
     setDela(true)
@@ -286,7 +291,9 @@ function Ponudba({ igralecId }: { igralecId: number }) {
 
   return (
     <div className="kartica space-y-2 border-sky-400/30 p-3 text-sm">
-      <h3 className="font-bold text-sky-200">{t('igralci.preverjen.ponudba.naslov')}</h3>
+      <h3 ref={naslov} tabIndex={-1} className="font-bold text-sky-200 outline-none">
+        {t('igralci.preverjen.ponudba.naslov')}
+      </h3>
       <p className="text-slate-300">{t('igralci.preverjen.ponudba.opis')}</p>
       <fieldset className="space-y-1">
         {(['letna', 'dozivljenjska'] as const).map((v) => (

@@ -100,7 +100,8 @@ function Reflektor({ igralecId, vrstice }: { igralecId: number; vrstice: Izbrano
         </h2>
       </div>
 
-      {stete.length ? (
+      {/* Brez številke stanje pove vrstica vsake lige spodaj, brez ponavljanja. */}
+      {stete.length > 0 && (
         <div className="space-y-1">
           <p className="text-sm font-semibold text-slate-200">{t('igralci.izbranost.stevecOznaka')}</p>
           <p className="text-6xl font-black tabular-nums leading-none text-white">{stevilo(skupaj)}</p>
@@ -115,8 +116,6 @@ function Reflektor({ igralecId, vrstice }: { igralecId: number; vrstice: Izbrano
               : t('igralci.izbranost.virVec', { n: stete.length })}
           </p>
         </div>
-      ) : (
-        <p className="text-sm text-slate-200">{stanje(vrstice[0])}</p>
       )}
 
       {vseh > 0 && (
@@ -135,7 +134,7 @@ function Reflektor({ igralecId, vrstice }: { igralecId: number; vrstice: Izbrano
       <div className="space-y-3 border-t border-white/10 pt-3">
         <h3 ref={seznam} tabIndex={-1} className="font-semibold text-slate-100 outline-none">
           {t('igralci.izbranost.seznam')}
-          {vseh > 0 && <span className="ml-1 tabular-nums text-slate-400">({stevilo(vseh)})</span>}
+          {vseh > 0 && <span className="ml-1 tabular-nums text-slate-300">({stevilo(vseh)})</span>}
         </h3>
         {vrstice.map((v) => {
           const pct = odstotek(v.owners, v.ekip)
@@ -151,7 +150,7 @@ function Reflektor({ igralecId, vrstice }: { igralecId: number; vrstice: Izbrano
                   <div className="h-full rounded-full bg-gnl-400" style={{ width: `${pct}%` }} />
                 </div>
               )}
-              {svez(v) && <p className="text-xs text-slate-400">{svez(v)}</p>}
+              {svez(v) && <p className="text-xs text-slate-300">{svez(v)}</p>}
               {lige.length > 0 && (
                 <ul aria-label={v.liga} className="flex flex-wrap gap-1.5 pt-1">
                   {lige.map((e) => (
@@ -159,7 +158,7 @@ function Reflektor({ igralecId, vrstice }: { igralecId: number; vrstice: Izbrano
                       <Link
                         to={zLigo(`/team/${e.fantasy_team_id}`, e.competition_slug)}
                         data-ekipa={e.fantasy_team_id}
-                        className="inline-flex min-h-9 items-center rounded-full bg-white/10 px-3 text-sm font-medium text-gnl-200 hover:bg-white/15 hover:underline"
+                        className="inline-flex min-h-11 items-center rounded-full bg-white/10 px-3 text-sm font-medium text-gnl-200 hover:bg-white/15 hover:underline"
                       >
                         {e.ime}
                       </Link>
@@ -175,7 +174,7 @@ function Reflektor({ igralecId, vrstice }: { igralecId: number; vrstice: Izbrano
             {t('igralci.izbranost.vec')}
           </button>
         )}
-        <p className="text-xs text-slate-400">{t('igralci.izbranost.seznamOpis')}</p>
+        <p className="text-xs text-slate-300">{t('igralci.izbranost.seznamOpis')}</p>
       </div>
     </section>
   )
