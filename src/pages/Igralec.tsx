@@ -658,7 +658,7 @@ export default function Igralec() {
       {/* razpoložljivost: uradno stanje in poročila skupnosti, obrazca zaprta */}
       <Razpolozljivost igralecId={igralec.id} vLigo={vLigo} nazaj={lokacija.pathname + lokacija.search} />
 
-      {!anonimiziran && (
+      {session && !anonimiziran && (
         <PopravekIgralca
           igralecId={igralec.id}
           pozicija={(igralec.position as Pozicija | null) ?? null}

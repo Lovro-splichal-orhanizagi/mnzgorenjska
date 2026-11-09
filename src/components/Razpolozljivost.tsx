@@ -100,7 +100,7 @@ export default function Razpolozljivost({
         <h2 id={`${id}-naslov`} className="text-base font-bold text-slate-100">
           {t('igralci.razpolozljivost.naslov')}
         </h2>
-        <Link to={`/absences${vLigo}`} className="text-xs text-gnl-300 hover:underline">
+        <Link to={`/absences${vLigo}`} className="inline-flex min-h-11 items-center text-xs text-gnl-300 hover:underline">
           {t('igralci.profil.vsaPorocila')}
         </Link>
       </div>
@@ -162,9 +162,9 @@ export default function Razpolozljivost({
                   maxLength={500}
                   aria-label={t('igralci.odsotnosti.javi')}
                   placeholder={t('igralci.profil.porociloPrimer')}
-                  className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 px-3 py-1.5 text-sm"
+                  className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 px-3 py-2 min-h-11 text-sm"
                 />
-                <button type="submit" disabled={dela || !besedilo.trim()} className="gumb-glavni px-3 py-1.5 text-sm">
+                <button type="submit" disabled={dela || !besedilo.trim()} className="gumb-glavni min-h-11 px-3 py-2 text-sm">
                   {t('igralci.odsotnosti.objavi')}
                 </button>
               </div>
