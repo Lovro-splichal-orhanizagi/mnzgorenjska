@@ -143,7 +143,7 @@ slff.eu {
 
 	# The same page with a trailing slash (/players/): one address for search engines,
 	# 301 to the canonical one without it, query kept (same trick as @stara_pot).
-	@posevnica path_regexp ^/(my-team|assists|positions|absences|players|standings|national|mini-leagues|predictions|results|table|login|legal|reminders|account|admin|si|sk|hr|cz|hu|at|rs|ro|ee|pl|es|lv|mk|de|gr|tr|ua|am|az|dk|gb|mt|me|ba|md|jp|hk|th|gi|sm)/$
+	@posevnica path_regexp ^/(my-team|assists|positions|absences|players|standings|national|mini-leagues|predictions|results|table|verified|login|legal|reminders|account|admin|si|sk|hr|cz|hu|at|rs|ro|ee|pl|es|lv|mk|de|gr|tr|ua|am|az|dk|gb|mt|me|ba|md|jp|hk|th|gi|sm)/$
 	handle @posevnica {
 		route {
 			uri path_regexp ^(/[a-z-]+)/$ $1
@@ -281,7 +281,7 @@ slff.eu {
 	# le zahtevke iz lb_retry_match (privzeto samo GET), zato še HEAD.
 	@html_strani {
 		method GET HEAD
-		path / /table /results /standings /players /player/* /club/* /match/* /mini-leagues/* /l/* /si /sk /hr /cz /hu /at /rs /ro /ee /pl /es /lv /mk /de /gr /tr /ua /am /az /dk /gb /mt /me /ba /md /jp /hk /th /gi /sm
+		path / /table /results /standings /players /player/* /club/* /match/* /mini-leagues/* /l/* /verified /si /sk /hr /cz /hu /at /rs /ro /ee /pl /es /lv /mk /de /gr /tr /ua /am /az /dk /gb /mt /me /ba /md /jp /hk /th /gi /sm
 	}
 	handle @html_strani {
 		reverse_proxy 127.0.0.1:3200 127.0.0.1:3201 {

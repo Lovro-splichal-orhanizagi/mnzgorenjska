@@ -85,6 +85,41 @@ export async function ekipeZIgralcem(igralecId: number, od = 0, koliko = 25): Pr
   return data ?? []
 }
 
+let zivo: Promise<boolean> | null = null
+
+/** Funkcije v bazi ni (PostgREST ali Postgres): objava še ni prišla. */
+const funkcijeNi = (kodaNapake?: string) => kodaNapake === 'PGRST202' || kodaNapake === '42883'
+
+/**
+ * Ali sta funkciji izbranosti (`vidi_izbranost`, `ekipe_z_igralcem`) v bazi.
+ * Odgovor je za vsakogar enak (ne odloča, kdo sme videti), zato lahko javna
+ * stran o preverjenem profilu pokaže korist "kdo te je izbral" šele, ko je
+ * baza obeh funkcij zares dobila; brez njiju (nepopolna objava) korist izpusti.
+ * `ekipe_z_igralcem` je le za prijavljene: obiskovalcu brez seje vrne zavrnjen
+ * dostop (42501), kar pomeni, da funkcija obstaja. Le "ni funkcije" je "ni živo";
+ * drugo napako (omrežje) štejemo kot ne živo in ne zapomnimo.
+ */
+export function izbranostJeZivo(): Promise<boolean> {
+  if (zivo) return zivo
+  const pot = Promise.all([
+    supabase.rpc('vidi_izbranost'),
+    supabase.rpc('ekipe_z_igralcem', { p_player_id: 0, p_od: 0, p_koliko: 1 }),
+  ]).then(
+    ([a, b]) => {
+      const dokoncno = [a, b].every((r) => !r.error || funkcijeNi(r.error.code) || r.error.code === '42501')
+      const zares = [a, b].every((r) => !r.error || r.error.code === '42501')
+      if (!dokoncno) zivo = null
+      return zares
+    },
+    () => {
+      zivo = null
+      return false
+    },
+  )
+  zivo = pot
+  return pot
+}
+
 /** Odstotek, zaokrožen; brez imenovalca ali števca ga ni. */
 export function odstotek(owners: number | null, ekip: number | null): number | null {
   if (owners == null || !ekip) return null
