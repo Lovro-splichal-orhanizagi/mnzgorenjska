@@ -786,6 +786,13 @@ export default function Domov() {
             >
               {t('lestvice.slovenija.vrhNaslov')} →
             </Link>
+            {/* Mladi (U18 in mlajši) imajo svojo lestvico: lige se ne mešajo. */}
+            <Link
+              to="/national?pogled=igralci&starost=mladi"
+              className="block pt-1 text-sm font-semibold text-gnl-300 hover:text-gnl-200"
+            >
+              {t('lestvice.slovenija.vrhNaslovMladi')} →
+            </Link>
           </Razdelek>
         )}
 

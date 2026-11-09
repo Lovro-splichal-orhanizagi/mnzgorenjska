@@ -42,6 +42,8 @@ const ostale: Povezava[] = [
   { pot: '/positions', get naslov() { return t('aplikacija.meni.pozicije') } },
   { pot: '/absences', get naslov() { return t('aplikacija.meni.odsotnosti') } },
   { pot: '/national', get naslov() { return t('aplikacija.meni.slovenija') } },
+  // Mladi (U18 in mlajši): ista stran, druga starostna skupina lig.
+  { pot: '/national?pogled=igralci&starost=mladi', get naslov() { return t('aplikacija.meni.mladi') } },
 ]
 
 // Vabilo sestavimo iz izbrane lige in njenih klubov (glej `lib/vabilo.ts`).
@@ -87,7 +89,11 @@ export default function Navbar() {
 
   // Mobilni meni se zapre ob vsaki navigaciji — tudi ob gumbu nazaj ali
   // povezavi zunaj menija, ne le ob kliku nanj.
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
+  // /national ima dve povezavi (glavna in mladi): označena je tista, ki se ujema s starostno skupino v naslovu.
+  const jeMladi = new URLSearchParams(search).get('starost') === 'mladi'
+  const dejavna = (p: Povezava, aktivna: boolean) =>
+    p.pot.startsWith('/national') ? aktivna && p.pot.includes('starost=mladi') === jeMladi : aktivna
   useEffect(() => {
     setOdprt(false)
     setVecOdprt(false)
@@ -256,7 +262,7 @@ export default function Navbar() {
                       to={p.pot}
                       role="menuitem"
                       className={({ isActive }) =>
-                        `${vrsticaMenija} ${isActive ? 'font-semibold text-gnl-300' : ''} ${p.odXl ? 'xl:hidden' : ''}`
+                        `${vrsticaMenija} ${dejavna(p, isActive) ? 'font-semibold text-gnl-300' : ''} ${p.odXl ? 'xl:hidden' : ''}`
                       }
                       onClick={() => setVecOdprt(false)}
                     >
@@ -421,7 +427,12 @@ export default function Navbar() {
             </div>
             <div className="mt-3 grid grid-cols-2 gap-1.5 border-t border-white/5 pt-3 text-sm">
               {vec.map((p) => (
-                <NavLink key={p.pot} to={p.pot} className={slogMobilni} onClick={() => setOdprt(false)}>
+                <NavLink
+                  key={p.pot}
+                  to={p.pot}
+                  className={(a) => slogMobilni({ isActive: dejavna(p, a.isActive) })}
+                  onClick={() => setOdprt(false)}
+                >
                   {p.naslov}
                   {p.pot === '/assists' && znacka(cakaGlasov)}
                 </NavLink>
