@@ -1024,7 +1024,19 @@
   (`opozorila.yml`, `VRSTA=liga-zivi` → `posli-opomnik`,
   `kandidati_za_zivo_ligo`, `zelja_lige_poslana`: uspeh pobriše e-naslov,
   neuspeh največ trikrat). Neobveščene z e-naslovom pg_cron po 12 mesecih
-  izbriše
+  izbriše. Isto tabelo piše klepet podpore prek `zahtevaj_ligo`
+- **Orodja klepeta podpore** (HelpStack SERVER_SIDE, javni ključ; migraciji
+  20261004142300 in 20261109194700): bralna `najdi_igralca`, `tekme_kluba`,
+  `liga`, `tocke_igralca` (točke po krogih tekoče sezone z razčlenitvijo po
+  pravilih `tocke_za_nastop`), `stanje_tekme` (zapisnik, izid, vir, razlog,
+  glasovanje o asistencah); pisalni `prijavi_napako` (zaprta `prijave_napak`,
+  ista prijava v uri ni nova, 5 na uro na stik, 40 na uro vseh; admin:
+  Administracija → Prijave napak, `admin_prijave_napak`,
+  `admin_resi_prijavo_napake`; pg_cron po 12 mesecih izbriše) in
+  `zahtevaj_ligo` (najprej poišče vpisane lige, tudi neaktivne; željo zapiše
+  prek `zelim_ligo` šele brez zadetka ali z `vztrajam`). V brskalniku
+  (`src/lib/podporaOrodja.ts`, CLIENT_SIDE) je `moja_ekipa_krog`: ekipa
+  prijavljenega za krog z njegovo sejo. Preizkus: `supabase/tests/podpora-orodja-2.sql`
 - **Pivski zid** (`/beers`, migracija 20261013150100): `piva` hrani nakupe
   Buy Me a Coffee (funkcija `bmc-pivo`, servisni ključ, `zunanji_id` = BMC
   `data.id`, idempotentno; vračilo postavi `vracilo`, `live_mode = false` je

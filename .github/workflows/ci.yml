@@ -293,6 +293,8 @@ jobs:
         run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/fussball-tekoca-pot.sql
       - name: Guarded cross-club identity correction
         run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/zlite-identity-repair.sql
+      - name: Support chat tools (error reports, league requests, points, match state)
+        run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/podpora-orodja-2.sql
       - name: HNS canonical release, target ACLs and waiting writers
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
