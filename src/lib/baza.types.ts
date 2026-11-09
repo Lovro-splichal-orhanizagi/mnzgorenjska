@@ -1475,6 +1475,27 @@ export type Database = {
           },
         ]
       }
+      highlight_videi: {
+        Row: {
+          igralec: number
+          opomba: string | null
+          stanje: string
+          updated_at: string
+        }
+        Insert: {
+          igralec: number
+          opomba?: string | null
+          stanje?: string
+          updated_at?: string
+        }
+        Update: {
+          igralec?: number
+          opomba?: string | null
+          stanje?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       klub_dodani_igralci: {
         Row: {
           competition_id: number
@@ -8620,6 +8641,21 @@ export type Database = {
         Args: { p_player_id: number; p_velja_do?: string; p_vir?: string }
         Returns: number
       }
+      admin_highlight_stanje: {
+        Args: { p_igralec: number; p_opomba?: string; p_stanje: string }
+        Returns: undefined
+      }
+      admin_highlight_vrsta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          eposta: string
+          igralec: number
+          ime: string
+          opomba: string
+          posnetkov: number
+          stanje: string
+        }[]
+      }
       admin_ista_oseba: {
         Args: { p_player_id: number }
         Returns: {
@@ -9325,6 +9361,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      cv_igralca: { Args: { p_player_id: number }; Returns: Json }
       dan_kroga: { Args: { p_round_id: number }; Returns: string }
       defer_fussball_card_replay: {
         Args: {
@@ -10127,8 +10164,10 @@ export type Database = {
           owner_name: string
         }[]
       }
+      moj_highlight: { Args: { p_player_id: number }; Returns: Json }
       moj_klubski_racun: { Args: never; Returns: Json }
       moja_koda_vabila: { Args: never; Returns: string }
+      moja_sezona: { Args: { p_player_id: number }; Returns: Json }
       moje_mesto_v_vrsti: {
         Args: never
         Returns: {
@@ -11684,6 +11723,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      zadnja_tekma_zgodba: { Args: { p_player_id: number }; Returns: Json }
       zahtevki_za_odlocitev: {
         Args: { p_player_id?: number; p_team_id?: number }
         Returns: {

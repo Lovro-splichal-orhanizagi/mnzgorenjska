@@ -30,12 +30,17 @@ export const preverjeni = {
     sporocilo: 'Un mensaje corto para los aficionados que ve todo el que abre tu perfil.',
     znacka: 'Una insignia impresa con tu nombre para la mochila o la chaqueta, como extra de la compra.',
     posnetki: 'Hasta 6 vídeos de tus mejores jugadas en la parte superior del perfil. El equipo de SLFF revisa antes cada vídeo.',
+    highlight: 'Sube 6 vídeos y el equipo de SLFF monta con ellos un vídeo profesional de tus mejores jugadas, incluido en el precio.',
     ogledi: 'Cuántas visitas de ojeadores recibe tu perfil en SLFF Scout, donde está disponible.',
     izbranost: 'Cuántos equipos fantasy te eligieron y cuáles son.',
     predTekmo: 'Antes de cada partido, un informe: forma de ambos equipos, goleadores del rival, enfrentamientos directos y tu propia forma.',
+    zgodbe: 'Tras cada partido, una imagen lista para tu historia de Instagram: resultado, minutos, goles y puntos.',
+    sezona: 'Durante y al final de la temporada, tu temporada en una imagen: goles, minutos, mejor partido, elecciones y ojeadores.',
+    cv: 'Un CV de una página con tus temporadas, clubes y números. Envía el enlace a un entrenador o guárdalo en PDF.',
     naslovi: {
       kljukica: 'Insignia azul',
       posnetki: 'Hasta 6 mejores jugadas',
+      highlight: 'Vídeo de jugadas incluido',
       profil: 'Banner y color a tu manera',
       vzdevek: 'Apodo en las listas',
       izpostavljeno: 'Partido o estadística destacada',
@@ -44,6 +49,9 @@ export const preverjeni = {
       ogledi: 'Visitas de ojeadores',
       izbranost: 'Quién te eligió',
       predTekmo: 'Informe previo al partido',
+      zgodbe: 'Una historia tras cada partido',
+      sezona: 'Mi temporada',
+      cv: 'CV para entrenadores',
     },
   },
   scout: {
@@ -55,10 +63,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Muy pronto',
     oznaka: 'Próximamente',
-    story: {
-      naslov: 'Tu perfil en una historia',
-      opis: 'Una imagen lista de tu perfil para una historia de Instagram, que compartes con un toque.',
-    },
     evropa: {
       naslov: 'Ante jugadores de toda Europa',
       opis: 'Los perfiles verificados se mostrarán a los jugadores de fantasy en todas las ligas de SLFF en Europa.',

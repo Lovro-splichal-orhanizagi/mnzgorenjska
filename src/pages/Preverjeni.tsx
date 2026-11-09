@@ -124,12 +124,16 @@ export default function Preverjeni() {
   const koristi = [
     "kljukica",
     "posnetki",
+    "highlight",
     "vzdevek",
     "profil",
     "izpostavljeno",
     "sporocilo",
     "ogledi",
     "predTekmo",
+    "zgodbe",
+    "sezona",
+    "cv",
     ...(izbranost ? (["izbranost"] as const) : []),
     // Značka je dodatek k nakupu: le kjer je nakup odprt (ne v aplikaciji).
     ...(ponudba ? (["znacka"] as const) : []),
@@ -241,8 +245,8 @@ export default function Preverjeni() {
           <h2 id="preverjeni-prihaja" className="text-xl font-black naslov">
             {t("preverjeni.prihaja.naslov")}
           </h2>
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {(["story", "evropa"] as const).map((k) => (
+          <ul className="grid gap-3">
+            {(["evropa"] as const).map((k) => (
               <li
                 key={k}
                 className="rounded-2xl border border-dashed border-white/15 p-4"

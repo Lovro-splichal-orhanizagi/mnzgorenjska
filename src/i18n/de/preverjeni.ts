@@ -30,12 +30,17 @@ export const preverjeni = {
     sporocilo: 'Eine kurze Nachricht an die Fans, die jeder sieht, der dein Profil öffnet.',
     znacka: 'Ein gedruckter Anstecker mit deinem Namen für Tasche oder Jacke, als Zusatz zum Kauf.',
     posnetki: 'Bis zu 6 Highlights deiner besten Aktionen ganz oben im Profil. Jeden Clip prüft zuerst das SLFF-Team.',
+    highlight: 'Lade 6 Clips hoch und das SLFF-Team schneidet daraus ein professionelles Highlight-Video, im Preis enthalten.',
     ogledi: 'Wie viele Scout-Aufrufe dein Profil in SLFF Scout hat, wo es verfügbar ist.',
     izbranost: 'Wie viele Fantasy-Teams dich gewählt haben und welche Teams das sind.',
     predTekmo: 'Vor jedem Spiel ein Bericht: Form beider Teams, Torschützen des Gegners, direkter Vergleich und deine eigene Form.',
+    zgodbe: 'Nach jedem Spiel ein Bild für deine Instagram-Story: Ergebnis, Minuten, Tore und Punkte.',
+    sezona: 'Während und am Ende der Saison deine Saison in einem Bild: Tore, Minuten, bestes Spiel, Auswahl und Scouts.',
+    cv: 'Ein einseitiger Lebenslauf mit Saisons, Vereinen und Zahlen. Schick den Link einem Trainer oder speichere ihn als PDF.',
     naslovi: {
       kljukica: 'Blauer Haken',
       posnetki: 'Bis zu 6 Highlights',
+      highlight: 'Highlight-Video inklusive',
       profil: 'Banner und Farbe nach deinem Stil',
       vzdevek: 'Spitzname in Listen',
       izpostavljeno: 'Hervorgehobenes Spiel oder Statistik',
@@ -44,6 +49,9 @@ export const preverjeni = {
       ogledi: 'Scout-Aufrufe',
       izbranost: 'Wer dich gewählt hat',
       predTekmo: 'Bericht vor dem Spiel',
+      zgodbe: 'Eine Story nach jedem Spiel',
+      sezona: 'Meine Saison',
+      cv: 'Lebenslauf für Trainer',
     },
   },
   scout: {
@@ -55,10 +63,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Bald',
     oznaka: 'Demnächst',
-    story: {
-      naslov: 'Dein Profil in der Story',
-      opis: 'Ein fertiges Bild deines Profils für die Instagram-Story, mit einem Tippen geteilt.',
-    },
     evropa: {
       naslov: 'Vor Spielern in ganz Europa',
       opis: 'Verifizierte Profile werden Fantasy-Spielern in allen SLFF-Ligen in Europa angezeigt.',

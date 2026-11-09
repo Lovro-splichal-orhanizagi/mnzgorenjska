@@ -29,12 +29,17 @@ export const preverjeni = {
     sporocilo: 'Rövid üzenet a szurkolóknak, amelyet mindenki lát, aki megnyitja a profilodat.',
     znacka: 'Nyomtatott kitűző a neveddel táskára vagy kabátra, a vásárlás kiegészítőjeként.',
     posnetki: 'Legfeljebb 6 videó a legjobb megmozdulásaidról a profilod tetején. Minden videót először az SLFF csapata ellenőriz.',
+    highlight: 'Tölts fel 6 videót, és az SLFF csapata profi highlight videót vág belőlük, az ár része.',
     ogledi: 'Hány megtekintést kapott a profilod megfigyelőktől az SLFF Scoutban, ahol elérhető.',
     izbranost: 'Hány fantasy csapat választott, és melyek azok.',
     predTekmo: 'Minden meccs előtt jelentés: mindkét csapat formája, az ellenfél góllövői, egymás elleni meccsek és a saját formád.',
+    zgodbe: 'Minden meccs után storyhoz kész kép: eredmény, percek, gólok és pontok.',
+    sezona: 'A szezon közben és végén a szezonod egy képen: gólok, percek, legjobb meccs, kiválasztások és megfigyelők.',
+    cv: 'Egyoldalas önéletrajz szezonokkal, klubokkal és számokkal. Küldd el a linket egy edzőnek, vagy mentsd PDF-be.',
     naslovi: {
       kljukica: 'Kék pipa',
       posnetki: 'Legfeljebb 6 legjobb megmozdulás',
+      highlight: 'Highlight videó az árban',
       profil: 'Borító és szín a te ízlésed szerint',
       vzdevek: 'Becenév a listákon',
       izpostavljeno: 'Kiemelt meccs vagy statisztika',
@@ -43,6 +48,9 @@ export const preverjeni = {
       ogledi: 'Megfigyelői megtekintések',
       izbranost: 'Kik választottak',
       predTekmo: 'Meccs előtti jelentés',
+      zgodbe: 'Történet minden meccs után',
+      sezona: 'Az én szezonom',
+      cv: 'Önéletrajz edzőknek',
     },
   },
   scout: {
@@ -54,10 +62,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Hamarosan',
     oznaka: 'Hamarosan',
-    story: {
-      naslov: 'A profilod storyban',
-      opis: 'Kész kép a profilodról Instagram storyhoz, egy érintéssel megosztható.',
-    },
     evropa: {
       naslov: 'Játékosok előtt egész Európában',
       opis: 'A hitelesített profilok megjelennek majd a fantasy játékosoknak az SLFF összes európai bajnokságában.',

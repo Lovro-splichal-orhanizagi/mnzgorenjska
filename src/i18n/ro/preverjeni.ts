@@ -29,12 +29,17 @@ export const preverjeni = {
     sporocilo: 'Un scurt mesaj pentru fani, pe care îl vede oricine îți deschide profilul.',
     znacka: 'O insignă tipărită cu numele tău, pentru geantă sau geacă, ca supliment la cumpărare.',
     posnetki: 'Până la 6 clipuri cu cele mai bune faze ale tale în partea de sus a profilului. Echipa SLFF verifică mai întâi fiecare clip.',
+    highlight: 'Încarcă 6 clipuri și echipa SLFF montează din ele un videoclip highlight profesionist, inclus în preț.',
     ogledi: 'Câte vizualizări de la scouteri are profilul tău în SLFF Scout, acolo unde este disponibil.',
     izbranost: 'Câte echipe fantasy te-au ales și care sunt acestea.',
     predTekmo: 'Înaintea fiecărui meci un raport: forma ambelor echipe, marcatorii adversarului, meciurile directe și forma ta.',
+    zgodbe: 'După fiecare meci, o imagine gata pentru Instagram story: scor, minute, goluri și puncte.',
+    sezona: 'În timpul și la finalul sezonului, sezonul tău într-o imagine: goluri, minute, cel mai bun meci, selecții și scouteri.',
+    cv: 'Un CV pe o pagină cu sezoane, cluburi și cifre. Trimite linkul unui antrenor sau salvează-l ca PDF.',
     naslovi: {
       kljukica: 'Bifă albastră',
       posnetki: 'Până la 6 faze de top',
+      highlight: 'Video highlight inclus',
       profil: 'Banner și culoare după gustul tău',
       vzdevek: 'Poreclă în liste',
       izpostavljeno: 'Meci sau statistică evidențiată',
@@ -43,6 +48,9 @@ export const preverjeni = {
       ogledi: 'Vizualizări scouteri',
       izbranost: 'Cine te-a ales',
       predTekmo: 'Raport înainte de meci',
+      zgodbe: 'O poveste după fiecare meci',
+      sezona: 'Sezonul meu',
+      cv: 'CV pentru antrenori',
     },
   },
   scout: {
@@ -54,10 +62,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'În curând',
     oznaka: 'În curând',
-    story: {
-      naslov: 'Profilul tău în story',
-      opis: 'O imagine gata făcută a profilului tău pentru Instagram story, distribuită cu o atingere.',
-    },
     evropa: {
       naslov: 'În fața jucătorilor din toată Europa',
       opis: 'Profilurile verificate vor fi afișate jucătorilor de fantasy din toate ligile SLFF din Europa.',

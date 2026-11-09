@@ -29,12 +29,17 @@ export const preverjeni = {
     sporocilo: 'Krótka wiadomość dla kibiców, którą widzi każdy, kto otworzy twój profil.',
     znacka: 'Drukowana odznaka z twoim nazwiskiem na torbę lub kurtkę, jako dodatek do zakupu.',
     posnetki: 'Do 6 nagrań twoich najlepszych akcji na górze profilu. Każde nagranie najpierw sprawdza zespół SLFF.',
+    highlight: 'Wgraj 6 nagrań, a zespół SLFF zmontuje z nich profesjonalny film z najlepszymi akcjami, wliczony w cenę.',
     ogledi: 'Ile wyświetleń od skautów ma twój profil w SLFF Scout, tam gdzie jest dostępny.',
     izbranost: 'Ile drużyn fantasy cię wybrało i które to są.',
     predTekmo: 'Przed każdym meczem raport: forma obu drużyn, strzelcy rywala, mecze bezpośrednie i twoja forma.',
+    zgodbe: 'Po każdym meczu obraz gotowy do relacji na Instagramie: wynik, minuty, gole i punkty.',
+    sezona: 'W trakcie i na koniec sezonu twój sezon w jednym obrazie: gole, minuty, najlepszy mecz, wybory i skauci.',
+    cv: 'CV na jednej stronie z sezonami, klubami i liczbami. Wyślij link trenerowi lub zapisz jako PDF.',
     naslovi: {
       kljukica: 'Niebieski znaczek',
       posnetki: 'Do 6 najlepszych akcji',
+      highlight: 'Film z akcjami w cenie',
       profil: 'Baner i kolor po twojemu',
       vzdevek: 'Pseudonim na listach',
       izpostavljeno: 'Wyróżniony mecz lub statystyka',
@@ -43,6 +48,9 @@ export const preverjeni = {
       ogledi: 'Wyświetlenia skautów',
       izbranost: 'Kto cię wybrał',
       predTekmo: 'Raport przed meczem',
+      zgodbe: 'Relacja po każdym meczu',
+      sezona: 'Mój sezon',
+      cv: 'CV dla trenerów',
     },
   },
   scout: {
@@ -54,10 +62,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Wkrótce',
     oznaka: 'Wkrótce',
-    story: {
-      naslov: 'Twój profil w relacji',
-      opis: 'Gotowy obraz twojego profilu do relacji na Instagramie, który udostępniasz jednym dotknięciem.',
-    },
     evropa: {
       naslov: 'Przed graczami w całej Europie',
       opis: 'Zweryfikowane profile będą pokazywane graczom fantasy we wszystkich ligach SLFF w Europie.',

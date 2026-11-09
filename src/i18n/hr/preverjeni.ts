@@ -30,12 +30,17 @@ export const preverjeni = {
     sporocilo: 'Kratka poruka navijačima koju vidi svatko tko otvori tvoj profil.',
     znacka: 'Tiskana značka s tvojim imenom za torbu ili jaknu, kao dodatak uz kupnju.',
     posnetki: 'Do 6 snimki tvojih najboljših poteza na vrhu profila. Svaku snimku najprije pregledava tim SLFF-a.',
+    highlight: 'Učitaj 6 snimki i tim SLFF-a od njih ti montira profesionalni highlight video, uključen u cijenu.',
     ogledi: 'Koliko prikaza skauta ima tvoj profil u SLFF Scoutu, gdje je dostupan.',
     izbranost: 'Koliko te fantasy ekipa odabralo i koje su to ekipe.',
     predTekmo: 'Prije svake utakmice izvještaj: forma obje momčadi, strijelci protivnika, međusobne utakmice i tvoja forma.',
+    zgodbe: 'Nakon svake utakmice slika spremna za Instagram story: rezultat, minute, golovi i bodovi.',
+    sezona: 'Tijekom i na kraju sezone tvoja sezona u jednoj slici: golovi, minute, najbolja utakmica, odabiri i skauti.',
+    cv: 'CV na jednoj stranici sa sezonama, klubovima i brojkama. Pošalji poveznicu treneru ili ga spremi kao PDF.',
     naslovi: {
       kljukica: 'Plava kvačica',
       posnetki: 'Do 6 najboljših poteza',
+      highlight: 'Highlight video u cijeni',
       profil: 'Naslovna slika i boja po tvom',
       vzdevek: 'Nadimak na popisima',
       izpostavljeno: 'Istaknuta utakmica ili statistika',
@@ -44,6 +49,9 @@ export const preverjeni = {
       ogledi: 'Prikazi skauta',
       izbranost: 'Tko te odabrao',
       predTekmo: 'Izvještaj prije utakmice',
+      zgodbe: 'Priča nakon svake utakmice',
+      sezona: 'Moja sezona',
+      cv: 'CV za trenere',
     },
   },
   scout: {
@@ -55,10 +63,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Uskoro',
     oznaka: 'Dolazi',
-    story: {
-      naslov: 'Tvoj profil u storyju',
-      opis: 'Gotova slika tvog profila za Instagram story koju dijeliš jednim dodirom.',
-    },
     evropa: {
       naslov: 'Pred igračima diljem Europe',
       opis: 'Provjereni profili prikazivat će se igračima fantasy igre u svim SLFF ligama diljem Europe.',

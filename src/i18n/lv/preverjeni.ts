@@ -29,12 +29,17 @@ export const preverjeni = {
     sporocilo: 'Īsa ziņa faniem, ko redz ikviens, kas atver tavu profilu.',
     znacka: 'Drukāta nozīmīte ar tavu vārdu somai vai jakai, kā papildinājums pirkumam.',
     posnetki: 'Līdz 6 video ar tavām labākajām epizodēm profila augšā. Katru video vispirms pārbauda SLFF komanda.',
+    highlight: 'Augšupielādē 6 video, un SLFF komanda no tiem samontēs profesionālu highlight video, iekļauts cenā.',
     ogledi: 'Cik skautu skatījumu tavam profilam ir SLFF Scout, kur tas ir pieejams.',
     izbranost: 'Cik fantasy komandu tevi izvēlējās un kuras tās ir.',
     predTekmo: 'Pirms katras spēles pārskats: abu komandu forma, pretinieka vārtu guvēji, savstarpējās spēles un tava forma.',
+    zgodbe: 'Pēc katras spēles attēls Instagram stāstam: rezultāts, minūtes, vārti un punkti.',
+    sezona: 'Sezonas laikā un beigās tava sezona vienā attēlā: vārti, minūtes, labākā spēle, izvēles un skauti.',
+    cv: 'Vienas lapas CV ar sezonām, klubiem un skaitļiem. Nosūti saiti trenerim vai saglabā kā PDF.',
     naslovi: {
       kljukica: 'Zilā ķeksīte',
       posnetki: 'Līdz 6 labākajām epizodēm',
+      highlight: 'Highlight video cenā',
       profil: 'Baneris un krāsa pēc tavas gaumes',
       vzdevek: 'Iesauka sarakstos',
       izpostavljeno: 'Izcelta spēle vai statistika',
@@ -43,6 +48,9 @@ export const preverjeni = {
       ogledi: 'Skautu skatījumi',
       izbranost: 'Kas tevi izvēlējās',
       predTekmo: 'Pārskats pirms spēles',
+      zgodbe: 'Stāsts pēc katras spēles',
+      sezona: 'Mana sezona',
+      cv: 'CV treneriem',
     },
   },
   scout: {
@@ -54,10 +62,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Drīzumā',
     oznaka: 'Drīzumā',
-    story: {
-      naslov: 'Tavs profils stāstā',
-      opis: 'Gatavs tava profila attēls Instagram stāstam, ko kopīgo ar vienu pieskārienu.',
-    },
     evropa: {
       naslov: 'Spēlētāju priekšā visā Eiropā',
       opis: 'Verificētie profili tiks rādīti fantāzijas spēlētājiem visās SLFF līgās Eiropā.',

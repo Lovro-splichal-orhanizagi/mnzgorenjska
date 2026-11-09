@@ -30,12 +30,17 @@ export const preverjeni = {
     sporocilo: 'A short message to fans that everyone who opens your profile sees.',
     znacka: 'A printed badge with your name for your bag or jacket, as an add-on to your purchase.',
     posnetki: 'Up to 6 highlights of your best moments at the top of your profile. The SLFF team reviews every clip first.',
+    highlight: 'Upload 6 clips and the SLFF team edits them into a professional highlight video, included in the price.',
     ogledi: 'How many scout views your profile gets in SLFF Scout, where it is available.',
     izbranost: 'How many fantasy teams picked you and which teams they are.',
     predTekmo: 'A report before every match: both teams\' form, the opponent\'s scorers, head to head and your own form.',
+    zgodbe: 'After every match, an image ready for your Instagram story: score, minutes, goals and points.',
+    sezona: 'During and at the end of the season, your season in one image: goals, minutes, best match, picks and scouts.',
+    cv: 'A one-page CV with your seasons, clubs and numbers. Send the link to a coach or save it as a PDF.',
     naslovi: {
       kljukica: 'Blue tick',
       posnetki: 'Up to 6 highlights',
+      highlight: 'Highlight video included',
       profil: 'Banner and colour your way',
       vzdevek: 'Nickname in lists',
       izpostavljeno: 'Featured match or stat',
@@ -44,6 +49,9 @@ export const preverjeni = {
       ogledi: 'Scout views',
       izbranost: 'Who picked you',
       predTekmo: 'Pre-match report',
+      zgodbe: 'A story after every match',
+      sezona: 'My season',
+      cv: 'CV for coaches',
     },
   },
   scout: {
@@ -55,10 +63,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Coming soon',
     oznaka: 'Coming',
-    story: {
-      naslov: 'Your profile in a story',
-      opis: 'A ready-made image of your profile for an Instagram story, shared with one tap.',
-    },
     evropa: {
       naslov: 'In front of players across Europe',
       opis: 'Verified profiles will be shown to fantasy players in all SLFF leagues across Europe.',

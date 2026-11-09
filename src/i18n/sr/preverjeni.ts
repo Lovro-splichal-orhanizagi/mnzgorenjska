@@ -30,12 +30,17 @@ export const preverjeni = {
     sporocilo: 'Kratka poruka navijačima koju vidi svako ko otvori tvoj profil.',
     znacka: 'Štampani bedž sa tvojim imenom za torbu ili jaknu, kao dodatak uz kupovinu.',
     posnetki: 'Do 6 snimaka tvojih najboljih poteza na vrhu profila. Svaki snimak najpre pregleda tim SLFF-a.',
+    highlight: 'Otpremi 6 snimaka i tim SLFF-a od njih ti montira profesionalni highlight video, uključen u cenu.',
     ogledi: 'Koliko pregleda skauta ima tvoj profil u SLFF Scoutu, gde je dostupan.',
     izbranost: 'Koliko te fantasy timova izabralo i koji su to timovi.',
     predTekmo: 'Pre svake utakmice izveštaj: forma obe ekipe, strelci protivnika, međusobne utakmice i tvoja forma.',
+    zgodbe: 'Posle svake utakmice slika spremna za Instagram story: rezultat, minuti, golovi i bodovi.',
+    sezona: 'Tokom i na kraju sezone tvoja sezona u jednoj slici: golovi, minuti, najbolja utakmica, izbori i skauti.',
+    cv: 'CV na jednoj stranici sa sezonama, klubovima i brojkama. Pošalji link treneru ili ga sačuvaj kao PDF.',
     naslovi: {
       kljukica: 'Plava kvačica',
       posnetki: 'Do 6 najboljih poteza',
+      highlight: 'Highlight video u ceni',
       profil: 'Naslovna slika i boja po tvom',
       vzdevek: 'Nadimak na spiskovima',
       izpostavljeno: 'Istaknuta utakmica ili statistika',
@@ -44,6 +49,9 @@ export const preverjeni = {
       ogledi: 'Pregledi skauta',
       izbranost: 'Ko te je izabrao',
       predTekmo: 'Izveštaj pre utakmice',
+      zgodbe: 'Priča posle svake utakmice',
+      sezona: 'Moja sezona',
+      cv: 'CV za trenere',
     },
   },
   scout: {
@@ -55,10 +63,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Uskoro',
     oznaka: 'Stiže',
-    story: {
-      naslov: 'Tvoj profil u storiju',
-      opis: 'Gotova slika tvog profila za Instagram story koju deliš jednim dodirom.',
-    },
     evropa: {
       naslov: 'Pred igračima širom Evrope',
       opis: 'Provereni profili prikazivaće se igračima fantasy igre u svim SLFF ligama širom Evrope.',

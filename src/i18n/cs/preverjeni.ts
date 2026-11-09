@@ -29,12 +29,17 @@ export const preverjeni = {
     sporocilo: 'Krátká zpráva fanouškům, kterou uvidí každý, kdo otevře tvůj profil.',
     znacka: 'Vytištěný odznak s tvým jménem na tašku nebo bundu, jako doplněk k nákupu.',
     posnetki: 'Až 6 videí tvých nejlepších akcí v horní části profilu. Každé video nejprve zkontroluje tým SLFF.',
+    highlight: 'Nahraj 6 videí a tým SLFF z nich sestříhá profesionální highlight video, zahrnuté v ceně.',
     ogledi: 'Kolik zobrazení od skautů má tvůj profil v SLFF Scout, kde je dostupný.',
     izbranost: 'Kolik fantasy týmů tě vybralo a které to jsou.',
     predTekmo: 'Před každým zápasem zpráva: forma obou týmů, střelci soupeře, vzájemné zápasy a tvoje forma.',
+    zgodbe: 'Po každém zápase obrázek připravený na Instagram story: výsledek, minuty, góly a body.',
+    sezona: 'Během a na konci sezóny tvoje sezóna v jednom obrázku: góly, minuty, nejlepší zápas, výběry a skauti.',
+    cv: 'CV na jedné straně se sezónami, kluby a čísly. Pošli odkaz trenérovi nebo ho ulož jako PDF.',
     naslovi: {
       kljukica: 'Modrá fajfka',
       posnetki: 'Až 6 nejlepších akcí',
+      highlight: 'Highlight video v ceně',
       profil: 'Banner a barva podle tebe',
       vzdevek: 'Přezdívka v seznamech',
       izpostavljeno: 'Zvýrazněný zápas nebo statistika',
@@ -43,6 +48,9 @@ export const preverjeni = {
       ogledi: 'Zobrazení skautů',
       izbranost: 'Kdo si tě vybral',
       predTekmo: 'Zpráva před zápasem',
+      zgodbe: 'Příběh po každém zápase',
+      sezona: 'Moje sezóna',
+      cv: 'CV pro trenéry',
     },
   },
   scout: {
@@ -54,10 +62,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Brzy',
     oznaka: 'Připravujeme',
-    story: {
-      naslov: 'Tvůj profil ve story',
-      opis: 'Hotový obrázek tvého profilu pro Instagram story, který sdílíš jedním klepnutím.',
-    },
     evropa: {
       naslov: 'Před hráči po celé Evropě',
       opis: 'Ověřené profily se budou zobrazovat hráčům fantasy hry ve všech soutěžích SLFF po Evropě.',

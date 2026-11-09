@@ -30,12 +30,17 @@ export const preverjeni = {
     sporocilo: 'Krátka správa fanúšikom, ktorú uvidí každý, kto otvorí tvoj profil.',
     znacka: 'Vytlačený odznak s tvojím menom na tašku alebo bundu, ako doplnok k nákupu.',
     posnetki: 'Až 6 videí tvojich najlepších akcií v hornej časti profilu. Každé video najprv skontroluje tím SLFF.',
+    highlight: 'Nahraj 6 videí a tím SLFF z nich zostrihá profesionálne highlight video, zahrnuté v cene.',
     ogledi: 'Koľko zobrazení od skautov má tvoj profil v SLFF Scout, kde je dostupný.',
     izbranost: 'Koľko fantasy tímov ťa vybralo a ktoré tímy to sú.',
     predTekmo: 'Pred každým zápasom správa: forma oboch tímov, strelci súpera, vzájomné zápasy a tvoja forma.',
+    zgodbe: 'Po každom zápase obrázok pripravený na Instagram story: výsledok, minúty, góly a body.',
+    sezona: 'Počas a na konci sezóny tvoja sezóna v jednom obrázku: góly, minúty, najlepší zápas, výbery a skauti.',
+    cv: 'CV na jednej strane so sezónami, klubmi a číslami. Pošli odkaz trénerovi alebo ho ulož ako PDF.',
     naslovi: {
       kljukica: 'Modrá fajka',
       posnetki: 'Až 6 najlepších akcií',
+      highlight: 'Highlight video v cene',
       profil: 'Banner a farba podľa teba',
       vzdevek: 'Prezývka v zoznamoch',
       izpostavljeno: 'Zvýraznený zápas alebo štatistika',
@@ -44,6 +49,9 @@ export const preverjeni = {
       ogledi: 'Zobrazenia skautov',
       izbranost: 'Kto si ťa vybral',
       predTekmo: 'Správa pred zápasom',
+      zgodbe: 'Príbeh po každom zápase',
+      sezona: 'Moja sezóna',
+      cv: 'CV pre trénerov',
     },
   },
   scout: {
@@ -55,10 +63,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Čoskoro',
     oznaka: 'Pripravujeme',
-    story: {
-      naslov: 'Tvoj profil v story',
-      opis: 'Hotový obrázok tvojho profilu pre Instagram story, ktorý zdieľaš jedným ťuknutím.',
-    },
     evropa: {
       naslov: 'Pred hráčmi po celej Európe',
       opis: 'Overené profily sa budú zobrazovať hráčom fantasy hry vo všetkých ligách SLFF po Európe.',

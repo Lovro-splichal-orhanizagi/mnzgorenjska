@@ -29,12 +29,17 @@ export const preverjeni = {
     sporocilo: 'Profilini açan hər kəsin gördüyü azarkeşlərə qısa mesaj.',
     znacka: 'Alışa əlavə olaraq çanta və ya gödəkçə üçün adın yazılmış çap nişanı.',
     posnetki: 'Profilin yuxarısında ən yaxşı anlarından 6 videoya qədər. Hər videonu əvvəlcə SLFF komandası yoxlayır.',
+    highlight: '6 video yüklə, SLFF komandası onlardan peşəkar highlight videosu montaj etsin, qiymətə daxildir.',
     ogledi: 'Profilinin SLFF Scout-da, mövcud olduğu yerlərdə, neçə skaut baxışı aldığı.',
     izbranost: 'Neçə fantasy komandasının səni seçdiyi və hansılar olduğu.',
     predTekmo: 'Hər oyundan əvvəl hesabat: hər iki komandanın forması, rəqibin qol vuranları, qarşılıqlı oyunlar və öz forman.',
+    zgodbe: 'Hər oyundan sonra Instagram story üçün hazır şəkil: hesab, dəqiqələr, qollar və xallar.',
+    sezona: 'Mövsüm ərzində və sonunda mövsümün bir şəkildə: qollar, dəqiqələr, ən yaxşı oyun, seçimlər və skautlar.',
+    cv: 'Mövsümlər, klublar və rəqəmlərlə bir səhifəlik CV. Keçidi məşqçiyə göndər və ya PDF kimi saxla.',
     naslovi: {
       kljukica: 'Mavi işarə',
       posnetki: '6 ən yaxşı ana qədər',
+      highlight: 'Highlight video qiymətə daxil',
       profil: 'Banner və rəng öz zövqünlə',
       vzdevek: 'Siyahılarda ləqəb',
       izpostavljeno: 'Seçilmiş oyun və ya statistika',
@@ -43,6 +48,9 @@ export const preverjeni = {
       ogledi: 'Skaut baxışları',
       izbranost: 'Səni kim seçib',
       predTekmo: 'Oyundan əvvəl hesabat',
+      zgodbe: 'Hər oyundan sonra hekayə',
+      sezona: 'Mənim mövsümüm',
+      cv: 'Məşqçilər üçün CV',
     },
   },
   scout: {
@@ -54,10 +62,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Tezliklə',
     oznaka: 'Tezliklə',
-    story: {
-      naslov: 'Profilin story-də',
-      opis: 'Profilinin Instagram story üçün hazır şəkli, bir toxunuşla paylaşılır.',
-    },
     evropa: {
       naslov: 'Bütün Avropada oyunçuların qarşısında',
       opis: 'Təsdiqlənmiş profillər Avropadakı bütün SLFF liqalarında fantaziya oyunçularına göstəriləcək.',

@@ -33,6 +33,7 @@ import KarticaIgralca from '../components/KarticaIgralca'
 import IzlozbaIgralca from '../components/IzlozbaIgralca'
 import MesecniOgledi from '../components/MesecniOgledi'
 import PredTekmo from '../components/PredTekmo'
+import ZgodbeIgralca from '../components/ZgodbeIgralca'
 import PosljiSporocilo from '../components/PosljiSporocilo'
 import { zabeleziOgledProfila } from '../lib/ogledi'
 import { naloziIzlozbo, type Izlozba } from '../lib/izlozba'
@@ -462,6 +463,9 @@ export default function Igralec() {
 
       {/* Pred tekmo: le preverjenemu lastniku pred tekmo v 10 dneh (baza drugim vrne prazno) */}
       {jeLastnik && smeKartico && <PredTekmo igralecId={igralec.id} />}
+
+      {/* Zgodbe za Instagram in CV: lastniku (napoved sezone tudi nepreverjenemu) */}
+      {jeLastnik && smeKartico && <ZgodbeIgralca igralecId={igralec.id} />}
 
       {/* Mesečna statistika: le preverjenemu lastniku (baza drugim vrne prazno) */}
       {jeLastnik && smeKartico && <MesecniOgledi igralecId={igralec.id} />}

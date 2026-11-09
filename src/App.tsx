@@ -33,6 +33,7 @@ const Igralci = lazy(() => import('./pages/Igralci'))
 const Igralec = lazy(() => import('./pages/Igralec'))
 const Preverjeni = lazy(() => import('./pages/Preverjeni'))
 const Sporocila = lazy(() => import('./pages/Sporocila'))
+const CvIgralca = lazy(() => import('./pages/CvIgralca'))
 const Lestvica = lazy(() => import('./pages/Lestvica'))
 const Slovenija = lazy(() => import('./pages/Slovenija'))
 const MiniLige = lazy(() => import('./pages/MiniLige'))
@@ -186,6 +187,7 @@ export default function App() {
               <Route path="/player/:id" element={<Igralec />} />
               <Route path="/verified" element={<Preverjeni />} />
               <Route path="/messages" element={<Sporocila />} />
+              <Route path="/cv/:id" element={<CvIgralca />} />
               <Route path="/standings" element={<Lestvica />} />
               <Route path="/national" element={<Slovenija />} />
               <Route path="/mini-leagues" element={<MiniLige />} />

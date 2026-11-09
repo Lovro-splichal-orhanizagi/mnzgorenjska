@@ -30,12 +30,17 @@ export const preverjeni = {
     sporocilo: 'Profilini açan herkesin gördüğü, taraftarlara kısa bir mesaj.',
     znacka: 'Satın almaya ek olarak, çanta veya ceket için adının yazılı olduğu basılı bir rozet.',
     posnetki: 'Profilinin en üstünde en iyi anlarından 6 videoya kadar. Her videoyu önce SLFF ekibi inceler.',
+    highlight: '6 video yükle, SLFF ekibi onlardan profesyonel bir highlight videosu kurgulasın; fiyata dahil.',
     ogledi: 'Profilinin SLFF Scout\'ta, mevcut olduğu yerlerde, kaç scout görüntülemesi aldığı.',
     izbranost: 'Kaç fantasy takımının seni seçtiği ve bu takımların hangileri olduğu.',
     predTekmo: 'Her maçtan önce bir rapor: iki takımın formu, rakibin golcüleri, aralarındaki maçlar ve kendi formun.',
+    zgodbe: 'Her maçtan sonra Instagram hikâyen için hazır bir görsel: skor, dakika, gol ve puan.',
+    sezona: 'Sezon boyunca ve sonunda sezonun tek görselde: goller, dakikalar, en iyi maç, seçimler ve scoutlar.',
+    cv: 'Sezonların, kulüplerin ve sayılarınla tek sayfalık CV. Bağlantıyı bir antrenöre gönder veya PDF olarak kaydet.',
     naslovi: {
       kljukica: 'Mavi tik',
       posnetki: '6 en iyi ana kadar',
+      highlight: 'Highlight video fiyata dahil',
       profil: 'Kapak ve renk senin tarzında',
       vzdevek: 'Listelerde takma ad',
       izpostavljeno: 'Öne çıkan maç veya istatistik',
@@ -44,6 +49,9 @@ export const preverjeni = {
       ogledi: 'Scout görüntülemeleri',
       izbranost: 'Seni kim seçti',
       predTekmo: 'Maç öncesi rapor',
+      zgodbe: 'Her maçtan sonra hikâye',
+      sezona: 'Sezonum',
+      cv: 'Antrenörler için CV',
     },
   },
   scout: {
@@ -55,10 +63,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Yakında',
     oznaka: 'Yakında',
-    story: {
-      naslov: 'Profilin hikâyede',
-      opis: 'Profilinin Instagram hikâyesi için hazır bir görseli, tek dokunuşla paylaşılır.',
-    },
     evropa: {
       naslov: 'Tüm Avrupa\'daki oyuncuların önünde',
       opis: 'Doğrulanmış profiller, Avrupa\'daki tüm SLFF liglerinde fantezi oyuncularına gösterilecek.',

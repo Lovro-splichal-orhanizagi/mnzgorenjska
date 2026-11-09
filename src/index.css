@@ -455,3 +455,13 @@ body:has(#chat-widget-bubble) [data-podpora] {
   background-size: 100% 100%, 100% 25%;
   box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.25);
 }
+
+/* CV igralca (/cv/:id): tisk ali PDF na beli podlagi, brez menija in gumbov. */
+@media print {
+  body:has(.cv-stran) { background: #fff !important; }
+  body:has(.cv-stran) nav, body:has(.cv-stran) footer:not(.cv-list footer), body:has(.cv-stran) header:not(.cv-list header),
+  body:has(.cv-stran) .ne-tiskaj, body:has(.cv-stran) .fixed { display: none !important; }
+  .cv-list { background: #fff !important; box-shadow: none !important; border: 0 !important; color: #0f172a !important; }
+  .cv-list * { color: #0f172a !important; border-color: #cbd5e1 !important; }
+  .cv-list .bg-white\/5 { background: #f1f5f9 !important; }
+}

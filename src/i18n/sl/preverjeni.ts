@@ -30,12 +30,17 @@ export const preverjeni = {
     sporocilo: 'Kratko sporočilo navijačem, ki ga vidi vsak, ki odpre tvoj profil.',
     znacka: 'Natisnjena značka s tvojim imenom za na torbo ali jakno, kot dodatek ob nakupu.',
     posnetki: 'Do 6 posnetkov tvojih najboljših potez na vrhu profila. Vsak posnetek najprej pregleda ekipa SLFF.',
+    highlight: 'Naloži 6 posnetkov in ekipa SLFF ti iz njih zmontira profesionalen highlight video, vključen v ceno.',
     ogledi: 'Koliko ogledov skavtov ima tvoj profil v SLFF Scoutu, kjer je na voljo.',
     izbranost: 'Koliko fantasy ekip te je izbralo in katere ekipe so to.',
     predTekmo: 'Pred vsako tekmo poročilo: forma obeh ekip, nasprotnikovi strelci, medsebojne tekme in tvoja forma.',
+    zgodbe: 'Po vsaki tekmi pripravljena slika za Instagram story: izid, minute, goli in točke.',
+    sezona: 'Ob koncu in med sezono tvoja sezona v eni sliki: goli, minute, najboljša tekma, izbranost in skavti.',
+    cv: 'CV na eni strani s sezonami, klubi in številkami. Pošlji povezavo trenerju ali ga shrani kot PDF.',
     naslovi: {
       kljukica: 'Modra kljukica',
       posnetki: 'Do 6 najboljših potez',
+      highlight: 'Highlight video v ceni',
       profil: 'Pasica in barva po tvoje',
       vzdevek: 'Vzdevek na seznamih',
       izpostavljeno: 'Izpostavljena tekma ali statistika',
@@ -44,6 +49,9 @@ export const preverjeni = {
       ogledi: 'Ogledi skavtov',
       izbranost: 'Kdo te je izbral',
       predTekmo: 'Poročilo pred tekmo',
+      zgodbe: 'Zgodba po vsaki tekmi',
+      sezona: 'Moja sezona',
+      cv: 'CV za trenerje',
     },
   },
   scout: {
@@ -55,10 +63,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Kmalu',
     oznaka: 'Prihaja',
-    story: {
-      naslov: 'Tvoj profil v storyju',
-      opis: 'Pripravljena slika tvojega profila za Instagram story, ki jo deliš z enim dotikom.',
-    },
     evropa: {
       naslov: 'Pred igralci po vsej Evropi',
       opis: 'Preverjeni profili se bodo prikazovali igralcem fantasy igre v vseh ligah SLFF po Evropi.',

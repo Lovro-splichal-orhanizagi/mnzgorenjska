@@ -29,12 +29,17 @@ export const preverjeni = {
     sporocilo: 'En kort besked til fansene, som alle, der åbner din profil, kan se.',
     znacka: 'Et trykt emblem med dit navn til tasken eller jakken, som tilkøb.',
     posnetki: 'Op til 6 highlights af dine bedste aktioner øverst på profilen. SLFF-teamet gennemgår hvert klip først.',
+    highlight: 'Upload 6 klip, og SLFF-teamet klipper dem til en professionel highlight-video, inkluderet i prisen.',
     ogledi: 'Hvor mange visninger fra spejdere din profil får i SLFF Scout, hvor det er tilgængeligt.',
     izbranost: 'Hvor mange fantasy-hold der valgte dig, og hvilke det er.',
     predTekmo: 'En rapport før hver kamp: begge holds form, modstanderens målscorere, indbyrdes opgør og din egen form.',
+    zgodbe: 'Efter hver kamp et billede klar til din Instagram-story: resultat, minutter, mål og point.',
+    sezona: 'I løbet af og ved slutningen af sæsonen din sæson i ét billede: mål, minutter, bedste kamp, valg og spejdere.',
+    cv: 'Et CV på én side med sæsoner, klubber og tal. Send linket til en træner eller gem det som PDF.',
     naslovi: {
       kljukica: 'Blåt flueben',
       posnetki: 'Op til 6 highlights',
+      highlight: 'Highlight-video inkluderet',
       profil: 'Banner og farve efter din smag',
       vzdevek: 'Kælenavn på lister',
       izpostavljeno: 'Fremhævet kamp eller statistik',
@@ -43,6 +48,9 @@ export const preverjeni = {
       ogledi: 'Spejdervisninger',
       izbranost: 'Hvem valgte dig',
       predTekmo: 'Rapport før kampen',
+      zgodbe: 'En story efter hver kamp',
+      sezona: 'Min sæson',
+      cv: 'CV til trænere',
     },
   },
   scout: {
@@ -54,10 +62,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Snart',
     oznaka: 'På vej',
-    story: {
-      naslov: 'Din profil i en story',
-      opis: 'Et færdigt billede af din profil til en Instagram-story, delt med ét tryk.',
-    },
     evropa: {
       naslov: 'Foran spillere i hele Europa',
       opis: 'Verificerede profiler vil blive vist for fantasyspillere i alle SLFF-rækker i Europa.',

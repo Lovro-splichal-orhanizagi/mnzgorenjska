@@ -29,12 +29,17 @@ export const preverjeni = {
     sporocilo: 'Lühike sõnum fännidele, mida näeb igaüks, kes su profiili avab.',
     znacka: 'Trükitud märk sinu nimega kotile või jopele, ostu lisana.',
     posnetki: 'Kuni 6 klippi sinu parimatest hetkedest profiili ülaosas. SLFF-i meeskond vaatab iga klipi esmalt üle.',
+    highlight: 'Laadi üles 6 klippi ja SLFF-i meeskond monteerib neist professionaalse highlight-video, hinna sees.',
     ogledi: 'Mitu skautide vaatamist su profiil SLFF Scoutis saab, kus see on saadaval.',
     izbranost: 'Mitu fantasy-meeskonda sind valis ja millised need on.',
     predTekmo: 'Enne iga mängu ülevaade: mõlema meeskonna vorm, vastase väravalööjad, omavahelised mängud ja sinu enda vorm.',
+    zgodbe: 'Pärast iga mängu storyks valmis pilt: tulemus, minutid, väravad ja punktid.',
+    sezona: 'Hooaja jooksul ja lõpus sinu hooaeg ühel pildil: väravad, minutid, parim mäng, valikud ja skaudid.',
+    cv: 'Üheleheküljeline CV hooaegade, klubide ja numbritega. Saada link treenerile või salvesta PDF-ina.',
     naslovi: {
       kljukica: 'Sinine linnuke',
       posnetki: 'Kuni 6 parimat hetke',
+      highlight: 'Highlight-video hinna sees',
       profil: 'Bänner ja värv sinu moodi',
       vzdevek: 'Hüüdnimi nimekirjades',
       izpostavljeno: 'Esiletõstetud mäng või statistika',
@@ -43,6 +48,9 @@ export const preverjeni = {
       ogledi: 'Skautide vaatamised',
       izbranost: 'Kes sind valis',
       predTekmo: 'Mängueelne ülevaade',
+      zgodbe: 'Lugu pärast iga mängu',
+      sezona: 'Minu hooaeg',
+      cv: 'CV treeneritele',
     },
   },
   scout: {
@@ -54,10 +62,6 @@ export const preverjeni = {
   prihaja: {
     naslov: 'Peagi',
     oznaka: 'Tulekul',
-    story: {
-      naslov: 'Sinu profiil storys',
-      opis: 'Valmis pilt sinu profiilist Instagrami story jaoks, jagatav ühe puudutusega.',
-    },
     evropa: {
       naslov: 'Mängijate ees üle Euroopa',
       opis: 'Kinnitatud profiile näidatakse fantaasiamängijatele kõigis SLFF-i liigades üle Euroopa.',
