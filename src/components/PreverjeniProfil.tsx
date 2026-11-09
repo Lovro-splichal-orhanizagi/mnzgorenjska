@@ -25,6 +25,7 @@ import {
 } from '../lib/preverjeni'
 import { Link } from './Povezava'
 import { PonudbaIzlozbe } from './IzlozbaIgralca'
+import { pozabiIzbranost } from '../lib/izbranost'
 
 interface Plus {
   player_id: number
@@ -101,7 +102,10 @@ export default function PreverjeniProfil({
     const id = window.setInterval(() => {
       ostalo -= 1
       void nalozi().then((ok) => {
-        if (ok) pozabiPreverjene()
+        if (ok) {
+          pozabiPreverjene()
+          pozabiIzbranost()
+        }
         if (ok || ostalo <= 0) window.clearInterval(id)
       })
     }, 2000)
@@ -278,6 +282,7 @@ function Ponudba({ igralecId }: { igralecId: number }) {
     <div className="kartica space-y-2 border-sky-400/30 p-3 text-sm">
       <h3 className="font-bold text-sky-200">{t('igralci.preverjen.ponudba.naslov')}</h3>
       <p className="text-slate-300">{t('igralci.preverjen.ponudba.opis')}</p>
+      <p className="text-slate-300">{t('igralci.preverjen.ponudba.izbranost')}</p>
       <fieldset className="space-y-1">
         {(['letna', 'dozivljenjska'] as const).map((v) => (
           <label key={v} htmlFor={`${idp}-${v}`} className="flex cursor-pointer items-center gap-2">

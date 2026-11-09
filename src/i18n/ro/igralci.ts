@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
+  izbranost: {
+    naslovSvoj: 'Raza ta',
+    naslovTuj: 'Selecție',
+    opis: 'În câte echipe fantasy a fost jucătorul în ultima etapă blocată a fiecărei ligi. Echipele casei nu se numără.',
+    vrstica: '{n} din {ekip} echipe · {odstotek}%',
+    posnetek: 'După termenul etapei {krog}, {datum}',
+    podPragom: 'Ascuns până când etapa are cel puțin 5 echipe.',
+    brezKroga: 'Nicio etapă nu este încă blocată.',
+    ekipe: 'Nu afișăm numele echipelor: lotul unei echipe îl vede doar proprietarul ei.',
+  },
   krog: 'Etapa {krog}',
   vrstePorocil: {
     poskodba: 'Accidentare',
@@ -295,6 +305,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Site-ul web trebuie să fie o adresă https:// (cel mult 200 de caractere).',
     ponudba: {
+      izbranost: 'Selecție: în câte echipe fantasy ești în fiecare ligă și selecția tuturor jucătorilor. Ceilalți utilizatori nu o văd.',
       naslov: 'Verifică profilul',
       opis: 'O bifă albastră lângă numele tău peste tot în joc, porecla în liste, o descriere mai lungă, YouTube, X și site web, banner și culoarea profilului, un meci sau o statistică evidențiată și un mesaj pentru fani.',
       cena: '9,99 € pe an sau 29 € pentru totdeauna',

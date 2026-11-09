@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
+  izbranost: {
+    naslovSvoj: 'Tvoj doseg',
+    naslovTuj: 'Izabranost',
+    opis: 'U koliko je fantasy timova igrač u poslednjem zaključanom kolu svake lige. Kućni timovi se ne broje.',
+    vrstica: '{n} od {ekip} timova · {odstotek} %',
+    posnetek: 'Posle roka {krog}. kola, {datum}',
+    podPragom: 'Skriveno dok u kolu nema bar 5 timova.',
+    brezKroga: 'Nijedno kolo još nije zaključano.',
+    ekipe: 'Imena timova ne prikazujemo: sastav tima vidi samo njegov vlasnik.',
+  },
   krog: '{krog}. kolo',
   vrstePorocil: {
     poskodba: 'Povreda',
@@ -295,6 +305,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Veb sajt mora biti adresa https:// (do 200 znakova).',
     ponudba: {
+      izbranost: 'Izabranost: u koliko si fantasy timova u svakoj ligi i izabranost svih igrača. Drugi korisnici to ne vide.',
       naslov: 'Proveri profil',
       opis: 'Plava kvačica pored tvog imena svuda u igri, nadimak na spiskovima, duži opis, YouTube, X i veb sajt, naslovna slika i boja profila, istaknuta utakmica ili statistika i poruka navijačima.',
       cena: '9,99 € godišnje ili 29 € zauvek',

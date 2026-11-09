@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
+  izbranost: {
+    naslovSvoj: 'Tava sasniedzamība',
+    naslovTuj: 'Izvēle',
+    opis: 'Cik fantāzijas komandās spēlētājs bija katras līgas pēdējā slēgtajā kārtā. Mājas komandas netiek skaitītas.',
+    vrstica: '{n} no {ekip} komandām · {odstotek}%',
+    posnetek: 'Pēc {krog}. kārtas termiņa, {datum}',
+    podPragom: 'Paslēpts, līdz kārtā ir vismaz 5 komandas.',
+    brezKroga: 'Neviena kārta vēl nav slēgta.',
+    ekipe: 'Komandu nosaukumus nerādām: komandas sastāvu redz tikai tās īpašnieks.',
+  },
   krog: '{krog}. kārta',
   vrstePorocil: {
     poskodba: 'Trauma',
@@ -298,6 +308,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Tīmekļa vietnei jābūt https:// adresei (līdz 200 rakstzīmēm).',
     ponudba: {
+      izbranost: 'Izvēle: cik fantāzijas komandās tu esi katrā līgā un visu spēlētāju izvēle. Citi lietotāji to neredz.',
       naslov: 'Pārbaudīt profilu',
       opis: 'Zils ķeksītis pie tava vārda visur spēlē, iesauka sarakstos, garāks apraksts, YouTube, X un tīmekļa vietne, vāka attēls un profila krāsa, izcelta spēle vai statistika un ziņa līdzjutējiem.',
       cena: '9,99 € gadā vai 29 € uz visiem laikiem',

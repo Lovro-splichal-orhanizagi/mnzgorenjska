@@ -68,7 +68,7 @@
   `fantasy_chips`; `tuja_postava` vrne vrstice le, če `sme_videti_ekipo(ekipa)`
   (lastnik, admin, servis). Javno ostane, kar sestave ne izda: lestvice (ime,
   lastnik, točke, mesto, točke kroga, število prestopov in kazen iz
-  `fantasy_transfers`), mini lige in izbranost. Izbranost (`owners` v
+  `fantasy_transfers`) in mini lige. Izbranost (`owners` v
   `player_standings`, `player_season_standings`) je NULL, dokler ima zadnji
   zaklenjeni krog lige manj kot **5 človeških ekip** — sicer seštevek izda
   ekipo. Stran `/team/:id` tujcu pokaže le ime, lastnika, točke in mesto;
@@ -76,6 +76,20 @@
   Funkcija ali pogled, ki bere tuje posnetke, mora teči kot lastnik sheme
   (SECURITY DEFINER / pogled brez `security_invoker`) in sama paziti, kaj
   vrne.
+- **Izbranost vidijo le preverjeni** (migracija 20261109120000, SLF-360):
+  `vidi_izbranost()` je true za admina, strežnik (service_role, postgres brez
+  JWT) in uporabnika z aktivno, nepotečeno pravico (`je_preverjen` +
+  `izlozba_odrasla_oseba`: stikalo, potrjen profil, brez mladinske ali
+  anonimizirane vrstice). Vsem drugim pogleda vrneta `owners` NULL, tudi prek
+  PostgREST; vmesnik (`useVidiIzbranost`) tedaj skrije stolpec, razvrščanje in
+  polje. Preklic ali potek pravice dostop vzame takoj. `izbranost_igralca(id)`
+  vrne preverjenemu razčlenitev po ligah osebe (`ekip` = imenovalec, `owners`
+  NULL pod pragom, krog in čas posnetka, `lastni`): svoj profil vse povezane
+  vrstice, tuj le vrstice v državi gledane; mladinske in anonimizirane nikoli.
+  **Imen ekip ne vrne**: seznam ekip, ki imajo igralca, bi izdal sestavo, zato
+  pride šele s privolitvijo lastnika ekipe. Panel `IzbranostIgralca.tsx`,
+  preizkus `supabase/tests/izbranost-preverjenim.sql`. Strežnik HTML in slike
+  za predogled `owners` ne bereta.
 - `rounds.lineups_locked_at` → dokončan zajem, tudi za neveljavne/prazne ekipe;
   odsotnost posnetka ni dovoljenje za poznejši zajem. `fantasy_teams.roster_updated_at`
   beleži čas shranjevanja. `shrani_ekipo` pred spremembo zajame zapadle kroge;

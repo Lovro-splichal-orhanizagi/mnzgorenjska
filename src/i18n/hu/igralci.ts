@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
+  izbranost: {
+    naslovSvoj: 'Az elérésed',
+    naslovTuj: 'Kiválasztottság',
+    opis: 'Hány fantasy csapatban szerepelt a játékos az egyes ligák utolsó lezárt fordulójában. A házi csapatok nem számítanak.',
+    vrstica: '{n} / {ekip} csapat · {odstotek}%',
+    posnetek: 'A(z) {krog}. forduló határideje után, {datum}',
+    podPragom: 'Rejtett, amíg a fordulóban nincs legalább 5 csapat.',
+    brezKroga: 'Még nincs lezárt forduló.',
+    ekipe: 'A csapatneveket nem mutatjuk: a keretet csak a csapat tulajdonosa látja.',
+  },
   krog: '{krog}. forduló',
   vrstePorocil: {
     poskodba: 'Sérülés',
@@ -293,6 +303,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'A weboldal csak https:// cím lehet (legfeljebb 200 karakter).',
     ponudba: {
+      izbranost: 'Kiválasztottság: hány fantasy csapatban vagy ligánként, és minden játékos kiválasztottsága. Más felhasználók ezt nem látják.',
       naslov: 'Profil ellenőrzése',
       opis: 'Kék pipa a neved mellett mindenhol a játékban, beceneved a listákon, hosszabb bemutatkozás, YouTube, X és weboldal, borítókép és profilszín, kiemelt mérkőzés vagy statisztika és üzenet a szurkolóknak.',
       cena: 'Évi 9,99 € vagy örökre 29 €',
