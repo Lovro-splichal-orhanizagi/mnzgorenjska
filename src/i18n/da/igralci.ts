@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
+  izbranost: {
+    naslovSvoj: 'Din rækkevidde',
+    naslovTuj: 'Valgt af',
+    opis: 'Hvor mange fantasyhold der havde spilleren i den seneste låste runde i hver liga. Husets hold tæller ikke.',
+    vrstica: '{n} af {ekip} hold · {odstotek} %',
+    posnetek: 'Efter fristen for {krog}. runde, {datum}',
+    podPragom: 'Skjult, indtil en runde har mindst 5 hold.',
+    brezKroga: 'Ingen runde er låst endnu.',
+    ekipe: 'Holdnavne vises ikke: kun ejeren ser holdets trup.',
+  },
   krog: '{krog}. runde',
   vrstePorocil: {
     poskodba: 'Skade',
@@ -293,6 +303,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Hjemmesiden skal være en https://-adresse (op til 200 tegn).',
     ponudba: {
+      izbranost: 'Udvælgelse: hvor mange fantasyhold du er på i hver liga, plus udvælgelse for alle spillere. Andre brugere kan ikke se det.',
       naslov: 'Bliv verificeret',
       opis: 'Et blåt flueben ved dit navn overalt i spillet, dit kaldenavn i listerne, en længere præsentation, YouTube, X og en hjemmeside, et banner og en profilfarve, en fremhævet kamp eller statistik og en besked til fansene.',
       cena: '9,99 € om året eller 29 € for altid',

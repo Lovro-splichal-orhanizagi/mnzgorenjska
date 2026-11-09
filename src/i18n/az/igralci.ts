@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
+  izbranost: {
+    naslovSvoj: 'Əhatən',
+    naslovTuj: 'Seçilmə',
+    opis: 'Oyunçunun hər liqanın son bağlanmış turunda neçə fantasy komandada olduğu. Ev komandaları sayılmır.',
+    vrstica: '{ekip} komandadan {n} · {odstotek}%',
+    posnetek: '{krog}-ci turun son tarixindən sonra, {datum}',
+    podPragom: 'Turda ən azı 5 komanda olana qədər gizlidir.',
+    brezKroga: 'Hələ heç bir tur bağlanmayıb.',
+    ekipe: 'Komanda adlarını göstərmirik: heyəti yalnız komandanın sahibi görür.',
+  },
   krog: 'Tur {krog}',
   vrstePorocil: {
     poskodba: 'Zədə',
@@ -293,6 +303,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Sayt https:// ünvanı olmalıdır (200 simvola qədər).',
     ponudba: {
+      izbranost: 'Seçilmə: hər liqada neçə fantasy komandada olduğun və bütün oyunçuların seçilməsi. Digər istifadəçilər bunu görmür.',
       naslov: 'Təsdiqlən',
       opis: 'Oyunun hər yerində adının yanında mavi işarə, siyahılarda ləqəbin, daha uzun təsvir, YouTube, X və sayt, banner və profil rəngi, önə çıxan oyun və ya statistika və azarkeşlərə mesaj.',
       cena: 'İldə 9,99 € və ya həmişəlik 29 €',

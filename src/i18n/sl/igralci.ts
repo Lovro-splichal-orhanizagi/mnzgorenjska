@@ -1,5 +1,15 @@
 // Nizi za področje `igralci` (glej src/i18n/index.tsx).
 export const igralci = {
+  izbranost: {
+    naslovSvoj: 'Tvoj doseg',
+    naslovTuj: 'Izbranost',
+    opis: 'V koliko fantasy ekipah je igralec v zadnjem zaklenjenem krogu vsake lige. Hišne ekipe ne štejejo.',
+    vrstica: '{n} od {ekip} ekip · {odstotek} %',
+    posnetek: 'Po roku {krog}. kroga, {datum}',
+    podPragom: 'Skrito, dokler v krogu ni vsaj 5 ekip.',
+    brezKroga: 'Noben krog še ni zaklenjen.',
+    ekipe: 'Imen ekip ne kažemo: sestavo ekipe vidi le njen lastnik.',
+  },
   krog: '{krog}. krog',
   vrstePorocil: {
     poskodba: 'Poškodba',
@@ -295,6 +305,7 @@ export const igralci = {
     },
     napakaSplet: 'Spletna stran mora biti naslov https:// (do 200 znakov).',
     ponudba: {
+      izbranost: 'Izbranost: v koliko fantasy ekipah si v vsaki ligi in izbranost vseh igralcev. Drugi uporabniki tega ne vidijo.',
       naslov: 'Preveri profil',
       opis: 'Modra kljukica ob tvojem imenu povsod v igri, vzdevek na seznamih, daljši opis, YouTube, X in spletna stran, pasica in barva profila, izpostavljena tekma ali statistika in sporočilo navijačem.',
       cena: '9,99 € na leto ali 29 € za vedno',

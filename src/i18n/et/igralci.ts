@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
+  izbranost: {
+    naslovSvoj: 'Sinu ulatus',
+    naslovTuj: 'Valituks',
+    opis: 'Mitmes fantaasiameeskonnas oli mängija iga liiga viimases lukustatud voorus. Majameeskondi ei arvestata.',
+    vrstica: '{n} / {ekip} meeskonda · {odstotek}%',
+    posnetek: 'Pärast {krog}. vooru tähtaega, {datum}',
+    podPragom: 'Peidetud, kuni voorus on vähemalt 5 meeskonda.',
+    brezKroga: 'Ühtegi vooru pole veel lukustatud.',
+    ekipe: 'Meeskondade nimesid ei näita: koosseisu näeb ainult meeskonna omanik.',
+  },
   krog: '{krog}. voor',
   vrstePorocil: {
     poskodba: 'Vigastus',
@@ -293,6 +303,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Veebileht peab olema https:// aadress (kuni 200 tähemärki).',
     ponudba: {
+      izbranost: 'Valik: mitmes fantaasiameeskonnas sa igas liigas oled ja kõigi mängijate valik. Teised kasutajad seda ei näe.',
       naslov: 'Kinnita profiil',
       opis: 'Sinine linnuke su nime juures kõikjal mängus, hüüdnimi nimekirjades, pikem tutvustus, YouTube, X ja veebileht, kaanepilt ja profiili värv, esile tõstetud mäng või statistika ning sõnum fännidele.',
       cena: '9,99 € aastas või 29 € igaveseks',

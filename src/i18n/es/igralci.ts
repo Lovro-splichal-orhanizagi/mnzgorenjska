@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
+  izbranost: {
+    naslovSvoj: 'Tu alcance',
+    naslovTuj: 'Elegido por',
+    opis: 'En cuántos equipos fantasy estuvo el jugador en la última jornada cerrada de cada liga. Los equipos de la casa no cuentan.',
+    vrstica: '{n} de {ekip} equipos · {odstotek} %',
+    posnetek: 'Tras el cierre de la jornada {krog}, {datum}',
+    podPragom: 'Oculto hasta que una jornada tenga al menos 5 equipos.',
+    brezKroga: 'Aún no hay ninguna jornada cerrada.',
+    ekipe: 'No mostramos nombres de equipos: la plantilla solo la ve su dueño.',
+  },
   krog: 'Jornada {krog}',
   vrstePorocil: {
     poskodba: 'Lesión',
@@ -295,6 +305,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'El sitio web debe ser una dirección https:// (hasta 200 caracteres).',
     ponudba: {
+      izbranost: 'Selección: en cuántos equipos fantasy estás en cada liga y la selección de todos los jugadores. Los demás usuarios no la ven.',
       naslov: 'Verifica tu perfil',
       opis: 'Un check azul junto a tu nombre en todo el juego, tu apodo en las listas, una descripción más larga, YouTube, X y sitio web, banner y color del perfil, un partido o estadística destacada y un mensaje a la afición.',
       cena: '9,99 € al año o 29 € para siempre',

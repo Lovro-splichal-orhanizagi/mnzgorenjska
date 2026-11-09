@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
+  izbranost: {
+    naslovSvoj: 'Erişimin',
+    naslovTuj: 'Seçilme',
+    opis: 'Oyuncunun her ligin son kilitlenen haftasında kaç fantezi takımda olduğu. Ev takımları sayılmaz.',
+    vrstica: '{ekip} takımdan {n} · %{odstotek}',
+    posnetek: '{krog}. hafta son tarihinden sonra, {datum}',
+    podPragom: 'Haftada en az 5 takım olana kadar gizli.',
+    brezKroga: 'Henüz kilitlenen hafta yok.',
+    ekipe: 'Takım adlarını göstermiyoruz: kadroyu yalnızca takım sahibi görür.',
+  },
   krog: '{krog}. hafta',
   vrstePorocil: {
     poskodba: 'Sakatlık',
@@ -293,6 +303,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Web sitesi https:// ile başlayan bir adres olmalı (en fazla 200 karakter).',
     ponudba: {
+      izbranost: 'Seçilme: her ligde kaç fantezi takımda olduğun ve tüm oyuncuların seçilme oranı. Diğer kullanıcılar bunu görmez.',
       naslov: 'Doğrulanmış oyuncu ol',
       opis: 'Oyunun her yerinde adının yanında mavi onay işareti, listelerde lakabın, uzun biyografi, YouTube, X ve web sitesi, kapak görseli ve profil rengi, öne çıkan bir maç veya istatistik ve taraftarlara bir mesaj.',
       cena: 'Yıllık 9,99 € veya ömür boyu 29 €',

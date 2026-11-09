@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const igralci: NonNullable<Prevod['igralci']> = {
+  izbranost: {
+    naslovSvoj: 'Tvůj dosah',
+    naslovTuj: 'Výběr',
+    opis: 'V kolika fantasy týmech je hráč v posledním uzamčeném kole každé ligy. Domácí týmy se nepočítají.',
+    vrstica: '{n} z {ekip} týmů · {odstotek} %',
+    posnetek: 'Po uzávěrce {krog}. kola, {datum}',
+    podPragom: 'Skryto, dokud v kole není alespoň 5 týmů.',
+    brezKroga: 'Zatím není uzamčené žádné kolo.',
+    ekipe: 'Názvy týmů neukazujeme: sestavu týmu vidí jen jeho majitel.',
+  },
   krog: '{krog}. kolo',
   vrstePorocil: {
     poskodba: 'Zranění',
@@ -297,6 +307,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     napakaSplet: 'Webová stránka musí být adresa https:// (do 200 znaků).',
     ponudba: {
+      izbranost: 'Výběr: v kolika fantasy týmech jsi v každé lize a výběr všech hráčů. Ostatní uživatelé to nevidí.',
       naslov: 'Ověřit profil',
       opis: 'Modrá fajfka u tvého jména všude ve hře, přezdívka v seznamech, delší popis, YouTube, X a webová stránka, banner a barva profilu, zvýrazněný zápas nebo statistika a vzkaz fanouškům.',
       cena: '9,99 € ročně nebo 29 € navždy',

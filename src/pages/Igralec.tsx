@@ -28,6 +28,7 @@ import { PokritostStatistike, usePokritostStatistike, usePokritostZgodovine, bre
 import FotoIgralca from '../components/FotoIgralca'
 import ZnakPreverjen from '../components/ZnakPreverjen'
 import PrevzemIgralca from '../components/PrevzemIgralca'
+import IzbranostIgralca from '../components/IzbranostIgralca'
 import UradneOdsotnostiIgralca from '../components/UradnaOdsotnost'
 import KarticaIgralca from '../components/KarticaIgralca'
 import IzlozbaIgralca from '../components/IzlozbaIgralca'
@@ -600,6 +601,9 @@ export default function Igralec() {
         vIzlozbi={zIzlozbo}
         ponudbaIzlozbe={!!izlozba && izlozba.lastnik && !izlozba.dovoljena && izlozba.vidi && izlozba.odrasla}
       />
+
+      {/* Izbranost: le za preverjene (baza drugim vrne prazno), brez mladinskih lig */}
+      {smeKartico && <IzbranostIgralca igralecId={igralec.id} />}
 
       {/* številke — tekoča sezona; seštevek vseh sezon je drugotna vrstica */}
       <div className="space-y-2">

@@ -9432,6 +9432,20 @@ export type Database = {
           liga: string
         }[]
       }
+      izbranost_igralca: {
+        Args: { p_player_id: number }
+        Returns: {
+          competition_id: number
+          ekip: number
+          krog: number
+          lastni: boolean
+          liga: string
+          owners: number
+          player_id: number
+          sezona: string
+          zaklenjen: string
+        }[]
+      }
       izbrisi_moj_racun: { Args: never; Returns: undefined }
       izid_znan: {
         Args: { p_imported_at: string; p_statistics_status: string }
@@ -11257,6 +11271,7 @@ export type Database = {
         Args: { p_aktiviraj?: boolean; p_manifest: string; p_sha256: string }
         Returns: Json
       }
+      vidi_izbranost: { Args: never; Returns: boolean }
       vidi_ponovno_ceno: { Args: never; Returns: boolean }
       vidi_posnetke: { Args: never; Returns: boolean }
       vidi_preverjene: { Args: never; Returns: boolean }
