@@ -135,8 +135,6 @@ export default function Preverjeni() {
     "sezona",
     "cv",
     ...(izbranost ? (["izbranost"] as const) : []),
-    // Značka je dodatek k nakupu: le kjer je nakup odprt (ne v aplikaciji).
-    ...(ponudba ? (["znacka"] as const) : []),
   ] as const;
   const koraki = [
     "poisci",
