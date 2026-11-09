@@ -212,6 +212,14 @@ export default function Preverjeni() {
           aria-label="Išči potrjen profil"
           className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-1.5 text-sm sm:max-w-sm"
         />
+        {!iskanje.trim() && (
+          <p className="text-xs text-slate-400">
+            Prazno iskanje prikaže le igralce, ki že imajo pravico. Za novo dodelitev vpiši ime igralca ali uporabnika (npr. priimek).
+          </p>
+        )}
+        {iskanje.trim() && zadetkiProfilov.length === 0 && (
+          <p className="text-sm text-slate-400">Ni potrjenega profila za to iskanje (igralec mora imeti potrjen prevzem profila).</p>
+        )}
         <ul className="divide-y divide-white/5 text-sm">
           {zadetkiProfilov.map((p) => (
             <li key={p.zahtevek_id} className="flex flex-wrap items-center justify-between gap-2 py-2">
