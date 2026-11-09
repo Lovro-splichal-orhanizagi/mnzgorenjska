@@ -77,6 +77,14 @@ begin
     'pravice: funkciji sta klicljivi, pravilo je v njiju';
   assert pg_get_function_result('public.izbranost_igralca(bigint)'::regprocedure) !~ '(team|ekipa|owner_id|name)',
     'izbranost_igralca ne vrne ekip ali lastnikov (sestave ostanejo zasebne)';
+  -- ekipe_z_igralcem (20261109130000): le prijavljeni, le relacija ekipa-igralec
+  assert not has_function_privilege('anon', 'public.ekipe_z_igralcem(bigint,integer,integer)', 'execute')
+     and has_function_privilege('authenticated', 'public.ekipe_z_igralcem(bigint,integer,integer)', 'execute'),
+    'ekipe_z_igralcem: anon ne sme klicati';
+  assert pg_get_function_result('public.ekipe_z_igralcem(bigint,integer,integer)'::regprocedure)
+         !~ '(captain|vice|starter|bench|chip|player|owner|points|lineup)',
+    'ekipe_z_igralcem ne vrne soigralcev, kapetana, klopi, pripomočkov ali lastnika';
+  assert not exists (select 1 from ekipe_z_igralcem(936101)), 'strežnik brez JWT: seznama ni (SSR, kartice)';
   -- strežnik (postgres brez JWT): vse, prag in hišne kot prej
   assert vidi_izbranost(), 'strežnik vidi';
   assert (select owners = 4 from player_standings where id = 936101), 'strežnik: 4 človeške, hišna ne šteje';
@@ -120,6 +128,8 @@ begin
       v.opis || ': owners NULL';
     assert not exists (select 1 from izbranost_igralca(936101)), v.opis || ': RPC prazen';
     assert not exists (select 1 from izbranost_igralca(936104)), v.opis || ': RPC prazen tudi za nepotrjenega';
+    assert not exists (select 1 from ekipe_z_igralcem(936101)), v.opis || ': seznam ekip prazen';
+    assert not exists (select 1 from ekipe_z_igralcem(936105)), v.opis || ': seznam ekip prazen tudi za svoj profil';
   end loop;
 end;
 $$;
@@ -145,6 +155,22 @@ begin
   assert not exists (select 1 from izbranost_igralca(936107)), 'V: oseba z mladinsko vrstico nima analitike';
   assert not exists (select 1 from izbranost_igralca(936108)), 'V: mladinska vrstica nima analitike';
   assert not exists (select 1 from fantasy_lineups where round_id between 936301 and 936303), 'V: tujih posnetkov ne bere';
+  -- seznam ekip na svojem profilu: A 4 človeške (brez hišne), B 5, C pod pragom nič
+  assert (select count(*) = 9 and min(skupaj) = 9 from ekipe_z_igralcem(936101, 0, 50)), 'V: 9 ekip v A in B';
+  assert (select array_agg(fantasy_team_id order by fantasy_team_id) = array[936411, 936412, 936413, 936414]::bigint[]
+            from ekipe_z_igralcem(936101, 0, 50) where competition_id = 936001), 'V: A natanko ekipe z mano, brez hišne';
+  assert not exists (select 1 from ekipe_z_igralcem(936101, 0, 50) where competition_id = 936003), 'V: C pod 5 ekipami brez imen';
+  assert not exists (select 1 from ekipe_z_igralcem(936101, 0, 50) where fantasy_team_id in (936415, 936416, 936419)),
+    'V: ekipe brez mene in hišna niso na seznamu';
+  assert (select count(*) = 9 from ekipe_z_igralcem(936103, 0, 50)), 'V: ista oseba prek povezane vrstice';
+  assert (select count(*) = 4 and min(skupaj) = 9 from ekipe_z_igralcem(936101, 2, 4)), 'V: stran 2, skupaj ostane';
+  assert (select count(*) = 1 from ekipe_z_igralcem(936101, 0, 0)), 'V: vsaj 1 na stran';
+  assert (select count(*) = 9 from ekipe_z_igralcem(936101, -5, 500)), 'V: negativen odmik 0, največ 50';
+  assert (select bool_and(competition_slug is not null and krog = 3) from ekipe_z_igralcem(936101)), 'V: povezava in krog';
+  -- tuj profil: števec da, imen ne (sicer bi sestavil kader vsake ekipe)
+  assert not exists (select 1 from ekipe_z_igralcem(936104)), 'V: tuj igralec brez imen ekip';
+  assert not exists (select 1 from ekipe_z_igralcem(936107)), 'V: mladoleten brez imen ekip';
+  assert not exists (select 1 from ekipe_z_igralcem(936108)), 'V: mladinska vrstica brez imen ekip';
 end;
 $$;
 reset role;
@@ -157,6 +183,8 @@ begin
   assert vidi_izbranost(), 'admin: vidi';
   assert (select count(*) = 2 and not bool_or(lastni) from izbranost_igralca(936101)), 'admin: tuja oseba le SI lige';
   assert (select count(*) = 1 from izbranost_igralca(936103)), 'admin: HR vrstica le HR';
+  assert (select count(*) = 9 from ekipe_z_igralcem(936101, 0, 50)), 'admin: ekipe v SI ligah';
+  assert not exists (select 1 from ekipe_z_igralcem(936103)), 'admin: HR pod pragom nič';
 end;
 $$;
 reset role;
@@ -178,6 +206,7 @@ set local role authenticated;
 do $$
 begin
   assert not vidi_izbranost(), 'V: anonimiziran profil izgubi dostop';
+  assert not exists (select 1 from ekipe_z_igralcem(936101)), 'V: anonimiziran brez seznama';
 end;
 $$;
 reset role;
@@ -190,6 +219,7 @@ do $$
 begin
   assert not vidi_izbranost(), 'V: preklic vzame dostop';
   assert (select owners is null from player_standings where id = 936101), 'V: po preklicu owners NULL';
+  assert not exists (select 1 from ekipe_z_igralcem(936101)), 'V: po preklicu brez seznama';
 end;
 $$;
 reset role;

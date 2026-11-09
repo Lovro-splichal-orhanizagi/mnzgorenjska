@@ -10,7 +10,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     posnetek: 'Posle roka {krog}. kola, {datum}',
     podPragom: 'Skriveno dok u kolu nema bar 5 timova.',
     brezKroga: 'Nijedno kolo još nije zaključano.',
-    ekipe: 'Imena timova ne prikazujemo: sastav tima vidi samo njegov vlasnik.',
+    ekipe: 'Koji ga timovi imaju, vidi samo igrač na svom profilu.',
+    seznam: 'Timovi koji te imaju',
+    seznamOpis: 'Svi timovi koji te imaju posle poslednjeg roka. Ostali igrači tih timova ostaju privatni.',
+    vec: 'Prikaži više',
   },
   krog: '{krog}. kolo',
   vrstePorocil: {

@@ -86,8 +86,16 @@
   vrne preverjenemu razčlenitev po ligah osebe (`ekip` = imenovalec, `owners`
   NULL pod pragom, krog in čas posnetka, `lastni`): svoj profil vse povezane
   vrstice, tuj le vrstice v državi gledane; mladinske in anonimizirane nikoli.
-  **Imen ekip ne vrne**: seznam ekip, ki imajo igralca, bi izdal sestavo, zato
-  pride šele s privolitvijo lastnika ekipe. Panel `IzbranostIgralca.tsx`,
+  **Imen ekip ne vrne**. Imena da ločena `ekipe_z_igralcem(id, od, koliko)`
+  (migracija 20261109130000, Nejc 9. 11. 2026: "just the one player"): ožja
+  izjema od zasebnih sestav, le relacija ekipa–igralec. Vrne ekipe (id, ime,
+  liga, krog, `skupaj`), ki imajo igralca v istem posnetku kot števec, le
+  prijavljenemu preverjenemu na **svojem** profilu (`lastni`) in adminu; tuj
+  profil, anon (brez pravice EXECUTE) in strežnik brez JWT ne dobijo nič, da
+  se iz vseh igralcev ne da sestaviti kadra ekipe. Le nad pragom 5 ekip
+  (kjer `owners` ni NULL), brez hišnih, brez mladinskih in anonimiziranih,
+  stran največ 50. Klik vodi na `/team/:id`, ki tujcu kaže le ime, lastnika,
+  točke in mesto. Panel `IzbranostIgralca.tsx`,
   preizkus `supabase/tests/izbranost-preverjenim.sql`. Strežnik HTML in slike
   za predogled `owners` ne bereta.
 - `rounds.lineups_locked_at` → dokončan zajem, tudi za neveljavne/prazne ekipe;

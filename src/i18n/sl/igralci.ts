@@ -8,7 +8,10 @@ export const igralci = {
     posnetek: 'Po roku {krog}. kroga, {datum}',
     podPragom: 'Skrito, dokler v krogu ni vsaj 5 ekip.',
     brezKroga: 'Noben krog še ni zaklenjen.',
-    ekipe: 'Imen ekip ne kažemo: sestavo ekipe vidi le njen lastnik.',
+    ekipe: 'Katere ekipe imajo igralca, vidi le igralec sam na svojem profilu.',
+    seznam: 'Ekipe, ki te imajo',
+    seznamOpis: 'Vse ekipe, ki te imajo po zadnjem roku. Ostali igralci teh ekip ostanejo zasebni.',
+    vec: 'Pokaži več',
   },
   krog: '{krog}. krog',
   vrstePorocil: {

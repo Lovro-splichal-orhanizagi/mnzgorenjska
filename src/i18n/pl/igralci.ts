@@ -10,7 +10,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     posnetek: 'Po terminie {krog}. kolejki, {datum}',
     podPragom: 'Ukryte, dopóki w kolejce nie ma co najmniej 5 drużyn.',
     brezKroga: 'Żadna kolejka nie jest jeszcze zablokowana.',
-    ekipe: 'Nie pokazujemy nazw drużyn: skład drużyny widzi tylko jej właściciel.',
+    ekipe: 'Które drużyny mają zawodnika, widzi tylko on sam na swoim profilu.',
+    seznam: 'Drużyny, które cię mają',
+    seznamOpis: 'Wszystkie drużyny, które mają cię po ostatnim terminie. Pozostali zawodnicy tych drużyn pozostają prywatni.',
+    vec: 'Pokaż więcej',
   },
   krog: '{krog}. kolejka',
   vrstePorocil: {

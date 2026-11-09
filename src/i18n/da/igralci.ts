@@ -10,7 +10,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     posnetek: 'Efter fristen for {krog}. runde, {datum}',
     podPragom: 'Skjult, indtil en runde har mindst 5 hold.',
     brezKroga: 'Ingen runde er låst endnu.',
-    ekipe: 'Holdnavne vises ikke: kun ejeren ser holdets trup.',
+    ekipe: 'Kun spilleren selv ser på sin profil, hvilke hold der har spilleren.',
+    seznam: 'Hold, der har dig',
+    seznamOpis: 'Alle hold, der har dig efter seneste deadline. Deres øvrige spillere forbliver private.',
+    vec: 'Vis flere',
   },
   krog: '{krog}. runde',
   vrstePorocil: {

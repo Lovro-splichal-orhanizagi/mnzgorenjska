@@ -10,7 +10,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     posnetek: 'Pēc {krog}. kārtas termiņa, {datum}',
     podPragom: 'Paslēpts, līdz kārtā ir vismaz 5 komandas.',
     brezKroga: 'Neviena kārta vēl nav slēgta.',
-    ekipe: 'Komandu nosaukumus nerādām: komandas sastāvu redz tikai tās īpašnieks.',
+    ekipe: 'Kuras komandas izvēlējušās spēlētāju, redz tikai pats spēlētājs savā profilā.',
+    seznam: 'Komandas, kurās tu esi',
+    seznamOpis: 'Visas komandas, kurās tu esi pēc pēdējā termiņa. Pārējie to spēlētāji paliek privāti.',
+    vec: 'Rādīt vairāk',
   },
   krog: '{krog}. kārta',
   vrstePorocil: {

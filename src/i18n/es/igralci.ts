@@ -10,7 +10,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     posnetek: 'Tras el cierre de la jornada {krog}, {datum}',
     podPragom: 'Oculto hasta que una jornada tenga al menos 5 equipos.',
     brezKroga: 'Aún no hay ninguna jornada cerrada.',
-    ekipe: 'No mostramos nombres de equipos: la plantilla solo la ve su dueño.',
+    ekipe: 'Solo el propio jugador ve, en su perfil, qué equipos lo tienen.',
+    seznam: 'Equipos que te tienen',
+    seznamOpis: 'Todos los equipos que te tienen tras el último cierre. Sus demás jugadores siguen siendo privados.',
+    vec: 'Mostrar más',
   },
   krog: 'Jornada {krog}',
   vrstePorocil: {

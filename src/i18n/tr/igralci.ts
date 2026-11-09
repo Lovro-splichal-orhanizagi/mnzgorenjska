@@ -10,7 +10,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     posnetek: '{krog}. hafta son tarihinden sonra, {datum}',
     podPragom: 'Haftada en az 5 takım olana kadar gizli.',
     brezKroga: 'Henüz kilitlenen hafta yok.',
-    ekipe: 'Takım adlarını göstermiyoruz: kadroyu yalnızca takım sahibi görür.',
+    ekipe: 'Oyuncuyu hangi takımların seçtiğini yalnızca oyuncu kendi profilinde görür.',
+    seznam: 'Seni seçen takımlar',
+    seznamOpis: 'Son kapanıştan sonra seni kadrosunda tutan tüm takımlar. Diğer oyuncuları gizli kalır.',
+    vec: 'Daha fazla göster',
   },
   krog: '{krog}. hafta',
   vrstePorocil: {

@@ -64,6 +64,27 @@ export async function izbranostIgralca(igralecId: number): Promise<IzbranostLige
   return (data ?? []) as IzbranostLige[]
 }
 
+export interface EkipaZIgralcem {
+  fantasy_team_id: number
+  ime: string
+  competition_id: number
+  competition_slug: string
+  liga: string
+  krog: number
+  skupaj: number
+}
+
+/**
+ * Ekipe, ki imajo igralca v zadnjem zaklenjenem krogu (`ekipe_z_igralcem`,
+ * 20261109130000): le preverjen na svojem profilu in admin, le nad pragom,
+ * brez hišnih. Stran z največ 50 ekipami; prazno, kdor ne sme.
+ */
+export async function ekipeZIgralcem(igralecId: number, od = 0, koliko = 25): Promise<EkipaZIgralcem[]> {
+  const { data, error } = await supabase.rpc('ekipe_z_igralcem', { p_player_id: igralecId, p_od: od, p_koliko: koliko })
+  if (error) return []
+  return data ?? []
+}
+
 /** Odstotek, zaokrožen; brez imenovalca ali števca ga ni. */
 export function odstotek(owners: number | null, ekip: number | null): number | null {
   if (owners == null || !ekip) return null
