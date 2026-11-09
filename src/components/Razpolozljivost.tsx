@@ -105,6 +105,10 @@ export default function Razpolozljivost({
         </Link>
       </div>
 
+      {porocila.length === 0 && uradnoPrazno && (
+        <p className="text-sm text-slate-500">{t('igralci.razpolozljivost.prazno')}</p>
+      )}
+
       <UradneOdsotnostiIgralca igralecId={igralecId} naPrazno={naPrazno} />
 
       {porocila.length > 0 && (
@@ -123,10 +127,6 @@ export default function Razpolozljivost({
           {vse ? t('igralci.razpolozljivost.skrij') : t('igralci.razpolozljivost.pokaziVse', { n: porocila.length })}
         </button>
       )}
-      {porocila.length === 0 && uradnoPrazno && (
-        <p className="text-sm text-slate-500">{t('igralci.razpolozljivost.prazno')}</p>
-      )}
-
       {session ? (
         <>
           <button
