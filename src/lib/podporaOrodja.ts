@@ -23,9 +23,13 @@
 // telefonu pokrije stran klepet in obiskovalec ne vidi nič. Kot dejanje
 // teče šele, ko obiskovalec tapne gumb; klepet se takrat umakne, neuspeh pa
 // vrne `{ ok: false, message }`, ki ga obiskovalec vidi v klepetu.
+//
+// `zamenjaj_jezik` je le dejanje: stran se naloži znova, klepet pa se zaradi
+// tega preseli na kanal novega jezika. Tega ne sme sprožiti agent sredi
+// odgovora, ampak obiskovalec s tapom.
 import { supabase } from './supabase'
 import { jeNeshranjeno } from './neshranjeno'
-import { t } from '../i18n/jedro.ts'
+import { izberiJezik, jePripravljen, jezik, t } from '../i18n/jedro.ts'
 
 /** Strani, na katere sme agent peljati — ključ je to, kar pošlje agent. */
 export const STRANI: Record<string, string> = {
@@ -173,4 +177,17 @@ export function prijaviOrodja(
   helpstack('registerTool', 'pokazi', (p) => pokazi(p))
   helpstack('registerAction', 'odpri_stran', async (p) => kotDejanje(await odpriStran(p)))
   helpstack('registerAction', 'pokazi', async (p) => kotDejanje(await pokazi(p, TRAJANJE_DEJANJA)))
+
+  helpstack('registerAction', 'zamenjaj_jezik', async (p) => {
+    const j = String(p.jezik ?? '').toLowerCase()
+    if (!jePripravljen(j)) return { ok: false, message: t('aplikacija.pokaziMi.neznano') }
+    if (j === jezik()) return { ok: true }
+    if (jeNeshranjeno()) {
+      osvetliCilj('shrani')
+      return { ok: false, message: t('aplikacija.pokaziMi.neshranjeno') }
+    }
+    // Widget naj dobi potrditev, preden se stran naloži znova.
+    window.setTimeout(() => izberiJezik(j), 300)
+    return { ok: true }
+  })
 }
