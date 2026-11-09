@@ -23,7 +23,7 @@ export function useNaslov(...deli: Array<string | null | undefined>): void {
  * kanonični naslov ga nima, da iskalnik ne vidi iste strani pod vsako ligo.
  * Predpona s poševnico na koncu velja za vse pod njo.
  */
-const BREZ_LIGE = ['/legal', '/verified', '/login', '/account', '/reminders', '/new-password', '/novo-geslo', '/admin', '/auth/', '/l/']
+const BREZ_LIGE = ['/legal', '/verified', '/messages', '/cv/', '/login', '/account', '/reminders', '/new-password', '/novo-geslo', '/admin', '/auth/', '/l/']
 
 export function jeBrezLige(pot: string): boolean {
   // Vstopna stran države (/at) je ena za vse lige; kanonični je `/at`.
@@ -104,7 +104,7 @@ export function useLigaStrani(slug: string | null | undefined): void {
 
 /** Zasebne strani (ekipa, račun, prijava, povabila): iskalnik jih ne indeksira. */
 // Isti seznam ima Caddy (scripts/hetzner/Caddyfile).
-const ZASEBNE = ['/my-team', '/mini-leagues', '/mini-leagues/', '/predictions', '/login', '/account', '/reminders', '/new-password', '/novo-geslo', '/admin', '/auth/', '/team/', '/l/', '/u/']
+const ZASEBNE = ['/my-team', '/mini-leagues', '/mini-leagues/', '/predictions', '/messages', '/cv/', '/login', '/account', '/reminders', '/new-password', '/novo-geslo', '/admin', '/auth/', '/team/', '/l/', '/u/']
 
 export const jeZasebna = (pot: string): boolean =>
   ZASEBNE.some((p) => (p.endsWith('/') ? pot.startsWith(p) : pot === p || pot === `${p}/`))
