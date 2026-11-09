@@ -122,56 +122,142 @@ export default function Preverjeni() {
     stanje.vrsta !== "nalaga";
 
   const koristi = [
-    t("preverjeni.kaj.kljukica"),
-    t("preverjeni.kaj.profil"),
-    t("preverjeni.kaj.posnetki"),
-    t("preverjeni.kaj.ogledi"),
-    ...(izbranost ? [t("preverjeni.kaj.izbranost")] : []),
-  ];
+    "kljukica",
+    "posnetki",
+    "highlight",
+    "vzdevek",
+    "profil",
+    "izpostavljeno",
+    "sporocilo",
+    "ogledi",
+    "predTekmo",
+    "zgodbe",
+    "sezona",
+    "cv",
+    ...(izbranost ? (["izbranost"] as const) : []),
+  ] as const;
   const koraki = [
     "poisci",
     "prevzemi",
     ...(ponudba ? (["izberi"] as const) : []),
     "uredi",
   ] as const;
+  // Cena ob glavnem gumbu: le kjer je nakup odprt in obiskovalec še ni preverjen.
+  const cena = prodaja && ponudba;
 
   return (
-    <div className="space-y-10 sm:space-y-14">
-      <section className="grid items-center gap-6 lg:grid-cols-2 lg:gap-10">
-        <div className="space-y-4">
-          <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-sky-300">
+    <div className="space-y-12 sm:space-y-16">
+      <section className="preverjeni-vrh relative -mx-4 grid items-center gap-8 overflow-hidden px-4 py-8 sm:mx-0 sm:rounded-3xl sm:px-8 sm:py-10 lg:grid-cols-2 lg:gap-12">
+        <div className="relative space-y-5">
+          <p className="preverjeni-oznaka inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider">
             <Kljukica velikost={16} />
             {t("preverjeni.naslov")}
           </p>
           <h1 className="text-4xl font-black leading-[1.05] naslov sm:text-5xl">
             {t("preverjeni.glava")}
           </h1>
-          <p className="max-w-xl text-base text-slate-300">
+          <p className="max-w-xl text-base text-slate-300 sm:text-lg">
             {t("preverjeni.uvod")}
           </p>
+          {cena && (
+            <p className="flex flex-wrap items-baseline gap-x-2">
+              <span className="text-2xl font-black text-white sm:text-3xl">
+                {t("igralci.preverjen.ponudba.letna")}
+              </span>
+              <span className="text-base text-slate-300">
+                {t("preverjeni.cena.ali", {
+                  cena: t("igralci.preverjen.ponudba.dozivljenjska"),
+                })}
+              </span>
+            </p>
+          )}
           <Cta stanje={stanje} />
         </div>
         <PrimerProfila />
       </section>
 
       {stanje.vrsta !== "brezPonudbe" && (
-        <section aria-labelledby="preverjeni-kaj" className="space-y-3">
+        <section className="mx-auto max-w-3xl space-y-3 text-center">
+          <h2 className="text-2xl font-black naslov sm:text-3xl">
+            {t("preverjeni.nizje.naslov")}
+          </h2>
+          <p className="text-base text-slate-300">
+            {t("preverjeni.nizje.besedilo")}
+          </p>
+        </section>
+      )}
+
+      {stanje.vrsta !== "brezPonudbe" && (
+        <section aria-labelledby="preverjeni-kaj" className="space-y-4">
           <h2 id="preverjeni-kaj" className="text-xl font-black naslov">
             {t("preverjeni.kaj.naslov")}
           </h2>
-          <ul className="divide-y divide-white/10 border-y border-white/10">
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {koristi.map((k) => (
+              <li key={k} className="preverjeni-korist rounded-2xl p-4">
+                <h3 className="flex items-center gap-2 font-bold text-slate-100">
+                  {k === "kljukica" ? (
+                    <Kljukica velikost={18} />
+                  ) : (
+                    <span
+                      className="preverjeni-pika h-2 w-2 shrink-0 rounded-full"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {t(`preverjeni.kaj.naslovi.${k}`)}
+                </h3>
+                <p className="mt-1.5 text-sm text-slate-300">
+                  {t(`preverjeni.kaj.${k}`)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {stanje.vrsta !== "brezPonudbe" && (
+        <section
+          aria-labelledby="preverjeni-scout"
+          className="kartica space-y-2 p-5 sm:p-6"
+        >
+          <h2 id="preverjeni-scout" className="text-xl font-black naslov">
+            {t("preverjeni.scout.naslov")}
+          </h2>
+          <p className="text-sm text-slate-300 sm:text-base">
+            {t("preverjeni.scout.opis")}
+          </p>
+          <p className="text-sm text-slate-300 sm:text-base">
+            {t("preverjeni.scout.ogledi")}
+          </p>
+          <a
+            href="/legal#scout"
+            className="inline-flex min-h-11 items-center text-sm text-sky-300 underline"
+          >
+            {t("preverjeni.scout.vec")}
+          </a>
+        </section>
+      )}
+
+      {stanje.vrsta !== "brezPonudbe" && (
+        <section aria-labelledby="preverjeni-prihaja" className="space-y-4">
+          <h2 id="preverjeni-prihaja" className="text-xl font-black naslov">
+            {t("preverjeni.prihaja.naslov")}
+          </h2>
+          <ul className="grid gap-3">
+            {(["evropa"] as const).map((k) => (
               <li
                 key={k}
-                className="flex gap-3 py-3 text-sm text-slate-200 sm:text-base"
+                className="rounded-2xl border border-dashed border-white/15 p-4"
               >
-                <span
-                  className="mt-0.5 font-black text-gnl-300"
-                  aria-hidden="true"
-                >
-                  ✓
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-200">
+                  {t("preverjeni.prihaja.oznaka")}
                 </span>
-                {k}
+                <h3 className="mt-1 font-bold text-slate-100">
+                  {t(`preverjeni.prihaja.${k}.naslov`)}
+                </h3>
+                <p className="mt-1 text-sm text-slate-400">
+                  {t(`preverjeni.prihaja.${k}.opis`)}
+                </p>
               </li>
             ))}
           </ul>
@@ -213,19 +299,41 @@ export default function Preverjeni() {
         </section>
       )}
 
-      {prodaja && ponudba && (
-        <section
-          aria-labelledby="preverjeni-cena"
-          className="space-y-2 border-t border-white/10 pt-6"
-        >
+      {cena && (
+        <section aria-labelledby="preverjeni-cena" className="space-y-4">
           <h2 id="preverjeni-cena" className="text-xl font-black naslov">
             {t("preverjeni.cena.naslov")}
           </h2>
-          <p className="text-lg font-bold text-slate-100">
-            {t("igralci.preverjen.ponudba.letna")}{" "}
-            <span className="font-normal text-slate-400">·</span>{" "}
-            {t("igralci.preverjen.ponudba.dozivljenjska")}
-          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="preverjeni-korist rounded-2xl p-5">
+              <p className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                {t("preverjeni.cena.letna")}
+              </p>
+              <p className="mt-1 text-2xl font-black text-white">
+                {t("igralci.preverjen.ponudba.letna")}
+              </p>
+              <p className="mt-1 text-sm text-slate-300">
+                {t("preverjeni.cena.letnaOpis")}
+              </p>
+            </div>
+            <div className="preverjeni-zlato relative rounded-2xl p-5">
+              <span className="izlozba izlozba-zlato absolute right-4 top-4 rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider">
+                {t("preverjeni.cena.najugodneje")}
+              </span>
+              <p className="text-sm font-bold uppercase tracking-wider text-amber-200">
+                {t("preverjeni.cena.zaVedno")}
+              </p>
+              <p className="mt-1 text-2xl font-black text-white">
+                {t("igralci.preverjen.ponudba.dozivljenjska")}
+              </p>
+              <p className="mt-1 text-sm text-slate-300">
+                {t("preverjeni.cena.zaVednoOpis")}
+              </p>
+            </div>
+          </div>
+          {(stanje.vrsta === "poisci" || stanje.vrsta === "kupi") && (
+            <Cta stanje={stanje} />
+          )}
           <p className="text-sm text-slate-300">
             {t("igralci.izlozba.ponudba.opomba")}
           </p>
@@ -331,10 +439,10 @@ function Cta({ stanje }: { stanje: Stanje }) {
  */
 function PrimerProfila() {
   return (
-    <figure className="m-0 space-y-2">
+    <figure className="relative m-0 space-y-2">
       <div
         aria-hidden="true"
-        className="izlozba izlozba-okvir overflow-hidden rounded-2xl"
+        className="izlozba izlozba-okvir preverjeni-primer overflow-hidden rounded-2xl"
         style={{ "--poudarek": "#34d399" } as CSSProperties}
       >
         <div className="relative aspect-[3/1]">
@@ -376,6 +484,9 @@ function PrimerProfila() {
             <li>{t("igralci.preverjen.youtube")}</li>
             <li>{t("igralci.preverjen.x")}</li>
           </ul>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-amber-200">
+            {t("preverjeni.primer.highlighti")}
+          </p>
           <div className="grid grid-cols-3 gap-2">
             {[1, 2, 3].map((n) => (
               <div

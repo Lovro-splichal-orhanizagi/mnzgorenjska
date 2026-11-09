@@ -18,6 +18,8 @@ import KlubskiRacuni from '../components/admin/KlubskiRacuni'
 import Prevzemi from '../components/admin/Prevzemi'
 import Preverjeni from '../components/admin/Preverjeni'
 import Posnetki from '../components/admin/Posnetki'
+import PrijaveSporocil from '../components/admin/PrijaveSporocil'
+import HighlightVrsta from '../components/admin/HighlightVrsta'
 import PonovneCene from '../components/admin/PonovneCene'
 import PrijaveMiniLig from '../components/admin/PrijaveMiniLig'
 import OmejitveUporabnikov from '../components/admin/OmejitveUporabnikov'
@@ -752,6 +754,7 @@ export default function Administracija() {
         { id: 'prevzemi', naslov: 'Prevzemi profilov' },
         { id: 'preverjeni', naslov: 'Preverjeni' },
         { id: 'posnetki', naslov: 'Posnetki' },
+        { id: 'sporocila', naslov: 'Sporočila' },
         { id: 'ponovne-cene', naslov: 'Ponovne cene (plačljivo)' },
       ],
     },
@@ -887,6 +890,12 @@ export default function Administracija() {
             </Razdelek>
             <Razdelek id="posnetki">
               <Posnetki />
+              <div className="mt-6">
+                <HighlightVrsta />
+              </div>
+            </Razdelek>
+            <Razdelek id="sporocila">
+              <PrijaveSporocil />
             </Razdelek>
             <Razdelek id="ponovne-cene">
               <PonovneCene />

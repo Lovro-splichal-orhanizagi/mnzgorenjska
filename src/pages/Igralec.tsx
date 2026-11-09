@@ -31,6 +31,11 @@ import IzbranostIgralca from '../components/IzbranostIgralca'
 import Razpolozljivost from '../components/Razpolozljivost'
 import KarticaIgralca from '../components/KarticaIgralca'
 import IzlozbaIgralca from '../components/IzlozbaIgralca'
+import MesecniOgledi from '../components/MesecniOgledi'
+import PredTekmo from '../components/PredTekmo'
+import ZgodbeIgralca from '../components/ZgodbeIgralca'
+import PosljiSporocilo from '../components/PosljiSporocilo'
+import { zabeleziOgledProfila } from '../lib/ogledi'
 import { naloziIzlozbo, type Izlozba } from '../lib/izlozba'
 import { jeMladinskiSlug, useFotografija } from '../lib/prevzem'
 import { dosezkiNastopa, odstotekIzbranosti } from '../lib/karticaIgralca'
@@ -96,6 +101,10 @@ export default function Igralec() {
   const [cene, setCene] = useState<any[]>([])
   // Ime je skrito na željo kluba (ugovor), ne zaradi neaktivnosti.
   const [naZeljoKluba, setNaZeljoKluba] = useState(false)
+  // Ogled za mesečno statistiko preverjenega profila; po seji, da baza ve, ali je prijavljen.
+  useEffect(() => {
+    if (!nalaganjeSeje) zabeleziOgledProfila(igralecId)
+  }, [igralecId, nalaganjeSeje])
   useEffect(() => {
     setNaZeljoKluba(false)
     if (!igralec?.id || !String(igralec.full_name ?? '').startsWith('#')) return
@@ -448,6 +457,18 @@ export default function Igralec() {
 
       {/* Izbranost: le za preverjene (baza drugim vrne prazno), brez mladinskih lig */}
       {smeKartico && <IzbranostIgralca igralecId={igralec.id} />}
+
+      {/* Sporočilo lastniku profila: kdo sme, odloči baza (le odrasli, ne lastnik sam) */}
+      {smeKartico && !jeLastnik && <PosljiSporocilo igralecId={igralec.id} prijava={prijava} />}
+
+      {/* Pred tekmo: le preverjenemu lastniku pred tekmo v 10 dneh (baza drugim vrne prazno) */}
+      {jeLastnik && smeKartico && <PredTekmo igralecId={igralec.id} />}
+
+      {/* Zgodbe za Instagram in CV: lastniku (napoved sezone tudi nepreverjenemu) */}
+      {jeLastnik && smeKartico && <ZgodbeIgralca igralecId={igralec.id} />}
+
+      {/* Mesečna statistika: le preverjenemu lastniku (baza drugim vrne prazno) */}
+      {jeLastnik && smeKartico && <MesecniOgledi igralecId={igralec.id} />}
 
       {/* številke — tekoča sezona; seštevek vseh sezon je drugotna vrstica */}
       <div className="space-y-2">

@@ -3,7 +3,7 @@ import Pivo from '../components/Pivo'
 import { imeZveze } from '../components/VirPodatkov'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { Link } from '../components/Povezava'
-import { jeNativno, povezavaTrgovine } from '../lib/platforma'
+import { jeNativno, povezavaTrgovine, TRGOVINA_VIDNA } from '../lib/platforma'
 import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import { lestvicaPodpornikov, type JavnoPivo } from '../lib/piva'
@@ -551,7 +551,7 @@ export default function Domov() {
 
       {/* Trgovina SLFF: standardni izdelki, brez cen (se menjajo). Vsem, v
           vsaki ligi in v aplikaciji. */}
-      {!appPromoAktivna() && (
+      {TRGOVINA_VIDNA && !appPromoAktivna() && (
         <section className="kartica grid gap-4 p-4 sm:p-6 lg:grid-cols-2 lg:items-center lg:gap-8">
           <div className="space-y-3">
             <span className="inline-block rounded-full bg-gnl-500/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-gnl-300">
