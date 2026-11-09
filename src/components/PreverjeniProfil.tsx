@@ -79,8 +79,10 @@ export default function PreverjeniProfil({
   const [plus, setPlus] = useState<Plus | null | undefined>(undefined)
   const [lastnik, setLastnik] = useState<{ vidi: boolean; preverjen: boolean; vir: string | null } | null>(null)
   // Vrnitev s Checkout (`?placilo=uspeh`): webhook pravico zapiše v nekaj sekundah.
-  const placano = new URLSearchParams(useLocation().search).get('placilo') === 'uspeh'
-  const [odprtNakup, setOdprtNakup] = useState(false)
+  const iskanje = new URLSearchParams(useLocation().search)
+  const placano = iskanje.get('placilo') === 'uspeh'
+  // Stran Preverjeni igralski profil (`/verified`) pelje naravnost v nakup.
+  const [odprtNakup, setOdprtNakup] = useState(iskanje.get('preveri') === '1')
 
   const nalozi = useCallback(async () => {
     const [{ data }, vidi, prev, pravica] = await Promise.all([
@@ -357,6 +359,9 @@ function Ponudba({ igralecId, fokus = false }: { igralecId: number; fokus?: bool
         {t('igralci.preverjen.ponudba.kupi')}
       </button>
       {napaka && <p className="text-rose-400">{napaka}</p>}
+      <Link to="/verified" className="inline-flex min-h-11 items-center text-xs text-sky-300 underline">
+        {t('preverjeni.vec')}
+      </Link>
     </div>
   )
 }

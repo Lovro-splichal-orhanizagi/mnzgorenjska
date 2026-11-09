@@ -23,7 +23,7 @@ export function useNaslov(...deli: Array<string | null | undefined>): void {
  * kanonični naslov ga nima, da iskalnik ne vidi iste strani pod vsako ligo.
  * Predpona s poševnico na koncu velja za vse pod njo.
  */
-const BREZ_LIGE = ['/legal', '/login', '/account', '/reminders', '/new-password', '/novo-geslo', '/admin', '/auth/', '/l/']
+const BREZ_LIGE = ['/legal', '/verified', '/login', '/account', '/reminders', '/new-password', '/novo-geslo', '/admin', '/auth/', '/l/']
 
 export function jeBrezLige(pot: string): boolean {
   // Vstopna stran države (/at) je ena za vse lige; kanonični je `/at`.

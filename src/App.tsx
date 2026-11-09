@@ -31,6 +31,7 @@ import { jeNativno, povezavaTrgovine } from './lib/platforma'
 // administracije in Moje ekipe. Kos pride ob prvem obisku strani.
 const Igralci = lazy(() => import('./pages/Igralci'))
 const Igralec = lazy(() => import('./pages/Igralec'))
+const Preverjeni = lazy(() => import('./pages/Preverjeni'))
 const Lestvica = lazy(() => import('./pages/Lestvica'))
 const Slovenija = lazy(() => import('./pages/Slovenija'))
 const MiniLige = lazy(() => import('./pages/MiniLige'))
@@ -182,6 +183,7 @@ export default function App() {
               <Route path="/absences" element={<Odsotnosti />} />
               <Route path="/players" element={<Igralci />} />
               <Route path="/player/:id" element={<Igralec />} />
+              <Route path="/verified" element={<Preverjeni />} />
               <Route path="/standings" element={<Lestvica />} />
               <Route path="/national" element={<Slovenija />} />
               <Route path="/mini-leagues" element={<MiniLige />} />
@@ -226,6 +228,13 @@ export default function App() {
               <Instagram />
               <Trgovine />
             </div>
+            {!jeNativno() && (
+              <div className="mb-3">
+                <Link to="/verified" className="underline hover:text-slate-200">
+                  {t('preverjeni.noga')}
+                </Link>
+              </div>
+            )}
             {!jeNativno() && (
               <div className="mb-3">
                 <Link to="/beers" className="underline hover:text-slate-200">

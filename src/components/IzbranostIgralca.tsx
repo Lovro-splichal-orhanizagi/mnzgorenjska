@@ -241,6 +241,9 @@ export function PredogledPreverjanja({ naPreveri }: { naPreveri: () => void }) {
       <button type="button" onClick={naPreveri} className="gumb-glavni min-h-11 w-full text-sm sm:w-auto sm:px-5">
         {t('igralci.izbranost.predogled.cta')}
       </button>
+      <Link to="/verified" className="inline-flex min-h-11 items-center text-sm text-gnl-200 underline sm:ml-4">
+        {t('preverjeni.vec')}
+      </Link>
     </section>
   )
 }

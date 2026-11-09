@@ -85,6 +85,25 @@ export async function ekipeZIgralcem(igralecId: number, od = 0, koliko = 25): Pr
   return data ?? []
 }
 
+let zivo: Promise<boolean> | null = null
+
+/**
+ * Ali sta funkciji izbranosti (`vidi_izbranost`, `ekipe_z_igralcem`) v bazi.
+ * Odgovor je za vsakogar enak (ne odloča, kdo sme videti), zato lahko javna
+ * stran o preverjenem profilu pokaže korist "kdo te je izbral" šele, ko je
+ * baza obeh funkcij zares dobila; brez njiju (nepopolna objava) korist izpusti.
+ */
+export function izbranostJeZivo(): Promise<boolean> {
+  zivo ??= Promise.all([
+    supabase.rpc('vidi_izbranost'),
+    supabase.rpc('ekipe_z_igralcem', { p_player_id: 0, p_od: 0, p_koliko: 1 }),
+  ]).then(
+    ([a, b]) => !a.error && !b.error,
+    () => false,
+  )
+  return zivo
+}
+
 /** Odstotek, zaokrožen; brez imenovalca ali števca ga ni. */
 export function odstotek(owners: number | null, ekip: number | null): number | null {
   if (owners == null || !ekip) return null
