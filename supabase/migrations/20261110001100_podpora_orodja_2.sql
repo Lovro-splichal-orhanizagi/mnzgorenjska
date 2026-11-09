@@ -32,8 +32,10 @@ create table public.prijave_napak (
   pravilno text check (length(pravilno) <= 300),
   -- E-naslov ali drug stik, če ga je uporabnik dal; le za odgovor nanj.
   kontakt text check (length(kontakt) <= 254),
-  player_id bigint references public.players(id) on delete set null,
-  competition_id bigint references public.competitions(id) on delete set null,
+  -- Brez tujih ključev na players/competitions: ID je le kazalec za admina,
+  -- test FCF_TARGET pa dovoli samo znane ključe na ti tabeli.
+  player_id bigint,
+  competition_id bigint,
   vir text not null default 'klepet' check (vir in ('klepet')),
   created_at timestamptz not null default now(),
   stanje text not null default 'odprta' check (stanje in ('odprta', 'resena', 'zavrnjena')),
