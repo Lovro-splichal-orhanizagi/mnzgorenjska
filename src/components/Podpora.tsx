@@ -46,24 +46,14 @@ const KANALI: Record<string, string> = {
   es: 'cmv6jwic8003qtk2c3vffzwz9',
   lv: 'cmv6jwl0l0047tk2c4uu40ayk',
   mk: 'cmv6jyq2o004otk2caifawqla',
-  // Grškega kanala še ni: grški obiskovalci dobijo slovenskega, ki
-  // odgovarja v jeziku vprašanja.
-  el: 'cmucx868b000cv2atsowgly81',
-  // Turškega kanala še ni: turški obiskovalci dobijo slovenskega, ki
-  // odgovarja v jeziku vprašanja.
-  tr: 'cmucx868b000cv2atsowgly81',
-  // Ukrajinskega kanala še ni: ukrajinski obiskovalci dobijo slovenskega, ki
-  // odgovarja v jeziku vprašanja.
-  uk: 'cmucx868b000cv2atsowgly81',
-  // Armenskega kanala še ni: armenski obiskovalci dobijo slovenskega, ki
-  // odgovarja v jeziku vprašanja.
-  hy: 'cmucx868b000cv2atsowgly81',
-  // Azerbajdžanskega kanala še ni: azerbajdžanski obiskovalci dobijo slovenskega, ki
-  // odgovarja v jeziku vprašanja.
-  az: 'cmucx868b000cv2atsowgly81',
-  // Danskega kanala še ni: danski obiskovalci dobijo slovenskega, ki
-  // odgovarja v jeziku vprašanja.
-  da: 'cmucx868b000cv2atsowgly81',
+  // Kanali od 9. 11. (baza znanja v svojem jeziku).
+  el: 'cmw9rmkq500icpb2co9a7xxb8',
+  tr: 'cmw9robk100jopb2c6f6zdt8o',
+  uk: 'cmw9rq2ou00l0pb2cgb9b1r4s',
+  hy: 'cmw9rrtl100mcpb2ccjcfdsq4',
+  az: 'cmw9rtl8o00nopb2c4lo18r5q',
+  da: 'cmw9rvc2v00p0pb2ck13md8pe',
+  en: 'cmw9rknfd00h0pb2c0wero1g1',
 }
 const skripta = (id: string) => `https://helpstack.eu/widget.js?id=${id}`
 
