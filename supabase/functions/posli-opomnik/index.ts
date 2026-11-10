@@ -45,6 +45,7 @@ import {
   sestaviPromoPreverjen,
   type Jezik,
   sestaviNovostMiniLig,
+  sestaviPovabiPrijatelja,
   sestaviOpozoriloOdsotnih,
   sestaviTedenskiPregled,
   type Liga,
@@ -60,7 +61,7 @@ const ANKETA_MEJA = 50
 const PROMO_MEJA = 500
 const PAKET_NAJVEC = 20
 
-const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'anketa-placila', 'promo-preverjen'] as const
+const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'anketa-placila', 'promo-preverjen', 'povabi-prijatelja'] as const
 type Vrsta = (typeof VRSTE)[number]
 
 // Besedila so v `sporocila.ts`, v jeziku DRŽAVE LIGE (slovaška liga →
@@ -549,6 +550,44 @@ Deno.serve(async (req) => {
       })
     }
     return json({ kandidati_stevilo: kand.length, poslano, push, preskoceno: kand.length - poslano })
+  }
+
+  // `povabi-prijatelja`: enkratni mail z osebno povezavo s kodo vabila
+  // (`kandidati_za_povabi_prijatelja`, 10. 11. 2026). Brez potisnega obvestila:
+  // povezava je za kopiranje, v obvestilu je ne bi bilo.
+  if (vrsta === 'povabi-prijatelja') {
+    if (!jeStroj) return json({ error: 'Povabilo pošlje samo delovni tok (servisni ključ).' }, 403)
+    if (!SMTP_PASS && !suho) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
+    const service6 = createClient(SUPABASE_URL, SERVICE_KEY)
+    const { data, error } = await service6.rpc('kandidati_za_povabi_prijatelja', {
+      p_najvec: suho ? 10000 : Math.min(vhod.najvec_poslati ?? 10, 20),
+      // Suhi tek le šteje: kod vabil ne ustvari.
+      p_ustvari_kode: !suho,
+    })
+    if (error) return json({ error: error.message }, 500)
+    const kand = (data ?? []) as Array<{
+      user_id: string; email: string; display_name: string | null; koda: string | null
+      competition_id: number; liga_slug: string; liga_oznaka: string; liga_drzava: string | null
+    }>
+    if (suho) return json({ suho: true, kandidati_stevilo: kand.length })
+    let poslano = 0
+    for (const u of kand) {
+      if (!u.koda) continue
+      if (poslano > 0) await new Promise((r) => setTimeout(r, 600))
+      const liga: Liga = { slug: u.liga_slug, oznaka: u.liga_oznaka, drzava: u.liga_drzava }
+      const sporocilo = sestaviPovabiPrijatelja(liga, { display_name: u.display_name, koda: u.koda })
+      const rez = await poslji(EMAIL_FROM, u.email, await sOdjavo(service6, u.user_id, sporocilo), Deno.env.get('EMAIL_REPLY_TO'))
+      if (!rez.napaka) poslano++
+      await service6.from('email_log').insert({
+        user_id: u.user_id,
+        email: u.email,
+        vrsta,
+        competition_id: u.competition_id,
+        resend_id: rez.id ?? null,
+        napaka: rez.napaka ?? null,
+      })
+    }
+    return json({ kandidati_stevilo: kand.length, poslano, preskoceno: kand.length - poslano })
   }
 
   // `liga-zivi`: enkratno obvestilo na željo "Moje lige ni", ko je liga

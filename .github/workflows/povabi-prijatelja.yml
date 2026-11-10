@@ -1,0 +1,52 @@
+name: Pripelji prijatelja (osebna povezava)
+# Enkratni mail z osebno povezavo s kodo vabila (`?od=<koda>`) do lige
+# prejemnika (`posli-opomnik`, vrsta `povabi-prijatelja`). Kdo ga dobi,
+# doloci `kandidati_za_povabi_prijatelja`: enkrat na cloveka in naslov za vedno,
+# vsi z nehisno ekipo v aktivni ligi, brez odjavljenih (`brez_opomnikov`),
+# omejenih in tistih z drugim enkratnim mailom v zadnjih 7 dneh.
+#
+# Le rocno, privzeto suho (suhi tek le presteje in ne ustvari kod vabil).
+# mail.slff.eu se se ogreva in hkrati tecejo opomniki, tedenski pregled in
+# posta klubom, zato po paketih (`najvec`, privzeto 500) cez vec dni; kdor je
+# mail ze dobil, ga ne dobi znova (email_log). Pred prvim zagonom mora biti
+# funkcija posli-opomnik objavljena (scripts/hetzner/objavi-funkcije.sh).
+on:
+  workflow_dispatch:
+    inputs:
+      suho:
+        description: 'Suhi tek (samo presteje, ne poslje)'
+        required: false
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
+      najvec:
+        description: 'Najvec poslanih v tem zagonu'
+        required: false
+        default: '500'
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: opozorila
+  cancel-in-progress: false
+jobs:
+  povabilo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
+      # za macOS); brez njih tuja koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
+      - name: Poslji povabilo prijatelja
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VRSTA: povabi-prijatelja
+          SUHO: ${{ inputs.suho }}
+          NAJVEC_DOBRODOSLIC: ${{ inputs.najvec }}
+        run: node scripts/posli-opomnike.mjs
