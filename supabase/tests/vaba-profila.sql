@@ -32,7 +32,7 @@ begin
   insert into competitions (slug, name, short_name, country_id, source, active)
   values ('test-vaba', 'TEST Vaba', 'TEST', (select id from countries where code = 'SI'), 'mnzg', false)
   returning id into v_liga;
-  insert into teams (name) values ('TEST Vaba klub') returning id into v_klub;
+  insert into teams (name, country_id) values ('TEST Vaba klub', (select id from countries where code = 'SI')) returning id into v_klub;
   insert into players (first_name, last_name, full_name, team_id, competition_id, active)
   values ('Vaba', 'Testni', 'Vaba Testni', v_klub, v_liga, true) returning id into v_igralec;
   insert into auth.users (id, email) values (v_uporabnik, 'vaba-test@example.invalid');
