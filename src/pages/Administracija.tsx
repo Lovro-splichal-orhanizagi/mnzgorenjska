@@ -20,12 +20,14 @@ import Preverjeni from '../components/admin/Preverjeni'
 import Posnetki from '../components/admin/Posnetki'
 import PrijaveSporocil from '../components/admin/PrijaveSporocil'
 import HighlightVrsta from '../components/admin/HighlightVrsta'
+import NarocilaPlakatov from '../components/admin/NarocilaPlakatov'
 import PonovneCene from '../components/admin/PonovneCene'
 import PrijaveMiniLig from '../components/admin/PrijaveMiniLig'
 import OmejitveUporabnikov from '../components/admin/OmejitveUporabnikov'
 import SeznamPopravkov from '../components/SeznamPopravkov'
 import RastLig from '../components/admin/RastLig'
 import ZeljeLig from '../components/admin/ZeljeLig'
+import PrijaveNapak from '../components/admin/PrijaveNapak'
 import Rast from '../components/admin/Rast'
 import Lijak from '../components/admin/Lijak'
 import Sponzorji from '../components/admin/Sponzorji'
@@ -738,6 +740,7 @@ export default function Administracija() {
       razdelki: [
         { id: 'lige', naslov: 'Upravljanje lig' },
         { id: 'zelje-lig', naslov: 'Želje lig' },
+        { id: 'prijave-napak', naslov: 'Prijave napak (klepet)' },
         { id: 'tocke', naslov: 'Točke' },
         { id: 'uvoz', naslov: 'Uvoz zapisnikov' },
         { id: 'nepopolni', naslov: `Nepopolni zapisniki (${opozorila.length})` },
@@ -885,6 +888,9 @@ export default function Administracija() {
             </Razdelek>
             <Razdelek id="preverjeni">
               <Preverjeni />
+              <div className="mt-6">
+                <NarocilaPlakatov />
+              </div>
             </Razdelek>
             <Razdelek id="posnetki">
               <Posnetki />
@@ -912,6 +918,9 @@ export default function Administracija() {
             </Razdelek>
             <Razdelek id="zelje-lig">
               <ZeljeLig />
+            </Razdelek>
+            <Razdelek id="prijave-napak">
+              <PrijaveNapak />
             </Razdelek>
             <Razdelek id="sponzorji">
               <Sponzorji />

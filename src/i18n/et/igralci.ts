@@ -326,7 +326,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       cena: '9,99 € aastas või 29 € igaveseks',
       letna: '9,99 € aastas',
       dozivljenjska: '29 € igaveseks',
-      znacka: '+ trükitud märk sinu nimega (5 €, postikulu 2 € SI / 4 € EL, ainult EL)',
+      znacka: '+ trükitud 40 × 60 cm plakat sinu nimega, saadetud koju (EL), hinna sees',
       imeNaZnacki: 'Nimi märgil (kuni 30 märki)',
       star18: 'Kinnitan, et olen vähemalt 18 aastat vana.',
       odpoved: 'Nõustun, et sisu antakse kohe ja sellega kaotan 14 päeva taganemisõiguse.',
@@ -701,5 +701,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       v_delu: 'Sinu highlight-video on töös.',
       oddan: 'Sinu highlight-video on valmis.',
     },
+  },
+  plakat: {
+    oznaka: 'Kinnitatud mängija',
   },
 }

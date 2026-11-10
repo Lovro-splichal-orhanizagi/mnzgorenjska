@@ -326,7 +326,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       cena: '9,99 € pro Jahr oder 29 € für immer',
       letna: '9,99 € pro Jahr',
       dozivljenjska: '29 € für immer',
-      znacka: '+ gedrucktes Abzeichen mit Namen (5 €, Porto 2 € SI / 4 € EU, nur EU)',
+      znacka: '+ gedrucktes Poster 40 × 60 cm mit deinem Namen, nach Hause geschickt (EU), inklusive',
       imeNaZnacki: 'Name auf dem Abzeichen (bis 30 Zeichen)',
       star18: 'Ich bestätige, dass ich mindestens 18 Jahre alt bin.',
       odpoved: 'Ich stimme zu, dass der Inhalt sofort bereitgestellt wird, und verliere damit mein 14-tägiges Widerrufsrecht.',
@@ -701,5 +701,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       v_delu: 'Dein Highlight-Video wird geschnitten.',
       oddan: 'Dein Highlight-Video ist fertig.',
     },
+  },
+  plakat: {
+    oznaka: 'Verifizierter Spieler',
   },
 }

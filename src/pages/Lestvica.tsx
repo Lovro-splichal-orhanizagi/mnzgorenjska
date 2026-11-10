@@ -1,6 +1,7 @@
 import CakajocKrog from '../components/CakajocKrog'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import ImeLastnika from '../components/ImeLastnika'
 import ImeEkipe from '../components/ImeEkipe'
 import { useAuth } from '../lib/useAuth'
@@ -14,6 +15,7 @@ import { useNaslov, zDrzavo } from '../lib/naslov'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { sestejOdKroga } from '../lib/lestvica'
 import MojeMiniLige from '../components/MojeMiniLige'
+import LestvicaNapovediLige from '../components/LestvicaNapovediLige'
 import NavijaciKlubov from '../components/NavijaciKlubov'
 import { t, datum } from '../i18n'
 import { izvor } from '../lib/platforma'
@@ -90,11 +92,11 @@ export default function Lestvica() {
   // Napaka pri krogih (zmagovalec, lestvica kroga) ne sme skriti skupne lestvice.
   const [napakaKrogov, setNapakaKrogov] = useState<string | null>(null)
   const uporabnikId = session?.user.id
-  // Zavihek pod lestvico: ekipe ali navijači klubov. `#fans` odpre navijače
-  // (povezava s strani kluba).
+  // Zavihek pod lestvico: ekipe, navijači klubov ali napovedi. `#fans` odpre
+  // navijače (povezava s strani kluba), `#predictions` napovedi.
   const { hash } = useLocation()
-  const [zavihek, setZavihek] = useState<'ekipe' | 'navijaci'>(
-    hash === '#fans' ? 'navijaci' : 'ekipe',
+  const [zavihek, setZavihek] = useState<'ekipe' | 'navijaci' | 'napovedi'>(
+    hash === '#fans' ? 'navijaci' : hash === '#predictions' ? 'napovedi' : 'ekipe',
   )
 
   useEffect(() => {
@@ -395,7 +397,7 @@ export default function Lestvica() {
             še zmeraj svojo lestvico. */}
         <div id="fans" className="flex scroll-mt-20 flex-wrap items-center justify-between gap-2">
           <div role="tablist" className="inline-flex rounded-lg bg-white/5 p-0.5">
-            {(['ekipe', 'navijaci'] as const).map((z) => (
+            {(['ekipe', 'navijaci', 'napovedi'] as const).map((z) => (
               <button
                 key={z}
                 role="tab"
@@ -405,7 +407,9 @@ export default function Lestvica() {
               >
                 {z === 'ekipe'
                   ? t('lestvice.lestvica.zavihekEkipe')
-                  : t('lestvice.lestvica.zavihekNavijaci')}
+                  : z === 'navijaci'
+                    ? t('lestvice.lestvica.zavihekNavijaci')
+                    : t('aplikacija.meni.napovedi')}
               </button>
             ))}
           </div>
@@ -431,6 +435,13 @@ export default function Lestvica() {
 
         {zavihek === 'navijaci' ? (
           <NavijaciKlubov tekmovanjeId={tekmovanjeId} />
+        ) : zavihek === 'napovedi' ? (
+          <div className="space-y-3">
+            <LestvicaNapovediLige tekmovanjeId={tekmovanjeId ?? null} />
+            <Link to="/predictions" className="gumb-glavni inline-block text-sm">
+              {t('lestvice.napovedi.naslov')}
+            </Link>
+          </div>
         ) : (
           <>
             {(zmagovalecKroga || mojeMesto >= 0) && (

@@ -2603,6 +2603,50 @@ export type Database = {
           },
         ]
       }
+      narocila_plakatov: {
+        Row: {
+          created_at: string
+          id: number
+          igralec: number
+          naslov: Json
+          opomba: string | null
+          poslano_at: string | null
+          status: string
+          stripe_checkout_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          igralec: number
+          naslov: Json
+          opomba?: string | null
+          poslano_at?: string | null
+          status?: string
+          stripe_checkout_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          igralec?: number
+          naslov?: Json
+          opomba?: string | null
+          poslano_at?: string | null
+          status?: string
+          stripe_checkout_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "narocila_plakatov_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       narocila_znack: {
         Row: {
           created_at: string
@@ -8711,6 +8755,20 @@ export type Database = {
           vrsta: string
         }[]
       }
+      admin_narocila_plakatov: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          eposta: string
+          id: number
+          igralec: number
+          ime: string
+          naslov: Json
+          opomba: string
+          poslano_at: string
+          status: string
+        }[]
+      }
       admin_narocila_znack: {
         Args: never
         Returns: {
@@ -8727,6 +8785,10 @@ export type Database = {
           pravica_status: string
           status: string
         }[]
+      }
+      admin_nastavi_narocilo_plakata: {
+        Args: { p_id: number; p_opomba?: string; p_status: string }
+        Returns: undefined
       }
       admin_nastavi_narocilo_znacke: {
         Args: { p_id: number; p_opomba?: string; p_status: string }
@@ -8981,6 +9043,26 @@ export type Database = {
           zadnja: string
         }[]
       }
+      admin_prijave_napak: {
+        Args: { p_stanje?: string }
+        Returns: {
+          competition_id: number
+          created_at: string
+          id: number
+          igralec: string
+          klub: string
+          kontakt: string
+          liga: string
+          liga_slug: string
+          opis: string
+          opomba: string
+          player_id: number
+          pravilno: string
+          reseno_at: string
+          stanje: string
+          vrsta: string
+        }[]
+      }
       admin_prijave_sporocil: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -9012,6 +9094,10 @@ export type Database = {
         }[]
       }
       admin_rast: { Args: { p_od?: string }; Returns: Json }
+      admin_resi_prijavo_napake: {
+        Args: { p_id: number; p_opomba?: string; p_stanje: string }
+        Returns: undefined
+      }
       admin_rast_lig: {
         Args: { p_tednov?: number }
         Returns: {
@@ -10077,6 +10163,20 @@ export type Database = {
           zmage: number
         }[]
       }
+      lestvica_napovedi_drzave: {
+        Args: { p_dni?: number; p_drzava: string; p_limit?: number }
+        Returns: {
+          display_name: string
+          je_moj: boolean
+          kralj: boolean
+          kron: number
+          mesto: number
+          ocenjenih: number
+          razpletov: number
+          tocke: number
+          tocnih: number
+        }[]
+      }
       lestvica_napovedi_lige: {
         Args: { p_krog?: number; p_tekmovanje: number }
         Returns: {
@@ -10359,6 +10459,10 @@ export type Database = {
       oznaci_odhod_igralca: {
         Args: { p_odsel: boolean; p_player_id: number }
         Returns: undefined
+      }
+      plakat_iz_placila: {
+        Args: { p_checkout: string; p_naslov: Json }
+        Returns: string
       }
       podeli_samodejne_poznavalce: { Args: never; Returns: number }
       podpora_brez_sumnikov: { Args: { t: string }; Returns: string }
@@ -11238,6 +11342,10 @@ export type Database = {
         }[]
       }
       sporocila_neprebrana: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      stevec_uporabnikov: {
         Args: Record<PropertyKey, never>
         Returns: number
       }

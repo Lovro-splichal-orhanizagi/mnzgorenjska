@@ -28,6 +28,8 @@ import type { Pozicija } from '../lib/tipi'
 import { jezikSlovarja, t, tx, datum } from '../i18n'
 import Sponzor from '../components/Sponzor'
 import AppPromo, { appPromoAktivna } from '../components/AppPromo'
+import VrhNapovediDrzave from '../components/VrhNapovediDrzave'
+import Stevec10k from '../components/Stevec10k'
 
 /** Kar liga čaka od skupnosti (asistence, pozicije). */
 interface Statistika {
@@ -105,7 +107,7 @@ function najboljsiKroga(krogId: number) {
 }
 
 export default function Domov() {
-  const { id: tekmovanjeId, slug, tekmovanje, tekmovanja, brezLig } = useTekmovanje()
+  const { id: tekmovanjeId, slug, tekmovanje, tekmovanja, brezLig, drzava } = useTekmovanje()
   // Naslovnica privzete lige ima osnovni naslov; druge lige svojega, sicer bi
   // bile vse naslovnice za iskalnik ista stran.
   useNaslov(slug === PRIVZETO ? null : zDrzavo(tekmovanje))
@@ -545,6 +547,8 @@ export default function Domov() {
         </section>
       )}
 
+      <Stevec10k />
+
       {/* Prvi dnevi po izidu aplikacij: kartica z aplikacijama namesto trgovine
           (trgovina je ves čas v meniju in nogi); potem se trgovina vrne. */}
       {appPromoAktivna() && <AppPromo />}
@@ -784,6 +788,9 @@ export default function Domov() {
             </Link>
           </Razdelek>
         )}
+
+        {/* Vrh napovedovalcev države (sezona); brez ocenjene napovedi se skrije. */}
+        {tekmovanjeId != null && <VrhNapovediDrzave drzava={drzava} />}
 
         {/* Pivska lestvica: vrh podpornikov s sporočili. Kot gumb za pivo le
             na spletu (Pivo.tsx); v aplikaciji izostane. */}

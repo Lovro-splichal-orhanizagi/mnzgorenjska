@@ -328,7 +328,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       cena: '9,99 € al año o 29 € para siempre',
       letna: '9,99 € al año',
       dozivljenjska: '29 € para siempre',
-      znacka: '+ insignia impresa con tu nombre (5 €, envío 2 € SI / 4 € UE, solo UE)',
+      znacka: '+ póster impreso de 40 × 60 cm con tu nombre, enviado a casa (UE), incluido',
       imeNaZnacki: 'Nombre en la insignia (hasta 30 caracteres)',
       star18: 'Confirmo que tengo al menos 18 años.',
       odpoved: 'Acepto que el contenido se facilite de inmediato y que así pierdo mi derecho de desistimiento de 14 días.',
@@ -703,5 +703,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       v_delu: 'Tu vídeo de jugadas se está montando.',
       oddan: 'Tu vídeo de jugadas está listo.',
     },
+  },
+  plakat: {
+    oznaka: 'Jugador verificado',
   },
 }

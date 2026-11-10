@@ -326,7 +326,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       cena: 'Yıllık 9,99 € veya ömür boyu 29 €',
       letna: 'Yıllık 9,99 €',
       dozivljenjska: 'Ömür boyu 29 €',
-      znacka: '+ adının basılı olduğu rozet (5 €, kargo 2 € SI / 4 € AB, sadece AB)',
+      znacka: '+ adınla basılmış 40 × 60 cm poster, evine gönderilir (AB), fiyata dahil',
       imeNaZnacki: 'Rozetteki isim (en fazla 30 karakter)',
       star18: 'En az 18 yaşında olduğumu onaylıyorum.',
       odpoved: 'İçeriğin hemen sağlanmasını ve bu nedenle 14 günlük cayma hakkımı kaybetmeyi kabul ediyorum.',
@@ -701,5 +701,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       v_delu: 'Highlight videon hazırlanıyor.',
       oddan: 'Highlight videon hazır.',
     },
+  },
+  plakat: {
+    oznaka: 'Doğrulanmış oyuncu',
   },
 }

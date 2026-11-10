@@ -325,6 +325,20 @@
   "👑 n" v vrstici obeh lestvic napovedi, vrstica "Kralj napovedi" nad njima;
   krona kralja sezone še v glavni lestvici mini lige in glavi njene strani
   (`useKraljMiniLige`, le člani).
+- **Lestvica napovedi države** (migracija 20261110120100):
+  `lestvica_napovedi_drzave(drzava, dni, limit)` (anon + authenticated,
+  security definer) sešteje napovedi vseh aktivnih lig države
+  (`countries.code`) po pravilih `lestvica_napovedi_lige` (lastnik nehišne
+  ekipe v ligi tekme, tekoča sezona lige, kontumacija in tekma brez izida ne
+  štejeta; točke, nato točni). Vrne iste stolpce kot lestvica lige (`mesto`,
+  prikazno ime, točke, točni, razpleti, ocenjene, `je_moj`, `kron`, `kralj`),
+  **nikoli user_id**: vrh `limit` (privzeto 50, največ 100) in klicateljevo
+  vrstico. `dni` (vmesnik 7) šteje le tekme zadnjih dni; `kron` so vedno krone
+  krogov sezone vseh lig države (isto pravilo kot `kralji_krogov_lige`, a le
+  za kroge z napovedmi), `kralj` vodilni pogleda. Gre od `napovedi` po ključih
+  (`offset 0`), Madžarska ~50 ms. Vmesnik: zavihek Napovedi na `/national`
+  (`?pogled=napovedi`, `LestvicaNapovediDrzave.tsx`, sezona ali zadnjih 7 dni)
+  in vrh 5 na naslovnici (`VrhNapovediDrzave.tsx`, skrit brez ocenjene napovedi).
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
 - `statistika_igralcev` → statistika igralca po ligi in sezoni (nastopi,
   minute, goli, kartoni, čiste mreže, točke, asistence, zadnji krog, forma).
@@ -655,6 +669,11 @@
   - Lastnik potrjenega profila, ki ni preverjen, pri vklopljenem stikalu
     vidi nakup (spodaj); v aplikaciji je skrit (`jeNativno`, pravila trgovin).
   - **Faza 2: Stripe Checkout** (testni način, migracija 20261012210100).
+    **Od 9. 11. 2026 namesto značke plakat 40 × 60 cm** ob doživljenjskem nakupu (v ceni,
+    EU): Checkout vedno pobere naslov, webhook kliče `plakat_iz_placila`, tabela
+    `narocila_plakatov` (brez tujih ključev na players/preverjeni_racuni zaradi kataloga
+    FCF), admin Preverjeni → Plakati (datoteka za tisk 200 dpi iz `cv_igralca`). Spodnji
+    opis značke velja za stara naročila.
     Kartica "Preveri profil": letno (9,99 €) ali za vedno (29 €), pri
     doživljenjski še "+ natisnjena značka" (5 €, poštnina 2 € SI / 4 € EU)
     z izbiro dostave "Slovenija / druga država EU" (seja dobi le to tarifo in
@@ -1024,7 +1043,19 @@
   (`opozorila.yml`, `VRSTA=liga-zivi` → `posli-opomnik`,
   `kandidati_za_zivo_ligo`, `zelja_lige_poslana`: uspeh pobriše e-naslov,
   neuspeh največ trikrat). Neobveščene z e-naslovom pg_cron po 12 mesecih
-  izbriše
+  izbriše. Isto tabelo piše klepet podpore prek `zahtevaj_ligo`
+- **Orodja klepeta podpore** (HelpStack SERVER_SIDE, javni ključ; migraciji
+  20261004142300 in 20261110120300): bralna `najdi_igralca`, `tekme_kluba`,
+  `liga`, `tocke_igralca` (točke po krogih tekoče sezone z razčlenitvijo po
+  pravilih `tocke_za_nastop`), `stanje_tekme` (zapisnik, izid, vir, razlog,
+  glasovanje o asistencah); pisalni `prijavi_napako` (zaprta `prijave_napak`,
+  ista prijava v uri ni nova, 5 na uro na stik, 40 na uro vseh; admin:
+  Administracija → Prijave napak, `admin_prijave_napak`,
+  `admin_resi_prijavo_napake`; pg_cron po 12 mesecih izbriše) in
+  `zahtevaj_ligo` (najprej poišče vpisane lige, tudi neaktivne; željo zapiše
+  prek `zelim_ligo` šele brez zadetka ali z `vztrajam`). V brskalniku
+  (`src/lib/podporaOrodja.ts`, CLIENT_SIDE) je `moja_ekipa_krog`: ekipa
+  prijavljenega za krog z njegovo sejo. Preizkus: `supabase/tests/podpora-orodja-2.sql`
 - **Pivski zid** (`/beers`, migracija 20261013150100): `piva` hrani nakupe
   Buy Me a Coffee (funkcija `bmc-pivo`, servisni ključ, `zunanji_id` = BMC
   `data.id`, idempotentno; vračilo postavi `vracilo`, `live_mode = false` je

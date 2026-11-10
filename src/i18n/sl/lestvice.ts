@@ -123,6 +123,13 @@ export const lestvice = {
     vrhOpomba:
       'Točke so brez asistenc: asistence potrdi glasovanje, ki v večini lig še ne teče, zato bi bile lige v neenakem položaju. Lige so odigrale različno število krogov.',
     vrhPrazno: 'V tekoči sezoni še ni odigranih tekem.',
+    napovediUvod: 'Najboljši napovedovalci vseh lig. Točen izid 3 točke, pravi razplet 1.',
+    napovediSezona: 'Sezona',
+    napovedi7dni: 'Zadnjih 7 dni',
+    napovediPrazno7: 'V zadnjih 7 dneh še ni ocenjenih napovedi.',
+    napovediOcenjenih: 'Ocenjenih napovedi: {n}',
+    vrhNapovedi: 'Najboljši napovedovalci',
+    vrhNapovediVse: 'Cela lestvica napovedi',
   },
 
   miniLige: {

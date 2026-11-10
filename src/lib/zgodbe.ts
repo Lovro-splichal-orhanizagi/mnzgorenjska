@@ -308,3 +308,118 @@ export async function narisiSezono(d: MojaSezona): Promise<Blob | null> {
   noga(c, t('igralci.zgodbe.noga'))
   return vBlob(p)
 }
+
+// Plakat 40 × 60 cm za tisk (ob doživljenjskem nakupu): 200 dpi = 3150 × 4724.
+// Riše se v logičnih enotah 1080 × 1620 in poveča, da veljajo iste mere kot pri zgodbah.
+export const PLAKAT_W = 1080
+export const PLAKAT_H = 1620
+const PLAKAT_POVECAVA = 3150 / PLAKAT_W
+
+export type PodatkiPlakata = {
+  ime: string
+  vzdevek: string | null
+  pozicija: string | null
+  klub: { ime: string; logo: string | null } | null
+  liga: { ime: string } | null
+  sezone: Array<{ sezona: string; liga: string; klub: string; tekme: number; minute: number; goli: number; asistence: number | null }>
+}
+
+/** `povecava`: privzeto za tisk (200 dpi); manjša za predogled na strani /verified. */
+export async function narisiPlakat(d: PodatkiPlakata, povecava = PLAKAT_POVECAVA): Promise<Blob | null> {
+  await naloziPisavo()
+  const p = document.createElement('canvas')
+  p.width = Math.round(PLAKAT_W * povecava)
+  p.height = Math.round(PLAKAT_H * povecava)
+  const c = p.getContext('2d')!
+  c.scale(povecava, povecava)
+
+  // Podlaga: kot zgodbe, v razmerju 2 : 3.
+  const g = c.createLinearGradient(0, 0, 0, PLAKAT_H)
+  g.addColorStop(0, '#0b1a16')
+  g.addColorStop(1, '#020617')
+  c.fillStyle = g
+  c.fillRect(0, 0, PLAKAT_W, PLAKAT_H)
+  c.fillStyle = 'rgba(255,255,255,0.025)'
+  for (let x = 0; x < PLAKAT_W; x += 180) c.fillRect(x, 0, 90, PLAKAT_H)
+  const sij = c.createRadialGradient(PLAKAT_W * 0.8, 100, 0, PLAKAT_W * 0.8, 100, 800)
+  sij.addColorStop(0, 'rgba(247,220,140,0.25)')
+  sij.addColorStop(1, 'rgba(247,220,140,0)')
+  c.fillStyle = sij
+  c.fillRect(0, 0, PLAKAT_W, PLAKAT_H)
+  c.strokeStyle = 'rgba(247,220,140,0.6)'
+  c.lineWidth = 5
+  c.strokeRect(40, 40, PLAKAT_W - 80, PLAKAT_H - 80)
+
+  const [logo, grb] = await Promise.all([slika('/logo/slff-grb.png'), slika(d.klub?.logo)])
+  if (logo) c.drawImage(logo, 90, 100, 100, 100)
+  c.textAlign = 'left'
+  c.fillStyle = ZLATO
+  napisi(c, t('igralci.plakat.oznaka').toUpperCase(), 215, 145, 600, (px) => oz(800, px), 46)
+  c.fillStyle = 'rgba(226,232,240,0.85)'
+  napisi(c, [d.klub?.ime, d.liga?.ime].filter(Boolean).join(' · '), 215, 190, 640, (px) => sans(500, px), 30)
+  if (grb) c.drawImage(grb, PLAKAT_W - 210, 95, 120, 120)
+
+  // Ime čez vso širino, vzdevek in pozicija pod njim.
+  c.fillStyle = '#ffffff'
+  napisi(c, d.ime.toUpperCase(), 90, 410, 820, (px) => oz(800, px), 150, 80)
+  const sir = Math.min(c.measureText(d.ime.toUpperCase()).width, 820)
+  kljukica(c, 90 + sir + 56, 360, 38)
+  c.fillStyle = 'rgba(226,232,240,0.9)'
+  napisi(c, [d.vzdevek ? `"${d.vzdevek}"` : null, d.pozicija].filter(Boolean).join(' · '), 90, 475, 900, (px) => sans(600, px), 40)
+
+  // Kariera skupaj.
+  const sk = d.sezone.reduce(
+    (a, s) => ({ t: a.t + (s.tekme ?? 0), m: a.m + (s.minute ?? 0), g: a.g + (s.goli ?? 0), as: a.as + (s.asistence ?? 0) }),
+    { t: 0, m: 0, g: 0, as: 0 },
+  )
+  const w = (PLAKAT_W - 180 - 3 * 24) / 4
+  ;([
+    [stevilo(sk.t), t('igralci.zgodbe.tekme'), false],
+    [`${stevilo(sk.m)}′`, t('igralci.zgodbe.minute'), false],
+    [stevilo(sk.g), t('igralci.zgodbe.goli'), true],
+    [stevilo(sk.as), t('igralci.zgodbe.asistence'), false],
+  ] as const).forEach(([v, n, zl], i) => ploscica(c, 90 + i * (w + 24), 540, w, 200, v, n, zl))
+
+  // Sezone (največ 8, najnovejše zgoraj).
+  c.textAlign = 'left'
+  c.fillStyle = ZLATO
+  c.font = oz(800, 44)
+  c.fillText(t('igralci.cv.kariera').toUpperCase(), 90, 830)
+  // Stolpci: sezona, klub in liga levo; tekme, goli, asistence desno poravnani (desni rob).
+  const desno = [760, 880, 990]
+  c.fillStyle = 'rgba(203,213,225,0.8)'
+  c.textAlign = 'left'
+  napisi(c, t('igralci.cv.sezona').toUpperCase(), 90, 880, 190, (px) => sans(700, px), 24, 14)
+  napisi(c, t('igralci.cv.klubLiga').toUpperCase(), 300, 880, 340, (px) => sans(700, px), 24, 14)
+  c.textAlign = 'right'
+  ;[t('igralci.zgodbe.tekme'), t('igralci.zgodbe.goli'), t('igralci.zgodbe.asistence')].forEach((n, i) =>
+    napisi(c, n.toUpperCase(), desno[i], 880, 100, (px) => sans(700, px), 22, 12),
+  )
+  // Manj sezon, večje vrstice: tabela zapolni prostor do noge.
+  const sezone = d.sezone.slice(0, 8)
+  const vrsta = Math.min(110, Math.floor(560 / Math.max(1, sezone.length)))
+  const pisava = Math.min(40, Math.round(vrsta * 0.42))
+  sezone.forEach((s, i) => {
+    const y = 900 + vrsta * (i + 1) - Math.round(vrsta * 0.32)
+    c.fillStyle = i % 2 ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.06)'
+    c.fillRect(80, 900 + vrsta * i + 12, PLAKAT_W - 160, vrsta - 8)
+    c.textAlign = 'left'
+    c.fillStyle = '#ffffff'
+    napisi(c, s.sezona, 90, y, 190, (px) => sans(700, px), pisava)
+    napisi(c, `${s.klub} · ${s.liga}`, 300, y, 340, (px) => sans(500, px), Math.round(pisava * 0.9), 16)
+    c.textAlign = 'right'
+    napisi(c, stevilo(s.tekme ?? 0), desno[0], y, 100, (px) => sans(700, px), pisava)
+    c.fillStyle = ZLATO
+    napisi(c, stevilo(s.goli ?? 0), desno[1], y, 100, (px) => sans(800, px), pisava)
+    c.fillStyle = '#ffffff'
+    napisi(c, stevilo(s.asistence ?? 0), desno[2], y, 100, (px) => sans(700, px), pisava)
+  })
+
+  c.textAlign = 'center'
+  c.fillStyle = 'rgba(203,213,225,0.85)'
+  napisi(c, t('igralci.cv.noga'), PLAKAT_W / 2, PLAKAT_H - 140, 900, (px) => sans(600, px), 30)
+  c.fillStyle = ZLATO
+  c.font = oz(800, 64)
+  c.fillText('SLFF.EU', PLAKAT_W / 2, PLAKAT_H - 75)
+  return new Promise<Blob | null>((r) => p.toBlob((b) => r(b), 'image/png'))
+}

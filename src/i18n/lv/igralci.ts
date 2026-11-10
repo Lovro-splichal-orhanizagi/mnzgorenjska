@@ -331,7 +331,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       cena: '9,99 € gadā vai 29 € uz visiem laikiem',
       letna: '9,99 € gadā',
       dozivljenjska: '29 € uz visiem laikiem',
-      znacka: '+ drukāta nozīmīte ar vārdu (5 €, pasts 2 € SI / 4 € ES, tikai ES)',
+      znacka: '+ drukāts 40 × 60 cm plakāts ar tavu vārdu, nosūtīts uz mājām (ES), cenā',
       imeNaZnacki: 'Vārds uz nozīmītes (līdz 30 rakstzīmēm)',
       star18: 'Apstiprinu, ka man ir vismaz 18 gadu.',
       odpoved: 'Piekrītu, ka saturs tiek nodrošināts nekavējoties, un ar to zaudēju 14 dienu atteikuma tiesības.',
@@ -706,5 +706,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       v_delu: 'Tavs highlight video tiek veidots.',
       oddan: 'Tavs highlight video ir gatavs.',
     },
+  },
+  plakat: {
+    oznaka: 'Verificēts spēlētājs',
   },
 }
