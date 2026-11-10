@@ -1026,7 +1026,7 @@
   neuspeh največ trikrat). Neobveščene z e-naslovom pg_cron po 12 mesecih
   izbriše. Isto tabelo piše klepet podpore prek `zahtevaj_ligo`
 - **Orodja klepeta podpore** (HelpStack SERVER_SIDE, javni ključ; migraciji
-  20261004142300 in 20261110001100): bralna `najdi_igralca`, `tekme_kluba`,
+  20261004142300 in 20261110120300): bralna `najdi_igralca`, `tekme_kluba`,
   `liga`, `tocke_igralca` (točke po krogih tekoče sezone z razčlenitvijo po
   pravilih `tocke_za_nastop`), `stanje_tekme` (zapisnik, izid, vir, razlog,
   glasovanje o asistencah); pisalni `prijavi_napako` (zaprta `prijave_napak`,
