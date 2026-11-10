@@ -13232,6 +13232,42 @@ preveri(
   preveri('anketa plačila: en klik pošlje vse odkljukane, z omejenim številom krogov',
     adminSrc.includes('for (let krog = 0; krog < 8; krog++)') && adminSrc.includes('izberi vse prikazane') &&
       adminSrc.includes('user_ids: izbraniAnketa, suho: false'))
+
+  // Promocija preverjenega profila (SLF-383): lasten jezik ali angleščina, cena iz Stripa,
+  // odjava v nogi, glavi in čistopisu; le obljubljene funkcije (brez scoutov, IG zgodb, Evrope).
+  const cenePromo = { letna: 999, dozivljenjska: 2900, valuta: 'eur' }
+  const promo = pivoLige.map((l) => [l, E.sestaviPromoPreverjen(l, { display_name: 'Ana Novak' }, cenePromo)])
+  const slabPromo = promo.find(([l, m]) => {
+    const j = E.jezikPromoPreverjen(l)
+    return !E.PROMO_PREVERJEN[j] || (E.jezikLige(l) !== j && j !== 'en') ||
+      m.odjava !== `https://slff.eu/reminders?t=${l.slug}` || !m.html.includes(`href="${m.odjava}"`) ||
+      !m.besedilo.includes(`: ${m.odjava}\n`) || !m.besedilo.includes('Ana,') ||
+      !m.html.includes(`https://slff.eu/verified?t=${l.slug}`) ||
+      !m.besedilo.includes(E.izpisCene(999, 'eur', j)) || !m.besedilo.includes(E.izpisCene(2900, 'eur', j)) ||
+      /\{letna\}|\{dozivljenjska\}/.test(m.besedilo) ||
+      (j !== 'sl' && slovensko.test(brezPovezav(m.naslov + m.html)))
+  })
+  preveri('e-pošta: promocija preverjenega profila (jezik, cena iz Stripa, odjava, povezava)', !slabPromo,
+    slabPromo ? `${slabPromo[0].drzava}: ${slabPromo[1].naslov}` : '')
+  preveri('e-pošta: promocija ne obljublja scoutov, IG zgodb ali prikaza po Evropi',
+    !/scout|skaut|instagram|\bIG\b|europ|evrop|európ|európ/i.test(JSON.stringify(E.PROMO_PREVERJEN)))
+  // Fotografija je brezplačna že ob prevzemu; plačljivo je naslovna slika. Brez moških oblik (ženske lige).
+  preveri('e-pošta: promocija ne prodaja fotografije in nagovarja nevtralno',
+    !/photo|foto|φωτογραφ|prislužil|prevzel|zaradio|preuzeo|odmakal|prevzal|uređuješ:|urejaš sam|upravuješ sám/i.test(JSON.stringify(E.PROMO_PREVERJEN)))
+  const migPromo = readFileSync(new URL('../supabase/migrations/20261110120000_promo_preverjen.sql', import.meta.url), 'utf8')
+  preveri('promocija: SQL izpusti mladoletne, odjavljene, preverjene, admine, hišo, anketo; le service_role',
+    ['izlozba_odrasla_oseba', 'brez_opomnikov', 'preverjeni_racuni', 'is_admin', 'testerji', 'hisna', "'anketa-placila'",
+      'je_omejen', 'podvojen_naslov', "'neaktiven'", 'agent.zaprte_tabele', 'pg_advisory_xact_lock', 'to service_role']
+      .every((x) => migPromo.includes(x)) && !/to (anon|authenticated)/.test(migPromo) &&
+      migPromo.includes('cardinality(user_ids) between 1 and 20'))
+  const promoBlok = fnAnketa.slice(fnAnketa.indexOf("if (vrsta === 'promo-preverjen')"), fnAnketa.indexOf('// `novost-mini-lige`'))
+  preveri('promocija: od info@, odobritev osnutka in paketa, Stripe v živo in /verified 200 pred pošiljanjem',
+    promoBlok.includes('poslji(ANKETA_FROM, k.email, s, undefined, smtpInfo)') && !promoBlok.includes('EMAIL_FROM') &&
+      promoBlok.includes("['Lovro', 'Nejc', 'Luka'].includes(odobril)") && promoBlok.includes('vhod.osnutek_sha !== osnutek.sha') &&
+      promoBlok.includes('!cene.live') && promoBlok.includes('stran !== 200') &&
+      promoBlok.indexOf("rpc('promo_preverjen_zasedi'") < promoBlok.indexOf('poslji(ANKETA_FROM, k.email') &&
+      // odgovor brez naslovov in imen
+      !/email:\s*k\.email|display_name:\s*k\.display_name\s*[,}]\s*\)?\s*$/m.test(promoBlok.slice(promoBlok.indexOf('return json({\n      paket'))))
 }
 
 // --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------
