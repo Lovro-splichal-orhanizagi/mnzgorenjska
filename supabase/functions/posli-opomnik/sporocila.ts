@@ -5005,9 +5005,12 @@ export const PROMO_PREVERJEN: Partial<Record<Jezik, BesedilaPromoPreverjen>> = {
 export const jezikPromoPreverjen = (liga: Pick<Liga, 'drzava'>): Jezik =>
   PROMO_PREVERJEN[jezikLige(liga)] ? jezikLige(liga) : 'en'
 
-/** Cena iz Stripa v jeziku maila, npr. "9,99 €" ali "€9.99". */
+/** Cena iz Stripa v jeziku maila, npr. "9,99 €" ali "€29" (cele brez decimalk). */
 export function izpisCene(centi: number, valuta: string, j: Jezik): string {
-  return new Intl.NumberFormat(LOKALE[j], { style: 'currency', currency: valuta.toUpperCase() }).format(centi / 100)
+  const cela = centi % 100 === 0
+  return new Intl.NumberFormat(LOKALE[j], {
+    style: 'currency', currency: valuta.toUpperCase(), minimumFractionDigits: cela ? 0 : 2, maximumFractionDigits: cela ? 0 : 2,
+  }).format(centi / 100)
 }
 
 export function sestaviPromoPreverjen(
