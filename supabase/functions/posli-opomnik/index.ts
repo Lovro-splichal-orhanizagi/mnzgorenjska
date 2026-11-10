@@ -432,6 +432,7 @@ Deno.serve(async (req) => {
       if (error) return json({ error: error.message }, 500)
       if (!id) return json({ ...povzetek, paket: null, sporocilo: 'Ni ustreznih prejemnikov za nov paket.' })
       const { data: nov } = await db.from('promo_preverjen_paketi').select('id, user_ids, created_at, odobril, odobren_at').eq('id', id).single()
+      if (!nov) return json({ error: `Paketa ${id} ni mogoče prebrati.` }, 500)
       return json({ ...povzetek, paket: opisPaketa(nov, poId) })
     }
 
@@ -455,10 +456,11 @@ Deno.serve(async (req) => {
       if (st?.osnutek_sha !== osnutek.sha) return json({ error: 'Paket je bil odobren za drug osnutek.' }, 409)
     } else {
       if (Date.parse(paket.created_at) < Date.now() - 7 * 864e5) return json({ error: 'Paket je starejši od 7 dni; pripravi novega.' }, 409)
-      const { error } = await db.from('promo_preverjen_paketi')
+      const { data: odobren, error } = await db.from('promo_preverjen_paketi')
         .update({ odobril, odobritev, osnutek_sha: osnutek.sha, odobren_at: new Date().toISOString() })
-        .eq('id', paketId).is('odobren_at', null)
+        .eq('id', paketId).is('odobren_at', null).select('id')
       if (error) return json({ error: error.message }, 500)
+      if (!odobren?.length) return json({ error: 'Paket je medtem odobril nekdo drug; poskusi znova.' }, 409)
     }
     // Ob pošiljanju vsakega še enkrat po istem pravilu (odjava, preverjen, …).
     let poslano = 0
@@ -472,14 +474,18 @@ Deno.serve(async (req) => {
       zaPoslati.push(k)
     }
     // Funkcija ima 60 s, mail traja ~4 s: 10 na klic, naslednji klic nadaljuje isti paket.
+    const izpadliPrej = izpadli.length
     for (const k of zaPoslati.slice(0, 10)) {
       if (poslano + napak > 0) await new Promise((r) => setTimeout(r, 500))
       const s = await sOdjavo(db, k.user_id, sestaviPromoPreverjen(
         { slug: k.liga_slug ?? '', oznaka: '', drzava: k.drzava }, { display_name: k.display_name }, cene))
+      // Promocija brez delujoče odjave v enem kliku ne gre ven.
+      if (!s.odjava || !new URL(s.odjava).searchParams.get('z')) { izpadli.push('brez_zetona_odjave'); continue }
       const { data: zid, error: zErr } = await db.rpc('promo_preverjen_zasedi', { p_user_id: k.user_id, p_email: k.email, p_meja: PROMO_MEJA })
       if (zErr) return json({ error: `email_log: ${zErr.message}`, poslano, napak }, 500)
       if (Number(zid) === -1) break
       if (Number(zid) === 0) { zasedenih++; continue }
+      if (Number(zid) === -2) { izpadli.push('ni_vec_ustrezen'); continue }
       const rez = await poslji(ANKETA_FROM, k.email, s, undefined, smtpInfo)
       if (rez.napaka) napak++
       else poslano++
@@ -497,7 +503,7 @@ Deno.serve(async (req) => {
       napak,
       zasedenih,
       izpadli_ob_preverbi: stej(izpadli),
-      ostalo_v_paketu: Math.max(0, zaPoslati.length - poslano - zasedenih - napak),
+      ostalo_v_paketu: Math.max(0, zaPoslati.length - poslano - zasedenih - napak - (izpadli.length - izpadliPrej)),
       ze_poslanih: Number(potem.data ?? 0),
       meja: PROMO_MEJA,
     })

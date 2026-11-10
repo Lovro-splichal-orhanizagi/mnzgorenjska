@@ -13251,6 +13251,9 @@ preveri(
     slabPromo ? `${slabPromo[0].drzava}: ${slabPromo[1].naslov}` : '')
   preveri('e-pošta: promocija ne obljublja scoutov, IG zgodb ali prikaza po Evropi',
     !/scout|skaut|instagram|\bIG\b|europ|evrop|európ|európ/i.test(JSON.stringify(E.PROMO_PREVERJEN)))
+  // Fotografija je brezplačna že ob prevzemu; plačljivo je naslovna slika. Brez moških oblik (ženske lige).
+  preveri('e-pošta: promocija ne prodaja fotografije in nagovarja nevtralno',
+    !/photo|foto|φωτογραφ|prislužil|prevzel|zaradio|preuzeo|odmakal|prevzal|uređuješ:|urejaš sam|upravuješ sám/i.test(JSON.stringify(E.PROMO_PREVERJEN)))
   const migPromo = readFileSync(new URL('../supabase/migrations/20261110120000_promo_preverjen.sql', import.meta.url), 'utf8')
   preveri('promocija: SQL izpusti mladoletne, odjavljene, preverjene, admine, hišo, anketo; le service_role',
     ['izlozba_odrasla_oseba', 'brez_opomnikov', 'preverjeni_racuni', 'is_admin', 'testerji', 'hisna', "'anketa-placila'",

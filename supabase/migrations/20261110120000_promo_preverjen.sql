@@ -88,13 +88,17 @@ as $$
                             and l.vrsta = 'promo-preverjen' and l.napaka is null) then 'ze_dobil'
              when exists (select 1 from email_log l where l.user_id = z.user_id
                             and l.vrsta = 'promo-preverjen' and l.napaka = 'poteka') then 'v_teku'
+             -- En mail na naslov tudi med računi: drug račun z istim naslovom ga je že dobil.
+             when exists (select 1 from email_log l where l.user_id <> z.user_id
+                            and lower(l.email) = lower(u.email) and l.vrsta = 'promo-preverjen'
+                            and (l.napaka is null or l.napaka = 'poteka')) then 'naslov_ze_dobil'
              when (select count(*) from email_log l where l.user_id = z.user_id
                      and l.vrsta = 'promo-preverjen') >= 3 then 'trije_neuspeli'
              when exists (select 1 from email_log l where l.user_id = z.user_id
                             and l.vrsta = 'anketa-placila'
                             and (l.napaka is null or l.napaka = 'poteka')) then 'anketa_placila'
              when exists (select 1 from email_log l where l.user_id = z.user_id and l.napaka is null
-                            and l.vrsta in ('novost-mini-lige', 'pivo-7dni')
+                            and l.vrsta in ('novost-mini-lige', 'pivo-7dni', 'dobrodoslica', 'brez-ekipe')
                             and l.poslano_at > now() - interval '14 days') then 'nedavni_mail'
              when coalesce(greatest(u.last_sign_in_at,
                     (select max(f.roster_updated_at) from fantasy_teams f
@@ -164,7 +168,8 @@ revoke all on function public.promo_preverjen_nov_paket(int, int) from public, a
 grant execute on function public.promo_preverjen_nov_paket(int, int) to service_role;
 
 -- Zasede vrstico v email_log pred pošiljanjem (kot anketa_placila_zasedi).
--- Vrne id; -1 = meja dosežena, 0 = človek že ima uspešno ali tekočo vrstico.
+-- Vrne id; -1 = meja dosežena, 0 = človek že ima uspešno ali tekočo vrstico,
+-- -2 = tik pred pošiljanjem ni več ustrezen (odjava ali naslov že dobil).
 create or replace function public.promo_preverjen_zasedi(p_user_id uuid, p_email text, p_meja int)
 returns bigint
 language plpgsql
@@ -176,6 +181,10 @@ declare
 begin
   perform pg_advisory_xact_lock(hashtext('promo-preverjen'));
   if promo_preverjen_poslanih() >= p_meja then return -1; end if;
+  if exists (select 1 from profiles p where p.id = p_user_id and coalesce(p.brez_opomnikov, false))
+     or exists (select 1 from email_log l where l.user_id <> p_user_id and lower(l.email) = lower(p_email)
+                  and l.vrsta = 'promo-preverjen' and (l.napaka is null or l.napaka = 'poteka'))
+  then return -2; end if;
   insert into email_log (user_id, email, vrsta, napaka)
   values (p_user_id, p_email, 'promo-preverjen', 'poteka')
   on conflict (user_id) where vrsta = 'promo-preverjen' and (napaka is null or napaka = 'poteka')

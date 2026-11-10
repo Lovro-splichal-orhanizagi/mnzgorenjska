@@ -90,6 +90,12 @@ begin
   perform pg_temp.pp_assert('med pošiljanjem v_teku', pg_temp.pp_razlog(1) = 'v_teku');
   update email_log set napaka = null where id = z1;
   perform pg_temp.pp_assert('po uspehu ze_dobil', pg_temp.pp_razlog(1) = 'ze_dobil');
+  perform pg_temp.pp_assert('drug račun z istim naslovom: naslov_ze_dobil', pg_temp.pp_razlog(9) = 'naslov_ze_dobil');
+  -- Isti naslov na drugem računu: ne dobi drugega maila.
+  perform pg_temp.pp_assert('drug račun z istim naslovom: zasedba -2',
+    promo_preverjen_zasedi(pg_temp.pp_user(10), 'PROMO-1@example.invalid', 500) = -2);
+  perform pg_temp.pp_assert('odjavljen tik pred pošiljanjem: zasedba -2',
+    promo_preverjen_zasedi(pg_temp.pp_user(3), 'promo-3@example.invalid', 500) = -2);
   perform pg_temp.pp_assert('meja dosežena vrne -1',
     promo_preverjen_zasedi(pg_temp.pp_user(10), 'promo-10@example.invalid', promo_preverjen_poslanih()::int) = -1);
 end $$;
