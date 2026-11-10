@@ -2860,6 +2860,27 @@ export type Database = {
         }
         Relationships: []
       }
+      ogledi_igralcev: {
+        Row: {
+          dan: string
+          drzava: string
+          igralec: number
+          stevilo: number
+        }
+        Insert: {
+          dan?: string
+          drzava?: string
+          igralec: number
+          stevilo?: number
+        }
+        Update: {
+          dan?: string
+          drzava?: string
+          igralec?: number
+          stevilo?: number
+        }
+        Relationships: []
+      }
       ogledi_profila_dnevno: {
         Row: {
           dan: string
@@ -11715,6 +11736,7 @@ export type Database = {
       uveljavi_popravek: { Args: { p_id: number }; Returns: undefined }
       uveljavi_pozicije: { Args: never; Returns: number }
       uveljavi_zapadle_cene: { Args: { p_okno?: string }; Returns: number }
+      vaba_profila: { Args: { p_igralec: number }; Returns: Json }
       varen_vklop_dfb_regije: {
         Args: { p_aktiviraj?: boolean; p_manifest: string; p_sha256: string }
         Returns: Json
@@ -11817,6 +11839,10 @@ export type Database = {
         Returns: undefined
       }
       zabelezi_obisk: { Args: { p_stran: string }; Returns: undefined }
+      zabelezi_ogled_igralca: {
+        Args: { p_drzava?: string; p_igralec: number }
+        Returns: undefined
+      }
       zabelezi_ogled_profila: {
         Args: { p_od_zunaj?: boolean; p_player_id: number }
         Returns: undefined

@@ -40,3 +40,44 @@ export async function mesecniOgledi(igralecId: number): Promise<MesecOgledov[]> 
   const { data } = await supabase.rpc('mesecni_ogledi_profila', { p_player_id: igralecId })
   return (data ?? []) as MesecOgledov[]
 }
+
+/**
+ * Vsak ogled strani igralca za okno "Tvoj profil" (`zabelezi_ogled_igralca`):
+ * brez sejnega omejevanja, tudi lastnikov in osvežitev — okno kaže oglede,
+ * ne ljudi. Državo doda baza iz glave Cloudflara.
+ */
+export function zabeleziOgledIgralca(igralecId: number) {
+  if (!Number.isFinite(igralecId)) return
+  supabase.rpc('zabelezi_ogled_igralca', { p_igralec: igralecId }).then(
+    () => {},
+    () => {},
+  )
+}
+
+export type VlogaVEkipi = 'kapetan' | 'podkapetan' | 'postava' | 'klop'
+export type EkipaVabe = {
+  id: number
+  ime: string
+  lastnik: string | null
+  liga: string
+  mesto: number | null
+  tock: number | null
+  vloga: VlogaVEkipi
+}
+export type Vaba =
+  | { preverjen: false }
+  | {
+      preverjen: true
+      ogledi_7: number
+      ogledi_skupaj: number
+      tedni: { teden: string; ogledi: number }[]
+      drzave: { drzava: string; ogledi: number }[]
+      ekipe: EkipaVabe[]
+    }
+
+/** Okno "Tvoj profil"; null, če klicatelj ni lastnik potrjenega profila. */
+export async function vabaProfila(igralecId: number): Promise<Vaba | null> {
+  const { data, error } = await supabase.rpc('vaba_profila', { p_igralec: igralecId })
+  if (error || !data) return null
+  return data as unknown as Vaba
+}

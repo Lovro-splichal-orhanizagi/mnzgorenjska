@@ -32,10 +32,11 @@ import Razpolozljivost from '../components/Razpolozljivost'
 import KarticaIgralca from '../components/KarticaIgralca'
 import IzlozbaIgralca from '../components/IzlozbaIgralca'
 import MesecniOgledi from '../components/MesecniOgledi'
+import VabaProfila from '../components/VabaProfila'
 import PredTekmo from '../components/PredTekmo'
 import ZgodbeIgralca from '../components/ZgodbeIgralca'
 import PosljiSporocilo from '../components/PosljiSporocilo'
-import { zabeleziOgledProfila } from '../lib/ogledi'
+import { zabeleziOgledIgralca, zabeleziOgledProfila } from '../lib/ogledi'
 import { naloziIzlozbo, type Izlozba } from '../lib/izlozba'
 import { jeMladinskiSlug, useFotografija } from '../lib/prevzem'
 import { dosezkiNastopa, odstotekIzbranosti } from '../lib/karticaIgralca'
@@ -105,6 +106,10 @@ export default function Igralec() {
   useEffect(() => {
     if (!nalaganjeSeje) zabeleziOgledProfila(igralecId)
   }, [igralecId, nalaganjeSeje])
+  // Vsak ogled za okno "Tvoj profil" (brez omejitve na sejo).
+  useEffect(() => {
+    zabeleziOgledIgralca(igralecId)
+  }, [igralecId])
   useEffect(() => {
     setNaZeljoKluba(false)
     if (!igralec?.id || !String(igralec.full_name ?? '').startsWith('#')) return
@@ -455,8 +460,11 @@ export default function Igralec() {
         odrasel={smeKartico}
       />
 
-      {/* Izbranost: le za preverjene (baza drugim vrne prazno), brez mladinskih lig */}
-      {smeKartico && <IzbranostIgralca igralecId={igralec.id} />}
+      {/* Lastnik: okno "Tvoj profil" (ogledi in ekipe; brez kljukice zamegljeno) */}
+      {jeLastnik && smeKartico && <VabaProfila igralecId={igralec.id} />}
+
+      {/* Izbranost drugim: le za preverjene (baza drugim vrne prazno), brez mladinskih lig */}
+      {smeKartico && !jeLastnik && <IzbranostIgralca igralecId={igralec.id} />}
 
       {/* Sporočilo lastniku profila: kdo sme, odloči baza (le odrasli, ne lastnik sam) */}
       {smeKartico && !jeLastnik && <PosljiSporocilo igralecId={igralec.id} prijava={prijava} />}

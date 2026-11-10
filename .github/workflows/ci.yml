@@ -297,6 +297,8 @@ jobs:
         run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/podpora-orodja-2.sql
       - name: Country predictions leaderboard
         run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/napovedi-drzava.sql
+      - name: Your profile box (views, teams, hidden numbers without verified)
+        run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/vaba-profila.sql
       - name: HNS canonical release, target ACLs and waiting writers
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
