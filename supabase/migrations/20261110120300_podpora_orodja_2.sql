@@ -33,9 +33,9 @@ create table public.prijave_napak (
   -- E-naslov ali drug stik, če ga je uporabnik dal; le za odgovor nanj.
   kontakt text check (length(kontakt) <= 254),
   -- Brez tujih ključev na players/competitions: ID je le kazalec za admina,
-  -- test FCF_TARGET pa dovoli samo znane ključe na ti tabeli.
-  player_id bigint,
-  competition_id bigint,
+  -- test FCF_TARGET pa zavrne vsak stolpec *_id na neznani tabeli, zato id_igralca/id_lige.
+  id_igralca bigint,
+  id_lige bigint,
   vir text not null default 'klepet' check (vir in ('klepet')),
   created_at timestamptz not null default now(),
   stanje text not null default 'odprta' check (stanje in ('odprta', 'resena', 'zavrnjena')),
@@ -133,7 +133,7 @@ begin
     having count(*) = 1;
   end if;
 
-  insert into prijave_napak (vrsta, opis, igralec, klub, liga, pravilno, kontakt, player_id, competition_id)
+  insert into prijave_napak (vrsta, opis, igralec, klub, liga, pravilno, kontakt, id_igralca, id_lige)
   values (v_vrsta, v_opis, v_igralec, v_klub, v_liga, v_pravilno, v_kontakt, v_igralec_id, v_liga_id)
   returning id into v_id;
 
@@ -161,9 +161,9 @@ begin
   end if;
   return query
   select p.id, p.vrsta, p.opis, p.igralec, p.klub, p.liga, p.pravilno, p.kontakt,
-         p.player_id, p.competition_id, c.slug, p.created_at, p.stanje, p.reseno_at, p.opomba
+         p.id_igralca, p.id_lige, c.slug, p.created_at, p.stanje, p.reseno_at, p.opomba
     from prijave_napak p
-    left join competitions c on c.id = p.competition_id
+    left join competitions c on c.id = p.id_lige
    where p_stanje is null or p.stanje = p_stanje
    order by p.created_at desc
    limit 300;
