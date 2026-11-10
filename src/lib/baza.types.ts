@@ -9043,6 +9043,26 @@ export type Database = {
           zadnja: string
         }[]
       }
+      admin_prijave_napak: {
+        Args: { p_stanje?: string }
+        Returns: {
+          competition_id: number
+          created_at: string
+          id: number
+          igralec: string
+          klub: string
+          kontakt: string
+          liga: string
+          liga_slug: string
+          opis: string
+          opomba: string
+          player_id: number
+          pravilno: string
+          reseno_at: string
+          stanje: string
+          vrsta: string
+        }[]
+      }
       admin_prijave_sporocil: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -9074,6 +9094,10 @@ export type Database = {
         }[]
       }
       admin_rast: { Args: { p_od?: string }; Returns: Json }
+      admin_resi_prijavo_napake: {
+        Args: { p_id: number; p_opomba?: string; p_stanje: string }
+        Returns: undefined
+      }
       admin_rast_lig: {
         Args: { p_tednov?: number }
         Returns: {
