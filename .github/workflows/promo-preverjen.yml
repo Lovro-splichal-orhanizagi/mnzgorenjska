@@ -1,0 +1,42 @@
+name: Promocija preverjenega profila (SLF-383)
+on:
+  workflow_dispatch:
+    inputs:
+      akcija:
+        description: Privzeto samo predogled; poslji zahteva odobren paket
+        type: choice
+        options: [predogled, paket, vzorec, poslji]
+        default: predogled
+      paket_id:
+        type: string
+      odobril:
+        type: string
+      odobritev:
+        description: Povezava na odobritev osnutka in paketa v Discordu
+        type: string
+      osnutek_sha:
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: promo-preverjen
+  cancel-in-progress: false
+jobs:
+  promo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preverjeni profil
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AKCIJA: ${{ inputs.akcija }}
+          PAKET_ID: ${{ inputs.paket_id }}
+          ODOBRIL: ${{ inputs.odobril }}
+          ODOBRITEV: ${{ inputs.odobritev }}
+          OSNUTEK_SHA: ${{ inputs.osnutek_sha }}
+        run: node scripts/promo-preverjen.mjs
