@@ -123,6 +123,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     vrhOpomba:
       'Punkty są bez asyst: asysty zatwierdza głosowanie, które w większości lig jeszcze nie działa, więc ligi byłyby w nierównym położeniu. Ligi rozegrały różną liczbę kolejek.',
     vrhPrazno: 'W bieżącym sezonie nie rozegrano jeszcze meczów.',
+    napovediUvod: 'Najlepsi typerzy ze wszystkich lig. Dokładny wynik 3 punkty, trafiony rezultat 1.',
+    napovediSezona: 'Sezon',
+    napovedi7dni: 'Ostatnie 7 dni',
+    napovediPrazno7: 'W ostatnich 7 dniach nie ma jeszcze rozliczonych typów.',
+    napovediOcenjenih: 'Rozliczone typy: {n}',
+    vrhNapovedi: 'Najlepsi typerzy',
+    vrhNapovediVse: 'Cała tabela typów',
   },
 
   miniLige: {

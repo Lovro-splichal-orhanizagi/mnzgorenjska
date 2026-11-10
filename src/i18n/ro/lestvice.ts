@@ -120,6 +120,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     vrhOpomba:
       'Punctele sunt fără pase decisive: pasele decisive le confirmă votul, care în majoritatea ligilor încă nu funcționează, așa că ligile ar fi în poziții inegale. Ligile au jucat un număr diferit de etape.',
     vrhPrazno: 'În sezonul curent nu s-a jucat încă niciun meci.',
+    napovediUvod: 'Cei mai buni pronosticatori din toate ligile. Scor exact 3 puncte, rezultat corect 1.',
+    napovediSezona: 'Sezon',
+    napovedi7dni: 'Ultimele 7 zile',
+    napovediPrazno7: 'În ultimele 7 zile nu există încă pronosticuri evaluate.',
+    napovediOcenjenih: 'Pronosticuri evaluate: {n}',
+    vrhNapovedi: 'Cei mai buni pronosticatori',
+    vrhNapovediVse: 'Tot clasamentul pronosticurilor',
   },
 
   miniLige: {
