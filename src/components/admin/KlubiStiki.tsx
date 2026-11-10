@@ -75,15 +75,27 @@ export default function KlubiStiki() {
   const [delam, setDelam] = useState(false)
   const [uvozeno, setUvozeno] = useState<string | null>(null)
 
+  // Vse vrstice po straneh: strežnik vrne največ toliko vrstic na zahtevo in
+  // tega ne pove. Ena zahteva (0–4999) je pri 5000 naslovih odrezala vse za
+  // Madžarsko (RS, SI, SK …), uvoz poslanih mailov pa je tak naslov vpisal
+  // znova in padel na `klub_stik_email_uq`. Vrstni red z `id` je enoličen,
+  // da se strani ne prekrivajo.
   const nalozi = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('klub_stik')
-      .select('*')
-      .order('drzava')
-      .order('klub')
-      .range(0, 4999)
-    if (error) return setNapaka(error.message)
-    setStiki(data ?? [])
+    const STRAN = 1000
+    const vse: Stik[] = []
+    for (let od = 0; ; od += STRAN) {
+      const { data, error } = await supabase
+        .from('klub_stik')
+        .select('*')
+        .order('drzava')
+        .order('klub')
+        .order('id')
+        .range(od, od + STRAN - 1)
+      if (error) return setNapaka(error.message)
+      vse.push(...(data ?? []))
+      if ((data ?? []).length < STRAN) break
+    }
+    setStiki(vse)
   }, [])
 
   useEffect(() => {
