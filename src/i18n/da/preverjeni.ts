@@ -15,6 +15,61 @@ export const preverjeni = {
     highlighti: 'Highlights',
     posnetek: 'Highlight {n}',
     alt: 'SLFF-bane',
+    zgled: {
+      ime: 'Lukas Hansen',
+      vzdevek: 'Lukse',
+      pozicija: 'Angriber',
+      klub: 'FC Stjernen',
+      nasprotnik: 'BK Falken',
+      liga: 'Serie 2',
+    },
+  },
+  zaupanje: {
+    zapisniki: 'Statistik fra officielle kamprapporter',
+    stripe: 'Sikker betaling via Stripe',
+    preklic: 'Opsig årsabonnementet når som helst',
+  },
+  izlozba: {
+    naslov: 'Det her får du. Bogstaveligt talt.',
+    opis: 'Billeder, som SLFF automatisk laver ud fra dine kampe, og en video, vi klipper til dig.',
+    primer: 'Eksempler med data fra en opdigtet spiller. Dine kommer fra dine kampe.',
+  },
+  stebri: {
+    naslov: 'Alt, hvad du får',
+    pokazi: 'Bliv set',
+    pripravi: 'Gør dig klar til kampen',
+    deli: 'Del din karriere',
+  },
+  primerjava: {
+    naslov: 'Gratis eller verificeret',
+    korist: 'Hvad du får',
+    brezplacno: 'Gratis',
+    preverjen: 'Verificeret',
+    prevzem: 'Gør krav på profilen og tilføj foto',
+    statistika: 'Statistik fra kamprapporter og point i spillet',
+    da: 'Inkluderet',
+    ne: 'Ikke inkluderet',
+  },
+  vprasanja: {
+    naslov: 'Ofte stillede spørgsmål',
+    evropa: 'Kan folk uden for mit land også se mig?',
+    kdo: 'Hvem kan købe en verificeret profil?',
+    highlight: {
+      v: 'Hvordan får jeg en highlight-video?',
+      o: 'Upload 6 klip af dine bedste aktioner. Når SLFF-holdet har godkendt dem, klipper vi en highlight-video til dig. Hvis du ikke har nok klip, kontakter vi dig.',
+    },
+    plakat: {
+      v: 'Hvordan får jeg plakaten?',
+      o: 'Plakaten på 40 × 60 cm er en del af købet for altid. Du angiver leveringsadressen ved betalingen, og vi sender den uden ekstra omkostninger til alle EU-lande.',
+    },
+    preklic: {
+      v: 'Kan jeg opsige abonnementet?',
+      o: 'Ja. Du kan opsige årsabonnementet når som helst. Købet for altid betaler du kun én gang.',
+    },
+  },
+  konec: {
+    naslov: 'Vis, hvad du kan.',
+    besedilo: 'Dine kampe er allerede på SLFF. Tilføj din historie, dine klip og fluebenet.',
   },
   nizje: {
     naslov: 'Lavet til spillere i de lavere rækker',
@@ -35,6 +90,7 @@ export const preverjeni = {
     predTekmo: 'En rapport før hver kamp: begge holds form, modstanderens målscorere, indbyrdes opgør og din egen form.',
     zgodbe: 'Efter hver kamp et billede klar til din Instagram-story: resultat, minutter, mål og point.',
     sezona: 'I løbet af og ved slutningen af sæsonen din sæson i ét billede: mål, minutter, bedste kamp, valg og spejdere.',
+    sporocila: 'Skriv til alle i spillet. Alle andre kan kun skrive til verificerede spillere.',
     cv: 'Et CV på én side med sæsoner, klubber og tal. Send linket til en træner eller gem det som PDF.',
     naslovi: {
       kljukica: 'Blåt flueben',
@@ -50,6 +106,7 @@ export const preverjeni = {
       predTekmo: 'Rapport før kampen',
       zgodbe: 'En story efter hver kamp',
       sezona: 'Min sæson',
+      sporocila: 'Beskeder til alle spillere',
       cv: 'CV til trænere',
     },
   },
@@ -94,6 +151,8 @@ export const preverjeni = {
     zaVedno: 'For altid',
     zaVednoOpis: 'Én betaling + plakat 40 × 60 cm hjem til dig.',
     najugodneje: 'Bedste værdi',
+    mesecno: 'Under 1 € om måneden',
+    inVec: 'og alt det andet ovenfor',
   },
   cta: {
     poisci: 'Find din profil',

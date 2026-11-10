@@ -324,13 +324,14 @@ export type PodatkiPlakata = {
   sezone: Array<{ sezona: string; liga: string; klub: string; tekme: number; minute: number; goli: number; asistence: number | null }>
 }
 
-export async function narisiPlakat(d: PodatkiPlakata): Promise<Blob | null> {
+/** `povecava`: privzeto za tisk (200 dpi); manjša za predogled na strani /verified. */
+export async function narisiPlakat(d: PodatkiPlakata, povecava = PLAKAT_POVECAVA): Promise<Blob | null> {
   await naloziPisavo()
   const p = document.createElement('canvas')
-  p.width = Math.round(PLAKAT_W * PLAKAT_POVECAVA)
-  p.height = Math.round(PLAKAT_H * PLAKAT_POVECAVA)
+  p.width = Math.round(PLAKAT_W * povecava)
+  p.height = Math.round(PLAKAT_H * povecava)
   const c = p.getContext('2d')!
-  c.scale(PLAKAT_POVECAVA, PLAKAT_POVECAVA)
+  c.scale(povecava, povecava)
 
   // Podlaga: kot zgodbe, v razmerju 2 : 3.
   const g = c.createLinearGradient(0, 0, 0, PLAKAT_H)

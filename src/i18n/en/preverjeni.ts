@@ -16,6 +16,61 @@ export const preverjeni = {
     highlighti: 'Highlights',
     posnetek: 'Highlight {n}',
     alt: 'SLFF pitch',
+    zgled: {
+      ime: 'Luke Miller',
+      vzdevek: 'Lukey',
+      pozicija: 'Forward',
+      klub: 'FC Star',
+      nasprotnik: 'FC Falcons',
+      liga: 'Division Two',
+    },
+  },
+  zaupanje: {
+    zapisniki: 'Stats from official match reports',
+    stripe: 'Secure payment via Stripe',
+    preklic: 'Cancel the annual plan anytime',
+  },
+  izlozba: {
+    naslov: 'This is what you get. Literally.',
+    opis: 'Images SLFF creates automatically from your matches, and a video we edit for you.',
+    primer: 'Examples with data of a fictional player. Yours will come from your matches.',
+  },
+  stebri: {
+    naslov: 'Everything you get',
+    pokazi: 'Get noticed',
+    pripravi: 'Prepare for the match',
+    deli: 'Share your career',
+  },
+  primerjava: {
+    naslov: 'Free or verified',
+    korist: 'What you get',
+    brezplacno: 'Free',
+    preverjen: 'Verified',
+    prevzem: 'Claim your profile and add a photo',
+    statistika: 'Stats from match reports and fantasy points',
+    da: 'Included',
+    ne: 'Not included',
+  },
+  vprasanja: {
+    naslov: 'Frequently asked questions',
+    evropa: 'Will people outside my country see me?',
+    kdo: 'Who can buy a verified profile?',
+    highlight: {
+      v: 'How do I get a highlight video?',
+      o: 'Upload 6 clips of your best moves. Once the SLFF team approves them, we edit them into a highlight video for you. If you do not have enough clips, we will get in touch.',
+    },
+    plakat: {
+      v: 'How do I get the poster?',
+      o: 'The 40 × 60 cm poster is part of the lifetime purchase. You enter the delivery address at checkout and we ship it to any EU country at no extra cost.',
+    },
+    preklic: {
+      v: 'Can I cancel the subscription?',
+      o: 'Yes. You can cancel the annual subscription anytime. The lifetime purchase is paid only once.',
+    },
+  },
+  konec: {
+    naslov: 'Show what you can do.',
+    besedilo: 'Your matches are already on SLFF. Add your story, your clips and the tick.',
   },
   nizje: {
     naslov: 'Built for lower-league players',
@@ -36,6 +91,7 @@ export const preverjeni = {
     predTekmo: 'A report before every match: both teams\' form, the opponent\'s scorers, head to head and your own form.',
     zgodbe: 'After every match, an image ready for your Instagram story: score, minutes, goals and points.',
     sezona: 'During and at the end of the season, your season in one image: goals, minutes, best match, picks and scouts.',
+    sporocila: 'Message anyone in the game. Everyone else can only message verified players.',
     cv: 'A one-page CV with your seasons, clubs and numbers. Send the link to a coach or save it as a PDF.',
     naslovi: {
       kljukica: 'Blue tick',
@@ -51,6 +107,7 @@ export const preverjeni = {
       predTekmo: 'Pre-match report',
       zgodbe: 'A story after every match',
       sezona: 'My season',
+      sporocila: 'Messages to all players',
       cv: 'CV for coaches',
     },
   },
@@ -95,6 +152,8 @@ export const preverjeni = {
     zaVedno: 'Lifetime',
     zaVednoOpis: 'One payment + a 40 × 60 cm poster to your home.',
     najugodneje: 'Best value',
+    mesecno: 'Less than 1 € a month',
+    inVec: 'and everything else above',
   },
   cta: {
     poisci: 'Find your profile',

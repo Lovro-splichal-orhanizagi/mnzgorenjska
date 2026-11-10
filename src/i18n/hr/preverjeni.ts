@@ -16,6 +16,61 @@ export const preverjeni = {
     highlighti: 'Najbolji potezi',
     posnetek: 'Potez {n}',
     alt: 'Igralište SLFF-a',
+    zgled: {
+      ime: 'Luka Horvat',
+      vzdevek: 'Luki',
+      pozicija: 'Napadač',
+      klub: 'NK Zvijezda',
+      nasprotnik: 'NK Sokol',
+      liga: '2. liga',
+    },
+  },
+  zaupanje: {
+    zapisniki: 'Statistika iz službenih zapisnika',
+    stripe: 'Sigurno plaćanje preko Stripea',
+    preklic: 'Godišnju pretplatu otkazuješ bilo kada',
+  },
+  izlozba: {
+    naslov: 'To dobiješ. Doslovno.',
+    opis: 'Slike koje SLFF automatski izrađuje iz tvojih utakmica i video koji montiramo za tebe.',
+    primer: 'Primjeri s podacima izmišljenog igrača. Tvoji će biti iz tvojih utakmica.',
+  },
+  stebri: {
+    naslov: 'Sve što dobiješ',
+    pokazi: 'Pokaži se',
+    pripravi: 'Pripremi se za utakmicu',
+    deli: 'Podijeli svoju karijeru',
+  },
+  primerjava: {
+    naslov: 'Besplatno ili provjereno',
+    korist: 'Što dobiješ',
+    brezplacno: 'Besplatno',
+    preverjen: 'Provjeren',
+    prevzem: 'Preuzimanje profila i fotografija',
+    statistika: 'Statistika iz zapisnika i bodovi u igri',
+    da: 'Uključeno',
+    ne: 'Nije uključeno',
+  },
+  vprasanja: {
+    naslov: 'Česta pitanja',
+    evropa: 'Hoće li me vidjeti i izvan moje zemlje?',
+    kdo: 'Tko može kupiti provjereni profil?',
+    highlight: {
+      v: 'Kako dobiti highlight video?',
+      o: 'Učitaj 6 snimaka svojih najboljih poteza. Kad ih ekipa SLFF odobri, od njih ti montiramo highlight video. Ako nemaš dovoljno snimaka, javit ćemo ti se.',
+    },
+    plakat: {
+      v: 'Kako dobiti poster?',
+      o: 'Poster 40 × 60 cm dio je kupnje zauvijek. Adresu za dostavu upisuješ pri plaćanju, a šaljemo ga bez nadoplate u sve zemlje EU.',
+    },
+    preklic: {
+      v: 'Mogu li otkazati pretplatu?',
+      o: 'Da. Godišnju pretplatu možeš otkazati bilo kada. Kupnju zauvijek plaćaš samo jednom.',
+    },
+  },
+  konec: {
+    naslov: 'Pokaži što znaš.',
+    besedilo: 'Tvoje utakmice su već na SLFF. Dodaj im svoju priču, snimke i kvačicu.',
   },
   nizje: {
     naslov: 'Napravljeno za igrače nižih liga',
@@ -36,6 +91,7 @@ export const preverjeni = {
     predTekmo: 'Prije svake utakmice izvještaj: forma obje momčadi, strijelci protivnika, međusobne utakmice i tvoja forma.',
     zgodbe: 'Nakon svake utakmice slika spremna za Instagram story: rezultat, minute, golovi i bodovi.',
     sezona: 'Tijekom i na kraju sezone tvoja sezona u jednoj slici: golovi, minute, najbolja utakmica, odabiri i skauti.',
+    sporocila: 'Piši bilo kome u igri. Ostali mogu pisati samo provjerenim igračima.',
     cv: 'CV na jednoj stranici sa sezonama, klubovima i brojkama. Pošalji poveznicu treneru ili ga spremi kao PDF.',
     naslovi: {
       kljukica: 'Plava kvačica',
@@ -51,6 +107,7 @@ export const preverjeni = {
       predTekmo: 'Izvještaj prije utakmice',
       zgodbe: 'Priča nakon svake utakmice',
       sezona: 'Moja sezona',
+      sporocila: 'Poruke svim igračima',
       cv: 'CV za trenere',
     },
   },
@@ -95,6 +152,8 @@ export const preverjeni = {
     zaVedno: 'Zauvijek',
     zaVednoOpis: 'Jednokratno plaćanje + poster 40 × 60 cm na kućnu adresu.',
     najugodneje: 'Najisplativije',
+    mesecno: 'Manje od 1 € mjesečno',
+    inVec: 'i sve ostalo gore',
   },
   cta: {
     poisci: 'Pronađi svoj profil',

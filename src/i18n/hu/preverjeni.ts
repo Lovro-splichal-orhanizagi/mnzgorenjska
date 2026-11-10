@@ -15,6 +15,61 @@ export const preverjeni = {
     highlighti: 'Legjobb megmozdulások',
     posnetek: 'Megmozdulás {n}',
     alt: 'SLFF pálya',
+    zgled: {
+      ime: 'Nagy Lukács',
+      vzdevek: 'Luki',
+      pozicija: 'Csatár',
+      klub: 'Csillag SE',
+      nasprotnik: 'Sólyom FC',
+      liga: 'Megyei II.',
+    },
+  },
+  zaupanje: {
+    zapisniki: 'Statisztika hivatalos jegyzőkönyvekből',
+    stripe: 'Biztonságos fizetés a Stripe rendszerén',
+    preklic: 'Az éves előfizetés bármikor lemondható',
+  },
+  izlozba: {
+    naslov: 'Ezt kapod. Szó szerint.',
+    opis: 'Képek, amelyeket az SLFF automatikusan készít a meccseidből, és egy videó, amelyet neked vágunk.',
+    primer: 'Példák egy kitalált játékos adataival. A tieid a saját meccseidből lesznek.',
+  },
+  stebri: {
+    naslov: 'Minden, amit kapsz',
+    pokazi: 'Mutasd meg magad',
+    pripravi: 'Készülj a meccsre',
+    deli: 'Oszd meg a pályafutásod',
+  },
+  primerjava: {
+    naslov: 'Ingyenes vagy ellenőrzött',
+    korist: 'Mit kapsz',
+    brezplacno: 'Ingyenes',
+    preverjen: 'Ellenőrzött',
+    prevzem: 'Profil igénylése és fotó',
+    statistika: 'Statisztika a jegyzőkönyvekből és pontok a játékban',
+    da: 'Benne van',
+    ne: 'Nincs benne',
+  },
+  vprasanja: {
+    naslov: 'Gyakori kérdések',
+    evropa: 'Az országomon kívül is látni fognak?',
+    kdo: 'Ki vásárolhat ellenőrzött profilt?',
+    highlight: {
+      v: 'Hogyan kapok highlight videót?',
+      o: 'Tölts fel 6 videót a legjobb megmozdulásaidról. Ha az SLFF csapata jóváhagyja őket, highlight videót vágunk belőlük neked. Ha nincs elég videód, jelentkezünk.',
+    },
+    plakat: {
+      v: 'Hogyan kapom meg a posztert?',
+      o: 'A 40 × 60 cm-es poszter az örökre szóló vásárlás része. A szállítási címet fizetéskor adod meg, és felár nélkül küldjük az EU bármely országába.',
+    },
+    preklic: {
+      v: 'Lemondhatom az előfizetést?',
+      o: 'Igen. Az éves előfizetést bármikor lemondhatod. Az örökre szóló vásárlást csak egyszer fizeted ki.',
+    },
+  },
+  konec: {
+    naslov: 'Mutasd meg, mit tudsz.',
+    besedilo: 'A meccseid már az SLFF-ben vannak. Add hozzá a történeted, a videóidat és a pipát.',
   },
   nizje: {
     naslov: 'Alsóbb osztályú játékosoknak készült',
@@ -35,6 +90,7 @@ export const preverjeni = {
     predTekmo: 'Minden meccs előtt jelentés: mindkét csapat formája, az ellenfél góllövői, egymás elleni meccsek és a saját formád.',
     zgodbe: 'Minden meccs után storyhoz kész kép: eredmény, percek, gólok és pontok.',
     sezona: 'A szezon közben és végén a szezonod egy képen: gólok, percek, legjobb meccs, kiválasztások és megfigyelők.',
+    sporocila: 'Írj bárkinek a játékban. Mások csak ellenőrzött játékosoknak írhatnak.',
     cv: 'Egyoldalas önéletrajz szezonokkal, klubokkal és számokkal. Küldd el a linket egy edzőnek, vagy mentsd PDF-be.',
     naslovi: {
       kljukica: 'Kék pipa',
@@ -50,6 +106,7 @@ export const preverjeni = {
       predTekmo: 'Meccs előtti jelentés',
       zgodbe: 'Történet minden meccs után',
       sezona: 'Az én szezonom',
+      sporocila: 'Üzenetek minden játékosnak',
       cv: 'Önéletrajz edzőknek',
     },
   },
@@ -94,6 +151,8 @@ export const preverjeni = {
     zaVedno: 'Örökre',
     zaVednoOpis: 'Egyszeri fizetés + 40 × 60 cm-es plakát házhoz.',
     najugodneje: 'Legjobb ár',
+    mesecno: 'Kevesebb mint havi 1 €',
+    inVec: 'és minden más fent',
   },
   cta: {
     poisci: 'Keresd meg a profilodat',

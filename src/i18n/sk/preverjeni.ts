@@ -16,6 +16,61 @@ export const preverjeni = {
     highlighti: 'Najlepšie akcie',
     posnetek: 'Akcia {n}',
     alt: 'Ihrisko SLFF',
+    zgled: {
+      ime: 'Lukáš Novák',
+      vzdevek: 'Luky',
+      pozicija: 'Útočník',
+      klub: 'FK Hviezda',
+      nasprotnik: 'FK Sokol',
+      liga: '2. liga',
+    },
+  },
+  zaupanje: {
+    zapisniki: 'Štatistiky z oficiálnych zápisov',
+    stripe: 'Bezpečná platba cez Stripe',
+    preklic: 'Ročné predplatné zrušíš kedykoľvek',
+  },
+  izlozba: {
+    naslov: 'Toto dostaneš. Doslova.',
+    opis: 'Obrázky, ktoré SLFF automaticky vytvorí z tvojich zápasov, a video, ktoré pre teba zostrihneme.',
+    primer: 'Ukážky s údajmi vymysleného hráča. Tvoje budú z tvojich zápasov.',
+  },
+  stebri: {
+    naslov: 'Všetko, čo dostaneš',
+    pokazi: 'Ukáž sa',
+    pripravi: 'Priprav sa na zápas',
+    deli: 'Zdieľaj svoju kariéru',
+  },
+  primerjava: {
+    naslov: 'Zadarmo alebo overené',
+    korist: 'Čo dostaneš',
+    brezplacno: 'Zadarmo',
+    preverjen: 'Overený',
+    prevzem: 'Prevzatie profilu a fotografia',
+    statistika: 'Štatistiky zo zápisov a body v hre',
+    da: 'V cene',
+    ne: 'Nie je v cene',
+  },
+  vprasanja: {
+    naslov: 'Časté otázky',
+    evropa: 'Uvidia ma aj mimo mojej krajiny?',
+    kdo: 'Kto si môže kúpiť overený profil?',
+    highlight: {
+      v: 'Ako získam highlight video?',
+      o: 'Nahraj 6 videí svojich najlepších akcií. Keď ich tím SLFF schváli, zostrihneme ti z nich highlight video. Ak nemáš dosť videí, ozveme sa ti.',
+    },
+    plakat: {
+      v: 'Ako získam plagát?',
+      o: 'Plagát 40 × 60 cm je súčasťou nákupu navždy. Adresu na doručenie zadáš pri platbe a pošleme ho bez doplatku do všetkých krajín EÚ.',
+    },
+    preklic: {
+      v: 'Môžem predplatné zrušiť?',
+      o: 'Áno. Ročné predplatné môžeš kedykoľvek zrušiť. Nákup navždy platíš iba raz.',
+    },
+  },
+  konec: {
+    naslov: 'Ukáž, čo vieš.',
+    besedilo: 'Tvoje zápasy sú už na SLFF. Pridaj k nim svoj príbeh, videá a fajku.',
   },
   nizje: {
     naslov: 'Vytvorené pre hráčov nižších líg',
@@ -36,6 +91,7 @@ export const preverjeni = {
     predTekmo: 'Pred každým zápasom správa: forma oboch tímov, strelci súpera, vzájomné zápasy a tvoja forma.',
     zgodbe: 'Po každom zápase obrázok pripravený na Instagram story: výsledok, minúty, góly a body.',
     sezona: 'Počas a na konci sezóny tvoja sezóna v jednom obrázku: góly, minúty, najlepší zápas, výbery a skauti.',
+    sporocila: 'Píš komukoľvek v hre. Ostatní môžu písať iba overeným hráčom.',
     cv: 'CV na jednej strane so sezónami, klubmi a číslami. Pošli odkaz trénerovi alebo ho ulož ako PDF.',
     naslovi: {
       kljukica: 'Modrá fajka',
@@ -51,6 +107,7 @@ export const preverjeni = {
       predTekmo: 'Správa pred zápasom',
       zgodbe: 'Príbeh po každom zápase',
       sezona: 'Moja sezóna',
+      sporocila: 'Správy všetkým hráčom',
       cv: 'CV pre trénerov',
     },
   },
@@ -95,6 +152,8 @@ export const preverjeni = {
     zaVedno: 'Navždy',
     zaVednoOpis: 'Jednorazová platba + plagát 40 × 60 cm domov.',
     najugodneje: 'Najvýhodnejšie',
+    mesecno: 'Menej ako 1 € mesačne',
+    inVec: 'a všetko ostatné vyššie',
   },
   cta: {
     poisci: 'Nájdi svoj profil',

@@ -15,6 +15,61 @@ export const preverjeni = {
     highlighti: 'Parimad hetked',
     posnetek: 'Hetk {n}',
     alt: 'SLFFi väljak',
+    zgled: {
+      ime: 'Lukas Tamm',
+      vzdevek: 'Luks',
+      pozicija: 'Ründaja',
+      klub: 'FC Täht',
+      nasprotnik: 'FC Pistrik',
+      liga: 'II liiga',
+    },
+  },
+  zaupanje: {
+    zapisniki: 'Statistika ametlikest protokollidest',
+    stripe: 'Turvaline makse Stripe kaudu',
+    preklic: 'Aastatellimuse saad tühistada igal ajal',
+  },
+  izlozba: {
+    naslov: 'Selle sa saad. Sõna otseses mõttes.',
+    opis: 'Pildid, mille SLFF sinu mängudest automaatselt loob, ja video, mille sulle monteerime.',
+    primer: 'Näited väljamõeldud mängija andmetega. Sinu omad tulevad sinu mängudest.',
+  },
+  stebri: {
+    naslov: 'Kõik, mida saad',
+    pokazi: 'Näita end',
+    pripravi: 'Valmistu mänguks',
+    deli: 'Jaga oma karjääri',
+  },
+  primerjava: {
+    naslov: 'Tasuta või kinnitatud',
+    korist: 'Mida saad',
+    brezplacno: 'Tasuta',
+    preverjen: 'Kinnitatud',
+    prevzem: 'Profiili enda omaks võtmine ja foto',
+    statistika: 'Statistika protokollidest ja punktid mängus',
+    da: 'Kaasas',
+    ne: 'Pole kaasas',
+  },
+  vprasanja: {
+    naslov: 'Korduma kippuvad küsimused',
+    evropa: 'Kas mind näevad ka väljaspool minu riiki?',
+    kdo: 'Kes saab kinnitatud profiili osta?',
+    highlight: {
+      v: 'Kuidas ma highlight video saan?',
+      o: 'Laadi üles 6 klippi oma parimatest hetkedest. Kui SLFF meeskond need heaks kiidab, monteerime neist sulle highlight video. Kui sul pole piisavalt klippe, võtame sinuga ühendust.',
+    },
+    plakat: {
+      v: 'Kuidas ma plakati saan?',
+      o: 'Plakat 40 × 60 cm kuulub igaveseks ostu juurde. Tarneaadressi sisestad maksmisel ja saadame selle ilma lisatasuta igasse ELi riiki.',
+    },
+    preklic: {
+      v: 'Kas saan tellimuse tühistada?',
+      o: 'Jah. Aastatellimuse saad tühistada igal ajal. Igaveseks ostu eest maksad ainult ühe korra.',
+    },
+  },
+  konec: {
+    naslov: 'Näita, mida oskad.',
+    besedilo: 'Sinu mängud on juba SLFF-is. Lisa neile oma lugu, klipid ja linnuke.',
   },
   nizje: {
     naslov: 'Loodud madalamate liigade mängijatele',
@@ -35,6 +90,7 @@ export const preverjeni = {
     predTekmo: 'Enne iga mängu ülevaade: mõlema meeskonna vorm, vastase väravalööjad, omavahelised mängud ja sinu enda vorm.',
     zgodbe: 'Pärast iga mängu storyks valmis pilt: tulemus, minutid, väravad ja punktid.',
     sezona: 'Hooaja jooksul ja lõpus sinu hooaeg ühel pildil: väravad, minutid, parim mäng, valikud ja skaudid.',
+    sporocila: 'Kirjuta mängus kellele tahes. Teised saavad kirjutada ainult kinnitatud mängijatele.',
     cv: 'Üheleheküljeline CV hooaegade, klubide ja numbritega. Saada link treenerile või salvesta PDF-ina.',
     naslovi: {
       kljukica: 'Sinine linnuke',
@@ -50,6 +106,7 @@ export const preverjeni = {
       predTekmo: 'Mängueelne ülevaade',
       zgodbe: 'Lugu pärast iga mängu',
       sezona: 'Minu hooaeg',
+      sporocila: 'Sõnumid kõigile mängijatele',
       cv: 'CV treeneritele',
     },
   },
@@ -94,6 +151,8 @@ export const preverjeni = {
     zaVedno: 'Igaveseks',
     zaVednoOpis: 'Ühekordne makse + plakat 40 × 60 cm koju.',
     najugodneje: 'Parim väärtus',
+    mesecno: 'Alla 1 € kuus',
+    inVec: 'ja kõik muu eespool',
   },
   cta: {
     poisci: 'Leia oma profiil',

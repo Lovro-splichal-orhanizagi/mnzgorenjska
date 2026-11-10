@@ -16,6 +16,61 @@ export const preverjeni = {
     highlighti: 'En iyi anlar',
     posnetek: 'An {n}',
     alt: 'SLFF sahası',
+    zgled: {
+      ime: 'Luka Yılmaz',
+      vzdevek: 'Luki',
+      pozicija: 'Forvet',
+      klub: 'Yıldız SK',
+      nasprotnik: 'Şahinler SK',
+      liga: 'Amatör Lig',
+    },
+  },
+  zaupanje: {
+    zapisniki: 'Resmi maç raporlarından istatistik',
+    stripe: 'Stripe ile güvenli ödeme',
+    preklic: 'Yıllık aboneliği istediğin zaman iptal et',
+  },
+  izlozba: {
+    naslov: 'Aldığın bu. Kelimenin tam anlamıyla.',
+    opis: 'SLFF\'nin maçlarından otomatik oluşturduğu görseller ve senin için kurguladığımız bir video.',
+    primer: 'Hayali bir oyuncunun verileriyle örnekler. Seninkiler kendi maçlarından gelecek.',
+  },
+  stebri: {
+    naslov: 'Aldığın her şey',
+    pokazi: 'Kendini göster',
+    pripravi: 'Maça hazırlan',
+    deli: 'Kariyerini paylaş',
+  },
+  primerjava: {
+    naslov: 'Ücretsiz mi doğrulanmış mı',
+    korist: 'Ne alırsın',
+    brezplacno: 'Ücretsiz',
+    preverjen: 'Doğrulanmış',
+    prevzem: 'Profili sahiplenme ve fotoğraf',
+    statistika: 'Maç raporlarından istatistik ve oyunda puanlar',
+    da: 'Dahil',
+    ne: 'Dahil değil',
+  },
+  vprasanja: {
+    naslov: 'Sık sorulan sorular',
+    evropa: 'Ülkem dışında da beni görecekler mi?',
+    kdo: 'Doğrulanmış profili kim satın alabilir?',
+    highlight: {
+      v: 'Highlight videosunu nasıl alırım?',
+      o: 'En iyi hareketlerinden 6 video yükle. SLFF ekibi onayladığında, bunlardan senin için bir highlight videosu kurgularız. Yeterli videon yoksa seninle iletişime geçeriz.',
+    },
+    plakat: {
+      v: 'Posteri nasıl alırım?',
+      o: '40 × 60 cm poster ömür boyu satın alımın parçasıdır. Teslimat adresini ödeme sırasında girersin ve ek ücret olmadan tüm AB ülkelerine göndeririz.',
+    },
+    preklic: {
+      v: 'Aboneliği iptal edebilir miyim?',
+      o: 'Evet. Yıllık aboneliği istediğin zaman iptal edebilirsin. Ömür boyu satın alımı yalnızca bir kez ödersin.',
+    },
+  },
+  konec: {
+    naslov: 'Neler yapabildiğini göster.',
+    besedilo: 'Maçların zaten SLFF\'de. Onlara hikayeni, videolarını ve onay işaretini ekle.',
   },
   nizje: {
     naslov: 'Alt lig oyuncuları için yapıldı',
@@ -36,6 +91,7 @@ export const preverjeni = {
     predTekmo: 'Her maçtan önce bir rapor: iki takımın formu, rakibin golcüleri, aralarındaki maçlar ve kendi formun.',
     zgodbe: 'Her maçtan sonra Instagram hikâyen için hazır bir görsel: skor, dakika, gol ve puan.',
     sezona: 'Sezon boyunca ve sonunda sezonun tek görselde: goller, dakikalar, en iyi maç, seçimler ve scoutlar.',
+    sporocila: 'Oyundaki herkese yaz. Diğerleri yalnızca doğrulanmış oyunculara yazabilir.',
     cv: 'Sezonların, kulüplerin ve sayılarınla tek sayfalık CV. Bağlantıyı bir antrenöre gönder veya PDF olarak kaydet.',
     naslovi: {
       kljukica: 'Mavi tik',
@@ -51,6 +107,7 @@ export const preverjeni = {
       predTekmo: 'Maç öncesi rapor',
       zgodbe: 'Her maçtan sonra hikâye',
       sezona: 'Sezonum',
+      sporocila: 'Tüm oyunculara mesaj',
       cv: 'Antrenörler için CV',
     },
   },
@@ -95,6 +152,8 @@ export const preverjeni = {
     zaVedno: 'Ömür boyu',
     zaVednoOpis: 'Tek ödeme + evine 40 × 60 cm poster.',
     najugodneje: 'En avantajlı',
+    mesecno: 'Ayda 1 €\'dan az',
+    inVec: 've yukarıdaki diğer her şey',
   },
   cta: {
     poisci: 'Profilini bul',

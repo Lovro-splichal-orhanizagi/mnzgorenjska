@@ -16,6 +16,61 @@ export const preverjeni = {
     highlighti: 'Mejores jugadas',
     posnetek: 'Jugada {n}',
     alt: 'Campo de SLFF',
+    zgled: {
+      ime: 'Lucas García',
+      vzdevek: 'Luqui',
+      pozicija: 'Delantero',
+      klub: 'CD Estrella',
+      nasprotnik: 'CD Halcones',
+      liga: 'Primera Regional',
+    },
+  },
+  zaupanje: {
+    zapisniki: 'Estadísticas de actas oficiales',
+    stripe: 'Pago seguro con Stripe',
+    preklic: 'Cancela el plan anual cuando quieras',
+  },
+  izlozba: {
+    naslov: 'Esto es lo que recibes. Literalmente.',
+    opis: 'Imágenes que SLFF crea automáticamente con tus partidos y un vídeo que montamos para ti.',
+    primer: 'Ejemplos con datos de un jugador ficticio. Los tuyos saldrán de tus partidos.',
+  },
+  stebri: {
+    naslov: 'Todo lo que recibes',
+    pokazi: 'Hazte ver',
+    pripravi: 'Prepárate para el partido',
+    deli: 'Comparte tu carrera',
+  },
+  primerjava: {
+    naslov: 'Gratis o verificado',
+    korist: 'Qué recibes',
+    brezplacno: 'Gratis',
+    preverjen: 'Verificado',
+    prevzem: 'Reclamar el perfil y subir foto',
+    statistika: 'Estadísticas de actas y puntos en el juego',
+    da: 'Incluido',
+    ne: 'No incluido',
+  },
+  vprasanja: {
+    naslov: 'Preguntas frecuentes',
+    evropa: '¿Me verán también fuera de mi país?',
+    kdo: '¿Quién puede comprar un perfil verificado?',
+    highlight: {
+      v: '¿Cómo consigo un vídeo de highlights?',
+      o: 'Sube 6 clips de tus mejores jugadas. Cuando el equipo de SLFF los apruebe, montamos con ellos un vídeo de highlights para ti. Si no tienes suficientes clips, te contactamos.',
+    },
+    plakat: {
+      v: '¿Cómo consigo el póster?',
+      o: 'El póster de 40 × 60 cm forma parte de la compra para siempre. Introduces la dirección de entrega al pagar y lo enviamos sin coste adicional a cualquier país de la UE.',
+    },
+    preklic: {
+      v: '¿Puedo cancelar la suscripción?',
+      o: 'Sí. Puedes cancelar la suscripción anual cuando quieras. La compra para siempre se paga una sola vez.',
+    },
+  },
+  konec: {
+    naslov: 'Demuestra lo que vales.',
+    besedilo: 'Tus partidos ya están en SLFF. Añádeles tu historia, tus clips y la insignia.',
   },
   nizje: {
     naslov: 'Hecho para jugadores de categorías inferiores',
@@ -36,6 +91,7 @@ export const preverjeni = {
     predTekmo: 'Antes de cada partido, un informe: forma de ambos equipos, goleadores del rival, enfrentamientos directos y tu propia forma.',
     zgodbe: 'Tras cada partido, una imagen lista para tu historia de Instagram: resultado, minutos, goles y puntos.',
     sezona: 'Durante y al final de la temporada, tu temporada en una imagen: goles, minutos, mejor partido, elecciones y ojeadores.',
+    sporocila: 'Escribe a cualquiera en el juego. Los demás solo pueden escribir a jugadores verificados.',
     cv: 'Un CV de una página con tus temporadas, clubes y números. Envía el enlace a un entrenador o guárdalo en PDF.',
     naslovi: {
       kljukica: 'Insignia azul',
@@ -51,6 +107,7 @@ export const preverjeni = {
       predTekmo: 'Informe previo al partido',
       zgodbe: 'Una historia tras cada partido',
       sezona: 'Mi temporada',
+      sporocila: 'Mensajes a todos los jugadores',
       cv: 'CV para entrenadores',
     },
   },
@@ -95,6 +152,8 @@ export const preverjeni = {
     zaVedno: 'Para siempre',
     zaVednoOpis: 'Un solo pago + póster de 40 × 60 cm a casa.',
     najugodneje: 'Mejor precio',
+    mesecno: 'Menos de 1 € al mes',
+    inVec: 'y todo lo demás de arriba',
   },
   cta: {
     poisci: 'Busca tu perfil',

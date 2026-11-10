@@ -15,6 +15,61 @@ export const preverjeni = {
     highlighti: 'Labākās epizodes',
     posnetek: 'Epizode {n}',
     alt: 'SLFF laukums',
+    zgled: {
+      ime: 'Lūkass Bērziņš',
+      vzdevek: 'Lūkis',
+      pozicija: 'Uzbrucējs',
+      klub: 'FK Zvaigzne',
+      nasprotnik: 'FK Piekūns',
+      liga: '2. līga',
+    },
+  },
+  zaupanje: {
+    zapisniki: 'Statistika no oficiālajiem protokoliem',
+    stripe: 'Droša apmaksa ar Stripe',
+    preklic: 'Gada abonementu vari atcelt jebkurā laikā',
+  },
+  izlozba: {
+    naslov: 'To tu saņem. Burtiski.',
+    opis: 'Attēli, ko SLFF automātiski izveido no tavām spēlēm, un video, ko mēs tev samontējam.',
+    primer: 'Piemēri ar izdomāta spēlētāja datiem. Tavējie būs no tavām spēlēm.',
+  },
+  stebri: {
+    naslov: 'Viss, ko saņem',
+    pokazi: 'Parādi sevi',
+    pripravi: 'Sagatavojies spēlei',
+    deli: 'Dalies ar savu karjeru',
+  },
+  primerjava: {
+    naslov: 'Bez maksas vai pārbaudīts',
+    korist: 'Ko tu saņem',
+    brezplacno: 'Bez maksas',
+    preverjen: 'Pārbaudīts',
+    prevzem: 'Profila pieprasīšana un foto',
+    statistika: 'Statistika no protokoliem un punkti spēlē',
+    da: 'Iekļauts',
+    ne: 'Nav iekļauts',
+  },
+  vprasanja: {
+    naslov: 'Biežāk uzdotie jautājumi',
+    evropa: 'Vai mani redzēs arī ārpus manas valsts?',
+    kdo: 'Kas var iegādāties pārbaudītu profilu?',
+    highlight: {
+      v: 'Kā saņemt highlight video?',
+      o: 'Augšupielādē 6 klipus ar saviem labākajiem momentiem. Kad SLFF komanda tos apstiprinās, mēs no tiem tev samontēsim highlight video. Ja tev nav pietiekami daudz klipu, mēs sazināsimies.',
+    },
+    plakat: {
+      v: 'Kā saņemt plakātu?',
+      o: 'Plakāts 40 × 60 cm ir daļa no pirkuma uz visiem laikiem. Piegādes adresi ievadi maksājot, un mēs to bez piemaksas nosūtām uz jebkuru ES valsti.',
+    },
+    preklic: {
+      v: 'Vai varu atcelt abonementu?',
+      o: 'Jā. Gada abonementu vari atcelt jebkurā laikā. Pirkumu uz visiem laikiem apmaksā tikai vienreiz.',
+    },
+  },
+  konec: {
+    naslov: 'Parādi, ko proti.',
+    besedilo: 'Tavas spēles jau ir SLFF. Pievieno tām savu stāstu, klipus un ķeksīti.',
   },
   nizje: {
     naslov: 'Radīts zemāko līgu spēlētājiem',
@@ -35,6 +90,7 @@ export const preverjeni = {
     predTekmo: 'Pirms katras spēles pārskats: abu komandu forma, pretinieka vārtu guvēji, savstarpējās spēles un tava forma.',
     zgodbe: 'Pēc katras spēles attēls Instagram stāstam: rezultāts, minūtes, vārti un punkti.',
     sezona: 'Sezonas laikā un beigās tava sezona vienā attēlā: vārti, minūtes, labākā spēle, izvēles un skauti.',
+    sporocila: 'Raksti jebkuram spēlē. Citi var rakstīt tikai pārbaudītiem spēlētājiem.',
     cv: 'Vienas lapas CV ar sezonām, klubiem un skaitļiem. Nosūti saiti trenerim vai saglabā kā PDF.',
     naslovi: {
       kljukica: 'Zilā ķeksīte',
@@ -50,6 +106,7 @@ export const preverjeni = {
       predTekmo: 'Pārskats pirms spēles',
       zgodbe: 'Stāsts pēc katras spēles',
       sezona: 'Mana sezona',
+      sporocila: 'Ziņas visiem spēlētājiem',
       cv: 'CV treneriem',
     },
   },
@@ -94,6 +151,8 @@ export const preverjeni = {
     zaVedno: 'Uz visiem laikiem',
     zaVednoOpis: 'Vienreizējs maksājums + plakāts 40 × 60 cm uz mājām.',
     najugodneje: 'Izdevīgāk',
+    mesecno: 'Mazāk nekā 1 € mēnesī',
+    inVec: 'un viss pārējais augstāk',
   },
   cta: {
     poisci: 'Atrodi savu profilu',

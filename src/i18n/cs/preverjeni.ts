@@ -15,6 +15,61 @@ export const preverjeni = {
     highlighti: 'Nejlepší akce',
     posnetek: 'Akce {n}',
     alt: 'Hřiště SLFF',
+    zgled: {
+      ime: 'Lukáš Dvořák',
+      vzdevek: 'Luky',
+      pozicija: 'Útočník',
+      klub: 'FK Hvězda',
+      nasprotnik: 'FK Sokol',
+      liga: 'Krajský přebor',
+    },
+  },
+  zaupanje: {
+    zapisniki: 'Statistiky z oficiálních zápisů',
+    stripe: 'Bezpečná platba přes Stripe',
+    preklic: 'Roční předplatné zrušíš kdykoli',
+  },
+  izlozba: {
+    naslov: 'Tohle dostaneš. Doslova.',
+    opis: 'Obrázky, které SLFF automaticky vytvoří z tvých zápasů, a video, které pro tebe sestříháme.',
+    primer: 'Ukázky s údaji smyšleného hráče. Tvoje budou z tvých zápasů.',
+  },
+  stebri: {
+    naslov: 'Všechno, co dostaneš',
+    pokazi: 'Ukaž se',
+    pripravi: 'Připrav se na zápas',
+    deli: 'Sdílej svou kariéru',
+  },
+  primerjava: {
+    naslov: 'Zdarma nebo ověřeně',
+    korist: 'Co dostaneš',
+    brezplacno: 'Zdarma',
+    preverjen: 'Ověřený',
+    prevzem: 'Převzetí profilu a fotografie',
+    statistika: 'Statistiky ze zápisů a body ve hře',
+    da: 'V ceně',
+    ne: 'Není v ceně',
+  },
+  vprasanja: {
+    naslov: 'Časté dotazy',
+    evropa: 'Uvidí mě i mimo mou zemi?',
+    kdo: 'Kdo si může koupit ověřený profil?',
+    highlight: {
+      v: 'Jak získám highlight video?',
+      o: 'Nahraj 6 videí svých nejlepších akcí. Jakmile je tým SLFF schválí, sestříháme ti z nich highlight video. Pokud nemáš dost videí, ozveme se ti.',
+    },
+    plakat: {
+      v: 'Jak získám plakát?',
+      o: 'Plakát 40 × 60 cm je součástí nákupu navždy. Doručovací adresu zadáš při platbě a pošleme ho bez příplatku do všech zemí EU.',
+    },
+    preklic: {
+      v: 'Můžu předplatné zrušit?',
+      o: 'Ano. Roční předplatné můžeš kdykoli zrušit. Nákup navždy platíš jen jednou.',
+    },
+  },
+  konec: {
+    naslov: 'Ukaž, co umíš.',
+    besedilo: 'Tvoje zápasy už jsou na SLFF. Přidej k nim svůj příběh, videa a fajfku.',
   },
   nizje: {
     naslov: 'Vytvořeno pro hráče nižších soutěží',
@@ -35,6 +90,7 @@ export const preverjeni = {
     predTekmo: 'Před každým zápasem zpráva: forma obou týmů, střelci soupeře, vzájemné zápasy a tvoje forma.',
     zgodbe: 'Po každém zápase obrázek připravený na Instagram story: výsledek, minuty, góly a body.',
     sezona: 'Během a na konci sezóny tvoje sezóna v jednom obrázku: góly, minuty, nejlepší zápas, výběry a skauti.',
+    sporocila: 'Piš komukoli ve hře. Ostatní můžou psát jen ověřeným hráčům.',
     cv: 'CV na jedné straně se sezónami, kluby a čísly. Pošli odkaz trenérovi nebo ho ulož jako PDF.',
     naslovi: {
       kljukica: 'Modrá fajfka',
@@ -50,6 +106,7 @@ export const preverjeni = {
       predTekmo: 'Zpráva před zápasem',
       zgodbe: 'Příběh po každém zápase',
       sezona: 'Moje sezóna',
+      sporocila: 'Zprávy všem hráčům',
       cv: 'CV pro trenéry',
     },
   },
@@ -94,6 +151,8 @@ export const preverjeni = {
     zaVedno: 'Navždy',
     zaVednoOpis: 'Jednorázová platba + plakát 40 × 60 cm domů.',
     najugodneje: 'Nejvýhodnější',
+    mesecno: 'Méně než 1 € měsíčně',
+    inVec: 'a všechno ostatní výše',
   },
   cta: {
     poisci: 'Najdi svůj profil',

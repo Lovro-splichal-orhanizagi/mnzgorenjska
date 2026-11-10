@@ -15,6 +15,61 @@ export const preverjeni = {
     highlighti: 'Cele mai bune faze',
     posnetek: 'Faza {n}',
     alt: 'Terenul SLFF',
+    zgled: {
+      ime: 'Luca Popescu',
+      vzdevek: 'Luki',
+      pozicija: 'Atacant',
+      klub: 'CS Steaua Nouă',
+      nasprotnik: 'CS Șoimii',
+      liga: 'Liga a 4-a',
+    },
+  },
+  zaupanje: {
+    zapisniki: 'Statistici din rapoarte oficiale',
+    stripe: 'Plată sigură prin Stripe',
+    preklic: 'Abonamentul anual îl anulezi oricând',
+  },
+  izlozba: {
+    naslov: 'Asta primești. Exact.',
+    opis: 'Imagini create automat de SLFF din meciurile tale și un video pe care îl montăm pentru tine.',
+    primer: 'Exemple cu datele unui jucător inventat. Ale tale vor fi din meciurile tale.',
+  },
+  stebri: {
+    naslov: 'Tot ce primești',
+    pokazi: 'Fă-te remarcat',
+    pripravi: 'Pregătește-te de meci',
+    deli: 'Împărtășește-ți cariera',
+  },
+  primerjava: {
+    naslov: 'Gratuit sau verificat',
+    korist: 'Ce primești',
+    brezplacno: 'Gratuit',
+    preverjen: 'Verificat',
+    prevzem: 'Revendicarea profilului și fotografie',
+    statistika: 'Statistici din rapoarte și puncte în joc',
+    da: 'Inclus',
+    ne: 'Nu este inclus',
+  },
+  vprasanja: {
+    naslov: 'Întrebări frecvente',
+    evropa: 'Mă vor vedea și în afara țării mele?',
+    kdo: 'Cine poate cumpăra un profil verificat?',
+    highlight: {
+      v: 'Cum primesc un video highlight?',
+      o: 'Încarcă 6 clipuri cu cele mai bune faze ale tale. După ce echipa SLFF le aprobă, montăm din ele un video highlight pentru tine. Dacă nu ai destule clipuri, te contactăm.',
+    },
+    plakat: {
+      v: 'Cum primesc posterul?',
+      o: 'Posterul 40 × 60 cm face parte din achiziția pe viață. Adresa de livrare o introduci la plată și îl trimitem fără cost suplimentar în orice țară din UE.',
+    },
+    preklic: {
+      v: 'Pot anula abonamentul?',
+      o: 'Da. Abonamentul anual îl poți anula oricând. Achiziția pe viață o plătești o singură dată.',
+    },
+  },
+  konec: {
+    naslov: 'Arată ce poți.',
+    besedilo: 'Meciurile tale sunt deja pe SLFF. Adaugă-le povestea ta, clipurile și bifa.',
   },
   nizje: {
     naslov: 'Creat pentru jucătorii din ligile inferioare',
@@ -35,6 +90,7 @@ export const preverjeni = {
     predTekmo: 'Înaintea fiecărui meci un raport: forma ambelor echipe, marcatorii adversarului, meciurile directe și forma ta.',
     zgodbe: 'După fiecare meci, o imagine gata pentru Instagram story: scor, minute, goluri și puncte.',
     sezona: 'În timpul și la finalul sezonului, sezonul tău într-o imagine: goluri, minute, cel mai bun meci, selecții și scouteri.',
+    sporocila: 'Scrie oricui din joc. Ceilalți pot scrie doar jucătorilor verificați.',
     cv: 'Un CV pe o pagină cu sezoane, cluburi și cifre. Trimite linkul unui antrenor sau salvează-l ca PDF.',
     naslovi: {
       kljukica: 'Bifă albastră',
@@ -50,6 +106,7 @@ export const preverjeni = {
       predTekmo: 'Raport înainte de meci',
       zgodbe: 'O poveste după fiecare meci',
       sezona: 'Sezonul meu',
+      sporocila: 'Mesaje către toți jucătorii',
       cv: 'CV pentru antrenori',
     },
   },
@@ -94,6 +151,8 @@ export const preverjeni = {
     zaVedno: 'Pe viață',
     zaVednoOpis: 'O singură plată + poster 40 × 60 cm acasă.',
     najugodneje: 'Cel mai avantajos',
+    mesecno: 'Mai puțin de 1 € pe lună',
+    inVec: 'și tot restul de mai sus',
   },
   cta: {
     poisci: 'Găsește-ți profilul',

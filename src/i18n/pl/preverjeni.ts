@@ -15,6 +15,61 @@ export const preverjeni = {
     highlighti: 'Najlepsze akcje',
     posnetek: 'Akcja {n}',
     alt: 'Boisko SLFF',
+    zgled: {
+      ime: 'Łukasz Nowak',
+      vzdevek: 'Luki',
+      pozicija: 'Napastnik',
+      klub: 'KS Gwiazda',
+      nasprotnik: 'KS Sokół',
+      liga: 'Klasa okręgowa',
+    },
+  },
+  zaupanje: {
+    zapisniki: 'Statystyki z oficjalnych protokołów',
+    stripe: 'Bezpieczna płatność przez Stripe',
+    preklic: 'Roczną subskrypcję anulujesz w każdej chwili',
+  },
+  izlozba: {
+    naslov: 'To dostajesz. Dosłownie.',
+    opis: 'Grafiki, które SLFF tworzy automatycznie z twoich meczów, i film, który dla ciebie zmontujemy.',
+    primer: 'Przykłady z danymi fikcyjnego zawodnika. Twoje będą z twoich meczów.',
+  },
+  stebri: {
+    naslov: 'Wszystko, co dostajesz',
+    pokazi: 'Pokaż się',
+    pripravi: 'Przygotuj się do meczu',
+    deli: 'Dziel się swoją karierą',
+  },
+  primerjava: {
+    naslov: 'Za darmo czy zweryfikowany',
+    korist: 'Co dostajesz',
+    brezplacno: 'Za darmo',
+    preverjen: 'Zweryfikowany',
+    prevzem: 'Przejęcie profilu i zdjęcie',
+    statistika: 'Statystyki z protokołów i punkty w grze',
+    da: 'W cenie',
+    ne: 'Nie ma w cenie',
+  },
+  vprasanja: {
+    naslov: 'Częste pytania',
+    evropa: 'Czy zobaczą mnie też poza moim krajem?',
+    kdo: 'Kto może kupić zweryfikowany profil?',
+    highlight: {
+      v: 'Jak dostanę film z najlepszymi akcjami?',
+      o: 'Wgraj 6 nagrań swoich najlepszych akcji. Gdy zespół SLFF je zatwierdzi, zmontujemy z nich dla ciebie film z najlepszymi akcjami. Jeśli nie masz dość nagrań, odezwiemy się.',
+    },
+    plakat: {
+      v: 'Jak dostanę plakat?',
+      o: 'Plakat 40 × 60 cm jest częścią zakupu na zawsze. Adres dostawy podajesz przy płatności, a wysyłamy go bez dopłaty do wszystkich krajów UE.',
+    },
+    preklic: {
+      v: 'Czy mogę anulować subskrypcję?',
+      o: 'Tak. Roczną subskrypcję możesz anulować w każdej chwili. Zakup na zawsze opłacasz tylko raz.',
+    },
+  },
+  konec: {
+    naslov: 'Pokaż, co potrafisz.',
+    besedilo: 'Twoje mecze są już w SLFF. Dodaj do nich swoją historię, nagrania i znaczek.',
   },
   nizje: {
     naslov: 'Stworzone dla zawodników niższych lig',
@@ -35,6 +90,7 @@ export const preverjeni = {
     predTekmo: 'Przed każdym meczem raport: forma obu drużyn, strzelcy rywala, mecze bezpośrednie i twoja forma.',
     zgodbe: 'Po każdym meczu obraz gotowy do relacji na Instagramie: wynik, minuty, gole i punkty.',
     sezona: 'W trakcie i na koniec sezonu twój sezon w jednym obrazie: gole, minuty, najlepszy mecz, wybory i skauci.',
+    sporocila: 'Pisz do każdego w grze. Pozostali mogą pisać tylko do zweryfikowanych zawodników.',
     cv: 'CV na jednej stronie z sezonami, klubami i liczbami. Wyślij link trenerowi lub zapisz jako PDF.',
     naslovi: {
       kljukica: 'Niebieski znaczek',
@@ -50,6 +106,7 @@ export const preverjeni = {
       predTekmo: 'Raport przed meczem',
       zgodbe: 'Relacja po każdym meczu',
       sezona: 'Mój sezon',
+      sporocila: 'Wiadomości do wszystkich zawodników',
       cv: 'CV dla trenerów',
     },
   },
@@ -94,6 +151,8 @@ export const preverjeni = {
     zaVedno: 'Na zawsze',
     zaVednoOpis: 'Jednorazowa płatność + plakat 40 × 60 cm do domu.',
     najugodneje: 'Najkorzystniej',
+    mesecno: 'Mniej niż 1 € miesięcznie',
+    inVec: 'i wszystko inne powyżej',
   },
   cta: {
     poisci: 'Znajdź swój profil',

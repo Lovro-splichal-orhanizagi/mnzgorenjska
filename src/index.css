@@ -446,6 +446,61 @@ body:has(#chat-widget-bubble) [data-podpora] {
   box-shadow: inset 0 0 0 1px rgba(247, 220, 140, 0.4);
 }
 
+/* Prenova /verified: napisna pisava, zlati napisi, stebri, telefon, stena s plakatom. */
+.pisava-prestiz {
+  font-family: 'Playfair Display Variable', 'Playfair Display', Georgia, 'Times New Roman', serif;
+  letter-spacing: -0.01em;
+}
+.preverjeni-zlati-napis {
+  background: linear-gradient(180deg, #fff3c4 0%, #f7dc8c 45%, #c99a2e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.preverjeni-crta { background: linear-gradient(90deg, transparent, #f7dc8c, transparent); }
+.preverjeni-steber {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.preverjeni-zlata-kartica {
+  background:
+    radial-gradient(90% 60% at 100% 0%, rgba(247, 220, 140, 0.18), transparent 70%),
+    linear-gradient(180deg, rgba(247, 220, 140, 0.08), rgba(255, 255, 255, 0.02));
+  box-shadow:
+    inset 0 0 0 1px rgba(247, 220, 140, 0.45),
+    0 30px 80px -40px rgba(247, 220, 140, 0.45);
+}
+.preverjeni-stolpec { background: rgba(247, 220, 140, 0.06); }
+.preverjeni-gumb {
+  background: linear-gradient(180deg, #fbe7a6, #e0b54d);
+  color: #1a1204;
+  box-shadow: 0 10px 30px -10px rgba(247, 220, 140, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.preverjeni-gumb:hover { background: linear-gradient(180deg, #fff0bf, #ebc260); }
+.preverjeni-telefon {
+  background: linear-gradient(160deg, #3a3326, #0b0b0b 40%, #1c1a15);
+  box-shadow:
+    0 0 0 1px rgba(247, 220, 140, 0.35),
+    0 50px 100px -30px rgba(0, 0, 0, 0.9),
+    0 30px 90px -40px rgba(247, 220, 140, 0.5);
+}
+.preverjeni-sij { background: radial-gradient(closest-side, rgba(247, 220, 140, 0.22), transparent); }
+.preverjeni-stena {
+  background:
+    radial-gradient(60% 50% at 50% 30%, rgba(255, 255, 255, 0.08), transparent 70%),
+    linear-gradient(180deg, #2a2620, #14120f);
+}
+.preverjeni-okvir {
+  border: 6px solid #0d0d0d;
+  box-shadow: 0 0 0 1px rgba(247, 220, 140, 0.4), 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+}
+.preverjeni-lepljiv {
+  background: rgba(2, 6, 23, 0.92);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 -1px 0 rgba(247, 220, 140, 0.3);
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
 /* Reflektor izbranosti (SLF-360): temno zeleno igrišče pod identiteto igralca. */
 .izbranost-reflektor {
   background-color: #0b3d2a;

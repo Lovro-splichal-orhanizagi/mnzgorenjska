@@ -16,6 +16,61 @@ export const preverjeni = {
     highlighti: 'Najboljše poteze',
     posnetek: 'Poteza {n}',
     alt: 'Igrišče SLFF',
+    zgled: {
+      ime: 'Luka Novak',
+      vzdevek: 'Luki',
+      pozicija: 'Napadalec',
+      klub: 'NK Zvezda',
+      nasprotnik: 'NK Sokol',
+      liga: '2. liga',
+    },
+  },
+  zaupanje: {
+    zapisniki: 'Statistika iz uradnih zapisnikov',
+    stripe: 'Varno plačilo prek Stripe',
+    preklic: 'Letno naročnino prekličeš kadarkoli',
+  },
+  izlozba: {
+    naslov: 'To dobiš. Dobesedno.',
+    opis: 'Slike, ki jih SLFF samodejno ustvari iz tvojih tekem, in video, ki ga zmontiramo zate.',
+    primer: 'Primeri s podatki izmišljenega igralca. Tvoji bodo iz tvojih tekem.',
+  },
+  stebri: {
+    naslov: 'Vse, kar dobiš',
+    pokazi: 'Pokaži se',
+    pripravi: 'Pripravi se na tekmo',
+    deli: 'Deli svojo kariero',
+  },
+  primerjava: {
+    naslov: 'Brezplačno ali preverjeno',
+    korist: 'Kaj dobiš',
+    brezplacno: 'Brezplačno',
+    preverjen: 'Preverjen',
+    prevzem: 'Prevzem profila in fotografija',
+    statistika: 'Statistika iz zapisnikov in točke v igri',
+    da: 'Vključeno',
+    ne: 'Ni vključeno',
+  },
+  vprasanja: {
+    naslov: 'Pogosta vprašanja',
+    evropa: 'Me bodo videli tudi zunaj Slovenije?',
+    kdo: 'Kdo lahko kupi preverjen profil?',
+    highlight: {
+      v: 'Kako dobim highlight video?',
+      o: 'Naloži 6 posnetkov svojih najboljših potez. Ko jih ekipa SLFF odobri, ti iz njih zmontiramo highlight video. Če posnetkov nimaš dovolj, se ti oglasimo.',
+    },
+    plakat: {
+      v: 'Kako dobim plakat?',
+      o: 'Plakat 40 × 60 cm je del nakupa za vedno. Naslov za dostavo vpišeš ob plačilu, pošljemo ga brez doplačila v vse države EU.',
+    },
+    preklic: {
+      v: 'Lahko naročnino prekličem?',
+      o: 'Da. Letno naročnino lahko kadarkoli prekličeš. Nakup za vedno plačaš samo enkrat.',
+    },
+  },
+  konec: {
+    naslov: 'Pokaži, kaj znaš.',
+    besedilo: 'Tvoje tekme so že v SLFF. Dodaj jim svojo zgodbo, posnetke in kljukico.',
   },
   nizje: {
     naslov: 'Narejeno za igralce nižjih lig',
@@ -36,6 +91,7 @@ export const preverjeni = {
     predTekmo: 'Pred vsako tekmo poročilo: forma obeh ekip, nasprotnikovi strelci, medsebojne tekme in tvoja forma.',
     zgodbe: 'Po vsaki tekmi pripravljena slika za Instagram story: izid, minute, goli in točke.',
     sezona: 'Ob koncu in med sezono tvoja sezona v eni sliki: goli, minute, najboljša tekma, izbranost in skavti.',
+    sporocila: 'Piši komurkoli v igri. Ostali lahko pišejo le preverjenim igralcem.',
     cv: 'CV na eni strani s sezonami, klubi in številkami. Pošlji povezavo trenerju ali ga shrani kot PDF.',
     naslovi: {
       kljukica: 'Modra kljukica',
@@ -51,6 +107,7 @@ export const preverjeni = {
       predTekmo: 'Poročilo pred tekmo',
       zgodbe: 'Zgodba po vsaki tekmi',
       sezona: 'Moja sezona',
+      sporocila: 'Sporočila vsem igralcem',
       cv: 'CV za trenerje',
     },
   },
@@ -86,6 +143,8 @@ export const preverjeni = {
     zaVedno: 'Za vedno',
     zaVednoOpis: 'Enkratno plačilo + plakat 40 × 60 cm na dom.',
     najugodneje: 'Najugodneje',
+    mesecno: 'Manj kot 1 € na mesec',
+    inVec: 'in vse ostalo zgoraj',
   },
   cta: {
     poisci: 'Poišči svoj profil',

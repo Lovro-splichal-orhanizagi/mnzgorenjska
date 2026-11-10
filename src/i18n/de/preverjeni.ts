@@ -16,6 +16,61 @@ export const preverjeni = {
     highlighti: 'Highlights',
     posnetek: 'Highlight {n}',
     alt: 'SLFF-Spielfeld',
+    zgled: {
+      ime: 'Lukas Berger',
+      vzdevek: 'Luki',
+      pozicija: 'Stürmer',
+      klub: 'FC Stern',
+      nasprotnik: 'SV Falken',
+      liga: 'Bezirksliga',
+    },
+  },
+  zaupanje: {
+    zapisniki: 'Statistik aus offiziellen Spielberichten',
+    stripe: 'Sichere Zahlung über Stripe',
+    preklic: 'Jahresabo jederzeit kündbar',
+  },
+  izlozba: {
+    naslov: 'Das bekommst du. Wortwörtlich.',
+    opis: 'Bilder, die SLFF automatisch aus deinen Spielen erstellt, und ein Video, das wir für dich schneiden.',
+    primer: 'Beispiele mit Daten eines erfundenen Spielers. Deine kommen aus deinen Spielen.',
+  },
+  stebri: {
+    naslov: 'Alles, was du bekommst',
+    pokazi: 'Zeig dich',
+    pripravi: 'Bereite dich aufs Spiel vor',
+    deli: 'Teile deine Karriere',
+  },
+  primerjava: {
+    naslov: 'Kostenlos oder verifiziert',
+    korist: 'Was du bekommst',
+    brezplacno: 'Kostenlos',
+    preverjen: 'Verifiziert',
+    prevzem: 'Profil übernehmen und Foto hochladen',
+    statistika: 'Statistik aus Spielberichten und Fantasy-Punkte',
+    da: 'Enthalten',
+    ne: 'Nicht enthalten',
+  },
+  vprasanja: {
+    naslov: 'Häufige Fragen',
+    evropa: 'Sehen mich auch Leute außerhalb meines Landes?',
+    kdo: 'Wer kann ein verifiziertes Profil kaufen?',
+    highlight: {
+      v: 'Wie bekomme ich ein Highlight-Video?',
+      o: 'Lade 6 Clips deiner besten Aktionen hoch. Sobald das SLFF-Team sie freigibt, schneiden wir daraus ein Highlight-Video für dich. Wenn du nicht genug Clips hast, melden wir uns.',
+    },
+    plakat: {
+      v: 'Wie bekomme ich das Poster?',
+      o: 'Das Poster 40 × 60 cm ist Teil des Kaufs für immer. Die Lieferadresse gibst du beim Bezahlen an, wir verschicken es ohne Aufpreis in alle EU-Länder.',
+    },
+    preklic: {
+      v: 'Kann ich das Abo kündigen?',
+      o: 'Ja. Das Jahresabo kannst du jederzeit kündigen. Den Kauf für immer bezahlst du nur einmal.',
+    },
+  },
+  konec: {
+    naslov: 'Zeig, was du kannst.',
+    besedilo: 'Deine Spiele sind schon bei SLFF. Gib ihnen deine Geschichte, deine Clips und den Haken.',
   },
   nizje: {
     naslov: 'Gemacht für Spieler unterer Ligen',
@@ -36,6 +91,7 @@ export const preverjeni = {
     predTekmo: 'Vor jedem Spiel ein Bericht: Form beider Teams, Torschützen des Gegners, direkter Vergleich und deine eigene Form.',
     zgodbe: 'Nach jedem Spiel ein Bild für deine Instagram-Story: Ergebnis, Minuten, Tore und Punkte.',
     sezona: 'Während und am Ende der Saison deine Saison in einem Bild: Tore, Minuten, bestes Spiel, Auswahl und Scouts.',
+    sporocila: 'Schreib jedem im Spiel. Alle anderen können nur verifizierten Spielern schreiben.',
     cv: 'Ein einseitiger Lebenslauf mit Saisons, Vereinen und Zahlen. Schick den Link einem Trainer oder speichere ihn als PDF.',
     naslovi: {
       kljukica: 'Blauer Haken',
@@ -51,6 +107,7 @@ export const preverjeni = {
       predTekmo: 'Bericht vor dem Spiel',
       zgodbe: 'Eine Story nach jedem Spiel',
       sezona: 'Meine Saison',
+      sporocila: 'Nachrichten an alle Spieler',
       cv: 'Lebenslauf für Trainer',
     },
   },
@@ -95,6 +152,8 @@ export const preverjeni = {
     zaVedno: 'Für immer',
     zaVednoOpis: 'Einmalzahlung + Poster 40 × 60 cm nach Hause.',
     najugodneje: 'Bester Wert',
+    mesecno: 'Weniger als 1 € im Monat',
+    inVec: 'und alles andere oben',
   },
   cta: {
     poisci: 'Finde dein Profil',
