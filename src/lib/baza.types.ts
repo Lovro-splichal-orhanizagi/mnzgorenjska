@@ -10077,6 +10077,20 @@ export type Database = {
           zmage: number
         }[]
       }
+      lestvica_napovedi_drzave: {
+        Args: { p_dni?: number; p_drzava: string; p_limit?: number }
+        Returns: {
+          display_name: string
+          je_moj: boolean
+          kralj: boolean
+          kron: number
+          mesto: number
+          ocenjenih: number
+          razpletov: number
+          tocke: number
+          tocnih: number
+        }[]
+      }
       lestvica_napovedi_lige: {
         Args: { p_krog?: number; p_tekmovanje: number }
         Returns: {

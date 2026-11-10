@@ -115,6 +115,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     vrhOpomba:
       'Punktides pole resultatiivseid sööte: need kinnitatakse hääletusega, mis pole enamikus liigades veel alanud, nii et liigad ei oleks võrdses seisus. Liigad on mänginud erineva arvu voore.',
     vrhPrazno: 'Sel hooajal pole veel ühtegi mängu mängitud.',
+    napovediUvod: 'Kõigi liigade parimad ennustajad. Täpne tulemus 3 punkti, õige lõpptulemus 1.',
+    napovediSezona: 'Hooaeg',
+    napovedi7dni: 'Viimased 7 päeva',
+    napovediPrazno7: 'Viimase 7 päeva jooksul pole veel hinnatud ennustusi.',
+    napovediOcenjenih: 'Hinnatud ennustusi: {n}',
+    vrhNapovedi: 'Parimad ennustajad',
+    vrhNapovediVse: 'Kogu ennustuste tabel',
   },
 
   miniLige: {

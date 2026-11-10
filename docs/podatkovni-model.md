@@ -325,6 +325,20 @@
   "👑 n" v vrstici obeh lestvic napovedi, vrstica "Kralj napovedi" nad njima;
   krona kralja sezone še v glavni lestvici mini lige in glavi njene strani
   (`useKraljMiniLige`, le člani).
+- **Lestvica napovedi države** (migracija 20261110120100):
+  `lestvica_napovedi_drzave(drzava, dni, limit)` (anon + authenticated,
+  security definer) sešteje napovedi vseh aktivnih lig države
+  (`countries.code`) po pravilih `lestvica_napovedi_lige` (lastnik nehišne
+  ekipe v ligi tekme, tekoča sezona lige, kontumacija in tekma brez izida ne
+  štejeta; točke, nato točni). Vrne iste stolpce kot lestvica lige (`mesto`,
+  prikazno ime, točke, točni, razpleti, ocenjene, `je_moj`, `kron`, `kralj`),
+  **nikoli user_id**: vrh `limit` (privzeto 50, največ 100) in klicateljevo
+  vrstico. `dni` (vmesnik 7) šteje le tekme zadnjih dni; `kron` so vedno krone
+  krogov sezone vseh lig države (isto pravilo kot `kralji_krogov_lige`, a le
+  za kroge z napovedmi), `kralj` vodilni pogleda. Gre od `napovedi` po ključih
+  (`offset 0`), Madžarska ~50 ms. Vmesnik: zavihek Napovedi na `/national`
+  (`?pogled=napovedi`, `LestvicaNapovediDrzave.tsx`, sezona ali zadnjih 7 dni)
+  in vrh 5 na naslovnici (`VrhNapovediDrzave.tsx`, skrit brez ocenjene napovedi).
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
 - `statistika_igralcev` → statistika igralca po ligi in sezoni (nastopi,
   minute, goli, kartoni, čiste mreže, točke, asistence, zadnji krog, forma).
