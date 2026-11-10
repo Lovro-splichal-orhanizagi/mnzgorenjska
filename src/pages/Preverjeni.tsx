@@ -4,8 +4,6 @@
 // ni ne cene ne gumba za nakup (Apple ne dovoli napotkov na plačila zunaj
 // trgovine), kot drugod (`jeNativno()`).
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-// Napisna pisava le za to stran (latinica, latin-ext in cirilica; ostalo serif).
-import "@fontsource-variable/playfair-display";
 import { Link } from "../components/Povezava";
 import { Kljukica } from "../components/ZnakPreverjen";
 import { supabase } from "../lib/supabase";
