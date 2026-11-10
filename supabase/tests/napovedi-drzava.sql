@@ -1,4 +1,4 @@
--- Lestvica napovedi države (20261109214100): seštevek vseh aktivnih lig
+-- Lestvica napovedi države (20261110120100): seštevek vseh aktivnih lig
 -- države, le lastniki nehišnih ekip v ligi tekme, le tekoča sezona,
 -- kontumacija ne šteje, neaktivna liga in druga država ne štejeta, krone
 -- enake kot `kralji_krogov_lige`, pogled zadnjih 7 dni, vrh in lastna vrstica,

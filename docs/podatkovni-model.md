@@ -325,7 +325,7 @@
   "👑 n" v vrstici obeh lestvic napovedi, vrstica "Kralj napovedi" nad njima;
   krona kralja sezone še v glavni lestvici mini lige in glavi njene strani
   (`useKraljMiniLige`, le člani).
-- **Lestvica napovedi države** (migracija 20261109214100):
+- **Lestvica napovedi države** (migracija 20261110120100):
   `lestvica_napovedi_drzave(drzava, dni, limit)` (anon + authenticated,
   security definer) sešteje napovedi vseh aktivnih lig države
   (`countries.code`) po pravilih `lestvica_napovedi_lige` (lastnik nehišne
