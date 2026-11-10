@@ -36,8 +36,8 @@ begin
   insert into players (first_name, last_name, full_name, team_id, competition_id, active)
   values ('Vaba', 'Testni', 'Vaba Testni', v_klub, v_liga, true) returning id into v_igralec;
   insert into auth.users (id, email) values (v_uporabnik, 'vaba-test@example.invalid');
-  insert into zahtevki_igralca (player_id, user_id, status)
-  values (v_igralec, v_uporabnik, 'potrjen') returning id into v_zahtevek;
+  insert into zahtevki_igralca (player_id, user_id, status, potrdil)
+  values (v_igralec, v_uporabnik, 'potrjen', 'admin') returning id into v_zahtevek;
 
   -- Štetje: vsak klic je ogled, neznan igralec ne šteje.
   perform zabelezi_ogled_igralca(v_igralec, 'si');
