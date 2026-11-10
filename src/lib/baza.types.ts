@@ -11255,6 +11255,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      stevec_uporabnikov: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       sporocila_pogovora: {
         Args: { p_pogovor: number; p_pred?: number }
         Returns: {

@@ -29,6 +29,7 @@ import { jezikSlovarja, t, tx, datum } from '../i18n'
 import Sponzor from '../components/Sponzor'
 import AppPromo, { appPromoAktivna } from '../components/AppPromo'
 import VrhNapovediDrzave from '../components/VrhNapovediDrzave'
+import Stevec10k from '../components/Stevec10k'
 
 /** Kar liga čaka od skupnosti (asistence, pozicije). */
 interface Statistika {
@@ -545,6 +546,8 @@ export default function Domov() {
           </div>
         </section>
       )}
+
+      <Stevec10k />
 
       {/* Prvi dnevi po izidu aplikacij: kartica z aplikacijama namesto trgovine
           (trgovina je ves čas v meniju in nogi); potem se trgovina vrne. */}
