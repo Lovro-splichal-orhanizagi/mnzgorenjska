@@ -13195,6 +13195,27 @@ preveri(
     ['je_mladinski_slug', 'brez_opomnikov', 'hisna', "'pivo-7dni'"].every((x) => migPivo.includes(x)))
   preveri('pivo 7 dni: urnik izklopljen do objave funkcije', !/^\s*schedule:/m.test(tokPivo) && /workflow_dispatch:/.test(tokPivo))
 
+  // Pripelji prijatelja: vseh 20 jezikov, osebna povezava s kodo vabila v HTML in čistopisu, gumb na mini lige, odjava.
+  const povabila = pivoLige.map((l) => [l, E.sestaviPovabiPrijatelja(l, { display_name: 'Ana Novak', koda: 'ab12cd34' })])
+  const jezikiPovabila = new Set(pivoLige.map((l) => E.jezikLige(l)))
+  const slabPovabilo = povabila.find(([l, m]) => {
+    const tuj = E.jezikLige(l) !== 'sl'
+    const povezava = E.povezavaPovabila(l.slug, 'ab12cd34')
+    const besedilo = brezPovezav(m.naslov + brezNoge(m.html))
+    return !povezava.includes('od=ab12cd34') || !m.besedilo.includes(povezava) ||
+      !m.html.includes(povezava.replaceAll('&', '&amp;')) ||
+      !gumbUrl(m)?.includes(`/mini-leagues?t=${encodeURIComponent(l.slug)}`) ||
+      m.odjava !== `https://slff.eu/reminders?t=${l.slug}` || !m.html.includes(`href="${m.odjava}"`) || !m.besedilo.includes(m.odjava) ||
+      (tuj && (slovensko.test(besedilo) || pomisljaj.test(besedilo)))
+  })
+  preveri('e-pošta: pripelji prijatelja v vseh 20 jezikih (povezava s kodo, gumb, odjava, brez slovenščine in pomišljajev)',
+    jezikiPovabila.size === 20 && !slabPovabilo, slabPovabilo ? `${slabPovabilo[0].drzava}: ${slabPovabilo[1].naslov}` : `${jezikiPovabila.size} jezikov`)
+  const migPovabilo = readFileSync(new URL('../supabase/migrations/20261110180000_povabi_prijatelja.sql', import.meta.url), 'utf8')
+  const tokPovabilo = readFileSync(new URL('../.github/workflows/povabi-prijatelja.yml', import.meta.url), 'utf8')
+  preveri('pripelji prijatelja: SQL izpusti odjavljene, omejene in hišne, enkrat na naslov, suhi tek ne piše kod',
+    ['brez_opomnikov', 'je_omejen', 'hisna', "'povabi-prijatelja'", 'lower(l.email)', 'p_ustvari_kode', "interval '7 days'"].every((x) => migPovabilo.includes(x)))
+  preveri('pripelji prijatelja: le ročno, privzeto suho', !/^\s*schedule:/m.test(tokPovabilo) && /workflow_dispatch:/.test(tokPovabilo) && /default: 'true'/.test(tokPovabilo))
+
   // Anketa plačila (SLF-211): sl/en/de/hr, ostali jeziki angleško; odjava v nogi, glavi in čistopisu.
   const ankete = pivoLige.map((l) => [l, E.sestaviAnketoPlacila(l, { display_name: 'Ana Novak' })])
   const slabaAnketa = ankete.find(([l, m]) => {

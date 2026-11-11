@@ -501,6 +501,15 @@
   mladim brez piva); liga in jezik sta od najstarejše nemladinske ekipe. Le
   pošta, brez pusha (povezava na pivo v aplikaciji ni dovoljena). Teče v
   `pivo-7dni.yml` (`VRSTA=pivo-7dni`), urnik je ob uvedbi izklopljen
+- `kandidati_za_povabi_prijatelja(najvec, ustvari_kode)` → enkratni mail
+  "Pripelji prijatelja" z osebno povezavo s kodo vabila
+  (`/?t=<liga>&od=<koda>`, `kode_vabil`; manjkajočo kodo ustvari funkcija, suhi
+  tek z `ustvari_kode = false` le šteje) in gumbom na mini lige. Enkrat na
+  človeka in naslov (`email_log` vrsta `povabi-prijatelja`, neuspel največ
+  trikrat, en poskus na dan); brez odjavljenih, omejenih, lastnikov hišnih
+  ekip in kdor je v 7 dneh dobil drug enkratni mail. Liga in jezik sta od
+  zadnje nehišne ekipe v aktivni ligi. Le pošta, brez pusha. Le ročno:
+  `povabi-prijatelja.yml` (privzeto suho, paketi po 500)
 - `kandidati_za_push_opomnik(liga)` → samo push "še nimaš ekipe": kdor ima
   napravo in v ligi nima ekipe (ali ima prazno; brez ekipe šteje domača liga
   kot pri opomniku), 24 ur pred rokom, enkrat na krog (`email_log` vrsta

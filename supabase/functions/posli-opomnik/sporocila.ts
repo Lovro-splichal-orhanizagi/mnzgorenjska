@@ -4153,6 +4153,277 @@ export function sestaviNovostMiniLig(liga: Liga, meta: { display_name: string | 
   }, p.odjava)
 }
 
+// --- pripelji prijatelja -----------------------------------------------------
+// Enkratni mail (10. 11. 2026) vsem z nehišno ekipo (`kandidati_za_povabi_prijatelja`).
+// Nosi osebno povezavo s kodo vabila (`?od=<koda>`, `src/lib/povabilo.tsx`) do
+// lige prejemnika; gumb odpre mini lige (dvoboj s prijateljem). Ne obljublja
+// nagrade — prednost v vrsti prevzema velja le čakajočim na prevzem profila.
+// Mail ne predlaga posredovanja: v nogi je prejemnikova povezava za odjavo.
+// Razlog v nogi je isti stavek kot pri novosti mini lig (`NOVOST_MINI_LIG.zakaj`).
+
+interface BesedilaPovabila {
+  zadeva: string
+  predglava: string
+  naslov: string
+  uvod: string
+  povezava: string
+  kako: string
+  kakoV: string
+  gumb: string
+  potem: string
+}
+
+const POVABI_PRIJATELJA: Record<Jezik, BesedilaPovabila> = {
+  sl: {
+    zadeva: 'Pripelji prijatelja v SLFF',
+    predglava: 'Tvoja osebna povezava za prijatelje. Skupaj je bolj zabavno, in vsak krog dvoboj.',
+    naslov: 'Igraj s prijatelji',
+    uvod: 'SLFF je boljši s prijatelji. Pošlji jim svojo povezavo in igrajte skupaj, brezplačno je.',
+    povezava: 'Tvoja povezava',
+    kako: 'Kako',
+    kakoV: 'Pošlji povezavo prijateljem ali v skupino ekipe na WhatsAppu ali Viberju. Prijava in ekipa sta hitro gotovi.',
+    gumb: 'Ustvari mini ligo',
+    potem: 'Ko se pridružijo, ustvari mini ligo in vsak krog igraj dvoboj proti njim.',
+  },
+  en: {
+    zadeva: 'Bring a friend to SLFF',
+    predglava: 'Your personal link for friends. More fun together, and a duel every round.',
+    naslov: 'Play with your friends',
+    uvod: 'SLFF is better with friends. Send them your link and play together, it\'s free.',
+    povezava: 'Your link',
+    kako: 'How',
+    kakoV: 'Send the link to friends or to your team\'s WhatsApp or Viber group. Signing up and building a team is quick.',
+    gumb: 'Create a mini league',
+    potem: 'Once they join, create a mini league and play a duel against them every round.',
+  },
+  sk: {
+    zadeva: 'Priveď kamaráta do SLFF',
+    predglava: 'Tvoj osobný odkaz pre kamarátov. Spolu je to väčšia zábava, a duel každé kolo.',
+    naslov: 'Hraj s kamarátmi',
+    uvod: 'SLFF je lepší s kamarátmi. Pošli im svoj odkaz a hrajte spolu, je to zadarmo.',
+    povezava: 'Tvoj odkaz',
+    kako: 'Ako',
+    kakoV: 'Pošli odkaz kamarátom alebo do skupiny tímu na WhatsAppe či Viberi. Registrácia aj tím sú hotové rýchlo.',
+    gumb: 'Vytvor minilígu',
+    potem: 'Keď sa pridajú, vytvor minilígu a každé kolo hraj proti nim duel.',
+  },
+  hr: {
+    zadeva: 'Dovedi prijatelja u SLFF',
+    predglava: 'Tvoja osobna poveznica za prijatelje. Zajedno je zabavnije, i dvoboj svako kolo.',
+    naslov: 'Igraj s prijateljima',
+    uvod: 'SLFF je bolji s prijateljima. Pošalji im svoju poveznicu i igrajte zajedno, besplatno je.',
+    povezava: 'Tvoja poveznica',
+    kako: 'Kako',
+    kakoV: 'Pošalji poveznicu prijateljima ili u grupu momčadi na WhatsAppu ili Viberu. Prijava i momčad brzo su gotovi.',
+    gumb: 'Napravi mini ligu',
+    potem: 'Kad se pridruže, napravi mini ligu i svako kolo igraj dvoboj protiv njih.',
+  },
+  cs: {
+    zadeva: 'Přiveď kamaráda do SLFF',
+    predglava: 'Tvůj osobní odkaz pro kamarády. Spolu je to větší zábava, a duel každé kolo.',
+    naslov: 'Hraj s kamarády',
+    uvod: 'SLFF je lepší s kamarády. Pošli jim svůj odkaz a hrajte spolu, je to zdarma.',
+    povezava: 'Tvůj odkaz',
+    kako: 'Jak',
+    kakoV: 'Pošli odkaz kamarádům nebo do skupiny týmu na WhatsAppu či Viberu. Registrace i tým jsou hotové rychle.',
+    gumb: 'Vytvoř miniligu',
+    potem: 'Až se přidají, vytvoř miniligu a každé kolo hraj proti nim duel.',
+  },
+  hu: {
+    zadeva: 'Hozd el a barátodat az SLFF-be',
+    predglava: 'A saját linked a barátaidnak. Együtt jobb, és minden fordulóban párharc.',
+    naslov: 'Játssz a barátaiddal',
+    uvod: 'Az SLFF a barátokkal jobb. Küldd el nekik a linkedet, és játsszatok együtt, ingyenes.',
+    povezava: 'A linked',
+    kako: 'Hogyan',
+    kakoV: 'Küldd el a linket a barátaidnak vagy a csapat WhatsApp- vagy Viber-csoportjába. A regisztráció és a csapat gyorsan megvan.',
+    gumb: 'Hozz létre minibajnokságot',
+    potem: 'Ha csatlakoztak, hozz létre minibajnokságot, és minden fordulóban játssz ellenük párharcot.',
+  },
+  de: {
+    zadeva: 'Bring einen Freund zu SLFF',
+    predglava: 'Dein persönlicher Link für Freunde. Zusammen macht es mehr Spaß, und jede Runde ein Duell.',
+    naslov: 'Spiel mit deinen Freunden',
+    uvod: 'SLFF ist mit Freunden besser. Schick ihnen deinen Link und spielt zusammen, es ist kostenlos.',
+    povezava: 'Dein Link',
+    kako: 'So geht\'s',
+    kakoV: 'Schick den Link an Freunde oder in die WhatsApp- oder Viber-Gruppe deines Teams. Anmeldung und Team sind schnell erledigt.',
+    gumb: 'Minileague erstellen',
+    potem: 'Sobald sie dabei sind, erstelle eine Minileague und spiel jede Runde ein Duell gegen sie.',
+  },
+  sr: {
+    zadeva: 'Dovedi prijatelja u SLFF',
+    predglava: 'Tvoj lični link za prijatelje. Zajedno je zabavnije, i dvoboj svako kolo.',
+    naslov: 'Igraj sa prijateljima',
+    uvod: 'SLFF je bolji sa prijateljima. Pošalji im svoj link i igrajte zajedno, besplatno je.',
+    povezava: 'Tvoj link',
+    kako: 'Kako',
+    kakoV: 'Pošalji link prijateljima ili u grupu tima na WhatsAppu ili Viberu. Prijava i tim su brzo gotovi.',
+    gumb: 'Napravi mini ligu',
+    potem: 'Kad se pridruže, napravi mini ligu i svako kolo igraj dvoboj protiv njih.',
+  },
+  ro: {
+    zadeva: 'Adu un prieten în SLFF',
+    predglava: 'Linkul tău personal pentru prieteni. Împreună e mai distractiv, și un duel în fiecare etapă.',
+    naslov: 'Joacă cu prietenii',
+    uvod: 'SLFF e mai bun cu prietenii. Trimite-le linkul tău și jucați împreună, e gratuit.',
+    povezava: 'Linkul tău',
+    kako: 'Cum',
+    kakoV: 'Trimite linkul prietenilor sau în grupul echipei pe WhatsApp ori Viber. Înscrierea și echipa se fac repede.',
+    gumb: 'Creează o miniligă',
+    potem: 'După ce se alătură, creează o miniligă și joacă un duel cu ei în fiecare etapă.',
+  },
+  et: {
+    zadeva: 'Too sõber SLFF-i',
+    predglava: 'Sinu isiklik link sõpradele. Koos on lõbusam, ja igas voorus duell.',
+    naslov: 'Mängi sõpradega',
+    uvod: 'SLFF on sõpradega parem. Saada neile oma link ja mängige koos, see on tasuta.',
+    povezava: 'Sinu link',
+    kako: 'Kuidas',
+    kakoV: 'Saada link sõpradele või meeskonna WhatsAppi või Viberi gruppi. Registreerumine ja meeskond on kiiresti valmis.',
+    gumb: 'Loo miniliiga',
+    potem: 'Kui nad on liitunud, loo miniliiga ja mängi nende vastu igas voorus duelli.',
+  },
+  lv: {
+    zadeva: 'Atved draugu uz SLFF',
+    predglava: 'Tava personīgā saite draugiem. Kopā ir jautrāk, un duelis katrā kārtā.',
+    naslov: 'Spēlē ar draugiem',
+    uvod: 'SLFF ir labāks ar draugiem. Nosūti viņiem savu saiti un spēlējiet kopā, tas ir bez maksas.',
+    povezava: 'Tava saite',
+    kako: 'Kā',
+    kakoV: 'Nosūti saiti draugiem vai komandas WhatsApp vai Viber grupā. Reģistrācija un komanda ir gatava ātri.',
+    gumb: 'Izveido minilīgu',
+    potem: 'Kad viņi pievienojas, izveido minilīgu un katrā kārtā spēlē dueli pret viņiem.',
+  },
+  pl: {
+    zadeva: 'Przyprowadź kumpla do SLFF',
+    predglava: 'Twój osobisty link dla znajomych. Razem jest fajniej, i pojedynek w każdej kolejce.',
+    naslov: 'Graj ze znajomymi',
+    uvod: 'SLFF jest lepszy ze znajomymi. Wyślij im swój link i grajcie razem, to nic nie kosztuje.',
+    povezava: 'Twój link',
+    kako: 'Jak',
+    kakoV: 'Wyślij link znajomym albo do grupy drużyny na WhatsAppie lub Viberze. Rejestracja i drużyna to chwila.',
+    gumb: 'Utwórz miniligę',
+    potem: 'Gdy dołączą, utwórz miniligę i w każdej kolejce graj z nimi pojedynek.',
+  },
+  es: {
+    zadeva: 'Trae a un amigo a SLFF',
+    predglava: 'Tu enlace personal para amigos. Juntos es más divertido, y hay un duelo cada jornada.',
+    naslov: 'Juega con tus amigos',
+    uvod: 'SLFF es mejor con amigos. Mándales tu enlace y jugad juntos: es gratis.',
+    povezava: 'Tu enlace',
+    kako: 'Cómo',
+    kakoV: 'Envía el enlace a tus amigos o al grupo de WhatsApp o Viber de tu equipo. Registrarse y hacer el equipo es rápido.',
+    gumb: 'Crea una minilliga',
+    potem: 'Cuando se unan, crea una minilliga y juega un duelo contra ellos cada jornada.',
+  },
+  mk: {
+    zadeva: 'Доведи пријател во SLFF',
+    predglava: 'Твојот личен линк за пријатели. Заедно е позабавно, и дуел секое коло.',
+    naslov: 'Играј со пријателите',
+    uvod: 'SLFF е подобар со пријатели. Испрати им го твојот линк и играјте заедно, бесплатно е.',
+    povezava: 'Твојот линк',
+    kako: 'Како',
+    kakoV: 'Испрати го линкот на пријателите или во групата на екипата на WhatsApp или Viber. Регистрацијата и екипата се брзо готови.',
+    gumb: 'Создај мини лига',
+    potem: 'Кога ќе се приклучат, создај мини лига и секое коло играј дуел против нив.',
+  },
+  el: {
+    zadeva: 'Φέρε έναν φίλο στο SLFF',
+    predglava: 'Ο προσωπικός σου σύνδεσμος για φίλους. Μαζί είναι πιο διασκεδαστικό, και μια μονομαχία κάθε αγωνιστική.',
+    naslov: 'Παίξε με τους φίλους σου',
+    uvod: 'Το SLFF είναι καλύτερο με φίλους. Στείλε τους τον σύνδεσμό σου και παίξτε μαζί, είναι δωρεάν.',
+    povezava: 'Ο σύνδεσμός σου',
+    kako: 'Πώς',
+    kakoV: 'Στείλε τον σύνδεσμο σε φίλους ή στην ομάδα WhatsApp ή Viber της ομάδας σου. Η εγγραφή και η ομάδα γίνονται γρήγορα.',
+    gumb: 'Φτιάξε μίνι λίγκα',
+    potem: 'Μόλις μπουν, φτιάξε μίνι λίγκα και παίξε μονομαχία μαζί τους κάθε αγωνιστική.',
+  },
+  tr: {
+    zadeva: 'Bir arkadaşını SLFF\'e getir',
+    predglava: 'Arkadaşların için kişisel bağlantın. Birlikte daha eğlenceli, ve her hafta bir düello.',
+    naslov: 'Arkadaşlarınla oyna',
+    uvod: 'SLFF arkadaşlarla daha güzel. Onlara bağlantını gönder ve birlikte oynayın, ücretsiz.',
+    povezava: 'Bağlantın',
+    kako: 'Nasıl',
+    kakoV: 'Bağlantıyı arkadaşlarına ya da takımının WhatsApp veya Viber grubuna gönder. Kayıt ve takım kurmak hızlıdır.',
+    gumb: 'Mini lig kur',
+    potem: 'Katıldıklarında bir mini lig kur ve her hafta onlara karşı düello oyna.',
+  },
+  uk: {
+    zadeva: 'Приведи друга в SLFF',
+    predglava: 'Твоє особисте посилання для друзів. Разом веселіше, і дуель щотуру.',
+    naslov: 'Грай з друзями',
+    uvod: 'SLFF кращий із друзями. Надішли їм своє посилання й грайте разом, це безкоштовно.',
+    povezava: 'Твоє посилання',
+    kako: 'Як',
+    kakoV: 'Надішли посилання друзям або в групу команди у WhatsApp чи Viber. Реєстрація й команда, це швидко.',
+    gumb: 'Створи міні-лігу',
+    potem: 'Коли вони приєднаються, створи міні-лігу й щотуру грай проти них дуель.',
+  },
+  hy: {
+    zadeva: 'Բեր ընկերոջդ SLFF',
+    predglava: 'Քո անձնական հղումը ընկերների համար։ Միասին ավելի հետաքրքիր է՝ և մենամարտ ամեն տուր։',
+    naslov: 'Խաղա ընկերներիդ հետ',
+    uvod: 'SLFF-ն ավելի լավն է ընկերների հետ։ Ուղարկիր նրանց քո հղումը և խաղացեք միասին՝ անվճար է։',
+    povezava: 'Քո հղումը',
+    kako: 'Ինչպես',
+    kakoV: 'Ուղարկիր հղումը ընկերներին կամ թիմի WhatsApp կամ Viber խմբին։ Գրանցումն ու թիմը արագ են պատրաստ։',
+    gumb: 'Ստեղծիր մինի լիգա',
+    potem: 'Երբ միանան, ստեղծիր մինի լիգա և ամեն տուր մենամարտ խաղա նրանց դեմ։',
+  },
+  az: {
+    zadeva: 'Dostunu SLFF-ə gətir',
+    predglava: 'Dostların üçün şəxsi linkin. Birlikdə daha əyləncəlidir, və hər turda duel.',
+    naslov: 'Dostlarınla oyna',
+    uvod: 'SLFF dostlarla daha yaxşıdır. Onlara linkini göndər və birlikdə oynayın, pulsuzdur.',
+    povezava: 'Sənin linkin',
+    kako: 'Necə',
+    kakoV: 'Linki dostlarına və ya komandanın WhatsApp və ya Viber qrupuna göndər. Qeydiyyat və komanda tez hazır olur.',
+    gumb: 'Mini liqa yarat',
+    potem: 'Qoşulduqdan sonra mini liqa yarat və hər turda onlara qarşı duel oyna.',
+  },
+  da: {
+    zadeva: 'Tag en ven med i SLFF',
+    predglava: 'Dit personlige link til venner. Det er sjovere sammen, og en duel hver runde.',
+    naslov: 'Spil med dine venner',
+    uvod: 'SLFF er bedre med venner. Send dem dit link, og spil sammen, det er gratis.',
+    povezava: 'Dit link',
+    kako: 'Sådan',
+    kakoV: 'Send linket til venner eller til dit holds WhatsApp- eller Viber-gruppe. Det går hurtigt at tilmelde sig og lave et hold.',
+    gumb: 'Opret en miniliga',
+    potem: 'Når de er med, så opret en miniliga og spil en duel mod dem hver runde.',
+  },
+}
+
+/** Osebna povezava za prijatelje: liga prejemnika in koda vabila. */
+export const povezavaPovabila = (slug: string, koda: string) =>
+  `${SITE}/?t=${encodeURIComponent(slug)}&od=${encodeURIComponent(koda)}`
+
+export function sestaviPovabiPrijatelja(liga: Liga, meta: { display_name: string | null; koda: string }): Sporocilo {
+  const j = jezikLige(liga)
+  const p = povezave(liga.slug)
+  const B = POVABI_PRIJATELJA[j]
+  const url = povezavaPovabila(liga.slug, meta.koda)
+  return sestavi(j, {
+    zadeva: B.zadeva,
+    predglava: B.predglava,
+    oznaka: liga.oznaka,
+    naslov: B.naslov,
+    uvod: `${pozdrav(j, meta.display_name)} ${B.uvod}`,
+    dejstva: [
+      { k: esc(B.povezava), v: `<a href="${esc(url)}" style="color: #0b5d3b; word-break: break-all;">${esc(url)}</a>` },
+      { k: esc(B.kako), v: esc(B.kakoV) },
+    ],
+    gumb: {
+      label: B.gumb,
+      url: `${SITE}/mini-leagues?t=${encodeURIComponent(liga.slug)}&src=mail-povabi`,
+    },
+    potem: B.potem,
+    zakaj: NOVOST_MINI_LIG[j].zakaj,
+  }, p.odjava)
+}
+
 // --- razlog neveljavne ekipe ------------------------------------------------
 
 /** Slovaška množina: 1 / 2–4 / ostalo. */
