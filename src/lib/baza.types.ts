@@ -10444,7 +10444,7 @@ export type Database = {
         }[]
       }
       moje_odprte_napovedi: {
-        Args: { p_tekmovanje?: number }
+        Args: { p_mini_liga?: number; p_tekmovanje?: number }
         Returns: {
           away_logo: string
           away_name: string

@@ -290,7 +290,7 @@
   tekoče sezone (`clani_napovedi_mini_lige`): `lestvica_napovedi_mini_lige(liga,
   krog)` (javna vsem prijavljenim, zasebna članom; točke, točni, razpleti),
   `krogi_napovedi_mini_lige`, `napovedi_mini_lige_krog` (le članom, le po
-  roku). Obrazec: `moje_odprte_napovedi(liga)` (naslednji krog mojih lig).
+  roku). Obrazec: `moje_odprte_napovedi(liga, mini_liga)` (naslednji krog mojih lig; v mini ligi le lige mojih ekip v njej).
   Servisni `povzetek_napovedi_kroga(uporabnik, krog)` za pošto. Vmesnik:
   Mini lige → Napovedi (`NapovediMiniLige.tsx`, `?pogled=napovedi`, povezava
   na lestvico lige).
