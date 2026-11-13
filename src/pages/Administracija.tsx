@@ -25,6 +25,7 @@ import PonovneCene from '../components/admin/PonovneCene'
 import PrijaveMiniLig from '../components/admin/PrijaveMiniLig'
 import OmejitveUporabnikov from '../components/admin/OmejitveUporabnikov'
 import SeznamPopravkov from '../components/SeznamPopravkov'
+import SamodejniPopravki from '../components/admin/SamodejniPopravki'
 import RastLig from '../components/admin/RastLig'
 import ZeljeLig from '../components/admin/ZeljeLig'
 import PrijaveNapak from '../components/admin/PrijaveNapak'
@@ -912,6 +913,7 @@ export default function Administracija() {
             </Razdelek>
             <Razdelek id="popravki">
               <SeznamPopravkov />
+              <SamodejniPopravki />
             </Razdelek>
             <Razdelek id="rast-lig">
               <RastLig />
