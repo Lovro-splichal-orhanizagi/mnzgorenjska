@@ -1186,6 +1186,23 @@
   asistence vpiše nazaj po ključu gola (minuta, strelec, klub, avtogol,
   enajstmetrovka; en sam zadetek, podajalec z nastopom). Gola, minut in
   kartonov se ne popravlja
+- **Samodejni sprejem popravkov** (migracija 20261113101100): `prijavi_popravek`
+  pred čakanjem pokliče `popravek_samodejno` (zaprta). Pozicija ali asistenca
+  velja takoj, če jo predlaga igralec s potrjenim profilom (`zahtevki_igralca`
+  + `povezani_igralci`) zase ali za igralca oz. gol svojega kluba
+  (`preverjen`), ali če isto predlagajo 3 različni ljudje za pozicijo, 2 za
+  asistenco (`soglasje`, `popravek_prag_soglasja`). Nikoli ob sporu (čakajoč
+  drugačen predlog, pri asistenci tudi že sprejet drugačen), pri poziciji z
+  virom `admin`/`klub` ali čakajoči klubski poziciji; odhod je vedno ročen.
+  Uveljavi se kot admin (`position_source = 'admin'`), enaki čakajoči predlogi
+  dobijo `razlog = 'samodejno (<način>) #<id>'`, prejšnja vrednost gre v
+  `popravki_samodejno` (zaprta), Discord dobi vrstico. Admin vidi zadnjih 30
+  dni v `admin_samodejni_popravki()` in razveljavi z
+  `admin_razveljavi_samodejni_popravek(id)` (vrne prejšnjo vrednost, če je od
+  takrat ni spremenil drug, in vse z njim zaprte predloge zavrne, da jih uvoz
+  golov ne vpiše nazaj). Klepet (`prijavi_napako`) pri poziciji ali asistenci
+  prepoznanega igralca vrne še `povezava` na stran igralca s pozivom, naj
+  popravek odda prijavljen uporabnik sam
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
   ščit z začetnicami
 
