@@ -1,4 +1,4 @@
--- Dnevna triaža (20261114210100, SLF-260): spori, mladinci brez potrdila,
+-- Dnevna triaža (20261114215100, SLF-260): spori, mladinci brez potrdila,
 -- dvojni zahtevki, povabilo ni dokaz, zadržanje 3 dni in prijatelj, preklican
 -- klubski račun, suhi tek, idempotenca, razveljavitev in besedilo brez
 -- osebnih podatkov. Teče v transakciji in se povrne.

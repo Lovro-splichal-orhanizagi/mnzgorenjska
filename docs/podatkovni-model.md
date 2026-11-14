@@ -1140,7 +1140,7 @@
   pokaže ali sprejme ročni vnos (`KodaPovabila.tsx`). `/invite` kaže seznam
   povabljenih s stanjem (`moji_povabljeni`), mail akcije pa osebno kodo
   (`koda_vabila_za`).
-- **Dnevna triaža admin vrst** (migracija 20261114210100, SLF-260):
+- **Dnevna triaža admin vrst** (migracija 20261114215100, SLF-260):
   `dnevna_triaza(p_suho)` (pg_cron `dnevna-triaza`, 7.07 UTC) razvrsti vse
   čakajoče prevzeme, prijave lažnih profilov, odprte klubske zahtevke in
   prošnje za poznavalca, zapiše `triaza_teki` / `triaza_postavke` (zaprti,
