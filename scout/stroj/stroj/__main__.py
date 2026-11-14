@@ -6,9 +6,11 @@
   python -m stroj --zanka         delavec slff-scout: vsak dan ob 11:00 (po nočnih uvozih), piše
 """
 import argparse
+import json
 import os
 import time
 import traceback
+import urllib.request
 from collections import deque
 from collections.abc import Iterator
 from datetime import datetime, timedelta, timezone
@@ -43,6 +45,24 @@ def do_naslednjega(zdaj: datetime, ura: int = 11, minuta: int = 0) -> float:
     if cilj <= zdaj:
         cilj += timedelta(days=1)
     return (cilj.astimezone(timezone.utc) - zdaj.astimezone(timezone.utc)).total_seconds()
+
+
+def javi_napako(napaka: BaseException, webhook: str | None) -> None:
+    """Padel zagon zanke na Discord: 28.–30. 10. 2026 je padal tri dni, ne da bi kdo opazil.
+    Brez webhooka le dnevnik; javljanje samo ne sme ustaviti zanke."""
+    if not webhook:
+        print("Stroj: zagon padel, DISCORD_WEBHOOK ni nastavljen.", flush=True)
+        return
+    vrstica = traceback.format_exception_only(napaka)[-1].strip()
+    besedilo = f"🔴 **SLFF Scout: dnevni zagon stroja je padel**\n`{vrstica[:1500]}`\nDnevnik: `ssh slff-ops logs slff-scout --errors`"
+    zahteva = urllib.request.Request(
+        webhook, data=json.dumps({"content": besedilo, "allowed_mentions": {"parse": []}}).encode(),
+        # Discord (Cloudflare) zavrne privzeti Python-urllib.
+        headers={"Content-Type": "application/json", "User-Agent": "SLFF stroj (https://slff.eu)"})
+    try:
+        urllib.request.urlopen(zahteva, timeout=15).close()
+    except Exception as e:
+        print(f"Stroj: Discord ni dosegljiv: {e}", flush=True)
 
 
 def _pregled(conn: psycopg.Connection, t: Tabela, idx: np.ndarray) -> None:
@@ -142,10 +162,11 @@ def main(argv: list[str] | None = None) -> int:
         try:
             with psycopg.connect(url, autocommit=True) as conn:
                 zagon(conn, a.pisi or a.zanka, a.moc_lig)
-        except Exception:
+        except Exception as e:
             if not a.zanka:
                 raise
             traceback.print_exc()
+            javi_napako(e, os.environ.get("DISCORD_WEBHOOK"))
         if not a.zanka:
             return 0
 
