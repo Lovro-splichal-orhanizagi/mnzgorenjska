@@ -58,7 +58,7 @@ declare
   m jsonb := moje_vabilo();
   v_napaka text;
 begin
-  assert m ->> 'koda' ~ '^[a-z0-9]{8}$', 'koda';
+  assert m ->> 'koda' ~ '^[a-z0-9]{3,20}$', 'koda';
   assert (m ->> 'registriranih')::int = 3, 'registriranih 3: ' || m;
   assert (m ->> 'pripeljanih')::int = 2, 'brez ekipe ne šteje: ' || m;
   -- Tekmovanje velja le v oknu akcije; po njem test ne sme pasti.

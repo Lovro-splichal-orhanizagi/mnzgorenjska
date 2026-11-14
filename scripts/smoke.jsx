@@ -39,6 +39,7 @@ import { ScoutIgralca } from '../src/components/ScoutIgralca'
 import Prevzemi from '../src/components/admin/Prevzemi'
 import Piva from '../src/pages/Piva'
 import Povabi from '../src/pages/Povabi'
+import VabiloPrijatelja from '../src/pages/VabiloPrijatelja'
 import Pravno from '../src/pages/Pravno'
 import PivskiZidAdmin from '../src/components/admin/Piva'
 import { lestvicaPodpornikov, vsehPiv } from '../src/lib/piva'
@@ -88,7 +89,6 @@ import { parsirajZapisnik, nastopi, dodajStrelceSKlopi } from './zapisnik.mjs'
 import { poZvezah, ustreza, pokaziZvezo, ustrezaRavni, privzetoRazprte } from '../src/components/IzbirnikLige'
 import { dovoljZaIskanje, ujemaIme, opisIgralca, potIgralca, izDrugihLig } from '../src/lib/iskanjeIgralcev'
 import { virPodatkov, imeZveze } from '../src/components/VirPodatkov'
-import { sestaviVabilo, vabiloMailto } from '../src/lib/vabilo'
 import { viraZa, znaniViri } from './viri/index.mjs'
 import { caka, brezAsistencePotrjeno, PRAG_ASISTENCE_PRIVZETO } from '../src/components/GolZaGlasovanje'
 import { adaptivniPrag } from '../src/pages/Pozicije'
@@ -168,6 +168,7 @@ const strani = [
   ['Admin: prevzemi', () => <div><Prevzemi /></div>, '/admin'],
   ['Pivski zid', Piva, '/beers'],
   ['Povabi prijatelje', Povabi, '/invite'],
+  ['Vabilo prijatelja', VabiloPrijatelja, '/i/luka27'],
   ['Admin: pivski zid', () => <div><PivskiZidAdmin /></div>, '/admin'],
 ]
 
@@ -1740,37 +1741,6 @@ preveri(
   preveri('podatki: 504 pri delu preverbe konča nadzor z napako',
     zagon.status === 1 && zagon.stderr.includes('del "postava"'), zagon.stderr.trim())
   preveri('podatki: 504 pri delu preverbe nikoli ne izpiše uspeha', !zagon.stdout.includes('Vse v redu'))
-}
-
-// --- vabilo prijatelju ------------------------------------------------------
-// Besedilo je bilo zapisano v kodi in je nastevalo trinajst gorenjskih klubov.
-// Pri eni ligi je bilo to najboljse mozno vabilo; pri devetih zvezah bi igralec
-// iz Ptuja vabil s klubi, ki jih ni nikoli videl.
-{
-  const liga = { id: 1, slug: 'pt-super', name: 'Super liga — Ptuj', short_name: 'PT 1.',
-    prvi_fantasy_krog: 1, federation_code: 'mnzpt', federation_name: 'MNZ Ptuj',
-    federation_short: 'Ptuj', federation_url: null, federation_sort: 4,
-    country_code: 'SI', country_name: 'Slovenija' }
-
-  const v = sestaviVabilo(liga, ['Bukovci', 'Dornava', 'Apace'])
-  preveri('vabilo: zadeva imenuje pravo ligo', v.zadeva.includes('Super liga — Ptuj'), v.zadeva)
-  preveri('vabilo: brez sklanjanja imena lige', !/za Super liga\b/.test(v.besedilo), v.besedilo.slice(0, 70))
-  preveri('vabilo: ne podvoji predloga', !v.besedilo.includes('igralcev iz naših'), v.besedilo.slice(60, 130))
-  preveri('vabilo: nasteje prave klube', v.besedilo.includes('Bukovci, Dornava, Apace'))
-  preveri('vabilo: ne omenja Gorenjske', !/Gorenjsk|GNL/.test(v.besedilo))
-  preveri('vabilo: doda zvezo, ce je ni v imenu', v.besedilo.includes('(MNZ Ptuj)'))
-
-  // Brez klubov mora ostati smiseln stavek, ne pa "iz nasih klubov ()".
-  const brez = sestaviVabilo(liga, [])
-  preveri('vabilo: brez klubov ni praznega oklepaja', !brez.besedilo.includes('()'), brez.besedilo.slice(0, 90))
-  preveri('vabilo: brez lige se vedno povabi', sestaviVabilo(null).besedilo.includes('Registriraj se'))
-
-  // Ce je zveza ze v imenu lige, je ne podvajamo.
-  const gnl = sestaviVabilo({ ...liga, name: 'MNZ Ptuj liga', federation_name: 'MNZ Ptuj' }, [])
-  preveri('vabilo: zveze ne podvoji', !gnl.besedilo.includes('MNZ Ptuj (MNZ Ptuj)'))
-
-  preveri('vabilo: mailto zakodira zadevo in telo',
-    vabiloMailto(v).startsWith('mailto:?subject=') && vabiloMailto(v).includes('&body='))
 }
 
 // --- viri ------------------------------------------------------------------
