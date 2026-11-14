@@ -12,23 +12,29 @@ od=${1:-}; do_=${2:-}; mesto=${3:-slff.eu}
 re='^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
 if [[ ! $od =~ $re || ! $do_ =~ $re ]]; then echo "umami: uporaba: umami YYYY-MM-DD YYYY-MM-DD [domena]" >&2; exit 2; fi
 if [[ ! $mesto =~ ^[a-z0-9.-]{1,60}$ ]]; then echo "umami: neveljavna domena" >&2; exit 2; fi
-# Obdobje [od, do] vključno, največ 366 dni; datume preveri še Postgres (::date).
-logger -t umami-stat -- "od=${SSH_CLIENT%% *} $od $do $mesto"
+# Obdobje [od, do] vključno, največ 366 dni. Napačno obdobje je napaka, ne tihe ničle v poročilu.
+s_od=$(date -u -d "$od" +%s 2>/dev/null) && s_do=$(date -u -d "$do_" +%s 2>/dev/null) \
+  || { echo "umami: neveljaven datum" >&2; exit 2; }
+if (( s_do < s_od )); then echo "umami: <do> je pred <od>" >&2; exit 2; fi
+if (( (s_do - s_od) / 86400 > 366 )); then echo "umami: obdobje je daljše od 366 dni" >&2; exit 2; fi
+logger -t umami-stat -- "od=${SUDO_USER:-${SSH_CLIENT:-lokalno}} $od $do_ $mesto"
 
+# Teče kot uporabnik umami-stat (sudo iz ovoja slff-ops). Geslo vloge umami_bralec je v
+# /etc/umami-bralec.env (root:umami-stat 640), agent ga ne more brati; nikoli v git.
 # shellcheck disable=SC1091
-source /etc/umami-bralec.env   # UMAMI_BRALEC_GESLO (root:agent 640), nikoli v git
+source /etc/umami-bralec.env
 
 export PGPASSWORD=$UMAMI_BRALEC_GESLO
-exec timeout 30 docker exec -i -e PGPASSWORD supabase-db psql -X -q -A -t -v ON_ERROR_STOP=1 \
-  "host=127.0.0.1 dbname=umami user=umami_bralec application_name=umami-stat" \
+exec timeout 30 psql -X -q -A -t -v ON_ERROR_STOP=1 \
+  "host=127.0.0.1 port=5432 dbname=umami user=umami_bralec application_name=umami-stat" \
   -v od="$od" -v do="$do_" -v mesto="$mesto" <<'SQL'
 begin transaction read only;
 set local statement_timeout = 5000;
-create temp view e as
+with e as (
   select we.* from website_event we join website w on w.website_id = we.website_id
   where w.domain = :'mesto' and w.deleted_at is null
     and we.created_at >= :'od'::date and we.created_at < (:'do'::date + 1)
-    and :'do'::date - :'od'::date <= 366;
+)
 select json_build_object(
   'obdobje', json_build_array(:'od', :'do'), 'domena', :'mesto',
   'casovni_pas', 'UTC (kot nadzorna plošča brez nastavitve)',
