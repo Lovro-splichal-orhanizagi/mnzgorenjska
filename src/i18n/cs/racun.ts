@@ -330,7 +330,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     tvojeMesto: 'Tvoje místo: {mesto}. ({n} v akci)',
     seNisi: 'V žebříčku ještě nejsi: pozvi prvního přítele.',
     prazno: 'Žebříček je zatím prázdný. Buď první!',
-    pravila: 'Cenu může získat jen plnoletý (18+). Při rovnosti vyhrává ten, kdo počet dosáhl dřív. Vítězi napíšeme na e-mail účtu; kam pivo nemůžeme poslat, dostane rovnocennou cenu. Falešné nebo duplicitní účty se nepočítají.',
+    pravila: 'Cenu může získat jen plnoletý (18+). Při rovnosti vyhrává ten, kdo počet dosáhl dřív. Vítězi napíšeme na e-mail účtu; kam pivo nemůžeme poslat, dostane rovnocennou cenu. Falešné nebo duplicitní účty se nepočítají. Apple a Google nejsou sponzory akce a nejsou s ní nijak spojeny.',
   },
   // Invite landing page /i/<code> and the code field at sign-up.
   vabilo: {

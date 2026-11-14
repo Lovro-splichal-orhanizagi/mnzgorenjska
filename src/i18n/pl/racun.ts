@@ -323,7 +323,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     tvojeMesto: 'Twoje miejsce: {mesto}. ({n} w akcji)',
     seNisi: 'Nie ma cię jeszcze w rankingu: zaproś pierwszego znajomego.',
     prazno: 'Ranking jest jeszcze pusty. Bądź pierwszy!',
-    pravila: 'Nagrodę może otrzymać tylko osoba pełnoletnia (18+). Przy remisie wygrywa ten, kto osiągnął wynik wcześniej. Do zwycięzcy piszemy na adres e-mail konta; tam, gdzie nie możemy wysłać piwa, otrzymuje nagrodę o równej wartości. Fałszywe lub zduplikowane konta się nie liczą.',
+    pravila: 'Nagrodę może otrzymać tylko osoba pełnoletnia (18+). Przy remisie wygrywa ten, kto osiągnął wynik wcześniej. Do zwycięzcy piszemy na adres e-mail konta; tam, gdzie nie możemy wysłać piwa, otrzymuje nagrodę o równej wartości. Fałszywe lub zduplikowane konta się nie liczą. Apple i Google nie są sponsorami akcji i nie są z nią w żaden sposób związane.',
   },
   // Invite landing page /i/<code> and the code field at sign-up.
   vabilo: {

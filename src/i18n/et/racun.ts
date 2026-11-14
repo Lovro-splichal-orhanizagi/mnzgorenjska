@@ -327,7 +327,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     tvojeMesto: 'Sinu koht: {mesto}. ({n} kampaanias)',
     seNisi: 'Sind pole veel edetabelis: kutsu esimene sõber.',
     prazno: 'Edetabel on veel tühi. Ole esimene!',
-    pravila: 'Auhinda saab ainult täisealine (18+). Viigi korral võidab see, kes jõudis numbrini varem. Võitjale kirjutame konto e-posti aadressile; kuhu õlut saata ei saa, saab võitja samaväärse auhinna. Võlts- või topeltkontosid ei arvestata.',
+    pravila: 'Auhinda saab ainult täisealine (18+). Viigi korral võidab see, kes jõudis numbrini varem. Võitjale kirjutame konto e-posti aadressile; kuhu õlut saata ei saa, saab võitja samaväärse auhinna. Võlts- või topeltkontosid ei arvestata. Apple ja Google ei ole kampaania sponsorid ega ole sellega seotud.',
   },
   // Invite landing page /i/<code> and the code field at sign-up.
   vabilo: {

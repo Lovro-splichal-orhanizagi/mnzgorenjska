@@ -329,7 +329,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     tvojeMesto: 'Din placering: {mesto}. ({n} i kampagnen)',
     seNisi: 'Du er ikke på stillingen endnu: inviter din første ven.',
     prazno: 'Stillingen er stadig tom. Bliv den første!',
-    pravila: 'Kun voksne (18+) kan vinde. Ved lige stilling vinder den, der nåede tallet først. Vi skriver til vinderen på kontoens e-mail; hvor vi ikke kan sende øl, får vinderen en tilsvarende præmie. Falske eller dobbelte konti tæller ikke.',
+    pravila: 'Kun voksne (18+) kan vinde. Ved lige stilling vinder den, der nåede tallet først. Vi skriver til vinderen på kontoens e-mail; hvor vi ikke kan sende øl, får vinderen en tilsvarende præmie. Falske eller dobbelte konti tæller ikke. Apple og Google er ikke sponsorer af kampagnen og er ikke involveret i den.',
   },
   // Invite landing page /i/<code> and the code field at sign-up.
   vabilo: {

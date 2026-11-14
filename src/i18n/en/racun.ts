@@ -330,7 +330,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     tvojeMesto: 'Your rank: {mesto}. ({n} in the challenge)',
     seNisi: 'You are not on the leaderboard yet: invite your first friend.',
     prazno: 'The leaderboard is still empty. Be the first!',
-    pravila: 'Only adults (18+) can win. In a tie, whoever reached the number first wins. We contact the winner at the account email; where we cannot ship beer, the winner gets an equivalent prize. Fake or duplicate accounts do not count.',
+    pravila: 'Only adults (18+) can win. In a tie, whoever reached the number first wins. We contact the winner at the account email; where we cannot ship beer, the winner gets an equivalent prize. Fake or duplicate accounts do not count. Apple and Google are not sponsors of and are not involved in this challenge.',
   },
   // Invite landing page /i/<code> and the code field at sign-up.
   vabilo: {
