@@ -35,7 +35,7 @@ on:
         type: boolean
         default: true
       liga:
-        description: 'Samo ena liga (slug); prazno = vse aktivne lige drzave'
+        description: 'Samo te lige (slug, vec jih loci z vejico; vse iz izbrane drzave); prazno = vse aktivne lige drzave'
         required: false
         type: string
         default: ''
@@ -49,6 +49,9 @@ permissions:
   contents: read
 
 # Dva hkratna zagona bi oba videla isto stevilo ekip in oba dopolnila.
+# GitHub v skupini obdrzi samo najnovejsi cakajoci zagon, starejse prekine
+# (`cancelled`, brez dnevnika). Zato vec lig nikoli ne sprozaj z vec zagoni
+# zapored, ampak z enim: `liga` sprejme seznam slugov, locen z vejico.
 concurrency:
   group: hisne-ekipe
   cancel-in-progress: false
@@ -82,7 +85,7 @@ jobs:
           [[ "$DRZAVA" =~ ^(SK|SI|HR|CZ|HU|AT|RS|RO|EE|PL|ES|LV|MK|GR|TR|UA|AM|AZ|DK|GB|MT|ME|BA|MD|JP|HK|TH|GI|SM)$ ]] || { echo "drzava mora biti SK, SI, HR, CZ, HU, AT, RS, RO, EE, PL, ES, LV, MK, GR, TR, UA, AM, AZ, DK, GB, MT, ME, BA, MD, JP, HK, TH, GI ali SM"; exit 1; }
           args=(--drzava "$DRZAVA")
           if [ -n "$LIGA" ]; then
-            [[ "$LIGA" =~ ^[a-z0-9-]+$ ]] || { echo "neveljaven slug lige"; exit 1; }
+            [[ "$LIGA" =~ ^[a-z0-9-]+(,[a-z0-9-]+)*$ ]] || { echo "neveljaven slug lige (slugi, loceni z vejico, brez presledkov)"; exit 1; }
             args+=(--liga "$LIGA")
           fi
           [ "$PO_VELIKOSTI" = "true" ] && args+=(--po-velikosti)
