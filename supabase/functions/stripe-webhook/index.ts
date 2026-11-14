@@ -83,6 +83,7 @@ import { jePlacanoAktivno } from '../_shared/trgovina-stanja.ts'
 import { veljavenPodpis } from './podpis.ts'
 import { scoutCeneNarocnine, scoutPostavkeVeljajo } from './scout.ts'
 import { enoteBonov, idKupona, IZDELEK_TRGOVINE, kodeSeje, napacnaTarifa, novaKoda, trgovinaIzSeje, zgostiKodo } from './trgovina.ts'
+import { sledi } from '../_shared/napake.ts'
 
 // deno-lint-ignore no-explicit-any
 type Obj = Record<string, any>
@@ -194,6 +195,8 @@ const CORS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
+
+sledi('stripe-webhook')
 
 Deno.serve(async (req) => {
   // OPTIONS: brskalnik (admin) in preverba objave (objavi-funkcije.sh).

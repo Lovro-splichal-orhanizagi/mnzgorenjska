@@ -19,6 +19,7 @@
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import { preberiVnos } from './vnos.ts'
+import { sledi } from '../_shared/napake.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -57,6 +58,8 @@ function novaKoda(): string {
   const z = Array.from(crypto.getRandomValues(new Uint8Array(8)), (x) => ABECEDA[x % ABECEDA.length]).join('')
   return `SLFF-${z.slice(0, 4)}-${z.slice(4)}`
 }
+
+sledi('trgovina-boni')
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })

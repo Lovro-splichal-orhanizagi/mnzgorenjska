@@ -50,6 +50,7 @@ import {
   r2Naslov,
   type R2,
 } from './r2.ts'
+import { sledi } from '../_shared/napake.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -258,6 +259,8 @@ async function potrdiR2(v: Vrstica): Promise<Response> {
   if (error) return napakaBaze(error)
   return json({ stanje: 'pripravljen' })
 }
+
+sledi('posnetki-igralca')
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })

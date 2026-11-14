@@ -50,6 +50,7 @@ import { BREZPLACNA_OD, EU27, tarifeZa } from './tarife.ts'
 import { IZDELEK_TRGOVINE, seznamPostavk } from './izdelki.ts'
 import { BESEDILA_NAKUPA, jezikNakupa, STRIPE_LOKALE } from './besedila.ts'
 import { jePlacanoAktivno } from '../_shared/trgovina-stanja.ts'
+import { sledi } from '../_shared/napake.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -126,6 +127,8 @@ async function izdelekTrgovine(): Promise<string | null> {
     return null
   }
 }
+
+sledi('trgovina-nakup')
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })
