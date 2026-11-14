@@ -44,7 +44,11 @@ permissions:
 # Nov push na isto vejo prekine prejšnji tek — zadnje stanje je edino, ki šteje.
 concurrency:
   group: ci-${{ github.ref }}-${{ inputs.vir || 'code' }}-${{ inputs.sezona || 'all' }}-${{ inputs.diagnostika && 'diagnostic' || 'normal' }}
-  cancel-in-progress: true
+  # Na main se tek ne prekliče: ob pogostih združitvah (~vsakih 5 min, tek
+  # ~20 min) je vsak naslednji preklical prejšnjega in migracije ter objava
+  # niso prišle v produkcijo ure (14. 11. 2026). GitHub v skupini drži en
+  # čakajoč tek, zato po koncu teče zadnji commit.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   novi-viri:
