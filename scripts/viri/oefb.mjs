@@ -409,10 +409,13 @@ export function nastopi(z) {
 // Vzdevki: levo ključ, kot ga piše vir, desno ključ, pod katerim klub že
 // poznamo. Dodaj le videne. Koroška je oktobra 2026 drugim ekipam dodala "1b":
 // razpored je pod novim imenom podvojil vse tekme kluba (isti nasprotnik, isti
-// krog), zapisnik 13. kroga pa je pristal pri dvojniku.
+// krog), zapisnik 13. kroga pa je pristal pri dvojniku. Enako 1. Klasse West
+// (Steiermark) novembra 2026: SV SW Lieboch je v razporedu postal "SV Schwarz -
+// Weiß Remax Lieboch", nočni uvoz pa je ustvaril dvojnika (id 11407).
 const ISTI_KLUB_AT = {
   'sg askö wölfnitz sv oberglan juniors 1b': 'sg askö wölfnitz sv oberglan juniors',
   'austria klagenfurt 1b': 'austria klagenfurt amat',
+  'sv schwarz weiß remax lieboch': 'sv sw lieboch',
 }
 
 const kljucBrezVzdevka = (ime) =>
