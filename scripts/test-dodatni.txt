@@ -8,3 +8,4 @@ scripts/test-hlf-kartice.mjs
 scripts/test-oefb-vzdevki.mjs
 scripts/test-preimenovan-klub.mjs
 scripts/test-podpora-zamenjave.mjs
+scripts/zgodbe/zgodbe.test.mjs
