@@ -28,8 +28,10 @@ select pg_temp.preveri('nasprotje šifre in imena = neznano', public.starostna_s
 select pg_temp.preveri('U21 = neznano', public.starostna_skupina_iz_oznake('hu-no-u21', 'Nógrád vármegyei U21') is null);
 select pg_temp.preveri('mladinska liga brez starosti = neznano', public.starostna_skupina_iz_oznake('mt-youth-a', 'Youth League A') is null);
 select pg_temp.preveri('vsaka aktivna liga je razvrščena ali izrecno neznana',
-  not exists (select 1 from public.competitions where starostna_skupina is null
-                 and public.starostna_skupina_iz_oznake(slug, name) is not null));
+  not exists (select 1 from public.competitions c
+               where public.starostna_skupina_iz_oznake(c.slug, c.name) is not null
+                 and not exists (select 1 from public.competition_starostne_skupine g
+                                  where g.competition_id = c.id)));
 
 -- Lastna država, da se ne meša z živimi podatki.
 insert into countries(id, code, name) overriding system value
@@ -48,7 +50,9 @@ select -936600 - n, s.slug, s.ime, upper(s.slug), s.aktivna, s.drzava, 'mnzg'
   ) as s(n, slug, ime, aktivna, drzava);
 
 select pg_temp.preveri('trigger razvrsti nove lige',
-  (select array_agg(starostna_skupina order by id desc) from competitions where id between -936608 and -936601)
+  (select array_agg(g.skupina order by c.id desc) from competitions c
+     left join competition_starostne_skupine g on g.competition_id = c.id
+    where c.id between -936608 and -936601)
   = array['clani', 'u19', 'pod_u19', 'pod_u19', null, 'pod_u19', 'pod_u19', 'clani']::text[]);
 
 insert into teams(id, name, short_name, country_id) overriding system value

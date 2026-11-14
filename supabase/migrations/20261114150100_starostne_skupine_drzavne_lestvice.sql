@@ -15,18 +15,29 @@
 --
 -- Pregled 9. 11. 2026 (vse 1 500 lig, aktivne in neaktivne): 1 072 članskih,
 -- 174 U19, 227 pod U19. Brez skupine ostane 23 lig, ki jih pravilo noče
--- ugibati; popravi jih človek z `update competitions set starostna_skupina`:
+-- ugibati; popravi jih človek z vpisom v `competition_starostne_skupine`:
 --   hr-ri-u19 (šifra U19, ime U18), hr-vz-u19 (kadeti/juniori U-18),
 --   13 madžarskih U21, at-w-stadtliga-u23, gb-lowland-u20-east/west,
 --   hk-u22-league, mt-youth-a..d (brez starostne meje).
--- Nove lige dobijo skupino ob vpisu iz iste funkcije; dvoumne ostanejo `null`.
+-- Nove lige dobijo skupino ob vpisu iz iste funkcije; dvoumne nimajo vrstice.
+--
+-- Skupina je v lastni tabeli, ne v stolpcu `competitions`: obliko `competitions`
+-- namreč zaklepa opazovalec FCF (G1), nov stolpec pa bi ga zrušil.
 
-alter table public.competitions
-  add column if not exists starostna_skupina text
-  check (starostna_skupina in ('clani', 'u19', 'pod_u19'));
+create table if not exists public.competition_starostne_skupine (
+  competition_id bigint primary key references public.competitions(id) on delete cascade,
+  skupina text not null check (skupina in ('clani', 'u19', 'pod_u19'))
+);
 
-comment on column public.competitions.starostna_skupina is
-  'Starostna skupina tekmovanja: clani, u19 ali pod_u19 (U18 in mlajši). null = neznana, liga ni na nobeni državni lestvici.';
+comment on table public.competition_starostne_skupine is
+  'Starostna skupina tekmovanja: clani, u19 ali pod_u19 (U18 in mlajši). Brez vrstice = neznana, liga ni na nobeni državni lestvici.';
+
+alter table public.competition_starostne_skupine enable row level security;
+drop policy if exists "javno branje" on public.competition_starostne_skupine;
+create policy "javno branje" on public.competition_starostne_skupine for select using (true);
+drop policy if exists "admin ureja skupine" on public.competition_starostne_skupine;
+create policy "admin ureja skupine" on public.competition_starostne_skupine for all
+  using (is_admin()) with check (is_admin());
 
 -- Skupina iz šifre in imena lige. Številka U-- (u17, U-15) ima prednost pred
 -- besedo; številka v šifri in imenu mora biti ena sama, sicer je odgovor null.
@@ -59,22 +70,26 @@ returns text language sql immutable parallel safe set search_path = public as $$
   end from st
 $$;
 
-update public.competitions
-   set starostna_skupina = public.starostna_skupina_iz_oznake(slug, name)
- where starostna_skupina is null;
+insert into public.competition_starostne_skupine (competition_id, skupina)
+select c.id, public.starostna_skupina_iz_oznake(c.slug, c.name)
+  from public.competitions c
+ where public.starostna_skupina_iz_oznake(c.slug, c.name) is not null
+on conflict (competition_id) do nothing;
 
 create or replace function public.competitions_starostna_skupina()
-returns trigger language plpgsql set search_path = public as $$
+returns trigger language plpgsql security definer set search_path = public as $$
+declare g text := public.starostna_skupina_iz_oznake(new.slug, new.name);
 begin
-  if new.starostna_skupina is null then
-    new.starostna_skupina := public.starostna_skupina_iz_oznake(new.slug, new.name);
+  if g is not null then
+    insert into public.competition_starostne_skupine (competition_id, skupina)
+    values (new.id, g) on conflict (competition_id) do nothing;
   end if;
-  return new;
+  return null;
 end $$;
 
 drop trigger if exists competitions_starostna_skupina_trg on public.competitions;
 create trigger competitions_starostna_skupina_trg
-  before insert on public.competitions
+  after insert on public.competitions
   for each row execute function public.competitions_starostna_skupina();
 
 -- Pogled lig: stolpec na konec, da `create or replace` ne prerazporedi
@@ -91,10 +106,11 @@ create or replace view public.competitions_view as
          f.site_url   as federation_url,
          f.sort_order as federation_sort,
          c.sezona_koledarska,
-         c.starostna_skupina
+         g.skupina as starostna_skupina
     from public.competitions c
     join public.countries d on d.id = c.country_id
-    left join public.federations f on f.id = c.federation_id;
+    left join public.federations f on f.id = c.federation_id
+    left join public.competition_starostne_skupine g on g.competition_id = c.id;
 
 -- ---------------------------------------------------------------------------
 -- vrh_drzave: najboljši igralci države, ločeno po starostnih skupinah
@@ -126,13 +142,14 @@ security definer
 set search_path to 'public'
 as $function$
   with lige as (
-    select c.id, c.slug, c.short_name, c.starostna_skupina
+    select c.id, c.slug, c.short_name, g.skupina as starostna_skupina
       from competitions c
       join countries d on d.id = c.country_id
+      join competition_starostne_skupine g on g.competition_id = c.id
      where c.active and d.code = p_drzava
        and case p_skupina
-             when 'glavna' then c.starostna_skupina in ('clani', 'u19')
-             when 'mladi'  then c.starostna_skupina = 'pod_u19'
+             when 'glavna' then g.skupina in ('clani', 'u19')
+             when 'mladi'  then g.skupina = 'pod_u19'
              else false
            end
   ),
@@ -214,13 +231,14 @@ security definer
 set search_path to 'public'
 as $function$
   with lige as (
-    select c.id, c.slug, c.short_name, c.starostna_skupina
+    select c.id, c.slug, c.short_name, g.skupina as starostna_skupina
       from competitions c
       join countries d on d.id = c.country_id
+      join competition_starostne_skupine g on g.competition_id = c.id
      where c.active and d.code = p_drzava
        and case p_skupina
-             when 'glavna' then c.starostna_skupina in ('clani', 'u19')
-             when 'mladi'  then c.starostna_skupina = 'pod_u19'
+             when 'glavna' then g.skupina in ('clani', 'u19')
+             when 'mladi'  then g.skupina = 'pod_u19'
              else false
            end
   ),
