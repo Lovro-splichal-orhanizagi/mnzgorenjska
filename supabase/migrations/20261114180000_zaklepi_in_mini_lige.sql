@@ -56,7 +56,7 @@ revoke all on procedure public.osvezi_vso_statistiko_po_kosih() from public, ano
 
 -- Cron posle je na strežniku ustvaril supabase_admin in jih migracija (teče
 -- kot postgres) ne sme spreminjati; preusmeritev je ročni korak na strežniku
--- (docs/podatkovni-model.md, *Cron*), tu le poskus brez napake.
+-- (`select cron.alter_job(…)` kot supabase_admin, 14. 11. 2026 narejen), tu le poskus brez napake.
 do $$
 begin
   if exists (select 1 from pg_namespace where nspname = 'cron') then
