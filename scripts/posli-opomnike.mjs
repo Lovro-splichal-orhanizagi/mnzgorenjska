@@ -163,7 +163,8 @@ for (const liga of lige ?? []) {
     liga.meja = NAJVEC_NA_LIGO
     const poKosih = (sProracunom || odsotni) && !suho
     let odgovor = await poklici(liga, poKosih ? Math.min(KOS, proracun) : sProracunom ? proracun : null)
-    napakZapored = 0 // odgovor je prišel, omrežje dela
+    // Odgovor je prišel, omrežje dela; 503 po vseh ponovitvah pa je izpad funkcije.
+    napakZapored = odgovor.status === 503 ? napakZapored + 1 : 0
     let izid = await odgovor.json().catch(() => ({}))
     // Nad mejo: preštejemo nove nepopolne ekipe (le takrat, ne vsako uro za
     // vsako ligo) in poskusimo enkrat znova z višjo mejo.
@@ -206,6 +207,10 @@ for (const liga of lige ?? []) {
     if (!odgovor.ok) {
       console.log(`  ${liga.slug.padEnd(14)} NAPAKA ${odgovor.status}: ${izid.error ?? ''}`)
       padlo++
+      if (napakZapored >= NAJVEC_NAPAK_ZAPORED) {
+        console.error(`::error::${napakZapored} lig zapored brez povezave s funkcijo; ustavljam, ostale lige pridejo ob naslednjem zagonu.`)
+        break
+      }
       continue
     }
     const n = izid.kandidati_stevilo ?? 0
