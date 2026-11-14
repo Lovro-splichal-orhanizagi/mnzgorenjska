@@ -14,7 +14,7 @@ export function withMfaHistoricalStatistics(base,competition,{installedHistorica
    // The abandoned segment is provenance of the one installed final fixture.
    if(competition.id===974)preskoci.add('mt50920555')
    if(options.samoZapisnik&&preskoci.has(String(options.samoZapisnik)))return[]
-   const reports=await base.zapisniki(code,read,{...options,preskoci})
+   const reports=await base.zapisniki(code,read,{...options,preskoci,strogo:true})
    for(const report of reports)assertMfaReportTiming(report.z)
    return reports
   },
