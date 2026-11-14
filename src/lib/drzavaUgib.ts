@@ -70,7 +70,7 @@ const jeOdprta = (koda: string | null | undefined): koda is string =>
  * Ugib iz podatkov brskalnika (brez dostopa do njega, da je preverljiv v
  * `npm run smoke`). Vrstni red:
  *   1. izbira s povezave `/sk` ali izbirnika države (`shranjena`),
- *   2. država po IP (`/api/drzava`, glava Vercela),
+ *   2. država po IP (`/api/drzava`, Caddy iz glave Cloudflara),
  *   3. prvi jezik brskalnika, ki ga poznamo,
  *   4. časovni pas (šibak znak — Bratislava in Ljubljana sta isti pas).
  * Kdor ne ustreza ničemur, dobi null — in s tem Slovenijo, kakor doslej.
@@ -128,7 +128,7 @@ export function drzavaObiskovalca(ip: string | null = null): string | null {
 export const CAKAJ_IP_MS = 800
 
 /**
- * Država po IP iz `/api/drzava` (Vercel jo da v glavi `x-vercel-ip-country`).
+ * Država po IP iz `/api/drzava` (Caddy jo vzame iz glave Cloudflara `CF-IPCountry`).
  * Nikoli ne vrže in ne čaka dlje od `casMs`: ob napaki, počasnem odgovoru ali
  * lokalno (`vite dev` funkcije nima in vrne index.html) vrne null.
  */
@@ -166,7 +166,7 @@ export async function drzavaPoIp({
 export interface UgibObiskovalca {
   /** Ugibana država (izbira → IP → jezik → pas) ali null (Slovenija). */
   drzava: string | null
-  /** Država po IP, kakor jo je javil Vercel; null ob napaki ali brez vprašanja. */
+  /** Država po IP, kakor jo je javil strežnik; null ob napaki ali brez vprašanja. */
   ip: string | null
 }
 
