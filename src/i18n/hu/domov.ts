@@ -4,6 +4,11 @@ import type { Prevod } from '../jedro.ts'
 export const domov: NonNullable<Prevod['domov']> = {
   napakaNalaganja: 'Nem sikerült betölteni az adatokat.',
   delNiNalozen: 'Az adatok egy része nem töltődött be: {napaka}',
+  stevec: {
+    naslov: 'Úton a 10 000 felhasználó felé',
+    dosezeno: 'Elértük a 10 000 felhasználót!',
+    opis: 'A célig még hiányzik: {n}',
+  },
   uvod: {
     gorenjskaMladinci: 'Gorenjska labdarúgó-bajnokság, ifjúsági',
     gorenjskaClani: '1. Gorenjska labdarúgó-bajnokság',
@@ -171,6 +176,12 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaPripomocki: 'Chips',
     pravilaWildcard: 'Wildcard: rebuild your team for free',
     pravilaKlopPlus: 'Bench+: your bench scores too',
+  },
+  // Časovno omejena kartica z aplikacijama namesto trgovine (AppPromo.tsx).
+  appPromo: {
+    oznaka: 'Újdonság · SLFF-alkalmazás',
+    naslov: 'Az SLFF már alkalmazásként is elérhető',
+    opis: 'Állítsd össze a csapatod, kövesd élőben a pontokat, és kérj emlékeztetőt a határidő előtt. Ingyenes Androidra és iPhone-ra.',
   },
   trgovina: {
     oznaka: 'Új · SLFF Bolt',

@@ -193,6 +193,9 @@ function besedeZaHtml() {
     // Mini lige (kartica ob deljenju) in slike za predogled (scripts/hetzner/predogledi/).
     'lestvice.vstop.naslov', 'lestvice.vstop.naslovLiga', 'lestvice.vstop.miniLiga', 'lestvice.javneLige.pridruziSe',
     'skupno.pozicijaKratko', 'skupno.cena', 'igralci.kartica.stat', 'igralci.kartica.tockVSezoni',
+    // Javna stran /verified (strežnik HTML, `preverjeni` v streznik.mjs).
+    'preverjeni.naslov', 'preverjeni.opis', 'preverjeni.glava', 'preverjeni.uvod', 'preverjeni.cta.poisci',
+    'preverjeni.kaj.kljukica', 'preverjeni.kaj.profil', 'preverjeni.kaj.posnetki', 'preverjeni.kaj.ogledi',
     'lestvice.krog', 'lestvice.mesto', 'lestvice.plakat.najvecTock', 'lestvice.plakat.izNasihIgralcev',
   ]
   const SLOVARJI = { sl, sk, hr, cs, hu, de, sr, ro, et, pl, es, lv, mk, el, tr, uk, hy, az, da, en }

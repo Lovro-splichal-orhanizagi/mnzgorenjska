@@ -38,6 +38,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'SLFF ir bez maksas: bez reklāmām, derībām un abonementiem. Diemžēl serveris nedarbojas ar entuziasmu. Viens alus palīdz samaksāt par serveri un e-pastu, un tavs vārds nonāk uz alus sienas.',
       kasneje: 'Varbūt nākamreiz',
       zeSem: 'Jau izdarīju 🍻',
+      jokNaslov: "Nēēē! Tiešām aizej? 😭",
+      jokBesedilo: "Visu nedēļu te stāvu uz ceļiem. Sāp ceļi, un kauss ir tukšs. Tikai viens alus, un es beigšu raudāt, apsolu. 🥺",
+      jokGumb: "Labi, beidz raudāt 🍺",
+      jokZapri: "Lai raud",
       /** Okno po shranjeni ekipi za naslednji krog. */
       ekipaNaslov: 'Komanda {krog}. kārtai ir gatava! 🍺',
       /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
@@ -86,6 +90,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     izbrisRacuna: 'Konta dzēšana',
     nastavitve: 'Konta iestatījumi',
     mojProfil: 'Mans profils',
+    sporocila: 'Ziņas',
     povabi: 'Uzaicini draugu',
     pomoc: 'Palīdzība',
     trgovina: 'Veikals',

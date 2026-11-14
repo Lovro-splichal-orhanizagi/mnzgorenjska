@@ -358,3 +358,125 @@ test('Quarta activation re-checks the bye-round first round right before the RPC
   const approved = await pripraviBatch(opts), result = await aktivirajBatch({ ...opts, approvedSha: approved.sha256 })
   assert.equal(result.results[0].prviKrog, 7); assert.deepEqual(db.mutations, [{ name: 'vklopi_ligo_sredi_sezone', args: { p_slug: 'es-ct-quarta-g1' } }])
 })
+
+// Pravila lastnika 2026-11-02 (A, C, D): samo navadne FCF skupine, nikoli
+// skupine z recenzirano zgodovino (es-fcf-six-reviewed-history-v1).
+function umakni(s, club) {
+  s.players = s.players.filter(p => p.team_id !== club)
+  const active = s.players.filter(p => p.active), ids = new Set(s.matches.filter(m => [m.home_team_id, m.away_team_id].includes(club)).map(m => m.id))
+  s.appearances = s.appearances.filter(a => !ids.has(a.match_id))
+  for (const m of s.matches) if (ids.has(m.id)) { m.imported_at = null; m.vir_brez_izida = m.played_on < '2026-10-17' }
+  Object.assign(s.state, { aktivnih: active.length, klubov: new Set(active.map(p => p.team_id)).size, igralci: active.map(({ id, team_id, position, value }) => ({ id, team_id, position, value })),
+    po_pozicijah: Object.fromEntries(['GK', 'DEF', 'MID', 'FWD'].map(p => [p, active.filter(a => a.position === p).length])) })
+  return s
+}
+const WITHDRAWN = 8 // ni na tekmi z vstopom strelca s klopi
+test('A: withdrawn club (0 imported, 0 players, all past vir_brez_izida) is excluded and listed in the hashed quality notes', async () => {
+  const s = umakni(quarta(16), WITHDRAWN), r = check(s)
+  assert.equal(r.pripravljena, true, r.tezave.join(' '))
+  assert.equal(r.opombe.filter(o => /umaknjen/.test(o)).length, 1); assert.match(r.opombe.join(' '), new RegExp(`Klub ${WITHDRAWN}:`))
+  assert.ok(r.counts.fullRounds >= 1)
+  const b = await pripraviBatch({ slugs: [s.competition.slug], sourceCommit: COMMIT, read: async () => structuredClone(s), now: () => NOW })
+  assert.deepEqual(b.manifest.leagues[0].quality.opombe, r.opombe)
+  assert.equal(check(quarta(16)).opombe, undefined)
+})
+for (const [name, mutate] of [
+  ['an inactive player', s => s.players.push({ id: 9999, competition_id: 9, team_id: WITHDRAWN, active: false, position: 'GK', value: 4.5 })],
+  ['one imported match', s => { s.matches.find(m => m.home_team_id === WITHDRAWN && m.played_on < '2026-10-17').imported_at = '2026-10-07T12:00:00Z' }],
+  ['a past match not marked vir_brez_izida', s => { s.matches.find(m => m.home_team_id === WITHDRAWN && m.played_on < '2026-10-17').vir_brez_izida = false }],
+]) test(`A: club with ${name} is not excluded`, () => {
+  const s = umakni(quarta(16), WITHDRAWN); mutate(s); const r = check(s)
+  assert.equal(r.pripravljena, false); assert.doesNotMatch((r.opombe ?? []).join(' '), /umaknjen/)
+})
+test('A: an upper group excludes the club from GK/roster checks but still needs bench proof; six-policy groups unchanged', () => {
+  const t = check(umakni(liga('es-ct-tercera-g8'), WITHDRAWN)).tezave
+  assert.deepEqual(t, [`Klub ${WITHDRAWN}: ni dokaza nastopa s klopi.`])
+  const six = check(umakni(liga('es-ct-tercera-g9'), WITHDRAWN))
+  assert.match(six.tezave.join(' '), /ni izrecnega začetnega vratarja/); assert.match(six.tezave.join(' '), /Aktivni igralci/); assert.equal(six.opombe, undefined)
+})
+function kratka(s, count, warned = count) {
+  const m = s.matches[2], starters = s.appearances.filter(a => a.match_id === m.id && a.team_id === m.home_team_id && a.started && !a.is_goalkeeper)
+  const drop = new Set(starters.slice(0, 11 - count).map(a => a.id))
+  s.appearances = s.appearances.filter(a => !drop.has(a.id))
+  m.import_warnings = [`DOMAČI C.F.: v postavi je ${warned} igralcev namesto 11`]
+  return { s, m }
+}
+for (const count of [7, 10]) test(`C: XI of ${count} that the acta warning states is accepted as a note`, () => {
+  const { s, m } = kratka(quarta(), count), r = check(s)
+  assert.equal(r.pripravljena, true, r.tezave.join(' ')); assert.deepEqual(r.opombe, [`Tekma ${m.id}/${m.home_team_id}: XI ima ${count} začetnikov, kot kaže akta.`])
+})
+test('C: upper group 10-man XI with the parser warning passes', () => {
+  const s = liga(); s.appearances[1].started = false; s.matches[0].import_warnings = ['X: v postavi je 10 igralcev namesto 11']
+  const r = check(s); assert.equal(r.pripravljena, true, r.tezave.join(' ')); assert.equal(r.opombe.length, 1)
+})
+for (const [name, build] of [
+  ['XI of 6', () => kratka(quarta(), 6).s],
+  ['warning count differs from stored starters', () => kratka(quarta(), 10, 9).s],
+  ['short XI without a warning', () => { const { s, m } = kratka(quarta(), 10); m.import_warnings = []; return s }],
+  ['one warning for two short teams', () => { const { s, m } = kratka(quarta(), 10); const a = s.appearances.find(a => a.match_id === m.id && a.team_id === m.away_team_id && a.started && !a.is_goalkeeper); a.started = false; return s }],
+  ['12 starters', () => { const s = quarta(), a = s.appearances.at(-1); a.started = true; a.minute_on = 0; a.minutes_played = 90; s.matches[0].import_warnings = ['X: v postavi je 12 igralcev namesto 11']; return s }],
+  ['six-policy group', () => { const s = liga('es-ct-segona-g1'); s.appearances[1].started = false; s.matches[0].import_warnings = ['X: v postavi je 10 igralcev namesto 11']; return s }],
+]) test(`C blocks ${name}`, () => { const r = check(build()); assert.equal(r.pripravljena, false); assert.match(r.tezave.join(' '), /XI|opozorila/) })
+function kontumacija(s) {
+  const m = s.matches[3]; m.kontumacija = true; m.home_goals = 3
+  s.appearances = s.appearances.filter(a => a.match_id !== m.id)
+  m.import_warnings = ['zapisnik nepopoln: DOMAČI, C.E. — brez postave', 'zapisnik nepopoln: GOSTJE, C.E. — brez postave']
+  return { s, m }
+}
+test('D: forfeit with no appearances and only "brez postave" warnings passes as a note', () => {
+  const { s, m } = kontumacija(quarta()), r = check(s)
+  assert.equal(r.pripravljena, true, r.tezave.join(' ')); assert.match(r.opombe.join(' '), new RegExp(`Tekma ${m.id}: kontumacija brez postave`))
+})
+for (const [name, mutate] of [
+  ['another warning', (s, m) => m.import_warnings.push('goli iz zapisnika (2:2) se ne ujemajo z izidom 3:0')],
+  ['a stored appearance', (s, m) => s.appearances.push({ ...s.appearances[0], id: 99999, match_id: m.id, team_id: m.home_team_id })],
+  ['no kontumacija flag', (s, m) => m.kontumacija = false],
+  ['six-policy group', s => s.competition.slug = 'es-ct-tercera-g2'],
+]) test(`D: forfeit with ${name} still fails the warning check`, () => {
+  const { s, m } = kontumacija(quarta()); mutate(s, m); const r = check(s)
+  assert.equal(r.pripravljena, false); assert.match(r.tezave.join(' '), new RegExp(`Tekma ${m.id}: nerešena uvozna opozorila`))
+})
+
+// Pravilo B (lastnik 2026-11-03): uradni administrativni izid 3:0/0:3 ob drugačnih
+// golih akte (npr. es-ct-quarta-g19 348361: akta 2:1, uradno 0:3).
+function administrativni(s, [home, away], [a, b], m = s.matches[3]) {
+  m.home_goals = home; m.away_goals = away
+  let id = Math.max(0, ...s.goals.map(g => g.id))
+  for (const [team, n] of [[m.home_team_id, a], [m.away_team_id, b]]) for (let i = 0; i < n; i++) {
+    const app = s.appearances.find(x => x.match_id === m.id && x.team_id === team && x.started && !x.is_goalkeeper && x.goals === 0)
+    app.goals = 1; s.goals.push({ id: ++id, match_id: m.id, scorer_id: app.player_id, team_id: team, minute: 10 + i, is_own_goal: false, is_penalty: false, score_home: null, score_away: null })
+  }
+  m.import_warnings = [...m.import_warnings, `goli iz zapisnika (${a}:${b}) se ne ujemajo z izidom ${home}:${away}`]
+  return { s, m }
+}
+for (const [official, report] of [[[0, 3], [2, 1]], [[0, 3], [0, 0]], [[3, 0], [2, 2]], [[3, 0], [0, 1]]]) test(`B: administrative ${official.join(':')} with acta ${report.join(':')} is accepted as a hashed note`, async () => {
+  const { s, m } = administrativni(quarta(), official, report), r = check(s)
+  assert.equal(r.pripravljena, true, r.tezave.join(' '))
+  assert.deepEqual(r.opombe, [`Tekma ${m.id}: uradni administrativni izid ${official.join(':')}, gol iz akte ${report.join(':')} — lestvica uradni izid, točke iz akte.`])
+  const b = await pripraviBatch({ slugs: [s.competition.slug], sourceCommit: COMMIT, read: async () => structuredClone(s), now: () => NOW })
+  assert.deepEqual(b.manifest.leagues[0].quality.opombe, r.opombe)
+})
+test('B: works next to the Quarta bench-scorer warning (346540: acta 1:2, official 3:0) and in an upper group', () => {
+  const s = quarta(), m = s.matches[0]; administrativni(s, [3, 0], [1, 2], m)
+  // The bench scorer's 1:0 goal is already stored; add only the away goals.
+  s.goals = s.goals.filter(g => !(g.match_id === m.id && g.team_id === m.home_team_id && g.id !== 1))
+  for (const a of s.appearances) if (a.match_id === m.id && a.team_id === m.home_team_id && a.started) a.goals = s.goals.filter(g => g.scorer_id === a.player_id).length
+  const r = check(s); assert.equal(r.pripravljena, true, r.tezave.join(' ')); assert.equal(r.opombe.length, 1)
+  const u = liga('es-ct-segona-g2'); administrativni(u, [3, 0], [2, 2], u.matches[0])
+  const ru = check(u); assert.equal(ru.pripravljena, true, ru.tezave.join(' ')); assert.match(ru.opombe.join(' '), /administrativni izid 3:0, gol iz akte 2:2/)
+})
+for (const [name, build] of [
+  ['official 3:6 vs acta 3:5 (269338)', () => administrativni(quarta(), [3, 6], [3, 5]).s],
+  ['official 2:0', () => administrativni(quarta(), [2, 0], [1, 1]).s],
+  ['official 4:0', () => administrativni(quarta(), [4, 0], [1, 1]).s],
+  ['warning official differs from the stored score', () => { const { s, m } = administrativni(quarta(), [3, 0], [1, 1]); m.home_goals = 0; m.away_goals = 3; return s }],
+  ['stored goals differ from the acta in the warning', () => { const { s, m } = administrativni(quarta(), [3, 0], [1, 1]); m.import_warnings = ['goli iz zapisnika (2:1) se ne ujemajo z izidom 3:0']; return s }],
+  ['acta equal to the official score', () => { const { s, m } = administrativni(quarta(), [3, 0], [3, 0]); return s }],
+  ['the warning twice', () => { const { s, m } = administrativni(quarta(), [3, 0], [1, 1]); m.import_warnings.push(m.import_warnings.at(-1)); return s }],
+  ['kontumacija flag set', () => { const { s, m } = administrativni(quarta(), [3, 0], [1, 1]); m.kontumacija = true; return s }],
+  ['an unimported match', () => { const { s, m } = administrativni(quarta(), [3, 0], [1, 1]); m.imported_at = null; return s }],
+  ['six-policy group', () => administrativni(liga('es-ct-tercera-g9'), [3, 0], [1, 1], undefined).s],
+]) test(`B blocks ${name}`, () => {
+  const s = build(), r = check(s)
+  assert.equal(r.pripravljena, false); assert.match(r.tezave.join(' '), /opozorila|goli po upravičencu/); assert.doesNotMatch((r.opombe ?? []).join(' '), /administrativni/)
+})

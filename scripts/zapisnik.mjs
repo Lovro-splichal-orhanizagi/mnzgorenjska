@@ -307,12 +307,14 @@ export function parsirajZapisnik(html, { zapisnikId = null, url = null } = {}) {
   const imena = ekipe.map((e) => e.ime)
 
   // Rezultat: imena ekip lahko vsebujejo " - ", zato ju vzamemo iz postav.
+  // Polčas je neobvezen: ljubljanske lige U15 (2011, 2012) ga ne vpisujejo
+  // ("TEKMA: Slovan - Šmartno 1 : 4") in brez tega je bil vsak zapisnik null.
   const mRez = tekmaVrstica.match(
-    /(\d+)\s*:\s*(\d+)\s*\(\s*(\d+)\s*:\s*(\d+)\s*\)/,
+    /(\d+)\s*:\s*(\d+)(?:\s*\(\s*(\d+)\s*:\s*(\d+)\s*\))?/
   )
   if (!mRez) return null
   const rezultat = { domaci: Number(mRez[1]), gostje: Number(mRez[2]) }
-  const polcas = { domaci: Number(mRez[3]), gostje: Number(mRez[4]) }
+  const polcas = mRez[3] == null ? null : { domaci: Number(mRez[3]), gostje: Number(mRez[4]) }
 
   // Krog in datum: "Zapisnik: 26. krog 30.05.26"
   //

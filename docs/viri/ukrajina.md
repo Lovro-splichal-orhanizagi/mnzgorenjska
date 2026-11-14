@@ -400,9 +400,21 @@ pojasni rdeči karton), 2092 menjav, 7350 nastopov, vsi s šifro, 0 opozoril.
 | liga | klubov | tekoča 2026/27 | arhiv 2025/26 |
 |---|---|---|---|
 | ua-upl | 16 | `432` | `428` (16 klubov, 240 tekem) |
+| ua-upl-2 | 16 | `433` | — (ni določen) |
+| ua-u19-upl | 14 | `434` (Національна Ліга U-19) | `429` (2025/26, ni preverjen) |
+
+`ua-upl-2` (rezervna liga UPL, migracija 20261104176100, **neaktivna**) ima
+isti koledar in zapisnike (vzorec 16364: začetna postava + klop). Pred uvozom
+preveri iste zadržke kot pri ua-upl (tekme brez datuma ali zapisnika).
 
 Uvoz: `gh workflow run uvoz-lige.yml -f liga=ua-upl -f arhiv=428 -f
 cene=true`. Arhiv 240 zapisnikov po 3 s je ~15 minut.
+
+`ua-u19-upl` (predlog 9. 11. 2026, fragment 08-ua, **neaktivna**,
+`prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`): isti koledar in zapisniki
+(vzorec 16872: postavi s šifro osebe, klop, vratar s sheme, goli = izid).
+Klubi so mladinske ekipe UPL klubov z istim zapisom imena kot člani. Drugi
+id-ji upl.ua: 430/435 pokal, 431 Play-Off.
 
 Registrirani obstoječi kandidat `ua-upl` (id 1001) ostane vezan na UPL
 sezono `432`. Za celotne arhivske nastope in cene je potreben izrecni arhiv
@@ -522,18 +534,35 @@ Izpuščeno: kupi (Кубок Третьої/Четвертої ліги, Куб
 plej-of tekme, Чемпіонат юніорів, ДЮФЛ, ženske, futsal, memoriali.
 
 Uvoz (ena za drugo; lige so **neaktivne**): `gh workflow run uvoz-lige.yml -f
-liga=ua-lv-premier -f cene=true` (brez arhiva).
+liga=ua-lv-premier -f cene=true` (brez arhiva; `tekoca` je privzeto vklopljen).
+Vklop po `node scripts/pripravljenost-lige.mjs --tekmovanje <liga>` in
+`vklopi_ligo_sredi_sezone('<liga>')` — ta potrebuje krog z rokom v prihodnosti
+za zadnjim krogom z nastopi, torej ocenjen krog, ki ga uvoz razporeda vpiše.
 
-**Vklop zdaj ni mogoč — roka kroga ni vnaprej.** Stran tekmovanja pokaže
-krog šele, ko se začne (15. 10. 2026: 12. krog, 17.–18. 10., ga še ni;
-"Календар ігор" v meniju vodi na naslovnico, ki ima isti drsnik). Uvoz
-razporeda zato krog vpiše po prvi tekmi z rokom, ki je že mimo: krog se
-zaklene ob naslednjem zaklepu s kadrom, kakršen je takrat — kdor po začetku
-kroga (in pred uvozom razporeda) zamenja igralce, jih dobi v krog; pred
-krogom pa ni roka ne "naslednjega kroga". Pred vklopom je potreben vir
-datumov vnaprej (koledar ЛАФ, objava razporeda v novicah) ali ocena roka
-prihodnjega kroga, kot jo ima `fssid` (`ocenjeniDatumi`), le da tu pari
-prihodnjega kroga niso znani — uvoz razporeda bi moral sprejeti krog brez
-tekem z ocenjenim rokom.
+**Roka vnaprej vir ne pozna — naslednji krog ocenimo.** Stran tekmovanja
+pokaže krog šele, ko se začne (15. 10. 2026: 12. krog, 17.–18. 10., ga še ni;
+"Календар ігор" v meniju vodi na naslovnico, ki ima isti drsnik). Druga
+polovica je pri ЛАФ **zrcalo prve** (Прем'єр 2026/27: 14. krog = 1. z
+zamenjanim domačinom, vseh sedem parov). `ocenjenKrog` (`scripts/viri/ffl.mjs`)
+zato doda en krog naprej: pari iz kroga `n − H` obrnjeni (H = krogov polovice:
+N−1 pri sodem, N pri lihem številu klubov), datum zadnji začetek kroga + 7 dni
+na najzgodnejši dan, na katerega se začne vsaj četrtina krogov (sobota/nedelja
+— rok raje prej), ura najzgodnejša na tak dan. Krog dobi `rounds.datum_ocenjen`
+(`ocenjeniDatumi`, kot `fssid`); ko ga vir objavi, uvoz razporeda prepiše datum
+in rok, če krog še ni zaklenjen (sicer počisti le oznako). Ocene ni, če:
+druga polovica se še ni začela ali njen objavljeni krog ni zrcalo (parov ne
+poznamo — prve polovice nikoli ne ocenjujemo), zadnji krog se je začel pred več
+kot 8 dnevi (liga miruje), ocenjeni dan je že mimo ali v decembru–februarju.
+**Tveganje:** zadnja ocena pred zimskim premorom (ali prestavljen krog) ostane
+v bazi z minulim rokom in se ob roku zaklene kot prestavljen krog drugih virov;
+spomladi ga vir objavi z istimi pari in tekme dobijo pravi datum.
+
+Stanje 3. 11. 2026 (8 strani tekmovanj, 3 članki): Прем'єр je odigrala 14
+krogov ("стартувало друге коло!", 1. 11.) — ocena 15. kroga 7. 11. 2026 ob
+12.00 (ljubljanski čas). Перша (13/13) in Друга (13/13) sta 1. 11. končali
+prvo polovico, Третя 1–3 (9/9) 18. 10., Четверта 1–2 (9/9) 1. 11. — druge
+polovice niso začele, zato ocene nimajo; Третя že dva vikenda ne igra
+(verjetno zimski premor do pomladi). Te lige se dajo uvoziti, vklopiti pa
+šele, ko vir objavi prvi krog druge polovice (nato ocena naslednjega).
 
 UPL rollout audit on 23 October 2026: the documented archive/current import has run, but this does not establish launch readiness. The current calendar leaves Chornomorets–Kolos (round 2) without a date, score or report link, and Obolon–Kryvbas (round 8, report `15940`) without a date; neither is explicitly marked postponed. Report `15956` currently shows 1–0 with no goal events, captured 45 minutes after its listed kickoff without an explicit live/final marker. Preserve these holds; do not infer postponements, final scores or finished player minutes. Recheck authoritative report completeness before any activation.

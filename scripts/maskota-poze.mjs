@@ -13,6 +13,9 @@
 //     mladinsko ligo — mladim nikoli ne pokažemo alkohola;
 //   - maskota je tista, ki joka v žlico — šala gre nanjo, ne na človeka.
 //
+// `prosi` in `joka` sta za okno "Časti pivo" (PivoOkno.tsx): Pivko kleči in
+// prosi, ob zapiranju zajoka. Okna ni v mladinski ligi, zato brez `-mladi`.
+//
 //   node scripts/maskota-poze.mjs          # zapiše public/logo/maskota/*.svg
 
 import { writeFileSync, mkdirSync } from 'node:fs'
@@ -112,6 +115,13 @@ function oci(vrsta) {
     case 'odlocen': // samozavestne obrvi
       return `<circle cx="${L[0]}" cy="${L[1] + 2}" r="15" fill="${C.crnilo}"/><circle cx="${D[0]}" cy="${D[1] + 2}" r="15" fill="${C.crnilo}"/>
         ${crta('M326 160 L374 170 M426 170 L474 160')}`
+    case 'prosece': // velike pasje oči z bleščicami
+      return `<circle cx="${L[0]}" cy="${L[1] + 4}" r="30" fill="${C.crnilo}"/><circle cx="${D[0]}" cy="${D[1] + 4}" r="30" fill="${C.crnilo}"/>
+        <circle cx="${L[0] + 10}" cy="${L[1] - 6}" r="11" fill="#fff"/><circle cx="${D[0] + 10}" cy="${D[1] - 6}" r="11" fill="#fff"/>
+        <circle cx="${L[0] - 9}" cy="${L[1] + 14}" r="5" fill="#fff"/><circle cx="${D[0] - 9}" cy="${D[1] + 14}" r="5" fill="#fff"/>
+        ${crta('M320 160 L368 142 M432 142 L480 160')}`
+    case 'jok': // stisnjene > <
+      return crta('M328 176 L368 196 L328 214 M472 176 L432 196 L472 214 M322 150 L370 140 M430 140 L478 150')
     default:
       return `<circle cx="${L[0]}" cy="${L[1]}" r="16" fill="${C.crnilo}"/><circle cx="${D[0]}" cy="${D[1]}" r="16" fill="${C.crnilo}"/>`
   }
@@ -126,6 +136,9 @@ function usta(vrsta) {
       return `<ellipse cx="400" cy="284" rx="14" ry="18" fill="${C.crnilo}"/>`
     case 'valovit':
       return `<path d="M376 284 q8 -8 16 0 t16 0 t16 0" fill="none" stroke="${C.crnilo}" stroke-width="8" stroke-linecap="round"/>`
+    case 'jok': // odprta, tuleča
+      return `<path d="M362 280 Q400 266 438 280 Q438 314 400 316 Q362 314 362 280 Z" fill="${C.crnilo}" stroke="${C.crnilo}" stroke-width="8" stroke-linejoin="round"/>
+        <path d="M380 304 Q400 292 420 304 Q412 312 400 312 Q388 312 380 304 Z" fill="${C.rdeca}"/>`
     case 'nasmeh':
       return `<path d="M380 278 Q400 294 420 278" fill="none" stroke="${C.crnilo}" stroke-width="8" stroke-linecap="round"/>`
     default:
@@ -273,6 +286,35 @@ function klop() {
     <rect x="660" y="850" width="44" height="120" fill="${C.lesTemen}" stroke="${C.crnilo}" stroke-width="${O}"/>`
 }
 
+/** Prazen vrček (okno "Časti pivo"): le kaplja na dnu. */
+function prazenVrcek(x, y, kot = 0) {
+  return `<g transform="translate(${x} ${y}) rotate(${kot})">
+    <path d="M60 -50 Q118 -50 118 2 Q118 50 60 50" fill="none" stroke="${C.crnilo}" stroke-width="${O + 12}"/>
+    <rect x="-74" y="-92" width="148" height="160" rx="14" fill="#e6eef0"/>
+    <rect x="-74" y="44" width="148" height="24" fill="${C.pivo}"/>
+    <rect x="-44" y="-58" width="16" height="80" rx="8" fill="#fff"/>
+    <rect x="-74" y="-92" width="148" height="160" rx="14" fill="none" stroke="${C.crnilo}" stroke-width="${O}"/>
+  </g>`
+}
+
+/** Kleči: senca, podplati za koleni, kratke hlače s koleni na tleh. */
+function klecanje() {
+  const podplat = (x, kot) =>
+    `<g transform="rotate(${kot} ${x} 806)"><rect x="${x - 70}" y="772" width="140" height="68" rx="34" fill="${C.crnilo}"/>
+     <path d="M${x - 36} 794 l22 12 M${x + 4} 794 l22 12" stroke="${C.krem}" stroke-width="7" stroke-linecap="round"/></g>`
+  return `<ellipse cx="400" cy="850" rx="320" ry="30" fill="${C.crnilo}" opacity=".18"/>` + podplat(168, -24) + podplat(632, 24) + hlace({ sede: true })
+}
+
+/** Curka solz iz oči in luži na tleh. */
+function curkiSolz() {
+  const curek = (d) =>
+    `<path d="${d}" fill="none" stroke="${C.crnilo}" stroke-width="40" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${C.solza}" stroke-width="22" stroke-linecap="round"/>`
+  return `<ellipse cx="90" cy="852" rx="110" ry="24" fill="${C.solza}" stroke="${C.crnilo}" stroke-width="10"/>
+    <ellipse cx="710" cy="852" rx="110" ry="24" fill="${C.solza}" stroke="${C.crnilo}" stroke-width="10"/>` +
+    curek('M326 206 Q200 80 70 300') + curek('M474 206 Q600 80 730 300') +
+    curek('M60 400 l-6 40 M80 520 l-4 30 M740 400 l6 40 M720 520 l4 30')
+}
+
 function solze() {
   const kaplja = (x, y, s = 1) =>
     `<path d="M${x} ${y} q${-16 * s} ${30 * s} 0 ${44 * s} q${16 * s} ${-14 * s} 0 ${-44 * s} z" fill="${C.solza}" stroke="${C.crnilo}" stroke-width="7" stroke-linejoin="round"/>`
@@ -378,6 +420,22 @@ export const POZE = {
      <rect x="672" y="290" width="92" height="84" rx="30" fill="${C.koza}" stroke="${C.crnilo}" stroke-width="${O}"/>
      <path d="M716 300 L716 252" stroke="${C.koza}" stroke-width="24" stroke-linecap="round"/>
      <path d="M690 320 h50 M690 344 h50" stroke="${C.crnilo}" stroke-width="7" stroke-linecap="round"/>`,
+
+  // Okno "Časti pivo": kleči z rokami v molitvi, ob njem prazen vrček.
+  prosi: () =>
+    prazenVrcek(760, 790, 76) +
+    klecanje() + trebuh() + vrat() + glava({ oci: 'prosece', usta: 'valovit' }) +
+    roka([230, 430], [236, 610], [372, 410]) +
+    roka([570, 430], [564, 610], [428, 410]) +
+    crte(['M300 360 l-26 -18', 'M500 360 l26 -18'], C.crnilo, 9),
+
+  // Okno "Časti pivo" ob zapiranju: kleči, tolče po tleh, solze v curkih.
+  joka: () =>
+    klecanje() + trebuh() + vrat() + glava({ oci: 'jok', usta: 'jok' }) +
+    roka([230, 430], [140, 600], [170, 790]) +
+    roka([570, 430], [660, 600], [630, 790]) +
+    curkiSolz() +
+    crte(['M120 840 l-30 -20', 'M200 840 l20 -30', 'M600 840 l-20 -30', 'M680 840 l30 -20'], C.crnilo, 10),
 }
 
 /** Poze z alkoholom imajo različico `-mladi`. */

@@ -25,12 +25,15 @@ import PotisnaObvestila from './components/PotisnaObvestila'
 import { BeleziPovabilo } from './lib/povabilo'
 import { jeZasebna, useKanonicni, useNaslov, useNoindex } from './lib/naslov'
 import { useObisk } from './lib/obiski'
-import { jeNativno, povezavaTrgovine } from './lib/platforma'
+import { jeNativno, povezavaTrgovine, TRGOVINA_VIDNA } from './lib/platforma'
 
 // Strani razen naslovnice so svoji kosi: obiskovalec naslovnice ne prenaša
 // administracije in Moje ekipe. Kos pride ob prvem obisku strani.
 const Igralci = lazy(() => import('./pages/Igralci'))
 const Igralec = lazy(() => import('./pages/Igralec'))
+const Preverjeni = lazy(() => import('./pages/Preverjeni'))
+const Sporocila = lazy(() => import('./pages/Sporocila'))
+const CvIgralca = lazy(() => import('./pages/CvIgralca'))
 const Lestvica = lazy(() => import('./pages/Lestvica'))
 const Slovenija = lazy(() => import('./pages/Slovenija'))
 const MiniLige = lazy(() => import('./pages/MiniLige'))
@@ -182,6 +185,9 @@ export default function App() {
               <Route path="/absences" element={<Odsotnosti />} />
               <Route path="/players" element={<Igralci />} />
               <Route path="/player/:id" element={<Igralec />} />
+              <Route path="/verified" element={<Preverjeni />} />
+              <Route path="/messages" element={<Sporocila />} />
+              <Route path="/cv/:id" element={<CvIgralca />} />
               <Route path="/standings" element={<Lestvica />} />
               <Route path="/national" element={<Slovenija />} />
               <Route path="/mini-leagues" element={<MiniLige />} />
@@ -228,18 +234,27 @@ export default function App() {
             </div>
             {!jeNativno() && (
               <div className="mb-3">
+                <Link to="/verified" className="underline hover:text-slate-200">
+                  {t('preverjeni.noga')}
+                </Link>
+              </div>
+            )}
+            {!jeNativno() && (
+              <div className="mb-3">
                 <Link to="/beers" className="underline hover:text-slate-200">
                   <span aria-hidden>🍺 </span>
                   {t('aplikacija.pivo.zid')}
                 </Link>
               </div>
             )}
-            <div className="mb-3">
-              <a {...povezavaTrgovine(jezikSlovarja())} className="underline hover:text-slate-200">
-                <span aria-hidden>🛍️ </span>
-                {t('aplikacija.meni.trgovina')}
-              </a>
-            </div>
+            {TRGOVINA_VIDNA && (
+              <div className="mb-3">
+                <a {...povezavaTrgovine(jezikSlovarja())} className="underline hover:text-slate-200">
+                  <span aria-hidden>🛍️ </span>
+                  {t('aplikacija.meni.trgovina')}
+                </a>
+              </div>
+            )}
             <Link to="/legal" className="underline hover:text-slate-200">
               {t('aplikacija.noga.zasebnost')}
             </Link>

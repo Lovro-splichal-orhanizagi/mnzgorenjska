@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, utimesSync, rmSync, readdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import vir, { preberiBlok, glavaStrani, vZapisnik, vrsticeRsc, tokRsc, FcfZavrnitev } from './viri/fcf.mjs'
+import vir, { preberiBlok, glavaStrani, vZapisnik, vrsticeRsc, tokRsc, FcfZavrnitev, uskladiMesaniPar } from './viri/fcf.mjs'
 
 const fixture = name => readFileSync(new URL(`./vzorci/${name}`, import.meta.url), 'utf8')
 const oldHome = fixture('es-fcf-calendar-old-4115262.html')
@@ -356,4 +356,95 @@ test('historical skip without a matching authoritative calendar identity fails r
  const f=setup(t)
  await assert.rejects(f.read(CODE,{preskoci:new Set([`es${FIRST}`])}),/fcf:.*koledar/i)
  assert.deepEqual(f.calls,[])
+})
+
+// Mešan povratni par kot stanje vira (Quarta g5/g7/g22 2026/27): krog ima obe
+// smeri para, zrcalni krog mu manjka; zastareli prvotni zapisnik je brez izida
+// s preteklim datumom pred datumom drugega člana.
+test('both members already fetched with an earlier stale pending date reconcile without a third read', async t => {
+  const stale = variant(newHome, s => s === '27.02.2027' ? '10.10.2026' : s)
+  const f = setup(t, { fresh: [HOME, AWAY], response: new Map([[HOME, stale], [AWAY, oldAway]]) }), b = await f.read()
+  assert.deepEqual(f.calls, [HOME, AWAY], 'source state: no repeated targeted read')
+  assertComplete(b)
+  assert.equal(b.tekme.find(x => x.id === HOME).g.krog, 5); assert.equal(b.tekme.find(x => x.id === HOME).g.datum, '2030-02-27')
+  assert.equal(b.tekme.find(x => x.id === AWAY).g.krog, 20)
+  assert.equal(readFileSync(f.cache(HOME), 'utf8'), stale, 'cached page keeps the original source header')
+})
+test('refreshed pair still in one round reconciles and only then replaces both cached members', async t => {
+  const stale = variant(newHome, s => s === '27.02.2027' ? '10.10.2026' : s)
+  const f = setup(t, { response: new Map([[HOME, stale], [AWAY, oldAway]]) }), b = await f.read()
+  assert.deepEqual(f.calls, [HOME, AWAY]); assertComplete(b)
+  assert.equal(b.tekme.find(x => x.id === HOME).g.krog, 5)
+  assert.equal(readFileSync(f.cache(HOME), 'utf8'), stale); assert.equal(readFileSync(f.cache(AWAY), 'utf8'), oldAway)
+})
+test('refreshed pair with equal future dates stays refused and keeps the original cache', async t => {
+  const f = setup(t, { response: new Map([[HOME, newHome], [AWAY, oldAway]]) })
+  await assert.rejects(f.read(), /fcf: neskladen koledar — povratni par ostaja neskladen/)
+  assert.equal(readFileSync(f.cache(AWAY), 'utf8'), oldAway); assert.deepEqual(f.calls, [HOME, AWAY])
+})
+
+// Čisti koledar: n klubov, krožna metoda, prvi del 1..R/2, povratni R/2+1..R.
+function koledar(n, { danes = '2026-11-01' } = {}) {
+  const size = n + n % 2, ring = Array.from({ length: size }, (_, i) => i), half = size - 1, out = []
+  for (let r = 0; r < half; r++) {
+    for (let i = 0; i < size / 2; i++) {
+      const [h, a] = [ring[i], ring[size - 1 - i]]
+      if (h >= n || a >= n) continue
+      for (const [d, g, k] of [[h, a, r + 1], [a, h, r + 1 + half]]) {
+        const datum = `${k + 1 <= half ? '2026' : '2027'}-${String((k % 12) + 1).padStart(2, '0')}-1${k % 9}`
+        out.push({ id: 1000 + out.length, g: { domaci: `KLUB ${d}, C.F.`, gostje: `KLUB ${g}, C.F.`, krog: k, datum, ura: '12:00', izid: datum < danes ? { domaci: 1, gostje: 0 } : null } })
+      }
+    }
+    ring.splice(1, 0, ring.pop())
+  }
+  return out
+}
+const najdi = (ts, d, g, k) => ts.find(t => t.g.domaci === `KLUB ${d}, C.F.` && t.g.gostje === `KLUB ${g}, C.F.` && (k === undefined || t.g.krog === k))
+// g7: B–A iz zrcalnega kroga odigran v krogu A–B; A–B ostane brez izida, prej.
+function mesan(n, round, { stale = '2026-10-04', moved = { datum: '2026-10-07', izid: { domaci: 7, gostje: 1 } } } = {}) {
+  const ts = koledar(n), first = ts.find(t => t.g.krog === round), [d, g] = [first.g.domaci, first.g.gostje]
+  const back = ts.find(t => t.g.domaci === g && t.g.gostje === d)
+  Object.assign(first.g, { datum: stale, izid: null })
+  back.g = { ...back.g, krog: round, ...moved }
+  return { ts, first, back, mirror: ts.filter(t => t.g.krog !== round && t !== back).find(t => t.g.krog === round + (n + n % 2 - 1)).g.krog }
+}
+const popoln = (ts, n) => {
+  const per = Math.floor(n / 2), R = n % 2 ? 2 * n : 2 * (n - 1)
+  for (let k = 1; k <= R; k++) {
+    const r = ts.filter(t => t.g.krog === k)
+    assert.equal(r.length, per, `krog ${k}`); assert.equal(new Set(r.flatMap(t => [t.g.domaci, t.g.gostje])).size, 2 * per)
+  }
+}
+for (const [label, n, round, opts, today] of [
+  ['g7: played reversed member stays, stale original goes to round 18', 16, 3, {}, '2026-11-01'],
+  ['g5: rescheduled future reversed member stays, stale original goes to round 14', 14, 1, { stale: '2026-10-03', moved: { datum: '2026-11-10', izid: null } }, '2026-11-01'],
+  ['g22 (11-02): both past and pending, the earlier original moves', 16, 1, { stale: '2026-10-20', moved: { datum: '2026-10-29', izid: null } }, '2026-11-02'],
+  ['odd club count with byes', 15, 2, {}, '2026-11-01'],
+]) test(`uskladiMesaniPar ${label}`, () => {
+  const { ts, first, back, mirror } = mesan(n, round, opts), date = ts.find(t => t.g.krog === mirror && t !== first).g.datum
+  const u = uskladiMesaniPar(ts, { danes: Date.parse(`${today}T12:00:00Z`) })
+  assert.deepEqual(u, { premaknjen: first.id, ostane: back.id, izKroga: round, vKrog: mirror, datum: date })
+  assert.equal(first.g.krog, mirror); assert.equal(first.g.datum, date); assert.equal(first.g.ura, null); assert.equal(first.g.izid, null)
+  assert.equal(back.g.krog, round); popoln(ts, n)
+  assert.equal(new Set(ts.map(t => `${t.g.domaci}|${t.g.gostje}`)).size, n * (n - 1))
+})
+test('uskladiMesaniPar leaves a healthy calendar untouched', () => {
+  const ts = koledar(16), before = structuredClone(ts)
+  assert.equal(uskladiMesaniPar(ts, { danes: Date.parse('2026-11-01') }), null); assert.deepEqual(ts, before)
+})
+for (const [label, build, expected] of [
+  ['equal future dates (authentic tercera-g4 R20)', () => mesan(16, 5, { stale: '2027-02-27', moved: { datum: '2027-02-27', izid: null } }).ts, 'nejasen'],
+  ['stale date after the played member', () => mesan(16, 3, { stale: '2026-10-09' }).ts, 'nejasen'],
+  ['both members played', () => { const m = mesan(16, 3); m.first.g.izid = { domaci: 0, gostje: 0 }; return m.ts }, 'nejasen'],
+  ['earlier member not yet past', () => mesan(16, 3, { stale: '2026-11-05', moved: { datum: '2026-11-10', izid: null } }).ts, 'nejasen'],
+  ['missing date', () => { const m = mesan(16, 3); m.first.g.datum = null; return m.ts }, 'nejasen'],
+  ['deficient round is not the mirror', () => { const m = mesan(16, 3); for (const t of m.ts) if (t.g.krog === 18 && t !== m.first) t.g.krog = 99; for (const t of m.ts) if (t.g.krog === 17) t.g.krog = 18; for (const t of m.ts) if (t.g.krog === 99) t.g.krog = 17; return m.ts }, null],
+  ['a second short round', () => { const m = mesan(16, 3); m.ts.find(t => t.g.krog === 10).g.krog = 11; return m.ts }, null],
+  ['a duplicated directed pair', () => { const m = mesan(16, 3); const x = m.ts.find(t => t.g.krog === 10); x.g = { ...m.ts.find(t => t.g.krog === 11).g, krog: 10 }; return m.ts }, null],
+  ['one fixture missing', () => { const m = mesan(16, 3); m.ts.splice(m.ts.findIndex(t => t.g.krog === 25), 1); return m.ts }, null],
+  ['historical member', () => { const m = mesan(16, 3); m.first.historicalMarker = {}; return m.ts }, null],
+]) test(`uskladiMesaniPar refuses ${label}`, () => {
+  const ts = build(), before = structuredClone(ts), u = uskladiMesaniPar(ts, { danes: Date.parse('2026-11-01T12:00:00Z') })
+  if (expected === 'nejasen') assert.equal(u?.nejasen, true); else assert.equal(u, null)
+  assert.deepEqual(ts, before, 'no mutation without an exact unique reconciliation')
 })

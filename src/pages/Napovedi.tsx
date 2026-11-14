@@ -1,11 +1,12 @@
 // Napovedi izidov za vse: obrazec za naslednji krog izbrane lige, lestvica
 // napovedi lige in po roku izbira skupnosti po tekmah.
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Link } from '../components/Povezava'
 import Grb from '../components/Grb'
 import PasSkupnosti from '../components/PasSkupnosti'
-import { ObrazecNapovedi, IzbiraKroga, KraljNapovedi, KroneVrstice } from '../components/NapovediMiniLige'
+import { ObrazecNapovedi } from '../components/NapovediMiniLige'
+import LestvicaNapovediLige from '../components/LestvicaNapovediLige'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -14,7 +15,6 @@ import { povezavaNaPrijavo } from '../lib/prijava'
 import { t } from '../i18n'
 import type { Database } from '../lib/baza.types'
 
-type VrsticaLestvice = Database['public']['Functions']['lestvica_napovedi_lige']['Returns'][number]
 type Skupnost = Database['public']['Functions']['skupnost_napovedi_kroga']['Returns'][number]
 
 interface TekmaSkupnosti extends Skupnost {
@@ -25,8 +25,6 @@ interface TekmaSkupnosti extends Skupnost {
   away_short: string | null
   away_logo: string | null
 }
-
-const MEDALJE = ['🥇', '🥈', '🥉']
 
 /**
  * Stran /predictions. Napoveduje vsak z (nehišno) ekipo v izbrani ligi;
@@ -43,12 +41,7 @@ export default function Napovedi() {
   // null: še ne vemo (nalaganje), sicer ali ima klicatelj ekipo v ligi.
   const [imamEkipo, setImamEkipo] = useState<boolean | null>(null)
   const [krogi, setKrogi] = useState<{ krog: number; round_id: number }[]>([])
-  const [krog, setKrog] = useState<number | null>(null)
-  const [lestvica, setLestvica] = useState<VrsticaLestvice[] | null>(null)
   const [skupnost, setSkupnost] = useState<TekmaSkupnosti[]>([])
-
-  // Nova liga začne pri skupni lestvici.
-  useEffect(() => setKrog(null), [tekmovanjeId])
 
   useEffect(() => {
     setImamEkipo(null)
@@ -79,21 +72,6 @@ export default function Napovedi() {
       veljavno = false
     }
   }, [tekmovanjeId])
-
-  useEffect(() => {
-    setLestvica(null)
-    if (tekmovanjeId == null) return
-    let veljavno = true
-    supabase
-      .rpc('lestvica_napovedi_lige', { p_tekmovanje: tekmovanjeId, p_krog: krog ?? undefined })
-      .then(({ data }) => {
-        if (veljavno) setLestvica(data ?? [])
-      })
-    return () => {
-      veljavno = false
-    }
-    // Prijava spremeni `je_moj`, zato lestvico preberemo znova.
-  }, [tekmovanjeId, krog, uporabnikId])
 
   // Izbira skupnosti: zadnji krog, katerega rok je potekel (prvi v seznamu).
   const zadnji = krogi[0] ?? null
@@ -126,6 +104,7 @@ export default function Napovedi() {
   }, [zadnjiId])
 
   const nazaj = pathname + search
+  const stevilkeKrogov = useMemo(() => krogi.map((k) => k.krog), [krogi])
 
   return (
     <div className="space-y-4">
@@ -158,60 +137,7 @@ export default function Napovedi() {
         <ObrazecNapovedi tekmovanjeId={tekmovanjeId} brezPravil />
       ) : null}
 
-      <section className="kartica space-y-3 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-bold">{t('lestvice.napovedi.lestvicaNaslov')}</h2>
-          <IzbiraKroga krogi={krogi.map((k) => k.krog)} krog={krog} onKrog={setKrog} />
-        </div>
-
-        {lestvica == null ? (
-          <p className="animiraj-utrip text-sm text-slate-400">{t('skupno.nalaganje')}</p>
-        ) : lestvica.length === 0 || lestvica.every((v) => v.ocenjenih === 0) ? (
-          <p className="text-sm text-slate-400">{t('lestvice.napovedi.prazna')}</p>
-        ) : (
-          <>
-          <KraljNapovedi vrstice={lestvica} krog={krog} />
-          <ol className="divide-y divide-white/10">
-            <li className="flex items-center gap-3 pb-1 text-[11px] uppercase tracking-wide text-slate-500">
-              <span className="w-7 shrink-0" />
-              <span className="min-w-0 flex-1" />
-              <span className="w-9 shrink-0" />
-              <span className="w-12 shrink-0 text-right">{t('lestvice.napovedi.tocni')}</span>
-              <span className="w-12 shrink-0 text-right">{t('lestvice.napovedi.tocke')}</span>
-            </li>
-            {lestvica.map((v, i) => {
-              // Lastna vrstica pod vrhom 50 je ločena s presledkom.
-              const vrzel = i > 0 && v.je_moj && v.mesto > lestvica[i - 1].mesto + 1
-              return (
-                <li
-                  key={i}
-                  className={`flex min-h-[44px] items-center gap-3 py-1.5 text-sm ${
-                    v.je_moj ? '-mx-2 rounded-lg bg-gnl-500/10 px-2 ring-1 ring-gnl-400/30' : ''
-                  } ${vrzel ? 'mt-3' : ''}`}
-                >
-                  <span className="w-7 shrink-0 text-center font-bold text-slate-400">
-                    {v.mesto <= 3 ? (
-                      <span role="img" aria-label={t('lestvice.mesto', { mesto: v.mesto })}>
-                        {MEDALJE[v.mesto - 1]}
-                      </span>
-                    ) : (
-                      v.mesto
-                    )}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate font-semibold">
-                    {v.display_name}
-                    {v.je_moj && <span className="ml-1.5 text-xs font-normal text-gnl-300">({t('lestvice.napovediLige.ti')})</span>}
-                  </span>
-                  <KroneVrstice kralj={v.kralj} kron={v.kron} />
-                  <span className="w-12 shrink-0 text-right tabular-nums text-slate-400">{v.tocnih}</span>
-                  <span className="w-12 shrink-0 text-right font-bold tabular-nums text-gnl-300">{v.tocke}</span>
-                </li>
-              )
-            })}
-          </ol>
-          </>
-        )}
-      </section>
+      <LestvicaNapovediLige tekmovanjeId={tekmovanjeId} krogi={stevilkeKrogov} />
 
       {zadnji && skupnost.length > 0 && (
         <section className="kartica space-y-3 p-4">

@@ -1,0 +1,10 @@
+@font-face {
+	font-family: font-xte27ssa;
+	src: 
+		url('//www.fussball.de/export.fontface/-/format/woff/id/xte27ssa/type/font') format('woff'),
+		url('//www.fussball.de/export.fontface/-/format/ttf/id/xte27ssa/type/font') format('truetype');
+}
+
+.results-c-xte27ssa {
+	font-family: font-xte27ssa !important;
+}

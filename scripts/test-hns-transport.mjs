@@ -145,3 +145,42 @@ test('HNS accepts XHTML and does not flag ordinary body text mentioning CAPTCHA'
   assert.equal(vir.jeIzziv('<title>Semafor</title><p>Info o CAPTCHA obrascima.</p>'), false)
   assert.equal(calls, 1)
 })
+
+// Semafor ob preobremenitvi vrne 200 s 114 bajti "Stranica je iz tehničkih
+// razloga trenutno nedostupna" (4. 11. 2026). To je prehodna napaka strani:
+// skupni prenos jo ponovi, zavrnitev vira ni, v predpomnilnik ne gre.
+const NEDOSTOPNO = '<html><body><h1>Stranica je iz tehničkih razloga trenutno nedostupna</h1></body></html>'
+
+test('HNS maintenance page with HTTP 200 is a transient error that the shared read retries', async t => {
+  let calls = 0
+  t.mock.method(globalThis, 'fetch', async () => {
+    calls++
+    return new Response(calls < 3 ? NEDOSTOPNO : '<html><title>Semafor</title><p>zapisnik</p></html>', {
+      headers: { 'content-type': 'text/html; charset=utf-8' },
+    })
+  })
+  const response = await sharedRead()
+  assert.equal(response.status, 200)
+  assert.match(await response.text(), /zapisnik/)
+  assert.equal(calls, 3)
+})
+
+test('HNS maintenance page that persists ends as a non-refusal 503, never as a page', async t => {
+  let calls = 0
+  t.mock.method(globalThis, 'fetch', async () => {
+    calls++
+    return new Response(NEDOSTOPNO, { headers: { 'content-type': 'text/html; charset=utf-8' } })
+  })
+  const response = await sharedRead()
+  assert.equal(response.status, 503)
+  assert.equal(response.ok, false)
+  assert.equal(calls, 4)
+  pozabiPadle()
+})
+
+test('HNS maintenance detection is limited to the short page', () => {
+  assert.equal(vir.zaPredpomnilnik(NEDOSTOPNO), false)
+  assert.equal(vir.zaPredpomnilnik('<html><title>Semafor</title><p>zapisnik</p></html>'), true)
+  const dolgaStran = `<html><p>Stranica je iz tehničkih razloga trenutno nedostupna</p>${'<tr><td>igrač</td></tr>'.repeat(400)}</html>`
+  assert.equal(vir.zaPredpomnilnik(dolgaStran), true)
+})

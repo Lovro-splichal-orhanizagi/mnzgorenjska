@@ -39,6 +39,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'Το SLFF είναι δωρεάν: χωρίς διαφημίσεις, χωρίς στοιχήματα, χωρίς συνδρομές. Δυστυχώς, ο διακομιστής δεν λειτουργεί με ενθουσιασμό. Μια μπίρα βοηθά να πληρώσουμε διακομιστή και email, και το όνομά σου μπαίνει στον τοίχο της μπίρας.',
       kasneje: 'Ίσως την επόμενη φορά',
       zeSem: 'Το έκανα ήδη 🍻',
+      jokNaslov: "Όχιιι! Αλήθεια φεύγεις; 😭",
+      jokBesedilo: "Είμαι γονατιστός εδώ όλη την εβδομάδα. Πονάνε τα γόνατά μου και το ποτήρι είναι άδειο. Μόνο μία μπύρα και σταματάω να κλαίω, το υπόσχομαι. 🥺",
+      jokGumb: "Καλά, μην κλαις 🍺",
+      jokZapri: "Άσ’ τον να κλαίει",
       /** Okno po shranjeni ekipi za naslednji krog. */
       ekipaNaslov: 'Η ομάδα σου για την αγωνιστική {krog} είναι έτοιμη! 🍺',
       /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
@@ -87,6 +91,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     izbrisRacuna: 'Διαγραφή λογαριασμού',
     nastavitve: 'Ρυθμίσεις λογαριασμού',
     mojProfil: 'Το προφίλ μου',
+    sporocila: 'Μηνύματα',
     povabi: 'Κάλεσε έναν φίλο',
     pomoc: 'Βοήθεια',
     trgovina: 'Κατάστημα',

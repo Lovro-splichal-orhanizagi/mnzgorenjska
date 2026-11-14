@@ -28,6 +28,7 @@ import ZnakPreverjen from '../components/ZnakPreverjen'
 import { t, tx, lokale } from '../i18n'
 import type { Pozicija } from '../lib/tipi'
 import Sponzor from '../components/Sponzor'
+import { useVidiIzbranost } from '../lib/izbranost'
 import { izDrugihLig, potIgralca, ujemaIme, useIskanjeIgralcev } from '../lib/iskanjeIgralcev'
 
 /** Vrstica pogleda `player_season_standings` (+ igralci brez nastopov). */
@@ -225,6 +226,12 @@ export default function Igralci() {
   const [filterPoz, setFilterPoz] = useState<Pozicija | 'vse'>('vse')
   const [filterKlub, setFilterKlub] = useState<string>('vsi')
   const [urejanje, setUrejanje] = useState<Stolpec>('points')
+  // Izbranost le za preverjene (baza drugim vrne NULL): brez stolpca in razvrščanja.
+  const vidiIzbranost = useVidiIzbranost()
+  const stolpci = vidiIzbranost ? STOLPCI : STOLPCI.filter((s) => s.kljuc !== 'owners')
+  useEffect(() => {
+    if (!vidiIzbranost && urejanje === 'owners') setUrejanje('points')
+  }, [vidiIzbranost, urejanje])
   const [koliko, setKoliko] = useState(50)
   const [sezone, setSezone] = useState<SezonaVrstica[]>([])
   const [sezona, setSezona] = useState<string | null>(null)
@@ -559,7 +566,7 @@ export default function Igralci() {
             className={`${selectRazred} w-full sm:hidden`}
           >
             {/* Le stolpci, ki jih telefon kaže: razvrščanje po skriti vrednosti zmede. */}
-            {STOLPCI.filter((s) => s.mobilno !== false).map((s) => (
+            {stolpci.filter((s) => s.mobilno !== false).map((s) => (
               <option key={s.kljuc} value={s.kljuc}>
                 {`↓ ${s.naslov}`}
               </option>
@@ -582,7 +589,7 @@ export default function Igralci() {
               <th className="sticky left-0 z-10 bg-slate-950 px-3 py-2 text-left font-semibold sm:static sm:bg-transparent">
                 {t('igralci.seznam.igralec')}
               </th>
-              {STOLPCI.map((s) => (
+              {stolpci.map((s) => (
                 <th
                   key={s.kljuc}
                   className={`px-2 py-2 text-right font-semibold ${
@@ -670,6 +677,7 @@ export default function Igralci() {
                 <td className="hidden px-2 py-2 text-right tabular-nums text-slate-400 sm:table-cell">
                   {brezPreverjenihNastopov(sezonaPodatki, i.matches) ? '—' : i.minutes}
                 </td>
+                {vidiIzbranost && (
                 <td className="px-2 py-2 text-right tabular-nums text-slate-400">
                   {i.owners === null ? (
                     <span className="text-slate-500" title={t('igralci.seznam.znanoPoRoku')}>
@@ -684,6 +692,7 @@ export default function Igralci() {
                     </>
                   )}
                 </td>
+                )}
               </tr>
             ))}
           </tbody>

@@ -154,11 +154,17 @@ tekme · gole · postave po 11 (dodaj-ligo, 0c) z uvozom v lokalno bazo.
 - HKPL: prihodnje tekme imajo v angleškem seznamu kitajska imena in pogosto
   `"--:--"`; oboje vir prenese (ime po club_id, ura null).
 
+## Vpisano 4. 11. 2026 (migracija 20261104176500)
+
+**Neaktivne**, arhiv ni določen: `hk-u22-league` (`2045/2026-2027`, 11
+klubov), `hk-women-1` (`2057/2026-2027`, 7 klubov, enokrožno) in
+`hk-women-2` (`2058/2026-2027`, 8 klubov). Vratar je redko označen (kot
+hk-2/3).
+
 ## Kasneje (ni vpisano)
 
-- **Ženske**: Jockey Club Women's Football League 1st–3rd Division (in FA Cup)
-  — isti vir, iste strani.
-- **Mladinske**: HKPL U-22 League, Hong Kong Premier Youth League U14/U16/U18,
+- **Ženske**: Women's League 3rd Division (`2059`, nepregledano) in FA Cup.
+- **Mladinske**: Hong Kong Premier Youth League U14/U16/U18,
   Jockey Club Youth Football League, Women's Youth.
 - **Pokali**: Senior Shield, FA Cup, League Cup, Sapling/Community Cup.
 - Futsal (Jockey Club Futsal League) ni nogomet na velikem igrišču.

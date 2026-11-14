@@ -222,6 +222,42 @@ Ni vpisanih: Bihor Liga 5 (1/3 in 0/1 polnih), Sibiu Liga 4 in Liga 5 (2/6,
 brez izidov), Prahova Liga 6 in Caraș-Severin (nič odigranega). Cluj L5
 Câmpia Turzii je vpisana s 3/5 polnih.
 
+Pregled 4. 11. 2026: Sibiu Liga 4 (3/6 polnih) in Liga 5 Mediaș (3/5) bi
+lahko šli s `frf` (403 od 12. 10.) na `hlf`, a le z delnimi zapisniki in
+novimi šiframi igralcev — odloči lastnik (ni v migraciji). Prahova Liga 6
+Nord (`judetean/prahova/fotbal/2026-2027/liga-a-6-a/sezon-regular/seria-nord`,
+16 klubov) ima 4/8 polnih, Bihor L5 še slabše; Galați, Maramureș, Sălaj in
+Caraș-Severin nimajo vpisanega izida — niso vpisani.
+
+**Mladinske lige FRF** (migracija 20261104175500, **neaktivne**, 62 lig,
+vse s starostno oznako v šifri; zveza `frf`). `scripts/hailafotbal-lige.mjs`
+jih ne izpiše (`IZPUSTI`), šifre so iz seznama strani 4. 11. 2026:
+
+| lige | šifra (`national/fotbal/2026-2027/…`) | klubov | zapisniki |
+|---|---|---|---|
+| ro-u19-s1 … s12 | `campionatul-national-u19/sezon-regular/seria-1` … `seria-12` | 9 (27 krogov) | S1, S7: zadnji krog 4/4 polnih |
+| ro-u17-s1 … s12 | `campionatul-national-u17/sezon-regular/seria-1` … `seria-12` | 9 | S1: 4/4 polnih |
+| ro-tineret-u19-playoff, -playout-est, -playout-vest | `liga-de-tineret/play-off/play-off`, `play-out/play-out-est`, `play-out-vest` | 7 (14 krogov od 18. 10.) | play-off 3/3 |
+| ro-elite-u17-playoff, -playout-est, -playout-vest | `liga-elitelor-u17/play-off/play-off`, `play-out/…-est`, `…-vest` | 7 | play-off 3/3 |
+| ro-elite-u16-playoff-1/2, -playout-1…4 | `liga-elitelor-u16/play-off/play-off-seria-N`, `play-out/play-out-seria-N` | ~8 | ni preverjeno |
+| ro-u16-s1 … s10 | `campionatul-national-u16/sezon-regular/seria-N` | ? | ni preverjeno |
+| ro-elite-u15-…, ro-u15-s1 … s10 | isto za `u15` | ? | ni preverjeno |
+
+Liga de Tineret je za letnik 2008 in mlajše (pravilnik FRF 2025/26), zato
+`u19` v šifri. Redni del Tineret in Elitelor (končan 10.–11. 10.), U14 in U13
+niso vpisani. Pred uvozom U16/U15 preveri zapisnike zadnjega kroga. Romunija
+nima kosov nočnega uvoza (`hlf` en posel, brskalnik ~1–2 minuti na ligo): ob
+vklopu več deset mladinskih lig preveri, ali posel še ujame 190 minut.
+
+Pregled 9. 11. 2026 (**neaktivni**): `ro-cj-u15`
+(`judetean/cluj/fotbal/2026-2027/campionatul-judetean-u15/sezon-regular/grupa-a`,
+11–12 klubov, 3/3 polnih) in `ro-hd-u19`
+(`judetean/hunedoara/fotbal/2026-2027/juniori-u19/faza-1/serie-1`, 8 klubov,
+3/3 polnih, pomlad od 23. 3. 2027). Caraș-Severin, Maramureș, Sălaj in Galați
+še nimajo vpisanega izida; Bihor L5, Prahova L6/U19 in Sibiu L5/mladi imajo
+prazne ali nepopolne zapisnike; Cluj U17 (7), Hunedoara U17/U16 imajo manj
+kot 8 klubov.
+
 Uvoz (ena za drugo, **brez arhiva**): `gh workflow run uvoz-lige.yml -f
 liga=ro-liga3-s1 -f cene=true`. Liga ~1–2 minuti.
 

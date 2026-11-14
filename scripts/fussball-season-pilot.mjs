@@ -13,6 +13,7 @@ import {loadFussballImportCapture} from './fussball-import.mjs'
 import {runFussballCaptureCli} from './zajemi-fussball-sezono.mjs'
 import {fussballCardPolicyForCandidate} from './fussball-community-policy.mjs'
 import {loadFussballCompletionParents} from './fussball-completion-actions.mjs'
+import {captureFussballResumeDirectory} from './fussball-resume-capture.mjs'
 const requireProof=(ok,message)=>{if(!ok)throw Error(`fussball season pilot: ${message}`)}
 const repository='Lovro-splichal-orhanizagi/mnzgorenjska'
 function integer(value,min,max){
@@ -35,7 +36,7 @@ export function validateFussballSeasonPilot(e,{headSha}={}){
  requireProof(!e.FUSSBALL_COMPLETION_PRESET||completion,'unknown reviewed completion preset')
  requireProof(!completion||e.ARCHIVE_JSON?.trim()&&maxRequests<=(v5?432:v4?483:successor?577:resumption?788:886),'completion requires the reviewed paired current allowance')
  if(!e.ARCHIVE_JSON?.trim()){
-  if(!e.ROLLOUT_CANDIDATE)return null
+  if(!e.ROLLOUT_CANDIDATE){requireProof(!e.RESUME_RUNS,'resume is only for a current-only capture');return null}
   // Path B: one catalog league, current season only, under the cumulative
   // website request ledger (prior + this run <= cap). No archive, no handoff.
   requireProof(!completion,'current-only capture cannot use a checkpoint preset')
@@ -49,8 +50,13 @@ export function validateFussballSeasonPilot(e,{headSha}={}){
   const c=validateGermanyCandidate(candidates[0]),current=scope({seedUrl:e.SEED_URL,staffel:e.STAFFEL,season:e.SEASON,maxRequests})
   requireProof(c.source_league_code===`${current.staffel}:${current.season}`&&c.seedUrl===current.seedUrl,'current-only candidate does not own the exact current scope')
   const cardPolicy=fussballCardPolicyForCandidate(c);if(cardPolicy)current.cardPolicy=cardPolicy
-  return {current,archive:null,priorRequests,totalRequestCap,currentOnlyCandidate:c.slug}
+  // Resume: failed captures of this scope whose requests are already in prior_requests.
+  requireProof(/^(?:|[1-9]\d{0,14}(?:,[1-9]\d{0,14}){0,7})$/.test(e.RESUME_RUNS??''),'resume runs must be up to eight run IDs')
+  const resumeRuns=e.RESUME_RUNS?e.RESUME_RUNS.split(','):[]
+  requireProof(new Set(resumeRuns).size===resumeRuns.length&&!resumeRuns.includes(e.GITHUB_RUN_ID),'distinct earlier resume runs required')
+  return {current,archive:null,priorRequests,totalRequestCap,currentOnlyCandidate:c.slug,...(resumeRuns.length?{resumeRuns}:{})}
  }
+ requireProof(!e.RESUME_RUNS,'resume is only for a current-only capture')
  const workflow=completion?'preveri-fussball-dopolni.yml':'preveri-fussball-sezono.yml'
  requireProof(e.GITHUB_REPOSITORY===repository&&e.GITHUB_REF==='refs/heads/main'&&e.GITHUB_EVENT_NAME==='workflow_dispatch'&&e.GITHUB_WORKFLOW_REF===`${repository}/.github/workflows/${workflow}@refs/heads/main`&&e.GITHUB_RUN_ATTEMPT==='1'&&/^[1-9]\d*$/.test(e.GITHUB_RUN_ID??''),'exact repository main dispatch and first attempt required')
  requireProof(/^[a-f0-9]{40}$/.test(e.EXPECTED_SHA??'')&&e.EXPECTED_SHA===e.GITHUB_SHA&&e.EXPECTED_SHA===headSha,'exact reviewed main SHA required')
@@ -103,17 +109,36 @@ export async function authorizeFussballRollout({currentDirectory,archiveDirector
  }
  return ['workflow','run','uvoz-pl-de-paketa.yml','--repo',repository,'--ref','main','-f','country=DE','-f','expected_sha='+e.EXPECTED_SHA,'-f','audit_run='+e.GITHUB_RUN_ID,'-f','candidate='+plan.rolloutCandidate,'-f','max_requests=1']
 }
-export async function captureFussballSeasonCurrent(directory,e,{headSha,captureDirectory=captureFussballDirectory}={}){
+export async function captureFussballSeasonCurrent(directory,e,{headSha,captureDirectory=captureFussballDirectory,resumeDirectory=captureFussballResumeDirectory}={}){
  const plan=validateFussballSeasonPilot(e,{headSha})
  const options={seedUrl:e.SEED_URL,staffel:e.STAFFEL,season:e.SEASON,maxRequests:integer(e.MAX_REQUESTS,1,3000),reportLimit:e.REPORTS==='all'?null:integer(e.REPORTS,0,3000),...(plan?.current.cardPolicy?{cardPolicy:plan.current.cardPolicy}:{})}
  const completionProof=plan?.checkpointPreset?loadFussballCompletionParents(e.FUSSBALL_COMPLETION_DIRECTORY??'checkpoint-input',{preset:plan.checkpointPreset}):null
+ if(plan?.resumeRuns)return resumeDirectory({directory,options,resumeDirectories:plan.resumeRuns.map(id=>resolve('resume',id)),onProgress:p=>console.log(JSON.stringify(p))})
  return captureDirectory({directory,options,onProgress:p=>console.log(JSON.stringify(p)),...(completionProof?{completionProof}:{})})
+}
+/** Admits only finished first-attempt main dispatches of this workflow and downloads their originals. */
+export async function downloadFussballResumeRuns(e,{headSha,github,download}={}){
+ const plan=validateFussballSeasonPilot(e,{headSha})
+ requireProof(plan?.resumeRuns,'no resume runs selected')
+ for(const id of plan.resumeRuns){
+  const run=await github(`repos/${repository}/actions/runs/${id}`)
+  requireProof(run?.id===Number(id)&&run.path==='.github/workflows/preveri-fussball-sezono.yml'&&run.event==='workflow_dispatch'&&run.head_branch==='main'&&run.head_repository?.full_name===repository&&run.run_attempt===1&&run.status==='completed'&&['failure','success'].includes(run.conclusion)&&run.display_title===`FUSSBALL season ${plan.current.staffel} ${plan.current.season}`,'resume run must be a finished main capture of this scope')
+  const artifacts=(await github(`repos/${repository}/actions/runs/${id}/artifacts?per_page=100`))?.artifacts?.filter(a=>a.name===`fussball-season-${id}`)
+  requireProof(artifacts?.length===1&&artifacts[0].expired===false&&artifacts[0].workflow_run?.id===Number(id),'resume run must keep exactly one unexpired capture artifact')
+  await download(id,resolve('resume',id))
+ }
+ return plan.resumeRuns
 }
 async function main(args){
  const [mode,directory]=args
- requireProof((mode==='validate'&&args.length===1)||(['authorize','capture-archive','capture-current'].includes(mode)&&args.length===2)||(mode==='handoff'&&args.length===3),'use validate, capture-current DIRECTORY, authorize DIRECTORY, capture-archive DIRECTORY or handoff CURRENT ARCHIVE')
+ requireProof((['validate','resume-runs'].includes(mode)&&args.length===1)||(['authorize','capture-archive','capture-current'].includes(mode)&&args.length===2)||(mode==='handoff'&&args.length===3),'use validate, resume-runs, capture-current DIRECTORY, authorize DIRECTORY, capture-archive DIRECTORY or handoff CURRENT ARCHIVE')
  const e=process.env,headSha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()
  if(mode==='validate'){console.log(JSON.stringify(validateFussballSeasonPilot(e,{headSha})));return}
+ if(mode==='resume-runs'){
+  const github=path=>JSON.parse(execFileSync('gh',['api',path],{encoding:'utf8',timeout:60000}))
+  const download=(id,directory)=>execFileSync('gh',['run','download',id,'--repo',repository,'--name',`fussball-season-${id}`,'--dir',directory],{stdio:'inherit',timeout:600000})
+  console.log(JSON.stringify({resumeRuns:await downloadFussballResumeRuns(e,{headSha,github,download})}));return
+ }
  if(mode==='capture-current'){const m=await captureFussballSeasonCurrent(resolve(directory),e,{headSha});console.log(JSON.stringify({success:m.success,requests:m.snapshot.requests,activationEligible:false}));return}
  if(mode==='handoff'){
   const remoteMain=()=>execFileSync('git',['ls-remote','--exit-code','origin','refs/heads/main'],{encoding:'utf8',timeout:30000}).split(/\s/)[0]

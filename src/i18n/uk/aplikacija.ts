@@ -39,6 +39,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'SLFF безкоштовний: без реклами, без ставок, без підписок. На жаль, сервер не працює на ентузіазмі. Одне пиво допомагає оплатити сервер і пошту, а твоє ім’я потрапить на пивну стіну.',
       kasneje: 'Можливо, наступного разу',
       zeSem: 'Я вже пригостив 🍻',
+      jokNaslov: "Ніііі! Ти справді йдеш? 😭",
+      jokBesedilo: "Я цілий тиждень стою тут на колінах. Болять коліна, кухоль порожній. Лише одне пиво, і я перестану плакати, обіцяю. 🥺",
+      jokGumb: "Гаразд, не плач 🍺",
+      jokZapri: "Хай плаче",
       /** Okno po shranjeni ekipi za naslednji krog. */
       ekipaNaslov: 'Команда на {krog}-й тур готова! 🍺',
       /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
@@ -87,6 +91,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     izbrisRacuna: 'Видалити акаунт',
     nastavitve: 'Налаштування акаунта',
     mojProfil: 'Мій профіль',
+    sporocila: 'Повідомлення',
     povabi: 'Запросити друга',
     pomoc: 'Допомога',
     trgovina: 'Магазин',

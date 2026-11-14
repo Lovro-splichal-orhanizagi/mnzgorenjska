@@ -10,6 +10,7 @@ import { useNaslov } from '../lib/naslov'
 import { useTekmovanje, zLigo } from '../lib/tekmovanje'
 import VrhDrzave from '../components/VrhDrzave'
 import VrhKlubov from '../components/VrhKlubov'
+import LestvicaNapovediDrzave from '../components/LestvicaNapovediDrzave'
 import {
   razvrsti,
   zMesti,
@@ -33,12 +34,12 @@ export default function Slovenija() {
   const [vseVrsticeDrzav, setVrstice] = useState<DrzavnaVrstica[]>([])
   const [kako, setKako] = useState<Razvrstitev>('skupno')
   const [koliko, setKoliko] = useState(50)
-  // Zavihek je v naslovu (`?pogled=igralci`, `?pogled=klubi`), da naslovnica
+  // Zavihek je v naslovu (`?pogled=igralci`, `?pogled=klubi`, `?pogled=napovedi`), da naslovnica
   // lahko pokaže naravnost na igralce in da je pogled deljiv. Ne `?t=` — ta menja ligo.
   const [iskanje, setIskanje] = useSearchParams()
   const pogled = iskanje.get('pogled')
-  const zavihek = pogled === 'igralci' || pogled === 'klubi' ? pogled : 'ekipe'
-  const setZavihek = (k: 'ekipe' | 'igralci' | 'klubi') => {
+  const zavihek = pogled === 'igralci' || pogled === 'klubi' || pogled === 'napovedi' ? pogled : 'ekipe'
+  const setZavihek = (k: 'ekipe' | 'igralci' | 'klubi' | 'napovedi') => {
     const novo = new URLSearchParams(iskanje)
     if (k === 'ekipe') novo.delete('pogled')
     else novo.set('pogled', k)
@@ -125,12 +126,13 @@ export default function Slovenija() {
             ['ekipe', t('lestvice.slovenija.zavihekEkipe')],
             ['igralci', t('lestvice.slovenija.zavihekIgralci')],
             ['klubi', t('lestvice.slovenija.zavihekKlubi')],
+            ['napovedi', t('lestvice.napovedi.napovedi')],
           ] as const
         ).map(([k, naslov]) => (
           <button
             key={k}
             onClick={() => setZavihek(k)}
-            className={`-mb-px flex-1 border-b-2 px-4 py-2.5 text-center text-sm font-bold sm:flex-none ${
+            className={`-mb-px min-w-0 flex-1 truncate border-b-2 px-2 py-2.5 text-center text-sm font-bold sm:flex-none sm:px-4 ${
               zavihek === k
                 ? 'border-gnl-400 text-gnl-200'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -145,6 +147,8 @@ export default function Slovenija() {
         <VrhDrzave drzava={drzava} />
       ) : zavihek === 'klubi' ? (
         <VrhKlubov drzava={drzava} />
+      ) : zavihek === 'napovedi' ? (
+        <LestvicaNapovediDrzave drzava={drzava} />
       ) : (
         <>
           <div className="flex flex-wrap items-center justify-between gap-2">

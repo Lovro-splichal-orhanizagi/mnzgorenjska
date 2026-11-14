@@ -53,6 +53,15 @@ const BESEDE = {
     'tekme.rezultati.naslov': 'Rezultati',
     'igralci.profil.naslov': 'Igralec',
     'igralci.preverjen.znacka': 'Preverjen igralec',
+    'preverjeni.naslov': 'Preverjeni igralski profil',
+    'preverjeni.opis': 'Modra kljukica in posnetki.',
+    'preverjeni.glava': 'Tvoj nogomet si zasluži, da ga vidijo.',
+    'preverjeni.uvod': 'Tvoja stran igralca.',
+    'preverjeni.cta.poisci': 'Poišči svoj profil',
+    'preverjeni.kaj.kljukica': 'Modra kljukica.',
+    'preverjeni.kaj.profil': 'Pasica in opis.',
+    'preverjeni.kaj.posnetki': 'Do 6 posnetkov.',
+    'preverjeni.kaj.ogledi': 'Ogledi skavtov.',
   },
   sk: { 'aplikacija.naslovStrani.zStranjo': '{naslov} · SLFF', 'aplikacija.naslovStrani.ligeDrzave': 'Fantasy ligy — {drzava}: {lige}.', 'skupno.besede': { tocke: { one: 'bod', few: 'body', many: 'bodu', other: 'bodov' } } },
 }
@@ -312,6 +321,18 @@ for (const pot of ['/player/9', '/player/abc']) {
   for (const p of ['/player/*', '/mini-leagues/*', '/l/*']) assert.ok(html.includes(p), `@html_strani brez ${p}`)
   assert.match(caddy, /handle \/predogled\/\* \{\s*reverse_proxy 127\.0\.0\.1:3202 127\.0\.0\.1:3201/)
   assert.match(caddy.slice(caddy.indexOf('http://:3201')), /handle \/predogled\/\* \{\s*rewrite \* \/og\/slff-og\.png/)
+}
+
+// Preverjeni igralski profil (/verified): brez lige, kanonični brez ?t=.
+{
+  const v = await stran('/verified', 'sk-za-1', { rest, lige: LIGE, besede: BESEDE })
+  const html = izrisi(PREDLOGA, v, prevajalnik(BESEDE, 'sl'))
+  assert.equal(v.kanonicni, 'https://slff.eu/verified')
+  assert.match(html, /<title>Preverjeni igralski profil · SLFF<\/title>/)
+  assert.match(html, /<h1>Tvoj nogomet si zasluži, da ga vidijo\.<\/h1>/)
+  assert.match(html, /<a href="\/players">Poišči svoj profil<\/a>/)
+  assert.ok(html.includes('rel="canonical" href="https://slff.eu/verified"'))
+  assert.ok(readFileSync(new URL('../Caddyfile', import.meta.url), 'utf8').match(/@html_strani \{[^}]*path [^\n]* \/verified /), '@html_strani brez /verified')
 }
 
 // Neznana pot: predloga ostane nespremenjena.

@@ -39,6 +39,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'SLFF ücretsiz: reklam yok, bahis yok, abonelik yok. Ne yazık ki sunucu heyecanla çalışmıyor. Bir bira sunucu ve e-posta masraflarına yardım eder, adın da bira duvarına yazılır.',
       kasneje: 'Belki bir dahaki sefere',
       zeSem: 'Zaten ısmarladım 🍻',
+      jokNaslov: "Hayııır! Gerçekten gidiyor musun? 😭",
+      jokBesedilo: "Bütün hafta burada diz çöktüm. Dizlerim ağrıyor, bardağım boş. Sadece bir bira ve ağlamayı keserim, söz. 🥺",
+      jokGumb: "Tamam, ağlama artık 🍺",
+      jokZapri: "Bırak ağlasın",
       /** Okno po shranjeni ekipi za naslednji krog. */
       ekipaNaslov: '{krog}. hafta için takımın hazır! 🍺',
       /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
@@ -87,6 +91,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     izbrisRacuna: 'Hesabı sil',
     nastavitve: 'Hesap ayarları',
     mojProfil: 'Profilim',
+    sporocila: 'Mesajlar',
     povabi: 'Arkadaşını davet et',
     pomoc: 'Yardım',
     trgovina: 'Mağaza',

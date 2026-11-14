@@ -11,6 +11,7 @@ import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { vseVrstice } from './strani.mjs'
 import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost.ts'
+import { getFcfSixPolicy } from './fcf-six-historical-policy.mjs'
 
 export const KATALONSKE_LIGE = ['es-ct-elit', ...['primera', 'segona', 'tercera'].flatMap((level, i) =>
   Array.from({ length: [3, 6, 17][i] }, (_, n) => `es-ct-${level}-g${n + 1}`))]
@@ -22,6 +23,15 @@ export const QUARTA_LIGE = [1, 2, 3, 4, 5, 6, 7, 8, 10, 13, 14, 16, 17, 18, 19, 
 export const QUARTA_BREZ_MENJAV = 'fcf-quarta-no-substitutions-full-minutes-2026-11-01'
 const DOVOLJENE_LIGE = [...KATALONSKE_LIGE, ...QUARTA_LIGE]
 const BENCH_SCORER = /^strelec .+ je na klopi, vstopa zapisnik nima — vstop postavljen na (\d+)\. minuto$/
+// Pravila lastnika 2026-11-02 (A, C, D) za navadne FCF skupine; skupine z
+// recenzirano zgodovino (es-fcf-six-reviewed-history-v1) ostanejo nespremenjene.
+// C: parser fcf zapiše natanko to opozorilo, ko akta pokaže XI pod 11.
+const KRATKA_POSTAVA = /^.+: v postavi je (\d+) igralcev namesto 11$/
+// D: kontumacija, kjer akta nima postave ene ali obeh ekip.
+const KONTUMACIJA_BREZ_POSTAVE = /^zapisnik nepopoln: .+ — brez postave$/
+// B (lastnik 2026-11-03): uradni administrativni izid 3:0/0:3 ob drugačnih golih
+// akte. Lestvica ohrani uradni izid, točke igralcev ostanejo iz akte.
+const ADMINISTRATIVNI_IZID = /^goli iz zapisnika \((\d+):(\d+)\) se ne ujemajo z izidom (\d+):(\d+)$/
 const REPOSITORY = 'Lovro-splichal-orhanizagi/mnzgorenjska'
 const PERMISSION_DATE = '2026-10-17'
 const fail = message => { throw new Error(`Vklop Katalonije: ${message}`) }
@@ -120,7 +130,7 @@ function futureProblems(s, round, now, perRound = 8) {
 export function preveriLigo(s, now = Date.now(), { allowActive = false } = {}) {
   const problems = [], add = text => problems.push(text)
   const { competition: c, rounds, matches, appearances, goals, players, state } = s
-  const quarta = QUARTA_LIGE.includes(c.slug)
+  const quarta = QUARTA_LIGE.includes(c.slug), pravila = !getFcfSixPolicy(c.slug), notes = [], note = text => notes.push(text)
   if (!DOVOLJENE_LIGE.includes(c.slug) || c.source !== 'fcf' || c.country_code !== 'ES' || c.sezona_koledarska !== false) add('Nedovoljen obseg: samo 27 zgornjih FCF skupin ES in imenovane skupine Quarta.')
   if (c.active !== false && !allowActive) add('Liga je že aktivna.')
   if (s.season !== currentSeason(now)) add('Napačna tekoča sezona.')
@@ -159,6 +169,15 @@ export function preveriLigo(s, now = Date.now(), { allowActive = false } = {}) {
     const ms = matches.filter(m => m.round_id === r.id)
     if (ms.length !== plan.perRound || new Set(ms.flatMap(m => [m.home_team_id, m.away_team_id])).size !== 2 * plan.perRound) add(`Krog ${r.number} nima ${plan.perRound} disjunktnih tekem ${2 * plan.perRound} klubov.`)
   }
+  // A: umaknjen/nadomestni klub (npr. 'TBD') — brez uvožene tekme, igralca in
+  // nastopa, vse pretekle tekme pa vir_brez_izida. Izvzet iz preverb po klubih.
+  const today = new Date(now).toISOString().slice(0, 10)
+  const withdrawn = new Set(pravila ? [...clubs].filter(club => {
+    const own = matches.filter(m => [m.home_team_id, m.away_team_id].includes(club)), past = own.filter(m => validDate(m.played_on) && m.played_on < today)
+    return past.length && past.every(m => m.vir_brez_izida === true) && !own.some(m => m.imported_at) &&
+      !players.some(p => p.team_id === club) && !appearances.some(a => a.team_id === club)
+  }).sort((a, b) => a - b) : [])
+  for (const club of withdrawn) note(`Klub ${club}: umaknjen/nadomestni (0 uvoženih tekem, 0 igralcev, vse pretekle tekme vir_brez_izida) — izvzet iz preverb po klubih.`)
   const matchMap = new Map(matches.map(m => [m.id, m])), playerMap = new Map(players.map(p => [p.id, p]))
   const appMap = new Map(), appsByMatch = new Map(), goalsByMatch = new Map(), keeperClubs = new Set(), benchClubs = new Set()
   for (const a of appearances) {
@@ -195,13 +214,47 @@ export function preveriLigo(s, now = Date.now(), { allowActive = false } = {}) {
     if (a) benchUsed.add(a.id)
     return Boolean(a)
   }
+  // C: kratka postava 7–10 je sprejeta, ko opozorilo parserja pove natanko
+  // število shranjenih začetnikov ene ekipe te tekme (vsako opozorilo enkrat).
+  const shortXi = new Set(), starterCount = (matchId, team) => (appsByMatch.get(matchId) ?? []).filter(a => a.team_id === team && a.started === true).length
+  const shortWarning = (w, m) => {
+    const count = Number(KRATKA_POSTAVA.exec(w)?.[1] ?? NaN)
+    if (!pravila || !m.imported_at || m.kontumacija || !integer(count, 7, 10)) return false
+    const team = [m.home_team_id, m.away_team_id].find(t => !shortXi.has(`${m.id}/${t}`) && starterCount(m.id, t) === count)
+    if (team !== undefined) shortXi.add(`${m.id}/${team}`)
+    return team !== undefined
+  }
+  // B: opozorilo parserja sprejeto le, ko je shranjen izid natanko 3:0/0:3,
+  // goli akte so drugačni in shranjeni goli po upravičencu so natanko goli akte.
+  // Kontumacija (brez postav) gre po D, ne po B.
+  const adminScore = new Map(), creditedScore = m => {
+    const gs = goalsByMatch.get(m.id) ?? [], credited = gs.map(g => g.is_own_goal ? (g.team_id === m.home_team_id ? m.away_team_id : m.home_team_id) : g.team_id)
+    return [credited.filter(id => id === m.home_team_id).length, credited.filter(id => id === m.away_team_id).length]
+  }
+  const adminWarning = (w, m) => {
+    const x = ADMINISTRATIVNI_IZID.exec(w)?.slice(1).map(Number)
+    if (!pravila || !x || !m.imported_at || m.kontumacija !== false) return false
+    if (adminScore.has(m.id)) return adminScore.set(m.id, null) && false // dvojno opozorilo ni sprejeto
+    const [a, b, home, away] = x, [ch, ca] = creditedScore(m)
+    if (home !== m.home_goals || away !== m.away_goals || !(home === 3 && away === 0 || home === 0 && away === 3) || a === home && b === away || ch !== a || ca !== b) return false
+    adminScore.set(m.id, [a, b])
+    return true
+  }
+  // D: kontumacija brez nastopov sme imeti samo opozorila 'brez postave'.
+  const forfeitOnly = m => pravila && m.kontumacija === true && !appsByMatch.has(m.id) && Array.isArray(m.import_warnings) && m.import_warnings.length > 0 &&
+    m.import_warnings.length <= 2 && new Set(m.import_warnings).size === m.import_warnings.length && m.import_warnings.every(w => KONTUMACIJA_BREZ_POSTAVE.test(w))
   let fullRounds = 0
-  for (const r of rounds) if (matches.filter(m => m.round_id === r.id && m.imported_at).length === plan.perRound) fullRounds++
+  // A: krog je poln, ko so uvožene vse njegove tekme brez umaknjenih klubov.
+  for (const r of rounds) {
+    const ms = matches.filter(m => m.round_id === r.id), counted = ms.filter(m => !withdrawn.has(m.home_team_id) && !withdrawn.has(m.away_team_id))
+    if (ms.length === plan.perRound && counted.length && counted.every(m => m.imported_at)) fullRounds++
+  }
   if (!fullRounds) add('Ni niti enega v celoti uvoženega kroga.')
   for (const m of matches) {
     if (!roundMap.has(m.round_id)) add(`Tekma ${m.id}: napačen krog.`)
     if (!validDate(m.played_on)) add(`Tekma ${m.id}: neveljaven datum.`)
-    if (!Array.isArray(m.import_warnings) || m.import_warnings.some(w => !(quarta && benchScorer(w, m.id)))) add(`Tekma ${m.id}: nerešena uvozna opozorila.`)
+    if (forfeitOnly(m)) note(`Tekma ${m.id}: kontumacija brez postave — opozorila 'zapisnik nepopoln … brez postave' sprejeta.`)
+    else if (!Array.isArray(m.import_warnings) || m.import_warnings.some(w => !(quarta && benchScorer(w, m.id)) && !shortWarning(w, m) && !adminWarning(w, m))) add(`Tekma ${m.id}: nerešena uvozna opozorila.`)
     if (typeof m.kontumacija !== 'boolean' || typeof m.vir_brez_izida !== 'boolean') add(`Tekma ${m.id}: neznano stanje statistike.`)
     if (m.imported_at !== null && !Number.isFinite(timestamp(m.imported_at))) add(`Tekma ${m.id}: neveljaven čas uvoza.`)
     if (!m.imported_at && !m.kontumacija && !m.vir_brez_izida && validDate(m.played_on) && now - Date.parse(`${m.played_on}T23:59:59.999Z`) > 48 * 3600000) add(`Tekma ${m.id}: zamuda zapisnika nad 48 ur po koncu UTC dneva.`)
@@ -210,11 +263,13 @@ export function preveriLigo(s, now = Date.now(), { allowActive = false } = {}) {
     if (!integer(m.home_goals) || !integer(m.away_goals)) add(`Tekma ${m.id}: neznan izid.`)
     for (const team of [m.home_team_id, m.away_team_id]) {
       const starters = aps.filter(a => a.team_id === team && a.started === true)
-      if (starters.length !== 11) add(`Tekma ${m.id}/${team}: XI ni natanko 11.`)
+      if (starters.length !== 11 && shortXi.has(`${m.id}/${team}`)) note(`Tekma ${m.id}/${team}: XI ima ${starters.length} začetnikov, kot kaže akta.`)
+      else if (starters.length !== 11) add(`Tekma ${m.id}/${team}: XI ni natanko 11.`)
       if (starters.filter(a => a.is_goalkeeper === true).length !== 1) add(`Tekma ${m.id}/${team}: začetni vratar ni natanko eden.`)
     }
-    const credited = gs.map(g => g.is_own_goal ? (g.team_id === m.home_team_id ? m.away_team_id : m.home_team_id) : g.team_id)
-    if (credited.filter(id => id === m.home_team_id).length !== m.home_goals || credited.filter(id => id === m.away_team_id).length !== m.away_goals) add(`Tekma ${m.id}: goli po upravičencu niso izid.`)
+    const [creditedHome, creditedAway] = creditedScore(m), admin = adminScore.get(m.id)
+    if (admin) note(`Tekma ${m.id}: uradni administrativni izid ${m.home_goals}:${m.away_goals}, gol iz akte ${admin[0]}:${admin[1]} — lestvica uradni izid, točke iz akte.`)
+    else if (creditedHome !== m.home_goals || creditedAway !== m.away_goals) add(`Tekma ${m.id}: goli po upravičencu niso izid.`)
     for (const a of aps) {
       const own = gs.filter(g => g.scorer_id === a.player_id && g.is_own_goal).length
       const scored = gs.filter(g => g.scorer_id === a.player_id && !g.is_own_goal).length
@@ -223,12 +278,12 @@ export function preveriLigo(s, now = Date.now(), { allowActive = false } = {}) {
     }
   }
   for (const club of clubs) {
-    if (!keeperClubs.has(club)) add(`Klub ${club}: ni izrecnega začetnega vratarja.`)
+    if (!keeperClubs.has(club) && !withdrawn.has(club)) add(`Klub ${club}: ni izrecnega začetnega vratarja.`)
     // Quarta clubs record no substitutions (QUARTA_BREZ_MENJAV): no bench proof exists.
     if (!quarta && !benchClubs.has(club)) add(`Klub ${club}: ni dokaza nastopa s klopi.`)
   }
   const active = players.filter(p => p.active)
-  if (active.some(p => !clubs.has(p.team_id) || !['GK', 'DEF', 'MID', 'FWD'].includes(p.position) || p.value === null || !Number.isFinite(Number(p.value)) || Number(p.value) <= 0) || new Set(active.map(p => p.team_id)).size !== n) add('Aktivni igralci/cene/pozicije/klubi niso popolni.')
+  if (active.some(p => !clubs.has(p.team_id) || !['GK', 'DEF', 'MID', 'FWD'].includes(p.position) || p.value === null || !Number.isFinite(Number(p.value)) || Number(p.value) <= 0) || new Set(active.map(p => p.team_id)).size !== n - withdrawn.size) add('Aktivni igralci/cene/pozicije/klubi niso popolni.')
   const roster = active.map(({ id, team_id, position, value }) => ({ id, team_id, position, value }))
   const positions = Object.fromEntries(['GK', 'DEF', 'MID', 'FWD'].map(p => [p, active.filter(a => a.position === p).length]))
   if (!state || state.privzetih !== active.filter(p => Number(p.value) === 4.5).length || Number(state.najvisja_cena) !== Math.max(0, ...active.map(p => Number(p.value))) || state.klubov !== new Set(active.map(p => p.team_id)).size || kanonicno(state.po_pozicijah) !== kanonicno(positions) || kanonicno(rows(state.igralci ?? [])) !== kanonicno(rows(roster)) || state.aktivnih !== active.length || state.krogov_tekoce !== rounds.length) add('Stanje pripravljenosti in prebrani igralci/krogi se ne ujemajo.')
@@ -236,7 +291,7 @@ export function preveriLigo(s, now = Date.now(), { allowActive = false } = {}) {
   problems.push(...readiness.tezave.map(t => `${t.kljuc}: ${t.kaj}`))
   const prviKrog = izberiPrviKrog(s, now)
   problems.push(...futureProblems(s, prviKrog, now, plan.perRound))
-  return { pripravljena: !problems.length, tezave: [...new Set(problems)], prviKrog, ...quarta && { menjave: QUARTA_BREZ_MENJAV }, counts: { rounds: rounds.length, matches: matches.length, clubs: clubs.size, perRound: plan.perRound, appearances: appearances.length, goals: goals.length, imported: matches.filter(m => m.imported_at).length, fullRounds }, najcenejsiKader: najcenejsiKader(state?.igralci ?? []), odstotekPrivzetih: readiness.odstotekPrivzetih }
+  return { pripravljena: !problems.length, tezave: [...new Set(problems)], prviKrog, ...quarta && { menjave: QUARTA_BREZ_MENJAV }, ...notes.length && { opombe: [...new Set(notes)] }, counts: { rounds: rounds.length, matches: matches.length, clubs: clubs.size, perRound: plan.perRound, appearances: appearances.length, goals: goals.length, imported: matches.filter(m => m.imported_at).length, fullRounds }, najcenejsiKader: najcenejsiKader(state?.igralci ?? []), odstotekPrivzetih: readiness.odstotekPrivzetih }
 }
 function normalizedSnapshot(s) {
   return { ...s, rounds: rows(s.rounds), matches: rows(s.matches), appearances: rows(s.appearances), goals: rows(s.goals), players: rows(s.players), state: { ...s.state, igralci: rows(s.state.igralci ?? []) } }
@@ -327,7 +382,7 @@ async function main() {
   if (mode === 'prepare') {
     const batch = await pripraviBatch(options)
     writeArtifacts(directory, { phase: 'prepare', batch, results: [] })
-    console.log(JSON.stringify({ sha256: batch.sha256, candidates: batch.leagues.filter(l => l.quality.pripravljena).map(l => l.slug), blocked: batch.leagues.filter(l => !l.quality.pripravljena).map(l => ({ slug: l.slug, reasons: l.quality.tezave })) }, null, 2))
+    console.log(JSON.stringify({ sha256: batch.sha256, candidates: batch.leagues.filter(l => l.quality.pripravljena).map(l => l.slug), notes: batch.leagues.filter(l => l.quality.opombe).map(l => ({ slug: l.slug, opombe: l.quality.opombe })), blocked: batch.leagues.filter(l => !l.quality.pripravljena).map(l => ({ slug: l.slug, reasons: l.quality.tezave })) }, null, 2))
   } else {
     const result = await aktivirajBatch({ ...options, approvedSha: arg('--approved-sha256'), onProgress: payload => writeArtifacts(directory, payload) })
     writeArtifacts(directory, { phase: 'complete', ...result })
