@@ -361,6 +361,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     },
     nimasEkipe: 'Még nincs csapatod<liga>({liga})</liga>, nélküle a következő fordulóban nem szerzel pontot.',
     sestavi: 'Csapat összeállítása →',
+    drugaLiga: 'A csapatod, a(z) {ime}, ebben a ligában van: {liga}',
+    odpri: 'Megnyitás →',
     popravi: 'Javítás →',
     poglej: 'Megnézem →',
     skrij: 'Figyelmeztetés elrejtése: {besedilo}',

@@ -360,6 +360,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     },
     nimasEkipe: 'Hələ komandan yoxdur<liga>({liga})</liga>. Onsuz növbəti turda xal toplamayacaqsan.',
     sestavi: 'Komanda yığ →',
+    drugaLiga: 'Sənin {ime} komandan {liga} liqasındadır',
+    odpri: 'Aç →',
     popravi: 'Düzəlt →',
     poglej: 'Bax →',
     skrij: 'Xəbərdarlığı gizlət: {besedilo}',

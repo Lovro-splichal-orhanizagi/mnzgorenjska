@@ -366,6 +366,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     },
     nimasEkipe: 'Încă nu ai echipă<liga>({liga})</liga>: fără ea nu primești puncte în etapa următoare.',
     sestavi: 'Fă-ți echipa →',
+    drugaLiga: 'Echipa ta {ime} este în liga {liga}',
+    odpri: 'Deschide →',
     popravi: 'Corectează →',
     poglej: 'Vezi →',
     skrij: 'Ascunde avertismentul: {besedilo}',

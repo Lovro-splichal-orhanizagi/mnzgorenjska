@@ -352,6 +352,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     },
     nimasEkipe: 'Tev vēl nav komandas<liga>({liga})</liga>: bez tās nākamajā kārtā tu nesaņemsi punktus.',
     sestavi: 'Sastādīt komandu →',
+    drugaLiga: 'Tava komanda {ime} ir līgā {liga}',
+    odpri: 'Atvērt →',
     popravi: 'Labot →',
     poglej: 'Skatīt →',
     skrij: 'Paslēpt brīdinājumu: {besedilo}',
