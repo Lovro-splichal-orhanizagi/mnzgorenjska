@@ -156,6 +156,19 @@ export function kroziSerije(odgovor, seriesId) {
   return [...out.values()].sort((a, b) => a.stevilka - b.stevilka)
 }
 
+/**
+ * Besedilo kartice je "domači izid gostje ura …": kartica kaže tekmo, če sta
+ * kluba v tem vrstnem redu. Stran ob menjavi kroga za hip pusti kartice
+ * prejšnjega kroga (obratni dvoboj istih klubov, domači in gostje zamenjani);
+ * brez vrstnega reda bi jih imeli za prave in kliknili napačno tekmo.
+ */
+export function karticaJeTekma(besedilo, tekma) {
+  const d = poenoti(tekma?.homeClub?.name)
+  const g = poenoti(tekma?.awayClub?.name)
+  const i = besedilo.indexOf(d)
+  return i >= 0 && besedilo.indexOf(g, i + d.length) >= 0
+}
+
 /** Tekme kroga iz GetMatches (krog): ploščat seznam v vrstnem redu strani. */
 export const tekmeKroga = (krog) => (krog?.responseData?.matches ?? []).flatMap((d) => d.list ?? [])
 
@@ -507,7 +520,7 @@ export class Seja {
     const naStrani = (o, besedila) => {
       const tekme = tekmeKroga(o.telo)
       return tekme.length > 0 && tekme.length === besedila.length &&
-        tekme.every((t) => besedila.some((b) => b.includes(poenoti(t.homeClub?.name)) && b.includes(poenoti(t.awayClub?.name))))
+        tekme.every((t) => besedila.some((b) => karticaJeTekma(b, t)))
     }
     let k = null
     for (const konec = Date.now() + 90000; !k && Date.now() < konec; ) {
@@ -621,7 +634,7 @@ export class Seja {
       const besedila = (await this.stran.locator('.match-container .match-details.isnotmobile').allInnerTexts().catch(() => [])).map(poenoti)
       if (
         besedila.length === tekme.length &&
-        tekme.every((t) => besedila.some((b) => b.includes(poenoti(t.homeClub?.name)) && b.includes(poenoti(t.awayClub?.name))))
+        tekme.every((t) => besedila.some((b) => karticaJeTekma(b, t)))
       )
         return true
       await cakaj(300)
@@ -645,12 +658,15 @@ export class Seja {
     })
     const n = await kartice.count()
     if (n !== tekme.length) throw new Error(`hlf: krog ${stevilka} ima na strani ${n} tekem, v odgovoru ${tekme.length}`)
-    // Kartico poiščemo po imenih obeh klubov, ne po mestu: stran jih lahko
-    // razvrsti drugače kot odgovor.
-    const besedila = (await kartice.allInnerTexts()).map(poenoti)
-    const ime = (k) => poenoti(k?.name)
-    let mesto = besedila.findIndex((b) => b.includes(ime(tekma.homeClub)) && b.includes(ime(tekma.awayClub)))
-    if (mesto < 0) mesto = besedila[idx]?.includes(ime(tekma.homeClub)) ? idx : -1
+    // Kartico poiščemo po imenih obeh klubov (domači pred gosti), ne po mestu:
+    // stran jih lahko razvrsti drugače kot odgovor. Čakamo, da se kartice
+    // osvežijo (za hip kažejo prejšnji krog).
+    let mesto = -1
+    for (const konec = Date.now() + 15000; mesto < 0; ) {
+      mesto = (await kartice.allInnerTexts().catch(() => [])).map(poenoti).findIndex((b) => karticaJeTekma(b, tekma))
+      if (mesto >= 0 || Date.now() > konec) break
+      await cakaj(300)
+    }
     if (mesto < 0) throw new Error(`hlf: kartice tekme ${tekma.homeClub?.name} - ${tekma.awayClub?.name} ni v krogu ${stevilka}`)
     const pred = this.odgovori.length
     await this.vljudno()
@@ -667,8 +683,12 @@ export class Seja {
       this.trenutni = null
     }
     if (!o) return null
-    if (o.zahteva?.MatchId && o.zahteva.MatchId !== tekma.matchId)
-      throw new Error(`hlf: klik na tekmo ${tekma.matchId} je odprl ${o.zahteva.MatchId}`)
+    // Napačna tekma: preskočimo le to tekmo (naslednji nočni uvoz jo bere znova),
+    // ne cele lige. Zapisnika druge tekme ne vzamemo.
+    if (o.zahteva?.MatchId && o.zahteva.MatchId !== tekma.matchId) {
+      this.log(`  hlf: klik na tekmo ${tekma.matchId} je odprl ${o.zahteva.MatchId} — tekmo preskočim`)
+      return null
+    }
     return o.status === 200 && o.telo && typeof o.telo === 'object' ? o.telo : null
   }
 
