@@ -40,7 +40,7 @@ echo "Koš $KOS/$KOSOV, lige (najdlje neosvežene prve): $(cut -d' ' -f1 "$LIGE"
 zacetek=$(date +%s)
 minut() { echo $(( ($(date +%s) - zacetek) / 60 )); }
 
-zavrnjeni=" "   # viri, ki so ta zagon vrnili 403/429/izziv
+zavrnjeni=" "   # viri, ki so ta zagon vrnili 401/403/429/izziv ali porabili proračun zahtev
 nedosegljivi=" " # viri, ki so ta zagon vrnili 5xx (vir je dol)
 zadnji_izhod=0
 teci() { "$@" </dev/null; zadnji_izhod=$?; return "$zadnji_izhod"; }
@@ -59,7 +59,7 @@ uvozi() {
     local capture_dir
     capture_dir=$(mktemp -d)
     rmdir "$capture_dir" || return 1
-    teci node scripts/prepare-fussball-nightly.mjs --tekmovanje "$liga" --output "$capture_dir" --max-requests 3000 || { [ "$zadnji_izhod" = 4 ] && return 4; return 1; }
+    teci node scripts/prepare-fussball-nightly.mjs --tekmovanje "$liga" --output "$capture_dir" --max-requests 3000 || { case $zadnji_izhod in 4|5) return "$zadnji_izhod" ;; *) return 1 ;; esac; }
     export SLFF_FUSSBALL_CAPTURE="$capture_dir"
   fi
   # Izhod 3: klub manjka v razporedu (izstop?) — odloči človek, liga ni padla.
@@ -129,7 +129,7 @@ while read -r liga faktor vir; do
     5) echo "::warning title=Vir ne dela::$liga — vir $vir vrača 5xx (nedosegljiv); ostale lige tega vira preskočene, ni napaka uvoza"
        nedosegljivi="$nedosegljivi$vir "; vir_dol="$vir_dol $liga" ;;
     0) echo "$liga: v redu"; node scripts/nocni-kosi.mjs --zabelezi "$liga" --stanje "$STANJE" ;;
-    4) echo "::error title=Vir je zavrnil::$liga — vir $vir je vrnil 403/429 ali izziv; ostale lige tega vira preskočene, ne obhajamo"
+    4) echo "::error title=Vir je zavrnil::$liga — vir $vir je vrnil 401/403/429, izziv ali preusmeritev, ali je zmanjkalo proračuna zahtev; ostale lige tega vira preskočene, ne obhajamo"
        zavrnjeni="$zavrnjeni$vir "; padle="$padle $liga" ;;
     *) echo "::warning title=Uvoz lige::$liga ni uspela; poskusim še enkrat na koncu"
        zacasno="$zacasno$liga $faktor $vir"$'\n' ;;

@@ -85,6 +85,17 @@ test('transport failure fails this league only: exit 1, no source stop, real cau
   await assert.rejects(api.prepareFussballNightly({candidate:row,directory:f.directory,cacheDirectory:join(f.root,'cache'),now,captureDirectory:challenge,loadCapture:f.loadCapture}),e=>e.exitCode===4&&e.sourceStop===true&&/source refused: .*challenge/.test(e.message))
  }finally{f.clean()}
 })
+test('401, second redirect refusal and budget stop exit 4; 5xx exits 5 (source down); only the real cause is named',async()=>{
+ const cases=[['fussball capture: source request failed (HTTP 401)',4,/source refused: /],['fussball capture: redirected response refused',4,/source refused: /],['fussball capture: request budget exhausted (3000)',4,/source stopped: .*budget/],['fussball capture: source request failed (HTTP 503)',5,/source down: .*503/]]
+ for(const [reason,exitCode,message] of cases){
+  const f=setup()
+  try{
+   const captureDirectory=async()=>{mkdirSync(f.directory);writeFileSync(join(f.directory,'manifest.json'),JSON.stringify({snapshot:{stopped:true,stopReason:reason}}));throw Error(`client stopped after ${reason}`)}
+   await assert.rejects(api.prepareFussballNightly({candidate:row,directory:f.directory,cacheDirectory:join(f.root,'cache'),now,captureDirectory,loadCapture:f.loadCapture}),e=>e.exitCode===exitCode&&e.sourceStop===true&&message.test(e.message),reason)
+   assert.equal(f.calls.length,0)
+  }finally{f.clean()}
+ }
+})
 test('installed source collector distinguishes actual refused response from semantic HTML failure',async()=>{
  for(const status of [403,200]){
   const f=setup();let requests=0,loaded=false
