@@ -24,5 +24,5 @@ services:
     env_file: .env
     volumes:
       - ./app:/app:ro
-    mem_limit: 128m
+    mem_limit: 256m
     cpus: 0.5

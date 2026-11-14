@@ -53,13 +53,33 @@ export function assertFussballNightlyCompetition(row){
  // updates. Initial bulk admission separately requires both complete seasons.
  return validateGermanyCandidate(matches[0])
 }
-function stoppedCapture(directory){
+// Only a real refusal (HTTP 401/403/429, a challenge page, a refused redirect)
+// or a spent request budget stops the source for the night (exit 4); an HTTP 5xx
+// means the source is down (exit 5). A transport failure ("fetch failed", timeout)
+// or a semantic parse error fails this league alone; its own message stays in the log.
+const REFUSAL=/\(HTTP (?:401|403|429)\)|source challenge detected|redirect refused|redirected response refused/
+const BUDGET=/request budget exhausted/
+const SOURCE_DOWN=/\(HTTP 5\d\d\)/
+function classifyStop(text){
+ if(REFUSAL.test(text))return {exitCode:4,word:'refused'}
+ if(BUDGET.test(text))return {exitCode:4,word:'stopped'}
+ if(SOURCE_DOWN.test(text))return {exitCode:5,word:'down'}
+ return null
+}
+// The Baden native capture writes no manifest.json when it fails, so there the
+// refusal is read from the capture client's own error message instead.
+function sourceStop(directory,error,{manifest=true}={}){
+ if(error?.sourceStop===true)return {exitCode:4,word:'stopped'}
+ if(!manifest)return classifyStop(error?.message??'')
  try{
   const file=join(directory,'manifest.json'),s=lstatSync(file)
-  return s.isFile()&&!s.isSymbolicLink()&&JSON.parse(readFileSync(file,'utf8')).snapshot?.stopped===true
- }catch{return false}
+  if(!s.isFile()||s.isSymbolicLink())return null
+  const snapshot=JSON.parse(readFileSync(file,'utf8')).snapshot
+  if(snapshot?.stopped!==true)return null
+  return classifyStop(`${snapshot.stopReason??''} ${error?.message??''}`)
+ }catch{return null}
 }
-export async function prepareFussballNightly({candidate,directory,maxRequests=4000,now=Date.now,captureDirectory=captureFussballDirectory,loadCapture=loadFussballImportCapture,loadCurrentOnly,loadCurrentOnlyPack,fetchFn,cacheDirectory,installedHistoricalMarkers=candidate?.fussballHistoricalContext,db}={}){
+export async function prepareFussballNightly({candidate,directory,maxRequests=4000,now=Date.now,captureDirectory=captureFussballDirectory,loadCapture=loadFussballImportCapture,loadCurrentOnly,loadCurrentOnlyPack,loadNativeSeed=loadFussballNativeRuntimeSeed,captureNative=captureFussballNativeRuntimeDirectory,fetchFn,cacheDirectory,installedHistoricalMarkers=candidate?.fussballHistoricalContext,db}={}){
  const reviewed=assertFussballNightlyCompetition(candidate),scope=parseFussballLeagueCode(reviewed.source_league_code)
  proof(typeof directory==='string'&&directory.length>0&&!existsSync(directory),'output must identify a new capture directory')
  proof(Number.isInteger(maxRequests)&&maxRequests>=1&&maxRequests<=4000,'request budget must be 1..4000')
@@ -84,14 +104,20 @@ export async function prepareFussballNightly({candidate,directory,maxRequests=40
    renameSync(next,latest);rmSync(previous,{recursive:true,force:true});rmSync(seed,{recursive:true,force:true})
    return {directory:resolve(directory),source_league_code:reviewed.source_league_code,...scope,reports:batch.reports.length,pendingReports:batch.pendingReports?.length??0,unknownReports:batch.unknownReports?.length??0,administrativeReports:batch.administrativeReports?.length??0,provenance:batch.provenance}
   }catch(error){
-   if(stoppedCapture(directory)||error.sourceStop)throw Object.assign(new Error(`fussball nightly source stopped: ${error.message}`),{sourceStop:true,exitCode:4})
+   {const stop=sourceStop(directory,error);if(stop)throw Object.assign(new Error(`fussball nightly source ${stop.word}: ${error.message}`),{sourceStop:true,exitCode:stop.exitCode})}
    throw Object.assign(error,{exitCode:1,dataHold:true})
   }
  }
  if(isBadenNativeCompetition(candidate)){
   const seedDirectory=existsSync(latest)?join(latest,'seed'):seed
-  const loaded=await loadFussballNativeRuntimeSeed({context:installedHistoricalMarkers,competition:candidate,db,directory:seedDirectory})
-  const batch=await captureFussballNativeRuntimeDirectory({context:loaded.context,competition:loaded.competition,directory,seedDirectory,...(existsSync(latest)?{reuseDirectory:latest}:{}),maxRequests,asOfDate,...(fetchFn?{fetchFn}:{})})
+  const loaded=await loadNativeSeed({context:installedHistoricalMarkers,competition:candidate,db,directory:seedDirectory})
+  let batch
+  try{
+   batch=await captureNative({context:loaded.context,competition:loaded.competition,directory,seedDirectory,...(existsSync(latest)?{reuseDirectory:latest}:{}),maxRequests,asOfDate,...(fetchFn?{fetchFn}:{})})
+  }catch(error){
+   {const stop=sourceStop(directory,error,{manifest:false});if(stop)throw Object.assign(new Error(`fussball nightly source ${stop.word}: ${error.message}`),{sourceStop:true,exitCode:stop.exitCode})}
+   throw Object.assign(error,{exitCode:1,dataHold:true})
+  }
   rmSync(next,{recursive:true,force:true});cpSync(directory,next,{recursive:true});rmSync(previous,{recursive:true,force:true})
   if(existsSync(latest))renameSync(latest,previous)
   renameSync(next,latest);rmSync(previous,{recursive:true,force:true});rmSync(seed,{recursive:true,force:true})
@@ -109,7 +135,7 @@ export async function prepareFussballNightly({candidate,directory,maxRequests=40
   renameSync(next,latest);rmSync(previous,{recursive:true,force:true});rmSync(seed,{recursive:true,force:true})
   return {directory:resolve(directory),source_league_code:reviewed.source_league_code,...scope,reports:batch.reports.length,...(cardPolicy?{pendingReports:batch.pendingReports.length}:{}),provenance:batch.provenance}
  }catch(error){
-  if(stoppedCapture(directory)||error.sourceStop)throw Object.assign(new Error(`fussball nightly source stopped: ${error.message}`),{sourceStop:true,exitCode:4})
+  {const stop=sourceStop(directory,error);if(stop)throw Object.assign(new Error(`fussball nightly source ${stop.word}: ${error.message}`),{sourceStop:true,exitCode:stop.exitCode})}
   throw Object.assign(error,{exitCode:1,dataHold:true})
  }
 }
@@ -148,5 +174,5 @@ export async function runFussballNightlyCli(args,{readCompetition:read=readCompe
  return prepare({candidate,directory:options.output,maxRequests:Number(options['max-requests'])})
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
- runFussballNightlyCli(process.argv.slice(2)).then(result=>console.log(JSON.stringify(result))).catch(error=>{console.error(error.message);process.exitCode=error.exitCode===4?4:1})
+ runFussballNightlyCli(process.argv.slice(2)).then(result=>console.log(JSON.stringify(result))).catch(error=>{console.error(error.message);process.exitCode=error.exitCode===4||error.exitCode===5?error.exitCode:1})
 }

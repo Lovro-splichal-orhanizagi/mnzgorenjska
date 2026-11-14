@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import Pivo from '../components/Pivo'
 import { imeZveze } from '../components/VirPodatkov'
-import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { Link } from '../components/Povezava'
 import { jeNativno, povezavaTrgovine, TRGOVINA_VIDNA } from '../lib/platforma'
 import { supabase } from '../lib/supabase'
@@ -28,6 +27,7 @@ import type { Pozicija } from '../lib/tipi'
 import { jezikSlovarja, t, tx, datum } from '../i18n'
 import Sponzor from '../components/Sponzor'
 import AppPromo, { appPromoAktivna } from '../components/AppPromo'
+import ZnackeTrgovin from '../components/ZnackeTrgovin'
 import VrhNapovediDrzave from '../components/VrhNapovediDrzave'
 import Stevec10k from '../components/Stevec10k'
 
@@ -113,25 +113,6 @@ export default function Domov() {
   useNaslov(slug === PRIVZETO ? null : zDrzavo(tekmovanje))
   const { session, loading: avtNalaganje } = useAuth()
   const zveza = imeZveze(tekmovanje)
-  const [klubiLige, setKlubiLige] = useState<string[]>([])
-  const vabilo = vabiloMailto(sestaviVabilo(tekmovanje, klubiLige))
-
-  // Klube beremo samo za vabilo; brez njih vabilo ostane smiselno, le brez
-  // seznama imen.
-  useEffect(() => {
-    if (!tekmovanjeId) return
-    let veljavno = true
-    supabase
-      .from('competition_teams')
-      .select('name')
-      .eq('competition_id', tekmovanjeId)
-      .then(({ data }) => {
-        if (veljavno) setKlubiLige((data ?? []).map((k) => k.name as string))
-      })
-    return () => {
-      veljavno = false
-    }
-  }, [tekmovanjeId])
   const [stat, setStat] = useState<Statistika | null>(null)
   const [zvezde, setZvezde] = useState<VrhIgralec[]>([])
   const [podajalci, setPodajalci] = useState<VrhIgralec[]>([])
@@ -450,7 +431,7 @@ export default function Domov() {
           naEkipo={setImaEkipo}
         />
       ) : (
-        <section className="relative overflow-hidden rounded-3xl p-4 ring-1 ring-white/10 sm:p-8">
+        <section className="relative overflow-hidden rounded-3xl p-5 ring-1 ring-gnl-400/25 sm:p-10">
           {/* Amaterska tekma pod reflektorji — natanko to, o čemer je liga. */}
           <picture>
             <source srcSet="/foto/igrisce.webp" type="image/webp" />
@@ -463,16 +444,30 @@ export default function Domov() {
               className="absolute inset-0 h-full w-full object-cover"
             />
           </picture>
+          {/* Temno zelena "trava" čez fotografijo: berljivo besedilo, klub pa ostane viden. */}
           <div
-            className="absolute inset-0 bg-gradient-to-br from-slate-950/90 via-slate-950/80 to-slate-950/70"
+            className="absolute inset-0 bg-gradient-to-br from-gnl-900/90 via-slate-950/85 to-slate-950/80"
             aria-hidden
           />
-          <div className="relative space-y-3 sm:space-y-4">
+          {/* Črte igrišča: sredinska črta in krog, komaj opazni. */}
+          <svg
+            aria-hidden
+            viewBox="0 0 400 400"
+            preserveAspectRatio="xMaxYMid slice"
+            className="pointer-events-none absolute -right-24 top-1/2 h-[140%] -translate-y-1/2 stroke-gnl-300/[0.08] sm:-right-10"
+            fill="none"
+            strokeWidth="3"
+          >
+            <circle cx="200" cy="200" r="120" />
+            <circle cx="200" cy="200" r="6" className="fill-gnl-300/[0.08]" />
+            <path d="M200 0v400" />
+          </svg>
+          <div className="relative space-y-4 sm:space-y-5">
             <div className="flex items-center justify-between gap-4">
               <img
                 src="/logo/slff-grb.png"
                 alt={t('aplikacija.naslovStrani.osnova')}
-                className="h-12 w-12 sm:h-24 sm:w-24"
+                className="h-14 w-14 drop-shadow-lg sm:h-24 sm:w-24"
               />
               {/* Gumb in pod njim pivski zid; v aplikaciji oboje izostane (Pivo.tsx). */}
               {!jeNativno() && (
@@ -484,13 +479,16 @@ export default function Domov() {
                 </div>
               )}
             </div>
+            {/* Širše: besedilo levo, aplikacija v kartici desno, da znački nista pod pregibom. */}
+            <div className="space-y-4 sm:space-y-5 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-x-12 lg:space-y-0">
+            <div className="space-y-4 sm:space-y-5">
             {/* Dokler se lige nalagajo, ne vemo, katera je izbrana — nevtralen
                 obris namesto gorenjskega imena, ki bi obiskovalcu druge lige
                 za hip pokazal napačno ligo. */}
             {!tekmovanje ? (
               <span className="block h-4 w-48 animate-pulse rounded bg-white/10" aria-hidden />
             ) : (
-              <p className="text-xs font-bold uppercase tracking-wide text-gnl-300">
+              <p className="inline-block rounded-full bg-gnl-400/15 px-3 py-1 text-xs font-bold uppercase tracking-wide text-gnl-300 ring-1 ring-gnl-400/30">
                 {/* Gorenjski besedili sta oglasni in ostaneta natanko taki, kot
                     sta bili; druga zveza dobi ime svoje lige. */}
                 {tekmovanje.federation_code === 'mnzg'
@@ -500,19 +498,22 @@ export default function Domov() {
                   : tekmovanje.name}
               </p>
             )}
-            <h1 className="text-3xl font-black leading-tight text-white sm:text-5xl">
+            <h1 className="text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-6xl">
               Sunday League
               <br />
-              Fantasy Football
+              <span className="text-gnl-300">Fantasy Football</span>
             </h1>
-            <p className="font-semibold text-gnl-300 sm:text-lg">{t('domov.uvod.geslo')}</p>
+            <p className="text-lg font-bold text-white sm:text-2xl">{t('domov.uvod.geslo')}</p>
             <p className="hidden max-w-xl text-slate-300 sm:block">{t('domov.uvod.opis', { zveza })}</p>
             {/* En poziv; rezultati so tiha povezava ob njem. */}
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1">
-              <Link to="/my-team" className="gumb-glavni">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-1">
+              <Link
+                to="/my-team"
+                className="gumb-glavni px-7 py-3.5 text-lg shadow-lg shadow-gnl-500/30 max-sm:w-full max-sm:text-center"
+              >
                 {t('domov.uvod.sestaviEkipo')}
               </Link>
-              <Link to="/results" className="text-sm font-semibold text-slate-200 hover:text-white">
+              <Link to="/results" className="text-sm font-semibold text-slate-100 underline-offset-4 hover:text-white hover:underline">
                 {t('domov.uvod.rezultati')} →
               </Link>
             </div>
@@ -543,6 +544,15 @@ export default function Domov() {
                 })}
               </p>
             )}
+            </div>
+            {/* Trajna pot do aplikacije; v aplikaciji je ni. Uradni znački, ne gumbi. */}
+            {!jeNativno() && (
+              <div className="space-y-2.5 border-t border-white/10 pt-4 lg:rounded-2xl lg:border lg:bg-slate-950/50 lg:p-5 lg:backdrop-blur-sm">
+                <p className="text-sm font-semibold text-gnl-100 lg:max-w-[11rem]">{t('domov.uvod.aplikacija')}</p>
+                <ZnackeTrgovin razred="lg:flex-col lg:items-start" />
+              </div>
+            )}
+            </div>
           </div>
         </section>
       )}
@@ -550,8 +560,10 @@ export default function Domov() {
       <Stevec10k />
 
       {/* Prvi dnevi po izidu aplikacij: kartica z aplikacijama namesto trgovine
-          (trgovina je ves čas v meniju in nogi); potem se trgovina vrne. */}
-      {appPromoAktivna() && <AppPromo />}
+          (trgovina je ves čas v meniju in nogi); potem se trgovina vrne.
+          Obiskovalec brez prijave znački že vidi v uvodu, zato kartica le
+          prijavljenim. */}
+      {appPromoAktivna() && session && <AppPromo />}
 
       {/* Trgovina SLFF: standardni izdelki, brez cen (se menjajo). Vsem, v
           vsaki ligi in v aplikaciji. */}
@@ -873,9 +885,9 @@ export default function Domov() {
 
       {/* Povabilo je tiha povezava na koncu, ne svoja kartica. */}
       <p className="text-center text-sm">
-        <a href={vabilo} className="font-semibold text-gnl-300 hover:text-gnl-200">
+        <Link to="/invite" className="font-semibold text-gnl-300 hover:text-gnl-200">
           {t('domov.povabi.naslov')} →
-        </a>
+        </Link>
       </p>
     </div>
   )

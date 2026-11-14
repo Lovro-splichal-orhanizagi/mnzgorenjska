@@ -4,7 +4,9 @@ import * as api from './viri/dfb-calendar.mjs'
 export const reviewed={
  nord:[
   {home:'SV Werder Bremen II',away:'1. FC Phönix Lübeck',homeSourceClubId:'sv-werder-bremen-ii',awaySourceClubId:'1-fc-phoenix-luebeck',games:[['2423139',7],['2423378',33]]},
-  {home:'VfB Lübeck',away:'SV Todesfelde',homeSourceClubId:'vfb-luebeck',awaySourceClubId:'SV-Todesfelde',games:[['2423173',11],['2423342',29]]}],
+  {home:'VfB Lübeck',away:'SV Todesfelde',homeSourceClubId:'vfb-luebeck',awaySourceClubId:'SV-Todesfelde',games:[['2423173',11],['2423342',29]]},
+  // Published 28 Oct 2026: round 12 was played at Hamburg but lists Werder as home.
+  {home:'SV Werder Bremen II',away:'Hamburger SV II',homeSourceClubId:'sv-werder-bremen-ii',awaySourceClubId:'hamburger-sv-ii-944',games:[['2423184',12],['2423251',19]]}],
  west:[
   {home:'Rot-Weiß Oberhausen',away:'Borussia Mönchengladbach II',homeSourceClubId:'rot-weiss-oberhausen',awaySourceClubId:'borussia-moenchengladbach-ii',games:[['2425450',9],['2425603',26]]},
   {home:'Rot-Weiß Oberhausen',away:'SC Paderborn 07 II',homeSourceClubId:'rot-weiss-oberhausen',awaySourceClubId:'sc-paderborn-07-ii',games:[['2425470',11],['2425622',28]]}]
@@ -14,7 +16,7 @@ const identity=(p,[id,round])=>{const {games,...rest}=p;return {id,round,...rest
 const witnesses=(region,f)=>[f.homeSourceClubId,f.awaySourceClubId].map((club,i)=>({club,url:`https://datencenter.dfb.de/competitions/regionalliga-${region}/seasons/2026-2027/teams/${club}`,sha256:(i?'b':'a').repeat(64)}))
 export function calendar(region='nord',evidence=true){
  const known=reviewed[region],native=new Map(known.flatMap(p=>[[p.home,p.homeSourceClubId],[p.away,p.awaySourceClubId]])),names=[...native.keys()]
- if(region==='nord'){names.push('VfB Oldenburg');native.set('VfB Oldenburg','vfb-oldenburg')}
+ if(region==='nord'){names.splice(4,0,'VfB Oldenburg');native.set('VfB Oldenburg','vfb-oldenburg')}
  while(names.length<18){const name=`Club ${names.length}`;names.push(name);native.set(name,`club-${names.length}`)}
  const ring=[...names],fixtures=[]
  for(let r=0;r<17;r++){

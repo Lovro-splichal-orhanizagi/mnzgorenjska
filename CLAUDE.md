@@ -259,6 +259,9 @@ to področje. Bistvo, ki ga je treba vedeti vedno:
   Zasebni `vrsta_zahtevkov_igralca()` deli dejanski vrstni red med uporabnika
   in admin; dodatna/ponovno ustvarjena ekipa ne daje nove prednosti.
   Samo uporabniški prikaz števila pred njim je pomnožen s 7.
+  Ista povabila štejejo za **akcijo vabil** (14.–30. 11. 2026, `/invite`):
+  bon za ponovno vrednotenje cene pri 3 in zaboj piva za največ
+  (`docs/podatkovni-model.md`, *Akcija vabil*).
 - Plačila (preverjeni igralci, Stripe): stikalo `preverjeni_racuni`, webhook
   `stripe-webhook`, **preklic naročnine mora biti vedno mogoč**; vse v
   `docs/podatkovni-model.md` (*Preverjeni igralci*).
@@ -579,7 +582,7 @@ kanonični `?t=` po svoji ligi.
   pon–sre, do 300 na zagon) bere `tedenski_pregled_ekip` in `namigi_ekipe`
   (kapetan brez minute, igralci brez minute, neporabljeni pripomočki). Dan pred
   rokom gre iz `opozorila.yml` še `opozorilo-odsotni` (javljena poškodba v
-  prvi postavi, `kandidati_za_opozorilo_odsotnih`). Avtentikacijska pošta (`supabase/templates/`) izbere
+  prvi postavi, `kandidati_za_opozorilo_odsotnih`; po 10 mailov na klic, funkcija po 40 s ne začne novega, ponovni klic preskoči že obveščene prek `email_log`; SLF-439). Avtentikacijska pošta (`supabase/templates/`) izbere
   jezik po `jezik` v metapodatkih uporabnika (vpiše ga registracija);
   v gostujočem projektu predloge **niso** iz config.toml — prilepi jih v
   Auth → Email Templates.

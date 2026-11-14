@@ -58,6 +58,7 @@ const PO_POTI: Record<string, string> = {
   '/absences': 'odsotnosti',
   '/account': 'racun',
   '/reminders': 'opomniki',
+  '/invite': 'povabi',
   '/legal': 'pravno',
   '/login': 'prijava',
   '/auth/confirm': 'potrditev',
@@ -71,6 +72,7 @@ const PO_PREDPONI: [string, string][] = [
   ['/l/', 'vstop_v_mini_ligo'],
   ['/mini-leagues/', 'mini_lige'],
   ['/u/', 'profil'],
+  ['/i/', 'vabilo'],
 ]
 
 export function imeStrani(pot: string): string | null {

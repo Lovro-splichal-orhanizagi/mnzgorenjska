@@ -462,6 +462,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     uspeh: 'Təşəkkürlər! Ödəniş alındı. Qiyməti yenidən hesablayıb bir neçə gün ərzində təsdiqləyəcəyik.',
     napaka: 'Ödənişi başlatmaq mümkün olmadı. Yenidən cəhd et.',
     niMogoce: 'Bu oyunçunun qiyməti hazırda yenidən qiymətləndirilə bilməz.',
+    brezplacno: 'kuponla pulsuz',
+    opisBon: 'Üç dəvət olunmuş dost üçün kuponun var. Qiyməti hər həftə olduğu kimi eyni qaydalarla yenidən hesablayır və bir neçə gün ərzində təsdiqləyirik. O arta, azala və ya eyni qala bilər. Kupon birdəfəlikdir.',
+    uporabiBon: 'Kuponu istifadə et',
+    uspehBon: 'Kupon istifadə olundu. Qiyməti yenidən hesablayıb bir neçə gün ərzində təsdiqləyəcəyik.',
+    niBona: 'Qiymətin yenidən qiymətləndirilməsi üçün kuponun yoxdur (komandası olan üç dəvət olunmuş dost lazımdır).',
     ovire: {
       taTeden: 'Qiymət bu həftə artıq yenidən qiymətləndirilib. Gələn həftə cəhd et.',
       nedavno: 'Bu oyunçu bu yaxınlarda yenidən qiymətləndirilib və ya sorğu artıq yoxlanılır.',

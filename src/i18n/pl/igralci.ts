@@ -466,6 +466,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     uspeh: 'Dziękujemy! Płatność otrzymana. Przeliczymy cenę i potwierdzimy ją w ciągu kilku dni.',
     napaka: 'Nie udało się rozpocząć płatności. Spróbuj ponownie.',
     niMogoce: 'Ceny tego zawodnika nie można teraz ponownie wycenić.',
+    brezplacno: 'za darmo z bonem',
+    opisBon: 'Masz bon za trzech zaproszonych znajomych. Przeliczamy cenę według tych samych zasad co co tydzień i potwierdzamy ją w ciągu kilku dni. Może wzrosnąć, spaść albo pozostać taka sama. Bon jest jednorazowy.',
+    uporabiBon: 'Użyj bonu',
+    uspehBon: 'Bon został użyty. Przeliczymy cenę i potwierdzimy ją w ciągu kilku dni.',
+    niBona: 'Nie masz bonu na ponowną wycenę (potrzebujesz trzech zaproszonych znajomych z drużyną).',
     ovire: {
       taTeden: 'Cena była już w tym tygodniu ponownie wyceniona. Spróbuj w przyszłym tygodniu.',
       nedavno: 'Ten zawodnik był niedawno wyceniony ponownie albo wniosek jest już weryfikowany.',
