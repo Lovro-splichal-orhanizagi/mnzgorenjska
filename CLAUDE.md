@@ -20,8 +20,8 @@ vratarja z (V), postave pa našteje po številkah dresov). Prag za pozicijo so 3
 - Backend / baza / avtentikacija: Supabase (PostgreSQL)
 - Gostovanje: **lasten strežnik** (Hetzner, `ssh slff`): self-hosted Supabase
   v Dockerju (`/opt/supabase`), Caddy streže stran in `api.slff.eu`, spredaj
-  Cloudflare. Supabase Cloud in Vercel sta od 6. 10. 2026 le še rezerva in
-  gresta proč (`docs/migracija-hetzner.md`). Pošta gre prek Mailcowa
+  Cloudflare. Vercel je odstranjen (14. 11. 2026), Supabase Cloud je le še
+  rezerva in gre proč (`docs/migracija-hetzner.md`). Pošta gre prek Mailcowa
   (`mail.slff.eu`, `noreply@slff.eu`), ne Resenda.
 
 Lokalni razvoj teče na Supabase CLI stacku v Dockerju (`npx supabase start`).

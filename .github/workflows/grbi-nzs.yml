@@ -2,7 +2,7 @@ name: Grbi z NZS
 
 # Grbi klubov iz NZS za lige, ki jih NZS objavlja (SNL in mladinske SML).
 # Skripta potrebuje zivi kljuc baze IN zapise datoteke v public/grbi, ki jih
-# streze Vercel — zato tece tu in spremembe sama zapise v git. Ujema samo
+# streze streznik — zato tece tu in spremembe sama zapise v git. Ujema samo
 # enaka imena; kar ostane, izpise za rocni pregled v dnevniku.
 on:
   workflow_dispatch:
@@ -53,7 +53,7 @@ jobs:
             [ "$i" -lt 5 ] || { echo "push ni uspel po 5 poskusih"; exit 1; }
             sleep $((i * 10))
           done
-          # Push z GITHUB_TOKEN ne sprozi CI in z njim objave na Vercel;
+          # Push z GITHUB_TOKEN ne sprozi CI in z njim objave;
           # brez tega bi baza kazala na grbe, ki jih stran se ne streze.
           gh workflow run ci.yml --ref main
         env:

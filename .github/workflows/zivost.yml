@@ -1,7 +1,7 @@
 name: Živost strani in API
 
 # Zunanji nadzor po selitvi na lasten strežnik (docs/migracija-hetzner.md):
-# Supabase in Vercel nista več tista, ki opazita izpad. Teče z GitHuba, torej
+# Supabase Cloud in Vercel nista več tista, ki opazita izpad. Teče z GitHuba, torej
 # od zunaj, prek Cloudflara — tako kot obiskovalec. Ob izpadu po en poskus
 # znova, nato sporočilo na Discord (dokler izpad traja, vsakih 10 minut).
 

@@ -1089,7 +1089,7 @@ preveri(
 }
 
 // --- vmesnik prezivi neuveljavljeno migracijo -------------------------------
-// Koda gre na Vercel, migracijo pa mora nekdo pognati proti Supabase. Ce se
+// Koda gre na strežnik, migracijo pa mora nekdo pognati proti bazi. Ce se
 // vrstni red obrne, PostgREST zavrne poizvedbo z neznanimi stolpci in vmesnik
 // ostane BREZ LIG — nobena stran nima kaj pokazati. Zato zna brati tudi staro
 // shemo.

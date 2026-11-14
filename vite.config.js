@@ -56,7 +56,6 @@ import { en } from './src/i18n/en/index.ts'
  */
 function shaCommita() {
   return (
-    process.env.VERCEL_GIT_COMMIT_SHA ||
     process.env.GITHUB_SHA ||
     (() => {
       try {
@@ -92,7 +91,7 @@ function znamkaCommita() {
  * Facebook, WhatsApp in iskalniki JS ne poženejo in vidijo le statični HTML —
  * slovenski. Klub, ki deli povezavo `slff.eu/club/…?t=sk-…`, bi objavil
  * "Fantasy liga za slovenske medobčinske lige". Build zato poleg index.html
- * zapiše še sk.html in hr.html z jezikom in opisi države; vercel.json ju vrne
+ * zapiše še sk.html in hr.html z jezikom in opisi države; Caddy (scripts/hetzner/Caddyfile) ju vrne
  * za `/sk`, `/hr` in poti z `?t=sk-…`, `?t=hr-…`. Aplikacija je ista, zamenjan
  * je le <head>.
  */

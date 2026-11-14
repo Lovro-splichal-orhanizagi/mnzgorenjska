@@ -75,7 +75,7 @@ export default function Slovenija() {
       }
       if (!veljavno) return
       // Koda in migracije potujeta vsaka po svoji poti: koda gre prek CI na
-      // Vercel, migracijo pa je treba pognati proti Supabase. Ce se vrstni red
+      // strežnik, migracijo pa je treba pognati proti bazi. Ce se vrstni red
       // obrne — ali ce je Supabase ravno na vzdrzevanju, kakor je bil ob
       // objavi te strani — pogleda se ni in PostgREST vrne 42P01. Takrat naj
       // stran pove, da lestvice se ni, ne pa izpise napake baze.

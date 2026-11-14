@@ -560,86 +560,6 @@ jobs:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -c 'select agent.uskladi_pravice()'
 
-  objavi:
-    name: Objava na Vercel
-    needs: [preveri, varnost, migracije]
-    if: inputs.diagnostika != true && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-
-      # Objava iz CI namesto prek Vercelove Git povezave. Ta povezava se je
-      # 3. septembra tiho podrla (repozitorij se je preimenoval, Vercel je
-      # obdržal staro pot) in dva dni ni nihče opazil, ker se deploy
-      # preprosto ni zgodil — nikjer ni bilo rdeče. Objava iz CI je vidna
-      # tu, poleg ostalih preverb, in se ne more tiho izgubiti.
-      - name: Ali so skrivnosti nastavljene?
-        id: skrivnosti
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
-            echo "::warning::Manjkajo VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID — objava preskočena."
-            echo "::warning::Dodaj jih v Settings -> Secrets and variables -> Actions."
-            echo "so=ne" >> "$GITHUB_OUTPUT"
-          else
-            echo "so=da" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Namesti Vercel CLI
-        if: steps.skrivnosti.outputs.so == 'da'
-        # Pripeta razlicica: `@latest` bi ob vsaki objavi potegnil, kar je
-        # tisti hip objavljeno — tudi pokvarjeno ali podtaknjeno razlicico.
-        run: npm i -g --ignore-scripts vercel@59.25.4
-
-      # Ce objava pade, naj bo takoj jasno KAJ od treh je narobe, ne da je
-      # treba ugibati iz "Could not retrieve Project Settings".
-      # `vercel whoami` NE sme ustaviti objave. Za ta racun vraca "User not
-      # found" tudi za zeton, ki morda dela — verjetno zato, ker je vezan na
-      # doloceno ekipo in whoami brez --scope uporabnika ne razresi. Diagnostika
-      # naj bo diagnostika; o uspehu odloci `vercel deploy`.
-      - name: Preveri dostop (samo diagnostika)
-        if: steps.skrivnosti.outputs.so == 'da'
-        continue-on-error: true
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          echo "Kdo sem:"
-          vercel whoami --token="$VERCEL_TOKEN" || echo "  (whoami ne razresi uporabnika — nadaljujem)"
-          echo "ORG_ID se zacne z:     $(printf '%.7s' "$VERCEL_ORG_ID")…"
-          echo "PROJECT_ID se zacne z: $(printf '%.7s' "$VERCEL_PROJECT_ID")…"
-
-      # Brez `vercel pull` in `vercel build`: tista dva potrebujeta lokalno
-      # povezan projekt (`.vercel/`) in padeta, ce se ORG/PROJECT ID ne
-      # ujemata. `vercel deploy` sam naloži izvorno kodo in jo zgradi na
-      # Vercelu — manj gibljivih delov, isti izid.
-      - name: Objavi v produkcijo
-        if: steps.skrivnosti.outputs.so == 'da'
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          vercel deploy --prod --yes --token="$VERCEL_TOKEN" || {
-            echo "::error::Objava ni uspela. Najverjetneje se VERCEL_ORG_ID ali"
-            echo "::error::VERCEL_PROJECT_ID ne ujema s projektom (Settings -> General)."
-            exit 1
-          }
-
-  # Selitev na Hetzner (docs/migracija-hetzner.md, P3): do preklopa DNS gre
-  # objava na oba, da je ta, na katerega kaže slff.eu, vedno svež, in je pot
-  # nazaj le sprememba DNS. Gradi se tu, ne na strežniku; strežnik dobi le
-  # dist/ v svojo mapo, `current` pa se premakne šele, ko je vse preneseno.
   objavi-vm:
     name: Objava na Hetzner VM
     needs: [preveri, varnost, migracije]
@@ -694,7 +614,7 @@ jobs:
 
   preveri-deploy:
     name: Je nova različica res v zraku?
-    needs: [objavi, objavi-vm]
+    needs: [objavi-vm]
     if: inputs.diagnostika != true && github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -721,9 +641,8 @@ jobs:
           echo
           echo "NAPAKA: po 10 minutah produkcija še vedno ne streže $PRICAKOVAN."
           echo "Najverjetnejši vzroki:"
-          echo "  - manjkajo skrivnosti VERCEL_* (glej job 'Objava na Vercel')"
-          echo "  - build na Vercelu je padel (glej Deployments)"
-          echo "  - projekt je zaustavljen (Settings -> General)"
+          echo "  - objava na strežnik je padla (glej job 'Objava na Hetzner VM')"
+          echo "  - Caddy ali Cloudflare streže staro različico (predpomnilnik)"
           exit 1
 
   # SLFF Club (club.slff.eu, prej Scout; scout.slff.eu preusmeri): isti tok kot
