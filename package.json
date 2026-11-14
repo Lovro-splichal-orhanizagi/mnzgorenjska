@@ -8,7 +8,6 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "node scripts/e2e.mjs",
-    "test:igralci-ui": "node scripts/test-igralci-table-ui.mjs",
     "test:varnost": "node scripts/test-varnost.mjs",
     "test:socasnost": "node scripts/test-socasnost.mjs",
     "db:reset": "supabase db reset",
