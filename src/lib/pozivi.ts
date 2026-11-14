@@ -1,6 +1,8 @@
 // Pozivi ob dobri volji: katero okno pokaže povod (shranjena ekipa, dober
 // krog). Eno okno na 7 dni za vse skupaj (tudi pivo), vrstni red:
 //
+//   0. vabilo     — med akcijo vabil (do 30. 11. 2026) prednost: svoj premor
+//                   3 dni in le dan po kateremkoli oknu, ne 7 (ne v mladinski ligi),
 //   1. aplikacija — splet na telefonu, kjer je aplikacija v trgovini,
 //   2. sledi      — Instagram in Facebook (tudi v aplikaciji in mladinski ligi),
 //   3. pivo       — kot doslej (PivoOkno), le splet in ne mladinska liga.
@@ -9,8 +11,9 @@
 // (aplikacije ne moremo zaznati, sledenja tudi ne). Vse le na napravi.
 import { jeNativno } from './platforma'
 import { APP_STORE, GOOGLE_PLAY } from '../components/Trgovine'
+import { akcijaVabilTece } from './akcijaVabil'
 
-export type Poziv = 'aplikacija' | 'sledi' | 'pivo'
+export type Poziv = 'vabilo' | 'aplikacija' | 'sledi' | 'pivo'
 
 const DAN = 24 * 60 * 60 * 1000
 const SKUPNI = 'slff-poziv-zadnji'
@@ -59,7 +62,8 @@ export function utisajPoziv(p: Exclude<Poziv, 'pivo'>, dni: number) {
  * Kateri poziv naj se pokaže ob povodu; `pivoMogoce` pove PivoOkno (splet,
  * ne mladinska liga, okno piva ni utišano). Null, če nič.
  */
-export function izberiPoziv(pivoMogoce: boolean, zdaj = Date.now()): Poziv | null {
+export function izberiPoziv(pivoMogoce: boolean, zdaj = Date.now(), mladinska = false): Poziv | null {
+  if (!mladinska && akcijaVabilTece(zdaj) && beri(kljuc('vabilo')) < zdaj && zdaj - beri(SKUPNI) >= DAN) return 'vabilo'
   if (!prostoZaOkno(zdaj)) return null
   if (!jeNativno() && trgovinaTelefona() && beri(kljuc('aplikacija')) < zdaj) return 'aplikacija'
   if (beri(kljuc('sledi')) < zdaj) return 'sledi'

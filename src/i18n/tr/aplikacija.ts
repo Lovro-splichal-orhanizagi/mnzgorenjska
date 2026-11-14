@@ -24,9 +24,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'Ana sayfaya dön',
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  akcijaVabil: {
+    pasica: 'Arkadaş davet et, bir kasa bira kazan (30.11’e kadar)',
+    povabi: 'Davet et',
+    skrij: 'Gizle',
+    meni: 'Davet et 🍺',
+    meniDolgo: '🍺 Arkadaşlarını davet et, bir kasa bira kazan',
+  },
   poziv: {
     kasneje: 'Belki sonra',
     aplikacija: { naslov: 'SLFF cebinde 📱', besedilo: 'Son tarih öncesi hatırlatma, maçlardan sonra takımının puanları ve kadroya daha hızlı erişim, uygulamada.', googlePlay: 'Google Play’den indir', appStore: 'App Store’dan indir' },
+    vabilo: { naslov: 'Arkadaşlarını davet et 🍺', besedilo: 'Takımı olan üç arkadaş sana ücretsiz oyuncu fiyat incelemesi kazandırır. 30.11’e kadar en çok davet eden bir kasa bira kazanır.', deli: 'Daveti paylaş', vec: 'Kodum ve sıralama' },
     sledi: { naslov: 'Aramıza katıl 🙌', besedilo: 'Haftanın takımları, haftanın oyuncuları ve liginden haberler, önce profillerimizde.', instagram: 'Instagram’da takip et', facebook: 'Facebook’ta beğen' },
   },
   pivo: {

@@ -4,6 +4,8 @@ import { useLocation } from 'react-router-dom'
 import { NavLink } from './Povezava'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
+import { akcijaVabilTece } from '../lib/akcijaVabil'
+import { jeMladinskiSlug } from '../lib/prevzem'
 import { supabase } from '../lib/supabase'
 import { potrdiZapustitev } from '../lib/neshranjeno'
 import { jeNativno, povezavaTrgovine, TRGOVINA_VIDNA } from '../lib/platforma'
@@ -67,7 +69,7 @@ function useZapriZunaj(odprt: boolean, zapri: () => void) {
 export default function Navbar() {
   const { session } = useAuth()
   const neprebrana = useNeprebrana()
-  const { id: tekmovanjeId, drzava } = useTekmovanje()
+  const { id: tekmovanjeId, drzava, slug } = useTekmovanje()
   const [jeAdmin, setJeAdmin] = useState(false)
   const [ime, setIme] = useState<string | null>(null)
   const [avatar, setAvatar] = useState<{ barva: number | null; ikona: string | null }>({ barva: null, ikona: null })
@@ -148,6 +150,8 @@ export default function Navbar() {
   // Pivski zid je le na spletu (kot gumb "Časti pivo", glej Pivo.tsx).
   const zSpletom = jeNativno() ? zaDrzavo : [...zaDrzavo, { pot: '/beers', get naslov() { return t('aplikacija.pivo.zid') } }]
   const vec = jeAdmin && !jeNativno() ? [...zSpletom, { pot: '/admin', get naslov() { return t('aplikacija.meni.admin') } }] : zSpletom
+  // Akcija vabil: poudarjena povezava v meniju (ne v mladinski ligi, nagrada je pivo).
+  const vabiloVidno = Boolean(session) && akcijaVabilTece() && !jeMladinskiSlug(slug)
   // Začetnica za avatar: iz vzdevka, sicer iz e-naslova.
   const zacetnica = (ime || session?.user.email || '?').trim().charAt(0).toUpperCase()
 
@@ -193,6 +197,11 @@ export default function Navbar() {
                 {p.naslov}
               </NavLink>
             ))}
+            {vabiloVidno && (
+              <NavLink to="/invite" className="whitespace-nowrap rounded-full bg-amber-400/20 px-3 py-1.5 font-semibold text-amber-200 ring-1 ring-amber-300/40 hover:bg-amber-400/30">
+                {t('aplikacija.akcijaVabil.meni')}
+              </NavLink>
+            )}
             {/* Pri 1024 px bi trgovina izbirniku lige vzela skoraj ves prostor
                 (grščina se prelije čez rob), zato je zgoraj šele od xl, prej v "Več". */}
             {TRGOVINA_VIDNA && (
@@ -390,6 +399,15 @@ export default function Navbar() {
 
         {odprt && (
           <div className="animiraj-vstop mt-3 border-t border-white/10 pt-3 text-base lg:hidden">
+            {vabiloVidno && (
+              <NavLink
+                to="/invite"
+                onClick={() => setOdprt(false)}
+                className="mb-2 block rounded-xl bg-amber-400/20 px-3 py-2.5 text-center font-semibold text-amber-100 ring-1 ring-amber-300/40"
+              >
+                {t('aplikacija.akcijaVabil.meniDolgo')}
+              </NavLink>
+            )}
             <div className="grid grid-cols-2 gap-1.5">
               {glavne.map((p) => (
                 <NavLink key={p.pot} to={p.pot} className={slogMobilni} onClick={() => setOdprt(false)}>

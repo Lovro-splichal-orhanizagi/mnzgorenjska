@@ -24,9 +24,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'Zurück zur Startseite',
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  akcijaVabil: {
+    pasica: 'Freunde einladen, Kasten Bier gewinnen (bis 30.11.)',
+    povabi: 'Einladen',
+    skrij: 'Ausblenden',
+    meni: 'Einladen 🍺',
+    meniDolgo: '🍺 Freunde einladen, Kasten Bier gewinnen',
+  },
   poziv: {
     kasneje: 'Vielleicht später',
     aplikacija: { naslov: 'SLFF in der Hosentasche 📱', besedilo: 'Erinnerung vor der Deadline, die Punkte deines Teams nach den Spielen und schneller zur Aufstellung, in der App.', googlePlay: 'Bei Google Play laden', appStore: 'Im App Store laden' },
+    vabilo: { naslov: 'Freunde einladen 🍺', besedilo: 'Drei Freunde mit Team bringen dir eine kostenlose Preisprüfung eines Spielers. Wer bis 30.11. die meisten einlädt, gewinnt einen Kasten Bier.', deli: 'Einladung teilen', vec: 'Mein Code und Rangliste' },
     sledi: { naslov: 'Sei dabei 🙌', besedilo: 'Teams des Spieltags, Spieler der Woche und News aus deiner Liga, zuerst auf unseren Profilen.', instagram: 'Auf Instagram folgen', facebook: 'Auf Facebook liken' },
   },
   pivo: {

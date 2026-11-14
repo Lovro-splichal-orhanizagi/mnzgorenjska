@@ -35,6 +35,11 @@ export type KorakLijaka =
   | 'poziv_sledi_klik'
   | 'poziv_zaprt'
   | 'pivo_prikaz'
+  | 'poziv_vabilo'
+  | 'poziv_vabilo_klik'
+  | 'pasica_vabila'
+  | 'pasica_vabila_klik'
+  | 'pasica_vabila_zaprta'
 
 /** Kje je gumb "Časti pivo" (`<Pivo src>`); mora se ujemati s seznamom v `zabelezi_korak`. */
 export type PivoVir = 'noga' | 'domov' | 'domov-lestvica' | 'zid'
