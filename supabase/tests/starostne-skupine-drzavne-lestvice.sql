@@ -36,6 +36,8 @@ select pg_temp.preveri('vsaka aktivna liga je razvrščena ali izrecno neznana',
 -- Lastna država, da se ne meša z živimi podatki.
 insert into countries(id, code, name) overriding system value
   values (-936601, 'ZA', 'Test A'), (-936602, 'ZB', 'Test B');
+-- Testne lige nimajo krogov; varovalo vklopa tu ne velja (razvrstitveni sprožilec ostane).
+alter table public.competitions disable trigger varovalo_vklopa_lige;
 insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
 select -936600 - n, s.slug, s.ime, upper(s.slug), s.aktivna, s.drzava, 'mnzg'
   from (values
@@ -48,6 +50,7 @@ select -936600 - n, s.slug, s.ime, upper(s.slug), s.aktivna, s.drzava, 'mnzg'
     (7, 'zb-kadeti',       'Kadeti',          true,  -936602),
     (8, 'zb-clani',        'Liga',            true,  -936602)
   ) as s(n, slug, ime, aktivna, drzava);
+alter table public.competitions enable trigger varovalo_vklopa_lige;
 
 select pg_temp.preveri('trigger razvrsti nove lige',
   (select array_agg(g.skupina order by c.id desc) from competitions c
