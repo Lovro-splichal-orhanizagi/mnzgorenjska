@@ -115,8 +115,11 @@ export async function prenesiSPonovitvami(url, moznosti = {}) {
     if (odgovor) {
       razlog = `HTTP ${odgovor.status}`
       const ra = retryAfterMs(odgovor.headers.get('retry-after'))
-      if (ra !== null) premor = Math.max(premor, ra)
-      if (premor > NAJDALJSI_PREMOR_MS) return odgovor
+      // Strop velja le za Retry-After vira; lastni zamiki vira (zamikiMs) so izbrani nalašč.
+      if (ra !== null && ra > premor) {
+        if (ra > NAJDALJSI_PREMOR_MS) return odgovor
+        premor = ra
+      }
       // Telo zavržemo, sicer undici drži povezavo odprto.
       await odgovor.body?.cancel().catch(() => {})
     } else {
