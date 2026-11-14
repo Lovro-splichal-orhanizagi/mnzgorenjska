@@ -383,15 +383,25 @@ Deno.serve(async (req) => {
     const akcija = vhod.akcija ?? 'predogled'
     if (!['predogled', 'paket', 'vzorec', 'poslji'].includes(akcija)) return json({ error: `Neznana akcija: ${akcija}.` }, 400)
     const db = createClient(SUPABASE_URL, SERVICE_KEY)
-    const osnutek = await osnutekPromo()
-    const [cene, stran] = await Promise.all([ceneIzStripa(), stranPreverjenih()])
-    const { data: kd, error: kErr } = await db.rpc('promo_preverjen_kohorta')
+    // Časi korakov v dnevnik (SLF-383: predogled je od 11. 11. obstajal na 30 s,
+    // brez sledi, kateri klic visi). Le imena korakov in ms, nič osebnega.
+    const t0 = Date.now()
+    const casovno = async <T>(korak: string, p: PromiseLike<T>): Promise<T> => {
+      const z = Date.now()
+      console.log(`promo-preverjen ${akcija}: ${korak} …`)
+      const v = await p
+      console.log(`promo-preverjen ${akcija}: ${korak} ${Date.now() - z} ms (skupaj ${Date.now() - t0} ms)`)
+      return v
+    }
+    const osnutek = await casovno('osnutek', osnutekPromo())
+    const [cene, stran] = await Promise.all([casovno('stripe', ceneIzStripa()), casovno('stran', stranPreverjenih())])
+    const { data: kd, error: kErr } = await casovno('kohorta', db.rpc('promo_preverjen_kohorta'))
     if (kErr) return json({ error: kErr.message }, 500)
     const vsi = (kd ?? []) as PromoKandidat[]
-    const prej = await db.rpc('promo_preverjen_poslanih')
+    const prej = await casovno('poslanih', db.rpc('promo_preverjen_poslanih'))
     if (prej.error) return json({ error: prej.error.message }, 500)
-    const { data: pk, error: pErr } = await db.from('promo_preverjen_paketi')
-      .select('id, user_ids, created_at, odobril, odobren_at').order('id')
+    const { data: pk, error: pErr } = await casovno('paketi', db.from('promo_preverjen_paketi')
+      .select('id, user_ids, created_at, odobril, odobren_at').order('id'))
     if (pErr) return json({ error: pErr.message }, 500)
     const paketi = (pk ?? []) as Array<{ id: number; user_ids: string[]; created_at: string; odobril: string | null; odobren_at: string | null }>
     const poId = new Map(vsi.map((k) => [k.user_id, k]))
@@ -1285,7 +1295,7 @@ async function ceneIzStripa(): Promise<{ letna: number; dozivljenjska: number; v
   if (!kljuc) return { ...prazno, napaka: 'STRIPE_SECRET_KEY ni nastavljen' }
   try {
     const q = new URLSearchParams([['lookup_keys[]', 'slff_preverjen_letna'], ['lookup_keys[]', 'slff_preverjen_dozivljenjska'], ['active', 'true']])
-    const r = await fetch(`https://api.stripe.com/v1/prices?${q}`, { headers: { Authorization: `Bearer ${kljuc}` } })
+    const r = await fetch(`https://api.stripe.com/v1/prices?${q}`, { headers: { Authorization: `Bearer ${kljuc}` }, signal: AbortSignal.timeout(8000) })
     const j = await r.json()
     if (!r.ok) return { ...prazno, napaka: `Stripe: ${j?.error?.message ?? r.status}` }
     const cene = (j.data ?? []) as Array<{ lookup_key: string; unit_amount: number | null; currency: string; livemode: boolean; recurring: { interval: string } | null }>
@@ -1296,6 +1306,7 @@ async function ceneIzStripa(): Promise<{ letna: number; dozivljenjska: number; v
     if (l.currency !== d.currency) return { ...prazno, napaka: 'Stripe: različni valuti' }
     return { letna: l.unit_amount, dozivljenjska: d.unit_amount, valuta: l.currency, live: l.livemode && d.livemode }
   } catch (e) {
+    console.error('promo-preverjen: stripe', String(e))
     return { ...prazno, napaka: `Stripe: ${String(e)}` }
   }
 }
@@ -1303,10 +1314,11 @@ async function ceneIzStripa(): Promise<{ letna: number; dozivljenjska: number; v
 /** HTTP status javne strani /verified (pred pošiljanjem mora biti 200). */
 async function stranPreverjenih(): Promise<number> {
   try {
-    const r = await fetch(`${(Deno.env.get('SITE_URL') ?? 'https://slff.eu').replace(/\/$/, '')}/verified`, { redirect: 'follow' })
+    const r = await fetch(`${(Deno.env.get('SITE_URL') ?? 'https://slff.eu').replace(/\/$/, '')}/verified`, { redirect: 'follow', signal: AbortSignal.timeout(8000) })
     await r.body?.cancel()
     return r.status
-  } catch {
+  } catch (e) {
+    console.error('promo-preverjen: stran /verified', String(e))
     return 0
   }
 }

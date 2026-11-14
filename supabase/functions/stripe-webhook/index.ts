@@ -101,12 +101,21 @@ async function stripe(pot: string, metoda = 'GET', polja?: Record<string, string
   const glave: Record<string, string> = { Authorization: `Bearer ${Deno.env.get('STRIPE_SECRET_KEY')}` }
   if (razlicica) glave['Stripe-Version'] = razlicica
   if (polja) glave['Content-Type'] = 'application/x-www-form-urlencoded'
-  const r = await fetch(`https://api.stripe.com/v1/${pot}`, {
-    method: metoda,
-    headers: glave,
-    body: polja ? new URLSearchParams(Object.entries(polja).map(([k, v]) => [k, String(v)])) : undefined,
-  })
-  return { ok: r.ok, status: r.status, j: await r.json() }
+  // Brez meje klic visi do 30 s roka prehoda in dogodek se izgubi brez sledi
+  // (SLF-383, 11.–14. 11.). Z mejo vrne napako in Stripe dogodek ponovi.
+  const z = Date.now()
+  try {
+    const r = await fetch(`https://api.stripe.com/v1/${pot}`, {
+      method: metoda,
+      headers: glave,
+      body: polja ? new URLSearchParams(Object.entries(polja).map(([k, v]) => [k, String(v)])) : undefined,
+      signal: AbortSignal.timeout(10000),
+    })
+    return { ok: r.ok, status: r.status, j: await r.json() }
+  } catch (e) {
+    console.error(`stripe-webhook: Stripe ${metoda} ${pot.split('?')[0]} po ${Date.now() - z} ms`, String(e))
+    throw e
+  }
 }
 async function beri(pot: string): Promise<Obj> {
   const r = await stripe(pot)
@@ -243,6 +252,8 @@ Deno.serve(async (req) => {
   } catch {
     return new Response('bad json', { status: 400 })
   }
+  // Sled za visenje (SLF-383): če "prejet" ni sledil izid, je obstal klic vmes.
+  console.log(`stripe-webhook: prejet ${dogodek.type} ${dogodek.id}`)
 
   const { data: ze } = await baza.from('stripe_dogodki').select('obdelano_at').eq('id', dogodek.id).maybeSingle()
   if (ze?.obdelano_at) return new Response('duplicate', { status: 200 })
