@@ -159,6 +159,10 @@ const IME_V_BLOKU = {
   },
   '76126804-76126985': { ŠUMADIJA: 'ŠUMADIJA (Aranđelovac)', ŠUMADINAC: 'ŠUMADINAC (Stojnik)' }, // Šumadijska okružna
   '76146941-76147122': { DUNAVAC: 'DUNAVAC (Petka)' }, // MFL Dunav
+  // MFL Mlava: COMET je 3. 11. 2026 za tekmo 76155125 (JASENOVAC : TRGOVAČKI, 1. 11.)
+  // napisal golo ime, vse druge tekme in prvi uvoz pa imajo TRGOVAČKI (Petrovac).
+  // Brez vzdevka je uvoz ustvaril klub 11509 in zapisnik trčil ob zapisnik_id.
+  '76155052-76155233': { TRGOVAČKI: 'TRGOVAČKI (Petrovac)' },
   '76148843-76149024': { BUDUĆNOST: 'BUDUĆNOST (Dobrić)' }, // Mačvanska okružna
   '76219059-76219240': { JEDINSTVO: 'JEDINSTVO (Štitar)' }, // MFL Mačva
   '76174925-76175056': { BSK: 'BSK (Belosavci)' }, // Topola
