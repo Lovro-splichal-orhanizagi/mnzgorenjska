@@ -56,10 +56,12 @@ tekme), zato se razčlenjevalnik drži besedila in razredov
   `<sup>`, tekma `an-match` s povezavo pri vsaki tekmi, neodigrana "– : –",
   ime lige v `<h1 class="mn2-hero-title">`); Ahajin `table.asp` od takrat
   kaže le lestvico, zato bere analitiko. Stara razčlenitev ostane za ostale
-  domene. Uvoz je do popravka javljal "ni razpored lige … 0 tekem". Če to
+  domene. **6. 11. 2026** so isto predlogo dobile še Pela, Drama, Kozani,
+  Imatija in Preveza-Lefkada (12 lig, uvoz "ni razpored lige … 0 tekem");
+  ostane le Thesprotija na `table.asp`. Uvoz je do popravka javljal "ni razpored lige … 0 tekem". Če to
   javi še katera domena, ima verjetno isto predlogo: preveri `an-round`.
-- **Razpored** je `table_analytika.asp` (epsm, Ahaja, Krf, Lezbos) ali `table.asp`
-  (ostale): krogi "N<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ", vrstica "Domači / - / Gostje"
+- **Razpored** je `table_analytika.asp` (vse razen Thesprotije) ali `table.asp`
+  (Thesprotija, stara oblika): krogi "N<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ", vrstica "Domači / - / Gostje"
   (ime kluba ima lahko " - ": "ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ"), izid, povezava
   `game.asp?game_number=N&match_date=dd.mm.yyyy`; Ahaja, Kozani, Imatija, Drama
   in Pela imajo pri tekmi še datum in uro, epsm le pri odigranih (s povezave).
