@@ -96,6 +96,20 @@ test('401, second redirect refusal and budget stop exit 4; 5xx exits 5 (source d
   }finally{f.clean()}
  }
 })
+test('Baden native capture: refusal exits 4, 5xx exits 5, transport/semantic failure exits 1 and no further request',async()=>{
+ const baden=GERMANY_BULK_CANDIDATES.find(c=>c.slug==='de-verbandsliga-baden')
+ const badenRow={...row,slug:baden.slug,source:baden.source,source_league_code:baden.source_league_code,source_policy:'fussball-community-cards-v1'}
+ const cases=[['client stopped after fussball capture: source request failed (HTTP 403)',4,/source refused: /],['fussball capture: source request failed (HTTP 429)',4,/source refused: /],['fussball capture: source challenge detected',4,/source refused: .*challenge/],['fussball capture: request budget exhausted (3000)',4,/source stopped: .*budget/],['fussball capture: source request failed (HTTP 503)',5,/source down: .*503/],['fetch failed',1,/^fetch failed$/],['Baden runtime: incomplete schedule',1,/^Baden runtime: incomplete schedule$/]]
+ for(const [reason,exitCode,message] of cases){
+  const f=setup();let captures=0
+  try{
+   await assert.rejects(api.prepareFussballNightly({candidate:badenRow,directory:f.directory,cacheDirectory:join(f.root,'cache'),now,
+    loadNativeSeed:async()=>({context:{},competition:badenRow}),
+    captureNative:async()=>{captures++;mkdirSync(f.directory);throw Error(reason)}}),e=>e.exitCode===exitCode&&!!e.sourceStop===(exitCode!==1)&&message.test(e.message),reason)
+   assert.equal(captures,1,'one capture attempt only')
+  }finally{f.clean()}
+ }
+})
 test('installed source collector distinguishes actual refused response from semantic HTML failure',async()=>{
  for(const status of [403,200]){
   const f=setup();let requests=0,loaded=false
