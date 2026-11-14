@@ -19,6 +19,10 @@ export const domov: NonNullable<Prevod['domov']> = {
     zamudniki: '<krepko>Lemaradtál a rajtról?</krepko> A <lestvica>Tabellán</lestvica> attól a fordulótól versenyzel, amikor csatlakozol.',
     sestaviEkipo: 'Rakd össze a csapatod',
     rezultati: 'Eredmények és összeállítások',
+    // Trajna vrstica s značkama trgovin v uvodu (components/ZnackeTrgovin.tsx).
+    aplikacija: 'Az SLFF alkalmazás: ingyenes Androidra és iPhone-ra',
+    znackaAppStore: 'Letöltés az App Store-ból',
+    znackaGooglePlay: 'Letöltés a Google Playről',
   },
   asistence: {
     cakajo: {

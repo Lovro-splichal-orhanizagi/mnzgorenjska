@@ -20,6 +20,10 @@ export const domov: NonNullable<Prevod['domov']> = {
     zamudniki: '<krepko>Jäid algusest maha?</krepko> <lestvica>Edetabelis</lestvica> võistled alates voorust, millega liitusid.',
     sestaviEkipo: 'Pane meeskond kokku',
     rezultati: 'Tulemused ja koosseisud',
+    // Trajna vrstica s značkama trgovin v uvodu (components/ZnackeTrgovin.tsx).
+    aplikacija: 'SLFF-i rakendus: tasuta Androidile ja iPhone’ile',
+    znackaAppStore: 'Laadi alla App Store’ist',
+    znackaGooglePlay: 'Laadi alla Google Playst',
   },
   asistence: {
     cakajo: {

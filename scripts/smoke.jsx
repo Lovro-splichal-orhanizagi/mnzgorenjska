@@ -80,6 +80,7 @@ import { jeDoberKrog, povprecjeKroga } from '../src/lib/pivoNavdusenje'
 import { trgovinaTelefona } from '../src/lib/pozivi'
 import Trgovine, { APP_STORE, GOOGLE_PLAY } from '../src/components/Trgovine'
 import AppPromo, { APP_PROMO_DO, appPromoAktivna } from '../src/components/AppPromo'
+import ZnackeTrgovin from '../src/components/ZnackeTrgovin'
 import Facebook from '../src/components/Facebook'
 import Instagram from '../src/components/Instagram'
 import { parsirajZapisnik, nastopi, dodajStrelceSKlopi } from './zapisnik.mjs'
@@ -3367,6 +3368,13 @@ preveri(
   preveri('promo: kartica ima obe povezavi na trgovini', promo.includes(`href="${GOOGLE_PLAY}"`) && promo.includes(`href="${APP_STORE}"`), promo)
   preveri('promo: aktivna pred koncem, neaktivna ob koncu in po njem', appPromoAktivna(APP_PROMO_DO - 1, false) && !appPromoAktivna(APP_PROMO_DO, false) && !appPromoAktivna(APP_PROMO_DO + 86400000, false))
   preveri('promo: v aplikaciji je ni', !appPromoAktivna(APP_PROMO_DO - 1, true))
+  // Uradni znački trgovin v uvodu (SLF-347): povezavi, imeni za bralnik zaslona in datoteke za vsak jezik.
+  const znacke = renderToString(<ZnackeTrgovin />)
+  preveri('znacke: povezavi na obe trgovini v novem zavihku', znacke.includes(`href="${GOOGLE_PLAY}"`) && znacke.includes(`href="${APP_STORE}"`) && znacke.split('target="_blank"').length === 3, znacke)
+  preveri('znacke: sliki imata ime, App Store prvi', !znacke.includes('alt=""') && znacke.indexOf('app-store') < znacke.indexOf('google-play'), znacke)
+  for (const j of ['sl', 'en', 'de', 'cs', 'da', 'el', 'es', 'et', 'hr', 'hu', 'hy', 'lv', 'mk', 'pl', 'ro', 'sk', 'sr', 'tr', 'uk', 'az']) {
+    preveri(`znacke: Google Play značka za ${j} obstaja`, existsSync(`public/badges/google-play-${j}.png`))
+  }
   // Noga: družabni omrežji samo kot ikoni, ime ostane za bralnik zaslona (SLF-343).
   for (const [ime, el] of [['Facebook', <Facebook />], ['Instagram', <Instagram />]]) {
     const html = renderToString(el)

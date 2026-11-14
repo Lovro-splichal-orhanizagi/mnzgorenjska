@@ -20,6 +20,10 @@ export const domov: NonNullable<Prevod['domov']> = {
     zamudniki: '<krepko>Başlangıcı mı kaçırdın?</krepko> <lestvica>Sıralama</lestvica> bölümünde katıldığın haftadan itibaren yarışırsın.',
     sestaviEkipo: 'Takımını kur',
     rezultati: 'Sonuçlar ve kadrolar',
+    // Trajna vrstica s značkama trgovin v uvodu (components/ZnackeTrgovin.tsx).
+    aplikacija: 'SLFF uygulaması: Android ve iPhone için ücretsiz',
+    znackaAppStore: 'App Store’dan indir',
+    znackaGooglePlay: 'Google Play’den edinin',
   },
   asistence: {
     cakajo: {
