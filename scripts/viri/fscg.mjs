@@ -108,6 +108,10 @@ const vir = {
   osnovniNaslov: 'https://fscg.me',
   glave: { 'User-Agent': 'SLFF fantasy (https://slff.eu)' },
   premorMs: 3000,
+  // fscg.me od 7. 11. 2026 presledoma odklanja povezave (ECONNREFUSED, SLF-355);
+  // ob 2/6/15 s so tri ponovitve padle znotraj iste motnje. Daljši premori mu
+  // dajo čas, da si opomore, in ne dodajo zahtevkov.
+  zamikiMs: [30000, 90000, 240000],
   imaRegistracije: false,
 
   naslovRazporeda: naslovLige,
