@@ -88,11 +88,22 @@ interface Stanje {
   sezona: string | null
 }
 
+/** Toliko uradnih odsotnosti je vidnih, preostale so za "Pokaži vse". */
+const VIDNIH = 3
+
 /**
- * Stran igralca: uradne odsotnosti te osebe (vse njene vrstice) in, za
- * lastnika, stanje opominov, "Spet sem nared" in obrazec za novo.
+ * Razpoložljivost na strani igralca: uradne odsotnosti te osebe (vse njene
+ * vrstice) in, za lastnika, stanje opominov, "Spet sem nared" ter gumb, ki
+ * odpre obrazec za novo. Brez naslova: naslov ima razdelek Razpoložljivost.
+ * `naPrazno` pove, ali je seznam prazen (razdelek tedaj piše "ni poročil").
  */
-export default function UradneOdsotnostiIgralca({ igralecId }: { igralecId: number }) {
+export default function UradneOdsotnostiIgralca({
+  igralecId,
+  naPrazno,
+}: {
+  igralecId: number
+  naPrazno?: (prazno: boolean) => void
+}) {
   const { session } = useAuth()
   const uid = session?.user.id ?? null
   const [seznam, setSeznam] = useState<UradnaOdsotnost[]>([])
@@ -103,6 +114,9 @@ export default function UradneOdsotnostiIgralca({ igralecId }: { igralecId: numb
   const [od, setOd] = useState(danes())
   const [vrnitev, setVrnitev] = useState('')
   const [opomba, setOpomba] = useState('')
+  // Obrazec je privzeto zaprt: odpre ga lastnik, ko ima kaj javiti.
+  const [obrazec, setObrazec] = useState(false)
+  const [vse, setVse] = useState(false)
 
   const nalozi = useCallback(async () => {
     // Glavna vrstica pove, katere vrstice so ista oseba (povezani igralci).
@@ -137,6 +151,10 @@ export default function UradneOdsotnostiIgralca({ igralecId }: { igralecId: numb
     void nalozi()
   }, [nalozi])
 
+  useEffect(() => {
+    naPrazno?.(seznam.length === 0)
+  }, [seznam.length, naPrazno])
+
   const lastnik = !!stanje?.lastnik
   if (!lastnik && seznam.length === 0) return null
 
@@ -168,16 +186,15 @@ export default function UradneOdsotnostiIgralca({ igralecId }: { igralecId: numb
     window.dispatchEvent(new Event(EKIPA_SHRANJENA))
     setOpomba('')
     setVrnitev('')
+    setObrazec(false)
     await nalozi()
   }
 
   return (
-    <section className="space-y-2" aria-label={t('igralci.uradno.naslov')}>
-      <h2 className="mb-2 text-base font-bold text-slate-100">{t('igralci.uradno.naslov')}</h2>
-
+    <div className="space-y-2">
       {seznam.length > 0 && (
         <ul className="space-y-2">
-          {seznam.map((o) => (
+          {(vse ? seznam : seznam.slice(0, VIDNIH)).map((o) => (
             <VrsticaUradne
               key={o.id}
               odsotnost={o}
@@ -187,23 +204,40 @@ export default function UradneOdsotnostiIgralca({ igralecId }: { igralecId: numb
           ))}
         </ul>
       )}
+      {seznam.length > VIDNIH && (
+        <button type="button" onClick={() => setVse((v) => !v)} aria-expanded={vse} className="gumb-tih min-h-11 px-3 text-sm">
+          {vse ? t('igralci.razpolozljivost.skrij') : t('igralci.razpolozljivost.pokaziVse', { n: seznam.length })}
+        </button>
+      )}
 
       {lastnik && stanje && (
-        <div className="kartica space-y-2 p-3 text-sm">
-          <p className="text-slate-400">{t('igralci.uradno.opis')}</p>
-          <p className={stanje.opomini > 0 ? 'font-semibold text-amber-200' : 'text-slate-300'}>
-            {t('igralci.uradno.opomini', {
-              sezona: stanje.sezona ?? '',
-              n: stanje.opomini,
-              najvec: stanje.najvec,
-            })}
-          </p>
+        <div className="space-y-2 text-sm">
           {stanje.blokiran ? (
             <p className="text-rose-300">{t('igralci.uradno.blokiran', { sezona: stanje.sezona ?? '' })}</p>
           ) : odprta ? (
             <p className="text-sky-200">{t('igralci.uradno.imasOdprto')}</p>
           ) : (
-            <form onSubmit={objavi} className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setObrazec((o) => !o)}
+              aria-expanded={obrazec}
+              aria-controls={`uradna-${igralecId}`}
+              className="gumb-tih min-h-11 px-3 text-sm"
+            >
+              {t('igralci.uradno.objavi')}
+            </button>
+          )}
+          {stanje.opomini > 0 && (
+            <p className="font-semibold text-amber-200">
+              {t('igralci.uradno.opomini', { sezona: stanje.sezona ?? '', n: stanje.opomini, najvec: stanje.najvec })}
+            </p>
+          )}
+          {obrazec && !stanje.blokiran && !odprta && (
+            <form id={`uradna-${igralecId}`} onSubmit={objavi} className="kartica space-y-2 p-3">
+              <p className="text-slate-400">{t('igralci.uradno.opis')}</p>
+              <p className="text-slate-300">
+                {t('igralci.uradno.opomini', { sezona: stanje.sezona ?? '', n: stanje.opomini, najvec: stanje.najvec })}
+              </p>
               <fieldset>
                 <legend className="text-xs text-slate-400">{t('igralci.uradno.vrsta')}</legend>
                 <div className="mt-1 flex flex-wrap gap-1.5">
@@ -271,6 +305,6 @@ export default function UradneOdsotnostiIgralca({ igralecId }: { igralecId: numb
       )}
 
       {napaka && <p className="text-sm text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>}
-    </section>
+    </div>
   )
 }

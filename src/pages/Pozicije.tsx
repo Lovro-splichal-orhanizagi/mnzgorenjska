@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNastavitev } from '../lib/nastavitve'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
@@ -80,6 +80,12 @@ export default function Pozicije() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
   useNaslov(tekmovanje?.name, t('tekme.pozicije.naslov'))
   const lokacija = useLocation()
+  // Povezava s strani igralca (`?klub=<id>&igralec=<id>`): odpre klub in pokaže
+  // tega igralca, tudi če je njegova pozicija že potrjena po glasovih.
+  const iskanje = new URLSearchParams(lokacija.search)
+  const zeljenKlub = Number(iskanje.get('klub')) || null
+  const zeljenIgralec = Number(iskanje.get('igralec')) || null
+  const kazano = useRef(false)
   const nastavitev = useNastavitev()
   const prag = nastavitev('prag_glasov_pozicija', PRAG_PRIVZETO)
   const minPrag = nastavitev('min_prag_glasov_pozicija', MIN_PRAG_PRIVZETO)
@@ -105,7 +111,7 @@ export default function Pozicije() {
   const [napaka, setNapaka] = useState<string | null>(null)
   // Privzeto pokažemo tiste, ki jih je vredno popraviti: brez pozicije in
   // ugibanja iz statistike. Potrjene iz zapisnika glasovanje itak ne premakne.
-  const [samoNepotrjene, setSamoNepotrjene] = useState(true)
+  const [samoNepotrjene, setSamoNepotrjene] = useState(!zeljenIgralec)
 
   useEffect(() => {
     if (!tekmovanjeId) return
@@ -126,7 +132,7 @@ export default function Pozicije() {
           name: k.name,
         }))
         setKlubi(seznam)
-        setKlubId(seznam[0]?.id ?? null)
+        setKlubId(seznam.find((k) => k.id === zeljenKlub)?.id ?? seznam[0]?.id ?? null)
         setNalaganje(false)
       })
     return () => {
@@ -328,6 +334,13 @@ export default function Pozicije() {
     [igralci, samoNepotrjene],
   )
 
+  // Igralec iz povezave: ko je naložen, ga pomaknemo v vidno polje (enkrat).
+  useEffect(() => {
+    if (kazano.current || !zeljenIgralec || !igralci.some((i) => i.id === zeljenIgralec)) return
+    kazano.current = true
+    document.getElementById(`igralec-${zeljenIgralec}`)?.scrollIntoView({ block: 'center' })
+  }, [igralci, vidni, zeljenIgralec])
+
   const stNepotrjenih = igralci.filter(
     (i) => !i.position || i.position_source === 'ugibanje',
   ).length
@@ -439,6 +452,7 @@ export default function Pozicije() {
               glasovi={glasovi[i.id] ?? {}}
               prior={priori[i.id] ?? null}
               mojGlas={mojiGlasovi[i.id]}
+              poudarjen={i.id === zeljenIgralec}
               omogoceno={Boolean(session)}
               insiderVelja={Boolean(insiderVeljaZaKlub)}
               poznavalecLige={poznavalecLige}
@@ -519,6 +533,7 @@ function IgralecKartica({
   glasovi,
   prior,
   mojGlas,
+  poudarjen,
   omogoceno,
   insiderVelja,
   poznavalecLige,
@@ -529,6 +544,7 @@ function IgralecKartica({
   glasovi: GlasoviIgralca
   prior: PrioriIgralca | null
   mojGlas?: Pozicija
+  poudarjen: boolean
   omogoceno: boolean
   insiderVelja: boolean
   poznavalecLige: boolean
@@ -571,7 +587,7 @@ function IgralecKartica({
     vodilna[1] >= pragZaPrior(prior?.[vodilna[0]] ?? 0)
 
   return (
-    <li className="p-3 sm:p-4">
+    <li id={`igralec-${igralec.id}`} className={`p-3 sm:p-4 ${poudarjen ? 'bg-gnl-500/10 ring-2 ring-inset ring-gnl-400/60' : ''}`}>
       <div className="flex flex-wrap items-center gap-3">
         <Grb
           ime={igralec.team_name}

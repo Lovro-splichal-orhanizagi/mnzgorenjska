@@ -73,7 +73,7 @@ export default function NapovediMiniLige({ ligaId }: { ligaId: number }) {
 
   return (
     <div className="space-y-4">
-      <ObrazecNapovedi />
+      <ObrazecNapovedi miniLigaId={ligaId} />
 
       <section className="kartica space-y-3 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -248,11 +248,13 @@ export function IzbiraKroga({ krogi, krog, onKrog }: {
 }
 
 /**
- * Tekme naslednjega kroga z mojimi napovedmi: vseh mojih lig (mini liga) ali
- * le ene (`tekmovanjeId`, stran Napovedi). Napoved je ena in velja povsod.
+ * Tekme naslednjega kroga z mojimi napovedmi: lig mojih ekip v mini ligi
+ * (`miniLigaId`) ali le ene lige (`tekmovanjeId`, stran Napovedi). Napoved
+ * je ena in velja povsod.
  */
-export function ObrazecNapovedi({ tekmovanjeId, brezPravil = false }: {
+export function ObrazecNapovedi({ tekmovanjeId, miniLigaId, brezPravil = false }: {
   tekmovanjeId?: number
+  miniLigaId?: number
   brezPravil?: boolean
 }) {
   const [tekme, setTekme] = useState<Odprta[] | null>(null)
@@ -261,14 +263,17 @@ export function ObrazecNapovedi({ tekmovanjeId, brezPravil = false }: {
     let veljavno = true
     setTekme(null)
     supabase
-      .rpc('moje_odprte_napovedi', tekmovanjeId == null ? {} : { p_tekmovanje: tekmovanjeId })
+      .rpc('moje_odprte_napovedi', {
+        ...(tekmovanjeId == null ? {} : { p_tekmovanje: tekmovanjeId }),
+        ...(miniLigaId == null ? {} : { p_mini_liga: miniLigaId }),
+      })
       .then(({ data }) => {
         if (veljavno) setTekme(data ?? [])
       })
     return () => {
       veljavno = false
     }
-  }, [tekmovanjeId])
+  }, [tekmovanjeId, miniLigaId])
 
   // Po ligah: vsaka ima svoj krog in rok.
   const poLigah = useMemo(() => {

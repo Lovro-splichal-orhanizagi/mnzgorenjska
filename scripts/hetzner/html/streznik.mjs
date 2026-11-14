@@ -462,6 +462,27 @@ async function vabilo(koda, { rest, b }) {
   }
 }
 
+/**
+ * Javna stran Preverjeni igralski profil (/verified): ni vezana na ligo ali
+ * igralca, zato brez lige in `?t=`; korist "kdo te je izbral" je le v
+ * vmesniku, ker je odvisna od baze (iskalnik dobi le stalne koristi).
+ */
+function preverjeni({ b }) {
+  const j = b()
+  const koristi = ['kljukica', 'profil', 'posnetki', 'ogledi'].map((k) => `<li>${esc(j.t(`preverjeni.kaj.${k}`))}</li>`)
+  return {
+    status: 200,
+    naslov: j.t('preverjeni.naslov'),
+    opis: j.t('preverjeni.opis'),
+    kanonicni: `${DOMENA}/verified`,
+    jsonld: [],
+    vsebina: ovij(
+      `<h1>${esc(j.t('preverjeni.glava'))}</h1><p>${esc(j.t('preverjeni.uvod'))}</p><ul>${koristi.join('')}</ul>` +
+        `<p>${povezava('/players', j.t('preverjeni.cta.poisci'))}</p>`,
+    ),
+  }
+}
+
 const SEZNAMI = { '/': domov, '/table': tabela, '/results': rezultati, '/players': igralci, '/standings': lestvica }
 const ENTITETE = { player: igralec, club: klub, match: tekma }
 
@@ -487,6 +508,7 @@ export async function stran(pot, t, { rest, lige, besede }) {
   if (ml) return miniLiga(Number(ml[1]), { rest, lige, b })
   const l = /^\/l\/([^/]+)$/.exec(pot)
   if (l) return KODA_MINI_LIGE.test(l[1].toUpperCase()) ? vabilo(l[1].toUpperCase(), { rest, b }) : null
+  if (pot === '/verified') return preverjeni({ b })
   const seznam = SEZNAMI[pot]
   if (!seznam) return null
   // Neznana ali neaktivna liga v `?t=`: vmesnik pokaže privzeto, kanonični brez `?t=`.
