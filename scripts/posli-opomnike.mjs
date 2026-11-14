@@ -68,7 +68,10 @@ const dni = Number(process.env.DNI ?? 2)
 // Dnevni proračun opomnikov čez VSE lige. Kampanja 3. 9. je obstala na dnevni
 // kvoti ponudnika; zato jih pošljemo največ toliko na dan, ostali pridejo ob
 // naslednjem zagonu (poslani so tri dni zaščiteni z `nedavni_opomnik`).
-let proracun = Number(process.env.NAJVEC_POSLATI ?? 90)
+// Opozorilo odsotnih proracuna nima: eno poročilo zadene vse ekipe z igralcem
+// (32 mailov v eni ligi), omejuje ga `NAJVEC_NA_LIGO`; ostane le kos na klic.
+const odsotni = vrsta === 'opozorilo-odsotni'
+let proracun = odsotni ? Infinity : Number(process.env.NAJVEC_POSLATI ?? 90)
 
 const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: fetchZaBazo() } })
 
@@ -113,7 +116,8 @@ let padlo = 0
 // 8. 10. je clani s 986 kandidati poslal 7 mailov in padel s 500. Zato
 // posiljamo po kosih (KOS mailov na klic) in klicemo znova, dokler liga ni
 // pocena ali proracun porabljen. Ponovni klic ne podvaja: opomnik istemu
-// cloveku ne gre dvakrat v 7 dneh, tedenski pregled ne dvakrat za isti krog.
+// cloveku ne gre dvakrat v 7 dneh, tedenski pregled ne dvakrat za isti krog,
+// opozorilo odsotnih ne dvakrat za isti krog (`email_log`; SLF-439).
 const KOS = Number(process.env.KOS ?? 10)
 // Samodejna shramba (26. 10. 2026) shrani tudi na pol sestavljene ekipe; te
 // so neveljavne, dokler jih lastnik ne dopolni, in opozorilo pred rokom jim
@@ -157,7 +161,7 @@ for (const liga of lige ?? []) {
   // zabeležimo jo in korak na koncu vseeno konča z napako.
   try {
     liga.meja = NAJVEC_NA_LIGO
-    const poKosih = sProracunom && !suho
+    const poKosih = (sProracunom || odsotni) && !suho
     let odgovor = await poklici(liga, poKosih ? Math.min(KOS, proracun) : sProracunom ? proracun : null)
     napakZapored = 0 // odgovor je prišel, omrežje dela
     let izid = await odgovor.json().catch(() => ({}))
