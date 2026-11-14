@@ -113,6 +113,7 @@ jobs:
           npx playwright install --with-deps chromium
           node scripts/test-community-cards-ui.mjs
           node scripts/test-community-round-ui.mjs
+          node scripts/test-igralci-table-ui.mjs
           npx vite-node scripts/test-community-round-points.ts
 
       - name: Provider batch and Dribl source diagnostics (source-free)

@@ -23,7 +23,7 @@ const league = { id: 1, slug: 'clani', name: 'Test League', short_name: 'Test Le
   active: true, country_code: 'SI', country_name: 'Slovenija', federation_code: 'mnzg',
   federation_name: 'Test Federation', federation_short: 'TF', federation_url: null,
   federation_sort: 1, prvi_fantasy_krog: 1, sezona_koledarska: false }
-async function app(width) {
+async function app(width, verified = false) {
   const context = await browser.newContext({ viewport: { width, height: 844 }, locale: 'sl-SI' })
   await context.addInitScript(({ league }) => {
     localStorage.setItem('sb-cobtigdsmlftvpfqtnas-auth-token', JSON.stringify({ access_token: 'dummy.offline.token', refresh_token: 'offline', expires_at: Math.floor(Date.now() / 1000) + 3600, user: { id: '00000000-0000-0000-0000-000000000001', aud: 'authenticated', user_metadata: { jezik: 'sl' } } }))
@@ -40,6 +40,8 @@ async function app(width) {
     if (url.origin === 'http://127.0.0.1:5211') return route.continue()
     if (url.origin !== 'http://127.0.0.1:54329') return route.abort()
     const table = url.pathname.split('/').at(-1)
+    const headers = { 'access-control-allow-origin': '*', 'content-range': '0-0/1' }
+    if (table === 'vidi_izbranost') return route.fulfill({ status: 200, contentType: 'application/json', headers, body: JSON.stringify(verified) })
     let rows = []
     if (table === 'competitions_view') rows = [league]
     if (table === 'sezone') rows = [{ competition_id: 1, season: '2026/27', tekoca: true, odigranih: 5,
@@ -49,7 +51,7 @@ async function app(width) {
     if (table === 'teams') rows = [{ id: 10, name: 'Home Club', short_name: 'HOME', logo_url: null }]
     if (table === 'competition_teams') rows = [{ competition_id: 1, competitions: league }]
     const object = route.request().headers().accept?.includes('application/vnd.pgrst.object+json')
-    await route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'content-range': '0-0/1' }, body: JSON.stringify(object ? rows[0] ?? null : rows) })
+    await route.fulfill({ status: 200, contentType: 'application/json', headers, body: JSON.stringify(object ? rows[0] ?? null : rows) })
   })
   await page.goto('http://127.0.0.1:5211/players')
   await page.locator('main table tbody tr').first().waitFor()
@@ -71,11 +73,12 @@ const stolpci = (page) => page.evaluate(() => {
   }
 })
 try {
-  for (const [width, pricakovano] of [
-    [1366, { Mreže: '7', Minute: '1234', Izbran: '–' }],
-    [390, { Mreže: '7' }],
-  ]) await check(`header and body cells line up (${width}px)`, async () => {
-    const { page, context } = await app(width)
+  for (const [width, verified, pricakovano] of [
+    [1366, true, { Mreže: '7', Minute: '1234', Izbran: '–' }],
+    [1366, false, { Mreže: '7', Minute: '1234' }],
+    [390, false, { Mreže: '7' }],
+  ]) await check(`header and body cells line up (${width}px, ${verified ? 'verified' : 'unverified'})`, async () => {
+    const { page, context } = await app(width, verified)
     try {
       const { naslovi, celice, zamik } = await stolpci(page)
       assert.equal(celice.length, naslovi.length, `glava ima ${naslovi.length} stolpcev, vrstica ${celice.length}: ${JSON.stringify({ naslovi, celice })}`)
@@ -84,11 +87,12 @@ try {
         assert.ok(i >= 0, `glava ${naslov} manjka: ${naslovi}`)
         assert.equal(celice[i], vrednost, `pod ${naslov} je ${celice[i]}`)
       }
+      assert.equal(naslovi.some((n) => n.startsWith('Izbran')), verified, 'Izbran je viden le preverjenim')
       if (width < 640) assert.ok(!naslovi.some((n) => n.startsWith('Minute')), 'Minute ostanejo skrite na telefonu')
       // Vsaka celica leži pod svojo glavo: stolpca z desno poravnavo sta lahko različno široka le za odmik besedila.
       assert.ok(zamik.every((z) => z !== null && z < 60), `celice niso pod glavami: ${zamik}`)
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'stran ne sme imeti vodoravnega drsenja; tabela drsi sama')
-      if (artifactDir) await page.screenshot({ path: `${artifactDir}/igralci-${width}.png`, fullPage: true })
+      if (artifactDir) await page.screenshot({ path: `${artifactDir}/igralci-${width}-${verified ? "verified" : "unverified"}.png`, fullPage: true })
     } finally { await context.close() }
   })
 } finally {
