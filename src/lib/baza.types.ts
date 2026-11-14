@@ -470,50 +470,6 @@ export type Database = {
           },
         ]
       }
-      competition_starostne_skupine: {
-        Row: {
-          competition_id: number
-          skupina: string
-        }
-        Insert: {
-          competition_id: number
-          skupina: string
-        }
-        Update: {
-          competition_id?: number
-          skupina?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "competition_starostne_skupine_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: true
-            referencedRelation: "competitions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "competition_starostne_skupine_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: true
-            referencedRelation: "competitions_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "competition_starostne_skupine_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: true
-            referencedRelation: "lestvica_drzavna"
-            referencedColumns: ["competition_id"]
-          },
-          {
-            foreignKeyName: "competition_starostne_skupine_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: true
-            referencedRelation: "objava_lige"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       competitions: {
         Row: {
           active: boolean
@@ -5919,6 +5875,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      starostne_skupine_izjeme: {
+        Row: {
+          skupina: string
+          slug: string
+        }
+        Insert: {
+          skupina: string
+          slug: string
+        }
+        Update: {
+          skupina?: string
+          slug?: string
+        }
+        Relationships: []
       }
       statistika_igralcev: {
         Row: {
@@ -11738,6 +11709,10 @@ export type Database = {
       }
       stevec_uporabnikov: { Args: never; Returns: number }
       starostna_skupina_iz_oznake: {
+        Args: { p_ime: string; p_slug: string }
+        Returns: string
+      }
+      starostna_skupina_lige: {
         Args: { p_ime: string; p_slug: string }
         Returns: string
       }

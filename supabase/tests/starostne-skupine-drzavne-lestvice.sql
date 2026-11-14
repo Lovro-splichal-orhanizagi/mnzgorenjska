@@ -27,11 +27,12 @@ select pg_temp.preveri('U18 je pod U19', public.starostna_skupina_iz_oznake('rs-
 select pg_temp.preveri('nasprotje šifre in imena = neznano', public.starostna_skupina_iz_oznake('hr-ri-u19', 'NS PGŽ U18') is null);
 select pg_temp.preveri('U21 = neznano', public.starostna_skupina_iz_oznake('hu-no-u21', 'Nógrád vármegyei U21') is null);
 select pg_temp.preveri('mladinska liga brez starosti = neznano', public.starostna_skupina_iz_oznake('mt-youth-a', 'Youth League A') is null);
-select pg_temp.preveri('vsaka aktivna liga je razvrščena ali izrecno neznana',
-  not exists (select 1 from public.competitions c
-               where public.starostna_skupina_iz_oznake(c.slug, c.name) is not null
-                 and not exists (select 1 from public.competition_starostne_skupine g
-                                  where g.competition_id = c.id)));
+select pg_temp.preveri('ni tujega ključa na competitions ali vrstice competition_id (varovalo FCF, opazovalec G1)',
+  not exists (select 1 from pg_constraint c where c.contype = 'f'
+                 and c.conrelid = 'public.starostne_skupine_izjeme'::regclass)
+  and not exists (select 1 from information_schema.columns
+                   where table_schema = 'public' and table_name = 'starostne_skupine_izjeme'
+                     and column_name = 'competition_id'));
 
 -- Lastna država, da se ne meša z živimi podatki.
 insert into countries(id, code, name) overriding system value
@@ -52,11 +53,15 @@ select -936600 - n, s.slug, s.ime, upper(s.slug), s.aktivna, s.drzava, 'mnzg'
   ) as s(n, slug, ime, aktivna, drzava);
 alter table public.competitions enable trigger varovalo_vklopa_lige;
 
-select pg_temp.preveri('trigger razvrsti nove lige',
-  (select array_agg(g.skupina order by c.id desc) from competitions c
-     left join competition_starostne_skupine g on g.competition_id = c.id
+select pg_temp.preveri('skupina lige se izračuna ob branju',
+  (select array_agg(public.starostna_skupina_lige(c.slug, c.name) order by c.id desc) from competitions c
     where c.id between -936608 and -936601)
   = array['clani', 'u19', 'pod_u19', 'pod_u19', null, 'pod_u19', 'pod_u19', 'clani']::text[]);
+select pg_temp.preveri('pogled lig nosi izračunano skupino',
+  (select starostna_skupina from competitions_view where slug = 'za-kadeti') = 'pod_u19'
+  and (select starostna_skupina from competitions_view where slug = 'za-u21') is null);
+select pg_temp.preveri('nobena vrstica competitions ni dobila tabelne vrstice',
+  not exists (select 1 from public.starostne_skupine_izjeme where slug like 'za-%' or slug like 'zb-%'));
 
 insert into teams(id, name, short_name, country_id) overriding system value
   values (-936610, 'Test klub 1', 'T1', -936601), (-936611, 'Test klub 2', 'T2', -936601);
@@ -128,6 +133,17 @@ select pg_temp.preveri('star klic z imenovanima argumentoma = glavna skupina',
 select pg_temp.preveri('anon sme klicati',
   has_function_privilege('anon', 'public.vrh_drzave(text,integer,text)', 'execute')
   and has_function_privilege('anon', 'public.vrh_klubov_drzave(text,integer,boolean,integer,text)', 'execute'));
+
+-- Izjeme po šifri: ročni vpis ima prednost, `nobena` lige izloči iz obeh lestvic.
+insert into public.starostne_skupine_izjeme(slug, skupina) values ('za-u21', 'u19'), ('za-clani', 'nobena');
+select pg_temp.preveri('izjema prevlada: U21 je ročno u19',
+  public.starostna_skupina_lige('za-u21', 'U21 liga') = 'u19');
+select pg_temp.preveri('izjema nobena izloči ligo iz lestvic',
+  public.starostna_skupina_lige('za-clani', 'Prva liga') is null
+  and not exists (select 1 from public.vrh_drzave('ZA', 50, 'glavna') where full_name = 'T Clan'));
+select pg_temp.preveri('ročno uvrščen U21 je v glavni',
+  exists (select 1 from public.vrh_drzave('ZA', 50, 'glavna') where full_name = 'T U21'));
+delete from public.starostne_skupine_izjeme where slug in ('za-u21', 'za-clani');
 
 -- Klubi: ista razdelitev; mesta so znotraj skupine.
 insert into matches(id, round_id, home_team_id, away_team_id, imported_at) overriding system value
