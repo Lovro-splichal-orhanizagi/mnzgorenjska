@@ -98,6 +98,9 @@ jobs:
           set -euo pipefail
           node scripts/aktivna-tekmovanja.mjs > /tmp/lige.txt
           echo "Lige: $(tr '\n' ' ' < /tmp/lige.txt)"
+          # `--import baza-ponovitve`: zapis cene igralca (PATCH) ponovi po
+          # omrezni napaki. Skripte same ne smemo spremeniti: njen odtis je
+          # pripet v migraciji FCF (SLF-292, 3. 11. 2026: 9 izgubljenih zapisov).
           # Ena liga ne sme podreti ostalih — isto kot pri uvozu. Tu je se bolj
           # pomembno: liga, ki jo prekine napaka na pol poti, ima del igralcev
           # prevrednoten in del ne. Zig `repriced_week` poskrbi, da naslednji
@@ -106,7 +109,7 @@ jobs:
           while IFS= read -r liga; do
             [ -n "$liga" ] || continue
             echo "::group::$liga"
-            if node scripts/ovrednoti-igralce.mjs --tekmovanje "$liga" --tedensko --pisi --najvec "$NAJVEC"; then
+            if node --import ./scripts/baza-ponovitve.mjs scripts/ovrednoti-igralce.mjs --tekmovanje "$liga" --tedensko --pisi --najvec "$NAJVEC"; then
               echo "$liga: v redu"
             else
               echo "::warning title=Prevrednotenje::$liga ni uspela; ostale se nadaljujejo"
