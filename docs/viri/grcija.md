@@ -378,6 +378,17 @@ mladinske lige (`epspeir.gr:740`, `741`, `757` Κ16; `754` Κ17; `758` Κ15
 deklet). Pred naslednjim branjem `eps` preveri, ali Vzhodna Atika še
 zavrača.
 
+**14. 11. 2026: epsip.gr in epsana.gr sta se preselila.** Od 6. 11. vrne
+`/results/display_schedule.php` na obeh HTTP 404 (domači strani 200; tekmovalna
+tabela `eps` na drugih domenah dela). Nočni uvoz GR 2/6, 3/6 in 5/6 je padal pri
+`gr-ip-a`, `gr-ip-b`, `gr-ip-g-a`, `gr-ip-g-b`, `gr-ana-a`, `gr-ana-b` in
+`gr-ana-g`; migracija 20261114153100 jih izklopi (`active = false`), podatki
+ostanejo. Nova predloga (neoverjeno, prebrano le z domačih strani): epsip.gr
+`/agones/?eps_comp=a|b`, `eps_cat=Γ' Κατηγορία`; epsana.gr
+`/diorganoseis/a-katigoria/?enosi_main_league_id=16&enosi_tab=standings`
+(Β 17, Γ 18). `scripts/viri/eps.mjs` je ne bere; za ponovni vklop je treba
+novi parser in preveriti, ali sta objavljena postava, menjave in goli.
+
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=gr-peir-a-1 -f
 arhiv=epspeir.gr:605 -f cene=true`. Arhiv 240 zapisnikov po 3 s je okoli
 12 minut na ligo (Atene odgovarjajo počasneje, ~5 s na stran).
