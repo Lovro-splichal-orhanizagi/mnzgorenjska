@@ -58,7 +58,11 @@ const sProracunom = vrsta === 'opomnik' || vrsta === 'tedenski-pregled'
 // dvajset ljudi, ki bi vsak zase pokvaril svojo ekipo — verjetneje je uvoz
 // deaktiviral cel klub ali prestavil pol lige. Takrat je napaka nasa in
 // posiljanje pomote dvajsetim ljudem je ne popravi.
-const NAJVEC_NA_LIGO = Number(process.env.NAJVEC_NA_LIGO ?? 25)
+//
+// Opozorilo za odsotne je drugacno: eno samo poročilo o enem igralcu zadene vse
+// ekipe z njim (SLF-324: kartoni, 3. 11., v 32 od 59 ekip lj-1-liga). To ni
+// napaka uvoza, zato je privzeta meja visoka in lovi le množično napačno poročilo.
+const NAJVEC_NA_LIGO = Number(process.env.NAJVEC_NA_LIGO ?? (vrsta === 'opozorilo-odsotni' ? 300 : 25))
 const dni = Number(process.env.DNI ?? 2)
 // Dnevni proračun opomnikov čez VSE lige. Kampanja 3. 9. je obstala na dnevni
 // kvoti ponudnika; zato jih pošljemo največ toliko na dan, ostali pridejo ob
