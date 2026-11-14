@@ -142,7 +142,10 @@ proti ablaciji**, `prestal`. Trajal je 61 s, največ ~600 MB pomnilnika
 
 `python -m stroj --zanka` teče vsak dan ob **11:00 Europe/Ljubljana** (nočni
 uvozi med tednom začnejo ob 07:17 in tečejo do 190 minut). Napaka v zagonu
-se izpiše, zanka teče naprej.
+se izpiše in javi na Discord (`DISCORD_WEBHOOK` v `/opt/slff-scout/.env`;
+brez njega le dnevnik), zanka teče naprej. Tekme brez izida (NULL goli)
+izloči že `SQL_TEKME`, `elo()` jih za vsak primer preskoči (28.–30. 10. 2026
+je TypeError tri dni ustavil stroj).
 
 Moč lig in backtest se izračunata, ko je zadnji izračun v bazi
 (`max(scout.lige_moc.izracunano_at)` zadnjega modela) starejši od 7 dni

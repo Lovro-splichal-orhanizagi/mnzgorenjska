@@ -100,7 +100,7 @@ async function prenesi(url, ime) {
     // Vir lahko zahteva vljudnost: premor med zahtevki in glavo, ki pove, kdo
     // bere (Sportnet). Slovenski viri tega nimajo in ostanejo, kot so bili.
     // Prehodne motnje prenos sam ponovi; šele ko odpove vse, velja rezerva.
-    const odgovor = await prenesiSPonovitvami(url, { glave: vir.glave, premorMs: vir.premorMs, fetchFn: vir.fetch })
+    const odgovor = await prenesiSPonovitvami(url, { glave: vir.glave, premorMs: vir.premorMs, zamiki: vir.zamikiMs, fetchFn: vir.fetch })
     if (!odgovor.ok) {
       const e = new Error(`${odgovor.status} ${url}`)
       e.status = odgovor.status

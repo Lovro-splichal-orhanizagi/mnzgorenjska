@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Katalog SLFF v Stripe (enak v testnem in živem načinu): tarife dostave
 # trgovine (pismo_si, paket_si, paket_eu, brezplačni brez_si in brez_eu) in preverjenih (postnina_si,
-# postnina_eu), cene po lookup_key (preverjeni, značka, Scout) in portal Scouta
+# postnina_eu), cene po lookup_key (preverjeni, značka, ponovna cena, Scout) in portal Scouta
 # (metadata app=slff-scout). Izdelek trgovine slff-shop ustvari trgovina-nakup
 # sama ob prvem nakupu.
 #
@@ -87,6 +87,7 @@ P='slff:SLFF Preverjen igralec:txcd_10000000'
 cena "$P" slff_preverjen_letna 999 inclusive year Letno
 cena "$P" slff_preverjen_dozivljenjska 2900 inclusive - 'Za vedno'
 cena 'slff:SLFF Natisnjena značka:txcd_99999999' slff_znacka 500 inclusive - 'Natisnjena značka'
+cena 'slff-cena:SLFF Ponovna cena igralca:txcd_10000000' slff_ponovna_cena 499 inclusive - 'Ponovna cena'
 # Scout je B2B: cena brez DDV (exclusive).
 S='slff-scout:SLFF Scout:txcd_10103001'
 cena "$S" slff_scout_klub_mesec 3900 exclusive month 'Klub, mesečno'

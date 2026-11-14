@@ -18,6 +18,10 @@ export const domov = {
     zamudniki: '<krepko>Zamudil si štart?</krepko> Na <lestvica>Lestvici</lestvica> tekmuješ od kroga, ko se pridružiš.',
     sestaviEkipo: 'Sestavi ekipo',
     rezultati: 'Rezultati in postave',
+    // Trajna vrstica s značkama trgovin v uvodu (components/ZnackeTrgovin.tsx).
+    aplikacija: 'Aplikacija SLFF: brezplačno za Android in iPhone',
+    znackaAppStore: 'Prenesi iz trgovine App Store',
+    znackaGooglePlay: 'Na voljo v Googlu Play',
   },
   asistence: {
     cakajo: {

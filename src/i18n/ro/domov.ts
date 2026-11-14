@@ -20,6 +20,10 @@ export const domov: NonNullable<Prevod['domov']> = {
     zamudniki: '<krepko>Ai ratat startul?</krepko> În <lestvica>Clasament</lestvica> concurezi din etapa în care te alături.',
     sestaviEkipo: 'Fă-ți echipa',
     rezultati: 'Rezultate și echipe de start',
+    // Trajna vrstica s značkama trgovin v uvodu (components/ZnackeTrgovin.tsx).
+    aplikacija: 'Aplicația SLFF: gratuită pentru Android și iPhone',
+    znackaAppStore: 'Descarcă din App Store',
+    znackaGooglePlay: 'Disponibil pe Google Play',
   },
   asistence: {
     cakajo: {

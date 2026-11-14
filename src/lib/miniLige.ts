@@ -3,6 +3,7 @@
 // Ločeno od strani, da jih preverja `npm run smoke` brez omrežja: normalizacija
 // kode in razvrstitev lestvice odločata, ali se človek pridruži in kdo je prvi.
 
+import { mojaKodaVabila } from './mojaKoda.ts'
 import { t } from '../i18n/jedro.ts'
 import { formatirajTocke, oblika, tockZ, TOCKE_TOZILNIK } from './pomozno.ts'
 import { izvor } from './platforma.ts'
@@ -109,7 +110,9 @@ export function vecLig(vrstice: MiniVrstica[]): boolean {
 
 /** Povezava, ki vabi: klik naredi vse, kode ne tipka nihče. */
 export function povezavaVabila(koda: string, naslov: string): string {
-  return `${naslov}/l/${ocistiKodo(koda)}`
+  // Osebna koda povabila (akcija vabil): kdor se prijavi prek vabila v mini ligo, šteje deljenju.
+  const od = mojaKodaVabila()
+  return `${naslov}/l/${ocistiKodo(koda)}${od ? `?od=${od}` : ''}`
 }
 
 /**

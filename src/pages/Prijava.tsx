@@ -12,6 +12,7 @@ import { JEZIK_DRZAVE } from '../lib/drzava'
 import { Capacitor } from '@capacitor/core'
 import { izvor } from '../lib/platforma'
 import { dogodek } from '../lib/analitika'
+import KodaPovabila from '../components/KodaPovabila'
 
 type Nacin = 'prijava' | 'registracija' | 'pozabljeno'
 
@@ -150,6 +151,8 @@ export default function Prijava() {
       <h1 className="text-3xl font-black naslov">
         {naslov}
       </h1>
+
+      {nacin === 'registracija' && <KodaPovabila />}
 
       {nacin !== 'pozabljeno' && (
         <>
