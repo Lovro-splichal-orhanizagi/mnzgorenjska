@@ -17,7 +17,7 @@ export const NAJVEC_VHOD = 20 * 1024 * 1024
 /** Mladinska liga po šifri (isto pravilo kot SQL `je_mladinski_slug`). */
 export function jeMladinskiSlug(slug: string | null | undefined): boolean {
   if (!slug) return false
-  return /(^|-)(u19|mladinci)($|-)/.test(slug) || /^sml[0-9]/.test(slug)
+  return /(^|-)(u1[4-9]|mladinci|kadeti|kadetki|kadetska|juniori)($|-)/.test(slug) || /^sml[0-9]/.test(slug)
 }
 
 /** Pot različice fotografije: '' (256 px), '-64' ali '-768'. */

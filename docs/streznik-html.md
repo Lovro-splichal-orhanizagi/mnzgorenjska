@@ -1,7 +1,7 @@
 # Strežnik HTML (iskalniki, kartice)
 
 SPA vsem naslovom vrne isti prazen `index.html`. Za `/`, `/table`, `/results`,
-`/standings`, `/players`, `/player/*`, `/club/*`, `/match/*`, `/mini-leagues/*`, `/l/*` (GET/HEAD) Caddy
+`/standings`, `/players`, `/player/*`, `/club/*`, `/match/*`, `/mini-leagues/*`, `/l/*`, `/verified` (GET/HEAD) Caddy
 (`@html_strani`) vpraša **strežnik HTML** (`scripts/hetzner/html/streznik.mjs`,
 Node 22 brez odvisnosti, kontejner `slff-html` na 127.0.0.1:3200). Ta vzame
 predlogo iz `/srv/slff/current` (index.html ali kartico države lige, kot Caddy),
@@ -20,6 +20,11 @@ dodaj v `KLJUCI` tam).
   ostane s kartice. Država brez aktivne lige dobi nespremenjeno predlogo.
   Vmesnik izriše isto stran (glej *Država obiskovalca*). `/` (domov) povezuje vse vstopne
   strani, prva drobtina (BreadcrumbList) kaže nanje.
+- **Preverjeni igralski profil** (`/verified`, `preverjeni()` v `streznik.mjs`): javna
+  prodajna stran brez lige in `?t=`; naslov, opis, kanonični, h1, stalne koristi in
+  povezava na iskanje igralcev. Korist "kdo te je izbral" je le v vmesniku (odvisna od
+  baze), cene in nakupa strežnik ne piše. Je v `public/sitemap.xml`; obiskov
+  (`obiski.ts`) ne šteje (potrebuje `zabelezi_obisk` v bazi).
 - **Naslovi strani lige** (domov, lestvica lige, fantasy lestvica, rezultati,
   igralci) imajo za imenom lige državo: "Bundesliga (Österreich)", ker ima
   ime, kot je "Bundesliga" ali "2. Liga", več držav. Pravilo je preprosto:

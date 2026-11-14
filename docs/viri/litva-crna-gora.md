@@ -94,7 +94,23 @@ poddomenah centar, sjever, jug):
   po ligaškem delu se razdeli na plej-of in plej-aut, ki sta **svoji
   tekmovanji** (2025/26: `8980717`, `8981167`; strani arhiva ju ne izrišeta v
   obliki z razporedom). Uvažamo le ligaški del; ko stran pokaže drug id, se
-  uvoz ustavi. Druga omladinska liga (`9313718`, 12 klubov) ni vpisana.
+  uvoz ustavi. Druga omladinska liga (`9313718`, 12–14 klubov) je vpisana
+  od 4. 11. 2026 (glej spodaj).
+- **Kadeti (U17) in Druga omladinska** (migracija 20261104174500, odobritev
+  lastnika 4. 11. 2026), ista predloga, `prvi_fantasy_krog = 2`,
+  `rok_pomak_ur = 2`, brez arhiva, **neaktivne**: `me-u19-2`
+  `fscg/druga-omladinska-liga/9313718`, `me-u17-1`
+  `fscg/prva-kadetska-liga/9315074` (10 klubov, zapisnik 9315348 preverjen),
+  `me-u17-2` `fscg/druga-kadetska-liga/9315843` (16). 1. ŽFL (`9336272`) ni
+  vpisana: 5 klubov.
+- **Pionirske lige (U15)** (predlog 9. 11. 2026, migracija iz fragmenta
+  08-me), ista predloga, `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`, brez
+  arhiva, **neaktivne**: `me-u15-1` `fscg/pionirska-liga/9317237` (9 klubov,
+  zapisnik 9317458), `me-u15-centar` `centar/pionirska-liga/9334988` (11,
+  9335149), `me-u15-sjever` `sjever/pionirska-liga/9344863` (13, 9345009),
+  `me-u15-jug` `jug/pionirska-liga/9392031` (8, 9392106); zveza je regijska
+  (`fscg-centar` …). 1. ŽFL ima 2026/27 le 3 klube; Liga pjetlića je mlajša
+  od U14.
 
 **Pravice (pregled 15. 10. 2026, ni pravni nasvet).** Nobeno spletišče nima
 robots.txt (`/robots.txt` preusmeri na naslovnico), izziva ni bilo. Pogojev

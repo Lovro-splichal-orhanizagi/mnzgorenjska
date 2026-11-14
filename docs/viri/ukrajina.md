@@ -400,9 +400,21 @@ pojasni rdeči karton), 2092 menjav, 7350 nastopov, vsi s šifro, 0 opozoril.
 | liga | klubov | tekoča 2026/27 | arhiv 2025/26 |
 |---|---|---|---|
 | ua-upl | 16 | `432` | `428` (16 klubov, 240 tekem) |
+| ua-upl-2 | 16 | `433` | — (ni določen) |
+| ua-u19-upl | 14 | `434` (Національна Ліга U-19) | `429` (2025/26, ni preverjen) |
+
+`ua-upl-2` (rezervna liga UPL, migracija 20261104176100, **neaktivna**) ima
+isti koledar in zapisnike (vzorec 16364: začetna postava + klop). Pred uvozom
+preveri iste zadržke kot pri ua-upl (tekme brez datuma ali zapisnika).
 
 Uvoz: `gh workflow run uvoz-lige.yml -f liga=ua-upl -f arhiv=428 -f
 cene=true`. Arhiv 240 zapisnikov po 3 s je ~15 minut.
+
+`ua-u19-upl` (predlog 9. 11. 2026, fragment 08-ua, **neaktivna**,
+`prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`): isti koledar in zapisniki
+(vzorec 16872: postavi s šifro osebe, klop, vratar s sheme, goli = izid).
+Klubi so mladinske ekipe UPL klubov z istim zapisom imena kot člani. Drugi
+id-ji upl.ua: 430/435 pokal, 431 Play-Off.
 
 Registrirani obstoječi kandidat `ua-upl` (id 1001) ostane vezan na UPL
 sezono `432`. Za celotne arhivske nastope in cene je potreben izrecni arhiv

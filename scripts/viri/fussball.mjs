@@ -121,10 +121,11 @@ function score(s,decode,allowUnplayed=false){
 function administrativeScore(s,decode,html,row,id){
  const court=/<span>&nbsp;U&nbsp;<\/span>/.test(s),valuation=/<span>&nbsp;[wW]&nbsp;<\/span>/.test(s)
  const shape=court?/^<td class="column-score">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/[A-Z0-9]{32}(?:#!\/section\/course)?"><span class="score-special"><span data-obfuscation="([a-z0-9]{8})">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>&nbsp;U&nbsp;<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><\/span><\/a>\s*<\/td>$/
-  :/^<td class="column-score">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/[A-Z0-9]{32}"><span class="score-special"><span data-obfuscation="([a-z0-9]{8})">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>&nbsp;V&nbsp;<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><\/span><\/a>\s*<\/td>$/
- // W uses the same closed canonical href/score structure as V; only the
- // witnessed literal marker changes. It does not acquire U's course suffix.
- const match=(valuation&&!court?new RegExp(shape.source.replace('&nbsp;V&nbsp;','&nbsp;[wW]&nbsp;')):shape).exec(s)
+  :/^<td class="column-score">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/[A-Z0-9]{32}(?:#!\/section\/course)?"><span class="score-special"><span data-obfuscation="([a-z0-9]{8})">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>&nbsp;V&nbsp;<\/span><span data-obfuscation="\1">([^<]+)<\/span><span>:<\/span><span data-obfuscation="\1">([^<]+)<\/span><\/span><\/a>\s*<\/td>$/
+ // U and V admit the witnessed course suffix (V: Oberliga Schleswig-Holstein
+ // 2026/27, run 41804947752). W keeps the closed canonical href: no W row with
+ // the suffix has been observed, so it does not inherit V's suffix.
+ const match=(valuation&&!court?new RegExp(shape.source.replace('(?:#!\\/section\\/course)?','').replace('&nbsp;V&nbsp;','&nbsp;[wW]&nbsp;')):shape).exec(s)
  // Inventory containers before validating the one witnessed child shape.
  const guardedDescriptions=(court||valuation)?[...html.matchAll(/<div\b[^>]*>/gi)]
   .filter(m=>{
@@ -143,13 +144,13 @@ function administrativeScore(s,decode,html,row,id){
     ((court||valuation)&&guardedDescriptions.length!==1)||
     (row.match(/\bscore-special\b/g)??[]).length!==1||/\bscore-(?:left|right)\b/.test(row))fail('nepodprt ali dvoumen administrativni izid')
  // Validate every row report reference, including malformed links that the
- // ordinary ID inventory cannot recognize. Only U admits the witnessed suffix.
+ // ordinary ID inventory cannot recognize. Only U and V admit the witnessed suffix.
  for(const [anchor] of row.matchAll(/<a\b[^>]*>/gi)){
   if(!/\/spiel\//.test(anchor))continue
   const href=attr(anchor,'href')
   if(!href||(anchor.match(/\bhref\s*=/gi)??[]).length!==1)fail('neveljavna povezava administrativnega izida')
   const ref=href.match(/^https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/([A-Z0-9]{32})(#!\/section\/course)?$/)
-  if(!ref||ref[1]!==id||(!court&&ref[2]))fail('neveljavna povezava administrativnega izida')
+  if(!ref||ref[1]!==id||(valuation&&!court&&ref[2]))fail('neveljavna povezava administrativnega izida')
  }
  const values=match.slice(2).map(value=>decode(`<span data-obfuscation="${match[1]}">${value}</span>`))
  if(values.some(value=>!/^\d{1,2}$/.test(value)))fail('neveljaven administrativni izid')
@@ -293,12 +294,19 @@ export function razberiKrog(html,{fonts,staffel}={}) {
   const ids=[...row.matchAll(/href="(https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/([A-Z0-9]{32}))(?:#![^\"]*)?"/g)]
   // The official table includes a club's bye as two club cells, but no fixture.
   // Empty or date-only labels are observed; a kickoff still makes this invalid.
-  if(/<td class="column-club no-border">\s*<span class="info-text">spielfrei<\/span>\s*<\/td>/.test(row)&&
-     !/<!--|<\/?(?:script|template|textarea)\b/i.test(row)&&names.length===1&&names[0]&&
-     !/href="[^\"]*\/spiel\//.test(row)&&ids.length===0&&
-     [...row.matchAll(/href="https:\/\/www\.fussball\.de\/mannschaft\//g)].length===1&&
-     text(element(row,'column-score'))===''){
-   const byeDate=decode(element(row,'column-date'))
+  // One witnessed bye (Kreisliga Mannheim 2026/27, run 41805924672) also has a
+  // single article icon cell linking to a /spiel/ page whose slug is the one
+  // club's team slug. Only that exact cell is set aside; every other guard
+  // still applies to the remaining row, so no other report link is admitted.
+  const media=[...row.matchAll(/<td class="column-detail fixture-media-info">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/([a-z0-9]+(?:-[a-z0-9]+)*)\/-\/spiel\/[A-Z0-9]{32}"><span class="icon-article fixture-info"><\/span><\/a>\s*<\/td>/g)]
+  const team=[...row.matchAll(/href="https:\/\/www\.fussball\.de\/mannschaft\/([a-z0-9]+(?:-[a-z0-9]+)*)\/-\/saison\//g)]
+  const byeRow=media.length===1&&team.length===1&&team[0][1].startsWith(media[0][1]+'-')?row.replace(media[0][0],()=>''):row
+  if(/<td class="column-club no-border">\s*<span class="info-text">spielfrei<\/span>\s*<\/td>/.test(byeRow)&&
+     !/<!--|<\/?(?:script|template|textarea)\b/i.test(byeRow)&&names.length===1&&names[0]&&
+     !/href="[^\"]*\/spiel\//.test(byeRow)&&!/\/spiel\/[A-Z0-9]{32}/.test(byeRow)&&
+     [...byeRow.matchAll(/href="https:\/\/www\.fussball\.de\/mannschaft\//g)].length===1&&
+     text(element(byeRow,'column-score'))===''){
+   const byeDate=decode(element(byeRow,'column-date'))
    if(byeDate==='')continue
    const dateOnly=byeDate.match(/^(?:Mo|Di|Mi|Do|Fr|Sa|So), (\d{2})\.(\d{2})\.(\d{2}) \|$/)
    if(dateOnly&&datum===`20${dateOnly[3]}-${dateOnly[2]}-${dateOnly[1]}`&&

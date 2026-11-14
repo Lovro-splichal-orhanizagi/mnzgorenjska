@@ -1,7 +1,7 @@
 // Native import from an explicitly supplied, complete original-byte capture.
 // Public source collection is handled separately, without database credentials.
 import {loadFussballImportCapture,parseFussballLeagueCode} from '../fussball-import.mjs'
-import {loadFussballCurrentOnlyCapture} from '../fussball-tekoca-pot.mjs'
+import {loadFussballCurrentOnlyCapture,fussballScheduleWarnings,FUSSBALL_ADMINISTRATIVE_WARNING} from '../fussball-tekoca-pot.mjs'
 
 import {GERMANY_BULK_CANDIDATES,validateGermanyCandidate} from '../bulk-germany-source.mjs'
 import {isFussballCommunityCompetition,isFussballCommunityCandidate,FUSSBALL_COMMUNITY_CARD_POLICY,FUSSBALL_COMMUNITY_SOURCE_POLICY} from '../fussball-community-policy.mjs'
@@ -67,6 +67,9 @@ export function createFussballPublicSource({competition,db,directory=process.env
   ime:'fussball-public',polnoIme:'FUSSBALL.DE — public match reports',drzava:'DE',
   osnovniNaslov:'https://www.fussball.de',imaRegistracije:true,razporedBrezUvodnegaPrenosa:true,premorMs:6000,
   kljucKluba:clubKey,poenostavi:clubKey,kratkoIme:clubText,
+  // Path B administrative rows: marker/kind in matches.import_warnings (uvoz-razporeda).
+  scheduleWarningPrefix:FUSSBALL_ADMINISTRATIVE_WARNING,
+  scheduleImportWarnings:fussballScheduleWarnings,
   naslovRazporeda(code){return 'https://www.fussball.de/spieltag/-/staffel/'+parseFussballLeagueCode(code).staffel},
   async razporedVseStrani(code){return structuredClone((await getBatch(code)).schedule)},
   async zapisniki(code){

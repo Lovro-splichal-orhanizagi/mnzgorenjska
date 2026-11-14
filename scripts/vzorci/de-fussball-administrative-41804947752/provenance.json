@@ -1,0 +1,314 @@
+{
+  "runId": 41804947752,
+  "captureCodeSha256": "3473ac914e562d49a1a1ee633b8c8c2e559d21a010c44737f0beeb6aebbd7856",
+  "captureError": "fussball: nepodprt ali dvoumen administrativni izid",
+  "seedUrl": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2627-schleswig-holstein/-/staffel/031AVH9TIC000004VS5489BTVSK8S3O6-G",
+  "staffel": "031AVH9TIC000004VS5489BTVSK8S3O6-G",
+  "season": "2026/27",
+  "documents": [
+    {
+      "url": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2627-schleswig-holstein/-/spieltag/4/staffel/031AVH9TIC000004VS5489BTVSK8S3O6-G",
+      "kind": "round",
+      "bytes": 206778,
+      "sha256": "38a36a955633a911f5f6cb1ac7506ba1af8b88a2f617a35f471e07b7864364f1",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-11-04T09:10:58.553Z",
+      "file": "documents/38a36a955633a911f5f6cb1ac7506ba1af8b88a2f617a35f471e07b7864364f1.html",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2627-schleswig-holstein/-/spieltag/4/staffel/031AVH9TIC000004VS5489BTVSK8S3O6-G",
+          "kind": "round",
+          "sha256": "38a36a955633a911f5f6cb1ac7506ba1af8b88a2f617a35f471e07b7864364f1",
+          "bytes": 206778,
+          "status": 200,
+          "contentType": "text/html; charset=UTF-8",
+          "capturedAt": "2026-11-04T09:10:58.553Z"
+        },
+        "attempt": {
+          "number": 12,
+          "url": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2627-schleswig-holstein/-/spieltag/4/staffel/031AVH9TIC000004VS5489BTVSK8S3O6-G",
+          "kind": "round",
+          "startedAt": "2026-11-04T09:10:58.553Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-11-04T09:09:52.537Z",
+          "codeSha256": "3473ac914e562d49a1a1ee633b8c8c2e559d21a010c44737f0beeb6aebbd7856",
+          "staffel": "031AVH9TIC000004VS5489BTVSK8S3O6-G",
+          "season": "2026/27"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/b4uo5yw7/type/css",
+      "kind": "css",
+      "bytes": 308,
+      "sha256": "9b4eef782015e766e4b29b8e2cef6e78adcadd03d914ebf47f8ea85fba7df84e",
+      "status": 200,
+      "contentType": "text/css; charset=UTF-8",
+      "capturedAt": "2026-11-04T09:11:04.553Z",
+      "file": "documents/9b4eef782015e766e4b29b8e2cef6e78adcadd03d914ebf47f8ea85fba7df84e.css",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/export.fontface/-/id/b4uo5yw7/type/css",
+          "kind": "css",
+          "sha256": "9b4eef782015e766e4b29b8e2cef6e78adcadd03d914ebf47f8ea85fba7df84e",
+          "bytes": 308,
+          "status": 200,
+          "contentType": "text/css; charset=UTF-8",
+          "capturedAt": "2026-11-04T09:11:04.553Z"
+        },
+        "attempt": {
+          "number": 13,
+          "url": "https://www.fussball.de/export.fontface/-/id/b4uo5yw7/type/css",
+          "kind": "css",
+          "startedAt": "2026-11-04T09:11:04.553Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-11-04T09:09:52.537Z",
+          "codeSha256": "3473ac914e562d49a1a1ee633b8c8c2e559d21a010c44737f0beeb6aebbd7856",
+          "staffel": "031AVH9TIC000004VS5489BTVSK8S3O6-G",
+          "season": "2026/27"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/b4uo5yw7/type/font",
+      "kind": "font",
+      "bytes": 8988,
+      "sha256": "cbe1d5ff68dafc91de65956be09d1959a84eef4ea1b31e733c5d1ecf5d77e058",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-11-04T09:11:10.553Z",
+      "file": "documents/cbe1d5ff68dafc91de65956be09d1959a84eef4ea1b31e733c5d1ecf5d77e058.woff",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/b4uo5yw7/type/font",
+          "kind": "font",
+          "sha256": "cbe1d5ff68dafc91de65956be09d1959a84eef4ea1b31e733c5d1ecf5d77e058",
+          "bytes": 8988,
+          "status": 200,
+          "contentType": "application/font-woff",
+          "capturedAt": "2026-11-04T09:11:10.553Z"
+        },
+        "attempt": {
+          "number": 14,
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/b4uo5yw7/type/font",
+          "kind": "font",
+          "startedAt": "2026-11-04T09:11:10.553Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-11-04T09:09:52.537Z",
+          "codeSha256": "3473ac914e562d49a1a1ee633b8c8c2e559d21a010c44737f0beeb6aebbd7856",
+          "staffel": "031AVH9TIC000004VS5489BTVSK8S3O6-G",
+          "season": "2026/27"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/jboeuxuo/type/css",
+      "kind": "css",
+      "bytes": 308,
+      "sha256": "7be8d651338727388cf5d52c87181b00718405c2105da051105b6ac7959e6998",
+      "status": 200,
+      "contentType": "text/css; charset=UTF-8",
+      "capturedAt": "2026-11-04T09:11:16.553Z",
+      "file": "documents/7be8d651338727388cf5d52c87181b00718405c2105da051105b6ac7959e6998.css",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/export.fontface/-/id/jboeuxuo/type/css",
+          "kind": "css",
+          "sha256": "7be8d651338727388cf5d52c87181b00718405c2105da051105b6ac7959e6998",
+          "bytes": 308,
+          "status": 200,
+          "contentType": "text/css; charset=UTF-8",
+          "capturedAt": "2026-11-04T09:11:16.553Z"
+        },
+        "attempt": {
+          "number": 15,
+          "url": "https://www.fussball.de/export.fontface/-/id/jboeuxuo/type/css",
+          "kind": "css",
+          "startedAt": "2026-11-04T09:11:16.553Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-11-04T09:09:52.537Z",
+          "codeSha256": "3473ac914e562d49a1a1ee633b8c8c2e559d21a010c44737f0beeb6aebbd7856",
+          "staffel": "031AVH9TIC000004VS5489BTVSK8S3O6-G",
+          "season": "2026/27"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/jboeuxuo/type/font",
+      "kind": "font",
+      "bytes": 2988,
+      "sha256": "c204a5ee39e25fe1c3e7786294e3039a2a2c1be9f9bd510c5fda192ddddb06be",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-11-04T09:11:22.554Z",
+      "file": "documents/c204a5ee39e25fe1c3e7786294e3039a2a2c1be9f9bd510c5fda192ddddb06be.woff",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/jboeuxuo/type/font",
+          "kind": "font",
+          "sha256": "c204a5ee39e25fe1c3e7786294e3039a2a2c1be9f9bd510c5fda192ddddb06be",
+          "bytes": 2988,
+          "status": 200,
+          "contentType": "application/font-woff",
+          "capturedAt": "2026-11-04T09:11:22.554Z"
+        },
+        "attempt": {
+          "number": 16,
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/jboeuxuo/type/font",
+          "kind": "font",
+          "startedAt": "2026-11-04T09:11:22.554Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-11-04T09:09:52.537Z",
+          "codeSha256": "3473ac914e562d49a1a1ee633b8c8c2e559d21a010c44737f0beeb6aebbd7856",
+          "staffel": "031AVH9TIC000004VS5489BTVSK8S3O6-G",
+          "season": "2026/27"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2627-schleswig-holstein/-/spieltag/10/staffel/031AVH9TIC000004VS5489BTVSK8S3O6-G",
+      "kind": "round",
+      "bytes": 209591,
+      "sha256": "583517d4fbb57c480d885b4a82ca80556fff53a3a5be0af8bd69a47c60541598",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-11-04T09:13:46.568Z",
+      "file": "documents/583517d4fbb57c480d885b4a82ca80556fff53a3a5be0af8bd69a47c60541598.html",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2627-schleswig-holstein/-/spieltag/10/staffel/031AVH9TIC000004VS5489BTVSK8S3O6-G",
+          "kind": "round",
+          "sha256": "583517d4fbb57c480d885b4a82ca80556fff53a3a5be0af8bd69a47c60541598",
+          "bytes": 209591,
+          "status": 200,
+          "contentType": "text/html; charset=UTF-8",
+          "capturedAt": "2026-11-04T09:13:46.568Z"
+        },
+        "attempt": {
+          "number": 40,
+          "url": "https://www.fussball.de/spieltag/flens-oberliga-schleswig-holstein-oberliga-schleswig-holstein-herren-saison2627-schleswig-holstein/-/spieltag/10/staffel/031AVH9TIC000004VS5489BTVSK8S3O6-G",
+          "kind": "round",
+          "startedAt": "2026-11-04T09:13:46.568Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-11-04T09:09:52.537Z",
+          "codeSha256": "3473ac914e562d49a1a1ee633b8c8c2e559d21a010c44737f0beeb6aebbd7856",
+          "staffel": "031AVH9TIC000004VS5489BTVSK8S3O6-G",
+          "season": "2026/27"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/id/sj0eqq4m/type/css",
+      "kind": "css",
+      "bytes": 308,
+      "sha256": "ce4b841002afd468c877bfbaa1e6c0c614bdbbf9fc0d782b8dc9387fb907eef1",
+      "status": 200,
+      "contentType": "text/css; charset=UTF-8",
+      "capturedAt": "2026-11-04T09:13:52.569Z",
+      "file": "documents/ce4b841002afd468c877bfbaa1e6c0c614bdbbf9fc0d782b8dc9387fb907eef1.css",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/export.fontface/-/id/sj0eqq4m/type/css",
+          "kind": "css",
+          "sha256": "ce4b841002afd468c877bfbaa1e6c0c614bdbbf9fc0d782b8dc9387fb907eef1",
+          "bytes": 308,
+          "status": 200,
+          "contentType": "text/css; charset=UTF-8",
+          "capturedAt": "2026-11-04T09:13:52.569Z"
+        },
+        "attempt": {
+          "number": 41,
+          "url": "https://www.fussball.de/export.fontface/-/id/sj0eqq4m/type/css",
+          "kind": "css",
+          "startedAt": "2026-11-04T09:13:52.569Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-11-04T09:09:52.537Z",
+          "codeSha256": "3473ac914e562d49a1a1ee633b8c8c2e559d21a010c44737f0beeb6aebbd7856",
+          "staffel": "031AVH9TIC000004VS5489BTVSK8S3O6-G",
+          "season": "2026/27"
+        }
+      }
+    },
+    {
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/sj0eqq4m/type/font",
+      "kind": "font",
+      "bytes": 8988,
+      "sha256": "020d663492044cddfa19d6bf4c54a0fb27671e005efb5d3960a2eb62cc57564c",
+      "status": 200,
+      "contentType": "application/font-woff",
+      "capturedAt": "2026-11-04T09:13:58.569Z",
+      "file": "documents/020d663492044cddfa19d6bf4c54a0fb27671e005efb5d3960a2eb62cc57564c.woff",
+      "origin": "network",
+      "originalReceipt": {
+        "version": 1,
+        "document": {
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/sj0eqq4m/type/font",
+          "kind": "font",
+          "sha256": "020d663492044cddfa19d6bf4c54a0fb27671e005efb5d3960a2eb62cc57564c",
+          "bytes": 8988,
+          "status": 200,
+          "contentType": "application/font-woff",
+          "capturedAt": "2026-11-04T09:13:58.569Z"
+        },
+        "attempt": {
+          "number": 42,
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/sj0eqq4m/type/font",
+          "kind": "font",
+          "startedAt": "2026-11-04T09:13:58.569Z",
+          "status": "success",
+          "error": null,
+          "httpStatus": 200
+        },
+        "capture": {
+          "createdAt": "2026-11-04T09:09:52.537Z",
+          "codeSha256": "3473ac914e562d49a1a1ee633b8c8c2e559d21a010c44737f0beeb6aebbd7856",
+          "staffel": "031AVH9TIC000004VS5489BTVSK8S3O6-G",
+          "season": "2026/27"
+        }
+      }
+    }
+  ]
+}

@@ -53,7 +53,7 @@ end$$;
 
 -- 2. Nameščanje politike brez arhiva in vklop samo s tekočo sezono.
 do $$
-declare de bigint:=(select id from countries where code='DE');cid bigint;home bigint;away bigint;r1 bigint;r2 bigint;r3 bigint;m1 bigint;m2 bigint;pid bigint;i integer;apps jsonb:='[]';goal jsonb;
+declare de bigint:=(select id from countries where code='DE');cid bigint;home bigint;away bigint;third bigint;r1 bigint;r2 bigint;r3 bigint;m1 bigint;m2 bigint;m3 bigint;pid bigint;i integer;apps jsonb:='[]';goal jsonb;
 begin
  perform set_config('request.jwt.claim.role','service_role',true);
  insert into competitions(slug,name,short_name,country_id,source,source_league_code,active,prvi_fantasy_krog)values('de-path-b-fixture','Path B fixture','PathB',de,'fussball-public',repeat('E',32)||'-G:2026/27',false,1)returning id into cid;
@@ -69,6 +69,11 @@ begin
  insert into rounds(competition_id,season,number,played_on,deadline_at)values(cid,'2026/27',3,current_date+6,clock_timestamp()+interval'6 days')returning id into r3;
  insert into matches(round_id,home_team_id,away_team_id,home_goals,away_goals,played_on,zapisnik_id)values(r1,home,away,1,0,current_date-14,'de-fussball-'||repeat('M',32))returning id into m1;
  insert into matches(round_id,home_team_id,away_team_id,home_goals,away_goals,played_on)values(r2,away,home,0,0,current_date-7)returning id into m2;
+ -- Administrative decision (V, owner rule 2026-11-04) as uvoz-razporeda writes it:
+ -- no score, not a forfeit, vir_brez_izida, marker only in import_warnings.
+ insert into teams(name,country_id)values('PATH B THIRD',de)returning id into third;
+ insert into matches(round_id,home_team_id,away_team_id,home_goals,away_goals,played_on,vir_brez_izida,import_warnings)values(r2,third,home,0,0,current_date-7,true,
+  array['FUSSBALL_ADMINISTRATIVE_RESULT_V1 V confirmed-administrative-decision; prikazano 5:0 | 0:5 (vrstni red vira, uradni par ni določen); brez izida, postav in točk'])returning id into m3;
  insert into matches(round_id,home_team_id,away_team_id,home_goals,away_goals,played_on,zapisnik_id)values(r3,home,away,0,0,current_date+6,'de-fussball-'||repeat('O',32));
  for i in 1..24 loop
   insert into players(first_name,last_name,full_name,team_id,competition_id,reg_st,position,position_source,active,value,value_start)
@@ -78,7 +83,7 @@ begin
  end loop;
  perform public.zamenjaj_nastope_tekme(m1,apps,goal);
  update matches set imported_at=clock_timestamp() where id=m1;
- insert into fx values('cid',cid),('m2',m2),('r3',r3),('home',home);
+ insert into fx values('cid',cid),('m2',m2),('m3',m3),('r3',r3),('home',home),('third',third);
 end$$;
 -- Readiness of prices/squads is the pre-existing preveri_vklop_lige guard, tested
 -- elsewhere; isolate only the current-only admission here.
@@ -96,8 +101,16 @@ begin
  perform set_config('request.jwt.claim.role','service_role',true);
  perform pg_temp.zavrni(format('select public.vklopi_fussball_tekoco(%L,%L)','de-path-b-fixture',m||jsonb_build_object('unknownReports',jsonb_build_array(jsonb_build_object('reportId','de-fussball-'||repeat('N',32),'round',2,'date',current_date-7,'home','PATH B HOME','away','PATH B AWAY','score',null)))),'unknown reports must be past');
  m:=m||jsonb_build_object('unknownReports',jsonb_build_array(jsonb_build_object('reportId','de-fussball-'||repeat('N',32),'round',2,'date',current_date-7,'home','PATH B AWAY','away','PATH B HOME','score',jsonb_build_object('domaci',3,'gostje',3),'reason','FUSSBALL_REPORT_INVALID')));
+ -- The administrative row must be listed too; it is never silently skipped.
+ perform pg_temp.zavrni(format('select public.vklopi_fussball_tekoco(%L,%L)','de-path-b-fixture',m),'every past current fixture');
+ m:=jsonb_set(m,'{unknownReports}',(m->'unknownReports')||jsonb_build_array(jsonb_build_object('reportId','de-fussball-'||repeat('V',32),'round',2,'date',current_date-7,'home','PATH B THIRD','away','PATH B HOME','score',null,'reason','FUSSBALL_ADMINISTRATIVE_RESULT_V')));
  res:=public.vklopi_fussball_tekoco('de-path-b-fixture',m);
- perform pg_temp.ok(res->>'vklopljena'='true' and (res->>'prvi_krog')::int=3 and (res->>'neznanih')::int=1,'activation result '||res::text);
+ perform pg_temp.ok(res->>'vklopljena'='true' and (res->>'prvi_krog')::int=3 and (res->>'neznanih')::int=2,'activation result '||res::text);
+ perform pg_temp.ok((select imported_at is null and statistics_status='available' and statistics_reason is null and not kontumacija and vir_brez_izida and home_goals=0 and away_goals=0 and zapisnik_id='de-fussball-'||repeat('V',32)
+  and import_warnings[1] like 'FUSSBALL_ADMINISTRATIVE_RESULT_V1 V %' and cardinality(import_warnings)=1
+  and not exists(select 1 from appearances where match_id=matches.id) and not exists(select 1 from goals where match_id=matches.id) from matches where id=(select value from fx where key='m3')),'administrative decision keeps no score, no rows, marker in warnings');
+ perform pg_temp.ok((select tekme=0 and tocke=0 from public.lestvica_lige(cid,'2026/27') where team_id=(select value from fx where key='third'))
+  and (select tekme=1 from public.lestvica_lige(cid,'2026/27') where team_id=(select value from fx where key='home')),'standings do not count the administrative decision');
  perform pg_temp.ok((select active and prvi_fantasy_krog=3 from competitions where id=cid),'active with fresh opening');
  perform pg_temp.ok((select imported_at is null and statistics_status='available' and zapisnik_id='de-fussball-'||repeat('N',32) and home_goals=3 and away_goals=3 and not vir_brez_izida and not exists(select 1 from appearances where match_id=matches.id) from matches where id=(select value from fx where key='m2')),'unknown report keeps only its official header');
  perform pg_temp.zavrni(format('select public.vklopi_fussball_tekoco(%L,%L)','de-path-b-fixture',m),'inactive current-only');

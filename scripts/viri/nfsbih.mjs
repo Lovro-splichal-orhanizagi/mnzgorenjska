@@ -46,26 +46,32 @@ import { datumUra, minuta, sezonaIzDatuma } from './fss.mjs'
 import { imeKluba, kljucKlubaBa, kratkoImeBa } from './nsfbih.mjs'
 
 const OSNOVNI = 'https://www.nfsbih.ba'
-const POT = '/takmicenja/nogomet-muskarci'
+// Razdelek strani: moške lige (tudi mladinske) so pod /takmicenja/nogomet-muskarci/,
+// ženske pod /takmicenja/nogomet-zene/ — ženska šifra ga nosi spredaj
+// (`nogomet-zene/premijer-zenska-liga-bih/54336938`).
+const MOSKI = 'nogomet-muskarci'
+const RAZDELKI = new Set([MOSKI, 'nogomet-zene'])
 const DOLZINA_TEKME = 90
 
 export { minuta, sezonaIzDatuma }
 
-/** "wwin-liga-bih/54152223" → { slug, id }. */
+/** "wwin-liga-bih/54152223" → { razdelek, slug, id }; "nogomet-zene/<slug>/<id>" za ženske. */
 export function razberiKodo(koda) {
-  const m = String(koda ?? '').trim().match(/^([a-z0-9-]+)\/(\d{6,})$/)
-  if (!m) throw new Error(`nfsbih: šifra lige je "<slug>/<id tekmovanja>" (npr. wwin-liga-bih/54152223), ne "${koda}"`)
-  return { slug: m[1], id: m[2] }
+  const m = String(koda ?? '').trim().match(/^(?:([a-z-]+)\/)?([a-z0-9-]+)\/(\d{6,})$/)
+  if (!m || (m[1] && !RAZDELKI.has(m[1])))
+    throw new Error(`nfsbih: šifra lige je "[nogomet-zene/]<slug>/<id tekmovanja>" (npr. wwin-liga-bih/54152223), ne "${koda}"`)
+  return { razdelek: m[1] ?? MOSKI, slug: m[2], id: m[3] }
 }
 
 export const naslovLige = (koda) => {
-  const { slug, id } = razberiKodo(koda)
-  return `${OSNOVNI}${POT}/${slug}?view=fixtures&id=${id}`
+  const { razdelek, slug, id } = razberiKodo(koda)
+  return `${OSNOVNI}/takmicenja/${razdelek}/${slug}?view=fixtures&id=${id}`
 }
 // Šifra zapisnika v bazi je `ba<id>` kot pri nsfbih: isti COMET, šifre tekem
 // so enolične v vsej BiH. Naslov predpono odreže.
 export const sifraZapisnika = (id) => `ba${String(id).replace(/^ba/, '')}`
-export const naslovTekme = (slug, id) => `${OSNOVNI}${POT}/${slug}?view=match&id=${String(id).replace(/^ba/, '')}`
+export const naslovTekme = (slug, id, razdelek = MOSKI) =>
+  `${OSNOVNI}/takmicenja/${razdelek}/${slug}?view=match&id=${String(id).replace(/^ba/, '')}`
 const imeLige = (koda) => `nfsbih-liga-${sifra(koda)}.html`
 const imeTekme = (id) => `nfsbih-tekma-${String(id).replace(/^ba/, '')}.html`
 
@@ -445,7 +451,7 @@ const vir = {
   imaRegistracije: false,
 
   naslovRazporeda: naslovLige,
-  naslovZapisnika: (koda, id) => naslovTekme(razberiKodo(koda).slug, id),
+  naslovZapisnika: (koda, id) => naslovTekme(razberiKodo(koda).slug, id, razberiKodo(koda).razdelek),
   jeIzziv,
   zavrnitev: (sporocilo, status = null) => new NfsbihZavrnitev(`nfsbih: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
   // V predpomnilnik gre le prava stran (razpored ali tekma), nikoli stran z
@@ -458,7 +464,7 @@ const vir = {
   },
 
   async zapisniki(koda, prenesi, { preskoci = new Set(), samoZapisnik = null } = {}) {
-    const { slug } = razberiKodo(koda)
+    const { slug, razdelek } = razberiKodo(koda)
     const { sezona, tekme } = tekmeLige(koda, await beri(prenesi, naslovLige(koda), imeLige(koda), true))
     const out = []
     const preskoceni = new Set(preskoci ?? [])
@@ -466,7 +472,7 @@ const vir = {
     for (const t of tekme.filter((x) => x.izid && !jeKontumacija(x))) {
       const sourceId = String(t.id).replace(/^ba/, '')
       if (preskoceni.has(sourceId) || preskoceni.has(`ba${sourceId}`) || (iskaniID && sourceId !== iskaniID)) continue
-      const url = naslovTekme(slug, t.id)
+      const url = naslovTekme(slug, t.id, razdelek)
       const id = sifraZapisnika(t.id)
       const star = starostDni(t.datum)
       // Zapisnik zadnjih dni se lahko še popravlja; brez postav ga 45 dni beremo znova (kot zapisnikSvez).

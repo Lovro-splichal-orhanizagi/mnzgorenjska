@@ -44,9 +44,12 @@ export function fussballPartialCaptureDocuments(directories,config,{now=new Date
   requireProof([1,2].includes(m.version)&&m.provider==='fussball'&&m.activationEligible===false&&(complete||m.success===false&&m.resultSha256===null&&m.snapshot?.stopped===true),'resume parent must be an ordinary capture, failed or complete')
   requireProof(['seedUrl','staffel','season'].every(k=>m.options?.[k]===config[k])&&m.options.reportLimit===null&&m.options.cardPolicy===config.cardPolicy,'resume parent scope/full intent differs')
   requireProof(Number.isFinite(created)&&created<=now&&now-created<=24*3600_000,'resume parent is older than 24 hours')
-  // Only a transport error (no HTTP response) is resumed; a refusal or challenge stops the source.
+  // Only a transport error (no HTTP response) or a transient gateway error (502/503/504)
+  // is resumed; a refusal (401/403/429...), challenge or redirect stops the source.
   const last=m.snapshot.attempts?.at(-1)
-  requireProof(complete||last?.status==='failed'&&!Object.hasOwn(last,'httpStatus')&&!/HTTP|challenge|redirect/i.test(`${m.error} ${last.error}`),'resume only after a transport error, never after a refusal')
+  const transport=last?.status==='failed'&&!Object.hasOwn(last,'httpStatus')&&!/HTTP|challenge|redirect/i.test(`${m.error} ${last.error}`)
+  const gateway=last?.status==='failed'&&[502,503,504].includes(last.httpStatus)&&[m.error,last.error].every(e=>e===`fussball capture: source request failed (HTTP ${last.httpStatus})`)
+  requireProof(complete||transport||gateway,'resume only after a transport error, never after a refusal')
   requireProof(Array.isArray(m.documents)&&m.documents.length<=20000&&Array.isArray(m.snapshot.attempts),'bounded resume inventory differs')
   for(const d of m.documents){
    if(d.kind==='round')continue
