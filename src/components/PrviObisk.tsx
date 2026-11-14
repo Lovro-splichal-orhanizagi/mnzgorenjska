@@ -112,6 +112,8 @@ export default function PrviObisk() {
     // (Google Play je posodobitev zavrnil, ker je okno prekrilo pravilnik).
     pathname === '/legal' ||
     pathname === '/account' ||
+    // Stran za preverjeni profil odpirajo deljene povezave in oglasi.
+    pathname === '/verified' ||
     // Vstopna stran države sama našteje lige.
     Boolean(drzavaVstopa(pathname))
   const okno = useRef<HTMLDivElement | null>(null)
