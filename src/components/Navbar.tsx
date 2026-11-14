@@ -7,10 +7,11 @@ import { useTekmovanje } from '../lib/tekmovanje'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { supabase } from '../lib/supabase'
 import { potrdiZapustitev } from '../lib/neshranjeno'
-import { jeNativno, povezavaTrgovine } from '../lib/platforma'
+import { jeNativno, povezavaTrgovine, TRGOVINA_VIDNA } from '../lib/platforma'
 import IzbirnikLige from './IzbirnikLige'
 import { odpriPodporo } from './Podpora'
 import { jezikSlovarja, t } from '../i18n'
+import { useNeprebrana } from '../lib/sporocila'
 
 interface Povezava {
   pot: string
@@ -68,6 +69,7 @@ function useZapriZunaj(odprt: boolean, zapri: () => void) {
 
 export default function Navbar() {
   const { session } = useAuth()
+  const neprebrana = useNeprebrana()
   const { id: tekmovanjeId, tekmovanje, drzava } = useTekmovanje()
   const [klubiLige, setKlubiLige] = useState<string[]>([])
   const [jeAdmin, setJeAdmin] = useState(false)
@@ -215,11 +217,13 @@ export default function Navbar() {
             ))}
             {/* Pri 1024 px bi trgovina izbirniku lige vzela skoraj ves prostor
                 (grščina se prelije čez rob), zato je zgoraj šele od xl, prej v "Več". */}
-            <a {...povezavaTrgovine(jezikSlovarja())} className={`${slog({ isActive: false })} hidden xl:inline`}>
-              {t('aplikacija.meni.trgovina')}
-              {' '}
-              {novo}
-            </a>
+            {TRGOVINA_VIDNA && (
+              <a {...povezavaTrgovine(jezikSlovarja())} className={`${slog({ isActive: false })} hidden xl:inline`}>
+                {t('aplikacija.meni.trgovina')}
+                {' '}
+                {novo}
+              </a>
+            )}
 
             {/* "Več": vse, kar ni tedensko. Pika za asistence se prenese na
                 gumb, da opomnik ne izgine v meniju; število je ob povezavi. */}
@@ -260,16 +264,18 @@ export default function Navbar() {
                       {p.pot === '/assists' && znacka(cakaGlasov)}
                     </NavLink>
                   ))}
-                  <a
-                    {...povezavaTrgovine(jezikSlovarja())}
-                    role="menuitem"
-                    className={`${vrsticaMenija} xl:hidden`}
-                    onClick={() => setVecOdprt(false)}
-                  >
-                    {t('aplikacija.meni.trgovina')}
-                    {' '}
-                    {novo}
-                  </a>
+                  {TRGOVINA_VIDNA && (
+                    <a
+                      {...povezavaTrgovine(jezikSlovarja())}
+                      role="menuitem"
+                      className={`${vrsticaMenija} xl:hidden`}
+                      onClick={() => setVecOdprt(false)}
+                    >
+                      {t('aplikacija.meni.trgovina')}
+                      {' '}
+                      {novo}
+                    </a>
+                  )}
                 </div>
               )}
             </div>
@@ -305,6 +311,15 @@ export default function Navbar() {
                       onClick={() => setRacunOdprt(false)}
                     >
                       {t('aplikacija.meni.mojProfil')}
+                    </NavLink>
+                    <NavLink
+                      to="/messages"
+                      role="menuitem"
+                      className={vrsticaMenija}
+                      onClick={() => setRacunOdprt(false)}
+                    >
+                      {t('aplikacija.meni.sporocila')}
+                      {neprebrana > 0 && <span className="ml-1.5 rounded-full bg-gnl-500 px-1.5 text-[11px] font-black text-slate-950">{neprebrana}</span>}
                     </NavLink>
                     <NavLink
                       to="/reminders"
@@ -411,15 +426,23 @@ export default function Navbar() {
                   {p.pot === '/assists' && znacka(cakaGlasov)}
                 </NavLink>
               ))}
-              <a {...povezavaTrgovine(jezikSlovarja())} className={slogMobilni({ isActive: false })} onClick={() => setOdprt(false)}>
-                {t('aplikacija.meni.trgovina')}
-                {' '}
-                {novo}
-              </a>
+              {TRGOVINA_VIDNA && (
+                <a {...povezavaTrgovine(jezikSlovarja())} className={slogMobilni({ isActive: false })} onClick={() => setOdprt(false)}>
+                  {t('aplikacija.meni.trgovina')}
+                  {' '}
+                  {novo}
+                </a>
+              )}
               {session ? (
-                <NavLink to="/reminders" className={slogMobilni} onClick={() => setOdprt(false)}>
-                  {t('aplikacija.meni.opomniki')}
-                </NavLink>
+                <>
+                  <NavLink to="/messages" className={slogMobilni} onClick={() => setOdprt(false)}>
+                    {t('aplikacija.meni.sporocila')}
+                    {neprebrana > 0 && <span className="ml-1.5 rounded-full bg-gnl-500 px-1.5 text-[11px] font-black text-slate-950">{neprebrana}</span>}
+                  </NavLink>
+                  <NavLink to="/reminders" className={slogMobilni} onClick={() => setOdprt(false)}>
+                    {t('aplikacija.meni.opomniki')}
+                  </NavLink>
+                </>
               ) : (
                 <NavLink to="/login" className={slogMobilni} onClick={() => setOdprt(false)}>
                   {t('aplikacija.meni.prijava')}

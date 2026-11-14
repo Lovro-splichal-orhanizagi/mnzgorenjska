@@ -18,6 +18,7 @@ import { t } from '../i18n'
 import { useZaklepPomika } from '../lib/zaklepPomika'
 import { naloziRazlage, type Razlaga } from '../lib/razlagaTock'
 import { RazlagaTock, RazlagaCene } from './Razlaga'
+import { useVidiIzbranost } from '../lib/izbranost'
 
 interface Sezona {
   matches: number | null
@@ -62,6 +63,7 @@ export default function InfoIgralca({
   dejanja?: React.ReactNode
 }) {
   const [sezona, setSezona] = useState<Sezona | null>(null)
+  const vidiIzbranost = useVidiIzbranost()
   const pokritost = usePokritostStatistike(tekmovanjeId)
   const brezOpazovanj = brezPreverjenihNastopov(pokritost, sezona?.matches)
   const [spremembe, setSpremembe] = useState<SpremembaCene[]>([])
@@ -246,10 +248,12 @@ export default function InfoIgralca({
                 oznaka={t('igralci.info.naTekmo')}
                 vrednost={brezOpazovanj ? '—' : formatirajTocke(sezona?.points_per_match)}
               />
-              <Polje
-                oznaka={t('igralci.info.izbran')}
-                vrednost={sezona?.owners == null ? '–' : sezona.owners}
-              />
+              {vidiIzbranost && (
+                <Polje
+                  oznaka={t('igralci.info.izbran')}
+                  vrednost={sezona?.owners == null ? '–' : sezona.owners}
+                />
+              )}
             </div>
 
             {zadnja && (

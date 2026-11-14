@@ -341,15 +341,18 @@ export function tekmeFsv(html) {
 const pot = (ime) => `${MAPA}/${ime}`
 const imeTekme = (id) => `tekma-${id}.html`
 const imeVratarjev = (id) => `vratarji-${id}.html`
+const ZAVRNITEV = new Set([401, 403, 429])
+let vratarjiZavrnjeni = false
 function izPredpomnilnika(ime) {
   const p = pot(ime)
   if (!existsSync(p)) return null
   return { html: readFileSync(p, 'utf8'), starost: Date.now() - statSync(p).mtimeMs }
 }
 /** Iz predpomnilnika, če ni starejši od `najvec` ms; sicer prenese (in zapiše). */
-async function beri(prenesi, url, ime, najvec) {
+async function beri(prenesi, url, ime, najvec, leIzPredpomnilnika = false) {
   const c = izPredpomnilnika(ime)
   if (c && c.starost <= najvec) return c.html
+  if (leIzPredpomnilnika) throw new Error(`${ime} ni v predpomnilniku`)
   const html = await prenesi(url, ime, true)
   // Oba uvoza pišeta v `scripts/.predpomnilnik/<vir>/<ime>`, kar je MAPA;
   // zapišemo še sami, da predpomnilnik ne visi na tem dogovoru.
@@ -615,11 +618,19 @@ const vir = {
     for (const t of b.tekme.filter((x) => x.stanje === 'odigrana')) {
       const url = naslovIzvestaja(t.id)
       let vratarji = null
+      // Stran vratarjev prvaliga.rs ob 401/403/429 zavrne vse nadaljnje: ne
+      // sprašujemo več (ne obhajamo), le predpomnilnik, nato prvi začetniki.
       try {
         const sveze = starostDni(t.datum) <= 3
-        vratarji = dresiVratarjev(await beri(prenesi, naslovVratarjev(t.id), imeVratarjev(t.id), sveze ? -1 : Infinity))
+        vratarji = dresiVratarjev(await beri(prenesi, naslovVratarjev(t.id), imeVratarjev(t.id),
+          vratarjiZavrnjeni ? Infinity : sveze ? -1 : Infinity, vratarjiZavrnjeni))
       } catch (e) {
-        console.warn(`fssid: vratarji ${t.id}: ${e.message}`)
+        if (!vratarjiZavrnjeni && (ZAVRNITEV.has(e?.status) || /HTTP (401|403|429)\b/.test(e?.message ?? ''))) {
+          vratarjiZavrnjeni = true
+          console.warn(`fssid: stran vratarjev je zavrnila dostop (${e.message}); do konca zagona je ne beremo več`)
+        } else if (!vratarjiZavrnjeni) {
+          console.warn(`fssid: vratarji ${t.id}: ${e.message}`)
+        }
       }
       if (!vratarji || ![...vratarji[0]].length || ![...vratarji[1]].length) {
         vratarji = prviZacetniki(t.html)

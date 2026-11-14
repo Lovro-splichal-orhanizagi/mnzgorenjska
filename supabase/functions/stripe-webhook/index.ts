@@ -316,6 +316,16 @@ async function obdelaj(tip: string, o: Obj): Promise<string> {
       })
       // Brez pravice ne smemo zaračunavati naprej (tudi če vrstice ni).
       if (izid === 'preklican' && sub) await prekliciNarocnino(sub)
+      // Plakat 40 × 60 cm ob doživljenjski: naročilo z naslovom iz Checkout.
+      if (vir === 'dozivljenjska' && m.plakat === 'true' && izid !== 'preklican') {
+        const a = dostava?.address
+        const plakat = await rpc('plakat_iz_placila', {
+          p_checkout: o.id,
+          p_naslov: a ? { name: dostava.name, line1: a.line1, line2: a.line2, postal_code: a.postal_code, city: a.city, country: a.country } : null,
+        })
+        if (plakat !== 'plakat') await discord(`⚠️ Seja ${o.id}: plakat ni zapisan (${plakat}). Preveri naslov ročno.`)
+        else await discord(`🖼️ Nov plakat 40 × 60 za tisk (seja ${o.id}).`)
+      }
       return izid
     }
     case 'checkout.session.expired':

@@ -23,7 +23,7 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'Segoe UI', 'system-ui', 'sans-serif'],
+        sans: ['Manrope Variable', 'Manrope', 'Segoe UI', 'system-ui', 'sans-serif'],
       },
     },
   },
