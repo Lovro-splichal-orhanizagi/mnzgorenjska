@@ -117,7 +117,7 @@ $$;
 reset role;
 do $$
 declare
-  v_id bigint := (select id from ponovne_cene where player_id = 990231 and z_bonom);
+  v_id bigint := (select zahtevek_id from boni_ponovne_cene b join ponovne_cene z on z.id = b.zahtevek_id where z.player_id = 990231);
 begin
   assert (select stanje from ponovne_cene where id = v_id) = 'placano', 'brez Stripe naravnost v izračun';
   assert (select count(*) from ponovne_cene_za_izracun() where zahtevek = v_id) = 1, 'v vrsti za izračun';

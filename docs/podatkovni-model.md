@@ -1121,7 +1121,7 @@
   `?od=<koda>` (obstoječi `kode_vabil`/`povabila`); povabilo šteje šele s
   prijateljevo nehišno ekipo (`kvalificiran_at`). Pri **3** takih (kadarkoli,
   `pripeljanih`) dobi uporabnik enkraten **bon za ponovno vrednotenje cene**:
-  `ponovna_cena_z_bonom` ustvari zahtevek `ponovne_cene.z_bonom` naravnost kot
+  `ponovna_cena_z_bonom` ustvari zahtevek `boni_ponovne_cene` naravnost kot
   `placano` (brez Stripe, ista pot izračuna in potrditve admina, tudi v
   aplikaciji); zavrnjen ali `za_vracilo` zahtevek bon vrne
   (`bon_ponovne_cene`). **Zaboj piva**: največ prijateljev, kvalificiranih v

@@ -3374,7 +3374,6 @@ export type Database = {
           stripe_placilo: string | null
           stripe_seja: string | null
           user_id: string | null
-          z_bonom: boolean
         }
         Insert: {
           competition_id: number
@@ -3394,7 +3393,6 @@ export type Database = {
           stripe_placilo?: string | null
           stripe_seja?: string | null
           user_id?: string | null
-          z_bonom?: boolean
         }
         Update: {
           competition_id?: number
@@ -3414,7 +3412,6 @@ export type Database = {
           stripe_placilo?: string | null
           stripe_seja?: string | null
           user_id?: string | null
-          z_bonom?: boolean
         }
         Relationships: [
           {

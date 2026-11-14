@@ -5,7 +5,7 @@
 -- da akcije ni mogoče napolniti s praznimi računi.
 --
 -- * Bon: kdor pripelje 3 prijatelje (kadarkoli), dobi enkrat brezplačno
---   ponovno vrednotenje cene (`ponovne_cene.z_bonom`). Pot je ista kot pri
+--   ponovno vrednotenje cene (`boni_ponovne_cene`). Pot je ista kot pri
 --   plačanem (izračun, potrditev admina), le Stripe izpade: zahtevek se rodi
 --   kot 'placano'. Zavrnjen ali neizvedljiv (`za_vracilo`) zahtevek bon vrne.
 -- * Zaboj piva: največ prijateljev, kvalificiranih v oknu akcije
@@ -31,7 +31,28 @@ as $$
 $$;
 revoke all on function public.akcija_vabil_val() from public, anon, authenticated;
 
-alter table public.ponovne_cene add column if not exists z_bonom boolean not null default false;
+-- Zahtevki, odprti z bonom. Ločena tabela brez tujih ključev: oblika
+-- `ponovne_cene` in graf odvisnosti igralcev sta zapisana v varovalih FCF
+-- (20261027211000 …), zato ju ne spreminjamo.
+create table public.boni_ponovne_cene (
+  zahtevek_id bigint primary key,
+  user_id     uuid not null,
+  created_at  timestamptz not null default now()
+);
+create index boni_ponovne_cene_uporabnik on public.boni_ponovne_cene (user_id);
+alter table public.boni_ponovne_cene enable row level security;
+revoke all on public.boni_ponovne_cene from public, anon, authenticated;
+insert into agent.zaprte_tabele (tabela, zakaj) values ('public.boni_ponovne_cene', 'kdo je porabil bon akcije vabil')
+on conflict (tabela) do nothing;
+
+-- Porabljen bon: zahtevek z bonom, ki ni zavrnjen ali neizvedljiv.
+create or replace function public.bon_porabljen(p_uid uuid)
+returns boolean language sql stable security definer set search_path = public
+as $$
+  select exists (select 1 from boni_ponovne_cene b join ponovne_cene z on z.id = b.zahtevek_id
+                  where b.user_id = p_uid and z.stanje not in ('zavrnjeno', 'za_vracilo'))
+$$;
+revoke all on function public.bon_porabljen(uuid) from public, anon, authenticated;
 
 -- Povabilo šteje za akcijo: prijatelj ima potrjen e-naslov in nehišno ekipo s
 -- kadrom (strožje od `pripeljanih`, ki ga vrsta prevzema ohrani nespremenjenega).
@@ -59,9 +80,7 @@ returns boolean language sql stable security definer set search_path = public
 as $$
   select p_uid is not null
      and public.pripeljanih_za_bon(p_uid) >= 3
-     and not exists (select 1 from ponovne_cene z
-                      where z.user_id = p_uid and z.z_bonom
-                        and z.stanje not in ('zavrnjeno', 'za_vracilo'))
+     and not public.bon_porabljen(p_uid)
 $$;
 revoke all on function public.bon_ponovne_cene(uuid) from public, anon, authenticated;
 
@@ -122,8 +141,7 @@ begin
     'v_akciji', coalesce(v_n, 0),
     'mesto', v_mesto,
     'bon', bon_ponovne_cene(uid),
-    'bon_porabljen', exists (select 1 from ponovne_cene z where z.user_id = uid and z.z_bonom
-                               and z.stanje not in ('zavrnjeno', 'za_vracilo')),
+    'bon_porabljen', bon_porabljen(uid),
     'do', (akcija_vabil_okno()).do_);
 end;
 $$;
@@ -158,9 +176,10 @@ begin
     raise exception 'Ponovno vrednotenje cene zdaj ni mogoče (%).', v_ovira;
   end if;
   select competition_id into v_liga from players where id = p_player_id;
-  insert into ponovne_cene (player_id, competition_id, user_id, stanje, placano_at, z_bonom)
-  values (p_player_id, v_liga, v_uid, 'placano', now(), true)
+  insert into ponovne_cene (player_id, competition_id, user_id, stanje, placano_at)
+  values (p_player_id, v_liga, v_uid, 'placano', now())
   returning id into v_id;
+  insert into boni_ponovne_cene (zahtevek_id, user_id) values (v_id, v_uid);
   perform preverjeni_na_discord(format('🎁 Ponovna cena #%s: %s, z bonom za 3 povabljene. Predlog pride v Administracijo v 15 minutah.',
                                        v_id, (select full_name from players where id = p_player_id)));
   return v_id;
@@ -308,7 +327,7 @@ begin
   update ponovne_cene
      set stanje = 'za_vracilo', izid = p_izid, stara_cena = p_stara, predlog_at = now()
    where id = z.id;
-  perform preverjeni_na_discord(format(case when z.z_bonom
+  perform preverjeni_na_discord(format(case when exists (select 1 from boni_ponovne_cene b where b.zahtevek_id = z.id)
     then '⚠️ Ponovna cena #%s (%s): izračun ni bil mogoč (%s). Zahtevek je bil z bonom: zavrni, bon se vrne sam (brez vračila denarja).'
     else '⚠️ Ponovna cena #%s (%s): izračun ni bil mogoč (%s). Zavrni in vrni denar v Stripe.' end, z.id, v_ime, p_izid));
   return 'za_vracilo';
