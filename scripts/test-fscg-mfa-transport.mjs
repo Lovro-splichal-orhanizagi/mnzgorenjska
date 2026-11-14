@@ -113,3 +113,10 @@ test('FSCG clear login HTML is a typed stop but a fixture page with a login head
     assert.equal(await actual.text(), fixture)
   })
 })
+
+test('fscg waits longer between retries than the default, others keep the default', async () => {
+  const { ZAMIKI_MS } = await import('./prenos.mjs')
+  assert.deepEqual(fscg.zamikiMs, [30000, 90000, 240000])
+  assert.ok(fscg.zamikiMs.every((ms, i) => ms > ZAMIKI_MS[i]))
+  assert.equal(mfa.zamikiMs, undefined)
+})
