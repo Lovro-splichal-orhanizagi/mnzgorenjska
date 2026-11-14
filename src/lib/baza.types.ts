@@ -1475,6 +1475,27 @@ export type Database = {
           },
         ]
       }
+      highlight_videi: {
+        Row: {
+          igralec: number
+          opomba: string | null
+          stanje: string
+          updated_at: string
+        }
+        Insert: {
+          igralec: number
+          opomba?: string | null
+          stanje?: string
+          updated_at?: string
+        }
+        Update: {
+          igralec?: number
+          opomba?: string | null
+          stanje?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       klub_dodani_igralci: {
         Row: {
           competition_id: number
@@ -2582,6 +2603,50 @@ export type Database = {
           },
         ]
       }
+      narocila_plakatov: {
+        Row: {
+          created_at: string
+          id: number
+          igralec: number
+          naslov: Json
+          opomba: string | null
+          poslano_at: string | null
+          status: string
+          stripe_checkout_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          igralec: number
+          naslov: Json
+          opomba?: string | null
+          poslano_at?: string | null
+          status?: string
+          stripe_checkout_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          igralec?: number
+          naslov?: Json
+          opomba?: string | null
+          poslano_at?: string | null
+          status?: string
+          stripe_checkout_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "narocila_plakatov_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       narocila_znack: {
         Row: {
           created_at: string
@@ -2792,6 +2857,48 @@ export type Database = {
         Update: {
           id?: number
           kljuc?: string
+        }
+        Relationships: []
+      }
+      ogledi_igralcev: {
+        Row: {
+          dan: string
+          drzava: string
+          igralec: number
+          stevilo: number
+        }
+        Insert: {
+          dan?: string
+          drzava?: string
+          igralec: number
+          stevilo?: number
+        }
+        Update: {
+          dan?: string
+          drzava?: string
+          igralec?: number
+          stevilo?: number
+        }
+        Relationships: []
+      }
+      ogledi_profila_dnevno: {
+        Row: {
+          dan: string
+          igralec: number
+          stevilo: number
+          vir: string
+        }
+        Insert: {
+          dan?: string
+          igralec: number
+          stevilo?: number
+          vir: string
+        }
+        Update: {
+          dan?: string
+          igralec?: number
+          stevilo?: number
+          vir?: string
         }
         Relationships: []
       }
@@ -3206,6 +3313,45 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "uradne_odsotnosti_view"
             referencedColumns: ["team_id"]
+          },
+        ]
+      }
+      pogovori: {
+        Row: {
+          a: string
+          b: string
+          created_at: string
+          id: number
+          zadnje_at: string
+        }
+        Insert: {
+          a: string
+          b: string
+          created_at?: string
+          id?: never
+          zadnje_at?: string
+        }
+        Update: {
+          a?: string
+          b?: string
+          created_at?: string
+          id?: never
+          zadnje_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pogovori_a_fkey"
+            columns: ["a"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pogovori_b_fkey"
+            columns: ["b"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3637,6 +3783,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      popravki_samodejno: {
+        Row: {
+          created_at: string
+          nacin: string
+          popravek: number
+          prej: Json
+          razveljavil: string | null
+          razveljavljen_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          nacin: string
+          popravek: number
+          prej: Json
+          razveljavil?: string | null
+          razveljavljen_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          nacin?: string
+          popravek?: number
+          prej?: Json
+          razveljavil?: string | null
+          razveljavljen_at?: string | null
+        }
+        Relationships: []
       }
       position_priors: {
         Row: {
@@ -4673,6 +4846,71 @@ export type Database = {
           },
         ]
       }
+      prijave_napak: {
+        Row: {
+          created_at: string
+          id: number
+          id_igralca: number | null
+          id_lige: number | null
+          igralec: string | null
+          klub: string | null
+          kontakt: string | null
+          liga: string | null
+          opis: string
+          opomba: string | null
+          pravilno: string | null
+          reseno_at: string | null
+          resil: string | null
+          stanje: string
+          vir: string
+          vrsta: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          id_igralca?: number | null
+          id_lige?: number | null
+          igralec?: string | null
+          klub?: string | null
+          kontakt?: string | null
+          liga?: string | null
+          opis: string
+          opomba?: string | null
+          pravilno?: string | null
+          reseno_at?: string | null
+          resil?: string | null
+          stanje?: string
+          vir?: string
+          vrsta: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          id_igralca?: number | null
+          id_lige?: number | null
+          igralec?: string | null
+          klub?: string | null
+          kontakt?: string | null
+          liga?: string | null
+          opis?: string
+          opomba?: string | null
+          pravilno?: string | null
+          reseno_at?: string | null
+          resil?: string | null
+          stanje?: string
+          vir?: string
+          vrsta?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prijave_napak_resil_fkey"
+            columns: ["resil"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prijave_posnetkov: {
         Row: {
           created_at: string
@@ -5102,6 +5340,36 @@ export type Database = {
           },
         ]
       }
+      promo_preverjen_paketi: {
+        Row: {
+          created_at: string
+          id: number
+          odobren_at: string | null
+          odobril: string | null
+          odobritev: string | null
+          osnutek_sha: string | null
+          user_ids: string[]
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          odobren_at?: string | null
+          odobril?: string | null
+          odobritev?: string | null
+          osnutek_sha?: string | null
+          user_ids: string[]
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          odobren_at?: string | null
+          odobril?: string | null
+          odobritev?: string | null
+          osnutek_sha?: string | null
+          user_ids?: string[]
+        }
+        Relationships: []
+      }
       push_tokens: {
         Row: {
           platforma: string
@@ -5464,6 +5732,146 @@ export type Database = {
             columns: ["federation_id"]
             isOneToOne: false
             referencedRelation: "federations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sporocila: {
+        Row: {
+          avtor: string
+          besedilo: string
+          created_at: string
+          id: number
+          pogovor_id: number
+          prebrano_at: string | null
+        }
+        Insert: {
+          avtor: string
+          besedilo: string
+          created_at?: string
+          id?: never
+          pogovor_id: number
+          prebrano_at?: string | null
+        }
+        Update: {
+          avtor?: string
+          besedilo?: string
+          created_at?: string
+          id?: never
+          pogovor_id?: number
+          prebrano_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sporocila_avtor_fkey"
+            columns: ["avtor"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sporocila_pogovor_id_fkey"
+            columns: ["pogovor_id"]
+            isOneToOne: false
+            referencedRelation: "pogovori"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sporocila_blokade: {
+        Row: {
+          created_at: string
+          kdo: string
+          koga: string
+        }
+        Insert: {
+          created_at?: string
+          kdo: string
+          koga: string
+        }
+        Update: {
+          created_at?: string
+          kdo?: string
+          koga?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sporocila_blokade_kdo_fkey"
+            columns: ["kdo"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sporocila_blokade_koga_fkey"
+            columns: ["koga"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sporocila_izklop: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sporocila_izklop_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sporocila_prijave: {
+        Row: {
+          created_at: string
+          id: number
+          prijavil: string
+          razlog: string | null
+          reseno_at: string | null
+          sporocilo_id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          prijavil: string
+          razlog?: string | null
+          reseno_at?: string | null
+          sporocilo_id: number
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          prijavil?: string
+          razlog?: string | null
+          reseno_at?: string | null
+          sporocilo_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sporocila_prijave_prijavil_fkey"
+            columns: ["prijavil"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sporocila_prijave_sporocilo_id_fkey"
+            columns: ["sporocilo_id"]
+            isOneToOne: false
+            referencedRelation: "sporocila"
             referencedColumns: ["id"]
           },
         ]
@@ -8420,6 +8828,21 @@ export type Database = {
         Args: { p_player_id: number; p_velja_do?: string; p_vir?: string }
         Returns: number
       }
+      admin_highlight_stanje: {
+        Args: { p_igralec: number; p_opomba?: string; p_stanje: string }
+        Returns: undefined
+      }
+      admin_highlight_vrsta: {
+        Args: never
+        Returns: {
+          eposta: string
+          igralec: number
+          ime: string
+          opomba: string
+          posnetkov: number
+          stanje: string
+        }[]
+      }
       admin_ista_oseba: {
         Args: { p_player_id: number }
         Returns: {
@@ -8475,6 +8898,20 @@ export type Database = {
           vrsta: string
         }[]
       }
+      admin_narocila_plakatov: {
+        Args: never
+        Returns: {
+          created_at: string
+          eposta: string
+          id: number
+          igralec: number
+          ime: string
+          naslov: Json
+          opomba: string
+          poslano_at: string
+          status: string
+        }[]
+      }
       admin_narocila_znack: {
         Args: never
         Returns: {
@@ -8491,6 +8928,10 @@ export type Database = {
           pravica_status: string
           status: string
         }[]
+      }
+      admin_nastavi_narocilo_plakata: {
+        Args: { p_id: number; p_opomba?: string; p_status: string }
+        Returns: undefined
       }
       admin_nastavi_narocilo_znacke: {
         Args: { p_id: number; p_opomba?: string; p_status: string }
@@ -8745,6 +9186,39 @@ export type Database = {
           zadnja: string
         }[]
       }
+      admin_prijave_napak: {
+        Args: { p_stanje?: string }
+        Returns: {
+          competition_id: number
+          created_at: string
+          id: number
+          igralec: string
+          klub: string
+          kontakt: string
+          liga: string
+          liga_slug: string
+          opis: string
+          opomba: string
+          player_id: number
+          pravilno: string
+          reseno_at: string
+          stanje: string
+          vrsta: string
+        }[]
+      }
+      admin_prijave_sporocil: {
+        Args: never
+        Returns: {
+          avtor: string
+          avtor_ime: string
+          besedilo: string
+          created_at: string
+          id: number
+          prijavil_ime: string
+          razlog: string
+          sporocilo_id: number
+        }[]
+      }
       admin_prosnje_poznavalcev: {
         Args: never
         Returns: {
@@ -8774,6 +9248,37 @@ export type Database = {
           novih: number
           slug: string
           teden: string
+        }[]
+      }
+      admin_razveljavi_samodejni_popravek: {
+        Args: { p_id: number }
+        Returns: undefined
+      }
+      admin_resi_prijavo_napake: {
+        Args: { p_id: number; p_opomba?: string; p_stanje: string }
+        Returns: undefined
+      }
+      admin_resi_prijavo_sporocila: {
+        Args: { p_id: number; p_izbrisi: boolean }
+        Returns: undefined
+      }
+      admin_samodejni_popravki: {
+        Args: never
+        Returns: {
+          asistent: string
+          avtor: string
+          created_at: string
+          id: number
+          igralec: string
+          klub: string
+          liga: string
+          minuta: number
+          nacin: string
+          pozicija: string
+          prej: string
+          razveljavljen_at: string
+          strelec: string
+          vrsta: string
         }[]
       }
       admin_samodejni_poznavalci: {
@@ -9108,6 +9613,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      cv_igralca: { Args: { p_player_id: number }; Returns: Json }
       dan_kroga: { Args: { p_round_id: number }; Returns: string }
       defer_fussball_card_replay: {
         Args: {
@@ -9145,6 +9651,18 @@ export type Database = {
       dvoboji_mini_lige: {
         Args: { p_krog?: number; p_liga: number }
         Returns: Json
+      }
+      ekipe_z_igralcem: {
+        Args: { p_koliko?: number; p_od?: number; p_player_id: number }
+        Returns: {
+          competition_id: number
+          competition_slug: string
+          fantasy_team_id: number
+          ime: string
+          krog: number
+          liga: string
+          skupaj: number
+        }[]
       }
       fcf_future_current_target_check: {
         Args: {
@@ -9430,6 +9948,20 @@ export type Database = {
           ime: string
           kratko: string
           liga: string
+        }[]
+      }
+      izbranost_igralca: {
+        Args: { p_player_id: number }
+        Returns: {
+          competition_id: number
+          ekip: number
+          krog: number
+          lastni: boolean
+          liga: string
+          owners: number
+          player_id: number
+          sezona: string
+          zaklenjen: string
         }[]
       }
       izbrisi_moj_racun: { Args: never; Returns: undefined }
@@ -9797,6 +10329,20 @@ export type Database = {
           zmage: number
         }[]
       }
+      lestvica_napovedi_drzave: {
+        Args: { p_dni?: number; p_drzava: string; p_limit?: number }
+        Returns: {
+          display_name: string
+          je_moj: boolean
+          kralj: boolean
+          kron: number
+          mesto: number
+          ocenjenih: number
+          razpletov: number
+          tocke: number
+          tocnih: number
+        }[]
+      }
       lestvica_napovedi_lige: {
         Args: { p_krog?: number; p_tekmovanje: number }
         Returns: {
@@ -9846,6 +10392,16 @@ export type Database = {
           najvisja: number
         }[]
       }
+      mesecni_ogledi_profila: {
+        Args: { p_player_id: number }
+        Returns: {
+          gost: number
+          igra: number
+          mesec: string
+          povezava: number
+          scout: number
+        }[]
+      }
       mini_liga_glava: {
         Args: { p_liga: number }
         Returns: {
@@ -9874,8 +10430,10 @@ export type Database = {
           owner_name: string
         }[]
       }
+      moj_highlight: { Args: { p_player_id: number }; Returns: Json }
       moj_klubski_racun: { Args: never; Returns: Json }
       moja_koda_vabila: { Args: never; Returns: string }
+      moja_sezona: { Args: { p_player_id: number }; Returns: Json }
       moje_mesto_v_vrsti: {
         Args: never
         Returns: {
@@ -9886,7 +10444,7 @@ export type Database = {
         }[]
       }
       moje_odprte_napovedi: {
-        Args: { p_tekmovanje?: number }
+        Args: { p_mini_liga?: number; p_tekmovanje?: number }
         Returns: {
           away_logo: string
           away_name: string
@@ -10068,7 +10626,12 @@ export type Database = {
         Args: { p_odsel: boolean; p_player_id: number }
         Returns: undefined
       }
+      plakat_iz_placila: {
+        Args: { p_checkout: string; p_naslov: Json }
+        Returns: string
+      }
       podeli_samodejne_poznavalce: { Args: never; Returns: number }
+      podpora_besedilo: { Args: { najvec: number; t: string }; Returns: string }
       podpora_brez_sumnikov: { Args: { t: string }; Returns: string }
       podpora_kandidati: {
         Args: { ime: string; liga: string; nacin: string }
@@ -10141,6 +10704,8 @@ export type Database = {
           zahtevek: number
         }[]
       }
+      popravek_prag_soglasja: { Args: { p_vrsta: string }; Returns: number }
+      popravek_samodejno: { Args: { p_id: number }; Returns: string }
       popravki_v_pregledu: {
         Args: { p_team_id?: number }
         Returns: {
@@ -10286,6 +10851,11 @@ export type Database = {
         }[]
       }
       povzetek_rasti: { Args: never; Returns: string }
+      pred_tekmo: { Args: { p_player_id: number }; Returns: Json }
+      pred_tekmo_forma: {
+        Args: { p_ekipa: number; p_liga: number; p_sezona: string }
+        Returns: Json
+      }
       prejemniki_ankete: {
         Args: { p_competition_id: number; p_ids: string[] }
         Returns: {
@@ -10607,6 +11177,18 @@ export type Database = {
         Args: { p_liga: number; p_razlog?: string }
         Returns: undefined
       }
+      prijavi_napako: {
+        Args: {
+          igralec?: string
+          klub?: string
+          kontakt?: string
+          liga?: string
+          opis: string
+          pravilno?: string
+          vrsta: string
+        }
+        Returns: Json
+      }
       prijavi_popravek: {
         Args: {
           p_asistent_id?: number
@@ -10629,6 +11211,28 @@ export type Database = {
       pripeljanih: { Args: { p_uid: string }; Returns: number }
       pripisi_obranjene_enajstmetrovke: {
         Args: { p_round_id: number }
+        Returns: number
+      }
+      promo_preverjen_kohorta: {
+        Args: never
+        Returns: {
+          aktiven_at: string
+          display_name: string
+          drzava: string
+          email: string
+          liga_slug: string
+          player_id: number
+          razlog: string
+          user_id: string
+        }[]
+      }
+      promo_preverjen_nov_paket: {
+        Args: { p_meja: number; p_velikost: number }
+        Returns: number
+      }
+      promo_preverjen_poslanih: { Args: never; Returns: number }
+      promo_preverjen_zasedi: {
+        Args: { p_email: string; p_meja: number; p_user_id: string }
         Returns: number
       }
       razdeli_zlitega_igralca:
@@ -10897,6 +11501,7 @@ export type Database = {
         Args: { p_competition_id: number; p_datum?: string }
         Returns: string
       }
+      sezona_vrstica: { Args: { p_glavni: number }; Returns: number }
       shrani_ekipo: {
         Args: { p_roster: Json; p_team_id: number }
         Returns: Json
@@ -10934,6 +11539,64 @@ export type Database = {
           url: string
         }[]
       }
+      sporocila_blokiraj: {
+        Args: { p_da: boolean; p_pogovor: number }
+        Returns: undefined
+      }
+      sporocila_izklopi: { Args: { p_da: boolean }; Returns: undefined }
+      sporocila_izlocen: { Args: { p_uid: string }; Returns: boolean }
+      sporocila_lastnik: { Args: { p_player_id: number }; Returns: string }
+      sporocila_moje_stanje: {
+        Args: never
+        Returns: {
+          izklopljeno: boolean
+          izlocen: boolean
+          preverjen: boolean
+        }[]
+      }
+      sporocila_neprebrana: { Args: never; Returns: number }
+      sporocila_pogovora: {
+        Args: { p_pogovor: number; p_pred?: number }
+        Returns: {
+          besedilo: string
+          created_at: string
+          id: number
+          moje: boolean
+          prebrano: boolean
+        }[]
+      }
+      sporocila_pogovori: {
+        Args: never
+        Returns: {
+          blokiran: boolean
+          drugi: string
+          id: number
+          igralec: string
+          igralec_id: number
+          ime: string
+          neprebranih: number
+          preverjen: boolean
+          razlog: string
+          zadnje: string
+          zadnje_at: string
+          zadnje_moje: boolean
+        }[]
+      }
+      sporocila_poslji: {
+        Args: { p_besedilo: string; p_pogovor: number }
+        Returns: number
+      }
+      sporocila_preverjen: { Args: { p_uid: string }; Returns: boolean }
+      sporocila_prijavi: {
+        Args: { p_razlog?: string; p_sporocilo: number }
+        Returns: undefined
+      }
+      sporocila_razlog: {
+        Args: { p_od: string; p_za: string }
+        Returns: string
+      }
+      sporocila_sme_pisati: { Args: { p_player_id: number }; Returns: string }
+      sporocila_zacni: { Args: { p_player_id: number }; Returns: number }
       stanje_lige: { Args: { p_competition_id: number }; Returns: Json }
       stanje_mojih_ekip: {
         Args: never
@@ -10950,6 +11613,10 @@ export type Database = {
           team_name: string
           veljavna: boolean
         }[]
+      }
+      stanje_tekme: {
+        Args: { klub: string; krog?: number; liga?: string }
+        Returns: Json
       }
       stanje_tekme_napovedi: {
         Args: {
@@ -10970,6 +11637,7 @@ export type Database = {
           sezona: string
         }[]
       }
+      stevec_uporabnikov: { Args: never; Returns: number }
       stiki_klubov: {
         Args: {
           p_drzava?: string
@@ -11040,6 +11708,7 @@ export type Database = {
       tekme_kluba: { Args: { klub: string; liga?: string }; Returns: Json }
       tekmovanje_id: { Args: { p_slug: string }; Returns: number }
       tekoca_sezona: { Args: { p_datum?: string }; Returns: string }
+      tocke_igralca: { Args: { ime: string; liga?: string }; Returns: Json }
       tocke_napovedi: {
         Args: {
           p_doma: number
@@ -11258,6 +11927,7 @@ export type Database = {
       uveljavi_popravek: { Args: { p_id: number }; Returns: undefined }
       uveljavi_pozicije: { Args: never; Returns: number }
       uveljavi_zapadle_cene: { Args: { p_okno?: string }; Returns: number }
+      vaba_profila: { Args: { p_igralec: number }; Returns: Json }
       varen_vklop_dfb_regije: {
         Args: { p_aktiviraj?: boolean; p_manifest: string; p_sha256: string }
         Returns: Json
@@ -11266,6 +11936,7 @@ export type Database = {
         Args: { p_aktiviraj?: boolean; p_manifest: string; p_sha256: string }
         Returns: Json
       }
+      vidi_izbranost: { Args: never; Returns: boolean }
       vidi_ponovno_ceno: { Args: never; Returns: boolean }
       vidi_posnetke: { Args: never; Returns: boolean }
       vidi_preverjene: { Args: never; Returns: boolean }
@@ -11359,6 +12030,14 @@ export type Database = {
         Returns: undefined
       }
       zabelezi_obisk: { Args: { p_stran: string }; Returns: undefined }
+      zabelezi_ogled_igralca: {
+        Args: { p_drzava?: string; p_igralec: number }
+        Returns: undefined
+      }
+      zabelezi_ogled_profila: {
+        Args: { p_od_zunaj?: boolean; p_player_id: number }
+        Returns: undefined
+      }
       zabelezi_povabilo: { Args: { p_koda: string }; Returns: boolean }
       zabelezi_sponzorja: {
         Args: {
@@ -11368,6 +12047,16 @@ export type Database = {
           p_sponsor_id: number
         }
         Returns: undefined
+      }
+      zadnja_tekma_zgodba: { Args: { p_player_id: number }; Returns: Json }
+      zahtevaj_ligo: {
+        Args: {
+          drzava?: string
+          kontakt?: string
+          liga: string
+          vztrajam?: boolean
+        }
+        Returns: Json
       }
       zahtevki_za_odlocitev: {
         Args: { p_player_id?: number; p_team_id?: number }
@@ -11569,4 +12258,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

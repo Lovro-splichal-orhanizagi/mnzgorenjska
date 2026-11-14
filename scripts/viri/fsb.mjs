@@ -138,6 +138,12 @@ const IME_V_LIGI = {
   'druga-omladinska-liga-beograda': { OMLADINAC: 'OMLADINAC (Veliko Polje)', JEDINSTVO: 'JEDINSTVO (Dobanovci)' },
   'treca-omladinska-liga-beograda-2026-27': MOL_A, // BSK iz Batajnice
   'treca-omladinska-liga-beograda': { BORAC: 'BORAC (Ostružnica)' },
+  // Kadetske lige (U17), pregled 4. 11. 2026 ("Mesto:" domače tekme): v Tretji
+  // BORAC = Ostružnica, JEDINSTVO = Dobanovci, OMLADINAC = Veliko Polje; v Drugi
+  // BSK (Borča) in BUDUĆNOST (Dobanovci) sta članska kluba brez kraja.
+  'treca-liga-kadeta-beograda-2026-27': {
+    BORAC: 'BORAC (Ostružnica)', JEDINSTVO: 'JEDINSTVO (Dobanovci)', OMLADINAC: 'OMLADINAC (Veliko Polje)',
+  },
 }
 
 /** Ime kluba, kot ga uvoz vidi (s preimenovanjem v tej ligi). */

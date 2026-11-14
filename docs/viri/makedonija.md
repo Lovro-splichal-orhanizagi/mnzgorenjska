@@ -137,3 +137,25 @@ Prvi začetnik ima dres 1 ali 12 v 70–90 % postav, sicer vratarske številke
 Uvoz (ena za drugo, ~2 s na zapisnik — arhiv 240 zapisnikov je ~10 minut):
 `gh workflow run uvoz-lige.yml -f liga=mk-prva-mfl -f arhiv=prva-mfl-25-26 -f
 cene=true`.
+
+**Kadetske (U17) in ženska liga** (migracija 20261104174500, odobritev
+lastnika 4. 11. 2026; prej "ne vpisujemo"), ista predloga COMET, brez arhiva,
+**neaktivne**. Kadeti: `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`; ženska
+liga kot člani (1, 6).
+
+| liga | tekoča 2026/27 | klubov | preverjeno |
+|---|---|---|---|
+| mk-u17-super | `kadetska-super-liga-26-27` | 12 | 2 zapisnika (postave, klop, goli, kartoni, menjave) |
+| mk-u17-vtora-istok | `vtora-kadetska-liga-istok-26-27` | 8 | ista predloga |
+| mk-u17-vtora-zapad | `vtora-kadetska-liga-zapad-26-27` | 14 | zapisnik 11953999 |
+| mk-zene-prva | `prva-zenska-fudbalska-liga-26-27` | 10 | zapisnik 11930670 |
+
+**Past:** `vtora-kadetska-liga-zapad-26-27-2` je pionirska (U15), ne kadetska
+— ni vpisana.
+
+**Pionerske lige (U15)** (predlog 9. 11. 2026, fragment 08-mk), ista
+predloga, `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`, **neaktivne**:
+`mk-u15-super` `pionerska-super-liga-26-27` (13 klubov, zapisnik 11940079),
+`mk-u15-vtora-istok` `vtora-pionerska-liga-istok-26-27` (11, 11956710),
+`mk-u15-vtora-zapad` `vtora-kadetska-liga-zapad-26-27-2` (14, 11954913 —
+slug je kadetski, naslov "Втора Пионерска лига ЗАПАД 26/27").

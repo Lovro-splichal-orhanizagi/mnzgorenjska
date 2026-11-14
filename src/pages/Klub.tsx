@@ -35,6 +35,16 @@ import KlubPredstavitev from '../components/KlubPredstavitev'
 import KlubUrejanje from '../components/KlubUrejanje'
 import { useMojKlub } from '../lib/useMojKlub'
 
+/** Vrstica pogleda `prihodnje_tekme`. */
+interface Tekma {
+  round_number: number | null
+  opponent_id: number | null
+  opponent_short: string | null
+  opponent_name: string | null
+  opponent_logo: string | null
+  doma: boolean | null
+}
+
 interface Igralec {
   id: number
   full_name: string | null
@@ -57,6 +67,8 @@ export default function Klub() {
   // kar na plakatu brez zveze ne pove, KJE je ta liga.
   const [ligaZaPlakat, setLigaZaPlakat] = useState<string>('')
   const [igralci, setIgralci] = useState<Igralec[]>([])
+  // Naslednje tekme kluba (prej na strani igralca): pomagajo pri izbiri igralcev.
+  const [tekme, setTekme] = useState<Tekma[]>([])
   // Klub je prosil, naj igralci ne bodo navedeni z imenom.
   const [naZeljoKluba, setNaZeljoKluba] = useState(false)
   const [nalaganje, setNalaganje] = useState(true)
@@ -182,6 +194,25 @@ export default function Klub() {
     }
   }, [id, izbranSlug])
 
+  useEffect(() => {
+    setTekme([])
+    if (!id || ligaId == null) return
+    let veljavno = true
+    void supabase
+      .from('prihodnje_tekme')
+      .select('round_number, opponent_id, opponent_short, opponent_name, opponent_logo, doma')
+      .eq('competition_id', ligaId)
+      .eq('team_id', Number(id))
+      .order('played_on')
+      .limit(5)
+      .then(({ data }) => {
+        if (veljavno) setTekme((data ?? []) as Tekma[])
+      })
+    return () => {
+      veljavno = false
+    }
+  }, [id, ligaId])
+
   const izbranih = useMemo(
     () => igralci.reduce((v, i) => v + Number(i.owners ?? 0), 0),
     [igralci],
@@ -271,6 +302,36 @@ export default function Klub() {
           </Link>
         </div>
       </section>
+
+      {tekme.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-base font-bold">{t('igralci.profil.naslednjeTekme')}</h2>
+          <ul className="flex flex-wrap gap-x-4 gap-y-2">
+            {tekme.map((tk, n) => (
+              <li
+                key={n}
+                className="flex items-center gap-1.5 text-sm"
+                title={t(tk.doma ? 'igralci.profil.tekmaDoma' : 'igralci.profil.tekmaVGosteh', {
+                  krog: tk.round_number ?? '',
+                  nasprotnik: tk.opponent_name ?? '',
+                })}
+              >
+                <Grb ime={tk.opponent_name} kratko={tk.opponent_short} logo={tk.opponent_logo} velikost={20} />
+                {tk.opponent_id ? (
+                  <Link to={`/club/${tk.opponent_id}${ligaParam}`} className="max-w-[12rem] truncate font-semibold hover:text-gnl-300 hover:underline">
+                    {tk.opponent_name ?? tk.opponent_short}
+                  </Link>
+                ) : (
+                  <span className="max-w-[12rem] truncate font-semibold">{tk.opponent_name ?? tk.opponent_short}</span>
+                )}
+                <span className={`text-xs ${tk.doma ? 'text-gnl-300' : 'text-slate-500'}`}>
+                  {tk.doma ? t('igralci.info.doma') : t('igralci.info.vGosteh')}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {igralci.length === 0 ? (
         <p className="text-sm text-slate-400">{t('lestvice.klub.brezStatistike')}</p>

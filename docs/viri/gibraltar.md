@@ -109,6 +109,11 @@ zveza `gfa`:
 |---|---|---|---|
 | gi-gfl | 11 | `gibraltar-football-league-26-27-3395567` | `gibraltar-football-league-25-26-3082381+gibraltar-football-league-25-26-3082383` |
 | gi-reserve-league | 9 | `reserve-league-26-27-3395742` | `intermediate-league-25-26-3085893` (8 klubov, 7 krogov) |
+| gi-u18 | 7 | `gyfl-u18-championship-26-27-3394735` | — |
+
+`gi-u18` je vpisana 4. 11. 2026 (migracija 20261104176500), **neaktivna**;
+ob vpisu le ~6 zapisnikov, cene bodo večinoma privzete. Ženska liga (5
+klubov) ni vpisana.
 
 - **GFL**: 11 klubov, 22 krogov osnovnega dela, nato skupini (glej *Faze*).
   Tekma Lincoln Red Imps : St Joseph's 1. kroga na seznamu manjka (109 od

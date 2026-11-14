@@ -13,7 +13,8 @@
 // tekmami: datum in ura ("11.10.2026 13:00", kijevski čas → ljubljanski −1 h;
 // "00:00" = ura ni znana), klub s šifro (`/team/<id>`), izid "3 - 1" ali "-"
 // (neodigrana). Stran kaže LE kroge, ki so se že začeli — prihodnjih krogov
-// (in njihovih rokov) vir ne objavi vnaprej. Stran tekme NE obstaja: tekma
+// (in njihovih rokov) vir ne objavi vnaprej; naslednji krog druge polovice
+// zato ocenimo iz prve (`ocenjenKrog`, `rounds.datum_ocenjen`). Stran tekme NE obstaja: tekma
 // nima šifre, zato je šifra zapisnika `ffl<liga>-<krog>-<klub>-<klub>`
 // (šifri klubov, manjša prva — glej `sifraZapisnika`).
 //
@@ -265,6 +266,128 @@ export function razporedIzTekem(tekme) {
     })
   }
   return [...krogi.values()].sort((a, b) => a.stevilka - b.stevilka)
+}
+
+// --- ocenjen naslednji krog ---------------------------------------------------------------
+//
+// Stran tekmovanja pokaže krog šele, ko se začne, zato krog nikoli nima roka
+// v prihodnosti in lige ni mogoče vklopiti. Druga polovica sezone pa je pri ЛАФ
+// zrcalo prve: krog H+k ima pare k-tega z zamenjanim domačinom (Прем'єр
+// 2026/27, 14. krog = obrnjen 1.; H = krogov polovice, N−1 pri sodem številu
+// klubov, N pri lihem). Zato naslednji krog druge polovice sestavimo vnaprej:
+// pari iz zrcaljenega kroga, datum zadnji krog + 7 dni na najzgodnejši pogost
+// dan začetka kroga, ura najzgodnejša na tak dan (rok raje prej kot pozneje).
+// Krog dobi `ocenjen` (→ `rounds.datum_ocenjen`); ko ga vir objavi, ga uvoz
+// razporeda prepiše s pravimi datumi (pari se ujemajo, vrstice ostanejo).
+//
+// Ocenimo LE en krog naprej in le, kadar:
+//   - druga polovica se je že začela in vsak njen objavljeni krog je zrcalo
+//     (prve polovice ne moremo napovedati, pari niso znani);
+//   - zadnji objavljeni krog se je začel pred največ ZADNJI_KROG_DNI dnevi
+//     (liga igra vsak teden; po premoru ne ugibamo);
+//   - ocenjeni datum je po današnjem in ni v zimskem premoru (december–februar).
+// Če vir ocenjenega kroga do ocenjenega dne ne objavi (zimski premor ali
+// prestavitev), ga ne ocenjujemo več; krog v bazi ostane z minulim rokom kot
+// prestavljen krog drugih virov (zaklenjenega se uvoz ne dotakne).
+
+/** Zadnji objavljeni krog se je začel pred največ toliko dni (sicer liga miruje). */
+const ZADNJI_KROG_DNI = 8
+/** Meseci zimskega premora ЛАФ: krog s takim ocenjenim datumom izpade. */
+const ZIMSKI_MESECI = new Set([12, 1, 2])
+
+const dodajDni = (datum, n) => new Date(Date.parse(`${datum}T12:00:00Z`) + n * DAN).toISOString().slice(0, 10)
+const danVTednu = (datum) => new Date(`${datum}T12:00:00Z`).getUTCDay()
+const razlikaDni = (a, b) => Math.round((Date.parse(`${a}T12:00:00Z`) - Date.parse(`${b}T12:00:00Z`)) / DAN)
+function najpogostejsi(xs) {
+  const n = new Map()
+  for (const x of xs) n.set(x, (n.get(x) ?? 0) + 1)
+  let naj = null
+  for (const [x, c] of n) if (naj == null || c > n.get(naj)) naj = x
+  return naj
+}
+
+/**
+ * Začetek kroga: najzgodnejši dan v treh dneh pred najpogostejšim dnem tekem
+ * kroga. Zaostala tekma (Прем'єр, 8. krog: 20. 9. in 21. 10.) ga ne premakne.
+ * Vrne { datum, ura } (ura najzgodnejše tekme tega dne ali null).
+ */
+export function zacetekKroga(tekme) {
+  const datumi = tekme.map((t) => t.datum).filter(Boolean)
+  if (!datumi.length) return null
+  const glavni = najpogostejsi(datumi)
+  const datum = datumi.filter((d) => razlikaDni(glavni, d) >= 0 && razlikaDni(glavni, d) <= 3).sort()[0]
+  const ura = tekme.filter((t) => t.datum === datum && t.ura).map((t) => t.ura).sort()[0] ?? null
+  return { datum, ura }
+}
+
+const par = (t) => `${t.domaciId}:${t.gostjeId}`
+
+/**
+ * Naslednji krog druge polovice z ocenjenim datumom iz tekem strani
+ * tekmovanja (`tekmeLige(...).tekme`). Vrne { krog, razlog }: `krog` v obliki
+ * `razporedIzTekem` z `ocenjen: true` ali null, `razlog` pove, zakaj ga ni.
+ */
+export function ocenjenKrog(tekme, { danes = new Date().toISOString().slice(0, 10) } = {}) {
+  const ni = (razlog) => ({ krog: null, razlog })
+  const klubi = new Set(tekme.flatMap((t) => [t.domaciId, t.gostjeId]))
+  const n = klubi.size
+  if (n < 4) return ni(`premalo klubov (${n})`)
+  const polovica = n % 2 ? n : n - 1
+  const naTekmo = Math.floor(n / 2)
+  const poKrogih = new Map()
+  for (const t of tekme) {
+    if (!poKrogih.has(t.krog)) poKrogih.set(t.krog, [])
+    poKrogih.get(t.krog).push(t)
+  }
+  const zadnji = Math.max(...poKrogih.keys())
+  if (zadnji >= 2 * polovica) return ni('sezona je odigrana')
+  if (zadnji <= polovica) return ni(`druga polovica se še ni začela (${zadnji}/${polovica} krogov) — parov ne poznamo`)
+  for (let k = 1; k <= zadnji; k++) {
+    if ((poKrogih.get(k)?.length ?? 0) !== naTekmo) return ni(`krog ${k} nima ${naTekmo} tekem`)
+  }
+  for (let k = polovica + 1; k <= zadnji; k++) {
+    const zrcalo = new Set(poKrogih.get(k - polovica).map((t) => `${t.gostjeId}:${t.domaciId}`))
+    if (!poKrogih.get(k).every((t) => zrcalo.has(par(t)))) return ni(`krog ${k} ni zrcalo kroga ${k - polovica}`)
+  }
+
+  const zacetki = [...poKrogih.values()].map(zacetekKroga).filter(Boolean)
+  const zadnjiZacetek = zacetekKroga(poKrogih.get(zadnji))
+  if (razlikaDni(danes, zadnjiZacetek.datum) > ZADNJI_KROG_DNI)
+    return ni(`zadnji krog (${zadnji}.) se je začel ${zadnjiZacetek.datum} — liga miruje`)
+  // Krog se začne v soboto ali nedeljo (Прем'єр 2026/27 pol-pol): rok raje
+  // prej kot pozneje, zato najzgodnejši dan (do tri dni pred najpogostejšim),
+  // na katerega se začne vsaj četrtina krogov.
+  const dnevi = zacetki.map((z) => danVTednu(z.datum))
+  const pogost = najpogostejsi(dnevi)
+  const dan = [3, 2, 1, 0].map((n) => (pogost - n + 7) % 7).find((d) => dnevi.filter((x) => x === d).length * 4 >= dnevi.length)
+  let datum = dodajDni(zadnjiZacetek.datum, 7)
+  datum = dodajDni(datum, ((dan - danVTednu(datum) + 10) % 7) - 3) // najbližji tak dan (−3 … +3)
+  if (datum <= danes) return ni(`ocenjeni datum ${datum} je že mimo — vir kroga ni objavil`)
+  if (ZIMSKI_MESECI.has(Number(datum.slice(5, 7)))) return ni(`ocenjeni datum ${datum} je v zimskem premoru`)
+  const ura = zacetki.filter((z) => z.ura && danVTednu(z.datum) === dan).map((z) => z.ura).sort()[0] ?? null
+
+  const stevilka = zadnji + 1
+  const krog = {
+    stevilka,
+    ocenjen: true,
+    tekme: poKrogih.get(stevilka - polovica).map((t) => ({
+      domaci: t.gostje,
+      gostje: t.domaci,
+      datum,
+      ura,
+      kontumacija: false,
+      odigrana: false,
+      izid: null,
+    })),
+  }
+  return { krog, razlog: null }
+}
+
+/** Razpored strani tekmovanja z ocenjenim naslednjim krogom, kadar ga smemo oceniti. */
+export function razporedZOceno(tekme, { danes } = {}) {
+  const razpored = razporedIzTekem(tekme).map((k) => ({ ...k, ocenjen: false }))
+  const { krog, razlog } = ocenjenKrog(tekme, { danes })
+  return { razpored: krog ? [...razpored, krog] : razpored, ocenjen: krog, razlog }
 }
 
 // --- seznam novic -------------------------------------------------------------------------
@@ -896,8 +1019,13 @@ const vir = {
   zaPredpomnilnik,
   zavrnitev: (sporocilo, status = null) => new FflZavrnitev(`ffl: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
 
+  // Uvoz razporeda zapiše `rounds.datum_ocenjen` (ocenjen naslednji krog, glej `ocenjenKrog`).
+  ocenjeniDatumi: true,
+
   async razporedVseStrani(koda, prenesi) {
-    return razporedIzTekem((await liga(koda, prenesi)).tekme)
+    const { razpored, ocenjen, razlog } = razporedZOceno((await liga(koda, prenesi)).tekme)
+    console.log(ocenjen ? `ffl: krog ${ocenjen.stevilka} ocenjen na ${ocenjen.tekme[0].datum} (zrcalo prve polovice)` : `ffl: brez ocenjenega kroga — ${razlog}`)
+    return razpored
   },
 
   async zapisniki(koda, prenesi) {

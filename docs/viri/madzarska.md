@@ -419,3 +419,157 @@ Accepted and refused redirects retain sanitized origin/route and public numeric
 query pairs (including duplicates); private paths, credentials and unknown
 query keys/values are redacted. This adds no source retry, historical exclusion
 or activation permission.
+
+
+## Četrti val (4. 11. 2026)
+
+Migracija 20261104171100: 86 lig, **neaktivnih**, po odobritvi lastnika
+(ženske, dekleta, U21 in mladinci do U15). Vse so 11 + 11 na velikem igrišču
+in imajo tekme do pomladi 2027. Zapisnik je enak kot pri članih (preverjeno
+na Női NB I, Pest U16, Győr U21, Tolna I-II., Országos U17).
+
+- **Ženske** (zveza `mlsz`): Női NB I (`Simple Női Liga`), NB II Kelet in
+  Nyugat ter MLSZ Leány Országos U19/U17/U15 in Regionális U19 (Nyugat,
+  Kelet) in U16 (Nyugat, Közép, Kelet). Női: `prvi_fantasy_krog = 1`,
+  `rok_pomak_ur = 6`; dekleta kot mladinci (2, 2).
+- **Člani**: Tolna I-II. *Kvalifikáció* (`67/17/33955`; Tolna 2026/27
+  nima I. in II. osztály, zato je to njena najvišja liga) in štiri nove
+  skupine Zala III. (Észak-Kelet A/B, Közép-Nyugat A/B, začetek 25. 10. 2026,
+  zamenjale so `hu-za-3-kozep`). **Zala III. nove skupine nimajo arhiva** —
+  uvoz brez arhiva potrebuje odobritev.
+- **U21** (spremljevalne lige članov; odrasli, brez starostnega dela v
+  šifri): Győr I., Hajdú-Bihar I. in II. Észak/Dél, Heves I./II., Nógrád,
+  Vas I. in II. (Szombathely, Körmend, Sárvár), Veszprém II., Zala. 2 in 2
+  kot mladinci (tekme pred člani, prehodi med selekcijama).
+- **U17/U16/U15**: šest skupin Regionális U17 Alap, pet U16 Alap, sedem U15
+  Alap (zveza `mlsz`, `<sz>` je županija, ki tekmovanje izvaja) in županijske
+  lige. Šifra ima starostni del (`-u15-`, `-u16-`, `-u17-`), da jih pravilo
+  zaščite mladoletnih prepozna (`je_mladinski_slug`, PR #668).
+
+Arhiv (évad 65) **še ni izbran** za nobeno ligo — pred uvozom ga izberi iz
+seznama zveze za sezono 65 (`getHeaderFilderData&season=65`), po skupnih
+klubih 1. kroga; vsak arhiv ima ena sama liga.
+
+Izpuščeno (preverjeno 4. 11. 2026 na strani 1. kroga — izbirnik `Forduló` in
+razpored ene ekipe):
+
+- **Jesenske faze** (pomladi bo nov verseny, vpiši tisto izdajo):
+  Országos in Regionális Kiemelt U15–U17 (12), Pest U15–U17 (13; 9 krogov),
+  Pest U21 (`67/14/34247`, 14 krogov, zadnji 18. 11.), Bács-Kiskun U16
+  (11 krogov, do 14. 11.), Fejér U16 (9 krogov, do 8. 11.) in zato tudi
+  Fejér U15 A–F, Győr U16 (11 krogov, do 28. 11.), Győr II. U21 (4 skupine,
+  osnovni del do 15. 11., kot člani Győr II. felső/alsóház), SZSZB leány
+  U19 (do 29. 11.).
+- **Mala igrišča**: županijske ženske in dekliške lige — Csongrád Női
+  Felnőtt igra 9 + 9 (zapisnik 1. kroga), enako izpuščene Fejér in Veszprém
+  Női ter dekliške U15/U16 Bács-Kiskun, Csongrád, Fejér, Heves.
+- KEM leány U19 (`67/12/33806`): 4 klubi.
+
+Preverjeno s celo sezono do pomladi: KEM U16 Dél/Észak, BAZ, Csongrád,
+Hajdú-Bihar, Somogy, Vas in Veszprém U16, Regionális U17 Alap Délkelet in
+Kelet, Hajdú-Bihar II. U21 Észak, Győr I. U21 (26 krogov). Ostale so
+izbrane po vzorcu teh; vklop vseeno preveri prihodnji rok.
+
+| liga | tekoča 2026/27 |
+|---|---|
+| hu-noi-nb1 | `67/0/33633` |
+| hu-noi-nb2-kelet | `67/0/33634` |
+| hu-noi-nb2-nyugat | `67/0/34124` |
+| hu-leany-u19-orszagos | `67/0/33636` |
+| hu-leany-u19-reg-nyugat | `67/0/33639` |
+| hu-leany-u19-reg-kelet | `67/0/34372` |
+| hu-leany-u17-orszagos | `67/0/33637` |
+| hu-leany-u16-reg-nyugat | `67/0/33640` |
+| hu-leany-u16-reg-kozep | `67/0/34378` |
+| hu-leany-u16-reg-kelet | `67/0/34379` |
+| hu-leany-u15-orszagos | `67/0/33638` |
+| hu-to-1-2-kval | `67/17/33955` |
+| hu-za-3-ek-a | `67/20/34859` |
+| hu-za-3-ek-b | `67/20/34860` |
+| hu-za-3-kny-a | `67/20/34861` |
+| hu-za-3-kny-b | `67/20/34862` |
+| hu-gy-u21-1 | `67/8/33889` |
+| hu-hb-u21-1 | `67/9/33902` |
+| hu-hb-u21-2-eszak | `67/9/34118` |
+| hu-hb-u21-2-del | `67/9/34120` |
+| hu-he-u21-1 | `67/10/33866` |
+| hu-he-u21-2 | `67/10/33867` |
+| hu-no-u21 | `67/13/33946` |
+| hu-va-u21-1 | `67/18/33768` |
+| hu-va-u21-2-szombathely | `67/18/34048` |
+| hu-va-u21-2-kormend | `67/18/34044` |
+| hu-va-u21-2-sarvar | `67/18/34045` |
+| hu-ve-u21-2 | `67/19/33720` |
+| hu-za-u21 | `67/20/33921` |
+| hu-u17-reg-alap-eszaknyugat | `67/20/34347` |
+| hu-u17-reg-alap-kozepnyugat | `67/7/34364` |
+| hu-u17-reg-alap-delnyugat | `67/2/34376` |
+| hu-u17-reg-alap-kozepkelet | `67/13/34395` |
+| hu-u17-reg-alap-kelet | `67/9/34311` |
+| hu-u17-reg-alap-delkelet | `67/1/34487` |
+| hu-be-u17-eszak | `67/3/34516` |
+| hu-be-u17-del | `67/3/34517` |
+| hu-bp-u17 | `67/5/33818` |
+| hu-no-u17 | `67/13/33947` |
+| hu-to-u17 | `67/17/33961` |
+| hu-u16-reg-alap-eszaknyugat | `67/20/34349` |
+| hu-u16-reg-alap-delnyugat | `67/15/34429` |
+| hu-u16-reg-alap-eszakkelet | `67/4/34332` |
+| hu-u16-reg-alap-kelet | `67/9/34312` |
+| hu-u16-reg-alap-delkelet | `67/6/34351` |
+| hu-ba-u16 | `67/2/33846` |
+| hu-baz-u16-eszak | `67/4/33601` |
+| hu-baz-u16-kelet | `67/4/34059` |
+| hu-baz-u16-kozep | `67/4/34060` |
+| hu-bp-u16 | `67/5/33819` |
+| hu-cs-u16-szalai | `67/6/33881` |
+| hu-cs-u16-toth | `67/6/34131` |
+| hu-hb-u16-a | `67/9/34150` |
+| hu-hb-u16-b | `67/9/34152` |
+| hu-he-u16-kelet | `67/10/33871` |
+| hu-he-u16-nyugat | `67/10/34159` |
+| hu-jn-u16 | `67/11/33745` |
+| hu-ke-u16-del | `67/12/33798` |
+| hu-ke-u16-eszak | `67/12/33799` |
+| hu-no-u16 | `67/13/34584` |
+| hu-so-u16-eszak | `67/15/33712` |
+| hu-so-u16-del | `67/15/34110` |
+| hu-sz-u16-eszak | `67/16/33815` |
+| hu-sz-u16-del | `67/16/34236` |
+| hu-to-u16 | `67/17/33962` |
+| hu-va-u16-eszak | `67/18/33779` |
+| hu-va-u16-del | `67/18/34333` |
+| hu-ve-u16-a | `67/19/34500` |
+| hu-ve-u16-b | `67/19/34501` |
+| hu-ve-u16-c | `67/19/34502` |
+| hu-za-u16-eszak | `67/20/33923` |
+| hu-za-u16-del | `67/20/34524` |
+| hu-u15-reg-alap-eszaknyugat | `67/19/34407` |
+| hu-u15-reg-alap-kozepnyugat | `67/5/34490` |
+| hu-u15-reg-alap-delnyugat | `67/15/34353` |
+| hu-u15-reg-alap-kozepkelet | `67/14/34301` |
+| hu-u15-reg-alap-eszakkelet | `67/10/34366` |
+| hu-u15-reg-alap-kelet | `67/16/34404` |
+| hu-u15-reg-alap-delkelet | `67/1/34491` |
+| hu-be-u15-eszak | `67/3/34531` |
+| hu-be-u15-kozep | `67/3/34532` |
+| hu-be-u15-del | `67/3/34533` |
+| hu-bp-u15-1 | `67/5/33821` |
+| hu-bp-u15-2 | `67/5/34373` |
+| hu-hb-u15 | `67/9/34206` |
+| hu-no-u15 | `67/13/33949` |
+
+## Pregled 9. 11. 2026
+
+Seznam tekmovanj vseh 21 zvez za évad 67: spomladanskih versenyjev
+(felsőház/alsóház, tavaszi szakasz) še ni. Nova je le **`hu-pe-u21`**
+(`67/14/34247`, Pest U21, 8 klubov, **neaktivna**): četrti val jo je imel za
+jesensko fazo, a je cela dvokrožna sezona v enem versenyju — krogi 11–14
+imajo nadomestni datum 30. 6. 2027 (pomlad še ni razporejena). Zapisnik
+1. kroga 11 + 11. Arhiv še ni izbran.
+
+SZSZB leány U19 (`67/16/34571`) je prav tako cela sezona (18 krogov, pomlad
+z datumom 31. 12.), a igra 8 + 8 — izpuščena kot malo igrišče. Ostale
+jesenske faze iz četrtega vala (Kiemelt U15–U17, Pest U15–U17, Bács-Kiskun,
+Fejér in Győr U15/U16, Győr II. U21, Győr III. Nyugat A Tartalék) so res
+enokrožne z zadnjim krogom jeseni; pomladi preveri nove versenyje.

@@ -119,6 +119,20 @@ Vpisane so 4 lige (migracija 20261016091500), zveza `mfa`:
 | mt-nl1 | `2601267/2027` | `2601267/2026` |
 | mt-nl2 | `6234492/2027` | `6234492/2026` |
 
+Še 10 lig (migracija 20261104176100, 4. 11. 2026), **neaktivne**, arhiv ni
+določen: `mt-women` (`58570/2027`, 6 klubov), `mt-youth-a`–`d` (U21,
+`2601268`, `6306756`, `6318084`, `6318086` /2027; 12, 12, 12, 9 klubov),
+`mt-u17-a`–`d` (`6472256`, `6480493`, `6480496`, `6480497` /2027, po 10
+klubov) in `mt-women-u16` (`1324251/2027`, 8 klubov). Youth in U17 imajo faze
+(Phase 1, nato nova tekmovanja) kot Challenge League. U17 A nima tekme po
+11. 10., Women U16 po 4. 10. — pred uvozom preveri, ali se faza nadaljuje.
+
+Še 4 lige (pregled 9. 11. 2026), **neaktivne**: `mt-u15-a`–`d` (`6480560`,
+`6480561`, `6480562`, `6480601` /2027; 10, 10, 10, 13 klubov; naslednji krog
+14. 11.; postave 11 + klop z vratarjem). Ni vpisano: Women's Youth League
+(6 klubov), lige Goza (GFL, GFA Youth, GYFA U16: 5–7 klubov), MAFA, IASC,
+ISA (6–7 klubov), GIDA League in SWAN (`pastMatches?season=2027` vrne 400).
+
 **Kandidata za navadni predogled obstoječih lig** (21. 10. 2026):
 `973/mt-nl1/mfa/2601267/2027` (arhiv `2601267/2026`) in
 `974/mt-nl2/mfa/6234492/2027` (arhiv `6234492/2026`), oba s

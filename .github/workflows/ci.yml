@@ -118,6 +118,9 @@ jobs:
       - name: Provider batch and Dribl source diagnostics (source-free)
         run: node --test scripts/test-provider-league-batch.mjs scripts/test-provider-source-budget.mjs scripts/test-mlsz-provider-proof.mjs scripts/test-eps-provider-batch.mjs scripts/test-eps-provider-proof.mjs scripts/test-eps-source-budget.mjs scripts/test-dribl.mjs scripts/test-dribl-import-actions.mjs scripts/test-dribl-capture.mjs scripts/test-dribl-import.mjs scripts/test-dribl-cli.mjs scripts/test-dribl-country-binding.mjs
 
+      - name: fssid stops goalkeeper page after 403 (source-free)
+        run: node --test scripts/test-fssid-vratarji-403.mjs
+
       - name: DFB current pending report isolation (source-free)
         run: node --test scripts/test-dfb-pending.mjs scripts/test-dfb-nightly-pending.mjs scripts/test-dfb-pending-pricing.mjs
 
@@ -157,6 +160,9 @@ jobs:
 
       - name: HNS public parser, packet, runtime and activation guards
         run: npm run test:hns-women
+
+      - name: HNS report club names
+        run: node --test scripts/test-hns-ime-kluba.mjs
 
       - name: Tipi
         run: npx tsc --noEmit
@@ -290,6 +296,12 @@ jobs:
         run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/fussball-tekoca-pot.sql
       - name: Guarded cross-club identity correction
         run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/zlite-identity-repair.sql
+      - name: Support chat tools (error reports, league requests, points, match state)
+        run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/podpora-orodja-2.sql
+      - name: Country predictions leaderboard
+        run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/napovedi-drzava.sql
+      - name: Your profile box (views, teams, hidden numbers without verified)
+        run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/vaba-profila.sql
       - name: HNS canonical release, target ACLs and waiting writers
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska

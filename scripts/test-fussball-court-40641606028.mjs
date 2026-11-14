@@ -37,11 +37,15 @@ test('exact retained V5 V control retains its existing schema, pair order and nu
  const f=parse(vHtml).tekme.find(f=>f.id===vId)
  assert.deepEqual(f.administrativeResult,{schemaVersion:1,kind:'confirmed-administrative-decision',marker:'V',displayedScores:[{domaci:0,gostje:3},{domaci:3,gostje:0}]})
  assert.equal(f.rezultat,null)
- assert.throws(()=>parse(vHtml.replace(new RegExp(vId+'"><span class="score-special"'),vId+'#!/section/course"><span class="score-special"')))
+ // V admits the same witnessed course suffix as U (run 41804947752) with an identical result.
+ assert.deepEqual(parse(vHtml.replace(new RegExp(vId+'"><span class="score-special"'),vId+'#!/section/course"><span class="score-special"')).tekme.find(f=>f.id===vId),f)
 })
 
 test('U rejects unknown markers and missing, duplicate or wrong confirmed court legends despite generic V legend',()=>{
- for(const marker of ['V','W','T','X',''])assert.throws(()=>parse(html.replace(special,special.replace('&nbsp;U&nbsp;',`&nbsp;${marker}&nbsp;`))))
+ for(const marker of ['W','T','X',''])assert.throws(()=>parse(html.replace(special,special.replace('&nbsp;U&nbsp;',`&nbsp;${marker}&nbsp;`))))
+ // A course-suffixed V row is now a witnessed shape (run 41804947752): it is read
+ // as V under the page's V legend, never as a court decision.
+ assert.deepEqual(parse(html.replace(special,special.replace('&nbsp;U&nbsp;','&nbsp;V&nbsp;'))).tekme.find(f=>f.id===id).administrativeResult,{...administrativeResult,kind:'confirmed-administrative-decision',marker:'V'})
  for(const replacement of ['',legend+legend,legend.replace('bestätigt','unbestätigt'),legend.replace('Sportgerichtsurteil','Verwaltungsentscheid'),legend+legend.replace('bestätigt','unbestätigt')])assert.throws(()=>parse(html.replace(legend,replacement)))
 })
 

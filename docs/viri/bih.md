@@ -182,3 +182,41 @@ pripravljenosti. Ohranita se 3-sekundni premor in ustavitev ob zavrnitvi.
 Rollout audit on 23 October 2026 imported 49 current reports and prepared 248 active players across ten clubs. Two reports still have an incoming substitute without an outgoing player: `ba54152295` (Široki Brijeg–Sarajevo, 2 September, 1–2) and `ba54152303` (Zrinjski–Široki Brijeg, 6 September, 2–1). Fresh source captures reproduce the missing events. The owner separately approved these exact two historical exclusions on 23 October. Use the shared reviewed-history release: preserve both official results, mark their individual statistics unavailable, reprice from the remaining 47 reports and require a fresh legal squad, verified goalkeepers and future deadline before activation. This approval does not extend to other reports.
 
 As an implementation choice for the 23 October 2026 prelaunch, this rollout sets a two-hour lock for `ba-wwin-liga-bih`. The retained NFSBiH fixture capture (`SHA-256 46bfd442846cb92162e9c24e105f72c0e2f25b8c37775bcb0d71200fe810ba84`, 11:58:56 UTC) showed the first kickoff, Zrinjski–Radnik, at 20:00 Ljubljana. The guarded one-time migration changes this inactive competition from its six-hour default to `rok_pomak_ur = 2` and moves round 11's deadline from 12:00 UTC to 16:00 UTC. It applies only to the exact five retained native fixtures while the new deadline is future and no user activity or round results exist; it preserves a private immutable before/after configuration audit. The configuration adjustment runs once; the two-hour per-league offset also applies to subsequent schedule refreshes.
+
+## BiH — kadeti (U17), Premijer omladinske in ženske lige
+
+Migracija 20261104174500 (odobritev lastnika 4. 11. 2026; prej "Kadeti (U17)
+niso vpisani"), vse **neaktivne**, brez arhiva. Mladinske
+`prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`; ženske kot člani (1, 6).
+
+| liga | vir | tekoča 2026/27 | klubov | preverjeno |
+|---|---|---|---|---|
+| ba-u17-kadeti-centar-1 | nsfbih | `omladinska-liga-bih-kadeti-centar-1/2026-27` | 14 | ista predloga kot juniori |
+| ba-u17-kadeti-centar-2 | nsfbih | `omladinska-liga-bih-kadeti-centar-2/2026-27` | 15 | ista predloga |
+| ba-u17-kadeti-jug | nsfbih | `omladinska-liga-bih-kadeti-jug/2026-27` | 13 | zapisnik 54197570 |
+| ba-zene-prva-fbih | nsfbih | `prva-zenska-liga-fbih/2026-27` | 6 | zapisnik 56051005; visoki izidi (17:0) |
+| ba-u19-premijer | nfsbih | `premijer-omladinska-liga-bih-u-19/54153428` | 16 | ista predloga kot WWIN |
+| ba-u17-premijer | nfsbih | `premijer-omladinska-liga-bih-u-17/54160619` | 10 | zapisnik 54172018 |
+| ba-zene-premijer | nfsbih | `nogomet-zene/premijer-zenska-liga-bih/54336938` | 10 | zapisnik 54336981 |
+
+**Ženske lige nfsbih** so pod `/takmicenja/nogomet-zene/`, ne pod
+`nogomet-muskarci`: šifra zato nosi razdelek spredaj
+(`nogomet-zene/<slug>/<id>`); `razberiKodo` vrne `razdelek`, naslova razporeda
+in tekme ga uporabita (smoke). Moške šifre ostanejo brez razdelka. Klubi
+Premijer omladinskih lig so mladinske ekipe klubov WWIN lige (isti klub,
+igralci ločeni po ligi). Uvoz brez arhiva: `gh workflow run uvoz-lige.yml -f
+liga=ba-u17-premijer -f cene=true`.
+
+## BiH — Premijer U-15 in kadetkinje (pregled 9. 11. 2026)
+
+Neaktivni, brez arhiva, `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`, vir `nfsbih`.
+
+| liga | tekoča 2026/27 | klubov | zapisnik (preverjen) |
+|---|---|---|---|
+| ba-u15-premijer | `premijer-omladinska-liga-bih-u-15/54160611` | 10 | 54165635 (11 + 7, GK) |
+| ba-zene-u17-kadetkinje | `nogomet-zene/premijer-liga-bih-kadetkinje/54337513` | 11 | 54337797 (11 + 3, GK) |
+
+Obe objavljata kroge sproti (9. 11. ni bil objavljen noben prihodnji krog:
+U-15 14 krogov, kadetkinje 10). nsfbih.ba novih tekmovanj nima (pionirjev in
+druge ženske lige ni). U-15 ima klub "BSK" brez kraja (ni v `IME_KLUBA`) —
+pred uvozom preveri trk z nsfbih.

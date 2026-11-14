@@ -24,6 +24,9 @@ export const platforma = (): 'ios' | 'android' | 'web' =>
  * WebView ne zapusti aplikacije. Fizično blago trgovini dovolita mimo IAP.
  * `jezik` (jezik slff.eu) gre v ?lang=, da trgovina govori isti jezik.
  */
+/** Trgovina v meniju, nogi in na naslovnici. Začasno skrita (9. 11. 2026); shop.slff.eu ostane dosegljiv. */
+export const TRGOVINA_VIDNA = false
+
 export const povezavaTrgovine = (jezik?: string) => {
   const href = `https://shop.slff.eu${jezik ? `/?lang=${encodeURIComponent(jezik)}` : ''}`
   return jeNativno() ? { href, target: '_blank', rel: 'noopener noreferrer' } : { href }

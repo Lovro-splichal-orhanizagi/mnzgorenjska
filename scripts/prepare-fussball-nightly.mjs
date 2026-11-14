@@ -82,7 +82,7 @@ export async function prepareFussballNightly({candidate,directory,maxRequests=40
    rmSync(next,{recursive:true,force:true});writeFussballCurrentOnlyCache(directory,next,reviewed);rmSync(previous,{recursive:true,force:true})
    if(existsSync(latest))renameSync(latest,previous)
    renameSync(next,latest);rmSync(previous,{recursive:true,force:true});rmSync(seed,{recursive:true,force:true})
-   return {directory:resolve(directory),source_league_code:reviewed.source_league_code,...scope,reports:batch.reports.length,pendingReports:batch.pendingReports?.length??0,unknownReports:batch.unknownReports?.length??0,provenance:batch.provenance}
+   return {directory:resolve(directory),source_league_code:reviewed.source_league_code,...scope,reports:batch.reports.length,pendingReports:batch.pendingReports?.length??0,unknownReports:batch.unknownReports?.length??0,administrativeReports:batch.administrativeReports?.length??0,provenance:batch.provenance}
   }catch(error){
    if(stoppedCapture(directory)||error.sourceStop)throw Object.assign(new Error(`fussball nightly source stopped: ${error.message}`),{sourceStop:true,exitCode:4})
    throw Object.assign(error,{exitCode:1,dataHold:true})

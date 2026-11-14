@@ -751,7 +751,12 @@ function identitetaPara(html) {
   })
 }
 
-/** Obnova velja samo za en podvojen neodigran povratni par v polnem bloku. */
+/**
+ * Obnova velja samo za en podvojen neodigran povratni par v polnem bloku.
+ * Ko sta oba člana sveža (že na začetku ali po ciljnem branju) in par ostaja v
+ * istem krogu, je to stanje vira: vrne { razlog, zapisi } in odloči
+ * `uskladiMesaniPar`; brez enolične uskladitve se uvoz ustavi kot doslej.
+ */
 async function obnoviPar(prave, glavna, ponovnoUporabljeni, prenesi) {
   if (prave.length !== 240 || new Set(prave.flatMap((t) => klubPara(t.g))).size !== 16) return
   const pari = new Map()
@@ -793,7 +798,7 @@ async function obnoviPar(prave, glavna, ponovnoUporabljeni, prenesi) {
   }
   if (luknji !== 2) throw napakaKoledarja('par ni edino neskladje dveh krogov')
   const zaBranje = par.filter((t) => ponovnoUporabljeni.has(t.id))
-  if (!zaBranje.length) throw napakaKoledarja('oba sporna zapisnika sta že sveže prebrana')
+  if (!zaBranje.length) return { razlog: 'oba sporna zapisnika sta že sveže prebrana', zapisi: [] }
   // Največ dve zaporedni logični branji; obstoječi transport ohrani svoje
   // premore, ponovitve in meje izvornih zahtevkov. Ni rekurzivne obnove.
   for (const t of zaBranje) {
@@ -809,14 +814,74 @@ async function obnoviPar(prave, glavna, ponovnoUporabljeni, prenesi) {
     t.html = html
     t.g = glavaStrani(html)
   }
-  if (par[0].g.krog === par[1].g.krog || klubPara(par[0].g)[0] !== klubPara(par[1].g)[1] ||
-    klubPara(par[0].g)[1] !== klubPara(par[1].g)[0]) throw napakaKoledarja('povratni par ostaja neskladen')
+  if (klubPara(par[0].g)[0] !== klubPara(par[1].g)[1] || klubPara(par[0].g)[1] !== klubPara(par[1].g)[0])
+    throw napakaKoledarja('povratni par ostaja neskladen')
+  // Sveža stran vira ima par še vedno v istem krogu: predpomnilnik se zamenja
+  // šele, ko ga `uskladiMesaniPar` enolično uskladi.
+  if (par[0].g.krog === par[1].g.krog) return { razlog: 'povratni par ostaja neskladen', zapisi: zaBranje }
   for (const ts of krogi().values()) {
     if (ts.length !== 8 || new Set(ts.flatMap((t) => klubPara(t.g))).size !== 16)
       throw napakaKoledarja('po obnovi vsak krog potrebuje osem disjunktnih tekem')
   }
   // Noben zavrnjen par ne sme z delnim zapisom izbrisati svojega sprožilca.
   for (const t of zaBranje) writeFileSync(pot(imeStrani(t.id)), t.html)
+}
+
+/**
+ * Mešan povratni par (Quarta g5, g7 2026/27): tekmo prvega dela, odigrano ali
+ * prestavljeno z obrnjenim domačinom, FCF vpiše v zapisnik povratnega kroga in
+ * mu da krog prvega dela; prvotni zapisnik ostane v istem krogu brez izida in s
+ * preteklim datumom (g7 4145928: "Acta Tancada", 4. 10., brez izida; 4146048:
+ * krog 3, 7:1, 7. 10.). Krog ima tako tekmo preveč, zrcalni krog (± pol sezone)
+ * pa mu manjka natanko ta par. Pozneje FCF prvotni zapisnik sam prestavi v
+ * zrcalni krog z datumom tega kroga (g22 4149517 → krog 16, 23. 1. 2027).
+ *
+ * Uskladimo le, ko je to EDINO neskladje popolnega dvokrožnega koledarja (vse
+ * smeri enolične, vsi krogi, ostali krogi polni in disjunktni) in je natanko en
+ * član para zastarel (brez izida, pretekel datum strogo pred datumom drugega
+ * člana): ta gre v zrcalni krog z najpogostejšim datumom tega kroga (začasno,
+ * do objave vira), drugi ostane.
+ * Uvoz razporeda nato neuvoženo vrstico zastarelega člana v polnem krogu odstrani.
+ * Brez enoličnega zastarelega člana vrne { nejasen }; sicer null (ni vzorca).
+ */
+export function uskladiMesaniPar(prave, { danes = Date.now() } = {}) {
+  const klubi = new Set(prave.flatMap((t) => klubPara(t.g)))
+  const n = klubi.size, naKrog = Math.floor(n / 2), krogov = n % 2 ? 2 * n : 2 * (n - 1)
+  if (n < 4 || prave.length !== n * (n - 1)) return null
+  const smeri = new Set(), poKrogih = new Map()
+  for (const t of prave) {
+    const [d, g] = klubPara(t.g), k = t.g.krog
+    if (d === g || !Number.isInteger(k) || k < 1 || k > krogov) return null
+    smeri.add(`${d}|${g}`)
+    if (!poKrogih.has(k)) poKrogih.set(k, [])
+    poKrogih.get(k).push(t)
+  }
+  if (smeri.size !== prave.length || poKrogih.size !== krogov) return null
+  const odstopi = [...poKrogih].filter(([, ts]) => ts.length !== naKrog).sort((a, b) => b[1].length - a[1].length)
+  if (odstopi.length !== 2) return null
+  const [[poln, prevec], [prazen, premalo]] = odstopi
+  if (prevec.length !== naKrog + 1 || premalo.length !== naKrog - 1 || Math.abs(poln - prazen) !== krogov / 2) return null
+  const disjunktne = (ts) => new Set(ts.flatMap((t) => klubPara(t.g))).size === 2 * ts.length
+  for (const [k, ts] of poKrogih) if (k !== poln && !disjunktne(ts)) return null
+  const obrnjen = (a, b) => klubPara(a.g)[0] === klubPara(b.g)[1] && klubPara(a.g)[1] === klubPara(b.g)[0]
+  const par = prevec.filter((t) => prevec.some((u) => u !== t && obrnjen(t, u)))
+  if (par.length !== 2) return null
+  const dvojica = klubPara(par[0].g), ostale = prevec.filter((t) => !par.includes(t))
+  if (!disjunktne(ostale) || ostale.some((t) => klubPara(t.g).some((k) => dvojica.includes(k)))) return null
+  const vPraznem = new Set(premalo.flatMap((t) => klubPara(t.g)))
+  if (dvojica.some((k) => vPraznem.has(k)) || n - vPraznem.size !== (n % 2 ? 3 : 2)) return null
+  if (par.some((t) => t.historicalMarker)) return null
+  // Zastareli član je prvotni zapisnik: brez izida, s preteklim datumom, ki je
+  // strogo pred datumom drugega člana (ta je odigran ali prestavljen pozneje).
+  const danesIso = new Date(danes).toISOString().slice(0, 10), veljaven = (t) => typeof t.g.datum === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(t.g.datum)
+  const [premakni, ostane] = [...par].sort((a, b) => (a.g.datum < b.g.datum ? -1 : 1))
+  if (!par.every(veljaven) || !(premakni.g.datum < ostane.g.datum) || premakni.g.izid || !(premakni.g.datum < danesIso))
+    return { nejasen: true, razlog: `mešan povratni par ${par.map((t) => t.id).join('/')} v krogu ${poln} nima enoličnega zastarelega zapisnika` }
+  const datumi = new Map()
+  for (const t of premalo) if (t.g.datum) datumi.set(t.g.datum, (datumi.get(t.g.datum) ?? 0) + 1)
+  const datum = [...datumi].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))[0]?.[0] ?? null
+  premakni.g = { ...premakni.g, krog: prazen, datum, ura: null }
+  return { premaknjen: premakni.id, ostane: ostane.id, izKroga: poln, vKrog: prazen, datum }
 }
 
 /**
@@ -867,7 +932,16 @@ export async function preberiBlok(koda, prenesi, { danes = Date.now(), svezi = f
   if (tuje.length) console.warn(`fcf: v bloku ${koda} so tekme drugih skupin (izpuščene): ${tuje.map((t) => `${t.id} (${kljuc(t.g)})`).join(', ')}`)
   // Prost krog: "vs undefined" (liho število klubov) ni tekma.
   const prave = tekme.filter((t) => kljuc(t.g) === glavna && t.g.domaci && t.g.gostje && !/^undefined$/i.test(t.g.gostje) && !/^undefined$/i.test(t.g.domaci))
-  await obnoviPar(prave, glavna, ponovnoUporabljeni, prenesi)
+  const odlozeno = await obnoviPar(prave, glavna, ponovnoUporabljeni, prenesi)
+  const uskladitev = uskladiMesaniPar(prave, { danes })
+  if (odlozeno && !uskladitev?.premaknjen) throw napakaKoledarja(odlozeno.razlog)
+  if (uskladitev?.nejasen) console.warn(`fcf: v bloku ${koda} ${uskladitev.razlog} — koledar ostane, kot ga kaže vir`)
+  if (uskladitev?.premaknjen) {
+    for (const t of odlozeno?.zapisi ?? []) writeFileSync(pot(imeStrani(t.id)), t.html)
+    const u = uskladitev
+    console.warn(`fcf: v bloku ${koda} mešan povratni par v krogu ${u.izKroga}: zastareli zapisnik ${u.premaknjen} (brez izida, pretekel datum) premaknjen v zrcalni krog ${u.vKrog}` +
+      ` z datumom kroga ${u.datum ?? '—'}; ${u.ostane} ostane v krogu ${u.izKroga}`)
+  }
   return { tekme: prave, skupina: glavna, tujih: tuje.length, ni }
 }
 

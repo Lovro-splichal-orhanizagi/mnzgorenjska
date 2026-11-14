@@ -39,6 +39,38 @@ največ 3 iz kluba je pet klubov spodnja meja brez izbire.
 | pt-mladinci | `2026:53` | `2025:71`, `2024:71` (šifra Mladine se s sezono menja) |
 | ms-mladinci | `2026:115` | `2025:115`, `2024:115` |
 
+Kadeti (U17), U15 in ženske lige (migracija 20261104173300, 30 lig,
+**neaktivnih**; odobritev lastnika 4. 11. 2026). Šifre nosijo starostno
+oznako (`skl1-u17`, ne `skl1`), da jih `je_mladinski_slug` (PR #668) prepozna;
+pred uvozom mora biti #668 združen. `prvi_fantasy_krog` je krog po zadnjem
+odigranem (ob vklopu ga skripta postavi na prvi prihodnji), `rok_pomak_ur = 2`
+(ŽNL 6).
+
+- **NZS ženske** so pod `/klubi/zenski/`: šifra `zenski/<pot>[:<sezona>]`
+  (`viri/nzs.mjs`), zapisnik je isti kot pri moških.
+- **LJ CMS starosti**: 2007/2008 = kadeti U17 (letnik 2010–11), 2011/2012 =
+  U15 (2012), 2009/2010 = starejši dečki, letnik 2013 (dejansko U14 —
+  ni vpisano). LJ U15 polčasa ne vpisuje; `zapisnik.mjs` ga ima za neobveznega
+  (`polcas: null`).
+- MB arhiv U17 ima drugačno ime: `u17-kadetska-liga-1-liga-25-26`.
+
+| liga | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|
+| skl1-u17 / skl2-vzhod-u17 / skl2-zahod-u17 (nzs) | `1-skl` / `2-skl-vzhod` / `2-skl-zahod` | `<pot>:22` (1. SKL preverjen) |
+| u15-1 / u15-2-vzhod / u15-2-zahod (nzs) | `1-liga-u15` / `2-liga-u15-vzhod` / `2-liga-u15-zahod` | `<pot>:22` (ni preverjeno) |
+| znl / zl-u17 / zl-u15-vzhod / zl-u15-zahod (nzs) | `zenski/zenska-nogometna-liga-triglav` / `zenski/liga-deklet-u17` / `zenski/liga-deklet-u15-vzhod` / `zenski/liga-deklet-u15-zahod` | `<šifra>:22` (ni preverjeno) |
+| gnl-kadeti / gnl-u15-modra / gnl-u15-rdeca | `1602` / `1604` / `1605` | `1504` / — / — |
+| lj-kadeti / lj-kadeti-2 | `2007` / `2008` | `1908` / `1909`? |
+| lj-u15 / lj-u15-2 | `2011` / `2012` | — |
+| ce-kadeti / ce-u15 / ce-u15-2 | `1904` / `1905` / `1906` | `1803` / — / — |
+| mb-u17 / mb-u17-2 | `u17-kadetska-liga-1-26-27` / `u17-kadetska-liga-2-26-27` | `u17-kadetska-liga-1-liga-25-26` / — |
+| mb-u15 / mb-u15-2a / mb-u15-2b | `u15-starejsi-decki-1-26-27` / `…-2a-26-27` / `…-2b-26-27` | `u15-starejsi-decki-1-25-26` / — / — |
+| ms-kadeti / ms-u15 | `2026:78` / `2026:121` | neznan |
+| pt-kadeti / pt-u15 / pt-u15-2 | `2026:54` / `2026:77` / `2026:94` | neznan (Ptuj šifro menja vsako sezono) |
+
+Majhne: ženski U15 Vzhod/Zahod in MB U17 2 (6 klubov), MS kadeti in PT U15 2
+(7). PT U15 2 zapisnika ob pregledu še ni pokazala.
+
 
 Nova Gorica menija za pretekle sezone nima — stara sezona je svoje tekmovanje
 s svojo šifro in do nje ne vodi nobena povezava, zato jih je treba prečesati.

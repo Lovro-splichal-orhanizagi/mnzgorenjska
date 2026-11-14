@@ -4,6 +4,11 @@ import type { Prevod } from '../jedro.ts'
 export const domov: NonNullable<Prevod['domov']> = {
   napakaNalaganja: 'Տվյալները չհաջողվեց բեռնել։',
   delNiNalozen: 'Տվյալների մի մասը չբեռնվեց: {napaka}',
+  stevec: {
+    naslov: 'Ճանապարհին դեպի 10 000 օգտատեր',
+    dosezeno: 'Մենք հասանք 10 000 օգտատիրոջ։',
+    opis: 'Մինչև նպատակը մնաց՝ {n}',
+  },
   uvod: {
     // Լիգաների անունները՝ հայատառ, առանց գծիկի.
     gorenjskaMladinci: 'Գորենյսկայի ֆուտբոլային լիգա, պատանիներ',
@@ -172,6 +177,12 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaPripomocki: 'Բոնուսներ',
     pravilaWildcard: 'Wildcard: վերակազմիր թիմդ անվճար',
     pravilaKlopPlus: 'Նստարան+: նստարանն էլ է միավորներ վաստակում',
+  },
+  // Časovno omejena kartica z aplikacijama namesto trgovine (AppPromo.tsx).
+  appPromo: {
+    oznaka: 'Նոր · SLFF հավելված',
+    naslov: 'SLFF-ն այժմ նաև հավելված է',
+    opis: 'Կազմիր քո թիմը, հետևիր միավորներին ուղիղ եթերում և ստացիր հիշեցում վերջնաժամկետից առաջ։ Անվճար Android-ի և iPhone-ի համար։',
   },
   trgovina: {
     oznaka: 'Նոր · SLFF խանութ',

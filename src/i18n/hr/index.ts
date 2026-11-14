@@ -9,5 +9,6 @@ import { igralci } from './igralci.ts'
 import { lestvice } from './lestvice.ts'
 import { tekme } from './tekme.ts'
 import { racun } from './racun.ts'
+import { preverjeni } from './preverjeni.ts'
 
-export const hr: Prevod = { skupno, aplikacija, domov, mojaEkipa, igralci, lestvice, tekme, racun }
+export const hr: Prevod = { skupno, aplikacija, domov, mojaEkipa, igralci, lestvice, tekme, racun, preverjeni }

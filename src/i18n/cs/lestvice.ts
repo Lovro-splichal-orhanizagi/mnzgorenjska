@@ -118,6 +118,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     vrhOpomba:
       'Body jsou bez asistencí: asistence potvrzuje hlasování, které ve většině lig ještě neběží, takže ligy by nebyly ve stejné pozici. Ligy odehrály různý počet kol.',
     vrhPrazno: 'V aktuální sezóně se ještě neodehrály žádné zápasy.',
+    napovediUvod: 'Nejlepší tipaři ze všech lig. Přesný výsledek 3 body, správný výsledek zápasu 1.',
+    napovediSezona: 'Sezóna',
+    napovedi7dni: 'Posledních 7 dní',
+    napovediPrazno7: 'Za posledních 7 dní zatím nejsou vyhodnocené žádné tipy.',
+    napovediOcenjenih: 'Vyhodnocené tipy: {n}',
+    vrhNapovedi: 'Nejlepší tipaři',
+    vrhNapovediVse: 'Celá tabulka tipů',
   },
 
   miniLige: {
