@@ -464,6 +464,11 @@ export const igralci = {
     uspeh: 'Hvala! Plačilo je prejeto. Ceno izračunamo znova in jo potrdimo v nekaj dneh.',
     napaka: 'Plačila ni bilo mogoče začeti. Poskusi znova.',
     niMogoce: 'Ponovno vrednotenje cene za tega igralca zdaj ni mogoče.',
+    brezplacno: 'brezplačno z bonom',
+    opisBon: 'Imaš bon za tri povabljene prijatelje. Ceno izračunamo znova z istimi pravili kot vsak teden in jo potrdimo v nekaj dneh. Lahko se zviša, zniža ali ostane enaka. Bon je enkraten.',
+    uporabiBon: 'Uporabi bon',
+    uspehBon: 'Bon je uporabljen. Ceno izračunamo znova in jo potrdimo v nekaj dneh.',
+    niBona: 'Bona za ponovno vrednotenje nimaš (potrebuješ tri povabljene prijatelje z ekipo).',
     ovire: {
       taTeden: 'Cena je bila ta teden že ponovno ovrednotena. Poskusi naslednji teden.',
       nedavno: 'Ta igralec je bil nedavno ponovno ovrednoten ali pa je zahtevek že v pregledu.',

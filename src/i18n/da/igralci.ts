@@ -462,6 +462,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     uspeh: 'Tak! Betalingen er modtaget. Vi genberegner prisen og bekræfter den inden for få dage.',
     napaka: 'Betalingen kunne ikke startes. Prøv igen.',
     niMogoce: 'Denne spillers pris kan ikke vurderes igen lige nu.',
+    brezplacno: 'gratis med kupon',
+    opisBon: 'Du har en kupon for tre inviterede venner. Vi genberegner prisen med de samme regler som hver uge og bekræfter den inden for få dage. Den kan stige, falde eller forblive den samme. Kuponen kan bruges én gang.',
+    uporabiBon: 'Brug kupon',
+    uspehBon: 'Kuponen er brugt. Vi genberegner prisen og bekræfter den inden for få dage.',
+    niBona: 'Du har ingen kupon til ny vurdering af prisen (du skal have tre inviterede venner med hold).',
     ovire: {
       taTeden: 'Prisen er allerede vurderet igen i denne uge. Prøv igen i næste uge.',
       nedavno: 'Denne spiller er for nylig vurderet igen, eller en anmodning bliver allerede gennemgået.',

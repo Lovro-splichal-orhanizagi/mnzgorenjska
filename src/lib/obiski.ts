@@ -58,6 +58,7 @@ const PO_POTI: Record<string, string> = {
   '/absences': 'odsotnosti',
   '/account': 'racun',
   '/reminders': 'opomniki',
+  '/invite': 'povabi',
   '/legal': 'pravno',
   '/login': 'prijava',
   '/auth/confirm': 'potrditev',

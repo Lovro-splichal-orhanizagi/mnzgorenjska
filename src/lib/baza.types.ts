@@ -3374,6 +3374,7 @@ export type Database = {
           stripe_placilo: string | null
           stripe_seja: string | null
           user_id: string | null
+          z_bonom: boolean
         }
         Insert: {
           competition_id: number
@@ -3393,6 +3394,7 @@ export type Database = {
           stripe_placilo?: string | null
           stripe_seja?: string | null
           user_id?: string | null
+          z_bonom?: boolean
         }
         Update: {
           competition_id?: number
@@ -3412,6 +3414,7 @@ export type Database = {
           stripe_placilo?: string | null
           stripe_seja?: string | null
           user_id?: string | null
+          z_bonom?: boolean
         }
         Relationships: [
           {
@@ -9432,6 +9435,16 @@ export type Database = {
           z_veljavno_ekipo: number
         }[]
       }
+      akcija_vabil_okno: { Args: never; Returns: Record<string, unknown> }
+      akcija_vabil_stevci: {
+        Args: never
+        Returns: {
+          n: number
+          user_id: string
+          zadnji: string
+        }[]
+      }
+      akcija_vabil_val: { Args: never; Returns: number }
       anketa_placila_poslanih: { Args: never; Returns: number }
       anketa_placila_zasedi: {
         Args: {
@@ -9545,6 +9558,7 @@ export type Database = {
         Args: { p_main_sha: string; p_policy_sha: string; p_slug: string }
         Returns: Json
       }
+      bon_ponovne_cene: { Args: { p_uid: string }; Returns: boolean }
       check_fcf_current_target: {
         Args: { p_activate?: boolean; p_rollout_text: string; p_sha256: string }
         Returns: Json
@@ -10029,6 +10043,23 @@ export type Database = {
         Returns: boolean
       }
       je_preverjen: { Args: { p_player_id: number }; Returns: boolean }
+      kandidati_za_akcijo_vabil: {
+        Args: { p_najvec?: number }
+        Returns: {
+          bon: boolean
+          competition_id: number
+          display_name: string
+          email: string
+          liga_drzava: string
+          liga_oznaka: string
+          liga_slug: string
+          pripeljanih: number
+          user_id: string
+          v_akciji: number
+          val: number
+          vodilni: number
+        }[]
+      }
       kandidati_za_dobrodoslico: {
         Args: { p_najvec?: number }
         Returns: {
@@ -10370,6 +10401,14 @@ export type Database = {
           user_id: string
         }[]
       }
+      lestvica_vabil: {
+        Args: never
+        Returns: {
+          ime: string
+          mesto: number
+          n: number
+        }[]
+      }
       liga: { Args: { liga: string }; Returns: Json }
       mark_dfb_report_pending: {
         Args: {
@@ -10463,6 +10502,7 @@ export type Database = {
           round_id: number
         }[]
       }
+      moje_vabilo: { Args: never; Returns: Json }
       najcenejsi_kader: { Args: { p_igralci: Json }; Returns: number }
       najdi_igralca: { Args: { ime: string; liga?: string }; Returns: Json }
       namigi_ekipe: {
@@ -10696,6 +10736,7 @@ export type Database = {
         Args: { p_competition_id: number }
         Returns: boolean
       }
+      ponovna_cena_z_bonom: { Args: { p_player_id: number }; Returns: number }
       ponovne_cene_za_izracun: {
         Args: never
         Returns: {

@@ -467,6 +467,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     uspeh: 'Paldies! Maksājums saņemts. Mēs pārrēķināsim cenu un apstiprināsim to dažu dienu laikā.',
     napaka: 'Maksājumu neizdevās sākt. Mēģini vēlreiz.',
     niMogoce: 'Šī spēlētāja cenu pašlaik nevar pārvērtēt.',
+    brezplacno: 'bez maksas ar kuponu',
+    opisBon: 'Tev ir kupons par trim uzaicinātiem draugiem. Mēs pārrēķinām cenu pēc tiem pašiem noteikumiem kā katru nedēļu un apstiprinām to dažu dienu laikā. Tā var pieaugt, samazināties vai palikt nemainīga. Kuponu var izmantot vienu reizi.',
+    uporabiBon: 'Izmantot kuponu',
+    uspehBon: 'Kupons izmantots. Mēs pārrēķināsim cenu un apstiprināsim to dažu dienu laikā.',
+    niBona: 'Tev nav cenas pārvērtēšanas kupona (vajag trīs uzaicinātus draugus ar komandu).',
     ovire: {
       taTeden: 'Cena šonedēļ jau ir pārvērtēta. Mēģini nākamnedēļ.',
       nedavno: 'Šis spēlētājs nesen tika pārvērtēts vai pieprasījums jau tiek pārskatīts.',

@@ -462,6 +462,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     uspeh: 'Aitäh! Makse on laekunud. Arvutame hinna ümber ja kinnitame selle mõne päeva jooksul.',
     napaka: 'Makset ei õnnestunud alustada. Proovi uuesti.',
     niMogoce: 'Selle mängija hinda ei saa praegu ümber hinnata.',
+    brezplacno: 'tasuta kupongiga',
+    opisBon: 'Sul on kupong kolme kutsutud sõbra eest. Arvutame hinna ümber samade reeglitega nagu igal nädalal ja kinnitame selle mõne päeva jooksul. See võib tõusta, langeda või jääda samaks. Kupongi saab kasutada ühe korra.',
+    uporabiBon: 'Kasuta kupongi',
+    uspehBon: 'Kupong on kasutatud. Arvutame hinna ümber ja kinnitame selle mõne päeva jooksul.',
+    niBona: 'Sul pole hinna ümberhindamise kupongi (vaja on kolme kutsutud sõpra meeskonnaga).',
     ovire: {
       taTeden: 'Hind on sel nädalal juba ümber hinnatud. Proovi järgmisel nädalal.',
       nedavno: 'Seda mängijat hinnati hiljuti ümber või on taotlus juba ülevaatusel.',

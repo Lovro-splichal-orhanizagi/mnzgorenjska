@@ -40,6 +40,7 @@ const ZNANE: [RegExp, Parameters<typeof t>[0]][] = [
   [/^Izpostavi lahko le svojo tekmo/, 'igralci.preverjen.napake.tekma'],
   [/^Plačilo trenutno ni na voljo/, 'igralci.preverjen.napake.niNaVoljo'],
   [/^Ponovno vrednotenje cene zdaj ni mogoče/, 'igralci.ponovnaCena.niMogoce'],
+  [/^Bona za ponovno vrednotenje nimaš/, 'igralci.ponovnaCena.niBona'],
   [/^Plačila ni bilo mogoče začeti/, 'igralci.ponovnaCena.napaka'],
   [/^Preveriš lahko le svoj potrjen profil/, 'igralci.preverjen.napake.niTvoj'],
   [/^Profil je že preverjen/, 'igralci.preverjen.napake.zePreverjen'],

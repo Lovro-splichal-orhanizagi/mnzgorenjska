@@ -1116,6 +1116,21 @@
   Omejeni računi ne kupujejo (`zavrni_omejenega`). Tabela je zaprta (tudi za
   agente); stran bere le `ponovna_cena_stanje`. Administracija → Igralci →
   Ponovne cene (stikalo, predlogi, potrditev, zavrnitev). V aplikaciji ga ni.
+- **Akcija vabil** (14.–30. 11. 2026, migracija 20261114120000, stran
+  `/invite` = `Povabi.tsx`, delovni tok *Akcija vabil*): osebna povezava
+  `?od=<koda>` (obstoječi `kode_vabil`/`povabila`); povabilo šteje šele s
+  prijateljevo nehišno ekipo (`kvalificiran_at`). Pri **3** takih (kadarkoli,
+  `pripeljanih`) dobi uporabnik enkraten **bon za ponovno vrednotenje cene**:
+  `ponovna_cena_z_bonom` ustvari zahtevek `ponovne_cene.z_bonom` naravnost kot
+  `placano` (brez Stripe, ista pot izračuna in potrditve admina, tudi v
+  aplikaciji); zavrnjen ali `za_vracilo` zahtevek bon vrne
+  (`bon_ponovne_cene`). **Zaboj piva**: največ prijateljev, kvalificiranih v
+  `akcija_vabil_okno()`, brez adminov in hišnih računov, izenačenje odloči
+  prej doseženo število (`akcija_vabil_stevci`, javni vrh `lestvica_vabil`,
+  lastno stanje `moje_vabilo`). Pošta in push v treh valovih
+  (`akcija_vabil_val`: od 14., 21. in 27. 11.), vsak enkrat na človeka, vsaj 4
+  dni narazen, brez mladinskih lig (`kandidati_za_akcijo_vabil`, vrsta
+  `akcija-vabil-<val>` v `email_log`). Zmagovalca izbere in obvesti admin ročno.
 - **Klubski računi** (migracija 20261013201100, spec
   `docs/superpowers/specs/2026-10-13-klubski-racuni-design.md`): klub dobi
   račun, ko se prijavi s **potrjenim** uradnim naslovom iz `klub_stik`

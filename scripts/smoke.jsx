@@ -38,6 +38,7 @@ import PrevzemIgralca from '../src/components/PrevzemIgralca'
 import { ScoutIgralca } from '../src/components/ScoutIgralca'
 import Prevzemi from '../src/components/admin/Prevzemi'
 import Piva from '../src/pages/Piva'
+import Povabi from '../src/pages/Povabi'
 import Pravno from '../src/pages/Pravno'
 import PivskiZidAdmin from '../src/components/admin/Piva'
 import { lestvicaPodpornikov, vsehPiv } from '../src/lib/piva'
@@ -165,6 +166,7 @@ const strani = [
   ['Scout igralca', () => <div><ScoutIgralca glavni={1} /></div>, '/player/1'],
   ['Admin: prevzemi', () => <div><Prevzemi /></div>, '/admin'],
   ['Pivski zid', Piva, '/beers'],
+  ['Povabi prijatelje', Povabi, '/invite'],
   ['Admin: pivski zid', () => <div><PivskiZidAdmin /></div>, '/admin'],
 ]
 

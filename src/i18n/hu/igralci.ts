@@ -462,6 +462,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     uspeh: 'Köszönjük! A fizetés megérkezett. Az árat újraszámoljuk, és néhány napon belül jóváhagyjuk.',
     napaka: 'A fizetést nem sikerült elindítani. Próbáld újra.',
     niMogoce: 'Ennek a játékosnak az ára most nem értékelhető újra.',
+    brezplacno: 'ingyenes utalvánnyal',
+    opisBon: 'Van utalványod három meghívott barátért. Az árat ugyanazokkal a szabályokkal számoljuk újra, mint minden héten, és néhány napon belül jóváhagyjuk. Emelkedhet, csökkenhet vagy maradhat. Az utalvány egyszer használható.',
+    uporabiBon: 'Utalvány beváltása',
+    uspehBon: 'Az utalványt beváltottad. Az árat újraszámoljuk, és néhány napon belül jóváhagyjuk.',
+    niBona: 'Nincs ár-újraértékelési utalványod (három meghívott, csapattal rendelkező barát kell hozzá).',
     ovire: {
       taTeden: 'Az árat ezen a héten már újraértékelték. Próbáld jövő héten.',
       nedavno: 'Ezt a játékost nemrég értékelték újra, vagy egy kérés már ellenőrzés alatt van.',
