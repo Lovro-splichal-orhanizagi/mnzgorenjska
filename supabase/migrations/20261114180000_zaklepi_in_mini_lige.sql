@@ -54,6 +54,9 @@ end;
 $$;
 revoke all on procedure public.osvezi_vso_statistiko_po_kosih() from public, anon, authenticated;
 
+-- Cron posle je na strežniku ustvaril supabase_admin in jih migracija (teče
+-- kot postgres) ne sme spreminjati; preusmeritev je ročni korak na strežniku
+-- (`select cron.alter_job(…)` kot supabase_admin, 14. 11. 2026 narejen), tu le poskus brez napake.
 do $$
 begin
   if exists (select 1 from pg_namespace where nspname = 'cron') then
@@ -62,6 +65,8 @@ begin
     perform cron.alter_job(jobid, command := 'call public.osvezi_vso_statistiko_po_kosih()')
        from cron.job where command = 'select public.osvezi_vso_statistiko_igralcev()';
   end if;
+exception when others then
+  raise notice 'Cron posli niso preusmerjeni (%): preusmeri jih ročno kot lastnik.', sqlerrm;
 end;
 $$;
 
