@@ -102,6 +102,7 @@ export default function PrviObisk() {
   const vabljen =
     pathname.startsWith('/club/') ||
     pathname.startsWith('/l/') ||
+    pathname.startsWith('/i/') ||
     // Deljena kartica igralca ali plakat ekipe: kdor pride od tam (pogosto
     // starši), naj najprej vidi, kar mu je kdo poslal.
     pathname.startsWith('/player/') ||

@@ -35,7 +35,7 @@ const DAN = 24 * 60 * 60 * 1000
 /** Da človek najprej vidi "Ekipa shranjena" oziroma stran, ki jo je odprl. */
 const ZAMIK_EKIPA_MS = 1_500
 const ZAMIK_KROG_MS = 2_500
-const BREZ_OKNA = ['/login', '/legal', '/account', '/beers', '/auth', '/admin', '/novo-geslo', '/new-password', '/reminders', '/claim']
+const BREZ_OKNA = ['/login', '/i/', '/invite', '/legal', '/account', '/beers', '/auth', '/admin', '/novo-geslo', '/new-password', '/reminders', '/claim']
 
 /** Okno utihne za `dni` dni (klik na pivo kjerkoli, zapiranje, "sem že"). */
 export function utisajPivoOkno(dni: number) {

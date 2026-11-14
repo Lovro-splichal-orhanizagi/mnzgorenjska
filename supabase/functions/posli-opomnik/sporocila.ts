@@ -4166,6 +4166,7 @@ export interface BesedilaAkcijeVabil {
   naslovZadnji: string
   uvod: string
   uvodZadnji: string
+  koda: string
   tvoji: string
   tvojiV: string
   bon: string
@@ -4183,6 +4184,7 @@ export interface BesedilaAkcijeVabil {
 
 export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
   sl: {
+    koda: 'Tvoja koda',
     zadeva: 'Povabi prijatelje v SLFF in osvoji zaboj piva 🍺',
     zadevaZadnji: 'Še nekaj dni: zaboj piva za največ povabljenih 🍺',
     predglava: 'Trije prijatelji z ekipo = brezplačen pregled cene igralca. Največ povabljenih do 30. 11. dobi zaboj piva.',
@@ -4205,6 +4207,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Ta mail dobiš, ker imaš ekipo na slff.eu. Akcija traja do 30. 11. 2026.',
   },
   en: {
+    koda: 'Your code',
     zadeva: 'Invite friends to SLFF and win a crate of beer 🍺',
     zadevaZadnji: 'A few days left: a crate of beer for the top inviter 🍺',
     predglava: 'Three friends with a team = a free player price review. The top inviter by 30 Nov wins a crate of beer.',
@@ -4227,6 +4230,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'You get this email because you have a team on slff.eu. The challenge runs until 30 Nov 2026.',
   },
   sk: {
+    koda: 'Tvoj kód',
     zadeva: 'Pozvi priateľov do SLFF a vyhraj basu piva 🍺',
     zadevaZadnji: 'Ešte pár dní: basa piva pre toho, kto pozve najviac 🍺',
     predglava: 'Traja priatelia s tímom = bezplatné preskúmanie ceny hráča. Kto do 30. 11. pozve najviac, získa basu piva.',
@@ -4249,6 +4253,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Tento e-mail dostávaš, pretože máš tím na slff.eu. Akcia trvá do 30. 11. 2026.',
   },
   hr: {
+    koda: 'Tvoj kod',
     zadeva: 'Pozovi prijatelje u SLFF i osvoji gajbu piva 🍺',
     zadevaZadnji: 'Još nekoliko dana: gajba piva za najviše pozvanih 🍺',
     predglava: 'Tri prijatelja s momčadi = besplatna revizija cijene igrača. Najviše pozvanih do 30. 11. dobiva gajbu piva.',
@@ -4271,6 +4276,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Ovaj e-mail dobivaš jer imaš momčad na slff.eu. Akcija traje do 30. 11. 2026.',
   },
   cs: {
+    koda: 'Tvůj kód',
     zadeva: 'Pozvi přátele do SLFF a vyhraj basu piva 🍺',
     zadevaZadnji: 'Ještě pár dní: basa piva pro toho, kdo pozve nejvíc 🍺',
     predglava: 'Tři přátelé s týmem = bezplatný přezkum ceny hráče. Kdo do 30. 11. pozve nejvíc, získá basu piva.',
@@ -4293,6 +4299,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Tento e-mail dostáváš, protože máš tým na slff.eu. Akce trvá do 30. 11. 2026.',
   },
   hu: {
+    koda: 'A kódod',
     zadeva: 'Hívd meg a barátaidat az SLFF-be, és nyerj egy rekesz sört 🍺',
     zadevaZadnji: 'Már csak néhány nap: egy rekesz sör a legtöbb meghívásért 🍺',
     predglava: 'Három barát csapattal = ingyenes játékosár-felülvizsgálat. Aki november 30-ig a legtöbb barátot hívja meg, egy rekesz sört nyer.',
@@ -4315,6 +4322,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Ezt az e-mailt azért kapod, mert van csapatod az slff.eu-n. Az akció 2026. november 30-ig tart.',
   },
   de: {
+    koda: 'Dein Code',
     zadeva: 'Lade Freunde zu SLFF ein und gewinne einen Kasten Bier 🍺',
     zadevaZadnji: 'Nur noch wenige Tage: ein Kasten Bier für die meisten Einladungen 🍺',
     predglava: 'Drei Freunde mit Team = eine kostenlose Preisprüfung eines Spielers. Wer bis 30.11. die meisten einlädt, gewinnt einen Kasten Bier.',
@@ -4337,6 +4345,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Du bekommst diese E-Mail, weil du ein Team auf slff.eu hast. Die Aktion läuft bis 30.11.2026.',
   },
   sr: {
+    koda: 'Tvoj kod',
     zadeva: 'Pozovi prijatelje u SLFF i osvoji gajbu piva 🍺',
     zadevaZadnji: 'Još nekoliko dana: gajba piva za najviše pozvanih 🍺',
     predglava: 'Tri prijatelja sa timom = besplatan pregled cene igrača. Najviše pozvanih do 30. 11. dobija gajbu piva.',
@@ -4359,6 +4368,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Ovaj e-mail dobijaš jer imaš tim na slff.eu. Akcija traje do 30. 11. 2026.',
   },
   ro: {
+    koda: 'Codul tău',
     zadeva: 'Invită prieteni în SLFF și câștigă o ladă de bere 🍺',
     zadevaZadnji: 'Încă câteva zile: o ladă de bere pentru cele mai multe invitații 🍺',
     predglava: 'Trei prieteni cu echipă = o revizuire gratuită a prețului unui jucător. Cine invită cei mai mulți până pe 30 noiembrie câștigă o ladă de bere.',
@@ -4381,6 +4391,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Primești acest e-mail pentru că ai o echipă pe slff.eu. Campania durează până pe 30 noiembrie 2026.',
   },
   et: {
+    koda: 'Sinu kood',
     zadeva: 'Kutsu sõbrad SLFF-i ja võida kast õlut 🍺',
     zadevaZadnji: 'Veel paar päeva: kast õlut kõige rohkem kutsunule 🍺',
     predglava: 'Kolm sõpra meeskonnaga = tasuta mängija hinna ülevaatus. Kes kutsub 30. novembriks kõige rohkem, võidab kasti õlut.',
@@ -4403,6 +4414,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Saad selle e-kirja, sest sul on meeskond saidil slff.eu. Kampaania kestab 30. novembrini 2026.',
   },
   pl: {
+    koda: 'Twój kod',
     zadeva: 'Zaproś znajomych do SLFF i wygraj skrzynkę piwa 🍺',
     zadevaZadnji: 'Jeszcze kilka dni: skrzynka piwa za najwięcej zaproszeń 🍺',
     predglava: 'Trzech znajomych z drużyną = darmowa weryfikacja ceny zawodnika. Kto do 30 listopada zaprosi najwięcej, wygrywa skrzynkę piwa.',
@@ -4425,6 +4437,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Dostajesz ten e-mail, bo masz drużynę na slff.eu. Akcja trwa do 30 listopada 2026.',
   },
   es: {
+    koda: 'Tu código',
     zadeva: 'Invita a tus amigos a SLFF y gana una caja de cerveza 🍺',
     zadevaZadnji: 'Quedan pocos días: una caja de cerveza para quien más invite 🍺',
     predglava: 'Tres amigos con equipo = una revisión de precio de jugador gratis. Quien más invite hasta el 30 de noviembre gana una caja de cerveza.',
@@ -4447,6 +4460,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Recibes este correo porque tienes un equipo en slff.eu. La promoción dura hasta el 30 de noviembre de 2026.',
   },
   lv: {
+    koda: 'Tavs kods',
     zadeva: 'Uzaicini draugus uz SLFF un laimē kasti alus 🍺',
     zadevaZadnji: 'Vēl dažas dienas: kaste alus tam, kurš uzaicinās visvairāk 🍺',
     predglava: 'Trīs draugi ar komandu = bezmaksas spēlētāja cenas pārskatīšana. Kurš līdz 30. novembrim uzaicinās visvairāk, laimēs kasti alus.',
@@ -4469,6 +4483,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Tu saņem šo e-pastu, jo tev ir komanda slff.eu. Akcija ilgst līdz 2026. gada 30. novembrim.',
   },
   mk: {
+    koda: 'Твојот код',
     zadeva: 'Покани пријатели во SLFF и освој гајба пиво 🍺',
     zadevaZadnji: 'Уште неколку дена: гајба пиво за најмногу поканети 🍺',
     predglava: 'Три пријатели со тим = бесплатен преглед на цената на играч. Најмногу поканети до 30 ноември добива гајба пиво.',
@@ -4491,6 +4506,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Го добиваш овој е-мејл затоа што имаш тим на slff.eu. Акцијата трае до 30 ноември 2026.',
   },
   el: {
+    koda: 'Ο κωδικός σου',
     zadeva: 'Κάλεσε φίλους στο SLFF και κέρδισε ένα κιβώτιο μπύρες 🍺',
     zadevaZadnji: 'Λίγες μέρες ακόμη: ένα κιβώτιο μπύρες για όποιον καλέσει τους περισσότερους 🍺',
     predglava: 'Τρεις φίλοι με ομάδα = δωρεάν αναθεώρηση τιμής παίκτη. Όποιος καλέσει τους περισσότερους έως τις 30 Νοεμβρίου κερδίζει ένα κιβώτιο μπύρες.',
@@ -4513,6 +4529,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Λαμβάνεις αυτό το email επειδή έχεις ομάδα στο slff.eu. Η προσφορά διαρκεί έως τις 30 Νοεμβρίου 2026.',
   },
   tr: {
+    koda: 'Kodun',
     zadeva: 'Arkadaşlarını SLFF\'e davet et, bir kasa bira kazan 🍺',
     zadevaZadnji: 'Son birkaç gün: en çok davet edene bir kasa bira 🍺',
     predglava: 'Takımı olan üç arkadaş = ücretsiz oyuncu fiyat incelemesi. 30 Kasım\'a kadar en çok davet eden bir kasa bira kazanır.',
@@ -4535,6 +4552,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Bu e-postayı slff.eu\'da takımın olduğu için alıyorsun. Kampanya 30 Kasım 2026\'ya kadar sürüyor.',
   },
   uk: {
+    koda: 'Твій код',
     zadeva: 'Запроси друзів у SLFF і виграй ящик пива 🍺',
     zadevaZadnji: 'Ще кілька днів: ящик пива за найбільше запрошень 🍺',
     predglava: 'Троє друзів з командою = безкоштовний перегляд ціни гравця. Хто запросить найбільше до 30 листопада, отримає ящик пива.',
@@ -4557,6 +4575,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Ти отримуєш цей лист, бо маєш команду на slff.eu. Акція триває до 30 листопада 2026.',
   },
   hy: {
+    koda: 'Քո կոդը',
     zadeva: 'Հրավիրիր ընկերներին SLFF և շահիր մեկ արկղ գարեջուր 🍺',
     zadevaZadnji: 'Մի քանի օր է մնացել. մեկ արկղ գարեջուր ամենաշատ հրավիրողին 🍺',
     predglava: 'Թիմ ունեցող երեք ընկեր = խաղացողի գնի անվճար վերանայում։ Ով մինչև նոյեմբերի 30-ը ամենաշատը հրավիրի, կստանա մեկ արկղ գարեջուր։',
@@ -4579,6 +4598,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Այս նամակը ստանում ես, քանի որ թիմ ունես slff.eu-ում։ Ակցիան տևում է մինչև 2026 թ. նոյեմբերի 30-ը։',
   },
   az: {
+    koda: 'Kodun',
     zadeva: 'Dostlarını SLFF-ə dəvət et və bir qutu pivə qazan 🍺',
     zadevaZadnji: 'Bir neçə gün qaldı: ən çox dəvət edənə bir qutu pivə 🍺',
     predglava: 'Komandası olan üç dost = pulsuz oyunçu qiymət baxışı. 30 noyabradək ən çox dəvət edən bir qutu pivə qazanır.',
@@ -4601,6 +4621,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
     zakaj: 'Bu məktubu slff.eu-da komandan olduğu üçün alırsan. Aksiya 30 noyabr 2026-dək davam edir.',
   },
   da: {
+    koda: 'Din kode',
     zadeva: 'Inviter venner til SLFF og vind en kasse øl 🍺',
     zadevaZadnji: 'Kun få dage tilbage: en kasse øl til den, der inviterer flest 🍺',
     predglava: 'Tre venner med hold = en gratis prisgennemgang af en spiller. Den, der inviterer flest inden 30. november, vinder en kasse øl.',
@@ -4626,7 +4647,7 @@ export const AKCIJA_VABIL: Record<Jezik, BesedilaAkcijeVabil> = {
 
 export function sestaviAkcijoVabil(
   liga: Liga,
-  meta: { display_name: string | null; val: number; pripeljanih: number; v_akciji: number; bon: boolean; vodilni: number },
+  meta: { display_name: string | null; val: number; pripeljanih: number; v_akciji: number; bon: boolean; vodilni: number; koda?: string | null },
 ): Sporocilo {
   const j = jezikLige(liga)
   const B = AKCIJA_VABIL[j]
@@ -4644,6 +4665,8 @@ export function sestaviAkcijoVabil(
     naslov: zadnji ? B.naslovZadnji : B.naslov,
     uvod: `${pozdrav(j, meta.display_name)} ${esc(zadnji ? B.uvodZadnji : B.uvod)}`,
     dejstva: [
+      // Osebna koda in kratka povezava: prijatelju jo lahko pošlje kar iz maila.
+      ...(meta.koda ? [{ k: esc(B.koda), v: `<strong>${esc(meta.koda)}</strong> · <a href="${SITE}/i/${esc(meta.koda)}">${SITE.replace(/^https?:\/\//, '')}/i/${esc(meta.koda)}</a>` }] : []),
       { k: esc(B.tvoji), v: esc(v(B.tvojiV, meta.pripeljanih)) },
       { k: esc(B.bon), v: esc(bon) },
       ...(meta.vodilni > 0 ? [{ k: esc(B.vodilni), v: esc(v(B.vodilniV, meta.vodilni)) }] : []),
