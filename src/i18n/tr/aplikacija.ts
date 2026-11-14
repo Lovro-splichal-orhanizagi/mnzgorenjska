@@ -91,6 +91,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     izbrisRacuna: 'Hesabı sil',
     nastavitve: 'Hesap ayarları',
     mojProfil: 'Profilim',
+    sporocila: 'Mesajlar',
     povabi: 'Arkadaşını davet et',
     pomoc: 'Yardım',
     trgovina: 'Mağaza',

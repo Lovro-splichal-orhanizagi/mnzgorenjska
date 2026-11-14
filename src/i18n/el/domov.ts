@@ -4,6 +4,11 @@ import type { Prevod } from '../jedro.ts'
 export const domov: NonNullable<Prevod['domov']> = {
   napakaNalaganja: 'Δεν ήταν δυνατή η φόρτωση των δεδομένων.',
   delNiNalozen: 'Μέρος των δεδομένων δεν φορτώθηκε: {napaka}',
+  stevec: {
+    naslov: 'Στον δρόμο για 10.000 χρήστες',
+    dosezeno: 'Φτάσαμε τους 10.000 χρήστες!',
+    opis: 'Απομένουν ακόμη: {n}',
+  },
   uvod: {
     // Τα ονόματα των πρωταθλημάτων μένουν όπως είναι.
     gorenjskaMladinci: 'Gorenjska nogometna liga, mladinci',
@@ -172,6 +177,12 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaPripomocki: 'Βοηθήματα',
     pravilaWildcard: 'Wildcard: ξαναφτιάξε την ομάδα σου δωρεάν',
     pravilaKlopPlus: 'Πάγκος+: μετράει και ο πάγκος σου',
+  },
+  // Časovno omejena kartica z aplikacijama namesto trgovine (AppPromo.tsx).
+  appPromo: {
+    oznaka: 'Νέο · εφαρμογή SLFF',
+    naslov: 'Το SLFF είναι πλέον και εφαρμογή',
+    opis: 'Φτιάξε την ομάδα σου, δες τους πόντους ζωντανά και πάρε υπενθύμιση πριν από την προθεσμία. Δωρεάν για Android και iPhone.',
   },
   trgovina: {
     oznaka: 'Νέο · Κατάστημα SLFF',

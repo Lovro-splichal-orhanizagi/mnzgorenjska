@@ -100,6 +100,7 @@ export const aplikacija = {
     izbrisRacuna: 'Izbris računa',
     nastavitve: 'Nastavitve računa',
     mojProfil: 'Moj profil',
+    sporocila: 'Sporočila',
     povabi: 'Povabi prijatelja',
     pomoc: 'Pomoč',
     trgovina: 'Trgovina',

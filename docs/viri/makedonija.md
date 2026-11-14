@@ -152,3 +152,10 @@ liga kot člani (1, 6).
 
 **Past:** `vtora-kadetska-liga-zapad-26-27-2` je pionirska (U15), ne kadetska
 — ni vpisana.
+
+**Pionerske lige (U15)** (predlog 9. 11. 2026, fragment 08-mk), ista
+predloga, `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`, **neaktivne**:
+`mk-u15-super` `pionerska-super-liga-26-27` (13 klubov, zapisnik 11940079),
+`mk-u15-vtora-istok` `vtora-pionerska-liga-istok-26-27` (11, 11956710),
+`mk-u15-vtora-zapad` `vtora-kadetska-liga-zapad-26-27-2` (14, 11954913 —
+slug je kadetski, naslov "Втора Пионерска лига ЗАПАД 26/27").

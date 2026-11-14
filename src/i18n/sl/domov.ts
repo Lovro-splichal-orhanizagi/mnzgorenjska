@@ -2,6 +2,11 @@
 export const domov = {
   napakaNalaganja: 'Podatkov ni bilo mogoče naložiti.',
   delNiNalozen: 'Del podatkov se ni naložil: {napaka}',
+  stevec: {
+    naslov: 'Na poti do 10.000 uporabnikov',
+    dosezeno: 'Dosegli smo 10.000 uporabnikov!',
+    opis: 'Do cilja manjka še: {n}',
+  },
   uvod: {
     // Gorenjski besedili sta oglasni in ostaneta natanko taki, kot sta bili.
     gorenjskaMladinci: 'Gorenjska nogometna liga — mladinci',
@@ -174,6 +179,12 @@ export const domov = {
     pravilaPripomocki: 'Pripomočki',
     pravilaWildcard: 'Wildcard: ekipo sestaviš na novo brez kazni',
     pravilaKlopPlus: 'Klop+: točke šteje tudi klop',
+  },
+  // Časovno omejena kartica z aplikacijama namesto trgovine (AppPromo.tsx).
+  appPromo: {
+    oznaka: 'Novo · Aplikacija SLFF',
+    naslov: 'SLFF je zdaj tudi aplikacija',
+    opis: 'Sestavi ekipo, spremljaj točke v živo in prejmi obvestila pred rokom. Brezplačno za Android in iPhone.',
   },
   // Kartica trgovine na naslovnici (shop.slff.eu), le standardni izdelki.
   trgovina: {
