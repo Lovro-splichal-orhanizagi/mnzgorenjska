@@ -316,15 +316,29 @@ export function kroziPulj(pulje) {
  */
 export const DBU_PULJE = {
   '2025/26': ['474114', '498951', '498952', '474115', '498953', '498954', '473826', '473827', '473828', '473829'],
-  '2026/27': ['508656', '508657', '499766', '499767', '499768', '499769'],
+  '2026/27': ['508656', '508657', '499766', '499767', '499768', '499769', '508850', '508670', '508669', '508668', '508667'],
+}
+
+/**
+ * Selekcija pulje (kar ni tu, so člani): klub je v bazi en sam ne glede na
+ * selekcijo (AaB člani, U19 in U17 sta isti klub), zato isto ime pri ekipah
+ * RAZLIČNIH selekcij ni trk. Trk je isto ime pri dveh ekipah iste selekcije
+ * (Holstebro B 6038 in 6068 v članih).
+ */
+export const SELEKCIJA_PULJE = {
+  508850: 'ženske',
+  508670: 'U19',
+  508669: 'U19',
+  508668: 'U17',
+  508667: 'U17',
 }
 
 /** Pulje šifre, ki niso v `DBU_PULJE` za sezono `sezona` (prazno = vse vpisane). */
 export const neznanePulje = (pulje, sezona) => pulje.filter((p) => !(DBU_PULJE[sezona] ?? []).includes(p))
 
 /**
- * Trki imen: isti ključ kluba pri dveh id-jih ekipe (po `IME_EKIPE`) v
- * programih pulj [{ pulja, html }]. Id ekipe je stalen čez sezone (Holstebro B
+ * Trki imen: isti ključ kluba pri dveh id-jih ekipe (po `IME_EKIPE`) iste
+ * selekcije (`SELEKCIJA_PULJE`) v programih pulj [{ pulja, html }]. Id ekipe je stalen čez sezone (Holstebro B
  * 6038 je 2025/26 v DS in 2026/27 v 3. division), zato se gleda čez vse sezone.
  * Vrne [{ kljuc, ekipe: [{ id, ime, pulje }] }].
  */
@@ -333,7 +347,7 @@ export function trkiEkip(programi) {
   for (const { pulja, html } of programi)
     for (const [, id, surovo] of String(html ?? '').matchAll(/href="\/resultater\/hold\/(\d+)_\d+">([\s\S]*?)<\/a>/g)) {
       const ime = IME_EKIPE[id] ?? imeKluba(surovo)
-      const k = kljucKlubaDk(ime)
+      const k = `${SELEKCIJA_PULJE[pulja] ?? 'člani'}|${kljucKlubaDk(ime)}`
       if (!poKljucu.has(k)) poKljucu.set(k, new Map())
       const e = poKljucu.get(k).get(id) ?? { id, ime, pulje: new Set() }
       e.pulje.add(pulja)
@@ -341,7 +355,7 @@ export function trkiEkip(programi) {
     }
   return [...poKljucu]
     .filter(([, m]) => m.size > 1)
-    .map(([kljuc, m]) => ({ kljuc, ekipe: [...m.values()].map((e) => ({ ...e, pulje: [...e.pulje] })) }))
+    .map(([kljuc, m]) => ({ kljuc: kljuc.split('|')[1], ekipe: [...m.values()].map((e) => ({ ...e, pulje: [...e.pulje] })) }))
 }
 
 // --- stran tekme -------------------------------------------------------------------------
