@@ -68,7 +68,7 @@
   `fantasy_chips`; `tuja_postava` vrne vrstice le, če `sme_videti_ekipo(ekipa)`
   (lastnik, admin, servis). Javno ostane, kar sestave ne izda: lestvice (ime,
   lastnik, točke, mesto, točke kroga, število prestopov in kazen iz
-  `fantasy_transfers`), mini lige in izbranost. Izbranost (`owners` v
+  `fantasy_transfers`) in mini lige. Izbranost (`owners` v
   `player_standings`, `player_season_standings`) je NULL, dokler ima zadnji
   zaklenjeni krog lige manj kot **5 človeških ekip** — sicer seštevek izda
   ekipo. Stran `/team/:id` tujcu pokaže le ime, lastnika, točke in mesto;
@@ -76,6 +76,28 @@
   Funkcija ali pogled, ki bere tuje posnetke, mora teči kot lastnik sheme
   (SECURITY DEFINER / pogled brez `security_invoker`) in sama paziti, kaj
   vrne.
+- **Izbranost vidijo le preverjeni** (migracija 20261109120000, SLF-360):
+  `vidi_izbranost()` je true za admina, strežnik (service_role, postgres brez
+  JWT) in uporabnika z aktivno, nepotečeno pravico (`je_preverjen` +
+  `izlozba_odrasla_oseba`: stikalo, potrjen profil, brez mladinske ali
+  anonimizirane vrstice). Vsem drugim pogleda vrneta `owners` NULL, tudi prek
+  PostgREST; vmesnik (`useVidiIzbranost`) tedaj skrije stolpec, razvrščanje in
+  polje. Preklic ali potek pravice dostop vzame takoj. `izbranost_igralca(id)`
+  vrne preverjenemu razčlenitev po ligah osebe (`ekip` = imenovalec, `owners`
+  NULL pod pragom, krog in čas posnetka, `lastni`): svoj profil vse povezane
+  vrstice, tuj le vrstice v državi gledane; mladinske in anonimizirane nikoli.
+  **Imen ekip ne vrne**. Imena da ločena `ekipe_z_igralcem(id, od, koliko)`
+  (migracija 20261109130000, Nejc 9. 11. 2026: "just the one player"): ožja
+  izjema od zasebnih sestav, le relacija ekipa–igralec. Vrne ekipe (id, ime,
+  liga, krog, `skupaj`), ki imajo igralca v istem posnetku kot števec, le
+  prijavljenemu preverjenemu na **svojem** profilu (`lastni`) in adminu; tuj
+  profil, anon (brez pravice EXECUTE) in strežnik brez JWT ne dobijo nič, da
+  se iz vseh igralcev ne da sestaviti kadra ekipe. Le nad pragom 5 ekip
+  (kjer `owners` ni NULL), brez hišnih, brez mladinskih in anonimiziranih,
+  stran največ 50. Klik vodi na `/team/:id`, ki tujcu kaže le ime, lastnika,
+  točke in mesto. Panel `IzbranostIgralca.tsx`,
+  preizkus `supabase/tests/izbranost-preverjenim.sql`. Strežnik HTML in slike
+  za predogled `owners` ne bereta.
 - `rounds.lineups_locked_at` → dokončan zajem, tudi za neveljavne/prazne ekipe;
   odsotnost posnetka ni dovoljenje za poznejši zajem. `fantasy_teams.roster_updated_at`
   beleži čas shranjevanja. `shrani_ekipo` pred spremembo zajame zapadle kroge;
@@ -268,7 +290,7 @@
   tekoče sezone (`clani_napovedi_mini_lige`): `lestvica_napovedi_mini_lige(liga,
   krog)` (javna vsem prijavljenim, zasebna članom; točke, točni, razpleti),
   `krogi_napovedi_mini_lige`, `napovedi_mini_lige_krog` (le članom, le po
-  roku). Obrazec: `moje_odprte_napovedi(liga)` (naslednji krog mojih lig).
+  roku). Obrazec: `moje_odprte_napovedi(liga, mini_liga)` (naslednji krog mojih lig; v mini ligi le lige mojih ekip v njej).
   Servisni `povzetek_napovedi_kroga(uporabnik, krog)` za pošto. Vmesnik:
   Mini lige → Napovedi (`NapovediMiniLige.tsx`, `?pogled=napovedi`, povezava
   na lestvico lige).
@@ -303,6 +325,20 @@
   "👑 n" v vrstici obeh lestvic napovedi, vrstica "Kralj napovedi" nad njima;
   krona kralja sezone še v glavni lestvici mini lige in glavi njene strani
   (`useKraljMiniLige`, le člani).
+- **Lestvica napovedi države** (migracija 20261110120100):
+  `lestvica_napovedi_drzave(drzava, dni, limit)` (anon + authenticated,
+  security definer) sešteje napovedi vseh aktivnih lig države
+  (`countries.code`) po pravilih `lestvica_napovedi_lige` (lastnik nehišne
+  ekipe v ligi tekme, tekoča sezona lige, kontumacija in tekma brez izida ne
+  štejeta; točke, nato točni). Vrne iste stolpce kot lestvica lige (`mesto`,
+  prikazno ime, točke, točni, razpleti, ocenjene, `je_moj`, `kron`, `kralj`),
+  **nikoli user_id**: vrh `limit` (privzeto 50, največ 100) in klicateljevo
+  vrstico. `dni` (vmesnik 7) šteje le tekme zadnjih dni; `kron` so vedno krone
+  krogov sezone vseh lig države (isto pravilo kot `kralji_krogov_lige`, a le
+  za kroge z napovedmi), `kralj` vodilni pogleda. Gre od `napovedi` po ključih
+  (`offset 0`), Madžarska ~50 ms. Vmesnik: zavihek Napovedi na `/national`
+  (`?pogled=napovedi`, `LestvicaNapovediDrzave.tsx`, sezona ali zadnjih 7 dni)
+  in vrh 5 na naslovnici (`VrhNapovediDrzave.tsx`, skrit brez ocenjene napovedi).
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
 - `statistika_igralcev` → statistika igralca po ligi in sezoni (nastopi,
   minute, goli, kartoni, čiste mreže, točke, asistence, zadnji krog, forma).
@@ -633,6 +669,11 @@
   - Lastnik potrjenega profila, ki ni preverjen, pri vklopljenem stikalu
     vidi nakup (spodaj); v aplikaciji je skrit (`jeNativno`, pravila trgovin).
   - **Faza 2: Stripe Checkout** (testni način, migracija 20261012210100).
+    **Od 9. 11. 2026 namesto značke plakat 40 × 60 cm** ob doživljenjskem nakupu (v ceni,
+    EU): Checkout vedno pobere naslov, webhook kliče `plakat_iz_placila`, tabela
+    `narocila_plakatov` (brez tujih ključev na players/preverjeni_racuni zaradi kataloga
+    FCF), admin Preverjeni → Plakati (datoteka za tisk 200 dpi iz `cv_igralca`). Spodnji
+    opis značke velja za stara naročila.
     Kartica "Preveri profil": letno (9,99 €) ali za vedno (29 €), pri
     doživljenjski še "+ natisnjena značka" (5 €, poštnina 2 € SI / 4 € EU)
     z izbiro dostave "Slovenija / druga država EU" (seja dobi le to tarifo in
@@ -1002,7 +1043,19 @@
   (`opozorila.yml`, `VRSTA=liga-zivi` → `posli-opomnik`,
   `kandidati_za_zivo_ligo`, `zelja_lige_poslana`: uspeh pobriše e-naslov,
   neuspeh največ trikrat). Neobveščene z e-naslovom pg_cron po 12 mesecih
-  izbriše
+  izbriše. Isto tabelo piše klepet podpore prek `zahtevaj_ligo`
+- **Orodja klepeta podpore** (HelpStack SERVER_SIDE, javni ključ; migraciji
+  20261004142300 in 20261110120300): bralna `najdi_igralca`, `tekme_kluba`,
+  `liga`, `tocke_igralca` (točke po krogih tekoče sezone z razčlenitvijo po
+  pravilih `tocke_za_nastop`), `stanje_tekme` (zapisnik, izid, vir, razlog,
+  glasovanje o asistencah); pisalni `prijavi_napako` (zaprta `prijave_napak`,
+  ista prijava v uri ni nova, 5 na uro na stik, 40 na uro vseh; admin:
+  Administracija → Prijave napak, `admin_prijave_napak`,
+  `admin_resi_prijavo_napake`; pg_cron po 12 mesecih izbriše) in
+  `zahtevaj_ligo` (najprej poišče vpisane lige, tudi neaktivne; željo zapiše
+  prek `zelim_ligo` šele brez zadetka ali z `vztrajam`). V brskalniku
+  (`src/lib/podporaOrodja.ts`, CLIENT_SIDE) je `moja_ekipa_krog`: ekipa
+  prijavljenega za krog z njegovo sejo. Preizkus: `supabase/tests/podpora-orodja-2.sql`
 - **Pivski zid** (`/beers`, migracija 20261013150100): `piva` hrani nakupe
   Buy Me a Coffee (funkcija `bmc-pivo`, servisni ključ, `zunanji_id` = BMC
   `data.id`, idempotentno; vračilo postavi `vracilo`, `live_mode = false` je
@@ -1133,6 +1186,23 @@
   asistence vpiše nazaj po ključu gola (minuta, strelec, klub, avtogol,
   enajstmetrovka; en sam zadetek, podajalec z nastopom). Gola, minut in
   kartonov se ne popravlja
+- **Samodejni sprejem popravkov** (migracija 20261113101100): `prijavi_popravek`
+  pred čakanjem pokliče `popravek_samodejno` (zaprta). Pozicija ali asistenca
+  velja takoj, če jo predlaga igralec s potrjenim profilom (`zahtevki_igralca`
+  + `povezani_igralci`) zase ali za igralca oz. gol svojega kluba
+  (`preverjen`), ali če isto predlagajo 3 različni ljudje za pozicijo, 2 za
+  asistenco (`soglasje`, `popravek_prag_soglasja`). Nikoli ob sporu (čakajoč
+  drugačen predlog, pri asistenci tudi že sprejet drugačen), pri poziciji z
+  virom `admin`/`klub` ali čakajoči klubski poziciji; odhod je vedno ročen.
+  Uveljavi se kot admin (`position_source = 'admin'`), enaki čakajoči predlogi
+  dobijo `razlog = 'samodejno (<način>) #<id>'`, prejšnja vrednost gre v
+  `popravki_samodejno` (zaprta), Discord dobi vrstico. Admin vidi zadnjih 30
+  dni v `admin_samodejni_popravki()` in razveljavi z
+  `admin_razveljavi_samodejni_popravek(id)` (vrne prejšnjo vrednost, če je od
+  takrat ni spremenil drug, in vse z njim zaprte predloge zavrne, da jih uvoz
+  golov ne vpiše nazaj). Klepet (`prijavi_napako`) pri poziciji ali asistenci
+  prepoznanega igralca vrne še `povezava` na stran igralca s pozivom, naj
+  popravek odda prijavljen uporabnik sam
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
   ščit z začetnicami
 

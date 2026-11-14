@@ -6,9 +6,10 @@
 // glasujem" ne odgovori z opisom, ampak odpre Mojo ekipo in osvetli trg.
 //
 // Pravila HelpStacka (docs/integrations/custom-agent-tools): odgovor v ~5 s,
-// majhni navadni objekti, nič, česar obiskovalec sam ne vidi. Edini klic na
-// strežnik je stanje lastnih ekip prijavljenega — isto, kar mu kaže pas nad
-// stranjo — in to le, ko agent vpraša.
+// majhni navadni objekti, nič, česar obiskovalec sam ne vidi. Na strežnik
+// gresta le stanje lastnih ekip prijavljenega (isto kot pas nad stranjo) in
+// `moja_ekipa_krog` (isto kot Moja ekipa in zgodovina postav), oba z
+// njegovo sejo in le, ko agent vpraša.
 //
 // Cilji za `pokazi` so elementi z atributom `data-pomoc`. Nov cilj = atribut
 // na elementu + vrstica v CILJI spodaj (in v opisu orodja v HelpStacku).
@@ -23,9 +24,13 @@
 // telefonu pokrije stran klepet in obiskovalec ne vidi nič. Kot dejanje
 // teče šele, ko obiskovalec tapne gumb; klepet se takrat umakne, neuspeh pa
 // vrne `{ ok: false, message }`, ki ga obiskovalec vidi v klepetu.
+//
+// `zamenjaj_jezik` je le dejanje: stran se naloži znova, klepet pa se zaradi
+// tega preseli na kanal novega jezika. Tega ne sme sprožiti agent sredi
+// odgovora, ampak obiskovalec s tapom.
 import { supabase } from './supabase'
 import { jeNeshranjeno } from './neshranjeno'
-import { t } from '../i18n/jedro.ts'
+import { izberiJezik, jePripravljen, jezik, t } from '../i18n/jedro.ts'
 
 /** Strani, na katere sme agent peljati — ključ je to, kar pošlje agent. */
 export const STRANI: Record<string, string> = {
@@ -109,6 +114,183 @@ function kotDejanje(r: Rezultat) {
   return { ok: true }
 }
 
+const PRIPOMOCKI: Record<string, string> = {
+  wildcard: 'Wildcard (prestopi v krogu brez kazni)',
+  klop_plus: 'Klop+ (štejejo tudi točke klopi)',
+}
+
+/**
+ * Ekipa prijavljenega v izbrani ligi za krog: postava, klop, kapetan,
+ * točke po igralcih z množiteljem, prestopi in pripomočki. Bere isto kot
+ * Moja ekipa (posnetek `fantasy_lineups` prek `tuja_postava`, točke iz
+ * `fantasy_round_points`); RLS pusti le lastno ekipo. Brez kroga: zadnji
+ * zaklenjen krog tekoče sezone, pred prvim rokom naslednji (trenutni kader).
+ */
+export async function mojaEkipaKrog(p: Record<string, unknown>, s: StanjeStrani): Promise<Rezultat> {
+  if (!s.prijavljen) return { prijavljen: false }
+  if (!s.liga) return { prijavljen: true, namig: 'Liga ni izbrana; naj uporabnik izbere ligo v izbirniku.' }
+  const liga = s.liga
+  const { data: seja } = await supabase.auth.getSession()
+  const uid = seja.session?.user.id
+  if (!uid) return { prijavljen: false }
+
+  const [rEkipa, rKrogi, rNastavitve] = await Promise.all([
+    supabase
+      .from('fantasy_teams')
+      .select('id, name')
+      .eq('owner_id', uid)
+      .eq('competition_id', liga.id)
+      .maybeSingle(),
+    supabase
+      .from('rounds')
+      .select('id, number, season, deadline_at, lineups_locked_at')
+      .eq('competition_id', liga.id)
+      .order('season', { ascending: false })
+      .order('number')
+      .limit(200),
+    supabase.from('settings').select('key, value').in('key', ['prosti_prestopi', 'kazen_prestopa']),
+  ])
+  const ekipa = rEkipa.data
+  if (!ekipa) return { prijavljen: true, liga: liga.ime, ekipa: null, namig: 'V tej ligi še nima ekipe.' }
+  const nastavitve = Object.fromEntries((rNastavitve.data ?? []).map((n) => [n.key, Number(n.value)]))
+  const prosti = nastavitve.prosti_prestopi ?? 3
+  const kazen = nastavitve.kazen_prestopa ?? 4
+
+  // Krogi tekoče sezone (prvi v seznamu je najnovejša sezona).
+  const vsi = rKrogi.data ?? []
+  const sezona = vsi[0]?.season ?? null
+  const krogi = vsi.filter((k) => k.season === sezona)
+  const zaklenjeni = krogi.filter((k) => k.lineups_locked_at)
+  const stevilka = Number(p.krog)
+  const krog = Number.isFinite(stevilka) && stevilka > 0
+    ? krogi.find((k) => k.number === stevilka)
+    : (zaklenjeni.at(-1) ?? krogi.find((k) => !k.lineups_locked_at))
+  if (!krog) {
+    return {
+      prijavljen: true,
+      ekipa: ekipa.name,
+      namig: `Kroga ${p.krog ?? ''} v sezoni ${sezona ?? ''} ni.`,
+      krogi: krogi.map((k) => k.number),
+    }
+  }
+
+  const rChips = await supabase
+    .from('fantasy_chips')
+    .select('chip, round_id')
+    .eq('fantasy_team_id', ekipa.id)
+    .eq('season', krog.season)
+  const stevilkaKroga = new Map(krogi.map((k) => [k.id, k.number]))
+  const chips = rChips.data ?? []
+  const pripomocki = {
+    porabljeni: chips.map((c) => ({ pripomocek: PRIPOMOCKI[c.chip] ?? c.chip, krog: stevilkaKroga.get(c.round_id) ?? null })),
+    na_voljo: Object.keys(PRIPOMOCKI).filter((c) => !chips.some((x) => x.chip === c)).map((c) => PRIPOMOCKI[c]),
+    v_tem_krogu: chips.filter((c) => c.round_id === krog.id).map((c) => PRIPOMOCKI[c.chip] ?? c.chip),
+  }
+  const osnova = { prijavljen: true, liga: liga.ime, ekipa: ekipa.name, sezona: krog.season, krog: krog.number }
+
+  if (krog.lineups_locked_at) {
+    // Zaklenjen krog: posnetek ob roku in točke kot na lestvici.
+    const [rPostava, rTocke, rPrestopi] = await Promise.all([
+      supabase.rpc('tuja_postava', { p_team: ekipa.id, p_round: krog.id }),
+      supabase
+        .from('fantasy_round_points')
+        .select('points, transfers, penalty, statistics_pending')
+        .eq('fantasy_team_id', ekipa.id)
+        .eq('round_id', krog.id)
+        .maybeSingle(),
+      supabase
+        .from('fantasy_transfers')
+        .select('transfers, free_transfers, penalty')
+        .eq('fantasy_team_id', ekipa.id)
+        .eq('round_id', krog.id)
+        .maybeSingle(),
+    ])
+    const postava = rPostava.data ?? []
+    if (!postava.length) return { ...osnova, namig: 'Ekipa v tem krogu ni imela postave (nastala je pozneje).' }
+    const igralec = (v: (typeof postava)[number]) => ({
+      ime: v.ime,
+      klub: v.klub,
+      pozicija: v.pozicija,
+      kapetan: v.je_kapetan || undefined,
+      podkapetan: v.je_namestnik || undefined,
+      tock: Number(v.tocke),
+      mnozitelj: v.mnozitelj,
+      steje: Number(v.tocke) * v.mnozitelj,
+      // Samodejne menjave: začetnik brez minute ne šteje, namesto njega igralec s klopi.
+      opomba: v.je_zacetnik && v.mnozitelj === 0
+        ? 'ni igral, zamenjan s klopi'
+        : !v.je_zacetnik && v.mnozitelj > 0 ? 'vstopil s klopi (samodejna menjava ali Klop+)' : undefined,
+    })
+    const caka = rTocke.data?.statistics_pending === true
+    return {
+      ...osnova,
+      zaklenjen: true,
+      tock_kroga: caka ? null : (rTocke.data?.points ?? null),
+      tocke_cakajo: caka || undefined,
+      prva_postava: postava.filter((v) => v.je_zacetnik).map(igralec),
+      klop: postava.filter((v) => !v.je_zacetnik).map(igralec),
+      prestopi: {
+        porabljenih: rTocke.data?.transfers ?? rPrestopi.data?.transfers ?? 0,
+        prostih: rPrestopi.data?.free_transfers ?? prosti,
+        kazen_tock: rTocke.data?.penalty ?? rPrestopi.data?.penalty ?? 0,
+      },
+      pripomocki,
+      opomba: 'Množitelj: kapetan ima pomnožene točke; če ni igral, jih dobi podkapetan. 0 = ne šteje. Točke kroga so po kazni za prestope.',
+    }
+  }
+
+  // Odprt krog: trenutni kader, prestopi glede na zadnjo zaklenjeno postavo iste sezone.
+  const prejsnji = zaklenjeni.filter((k) => k.number < krog.number).at(-1)
+  const [rKader, rPrej] = await Promise.all([
+    supabase
+      .from('fantasy_roster')
+      .select('player_id, is_starter, is_captain, is_vice, bench_order')
+      .eq('fantasy_team_id', ekipa.id),
+    prejsnji
+      ? supabase.from('fantasy_lineups').select('player_id').eq('fantasy_team_id', ekipa.id).eq('round_id', prejsnji.id)
+      : Promise.resolve({ data: [] as { player_id: number }[] }),
+  ])
+  const kader = rKader.data ?? []
+  const ids = kader.map((k) => k.player_id)
+  const rImena = ids.length
+    ? await supabase.from('player_overview').select('id, full_name, team_name, position').in('id', ids)
+    : { data: [] }
+  const poId = new Map((rImena.data ?? []).map((i) => [i.id, i]))
+  const igralec = (k: (typeof kader)[number]) => {
+    const i = poId.get(k.player_id)
+    return {
+      ime: i?.full_name ?? null,
+      klub: i?.team_name ?? null,
+      pozicija: i?.position ?? null,
+      kapetan: k.is_captain || undefined,
+      podkapetan: k.is_vice || undefined,
+    }
+  }
+  const prej = new Set((rPrej.data ?? []).map((x) => x.player_id))
+  const porabljenih = prej.size ? ids.filter((id) => !prej.has(id)).length : 0
+  const wildcard = pripomocki.v_tem_krogu.includes(PRIPOMOCKI.wildcard)
+  return {
+    ...osnova,
+    zaklenjen: false,
+    rok: krog.deadline_at,
+    prva_postava: kader.filter((k) => k.is_starter).map(igralec),
+    klop: kader
+      .filter((k) => !k.is_starter)
+      .sort((a, b) => (a.bench_order ?? 99) - (b.bench_order ?? 99))
+      .map(igralec),
+    prestopi: prej.size
+      ? {
+          porabljenih,
+          prostih: prosti,
+          ostalo_prostih: Math.max(0, prosti - porabljenih),
+          kazen_tock_ob_roku: wildcard ? 0 : Math.max(0, porabljenih - prosti) * kazen,
+        }
+      : { opomba: 'Ekipa še nima zaklenjene postave v tej sezoni: prestopi pred prvim rokom ne štejejo.' },
+    pripomocki,
+    opomba: 'Krog še ni zaklenjen: to je trenutno shranjen kader (neshranjene spremembe na strani niso vključene). Točke bodo po roku.',
+  }
+}
+
 /**
  * Prijavi orodja widgetu. `stanje` vrne trenutno stanje strani (kliče se ob
  * vsakem klicu orodja, zato je vedno sveže); `pojdi` je navigate routerja.
@@ -144,6 +326,8 @@ export function prijaviOrodja(
     }
   })
 
+  helpstack('registerTool', 'moja_ekipa_krog', (p) => mojaEkipaKrog(p, stanje()))
+
   const odpriStran = async (p: Record<string, unknown>): Promise<Rezultat> => {
     const kam = STRANI[String(p.stran ?? '')]
     if (!kam) return { odprto: false, razlog: 'neznana stran', mozne: Object.keys(STRANI) }
@@ -173,4 +357,17 @@ export function prijaviOrodja(
   helpstack('registerTool', 'pokazi', (p) => pokazi(p))
   helpstack('registerAction', 'odpri_stran', async (p) => kotDejanje(await odpriStran(p)))
   helpstack('registerAction', 'pokazi', async (p) => kotDejanje(await pokazi(p, TRAJANJE_DEJANJA)))
+
+  helpstack('registerAction', 'zamenjaj_jezik', async (p) => {
+    const j = String(p.jezik ?? '').toLowerCase()
+    if (!jePripravljen(j)) return { ok: false, message: t('aplikacija.pokaziMi.neznano') }
+    if (j === jezik()) return { ok: true }
+    if (jeNeshranjeno()) {
+      osvetliCilj('shrani')
+      return { ok: false, message: t('aplikacija.pokaziMi.neshranjeno') }
+    }
+    // Widget naj dobi potrditev, preden se stran naloži znova.
+    window.setTimeout(() => izberiJezik(j), 300)
+    return { ok: true }
+  })
 }

@@ -115,6 +115,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     vrhOpomba:
       'Xallara asistlər daxil deyil: asistlər səsvermə ilə təsdiqlənir, o isə liqaların çoxunda hələ başlamayıb, ona görə liqalar bərabər şəraitdə olmazdı. Liqalarda müxtəlif sayda tur oynanıb.',
     vrhPrazno: 'Bu mövsüm hələ oyun oynanmayıb.',
+    napovediUvod: 'Bütün liqaların ən yaxşı proqnozçuları. Dəqiq hesab 3 xal, düzgün nəticə 1.',
+    napovediSezona: 'Mövsüm',
+    napovedi7dni: 'Son 7 gün',
+    napovediPrazno7: 'Son 7 gündə hələ qiymətləndirilmiş proqnoz yoxdur.',
+    napovediOcenjenih: 'Qiymətləndirilmiş proqnozlar: {n}',
+    vrhNapovedi: 'Ən yaxşı proqnozçular',
+    vrhNapovediVse: 'Bütün proqnoz cədvəli',
   },
 
   miniLige: {

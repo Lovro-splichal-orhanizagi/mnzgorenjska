@@ -192,6 +192,14 @@ Preveza in Thesprotia pred uvozom: `node scripts/mascot-lige.mjs <domena>
 `--preveri` pokaže zapisnike. Mlajše kategorije, ženske, pokali in play-off /
 play-out (zakomentirani vnosi menija) niso vpisani.
 
+Pregled 9. 11. 2026: vpisana `gr-ker-u15` (`epskerkyras.gr:Κ15`, 10 klubov,
+3 krogi, XI 11/11 s klopjo; krogi 4–18 še brez datuma), **neaktivna**. Ni
+vpisano: epsm Κ17 LEAGUE 1 (dve skupini, 41 klubov na eni strani — odloči
+lastnik), Ahaja Κ16/Κ17 (brez odigrane tekme), Lezbos Γ Εθνική in Β/Γ Εθνική
+Γυναικών (stran tekme brez postav), Lezbos Κ16 (5 klubov), Imatija Γ, Pela
+Κ16, Drama Κ15, Thesprotia Κ15, epsm Κ15 deklet, Preveza-Lefkada Β2 (brez
+razporeda).
+
 Uvoz (ena za drugo, brez arhiva): `gh workflow run uvoz-lige.yml -f
 liga=gr-mak-a1 -f cene=true`. Liga ~60 zapisnikov po 3 s je ~3–4 minute.
 
@@ -365,6 +373,12 @@ vstopa), Halkidika (`epshalkidikis.gr:110`, `112`) in Kikladi
 (`epskyklades.gr:520`, `521`) — le izidi (15. 10. 2026). Kilkis in Mesenija
 sezone 2026/27 na strani še nimata. Γ Εθνική na straneh zvez (raven 3, vodi
 jo EPO) ni vpisana. Ostale mladinske (Κ12–Κ16) niso vpisane.
+
+**9. 11. 2026: `www.epsana.gr/results/results.php` je vrnil HTTP 403** —
+pregled `eps` je bil ustavljen (ni ponovljen). Pirej ima nepreverjene nove
+mladinske lige (`epspeir.gr:740`, `741`, `757` Κ16; `754` Κ17; `758` Κ15
+deklet). Pred naslednjim branjem `eps` preveri, ali Vzhodna Atika še
+zavrača.
 
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=gr-peir-a-1 -f
 arhiv=epspeir.gr:605 -f cene=true`. Arhiv 240 zapisnikov po 3 s je okoli

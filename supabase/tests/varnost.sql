@@ -2018,9 +2018,13 @@ select pg_temp.preveri('zasebne: pri 4 cloveskih ekipah izbranost ni znana',
 reset role;
 insert into fantasy_lineups(round_id, fantasy_team_id, player_id, is_starter, is_captain, is_vice, bench_order, position)
 values (-917001, -917005, -917001, true, true, false, null, 'MID');
-set local role anon;
-select pg_temp.preveri('zasebne: od 5 cloveskih ekip anonimni vidi izbranost (brez hisnih)',
+select pg_temp.preveri('zasebne: od 5 cloveskih ekip streznik vidi izbranost (brez hisnih)',
   (select owners = 5 from player_standings where id=-917001));
+-- Od 20261109120000 izbranost vidijo le preverjeni, admin in streznik
+-- (supabase/tests/izbranost-preverjenim.sql).
+set local role anon;
+select pg_temp.preveri('zasebne: anonimni izbranosti ne vidi niti nad pragom',
+  (select owners is null from player_standings where id=-917001));
 select pg_temp.preveri('zasebne: sezonska izbranost bere isti prag brez napake',
   (select count(*) >= 0 from player_season_standings where competition_id=-917001));
 reset role;

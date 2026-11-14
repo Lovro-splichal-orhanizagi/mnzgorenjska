@@ -40,6 +40,10 @@ import {
   sestaviPivo7dni,
   sestaviAnketoPlacila,
   jezikAnkete,
+  PROMO_PREVERJEN,
+  jezikPromoPreverjen,
+  sestaviPromoPreverjen,
+  type Jezik,
   sestaviNovostMiniLig,
   sestaviOpozoriloOdsotnih,
   sestaviTedenskiPregled,
@@ -52,8 +56,11 @@ import nodemailer from 'npm:nodemailer@6.9.16'
 
 // Anketa plačila (SLF-211): Lovro, 30. 10. 2026, okoli 50 ročno izbranih.
 const ANKETA_MEJA = 50
+// Promocija preverjenega profila (SLF-383): največ 500 skupaj, paket največ 20.
+const PROMO_MEJA = 500
+const PAKET_NAJVEC = 20
 
-const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'anketa-placila'] as const
+const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'anketa-placila', 'promo-preverjen'] as const
 type Vrsta = (typeof VRSTE)[number]
 
 // Besedila so v `sporocila.ts`, v jeziku DRŽAVE LIGE (slovaška liga →
@@ -96,6 +103,23 @@ interface Zahteva {
   najvec_poslati?: number
   // 'anketa-placila' iz administracije: natanko odkljukani uporabniki (do ANKETA_MEJA).
   user_ids?: string[]
+  // 'promo-preverjen' (SLF-383)
+  akcija?: 'predogled' | 'paket' | 'vzorec' | 'poslji'
+  paket_id?: number
+  odobril?: string
+  odobritev?: string
+  osnutek_sha?: string
+}
+
+interface PromoKandidat {
+  user_id: string
+  email: string
+  display_name: string | null
+  player_id: number
+  liga_slug: string | null
+  drzava: string | null
+  aktiven_at: string | null
+  razlog: string | null
 }
 
 interface Uporabnik {
@@ -344,6 +368,147 @@ Deno.serve(async (req) => {
 
   // Brez izbora ni ankete: strežnik nikogar ne izbere sam (Lovro, 30. 10. 2026).
   if (vrsta === 'anketa-placila') return json({ error: 'Anketa gre le izbranim v administraciji (user_ids).' }, 400)
+
+  // `promo-preverjen` (SLF-383): enkratni promocijski mail "Preverjen profil" od
+  // info@slff.eu, ločeno od ankete. Kdo pride v poštev, določi SQL
+  // (`promo_preverjen_kohorta`); odgovor vrne le števila, nikoli naslovov ali imen.
+  // `akcija`: 'predogled' (privzeto) | 'paket' (zamrzne do 20) | 'vzorec' (vse
+  // jezikovne različice na info@slff.eu) | 'poslji' (paket, le z odobritvijo
+  // osnutka in seznama: `odobril`, `odobritev`, `osnutek_sha` iz predogleda).
+  if (vrsta === 'promo-preverjen') {
+    const akcija = vhod.akcija ?? 'predogled'
+    if (!['predogled', 'paket', 'vzorec', 'poslji'].includes(akcija)) return json({ error: `Neznana akcija: ${akcija}.` }, 400)
+    const db = createClient(SUPABASE_URL, SERVICE_KEY)
+    const osnutek = await osnutekPromo()
+    const [cene, stran] = await Promise.all([ceneIzStripa(), stranPreverjenih()])
+    const { data: kd, error: kErr } = await db.rpc('promo_preverjen_kohorta')
+    if (kErr) return json({ error: kErr.message }, 500)
+    const vsi = (kd ?? []) as PromoKandidat[]
+    const prej = await db.rpc('promo_preverjen_poslanih')
+    if (prej.error) return json({ error: prej.error.message }, 500)
+    const { data: pk, error: pErr } = await db.from('promo_preverjen_paketi')
+      .select('id, user_ids, created_at, odobril, odobren_at').order('id')
+    if (pErr) return json({ error: pErr.message }, 500)
+    const paketi = (pk ?? []) as Array<{ id: number; user_ids: string[]; created_at: string; odobril: string | null; odobren_at: string | null }>
+    const poId = new Map(vsi.map((k) => [k.user_id, k]))
+    const ustrezni = vsi.filter((k) => !k.razlog)
+    const povzetek = {
+      posiljatelj: ANKETA_FROM,
+      posiljatelj_pripravljen: !!INFO_SMTP_PASS,
+      osnutek_sha: osnutek.sha,
+      cene: cene.napaka ? { napaka: cene.napaka } : { letna: cene.letna, dozivljenjska: cene.dozivljenjska, valuta: cene.valuta, live: cene.live },
+      stran_verified: stran,
+      potrjenih_prevzemov: vsi.length,
+      ustreznih: ustrezni.length,
+      // Kohorta: ustrezni do meje (najbolj nedavno aktivni najprej).
+      kohorta: Math.min(ustrezni.length, Math.max(0, PROMO_MEJA - Number(prej.data ?? 0))),
+      preskoceni: stej(vsi.filter((k) => k.razlog).map((k) => k.razlog!)),
+      ustrezni_po_drzavi: stej(ustrezni.map((k) => k.drzava ?? '?')),
+      ustrezni_po_jeziku: stej(ustrezni.map((k) => jezikPromoPreverjen({ drzava: k.drzava }))),
+      ze_poslanih: Number(prej.data ?? 0),
+      meja: PROMO_MEJA,
+      paketi: paketi.map((p) => opisPaketa(p, poId)),
+    }
+    if (akcija === 'predogled') return json({ suho: true, ...povzetek })
+
+    if (akcija === 'vzorec') {
+      if (!INFO_SMTP_PASS) return json({ error: 'Pošiljatelj info@slff.eu ni nastavljen (INFO_SMTP_PASS).' }, 500)
+      if (cene.napaka) return json({ error: `Cene: ${cene.napaka}` }, 503)
+      let poslano = 0
+      const napake: string[] = []
+      for (const j of Object.keys(PROMO_PREVERJEN) as Jezik[]) {
+        const drzava = Object.entries(JEZIK_DRZAVE).find(([, v]) => v === j)?.[0] ?? 'GB'
+        const s = sestaviPromoPreverjen({ slug: '', oznaka: '', drzava }, { display_name: 'Alex' }, cene)
+        const rez = await poslji(ANKETA_FROM, 'info@slff.eu', { ...s, naslov: `[VZOREC ${j} ${osnutek.sha.slice(0, 8)}] ${s.naslov}` }, undefined, smtpInfo)
+        if (rez.napaka) napake.push(`${j}: ${rez.napaka}`)
+        else poslano++
+        await new Promise((r) => setTimeout(r, 500))
+      }
+      return json({ vzorec: true, na: 'info@slff.eu', poslano, napake, osnutek_sha: osnutek.sha })
+    }
+
+    if (akcija === 'paket') {
+      const { data: id, error } = await db.rpc('promo_preverjen_nov_paket', { p_velikost: PAKET_NAJVEC, p_meja: PROMO_MEJA })
+      if (error) return json({ error: error.message }, 500)
+      if (!id) return json({ ...povzetek, paket: null, sporocilo: 'Ni ustreznih prejemnikov za nov paket.' })
+      const { data: nov } = await db.from('promo_preverjen_paketi').select('id, user_ids, created_at, odobril, odobren_at').eq('id', id).single()
+      if (!nov) return json({ error: `Paketa ${id} ni mogoče prebrati.` }, 500)
+      return json({ ...povzetek, paket: opisPaketa(nov, poId) })
+    }
+
+    // akcija === 'poslji'
+    const paketId = Number(vhod.paket_id)
+    const odobril = vhod.odobril
+    const odobritev = vhod.odobritev?.trim()
+    if (!Number.isInteger(paketId)) return json({ error: 'Manjka paket_id.' }, 400)
+    if (!odobril || !['Lovro', 'Nejc', 'Luka'].includes(odobril)) return json({ error: 'odobril: Lovro, Nejc ali Luka.' }, 400)
+    if (!odobritev || !/^https:\/\/(discord\.com|ptb\.discord\.com|canary\.discord\.com)\/channels\/\d+\/\d+\/\d+$/.test(odobritev))
+      return json({ error: 'odobritev: povezava do sporočila z odobritvijo v Discordu (#kafana).' }, 400)
+    if (vhod.osnutek_sha !== osnutek.sha) return json({ error: 'osnutek_sha se ne ujema s trenutnim osnutkom: odobren je bil drug osnutek. Nič ni poslano.' }, 409)
+    if (!INFO_SMTP_PASS) return json({ error: 'Pošiljatelj info@slff.eu ni nastavljen (INFO_SMTP_PASS). Nič ni poslano.' }, 500)
+    if (cene.napaka || !cene.live) return json({ error: `Plačilo ni v živo: ${cene.napaka ?? 'Stripe test način'}. Nič ni poslano.` }, 503)
+    if (stran !== 200) return json({ error: `Stran /verified vrne ${stran}. Nič ni poslano.` }, 503)
+    const paket = paketi.find((p) => p.id === paketId)
+    if (!paket) return json({ error: `Paket ${paketId} ne obstaja.` }, 404)
+    if (paket.odobren_at) {
+      if (paket.odobril !== odobril) return json({ error: `Paket je odobril že ${paket.odobril}.` }, 409)
+      const { data: st } = await db.from('promo_preverjen_paketi').select('osnutek_sha').eq('id', paketId).single()
+      if (st?.osnutek_sha !== osnutek.sha) return json({ error: 'Paket je bil odobren za drug osnutek.' }, 409)
+    } else {
+      if (Date.parse(paket.created_at) < Date.now() - 7 * 864e5) return json({ error: 'Paket je starejši od 7 dni; pripravi novega.' }, 409)
+      const { data: odobren, error } = await db.from('promo_preverjen_paketi')
+        .update({ odobril, odobritev, osnutek_sha: osnutek.sha, odobren_at: new Date().toISOString() })
+        .eq('id', paketId).is('odobren_at', null).select('id')
+      if (error) return json({ error: error.message }, 500)
+      if (!odobren?.length) return json({ error: 'Paket je medtem odobril nekdo drug; poskusi znova.' }, 409)
+    }
+    // Ob pošiljanju vsakega še enkrat po istem pravilu (odjava, preverjen, …).
+    let poslano = 0
+    let napak = 0
+    let zasedenih = 0
+    const izpadli: string[] = []
+    const zaPoslati: PromoKandidat[] = []
+    for (const id of paket.user_ids) {
+      const k = poId.get(id)
+      if (!k || k.razlog) { if (k?.razlog !== 'ze_dobil') izpadli.push(k?.razlog ?? 'ni_vec_prevzema'); continue }
+      zaPoslati.push(k)
+    }
+    // Funkcija ima 60 s, mail traja ~4 s: 10 na klic, naslednji klic nadaljuje isti paket.
+    const izpadliPrej = izpadli.length
+    for (const k of zaPoslati.slice(0, 10)) {
+      if (poslano + napak > 0) await new Promise((r) => setTimeout(r, 500))
+      const s = await sOdjavo(db, k.user_id, sestaviPromoPreverjen(
+        { slug: k.liga_slug ?? '', oznaka: '', drzava: k.drzava }, { display_name: k.display_name }, cene))
+      // Promocija brez delujoče odjave v enem kliku ne gre ven.
+      if (!s.odjava || !new URL(s.odjava).searchParams.get('z')) { izpadli.push('brez_zetona_odjave'); continue }
+      const { data: zid, error: zErr } = await db.rpc('promo_preverjen_zasedi', { p_user_id: k.user_id, p_email: k.email, p_meja: PROMO_MEJA })
+      if (zErr) return json({ error: `email_log: ${zErr.message}`, poslano, napak }, 500)
+      if (Number(zid) === -1) break
+      if (Number(zid) === 0) { zasedenih++; continue }
+      if (Number(zid) === -2) { izpadli.push('ni_vec_ustrezen'); continue }
+      const rez = await poslji(ANKETA_FROM, k.email, s, undefined, smtpInfo)
+      if (rez.napaka) napak++
+      else poslano++
+      const { error: logErr } = await db.from('email_log')
+        .update({ resend_id: rez.id ?? null, napaka: rez.napaka ?? null, poslano_at: new Date().toISOString() })
+        .eq('id', Number(zid))
+      if (logErr) return json({ error: `email_log: ${logErr.message}`, poslano, napak }, 500)
+    }
+    const potem = await db.rpc('promo_preverjen_poslanih')
+    return json({
+      paket: paketId,
+      odobril,
+      osnutek_sha: osnutek.sha,
+      poslano,
+      napak,
+      zasedenih,
+      izpadli_ob_preverbi: stej(izpadli),
+      ostalo_v_paketu: Math.max(0, zaPoslati.length - poslano - zasedenih - napak - (izpadli.length - izpadliPrej)),
+      ze_poslanih: Number(potem.data ?? 0),
+      meja: PROMO_MEJA,
+    })
+  }
+
 
   // `novost-mini-lige`: enkratno obvestilo o dvobojih in napovedih v mini
   // ligah (26. 10. 2026), vsem z nehišno ekipo (`kandidati_za_novost_mini_lig`).
@@ -1025,6 +1190,70 @@ const smtpInfo = nodemailer.createTransport({
   pool: true,
   auth: { user: 'info@slff.eu', pass: INFO_SMTP_PASS },
 })
+
+function stej(xs: string[]): Record<string, number> {
+  const o: Record<string, number> = {}
+  for (const x of xs) o[x] = (o[x] ?? 0) + 1
+  return o
+}
+
+/** Paket brez id-jev: velikost, odobritev, koliko jih je že dobilo in kje so. */
+function opisPaketa(
+  p: { id: number; user_ids: string[]; created_at: string; odobril: string | null; odobren_at: string | null },
+  poId: Map<string, PromoKandidat>,
+) {
+  const clani = p.user_ids.map((id) => poId.get(id))
+  return {
+    id: p.id,
+    velikost: p.user_ids.length,
+    ustvarjen: p.created_at,
+    odobril: p.odobril,
+    odobren: p.odobren_at,
+    stanje: stej(clani.map((k) => (!k ? 'ni_vec_prevzema' : k.razlog ?? 'caka'))),
+    po_drzavi: stej(clani.map((k) => k?.drzava ?? '?')),
+    po_jeziku: stej(clani.map((k) => jezikPromoPreverjen({ drzava: k?.drzava ?? null }))),
+  }
+}
+
+/** Zgoščena vrednost besedil in predloge: odobritev velja le za ta osnutek. */
+async function osnutekPromo(): Promise<{ sha: string }> {
+  const vir = JSON.stringify(PROMO_PREVERJEN) + sestaviPromoPreverjen.toString()
+  const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(vir))
+  return { sha: [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, '0')).join('') }
+}
+
+/** Trenutni ceni preverjenega profila iz Stripa (isti lookup_key kot preverjen-placilo). */
+async function ceneIzStripa(): Promise<{ letna: number; dozivljenjska: number; valuta: string; live: boolean; napaka?: string }> {
+  const prazno = { letna: 0, dozivljenjska: 0, valuta: 'eur', live: false }
+  const kljuc = Deno.env.get('STRIPE_SECRET_KEY')
+  if (!kljuc) return { ...prazno, napaka: 'STRIPE_SECRET_KEY ni nastavljen' }
+  try {
+    const q = new URLSearchParams([['lookup_keys[]', 'slff_preverjen_letna'], ['lookup_keys[]', 'slff_preverjen_dozivljenjska'], ['active', 'true']])
+    const r = await fetch(`https://api.stripe.com/v1/prices?${q}`, { headers: { Authorization: `Bearer ${kljuc}` } })
+    const j = await r.json()
+    if (!r.ok) return { ...prazno, napaka: `Stripe: ${j?.error?.message ?? r.status}` }
+    const cene = (j.data ?? []) as Array<{ lookup_key: string; unit_amount: number | null; currency: string; livemode: boolean; recurring: { interval: string } | null }>
+    const l = cene.find((c) => c.lookup_key === 'slff_preverjen_letna')
+    const d = cene.find((c) => c.lookup_key === 'slff_preverjen_dozivljenjska')
+    if (!l?.unit_amount || !d?.unit_amount) return { ...prazno, napaka: 'Stripe: manjka aktivna cena' }
+    if (l.recurring?.interval !== 'year' || d.recurring) return { ...prazno, napaka: 'Stripe: cena ni letna/enkratna' }
+    if (l.currency !== d.currency) return { ...prazno, napaka: 'Stripe: različni valuti' }
+    return { letna: l.unit_amount, dozivljenjska: d.unit_amount, valuta: l.currency, live: l.livemode && d.livemode }
+  } catch (e) {
+    return { ...prazno, napaka: `Stripe: ${String(e)}` }
+  }
+}
+
+/** HTTP status javne strani /verified (pred pošiljanjem mora biti 200). */
+async function stranPreverjenih(): Promise<number> {
+  try {
+    const r = await fetch(`${(Deno.env.get('SITE_URL') ?? 'https://slff.eu').replace(/\/$/, '')}/verified`, { redirect: 'follow' })
+    await r.body?.cancel()
+    return r.status
+  } catch {
+    return 0
+  }
+}
 
 /** `id` je Message-ID; v email_log gre v stolpec `resend_id` (ime iz časa Resenda). */
 async function poslji(

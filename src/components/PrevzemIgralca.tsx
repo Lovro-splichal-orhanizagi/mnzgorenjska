@@ -48,6 +48,7 @@ export default function PrevzemIgralca({
   naLastnika,
   vIzlozbi = false,
   ponudbaIzlozbe = false,
+  odrasel = false,
 }: {
   igralecId: number
   slugLige: string | undefined
@@ -58,6 +59,8 @@ export default function PrevzemIgralca({
   ponudbaIzlozbe?: boolean
   /** Pove strani, ali je prijavljeni potrjeni lastnik profila (kartica). */
   naLastnika?: (jeLastnik: boolean) => void
+  /** Odrasla liga, ne anonimiziran: predogled koristi pred nakupom. */
+  odrasel?: boolean
 }) {
   const { session } = useAuth()
   const uid = session?.user.id ?? null
@@ -176,6 +179,7 @@ export default function PrevzemIgralca({
           urejam={urejam}
           vIzlozbi={vIzlozbi}
           ponudbaIzlozbe={ponudbaIzlozbe}
+          odrasel={odrasel}
         />
       )}
 
