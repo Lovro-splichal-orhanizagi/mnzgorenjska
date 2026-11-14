@@ -31,16 +31,35 @@ async function naloziMojoKodo(uid: string) {
     /* nič */
   }
 }
-const VZOREC = /^[a-z0-9]{8}$/
+/** Koda: 3–20 malih črk ali števk (stare naključne kode imajo 8). */
+export const VZOREC_KODE = /^[a-z0-9]{3,20}$/
+const VZOREC = VZOREC_KODE
 
-/** Ob nalaganju strani: zapomni si kodo iz naslova. */
-function ujemiPovabilo() {
+/** Zapomni si kodo povabila (povezava, stran /i/<koda> ali vnos ob registraciji). */
+export function shraniKodoPovabila(koda: string): boolean {
+  const k = koda.trim().toLowerCase()
+  if (!VZOREC.test(k)) return false
   try {
-    const koda = new URLSearchParams(window.location.search).get('od')?.trim().toLowerCase()
-    if (koda && VZOREC.test(koda)) localStorage.setItem(KLJUC, koda)
+    localStorage.setItem(KLJUC, k)
   } catch {
     /* zasebno okno: povabilo se izgubi, stran dela naprej */
   }
+  return true
+}
+
+/** Koda, ki čaka na registracijo (za "Povabil te je …" na prijavi). */
+export function shranjenaKodaPovabila(): string | null {
+  try {
+    return localStorage.getItem(KLJUC)
+  } catch {
+    return null
+  }
+}
+
+/** Ob nalaganju strani: zapomni si kodo iz naslova. */
+function ujemiPovabilo() {
+  const koda = new URLSearchParams(window.location.search).get('od')
+  if (koda) shraniKodoPovabila(koda)
 }
 
 /** Po prijavi: zabeleži shranjeno kodo in jo pozabi (tudi ob zavrnitvi). */

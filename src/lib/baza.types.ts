@@ -10274,6 +10274,8 @@ export type Database = {
         }
         Returns: number
       }
+      koda_vabila_rezervirana: { Args: { p_koda: string }; Returns: boolean }
+      koda_vabila_za: { Args: { p_uid: string }; Returns: string }
       koncani_krogi_mini_lige: {
         Args: { p_liga: number }
         Returns: {
@@ -10323,6 +10325,7 @@ export type Database = {
           krog: number
         }[]
       }
+      lastnik_kode_vabila: { Args: { p_koda: string }; Returns: string }
       lestvica_javne_mini_lige: {
         Args: { p_liga: number }
         Returns: {
@@ -10500,6 +10503,14 @@ export type Database = {
         }[]
       }
       moje_vabilo: { Args: never; Returns: Json }
+      moji_povabljeni: {
+        Args: never
+        Returns: {
+          ime: string
+          kdaj: string
+          stanje: string
+        }[]
+      }
       najcenejsi_kader: { Args: { p_igralci: Json }; Returns: number }
       najdi_igralca: { Args: { ime: string; liga?: string }; Returns: Json }
       namigi_ekipe: {
@@ -10544,6 +10555,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      nastavi_kodo_vabila: { Args: { p_koda: string }; Returns: string }
       nastavi_saljive_nagrade: {
         Args: { p_liga: number; p_vklop: boolean }
         Returns: boolean
@@ -10894,6 +10906,7 @@ export type Database = {
         Args: { p_ekipa: number; p_liga: number; p_sezona: string }
         Returns: Json
       }
+      predlagaj_kodo_vabila: { Args: { p_ime: string }; Returns: string }
       prejemniki_ankete: {
         Args: { p_competition_id: number; p_ids: string[] }
         Returns: {
@@ -11966,6 +11979,7 @@ export type Database = {
       uveljavi_pozicije: { Args: never; Returns: number }
       uveljavi_zapadle_cene: { Args: { p_okno?: string }; Returns: number }
       vaba_profila: { Args: { p_igralec: number }; Returns: Json }
+      vabilo_od: { Args: { p_koda: string }; Returns: Json }
       varen_vklop_dfb_regije: {
         Args: { p_aktiviraj?: boolean; p_manifest: string; p_sha256: string }
         Returns: Json

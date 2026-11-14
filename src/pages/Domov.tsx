@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import Pivo from '../components/Pivo'
 import { imeZveze } from '../components/VirPodatkov'
-import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { Link } from '../components/Povezava'
 import { jeNativno, povezavaTrgovine, TRGOVINA_VIDNA } from '../lib/platforma'
 import { supabase } from '../lib/supabase'
@@ -114,25 +113,6 @@ export default function Domov() {
   useNaslov(slug === PRIVZETO ? null : zDrzavo(tekmovanje))
   const { session, loading: avtNalaganje } = useAuth()
   const zveza = imeZveze(tekmovanje)
-  const [klubiLige, setKlubiLige] = useState<string[]>([])
-  const vabilo = vabiloMailto(sestaviVabilo(tekmovanje, klubiLige))
-
-  // Klube beremo samo za vabilo; brez njih vabilo ostane smiselno, le brez
-  // seznama imen.
-  useEffect(() => {
-    if (!tekmovanjeId) return
-    let veljavno = true
-    supabase
-      .from('competition_teams')
-      .select('name')
-      .eq('competition_id', tekmovanjeId)
-      .then(({ data }) => {
-        if (veljavno) setKlubiLige((data ?? []).map((k) => k.name as string))
-      })
-    return () => {
-      veljavno = false
-    }
-  }, [tekmovanjeId])
   const [stat, setStat] = useState<Statistika | null>(null)
   const [zvezde, setZvezde] = useState<VrhIgralec[]>([])
   const [podajalci, setPodajalci] = useState<VrhIgralec[]>([])
@@ -905,9 +885,9 @@ export default function Domov() {
 
       {/* Povabilo je tiha povezava na koncu, ne svoja kartica. */}
       <p className="text-center text-sm">
-        <a href={vabilo} className="font-semibold text-gnl-300 hover:text-gnl-200">
+        <Link to="/invite" className="font-semibold text-gnl-300 hover:text-gnl-200">
           {t('domov.povabi.naslov')} →
-        </a>
+        </Link>
       </p>
     </div>
   )

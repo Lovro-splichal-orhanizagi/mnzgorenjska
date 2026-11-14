@@ -574,7 +574,8 @@ Deno.serve(async (req) => {
     for (const u of kand) {
       if (poslano > 0) await new Promise((r) => setTimeout(r, 600))
       const liga: Liga = { slug: u.liga_slug, oznaka: u.liga_oznaka, drzava: u.liga_drzava }
-      const sporocilo = sestaviAkcijoVabil(liga, u)
+      const { data: koda } = await service6.rpc('koda_vabila_za', { p_uid: u.user_id })
+      const sporocilo = sestaviAkcijoVabil(liga, { ...u, koda: typeof koda === 'string' ? koda : null })
       const rez = await poslji(EMAIL_FROM, u.email, await sOdjavo(service6, u.user_id, sporocilo), Deno.env.get('EMAIL_REPLY_TO'))
       if (!rez.napaka) {
         poslano++
