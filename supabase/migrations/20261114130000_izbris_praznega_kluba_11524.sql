@@ -42,6 +42,6 @@ begin
   delete from goals where match_id = any (v_tekme) or team_id = v_klub;
   delete from appearances where match_id = any (v_tekme) or team_id = v_klub;
   delete from matches where id = any (v_tekme);
-  delete from competition_teams where team_id = v_klub;
+  -- competition_teams je pogled (iz tekem in igralcev): izbris ga izprazni sam.
   delete from teams where id = v_klub;  -- igralci in njihove točke gredo z njo (on delete cascade)
 end $$;
