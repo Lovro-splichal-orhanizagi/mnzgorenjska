@@ -20,6 +20,10 @@ export const domov: NonNullable<Prevod['domov']> = {
     zamudniki: '<krepko>Missed the start?</krepko> In <lestvica>Standings</lestvica> you compete from the round you join.',
     sestaviEkipo: 'Build your team',
     rezultati: 'Results and line-ups',
+    // Trajna vrstica s značkama trgovin v uvodu (components/ZnackeTrgovin.tsx).
+    aplikacija: 'The SLFF app: free for Android and iPhone',
+    znackaAppStore: 'Download on the App Store',
+    znackaGooglePlay: 'Get it on Google Play',
   },
   asistence: {
     cakajo: {

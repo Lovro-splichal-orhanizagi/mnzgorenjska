@@ -4,7 +4,6 @@ import { useLocation } from 'react-router-dom'
 import { NavLink } from './Povezava'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
-import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { supabase } from '../lib/supabase'
 import { potrdiZapustitev } from '../lib/neshranjeno'
 import { jeNativno, povezavaTrgovine, TRGOVINA_VIDNA } from '../lib/platforma'
@@ -44,8 +43,6 @@ const ostale: Povezava[] = [
   { pot: '/national', get naslov() { return t('aplikacija.meni.slovenija') } },
 ]
 
-// Vabilo sestavimo iz izbrane lige in njenih klubov (glej `lib/vabilo.ts`).
-
 /** Zapre spustni meni ob kliku zunaj njega ali ob Escape. */
 function useZapriZunaj(odprt: boolean, zapri: () => void) {
   const ref = useRef<HTMLDivElement>(null)
@@ -70,8 +67,7 @@ function useZapriZunaj(odprt: boolean, zapri: () => void) {
 export default function Navbar() {
   const { session } = useAuth()
   const neprebrana = useNeprebrana()
-  const { id: tekmovanjeId, tekmovanje, drzava } = useTekmovanje()
-  const [klubiLige, setKlubiLige] = useState<string[]>([])
+  const { id: tekmovanjeId, drzava } = useTekmovanje()
   const [jeAdmin, setJeAdmin] = useState(false)
   const [ime, setIme] = useState<string | null>(null)
   const [avatar, setAvatar] = useState<{ barva: number | null; ikona: string | null }>({ barva: null, ikona: null })
@@ -93,24 +89,6 @@ export default function Navbar() {
     setVecOdprt(false)
     setRacunOdprt(false)
   }, [pathname])
-
-  // Klube beremo za vabilo; brez njih vabilo ostane smiselno, le brez seznama.
-  useEffect(() => {
-    if (!tekmovanjeId) return
-    let veljavno = true
-    supabase
-      .from('competition_teams')
-      .select('name')
-      .eq('competition_id', tekmovanjeId)
-      .then(({ data }) => {
-        if (veljavno) setKlubiLige((data ?? []).map((k) => k.name as string))
-      })
-    return () => {
-      veljavno = false
-    }
-  }, [tekmovanjeId])
-
-  const vabilo = vabiloMailto(sestaviVabilo(tekmovanje, klubiLige))
 
   useEffect(() => {
     if (!tekmovanjeId) return
@@ -337,14 +315,14 @@ export default function Navbar() {
                     >
                       {t('aplikacija.meni.nastavitve')}
                     </NavLink>
-                    <a
-                      href={vabilo}
+                    <NavLink
+                      to="/invite"
                       role="menuitem"
                       className={vrsticaMenija}
                       onClick={() => setRacunOdprt(false)}
                     >
                       {t('aplikacija.meni.povabi')}
-                    </a>
+                    </NavLink>
                     <button
                       type="button"
                       role="menuitem"
@@ -458,13 +436,13 @@ export default function Navbar() {
               >
                 {t('aplikacija.meni.pomoc')}
               </button>
-              <a
-                href={vabilo}
+              <NavLink
+                to="/invite"
                 className="col-span-2 rounded-lg px-3 py-2.5 text-center text-slate-400 hover:bg-white/5"
                 onClick={() => setOdprt(false)}
               >
                 {t('aplikacija.meni.povabi')}
-              </a>
+              </NavLink>
             </div>
           </div>
         )}

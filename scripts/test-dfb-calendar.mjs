@@ -14,11 +14,11 @@ const reverse=f=>{[f.home,f.away]=[f.away,f.home];[f.homeSourceClubId,f.awaySour
 test('calendar support exports shared proof and shape validation',()=>{
  assert.equal(typeof api.dfbCalendarEvidence,'function');assert.equal(typeof api.verifyDfbCalendar,'function')
 })
-test('exact eight reviewed fixtures accept two current participant witnesses and preserve input',()=>{
+test('exact ten reviewed fixtures accept two current participant witnesses and preserve input',()=>{
  for(const region of ['nord','west']){
   const s=calendar(region),before=structuredClone(s)
   assert.equal(verify(s),true);assert.deepEqual(s,before)
-  assert.equal(s.fixtures.filter(f=>f.calendarEvidence).length,4)
+  assert.equal(s.fixtures.filter(f=>f.calendarEvidence).length,reviewed[region].length*2)
   for(const p of reviewed[region])for(const game of p.games){const f=s.fixtures.find(f=>f.id===game[0]);assert.deepEqual(Object.fromEntries(Object.entries(f).filter(([k])=>k!=='calendarEvidence')),identity(p,game))}
  }
 })
@@ -37,8 +37,10 @@ test('missing or altered proof and proof smuggled on an ordinary fixture refuse'
 })
 test('corrected normal pairs use strict validation without evidence, including partial correction',()=>{
  const s=calendar();reverse(s.fixtures.find(f=>f.id==='2423378'));delete s.fixtures.find(f=>f.id==='2423139').calendarEvidence
- assert.equal(verify(s),true);assert.equal(s.fixtures.filter(f=>f.calendarEvidence).length,2)
+ assert.equal(verify(s),true);assert.equal(s.fixtures.filter(f=>f.calendarEvidence).length,4)
  reverse(s.fixtures.find(f=>f.id==='2423342'));delete s.fixtures.find(f=>f.id==='2423173').calendarEvidence
+ assert.equal(verify(s),true);assert.equal(s.fixtures.filter(f=>f.calendarEvidence).length,2)
+ reverse(s.fixtures.find(f=>f.id==='2423251'));delete s.fixtures.find(f=>f.id==='2423184').calendarEvidence
  assert.equal(verify(s),true);assert.equal(s.fixtures.filter(f=>f.calendarEvidence).length,0)
 })
 test('fixture count, unique IDs, native/name bijection, unordered multiplicity and per-round participation stay strict',()=>{
@@ -103,7 +105,7 @@ test('canonical builder accepts exact calendar evidence, preserves statistics an
  const {sestaviSezono}=await import('./vklopi-dfb-regijo.mjs')
  for(const region of ['nord','west']){
   const s=builderInput(region),out=sestaviSezono(s),f=out.fixtures.find(f=>f.id==='de-dfb-'+reviewed[region][0].games[0][0])
-  assert.equal(out.fixtures.length,306);assert.equal(out.fixtures.filter(f=>f.calendarEvidence).length,4)
+  assert.equal(out.fixtures.length,306);assert.equal(out.fixtures.filter(f=>f.calendarEvidence).length,reviewed[region].length*2)
   assert.equal(f.home,reviewed[region][0].home);assert.equal(f.homeSourceClubId,reviewed[region][0].homeSourceClubId)
   assert.equal(f.homeGoals,0);assert.equal(f.awayGoals,0);assert.deepEqual(f.goals,[]);assert.deepEqual(f.warnings,[])
   assert.equal(f.starters.length,22);assert.equal(f.appearances.length,22)

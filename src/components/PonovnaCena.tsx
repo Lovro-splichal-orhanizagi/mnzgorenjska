@@ -9,8 +9,9 @@
 // Stanje drži en kavelj (`usePonovnaCena`): pri izložbi je cena v strani dvakrat
 // (namizje, mobilno), zato se baza vpraša enkrat in okno je eno.
 // V mobilni aplikaciji ga ni (plačila v aplikaciji le prek trgovin), tudi ne
-// za neprijavljene.
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+// za neprijavljene. Izjema je bon za 3 povabljene (akcija vabil, migracija
+// 20261114120000): brezplačen, zato tudi v aplikaciji.
+import { useCallback, useEffect, useId, useRef, useState, type MutableRefObject } from 'react'
 import { useLocation } from 'react-router-dom'
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
@@ -25,6 +26,7 @@ interface Stanje {
   ovira?: string | null
   v_pregledu?: boolean
   centi?: number
+  bon?: boolean
   zadnja?: { kdaj: string; stara: number; nova: number } | null
 }
 
@@ -41,6 +43,8 @@ export interface PonovnaCenaKrmilo {
   odpoved: boolean
   nastaviOdpoved: (v: boolean) => void
   kupi: () => Promise<void>
+  uporabiBon: () => Promise<void>
+  bonUporabljen: boolean
 }
 
 export function usePonovnaCena(igralecId: number | undefined): PonovnaCenaKrmilo {
@@ -50,10 +54,11 @@ export function usePonovnaCena(igralecId: number | undefined): PonovnaCenaKrmilo
   const [odpoved, setOdpoved] = useState(false)
   const [dela, setDela] = useState(false)
   const [napaka, setNapaka] = useState<string | null>(null)
+  const [bonUporabljen, setBonUporabljen] = useState(false)
   const odpri = useCallback(() => setOdprto(true), [])
   const zapri = useCallback(() => setOdprto(false), [])
 
-  const smePrikazati = !jeNativno() && Boolean(session) && igralecId != null
+  const smePrikazati = Boolean(session) && igralecId != null
   useEffect(() => {
     if (!smePrikazati) return
     let zivo = true
@@ -83,8 +88,19 @@ export function usePonovnaCena(igralecId: number | undefined): PonovnaCenaKrmilo
     setNapaka(sporocilo ? prevediNapako(sporocilo) : t('igralci.ponovnaCena.napaka'))
   }
 
+  async function uporabiBon() {
+    setDela(true)
+    setNapaka(null)
+    const { error } = await supabase.rpc('ponovna_cena_z_bonom', { p_player_id: igralecId as number })
+    setDela(false)
+    if (error) return setNapaka(prevediNapako(error.message))
+    setStanje((s) => (s ? { ...s, bon: false, v_pregledu: true } : s))
+    setBonUporabljen(true)
+    setOdprto(false)
+  }
+
   return {
-    stanje: smePrikazati && stanje?.vidno ? stanje : null,
+    stanje: smePrikazati && stanje?.vidno && (!jeNativno() || stanje.bon) ? stanje : null,
     odprto,
     odpri,
     zapri,
@@ -93,6 +109,8 @@ export function usePonovnaCena(igralecId: number | undefined): PonovnaCenaKrmilo
     odpoved,
     nastaviOdpoved: setOdpoved,
     kupi,
+    uporabiBon,
+    bonUporabljen,
   }
 }
 
@@ -111,7 +129,9 @@ export function PonovnaCenaAkcija({ krmilo }: { krmilo: PonovnaCenaKrmilo }) {
       className="flex min-h-11 w-fit items-center gap-1.5 text-xs font-semibold text-gnl-300 underline decoration-dotted underline-offset-2 hover:text-white sm:ml-auto sm:min-h-8"
     >
       {t('igralci.ponovnaCena.gumb')}
-      <span className="font-normal text-slate-500">· {znesekCene(stanje)}</span>
+      <span className="font-normal text-slate-500">
+        · {stanje.bon ? t('igralci.ponovnaCena.brezplacno') : znesekCene(stanje)}
+      </span>
     </button>
   )
 }
@@ -121,6 +141,7 @@ export function PonovnaCenaPovratno({ krmilo }: { krmilo: PonovnaCenaKrmilo }) {
   const { search } = useLocation()
   const { stanje } = krmilo
   const vrnitev = new URLSearchParams(search).get('cena')
+  if (krmilo.bonUporabljen) return <p className="text-sm text-gnl-300">{t('igralci.ponovnaCena.uspehBon')}</p>
   if (!stanje && vrnitev !== 'uspeh') return null
   const z = stanje?.zadnja
   const ovira = stanje?.ovira ? OVIRE[stanje.ovira as keyof typeof OVIRE] : undefined
@@ -159,6 +180,7 @@ export function PonovnaCenaOkno({ krmilo }: { krmilo: PonovnaCenaKrmilo }) {
 
   if (!odprto || !stanje) return null
   const znesek = znesekCene(stanje)
+  if (stanje.bon) return <OknoBona krmilo={krmilo} okno={okno} idp={idp} />
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 pb-[max(1rem,var(--dno))] pt-[max(1rem,var(--vrh))] text-left backdrop-blur"
@@ -210,6 +232,47 @@ export function PonovnaCenaOkno({ krmilo }: { krmilo: PonovnaCenaKrmilo }) {
             onClick={() => void krmilo.kupi()}
           >
             {t('igralci.ponovnaCena.kupi', { cena: znesek })}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Bon za 3 povabljene: isti izračun brez plačila, zato brez soglasja o odstopu. */
+function OknoBona({ krmilo, okno, idp }: { krmilo: PonovnaCenaKrmilo; okno: MutableRefObject<HTMLDivElement | null>; idp: string }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 pb-[max(1rem,var(--dno))] pt-[max(1rem,var(--vrh))] text-left backdrop-blur"
+      onClick={(e) => e.target === e.currentTarget && krmilo.zapri()}
+    >
+      <div
+        ref={okno}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`${idp}-naslov`}
+        tabIndex={-1}
+        className="kartica w-full max-w-md space-y-3 p-4 text-sm text-slate-200"
+      >
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 id={`${idp}-naslov`} className="text-base font-bold">
+            {t('igralci.ponovnaCena.naslov')}
+          </h2>
+          <span className="text-base font-black text-gnl-300">{t('igralci.ponovnaCena.brezplacno')}</span>
+        </div>
+        <p>{t('igralci.ponovnaCena.opisBon')}</p>
+        {krmilo.napaka && <p className="text-rose-400">{krmilo.napaka}</p>}
+        <div className="flex flex-wrap justify-end gap-2">
+          <button type="button" className="gumb-tih text-sm" onClick={krmilo.zapri}>
+            {t('igralci.ponovnaCena.zapri')}
+          </button>
+          <button
+            type="button"
+            className="gumb-glavni flex-1 text-sm disabled:opacity-50 sm:flex-none"
+            disabled={krmilo.dela}
+            onClick={() => void krmilo.uporabiBon()}
+          >
+            {t('igralci.ponovnaCena.uporabiBon')}
           </button>
         </div>
       </div>

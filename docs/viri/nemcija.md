@@ -708,9 +708,15 @@ ostala enako neveljavna tudi v ciljnem običajnem svežem DFB zajemu
 ## Omejena lokalna priprava pregledanih koledarjev Nord/West (18. 10. 2026)
 
 `dfb-calendar.mjs` in nespremenljivi, s SHA-256 pripeti dejstveni register
-`dfb-calendar-receipts.json` podpirata samo objavljeno orientacijo štirih
+`dfb-calendar-receipts.json` podpirata samo objavljeno orientacijo štirih (od 5. 11. 2026 petih)
 podvojenih usmerjenih parov v sezoni 2026/27: Nord 2423139/2423378 in
-2423173/2423342, West 2425450/2425603 in 2425470/2425622. Register veže
+2423173/2423342, West 2425450/2425603 in 2425470/2425622.
+**5. 11. 2026 (SLF-289):** DFB je v Nordu objavil še peti par, 2423184/2423251
+(SV Werder Bremen II – Hamburger SV II, krog 12 in 19; krog 12 je bil odigran
+28. 10. na igrišču HSV II, a vir navaja Werder kot domačina). Par je dodan v
+register (nov SHA-256 `8f8f58e1…5043`) in v migracijo
+`20261105120000_dfb_calendar_receipt_nord_hsv.sql`, ki zamenja le register in
+njegov SHA v obeh DB validatorjih. Register veže
 izvorne klubske šifre, prikazna imena, kroge in izvirna URL/SHA/UTC obeh
 sodelujočih klubskih strani. Ne vsebuje surovega HTML ali podatkov igralcev.
 Parser ohrani objavljene strani, datume, izide in statistiko. Aktualni

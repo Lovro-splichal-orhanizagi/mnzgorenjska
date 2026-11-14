@@ -40,7 +40,7 @@ echo "Koš $KOS/$KOSOV, lige (najdlje neosvežene prve): $(cut -d' ' -f1 "$LIGE"
 zacetek=$(date +%s)
 minut() { echo $(( ($(date +%s) - zacetek) / 60 )); }
 
-zavrnjeni=" "   # viri, ki so ta zagon vrnili 403/429/izziv
+zavrnjeni=" "   # viri, ki so ta zagon vrnili 401/403/429/izziv ali porabili proračun zahtev
 nedosegljivi=" " # viri, ki so ta zagon vrnili 5xx (vir je dol)
 zadnji_izhod=0
 teci() { "$@" </dev/null; zadnji_izhod=$?; return "$zadnji_izhod"; }
@@ -53,11 +53,13 @@ uvozi() {
   if [ "$3" = fussball-public ]; then
     # Capture/replay the complete current source before any native write. Source
     # refusals stop this provider for the run; no second attempt or fallback.
-    node scripts/bulk-source-coordination.mjs </dev/null || return 4
+    # Only exit 4 of the capture is a refusal; the reader gate (GitHub API) and a
+    # transport or parse failure fail this league alone, retried at the end.
+    node scripts/bulk-source-coordination.mjs </dev/null || return 1
     local capture_dir
     capture_dir=$(mktemp -d)
-    rmdir "$capture_dir" || return 4
-    teci node scripts/prepare-fussball-nightly.mjs --tekmovanje "$liga" --output "$capture_dir" --max-requests 3000 || return 4
+    rmdir "$capture_dir" || return 1
+    teci node scripts/prepare-fussball-nightly.mjs --tekmovanje "$liga" --output "$capture_dir" --max-requests 3000 || { case $zadnji_izhod in 4|5) return "$zadnji_izhod" ;; *) return 1 ;; esac; }
     export SLFF_FUSSBALL_CAPTURE="$capture_dir"
   fi
   # Izhod 3: klub manjka v razporedu (izstop?) — odloči človek, liga ni padla.
@@ -127,7 +129,7 @@ while read -r liga faktor vir; do
     5) echo "::warning title=Vir ne dela::$liga — vir $vir vrača 5xx (nedosegljiv); ostale lige tega vira preskočene, ni napaka uvoza"
        nedosegljivi="$nedosegljivi$vir "; vir_dol="$vir_dol $liga" ;;
     0) echo "$liga: v redu"; node scripts/nocni-kosi.mjs --zabelezi "$liga" --stanje "$STANJE" ;;
-    4) echo "::error title=Vir je zavrnil::$liga — vir $vir je vrnil 403/429 ali izziv; ostale lige tega vira preskočene, ne obhajamo"
+    4) echo "::error title=Vir je zavrnil::$liga — vir $vir je vrnil 401/403/429, izziv ali preusmeritev, ali je zmanjkalo proračuna zahtev; ostale lige tega vira preskočene, ne obhajamo"
        zavrnjeni="$zavrnjeni$vir "; padle="$padle $liga" ;;
     *) echo "::warning title=Uvoz lige::$liga ni uspela; poskusim še enkrat na koncu"
        zacasno="$zacasno$liga $faktor $vir"$'\n' ;;
@@ -135,22 +137,34 @@ while read -r liga faktor vir; do
 done < "$LIGE"
 
 # Drugi poskus: prehodne napake (omrežje, "lock timeout" ob hkratnem pisanju).
+# Vir, ki je med tem zavrnil (4) ali je dol (5), ne dobi novih zahtev: ostale
+# njegove lige čakajo brez poskusa, enako kot v prvem krogu.
 while read -r liga faktor vir; do
   [ -n "$liga" ] || continue
-  if [ "$(minut)" -ge "$ROK_MIN" ] || [[ "$zavrnjeni" == *" $vir "* ]]; then padle="$padle $liga"; continue; fi
+  if [ "$(minut)" -ge "$ROK_MIN" ]; then padle="$padle $liga"; continue; fi
+  if [[ "$nedosegljivi" == *" $vir "* ]]; then
+    echo "::warning title=Vir ne dela::$liga preskočena — vir $vir je ta zagon vrnil 5xx"
+    vir_dol="$vir_dol $liga"; continue
+  fi
+  if [[ "$zavrnjeni" == *" $vir "* ]]; then
+    echo "::warning title=Vir je zavrnil::$liga preskočena — vir $vir je ta zagon že zavrnil"
+    padle="$padle $liga"; continue
+  fi
   echo "::group::$liga — drugi poskus ($(minut) min)"
   uvozi "$liga" "$faktor" "$vir"; izid=$?
   echo "::endgroup::"
-  if [ "$izid" = 0 ]; then
-    echo "$liga: v redu v drugem poskusu"
-    node scripts/nocni-kosi.mjs --zabelezi "$liga" --stanje "$STANJE"
-  elif [ "$izid" = 6 ]; then
-    echo "::warning title=DFB podatki čakajo::$liga — brez nadaljnje ponovitve"
-    cakajoci="$cakajoci $liga"
-  else
-    echo "::warning title=Uvoz lige::$liga ni uspela niti v drugem poskusu"
-    padle="$padle $liga"
-  fi
+  case $izid in
+    0) echo "$liga: v redu v drugem poskusu"
+       node scripts/nocni-kosi.mjs --zabelezi "$liga" --stanje "$STANJE" ;;
+    6) echo "::warning title=DFB podatki čakajo::$liga — brez nadaljnje ponovitve"
+       cakajoci="$cakajoci $liga" ;;
+    5) echo "::warning title=Vir ne dela::$liga — vir $vir vrača 5xx (nedosegljiv); ostale lige tega vira preskočene, ni napaka uvoza"
+       nedosegljivi="$nedosegljivi$vir "; vir_dol="$vir_dol $liga" ;;
+    4) echo "::error title=Vir je zavrnil::$liga — vir $vir je vrnil 401/403/429, izziv ali preusmeritev, ali je zmanjkalo proračuna zahtev; ostale lige tega vira preskočene, ne obhajamo"
+       zavrnjeni="$zavrnjeni$vir "; padle="$padle $liga" ;;
+    *) echo "::warning title=Uvoz lige::$liga ni uspela niti v drugem poskusu"
+       padle="$padle $liga" ;;
+  esac
 done <<< "$zacasno"
 
 if [ -n "$preskocene" ]; then

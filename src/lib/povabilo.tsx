@@ -10,8 +10,27 @@ import { useLocation } from 'react-router-dom'
 import { supabase } from './supabase'
 import { useAuth } from './useAuth'
 import { izvor } from './platforma'
+import { nastaviMojoKodo } from './mojaKoda'
 
 const KLJUC = 'slff-povabil'
+const KLJUC_MOJA = 'slff-moja-koda'
+/** Enkrat na napravo in račun: koda se ne spreminja, zato je shranjena. */
+async function naloziMojoKodo(uid: string) {
+  try {
+    const [u, k] = (localStorage.getItem(KLJUC_MOJA) ?? '').split(':')
+    if (u === uid && VZOREC.test(k ?? '')) return nastaviMojoKodo(k ?? null)
+  } catch {
+    /* zasebno okno: vprašamo bazo */
+  }
+  const { data } = await supabase.rpc('moja_koda_vabila')
+  if (typeof data !== 'string') return
+  nastaviMojoKodo(data)
+  try {
+    localStorage.setItem(KLJUC_MOJA, `${uid}:${data}`)
+  } catch {
+    /* nič */
+  }
+}
 const VZOREC = /^[a-z0-9]{8}$/
 
 /** Ob nalaganju strani: zapomni si kodo iz naslova. */
@@ -59,5 +78,9 @@ export function BeleziPovabilo() {
     ujemiPovabilo()
     if (uid) void zabeleziPovabilo()
   }, [search, uid])
+  useEffect(() => {
+    nastaviMojoKodo(null)
+    if (uid) void naloziMojoKodo(uid)
+  }, [uid])
   return null
 }
