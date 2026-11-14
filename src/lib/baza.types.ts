@@ -5876,6 +5876,21 @@ export type Database = {
           },
         ]
       }
+      starostne_skupine_izjeme: {
+        Row: {
+          skupina: string
+          slug: string
+        }
+        Insert: {
+          skupina: string
+          slug: string
+        }
+        Update: {
+          skupina?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       statistika_igralcev: {
         Row: {
           assists: number
@@ -6359,6 +6374,7 @@ export type Database = {
           izracunano_at: string
           najmanj: number
           po_krogu: boolean
+          skupina: string
           vrstice: Json
         }
         Insert: {
@@ -6366,6 +6382,7 @@ export type Database = {
           izracunano_at?: string
           najmanj: number
           po_krogu: boolean
+          skupina: string
           vrstice: Json
         }
         Update: {
@@ -6373,6 +6390,7 @@ export type Database = {
           izracunano_at?: string
           najmanj?: number
           po_krogu?: boolean
+          skupina?: string
           vrstice?: Json
         }
         Relationships: []
@@ -6950,6 +6968,7 @@ export type Database = {
           sort_order: number | null
           source: string | null
           source_league_code: string | null
+          starostna_skupina: string | null
           vir_ime: string | null
           vir_url: string | null
         }
@@ -11689,6 +11708,14 @@ export type Database = {
         }[]
       }
       stevec_uporabnikov: { Args: never; Returns: number }
+      starostna_skupina_iz_oznake: {
+        Args: { p_ime: string; p_slug: string }
+        Returns: string
+      }
+      starostna_skupina_lige: {
+        Args: { p_ime: string; p_slug: string }
+        Returns: string
+      }
       stiki_klubov: {
         Args: {
           p_drzava?: string
@@ -12003,7 +12030,7 @@ export type Database = {
       }
       voter_weight: { Args: { p_voter_id: string }; Returns: number }
       vrh_drzave: {
-        Args: { p_drzava: string; p_koliko?: number }
+        Args: { p_drzava: string; p_koliko?: number; p_skupina?: string }
         Returns: {
           competition_short: string
           competition_slug: string
@@ -12014,6 +12041,7 @@ export type Database = {
           player_id: number
           position: string
           season: string
+          starostna_skupina: string
           team_logo: string
           team_name: string
           team_short: string
@@ -12027,6 +12055,7 @@ export type Database = {
           p_koliko?: number
           p_na_krog?: boolean
           p_najmanj_krogov?: number
+          p_skupina?: string
         }
         Returns: {
           competition_short: string
@@ -12037,6 +12066,7 @@ export type Database = {
           mesto: number
           na_krog: number
           season: string
+          starostna_skupina: string
           team_id: number
           team_logo: string
           team_name: string
@@ -12050,6 +12080,7 @@ export type Database = {
           p_koliko?: number
           p_na_krog?: boolean
           p_najmanj_krogov?: number
+          p_skupina?: string
         }
         Returns: {
           competition_short: string
@@ -12060,6 +12091,7 @@ export type Database = {
           mesto: number
           na_krog: number
           season: string
+          starostna_skupina: string
           team_id: number
           team_logo: string
           team_name: string

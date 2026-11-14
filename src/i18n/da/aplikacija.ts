@@ -93,6 +93,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     odsotnosti: 'Fravær',
     // Landsdækkende rangliste på tværs af ligaerne.
     slovenija: 'Hele landet',
+    mladi: 'Unge spillere',
     admin: 'Admin',
     vec: 'Mere',
     racun: 'Konto',

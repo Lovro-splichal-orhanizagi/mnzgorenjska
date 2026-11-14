@@ -122,6 +122,23 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napovediOcenjenih: 'Pronósticos puntuados: {n}',
     vrhNapovedi: 'Mejores pronosticadores',
     vrhNapovediVse: 'Clasificación completa de pronósticos',
+    naslovStraniMladi: 'Clasificación nacional — jugadores jóvenes (U18 y menores)',
+    skupinaOznaka: 'Categoría de edad de la liga',
+    skupinaGlavna: 'Sénior y U19',
+    skupinaMladi: 'U18 y menores',
+    glavnaOpis:
+      'Esta clasificación solo incluye las ligas sénior y U19. Las ligas U18 y menores (U17, U15 …) tienen la suya, así que los jóvenes no se miden con los adultos.',
+    glavnaPovezava: 'Mejores jugadores jóvenes →',
+    mladiOpis:
+      'Solo ligas U18 y menores (U17, U15 …): las jóvenes promesas compiten entre sí. La categoría pertenece a la liga, no a la edad de ningún jugador.',
+    mladiPovezava: '← Sénior y U19',
+    vrhNaslovMladi: '¿Quién es el mejor jugador joven?',
+    vrhUvodGlavna: 'Los {n} mejores de las ligas sénior y U19 · temporada {sezona}',
+    vrhUvodMladi: 'Los {n} mejores de las ligas U18 y menores · temporada {sezona}',
+    vrhPrazenMladi: 'Esta temporada aún no se ha jugado ningún partido en las ligas U18 y menores.',
+    vrhSezona: 'temporada {sezona}',
+    mladiOpomba:
+      'La categoría pertenece a la liga (U18 y menores), no a la edad del jugador. Un mismo jugador puede aparecer también en una liga superior, donde tiene su propia clasificación.',
   },
 
   miniLige: {

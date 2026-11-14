@@ -4,6 +4,7 @@ import { zLigo } from '../lib/tekmovanje'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke, mnozina, KROGI } from '../lib/pomozno'
 import { NAJMANJ_KROGOV_ZA_POVPRECJE, type Razvrstitev } from '../lib/drzavna'
+import { jeNiPripravljeno, type Starost } from '../lib/starost'
 import Grb from './Grb'
 import { t } from '../i18n'
 import type { Database } from '../lib/baza.types'
@@ -18,13 +19,23 @@ const STRAN = 50
  * vseh lig. Ne fantasy ekipe, ampak pravi klubi; člani in mladinci istega
  * kluba sta vsak svoja vrstica, prestopnik pri novem klubu začne z nič.
  * Sešteje in razvrsti baza (`vrh_klubov_drzave`).
+ *
+ * `starost` loči lige (glavna = člani + U19, mladi = U18 in mlajši): mesta so
+ * znotraj skupine, kluba iz druge skupine ni med njimi.
  */
-export default function VrhKlubov({ drzava }: { drzava: string }) {
+export default function VrhKlubov({ drzava, starost }: { drzava: string; starost: Starost }) {
   const [vrstice, setVrstice] = useState<Vrstica[]>([])
   const [kako, setKako] = useState<Razvrstitev>('skupno')
   const [koliko, setKoliko] = useState(STRAN)
   const [nalaganje, setNalaganje] = useState(true)
-  const [napaka, setNapaka] = useState<string | null>(null)
+  const [napaka, setNapaka] = useState<{ code?: string; message: string } | null>(null)
+
+  // Druga država ali skupina je drug seznam: začne pri prvi strani.
+  useEffect(() => {
+    setKoliko(STRAN)
+    setVrstice([])
+    setNalaganje(true)
+  }, [drzava, starost])
 
   useEffect(() => {
     let veljavno = true
@@ -35,17 +46,18 @@ export default function VrhKlubov({ drzava }: { drzava: string }) {
         p_koliko: koliko + 1,
         p_na_krog: kako === 'povprecje',
         p_najmanj_krogov: NAJMANJ_KROGOV_ZA_POVPRECJE,
+        p_skupina: starost,
       })
       .then(({ data, error }) => {
         if (!veljavno) return
-        setNapaka(error ? error.message : null)
+        setNapaka(error)
         setVrstice(data ?? [])
         setNalaganje(false)
       })
     return () => {
       veljavno = false
     }
-  }, [drzava, kako, koliko])
+  }, [drzava, starost, kako, koliko])
 
   const izberi = (k: Razvrstitev) => {
     setKako(k)
@@ -53,7 +65,9 @@ export default function VrhKlubov({ drzava }: { drzava: string }) {
   }
 
   if (nalaganje) return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
-  if (napaka) return <p className="text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>
+  if (jeNiPripravljeno(napaka))
+    return <p className="text-sm text-slate-400">{t('lestvice.slovenija.pripravlja')}</p>
+  if (napaka) return <p className="text-rose-400">{t('skupno.napaka', { sporocilo: napaka.message })}</p>
 
   return (
     <div className="space-y-4">
@@ -90,7 +104,9 @@ export default function VrhKlubov({ drzava }: { drzava: string }) {
       )}
 
       {vrstice.length === 0 ? (
-        <p className="text-sm text-slate-400">{t('lestvice.slovenija.vrhPrazno')}</p>
+        <p className="text-sm text-slate-400">
+          {t(starost === 'mladi' ? 'lestvice.slovenija.vrhPrazenMladi' : 'lestvice.slovenija.vrhPrazno')}
+        </p>
       ) : (
         <ol className="kartica divide-y divide-white/10 overflow-hidden">
           {vrstice.slice(0, koliko).map((v) => (
@@ -112,6 +128,9 @@ export default function VrhKlubov({ drzava }: { drzava: string }) {
                 <div className="truncate text-xs text-slate-500">
                   {v.competition_short} · {t('lestvice.slovenija.klubiIgralcev', { n: v.igralcev })} · {v.goli}{' '}
                   <span aria-hidden>⚽</span>
+                </div>
+                <div className="truncate text-[11px] text-slate-500">
+                  {t('lestvice.slovenija.vrhSezona', { sezona: v.season })}
                 </div>
               </div>
               <div className="shrink-0 text-right">

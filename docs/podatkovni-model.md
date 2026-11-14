@@ -1271,3 +1271,20 @@ prikazana para ločeno; oba domača gola sta NULL. Obstoječi javni prikaz kaže
 `—`; lestvica in Elo ne določita zmagovalca iz neznanega izida. Znani uradni
 izidi zgodovinskih glav in registriranih čakajočih kartonov štejejo v
 lestvico samo za natančno nameščeno Badenovo povezavo.
+
+## Državna lestvica po starostnih skupinah (SLF-366)
+
+`competitions_view.starostna_skupina` (`clani` | `u19` | `pod_u19`, `null` = neznano)
+je oznaka TEKMOVANJA, ne igralca. Izračuna se ob branju s `starostna_skupina_lige(slug,
+name)` (izjema po šifri v `starostne_skupine_izjeme`, sicer `starostna_skupina_iz_oznake`;
+ni stolpca ali tujega ključa na `competitions`, ker ga varovalo FCF in opazovalec G1 zaklepata): številka `U..` v šifri ali imenu ima prednost; nasprotje
+(šifra `u19`, ime `U18`), U20 in več ter mladinska liga brez starosti ostanejo
+`null`. Lige z `null` niso na nobeni državni lestvici (zavrnitev, ne ugibanje);
+popravi se z vrstico v `starostne_skupine_izjeme(slug, skupina)` (`nobena` = izloči).
+
+Državna stran (`/national`) ima dva pogleda, ki se ne mešata: glavna (`clani` +
+`u19`) in mladi (`pod_u19`, `?starost=mladi`). `vrh_drzave(p_drzava, p_koliko,
+p_skupina)` in `vrh_klubov_drzave(..., p_skupina)` izločita skupino PRED
+razvrščanjem in `limit`; tekoča sezona je po ligi. Predpomnilnik klubov
+(`vrh_klubov_predpomnilnik`) ima ključ po skupini. Fantasy ekipe filtrira
+stran po skupini lige. Test: `supabase/tests/starostne-skupine-drzavne-lestvice.sql`.

@@ -101,6 +101,7 @@ export const aplikacija = {
     pozicije: 'Pozicije',
     odsotnosti: 'Odsotnosti',
     slovenija: 'Slovenija',
+    mladi: 'Mladi igralci',
     admin: 'Admin',
     vec: 'Več',
     racun: 'Račun',

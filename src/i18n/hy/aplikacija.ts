@@ -93,6 +93,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     odsotnosti: 'Բացակայություններ',
     // Չեզոք անվանում, ինչպես անգլերենում.
     slovenija: 'Համազգային',
+    mladi: 'Երիտասարդ խաղացողներ',
     admin: 'Ադմին',
     vec: 'Ավելին',
     racun: 'Հաշիվ',

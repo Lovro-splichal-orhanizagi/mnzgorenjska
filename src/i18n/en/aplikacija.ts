@@ -93,6 +93,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     odsotnosti: 'Absences',
     // English serves both countries, so the label stays neutral.
     slovenija: 'National',
+    mladi: 'Young players',
     admin: 'Admin',
     vec: 'More',
     racun: 'Account',

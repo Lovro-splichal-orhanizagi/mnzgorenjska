@@ -123,6 +123,23 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napovediOcenjenih: 'Novērtētas prognozes: {n}',
     vrhNapovedi: 'Labākie prognozētāji',
     vrhNapovediVse: 'Visa prognožu tabula',
+    naslovStraniMladi: 'Valsts kopvērtējums · jaunie spēlētāji (U18 un jaunāki)',
+    skupinaOznaka: 'Līgas vecuma grupa',
+    skupinaGlavna: 'Pieaugušie un U19',
+    skupinaMladi: 'U18 un jaunāki',
+    glavnaOpis:
+      'Šajā kopvērtējumā ir tikai pieaugušo un U19 līgas. U18 un jaunāko līgām (U17, U15 …) ir savs kopvērtējums, tāpēc jaunie spēlētāji netiek salīdzināti ar pieaugušajiem.',
+    glavnaPovezava: 'Labākie jaunie spēlētāji →',
+    mladiOpis:
+      'Tikai U18 un jaunāko līgas (U17, U15 …): topošās zvaigznes sacenšas savā starpā. Grupa pieder līgai, nevis kāda spēlētāja vecumam.',
+    mladiPovezava: '← Pieaugušie un U19',
+    vrhNaslovMladi: 'Kurš ir labākais jaunais spēlētājs?',
+    vrhUvodGlavna: 'Labākie {n} pieaugušo un U19 līgās · sezona {sezona}',
+    vrhUvodMladi: 'Labākie {n} U18 un jaunāko līgās · sezona {sezona}',
+    vrhPrazenMladi: 'U18 un jaunāko līgās šajā sezonā vēl nav aizvadītu spēļu.',
+    vrhSezona: 'sezona {sezona}',
+    mladiOpomba:
+      'Grupa pieder līgai (U18 un jaunāki), nevis spēlētāja vecumam. Tas pats spēlētājs var parādīties arī vecākā līgā, kur viņam ir atsevišķs kopvērtējums.',
   },
 
   miniLige: {
