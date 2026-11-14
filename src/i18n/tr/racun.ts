@@ -323,7 +323,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     tvojeMesto: 'Sıran: {mesto}. (kampanyada {n} kişi)',
     seNisi: 'Henüz sıralamada değilsin: ilk arkadaşını davet et.',
     prazno: 'Sıralama henüz boş. İlk sen ol!',
-    pravila: 'Ödülü yalnızca reşit olanlar (18+) alabilir. Eşitlik halinde sayıya önce ulaşan kazanır. Kazanana hesabın e-posta adresinden yazarız; bira gönderemediğimiz yerlerde eşdeğer bir ödül verilir. Sahte veya mükerrer hesaplar sayılmaz.',
+    pravila: 'Ödülü yalnızca reşit olanlar (18+) alabilir. Eşitlik halinde sayıya önce ulaşan kazanır. Kazanana hesabın e-posta adresinden yazarız; bira gönderemediğimiz yerlerde eşdeğer bir ödül verilir. Sahte veya mükerrer hesaplar sayılmaz. Apple ve Google bu kampanyanın sponsoru değildir ve kampanyayla hiçbir şekilde ilişkili değildir.',
   },
   // Invite landing page /i/<code> and the code field at sign-up.
   vabilo: {

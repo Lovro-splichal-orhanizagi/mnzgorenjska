@@ -327,7 +327,7 @@ export const racun = {
     tvojeMesto: 'Tvoje mesto: {mesto}. ({n} v akciji)',
     seNisi: 'Na lestvici te še ni: povabi prvega prijatelja.',
     prazno: 'Lestvica je še prazna. Bodi prvi!',
-    pravila: 'Nagrado dobi le polnoleten (18+). Ob izenačenju zmaga, kdor je število dosegel prej. Zmagovalcu pišemo na e-naslov računa; kamor piva ne moremo poslati, dobi enakovredno nagrado. Lažni ali podvojeni računi ne štejejo.',
+    pravila: 'Nagrado dobi le polnoleten (18+). Ob izenačenju zmaga, kdor je število dosegel prej. Zmagovalcu pišemo na e-naslov računa; kamor piva ne moremo poslati, dobi enakovredno nagrado. Lažni ali podvojeni računi ne štejejo. Apple in Google nista sponzorja akcije in z njo nista povezana.',
   },
   // Stran povabila /i/<koda> in polje kode na registraciji.
   vabilo: {

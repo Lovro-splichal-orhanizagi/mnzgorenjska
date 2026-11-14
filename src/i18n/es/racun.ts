@@ -323,7 +323,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     tvojeMesto: 'Tu posición: {mesto}. ({n} en la promoción)',
     seNisi: 'Aún no estás en la clasificación: invita a tu primer amigo.',
     prazno: 'La clasificación aún está vacía. ¡Sé el primero!',
-    pravila: 'Solo pueden ganar mayores de edad (18+). En caso de empate gana quien alcanzó antes la cifra. Escribimos al ganador al correo de su cuenta; donde no podamos enviar cerveza, recibe un premio equivalente. Las cuentas falsas o duplicadas no cuentan.',
+    pravila: 'Solo pueden ganar mayores de edad (18+). En caso de empate gana quien alcanzó antes la cifra. Escribimos al ganador al correo de su cuenta; donde no podamos enviar cerveza, recibe un premio equivalente. Las cuentas falsas o duplicadas no cuentan. Apple y Google no patrocinan esta promoción ni están vinculados a ella.',
   },
   // Invite landing page /i/<code> and the code field at sign-up.
   vabilo: {

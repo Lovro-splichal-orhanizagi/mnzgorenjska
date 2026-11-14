@@ -323,7 +323,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     tvojeMesto: 'Locul tău: {mesto}. ({n} în campanie)',
     seNisi: 'Încă nu ești în clasament: invită primul prieten.',
     prazno: 'Clasamentul e încă gol. Fii primul!',
-    pravila: 'Premiul îl poate primi doar o persoană majoră (18+). La egalitate câștigă cine a atins numărul mai devreme. Îi scriem câștigătorului la adresa de e-mail a contului; unde nu putem trimite bere, primește un premiu echivalent. Conturile false sau duplicate nu contează.',
+    pravila: 'Premiul îl poate primi doar o persoană majoră (18+). La egalitate câștigă cine a atins numărul mai devreme. Îi scriem câștigătorului la adresa de e-mail a contului; unde nu putem trimite bere, primește un premiu echivalent. Conturile false sau duplicate nu contează. Apple și Google nu sunt sponsori ai campaniei și nu sunt asociate cu aceasta.',
   },
   // Invite landing page /i/<code> and the code field at sign-up.
   vabilo: {

@@ -328,7 +328,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     tvojeMesto: 'A helyezésed: {mesto}. ({n} az akcióban)',
     seNisi: 'Még nem vagy a ranglistán: hívd meg az első barátodat.',
     prazno: 'A ranglista még üres. Légy az első!',
-    pravila: 'Nyereményt csak nagykorú (18+) kaphat. Holtverseny esetén az nyer, aki a számot előbb érte el. A nyertesnek a fiók e-mail-címére írunk; ahová sört nem tudunk küldeni, ott egyenértékű nyereményt kap. A hamis vagy többszörös fiókok nem számítanak.',
+    pravila: 'Nyereményt csak nagykorú (18+) kaphat. Holtverseny esetén az nyer, aki a számot előbb érte el. A nyertesnek a fiók e-mail-címére írunk; ahová sört nem tudunk küldeni, ott egyenértékű nyereményt kap. A hamis vagy többszörös fiókok nem számítanak. Az Apple és a Google nem szponzora az akciónak, és semmilyen módon nem kapcsolódik hozzá.',
   },
   // Invite landing page /i/<code> and the code field at sign-up.
   vabilo: {

@@ -330,7 +330,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     tvojeMesto: 'Tvoje mjesto: {mesto}. ({n} u akciji)',
     seNisi: 'Još nisi na ljestvici: pozovi prvog prijatelja.',
     prazno: 'Ljestvica je još prazna. Budi prvi!',
-    pravila: 'Nagradu može dobiti samo punoljetna osoba (18+). Pri izjednačenju pobjeđuje onaj tko je broj dosegnuo prije. Pobjedniku pišemo na e-adresu računa; kamo pivo ne možemo poslati, dobiva jednakovrijednu nagradu. Lažni ili dvostruki računi se ne računaju.',
+    pravila: 'Nagradu može dobiti samo punoljetna osoba (18+). Pri izjednačenju pobjeđuje onaj tko je broj dosegnuo prije. Pobjedniku pišemo na e-adresu računa; kamo pivo ne možemo poslati, dobiva jednakovrijednu nagradu. Lažni ili dvostruki računi se ne računaju. Apple i Google nisu sponzori akcije i nisu s njom povezani.',
   },
   // Invite landing page /i/<code> and the code field at sign-up.
   vabilo: {
