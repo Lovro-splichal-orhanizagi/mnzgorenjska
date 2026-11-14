@@ -2,3 +2,4 @@
 # Sem dodajaj nove teste namesto v "test:sources" v package.json: package.json je
 # v pripetem zaprtju scripts/fussball-fresh-pair.mjs in vsak popravek premakne
 # zgoščeno vrednost (glej SLF-308).
+scripts/zgodbe/zgodbe.test.mjs
