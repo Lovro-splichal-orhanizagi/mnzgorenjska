@@ -259,6 +259,9 @@ to področje. Bistvo, ki ga je treba vedeti vedno:
   Zasebni `vrsta_zahtevkov_igralca()` deli dejanski vrstni red med uporabnika
   in admin; dodatna/ponovno ustvarjena ekipa ne daje nove prednosti.
   Samo uporabniški prikaz števila pred njim je pomnožen s 7.
+  Ista povabila štejejo za **akcijo vabil** (14.–30. 11. 2026, `/invite`):
+  bon za ponovno vrednotenje cene pri 3 in zaboj piva za največ
+  (`docs/podatkovni-model.md`, *Akcija vabil*).
 - Plačila (preverjeni igralci, Stripe): stikalo `preverjeni_racuni`, webhook
   `stripe-webhook`, **preklic naročnine mora biti vedno mogoč**; vse v
   `docs/podatkovni-model.md` (*Preverjeni igralci*).

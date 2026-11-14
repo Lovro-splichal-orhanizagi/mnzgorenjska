@@ -15,6 +15,7 @@
 //   ... VRSTA=liga-zivi node scripts/posli-opomnike.mjs                  # želena liga je zaživela (Moje lige ni)
 //   ... VRSTA=pivo-7dni node scripts/posli-opomnike.mjs                  # teden po prvi ekipi: plačaš pivo? (enkrat)
 //   ... VRSTA=novost-mini-lige node scripts/posli-opomnike.mjs           # enkratno: dvoboji in napovedi v mini ligah
+//   ... VRSTA=akcija-vabil node scripts/posli-opomnike.mjs               # akcija Povabi prijatelje (14.–30. 11. 2026)
 //   ... VRSTA=opozorilo-odsotni node scripts/posli-opomnike.mjs          # rok jutri: odsoten igralec v prvi postavi
 //
 // Opomnik gre vsem brez ekipe (353 ljudi) in je zato ročna odločitev.
@@ -46,7 +47,7 @@ if (!SERVICE) { console.error('Manjka SUPABASE_SERVICE_ROLE_KEY'); process.exit(
 // Suho je PRIVZETO. Pošiljanje pošte resničnim ljudem mora biti izrecna
 // izbira, ne privzeta posledica zagona.
 const suho = String(process.env.SUHO ?? 'true').toLowerCase() !== 'false'
-const vrsta = ['opozorilo', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni'].includes(process.env.VRSTA) ? process.env.VRSTA : 'opomnik'
+const vrsta = ['opozorilo', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'akcija-vabil'].includes(process.env.VRSTA) ? process.env.VRSTA : 'opomnik'
 // Opozorilo, push opomnik in tedenski pregled tečejo po urniku; varuje jih meja na ligo.
 const poUrniku = vrsta !== 'opomnik'
 // Opomnik in tedenski pregled gresta po pošti v velikem številu: oba omejuje
@@ -58,7 +59,11 @@ const sProracunom = vrsta === 'opomnik' || vrsta === 'tedenski-pregled'
 // dvajset ljudi, ki bi vsak zase pokvaril svojo ekipo — verjetneje je uvoz
 // deaktiviral cel klub ali prestavil pol lige. Takrat je napaka nasa in
 // posiljanje pomote dvajsetim ljudem je ne popravi.
-const NAJVEC_NA_LIGO = Number(process.env.NAJVEC_NA_LIGO ?? 25)
+//
+// Opozorilo za odsotne je drugacno: eno samo poročilo o enem igralcu zadene vse
+// ekipe z njim (SLF-324: kartoni, 3. 11., v 32 od 59 ekip lj-1-liga). To ni
+// napaka uvoza, zato je privzeta meja visoka in lovi le množično napačno poročilo.
+const NAJVEC_NA_LIGO = Number(process.env.NAJVEC_NA_LIGO ?? (vrsta === 'opozorilo-odsotni' ? 300 : 25))
 const dni = Number(process.env.DNI ?? 2)
 // Dnevni proračun opomnikov čez VSE lige. Kampanja 3. 9. je obstala na dnevni
 // kvoti ponudnika; zato jih pošljemo največ toliko na dan, ostali pridejo ob
@@ -70,7 +75,7 @@ const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global
 // Dobrodošlica ni vezana na ligo: kosi po 10, dokler je kaj kandidatov ali do
 // NAJVEC_DOBRODOSLIC na zagon (urni zagon: zaostanek ~500 gre v pol dneva).
 // Opomnik brez ekipe enako (zaostanek ~1800 po 60 na uro gre v dan in pol).
-if (vrsta === 'dobrodoslica' || vrsta === 'brez-ekipe' || vrsta === 'liga-zivi' || vrsta === 'pivo-7dni' || vrsta === 'novost-mini-lige') {
+if (vrsta === 'dobrodoslica' || vrsta === 'brez-ekipe' || vrsta === 'liga-zivi' || vrsta === 'pivo-7dni' || vrsta === 'novost-mini-lige' || vrsta === 'akcija-vabil') {
   let ostane = Number(process.env.NAJVEC_DOBRODOSLIC ?? 60)
   let poslano = 0
   for (;;) {
