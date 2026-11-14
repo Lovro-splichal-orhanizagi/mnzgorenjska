@@ -125,6 +125,23 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napovediOcenjenih: 'Vyhodnotené tipy: {n}',
     vrhNapovedi: 'Najlepší tipéri',
     vrhNapovediVse: 'Celá tabuľka tipov',
+    naslovStraniMladi: 'Celoštátna tabuľka — mladí hráči (U18 a mladší)',
+    skupinaOznaka: 'Veková skupina ligy',
+    skupinaGlavna: 'Dospelí a U19',
+    skupinaMladi: 'U18 a mladší',
+    glavnaOpis:
+      'Táto tabuľka zahŕňa iba ligy dospelých a ligy U19. Ligy U18 a mladších (U17, U15 …) majú vlastnú tabuľku, takže mladí hráči sa nemerajú s dospelými.',
+    glavnaPovezava: 'Najlepší mladí hráči →',
+    mladiOpis:
+      'Iba ligy U18 a mladších (U17, U15 …): nádejné talenty súťažia medzi sebou. Skupina patrí lige, nie veku jednotlivého hráča.',
+    mladiPovezava: '← Dospelí a U19',
+    vrhNaslovMladi: 'Kto je najlepší mladý hráč?',
+    vrhUvodGlavna: 'Najlepších {n} v ligách dospelých a U19 · sezóna {sezona}',
+    vrhUvodMladi: 'Najlepších {n} v ligách U18 a mladších · sezóna {sezona}',
+    vrhPrazenMladi: 'V aktuálnej sezóne sa v ligách U18 a mladších ešte neodohrali žiadne zápasy.',
+    vrhSezona: 'sezóna {sezona}',
+    mladiOpomba:
+      'Skupina patrí lige (U18 a mladší), nie veku hráča. Ten istý hráč sa môže objaviť aj v staršej lige, kde má samostatnú tabuľku.',
   },
 
   miniLige: {

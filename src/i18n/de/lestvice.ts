@@ -122,6 +122,23 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napovediOcenjenih: 'Gewertete Tipps: {n}',
     vrhNapovedi: 'Beste Tipper',
     vrhNapovediVse: 'Ganze Tipptabelle',
+    naslovStraniMladi: 'Landesweite Tabelle · Nachwuchsspieler (U18 und jünger)',
+    skupinaOznaka: 'Altersgruppe der Liga',
+    skupinaGlavna: 'Erwachsene und U19',
+    skupinaMladi: 'U18 und jünger',
+    glavnaOpis:
+      'Diese Tabelle umfasst nur Erwachsenen- und U19-Ligen. Die Ligen U18 und jünger (U17, U15 …) haben eine eigene Tabelle, damit Nachwuchsspieler nicht an Erwachsenen gemessen werden.',
+    glavnaPovezava: 'Beste Nachwuchsspieler →',
+    mladiOpis:
+      'Nur Ligen U18 und jünger (U17, U15 …): Nachwuchstalente messen sich untereinander. Die Gruppe gehört zur Liga, nicht zum Alter einzelner Spieler.',
+    mladiPovezava: '← Erwachsene und U19',
+    vrhNaslovMladi: 'Wer ist der beste Nachwuchsspieler?',
+    vrhUvodGlavna: 'Top {n} der Erwachsenen- und U19-Ligen · Saison {sezona}',
+    vrhUvodMladi: 'Top {n} der Ligen U18 und jünger · Saison {sezona}',
+    vrhPrazenMladi: 'In der laufenden Saison wurden in den Ligen U18 und jünger noch keine Spiele gespielt.',
+    vrhSezona: 'Saison {sezona}',
+    mladiOpomba:
+      'Die Gruppe gehört zur Liga (U18 und jünger), nicht zum Alter des Spielers. Derselbe Spieler kann auch in einer älteren Liga auftauchen, wo er eine eigene Tabelle hat.',
   },
 
   miniLige: {

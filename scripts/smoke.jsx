@@ -2598,6 +2598,31 @@ preveri(
     razvrsti([], 'povprecje').length === 0 && povzetek([]).lig === 0)
 }
 
+// --- starostne skupine drzavne lestvice (SLF-366) ---------------------------
+// Glavna lestvica = clani + U19, mladi = U18 in mlajsi; neznana skupina ni
+// v nobeni. Skupina je oznaka lige, ne igralca.
+{
+  const { jeVStarosti, starostIzNaslova, naslovStarosti, jeNiPripravljeno } =
+    await import('../src/lib/starost.ts')
+  preveri('starost: clani in U19 so v glavni, ne med mladimi',
+    jeVStarosti('clani', 'glavna') && jeVStarosti('u19', 'glavna')
+    && !jeVStarosti('clani', 'mladi') && !jeVStarosti('u19', 'mladi'))
+  preveri('starost: U18 in mlajsi so le med mladimi',
+    jeVStarosti('pod_u19', 'mladi') && !jeVStarosti('pod_u19', 'glavna'))
+  preveri('starost: neznana skupina ni nikjer (fail closed)',
+    [null, undefined, '', 'u21', 'mladi'].every((x) => !jeVStarosti(x, 'glavna') && !jeVStarosti(x, 'mladi')))
+  preveri('starost: ?starost=mladi, vse drugo je glavna',
+    starostIzNaslova('mladi') === 'mladi' && starostIzNaslova(null) === 'glavna'
+    && starostIzNaslova('glavna') === 'glavna' && starostIzNaslova('xyz') === 'glavna')
+  const iskanje = new URLSearchParams('t=lj-1-liga&pogled=klubi')
+  preveri('starost: preklop ohrani ligo in zavihek, nazaj odstrani parameter',
+    naslovStarosti(iskanje, 'mladi').toString() === 't=lj-1-liga&pogled=klubi&starost=mladi'
+    && naslovStarosti(new URLSearchParams('t=x&starost=mladi'), 'glavna').toString() === 't=x')
+  preveri('starost: manjkajoca migracija ni napaka baze',
+    jeNiPripravljeno({ code: 'PGRST202', message: 'x' }) && jeNiPripravljeno({ message: 'column starostna_skupina does not exist' })
+    && !jeNiPripravljeno({ code: '57014', message: 'timeout' }) && !jeNiPripravljeno(null))
+}
+
 // --- ISO teden za tedensko prevrednotenje ------------------------------------
 // Prevrednotenje NI idempotentno: vsak zagon priblizna ceno za najvec 1.0 in
 // z njo potuje sidro borze. Dvakrat v istem tednu pomeni premik za 2.0, zato

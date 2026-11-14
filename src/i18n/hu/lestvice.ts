@@ -123,6 +123,23 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napovediOcenjenih: 'Kiértékelt tippek: {n}',
     vrhNapovedi: 'Legjobb tippelők',
     vrhNapovediVse: 'Teljes tipptabella',
+    naslovStraniMladi: 'Országos tabella · fiatal játékosok (U18 és fiatalabb)',
+    skupinaOznaka: 'A bajnokság korosztálya',
+    skupinaGlavna: 'Felnőtt és U19',
+    skupinaMladi: 'U18 és fiatalabb',
+    glavnaOpis:
+      'Ez a tabella csak a felnőtt és az U19-es bajnokságokat tartalmazza. Az U18 és fiatalabb bajnokságoknak (U17, U15 …) saját tabellájuk van, így a fiatal játékosokat nem a felnőttekhez mérjük.',
+    glavnaPovezava: 'A legjobb fiatalok →',
+    mladiOpis:
+      'Csak az U18 és fiatalabb bajnokságok (U17, U15 …): a feltörekvő tehetségek egymással mérkőznek. A korosztály a bajnokságot jellemzi, nem az egyes játékosok életkorát.',
+    mladiPovezava: '← Felnőtt és U19',
+    vrhNaslovMladi: 'Ki a legjobb fiatal játékos?',
+    vrhUvodGlavna: 'Top {n} a felnőtt és U19-es bajnokságokból · {sezona} szezon',
+    vrhUvodMladi: 'Top {n} az U18 és fiatalabb bajnokságokból · {sezona} szezon',
+    vrhPrazenMladi: 'Az U18 és fiatalabb bajnokságokban ebben a szezonban még nem játszottak mérkőzést.',
+    vrhSezona: '{sezona} szezon',
+    mladiOpomba:
+      'A korosztály a bajnokságot jellemzi (U18 és fiatalabb), nem a játékos életkorát. Ugyanaz a játékos egy idősebb bajnokságban is megjelenhet, ahol külön tabellája van.',
   },
 
   miniLige: {

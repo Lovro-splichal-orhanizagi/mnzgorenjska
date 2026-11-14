@@ -122,6 +122,23 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napovediOcenjenih: 'Qiymətləndirilmiş proqnozlar: {n}',
     vrhNapovedi: 'Ən yaxşı proqnozçular',
     vrhNapovediVse: 'Bütün proqnoz cədvəli',
+    naslovStraniMladi: 'Ölkə üzrə reytinq · gənc oyunçular (U18 və aşağı)',
+    skupinaOznaka: 'Liqanın yaş qrupu',
+    skupinaGlavna: 'Böyüklər və U19',
+    skupinaMladi: 'U18 və aşağı',
+    glavnaOpis:
+      'Bu reytinq yalnız böyüklər və U19 liqalarını əhatə edir. U18 və aşağı liqaların (U17, U15 …) ayrıca reytinqi var, beləliklə gənc oyunçular böyüklərlə müqayisə olunmur.',
+    glavnaPovezava: 'Ən yaxşı gənc oyunçular →',
+    mladiOpis:
+      'Yalnız U18 və aşağı liqalar (U17, U15 …): gələcəyin ulduzları bir-biri ilə yarışır. Qrup liqaya aiddir, hansısa oyunçunun yaşına yox.',
+    mladiPovezava: '← Böyüklər və U19',
+    vrhNaslovMladi: 'Ən yaxşı gənc oyunçu kimdir?',
+    vrhUvodGlavna: 'Böyüklər və U19 liqalarında ilk {n} · mövsüm {sezona}',
+    vrhUvodMladi: 'U18 və aşağı liqalarda ilk {n} · mövsüm {sezona}',
+    vrhPrazenMladi: 'U18 və aşağı liqalarda bu mövsüm hələ oyun oynanmayıb.',
+    vrhSezona: 'mövsüm {sezona}',
+    mladiOpomba:
+      'Qrup liqaya aiddir (U18 və aşağı), oyunçunun yaşına yox. Eyni oyunçu daha yuxarı liqada da ola bilər; orada onun ayrıca reytinqi var.',
   },
 
   miniLige: {
