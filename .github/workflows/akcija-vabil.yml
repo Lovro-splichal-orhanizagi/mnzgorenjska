@@ -6,11 +6,11 @@ name: Akcija vabil (povabi prijatelje)
 # ~4800 ljudi na val; 120 na zagon, vsako uro med 8 in 17 UTC = ~1200 na dan,
 # val v ~4 dneh. Zunaj akcije kandidatov ni in zagon ne poslje nicesar.
 #
-# Urnik vklopi sele, ko je funkcija objavljena (`scripts/hetzner/objavi-funkcije.sh
-# posli-opomnik`) in je rocni suhi tek vrnil kandidate: stara funkcija vrsto zavrne.
+# Urnik je vklopljen 14. 11. 2026 po objavi funkcije, suhem teku (4776) in
+# prvem paketu 10 brez napak.
 on:
-  # schedule:
-  #   - cron: '23 8-17 * * *'
+  schedule:
+    - cron: '23 8-17 * * *'
   workflow_dispatch:
     inputs:
       suho:
