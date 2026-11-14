@@ -8,6 +8,12 @@
 // 4xx/5xx funkcija vrne po svoji presoji (409 = varovalka na ligo) in ga
 // ponovitev ne sme preglasiti.
 //
+// 14. 11. 2026 je funkcija po ponovnem zagonu vračala 503 brez telesa (3 lige ob
+// 17:05, `rs-sombor-pfl` ob 17:14 pri suhem teku): odgovor da prehod platforme,
+// ne funkcija (`posli-opomnik` vrne 503 samo za promo akcije, ne za opomnike).
+// Tudi 503 ponovimo, a z istim dolgim premorom kot ECONNRESET: ne moremo
+// dokazati, da se pošiljanje ni začelo, in pri 65 s je prvi klic gotovo končan.
+//
 // Pri ECONNRESET ne vemo, ali je zahtevek dosegel funkcijo. Če jo je in še
 // pošilja, bi takojšnja ponovitev istim prejemnikom poslala drugič: `opozorilo`
 // in `opozorilo-odsotni` kandidatov ne preverjata znova ob vsakem prejemniku.
@@ -35,7 +41,12 @@ export async function klicSPonovitvami(
 ) {
   for (let poskus = 0; ; poskus++) {
     try {
-      return await fetchFn(url, init)
+      const odgovor = await fetchFn(url, init)
+      if (odgovor.status !== 503 || poskus >= zamiki.length) return odgovor
+      await odgovor.body?.cancel?.().catch(() => {})
+      log(`  ponovim klic (${poskus + 2}/${zamiki.length + 1}) čez ${zamikNejasno / 1000} s: HTTP 503`)
+      await cakaj(zamikNejasno)
+      continue
     } catch (e) {
       if (!jePrehodnaNapaka(e) || poskus >= zamiki.length) throw e
       const koda = String(e.cause?.code ?? e.code ?? '')

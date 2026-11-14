@@ -42,6 +42,22 @@ test('ECONNRESET (nejasno): počakamo dlje od omejitve funkcije; ECONNREFUSED: k
   assert.ok(ZAMIK_NEJASNO_MS > 60000)
 })
 
+test('503: klic ponovimo z dolgim premorom; po vseh poskusih vrnemo 503, ostali statusi se ne ponovijo', async () => {
+  const premori = []
+  let klici = 0
+  const r = await klicSPonovitvami(async () => (++klici < 3 ? { status: 503 } : { status: 200 }), 'u', {}, { log: (v) => premori.push(v), zamiki: [2000, 6000], zamikNejasno: 0 })
+  assert.equal(r.status, 200)
+  assert.equal(klici, 3)
+  assert.match(premori[0], /HTTP 503/)
+  klici = 0
+  const zadnji = await klicSPonovitvami(async () => { klici++; return { status: 503 } }, 'u', {}, tih)
+  assert.equal(zadnji.status, 503)
+  assert.equal(klici, 3)
+  klici = 0
+  for (const status of [500, 502, 504, 409]) await klicSPonovitvami(async () => { klici++; return { status } }, 'u', {}, tih)
+  assert.equal(klici, 4)
+})
+
 // Skripta zares, proti lokalnemu strežniku, ki prvi klic funkcije prekine.
 async function zazeni(vedenje, { resetLig = 0, lige = 2 } = {}) {
   const klici = []
@@ -57,7 +73,9 @@ async function zazeni(vedenje, { resetLig = 0, lige = 2 } = {}) {
     req.on('end', () => {
       const liga = JSON.parse(telo).competition_id
       klici.push(liga)
-      if (vedenje(liga, klici.filter((l) => l === liga).length)) return req.socket.resetAndDestroy()
+      const v = vedenje(liga, klici.filter((l) => l === liga).length)
+      if (v === 503) { res.statusCode = 503; return res.end() }
+      if (v) return req.socket.resetAndDestroy()
       res.setHeader('content-type', 'application/json')
       res.end(JSON.stringify({ kandidati_stevilo: 2, poslano: 2, preskoceno: 0 }))
     })
@@ -101,6 +119,21 @@ test('skripta: 5 lig zapored brez povezave ustavi korak (izpad povezave ne traja
   assert.equal(r.klici.length, 5 * 3, r.out)
   assert.match(r.out, /5 lig zapored brez povezave/)
   assert.match(r.out, /Lig z napako: 5/)
+})
+
+test('skripta: 503 na prvem klicu, ponovitev uspe, korak je zelen', async () => {
+  const r = await zazeni((liga, n) => (liga === 1 && n === 1 ? 503 : false))
+  assert.equal(r.koda, 0, r.out)
+  assert.deepEqual(r.klici, [1, 1, 2])
+  assert.match(r.out, /ponovim klic \(2\/3\).*HTTP 503/)
+})
+
+test('skripta: 5 lig zapored s 503 ustavi korak', async () => {
+  const r = await zazeni(() => 503, { lige: 8 })
+  assert.equal(r.koda, 1, r.out)
+  assert.equal(r.klici.length, 5 * 3, r.out)
+  assert.match(r.out, /NAPAKA 503/)
+  assert.match(r.out, /5 lig zapored brez povezave/)
 })
 
 test('skripta: prekinjeno branje seznama lig se ponovi', async () => {
