@@ -390,6 +390,8 @@ ostanejo. Nova predloga (neoverjeno, prebrano le z domačih strani): epsip.gr
 `/diorganoseis/a-katigoria/?enosi_main_league_id=16&enosi_tab=standings`
 (Β 17, Γ 18). `scripts/viri/eps.mjs` je ne bere; za ponovni vklop je treba
 novi parser in preveriti, ali sta objavljena postava, menjave in goli.
+Od 14. 11. epsana.gr runnerju vrne 403 (ne obhajamo); uvoz ob tem preskoči še
+ostale `eps` lige v istem poslu (gr-arg, gr-ev, gr-dod), zato izklop.
 
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=gr-peir-a-1 -f
 arhiv=epspeir.gr:605 -f cene=true`. Arhiv 240 zapisnikov po 3 s je okoli
