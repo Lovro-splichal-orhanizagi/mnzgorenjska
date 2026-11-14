@@ -2,6 +2,11 @@
 export const domov = {
   napakaNalaganja: 'Podatkov ni bilo mogoče naložiti.',
   delNiNalozen: 'Del podatkov se ni naložil: {napaka}',
+  stevec: {
+    naslov: 'Na poti do 10.000 uporabnikov',
+    dosezeno: 'Dosegli smo 10.000 uporabnikov!',
+    opis: 'Do cilja manjka še: {n}',
+  },
   uvod: {
     // Gorenjski besedili sta oglasni in ostaneta natanko taki, kot sta bili.
     gorenjskaMladinci: 'Gorenjska nogometna liga — mladinci',

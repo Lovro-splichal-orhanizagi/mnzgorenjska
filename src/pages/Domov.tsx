@@ -3,7 +3,7 @@ import Pivo from '../components/Pivo'
 import { imeZveze } from '../components/VirPodatkov'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { Link } from '../components/Povezava'
-import { jeNativno, povezavaTrgovine } from '../lib/platforma'
+import { jeNativno, povezavaTrgovine, TRGOVINA_VIDNA } from '../lib/platforma'
 import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import { lestvicaPodpornikov, type JavnoPivo } from '../lib/piva'
@@ -29,6 +29,8 @@ import { jezikSlovarja, t, tx, datum } from '../i18n'
 import Sponzor from '../components/Sponzor'
 import AppPromo, { appPromoAktivna } from '../components/AppPromo'
 import ZnackeTrgovin from '../components/ZnackeTrgovin'
+import VrhNapovediDrzave from '../components/VrhNapovediDrzave'
+import Stevec10k from '../components/Stevec10k'
 
 /** Kar liga čaka od skupnosti (asistence, pozicije). */
 interface Statistika {
@@ -106,7 +108,7 @@ function najboljsiKroga(krogId: number) {
 }
 
 export default function Domov() {
-  const { id: tekmovanjeId, slug, tekmovanje, tekmovanja, brezLig } = useTekmovanje()
+  const { id: tekmovanjeId, slug, tekmovanje, tekmovanja, brezLig, drzava } = useTekmovanje()
   // Naslovnica privzete lige ima osnovni naslov; druge lige svojega, sicer bi
   // bile vse naslovnice za iskalnik ista stran.
   useNaslov(slug === PRIVZETO ? null : zDrzavo(tekmovanje))
@@ -575,6 +577,8 @@ export default function Domov() {
         </section>
       )}
 
+      <Stevec10k />
+
       {/* Prvi dnevi po izidu aplikacij: kartica z aplikacijama namesto trgovine
           (trgovina je ves čas v meniju in nogi); potem se trgovina vrne.
           Obiskovalec brez prijave znački že vidi v uvodu, zato kartica le
@@ -583,7 +587,7 @@ export default function Domov() {
 
       {/* Trgovina SLFF: standardni izdelki, brez cen (se menjajo). Vsem, v
           vsaki ligi in v aplikaciji. */}
-      {!appPromoAktivna() && (
+      {TRGOVINA_VIDNA && !appPromoAktivna() && (
         <section className="kartica grid gap-4 p-4 sm:p-6 lg:grid-cols-2 lg:items-center lg:gap-8">
           <div className="space-y-3">
             <span className="inline-block rounded-full bg-gnl-500/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-gnl-300">
@@ -816,6 +820,9 @@ export default function Domov() {
             </Link>
           </Razdelek>
         )}
+
+        {/* Vrh napovedovalcev države (sezona); brez ocenjene napovedi se skrije. */}
+        {tekmovanjeId != null && <VrhNapovediDrzave drzava={drzava} />}
 
         {/* Pivska lestvica: vrh podpornikov s sporočili. Kot gumb za pivo le
             na spletu (Pivo.tsx); v aplikaciji izostane. */}

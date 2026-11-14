@@ -4,6 +4,11 @@ import type { Prevod } from '../jedro.ts'
 export const domov: NonNullable<Prevod['domov']> = {
   napakaNalaganja: 'Nem sikerült betölteni az adatokat.',
   delNiNalozen: 'Az adatok egy része nem töltődött be: {napaka}',
+  stevec: {
+    naslov: 'Úton a 10 000 felhasználó felé',
+    dosezeno: 'Elértük a 10 000 felhasználót!',
+    opis: 'A célig még hiányzik: {n}',
+  },
   uvod: {
     gorenjskaMladinci: 'Gorenjska labdarúgó-bajnokság, ifjúsági',
     gorenjskaClani: '1. Gorenjska labdarúgó-bajnokság',

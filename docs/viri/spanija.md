@@ -286,6 +286,27 @@ zunaj: `4150237` in `4150478` sta prazni, `4150719` je grup 27 1. krog,
 --preveri`). Grup 26 (vrzel pri `4150478`, `4150490`, `4150715–6`) in 29–31
 niso najdene. Vklop le skozi `vklop-katalonije` (QUARTA_LIGE ostaja nespremenjen).
 
+**Mladinske lige** (pregled 9. 11. 2026, 59 zapisnikov, **neaktivne**,
+`prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`): vsi bloki 240 mest (30 krogov,
+16 klubov), postave 11 + 11 z vratarjem, menjav ne vpisujejo (kot Quarta).
+Kadeti igrajo 2 × 40 min, vir šteje 90.
+
+| liga | tekoča 2026/27 |
+|---|---|
+| es-ct-u19-zenske-preferent (Preferent Femení Juvenil) | `4115708-4115947` |
+| es-ct-u19-zenske-primera-g2 (Primera Divisió Femení Juvenil) | `4137344-4137583` |
+| es-ct-u19-zenske-primera-g3 | `4137104-4137342` |
+| es-ct-u15-preferent-g2 (Preferent Cadet S15) | `4155329-4155568` |
+| es-ct-u15-preferent-g3 | `4155569-4155808` |
+| es-ct-u15-preferent-g4 | `4155809-4156048` |
+
+Še odprto: Preferent Cadet S15 grup 1 (konča pri `4155328`) in grup 5+ (za
+`4156048`), Primera Femení Juvenil grup 1, fantovski Juvenil. Ostale vrzeli:
+`4118109-4118348` Preferent Femení Aleví, `4117148-4117387` Preferent Femení
+Infantil, `4140865-4145910` prijateljske in RFEF (Primera Federació **brez
+postav**, `4143290`), Primera Femení Infantil, Aleví S11/S12; `4119738-4136000`
+futsal.
+
 **Quarta grup 7+** (pregled 13.–14. 10. 2026, migracija 20261014093100): grup
 7–23 ležijo strnjeno v `4145911-4149995` (po 240 šifer, 30 krogov, 16 klubov,
 urejeni po številki skupine; pred grup 7 je vrzel), grup 24 se začne pri

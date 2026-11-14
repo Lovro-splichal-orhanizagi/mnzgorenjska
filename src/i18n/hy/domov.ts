@@ -4,6 +4,11 @@ import type { Prevod } from '../jedro.ts'
 export const domov: NonNullable<Prevod['domov']> = {
   napakaNalaganja: 'Տվյալները չհաջողվեց բեռնել։',
   delNiNalozen: 'Տվյալների մի մասը չբեռնվեց: {napaka}',
+  stevec: {
+    naslov: 'Ճանապարհին դեպի 10 000 օգտատեր',
+    dosezeno: 'Մենք հասանք 10 000 օգտատիրոջ։',
+    opis: 'Մինչև նպատակը մնաց՝ {n}',
+  },
   uvod: {
     // Լիգաների անունները՝ հայատառ, առանց գծիկի.
     gorenjskaMladinci: 'Գորենյսկայի ֆուտբոլային լիգա, պատանիներ',

@@ -4,6 +4,11 @@ import type { Prevod } from '../jedro.ts'
 export const domov: NonNullable<Prevod['domov']> = {
   napakaNalaganja: 'The data could not be loaded.',
   delNiNalozen: 'Some of the data did not load: {napaka}',
+  stevec: {
+    naslov: 'On the way to 10,000 users',
+    dosezeno: 'We reached 10,000 users!',
+    opis: 'Still to go: {n}',
+  },
   uvod: {
     // League names stay as they are.
     gorenjskaMladinci: 'Gorenjska nogometna liga — mladinci',

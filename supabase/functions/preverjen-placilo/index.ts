@@ -4,7 +4,6 @@
 // je kartica skrita). Kliče prijavljen uporabnik (Bearer <access_token>):
 //
 //   {"akcija": "checkout", "player_id": 123, "vir": "letna"|"dozivljenjska",
-//    "znacka": false, "dostava"?: "si"|"eu", "ime_na_znacki"?: "…",
 //    "star_vsaj_18": true, "odpoved_pravici": true, "jezik"?: "sl"|…} → {"url": "<Checkout>"}
 //   {"akcija": "portal", "player_id"?: 123} → {"url": "<Billing portal>"}
 //     (vsak kupec z aktivno naročnino, ne glede na stikalo; vrnitev na
@@ -16,8 +15,10 @@
 // (`stripe-webhook`) po plačilu. Cene iščemo po lookup_key, poštnino po
 // metapodatku `kljuc` — id-jev ne pišemo v kodo.
 //
-// Poštnina: kupec izbere "Slovenija" ali "druga država EU"; seja dobi le
-// ustrezno tarifo in le te države (SI ali EU-26).
+// Plakat 40 × 60 cm (od 9. 11. 2026 namesto značke): doživljenjski nakup vedno
+// pobere naslov v EU, plakat je v ceni (brez postavke in poštnine). Naročilo
+// zapiše webhook (`plakat_iz_placila`). Stari odjemalec, ki pošlje "znacka",
+// značke ne dobi več in ne plača.
 //
 // Napake baze, ki jih vmesnik pozna, gredo naprej; ostale postanejo splošna.
 //
@@ -119,9 +120,9 @@ Deno.serve(async (req) => {
     if (vhod.akcija !== 'checkout') return json({ error: 'akcija: checkout ali portal.' }, 400)
     const vir = vhod.vir
     if (vir !== 'letna' && vir !== 'dozivljenjska') return json({ error: 'vir: letna ali dozivljenjska.' }, 400)
-    const znacka = vhod.znacka === true
-    if (znacka && vir !== 'dozivljenjska') return json({ error: NAPAKA }, 400)
-    if (znacka && vhod.dostava !== 'si' && vhod.dostava !== 'eu') return json({ error: NAPAKA }, 400)
+    // Značke ni več (nadomesti jo plakat ob doživljenjski); stari odjemalci jo še pošljejo.
+    const znacka = false
+    const plakat = vir === 'dozivljenjska'
     if (vhod.star_vsaj_18 !== true || vhod.odpoved_pravici !== true)
       return json({ error: NAPAKA }, 400)
 
@@ -152,6 +153,7 @@ Deno.serve(async (req) => {
       player_id: String(n.glavni),
       vir,
       znacka: String(znacka),
+      plakat: String(plakat),
       star_vsaj_18: 'true',
       odpoved_pravici: 'true',
       ...(znacka ? { ime_na_znacki: n.ime_na_znacki ?? '', dostava: vhod.dostava ?? '' } : {}),
@@ -188,11 +190,12 @@ Deno.serve(async (req) => {
       polja.customer = n.stripe_customer_id
       polja['customer_update[address]'] = 'auto'
       polja['customer_update[name]'] = 'auto'
-      if (znacka) polja['customer_update[shipping]'] = 'auto'
+      if (plakat) polja['customer_update[shipping]'] = 'auto'
     } else {
       polja.customer_email = n.email ?? u.user.email
       if (vir === 'dozivljenjska') polja.customer_creation = 'always'
     }
+    if (plakat) EU.forEach((d, i) => (polja[`shipping_address_collection[allowed_countries][${i}]`] = d))
     if (znacka) {
       polja['line_items[1][price]'] = cena(CENE.znacka)
       polja['line_items[1][quantity]'] = 1
