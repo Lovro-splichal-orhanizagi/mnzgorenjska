@@ -46,6 +46,10 @@ insert into mini_lige (id, name, code, owner_id) overriding system value
 values (990551, 'Napovedna', 'NAPOVED551', '00000000-0000-0000-0000-00000000f00a');
 insert into mini_liga_clani (mini_liga_id, fantasy_team_id) values
   (990551, 990541), (990551, 990542), (990551, 990543);
+-- Druga mini liga le z ekipo D: A v njej nima ekipe (obseg obrazca).
+insert into mini_lige (id, name, code, owner_id) overriding system value
+values (990552, 'Tuja napovedna', 'NAPOVED552', '00000000-0000-0000-0000-00000000f00d');
+insert into mini_liga_clani (mini_liga_id, fantasy_team_id) values (990552, 990544);
 insert into omejitve_uporabnikov (user_id, velja_do, razlog)
 values ('00000000-0000-0000-0000-00000000f00c', now() + interval '3 days', 'test');
 
@@ -100,6 +104,8 @@ declare
   v_napaka text;
 begin
   assert (select count(*) from moje_odprte_napovedi()) = 2, 'odprti sta tekmi kroga 2';
+  assert (select count(*) from moje_odprte_napovedi(p_mini_liga => 990551)) = 2, 'mini liga z mojo ekipo';
+  assert not exists (select 1 from moje_odprte_napovedi(p_mini_liga => 990552)), 'mini liga brez moje ekipe';
   perform shrani_napoved(990535, 1, 0);
   perform shrani_napoved(990535, 2, 2);
   perform shrani_napoved(990536, 0, 1);

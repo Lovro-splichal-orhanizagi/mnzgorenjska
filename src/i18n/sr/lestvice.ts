@@ -116,6 +116,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     vrhOpomba:
       'Bodovi su bez asistencija: asistencije potvrđuje glasanje koje u većini liga još ne radi, pa bi lige bile u nejednakom položaju. Lige su odigrale različit broj kola.',
     vrhPrazno: 'U tekućoj sezoni još nema odigranih utakmica.',
+    napovediUvod: 'Najbolji prognozeri svih liga. Tačan rezultat 3 boda, pravi ishod 1.',
+    napovediSezona: 'Sezona',
+    napovedi7dni: 'Poslednjih 7 dana',
+    napovediPrazno7: 'U poslednjih 7 dana još nema ocenjenih prognoza.',
+    napovediOcenjenih: 'Ocenjenih prognoza: {n}',
+    vrhNapovedi: 'Najbolji prognozeri',
+    vrhNapovediVse: 'Cela tabela prognoza',
   },
 
   miniLige: {

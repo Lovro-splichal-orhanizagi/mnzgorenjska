@@ -558,3 +558,18 @@ izbrane po vzorcu teh; vklop vseeno preveri prihodnji rok.
 | hu-bp-u15-2 | `67/5/34373` |
 | hu-hb-u15 | `67/9/34206` |
 | hu-no-u15 | `67/13/33949` |
+
+## Pregled 9. 11. 2026
+
+Seznam tekmovanj vseh 21 zvez za évad 67: spomladanskih versenyjev
+(felsőház/alsóház, tavaszi szakasz) še ni. Nova je le **`hu-pe-u21`**
+(`67/14/34247`, Pest U21, 8 klubov, **neaktivna**): četrti val jo je imel za
+jesensko fazo, a je cela dvokrožna sezona v enem versenyju — krogi 11–14
+imajo nadomestni datum 30. 6. 2027 (pomlad še ni razporejena). Zapisnik
+1. kroga 11 + 11. Arhiv še ni izbran.
+
+SZSZB leány U19 (`67/16/34571`) je prav tako cela sezona (18 krogov, pomlad
+z datumom 31. 12.), a igra 8 + 8 — izpuščena kot malo igrišče. Ostale
+jesenske faze iz četrtega vala (Kiemelt U15–U17, Pest U15–U17, Bács-Kiskun,
+Fejér in Győr U15/U16, Győr II. U21, Győr III. Nyugat A Tartalék) so res
+enokrožne z zadnjim krogom jeseni; pomladi preveri nove versenyje.

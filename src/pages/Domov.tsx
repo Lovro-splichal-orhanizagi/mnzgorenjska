@@ -3,7 +3,7 @@ import Pivo from '../components/Pivo'
 import { imeZveze } from '../components/VirPodatkov'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { Link } from '../components/Povezava'
-import { jeNativno, povezavaTrgovine } from '../lib/platforma'
+import { jeNativno, povezavaTrgovine, TRGOVINA_VIDNA } from '../lib/platforma'
 import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import { lestvicaPodpornikov, type JavnoPivo } from '../lib/piva'
@@ -27,6 +27,9 @@ import type { IgralecEnajsterice } from '../components/EnajstericaNaIgriscu'
 import type { Pozicija } from '../lib/tipi'
 import { jezikSlovarja, t, tx, datum } from '../i18n'
 import Sponzor from '../components/Sponzor'
+import AppPromo, { appPromoAktivna } from '../components/AppPromo'
+import VrhNapovediDrzave from '../components/VrhNapovediDrzave'
+import Stevec10k from '../components/Stevec10k'
 
 /** Kar liga čaka od skupnosti (asistence, pozicije). */
 interface Statistika {
@@ -104,7 +107,7 @@ function najboljsiKroga(krogId: number) {
 }
 
 export default function Domov() {
-  const { id: tekmovanjeId, slug, tekmovanje, tekmovanja, brezLig } = useTekmovanje()
+  const { id: tekmovanjeId, slug, tekmovanje, tekmovanja, brezLig, drzava } = useTekmovanje()
   // Naslovnica privzete lige ima osnovni naslov; druge lige svojega, sicer bi
   // bile vse naslovnice za iskalnik ista stran.
   useNaslov(slug === PRIVZETO ? null : zDrzavo(tekmovanje))
@@ -544,43 +547,51 @@ export default function Domov() {
         </section>
       )}
 
+      <Stevec10k />
+
+      {/* Prvi dnevi po izidu aplikacij: kartica z aplikacijama namesto trgovine
+          (trgovina je ves čas v meniju in nogi); potem se trgovina vrne. */}
+      {appPromoAktivna() && <AppPromo />}
+
       {/* Trgovina SLFF: standardni izdelki, brez cen (se menjajo). Vsem, v
           vsaki ligi in v aplikaciji. */}
-      <section className="kartica grid gap-4 p-4 sm:p-6 lg:grid-cols-2 lg:items-center lg:gap-8">
-        <div className="space-y-3">
-          <span className="inline-block rounded-full bg-gnl-500/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-gnl-300">
-            {t('domov.trgovina.oznaka')}
-          </span>
-          <h2 className="text-2xl font-black leading-tight text-white sm:text-3xl">{t('domov.trgovina.naslov')}</h2>
-          <p className="max-w-md text-slate-300">{t('domov.trgovina.opis')}</p>
-          <a {...povezavaTrgovine(jezikSlovarja())} className="gumb-glavni inline-flex">
-            {t('domov.trgovina.gumb')}
-          </a>
-        </div>
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {(['majica', 'pulover', 'sal', 'kapa'] as const).map((izdelek) => (
-            <li key={izdelek}>
-              <a
-                {...povezavaTrgovine(jezikSlovarja())}
-                className="kartica-hover block h-full overflow-hidden rounded-xl border border-white/10 bg-white/[0.04]"
-              >
-                <img
-                  src={`/foto/trgovina-${izdelek}.webp`}
-                  alt=""
-                  width={300}
-                  height={300}
-                  loading="lazy"
-                  decoding="async"
-                  className="aspect-square w-full object-cover"
-                />
-                <span className="block px-2 py-1.5 text-center text-sm font-semibold text-slate-200">
-                  {t(`domov.trgovina.${izdelek}`)}
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {TRGOVINA_VIDNA && !appPromoAktivna() && (
+        <section className="kartica grid gap-4 p-4 sm:p-6 lg:grid-cols-2 lg:items-center lg:gap-8">
+          <div className="space-y-3">
+            <span className="inline-block rounded-full bg-gnl-500/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-gnl-300">
+              {t('domov.trgovina.oznaka')}
+            </span>
+            <h2 className="text-2xl font-black leading-tight text-white sm:text-3xl">{t('domov.trgovina.naslov')}</h2>
+            <p className="max-w-md text-slate-300">{t('domov.trgovina.opis')}</p>
+            <a {...povezavaTrgovine(jezikSlovarja())} className="gumb-glavni inline-flex">
+              {t('domov.trgovina.gumb')}
+            </a>
+          </div>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {(['majica', 'pulover', 'sal', 'kapa'] as const).map((izdelek) => (
+              <li key={izdelek}>
+                <a
+                  {...povezavaTrgovine(jezikSlovarja())}
+                  className="kartica-hover block h-full overflow-hidden rounded-xl border border-white/10 bg-white/[0.04]"
+                >
+                  <img
+                    src={`/foto/trgovina-${izdelek}.webp`}
+                    alt=""
+                    width={300}
+                    height={300}
+                    loading="lazy"
+                    decoding="async"
+                    className="aspect-square w-full object-cover"
+                  />
+                  <span className="block px-2 py-1.5 text-center text-sm font-semibold text-slate-200">
+                    {t(`domov.trgovina.${izdelek}`)}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {napaka && (
         <p className="rounded-xl bg-rose-500/10 p-3 text-sm text-rose-300 ring-1 ring-rose-400/30">
@@ -777,6 +788,9 @@ export default function Domov() {
             </Link>
           </Razdelek>
         )}
+
+        {/* Vrh napovedovalcev države (sezona); brez ocenjene napovedi se skrije. */}
+        {tekmovanjeId != null && <VrhNapovediDrzave drzava={drzava} />}
 
         {/* Pivska lestvica: vrh podpornikov s sporočili. Kot gumb za pivo le
             na spletu (Pivo.tsx); v aplikaciji izostane. */}

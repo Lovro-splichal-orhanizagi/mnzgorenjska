@@ -249,6 +249,15 @@ niso vpisani. Pred uvozom U16/U15 preveri zapisnike zadnjega kroga. Romunija
 nima kosov nočnega uvoza (`hlf` en posel, brskalnik ~1–2 minuti na ligo): ob
 vklopu več deset mladinskih lig preveri, ali posel še ujame 190 minut.
 
+Pregled 9. 11. 2026 (**neaktivni**): `ro-cj-u15`
+(`judetean/cluj/fotbal/2026-2027/campionatul-judetean-u15/sezon-regular/grupa-a`,
+11–12 klubov, 3/3 polnih) in `ro-hd-u19`
+(`judetean/hunedoara/fotbal/2026-2027/juniori-u19/faza-1/serie-1`, 8 klubov,
+3/3 polnih, pomlad od 23. 3. 2027). Caraș-Severin, Maramureș, Sălaj in Galați
+še nimajo vpisanega izida; Bihor L5, Prahova L6/U19 in Sibiu L5/mladi imajo
+prazne ali nepopolne zapisnike; Cluj U17 (7), Hunedoara U17/U16 imajo manj
+kot 8 klubov.
+
 Uvoz (ena za drugo, **brez arhiva**): `gh workflow run uvoz-lige.yml -f
 liga=ro-liga3-s1 -f cene=true`. Liga ~1–2 minuti.
 
