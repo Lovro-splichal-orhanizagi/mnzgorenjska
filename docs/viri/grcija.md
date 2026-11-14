@@ -384,7 +384,7 @@ zavrača.
 `/results/display_schedule.php` na obeh HTTP 404 (domači strani 200; tekmovalna
 tabela `eps` na drugih domenah dela). Nočni uvoz GR 2/6, 3/6 in 5/6 je padal pri
 `gr-ip-a`, `gr-ip-b`, `gr-ip-g-a`, `gr-ip-g-b`, `gr-ana-a`, `gr-ana-b` in
-`gr-ana-g`; migracija 20261114181100 jih izklopi (`active = false`), podatki
+`gr-ana-g`; migracija 20261114201100 jih izklopi (`active = false`), podatki
 ostanejo. Nova predloga (neoverjeno, prebrano le z domačih strani): epsip.gr
 `/agones/?eps_comp=a|b`, `eps_cat=Γ' Κατηγορία`; epsana.gr
 `/diorganoseis/a-katigoria/?enosi_main_league_id=16&enosi_tab=standings`
