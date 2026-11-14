@@ -206,3 +206,17 @@ in tekme ga uporabita (smoke). Moške šifre ostanejo brez razdelka. Klubi
 Premijer omladinskih lig so mladinske ekipe klubov WWIN lige (isti klub,
 igralci ločeni po ligi). Uvoz brez arhiva: `gh workflow run uvoz-lige.yml -f
 liga=ba-u17-premijer -f cene=true`.
+
+## BiH — Premijer U-15 in kadetkinje (pregled 9. 11. 2026)
+
+Neaktivni, brez arhiva, `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`, vir `nfsbih`.
+
+| liga | tekoča 2026/27 | klubov | zapisnik (preverjen) |
+|---|---|---|---|
+| ba-u15-premijer | `premijer-omladinska-liga-bih-u-15/54160611` | 10 | 54165635 (11 + 7, GK) |
+| ba-zene-u17-kadetkinje | `nogomet-zene/premijer-liga-bih-kadetkinje/54337513` | 11 | 54337797 (11 + 3, GK) |
+
+Obe objavljata kroge sproti (9. 11. ni bil objavljen noben prihodnji krog:
+U-15 14 krogov, kadetkinje 10). nsfbih.ba novih tekmovanj nima (pionirjev in
+druge ženske lige ni). U-15 ima klub "BSK" brez kraja (ni v `IME_KLUBA`) —
+pred uvozom preveri trk z nsfbih.

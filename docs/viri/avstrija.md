@@ -279,6 +279,25 @@ odločitev za pomlad (zimski premor).
   (razen West), Stmk. IB, NÖ Frauen GL, OÖ, Stmk., Tirol, Wien (1. Kl.,
   Newcomer) ženske že 23. 10.–1. 11., Challenge Villach 11. 10.
 
+**Še 70 lig** (pregled 9. 11. 2026, vse **neaktivne**, vpis v skupni
+migraciji novih lig): 38 rezervnih (BFV II. Liga in 1. Klasse Reserve
+`232554`, `232567`, `232579`, `232556`, `232569`, `232578`; NÖ 2. Landesliga
+Ost/West Reserve `232552`, `232488` in 15 × 2. Klasse Reserve; OÖ 1. Klasse
+Reserve `232606`–`232721`; Dunaj Oberliga A/B in 1. Klasse A/B Reserve
+`232726`–`232729`, DSG Reserve A/B `232588`, `232589`, 2. Landesliga U23
+`232584`), Tirol Frauen Landesliga `231685` in Frauen Reserve Liga `232616`,
+30 mladinskih (BFV U15 Nord `233642`; KFV Unter 17+4 Eliteliga/A/B `233029`,
+`233034`, `233035`, U15 Eliteliga `233031`; NÖ JHG U16 `233251`, `233302`,
+`233558`, `232900`, U15 `232902`; SFV U17 1. Sparkassenliga `233372`; Stmk.
+Graz U18 `233790`, Mur-Mürz U15 `233355`, Murtal-Enns U15 `233498`; Tirol
+U15 Tirol Liga `231701`, U16 LL `232643`/`231700`, U15 LL
+`232619`–`232621`; Dunaj A/B-Liga U17, WFV/A/B-Liga U16, C-Liga U16
+B-Teams, WFV/A/B/C-Liga U15). Šifre so v `frag`/migraciji s klubi po ligi.
+Jesenske mladinske skupine (OPO/MPO/UPO, OÖ "H-…" Gruppen-/Regionsliga,
+Vorarlberg U18/U16/U15, Tirol U18 …) končajo novembra; pomlad bo novo
+tekmovanje — preveri spomladi. Pod 8 klubi izpuščene (DSG Frauen/Mädchen,
+BFV U16, Mädchen U15/U16, Stmk. U16 Mur-Mürz/Enns, Wien C-Liga U16 A).
+
 | liga | klubov | tekoča 2026/27 | arhiv (2025/26; pri ≤ 10 klubih še 2024/25) |
 |---|---|---|---|
 | at-bundesliga | 12 | `232246` | `227113+231372+231373` |

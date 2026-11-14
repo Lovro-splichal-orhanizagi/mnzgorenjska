@@ -233,7 +233,8 @@ to področje. Bistvo, ki ga je treba vedeti vedno:
   `npm run preizkus-statistike`).
 - **Ekipe so zasebne**: sestavo vidi le lastnik in admin
   (`sme_videti_ekipo`). Funkcija, ki bere tuje posnetke, teče kot lastnik
-  sheme in sama pazi, kaj vrne. Izbranost je NULL pod 5 človeškimi ekipami.
+  sheme in sama pazi, kaj vrne. Izbranost je NULL pod 5 človeškimi ekipami
+  in za vse razen preverjenih, admina in strežnika (`vidi_izbranost`).
 - **Hišne ekipe** (`fantasy_teams.hisna`) se ne štejejo v izbranosti,
   državni lestvici, pošti, mini ligah in statistiki — nova poizvedba, ki šteje
   ljudi ali ekipe čez lige, naj izpusti `hisna` (`docs/hisne-ekipe.md`).

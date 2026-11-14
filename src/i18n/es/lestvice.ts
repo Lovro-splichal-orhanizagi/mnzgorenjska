@@ -115,6 +115,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     vrhOpomba:
       'Los puntos no incluyen asistencias: las asistencias las confirma una votación que en la mayoría de ligas aún no está en marcha, y las ligas quedarían en desigualdad. Las ligas han jugado un número distinto de jornadas.',
     vrhPrazno: 'En la temporada actual aún no se ha jugado ningún partido.',
+    napovediUvod: 'Los mejores pronosticadores de todas las ligas. Resultado exacto 3 puntos, signo correcto 1.',
+    napovediSezona: 'Temporada',
+    napovedi7dni: 'Últimos 7 días',
+    napovediPrazno7: 'En los últimos 7 días aún no hay pronósticos puntuados.',
+    napovediOcenjenih: 'Pronósticos puntuados: {n}',
+    vrhNapovedi: 'Mejores pronosticadores',
+    vrhNapovediVse: 'Clasificación completa de pronósticos',
   },
 
   miniLige: {
