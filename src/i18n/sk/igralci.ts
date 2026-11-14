@@ -466,6 +466,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     uspeh: 'Ďakujeme! Platba je prijatá. Cenu prepočítame a potvrdíme do niekoľkých dní.',
     napaka: 'Platbu sa nepodarilo začať. Skús to znova.',
     niMogoce: 'Cenu tohto hráča teraz nie je možné znovu oceniť.',
+    brezplacno: 'zadarmo s poukazom',
+    opisBon: 'Máš poukaz za troch pozvaných priateľov. Cenu prepočítame podľa rovnakých pravidiel ako každý týždeň a potvrdíme ju do niekoľkých dní. Môže stúpnuť, klesnúť alebo zostať rovnaká. Poukaz je jednorazový.',
+    uporabiBon: 'Použiť poukaz',
+    uspehBon: 'Poukaz je použitý. Cenu prepočítame a potvrdíme do niekoľkých dní.',
+    niBona: 'Nemáš poukaz na nové ocenenie ceny (potrebuješ troch pozvaných priateľov s tímom).',
     ovire: {
       taTeden: 'Cena už bola tento týždeň znovu ocenená. Skús to budúci týždeň.',
       nedavno: 'Tento hráč bol nedávno znovu ocenený alebo sa žiadosť už posudzuje.',

@@ -464,6 +464,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     uspeh: 'Hvala! Plaćanje je primljeno. Cenu ćemo ponovo izračunati i potvrditi za nekoliko dana.',
     napaka: 'Plaćanje nije moglo da počne. Pokušaj ponovo.',
     niMogoce: 'Ponovna procena cene za ovog igrača trenutno nije moguća.',
+    brezplacno: 'besplatno uz vaučer',
+    opisBon: 'Imaš vaučer za tri pozvana prijatelja. Cenu ponovo izračunavamo po istim pravilima kao svake nedelje i potvrđujemo je za nekoliko dana. Može da poraste, padne ili ostane ista. Vaučer je jednokratan.',
+    uporabiBon: 'Iskoristi vaučer',
+    uspehBon: 'Vaučer je iskorišćen. Cenu ćemo ponovo izračunati i potvrditi za nekoliko dana.',
+    niBona: 'Nemaš vaučer za ponovnu procenu cene (trebaju ti tri pozvana prijatelja sa timom).',
     ovire: {
       taTeden: 'Cena je ove nedelje već ponovo procenjena. Pokušaj sledeće nedelje.',
       nedavno: 'Ovaj igrač je nedavno ponovo procenjen ili je zahtev već u pregledu.',

@@ -464,6 +464,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     uspeh: '¡Gracias! Pago recibido. Recalcularemos el precio y lo confirmaremos en unos días.',
     napaka: 'No se pudo iniciar el pago. Inténtalo de nuevo.',
     niMogoce: 'El precio de este jugador no se puede revalorizar ahora.',
+    brezplacno: 'gratis con bono',
+    opisBon: 'Tienes un bono por invitar a tres amigos. Recalculamos el precio con las mismas reglas que cada semana y lo confirmamos en unos días. Puede subir, bajar o quedarse igual. El bono es de un solo uso.',
+    uporabiBon: 'Usar bono',
+    uspehBon: 'Bono usado. Recalcularemos el precio y lo confirmaremos en unos días.',
+    niBona: 'No tienes bono de revalorización (necesitas tres amigos invitados con equipo).',
     ovire: {
       taTeden: 'El precio ya se revalorizó esta semana. Inténtalo la semana que viene.',
       nedavno: 'Este jugador se revalorizó hace poco o ya hay una solicitud en revisión.',

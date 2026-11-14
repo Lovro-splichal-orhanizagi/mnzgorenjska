@@ -464,6 +464,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     uspeh: 'Mulțumim! Plata a fost primită. Recalculăm prețul și îl confirmăm în câteva zile.',
     napaka: 'Plata nu a putut fi pornită. Încearcă din nou.',
     niMogoce: 'Prețul acestui jucător nu poate fi reevaluat acum.',
+    brezplacno: 'gratuit cu voucher',
+    opisBon: 'Ai un voucher pentru trei prieteni invitați. Recalculăm prețul cu aceleași reguli ca în fiecare săptămână și îl confirmăm în câteva zile. Poate crește, scădea sau rămâne la fel. Voucherul se poate folosi o singură dată.',
+    uporabiBon: 'Folosește voucherul',
+    uspehBon: 'Voucherul a fost folosit. Recalculăm prețul și îl confirmăm în câteva zile.',
+    niBona: 'Nu ai un voucher pentru reevaluarea prețului (ai nevoie de trei prieteni invitați cu echipă).',
     ovire: {
       taTeden: 'Prețul a fost deja reevaluat săptămâna aceasta. Încearcă săptămâna viitoare.',
       nedavno: 'Acest jucător a fost reevaluat recent sau o cerere este deja în verificare.',

@@ -462,6 +462,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     uspeh: 'Thank you! Payment received. We will recalculate the price and confirm it within a few days.',
     napaka: 'The payment could not be started. Please try again.',
     niMogoce: 'This player\'s price can\'t be re-evaluated right now.',
+    brezplacno: 'free with voucher',
+    opisBon: 'You have a voucher for inviting three friends. We recalculate the price with the same rules as every week and confirm it within a few days. It can go up, down or stay the same. The voucher can be used once.',
+    uporabiBon: 'Use voucher',
+    uspehBon: 'Voucher used. We will recalculate the price and confirm it within a few days.',
+    niBona: 'You have no price review voucher (you need three invited friends with a team).',
     ovire: {
       taTeden: 'The price was already re-evaluated this week. Try again next week.',
       nedavno: 'This player was re-evaluated recently or a request is already under review.',
