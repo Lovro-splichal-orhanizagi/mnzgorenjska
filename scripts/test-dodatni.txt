@@ -3,3 +3,4 @@
 # v pripetem zaprtju scripts/fussball-fresh-pair.mjs in vsak popravek premakne
 # zgoščeno vrednost (glej SLF-308).
 scripts/test-fssid-vzdevki.mjs
+scripts/test-hlf-kartice.mjs

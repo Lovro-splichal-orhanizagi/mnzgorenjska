@@ -156,7 +156,6 @@ export function kroziSerije(odgovor, seriesId) {
   return [...out.values()].sort((a, b) => a.stevilka - b.stevilka)
 }
 
-/** Tekme kroga iz GetMatches (krog): ploščat seznam v vrstnem redu strani. */
 /**
  * Besedilo kartice je "domači izid gostje ura …": kartica kaže tekmo, če sta
  * kluba v tem vrstnem redu. Stran ob menjavi kroga za hip pusti kartice
@@ -170,6 +169,7 @@ export function karticaJeTekma(besedilo, tekma) {
   return i >= 0 && besedilo.indexOf(g, i + d.length) >= 0
 }
 
+/** Tekme kroga iz GetMatches (krog): ploščat seznam v vrstnem redu strani. */
 export const tekmeKroga = (krog) => (krog?.responseData?.matches ?? []).flatMap((d) => d.list ?? [])
 
 const izid = (t) =>
