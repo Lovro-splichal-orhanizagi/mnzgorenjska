@@ -11,7 +11,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 # Skripte, ki jih uvozita posta-klubom.mjs in vrsta-poste-klubom.mjs.
 DATOTEKE=(
-  scripts/posta-klubom.mjs scripts/vrsta-poste-klubom.mjs scripts/dnevno-porocilo-poste.mjs scripts/javi-napako.mjs
+  scripts/posta-klubom.mjs scripts/posli-enega.mjs scripts/vrsta-poste-klubom.mjs scripts/dnevno-porocilo-poste.mjs scripts/javi-napako.mjs
   scripts/strani.mjs scripts/prenos.mjs scripts/klubi.mjs scripts/zapisnik.mjs
   scripts/viri/oefb.mjs scripts/viri/facr.mjs scripts/viri/jalgpall.mjs scripts/viri/sportnet.mjs
   scripts/viri/frf.mjs scripts/viri/zapisniki.mjs scripts/viri/mlsz.mjs
