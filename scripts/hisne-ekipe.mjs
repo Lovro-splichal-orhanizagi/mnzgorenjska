@@ -12,6 +12,7 @@
 // Uporaba (servisni ključ; brez --pisi je samo načrt):
 //   node scripts/hisne-ekipe.mjs                       # vse aktivne lige SK
 //   node scripts/hisne-ekipe.mjs --liga sk-za-1trieda  # ena liga (tudi neaktivna)
+//   node scripts/hisne-ekipe.mjs --drzava HU --liga a,b,c  # več lig iste države
 //   node scripts/hisne-ekipe.mjs --na-ligo 10 --razpon 2 --pisi
 //   node scripts/hisne-ekipe.mjs --odstrani [--liga …] --pisi
 //
@@ -60,6 +61,8 @@ const arg = (ime, privzeto = null) => {
 }
 const DRZAVA = String(arg('drzava', 'SK')).toUpperCase()
 const LIGA = arg('liga')
+// `--liga a,b,c`: več lig iste države v enem zagonu.
+const LIGE = LIGA ? [...new Set(LIGA.split(',').map((v) => v.trim()).filter(Boolean))] : []
 const NA_LIGO = Number(arg('na-ligo', '10'))
 const RAZPON = Number(arg('razpon', '2'))
 if (!Number.isInteger(NA_LIGO) || !Number.isInteger(RAZPON) || NA_LIGO - RAZPON < 0 || NA_LIGO + RAZPON > 40) {
@@ -822,11 +825,17 @@ async function lige() {
     .select('id, slug, short_name, name, active, country_code')
     .order('sort_order', { nullsFirst: false })
     .order('id')
-  if (LIGA) q = q.eq('slug', LIGA)
+  if (LIGA) q = q.in('slug', LIGE)
   else q = q.eq('country_code', DRZAVA)
   const { data, error } = await q
   if (error) throw new Error(error.message)
-  if (LIGA && !data?.length) throw new Error(`Lige ${LIGA} ni.`)
+  if (LIGA) {
+    const manjka = LIGE.filter((slug) => !(data ?? []).some((l) => l.slug === slug))
+    if (manjka.length) throw new Error(`Lige ${manjka.join(', ')} ni.`)
+    // Imena ekip so po državi: lige iz druge države bi dobile napačen nabor.
+    const tuje = (data ?? []).filter((l) => l.country_code !== DRZAVA)
+    if (tuje.length) throw new Error(`Lige ${tuje.map((l) => l.slug).join(', ')} niso iz države ${DRZAVA}.`)
+  }
   // Brez --liga le aktivne; odstranjevanje pa počisti vse lige države.
   return (data ?? []).filter((l) => LIGA || odstrani || l.active)
 }
