@@ -470,6 +470,50 @@ export type Database = {
           },
         ]
       }
+      competition_starostne_skupine: {
+        Row: {
+          competition_id: number
+          skupina: string
+        }
+        Insert: {
+          competition_id: number
+          skupina: string
+        }
+        Update: {
+          competition_id?: number
+          skupina?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_starostne_skupine_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: true
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_starostne_skupine_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: true
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_starostne_skupine_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: true
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_starostne_skupine_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: true
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competitions: {
         Row: {
           active: boolean
@@ -488,7 +532,6 @@ export type Database = {
           source: string
           source_league_code: string | null
           source_policy: string | null
-          starostna_skupina: string | null
           vir_ime: string | null
           vir_url: string | null
         }
@@ -509,7 +552,6 @@ export type Database = {
           source: string
           source_league_code?: string | null
           source_policy?: string | null
-          starostna_skupina?: string | null
           vir_ime?: string | null
           vir_url?: string | null
         }
@@ -530,7 +572,6 @@ export type Database = {
           source?: string
           source_league_code?: string | null
           source_policy?: string | null
-          starostna_skupina?: string | null
           vir_ime?: string | null
           vir_url?: string | null
         }
