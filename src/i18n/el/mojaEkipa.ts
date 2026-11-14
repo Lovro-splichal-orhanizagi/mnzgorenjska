@@ -361,6 +361,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     },
     nimasEkipe: 'Δεν έχεις ακόμα ομάδα<liga>({liga})</liga>. Χωρίς ομάδα δεν θα πάρεις πόντους την επόμενη αγωνιστική.',
     sestavi: 'Φτιάξε ομάδα →',
+    drugaLiga: 'Η ομάδα σου {ime} είναι στο πρωτάθλημα {liga}',
+    odpri: 'Άνοιγμα →',
     popravi: 'Διόρθωση →',
     poglej: 'Προβολή →',
     skrij: 'Απόκρυψη προειδοποίησης: {besedilo}',

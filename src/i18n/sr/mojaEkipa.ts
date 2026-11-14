@@ -366,6 +366,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     },
     nimasEkipe: 'Još nemaš tim<liga>({liga})</liga>. Bez njega u sledećem kolu nećeš dobiti bodove.',
     sestavi: 'Sastavi tim →',
+    drugaLiga: 'Tvoj tim {ime} je u ligi {liga}',
+    odpri: 'Otvori →',
     popravi: 'Popravi →',
     poglej: 'Pogledaj →',
     skrij: 'Sakrij upozorenje: {besedilo}',

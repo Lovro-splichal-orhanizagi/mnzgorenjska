@@ -360,6 +360,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     },
     nimasEkipe: 'Du har endnu intet hold<liga>({liga})</liga>, og uden et hold får du ingen point i næste runde.',
     sestavi: 'Sæt et hold →',
+    drugaLiga: 'Dit hold {ime} er i ligaen {liga}',
+    odpri: 'Åbn →',
     popravi: 'Ret →',
     poglej: 'Se →',
     skrij: 'Skjul advarsel: {besedilo}',

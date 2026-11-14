@@ -361,6 +361,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     },
     nimasEkipe: 'Sul pole veel meeskonda<liga>({liga})</liga>: ilma selleta ei saa sa järgmises voorus punkte.',
     sestavi: 'Pane meeskond kokku →',
+    drugaLiga: 'Sinu meeskond {ime} on liigas {liga}',
+    odpri: 'Ava →',
     popravi: 'Paranda →',
     poglej: 'Vaata →',
     skrij: 'Peida hoiatus: {besedilo}',

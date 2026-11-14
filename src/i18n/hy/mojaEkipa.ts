@@ -362,6 +362,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     },
     nimasEkipe: 'Դեռ թիմ չունես<liga>({liga})</liga>. առանց դրա հաջորդ տուրում միավորներ չես վաստակի։',
     sestavi: 'Կազմել թիմ →',
+    drugaLiga: 'Քո {ime} թիմը {liga} լիգայում է�',
+    odpri: 'Բացել →',
     popravi: 'Ուղղել →',
     poglej: 'Դիտել →',
     skrij: 'Թաքցնել զգուշացումը: {besedilo}',

@@ -3815,7 +3815,8 @@ preveri(
     preveri('izris: Potrditev je alertdialog', false, e.message)
   }
 
-  const { obvestilaEkip, naslovNapak, kljucOpozorila } = await import('../src/lib/stanjeEkip')
+  const { obvestilaEkip, naslovNapak, kljucOpozorila, pasBrezEkipe } = await import('../src/lib/stanjeEkip')
+  const { t: prevod } = await import('../src/i18n/jedro.ts')
   const blaj = { player_id: 7, ime: 'Blaj Marcel', vrsta: 'poskodba', opis: 'gleženj', datum: '2026-09-20', v_postavi: true, kapetan: true, namestnik: false }
   const klop = { player_id: 8, ime: 'Novak Luka', vrsta: 'odsotnost', opis: null, datum: '2026-09-21', v_postavi: false, kapetan: false, namestnik: false }
   const ekipe = [
@@ -3839,6 +3840,14 @@ preveri(
     obvestilaEkip(ekipe, { skrijLigo: 'clani' }).napake.length === 0)
   preveri('obvestila: napake ni mogoce skriti',
     obvestilaEkip(ekipe, { skrita: new Set(['napaka:11']) }).napake.length === 1)
+  preveri('pas: ekipa v izbrani ligi, brez pasu', pasBrezEkipe(ekipe, 2) === null)
+  preveri('pas: liga se ni izbrana, brez pasu', pasBrezEkipe(ekipe, null) === null)
+  preveri('pas: brez ekipe nikjer je vabilo', pasBrezEkipe([], 2)?.vrsta === 'nimas')
+  const drugaLiga = pasBrezEkipe(ekipe, 99)
+  preveri('pas: ekipa v drugi ligi se pokaze, ne vabilo',
+    drugaLiga?.vrsta === 'drugaLiga' && drugaLiga.ekipa.slug === 'snl3-vzhod')
+  const besedilo = prevod('mojaEkipa.opozorila.drugaLiga', { ime: 'FC Matiaj', liga: 'ZG I.' })
+  preveri('pas: besedilo druge lige vsebuje ime ekipe in ligo', besedilo.includes('FC Matiaj') && besedilo.includes('ZG I.'), besedilo)
   preveri('obvestila: naslov 1', naslovNapak(1) === 'Ena od tvojih ekip ne bo dobila točk')
   preveri('obvestila: naslov 2', naslovNapak(2) === '2 tvoji ekipi ne bosta dobili točk')
   preveri('obvestila: naslov 3', naslovNapak(3) === '3 tvoje ekipe ne bodo dobile točk')
