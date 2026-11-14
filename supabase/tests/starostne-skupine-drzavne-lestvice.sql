@@ -136,8 +136,8 @@ insert into appearances(id, match_id, player_id, team_id, started, is_goalkeeper
   overriding system value
 select -936650 - p.id::int % 1000, -936640 - (-936600 - p.competition_id)::int, p.id, -936610, true, false, 90, 0, 90
   from players p where p.id in (-936701, -936703, -936704, -936706);
-insert into player_scores(round_id, player_id, avg_rating, votes_count, points)
-select -936620 - (-936600 - p.competition_id)::int, p.id, 6, 1, 10
+insert into player_scores(round_id, player_id, points)
+select -936620 - (-936600 - p.competition_id)::int, p.id, 10
   from players p where p.id in (-936701, -936703, -936704, -936706)
 on conflict do nothing;
 
