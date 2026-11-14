@@ -24,6 +24,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { vseVrstice } from './strani.mjs'
+import { klicSPonovitvami } from './klic-opomnika.mjs'
+import { fetchZaBazo } from './prenos.mjs'
 
 function izEnv() {
   try {
@@ -67,7 +69,7 @@ const dni = Number(process.env.DNI ?? 2)
 // naslednjem zagonu (poslani so tri dni zaščiteni z `nedavni_opomnik`).
 let proracun = Number(process.env.NAJVEC_POSLATI ?? 90)
 
-const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
+const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: fetchZaBazo() } })
 
 // Dobrodošlica ni vezana na ligo: kosi po 10, dokler je kaj kandidatov ali do
 // NAJVEC_DOBRODOSLIC na zagon (urni zagon: zaostanek ~500 gre v pol dneva).
@@ -76,7 +78,7 @@ if (vrsta === 'dobrodoslica' || vrsta === 'brez-ekipe' || vrsta === 'liga-zivi' 
   let ostane = Number(process.env.NAJVEC_DOBRODOSLIC ?? 60)
   let poslano = 0
   for (;;) {
-    const o = await fetch(`${BASE}/functions/v1/posli-opomnik`, {
+    const o = await klicSPonovitvami(fetch, `${BASE}/functions/v1/posli-opomnik`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${SERVICE}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ vrsta, suho, najvec_poslati: Math.min(10, ostane) }),
@@ -128,7 +130,7 @@ async function nepopolneNove(ligaId) {
 }
 
 const poklici = (liga, najvecPoslati) =>
-  fetch(`${BASE}/functions/v1/posli-opomnik`, {
+  klicSPonovitvami(fetch, `${BASE}/functions/v1/posli-opomnik`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${SERVICE}`,
@@ -143,79 +145,97 @@ const poklici = (liga, najvecPoslati) =>
     }),
   })
 
+// Ob pravem izpadu povezave bi vsaka liga porabila vse ponovitve (nejasna napaka
+// ~2 min), lig pa je prek 900: po tolikšnem številu lig zapored z omrežno
+// napako korak ustavimo (naslednji urni zagon nadaljuje).
+const NAJVEC_NAPAK_ZAPORED = 5
+let napakZapored = 0
+
 for (const liga of lige ?? []) {
-  liga.meja = NAJVEC_NA_LIGO
-  const poKosih = sProracunom && !suho
-  let odgovor = await poklici(liga, poKosih ? Math.min(KOS, proracun) : sProracunom ? proracun : null)
-  let izid = await odgovor.json().catch(() => ({}))
-  // Nad mejo: preštejemo nove nepopolne ekipe (le takrat, ne vsako uro za
-  // vsako ligo) in poskusimo enkrat znova z višjo mejo.
-  if (odgovor.status === 409 && vrsta === 'opozorilo') {
-    const nove = await nepopolneNove(liga.id)
-    if (nove > 0) {
-      liga.meja += nove
-      odgovor = await poklici(liga, null)
-      izid = await odgovor.json().catch(() => ({}))
+  // Ena liga, ki ji klic ne uspe tudi po ponovitvah, ne sme ustaviti ostalih:
+  // zabeležimo jo in korak na koncu vseeno konča z napako.
+  try {
+    liga.meja = NAJVEC_NA_LIGO
+    const poKosih = sProracunom && !suho
+    let odgovor = await poklici(liga, poKosih ? Math.min(KOS, proracun) : sProracunom ? proracun : null)
+    napakZapored = 0 // odgovor je prišel, omrežje dela
+    let izid = await odgovor.json().catch(() => ({}))
+    // Nad mejo: preštejemo nove nepopolne ekipe (le takrat, ne vsako uro za
+    // vsako ligo) in poskusimo enkrat znova z višjo mejo.
+    if (odgovor.status === 409 && vrsta === 'opozorilo') {
+      const nove = await nepopolneNove(liga.id)
+      if (nove > 0) {
+        liga.meja += nove
+        odgovor = await poklici(liga, null)
+        izid = await odgovor.json().catch(() => ({}))
+      }
     }
-  }
-  if (poKosih && odgovor.ok) {
-    const kandidatov = izid.kandidati_stevilo ?? 0
-    let poslano = izid.poslanih_mailov ?? izid.poslano ?? 0
-    let skupajLiga = poslano
-    let preskoceno = izid.preskoceno ?? 0
-    proracun = Math.max(0, proracun - poslano)
-    // Kandidatov je po vsakem kosu manj (poslani izpadejo); nehamo, ko kos ne
-    // poslje nicesar (ostali so preskoceni ali pa jih ni vec).
-    while (odgovor.ok && poslano > 0 && proracun > 0 && (izid.kandidati_stevilo ?? 0) > poslano) {
-      odgovor = await poklici(liga, Math.min(KOS, proracun))
-      izid = await odgovor.json().catch(() => ({}))
-      if (!odgovor.ok) break
-      poslano = izid.poslanih_mailov ?? izid.poslano ?? 0
-      skupajLiga += poslano
-      preskoceno = izid.preskoceno ?? preskoceno
+    if (poKosih && odgovor.ok) {
+      const kandidatov = izid.kandidati_stevilo ?? 0
+      let poslano = izid.poslanih_mailov ?? izid.poslano ?? 0
+      let skupajLiga = poslano
+      let preskoceno = izid.preskoceno ?? 0
       proracun = Math.max(0, proracun - poslano)
+      // Kandidatov je po vsakem kosu manj (poslani izpadejo); nehamo, ko kos ne
+      // poslje nicesar (ostali so preskoceni ali pa jih ni vec).
+      while (odgovor.ok && poslano > 0 && proracun > 0 && (izid.kandidati_stevilo ?? 0) > poslano) {
+        odgovor = await poklici(liga, Math.min(KOS, proracun))
+        izid = await odgovor.json().catch(() => ({}))
+        if (!odgovor.ok) break
+        poslano = izid.poslanih_mailov ?? izid.poslano ?? 0
+        skupajLiga += poslano
+        preskoceno = izid.preskoceno ?? preskoceno
+        proracun = Math.max(0, proracun - poslano)
+      }
+      // Izpis spodaj sesteje vse kose lige.
+      if (odgovor.ok) izid = { ...izid, kandidati_stevilo: kandidatov, poslano: skupajLiga, preskoceno }
     }
-    // Izpis spodaj sesteje vse kose lige.
-    if (odgovor.ok) izid = { ...izid, kandidati_stevilo: kandidatov, poslano: skupajLiga, preskoceno }
-  }
-  if (odgovor.status === 409) {
-    console.error(
-      `  ${liga.slug.padEnd(14)} USTAVLJENO: ${izid.kandidati_stevilo ?? '?'} kandidatov (meja ${liga.meja}).` +
-        ' Toliko hkrati pomeni napako pri uvozu, ne pri uporabnikih. Nic ni bilo poslano.',
+    if (odgovor.status === 409) {
+      console.error(
+        `  ${liga.slug.padEnd(14)} USTAVLJENO: ${izid.kandidati_stevilo ?? '?'} kandidatov (meja ${liga.meja}).` +
+          ' Toliko hkrati pomeni napako pri uvozu, ne pri uporabnikih. Nic ni bilo poslano.',
+      )
+      padlo++
+      continue
+    }
+    if (!odgovor.ok) {
+      console.log(`  ${liga.slug.padEnd(14)} NAPAKA ${odgovor.status}: ${izid.error ?? ''}`)
+      padlo++
+      continue
+    }
+    const n = izid.kandidati_stevilo ?? 0
+    // Suhi tek ne posilja, zato ga funkcija ne ustavi; mejo pa vseeno pokazemo,
+    // da se vidi, katera liga bi se ob pravem zagonu ustavila.
+    if (suho && vrsta === 'opozorilo' && n > liga.meja) liga.meja += await nepopolneNove(liga.id)
+    if (poUrniku && n > liga.meja && suho) {
+      console.error(
+        `  ${liga.slug.padEnd(14)} BI USTAVILO: ${n} kandidatov (meja ${liga.meja}).`,
+      )
+    }
+    // Pravi zagon nad mejo, ki ga funkcija NI ustavila: objavljena je stara
+    // razlicica brez `najvec` in je sporocila ze poslala. Ustaviti ne moremo
+    // vec, zagon pa mora biti rdec, da se opazi.
+    if (poUrniku && n > liga.meja && !suho) {
+      console.error(
+        `::error::${liga.slug}: ${n} kandidatov nad mejo ${liga.meja}, funkcija pa ni ustavila ` +
+          'posiljanja — objavljena je stara razlicica brez `najvec`. Objavi funkcijo znova.',
+      )
+      padlo++
+    }
+    skupaj += n
+    // proracun je pri posiljanju ze zmanjsan med kosi
+    console.log(
+      `  ${liga.slug.padEnd(14)} kandidatov ${String(n).padStart(4)}` +
+        (suho ? '' : ` · poslano ${izid.poslano ?? 0}, preskočeno ${izid.preskoceno ?? 0}`),
     )
+  } catch (e) {
+    console.error(`  ${liga.slug.padEnd(14)} NAPAKA KLICA: ${e.message}${e.cause?.code ? ` (${e.cause.code})` : ''}`)
     padlo++
-    continue
+    if (++napakZapored >= NAJVEC_NAPAK_ZAPORED) {
+      console.error(`::error::${napakZapored} lig zapored brez povezave s funkcijo; ustavljam, ostale lige pridejo ob naslednjem zagonu.`)
+      break
+    }
   }
-  if (!odgovor.ok) {
-    console.log(`  ${liga.slug.padEnd(14)} NAPAKA ${odgovor.status}: ${izid.error ?? ''}`)
-    padlo++
-    continue
-  }
-  const n = izid.kandidati_stevilo ?? 0
-  // Suhi tek ne posilja, zato ga funkcija ne ustavi; mejo pa vseeno pokazemo,
-  // da se vidi, katera liga bi se ob pravem zagonu ustavila.
-  if (suho && vrsta === 'opozorilo' && n > liga.meja) liga.meja += await nepopolneNove(liga.id)
-  if (poUrniku && n > liga.meja && suho) {
-    console.error(
-      `  ${liga.slug.padEnd(14)} BI USTAVILO: ${n} kandidatov (meja ${liga.meja}).`,
-    )
-  }
-  // Pravi zagon nad mejo, ki ga funkcija NI ustavila: objavljena je stara
-  // razlicica brez `najvec` in je sporocila ze poslala. Ustaviti ne moremo
-  // vec, zagon pa mora biti rdec, da se opazi.
-  if (poUrniku && n > liga.meja && !suho) {
-    console.error(
-      `::error::${liga.slug}: ${n} kandidatov nad mejo ${liga.meja}, funkcija pa ni ustavila ` +
-        'posiljanja — objavljena je stara razlicica brez `najvec`. Objavi funkcijo znova.',
-    )
-    padlo++
-  }
-  skupaj += n
-  // proracun je pri posiljanju ze zmanjsan med kosi
-  console.log(
-    `  ${liga.slug.padEnd(14)} kandidatov ${String(n).padStart(4)}` +
-      (suho ? '' : ` · poslano ${izid.poslano ?? 0}, preskočeno ${izid.preskoceno ?? 0}`),
-  )
 }
 
 console.log(`\nSkupaj kandidatov: ${skupaj}`)

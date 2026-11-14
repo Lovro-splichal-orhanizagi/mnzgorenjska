@@ -13,6 +13,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { vseVrstice } from './strani.mjs'
+import { preveriPodatkeVBazi } from './preverbe-baze.mjs'
 import { sezonaIz, krogiPredPrejsnjim } from './razpored.mjs'
 import { VELIKOST_EKIPE, PRORACUN } from '../src/lib/pravila.ts'
 import { najcenejsiKader } from '../src/lib/pripravljenost.ts'
@@ -49,7 +50,7 @@ const tezave = []
 const opozorila = []
 
 // --- preverbe v bazi --------------------------------------------------------
-const { data: izBaze, error } = await db.rpc('preveri_podatke')
+const { data: izBaze, error } = await preveriPodatkeVBazi(db)
 if (error) {
   console.error(`Preverb ni bilo mogoče pognati: ${error.message}`)
   process.exit(1)
