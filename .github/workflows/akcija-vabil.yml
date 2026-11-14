@@ -1,0 +1,59 @@
+name: Akcija vabil (povabi prijatelje)
+
+# Akcija Povabi prijatelje (14.-30. 11. 2026): mail in potisno obvestilo v
+# treh valovih (zagon, 21. 11., 27. 11.), vsak val enkrat na cloveka
+# (`posli-opomnik`, vrsta `akcija-vabil`, `kandidati_za_akcijo_vabil`).
+# ~4800 ljudi na val; 120 na zagon, vsako uro med 8 in 17 UTC = ~1200 na dan,
+# val v ~4 dneh. Zunaj akcije kandidatov ni in zagon ne poslje nicesar.
+#
+# Urnik vklopi sele, ko je funkcija objavljena (`scripts/hetzner/objavi-funkcije.sh
+# posli-opomnik`) in je rocni suhi tek vrnil kandidate: stara funkcija vrsto zavrne.
+on:
+  # schedule:
+  #   - cron: '23 8-17 * * *'
+  workflow_dispatch:
+    inputs:
+      suho:
+        description: 'Suhi tek (samo presteje, ne poslje)'
+        required: false
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
+      najvec:
+        description: 'Najvec poslanih v tem zagonu'
+        required: false
+        default: '120'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: akcija-vabil
+  cancel-in-progress: false
+
+jobs:
+  akcija:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Poslji akcijo vabil
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VRSTA: akcija-vabil
+          SUHO: ${{ github.event_name == 'schedule' && 'false' || inputs.suho }}
+          NAJVEC_DOBRODOSLIC: ${{ inputs.najvec || '120' }}
+        run: node scripts/posli-opomnike.mjs
+
+      - name: Javi padec na Discord
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_TEDENSKO }}
+        run: node scripts/javi-napako.mjs "Akcija vabil"
