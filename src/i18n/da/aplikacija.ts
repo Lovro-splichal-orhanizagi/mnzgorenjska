@@ -24,9 +24,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'Tilbage til forsiden',
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  akcijaVabil: {
+    pasica: 'Inviter venner og vind en kasse øl (til 30.11.)',
+    povabi: 'Inviter',
+    skrij: 'Skjul',
+    meni: 'Inviter 🍺',
+    meniDolgo: '🍺 Inviter venner, vind en kasse øl',
+  },
   poziv: {
     kasneje: 'Måske senere',
     aplikacija: { naslov: 'SLFF i lommen 📱', besedilo: 'Påmindelse før deadline, dit holds point efter kampene og hurtigere vej til startopstillingen, i appen.', googlePlay: 'Hent på Google Play', appStore: 'Hent i App Store' },
+    vabilo: { naslov: 'Inviter venner 🍺', besedilo: 'Tre venner med hold giver dig en gratis prisgennemgang af en spiller. Den, der inviterer flest inden 30.11., vinder en kasse øl.', deli: 'Del invitation', vec: 'Min kode og rangliste' },
     sledi: { naslov: 'Vær med 🙌', besedilo: 'Rundens hold, ugens spillere og nyt fra din liga, først på vores profiler.', instagram: 'Følg på Instagram', facebook: 'Synes godt om på Facebook' },
   },
   pivo: {

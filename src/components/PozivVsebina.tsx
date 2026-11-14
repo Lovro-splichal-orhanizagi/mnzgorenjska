@@ -1,10 +1,12 @@
-// Okno poziva "aplikacija" ali "sledi" (izbere lib/pozivi.ts, odpre PivoOkno).
-// Zapiranje poziv utiša za 60 dni, klik na povezavo za leto.
+// Okno poziva "vabilo", "aplikacija" ali "sledi" (izbere lib/pozivi.ts, odpre PivoOkno).
+// Zapiranje poziv utiša za 60 dni (vabilo 3), klik na povezavo za leto (vabilo 7 dni).
 import type { MutableRefObject } from 'react'
 import { utisajPoziv, trgovinaTelefona, type Poziv } from '../lib/pozivi'
 import { zabeleziKorak } from '../lib/lijak'
 import { jeMladinskiSlug } from '../lib/prevzem'
 import { useTekmovanje } from '../lib/tekmovanje'
+import { Link } from './Povezava'
+import { deliMojeVabilo } from '../lib/povabilo'
 import { FACEBOOK } from './Facebook'
 import { INSTAGRAM } from './Instagram'
 import { t } from '../i18n'
@@ -27,8 +29,8 @@ export default function PozivVsebina({ vrsta, okno, zapri, odkloni }: Lastnosti)
 
   const kasneje = odkloni
   const klik = () => {
-    utisajPoziv(vrsta, 365)
-    zabeleziKorak(vrsta === 'aplikacija' ? 'poziv_aplikacija_klik' : 'poziv_sledi_klik')
+    utisajPoziv(vrsta, vrsta === 'vabilo' ? 7 : 365)
+    zabeleziKorak(vrsta === 'vabilo' ? 'poziv_vabilo_klik' : vrsta === 'aplikacija' ? 'poziv_aplikacija_klik' : 'poziv_sledi_klik')
     zapri()
   }
 
@@ -54,7 +56,26 @@ export default function PozivVsebina({ vrsta, okno, zapri, odkloni }: Lastnosti)
         </button>
         <img src={`/logo/maskota/${maskota}.svg`} alt="" aria-hidden className="mx-auto -mt-2 h-40 w-40" />
 
-        {vrsta === 'aplikacija' ? (
+        {vrsta === 'vabilo' ? (
+          <>
+            <h2 id="poziv-naslov" className="mt-2 text-xl font-black naslov">{t('aplikacija.poziv.vabilo.naslov')}</h2>
+            <p className="mt-2 text-sm text-slate-300">{t('aplikacija.poziv.vabilo.besedilo')}</p>
+            <button
+              type="button"
+              onClick={() => {
+                klik()
+                void deliMojeVabilo()
+              }}
+              className={`${GUMB} mt-4 bg-gradient-to-b from-amber-300 to-amber-500 text-amber-950 hover:from-amber-200 hover:to-amber-400`}
+            >
+              <span aria-hidden>🍺</span>
+              {t('aplikacija.poziv.vabilo.deli')}
+            </button>
+            <Link to="/invite" onClick={klik} className="mt-2 block text-sm font-semibold text-gnl-300 underline">
+              {t('aplikacija.poziv.vabilo.vec')}
+            </Link>
+          </>
+        ) : vrsta === 'aplikacija' ? (
           <>
             <h2 id="poziv-naslov" className="mt-2 text-xl font-black naslov">{t('aplikacija.poziv.aplikacija.naslov')}</h2>
             <p className="mt-2 text-sm text-slate-300">{t('aplikacija.poziv.aplikacija.besedilo')}</p>

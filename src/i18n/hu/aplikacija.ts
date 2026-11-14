@@ -24,9 +24,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'Vissza a kezdőlapra',
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  akcijaVabil: {
+    pasica: 'Hívd meg a barátaidat, nyerj egy rekesz sört (11. 30-ig)',
+    povabi: 'Meghívás',
+    skrij: 'Elrejtés',
+    meni: 'Meghívás 🍺',
+    meniDolgo: '🍺 Hívd meg a barátaidat, nyerj egy rekesz sört',
+  },
   poziv: {
     kasneje: 'Talán később',
     aplikacija: { naslov: 'SLFF a zsebedben 📱', besedilo: 'Emlékeztető a határidő előtt, csapatod pontjai a meccsek után és gyorsabb út a kezdőhöz, az alkalmazásban.', googlePlay: 'Letöltés a Google Playről', appStore: 'Letöltés az App Store-ból' },
+    vabilo: { naslov: 'Hívd meg a barátaidat 🍺', besedilo: 'Három csapattal rendelkező barát ingyenes játékosár-felülvizsgálatot hoz neked. Aki 11. 30-ig a legtöbbet hívja meg, egy rekesz sört nyer.', deli: 'Meghívó megosztása', vec: 'A kódom és a ranglista' },
     sledi: { naslov: 'Légy velünk 🙌', besedilo: 'A forduló csapatai, a hét játékosai és hírek a ligádból, először a profiljainkon.', instagram: 'Kövess Instagramon', facebook: 'Lájkolj Facebookon' },
   },
   pivo: {

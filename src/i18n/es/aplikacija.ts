@@ -23,9 +23,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     opis: 'Puede que el enlace esté caducado o que haya una errata en la dirección.',
     nazaj: 'Volver a la página de inicio',
   },
+  akcijaVabil: {
+    pasica: 'Invita amigos y gana una caja de cerveza (hasta el 30/11)',
+    povabi: 'Invitar',
+    skrij: 'Ocultar',
+    meni: 'Invitar 🍺',
+    meniDolgo: '🍺 Invita a tus amigos, gana una caja de cerveza',
+  },
   poziv: {
     kasneje: 'Quizá más tarde',
     aplikacija: { naslov: 'SLFF en tu bolsillo 📱', besedilo: 'Aviso antes del cierre, los puntos de tu equipo tras los partidos y un camino más rápido a tu alineación, en la app.', googlePlay: 'Descárgala en Google Play', appStore: 'Descárgala en App Store' },
+    vabilo: { naslov: 'Invita a tus amigos 🍺', besedilo: 'Tres amigos con equipo te dan una revisión de precio de jugador gratis. Quien más invite hasta el 30/11 gana una caja de cerveza.', deli: 'Compartir invitación', vec: 'Mi código y la clasificación' },
     sledi: { naslov: 'Únete 🙌', besedilo: 'Equipos de la jornada, jugadores de la semana y novedades de tu liga, primero en nuestros perfiles.', instagram: 'Síguenos en Instagram', facebook: 'Danos me gusta en Facebook' },
   },
   pivo: {

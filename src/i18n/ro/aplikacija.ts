@@ -24,9 +24,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'Înapoi la pagina principală',
   },
   /** Buton de susținere (components/Pivo.tsx). */
+  akcijaVabil: {
+    pasica: 'Invită prieteni, câștigă o ladă de bere (până pe 30.11)',
+    povabi: 'Invită',
+    skrij: 'Ascunde',
+    meni: 'Invită 🍺',
+    meniDolgo: '🍺 Invită prieteni, câștigă o ladă de bere',
+  },
   poziv: {
     kasneje: 'Poate mai târziu',
     aplikacija: { naslov: 'SLFF în buzunar 📱', besedilo: 'Memento înainte de termen, punctele echipei tale după meciuri și drum mai rapid spre formație, în aplicație.', googlePlay: 'Descarcă din Google Play', appStore: 'Descarcă din App Store' },
+    vabilo: { naslov: 'Invită prieteni 🍺', besedilo: 'Trei prieteni cu echipă îți aduc o revizuire gratuită a prețului unui jucător. Cine invită cei mai mulți până pe 30.11 câștigă o ladă de bere.', deli: 'Distribuie invitația', vec: 'Codul meu și clasamentul' },
     sledi: { naslov: 'Fii alături de noi 🙌', besedilo: 'Echipele etapei, jucătorii săptămânii și noutăți din liga ta, întâi pe profilurile noastre.', instagram: 'Urmărește pe Instagram', facebook: 'Apreciază pe Facebook' },
   },
   pivo: {

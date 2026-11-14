@@ -10,7 +10,9 @@ import { useLocation } from 'react-router-dom'
 import { supabase } from './supabase'
 import { useAuth } from './useAuth'
 import { izvor } from './platforma'
-import { nastaviMojoKodo } from './mojaKoda'
+import { mojaKodaVabila, nastaviMojoKodo } from './mojaKoda'
+import { deliBesedilo, type IzidDeljenja } from './miniLige'
+import { t } from '../i18n/jedro.ts'
 
 const KLJUC = 'slff-povabil'
 const KLJUC_MOJA = 'slff-moja-koda'
@@ -102,4 +104,16 @@ export function BeleziPovabilo() {
     if (uid) void naloziMojoKodo(uid)
   }, [uid])
   return null
+}
+
+/** Deli osebno povabilo (sistemski list ali kopiranje); koda iz predpomnilnika ali baze. */
+export async function deliMojeVabilo(): Promise<IzidDeljenja> {
+  let koda = mojaKodaVabila()
+  if (!koda) {
+    const { data } = await supabase.rpc('moja_koda_vabila')
+    koda = typeof data === 'string' ? data : null
+  }
+  if (!koda) return 'neuspelo'
+  const povezava = `${izvor()}/i/${koda}`
+  return deliBesedilo(t('racun.povabi.naslov'), t('racun.povabi.besedilo', { povezava, koda }))
 }

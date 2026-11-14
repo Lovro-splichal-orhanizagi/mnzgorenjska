@@ -5,6 +5,7 @@ import { AuthProvider } from './lib/useAuth'
 import { TekmovanjeProvider } from './lib/tekmovanje'
 import Navbar from './components/Navbar'
 import PrviObisk from './components/PrviObisk'
+import PasicaVabila from './components/PasicaVabila'
 import PivoOkno from './components/PivoOkno'
 import VirPodatkov from './components/VirPodatkov'
 import RokKroga from './components/RokKroga'
@@ -138,6 +139,7 @@ export default function App() {
           <PivoOkno />
           <RokKroga />
           <Navbar />
+          <PasicaVabila />
           <OpozoriloEkipe />
           {/* min-h-screen: noga je pod robom zaslona, dokler se stran nalaga, in
               ne skače navzdol, ko pridejo podatki (premik postavitve, CLS). */}

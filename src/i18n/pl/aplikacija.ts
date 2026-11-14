@@ -23,9 +23,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     opis: 'Link może być nieaktualny albo w adresie jest literówka.',
     nazaj: 'Wróć na stronę główną',
   },
+  akcijaVabil: {
+    pasica: 'Zaproś znajomych i wygraj skrzynkę piwa (do 30.11)',
+    povabi: 'Zaproś',
+    skrij: 'Ukryj',
+    meni: 'Zaproś 🍺',
+    meniDolgo: '🍺 Zaproś znajomych, wygraj skrzynkę piwa',
+  },
   poziv: {
     kasneje: 'Może później',
     aplikacija: { naslov: 'SLFF w kieszeni 📱', besedilo: 'Przypomnienie przed terminem, punkty twojej drużyny po meczach i szybsza droga do składu, w aplikacji.', googlePlay: 'Pobierz z Google Play', appStore: 'Pobierz z App Store' },
+    vabilo: { naslov: 'Zaproś znajomych 🍺', besedilo: 'Trzech znajomych z drużyną daje ci darmową weryfikację ceny zawodnika. Kto do 30.11 zaprosi najwięcej, wygrywa skrzynkę piwa.', deli: 'Udostępnij zaproszenie', vec: 'Mój kod i ranking' },
     sledi: { naslov: 'Bądź z nami 🙌', besedilo: 'Drużyny kolejki, piłkarze tygodnia i nowości z twojej ligi, najpierw na naszych profilach.', instagram: 'Obserwuj na Instagramie', facebook: 'Polub na Facebooku' },
   },
   pivo: {

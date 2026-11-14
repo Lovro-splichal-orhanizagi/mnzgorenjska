@@ -24,9 +24,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'Natrag na početnu stranicu',
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  akcijaVabil: {
+    pasica: 'Pozovi prijatelje i osvoji gajbu piva (do 30. 11.)',
+    povabi: 'Pozovi',
+    skrij: 'Sakrij',
+    meni: 'Pozovi 🍺',
+    meniDolgo: '🍺 Pozovi prijatelje, osvoji gajbu piva',
+  },
   poziv: {
     kasneje: 'Možda kasnije',
     aplikacija: { naslov: 'SLFF u džepu 📱', besedilo: 'Podsjetnik prije roka, bodovi tvoje ekipe nakon utakmica i brži put do postave, u aplikaciji.', googlePlay: 'Preuzmi s Google Playa', appStore: 'Preuzmi s App Storea' },
+    vabilo: { naslov: 'Pozovi prijatelje 🍺', besedilo: 'Tri prijatelja s momčadi donose ti besplatnu reviziju cijene igrača. Tko do 30. 11. pozove najviše, dobiva gajbu piva.', deli: 'Podijeli pozivnicu', vec: 'Moj kod i ljestvica' },
     sledi: { naslov: 'Budi s nama 🙌', besedilo: 'Ekipe kola, igrači tjedna i novosti iz tvoje lige, prvo na našim profilima.', instagram: 'Prati na Instagramu', facebook: 'Lajkaj na Facebooku' },
   },
   pivo: {
