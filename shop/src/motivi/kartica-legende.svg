@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 148 210" width="148mm" height="210mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="kartica">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 148 210" width="148mm" height="210mm" font-family="Anton, 'SLFF Motivi Dodatek', 'SLFF Motivi Armenscina', Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="kartica">
   <rect width="148" height="210" data-barva="t"/>
   <defs><clipPath id="karta"><path d="M30 10 H118 L136 22 V160 Q136 176 122 182 L74 200 L26 182 Q12 176 12 160 V22 Z"/></clipPath></defs>
   <path d="M30 10 H118 L136 22 V160 Q136 176 122 182 L74 200 L26 182 Q12 176 12 160 V22 Z" data-barva="1"/>
@@ -14,13 +14,13 @@
   <text x="74" y="131" font-size="19" letter-spacing=".8" data-polje="ime" data-velike data-sirina="108" data-sredina data-barva="t">KRAJNC</text>
   <path d="M26 139.5 H122 M74 143 V170" fill="none" data-crta="t" stroke-width=".6"/>
   <text x="47" y="152.5" font-size="12" text-anchor="end" data-polje="hitrost" data-barva="t">88</text>
-  <text x="50" y="152.5" font-size="8.4" letter-spacing=".8" text-anchor="start" data-barva="t" data-en="PAC">HIT</text>
+  <text data-sirina="14.3" data-napis="hit" x="50" y="152.5" font-size="8.4" letter-spacing=".8" text-anchor="start" data-barva="t">HIT</text>
   <text x="47" y="167" font-size="12" text-anchor="end" data-polje="strel" data-barva="t">88</text>
-  <text x="50" y="167" font-size="8.4" letter-spacing=".8" text-anchor="start" data-barva="t" data-en="SHO">STR</text>
+  <text data-sirina="16.6" data-napis="str" x="50" y="167" font-size="8.4" letter-spacing=".8" text-anchor="start" data-barva="t">STR</text>
   <text x="111" y="152.5" font-size="12" text-anchor="end" data-polje="podaje" data-barva="t">88</text>
-  <text x="114" y="152.5" font-size="8.4" letter-spacing=".8" text-anchor="start" data-barva="t" data-en="PAS">POD</text>
+  <text data-sirina="17.9" data-napis="pod" x="114" y="152.5" font-size="8.4" letter-spacing=".8" text-anchor="start" data-barva="t">POD</text>
   <text x="111" y="167" font-size="12" text-anchor="end" data-polje="obramba" data-barva="t">88</text>
-  <text x="114" y="167" font-size="8.4" letter-spacing=".8" text-anchor="start" data-barva="t" data-en="DEF">OBR</text>
+  <text data-sirina="17.8" data-napis="obr" x="114" y="167" font-size="8.4" letter-spacing=".8" text-anchor="start" data-barva="t">OBR</text>
   <text x="74" y="181" font-size="6" letter-spacing="1.6" data-polje="klub" data-velike data-sirina="80" data-ce="klub" data-barva="t">NK ZGORNJA VAS</text>
   <text x="74" y="190.5" font-size="4.4" letter-spacing="1.4" data-barva="t" opacity=".8">SLFF</text>
 </svg>

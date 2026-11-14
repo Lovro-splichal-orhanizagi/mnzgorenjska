@@ -1,3 +1,7 @@
+// TEST ONLY (#582/V6 pattern): happy paths read the pinned historical
+// scripts/viri/fussball.mjs bytes (main 80406b24, sha256 816617fb…).
+import {usePinnedFussballBytes} from './lib/test-only-pinned-fussball.mjs'
+usePinnedFussballBytes()
 import test from 'node:test'
 import assert from 'node:assert/strict'
 const api=await import('./fussball-baden-fresh-pair.mjs').catch(e=>{if(e.code==='ERR_MODULE_NOT_FOUND')return {};throw e})

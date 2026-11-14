@@ -1,0 +1,10 @@
+@font-face {
+	font-family: font-qri0492y;
+	src: 
+		url('//www.fussball.de/export.fontface/-/format/woff/id/qri0492y/type/font') format('woff'),
+		url('//www.fussball.de/export.fontface/-/format/ttf/id/qri0492y/type/font') format('truetype');
+}
+
+.results-c-qri0492y {
+	font-family: font-qri0492y !important;
+}

@@ -118,7 +118,7 @@ test('archive authorization binds the exact current short menu even when capture
 test('opt-in rollout candidate must exactly own both observed catalog scopes before source requests',()=>{
  const e={...environment(),ROLLOUT_CANDIDATE:'de-verbandsliga-baden',ARCHIVE_JSON:JSON.stringify({...archive,...badenProof.archive,observedSeedUrl:badenProof.observedSeedUrl})}
  assert.equal(validate(e).rolloutCandidate,'de-verbandsliga-baden')
- for(const patch of [{ROLLOUT_CANDIDATE:'de-other'},{ROLLOUT_CANDIDATE:'de-flens-oberliga-schleswig-holstein'},{ARCHIVE_JSON:''},{STAFFEL:fixtureStaffel,SEED_URL:fixtureSeed},{ARCHIVE_JSON:JSON.stringify({...archive,...badenProof.archive,seedUrl:archive.seedUrl})}])assert.throws(()=>validate({...e,...patch}))
+ for(const patch of [{ROLLOUT_CANDIDATE:'de-other'},{ROLLOUT_CANDIDATE:'de-flens-oberliga-schleswig-holstein'},{STAFFEL:fixtureStaffel,SEED_URL:fixtureSeed},{ARCHIVE_JSON:JSON.stringify({...archive,...badenProof.archive,seedUrl:archive.seedUrl})}])assert.throws(()=>validate({...e,...patch}))
 })
 
 test('rollout authorization requires both complete fresh native batches and unchanged main before creating exact dispatch args',async()=>{

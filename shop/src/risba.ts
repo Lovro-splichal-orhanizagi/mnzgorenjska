@@ -13,8 +13,9 @@
 //   data-ce="ime"        element se skrije, če je polje prazno (data-ce="!ime": če ni prazno)
 //   data-barva="t|s|k"   najtemnejša | najsvetlejša barva sheme | tista od obeh, ki bolj izstopa iz barve 1
 //   data-polje="a.b.0.c" pot v predmet (posnetek postave); poljaCone vidi le "a"
-//   data-vzorec="{liga} · {sezona}"  besedilo iz delov polja data-polje (data-vzorec-en za angleščino)
-//   data-en="…"          stalno besedilo v angleščini
+//   data-vzorec="{liga} · {sezona}"  besedilo iz delov polja data-polje
+//   data-napis="liga sezona"  stalni napis: slovenski napis ključa (motivi/napisi.ts) v besedilu
+//                        se zamenja z napisom v jeziku izrisa ("SLFF · NEDELJSKA LIGA" → "SLFF · SUNDAY LEAGUE")
 //   data-izracun="povprecje a b"  zaokroženo povprečje polj (ocena kartice)
 //   {n}                  v ključu in besedilu: zaporedna številka kosa (podstavki, motiv.kosov)
 //   <g data-postava="postava" data-igrisce="x y w h" data-klop="x y w h"/>  postava iz posnetka
@@ -23,14 +24,19 @@
 //   data-prirez="cx cy r" lik brez pravokotnega roba (trikotnik): izvoz ga poveča okoli središča
 //                        včrtanega kroga (r) za prirez; trikotnik tako zraste točno za 3 mm na vsaki stranici
 import { MOTIVI, type Motiv } from './motivi'
+import { NAPISI, type KljucNapisa } from './motivi/napisi'
+import { SIRINE_DODATKA } from './motivi/sirine-dodatka'
+import { LOKALE, type Jezik } from './jezik'
 
 /** Vrednosti polj: besedilo, število ali predmet (posnetek postave). */
 export type VrednostiPolj = Record<string, unknown>
-export type Jezik = 'sl' | 'en'
+export type { Jezik }
 /** Kos (podstavek 1–6) in jezik stalnih napisov ter datuma. */
 export interface MoznostiIzrisa { kos?: number; jezik?: Jezik }
 
-export const PISAVA_MOTIVOV = "Anton, Impact, 'Arial Narrow', sans-serif"
+// Anton ima le latinico; cirilico, grščino, ə (dodatek.ttf) in armenščino (dodatek-hy.ttf)
+// rišeta dodatni pisavi, raztegnjeni na višino Antonovih velikih črk (scripts/trgovina-pisave.py).
+export const PISAVA_MOTIVOV = "Anton, 'SLFF Motivi Dodatek', 'SLFF Motivi Armenscina', Impact, 'Arial Narrow', sans-serif"
 
 // Znaki, ki jih XML ne dovoli (kontrolni razen tab/LF/CR, U+FFFE/FFFF, osamljeni nadomestki), izpustimo.
 const PREPOVEDANI = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g
@@ -46,11 +52,27 @@ const SIRINE: Record<string, number> = {
   a: 990, b: 1027, c: 1006, d: 1020, e: 1000, f: 574, g: 1032, h: 1035, i: 498, j: 538, k: 1005, l: 508, m: 1553,
   n: 1021, o: 1017, p: 1027, q: 1020, r: 710, s: 972, t: 625, u: 1022, v: 944, w: 1426, x: 940, y: 944, z: 790,
 }
+for (const z of SIRINE_DODATKA.split(',')) SIRINE[[...z][0]!] = Number([...z].slice(1).join(''))
 const VISINA_VELIKIH = 1760 / 2048
 
 /** Širina znaka v em: števke so enako široke kot 0, črka s strešico kot osnovna. */
 const sirinaZnaka = (z: string): number =>
   (SIRINE[z] ?? (/\d/.test(z) ? 1012 : SIRINE[z.normalize('NFD')[0] ?? ''] ?? 1000)) / 2048
+
+/** Stalni napis motiva v jeziku; {parametri} se zamenjajo. */
+export const napis = (k: KljucNapisa, jezik: Jezik, p: Record<string, string | number> = {}): string =>
+  (NAPISI[jezik] ?? NAPISI.en)[k].replace(/\{(\w+)\}/g, (cel, ime: string) => (ime in p ? String(p[ime]) : cel))
+
+const ubezi = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+/** V besedilu zamenja slovenski napis ključa z napisom v jeziku ({n} ipd. ostanejo, kar so bili). */
+function prevediNapis(s: string, k: KljucNapisa, jezik: Jezik): string {
+  const izvor = NAPISI.sl[k]
+  if (!izvor) return s
+  const imena: string[] = []
+  const vzorec = izvor.split(/(\{\w+\})/).map((d) => (/^\{\w+\}$/.test(d) ? (imena.push(d), '(\\S+)') : ubezi(d))).join('')
+  return s.replace(new RegExp(vzorec), (...m: string[]) => imena.reduce((c, ime, i) => c.replace(ime, m[i + 1] ?? ''), napis(k, jezik)))
+}
+const velike = (s: string, jezik: Jezik): string => s.toLocaleUpperCase(LOKALE[jezik])
 
 /** Širina besedila v enotah predloge (pisava Anton, razmik med črkami). */
 export const sirinaBesedila = (s: string, velikost: number, razmik = 0): number => {
@@ -66,22 +88,18 @@ const poPoti = (vr: VrednostiPolj, pot: string): unknown =>
   pot.split('.').reduce<unknown>((v, k) => (v !== null && typeof v === 'object' ? (v as Record<string, unknown>)[k] : undefined), vr)
 const kotBesedilo = (v: unknown): string => (v === null || v === undefined || typeof v === 'object' ? '' : String(v))
 
-const MESECI = {
-  sl: ['januarja', 'februarja', 'marca', 'aprila', 'maja', 'junija', 'julija', 'avgusta', 'septembra', 'oktobra', 'novembra', 'decembra'],
-  en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-}
-const DNEVI = {
-  sl: ['nedelja', 'ponedeljek', 'torek', 'sreda', 'četrtek', 'petek', 'sobota'],
-  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-}
-/** "2026-05-17" → "17. maja 2026" / "17 May 2026"; z dnem "nedelja, 17. maja 2026". */
+// Slovenščina po svoje (rodilnik "17. maja", Intl da "17. maj"), drugi jeziki po Intl.
+const MESECI_SL = ['januarja', 'februarja', 'marca', 'aprila', 'maja', 'junija', 'julija', 'avgusta', 'septembra', 'oktobra', 'novembra', 'decembra']
+const DNEVI_SL = ['nedelja', 'ponedeljek', 'torek', 'sreda', 'četrtek', 'petek', 'sobota']
+/** "2026-05-17" → "17. maja 2026" / "17 May 2026" / "17. Mai 2026"; z dnem "nedelja, 17. maja 2026". */
 export function oblikujDatum(v: string, jezik: Jezik = 'sl', zDnem = false): string {
   const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v)
   if (!d) return v
   const [l, m, dan] = [Number(d[1]), Number(d[2]), Number(d[3])]
   if (m < 1 || m > 12) return v
-  const datum = jezik === 'sl' ? `${dan}. ${MESECI.sl[m - 1]} ${l}` : `${dan} ${MESECI.en[m - 1]} ${l}`
-  return zDnem ? `${DNEVI[jezik][new Date(Date.UTC(l, m - 1, dan)).getUTCDay()]}, ${datum}` : datum
+  const dat = new Date(Date.UTC(l, m - 1, dan))
+  if (jezik === 'sl') return `${zDnem ? `${DNEVI_SL[dat.getUTCDay()]}, ` : ''}${dan}. ${MESECI_SL[m - 1]} ${l}`
+  return new Intl.DateTimeFormat(LOKALE[jezik], { ...(zDnem && { weekday: 'long' }), day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(dat)
 }
 
 // "Prvak mini lige Liga pri Šanku 2025/26" (baza, besedilo_prvaka) → naslov, liga, sezona.
@@ -91,7 +109,7 @@ function oblikuj(v: string, oblika: string | undefined, jezik: Jezik): string {
   if (oblika === 'sezona') return /^\d{4}$/.test(v) ? `${v}/${String((Number(v) + 1) % 100).padStart(2, '0')}` : v
   if (oblika === 'navednice') return `“${v}”`
   const p = PRVAK.exec(v)
-  if (oblika === 'prvak-naslov') return p ? p[1]! : ''
+  if (oblika === 'prvak-naslov') return p ? napis('prvak', jezik) : ''
   if (oblika === 'prvak-liga') return p ? p[2]! : v
   if (oblika === 'prvak-sezona') return p ? p[3]! : ''
   return v
@@ -199,7 +217,7 @@ function poLoku(oznaka: string, besedilo: string, velikost: number, razmik: numb
 }
 
 // Oznake predloge, ki jih izris porabi (v izhodu jih ni).
-const POMOZNE = ['data-polje', 'data-sirina', 'data-velike', 'data-oblika', 'data-sredina', 'data-vrstice', 'data-vrstice-najvec', 'data-prazno', 'data-en', 'data-vzorec', 'data-vzorec-en', 'data-izracun']
+const POMOZNE = ['data-polje', 'data-sirina', 'data-velike', 'data-oblika', 'data-sredina', 'data-vrstice', 'data-vrstice-najvec', 'data-prazno', 'data-napis', 'data-vzorec', 'data-izracun']
 
 // Najboljša delitev v dve vrstici (ob presledku, najožja daljša vrstica) ali null.
 function dveVrstici(v: string, velikost: number, razmik: number): [string, string] | null {
@@ -217,7 +235,7 @@ function dveVrstici(v: string, velikost: number, razmik: number): [string, strin
 
 function besedilo(oznaka: string, vsebina: string, vrednosti: VrednostiPolj, jezik: Jezik): string {
   const kljuc = atribut(oznaka, 'data-polje')
-  const vzorec = (jezik === 'en' && atribut(oznaka, 'data-vzorec-en')) || atribut(oznaka, 'data-vzorec')
+  const vzorec = atribut(oznaka, 'data-vzorec')
   const izracun = atribut(oznaka, 'data-izracun')?.split(/\s+/)
   let surovo: string
   if (izracun?.[0] === 'povprecje') {
@@ -225,9 +243,10 @@ function besedilo(oznaka: string, vsebina: string, vrednosti: VrednostiPolj, jez
     surovo = st.length ? String(Math.round(st.reduce((a, b) => a + b, 0) / st.length)) : ''
   } else if (kljuc && vzorec) surovo = vzorec.replace(/\{([\w.]+)\}/g, (_, pot: string) => kotBesedilo(poPoti(vrednosti, `${kljuc}.${pot}`)))
   else if (kljuc) surovo = kotBesedilo(poPoti(vrednosti, kljuc))
-  else surovo = (jezik === 'en' && atribut(oznaka, 'data-en')) || vsebina.replace(/&(amp|lt|gt|quot|apos);/g, (_, e: string) => ({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" })[e]!)
+  else surovo = vsebina.replace(/&(amp|lt|gt|quot|apos);/g, (_, e: string) => ({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" })[e]!)
+  for (const k of (atribut(oznaka, 'data-napis') ?? '').split(/\s+/).filter(Boolean)) surovo = prevediNapis(surovo, k as KljucNapisa, jezik)
   let v = oblikuj(surovo.replace(/\s+/g, ' ').trim(), atribut(oznaka, 'data-oblika'), jezik)
-  if (imaAtribut(oznaka, 'data-velike')) v = v.toUpperCase()
+  if (imaAtribut(oznaka, 'data-velike')) v = velike(v, jezik)
   const velikost0 = Number(atribut(oznaka, 'font-size') ?? 10)
   const razmik = Number(atribut(oznaka, 'letter-spacing') ?? 0)
   const sirina = Number(atribut(oznaka, 'data-sirina') ?? Infinity)
@@ -308,7 +327,7 @@ function zeton(pot: string, i: Record<string, unknown>, x: number, y: number, s:
     + znak + zamenjava + kljukica + '</g>'
 }
 
-function narisiPostavo(oznaka: string, vr: VrednostiPolj): string {
+function narisiPostavo(oznaka: string, vr: VrednostiPolj, jezik: Jezik): string {
   const kljuc = atribut(oznaka, 'data-postava') ?? 'postava'
   const p = poPoti(vr, kljuc)
   const posnetek = p !== null && typeof p === 'object' ? (p as Record<string, unknown>) : {}
@@ -334,7 +353,7 @@ function narisiPostavo(oznaka: string, vr: VrednostiPolj): string {
   const kazen = Number(posnetek.kazen)
   const [zx, zy] = (atribut(oznaka, 'data-kazen') ?? '').split(/\s+/).map(Number)
   if (kazen > 0 && Number.isFinite(zx) && Number.isFinite(zy)) {
-    deli.push(`<text x="${st(zx!)}" y="${st(zy!)}" font-size="4.4" letter-spacing=".8" data-barva="1" data-en="INCL. −${kazen} TRANSFERS">VKLJ. −${kazen} ZA PRESTOPE</text>`)
+    deli.push(`<text x="${st(zx!)}" y="${st(zy!)}" font-size="4.4" letter-spacing=".8" data-sirina="80" data-barva="1">${xml(napis('prestopi', jezik, { kazen }))}</text>`)
   }
   return `<g>${deli.join('')}</g>`
 }
@@ -457,10 +476,10 @@ export function narisiMotiv(
   // motiv sorazmerno pomanjša in postavi na sredino cone.
   if (mm) svg = svg.replace(/^(<svg\b[^>]*>)/m, (o) => nastavi(nastavi(o, 'width', `${st(mm.sirina)}mm`), 'height', `${st(mm.visina)}mm`))
   // Sestavljeni deli (postava, dres) najprej: rišejo z istimi oznakami kot predloga.
-  svg = svg.replace(/<g\b[^>]*\sdata-postava="[^"]*"[^>]*?(?:\/>|><\/g>)/g, (o) => narisiPostavo(o, polja))
+  svg = svg.replace(/<g\b[^>]*\sdata-postava="[^"]*"[^>]*?(?:\/>|><\/g>)/g, (o) => narisiPostavo(o, polja, jezik))
   svg = svg.replace(/<g\b[^>]*\sdata-dres="[^"]*"[^>]*?(?:\/>|><\/g>)/g, (o) => narisiDres(o, polja, barve))
   // Besedila (polja in stalni napisi po loku): vsebina je navaden tekst brez gnezdenja.
-  svg = svg.replace(/(<text\b[^>]*\sdata-(?:polje|luk|en|izracun|sirina)="[^"]+"[^>]*>)([^<]*)<\/text>/g, (_, oznaka: string, vsebina: string) =>
+  svg = svg.replace(/(<text\b[^>]*\sdata-(?:polje|luk|napis|izracun|sirina)="[^"]+"[^>]*>)([^<]*)<\/text>/g, (_, oznaka: string, vsebina: string) =>
     besedilo(oznaka, vsebina, polja, jezik))
   svg = svg.replace(/<[\w:-]+\b[^>]*>/g, (oznaka) => {
     if (oznaka.startsWith('</')) return oznaka
@@ -508,8 +527,16 @@ export function barveIzPolj(definicije: { kljuc: string; vrsta: string; moznosti
 /**
  * SVG z vgrajeno pisavo (data URL): za tiskarno in <img>/<canvas>, kjer pisava strani ne velja.
  * Pisava (~30 KB base64) se naloži šele tu, v svojem kosu, ne v vsakem, ki riše motive.
+ * Dodatni pisavi (cirilica, grščina, ə; armenščina) le, če ju besedilo potrebuje.
  */
 export async function zVgrajenoPisavo(svg: string): Promise<string> {
-  const { default: pisava } = await import('./motivi/anton.ttf?inline')
-  return svg.replace(/(<svg\b[^>]*>)/, `$1<style>@font-face{font-family:Anton;src:url(${pisava}) format('truetype');}</style>`)
+  const pisave: Promise<[string, string]>[] = [import('./motivi/anton.ttf?inline').then((m) => ['Anton', m.default])]
+  if (DODATEK.test(svg)) pisave.push(import('./motivi/dodatek.ttf?inline').then((m) => ['SLFF Motivi Dodatek', m.default]))
+  if (ARMENSCINA.test(svg)) pisave.push(import('./motivi/dodatek-hy.ttf?inline').then((m) => ['SLFF Motivi Armenscina', m.default]))
+  const css = (await Promise.all(pisave)).map(([ime, url]) => `@font-face{font-family:'${ime}';src:url(${url}) format('truetype');}`).join('')
+  return svg.replace(/(<svg\b[^>]*>)/, `$1<style>${css}</style>`)
 }
+
+/** Znaki dodatnih pisav (glej scripts/trgovina-pisave.py). */
+export const DODATEK = /[\u0370-\u045F\u0490-\u049F\u018F\u0259\u2212]/
+export const ARMENSCINA = /[\u0531-\u058F]/

@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom'
 import grb from '../../public/logo/slff-grb.png'
 import { supabase } from './baza'
 import { izberiJezik, jezik, t, TELEFON, TELEFON_POVEZAVA } from './besede'
+import { IMENA_JEZIKOV, JEZIKI, jeJezik } from './jezik'
 import { kosov, useKosarica } from './kosarica'
 import { useSeja } from './seja'
 import { useMotivi } from './strani/Personalizirano'
@@ -29,6 +30,23 @@ const povezava = ({ isActive }: { isActive: boolean }) =>
     : 'whitespace-nowrap rounded-lg px-3 py-1.5 text-slate-400 hover:bg-white/5 hover:text-slate-100'
 
 const tiho = 'whitespace-nowrap rounded-lg px-3 py-1.5 text-slate-400 hover:bg-white/5 hover:text-slate-100'
+
+/**
+ * Izbira jezika: vidna je le oznaka (SL, DE …), spustni seznam je pravi <select>
+ * z imeni jezikov v njih samih (dostopen, na telefonu sistemski izbirnik).
+ */
+export function IzbiraJezika() {
+  return (
+    <label className={`${tiho} relative cursor-pointer font-semibold uppercase`} lang={jezik}>
+      {jezik}
+      <span aria-hidden="true" className="ml-0.5 text-[10px] text-slate-500">▾</span>
+      <select value={jezik} onChange={(e) => jeJezik(e.target.value) && izberiJezik(e.target.value)}
+        aria-label={`${IMENA_JEZIKOV[jezik]} · Language`} className="absolute inset-0 cursor-pointer opacity-0">
+        {JEZIKI.map((j) => <option key={j} value={j} lang={j}>{IMENA_JEZIKOV[j]}</option>)}
+      </select>
+    </label>
+  )
+}
 
 export function Okvir({ children }: { children: ReactNode }) {
   const { seja } = useSeja()
@@ -58,10 +76,7 @@ export function Okvir({ children }: { children: ReactNode }) {
             ) : (
               <NavLink to="/login" className={povezava}>{t('nav.prijava')}</NavLink>
             )}
-            <button type="button" onClick={() => izberiJezik(jezik === 'sl' ? 'en' : 'sl')} className={`${tiho} font-semibold`}
-              lang={jezik === 'sl' ? 'en' : 'sl'} aria-label={jezik === 'sl' ? 'English' : 'Slovenščina'}>
-              {jezik === 'sl' ? 'EN' : 'SL'}
-            </button>
+            <IzbiraJezika />
             <Link to="/cart" aria-label={t('nav.kosarica', { n })} className="relative rounded-lg p-2 text-slate-200 hover:bg-white/5">
               <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 7h12l-1 13H7L6 7Z" />

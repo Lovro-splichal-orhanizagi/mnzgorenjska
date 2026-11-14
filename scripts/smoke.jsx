@@ -57,14 +57,19 @@ import {
 } from '../src/lib/pravila'
 import { tockeZaNastop, razloziTocke } from '../src/lib/tockovanje'
 import { veljavenPodpis } from '../supabase/functions/stripe-webhook/podpis.ts'
+import { veljavenPodpisStream, podpisiZeton, stanjeIzStreama } from '../supabase/functions/posnetki-igralca/stream.ts'
+import { podpisanNaslov, r2Naslov, kljucVidea, kljucSlike } from '../supabase/functions/posnetki-igralca/r2.ts'
 import { scoutPostavkeVeljajo, scoutCeneNarocnine } from '../supabase/functions/stripe-webhook/scout.ts'
 import { trgovinaIzSeje, napacnaTarifa, novaKoda, idKupona, enoteBonov, kodeSeje, zgostiKodo, IZDELEK_TRGOVINE as IZDELEK_BONOV } from '../supabase/functions/stripe-webhook/trgovina.ts'
 import { IZDELEK_TRGOVINE, seznamPostavk } from '../supabase/functions/trgovina-nakup/izdelki.ts'
 import { sestaviMail as trgovinaMail, TELEFON as trgovinaTelefonMail, POGOJI_VERZIJA as trgovinaVerzijaMail } from '../supabase/functions/trgovina-posta/sporocila.ts'
-import { SL as trgovinaSL, EN as trgovinaEN, TELEFON as trgovinaTelefon, POGOJI_VERZIJA as trgovinaVerzija } from '../shop/src/besede.ts'
+import { SL as trgovinaSL, slovar as trgovinaSlovar, TELEFON as trgovinaTelefon, POGOJI_VERZIJA as trgovinaVerzija } from '../shop/src/besede.ts'
+import { JEZIKI as trgovinaJeziki } from '../shop/src/jezik.ts'
+import { JEZIKI_NAKUPA, jezikNakupa, STRIPE_LOKALE, BESEDILA_NAKUPA } from '../supabase/functions/trgovina-nakup/besedila.ts'
+import { BESEDILA as trgovinaBesedilaMaila } from '../supabase/functions/trgovina-posta/besedila.ts'
 import { EU27 as trgovinaEU27, tarifeZa } from '../supabase/functions/trgovina-nakup/tarife.ts'
 import { preberiVnos as vnosBona } from '../supabase/functions/trgovina-boni/vnos.ts'
-import { createHmac } from 'node:crypto'
+import { createHmac, createVerify, generateKeyPairSync } from 'node:crypto'
 import { sestejOdKroga } from '../src/lib/lestvica'
 import { zdruziNavijace } from '../src/lib/navijaci'
 import { TabelaNavijacev, KlubMedNavijaci, IzbiraKluba } from '../src/components/NavijaciKlubov'
@@ -73,7 +78,10 @@ import { veljavenOsnutek } from '../src/lib/osnutek'
 import { krogKoncan, mestoVLigi, igralciPregleda, postaviPregled, oznakaPremika, imeDatotekePregleda, KVADRAT, SIRINA_P, VISINA_P, ROB_P } from '../src/lib/tedenskiPregled'
 import { jeDoberKrog, povprecjeKroga } from '../src/lib/pivoNavdusenje'
 import { trgovinaTelefona } from '../src/lib/pozivi'
-import { APP_STORE } from '../src/components/Trgovine'
+import Trgovine, { APP_STORE, GOOGLE_PLAY } from '../src/components/Trgovine'
+import AppPromo, { APP_PROMO_DO, appPromoAktivna } from '../src/components/AppPromo'
+import Facebook from '../src/components/Facebook'
+import Instagram from '../src/components/Instagram'
 import { parsirajZapisnik, nastopi, dodajStrelceSKlopi } from './zapisnik.mjs'
 import { poZvezah, ustreza, pokaziZvezo, ustrezaRavni, privzetoRazprte } from '../src/components/IzbirnikLige'
 import { dovoljZaIskanje, ujemaIme, opisIgralca, potIgralca, izDrugihLig } from '../src/lib/iskanjeIgralcev'
@@ -893,6 +901,17 @@ preveri(
     preveri('zapisnik LJ: datum je datum TEKME, ne kroga', z.datum === '2026-09-04', String(z.datum))
     const n = nastopi(z)
     preveri('zapisnik LJ: nastopi za obe ekipi', (n?.length ?? 0) >= 22, String(n?.length))
+
+    // Ljubljanske lige U15 (2011, 2012) polčasa ne vpisujejo: "TEKMA: Slovan -
+    // Šmartno 1 : 4". Prej je bil tak zapisnik null in liga brez statistike.
+    const brezPolcasa = parsirajZapisnik(
+      vzorec('zapisnik-ljubljana-2003.html').replace('TEKMA: Ljubljana - Dragomer 1 : 1 (0 : 1)', 'TEKMA: Ljubljana - Dragomer 1 : 1'),
+      { zapisnikId: '157904' })
+    preveri('zapisnik LJ U15: brez polčasa se razčleni',
+      brezPolcasa?.rezultat?.domaci === 1 && brezPolcasa?.rezultat?.gostje === 1 && brezPolcasa?.polcas === null &&
+        brezPolcasa?.domaci?.postava?.length === 11 && brezPolcasa?.menjave?.length === z.menjave?.length,
+      JSON.stringify(brezPolcasa?.rezultat))
+    preveri('zapisnik LJ: polčas ostane, kjer je', z.polcas?.domaci === 0 && z.polcas?.gostje === 1, JSON.stringify(z.polcas))
   }
 
   // Celje — tretja zveza na istem CMS-u. Sezono pise z DVEMA stevkama
@@ -3014,6 +3033,22 @@ preveri(
     nzs.naslovZapisnika('prva-liga-telemach:25', 'fc-koper-dns-mura-1snl2223-2023-05-20-201500') ===
       'https://www.nzs.si/klubi/moski/prva-liga-telemach/tekme/fc-koper-dns-mura-1snl2223-2023-05-20-201500/zapisnik')
 
+  // Ženske lige so pod /klubi/zenski/, šifra ima predpono `zenski/`.
+  preveri('NZS ženske: šifra s predpono se razbije',
+    razbijKodo('zenski/liga-deklet-u17:22').pot === 'liga-deklet-u17' &&
+    razbijKodo('zenski/liga-deklet-u17:22').sezona === '22' &&
+    razbijKodo('zenski/liga-deklet-u17').spol === 'zenski' && razbijKodo('1-skl').spol === 'moski')
+  preveri('NZS ženske: seznam tekem pod /klubi/zenski/',
+    nzs.naslovSeznamaTekem('zenski/zenska-nogometna-liga-triglav') ===
+      'https://www.nzs.si/klubi/zenski/zenska-nogometna-liga-triglav/tekme?page=0%2C0',
+    nzs.naslovSeznamaTekem('zenski/zenska-nogometna-liga-triglav'))
+  preveri('NZS ženske: zapisnik pod /klubi/zenski/',
+    nzs.naslovZapisnika('zenski/liga-deklet-u15-vzhod', 'dns-mura-nk-malecnik-du15v2627-2026-10-04-110000') ===
+      'https://www.nzs.si/klubi/zenski/liga-deklet-u15-vzhod/tekme/dns-mura-nk-malecnik-du15v2627-2026-10-04-110000/zapisnik')
+  preveri('NZS ženske: šifre tekem tudi s strani ženske lige',
+    sifreTekem('<a href="/klubi/zenski/liga-deklet-u15-vzhod/tekme/dns-mura-nk-malecnik-du15v2627-2026-10-04-110000">x</a>')[0] ===
+      'dns-mura-nk-malecnik-du15v2627-2026-10-04-110000')
+
   const sifre = sifreTekem(html)
   preveri('NZS: stran seznama da deset tekem', sifre.length === 10, String(sifre.length))
   preveri('NZS: sifra tekme je njen del poti z datumom',
@@ -3323,6 +3358,20 @@ preveri(
   // Okno "Časti pivo" le po dobrem krogu.
   preveri('poziv: Android dobi Google Play, namizje nič', /play\.google/.test(trgovinaTelefona('Mozilla/5.0 (Linux; Android 14)', 5) ?? '') && trgovinaTelefona('Mozilla/5.0 (Windows NT 10.0)', 0) === null)
   preveri('poziv: iPhone in iPad (Macintosh z dotikom) dobita App Store, Mac brez dotika nič', trgovinaTelefona('Mozilla/5.0 (iPhone)', 5) === APP_STORE && trgovinaTelefona('Mozilla/5.0 (Macintosh; Intel Mac OS X)', 5) === APP_STORE && trgovinaTelefona('Mozilla/5.0 (Macintosh; Intel Mac OS X)', 0) === null)
+  // Noga in Nastavitve: obe povezavi na trgovini morata biti v izrisu (SLF-343).
+  const trgovine = renderToString(<Trgovine />)
+  preveri('trgovine: App Store je nastavljen na objavljeni vnos', APP_STORE === 'https://apps.apple.com/app/id6818746153', String(APP_STORE))
+  preveri('trgovine: izris ima Google Play in App Store', trgovine.includes(`href="${GOOGLE_PLAY}"`) && trgovine.includes('href="https://apps.apple.com/app/id6818746153"'), trgovine)
+  // Promocija aplikacij na naslovnici: 48 ur, nato se trgovina sama vrne; v aplikaciji je ni.
+  const promo = renderToString(<AppPromo />)
+  preveri('promo: kartica ima obe povezavi na trgovini', promo.includes(`href="${GOOGLE_PLAY}"`) && promo.includes(`href="${APP_STORE}"`), promo)
+  preveri('promo: aktivna pred koncem, neaktivna ob koncu in po njem', appPromoAktivna(APP_PROMO_DO - 1, false) && !appPromoAktivna(APP_PROMO_DO, false) && !appPromoAktivna(APP_PROMO_DO + 86400000, false))
+  preveri('promo: v aplikaciji je ni', !appPromoAktivna(APP_PROMO_DO - 1, true))
+  // Noga: družabni omrežji samo kot ikoni, ime ostane za bralnik zaslona (SLF-343).
+  for (const [ime, el] of [['Facebook', <Facebook />], ['Instagram', <Instagram />]]) {
+    const html = renderToString(el)
+    preveri(`noga: ${ime} je ikona z imenom za bralnik`, /aria-label="[^"]+"/.test(html) && !html.replace(/<[^>]*>/g, '').trim(), html)
+  }
   preveri('pivo: napredek na lestvici je dober krog', jeDoberKrog(5, 30, 2))
   preveri('pivo: nad povprečjem brez premika je dober krog', jeDoberKrog(31, 30, 0) && jeDoberKrog(31, 30, null))
   preveri('pivo: padec ali povprečje nista dober krog', !jeDoberKrog(30, 30, 0) && !jeDoberKrog(10, 30, -3) && !jeDoberKrog(0, -1, null))
@@ -4747,7 +4796,7 @@ preveri(
     M.kratkoImeHu('swisspor LENTI TE ') === 'Swisspor Lenti' && M.kratkoImeHu('ZVFC') === 'ZVFC' && M.kratkoImeHu('Semjénháza Se') === 'Semjénháza')
   preveri('mlsz: ključ kluba (velikost črk, naglasi, vzdevek)',
     M.kljucKlubaHu('KISKANIZSAI SÁSKÁK') === M.kljucKlubaHu('Kiskanizsai Sáskák') && M.kljucKlubaHu('Hévíz SK') !== M.kljucKlubaHu('Heviz SK') &&
-    M.kljucKlubaHu('ZVFC') === M.kljucKlubaHu('Zalaszentgróti VFC') && M.kljucKlubaHu('Vácrátót KSE') === M.kljucKlubaHu('Vácrátóti KSE'))
+    M.kljucKlubaHu('ZVFC') === M.kljucKlubaHu('Zalaszentgróti VFC') && M.kljucKlubaHu('Vácrátót KSE') === M.kljucKlubaHu('Vácrátóti KSE') && M.kljucKlubaHu('GÜL BABA CELTIC FK') === M.kljucKlubaHu('GB CELTIC FK'))
 
   // Stran kroga: Zala I 2025/26, 7. krog — pod razporedom kroga je še razpored
   // ene ekipe čez vso sezono (tudi 2090965 iz 7. kroga, ki se ne sme podvojiti).
@@ -8367,6 +8416,24 @@ preveri(
   preveri('nsfbih: izid, zelena miza, neodigrana', N.izidIz('<b>7:0</b> ').izid?.domaci === 7 && !N.izidIz('<b>7:0</b>').zelenaMiza &&
     N.izidIz('<b>3:0</b> * ').zelenaMiza && N.izidIz(' - ').izid === null)
 
+  // Pošta klubom: seznam /klubovi/<liga> → šifre klubov, stran kluba → "E-mail" (ne naslov zveze v nogi).
+  const seznamBa = N.klubiLige(beri('ba-nsfbih-klubovi-wwin-prva-liga-fbih.html'))
+  preveri('nsfbih: seznam klubov lige (16, ime kot na razporedu)', seznamBa.length === 16 &&
+    seznamBa.some((x) => x.id === '415' && x.ime === 'FK BUDUĆNOST') && seznamBa.some((x) => x.ime === 'FK RADNIK (H)') &&
+    N.naslovKlubaBa('wwin-prva-liga-fbih/2026-27', '415') === 'https://www.nsfbih.ba/klubovi/wwin-prva-liga-fbih/415', seznamBa.length)
+  const brezNaslova = N.klubiLige(beri('ba-nsfbih-klubovi-wwin-prva-liga-fbih.html').replace('<div class="title">FK BUDUĆNOST</div>', ''))
+  const igman = seznamBa.find((x) => x.ime === 'FK IGMAN')
+  preveri('nsfbih: kartica brez naslova ne vzame imena naslednjega kluba', brezNaslova.length === 15 &&
+    !brezNaslova.some((x) => x.id === '415') && brezNaslova.find((x) => x.ime === 'FK IGMAN')?.id === igman?.id, brezNaslova.length)
+  const klubBa = beri('ba-nsfbih-klub-wwin-prva-liga-fbih-415.html')
+  preveri('nsfbih: naslov kluba iz vrstice E-mail, ne federacija@ iz noge; seznam ni stran kluba',
+    N.emailKluba(klubBa) === 'klub@example.com' && N.emailKluba(klubBa.replace(/<a href="mailto:klub@[^<]*<\/a>/, '')) === null &&
+    N.emailKluba(beri('ba-nsfbih-klubovi-wwin-prva-liga-fbih.html')) === undefined)
+  preveri('nsfbih: naslov zveze v vrstici E-mail ni naslov kluba', N.emailKluba(klubBa.replaceAll('klub@example.com', 'federacija@nsfbih.ba')) === null &&
+    N.emailKluba(klubBa.replaceAll('klub@example.com', 'info@nfsbih.ba')) === null)
+  preveri('nsfbih: obrazec z reCAPTCHA ni izziv, stran Cloudflare je', !N.jeIzziv(klubBa + '<div class="g-recaptcha"></div>') &&
+    N.jeIzziv('<title>Just a moment...</title>') && N.jeIzziv('<script src="/cdn-cgi/challenge-platform/h/b"></script>'))
+
   const stran = beri('ba-nsfbih-liga-druga-liga-fbih-jug.html')
   const t = N.tekmeStrani(stran)
   preveri('nsfbih: stran lige — 16 krogov po 6 tekem, 13 klubov, 48 odigranih, vse z uro', t.length === 96 && new Set(t.map((x) => x.krog)).size === 16 &&
@@ -8511,6 +8578,15 @@ preveri(
     F.default.naslovRazporeda('wwin-liga-bih/54152223') === 'https://www.nfsbih.ba/takmicenja/nogomet-muskarci/wwin-liga-bih?view=fixtures&id=54152223' &&
     F.default.naslovZapisnika('wwin-liga-bih/54152223', 'ba54152314') === 'https://www.nfsbih.ba/takmicenja/nogomet-muskarci/wwin-liga-bih?view=match&id=54152314' &&
     F.sifraZapisnika(54152314) === 'ba54152314' && /<slug>\/<id tekmovanja>/.test(slaba ?? ''))
+  // Ženske lige so pod /takmicenja/nogomet-zene/ (razdelek spredaj v šifri).
+  const kz = F.razberiKodo('nogomet-zene/premijer-zenska-liga-bih/54336938')
+  let slabRazdelek = null
+  try { F.razberiKodo('nogomet-futsal/premijer-liga/54336938') } catch (e) { slabRazdelek = e.message }
+  preveri('nfsbih: ženska liga (razdelek nogomet-zene v šifri), moška ostane pod nogomet-muskarci', kz.razdelek === 'nogomet-zene' &&
+    kz.slug === 'premijer-zenska-liga-bih' && kz.id === '54336938' && k.razdelek === 'nogomet-muskarci' &&
+    F.default.naslovRazporeda('nogomet-zene/premijer-zenska-liga-bih/54336938') === 'https://www.nfsbih.ba/takmicenja/nogomet-zene/premijer-zenska-liga-bih?view=fixtures&id=54336938' &&
+    F.default.naslovZapisnika('nogomet-zene/premijer-zenska-liga-bih/54336938', 'ba54336981') === 'https://www.nfsbih.ba/takmicenja/nogomet-zene/premijer-zenska-liga-bih?view=match&id=54336981' &&
+    !!slabRazdelek)
 
   const stran = beri('ba-nfsbih-razpored-54152223.html')
   const t = F.tekmeStrani(stran)
@@ -9723,6 +9799,11 @@ preveri(
   preveri('fsb: isto ime, drug klub (po ligi)', F.imeKluba('BORAC', 'zonska-liga-beograd') === 'BORAC (Ostružnica)' &&
     F.imeKluba('BORAC', 'prva-beogradska-liga-grupa-b') === 'BORAC' &&
     F.kljucKlubaRs(F.imeKluba('OMLADINAC', 'zonska-liga-beograd')) !== F.kljucKlubaRs(F.imeKluba('OMLADINAC', 'prva-beogradska-liga-grupa-c-2')))
+  preveri('fsb: kadeti — Treća liga ima kraj kot omladinske (Ostružnica, Dobanovci, Veliko Polje), Druga ne',
+    F.imeKluba('BORAC', 'treca-liga-kadeta-beograda-2026-27') === 'BORAC (Ostružnica)' &&
+    F.imeKluba('JEDINSTVO', 'treca-liga-kadeta-beograda-2026-27') === F.imeKluba('JEDINSTVO', 'druga-omladinska-liga-beograda-2026-27') &&
+    F.imeKluba('OMLADINAC', 'treca-liga-kadeta-beograda-2026-27') === F.imeKluba('OMLADINAC', 'zonska-liga-beograd') &&
+    F.imeKluba('BSK', 'druga-liga-kadeta-beograda-2026-27') === 'BSK')
   preveri('fsb: nižje lige — kraj ima klub nižje lige, isti v vseh treh sezonah',
     F.imeKluba('SLOGA', 'opstinska-liga-obrenovac') === 'SLOGA (Ratari)' &&
     F.imeKluba('SLOGA', 'opstinska-liga-obrenovac-2024-2025') === 'SLOGA (Ratari)' &&
@@ -10903,6 +10984,24 @@ preveri(
   } finally {
     rmSync(mapa, { recursive: true, force: true })
   }
+  // Ocenjen naslednji krog: druga polovica je zrcalo prve (scripts/test-ffl-ocenjen-krog.mjs ima več primerov).
+  const dvokrozna = (odigranih) => {
+    // 6 klubov, krožna metoda, krog vsako soboto od 2026-08-01, 13:00.
+    const prva = [[[1, 6], [2, 5], [3, 4]], [[6, 4], [5, 3], [1, 2]], [[2, 6], [3, 1], [4, 5]], [[6, 5], [1, 4], [2, 3]], [[3, 6], [4, 2], [5, 1]]]
+    const vsi = [...prva, ...prva.map((p) => p.map(([a, b]) => [b, a]))]
+    return vsi.slice(0, odigranih).flatMap((pari, i) => pari.map(([a, b]) => ({
+      krog: i + 1, datum: new Date(Date.parse('2026-08-01T12:00:00Z') + 7 * i * 864e5).toISOString().slice(0, 10), ura: '13:00',
+      domaci: `K${a}`, domaciId: a, gostje: `K${b}`, gostjeId: b, izid: { domaci: 1, gostje: 0 },
+    })))
+  }
+  const oc = L.ocenjenKrog(dvokrozna(7), { danes: '2026-09-14' }) // 7. krog 12. 9.
+  preveri('ffl: ocenjen 8. krog — obrnjeni pari 3. kroga, +7 dni, ocenjen; vir piše datum_ocenjen', L.default.ocenjeniDatumi === true &&
+    oc.krog?.stevilka === 8 && oc.krog.ocenjen === true && oc.krog.tekme.map((t) => `${t.domaci}-${t.gostje}`).join(' ') === 'K6-K2 K1-K3 K5-K4' &&
+    oc.krog.tekme.every((t) => t.datum === '2026-09-19' && t.ura === '13:00' && !t.odigrana && !t.izid))
+  preveri('ffl: brez ocene v prvi polovici, po premoru in na vzorcu 837 (11 od 13 krogov)',
+    /še ni začela/.test(L.ocenjenKrog(dvokrozna(5), { danes: '2026-09-01' }).razlog) &&
+    /miruje/.test(L.ocenjenKrog(dvokrozna(7), { danes: '2026-09-25' }).razlog) &&
+    L.razporedZOceno(l837.tekme, { danes: '2026-10-15' }).ocenjen === null)
 }
 
 // --- vir hoff-km (Ukrajina, Hmeljnicka oblast, hoff.km.ua) -----------------------
@@ -13133,6 +13232,42 @@ preveri(
   preveri('anketa plačila: en klik pošlje vse odkljukane, z omejenim številom krogov',
     adminSrc.includes('for (let krog = 0; krog < 8; krog++)') && adminSrc.includes('izberi vse prikazane') &&
       adminSrc.includes('user_ids: izbraniAnketa, suho: false'))
+
+  // Promocija preverjenega profila (SLF-383): lasten jezik ali angleščina, cena iz Stripa,
+  // odjava v nogi, glavi in čistopisu; le obljubljene funkcije (brez scoutov, IG zgodb, Evrope).
+  const cenePromo = { letna: 999, dozivljenjska: 2900, valuta: 'eur' }
+  const promo = pivoLige.map((l) => [l, E.sestaviPromoPreverjen(l, { display_name: 'Ana Novak' }, cenePromo)])
+  const slabPromo = promo.find(([l, m]) => {
+    const j = E.jezikPromoPreverjen(l)
+    return !E.PROMO_PREVERJEN[j] || (E.jezikLige(l) !== j && j !== 'en') ||
+      m.odjava !== `https://slff.eu/reminders?t=${l.slug}` || !m.html.includes(`href="${m.odjava}"`) ||
+      !m.besedilo.includes(`: ${m.odjava}\n`) || !m.besedilo.includes('Ana,') ||
+      !m.html.includes(`https://slff.eu/verified?t=${l.slug}`) ||
+      !m.besedilo.includes(E.izpisCene(999, 'eur', j)) || !m.besedilo.includes(E.izpisCene(2900, 'eur', j)) ||
+      /\{letna\}|\{dozivljenjska\}/.test(m.besedilo) ||
+      (j !== 'sl' && slovensko.test(brezPovezav(m.naslov + m.html)))
+  })
+  preveri('e-pošta: promocija preverjenega profila (jezik, cena iz Stripa, odjava, povezava)', !slabPromo,
+    slabPromo ? `${slabPromo[0].drzava}: ${slabPromo[1].naslov}` : '')
+  preveri('e-pošta: promocija ne obljublja scoutov, IG zgodb ali prikaza po Evropi',
+    !/scout|skaut|instagram|\bIG\b|europ|evrop|európ|európ/i.test(JSON.stringify(E.PROMO_PREVERJEN)))
+  // Fotografija je brezplačna že ob prevzemu; plačljivo je naslovna slika. Brez moških oblik (ženske lige).
+  preveri('e-pošta: promocija ne prodaja fotografije in nagovarja nevtralno',
+    !/photo|foto|φωτογραφ|prislužil|prevzel|zaradio|preuzeo|odmakal|prevzal|uređuješ:|urejaš sam|upravuješ sám/i.test(JSON.stringify(E.PROMO_PREVERJEN)))
+  const migPromo = readFileSync(new URL('../supabase/migrations/20261110120000_promo_preverjen.sql', import.meta.url), 'utf8')
+  preveri('promocija: SQL izpusti mladoletne, odjavljene, preverjene, admine, hišo, anketo; le service_role',
+    ['izlozba_odrasla_oseba', 'brez_opomnikov', 'preverjeni_racuni', 'is_admin', 'testerji', 'hisna', "'anketa-placila'",
+      'je_omejen', 'podvojen_naslov', "'neaktiven'", 'agent.zaprte_tabele', 'pg_advisory_xact_lock', 'to service_role']
+      .every((x) => migPromo.includes(x)) && !/to (anon|authenticated)/.test(migPromo) &&
+      migPromo.includes('cardinality(user_ids) between 1 and 20'))
+  const promoBlok = fnAnketa.slice(fnAnketa.indexOf("if (vrsta === 'promo-preverjen')"), fnAnketa.indexOf('// `novost-mini-lige`'))
+  preveri('promocija: od info@, odobritev osnutka in paketa, Stripe v živo in /verified 200 pred pošiljanjem',
+    promoBlok.includes('poslji(ANKETA_FROM, k.email, s, undefined, smtpInfo)') && !promoBlok.includes('EMAIL_FROM') &&
+      promoBlok.includes("['Lovro', 'Nejc', 'Luka'].includes(odobril)") && promoBlok.includes('vhod.osnutek_sha !== osnutek.sha') &&
+      promoBlok.includes('!cene.live') && promoBlok.includes('stran !== 200') &&
+      promoBlok.indexOf("rpc('promo_preverjen_zasedi'") < promoBlok.indexOf('poslji(ANKETA_FROM, k.email') &&
+      // odgovor brez naslovov in imen
+      !/email:\s*k\.email|display_name:\s*k\.display_name\s*[,}]\s*\)?\s*$/m.test(promoBlok.slice(promoBlok.indexOf('return json({\n      paket'))))
 }
 
 // --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------
@@ -13394,13 +13529,13 @@ preveri(
   }
   const k = (drzava) => ({ drzava, team_id: 2002, liga_slug: 'x-liga', ime_lige: 'Kärntner Liga', klub: 'St. Veit SC' })
   const p = { igralcev: 19, naj: 'Sebastian Weiss', tocke: 55, ekip: 7 }
-  for (const drzava of ['AT', 'EE', 'HR', 'HU', 'RS']) {
+  for (const drzava of ['AT', 'BA', 'EE', 'GI', 'GR', 'HK', 'HR', 'HU', 'JP', 'LV', 'MD', 'ME', 'MK', 'MT', 'RO', 'RS', 'TH', 'UA']) {
     for (const vrsta of ['prvi', 'opomnik']) {
       for (const pp of [p, { ...p, naj: null, ekip: 0 }]) {
         const b = besedilo(k(drzava), pp, vrsta)
         const vse = `${b.zadeva}\n${b.telo}`
         preveri(`pošta klubom: ${drzava} ${vrsta} brez ostankov`, !/[{}]|undefined|null|NaN/.test(vse) && vse.includes('https://slff.eu/club/2002?t=x-liga'), vse.slice(0, 80))
-        if (drzava === 'EE') preveri(`pošta klubom: EE ${vrsta} brez pomišljajev`, !/[–—]/.test(vse))
+        if (drzava !== 'AT') preveri(`pošta klubom: ${drzava} ${vrsta} brez pomišljajev`, !/[–—]/.test(vse))
         const m = sporocilo({ na: 'klub@example.com', zadeva: b.zadeva, telo: b.telo, odjava: b.odjava, jezik: b.jezik, id: 'x' })
         const glava = m.match(/^Subject: (.*(?:\r\n .*)*)/m)[1]
         const nazaj = glava.split('\r\n ').map((w) => w.match(/^=\?UTF-8\?B\?(.*)\?=$/)).map((x, i) => (x ? Buffer.from(x[1], 'base64').toString() : glava.split('\r\n ')[i])).join('')
@@ -13415,6 +13550,44 @@ preveri(
     }
   }
   preveri('pošta klubom: država brez besedil ne dobi nič', besedilo(k('SI'), p, 'prvi') === null)
+  for (const d of ['SK', 'GB', 'DE', 'PL', 'DK', 'ES']) preveri(`pošta klubom: ${d} brez samodejne pošte`, besedilo(k(d), p, 'prvi') === null && !vOknu(d, new Date('2026-10-12T10:00:00Z')))
+  {
+    // Vir točk: domena zveze lige (federations.site_url), brez nje privzeta domena države.
+    const { domenaVira } = await import('./posta-klubom.mjs')
+    const privzeto = { BA: 'nfsbih.ba', GI: 'gibraltarfa.com', GR: 'epo.gr', HK: 'hkfa.com', JP: 'jfl.or.jp', LV: 'lff.lv', MD: 'fmf.md',
+      ME: 'fscg.me', MK: 'ffm.mk', MT: 'mfa.com.mt', RO: 'hailafotbal.ro', TH: 'thaileague.co.th', UA: 'upl.ua' }
+    for (const [d, dom] of Object.entries(privzeto)) preveri(`pošta klubom: ${d} privzeti vir`, besedilo(k(d), p, 'prvi').telo.includes(` ${dom}.`))
+    preveri('pošta klubom: vir iz zveze lige', domenaVira('https://www.epspeir.gr/') === 'epspeir.gr' && domenaVira('https://www.frf-ajf.ro/arges') === 'frf-ajf.ro' &&
+      domenaVira(null) === null && besedilo({ ...k('GR'), vir: 'epspeir.gr' }, p, 'prvi').telo.includes('στο epspeir.gr.'))
+    // ro-sb-superliga: bere hailafotbal.ro (vir_url), zveza ajf-sibiu pa kaže na frf-ajf.ro; navedba lige zmaga.
+    const virLige = (l) => domenaVira(l.vir_url) ?? domenaVira(l.federations?.site_url)
+    const sb = virLige({ vir_url: 'https://hailafotbal.ro/rezultate/judetean/sibiu/fotbal/2026-2027/superliga/sezon-regular/serie-1', federations: { site_url: 'https://www.frf-ajf.ro/sibiu' } })
+    preveri('pošta klubom: vir_url lige pred zvezo', sb === 'hailafotbal.ro' && virLige({ vir_url: null, federations: { site_url: 'https://www.frf-ajf.ro/arges' } }) === 'frf-ajf.ro' &&
+      besedilo({ ...k('RO'), liga_slug: 'ro-sb-superliga', vir: sb }, p, 'prvi').telo.includes('de pe hailafotbal.ro.') && !besedilo({ ...k('RO'), vir: sb }, p, 'prvi').telo.includes('frf-ajf'), sb)
+    // Osebni pošiljatelj v ednini, ekipa v množini.
+    const [, lovroPo, , klubiPo] = (await import('./posta-klubom.mjs')).POSILJATELJI
+    const op = (d, po) => besedilo(k(d), p, 'opomnik', po).telo
+    preveri('pošta klubom: opomnik ednina/množina', op('RO', lovroPo).includes('mă bucur') && op('RO', klubiPo).includes('ne bucurăm') &&
+      op('LV', lovroPo).includes('atgādinu par savu') && op('LV', lovroPo).includes('es būšu priecīgs') && op('MT', lovroPo).includes('I would be delighted') &&
+      op('MT', klubiPo).includes('we would be delighted') && op('BA', lovroPo).includes('drago mi je') && op('BA', klubiPo).includes('kratko se javljamo povodom naše') &&
+      op('HR', klubiPo).includes('kratko se javljamo na našu') && op('RS', lovroPo).includes('kratko se javljam povodom moje') && op('MK', klubiPo).includes('7 фантази тима'))
+    // Množina: romunsko "de" od 20, latvijsko/makedonsko ednina na 1 in 21 (ne 11), angleško decimalna pika.
+    const t = (d, n, tt) => besedilo(k(d), { ...p, igralcev: n, tocke: tt }, 'prvi').telo
+    preveri('pošta klubom: RO množina', t('RO', 1, 1).includes('deja 1 jucător de la') && t('RO', 19, 2).includes('19 jucători') &&
+      t('RO', 20, 55).includes('20 de jucători') && t('RO', 19, 55).includes('55 de puncte') && t('RO', 19, 1).includes('1 punct.') && t('RO', 19, 112).includes('112 puncte'))
+    preveri('pošta klubom: LV in MK množina', t('LV', 21, 11).includes('21 spēlētājs') && t('LV', 11, 1).includes('11 spēlētāji') && t('LV', 2, 11).includes('11 punkti') &&
+      t('MK', 1, 21).includes('1 играч од') && t('MK', 5, 21).includes('21 поен.') && t('MK', 5, 55).includes('55 поена.') && t('MK', 11, 3).includes('11 играчи'))
+    preveri('pošta klubom: EN ednina in pika', t('MT', 1, 1).includes('has 1 player in') && t('MT', 2, 7.5).includes('with 7.5 points') && t('GI', 2, 1).includes('with 1 point.'))
+    preveri('pošta klubom: UA množina', t('UA', 1, 1).includes('вже 1 гравець клубу') && t('UA', 3, 3).includes('3 гравці') && t('UA', 11, 21).includes('11 гравців') &&
+      t('UA', 22, 55).includes('55 балів.') && t('UA', 2, 21).includes('21 бал.') && t('UA', 2, 2).includes('2 бали.') && t('UA', 2, 7.5).includes('7,5 бала.') && !t('UA', 2, 2).includes('аматор'))
+    {
+      const [, lo, , kl] = (await import('./posta-klubom.mjs')).POSILJATELJI
+      const o = (po, ekip) => besedilo(k('UA'), { ...p, ekip }, 'opomnik', po)
+      preveri('pošta klubom: UA opomnik (ednina osebno, množina ekipa, sklon ekip)', o(lo, 7).telo.includes('Коротко нагадую про мій') && o(lo, 7).telo.includes('я буду радий') &&
+        o(kl, 7).telo.includes('Коротко нагадуємо про наш') && o(kl, 7).telo.includes('ми будемо раді') && o(lo, 21).zadeva.includes('у 21 фентезі-команді') && o(lo, 7).zadeva.includes('у 7 фентезі-командах'))
+    }
+    preveri('pošta klubom: BA nogomet, ME fudbal', t('BA', 3, 3).includes('fantasy nogometne igre') && t('ME', 3, 3).includes('fantasy fudbalske igre') && t('BA', 3, 3).includes('3 boda'))
+  }
   {
     // Hrvaščina in srbščina: število igralcev in točk v pravem sklonu, srbski vir po ligi.
     const hr = (n, t) => besedilo(k('HR'), { ...p, igralcev: n, tocke: t }, 'prvi').telo
@@ -13431,6 +13604,11 @@ preveri(
     ['AT', '2026-10-26T06:30:00Z', false], ['AT', '2026-10-26T07:00:00Z', true], ['EE', '2026-10-12T05:30:00Z', true],
     ['EE', '2026-10-12T15:30:00Z', false], ['SI', '2026-10-12T10:00:00Z', false],
     ['HR', '2026-10-12T06:30:00Z', true], ['HU', '2026-10-12T15:59:00Z', true], ['RS', '2026-10-12T16:00:00Z', false],
+    // 12. 10. 2026 (pon.): Tokio UTC+9, Hongkong/Bangkok UTC+8/+7, Bukarešta/Kišinjev/Riga/Atene UTC+3, Malta/Gibraltar UTC+2.
+    ['JP', '2026-10-11T23:00:00Z', true], ['JP', '2026-10-12T09:00:00Z', false], ['HK', '2026-10-12T00:00:00Z', true], ['TH', '2026-10-12T00:30:00Z', false],
+    ['TH', '2026-10-12T10:59:00Z', true], ['RO', '2026-10-12T05:00:00Z', true], ['MD', '2026-10-12T04:59:00Z', false], ['LV', '2026-10-12T14:59:00Z', true],
+    ['GR', '2026-10-12T15:00:00Z', false], ['MT', '2026-10-12T06:00:00Z', true], ['GI', '2026-10-12T05:59:00Z', false], ['BA', '2026-10-12T15:59:00Z', true],
+    ['ME', '2026-10-12T16:00:00Z', false], ['UA', '2026-10-12T05:00:00Z', true], ['UA', '2026-10-12T04:59:00Z', false], ['UA', '2026-10-12T15:00:00Z', false], ['MK', '2026-10-17T10:00:00Z', true], ['JP', '2026-10-17T23:00:00Z', false],
   ]
   for (const [d, t, ok] of okno) preveri(`pošta klubom: okno ${d} ${t}`, vOknu(d, new Date(t)) === ok)
 
@@ -13551,15 +13729,20 @@ preveri(
     ], new Set(['at-a']), zdaj, [a])
     preveri('pošta klubom: pošta drugega pošiljatelja SLFF zapre opomnik', z.length === 0)
   }
-  for (const drzava of ['AT', 'EE', 'HR', 'HU', 'RS']) {
+  for (const drzava of ['AT', 'BA', 'EE', 'GI', 'GR', 'HK', 'HR', 'HU', 'JP', 'LV', 'MD', 'ME', 'MK', 'MT', 'RO', 'RS', 'TH', 'UA']) {
     for (const vrsta of ['prvi', 'opomnik']) {
       const bl = besedilo(k(drzava), p, vrsta, lovro).telo
       preveri(`pošta klubom: ${drzava} ${vrsta} podpis Lovro`, /\nLovro\nslff\.eu/.test(bl) && !bl.includes('Luka'))
       const be = besedilo(k(drzava), p, vrsta, klubi).telo
       const ekipa = { AT: ['wir sind das Team von SLFF', 'Das SLFF-Team'], EE: ['Oleme SLFF-i meeskond.', 'SLFF meeskond'], HR: ['mi smo tim SLFF-a', 'SLFF tim'],
-        HU: ['Az SLFF csapata vagyunk.', 'Az SLFF csapata'], RS: ['mi smo tim SLFF-a', 'SLFF tim'] }[drzava]
+        HU: ['Az SLFF csapata vagyunk.', 'Az SLFF csapata'], RS: ['mi smo tim SLFF-a', 'SLFF tim'],
+        BA: ['mi smo tim SLFF-a', 'SLFF tim'], ME: ['mi smo tim SLFF-a', 'SLFF tim'], RO: ['Suntem echipa SLFF', 'Echipa SLFF'], MD: ['Suntem echipa SLFF', 'Echipa SLFF'],
+        LV: ['Mēs esam SLFF komanda. SLFF ir', 'SLFF komanda'], MK: ['ние сме тимот на SLFF', 'Тимот на SLFF'], GR: ['Είμαστε η ομάδα του SLFF', 'Η ομάδα του SLFF'],
+        MT: ["We're the team behind SLFF", 'The SLFF team'], HK: ["We're the team behind SLFF", 'The SLFF team'], GI: ["We're the team behind SLFF", 'The SLFF team'],
+        JP: ["We're the team behind SLFF", 'The SLFF team'], TH: ["We're the team behind SLFF", 'The SLFF team'],
+        UA: ['Ми команда SLFF. SLFF є безкоштовною грою', 'Команда SLFF'] }[drzava]
       preveri(`pošta klubom: ${drzava} ${vrsta} besedilo ekipe`, (vrsta === 'opomnik' || be.includes(ekipa[0])) && be.includes(`\n${ekipa[1]}\nslff.eu`) &&
-        !/Luka|Ekipa SLFF|undefined/.test(be) && !/\b(ich bin|Olen |ja sam|vagyok az)/.test(be))
+        !/Luka|Ekipa SLFF|undefined/.test(be) && !/\b(ich bin|Olen |ja sam|vagyok az|Sunt |Esmu |I'm |Revin |atgādinu)|јас сум|се надоврзувам |Είμαι |Επανέρχομαι |Мене звати|нагадую про мій|я буду радий/.test(be))
       if (drzava === 'HU') preveri(`pošta klubom: HU ${vrsta} pozdrav ekipe v množini`, be.startsWith('Jó napot kívánunk!\n') && bl.startsWith('Jó napot kívánok!\n'))
       if (drzava === 'EE' && vrsta === 'prvi') preveri('pošta klubom: EE ekipa "SLFF on tasuta"', be.includes('Oleme SLFF-i meeskond. SLFF on tasuta') && bl.includes('SLFF-ist. See on tasuta'))
     }
@@ -13934,6 +14117,58 @@ preveri(
 }
 
 {
+  // Cloudflare Stream (posnetki-igralca): webhook "time=…,sig1=…" in RS256 žeton za ogled.
+  const skr = 'stream_smoke_skrivnost'
+  const telo = '{"uid":"abc123def456","readyToStream":true}'
+  const t = 1760000000
+  const sig = createHmac('sha256', skr).update(`${t}.${telo}`).digest('hex')
+  preveri('stream: veljaven podpis gre', await veljavenPodpisStream(`time=${t},sig1=${sig}`, telo, skr, t + 10))
+  preveri('stream: spremenjeno telo pade', !(await veljavenPodpisStream(`time=${t},sig1=${sig}`, telo + ' ', skr, t)))
+  preveri('stream: star podpis pade', !(await veljavenPodpisStream(`time=${t},sig1=${sig}`, telo, skr, t + 301)))
+  preveri('stream: brez skrivnosti pade', !(await veljavenPodpisStream(`time=${t},sig1=${sig}`, telo, '', t)))
+  preveri('stream: brez glave pade', !(await veljavenPodpisStream(null, telo, skr, t)))
+  const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
+  const zeton = await podpisiZeton('abc123def456', 'kid1', privateKey.export({ format: 'jwk' }), 7200, t)
+  const [g, b, p] = zeton.split('.')
+  const iz64 = (s) => JSON.parse(Buffer.from(s, 'base64url').toString())
+  preveri('stream: žeton ima uid, kid in rok',
+    iz64(g).alg === 'RS256' && iz64(g).kid === 'kid1' && iz64(b).sub === 'abc123def456' && iz64(b).exp === t + 7200)
+  preveri('stream: podpis žetona se preveri z javnim ključem',
+    createVerify('RSA-SHA256').update(`${g}.${b}`).verify(publicKey, Buffer.from(p, 'base64url')))
+  preveri('stream: stanje videa',
+    stanjeIzStreama({ readyToStream: true }) === 'pripravljen' && stanjeIzStreama({ status: { state: 'error' } }) === 'napaka'
+    && stanjeIzStreama({ status: { state: 'inprogress' } }) === 'obdelava' && stanjeIzStreama(null) === null)
+}
+
+{
+  // R2 (posnetki-igralca/r2.ts): SigV4 v poizvedbi. Uradni primer AWS
+  // (S3 "Authenticating Requests: Using Query Parameters", GET test.txt).
+  const aws = await podpisanNaslov({
+    dostopniKljuc: 'AKIAIOSFODNN7EXAMPLE',
+    skrivniKljuc: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+    regija: 'us-east-1',
+    gostitelj: 'examplebucket.s3.amazonaws.com',
+    pot: '/test.txt',
+    metoda: 'GET',
+    traja: 86400,
+    zdaj: new Date('2013-05-24T00:00:00Z'),
+  })
+  preveri('r2: podpis SigV4 se ujema z uradnim primerom AWS',
+    aws.endsWith('X-Amz-Signature=aeeed9bbccd4d02ee5c0109b86d86835f995330da4c265957d157751f604d404'), aws)
+  const r2 = { racun: 'acc123', dostopniKljuc: 'AK', skrivniKljuc: 'SK', vedro: 'slff-posnetki' }
+  const put = new URL(await r2Naslov(r2, kljucVidea('r2-abc'), 'PUT', 900, { 'Content-Type': 'video/mp4', 'Content-Length': '1234' }))
+  preveri('r2: PUT na vedro v slogu poti, podpisani vrsta in velikost, 15 min',
+    put.host === 'acc123.r2.cloudflarestorage.com' && put.pathname === '/slff-posnetki/posnetki/r2-abc'
+    && put.searchParams.get('X-Amz-SignedHeaders') === 'content-length;content-type;host'
+    && put.searchParams.get('X-Amz-Expires') === '900' && /\/auto\/s3\/aws4_request$/.test(put.searchParams.get('X-Amz-Credential') ?? ''))
+  const a = await r2Naslov(r2, kljucSlike('r2-abc'), 'GET', 7200)
+  const b = await r2Naslov(r2, kljucSlike('r2-abc'), 'HEAD', 7200)
+  preveri('r2: sličica ima svoj ključ, metoda je v podpisu',
+    new URL(a).pathname.endsWith('/posnetki/r2-abc-slika')
+    && new URL(a).searchParams.get('X-Amz-Signature') !== new URL(b).searchParams.get('X-Amz-Signature'))
+}
+
+{
   // Postavke seje Scout (stripe-webhook/scout.ts): ena cena obdobja, en kos, brez popusta.
   const p = (kljuc, kos = 1, znesek = 3900) => ({ quantity: kos, amount_subtotal: znesek, price: { lookup_key: kljuc, unit_amount: 3900 } })
   preveri('scout stripe: mesečna postavka gre', scoutPostavkeVeljajo([p('slff_scout_klub_mesec')], 'mesec'))
@@ -14013,10 +14248,38 @@ preveri(
   preveri('trgovina mail: telefon in različica pogojev kot v trgovini', trgovinaTelefonMail === trgovinaTelefon && trgovinaVerzijaMail === trgovinaVerzija)
   // Trajni nosilec: potrditev nosi celoten pouk o odstopu in vzorčni obrazec v jeziku naročila.
   const enP = trgovinaMail('potrditev', { ...n, jezik: 'en' }, 'https://shop.slff.eu')
+  const trgovinaEN = await trgovinaSlovar('en')
   preveri('trgovina mail: pouk o odstopu, obrazec, pogoji z dne, telefon (sl, en)',
     [[sl, trgovinaSL, 'Pogoji z dne'], [enP, trgovinaEN, 'Terms dated']].every(([m, B, z]) =>
       B['pogoji.s6.besedilo'].split('\n\n').every((o) => m.besedilo.includes(o)) &&
       m.besedilo.includes(B['odstop.vzorec']) && m.besedilo.includes(`${z} ${trgovinaVerzija}`) && m.besedilo.includes(trgovinaTelefon)))
+  // Vsi jeziki trgovine: mail ima pouk o odstopu in obrazec dobesedno iz slovarja trgovine,
+  // vse tri vrste brez nezamenjanih {…}, z zneskom v jeziku; nakup pozna iste jezike.
+  const napakeMailov = []
+  for (const j of trgovinaJeziki) {
+    const B = await trgovinaSlovar(j)
+    const bes = trgovinaBesedilaMaila[j]
+    if (!bes) { napakeMailov.push(`${j}: ni besedil`); continue }
+    if (bes.odstopBesedilo !== B['pogoji.s6.besedilo'] || bes.vzorec !== B['odstop.vzorec']) napakeMailov.push(`${j}: pravno besedilo ni kopija slovarja`)
+    const pm = trgovinaMail('potrditev', { ...n, jezik: j }, 'https://shop.slff.eu')
+    const om = trgovinaMail('poslano', { ...n, jezik: j, stanje: 'poslano' }, 'https://shop.slff.eu')
+    const bm = trgovinaMail('bon', { ...n, jezik: j }, 'https://shop.slff.eu', [{ koda: 'SLFF-ABCD-EFGH', znesek: 2000, velja_do: '2027-10-18T10:00:00Z' }])
+    for (const [ime, m] of [['potrditev', pm], ['poslano', om], ['bon', bm]]) {
+      if (/\{[a-z]\}/.test(m.besedilo + m.naslov + m.html)) napakeMailov.push(`${j}/${ime}: nezamenjan {…}`)
+      if (!m.html.includes(`lang="${j}"`)) napakeMailov.push(`${j}/${ime}: lang`)
+    }
+    if (!pm.besedilo.includes(B['odstop.vzorec']) || !pm.besedilo.includes(trgovinaTelefon) || !pm.besedilo.includes(trgovinaVerzija) || !pm.naslov.includes('AB12CD34'))
+      napakeMailov.push(`${j}: potrditev brez obrazca, telefona, različice pogojev ali oznake`)
+    if (!/53[,.]90/.test(pm.besedilo)) napakeMailov.push(`${j}: znesek`)
+    if (!bm.besedilo.includes('SLFF-ABCD-EFGH') || !om.besedilo.includes('RR123456789SI')) napakeMailov.push(`${j}: koda bona ali sledilna`)
+    if (j !== 'sl' && /Pozdravljeni|naročilo/.test(om.besedilo)) napakeMailov.push(`${j}: slovenščina v mailu`)
+    const nb = BESEDILA_NAKUPA[j]
+    if (!nb || !nb.strinjam.includes('{pogoji}') || !nb.placilo.includes('{pogoji}') || !nb.pogoji.trim() || !STRIPE_LOKALE[j]) napakeMailov.push(`${j}: nakup`)
+  }
+  preveri('trgovina mail in nakup: vsi jeziki trgovine (pravno besedilo = slovar, brez {…}, zneski, Stripe)', napakeMailov.length === 0, napakeMailov.slice(0, 6).join(' / '))
+  preveri('trgovina nakup: jeziki = jeziki trgovine, neznan → sl, Stripe brez nepodprtih',
+    JSON.stringify([...JEZIKI_NAKUPA].sort()) === JSON.stringify([...trgovinaJeziki].sort()) && jezikNakupa('xx') === 'sl' && jezikNakupa('de') === 'de'
+      && STRIPE_LOKALE.uk === 'auto' && STRIPE_LOKALE.de === 'de')
 
   // Personalizacija in boni (trgovina-posta, stripe-webhook/trgovina.ts, trgovina-nakup/izdelki.ts).
   const np = {

@@ -4,7 +4,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase, type MotivKataloga, type PrimerMotiva } from '../baza'
-import { cena, po, t } from '../besede'
+import { cena, jezik, pr, slikaJezika, t } from '../besede'
+import { lokalizirajMotiv } from '../prevodi'
 import { conaZa, Mockup } from '../mockup'
 import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
@@ -24,9 +25,9 @@ export const vProdaji = (motivi: MotivKataloga[]): MotivKataloga[] =>
 // Glava, katalog in vitrina berejo isto: ena poizvedba na obisk.
 let zahteva: Promise<{ motivi: MotivKataloga[]; napaka: boolean }> | null = null
 const preberiMotive = () =>
-  (zahteva ??= Promise.resolve(supabase.rpc('trgovina_motivi')).then(({ data, error }) => {
+  (zahteva ??= Promise.resolve(supabase.rpc('trgovina_motivi', { p_jezik: jezik })).then(({ data, error }) => {
     if (error) zahteva = null
-    return { motivi: error ? [] : vProdaji((data as unknown as MotivKataloga[] | null) ?? []), napaka: Boolean(error) }
+    return { motivi: error ? [] : vProdaji(((data as unknown as MotivKataloga[] | null) ?? []).map((m) => lokalizirajMotiv(m))), napaka: Boolean(error) }
   }))
 
 /** Motivi v prodaji; null med nalaganjem. */
@@ -52,7 +53,7 @@ export function PrimerNaMockupu({ m, p, povecava = 1, className = '', alt }: { m
 const mirno = (): boolean => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
 function KarticaMotiva({ m, zamik }: { m: MotivKataloga; zamik: number }) {
-  const ime = po(m.ime_sl, m.ime_en)
+  const ime = pr(m, 'ime')
   const [n, setN] = useState(0)
   // Trenutni primer zbledi in odkrije naslednjega, ki že čaka pod njim; v DOM sta le ta dva.
   const [bledi, setBledi] = useState(false)
@@ -99,13 +100,13 @@ function KarticaMotiva({ m, zamik }: { m: MotivKataloga; zamik: number }) {
             </div>
           )}
         </div>
-        <p className="line-clamp-3 text-sm leading-relaxed text-slate-400">{po(m.opis_sl, m.opis_en)}</p>
+        <p className="line-clamp-3 text-sm leading-relaxed text-slate-400">{pr(m, 'opis')}</p>
         <div className="mt-auto space-y-3 pt-1">
           <Link to={`/p/${glavni.slug}?motiv=${m.slug}`} className="gumb-glavni block text-center">{t('osebno.cta')} →</Link>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
             {m.izdelki.map((x) => (
               <Link key={x.slug} to={`/p/${x.slug}?motiv=${m.slug}`} className="text-slate-400 underline-offset-4 hover:text-gnl-200 hover:underline">
-                {t('osebno.na', { izdelek: po(x.ime_sl, x.ime_en), cena: cena(x.cena_od + x.doplacilo) })}
+                {t('osebno.na', { izdelek: pr(x, 'ime'), cena: cena(x.cena_od + x.doplacilo) })}
               </Link>
             ))}
           </div>
@@ -185,7 +186,10 @@ export function Pahljaca({ motivi, majhna = false }: { motivi: MotivKataloga[]; 
 
 /** Prizori iz nedeljske lige (scripts/trgovina-hero.mjs): pravi motivi na nosilcih, menjajo se sami. */
 const PRIZORI = ['igrisce', 'gostilna', 'slacilnica'] as const
-const prizor = (ime: string) => ({ src: `/nosilci/hero-${ime}-1000.webp`, srcSet: `/nosilci/hero-${ime}-1000.webp 1000w, /nosilci/hero-${ime}.webp 2000w` })
+// Slovensko 1000 in 2000 px, drugi jeziki le 1000 px (slikaJezika).
+const prizor = (ime: string) => (jezik === 'sl'
+  ? { src: `/nosilci/hero-${ime}-1000.webp`, srcSet: `/nosilci/hero-${ime}-1000.webp 1000w, /nosilci/hero-${ime}.webp 2000w` }
+  : { src: slikaJezika(`/nosilci/hero-${ime}.webp`), srcSet: undefined })
 
 export function Prizori() {
   const [n, setN] = useState(0)

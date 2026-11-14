@@ -3,7 +3,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { dogodek } from '../analitika'
 import { supabase, type Izdelek } from '../baza'
-import { cena, imeDrzave, jezik, po, t, type Kljuc } from '../besede'
+import { cena, imeDrzave, jezik, pr, t, type Kljuc } from '../besede'
+import { lokalizirajIzdelek } from '../prevodi'
 import { BREZPLACNA_OD, EU27, izprazni, kljuc, nastavi, NAJVEC, odstrani, postnina, shrani, shraniPlacilo, skupaj, useKosarica, zadnjePlacilo, type Kosarica as TKosarica, type Postavka } from '../kosarica'
 import { doplacilo } from '../personalizacija'
 import { useNaslov } from '../Okvir'
@@ -67,9 +68,9 @@ export const ociscena = (k: TKosarica, izdelki: Izdelki): TKosarica => ({
 })
 
 async function preberiIzdelke(slugi: string[]): Promise<Izdelki | null> {
-  const odg = await Promise.all(slugi.map((slug) => supabase.rpc('trgovina_izdelek', { p_slug: slug })))
+  const odg = await Promise.all(slugi.map((slug) => supabase.rpc('trgovina_izdelek', { p_slug: slug, p_jezik: jezik })))
   if (odg.some((o) => o.error)) return null
-  return Object.fromEntries(slugi.map((slug, n) => [slug, (odg[n].data as unknown as Izdelek | null) ?? null]))
+  return Object.fromEntries(slugi.map((slug, n) => [slug, odg[n].data ? lokalizirajIzdelek(odg[n].data as unknown as Izdelek) : null]))
 }
 
 export function Kosarica() {
@@ -193,7 +194,7 @@ export function Kosarica() {
           {k.postavke.map((p) => {
             const iz = izdelki[p.slug]
             const r = razlicica(izdelki, p.slug, p.razlicica_id)
-            const ime = iz ? po(iz.ime_sl, iz.ime_en) : p.slug
+            const ime = iz ? pr(iz, 'ime') : p.slug
             const kos = cenaKosa(izdelki, p)
             const vrstica = kljuc(p)
             const najvec = najvecKosov(iz)
@@ -206,7 +207,7 @@ export function Kosarica() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <Link to={`/p/${p.slug}`} className="font-bold text-slate-100 hover:text-gnl-200">{ime}</Link>
-                      {r && iz && iz.razlicice.length > 1 && <p className="text-sm text-slate-400">{po(r.oznaka_sl, r.oznaka_en)}</p>}
+                      {r && iz && iz.razlicice.length > 1 && <p className="text-sm text-slate-400">{pr(r, 'oznaka')}</p>}
                       {p.opis && <p className="break-words text-sm font-semibold uppercase text-gnl-200">{p.opis}</p>}
                       {iz?.digitalni && <p className="text-xs text-slate-500">{t('izdelek.digitalni')}</p>}
                       {napacna === vrstica && <p className="text-sm text-rose-300">{t('kosarica.napacnaVrstica')}</p>}

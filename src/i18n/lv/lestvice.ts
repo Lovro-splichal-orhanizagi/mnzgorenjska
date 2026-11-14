@@ -116,6 +116,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     vrhOpomba:
       'Punkti ir bez rezultatīvajām piespēlēm: tās apstiprina balsošana, kas lielākajā daļā līgu vēl nenotiek, tāpēc līgas būtu nevienlīdzīgā stāvoklī. Līgas ir aizvadījušas atšķirīgu kārtu skaitu.',
     vrhPrazno: 'Pašreizējā sezonā vēl nav aizvadītu spēļu.',
+    napovediUvod: 'Visu līgu labākie prognozētāji. Precīzs rezultāts 3 punkti, pareizs iznākums 1.',
+    napovediSezona: 'Sezona',
+    napovedi7dni: 'Pēdējās 7 dienas',
+    napovediPrazno7: 'Pēdējās 7 dienās vēl nav novērtētu prognožu.',
+    napovediOcenjenih: 'Novērtētas prognozes: {n}',
+    vrhNapovedi: 'Labākie prognozētāji',
+    vrhNapovediVse: 'Visa prognožu tabula',
   },
 
   miniLige: {

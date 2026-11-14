@@ -17,12 +17,18 @@ import SamodejniPoznavalci from '../components/admin/SamodejniPoznavalci'
 import KlubskiRacuni from '../components/admin/KlubskiRacuni'
 import Prevzemi from '../components/admin/Prevzemi'
 import Preverjeni from '../components/admin/Preverjeni'
+import Posnetki from '../components/admin/Posnetki'
+import PrijaveSporocil from '../components/admin/PrijaveSporocil'
+import HighlightVrsta from '../components/admin/HighlightVrsta'
+import NarocilaPlakatov from '../components/admin/NarocilaPlakatov'
 import PonovneCene from '../components/admin/PonovneCene'
 import PrijaveMiniLig from '../components/admin/PrijaveMiniLig'
 import OmejitveUporabnikov from '../components/admin/OmejitveUporabnikov'
 import SeznamPopravkov from '../components/SeznamPopravkov'
+import SamodejniPopravki from '../components/admin/SamodejniPopravki'
 import RastLig from '../components/admin/RastLig'
 import ZeljeLig from '../components/admin/ZeljeLig'
+import PrijaveNapak from '../components/admin/PrijaveNapak'
 import Rast from '../components/admin/Rast'
 import Lijak from '../components/admin/Lijak'
 import Sponzorji from '../components/admin/Sponzorji'
@@ -735,6 +741,7 @@ export default function Administracija() {
       razdelki: [
         { id: 'lige', naslov: 'Upravljanje lig' },
         { id: 'zelje-lig', naslov: 'Želje lig' },
+        { id: 'prijave-napak', naslov: 'Prijave napak (klepet)' },
         { id: 'tocke', naslov: 'Točke' },
         { id: 'uvoz', naslov: 'Uvoz zapisnikov' },
         { id: 'nepopolni', naslov: `Nepopolni zapisniki (${opozorila.length})` },
@@ -748,6 +755,8 @@ export default function Administracija() {
         { id: 'popravki', naslov: 'Popravki podatkov' },
         { id: 'prevzemi', naslov: 'Prevzemi profilov' },
         { id: 'preverjeni', naslov: 'Preverjeni' },
+        { id: 'posnetki', naslov: 'Posnetki' },
+        { id: 'sporocila', naslov: 'Sporočila' },
         { id: 'ponovne-cene', naslov: 'Ponovne cene (plačljivo)' },
       ],
     },
@@ -880,6 +889,18 @@ export default function Administracija() {
             </Razdelek>
             <Razdelek id="preverjeni">
               <Preverjeni />
+              <div className="mt-6">
+                <NarocilaPlakatov />
+              </div>
+            </Razdelek>
+            <Razdelek id="posnetki">
+              <Posnetki />
+              <div className="mt-6">
+                <HighlightVrsta />
+              </div>
+            </Razdelek>
+            <Razdelek id="sporocila">
+              <PrijaveSporocil />
             </Razdelek>
             <Razdelek id="ponovne-cene">
               <PonovneCene />
@@ -892,12 +913,16 @@ export default function Administracija() {
             </Razdelek>
             <Razdelek id="popravki">
               <SeznamPopravkov />
+              <SamodejniPopravki />
             </Razdelek>
             <Razdelek id="rast-lig">
               <RastLig />
             </Razdelek>
             <Razdelek id="zelje-lig">
               <ZeljeLig />
+            </Razdelek>
+            <Razdelek id="prijave-napak">
+              <PrijaveNapak />
             </Razdelek>
             <Razdelek id="sponzorji">
               <Sponzorji />

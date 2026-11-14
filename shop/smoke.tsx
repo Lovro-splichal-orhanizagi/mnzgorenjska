@@ -25,7 +25,10 @@ import { doplaciloIz, KarticaMotiva, type MotivAdmin } from './src/strani/AdminM
 import { zahtevaBona } from './src/strani/AdminBoni'
 import { PREHODI, povzetekPostavk, stripePovezava, ZnackaStanja } from './src/strani/AdminVsaNarocila'
 import { vCente, varnoIme } from './src/strani/AdminIzdelki'
-import { EN, SL, TELEFON, cena, type Kljuc } from './src/besede'
+import { SL, TELEFON, cena, pr, slikaJezika, slovar, type Kljuc, type Slovar } from './src/besede'
+import { izberiJezikIz, JEZIKI, jezikIzOznake, type Jezik } from './src/jezik'
+import { NAPISI } from './src/motivi/napisi'
+import { lokalizirajMotiv } from './src/prevodi'
 import { BREZPLACNA_OD, dodaj, kljuc, kosov, nastavi, odstrani, postnina, preberi, PRAZNA, skupaj } from './src/kosarica'
 import { BREZPLACNA_OD as BREZPLACNA_OD_NAKUP, tarifeZa } from '../supabase/functions/trgovina-nakup/tarife'
 import { celicaCsv, doplacilo, letoNaprej, napakaImena, napakaPolja, oblikaSvg, stabilno, stevilka, veljavnaOblika } from './src/personalizacija'
@@ -120,13 +123,93 @@ preveri('odstop: mailto z izpolnjenim obrazcem', mail.startsWith('mailto:info@sl
 
 const kljuci = Object.keys(SL) as Kljuc[]
 const parametri = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(',')
-const razlicni = kljuci.filter((k) => parametri(SL[k]) !== parametri(EN[k]))
-preveri('besede: en ima iste {parametre} kot sl', razlicni.length === 0, razlicni.join(', '))
-const prazni = kljuci.filter((k) => !SL[k].trim() || !EN[k].trim())
-preveri('besede: brez praznih nizov', prazni.length === 0, prazni.join(', '))
+// Vsi jeziki (shop/src/jeziki): isti {parametri}, brez praznih nizov, pogoji in obrazec
+// za odstop z istim številom odstavkov (in vrstic obrazca), polno ime prodajalca in telefon.
+const SLOVARJI = Object.fromEntries(await Promise.all(JEZIKI.map(async (j) => [j, await slovar(j)] as const))) as Record<Jezik, Slovar>
+const EN = SLOVARJI.en
 const odstavkov = (s: string) => s.split('\n\n').length
-const pogojiRazlicni = kljuci.filter((k) => k.startsWith('pogoji.') && odstavkov(SL[k]) !== odstavkov(EN[k]))
-preveri('besede: pogoji imajo v obeh jezikih enako odstavkov', pogojiRazlicni.length === 0, pogojiRazlicni.join(', '))
+for (const j of JEZIKI) {
+  const D = SLOVARJI[j]
+  const razlicni = kljuci.filter((k) => typeof D[k] !== 'string' || parametri(SL[k]) !== parametri(D[k]))
+  preveri(`besede ${j}: iste {parametre} kot sl`, razlicni.length === 0, razlicni.join(', '))
+  const prazni = kljuci.filter((k) => !D[k]?.trim())
+  preveri(`besede ${j}: brez praznih nizov`, prazni.length === 0, prazni.join(', '))
+  const odvecni = Object.keys(D).filter((k) => !(k in SL))
+  preveri(`besede ${j}: brez odvečnih ključev`, odvecni.length === 0, odvecni.join(', '))
+  const pogojiRazlicni = kljuci.filter((k) => (k.startsWith('pogoji.') || k.startsWith('odstop.')) && odstavkov(SL[k]) !== odstavkov(D[k]))
+  preveri(`besede ${j}: pogoji in odstop imajo enako odstavkov kot sl`, pogojiRazlicni.length === 0, pogojiRazlicni.join(', '))
+  preveri(`besede ${j}: vzorčni obrazec ima enako vrstic kot sl`, D['odstop.vzorec'].split('\n').length === SL['odstop.vzorec'].split('\n').length)
+  preveri(`besede ${j}: prodajalec in telefon v pogojih`, D['pogoji.s1.besedilo'].includes(TELEFON)
+    && ['noga.prodajalec', 'odstop.vzorec', 'pogoji.s1.besedilo'].every((k) => D[k as Kljuc].includes('SPACE GUARDIAN, računalniško programiranje, d.o.o.')))
+}
+preveri('besede: en je prevod (ne slovenščina)', EN['nav.kosarica'] === 'Cart ({n})')
+
+// Izbira jezika: ?lang= (slff.eu) > shranjen > brskalnik > en.
+preveri('jezik: ?lang= obvelja pred shranjenim in brskalnikom', izberiJezikIz({ param: 'de', shranjen: 'sl', brskalnik: ['hr-HR'] }) === 'de')
+preveri('jezik: neznan ?lang= → shranjen, nato brskalnik', izberiJezikIz({ param: 'xx', shranjen: 'pl' }) === 'pl'
+  && izberiJezikIz({ param: null, shranjen: null, brskalnik: ['fr-FR', 'de-AT'] }) === 'de')
+preveri('jezik: bosanščina → hr, srbski z regijo → sr, brez ujemanja → en', jezikIzOznake('bs-BA') === 'hr' && jezikIzOznake('sr-Latn-RS') === 'sr'
+  && izberiJezikIz({ brskalnik: ['fr', 'it'] }) === 'en' && izberiJezikIz({}) === 'en')
+preveri('jezik: slike z motivom po jeziku, slovenska in druge nespremenjene',
+  slikaJezika('/nosilci/hero-gostilna-1000.webp', 'de') === '/nosilci/hero-gostilna-de.webp'
+  && slikaJezika('https://shop.slff.eu/nosilci/katalog-majica.webp', 'uk') === 'https://shop.slff.eu/nosilci/katalog-majica-uk.webp'
+  && slikaJezika('/nosilci/hero-gostilna-1000.webp', 'sl') === '/nosilci/hero-gostilna-1000.webp'
+  && slikaJezika('/nosilci/majica-crna-hrbet.webp', 'de') === '/nosilci/majica-crna-hrbet.webp')
+{
+  const { existsSync } = await import('node:fs')
+  const manjka = JEZIKI.filter((j) => j !== 'sl').flatMap((j) => ['hero-igrisce', 'hero-gostilna', 'hero-slacilnica', 'katalog-majica', 'katalog-pulover']
+    .map((x) => `${x}-${j}.webp`)).filter((f) => !existsSync(new URL(`./nosilci/${f}`, import.meta.url)))
+  preveri('jezik: slike z motivom obstajajo za vse jezike', manjka.length === 0, manjka.join(', '))
+}
+preveri('baza: pr() bere stolpec, prevod in angleško rezervo',
+  pr({ ime_sl: 'Majica', ime_en: 'T-shirt', prevodi: { de: { ime: 'T-Shirt' } } }, 'ime', 'de') === 'T-Shirt'
+  && pr({ ime_sl: 'Majica', ime_en: 'T-shirt', prevodi: {} }, 'ime', 'hu') === 'T-shirt'
+  && pr({ ime_sl: 'Črte', ime_en: 'Stripes', ime_hr: 'Pruge' }, 'ime', 'hr') === 'Pruge'
+  && pr({ ime_sl: 'Majica', ime_en: 'T-shirt', prevodi: { de: { ime: 'T-Shirt' } } }, 'ime', 'sl') === 'Majica')
+{
+  const m = { polja: [{ kljuc: 'slogan', vrsta: 'izbira' as const, oznaka_sl: 'Slogan', oznaka_en: 'Slogan', obvezno: true, privzeto: 'Do konca!', moznosti: ['Do konca!'], privzeto_de: 'Bis zum Schluss!', moznosti_de: ['Bis zum Schluss!'] }],
+    primeri: [{ polja: { slogan: 'Do konca!' }, shema: 'a', izdelek: 'sal', barva: 'Ena' }],
+    prevodi: { de: { primeri: [{ polja: { slogan: 'Bis zum Schluss!' }, shema: 'a', izdelek: 'sal', barva: 'Ena' }] } } }
+  const de = lokalizirajMotiv(m, 'de')
+  preveri('baza: motiv v jeziku (primeri, privzeto, slogani), slovenščina nespremenjena', de.primeri[0]!.polja.slogan === 'Bis zum Schluss!'
+    && de.polja[0]!.privzeto === 'Bis zum Schluss!' && de.polja[0]!.moznosti?.[0] === 'Bis zum Schluss!' && lokalizirajMotiv(m, 'sl') === m
+    && lokalizirajMotiv(m, 'hu').primeri[0]!.polja.slogan === 'Do konca!')
+}
+preveri('napisi: vsi jeziki imajo vse napise, z velikimi črkami in istimi {parametri}', JEZIKI.every((j) => Object.entries(NAPISI.sl).every(([k, v]) => {
+  const x = (NAPISI[j] as Record<string, string>)[k]
+  return typeof x === 'string' && x.trim() !== '' && parametri(x) === parametri(v) && x.replace(/\{\w+\}/g, '') === x.replace(/\{\w+\}/g, '').toLocaleUpperCase(j)
+})))
+
+// Motivi v vseh jezikih: domači primeri iz migracije jezikov (prevodi.<jezik>.primeri)
+// se izrišejo v vsaki coni brez slovenskih stalnih napisov in nezamenjanih {parametrov};
+// jezik naročila odloča o napisih tudi pri tisku (narisiKose).
+{
+  const { readFileSync: beri } = await import('node:fs')
+  const sqlJ = beri(new URL('../supabase/migrations/20261031150100_trgovina_jeziki.sql', import.meta.url), 'utf8')
+  const prevodi: Record<string, Record<string, { primeri?: PrimerMotiva[] }>> = Object.fromEntries([...sqlJ.matchAll(/^update trgovina\.motivi set prevodi = \$p\$(.*?)\$p\$::jsonb,[\s\S]*?where slug = '([a-z0-9-]+)';/gm)]
+    .map((m) => [m[2]!, JSON.parse(m[1]!)]))
+  preveri('jeziki motivov: prevodi vseh motivov v migraciji', MOTIVI.every((m) => prevodi[m.slug]), Object.keys(prevodi).join(','))
+  const napake: string[] = []
+  for (const j of JEZIKI.filter((x) => x !== 'sl')) {
+    const tuji = Object.entries(NAPISI.sl).filter(([k, v]) => v !== (NAPISI[j] as Record<string, string>)[k] && !v.includes('{') && v.length > 4).map(([, v]) => v)
+    for (const m of MOTIVI) {
+      const primeri = prevodi[m.slug]?.[j]?.primeri ?? []
+      if (!primeri.length) napake.push(`${j}/${m.slug}: ni primerov`)
+      for (const [n, p] of primeri.entries()) for (const c of coneMotiva(m.slug)) {
+        const svg = narisiMotiv(m.slug, p.polja, ['#1E8C45', '#F4F4F0', '#0B3B1E'], c, undefined, { jezik: j })
+        const besedila = [...svg.matchAll(/>([^<]+)<\/text>/g)].map((x) => x[1]!)
+        const sl = tuji.filter((v) => besedila.some((b) => ` ${b} `.includes(` ${v} `)))
+        if (sl.length) napake.push(`${j}/${m.slug}/${c}/${n}: slovensko ${sl.join(', ')}`)
+        if (besedila.some((b) => /\{\w+\}/.test(b))) napake.push(`${j}/${m.slug}/${c}/${n}: nezamenjan {parameter}`)
+      }
+    }
+  }
+  preveri('jeziki motivov: domači primeri, brez slovenskih napisov in {parametrov} (19 jezikov × vsi motivi)', napake.length === 0, napake.slice(0, 8).join(' / '))
+  const kosi = narisiKose('kafanski-komplet', { ekipa: 'FC Test', slogan1: 'A', slogan2: 'B', slogan3: 'C', slogan4: 'D', slogan5: 'E', slogan6: 'F' }, ['#E8A317', '#FFF4D6', '#5A3A0A'], 'de')
+  preveri('jeziki motivov: tisk kompleta v jeziku naročila', [...kosi.matchAll(/>([^<]+)<\/text>/g)].map((x) => x[1]).join('').includes(NAPISI.de.runda.replace('{n}', '6').replace(/ /g, '')))
+  preveri('jeziki motivov: datum po Intl, slovenščina z rodilnikom', oblikujDatum('2026-05-17', 'de') === '17. Mai 2026' && oblikujDatum('2026-05-17', 'hr') === '17. svibnja 2026.'
+    && oblikujDatum('2026-05-17', 'sl') === '17. maja 2026')
+}
 
 // Administracija
 preveri('admin: evri v cente', vCente('25') === 2500 && vCente('25,00') === 2500 && vCente('25.00') === 2500 && vCente(' 25,5 ') === 2550
@@ -280,7 +363,7 @@ preveri('admin: pogled serije s predogledi', pogledSerije.includes('Serija 3') &
     && ROB >= 3 + 5 && list.includes(`<svg x="${ROB}" y="${ROB}" width="260" height="120" overflow="visible"`)
     && odseki.length === 8 && zunaj && list.includes('#C8102E') && list.includes('BAR OFFSIDE'), list.slice(0, 400))
   const sPisavo = await zVgrajenoPisavo(list)
-  preveri('tisk motiva: SVG ima vgrajeno pisavo Anton', /^<\?xml[^>]*>\n<svg [^>]*><style>@font-face\{font-family:Anton;src:url\(data:font\/ttf;base64,/.test(sPisavo))
+  preveri('tisk motiva: SVG ima vgrajeno pisavo Anton', /^<\?xml[^>]*>\n<svg [^>]*><style>@font-face\{font-family:'Anton';src:url\(data:font\/ttf;base64,/.test(sPisavo))
   const csvM = csvSerije({ ...serija, postavke: [motivna] }).split('\r\n')
   preveri('tisk motiva: CSV vrstica na cono s stolpci motiv, postopek, cona',
     csvM[0]!.endsWith('"SVG";"Motiv";"Postopek";"Cona";"PNG";"PNG DTF";"Kos";"Mere (mm)";"DPI";"Barve niti"') && csvM.length === 4
@@ -410,7 +493,10 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
     && JSON.stringify(velikostMm('retro-dres')) === '{"sirina":300,"visina":400}'
     && narisiMotiv('kralj-kafane', { ime: 'A', goli: 3, sezona: 2025 }, ['#111', '#eee', '#000']).includes('>2025/26</text>')
     && (narisiMotiv('prvak-mini-lige', { prvak: 'Prvak mini lige Pisarna United Kran… 2025/26' }, ['#111', '#eee', '#000']).match(/>PISARNA<\/text>/g) ?? []).length === 2
-    && (await zVgrajenoPisavo(mm)).includes('@font-face{font-family:Anton;src:url(data:font/ttf;base64,'), mm.slice(0, 300))
+    && (await zVgrajenoPisavo(mm)).includes("@font-face{font-family:'Anton';src:url(data:font/ttf;base64,")
+    && !(await zVgrajenoPisavo(mm)).includes("font-family:'SLFF Motivi Dodatek';src")
+    && (await zVgrajenoPisavo(narisiMotiv('kapetan', { ime: 'ПЕТРОВ', stevilka: 5 }, ['#111', '#eee', '#000'], undefined, undefined, { jezik: 'uk' }))).includes("font-family:'SLFF Motivi Dodatek';src:url(data:font/ttf;base64,")
+    && (await zVgrajenoPisavo(narisiMotiv('kapetan', { ime: 'ՊԵՏՐՈՍՅԱՆ', stevilka: 5 }, ['#111', '#eee', '#000'], undefined, undefined, { jezik: 'hy' }))).includes("font-family:'SLFF Motivi Armenscina'"), mm.slice(0, 300))
   const ids = (x: string): string[] => [...x.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]!)
   const a = narisiMotiv('prvak-mini-lige', { prvak: 'Prvak mini lige ABC 2025/26' }, ['#111', '#eee', '#000'])
   const b = narisiMotiv('prvak-mini-lige', { prvak: 'Prvak mini lige ABC 2025/26' }, ['#111', '#eee', '#000'])

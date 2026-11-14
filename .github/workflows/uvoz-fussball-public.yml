@@ -12,7 +12,7 @@ on:
         type: string
         required: true
       audit_run:
-        description: Successful full FUSSBALL audit run on this exact main commit
+        description: Successful full FUSSBALL audit run on this main commit or an ancestor without migration changes
         type: string
         required: true
 permissions:
@@ -23,7 +23,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   import:
-    if: github.ref == 'refs/heads/main'
+    # Production writes and the nightly seed: owner account, first attempt only.
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1 && github.actor == 'nejcar20' && github.actor_id == '25134229' && github.triggering_actor == 'nejcar20'
     runs-on: ubuntu-latest
     timeout-minutes: 180
     env:
@@ -33,12 +34,15 @@ jobs:
       SLFF_FUSSBALL_CAPTURE: ${{ github.workspace }}/capture
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Audit commit ancestry and migration drift (as uvoz-paketa-lig).
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
-      - name: Admit exact same-repository audit before downloading evidence
+      - name: Admit same-repository audit (this commit, or an ancestor without migrations) before downloading evidence
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -56,11 +60,18 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/cakaj-na-uvoze.mjs --liga "$LIGA"
-      - name: Check exact inactive competition and empty fantasy bootstrap
+      - name: Check exact inactive competition (install current-only card policy for a new catalog league)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/preveri-fussball-uvoz.mjs check-competition --slug "$LIGA" --code "$SOURCE_CODE"
+      - name: Restore the German nightly cache before adding this league's seed
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-DE-bulk-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            zapisniki-DE-
       - name: Import validated schedule and reports, then calculate prices
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -72,7 +83,25 @@ jobs:
           node scripts/ugani-pozicije.mjs --tekmovanje "$LIGA" --samo-nove --pisi
           node scripts/ovrednoti-igralce.mjs --tekmovanje "$LIGA" --pisi
           node scripts/pripravljenost-lige.mjs --tekmovanje "$LIGA"
-      - name: Import admission and public-data preview
+      - name: Seed the nightly cache from the same verified capture
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/prepare-fussball-nightly.mjs seed --tekmovanje "$LIGA" --bulk-capture "$SLFF_FUSSBALL_CAPTURE"
+      - name: Persist the nightly seed
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-DE-bulk-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Confirm durable seed cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          node scripts/bulk-seed-cache-receipt.mjs
+          cp release/pl-de-bulk/seed-cache-receipt.json seed-cache-receipt.json
+      - name: Import admission, public-data preview and seed receipt
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -80,5 +109,6 @@ jobs:
           path: |
             admission.json
             preview.json
+            seed-cache-receipt.json
           if-no-files-found: ignore
           retention-days: 90

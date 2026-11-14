@@ -1181,3 +1181,135 @@ remain flat and retain their actual attempt numbers. New network originals are
 matched by their unique successful numbered receipt, including after retries.
 The fresh nightly itself keeps ordinary schema2, first-error/no-retry behavior
 and existing request limits; checkpoint/retry authority is not inherited.
+
+## Pot B: samo tekoča sezona (odločitev lastnika 1. 11. 2026)
+
+Namesto enkratne Badenove verige (pripeti zagoni, 24-urni pari, arhiv) gre
+nemška liga FUSSBALL v igro le s tekočo sezono. Sprejeto: brez arhiva
+prejšnje sezone (cene kot v drugih ligah brez zgodovine), brez pripenjanja na
+posamezen zagon. Ostane: točna šifra lige/sezone iz kataloga
+`de-bulk-candidates.json`, javne identitete in postave, vratarji, cene in
+dosegljiv kader, nedotaknjen prihodnji prvi krog, vklop in javno branje.
+
+- **Migracija `20261101150100_fussball_tekoca_pot`** odveže Baden od enkratne
+  verige: izbriše `private_baden_history.prepared`, nameščeno zgodovinsko
+  politiko in njenih 56 označb ter morebitno sprejemnico kartonov. Arhivska
+  sezona 2025/26 (30 krogov, 240 tekem brez nastopov; tri brez izida) se
+  izbriše, ker je pot B nima; 9 označenih tekem tekoče sezone (z uradnim
+  izidom) dobi `statistics_status='available'` brez nastopov in jih uvoz poti B
+  uvozi ali pusti izrecno neznane. Kartonska politika dobi `archive_codes='{}'`. Prej shranjeno stanje
+  je v `private_fussball.detached_native_state`. Tekme in krogi tekoče sezone, klubi in
+  `private_baden_history.catalog/club_bindings` ostanejo. Skripte enkratne
+  verige ostanejo v repozitoriju, za Baden pa se ne uporabljajo več.
+- **Kartonska politika brez arhiva** (`install_fussball_card_policy(..., '{}')`)
+  pomeni ligo poti B; `tekmovanje()` jo označi z `fussball_current_only`.
+  Nova liga iz kataloga z `communityCards` jo dobi ob uvozu (check-competition).
+- **Neznani zapisniki**: zapisnik, ki ga strogi razčlenjevalnik zavrne, in
+  pretekla tekma brez objavljenega izida ostaneta neuvožena (uradna glava,
+  brez nastopov in golov) — **samo pred prvim fantasy krogom**. Po vklopu
+  zavrnitev ustavi nočni uvoz lige kot doslej. Pripete zajemne datoteke
+  (`fussball-import.mjs`, `fussball-capture-evidence.mjs`) so nespremenjene;
+  pot B je ovoj v `scripts/fussball-tekoca-pot.mjs`.
+- **Proračun zahtevkov**: `preveri-fussball-sezono.yml` z `rollout_candidate` in
+  praznim `archive_json` zajame samo tekočo sezono in pred prvim zahtevkom
+  preveri `prior_requests + max_requests <= total_request_cap` (največ 5000).
+  `prior_requests` je dejanska skupna poraba (Baden 1. 11.: 3607).
+- **Nadaljevanje po prekinitvi** (`resume_runs`, 2. 11. 2026): ko zajem pade na
+  transportni napaki (Baden 2. 11.: `ETIMEDOUT` po 378 in po 200 zahtevkih),
+  naslednji zajem iste lige z `resume_runs=<id>,<id>` vzame izvirnike neuspelih
+  zajemov iz zadnjih 24 ur (le uspešno prebrani 200, zapisan poskus, nespremenjeni
+  bajti; razporedi vedno sveži) in bere le manjkajoče. Njihovi zahtevki morajo
+  biti že v `prior_requests`. Izid je navaden mešani zajem (v2), ki ga preverba in
+  uvoz ponovita brez sprememb; ovoj je `scripts/fussball-resume-capture.mjs`,
+  pripeta zajemna koda ostane nespremenjena. Nikoli za 403/429/izziv: to ni
+  transportna napaka in zajem se ustavi.
+- **Uvoz** (`uvoz-fussball-public.yml`, samo lastnik `nejcar20`) sprejme audit
+  istega commita ali starejšega `main`, če je novejši njegov potomec brez
+  sprememb `supabase/migrations/` (pravilo iz #644; zajemna koda se mora še
+  vedno ujemati), nato zapiše tudi začetni nočni predpomnilnik (`bulk-seed`,
+  ovoj `fussball-current-only-cache`) in potrdilo, da je shranjen.
+- **Vklop** (`vklop-fussball-tekoce.yml`, samo lastnik) prebere predogled in
+  potrdilo uvoza, kliče `vklopi_fussball_tekoco` (vsaka pretekla tekma tekoče
+  sezone je uvožena, čaka na kartone ali je izrecno neznana; popolna postava,
+  en začetni vratar, goli; prvi krog = najnižji nedotaknjen prihodnji krog brez
+  kasnejših uvozov; običajno varovalo cen/kadra) in preveri `competitions_view`
+  z javnim ključem.
+
+Zaporedje za ligo (vse tri v istem oknu med krogi, sicer odigran a neuvožen
+krog zadrži vklop):
+
+```bash
+gh workflow run preveri-fussball-sezono.yml --repo Lovro-splichal-orhanizagi/mnzgorenjska -f rollout_candidate=<slug> -f seed_url=<katalog seedUrl> -f staffel=<ID-G> -f season=2026/27 -f reports=all -f archive_json= -f max_requests=700 -f prior_requests=<poraba> -f total_request_cap=5000 -f expected_sha=<main SHA>
+gh workflow run uvoz-fussball-public.yml --repo Lovro-splichal-orhanizagi/mnzgorenjska -f liga=<slug> -f source_code=<ID-G>:2026/27 -f audit_run=<zagon zajema>   # v 24 h od začetka zajema
+gh workflow run vklop-fussball-tekoce.yml --repo Lovro-splichal-orhanizagi/mnzgorenjska -f liga=<slug> -f import_run=<zagon uvoza>
+```
+
+Nočni uvoz (vrstica DE) za aktivno ligo poti B bere ovoj predpomnilnika:
+strani krogov vsakič sveže, popolne zapisnike iz predpomnilnika, nove zapisnike
+sveže (meja 3000). SQL regresija: `supabase/tests/fussball-tekoca-pot.sql`;
+brez omrežja: `node --test scripts/test-fussball-tekoca-pot.mjs`.
+
+### Opaženi obliki strani krogov (4. 11. 2026)
+
+- **V s pripono `#!/section/course`** (Oberliga Schleswig-Holstein 2026/27,
+  zajem `41804947752`, 10. krog, FC Kilia Kiel – 1.FC Phönix Lübeck II):
+  povezava vrstice z `V` (Verwaltungsentscheid, potrjeno) ima isto pripono kot
+  že podprti `U`. Razčlenjevalnik jo zdaj sprejme tudi pri `V` in vrne
+  `confirmed-administrative-decision` s prikazanima izidoma v objavljenem
+  vrstnem redu (5:0, 0:5) in `rezultat: null`. Vsa ostala varovala (ena
+  legenda, ena oznaka, zaprta oblika izida, vezana pisava, ista šifra tekme v
+  vseh povezavah vrstice) ostanejo. `W` pripone ne dobi, ker je nismo opazili.
+- **Prost klub s povezavo na članek** (Kreisliga Mannheim 2026/27, zajem
+  `41805924672`, 11. krog, SC Olympia Neulußheim): vrstica `spielfrei` ima
+  eno celico `fixture-media-info` z ikono `icon-article fixture-info` in
+  povezavo `/spiel/<slug kluba>/-/spiel/<šifra>`. Izvzame se samo ta točna
+  celica, če je slug začetek sluga edinega kluba vrstice; ostanek vrstice mora
+  ustrezati dosedanji obliki prostega kluba (prazen datum ali le datum, prazen
+  izid, brez drugega kluba ali povezave na zapisnik). Vrstica ostane prost klub.
+
+Izvirne strani, CSS in pisave so v `scripts/vzorci/de-fussball-administrative-41804947752/`
+in `scripts/vzorci/de-fussball-bye-media-41805924672/`, preizkus brez omrežja
+`node --test scripts/test-fussball-observed-20261104.mjs`.
+
+Pozor: sprememba `scripts/viri/fussball.mjs` spremeni prstni odtis zajemne
+kode. Enkratna Badenova veriga (`fussball-fresh-pair-history.json`,
+`fussball-baden-completed-stages.json`, V7, domača sestava) je pripeta na stare
+bajte (main `80406b24`, SHA-256 `816617fb…`) in trenutno kodo zavrne — pot B je
+ne uporablja; pripetih datotek in zapisov zagonov nismo spreminjali. Po vzorcu
+#582/V6 `scripts/test-fussball-pinned-authority-refusal.mjs` dokaže zavrnitev,
+srečne poti verige pa tečejo v izrecnem TEST ONLY kontekstu
+(`scripts/lib/test-only-pinned-fussball.mjs`), ki branje te ene datoteke prek
+`node:fs` zamenja s shranjenimi starimi bajti
+(`scripts/vzorci/test-only-fussball-mjs-816617fb/`). Strogi `buildFussballImportBatch`
+(domača veriga) tekme z `administrativeResult` še vedno zavrne; pot B jih od
+4. 11. 2026 uvozi po spodnjem pravilu.
+
+### Administrativni izid na poti B (odločitev lastnika 4. 11. 2026)
+
+Tekma z `U` (Sportgerichtsurteil), `V` (Verwaltungsentscheid) ali `W` (Wertung
+Spielinstanz) se na ligi poti B uvozi kot **uradna odločitev brez izida**:
+brez postav, nastopov, golov in kartonov, zato nihče ne dobi fantasy točk.
+Prikazana para (`displayedScores`) ostaneta le v vrstnem redu vira — katerega
+je zveza potrdila, ne ugibamo (podobno pravilu B za Katalonijo, a brez izida).
+
+- `scripts/fussball-tekoca-pot.mjs`: vrstica mora imeti točno obliko
+  razčlenjevalnika (W z `rawMarker`, U/V brez), `rezultat: null`, ujemati se
+  mora z `administrativeFixtures` in `coverage.administrativeFixtures` zajema
+  in ne sme imeti zapisnika (popolnega, čakajočega ali zavrnjenega) — sicer
+  uvoz pade. Velja pred vklopom in po njem (meja `unknownBefore` je ne
+  zadeva), zato nova odločitev nočnega uvoza ne ustavi.
+- V bazi: `imported_at` NULL, `home_goals`/`away_goals` 0, `kontumacija` false,
+  `vir_brez_izida` true (minula tekma brez izida), `statistics_status`
+  `available`, brez `appearances`/`goals`; lestvica lige je ne šteje.
+  `import_warnings` = `FUSSBALL_ADMINISTRATIVE_RESULT_V1 <U|V|W> <kind>;
+  prikazano a:b | c:d (vrstni red vira, …)` — piše ga `uvoz-razporeda`
+  (`scheduleImportWarnings` vira, le na neuvoženi tekmi).
+- Vklop: minula vrstica gre v `unknownReports` manifesta s `score: null` in
+  razlogom `FUSSBALL_ADMINISTRATIVE_RESULT_<U|V|W>`; `vklopi_fussball_tekoco`
+  jo sprejme kot izrecno neznano (brez spremembe SQL).
+- Odločitev na že uvoženi tekmi `uvoz-razporeda` ne spremeni, le opozori
+  (`::warning::`) za ročni pregled.
+
+Preizkus brez omrežja (resnični vrstici U in V iz zajema `41804947752`):
+`node --test scripts/test-fussball-administrative-path-b.mjs`; SQL v
+`supabase/tests/fussball-tekoca-pot.sql`.

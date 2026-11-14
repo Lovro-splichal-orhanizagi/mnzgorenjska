@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300mm" height="400mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="hrbet">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300mm" height="400mm" font-family="Anton, 'SLFF Motivi Dodatek', 'SLFF Motivi Armenscina', Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="hrbet">
   <defs>
     <path id="zvezda" d="M0 -10L2.35 -3.24L9.51 -3.09L3.8 1.24L5.88 8.09L0 4L-5.88 8.09L-3.8 1.24L-9.51 -3.09L-2.35 -3.24Z"/>
     <path id="list" d="M0 0C5 -5 6 -13 0 -21C-6 -13 -5 -5 0 0Z"/>
   </defs>
   <!-- naslov po loku z zvezdami -->
-  <text data-luk="150 330 290" font-size="22" letter-spacing="3.2" data-barva="1">LEGENDA NEDELJSKE LIGE</text>
+  <text data-sirina="301.8" data-napis="legenda" data-luk="150 330 290" font-size="22" letter-spacing="3.2" data-barva="1">LEGENDA NEDELJSKE LIGE</text>
   <use href="#zvezda" transform="translate(130 64) scale(.6)" data-barva="1"/>
   <use href="#zvezda" transform="translate(150 62) scale(.8)" data-barva="1"/>
   <use href="#zvezda" transform="translate(170 64) scale(.6)" data-barva="1"/>
@@ -49,7 +49,7 @@
     <use href="#list" transform="translate(247.9 302.6) rotate(-87) scale(0.81)"/>
     <use href="#list" transform="translate(244.2 279.0) rotate(-41) scale(0.97)"/>
   </g>
-  <text x="150" y="256" font-size="13" letter-spacing="3" data-barva="1">NA IGRIŠČU OD</text>
+  <text data-sirina="166.9" data-napis="naIgriscuOd" x="150" y="256" font-size="13" letter-spacing="3" data-barva="1">NA IGRIŠČU OD</text>
   <text x="150" y="318" font-size="56" letter-spacing="1" data-polje="leto" data-barva="3" data-crta="3" stroke-width="10">1994</text>
   <text x="150" y="318" font-size="56" letter-spacing="1" data-polje="leto" data-barva="1" data-crta="2" stroke-width="4" paint-order="stroke">1994</text>
   <text x="150" y="342" font-size="8" letter-spacing="3" data-barva="1">SLFF</text>

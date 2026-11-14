@@ -4,7 +4,7 @@
 // pokaže nakup (Stripe Checkout prek funkcije `preverjen-placilo`, le na
 // spletu), preverjenemu urejevalnik in pri letni naročnini portal Stripe.
 // Kaj kdo vidi, odloči baza (`je_preverjen`, `vidi_preverjene`).
-import { useCallback, useEffect, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
@@ -24,6 +24,9 @@ import {
   type Statistika,
 } from '../lib/preverjeni'
 import { Link } from './Povezava'
+import { PonudbaIzlozbe } from './IzlozbaIgralca'
+import { pozabiIzbranost } from '../lib/izbranost'
+import { PredogledPreverjanja } from './IzbranostIgralca'
 
 interface Plus {
   player_id: number
@@ -58,16 +61,28 @@ export default function PreverjeniProfil({
   glavni,
   jeLastnik,
   urejam,
+  vIzlozbi = false,
+  ponudbaIzlozbe = false,
+  odrasel = false,
 }: {
   igralecId: number
   glavni: number
   jeLastnik: boolean
   urejam: boolean
+  /** Pasica in opis sta v izložbi na vrhu strani. */
+  vIzlozbi?: boolean
+  /** Nad nakupom pokaži, kaj prinese izložba (posnetki, SLFF Club). */
+  ponudbaIzlozbe?: boolean
+  /** Odrasla liga, ne anonimiziran: nakup začne predogled koristi. */
+  odrasel?: boolean
 }) {
   const [plus, setPlus] = useState<Plus | null | undefined>(undefined)
   const [lastnik, setLastnik] = useState<{ vidi: boolean; preverjen: boolean; vir: string | null } | null>(null)
   // Vrnitev s Checkout (`?placilo=uspeh`): webhook pravico zapiše v nekaj sekundah.
-  const placano = new URLSearchParams(useLocation().search).get('placilo') === 'uspeh'
+  const iskanje = new URLSearchParams(useLocation().search)
+  const placano = iskanje.get('placilo') === 'uspeh'
+  // Stran Preverjeni igralski profil (`/verified`) pelje naravnost v nakup.
+  const [odprtNakup, setOdprtNakup] = useState(iskanje.get('preveri') === '1')
 
   const nalozi = useCallback(async () => {
     const [{ data }, vidi, prev, pravica] = await Promise.all([
@@ -94,7 +109,10 @@ export default function PreverjeniProfil({
     const id = window.setInterval(() => {
       ostalo -= 1
       void nalozi().then((ok) => {
-        if (ok) pozabiPreverjene()
+        if (ok) {
+          pozabiPreverjene()
+          pozabiIzbranost()
+        }
         if (ok || ostalo <= 0) window.clearInterval(id)
       })
     }, 2000)
@@ -105,13 +123,15 @@ export default function PreverjeniProfil({
   const kupuje = lastnik?.vidi && !lastnik.preverjen && !jeNativno()
   return (
     <>
-      {plus && <Prikaz plus={plus} igralecId={igralecId} />}
+      {plus && <Prikaz plus={plus} igralecId={igralecId} vIzlozbi={vIzlozbi} />}
       {placano && lastnik?.vidi && (lastnik.preverjen || !jeNativno()) && (
         <p className="kartica p-3 text-sm text-sky-200">
           {t(lastnik.preverjen ? 'igralci.preverjen.ponudba.uspeh' : 'igralci.preverjen.ponudba.obdeluje')}
         </p>
       )}
-      {kupuje && !placano && <Ponudba igralecId={igralecId} />}
+      {kupuje && !placano && odrasel && !odprtNakup && <PredogledPreverjanja naPreveri={() => setOdprtNakup(true)} />}
+      {kupuje && !placano && (!odrasel || odprtNakup) && ponudbaIzlozbe && <PonudbaIzlozbe />}
+      {kupuje && !placano && (!odrasel || odprtNakup) && <Ponudba igralecId={igralecId} fokus={odprtNakup} />}
       {lastnik?.preverjen && lastnik.vir === 'letna' && !jeNativno() && <Narocnina igralecId={igralecId} />}
       {lastnik?.preverjen && urejam && (
         <Urejevalnik
@@ -128,21 +148,24 @@ export default function PreverjeniProfil({
   )
 }
 
-function Prikaz({ plus, igralecId }: { plus: Plus; igralecId: number }) {
+function Prikaz({ plus, igralecId, vIzlozbi }: { plus: Plus; igralecId: number; vIzlozbi: boolean }) {
   const barva = plus.barva ? BARVE[plus.barva as Barva] : undefined
-  const pasica = naslovFotografije(plus.pasica)
+  const pasica = vIzlozbi ? null : naslovFotografije(plus.pasica)
+  const opis = vIzlozbi ? null : plus.opis
   const povezave = [
     plus.youtube && { naslov: NASLOV.youtube(plus.youtube), besedilo: `${t('igralci.preverjen.youtube')}: @${plus.youtube}` },
     plus.x && { naslov: NASLOV.x(plus.x), besedilo: `${t('igralci.preverjen.x')}: @${plus.x}` },
     plus.splet && { naslov: plus.splet, besedilo: plus.splet.replace(/^https:\/\//, '') },
   ].filter((p): p is { naslov: string; besedilo: string } => !!p)
+  // V izložbi brez preostalih dodatkov ni česa pokazati.
+  if (vIzlozbi && !plus.sporocilo && plus.tekma_id == null && !plus.statistika && !povezave.length) return null
   return (
     <div className="kartica space-y-3 overflow-hidden p-0" style={barva ? { borderColor: barva } : undefined}>
       {pasica && (
         <img src={pasica} alt="" width={1200} height={400} loading="lazy" className="aspect-[3/1] w-full object-cover" />
       )}
       <div className="space-y-2 px-3 pb-3 first:pt-3">
-        {plus.opis && <p className="whitespace-pre-line break-words text-sm text-slate-200">{plus.opis}</p>}
+        {opis && <p className="whitespace-pre-line break-words text-sm text-slate-200">{opis}</p>}
         {plus.sporocilo && (
           <blockquote className="border-l-2 pl-2 text-sm italic text-slate-300" style={barva ? { borderColor: barva } : undefined}>
             <span className="block text-xs not-italic text-slate-500">{t('igralci.preverjen.sporocilo')}</span>"{plus.sporocilo}"
@@ -231,18 +254,19 @@ async function placilo(telo: Record<string, unknown>): Promise<{ url?: string; n
   return { napaka: sporocilo ? prevediNapako(sporocilo) : t('igralci.preverjen.ponudba.napaka') }
 }
 
-function Ponudba({ igralecId }: { igralecId: number }) {
+function Ponudba({ igralecId, fokus = false }: { igralecId: number; fokus?: boolean }) {
   const [vir, setVir] = useState<'letna' | 'dozivljenjska'>('letna')
-  const [znacka, setZnacka] = useState(false)
-  const [dostava, setDostava] = useState<'si' | 'eu'>('si')
-  const [ime, setIme] = useState('')
   const [star18, setStar18] = useState(false)
   const [odpoved, setOdpoved] = useState(false)
   const [dela, setDela] = useState(false)
   const [napaka, setNapaka] = useState<string | null>(null)
-  const zZnacko = vir === 'dozivljenjska' && znacka
   // Izrecna povezava oznake z izbiro: klik na besedilo (ceno, državo) izbere.
   const idp = useId()
+  // Odprto iz predogleda: predogled izgine, zato fokus na naslov nakupa.
+  const naslov = useRef<HTMLHeadingElement>(null)
+  useEffect(() => {
+    if (fokus) naslov.current?.focus()
+  }, [fokus])
 
   async function kupi() {
     setDela(true)
@@ -251,9 +275,6 @@ function Ponudba({ igralecId }: { igralecId: number }) {
       akcija: 'checkout',
       player_id: igralecId,
       vir,
-      znacka: zZnacko,
-      dostava: zZnacko ? dostava : undefined,
-      ime_na_znacki: zZnacko ? ime : undefined,
       star_vsaj_18: star18,
       odpoved_pravici: odpoved,
       jezik: jezikSlovarja(),
@@ -265,7 +286,9 @@ function Ponudba({ igralecId }: { igralecId: number }) {
 
   return (
     <div className="kartica space-y-2 border-sky-400/30 p-3 text-sm">
-      <h3 className="font-bold text-sky-200">{t('igralci.preverjen.ponudba.naslov')}</h3>
+      <h3 ref={naslov} tabIndex={-1} className="font-bold text-sky-200 outline-none">
+        {t('igralci.preverjen.ponudba.naslov')}
+      </h3>
       <p className="text-slate-300">{t('igralci.preverjen.ponudba.opis')}</p>
       <fieldset className="space-y-1">
         {(['letna', 'dozivljenjska'] as const).map((v) => (
@@ -275,34 +298,8 @@ function Ponudba({ igralecId }: { igralecId: number }) {
           </label>
         ))}
       </fieldset>
-      {vir === 'dozivljenjska' && (
-        <div className="space-y-1 pl-5">
-          <label htmlFor={`${idp}-znacka`} className="flex cursor-pointer items-center gap-2">
-            <input id={`${idp}-znacka`} type="checkbox" checked={znacka} onChange={(e) => setZnacka(e.target.checked)} />
-            <span>{t('igralci.preverjen.ponudba.znacka')}</span>
-          </label>
-          {znacka && (
-            <div className="flex flex-wrap gap-3">
-              {(['si', 'eu'] as const).map((d) => (
-                <label key={d} htmlFor={`${idp}-${d}`} className="flex cursor-pointer items-center gap-1">
-                  <input id={`${idp}-${d}`} type="radio" name="dostava-znacke" checked={dostava === d} onChange={() => setDostava(d)} />
-                  {t(d === 'si' ? 'igralci.preverjen.ponudba.dostavaSi' : 'igralci.preverjen.ponudba.dostavaEu')}
-                </label>
-              ))}
-            </div>
-          )}
-          {znacka && (
-            <input
-              value={ime}
-              onChange={(e) => setIme(e.target.value)}
-              maxLength={30}
-              aria-label={t('igralci.preverjen.ponudba.imeNaZnacki')}
-              placeholder={t('igralci.preverjen.ponudba.imeNaZnacki')}
-              className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-1.5 sm:max-w-xs"
-            />
-          )}
-        </div>
-      )}
+      {/* Plakat 40 × 60 cm je v ceni doživljenjske; naslov pobere Stripe. */}
+      {vir === 'dozivljenjska' && <p className="pl-5 text-amber-100">{t('igralci.preverjen.ponudba.znacka')}</p>}
       <label htmlFor={`${idp}-star18`} className="flex cursor-pointer items-start gap-2">
         <input id={`${idp}-star18`} type="checkbox" className="mt-1" checked={star18} onChange={(e) => setStar18(e.target.checked)} />
         <span>{t('igralci.preverjen.ponudba.star18')}</span>
@@ -322,13 +319,16 @@ function Ponudba({ igralecId }: { igralecId: number }) {
       </p>
       <button
         type="button"
-        disabled={dela || !star18 || !odpoved || (zZnacko && !ime.trim())}
+        disabled={dela || !star18 || !odpoved}
         onClick={() => void kupi()}
         className="gumb-glavni text-sm disabled:opacity-50"
       >
         {t('igralci.preverjen.ponudba.kupi')}
       </button>
       {napaka && <p className="text-rose-400">{napaka}</p>}
+      <Link to="/verified" className="inline-flex min-h-11 items-center text-xs text-sky-300 underline">
+        {t('preverjeni.vec')}
+      </Link>
     </div>
   )
 }
@@ -360,19 +360,19 @@ function Narocnina({ igralecId }: { igralecId?: number }) {
 
 /**
  * Naročnina na strani Račun: vsak z aktivno naročnino jo lahko prekliče,
- * ne glede na stikalo in profil. V aplikaciji le opomba (nakup in portal sta
- * na spletu).
+ * ne glede na stikalo in profil. V aplikaciji nič: Apple ne dovoli napotkov
+ * na plačila zunaj trgovine (nakup in portal sta na spletu).
  */
 export function UpravljanjeNarocnine() {
   const [ima, setIma] = useState(false)
   useEffect(() => {
     void supabase.rpc('preverjen_moje_narocnine').then(({ data }) => setIma(!!data?.length))
   }, [])
-  if (!ima) return null
+  if (!ima || jeNativno()) return null
   return (
     <section className="kartica space-y-2 p-4">
       <h2 className="text-lg font-bold">{t('igralci.preverjen.ponudba.narocninaNaslov')}</h2>
-      {jeNativno() ? <p className="text-sm text-slate-300">{t('igralci.preverjen.ponudba.narocninaApp')}</p> : <Narocnina />}
+      <Narocnina />
     </section>
   )
 }

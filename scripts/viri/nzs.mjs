@@ -8,6 +8,11 @@
 //
 // Zato je šifra `<pot>` za tekočo sezono in `<pot>:<sezona>` za arhiv.
 //
+// Ženske lige (ŽNL, lige deklet) so pod `/klubi/zenski/` namesto
+// `/klubi/moski/`: njihova šifra ima predpono `zenski/`, npr.
+// `zenski/zenska-nogometna-liga-triglav` ali `zenski/liga-deklet-u17:22`.
+// Zapisnik je isti kot pri moških.
+//
 // Nastevanje tekem je bila zadnja uganka. Izbirnik sezone je skripten in
 // navaden POST vrne tekočo sezono; AJAX pa v odgovoru pove, kam preusmeri —
 // in to je navaden `?season=<id>`. Seznam je ostranjen z Drupalovim
@@ -19,23 +24,24 @@ import { naredikljucKluba, kratkoIme, poenostavi, razpakiraj } from '../klubi.mj
 const OSNOVNI = 'https://www.nzs.si'
 const NA_STRAN = 10
 
-/** `<pot>` ali `<pot>:<sezona>` → { pot, sezona }. */
+/** `[zenski/]<pot>[:<sezona>]` → { pot, sezona, spol } (spol: 'moski' | 'zenski'). */
 export function razbijKodo(koda) {
-  const [pot, sezona = null] = String(koda).split(':')
-  return { pot, sezona }
+  const [cela, sezona = null] = String(koda).split(':')
+  const zenski = cela.startsWith('zenski/')
+  return { pot: zenski ? cela.slice('zenski/'.length) : cela, sezona, spol: zenski ? 'zenski' : 'moski' }
 }
 
 const naslovSeznama = (koda, stran = 0) => {
-  const { pot, sezona } = razbijKodo(koda)
+  const { pot, sezona, spol } = razbijKodo(koda)
   const q = [sezona ? `season=${sezona}` : null, `page=0%2C${stran}`]
     .filter(Boolean)
     .join('&')
-  return `${OSNOVNI}/klubi/moski/${pot}/tekme?${q}`
+  return `${OSNOVNI}/klubi/${spol}/${pot}/tekme?${q}`
 }
 
 /** Naslovi tekem s strani seznama; šifra tekme je kar njen del poti. */
 export function sifreTekem(html) {
-  const re = /\/klubi\/moski\/[a-z0-9-]+\/tekme\/([a-z0-9-]+-\d{4}-\d{2}-\d{2}-\d{6})/g
+  const re = /\/klubi\/(?:moski|zenski)\/[a-z0-9-]+\/tekme\/([a-z0-9-]+-\d{4}-\d{2}-\d{2}-\d{6})/g
   return [...new Set([...html.matchAll(re)].map((m) => m[1]))]
 }
 
@@ -96,8 +102,10 @@ const vir = {
 
   naslovSeznamaTekem: (koda) => naslovSeznama(koda, 0),
   naslovRazporeda: (koda) => naslovSeznama(koda, 0),
-  naslovZapisnika: (koda, sifra) =>
-    `${OSNOVNI}/klubi/moski/${razbijKodo(koda).pot}/tekme/${sifra}/zapisnik`,
+  naslovZapisnika: (koda, sifra) => {
+    const { pot, spol } = razbijKodo(koda)
+    return `${OSNOVNI}/klubi/${spol}/${pot}/tekme/${sifra}/zapisnik`
+  },
 
   parsirajZapisnik,
   nastopi,

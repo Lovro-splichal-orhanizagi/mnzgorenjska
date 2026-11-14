@@ -233,7 +233,8 @@ to področje. Bistvo, ki ga je treba vedeti vedno:
   `npm run preizkus-statistike`).
 - **Ekipe so zasebne**: sestavo vidi le lastnik in admin
   (`sme_videti_ekipo`). Funkcija, ki bere tuje posnetke, teče kot lastnik
-  sheme in sama pazi, kaj vrne. Izbranost je NULL pod 5 človeškimi ekipami.
+  sheme in sama pazi, kaj vrne. Izbranost je NULL pod 5 človeškimi ekipami
+  in za vse razen preverjenih, admina in strežnika (`vidi_izbranost`).
 - **Hišne ekipe** (`fantasy_teams.hisna`) se ne štejejo v izbranosti,
   državni lestvici, pošti, mini ligah in statistiki — nova poizvedba, ki šteje
   ljudi ali ekipe čez lige, naj izpusti `hisna` (`docs/hisne-ekipe.md`).
@@ -261,6 +262,14 @@ to področje. Bistvo, ki ga je treba vedeti vedno:
 - Plačila (preverjeni igralci, Stripe): stikalo `preverjeni_racuni`, webhook
   `stripe-webhook`, **preklic naročnine mora biti vedno mogoč**; vse v
   `docs/podatkovni-model.md` (*Preverjeni igralci*).
+- **Izložba preverjenega igralca** (posnetki v Cloudflare R2 ali Stream,
+  ponudnik na posnetku, nov po `POSNETKI_PONUDNIK`; nikoli na našem disku;
+  R2 nad 9 GB ustavi nalaganje): eno pravilo `izlozba_dovoljena()` (stikalo
+  `posnetki_igralcev`, `je_preverjen`, brez mladinske ali anonimizirane
+  vrstice osebe); vsak posnetek najprej čaka na pregled (Administracija →
+  Posnetki); podpisane naslove (R2) in žetone (Stream) izda le funkcija
+  `posnetki-igralca`. Vklop,
+  skrivnosti, brisanje in stroški: `docs/podatkovni-model.md` (*Izložba*).
 
 ## Pregledane zgodovinske vrzeli
 
@@ -280,6 +289,14 @@ rezultate, samodejne menjave in obvestila. Potrdi jih šele atomski zapis po
 ponovitvi izvirnih bajtov. `replay-fussball-cards.yml` vsako uro obdela največ
 10 predlogov brez branja nogometnih strani. Delni zajem ali napaka javne
 identitete še vedno prepreči vklop; podrobnosti v `docs/viri/nemcija.md`.
+
+**Pot B (od 1. 11. 2026)**: nemška liga FUSSBALL gre v igro samo s tekočo
+sezono — kartonska politika z `archive_codes='{}'` (`fussball_current_only` v
+`tekmovanje()`), zajem s skupnim proračunom (`preveri-fussball-sezono.yml`),
+`uvoz-fussball-public.yml` (tudi nočni predpomnilnik) in `vklop-fussball-tekoce.yml`
+(`vklopi_fussball_tekoco`). Zavrnjen zapisnik pred prvim krogom ostane neznan
+(brez statistik); Baden je odvezan od enkratne verige (migracija
+`20261101150100`). Podrobnosti v `docs/viri/nemcija.md` (*Pot B*).
 
 `matches.statistics_status = 'unavailable_historical'` ohrani uradni izid,
 vendar nima nastopov/golov in `imported_at` ostane NULL. Izjeme so omejene
@@ -475,7 +492,9 @@ zaloga se odšteje le ob plačilu, rezervacija drži 35 min. CI jo objavi ob
 `SHOP_OBJAVA=1`; funkcije, Stripe tarife in živi ključ so ročni. Vse:
 `docs/trgovina.md`.
 Motivi po meri (nosilci, cone, predloge, tisk, slike s prizori, nov motiv):
-`docs/trgovina.md` (*Motivi*).
+`docs/trgovina.md` (*Motivi*). Trgovina govori vse jezike slff.eu (slovar na jezik
+v `shop/src/jeziki/`, prevodi v bazi v `prevodi`, mail in Stripe v jeziku naročila):
+**nov niz trgovine dodaj v vseh 20 jezikov**; `docs/trgovina.md` (*Jeziki*).
 
 ## Poti
 

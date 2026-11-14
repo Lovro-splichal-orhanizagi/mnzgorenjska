@@ -114,6 +114,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     vrhOpomba:
       'Pointene er uden assists: assists bekræftes ved afstemning, som endnu ikke er begyndt i de fleste ligaer, så ligaerne ville ikke stå lige. Ligaerne har spillet forskelligt antal runder.',
     vrhPrazno: 'Der er ikke spillet nogen kampe i denne sæson endnu.',
+    napovediUvod: 'De bedste tippere fra alle ligaer. Præcist resultat 3 point, rigtigt udfald 1.',
+    napovediSezona: 'Sæson',
+    napovedi7dni: 'Seneste 7 dage',
+    napovediPrazno7: 'Der er endnu ingen afgjorte tips i de seneste 7 dage.',
+    napovediOcenjenih: 'Afgjorte tips: {n}',
+    vrhNapovedi: 'Bedste tippere',
+    vrhNapovediVse: 'Hele tipstabellen',
   },
 
   miniLige: {

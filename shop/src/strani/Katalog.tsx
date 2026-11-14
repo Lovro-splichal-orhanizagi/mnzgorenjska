@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import grb from '../../../public/logo/slff-grb.png'
 import { supabase, type IzdelekKataloga, type MotivKataloga, type Voljo } from '../baza'
-import { cena, po, t } from '../besede'
+import { cena, jezik, pr, slikaJezika, t } from '../besede'
 import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
 import { Pahljaca, PrimerNaMockupu, primeriMotiva, useMotivi } from './Personalizirano'
@@ -12,7 +12,7 @@ export function Slika({ src, alt, majhna = false }: { src?: string; alt: string;
   return (
     <div className="slika-izdelka">
       {src ? (
-        <img src={src} alt={alt} loading="lazy" className="h-full w-full object-cover" />
+        <img src={slikaJezika(src)} alt={alt} loading="lazy" className="h-full w-full object-cover" />
       ) : (
         <div className="grid h-full w-full place-items-center">
           <img src={grb} alt="" className={`${majhna ? 'w-1/2' : 'w-2/5'} opacity-90 drop-shadow-2xl`} />
@@ -42,7 +42,7 @@ function MotivNaNosilcu({ slug, motivi, alt }: { slug: string; motivi: MotivKata
 }
 
 export function KarticaIzdelka({ i, motivi = null }: { i: IzdelekKataloga; motivi?: MotivKataloga[] | null }) {
-  const ime = po(i.ime_sl, i.ime_en)
+  const ime = pr(i, 'ime')
   const mockup = !i.slike[0] && motivi?.some((m) => m.izdelki.some((x) => x.slug === i.slug)) && <MotivNaNosilcu slug={i.slug} motivi={motivi} alt={ime} />
   return (
     <Link to={`/p/${i.slug}`} className="group kartica block p-3 transition hover:-translate-y-0.5 hover:border-gnl-400/40 hover:bg-white/[0.06]">
@@ -80,7 +80,7 @@ function PasPoMeri() {
   if (!motivi?.length) return null
   return (
     <Link to="/personalised" className="group relative block overflow-hidden rounded-3xl border border-gnl-400/25 bg-gradient-to-br from-gnl-900/80 via-slate-900 to-slate-950 p-6 transition hover:border-gnl-400/50 sm:p-8">
-      <img src="/nosilci/hero-gostilna-1000.webp" alt="" loading="lazy" decoding="async" width={1000} height={667}
+      <img src={slikaJezika('/nosilci/hero-gostilna-1000.webp')} alt="" loading="lazy" decoding="async" width={1000} height={667}
         className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-50 transition duration-700 group-hover:scale-[1.02] motion-reduce:transition-none" />
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-slate-950/30" />
       <div className="relative grid items-center gap-6 md:grid-cols-[1fr_minmax(0,22rem)]">
@@ -102,7 +102,7 @@ export function Katalog() {
   useNaslov(t('katalog.naslov'))
 
   useEffect(() => {
-    void supabase.rpc('trgovina_katalog').then(({ data, error }) => {
+    void supabase.rpc('trgovina_katalog', { p_jezik: jezik }).then(({ data, error }) => {
       setNapaka(Boolean(error))
       setIzdelki(error ? [] : ((data as unknown as IzdelekKataloga[] | null) ?? []))
     })

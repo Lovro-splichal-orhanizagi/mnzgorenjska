@@ -68,7 +68,7 @@
   `fantasy_chips`; `tuja_postava` vrne vrstice le, če `sme_videti_ekipo(ekipa)`
   (lastnik, admin, servis). Javno ostane, kar sestave ne izda: lestvice (ime,
   lastnik, točke, mesto, točke kroga, število prestopov in kazen iz
-  `fantasy_transfers`), mini lige in izbranost. Izbranost (`owners` v
+  `fantasy_transfers`) in mini lige. Izbranost (`owners` v
   `player_standings`, `player_season_standings`) je NULL, dokler ima zadnji
   zaklenjeni krog lige manj kot **5 človeških ekip** — sicer seštevek izda
   ekipo. Stran `/team/:id` tujcu pokaže le ime, lastnika, točke in mesto;
@@ -76,6 +76,28 @@
   Funkcija ali pogled, ki bere tuje posnetke, mora teči kot lastnik sheme
   (SECURITY DEFINER / pogled brez `security_invoker`) in sama paziti, kaj
   vrne.
+- **Izbranost vidijo le preverjeni** (migracija 20261109120000, SLF-360):
+  `vidi_izbranost()` je true za admina, strežnik (service_role, postgres brez
+  JWT) in uporabnika z aktivno, nepotečeno pravico (`je_preverjen` +
+  `izlozba_odrasla_oseba`: stikalo, potrjen profil, brez mladinske ali
+  anonimizirane vrstice). Vsem drugim pogleda vrneta `owners` NULL, tudi prek
+  PostgREST; vmesnik (`useVidiIzbranost`) tedaj skrije stolpec, razvrščanje in
+  polje. Preklic ali potek pravice dostop vzame takoj. `izbranost_igralca(id)`
+  vrne preverjenemu razčlenitev po ligah osebe (`ekip` = imenovalec, `owners`
+  NULL pod pragom, krog in čas posnetka, `lastni`): svoj profil vse povezane
+  vrstice, tuj le vrstice v državi gledane; mladinske in anonimizirane nikoli.
+  **Imen ekip ne vrne**. Imena da ločena `ekipe_z_igralcem(id, od, koliko)`
+  (migracija 20261109130000, Nejc 9. 11. 2026: "just the one player"): ožja
+  izjema od zasebnih sestav, le relacija ekipa–igralec. Vrne ekipe (id, ime,
+  liga, krog, `skupaj`), ki imajo igralca v istem posnetku kot števec, le
+  prijavljenemu preverjenemu na **svojem** profilu (`lastni`) in adminu; tuj
+  profil, anon (brez pravice EXECUTE) in strežnik brez JWT ne dobijo nič, da
+  se iz vseh igralcev ne da sestaviti kadra ekipe. Le nad pragom 5 ekip
+  (kjer `owners` ni NULL), brez hišnih, brez mladinskih in anonimiziranih,
+  stran največ 50. Klik vodi na `/team/:id`, ki tujcu kaže le ime, lastnika,
+  točke in mesto. Panel `IzbranostIgralca.tsx`,
+  preizkus `supabase/tests/izbranost-preverjenim.sql`. Strežnik HTML in slike
+  za predogled `owners` ne bereta.
 - `rounds.lineups_locked_at` → dokončan zajem, tudi za neveljavne/prazne ekipe;
   odsotnost posnetka ni dovoljenje za poznejši zajem. `fantasy_teams.roster_updated_at`
   beleži čas shranjevanja. `shrani_ekipo` pred spremembo zajame zapadle kroge;
@@ -268,7 +290,7 @@
   tekoče sezone (`clani_napovedi_mini_lige`): `lestvica_napovedi_mini_lige(liga,
   krog)` (javna vsem prijavljenim, zasebna članom; točke, točni, razpleti),
   `krogi_napovedi_mini_lige`, `napovedi_mini_lige_krog` (le članom, le po
-  roku). Obrazec: `moje_odprte_napovedi(liga)` (naslednji krog mojih lig).
+  roku). Obrazec: `moje_odprte_napovedi(liga, mini_liga)` (naslednji krog mojih lig; v mini ligi le lige mojih ekip v njej).
   Servisni `povzetek_napovedi_kroga(uporabnik, krog)` za pošto. Vmesnik:
   Mini lige → Napovedi (`NapovediMiniLige.tsx`, `?pogled=napovedi`, povezava
   na lestvico lige).
@@ -303,6 +325,20 @@
   "👑 n" v vrstici obeh lestvic napovedi, vrstica "Kralj napovedi" nad njima;
   krona kralja sezone še v glavni lestvici mini lige in glavi njene strani
   (`useKraljMiniLige`, le člani).
+- **Lestvica napovedi države** (migracija 20261110120100):
+  `lestvica_napovedi_drzave(drzava, dni, limit)` (anon + authenticated,
+  security definer) sešteje napovedi vseh aktivnih lig države
+  (`countries.code`) po pravilih `lestvica_napovedi_lige` (lastnik nehišne
+  ekipe v ligi tekme, tekoča sezona lige, kontumacija in tekma brez izida ne
+  štejeta; točke, nato točni). Vrne iste stolpce kot lestvica lige (`mesto`,
+  prikazno ime, točke, točni, razpleti, ocenjene, `je_moj`, `kron`, `kralj`),
+  **nikoli user_id**: vrh `limit` (privzeto 50, največ 100) in klicateljevo
+  vrstico. `dni` (vmesnik 7) šteje le tekme zadnjih dni; `kron` so vedno krone
+  krogov sezone vseh lig države (isto pravilo kot `kralji_krogov_lige`, a le
+  za kroge z napovedmi), `kralj` vodilni pogleda. Gre od `napovedi` po ključih
+  (`offset 0`), Madžarska ~50 ms. Vmesnik: zavihek Napovedi na `/national`
+  (`?pogled=napovedi`, `LestvicaNapovediDrzave.tsx`, sezona ali zadnjih 7 dni)
+  in vrh 5 na naslovnici (`VrhNapovediDrzave.tsx`, skrit brez ocenjene napovedi).
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
 - `statistika_igralcev` → statistika igralca po ligi in sezoni (nastopi,
   minute, goli, kartoni, čiste mreže, točke, asistence, zadnji krog, forma).
@@ -633,6 +669,11 @@
   - Lastnik potrjenega profila, ki ni preverjen, pri vklopljenem stikalu
     vidi nakup (spodaj); v aplikaciji je skrit (`jeNativno`, pravila trgovin).
   - **Faza 2: Stripe Checkout** (testni način, migracija 20261012210100).
+    **Od 9. 11. 2026 namesto značke plakat 40 × 60 cm** ob doživljenjskem nakupu (v ceni,
+    EU): Checkout vedno pobere naslov, webhook kliče `plakat_iz_placila`, tabela
+    `narocila_plakatov` (brez tujih ključev na players/preverjeni_racuni zaradi kataloga
+    FCF), admin Preverjeni → Plakati (datoteka za tisk 200 dpi iz `cv_igralca`). Spodnji
+    opis značke velja za stara naročila.
     Kartica "Preveri profil": letno (9,99 €) ali za vedno (29 €), pri
     doživljenjski še "+ natisnjena značka" (5 €, poštnina 2 € SI / 4 € EU)
     z izbiro dostave "Slovenija / druga država EU" (seja dobi le to tarifo in
@@ -783,6 +824,170 @@
       besedilo odpovedi.
     - **Portal v živem načinu**: preklic naročnine ob koncu obdobja (v
       testnem je tako nastavljen; ponovi v živem).
+- **Izložba preverjenega igralca** (posnetki, migracija 20261031183100): preverjen
+  polnoleten igralec ima na vrhu `/player/<id>` izložbo (`IzlozbaIgralca.tsx`):
+  pasica, fotografija, ime s kljukico, pozicija · klub · liga · letnik, zlati
+  "Odprt za prestop" in regije (iz `scout.privolitve`, le pri odprt za prestop,
+  kot klubom), velik izpostavljeni posnetek, do 6 posnetkov z naslovom, številke
+  sezone (tekme, goli, asistence, fantasy točke; gost jih ne vidi), pozitiven
+  kazalnik Scouta (le vrh 25/10/5 % iz zadnjega objavljenega modela prek
+  `scout.vidni`, zaupanje ≥ 0,5; "kazalniki iz podatkov tekem"), O meni
+  (`profil_igralca_plus.opis`, sicer `profil_igralca.opis`) in opomba "prikazan
+  skavtom v omrežju SLFF Club" (država odprta, brez ugovora). Lastnik isto
+  stran ureja na mestu (pasica, opis, dodaj/preimenuj/premakni/izpostavi/izbriši
+  posnetek), vidi moč profila z naslednjim korakom in **oglede skavtov**:
+  odprtja profila v SLFF Club zadnjih 30 dni iz obstoječega `scout.dnevnik`
+  (`vrsta = 'igralec'`, vrstice osebe, brez lastnega kluba) — le števili
+  (odprtij, različnih klubov), nikoli kateri klub. Lastnik potrjenega,
+  polnoletnega profila brez pravice vidi ponudbo (`PonudbaIzlozbe` nad nakupom;
+  v aplikaciji skrita kot nakup).
+  - **Pravilo (eno, v SQL):** `izlozba_dovoljena(igralec)` = `vidi_posnetke()`
+    (stikalo `posnetki_igralcev`: 0 nihče, 1 admin in `testerji`, 2 vsi) AND
+    `je_preverjen(igralec)` (vsebuje stikalo `preverjeni_racuni`, 18+ ob nakupu)
+    AND `izlozba_odrasla_oseba(igralec)`: potrjen zahtevek; nobena vrstica osebe
+    (glavna in `povezani_igralci`) ni v mladinski ligi (`je_mladinski_slug`) ali
+    anonimizirana (`anonimiziran_at` ali ključ v `anonimizirani_igralci`); v
+    državi ni mladinske vrstice z istim `full_name` ali `reg_st` (Scoutov ključ
+    osebe; izjema kot v Scoutu: privolitev lastnika s polnoletno letnico odpre
+    ujemanje po ključu, lastnih mladinskih vrstic pa nikoli). Izmerjeno na
+    produkciji (države z največ mladinskimi vrsticami): 35 ms. Uporabljajo ga
+    javno branje, nalaganje, žetoni, SLFF Club in prijave.
+  - **Tabele** (zaprte, `agent.zaprte_tabele`): `posnetki_igralca` (ključ glavna
+    vrstica v stolpcu `igralec`, brez tujega ključa in ne `player_id`: zaklenjene izdaje FCF preverjajo točen katalog relacij na igralce, osirotele vrstice pobere čiščenje; `stream_uid`, naslov ≤ 60 skozi `prepovedane_besede`, `vrstni_red`,
+    `izpostavljen` (en na igralca), `stanje` `nalaganje`/`obdelava`/`pripravljen`/`napaka`,
+    `pregled` `caka`/`odobren`/`zavrnjen` z razlogom, `trajanje`,
+    `brez_pravice_od`), `posnetki_brisanje` (uid-ji za izbris v Streamu),
+    `prijave_posnetkov`, `posnetki_nalaganja` (meja 12 na dan).
+  - **RPC:** javno `izlozba_igralca(igralec)` (jsonb; tujec le, če pravilo velja,
+    sicer null; lastnik vedno, z `dovoljena`, `vidi`, `odrasla`, svojimi
+    posnetki v vseh stanjih in razlogom zavrnitve), `posnetki_za_ogled(ids[])`
+    (uid-ji, ki jih klicatelj sme gledati: lastnik svoje, admin vse, ostali
+    odobrene in obdelane); lastnik `posnetki_pripravi` (pravilo, največ 6,
+    meja), `posnetki_uredi`, `posnetki_razvrsti`, `posnetki_izpostavi`,
+    `posnetki_izbrisi` (tudi admin); `prijavi_posnetek` (prijavljen, ne lastnik;
+    tri odprte prijave posnetek vrnejo v pregled); admin `admin_posnetki`,
+    `admin_odloci_posnetek` (zavrnitev z razlogom, reši prijave); servis
+    `posnetki_nastavi_uid`, `posnetki_stream_stanje`, `posnetki_pocisti`,
+    `posnetki_za_brisanje`, `posnetki_brisanje_izid`. SLFF Club:
+    `scout_posnetki(igralec)` skozi `scout.dostop` (`dnevnik.vrsta = 'posnetki'`,
+    meja drugih klicev) in `scout.vidni`; `scout_igralec` doda `posnetkov`
+    (aplikacija posnetke naloži le takrat).
+  - **Moderacija:** vsak nov posnetek `caka`; javno in klubom šele `odobren` in
+    `pripravljen`. Administracija → Igralci → *Posnetki*: stikalo, predvajanje,
+    odobri, zavrni z razlogom, izbriši, "Počisti zdaj". Discord (`trg_posnetki_na_discord`,
+    webhook iz Vaulta kot `trg_prevzem_na_discord`): ko je posnetek naložen (R2) ali obdelan (Stream)
+    in čaka na pregled ter ob prijavi.
+  - **Ponudnik** (migracija 20261031223100): videov ni na našem disku. Vsak
+    posnetek ima `ponudnik` (`r2`, `stream` ali `test`); nov posnetek gre k
+    ponudniku iz env `POSNETKI_PONUDNIK` (`r2` | `stream` | `test`; brez nje
+    `r2`, če so nastavljeni `R2_*`, sicer `stream`, če so `CF_*`, sicer `test`
+    ob `POSNETKI_TEST=1`). Obstoječi posnetki ostanejo pri svojem ponudniku in
+    se predvajajo tudi po menjavi (oba ponudnika morata ostati nastavljena,
+    dokler obstaja kak njun posnetek). Brez ponudnika `nalozi` vrne 503
+    (`posnetki-izklopljeno`); ogled, izbris in čiščenje delajo naprej.
+  - **Cloudflare R2** (zdaj; do 10 GB brezplačno, prenos brez plačila):
+    zasebno vedro (`R2_BUCKET`, privzeto `slff-posnetki`), ključa
+    `posnetki/<uid>` (video) in `posnetki/<uid>-slika` (plakat), uid `r2-<uuid>`.
+    Brskalnik video preveri sam (mp4, mov, webm; do 100 MB; do 3 min iz
+    metapodatkov) in iz enega okvirja nariše plakat (JPEG do 1 MB). Če videa ne
+    zna prebrati (HEVC v namiznem Chromu), pokaže navodilo za MP4/H.264 oziroma
+    iPhone »Najbolj združljivo«. Funkcija (`nalozi`) rezervira prostor
+    (`posnetki_r2_rezerviraj`, zaklep) in vrne dva podpisana PUT (15 min; SigV4 v
+    poizvedbi, `r2.ts`, smoke z uradnim primerom AWS) s podpisanima
+    `Content-Type` in `Content-Length`, zato ključa, vrste in velikosti ni mogoče
+    spremeniti. Po nalaganju `potrdi`: HEAD obeh predmetov (vrsta, velikost),
+    `posnetki_r2_potrjen` → `pripravljen`, posnetek čaka na pregled (Discord kot
+    pri Streamu); neujemanje je `napaka`. Trajanje je klientovo (iz
+    metapodatkov), strežnik ga ne preveri. Ogled: podpisan GET (2 uri) **naravnost
+    na R2** (`<račun>.r2.cloudflarestorage.com`, ne prek slff.eu), le za uid-je iz
+    `posnetki_za_ogled`; navaden `<video>` s plakatom, Range dela.
+    **Prostor:** `posnetki_r2_prostor()` = posnetki in plakati v R2 ter vrsta
+    brisanja; nad 9 GB `posnetki_r2_rezerviraj` zavrne (`posnetki-prostor`,
+    "nalaganje začasno ustavljeno"), pri 8 GB enkrat Discord
+    (`posnetki_r2_opozorilo`, `settings.posnetki_r2_opozorjeno`, ponastavi se pod
+    7,5 GB). Zasedenost je v Administracija → Posnetki.
+  - **Cloudflare Stream** (pozneje, ko bo nekaj plačnikov): funkcija
+    `posnetki-igralca` ustvari Direct Creator Upload (`maxDurationSeconds: 180`,
+    `requireSignedURLs: true`, naslov velja 1 uro; vmesnik omeji na 100 MB),
+    brskalnik video pošlje naravnost v Stream. Stanje pride z webhookom
+    (`Webhook-Signature`, HMAC-SHA256 nad `time.telo`, 5 min; `stream.ts`, smoke)
+    ali z vprašanjem `stanje` (rezerva). Ogled: podpisan žeton RS256 (2 uri) s
+    ključem Streama le za uid-je iz `posnetki_za_ogled` z glavo klicatelja;
+    neodobren ali izbrisan posnetek žetona ne dobi. Predvajalnik je iframe
+    Streama (`customer-<koda>.cloudflarestream.com/<žeton>/iframe`).
+  - **Preizkusni način** (lokalno, CI): `POSNETKI_PONUDNIK=test` ali brez
+    `R2_*`/`CF_*` in z `POSNETKI_TEST=1`: nalaganje dobi uid `test-…`, `stanje`
+    takoj vrne `pripravljen`, ogled je brez naslovov (plakat).
+  - **Brisanje:** lastnik ali admin → vrstica takoj, video pri ponudniku takoj
+    (R2: video in plakat; ob napaki vrsta). `prevzem_odstrani_predstavitev`
+    (preklic profila, anonimizacija, izbris računa) in kaskada igralca izbrišeta
+    vrstice; sprožilec uid, ponudnika in velikost vpiše v `posnetki_brisanje`
+    (velikost šteje v prostor R2, dokler izbris ne uspe). Pravica, ki ne velja
+    več, posnetke skrije takoj (pravilo); `posnetki_pocisti()` jih izbriše:
+    zadnja pravica `preklican` (vračilo, spor, odvzem) ob naslednjem čiščenju,
+    potek po 30 dneh (`brez_pravice_od`). Še: nedokončana nalaganja po 3 urah,
+    napake po 7 dneh, zavrnjeni 14 dni po odločitvi. Čiščenje in praznjenje
+    vrste: delovni tok *Posnetki: čiščenje* (`posnetki-pocisti.yml`, vsako uro,
+    `{"akcija":"pocisti"}` s servisnim ključem; 404/503 pred objavo je le opozorilo).
+  - **Vklop R2 (lastnik):**
+    1. Cloudflare (račun, ki ima slff.eu) → R2 Object Storage → vklop (brezplačni
+       paket; zahteva plačilno sredstvo, do 10 GB in 1 M zapisov/10 M branj na
+       mesec brez stroškov).
+    2. R2 → Create bucket `slff-posnetki` (lokacija samodejno ali EU), **brez**
+       javnega dostopa in brez r2.dev domene.
+    3. Bucket → Settings → CORS policy:
+       ```json
+       [{"AllowedOrigins": ["https://slff.eu", "https://club.slff.eu", "capacitor://localhost", "https://localhost"],
+         "AllowedMethods": ["GET", "PUT", "HEAD"],
+         "AllowedHeaders": ["content-type"],
+         "ExposeHeaders": ["ETag", "Content-Length", "Content-Range", "Accept-Ranges"],
+         "MaxAgeSeconds": 3600}]
+       ```
+       (zadnja dva izvora sta aplikacija na iOS in Androidu).
+    4. R2 → Manage R2 API Tokens → Create API token: *Object Read & Write*,
+       **Apply to specific buckets only: `slff-posnetki`**, brez roka ali z
+       dolgim rokom. Shrani Access Key ID in Secret Access Key (prikažeta se
+       enkrat); Account ID je na strani R2.
+    5. Na strežniku v `/opt/supabase/.env` (chmod 600, nikoli v git):
+       `POSNETKI_PONUDNIK=r2`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
+       `R2_SECRET_ACCESS_KEY`, `R2_BUCKET=slff-posnetki`. Novi
+       `scripts/hetzner/docker-compose.slff.yml` prenesi v `/opt/supabase/`
+       (compose ni v CI), nato
+       `cd /opt/supabase && docker compose -f docker-compose.yml -f docker-compose.slff.yml up -d functions`.
+    6. Po združitvi (migracijo uveljavi CI): `scripts/hetzner/objavi-funkcije.sh posnetki-igralca`
+       (ena funkcija na klic). Stara funkcija ne pozna nove oblike vrste brisanja,
+       zato jo objavi takoj po združitvi.
+    7. Administracija → Igralci → *Posnetki*: stikalo 1, preizkus s
+       preizkuševalcem (nalaganje mp4 in .mov z iPhona, pregled, ogled na
+       telefonu in računalniku, prijava, izbris; v R2 izgineta video in plakat),
+       nato 2.
+  - **Prehod na Stream (pozneje):** R2 ostane nastavljen (stari posnetki se
+    predvajajo iz R2). Nato:
+    1. Cloudflare → Stream → vklop naročnine.
+    2. API žeton (My Profile → API Tokens → Custom): *Account → Stream → Edit*,
+       le račun SLFF. Koda naročnika je v Stream → katerikoli video → Embed
+       (`customer-<koda>.cloudflarestream.com`).
+    3. Podpisni ključ: `curl -X POST https://api.cloudflare.com/client/v4/accounts/<ACC>/stream/keys -H "Authorization: Bearer <ŽETON>"`
+       → `result.id` je `CF_STREAM_KEY_ID`, `result.jwk` (base64) je `CF_STREAM_KEY_JWK`.
+    4. Webhook: `curl -X PUT https://api.cloudflare.com/client/v4/accounts/<ACC>/stream/webhook -H "Authorization: Bearer <ŽETON>" -H 'Content-Type: application/json' -d '{"notificationUrl":"https://api.slff.eu/functions/v1/posnetki-igralca"}'`
+       → `result.secret` je `CF_STREAM_WEBHOOK_SECRET`.
+    5. V `/opt/supabase/.env`: `CF_ACCOUNT_ID`, `CF_STREAM_TOKEN`,
+       `CF_STREAM_DOMAIN=customer-<koda>.cloudflarestream.com`,
+       `CF_STREAM_WEBHOOK_SECRET`, `CF_STREAM_KEY_ID`, `CF_STREAM_KEY_JWK`,
+       neobvezno `POSNETKI_ORIGINS=slff.eu,club.slff.eu`, in
+       **`POSNETKI_PONUDNIK=stream`**; nato `up -d functions` kot zgoraj.
+    6. Preveri webhook brez JWT:
+       `curl -s -o /dev/null -w '%{http_code}' -X POST https://api.slff.eu/functions/v1/posnetki-igralca -H 'Webhook-Signature: time=1,sig1=x' -d '{}'`
+       mora vrniti 400 (podpis), ne 401.
+    7. Neobvezno: stare posnetke prenese le ponovno nalaganje (selitve ni);
+       ko v R2 ni več posnetkov (Administracija → Posnetki, prostor 0), lahko
+       `R2_*` odstraniš.
+  - **Stroški:** R2 do 10 GB na mesec brezplačno (nad tem ~0,015 $/GB), prenos
+    brez plačila; 100 MB na posnetek in 6 posnetkov = do 600 MB na igralca,
+    meja 9 GB zadošča za ~15 polnih izložb ali ~90 posnetkov po 100 MB (običajen
+    30-sekundni posnetek s telefona ima 15–60 MB). Stream (cenik 2026, preveri):
+    5 $ na 1000 shranjenih minut na mesec, 1 $ na 1000 predvajanih minut;
+    najmanjši paket 5 $.
 - **Uradne odsotnosti** (migracija 20261012135100): potrjeni igralec (lastnik
   potrjenega `zahtevki_igralca`, tudi za povezane vrstice) sam javi odsotnost
   (`objavi_uradno_odsotnost`: vrsta `poskodba`/`bolezen`/`dopust`/`kazen`/`drugo`,
@@ -838,7 +1043,19 @@
   (`opozorila.yml`, `VRSTA=liga-zivi` → `posli-opomnik`,
   `kandidati_za_zivo_ligo`, `zelja_lige_poslana`: uspeh pobriše e-naslov,
   neuspeh največ trikrat). Neobveščene z e-naslovom pg_cron po 12 mesecih
-  izbriše
+  izbriše. Isto tabelo piše klepet podpore prek `zahtevaj_ligo`
+- **Orodja klepeta podpore** (HelpStack SERVER_SIDE, javni ključ; migraciji
+  20261004142300 in 20261110120300): bralna `najdi_igralca`, `tekme_kluba`,
+  `liga`, `tocke_igralca` (točke po krogih tekoče sezone z razčlenitvijo po
+  pravilih `tocke_za_nastop`), `stanje_tekme` (zapisnik, izid, vir, razlog,
+  glasovanje o asistencah); pisalni `prijavi_napako` (zaprta `prijave_napak`,
+  ista prijava v uri ni nova, 5 na uro na stik, 40 na uro vseh; admin:
+  Administracija → Prijave napak, `admin_prijave_napak`,
+  `admin_resi_prijavo_napake`; pg_cron po 12 mesecih izbriše) in
+  `zahtevaj_ligo` (najprej poišče vpisane lige, tudi neaktivne; željo zapiše
+  prek `zelim_ligo` šele brez zadetka ali z `vztrajam`). V brskalniku
+  (`src/lib/podporaOrodja.ts`, CLIENT_SIDE) je `moja_ekipa_krog`: ekipa
+  prijavljenega za krog z njegovo sejo. Preizkus: `supabase/tests/podpora-orodja-2.sql`
 - **Pivski zid** (`/beers`, migracija 20261013150100): `piva` hrani nakupe
   Buy Me a Coffee (funkcija `bmc-pivo`, servisni ključ, `zunanji_id` = BMC
   `data.id`, idempotentno; vračilo postavi `vracilo`, `live_mode = false` je
@@ -969,6 +1186,23 @@
   asistence vpiše nazaj po ključu gola (minuta, strelec, klub, avtogol,
   enajstmetrovka; en sam zadetek, podajalec z nastopom). Gola, minut in
   kartonov se ne popravlja
+- **Samodejni sprejem popravkov** (migracija 20261113101100): `prijavi_popravek`
+  pred čakanjem pokliče `popravek_samodejno` (zaprta). Pozicija ali asistenca
+  velja takoj, če jo predlaga igralec s potrjenim profilom (`zahtevki_igralca`
+  + `povezani_igralci`) zase ali za igralca oz. gol svojega kluba
+  (`preverjen`), ali če isto predlagajo 3 različni ljudje za pozicijo, 2 za
+  asistenco (`soglasje`, `popravek_prag_soglasja`). Nikoli ob sporu (čakajoč
+  drugačen predlog, pri asistenci tudi že sprejet drugačen), pri poziciji z
+  virom `admin`/`klub` ali čakajoči klubski poziciji; odhod je vedno ročen.
+  Uveljavi se kot admin (`position_source = 'admin'`), enaki čakajoči predlogi
+  dobijo `razlog = 'samodejno (<način>) #<id>'`, prejšnja vrednost gre v
+  `popravki_samodejno` (zaprta), Discord dobi vrstico. Admin vidi zadnjih 30
+  dni v `admin_samodejni_popravki()` in razveljavi z
+  `admin_razveljavi_samodejni_popravek(id)` (vrne prejšnjo vrednost, če je od
+  takrat ni spremenil drug, in vse z njim zaprte predloge zavrne, da jih uvoz
+  golov ne vpiše nazaj). Klepet (`prijavi_napako`) pri poziciji ali asistenci
+  prepoznanega igralca vrne še `povezava` na stran igralca s pozivom, naj
+  popravek odda prijavljen uporabnik sam
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
   ščit z začetnicami
 

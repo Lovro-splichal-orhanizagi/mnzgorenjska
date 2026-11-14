@@ -38,6 +38,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       besedilo: 'SLFF jest darmowy: bez reklam, bez zakładów, bez subskrypcji. Niestety serwer nie działa na entuzjazmie. Jedno piwo pomaga opłacić serwer i pocztę, a twoje imię trafia na piwną ścianę.',
       kasneje: 'Może następnym razem',
       zeSem: 'Już postawiłem 🍻',
+      jokNaslov: "Nieee! Naprawdę wychodzisz? 😭",
+      jokBesedilo: "Cały tydzień klęczę tu na kolanach. Bolą mnie kolana, kufel jest pusty. Jedno piwo i przestanę płakać, obiecuję. 🥺",
+      jokGumb: "No dobra, nie płacz 🍺",
+      jokZapri: "Niech płacze",
       /** Okno po shranjeni ekipi za naslednji krog. */
       ekipaNaslov: 'Drużyna na {krog}. kolejkę gotowa! 🍺',
       /** Okno ob prvem obisku po dobrem krogu (napredek na lestvici ali nad povprečjem lige). */
@@ -86,6 +90,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     izbrisRacuna: 'Usuń konto',
     nastavitve: 'Ustawienia konta',
     mojProfil: 'Mój profil',
+    sporocila: 'Wiadomości',
     povabi: 'Zaproś znajomego',
     pomoc: 'Pomoc',
     trgovina: 'Sklep',

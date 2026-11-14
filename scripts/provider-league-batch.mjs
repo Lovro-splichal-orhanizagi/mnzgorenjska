@@ -43,8 +43,22 @@ export function parseArguments(args) {
  options.slugs=(options.slugs??'').split(',');if(options.slugs.some(s=>! /^[a-z0-9-]+$/.test(s)))fail('Explicit comma-separated slugs required.')
  return options
 }
-export function assertBatchExecution({expectedSha,headSha,mainSha,env=process.env,envFileExists=false}) {
- if(!/^[a-f0-9]{40}$/.test(expectedSha??'')||headSha!==expectedSha||mainSha!==expectedSha||env.GITHUB_ACTIONS!=='true'||env.GITHUB_REF!=='refs/heads/main'||env.GITHUB_SHA!==expectedSha||env.GITHUB_REPOSITORY!==REPOSITORY||! /^[1-9]\d*$/.test(env.GITHUB_RUN_ID??'')||env.GITHUB_RUN_ATTEMPT!=='1')fail('Batch requires first Actions attempt on exact reviewed current main; no automatic write replay.')
+// Main may advance while the batch waits for nightly imports (run 41242628536
+// waited two hours and then refused). The running code stays the reviewed SHA;
+// newer main is accepted only as a descendant without database migrations.
+export function mainDriftAllowed(expectedSha,mainSha,drift) {
+ return mainSha===expectedSha||/^[a-f0-9]{40}$/.test(mainSha??'')&&drift?.ancestor===true&&Array.isArray(drift.changed)&&drift.changed.length>0&&!drift.changed.some(f=>f.startsWith('supabase/migrations/'))
+}
+export function readMainState(expectedSha) {
+ const git=args=>execFileSync('git',args,{encoding:'utf8',timeout:60000})
+ const mainSha=git(['ls-remote','--exit-code','origin','refs/heads/main']).split(/\s/)[0]
+ if(mainSha===expectedSha)return {mainSha}
+ git(['fetch','--quiet','--no-tags','origin','refs/heads/main'])
+ let ancestor=true;try{git(['merge-base','--is-ancestor',expectedSha,mainSha])}catch{ancestor=false}
+ return {mainSha,mainDrift:{ancestor,changed:git(['diff','--name-only',expectedSha,mainSha]).split('\n').filter(Boolean)}}
+}
+export function assertBatchExecution({expectedSha,headSha,mainSha,mainDrift,env=process.env,envFileExists=false}) {
+ if(!/^[a-f0-9]{40}$/.test(expectedSha??'')||headSha!==expectedSha||!mainDriftAllowed(expectedSha,mainSha,mainDrift)||env.GITHUB_ACTIONS!=='true'||env.GITHUB_REF!=='refs/heads/main'||env.GITHUB_SHA!==expectedSha||env.GITHUB_REPOSITORY!==REPOSITORY||! /^[1-9]\d*$/.test(env.GITHUB_RUN_ID??'')||env.GITHUB_RUN_ATTEMPT!=='1')fail('Batch requires first Actions attempt on the exact reviewed SHA, with main unchanged or only advanced without migrations; no automatic write replay.')
  if(envFileExists||!env.SUPABASE_URL||!env.SUPABASE_SERVICE_ROLE_KEY)fail('Actions database keys required and repository .env must be absent.')
 }
 function requireCandidate(candidate,competition) {
@@ -329,8 +343,7 @@ async function main() {
  try {
   const guard=async()=>{
    const headSha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()
-   const mainSha=execFileSync('git',['ls-remote','--exit-code','origin','refs/heads/main'],{encoding:'utf8',timeout:30000}).split(/\s/)[0]
-   assertBatchExecution({expectedSha:options.expectedSha,headSha,mainSha,envFileExists:existsSync(resolve('.env'))})
+   assertBatchExecution({expectedSha:options.expectedSha,headSha,...readMainState(options.expectedSha),envFileExists:existsSync(resolve('.env'))})
   }
   await guard()
   const registry=JSON.parse(readFileSync(new URL('./policies/existing-league-candidates-20261018.json',import.meta.url),'utf8'))

@@ -54,7 +54,11 @@ export const doplacilo = (moznosti: Moznost[], p: Personalizacija | undefined, m
   !p ? 0 : p.motiv !== undefined ? (motivi.find((m) => m.slug === p.motiv)?.doplacilo ?? 0)
     : moznosti.filter((m) => m.vrsta in p).reduce((s, m) => s + m.doplacilo, 0)
 
-const ZNAKI_MOTIVA = /^[A-Za-zÀ-ÖØ-öø-ž0-9 .'&!?-]+$/
+// Črke vseh jezikov trgovine: latinica (tudi ș ț ə), grščina, cirilica (mk, uk), armenščina.
+// Isti nabor v trgovina.vrednost_polja; pisave motivov jih imajo (risba.ts, PISAVA_MOTIVOV).
+const CRKE_MOTIVA = 'A-Za-zÀ-ÖØ-öø-žȘșȚțƏəͰ-ϿЀ-џҐ-ҟԱ-֏'
+const ZNAKI_MOTIVA = new RegExp(`^[${CRKE_MOTIVA}0-9 .'&!?-]+$`)
+const CRKA_MOTIVA = new RegExp(`[${CRKE_MOTIVA}]`)
 
 /**
  * Napaka vnosa polja motiva (zrcali trgovina.vrednost_polja) ali null. Prazno
@@ -65,7 +69,7 @@ export function napakaPolja(vrsta: string, surovo: string, max = 12, letos = new
   if (!v) return null
   if (vrsta === 'besedilo') {
     if ([...v].length > max) return 'motiv.napaka.dolgo'
-    if (!ZNAKI_MOTIVA.test(v) || !CRKA.test(v)) return 'motiv.napaka.znaki'
+    if (!ZNAKI_MOTIVA.test(v) || !CRKA_MOTIVA.test(v)) return 'motiv.napaka.znaki'
   }
   if (vrsta === 'stevilka' && min > 0 && (stevilka(v) ?? 0) < min) return 'motiv.napaka.ocena'
   if (vrsta === 'stevilka' && stevilka(v) === null) return 'pers.napaka.stevilka'

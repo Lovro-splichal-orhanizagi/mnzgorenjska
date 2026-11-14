@@ -4,6 +4,11 @@ import type { Prevod } from '../jedro.ts'
 export const domov: NonNullable<Prevod['domov']> = {
   napakaNalaganja: 'Nie udało się wczytać danych.',
   delNiNalozen: 'Część danych się nie wczytała: {napaka}',
+  stevec: {
+    naslov: 'W drodze do 10 000 użytkowników',
+    dosezeno: 'Mamy 10 000 użytkowników!',
+    opis: 'Do celu brakuje jeszcze: {n}',
+  },
   uvod: {
     // Teksty gorenjskie są reklamowe i zostają takie, jakie były.
     gorenjskaMladinci: 'Gorenjska nogometna liga — mladinci',
@@ -176,6 +181,12 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaPripomocki: 'Chips',
     pravilaWildcard: 'Wildcard: rebuild your team for free',
     pravilaKlopPlus: 'Bench+: your bench scores too',
+  },
+  // Časovno omejena kartica z aplikacijama namesto trgovine (AppPromo.tsx).
+  appPromo: {
+    oznaka: 'Nowość · aplikacja SLFF',
+    naslov: 'SLFF jest teraz także aplikacją',
+    opis: 'Ułóż skład, śledź punkty na żywo i dostań przypomnienie przed terminem. Za darmo na Androida i iPhone’a.',
   },
   trgovina: {
     oznaka: 'Nowość · Sklep SLFF',

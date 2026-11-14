@@ -73,8 +73,12 @@ East in West).
   Cowdenbeath; West: Cumbernauld : Clydebank); prekinjene še nismo videli.
 - **Arhiva ni**: stran je nova, `/match-centre/slfl/2025-2026/` vrne 404 —
   cene le iz tekoče sezone (oktobra ~11 odigranih krogov).
-- Ista stran nosi še Lowland League Cup (pokal — ne) in SLDFL (razvojna liga
-  rezervnih ekip — ne). Highland League (highlandfootballleague.com, SFG
+- Ista stran nosi še Lowland League Cup (pokal — ne). SLDFL (U20 Development
+  League) ima svojo pot `/match-centre/sldfl/2026-2027/`: od 4. 11. 2026
+  sta vpisani `gb-lowland-u20-east` (`sldfl/2026-2027/54269281`, ~13 klubov)
+  in `gb-lowland-u20-west` (`sldfl/2026-2027/54269309`, ~12 klubov),
+  migracija 20261104176100, **neaktivni**, brez arhiva; nekateri zapisniki
+  imajo "Lineups not available". Highland League (highlandfootballleague.com, SFG
   Software) ima le izide in drug upravljavec, North of Scotland in EoSFL/WoSFL
   imajo robots `Disallow: /` — dovoljenje za SLFL jih ne pokriva.
 

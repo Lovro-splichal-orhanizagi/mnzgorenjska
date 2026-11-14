@@ -455,3 +455,59 @@ potrjeno, da je isti. RADNIČKI (Obrenovac), BUDUĆNOST (Dobanovci), DUNAV
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=rs-u19-srbija -f
 arhiv=omladinska-liga-srbije-25-26 -f cene=true`; fssid brez arhiva. Seznam
 je v PR.
+
+## Srbija — kadeti (U17), mlađi omladinci (U18) in ženske lige
+
+Migracija 20261104174300 (odobritev lastnika 4. 11. 2026), devet lig,
+**neaktivnih**. Mladinske `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`;
+ženske kot člani fss (1, 6).
+
+| liga | vir | šifra 2026/27 | klubov | opomba |
+|---|---|---|---|---|
+| rs-zene-superliga | fss | `super-liga-srbije-z-26-27` | 8 | vratar s prvaliga.rs morda manjka (opozorilo, glasovanje) |
+| rs-zene-prva | fss | `prva-liga-srbije-z-26-27` | 9 | isto |
+| rs-u17-srbija | fss | `kadetska-liga-srbije-26-27` | 14 | arhiv `kadetska-liga-srbije-25-26` (nepreverjen) |
+| rs-u18-bg | fsb | `liga-mladjih-omladinaca-beograda-2026-27` | 16 | |
+| rs-u17-bg-1 | fsb | `prva-liga-kadeta-beograda-2026-27` | 14 | RADNIČKI brez kraja (= članski, Obrenovac?) ni preverjen |
+| rs-u17-bg-2 | fsb | `druga-liga-kadeta-beograda-2026-27` | 14 | BSK = Borča, BUDUĆNOST = Dobanovci (članska) |
+| rs-u17-bg-3 | fsb | `treca-liga-kadeta-beograda-2026-27` | 15 | `IME_V_LIGI`: BORAC (Ostružnica), JEDINSTVO (Dobanovci), OMLADINAC (Veliko Polje) |
+| rs-u17-vojvodina | fssid | `76002700-76002881` | 14 | FSV; datumi ocenjeni |
+| rs-u17-zapad | fssid | `75910179-75910418` | 16 | FSRZS; datumi ocenjeni |
+
+Meje blokov fssid so preverjene 4. 11. 2026 (zadnja šifra obstaja, naslednja
+"Utakmica ne postoji"). **Ni vpisano**: Druga kadetska Vojvodine Sever
+(76059057) in Jug (76060043) — šifra za 12-klubskim blokom še obstaja, meje
+niso znane; Druga kadetska "Zapadno-moravska" (75932006, pri 13 klubih zadnje
+šifre ni), "Kolubarsko-mačvanska" (75918864) in "Podunavsko-šumadijska"
+(75915926) — število klubov ni znano. Meje naj najde `node
+scripts/srbija-blok.mjs <šifra>`. Druga liga za žene FSB
+(`druga-liga-za-zene-fsb`) ni vpisana: stran nima sezone v naslovu in je
+`fsb` ne prebere. Fssid lige imajo kot omladinske le ocenjene datume — pred
+vklopom preveri `datum_ocenjen` (glej rs-bg-lazarevac-1).
+
+## Srbija — druge kadetske in pionirske lige (U17, U15)
+
+Pregled 9. 11. 2026 (fragment za migracijo novih lig), vse **neaktivne**,
+`prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`, brez arhiva. Meje blokov fssid
+je našel `scripts/srbija-blok.mjs`; pioniri so U15 po kategorijah FSS (mlađi
+pioniri U14 in petlići niso vpisani).
+
+| liga | vir | šifra 2026/27 | klubov | zapisnik (preverjen) |
+|---|---|---|---|---|
+| rs-u17-vojvodina-sever | fssid | `76059057-76059238` | 14 | 76059127 |
+| rs-u17-vojvodina-jug | fssid | `76060043-76060224` | 14 | 76060113 |
+| rs-u17-zapad-km | fssid | `75918864-75919073` | 15 (lih) | 75918941 |
+| rs-u15-vojvodina | fssid | `76003873-76004054` | 14 | 76003943 |
+| rs-u15-bg-1 | fsb | `prva-liga-pionira-beograda-2026-27` | 14 | 76492184 |
+| rs-u15-bg-2 | fsb | `druga-liga-pionira-beograda-2026-27` | 14 | 76494291 (BSK = Borča), 76494287 (RADNIČKI = Obrenovac) |
+| rs-u15-bg-3b | fsb | `treca-liga-pionira-beograda-grupa-b-2026-27` | 12 | 76498430 |
+
+**Ni vpisano** (9. 11.): Druga kadetska FSRZS "Zapadno-moravska"
+`75932006-75932137` (12) in "Podunavsko-šumadijska" `75915926-75916057` (12)
+ter Druga pionirska Vojvodine Sever `76061069-76061200` (12) — jesen (11
+krogov) končana, pomladni datumi niso znani; vpiši spomladi. Treća liga pionira
+Beograda grupa A (`treca-liga-pionira-beograda-grupa-a-2026-27`, 12) potrebuje
+v `IME_V_LIGI` OMLADINAC → "OMLADINAC (Veliko Polje)" (BUDUĆNOST = Dobanovci,
+SREM = Jakovo sta članska); grupa V (10) je jesen končala. Lige mlađih kadeta
+(U16, štiri skupine po 9–10) so enokrožne in skoraj končane. Razvojna liga FSS
+U-15 na teritoriji FSB in Druga liga za žene FSB: brez sezone v naslovu strani.

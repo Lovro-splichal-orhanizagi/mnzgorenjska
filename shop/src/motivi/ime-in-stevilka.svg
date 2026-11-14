@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 15" width="50mm" height="15mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="rocaj">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 15" width="50mm" height="15mm" font-family="Anton, 'SLFF Motivi Dodatek', 'SLFF Motivi Armenscina', Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="rocaj">
   <rect x="1" y="1" width="13" height="13" rx="2" fill="none" data-crta="1" stroke-width=".6"/>
   <text x="7.5" y="12.4" font-size="11.6" data-polje="stevilka" data-sirina="10.5" data-sredina data-barva="1">5</text>
   <text x="32" y="8.9" font-size="8.4" letter-spacing=".6" data-polje="ime" data-velike data-sirina="33" data-sredina data-barva="1">MLAKAR</text>
-  <text x="32" y="14.3" font-size="4.5" letter-spacing=".5" data-sirina="33" data-barva="1" data-en="SUNDAY LEAGUE">NEDELJSKA LIGA</text>
+  <text data-napis="liga" x="32" y="14.3" font-size="4.5" letter-spacing=".5" data-sirina="33" data-barva="1">NEDELJSKA LIGA</text>
 </svg>

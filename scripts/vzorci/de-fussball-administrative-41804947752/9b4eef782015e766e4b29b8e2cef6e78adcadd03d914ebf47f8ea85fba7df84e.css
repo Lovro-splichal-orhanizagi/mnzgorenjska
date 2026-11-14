@@ -1,0 +1,10 @@
+@font-face {
+	font-family: font-b4uo5yw7;
+	src: 
+		url('//www.fussball.de/export.fontface/-/format/woff/id/b4uo5yw7/type/font') format('woff'),
+		url('//www.fussball.de/export.fontface/-/format/ttf/id/b4uo5yw7/type/font') format('truetype');
+}
+
+.results-c-b4uo5yw7 {
+	font-family: font-b4uo5yw7 !important;
+}
