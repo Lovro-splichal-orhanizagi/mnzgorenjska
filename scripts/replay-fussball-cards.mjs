@@ -16,7 +16,7 @@ function reviewed(slug){
  require(candidates.length<=16&&(!slug||candidates.some(c=>c.slug===slug)),'unknown or unbounded reviewed selection')
  return candidates.filter(c=>!slug||c.slug===slug).map(c=>validateGermanyCandidate(c))
 }
-async function rpc(db,name,args){const {data,error}=await db.rpc(name,args);if(error)throw Error('FUSSBALL card worker database operation failed');return data}
+async function rpc(db,name,args){const {data,error}=await db.rpc(name,args);if(error)throw Error('FUSSBALL card worker: database operation failed');return data}
 async function scopesFor(db,slug){
  const scopes=[];let competitions=0
  for(const c of reviewed(slug)){
@@ -27,12 +27,18 @@ async function scopesFor(db,slug){
   const {data:country,error:countryError}=await db.from('countries').select('code').eq('id',row.country_id).maybeSingle()
   require(!countryError&&country?.code==='DE','actual registered country differs')
   const installed=await rpc(db,'get_fussball_card_policy',{p_competition_id:row.id})
-  require(installed?.installed===true&&typeof installed.enabled==='boolean'&&installed.source_policy===FUSSBALL_COMMUNITY_SOURCE_POLICY&&installed.current_code===c.source_league_code&&Array.isArray(installed.archive_codes)&&same([...installed.archive_codes].sort(),c.archives.map(a=>a.code).sort()),'exact installed current/archive policy required')
+  require(installed?.installed===true&&typeof installed.enabled==='boolean'&&installed.source_policy===FUSSBALL_COMMUNITY_SOURCE_POLICY&&installed.current_code===c.source_league_code&&Array.isArray(installed.archive_codes)&&(!installed.archive_codes.length||same([...installed.archive_codes].sort(),c.archives.map(a=>a.code).sort())),'exact installed current/archive policy required')
   if(!installed.enabled)continue
   competitions++
-  for(const code of [c.source_league_code,...c.archives.map(a=>a.code)])scopes.push({competitionId:row.id,code})
+  // Path B (current-only, #648) installs the policy with no archive codes: replay the current season only.
+  for(const code of [c.source_league_code,...(installed.archive_codes.length?c.archives.map(a=>a.code):[])])scopes.push({competitionId:row.id,code})
  }
  return {scopes,competitions}
+}
+// Only our own fixed-text errors (worker and requireProof runtime ones) are echoed; anything else (database, network, parser) is reduced to its class name so no payload or secret can leak.
+export function safeReplayError(error){
+ const message=typeof error?.message==='string'?error.message:''
+ return /^FUSSBALL card (worker|runtime): /.test(message)&&message.length<=200&&/^[\x20-\x7e]+$/.test(message)?message:'Unexpected '+(typeof error?.name==='string'&&/^[A-Za-z]{1,40}$/.test(error.name)?error.name:'error')+'.'
 }
 export async function runFussballCardReplayWorker({db,slug,maxJobs=10,runId,processJob=processFussballCardJob}={}){
  require(db&&typeof db.rpc==='function'&&typeof db.from==='function'&&Number.isSafeInteger(maxJobs)&&maxJobs>=1&&maxJobs<=10&&/^[1-9]\d{0,15}$/.test(runId??''),'bounded native worker scope required')
@@ -79,4 +85,4 @@ export async function runFussballCardReplay(args,{env=process.env,headSha,envFil
  }
  return runFussballCardReplayWorker({db,slug,runId:env.GITHUB_RUN_ID,...(processJob?{processJob}:{})})
 }
-if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))runFussballCardReplay(process.argv.slice(2)).then(result=>console.log(JSON.stringify(result))).catch(()=>{console.error('FUSSBALL card replay stopped; inspect private native state before a distinct run.');process.exitCode=1})
+if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))runFussballCardReplay(process.argv.slice(2)).then(result=>console.log(JSON.stringify(result))).catch(error=>{console.error(safeReplayError(error)+' FUSSBALL card replay stopped; inspect private native state before a distinct run.');process.exitCode=1})

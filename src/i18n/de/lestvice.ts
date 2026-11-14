@@ -115,6 +115,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     vrhOpomba:
       'Punkte ohne Assists: Assists werden per Abstimmung bestätigt, die in den meisten Ligen noch nicht läuft, sonst wären die Ligen ungleich gestellt. Die Ligen haben unterschiedlich viele Runden gespielt.',
     vrhPrazno: 'In der laufenden Saison wurden noch keine Spiele gespielt.',
+    napovediUvod: 'Die besten Tipper aller Ligen. Exaktes Ergebnis 3 Punkte, richtige Tendenz 1.',
+    napovediSezona: 'Saison',
+    napovedi7dni: 'Letzte 7 Tage',
+    napovediPrazno7: 'In den letzten 7 Tagen gibt es noch keine gewerteten Tipps.',
+    napovediOcenjenih: 'Gewertete Tipps: {n}',
+    vrhNapovedi: 'Beste Tipper',
+    vrhNapovediVse: 'Ganze Tipptabelle',
   },
 
   miniLige: {

@@ -217,3 +217,20 @@ Izpuščeno: BFZ WU19 (3 klubi), SsFZ WU19 (5), ObFZ Banská Bystrica U17 (brez
 tekem), U14 in mlajši, VsFZ/ZsFZ III. liga U15 (nepreverjene). Postave so
 preverjene na Orange ligi, državni U17 in BFZ U17 (11 + klop, ISSF, dogodki).
 Šifre so v migraciji.
+
+## Slovaška — regijske in okresne U15, Liptov U19 (9. 11. 2026)
+
+Pometanje vseh 44 appSpace-ov za 2026/27: 18 novih lig, **neaktivnih**
+(`sk-ssfz-u15-3liga`, `sk-zsfz-u15-3liga-jv`/`-sz`, `sk-ba-u15-3liga`,
+`sk-ba-u15-4liga-a`/`-b`, `sk-bav-u15`, `sk-ds-u15`, `sk-kn-u15`, `sk-lv-u15`,
+`sk-tfz-u15`, `sk-lm-u19`, `sk-pp-u15`, `sk-po-u15-4liga`,
+`sk-po-u15-5liga-a`, `sk-tv-u15`, `sk-vk-u15`, `sk-vt-u15-a`; šifre so v
+migraciji). Mladinske kot ostale (2 in 2).
+
+**Pazi — zapisnik brez klopi.** Mnoge lige U15 in WU15 (BFZ/SFZ/SsFZ WU15,
+VsFZ III. U15, Trnava, Trenčín, Nitra, Žilina, Orava, Spiš …) igrajo s
+povratnimi menjavami: zapisnik našteje 12–20 igralcev, vsi brez `substitute`,
+menjav ni. Vir bi jih vse štel za začetne, zato teh lig nismo vpisali. Preden
+vklopiš že vpisano U15 ali WU15 (20261104174100), preveri en zapisnik.
+Tekmo z `__issfMatchStatus = NEZUCASTNENE_JEDNO_DRUZSTVO` (prosti krog) API
+vrne z drugim imenom dela, a z istim `partId` — ni nova skupina.

@@ -4804,3 +4804,271 @@ function razlogVDanscini(razlog: string | null | undefined): string {
     return 'Holdet har ikke præcis én vicekaptajn.'
   return 'Holdet overholder ikke reglerne. Detaljer finder du under Mit hold.'
 }
+
+// --- promocija: preverjen profil (SLF-383) ----------------------------------
+// Enkratni mail od info@slff.eu odraslim lastnikom potrjenega prevzema
+// (`promo_preverjen_kohorta`). Obljubimo le, kar že deluje (kot stran /verified):
+// highlight video iz 6 posnetkov, slike po tekmi in sezone, CV in poročilo pred
+// tekmo, kljukica s profilom in sporočili, plakat ob nakupu za vedno. Cene pridejo iz Stripa ob pošiljanju
+// (`cene`), nikoli iz besedila. Jezik: država lige prevzetega igralca, če ima
+// prevod, sicer angleščina. Besedilo odobri človek (Lovro, Nejc ali Luka);
+// vsaka sprememba spremeni `osnutek_sha` in zahteva novo odobritev.
+
+interface BesedilaPromoPreverjen {
+  zadeva: string
+  zdravo: string
+  uvod: string
+  prevzet: string
+  tocke: string[]
+  gumb: string
+  cene: string // {letna}, {dozivljenjska}
+  vprasanja: string
+  podpis: string
+  zakaj: string
+  odjava: string
+}
+
+export const PROMO_PREVERJEN: Partial<Record<Jezik, BesedilaPromoPreverjen>> = {
+  en: {
+    zadeva: 'Your football deserves to be seen',
+    zdravo: 'Hi',
+    uvod: 'Your matches, goals and minutes are already on SLFF. A verified profile turns them into something you can show.',
+    prevzet: 'Your SLFF player profile is already confirmed as yours. A verified profile adds:',
+    tocke: [
+      'A highlight video made for you: upload 6 clips of your best moves and the SLFF team edits them into one video, included in the price.',
+      'A ready-made image after every match (score, minutes, goals, points) and your whole season in one image, ready to share.',
+      'A one-page CV with your seasons, clubs and numbers to send to a coach, plus a report before every match.',
+      'The blue tick next to your name, your own cover, colour, story and links, and messages to any player in the game.',
+      'With the lifetime option: a printed 40 × 60 cm poster of your career, delivered to your home in the EU.',
+    ],
+    gumb: 'See everything you get',
+    cene: '{letna} a year, or {dozivljenjska} once for lifetime with the poster included. The fantasy game stays free.',
+    vprasanja: 'Questions? Just reply to this email.',
+    podpis: 'The SLFF team',
+    zakaj: 'We send this once, because you claimed your player profile on slff.eu.',
+    odjava: 'Don\'t email me again',
+  },
+  sl: {
+    zadeva: 'Tvoj nogomet si zasluži, da ga vidijo',
+    zdravo: 'Živjo',
+    uvod: 'Tvoje tekme, goli in minute so že v SLFF. Preverjen profil iz njih naredi nekaj, kar lahko pokažeš.',
+    prevzet: 'Tvoj profil igralca v SLFF je že potrjen kot tvoj. Preverjen profil doda:',
+    tocke: [
+      'Highlight video, narejen zate: naloži 6 posnetkov svojih najboljših potez in ekipa SLFF jih zmontira v en video, vključen v ceno.',
+      'Po vsaki tekmi pripravljena slika (izid, minute, goli, točke) in cela sezona v eni sliki, pripravljeni za deljenje.',
+      'CV na eni strani s sezonami, klubi in številkami za trenerja ter poročilo pred vsako tekmo.',
+      'Modra kljukica ob imenu, tvoja pasica, barva, zgodba in povezave ter sporočila kateremukoli igralcu v igri.',
+      'Ob nakupu za vedno: natisnjen plakat tvoje kariere 40 × 60 cm, poslan na dom v EU.',
+    ],
+    gumb: 'Oglej si vse, kar dobiš',
+    cene: '{letna} na leto ali enkrat {dozivljenjska} za vedno, s plakatom. Fantasy igra ostane brezplačna.',
+    vprasanja: 'Vprašanja? Preprosto odgovori na ta mail.',
+    podpis: 'Ekipa SLFF',
+    zakaj: 'Ta mail pošljemo enkrat, ker imaš na slff.eu potrjen profil igralca.',
+    odjava: 'Ne pošiljajte mi več mailov',
+  },
+  de: {
+    zadeva: 'Dein Fußball verdient es, gesehen zu werden',
+    zdravo: 'Hallo',
+    uvod: 'Deine Spiele, Tore und Minuten sind schon bei SLFF. Ein verifiziertes Profil macht daraus etwas, das du zeigen kannst.',
+    prevzet: 'Dein SLFF Spielerprofil ist bereits als deins bestätigt. Ein verifiziertes Profil bringt:',
+    tocke: [
+      'Ein Highlight-Video für dich: Lade 6 Clips deiner besten Aktionen hoch und das SLFF-Team schneidet daraus ein Video, im Preis enthalten.',
+      'Nach jedem Spiel ein fertiges Bild (Ergebnis, Minuten, Tore, Punkte) und deine ganze Saison in einem Bild, bereit zum Teilen.',
+      'Ein einseitiger Lebenslauf mit Saisons, Vereinen und Zahlen für Trainer, dazu ein Bericht vor jedem Spiel.',
+      'Den blauen Haken neben deinem Namen, eigenes Titelbild, Farbe, Geschichte und Links und Nachrichten an jeden Spieler im Spiel.',
+      'Beim Kauf für immer: ein gedrucktes Poster deiner Karriere, 40 × 60 cm, nach Hause geliefert (EU).',
+    ],
+    gumb: 'Alles ansehen, was du bekommst',
+    cene: '{letna} pro Jahr oder einmalig {dozivljenjska} für immer, mit Poster. Das Fantasy-Spiel bleibt kostenlos.',
+    vprasanja: 'Fragen? Antworte einfach auf diese E-Mail.',
+    podpis: 'Das SLFF-Team',
+    zakaj: 'Wir senden diese E-Mail einmal, weil du dein Spielerprofil auf slff.eu übernommen hast.',
+    odjava: 'Keine E-Mails mehr',
+  },
+  hr: {
+    zadeva: 'Tvoj nogomet zaslužuje da bude viđen',
+    zdravo: 'Bok',
+    uvod: 'Tvoje utakmice, golovi i minute već su na SLFF. Provjereni profil od njih napravi nešto što možeš pokazati.',
+    prevzet: 'Tvoj profil igrača na SLFF već je potvrđen kao tvoj. Provjereni profil donosi:',
+    tocke: [
+      'Highlight video napravljen za tebe: učitaj 6 snimaka svojih najboljih poteza i SLFF tim montira ih u jedan video, uključen u cijenu.',
+      'Nakon svake utakmice gotova slika (rezultat, minute, golovi, bodovi) i cijela sezona na jednoj slici, spremne za dijeljenje.',
+      'CV na jednoj stranici sa sezonama, klubovima i brojkama za trenera te izvještaj prije svake utakmice.',
+      'Plava kvačica uz ime, tvoja naslovna slika, boja, priča i poveznice te poruke bilo kojem igraču u igri.',
+      'Uz kupnju zauvijek: tiskani poster tvoje karijere 40 × 60 cm, dostavljen na kućnu adresu u EU.',
+    ],
+    gumb: 'Pogledaj sve što dobivaš',
+    cene: '{letna} godišnje ili jednom {dozivljenjska} zauvijek, s posterom. Fantasy igra ostaje besplatna.',
+    vprasanja: 'Pitanja? Samo odgovori na ovaj mail.',
+    podpis: 'Tim SLFF-a',
+    zakaj: 'Ovaj mail šaljemo jednom jer imaš potvrđen profil igrača na slff.eu.',
+    odjava: 'Ne šaljite mi više mailove',
+  },
+  sr: {
+    zadeva: 'Tvoj fudbal zaslužuje da se vidi',
+    zdravo: 'Zdravo',
+    uvod: 'Tvoje utakmice, golovi i minuti već su na SLFF. Proveren profil od njih napravi nešto što možeš da pokažeš.',
+    prevzet: 'Tvoj profil igrača na SLFF već je potvrđen kao tvoj. Proveren profil donosi:',
+    tocke: [
+      'Highlight video napravljen za tebe: postavi 6 snimaka svojih najboljih poteza i SLFF tim ih montira u jedan video, uključen u cenu.',
+      'Posle svake utakmice gotova slika (rezultat, minuti, golovi, poeni) i cela sezona na jednoj slici, spremne za deljenje.',
+      'CV na jednoj strani sa sezonama, klubovima i brojkama za trenera i izveštaj pre svake utakmice.',
+      'Plava kvačica pored imena, tvoja naslovna slika, boja, priča i linkovi i poruke bilo kom igraču u igri.',
+      'Uz kupovinu zauvek: štampani poster tvoje karijere 40 × 60 cm, dostavljen na kućnu adresu u EU.',
+    ],
+    gumb: 'Pogledaj sve što dobijaš',
+    cene: '{letna} godišnje ili jednom {dozivljenjska} zauvek, sa posterom. Fantasy igra ostaje besplatna.',
+    vprasanja: 'Pitanja? Samo odgovori na ovaj mejl.',
+    podpis: 'SLFF tim',
+    zakaj: 'Ovaj mejl šaljemo jednom jer imaš potvrđen profil igrača na slff.eu.',
+    odjava: 'Ne šaljite mi više mejlove',
+  },
+  hu: {
+    zadeva: 'A focid megérdemli, hogy lássák',
+    zdravo: 'Szia',
+    uvod: 'A meccseid, góljaid és perceid már az SLFF-ben vannak. Az ellenőrzött profil olyat csinál belőlük, amit meg is mutathatsz.',
+    prevzet: 'Az SLFF játékosprofilod már a tiédként van megerősítve. Az ellenőrzött profil ezt adja:',
+    tocke: [
+      'Neked készült highlight videó: tölts fel 6 videót a legjobb megmozdulásaidról, és az SLFF csapata egy videóvá vágja őket, az ár része.',
+      'Minden meccs után kész kép (eredmény, percek, gólok, pontok) és az egész szezonod egy képen, megosztásra készen.',
+      'Egyoldalas önéletrajz szezonokkal, klubokkal és számokkal az edzőnek, plusz beszámoló minden meccs előtt.',
+      'Kék pipa a neved mellett, saját borító, szín, történet és linkek, és üzenet bármelyik játékosnak a játékban.',
+      'Örökre szóló vásárlásnál: nyomtatott 40 × 60 cm-es poszter a pályafutásodról, házhoz szállítva az EU-ban.',
+    ],
+    gumb: 'Nézd meg, mit kapsz',
+    cene: 'Évi {letna}, vagy egyszer {dozivljenjska} örökre, poszterrel. A fantasy játék ingyenes marad.',
+    vprasanja: 'Kérdésed van? Csak válaszolj erre az e-mailre.',
+    podpis: 'Az SLFF csapata',
+    zakaj: 'Ezt az e-mailt egyszer küldjük el, mert az slff.eu-n átvetted a játékosprofilodat.',
+    odjava: 'Ne küldjetek több e-mailt',
+  },
+  sk: {
+    zadeva: 'Tvoj futbal si zaslúži, aby ho bolo vidieť',
+    zdravo: 'Ahoj',
+    uvod: 'Tvoje zápasy, góly a minúty sú už na SLFF. Overený profil z nich urobí niečo, čo môžeš ukázať.',
+    prevzet: 'Tvoj hráčsky profil na SLFF je už potvrdený ako tvoj. Overený profil pridá:',
+    tocke: [
+      'Highlight video pre teba: nahraj 6 videí svojich najlepších akcií a tím SLFF z nich zostrihá jedno video, v cene.',
+      'Po každom zápase hotový obrázok (výsledok, minúty, góly, body) a celá sezóna na jednom obrázku, pripravené na zdieľanie.',
+      'Životopis na jednu stranu so sezónami, klubmi a číslami pre trénera a správa pred každým zápasom.',
+      'Modrá fajka pri mene, vlastná titulná grafika, farba, príbeh a odkazy a správy ktorémukoľvek hráčovi v hre.',
+      'Pri nákupe navždy: vytlačený plagát tvojej kariéry 40 × 60 cm, doručený domov v rámci EÚ.',
+    ],
+    gumb: 'Pozri si všetko, čo dostaneš',
+    cene: '{letna} ročne alebo raz {dozivljenjska} navždy, s plagátom. Fantasy hra zostáva zadarmo.',
+    vprasanja: 'Otázky? Stačí odpovedať na tento e-mail.',
+    podpis: 'Tím SLFF',
+    zakaj: 'Tento e-mail posielame raz, lebo máš na slff.eu potvrdený hráčsky profil.',
+    odjava: 'Neposielajte mi už e-maily',
+  },
+  es: {
+    zadeva: 'Tu fútbol merece que lo vean',
+    zdravo: 'Hola',
+    uvod: 'Tus partidos, goles y minutos ya están en SLFF. Un perfil verificado los convierte en algo que puedes enseñar.',
+    prevzet: 'Tu perfil de jugador en SLFF ya está confirmado como tuyo. Un perfil verificado añade:',
+    tocke: [
+      'Un vídeo de highlights hecho para ti: sube 6 clips de tus mejores jugadas y el equipo de SLFF los monta en un vídeo, incluido en el precio.',
+      'Después de cada partido, una imagen lista (resultado, minutos, goles, puntos) y toda tu temporada en una imagen, listas para compartir.',
+      'Un CV de una página con temporadas, clubes y números para enviar a un entrenador, y un informe antes de cada partido.',
+      'La insignia azul junto a tu nombre, tu portada, color, historia y enlaces, y mensajes a cualquier jugador del juego.',
+      'Con la compra para siempre: un póster impreso de tu carrera de 40 × 60 cm, enviado a tu casa en la UE.',
+    ],
+    gumb: 'Mira todo lo que recibes',
+    cene: '{letna} al año, o una vez {dozivljenjska} para siempre, con póster. El juego de fantasy sigue siendo gratis.',
+    vprasanja: '¿Preguntas? Responde a este correo.',
+    podpis: 'El equipo de SLFF',
+    zakaj: 'Te enviamos este correo una sola vez porque reclamaste tu perfil de jugador en slff.eu.',
+    odjava: 'No me enviéis más correos',
+  },
+  el: {
+    zadeva: 'Το ποδόσφαιρό σου αξίζει να φαίνεται',
+    zdravo: 'Γεια σου',
+    uvod: 'Οι αγώνες, τα γκολ και τα λεπτά σου είναι ήδη στο SLFF. Ένα επαληθευμένο προφίλ τα κάνει κάτι που μπορείς να δείξεις.',
+    prevzet: 'Το προφίλ παίκτη σου στο SLFF είναι ήδη επιβεβαιωμένο ως δικό σου. Ένα επαληθευμένο προφίλ προσθέτει:',
+    tocke: [
+      'Βίντεο highlights για σένα: ανέβασε 6 βίντεο με τις καλύτερες φάσεις σου και η ομάδα του SLFF τα μοντάρει σε ένα βίντεο, μέσα στην τιμή.',
+      'Μετά από κάθε αγώνα μια έτοιμη εικόνα (σκορ, λεπτά, γκολ, πόντοι) και όλη η σεζόν σου σε μία εικόνα, έτοιμες για κοινοποίηση.',
+      'Βιογραφικό μίας σελίδας με σεζόν, συλλόγους και αριθμούς για προπονητή, και αναφορά πριν από κάθε αγώνα.',
+      'Το μπλε σήμα δίπλα στο όνομά σου, δικό σου εξώφυλλο, χρώμα, ιστορία και σύνδεσμοι, και μηνύματα σε οποιονδήποτε παίκτη.',
+      'Με την αγορά για πάντα: τυπωμένη αφίσα της καριέρας σου 40 × 60 cm, στο σπίτι σου στην ΕΕ.',
+    ],
+    gumb: 'Δες όλα όσα παίρνεις',
+    cene: '{letna} τον χρόνο ή μία φορά {dozivljenjska} για πάντα, με την αφίσα. Το fantasy παιχνίδι μένει δωρεάν.',
+    vprasanja: 'Ερωτήσεις; Απλώς απάντησε σε αυτό το email.',
+    podpis: 'Η ομάδα του SLFF',
+    zakaj: 'Σου στέλνουμε αυτό το email μία φορά, επειδή διεκδίκησες το προφίλ παίκτη σου στο slff.eu.',
+    odjava: 'Μη μου στέλνετε άλλα email',
+  },
+  ro: {
+    zadeva: 'Fotbalul tău merită să fie văzut',
+    zdravo: 'Salut',
+    uvod: 'Meciurile, golurile și minutele tale sunt deja pe SLFF. Un profil verificat le transformă în ceva ce poți arăta.',
+    prevzet: 'Profilul tău de jucător pe SLFF este deja confirmat ca fiind al tău. Un profil verificat adaugă:',
+    tocke: [
+      'Un video highlight făcut pentru tine: încarcă 6 clipuri cu cele mai bune faze și echipa SLFF le montează într-un video, inclus în preț.',
+      'După fiecare meci o imagine gata făcută (scor, minute, goluri, puncte) și tot sezonul tău într-o imagine, gata de distribuit.',
+      'Un CV de o pagină cu sezoane, cluburi și cifre pentru antrenor, plus un raport înaintea fiecărui meci.',
+      'Bifa albastră lângă nume, copertă, culoare, poveste și linkuri proprii și mesaje către orice jucător din joc.',
+      'La achiziția pe viață: un poster tipărit cu cariera ta, 40 × 60 cm, livrat acasă în UE.',
+    ],
+    gumb: 'Vezi tot ce primești',
+    cene: '{letna} pe an sau o singură dată {dozivljenjska} pe viață, cu poster. Jocul fantasy rămâne gratuit.',
+    vprasanja: 'Întrebări? Răspunde pur și simplu la acest email.',
+    podpis: 'Echipa SLFF',
+    zakaj: 'Îți trimitem acest email o singură dată, pentru că ți-ai revendicat profilul de jucător pe slff.eu.',
+    odjava: 'Nu-mi mai trimiteți emailuri',
+  },
+}
+
+/** Jezik promocije: jezik države lige, če ima prevod, sicer angleščina. */
+export const jezikPromoPreverjen = (liga: Pick<Liga, 'drzava'>): Jezik =>
+  PROMO_PREVERJEN[jezikLige(liga)] ? jezikLige(liga) : 'en'
+
+/** Cena iz Stripa v jeziku maila, npr. "9,99 €" ali "€29" (cele brez decimalk). */
+export function izpisCene(centi: number, valuta: string, j: Jezik): string {
+  const cela = centi % 100 === 0
+  return new Intl.NumberFormat(LOKALE[j], {
+    style: 'currency', currency: valuta.toUpperCase(), minimumFractionDigits: cela ? 0 : 2, maximumFractionDigits: cela ? 0 : 2,
+  }).format(centi / 100)
+}
+
+export function sestaviPromoPreverjen(
+  liga: Liga,
+  meta: { display_name: string | null },
+  cene: { letna: number; dozivljenjska: number; valuta: string },
+): Sporocilo {
+  const j = jezikPromoPreverjen(liga)
+  const B = PROMO_PREVERJEN[j]!
+  const t = liga.slug ? `?t=${encodeURIComponent(liga.slug)}` : ''
+  const stran = `${SITE}/verified${t}`
+  const odjava = `${SITE}/reminders${t}`
+  const prvo = meta.display_name?.trim().split(' ')[0]
+  const zdravo = prvo ? `${B.zdravo} ${prvo},` : `${B.zdravo},`
+  const cenaVrstica = B.cene
+    .replace('{letna}', izpisCene(cene.letna, cene.valuta, j))
+    .replace('{dozivljenjska}', izpisCene(cene.dozivljenjska, cene.valuta, j))
+  const p = (s: string) => `<p style="margin: 0 0 14px;">${esc(s)}</p>`
+  const html = `<!doctype html>
+<html lang="${j}"><head><meta charset="utf-8"><title>${esc(B.zadeva)}</title></head>
+<body style="margin: 0; padding: 16px; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 22px; color: #0f172a;">
+<div style="max-width: 560px;">
+${p(zdravo)}
+${p(B.uvod)}
+${p(B.prevzet)}
+<ul style="margin: 0 0 14px; padding-left: 22px;">${B.tocke.map((v) => `<li style="margin: 0 0 6px;">${esc(v)}</li>`).join('')}</ul>
+<p style="margin: 0 0 14px;"><a href="${esc(stran)}" style="color: #0b6b3a; font-weight: bold;">${esc(B.gumb)} →</a></p>
+${p(cenaVrstica)}
+${p(B.vprasanja)}
+${p(`— ${B.podpis}`)}
+<p style="margin: 24px 0 0; font-size: 12px; line-height: 18px; color: #5b6b63;">${esc(B.zakaj)}<br><a href="${esc(odjava)}" style="color: #5b6b63;">${esc(B.odjava)}</a></p>
+</div>
+</body></html>`
+  const besedilo = [
+    zdravo, '', B.uvod, '', B.prevzet,
+    ...B.tocke.map((v) => `- ${v}`), '',
+    `${B.gumb}: ${stran}`, '',
+    cenaVrstica, '', B.vprasanja, '', `— ${B.podpis}`, '', '--', B.zakaj, `${B.odjava}: ${odjava}`, '',
+  ].join('\n')
+  return { naslov: B.zadeva, html, besedilo, predglava: B.uvod, odjava }
+}
