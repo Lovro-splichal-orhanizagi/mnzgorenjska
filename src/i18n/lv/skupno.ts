@@ -43,6 +43,8 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     miniLigaNi: 'Minilīgas ar šādu kodu nav.',
     niTvojaEkipa: 'Šī nav tava komanda.',
     imeMiniLige: 'Minilīgas nosaukumā jābūt no 2 līdz 40 rakstzīmēm.',
+    imeMiniLigeZnaki: 'Mini līgas nosaukumā ir neatļautas rakstzīmes.',
+    imeMiniLigeNedovoljeno: 'Šāds mini līgas nosaukums nav atļauts.',
     prijavaMiniLiga: 'Lai piedalītos minilīgā, jāpiesakās.',
     niDovoljenja: 'Nav atļaujas rediģēt šo komandu.',
     kodaNeUstvarjena: 'Minilīgas kodu neizdevās izveidot. Mēģini vēlreiz.',

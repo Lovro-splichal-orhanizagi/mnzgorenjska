@@ -369,6 +369,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     potrdi: 'Evet, mini ligi sil',
     razpuscena: '“{liga}” mini ligi silindi.',
   },
+  preimenujMiniLigo: {
+    gumb: 'Mini ligin adını değiştir',
+    oznaka: 'Mini lig adı',
+    shrani: 'Adı kaydet',
+    preimenovana: 'Mini ligin adı “{liga}” oldu.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Başka birini davet et: {ime}',

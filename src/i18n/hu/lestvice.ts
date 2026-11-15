@@ -379,6 +379,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     potrdi: 'Igen, törlöm a minibajnokságot',
     razpuscena: 'A(z) „{liga}” minibajnokság törölve.',
   },
+  preimenujMiniLigo: {
+    gumb: 'Minibajnokság átnevezése',
+    oznaka: 'A minibajnokság neve',
+    shrani: 'Név mentése',
+    preimenovana: 'A minibajnokság új neve: „{liga}”.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Hívj meg még valakit ide: {ime}',

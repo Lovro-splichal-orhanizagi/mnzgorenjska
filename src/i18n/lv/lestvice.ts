@@ -379,6 +379,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     potrdi: 'Jā, dzēst mini līgu',
     razpuscena: 'Mini līga “{liga}” izdzēsta.',
   },
+  preimenujMiniLigo: {
+    gumb: 'Pārdēvēt mini līgu',
+    oznaka: 'Mini līgas nosaukums',
+    shrani: 'Saglabāt nosaukumu',
+    preimenovana: 'Mini līgas jaunais nosaukums ir “{liga}”.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Uzaicini vēl kādu: {ime}',

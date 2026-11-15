@@ -41,6 +41,8 @@ export const skupno = {
     miniLigaNi: 'Mini lige s to kodo ni.',
     niTvojaEkipa: 'To ni tvoja ekipa.',
     imeMiniLige: 'Ime mini lige naj ima med 2 in 40 znaki.',
+    imeMiniLigeZnaki: 'Ime mini lige vsebuje nedovoljene znake.',
+    imeMiniLigeNedovoljeno: 'To ime mini lige ni dovoljeno.',
     prijavaMiniLiga: 'Za mini ligo se je treba prijaviti.',
     niDovoljenja: 'Ni dovoljenja za urejanje te ekipe.',
     kodaNeUstvarjena: 'Kode mini lige ni bilo mogoče ustvariti. Poskusi znova.',

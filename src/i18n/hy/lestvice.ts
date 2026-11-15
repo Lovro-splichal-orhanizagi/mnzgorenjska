@@ -378,6 +378,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     potrdi: 'Այո, ջնջել մինի լիգան',
     razpuscena: '«{liga}» մինի լիգան ջնջվեց։',
   },
+  preimenujMiniLigo: {
+    gumb: 'Վերանվանել մինի լիգան',
+    oznaka: 'Մինի լիգայի անունը',
+    shrani: 'Պահպանել անունը',
+    preimenovana: 'Մինի լիգան վերանվանվեց «{liga}»։',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Հրավիրիր ևս մեկին {ime} լիգա',

@@ -387,6 +387,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     potrdi: 'Da, șterge mini-liga',
     razpuscena: 'Mini-liga „{liga}” a fost ștearsă.',
   },
+  preimenujMiniLigo: {
+    gumb: 'Redenumește mini-liga',
+    oznaka: 'Numele mini-ligii',
+    shrani: 'Salvează numele',
+    preimenovana: 'Mini-liga a fost redenumită „{liga}”.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Mai invită pe cineva în {ime}',

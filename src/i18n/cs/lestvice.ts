@@ -385,6 +385,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     potrdi: 'Ano, smazat mini ligu',
     razpuscena: 'Mini liga „{liga}“ byla smazána.',
   },
+  preimenujMiniLigo: {
+    gumb: 'Přejmenovat mini ligu',
+    oznaka: 'Název miniligy',
+    shrani: 'Uložit název',
+    preimenovana: 'Mini liga se nově jmenuje „{liga}“.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Pozvi někoho dalšího do {ime}',

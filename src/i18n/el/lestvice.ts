@@ -378,6 +378,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     potrdi: 'Ναι, διαγραφή της μίνι λίγκας',
     razpuscena: 'Η μίνι λίγκα «{liga}» διαγράφηκε.',
   },
+  preimenujMiniLigo: {
+    gumb: 'Μετονομασία μίνι λίγκας',
+    oznaka: 'Όνομα μίνι λίγκας',
+    shrani: 'Αποθήκευση ονόματος',
+    preimenovana: 'Η μίνι λίγκα μετονομάστηκε σε «{liga}».',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Κάλεσε κι άλλους στη λίγκα {ime}',

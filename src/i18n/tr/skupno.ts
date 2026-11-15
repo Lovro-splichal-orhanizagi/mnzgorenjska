@@ -42,6 +42,8 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     miniLigaNi: 'Bu koda sahip bir mini lig yok.',
     niTvojaEkipa: 'Bu senin takımın değil.',
     imeMiniLige: 'Mini lig adı 2 ile 40 karakter arasında olmalı.',
+    imeMiniLigeZnaki: 'Mini lig adı izin verilmeyen karakterler içeriyor.',
+    imeMiniLigeNedovoljeno: 'Bu mini lig adına izin verilmiyor.',
     prijavaMiniLiga: 'Mini ligleri kullanmak için giriş yap.',
     niDovoljenja: 'Bu takımı düzenleme yetkin yok.',
     kodaNeUstvarjena: 'Mini lig kodu oluşturulamadı. Tekrar dene.',
