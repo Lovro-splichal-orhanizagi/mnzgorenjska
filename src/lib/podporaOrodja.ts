@@ -346,7 +346,14 @@ export function prijaviOrodja(
       if (jeNeshranjeno()) return zadrzi()
       pojdi(STRANI[stran])
       // Stran se izriše po navigaciji; počakamo, da se cilj pojavi.
-      for (let i = 0; i < 20 && !najdiZZamenjavo(cilj, najdi); i++) await new Promise((r) => setTimeout(r, 150))
+      // Najprej čakamo na zahtevani cilj: na Asistencah se krogi/tekme izrišejo
+      // po prvem nalaganju, gole pa naloži šele drugo (po samodejni izbiri tekme).
+      // Nadomestek sprejmemo šele po ~1 s, sicer bi `goli` vedno osvetlil `krogi`.
+      for (let i = 0; i < 20; i++) {
+        if (najdi(cilj)) break
+        if (i >= 6 && najdiZZamenjavo(cilj, najdi)) break
+        await new Promise((r) => setTimeout(r, 150))
+      }
     }
     const najden = najdiZZamenjavo(cilj, najdi)
     if (!najden) return { najdeno: false, cilj, namig: 'element ni viden (morda ni prijavljen ali nima ekipe)' }
