@@ -14071,6 +14071,17 @@ preveri(
     && o.vsebinaVrste({ tekme: [] }, 'predogled', 'sob') === null && o.vsebinaVrste({}, 'pravila', 'sob') !== null)
   const liga = o.vsebinaVrste(beri('objava-liga.json'), 'liga', 'sre')
   preveri('objave: liga tedna vodi v svojo ligo', o.povezava(liga) === 'https://slff.eu/?t=clani&src=ig')
+  {
+    // Pokrovitelj lige (SLF-481): v napisu, na naslovnici in pozivu; brez njega nič.
+    const zP = { ...liga, liga: { ...liga.liga, pokrovitelj: { ime: 'Pivovarna Kranj', logo: '/sponzorji/x.png' } } }
+    const nn = o.predlogaNapisa(zP)
+    const seznam = prosojnice(zP)
+    const izris = (v, k) => renderToString(<StaticRouter location="/objava"><Prosojnica v={v} n={k} /></StaticRouter>).replace(/<!-- -->/g, '')
+    preveri('objave: liga tedna s pokroviteljem', nn.includes('League presented by Pivovarna Kranj')
+      && !o.preveriNapis(nn, o.dejstvaZaNapis(zP)).length
+      && izris(zP, 0).includes('Pivovarna Kranj') && izris(zP, seznam.length - 1).includes('Pivovarna Kranj')
+      && !o.predlogaNapisa(liga).includes('presented') && !izris(liga, 0).includes('sponzorji/'))
+  }
   preveri('objave: najmanj rabljena skladba', o.najmanjRabljena(['a.mp3', 'b.mp3', 'c.mp3'], [
     { glasba: 'a.mp3', ustvarjeno: '2026-10-01' }, { glasba: 'b.mp3', ustvarjeno: '2026-09-01' }, { glasba: 'c.mp3', ustvarjeno: '2026-10-05' },
   ]) === 'b.mp3' && o.najmanjRabljena(['a.mp3', 'z.mp3'], [{ glasba: 'a.mp3', ustvarjeno: '2026-10-01' }]) === 'z.mp3')

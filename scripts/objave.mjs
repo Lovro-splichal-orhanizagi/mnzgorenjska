@@ -421,13 +421,15 @@ export const NAPISI = {
         league: l.ime, league_short: l.kratko, country: l.drzava, flag: l.zastava, after_round: l.krog, fantasy_managers: l.upraviteljev,
         top_3: l.lestvica.map((x) => ({ position: x.mesto, club: x.ime, points: x.tocke, played: x.tekme })),
         ...(l.strelec ? { top_scorer: { name: prikaz(l.strelec.ime), club: l.strelec.klub, goals: l.strelec.goli } } : {}),
+        ...(l.pokrovitelj ? { league_presented_by: l.pokrovitelj.ime } : {}),
       }
     },
     vrstice: (v) => {
       const l = v.liga
       return [`${l.zastava} League spotlight: ${l.ime} (${l.drzava})`, '',
         ...l.lestvica.map((x) => `${x.mesto}. ${x.ime}, ${tock(x.tocke)}`),
-        ...(l.strelec ? ['', `⚽ Top scorer: ${prikaz(l.strelec.ime)} (${l.strelec.klub}), ${goli(l.strelec.goli)}`] : [])]
+        ...(l.strelec ? ['', `⚽ Top scorer: ${prikaz(l.strelec.ime)} (${l.strelec.klub}), ${goli(l.strelec.goli)}`] : []),
+        ...(l.pokrovitelj ? ['', `League presented by ${l.pokrovitelj.ime}`] : [])]
     },
     cta: (v) => `👉 Join the ${v.liga.kratko} fantasy league: ${povezava(v)}`,
   },
@@ -1225,6 +1227,25 @@ async function nedavneSrede(db, stolpec, teden) {
 }
 
 /**
+ * Pokrovitelj lige (SLF-481): sponzor z dosegom te lige, aktiven na dan
+ * objave, ko je stikalo `sponzorji_vidni` vklopljeno. Ista pravila kot
+ * `sponzorji_za` (src/lib/pokrovitelj.ts); null, ko ga ni.
+ */
+export async function pokroviteljLige(db, slug, dan) {
+  const { data: vidni } = await db.from('settings').select('value').eq('key', 'sponzorji_vidni').maybeSingle()
+  if (Number(vidni?.value) !== 1) return null
+  const { data: liga } = await db.from('competitions').select('id').eq('slug', slug).maybeSingle()
+  if (!liga) return null
+  const { data, error } = await db.from('sponsors').select('name, logo_url, starts_on, ends_on, utez, id')
+    .eq('competition_id', liga.id).eq('active', true)
+  if (error) throw new Error(`sponsors: ${error.message}`)
+  const s = (data ?? [])
+    .filter((x) => (!x.starts_on || x.starts_on <= dan) && (!x.ends_on || x.ends_on >= dan))
+    .sort((a, b) => b.utez - a.utez || a.id - b.id)[0]
+  return s ? { ime: s.name, logo: s.logo_url } : null
+}
+
+/**
  * Dejstva termina: ponedeljek po državah (objava_drzave), četrtek dosežki
  * (objava_dosezki), ostali dnevi po vrsti tedna (RPC); pravila ne rabijo baze.
  */
@@ -1237,7 +1258,11 @@ async function dejstvaTermina(db, slot, teden, vrsta = slot) {
     if (error) throw new Error(`${RPC[vrsta]}: ${error.message}`)
     return data
   }
-  if (vrsta === 'liga') return klic({ ...p, p_izkljuci: await nedavneSrede(db, 'liga', teden) })
+  if (vrsta === 'liga') {
+    const d = await klic({ ...p, p_izkljuci: await nedavneSrede(db, 'liga', teden) })
+    if (d?.liga?.slug) d.liga.pokrovitelj = await pokroviteljLige(db, d.liga.slug, datumLj(new Date()))
+    return d
+  }
   if (vrsta === 'drzava') {
     // Država se lahko ponovi, ko so vse druge že bile.
     const d = await klic({ ...p, p_izkljuci: await nedavneSrede(db, 'drzava', teden) })

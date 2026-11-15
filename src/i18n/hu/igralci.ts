@@ -704,6 +704,14 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     noga: 'Alsóbb osztályú fantasy foci',
     besediloTekme: '{domaci} {izid} {gostje} az SLFF-en',
     besediloSezone: 'A {sezona} szezonom az SLFF-en',
+    kartica: {
+      naslov: 'Megosztható kártya',
+      opis: 'A csapat csoportjába: hány csapat választott és hol lehet játszani.',
+      besedilo: 'Válassz be a csapatodba az SLFF-en',
+      izbran: 'fantasy csapat választott be',
+      poziv: 'Állítsd össze a csapatod',
+      igraj: 'Játssz SLFF fantasyt ingyen: slff.eu',
+    },
     cv: 'Önéletrajzom edzőknek',
   },
   cv: {

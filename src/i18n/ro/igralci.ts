@@ -706,6 +706,14 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     noga: 'Fantasy fotbal pentru ligile inferioare',
     besediloTekme: '{domaci} {izid} {gostje} pe SLFF',
     besediloSezone: 'Sezonul meu {sezona} pe SLFF',
+    kartica: {
+      naslov: 'Card de distribuit',
+      opis: 'Pentru grupul echipei: câte echipe te-au ales și unde se joacă.',
+      besedilo: 'Alege-mă în echipa ta SLFF',
+      izbran: 'echipe fantasy m-au ales',
+      poziv: 'Fă-ți echipa',
+      igraj: 'Joacă SLFF fantasy gratuit pe slff.eu',
+    },
     cv: 'CV-ul meu pentru antrenori',
   },
   cv: {

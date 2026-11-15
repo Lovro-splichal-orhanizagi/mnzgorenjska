@@ -230,6 +230,7 @@ export const aplikacija = {
   sponzor: {
     oznaka: 'Sponzor',
     obisci: 'Obišči stran',
+    predstavlja: 'Ligo predstavlja {pokrovitelj}',
   },
   napaka: {
     naslov: 'Stran se je zataknila',

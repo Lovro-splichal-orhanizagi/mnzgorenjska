@@ -10,6 +10,7 @@ import { najboljsiTrije, type VrsticaIgralca } from '../lib/plakat'
 import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import Sponzor from '../components/Sponzor'
+import PokroviteljLige from '../components/PokroviteljLige'
 import { formatirajTocke, tockZ } from '../lib/pomozno'
 import { useNaslov, zDrzavo } from '../lib/naslov'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -343,6 +344,7 @@ export default function Lestvica() {
         {t('lestvice.lestvica.naslov')}
         {tekmovanje?.short_name ? ` — ${tekmovanje.short_name}` : ''}
       </h1>
+      <PokroviteljLige ligaId={tekmovanjeId} blok className="-mt-4" />
 
       {/* Najprej moje mini lige: trije prijatelji so igra, dvanajst tujcev ni. */}
       <MojeMiniLige ekipaId={mojaEkipa} />

@@ -5,6 +5,7 @@
 import { t, datum, stevilo } from '../i18n'
 import { naslovSlike } from './platforma'
 import { formatirajTocke } from './pomozno'
+import { kodaQr } from './qr'
 
 export const SIRINA_Z = 1080
 export const VISINA_Z = 1920
@@ -109,37 +110,37 @@ function napisi(c: CanvasRenderingContext2D, besedilo: string, x: number, y: num
   c.fillText(b, x, y)
 }
 
-function platno() {
+function platno(visina = VISINA_Z) {
   const p = document.createElement('canvas')
   p.width = SIRINA_Z
-  p.height = VISINA_Z
+  p.height = visina
   return { p, c: p.getContext('2d')! }
 }
 
 const vBlob = (p: HTMLCanvasElement) => new Promise<Blob | null>((r) => p.toBlob((b) => r(b), 'image/png'))
 
 /** Temno igrišče z zlatim sijem in robom: ista podlaga kot stran /verified. */
-function podlaga(c: CanvasRenderingContext2D) {
-  const g = c.createLinearGradient(0, 0, 0, VISINA_Z)
+function podlaga(c: CanvasRenderingContext2D, visina = c.canvas.height) {
+  const g = c.createLinearGradient(0, 0, 0, visina)
   g.addColorStop(0, '#0b1a16')
   g.addColorStop(1, '#020617')
   c.fillStyle = g
-  c.fillRect(0, 0, SIRINA_Z, VISINA_Z)
+  c.fillRect(0, 0, SIRINA_Z, visina)
   c.fillStyle = 'rgba(255,255,255,0.025)'
-  for (let x = 0; x < SIRINA_Z; x += 180) c.fillRect(x, 0, 90, VISINA_Z)
+  for (let x = 0; x < SIRINA_Z; x += 180) c.fillRect(x, 0, 90, visina)
   const sij = c.createRadialGradient(SIRINA_Z * 0.85, 120, 0, SIRINA_Z * 0.85, 120, 900)
   sij.addColorStop(0, 'rgba(247,220,140,0.22)')
   sij.addColorStop(1, 'rgba(247,220,140,0)')
   c.fillStyle = sij
-  c.fillRect(0, 0, SIRINA_Z, VISINA_Z)
-  const zel = c.createRadialGradient(0, VISINA_Z, 0, 0, VISINA_Z, 1100)
+  c.fillRect(0, 0, SIRINA_Z, visina)
+  const zel = c.createRadialGradient(0, visina, 0, 0, visina, 1100)
   zel.addColorStop(0, 'rgba(52,211,153,0.22)')
   zel.addColorStop(1, 'rgba(52,211,153,0)')
   c.fillStyle = zel
-  c.fillRect(0, 0, SIRINA_Z, VISINA_Z)
+  c.fillRect(0, 0, SIRINA_Z, visina)
   c.strokeStyle = 'rgba(247,220,140,0.45)'
   c.lineWidth = 4
-  c.strokeRect(36, 36, SIRINA_Z - 72, VISINA_Z - 72)
+  c.strokeRect(36, 36, SIRINA_Z - 72, visina - 72)
 }
 
 /** Modra kljukica preverjenega profila. */
@@ -205,7 +206,7 @@ function noga(c: CanvasRenderingContext2D, besedilo: string) {
   c.fillText('SLFF.EU', SIRINA_Z / 2, VISINA_Z - 80)
 }
 
-export function imeZgodbe(d: { ime: string }, kaj: 'tekma' | 'sezona') {
+export function imeZgodbe(d: { ime: string }, kaj: 'tekma' | 'sezona' | 'kartica') {
   return `slff-${kaj}-${d.ime.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.png`
 }
 
@@ -306,6 +307,105 @@ export async function narisiSezono(d: MojaSezona): Promise<Blob | null> {
   })
   c.fillStyle = ZLATO_TEMNO
   noga(c, t('igralci.zgodbe.noga'))
+  return vBlob(p)
+}
+
+// Kartica za deljenje (SLF-481): 1080 × 1350 za WhatsApp in Instagram objavo.
+// Preverjen igralec jo deli v klubske skupine; QR in povezava vodita na
+// njegov profil (z utm in kodo povabila, da štejemo deljenja in registracije).
+// Spodnji trak nosi pokrovitelja lige, ko ga liga ima.
+export const VISINA_D = 1350
+
+export type Pokrovitelj = { ime: string; logo: string | null }
+
+/** Kvadrat QR (bel z robom) z zgornjim levim kotom v (x, y). */
+function narisiQr(c: CanvasRenderingContext2D, besedilo: string, x: number, y: number, velikost: number) {
+  const m = kodaQr(besedilo)
+  if (!m) return
+  c.fillStyle = '#ffffff'
+  c.beginPath()
+  c.roundRect(x, y, velikost, velikost, 20)
+  c.fill()
+  const rob = 18
+  const modul = (velikost - 2 * rob) / m.length
+  c.fillStyle = '#020617'
+  m.forEach((vrsta, my) =>
+    vrsta.forEach((temen, mx) => {
+      // +0.5 zapre lase med moduli ob neceli velikosti.
+      if (temen) c.fillRect(x + rob + mx * modul, y + rob + my * modul, modul + 0.5, modul + 0.5)
+    }),
+  )
+}
+
+export async function narisiDeliKartico(d: MojaSezona, povezava: string, pokrovitelj: Pokrovitelj | null = null): Promise<Blob | null> {
+  await naloziPisavo()
+  const { p, c } = platno(VISINA_D)
+  podlaga(c)
+  await glava(c, d.liga, d.sezona)
+  const grb = await slika(d.klub_logo)
+  if (grb) c.drawImage(grb, SIRINA_Z - 90 - 120, 100, 120, 120)
+
+  ime(c, d.ime, 400)
+  c.textAlign = 'left'
+  c.fillStyle = 'rgba(226,232,240,0.85)'
+  napisi(c, d.klub, 90, 465, 900, (px) => sans(600, px), 38)
+
+  // Izbranost čez vso širino; brez nje (liga pod 5 ekipami) ostanejo ploščice.
+  let y = 505
+  if (d.izbranost != null && d.izbranost > 0) {
+    c.fillStyle = 'rgba(247,220,140,0.12)'
+    c.strokeStyle = 'rgba(247,220,140,0.55)'
+    c.lineWidth = 3
+    c.beginPath()
+    c.roundRect(90, y, SIRINA_Z - 180, 200, 28)
+    c.fill()
+    c.stroke()
+    c.textAlign = 'center'
+    c.fillStyle = ZLATO
+    napisi(c, stevilo(d.izbranost), SIRINA_Z / 2, y + 118, 800, (px) => oz(800, px), 120)
+    c.fillStyle = 'rgba(226,232,240,0.9)'
+    napisi(c, t('igralci.zgodbe.kartica.izbran').toUpperCase(), SIRINA_Z / 2, y + 172, 840, (px) => sans(700, px), 34, 22)
+    y += 225
+  }
+
+  // Goli in asistence, ko jih imamo; sicer tekme.
+  const w = (SIRINA_Z - 180 - 40) / 2
+  const h = y > 505 ? 180 : 260
+  ploscica(c, 90, y, w, h, stevilo(d.goli ?? 0), t('igralci.zgodbe.goli'), (d.goli ?? 0) > 0)
+  if (d.asistence != null) ploscica(c, 90 + w + 40, y, w, h, stevilo(d.asistence), t('igralci.zgodbe.asistence'))
+  else ploscica(c, 90 + w + 40, y, w, h, stevilo(d.tekme ?? 0), t('igralci.zgodbe.tekme'))
+
+  // QR in povabilo, tik nad trakom (ploščice se končajo najkasneje pri 910).
+  const qr = 210
+  const yQr = VISINA_D - 140 - qr - 25
+  narisiQr(c, povezava, SIRINA_Z - 90 - qr, yQr, qr)
+  c.textAlign = 'left'
+  c.fillStyle = '#ffffff'
+  napisi(c, t('igralci.zgodbe.kartica.poziv'), 90, yQr + 80, SIRINA_Z - 180 - qr - 40, (px) => oz(800, px), 64, 40)
+  c.fillStyle = ZLATO
+  c.font = oz(800, 60)
+  c.fillText('SLFF.EU', 90, yQr + 160)
+
+  // Spodnji trak: pokrovitelj lige ali vabilo k igri.
+  const yTrak = VISINA_D - 140
+  c.fillStyle = 'rgba(2,6,23,0.7)'
+  c.fillRect(38, yTrak, SIRINA_Z - 76, 140 - 38)
+  if (pokrovitelj) {
+    const logo = await slika(pokrovitelj.logo)
+    const napis = t('aplikacija.sponzor.predstavlja', { pokrovitelj: pokrovitelj.ime })
+    c.font = sans(700, 34)
+    const sirLogo = logo ? Math.min(160, (logo.width / logo.height) * 64) : 0
+    const sir = Math.min(c.measureText(napis).width, 900 - (logo ? sirLogo + 24 : 0))
+    const zacetek = SIRINA_Z / 2 - (sir + (logo ? sirLogo + 24 : 0)) / 2
+    if (logo) c.drawImage(logo, zacetek, yTrak + 19, sirLogo, 64)
+    c.textAlign = 'left'
+    c.fillStyle = '#ffffff'
+    napisi(c, napis, zacetek + (logo ? sirLogo + 24 : 0), yTrak + 63, sir, (px) => sans(700, px), 34, 22)
+  } else {
+    c.textAlign = 'center'
+    c.fillStyle = 'rgba(226,232,240,0.95)'
+    napisi(c, t('igralci.zgodbe.kartica.igraj'), SIRINA_Z / 2, yTrak + 63, 900, (px) => sans(700, px), 34, 22)
+  }
   return vBlob(p)
 }
 
