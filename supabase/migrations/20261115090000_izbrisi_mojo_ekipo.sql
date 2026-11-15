@@ -41,6 +41,16 @@ begin
       using errcode = 'P0001', hint = 'ekipa_ima_tocke';
   end if;
 
+  -- Dvoboj v mini ligi: CASCADE bi pobrisal par in nasprotniku vzel izid kroga
+  -- (ekipa z 0 točkami je ob zaklepu kroga že sparjena), zato ostane za podporo.
+  if exists (
+    select 1 from mini_liga_dvoboji
+     where ekipa_a = p_ekipa or ekipa_b = p_ekipa
+  ) then
+    raise exception 'Ekipa je že v dvoboju mini lige, zato je ne moreš izbrisati. Piši podpori.'
+      using errcode = 'P0001', hint = 'ekipa_ima_tocke';
+  end if;
+
   delete from fantasy_teams where id = p_ekipa;
 end;
 $$;

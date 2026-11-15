@@ -256,6 +256,29 @@ begin
   delete from tocke_krogov where round_id = krog;
   delete from rounds where id = krog;
 
+  -- Ekipa v dvoboju mini lige ostane (nasprotnik ne sme izgubiti izida kroga).
+  insert into mini_lige (name, code, owner_id) values ('Preizkus 762 dvoboj', nova_koda_mini_lige(), a)
+    returning id into liga;
+  insert into mini_liga_clani (mini_liga_id, fantasy_team_id) values (liga, ekipa_a), (liga, ekipa_b);
+  insert into mini_liga_dvoboji (mini_liga_id, sezona, krog, ekipa_a, ekipa_b)
+  values (liga, 'preizkus-762', 1, ekipa_a, ekipa_b);
+  perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated')::text, true);
+  begin
+    execute 'set local role authenticated';
+    perform izbrisi_mojo_ekipo(ekipa_b);
+    execute 'set local role postgres';
+    raise exception 'NAPAKA: ekipa v dvoboju je bila izbrisana';
+  exception when others then
+    execute 'set local role postgres';
+    get stacked diagnostics napaka = message_text;
+    if napaka like 'NAPAKA:%' then raise; end if;
+  end;
+  select count(*) into n from mini_liga_dvoboji where mini_liga_id = liga;
+  if n <> 1 then raise exception '16. dvoboj je izginil'; end if;
+  delete from mini_liga_dvoboji where mini_liga_id = liga;
+  delete from mini_liga_clani where mini_liga_id = liga;
+  delete from mini_lige where id = liga;
+
   -- Ekipa brez tock gre, z njo clanstvo v mini ligi; druge ekipe ostanejo.
   insert into mini_lige (name, code, owner_id) values ('Preizkus 762', nova_koda_mini_lige(), b)
     returning id into liga;
