@@ -30,6 +30,7 @@
 // odgovora, ampak obiskovalec s tapom.
 import { supabase } from './supabase'
 import { jeNeshranjeno } from './neshranjeno'
+import { najdiZZamenjavo } from './podporaZamenjave.ts'
 import { izberiJezik, jePripravljen, jezikSlovarja, t } from '../i18n/jedro.ts'
 
 /** Strani, na katere sme agent peljati — ključ je to, kar pošlje agent. */
@@ -345,12 +346,21 @@ export function prijaviOrodja(
       if (jeNeshranjeno()) return zadrzi()
       pojdi(STRANI[stran])
       // Stran se izriše po navigaciji; počakamo, da se cilj pojavi.
-      for (let i = 0; i < 20 && !najdi(cilj); i++) await new Promise((r) => setTimeout(r, 150))
+      // Najprej čakamo na zahtevani cilj: na Asistencah se krogi/tekme izrišejo
+      // po prvem nalaganju, gole pa naloži šele drugo (po samodejni izbiri tekme).
+      // Nadomestek sprejmemo šele po ~1 s, sicer bi `goli` vedno osvetlil `krogi`.
+      for (let i = 0; i < 20; i++) {
+        if (najdi(cilj)) break
+        if (i >= 6 && najdiZZamenjavo(cilj, najdi)) break
+        await new Promise((r) => setTimeout(r, 150))
+      }
     }
-    const el = najdi(cilj)
-    if (!el) return { najdeno: false, cilj, namig: 'element ni viden (morda ni prijavljen ali nima ekipe)' }
-    osvetli(el, trajanje)
-    return { najdeno: true, cilj }
+    const najden = najdiZZamenjavo(cilj, najdi)
+    if (!najden) return { najdeno: false, cilj, namig: 'element ni viden (morda ni prijavljen ali nima ekipe)' }
+    osvetli(najden.el, trajanje)
+    const r: Rezultat = { najdeno: true, cilj, cilj_prikazan: najden.prikazan }
+    if (najden.prikazan !== cilj) r.namig = `Cilj ${cilj} na tej napravi ali strani ni viden, zato je osvetljen ${najden.prikazan}.`
+    return r
   }
 
   helpstack('registerTool', 'odpri_stran', odpriStran)
