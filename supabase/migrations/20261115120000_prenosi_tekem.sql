@@ -36,7 +36,9 @@ comment on column public.matches.zacetek is
   'Ura začetka tekme, kadar jo vir pove. Okno za prenos je od 30 min pred do 3 h po njej; brez nje velja dan tekme (played_on).';
 
 create table if not exists public.prenosi_tekmovanja (
-  competition_id bigint primary key references public.competitions on delete cascade,
+  -- Brez FK na competitions/matches: varovalo FCF projekcije dovoli le znan seznam
+  -- FK na te tabele. Obstoj preverijo RPC-ji, bralci pa se vedno pridružijo tekmi.
+  competition_id bigint primary key,
   created_at     timestamptz not null default now()
 );
 comment on table public.prenosi_tekmovanja is
@@ -98,7 +100,7 @@ revoke all on function public.prenos_okno(bigint) from public, anon, authenticat
 -- --------------------------------------------------------------------------
 create table if not exists public.prenosi (
   id           uuid primary key default gen_random_uuid(),
-  match_id     bigint not null references public.matches on delete cascade,
+  match_id     bigint not null,                -- brez FK (glej prenosi_tekmovanja)
   user_id      uuid not null references public.profiles on delete cascade,
   video_id     text not null unique check (video_id ~ '^[A-Za-z0-9_-]{11}$'),
   kanal_id     text not null,
@@ -175,7 +177,7 @@ revoke all on public.prenosi_vpisi from public, anon, authenticated;
 
 -- Push "tekma je v živo": največ eden na tekmo in osebo.
 create table if not exists public.prenosi_obvestila (
-  match_id   bigint not null references public.matches on delete cascade,
+  match_id   bigint not null,                  -- brez FK (glej prenosi_tekmovanja)
   user_id    uuid not null references public.profiles on delete cascade,
   created_at timestamptz not null default now(),
   primary key (match_id, user_id)
@@ -277,6 +279,7 @@ as $$
              exists (select 1 from prenosi_prijave pp where pp.prenos_id = p.id and pp.user_id = auth.uid()) as prijavil,
              row_number() over (partition by p.stanje order by p.gledalcev desc nulls last, p.zacetek) as mesto
         from prenosi p
+        join matches m on m.id = p.match_id
         left join profiles pr on pr.id = p.user_id
        where p.match_id = p_match
          and public.vidi_prenose()
