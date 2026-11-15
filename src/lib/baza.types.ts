@@ -11685,6 +11685,10 @@ export type Database = {
           veljavna: boolean
         }[]
       }
+      stanje_prijave: {
+        Args: { igralec?: string; klub?: string }
+        Returns: Json
+      }
       stanje_tekme: {
         Args: { klub: string; krog?: number; liga?: string }
         Returns: Json

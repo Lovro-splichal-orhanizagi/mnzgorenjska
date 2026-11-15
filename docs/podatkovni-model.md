@@ -1049,9 +1049,10 @@
   `liga`, `tocke_igralca` (točke po krogih tekoče sezone z razčlenitvijo po
   pravilih `tocke_za_nastop`), `stanje_tekme` (zapisnik, izid, vir, razlog,
   glasovanje o asistencah); pisalni `prijavi_napako` (zaprta `prijave_napak`,
-  ista prijava v uri ni nova, 5 na uro na stik, 40 na uro vseh; admin:
+  ista prijava v uri ni nova, odprta prijava iste vrste za istega igralca ali klub v 7 dneh tudi ne (migracija 20261115110000, vrne `ze_prijavljeno`), 5 na uro na stik, 40 na uro vseh; admin:
   Administracija → Prijave napak, `admin_prijave_napak`,
   `admin_resi_prijavo_napake`; pg_cron po 12 mesecih izbriše) in
+  bralna `stanje_prijave` (zadnjih 5 prijav igralca ali kluba: datum, vrsta, stanje, opomba admina; brez opisa in stika) in
   `zahtevaj_ligo` (najprej poišče vpisane lige, tudi neaktivne; željo zapiše
   prek `zelim_ligo` šele brez zadetka ali z `vztrajam`). V brskalniku
   (`src/lib/podporaOrodja.ts`, CLIENT_SIDE) je `moja_ekipa_krog`: ekipa
