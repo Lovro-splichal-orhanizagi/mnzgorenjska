@@ -9,10 +9,9 @@ name: Akcija vabil (povabi prijatelje)
 # Urnik je vklopljen 14. 11. 2026 po objavi funkcije, suhem teku (4776) in
 # prvem paketu 10 brez napak.
 on:
-  # Dvakrat na uro po 60: GitHub urnike ob obremenitvi izpušča (prvi urnik
-  # 23 8-17 se 14. 11. ni sprožil niti enkrat), izpuščen zagon tako manj šteje.
-  schedule:
-    - cron: '7,37 8-17 * * *'
+  # Urnik je od 15. 11. na strezniku (/etc/cron.d/slff-akcija-vabil,
+  # /usr/local/sbin/slff-akcija-vabil): GitHub je cron izpuscal (1 zagon v
+  # dveh dneh). Tu ostane le rocni zagon.
   workflow_dispatch:
     inputs:
       suho:
