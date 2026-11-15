@@ -57,7 +57,13 @@ const MESTA: [string, string][] = [
   ['rezultati', 'Rezultati'],
   ['igralci', 'Igralci'],
 ]
-const imeMesta = (k: string) => MESTA.find(([m]) => m === k)?.[1] ?? k
+// Pokrovitelj lige (SLF-484): ta mesta se štejejo sama, admin jih ne vklaplja.
+const MESTA_POKROVITELJA: [string, string][] = [
+  ['glava', 'Glava lige'],
+  ['kartica', 'Kartica igralca (deljena / obisk)'],
+  ['objava', 'Objava lige tedna (objavljena / obisk)'],
+]
+const imeMesta = (k: string) => [...MESTA, ...MESTA_POKROVITELJA].find(([m]) => m === k)?.[1] ?? k
 
 /** Delež klikov v odstotkih, na eno decimalko. */
 const delez = (klikov: number, prikazov: number) =>

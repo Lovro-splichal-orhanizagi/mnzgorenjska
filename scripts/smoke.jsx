@@ -14081,6 +14081,11 @@ preveri(
       && !o.preveriNapis(nn, o.dejstvaZaNapis(zP)).length
       && izris(zP, 0).includes('Pivovarna Kranj') && izris(zP, seznam.length - 1).includes('Pivovarna Kranj')
       && !o.predlogaNapisa(liga).includes('presented') && !izris(liga, 0).includes('sponzorji/'))
+    // Števec (SLF-484): povezava nosi pk, objava ga prebere iz napisa.
+    const zPk = { ...liga, liga: { ...liga.liga, pokrovitelj: { id: 12, liga: 345, ime: 'Pivovarna Kranj', logo: null } } }
+    const pk = o.pokroviteljIzNapisa(o.predlogaNapisa(zPk))
+    preveri('objave: povezava s pokroviteljem nosi pk', o.povezava(zPk) === 'https://slff.eu/?t=clani&src=ig&pk=o12.345'
+      && pk?.id === 12 && pk?.liga === 345 && o.pokroviteljIzNapisa(o.predlogaNapisa(liga)) === null, JSON.stringify(pk))
   }
   preveri('objave: najmanj rabljena skladba', o.najmanjRabljena(['a.mp3', 'b.mp3', 'c.mp3'], [
     { glasba: 'a.mp3', ustvarjeno: '2026-10-01' }, { glasba: 'b.mp3', ustvarjeno: '2026-09-01' }, { glasba: 'c.mp3', ustvarjeno: '2026-10-05' },

@@ -374,7 +374,18 @@ export function vsebinaVrste(d, vrsta, slot) {
 }
 
 /** Povezava v napisu; liga tedna vodi naravnost v svojo ligo. */
-export const povezava = (v) => (v?.liga?.slug ? `https://slff.eu/?t=${v.liga.slug}&src=ig` : 'https://slff.eu/?src=ig')
+export const povezava = (v) => {
+  if (!v?.liga?.slug) return 'https://slff.eu/?src=ig'
+  // Pokrovitelj lige (SLF-484): `pk=o<sponzor>.<liga>`; obisk prek povezave je klik na objavi.
+  const p = v.liga.pokrovitelj
+  return `https://slff.eu/?t=${v.liga.slug}&src=ig${p?.id && p?.liga ? `&pk=o${p.id}.${p.liga}` : ''}`
+}
+
+/** Pokrovitelj iz povezave v napisu (`pk=o12.345`) ali null. */
+export function pokroviteljIzNapisa(napis) {
+  const m = /[?&]pk=o(\d+)\.(\d+)/.exec(napis ?? '')
+  return m ? { id: Number(m[1]), liga: Number(m[2]) } : null
+}
 
 // Naslovi dosežkov v napisu in predlogi (prosojnice imajo svoje v slovarju).
 const NASLOV = {
@@ -1242,7 +1253,7 @@ export async function pokroviteljLige(db, slug, dan) {
   const s = (data ?? [])
     .filter((x) => (!x.starts_on || x.starts_on <= dan) && (!x.ends_on || x.ends_on >= dan))
     .sort((a, b) => b.utez - a.utez || a.id - b.id)[0]
-  return s ? { ime: s.name, logo: s.logo_url } : null
+  return s ? { id: s.id, liga: liga.id, ime: s.name, logo: s.logo_url } : null
 }
 
 /**
@@ -1413,6 +1424,12 @@ export async function objaviZapadle({ db, env, mapa, zdaj = Date.now(), f = fetc
       ? { ...izid, stanje: 'napaka', napaka }
       : { ...izid, stanje: 'objavljeno', objavljeno_at: new Date().toISOString() }).eq('id', o.id)
     if (e3) log(`Objava #${o.id}: zapis stanja ni uspel: ${e3.message}`)
+    // Objava s pokroviteljem lige je zanj en prikaz (SLF-484).
+    const pk = napaka ? null : pokroviteljIzNapisa(o.napis)
+    if (pk) {
+      const { error: e4 } = await db.rpc('zabelezi_sponzorja', { p_sponsor_id: pk.id, p_competition_id: pk.liga, p_klik: false, p_mesto: 'objava' })
+      if (e4) log(`Objava #${o.id}: števec pokrovitelja: ${e4.message}`)
+    }
     const povezave = [izid.ig_povezava && `Instagram: <${izid.ig_povezava}>`, izid.fb_povezava && `Facebook: <${izid.fb_povezava}>`]
       .filter(Boolean).join('\n')
     const sporocilo = napaka

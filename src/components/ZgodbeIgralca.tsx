@@ -8,7 +8,7 @@ import { Link } from './Povezava'
 import { supabase } from '../lib/supabase'
 import { izvor } from '../lib/platforma'
 import { povezavaZVabilom } from '../lib/povabilo'
-import { pokroviteljPoSlugu, type PokroviteljLige } from '../lib/pokrovitelj'
+import { oznakaPokrovitelja, pokroviteljPoSlugu, zabeleziPokrovitelja, type PokroviteljLige } from '../lib/pokrovitelj'
 import { imeZgodbe, narisiDeliKartico, narisiSezono, narisiZgodboTekme, type MojaSezona, type ZadnjaTekma } from '../lib/zgodbe'
 import { t } from '../i18n'
 
@@ -60,6 +60,12 @@ export default function ZgodbeIgralca({ igralecId }: { igralecId: number }) {
 
   if (!sezona && !tekma) return null
   const povezava = `${izvor()}/player/${igralecId}`
+  // Kartica s pokroviteljem: povezava in QR nosita `pk=`, obisk prek nje je
+  // klik na kartici, deljenje ali prenos pa prikaz (SLF-484).
+  const povezavaKartice =
+    vabilo && pokrovitelj
+      ? `${vabilo}${vabilo.includes('?') ? '&' : '?'}pk=${oznakaPokrovitelja(pokrovitelj, 'kartica')}`
+      : vabilo
 
   return (
     <section aria-labelledby="zgodbe-igralca" className="kartica space-y-4 p-4">
@@ -105,17 +111,18 @@ export default function ZgodbeIgralca({ igralecId }: { igralecId: number }) {
             )}
           </div>
         )}
-        {sezona?.preverjen && vabilo && pokrovitelj !== undefined && (
+        {sezona?.preverjen && povezavaKartice && pokrovitelj !== undefined && (
           <div className="space-y-2">
             <h3 className="text-sm font-semibold text-slate-200">{t('igralci.zgodbe.kartica.naslov')}</h3>
             <p className="text-xs text-slate-400">{t('igralci.zgodbe.kartica.opis')}</p>
             <DeliSliko
-              narisi={() => narisiDeliKartico(sezona, vabilo, pokrovitelj)}
-              kljuc={`deli-${sezona.sezona}-${sezona.izbranost}-${sezona.goli}-${sezona.asistence}-${vabilo}-${pokrovitelj?.id ?? 0}`}
+              narisi={() => narisiDeliKartico(sezona, povezavaKartice, pokrovitelj)}
+              kljuc={`deli-${sezona.sezona}-${sezona.izbranost}-${sezona.goli}-${sezona.asistence}-${povezavaKartice}-${pokrovitelj?.id ?? 0}`}
               naslov={sezona.ime}
               besedilo={t('igralci.zgodbe.kartica.besedilo')}
-              povezava={vabilo}
+              povezava={povezavaKartice}
               imeSlike={imeZgodbe(sezona, 'kartica')}
+              naDeljeno={pokrovitelj ? () => zabeleziPokrovitelja(pokrovitelj, 'kartica', false) : undefined}
             />
           </div>
         )}
