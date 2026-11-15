@@ -196,6 +196,12 @@ Funkcija `lestvica_lige(liga, sezona)` vrne pravo lestvico lige iz izidov tekem
 poišče igralce vseh aktivnih lig po imenu, brez šumnikov in z dopuščeno tipkarsko
 napako (izbirnik lige, stran Igralci).
 
+Prenosi tekem v živo z YouTuba: `prenosi` (en video na tekmo, kanal, stanje
+`v_zivo`/`posnetek`/`izbrisan`), `prenosi_prijave`, `prenosi_prepovedi`,
+`prenosi_tekmovanja` (kje so dovoljeni), merilo v `prenosi_ogledi` in
+`prenosi_vpisi`; `matches.zacetek` je ura začetka, kadar jo poznamo
+(`docs/podatkovni-model.md`, *Prenosi tekem*).
+
 Skupni stiki s klubi (`klub_stik`) sprejmejo tudi Nemčijo (`DE`); pred vsakim
 mailom je obvezno preverjanje zgodovine kluba in naslova s `scripts/stiki-klubov.mjs`.
 

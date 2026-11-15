@@ -34,6 +34,7 @@ import { useFotografije } from '../lib/prevzem'
 import KlubPredstavitev from '../components/KlubPredstavitev'
 import KlubUrejanje from '../components/KlubUrejanje'
 import { useMojKlub } from '../lib/useMojKlub'
+import VZivoZdaj from '../components/VZivoZdaj'
 
 /** Vrstica pogleda `prihodnje_tekme`. */
 interface Tekma {
@@ -267,6 +268,8 @@ export default function Klub() {
           {naZeljoKluba && <p className="text-xs text-slate-500">{t('skupno.naZeljoKluba')}</p>}
         </div>
       </header>
+
+      {id && <VZivoZdaj teamId={Number(id)} />}
 
       <PokritostStatistike podatki={pokritost} />
 

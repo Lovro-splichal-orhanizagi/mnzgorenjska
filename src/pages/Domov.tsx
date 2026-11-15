@@ -30,6 +30,7 @@ import AppPromo, { appPromoAktivna } from '../components/AppPromo'
 import ZnackeTrgovin from '../components/ZnackeTrgovin'
 import VrhNapovediDrzave from '../components/VrhNapovediDrzave'
 import Stevec10k from '../components/Stevec10k'
+import VZivoZdaj from '../components/VZivoZdaj'
 
 /** Kar liga čaka od skupnosti (asistence, pozicije). */
 interface Statistika {
@@ -556,6 +557,8 @@ export default function Domov() {
           </div>
         </section>
       )}
+
+      <VZivoZdaj />
 
       <Stevec10k />
 
