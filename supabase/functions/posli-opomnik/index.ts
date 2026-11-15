@@ -60,6 +60,9 @@ const ANKETA_MEJA = 50
 // Promocija preverjenega profila (SLF-383): največ 500 skupaj, paket največ 20.
 const PROMO_MEJA = 500
 const PAKET_NAJVEC = 20
+// Prehod prekine klic po 30 s; kohorta traja ~12 s, mail ~4,6 s. Po 20 s od začetka
+// klica promo ne začne novega maila, ostale pošlje naslednji klic.
+const PROMO_PRORACUN_MS = 20_000
 
 // Funkcija ima 60 s; mail traja ~4,6 s, zato po 40 s ne zacnemo novega.
 const ODSOTNI_PRORACUN_MS = 40_000
@@ -487,9 +490,10 @@ Deno.serve(async (req) => {
       if (!k || k.razlog) { if (k?.razlog !== 'ze_dobil') izpadli.push(k?.razlog ?? 'ni_vec_prevzema'); continue }
       zaPoslati.push(k)
     }
-    // Funkcija ima 60 s, mail traja ~4 s: 10 na klic, naslednji klic nadaljuje isti paket.
+    // Največ 10 na klic in le do PROMO_PRORACUN_MS; naslednji klic nadaljuje isti paket.
     const izpadliPrej = izpadli.length
     for (const k of zaPoslati.slice(0, 10)) {
+      if (poslano + napak > 0 && Date.now() - t0 > PROMO_PRORACUN_MS) break
       if (poslano + napak > 0) await new Promise((r) => setTimeout(r, 500))
       const s = await sOdjavo(db, k.user_id, sestaviPromoPreverjen(
         { slug: k.liga_slug ?? '', oznaka: '', drzava: k.drzava }, { display_name: k.display_name }, cene))
