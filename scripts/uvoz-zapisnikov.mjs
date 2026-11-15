@@ -22,7 +22,7 @@ import { viraZa } from './viri/index.mjs'
 import {loadHistoricalStatisticsImportContext,assertHistoricalReportImportable,skipIncompleteArchiveReport} from './lib/historical-statistics-import.mjs'
 import {isBadenNativeCompetition} from './fussball-native-runtime.mjs'
 import { zaprtje } from './odtis-kode.mjs'
-import { mapaKlubov } from './klubi.mjs'
+import { mapaKlubov, preimenovanKlub, tekmeSezone } from './klubi.mjs'
 import { vseVrstice } from './strani.mjs'
 import { requireMissingReportImportScope, completedReportIds } from './missing-report-import.mjs'
 import { prenesiSPonovitvami, fetchZaBazo } from './prenos.mjs'
@@ -193,11 +193,33 @@ const klubi = await mapaKlubov(db, vir) // ključ kluba -> id
 const igralci = new Map() // Dres mora lociti soimenjake tudi pri samostojnem nastopu.
 const klubPoReg = new Map() // `reg|<st>` -> { team, datum } zadnje tekme v tem zagonu
 
-async function klubId(ime) {
+// Preimenovan klub (glej `preimenovanKlub` v klubi.mjs): zapisnik piše klub
+// drugače kot razpored ("TRGOVAČKI" proti "TRGOVAČKI (Petrovac)"). Dokaz je
+// tekma istega kroga proti istemu nasprotniku, ki je v bazi že pri starem klubu.
+const sezoneBaze = new Map() // sezona -> { tekmeBaze, kljuciKlubov }
+async function preimenovan(kljuc, tekma) {
+  const nasprotnik = tekma && klubi.get(vir.kljucKluba(tekma.nasprotnik))
+  if (nasprotnik == null || !tekma.sezona || tekma.krog == null) return null
+  if (!sezoneBaze.has(tekma.sezona))
+    sezoneBaze.set(tekma.sezona, await tekmeSezone(db, tekmovanje.id, tekma.sezona, vir.kljucKluba))
+  return preimenovanKlub({
+    kljuc,
+    tekme: [{ krog: tekma.krog, nasprotnik, doma: tekma.doma }],
+    ...sezoneBaze.get(tekma.sezona),
+  })
+}
+
+async function klubId(ime, tekma = null) {
   const kljuc = vir.kljucKluba(ime)
   if (klubi.has(kljuc)) return klubi.get(kljuc)
 
   const polnoIme = ime.trim()
+  const star = await preimenovan(kljuc, tekma)
+  if (star != null) {
+    console.log(`  preimenovan klub: ${polnoIme} = obstoječi klub ${star}`)
+    klubi.set(kljuc, star)
+    return star
+  }
   // Klub s tem imenom morda že obstaja, le ključ ga ni našel (vzdevek kluba,
   // ki v ligah tega vira še nima igralcev). Ime je unikatno znotraj države,
   // zato bi vstavljanje padlo — raje ga vzamemo.
@@ -880,8 +902,8 @@ for (const report of zapisniki) {
   }
 
   try {
-    const domaciId = await klubId(z.domaci.ime)
-    const gostjeId = await klubId(z.gostje.ime)
+    const domaciId = await klubId(z.domaci.ime, { sezona: z.sezona, krog: z.krog, nasprotnik: z.gostje.ime, doma: true })
+    const gostjeId = await klubId(z.gostje.ime, { sezona: z.sezona, krog: z.krog, nasprotnik: z.domaci.ime, doma: false })
     const rId = await krogId(z.sezona, z.krog, z.datum)
     dotaknjeniKrogi.add(rId)
 

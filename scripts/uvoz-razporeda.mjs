@@ -19,7 +19,7 @@ import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
 import {loadHistoricalStatisticsImportContext} from './lib/historical-statistics-import.mjs'
-import { mapaKlubov } from './klubi.mjs'
+import { mapaKlubov, preimenovanKlub, tekmeSezone } from './klubi.mjs'
 import { sifra } from './viri/zapisniki.mjs'
 import { razcleniRazpored, sezonaIz, oznakaBrezIzida, tekmaDrugegaKroga, odvecneVrsticePara, preberiKontumacije, krogiZDatumomNazaj, uskladiOpozorilaRazporeda } from './razpored.mjs'
 import { rokKroga } from './razporedi.mjs'
@@ -228,11 +228,37 @@ if (!pisi) {
 // tega vira (glej `mapaKlubov`).
 const klubi = await mapaKlubov(db, vir) // ključ kluba -> id
 
+// Preimenovan klub (glej `preimenovanKlub` v klubi.mjs): ime, ki ga ključ ne
+// najde, je lahko klub, ki v tej ligi letos že igra pod starim imenom. Tekme
+// sezone preberemo šele ob prvem neznanem imenu.
+let sezonaBaze = null
+const kljuciRazporeda = new Set(veljavni.flatMap((k) => k.tekme.flatMap((t) => [vir.kljucKluba(t.domaci), vir.kljucKluba(t.gostje)])))
+async function preimenovan(kljuc) {
+  sezonaBaze ??= await tekmeSezone(db, tekmovanje.id, sezona, vir.kljucKluba)
+  const tekme = veljavni.flatMap((k) =>
+    k.tekme.flatMap((t) => {
+      const d = vir.kljucKluba(t.domaci)
+      const g = vir.kljucKluba(t.gostje)
+      if (d === kljuc && klubi.has(g)) return [{ krog: k.stevilka, nasprotnik: klubi.get(g), doma: true }]
+      if (g === kljuc && klubi.has(d)) return [{ krog: k.stevilka, nasprotnik: klubi.get(d), doma: false }]
+      return []
+    }),
+  )
+  const vViru = new Set([...kljuciRazporeda].filter((k) => k !== kljuc && klubi.has(k)).map((k) => klubi.get(k)))
+  return preimenovanKlub({ kljuc, tekme, ...sezonaBaze, vViru })
+}
+
 async function klubId(ime) {
   const kljuc = vir.kljucKluba(ime)
   if (klubi.has(kljuc)) return klubi.get(kljuc)
 
   const polnoIme = ime.trim()
+  const star = await preimenovan(kljuc)
+  if (star != null) {
+    console.log(`  preimenovan klub: ${polnoIme} = obstoječi klub ${star} (${sezonaBaze.kljuciKlubov.get(star)})`)
+    klubi.set(kljuc, star)
+    return star
+  }
   // Klub s tem imenom morda že obstaja, le ključ ga ni našel (vzdevek kluba,
   // ki v ligah tega vira še nima igralcev). Ime je unikatno znotraj države,
   // zato bi vstavljanje padlo — raje ga vzamemo.
