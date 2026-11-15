@@ -6,7 +6,7 @@
 //
 // Prej je bila to vrsta kod "SL · HR · SK …"; pri trinajstih jezikih se je na
 // telefonu raztegnila čez tri vrstice in koda ni povedala, kateri jezik je.
-import { PRIPRAVLJENI, izberiJezik, jezik, t, type Jezik } from '../i18n'
+import { PRIPRAVLJENI, izberiJezik, jezikSlovarja, t, type Jezik } from '../i18n'
 import { potrdiZapustitev } from '../lib/neshranjeno'
 import SpustniMeni from './SpustniMeni'
 
@@ -42,7 +42,10 @@ export default function IzbiraJezika({
   /** Seznam nad gumbom (noga strani). */
   navzgor?: boolean
 }) {
-  const zdaj = jezik()
+  // Jezik, ki je res na zaslonu: ko slovar izbranega jezika ni prišel
+  // (počasno omrežje), je to slovenščina, in tak naj bo tudi gumb — sicer
+  // "Srpski" kaže na slovenski strani, izbira "Srpski" pa ne stori ničesar.
+  const zdaj = jezikSlovarja()
   const ime = (j: Jezik) => IMENA[j] ?? j
   const preklopi = (j: string) => {
     if (j === zdaj || !potrdiZapustitev()) return
