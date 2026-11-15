@@ -26,6 +26,7 @@ import PotisnaObvestila from './components/PotisnaObvestila'
 import { BeleziPovabilo } from './lib/povabilo'
 import { jeZasebna, useKanonicni, useNaslov, useNoindex } from './lib/naslov'
 import { useObisk } from './lib/obiski'
+import { zabeleziObiskPokrovitelja } from './lib/pokrovitelj'
 import { jeNativno, povezavaTrgovine, TRGOVINA_VIDNA } from './lib/platforma'
 
 // Strani razen naslovnice so svoji kosi: obiskovalec naslovnice ne prenaša
@@ -127,6 +128,8 @@ export default function App() {
   // Katero stran človek po registraciji sploh odpre — dnevni seštevki, brez
   // uporabnika in naprave (`src/lib/obiski.ts`).
   useObisk()
+  // Obisk s kartice ali iz objave s pokroviteljem lige (`?pk=`, SLF-484).
+  useEffect(() => zabeleziObiskPokrovitelja(search), [search])
   return (
     <AuthProvider>
       <TekmovanjeProvider>

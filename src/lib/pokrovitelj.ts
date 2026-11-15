@@ -9,7 +9,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
 
-export type PokroviteljLige = { id: number; ime: string; logo: string | null; url: string }
+export type PokroviteljLige = { id: number; liga: number; ime: string; logo: string | null; url: string }
 
 type Vrstica = { id: number; name: string; logo_url: string | null; url: string; doseg: string }
 
@@ -30,7 +30,44 @@ export async function pokroviteljLige(ligaId: number): Promise<PokroviteljLige |
   const s = ((data ?? []) as Vrstica[]).find((v) => v.doseg === 'liga')
   const url = varenNaslov(s?.url)
   if (!s || !url) return null
-  return { id: s.id, ime: s.name, logo: varenNaslov(s.logo_url, true), url }
+  return { id: s.id, liga: ligaId, ime: s.name, logo: varenNaslov(s.logo_url, true), url }
+}
+
+/** Kje je bil pokrovitelj viden (SLF-484); pomen prikaza in klika v migraciji 20261115190000. */
+export type MestoPokrovitelja = 'glava' | 'kartica' | 'objava'
+
+/**
+ * Zapis prikaza ali klika pokrovitelja. Baza šteje le trenutnega pokrovitelja
+ * te lige. Poizvedba Supabase se pošlje šele ob `then`.
+ */
+export function zabeleziPokrovitelja(p: { id: number; liga: number }, mesto: MestoPokrovitelja, klik: boolean) {
+  supabase
+    .rpc('zabelezi_sponzorja', { p_sponsor_id: p.id, p_competition_id: p.liga, p_klik: klik, p_mesto: mesto })
+    .then(
+      () => {},
+      () => {},
+    )
+}
+
+/**
+ * Oznaka v povezavi s kartice ali iz objave: `pk=k12.345` (k = kartica,
+ * o = objava, sponzor 12, liga 345). Obisk prek nje je klik na tem mestu.
+ */
+export const oznakaPokrovitelja = (p: { id: number; liga: number }, mesto: 'kartica' | 'objava') =>
+  `${mesto === 'kartica' ? 'k' : 'o'}${p.id}.${p.liga}`
+
+/** Obisk s `pk=` v naslovu: enkrat na sejo zapiše klik. */
+export function zabeleziObiskPokrovitelja(iskanje: string) {
+  const m = /^([ko])(\d+)\.(\d+)$/.exec(new URLSearchParams(iskanje).get('pk') ?? '')
+  if (!m) return
+  const kljuc = `slff-pk-${m[0]}`
+  try {
+    if (sessionStorage.getItem(kljuc)) return
+    sessionStorage.setItem(kljuc, '1')
+  } catch {
+    // Brez sessionStorage (zasebno okno): šteje vsak obisk, kot prej Umami.
+  }
+  zabeleziPokrovitelja({ id: Number(m[2]), liga: Number(m[3]) }, m[1] === 'k' ? 'kartica' : 'objava', true)
 }
 
 /** Pokrovitelj po slugu lige (kartica igralca pozna le slug). */
