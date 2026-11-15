@@ -39,6 +39,7 @@ async function klic() {
   return j
 }
 
-// Funkcija pošlje največ 10 na klic; paket (do 20) dokonča v največ treh klicih.
+// Funkcija pošlje na klic le toliko, kolikor dopušča časovni proračun (vsaj 1);
+// paket (do 20) dokonča v največ 20 klicih.
 let j = await klic()
-for (let i = 0; akcija === 'poslji' && i < 2 && j.ostalo_v_paketu > 0 && j.poslano > 0; i++) j = await klic()
+for (let i = 0; akcija === 'poslji' && i < 19 && j.ostalo_v_paketu > 0 && j.poslano > 0; i++) j = await klic()
