@@ -4,3 +4,4 @@
 # zgoščeno vrednost (glej SLF-308).
 scripts/test-fssid-vzdevki.mjs
 scripts/test-hlf-kartice.mjs
+scripts/test-oefb-vzdevki.mjs

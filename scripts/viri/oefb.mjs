@@ -411,11 +411,15 @@ export function nastopi(z) {
 // razpored je pod novim imenom podvojil vse tekme kluba (isti nasprotnik, isti
 // krog), zapisnik 13. kroga pa je pristal pri dvojniku. Enako 1. Klasse West
 // (Steiermark) novembra 2026: SV SW Lieboch je v razporedu postal "SV Schwarz -
-// Weiß Remax Lieboch", nočni uvoz pa je ustvaril dvojnika (id 11407).
+// Weiß Remax Lieboch", nočni uvoz pa je ustvaril dvojnika (id 11407). In 2. Klasse
+// 1b (OÖ) 15. 11. 2026: "St. Valent.ASK 1b" (klub 3685) je v razporedu postal
+// "St. Valentin ASK 1b"; dvojnik 12917 je dobil prazni tekmi 15. in 30. kroga,
+// zapisnik 4129708 pa je trčil v `matches_zapisnik_id_key` (SLF-456).
 const ISTI_KLUB_AT = {
   'sg askö wölfnitz sv oberglan juniors 1b': 'sg askö wölfnitz sv oberglan juniors',
   'austria klagenfurt 1b': 'austria klagenfurt amat',
   'sv schwarz weiß remax lieboch': 'sv sw lieboch',
+  'st valentin ask 1b': 'st valent ask 1b',
 }
 
 const kljucBrezVzdevka = (ime) =>
