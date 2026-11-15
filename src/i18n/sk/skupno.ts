@@ -41,6 +41,8 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     miniLigaNi: 'Mini liga s týmto kódom neexistuje.',
     niTvojaEkipa: 'To nie je tvoj tím.',
     imeMiniLige: 'Názov mini ligy musí mať 2 až 40 znakov.',
+    imeMiniLigeZnaki: 'Názov mini ligy obsahuje nepovolené znaky.',
+    imeMiniLigeNedovoljeno: 'Tento názov mini ligy nie je povolený.',
     prijavaMiniLiga: 'Pre mini ligu sa musíš prihlásiť.',
     niDovoljenja: 'Nemáš oprávnenie upravovať tento tím.',
     kodaNeUstvarjena: 'Kód mini ligy sa nepodarilo vytvoriť. Skús znova.',

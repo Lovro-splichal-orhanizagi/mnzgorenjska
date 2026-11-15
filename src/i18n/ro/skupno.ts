@@ -44,6 +44,8 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     miniLigaNi: 'Nu există nicio mini-ligă cu acest cod.',
     niTvojaEkipa: 'Nu e echipa ta.',
     imeMiniLige: 'Numele mini-ligii trebuie să aibă între 2 și 40 de caractere.',
+    imeMiniLigeZnaki: 'Numele mini-ligii conține caractere nepermise.',
+    imeMiniLigeNedovoljeno: 'Acest nume de mini-ligă nu este permis.',
     prijavaMiniLiga: 'Pentru o mini-ligă trebuie să te autentifici.',
     niDovoljenja: 'Nu ai permisiunea să editezi această echipă.',
     kodaNeUstvarjena: 'Codul mini-ligii nu a putut fi creat. Încearcă din nou.',

@@ -395,6 +395,12 @@ export const lestvice = {
     potrdi: 'Da, izbriši mini ligo',
     razpuscena: 'Mini liga »{liga}« je izbrisana.',
   },
+  preimenujMiniLigo: {
+    gumb: 'Preimenuj mini ligo',
+    oznaka: 'Ime mini lige',
+    shrani: 'Shrani ime',
+    preimenovana: 'Mini liga se zdaj imenuje »{liga}«.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Povabi še koga v {ime}',

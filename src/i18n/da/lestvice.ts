@@ -377,6 +377,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     potrdi: 'Ja, slet minirækken',
     razpuscena: 'Minirækken “{liga}” er slettet.',
   },
+  preimenujMiniLigo: {
+    gumb: 'Omdøb minirækken',
+    oznaka: 'Miniligaens navn',
+    shrani: 'Gem navnet',
+    preimenovana: 'Minirækken hedder nu “{liga}”.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Inviter en mere til {ime}',

@@ -6,6 +6,8 @@ const ZNANE: [RegExp, Parameters<typeof t>[0]][] = [
   [/^Mini lige s to kodo ni/, 'skupno.napakeRpc.miniLigaNi'],
   [/^To ni tvoja ekipa/, 'skupno.napakeRpc.niTvojaEkipa'],
   [/^Ime mini lige naj ima/, 'skupno.napakeRpc.imeMiniLige'],
+  [/^Ime mini lige vsebuje nedovoljene znake/, 'skupno.napakeRpc.imeMiniLigeZnaki'],
+  [/^To ime mini lige ni dovoljeno/, 'skupno.napakeRpc.imeMiniLigeNedovoljeno'],
   [/^Za mini ligo se je treba prijaviti/, 'skupno.napakeRpc.prijavaMiniLiga'],
   [/^Ni dovoljenja za urejanje te ekipe/, 'skupno.napakeRpc.niDovoljenja'],
   [/^Kode mini lige ni bilo mogo/, 'skupno.napakeRpc.kodaNeUstvarjena'],
