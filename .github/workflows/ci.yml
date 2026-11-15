@@ -191,6 +191,9 @@ jobs:
       - name: Nadzorovana FCF osvezitev
         run: node --test scripts/test-osvezi-fcf-predpomnilnik.mjs
 
+      - name: Nočni koši in klic opomnikov
+        run: node --test scripts/test-nocni-kosi.mjs scripts/test-bulk-klic-opomnika.mjs scripts/test-mfa-missing-minute.mjs
+
       - name: Build
         run: npm run build
 

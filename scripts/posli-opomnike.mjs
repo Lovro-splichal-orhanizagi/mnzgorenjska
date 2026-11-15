@@ -88,7 +88,7 @@ if (vrsta === 'dobrodoslica' || vrsta === 'brez-ekipe' || vrsta === 'liga-zivi' 
       body: JSON.stringify({ vrsta, suho, najvec_poslati: Math.min(10, ostane) }),
     })
     const izid = await o.json().catch(() => ({}))
-    if (!o.ok) { console.error(`${vrsta.toUpperCase()} NAPAKA ${o.status}: ${izid.error ?? ''}`); process.exit(1) }
+    if (!o.ok) { console.error(`${vrsta.toUpperCase()} NAPAKA ${o.status}: ${izid.error ?? izid.msg ?? ''}`); process.exit(1) }
     if (suho) { console.log(`${vrsta.toUpperCase()} — suhi tek: ${izid.kandidati_stevilo} kandidatov.`); process.exit(0) }
     poslano += izid.poslano ?? 0
     ostane -= izid.kandidati_stevilo ?? 0
@@ -205,7 +205,7 @@ for (const liga of lige ?? []) {
       continue
     }
     if (!odgovor.ok) {
-      console.log(`  ${liga.slug.padEnd(14)} NAPAKA ${odgovor.status}: ${izid.error ?? ''}`)
+      console.log(`  ${liga.slug.padEnd(14)} NAPAKA ${odgovor.status}: ${izid.error ?? izid.msg ?? ''}`)
       padlo++
       if (napakZapored >= NAJVEC_NAPAK_ZAPORED) {
         console.error(`::error::${napakZapored} lig zapored brez povezave s funkcijo; ustavljam, ostale lige pridejo ob naslednjem zagonu.`)

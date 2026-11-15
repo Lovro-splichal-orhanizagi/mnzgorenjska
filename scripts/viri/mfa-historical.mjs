@@ -14,7 +14,8 @@ export function withMfaHistoricalStatistics(base,competition,{installedHistorica
    // The abandoned segment is provenance of the one installed final fixture.
    if(competition.id===974)preskoci.add('mt50920555')
    if(options.samoZapisnik&&preskoci.has(String(options.samoZapisnik)))return[]
-   const reports=await base.zapisniki(code,read,{...options,preskoci,strogo:true})
+   // Strict unless the nightly basket opts out (nocni-uvoz.sh): reviewed releases keep a missing red-card clock fatal.
+   const reports=await base.zapisniki(code,read,{...options,preskoci,strogo:process.env.SLFF_MFA_NESTROGO!=='1'})
    for(const report of reports)assertMfaReportTiming(report.z)
    return reports
   },

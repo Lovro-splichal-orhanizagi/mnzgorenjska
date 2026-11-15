@@ -39,7 +39,11 @@ test('strict mode (reviewed historical releases) keeps the report so the validat
   assert.throws(() => assertMfaReportTiming(reports[1].z), /on-field dismissal minute missing/)
 })
 
-test('historical wrapper requests strict mode from the base source', () => {
+test('historical wrapper requests strict mode unless the nightly basket opts out', () => {
   const src = readFileSync(new URL('./viri/mfa-historical.mjs', import.meta.url), 'utf8')
-  assert.match(src, /base\.zapisniki\(code,read,\{\.\.\.options,preskoci,strogo:true\}\)/)
+  assert.match(src, /base\.zapisniki\(code,read,\{\.\.\.options,preskoci,strogo:process\.env\.SLFF_MFA_NESTROGO!=='1'\}\)/)
+  const sh = readFileSync(new URL('./nocni-uvoz.sh', import.meta.url), 'utf8')
+  assert.match(sh, /^export SLFF_MFA_NESTROGO=1$/m)
+  for (const f of ['mfa-reviewed-history.mjs', 'mfa-challenge-reviewed-history.mjs', 'mfa-nl-reviewed-history.mjs'])
+    assert.doesNotMatch(readFileSync(new URL(`./${f}`, import.meta.url), 'utf8'), /SLFF_MFA_NESTROGO/)
 })

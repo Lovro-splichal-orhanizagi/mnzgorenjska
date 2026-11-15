@@ -30,6 +30,10 @@ set -uo pipefail
 URNI=0
 if [ "$URNIK" = '17 * * * 5,6,0' ] && [ "$(date -u +%H)" != "05" ]; then URNI=1; fi
 STANJE="scripts/.predpomnilnik/nocni-stanje-${DRZAVA}-${KOS}.json"
+# Malta: zapisnik, ki mu vir ne objavi minute izključitve, nočni uvoz preskoči in
+# izpiše (kot pri ostalih ligah mfa); strogi ostanejo le pregledani zgodovinski
+# uvozi. 15. 11. 2026 je en tak zapisnik podrl celo mt-nl2 (SLF-452).
+export SLFF_MFA_NESTROGO=1
 LIGE=$(mktemp)
 
 node scripts/nocni-kosi.mjs --drzava "$DRZAVA" --kos "$KOS" --kosov "$KOSOV" --stanje "$STANJE" > "$LIGE" || exit 1

@@ -58,6 +58,28 @@ test('503: klic ponovimo z dolgim premorom; po vseh poskusih vrnemo 503, ostali 
   assert.equal(klici, 4)
 })
 
+const UPOKOJEN = '{"msg":"WorkerAlreadyRetired: request cannot be handled because the worker has already retired"}'
+
+test('500 WorkerAlreadyRetired (edge runtime) ponovimo; druge 500 ne', async () => {
+  const premori = []
+  let klici = 0
+  const r = await klicSPonovitvami(async () => (++klici < 2 ? new Response(UPOKOJEN, { status: 500 }) : new Response('{}', { status: 200 })), 'u', {}, { log: (v) => premori.push(v), zamiki: [2000, 6000], zamikNejasno: 0 })
+  assert.equal(r.status, 200)
+  assert.equal(klici, 2)
+  assert.match(premori[0], /HTTP 500 WorkerAlreadyRetired/)
+  klici = 0
+  const zadnji = await klicSPonovitvami(async () => { klici++; return new Response(UPOKOJEN, { status: 500 }) }, 'u', {}, tih)
+  assert.equal(zadnji.status, 500)
+  assert.equal(klici, 3)
+  assert.match((await zadnji.json()).msg, /WorkerAlreadyRetired/)
+  for (const telo of ['{"error":"x"}', '{"msg":"WorkerRequestCancelled: request has been cancelled"}', '']) {
+    klici = 0
+    const funkcija = await klicSPonovitvami(async () => { klici++; return new Response(telo, { status: 500 }) }, 'u', {}, tih)
+    assert.equal(klici, 1, telo)
+    assert.equal(await funkcija.text(), telo)
+  }
+})
+
 // Skripta zares, proti lokalnemu strežniku, ki prvi klic funkcije prekine.
 async function zazeni(vedenje, { resetLig = 0, lige = 2 } = {}) {
   const klici = []
