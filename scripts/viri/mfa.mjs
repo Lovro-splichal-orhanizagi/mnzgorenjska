@@ -574,11 +574,13 @@ const vir = {
   },
 
   // `strogo` (zgodovinski pregledani izdaji): zapisnik brez minute ostane napaka.
-  // Sicer ga preskocimo in navedemo, da se preostala liga uvozi; minute ne ugibamo.
+  // Sicer: rdeči karton brez minute uvozimo z minuto NULL (Nejc, 15. 11. 2026),
+  // zapisnik z drugo manjkajočo minuto preskočimo; oboje navedemo, minute ne ugibamo.
   async zapisniki(koda, prenesi, { zdaj = Date.now(), mapa, preskoci = new Set(), strogo = false } = {}) {
     const { sezona } = razbijKodo(koda)
     const out = []
     const brezMinute = []
+    const rdecBrezMinute = []
     for (const { krog, t } of krogiSezone(await vseTekme(koda, prenesi, { mapa }))) {
       if (cancelledMtarfaFixture(t)) continue
       if (t.status !== 'PLAYED') continue
@@ -605,12 +607,26 @@ const vir = {
       z.sezona = sezonaIz(sezona)
       z.datum ??= datum
       if (!strogo) {
+        const naIgrisce = new Set([...z.domaci.postava.map((p) => `0:${p.regSt}`), ...z.gostje.postava.map((p) => `1:${p.regSt}`),
+          ...z.menjave.filter((m) => m.minuta != null).map((m) => `${m.ekipaIdx}:${m.noter?.regSt}`)])
+        const brez = z.rdeci.filter((r) => r.minuta == null && naIgrisce.has(`${r.ekipaIdx}:${r.regSt}`))
+        if (brez.length) {
+          z.dovoliRdecBrezMinute = true
+          for (const r of brez) {
+            z.opozorila.push(`rdeči karton brez minute pri ${r.ime ?? '?'}: minuta ostane prazna, minute igralca do konca tekme`)
+            rdecBrezMinute.push(`${z.zapisnikId} (${z.url}): ${r.ime ?? '?'} (${r.regSt})`)
+          }
+        }
         try { assertMfaReportTiming(z) } catch (e) {
           brezMinute.push(`${z.zapisnikId} (${z.url}): ${e.message.replace(/^MFA report validation: /, '')}`)
           continue
         }
       }
       out.push({ id: z.zapisnikId, z, url: z.url })
+    }
+    if (rdecBrezMinute.length) {
+      console.warn(`mfa ${koda}: ${rdecBrezMinute.length} rdečih kartonov brez minute v viru, uvoženih z minuto NULL:`)
+      for (const v of rdecBrezMinute) console.warn(`  - ${v}`)
     }
     if (brezMinute.length) {
       console.warn(`mfa ${koda}: ${brezMinute.length} zapisnikov preskočenih, ker vir ne objavlja minute dogodka:`)

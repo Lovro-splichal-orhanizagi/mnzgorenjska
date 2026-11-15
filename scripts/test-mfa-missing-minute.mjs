@@ -22,11 +22,39 @@ const read = async url => {
 }
 const opts = { mapa: null, zdaj: Date.parse('2026-11-01T00:00Z') }
 
-test('a report with an on-field red card without minute is skipped and listed; the rest imports', async () => {
+test('a red card without minute is imported with minute NULL and listed; the rest imports', async () => {
   const warn = console.warn, lines = []
   console.warn = (m) => lines.push(m)
   try {
     const reports = await mfa.zapisniki('6306756/2027', read, opts)
+    assert.deepEqual(reports.map(r => r.id), ['mt101', 'mt102'])
+    assert.ok(lines.join('\n').includes('mt102'))
+    const z = reports[1].z
+    assert.equal(z.dovoliRdecBrezMinute, true)
+    assert.equal(z.rdeci[0].minuta, null)
+    const sentOff = mfa.nastopi(z).find(n => n.regSt === 2000)
+    assert.equal(sentOff.rdeci, 1)
+    assert.equal(sentOff.minutaDo, 90)
+    const { assertHistoricalReportImportable } = await import('./lib/historical-statistics-import.mjs')
+    assert.doesNotThrow(() => assertHistoricalReportImportable({ competition: { source: 'mfa', slug: 'mt-youth-b' }, report: reports[1] }))
+    assert.equal(reports[0].z.dovoliRdecBrezMinute, undefined)
+  } finally { console.warn = warn }
+})
+
+test('a report missing another minute (substitution) is still skipped and listed', async () => {
+  const readSub = async url => {
+    const m = /matches\/(\d+)\/(result|lineup)/.exec(url)
+    if (!m || m[1] !== '102') return read(url)
+    const sub = { id: 8, type: 'SUBSTITUTION', team: 'HOME', time: "'", playerName: 'Y', playerId: 1011, playerIdTwo: 1005 }
+    const bench = { id: 1011, number: 12, name: 'P1011', startingLineup: false, isGoalkeeper: false, events: [sub] }
+    if (m[2] === 'result') return JSON.stringify({ status: 'PLAYED', homeScore: '0', awayScore: '0', events: [sub] })
+    const home = team(1000, { 6: [sub] }); home.players.push(bench)
+    return JSON.stringify({ homeTeam: home, awayTeam: team(2000) })
+  }
+  const warn = console.warn, lines = []
+  console.warn = (m) => lines.push(m)
+  try {
+    const reports = await mfa.zapisniki('6306756/2027', readSub, opts)
     assert.deepEqual(reports.map(r => r.id), ['mt101'])
     assert.ok(lines.join('\n').includes('mt102'))
   } finally { console.warn = warn }
