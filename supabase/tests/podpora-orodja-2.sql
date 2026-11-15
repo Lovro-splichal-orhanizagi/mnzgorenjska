@@ -9,7 +9,8 @@ begin
     'public.prijavi_napako(text,text,text,text,text,text,text)',
     'public.tocke_igralca(text,text)',
     'public.stanje_tekme(text,text,integer)',
-    'public.zahtevaj_ligo(text,text,text,boolean)'
+    'public.zahtevaj_ligo(text,text,text,boolean)',
+    'public.stanje_prijave(text,text)'
   ] loop
     if not has_function_privilege('anon', f, 'EXECUTE') then
       raise exception '% mora biti odprta za anon', f;
@@ -42,6 +43,28 @@ begin
   if r2 ->> 'id' <> r ->> 'id' or not (r2 ->> 'ze_prijavljeno')::boolean then
     raise exception 'Ponovljena prijava je nova: %', r2;
   end if;
+
+  -- SLF-469: odprta prijava iste vrste za istega igralca v 7 dneh ni nova,
+  -- druga vrsta ali rešena prijava je; stanje_prijave jo vidi brez stika.
+  r := prijavi_napako('pozicija', 'Kos je napadalec, ne branilec', 'Qzxw Preizkusni Igralec', 'Qzxw Klub', null, null, 'c@d.si');
+  r2 := prijavi_napako('pozicija', 'Drugo besedilo, isti igralec', 'qzxw preizkusni igralec', null, null, null, 'e@f.si');
+  if r2 ->> 'id' <> r ->> 'id' or not (r2 ->> 'ze_prijavljeno')::boolean or r2 ->> 'stanje' <> 'odprta' then
+    raise exception 'Podvojena prijava igralca je nova: %', r2;
+  end if;
+  r2 := prijavi_napako('cena', 'Cena je napačna', 'Qzxw Preizkusni Igralec', null, null, null, 'c@d.si');
+  if r2 ->> 'id' = r ->> 'id' or r2 ->> 'ze_prijavljeno' is not null then
+    raise exception 'Druga vrsta je bila zavrnjena kot podvojena: %', r2;
+  end if;
+  r2 := prijavi_napako('pozicija', 'Drug igralec, ista vrsta', 'Qzxw Drugi Igralec', null, null, null, 'c@d.si');
+  if r2 ->> 'id' = r ->> 'id' or r2 ->> 'ze_prijavljeno' is not null then
+    raise exception 'Drug igralec je bil zavrnjen kot podvojen: %', r2;
+  end if;
+  r2 := stanje_prijave('Qzxw Preizkusni Igralec', null);
+  if (r2 ->> 'najdenih')::int <> 2 or r2::text like '%c@d.si%' or r2::text like '%napadalec%' then
+    raise exception 'stanje_prijave: %', r2;
+  end if;
+  r2 := stanje_prijave(null, null);
+  if (r2 ->> 'najdenih')::int <> 0 then raise exception 'stanje_prijave brez imena: %', r2; end if;
 
   -- Meja na stik: 5 na uro.
   for i in 1..4 loop
