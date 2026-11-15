@@ -11,7 +11,7 @@
 --     še ni odobreno), 1 pošlji
 --   * seznam tekmovanj `prenosi_tekmovanja` (MNZ / regionalne lige članov);
 --     mladinske in lige brez znane starostne skupine so izklopljene vedno
---   * `matches.zacetek`: ura začetka, kadar jo poznamo; brez nje velja dan tekme
+--   * `prenosi_zacetki`: ura začetka, kadar jo poznamo; brez nje velja dan tekme
 
 insert into settings (key, value) values ('prenosi', '1'), ('prenosi_push', '0')
 on conflict (key) do nothing;
@@ -31,14 +31,23 @@ grant execute on function public.vidi_prenose() to anon, authenticated, service_
 -- --------------------------------------------------------------------------
 -- Kje so prenosi dovoljeni
 -- --------------------------------------------------------------------------
-alter table public.matches add column if not exists zacetek timestamptz;
-comment on column public.matches.zacetek is
+-- Ura začetka je v svoji tabeli, ne v `matches`: varovalo FCF projekcije zahteva
+-- natančno obliko `matches` in nobenega novega stolpca `*_id` (od tod `tekma`,
+-- `tekmovanje` spodaj).
+create table if not exists public.prenosi_zacetki (
+  tekma   bigint primary key,
+  zacetek timestamptz not null
+);
+comment on table public.prenosi_zacetki is
   'Ura začetka tekme, kadar jo vir pove. Okno za prenos je od 30 min pred do 3 h po njej; brez nje velja dan tekme (played_on).';
+alter table public.prenosi_zacetki enable row level security;
+drop policy if exists "admin ureja" on public.prenosi_zacetki;
+create policy "admin ureja" on public.prenosi_zacetki for all using (is_admin()) with check (is_admin());
 
 create table if not exists public.prenosi_tekmovanja (
   -- Brez FK na competitions/matches: varovalo FCF projekcije dovoli le znan seznam
   -- FK na te tabele. Obstoj preverijo RPC-ji, bralci pa se vedno pridružijo tekmi.
-  competition_id bigint primary key,
+  tekmovanje     bigint primary key,
   created_at     timestamptz not null default now()
 );
 comment on table public.prenosi_tekmovanja is
@@ -50,7 +59,7 @@ drop policy if exists "admin ureja" on public.prenosi_tekmovanja;
 create policy "admin ureja" on public.prenosi_tekmovanja for all using (is_admin()) with check (is_admin());
 
 -- Začetni seznam: slovenske lige regijskih zvez (mnz*), le člani.
-insert into public.prenosi_tekmovanja (competition_id)
+insert into public.prenosi_tekmovanja (tekmovanje)
 select c.id
   from competitions c
   join countries d on d.id = c.country_id
@@ -70,7 +79,7 @@ as $$
   select case
     when c.id is null then 'ni_tekme'
     when public.starostna_skupina_lige(c.slug, c.name) is distinct from 'clani' then 'mladinska'
-    when not exists (select 1 from prenosi_tekmovanja pt where pt.competition_id = c.id) then 'tekmovanje'
+    when not exists (select 1 from prenosi_tekmovanja pt where pt.tekmovanje = c.id) then 'tekmovanje'
     else null
   end
   from (select 1) x
@@ -85,13 +94,14 @@ create or replace function public.prenos_okno(p_match bigint)
 returns table (od timestamptz, do_ timestamptz, ura_znana boolean)
 language sql stable security definer set search_path = public
 as $$
-  select case when m.zacetek is not null then m.zacetek - interval '30 minutes'
+  select case when z.zacetek is not null then z.zacetek - interval '30 minutes'
               else (m.played_on::timestamp) at time zone 'Europe/Ljubljana' end,
-         case when m.zacetek is not null then m.zacetek + interval '3 hours'
+         case when z.zacetek is not null then z.zacetek + interval '3 hours'
               else ((m.played_on + 1)::timestamp) at time zone 'Europe/Ljubljana' end,
-         m.zacetek is not null
+         z.zacetek is not null
     from matches m
-   where m.id = p_match and (m.zacetek is not null or m.played_on is not null)
+    left join prenosi_zacetki z on z.tekma = m.id
+   where m.id = p_match and (z.zacetek is not null or m.played_on is not null)
 $$;
 revoke all on function public.prenos_okno(bigint) from public, anon, authenticated;
 
@@ -100,7 +110,7 @@ revoke all on function public.prenos_okno(bigint) from public, anon, authenticat
 -- --------------------------------------------------------------------------
 create table if not exists public.prenosi (
   id           uuid primary key default gen_random_uuid(),
-  match_id     bigint not null,                -- brez FK (glej prenosi_tekmovanja)
+  tekma        bigint not null,                -- brez FK (glej prenosi_tekmovanja)
   user_id      uuid not null references public.profiles on delete cascade,
   video_id     text not null unique check (video_id ~ '^[A-Za-z0-9_-]{11}$'),
   kanal_id     text not null,
@@ -119,7 +129,7 @@ create table if not exists public.prenosi (
   osvezeno_at  timestamptz not null default now(),
   created_at   timestamptz not null default now()
 );
-create index if not exists prenosi_match_idx on public.prenosi (match_id);
+create index if not exists prenosi_match_idx on public.prenosi (tekma);
 create index if not exists prenosi_user_idx on public.prenosi (user_id);
 create index if not exists prenosi_kanal_idx on public.prenosi (kanal_id);
 create index if not exists prenosi_v_zivo_idx on public.prenosi (stanje) where stanje = 'v_zivo';
@@ -177,10 +187,10 @@ revoke all on public.prenosi_vpisi from public, anon, authenticated;
 
 -- Push "tekma je v živo": največ eden na tekmo in osebo.
 create table if not exists public.prenosi_obvestila (
-  match_id   bigint not null,                  -- brez FK (glej prenosi_tekmovanja)
+  tekma      bigint not null,                  -- brez FK (glej prenosi_tekmovanja)
   user_id    uuid not null references public.profiles on delete cascade,
   created_at timestamptz not null default now(),
-  primary key (match_id, user_id)
+  primary key (tekma, user_id)
 );
 alter table public.prenosi_obvestila enable row level security;
 revoke all on public.prenosi_obvestila from public, anon, authenticated;
@@ -226,7 +236,7 @@ as $$
   select p.stanje <> 'izbrisan'
      and not p.skrit
      and not p.skrit_prijave
-     and public.prenos_zaprt_zakaj(p.match_id) is null
+     and public.prenos_zaprt_zakaj(p.tekma) is null
      and (public.prenos_prepoved(p.user_id, p.kanal_id)).id is null
 $$;
 revoke all on function public.prenos_viden(public.prenosi) from public, anon, authenticated;
@@ -279,9 +289,9 @@ as $$
              exists (select 1 from prenosi_prijave pp where pp.prenos_id = p.id and pp.user_id = auth.uid()) as prijavil,
              row_number() over (partition by p.stanje order by p.gledalcev desc nulls last, p.zacetek) as mesto
         from prenosi p
-        join matches m on m.id = p.match_id
+        join matches m on m.id = p.tekma
         left join profiles pr on pr.id = p.user_id
-       where p.match_id = p_match
+       where p.tekma = p_match
          and public.vidi_prenose()
          and public.prenos_viden(p)
     ) q
@@ -303,8 +313,8 @@ returns table (
 language sql stable security definer set search_path = public
 as $$
   with vidni as (
-    select p.*, row_number() over (partition by p.match_id order by p.gledalcev desc nulls last, p.zacetek) as mesto,
-           count(*) over (partition by p.match_id) as n
+    select p.*, row_number() over (partition by p.tekma order by p.gledalcev desc nulls last, p.zacetek) as mesto,
+           count(*) over (partition by p.tekma) as n
       from prenosi p
      where p.stanje = 'v_zivo'
        and public.vidi_prenose()
@@ -315,7 +325,7 @@ as $$
          m.home_goals, m.away_goals,
          least(v.n, 3)::int, v.video_id, v.naslov, v.kanal_ime, v.gledalcev, v.osvezeno_at
     from vidni v
-    join matches m on m.id = v.match_id
+    join matches m on m.id = v.tekma
     join rounds r on r.id = m.round_id
     join competitions c on c.id = r.competition_id
     join teams th on th.id = m.home_team_id
@@ -425,7 +435,7 @@ begin
   select * into obstojeci from prenosi where video_id = p_video_id;
   if obstojeci.id is not null then
     return jsonb_build_object('ok', false,
-      'napaka', case when obstojeci.match_id = p_match then 'ze_dodan' else 'druga_tekma' end);
+      'napaka', case when obstojeci.tekma = p_match then 'ze_dodan' else 'druga_tekma' end);
   end if;
   if exists (select 1 from prenosi where kanal_id = p_kanal_id and stanje = 'v_zivo') then
     return jsonb_build_object('ok', false, 'napaka', 'kanal_ze_v_zivo');
@@ -444,8 +454,8 @@ begin
        and position(b.beseda in besedilo) > 0
   ) into ujema;
 
-  prvi := not exists (select 1 from prenosi where match_id = p_match and stanje = 'v_zivo');
-  insert into prenosi (match_id, user_id, video_id, kanal_id, kanal_ime, naslov, zacetek, gledalcev, nepreverjeno)
+  prvi := not exists (select 1 from prenosi where tekma = p_match and stanje = 'v_zivo');
+  insert into prenosi (tekma, user_id, video_id, kanal_id, kanal_ime, naslov, zacetek, gledalcev, nepreverjeno)
   values (p_match, p_user, p_video_id, p_kanal_id, left(p_kanal_ime, 200), left(p_naslov, 300), p_zacetek, p_gledalcev, not ujema)
   returning id into nov_id;
   return jsonb_build_object('ok', true, 'id', nov_id, 'prvi', prvi, 'nepreverjeno', not ujema);
@@ -514,7 +524,7 @@ grant execute on function public.prenosi_osvezi(jsonb) to service_role;
 create or replace function public.prenos_push_prejemniki(p_match bigint, p_najvec int default 500)
 returns setof uuid language sql volatile security definer set search_path = public
 as $$
-  insert into prenosi_obvestila (match_id, user_id)
+  insert into prenosi_obvestila (tekma, user_id)
   select p_match, pr.id
     from matches m
     join profiles pr on pr.navijam_team_id in (m.home_team_id, m.away_team_id)
@@ -546,7 +556,7 @@ as $$
 begin
   if not is_admin() then raise exception 'Le za admina.'; end if;
   return query
-  select p.id, p.match_id, th.name || ' – ' || ta.name, p.video_id, p.kanal_id, p.kanal_ime, p.naslov,
+  select p.id, p.tekma, th.name || ' – ' || ta.name, p.video_id, p.kanal_id, p.kanal_ime, p.naslov,
          p.user_id, pr.display_name, p.stanje, p.gledalcev, p.zacetek, p.created_at,
          p.nepreverjeno, p.skrit, p.skrit_prijave, p.pregledan_at,
          (prenos_prepoved(p.user_id, p.kanal_id)).id is not null,
@@ -556,7 +566,7 @@ begin
          (select count(*)::int from prenosi_ogledi og where og.prenos_id = p.id),
          (select count(*)::int from prenosi_vpisi vp where vp.prenos_id = p.id)
     from prenosi p
-    join matches m on m.id = p.match_id
+    join matches m on m.id = p.tekma
     join teams th on th.id = m.home_team_id
     join teams ta on ta.id = m.away_team_id
     left join profiles pr on pr.id = p.user_id
@@ -655,7 +665,7 @@ begin
          (select count(*)::int from prenosi_ogledi og where og.prenos_id = p.id),
          (select count(*)::int from prenosi_vpisi vp where vp.prenos_id = p.id)
     from prenosi p
-    join matches m on m.id = p.match_id
+    join matches m on m.id = p.tekma
     join teams th on th.id = m.home_team_id
     join teams ta on ta.id = m.away_team_id
    order by p.zacetek desc

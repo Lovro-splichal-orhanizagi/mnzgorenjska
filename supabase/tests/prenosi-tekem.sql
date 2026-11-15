@@ -46,7 +46,7 @@ insert into competitions (id, slug, name, short_name, active, country_id, source
   (991301, 'zz-test-prenosi-clani', 'Prenosi člani', 'PC', false, (select id from countries where code = 'SI'), 'test'),
   (991302, 'zz-test-prenosi-u17', 'Prenosi U17', 'P17', false, (select id from countries where code = 'SI'), 'test'),
   (991303, 'zz-test-prenosi-izven', 'Prenosi izven seznama', 'PI', false, (select id from countries where code = 'SI'), 'test');
-insert into prenosi_tekmovanja (competition_id) values (991301), (991302);
+insert into prenosi_tekmovanja (tekmovanje) values (991301), (991302);
 insert into teams (id, name, short_name, country_id) overriding system value values
   (991311, 'NK Prenosgrad', 'Prenosgrad', (select id from countries where code = 'SI')),
   (991312, 'NK Kamniška Bistrica', 'Bistrica', (select id from countries where code = 'SI'));
@@ -55,12 +55,13 @@ insert into rounds (id, season, number, deadline_at, played_on, competition_id) 
   (991322, sezona_lige(991302), 1, now() - interval '1 day', current_date, 991302),
   (991323, sezona_lige(991303), 1, now() - interval '1 day', current_date, 991303),
   (991324, sezona_lige(991301), 2, now() - interval '1 day', current_date, 991301);
-insert into matches (id, round_id, home_team_id, away_team_id, played_on, zacetek) overriding system value values
-  (991331, 991321, 991311, 991312, (now() at time zone 'Europe/Ljubljana')::date, null),
-  (991332, 991321, 991312, 991311, (now() at time zone 'Europe/Ljubljana')::date, now() - interval '5 hours'),
-  (991333, 991322, 991311, 991312, (now() at time zone 'Europe/Ljubljana')::date, null),
-  (991334, 991323, 991311, 991312, (now() at time zone 'Europe/Ljubljana')::date, null),
-  (991335, 991324, 991312, 991311, (now() at time zone 'Europe/Ljubljana')::date, null);
+insert into matches (id, round_id, home_team_id, away_team_id, played_on) overriding system value values
+  (991331, 991321, 991311, 991312, (now() at time zone 'Europe/Ljubljana')::date),
+  (991332, 991321, 991312, 991311, (now() at time zone 'Europe/Ljubljana')::date),
+  (991333, 991322, 991311, 991312, (now() at time zone 'Europe/Ljubljana')::date),
+  (991334, 991323, 991311, 991312, (now() at time zone 'Europe/Ljubljana')::date),
+  (991335, 991324, 991312, 991311, (now() at time zone 'Europe/Ljubljana')::date);
+insert into prenosi_zacetki (tekma, zacetek) values (991332, now() - interval '5 hours');
 
 insert into settings (key, value) values ('prenosi', '2'), ('prenosi_push', '0')
 on conflict (key) do update set value = excluded.value;

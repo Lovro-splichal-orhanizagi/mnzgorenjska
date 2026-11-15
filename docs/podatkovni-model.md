@@ -1326,7 +1326,7 @@ funkcija `supabase/functions/prenosi/`, vmesnik `PrenosiTekme.tsx`,
   imeti starostno skupino `clani` (`starostna_skupina_lige`); mladinske in
   neznane so zaprte ne glede na seznam (snemanje mladoletnih).
 - **Okno**: začetek prenosa (YouTube `actualStartTime`) od 30 min pred do 3 h
-  po `matches.zacetek`; dokler uvoz ure ne pozna (zdaj nikjer), velja dan
+  po `prenosi_zacetki.zacetek`; dokler uvoz ure ne pozna (zdaj nikjer), velja dan
   tekme (`played_on`, Europe/Ljubljana).
 - **Vpis** (`prenos_dodaj`, le servis): potrjen e-naslov, brez veljavne
   prepovedi uporabnika ali kanala, isti video ne na dveh tekmah, en kanal en
