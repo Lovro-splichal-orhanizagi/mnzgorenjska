@@ -56,6 +56,17 @@ export const VZPOREDNI = {
 // (pri 5 koših bi mascot delil koš z 9 ligami eps).
 export const KOSOV = { AT: 4, HR: 3, HU: 3, SK: 2, RS: 2, SI: 2, GR: 6 }
 
+/**
+ * Viri, ki jih nočni uvoz ne bere, čeprav so njihove lige vklopljene.
+ * fcf.cat je od 14. 11. 2026 na seznamu virov, ki jih ne uporabljamo (pravila
+ * SLFF). 15. 11. je vsaka katalonska liga padla, ker fcf.cat namesto zapisnika
+ * vrača drugo stran (~114 KB): dva poskusa po ~17 min za nič (SLF-452).
+ */
+export const IZKLOPLJENI_VIRI = new Set(['fcf'])
+
+/** Vklopljene lige brez lig iz izklopljenih virov. */
+export const brezIzklopljenih = (lige) => lige.filter((t) => !IZKLOPLJENI_VIRI.has(t.source))
+
 /** FNV-1a, 32 bitov: stabilna zgoščenka niza (brez kripto, enaka v vsakem Node). */
 export function zgoscenka(niz) {
   let h = 0x811c9dc5
@@ -147,6 +158,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error(`Tekmovanj ni mogoče prebrati: ${error.message}`)
     process.exit(1)
   }
-  const kosi = razdeli((data ?? []).map((t) => ({ slug: t.slug, vir: t.source })), kosov)
+  const izklopljene = (data ?? []).length - brezIzklopljenih(data ?? []).length
+  if (izklopljene) console.error(`Izpuščenih lig iz izklopljenih virov (${[...IZKLOPLJENI_VIRI].join(', ')}): ${izklopljene}`)
+  const kosi = razdeli(brezIzklopljenih(data ?? []).map((t) => ({ slug: t.slug, vir: t.source })), kosov)
   for (const l of uredi(kosi[kos - 1], preberiStanje(potStanja))) console.log(`${l.slug} ${l.faktor} ${l.vir}`)
 }

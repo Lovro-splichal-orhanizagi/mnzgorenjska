@@ -58,6 +58,23 @@ test('503: klic ponovimo z dolgim premorom; po vseh poskusih vrnemo 503, ostali 
   assert.equal(klici, 4)
 })
 
+test('500 brez telesa (upokojen delavec edge runtime) ponovimo; 500 z napako funkcije ne', async () => {
+  const premori = []
+  let klici = 0
+  const r = await klicSPonovitvami(async () => (++klici < 2 ? new Response('', { status: 500 }) : new Response('{}', { status: 200 })), 'u', {}, { log: (v) => premori.push(v), zamiki: [2000, 6000], zamikNejasno: 0 })
+  assert.equal(r.status, 200)
+  assert.equal(klici, 2)
+  assert.match(premori[0], /HTTP 500 brez telesa/)
+  klici = 0
+  const zadnji = await klicSPonovitvami(async () => { klici++; return new Response('', { status: 500 }) }, 'u', {}, tih)
+  assert.equal(zadnji.status, 500)
+  assert.equal(klici, 3)
+  klici = 0
+  const funkcija = await klicSPonovitvami(async () => { klici++; return new Response('{"error":"x"}', { status: 500 }) }, 'u', {}, tih)
+  assert.equal(klici, 1)
+  assert.deepEqual(await funkcija.json(), { error: 'x' })
+})
+
 // Skripta zares, proti lokalnemu strežniku, ki prvi klic funkcije prekine.
 async function zazeni(vedenje, { resetLig = 0, lige = 2 } = {}) {
   const klici = []
