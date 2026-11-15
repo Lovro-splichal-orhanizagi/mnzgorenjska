@@ -1307,3 +1307,50 @@ p_skupina)` in `vrh_klubov_drzave(..., p_skupina)` izločita skupino PRED
 razvrščanjem in `limit`; tekoča sezona je po ligi. Predpomnilnik klubov
 (`vrh_klubov_predpomnilnik`) ima ključ po skupini. Fantasy ekipe filtrira
 stran po skupini lige. Test: `supabase/tests/starostne-skupine-drzavne-lestvice.sql`.
+
+## Prenosi tekem v živo (SLF-472, SLF-477)
+
+Navijač na strani tekme prilepi povezavo YouTube prenosa; prenos pokažemo pod
+»Tekma v živo«, po koncu sam preide pod »Posnetek tekme«. Videa ne gostimo in
+ključa prenosa nikoli ne vidimo. Migracija `20261115120000_prenosi_tekem.sql`,
+funkcija `supabase/functions/prenosi/`, vmesnik `PrenosiTekme.tsx`,
+`VZivoZdaj.tsx`, admin `admin/Prenosi.tsx` (Administracija → Prenosi v živo).
+
+- **Stikala**: `prenosi` (0 nihče, 1 admin in `testerji`, 2 vsi; ob uvedbi 1)
+  in `prenosi_push` (0; obvestila »Tekma A – B je v živo« navijačem obeh
+  klubov, `profiles.navijam_team_id`, brez `brez_push`, največ eno na tekmo v
+  `prenosi_obvestila`). Besedilo obvestila je novo besedilo za ljudi: pred
+  prvim vklopom ga odobri človek.
+- **Kje**: `prenos_zaprt_zakaj(tekma)`. Liga mora biti v `prenosi_tekmovanja`
+  (ob uvedbi slovenske lige zvez `mnz*`, le člani; brez 1./2. SNL in pokalov) in
+  imeti starostno skupino `clani` (`starostna_skupina_lige`); mladinske in
+  neznane so zaprte ne glede na seznam (snemanje mladoletnih).
+- **Okno**: začetek prenosa (YouTube `actualStartTime`) od 30 min pred do 3 h
+  po `prenosi_zacetki.zacetek`; dokler uvoz ure ne pozna (zdaj nikjer), velja dan
+  tekme (`played_on`, Europe/Ljubljana).
+- **Vpis** (`prenos_dodaj`, le servis): potrjen e-naslov, brez veljavne
+  prepovedi uporabnika ali kanala, isti video ne na dveh tekmah, en kanal en
+  živ prenos (tudi enolični indeks). Brez imena kluba (besede iz imena ali
+  kratkega imena, vsaj 4 črke) v naslovu ali opisu je `nepreverjeno`: viden,
+  a v vrsti admina. Pravila YouTuba (v živo zdaj, javen ali neobjavljen,
+  vdelava dovoljena, brez starostne in regijske omejitve) so v
+  `functions/prenosi/youtube.ts` (preizkus `youtube.test.ts`).
+- **Vidnost** (`prenos_viden`): ni izbrisan na YouTubu, ni skrit, ni skrit
+  zaradi 2 prijav (`prenos_prijavi`; po pregledu admina štejejo le nove
+  prijave), liga še dovoljena, ni veljavne prepovedi uporabnika ali kanala.
+  `prenosi_tekme` vrne največ 3 žive in 3 posnetke, po gledalcih; ime kdo je
+  dodal le skrajšano (»Jure K.«). Gledanje brez prijave.
+- **Osvežitev in kvota**: `prenosi_za_osvezitev` pusti YouTube vprašati največ
+  enkrat na 2 min (živi) oziroma 20 h (posnetki), ne glede na število
+  obiskov; sprožijo jo ogledi strani in `prenosi-osvezi.yml` (vsakih 10 min,
+  posnetki enkrat na dan). Ena enota kvote na 50 videov; ob nekaj tekmah na
+  vikend ostanemo pod 1 % brezplačnih 10.000 na dan.
+- **Merilo**: `prenosi_ogledi` (edinstveni gledalci po naključni oznaki
+  naprave ob tapu »predvajaj«) in `prenosi_vpisi` (prijava v 2 h po tem, ko je
+  gost na tekmi s prenosom tapnil predvajaj ali prijavo); `admin_prenosi`
+  in `admin_prenosi_merilo` ju štejeta po prenosu.
+- **Vklop**: ključ YouTube Data API v3 (brezplačen, omejen na to API) kot
+  `YOUTUBE_API_KEY` v okolju funkcij, objava `scripts/hetzner/objavi-funkcije.sh
+  prenosi` (in `posli-opomnik`, ker je `push.ts` zdaj v `_shared`). Brez ključa
+  vpis odgovori »prenosi še niso vklopljeni«.
+

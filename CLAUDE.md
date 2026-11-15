@@ -273,6 +273,12 @@ to področje. Bistvo, ki ga je treba vedeti vedno:
   Posnetki); podpisane naslove (R2) in žetone (Stream) izda le funkcija
   `posnetki-igralca`. Vklop,
   skrivnosti, brisanje in stroški: `docs/podatkovni-model.md` (*Izložba*).
+- **Prenosi tekem v živo z YouTuba** (SLF-477): navijač prilepi povezavo na
+  strani tekme, mi hranimo le id videa in kanala (nikoli videa ali ključa
+  prenosa). Funkcija `prenosi` vpraša YouTube Data API (`YOUTUBE_API_KEY`,
+  le strežnik; videos.list), pravila baze so v SQL `prenos_dodaj`; stikalo
+  `prenosi`, seznam `prenosi_tekmovanja`, mladinske zaprte vedno. Podrobnosti
+  v `docs/podatkovni-model.md` (*Prenosi tekem*).
 
 ## Pregledane zgodovinske vrzeli
 

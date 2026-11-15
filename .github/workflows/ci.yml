@@ -328,6 +328,8 @@ jobs:
         run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/starostne-skupine-drzavne-lestvice.sql
       - name: Your profile box (views, teams, hidden numbers without verified)
         run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/vaba-profila.sql
+      - name: Prenosi tekem v živo (prijave, prepovedi, okno, kvota)
+        run: docker exec -i supabase_db_mnzgorenjska psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 < supabase/tests/prenosi-tekem.sql
       - name: HNS canonical release, target ACLs and waiting writers
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska

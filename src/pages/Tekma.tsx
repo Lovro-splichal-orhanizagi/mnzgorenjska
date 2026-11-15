@@ -18,6 +18,7 @@ import IgrisceTocke from '../components/IgrisceTocke'
 import GolZaGlasovanje, { caka } from '../components/GolZaGlasovanje'
 import PopravekAsistence from '../components/PopravekAsistence'
 import PasSkupnosti from '../components/PasSkupnosti'
+import PrenosiTekme from '../components/PrenosiTekme'
 import type { Gol, Glas, Kandidat } from '../components/GolZaGlasovanje'
 import type { NastopNaTekmi } from '../components/IgrisceTocke'
 import type { TekmaVrstica } from '../lib/tipi'
@@ -351,6 +352,8 @@ export default function Tekma() {
         </span>
         <Klub ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} id={tekma.away_team_id} liga={slugLige} />
       </h1>
+
+      <PrenosiTekme matchId={tekmaId} tekma={`${tekma.home_name} – ${tekma.away_name}`} />
 
       {skupnost && skupnost.match_id === tekmaId && (
         <section className="kartica space-y-2 p-3" aria-label={t('lestvice.napovediLige.skupnost')}>

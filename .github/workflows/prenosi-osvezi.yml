@@ -1,0 +1,38 @@
+name: Prenosi tekem (osvežitev)
+
+# Prenosi v živo z YouTuba (SLF-477, funkcija `prenosi`). Žive prenose osveži
+# že vsak ogled strani (največ enkrat na 2 min); ta zagon poskrbi za prenose,
+# ki jih nihče ne gleda (konec → posnetek), in enkrat na dan za posnetke
+# (izbrisan ali zaseben video se skrije). YouTube vpraša le, če je kaj za
+# osvežiti: ena enota kvote na 50 videov.
+on:
+  schedule:
+    - cron: '3,13,23,33,43,53 * * * *'
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prenosi-osvezi
+  cancel-in-progress: false
+
+jobs:
+  osvezi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      AKCIJA: ${{ github.event.schedule == '17 3 * * *' && 'dnevno' || 'osvezi' }}
+    steps:
+      - run: |
+          set -euo pipefail
+          koda=$(curl -sS -o odgovor.json -w '%{http_code}' -X POST "$SUPABASE_URL/functions/v1/prenosi" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H 'Content-Type: application/json' -d "{\"akcija\":\"$AKCIJA\"}")
+          cat odgovor.json; echo
+          # Funkcija še ni objavljena (scripts/hetzner/objavi-funkcije.sh prenosi).
+          if [ "$koda" = 404 ]; then echo "prenosi ni objavljena"; exit 0; fi
+          [ "$koda" = 200 ]

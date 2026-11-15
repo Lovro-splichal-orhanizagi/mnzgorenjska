@@ -97,3 +97,5 @@ jobs:
         run: npx --yes deno@2.7.14 check --no-lock --node-modules-dir=none supabase/functions/*/index.ts
       - name: deno lint
         run: npx --yes deno@2.7.14 lint --rules-exclude=no-import-prefix supabase/functions
+      - name: deno test
+        run: npx --yes deno@2.7.14 test --no-lock --node-modules-dir=none supabase/functions/prenosi/youtube.test.ts

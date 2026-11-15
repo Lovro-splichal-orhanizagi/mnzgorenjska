@@ -18,6 +18,7 @@ import KlubskiRacuni from '../components/admin/KlubskiRacuni'
 import Prevzemi from '../components/admin/Prevzemi'
 import Preverjeni from '../components/admin/Preverjeni'
 import Posnetki from '../components/admin/Posnetki'
+import Prenosi from '../components/admin/Prenosi'
 import PrijaveSporocil from '../components/admin/PrijaveSporocil'
 import HighlightVrsta from '../components/admin/HighlightVrsta'
 import NarocilaPlakatov from '../components/admin/NarocilaPlakatov'
@@ -742,6 +743,7 @@ export default function Administracija() {
         { id: 'lige', naslov: 'Upravljanje lig' },
         { id: 'zelje-lig', naslov: 'Želje lig' },
         { id: 'prijave-napak', naslov: 'Prijave napak (klepet)' },
+        { id: 'prenosi', naslov: 'Prenosi v živo' },
         { id: 'tocke', naslov: 'Točke' },
         { id: 'uvoz', naslov: 'Uvoz zapisnikov' },
         { id: 'nepopolni', naslov: `Nepopolni zapisniki (${opozorila.length})` },
@@ -898,6 +900,9 @@ export default function Administracija() {
               <div className="mt-6">
                 <HighlightVrsta />
               </div>
+            </Razdelek>
+            <Razdelek id="prenosi">
+              <Prenosi />
             </Razdelek>
             <Razdelek id="sporocila">
               <PrijaveSporocil />

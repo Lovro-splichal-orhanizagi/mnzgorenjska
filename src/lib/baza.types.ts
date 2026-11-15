@@ -12022,6 +12022,102 @@ export type Database = {
       }
       vidi_izbranost: { Args: never; Returns: boolean }
       vidi_ponovno_ceno: { Args: never; Returns: boolean }
+      admin_prenos_odloci: { Args: { p_akcija: string; p_id: string }; Returns: undefined }
+      admin_prenosi: {
+        Args: { p_filter?: string }
+        Returns: {
+          created_at: string
+          gledalcev: number
+          id: string
+          kanal_id: string
+          kanal_ime: string
+          match_id: number
+          naslov: string
+          nepreverjeno: boolean
+          ogledov: number
+          pregledan_at: string
+          prepovedan: boolean
+          prijav: number
+          prijave: Json
+          skrit: boolean
+          skrit_prijave: boolean
+          stanje: string
+          tekma: string
+          uporabnik: string
+          user_id: string
+          video_id: string
+          vpisov: number
+          zacetek: string
+        }[]
+      }
+      admin_prenosi_merilo: {
+        Args: never
+        Returns: { id: string; kanal_ime: string; ogledov: number; tekma: string; vpisov: number; zacetek: string }[]
+      }
+      admin_prenosi_preklici: { Args: { p_id: number }; Returns: undefined }
+      admin_prenosi_prepovedi: {
+        Args: never
+        Returns: {
+          created_at: string
+          do_: string
+          id: number
+          kanal_id: string
+          kanal_ime: string
+          razlog: string
+          uporabnik: string
+          user_id: string
+          velja: boolean
+        }[]
+      }
+      admin_prenosi_prepovej: {
+        Args: { p_do: string | null; p_kanal: string | null; p_razlog: string; p_user: string }
+        Returns: number
+      }
+      prenos_ogled: { Args: { p_obiskovalec: string; p_prenos: string }; Returns: undefined }
+      prenos_prijavi: { Args: { p_opomba?: string; p_prenos: string; p_razlog: string }; Returns: undefined }
+      prenos_vpis: { Args: { p_prenos: string }; Returns: undefined }
+      prenosi_stanje_tekme: { Args: { p_match: number }; Returns: Json }
+      prenosi_tekme: {
+        Args: { p_match: number }
+        Returns: {
+          dodal: string
+          gledalcev: number
+          id: string
+          kanal_id: string
+          kanal_ime: string
+          moj: boolean
+          naslov: string
+          osvezeno_at: string
+          prijavil: boolean
+          stanje: string
+          trajanje_s: number
+          video_id: string
+          zacetek: string
+        }[]
+      }
+      prenosi_v_zivo: {
+        Args: { p_team?: number }
+        Returns: {
+          away_goals: number
+          away_logo: string
+          away_name: string
+          away_short: string
+          competition_id: number
+          gledalcev: number
+          home_goals: number
+          home_logo: string
+          home_name: string
+          home_short: string
+          kanal_ime: string
+          liga: string
+          match_id: number
+          naslov: string
+          osvezeno_at: string
+          prenosov: number
+          video_id: string
+        }[]
+      }
+      vidi_prenose: { Args: never; Returns: boolean }
       vidi_posnetke: { Args: never; Returns: boolean }
       vidi_preverjene: { Args: never; Returns: boolean }
       vklopi_fussball_tekoco: {

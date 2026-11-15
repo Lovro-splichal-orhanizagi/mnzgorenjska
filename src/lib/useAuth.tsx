@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from './supabase'
 import { uveljaviKlubskiRacun } from './klubskiRacun'
+import { pripisiPrijavo } from './prenosi'
 import { jezik } from '../i18n'
 
 interface AuthVrednost {
@@ -23,8 +24,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     })
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((dogodek, s) => {
       setSession(s)
+      // Merilo prenosov: prijava, ki se je začela na tekmi med prenosom.
+      // Klic baze ne sme teči v tem povratnem klicu (zaklep seje), zato kasneje.
+      if (dogodek === 'SIGNED_IN') setTimeout(pripisiPrijavo, 0)
     })
 
     return () => sub.subscription.unsubscribe()
