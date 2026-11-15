@@ -793,6 +793,9 @@ const najpogostejsi = (xs) => {
   return [...n.entries()].sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])))[0]?.[0] ?? null
 }
 
+/** Datum, iz katerega je sezona lige: prva tekma z datumom, sicer danes (tekma brez datuma je iz iste sezone kot ostale). */
+export const datumSezoneLige = (tekme, danes = Date.now()) => tekme.find((t) => t.datum)?.datum ?? new Date(danes).toISOString().slice(0, 10)
+
 /** Kako stara sme biti shranjena stran neodigrane tekme (za datum). */
 function najvecStarostNeodigrane(datum, danes) {
   if (!datum) return DAN
@@ -826,7 +829,7 @@ async function datumiNeodigranih(koda, tekme, prenesi, danes) {
     }
   }
   // Sezona razporeda (tekma brez datuma je iz iste sezone kot ostale).
-  const datumSezone = tekme.find((t) => t.datum)?.datum ?? new Date(danes).toISOString().slice(0, 10)
+  const datumSezone = datumSezoneLige(tekme, danes)
   const sezona = sezonaIzDatuma(datumSezone)
   for (const t of brez.filter((x) => krogi.includes(x.krog) && x.igra)) {
     const ime = imeTekme(domena, t.igra, datumSezone)
@@ -942,10 +945,12 @@ const vir = {
     const { domena } = razberiKodo(koda)
     const tekme = await tekmeLige(koda, prenesi, { datumi: false })
     const out = []
+    const datumSezone = datumSezoneLige(tekme, danes)
     for (const t of tekme.filter((x) => x.izid && x.igra && !x.brezBorbe)) {
       const url = naslovTekme(domena, t.igra, t.datum)
-      const ime = imeTekme(domena, t.igra, t.datum)
-      const id = sifraZapisnika(domena, t.igra, t.datum)
+      // Odigrana tekma brez datuma v razporedu (Lezbos B): ime in šifra iz sezone lige.
+      const ime = imeTekme(domena, t.igra, t.datum ?? datumSezone)
+      const id = sifraZapisnika(domena, t.igra, t.datum ?? datumSezone)
       // Zapisnik zadnjih treh dni se lahko še popravlja. Shranjena stran velja
       // za dokončno le, če je bila prebrana več kot tri dni po tekmi (čas
       // shrambe, ne starost tekme: stran z dne tekme ima lahko postave brez
@@ -966,6 +971,7 @@ const vir = {
         z = vZapisnik(html, { id, url, domena })
       }
       if (!z) continue
+      if (!t.datum) z.opozorila.push(`tekma ${t.igra} brez datuma v razporedu, sezona iz lige (${sezonaIzDatuma(datumSezone)})`)
       if (tujDatum()) z.opozorila.push(`datum zapisnika ${glavaTekme(html).datum} je daleč od datuma razporeda ${t.datum}`)
       const g = glavaTekme(html)
       if (kljucKlubaGr(g.domaci) !== kljucKlubaGr(t.domaci) || kljucKlubaGr(g.gostje) !== kljucKlubaGr(t.gostje))
