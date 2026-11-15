@@ -209,6 +209,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   sponzor: {
     oznaka: 'Szponzor',
     obisci: 'Weboldal megnyitása',
+    predstavlja: 'A ligát a(z) {pokrovitelj} támogatja',
   },
   napaka: {
     naslov: 'Az oldal elakadt',

@@ -712,7 +712,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       besedilo: 'Odaberi me u svoju ekipu na SLFF-u',
       izbran: 'fantasy ekipa me odabralo',
       poziv: 'Složi svoju ekipu',
-      predstavlja: 'Ligu predstavlja {pokrovitelj}',
       igraj: 'Igraj SLFF fantasy besplatno na slff.eu',
     },
     cv: 'Moj CV za trenere',

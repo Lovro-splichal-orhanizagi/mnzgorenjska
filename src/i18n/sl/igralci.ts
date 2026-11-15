@@ -719,7 +719,6 @@ export const igralci = {
       besedilo: 'Izberi me v svojo ekipo na SLFF',
       izbran: 'fantasy ekip me je izbralo',
       poziv: 'Sestavi svojo ekipo',
-      predstavlja: 'Ligo predstavlja {pokrovitelj}',
       igraj: 'Igraj SLFF fantasy brezplačno na slff.eu',
     },
     cv: 'Moj CV za trenerje',

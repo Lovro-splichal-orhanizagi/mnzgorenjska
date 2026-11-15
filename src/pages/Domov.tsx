@@ -26,6 +26,7 @@ import type { IgralecEnajsterice } from '../components/EnajstericaNaIgriscu'
 import type { Pozicija } from '../lib/tipi'
 import { jezikSlovarja, t, tx, datum } from '../i18n'
 import Sponzor from '../components/Sponzor'
+import PokroviteljLige from '../components/PokroviteljLige'
 import AppPromo, { appPromoAktivna } from '../components/AppPromo'
 import ZnackeTrgovin from '../components/ZnackeTrgovin'
 import VrhNapovediDrzave from '../components/VrhNapovediDrzave'
@@ -499,6 +500,8 @@ export default function Domov() {
                   : tekmovanje.name}
               </p>
             )}
+            {/* Pokrovitelj lige (SLF-481); brez njega nič. */}
+            <PokroviteljLige ligaId={tekmovanjeId} blok />
             <h1 className="text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-6xl">
               Sunday League
               <br />
@@ -1194,6 +1197,7 @@ function MojaGlava({
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-xs font-bold uppercase tracking-wide text-gnl-300">{liga}</p>
+          <PokroviteljLige ligaId={ligaId} blok className="mb-1" />
           <h1 className="truncate text-2xl font-black">
             {ekipa ? ekipa.ime : t('aplikacija.meni.mojaEkipa')}
           </h1>

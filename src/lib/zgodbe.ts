@@ -392,7 +392,7 @@ export async function narisiDeliKartico(d: MojaSezona, povezava: string, pokrovi
   c.fillRect(38, yTrak, SIRINA_Z - 76, 140 - 38)
   if (pokrovitelj) {
     const logo = await slika(pokrovitelj.logo)
-    const napis = t('igralci.zgodbe.kartica.predstavlja', { pokrovitelj: pokrovitelj.ime })
+    const napis = t('aplikacija.sponzor.predstavlja', { pokrovitelj: pokrovitelj.ime })
     c.font = sans(700, 34)
     const sirLogo = logo ? Math.min(160, (logo.width / logo.height) * 64) : 0
     const sir = Math.min(c.measureText(napis).width, 900 - (logo ? sirLogo + 24 : 0))

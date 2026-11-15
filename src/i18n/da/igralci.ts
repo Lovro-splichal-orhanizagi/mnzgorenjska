@@ -710,7 +710,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       besedilo: 'Vælg mig på dit SLFF-hold',
       izbran: 'fantasy-hold valgte mig',
       poziv: 'Sæt dit hold',
-      predstavlja: 'Ligaen præsenteres af {pokrovitelj}',
       igraj: 'Spil SLFF fantasy gratis på slff.eu',
     },
     cv: 'Mit CV til trænere',

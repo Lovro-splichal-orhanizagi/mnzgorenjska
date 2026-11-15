@@ -8,6 +8,7 @@ import { Link } from './Povezava'
 import { supabase } from '../lib/supabase'
 import { izvor } from '../lib/platforma'
 import { povezavaZVabilom } from '../lib/povabilo'
+import { pokroviteljPoSlugu, type PokroviteljLige } from '../lib/pokrovitelj'
 import { imeZgodbe, narisiDeliKartico, narisiSezono, narisiZgodboTekme, type MojaSezona, type ZadnjaTekma } from '../lib/zgodbe'
 import { t } from '../i18n'
 
@@ -19,6 +20,8 @@ export default function ZgodbeIgralca({ igralecId }: { igralecId: number }) {
   const [tekma, setTekma] = useState<ZadnjaTekma | null>(null)
   const [highlight, setHighlight] = useState<Highlight | null>(null)
   const [vabilo, setVabilo] = useState<string | null>(null)
+  // undefined = še nalaga; kartica počaka, da trak ne preskoči.
+  const [pokrovitelj, setPokrovitelj] = useState<PokroviteljLige | null | undefined>(undefined)
 
   useEffect(() => {
     let velja = true
@@ -40,6 +43,20 @@ export default function ZgodbeIgralca({ igralecId }: { igralecId: number }) {
       velja = false
     }
   }, [igralecId])
+
+  // Pokrovitelj lige na spodnjem traku kartice (SLF-481).
+  const ligaSlug = sezona?.preverjen ? sezona.liga_slug : undefined
+  useEffect(() => {
+    if (!ligaSlug) return setPokrovitelj(null)
+    let velja = true
+    pokroviteljPoSlugu(ligaSlug).then(
+      (p) => velja && setPokrovitelj(p),
+      () => velja && setPokrovitelj(null),
+    )
+    return () => {
+      velja = false
+    }
+  }, [ligaSlug])
 
   if (!sezona && !tekma) return null
   const povezava = `${izvor()}/player/${igralecId}`
@@ -88,13 +105,13 @@ export default function ZgodbeIgralca({ igralecId }: { igralecId: number }) {
             )}
           </div>
         )}
-        {sezona?.preverjen && vabilo && (
+        {sezona?.preverjen && vabilo && pokrovitelj !== undefined && (
           <div className="space-y-2">
             <h3 className="text-sm font-semibold text-slate-200">{t('igralci.zgodbe.kartica.naslov')}</h3>
             <p className="text-xs text-slate-400">{t('igralci.zgodbe.kartica.opis')}</p>
             <DeliSliko
-              narisi={() => narisiDeliKartico(sezona, vabilo)}
-              kljuc={`deli-${sezona.sezona}-${sezona.izbranost}-${sezona.goli}-${sezona.asistence}-${vabilo}`}
+              narisi={() => narisiDeliKartico(sezona, vabilo, pokrovitelj)}
+              kljuc={`deli-${sezona.sezona}-${sezona.izbranost}-${sezona.goli}-${sezona.asistence}-${vabilo}-${pokrovitelj?.id ?? 0}`}
               naslov={sezona.ime}
               besedilo={t('igralci.zgodbe.kartica.besedilo')}
               povezava={vabilo}

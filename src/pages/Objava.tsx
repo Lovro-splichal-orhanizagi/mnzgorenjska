@@ -102,6 +102,8 @@ export interface VsebinaObjave {
   liga?: {
     slug: string; ime: string; kratko: string; drzava?: string; zastava?: string; krog: number; upraviteljev: number
     lestvica: KlubLestvice[]; strelec?: { ime: string; klub: string; goli: number } | null
+    /** Pokrovitelj lige (SLF-481); null, ko ga ni. */
+    pokrovitelj?: { ime: string; logo: string | null } | null
   }
   drzavaTedna?: DrzavaObjave & { lig: number; upraviteljev: number; ekip: number }
   tekme?: { liga: string; drzava?: string; zastava?: string; dan: string; domaci: KlubLestvice; gostje: KlubLestvice }[]
@@ -302,6 +304,7 @@ function vsebinaVrste(v: VsebinaObjave, kaj: Prosojnica): { desno?: ReactNode; t
               <span className="text-4xl font-bold text-slate-200">{t('domov.objava.upravitelji')}</span>
             </div>
           )}
+          <PredstavljaLigo p={l.pokrovitelj} />
         </Sredina>
       ),
     }
@@ -559,9 +562,21 @@ function vsebina(v: VsebinaObjave, kaj: Prosojnica): { desno?: ReactNode; telo: 
         <div className="text-7xl font-black naslov">{t('domov.objava.poziv')}</div>
         <div className="text-4xl text-slate-300">{v.liga ? t('domov.objava.pridruziSe', { liga: v.liga.kratko }) : t('domov.uvod.geslo')}</div>
         <div className="rounded-3xl bg-gnl-400 px-14 py-7 text-6xl font-black text-slate-950">slff.eu</div>
+        <PredstavljaLigo p={v.liga?.pokrovitelj} />
       </Sredina>
     ),
   }
+}
+
+/** "Ligo predstavlja …" z logotipom; liga brez pokrovitelja nič. */
+function PredstavljaLigo({ p }: { p?: { ime: string; logo: string | null } | null }) {
+  if (!p) return null
+  return (
+    <div className="flex items-center gap-5 rounded-3xl bg-black/30 px-10 py-5">
+      {p.logo && <img src={p.logo} alt="" className="h-20 max-w-[14rem] object-contain" />}
+      <span className="text-4xl font-bold text-slate-100">{t('aplikacija.sponzor.predstavlja', { pokrovitelj: p.ime })}</span>
+    </div>
+  )
 }
 
 /** Ena prosojnica (smoke jo izriše s preizkusno vsebino). */

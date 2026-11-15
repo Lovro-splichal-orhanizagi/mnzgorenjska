@@ -207,6 +207,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   sponzor: {
     oznaka: 'Sponsor',
     obisci: 'Odwiedź stronę',
+    predstavlja: 'Ligę prezentuje {pokrovitelj}',
   },
   napaka: {
     naslov: 'Strona się zacięła',

@@ -710,7 +710,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       besedilo: 'Məni SLFF komandana seç',
       izbran: 'fantasy komanda məni seçib',
       poziv: 'Komandanı qur',
-      predstavlja: 'Liqanı təqdim edir: {pokrovitelj}',
       igraj: 'SLFF fantasy pulsuz: slff.eu',
     },
     cv: 'Məşqçilər üçün CV-m',

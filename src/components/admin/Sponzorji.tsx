@@ -4,6 +4,10 @@
 // Kranja naj se pokaze Gorenjcem in ne Prekmurcem, sponzor lige samo v tisti
 // ligi. Najbolj dolocen zadetek zmaga.
 //
+// Sponzor z dosegom lige je tudi njen pokrovitelj (SLF-481): "Ligo
+// predstavlja …" v glavi lige, na karticah igralcev in v objavi lige tedna,
+// ne glede na mesta. Sezono določata začetek in konec.
+//
 // Dokler nastavitev `sponzorji_vidni` ni 1, se na strani ne pokaze nic —
 // tukaj se sponzorje pripravi, vklopi pa jih stikalo.
 //
@@ -315,8 +319,14 @@ export default function Sponzorji() {
                     {ime}
                   </button>
                 ))}
-                {s.mesta.length === 0 && (
-                  <span className="text-xs text-amber-300">brez mesta — ni prikazan nikjer</span>
+                {s.competition_id != null ? (
+                  <span className="text-xs text-slate-400">
+                    + "Ligo predstavlja" (glava lige, kartice igralcev, objava lige tedna)
+                  </span>
+                ) : (
+                  s.mesta.length === 0 && (
+                    <span className="text-xs text-amber-300">brez mesta — ni prikazan nikjer</span>
+                  )
                 )}
               </div>
               {poMestih.some((v) => v.sponsor_id === s.id) && (
