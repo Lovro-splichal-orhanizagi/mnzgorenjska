@@ -704,6 +704,15 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     noga: 'Aşağı liqalar üçün fantaziya futbolu',
     besediloTekme: 'SLFF-də {domaci} {izid} {gostje}',
     besediloSezone: 'SLFF-də {sezona} mövsümüm',
+    kartica: {
+      naslov: 'Paylaşım kartı',
+      opis: 'Komanda qrupu üçün: neçə komanda səni seçib və harada oynamaq olar.',
+      besedilo: 'Məni SLFF komandana seç',
+      izbran: 'fantasy komanda məni seçib',
+      poziv: 'Komandanı qur',
+      predstavlja: 'Liqanı təqdim edir: {pokrovitelj}',
+      igraj: 'SLFF fantasy pulsuz: slff.eu',
+    },
     cv: 'Məşqçilər üçün CV-m',
   },
   cv: {

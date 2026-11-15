@@ -704,6 +704,15 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     noga: 'Madalamate liigade fantaasiajalgpall',
     besediloTekme: '{domaci} {izid} {gostje} SLFF-is',
     besediloSezone: 'Minu hooaeg {sezona} SLFF-is',
+    kartica: {
+      naslov: 'Jagamiskaart',
+      opis: 'Meeskonna vestlusesse: mitu tiimi sind valis ja kus mängida.',
+      besedilo: 'Vali mind oma SLFF-i tiimi',
+      izbran: 'fantaasiatiimi valis mind',
+      poziv: 'Pane tiim kokku',
+      predstavlja: 'Liigat esitleb {pokrovitelj}',
+      igraj: 'Mängi SLFF fantasyt tasuta: slff.eu',
+    },
     cv: 'Minu CV treeneritele',
   },
   cv: {

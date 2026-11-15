@@ -713,6 +713,15 @@ export const igralci = {
     noga: 'Fantasy nogomet nižjih lig',
     besediloTekme: '{domaci} {izid} {gostje} na SLFF',
     besediloSezone: 'Moja sezona {sezona} na SLFF',
+    kartica: {
+      naslov: 'Kartica za deljenje',
+      opis: 'Za klubsko skupino: koliko ekip te je izbralo in kje se igra.',
+      besedilo: 'Izberi me v svojo ekipo na SLFF',
+      izbran: 'fantasy ekip me je izbralo',
+      poziv: 'Sestavi svojo ekipo',
+      predstavlja: 'Ligo predstavlja {pokrovitelj}',
+      igraj: 'Igraj SLFF fantasy brezplačno na slff.eu',
+    },
     cv: 'Moj CV za trenerje',
   },
   // CV igralca (/cv/:id).

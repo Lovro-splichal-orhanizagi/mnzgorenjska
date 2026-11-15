@@ -705,6 +705,15 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     noga: 'Ցածր լիգաների ֆենթեզի ֆուտբոլ',
     besediloTekme: '{domaci} {izid} {gostje} SLFF-ում',
     besediloSezone: 'Իմ {sezona} մրցաշրջանը SLFF-ում',
+    kartica: {
+      naslov: 'Կիսվելու քարտ',
+      opis: 'Թիմի զրույցի համար. քանի թիմ է քեզ ընտրել և որտեղ խաղալ։',
+      besedilo: 'Ընտրիր ինձ քո SLFF թիմում',
+      izbran: 'ֆենթեզի թիմ ինձ ընտրել է',
+      poziv: 'Կազմիր քո թիմը',
+      predstavlja: 'Լիգան ներկայացնում է {pokrovitelj}',
+      igraj: 'Խաղա SLFF ֆենթեզի անվճար՝ slff.eu',
+    },
     cv: 'Իմ CV-ն մարզիչների համար',
   },
   cv: {

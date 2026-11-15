@@ -1,12 +1,14 @@
 // Zgodbe za Instagram na svojem profilu (SLF-373): zgodba po zadnji tekmi
 // (preverjeni), "Moja sezona" (preverjeni polno, ostali napoved z vabilom na
-// /verified) in povezava na CV (preverjeni). Kaj kdo dobi, odloči baza.
+// /verified), kartica za deljenje v klubske skupine (preverjeni, SLF-481) in
+// povezava na CV (preverjeni). Kaj kdo dobi, odloči baza.
 import { useEffect, useState } from 'react'
 import DeliSliko from './DeliSliko'
 import { Link } from './Povezava'
 import { supabase } from '../lib/supabase'
 import { izvor } from '../lib/platforma'
-import { imeZgodbe, narisiSezono, narisiZgodboTekme, type MojaSezona, type ZadnjaTekma } from '../lib/zgodbe'
+import { povezavaZVabilom } from '../lib/povabilo'
+import { imeZgodbe, narisiDeliKartico, narisiSezono, narisiZgodboTekme, type MojaSezona, type ZadnjaTekma } from '../lib/zgodbe'
 import { t } from '../i18n'
 
 /** Highlight video: ekipa SLFF ga zmontira iz 6 odobrenih posnetkov (`moj_highlight`). */
@@ -16,6 +18,7 @@ export default function ZgodbeIgralca({ igralecId }: { igralecId: number }) {
   const [sezona, setSezona] = useState<MojaSezona | null>(null)
   const [tekma, setTekma] = useState<ZadnjaTekma | null>(null)
   const [highlight, setHighlight] = useState<Highlight | null>(null)
+  const [vabilo, setVabilo] = useState<string | null>(null)
 
   useEffect(() => {
     let velja = true
@@ -28,6 +31,11 @@ export default function ZgodbeIgralca({ igralecId }: { igralecId: number }) {
     void Promise.resolve(supabase.rpc('moj_highlight', { p_player_id: igralecId })).then(
       ({ data }) => velja && setHighlight((data as Highlight | null) ?? null),
     )
+    // Povezava kartice: utm šteje deljenja (Umami), koda povabila registracije.
+    const utm = 'utm_source=deli&utm_medium=kartica&utm_campaign=igralec'
+    void povezavaZVabilom(`/player/${igralecId}?${utm}`)
+      .catch(() => `${izvor()}/player/${igralecId}?${utm}`)
+      .then((url) => velja && setVabilo(url))
     return () => {
       velja = false
     }
@@ -78,6 +86,20 @@ export default function ZgodbeIgralca({ igralecId }: { igralecId: number }) {
                 </Link>
               </p>
             )}
+          </div>
+        )}
+        {sezona?.preverjen && vabilo && (
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-slate-200">{t('igralci.zgodbe.kartica.naslov')}</h3>
+            <p className="text-xs text-slate-400">{t('igralci.zgodbe.kartica.opis')}</p>
+            <DeliSliko
+              narisi={() => narisiDeliKartico(sezona, vabilo)}
+              kljuc={`deli-${sezona.sezona}-${sezona.izbranost}-${sezona.goli}-${sezona.asistence}-${vabilo}`}
+              naslov={sezona.ime}
+              besedilo={t('igralci.zgodbe.kartica.besedilo')}
+              povezava={vabilo}
+              imeSlike={imeZgodbe(sezona, 'kartica')}
+            />
           </div>
         )}
       </div>
