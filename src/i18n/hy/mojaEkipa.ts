@@ -143,6 +143,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: '{novi} կազմումդ է {ime}-ի փոխարեն։ Պահպանիր թիմդ, երբ գոհ լինես։',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Թիմի խորհրդատու',
+    zaKrog: 'Առաջարկներ {krog}-րդ տուրի համար։ Ոչինչ չի փոխվի, քանի դեռ ինքդ չես պահպանել։',
+    zaklenjeno: 'Հաստատիր քո խաղացողի պրոֆիլը՝ Թիմի խորհրդատուն բացելու համար։',
+    zaklenjenoPoveza: 'Հաստատել պրոֆիլը',
+    sibkosti: 'Թույլ կետեր',
+    brezSibkosti: 'Կազմում ակնհայտ թույլ կետեր չկան։',
+    razlog: {
+      neaktiven: 'այլևս լիգայում չէ',
+      poskodba: 'վնասվածքով',
+      odsotnost: 'անհասանելի',
+      brezTekme: 'ակումբը չի խաղում',
+      malMinut: 'քիչ րոպե',
+      slabaForma: 'վատ ֆորմա',
+    },
+    prestopi: 'Առաջարկվող տրանսֆերներ',
+    brezPrestopov: 'Բյուջեի և կանոնների շրջանակում ոչ մի տրանսֆեր հստակ չէր օգնի։',
+    prestopRazlog: {
+      nerazpolozljiv: 'Խնդիր {stari}-ի հետ՝ {razlog}։ {novi}-ն վերջին 3 տուրում հավաքեց {formaNovi} միավոր։',
+      forma: '{novi}-ն վերջին 3 տուրում հավաքեց {formaNovi} միավոր, {stari}-ն՝ {formaStari}։',
+      minute: '{novi}-ն ավելի շատ է խաղում՝ հնարավոր րոպեների {minuteNovi} %-ը, {stari}-ն՝ {minuteStari} %։',
+      tekme: '{novi}-ի հաջորդ մրցակիցներն ավելի հեշտ են՝ {nasprotniki}։',
+      cena: '{novi}-ն ավելի շատ միավոր է խոստանում և {prihranek}-ով էժան է։',
+    },
+    postava: 'Լավագույն մեկնարկային կազմ ({formacija})',
+    kapetan: 'Ավագ՝ {ime}',
+    namestnik: 'տեղակալ՝ {ime}',
+    enakoKotSedaj: 'Քո կազմն ու կապիտանի կապը արդեն այդպիսին են։',
+    samoTrak: 'Կազմը նույնն է, փոխվում է միայն ավագը կամ տեղակալը։',
+    spremembe: 'Ներս՝ {noter}։ Դուրս՝ {ven}։',
+    opomba: 'Կանոնների վրա հիմնված՝ մեր տվյալներից (միավորներ, րոպեներ, ժամանակացույց, գներ)։ Միայն առաջարկ. թիմդ չի փոխում և չի պահպանում։',
+  },
+
   // Price changes of squad players since the last visit.
   odZadnjegaObiska: {
     naslov: 'Վերջին այցելությունիցդ ի վեր',

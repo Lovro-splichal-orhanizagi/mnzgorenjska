@@ -141,6 +141,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: 'Heyətində {ime} yerinə indi {novi} var. Razı olanda komandanı yadda saxla.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Komanda məsləhətçisi',
+    zaKrog: '{krog}. tur üçün təkliflər. Özün yadda saxlamayana qədər heç nə dəyişmir.',
+    zaklenjeno: 'Komanda məsləhətçisinin kilidini açmaq üçün oyunçu profilini təsdiqlə.',
+    zaklenjenoPoveza: 'Profili təsdiqlə',
+    sibkosti: 'Zəif nöqtələr',
+    brezSibkosti: 'Heyətdə aşkar zəif nöqtə yoxdur.',
+    razlog: {
+      neaktiven: 'artıq liqada deyil',
+      poskodba: 'zədəlidir',
+      odsotnost: 'əlçatan deyil',
+      brezTekme: 'klubun oyunu yoxdur',
+      malMinut: 'az dəqiqə',
+      slabaForma: 'zəif forma',
+    },
+    prestopi: 'Təklif olunan transferlər',
+    brezPrestopov: 'Büdcə və qaydalar çərçivəsində heç bir transfer aydın kömək etməzdi.',
+    prestopRazlog: {
+      nerazpolozljiv: '{stari} ilə problem: {razlog}. {novi} son 3 turda {formaNovi} xal topladı.',
+      forma: '{novi} son 3 turda {formaNovi} xal topladı, {stari} {formaStari}.',
+      minute: '{novi} daha çox oynayır: mümkün dəqiqələrin {minuteNovi} %-i, {stari} {minuteStari} %.',
+      tekme: '{novi} üçün növbəti rəqiblər daha asandır: {nasprotniki}.',
+      cena: '{novi} daha çox xal vəd edir və {prihranek} ucuzdur.',
+    },
+    postava: 'Ən yaxşı start heyəti ({formacija})',
+    kapetan: 'Kapitan: {ime}',
+    namestnik: 'müavin: {ime}',
+    enakoKotSedaj: 'Heyətin və kapitan bandı artıq belədir.',
+    samoTrak: 'Heyət eynidir, yalnız kapitan və ya müavin dəyişir.',
+    spremembe: 'Daxil: {noter}. Çıxır: {ven}.',
+    opomba: 'Məlumatlarımızdan qaydalara əsaslanır (xallar, dəqiqələr, cədvəl, qiymətlər). Yalnız təklifdir: komandanı dəyişmir və yadda saxlamır.',
+  },
+
   // Son ziyarətdən bəri heyət oyunçularının qiymət dəyişiklikləri.
   odZadnjegaObiska: {
     naslov: 'Son ziyarətindən bəri',

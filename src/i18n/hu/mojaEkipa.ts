@@ -142,6 +142,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: '{novi} bekerült a keretbe, helyette kikerült: {ime}. Mentsd a csapatot, ha elégedett vagy.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Csapattanácsadó',
+    zaKrog: 'Javaslatok a(z) {krog}. fordulóra. Semmi sem változik, amíg te magad el nem mented.',
+    zaklenjeno: 'Igazold a játékosprofilodat, és nyisd meg a Csapattanácsadót.',
+    zaklenjenoPoveza: 'Profil igazolása',
+    sibkosti: 'Gyenge pontok',
+    brezSibkosti: 'A keretben nincsenek nyilvánvaló gyenge pontok.',
+    razlog: {
+      neaktiven: 'már nincs a ligában',
+      poskodba: 'sérült',
+      odsotnost: 'nem elérhető',
+      brezTekme: 'a klub nem játszik',
+      malMinut: 'kevés perc',
+      slabaForma: 'gyenge forma',
+    },
+    prestopi: 'Javasolt átigazolások',
+    brezPrestopov: 'Egyetlen átigazolás sem segítene egyértelműen a költségvetés és a szabályok keretében.',
+    prestopRazlog: {
+      nerazpolozljiv: 'Gond {stari} körül: {razlog}. {novi} az utolsó 3 fordulóban {formaNovi} pontot szerzett.',
+      forma: '{novi} az utolsó 3 fordulóban {formaNovi} pontot szerzett, {stari} {formaStari}-t.',
+      minute: '{novi} többet játszik: a lehetséges percek {minuteNovi} %-a, {stari} {minuteStari} %-a.',
+      tekme: '{novi}-nak könnyebb a következő ellenfele: {nasprotniki}.',
+      cena: '{novi} több pontot ígér, és {prihranek}-val olcsóbb.',
+    },
+    postava: 'Legjobb kezdőcsapat ({formacija})',
+    kapetan: 'Csapatkapitány: {ime}',
+    namestnik: 'helyettes: {ime}',
+    enakoKotSedaj: 'A felállásod és a karszalag már ilyen.',
+    samoTrak: 'Ugyanaz a felállás, csak a kapitány vagy a helyettes változik.',
+    spremembe: 'Be: {noter}. Ki: {ven}.',
+    opomba: 'Szabályalapú, az adatainkból (pontok, percek, menetrend, árak). Csak javaslat: a csapatodat nem módosítja és nem menti.',
+  },
+
   // A keret játékosainak árváltozásai a legutóbbi látogatás óta.
   odZadnjegaObiska: {
     naslov: 'Legutóbbi látogatásod óta',

@@ -143,6 +143,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: '{novi} je na soupisce místo hráče {ime}. Až budeš spokojený, ulož tým.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Poradce týmu',
+    zaKrog: 'Návrhy pro {krog}. kolo. Nic se nezmění, dokud sám neuložíš.',
+    zaklenjeno: 'Ověř svůj hráčský profil a odemkni Poradce týmu.',
+    zaklenjenoPoveza: 'Ověřit profil',
+    sibkosti: 'Slabá místa',
+    brezSibkosti: 'V kádru nejsou zjevná slabá místa.',
+    razlog: {
+      neaktiven: 'už není v lize',
+      poskodba: 'zraněný',
+      odsotnost: 'nedostupný',
+      brezTekme: 'klub nehraje',
+      malMinut: 'málo minut',
+      slabaForma: 'špatná forma',
+    },
+    prestopi: 'Navržené přestupy',
+    brezPrestopov: 'Žádný přestup by v rámci rozpočtu a pravidel jasně nepomohl.',
+    prestopRazlog: {
+      nerazpolozljiv: 'Problém u {stari}: {razlog}. {novi} získal v posledních 3 kolech {formaNovi} bodů.',
+      forma: '{novi} získal v posledních 3 kolech {formaNovi} bodů, {stari} {formaStari}.',
+      minute: '{novi} hraje víc: {minuteNovi} % možných minut, {stari} {minuteStari} %.',
+      tekme: '{novi} má lehčí další soupeře: {nasprotniki}.',
+      cena: '{novi} slibuje víc bodů a je o {prihranek} levnější.',
+    },
+    postava: 'Nejlepší základní sestava ({formacija})',
+    kapetan: 'Kapitán: {ime}',
+    namestnik: 'zástupce: {ime}',
+    enakoKotSedaj: 'Tvoje sestava a páska už takové jsou.',
+    samoTrak: 'Sestava je stejná, mění se jen kapitán nebo zástupce.',
+    spremembe: 'Dovnitř: {noter}. Ven: {ven}.',
+    opomba: 'Pravidlo z našich dat (body, minuty, rozpis, ceny). Jen návrh: tým nemění ani neukládá.',
+  },
+
   odZadnjegaObiska: {
     naslov: 'Od poslední návštěvy',
     naslovTeden: 'Za poslední týden',

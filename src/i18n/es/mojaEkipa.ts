@@ -141,6 +141,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: '{novi} está en la plantilla en lugar de {ime}. Cuando estés conforme, guarda el equipo.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Asesor del equipo',
+    zaKrog: 'Sugerencias para la jornada {krog}. Nada cambia hasta que guardes tú.',
+    zaklenjeno: 'Verifica tu perfil de jugador para desbloquear el Asesor del equipo.',
+    zaklenjenoPoveza: 'Verificar perfil',
+    sibkosti: 'Puntos débiles',
+    brezSibkosti: 'No hay puntos débiles evidentes en tu plantilla.',
+    razlog: {
+      neaktiven: 'ya no está en la liga',
+      poskodba: 'lesionado',
+      odsotnost: 'no disponible',
+      brezTekme: 'el club no juega',
+      malMinut: 'pocos minutos',
+      slabaForma: 'mala forma',
+    },
+    prestopi: 'Fichajes sugeridos',
+    brezPrestopov: 'Ningún fichaje ayudaría claramente dentro del presupuesto y las reglas.',
+    prestopRazlog: {
+      nerazpolozljiv: 'Problema con {stari}: {razlog}. {novi} sumó {formaNovi} puntos en las últimas 3 jornadas.',
+      forma: '{novi} sumó {formaNovi} puntos en las últimas 3 jornadas, {stari} {formaStari}.',
+      minute: '{novi} juega más: {minuteNovi} % de los minutos posibles, {stari} {minuteStari} %.',
+      tekme: '{novi} tiene rivales más fáciles: {nasprotniki}.',
+      cena: '{novi} promete más puntos y es {prihranek} más barato.',
+    },
+    postava: 'Mejor once inicial ({formacija})',
+    kapetan: 'Capitán: {ime}',
+    namestnik: 'vice: {ime}',
+    enakoKotSedaj: 'Tu alineación y el brazalete ya son así.',
+    samoTrak: 'Misma alineación, solo cambia el capitán o el vice.',
+    spremembe: 'Entran: {noter}. Salen: {ven}.',
+    opomba: 'Basado en reglas con nuestros datos (puntos, minutos, calendario, precios). Solo una sugerencia: no cambia ni guarda tu equipo.',
+  },
+
   odZadnjegaObiska: {
     naslov: 'Desde tu última visita',
     naslovTeden: 'En la última semana',

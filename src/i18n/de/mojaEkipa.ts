@@ -143,6 +143,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: '{novi} ist statt {ime} in deinem Kader. Speichere dein Team, wenn du zufrieden bist.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Team-Berater',
+    zaKrog: 'Vorschläge für Runde {krog}. Nichts ändert sich, bis du selbst speicherst.',
+    zaklenjeno: 'Verifiziere dein Spielerprofil, um den Team-Berater freizuschalten.',
+    zaklenjenoPoveza: 'Profil verifizieren',
+    sibkosti: 'Schwachstellen',
+    brezSibkosti: 'Keine offensichtlichen Schwachstellen im Kader.',
+    razlog: {
+      neaktiven: 'nicht mehr in der Liga',
+      poskodba: 'verletzt',
+      odsotnost: 'nicht verfügbar',
+      brezTekme: 'Verein spielt nicht',
+      malMinut: 'wenig Minuten',
+      slabaForma: 'schwache Form',
+    },
+    prestopi: 'Vorgeschlagene Transfers',
+    brezPrestopov: 'Kein Transfer würde im Rahmen von Budget und Regeln klar helfen.',
+    prestopRazlog: {
+      nerazpolozljiv: 'Problem bei {stari}: {razlog}. {novi} holte in den letzten 3 Runden {formaNovi} Punkte.',
+      forma: '{novi} holte in den letzten 3 Runden {formaNovi} Punkte, {stari} {formaStari}.',
+      minute: '{novi} spielt mehr: {minuteNovi} % der möglichen Minuten, {stari} {minuteStari} %.',
+      tekme: '{novi} hat leichtere nächste Gegner: {nasprotniki}.',
+      cena: '{novi} verspricht mehr Punkte und ist {prihranek} günstiger.',
+    },
+    postava: 'Beste Startelf ({formacija})',
+    kapetan: 'Kapitän: {ime}',
+    namestnik: 'Vize: {ime}',
+    enakoKotSedaj: 'Deine Aufstellung und Binde passen schon dazu.',
+    samoTrak: 'Gleiche Aufstellung, nur Kapitän oder Vize ändert sich.',
+    spremembe: 'Rein: {noter}. Raus: {ven}.',
+    opomba: 'Regelbasiert aus unseren Daten (Punkte, Minuten, Spielplan, Preise). Nur ein Vorschlag: dein Team wird weder geändert noch gespeichert.',
+  },
+
   // Preisänderungen der Kaderspieler seit dem letzten Besuch.
   odZadnjegaObiska: {
     naslov: 'Seit deinem letzten Besuch',

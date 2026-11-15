@@ -18,6 +18,7 @@ import KlubskiRacuni from '../components/admin/KlubskiRacuni'
 import Prevzemi from '../components/admin/Prevzemi'
 import Preverjeni from '../components/admin/Preverjeni'
 import Posnetki from '../components/admin/Posnetki'
+import SvetovalecEkipe from '../components/admin/SvetovalecEkipe'
 import Prenosi from '../components/admin/Prenosi'
 import PrijaveSporocil from '../components/admin/PrijaveSporocil'
 import HighlightVrsta from '../components/admin/HighlightVrsta'
@@ -893,6 +894,9 @@ export default function Administracija() {
               <Preverjeni />
               <div className="mt-6">
                 <NarocilaPlakatov />
+              </div>
+              <div className="mt-6">
+                <SvetovalecEkipe />
               </div>
             </Razdelek>
             <Razdelek id="posnetki">

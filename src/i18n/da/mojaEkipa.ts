@@ -141,6 +141,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: '{novi} er i din trup i stedet for {ime}. Gem holdet, når du er tilfreds.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Holdrådgiver',
+    zaKrog: 'Forslag til runde {krog}. Intet ændres, før du selv gemmer.',
+    zaklenjeno: 'Bekræft din spillerprofil for at låse Holdrådgiveren op.',
+    zaklenjenoPoveza: 'Bekræft profil',
+    sibkosti: 'Svage punkter',
+    brezSibkosti: 'Ingen oplagte svage punkter i truppen.',
+    razlog: {
+      neaktiven: 'er ikke længere i ligaen',
+      poskodba: 'skadet',
+      odsotnost: 'utilgængelig',
+      brezTekme: 'klubben spiller ikke',
+      malMinut: 'få minutter',
+      slabaForma: 'dårlig form',
+    },
+    prestopi: 'Foreslåede overgange',
+    brezPrestopov: 'Ingen overgang ville tydeligt hjælpe inden for budget og regler.',
+    prestopRazlog: {
+      nerazpolozljiv: 'Problem med {stari}: {razlog}. {novi} har scoret {formaNovi} point i de seneste 3 runder.',
+      forma: '{novi} har scoret {formaNovi} point i de seneste 3 runder, {stari} {formaStari}.',
+      minute: '{novi} spiller mere: {minuteNovi} % af de mulige minutter, {stari} {minuteStari} %.',
+      tekme: '{novi} har lettere næste modstandere: {nasprotniki}.',
+      cena: '{novi} lover flere point og er {prihranek} billigere.',
+    },
+    postava: 'Bedste startopstilling ({formacija})',
+    kapetan: 'Anfører: {ime}',
+    namestnik: 'vice: {ime}',
+    enakoKotSedaj: 'Din opstilling og anførerbind er allerede sådan.',
+    samoTrak: 'Samme opstilling, kun anfører eller vice ændres.',
+    spremembe: 'Ind: {noter}. Ud: {ven}.',
+    opomba: 'Regelbaseret ud fra vores data (point, minutter, kampprogram, priser). Kun et forslag: dit hold ændres eller gemmes ikke.',
+  },
+
   // Prisændringer for truppens spillere siden sidste besøg.
   odZadnjegaObiska: {
     naslov: 'Siden dit sidste besøg',

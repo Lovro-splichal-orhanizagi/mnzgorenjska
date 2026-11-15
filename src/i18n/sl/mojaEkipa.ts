@@ -151,6 +151,40 @@ export const mojaEkipa = {
     zamenjano: '{novi} je v kadru namesto {ime}. Ko si zadovoljen, shrani ekipo.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Svetovalec ekipe',
+    zaKrog: 'Predlogi za {krog}. krog. Nič se ne spremeni, dokler sam ne shraniš.',
+    zaklenjeno: 'Preveri svoj igralski profil in odkleni Svetovalca ekipe.',
+    zaklenjenoPoveza: 'Preveri profil',
+    sibkosti: 'Šibka mesta',
+    brezSibkosti: 'V kadru ni očitnih šibkih mest.',
+    razlog: {
+      neaktiven: 'ni več v ligi',
+      poskodba: 'poškodovan',
+      odsotnost: 'odsoten',
+      brezTekme: 'klub nima tekme',
+      malMinut: 'malo minut',
+      slabaForma: 'slaba forma',
+    },
+    prestopi: 'Predlagani prestopi',
+    brezPrestopov: 'Noben prestop v okviru proračuna in pravil ne bi jasno pomagal.',
+    prestopRazlog: {
+      nerazpolozljiv: 'Težava pri {stari}: {razlog}. {novi} je v zadnjih 3 krogih zbral {formaNovi} točk.',
+      forma: '{novi} je v zadnjih 3 krogih zbral {formaNovi} točk, {stari} {formaStari}.',
+      minute: '{novi} igra več: {minuteNovi} % možnih minut, {stari} {minuteStari} %.',
+      tekme: '{novi} ima lažje naslednje tekmece: {nasprotniki}.',
+      cena: '{novi} obeta več točk in je za {prihranek} cenejši.',
+    },
+    postava: 'Najboljša prva postava ({formacija})',
+    kapetan: 'Kapetan: {ime}',
+    namestnik: 'namestnik: {ime}',
+    enakoKotSedaj: 'Tvoja postava in trak sta že taka.',
+    samoTrak: 'Postava je enaka, spremeni se le kapetan ali namestnik.',
+    spremembe: 'V postavo: {noter}. Iz postave: {ven}.',
+    opomba: 'Pravilo iz naših podatkov (točke, minute, razpored, cene). Samo predlog: ekipe ne spremeni in je ne shrani.',
+  },
+
   // Gibanje cen igralcev v kadru od zadnjega ogleda strani.
   odZadnjegaObiska: {
     naslov: 'Od zadnjega obiska',

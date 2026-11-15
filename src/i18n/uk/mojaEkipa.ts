@@ -147,6 +147,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: '{novi} у складі замість {ime}. Збережи команду, коли будеш задоволений.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Радник команди',
+    zaKrog: 'Поради на {krog}-й тур. Нічого не зміниться, доки ти сам не збережеш.',
+    zaklenjeno: 'Підтверди свій профіль гравця, щоб розблокувати Радника команди.',
+    zaklenjenoPoveza: 'Підтвердити профіль',
+    sibkosti: 'Слабкі місця',
+    brezSibkosti: 'У складі немає очевидних слабких місць.',
+    razlog: {
+      neaktiven: 'більше не в лізі',
+      poskodba: 'травмований',
+      odsotnost: 'недоступний',
+      brezTekme: 'клуб не грає',
+      malMinut: 'мало хвилин',
+      slabaForma: 'погана форма',
+    },
+    prestopi: 'Запропоновані трансфери',
+    brezPrestopov: 'Жоден трансфер у межах бюджету та правил не допоміг би чітко.',
+    prestopRazlog: {
+      nerazpolozljiv: 'Проблема з {stari}: {razlog}. {novi} набрав за останні 3 тури {formaNovi} балів.',
+      forma: '{novi} набрав за останні 3 тури {formaNovi} балів, {stari} {formaStari}.',
+      minute: '{novi} грає більше: {minuteNovi} % можливих хвилин, {stari} {minuteStari} %.',
+      tekme: '{novi} має легших наступних суперників: {nasprotniki}.',
+      cena: '{novi} обіцяє більше балів і дешевший на {prihranek}.',
+    },
+    postava: 'Найкращий стартовий склад ({formacija})',
+    kapetan: 'Капітан: {ime}',
+    namestnik: 'заступник: {ime}',
+    enakoKotSedaj: 'Твій склад і пов’язка вже такі.',
+    samoTrak: 'Склад той самий, змінюється лише капітан або заступник.',
+    spremembe: 'У склад: {noter}. Зі складу: {ven}.',
+    opomba: 'На основі правил з наших даних (бали, хвилини, календар, ціни). Лише порада: команду не змінює і не зберігає.',
+  },
+
   // Spremembe cen igralcev v kadru od zadnjega obiska.
   odZadnjegaObiska: {
     naslov: 'Від твого останнього візиту',
