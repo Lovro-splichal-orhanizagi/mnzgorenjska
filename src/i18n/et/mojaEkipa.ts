@@ -142,6 +142,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: '{novi} on koosseisus mängija {ime} asemel. Salvesta meeskond, kui oled rahul.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Tiiminõustaja',
+    zaKrog: 'Soovitused {krog}. vooru jaoks. Midagi ei muutu, kuni sa ise ei salvesta.',
+    zaklenjeno: 'Kinnita oma mängijaprofiil, et avada Tiiminõustaja.',
+    zaklenjenoPoveza: 'Kinnita profiil',
+    sibkosti: 'Nõrgad kohad',
+    brezSibkosti: 'Koosseisus pole ilmseid nõrku kohti.',
+    razlog: {
+      neaktiven: 'pole enam liigas',
+      poskodba: 'vigastatud',
+      odsotnost: 'pole saadaval',
+      brezTekme: 'klubil pole mängu',
+      malMinut: 'vähe minuteid',
+      slabaForma: 'kehv vorm',
+    },
+    prestopi: 'Soovitatud üleminekud',
+    brezPrestopov: 'Ükski üleminek ei aitaks eelarve ja reeglite piires selgelt.',
+    prestopRazlog: {
+      nerazpolozljiv: 'Probleem mängijaga {stari}: {razlog}. {novi} kogus viimases 3 voorus {formaNovi} punkti.',
+      forma: '{novi} kogus viimases 3 voorus {formaNovi} punkti, {stari} {formaStari}.',
+      minute: '{novi} mängib rohkem: {minuteNovi} % võimalikest minutitest, {stari} {minuteStari} %.',
+      tekme: '{novi} saab järgmistes mängudes kergemad vastased: {nasprotniki}.',
+      cena: '{novi} lubab rohkem punkte ja on {prihranek} odavam.',
+    },
+    postava: 'Parim algkoosseis ({formacija})',
+    kapetan: 'Kapten: {ime}',
+    namestnik: 'abikapten: {ime}',
+    enakoKotSedaj: 'Sinu koosseis ja kaptenipael on juba sellised.',
+    samoTrak: 'Koosseis sama, muutub vaid kapten või abikapten.',
+    spremembe: 'Sisse: {noter}. Välja: {ven}.',
+    opomba: 'Reeglipõhine meie andmetest (punktid, minutid, mängukava, hinnad). Ainult soovitus: tiimi ei muuda ega salvesta.',
+  },
+
   // Koosseisu mängijate hinnamuutused pärast viimast külastust.
   odZadnjegaObiska: {
     naslov: 'Pärast sinu viimast külastust',

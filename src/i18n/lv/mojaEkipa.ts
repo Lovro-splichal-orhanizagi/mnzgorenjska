@@ -139,6 +139,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: '{novi} ir sastāvā {ime} vietā. Kad esi apmierināts, saglabā komandu.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Komandas padomdevējs',
+    zaKrog: 'Ieteikumi {krog}. kārtai. Nekas nemainās, kamēr pats nesaglabā.',
+    zaklenjeno: 'Apstiprini savu spēlētāja profilu, lai atbloķētu Komandas padomdevēju.',
+    zaklenjenoPoveza: 'Apstiprināt profilu',
+    sibkosti: 'Vājās vietas',
+    brezSibkosti: 'Sastāvā nav acīmredzamu vāju vietu.',
+    razlog: {
+      neaktiven: 'vairs nav līgā',
+      poskodba: 'savainots',
+      odsotnost: 'nav pieejams',
+      brezTekme: 'klubam nav spēles',
+      malMinut: 'maz minūšu',
+      slabaForma: 'slikta forma',
+    },
+    prestopi: 'Ieteiktie transfēri',
+    brezPrestopov: 'Neviens transfērs budžeta un noteikumu ietvaros skaidri nepalīdzētu.',
+    prestopRazlog: {
+      nerazpolozljiv: 'Problēma ar {stari}: {razlog}. {novi} pēdējās 3 kārtās ieguva {formaNovi} punktus.',
+      forma: '{novi} pēdējās 3 kārtās ieguva {formaNovi} punktus, {stari} {formaStari}.',
+      minute: '{novi} spēlē vairāk: {minuteNovi} % iespējamo minūšu, {stari} {minuteStari} %.',
+      tekme: '{novi} nākamie pretinieki ir vieglāki: {nasprotniki}.',
+      cena: '{novi} sola vairāk punktu un ir par {prihranek} lētāks.',
+    },
+    postava: 'Labākais sākumsastāvs ({formacija})',
+    kapetan: 'Kapteinis: {ime}',
+    namestnik: 'vietnieks: {ime}',
+    enakoKotSedaj: 'Tavs sastāvs un kapteiņa lente jau ir tādi.',
+    samoTrak: 'Sastāvs tas pats, mainās tikai kapteinis vai vietnieks.',
+    spremembe: 'Iekšā: {noter}. Ārā: {ven}.',
+    opomba: 'Uz noteikumiem balstīts no mūsu datiem (punkti, minūtes, kalendārs, cenas). Tikai ieteikums: komandu nemaina un nesaglabā.',
+  },
+
   odZadnjegaObiska: {
     naslov: 'Kopš pēdējā apmeklējuma',
     naslovTeden: 'Pēdējā nedēļā',

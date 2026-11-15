@@ -143,6 +143,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: '{novi} jest w kadrze zamiast {ime}. Gdy będziesz zadowolony, zapisz drużynę.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Doradca drużyny',
+    zaKrog: 'Propozycje na {krog}. kolejkę. Nic się nie zmieni, dopóki sam nie zapiszesz.',
+    zaklenjeno: 'Zweryfikuj swój profil zawodnika, aby odblokować Doradcę drużyny.',
+    zaklenjenoPoveza: 'Zweryfikuj profil',
+    sibkosti: 'Słabe punkty',
+    brezSibkosti: 'W kadrze nie ma oczywistych słabych punktów.',
+    razlog: {
+      neaktiven: 'nie ma go już w lidze',
+      poskodba: 'kontuzjowany',
+      odsotnost: 'niedostępny',
+      brezTekme: 'klub nie gra',
+      malMinut: 'mało minut',
+      slabaForma: 'słaba forma',
+    },
+    prestopi: 'Proponowane transfery',
+    brezPrestopov: 'Żaden transfer w ramach budżetu i zasad nie pomógłby wyraźnie.',
+    prestopRazlog: {
+      nerazpolozljiv: 'Problem z {stari}: {razlog}. {novi} zdobył w ostatnich 3 kolejkach {formaNovi} pkt.',
+      forma: '{novi} zdobył w ostatnich 3 kolejkach {formaNovi} pkt, {stari} {formaStari}.',
+      minute: '{novi} gra więcej: {minuteNovi} % możliwych minut, {stari} {minuteStari} %.',
+      tekme: '{novi} ma łatwiejszych kolejnych rywali: {nasprotniki}.',
+      cena: '{novi} obiecuje więcej punktów i jest tańszy o {prihranek}.',
+    },
+    postava: 'Najlepszy wyjściowy skład ({formacija})',
+    kapetan: 'Kapitan: {ime}',
+    namestnik: 'zastępca: {ime}',
+    enakoKotSedaj: 'Twój skład i opaska już takie są.',
+    samoTrak: 'Skład ten sam, zmienia się tylko kapitan lub zastępca.',
+    spremembe: 'Wchodzą: {noter}. Wypadają: {ven}.',
+    opomba: 'Reguły z naszych danych (punkty, minuty, terminarz, ceny). Tylko propozycja: nie zmienia ani nie zapisuje drużyny.',
+  },
+
   odZadnjegaObiska: {
     naslov: 'Od ostatniej wizyty',
     naslovTeden: 'W ostatnim tygodniu',

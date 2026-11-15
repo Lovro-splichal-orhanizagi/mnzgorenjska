@@ -73,6 +73,10 @@ import {
   type GibanjeIgralca,
 } from '../lib/namigiEkipe'
 import { NamigiZaPrestope, OdZadnjegaObiska } from '../components/NamigiEkipe'
+import SvetovalecEkipe from '../components/SvetovalecEkipe'
+import { useDostopSvetovalca } from '../lib/svetovalecDostop'
+import { podatkiRazporeda, svetuj, PRAZEN_RAZPORED, KROGOV_NAPREJ } from '../lib/svetovalecEkipe'
+import type { PodatkiRazporeda } from '../lib/svetovalecEkipe'
 import type { IgralecNaIgriscu } from '../components/Igrisce'
 import type { Pozicija } from '../lib/tipi'
 import { t, tx, datumUra, lokale } from '../i18n'
@@ -338,6 +342,8 @@ export default function MojaEkipa() {
   const [klubiZTekmo, setKlubiZTekmo] = useState<Set<number> | null>(null)
   // Namigi za prestope, skriti za ta krog (localStorage, le udobje).
   const [namigiZaprti, setNamigiZaprti] = useState(false)
+  // Svetovalec ekipe (le preverjeni igralci): moč klubov in naslednji tekmeci.
+  const [razpored, setRazpored] = useState<PodatkiRazporeda>(PRAZEN_RAZPORED)
   // Gibanje cen igralcev v kadru od zadnjega obiska.
   const [gibanje, setGibanje] = useState<{
     igralci: GibanjeIgralca[]
@@ -895,6 +901,42 @@ export default function MojaEkipa() {
     }
   }, [ekipaId, zgodovinaKrogId, zgodovinaCaka])
 
+  // Svetovalec ekipe: kdo ga vidi (preverjen igralec, stikalo `svetovalec_ekipe`).
+  const dostopSvetovalca = useDostopSvetovalca(ekipa?.id ? uporabnikId : null)
+
+  // Moč klubov (razlika golov na tekmo) in naslednji tekmeci iz tekem sezone;
+  // naloži se šele, ko svetovalec sploh smo kazati.
+  const odprtSvetovalec = dostopSvetovalca === 'odprt'
+  useEffect(() => {
+    setRazpored(PRAZEN_RAZPORED)
+    const sezona = naslednjiKrog?.season
+    if (!odprtSvetovalec || !naslednjiKrog || !sezona) return
+    const vSezoni = krogi.filter((k) => k.season === sezona)
+    const naprej = vSezoni
+      .filter((k) => (k.number ?? 0) >= (naslednjiKrog.number ?? 0))
+      .sort((a, b) => (a.number ?? 0) - (b.number ?? 0))
+      .slice(0, KROGOV_NAPREJ)
+      .map((k) => k.id)
+    if (vSezoni.length === 0) return
+    let veljavno = true
+    vseVrstice((od, do_) =>
+      supabase
+        .from('matches')
+        .select('round_id, home_team_id, away_team_id, home_goals, away_goals, kontumacija')
+        .in('round_id', vSezoni.map((k) => k.id))
+        .order('id')
+        .range(od, do_),
+    )
+      .then((tekme) => {
+        if (veljavno) setRazpored(podatkiRazporeda(tekme, naprej))
+      })
+      // Brez razporeda svetovalec računa le iz forme in minut.
+      .catch(() => {})
+    return () => {
+      veljavno = false
+    }
+  }, [odprtSvetovalec, naslednjiKrog, krogi])
+
   // Kateri klubi igrajo v naslednjem krogu — kdor nima tekme, ne dobi točk.
   const naslednjiKrogId = naslednjiKrog?.id ?? null
   useEffect(() => {
@@ -1012,6 +1054,31 @@ export default function MojaEkipa() {
   const bogastvoC = centi(preostalo) + vrednostKadraC
   const razlikaC = bogastvoC - centi(proracun)
   const bogastvo = bogastvoC / 100
+  // Svetovalec računa iz osnutka kot namigi: predlog sledi spremembam, ki jih
+  // človek še ni shranil. Predlaga le, nikoli ne spremeni kadra.
+  const svetovanje = useMemo(
+    () =>
+      odprtSvetovalec && ekipa?.id && izbrani.length === VELIKOST_EKIPE
+        ? svetuj(
+            izbraniPodrobno as IgralecTrga[],
+            igralci,
+            preostalo,
+            {
+              klubiZTekmo,
+              odsotni: Object.fromEntries(Object.entries(odsotni).map(([id, o]) => [id, o.kind])),
+            },
+            razpored,
+          )
+        : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [odprtSvetovalec, ekipa?.id, izbrani.length, izbraniPodrobno, igralci, preostalo, klubiZTekmo, odsotni, razpored],
+  )
+  const imenaKlubov = useMemo(() => {
+    const m: Record<number, string> = {}
+    for (const i of igralci) if (i.team_id != null) m[Number(i.team_id)] ??= i.team_short ?? i.team_name ?? ''
+    return m
+  }, [igralci])
+
   const napakeEkipe = preveriEkipo(izbraniPodrobno, proracun, preostalo)
   const prvi = izbraniPodrobno.filter((s) => s.is_starter)
   const vKadru = poPozicijah(izbraniPodrobno)
@@ -2144,6 +2211,15 @@ export default function MojaEkipa() {
               setNamigiZaprti(true)
             }}
           />
+
+          {(dostopSvetovalca === 'odprt' || dostopSvetovalca === 'zaklenjen') && ekipa?.id && (
+            <SvetovalecEkipe
+              dostop={dostopSvetovalca}
+              krog={naslednjiKrog?.number ?? null}
+              svetovanje={svetovanje}
+              imenaKlubov={imenaKlubov}
+            />
+          )}
 
           {gibanje && (
             <OdZadnjegaObiska

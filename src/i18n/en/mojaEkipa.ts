@@ -142,6 +142,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: '{novi} is in your squad instead of {ime}. Save your team when you’re happy.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Team advisor',
+    zaKrog: 'Suggestions for round {krog}. Nothing changes until you save it yourself.',
+    zaklenjeno: 'Verify your player profile to unlock the Team advisor',
+    zaklenjenoPoveza: 'Verify profile',
+    sibkosti: 'Weak spots',
+    brezSibkosti: 'No obvious weak spots in your squad.',
+    razlog: {
+      neaktiven: 'no longer in the league',
+      poskodba: 'injured',
+      odsotnost: 'unavailable',
+      brezTekme: 'club not playing',
+      malMinut: 'few minutes',
+      slabaForma: 'poor form',
+    },
+    prestopi: 'Suggested transfers',
+    brezPrestopov: 'No transfer would clearly help within your budget and the rules.',
+    prestopRazlog: {
+      nerazpolozljiv: 'Problem with {stari}: {razlog}. {novi} scored {formaNovi} points in the last 3 rounds.',
+      forma: '{novi} scored {formaNovi} points in the last 3 rounds, {stari} {formaStari}.',
+      minute: '{novi} plays more: {minuteNovi}% of possible minutes, {stari} {minuteStari}%.',
+      tekme: '{novi} has easier next opponents: {nasprotniki}.',
+      cena: '{novi} promises more points and is {prihranek} cheaper.',
+    },
+    postava: 'Best starting XI ({formacija})',
+    kapetan: 'Captain: {ime}',
+    namestnik: 'vice: {ime}',
+    enakoKotSedaj: 'Your lineup and armband already match this.',
+    samoTrak: 'Same lineup, only the captain or vice changes.',
+    spremembe: 'In: {noter}. Out: {ven}.',
+    opomba: 'Rule-based from our data (points, minutes, fixtures, prices). A suggestion only: it does not change or save your team.',
+  },
+
   // Price changes of squad players since the last visit.
   odZadnjegaObiska: {
     naslov: 'Since your last visit',

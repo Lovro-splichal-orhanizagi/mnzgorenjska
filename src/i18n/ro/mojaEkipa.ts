@@ -145,6 +145,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: '{novi} e în lot în locul lui {ime}. Când ești mulțumit, salvează echipa.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Consilierul echipei',
+    zaKrog: 'Sugestii pentru runda {krog}. Nimic nu se schimbă până nu salvezi tu.',
+    zaklenjeno: 'Verifică-ți profilul de jucător ca să deblochezi Consilierul echipei.',
+    zaklenjenoPoveza: 'Verifică profilul',
+    sibkosti: 'Puncte slabe',
+    brezSibkosti: 'Nu sunt puncte slabe evidente în lot.',
+    razlog: {
+      neaktiven: 'nu mai e în ligă',
+      poskodba: 'accidentat',
+      odsotnost: 'indisponibil',
+      brezTekme: 'clubul nu joacă',
+      malMinut: 'puține minute',
+      slabaForma: 'formă slabă',
+    },
+    prestopi: 'Transferuri sugerate',
+    brezPrestopov: 'Niciun transfer nu ar ajuta clar în limita bugetului și a regulilor.',
+    prestopRazlog: {
+      nerazpolozljiv: 'Problemă la {stari}: {razlog}. {novi} a strâns {formaNovi} puncte în ultimele 3 runde.',
+      forma: '{novi} a strâns {formaNovi} puncte în ultimele 3 runde, {stari} {formaStari}.',
+      minute: '{novi} joacă mai mult: {minuteNovi} % din minutele posibile, {stari} {minuteStari} %.',
+      tekme: '{novi} are adversari mai ușori: {nasprotniki}.',
+      cena: '{novi} promite mai multe puncte și e cu {prihranek} mai ieftin.',
+    },
+    postava: 'Cel mai bun prim unsprezece ({formacija})',
+    kapetan: 'Căpitan: {ime}',
+    namestnik: 'secund: {ime}',
+    enakoKotSedaj: 'Formația și banderola ta sunt deja așa.',
+    samoTrak: 'Aceeași formație, se schimbă doar căpitanul sau secundul.',
+    spremembe: 'Intră: {noter}. Ies: {ven}.',
+    opomba: 'Bazat pe reguli din datele noastre (puncte, minute, program, prețuri). Doar o sugestie: nu schimbă și nu salvează echipa.',
+  },
+
   // Evoluția prețurilor jucătorilor din lot de la ultima vizită.
   odZadnjegaObiska: {
     naslov: 'De la ultima vizită',

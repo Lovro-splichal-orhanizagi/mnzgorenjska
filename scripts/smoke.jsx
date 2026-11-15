@@ -3940,6 +3940,125 @@ preveri(
     preveri('obisk: brez localStorage ne pade', N.preberiZadnjiOgled(1) === null && N.namigiSkriti(1, 2) === false)
   }
 
+  // --- svetovalec ekipe (lib/svetovalecEkipe) --------------------------------
+  {
+    const S = await import('../src/lib/svetovalecEkipe')
+    const { preveriEkipo, zakajNeGre } = await import('../src/lib/pravila')
+    // Kader 2-5-5-3, postava 4-4-2 (klop: GK 101, DEF 106, MID 111, FWD 114), kapetan 109, namestnik 110.
+    const poz = ['GK', 'GK', 'DEF', 'DEF', 'DEF', 'DEF', 'DEF', 'MID', 'MID', 'MID', 'MID', 'MID', 'FWD', 'FWD', 'FWD']
+    const klub = [1, 2, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 3, 4, 5]
+    const prvi = new Set([100, 102, 103, 104, 105, 107, 108, 109, 110, 112, 113])
+    const kader = poz.map((p, i) => ({
+      id: 100 + i, position: p, team_id: klub[i], team_name: `K${klub[i]}`, value: 5, active: true,
+      is_starter: prvi.has(100 + i), is_captain: 100 + i === 109, is_vice: 100 + i === 110,
+      form: 6, points_per_match: 2, minutes: 900,
+    }))
+    const razp = { moc: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: -2 }, tekem: { 1: 10, 2: 10, 3: 10, 4: 10, 5: 10, 6: 10, 7: 10 }, naslednji: {} }
+    const moz = { klubiZTekmo: new Set([1, 2, 3, 4, 5, 6, 7]), odsotni: {} }
+
+    // razpored iz tekem
+    const rz = S.podatkiRazporeda([
+      { round_id: 1, home_team_id: 1, away_team_id: 2, home_goals: 3, away_goals: 0 },
+      { round_id: 1, home_team_id: 3, away_team_id: 4, home_goals: 1, away_goals: 1, kontumacija: true },
+      { round_id: 2, home_team_id: 1, away_team_id: 3, home_goals: null, away_goals: null },
+    ], [2])
+    preveri('svetovalec: moc kluba iz tekem', rz.moc[1] === 3 && rz.moc[2] === -3 && rz.tekem[1] === 1 && rz.tekem[3] === undefined)
+    preveri('svetovalec: naslednji tekmeci', rz.naslednji[1]?.[0] === 3 && rz.naslednji[3]?.[0] === 1)
+    preveri('svetovalec: neodigrana tekma ne steje v moc', rz.tekem[3] === undefined)
+
+    // ocena
+    const o = (i, m = moz, r = razp) => S.ocenaIgralca(i, m, r)
+    preveri('svetovalec: ocena zdravega > 0', o(kader[2]) > 0, String(o(kader[2])))
+    preveri('svetovalec: poskodovan ima oceno 0', o(kader[2], { ...moz, odsotni: { 102: 'poskodba' } }) === 0)
+    preveri('svetovalec: klub brez tekme ima oceno 0', o({ ...kader[2], team_id: 9 }) === 0)
+    preveri('svetovalec: vec minut, vecja ocena', o(kader[2]) > o({ ...kader[2], minutes: 450 }))
+    preveri('svetovalec: lazji tekmeci, vecja ocena',
+      o(kader[2], moz, { ...razp, naslednji: { 1: [7, 7, 7] } }) > o(kader[2]))
+    preveri('svetovalec: minute neznane pri premalo tekmah', S.delezMinut(kader[2], { ...razp, tekem: { 1: 2 } }) === null)
+
+    // šibka mesta
+    const sibki = S.sibkaMesta(
+      kader.map((i) =>
+        i.id === 102 ? { ...i, minutes: 100 } : i.id === 105 ? { ...i, form: 1 } : i.id === 107 ? { ...i, active: false } : i),
+      { ...moz, odsotni: { 103: 'poskodba' } }, razp)
+    const razloge = Object.fromEntries(sibki.map((m) => [m.igralec.id, m.razlog]))
+    preveri('svetovalec: sibka mesta z razlogi', razloge[102] === 'malMinut' && razloge[105] === 'slabaForma' && razloge[107] === 'neaktiven' && razloge[103] === 'poskodba', JSON.stringify(razloge))
+    preveri('svetovalec: zdrav kader brez sibkih mest', S.sibkaMesta(kader, moz, razp).length === 0)
+    preveri('svetovalec: najhujse prvo', sibki[0].razlog === 'neaktiven' && sibki[1].razlog === 'poskodba')
+
+    // prestopi: iz kluba 1 so v kadru trije, zato kandidat iz kluba 1 ne sme priti noter
+    const trg = [
+      { id: 1, position: 'DEF', team_id: 1, team_name: 'K1', value: 5, form: 15, points_per_match: 6, minutes: 900, active: true }, // klub poln
+      { id: 2, position: 'DEF', team_id: 6, team_name: 'K6', value: 5, form: 12, points_per_match: 5, minutes: 900, active: true },
+      { id: 3, position: 'DEF', team_id: 6, team_name: 'K6', value: 9.5, form: 18, points_per_match: 7, minutes: 900, active: true }, // predrag
+      { id: 4, position: 'DEF', team_id: 6, team_name: 'K6', value: 5, form: 11, points_per_match: 5, minutes: 900, active: false }, // neaktiven
+      { id: 5, position: 'DEF', team_id: 6, team_name: 'K6', value: 5, form: 9, points_per_match: 4, minutes: 900, active: true },
+      { id: 6, position: 'MID', team_id: 6, team_name: 'K6', value: 5, form: 6, points_per_match: 2, minutes: 900, active: true }, // brez dobicka
+      { id: 7, position: 'FWD', team_id: 6, team_name: 'K6', value: 5, form: 10, points_per_match: 4, minutes: 900, active: true },
+    ]
+    const slabKader = kader.map((i) => (i.id === 103 ? { ...i, form: 0, points_per_match: 0.5 } : i)) // klub 2
+    const pr = S.predlagajPrestope(slabKader, trg, 0, moz, razp)
+    preveri('svetovalec: prestop za najslabsega', pr.length >= 1 && pr[0].stari.id === 103, JSON.stringify(pr.map((p) => [p.stari.id, p.novi.id])))
+    preveri('svetovalec: najboljsi dovoljen kandidat', pr[0].novi.id === 2, String(pr[0]?.novi.id))
+    preveri('svetovalec: kandidat iz polnega kluba ne pride noter', !pr.some((p) => p.novi.id === 1 && ![102, 107].includes(p.stari.id) && p.stari.team_id !== 1))
+    preveri('svetovalec: predrag in neaktiven ne', !pr.some((p) => p.novi.id === 3 || p.novi.id === 4))
+    preveri('svetovalec: pozicija ostane', pr.every((p) => p.stari.position === p.novi.position))
+    preveri('svetovalec: razlog je zapisan', pr.every((p) => p.razlog && p.dobitek > 0))
+    const veliki = S.predlagajPrestope(slabKader, trg.map((k) => ({ ...k, value: k.id === 3 ? 5 : k.value })), 0, moz, razp)
+    preveri('svetovalec: z denarjem pride drag kandidat', veliki[0]?.novi.id === 3 || veliki[0]?.novi.id === 1, String(veliki[0]?.novi.id))
+    // vsi prestopi skupaj ostanejo veljavni
+    let trenutni = slabKader
+    let denar = 0
+    let ok = true
+    for (const p of pr) {
+      const brez = trenutni.filter((i) => i.id !== p.stari.id)
+      denar += p.stari.value
+      if (zakajNeGre(p.novi, brez, denar) != null) ok = false
+      denar -= p.novi.value
+      trenutni = [...brez, p.novi]
+    }
+    preveri('svetovalec: prestopi so skupaj dovoljeni po pravilih', ok && trenutni.length === 15 && denar >= 0)
+    const veliko = S.predlagajPrestope(
+      kader.map((i) => ({ ...i, form: 0, points_per_match: 0.1 })),
+      Array.from({ length: 12 }, (_, n) => ({ id: 200 + n, position: poz[2 + (n % 5)], team_id: 20 + n, team_name: `T${n}`, value: 5, form: 20, points_per_match: 8, minutes: 900, active: true })),
+      0, { klubiZTekmo: null, odsotni: {} }, razp)
+    preveri('svetovalec: najvec tri prestopi', veliko.length === 3, String(veliko.length))
+    preveri('svetovalec: brez trga ni prestopov', S.predlagajPrestope(slabKader, [], 0, moz, razp).length === 0)
+    preveri('svetovalec: nerazpolozljiv razlog za poskodovanega',
+      S.predlagajPrestope(kader, trg, 0, { ...moz, odsotni: { 103: 'poskodba' } }, razp)[0]?.razlog.vrsta === 'nerazpolozljiv')
+
+    // najboljša postava
+    const enaka = S.najboljsaPostava(kader, moz, razp)
+    preveri('svetovalec: enaka ocena obdrzi zdajsnjo postavo', enaka?.enakoKotSedaj === true && enaka.formacija === '4-4-2', enaka?.formacija)
+    const ranjen = S.najboljsaPostava(kader, { ...moz, odsotni: { 109: 'poskodba' } }, razp)
+    preveri('svetovalec: poskodovan izpade iz postave', ranjen && !ranjen.prvi.some((i) => i.id === 109) && ranjen.ven.some((i) => i.id === 109))
+    preveri('svetovalec: kapetan ni poskodovan', ranjen.kapetan.id !== 109 && ranjen.namestnik?.id !== 109)
+    const cena = kader.map((i) => (i.id === 106 ? { ...i, form: 12, points_per_match: 6 } : i))
+    const boljsi = S.najboljsaPostava(cena, moz, razp)
+    preveri('svetovalec: boljsi klopar stopi v postavo', boljsi.prvi.some((i) => i.id === 106) && boljsi.noter.some((i) => i.id === 106) && !boljsi.enakoKotSedaj)
+    preveri('svetovalec: kapetan je najboljsi', boljsi.kapetan.id === 106, String(boljsi.kapetan.id))
+    const mnogoFwd = kader.map((i) => (i.position === 'FWD' ? { ...i, form: 30, points_per_match: 9 } : i))
+    const f3 = S.najboljsaPostava(mnogoFwd, moz, razp)
+    preveri('svetovalec: trije napadalci, formacija 3-4-3 ali 4-3-3', ['3-4-3', '4-3-3'].includes(f3.formacija) && f3.prvi.filter((i) => i.position === 'FWD').length === 3, f3.formacija)
+    // postava je veljavna po pravilih: 11 v postavi, en vratar, meje pozicij, en kapetan in namestnik
+    const veljavna = kader.map((i) => ({
+      ...i,
+      is_starter: boljsi.prvi.some((p) => p.id === i.id),
+      is_captain: i.id === boljsi.kapetan.id,
+      is_vice: i.id === boljsi.namestnik?.id,
+    }))
+    preveri('svetovalec: predlagana postava je veljavna', preveriEkipo(veljavna, 100, 100 - 75).length === 0, preveriEkipo(veljavna, 100, 25).join(' | '))
+    preveri('svetovalec: kader brez vratarja nima postave', S.najboljsaPostava(kader.filter((i) => i.position !== 'GK'), moz, razp) === null)
+    const celoten = S.svetuj(kader, trg, 0, moz, razp)
+    preveri('svetovalec: svetuj vrne vse tri dele', Array.isArray(celoten.sibkosti) && Array.isArray(celoten.prestopi) && celoten.postava != null)
+    preveri('svetovalec: svetuj ne spremeni kadra', kader.length === 15 && kader[2].is_starter === true && kader[9].is_captain === true)
+
+    // stikalo
+    preveri('svetovalec: manjkajoca vrstica = vklopljeno', S.svetovalecVklopljen(null) && S.svetovalecVklopljen(undefined))
+    preveri('svetovalec: "0" izklopi', !S.svetovalecVklopljen({ value: '0' }) && !S.svetovalecVklopljen({ value: 0 }) && !S.svetovalecVklopljen({ value: false }))
+    preveri('svetovalec: "1" vklopi', S.svetovalecVklopljen({ value: '1' }) && S.svetovalecVklopljen({ value: 1 }))
+  }
+
   const K = await import('../src/lib/karticaIgralca')
   preveri('kartica: dva gola in asistenca', K.dosezkiNastopa({ minute: 90, goli: 2, asistence: 1, cistaMreza: false, obranjene: 0 }, 'FWD').join(', ') === '2 gola, asistenca, 90 min')
   preveri('kartica: en gol je "gol"', K.dosezkiNastopa({ minute: 70, goli: 1, asistence: 0, cistaMreza: false, obranjene: 0 }, 'MID')[0] === 'gol')

@@ -145,6 +145,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: '{novi} je u timu umesto {ime}. Kad budeš zadovoljan, sačuvaj tim.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Savetnik tima',
+    zaKrog: 'Predlozi za {krog}. kolo. Ništa se ne menja dok sam ne sačuvaš.',
+    zaklenjeno: 'Potvrdi svoj igrački profil i otključaj Savetnika tima.',
+    zaklenjenoPoveza: 'Potvrdi profil',
+    sibkosti: 'Slaba mesta',
+    brezSibkosti: 'U sastavu nema očiglednih slabih mesta.',
+    razlog: {
+      neaktiven: 'više nije u ligi',
+      poskodba: 'povređen',
+      odsotnost: 'odsutan',
+      brezTekme: 'klub nema utakmicu',
+      malMinut: 'malo minuta',
+      slabaForma: 'loša forma',
+    },
+    prestopi: 'Predloženi transferi',
+    brezPrestopov: 'Nijedan transfer u okviru budžeta i pravila ne bi jasno pomogao.',
+    prestopRazlog: {
+      nerazpolozljiv: 'Problem kod {stari}: {razlog}. {novi} je u poslednja 3 kola sakupio {formaNovi} poena.',
+      forma: '{novi} je u poslednja 3 kola sakupio {formaNovi} poena, {stari} {formaStari}.',
+      minute: '{novi} igra više: {minuteNovi} % mogućih minuta, {stari} {minuteStari} %.',
+      tekme: '{novi} ima lakše sledeće protivnike: {nasprotniki}.',
+      cena: '{novi} obećava više poena i jeftiniji je za {prihranek}.',
+    },
+    postava: 'Najbolja početna postava ({formacija})',
+    kapetan: 'Kapiten: {ime}',
+    namestnik: 'zamenik: {ime}',
+    enakoKotSedaj: 'Tvoja postava i traka već su takve.',
+    samoTrak: 'Postava je ista, menja se samo kapiten ili zamenik.',
+    spremembe: 'U postavu: {noter}. Iz postave: {ven}.',
+    opomba: 'Pravilo iz naših podataka (poeni, minuti, raspored, cene). Samo predlog: ne menja i ne čuva tvoj tim.',
+  },
+
   // Kretanje cena igrača u timu od poslednje posete stranici.
   odZadnjegaObiska: {
     naslov: 'Od poslednje posete',

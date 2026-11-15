@@ -143,6 +143,40 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zamenjano: 'Kadronda {ime} yerine artık {novi} var. Memnun olduğunda takımını kaydet.',
   },
 
+  // Team advisor (lib/svetovalecEkipe.ts) — for verified players only.
+  svetovalec: {
+    naslov: 'Takım danışmanı',
+    zaKrog: '{krog}. tur için öneriler. Sen kaydedene kadar hiçbir şey değişmez.',
+    zaklenjeno: 'Takım danışmanının kilidini açmak için oyuncu profilini doğrula.',
+    zaklenjenoPoveza: 'Profili doğrula',
+    sibkosti: 'Zayıf noktalar',
+    brezSibkosti: 'Kadroda belirgin zayıf nokta yok.',
+    razlog: {
+      neaktiven: 'artık ligde değil',
+      poskodba: 'sakat',
+      odsotnost: 'müsait değil',
+      brezTekme: 'kulübün maçı yok',
+      malMinut: 'az dakika',
+      slabaForma: 'kötü form',
+    },
+    prestopi: 'Önerilen transferler',
+    brezPrestopov: 'Bütçe ve kurallar içinde hiçbir transfer açıkça yardımcı olmaz.',
+    prestopRazlog: {
+      nerazpolozljiv: '{stari} ile sorun: {razlog}. {novi} son 3 turda {formaNovi} puan topladı.',
+      forma: '{novi} son 3 turda {formaNovi} puan topladı, {stari} {formaStari}.',
+      minute: '{novi} daha çok oynuyor: olası dakikaların %{minuteNovi}\'i, {stari} %{minuteStari}.',
+      tekme: '{novi} için sonraki rakipler daha kolay: {nasprotniki}.',
+      cena: '{novi} daha çok puan vaat ediyor ve {prihranek} daha ucuz.',
+    },
+    postava: 'En iyi ilk 11 ({formacija})',
+    kapetan: 'Kaptan: {ime}',
+    namestnik: 'yardımcı: {ime}',
+    enakoKotSedaj: 'Dizilişin ve pazubendin zaten böyle.',
+    samoTrak: 'Diziliş aynı, yalnızca kaptan veya yardımcı değişiyor.',
+    spremembe: 'Giren: {noter}. Çıkan: {ven}.',
+    opomba: 'Verilerimizden kural tabanlı (puan, dakika, fikstür, fiyat). Yalnızca öneri: takımını değiştirmez ve kaydetmez.',
+  },
+
   // Son ziyaretten beri kadrodaki oyuncuların fiyat değişimleri.
   odZadnjegaObiska: {
     naslov: 'Son ziyaretinden beri',
