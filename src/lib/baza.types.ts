@@ -9995,6 +9995,7 @@ export type Database = {
         }[]
       }
       izbrisi_moj_racun: { Args: never; Returns: undefined }
+      izbrisi_mojo_ekipo: { Args: { p_ekipa: number }; Returns: undefined }
       izid_znan: {
         Args: { p_imported_at: string; p_statistics_status: string }
         Returns: boolean

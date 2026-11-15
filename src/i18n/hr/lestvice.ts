@@ -377,6 +377,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     odstranjena: 'Momčad {ekipa} uklonjena je iz mini lige.',
     niUspelo: 'Nije uspjelo. Osvježi stranicu i pokušaj ponovno.',
   },
+  razpustiMiniLigo: {
+    gumb: 'Izbriši mini ligu',
+    vprasanje: 'Izbrisati mini ligu »{liga}« za sve članove? Ekipe, igrači i bodovi ostaju, nestaju samo ljestvica te mini lige i njezin kod za pozivnicu. Ovo se ne može poništiti.',
+    potrdi: 'Da, izbriši mini ligu',
+    razpuscena: 'Mini liga »{liga}« je izbrisana.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Pozovi još nekoga u {ime}',

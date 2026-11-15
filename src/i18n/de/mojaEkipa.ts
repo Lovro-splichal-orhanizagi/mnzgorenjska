@@ -401,4 +401,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       izstop: 'Er holt keine Punkte mehr, ersetze ihn. Behältst du ihn, bleibt dein Team gültig.',
     },
   },
+  odstraniEkipo: {
+    gumb: 'Dieses Team entfernen',
+    vprasanje: 'Das Team {ekipa} aus {liga} entfernen? Sein Kader und seine Mini-Liga-Mitgliedschaften werden endgültig gelöscht. Du kannst später ein neues Team aufstellen. Das geht nur, solange das Team keine Punkte hat.',
+    potrdi: 'Ja, Team entfernen',
+    imaTocke: 'Dieses Team hat schon Punkte und kann hier nicht entfernt werden. Schreib uns im Chat, wir helfen dir.',
+  },
 }

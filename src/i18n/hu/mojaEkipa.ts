@@ -400,4 +400,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       izstop: 'Több pontot nem szerez, cseréld le. Ha megtartod, a csapatod szabályos marad.',
     },
   },
+  odstraniEkipo: {
+    gumb: 'Csapat eltávolítása',
+    vprasanje: 'Eltávolítod a(z) {ekipa} csapatot a(z) {liga} bajnokságból? A kerete és a minibajnokságokbeli tagságai véglegesen törlődnek. Később összeállíthatsz új csapatot. Ez csak addig lehetséges, amíg a csapatnak nincs pontja.',
+    potrdi: 'Igen, eltávolítom a csapatot',
+    imaTocke: 'Ennek a csapatnak már vannak pontjai, ezért itt nem távolítható el. Írj nekünk a chaten, és segítünk.',
+  },
 }

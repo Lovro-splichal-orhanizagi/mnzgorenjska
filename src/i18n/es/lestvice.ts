@@ -372,6 +372,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     odstranjena: 'El equipo {ekipa} se ha quitado de la miniliga.',
     niUspelo: 'No ha funcionado. Recarga la página y vuelve a intentarlo.',
   },
+  razpustiMiniLigo: {
+    gumb: 'Eliminar la miniliga',
+    vprasanje: '¿Eliminar la miniliga «{liga}» para todos sus miembros? Los equipos, los jugadores y los puntos se quedan; solo desaparecen la tabla de esta miniliga y su código de invitación. No se puede deshacer.',
+    potrdi: 'Sí, eliminar la miniliga',
+    razpuscena: 'Miniliga «{liga}» eliminada.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Invita a alguien más a {ime}',

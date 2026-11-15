@@ -379,6 +379,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     odstranjena: 'Tým {ekipa} byl odebrán z miniligy.',
     niUspelo: 'Nepovedlo se. Obnov stránku a zkus to znovu.',
   },
+  razpustiMiniLigo: {
+    gumb: 'Smazat mini ligu',
+    vprasanje: 'Smazat mini ligu „{liga}“ pro všechny členy? Týmy, hráči a body zůstanou, zmizí jen tabulka této mini ligy a její pozvánkový kód. Nelze to vrátit zpět.',
+    potrdi: 'Ano, smazat mini ligu',
+    razpuscena: 'Mini liga „{liga}“ byla smazána.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Pozvi někoho dalšího do {ime}',

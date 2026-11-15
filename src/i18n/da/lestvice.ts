@@ -371,6 +371,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     odstranjena: 'Holdet {ekipa} er fjernet fra miniligaen.',
     niUspelo: 'Det lykkedes ikke. Genindlæs siden og prøv igen.',
   },
+  razpustiMiniLigo: {
+    gumb: 'Slet minirækken',
+    vprasanje: 'Slet minirækken “{liga}” for alle medlemmer? Hold, spillere og point bliver, kun denne minirækkes tabel og dens invitationskode forsvinder. Det kan ikke fortrydes.',
+    potrdi: 'Ja, slet minirækken',
+    razpuscena: 'Minirækken “{liga}” er slettet.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Inviter en mere til {ime}',

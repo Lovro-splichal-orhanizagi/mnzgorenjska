@@ -389,6 +389,12 @@ export const lestvice = {
     odstranjena: 'Ekipa {ekipa} je odstranjena iz mini lige.',
     niUspelo: 'Ni uspelo. Osveži stran in poskusi znova.',
   },
+  razpustiMiniLigo: {
+    gumb: 'Izbriši mini ligo',
+    vprasanje: 'Izbrišeš mini ligo »{liga}« za vse člane? Ekipe, igralci in točke ostanejo, izgineta le lestvica te mini lige in njena koda povabila. Tega ni mogoče razveljaviti.',
+    potrdi: 'Da, izbriši mini ligo',
+    razpuscena: 'Mini liga »{liga}« je izbrisana.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Povabi še koga v {ime}',

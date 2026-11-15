@@ -21,6 +21,7 @@ import {
 import DeliMiniLigo from '../components/DeliMiniLigo'
 import TedenskiPregled from '../components/TedenskiPregled'
 import IzstopMiniLige from '../components/IzstopMiniLige'
+import RazpustiMiniLigo from '../components/RazpustiMiniLigo'
 import SaljiveNagrade from '../components/SaljiveNagrade'
 import NapovediMiniLige, { KraljNapovedi, KronaKralja, useKraljMiniLige } from '../components/NapovediMiniLige'
 import DvobojiMiniLige, { IzbiraPogleda, type PogledMiniLige } from '../components/DvobojiMiniLige'
@@ -499,6 +500,10 @@ export default function MiniLige() {
 
           {trenutna && trenutna.owner_id === uporabnikId && (
             <SaljiveNagrade liga={trenutna} onSpremenjeno={naloziSvoje} />
+          )}
+
+          {trenutna && semLastnik && (
+            <RazpustiMiniLigo ligaId={trenutna.id} imeLige={trenutna.name} onKoncano={poIzstopu} />
           )}
 
           <details className="group">
