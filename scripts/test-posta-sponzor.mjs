@@ -2,7 +2,7 @@
 // Enkratni mail sponzor 1. GNL (SLF-491): kdo ga sme dobiti in kdaj, besedilo.
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { SPONZOR, kandidatiSponzor, vOknu, sporocilo, POSILJATELJI } from './posta-klubom.mjs'
+import { SPONZOR, kandidatiSponzor, nabiralnikPrejsnjega, vOknu, sporocilo, POSILJATELJI } from './posta-klubom.mjs'
 
 const NEJC = POSILJATELJI.find((p) => p.kljuc === 'nejc')
 const zdaj = new Date('2026-11-16T10:00:00+01:00') // ponedeljek
@@ -15,11 +15,27 @@ test('vseh sedem klubov brez nedavne pošte je kandidatov', () => {
   assert.deepEqual(kandidatiSponzor(vsi, vsi.map((s) => posta(s.id)), zdaj).map((s) => s.id), SPONZOR.ids)
 })
 
-test('klub z odgovorom, ne_zeli, napacen_mail ali zunaj vrste ne dobi maila', () => {
-  for (const o of [{ stanje: 'odgovoril' }, { stanje: 'ne_zeli' }, { stanje: 'napacen_mail' }, { v_vrsti: false }, { email: null }, { liga_slug: 'mladinci' }]) {
+test('klub z odgovorom, ne_zeli ali napacen_mail ne dobi maila', () => {
+  for (const o of [{ stanje: 'odgovoril' }, { stanje: 'ne_zeli' }, { stanje: 'napacen_mail' }, { email: null }, { liga_slug: 'mladinci' }]) {
     const v = vsi.map((s) => (s.id === 12 ? { ...s, ...o } : s))
     assert.ok(!kandidatiSponzor(v, [], zdaj).some((s) => s.id === 12), JSON.stringify(o))
   }
+})
+
+test('vrstica ročno vpisana brez vrste (v_vrsti false) je kandidat', () => {
+  const v = vsi.map((s) => ({ ...s, v_vrsti: false, stanje: 'opomnik' }))
+  assert.deepEqual(kandidatiSponzor(v, [], zdaj).map((s) => s.id), SPONZOR.ids)
+})
+
+test('nabiralnik prejšnjega maila: po naslovu v poslal, tudi ročno vpisanem', () => {
+  const aktivni = POSILJATELJI.filter((p) => p.kljuc !== 'klubi')
+  const r = (poslal, o = {}) => ({ id: 1, stik_id: 12, vrsta: 'prvi', poslal, poslano_at: dni(30), zadeva: 'x', ...o })
+  assert.equal(nabiralnikPrejsnjega([r('Luka (luka@slff.eu)')], 12, aktivni).po.kljuc, 'luka')
+  assert.equal(nabiralnikPrejsnjega([r('luka@slff.eu (ročno)')], 12, aktivni).po.kljuc, 'luka')
+  assert.equal(nabiralnikPrejsnjega([r('Luka (luka@slff.eu)', { stik_id: 99 })], 12, aktivni), null)
+  assert.equal(nabiralnikPrejsnjega([r('Luka (Gmail)')], 12, aktivni), null)
+  assert.equal(nabiralnikPrejsnjega([], 12, aktivni), null)
+  assert.equal(nabiralnikPrejsnjega([r('Luka (luka@slff.eu)', { id: 2, poslano_at: dni(20) }), r('Lovro (lovro@slff.eu)')], 12, aktivni).po.kljuc, 'lovro')
 })
 
 test('drug klub ali drug id ni v seznamu', () => {

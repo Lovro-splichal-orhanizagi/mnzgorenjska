@@ -1059,19 +1059,37 @@ SLFF
 }
 
 /**
- * Kluba iz SPONZOR, ki mu ga lahko pošljemo zdaj: v vrsti, stanje poslano ali
- * opomnik (ne odgovoril, ne_zeli, napacen_mail), še brez te zadeve, pošta
- * kluba po pravilu (3 dni od kogarkoli, 7 dni od drugega kot pošiljatelj).
+ * Kluba iz SPONZOR, ki mu ga lahko pošljemo zdaj: stanje poslano ali opomnik
+ * (ne odgovoril, ne_zeli, napacen_mail), še brez te zadeve, pošta kluba po
+ * pravilu (3 dni od kogarkoli, 7 dni od drugega kot pošiljatelj). `v_vrsti`
+ * se NE gleda: teh sedem vrstic je bilo vpisanih ročno, brez vrste, in mail
+ * jih vrste ne spremeni. Parkirana vrstica ("poslano…" v opombi) blokira.
  */
 export function kandidatiSponzor(vsi, posta, zdaj = new Date(), sp = SPONZOR) {
   const poStiku = new Map()
   for (const r of posta) (poStiku.get(r.stik_id) ?? poStiku.set(r.stik_id, []).get(r.stik_id)).push(r)
   const po = POSILJATELJI.find((x) => x.kljuc === sp.posiljatelj)
   return vsi.filter((s) =>
-    sp.ids.includes(s.id) && s.drzava === sp.drzava && s.liga_slug === sp.liga && s.v_vrsti && s.email &&
+    sp.ids.includes(s.id) && s.drzava === sp.drzava && s.liga_slug === sp.liga && s.email &&
     ['poslano', 'opomnik'].includes(s.stanje) &&
     !istiKlub(s, vsi).some((o) => (poStiku.get(o.id) ?? []).some((r) => r.vrsta === 'drugo' && r.zadeva === sp.zadeva)) &&
     !klubBlokiran(s, vsi, poStiku, zdaj, false, po.poslal))
+}
+
+/**
+ * Nabiralnik, v katerem bi bil odgovor ali odboj na prejšnji mail kluba: prvi
+ * `prvi`/`opomnik` zapis, ki ga je poslal dejaven nabiralnik delavca (po
+ * naslovu v `poslal`, tudi pri ročno vpisanem "--poslal"). Brez takega zapisa
+ * (poslano z Gmaila ali drugače) vrne null: velja le pravilo kluba iz baze.
+ */
+export function nabiralnikPrejsnjega(posta, stikId, aktivni) {
+  const prej = posta.filter((r) => r.stik_id === stikId && ['prvi', 'opomnik'].includes(r.vrsta))
+    .sort((a, b) => Date.parse(a.poslano_at) - Date.parse(b.poslano_at))
+  for (const r of prej) {
+    const po = aktivni.find((x) => String(r.poslal ?? '').toLowerCase().includes(x.od))
+    if (po) return { po, od: new Date(r.poslano_at) }
+  }
+  return null
 }
 
 // V dnevnik nikoli naslov kluba: stik #id (klub, liga).
@@ -1166,7 +1184,8 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
     const { error } = await db.from('klub_stik').update({ v_vrsti: false, opomba: opomba.slice(0, 500) }).eq('id', s.id)
     if (error) log(`  ! ${oznaka(s)}: opombe ni bilo mogoče zapisati (${error.message}); vrstica je že zunaj vrste`)
   }
-  async function vrniVVrsto(s) {
+  async function vrniVVrsto(s, vrstaMaila) {
+    if (vrstaMaila === 'sponzor') return // sponzor vrstice ni prevzel
     const { error } = await db.from('klub_stik').update({ v_vrsti: true }).eq('id', s.id)
     if (error) log(`  ! ${oznaka(s)}: vrnitev v vrsto ni uspela (${error.message}); mail NI šel`)
   }
@@ -1196,15 +1215,21 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
       }
       if (vrstaMaila !== 'prvi' && !suho) {
         // Odgovor in odboj pride v nabiralnik, ki je poslal prvi mail (pri opomniku je to `po`).
-        const prvi = posta.find((r) => r.stik_id === s.id && r.vrsta === 'prvi')
-        const pregled = vrstaMaila === 'opomnik' ? po : aktivni.find((x) => x.poslal === prvi?.poslal)
-        if (!prvi || !pregled) {
+        let prvi = posta.find((r) => r.stik_id === s.id && r.vrsta === 'prvi')
+        let pregled = vrstaMaila === 'opomnik' ? po : aktivni.find((x) => x.poslal === prvi?.poslal)
+        if (vrstaMaila === 'sponzor') {
+          // Ročno vpisani stiki: nabiralnik po naslovu; brez njega velja le pravilo kluba iz baze.
+          const prej = nabiralnikPrejsnjega(posta, s.id, aktivni)
+          pregled = prej?.po
+          prvi = prej && { poslano_at: prej.od }
+          if (!prej) log(`${oznaka(s)}: prejšnji mail ni iz nabiralnika delavca, odgovor preverjen le v bazi`)
+        } else if (!prvi || !pregled) {
           log(`preskok ${oznaka(s)}: nabiralnik prvega maila ni dejaven`)
           continue
         }
-        const n = await zImap(pregled, (ukaz) => preveriNabiralnik(ukaz, {
+        const n = pregled ? await zImap(pregled, (ukaz) => preveriNabiralnik(ukaz, {
           naslov: s.email, povezava: `slff.eu/club/${s.team_id}?t=${s.liga_slug}`, od: new Date(prvi.poslano_at),
-        }))
+        })) : { odgovor: false, odboj: false }
         if (n.odgovor) {
           const zapis = { stik_id: s.id, vrsta: 'odgovor', poslal: s.email, za: pregled.od, opomba: `odgovor v ${pregled.od}` }
           preveri(await db.from('klub_stik_posta').insert(zapis))
@@ -1255,7 +1280,9 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
       log(`preskok ${oznaka(s)}: zunaj okna ali klub je medtem dobil pošto`)
       continue
     }
-    const prevzem = await db.from('klub_stik').update({ v_vrsti: false }).eq('id', s.id).eq('v_vrsti', true).in('stanje', vrstaMaila === 'sponzor' ? ['poslano', 'opomnik'] : ['nov', 'poslano']).select('id')
+    // Sponzor: vrstice ne prevzamemo (v_vrsti je lahko false od vsega začetka); en zagon, svež pregled tik prej,
+    // neznan izid parkira vrstico z opombo "poslano…", ki blokira klub.
+    const prevzem = vrstaMaila === 'sponzor' ? { data: [s] } : await db.from('klub_stik').update({ v_vrsti: false }).eq('id', s.id).eq('v_vrsti', true).in('stanje', ['nov', 'poslano']).select('id')
     if (prevzem.error || !prevzem.data?.length) {
       log(`preskok ${oznaka(s)}: ${prevzem.error ? `prevzem ni uspel (${prevzem.error.message})` : 'vrstico je vzel drug zagon'}`)
       continue
@@ -1265,7 +1292,7 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
       await posljiSmtp(await povezi(GOSTITELJ, 465), { od: po.od, na: s.email, geslo: po.geslo, sporocilo: m })
     } catch (e) {
       if (e instanceof NapakaPrijave) {
-        await vrniVVrsto(s)
+        await vrniVVrsto(s, vrstaMaila)
         zavrni(po, e)
         continue
       }
@@ -1289,7 +1316,7 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
         continue
       }
       // Pred DATA (povezava, 4xx): nič ni šlo — vrstica nazaj v vrsto, krog konča.
-      await vrniVVrsto(s)
+      await vrniVVrsto(s, vrstaMaila)
       log(`SMTP ni dosegljiv (${e.message}) — konec kroga`)
       return true
     }
@@ -1311,7 +1338,7 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
     }
     posta.push({ ...zapis, poslano_at: new Date().toISOString() })
     // Nazaj v vrsto šele po vpisu (za opomnik čez tri dni); posiljatelj = nabiralnik, ki je poslal.
-    const { error: eVrsta } = await db.from('klub_stik').update(vrstaMaila === 'sponzor' ? { v_vrsti: true } : { v_vrsti: true, posiljatelj: po.od }).eq('id', s.id)
+    const { error: eVrsta } = vrstaMaila === 'sponzor' ? {} : await db.from('klub_stik').update({ v_vrsti: true, posiljatelj: po.od }).eq('id', s.id)
     log(`${vrstaMaila} (${po.kljuc}) → ${oznaka(s)}${eVrsta ? ` (vrnitev v vrsto ni uspela: ${eVrsta.message})` : ''}`)
     try {
       await zImap(po, (ukaz) => ukaz(`APPEND "Sent" (\\Seen) {${Buffer.byteLength(m)}}`, m))
