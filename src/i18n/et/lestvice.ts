@@ -122,6 +122,23 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napovediOcenjenih: 'Hinnatud ennustusi: {n}',
     vrhNapovedi: 'Parimad ennustajad',
     vrhNapovediVse: 'Kogu ennustuste tabel',
+    naslovStraniMladi: 'Riiklik edetabel · noored mängijad (U18 ja nooremad)',
+    skupinaOznaka: 'Liiga vanuserühm',
+    skupinaGlavna: 'Täiskasvanud ja U19',
+    skupinaMladi: 'U18 ja nooremad',
+    glavnaOpis:
+      'See edetabel hõlmab ainult täiskasvanute ja U19 liigasid. U18 ja nooremate liigadel (U17, U15 …) on oma edetabel, nii et noori mängijaid ei võrrelda täiskasvanutega.',
+    glavnaPovezava: 'Parimad noored mängijad →',
+    mladiOpis:
+      'Ainult U18 ja nooremate liigad (U17, U15 …): tõusvad tähed võistlevad omavahel. Rühm kuulub liigale, mitte ühegi mängija east.',
+    mladiPovezava: '← Täiskasvanud ja U19',
+    vrhNaslovMladi: 'Kes on parim noor mängija?',
+    vrhUvodGlavna: 'Top {n} täiskasvanute ja U19 liigades · hooaeg {sezona}',
+    vrhUvodMladi: 'Top {n} U18 ja nooremate liigades · hooaeg {sezona}',
+    vrhPrazenMladi: 'U18 ja nooremate liigades pole sel hooajal veel ühtegi mängu mängitud.',
+    vrhSezona: 'hooaeg {sezona}',
+    mladiOpomba:
+      'Rühm kuulub liigale (U18 ja nooremad), mitte mängija east. Sama mängija võib esineda ka vanemas liigas, kus tal on eraldi edetabel.',
   },
 
   miniLige: {
@@ -354,6 +371,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     izstopila: 'Meeskond {ekipa} lahkus miniliigast.',
     odstranjena: 'Meeskond {ekipa} eemaldati miniliigast.',
     niUspelo: 'Ei õnnestunud. Värskenda lehte ja proovi uuesti.',
+  },
+  razpustiMiniLigo: {
+    gumb: 'Kustuta miniliiga',
+    vprasanje: 'Kas kustutada miniliiga „{liga}” kõigi liikmete jaoks? Tiimid, mängijad ja punktid jäävad alles, kaovad vaid selle miniliiga tabel ja kutsekood. Seda ei saa tagasi võtta.',
+    potrdi: 'Jah, kustuta miniliiga',
+    razpuscena: 'Miniliiga „{liga}” on kustutatud.',
   },
 
   povabiSoigralce: {

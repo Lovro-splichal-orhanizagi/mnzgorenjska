@@ -113,3 +113,26 @@ test('FSCG clear login HTML is a typed stop but a fixture page with a login head
     assert.equal(await actual.text(), fixture)
   })
 })
+
+test('fscg waits longer between retries than the default, others keep the default', async () => {
+  const { ZAMIKI_MS } = await import('./prenos.mjs')
+  assert.deepEqual(fscg.zamikiMs, [30000, 90000, 240000])
+  assert.ok(fscg.zamikiMs.every((ms, i) => ms > ZAMIKI_MS[i]))
+  assert.equal(mfa.zamikiMs, undefined)
+})
+
+test('a source with long zamiki still gets all its retries on HTTP 503', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  let attempts = 0
+  const fetchFn = async () => { attempts++; return new Response('down', { status: 503 }) }
+  pozabiPadle()
+  const done = prenesiSPonovitvami('https://example.test/x', { zamiki: fscg.zamikiMs, fetchFn, log: () => {} })
+  for (let i = 0; i < fscg.zamikiMs.length; i++) {
+    for (let k = 0; k < 20; k++) await Promise.resolve()
+    t.mock.timers.tick(fscg.zamikiMs[i])
+  }
+  const res = await done
+  pozabiPadle()
+  assert.equal(res.status, 503)
+  assert.equal(attempts, 4)
+})

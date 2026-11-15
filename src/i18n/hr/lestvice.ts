@@ -123,6 +123,23 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napovediOcenjenih: 'Ocijenjenih prognoza: {n}',
     vrhNapovedi: 'Najbolji prognozeri',
     vrhNapovediVse: 'Cijela ljestvica prognoza',
+    naslovStraniMladi: 'Državna ljestvica — mladi igrači (U18 i mlađi)',
+    skupinaOznaka: 'Dobna skupina lige',
+    skupinaGlavna: 'Seniori i U19',
+    skupinaMladi: 'U18 i mlađi',
+    glavnaOpis:
+      'Ova ljestvica obuhvaća samo seniorske lige i lige U19. Lige U18 i mlađih (U17, U15 …) imaju vlastitu ljestvicu, pa se mladi igrači ne mjere s odraslima.',
+    glavnaPovezava: 'Najbolji mladi igrači →',
+    mladiOpis:
+      'Samo lige U18 i mlađih (U17, U15 …): mlade nade natječu se međusobno. Skupina pripada ligi, a ne dobi pojedinog igrača.',
+    mladiPovezava: '← Seniori i U19',
+    vrhNaslovMladi: 'Tko je najbolji mladi igrač?',
+    vrhUvodGlavna: 'Najboljih {n} u seniorskim ligama i ligama U19 · sezona {sezona}',
+    vrhUvodMladi: 'Najboljih {n} u ligama U18 i mlađih · sezona {sezona}',
+    vrhPrazenMladi: 'U tekućoj sezoni u ligama U18 i mlađih još nema odigranih utakmica.',
+    vrhSezona: 'sezona {sezona}',
+    mladiOpomba:
+      'Skupina pripada ligi (U18 i mlađi), a ne dobi igrača. Isti se igrač može pojaviti i u starijoj ligi, gdje ima zasebnu ljestvicu.',
   },
 
   miniLige: {
@@ -359,6 +376,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     izstopila: 'Momčad {ekipa} izašla je iz mini lige.',
     odstranjena: 'Momčad {ekipa} uklonjena je iz mini lige.',
     niUspelo: 'Nije uspjelo. Osvježi stranicu i pokušaj ponovno.',
+  },
+  razpustiMiniLigo: {
+    gumb: 'Izbriši mini ligu',
+    vprasanje: 'Izbrisati mini ligu »{liga}« za sve članove? Ekipe, igrači i bodovi ostaju, nestaju samo ljestvica te mini lige i njezin kod za pozivnicu. Ovo se ne može poništiti.',
+    potrdi: 'Da, izbriši mini ligu',
+    razpuscena: 'Mini liga »{liga}« je izbrisana.',
   },
 
   povabiSoigralce: {

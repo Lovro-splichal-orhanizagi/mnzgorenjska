@@ -24,9 +24,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'Վերադառնալ գլխավոր էջ',
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  akcijaVabil: {
+    pasica: 'Հրավիրիր ընկերներին, շահիր արկղ գարեջուր (մինչև 30.11)',
+    povabi: 'Հրավիրել',
+    skrij: 'Թաքցնել',
+    meni: 'Հրավիրիր 🍺',
+    meniDolgo: '🍺 Հրավիրիր ընկերներին, շահիր արկղ գարեջուր',
+  },
   poziv: {
     kasneje: 'Գուցե ավելի ուշ',
     aplikacija: { naslov: 'SLFF-ը քո գրպանում 📱', besedilo: 'Հիշեցում վերջնաժամկետից առաջ, քո թիմի միավորները խաղերից հետո և ավելի արագ ճանապարհ դեպի կազմ՝ հավելվածում։', googlePlay: 'Ներբեռնել Google Play-ից', appStore: 'Ներբեռնել App Store-ից' },
+    vabilo: { naslov: 'Հրավիրիր ընկերներին 🍺', besedilo: 'Թիմ ունեցող երեք ընկեր քեզ բերում են խաղացողի գնի անվճար վերանայում։ Ով մինչև 30.11 հրավիրի ամենաշատը, կստանա մեկ արկղ գարեջուր։', deli: 'Կիսվել հրավերով', vec: 'Իմ կոդը և աղյուսակը' },
     sledi: { naslov: 'Միացիր մեզ 🙌', besedilo: 'Տուրի թիմերը, շաբաթվա խաղացողները և նորություններ քո լիգայից՝ նախ մեր էջերում։', instagram: 'Հետևիր Instagram-ում', facebook: 'Հավանիր Facebook-ում' },
   },
   pivo: {
@@ -85,6 +93,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     odsotnosti: 'Բացակայություններ',
     // Չեզոք անվանում, ինչպես անգլերենում.
     slovenija: 'Համազգային',
+    mladi: 'Երիտասարդ խաղացողներ',
     admin: 'Ադմին',
     vec: 'Ավելին',
     racun: 'Հաշիվ',

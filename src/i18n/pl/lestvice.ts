@@ -130,6 +130,23 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napovediOcenjenih: 'Rozliczone typy: {n}',
     vrhNapovedi: 'Najlepsi typerzy',
     vrhNapovediVse: 'Cała tabela typów',
+    naslovStraniMladi: 'Tabela krajowa — młodzi zawodnicy (U18 i młodsi)',
+    skupinaOznaka: 'Grupa wiekowa ligi',
+    skupinaGlavna: 'Seniorzy i U19',
+    skupinaMladi: 'U18 i młodsi',
+    glavnaOpis:
+      'Ta tabela obejmuje wyłącznie ligi seniorów i U19. Ligi U18 i młodszych (U17, U15 …) mają własną tabelę, dzięki czemu młodzi zawodnicy nie są porównywani z dorosłymi.',
+    glavnaPovezava: 'Najlepsi młodzi zawodnicy →',
+    mladiOpis:
+      'Tylko ligi U18 i młodszych (U17, U15 …): przyszłe gwiazdy rywalizują między sobą. Grupa należy do ligi, a nie do wieku któregokolwiek zawodnika.',
+    mladiPovezava: '← Seniorzy i U19',
+    vrhNaslovMladi: 'Kto jest najlepszym młodym zawodnikiem?',
+    vrhUvodGlavna: 'Top {n} w ligach seniorów i U19 · sezon {sezona}',
+    vrhUvodMladi: 'Top {n} w ligach U18 i młodszych · sezon {sezona}',
+    vrhPrazenMladi: 'W tym sezonie w ligach U18 i młodszych nie rozegrano jeszcze meczów.',
+    vrhSezona: 'sezon {sezona}',
+    mladiOpomba:
+      'Grupa należy do ligi (U18 i młodsi), a nie do wieku zawodnika. Ten sam zawodnik może pojawić się też w starszej lidze, gdzie jest klasyfikowany osobno.',
   },
 
   miniLige: {
@@ -366,6 +383,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     izstopila: 'Drużyna {ekipa} opuściła miniligę.',
     odstranjena: 'Drużyna {ekipa} została usunięta z miniligi.',
     niUspelo: 'Nie udało się. Odśwież stronę i spróbuj ponownie.',
+  },
+  razpustiMiniLigo: {
+    gumb: 'Usuń miniligę',
+    vprasanje: 'Usunąć miniligę „{liga}” dla wszystkich członków? Drużyny, zawodnicy i punkty zostają, znika tylko tabela tej miniligi i jej kod zaproszenia. Nie można tego cofnąć.',
+    potrdi: 'Tak, usuń miniligę',
+    razpuscena: 'Miniliga „{liga}” została usunięta.',
   },
 
   povabiSoigralce: {

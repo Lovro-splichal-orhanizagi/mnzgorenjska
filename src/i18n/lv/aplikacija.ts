@@ -23,9 +23,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     opis: 'Saite, iespējams, ir novecojusi, vai adresē ir drukas kļūda.',
     nazaj: 'Atpakaļ uz sākumlapu',
   },
+  akcijaVabil: {
+    pasica: 'Uzaicini draugus un laimē kasti alus (līdz 30.11.)',
+    povabi: 'Uzaicināt',
+    skrij: 'Paslēpt',
+    meni: 'Uzaicini 🍺',
+    meniDolgo: '🍺 Uzaicini draugus, laimē kasti alus',
+  },
   poziv: {
     kasneje: 'Varbūt vēlāk',
     aplikacija: { naslov: 'SLFF kabatā 📱', besedilo: 'Atgādinājums pirms termiņa, tavas komandas punkti pēc spēlēm un ātrāks ceļš uz sastāvu, lietotnē.', googlePlay: 'Lejupielādēt no Google Play', appStore: 'Lejupielādēt no App Store' },
+    vabilo: { naslov: 'Uzaicini draugus 🍺', besedilo: 'Trīs draugi ar komandu tev dod bezmaksas spēlētāja cenas pārskatīšanu. Kurš līdz 30.11. uzaicinās visvairāk, laimēs kasti alus.', deli: 'Kopīgot ielūgumu', vec: 'Mans kods un tabula' },
     sledi: { naslov: 'Esi ar mums 🙌', besedilo: 'Kārtas komandas, nedēļas spēlētāji un jaunumi no tavas līgas, vispirms mūsu profilos.', instagram: 'Seko Instagram', facebook: 'Atzīmē “patīk” Facebook' },
   },
   pivo: {
@@ -83,6 +91,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     pozicije: 'Pozīcijas',
     odsotnosti: 'Prombūtnes',
     slovenija: 'Latvija',
+    mladi: 'Jaunie spēlētāji',
     admin: 'Admin',
     vec: 'Vairāk',
     racun: 'Konts',

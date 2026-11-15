@@ -24,9 +24,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'На головну сторінку',
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  akcijaVabil: {
+    pasica: 'Запроси друзів і виграй ящик пива (до 30.11)',
+    povabi: 'Запросити',
+    skrij: 'Сховати',
+    meni: 'Запроси 🍺',
+    meniDolgo: '🍺 Запроси друзів, виграй ящик пива',
+  },
   poziv: {
     kasneje: 'Можливо, пізніше',
     aplikacija: { naslov: 'SLFF у кишені 📱', besedilo: 'Нагадування перед дедлайном, очки твоєї команди після матчів і швидший шлях до складу, у застосунку.', googlePlay: 'Завантажити з Google Play', appStore: 'Завантажити з App Store' },
+    vabilo: { naslov: 'Запроси друзів 🍺', besedilo: 'Троє друзів з командою дають тобі безкоштовний перегляд ціни гравця. Хто до 30.11 запросить найбільше, отримає ящик пива.', deli: 'Поділитися запрошенням', vec: 'Мій код і таблиця' },
     sledi: { naslov: 'Будь з нами 🙌', besedilo: 'Команди туру, гравці тижня та новини твоєї ліги, спершу на наших сторінках.', instagram: 'Стеж в Instagram', facebook: 'Вподобай у Facebook' },
   },
   pivo: {
@@ -84,6 +92,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     pozicije: 'Позиції',
     odsotnosti: 'Відсутні',
     slovenija: 'Україна',
+    mladi: 'Юні гравці',
     admin: 'Адмін',
     vec: 'Більше',
     racun: 'Акаунт',

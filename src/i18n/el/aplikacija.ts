@@ -24,9 +24,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'Πίσω στην αρχική σελίδα',
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  akcijaVabil: {
+    pasica: 'Κάλεσε φίλους, κέρδισε ένα κιβώτιο μπύρες (έως 30/11)',
+    povabi: 'Πρόσκληση',
+    skrij: 'Απόκρυψη',
+    meni: 'Κάλεσε 🍺',
+    meniDolgo: '🍺 Κάλεσε φίλους, κέρδισε κιβώτιο μπύρες',
+  },
   poziv: {
     kasneje: 'Ίσως αργότερα',
     aplikacija: { naslov: 'Το SLFF στην τσέπη σου 📱', besedilo: 'Υπενθύμιση πριν από την προθεσμία, οι πόντοι της ομάδας σου μετά τους αγώνες και πιο γρήγορα στην ενδεκάδα, στην εφαρμογή.', googlePlay: 'Λήψη από το Google Play', appStore: 'Λήψη από το App Store' },
+    vabilo: { naslov: 'Κάλεσε φίλους 🍺', besedilo: 'Τρεις φίλοι με ομάδα σού φέρνουν δωρεάν αναθεώρηση τιμής παίκτη. Όποιος καλέσει τους περισσότερους έως τις 30/11 κερδίζει ένα κιβώτιο μπύρες.', deli: 'Κοινοποίηση πρόσκλησης', vec: 'Ο κωδικός μου και η κατάταξη' },
     sledi: { naslov: 'Έλα μαζί μας 🙌', besedilo: 'Ομάδες της αγωνιστικής, παίκτες της εβδομάδας και νέα από τη λίγκα σου, πρώτα στα προφίλ μας.', instagram: 'Ακολούθησε στο Instagram', facebook: 'Κάνε like στο Facebook' },
   },
   pivo: {
@@ -84,6 +92,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     pozicije: 'Θέσεις',
     odsotnosti: 'Απουσίες',
     slovenija: 'Ελλάδα',
+    mladi: 'Νέοι παίκτες',
     admin: 'Διαχείριση',
     vec: 'Περισσότερα',
     racun: 'Λογαριασμός',

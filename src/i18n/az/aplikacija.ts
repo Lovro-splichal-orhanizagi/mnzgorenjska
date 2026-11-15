@@ -24,9 +24,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'Ana səhifəyə qayıt',
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  akcijaVabil: {
+    pasica: 'Dostlarını dəvət et, bir qutu pivə qazan (30.11-dək)',
+    povabi: 'Dəvət et',
+    skrij: 'Gizlət',
+    meni: 'Dəvət et 🍺',
+    meniDolgo: '🍺 Dostlarını dəvət et, bir qutu pivə qazan',
+  },
   poziv: {
     kasneje: 'Bəlkə sonra',
     aplikacija: { naslov: 'SLFF cibində 📱', besedilo: 'Son tarixdən əvvəl xatırlatma, oyunlardan sonra komandanın xalları və heyətə daha sürətli yol, tətbiqdə.', googlePlay: 'Google Play-dən yüklə', appStore: 'App Store-dan yüklə' },
+    vabilo: { naslov: 'Dostlarını dəvət et 🍺', besedilo: 'Komandası olan üç dost sənə pulsuz oyunçu qiymət baxışı qazandırır. 30.11-dək ən çox dəvət edən bir qutu pivə qazanır.', deli: 'Dəvəti paylaş', vec: 'Kodum və reytinq' },
     sledi: { naslov: 'Bizə qoşul 🙌', besedilo: 'Turun komandaları, həftənin oyunçuları və liqandan xəbərlər, əvvəlcə profillərimizdə.', instagram: 'Instagram-da izlə', facebook: 'Facebook-da bəyən' },
   },
   pivo: {
@@ -84,6 +92,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     pozicije: 'Mövqelər',
     odsotnosti: 'Oynamayanlar',
     slovenija: 'Ölkə üzrə',
+    mladi: 'Gənc oyunçular',
     admin: 'Admin',
     vec: 'Daha çox',
     racun: 'Hesab',

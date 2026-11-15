@@ -117,6 +117,23 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napovediOcenjenih: 'Puanlanan tahminler: {n}',
     vrhNapovedi: 'En iyi tahminciler',
     vrhNapovediVse: 'Tüm tahmin tablosu',
+    naslovStraniMladi: 'Ülke geneli sıralama · genç oyuncular (U18 ve altı)',
+    skupinaOznaka: 'Lig yaş grubu',
+    skupinaGlavna: 'A takım ve U19',
+    skupinaMladi: 'U18 ve altı',
+    glavnaOpis:
+      'Bu sıralama yalnızca A takım ve U19 liglerini kapsar. U18 ve altı ligler (U17, U15 …) ayrı bir sıralamaya sahiptir; böylece genç oyuncular yetişkinlerle kıyaslanmaz.',
+    glavnaPovezava: 'En iyi genç oyuncular →',
+    mladiOpis:
+      'Yalnızca U18 ve altı ligler (U17, U15 …): yükselen yıldızlar birbirleriyle yarışır. Grup, oyuncunun yaşına değil, lige aittir.',
+    mladiPovezava: '← A takım ve U19',
+    vrhNaslovMladi: 'En iyi genç oyuncu kim?',
+    vrhUvodGlavna: 'A takım ve U19 liglerinde ilk {n} · {sezona} sezonu',
+    vrhUvodMladi: 'U18 ve altı liglerde ilk {n} · {sezona} sezonu',
+    vrhPrazenMladi: 'U18 ve altı liglerde bu sezon henüz maç oynanmadı.',
+    vrhSezona: '{sezona} sezonu',
+    mladiOpomba:
+      'Grup, oyuncunun yaşına değil, lige aittir (U18 ve altı). Aynı oyuncu daha büyük bir ligde de yer alabilir; orada ayrı bir sıralaması vardır.',
   },
 
   miniLige: {
@@ -345,6 +362,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     izstopila: '{ekipa} takımı mini ligden ayrıldı.',
     odstranjena: '{ekipa} takımı mini ligden çıkarıldı.',
     niUspelo: 'Olmadı. Sayfayı yenileyip tekrar dene.',
+  },
+  razpustiMiniLigo: {
+    gumb: 'Mini ligi sil',
+    vprasanje: '“{liga}” mini ligi tüm üyeler için silinsin mi? Takımlar, oyuncular ve puanlar kalır; yalnızca bu mini ligin tablosu ve davet kodu kaybolur. Bu geri alınamaz.',
+    potrdi: 'Evet, mini ligi sil',
+    razpuscena: '“{liga}” mini ligi silindi.',
   },
 
   povabiSoigralce: {

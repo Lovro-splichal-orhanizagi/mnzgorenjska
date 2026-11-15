@@ -5876,6 +5876,21 @@ export type Database = {
           },
         ]
       }
+      starostne_skupine_izjeme: {
+        Row: {
+          skupina: string
+          slug: string
+        }
+        Insert: {
+          skupina: string
+          slug: string
+        }
+        Update: {
+          skupina?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       statistika_igralcev: {
         Row: {
           assists: number
@@ -6359,6 +6374,7 @@ export type Database = {
           izracunano_at: string
           najmanj: number
           po_krogu: boolean
+          skupina: string
           vrstice: Json
         }
         Insert: {
@@ -6366,6 +6382,7 @@ export type Database = {
           izracunano_at?: string
           najmanj: number
           po_krogu: boolean
+          skupina: string
           vrstice: Json
         }
         Update: {
@@ -6373,6 +6390,7 @@ export type Database = {
           izracunano_at?: string
           najmanj?: number
           po_krogu?: boolean
+          skupina?: string
           vrstice?: Json
         }
         Relationships: []
@@ -6950,6 +6968,7 @@ export type Database = {
           sort_order: number | null
           source: string | null
           source_league_code: string | null
+          starostna_skupina: string | null
           vir_ime: string | null
           vir_url: string | null
         }
@@ -9432,6 +9451,16 @@ export type Database = {
           z_veljavno_ekipo: number
         }[]
       }
+      akcija_vabil_okno: { Args: never; Returns: Record<string, unknown> }
+      akcija_vabil_stevci: {
+        Args: never
+        Returns: {
+          n: number
+          user_id: string
+          zadnji: string
+        }[]
+      }
+      akcija_vabil_val: { Args: never; Returns: number }
       anketa_placila_poslanih: { Args: never; Returns: number }
       anketa_placila_zasedi: {
         Args: {
@@ -9545,6 +9574,7 @@ export type Database = {
         Args: { p_main_sha: string; p_policy_sha: string; p_slug: string }
         Returns: Json
       }
+      bon_ponovne_cene: { Args: { p_uid: string }; Returns: boolean }
       check_fcf_current_target: {
         Args: { p_activate?: boolean; p_rollout_text: string; p_sha256: string }
         Returns: Json
@@ -9965,6 +9995,7 @@ export type Database = {
         }[]
       }
       izbrisi_moj_racun: { Args: never; Returns: undefined }
+      izbrisi_mojo_ekipo: { Args: { p_ekipa: number }; Returns: undefined }
       izid_znan: {
         Args: { p_imported_at: string; p_statistics_status: string }
         Returns: boolean
@@ -10029,6 +10060,23 @@ export type Database = {
         Returns: boolean
       }
       je_preverjen: { Args: { p_player_id: number }; Returns: boolean }
+      kandidati_za_akcijo_vabil: {
+        Args: { p_najvec?: number }
+        Returns: {
+          bon: boolean
+          competition_id: number
+          display_name: string
+          email: string
+          liga_drzava: string
+          liga_oznaka: string
+          liga_slug: string
+          pripeljanih: number
+          user_id: string
+          v_akciji: number
+          val: number
+          vodilni: number
+        }[]
+      }
       kandidati_za_dobrodoslico: {
         Args: { p_najvec?: number }
         Returns: {
@@ -10246,6 +10294,8 @@ export type Database = {
         }
         Returns: number
       }
+      koda_vabila_rezervirana: { Args: { p_koda: string }; Returns: boolean }
+      koda_vabila_za: { Args: { p_uid: string }; Returns: string }
       koncani_krogi_mini_lige: {
         Args: { p_liga: number }
         Returns: {
@@ -10295,6 +10345,7 @@ export type Database = {
           krog: number
         }[]
       }
+      lastnik_kode_vabila: { Args: { p_koda: string }; Returns: string }
       lestvica_javne_mini_lige: {
         Args: { p_liga: number }
         Returns: {
@@ -10368,6 +10419,14 @@ export type Database = {
           tocke: number
           tocnih: number
           user_id: string
+        }[]
+      }
+      lestvica_vabil: {
+        Args: never
+        Returns: {
+          ime: string
+          mesto: number
+          n: number
         }[]
       }
       liga: { Args: { liga: string }; Returns: Json }
@@ -10463,6 +10522,15 @@ export type Database = {
           round_id: number
         }[]
       }
+      moje_vabilo: { Args: never; Returns: Json }
+      moji_povabljeni: {
+        Args: never
+        Returns: {
+          ime: string
+          kdaj: string
+          stanje: string
+        }[]
+      }
       najcenejsi_kader: { Args: { p_igralci: Json }; Returns: number }
       najdi_igralca: { Args: { ime: string; liga?: string }; Returns: Json }
       namigi_ekipe: {
@@ -10507,6 +10575,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      nastavi_kodo_vabila: { Args: { p_koda: string }; Returns: string }
       nastavi_saljive_nagrade: {
         Args: { p_liga: number; p_vklop: boolean }
         Returns: boolean
@@ -10696,6 +10765,7 @@ export type Database = {
         Args: { p_competition_id: number }
         Returns: boolean
       }
+      ponovna_cena_z_bonom: { Args: { p_player_id: number }; Returns: number }
       ponovne_cene_za_izracun: {
         Args: never
         Returns: {
@@ -10856,6 +10926,7 @@ export type Database = {
         Args: { p_ekipa: number; p_liga: number; p_sezona: string }
         Returns: Json
       }
+      predlagaj_kodo_vabila: { Args: { p_ime: string }; Returns: string }
       prejemniki_ankete: {
         Args: { p_competition_id: number; p_ids: string[] }
         Returns: {
@@ -10927,6 +10998,15 @@ export type Database = {
       }
       preveri_podatke: {
         Args: never
+        Returns: {
+          kljuc: string
+          koliko: number
+          opis: string
+          primer: string
+        }[]
+      }
+      preveri_podatke_del: {
+        Args: { p_del: string }
         Returns: {
           kljuc: string
           koliko: number
@@ -11629,6 +11709,14 @@ export type Database = {
         }[]
       }
       stevec_uporabnikov: { Args: never; Returns: number }
+      starostna_skupina_iz_oznake: {
+        Args: { p_ime: string; p_slug: string }
+        Returns: string
+      }
+      starostna_skupina_lige: {
+        Args: { p_ime: string; p_slug: string }
+        Returns: string
+      }
       stiki_klubov: {
         Args: {
           p_drzava?: string
@@ -11919,6 +12007,7 @@ export type Database = {
       uveljavi_pozicije: { Args: never; Returns: number }
       uveljavi_zapadle_cene: { Args: { p_okno?: string }; Returns: number }
       vaba_profila: { Args: { p_igralec: number }; Returns: Json }
+      vabilo_od: { Args: { p_koda: string }; Returns: Json }
       varen_vklop_dfb_regije: {
         Args: { p_aktiviraj?: boolean; p_manifest: string; p_sha256: string }
         Returns: Json
@@ -11942,7 +12031,7 @@ export type Database = {
       }
       voter_weight: { Args: { p_voter_id: string }; Returns: number }
       vrh_drzave: {
-        Args: { p_drzava: string; p_koliko?: number }
+        Args: { p_drzava: string; p_koliko?: number; p_skupina?: string }
         Returns: {
           competition_short: string
           competition_slug: string
@@ -11953,6 +12042,7 @@ export type Database = {
           player_id: number
           position: string
           season: string
+          starostna_skupina: string
           team_logo: string
           team_name: string
           team_short: string
@@ -11966,6 +12056,7 @@ export type Database = {
           p_koliko?: number
           p_na_krog?: boolean
           p_najmanj_krogov?: number
+          p_skupina?: string
         }
         Returns: {
           competition_short: string
@@ -11976,6 +12067,7 @@ export type Database = {
           mesto: number
           na_krog: number
           season: string
+          starostna_skupina: string
           team_id: number
           team_logo: string
           team_name: string
@@ -11989,6 +12081,7 @@ export type Database = {
           p_koliko?: number
           p_na_krog?: boolean
           p_najmanj_krogov?: number
+          p_skupina?: string
         }
         Returns: {
           competition_short: string
@@ -11999,6 +12092,7 @@ export type Database = {
           mesto: number
           na_krog: number
           season: string
+          starostna_skupina: string
           team_id: number
           team_logo: string
           team_name: string

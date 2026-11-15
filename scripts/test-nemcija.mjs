@@ -91,11 +91,12 @@ test('the real country-card build plugin produces German HTML with Germany local
   } finally { rmSync(output, { recursive: true, force: true }) }
 })
 
-test('Vercel country and league rewrites reach the same generated German HTML', () => {
-  const { rewrites } = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'))
-  assert.equal(rewrites.find(r => r.source === '/de')?.destination, '/de.html')
-  const league = rewrites.find(r => r.has?.some(h => h.type === 'query' && h.key === 't' && new RegExp(`^${h.value}$`).test('de-regionalliga-nordost')))
-  assert.equal(league?.destination, '/de.html')
+test('Caddy country and league rewrites reach the same generated German HTML', () => {
+  const caddy = readFileSync(new URL('./hetzner/Caddyfile', import.meta.url), 'utf8')
+  assert.match(caddy, /@de_vstop path \/de \/de\//)
+  assert.match(caddy, /rewrite @de_vstop \/de\.html/)
+  assert.match(caddy, /@de_liga \{[^}]*\{query\.t\}\.startsWith\("de-"\)/)
+  assert.match(caddy, /rewrite @de_liga \/de\.html/)
   const routes = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
   assert.match(routes, /path="\/de"\s+element=\{<VstopDrzave drzava="DE"/)
 })

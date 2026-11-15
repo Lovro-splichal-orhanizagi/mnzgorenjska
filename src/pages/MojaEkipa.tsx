@@ -1,4 +1,5 @@
 import CakajocKrog from '../components/CakajocKrog'
+import OdstraniEkipo from '../components/OdstraniEkipo'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -320,6 +321,19 @@ export default function MojaEkipa() {
     () => typeof window !== 'undefined' && !!window.matchMedia?.('(min-width: 1024px)').matches,
   )
   const odsotni = useOdsotni(tekmovanjeId)
+  // Višini navbarja in pasu povzetka: na računalniku se pas prilepi pod
+  // navbar, trg pa pod pas, sicer ga oba prekrijeta in dno trga uide z zaslona.
+  const [pas, setPas] = useState<HTMLElement | null>(null)
+  const [vrhovi, setVrhovi] = useState({ nav: 0, pas: 0 })
+  useEffect(() => {
+    const nav = document.querySelector('header')
+    if (!pas || typeof ResizeObserver === 'undefined') return
+    const izmeri = () => setVrhovi({ nav: nav?.offsetHeight ?? 0, pas: pas.offsetHeight })
+    const ro = new ResizeObserver(izmeri)
+    if (nav) ro.observe(nav)
+    ro.observe(pas)
+    return () => ro.disconnect()
+  }, [pas])
   // Klubi s tekmo v naslednjem krogu; null, dokler razporeda kroga ne poznamo.
   const [klubiZTekmo, setKlubiZTekmo] = useState<Set<number> | null>(null)
   // Namigi za prestope, skriti za ta krog (localStorage, le udobje).
@@ -1702,7 +1716,10 @@ export default function MojaEkipa() {
   )
 
   return (
-    <div className="space-y-4 pb-[calc(7rem+var(--dno))] sm:space-y-5 lg:pb-0">
+    <div
+      className="space-y-4 pb-[calc(7rem+var(--dno))] sm:space-y-5 lg:pb-0"
+      style={{ '--vrh-nav': `${vrhovi.nav}px`, '--vrh-pas': `${vrhovi.pas}px` } as React.CSSProperties}
+    >
       {/* Obvestila — en sklad pod navbarjem, da se ne prekrivajo. Napaka
           ostane, dokler je uporabnik ne zapre; potrditev izgine sama. */}
       {(sporocilo || napaka || razveljavi) && (
@@ -1785,7 +1802,10 @@ export default function MojaEkipa() {
 
       {/* Povzetek v enem pasu: ime, denar, prestopi in rok. Igrišče je tako na
           telefonu takoj pod njim. Ime se ureja na klik, shrani pa se z ekipo. */}
-      <section className="space-y-1 border-b border-white/10 pb-3 lg:sticky lg:top-2 lg:z-30 lg:bg-slate-950/90 lg:pt-2 lg:backdrop-blur">
+      <section
+        ref={setPas}
+        className="space-y-1 border-b border-white/10 pb-3 lg:sticky lg:top-[calc(var(--vrh)+var(--vrh-nav))] lg:z-30 lg:bg-slate-950/90 lg:pt-2 lg:backdrop-blur"
+      >
         <div className="flex items-center gap-2">
           {/* Ime je mogoče spremeniti kadarkoli (od 6. 10. 2026); lestvica kaže trenutno. */}
           <div data-pomoc="ime-ekipe" className="flex min-w-0 flex-1 items-center">
@@ -2365,15 +2385,20 @@ export default function MojaEkipa() {
                 )}
               </div>
 
-              {/* Zgodovina postav — pregled preteklih krogov. */}
+              {/* Zgodovina postav — pregled preteklih krogov. Zaprta, ker je z
+                  drugim igriščem in plakatom daljša od vsega ostalega. */}
               {posnetkiPoKrogih.length > 0 && (
-                <div className="space-y-3 py-3">
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <h3 className="font-semibold text-slate-200">{t('mojaEkipa.zgodovina.naslov')}</h3>
+                <details className="group/zgodovina py-3">
+                  <summary className="flex cursor-pointer list-none flex-wrap items-baseline gap-2 hover:text-white [&::-webkit-details-marker]:hidden">
+                    <h3 className="flex-1 font-semibold text-slate-200">{t('mojaEkipa.zgodovina.naslov')}</h3>
                     <span className="text-xs text-slate-500">
                       {t('mojaEkipa.zgodovina.posnetkov', { n: posnetkiPoKrogih.length })}
                     </span>
-                  </div>
+                    <span aria-hidden className="text-slate-500 transition group-open/zgodovina:rotate-180">
+                      ▾
+                    </span>
+                  </summary>
+                  <div className="mt-3 space-y-3">
                   <div className="flex flex-wrap gap-1.5">
                     {[...posnetkiPoKrogih]
                       .sort((a, b) => (a.krog?.number ?? 0) - (b.krog?.number ?? 0))
@@ -2457,7 +2482,8 @@ export default function MojaEkipa() {
                       </>
                     )
                   })()}
-                </div>
+                  </div>
+                </details>
               )}
             </div>
           </details>
@@ -2465,7 +2491,11 @@ export default function MojaEkipa() {
         </div>
 
         {/* trg — na velikih zaslonih stranski stolpec, ki ostane na mestu */}
-        <aside data-pomoc="trg" className="hidden lg:sticky lg:top-4 lg:block lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto lg:pr-1">
+        {/* Trg ostane ob igrišču: visok do dna zaslona, pomika se le sam vase. */}
+        <aside
+          data-pomoc="trg"
+          className="hidden [scrollbar-color:rgb(255_255_255/0.15)_transparent] [scrollbar-width:thin] lg:sticky lg:top-[calc(var(--vrh)+var(--vrh-nav)+var(--vrh-pas)+1rem)] lg:block lg:max-h-[calc(100dvh-var(--vrh)-var(--vrh-nav)-var(--vrh-pas)-2rem)] lg:self-start lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-contain lg:pr-2"
+        >
           {trg}
         </aside>
       </div>
@@ -2604,6 +2634,19 @@ export default function MojaEkipa() {
 
       <Sponzor kje="moja_ekipa" />
 
+      {/* Ekipa, ustvarjena po pomoti: baza jo izbriše le, dokler nima točk (SLF-462). */}
+      {uporabnikId && ekipa?.id != null && tekmovanje && (
+        <OdstraniEkipo
+          ekipaId={ekipa.id}
+          imeEkipe={ekipa.name ?? imeEkipe}
+          imeLige={tekmovanje.name}
+          onKoncano={() => {
+            if (tekmovanjeId != null) pozabiOsnutek(tekmovanjeId)
+            window.location.reload()
+          }}
+        />
+      )}
+
       {/* Podatki o igralcu — brez zapuscanja na pol sestavljene ekipe. */}
       {info && tekmovanjeId != null && (
         <InfoIgralca
@@ -2682,11 +2725,19 @@ function TrgIgralcev({
       return () => clearTimeout(t)
     }
   }, [mobilno, zIskanjem])
+  // Razlog, ki velja za vse proste igralce na seznamu (poln kader, polna
+  // pozicija), se izpiše enkrat nad seznamom, ne v vsaki vrstici.
+  const prosti = vidni.slice(0, 60).filter((i) => !izbrani.some((s) => s.player_id === i.id))
+  const razlogiProstih = prosti.map((i) => zakajNeGre(i, izbraniPodrobno, preostalo))
+  const skupniRazlog =
+    razlogiProstih.length > 1 && razlogiProstih.every((r) => r !== null && r === razlogiProstih[0])
+      ? razlogiProstih[0]
+      : null
   return (
     <section className="space-y-3">
       {/* Iskanje in filtri so sticky, da ne izginejo, ko listaš seznam.
           Na mobilnem je to ključno — brskaš po 60 igralcih z eno roko. */}
-      <div className="sticky top-0 z-10 -mx-3 space-y-2 border-b border-white/5 bg-slate-950/95 px-3 pb-2 pt-2 backdrop-blur sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:pt-0">
+      <div className="sticky top-0 z-10 -mx-3 space-y-2 border-b border-white/5 bg-slate-950/95 px-3 pb-2 pt-2 backdrop-blur sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:pt-0 lg:bg-slate-950/95">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-base font-bold sm:text-xl">
             {filterPoz === 'vse' ? t('mojaEkipa.trg.naslov') : POZICIJE[filterPoz].naslov}
@@ -2762,6 +2813,12 @@ function TrgIgralcev({
             </option>
           ))}
         </select>
+
+        {skupniRazlog && (
+          <p role="status" className="rounded-lg bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+            ⚠ {skupniRazlog}
+          </p>
+        )}
       </div>
 
       {vidni.length === 0 && (
@@ -2797,9 +2854,9 @@ function TrgIgralcev({
           return (
             <li
               key={i.id}
-              className={`py-2 ${
-                jeIzbran ? '-mx-2 rounded-lg bg-gnl-500/10 px-2' : ''
-              } ${razlog ? 'opacity-70' : ''}`}
+              className={`rounded-lg px-1.5 py-2 ${jeIzbran ? 'bg-gnl-500/10' : ''} ${
+                razlog ? 'opacity-70' : ''
+              }`}
             >
               <div className="flex items-center gap-2">
                 <FotoIgralca
@@ -2889,15 +2946,19 @@ function TrgIgralcev({
                     }}
                     onPointerDownCapture={(e) => e.stopPropagation()}
                     title={razlog ?? undefined}
+                    // Klik ostane: izpiše razlog v obvestilu, kot doslej.
+                    aria-disabled={razlog ? true : undefined}
                     className={`${
-                      jeIzbran ? 'gumb-tih' : 'gumb-glavni'
-                    } min-h-[40px] min-w-[4.5rem] px-3 py-2 text-sm`}
+                      jeIzbran || razlog ? 'gumb-tih' : 'gumb-glavni'
+                    } min-h-[40px] min-w-[4.5rem] whitespace-nowrap px-3 py-2 text-sm ${
+                      razlog ? 'cursor-not-allowed text-slate-400' : ''
+                    }`}
                   >
                     {jeIzbran ? t('mojaEkipa.trg.odstrani') : t('mojaEkipa.trg.dodaj')}
                   </button>
                 </div>
               </div>
-              {razlog && (
+              {razlog && razlog !== skupniRazlog && (
                 <p className="mt-1 text-[11px] leading-tight text-amber-300/90">
                   ⚠ {razlog}
                 </p>

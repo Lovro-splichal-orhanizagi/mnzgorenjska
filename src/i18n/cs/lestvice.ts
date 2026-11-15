@@ -125,6 +125,23 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napovediOcenjenih: 'Vyhodnocené tipy: {n}',
     vrhNapovedi: 'Nejlepší tipaři',
     vrhNapovediVse: 'Celá tabulka tipů',
+    naslovStraniMladi: 'Celostátní žebříček · mladí hráči (U18 a mladší)',
+    skupinaOznaka: 'Věková skupina ligy',
+    skupinaGlavna: 'Dospělí a U19',
+    skupinaMladi: 'U18 a mladší',
+    glavnaOpis:
+      'Tento žebříček zahrnuje pouze ligy dospělých a ligy U19. Ligy U18 a mladších (U17, U15 …) mají vlastní žebříček, takže mladí hráči se neměří s dospělými.',
+    glavnaPovezava: 'Nejlepší mladí hráči →',
+    mladiOpis:
+      'Pouze ligy U18 a mladších (U17, U15 …): nadějné talenty soutěží mezi sebou. Skupina patří lize, ne věku jednotlivého hráče.',
+    mladiPovezava: '← Dospělí a U19',
+    vrhNaslovMladi: 'Kdo je nejlepší mladý hráč?',
+    vrhUvodGlavna: 'Nejlepších {n} v ligách dospělých a U19 · sezóna {sezona}',
+    vrhUvodMladi: 'Nejlepších {n} v ligách U18 a mladších · sezóna {sezona}',
+    vrhPrazenMladi: 'V aktuální sezóně se v ligách U18 a mladších ještě neodehrály žádné zápasy.',
+    vrhSezona: 'sezóna {sezona}',
+    mladiOpomba:
+      'Skupina patří lize (U18 a mladší), ne věku hráče. Stejný hráč se může objevit i ve starší lize, kde má samostatný žebříček.',
   },
 
   miniLige: {
@@ -361,6 +378,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     izstopila: 'Tým {ekipa} odešel z miniligy.',
     odstranjena: 'Tým {ekipa} byl odebrán z miniligy.',
     niUspelo: 'Nepovedlo se. Obnov stránku a zkus to znovu.',
+  },
+  razpustiMiniLigo: {
+    gumb: 'Smazat mini ligu',
+    vprasanje: 'Smazat mini ligu „{liga}“ pro všechny členy? Týmy, hráči a body zůstanou, zmizí jen tabulka této mini ligy a její pozvánkový kód. Nelze to vrátit zpět.',
+    potrdi: 'Ano, smazat mini ligu',
+    razpuscena: 'Mini liga „{liga}“ byla smazána.',
   },
 
   povabiSoigralce: {

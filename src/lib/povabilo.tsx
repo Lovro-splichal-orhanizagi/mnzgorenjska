@@ -10,18 +10,58 @@ import { useLocation } from 'react-router-dom'
 import { supabase } from './supabase'
 import { useAuth } from './useAuth'
 import { izvor } from './platforma'
+import { mojaKodaVabila, nastaviMojoKodo } from './mojaKoda'
+import { deliBesedilo, type IzidDeljenja } from './miniLige'
+import { t } from '../i18n/jedro.ts'
 
 const KLJUC = 'slff-povabil'
-const VZOREC = /^[a-z0-9]{8}$/
-
-/** Ob nalaganju strani: zapomni si kodo iz naslova. */
-function ujemiPovabilo() {
+const KLJUC_MOJA = 'slff-moja-koda'
+/** Enkrat na napravo in račun: koda se ne spreminja, zato je shranjena. */
+async function naloziMojoKodo(uid: string) {
   try {
-    const koda = new URLSearchParams(window.location.search).get('od')?.trim().toLowerCase()
-    if (koda && VZOREC.test(koda)) localStorage.setItem(KLJUC, koda)
+    const [u, k] = (localStorage.getItem(KLJUC_MOJA) ?? '').split(':')
+    if (u === uid && VZOREC.test(k ?? '')) return nastaviMojoKodo(k ?? null)
+  } catch {
+    /* zasebno okno: vprašamo bazo */
+  }
+  const { data } = await supabase.rpc('moja_koda_vabila')
+  if (typeof data !== 'string') return
+  nastaviMojoKodo(data)
+  try {
+    localStorage.setItem(KLJUC_MOJA, `${uid}:${data}`)
+  } catch {
+    /* nič */
+  }
+}
+/** Koda: 3–20 malih črk ali števk (stare naključne kode imajo 8). */
+export const VZOREC_KODE = /^[a-z0-9]{3,20}$/
+const VZOREC = VZOREC_KODE
+
+/** Zapomni si kodo povabila (povezava, stran /i/<koda> ali vnos ob registraciji). */
+export function shraniKodoPovabila(koda: string): boolean {
+  const k = koda.trim().toLowerCase()
+  if (!VZOREC.test(k)) return false
+  try {
+    localStorage.setItem(KLJUC, k)
   } catch {
     /* zasebno okno: povabilo se izgubi, stran dela naprej */
   }
+  return true
+}
+
+/** Koda, ki čaka na registracijo (za "Povabil te je …" na prijavi). */
+export function shranjenaKodaPovabila(): string | null {
+  try {
+    return localStorage.getItem(KLJUC)
+  } catch {
+    return null
+  }
+}
+
+/** Ob nalaganju strani: zapomni si kodo iz naslova. */
+function ujemiPovabilo() {
+  const koda = new URLSearchParams(window.location.search).get('od')
+  if (koda) shraniKodoPovabila(koda)
 }
 
 /** Po prijavi: zabeleži shranjeno kodo in jo pozabi (tudi ob zavrnitvi). */
@@ -59,5 +99,21 @@ export function BeleziPovabilo() {
     ujemiPovabilo()
     if (uid) void zabeleziPovabilo()
   }, [search, uid])
+  useEffect(() => {
+    nastaviMojoKodo(null)
+    if (uid) void naloziMojoKodo(uid)
+  }, [uid])
   return null
+}
+
+/** Deli osebno povabilo (sistemski list ali kopiranje); koda iz predpomnilnika ali baze. */
+export async function deliMojeVabilo(): Promise<IzidDeljenja> {
+  let koda = mojaKodaVabila()
+  if (!koda) {
+    const { data } = await supabase.rpc('moja_koda_vabila')
+    koda = typeof data === 'string' ? data : null
+  }
+  if (!koda) return 'neuspelo'
+  const povezava = `${izvor()}/i/${koda}`
+  return deliBesedilo(t('racun.povabi.naslov'), t('racun.povabi.besedilo', { povezava, koda }))
 }

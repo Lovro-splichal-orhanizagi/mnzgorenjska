@@ -13,6 +13,7 @@
 //   ... --discord        pošlje na Discord (sicer samo izpiše)
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
+import { preveriPodatkeVBazi } from './preverbe-baze.mjs'
 
 function izEnv() {
   try {
@@ -156,7 +157,7 @@ for (const liga of lige ?? []) {
 
 let tezave, igralcev, ekip
 try {
-  ;({ data: tezave } = await poskusi('preverba', () => db.rpc('preveri_podatke')))
+  ;({ data: tezave } = await poskusi('preverba', () => preveriPodatkeVBazi(db)))
   ;({ count: igralcev } = await poskusi('igralci', () =>
     db.from('players').select('id', { count: 'exact', head: true }).eq('active', true)))
   ;({ count: ekip } = await poskusi('ekipe', () =>

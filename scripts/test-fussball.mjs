@@ -113,6 +113,16 @@ test('an explicit Ausfall stays a scheduled fixture without an invented result',
  for(const bad of [cell.replace('>Ausfall<','>Unknown<'),cell.replace('>Ausfall<','>Ausfall 2:3<'),cell.replace('<span class="info-text">Ausfall</span>','<!-- <span class="info-text">Ausfall</span> -->')])
   assert.throws(()=>razberiKrog(prefix+changed(table,original,bad),{fonts,staffel:'031EKNM2HG00000LVS5489BUVUR5FS5A-G'}),/score-left|izid/)
 })
+test('an explicit Absetzung (Baden, 14 Nov 2026) stays a scheduled fixture without an invented result',()=>{
+ const html=read('de-fussball-krog8.html').toString(),start=html.indexOf('fixtures-matches-table'),prefix=html.slice(0,start),table=html.slice(start)
+ const original=table.match(/<td class="column-score">[\s\S]*?<\/td>/)[0],url=original.match(/href="([^"]+)"/)[1].split('#')[0]
+ const cell=read('de-fussball-baden-absetzung.html').toString().replace(/href="[^"]+"/,`href="${url}"`)
+ const r=razberiKrog(prefix+changed(table,original,cell),{fonts,staffel:'031EKNM2HG00000LVS5489BUVUR5FS5A-G'})
+ assert.equal(r.tekme.length,8);assert.equal(r.tekme[0].rezultat,null)
+ assert.equal(r.tekme.filter(f=>f.rezultat!==null).length,7)
+ for(const bad of [cell.replace('>Absetzung<','>Absetzung 2:3<'),cell.replace('>Absetzung<','>AusfallAbsetzung<'),cell.replace('<span class="info-text">Absetzung</span>','<!-- <span class="info-text">Absetzung</span> -->')])
+  assert.throws(()=>razberiKrog(prefix+changed(table,original,bad),{fonts,staffel:'031EKNM2HG00000LVS5489BUVUR5FS5A-G'}),/score-left|izid/)
+})
 
 test('decoy score outside the match stage cannot replace the actual result',()=>{
  const fake='<span class="end-result"><span data-obfuscation="q73uvs1t" class="score-left">&#xE6A7;</span><span data-obfuscation="q73uvs1t" class="score-right">&#xE66F;</span></span>'

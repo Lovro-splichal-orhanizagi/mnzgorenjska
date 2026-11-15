@@ -1116,6 +1116,48 @@
   Omejeni računi ne kupujejo (`zavrni_omejenega`). Tabela je zaprta (tudi za
   agente); stran bere le `ponovna_cena_stanje`. Administracija → Igralci →
   Ponovne cene (stikalo, predlogi, potrditev, zavrnitev). V aplikaciji ga ni.
+- **Akcija vabil** (14.–30. 11. 2026, migracija 20261114120000, stran
+  `/invite` = `Povabi.tsx`, delovni tok *Akcija vabil*): osebna povezava
+  `?od=<koda>` (obstoječi `kode_vabil`/`povabila`); povabilo šteje šele s
+  prijateljevo nehišno ekipo (`kvalificiran_at`). Pri **3** takih (kadarkoli,
+  `pripeljanih`) dobi uporabnik enkraten **bon za ponovno vrednotenje cene**:
+  `ponovna_cena_z_bonom` ustvari zahtevek `boni_ponovne_cene` naravnost kot
+  `placano` (brez Stripe, ista pot izračuna in potrditve admina, tudi v
+  aplikaciji); zavrnjen ali `za_vracilo` zahtevek bon vrne
+  (`bon_ponovne_cene`). **Zaboj piva**: največ prijateljev, kvalificiranih v
+  `akcija_vabil_okno()`, brez adminov in hišnih računov, izenačenje odloči
+  prej doseženo število (`akcija_vabil_stevci`, javni vrh `lestvica_vabil`,
+  lastno stanje `moje_vabilo`). Pošta in push v treh valovih
+  (`akcija_vabil_val`: od 14., 21. in 27. 11.), vsak enkrat na človeka, vsaj 4
+  dni narazen, brez mladinskih lig (`kandidati_za_akcijo_vabil`, vrsta
+  `akcija-vabil-<val>` v `email_log`). Zmagovalca izbere in obvesti admin ročno.
+  **Koda in povezava** (migracija 20261114200000): koda je berljiva (prva
+  beseda imena + števke, `predlagaj_kodo_vabila`), lastnik jo spremeni z
+  `nastavi_kodo_vabila` (3–20 znakov, največ 5× na dan); prejšnje kode ostanejo
+  veljavne v `stare_kode_vabil` (`lastnik_kode_vabila`). Kratka povezava
+  `/i/<koda>` (`VabiloPrijatelja.tsx`, `vabilo_od` javno vrne vzdevek in
+  avatar) in `?od=<koda>` kodo shranita v localStorage; registracija jo
+  pokaže ali sprejme ročni vnos (`KodaPovabila.tsx`). `/invite` kaže seznam
+  povabljenih s stanjem (`moji_povabljeni`), mail akcije pa osebno kodo
+  (`koda_vabila_za`).
+- **Dnevna triaža admin vrst** (migracija 20261114215100, SLF-260):
+  `dnevna_triaza(p_suho)` (pg_cron `dnevna-triaza`, 7.07 UTC) razvrsti vse
+  čakajoče prevzeme, prijave lažnih profilov, odprte klubske zahtevke in
+  prošnje za poznavalca, zapiše `triaza_teki` / `triaza_postavke` (zaprti,
+  admin bere `admin_triaza`, `admin_triaza_postavke`, suhi tek
+  `admin_triaza_predogled`) in na Discord pošlje le števila. Dejanja le, če je
+  `triaza_samodejno` true (privzeto false): prevzem potrdi (`soigralci`) le z
+  zapisanima potrditvama dveh soigralcev, ki sta še potrjena in z vabilom
+  nepovezana s prosilcem ali med seboj (`triaza_dokaz_soigralcev`), in šele
+  po `triaza_zadrzanje_dni` (3) od oddaje ali prej, če je po oddaji na novo
+  kvalificiran prijatelj; povabilo samo ni dokaz, brez dokaza se ne zgodi nič.
+  Spor, prijava, mladinec brez "vsaj 16", skrito ime in omejen račun ostanejo
+  adminu. Klubski `polno`/`brez_kluba` dobi račun po pravilu
+  `uveljavi_klubski_racun` (nikoli po preklicu), zahtevek, ki ga je prehitel
+  račun istega kluba, se zapre; nov naslov in poznavalci so vedno adminovi.
+  En pravi tek na dan (ponovni klic vrne povzetek), vsako dejanje v svojem
+  podbloku, `admin_triaza_razveljavi` vrne prevzem v čakanje oz. prekliče
+  izdani račun in odpre zahtevek.
 - **Klubski računi** (migracija 20261013201100, spec
   `docs/superpowers/specs/2026-10-13-klubski-racuni-design.md`): klub dobi
   račun, ko se prijavi s **potrjenim** uradnim naslovom iz `klub_stik`
@@ -1247,3 +1289,20 @@ prikazana para ločeno; oba domača gola sta NULL. Obstoječi javni prikaz kaže
 `—`; lestvica in Elo ne določita zmagovalca iz neznanega izida. Znani uradni
 izidi zgodovinskih glav in registriranih čakajočih kartonov štejejo v
 lestvico samo za natančno nameščeno Badenovo povezavo.
+
+## Državna lestvica po starostnih skupinah (SLF-366)
+
+`competitions_view.starostna_skupina` (`clani` | `u19` | `pod_u19`, `null` = neznano)
+je oznaka TEKMOVANJA, ne igralca. Izračuna se ob branju s `starostna_skupina_lige(slug,
+name)` (izjema po šifri v `starostne_skupine_izjeme`, sicer `starostna_skupina_iz_oznake`;
+ni stolpca ali tujega ključa na `competitions`, ker ga varovalo FCF in opazovalec G1 zaklepata): številka `U..` v šifri ali imenu ima prednost; nasprotje
+(šifra `u19`, ime `U18`), U20 in več ter mladinska liga brez starosti ostanejo
+`null`. Lige z `null` niso na nobeni državni lestvici (zavrnitev, ne ugibanje);
+popravi se z vrstico v `starostne_skupine_izjeme(slug, skupina)` (`nobena` = izloči).
+
+Državna stran (`/national`) ima dva pogleda, ki se ne mešata: glavna (`clani` +
+`u19`) in mladi (`pod_u19`, `?starost=mladi`). `vrh_drzave(p_drzava, p_koliko,
+p_skupina)` in `vrh_klubov_drzave(..., p_skupina)` izločita skupino PRED
+razvrščanjem in `limit`; tekoča sezona je po ligi. Predpomnilnik klubov
+(`vrh_klubov_predpomnilnik`) ima ključ po skupini. Fantasy ekipe filtrira
+stran po skupini lige. Test: `supabase/tests/starostne-skupine-drzavne-lestvice.sql`.

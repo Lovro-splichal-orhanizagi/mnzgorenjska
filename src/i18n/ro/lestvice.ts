@@ -127,6 +127,23 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napovediOcenjenih: 'Pronosticuri evaluate: {n}',
     vrhNapovedi: 'Cei mai buni pronosticatori',
     vrhNapovediVse: 'Tot clasamentul pronosticurilor',
+    naslovStraniMladi: 'Clasament național · tineri jucători (U18 și mai mici)',
+    skupinaOznaka: 'Grupa de vârstă a ligii',
+    skupinaGlavna: 'Seniori și U19',
+    skupinaMladi: 'U18 și mai mici',
+    glavnaOpis:
+      'Acest clasament cuprinde doar ligile de seniori și U19. Ligile U18 și mai mici (U17, U15 …) au clasamentul lor, așa că tinerii jucători nu sunt comparați cu adulții.',
+    glavnaPovezava: 'Cei mai buni tineri jucători →',
+    mladiOpis:
+      'Doar ligile U18 și mai mici (U17, U15 …): speranțele concurează între ele. Grupa aparține ligii, nu vârstei vreunui jucător.',
+    mladiPovezava: '← Seniori și U19',
+    vrhNaslovMladi: 'Cine este cel mai bun tânăr jucător?',
+    vrhUvodGlavna: 'Top {n} din ligile de seniori și U19 · sezonul {sezona}',
+    vrhUvodMladi: 'Top {n} din ligile U18 și mai mici · sezonul {sezona}',
+    vrhPrazenMladi: 'În acest sezon nu s-a jucat încă niciun meci în ligile U18 și mai mici.',
+    vrhSezona: 'sezonul {sezona}',
+    mladiOpomba:
+      'Grupa aparține ligii (U18 și mai mici), nu vârstei jucătorului. Același jucător poate apărea și într-o ligă de vârstă superioară, unde are un clasament separat.',
   },
 
   miniLige: {
@@ -363,6 +380,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     izstopila: 'Echipa {ekipa} a ieșit din mini-ligă.',
     odstranjena: 'Echipa {ekipa} a fost eliminată din mini-ligă.',
     niUspelo: 'Nu a mers. Reîncarcă pagina și încearcă din nou.',
+  },
+  razpustiMiniLigo: {
+    gumb: 'Șterge mini-liga',
+    vprasanje: 'Ștergi mini-liga „{liga}” pentru toți membrii? Echipele, jucătorii și punctele rămân, dispar doar clasamentul acestei mini-ligi și codul ei de invitație. Nu se poate anula.',
+    potrdi: 'Da, șterge mini-liga',
+    razpuscena: 'Mini-liga „{liga}” a fost ștearsă.',
   },
 
   povabiSoigralce: {

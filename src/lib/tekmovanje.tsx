@@ -204,7 +204,7 @@ const STOLPCI_OSNOVNI =
  * Dopolni vrstico, prebrano po stari shemi, s praznimi polji zveze.
  *
  * Koda in migracije potujeta vsaka po svoji poti: koda gre v git in na
- * Vercel, migracijo pa mora nekdo pognati proti Supabase. Če se vrstni red
+ * strežnik, migracijo pa mora nekdo pognati proti bazi. Če se vrstni red
  * obrne — ali če migracija spodleti — PostgREST zavrne poizvedbo z neznanimi
  * stolpci in vmesnik ostane BREZ LIG: nobena stran nima česa prikazati.
  * Zato raje beremo, kar je na voljo; izbirnik lig brez zveze pokaže vse v eni

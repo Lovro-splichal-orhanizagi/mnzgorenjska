@@ -24,9 +24,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'Back to the home page',
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  akcijaVabil: {
+    pasica: 'Invite friends and win a crate of beer (until 30 Nov)',
+    povabi: 'Invite',
+    skrij: 'Hide',
+    meni: 'Invite 🍺',
+    meniDolgo: '🍺 Invite friends, win a crate of beer',
+  },
   poziv: {
     kasneje: 'Maybe later',
     aplikacija: { naslov: 'SLFF in your pocket 📱', besedilo: 'Deadline reminders, your team’s points after matches and a faster way to your line-up, in the app.', googlePlay: 'Get it on Google Play', appStore: 'Download on the App Store' },
+    vabilo: { naslov: 'Invite friends 🍺', besedilo: 'Three friends with a team get you a free player price review. Whoever invites the most by 30 Nov wins a crate of beer.', deli: 'Share your invite', vec: 'My code and leaderboard' },
     sledi: { naslov: 'Join the crowd 🙌', besedilo: 'Teams of the round, players of the week and news from your league, first on our profiles.', instagram: 'Follow on Instagram', facebook: 'Like us on Facebook' },
   },
   pivo: {
@@ -85,6 +93,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     odsotnosti: 'Absences',
     // English serves both countries, so the label stays neutral.
     slovenija: 'National',
+    mladi: 'Young players',
     admin: 'Admin',
     vec: 'More',
     racun: 'Account',

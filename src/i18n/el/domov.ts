@@ -20,6 +20,10 @@ export const domov: NonNullable<Prevod['domov']> = {
     zamudniki: '<krepko>Έχασες την αρχή;</krepko> Στην <lestvica>Κατάταξη</lestvica> διαγωνίζεσαι από την αγωνιστική που μπαίνεις.',
     sestaviEkipo: 'Φτιάξε την ομάδα σου',
     rezultati: 'Αποτελέσματα και συνθέσεις',
+    // Trajna vrstica s značkama trgovin v uvodu (components/ZnackeTrgovin.tsx).
+    aplikacija: 'Η εφαρμογή SLFF: δωρεάν για Android και iPhone',
+    znackaAppStore: 'Λήψη από το App Store',
+    znackaGooglePlay: 'Διαθέσιμο στο Google Play',
   },
   asistence: {
     cakajo: {

@@ -5,6 +5,7 @@ import { AuthProvider } from './lib/useAuth'
 import { TekmovanjeProvider } from './lib/tekmovanje'
 import Navbar from './components/Navbar'
 import PrviObisk from './components/PrviObisk'
+import PasicaVabila from './components/PasicaVabila'
 import PivoOkno from './components/PivoOkno'
 import VirPodatkov from './components/VirPodatkov'
 import RokKroga from './components/RokKroga'
@@ -59,6 +60,8 @@ const Profil = lazy(() => import('./pages/Profil'))
 const PotrditevPovezave = lazy(() => import('./pages/PotrditevPovezave'))
 const PotrditevPrevzema = lazy(() => import('./pages/PotrditevPrevzema'))
 const Piva = lazy(() => import('./pages/Piva'))
+const Povabi = lazy(() => import('./pages/Povabi'))
+const VabiloPrijatelja = lazy(() => import('./pages/VabiloPrijatelja'))
 
 // Poti so angleške, ker jih vidi vsaka država (slovaški obiskovalec ne
 // odpira "moja-ekipa"). Stari slovenski naslovi ostanejo kot preusmeritve.
@@ -136,6 +139,7 @@ export default function App() {
           <PivoOkno />
           <RokKroga />
           <Navbar />
+          <PasicaVabila />
           <OpozoriloEkipe />
           {/* min-h-screen: noga je pod robom zaslona, dokler se stran nalaga, in
               ne skače navzdol, ko pridejo podatki (premik postavitve, CLS). */}
@@ -212,6 +216,8 @@ export default function App() {
               <Route path="/auth/confirm" element={<PotrditevPovezave />} />
               <Route path="/claim" element={<PotrditevPrevzema />} />
               <Route path="/beers" element={<Piva />} />
+              <Route path="/invite" element={<Povabi />} />
+              <Route path="/i/:koda" element={<VabiloPrijatelja />} />
               {/* Stari slovenski naslovi (deljene povezave, e-pošta, iskalniki)
                   vodijo na nove — s parametri, poizvedbo in #. */}
               {STARE_POTI.map(([staro, novo]) => (

@@ -405,4 +405,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       izstop: 'Za njega više nećeš dobijati bodove, zameni ga. Tim sa njim ostaje ispravan.',
     },
   },
+  odstraniEkipo: {
+    gumb: 'Ukloni ovaj tim',
+    vprasanje: 'Ukloniti tim {ekipa} iz lige {liga}? Njegov sastav i članstva u mini ligama brišu se zauvek. Kasnije možeš da sastaviš novi tim. To je moguće samo dok tim nema bodova.',
+    potrdi: 'Da, ukloni tim',
+    imaTocke: 'Ovaj tim već ima bodove pa se ovde ne može ukloniti. Piši nam u četu i pomoći ćemo ti.',
+  },
 }

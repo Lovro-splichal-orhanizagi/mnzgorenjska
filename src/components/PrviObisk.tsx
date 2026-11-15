@@ -102,6 +102,7 @@ export default function PrviObisk() {
   const vabljen =
     pathname.startsWith('/club/') ||
     pathname.startsWith('/l/') ||
+    pathname.startsWith('/i/') ||
     // Deljena kartica igralca ali plakat ekipe: kdor pride od tam (pogosto
     // starši), naj najprej vidi, kar mu je kdo poslal.
     pathname.startsWith('/player/') ||
@@ -111,6 +112,8 @@ export default function PrviObisk() {
     // (Google Play je posodobitev zavrnil, ker je okno prekrilo pravilnik).
     pathname === '/legal' ||
     pathname === '/account' ||
+    // Stran za preverjeni profil odpirajo deljene povezave in oglasi.
+    pathname === '/verified' ||
     // Vstopna stran države sama našteje lige.
     Boolean(drzavaVstopa(pathname))
   const okno = useRef<HTMLDivElement | null>(null)

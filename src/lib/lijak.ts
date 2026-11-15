@@ -34,19 +34,36 @@ export type KorakLijaka =
   | 'poziv_sledi'
   | 'poziv_sledi_klik'
   | 'poziv_zaprt'
+  | 'pivo_prikaz'
+  | 'poziv_vabilo'
+  | 'poziv_vabilo_klik'
+  | 'pasica_vabila'
+  | 'pasica_vabila_klik'
+  | 'pasica_vabila_zaprta'
 
-export function zabeleziKorak(korak: KorakLijaka) {
+/** Kje je gumb "Časti pivo" (`<Pivo src>`); mora se ujemati s seznamom v `zabelezi_korak`. */
+export type PivoVir = 'noga' | 'domov' | 'domov-lestvica' | 'zid'
+
+export function zabeleziKorak(korak: KorakLijaka | `${'pivo' | 'pivo_prikaz'}:${PivoVir}`) {
   const kljuc = `slff-lijak-${korak}-${new Date().toISOString().slice(0, 10)}`
   try {
     if (sessionStorage.getItem(kljuc)) return
     sessionStorage.setItem(kljuc, '1')
   } catch {}
-  dogodek(korak)
+  // Korak z virom je le razčlenitev skupnega: Umami in osebni zapis dobita le skupnega.
+  const razclenitev = korak.includes(':')
+  if (!razclenitev) dogodek(korak)
   // Klic se izvede šele ob then — `void supabase.rpc(…)` ne pošlje ničesar.
   // Prijavljenemu baza zapiše korak še osebno (dejanja_uporabnikov), razen ob "Ne sledi".
-  const osebno = typeof navigator === 'undefined' || navigator.doNotTrack !== '1'
+  const osebno = !razclenitev && (typeof navigator === 'undefined' || navigator.doNotTrack !== '1')
   supabase.rpc('zabelezi_korak', { p_korak: korak, p_platforma: platforma(), p_osebno: osebno }).then(
     () => {},
     () => {},
   )
+}
+
+/** Prikaz ali klik gumba "Časti pivo": skupni korak in isti korak z virom. */
+export function zabeleziPivo(korak: 'pivo' | 'pivo_prikaz', vir: PivoVir) {
+  zabeleziKorak(korak)
+  zabeleziKorak(`${korak}:${vir}`)
 }

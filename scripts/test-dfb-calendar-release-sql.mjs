@@ -5,7 +5,7 @@ import {calendar} from './dfb-calendar-test-fixture.mjs'
 const container=process.env.SUPABASE_DB_CONTAINER,db=process.env.SUPABASE_TEST_DB
 if(!container||!db)throw Error('Explicit disposable container AND database required')
 const run=sql=>execFileSync('docker',['exec','-i',container,'psql','-U','supabase_admin','-d',db,'-X','-v','ON_ERROR_STOP=1','-v','regional_slug=de-regionalliga-nord','-v','current_clubs=18','-v','current_rounds=34'],{input:sql,stdio:['pipe','inherit','inherit']})
-const receipt=JSON.parse(readFileSync(new URL('./viri/dfb-calendar-receipts.json',import.meta.url))),receiptSha256='e5940813944dced7845c3e6ca1eb87868ff4e241b82e24676e3f3aa1569c97b3'
+const receipt=JSON.parse(readFileSync(new URL('./viri/dfb-calendar-receipts.json',import.meta.url))),receiptSha256='8f8f58e1fa0aa951e720adca67da156ca8dbd13dafb60cedb9771234a9915043'
 for(const season of receipt.seasons){
  const fixtures=season.pairs.flatMap(p=>p.fixtures.map(({witnesses,...f})=>({...f,id:'de-dfb-'+f.id,calendarEvidence:{version:1,receiptSha256,code:season.code,fixture:f,witnesses:witnesses.map((w,i)=>({club:w.club,url:w.url,sha256:(i?'b':'a').repeat(64)}))}})))
  const m={version:4,provenanceVersion:1,calendarReceiptSha256:receiptSha256,slug:'de-'+season.code.split('/')[0],seasons:[{season:'2026/27',code:season.code,fixtures}]}

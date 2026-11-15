@@ -24,9 +24,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: 'Tagasi avalehele',
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  akcijaVabil: {
+    pasica: 'Kutsu sõpru ja võida kast õlut (kuni 30.11)',
+    povabi: 'Kutsu',
+    skrij: 'Peida',
+    meni: 'Kutsu 🍺',
+    meniDolgo: '🍺 Kutsu sõpru, võida kast õlut',
+  },
   poziv: {
     kasneje: 'Võib-olla hiljem',
     aplikacija: { naslov: 'SLFF taskus 📱', besedilo: 'Meeldetuletus enne tähtaega, sinu meeskonna punktid pärast mänge ja kiirem tee koosseisuni, rakenduses.', googlePlay: 'Laadi Google Playst', appStore: 'Laadi App Store’ist' },
+    vabilo: { naslov: 'Kutsu sõpru 🍺', besedilo: 'Kolm meeskonnaga sõpra toovad sulle tasuta mängija hinna ülevaatuse. Kes kutsub 30.11-ni kõige rohkem, võidab kasti õlut.', deli: 'Jaga kutset', vec: 'Minu kood ja edetabel' },
     sledi: { naslov: 'Ole meiega 🙌', besedilo: 'Vooru meeskonnad, nädala mängijad ja uudised sinu liigast, esmalt meie profiilidel.', instagram: 'Jälgi Instagramis', facebook: 'Meeldi Facebookis' },
   },
   pivo: {
@@ -84,6 +92,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     pozicije: 'Positsioonid',
     odsotnosti: 'Puudumised',
     slovenija: 'Eesti',
+    mladi: 'Noored mängijad',
     admin: 'Admin',
     vec: 'Veel',
     racun: 'Konto',

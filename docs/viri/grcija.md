@@ -56,10 +56,12 @@ tekme), zato se razčlenjevalnik drži besedila in razredov
   `<sup>`, tekma `an-match` s povezavo pri vsaki tekmi, neodigrana "– : –",
   ime lige v `<h1 class="mn2-hero-title">`); Ahajin `table.asp` od takrat
   kaže le lestvico, zato bere analitiko. Stara razčlenitev ostane za ostale
-  domene. Uvoz je do popravka javljal "ni razpored lige … 0 tekem". Če to
+  domene. **6. 11. 2026** so isto predlogo dobile še Pela, Drama, Kozani,
+  Imatija in Preveza-Lefkada (12 lig, uvoz "ni razpored lige … 0 tekem");
+  ostane le Thesprotija na `table.asp`. Uvoz je do popravka javljal "ni razpored lige … 0 tekem". Če to
   javi še katera domena, ima verjetno isto predlogo: preveri `an-round`.
-- **Razpored** je `table_analytika.asp` (epsm, Ahaja, Krf, Lezbos) ali `table.asp`
-  (ostale): krogi "N<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ", vrstica "Domači / - / Gostje"
+- **Razpored** je `table_analytika.asp` (vse razen Thesprotije) ali `table.asp`
+  (Thesprotija, stara oblika): krogi "N<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ", vrstica "Domači / - / Gostje"
   (ime kluba ima lahko " - ": "ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ"), izid, povezava
   `game.asp?game_number=N&match_date=dd.mm.yyyy`; Ahaja, Kozani, Imatija, Drama
   in Pela imajo pri tekmi še datum in uro, epsm le pri odigranih (s povezave).
@@ -377,6 +379,19 @@ pregled `eps` je bil ustavljen (ni ponovljen). Pirej ima nepreverjene nove
 mladinske lige (`epspeir.gr:740`, `741`, `757` Κ16; `754` Κ17; `758` Κ15
 deklet). Pred naslednjim branjem `eps` preveri, ali Vzhodna Atika še
 zavrača.
+
+**14. 11. 2026: epsip.gr in epsana.gr sta se preselila.** Od 6. 11. vrne
+`/results/display_schedule.php` na obeh HTTP 404 (domači strani 200; tekmovalna
+tabela `eps` na drugih domenah dela). Nočni uvoz GR 2/6, 3/6 in 5/6 je padal pri
+`gr-ip-a`, `gr-ip-b`, `gr-ip-g-a`, `gr-ip-g-b`, `gr-ana-a`, `gr-ana-b` in
+`gr-ana-g`; migracija 20261114211100 jih izklopi (`active = false`), podatki
+ostanejo. Nova predloga (neoverjeno, prebrano le z domačih strani): epsip.gr
+`/agones/?eps_comp=a|b`, `eps_cat=Γ' Κατηγορία`; epsana.gr
+`/diorganoseis/a-katigoria/?enosi_main_league_id=16&enosi_tab=standings`
+(Β 17, Γ 18). `scripts/viri/eps.mjs` je ne bere; za ponovni vklop je treba
+novi parser in preveriti, ali sta objavljena postava, menjave in goli.
+Od 14. 11. epsana.gr runnerju vrne 403 (ne obhajamo); uvoz ob tem preskoči še
+ostale `eps` lige v istem poslu (gr-arg, gr-ev, gr-dod), zato izklop.
 
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=gr-peir-a-1 -f
 arhiv=epspeir.gr:605 -f cene=true`. Arhiv 240 zapisnikov po 3 s je okoli

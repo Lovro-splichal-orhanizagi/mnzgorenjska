@@ -42,6 +42,44 @@ test('ECONNRESET (nejasno): počakamo dlje od omejitve funkcije; ECONNREFUSED: k
   assert.ok(ZAMIK_NEJASNO_MS > 60000)
 })
 
+test('503: klic ponovimo z dolgim premorom; po vseh poskusih vrnemo 503, ostali statusi se ne ponovijo', async () => {
+  const premori = []
+  let klici = 0
+  const r = await klicSPonovitvami(async () => (++klici < 3 ? { status: 503 } : { status: 200 }), 'u', {}, { log: (v) => premori.push(v), zamiki: [2000, 6000], zamikNejasno: 0 })
+  assert.equal(r.status, 200)
+  assert.equal(klici, 3)
+  assert.match(premori[0], /HTTP 503/)
+  klici = 0
+  const zadnji = await klicSPonovitvami(async () => { klici++; return { status: 503 } }, 'u', {}, tih)
+  assert.equal(zadnji.status, 503)
+  assert.equal(klici, 3)
+  klici = 0
+  for (const status of [500, 502, 504, 409]) await klicSPonovitvami(async () => { klici++; return { status } }, 'u', {}, tih)
+  assert.equal(klici, 4)
+})
+
+const UPOKOJEN = '{"msg":"WorkerAlreadyRetired: request cannot be handled because the worker has already retired"}'
+
+test('500 WorkerAlreadyRetired (edge runtime) ponovimo; druge 500 ne', async () => {
+  const premori = []
+  let klici = 0
+  const r = await klicSPonovitvami(async () => (++klici < 2 ? new Response(UPOKOJEN, { status: 500 }) : new Response('{}', { status: 200 })), 'u', {}, { log: (v) => premori.push(v), zamiki: [2000, 6000], zamikNejasno: 0 })
+  assert.equal(r.status, 200)
+  assert.equal(klici, 2)
+  assert.match(premori[0], /HTTP 500 WorkerAlreadyRetired/)
+  klici = 0
+  const zadnji = await klicSPonovitvami(async () => { klici++; return new Response(UPOKOJEN, { status: 500 }) }, 'u', {}, tih)
+  assert.equal(zadnji.status, 500)
+  assert.equal(klici, 3)
+  assert.match((await zadnji.json()).msg, /WorkerAlreadyRetired/)
+  for (const telo of ['{"error":"x"}', '{"msg":"WorkerRequestCancelled: request has been cancelled"}', '']) {
+    klici = 0
+    const funkcija = await klicSPonovitvami(async () => { klici++; return new Response(telo, { status: 500 }) }, 'u', {}, tih)
+    assert.equal(klici, 1, telo)
+    assert.equal(await funkcija.text(), telo)
+  }
+})
+
 // Skripta zares, proti lokalnemu strežniku, ki prvi klic funkcije prekine.
 async function zazeni(vedenje, { resetLig = 0, lige = 2 } = {}) {
   const klici = []
@@ -57,7 +95,9 @@ async function zazeni(vedenje, { resetLig = 0, lige = 2 } = {}) {
     req.on('end', () => {
       const liga = JSON.parse(telo).competition_id
       klici.push(liga)
-      if (vedenje(liga, klici.filter((l) => l === liga).length)) return req.socket.resetAndDestroy()
+      const v = vedenje(liga, klici.filter((l) => l === liga).length)
+      if (v === 503) { res.statusCode = 503; return res.end() }
+      if (v) return req.socket.resetAndDestroy()
       res.setHeader('content-type', 'application/json')
       res.end(JSON.stringify({ kandidati_stevilo: 2, poslano: 2, preskoceno: 0 }))
     })
@@ -103,9 +143,107 @@ test('skripta: 5 lig zapored brez povezave ustavi korak (izpad povezave ne traja
   assert.match(r.out, /Lig z napako: 5/)
 })
 
+test('skripta: 503 na prvem klicu, ponovitev uspe, korak je zelen', async () => {
+  const r = await zazeni((liga, n) => (liga === 1 && n === 1 ? 503 : false))
+  assert.equal(r.koda, 0, r.out)
+  assert.deepEqual(r.klici, [1, 1, 2])
+  assert.match(r.out, /ponovim klic \(2\/3\).*HTTP 503/)
+})
+
+test('skripta: 5 lig zapored s 503 ustavi korak', async () => {
+  const r = await zazeni(() => 503, { lige: 8 })
+  assert.equal(r.koda, 1, r.out)
+  assert.equal(r.klici.length, 5 * 3, r.out)
+  assert.match(r.out, /NAPAKA 503/)
+  assert.match(r.out, /5 lig zapored brez povezave/)
+})
+
 test('skripta: prekinjeno branje seznama lig se ponovi', async () => {
   const r = await zazeni(() => false, { resetLig: 1 })
   assert.equal(r.koda, 0, r.out)
   assert.equal(r.branja, 2)
   assert.deepEqual(r.klici, [1, 2])
+})
+
+// SLF-439: opozorilo odsotnih po kosih. Lazna funkcija ravna kot prava: kandidati
+// so tisti iz `email_log` brez uspesnega zapisa, `najvec_poslati` omeji kos,
+// `najvec` (meja na ligo) preveri PRED posiljanjem.
+async function zazeniOdsotne({ kandidatov = 32, suho = false, padlaPrvic = [], zeposlano = [] } = {}) {
+  const cakajoci = new Set(Array.from({ length: kandidatov }, (_, i) => i + 1).filter((i) => !zeposlano.includes(i)))
+  const poslanoKrat = new Map(zeposlano.map((i) => [i, 1]))
+  const klici = []
+  const streznik = http.createServer((req, res) => {
+    res.setHeader('content-type', 'application/json')
+    if (req.url.startsWith('/rest/v1/competitions')) return res.end(JSON.stringify([{ id: 1, slug: 'lj-1-liga', name: 'x' }]))
+    let telo = ''
+    req.on('data', (d) => { telo += d })
+    req.on('end', () => {
+      const v = JSON.parse(telo)
+      klici.push(v)
+      const n = cakajoci.size
+      if (v.suho) return res.end(JSON.stringify({ suho: true, kandidati_stevilo: n }))
+      if (typeof v.najvec === 'number' && n > v.najvec) { res.statusCode = 409; return res.end(JSON.stringify({ error: 'meja', kandidati_stevilo: n })) }
+      const kos = [...cakajoci].slice(0, typeof v.najvec_poslati === 'number' ? v.najvec_poslati : n)
+      let poslano = 0
+      for (const i of kos) {
+        poslanoKrat.set(i, (poslanoKrat.get(i) ?? 0) + 1)
+        if (padlaPrvic.includes(i) && poslanoKrat.get(i) === 1) continue // napaka: v email_log z napako, ostane kandidat
+        cakajoci.delete(i); poslano++
+      }
+      res.end(JSON.stringify({ kandidati_stevilo: n, poslano, preskoceno: kos.length - poslano }))
+    })
+  })
+  await new Promise((r) => streznik.listen(0, '127.0.0.1', r))
+  const izhod = await new Promise((resolve) => {
+    let out = ''
+    const p = spawn(process.execPath, ['scripts/posli-opomnike.mjs'], {
+      env: {
+        ...process.env,
+        SUPABASE_URL: `http://127.0.0.1:${streznik.address().port}`,
+        SUPABASE_SERVICE_ROLE_KEY: 'k', VRSTA: 'opozorilo-odsotni', SUHO: String(suho), OPOMNIK_ZAMIKI_MS: '0,0',
+      },
+    })
+    p.stdout.on('data', (d) => { out += d }); p.stderr.on('data', (d) => { out += d })
+    p.on('close', (koda) => resolve({ koda, out }))
+  })
+  streznik.close()
+  return { ...izhod, klici, cakajoci, poslanoKrat }
+}
+
+test('opozorilo odsotnih: 32 kandidatov gre v kosih po 10, vsak natanko enkrat', async () => {
+  const r = await zazeniOdsotne()
+  assert.equal(r.koda, 0, r.out)
+  assert.deepEqual(r.klici.map((k) => k.najvec_poslati), [10, 10, 10, 10])
+  assert.equal(r.cakajoci.size, 0)
+  assert.equal(r.poslanoKrat.size, 32)
+  assert.ok([...r.poslanoKrat.values()].every((n) => n === 1))
+  assert.match(r.out, /lj-1-liga\s+kandidatov\s+32 · poslano 32/)
+})
+
+test('opozorilo odsotnih: ponovni zagon preskoci ze obvestene (email_log)', async () => {
+  const r = await zazeniOdsotne({ zeposlano: Array.from({ length: 22 }, (_, i) => i + 1) })
+  assert.equal(r.koda, 0, r.out)
+  assert.deepEqual(r.klici.map((k) => k.najvec_poslati), [10])
+  assert.ok([...r.poslanoKrat.values()].every((n) => n === 1))
+  assert.match(r.out, /kandidatov\s+10 · poslano 10/)
+})
+
+test('opozorilo odsotnih: padli mail ne ustavi lige in drugim ne gre dvakrat', async () => {
+  const r = await zazeniOdsotne({ padlaPrvic: [3] })
+  assert.equal(r.koda, 0, r.out)
+  assert.equal(r.poslanoKrat.get(3), 2) // padli ima en ponovni poskus v naslednjem kosu
+  assert.ok([...r.poslanoKrat].filter(([i]) => i !== 3).every(([, n]) => n === 1))
+  assert.equal(r.cakajoci.size, 0)
+})
+
+test('opozorilo odsotnih: suhi tek samo presteje; meja 300 se ne spremeni', async () => {
+  const r = await zazeniOdsotne({ suho: true })
+  assert.equal(r.koda, 0, r.out)
+  assert.equal(r.klici.length, 1)
+  assert.equal(r.klici[0].najvec_poslati, undefined)
+  assert.equal(r.poslanoKrat.size, 0)
+  const nad = await zazeniOdsotne({ kandidatov: 301 })
+  assert.equal(nad.koda, 1, nad.out)
+  assert.match(nad.out, /USTAVLJENO: 301 kandidatov \(meja 300\)/)
+  assert.equal(nad.poslanoKrat.size, 0)
 })

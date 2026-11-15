@@ -22,10 +22,10 @@
 // enako. Ker so v šifri grške črke, `sifra()` iz `zapisniki.mjs` ni enolična
 // (vse grške črke postanejo `_`): vir zato svojih datotek ne imenuje po njej.
 //
-// RAZPORED: `table_analytika.asp` (epsm, Ahaja, Krf, Lezbos) ali `table.asp`
-// (ostale). Epsm in Ahaja imata od 30. 10. 2026 novo predlogo (`an-round`,
-// `tekmeAnalitike`, ime lige v `mn2-hero-title`); Ahajin `table.asp` od takrat
-// pokaže le lestvico. Ostale: krogi "N<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ", tekma "Domači - Gostje", izid, pri nekaterih
+// RAZPORED: `table_analytika.asp` (vse domene razen Thesprotije) ali `table.asp`.
+// Epsm in Ahaja imata od 30. 10. 2026 novo predlogo (`an-round`,
+// `tekmeAnalitike`, ime lige v `mn2-hero-title`), Pela, Drama, Kozani, Imatija
+// in Preveza-Lefkada od 6. 11. 2026; `table.asp` pokaže le lestvico. Stara oblika: krogi "N<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ", tekma "Domači - Gostje", izid, pri nekaterih
 // datum in ura (atenski čas → ljubljanski −1 h), povezava
 // `game.asp?game_number=N&match_date=dd.mm.yyyy`. Številka tekme je enolična
 // znotraj domene in sezone (vsaka liga ima svoj tisočak), zato je šifra
@@ -65,14 +65,14 @@ const mapa = () => process.env.SLFF_MASCOT_MAPA || 'scripts/.predpomnilnik/masco
 export const DOMENE = {
   'epsm.gr': { zveza: 'mak', ime: 'ΕΠΣ Μακεδονίας', kraj: 'Θεσσαλονίκη', analitika: true },
   'epsachaias.gr': { zveza: 'ach', ime: 'ΕΠΣ Αχαΐας', kraj: 'Αχαΐα', analitika: true, menjava: 'noter-ven' },
-  'epspellas.gr': { zveza: 'pel', ime: 'ΕΠΣ Πέλλας', kraj: 'Πέλλα', analitika: false },
-  'epsdramas.gr': { zveza: 'dra', ime: 'ΕΠΣ Δράμας', kraj: 'Δράμα', analitika: false },
-  'epskozanis.gr': { zveza: 'koz', ime: 'ΕΠΣ Κοζάνης', kraj: 'Κοζάνη', analitika: false },
+  'epspellas.gr': { zveza: 'pel', ime: 'ΕΠΣ Πέλλας', kraj: 'Πέλλα', analitika: true },
+  'epsdramas.gr': { zveza: 'dra', ime: 'ΕΠΣ Δράμας', kraj: 'Δράμα', analitika: true },
+  'epskozanis.gr': { zveza: 'koz', ime: 'ΕΠΣ Κοζάνης', kraj: 'Κοζάνη', analitika: true },
   'epskerkyras.gr': { zveza: 'ker', ime: 'ΕΠΣ Κέρκυρας', kraj: 'Κέρκυρα', analitika: true },
   'epsthesprotias.gr': { zveza: 'thes', ime: 'ΕΠΣ Θεσπρωτίας', kraj: 'Θεσπρωτία', analitika: false },
   'epsl.gr': { zveza: 'les', ime: 'ΕΠΣ Λέσβου', kraj: 'Λέσβος', analitika: true },
-  'eps-imathias.gr': { zveza: 'ima', ime: 'ΕΠΣ Ημαθίας', kraj: 'Ημαθία', analitika: false },
-  'epsprevezas-lefkadas.gr': { zveza: 'pl', ime: 'ΕΠΣ Πρέβεζας-Λευκάδας', kraj: 'Πρέβεζα', analitika: false },
+  'eps-imathias.gr': { zveza: 'ima', ime: 'ΕΠΣ Ημαθίας', kraj: 'Ημαθία', analitika: true },
+  'epsprevezas-lefkadas.gr': { zveza: 'pl', ime: 'ΕΠΣ Πρέβεζας-Λευκάδας', kraj: 'Πρέβεζα', analitika: true },
 }
 
 // --- šifre in naslovi ----------------------------------------------------------------
@@ -793,6 +793,9 @@ const najpogostejsi = (xs) => {
   return [...n.entries()].sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])))[0]?.[0] ?? null
 }
 
+/** Datum, iz katerega je sezona lige: prva tekma z datumom, sicer danes (tekma brez datuma je iz iste sezone kot ostale). */
+export const datumSezoneLige = (tekme, danes = Date.now()) => tekme.find((t) => t.datum)?.datum ?? new Date(danes).toISOString().slice(0, 10)
+
 /** Kako stara sme biti shranjena stran neodigrane tekme (za datum). */
 function najvecStarostNeodigrane(datum, danes) {
   if (!datum) return DAN
@@ -826,7 +829,7 @@ async function datumiNeodigranih(koda, tekme, prenesi, danes) {
     }
   }
   // Sezona razporeda (tekma brez datuma je iz iste sezone kot ostale).
-  const datumSezone = tekme.find((t) => t.datum)?.datum ?? new Date(danes).toISOString().slice(0, 10)
+  const datumSezone = datumSezoneLige(tekme, danes)
   const sezona = sezonaIzDatuma(datumSezone)
   for (const t of brez.filter((x) => krogi.includes(x.krog) && x.igra)) {
     const ime = imeTekme(domena, t.igra, datumSezone)
@@ -942,10 +945,12 @@ const vir = {
     const { domena } = razberiKodo(koda)
     const tekme = await tekmeLige(koda, prenesi, { datumi: false })
     const out = []
+    const datumSezone = datumSezoneLige(tekme, danes)
     for (const t of tekme.filter((x) => x.izid && x.igra && !x.brezBorbe)) {
       const url = naslovTekme(domena, t.igra, t.datum)
-      const ime = imeTekme(domena, t.igra, t.datum)
-      const id = sifraZapisnika(domena, t.igra, t.datum)
+      // Odigrana tekma brez datuma v razporedu (Lezbos B): ime in šifra iz sezone lige.
+      const ime = imeTekme(domena, t.igra, t.datum ?? datumSezone)
+      const id = sifraZapisnika(domena, t.igra, t.datum ?? datumSezone)
       // Zapisnik zadnjih treh dni se lahko še popravlja. Shranjena stran velja
       // za dokončno le, če je bila prebrana več kot tri dni po tekmi (čas
       // shrambe, ne starost tekme: stran z dne tekme ima lahko postave brez
@@ -966,6 +971,7 @@ const vir = {
         z = vZapisnik(html, { id, url, domena })
       }
       if (!z) continue
+      if (!t.datum) z.opozorila.push(`tekma ${t.igra} brez datuma v razporedu, sezona iz lige (${sezonaIzDatuma(datumSezone)})`)
       if (tujDatum()) z.opozorila.push(`datum zapisnika ${glavaTekme(html).datum} je daleč od datuma razporeda ${t.datum}`)
       const g = glavaTekme(html)
       if (kljucKlubaGr(g.domaci) !== kljucKlubaGr(t.domaci) || kljucKlubaGr(g.gostje) !== kljucKlubaGr(t.gostje))

@@ -30,9 +30,17 @@ export const aplikacija = {
     nazaj: 'Nazaj na začetno stran',
   },
   /** Gumb za podporo: naslovnica in noga vsake strani (components/Pivo.tsx). */
+  akcijaVabil: {
+    pasica: 'Povabi prijatelje in osvoji zaboj piva (do 30. 11.)',
+    povabi: 'Povabi',
+    skrij: 'Skrij',
+    meni: 'Povabi 🍺',
+    meniDolgo: '🍺 Povabi prijatelje, osvoji zaboj piva',
+  },
   poziv: {
     kasneje: 'Mogoče kasneje',
     aplikacija: { naslov: 'SLFF v žepu 📱', besedilo: 'Opomnik pred rokom, točke tvoje ekipe po tekmah in hitrejša pot do postave, v aplikaciji.', googlePlay: 'Prenesi z Google Play', appStore: 'Prenesi iz App Store' },
+    vabilo: { naslov: 'Povabi prijatelje 🍺', besedilo: 'Trije prijatelji z ekipo ti prinesejo brezplačen pregled cene igralca. Kdor do 30. 11. povabi največ, dobi zaboj piva.', deli: 'Deli svoje povabilo', vec: 'Moja koda in lestvica' },
     sledi: { naslov: 'Bodi zraven 🙌', besedilo: 'Ekipe kroga, igralci tedna in novosti iz tvoje lige, najprej na naših profilih.', instagram: 'Sledi na Instagramu', facebook: 'Všečkaj na Facebooku' },
   },
   pivo: {
@@ -93,6 +101,7 @@ export const aplikacija = {
     pozicije: 'Pozicije',
     odsotnosti: 'Odsotnosti',
     slovenija: 'Slovenija',
+    mladi: 'Mladi igralci',
     admin: 'Admin',
     vec: 'Več',
     racun: 'Račun',

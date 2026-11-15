@@ -393,4 +393,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       izstop: 'Ya no puntuará para ti: cámbialo. El equipo con él sigue siendo válido.',
     },
   },
+  odstraniEkipo: {
+    gumb: 'Quitar este equipo',
+    vprasanje: '¿Quitar el equipo {ekipa} de {liga}? Su plantilla y sus pertenencias a miniligas se borran para siempre. Más adelante puedes crear un equipo nuevo. Solo es posible mientras el equipo no tenga puntos.',
+    potrdi: 'Sí, quitar el equipo',
+    imaTocke: 'Este equipo ya tiene puntos, así que no se puede quitar aquí. Escríbenos en el chat y te ayudamos.',
+  },
 }

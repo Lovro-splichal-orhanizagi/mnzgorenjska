@@ -399,4 +399,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       izstop: 'Daha xal toplamayacaq, onu əvəz et. Saxlasan da komandan qaydalara uyğun qalır.',
     },
   },
+  odstraniEkipo: {
+    gumb: 'Bu komandanı sil',
+    vprasanje: '{ekipa} komandası {liga} liqasından silinsin? Heyəti və mini liqalardakı üzvlükləri həmişəlik silinir. Sonra yeni komanda qura bilərsən. Bu yalnız komandanın xalı olmadıqda mümkündür.',
+    potrdi: 'Bəli, komandanı sil',
+    imaTocke: 'Bu komandanın artıq xalları var, ona görə burada silmək olmur. Çatda bizə yaz, kömək edək.',
+  },
 }

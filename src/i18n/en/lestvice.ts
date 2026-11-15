@@ -122,6 +122,23 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napovediOcenjenih: 'Scored predictions: {n}',
     vrhNapovedi: 'Top predictors',
     vrhNapovediVse: 'Full prediction table',
+    naslovStraniMladi: 'National rankings — young players (U18 and younger)',
+    skupinaOznaka: 'League age group',
+    skupinaGlavna: 'Senior and U19',
+    skupinaMladi: 'U18 and younger',
+    glavnaOpis:
+      'This ranking covers senior and U19 leagues only. U18-and-younger leagues (U17, U15 …) have their own ranking, so young players are not measured against adults.',
+    glavnaPovezava: 'Best young players →',
+    mladiOpis:
+      'U18-and-younger leagues only (U17, U15 …): rising stars compete against each other. The group belongs to the league, not to any one player’s age.',
+    mladiPovezava: '← Senior and U19',
+    vrhNaslovMladi: 'Who’s the best young player?',
+    vrhUvodGlavna: 'Top {n} in senior and U19 leagues · season {sezona}',
+    vrhUvodMladi: 'Top {n} in U18-and-younger leagues · season {sezona}',
+    vrhPrazenMladi: 'No matches played yet this season in U18-and-younger leagues.',
+    vrhSezona: 'season {sezona}',
+    mladiOpomba:
+      'The group belongs to the league (U18 and younger), not to the player’s age. The same player may also appear in an older league, where they have a separate ranking.',
   },
 
   miniLige: {
@@ -354,6 +371,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     izstopila: 'Team {ekipa} has left the mini-league.',
     odstranjena: 'Team {ekipa} has been removed from the mini-league.',
     niUspelo: 'That didn’t work. Refresh the page and try again.',
+  },
+  razpustiMiniLigo: {
+    gumb: 'Delete this mini-league',
+    vprasanje: 'Delete the mini-league “{liga}” for all its members? Teams, players and points stay; only this mini-league’s table and its invite code are removed. This can’t be undone.',
+    potrdi: 'Yes, delete the mini-league',
+    razpuscena: 'Mini-league “{liga}” deleted.',
   },
 
   povabiSoigralce: {

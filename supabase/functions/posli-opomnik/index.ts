@@ -45,6 +45,7 @@ import {
   sestaviPromoPreverjen,
   type Jezik,
   sestaviNovostMiniLig,
+  sestaviAkcijoVabil,
   sestaviOpozoriloOdsotnih,
   sestaviTedenskiPregled,
   type Liga,
@@ -59,8 +60,14 @@ const ANKETA_MEJA = 50
 // Promocija preverjenega profila (SLF-383): največ 500 skupaj, paket največ 20.
 const PROMO_MEJA = 500
 const PAKET_NAJVEC = 20
+// Prehod prekine klic po 30 s; kohorta traja ~12 s, mail ~4,6 s. Po 20 s od začetka
+// klica promo ne začne novega maila, ostale pošlje naslednji klic.
+const PROMO_PRORACUN_MS = 20_000
 
-const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'anketa-placila', 'promo-preverjen'] as const
+// Funkcija ima 60 s; mail traja ~4,6 s, zato po 40 s ne zacnemo novega.
+const ODSOTNI_PRORACUN_MS = 40_000
+
+const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'anketa-placila', 'promo-preverjen', 'akcija-vabil'] as const
 type Vrsta = (typeof VRSTE)[number]
 
 // Besedila so v `sporocila.ts`, v jeziku DRŽAVE LIGE (slovaška liga →
@@ -379,15 +386,25 @@ Deno.serve(async (req) => {
     const akcija = vhod.akcija ?? 'predogled'
     if (!['predogled', 'paket', 'vzorec', 'poslji'].includes(akcija)) return json({ error: `Neznana akcija: ${akcija}.` }, 400)
     const db = createClient(SUPABASE_URL, SERVICE_KEY)
-    const osnutek = await osnutekPromo()
-    const [cene, stran] = await Promise.all([ceneIzStripa(), stranPreverjenih()])
-    const { data: kd, error: kErr } = await db.rpc('promo_preverjen_kohorta')
+    // Časi korakov v dnevnik (SLF-383: predogled je od 11. 11. obstajal na 30 s,
+    // brez sledi, kateri klic visi). Le imena korakov in ms, nič osebnega.
+    const t0 = Date.now()
+    const casovno = async <T>(korak: string, p: PromiseLike<T>): Promise<T> => {
+      const z = Date.now()
+      console.log(`promo-preverjen ${akcija}: ${korak} …`)
+      const v = await p
+      console.log(`promo-preverjen ${akcija}: ${korak} ${Date.now() - z} ms (skupaj ${Date.now() - t0} ms)`)
+      return v
+    }
+    const osnutek = await casovno('osnutek', osnutekPromo())
+    const [cene, stran] = await Promise.all([casovno('stripe', ceneIzStripa()), casovno('stran', stranPreverjenih())])
+    const { data: kd, error: kErr } = await casovno('kohorta', db.rpc('promo_preverjen_kohorta'))
     if (kErr) return json({ error: kErr.message }, 500)
     const vsi = (kd ?? []) as PromoKandidat[]
-    const prej = await db.rpc('promo_preverjen_poslanih')
+    const prej = await casovno('poslanih', db.rpc('promo_preverjen_poslanih'))
     if (prej.error) return json({ error: prej.error.message }, 500)
-    const { data: pk, error: pErr } = await db.from('promo_preverjen_paketi')
-      .select('id, user_ids, created_at, odobril, odobren_at').order('id')
+    const { data: pk, error: pErr } = await casovno('paketi', db.from('promo_preverjen_paketi')
+      .select('id, user_ids, created_at, odobril, odobren_at').order('id'))
     if (pErr) return json({ error: pErr.message }, 500)
     const paketi = (pk ?? []) as Array<{ id: number; user_ids: string[]; created_at: string; odobril: string | null; odobren_at: string | null }>
     const poId = new Map(vsi.map((k) => [k.user_id, k]))
@@ -473,9 +490,10 @@ Deno.serve(async (req) => {
       if (!k || k.razlog) { if (k?.razlog !== 'ze_dobil') izpadli.push(k?.razlog ?? 'ni_vec_prevzema'); continue }
       zaPoslati.push(k)
     }
-    // Funkcija ima 60 s, mail traja ~4 s: 10 na klic, naslednji klic nadaljuje isti paket.
+    // Največ 10 na klic in le do PROMO_PRORACUN_MS; naslednji klic nadaljuje isti paket.
     const izpadliPrej = izpadli.length
     for (const k of zaPoslati.slice(0, 10)) {
+      if (poslano + napak > 0 && Date.now() - t0 > PROMO_PRORACUN_MS) break
       if (poslano + napak > 0) await new Promise((r) => setTimeout(r, 500))
       const s = await sOdjavo(db, k.user_id, sestaviPromoPreverjen(
         { slug: k.liga_slug ?? '', oznaka: '', drzava: k.drzava }, { display_name: k.display_name }, cene))
@@ -543,6 +561,49 @@ Deno.serve(async (req) => {
         user_id: u.user_id,
         email: u.email,
         vrsta,
+        competition_id: u.competition_id,
+        resend_id: rez.id ?? null,
+        napaka: rez.napaka ?? null,
+      })
+    }
+    return json({ kandidati_stevilo: kand.length, poslano, push, preskoceno: kand.length - poslano })
+  }
+
+  // `akcija-vabil`: akcija Povabi prijatelje (14.–30. 11. 2026), trije valovi
+  // (`kandidati_za_akcijo_vabil` izbere val in prejemnike, vsak val enkrat na
+  // človeka). Ob mailu še potisno obvestilo (brez `brez_push`).
+  if (vrsta === 'akcija-vabil') {
+    if (!jeStroj) return json({ error: 'Akcijo vabil pošlje samo delovni tok (servisni ključ).' }, 403)
+    if (!SMTP_PASS && !suho) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
+    const service6 = createClient(SUPABASE_URL, SERVICE_KEY)
+    const { data, error } = await service6.rpc('kandidati_za_akcijo_vabil', {
+      p_najvec: suho ? 10000 : Math.min(vhod.najvec_poslati ?? 10, 20),
+    })
+    if (error) return json({ error: error.message }, 500)
+    const kand = (data ?? []) as Array<{
+      user_id: string; email: string; display_name: string | null
+      competition_id: number; liga_slug: string; liga_oznaka: string; liga_drzava: string | null
+      val: number; pripeljanih: number; v_akciji: number; bon: boolean; vodilni: number
+    }>
+    if (suho) return json({ suho: true, kandidati_stevilo: kand.length, val: kand[0]?.val ?? null })
+    let poslano = 0
+    let push = 0
+    for (const u of kand) {
+      if (poslano > 0) await new Promise((r) => setTimeout(r, 600))
+      const liga: Liga = { slug: u.liga_slug, oznaka: u.liga_oznaka, drzava: u.liga_drzava }
+      const { data: koda } = await service6.rpc('koda_vabila_za', { p_uid: u.user_id })
+      const sporocilo = sestaviAkcijoVabil(liga, { ...u, koda: typeof koda === 'string' ? koda : null })
+      const rez = await poslji(EMAIL_FROM, u.email, await sOdjavo(service6, u.user_id, sporocilo), Deno.env.get('EMAIL_REPLY_TO'))
+      if (!rez.napaka) {
+        poslano++
+        const { data: pr } = await service6.from('profiles').select('brez_push').eq('id', u.user_id).maybeSingle()
+        if (!pr?.brez_push && pushNastavljen())
+          push += await posljiPush(service6, u.user_id, vObvestilo(sporocilo, `/invite?t=${u.liga_slug}`)).catch(() => 0)
+      }
+      await service6.from('email_log').insert({
+        user_id: u.user_id,
+        email: u.email,
+        vrsta: `akcija-vabil-${u.val}`,
         competition_id: u.competition_id,
         resend_id: rez.id ?? null,
         napaka: rez.napaka ?? null,
@@ -808,8 +869,17 @@ Deno.serve(async (req) => {
     if (suho) return json({ suho: true, kandidati_stevilo: kand.length })
     if (typeof vhod.najvec === 'number' && kand.length > vhod.najvec)
       return json({ error: `Preveč kandidatov (${kand.length}, meja ${vhod.najvec}). Nič ni bilo poslano.`, kandidati_stevilo: kand.length }, 409)
+    // Kos: skripta klice po `najvec_poslati` kandidatov (SLF-439; 3. 11. je eno
+    // porocilo zadelo 32 ekip, 32 x ~4,6 s pa presega 60 s). Poleg tega
+    // casovni proracun: ko je porabljen, ostale pusti za naslednji klic; kdor je
+    // dobil mail, je v `email_log` in iz kandidatov izpade.
+    const kos = typeof vhod.najvec_poslati === 'number' ? Math.max(0, vhod.najvec_poslati) : kand.length
+    const zacetek = Date.now()
     let poslano = 0
-    for (const u of kand) {
+    let obdelanih = 0
+    for (const u of kand.slice(0, kos)) {
+      if (obdelanih > 0 && Date.now() - zacetek > ODSOTNI_PRORACUN_MS) break
+      obdelanih++
       const sporocilo = await sOdjavo(service, u.user_id, sestaviOpozoriloOdsotnih(liga, {
         display_name: u.display_name,
         krog: u.round_number,
@@ -838,7 +908,7 @@ Deno.serve(async (req) => {
         ...izid,
       })
     }
-    return json({ kandidati_stevilo: kand.length, poslano, preskoceno: kand.length - poslano })
+    return json({ kandidati_stevilo: kand.length, poslano, preskoceno: obdelanih - poslano })
   }
 
   // Enkratni obvestili lastnikom ekip z dolocenimi igralci v kadru — en mail
@@ -1229,7 +1299,7 @@ async function ceneIzStripa(): Promise<{ letna: number; dozivljenjska: number; v
   if (!kljuc) return { ...prazno, napaka: 'STRIPE_SECRET_KEY ni nastavljen' }
   try {
     const q = new URLSearchParams([['lookup_keys[]', 'slff_preverjen_letna'], ['lookup_keys[]', 'slff_preverjen_dozivljenjska'], ['active', 'true']])
-    const r = await fetch(`https://api.stripe.com/v1/prices?${q}`, { headers: { Authorization: `Bearer ${kljuc}` } })
+    const r = await fetch(`https://api.stripe.com/v1/prices?${q}`, { headers: { Authorization: `Bearer ${kljuc}` }, signal: AbortSignal.timeout(8000) })
     const j = await r.json()
     if (!r.ok) return { ...prazno, napaka: `Stripe: ${j?.error?.message ?? r.status}` }
     const cene = (j.data ?? []) as Array<{ lookup_key: string; unit_amount: number | null; currency: string; livemode: boolean; recurring: { interval: string } | null }>
@@ -1240,6 +1310,7 @@ async function ceneIzStripa(): Promise<{ letna: number; dozivljenjska: number; v
     if (l.currency !== d.currency) return { ...prazno, napaka: 'Stripe: različni valuti' }
     return { letna: l.unit_amount, dozivljenjska: d.unit_amount, valuta: l.currency, live: l.livemode && d.livemode }
   } catch (e) {
+    console.error('promo-preverjen: stripe', String(e))
     return { ...prazno, napaka: `Stripe: ${String(e)}` }
   }
 }
@@ -1247,10 +1318,11 @@ async function ceneIzStripa(): Promise<{ letna: number; dozivljenjska: number; v
 /** HTTP status javne strani /verified (pred pošiljanjem mora biti 200). */
 async function stranPreverjenih(): Promise<number> {
   try {
-    const r = await fetch(`${(Deno.env.get('SITE_URL') ?? 'https://slff.eu').replace(/\/$/, '')}/verified`, { redirect: 'follow' })
+    const r = await fetch(`${(Deno.env.get('SITE_URL') ?? 'https://slff.eu').replace(/\/$/, '')}/verified`, { redirect: 'follow', signal: AbortSignal.timeout(8000) })
     await r.body?.cancel()
     return r.status
-  } catch {
+  } catch (e) {
+    console.error('promo-preverjen: stran /verified', String(e))
     return 0
   }
 }

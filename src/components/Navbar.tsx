@@ -4,7 +4,8 @@ import { useLocation } from 'react-router-dom'
 import { NavLink } from './Povezava'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
-import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
+import { akcijaVabilTece } from '../lib/akcijaVabil'
+import { jeMladinskiSlug } from '../lib/prevzem'
 import { supabase } from '../lib/supabase'
 import { potrdiZapustitev } from '../lib/neshranjeno'
 import { jeNativno, povezavaTrgovine, TRGOVINA_VIDNA } from '../lib/platforma'
@@ -42,9 +43,9 @@ const ostale: Povezava[] = [
   { pot: '/positions', get naslov() { return t('aplikacija.meni.pozicije') } },
   { pot: '/absences', get naslov() { return t('aplikacija.meni.odsotnosti') } },
   { pot: '/national', get naslov() { return t('aplikacija.meni.slovenija') } },
+  // Mladi (U18 in mlajši): ista stran, druga starostna skupina lig.
+  { pot: '/national?pogled=igralci&starost=mladi', get naslov() { return t('aplikacija.meni.mladi') } },
 ]
-
-// Vabilo sestavimo iz izbrane lige in njenih klubov (glej `lib/vabilo.ts`).
 
 /** Zapre spustni meni ob kliku zunaj njega ali ob Escape. */
 function useZapriZunaj(odprt: boolean, zapri: () => void) {
@@ -70,8 +71,7 @@ function useZapriZunaj(odprt: boolean, zapri: () => void) {
 export default function Navbar() {
   const { session } = useAuth()
   const neprebrana = useNeprebrana()
-  const { id: tekmovanjeId, tekmovanje, drzava } = useTekmovanje()
-  const [klubiLige, setKlubiLige] = useState<string[]>([])
+  const { id: tekmovanjeId, drzava, slug } = useTekmovanje()
   const [jeAdmin, setJeAdmin] = useState(false)
   const [ime, setIme] = useState<string | null>(null)
   const [avatar, setAvatar] = useState<{ barva: number | null; ikona: string | null }>({ barva: null, ikona: null })
@@ -87,30 +87,16 @@ export default function Navbar() {
 
   // Mobilni meni se zapre ob vsaki navigaciji — tudi ob gumbu nazaj ali
   // povezavi zunaj menija, ne le ob kliku nanj.
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
+  // /national ima dve povezavi (glavna in mladi): označena je tista, ki se ujema s starostno skupino v naslovu.
+  const jeMladi = new URLSearchParams(search).get('starost') === 'mladi'
+  const dejavna = (p: Povezava, aktivna: boolean) =>
+    p.pot.startsWith('/national') ? aktivna && p.pot.includes('starost=mladi') === jeMladi : aktivna
   useEffect(() => {
     setOdprt(false)
     setVecOdprt(false)
     setRacunOdprt(false)
   }, [pathname])
-
-  // Klube beremo za vabilo; brez njih vabilo ostane smiselno, le brez seznama.
-  useEffect(() => {
-    if (!tekmovanjeId) return
-    let veljavno = true
-    supabase
-      .from('competition_teams')
-      .select('name')
-      .eq('competition_id', tekmovanjeId)
-      .then(({ data }) => {
-        if (veljavno) setKlubiLige((data ?? []).map((k) => k.name as string))
-      })
-    return () => {
-      veljavno = false
-    }
-  }, [tekmovanjeId])
-
-  const vabilo = vabiloMailto(sestaviVabilo(tekmovanje, klubiLige))
 
   useEffect(() => {
     if (!tekmovanjeId) return
@@ -170,6 +156,8 @@ export default function Navbar() {
   // Pivski zid je le na spletu (kot gumb "Časti pivo", glej Pivo.tsx).
   const zSpletom = jeNativno() ? zaDrzavo : [...zaDrzavo, { pot: '/beers', get naslov() { return t('aplikacija.pivo.zid') } }]
   const vec = jeAdmin && !jeNativno() ? [...zSpletom, { pot: '/admin', get naslov() { return t('aplikacija.meni.admin') } }] : zSpletom
+  // Akcija vabil: poudarjena povezava v meniju (ne v mladinski ligi, nagrada je pivo).
+  const vabiloVidno = Boolean(session) && akcijaVabilTece() && !jeMladinskiSlug(slug)
   // Začetnica za avatar: iz vzdevka, sicer iz e-naslova.
   const zacetnica = (ime || session?.user.email || '?').trim().charAt(0).toUpperCase()
 
@@ -215,6 +203,11 @@ export default function Navbar() {
                 {p.naslov}
               </NavLink>
             ))}
+            {vabiloVidno && (
+              <NavLink to="/invite" className="whitespace-nowrap rounded-full bg-amber-400/20 px-3 py-1.5 font-semibold text-amber-200 ring-1 ring-amber-300/40 hover:bg-amber-400/30">
+                {t('aplikacija.akcijaVabil.meni')}
+              </NavLink>
+            )}
             {/* Pri 1024 px bi trgovina izbirniku lige vzela skoraj ves prostor
                 (grščina se prelije čez rob), zato je zgoraj šele od xl, prej v "Več". */}
             {TRGOVINA_VIDNA && (
@@ -256,7 +249,7 @@ export default function Navbar() {
                       to={p.pot}
                       role="menuitem"
                       className={({ isActive }) =>
-                        `${vrsticaMenija} ${isActive ? 'font-semibold text-gnl-300' : ''} ${p.odXl ? 'xl:hidden' : ''}`
+                        `${vrsticaMenija} ${dejavna(p, isActive) ? 'font-semibold text-gnl-300' : ''} ${p.odXl ? 'xl:hidden' : ''}`
                       }
                       onClick={() => setVecOdprt(false)}
                     >
@@ -337,14 +330,14 @@ export default function Navbar() {
                     >
                       {t('aplikacija.meni.nastavitve')}
                     </NavLink>
-                    <a
-                      href={vabilo}
+                    <NavLink
+                      to="/invite"
                       role="menuitem"
                       className={vrsticaMenija}
                       onClick={() => setRacunOdprt(false)}
                     >
                       {t('aplikacija.meni.povabi')}
-                    </a>
+                    </NavLink>
                     <button
                       type="button"
                       role="menuitem"
@@ -412,6 +405,15 @@ export default function Navbar() {
 
         {odprt && (
           <div className="animiraj-vstop mt-3 border-t border-white/10 pt-3 text-base lg:hidden">
+            {vabiloVidno && (
+              <NavLink
+                to="/invite"
+                onClick={() => setOdprt(false)}
+                className="mb-2 block rounded-xl bg-amber-400/20 px-3 py-2.5 text-center font-semibold text-amber-100 ring-1 ring-amber-300/40"
+              >
+                {t('aplikacija.akcijaVabil.meniDolgo')}
+              </NavLink>
+            )}
             <div className="grid grid-cols-2 gap-1.5">
               {glavne.map((p) => (
                 <NavLink key={p.pot} to={p.pot} className={slogMobilni} onClick={() => setOdprt(false)}>
@@ -421,7 +423,12 @@ export default function Navbar() {
             </div>
             <div className="mt-3 grid grid-cols-2 gap-1.5 border-t border-white/5 pt-3 text-sm">
               {vec.map((p) => (
-                <NavLink key={p.pot} to={p.pot} className={slogMobilni} onClick={() => setOdprt(false)}>
+                <NavLink
+                  key={p.pot}
+                  to={p.pot}
+                  className={(a) => slogMobilni({ isActive: dejavna(p, a.isActive) })}
+                  onClick={() => setOdprt(false)}
+                >
                   {p.naslov}
                   {p.pot === '/assists' && znacka(cakaGlasov)}
                 </NavLink>
@@ -458,13 +465,13 @@ export default function Navbar() {
               >
                 {t('aplikacija.meni.pomoc')}
               </button>
-              <a
-                href={vabilo}
+              <NavLink
+                to="/invite"
                 className="col-span-2 rounded-lg px-3 py-2.5 text-center text-slate-400 hover:bg-white/5"
                 onClick={() => setOdprt(false)}
               >
                 {t('aplikacija.meni.povabi')}
-              </a>
+              </NavLink>
             </div>
           </div>
         )}

@@ -35,7 +35,8 @@ const DAN = 24 * 60 * 60 * 1000
 /** Da človek najprej vidi "Ekipa shranjena" oziroma stran, ki jo je odprl. */
 const ZAMIK_EKIPA_MS = 1_500
 const ZAMIK_KROG_MS = 2_500
-const BREZ_OKNA = ['/login', '/legal', '/account', '/beers', '/auth', '/admin', '/novo-geslo', '/new-password', '/reminders', '/claim']
+const ZAMIK_OBISK_MS = 6_000
+const BREZ_OKNA = ['/login', '/i/', '/invite', '/legal', '/account', '/beers', '/auth', '/admin', '/novo-geslo', '/new-password', '/reminders', '/claim']
 
 /** Okno utihne za `dni` dni (klik na pivo kjerkoli, zapiranje, "sem že"). */
 export function utisajPivoOkno(dni: number) {
@@ -72,13 +73,14 @@ export default function PivoOkno() {
     zeVprasan() &&
     !BREZ_OKNA.some((p) => pathname.startsWith(p))
   const pivoMogoce = () => !jeNativno() && !jeMladinskiSlug(slug) && !utisano()
+  const izberi = () => izberiPoziv(pivoMogoce(), Date.now(), jeMladinskiSlug(slug))
 
   const zapri = () => {
     setPovod(null)
     setJoka(false)
   }
   const koncaj = () => {
-    if (vrsta !== 'pivo') utisajPoziv(vrsta, 60)
+    if (vrsta !== 'pivo') utisajPoziv(vrsta, vrsta === 'vabilo' ? 3 : 60)
     zabeleziKorak(vrsta === 'pivo' ? 'pivo_okno_zaprto' : 'poziv_zaprt')
     zapri()
   }
@@ -86,14 +88,14 @@ export default function PivoOkno() {
 
   function odpri(p: PovodPiva, zamik: number) {
     return window.setTimeout(() => {
-      const v = izberiPoziv(pivoMogoce())
+      const v = izberi()
       if (!v) return
       oznaciOkno() // osvežitev strani ga ne prikliče znova
       if (v === 'pivo') {
         utisajPivoOkno(14)
         zabeleziKorak('pivo_okno')
         zabeleziKorak(p.vrsta === 'ekipa' ? 'pivo_okno_ekipa' : 'pivo_okno_krog')
-      } else zabeleziKorak(v === 'aplikacija' ? 'poziv_aplikacija' : 'poziv_sledi')
+      } else zabeleziKorak(v === 'vabilo' ? 'poziv_vabilo' : v === 'aplikacija' ? 'poziv_aplikacija' : 'poziv_sledi')
       setVrsta(v)
       setPovod(p)
     }, zamik)
@@ -104,7 +106,7 @@ export default function PivoOkno() {
     if (!ustreza || odprto) return
     let id: number | undefined
     const stop = poslusajPovode((p) => {
-      if (!izberiPoziv(pivoMogoce())) return
+      if (!izberi()) return
       window.clearTimeout(id)
       id = odpri(p, ZAMIK_EKIPA_MS)
     })
@@ -116,7 +118,7 @@ export default function PivoOkno() {
 
   // Povod "krog": ob prvem obisku po končanem krogu, če je bil dober.
   useEffect(() => {
-    if (!ustreza || odprto || !izberiPoziv(pivoMogoce()) || !uporabnik || ligaId == null) return
+    if (!ustreza || odprto || !izberi() || !uporabnik || ligaId == null) return
     let velja = true
     let id: number | undefined
     najdiDoberKrog(uporabnik, ligaId)
@@ -130,6 +132,14 @@ export default function PivoOkno() {
       window.clearTimeout(id)
     }
   }, [ustreza, odprto, uporabnik, ligaId])
+
+  // Povod "obisk": med akcijo vabil okno vabila tudi brez dobre volje,
+  // nekaj sekund po odprtju strani (premor in prednost ureja lib/pozivi.ts).
+  useEffect(() => {
+    if (!ustreza || odprto || izberi() !== 'vabilo') return
+    const id = odpri({ vrsta: 'ekipa', krog: null }, ZAMIK_OBISK_MS)
+    return () => window.clearTimeout(id)
+  }, [ustreza, odprto, slug])
 
   useEffect(() => {
     if (!odprto) return

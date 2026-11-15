@@ -4,6 +4,7 @@ import { Link } from '../components/Povezava'
 import ImeLastnika from '../components/ImeLastnika'
 import { KraljNapovedi, KronaKralja, useKraljMiniLige } from '../components/NapovediMiniLige'
 import IzstopMiniLige from '../components/IzstopMiniLige'
+import RazpustiMiniLigo from '../components/RazpustiMiniLigo'
 import DvobojiMiniLige, { IzbiraPogleda, type PogledMiniLige } from '../components/DvobojiMiniLige'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
@@ -169,6 +170,10 @@ export default function JavnaMiniLiga() {
             </li>
           ))}
         </ol>
+      )}
+
+      {glava.sem_lastnik && (
+        <RazpustiMiniLigo ligaId={glava.id} imeLige={glava.name} onKoncano={() => pojdi('/mini-leagues')} />
       )}
     </div>
   )

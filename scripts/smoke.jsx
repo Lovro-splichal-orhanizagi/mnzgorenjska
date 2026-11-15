@@ -38,6 +38,8 @@ import PrevzemIgralca from '../src/components/PrevzemIgralca'
 import { ScoutIgralca } from '../src/components/ScoutIgralca'
 import Prevzemi from '../src/components/admin/Prevzemi'
 import Piva from '../src/pages/Piva'
+import Povabi from '../src/pages/Povabi'
+import VabiloPrijatelja from '../src/pages/VabiloPrijatelja'
 import Pravno from '../src/pages/Pravno'
 import PivskiZidAdmin from '../src/components/admin/Piva'
 import { lestvicaPodpornikov, vsehPiv } from '../src/lib/piva'
@@ -80,13 +82,13 @@ import { jeDoberKrog, povprecjeKroga } from '../src/lib/pivoNavdusenje'
 import { trgovinaTelefona } from '../src/lib/pozivi'
 import Trgovine, { APP_STORE, GOOGLE_PLAY } from '../src/components/Trgovine'
 import AppPromo, { APP_PROMO_DO, appPromoAktivna } from '../src/components/AppPromo'
+import ZnackeTrgovin from '../src/components/ZnackeTrgovin'
 import Facebook from '../src/components/Facebook'
 import Instagram from '../src/components/Instagram'
 import { parsirajZapisnik, nastopi, dodajStrelceSKlopi } from './zapisnik.mjs'
 import { poZvezah, ustreza, pokaziZvezo, ustrezaRavni, privzetoRazprte } from '../src/components/IzbirnikLige'
 import { dovoljZaIskanje, ujemaIme, opisIgralca, potIgralca, izDrugihLig } from '../src/lib/iskanjeIgralcev'
 import { virPodatkov, imeZveze } from '../src/components/VirPodatkov'
-import { sestaviVabilo, vabiloMailto } from '../src/lib/vabilo'
 import { viraZa, znaniViri } from './viri/index.mjs'
 import { caka, brezAsistencePotrjeno, PRAG_ASISTENCE_PRIVZETO } from '../src/components/GolZaGlasovanje'
 import { adaptivniPrag } from '../src/pages/Pozicije'
@@ -165,6 +167,8 @@ const strani = [
   ['Scout igralca', () => <div><ScoutIgralca glavni={1} /></div>, '/player/1'],
   ['Admin: prevzemi', () => <div><Prevzemi /></div>, '/admin'],
   ['Pivski zid', Piva, '/beers'],
+  ['Povabi prijatelje', Povabi, '/invite'],
+  ['Vabilo prijatelja', VabiloPrijatelja, '/i/luka27'],
   ['Admin: pivski zid', () => <div><PivskiZidAdmin /></div>, '/admin'],
 ]
 
@@ -1085,7 +1089,7 @@ preveri(
 }
 
 // --- vmesnik prezivi neuveljavljeno migracijo -------------------------------
-// Koda gre na Vercel, migracijo pa mora nekdo pognati proti Supabase. Ce se
+// Koda gre na strežnik, migracijo pa mora nekdo pognati proti bazi. Ce se
 // vrstni red obrne, PostgREST zavrne poizvedbo z neznanimi stolpci in vmesnik
 // ostane BREZ LIG — nobena stran nima kaj pokazati. Zato zna brati tudi staro
 // shemo.
@@ -1572,7 +1576,7 @@ preveri(
       })
       if (tabela === 'competitions')
         return odgovor(url.searchParams.has('slug') ? liga : [liga])
-      if (tabela === 'preveri_podatke') return odgovor([])
+      if (tabela === 'preveri_podatke_del') return odgovor([])
       // Zamujene tekme: privzeto jih ni. Preverba mora znati lociti "ni
       // zamud" od "poizvedba je padla", zato tu vrnemo prazen seznam in ne
       // napake — zamude imajo svojo trditev nize.
@@ -1698,7 +1702,7 @@ preveri(
     globalThis.fetch = async (vhod, moznosti) => {
       const zahteva = new Request(vhod, moznosti)
       const pot = new URL(zahteva.url).pathname
-      if (pot.endsWith('/rpc/preveri_podatke'))
+      if (pot.endsWith('/rpc/preveri_podatke_del'))
         return new Response('[]', { headers: { 'Content-Type': 'application/json' } })
       if (pot.endsWith('/competitions'))
         return new Response(JSON.stringify({ message: 'Branje lig ni uspelo' }), {
@@ -1717,35 +1721,26 @@ preveri(
   preveri('podatki: napaka branja lig nikoli ne izpiše uspeha', !zagon.stdout.includes('Vse v redu'))
 }
 
-// --- vabilo prijatelju ------------------------------------------------------
-// Besedilo je bilo zapisano v kodi in je nastevalo trinajst gorenjskih klubov.
-// Pri eni ligi je bilo to najboljse mozno vabilo; pri devetih zvezah bi igralec
-// iz Ptuja vabil s klubi, ki jih ni nikoli videl.
+// 504 prehoda (Cloudflare) iz lastnega API-ja je padec preverbe, ne "vir ne dela"
+// in ne "vse v redu": izhod 1, del imenovan, uspeha ni.
 {
-  const liga = { id: 1, slug: 'pt-super', name: 'Super liga — Ptuj', short_name: 'PT 1.',
-    prvi_fantasy_krog: 1, federation_code: 'mnzpt', federation_name: 'MNZ Ptuj',
-    federation_short: 'Ptuj', federation_url: null, federation_sort: 4,
-    country_code: 'SI', country_name: 'Slovenija' }
-
-  const v = sestaviVabilo(liga, ['Bukovci', 'Dornava', 'Apace'])
-  preveri('vabilo: zadeva imenuje pravo ligo', v.zadeva.includes('Super liga — Ptuj'), v.zadeva)
-  preveri('vabilo: brez sklanjanja imena lige', !/za Super liga\b/.test(v.besedilo), v.besedilo.slice(0, 70))
-  preveri('vabilo: ne podvoji predloga', !v.besedilo.includes('igralcev iz naših'), v.besedilo.slice(60, 130))
-  preveri('vabilo: nasteje prave klube', v.besedilo.includes('Bukovci, Dornava, Apace'))
-  preveri('vabilo: ne omenja Gorenjske', !/Gorenjsk|GNL/.test(v.besedilo))
-  preveri('vabilo: doda zvezo, ce je ni v imenu', v.besedilo.includes('(MNZ Ptuj)'))
-
-  // Brez klubov mora ostati smiseln stavek, ne pa "iz nasih klubov ()".
-  const brez = sestaviVabilo(liga, [])
-  preveri('vabilo: brez klubov ni praznega oklepaja', !brez.besedilo.includes('()'), brez.besedilo.slice(0, 90))
-  preveri('vabilo: brez lige se vedno povabi', sestaviVabilo(null).besedilo.includes('Registriraj se'))
-
-  // Ce je zveza ze v imenu lige, je ne podvajamo.
-  const gnl = sestaviVabilo({ ...liga, name: 'MNZ Ptuj liga', federation_name: 'MNZ Ptuj' }, [])
-  preveri('vabilo: zveze ne podvoji', !gnl.besedilo.includes('MNZ Ptuj (MNZ Ptuj)'))
-
-  preveri('vabilo: mailto zakodira zadevo in telo',
-    vabiloMailto(v).startsWith('mailto:?subject=') && vabiloMailto(v).includes('&body='))
+  const { spawnSync } = await import('node:child_process')
+  const zagon = spawnSync(process.execPath, ['--input-type=module', '-e', `
+    globalThis.fetch = async (vhod, moznosti) => {
+      const pot = new URL(new Request(vhod, moznosti).url).pathname
+      if (pot.endsWith('/rpc/preveri_podatke_del'))
+        return new Response('<html>504 Gateway Time-out</html>', { status: 504, headers: { 'Content-Type': 'text/html' } })
+      throw new Error('Nepričakovana zahteva: ' + pot)
+    }
+    await import(${JSON.stringify(new URL('./preveri-podatke.mjs', import.meta.url).href)})
+  `], {
+    encoding: 'utf8', timeout: 10000,
+    env: { PATH: process.env.PATH, SUPABASE_URL: 'http://127.0.0.1:54321',
+      SUPABASE_SERVICE_ROLE_KEY: 'preizkusni-kljuc' },
+  })
+  preveri('podatki: 504 pri delu preverbe konča nadzor z napako',
+    zagon.status === 1 && zagon.stderr.includes('del "postava"'), zagon.stderr.trim())
+  preveri('podatki: 504 pri delu preverbe nikoli ne izpiše uspeha', !zagon.stdout.includes('Vse v redu'))
 }
 
 // --- viri ------------------------------------------------------------------
@@ -2576,6 +2571,31 @@ preveri(
     razvrsti([], 'povprecje').length === 0 && povzetek([]).lig === 0)
 }
 
+// --- starostne skupine drzavne lestvice (SLF-366) ---------------------------
+// Glavna lestvica = clani + U19, mladi = U18 in mlajsi; neznana skupina ni
+// v nobeni. Skupina je oznaka lige, ne igralca.
+{
+  const { jeVStarosti, starostIzNaslova, naslovStarosti, jeNiPripravljeno } =
+    await import('../src/lib/starost.ts')
+  preveri('starost: clani in U19 so v glavni, ne med mladimi',
+    jeVStarosti('clani', 'glavna') && jeVStarosti('u19', 'glavna')
+    && !jeVStarosti('clani', 'mladi') && !jeVStarosti('u19', 'mladi'))
+  preveri('starost: U18 in mlajsi so le med mladimi',
+    jeVStarosti('pod_u19', 'mladi') && !jeVStarosti('pod_u19', 'glavna'))
+  preveri('starost: neznana skupina ni nikjer (fail closed)',
+    [null, undefined, '', 'u21', 'mladi'].every((x) => !jeVStarosti(x, 'glavna') && !jeVStarosti(x, 'mladi')))
+  preveri('starost: ?starost=mladi, vse drugo je glavna',
+    starostIzNaslova('mladi') === 'mladi' && starostIzNaslova(null) === 'glavna'
+    && starostIzNaslova('glavna') === 'glavna' && starostIzNaslova('xyz') === 'glavna')
+  const iskanje = new URLSearchParams('t=lj-1-liga&pogled=klubi')
+  preveri('starost: preklop ohrani ligo in zavihek, nazaj odstrani parameter',
+    naslovStarosti(iskanje, 'mladi').toString() === 't=lj-1-liga&pogled=klubi&starost=mladi'
+    && naslovStarosti(new URLSearchParams('t=x&starost=mladi'), 'glavna').toString() === 't=x')
+  preveri('starost: manjkajoca migracija ni napaka baze',
+    jeNiPripravljeno({ code: 'PGRST202', message: 'x' }) && jeNiPripravljeno({ message: 'column starostna_skupina does not exist' })
+    && !jeNiPripravljeno({ code: '57014', message: 'timeout' }) && !jeNiPripravljeno(null))
+}
+
 // --- ISO teden za tedensko prevrednotenje ------------------------------------
 // Prevrednotenje NI idempotentno: vsak zagon priblizna ceno za najvec 1.0 in
 // z njo potuje sidro borze. Dvakrat v istem tednu pomeni premik za 2.0, zato
@@ -3367,6 +3387,13 @@ preveri(
   preveri('promo: kartica ima obe povezavi na trgovini', promo.includes(`href="${GOOGLE_PLAY}"`) && promo.includes(`href="${APP_STORE}"`), promo)
   preveri('promo: aktivna pred koncem, neaktivna ob koncu in po njem', appPromoAktivna(APP_PROMO_DO - 1, false) && !appPromoAktivna(APP_PROMO_DO, false) && !appPromoAktivna(APP_PROMO_DO + 86400000, false))
   preveri('promo: v aplikaciji je ni', !appPromoAktivna(APP_PROMO_DO - 1, true))
+  // Uradni znački trgovin v uvodu (SLF-347): povezavi, imeni za bralnik zaslona in datoteke za vsak jezik.
+  const znacke = renderToString(<ZnackeTrgovin />)
+  preveri('znacke: povezavi na obe trgovini v novem zavihku', znacke.includes(`href="${GOOGLE_PLAY}"`) && znacke.includes(`href="${APP_STORE}"`) && znacke.split('target="_blank"').length === 3, znacke)
+  preveri('znacke: sliki imata ime, App Store prvi', !znacke.includes('alt=""') && znacke.indexOf('app-store') < znacke.indexOf('google-play'), znacke)
+  for (const j of ['sl', 'en', 'de', 'cs', 'da', 'el', 'es', 'et', 'hr', 'hu', 'hy', 'lv', 'mk', 'pl', 'ro', 'sk', 'sr', 'tr', 'uk', 'az']) {
+    preveri(`znacke: Google Play značka za ${j} obstaja`, existsSync(`public/badges/google-play-${j}.png`))
+  }
   // Noga: družabni omrežji samo kot ikoni, ime ostane za bralnik zaslona (SLF-343).
   for (const [ime, el] of [['Facebook', <Facebook />], ['Instagram', <Instagram />]]) {
     const html = renderToString(el)
@@ -8237,7 +8264,11 @@ preveri(
     preveri('dbu: trki imen — FC Roskilde z dvema id-jema je trk; Holstebro B 6038 in 6068 ni (IME_EKIPE)',
       trki.length === 1 && trki[0].kljuc === 'fc roskilde' && trki[0].ekipe.map((e) => e.id).sort().join() === '18483,99999' &&
       D.trkiEkip([{ pulja: '508657', html: holstebro(6038, 508657) }, { pulja: '499769', html: holstebro(6068, 499769) }, { pulja: '473829', html: holstebro(6038, 473829) }]).length === 0 &&
-      D.trkiEkip([{ pulja: '508657', html: holstebro(6038, 508657) }, { pulja: '499768', html: holstebro(7777, 499768) }]).length === 1)
+      D.trkiEkip([{ pulja: '508657', html: holstebro(6038, 508657) }, { pulja: '499768', html: holstebro(7777, 499768) }]).length === 1 &&
+      // isti klub v članih, U19 in U17 ni trk; dve ekipi iste selekcije (U19 Ligaen + Divisionen) sta
+      D.trkiEkip([{ pulja: '508656', html: holstebro(1, 508656) }, { pulja: '508670', html: holstebro(2, 508670) }, { pulja: '508668', html: holstebro(3, 508668) }]).length === 0 &&
+      D.trkiEkip([{ pulja: '508670', html: holstebro(2, 508670) }, { pulja: '508669', html: holstebro(4, 508669) }]).length === 1 &&
+      ['508850', '508670', '508669', '508668', '508667'].every((p) => D.DBU_PULJE['2026/27'].includes(p)))
     let trk = null
     console.warn = () => {}
     try { await D.default.zapisniki('508656', async (url, ime) => (ime === 'pulje-499769.html' ? drugaEkipa : ime.startsWith('pulje-') ? prog : beri('dk-dbu-kamp-308808.html'))) } catch (e) { trk = e }
@@ -10315,10 +10346,10 @@ preveri(
   const k = M.razberiKodo('epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ')
   let neznana = null
   try { M.razberiKodo('epsath.gr:Α ΚΑΤΗΓΟΡΙΑ') } catch (e) { neznana = e.message }
-  preveri('mascot: šifra lige in naslovi (analitika pri epsm in Ahaji, table.asp drugje)', k.domena === 'epsm.gr' && k.diorganosi === 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ' && k.zveza === 'mak' &&
+  preveri('mascot: šifra lige in naslovi (analitika povsod razen Thesprotija)', k.domena === 'epsm.gr' && k.diorganosi === 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ' && k.zveza === 'mak' &&
     V.naslovRazporeda('epsm.gr:Α1 ΕΡΑΣΙΤΕΧΝΙΚΗ') === 'https://www.epsm.gr/table_analytika.asp?diorganosi=%CE%911%20%CE%95%CE%A1%CE%91%CE%A3%CE%99%CE%A4%CE%95%CE%A7%CE%9D%CE%99%CE%9A%CE%97' &&
     V.naslovRazporeda('epsachaias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ').startsWith('https://www.epsachaias.gr/table_analytika.asp?diorganosi=') &&
-    V.naslovRazporeda('epsdramas.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)').startsWith('https://www.epsdramas.gr/table.asp?diorganosi=') &&
+    V.naslovRazporeda('epsdramas.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)').startsWith('https://www.epsdramas.gr/table_analytika.asp?diorganosi=') && V.naslovRazporeda('epsthesprotias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ').startsWith('https://www.epsthesprotias.gr/table.asp?diorganosi=') &&
     M.naslovTekme('epsm.gr', 2018, '2026-10-10') === 'https://www.epsm.gr/game.asp?game_number=2018&match_date=10.10.2026' && /ne poznam/.test(neznana ?? ''))
   preveri('mascot: šifra zapisnika ima zvezo in sezono (številke tekem se vsako sezono ponovijo)', M.sifraZapisnika('epsm.gr', 2018, '2026-10-10') === 'gr-mak-2026-2018' &&
     M.sifraZapisnika('epsm.gr', 2018, '2027-04-10') === 'gr-mak-2026-2018' && M.sifraZapisnika('epsachaias.gr', 1002, '2027-09-27') === 'gr-ach-2027-1002' &&
@@ -10383,6 +10414,21 @@ preveri(
     tan.length === 90 && new Set(tan.map((x) => x.krog)).size === 18 && tan.every((x) => x.igra) && tan.filter((x) => x.izid).length === 25 &&
     ta.filter((x) => x.igra).every((x) => tan.some((y) => y.igra === x.igra && y.domaci === x.domaci && y.gostje === x.gostje)) &&
     tan.find((x) => x.igra === 1002)?.ura === '19:30' && M.jeStranLige(ran, 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ'))
+  // 6. 11. 2026: še pet domen (Pela, Drama, Kozani, Imatija, Preveza-Lefkada) je table.asp zamenjalo z analitiko.
+  for (const [ime, liga, n, krogov, klubov, odigranih, domena] of [
+    ['epspellas-b-1', 'Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ', 56, 14, 8, 9, 'epspellas.gr'],
+    ['epsdramas-a', 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)', 132, 22, 12, 41, 'epsdramas.gr'],
+    ['epskozanis-a', 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)', 110, 22, 11, 25, 'epskozanis.gr'],
+    ['eps-imathias-a', 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ ΚΑΤΗΓΟΡΙΑ ΚΑΝΟΝΙΚΗ ΠΕΡΙΟΔΟΣ', 182, 26, 14, 48, 'eps-imathias.gr'],
+    ['epsprevezas-a', 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)', 72, 18, 9, 8, 'epsprevezas-lefkadas.gr'],
+  ]) {
+    const h = beri(`gr-mascot-razpored-${ime}-an.html`)
+    const t = M.tekmeRazporeda(h)
+    preveri(`mascot: nova predloga ${domena} — ${n} tekem, ${krogov} krogov, ${klubov} klubov, vsaka s povezavo, bere se z analitike`,
+      t.length === n && new Set(t.map((x) => x.krog)).size === krogov && new Set(t.flatMap((x) => [x.domaci, x.gostje])).size === klubov &&
+      t.every((x) => x.igra) && t.filter((x) => x.izid).length === odigranih && !t.some((x) => x.brezBorbe) &&
+      M.jeStranLige(h, liga) && M.naslovRazporeda(`${domena}:X`).includes('/table_analytika.asp'))
+  }
   const vrsta = (d, g) => `<i onclick="location.href='game.asp?game_number=1'"></i>\n${d} - ${g}&nbsp;&nbsp;&nbsp;1 - 0\n<font>ΗΜ: 10.10.2026 16:00</font><br>`
   const vezaj = M.tekmeRazporeda(`<div>ΑΝΑΛΥΤΙΚΟ ΠΡΟΓΡΑΜΜΑ <b>1<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ</b><br>${vrsta('ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ', 'ΑΧΑΙΚΗ')}${vrsta('ΦΑΡΑΙΚΟΣ', 'ΘΥΕΛΛΑ')}<b>2<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ</b><br>${vrsta('ΑΧΑΙΚΗ', 'ΦΑΡΑΙΚΟΣ')}${vrsta('ΘΥΕΛΛΑ', 'ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ')}</div>`)
   preveri('mascot: vrstica brez ločila — ime z " - " se razdeli po klubih, ki jih razpored pozna', vezaj.length === 4 &&
