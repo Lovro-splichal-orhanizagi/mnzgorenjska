@@ -372,6 +372,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     odstranjena: 'Meeskond {ekipa} eemaldati miniliigast.',
     niUspelo: 'Ei õnnestunud. Värskenda lehte ja proovi uuesti.',
   },
+  razpustiMiniLigo: {
+    gumb: 'Kustuta miniliiga',
+    vprasanje: 'Kas kustutada miniliiga „{liga}” kõigi liikmete jaoks? Tiimid, mängijad ja punktid jäävad alles, kaovad vaid selle miniliiga tabel ja kutsekood. Seda ei saa tagasi võtta.',
+    potrdi: 'Jah, kustuta miniliiga',
+    razpuscena: 'Miniliiga „{liga}” on kustutatud.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Kutsu veel kedagi: {ime}',

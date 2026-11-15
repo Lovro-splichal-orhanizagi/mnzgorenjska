@@ -413,4 +413,10 @@ export const mojaEkipa = {
       izstop: 'Zanj ne boš več dobil točk — zamenjaj ga. Ekipa z njim ostane veljavna.',
     },
   },
+  odstraniEkipo: {
+    gumb: 'Odstrani to ekipo',
+    vprasanje: 'Odstraniš ekipo {ekipa} iz lige {liga}? Njen kader in njena članstva v mini ligah se izbrišejo za vedno. Kasneje lahko sestaviš novo ekipo. To gre le, dokler ekipa nima točk.',
+    potrdi: 'Da, odstrani ekipo',
+    imaTocke: 'Ta ekipa že ima točke, zato je tu ni mogoče odstraniti. Piši nam v klepetu in ti bomo pomagali.',
+  },
 }

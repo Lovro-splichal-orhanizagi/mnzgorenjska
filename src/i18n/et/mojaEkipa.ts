@@ -400,4 +400,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       izstop: 'Ta ei saa enam punkte: vaheta ta välja. Kui ta jääb, jääb su meeskond siiski nõuetekohaseks.',
     },
   },
+  odstraniEkipo: {
+    gumb: 'Eemalda see tiim',
+    vprasanje: 'Kas eemaldada tiim {ekipa} liigast {liga}? Selle koosseis ja miniliigade liikmesused kustutatakse jäädavalt. Hiljem saad koostada uue tiimi. See on võimalik ainult seni, kuni tiimil pole punkte.',
+    potrdi: 'Jah, eemalda tiim',
+    imaTocke: 'Sellel tiimil on juba punkte, seega ei saa seda siin eemaldada. Kirjuta meile vestluses ja aitame.',
+  },
 }

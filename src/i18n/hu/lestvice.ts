@@ -373,6 +373,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     odstranjena: 'A(z) {ekipa} csapatot eltávolítottuk a miniligából.',
     niUspelo: 'Nem sikerült. Frissítsd az oldalt, és próbáld újra.',
   },
+  razpustiMiniLigo: {
+    gumb: 'Minibajnokság törlése',
+    vprasanje: 'Törlöd a(z) „{liga}” minibajnokságot az összes tagja számára? A csapatok, a játékosok és a pontok megmaradnak, csak ennek a minibajnokságnak a táblázata és a meghívókódja tűnik el. Ez nem vonható vissza.',
+    potrdi: 'Igen, törlöm a minibajnokságot',
+    razpuscena: 'A(z) „{liga}” minibajnokság törölve.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Hívj meg még valakit ide: {ime}',

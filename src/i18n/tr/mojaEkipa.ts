@@ -401,4 +401,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       izstop: 'Artık puan almayacak, yerine başkasını al. Onu tutarsan takımın yine de geçerli kalır.',
     },
   },
+  odstraniEkipo: {
+    gumb: 'Bu takımı kaldır',
+    vprasanje: '{ekipa} takımı {liga} liginden kaldırılsın mı? Kadrosu ve mini lig üyelikleri kalıcı olarak silinir. Daha sonra yeni bir takım kurabilirsin. Bu yalnızca takımın puanı yokken mümkündür.',
+    potrdi: 'Evet, takımı kaldır',
+    imaTocke: 'Bu takımın zaten puanı var, bu yüzden burada kaldırılamaz. Sohbetten bize yaz, yardımcı olalım.',
+  },
 }

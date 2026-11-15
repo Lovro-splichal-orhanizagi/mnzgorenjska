@@ -405,4 +405,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       izstop: 'Pentru el nu vei mai primi puncte: înlocuiește-l. Echipa cu el rămâne validă.',
     },
   },
+  odstraniEkipo: {
+    gumb: 'Elimină această echipă',
+    vprasanje: 'Elimini echipa {ekipa} din {liga}? Lotul ei și apartenențele la mini-ligi se șterg definitiv. Poți forma o echipă nouă mai târziu. Merge doar cât timp echipa nu are puncte.',
+    potrdi: 'Da, elimină echipa',
+    imaTocke: 'Această echipă are deja puncte, deci nu poate fi eliminată aici. Scrie-ne în chat și te ajutăm.',
+  },
 }

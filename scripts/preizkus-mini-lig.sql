@@ -22,6 +22,7 @@ declare
   drzava bigint;
   tekmovanje bigint;
   klub bigint;
+  krog bigint;
 begin
   -- --- priprava ------------------------------------------------------------
   insert into auth.users (id, email, instance_id, aud, role)
@@ -201,6 +202,75 @@ begin
     raise exception '14. vsebina klepeta mora ostati vidna, vidnih je %', n;
   end if;
   raise notice 'OK 14: klepet je viden, avtor pa ne';
+
+  -- --- 15. lastnik razpusti mini ligo, tujec ne (SLF-462) -------------------
+  perform set_config('request.jwt.claims', json_build_object('sub', c, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  delete from mini_lige where id = liga;
+  get diagnostics n = row_count;
+  execute 'set local role postgres';
+  if n <> 0 then raise exception '15. tujec je razpustil tujo mini ligo'; end if;
+
+  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  delete from mini_lige where id = liga;
+  get diagnostics n = row_count;
+  execute 'set local role postgres';
+  if n <> 1 then raise exception '15. lastnik ne more razpustiti svoje mini lige'; end if;
+  select count(*) into n from mini_liga_clani where mini_liga_id = liga;
+  if n <> 0 then raise exception '15. clanstva razpustene lige so ostala (%)', n; end if;
+  select count(*) into n from fantasy_teams where id in (ekipa_a, ekipa_b);
+  if n <> 2 then raise exception '15. razpustitev lige je pobrisala ekipe (%)', n; end if;
+  raise notice 'OK 15: lastnik razpusti mini ligo, ekipe ostanejo';
+
+  -- --- 16. izbrisi_mojo_ekipo ------------------------------------------------
+  perform set_config('request.jwt.claims', json_build_object('sub', c, 'role', 'authenticated')::text, true);
+  begin
+    execute 'set local role authenticated';
+    perform izbrisi_mojo_ekipo(ekipa_a);
+    execute 'set local role postgres';
+    raise exception 'NAPAKA: tujec je izbrisal tujo ekipo';
+  exception when others then
+    execute 'set local role postgres';
+    get stacked diagnostics napaka = message_text;
+    if napaka like 'NAPAKA:%' then raise; end if;
+  end;
+
+  -- Ekipa s tockami ostane.
+  insert into rounds (competition_id, season, number, deadline_at, played_on)
+  values (tekmovanje, 'preizkus-762', 1, now(), current_date)
+  returning id into krog;
+  insert into tocke_krogov (fantasy_team_id, round_id, points, transfers, penalty)
+  values (ekipa_a, krog, 12, 0, 0);
+  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated')::text, true);
+  begin
+    execute 'set local role authenticated';
+    perform izbrisi_mojo_ekipo(ekipa_a);
+    execute 'set local role postgres';
+    raise exception 'NAPAKA: ekipa s tockami je bila izbrisana';
+  exception when others then
+    execute 'set local role postgres';
+    get stacked diagnostics napaka = message_text;
+    if napaka like 'NAPAKA:%' then raise; end if;
+  end;
+  delete from tocke_krogov where round_id = krog;
+  delete from rounds where id = krog;
+
+  -- Ekipa brez tock gre, z njo clanstvo v mini ligi; druge ekipe ostanejo.
+  insert into mini_lige (name, code, owner_id) values ('Preizkus 762', nova_koda_mini_lige(), b)
+    returning id into liga;
+  insert into mini_liga_clani (mini_liga_id, fantasy_team_id) values (liga, ekipa_b);
+  perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  perform izbrisi_mojo_ekipo(ekipa_b);
+  execute 'set local role postgres';
+  select count(*) into n from fantasy_teams where id = ekipa_b;
+  if n <> 0 then raise exception '16. ekipa brez tock ni izbrisana'; end if;
+  select count(*) into n from mini_liga_clani where fantasy_team_id = ekipa_b;
+  if n <> 0 then raise exception '16. clanstvo izbrisane ekipe je ostalo'; end if;
+  select count(*) into n from fantasy_teams where id = ekipa_a;
+  if n <> 1 then raise exception '16. izbrisana je bila tudi tuja ekipa'; end if;
+  raise notice 'OK 16: izbrisi_mojo_ekipo: tujec ne, ekipa s tockami ne, ekipa brez tock da';
 
   -- --- pospravi -------------------------------------------------------------
   delete from chat_messages where user_id in (a, b, c);

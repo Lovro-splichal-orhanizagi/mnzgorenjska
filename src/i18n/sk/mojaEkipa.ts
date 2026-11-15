@@ -397,4 +397,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       izstop: 'Body za neho už nezískaš — vymeň ho. Tím s ním zostáva platný.',
     },
   },
+  odstraniEkipo: {
+    gumb: 'Odstrániť tento tím',
+    vprasanje: 'Odstrániť tím {ekipa} z ligy {liga}? Jeho súpiska a členstvá v mini ligách sa natrvalo vymažú. Neskôr môžeš zostaviť nový tím. Funguje to, len kým tím nemá body.',
+    potrdi: 'Áno, odstrániť tím',
+    imaTocke: 'Tento tím už má body, preto sa tu nedá odstrániť. Napíš nám v chate a pomôžeme ti.',
+  },
 }

@@ -373,6 +373,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     odstranjena: 'Komanda {ekipa} ir izņemta no minilīgas.',
     niUspelo: 'Neizdevās. Atsvaidzini lapu un mēģini vēlreiz.',
   },
+  razpustiMiniLigo: {
+    gumb: 'Dzēst mini līgu',
+    vprasanje: 'Dzēst mini līgu “{liga}” visiem dalībniekiem? Komandas, spēlētāji un punkti paliek, pazūd tikai šīs mini līgas tabula un tās ielūguma kods. To nevar atsaukt.',
+    potrdi: 'Jā, dzēst mini līgu',
+    razpuscena: 'Mini līga “{liga}” izdzēsta.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Uzaicini vēl kādu: {ime}',

@@ -391,4 +391,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       izstop: 'Par viņu tu vairs nesaņemsi punktus: nomaini viņu. Komanda ar viņu paliek derīga.',
     },
   },
+  odstraniEkipo: {
+    gumb: 'Noņemt šo komandu',
+    vprasanje: 'Noņemt komandu {ekipa} no līgas {liga}? Tās sastāvs un dalība mini līgās tiek izdzēsti uz visiem laikiem. Vēlāk vari izveidot jaunu komandu. Tas ir iespējams tikai, kamēr komandai nav punktu.',
+    potrdi: 'Jā, noņemt komandu',
+    imaTocke: 'Šai komandai jau ir punkti, tāpēc to šeit nevar noņemt. Uzraksti mums tērzētavā, un mēs palīdzēsim.',
+  },
 }

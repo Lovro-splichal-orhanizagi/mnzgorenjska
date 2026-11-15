@@ -363,6 +363,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     odstranjena: '{ekipa} takımı mini ligden çıkarıldı.',
     niUspelo: 'Olmadı. Sayfayı yenileyip tekrar dene.',
   },
+  razpustiMiniLigo: {
+    gumb: 'Mini ligi sil',
+    vprasanje: '“{liga}” mini ligi tüm üyeler için silinsin mi? Takımlar, oyuncular ve puanlar kalır; yalnızca bu mini ligin tablosu ve davet kodu kaybolur. Bu geri alınamaz.',
+    potrdi: 'Evet, mini ligi sil',
+    razpuscena: '“{liga}” mini ligi silindi.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Başka birini davet et: {ime}',

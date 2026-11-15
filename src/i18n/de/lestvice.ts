@@ -372,6 +372,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     odstranjena: 'Das Team {ekipa} wurde aus der Mini-Liga entfernt.',
     niUspelo: 'Das hat nicht geklappt. Lade die Seite neu und versuche es noch einmal.',
   },
+  razpustiMiniLigo: {
+    gumb: 'Mini-Liga löschen',
+    vprasanje: 'Die Mini-Liga „{liga}“ für alle Mitglieder löschen? Teams, Spieler und Punkte bleiben, nur die Tabelle dieser Mini-Liga und ihr Einladungscode verschwinden. Das lässt sich nicht rückgängig machen.',
+    potrdi: 'Ja, Mini-Liga löschen',
+    razpuscena: 'Mini-Liga „{liga}“ gelöscht.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Noch jemanden in {ime} einladen',

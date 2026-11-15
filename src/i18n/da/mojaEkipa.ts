@@ -399,4 +399,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       izstop: 'Han får ikke flere point, så skift ham ud. Dit hold forbliver gyldigt, hvis du beholder ham.',
     },
   },
+  odstraniEkipo: {
+    gumb: 'Fjern dette hold',
+    vprasanje: 'Fjern holdet {ekipa} fra {liga}? Dets trup og dets medlemskaber af minirækker slettes for altid. Du kan sammensætte et nyt hold senere. Det kan kun lade sig gøre, så længe holdet ingen point har.',
+    potrdi: 'Ja, fjern holdet',
+    imaTocke: 'Dette hold har allerede point og kan derfor ikke fjernes her. Skriv til os i chatten, så hjælper vi.',
+  },
 }

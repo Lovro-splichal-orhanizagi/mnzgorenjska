@@ -1,4 +1,5 @@
 import CakajocKrog from '../components/CakajocKrog'
+import OdstraniEkipo from '../components/OdstraniEkipo'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -2632,6 +2633,19 @@ export default function MojaEkipa() {
       </div>
 
       <Sponzor kje="moja_ekipa" />
+
+      {/* Ekipa, ustvarjena po pomoti: baza jo izbriše le, dokler nima točk (SLF-462). */}
+      {uporabnikId && ekipa?.id != null && tekmovanje && (
+        <OdstraniEkipo
+          ekipaId={ekipa.id}
+          imeEkipe={ekipa.name ?? imeEkipe}
+          imeLige={tekmovanje.name}
+          onKoncano={() => {
+            if (tekmovanjeId != null) pozabiOsnutek(tekmovanjeId)
+            window.location.reload()
+          }}
+        />
+      )}
 
       {/* Podatki o igralcu — brez zapuscanja na pol sestavljene ekipe. */}
       {info && tekmovanjeId != null && (

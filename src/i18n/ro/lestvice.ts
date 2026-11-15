@@ -381,6 +381,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     odstranjena: 'Echipa {ekipa} a fost eliminată din mini-ligă.',
     niUspelo: 'Nu a mers. Reîncarcă pagina și încearcă din nou.',
   },
+  razpustiMiniLigo: {
+    gumb: 'Șterge mini-liga',
+    vprasanje: 'Ștergi mini-liga „{liga}” pentru toți membrii? Echipele, jucătorii și punctele rămân, dispar doar clasamentul acestei mini-ligi și codul ei de invitație. Nu se poate anula.',
+    potrdi: 'Da, șterge mini-liga',
+    razpuscena: 'Mini-liga „{liga}” a fost ștearsă.',
+  },
 
   povabiSoigralce: {
     naslovLiga: 'Mai invită pe cineva în {ime}',
