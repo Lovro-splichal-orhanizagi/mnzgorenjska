@@ -123,6 +123,16 @@ stran". Preizkus brez baze: `--drzava BA --suho --koda
 wwin-prva-liga-fbih/2026-27 --najvec 5`. Neaktivne lige polnjenje preskoči,
 zato BA najde klube šele po vklopu.
 
+**Enkratno: sponzor 1. GNL (SLF-485/491, 15. 11. 2026).** `SPONZOR` v
+`posta-klubom.mjs`: potrjeno besedilo (zadeva "Pokrovitelj 1. GNL na SLFF …",
+podpis Nejc) gre enkrat vsakemu od klub_stik id 12, 15, 16, 17, 19, 21, 22
+(SI, liga `clani`, stanje poslano ali opomnik) iz nejc@slff.eu, v oknu SI
+(`OKNA`), pred opomniki in prvimi maili, po istih pravilih kluba in z
+pregledom nabiralnika prvega maila. Zapiše se kot vrsta `drugo`
+(`klub_stik_posta`, brez migracije); klub z to zadevo v pošti je ne dobi
+znova, zato koda po sedmih mailih miruje — odstrani jo. Test:
+`node --test scripts/test-posta-sponzor.mjs`.
+
 **HR in RS polnjenje nima** (pregled 15. 10. 2026): Semafor pri klubu
 (`/klubovi/<id>/`) kaže le naslov in stadion, fsb.org.rs in fss.rs naslovov
 klubov ne objavljata. ŽNS jih objavijo v PDF "Adresar klubova" (zns.hr: 1. in
