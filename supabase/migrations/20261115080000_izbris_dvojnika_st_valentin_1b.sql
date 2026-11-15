@@ -3,7 +3,7 @@
 -- ÖFB je klub v razporedu preimenoval v "St. Valentin ASK 1b", zato je nočni
 -- uvoz ustvaril ekipo 12917 in vanjo 26 praznih tekem (0:0, brez zapisnika,
 -- brez nastopov in golov). Prava ekipa je 3685; vzdevek iz #744 preprečuje,
--- da bi se dvojnik ponovno ustvaril. Izbris je odobril Nejc 15. 11. 2026.
+-- da bi se dvojnik ponovno ustvaril. Izbris je bil odobren na kartici SLF-456 15. 11. 2026.
 --
 -- Brišemo samo, če je dvojnik še prazen: vse tekme v ligi 1270, brez
 -- zapisnika, nastopov, golov, igralcev. Sicer migracija ne naredi nič.
