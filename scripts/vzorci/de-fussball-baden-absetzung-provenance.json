@@ -1,0 +1,11 @@
+{
+  "sourceUrl": "https://www.fussball.de/spieltag/bfv-verbandsliga-baden-verbandsliga-herren-saison2627-baden/-/staffel/03188V27L800000JVS5489BTVU7GTVLE-G",
+  "sourceRun": 43665469778,
+  "capturedAt": "2026-11-15T06:12:29.887Z",
+  "sourceSha256": "f75dadd0d625e82236180662cd646bcebabf4143345faedfe9552423df63e5af",
+  "sourceBytes": 198309,
+  "fixtureSha256": "5eed00836e0868f5305dedab3b1a8bbd904c52f81ebbe8941b1d080271078971",
+  "byteOffset": 144646,
+  "fixture": "de-fussball-baden-absetzung.html",
+  "note": "Exact original score cell of the called-off VfR Mannheim 2 - VfB Eppingen row that failed every nightly since 14 Nov with score-left. Tests compose it into another retained round with its fixture URL, not a second real result."
+}

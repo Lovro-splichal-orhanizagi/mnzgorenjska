@@ -111,7 +111,7 @@ export function razberiPostavo(html,{fonts}={}) {
 }
 function score(s,decode,allowUnplayed=false){
  if(/\bscore-special\b/.test(s))fail('administrativni izid ni običajen izid')
- if(allowUnplayed&&/^<td class="column-score">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/[A-Z0-9]{32}"><span class="info-text">Ausfall<\/span><\/a>\s*<\/td>$/.test(s))return null
+ if(allowUnplayed&&/^<td class="column-score">\s*<a href="https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/[A-Z0-9]{32}"><span class="info-text">(?:Ausfall|Absetzung)<\/span><\/a>\s*<\/td>$/.test(s))return null
  const values=['score-left','score-right'].map(c=>{const field=element(s,c);if(!/data-obfuscation=/.test(field))fail('izid brez vezane pisave');return decode(field)})
  if(allowUnplayed && values.every(v=>v==='-'))return null
  if(values.some(v=>!/^\d{1,2}$/.test(v)))fail('neveljaven izid')
