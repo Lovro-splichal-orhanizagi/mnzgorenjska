@@ -4027,6 +4027,34 @@ preveri(
     preveri('svetovalec: nerazpolozljiv razlog za poskodovanega',
       S.predlagajPrestope(kader, trg, 0, { ...moz, odsotni: { 103: 'poskodba' } }, razp)[0]?.razlog.vrsta === 'nerazpolozljiv')
 
+    // prosti prestopi: čez njih vsak prestop stane kazen
+    const slabsi = kader.map((i) => ({ ...i, form: 0, points_per_match: 0.1 }))
+    const trgVeliko = Array.from({ length: 12 }, (_, n) => ({ id: 200 + n, position: poz[2 + (n % 5)], team_id: 20 + n, team_name: `T${n}`, value: 5, form: 20, points_per_match: 8, minutes: 900, active: true }))
+    const brezKlubov = { klubiZTekmo: null, odsotni: {} }
+    const omejeni = (omejitev) => S.predlagajPrestope(slabsi, trgVeliko, 0, brezKlubov, razp, 3, omejitev)
+    const srednjiKader = kader.map((i) => (i.id === 103 ? { ...i, form: 3, points_per_match: 0.5 } : i)) // dobitek pod kaznijo
+    preveri('svetovalec: dobitek pod kaznijo, 0 prostih: ni prestopa',
+      S.predlagajPrestope(srednjiKader, trg, 0, moz, razp, 3, { prosti: 0, kazen: 4 }).length === 0)
+    preveri('svetovalec: isti kader s prostim prestopom ga dobi',
+      S.predlagajPrestope(srednjiKader, trg, 0, moz, razp, 3, { prosti: 1, kazen: 4 }).length === 1)
+    preveri('svetovalec: 1 prosti, ostali pod kaznijo', omejeni({ prosti: 1, kazen: 100 }).length === 1)
+    preveri('svetovalec: 2 prosta', omejeni({ prosti: 2, kazen: 100 }).length === 2)
+    preveri('svetovalec: dobitek nad kaznijo gre tudi brez prostih', omejeni({ prosti: 0, kazen: 4 }).length === 3)
+    preveri('svetovalec: wildcard brez omejitve', omejeni({ prosti: Infinity, kazen: 4 }).length === 3)
+    preveri('svetovalec: svetuj spostuje omejitev', S.svetuj(slabsi, trgVeliko, 0, brezKlubov, razp, { prosti: 1, kazen: 100 }).prestopi.length === 1)
+    // razlog je tisti, ki je res prinesel dobitek
+    const staraForma = kader.map((i) => (i.id === 103 ? { ...i, form: 6, points_per_match: 0.2 } : i))
+    const nizjaForma = S.predlagajPrestope(
+      staraForma,
+      [{ id: 300, position: 'DEF', team_id: 6, team_name: 'K6', value: 5, form: 5, points_per_match: 6, minutes: 900, active: true }],
+      0, moz, razp)
+    preveri('svetovalec: nizja forma novega ni razlog "forma"', nizjaForma.every((p) => p.razlog.vrsta !== 'forma'), JSON.stringify(nizjaForma.map((p) => p.razlog.vrsta)))
+    const manjsaForma = S.predlagajPrestope(
+      kader.map((i) => (i.id === 103 ? { ...i, form: 3, points_per_match: 0.2 } : i)),
+      [{ id: 301, position: 'DEF', team_id: 6, team_name: 'K6', value: 5, form: 5, points_per_match: 2, minutes: 900, active: true }],
+      0, moz, razp)
+    preveri('svetovalec: manjsa prednost v formi je razlog "forma"', manjsaForma[0]?.razlog.vrsta === 'forma', JSON.stringify(manjsaForma.map((p) => p.razlog.vrsta)))
+
     // najboljša postava
     const enaka = S.najboljsaPostava(kader, moz, razp)
     preveri('svetovalec: enaka ocena obdrzi zdajsnjo postavo', enaka?.enakoKotSedaj === true && enaka.formacija === '4-4-2', enaka?.formacija)
