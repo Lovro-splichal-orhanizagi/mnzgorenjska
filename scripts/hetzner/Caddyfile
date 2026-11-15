@@ -202,6 +202,24 @@ slff.eu {
 		}
 	}
 
+	# Bugsink (sledenje napakam, docs/napake.md) first-party: only the Sentry envelope endpoint
+	# (src/lib/napake.ts, edge functions), never the UI (ssh tunnel to 3110). Visitor IP headers
+	# and cookies are dropped, so Bugsink stores the docker gateway as remote_addr.
+	@napake path_regexp ^/n/api/[0-9]{1,4}/envelope/$
+	handle @napake {
+		uri strip_prefix /n
+		request_body {
+			max_size 256KB
+		}
+		reverse_proxy localhost:3110 {
+			header_up -X-Forwarded-For
+			header_up -X-Real-IP
+			header_up -CF-Connecting-IP
+			header_up -Cookie
+			header_down -Access-Control-Allow-Origin
+		}
+	}
+
 	# Supabase API on the site's own origin (src/lib/supabase.ts, VITE_API_ISTI_IZVOR=1): the
 	# browser then skips the CORS preflight (OPTIONS) it sends before calls to api.slff.eu.
 	# The same Kong as api.slff.eu, which stays exactly as it is (mobile app, old builds,
