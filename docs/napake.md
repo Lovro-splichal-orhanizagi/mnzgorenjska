@@ -12,7 +12,7 @@ vidita le združke prek `slff-ops napake`, nikoli dogodkov, sporočil ali žeton
 | Baza | lastna datoteka, nič v `supabase-db` | nova baza v `supabase-db` (že ~98 % CPU, 1,6 GB) |
 | Hramba | `MAX_EVENT_AGE_DAYS` + največ dogodkov na projekt | `GLITCHTIP_*_RETENTION_DAYS` |
 | Obvestila | e-pošta (Mailcow), po želji Discord/Slack webhook na projekt | e-pošta, webhooki |
-| SDK | Sentry (`@sentry/browser`), isto | isto |
+| Odjemalec | protokol Sentry; pri nas brez SDK-ja (`_shared/napake-ovojnica.ts`) | isto |
 
 VM ima 3,8 GB RAM, prostih ~600 MB, 1 GB swapa v rabi, 21 GB diska. GlitchTip bi dodal pisanje v že obremenjen
 Postgres; Bugsink ostane ločen in ga ustavimo brez vpliva na aplikacijo. Uptime, transakcije in sledi (GlitchTip)
@@ -20,13 +20,14 @@ ne rabimo.
 
 ## Kaj se pošilja in kaj ne
 
-- **Brskalnik** (`src/lib/sledenjeNapak.ts`): SDK se naloži v ločenem kosu (~31 kB gzip) šele po izrisu, samo če je
-  ob gradnji nastavljen `VITE_NAPAKE_DSN`. Javljajo se neujete izjeme, zavrnjene obljube in `NapakaOprijem`.
-  Brez sej (obisk šteje Umami), brez vnosov konzole, brez sledenja zmogljivosti. Izdaja = `meta slff-commit`.
+- **Brskalnik** (`src/lib/sledenjeNapak.ts`): brez SDK-ja in nove odvisnosti (`package.json` je del pripete
+  zaprtosti FUSSBALL), ~1 kB kode; deluje le, če je ob gradnji nastavljen `VITE_NAPAKE_DSN`. Javljajo se neujete
+  izjeme, zavrnjene obljube in `NapakaOprijem`, vsaka ista napaka enkrat na zavihek, največ 10/min. Brez sej,
+  vnosov konzole in sledenja zmogljivosti. Izdaja = `meta slff-commit`.
 - **Funkcije** (`supabase/functions/_shared/napake.ts`): vsaka `index.ts` pokliče `sledi('<ime>')`; vsak
   `console.error` in neujeta izjema gre v Bugsink (največ 10/min na izolat, brez čakanja). Predmeti iz
   `console.error` se ne pošljejo, le nizi in `Error`.
-- **Čiščenje** (`_shared/napake-cistilo.ts`, skupno obema; preizkus `npm run test:napake`): odstrani `user`,
+- **Čiščenje** (`_shared/napake-cistilo.ts`, skupno obema; preizkus `npx vite-node scripts/test-napake.ts`): odstrani `user`,
   `server_name`, piškotke, glave, telo in poizvedbo zahteve, poizvedbe in `#` iz vseh naslovov, ključe
   `pass|token|secret|auth|cookie|session|email|apikey|signature|ip`, v nizih pa zamenja e-naslove, JWT, `Bearer`,
   ključe Supabase/Stripe, `token=`/`code=`/…, uuid, IPv4 in telefonske/dolge številke.
@@ -60,8 +61,7 @@ ssh slff "cd /opt/napake && docker compose up -d && docker exec -it bugsink bugs
 #    ekipa slff; projekta slff-web (1) in slff-funkcije (2); obvestila: nova težava, regresija, odmik utišanja;
 #    člani projekta s "Send email alerts" (ali Discord webhook projekta, če ga lastnik želi).
 # 3. Caddy: blok @napake iz scripts/hetzner/Caddyfile -> caddy validate && systemctl reload caddy
-# 4. .github/workflows/ci.yml, korak Build spletne strani (agentov žeton ne sme v workflowe):
-#      VITE_NAPAKE_DSN: ${{ vars.VITE_NAPAKE_DSN }}
+# 4. ci.yml (korak Build) že bere vars.VITE_NAPAKE_DSN; prazna = brez sledenja.
 #    Repo spremenljivka VITE_NAPAKE_DSN = https://<ključ slff-web>@slff.eu/n/1 (ključ je javen, le sprejem)
 #    /opt/supabase/.env: NAPAKE_DSN=https://<ključ slff-funkcije>@slff.eu/n/2, nato up funkcij
 # 5. Agentska pot: scripts/hetzner/napake-stat.sh -> /usr/local/bin/ ; v ovoju slff-ops:

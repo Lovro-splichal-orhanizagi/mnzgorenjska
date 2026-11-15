@@ -1,4 +1,4 @@
-// Preizkus čiščenja dogodkov napak (SLF-245, docs/napake.md): npm run test:napake
+// Preizkus čiščenja dogodkov napak (SLF-245, docs/napake.md): npx vite-node scripts/test-napake.ts
 // Nobena skrivnost ali osebni podatek iz spodnjega dogodka ne sme preživeti.
 import assert from 'node:assert/strict'
 import { pocisti, pocistiDogodek } from '../supabase/functions/_shared/napake-cistilo.ts'
