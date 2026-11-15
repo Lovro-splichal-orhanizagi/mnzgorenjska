@@ -30,7 +30,7 @@
 // odgovora, ampak obiskovalec s tapom.
 import { supabase } from './supabase'
 import { jeNeshranjeno } from './neshranjeno'
-import { izberiJezik, jePripravljen, jezik, t } from '../i18n/jedro.ts'
+import { izberiJezik, jePripravljen, jezikSlovarja, t } from '../i18n/jedro.ts'
 
 /** Strani, na katere sme agent peljati — ključ je to, kar pošlje agent. */
 export const STRANI: Record<string, string> = {
@@ -361,7 +361,8 @@ export function prijaviOrodja(
   helpstack('registerAction', 'zamenjaj_jezik', async (p) => {
     const j = String(p.jezik ?? '').toLowerCase()
     if (!jePripravljen(j)) return { ok: false, message: t('aplikacija.pokaziMi.neznano') }
-    if (j === jezik()) return { ok: true }
+    // Jezik slovarja, ne izbrani: če slovar ni prišel, je zaslon slovenski in ukaz mora stran naložiti znova.
+    if (j === jezikSlovarja()) return { ok: true }
     if (jeNeshranjeno()) {
       osvetliCilj('shrani')
       return { ok: false, message: t('aplikacija.pokaziMi.neshranjeno') }

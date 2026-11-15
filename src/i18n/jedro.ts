@@ -98,7 +98,7 @@ export const jezikSlovarja = (): Jezik => jezikVRabi ?? jezik()
  * pride v `rokMs` (zastalo omrežje) ali sploh ne, ostane slovenščina za ves
  * obisk — pozen slovar bi sredi strani zamenjal jezik.
  */
-export async function naloziSlovar(rokMs = 3000): Promise<void> {
+export async function naloziSlovar(rokMs = 6000): Promise<void> {
   const j = jezik()
   let d: Drevo | null = null
   if (j !== 'sl') {
