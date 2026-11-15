@@ -394,7 +394,7 @@ export default function PrenosiTekme({ matchId, tekma }: { matchId: number; tekm
               <div className="flex gap-2">
                 <input
                   id="prenos-povezava"
-                  type="url"
+                  type="text"
                   inputMode="url"
                   required
                   value={povezava}
