@@ -14,11 +14,12 @@
 // Tudi 503 ponovimo, a z istim dolgim premorom kot ECONNRESET: ne moremo
 // dokazati, da se pošiljanje ni začelo, in pri 65 s je prvi klic gotovo končan.
 //
-// 15. 11. 2026 ob 03:19 je `at-ooe-frauen-ooe-liga` dobila 500 brez telesa: edge
-// runtime je zahtevek dodelil delavcu, ki se je ravno upokojil (dnevnik: "request
-// cannot be handled because the worker has already retired"). Naša koda odgovora
-// ni napisala (svoje 500 vrne z `error` v JSON), zato 500 s praznim telesom
-// ponovimo kot 503; 500 s telesom ostane odločitev funkcije.
+// 15. 11. 2026 ob 03:19 je `at-ooe-frauen-ooe-liga` dobila 500 od edge runtima:
+// zahtevek je šel delavcu, ki se je ravno upokojil. Glavni delavec takrat vrne
+// `500 {"msg":"WorkerAlreadyRetired: ..."}`; upokojitev zavrne zahtevek pred
+// predajo, naša koda se ni zagnala, zato ga ponovimo kot 503. Drugih napak edge
+// runtima (npr. WorkerRequestCancelled) ne ponavljamo: lahko pridejo sredi
+// pošiljanja. Vsaka druga 500 ostane odločitev funkcije.
 //
 // Pri ECONNRESET ne vemo, ali je zahtevek dosegel funkcijo. Če jo je in še
 // pošilja, bi takojšnja ponovitev istim prejemnikom poslala drugič: `opozorilo`
@@ -40,11 +41,11 @@ export const ZAMIK_NEJASNO_MS = IZ_ENV ? Math.max(...IZ_ENV) : 65000
 const cakaj = (ms) => new Promise((r) => setTimeout(r, ms))
 
 // Telo preberemo s kopije, da ga klicatelj še lahko prebere. Brez kopije
-// (neznan odgovor) telo ni prazno: raje ne ponovimo.
-async function jePraznoTelo(odgovor) {
+// (neznan odgovor) raje ne ponovimo.
+async function jeUpokojenDelavec(odgovor) {
   if (typeof odgovor.clone !== 'function') return false
-  const telo = await odgovor.clone().text().catch(() => null)
-  return telo !== null && telo.trim() === ''
+  const telo = await odgovor.clone().text().catch(() => '')
+  return telo.includes('WorkerAlreadyRetired')
 }
 
 export async function klicSPonovitvami(
@@ -56,10 +57,10 @@ export async function klicSPonovitvami(
   for (let poskus = 0; ; poskus++) {
     try {
       const odgovor = await fetchFn(url, init)
-      const prazen500 = odgovor.status === 500 && poskus < zamiki.length && (await jePraznoTelo(odgovor))
-      if ((odgovor.status !== 503 && !prazen500) || poskus >= zamiki.length) return odgovor
+      const upokojen = odgovor.status === 500 && poskus < zamiki.length && (await jeUpokojenDelavec(odgovor))
+      if ((odgovor.status !== 503 && !upokojen) || poskus >= zamiki.length) return odgovor
       await odgovor.body?.cancel?.().catch(() => {})
-      log(`  ponovim klic (${poskus + 2}/${zamiki.length + 1}) čez ${zamikNejasno / 1000} s: HTTP ${odgovor.status}${prazen500 ? ' brez telesa' : ''}`)
+      log(`  ponovim klic (${poskus + 2}/${zamiki.length + 1}) čez ${zamikNejasno / 1000} s: HTTP ${odgovor.status}${upokojen ? ' WorkerAlreadyRetired' : ''}`)
       await cakaj(zamikNejasno)
       continue
     } catch (e) {
