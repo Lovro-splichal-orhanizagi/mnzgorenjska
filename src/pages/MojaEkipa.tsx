@@ -1056,6 +1056,21 @@ export default function MojaEkipa() {
   const bogastvo = bogastvoC / 100
   // Svetovalec računa iz osnutka kot namigi: predlog sledi spremembam, ki jih
   // človek še ni shranil. Predlaga le, nikoli ne spremeni kadra.
+  // Prosti prestopi, ki jih osnutek še ni porabil (wildcard: vsi). Čez njih
+  // vsak predlagan prestop stane kazen, zato ga svetovalec predlaga le, če se izplača.
+  const prestopovVOsnutku = zaklenjenaPostava
+    ? izbrani.filter((s) => !zaklenjenaPostava.includes(s.player_id)).length
+    : 0
+  const wildcardNaslednji = pripomocki.some(
+    (c) => c.chip === 'wildcard' && naslednjiKrog != null && c.round_id === naslednjiKrog.id,
+  )
+  const omejitevPrestopov = useMemo(
+    () => ({
+      prosti: wildcardNaslednji ? Infinity : Math.max(0, pravila.prosti - prestopovVOsnutku),
+      kazen: pravila.kazen,
+    }),
+    [wildcardNaslednji, pravila.prosti, pravila.kazen, prestopovVOsnutku],
+  )
   const svetovanje = useMemo(
     () =>
       odprtSvetovalec && ekipa?.id && izbrani.length === VELIKOST_EKIPE
@@ -1068,10 +1083,11 @@ export default function MojaEkipa() {
               odsotni: Object.fromEntries(Object.entries(odsotni).map(([id, o]) => [id, o.kind])),
             },
             razpored,
+            omejitevPrestopov,
           )
         : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [odprtSvetovalec, ekipa?.id, izbrani.length, izbraniPodrobno, igralci, preostalo, klubiZTekmo, odsotni, razpored],
+    [odprtSvetovalec, ekipa?.id, izbrani.length, izbraniPodrobno, igralci, preostalo, klubiZTekmo, odsotni, razpored, omejitevPrestopov],
   )
   const imenaKlubov = useMemo(() => {
     const m: Record<number, string> = {}

@@ -202,6 +202,16 @@ export interface RazlogPrestopa {
   prihranek: number
 }
 
+/**
+ * Kolikšen del prestopov je brezplačen. Vsak prestop čez `prosti` stane
+ * `kazen` točk, zato ga predlagamo le, če je pričakovan dobitek večji od kazni.
+ * `prosti` je lahko Infinity (wildcard: prestopi niso kaznovani).
+ */
+export interface OmejitevPrestopov {
+  prosti: number
+  kazen: number
+}
+
 export interface Prestop<T extends IgralecZaSvetovalca> {
   stari: T
   novi: T
@@ -210,12 +220,42 @@ export interface Prestop<T extends IgralecZaSvetovalca> {
   razlog: RazlogPrestopa
 }
 
+/**
+ * Kaj je dobitek res prinesla. Najprej jasni zmagovalci; sicer prvo, kar
+ * govori za novega igralca. Null, če nič od naštetega ne drži (dobitek je le
+ * iz točk na tekmo): besedilo bi potem trdilo nekaj, česar ni.
+ */
+function vrstaRazloga(
+  stari: IgralecZaSvetovalca,
+  novi: IgralecZaSvetovalca,
+  r: PodatkiRazporeda,
+  nerazpolozljiv: boolean,
+  formaS: number,
+  formaN: number,
+  minS: number | null,
+  minN: number | null,
+  prihranek: number,
+): VrstaRazloga | null {
+  const lahkotaRazlika = lahkotaTekem(novi, r) - lahkotaTekem(stari, r)
+  const minRazlika = minN != null && minS != null ? minN - minS : 0
+  if (nerazpolozljiv) return 'nerazpolozljiv'
+  if (formaN - formaS >= 3) return 'forma'
+  if (minRazlika >= 0.25) return 'minute'
+  if (lahkotaRazlika >= 0.5) return 'tekme'
+  if (prihranek >= 0.4) return 'cena'
+  if (formaN > formaS) return 'forma'
+  if (minRazlika > 0) return 'minute'
+  if (lahkotaRazlika > 0) return 'tekme'
+  if (prihranek > 0) return 'cena'
+  return null
+}
+
 function razlogPrestopa<T extends IgralecZaSvetovalca>(
   stari: T,
   novi: T,
   moznosti: Pick<MoznostiNamigov, 'klubiZTekmo' | 'odsotni'>,
   r: PodatkiRazporeda,
-): RazlogPrestopa {
+): RazlogPrestopa | null {
   const sibkost = razlogSibkostiSvetovalca(stari, moznosti, r)
   const minS = delezMinut(stari, r)
   const minN = delezMinut(novi, r)
@@ -223,13 +263,8 @@ function razlogPrestopa<T extends IgralecZaSvetovalca>(
   const formaN = stevilka(novi.form)
   const prihranek = (centi(stari.value) - centi(novi.value)) / 100
   const nerazpolozljiv = sibkost != null && sibkost !== 'malMinut' && sibkost !== 'slabaForma'
-  let vrsta: VrstaRazloga
-  if (nerazpolozljiv) vrsta = 'nerazpolozljiv'
-  else if (formaN - formaS >= 3) vrsta = 'forma'
-  else if (minN != null && minS != null && minN - minS >= 0.25) vrsta = 'minute'
-  else if (lahkotaTekem(novi, r) - lahkotaTekem(stari, r) >= 0.5) vrsta = 'tekme'
-  else if (prihranek >= 0.4) vrsta = 'cena'
-  else vrsta = 'forma'
+  const vrsta = vrstaRazloga(stari, novi, r, nerazpolozljiv, formaS, formaN, minS, minN, prihranek)
+  if (vrsta == null) return null
   return {
     vrsta,
     sibkost: nerazpolozljiv ? sibkost : null,
@@ -245,7 +280,8 @@ function razlogPrestopa<T extends IgralecZaSvetovalca>(
 /**
  * Do tri prestopi, ki najbolj dvignejo pričakovane točke. Vsak naslednji
  * je izbran iz kadra po prejšnjem (z njegovim denarjem), zato je vsaka
- * menjava dovoljena po pravilih tudi skupaj z ostalimi.
+ * menjava dovoljena po pravilih tudi skupaj z ostalimi. Z `omejitev` jih je
+ * brezplačnih le `prosti`; vsak naslednji mora dobitkom preseči kazen.
  */
 export function predlagajPrestope<T extends IgralecZaSvetovalca>(
   kader: T[],
@@ -254,6 +290,7 @@ export function predlagajPrestope<T extends IgralecZaSvetovalca>(
   moznosti: Pick<MoznostiNamigov, 'klubiZTekmo' | 'odsotni'>,
   r: PodatkiRazporeda,
   najvec: number = NAJVEC_PRESTOPOV,
+  omejitev: OmejitevPrestopov = { prosti: Infinity, kazen: 0 },
 ): Prestop<T>[] {
   const ocene = new Map<number, number>()
   const ocena = (i: T) => {
@@ -279,7 +316,10 @@ export function predlagajPrestope<T extends IgralecZaSvetovalca>(
   const prestopi: Prestop<T>[] = []
 
   while (prestopi.length < najvec) {
-    let najboljsi: { stari: T; novi: T; dobitek: number } | null = null
+    // Čez brezplačne prestope dobitek plača kazen: tak prestop je vreden le, če jo preseže.
+    const prag =
+      prestopi.length < omejitev.prosti ? MIN_DOBITEK : Math.max(MIN_DOBITEK, omejitev.kazen)
+    let najboljsi: { stari: T; novi: T; dobitek: number; razlog: RazlogPrestopa } | null = null
     for (const stari of trenutni) {
       if (!stari.position || novi.has(stari.id)) continue
       const ocenaStarega = ocena(stari)
@@ -287,18 +327,17 @@ export function predlagajPrestope<T extends IgralecZaSvetovalca>(
       const mozniDenar = (denar + centi(stari.value)) / 100
       for (const k of poPoziciji.get(stari.position) ?? []) {
         const dobitek = ocena(k) - ocenaStarega
-        if (dobitek < MIN_DOBITEK || (najboljsi && dobitek <= najboljsi.dobitek)) break
+        if (dobitek < prag || (najboljsi && dobitek <= najboljsi.dobitek)) break
         if (uporabljeni.has(k.id)) continue
         if (zakajNeGre(k, brezStarega, mozniDenar) != null) continue
-        najboljsi = { stari, novi: k, dobitek }
+        const razlog = razlogPrestopa(stari, k, moznosti, r)
+        if (razlog == null) continue
+        najboljsi = { stari, novi: k, dobitek, razlog }
         break
       }
     }
     if (!najboljsi) break
-    prestopi.push({
-      ...najboljsi,
-      razlog: razlogPrestopa(najboljsi.stari, najboljsi.novi, moznosti, r),
-    })
+    prestopi.push(najboljsi)
     trenutni = trenutni.map((i) => (i.id === najboljsi!.stari.id ? najboljsi!.novi : i))
     denar += centi(najboljsi.stari.value) - centi(najboljsi.novi.value)
     uporabljeni.add(najboljsi.novi.id)
@@ -409,10 +448,11 @@ export function svetuj<T extends IgralecZaSvetovalca>(
   preostalo: number,
   moznosti: Pick<MoznostiNamigov, 'klubiZTekmo' | 'odsotni'>,
   razpored: PodatkiRazporeda = PRAZEN_RAZPORED,
+  omejitev?: OmejitevPrestopov,
 ): Svetovanje<T> {
   return {
     sibkosti: sibkaMesta(kader, moznosti, razpored),
-    prestopi: predlagajPrestope(kader, trg, preostalo, moznosti, razpored),
+    prestopi: predlagajPrestope(kader, trg, preostalo, moznosti, razpored, NAJVEC_PRESTOPOV, omejitev),
     postava: najboljsaPostava(kader, moznosti, razpored),
   }
 }
