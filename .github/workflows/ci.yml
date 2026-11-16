@@ -192,7 +192,7 @@ jobs:
         run: node --test scripts/test-osvezi-fcf-predpomnilnik.mjs
 
       - name: Nočni koši in klic opomnikov
-        run: node --test scripts/test-nocni-kosi.mjs scripts/test-bulk-klic-opomnika.mjs scripts/test-mfa-missing-minute.mjs
+        run: node --test scripts/test-nocni-kosi.mjs scripts/test-nocni-uvoz-drugi-poskus.mjs scripts/test-bulk-klic-opomnika.mjs scripts/test-mfa-missing-minute.mjs
 
       - name: Mascot tekma brez datuma
         run: node --test scripts/viri/mascot-brez-datuma.test.mjs
