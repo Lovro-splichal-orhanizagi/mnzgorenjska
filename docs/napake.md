@@ -34,6 +34,12 @@ ne rabimo.
 - **Strežnik**: Caddy na `slff.eu/n/` spusti le `POST /api/<n>/envelope/` (do 256 KB) in odreže
   `X-Forwarded-For`, `CF-Connecting-IP`, `X-Real-IP` in piškotke; Bugsink zato kot `remote_addr` vidi le prehod
   Dockerja. Vmesnik Bugsinka ni na internetu.
+- **CORS / mobilna aplikacija**: Caddy odreže `Access-Control-Allow-Origin` Bugsinka, glavni blok strani pa doda
+  `Access-Control-Allow-Origin *`, zato je ena sama vrednost in sprejem velja za vsak izvor, tudi
+  `capacitor://localhost` (preverjeno 16. 11. 2026: predpreverjanje OPTIONS z `Origin: capacitor://localhost`
+  vrne 200 in `*`). Aplikacija javlja le, če je bila zgrajena z `VITE_NAPAKE_DSN`.
+- **Funkcije brez DSN**: če `NAPAKE_DSN` ne pride v vsebnik, vsak izolat enkrat zapiše
+  `napake: NAPAKE_DSN ni nastavljen` (`slff-ops logs supabase-edge-functions | grep napake:`).
 - **Hramba**: 30 dni (`MAX_EVENT_AGE_DAYS`) in največ 5000 dogodkov na projekt; omejitve 300/5 min, 1500/h na
   projekt, 200 000 na mesec.
 
