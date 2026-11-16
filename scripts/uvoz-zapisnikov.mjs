@@ -833,7 +833,7 @@ const odtisKode = (() => {
   const datoteke = [...new Set([
     'scripts/uvoz-zapisnikov.mjs',
     ...brezTujega(zaprtje('scripts/lib/historical-statistics-import.mjs')),
-    ...(isFussballCommunityCompetition(tekmovanje) ? brezTujega(zaprtje('scripts/fussball-community-runtime.mjs')) : []),
+    ...(isFussballCommunityCompetition(tekmovanje) ? zaprtje('scripts/fussball-community-runtime.mjs').filter((f) => !f.startsWith('src/i18n/')) : []),
     ...(vir.historicalSourceFiles??[]),
     'src/lib/nepripisaniRumeni.mjs',
     'scripts/prestop.mjs',
