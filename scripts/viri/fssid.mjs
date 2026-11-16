@@ -342,7 +342,11 @@ const pot = (ime) => `${MAPA}/${ime}`
 const imeTekme = (id) => `tekma-${id}.html`
 const imeVratarjev = (id) => `vratarji-${id}.html`
 const ZAVRNITEV = new Set([401, 403, 429])
-let vratarjiZavrnjeni = false
+// Stran vratarjev prvaliga.rs vrača 403 vsak zagon vsaj od 15. 11. 2026 (vsaka
+// liga v svojem procesu je poslala še eno zavrnjeno zahtevo, 66 na zagon):
+// ne beremo je, le predpomnilnik, nato prvi začetniki (SLF-524). Ponovni vklop:
+// SLFF_FSSID_VRATARJI=1, ko stran spet odgovori brez zavrnitve.
+let vratarjiZavrnjeni = process.env.SLFF_FSSID_VRATARJI !== '1'
 function izPredpomnilnika(ime) {
   const p = pot(ime)
   if (!existsSync(p)) return null

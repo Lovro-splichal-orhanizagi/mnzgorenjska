@@ -52,6 +52,10 @@ import { nastopi } from './hlf.mjs'
 import { NEPOPOLN, vLjubljanskiCas } from './frf.mjs'
 import { sifra } from './zapisniki.mjs'
 
+// Naslov vrnjene strani v napaki: GitHubovi stroji 16. 11. 2026 dobivajo ~12 kB
+// stran namesto razporeda (SLF-524); iz naslova se vidi, kaj je spletišče vrnilo.
+const naslovStrani = (html) => (String(html ?? '').match(/<title[^>]*>([^<]*)/i)?.[1] ?? '').replace(/\s+/g, ' ').trim().slice(0, 120)
+
 export { nastopi, NEPOPOLN }
 
 const DOLZINA_TEKME = 90
@@ -602,7 +606,7 @@ async function beri(prenesi, url, ime, sveze) {
     throw e
   }
   if (jeIzziv(html)) throw new EpsZavrnitev(`eps: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
-  if (!jeStranPlatforme(html) && !jeOdrezanaTekma(html)) throw new Error(`eps: ${url} ni stran platforme (${String(html ?? '').length} B) — uvoz ustavljen`)
+  if (!jeStranPlatforme(html) && !jeOdrezanaTekma(html)) throw new Error(`eps: ${url} ni stran platforme (${String(html ?? '').length} B, naslov "${naslovStrani(html)}") — uvoz ustavljen`)
   return html
 }
 
