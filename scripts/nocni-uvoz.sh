@@ -150,7 +150,10 @@ done < "$LIGE"
 while read -r liga faktor vir kljuc; do
   [ -n "$liga" ] || continue
   kljuc=${kljuc:-$vir}
-  if [ "$(minut)" -ge "$ROK_MIN" ]; then padle="$padle $liga"; continue; fi
+  # Brez časa za drugi poskus: liga ni zabeležena kot osvežena, naslednji
+  # zagon jo vzame prvo. 16. 11. 2026 je en prehoden padec baze (520,
+  # "terminated") po 165 min obarval AT in HU rdeče (SLF-524).
+  if [ "$(minut)" -ge "$ROK_MIN" ]; then preskocene="$preskocene $liga"; continue; fi
   if [[ "$nedosegljivi" == *" $kljuc "* ]]; then
     echo "::warning title=Vir ne dela::$liga preskočena — vir $kljuc je ta zagon vrnil 5xx"
     vir_dol="$vir_dol $liga"; continue
@@ -178,7 +181,7 @@ done <<< "$zacasno"
 
 if [ -n "$preskocene" ]; then
   # Ni napaka: naslednji zagon začne prav pri njih (najdlje neosvežene prve).
-  echo "::warning title=Zmanjkalo časa::po $ROK_MIN min niso prišle na vrsto:$preskocene"
+  echo "::warning title=Zmanjkalo časa::po $ROK_MIN min niso prišle na vrsto (ali na drugi poskus):$preskocene"
 fi
 if [ -n "$vir_dol" ]; then
   # Ni padec: vir je dol, ne mi. Ostane viden v povzetku zagona.

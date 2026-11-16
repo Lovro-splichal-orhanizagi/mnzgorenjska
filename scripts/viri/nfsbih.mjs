@@ -45,6 +45,10 @@ import { sifra } from './zapisniki.mjs'
 import { datumUra, minuta, sezonaIzDatuma } from './fss.mjs'
 import { imeKluba, kljucKlubaBa, kratkoImeBa } from './nsfbih.mjs'
 
+// Naslov vrnjene strani v napaki: GitHubovi stroji 16. 11. 2026 dobivajo ~12 kB
+// stran namesto razporeda (SLF-524); iz naslova se vidi, kaj je spletišče vrnilo.
+const naslovStrani = (html) => (String(html ?? '').match(/<title[^>]*>([^<]*)/i)?.[1] ?? '').replace(/\s+/g, ' ').trim().slice(0, 120)
+
 const OSNOVNI = 'https://www.nfsbih.ba'
 // Razdelek strani: moške lige (tudi mladinske) so pod /takmicenja/nogomet-muskarci/,
 // ženske pod /takmicenja/nogomet-zene/ — ženska šifra ga nosi spredaj
@@ -178,7 +182,7 @@ export function tekmeStrani(html) {
 
 /** Tekme lige iz šifre; stran druge sezone ali brez krogov ustavi uvoz. */
 export function tekmeLige(koda, html) {
-  if (!jeStranLige(html)) throw new Error(`nfsbih: ${naslovLige(koda)} ni razpored (${String(html ?? '').length} B) — uvoz ustavljen`)
+  if (!jeStranLige(html)) throw new Error(`nfsbih: ${naslovLige(koda)} ni razpored (${String(html ?? '').length} B, naslov "${naslovStrani(html)}") — uvoz ustavljen`)
   const tekme = tekmeStrani(html)
   if (!tekme.length) throw new Error(`nfsbih: ${naslovLige(koda)} nima tekem — uvoz ustavljen`)
   const sezona = sezonaNaslova(html)

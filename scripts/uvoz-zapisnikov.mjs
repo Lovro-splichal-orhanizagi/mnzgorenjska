@@ -821,12 +821,19 @@ console.log(`Najdenih zapisnikov: ${zapisniki.length}`)
 // ali popravek razclenjevalnika gre skozi kot doslej; brez `--sveze` (rocni
 // uvoz cele lige) se ne preskoci nic.
 const ODTISI = `${MAPA}/odtisi-${tekmovanje.slug}.json`
+// Zaprtje historical-statistics-import.mjs sega do src/i18n (prevodi strani) in
+// do tujih virov (mfa, hns ...): 16. 11. 2026 je zato skoraj vsaka združitev
+// razveljavila vse odtise, AT in HU sta vsak zagon znova uvažala vse zapisnike
+// 21 dni in tretjina lig ni prišla na vrsto (SLF-524). Prevodi zapisnika ne
+// berejo, tuj vir pa te lige ne razčlenjuje.
+const virLige = zaprtje(`scripts/viri/${virIme ?? tekmovanje.source}.mjs`)
+const brezTujega = (datoteke) => datoteke.filter((f) => !f.startsWith('src/i18n/') && (!f.startsWith('scripts/viri/') || virLige.includes(f)))
 const odtisKode = (() => {
   const h = createHash('sha256')
-  const datoteke = [
+  const datoteke = [...new Set([
     'scripts/uvoz-zapisnikov.mjs',
-    ...zaprtje('scripts/lib/historical-statistics-import.mjs'),
-    ...(isFussballCommunityCompetition(tekmovanje) ? zaprtje('scripts/fussball-community-runtime.mjs') : []),
+    ...brezTujega(zaprtje('scripts/lib/historical-statistics-import.mjs')),
+    ...(isFussballCommunityCompetition(tekmovanje) ? brezTujega(zaprtje('scripts/fussball-community-runtime.mjs')) : []),
     ...(vir.historicalSourceFiles??[]),
     'src/lib/nepripisaniRumeni.mjs',
     'scripts/prestop.mjs',
@@ -835,8 +842,8 @@ const odtisKode = (() => {
     ...readdirSync('scripts').filter((f) => /^zapisnik.*\.mjs$/.test(f)).map((f) => `scripts/${f}`),
     // Le vir te lige (in kar uvaža), ne vseh virov: popravek madžarskega vira
     // ne sme razveljaviti odtisov avstrijskih lig (odtis-kode.mjs).
-    ...zaprtje(`scripts/viri/${virIme ?? tekmovanje.source}.mjs`),
-  ].sort()
+    ...virLige,
+  ])].sort()
   for (const f of datoteke) h.update(f).update(readFileSync(f))
   return h.digest('hex').slice(0, 16)
 })()
