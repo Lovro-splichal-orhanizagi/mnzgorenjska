@@ -272,7 +272,7 @@ function razdeliIme(polno) {
 // Uvoz imena in šifre igralcu nikoli ne povozi. Anonimiziran igralec ima ime
 // "#<id>" in nima šifre, zato ga najdemo po zgoščenem ključu (le enoličen
 // zadetek v tej ligi), sicer bi zapisnik ustvaril dvojnika s pravim imenom.
-const POLJA_IGRALCA = 'id, position, position_source, team_id, active, odsel_at, izstopil_at, anonimiziran_razlog'
+const POLJA_IGRALCA = 'id, position, position_source, team_id, active, odsel_at, izstopil_at, anonimiziran_razlog, shirt_number'
 async function anonimiziranVLigi(kljuc) {
   const { data, error } = await db
     .from('anonimizirani_igralci')
@@ -551,6 +551,9 @@ async function igralecId(
   // `.order('id')` ni kozmetika: brez njega Postgres vrne poljubno vrstico in
   // isti uvoz lahko vsakic pripne statistiko drugemu soimenjaku.
   let { data: zadetki } = await poizvedba.order('id').limit(2)
+  // Edini igralec s tem imenom pri klubu: njegov dres smemo osvežiti (spodaj).
+  // Pri soimenjakih dres loči osebe, zato ga tam ne spreminjamo.
+  const edinecPoImenu = (zadetki?.length ?? 0) === 1
 
   // `dvoumno` pove le, da sta soimenjaka oba nastopila na TEJ tekmi. Ce je
   // igral en sam, ostane false, poizvedba pa vseeno vrne vec vrstic — takrat
@@ -684,6 +687,17 @@ async function igralecId(
         .is('anonimiziran_razlog', null)
       if (error) throw new Error(`igralec ${polnoIme}: ${error.message}`)
       if (count !== 1) throw new Error(`reaktivacija ${polnoIme}: pričakovan popravek natanko enega igralca`)
+    }
+    // Brez šifre (FSB, MNZ ...) se dres ob ujemanju po imenu ni nikoli
+    // posodobil (Sekulić, BASK: profil 13, zapisniki od 3. 10. pa 2). Osvežimo
+    // ga le, če je to njegov najnovejši nastop: arhiv in ponovni uvoz starejših
+    // tekem ne smeta povoziti novejše številke.
+    if (edinecPoImenu && !dvoumno && st != null && datum != null && obstoj.shirt_number !== st) {
+      const poznejsi = (await nastopiIgralca(obstoj.id)).some((n) => n.datum != null && n.datum > datum)
+      if (!poznejsi) {
+        const { error: eDres } = await db.from('players').update({ shirt_number: st }).eq('id', obstoj.id)
+        if (eDres) throw new Error(`dres ${polnoIme}: ${eDres.message}`)
+      }
     }
     igralci.set(kljuc, obstoj.id)
     javiVratarjaIzPolja(obstoj)
