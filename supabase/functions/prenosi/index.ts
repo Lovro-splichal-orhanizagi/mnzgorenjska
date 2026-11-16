@@ -21,6 +21,7 @@ const env = (k: string) => Deno.env.get(k) ?? ''
 const URL_BAZE = env('SUPABASE_URL')
 const ANON = env('SUPABASE_ANON_KEY')
 const SERVIS = env('SUPABASE_SERVICE_ROLE_KEY')
+const SKRIVNI = env('SUPABASE_SECRET_KEY')
 const KLJUC = env('YOUTUBE_API_KEY')
 const servis = createClient(URL_BAZE, SERVIS)
 
@@ -112,7 +113,8 @@ Deno.serve(async (req) => {
       case 'osvezi':
         return json({ osvezenih: await osvezi('zivo') })
       case 'dnevno':
-        if (!SERVIS || auth !== `Bearer ${SERVIS}`) return json({ error: 'Le servis.' }, 403)
+        // GitHub pošlje novi skrivni ključ, ne starega service_role (kot drugje).
+        if (![SERVIS, SKRIVNI].filter(Boolean).some((k) => auth === `Bearer ${k}`)) return json({ error: 'Le servis.' }, 403)
         return json({ zivih: await osvezi('zivo'), posnetkov: await osvezi('dnevno') })
       default:
         return json({ error: 'Neznana akcija.' }, 400)
