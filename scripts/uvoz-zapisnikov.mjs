@@ -693,14 +693,8 @@ async function igralecId(
     // ga le, če je to njegov najnovejši nastop: arhiv in ponovni uvoz starejših
     // tekem ne smeta povoziti novejše številke.
     if (edinecPoImenu && !dvoumno && st != null && datum != null && obstoj.shirt_number !== st) {
-      const { data: poznejsi, error: ePoz } = await db
-        .from('appearances')
-        .select('id, matches!inner(played_on)')
-        .eq('player_id', obstoj.id)
-        .gt('matches.played_on', datum)
-        .limit(1)
-      if (ePoz) throw new Error(`dres ${polnoIme}: ${ePoz.message}`)
-      if (!poznejsi?.length) {
+      const poznejsi = (await nastopiIgralca(obstoj.id)).some((n) => n.datum != null && n.datum > datum)
+      if (!poznejsi) {
         const { error: eDres } = await db.from('players').update({ shirt_number: st }).eq('id', obstoj.id)
         if (eDres) throw new Error(`dres ${polnoIme}: ${eDres.message}`)
       }
