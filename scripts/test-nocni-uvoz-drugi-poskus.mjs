@@ -19,7 +19,7 @@ function zaženi(lige, izidi) {
   stub('nocni-kosi.mjs', `
     const a = process.argv.slice(2)
     if (a.includes('--zabelezi')) process.exit(0)
-    for (const [l, v] of ${JSON.stringify(lige)}) console.log(l + ' 1 ' + v)
+    for (const [l, v, k] of ${JSON.stringify(lige)}) console.log(l + ' 1 ' + v + (k ? ' ' + k : ''))
   `)
   for (const ime of ['bulk-source-coordination', 'uvoz-razporeda', 'uvoz-delegiranja', 'uvoz-zapisnikov',
     'uvoz-registracij', 'lazni-vratarji', 'ugani-pozicije']) stub(ime + '.mjs', 'process.exit(0)')
@@ -61,4 +61,17 @@ test('retry z uspehom ne ustavi vira', () => {
   const r = zaženi([['a', FP], ['b', FP]], { a: [1, 0], b: [1, 0] })
   assert.deepEqual(r.klici, ['a', 'b', 'a', 'b'])
   assert.equal(r.status, 0)
+})
+
+// SLF-500: zavrnitev ustavi spletišče (4. stolpec), ne celega vira.
+test('zavrnitev enega spletišča ne preskoči lig drugega spletišča istega vira', () => {
+  const r = zaženi([['a', FP, 'x:dod'], ['b', FP, 'x:dod'], ['c', FP, 'x:ath']], { a: [4], b: [0], c: [0] })
+  assert.deepEqual(r.klici, ['a', 'c'])
+  assert.match(r.izhod, /Vir je zavrnil::b preskočena — vir x:dod/)
+  assert.equal(r.status, 1)
+})
+
+test('brez 4. stolpca je ključ vir (kot prej)', () => {
+  const r = zaženi([['a', FP], ['b', FP]], { a: [4], b: [0] })
+  assert.deepEqual(r.klici, ['a'])
 })

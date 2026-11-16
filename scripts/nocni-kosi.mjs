@@ -24,7 +24,8 @@
 //
 // Uporaba (v delovnem toku):
 //   node scripts/nocni-kosi.mjs --drzava AT --kos 2 --kosov 4 --stanje <json>
-//       izpiše "slug faktor vir" za lige koša, urejeno po stanju
+//       izpiše "slug faktor vir ključ" za lige koša, urejeno po stanju (ključ:
+//       spletišče, ki ga zavrnitev ali izpad ustavi, glej kljucVira)
 //   node scripts/nocni-kosi.mjs --zabelezi at-bundesliga --stanje <json>
 //       zapiše čas uspešnega uvoza lige
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
@@ -64,8 +65,34 @@ export const KOSOV = { AT: 4, HR: 3, HU: 3, SK: 2, RS: 2, SI: 2, GR: 6 }
  */
 export const IZKLOPLJENI_VIRI = new Set(['fcf'])
 
-/** Vklopljene lige brez lig iz izklopljenih virov. */
-export const brezIzklopljenih = (lige) => lige.filter((t) => !IZKLOPLJENI_VIRI.has(t.source))
+/**
+ * Spletišča, ki nas zavračajo vsak zagon (SLF-500): ne obhajamo, zato jih nočni
+ * uvoz ne bere, dokler kdo ne preveri, da spet odgovarjajo. Vsak zagon je bil
+ * zaradi njih rdeč in rdeča ni več povedala nič novega.
+ *   - hns (semafor.hns.family): HTTP 403 vsak zagon od 10. 11. 2026, vsa HR.
+ *   - eps:epsdod.gr (Dodekanez): HTTP 403 vsak zagon od 7. 11. 2026; ostale
+ *     zveze eps odgovarjajo.
+ * Ponovno vklopi: odstrani ključ, ko en ročni zahtevek vrne 200.
+ */
+export const ZAVRNJENA_SPLETISCA = new Set(['hns', 'eps:epsdod.gr'])
+
+/**
+ * Ključ, s katerim nočna zanka ustavi vir po zavrnitvi (4) ali izpadu (5).
+ * eps je ena koda za ~30 ločenih spletišč regionalnih zvez (šifra lige
+ * "<domena>:<id>"): 403 Dodekaneza je 16. 11. ustavil še 11 lig drugih zvez v
+ * istem košu. Drugi viri so eno spletišče.
+ */
+export function kljucVira(vir, koda) {
+  if (vir === 'eps') {
+    const m = String(koda ?? '').match(/^([a-z]+\.gr):/)
+    if (m) return `eps:${m[1]}`
+  }
+  return vir
+}
+
+/** Vklopljene lige brez lig iz izklopljenih virov in zavrnjenih spletišč. */
+export const brezIzklopljenih = (lige) =>
+  lige.filter((t) => !IZKLOPLJENI_VIRI.has(t.source) && !ZAVRNJENA_SPLETISCA.has(kljucVira(t.source, t.source_league_code)))
 
 /** FNV-1a, 32 bitov: stabilna zgoščenka niza (brez kripto, enaka v vsakem Node). */
 export function zgoscenka(niz) {
@@ -149,7 +176,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   })
   const { data, error } = await db
     .from('competitions')
-    .select('slug, source, sort_order, countries!inner(code)')
+    .select('slug, source, source_league_code, sort_order, countries!inner(code)')
     .eq('active', true)
     .eq('countries.code', drzava)
     .order('sort_order')
@@ -159,7 +186,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1)
   }
   const izklopljene = (data ?? []).length - brezIzklopljenih(data ?? []).length
-  if (izklopljene) console.error(`Izpuščenih lig iz izklopljenih virov (${[...IZKLOPLJENI_VIRI].join(', ')}): ${izklopljene}`)
-  const kosi = razdeli(brezIzklopljenih(data ?? []).map((t) => ({ slug: t.slug, vir: t.source })), kosov)
-  for (const l of uredi(kosi[kos - 1], preberiStanje(potStanja))) console.log(`${l.slug} ${l.faktor} ${l.vir}`)
+  if (izklopljene) console.error(`Izpuščenih lig iz izklopljenih virov (${[...IZKLOPLJENI_VIRI, ...ZAVRNJENA_SPLETISCA].join(', ')}): ${izklopljene}`)
+  const lige = brezIzklopljenih(data ?? []).map((t) => ({ slug: t.slug, vir: t.source, kljuc: kljucVira(t.source, t.source_league_code) }))
+  const kosi = razdeli(lige, kosov)
+  for (const l of uredi(kosi[kos - 1], preberiStanje(potStanja))) console.log(`${l.slug} ${l.faktor} ${l.vir} ${l.kljuc}`)
 }

@@ -39,10 +39,13 @@ import {stageAndReplayFussballCardReport} from './fussball-community-runtime.mjs
 // Vir je zavrnil (jalgpall: 403, 429, izziv): izhod 4, da nočna zanka države
 // ne bere naprej (uvoz-zapisnikov.yml). Izhod 5: vir je nedosegljiv (HTTP 5xx,
 // npr. 522 pri fss.rs, tudi po ponovitvah) — to ni napaka uvoza, nocni-uvoz.sh
-// ga javi kot "vir ne dela". Ostale napake ostanejo izhod 1.
+// ga javi kot "vir ne dela". Enako strežnik, ki se po vseh ponovitvah ne oglasi
+// (connect timeout: mnzmaribor.si 16. 11. 2026, SLF-500). Ostale napake
+// ostanejo izhod 1.
+const seNeOglasi = (e) => e?.cause?.code === 'UND_ERR_CONNECT_TIMEOUT'
 process.on('uncaughtException', (e) => {
   console.error(e)
-  process.exit(e?.zavrnitev ? 4 : e?.status >= 500 && e.status <= 599 ? 5 : 1)
+  process.exit(e?.zavrnitev ? 4 : (e?.status >= 500 && e.status <= 599) || seNeOglasi(e) ? 5 : 1)
 })
 
 /** Nepopolna tekma: prvo opozorilo se začne z `NEPOPOLN` (glej viri/frf.mjs). */
