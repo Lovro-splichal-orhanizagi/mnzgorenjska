@@ -291,7 +291,7 @@ export async function narisiKartico(p: PodatkiKartice, foto: FotoKartice | null 
   c.fillStyle = CRNILO
   const priimek = p.priimek.toUpperCase()
   if (p.preverjen) {
-    const K = 56
+    const K = 64
     const sir = cw - 120 - K - 12
     const cx = W / 2 - (K + 12) / 2
     napisi(c, priimek, cx, y + 620, sir, (v) => oz(800, v), 96, 56)
