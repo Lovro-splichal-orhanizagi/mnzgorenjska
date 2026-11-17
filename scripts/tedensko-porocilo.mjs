@@ -30,7 +30,29 @@ const env = izEnv()
 const BASE = process.env.SUPABASE_URL ?? env.VITE_SUPABASE_URL ?? 'http://127.0.0.1:54321'
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
 if (!SERVICE) { console.error('Manjka SUPABASE_SERVICE_ROLE_KEY'); process.exit(1) }
-const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
+
+// Vsaka zahteva ima svojo mejo: zatikljaj mora pasti glasno (in priti v
+// `poskusi`), ne pa molce zadrzati zagona do 10-minutne meje Actions.
+const MEJA_ZAHTEVE_MS = 30_000
+const db = createClient(BASE, SERVICE, {
+  auth: { persistSession: false },
+  global: { fetch: (url, opts = {}) => fetch(url, { ...opts, signal: AbortSignal.timeout(MEJA_ZAHTEVE_MS) }) },
+})
+
+const zacetek = Date.now()
+const dnevnik = (s) => console.log(`[${Math.round((Date.now() - zacetek) / 1000)} s] ${s}`)
+
+// Zadnja varovalka: ce zagon kljub mejam zahtev traja predolgo, to povemo
+// SAMI, prej kot GitHub ubije posel (ob preklicu se korak "Javi padec" ne
+// sprozi, zato tedne ni nihce izvedel, da porocila ni).
+const MEJA_ZAGONA_MS = 8 * 60_000
+setTimeout(async () => {
+  const sporocilo = `zagon traja ze ${MEJA_ZAGONA_MS / 60_000} min, prekinjam (${stanje})`
+  console.error(sporocilo)
+  await javiNapako(sporocilo)
+  process.exit(1)
+}, MEJA_ZAGONA_MS).unref()
+let stanje = 'zacetek'
 
 /**
  * Poizvedba s ponovnimi poskusi.
@@ -43,7 +65,9 @@ const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 async function poskusi(ime, fn, poskusov = 4) {
   let zadnja
   for (let i = 1; i <= poskusov; i++) {
-    const { data, error, count } = await fn()
+    let r
+    try { r = await fn() } catch (e) { r = { error: e } }
+    const { data, error, count } = r
     if (!error) return { data, count }
     zadnja = error
     if (i < poskusov) await new Promise((r) => setTimeout(r, 1000 * 2 ** (i - 1)))
@@ -69,14 +93,42 @@ async function javiNapako(sporocilo) {
 const DNI = 7
 const odKdaj = new Date(Date.now() - DNI * 86400000).toISOString().slice(0, 10)
 
+const STRAN = 1000
+
+/** Vse vrstice poizvedbe: PostgREST odgovor omeji (privzeto 1000 vrstic). */
+async function vse(ime, sestavi) {
+  const rezultat = []
+  for (let od = 0; ; od += STRAN) {
+    const { data } = await poskusi(`${ime} (od ${od})`, () => sestavi().range(od, od + STRAN - 1))
+    rezultat.push(...(data ?? []))
+    if ((data?.length ?? 0) < STRAN) return rezultat
+  }
+}
+
+/** Izvede `fn` nad elementi z omejeno vzporednostjo; prva napaka ustavi vse. */
+async function vzporedno(elementi, vzporednost, fn) {
+  const izid = new Array(elementi.length)
+  let naslednji = 0
+  await Promise.all(Array.from({ length: Math.min(vzporednost, elementi.length) }, async () => {
+    while (naslednji < elementi.length) {
+      const i = naslednji++
+      izid[i] = await fn(elementi[i], i)
+    }
+  }))
+  return izid
+}
+
 let lige
 try {
-  ;({ data: lige } = await poskusi('lige', () =>
+  stanje = 'lige'
+  lige = await vse('lige', () =>
     db.from('competitions_view')
       .select('id, slug, name, short_name, federation_short')
       .eq('active', true)
       .order('federation_sort')
-      .order('sort_order')))
+      .order('sort_order')
+      .order('id'))
+  dnevnik(`${lige.length} lig`)
 } catch (e) {
   console.error(e.message)
   await javiNapako(e.message)
@@ -84,31 +136,33 @@ try {
 }
 
 /** Zadnji krog z odigrano tekmo in koliko tekem v njem je uvoženih. */
-async function stanjeLige(liga) {
-  const { data: krogi } = await db
+async function stanjeLige(liga, manjka) {
+  // Napaka poizvedbe se NE sme prebrati kot "ni podatkov": `poskusi` jo ponovi
+  // in nazadnje vrze, poročilo pa pade glasno.
+  const { data: krogi } = await poskusi(`${liga.slug}: krogi`, () => db
     .from('rounds')
     .select('id, number, season, played_on, deadline_at')
     .eq('competition_id', liga.id)
     .not('played_on', 'is', null)
     .lte('played_on', new Date().toISOString().slice(0, 10))
     .order('played_on', { ascending: false })
-    .limit(1)
+    .limit(1))
   const zadnji = krogi?.[0] ?? null
 
-  const { data: naslednji } = await db
+  const { data: naslednji } = await poskusi(`${liga.slug}: rok`, () => db
     .from('rounds')
     .select('number, deadline_at')
     .eq('competition_id', liga.id)
     .gt('deadline_at', new Date().toISOString())
     .order('deadline_at')
-    .limit(1)
+    .limit(1))
 
   let tekem = 0, uvozenih = 0
   if (zadnji) {
-    const { data: t } = await db
+    const { data: t } = await poskusi(`${liga.slug}: tekme`, () => db
       .from('matches')
       .select('id, imported_at')
-      .eq('round_id', zadnji.id)
+      .eq('round_id', zadnji.id))
     tekem = t?.length ?? 0
     uvozenih = (t ?? []).filter((x) => x.imported_at).length
   }
@@ -121,23 +175,50 @@ async function stanjeLige(liga) {
   // odigrani — prvo poročilo je tako javilo 145 manjkajočih tekem za ligo,
   // ki ni zamujala z ničimer. Merilo štejemo po datumu TEKME, ne kroga:
   // prestavljena tekma ima svoj datum in ni zamuda kroga.
-  const danes = new Date().toISOString().slice(0, 10)
-  const { data: sveze } = await db
-    .from('matches')
-    .select('id, imported_at, played_on, rounds!inner(number, competition_id)')
-    .eq('rounds.competition_id', liga.id)
-    .gte('played_on', odKdaj)
-    .lte('played_on', danes)
-    .is('imported_at', null)
-  const manjka = sveze ?? []
-
-  return { zadnji, naslednji: naslednji?.[0] ?? null, tekem, uvozenih, manjka }
+  //
+  // Te tekme poberemo ENKRAT za vse lige (glej spodaj), ne po poizvedbo na
+  // ligo: pri ~1400 ligah je to prihranilo tretjino vseh zahtev.
+  return { zadnji, naslednji: naslednji?.[0] ?? null, tekem, uvozenih, manjka: manjka.get(liga.id) ?? [] }
 }
 
+const VZPOREDNOST = 8
 const vrstice = []
 let skupajManjka = 0
-for (const liga of lige ?? []) {
-  const s = await stanjeLige(liga)
+let stanja
+try {
+  stanje = 'sveze tekme'
+  const danes = new Date().toISOString().slice(0, 10)
+  const sveze = await vse('sveze tekme', () =>
+    db.from('matches')
+      .select('id, imported_at, played_on, rounds!inner(number, competition_id)')
+      .gte('played_on', odKdaj)
+      .lte('played_on', danes)
+      .is('imported_at', null)
+      .order('id'))
+  const manjkaPoLigi = new Map()
+  for (const t of sveze) {
+    const id = t.rounds?.competition_id
+    if (!manjkaPoLigi.has(id)) manjkaPoLigi.set(id, [])
+    manjkaPoLigi.get(id).push(t)
+  }
+  dnevnik(`${sveze.length} svezih tekem brez statistike`)
+
+  stanje = 'stanje lig'
+  let koncanih = 0
+  stanja = await vzporedno(lige, VZPOREDNOST, async (liga) => {
+    const s = await stanjeLige(liga, manjkaPoLigi)
+    if (++koncanih % 100 === 0) dnevnik(`lige: ${koncanih}/${lige.length}`)
+    return s
+  })
+  dnevnik(`lige: ${lige.length}/${lige.length}`)
+} catch (e) {
+  console.error(e.message)
+  await javiNapako(e.message)
+  process.exit(1)
+}
+
+for (const [i, liga] of (lige ?? []).entries()) {
+  const s = stanja[i]
   skupajManjka += s.manjka.length
   const krog = s.zadnji ? `${s.zadnji.number}. krog` : 'brez odigranega kroga'
   const uvoz = s.zadnji ? `${s.uvozenih}/${s.tekem}` : '—'
@@ -157,11 +238,13 @@ for (const liga of lige ?? []) {
 
 let tezave, igralcev, ekip
 try {
+  stanje = 'preverba'
   ;({ data: tezave } = await poskusi('preverba', () => preveriPodatkeVBazi(db)))
   ;({ count: igralcev } = await poskusi('igralci', () =>
     db.from('players').select('id', { count: 'exact', head: true }).eq('active', true)))
   ;({ count: ekip } = await poskusi('ekipe', () =>
     db.from('fantasy_teams').select('id', { count: 'exact', head: true }).eq('hisna', false)))
+  dnevnik('preverba koncana')
 } catch (e) {
   console.error(e.message)
   await javiNapako(e.message)
