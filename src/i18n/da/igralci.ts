@@ -372,6 +372,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     cakaKopirano: 'Linket er kopieret.',
     umakni: 'Træk anmodningen tilbage',
     zavrnjen: 'Din anmodning om denne profil blev afvist.',
+    nadgradnja: 'Når du er bekræftet, kan du opgradere til en verificeret profil:',
+    karticaVabilo: 'Er det dig? Verificerede spillere har et blåt flueben på deres kort.',
     znacka: {
       klub: 'Bekræftet af klubben',
       soigralci: 'Bekræftet af holdkammerater',

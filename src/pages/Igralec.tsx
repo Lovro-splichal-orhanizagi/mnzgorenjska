@@ -26,7 +26,7 @@ import Grb from '../components/Grb'
 import { PokritostStatistike, usePokritostStatistike, usePokritostZgodovine, brezPreverjenihNastopov } from '../components/PokritostStatistike'
 import FotoIgralca from '../components/FotoIgralca'
 import ZnakPreverjen from '../components/ZnakPreverjen'
-import PrevzemIgralca from '../components/PrevzemIgralca'
+import PrevzemIgralca, { VabiloPreverjen } from '../components/PrevzemIgralca'
 import IzbranostIgralca from '../components/IzbranostIgralca'
 import Razpolozljivost from '../components/Razpolozljivost'
 import KarticaIgralca from '../components/KarticaIgralca'
@@ -39,6 +39,7 @@ import PosljiSporocilo from '../components/PosljiSporocilo'
 import { zabeleziOgledIgralca, zabeleziOgledProfila } from '../lib/ogledi'
 import { naloziIzlozbo, type Izlozba } from '../lib/izlozba'
 import { jeMladinskiSlug, useFotografija } from '../lib/prevzem'
+import { usePreverjen, useVidiPreverjene } from '../lib/preverjeni'
 import { dosezkiNastopa, odstotekIzbranosti } from '../lib/karticaIgralca'
 import { naloziRazlage, type Razlaga } from '../lib/razlagaTock'
 import { SeznamPostavk, RazlagaCene } from '../components/Razlaga'
@@ -136,6 +137,11 @@ export default function Igralec() {
   const [ekipVLigi, setEkipVLigi] = useState<number | null>(null)
   // Potrjeni lastnik profila deli "svojo" kartico.
   const [jeLastnik, setJeLastnik] = useState(false)
+  // Neprevzet profil: pod kartico vabilo k prevzemu in preverjenemu profilu.
+  const [prevzet, setPrevzet] = useState(true)
+  // Preverjen igralec: modra kljukica tudi na kartici za objavo.
+  const preverjen = !!usePreverjen(igralecId)
+  const vidiPreverjene = useVidiPreverjene()
   // Izložba preverjenega polnoletnega igralca (posnetki); null brez nje.
   const [izlozba, setIzlozba] = useState<Izlozba | null>(null)
   const osveziIzlozbo = async () => setIzlozba(await naloziIzlozbo(igralecId))
@@ -446,6 +452,7 @@ export default function Igralec() {
             )}
           </p>
           <GumbGoogle nazaj={lokacija.pathname + lokacija.search} />
+          {smeKartico && <VabiloPreverjen className="border-t border-white/10 pt-3" />}
         </div>
       ) : nalaganjeSeje ? null : (
         <>
@@ -455,6 +462,7 @@ export default function Igralec() {
         slugLige={slugLige}
         anonimiziran={anonimiziran}
         naLastnika={setJeLastnik}
+        naPrevzet={setPrevzet}
         vIzlozbi={zIzlozbo}
         ponudbaIzlozbe={!!izlozba && izlozba.lastnik && !izlozba.dovoljena && izlozba.vidi && izlozba.odrasla}
         odrasel={smeKartico}
@@ -705,6 +713,14 @@ export default function Igralec() {
           <h2 className={NASLOV}>
             {jeLastnik ? t('igralci.profil.deliSvojoKartico') : t('igralci.profil.deliKartico')}
           </h2>
+          {!prevzet && !preverjen && vidiPreverjene && (
+            <p className="-mt-1 mb-3 text-xs text-slate-400">
+              {t('igralci.prevzem.karticaVabilo')}{' '}
+              <Link to="/verified" className="font-semibold text-sky-300 underline">
+                {t('preverjeni.vec')}
+              </Link>
+            </p>
+          )}
           <KarticaIgralca
             podatki={{
               ime: igralec.first_name ?? '',
@@ -731,6 +747,7 @@ export default function Igralec() {
               premikCene: premik,
               izbran: odstotekIzbranosti(ekipZIgralcem, ekipVLigi),
               naslov: povezavaKartice,
+              preverjen,
             }}
             fotografija={fotoProfila}
             povezava={povezavaKartice}

@@ -377,6 +377,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     cakaKopirano: 'Saite nokopēta.',
     umakni: 'Atsaukt pieprasījumu',
     zavrnjen: 'Tavs pieprasījums par šo profilu tika noraidīts.',
+    nadgradnja: 'Pēc apstiprināšanas vari profilu uzlabot uz pārbaudītu:',
+    karticaVabilo: 'Vai tas esi tu? Pārbaudītiem spēlētājiem kartītē ir zils ķeksītis.',
     znacka: {
       klub: 'Apstiprināja klubs',
       soigralci: 'Apstiprināja komandas biedri',

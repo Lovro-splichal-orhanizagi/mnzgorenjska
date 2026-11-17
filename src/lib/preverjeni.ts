@@ -129,6 +129,29 @@ export function usePreverjen(id: number | null | undefined): Preverjen | null {
   return id == null ? null : (m.get(id) ?? null)
 }
 
+// Ali so preverjeni profili odprti (`vidi_preverjene`): en klic na prijavo.
+let vidiObljuba: Promise<boolean> | null = null
+supabase.auth.onAuthStateChange(() => {
+  vidiObljuba = null
+})
+
+/**
+ * Vabilo k preverjenemu profilu (ob "To sem jaz", na kartici) le, ko so
+ * preverjeni odprti; sicer bi vodilo na stran, ki ničesar ne ponuja.
+ */
+export function useVidiPreverjene(): boolean {
+  const [vidi, setVidi] = useState(false)
+  useEffect(() => {
+    let velja = true
+    vidiObljuba ??= Promise.resolve(supabase.rpc('vidi_preverjene')).then(({ data }) => data === true)
+    void vidiObljuba.then((v) => velja && setVidi(v))
+    return () => {
+      velja = false
+    }
+  }, [])
+  return vidi
+}
+
 // --- pasica: izrez 3 : 1 ----------------------------------------------------
 
 export const NAJVEC_PASICA = 2 * 1024 * 1024

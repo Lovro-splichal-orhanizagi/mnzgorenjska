@@ -374,6 +374,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     cakaKopirano: 'Poveznica je kopirana.',
     umakni: 'Povuci zahtjev',
     zavrnjen: 'Tvoj zahtjev za ovaj profil je odbijen.',
+    nadgradnja: 'Kad te potvrdimo, profil možeš nadograditi u provjereni:',
+    karticaVabilo: 'Jesi li to ti? Provjereni igrači imaju plavu kvačicu na kartici.',
     znacka: {
       klub: 'Potvrdio klub',
       soigralci: 'Potvrdili suigrači',

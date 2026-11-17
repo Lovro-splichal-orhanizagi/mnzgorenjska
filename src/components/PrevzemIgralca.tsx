@@ -15,7 +15,10 @@ import {
   pripraviFotografijo,
   razlicicaFotografije,
 } from '../lib/prevzem'
+import { useVidiPreverjene } from '../lib/preverjeni'
 import PreverjeniProfil from './PreverjeniProfil'
+import { Link } from './Povezava'
+import { Kljukica } from './ZnakPreverjen'
 import { ScoutIgralca } from './ScoutIgralca'
 import PredstavitevIgralca, { OMREZJA, type Omrezje, type Potrdil, type Predstavitev } from './PredstavitevIgralca'
 
@@ -46,6 +49,7 @@ export default function PrevzemIgralca({
   slugLige,
   anonimiziran,
   naLastnika,
+  naPrevzet,
   vIzlozbi = false,
   ponudbaIzlozbe = false,
   odrasel = false,
@@ -59,6 +63,8 @@ export default function PrevzemIgralca({
   ponudbaIzlozbe?: boolean
   /** Pove strani, ali je prijavljeni potrjeni lastnik profila (kartica). */
   naLastnika?: (jeLastnik: boolean) => void
+  /** Pove strani, ali je profil že prevzet (vabilo pod kartico le neprevzetim). */
+  naPrevzet?: (prevzet: boolean) => void
   /** Odrasla liga, ne anonimiziran: predogled koristi pred nakupom. */
   odrasel?: boolean
 }) {
@@ -111,6 +117,10 @@ export default function PrevzemIgralca({
   useEffect(() => {
     naLastnika?.(!!potrjen && moji.some((z) => z.status === 'potrjen' && z.player_id === potrjen.glavni))
   }, [potrjen, moji, naLastnika])
+
+  useEffect(() => {
+    if (potrjen !== undefined) naPrevzet?.(!!potrjen)
+  }, [potrjen, naPrevzet])
 
   if (potrjen === undefined) return null
 
@@ -221,13 +231,23 @@ export default function PrevzemIgralca({
         <p className="text-xs text-slate-500">{t('igralci.prevzem.zavrnjen')}</p>
       )}
 
-      {lahkoZahteva && (
-        <button
-          onClick={() => setOkno(true)}
-          className={potrjen ? 'text-xs text-slate-500 hover:text-slate-200' : 'gumb-tih text-sm'}
-        >
+      {lahkoZahteva && potrjen && (
+        <button onClick={() => setOkno(true)} className="text-xs text-slate-500 hover:text-slate-200">
           {t('igralci.prevzem.gumb')}
         </button>
+      )}
+
+      {/* neprevzet profil: viden "To sem jaz" in kaj prinese preverjen profil */}
+      {lahkoZahteva && !potrjen && (
+        <div className="kartica space-y-3 border-sky-400/30 p-3 text-sm">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <button onClick={() => setOkno(true)} className="gumb-glavni min-h-11 text-sm">
+              {t('igralci.prevzem.gumb')}
+            </button>
+            <span className="text-xs text-slate-400">{t('preverjeni.cta.poisciOpis')}</span>
+          </div>
+          {odrasel && <VabiloPreverjen className="border-t border-white/10 pt-3" />}
+        </div>
       )}
 
       {/* poznavalec kluba ali potrjen soigralec odloči */}
@@ -246,6 +266,7 @@ export default function PrevzemIgralca({
       {okno && (
         <OknoZahtevka
           mladinska={jeMladinskiSlug(slugLige)}
+          preverjen={odrasel}
           dela={dela}
           napaka={napaka}
           naZapri={() => setOkno(false)}
@@ -340,14 +361,51 @@ export function VrsticaOdlocitve({
   )
 }
 
+/** Koristi preverjenega profila ob "To sem jaz" (naslovi s strani /verified). */
+const KORISTI = ['kljukica', 'posnetki', 'highlight', 'sporocila'] as const
+
+/**
+ * Kaj prinese preverjen profil in povezava na /verified. Kliče ga le odrasla
+ * liga brez skritega imena; nič, dokler preverjeni niso odprti.
+ */
+export function VabiloPreverjen({ className = '' }: { className?: string }) {
+  const vidi = useVidiPreverjene()
+  if (!vidi) return null
+  return (
+    <div className={`space-y-2 ${className}`}>
+      <p className="flex items-center gap-1.5 font-semibold text-sky-200">
+        <Kljukica velikost={16} />
+        {t('preverjeni.naslov')}
+      </p>
+      <p className="text-xs text-slate-300">{t('igralci.prevzem.nadgradnja')}</p>
+      <ul className="grid gap-1 text-xs text-slate-200 sm:grid-cols-2">
+        {KORISTI.map((k) => (
+          <li key={k} className="flex items-start gap-1.5">
+            <span aria-hidden="true" className="text-sky-300">
+              ✓
+            </span>
+            {t(`preverjeni.kaj.naslovi.${k}`)}
+          </li>
+        ))}
+      </ul>
+      <Link to="/verified" className="inline-flex min-h-11 items-center text-xs font-semibold text-sky-300 underline">
+        {t('preverjeni.vec')}
+      </Link>
+    </div>
+  )
+}
+
 function OknoZahtevka({
   mladinska,
+  preverjen,
   dela,
   napaka,
   naZapri,
   naPoslji,
 }: {
   mladinska: boolean
+  /** Pokaži, kaj prinese preverjen profil po potrditvi. */
+  preverjen: boolean
   dela: boolean
   napaka: string | null
   naZapri: () => void
@@ -389,6 +447,7 @@ function OknoZahtevka({
             <p className="text-xs text-slate-400">{t('igralci.prevzem.mlajsi')}</p>
           </div>
         )}
+        {preverjen && <VabiloPreverjen className="rounded-lg border border-sky-400/30 bg-sky-400/5 p-3 text-sm" />}
         {napaka && <p className="text-sm text-rose-400">{napaka}</p>}
         <div className="flex justify-end gap-2">
           <button type="button" onClick={naZapri} className="gumb-tih text-sm">

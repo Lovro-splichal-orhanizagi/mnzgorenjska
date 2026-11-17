@@ -41,6 +41,8 @@ export interface PodatkiKartice {
   izbran: number | null
   /** Kratka povezava, izpisana na sliki ("slff.eu/player/123"). */
   naslov: string
+  /** Preverjen igralec: modra kljukica ob imenu. */
+  preverjen?: boolean
 }
 
 /**

@@ -374,6 +374,8 @@ export const igralci = {
     cakaKopirano: 'Povezava je kopirana.',
     umakni: 'Umakni zahtevek',
     zavrnjen: 'Tvoj zahtevek za ta profil je bil zavrnjen.',
+    nadgradnja: 'Ko te potrdimo, lahko profil nadgradiš v preverjenega:',
+    karticaVabilo: 'Si to ti? Preverjeni igralci imajo na kartici modro kljukico.',
     znacka: {
       klub: 'Potrdil klub',
       soigralci: 'Potrdili soigralci',

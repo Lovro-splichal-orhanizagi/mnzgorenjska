@@ -376,6 +376,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     cakaKopirano: 'Link skopiowany.',
     umakni: 'Wycofaj zgłoszenie',
     zavrnjen: 'Twoje zgłoszenie dotyczące tego profilu zostało odrzucone.',
+    nadgradnja: 'Po potwierdzeniu możesz ulepszyć profil do zweryfikowanego:',
+    karticaVabilo: 'To ty? Zweryfikowani zawodnicy mają na karcie niebieski znaczek.',
     znacka: {
       klub: 'Potwierdzone przez klub',
       soigralci: 'Potwierdzone przez kolegów z drużyny',

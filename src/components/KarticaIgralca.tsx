@@ -163,6 +163,25 @@ function narisiFoto(c: CanvasRenderingContext2D, f: FotoKartice, rx: number, ry:
   c.drawImage(off, rx, ry, rw, rh)
 }
 
+/** Modra kljukica preverjenega (ista oblika kot `Kljukica`), levi zgornji kot in velikost. */
+function narisiKljukico(c: CanvasRenderingContext2D, kx: number, ky: number, k: number) {
+  c.save()
+  c.translate(kx, ky)
+  c.scale(k / 24, k / 24)
+  c.fillStyle = '#38bdf8'
+  c.fill(
+    new Path2D(
+      'M12 1.5l2.6 1.9 3.2-.1 1 3 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3 3.2.1z',
+    ),
+  )
+  c.strokeStyle = '#0f172a'
+  c.lineWidth = 2.4
+  c.lineCap = 'round'
+  c.lineJoin = 'round'
+  c.stroke(new Path2D('M7.5 12.3l3 3 6-6.3'))
+  c.restore()
+}
+
 /** Okno za fotografijo v točkah kartice — potrebno tudi za vlečenje. */
 export const OKNO_FOTO = { x: 170 + 240, y: 130 + 30, w: 740 - 270, h: 540 }
 
@@ -268,9 +287,19 @@ export async function narisiKartico(p: PodatkiKartice, foto: FotoKartice | null 
     c.fillText(p.stevilka != null ? String(p.stevilka) : '', x + cw * 0.64, y + 520)
   }
 
-  // ime
+  // ime; preverjen ima ob njem modro kljukico (ime se umakne levo za pol kljukice)
   c.fillStyle = CRNILO
-  napisi(c, p.priimek.toUpperCase(), W / 2, y + 620, cw - 120, (v) => oz(800, v), 96, 56)
+  const priimek = p.priimek.toUpperCase()
+  if (p.preverjen) {
+    const K = 56
+    const sir = cw - 120 - K - 12
+    const cx = W / 2 - (K + 12) / 2
+    napisi(c, priimek, cx, y + 620, sir, (v) => oz(800, v), 96, 56)
+    const desno = cx + Math.min(c.measureText(priimek).width, sir) / 2
+    narisiKljukico(c, desno + 12, y + 620 - 34 - K / 2, K)
+  } else {
+    napisi(c, priimek, W / 2, y + 620, cw - 120, (v) => oz(800, v), 96, 56)
+  }
   c.fillStyle = 'rgba(36,28,12,.72)'
   napisi(c, p.klub, W / 2, y + 666, cw - 160, (v) => oz(700, v), 38, 28)
   c.fillStyle = 'rgba(36,28,12,.35)'

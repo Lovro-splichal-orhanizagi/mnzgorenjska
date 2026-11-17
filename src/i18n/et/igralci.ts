@@ -372,6 +372,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     cakaKopirano: 'Link on kopeeritud.',
     umakni: 'Võta taotlus tagasi',
     zavrnjen: 'Sinu taotlus selle profiili kohta lükati tagasi.',
+    nadgradnja: 'Pärast kinnitamist saad profiili muuta kinnitatud profiiliks:',
+    karticaVabilo: 'Kas see oled sina? Kinnitatud mängijatel on kaardil sinine linnuke.',
     znacka: {
       klub: 'Kinnitas klubi',
       soigralci: 'Kinnitasid meeskonnakaaslased',

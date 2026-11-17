@@ -19,6 +19,10 @@ import { useZaklepPomika } from '../lib/zaklepPomika'
 import { naloziRazlage, type Razlaga } from '../lib/razlagaTock'
 import { RazlagaTock, RazlagaCene } from './Razlaga'
 import { useVidiIzbranost } from '../lib/izbranost'
+import { jeMladinskiSlug } from '../lib/prevzem'
+import { useVidiPreverjene } from '../lib/preverjeni'
+import { useTekmovanje } from '../lib/tekmovanje'
+import ZnakPreverjen, { Kljukica } from './ZnakPreverjen'
 
 interface Sezona {
   matches: number | null
@@ -77,6 +81,12 @@ export default function InfoIgralca({
   const okno = useRef<HTMLDivElement | null>(null)
   // Potrjen igralec se predstavi sam: fotografija, vzdevek, opis, omrežja.
   const predstavitev = usePredstavitev(igralecId)
+  // Neprevzet odrasel profil: povezava "To sem jaz" (prevzem je na strani igralca).
+  const { vsaTekmovanja } = useTekmovanje()
+  const vidiPreverjene = useVidiPreverjene()
+  const slugLige = vsaTekmovanja.find((tm) => tm.id === tekmovanjeId)?.slug
+  const vabilo =
+    predstavitev === null && vidiPreverjene && !!slugLige && !jeMladinskiSlug(slugLige) && !String(ime ?? '').startsWith('#')
 
   // Pogovorno okno: fokus vanj ob odprtju, Escape ga zapre.
   useEffect(() => {
@@ -209,7 +219,10 @@ export default function InfoIgralca({
             nadomestek={<Grb ime={klub} kratko={klubKratko} logo={klubLogo} velikost={26} />}
           />
           <div className="min-w-0 flex-1">
-            <div className="truncate font-black">{prikazniIme(ime)}</div>
+            <div className="flex min-w-0 items-center gap-1.5 font-black">
+              <span className="truncate">{prikazniIme(ime)}</span>
+              <ZnakPreverjen id={igralecId} velikost={16} />
+            </div>
             <div className="flex min-w-0 items-center gap-1.5 text-xs text-slate-500">
               {predstavitev?.profil?.fotografija && <Grb ime={klub} kratko={klubKratko} logo={klubLogo} velikost={14} />}
               <span className="truncate">{klub}</span>
@@ -228,6 +241,20 @@ export default function InfoIgralca({
           <div className="mb-3">
             <PredstavitevIgralca potrdil={predstavitev.potrdil} profil={predstavitev.profil} />
           </div>
+        )}
+
+        {vabilo && (
+          <Link
+            to={`/player/${igralecId}`}
+            target="_blank"
+            rel="noopener"
+            className="mb-3 flex min-h-11 items-center gap-1.5 rounded-lg border border-sky-400/30 px-3 py-2 text-xs text-sky-200 hover:bg-sky-400/10"
+          >
+            <Kljukica velikost={14} />
+            <span>
+              <span className="font-semibold">{t('igralci.prevzem.gumb')}</span> · {t('preverjeni.naslov')} →
+            </span>
+          </Link>
         )}
 
         {dejanja && <div className="mb-3">{dejanja}</div>}
