@@ -185,7 +185,7 @@ function player(n,{goal=false}={}){
  if(goal){
   const image=shape(c[0],'span',{class:'player-image table-image'},1)[0]
   const imageUrl=image?.attrs?.['data-responsive-image']
-  requireProof(/^(?:https:\/\/cdn\.fussball\.de\/public\/[A-Z0-9]{32}\.stamp|\/\/www\.fussball\.de\/export\.media\/-\/action\/getPlayerImage\/format\/15\/image-id\/NPI_[0-9]{28}|(?:https:)?\/\/images\.media\.fussball\.de\/userfiles\/[A-Za-z0-9]+\/[A-Za-z0-9]+\/[A-Za-z0-9]+\/[A-Za-z0-9_-]+_p3\.jpg)$/.test(imageUrl??''),'nepodprta slika igralca')
+  requireProof(/^(?:https:\/\/cdn\.fussball\.de\/public\/[A-Z0-9]{32}\.stamp|\/\/www\.fussball\.de\/export\.media\/-\/action\/getPlayerImage\/format\/15\/image-id\/NPI_[0-9]{28}|(?:https:)?\/\/images\.media\.fussball\.de\/userfiles\/[A-Za-z0-9]+\/[A-Za-z0-9]+\/[A-Za-z0-9]+\/[A-Za-z0-9_-]+_p3\.jpg|https:\/\/res\.cloudinary\.com\/dfb-de\/image\/upload\/[A-Za-z0-9_:,]+\/v1\/user_generated_content\/ugc_fbde\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\?_a=[A-Za-z0-9+\/=_-]+)$/.test(imageUrl??''),'nepodprta slika igralca')
   shape(image,'span',{'data-alt':'player-image','data-responsive-image':imageUrl},0)
  }
  const name=c.at(-1)

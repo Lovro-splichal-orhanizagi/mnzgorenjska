@@ -1,0 +1,14 @@
+{
+  "testOnly": true,
+  "purpose": "TEST ONLY historical body of scripts/viri/fussball-statistika.mjs inside the capture closure pinned by the one-time Baden native chain; never production authority",
+  "repository": "Lovro-splichal-orhanizagi/mnzgorenjska",
+  "commit": "80406b242a59b30ce7dbcd421cda7720c31a5b7a",
+  "path": "scripts/viri/fussball-statistika.mjs",
+  "file": "fussball-statistika.mjs.txt",
+  "bytes": 27960,
+  "sha256": "9b1363b0f88c51ecc6ab766233380e6399194e9ec5f7b509620106a33a4fcaac",
+  "pinnedBy": [
+    "scripts/fussball-fresh-pair-history.json",
+    "scripts/fussball-baden-completed-stages.json"
+  ]
+}
