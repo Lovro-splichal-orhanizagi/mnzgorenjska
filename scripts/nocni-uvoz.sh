@@ -2,8 +2,10 @@
 # Nočni uvoz enega koša lig ene države (posel matrike v uvoz-zapisnikov.yml).
 #
 # Okolje: DRZAVA, KOS, KOSOV, URNIK (github.event.schedule), ROK_MIN
-# (po koliko minutah ne začnemo nove lige; privzeto 190 — posel ima 240 in
-# mora še shraniti predpomnilnik). SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
+# (po koliko minutah od začetka POSLA ne začnemo nove lige; privzeto 190 —
+# posel ima 240 in mora še shraniti predpomnilnik), ZACETEK_POSLA (epoch
+# sekunde prvega koraka posla; brez njega šteje od zagona skripte).
+# SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
 #
 # Kar se je naučilo:
 #   - Ena liga ne sme podreti ostalih. Spletišča zvez so različno zanesljiva
@@ -27,6 +29,9 @@
 #   - Liga z znano napako (5. stolpec nocni-kosi.mjs, ZNANE_NAPAKE) ima svojo
 #     nalogo: poskusimo jo, neuspeh (razen zavrnitve) je opozorilo. Ena liga
 #     (de-verbandsliga-baden) je dneve barvala cel DE rdeče (SLF-557).
+#   - Rok šteje od začetka posla, ne skripte: 17. 11. 2026 so HU, AT in SK
+#     105 min čakali na tedensko prevrednotenje, nato 190 min uvažali in GitHub
+#     jih je po 240 min preklical (rdeče, brez shranjenega stanja; SLF-557).
 #   - Izhod 3 uvoza razporeda = razpored ima klub manj kot baza (izstop ali
 #     okrnjena stran): uvoz je uspel, liga ni padla, koš izpiše opozorilo.
 set -uo pipefail
@@ -47,7 +52,7 @@ echo "Koš $KOS/$KOSOV, lige (najdlje neosvežene prve): $(cut -d' ' -f1 "$LIGE"
 [ -s "$LIGE" ] || { echo "Država $DRZAVA nima vklopljenih lig v tem košu."; exit 0; }
 [ "$URNI" = 1 ] && echo "Urni zagon: preračun le dotaknjenih krogov"
 
-zacetek=$(date +%s)
+zacetek=${ZACETEK_POSLA:-$(date +%s)}
 minut() { echo $(( ($(date +%s) - zacetek) / 60 )); }
 
 zavrnjeni=" "   # ključi virov (spletišča), ki so ta zagon vrnili 401/403/429/izziv ali porabili proračun zahtev

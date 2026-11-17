@@ -12,7 +12,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 
 // lige: [liga, vir]; izidi: liga → izhodi capture-a po vrsti (0 = uspeh)
 // ura: liga → minute, ki jih ura kaže po prvem klicu te lige (stub `date`)
-function zaženi(lige, izidi, ura = {}) {
+function zaženi(lige, izidi, ura = {}, okolje = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'nocni-uvoz-'))
   mkdirSync(join(dir, 'scripts'))
   mkdirSync(join(dir, 'bin'))
@@ -42,7 +42,7 @@ if [ "$1" = +%s ]; then cat ${JSON.stringify(uraDat)}; else exec /usr/bin/env -i
   `)
   const r = spawnSync('bash', ['scripts/nocni-uvoz.sh'], {
     cwd: dir, encoding: 'utf8',
-    env: { ...process.env, PATH: `${join(dir, 'bin')}:${process.env.PATH}`, DRZAVA: 'DE', KOS: '1', KOSOV: '1', URNIK: '', ROK_MIN: '190', GITHUB_STEP_SUMMARY: '' },
+    env: { ...process.env, PATH: `${join(dir, 'bin')}:${process.env.PATH}`, DRZAVA: 'DE', KOS: '1', KOSOV: '1', URNIK: '', ROK_MIN: '190', GITHUB_STEP_SUMMARY: '', ...okolje },
   })
   const klici = existsSync(join(dir, 'klici.log')) ? readFileSync(join(dir, 'klici.log'), 'utf8').trim().split('\n') : []
   return { ...r, klici, izhod: `${r.stdout}\n${r.stderr}` }
@@ -115,4 +115,20 @@ test('zavrnitev lige z znano napako ostane rdeča', () => {
   const r = zaženi([['baden', FP, FP, 'SLF-558']], { baden: [4] })
   assert.match(r.izhod, /Neuspele lige:: baden/)
   assert.equal(r.status, 1)
+})
+
+// SLF-557: rok šteje od začetka posla (ZACETEK_POSLA), ne od zagona skripte —
+// čakanje na starejši uvoz ga porabi, sicer GitHub posel po 240 min prekliče.
+test('rok šteje od začetka posla: po čakanju naslednja liga ne začne', () => {
+  // ura skripte 0, posel se je začel 150 min prej; po a ura kaže 50 min → 200 >= 190
+  const r = zaženi([['a', FP], ['b', FP]], { a: [0], b: [0] }, { a: 50 }, { ZACETEK_POSLA: String(-150 * 60) })
+  assert.deepEqual(r.klici, ['a'])
+  assert.match(r.izhod, /Zmanjkalo časa::.* b/)
+  assert.equal(r.status, 0)
+})
+
+test('brez ZACETEK_POSLA rok šteje od zagona skripte', () => {
+  const r = zaženi([['a', FP], ['b', FP]], { a: [0], b: [0] }, { a: 50 })
+  assert.deepEqual(r.klici, ['a', 'b'])
+  assert.equal(r.status, 0)
 })
