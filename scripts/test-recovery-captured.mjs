@@ -52,3 +52,10 @@ test('native fixture guard rejects report reassignment and skips already-complet
  row={id:1,zapisnik_id:null,imported_at:null};assert.equal(await assertRecoveryFixture(db,scope),true)
  row={id:1,zapisnik_id:'new-report',imported_at:'2026-11-18'};assert.equal(await assertRecoveryFixture(db,scope),false)
 })
+test('phase report binds exact parent competition name and season; unrelated phase is rejected',()=>{
+ let html=fs.readFileSync(new URL('./vzorci/hns-tekma-11m.html',import.meta.url),'utf8').replace('<h2>Treća NL Istok 26/27,','<h2><a href="https://semafor.hns.family/natjecanja/999/x/">Treća NL Istok 26/27 1. DIO</a>,')
+ const z=vZapisnik(html,{id:'456',url:'https://semafor.hns.family/utakmice/456/x/'}),f={id:'456',krog:z.krog,datum:z.datum,domaci:z.domaci.ime,gostje:z.gostje.ime,izid:z.rezultat}
+ assert.equal(report(html,f,'123','Treća NL Istok 26/27').quality.complete,true)
+ assert.throws(()=>report(html,f,'123','Other competition 26/27'),/competition header/)
+ assert.throws(()=>report(html,f,'123','Treća NL Istok 25/26'),/competition header/)
+})

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import hns from './hns.mjs'
 import pzpn,{vZapisnik,popolnZapisnik,POSREDNIKI} from './pzpn.mjs'
-import {schedule,report} from '../hns-recovery-validation.mjs'
+import {schedule,report,competitionName} from '../hns-recovery-validation.mjs'
 import {LEAGUES,scheduleUrl,selectMatches} from '../pzpn-collect-recovery.mjs'
 const hash=b=>createHash('sha256').update(b).digest('hex')
 const noNetwork=()=>{throw Error('recovery snapshot: network access is disabled')}
@@ -36,12 +36,12 @@ export function createRecoverySource({competition:c,directory,source=c.source,db
  const records=[]
  if(source==='hns'){
   assert.equal(l.schedule.url,`https://semafor.hns.family/natjecanja/${l.code}/x/`)
-  const fixtures=schedule(bytes(l.schedule))
+  const scheduleHtml=bytes(l.schedule),fixtures=schedule(scheduleHtml),parentName=competitionName(scheduleHtml)
   for(const r of l.reports){
    const f=fixtures.find(x=>x.id===r.fixture.id);assert.deepEqual(r.fixture,f,'fixture not in captured schedule')
    assert.ok(f.datum>=s.fromDate&&f.datum<=s.throughDate&&f.izid)
    const url=`https://semafor.hns.family/utakmice/${f.id}/x/`;assert.equal(r.capture.url,url)
-   const {quality,z}=report(bytes(r.capture),f,l.code);assert.ok(quality.complete,'incomplete report cannot be imported')
+   const {quality,z}=report(bytes(r.capture),f,l.code,parentName);assert.ok(quality.complete,'incomplete report cannot be imported')
    records.push({id:z.zapisnikId,z,url})
   }
  }else{
