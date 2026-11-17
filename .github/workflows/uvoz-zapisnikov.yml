@@ -153,14 +153,17 @@ jobs:
     # pri skupnem viru gleda vse posle, ki se začnejo z "uvoz <država>").
     name: uvoz ${{ matrix.drzava }}${{ matrix.kosov > 1 && format(' {0}/{1}', matrix.kos, matrix.kosov) || '' }}
     runs-on: ubuntu-latest
-    # Koš sam ne začne nove lige po 190 minutah (ROK_MIN v nocni-uvoz.sh), da
-    # ostane čas za shranjevanje predpomnilnika. Do 120 minut čakanja na
-    # starejši ročni uvoz pride zraven, zato 240 ostane.
+    # Koš sam ne začne nove lige po 190 minutah od začetka posla (ROK_MIN in
+    # ZACETEK_POSLA v nocni-uvoz.sh), da ostane čas za shranjevanje
+    # predpomnilnika. Čakanje na starejši uvoz (do 120 min) gre od tega roka.
     timeout-minutes: 240
     permissions:
       contents: read
       actions: read
     steps:
+      - name: Zacetek posla
+        run: echo "ZACETEK_POSLA=$(date +%s)" >> "$GITHUB_ENV"
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
