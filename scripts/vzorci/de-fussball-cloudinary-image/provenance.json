@@ -1,0 +1,50 @@
+{
+  "matchId": "031DS4G1C0000000VS5489BUVUR5FS5A",
+  "season": "2026/27",
+  "documents": [
+    {
+      "url": "https://www.fussball.de/spiel/fc-zuzenhausen-fv-fortuna-heddesheim/-/spiel/031DS4G1C0000000VS5489BUVUR5FS5A",
+      "kind": "report",
+      "bytes": 198637,
+      "sha256": "7135a8f0114d2aad5c2bf4359c27f2124af6f0ae31f200056bcfc6a59cf02378",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-11-17T15:33:46.418Z"
+    },
+    {
+      "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G1C0000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+      "kind": "lineup",
+      "bytes": 25728,
+      "sha256": "b4e5b0c0152bc58b397534dc3b9a26f7e7782c7d46a47e20c4454ea8cace0c18",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-11-17T15:33:48.985Z"
+    }
+  ],
+  "fonts": {
+    "754lxit1": {
+      "file": "754lxit1.woff",
+      "sha256": "4293aedbffb6076acec91d02f9a167daecbc5b7eca0e9bf6ec6fc05ba6042aab",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/754lxit1/type/font",
+      "capturedAt": "2026-11-17T15:33:54.169Z"
+    },
+    "zcs2dza9": {
+      "file": "zcs2dza9.woff",
+      "sha256": "fb354a06b87d1c871701b013426fc00e2e2166ad7e4b8a15ce2512719531afa1",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/zcs2dza9/type/font",
+      "capturedAt": "2026-11-17T15:33:59.313Z"
+    },
+    "4eu2t8yi": {
+      "file": "4eu2t8yi.woff",
+      "sha256": "10564d8f4580a85d770ebaec02dd4e8d68d02ea0484697875204cf1aa399506a",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/4eu2t8yi/type/font",
+      "capturedAt": "2026-11-17T15:34:04.427Z"
+    },
+    "8n8k7bad": {
+      "file": "8n8k7bad.woff",
+      "sha256": "1ee68415c01a13ba38237b4efecb1d8c88a47cb5fe3d170ff9ef48badd42333d",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/8n8k7bad/type/font",
+      "capturedAt": "2026-11-17T15:34:09.555Z"
+    }
+  }
+}
