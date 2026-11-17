@@ -40,6 +40,7 @@
 // /stats/ vrne 403 (ne beremo ga). Beremo odkrito: User-Agent SLFF, 3 s med
 // zahtevki, popolnih zapisnikov ne beremo znova. Ob 403, 429, izzivu ali
 // CAPTCHI se uvoz ustavi — ne obhajaj.
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { razpakiraj } from '../klubi.mjs'
 import { sifra } from './zapisniki.mjs'
 import { datumUra, minuta, sezonaIzDatuma } from './fss.mjs'
@@ -423,6 +424,24 @@ export function nastopi(z) {
 
 const starostDni = (datum, danes = Date.now()) => (datum ? (danes - Date.parse(`${datum}T00:00:00Z`)) / 86400000 : 0)
 
+/**
+ * Stran lige, ki jo je ta zagon prebral v zadnjih 30 min (uvoz razporeda jo
+ * shrani kot `razpored-…`, razporedVseStrani kot `nfsbih-liga-…`). GitHubovi
+ * stroji so 16. 11. 2026 ob drugem branju iste strani v nekaj sekundah dobili
+ * ~12 kB stran brez razporeda (SLF-546), zato iste strani ne beremo znova.
+ */
+const MAPA = 'scripts/.predpomnilnik/nfsbih'
+export const SVEZA_LIGA_MS = 30 * 60000
+export function svezaLiga(koda, mapa = MAPA, zdaj = Date.now()) {
+  for (const ime of [imeLige(koda), `razpored-${sifra(koda)}.html`]) {
+    const p = `${mapa}/${ime}`
+    if (!existsSync(p) || zdaj - statSync(p).mtimeMs > SVEZA_LIGA_MS) continue
+    const html = readFileSync(p, 'utf8')
+    if (jeStranLige(html) && !jeIzziv(html)) return html
+  }
+  return null
+}
+
 /** Prenos, ki se ob izzivu ali zavrnitvi ustavi. */
 async function beri(prenesi, url, ime, sveze) {
   let html
@@ -464,12 +483,12 @@ const vir = {
     /^nfsbih-tekma-/.test(datoteka) ? jeStranTekme(html) : /^nfsbih-liga-/.test(datoteka) ? jeStranLige(html) : jeStranLige(html) || jeStranTekme(html),
 
   async razporedVseStrani(koda, prenesi) {
-    return razcleniRazpored(koda, await beri(prenesi, naslovLige(koda), imeLige(koda), true))
+    return razcleniRazpored(koda, svezaLiga(koda) ?? (await beri(prenesi, naslovLige(koda), imeLige(koda), true)))
   },
 
   async zapisniki(koda, prenesi, { preskoci = new Set(), samoZapisnik = null } = {}) {
     const { slug, razdelek } = razberiKodo(koda)
-    const { sezona, tekme } = tekmeLige(koda, await beri(prenesi, naslovLige(koda), imeLige(koda), true))
+    const { sezona, tekme } = tekmeLige(koda, svezaLiga(koda) ?? (await beri(prenesi, naslovLige(koda), imeLige(koda), true)))
     const out = []
     const preskoceni = new Set(preskoci ?? [])
     const iskaniID = samoZapisnik == null ? null : String(samoZapisnik).replace(/^ba/, '')
