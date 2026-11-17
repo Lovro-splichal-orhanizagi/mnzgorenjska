@@ -16,6 +16,7 @@
 //   ... VRSTA=pivo-7dni node scripts/posli-opomnike.mjs                  # teden po prvi ekipi: plačaš pivo? (enkrat)
 //   ... VRSTA=novost-mini-lige node scripts/posli-opomnike.mjs           # enkratno: dvoboji in napovedi v mini ligah
 //   ... VRSTA=akcija-vabil node scripts/posli-opomnike.mjs               # akcija Povabi prijatelje (14.–30. 11. 2026)
+//   ... VRSTA=novost-svetovalec node scripts/posli-opomnike.mjs         # enkratno: Svetovalec ekipe (SLF-549, max 150 na dan)
 //   ... VRSTA=opozorilo-odsotni node scripts/posli-opomnike.mjs          # rok jutri: odsoten igralec v prvi postavi
 //
 // Opomnik gre vsem brez ekipe (353 ljudi) in je zato ročna odločitev.
@@ -47,7 +48,7 @@ if (!SERVICE) { console.error('Manjka SUPABASE_SERVICE_ROLE_KEY'); process.exit(
 // Suho je PRIVZETO. Pošiljanje pošte resničnim ljudem mora biti izrecna
 // izbira, ne privzeta posledica zagona.
 const suho = String(process.env.SUHO ?? 'true').toLowerCase() !== 'false'
-const vrsta = ['opozorilo', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'akcija-vabil'].includes(process.env.VRSTA) ? process.env.VRSTA : 'opomnik'
+const vrsta = ['opozorilo', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'akcija-vabil', 'novost-svetovalec'].includes(process.env.VRSTA) ? process.env.VRSTA : 'opomnik'
 // Opozorilo, push opomnik in tedenski pregled tečejo po urniku; varuje jih meja na ligo.
 const poUrniku = vrsta !== 'opomnik'
 // Opomnik in tedenski pregled gresta po pošti v velikem številu: oba omejuje
@@ -78,7 +79,7 @@ const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global
 // Dobrodošlica ni vezana na ligo: kosi po 10, dokler je kaj kandidatov ali do
 // NAJVEC_DOBRODOSLIC na zagon (urni zagon: zaostanek ~500 gre v pol dneva).
 // Opomnik brez ekipe enako (zaostanek ~1800 po 60 na uro gre v dan in pol).
-if (vrsta === 'dobrodoslica' || vrsta === 'brez-ekipe' || vrsta === 'liga-zivi' || vrsta === 'pivo-7dni' || vrsta === 'novost-mini-lige' || vrsta === 'akcija-vabil') {
+if (vrsta === 'dobrodoslica' || vrsta === 'brez-ekipe' || vrsta === 'liga-zivi' || vrsta === 'pivo-7dni' || vrsta === 'novost-mini-lige' || vrsta === 'akcija-vabil' || vrsta === 'novost-svetovalec') {
   let ostane = Number(process.env.NAJVEC_DOBRODOSLIC ?? 60)
   let poslano = 0
   for (;;) {
@@ -89,7 +90,7 @@ if (vrsta === 'dobrodoslica' || vrsta === 'brez-ekipe' || vrsta === 'liga-zivi' 
     })
     const izid = await o.json().catch(() => ({}))
     if (!o.ok) { console.error(`${vrsta.toUpperCase()} NAPAKA ${o.status}: ${izid.error ?? izid.msg ?? ''}`); process.exit(1) }
-    if (suho) { console.log(`${vrsta.toUpperCase()} — suhi tek: ${izid.kandidati_stevilo} kandidatov.`); process.exit(0) }
+    if (suho) { console.log(`${vrsta.toUpperCase()} — suhi tek: ${izid.kandidati_stevilo} kandidatov.` + (izid.ostane_danes != null ? ` Danes poslanih ${izid.poslanih_danes}, do dnevne meje še ${izid.ostane_danes}.` : '')); process.exit(0) }
     poslano += izid.poslano ?? 0
     ostane -= izid.kandidati_stevilo ?? 0
     // Kos brez uspeha (vsi padli) ali zadnji kos: konec, ostali pridejo naslednjo uro.

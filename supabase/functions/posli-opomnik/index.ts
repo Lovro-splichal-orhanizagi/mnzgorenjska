@@ -46,6 +46,7 @@ import {
   type Jezik,
   sestaviNovostMiniLig,
   sestaviAkcijoVabil,
+  sestaviNovostSvetovalec,
   sestaviOpozoriloOdsotnih,
   sestaviTedenskiPregled,
   type Liga,
@@ -61,6 +62,8 @@ const ANKETA_MEJA = 50
 // Promocija preverjenega profila (SLF-383): največ 500 skupaj, paket največ 20.
 const PROMO_MEJA = 500
 const PAKET_NAJVEC = 20
+// Svetovalec ekipe (SLF-549): največ 150 mailov na dan (po ljubljanskem času).
+const SVETOVALEC_NA_DAN = 150
 // Prehod prekine klic po 30 s; kohorta traja ~12 s, mail ~4,6 s. Po 20 s od začetka
 // klica promo ne začne novega maila, ostale pošlje naslednji klic.
 const PROMO_PRORACUN_MS = 20_000
@@ -68,7 +71,7 @@ const PROMO_PRORACUN_MS = 20_000
 // Funkcija ima 60 s; mail traja ~4,6 s, zato po 40 s ne zacnemo novega.
 const ODSOTNI_PRORACUN_MS = 40_000
 
-const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'anketa-placila', 'promo-preverjen', 'akcija-vabil'] as const
+const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'anketa-placila', 'promo-preverjen', 'akcija-vabil', 'novost-svetovalec'] as const
 type Vrsta = (typeof VRSTE)[number]
 
 // Besedila so v `sporocila.ts`, v jeziku DRŽAVE LIGE (slovaška liga →
@@ -613,6 +616,44 @@ Deno.serve(async (req) => {
       })
     }
     return json({ kandidati_stevilo: kand.length, poslano, push, preskoceno: kand.length - poslano })
+  }
+
+  // `novost-svetovalec` (SLF-549): enkraten mail o Svetovalcu ekipe, ki ga
+  // dobi vsak z ekipo v slovenski ligi brez Preverjenega profila
+  // (`kandidati_za_novost_svetovalec`). Dnevna meja 150; suhi tek vrne le števila.
+  if (vrsta === 'novost-svetovalec') {
+    if (!jeStroj) return json({ error: 'Novost pošlje samo delovni tok (servisni ključ).' }, 403)
+    if (!SMTP_PASS && !suho) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
+    const service7 = createClient(SUPABASE_URL, SERVICE_KEY)
+    const { data: danesN, error: dErr } = await service7.rpc('novost_svetovalec_danes')
+    if (dErr) return json({ error: dErr.message }, 500)
+    const ostane = Math.max(SVETOVALEC_NA_DAN - Number(danesN ?? 0), 0)
+    const { data, error } = await service7.rpc('kandidati_za_novost_svetovalec', {
+      p_najvec: suho ? 10000 : Math.min(vhod.najvec_poslati ?? 10, 20, ostane),
+    })
+    if (error) return json({ error: error.message }, 500)
+    const kand = (data ?? []) as Array<{
+      user_id: string; email: string; display_name: string | null
+      competition_id: number; liga_slug: string; liga_oznaka: string; liga_drzava: string | null
+    }>
+    if (suho) return json({ suho: true, kandidati_stevilo: kand.length, poslanih_danes: Number(danesN ?? 0), ostane_danes: ostane })
+    let poslano = 0
+    for (const u of kand) {
+      if (poslano > 0) await new Promise((r) => setTimeout(r, 600))
+      const liga: Liga = { slug: u.liga_slug, oznaka: u.liga_oznaka, drzava: u.liga_drzava }
+      const sporocilo = sestaviNovostSvetovalec(liga)
+      const rez = await poslji(EMAIL_FROM, u.email, await sOdjavo(service7, u.user_id, sporocilo), Deno.env.get('EMAIL_REPLY_TO'))
+      if (!rez.napaka) poslano++
+      await service7.from('email_log').insert({
+        user_id: u.user_id,
+        email: u.email,
+        vrsta,
+        competition_id: u.competition_id,
+        resend_id: rez.id ?? null,
+        napaka: rez.napaka ?? null,
+      })
+    }
+    return json({ kandidati_stevilo: kand.length, poslano, preskoceno: kand.length - poslano, ostane_danes: Math.max(ostane - poslano, 0) })
   }
 
   // `liga-zivi`: enkratno obvestilo na željo "Moje lige ni", ko je liga
