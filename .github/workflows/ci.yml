@@ -97,6 +97,11 @@ jobs:
 
       # `npm run build` že poganja `tsc --noEmit`, a ločen korak pove, KATERI
       # od obeh je padel, brez brskanja po dnevniku.
+      - name: HNS transport, timings and offline recovery
+        run: |
+          node --test scripts/test-hns-http.mjs scripts/test-nocni-urnik.mjs scripts/test-hns-collection-manifest.mjs scripts/test-recovery-captured.mjs scripts/test-pzpn-collect-recovery.mjs
+          python3 scripts/test_hns_collector.py
+
       - name: Germany activation manifest
         run: node --test scripts/test-dfb-west-prelaunch-proof.mjs scripts/test-dfb-historical-policy.mjs scripts/test-dfb-historical-provider.mjs scripts/lib/historical-statistics-policy.test.mjs scripts/lib/historical-statistics-installed.test.mjs scripts/lib/historical-statistics-runtime.test.mjs scripts/test-dfb-calendar.mjs scripts/test-dfb-nord-west-historical.mjs scripts/test-vklop-nemcije.mjs scripts/test-zagona-nemcije.mjs scripts/test-vklop-dfb-regije.mjs scripts/test-dfb-regije-dokazi.mjs scripts/test-dfb-regije-replay.mjs scripts/test-dfb-west-clock.mjs scripts/test-current-player-reactivation.mjs scripts/test-predpomnjen-vratar.mjs scripts/test-dfb-current-reactivation.mjs
 

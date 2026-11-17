@@ -1,3 +1,4 @@
+import {createRecoverySource} from './recovery-captured.mjs'
 import {withFcfG1Installed4109410} from './fcf-g1-9410-runtime.mjs'
 import {isFcfG1SupplementCompetition} from '../lib/fcf-g1-supplement-installed.mjs'
 import {withFcfG1InstalledSupplement} from './fcf-g1-supplement-runtime.mjs'
@@ -253,6 +254,7 @@ const VIRI = {
  */
 export function viraZa(tekmovanje, {installedHistoricalMarkers=null,installedG1Supplement=null,db=null}={}) {
   const ime = tekmovanje?.source ?? 'mnzg'
+  if(process.env.SLFF_RECOVERY_CAPTURE)return createRecoverySource({competition:tekmovanje,directory:process.env.SLFF_RECOVERY_CAPTURE,db})
   if(isBadenNativeCompetition(tekmovanje)){
     const context=installedHistoricalMarkers??tekmovanje.fussballHistoricalContext
     const base=process.env.SLFF_BULK_CAPTURE?createBulkCapturedSource({competition:tekmovanje,db,directory:process.env.SLFF_BULK_CAPTURE,installedHistoricalMarkers:context}):{...createFussballPublicSource({competition:tekmovanje,db,loadCapture:(directory,{staffel,season})=>loadFussballNativeRuntimeCapture({context,competition:tekmovanje,directory,code:staffel+':'+season})}),fussballHistoricalContext:context}

@@ -660,3 +660,12 @@ test('a transient GitHub 5xx is retried instead of failing the wait step', async
   assert.match(drugo.izid.stderr, /HTTP 404/)
   assert.equal(drugo.klici, 1)
 })
+
+ test('captured recovery serializes the same country and global writers',async()=>{
+  for(const [source,country] of [['hns','HR'],['pzpn','PL']]){
+   const runs={'recovery-captured.yml':[run('Captured recovery '+source)]}
+   assert.equal((await coordinate(['--drzava',country],runs)).code,1)
+   assert.equal((await coordinate(['--drzava','DE'],runs)).code,0)
+  }
+  for(const file of ['zdruzi-klube.yml','tedensko-cene.yml'])assert.match(readFileSync(new URL('../.github/workflows/'+file,import.meta.url),'utf8'),/for wf in recovery-captured.yml/)
+ })
