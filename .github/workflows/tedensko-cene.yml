@@ -132,6 +132,24 @@ jobs:
             fi
             echo "::endgroup::"
           done < /tmp/lige.txt
+          # Branje lige (`TypeError: terminated`) `baza-ponovitve` ne ponovi
+          # (17. 11. 2026: 2 od 1359 lig padli v prvi sekundi). Padle lige zato
+          # na koncu poskusimo se enkrat; `repriced_week` poskrbi, da nikogar
+          # ne premaknemo dvakrat.
+          if [ -n "$padle" ]; then
+            sleep 30
+            prve="$padle"
+            padle=""
+            for liga in $prve; do
+              echo "::group::$liga (drugic)"
+              if node --import ./scripts/baza-ponovitve.mjs scripts/ovrednoti-igralce.mjs --tekmovanje "$liga" --tedensko --pisi --najvec "$NAJVEC"; then
+                echo "$liga: v redu (drugic)"
+              else
+                padle="$padle $liga"
+              fi
+              echo "::endgroup::"
+            done
+          fi
           if [ -n "$padle" ]; then
             echo "::error title=Neuspele lige::$padle"
             exit 1
