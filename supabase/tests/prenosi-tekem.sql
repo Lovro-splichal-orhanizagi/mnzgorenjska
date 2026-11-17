@@ -76,8 +76,12 @@ declare
   p2 uuid;
   n int;
   s jsonb;
+  -- Začetek pred 10 min, a ne pred lokalno polnočjo: tekma je danes (Ljubljana),
+  -- prve minute po polnoči bi sicer padle na včeraj (izven_casa).
+  pred10 constant timestamptz := greatest(now() - interval '10 minutes',
+    date_trunc('day', now() at time zone 'Europe/Ljubljana') at time zone 'Europe/Ljubljana');
 begin
-  r := prenos_dodaj(u2, 991331, 'aaaaaaaaaa1', 'UCkanal1', 'Kanal 1', 'Prenosgrad : Bistrica', '', now() - interval '10 minutes', 5);
+  r := prenos_dodaj(u2, 991331, 'aaaaaaaaaa1', 'UCkanal1', 'Kanal 1', 'Prenosgrad : Bistrica', '', pred10, 5);
   if r->>'napaka' is distinct from 'potrdi_naslov' then raise exception 'Nepotrjen naslov: %', r; end if;
   r := prenos_dodaj(u1, 991333, 'aaaaaaaaaa1', 'UCkanal1', 'Kanal 1', 'x', '', now(), 5);
   if r->>'napaka' is distinct from 'mladinska' then raise exception 'Mladinska tekma: %', r; end if;
@@ -92,7 +96,7 @@ begin
   r := prenos_dodaj(u1, 991331, 'aaaaaaaaaa1', 'UCkanal1', 'Kanal 1', 'x', '', now() - interval '2 days', 5);
   if r->>'napaka' is distinct from 'izven_casa' then raise exception 'Prenos od včeraj: %', r; end if;
 
-  r := prenos_dodaj(u1, 991331, 'aaaaaaaaaa1', 'UCkanal1', 'Kanal 1', 'Prenosgrad : Bistrica', '', now() - interval '10 minutes', 5);
+  r := prenos_dodaj(u1, 991331, 'aaaaaaaaaa1', 'UCkanal1', 'Kanal 1', 'Prenosgrad : Bistrica', '', pred10, 5);
   if not (r->>'ok')::boolean or not (r->>'prvi')::boolean or (r->>'nepreverjeno')::boolean then
     raise exception 'Prvi prenos: %', r;
   end if;
