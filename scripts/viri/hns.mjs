@@ -77,7 +77,7 @@ export async function hnsFetch(url, options = {}) {
     response = transport === 'curl_cffi'
       ? await hnsHttp(url, options)
       : await fetch(url, { ...options, redirect: 'manual' })
-    if (!response.ok) {
+    if (response.status !== 200) {
       try { await response.body?.cancel() } catch {}
       throw new HnsZavrnitev(`hns: ${url} → HTTP ${response.status} — uvoz ustavljen`, response.status)
     }
@@ -106,6 +106,10 @@ export async function hnsFetch(url, options = {}) {
         statusText: 'HNS tehnicna nedostopnost',
         headers: { 'content-type': 'text/html; charset=utf-8', 'x-slff-hns-nedostopno': '1' },
       })
+    }
+    if (!/<(?:!doctype\s+html|html(?:\s|>))/i.test(html)) {
+      try { await response.body?.cancel() } catch {}
+      throw new HnsZavrnitev(`hns: ${url} ni dokument HTML — uvoz ustavljen`, response.status)
     }
     return response
   } catch (error) {

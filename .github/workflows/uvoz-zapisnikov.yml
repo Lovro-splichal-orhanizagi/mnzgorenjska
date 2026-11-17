@@ -24,7 +24,9 @@ on:
     # zagone zamika ali izpusti. Z '0 * …' je "urni" uvoz 3.–4. 10. 2026
     # dejansko tekel na 3–6 ur in točke so ob vikendu zaostajale.
     # Petek (5), Sobota (6), Nedelja (0) — vsako uro
-    - cron: '17 * * * 5,6,0'
+    - cron: '17 5 * * 5,6,0'
+    - cron: '17 17,21 * * 5,6,0'
+    - cron: '17 0-4,6-16,18-20,22-23 * * 5,6,0'
     # Ponedeljek do četrtek — enkrat, ob 5:17 UTC (7:17 po naše)
     - cron: '17 5 * * 1-4'
     # Rezerva: GitHub zagon ob obremenitvi tiho izpusti (13. 10. 2026 ga ni
@@ -33,12 +35,6 @@ on:
     # je jutranji padel, rezerva pa se je preskočila in cel dan ni bilo uvoza).
     - cron: '47 6 * * 1-4'
   workflow_dispatch:
-    inputs:
-      drzava:
-        description: 'Obseg uvoza (HR za obnovo hrvaških lig)'
-        type: choice
-        default: ALL
-        options: [ALL, HR]
 
 permissions:
   contents: read
@@ -71,21 +67,18 @@ jobs:
       actions: read
     outputs:
       teci: ${{ steps.odlocitev.outputs.teci }}
-      zacetek: ${{ steps.odlocitev.outputs.zacetek }}
     steps:
       - id: odlocitev
         env:
           GH_TOKEN: ${{ github.token }}
           URNIK: ${{ github.event.schedule }}
         run: |
-          zacetek=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq .created_at)
-          echo "zacetek=$zacetek" >> "$GITHUB_OUTPUT"
           teci=true
           if [ "$URNIK" = '47 6 * * 1-4' ]; then
             danes=$(date -u +%Y-%m-%dT04:00:00Z)
             prej=$(gh run list -R "$GITHUB_REPOSITORY" --workflow uvoz-zapisnikov.yml --limit 20 \
-              --json databaseId,createdAt,status,conclusion,event \
-              --jq "[.[]|select(.event == \"schedule\" and .databaseId != ${GITHUB_RUN_ID} and .createdAt >= \"$danes\" and (.status != \"completed\" or .conclusion == \"success\"))]|length")
+              --json databaseId,createdAt,status,conclusion \
+              --jq "[.[]|select(.databaseId != ${GITHUB_RUN_ID} and .createdAt >= \"$danes\" and (.status != \"completed\" or .conclusion == \"success\"))]|length")
             [ "$prej" -gt 0 ] && teci=false
           fi
           echo "Rezervni zagon potreben: $teci"
@@ -176,13 +169,11 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Izberi drzavo in termin
+      - name: Preveri termin drzave
         id: urnik
         env:
           DRZAVA: ${{ matrix.drzava }}
-          IZBRANA_DRZAVA: ${{ inputs.drzava == 'HR' && 'HR' || '' }}
           URNIK: ${{ github.event.schedule }}
-          ZACETEK_URNIKA: ${{ needs.zacni.outputs.zacetek }}
         run: node scripts/nocni-urnik.mjs
 
       - uses: actions/setup-node@v4
@@ -274,7 +265,7 @@ jobs:
   # Ko so vse države končale (tudi neuspešno).
   skupno:
     needs: [zacni, uvoz]
-    if: always() && needs.zacni.outputs.teci == 'true' && inputs.drzava != 'HR'
+    if: always() && needs.zacni.outputs.teci == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

@@ -52,7 +52,18 @@
 - Task 1 verified: Ubuntu run 44188224527 and macOS run 44188451796 both
   returned 403/challenge. Rechecked local request: 200, 180 parsed fixtures.
 - Task 2 implemented as opt-in only; default transport and HNS exclusion remain.
-- Task 3 timing/filter prepared. Runtime installation in production workflows,
+- Task 3 timing prepared; HR-only dispatch deferred to avoid displacing all-country queued runs. Runtime installation in production workflows,
   HR source serialization, removal of exclusion and backfill are pending a
   working execution location. Do not merge this as a completed incident fix.
 - User was asked which machine should collect pages; no machine chosen yet.
+
+## Review corrections
+
+- Exact HTTP 200 plus an HTML document envelope are required; partial 206 and
+  JSON mislabeled as HTML are rejected before caching.
+- Buffer at most 8 MiB through curl's content callback, rather than checking
+  after the entire decompressed body is allocated.
+- Use three non-overlapping weekend cron expressions, not wall-clock hours.
+  Both admission and full/incremental scoring use the cron identity.
+- HR-only dispatch is deferred: sharing the ALL concurrency group can evict
+  a queued nightly run; separate groups need HR source-wide coordination.

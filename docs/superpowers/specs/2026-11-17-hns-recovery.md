@@ -15,8 +15,8 @@ non-HTML, challenge, refusal and process failure must stop the source.
 Keep three Croatian buckets and their cache keys. Increase the source delay
 from 500 ms to 5 seconds (15 seconds per request per bucket). Run Croatia at
 05:17 UTC daily and 17:17/21:17 UTC Friday–Sunday, with the existing weekday
-fallback. Other countries retain their schedules. A manual country filter
-allows HR-only recovery. Serialize HR manual readers against nightly readers.
+fallback. Other countries retain their schedules. A separate HR-only recovery dispatch is deferred until fetcher selection
+and source-wide serialization are designed together. Serialize HR manual readers against nightly readers.
 Use the existing incremental, idempotent importer and score recomputation;
 never reprice active teams or modify closed historical women packets.
 

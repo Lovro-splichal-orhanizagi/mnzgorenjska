@@ -14,14 +14,21 @@ def main():
 
     # Keep Chrome's matching headers and connection profile. No personal browser
     # cookies, redirects, proxy environment, session persistence or retries.
-    response = requests.get(sys.argv[1], impersonate="chrome", timeout=25,
-                            allow_redirects=False, trust_env=False)
-    if len(response.content) > 8 * 1024 * 1024:
-        raise ValueError("HNS response exceeds 8 MiB")
+    body = bytearray()
+
+    def collect(chunk):
+        if len(body) + len(chunk) > 8 * 1024 * 1024:
+            raise ValueError("HNS response exceeds 8 MiB")
+        body.extend(chunk)
+        return len(chunk)
+
+    with requests.Session(trust_env=False) as session:
+        response = session.get(sys.argv[1], impersonate="chrome", timeout=25,
+                               allow_redirects=False, content_callback=collect)
     headers = {k: v for k, v in response.headers.items()
                if k.lower() in ("content-type", "cf-mitigated", "retry-after")}
     print(json.dumps({"status": response.status_code, "headers": headers,
-                      "body": base64.b64encode(response.content).decode("ascii")}))
+                      "body": base64.b64encode(body).decode("ascii")}))
 
 
 if __name__ == "__main__":

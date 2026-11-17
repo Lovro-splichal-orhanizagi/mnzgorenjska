@@ -23,12 +23,25 @@ class Response:
     status_code = ${status}
     headers = ${JSON.stringify(headers)}
     content = ${JSON.stringify(body)}.encode('utf-8')
-class Requests:
+class Session:
+    def __init__(self, *, trust_env):
+        assert trust_env is False
+    def __enter__(self):
+        return self
+    def __exit__(self, *args):
+        pass
     def get(self, url, **kwargs):
         assert url == 'https://semafor.hns.family/utakmice/123/x/'
-        assert kwargs == dict(impersonate='chrome', timeout=25, allow_redirects=False, trust_env=False)
+        callback = kwargs.pop('content_callback')
+        assert kwargs == dict(impersonate='chrome', timeout=25, allow_redirects=False)
         time.sleep(${delay})
-        return Response()
+        response = Response()
+        for offset in range(0, len(response.content), 65536):
+            callback(response.content[offset:offset + 65536])
+        response.content = b''
+        return response
+class Requests:
+    Session = Session
 requests = Requests()
 `)
   setEnv(t, 'PYTHONPATH', dir)
@@ -45,6 +58,8 @@ test('curl transport preserves UTF-8 HTML and headers through the existing guard
   assert.equal(await r.text(), '<html><title>Semafor</title>Ž</html>')
 })
 for (const [name, status, body, headers] of [
+  ['partial HTML', 206, '<html>partial</html>', { 'content-type': 'text/html' }],
+  ['mislabeled JSON', 200, '{}', { 'content-type': 'text/html' }],
   ['403', 403, 'denied', { 'content-type': 'text/html' }],
   ['redirect', 302, 'moved', { 'content-type': 'text/html' }],
   ['JSON', 200, '{}', { 'content-type': 'application/json' }],
@@ -69,4 +84,9 @@ test('unknown transport fails closed', async t => {
   setEnv(t, 'SLFF_HNS_TRANSPORT', 'typo')
   t.mock.method(globalThis, 'fetch', async () => new Response('<html>Semafor</html>', { headers: { 'content-type': 'text/html' } }))
   await assert.rejects(vir.fetch(url), e => e.zavrnitev === true)
+})
+
+test('oversized decompressed response stops while collecting chunks', async t => {
+  fixture(t, 200, 'x'.repeat(9 * 1024 * 1024))
+  await assert.rejects(vir.fetch(url), e => e.zavrnitev === true && /8 MiB/.test(e.message))
 })
