@@ -926,6 +926,10 @@ for (const report of zapisniki) {
   }
 
   try {
+    // Odtis sveže razčlenjenega zapisnika, kot ga računa filter zgoraj. Uvoz
+    // spodaj dopisuje z.opozorila (vratar, strelci, igralci), zato odtis na
+    // koncu ni bil nikoli enak in AT, HU in RS niso preskočili ničesar (SLF-528).
+    const odtis = odtisZapisnika(z, cardEnvelope)
     const domaciId = await klubId(z.domaci.ime, { sezona: z.sezona, krog: z.krog, nasprotnik: z.gostje.ime, doma: true })
     const gostjeId = await klubId(z.gostje.ime, { sezona: z.sezona, krog: z.krog, nasprotnik: z.domaci.ime, doma: false })
     const rId = await krogId(z.sezona, z.krog, z.datum)
@@ -957,7 +961,7 @@ for (const report of zapisniki) {
       const outcome=await stageAndReplayFussballCardReport({db,competitionId:tekmovanje.id,code:liga,matchId,envelope:cardEnvelope,candidates})
       if(outcome.status==='APPLIED')uvozenih++;else preskocenih++
       if(['PENDING','HOLD'].includes(outcome.status))skupnostnihCakajocih++
-      noviOdtisi[id]=odtisZapisnika(z,cardEnvelope)
+      noviOdtisi[id]=odtis
       console.log(`  ${id}: community cards ${outcome.status}`)
       continue
     }
@@ -1259,7 +1263,7 @@ for (const report of zapisniki) {
 
     if (z.nepopoln) nepopolnih++
     uvozenih++
-    noviOdtisi[id] = odtisZapisnika(z)
+    noviOdtisi[id] = odtis
     if (z.opozorila.length)
       vsaOpozorila.push(`${id} (${z.domaci.ime} — ${z.gostje.ime}): ${z.opozorila.join('; ')}`)
     process.stdout.write(
