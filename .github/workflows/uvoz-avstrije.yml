@@ -52,7 +52,7 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: node scripts/vrsta-avstrije.mjs
       - name: Javi napako
-        if: failure()
+        if: failure() || cancelled()
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: node scripts/javi-napako.mjs "Uvoz Avstrije (vrsta)"

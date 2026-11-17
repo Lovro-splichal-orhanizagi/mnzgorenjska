@@ -54,7 +54,7 @@ jobs:
         run: node scripts/posli-opomnike.mjs
 
       - name: Javi padec na Discord
-        if: failure()
+        if: failure() || cancelled()
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_TEDENSKO }}
         run: node scripts/javi-napako.mjs "Akcija vabil"

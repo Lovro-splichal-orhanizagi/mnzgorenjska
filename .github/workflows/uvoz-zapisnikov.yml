@@ -238,7 +238,7 @@ jobs:
       # Rdec zagon v GitHubu ni alarm, dokler ga kdo ne vidi. Uvoz je dvakrat
       # padel in dva dni ni opazil nihce.
       - name: Javi padec na Discord
-        if: failure()
+        if: failure() || cancelled()
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_TEDENSKO }}
         run: node scripts/javi-napako.mjs "Uvoz zapisnikov ${{ matrix.drzava }} ${{ matrix.kos }}/${{ matrix.kosov }}"
