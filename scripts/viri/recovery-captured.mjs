@@ -59,21 +59,30 @@ export function createRecoverySource({competition:c,directory,source=c.source,db
    records.push({id:z.zapisnikId,z,url:z.url})
   }
  }
+ for(const r of records){assert.equal(r.z.sezona,'2026/27');assert.ok(Number.isSafeInteger(r.z.krog)&&r.z.krog>0,'positive source round required')}
  assert.equal(new Set(records.map(r=>r.id)).size,records.length,'duplicate report')
  const base=source==='hns'?hns:pzpn
- return {...base,recoveryCaptured:true,recoveryRounds:[...new Set(records.map(r=>r.z.krog))],fetch:noNetwork,razporedVseStrani:noNetwork,async zapisniki(code){
+ return {...base,recoveryCaptured:true,recoveryReportIds:records.map(r=>String(r.id)),assertNativeFixture:scope=>assertRecoveryFixture(db,scope),recoveryRounds:[...new Set(records.map(r=>r.z.krog))],fetch:noNetwork,razporedVseStrani:noNetwork,async zapisniki(code){
   assert.equal(code,l.code)
-  return await missingRecoveryRecords(records,c,db)
+  return await missingRecoveryRecords(records,c,db,base.kljucKluba)
  }}
 }
 
-export async function missingRecoveryRecords(records,c,db){
+export async function missingRecoveryRecords(records,c,db,key){
   const completed=new Set()
   if(db)for(let start=0;start<records.length;start+=100){
    const chunk=records.slice(start,start+100),ids=chunk.map(r=>String(r.id))
-   const {data,error}=await db.from('matches').select('id,zapisnik_id,imported_at,played_on,rounds!inner(competition_id,season,number)').in('zapisnik_id',ids)
+   const {data,error}=await db.from('matches').select('id,zapisnik_id,imported_at,played_on,home:teams!home_team_id(id,name),away:teams!away_team_id(id,name),rounds!inner(competition_id,season,number)').in('zapisnik_id',ids)
    if(error)throw Error('completed report lookup failed: '+error.message)
-   for(const m of data){const r=chunk.find(r=>String(r.id)===String(m.zapisnik_id));assert.ok(r);assert.equal(m.rounds.competition_id,c.id);assert.equal(m.rounds.season,'2026/27');assert.equal(m.rounds.number,r.z.krog);assert.equal(m.played_on,r.z.datum);if(m.imported_at)completed.add(String(r.id))}
+   for(const m of data){const r=chunk.find(r=>String(r.id)===String(m.zapisnik_id));assert.ok(r);assert.equal(m.rounds.competition_id,c.id);assert.equal(m.rounds.season,'2026/27');assert.equal(m.rounds.number,r.z.krog);assert.equal(m.played_on,r.z.datum);if(key){assert.equal(key(m.home.name),key(r.z.domaci.ime));assert.equal(key(m.away.name),key(r.z.gostje.ime))}if(m.imported_at)completed.add(String(r.id))}
   }
   return structuredClone(records.filter(r=>!completed.has(String(r.id))))
+}
+
+export async function assertRecoveryFixture(db,{id,roundId,homeTeamId,awayTeamId}){
+ assert.ok(db,'native writer database required')
+ const {data:existing,error}=await db.from('matches').select('id,zapisnik_id,imported_at').eq('round_id',roundId).eq('home_team_id',homeTeamId).eq('away_team_id',awayTeamId).maybeSingle()
+ if(error)throw error
+ assert.ok(!existing?.zapisnik_id||String(existing.zapisnik_id)===String(id),'existing native fixture owns another report')
+ return !existing?.imported_at
 }

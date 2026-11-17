@@ -1,5 +1,5 @@
 name: Captured results recovery
-run-name: Captured recovery ${{ inputs.source || 'registration' }}
+run-name: Captured recovery ${{ inputs.source || 'registration' }} ${{ inputs.snapshot }}
 on:
   push:
     branches: [codex/hns-recovery]

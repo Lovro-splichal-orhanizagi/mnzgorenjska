@@ -12,7 +12,7 @@ def main():
    print(json.dumps(dict(time=time.time(),status=s['status'],publisherCode=result.returncode,result=result.stdout[-2000:],error=result.stderr[-1000:])),flush=True)
    if result.returncode:raise RuntimeError('publisher failed; retained captures require review')
    published=json.loads(result.stdout)
-   if s['status']!='collecting' and published['status'] in ('submitted','already-submitted','no-complete-reports'):break
+   if s['status']!='collecting' and published['status'] in ('completed','no-complete-reports'):break
   except Exception as e:
    print(json.dumps(dict(status='handoff-stopped',reason=str(e))),flush=True);return 1
   time.sleep(900)

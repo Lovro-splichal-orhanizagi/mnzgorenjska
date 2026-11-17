@@ -43,3 +43,12 @@ test('actual competition loader resolves the country for captured HNS before nat
  const db={from(table){let column;return {select(c){column=c;return this},eq(){return this},async maybeSingle(){return {data:table==='countries'?{code:'HR'}:column==='sezona_koledarska'?{sezona_koledarska:false}:{id:1,slug:'hr-test',country_id:2,source:'hns',active:true,source_policy:null,source_league_code:'123'},error:null}}}}}
  try{assert.equal((await tekmovanje(db,'hr-test')).country_code,'HR')}finally{if(old===undefined)delete process.env.SLFF_RECOVERY_CAPTURE;else process.env.SLFF_RECOVERY_CAPTURE=old}
 })
+test('native fixture guard rejects report reassignment and skips already-complete fixtures',async()=>{
+ const {assertRecoveryFixture}=await import('./viri/recovery-captured.mjs')
+ let row={id:1,zapisnik_id:'old-report',imported_at:'2026-11-18'}
+ const db={from(){return{select(){return this},eq(){return this},async maybeSingle(){return{data:row,error:null}}}}}
+ const scope={id:'new-report',roundId:1,homeTeamId:2,awayTeamId:3}
+ await assert.rejects(assertRecoveryFixture(db,scope),/owns another/)
+ row={id:1,zapisnik_id:null,imported_at:null};assert.equal(await assertRecoveryFixture(db,scope),true)
+ row={id:1,zapisnik_id:'new-report',imported_at:'2026-11-18'};assert.equal(await assertRecoveryFixture(db,scope),false)
+})
