@@ -5,7 +5,7 @@ import argparse,hashlib,json,pathlib,subprocess
 def run(args):return subprocess.check_output(args,text=True,stderr=subprocess.STDOUT,timeout=180)
 def main():
  p=argparse.ArgumentParser();p.add_argument('--dir',required=True);p.add_argument('--source',choices=['hns','pzpn'],required=True);p.add_argument('--ref',default='main');p.add_argument('--preview',action='store_true');p.add_argument('--upload-only',action='store_true');a=p.parse_args()
- d=pathlib.Path(a.dir);src=d/'latest.json' if a.source=='hns' else d/'snapshot.json';body=src.read_bytes();snapshot=json.loads(body)
+ d=pathlib.Path(a.dir);src=d/'latest.json' if a.source=='hns' else d/'snapshot.json';body=run(['node',str(pathlib.Path(__file__).with_name('recovery-prepare.mjs')),str(d)]).encode() if a.source=='hns' else src.read_bytes();snapshot=json.loads(body)
  assert snapshot['source']==a.source
  n=sum(len(l['reports']) if a.source=='hns' else sum(r['status']=='complete' for r in l['reports']) for l in snapshot['leagues'])
  if not n:print(json.dumps(dict(status='no-complete-reports')));return

@@ -7,7 +7,10 @@ export function report(html,f,code){
  // HNS does not embed the report ID. Bind its requested URL through the
  // captured schedule and independently match competition, round, date and clubs.
  const header=html.match(/<div class="competition-title">([\s\S]*?)<\/h2>/)?.[1]??''
- assert.ok(header.includes(`/natjecanja/${code}/`),'competition header mismatch')
+ // Istria aggregate114701073 publishes its first-phase reports under114701126.
+ // This exact relationship was checked against all five retained parent fixtures.
+ const phases={'114701073':['114701126']}
+ assert.ok([String(code),...(phases[code]??[])].some(id=>header.includes(`/natjecanja/${id}/`)),'competition header mismatch')
  const z=vZapisnik(html,{id:String(f.id),url:`https://semafor.hns.family/utakmice/${f.id}/x/`})
  if(!z)return {quality:{complete:false,reason:jeKontumacija(html,f.izid)?'forfeit':'unpublished-or-incomplete'},z:null}
  const aliases={617:['NK Ponikve'],2573:['NK Polet','NK Polet (SK)'],1329:['NK Sveti Đurađ'],209:['NK Dragovoljac'],178362:['NK Borac'],40074:['NK Podravac'],40262:['NK Otok']}
