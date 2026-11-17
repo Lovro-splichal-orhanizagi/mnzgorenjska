@@ -15,6 +15,7 @@
 // stran tekme pa zapisnik. Podatki so javni (HNS jih objavlja v javnem
 // interesu), izrecnega dovoljenja nimamo — beremo odkrito, počasi in le nove
 // tekme, vir pa navedemo na vsaki strani.
+import { hnsHttp } from '../hns-http.mjs'
 import { nastopi as skupniNastopi } from '../zapisnik.mjs'
 import { razpakiraj } from '../klubi.mjs'
 import { vPriimekIme } from './sportnet.mjs'
@@ -71,7 +72,11 @@ export async function hnsFetch(url, options = {}) {
 
   let response
   try {
-    response = await fetch(url, { ...options, redirect: 'manual' })
+    const transport = process.env.SLFF_HNS_TRANSPORT || 'fetch'
+    if (!['fetch', 'curl_cffi'].includes(transport)) throw new Error('Neznan HNS transport')
+    response = transport === 'curl_cffi'
+      ? await hnsHttp(url, options)
+      : await fetch(url, { ...options, redirect: 'manual' })
     if (!response.ok) {
       try { await response.body?.cancel() } catch {}
       throw new HnsZavrnitev(`hns: ${url} → HTTP ${response.status} — uvoz ustavljen`, response.status)
@@ -87,7 +92,7 @@ export async function hnsFetch(url, options = {}) {
       try { await response.body?.cancel() } catch {}
       throw new HnsZavrnitev(`hns: ${url} vrne prazno telo — uvoz ustavljen`, response.status)
     }
-    if (jeIzziv(html)) {
+    if (response.headers.get('cf-mitigated') === 'challenge' || jeIzziv(html)) {
       try { await response.body?.cancel() } catch {}
       throw new HnsZavrnitev(`hns: ${url} vrne izziv ali prijavo — uvoz ustavljen`, response.status)
     }
@@ -500,7 +505,7 @@ const vir = {
   drzava: 'HR',
   osnovniNaslov: OSNOVNI,
   glave: { 'User-Agent': 'SLFF fantasy (https://slff.eu)' },
-  premorMs: 500,
+  premorMs: 5000,
   imaRegistracije: false,
   fetch: hnsFetch,
   jeIzziv,

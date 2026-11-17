@@ -70,3 +70,22 @@ Kako zdaj:
   `cakaj-na-uvoze.mjs` pri skupnem viru in popravku z znano državo gleda
   vse posle te države. Vsak koš mora biti prisoten in končan; neznan obseg
   popravka ali manjkajoči posli še vedno čakajo na celoten zagon.
+
+## Hrvaška: priprava obnove po blokadi
+
+`nocni-urnik.mjs` omeji HR na 05:17 UTC vsak dan in dodatno 17:17 ter
+21:17 UTC petek–nedelja (pozimi na Hrvaškem 06:17, 18:17, 22:17;
+poleti uro pozneje). Odločitev uporablja `created_at` celotnega zagona,
+ne trenutne ure posameznega koša, zato vsi koši dobijo isti odgovor tudi
+po čakanju ali ponovitvi posla. GitHub cron lahko začetek zamakne; to niso
+zagotovljene ure zaključka. Jutranja rezerva med tednom ostane.
+Druge države ohranijo urni vikend/dnevni delovnik.
+
+Ročni `drzava: HR` preskoči ostale države in skupno vzdrževanje vseh lig;
+`ALL` je privzeto. Tak ročni zagon ne šteje kot uspeh vseh držav pri presoji
+jutranje rezerve. Trije HR koši in ključi predpomnilnikov ostanejo isti.
+HNS ima 5 s osnovnega premora oziroma 15 s na koš.
+
+**HNS je še vedno izključen.** GitHubova preizkusa z novim transportom sta
+oba dobila 403; lokalni je uspel. Ta urnik je priprava za obnovo, ne dokaz,
+da se HR uvaža. Dokazi in pogoji vklopa: `docs/viri/hrvaska.md`.
