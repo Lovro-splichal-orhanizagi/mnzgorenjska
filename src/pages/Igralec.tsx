@@ -452,7 +452,8 @@ export default function Igralec() {
             )}
           </p>
           <GumbGoogle nazaj={lokacija.pathname + lokacija.search} />
-          {smeKartico && <VabiloPreverjen className="border-t border-white/10 pt-3" />}
+          {/* že preverjenemu ne ponujamo preverjenega profila */}
+          {smeKartico && !preverjen && <VabiloPreverjen className="border-t border-white/10 pt-3" />}
         </div>
       ) : nalaganjeSeje ? null : (
         <>
