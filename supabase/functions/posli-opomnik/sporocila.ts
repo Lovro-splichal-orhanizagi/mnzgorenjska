@@ -4153,6 +4153,29 @@ export function sestaviNovostMiniLig(liga: Liga, meta: { display_name: string | 
   }, p.odjava)
 }
 
+// --- novost: Svetovalec ekipe (SLF-549) --------------------------------------
+// Enkraten mail vsakomur z ekipo v slovenski članski ligi, ki še nima
+// Preverjenega profila (`kandidati_za_novost_svetovalec`). Besedilo je slovensko
+// in ga je 17. 11. 2026 odobril Nejc (SLF-548); vsaka sprememba zahteva novo
+// odobritev. Brez drugih jezikov: zanje besedila ni.
+
+export function sestaviNovostSvetovalec(liga: Liga): Sporocilo {
+  const p = povezave(liga.slug)
+  const zadeva = 'Nov Svetovalec ekipe na SLFF'
+  return sestavi('sl', {
+    zadeva,
+    predglava: 'Pogleda tvoj kader in ti predlaga do tri prestope (zamenjava z enim dotikom), pokaže najboljšo postavo na igrišču in šibka mesta v ekipi.',
+    oznaka: liga.oznaka,
+    naslov: zadeva,
+    uvod: 'Pozdravljeni,<br><br>' +
+      'v Moji ekipi imamo novega Svetovalca ekipe. Pogleda tvoj kader in ti predlaga do tri prestope (zamenjava z enim dotikom), pokaže najboljšo postavo na igrišču in šibka mesta v ekipi.<br><br>' +
+      'Svetovalec je del Preverjenega profila (manj kot 1 € na mesec). Poglej, kaj vse dobiš:',
+    gumb: { label: 'slff.eu/verified', url: `${SITE}/verified` },
+    opomba: 'Nejc<br>SLFF',
+    zakaj: 'Ta mail pošljemo enkrat, ker imaš na slff.eu ekipo.',
+  }, p.odjava)
+}
+
 // --- akcija vabil: povabi prijatelje (14.–30. 11. 2026) ----------------------
 // Trije valovi (`kandidati_za_akcijo_vabil`): 1 zagon, 2 teden pozneje, 3
 // zadnji dnevi. Brez mladinskih lig (nagrada je zaboj piva, le polnoletnim).

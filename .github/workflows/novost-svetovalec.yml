@@ -1,0 +1,48 @@
+name: Novost Svetovalec ekipe (SLF-549)
+
+# Enkraten mail o Svetovalcu ekipe (`posli-opomnik`, vrsta `novost-svetovalec`).
+# Besedilo je odobril Nejc 17. 11. 2026 (SLF-548). Kdo ga dobi, doloci
+# `kandidati_za_novost_svetovalec`: ekipa v slovenski clanski ligi, brez
+# Preverjenega profila, enkrat na cloveka in naslov, brez odjavljenih in
+# omejenih, brez tistih z mailom v zadnjih treh dneh. Najvec 150 na dan
+# (po ljubljanskem casu); ostali pridejo naslednji dan.
+#
+# Le rocno, privzeto suho (samo presteje).
+on:
+  workflow_dispatch:
+    inputs:
+      suho:
+        description: 'Suhi tek (samo presteje, ne poslje)'
+        required: false
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
+      najvec:
+        description: 'Najvec poslanih v tem zagonu (dnevna meja 150 velja vedno)'
+        required: false
+        default: '150'
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: opozorila
+  cancel-in-progress: false
+jobs:
+  novost:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Poslji novost Svetovalec ekipe
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VRSTA: novost-svetovalec
+          SUHO: ${{ inputs.suho }}
+          NAJVEC_DOBRODOSLIC: ${{ inputs.najvec }}
+        run: node scripts/posli-opomnike.mjs
