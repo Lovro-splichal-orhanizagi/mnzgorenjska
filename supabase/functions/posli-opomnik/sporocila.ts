@@ -4164,7 +4164,7 @@ export function sestaviNovostSvetovalec(liga: Liga): Sporocilo {
   const zadeva = 'Nov Svetovalec ekipe na SLFF'
   return sestavi('sl', {
     zadeva,
-    predglava: 'Do tri prestopi z enim dotikom, najboljša postava in šibka mesta.',
+    predglava: 'Pogleda tvoj kader in ti predlaga do tri prestope (zamenjava z enim dotikom), pokaže najboljšo postavo na igrišču in šibka mesta v ekipi.',
     oznaka: liga.oznaka,
     naslov: zadeva,
     uvod: 'Pozdravljeni,<br><br>' +
