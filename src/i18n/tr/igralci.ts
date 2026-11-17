@@ -372,6 +372,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     cakaKopirano: 'Bağlantı kopyalandı.',
     umakni: 'Başvuruyu geri çek',
     zavrnjen: 'Bu profil için başvurun reddedildi.',
+    nadgradnja: 'Onaylandıktan sonra profilini doğrulanmış profile yükseltebilirsin:',
+    karticaVabilo: 'Bu sen misin? Doğrulanmış oyuncuların kartında mavi tik olur.',
     znacka: {
       klub: 'Kulüp onayladı',
       soigralci: 'Takım arkadaşları onayladı',

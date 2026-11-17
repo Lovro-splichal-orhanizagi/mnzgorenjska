@@ -374,6 +374,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     cakaKopirano: 'Linkul a fost copiat.',
     umakni: 'Retrage cererea',
     zavrnjen: 'Cererea ta pentru acest profil a fost respinsă.',
+    nadgradnja: 'După confirmare, îți poți face profilul verificat:',
+    karticaVabilo: 'Tu ești? Jucătorii verificați au o bifă albastră pe card.',
     znacka: {
       klub: 'Confirmat de club',
       soigralci: 'Confirmat de coechipieri',

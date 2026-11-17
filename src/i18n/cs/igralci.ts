@@ -376,6 +376,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     cakaKopirano: 'Odkaz je zkopírován.',
     umakni: 'Stáhnout žádost',
     zavrnjen: 'Tvoje žádost o tento profil byla zamítnuta.',
+    nadgradnja: 'Po potvrzení si můžeš profil vylepšit na ověřený:',
+    karticaVabilo: 'Jsi to ty? Ověření hráči mají na kartě modrou fajfku.',
     znacka: {
       klub: 'Potvrdil klub',
       soigralci: 'Potvrdili spoluhráči',

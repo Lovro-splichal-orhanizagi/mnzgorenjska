@@ -372,6 +372,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     cakaKopirano: 'A link másolva.',
     umakni: 'Kérelem visszavonása',
     zavrnjen: 'Erre a profilra beadott kérelmedet elutasították.',
+    nadgradnja: 'A megerősítés után ellenőrzött profilra válthatsz:',
+    karticaVabilo: 'Te vagy az? Az ellenőrzött játékosok kártyáján kék pipa van.',
     znacka: {
       klub: 'A klub megerősítette',
       soigralci: 'A csapattársak megerősítették',

@@ -372,6 +372,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     cakaKopirano: 'Link kopiert.',
     umakni: 'Antrag zurückziehen',
     zavrnjen: 'Dein Antrag für dieses Profil wurde abgelehnt.',
+    nadgradnja: 'Nach der Bestätigung kannst du dein Profil verifizieren lassen:',
+    karticaVabilo: 'Bist du das? Verifizierte Spieler haben einen blauen Haken auf ihrer Karte.',
     znacka: {
       klub: 'Vom Verein bestätigt',
       soigralci: 'Von Mitspielern bestätigt',
