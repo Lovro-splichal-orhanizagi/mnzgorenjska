@@ -1,0 +1,36 @@
+name: HNS public transport probe
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/hns-recovery]
+    paths: [.github/workflows/hns-probe.yml]
+permissions:
+  contents: read
+concurrency:
+  group: hns-public-probe
+  cancel-in-progress: false
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --only-binary=:all: curl_cffi==0.17.0
+      - name: Read two public pages, without database access
+        shell: python
+        run: |
+          import time, re
+          from curl_cffi import requests
+          pages = [
+            ('competition', 'https://semafor.hns.family/natjecanja/114137140/x/', 'data-match'),
+            ('report', 'https://semafor.hns.family/utakmice/114147891/x/', 'data-personid'),
+          ]
+          for kind, url, marker in pages:
+              time.sleep(5)
+              r = requests.get(url, impersonate='chrome', timeout=25, allow_redirects=False)
+              print(f'{kind}: HTTP {r.status_code}, bytes={len(r.content)}, markers={r.text.count(marker)}, mitigation={r.headers.get("cf-mitigated", "none")}', flush=True)
+              assert r.status_code == 200 and marker in r.text and r.headers.get('cf-mitigated') != 'challenge', f'{kind}: public HTML unavailable'
+              assert not re.search(r'<title[^>]*>[^<]*(just a moment|attention required|access denied)', r.text, re.I)
