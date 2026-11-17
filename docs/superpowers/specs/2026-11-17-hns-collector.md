@@ -1,6 +1,6 @@
 # HNS collector: controlled collection, offline GitHub import
 
-Status: proposed design only. No collector, scheduler, staging service or credentials
+Status: proposed design only; accelerated incident recovery revision requested by the user. No collector, scheduler, staging service or credentials
 have been installed. Existing HNS exclusion remains. This supersedes the direct
 GitHub fetch assumption in the earlier recovery spec; PR #788 is preparatory.
 
@@ -55,9 +55,17 @@ All HR writers must coordinate before adding a separate recovery workflow.
 - Exactly one HNS request in flight across all runs and commands.
 - Wait at least 10 seconds after each response/failure before another request.
 - Persist every attempted request before sending it. Count errors and probes.
-- Pilot caps: 30 attempts/rolling 24 h for 2 leagues; then 100 for 10 leagues;
-  eventual initial ceiling 500 for all 139. Each stage needs at least 24 h of
-  observations before expansion and an explicit configuration change. No auto-ramp.
+- Separate one-time incident recovery from routine operation. Remove the multi-day
+  pilot gates: first validate at most 20 requests across 2 leagues plus one staged
+  import, then proceed with the explicitly approved incident queue if validation
+  succeeds and no source challenge occurs. This tests correctness, not sustained
+  access guarantees.
+- Recovery ceiling: 1,000 TOTAL attempts in a rolling 24 h, including initial
+  validation, schedules, reports and diagnostics. Bind recovery to one incident
+  manifest; do not reset or renew it on restart. Recover only the approved missing
+  rounds, never use spare budget to crawl history. Normal operation retains a
+  500-attempt rolling ceiling; existing recovery requests still count when switching
+  back, so routine work may wait for budget to become available.
 - The rolling 24-hour cap survives process restarts, sleep, midnight and crashes.
   Clock rollback pauses collection until reconciled; waking does not replay missed
   scheduled runs in a burst. Budget exhaustion persists pending work for later.
@@ -73,11 +81,18 @@ All HR writers must coordinate before adding a separate recovery workflow.
 - An unpublished/incomplete report is reconsidered no sooner than 24 h after its
   last attempt. Fetch played matches only, not future fixtures or every historical
   match. Do not immediately refetch a just-downloaded incomplete report.
-- Seed from validated existing HR caches before recovery. Backlog priority is the
-  missing two rounds, ordered oldest first, then other explicitly approved gaps.
-  Once fully enabled, target at most 300 backlog reports/day within the total cap,
-  reserving room for up to 139 schedules and the correction audit. Unused budget is
-  not an instruction to discover or download more data.
+- Seed from validated existing HR caches before recovery and import usable missing
+  cached reports before requesting them again. Prioritize leagues by affected user
+  count, processing the missing rounds oldest first within each league. Suspend
+  the optional correction audit during recovery; prioritize current user impact.
+- Publish the first validated league as soon as it is ready, then completed work
+  at most every 15 minutes. Import batches while collection continues; never wait
+  for all 139 leagues. A later challenge stops further source requests but does not
+  invalidate previously captured and verified data.
+- GitHub may use the existing three disjoint HR import shards to process staged
+  files in parallel. Only the collector contacts HNS; parallel database work does
+  not multiply source requests. Batch consumption must be idempotent and coordinated
+  with existing HR writers. Unused request budget is not a collection target.
 
 ## Stop conditions and recovery
 
@@ -105,22 +120,31 @@ would be preferable to guessing limits; no contact is sent without instruction.
 
 ## Release gates
 
-1. Choose the always-on machine; confirm it can reach HNS with the pinned client.
+1. For urgent recovery, confirm the proven Mac can stay awake/on the same network
+   for about four hours. Select an always-on host separately for routine service.
 2. Validate private staging access and narrowly scoped transfer credentials.
 3. Pass offline tests for global pacing, restart/clock handling, refusal stops,
    cache correctness, batch integrity, source/season scope and idempotent replay.
-4. Complete the 2-league and 10-league pilot stages, recording outcomes and lag.
-5. Compare one staged league against HNS and existing DB identities, then run an
-   explicitly scoped import and verify results, lineups and fantasy scores.
-6. Enable remaining leagues gradually within the same global ceiling. Keep direct
+4. Validate at most 20 requests across two leagues; compare one staged league
+   against HNS and existing DB identities, import it and verify results, lineups and
+   fantasy scores. No mandatory 24-hour observation hold during this incident.
+5. Continue the approved missing-round queue within the recovery ceiling, publishing
+   and importing incrementally; inspect counts and errors during the run.
+6. Return to the routine ceiling without resetting the ledger. Keep direct
    GitHub HNS reads disabled. Stop/rollback means pausing collection/consumption;
    retain queue/cache and do not undo already verified match imports.
 
-At the eventual 300-report/day target, 660 missing reports need at least three
-collection days AFTER pilot expansion, assuming no new errors or competing work.
-This is a capacity estimate, not a completion guarantee. The computer must be awake
-and connected during collection; normal work can continue. Full load gets measured
-in the pilot before committing to a background-service resource budget.
+Recovery estimate AFTER the pipeline is installed: 139 schedule reads + 660 missing
+reports = 799 requests. At 10 seconds spacing this is approximately 133 minutes of
+pacing, plus download and processing time. Plan for roughly 2–4 hours if access
+continues and the inventory matches that estimate; initial restored leagues may
+appear within 20–30 minutes of starting the recovery because imports stream in.
+These are targets, not measured end-to-end timings. Setup/implementation time is
+additional. Cached reports can shorten recovery; cold history, publication gaps,
+source errors or database bottlenecks can lengthen it. If the approved queue exceeds
+1,000 attempts, report that fact and revise scope rather than silently raising the
+cap. The computer must remain awake and connected; measure full collector/import
+load during the initial run.
 
 References:
 - https://developers.cloudflare.com/fundamentals/reference/cloudflare-ray-id/

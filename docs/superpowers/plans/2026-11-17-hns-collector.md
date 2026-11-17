@@ -10,8 +10,10 @@
 ## Global Constraints
 
 - Planning only until the host and private staging access are confirmed; never silently install on Luka's avengers-hq.
-- One source-wide reader; at least 10 seconds after response/failure; rolling 24 h caps 30/100/500 at the 2/10/all-league stages.
-- Each pilot stage lasts at least 24 h before explicit expansion. Backlog target at most 300/day, correction audit at most 10/day, all within the same ceiling.
+- One source-wide reader; at least 10 seconds after response/failure. One-time incident ceiling 1,000 total attempts/rolling 24 h; routine ceiling 500, sharing the same persistent accounting.
+- Initial validation at most 20 requests across 2 leagues plus one verified staged import; no multi-day observation gate for this incident. A successful pilot does not prove future access.
+- Prioritize leagues by affected user count and chronological rounds within each league. Import good cached missing reports first; suspend optional correction audits during recovery.
+- Publish the first verified league immediately, then completed work at most every 15 minutes; import concurrently with collection using disjoint HR shards and no live HTTP fallback.
 - One daily cycle at 06:30 Europe/Zagreb initially; optional targeted 21:30 later uses the same budget.
 - 403, 429 or challenge persists BLOCKED, with no automatic transport/network fallback. Other transport failures end the run and defer at least one hour.
 - Only active approved HR hns identities/current seasons; preserve closed HNLŽ policy and all other countries.
@@ -36,8 +38,8 @@
 
 ### Task 2: Durable collector and caching
 **Files:** Create `scripts/hns-collector.py`, `scripts/test_hns_collector.py`; extend `scripts/hns-http.py` for diagnostic Ray ID capture; reuse `scripts/viri/hns.mjs` through a small `scripts/hns-collection-parse.mjs` CLI.
-**Interfaces:** `hns-collector.py --manifest PATH --state PATH --cache PATH --output PATH --max-attempts N` accepts only the configured pilot stage. Queue/state stores request attempts, last response time, block state, parsed report state and pending reason. Parser CLI emits source-bound JSON facts from captured HTML and never performs HTTP.
-- [ ] Write failing tests using a fake clock, temporary SQLite state and injected HTTP boundary: parallel invocations, 10-second spacing, rolling cap after restart/midnight, clock rollback, blocked-state persistence, cache reuse, incomplete-report 24 h deferral and no immediate double-fetch.
+**Interfaces:** `hns-collector.py --manifest PATH --state PATH --cache PATH --output PATH --max-attempts N` accepts only the configured routine or one-time incident budget, bound to its manifest. Queue/state stores request attempts, last response time, block state, parsed report state and pending reason. Parser CLI emits source-bound JSON facts from captured HTML and never performs HTTP.
+- [ ] Write failing tests using a fake clock, temporary SQLite state and injected HTTP boundary: parallel invocations, 10-second spacing, rolling cap after restart/midnight and recovery-to-routine transition, clock rollback, blocked-state persistence, cache reuse, incomplete-report 24 h deferral and no immediate double-fetch.
 - [ ] Run `python3 -m unittest discover -s scripts -p 'test_hns_collector.py'`; verify failures before implementation.
 - [ ] Implement the source lock, persisted pre-request accounting, bounded queue and stop conditions from the spec. Cold starts retain budgets and prioritize the approved missing rounds.
 - [ ] Run collector tests plus the existing HNS transport/parser suites; require no real HNS calls from unit tests.
@@ -58,21 +60,30 @@
 - [ ] Run actionlint, coordinator tests and offline smoke with CI fixture environment.
 - [ ] Confirm logs contain no secrets/player payloads and a stopped collection remains visibly blocked/late.
 
-### Task 5: Measured pilot and gradual recovery
+### Task 5: Bounded validation and same-day recovery
 **Files:** Add pilot evidence to `docs/viri/hrvaska.md`; retain raw payloads only in private staging/cache.
-**Interfaces:** Operator-selected stage controls eligible leagues and the global cap. Promotion is an explicit configuration change based on observed access, parser validity and import results.
+**Interfaces:** A single incident manifest defines eligible leagues, missing rounds and the 1,000-attempt ceiling. The first small batch gates correctness; subsequent validated batches are consumed without waiting for complete-country collection.
 - [ ] Confirm host/staging choices and run the two-page diagnostic from the actual collector host.
-- [ ] Observe 2 leagues with a 30-attempt cap for at least 24 h, then 10 leagues with a 100-attempt cap for at least 24 h. A challenge stops the rollout.
+- [ ] Validate at most 20 requests across 2 leagues, verify one imported league and proceed immediately if successful; a challenge stops source collection globally.
 - [ ] Measure request count, bytes, CPU/RAM, cache hit rate, publication delay and per-league freshness. Verify one staged league end-to-end before broader writes.
-- [ ] Expand toward 139 leagues at max 500 attempts/rolling 24 h; backfill at most 300 missing reports/day within the same cap. No active-league repricing.
-- [ ] Verify sampled scores/lineups/points, disclose pending gaps and record rollback/resume instructions. Consider targeted evening collection only after the daily pilot supports it.
+- [ ] Recover the approved queue across up to 139 leagues, at most 1,000 total attempts/rolling 24 h, prioritizing affected users. Publish first results immediately and subsequent ready batches at most every 15 minutes. No active-league repricing.
+- [ ] Verify sampled scores/lineups/points, disclose pending gaps and record rollback/resume instructions. Return to the 500-attempt routine ceiling without clearing request history; add targeted evening collection only if the observed budget supports it.
 
 ## Decisions still required before installation
 
-- Collector host: Jernej's Mac is proven reachable now; an always-on alternative must be tested independently. No machine has been selected.
+- Incident host: confirm Jernej's proven Mac can remain awake/on the same network for roughly four hours. Routine always-on host selection is separate; an alternative needs its own access test.
 - Private staging: proposed existing SLFF server; connectivity and scoped transfer access have not been confirmed.
 - Whether to request an HNS-supported feed or explicit access/rate allowance. No external contact has been authorized or sent.
 
 This plan does not promise to avoid Cloudflare challenges. Its guarantees are local:
 bounded traffic, no accidental bursts/repeated history reads, clear stopping and
 accurate reporting when collection cannot proceed.
+
+## Timing expectations
+
+Once installed, the illustrative 799-request queue (139 schedules + 660 reports)
+requires about 133 minutes of ten-second pacing. Target 2–4 hours for recovery,
+with the first validated leagues visible within 20–30 minutes of beginning the
+run. Setup time is separate; source access and complete report publication are
+not guaranteed. Confirm actual queue size from inventory/cache before promising
+an end time. No automatic budget expansion if the queue is larger than expected.
