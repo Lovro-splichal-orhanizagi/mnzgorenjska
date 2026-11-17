@@ -33,6 +33,20 @@ const NAJMANJ_ZACETNIKOV = 7
 export const PREMOR_MS = 3000
 const UA = 'Mozilla/5.0 SLFF fantasy (slff.eu; splih.94@gmail.com)'
 
+/**
+ * Zavrnitev (401, 403, 429): izhod 4, nočna zanka spletišča ne bere naprej.
+ * Brez nje je uvoz razporeda ob 403 vzel shranjeni razpored in zapisniki so
+ * isti 403 dobili še enkrat na ligo, v obeh poskusih (17. 11. 2026, SLF-557).
+ */
+export class PzpnZavrnitev extends Error {
+  constructor(sporocilo, status = null) {
+    super(sporocilo)
+    this.name = 'PzpnZavrnitev'
+    this.status = status
+    this.zavrnitev = true
+  }
+}
+
 /** `swietokrzyski/<uuid>` → { zveza, play, api }. */
 export function razbijKodo(koda) {
   const m = String(koda ?? '').trim().match(/^([a-z-]+)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/)
@@ -232,6 +246,7 @@ const vir = {
   glave: { 'User-Agent': UA, Accept: 'application/json' },
   premorMs: PREMOR_MS,
   imaRegistracije: false,
+  zavrnitev: (sporocilo, status = null) => new PzpnZavrnitev(`pzpn: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
 
   naslovRazporeda: (koda) => naslovTekem(koda, 'schedule'),
   naslovZapisnika,

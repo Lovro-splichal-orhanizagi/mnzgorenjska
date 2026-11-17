@@ -26,7 +26,7 @@ if [ "$1" = +%s ]; then cat ${JSON.stringify(uraDat)}; else exec /usr/bin/env -i
   stub('nocni-kosi.mjs', `
     const a = process.argv.slice(2)
     if (a.includes('--zabelezi')) process.exit(0)
-    for (const [l, v, k] of ${JSON.stringify(lige)}) console.log(l + ' 1 ' + v + (k ? ' ' + k : ''))
+    for (const [l, v, k, z] of ${JSON.stringify(lige)}) console.log(l + ' 1 ' + v + (k || z ? ' ' + (k || v) : '') + (z ? ' ' + z : ''))
   `)
   for (const ime of ['bulk-source-coordination', 'uvoz-razporeda', 'uvoz-delegiranja', 'uvoz-zapisnikov',
     'uvoz-registracij', 'lazni-vratarji', 'ugani-pozicije']) stub(ime + '.mjs', 'process.exit(0)')
@@ -93,4 +93,26 @@ test('ni časa za drugi poskus: liga med preskočenimi, koš ne pade', () => {
   assert.match(r.izhod, /Zmanjkalo časa::po 190 min niso prišle na vrsto \(ali na drugi poskus\): b/)
   assert.doesNotMatch(r.izhod, /Neuspele lige/)
   assert.equal(r.status, 0)
+})
+
+// SLF-557: liga z znano napako (5. stolpec) ima svojo nalogo; njen neuspeh je
+// opozorilo, ostale lige koša pa še vedno lahko obarvajo koš rdeče.
+test('znana napaka v obeh poskusih: opozorilo, koš ne pade', () => {
+  const r = zaženi([['baden', FP, FP, 'SLF-558'], ['b', FP]], { baden: [1, 1], b: [0] })
+  assert.deepEqual(r.klici, ['baden', 'b', 'baden'])
+  assert.match(r.izhod, /Znane napake::niso uspele, a imajo svojo nalogo: baden \(SLF-558\)/)
+  assert.doesNotMatch(r.izhod, /Neuspele lige/)
+  assert.equal(r.status, 0)
+})
+
+test('znana napaka ne skrije nove napake druge lige', () => {
+  const r = zaženi([['baden', FP, FP, 'SLF-558'], ['b', FP]], { baden: [1, 1], b: [1, 1] })
+  assert.match(r.izhod, /Neuspele lige:: b/)
+  assert.equal(r.status, 1)
+})
+
+test('zavrnitev lige z znano napako ostane rdeča', () => {
+  const r = zaženi([['baden', FP, FP, 'SLF-558']], { baden: [4] })
+  assert.match(r.izhod, /Neuspele lige:: baden/)
+  assert.equal(r.status, 1)
 })

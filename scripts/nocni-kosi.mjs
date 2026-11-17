@@ -72,9 +72,28 @@ export const IZKLOPLJENI_VIRI = new Set(['fcf'])
  *   - hns (semafor.hns.family): HTTP 403 vsak zagon od 10. 11. 2026, vsa HR.
  *   - eps:epsdod.gr (Dodekanez): HTTP 403 vsak zagon od 7. 11. 2026; ostale
  *     zveze eps odgovarjajo.
+ *   - pzpn (szpnkielce.pl, posrednik Świętokrzyskega ZPN): HTTP 403 GitHubovim
+ *     strežnikom od 17. 11. 2026, vseh 8 lig PL pzpn (SLF-557).
  * Ponovno vklopi: odstrani ključ, ko en ročni zahtevek vrne 200.
  */
-export const ZAVRNJENA_SPLETISCA = new Set(['hns', 'eps:epsdod.gr'])
+export const ZAVRNJENA_SPLETISCA = new Set(['hns', 'eps:epsdod.gr', 'pzpn'])
+
+/**
+ * Lige z znano napako, ki ima svojo nalogo: nočni uvoz jih še vedno poskusi,
+ * neuspeh pa je opozorilo, ne rdeč koš (SLF-557). Ena liga je dneve barvala
+ * cel posel DE rdeče in prave nove napake niso bile več vidne. Po datumu `do`
+ * je liga spet navadna: če še pada, je koš spet rdeč. Zavrnitev (4) ostane
+ * rdeča vedno.
+ */
+export const ZNANE_NAPAKE = {
+  'de-verbandsliga-baden': { naloga: 'SLF-558', do: '2026-12-01' },
+}
+
+/** Naloga znane napake lige, če velja na dan `danes` (YYYY-MM-DD), sicer null. */
+export function znanaNapaka(slug, danes = new Date().toISOString().slice(0, 10)) {
+  const z = ZNANE_NAPAKE[slug]
+  return z && danes < z.do ? z.naloga : null
+}
 
 /**
  * Ključ, s katerim nočna zanka ustavi vir po zavrnitvi (4) ali izpadu (5).
@@ -189,5 +208,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (izklopljene) console.error(`Izpuščenih lig iz izklopljenih virov (${[...IZKLOPLJENI_VIRI, ...ZAVRNJENA_SPLETISCA].join(', ')}): ${izklopljene}`)
   const lige = brezIzklopljenih(data ?? []).map((t) => ({ slug: t.slug, vir: t.source, kljuc: kljucVira(t.source, t.source_league_code) }))
   const kosi = razdeli(lige, kosov)
-  for (const l of uredi(kosi[kos - 1], preberiStanje(potStanja))) console.log(`${l.slug} ${l.faktor} ${l.vir} ${l.kljuc}`)
+  // 5. stolpec: naloga znane napake (nocni-uvoz.sh jo javi kot opozorilo).
+  for (const l of uredi(kosi[kos - 1], preberiStanje(potStanja))) console.log(`${l.slug} ${l.faktor} ${l.vir} ${l.kljuc}${znanaNapaka(l.slug) ? ` ${znanaNapaka(l.slug)}` : ''}`)
 }
