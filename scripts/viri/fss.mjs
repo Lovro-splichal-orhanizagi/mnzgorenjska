@@ -36,6 +36,7 @@
 //
 // Beremo odkrito in počasi (User-Agent SLFF, 2 s med zahtevki, popolnih
 // zapisnikov ne beremo znova). Če se pojavi izziv ali CAPTCHA, ustavi.
+import { existsSync, readFileSync } from 'node:fs'
 import { razpakiraj } from '../klubi.mjs'
 import { sifra } from './zapisniki.mjs'
 import { kljucKlubaRs, kratkoImeRs, lepoIme } from './fsb.mjs'
@@ -51,6 +52,16 @@ export const naslovVratarjev = (id) => `${VRATARJI}/${id}/`
 const imeLige = (koda) => `fss-liga-${sifra(koda)}.html`
 const imeIzvestaja = (koda, id) => `fss-izvestaj-${sifra(koda)}-${id}.html`
 const imeVratarjev = (koda, id) => `fss-vratarji-${sifra(koda)}-${id}.html`
+// Ista stran prvaliga.rs kot pri fssid: 17. 11. 2026 je vrnila 403 na vseh
+// 212 zahtev zagona (SLF-528). V premoru jo beremo le iz predpomnilnika (ne
+// obhajamo); SLFF_FSSID_VRATARJI=1 jo spet vklopi, prva zavrnitev pa jo
+// izklopi do konca zagona.
+const ZAVRNITEV = new Set([401, 403, 429])
+let vratarjiZavrnjeni = process.env.SLFF_FSSID_VRATARJI !== '1'
+const vratarjiIzPredpomnilnika = (ime) => {
+  const p = `scripts/.predpomnilnik/fss/${ime}`
+  return existsSync(p) ? readFileSync(p, 'utf8') : null
+}
 
 const besedilo = (html) => razpakiraj(String(html ?? '').replace(/<[^>]+>/g, ' '))
 const brezSkript = (s) => String(s ?? '').replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '')
@@ -391,9 +402,16 @@ const vir = {
       // Brez prvaliga.rs je zapisnik še vedno dober, le vratar ni znan.
       let vratarji = null
       try {
-        vratarji = dresiVratarjev(await prenesi(naslovVratarjev(t.id), imeVratarjev(koda, t.id), sveze))
+        const shranjeno = vratarjiZavrnjeni ? vratarjiIzPredpomnilnika(imeVratarjev(koda, t.id)) : null
+        if (shranjeno) vratarji = dresiVratarjev(shranjeno)
+        else if (!vratarjiZavrnjeni) vratarji = dresiVratarjev(await prenesi(naslovVratarjev(t.id), imeVratarjev(koda, t.id), sveze))
       } catch (e) {
-        console.warn(`fss: vratarji ${t.id}: ${e.message}`)
+        if (!vratarjiZavrnjeni && (ZAVRNITEV.has(e?.status) || /HTTP (401|403|429)\b/.test(e?.message ?? ''))) {
+          vratarjiZavrnjeni = true
+          console.warn(`fss: stran vratarjev je zavrnila dostop (${e.message}); do konca zagona je ne beremo več`)
+        } else if (!vratarjiZavrnjeni) {
+          console.warn(`fss: vratarji ${t.id}: ${e.message}`)
+        }
       }
       let z = vZapisnik(await prenesi(url, imeIzvestaja(koda, t.id), sveze), { id: t.id, url, vratarji })
       if (!z && !sveze && star <= 45) z = vZapisnik(await prenesi(url, imeIzvestaja(koda, t.id), true), { id: t.id, url, vratarji })
