@@ -1420,6 +1420,24 @@ export default function MojaEkipa() {
     setIzbrani(kopija)
   }
 
+  // Svetovalec: predlagano prvo enajsterico, klop in trak prepiše v osnutek.
+  function uporabiPredlaganoPostavo() {
+    const postava = svetovanje?.postava
+    if (!postava) return
+    setSporocilo(null)
+    const prvih = new Set(postava.prvi.map((i) => i.id))
+    const klop = postava.klop.map((i) => i.id)
+    setIzbrani(
+      izbrani.map((s) => ({
+        ...s,
+        is_starter: prvih.has(s.player_id),
+        is_captain: s.player_id === postava.kapetan.id,
+        is_vice: s.player_id === postava.namestnik?.id,
+        bench_order: prvih.has(s.player_id) ? null : klop.indexOf(s.player_id) + 1,
+      })),
+    )
+  }
+
   function nastaviTrak(playerId: string | number, polje: 'is_captain' | 'is_vice') {
     const id = Number(playerId)
     const prej = izbrani.find((s) => s.player_id === id)
@@ -2234,6 +2252,8 @@ export default function MojaEkipa() {
               krog={naslednjiKrog?.number ?? null}
               svetovanje={svetovanje}
               imenaKlubov={imenaKlubov}
+              naZamenjaj={zamenjaj}
+              naUporabiPostavo={uporabiPredlaganoPostavo}
             />
           )}
 
