@@ -24,6 +24,9 @@
 #   - Zavrnitev in izpad ustavita spletišče (4. stolpec nocni-kosi.mjs), ne
 #     celega vira: eps je ~30 spletišč regionalnih zvez in 403 Dodekaneza je
 #     16. 11. 2026 ustavil še 11 lig drugih zvez (SLF-500).
+#   - Liga z znano napako (5. stolpec nocni-kosi.mjs, ZNANE_NAPAKE) ima svojo
+#     nalogo: poskusimo jo, neuspeh (razen zavrnitve) je opozorilo. Ena liga
+#     (de-verbandsliga-baden) je dneve barvala cel DE rdeče (SLF-557).
 #   - Izhod 3 uvoza razporeda = razpored ima klub manj kot baza (izstop ali
 #     okrnjena stran): uvoz je uspel, liga ni padla, koš izpiše opozorilo.
 set -uo pipefail
@@ -116,7 +119,8 @@ cakajoci=""    # DFB podatki čakajo; brez takojšnje ponovitve cele lige
 odlocitve=""   # razpored ima klub manj kot baza: izstop kluba ali --dovoli-manj-klubov
 zacasno=""      # padle v prvem krogu, za ponovni poskus: "liga faktor vir ključ"
 preskocene=""
-while read -r liga faktor vir kljuc; do
+znane=""        # lige z znano napako (ZNANE_NAPAKE v nocni-kosi.mjs): opozorilo, ne padec
+while read -r liga faktor vir kljuc znana; do
   [ -n "$liga" ] || continue
   kljuc=${kljuc:-$vir}
   if [ "$(minut)" -ge "$ROK_MIN" ]; then preskocene="$preskocene $liga"; continue; fi
@@ -140,14 +144,14 @@ while read -r liga faktor vir kljuc; do
     4) echo "::error title=Vir je zavrnil::$liga — vir $kljuc je vrnil 401/403/429, izziv ali preusmeritev, ali je zmanjkalo proračuna zahtev; ostale lige tega vira preskočene, ne obhajamo"
        zavrnjeni="$zavrnjeni$kljuc "; padle="$padle $liga" ;;
     *) echo "::warning title=Uvoz lige::$liga ni uspela; poskusim še enkrat na koncu"
-       zacasno="$zacasno$liga $faktor $vir $kljuc"$'\n' ;;
+       zacasno="$zacasno$liga $faktor $vir $kljuc $znana"$'\n' ;;
   esac
 done < "$LIGE"
 
 # Drugi poskus: prehodne napake (omrežje, "lock timeout" ob hkratnem pisanju).
 # Vir, ki je med tem zavrnil (4) ali je dol (5), ne dobi novih zahtev: ostale
 # njegove lige čakajo brez poskusa, enako kot v prvem krogu.
-while read -r liga faktor vir kljuc; do
+while read -r liga faktor vir kljuc znana; do
   [ -n "$liga" ] || continue
   kljuc=${kljuc:-$vir}
   # Brez časa za drugi poskus: liga ni zabeležena kot osvežena, naslednji
@@ -174,8 +178,13 @@ while read -r liga faktor vir kljuc; do
        nedosegljivi="$nedosegljivi$kljuc "; vir_dol="$vir_dol $liga" ;;
     4) echo "::error title=Vir je zavrnil::$liga — vir $kljuc je vrnil 401/403/429, izziv ali preusmeritev, ali je zmanjkalo proračuna zahtev; ostale lige tega vira preskočene, ne obhajamo"
        zavrnjeni="$zavrnjeni$kljuc "; padle="$padle $liga" ;;
-    *) echo "::warning title=Uvoz lige::$liga ni uspela niti v drugem poskusu"
-       padle="$padle $liga" ;;
+    *) if [ -n "$znana" ]; then
+         echo "::warning title=Znana napaka::$liga ni uspela niti v drugem poskusu — znana napaka $znana, koš zaradi nje ne pade"
+         znane="$znane $liga ($znana)"
+       else
+         echo "::warning title=Uvoz lige::$liga ni uspela niti v drugem poskusu"
+         padle="$padle $liga"
+       fi ;;
   esac
 done <<< "$zacasno"
 
@@ -194,6 +203,10 @@ fi
 if [ -n "$cakajoci" ]; then
   echo "::warning title=DFB pending::Zavrnjeni zapisniki in nepopolni krogi:$cakajoci"
   [ -n "${GITHUB_STEP_SUMMARY:-}" ] && echo "DFB podatki čakajo (zavrnjen zapisnik ni popoln uvoz):$cakajoci" >> "$GITHUB_STEP_SUMMARY"
+fi
+if [ -n "$znane" ]; then
+  echo "::warning title=Znane napake::niso uspele, a imajo svojo nalogo:$znane"
+  [ -n "${GITHUB_STEP_SUMMARY:-}" ] && echo "### Znane napake — koš $DRZAVA $KOS/$KOSOV"$'\n'"Niso uspele (naloga v oklepaju):$znane" >> "$GITHUB_STEP_SUMMARY"
 fi
 echo "Koš $KOS/$KOSOV končan v $(minut) min."
 if [ -n "$padle" ]; then

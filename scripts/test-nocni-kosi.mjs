@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { IZKLOPLJENI_VIRI, ZAVRNJENA_SPLETISCA, brezIzklopljenih, kljucVira, razdeli } from './nocni-kosi.mjs'
+import { IZKLOPLJENI_VIRI, ZAVRNJENA_SPLETISCA, ZNANE_NAPAKE, brezIzklopljenih, kljucVira, razdeli, znanaNapaka } from './nocni-kosi.mjs'
 
 // fcf.cat je na seznamu virov, ki jih ne uporabljamo (SLF-452).
 test('lige iz izklopljenih virov ne pridejo v nočni koš', () => {
@@ -31,4 +31,18 @@ test('zavrnjena spletišča ne pridejo v nočni koš, ostale zveze eps pridejo',
     { slug: 'hr-zd-1-znl', source: 'hns', source_league_code: '115235266' },
   ]
   assert.deepEqual(brezIzklopljenih(lige).map((t) => t.slug), ['gr-ath-a-1'])
+})
+
+// SLF-557: szpnkielce.pl (pzpn) vrača GitHubu 403 — ne obhajamo.
+test('pzpn je med zavrnjenimi spletišči', () => {
+  assert.ok(ZAVRNJENA_SPLETISCA.has('pzpn'))
+  assert.deepEqual(brezIzklopljenih([{ slug: 'pl-sk-4-liga', source: 'pzpn', source_league_code: 'swietokrzyski/x' }]), [])
+})
+
+test('znana napaka velja do datuma, potem je liga spet navadna', () => {
+  const { naloga, do: rok } = ZNANE_NAPAKE['de-verbandsliga-baden']
+  assert.match(naloga, /^SLF-\d+$/)
+  assert.equal(znanaNapaka('de-verbandsliga-baden', '2026-11-17'), naloga)
+  assert.equal(znanaNapaka('de-verbandsliga-baden', rok), null)
+  assert.equal(znanaNapaka('de-regionalliga-nord', '2026-11-17'), null)
 })
