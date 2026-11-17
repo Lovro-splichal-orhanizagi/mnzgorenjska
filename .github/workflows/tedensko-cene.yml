@@ -47,8 +47,10 @@ concurrency:
 jobs:
   cene:
     runs-on: ubuntu-latest
-    # 30 minut dela + do 120 minut cakanja na starejsi uvoz.
-    timeout-minutes: 150
+    # Do 120 minut cakanja na starejsi uvoz + ~2 uri dela (17. 11. 2026:
+    # ~1360 lig, po 96 minutah prevrednotenih 1092, nato prekinjeno pri
+    # 150 minutah, SLF-507). GitHub dovoli najvec 360.
+    timeout-minutes: 330
     permissions:
       contents: read
       actions: read
@@ -72,7 +74,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          MOJ=$(gh run view "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" --json startedAt --jq .startedAt)
+          # Napaka API-ja (npr. 403 rate limit, 17. 11. 2026, SLF-559) ne
+          # sme koncati zagona: cas zacetka poskusi znova, neuspel pregled
+          # delovnega toka pa steje kot "tece" (raje cakamo dlje kot prezgodaj).
+          MOJ=""
+          for t in $(seq 1 30); do
+            MOJ=$(gh run view "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" --json startedAt --jq .startedAt) && break
+            echo "GitHub API ni odgovoril — znova cez 60 s ($t/30)"
+            sleep 60
+          done
+          [ -n "$MOJ" ] || { echo "::error::Casa zacetka ni bilo mogoce prebrati."; exit 1; }
           # Pregled ima 24 klicev API-ja; GITHUB_TOKEN jih dovoli 1000 na uro
           # za cel repozitorij. Pregled vsako minuto (1440/h) je 17. 11. 2026
           # porabil omejitev in naslednji zagon je dobil 403 (SLF-559).
@@ -84,7 +95,7 @@ jobs:
               # prvi. Zato vec kot 20 — koncani zagoni zasedejo del seznama.
               k=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$wf" --limit 50 \
                 --json databaseId,startedAt,status,displayTitle \
-                --jq "[.[] | select(.status != \"completed\" and (\"$wf\" != \"mfa-reviewed-history.yml\" or (.displayTitle | test(\"^MFA reviewed history (prepare|preview|receipt) mt-premier$\") | not)) and .databaseId != $GITHUB_RUN_ID and .startedAt > \"2000\" and (.startedAt < \"$MOJ\" or (.startedAt == \"$MOJ\" and .databaseId < $GITHUB_RUN_ID)))] | length")
+                --jq "[.[] | select(.status != \"completed\" and (\"$wf\" != \"mfa-reviewed-history.yml\" or (.displayTitle | test(\"^MFA reviewed history (prepare|preview|receipt) mt-premier$\") | not)) and .databaseId != $GITHUB_RUN_ID and .startedAt > \"2000\" and (.startedAt < \"$MOJ\" or (.startedAt == \"$MOJ\" and .databaseId < $GITHUB_RUN_ID)))] | length") || k=1
               n=$((n + k))
             done
             [ "$n" -eq 0 ] && exit 0
