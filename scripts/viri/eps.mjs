@@ -46,7 +46,7 @@
 // Beremo odkrito (User-Agent SLFF, 3 s med zahtevki), zapisnikov, starejših
 // od tedna, ne beremo znova. Ob izzivu, CAPTCHI, 401, 403 ali 429 se uvoz
 // ustavi — ne obhajaj.
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { razpakiraj } from '../klubi.mjs'
 import { nastopi } from './hlf.mjs'
 import { NEPOPOLN, vLjubljanskiCas } from './frf.mjs'
@@ -626,6 +626,21 @@ const shranjena = (ime) => {
 const starostDni = (datum, danes = Date.now()) => (datum ? (danes - Date.parse(`${datum}T00:00:00Z`)) / DAN : 0)
 
 /**
+ * Razpored, ki ga je uvoz razporeda prenesel v tem zagonu (zadnjih 30 min).
+ * GitHubovi stroji so 16. 11. 2026 ob drugem branju iste strani v pol minute
+ * dobili ~12 kB stran brez razporeda, prvo branje pa je bilo celo (SLF-546).
+ * Iste strani zato ne beremo dvakrat; starejša shranjena ne velja (razpored
+ * je živ dokument), takrat jo preberemo znova.
+ */
+export const SVEZ_RAZPORED_MS = 30 * 60000
+export const svezRazpored = (ime, mapa = MAPA, zdaj = Date.now()) => {
+  const p = `${mapa}/${ime}`
+  if (!existsSync(p) || zdaj - statSync(p).mtimeMs > SVEZ_RAZPORED_MS) return null
+  const html = readFileSync(p, 'utf8')
+  return zaPredpomnilnik(html) && jeStranPlatforme(html) ? html : null
+}
+
+/**
  * Prenos z daljšim rokom. Dodekanez (epsdod.gr) vrne VSAKO stran s statusom
  * 500, a celo (noga, </html>); Epir (epsip.gr) vrne 500 pri tekmi s
  * pripombami, odrezano za podatki tekme — obe veljata kot 200. Napaka
@@ -674,7 +689,7 @@ const vir = {
 
   async zapisniki(koda, prenesi, { preskoci = new Set(), samoZapisnik = null } = {}) {
     const { domena } = razberiKodo(koda)
-    const razpored = razporedStrani(await beri(prenesi, naslovRazporeda(koda), imeRazporeda(koda), true))
+    const razpored = razporedStrani(svezRazpored(imeRazporeda(koda)) ?? (await beri(prenesi, naslovRazporeda(koda), imeRazporeda(koda), true)))
     const mreza = tekmeMreze(await beri(prenesi, naslovMreze(koda), imeMreze(koda), true))
     // Odigrane tekme iz mreže in povezav razporeda; kontumacije nimajo zapisnika.
     const tekme = new Map(mreza.map((t) => [t.gameId, t]))
