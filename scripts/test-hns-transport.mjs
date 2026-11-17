@@ -127,7 +127,7 @@ test('retained HNS schedule and report captures pass through the guard unchanged
     assert.equal(vir.jeIzziv(bytesByUrl.get(url).toString('utf8')), false, `${name} is not challenged`)
   }
   assert.equal(calls, fixtures.length)
-  assert.equal(vir.premorMs, 500)
+  assert.equal(vir.premorMs, 5000)
   pozabiPadle()
 })
 

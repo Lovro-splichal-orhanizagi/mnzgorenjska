@@ -132,3 +132,15 @@ test('brez ZACETEK_POSLA rok šteje od zagona skripte', () => {
   assert.deepEqual(r.klici, ['a', 'b'])
   assert.equal(r.status, 0)
 })
+
+for (const [urnik, urni] of [
+  ['17 5 * * 5,6,0', false],
+  ['17 5 * * 1-4', false],
+  ['47 6 * * 1-4', false],
+  ['17 17,21 * * 5,6,0', true],
+  ['17 0-4,6-16,18-20,22-23 * * 5,6,0', true],
+  ['', false],
+]) test(`full/incremental mode follows scheduled slot, not shard wall clock: ${urnik}`, () => {
+  const r = zaženi([['a', FP]], { a: [4] }, {}, { URNIK: urnik })
+  assert.equal(r.izhod.includes('Urni zagon: preračun le dotaknjenih krogov'), urni)
+})

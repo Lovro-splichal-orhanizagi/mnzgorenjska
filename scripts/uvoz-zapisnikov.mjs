@@ -966,6 +966,8 @@ for (const report of zapisniki) {
       continue
     }
 
+    if(vir.recoveryCaptured&&!await vir.assertNativeFixture({id,roundId:rId,homeTeamId:domaciId,awayTeamId:gostjeId})){preskocenih++;continue}
+
     // tekma
     // onConflict cilja `(round_id, home_team_id, away_team_id)` — isti nabor
     // ima unique index `matches_krog_klub_klub_key` (migracija

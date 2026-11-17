@@ -1,0 +1,32 @@
+name: HNS public transport probe
+# Explicit operator diagnostic only; no nightly polling of a refused source.
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        type: choice
+        default: ubuntu-latest
+        options: [ubuntu-latest, macos-latest]
+permissions:
+  contents: read
+concurrency:
+  group: hns-public-probe
+  cancel-in-progress: false
+jobs:
+  probe:
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          python -m pip install --only-binary=:all: -r scripts/hns-requirements.txt
+      - name: Read and parse two public pages without database access
+        env:
+          SLFF_HNS_TRANSPORT: curl_cffi
+        run: node scripts/preveri-hns.mjs

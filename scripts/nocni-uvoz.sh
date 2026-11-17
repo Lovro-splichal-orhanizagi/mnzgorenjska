@@ -39,7 +39,9 @@ set -uo pipefail
 : "${DRZAVA:?}" "${KOS:=1}" "${KOSOV:=1}" "${URNIK:=}" "${ROK_MIN:=190}"
 # Urni zagon ob vikendih (ne tisti ob 05 UTC) dela le, kar je novo.
 URNI=0
-if [ "$URNIK" = '17 * * * 5,6,0' ] && [ "$(date -u +%H)" != "05" ]; then URNI=1; fi
+case "$URNIK" in
+  '17 17,21 * * 5,6,0'|'17 0-4,6-16,18-20,22-23 * * 5,6,0') URNI=1 ;;
+esac
 STANJE="scripts/.predpomnilnik/nocni-stanje-${DRZAVA}-${KOS}.json"
 # Malta: zapisnik, ki mu vir ne objavi minute izključitve, nočni uvoz preskoči in
 # izpiše (kot pri ostalih ligah mfa); strogi ostanejo le pregledani zgodovinski

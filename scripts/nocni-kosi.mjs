@@ -35,7 +35,7 @@ import { dirname } from 'node:path'
 export const VZPOREDNI = {
   // ÖFB je uporabo dovolil; oefb.at je velik strežnik, odgovor 2–7 s.
   oefb: 4,
-  // HNS Semafor (COMET), javni prikaz; 500 ms med zahtevki.
+  // HNS Semafor (COMET): 5 s osnove, 15 s na koš; trenutno izključen.
   hns: 3,
   // MLSZ adatbank: robots.txt Crawl-delay 1 s. S faktorjem premora (3 × 1,5 s)
   // ostane skupni tempo 0,67 zahtevka na sekundo kot pri enem poslu.

@@ -306,7 +306,8 @@ Posebnosti, ki jih je našel pregled pred vklopom (7. 10. 2026):
   `20261008033100`). Pred vklopom preveri, da noben krog ≥ prvega nima
   zapisnikov.
 
-Beremo odkrito (`User-Agent: SLFF fantasy`, 500 ms med zahtevki,
+Privzeti transport uporablja `User-Agent: SLFF fantasy`, 5 s med zahtevki
+(15 s na koš pri treh koših),
 popolnih zapisnikov ne beremo znova), vir je v nogi vsake strani.
 Zapisnik s postavami ni nujno popoln: zveza lahko postave vnese pred izidom
 (Samoborski Otok : Novaki, 24. 10. 2026 — v predpomnilniku 0:0 brez golov,
@@ -321,6 +322,40 @@ najprej brez `pisi`, po želji `tekmovanje`. Klub brez grba ima na Semaforju
 `logo nologo` brez slike in ostane pri grbu iz začetnic. Načrt (brez
 `--pisi`) dela tudi z javnim anon ključem. Po uvozu nove hrvaške lige ga
 poženi znova.
+
+## Blokada in priprava obnove (17. 11. 2026)
+
+HNS ostaja v `ZAVRNJENA_SPLETISCA`. Preizkus `curl_cffi==0.17.0` z
+`impersonate="chrome"` je na Jernejevem Macu vrnil 200 za tekmovanje
+`114137140` in tekmo `114147891`: razpored 180 tekem, rezultat 1:3,
+11 + 11 začetnih igralcev in štirje goli. Isti preizkus na GitHubovih
+[Ubuntu](https://github.com/Lovro-splichal-orhanizagi/mnzgorenjska/actions/runs/44188224527)
+in [macOS](https://github.com/Lovro-splichal-orhanizagi/mnzgorenjska/actions/runs/44188451796)
+izvajalcih je vrnil 403 in `cf-mitigated: challenge` že za razpored.
+**Lokalni uspeh ni dokaz delovanja GitHubovega nočnega uvoza.**
+
+Pripravljen opt-in transport:
+
+```sh
+python3 -m venv /tmp/slff-hns
+/tmp/slff-hns/bin/pip install --only-binary=:all: -r scripts/hns-requirements.txt
+SLFF_HNS_TRANSPORT=curl_cffi SLFF_HNS_PYTHON=/tmp/slff-hns/bin/python node scripts/preveri-hns.mjs
+```
+
+Preverba naredi samo dva javna zahtevka, brez baze ali zapisovanja
+predpomnilnika. Transport uporabi ujemajoče se Chromeove glave knjižnice
+(tudi User-Agent), ne stare glave SLFF; ta je bila pri ločenem lokalnem
+preizkusu zavrnjena. Ne uporablja osebnih piškotkov, proxyja, preusmeritev
+ali reševanja izzivov. Ob 403/429, izzivu, napačnem tipu vsebine ali napaki
+procesa se vir ustavi; ni rezervnega poskusa z drugim transportom.
+`hns-probe.yml` je samo ročna preverba brez servisnega ključa baze.
+
+Pred ponovnim vklopom je treba izbrati trajno dosegljiv fetcher ali dobiti
+dovoljen dostop za GitHub, preveriti obe strani iz dejanskega izvajalca,
+povezati transport z uvoznimi tokovi ter šele nato odstraniti izključitev.
+Do takrat sprememba **ne obnovi rezultatov ali fantasy točk**. Obnovitev naj
+uporabi obstoječe tri predpomnilnike in idempotenten uvoz manjkajočih tekem;
+aktivnih lig se ne ceni znova. Zaprti paket Prve HNLŽ ostane ločen.
 
 ## Prva HNLŽ: zaprt začetni uvoz
 

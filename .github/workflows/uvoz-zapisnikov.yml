@@ -2,6 +2,7 @@ name: Uvoz zapisnikov
 
 # Zapisniki se objavijo nekaj ur do nekaj dni po tekmi. Ker se tekme igrajo
 # predvsem ob petkih, sobotah in nedeljah, na te dneve pobiramo VSAKO URO
+# (HR izjema: 05, 17, 21 UTC; scripts/nocni-urnik.mjs).
 # (tekme končane 17-19h → zapisnik tipično 20-22h, včasih zjutraj). Med
 # tednom enkrat dnevno je dovolj.
 #
@@ -23,7 +24,9 @@ on:
     # zagone zamika ali izpusti. Z '0 * …' je "urni" uvoz 3.–4. 10. 2026
     # dejansko tekel na 3–6 ur in točke so ob vikendu zaostajale.
     # Petek (5), Sobota (6), Nedelja (0) — vsako uro
-    - cron: '17 * * * 5,6,0'
+    - cron: '17 5 * * 5,6,0'
+    - cron: '17 17,21 * * 5,6,0'
+    - cron: '17 0-4,6-16,18-20,22-23 * * 5,6,0'
     # Ponedeljek do četrtek — enkrat, ob 5:17 UTC (7:17 po naše)
     - cron: '17 5 * * 1-4'
     # Rezerva: GitHub zagon ob obremenitvi tiho izpusti (13. 10. 2026 ga ni
@@ -166,7 +169,15 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      - name: Preveri termin drzave
+        id: urnik
+        env:
+          DRZAVA: ${{ matrix.drzava }}
+          URNIK: ${{ github.event.schedule }}
+        run: node scripts/nocni-urnik.mjs
+
       - uses: actions/setup-node@v4
+        if: steps.urnik.outputs.teci == 'true'
         with:
           node-version: '22'
           cache: npm
@@ -174,13 +185,14 @@ jobs:
       # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
       # za macOS); brez njih tuja koda ob namestitvi ne tece.
       - run: npm ci --ignore-scripts
+        if: steps.urnik.outputs.teci == 'true'
       # Vir hlf (hailafotbal.ro) bere stran v brskalniku brez glave (Playwright).
       - name: Chromium za vir hlf
-        if: matrix.drzava == 'RO'
+        if: steps.urnik.outputs.teci == 'true' && (matrix.drzava == 'RO')
         run: npx playwright install chromium --only-shell --with-deps
       # Viri fmf (fmf.md), pfl-az (Azerbajdžan) in thaileague (Tajska) berejo zapisnike PDF s pdftotext (poppler-utils).
       - name: pdftotext za vire fmf, pfl-az in thaileague
-        if: matrix.drzava == 'MD' || matrix.drzava == 'AZ' || matrix.drzava == 'TH'
+        if: steps.urnik.outputs.teci == 'true' && (matrix.drzava == 'MD' || matrix.drzava == 'AZ' || matrix.drzava == 'TH')
         run: command -v pdftotext || (sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils)
 
       # Druzina uvozov (uvoz-zapisnikov, uvoz-lige, zdruzi-klube,
@@ -189,6 +201,7 @@ jobs:
       # brez izpodrivanja; razlicne drzave tecejo hkrati. Koši istega zagona
       # drug na drugega ne čakajo (isti zagon).
       - name: Pocakaj na starejse uvoze
+        if: steps.urnik.outputs.teci == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -203,6 +216,7 @@ jobs:
       # shranil le ob uspehu, zato je posel, ki je padel na eni ligi, vsak
       # zagon znova uvažal vse.
       - name: Predpomnilnik zapisnikov
+        if: steps.urnik.outputs.teci == 'true'
         uses: actions/cache/restore@v4
         with:
           path: scripts/.predpomnilnik
@@ -215,6 +229,7 @@ jobs:
       # Napake posamezne lige zberemo, obdelamo tudi ostale in na koncu
       # vrnemo neuspeh, ce katera liga ni uspela (glej scripts/nocni-uvoz.sh).
       - name: Uvoz po ligah
+        if: steps.urnik.outputs.teci == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -232,7 +247,7 @@ jobs:
         run: bash scripts/nocni-uvoz.sh
 
       - name: Shrani predpomnilnik
-        if: always()
+        if: steps.urnik.outputs.teci == 'true' && (always())
         uses: actions/cache/save@v4
         with:
           path: scripts/.predpomnilnik

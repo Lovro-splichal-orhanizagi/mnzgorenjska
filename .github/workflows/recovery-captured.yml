@@ -1,0 +1,93 @@
+name: Captured results recovery
+run-name: Captured recovery ${{ inputs.source || 'registration' }} ${{ inputs.snapshot }}
+on:
+  push:
+    branches: [codex/hns-recovery]
+    paths: [.github/workflows/recovery-captured.yml]
+  workflow_dispatch:
+    inputs:
+      source:
+        type: choice
+        options: [hns, pzpn]
+        required: true
+      snapshot:
+        description: SHA256 of the privately staged snapshot
+        type: string
+        required: true
+      preview:
+        description: Validate captured reports without writing results
+        type: boolean
+        default: true
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: captured-recovery-${{ inputs.source || 'registration' }}
+  cancel-in-progress: false
+jobs:
+  registration:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'Manual snapshot recovery workflow registered; no source or database access.'
+  replay:
+    if: github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      RECOVERY_SOURCE: ${{ inputs.source }}
+      RECOVERY_SHARD: ${{ matrix.shard }}
+      SNAPSHOT: ${{ inputs.snapshot }}
+      RECOVERY_PREVIEW: ${{ inputs.preview }}
+      SLFF_RECOVERY_CAPTURE: ${{ github.workspace }}/private-recovery
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Validate exact input and configure existing private read identity
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          [[ "$RECOVERY_SOURCE" =~ ^(hns|pzpn)$ ]]
+          [[ "$SNAPSHOT" =~ ^[a-f0-9]{64}$ ]]
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          mkdir -m 700 "$SLFF_RECOVERY_CAPTURE"
+          remote="/srv/slff-recovery/${RECOVERY_SOURCE}-20261117"
+          scp "deploy@2.31.6.53:$remote/snapshots/$SNAPSHOT.json" "$SLFF_RECOVERY_CAPTURE/snapshot.json"
+          printf '%s  %s\n' "$SNAPSHOT" "$SLFF_RECOVERY_CAPTURE/snapshot.json" | sha256sum --check
+          if [ "$RECOVERY_SOURCE" = hns ]; then
+            mv "$SLFF_RECOVERY_CAPTURE/snapshot.json" "$SLFF_RECOVERY_CAPTURE/latest.json"
+            rsync -r --safe-links "deploy@2.31.6.53:$remote/blobs/" "$SLFF_RECOVERY_CAPTURE/blobs/"
+          else
+            rsync -r --safe-links "deploy@2.31.6.53:$remote/raw/" "$SLFF_RECOVERY_CAPTURE/raw/"
+          fi
+      - name: Remove transfer credential before replay
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519
+      - name: Wait for older writers in this country
+        if: inputs.preview == false
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          country=HR
+          [ "$RECOVERY_SOURCE" != pzpn ] || country=PL
+          node scripts/cakaj-na-uvoze.mjs --drzava "$country"
+      - name: Validate originals and replay complete reports
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/recovery-import.mjs
