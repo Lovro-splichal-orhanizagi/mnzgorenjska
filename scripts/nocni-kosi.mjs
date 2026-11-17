@@ -85,9 +85,7 @@ export const ZAVRNJENA_SPLETISCA = new Set(['hns', 'eps:epsdod.gr', 'pzpn'])
  * je liga spet navadna: če še pada, je koš spet rdeč. Zavrnitev (4) ostane
  * rdeča vedno.
  */
-export const ZNANE_NAPAKE = {
-  'de-verbandsliga-baden': { naloga: 'SLF-558', do: '2026-12-01' },
-}
+export const ZNANE_NAPAKE = {}
 
 /** Naloga znane napake lige, če velja na dan `danes` (YYYY-MM-DD), sicer null. */
 export function znanaNapaka(slug, danes = new Date().toISOString().slice(0, 10)) {

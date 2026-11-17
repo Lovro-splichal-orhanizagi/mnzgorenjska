@@ -40,9 +40,18 @@ test('pzpn je med zavrnjenimi spletišči', () => {
 })
 
 test('znana napaka velja do datuma, potem je liga spet navadna', () => {
-  const { naloga, do: rok } = ZNANE_NAPAKE['de-verbandsliga-baden']
-  assert.match(naloga, /^SLF-\d+$/)
-  assert.equal(znanaNapaka('de-verbandsliga-baden', '2026-11-17'), naloga)
-  assert.equal(znanaNapaka('de-verbandsliga-baden', rok), null)
-  assert.equal(znanaNapaka('de-regionalliga-nord', '2026-11-17'), null)
+  const pred = { ...ZNANE_NAPAKE }
+  ZNANE_NAPAKE['de-test-liga'] = { naloga: 'SLF-1', do: '2026-12-01' }
+  try {
+    assert.equal(znanaNapaka('de-test-liga', '2026-11-17'), 'SLF-1')
+    assert.equal(znanaNapaka('de-test-liga', '2026-12-01'), null)
+    assert.equal(znanaNapaka('de-regionalliga-nord', '2026-11-17'), null)
+  } finally {
+    delete ZNANE_NAPAKE['de-test-liga']
+  }
+  assert.deepEqual(ZNANE_NAPAKE, pred)
+})
+
+test('de-verbandsliga-baden ni vec znana napaka (SLF-558 popravljen)', () => {
+  assert.equal(znanaNapaka('de-verbandsliga-baden', '2026-11-17'), null)
 })
