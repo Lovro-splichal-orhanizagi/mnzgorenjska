@@ -633,3 +633,30 @@ test('Baden fresh paired source is reciprocally visible with exact DE scope and 
  for(const title of ['', 'Unknown source', 'Baden fresh paired source audit foreign']){const r={[workflow]:[run(title)]};assert.equal((await coordinate(['--drzava','ES'],r)).code,1);assert.equal((await coordinate(['--tece','--drzava','ES'],r)).code,3)}
  for(const patch of [{databaseId:30},{databaseId:20},{status:'completed'}])assert.equal((await coordinate(['--drzava','DE'],{[workflow]:[run(title,patch)]})).code,0)
 })
+
+// Runs the actual ghPocakaj with a stubbed gh that fails with the given errors first.
+async function ghPocakaj(napake) {
+  const klici = []
+  const context = vm.createContext({
+    console: { log: () => {} },
+    setTimeout: (r) => r(),
+    gh: (...a) => {
+      klici.push(a)
+      const e = napake.shift()
+      if (e) throw Object.assign(new Error('Command failed'), { stderr: e })
+      return 'ok'
+    },
+  })
+  vm.runInContext(source.slice(source.indexOf('const jeOmejitev'), source.indexOf('\nconst moj = ')) + '\nthis.ghPocakaj = ghPocakaj', context)
+  return { izid: await context.ghPocakaj('run', 'list').catch((e) => e), klici: klici.length }
+}
+
+test('a transient GitHub 5xx is retried instead of failing the wait step', async () => {
+  assert.deepEqual(await ghPocakaj(['HTTP 502: Server Error (https://api.github.com/x)']), { izid: 'ok', klici: 2 })
+  const trajno = await ghPocakaj(Array(6).fill('HTTP 503: Service Unavailable'))
+  assert.match(trajno.izid.stderr, /HTTP 503/)
+  assert.equal(trajno.klici, 6)
+  const drugo = await ghPocakaj(['HTTP 404: Not Found'])
+  assert.match(drugo.izid.stderr, /HTTP 404/)
+  assert.equal(drugo.klici, 1)
+})

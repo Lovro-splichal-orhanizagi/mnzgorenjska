@@ -113,11 +113,20 @@ const gh = (...a) => execFileSync('gh', [...a, '-R', GITHUB_REPOSITORY], { encod
 // so padli. Zato poizvedujemo na KORAK_MIN minut in omejitev počakamo.
 const KORAK_MIN = 3
 const jeOmejitev = (e) => /rate limit/i.test(String(e?.stderr ?? e?.message ?? ''))
+// GitHub API občasno vrne 5xx (16. 11. je HTTP 502 podrl cel posel HR 3/3).
+// Napaka je prehodna: počakamo 30 s in poskusimo do 5-krat.
+const napakaStreznika = (e) => /HTTP 5\d\d/.exec(String(e?.stderr ?? e?.message ?? ''))?.[0]
 async function ghPocakaj(...a) {
-  for (let poskus = 1; ; poskus++) {
+  for (let poskus = 1, streznik = 0; ; poskus++) {
     try {
       return gh(...a)
     } catch (e) {
+      const http = napakaStreznika(e)
+      if (http && ++streznik <= 5) {
+        console.log(`GitHub API ${http} — počakam 30 s (${streznik}/5)`)
+        await new Promise((r) => setTimeout(r, 30_000))
+        continue
+      }
       if (!jeOmejitev(e) || poskus >= 20) throw e
       console.log(`Omejitev GitHub API — počakam 5 min (${poskus}/20)`)
       await new Promise((r) => setTimeout(r, 300_000))
