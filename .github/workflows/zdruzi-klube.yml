@@ -79,7 +79,11 @@ jobs:
         run: |
           set -euo pipefail
           MOJ=$(gh run view "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" --json startedAt --jq .startedAt)
-          for i in $(seq 1 120); do
+          # Pregled ima 24 klicev API-ja; GITHUB_TOKEN jih dovoli 1000 na uro
+          # za cel repozitorij. Pregled vsako minuto (1440/h) je 17. 11. 2026
+          # porabil omejitev in naslednji zagon je dobil 403 (SLF-559).
+          # Vsakih 5 minut je 288/h; za tedenski posel je zamik nepomemben.
+          for i in $(seq 1 24); do
             n=0
             for wf in replay-fussball-cards.yml uvoz-baden-native.yml uvoz-pl-de-paketa.yml uvoz-paketa-lig.yml reviewed-existing-history.yml mlsz-reviewed-history.yml mfa-nl-reviewed-history.yml mfa-challenge-reviewed-history.yml mfa-reviewed-history.yml uvoz-hr-zenske.yml uvoz-zapisnikov.yml uvoz-lige.yml uvoz-fussball-public.yml uvoz-dribl-public.yml uvoz-dfb-regije.yml vklop-dfb-regije.yml vklop-katalonije.yml vklop-obstojecih-lig.yml uskladi-pozicije.yml izstop-kluba.yml cene-lig.yml zdruzi-klube.yml tedensko-cene.yml razdeli-zlite-igralce.yml; do
               # Brez --status: tudi cakajoci (queued) starejsi zagon mora priti
@@ -90,8 +94,8 @@ jobs:
               n=$((n + k))
             done
             [ "$n" -eq 0 ] && exit 0
-            echo "Pred mano tece se $n uvozov — cakam ($i/120 min)"
-            sleep 60
+            echo "Pred mano tece se $n uvozov — cakam ($((i * 5))/120 min)"
+            sleep 300
           done
           echo "::error::Starejsi uvoz tece ze dve uri."
           exit 1
