@@ -102,13 +102,13 @@ function useStanje(ponudba: boolean | null): Stanje {
 /** Skupine koristi: kako se pokažeš, kako se pripraviš in kaj deliš. */
 const STEBRI = {
   pokazi: ["kljukica", "posnetki", "highlight", "vzdevek", "profil", "izpostavljeno", "sporocilo"],
-  pripravi: ["predTekmo", "sporocila", "ogledi", "izbranost"],
+  pripravi: ["svetovalec", "predTekmo", "sporocila", "ogledi", "izbranost"],
   deli: ["zgodbe", "sezona", "cv", "plakat"],
 } as const;
 type Korist = (typeof STEBRI)[keyof typeof STEBRI][number];
 
 /** Vrstice primerjave: prvi dve ima vsak potrjen igralec, ostale le preverjeni. */
-const PRIMERJAVA = ["kljukica", "posnetki", "highlight", "profil", "sporocila", "predTekmo", "zgodbe", "sezona", "cv", "plakat"] as const;
+const PRIMERJAVA = ["kljukica", "posnetki", "highlight", "profil", "sporocila", "svetovalec", "predTekmo", "zgodbe", "sezona", "cv", "plakat"] as const;
 
 export default function Preverjeni() {
   useNaslov(t("preverjeni.naslov"));

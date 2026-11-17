@@ -71,22 +71,33 @@ export function OdZadnjegaObiska({
         </div>
         <Zapri oznaka={t('mojaEkipa.odZadnjegaObiska.zapri')} naKlik={naZapri} />
       </div>
-      <ul className="mt-2 flex flex-wrap gap-1.5">
-        {igralci.map((i) => {
-          const gor = i.razlikaC > 0
-          return (
-            <li
-              key={i.player_id}
-              className={`znacka tabular-nums ${gor ? 'bg-gnl-500/15 text-gnl-200' : 'bg-rose-500/15 text-rose-200'}`}
-            >
-              <span aria-label={gor ? t('mojaEkipa.odZadnjegaObiska.gor') : t('mojaEkipa.odZadnjegaObiska.dol')}>
-                {gor ? '▲' : '▼'}
-              </span>{' '}
-              {ime(i.ime)} {formatirajCeno(i.iz)} → {formatirajCeno(i.v)}
-            </li>
-          )
-        })}
-      </ul>
+      <details className="group/g mt-1">
+        <summary className="cursor-pointer list-none text-xs text-slate-400 hover:text-slate-200 [&::-webkit-details-marker]:hidden">
+          {t('mojaEkipa.odZadnjegaObiska.igralci', { n: igralci.length })}{' '}
+          <span aria-hidden className="inline-block transition group-open/g:rotate-180">
+            ▾
+          </span>
+        </summary>
+        <ul className="mt-2 grid gap-x-4 gap-y-1 text-xs sm:grid-cols-2">
+          {igralci.map((i) => {
+            const gor = i.razlikaC > 0
+            return (
+              <li key={i.player_id} className="flex items-baseline gap-2 tabular-nums">
+                <span
+                  className={gor ? 'text-gnl-300' : 'text-rose-300'}
+                  aria-label={gor ? t('mojaEkipa.odZadnjegaObiska.gor') : t('mojaEkipa.odZadnjegaObiska.dol')}
+                >
+                  {gor ? '▲' : '▼'}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-slate-200">{ime(i.ime)}</span>
+                <span className="text-slate-400">
+                  {formatirajCeno(i.iz)} → <span className={gor ? 'text-gnl-200' : 'text-rose-200'}>{formatirajCeno(i.v)}</span>
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      </details>
     </section>
   )
 }
