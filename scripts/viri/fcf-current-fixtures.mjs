@@ -100,7 +100,13 @@ export function withFcfCurrentFixtures(base,c,db) {
     if(error)throw error
     sameFixture(live,original,c,season,key)
     assert.ok(!live.zapisnik_id||live.zapisnik_id===record.id,'fcf current fixtures: fixture owns another report')
-    assert.ok(!live.source_url||live.source_url===record.url,'fcf current fixtures: fixture source URL changed')
+    // Native calendar placeholders carry the first numeric URL in the block.
+    // It is evidence of the registered calendar, not ownership of that report.
+    const completedSelf = Boolean(live.imported_at) && live.zapisnik_id === record.id && live.source_url === record.url
+    if (!completedSelf) assert.equal(live.source_url ?? null, original.source_url ?? null, 'fcf current fixtures: fixture source URL changed')
+    const calendarPlaceholder = !original.zapisnik_id && !live.zapisnik_id &&
+      original.source_url === naslovZapisnika(block.od) && live.source_url === original.source_url
+    assert.ok(!live.source_url || live.source_url === record.url || calendarPlaceholder, 'fcf current fixtures: fixture source URL is not the report or registered calendar')
     if(live.imported_at||live.kontumacija)return false
     const {data:owner,error:ownershipError}=await db.from('matches').select('id,zapisnik_id').eq('zapisnik_id',record.id).maybeSingle()
     if(ownershipError)throw ownershipError

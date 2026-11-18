@@ -167,3 +167,25 @@ test('unassignable discovered source page does not abort later candidates',async
  await assert.rejects(adapter.withFcfCurrentFixtures(base,unavailableCompetition,f.db).zapisniki(unavailableCompetition.source_league_code,async()=>unavailableHtml))
  assert.equal(calls.length,1);assert.equal(calls[0].allowAbsent,false)
 })
+
+test('unassigned fixture with native block calendar URL admits its exact discovered report',async t=>{
+ const original={...fixture(),zapisnik_id:null,source_url:'https://www.fcf.cat/ca/competicio/acta/4106968'}
+ const f=setup(t,[original]),p=f.provider(),scope={id:'es4107024',roundId:900,homeTeamId:800,awayTeamId:801}
+ assert.deepEqual((await p.zapisniki(c.source_league_code)).map(r=>r.id),['es4107024'])
+ assert.equal(await p.assertNativeFixture(scope),true)
+ f.state.rows[0]={...original,zapisnik_id:'es4107024',source_url:url,imported_at:'2026-11-18T12:01:00Z'}
+ assert.equal(await p.assertNativeFixture(scope),false,'completed self-import may replace calendar URL with exact report URL')
+})
+test('unassigned URL exceptions do not admit another block calendar or assigned wrong report URL',async t=>{
+ const f=setup(t)
+ for(const row of [{...fixture(),zapisnik_id:null,source_url:'https://www.fcf.cat/ca/competicio/acta/4139542'}, {...fixture(),source_url:'https://www.fcf.cat/ca/competicio/acta/4106968'}]){
+  f.state.rows=[row]
+  await assert.rejects(f.provider().zapisniki(c.source_league_code),/source URL/)
+ }
+})
+test('pending source URL is pinned to captured fixture even if replacement would otherwise be allowed',async t=>{
+ const f=setup(t),p=f.provider(),scope={id:'es4107024',roundId:900,homeTeamId:800,awayTeamId:801}
+ await p.zapisniki(c.source_league_code)
+ f.state.rows[0].source_url=url
+ await assert.rejects(p.assertNativeFixture(scope),/source URL/)
+})
