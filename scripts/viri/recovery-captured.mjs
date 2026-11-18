@@ -7,6 +7,7 @@ import hns from './hns.mjs'
 import pzpn,{vZapisnik,popolnZapisnik,POSREDNIKI} from './pzpn.mjs'
 import {schedule,report,competitionName} from '../hns-recovery-validation.mjs'
 import {LEAGUES,scheduleUrl,selectMatches} from '../pzpn-collect-recovery.mjs'
+import {podobnoIme} from '../klubi.mjs'
 const hash=b=>createHash('sha256').update(b).digest('hex')
 const noNetwork=()=>{throw Error('recovery snapshot: network access is disabled')}
 export function loadRecovery(directory,source){
@@ -68,13 +69,22 @@ export function createRecoverySource({competition:c,directory,source=c.source,db
  }}
 }
 
+// The report id, round and date already pin the match. A sponsor rename ("Tim Kabel" / "Zagreb" for
+// NK Dubrava) may differ on one side only if the opponent matches exactly and the normal import's
+// rename rule (`podobnoIme`) accepts the pair; anything else is a different club.
+function assertSameClubs(m,z,key){
+ const sides=[[m.home.name,z.domaci.ime],[m.away.name,z.gostje.ime]].map(([a,b])=>[key(a),key(b)])
+ const bad=sides.filter(([a,b])=>a!==b)
+ assert.ok(bad.length===0||bad.length===1&&podobnoIme(bad[0][0],bad[0][1]),`stored match differs from captured report: ${bad.map(([a,b])=>`'${a}' vs '${b}'`).join(', ')}`)
+}
+
 export async function missingRecoveryRecords(records,c,db,key){
   const completed=new Set()
   if(db)for(let start=0;start<records.length;start+=100){
    const chunk=records.slice(start,start+100),ids=chunk.map(r=>String(r.id))
    const {data,error}=await db.from('matches').select('id,zapisnik_id,imported_at,played_on,home:teams!home_team_id(id,name),away:teams!away_team_id(id,name),rounds!inner(competition_id,season,number)').in('zapisnik_id',ids)
    if(error)throw Error('completed report lookup failed: '+error.message)
-   for(const m of data){const r=chunk.find(r=>String(r.id)===String(m.zapisnik_id));assert.ok(r);assert.equal(m.rounds.competition_id,c.id);assert.equal(m.rounds.season,'2026/27');assert.equal(m.rounds.number,r.z.krog);assert.equal(m.played_on,r.z.datum);if(key){assert.equal(key(m.home.name),key(r.z.domaci.ime));assert.equal(key(m.away.name),key(r.z.gostje.ime))}if(m.imported_at)completed.add(String(r.id))}
+   for(const m of data){const r=chunk.find(r=>String(r.id)===String(m.zapisnik_id));assert.ok(r);assert.equal(m.rounds.competition_id,c.id);assert.equal(m.rounds.season,'2026/27');assert.equal(m.rounds.number,r.z.krog);assert.equal(m.played_on,r.z.datum);if(key)assertSameClubs(m,r.z,key);if(m.imported_at)completed.add(String(r.id))}
   }
   return structuredClone(records.filter(r=>!completed.has(String(r.id))))
 }
