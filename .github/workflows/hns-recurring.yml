@@ -122,6 +122,13 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/recovery-import.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hns-review-holds-${{ matrix.shard }}
+          path: private-recovery/manual-review-*.json
+          if-no-files-found: ignore
+          retention-days: 90
 
   acknowledge:
     needs: [inventory, replay]
@@ -129,6 +136,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hns-review-holds-*
+          path: review-holds
+          merge-multiple: true
       - name: Persist receipt only after all imports and scoring succeed
         env:
           SNAPSHOT: ${{ needs.inventory.outputs.snapshot }}
@@ -142,7 +154,16 @@ jobs:
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          node -e "require('fs').writeFileSync('receipt.json',JSON.stringify({sha256:process.env.SNAPSHOT,status:'import-and-scoring-complete',runId:process.env.GITHUB_RUN_ID,completedAt:new Date().toISOString()}))"
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const files=fs.existsSync('review-holds')?fs.readdirSync('review-holds'):[];
+          const expected=['manual-review-1.json','manual-review-2.json','manual-review-3.json'];
+          if(!expected.every(n=>files.includes(n)))throw Error('missing shard review receipt');
+          const manualReview=files.filter(n=>/^manual-review-[123]\.json$/.test(n)).flatMap(n=>{const x=JSON.parse(fs.readFileSync('review-holds/'+n));if(x.schema!==1||x.source!=='hns'||!Array.isArray(x.holds))throw Error('invalid shard review receipt');return x.holds});
+          const status=manualReview.length?'import-and-scoring-complete-with-review-holds':'import-and-scoring-complete';
+          fs.writeFileSync('receipt.json',JSON.stringify({sha256:process.env.SNAPSHOT,status,manualReview,runId:process.env.GITHUB_RUN_ID,completedAt:new Date().toISOString()}));
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Import/scoring receipt: '+status+'; manual correction holds: '+manualReview.length+'\n');
+          JS
           scp receipt.json "deploy@2.31.6.53:/srv/slff-recovery/hns-recurring-receipts/$SNAPSHOT.$GITHUB_RUN_ID.tmp"
           # SHA and run ID are deliberately expanded locally; SHA was validated above.
           # shellcheck disable=SC2029

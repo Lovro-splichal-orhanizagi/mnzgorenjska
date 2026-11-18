@@ -31,3 +31,12 @@ test('old zero-progress snapshot cannot block later real work',t=>{
  const next=add(d,'2026-11-18T12:00:00Z')
  assert.equal(selectBatch(d).sha256,next)
 })
+
+test('acknowledged import with explicit correction hold does not starve new work',t=>{
+ const d=fixture(t),old=add(d,'2026-11-17T12:00:00Z'),fresh=add(d,'2026-11-18T12:00:00Z')
+ const receipt={sha256:old,status:'import-and-scoring-complete-with-review-holds',manualReview:[{kind:'already-imported-source-change',matchId:58085,reportId:'114652522',league:'hr-ri-4nl'}]}
+ fs.writeFileSync(path.join(d,'receipts',old+'.json'),JSON.stringify(receipt))
+ assert.equal(selectBatch(d).sha256,fresh)
+ fs.writeFileSync(path.join(d,'receipts',old+'.json'),JSON.stringify({...receipt,manualReview:[]}))
+ assert.throws(()=>selectBatch(d))
+})

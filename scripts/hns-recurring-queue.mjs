@@ -14,7 +14,12 @@ export function selectBatch(dir){
   assert.ok(Array.isArray(s.leagues))
   if(s.leagues.length===0){assert.ok(['paused','stopped'].includes(s.status),'empty complete inventory');continue}
   const receipt=path.join(dir,'receipts',name)
-  if(fs.existsSync(receipt)){const r=JSON.parse(fs.readFileSync(receipt));assert.equal(r.sha256,id);assert.equal(r.status,'import-and-scoring-complete');continue}
+  if(fs.existsSync(receipt)){
+   const r=JSON.parse(fs.readFileSync(receipt));assert.equal(r.sha256,id)
+   if(r.status==='import-and-scoring-complete-with-review-holds')assert.ok(Array.isArray(r.manualReview)&&r.manualReview.length>0&&r.manualReview.every(h=>h.kind==='already-imported-source-change'&&Number.isSafeInteger(h.matchId)&&/^\d+$/.test(h.reportId)),'explicit review holds required')
+   else assert.equal(r.status,'import-and-scoring-complete')
+   continue
+  }
   pending.push({sha256:id,createdAt:s.createdAt})
  }
  pending.sort((a,b)=>Date.parse(a.createdAt)-Date.parse(b.createdAt)||a.sha256.localeCompare(b.sha256))
@@ -22,7 +27,9 @@ export function selectBatch(dir){
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
  const dir=process.argv[2],batch=selectBatch(dir)
- console.log(JSON.stringify({pending:!!batch,...batch}))
+ const holds=fs.readdirSync(path.join(dir,'receipts')).filter(n=>/^[a-f0-9]{64}\.json$/.test(n)).flatMap(n=>JSON.parse(fs.readFileSync(path.join(dir,'receipts',n))).manualReview??[])
+ console.log(JSON.stringify({pending:!!batch,...batch,manualReview:holds}))
+ if(holds.length&&process.env.GITHUB_STEP_SUMMARY)fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'### Existing-result corrections awaiting review\n\nThese imported results were preserved.\n\n```json\n'+JSON.stringify(holds,null,2)+'\n```\n')
  if(batch)fs.copyFileSync(path.join(dir,'snapshots',batch.sha256+'.json'),path.join(dir,'latest.json'))
  if(process.env.GITHUB_OUTPUT)fs.appendFileSync(process.env.GITHUB_OUTPUT,`replay_needed=${!!batch}\nsnapshot=${batch?.sha256??''}\n`)
 }
