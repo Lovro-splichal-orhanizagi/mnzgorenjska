@@ -151,6 +151,7 @@ test('FCF nightly fetches only recent existing fixtures and does not scan the se
  assert.equal(r.status,0)
  assert.deepEqual(r.steps.filter(s=>s.league==='es-ct-elit'&&['uvoz-razporeda','uvoz-delegiranja'].includes(s.step)),[])
  assert.equal(r.steps.find(s=>s.league==='es-ct-elit'&&s.step==='uvoz-zapisnikov').bounded,'1')
+ assert.ok(r.steps.filter(s=>s.league==='es-ct-elit'&&['uvoz-registracij','lazni-vratarji','ugani-pozicije'].includes(s.step)).every(s=>s.bounded===null))
  assert.equal(r.steps.find(s=>s.league==='gr-dod-a'&&s.step==='uvoz-zapisnikov').bounded,null)
  assert.ok(r.steps.some(s=>s.league==='gr-dod-a'&&s.step==='uvoz-razporeda'))
 })

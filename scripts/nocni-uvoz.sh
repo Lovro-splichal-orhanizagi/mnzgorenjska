@@ -107,6 +107,7 @@ uvozi() {
       *) ok=0 ;;
     esac
   fi
+  unset SLFF_FCF_CURRENT_FIXTURES
   # Vir je dol: ostali koraki bi bili brez zapisnikov, liga ni uvožena.
   [ "$dol" = 1 ] && return 5
   # Prestopi so poročilo; vir, ki jih ne objavlja, se konča z 0.
