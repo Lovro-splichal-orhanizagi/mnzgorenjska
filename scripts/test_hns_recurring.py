@@ -124,5 +124,14 @@ class Tests(unittest.TestCase):
   self.collect(max_leagues=1)
   self.assertEqual(self.load()['createdAt'],'2026-11-18T12:00:00Z')
   self.assertEqual(self.load()['throughDate'],'2026-11-18')
+ def test_server_failure_defers_without_refusal_latch_and_can_resume_after_one_hour(self):
+  def unavailable(url):self.calls.append(url);return 503,{'content-type':'text/plain'},b'temporary outage'
+  with self.assertRaisesRegex(RuntimeError,'temporary'):self.collect(fetch_fn=unavailable)
+  ledger=m.Ledger(self.lp,950,self.clock.now,self.clock.sleep)
+  self.assertEqual(ledger.get('blocked',''),'');self.assertEqual(float(ledger.get('defer')),self.clock.t+3600);ledger.close()
+  with self.assertRaises(m.SourceBlocked):self.collect(max_leagues=1)
+  self.assertEqual(len(self.calls),1)
+  self.clock.t+=3600;self.collect(max_leagues=1)
+  self.assertEqual(len(self.calls),4);self.assertEqual(self.load()['status'],'paused')
 
 if __name__=='__main__':unittest.main()

@@ -54,3 +54,22 @@ test('offline schedule bridge extracts current parent identity and rejects an ol
   const parsed=JSON.parse(good.stdout);assert.equal(parsed.parentName,'Test 26/27');assert.ok(parsed.fixtures.length>0)
   assert.notEqual(run('25/26').status,0)
 })
+test('new cycle prioritizes missing and unfinished prior leagues while retaining fresh DB completion data',async()=>{
+  const priorSnapshot={schema:2,source:'hns',mode:'recurring',season:'2026/27',leagues:[
+    {id:1,slug:'hr-test-1',code:'1000',finished:true,completed:['old'],schedule:{sha256:'old'}},
+    {id:2,slug:'hr-test-2',code:'1001',finished:false},
+    {id:3,slug:'hr-test-3',code:'1002',finished:true},
+  ]}
+  const value=await build({...opts,priorSnapshot})
+  assert.deepEqual(value.leagues.slice(0,3).map(x=>x.id),[2,4,5])
+  assert.deepEqual(value.leagues.slice(-2).map(x=>x.id),[1,3])
+  assert.deepEqual(value.leagues.find(x=>x.id===1),{id:1,slug:'hr-test-1',code:'1000',completed:[]})
+  assert.equal(value.leagues.length,139)
+})
+test('prior cycle cannot reorder by foreign, changed or duplicate identities',async()=>{
+  const prior={schema:2,source:'hns',mode:'recurring',season:'2026/27',leagues:[{id:1,slug:'hr-test-1',code:'1000',finished:true}]}
+  for(const change of [{id:999},{slug:'hr-other'},{code:'999'},{finished:'true'}])
+    await assert.rejects(()=>build({...opts,priorSnapshot:{...prior,leagues:[{...prior.leagues[0],...change}]}}))
+  await assert.rejects(()=>build({...opts,priorSnapshot:{...prior,leagues:[...prior.leagues,...prior.leagues]}}))
+  await assert.rejects(()=>build({...opts,priorSnapshot:{...prior,season:'2025/26'}}))
+})

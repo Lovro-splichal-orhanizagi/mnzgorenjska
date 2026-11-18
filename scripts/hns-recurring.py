@@ -212,6 +212,8 @@ def collect(directory, manifest_path, ledger_path, *, max_new=950, max_leagues=1
                 ledger.finish(attempt, status, blocked=reason)
                 raise SourceBlocked(reason)
             ledger.finish(attempt, status, defer=status >= 500)
+            if status >= 500:
+                raise RuntimeError(f'temporary source failure HTTP {status}; deferred for one hour')
             try:
                 validate_html(status, headers, body)
             except ValueError:
