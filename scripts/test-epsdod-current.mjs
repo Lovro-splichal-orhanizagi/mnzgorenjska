@@ -239,3 +239,24 @@ test('missing-sheet handling preserves refusal and mismatched-identity fail-stop
   }), /ne ujema z razporedom/)
   assert.equal(reportReads, 1)
 })
+
+test('validated current EPSdod reports clear an earlier source-no-result flag in native match fields', () => {
+  const reports = [parse(), vZapisnik(sponsoredAReport, { domena: 'epsdod.gr', gameId: 26556, url: 'https://epsdod.gr/fyllo-agona/?game_id=26556', koda: 'epsdod.gr:495' })]
+  for (const report of reports) {
+    const nativeFields = { vir_brez_izida: true, ...(eps.matchSourceFields?.(report) ?? {}) }
+    assert.equal(nativeFields.vir_brez_izida, false)
+    assert.deepEqual(eps.matchSourceFields(report), { vir_brez_izida: false })
+  }
+})
+test('incomplete, conflicting, legacy and foreign reports cannot clear source-no-result metadata', () => {
+  const complete = parse()
+  const legacy = vZapisnik(readFileSync(new URL('./vzorci/gr-eps-tekma-epspeir-27822.html', import.meta.url), 'utf8'), { domena: 'epspeir.gr', gameId: 27822 })
+  for (const report of [
+    parse(html.replace('Τελικό', 'Σε εξέλιξη')), legacy,
+    { ...complete, opozorila: ['source contradiction'] },
+    { ...complete, kontumacija: true }, { ...complete, prazen: true },
+    { ...complete, url: 'https://epsdod.gr/results/display_game.php?game_id=26804' },
+    { ...complete, url: 'https://evil.test/fyllo-agona/?game_id=26804' },
+    { ...complete, zapisnikId: 'gr5-26805' },
+  ]) assert.deepEqual(eps.matchSourceFields?.(report) ?? {}, {})
+})
