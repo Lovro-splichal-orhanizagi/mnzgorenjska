@@ -4,6 +4,12 @@ on:
     branches: [codex/es-gr-source-migration]
     paths: [.github/workflows/source-migration-probe.yml, scripts/source-migration-inventory.mjs]
   workflow_dispatch:
+    inputs:
+      scope:
+        description: Fixed public diagnostic only; no database writes
+        type: choice
+        options: [migration, epsdod-nightly]
+        default: migration
 permissions:
   contents: read
 concurrency:
@@ -11,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   public-page:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && inputs.scope != 'epsdod-nightly'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     strategy:
@@ -49,6 +55,7 @@ jobs:
           retention-days: 7
 
   retained-inventory:
+    if: inputs.scope != 'epsdod-nightly'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -71,4 +78,37 @@ jobs:
         with:
           name: migration-inventory-${{ github.run_id }}
           path: source-inventory/
+          retention-days: 7
+
+  epsdod-nightly:
+    if: github.event_name == 'workflow_dispatch' && inputs.scope == 'epsdod-nightly'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture the two observed nightly failures once; stop on refusal
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import {createHash} from 'node:crypto';
+          fs.mkdirSync('capture',{mode:0o700});
+          for (const gameId of [26504,26774]) {
+            const url=`https://epsdod.gr/fyllo-agona/?game_id=${gameId}`;
+            const response=await fetch(url,{redirect:'manual',headers:{'User-Agent':'SLFF fantasy (https://slff.eu)','Accept':'text/html'},signal:AbortSignal.timeout(45000)});
+            const chunks=[];let size=0;for await(const chunk of response.body){size+=chunk.length;if(size>2*1024*1024)throw Error('body limit');chunks.push(chunk)}
+            const body=Buffer.concat(chunks),html=body.toString('utf8'),blocked=response.status!==200||/cf-chl|challenge-platform|g-recaptcha|This request was blocked|Sorry, you have been blocked/i.test(html);
+            const result={url,status:response.status,bytes:size,sha256:createHash('sha256').update(body).digest('hex'),capturedAt:new Date().toISOString(),blocked};
+            fs.writeFileSync(`capture/${gameId}.json`,JSON.stringify(result,null,2));console.log(JSON.stringify(result));
+            if(blocked)throw Error('public report refused; no retry or next request');
+            fs.writeFileSync(`capture/${gameId}.html`,body);
+            if(gameId===26504)await new Promise(resolve=>setTimeout(resolve,3000));
+          }
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: epsdod-nightly-diagnostic-${{ github.run_id }}
+          path: capture/
           retention-days: 7
