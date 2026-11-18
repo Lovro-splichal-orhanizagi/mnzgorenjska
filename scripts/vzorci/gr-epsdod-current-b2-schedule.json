@@ -1,0 +1,6 @@
+{
+  "sourceUrl": "https://epsdod.gr/diorganoseis/v-katigoria/?enosi_main_league_id=2&enosi_tab=schedule&enosi_league_id=497&enosi_scope=all&enosi_period=14",
+  "originalSha256": "0018b005e0c615783e09ef9aa89a7c198a0bb60652a6f70492b78f93220461c3",
+  "fixtureSha256": "e38f970a04136518b5deb6e312dfc65376ffcf65bd5a25de459f85c666012051",
+  "extraction": "Exact competition section header and rounds 3 and 4; other complete rounds removed for bounded offline fixture."
+}

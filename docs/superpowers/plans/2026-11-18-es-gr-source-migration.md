@@ -1,0 +1,54 @@
+# Catalonia and Dodecanese recovery implementation plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task.
+
+**Goal:** Restore imports from the federations' redesigned public match pages and recover available current results.
+
+**Architecture:** Keep existing EPS and FCF identity namespaces and native DB writers. Add narrowly scoped HTML parsing and same-origin public page routing for each migrated source. Root coordinates network budget, importer integration, workflow testing and production verification.
+
+**Tech Stack:** Existing Node ESM parsers/test runner, Python bounded capture, Supabase native import, GitHub Actions.
+
+**Spec:** docs/superpowers/specs/2026-11-18-es-gr-source-migration.md
+
+## Global constraints
+- No package.json changes, private API calls, cookie extraction, or DB credentials on the Mac.
+- Keep original fixtures, hashes, report/player IDs and explicit complete/incomplete states.
+- Source requests stop on403/429/challenge; minimum3seconds between same-host requests.
+- Only root performs live source requests and production operations.
+
+## Review focus
+- Redirect target must be same host and exact public report route, never credentials/query/private routes.
+- New page cannot silently change numeric report identity or league/round/team binding.
+- Missing minutes/lineups, goal mismatches, incomplete match states fail closed.
+- Legacy retained fixtures and other EPS associations must retain their existing behavior.
+- Recovery must skip already completed reports, preserve user data and recompute affected round points.
+
+### Task1: FCF public report redesign
+Files: scripts/viri/fcf.mjs; optionally scripts/viri/fcf-current.mjs; scripts/test-fcf-current.mjs and bounded retained fixtures.
+- [x] Add failing tests for observed legacy redirect + canonical report and wrong-target/incomplete cases.
+- [x] Implement same-origin redirect extraction and new HTML/RSC report mapping into existing record shape; preserve legacy parser behavior.
+- [x] Validate all selected retained originals and existing FCF offline tests. Return interfaces and quality holds to coordinator.
+
+### Task2: Dodecanese WordPress migration
+Files: scripts/viri/eps.mjs; scripts/viri/epsdod.mjs; scripts/test-epsdod-current.mjs and bounded retained fixtures.
+- [x] Add failing tests for new public report, player IDs, lineup/event minutes, wrong report/league and incomplete cases.
+- [x] Implement new public schedule/report parsing scoped only to epsdod.gr; preserve EPS ID namespace and old associations.
+- [x] Validate retained originals and existing EPS offline tests. Return interfaces and quality holds to coordinator.
+
+### Task3: Controlled capture and production integration
+Files: bounded recovery scripts/workflow wiring only as required by proven source output; root owns shared integration files.
+- [x] Capture a small pilot and compare same-report identities with public DB inventory.
+- [x] Run hosted read-only transport/parse validation before enabling hosted reads.
+- [ ] Review all changes and pass relevant CI. Import available reports using native guards.
+- [ ] Verify live scores, lineups, affected round points, and explicitly record remaining source gaps.
+
+## Implemented operational details
+- Hosted public-page test44275697822 returned200 for both redesigned reports.
+- Retained FCF redirects are reused as original numeric-to-canonical evidence; one serialized collector reads bounded candidate rounds, minimum3seconds between requests, stops on refusal.
+- New source-free recovery adapter requires complete warning-free reports, immutable body hashes, exact existing fixture IDs and live ownership checks. Native imports and points recalculation use existing writers. Readback checks stable player IDs, lineup minutes, cards and goal attribution.
+- FCF scheduled mode queries pending existing fixtures from the last21days, discovers at most100numeric report candidates per league, and binds exact source identity before admission. It skips full-season calendar/delegation scans. Manual calendar setup remains available. Already-completed reports are not refreshed by this bounded queue; separate correction imports remain available.
+- Dodecanese current495/497 use the exact public WordPress schedule for period14. Other EPS sources and historical policies retain their original routes.
+- Review findings fixed with regression tests: duplicateFCFevents, typedcard/penalty contradictions, whitespace in source team labels, observed91/92minute notation, all-complete replay recomputation retry and fullappearance readback.
+- Official reports missing starter identities or substitution minutes remain held; no timing is inferred from the scorer's first goal.
+- Ruling: a discovery candidate with a proven exact numeric source route and explicitly unassignable official team header may be skipped without inferring a bye or match identity. Unknown HTML, wrong routes, challenges and known-ID reads remain strict. This prevents one unavailable candidate from discarding valid reports; the affected fixture remains pending.
+- Dodecanese's two leagues share one worker's pacing and refusal state. FCF historical-policy leagues remain excluded from this narrowly scoped scheduled recovery.

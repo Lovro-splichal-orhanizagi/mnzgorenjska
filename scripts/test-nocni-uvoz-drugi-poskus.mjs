@@ -29,7 +29,7 @@ if [ "$1" = +%s ]; then cat ${JSON.stringify(uraDat)}; else exec /usr/bin/env -i
     for (const [l, v, k, z] of ${JSON.stringify(lige)}) console.log(l + ' 1 ' + v + (k || z ? ' ' + (k || v) : '') + (z ? ' ' + z : ''))
   `)
   for (const ime of ['bulk-source-coordination', 'uvoz-razporeda', 'uvoz-delegiranja', 'uvoz-zapisnikov',
-    'uvoz-registracij', 'lazni-vratarji', 'ugani-pozicije']) stub(ime + '.mjs', 'process.exit(0)')
+    'uvoz-registracij', 'lazni-vratarji', 'ugani-pozicije']) stub(ime + '.mjs', `import fs from 'node:fs';fs.appendFileSync('steps.log',JSON.stringify({step:${JSON.stringify(ime)},league:process.argv[process.argv.indexOf('--tekmovanje')+1],bounded:process.env.SLFF_FCF_CURRENT_FIXTURES??null})+'\\n');process.exit(0)`)
   stub('prepare-fussball-nightly.mjs', `
     import fs from 'node:fs'
     const liga = process.argv[process.argv.indexOf('--tekmovanje') + 1]
@@ -45,7 +45,8 @@ if [ "$1" = +%s ]; then cat ${JSON.stringify(uraDat)}; else exec /usr/bin/env -i
     env: { ...process.env, PATH: `${join(dir, 'bin')}:${process.env.PATH}`, DRZAVA: 'DE', KOS: '1', KOSOV: '1', URNIK: '', ROK_MIN: '190', GITHUB_STEP_SUMMARY: '', ...okolje },
   })
   const klici = existsSync(join(dir, 'klici.log')) ? readFileSync(join(dir, 'klici.log'), 'utf8').trim().split('\n') : []
-  return { ...r, klici, izhod: `${r.stdout}\n${r.stderr}` }
+  const steps=existsSync(join(dir,'steps.log'))?readFileSync(join(dir,'steps.log'),'utf8').trim().split('\n').map(s=>JSON.parse(s)):[]
+  return { ...r, klici, steps, izhod: `${r.stdout}\n${r.stderr}` }
 }
 
 const FP = 'fussball-public'
@@ -143,4 +144,14 @@ for (const [urnik, urni] of [
 ]) test(`full/incremental mode follows scheduled slot, not shard wall clock: ${urnik}`, () => {
   const r = zaženi([['a', FP]], { a: [4] }, {}, { URNIK: urnik })
   assert.equal(r.izhod.includes('Urni zagon: preračun le dotaknjenih krogov'), urni)
+})
+
+test('FCF nightly fetches only recent existing fixtures and does not scan the season calendar',()=>{
+ const r=zaženi([['es-ct-elit','fcf'],['gr-dod-a','eps']],{})
+ assert.equal(r.status,0)
+ assert.deepEqual(r.steps.filter(s=>s.league==='es-ct-elit'&&['uvoz-razporeda','uvoz-delegiranja'].includes(s.step)),[])
+ assert.equal(r.steps.find(s=>s.league==='es-ct-elit'&&s.step==='uvoz-zapisnikov').bounded,'1')
+ assert.ok(r.steps.filter(s=>s.league==='es-ct-elit'&&['uvoz-registracij','lazni-vratarji','ugani-pozicije'].includes(s.step)).every(s=>s.bounded===null))
+ assert.equal(r.steps.find(s=>s.league==='gr-dod-a'&&s.step==='uvoz-zapisnikov').bounded,null)
+ assert.ok(r.steps.some(s=>s.league==='gr-dod-a'&&s.step==='uvoz-razporeda'))
 })

@@ -1,3 +1,5 @@
+import {withFcfCurrentFixtures} from './fcf-current-fixtures.mjs'
+import {createMigrationCapturedSource} from './source-migration-captured.mjs'
 import {createRecoverySource} from './recovery-captured.mjs'
 import {withFcfG1Installed4109410} from './fcf-g1-9410-runtime.mjs'
 import {isFcfG1SupplementCompetition} from '../lib/fcf-g1-supplement-installed.mjs'
@@ -254,6 +256,10 @@ const VIRI = {
  */
 export function viraZa(tekmovanje, {installedHistoricalMarkers=null,installedG1Supplement=null,db=null}={}) {
   const ime = tekmovanje?.source ?? 'mnzg'
+  if(process.env.SLFF_MIGRATION_CAPTURE){
+    if(process.env.SLFF_RECOVERY_CAPTURE || process.env.SLFF_BULK_CAPTURE)throw Error('migration capture: conflicting capture providers')
+    return createMigrationCapturedSource({competition:tekmovanje,directory:process.env.SLFF_MIGRATION_CAPTURE,db})
+  }
   if(process.env.SLFF_RECOVERY_CAPTURE)return createRecoverySource({competition:tekmovanje,directory:process.env.SLFF_RECOVERY_CAPTURE,db})
   if(isBadenNativeCompetition(tekmovanje)){
     const context=installedHistoricalMarkers??tekmovanje.fussballHistoricalContext
@@ -282,7 +288,10 @@ export function viraZa(tekmovanje, {installedHistoricalMarkers=null,installedG1S
     return wrapped
   }
   const policy=getHistoricalStatisticsPolicy(tekmovanje?.slug)
-  if(!policy && tekmovanje?.source_policy==null)return vir
+  if(!policy && tekmovanje?.source_policy==null){
+    if(ime==='fcf' && process.env.SLFF_FCF_CURRENT_FIXTURES==='1')return withFcfCurrentFixtures(vir,tekmovanje,db)
+    return vir
+  }
   if(!policy || tekmovanje.source!==policy.provider || tekmovanje.source_policy!==policy.sourcePolicy)throw Error('historical provider: invalid competition/provider/policy tuple')
   let wrapped,files
   if(ime==='dfb') {

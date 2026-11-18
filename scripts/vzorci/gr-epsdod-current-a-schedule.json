@@ -1,0 +1,6 @@
+{
+  "sourceUrl": "https://epsdod.gr/diorganoseis/a-katigoria/?enosi_main_league_id=1&enosi_tab=schedule&enosi_league_id=495&enosi_scope=all&enosi_period=14",
+  "originalSha256": "b92c5e7dc1a561d06e04f315ab87739e218951b2adbfc278893a9a093ae8bdce",
+  "fixtureSha256": "7cd2c54a041ee83f9437d7e7f0be38bf783576238cbce97ed16d6e8be1d704b2",
+  "extraction": "Exact competition section header and round 7; other complete rounds removed for bounded offline fixture."
+}

@@ -2,17 +2,13 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { IZKLOPLJENI_VIRI, ZAVRNJENA_SPLETISCA, ZNANE_NAPAKE, brezIzklopljenih, kljucVira, razdeli, znanaNapaka } from './nocni-kosi.mjs'
 
-// fcf.cat je na seznamu virov, ki jih ne uporabljamo (SLF-452).
-test('lige iz izklopljenih virov ne pridejo v nočni koš', () => {
-  assert.ok(IZKLOPLJENI_VIRI.has('fcf'))
-  const lige = [
-    { slug: 'es-ct-quarta-g1', source: 'fcf' },
-    { slug: 'es-ct-tercera-g4', source: 'fcf' },
-    { slug: 'es-rfef-1', source: 'rfef' },
-  ]
-  assert.deepEqual(brezIzklopljenih(lige).map((t) => t.slug), ['es-rfef-1'])
-  const kosi = razdeli(brezIzklopljenih(lige).map((t) => ({ slug: t.slug, vir: t.source })), 1)
-  assert.deepEqual(kosi[0].map((l) => l.slug), ['es-rfef-1'])
+// Redesigned public routes were verified from hosted runners on 18 Nov.
+test('current FCF leagues return to a single paced nightly source worker', () => {
+  const leagues = [{slug:'es-ct-quarta-g1',source:'fcf'},{slug:'es-ct-tercera-g4',source:'fcf'}]
+  const admitted=brezIzklopljenih(leagues)
+  assert.deepEqual(admitted,leagues)
+  const bins=razdeli(admitted.map(l=>({slug:l.slug,vir:l.source})),4)
+  assert.equal(bins.filter(bin=>bin.length).length,1)
 })
 
 // SLF-500: eps je več spletišč; zavrnitev enega ne sme ustaviti ostalih.
@@ -30,7 +26,7 @@ test('zavrnjena spletišča ne pridejo v nočni koš, ostale zveze eps pridejo',
     { slug: 'gr-ath-a-1', source: 'eps', source_league_code: 'epsath.gr:12' },
     { slug: 'hr-zd-1-znl', source: 'hns', source_league_code: '115235266' },
   ]
-  assert.deepEqual(brezIzklopljenih(lige).map((t) => t.slug), ['gr-ath-a-1'])
+  assert.deepEqual(brezIzklopljenih(lige).map((t) => t.slug), ['gr-dod-a', 'gr-ath-a-1'])
 })
 
 // SLF-557: szpnkielce.pl (pzpn) vrača GitHubu 403 — ne obhajamo.
@@ -54,4 +50,13 @@ test('znana napaka velja do datuma, potem je liga spet navadna', () => {
 
 test('de-verbandsliga-baden ni vec znana napaka (SLF-558 popravljen)', () => {
   assert.equal(znanaNapaka('de-verbandsliga-baden', '2026-11-17'), null)
+})
+
+test('Dodecanese leagues share one source worker and refusal state',()=>{
+ const bins=razdeli([{slug:'gr-dod-a',vir:'eps',kljuc:'eps:epsdod.gr'},{slug:'gr-dod-b-2',vir:'eps',kljuc:'eps:epsdod.gr'},{slug:'gr-ath-a-1',vir:'eps',kljuc:'eps:epsath.gr'}],6)
+ assert.equal(bins.filter(bin=>bin.some(l=>l.kljuc==='eps:epsdod.gr')).length,1)
+})
+test('FCF migration scheduling does not enable historical policy sources',()=>{
+ const ordinary={slug:'es-ct-elit',source:'fcf',source_policy:null},historical={slug:'es-ct-segona-g1',source:'fcf',source_policy:'es-fcf-reviewed'}
+ assert.deepEqual(brezIzklopljenih([ordinary,historical]),[ordinary])
 })

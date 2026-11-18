@@ -51,6 +51,7 @@ import { razpakiraj } from '../klubi.mjs'
 import { nastopi } from './hlf.mjs'
 import { NEPOPOLN, vLjubljanskiCas } from './frf.mjs'
 import { sifra } from './zapisniki.mjs'
+import { jeEpsdodTekma, epsdodPodatki, jeEpsdodAktualna, epsdodNaslovRazporeda, epsdodRazpored, jeEpsdodStran } from './epsdod.mjs'
 
 // Naslov vrnjene strani v napaki: GitHubovi stroji 16. 11. 2026 dobivajo ~12 kB
 // stran namesto razporeda (SLF-524); iz naslova se vidi, kaj je spletišče vrnilo.
@@ -107,6 +108,7 @@ export const naslovMreze = (koda) => {
   return `${osnovni(domena)}/results/display_results.php?league_id=${liga}`
 }
 export const naslovTekme = (domena, gameId) => `${osnovni(domena)}/results/display_game.php?game_id=${gameId}`
+export const naslovEpsdodTekme = gameId => `https://epsdod.gr/fyllo-agona/?game_id=${gameId}`
 
 /** Šifra zapisnika v bazi: `gr<zveza>-<game_id>` (game_id šteje vsaka zveza zase). */
 export const sifraZapisnika = (domena, gameId) => `gr${ZVEZE[domena]}-${gameId}`
@@ -198,7 +200,8 @@ export const jeOdrezanaTekma = (html) =>
  * Stran razporeda: { sezona, ime, krogi: [{ stevilka, tekme: [{ domaci, gostje,
  * datum, ura, izid, kontumacija, gameId, neBo }] }] }.
  */
-export function razporedStrani(html) {
+export function razporedStrani(html, { koda = null } = {}) {
+  if (jeEpsdodAktualna(koda)) return epsdodRazpored(html, koda, { besedilo, sezonaIz, krogIz, datumIz, casTekme, izidIz, kljucKlubaGr })
   const s = cisto(html)
   const glava = s.match(/<div id="maincolumn">[\s\S]*?<h1>([\s\S]*?)<\/h1>/)?.[1] ?? ''
   const [prvi, ...ostalo] = glava.split(/<br\s*\/?>/i)
@@ -411,14 +414,15 @@ export function postaviTekme(html) {
  * Ekipa z manj kot 7 začetniki je nepopolna (kot frf, fcf): izid se zapiše,
  * tekma se bere znova.
  */
-export function vZapisnik(html, { domena = null, gameId = null, url = null } = {}) {
-  const g = glavaTekme(html)
+export function vZapisnik(html, { domena = null, gameId = null, url = null, koda = null } = {}) {
+  const novo = domena === 'epsdod.gr' && jeEpsdodTekma(html) ? epsdodPodatki(html, { gameId, url, koda }, { besedilo, minuta, sezonaIz, krogIz, datumIz, casTekme, kljucKlubaGr }) : null
+  const g = novo?.g ?? glavaTekme(html)
   if (!g?.izid) return null
   const regSt = (playerId) => (domena ? sifraIgralca(domena, playerId) : playerId)
   const imeni = [g.domaci, g.gostje]
-  const opozorila = []
-  const postavi = postaviTekme(html)
-  const dogodki = casovnica(html)
+  const opozorila = (novo?.holds ?? []).map(x => `${NEPOPOLN}: ${x}`)
+  const postavi = novo?.postavi ?? postaviTekme(html)
+  const dogodki = novo?.dogodki ?? casovnica(html)
   const znana = postavi.map((xs) => xs.filter((x) => x.zacetnik).length >= NAJMANJ_ZACETNIKOV)
   postavi.forEach((xs, idx) => {
     const n = xs.filter((x) => x.zacetnik).length
@@ -513,6 +517,7 @@ export function vZapisnik(html, { domena = null, gameId = null, url = null } = {
   if (brezCasovnice) opozorila.push(`${NEPOPOLN}: časovnica brez golov pri izidu ${g.izid.domaci}:${g.izid.gostje}`)
   else if (!g.kontumacija && znana[0] && znana[1] && (zaEkipo(0) !== g.izid.domaci || zaEkipo(1) !== g.izid.gostje))
     opozorila.push(`goli iz časovnice (${zaEkipo(0)}:${zaEkipo(1)}) se ne ujemajo z izidom ${g.izid.domaci}:${g.izid.gostje}`)
+  if (novo) for (let i = 0; i < opozorila.length; i++) if (!opozorila[i].startsWith(NEPOPOLN)) opozorila[i] = `${NEPOPOLN}: ${opozorila[i]}`
   opozorila.sort((a, b) => Number(b.startsWith(NEPOPOLN)) - Number(a.startsWith(NEPOPOLN)))
 
   return {
@@ -533,7 +538,7 @@ export function vZapisnik(html, { domena = null, gameId = null, url = null } = {
     rdeci,
     menjave,
     kontumacija: g.kontumacija,
-    nepopoln: !g.kontumacija && (!znana[0] || !znana[1] || brezCasovnice),
+    nepopoln: !g.kontumacija && (!znana[0] || !znana[1] || brezCasovnice || (!!novo && opozorila.length > 0)),
     prazen: !postavi[0].length && !postavi[1].length,
     opozorila,
   }
@@ -606,7 +611,7 @@ async function beri(prenesi, url, ime, sveze) {
     throw e
   }
   if (jeIzziv(html)) throw new EpsZavrnitev(`eps: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
-  if (!jeStranPlatforme(html) && !jeOdrezanaTekma(html)) throw new Error(`eps: ${url} ni stran platforme (${String(html ?? '').length} B, naslov "${naslovStrani(html)}") — uvoz ustavljen`)
+  if (!jeStranPlatforme(html) && !jeOdrezanaTekma(html) && !(new URL(url).origin === 'https://epsdod.gr' && jeEpsdodStran(html))) throw new Error(`eps: ${url} ni stran platforme (${String(html ?? '').length} B, naslov "${naslovStrani(html)}") — uvoz ustavljen`)
   return html
 }
 
@@ -615,7 +620,7 @@ async function beri(prenesi, url, ime, sveze) {
  * tekma, odrezana za podatki. Izziv, stran vzdrževanja ali prazen odgovor 200
  * ne — sicer bi obveljal za vselej (mlsz, 10. 2026).
  */
-export const zaPredpomnilnik = (html) => !jeIzziv(html) && (jeStranPlatforme(html) || jeOdrezanaTekma(html))
+export const zaPredpomnilnik = (html) => !jeIzziv(html) && (jeStranPlatforme(html) || jeOdrezanaTekma(html) || jeEpsdodStran(html))
 
 const shranjena = (ime) => {
   const p = `${MAPA}/${ime}`
@@ -646,6 +651,31 @@ export async function epsFetch(url, moznosti = {}) {
   return new Response(telo, { status, statusText: o.statusText, headers: o.headers })
 }
 
+
+// Current public schedule is the sole report inventory. Bind every report by
+// game ID plus season, league, round, teams, date/time and score before writing.
+async function zapisnikiEpsdod(koda, prenesi, { preskoci, samoZapisnik }) {
+  const r = razporedStrani(await beri(prenesi, epsdodNaslovRazporeda(koda), `aktualni-${imeRazporeda(koda)}`, true), { koda })
+  const out = []
+  for (const k of r.krogi) for (const t of k.tekme) {
+    const id = sifraZapisnika('epsdod.gr', t.gameId)
+    if (!t.izid || t.kontumacija || !t.reportAvailable || preskoci.has(id) || (samoZapisnik && id !== String(samoZapisnik))) continue
+    const url = naslovEpsdodTekme(t.gameId)
+    const html = await beri(prenesi, url, `aktualni-${imeTekme('epsdod.gr', t.gameId)}`, true)
+    const z = vZapisnik(html, { domena: 'epsdod.gr', gameId: t.gameId, url, koda })
+    if (!z) { console.warn(`epsdod: ${id} HOLD — ni popolnega zapisnika`); continue }
+    const matches = z.sezona === r.sezona && z.krog === k.stevilka &&
+      kljucKlubaGr(z.domaci.ime) === kljucKlubaGr(t.domaci) && kljucKlubaGr(z.gostje.ime) === kljucKlubaGr(t.gostje) &&
+      z.datum === t.datum && z.ura === t.ura && z.rezultat.domaci === t.izid.domaci && z.rezultat.gostje === t.izid.gostje
+    if (!matches) throw new Error(`epsdod: ${id} identiteta/izid zapisnika se ne ujema z razporedom`)
+    // Native writers may write incomplete appearances. Do not return partial
+    // current reports to them; keep their imported_at pending for a later pass.
+    if (z.nepopoln || z.opozorila.length) { console.warn(`epsdod: ${id} HOLD — ${z.opozorila.join('; ')}`); continue }
+    out.push({ id, z, url })
+  }
+  return out
+}
+
 const vir = {
   ime: 'eps',
   fetch: epsFetch,
@@ -656,16 +686,20 @@ const vir = {
   premorMs: PREMOR_MS,
   imaRegistracije: false,
 
-  naslovRazporeda,
-  naslovZapisnika: (_koda, id) => {
+  naslovRazporeda: koda => jeEpsdodAktualna(koda) ? epsdodNaslovRazporeda(koda) : naslovRazporeda(koda),
+  naslovZapisnika: (koda, id) => {
     const { domena, gameId } = razberiZapisnik(id)
-    return naslovTekme(domena, gameId)
+    return domena === 'epsdod.gr' && jeEpsdodAktualna(koda) ? naslovEpsdodTekme(gameId) : naslovTekme(domena, gameId)
   },
   jeIzziv,
   zaPredpomnilnik,
   zavrnitev: (sporocilo, status = null) => new EpsZavrnitev(`eps: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
 
   async razporedVseStrani(koda, prenesi) {
+    if (jeEpsdodAktualna(koda)) {
+      const html = await beri(prenesi, epsdodNaslovRazporeda(koda), `aktualni-${imeRazporeda(koda)}`, true)
+      return razporedVUvoz(razporedStrani(html, { koda }), 'epsdod.gr')
+    }
     // Uvoz razporeda je to stran pravkar prenesel (svežo) pod istim imenom.
     const html = shranjena(imeRazporeda(koda)) ?? (await beri(prenesi, naslovRazporeda(koda), imeRazporeda(koda), true))
     if (jeIzziv(html)) throw new EpsZavrnitev(`eps: ${naslovRazporeda(koda)} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
@@ -674,6 +708,7 @@ const vir = {
 
   async zapisniki(koda, prenesi, { preskoci = new Set(), samoZapisnik = null } = {}) {
     const { domena } = razberiKodo(koda)
+    if (jeEpsdodAktualna(koda)) return zapisnikiEpsdod(koda, prenesi, { preskoci, samoZapisnik })
     const razpored = razporedStrani(await beri(prenesi, naslovRazporeda(koda), imeRazporeda(koda), true))
     const mreza = tekmeMreze(await beri(prenesi, naslovMreze(koda), imeMreze(koda), true))
     // Odigrane tekme iz mreže in povezav razporeda; kontumacije nimajo zapisnika.
