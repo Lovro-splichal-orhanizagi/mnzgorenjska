@@ -596,6 +596,9 @@ export const poenostaviKlubEs = (ime) =>
 // calendar establish this exact identity. Reserve/legal forms stay distinct.
 export const kljucKlubaEs = (ime) => {
   const key = poenostaviKlubEs(ime)
+  // Acta 4117694, G14 round 9: same fixture/opponent/date and 18 stable player
+  // IDs bind BELLVIS CF to existing team 8400 (competition 802). Reserves stay distinct.
+  if (key === 'bellvis cf') return 'bellvis c f'
   return key === 'vilanova atletic' ? 'futbol club atletic vng pasifae' : key
 }
 
