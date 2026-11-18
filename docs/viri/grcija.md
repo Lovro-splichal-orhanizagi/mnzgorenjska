@@ -415,3 +415,28 @@ A source-confirmed false interval failure is covered by `gr-eps-tekma-klop-rdeci
 The second retained report, `gr-eps-tekma-napacen-izstop-epsdod-24025.html`, is a genuine source contradiction: a reserve has an exit without an entry, producing1020 team minutes. It must remain HOLD even when its parsed rows match stored rows. No starting player or missing substitution may be guessed.
 
 The completed batch ledger spent133 requests including the original six qualifiers. Two subsequent bounded original-report inspections brought this effort to135 of1000. The canonical successor ledger is `league-rollout-evidence/2026-10-26-large-cohort/postrun-source-check/source-budget.json`; its manifest binds the immutable parent ledger hash. A later run must preserve those spent requests, not restart the allowance at six. No new Greek historical exclusions or activation overrides were authorized by this correction.
+
+## EPSdod current nightly holds (18 November 2026)
+
+The current public WordPress route can return HTTP 200 with the exact
+`enosi_match_sheet` error component `Match sheet not found.`. A bounded
+[GitHub diagnostic](https://github.com/Lovro-splichal-orhanizagi/mnzgorenjska/actions/runs/44331345704)
+observed this for games 26504 and 26774 after both active Dodecanese leagues
+failed on those reports in nightly shard GR 5/6. Capture hashes and a minimal
+exact component fixture are in `gr-epsdod-current-report-missing.json` / `.html`.
+
+Only this component on the current EPSdod public match-sheet route is treated
+like an unavailable report: log the game ID and reason as HOLD, leave statistics
+unimported, continue with later fully validated reports, and print a per-league
+held count and ID list. The response is never cached; the schedule still retains
+pending old game IDs for the next scan, including outside `--sveze 21` (that
+option skips only previously imported older reports). Generic errors, truncated
+pages, HTTP refusals/challenges and identity/score mismatches still stop the
+league. Other EPS associations and historical routes are unchanged.
+
+The `source-migration-probe.yml` optional scope `epsdod-nightly` is a read-only
+diagnostic for exactly those two IDs, once each, with a three-second pause.
+It uses the existing public request headers, no database credentials, stores
+short-lived response artifacts and stops before the second request on a refusal.
+A passing diagnostic or offline test is not proof that recurring import is
+restored: verify both leagues in an actual scheduled run and production readback.
