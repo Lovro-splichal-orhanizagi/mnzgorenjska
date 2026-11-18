@@ -153,3 +153,41 @@ test('timeline card type and minute must match the independent lineup badges', (
 test('timeline penalty attribution must match lineup goal badge type', () => {
   assert.equal(parse(html.replace('timeline-item--penalty', 'timeline-item--goal')).nepopoln, true)
 })
+const unlinkedReport = readFileSync(new URL('./vzorci/gr-epsdod-current-26570.html', import.meta.url), 'utf8')
+const unlinkedSchedule = readFileSync(new URL('./vzorci/gr-epsdod-current-a-round9-schedule.html', import.meta.url), 'utf8')
+test('scored schedule ID with no report link still admits its proven complete public report', async () => {
+  const schedule = razporedStrani(unlinkedSchedule, { koda: 'epsdod.gr:495' })
+  const fixture = schedule.krogi[0].tekme.find(t => t.gameId === 26570)
+  assert.equal(fixture.reportAvailable, false)
+  assert.deepEqual(fixture.izid, { domaci: 1, gostje: 1 })
+  const calls = []
+  const records = await eps.zapisniki('epsdod.gr:495', async url => {
+    calls.push(url)
+    if (url.includes('/diorganoseis/')) return unlinkedSchedule
+    assert.equal(url, 'https://epsdod.gr/fyllo-agona/?game_id=26570')
+    return unlinkedReport
+  }, { samoZapisnik: 'gr5-26570' })
+  assert.equal(records.length, 1)
+  assert.equal(records[0].id, 'gr5-26570')
+  assert.equal(records[0].z.datum, '2026-11-17')
+  assert.deepEqual(records[0].z.rezultat, { domaci: 1, gostje: 1 })
+  assert.deepEqual(records[0].z.opozorila, [])
+  assert.equal(calls.length, 2)
+})
+test('unlinked unavailable or incomplete reports stay pending and refusals still stop', async t => {
+  const warnings = []; t.mock.method(console, 'warn', warning => warnings.push(warning))
+  for (const reply of [() => unlinkedReport.replace('Τελικό', 'Σε εξέλιξη'), () => { throw Object.assign(new Error('Not Found'), { status: 404 }) }]) {
+    let reads = 0
+    const records = await eps.zapisniki('epsdod.gr:495', async url => {
+      if (url.includes('/diorganoseis/')) return unlinkedSchedule
+      reads++; return reply()
+    }, { samoZapisnik: 'gr5-26570' })
+    assert.deepEqual(records, [])
+    assert.equal(reads, 1)
+  }
+  assert.equal(warnings.filter(w => w.includes('gr5-26570 HOLD')).length, 2)
+  await assert.rejects(eps.zapisniki('epsdod.gr:495', async url => {
+    if (url.includes('/diorganoseis/')) return unlinkedSchedule
+    throw Object.assign(new Error('Forbidden'), { status: 403 })
+  }, { samoZapisnik: 'gr5-26570' }), error => error.zavrnitev === true)
+})

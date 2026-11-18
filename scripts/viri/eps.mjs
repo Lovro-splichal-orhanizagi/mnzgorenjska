@@ -659,9 +659,18 @@ async function zapisnikiEpsdod(koda, prenesi, { preskoci, samoZapisnik }) {
   const out = []
   for (const k of r.krogi) for (const t of k.tekme) {
     const id = sifraZapisnika('epsdod.gr', t.gameId)
-    if (!t.izid || t.kontumacija || !t.reportAvailable || preskoci.has(id) || (samoZapisnik && id !== String(samoZapisnik))) continue
+    if (!t.izid || t.kontumacija || t.neBo || preskoci.has(id) || (samoZapisnik && id !== String(samoZapisnik))) continue
     const url = naslovEpsdodTekme(t.gameId)
-    const html = await beri(prenesi, url, `aktualni-${imeTekme('epsdod.gr', t.gameId)}`, true)
+    // A scored schedule row may omit its link even when the public game ID has
+    // a complete report. Validate that report normally; only a genuine 404 is
+    // held here. Refusals/challenges and other transport failures still stop.
+    let html
+    try { html = await beri(prenesi, url, `aktualni-${imeTekme('epsdod.gr', t.gameId)}`, true) }
+    catch (error) {
+      if (error.status !== 404 || error.zavrnitev) throw error
+      console.warn(`epsdod: ${id} HOLD — javni zapisnik še ni na voljo (HTTP 404)`)
+      continue
+    }
     const z = vZapisnik(html, { domena: 'epsdod.gr', gameId: t.gameId, url, koda })
     if (!z) { console.warn(`epsdod: ${id} HOLD — ni popolnega zapisnika`); continue }
     const matches = z.sezona === r.sezona && z.krog === k.stevilka &&

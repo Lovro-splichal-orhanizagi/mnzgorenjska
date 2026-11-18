@@ -119,7 +119,7 @@ export function createMigrationCapturedSource({ competition: c, directory, db = 
       const matches = schedule.krogi.flatMap(k => k.tekme.filter(t => t.gameId === gameId).map(t => ({ ...t, krog: k.stevilka })))
       assert.equal(matches.length, 1, 'migration capture: report not in exact schedule')
       const f = matches[0]
-      assert.ok(f.izid && f.reportAvailable && !f.kontumacija && !f.neBo, 'migration capture: schedule has no completed report')
+      assert.ok(f.izid && !f.kontumacija && !f.neBo, 'migration capture: schedule has no scored nonforfeit fixture')
       assert.ok(z && z.krog === f.krog && z.datum === f.datum && z.ura === f.ura && z.sezona === schedule.sezona && base.kljucKluba(z.domaci.ime) === base.kljucKluba(f.domaci) && base.kljucKluba(z.gostje.ime) === base.kljucKluba(f.gostje), 'migration capture: report differs from schedule fixture')
       assert.deepEqual(z.rezultat, f.izid, 'migration capture: report score differs from schedule')
     }
