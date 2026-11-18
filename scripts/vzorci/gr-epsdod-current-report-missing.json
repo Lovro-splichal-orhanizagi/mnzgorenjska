@@ -1,0 +1,23 @@
+{
+  "sourceRun": "https://github.com/Lovro-splichal-orhanizagi/mnzgorenjska/actions/runs/44331345704",
+  "responses": [
+    {
+      "url": "https://epsdod.gr/fyllo-agona/?game_id=26504",
+      "status": 200,
+      "bytes": 147393,
+      "sha256": "841fec32e62dfc3300878b9ac00c4c611a432b2d7d675a073b4aca6b82511ea8",
+      "capturedAt": "2026-11-18T15:04:28.418Z",
+      "blocked": false
+    },
+    {
+      "url": "https://epsdod.gr/fyllo-agona/?game_id=26774",
+      "status": 200,
+      "bytes": 147393,
+      "sha256": "f39a965ebd4584dc0dc68a3276513132caecdf10a86f6e3d08ec7bb459b1168c",
+      "capturedAt": "2026-11-18T15:04:32.216Z",
+      "blocked": false
+    }
+  ],
+  "extraction": "Exact enosi_match_sheet shortcode/error component from game 26504; surrounding document is a minimal test wrapper. Same component observed for 26774. No player data.",
+  "fixtureSha256": "413b7a8edc51a030421e7f1b0e081d4c791cb60c46ac6a5a877b67842bc5c5bb"
+}

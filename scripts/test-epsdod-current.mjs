@@ -191,3 +191,51 @@ test('unlinked unavailable or incomplete reports stay pending and refusals still
     throw Object.assign(new Error('Forbidden'), { status: 403 })
   }, { samoZapisnik: 'gr5-26570' }), error => error.zavrnitev === true)
 })
+
+const missingReport = readFileSync(new URL('./vzorci/gr-epsdod-current-report-missing.html', import.meta.url), 'utf8')
+// Removing the narrow missing-sheet handling must stop this traversal before
+// the later valid report; a generic catch would fail the rejection cases below.
+test('observed missing-sheet response is held and a later validated report still reaches the writer', async t => {
+  const warnings = []; t.mock.method(console, 'warn', warning => warnings.push(warning))
+  const selected = new Set(['gr5-26798', 'gr5-26804'])
+  const preskoci = new Set(razporedStrani(schedule, { koda: 'epsdod.gr:497' }).krogi.flatMap(k => k.tekme.map(t => `gr5-${t.gameId}`)).filter(id => !selected.has(id)))
+  const records = await eps.zapisniki('epsdod.gr:497', async url => {
+    if (url.includes('/diorganoseis/')) return schedule
+    if (url.endsWith('game_id=26798')) return missingReport
+    assert.equal(url, options.url)
+    return html
+  }, { preskoci })
+  assert.deepEqual(records.map(r => r.id), ['gr5-26804'])
+  assert.ok(warnings.some(w => w.includes('gr5-26798 HOLD') && w.includes('Match sheet not found.')))
+  assert.ok(warnings.some(w => w.includes('HOLD=1') && w.includes('gr5-26798') && w.includes('epsdod.gr:497')))
+  assert.equal(eps.zaPredpomnilnik(missingReport), false, 'unavailable response must never become a permanent cached report')
+})
+test('missing-sheet handling never accepts generic errors, truncated responses, challenge pages or schedule errors', async () => {
+  for (const bad of [
+    missingReport.replace('Match sheet not found.', 'Database unavailable.'),
+    missingReport.replace('data-enosi-shortcode="enosi_match_sheet"', 'data-enosi-shortcode="other"'),
+    missingReport.replace('enosi-bridge--error', 'unrelated-error'),
+    missingReport.replace('</html>', ''),
+    '<html><title>Φύλλο Αγώνα - ΕΠΣ Δωδεκανήσου</title><body>Match sheet not found.</body></html>',
+  ]) await assert.rejects(eps.zapisniki('epsdod.gr:497', async url => url.includes('/diorganoseis/') ? schedule : bad, { samoZapisnik: 'gr5-26804' }), /ni stran platforme/)
+  await assert.rejects(eps.zapisniki('epsdod.gr:497', async () => missingReport), /ni stran platforme/)
+  await assert.rejects(eps.zapisniki('epsdod.gr:497', async url => url.includes('/diorganoseis/') ? schedule : missingReport.replace('</body>', '<div class="g-recaptcha"></div></body>'), { samoZapisnik: 'gr5-26804' }), error => error.zavrnitev === true)
+})
+test('missing-sheet handling preserves refusal and mismatched-identity fail-stop before later reports', async () => {
+  for (const status of [401, 403, 429]) {
+    let reportReads = 0
+    await assert.rejects(eps.zapisniki('epsdod.gr:497', async url => {
+      if (url.includes('/diorganoseis/')) return schedule
+      reportReads++
+      throw Object.assign(new Error('refused'), { status })
+    }), error => error.zavrnitev === true)
+    assert.equal(reportReads, 1)
+  }
+  let reportReads = 0
+  await assert.rejects(eps.zapisniki('epsdod.gr:497', async url => {
+    if (url.includes('/diorganoseis/')) return schedule
+    reportReads++
+    return html
+  }), /ne ujema z razporedom/)
+  assert.equal(reportReads, 1)
+})

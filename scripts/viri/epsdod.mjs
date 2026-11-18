@@ -6,6 +6,15 @@ const validMinute = value => {
   return !!m && Number(m[1]) <= 120 && (!m[2] || Number(m[2]) <= 30)
 }
 export const jeEpsdodTekma = html => /<article\b[^>]*class="[^"]*\benosi-bridge--match-sheet\b/.test(String(html ?? ''))
+// Observed HTTP 200 response for current public game IDs 26504 and 26774.
+// This is only a retryable absence signal, never a report or cacheable page.
+export function jeEpsdodManjkajocZapisnik(html) {
+  const source = String(html ?? '')
+  if (jeEpsdodTekma(source) || !/<\/html>\s*$/i.test(source)) return false
+  const message = source.match(/<div\b[^>]*\bdata-enosi-shortcode="enosi_match_sheet"[^>]*>\s*<div\b[^>]*\bclass="([^"]*)"[^>]*>\s*Match sheet not found\.\s*<\/div>\s*<\/div>/)
+  const classes = new Set((message?.[1] ?? '').split(/\s+/))
+  return ['enosi-bridge', 'enosi-bridge--message', 'enosi-bridge--error'].every(name => classes.has(name))
+}
 const field = (s, name) => s.match(new RegExp(`<([a-z0-9]+)\\b[^>]*class="[^"]*\\b${P}${name}(?=["\\s])[^\"]*"[^>]*>([\\s\\S]*?)<\\/\\1>`, 'i'))?.[2] ?? ''
 const blocks = (s, tag, name) => [...s.matchAll(new RegExp(`<${tag}\\b[^>]*class="[^"]*\\b${P}${name}(?=["\\s])[^\"]*"[^>]*>[\\s\\S]*?<\\/${tag}>`, 'g'))].map(m => m[0])
 
