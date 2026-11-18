@@ -277,7 +277,8 @@ export function dogodkiStrani(html) {
         if (naslov === 'SUSTITUCIONES') {
           const noter = besedilo(li.match(/sp-res__name--in">([\s\S]*?)<\/span>/)?.[1]).replace(/^[↑\s]+/, '')
           const ven = besedilo(li.match(/sp-res__name--out">([\s\S]*?)<\/span>/)?.[1]).replace(/^[↓\s]+/, '')
-          menjave.push({ ekipaIdx, noter: noter || null, ven: ven || null, minuta: m })
+          const samoIme = !noter && !ven ? besedilo(li.match(/<span class="sp-res__name">([\s\S]*?)<\/span>/)?.[1]) : ''
+          menjave.push({ ekipaIdx, noter: noter || null, ven: ven || null, minuta: m, ...(samoIme ? { samoIme } : {}) })
           continue
         }
         const ime = besedilo(li.match(/<span class="sp-res__name">([\s\S]*?)<\/span>/)?.[1])
@@ -347,8 +348,17 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
   }
   const menjave = []
   for (const x of d.menjave) {
-    const noter = x.noter ? poImenu(x.ekipaIdx, x.noter) : null
+    // Some source rows give only an entrant's name and clock (14681, Pablo
+    // Barrientos 82'). Direction must also be explicit in the same team's
+    // roster; a starter/unused reserve or duplicate name is not sufficient.
+    const enojna = x.minuta != null && x.samoIme && !x.noter && !x.ven
+    const kandidati = enojna ? ekipeIgr[x.ekipaIdx].filter(i => i.ime.toLowerCase() === x.samoIme.toLowerCase()) : []
+    const potrjenVstop = kandidati.length === 1 && kandidati[0].vstopil && !kandidati[0].zacetnik ? kandidati[0] : null
+    const noter = x.noter ? poImenu(x.ekipaIdx, x.noter) : potrjenVstop
     const ven = x.ven ? poImenu(x.ekipaIdx, x.ven) : null
+    if (enojna) opozorila.push(potrjenVstop
+      ? `${imeni[x.ekipaIdx]}: vstop ${x.samoIme} v ${x.minuta}. minuti — izstopajoči igralec ni naveden`
+      : `${imeni[x.ekipaIdx]}: enojna menjava ${x.samoIme} v ${x.minuta}. minuti — smer vstopa ni enolično potrjena`)
     if (x.noter && !noter) opozorila.push(`${imeni[x.ekipaIdx]}: vstop "${x.noter}" (${x.minuta}.) — igralca ni v postavi`)
     if (x.ven && !ven) opozorila.push(`${imeni[x.ekipaIdx]}: izstop "${x.ven}" (${x.minuta}.) — igralca ni v postavi`)
     if (x.minuta == null) {
