@@ -18,7 +18,7 @@ test('daily window uses fourteen UTC calendar days, expires in 24 hours, and ret
   const m=await build({...opts,matches:[match,match,{...match,zapisnik_id:'43',imported_at:null},{...match,zapisnik_id:'44',rounds:{competition_id:1,season:'2025/26'}},{...match,zapisnik_id:'45',played_on:'2026-11-04'}]})
   assert.equal(m.schema,2);assert.equal(m.mode,'recurring');assert.equal(m.source,'hns');assert.equal(m.season,'2026/27')
   assert.equal(m.fromDate,'2026-11-05');assert.equal(m.toDate,'2026-11-18')
-  assert.equal(m.expiresAt,'2026-11-19T00:15:00.000Z');assert.deepEqual(m.leagues[0].completed,['42']);assert.equal(m.leagues.length,139)
+  assert.equal(m.expiresAt,'2026-11-19T00:15:00.000Z');assert.deepEqual(m.leagues[0].completed,['42','45']);assert.equal(m.leagues.length,139)
 })
 test('reject changed or ambiguous reviewed inventory and never admit women or policy-held leagues',async()=>{
   for(const replacement of [{id:0},{id:true},{slug:'../escape'},{source_league_code:'12/path'},{countries:{code:'SI'}},{id:2},{source_league_code:'1001'},{slug:'hr-test-2'},{active:false},{slug:'hr-prva-hnlz'},{source_policy:'hold'}]) {
@@ -86,4 +86,18 @@ test('prior cycle cannot reorder by foreign, changed or duplicate identities',as
     await assert.rejects(()=>build({...opts,priorSnapshot:{...prior,leagues:[{...prior.leagues[0],...change}]}}))
   await assert.rejects(()=>build({...opts,priorSnapshot:{...prior,leagues:[...prior.leagues,...prior.leagues]}}))
   await assert.rejects(()=>build({...opts,priorSnapshot:{...prior,season:'2025/26'}}))
+})
+
+test('manifest DB inventory includes imported reports before the collection window',async()=>{
+  const {readRecurringCompletedMatches}=await import('./hns-recurring-manifest.mjs')
+  const row={zapisnik_id:'114652522',imported_at:'2026-10-24',played_on:'2026-10-24',rounds:{competition_id:1,season:'2026/27'}}
+  const filters=[]
+  const db={from(table){assert.equal(table,'matches');return {
+    select(){return this},eq(...args){filters.push(args);return this},not(...args){filters.push(args);return this},order(){return this},
+    async range(){return {data:[row],error:null}},
+  }}}
+  const matches=await readRecurringCompletedMatches(db)
+  assert.deepEqual((await build({...opts,matches})).leagues[0].completed,['114652522'])
+  assert.ok(filters.some(f=>f[0]==='rounds.season'&&f[1]==='2026/27'))
+  assert.ok(filters.some(f=>f[0]==='imported_at'&&f[1]==='is'&&f[2]===null))
 })

@@ -85,3 +85,53 @@ test('aggregate competitions accept identical season labels and the published Cr
   for(const wrong of [parent.replace('26/27','25/26'),'Other league 26/27',parent+' Group B'])assert.throws(()=>report(html,f,'123',wrong),/competition header/)
  }
 })
+
+function correctionCase(){
+ const z={datum:'2026-11-18',krog:10,rezultat:{domaci:1,gostje:1},domaci:{ime:'NK First'},gostje:{ime:'NK Second'}}
+ const records=[{id:'114652522',z},{id:'114652523',z:structuredClone(z)}]
+ const rows=records.map((r,i)=>({id:58085+i,zapisnik_id:r.id,imported_at:i===0?'2026-10-24':null,played_on:i===0?'2026-10-24':z.datum,home_goals:0,away_goals:0,home:{name:z.domaci.ime},away:{name:z.gostje.ime},rounds:{competition_id:10,season:'2026/27',number:10}}))
+ const db={from(table){assert.equal(table,'matches');return{select(columns){assert.ok(columns.includes('home_goals')&&columns.includes('away_goals'));return this},async in(){return{data:rows,error:null}}}}}
+ return {records,rows,db,c:{id:10,slug:'hr-test'},key:x=>x}
+}
+test('recurring imported source date/score correction is held without changing the match or stopping other reports',async()=>{
+ const {missingRecoveryRecords}=await import('./viri/recovery-captured.mjs')
+ const {records,rows,db,c,key}=correctionCase(),before=structuredClone(rows),holds=[]
+ assert.deepEqual((await missingRecoveryRecords(records,c,db,key,{recurring:true,onHold:h=>holds.push(h)})).map(r=>r.id),['114652523'])
+ assert.deepEqual(rows,before)
+ assert.deepEqual(holds,[{kind:'already-imported-source-change',league:'hr-test',matchId:58085,reportId:'114652522',stored:{playedOn:'2026-10-24',homeGoals:0,awayGoals:0},captured:{playedOn:'2026-11-18',homeGoals:1,awayGoals:1}}])
+ rows[0].played_on='2026-11-18';holds.length=0
+ await missingRecoveryRecords(records,c,db,key,{recurring:true,onHold:h=>holds.push(h)})
+ assert.equal(holds.length,1,'score-only corrections also require review')
+ rows[0].home_goals=1;rows[0].away_goals=1;holds.length=0
+ await missingRecoveryRecords(records,c,db,key,{recurring:true,onHold:h=>holds.push(h)})
+ assert.deepEqual(holds,[],'unchanged completed reports need no hold')
+})
+test('recurring exact report placeholders can change dates; historical dates and all other identities stay strict',async()=>{
+ const {missingRecoveryRecords}=await import('./viri/recovery-captured.mjs')
+ const {records,rows,db,c,key}=correctionCase()
+ rows[0].imported_at=null
+ assert.equal((await missingRecoveryRecords(records,c,db,key,{recurring:true})).length,2)
+ await assert.rejects(missingRecoveryRecords(records,c,db,key))
+ for(const mutate of [m=>m.rounds.competition_id=999,m=>m.rounds.season='2025/26',m=>m.rounds.number=9,m=>m.home.name='Other FC']){
+  const original=structuredClone(rows[0]);mutate(rows[0])
+  await assert.rejects(missingRecoveryRecords(records,c,db,key,{recurring:true,onHold:()=>assert.fail('identity errors cannot become holds')}))
+  rows[0]=original
+ }
+})
+test('recurring corrections cannot be silently skipped if hold persistence fails',async()=>{
+ const {missingRecoveryRecords}=await import('./viri/recovery-captured.mjs')
+ const {records,db,c,key}=correctionCase()
+ await assert.rejects(missingRecoveryRecords(records,c,db,key,{recurring:true}))
+ await assert.rejects(missingRecoveryRecords(records,c,db,key,{recurring:true,onHold:async()=>{throw Error('disk full')}}),/disk full/)
+})
+test('manual review artifacts preserve and deduplicate holds atomically per shard',async t=>{
+ const {persistRecoveryHold,missingRecoveryRecords}=await import('./viri/recovery-captured.mjs')
+ const d=fs.mkdtempSync(path.join(os.tmpdir(),'recovery-holds-'));t.after(()=>fs.rmSync(d,{recursive:true,force:true}))
+ const {records,rows,db,c,key}=correctionCase()
+ const run=()=>missingRecoveryRecords(records,c,db,key,{recurring:true,onHold:hold=>persistRecoveryHold(d,hold,{shard:2})})
+ await run();await run();rows[1].imported_at='2026-11-18';await run()
+ const value=JSON.parse(fs.readFileSync(path.join(d,'manual-review-2.json'),'utf8'))
+ assert.equal(value.schema,1);assert.equal(value.source,'hns');assert.equal(value.holds.length,2)
+ assert.deepEqual(fs.readdirSync(d),['manual-review-2.json'])
+ assert.throws(()=>persistRecoveryHold(d,value.holds[0],{shard:'../escape'}))
+})

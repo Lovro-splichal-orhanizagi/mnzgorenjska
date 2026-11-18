@@ -17,7 +17,7 @@ export function buildRecurringManifest({competitions,matches,now,priorSnapshot})
     assert.match(c.slug,/^hr-[a-z0-9-]+$/);assert.match(c.source_league_code,/^\d+$/)
     assert.ok(!ids.has(c.id)&&!slugs.has(c.slug)&&!codes.has(c.source_league_code),'duplicate league identity')
     ids.add(c.id);slugs.add(c.slug);codes.add(c.source_league_code)
-    const completed=[...new Set(matches.filter(m=>m.rounds?.competition_id===c.id&&m.rounds.season==='2026/27'&&m.imported_at&&m.played_on>=fromDate&&m.played_on<=toDate&&/^\d+$/.test(String(m.zapisnik_id))).map(m=>String(m.zapisnik_id)))].sort()
+    const completed=[...new Set(matches.filter(m=>m.rounds?.competition_id===c.id&&m.rounds.season==='2026/27'&&m.imported_at&&/^\d+$/.test(String(m.zapisnik_id))).map(m=>String(m.zapisnik_id)))].sort()
     leagues.push({id:c.id,slug:c.slug,code:c.source_league_code,completed})
   }
   assert.equal(leagues.length,139,'Review changed eligible HNS inventory before collection')
@@ -41,6 +41,18 @@ export function buildRecurringManifest({competitions,matches,now,priorSnapshot})
   return {schema:2,source:'hns',mode:'recurring',season:'2026/27',fromDate,toDate,createdAt:now,expiresAt:new Date(time+86400000).toISOString(),leagues:ordered}
 }
 
+// Completed source IDs are season-wide: a changed source date must not make an
+// already-imported report eligible for automatic correction in a later window.
+export async function readRecurringCompletedMatches(db){
+  const matches=[]
+  for(let offset=0;;offset+=1000){
+    const {data,error}=await db.from('matches').select('id,zapisnik_id,imported_at,played_on,rounds!inner(competition_id,season,competitions!inner(source,active))').eq('rounds.competitions.source','hns').eq('rounds.competitions.active',true).eq('rounds.season','2026/27').not('imported_at','is',null).order('id').range(offset,offset+999)
+    if(error)throw Error(error.message)
+    matches.push(...data)
+    if(data.length<1000)return matches
+  }
+}
+
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
   const {positionals,values}=parseArgs({allowPositionals:true,options:{'prior-snapshot':{type:'string'}}})
   assert.equal(positionals.length,1,'Usage: node scripts/hns-recurring-manifest.mjs <new-output.json> [--prior-snapshot <latest.json>]')
@@ -51,11 +63,9 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
   const db=createClient(env.VITE_SUPABASE_URL,env.VITE_SUPABASE_ANON_KEY,{auth:{persistSession:false}})
   const {data:competitions,error}=await db.from('competitions').select('id,slug,active,source,source_league_code,source_policy,countries!inner(code)').eq('active',true).eq('source','hns').order('sort_order').order('slug')
   if(error)throw Error(error.message)
-  const now=new Date().toISOString(),scope=buildRecurringManifest({competitions,matches:[],now,priorSnapshot}),matches=[]
-  for(let offset=0;;offset+=1000){
-    const {data,error}=await db.from('matches').select('id,zapisnik_id,imported_at,played_on,rounds!inner(competition_id,season,competitions!inner(source,active))').eq('rounds.competitions.source','hns').eq('rounds.competitions.active',true).eq('rounds.season','2026/27').gte('played_on',scope.fromDate).lte('played_on',scope.toDate).order('id').range(offset,offset+999)
-    if(error)throw Error(error.message);matches.push(...data);if(data.length<1000)break
-  }
+  const now=new Date().toISOString()
+  buildRecurringManifest({competitions,matches:[],now,priorSnapshot}) // Validate reviewed inventory before paging.
+  const matches=await readRecurringCompletedMatches(db)
   const manifest=buildRecurringManifest({competitions,matches,now,priorSnapshot})
   writeFileSync(positionals[0],JSON.stringify(manifest,null,2),{mode:0o600,flag:'wx'})
   console.log(JSON.stringify({leagues:manifest.leagues.length,fromDate:manifest.fromDate,toDate:manifest.toDate,completed:manifest.leagues.reduce((n,l)=>n+l.completed.length,0),output:positionals[0]}))
