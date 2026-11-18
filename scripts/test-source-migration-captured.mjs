@@ -120,3 +120,20 @@ test('unassigned existing fixture can receive its proven report but no other ide
   live.state.row.imported_at = '2026-11-18'
   await assert.rejects(p.zapisniki(f.league.code), /complete.*identity/)
 })
+test('retained scored schedule proves an unlinked public report but never relaxes DB fixture dates', t => {
+  const f = evidence(t)
+  Object.assign(f.competition, { id: 913, slug: 'gr-dod-a', source_league_code: 'epsdod.gr:495' })
+  Object.assign(f.league, { id: 913, slug: 'gr-dod-a', code: 'epsdod.gr:495' })
+  Object.assign(f.fixture, { zapisnik_id: 'gr5-26570', played_on: '2026-11-17' })
+  Object.assign(f.fixture.rounds, { number: 9, competition_id: 913 })
+  f.fixture.home.name = 'ΑΡΗΣ ΑΡΧΑΓΓΕΛΟΥ'; f.fixture.away.name = 'ΑΝΑΓΕΝΝΗΣΗ ΑΣΦΕΝΔΙΟΥ'
+  f.report.id = 'gr5-26570'
+  f.report.capture = f.store(read('gr-epsdod-current-26570.html'), 'https://epsdod.gr/fyllo-agona/?game_id=26570')
+  f.league.schedule = f.store(read('gr-epsdod-current-a-round9-schedule.html'), 'https://epsdod.gr/diorganoseis/a-katigoria/?enosi_main_league_id=1&enosi_tab=schedule&enosi_league_id=495&enosi_scope=all&enosi_period=14')
+  f.save()
+  const provider = migration.createMigrationCapturedSource({ competition: f.competition, directory: f.directory, now })
+  assert.equal(provider.capturedRecords().length, 1)
+  assert.deepEqual(provider.capturedRecords()[0].z.rezultat, { domaci: 1, gostje: 1 })
+  f.fixture.played_on = '2026-11-14'; f.save()
+  assert.throws(() => migration.createMigrationCapturedSource({ competition: f.competition, directory: f.directory, now }), /fixture date mismatch/)
+})

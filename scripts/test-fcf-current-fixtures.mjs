@@ -189,3 +189,21 @@ test('pending source URL is pinned to captured fixture even if replacement would
  f.state.rows[0].source_url=url
  await assert.rejects(p.assertNativeFixture(scope),/source URL/)
 })
+
+test('exact Bellvis source rename retains existing club key without merging reserve or unrelated initials',()=>{
+ assert.equal(fcf.kljucKluba('BELLVIS CF'),'bellvis c f')
+ assert.equal(fcf.kljucKluba('BELLVIS, C.F.'),'bellvis c f')
+ for(const name of ['BELLVIS CF B','BELLVIS, C.F. B','BELLVIS FC','BELLVIS, F.C.','BELLVIS CE','BELLVIS CFB'])
+  assert.notEqual(fcf.kljucKluba(name),'bellvis c f')
+ assert.notEqual(fcf.kljucKluba('OTHER CF'),fcf.kljucKluba('OTHER, C.F.'))
+})
+test('Bellvis label change binds to existing away team rather than admitting a new club identity',async t=>{
+ // Synthetic identity-only projection of a complete parsed report exercises
+ // the actual pending-fixture admission and native team-ID guard.
+ const row={...fixture(),away:{id:8400,name:'BELLVIS, C.F.'}},r=record()
+ r.z.gostje.ime='BELLVIS CF'
+ const f=setup(t,[row],new Map([[r.id,r]])),p=f.provider()
+ assert.deepEqual((await p.zapisniki(c.source_league_code)).map(report=>report.id),[r.id])
+ assert.equal(await p.assertNativeFixture({id:r.id,roundId:900,homeTeamId:800,awayTeamId:8400}),true)
+ await assert.rejects(p.assertNativeFixture({id:r.id,roundId:900,homeTeamId:800,awayTeamId:8401}))
+})

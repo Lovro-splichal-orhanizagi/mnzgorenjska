@@ -223,7 +223,10 @@ function seKrize(tok, naslov, id) {
   // minutah (ee-premium-liiga je 11. 10. 2026 čakal 120 minut in padel).
   if (tok === 'uvoz-zapisnikov.yml') {
     if (popravek && !mojaDrzava) return true
-    if (!popravek && !SKUPEN_VIR[mojaDrzava]) return mojaLiga ? mojaJeAktivna : false
+    // Aktivna grška liga čaka le na grške posle; EPS nima enega skupnega
+    // gostitelja. Nevklopljene lige ohranijo izjemo pred nočnim uvozom.
+    const grskaAktivnaLiga = mojaDrzava === 'GR' && mojaLiga && mojaJeAktivna
+    if (!popravek && !SKUPEN_VIR[mojaDrzava] && !grskaAktivnaLiga) return mojaLiga ? mojaJeAktivna : false
     // Država ima lahko več košev ("uvoz HU 1/3" …, scripts/nocni-kosi.mjs).
     const jobs = JSON.parse(gh('run', 'view', String(id), '--json', 'jobs')).jobs
     if (!Array.isArray(jobs)) return true
