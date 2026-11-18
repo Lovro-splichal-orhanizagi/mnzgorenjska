@@ -11,11 +11,12 @@ export function report(html,f,code,parentName=''){
  const header=html.match(/<div class="competition-title">([\s\S]*?)<\/h2>/)?.[1]??''
  // Aggregate league schedules can list first/second phase fixtures. HNS
  // publishes the reports under a child competition ID. Bind that child to the
- // captured parent's exact season-bearing name plus its explicit phase suffix.
+ // captured parent's full season-bearing name (case/whitespace normalized),
+ // with either no suffix or a narrowly recognized published phase suffix.
  const link=header.match(/<a href="https:\/\/semafor\.hns\.family\/natjecanja\/(\d+)\/[^"\s]*">([^<]+)<\/a>/)
- const childName=razpakiraj(link?.[2]??'')
- const phaseSuffix=childName.startsWith(parentName)?childName.slice(parentName.length):''
- const phase=!!parentName&&/26\/27$/.test(parentName)&&/^ [1-4]\. DIO$/.test(phaseSuffix)
+ const childName=razpakiraj(link?.[2]??'').toLocaleLowerCase('hr'),parent=razpakiraj(parentName).toLocaleLowerCase('hr')
+ const phaseSuffix=childName.startsWith(parent)?childName.slice(parent.length):null
+ const phase=!!parent&&/26\/27$/.test(parent)&&phaseSuffix!==null&&/^(?:| [1-4]\. dio| - prvi dio)$/.test(phaseSuffix)
  assert.ok(link&&(link[1]===String(code)||phase),'competition header mismatch')
  const z=vZapisnik(html,{id:String(f.id),url:`https://semafor.hns.family/utakmice/${f.id}/x/`})
  if(!z)return {quality:{complete:false,reason:jeKontumacija(html,f.izid)?'forfeit':'unpublished-or-incomplete'},z:null}
