@@ -51,3 +51,12 @@ test('znana napaka velja do datuma, potem je liga spet navadna', () => {
 test('de-verbandsliga-baden ni vec znana napaka (SLF-558 popravljen)', () => {
   assert.equal(znanaNapaka('de-verbandsliga-baden', '2026-11-17'), null)
 })
+
+test('Dodecanese leagues share one source worker and refusal state',()=>{
+ const bins=razdeli([{slug:'gr-dod-a',vir:'eps',kljuc:'eps:epsdod.gr'},{slug:'gr-dod-b-2',vir:'eps',kljuc:'eps:epsdod.gr'},{slug:'gr-ath-a-1',vir:'eps',kljuc:'eps:epsath.gr'}],6)
+ assert.equal(bins.filter(bin=>bin.some(l=>l.kljuc==='eps:epsdod.gr')).length,1)
+})
+test('FCF migration scheduling does not enable historical policy sources',()=>{
+ const ordinary={slug:'es-ct-elit',source:'fcf',source_policy:null},historical={slug:'es-ct-segona-g1',source:'fcf',source_policy:'es-fcf-reviewed'}
+ assert.deepEqual(brezIzklopljenih([ordinary,historical]),[ordinary])
+})

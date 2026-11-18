@@ -103,7 +103,7 @@ export function kljucVira(vir, koda) {
 
 /** Vklopljene lige brez lig iz izklopljenih virov in zavrnjenih spletišč. */
 export const brezIzklopljenih = (lige) =>
-  lige.filter((t) => !IZKLOPLJENI_VIRI.has(t.source) && !ZAVRNJENA_SPLETISCA.has(kljucVira(t.source, t.source_league_code)))
+  lige.filter((t) => !(t.source === 'fcf' && t.source_policy != null) && !IZKLOPLJENI_VIRI.has(t.source) && !ZAVRNJENA_SPLETISCA.has(kljucVira(t.source, t.source_league_code)))
 
 /** FNV-1a, 32 bitov: stabilna zgoščenka niza (brez kripto, enaka v vsakem Node). */
 export function zgoscenka(niz) {
@@ -116,7 +116,9 @@ export function zgoscenka(niz) {
 }
 
 /** Koš (0 … kosov-1), v katerem se uvaža liga. */
-export function kosLige(slug, vir, kosov) {
+export function kosLige(slug, vir, kosov, kljuc = null) {
+  // Both current Dodecanese leagues share pacing and the refusal stop state.
+  if (vir === 'eps' && kljuc === 'eps:epsdod.gr') slug = 'epsdod.gr'
   if (kosov <= 1) return 0
   const smeje = Math.max(1, Math.min(VZPOREDNI[vir] ?? 1, kosov))
   // Vir z omejitvijo c zaseda c zaporednih košev od svojega zamika naprej.
@@ -131,7 +133,7 @@ export function razdeli(lige, kosov) {
   const kosi = Array.from({ length: Math.max(1, kosov) }, () => [])
   const kosiVira = new Map()
   for (const l of lige) {
-    const k = kosLige(l.slug, l.vir, kosov)
+    const k = kosLige(l.slug, l.vir, kosov, l.kljuc)
     kosi[k].push(l)
     if (!kosiVira.has(l.vir)) kosiVira.set(l.vir, new Set())
     kosiVira.get(l.vir).add(k)
@@ -187,7 +189,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   })
   const { data, error } = await db
     .from('competitions')
-    .select('slug, source, source_league_code, sort_order, countries!inner(code)')
+    .select('slug, source, source_league_code, source_policy, sort_order, countries!inner(code)')
     .eq('active', true)
     .eq('countries.code', drzava)
     .order('sort_order')
