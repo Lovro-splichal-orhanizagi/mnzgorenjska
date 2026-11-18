@@ -27,7 +27,7 @@ class Tests(unittest.TestCase):
  def fetch(self,url):
   self.calls.append(url);return 200,{'content-type':'text/html'},b'<html><title>verified fixture</title></html>'
  def parse(self,kind,path,fixture=None,code=None,parent_name=None):
-  if kind=='schedule': return dict(parentName='Test 26/27',fixtures=[dict(id='20',datum='2026-11-17',izid='2:1'),dict(id='21',datum='2026-11-18',izid=None),dict(id='22',datum='2026-11-04',izid='1:1'),dict(id='23',datum='2026-11-17',izid='0:0')])
+  if kind=='schedule': return dict(parentName='Test 26/27',season='2026/27',competitionCode=code,fixtures=[dict(id='20',datum='2026-11-17',izid='2:1'),dict(id='21',datum='2026-11-18',izid=None),dict(id='22',datum='2026-11-04',izid='1:1'),dict(id='23',datum='2026-11-17',izid='0:0')])
   self.assertEqual(parent_name,'Test 26/27')
   return dict(complete=fixture['id']!='23',reason='unpublished' if fixture['id']=='23' else None)
  def load(self,name='latest.json'):return json.loads((self.run/name).read_text())
@@ -99,7 +99,7 @@ class Tests(unittest.TestCase):
   self.assertEqual(list(holds['open']),['1:21']);self.assertEqual(holds['resolved']['1:23']['resolution'],'database-imported')
  def test_all_leagues_are_finished_before_terminal_status_and_empty_results_remain_pending(self):
   def unplayed(kind,path,fixture=None,code=None,parent_name=None):
-   self.assertEqual(kind,'schedule');return dict(parentName='Test 26/27',fixtures=[dict(id='21',datum='2026-11-18',izid=None)])
+   self.assertEqual(kind,'schedule');return dict(parentName='Test 26/27',season='2026/27',competitionCode=code,fixtures=[dict(id='21',datum='2026-11-18',izid=None)])
   self.collect(parse_fn=unplayed)
   snap=self.load();self.assertEqual(len(snap['leagues']),139);self.assertEqual(snap['status'],'pending');self.assertEqual(snap['sourceUnplayedCount'],139)
   self.assertEqual(self.load('status.json')['openHolds'],139)
@@ -116,7 +116,7 @@ class Tests(unittest.TestCase):
   for league in value['leagues']:league['completed']=['20']
   self.mp.write_text(json.dumps(value))
   def completed(kind,path,fixture=None,code=None,parent_name=None):
-   self.assertEqual(kind,'schedule');return dict(parentName='Test 26/27',fixtures=[dict(id='20',datum='2026-11-17',izid='2:1')])
+   self.assertEqual(kind,'schedule');return dict(parentName='Test 26/27',season='2026/27',competitionCode=code,fixtures=[dict(id='20',datum='2026-11-17',izid='2:1')])
   self.collect(parse_fn=completed)
   self.assertEqual(len(self.calls),139);self.assertEqual(self.load()['status'],'complete');self.assertEqual(self.load()['holds']['openCount'],0)
  def test_resume_after_utc_midnight_preserves_manifest_creation_day(self):
@@ -133,5 +133,18 @@ class Tests(unittest.TestCase):
   self.assertEqual(len(self.calls),1)
   self.clock.t+=3600;self.collect(max_leagues=1)
   self.assertEqual(len(self.calls),4);self.assertEqual(self.load()['status'],'paused')
+ def test_unsuffixed_parent_is_preserved_and_schedule_proof_must_match_manifest(self):
+  def valid(kind,path,fixture=None,code=None,parent_name=None):
+   if kind=='schedule':return dict(parentName='SuperSport HNL',season='2026/27',competitionCode=code,fixtures=[dict(id='20',datum='2026-11-17',izid='2:1')])
+   self.assertEqual(parent_name,'SuperSport HNL');return dict(complete=True)
+  self.collect(parse_fn=valid,max_leagues=1)
+  self.assertEqual(self.load()['leagues'][0]['parentName'],'SuperSport HNL')
+  for i,change in enumerate([dict(season='2025/26'),dict(competitionCode='999')]):
+   self.run=self.root/f'wrong-proof-{i}'
+   def invalid(kind,path,fixture=None,code=None,parent_name=None):
+    result=valid(kind,path,fixture,code,parent_name);result.update(change);return result
+   before=len(self.calls)
+   with self.assertRaisesRegex(ValueError,'identity'):self.collect(parse_fn=invalid,max_leagues=1)
+   self.assertEqual(len(self.calls),before+1)
 
 if __name__=='__main__':unittest.main()

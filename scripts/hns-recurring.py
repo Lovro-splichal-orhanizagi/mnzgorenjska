@@ -238,9 +238,10 @@ def collect(directory, manifest_path, ledger_path, *, max_new=950, max_leagues=1
             if league and league.get('finished'):
                 continue
             path, schedule_capture = capture(f"https://semafor.hns.family/natjecanja/{league_manifest['code']}/x/")
-            parsed = parse_fn('schedule', path)
+            parsed = parse_fn('schedule', path, code=league_manifest['code'])
             parent = parsed.get('parentName')
-            require(isinstance(parent, str) and re.search(r'26/27$', parent), 'current parent competition name required')
+            require(isinstance(parent, str) and parent.strip(), 'captured parent competition name required')
+            require(parsed.get('season') == manifest['season'] and parsed.get('competitionCode') == league_manifest['code'], 'schedule season/competition identity mismatch')
             fixtures = parsed['fixtures']
             require(isinstance(fixtures, list) and fixtures, 'empty schedule')
             require(all(isinstance(f, dict) and re.fullmatch(r'\d+', str(f.get('id', ''))) for f in fixtures), 'invalid fixture id')

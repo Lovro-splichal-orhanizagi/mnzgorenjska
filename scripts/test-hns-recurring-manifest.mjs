@@ -42,17 +42,31 @@ test('offline bridge admits phase reports only with the correct current-season p
   const good=run('Treća NL Istok 26/27');assert.equal(good.status,0,good.stderr);assert.equal(JSON.parse(good.stdout).complete,true)
   for(const wrong of ['Other competition 26/27','Treća NL Istok 25/26',''])assert.notEqual(run(wrong).status,0)
 })
-test('offline schedule bridge extracts current parent identity and rejects an old season',t=>{
+test('authentic schedule binds explicit selected season and requested competition without a title suffix',t=>{
   const dir=mkdtempSync(join(tmpdir(),'hns-recurring-schedule-'));t.after(()=>rmSync(dir,{recursive:true,force:true}))
-  const original=readFileSync(new URL('./vzorci/hns-natjecanje.html',import.meta.url),'utf8')
+  const original=readFileSync(new URL('./vzorci/hns-schedule-hnl-20261118.html',import.meta.url),'utf8')
   const path=join(dir,'schedule.html')
-  const run=season=>{
-    writeFileSync(path,`<html><head><title>Test ${season} - Hrvatski nogometni savez</title></head><body>${original}</body></html>`)
-    return spawnSync(process.execPath,[new URL('./hns-recurring-parse.mjs',import.meta.url).pathname],{input:JSON.stringify({kind:'schedule',path}),encoding:'utf8'})
+  const run=(html=original,code='114137140')=>{
+    writeFileSync(path,html)
+    return spawnSync(process.execPath,[new URL('./hns-recurring-parse.mjs',import.meta.url).pathname],{input:JSON.stringify({kind:'schedule',path,code}),encoding:'utf8'})
   }
-  const good=run('26/27');assert.equal(good.status,0,good.stderr)
-  const parsed=JSON.parse(good.stdout);assert.equal(parsed.parentName,'Test 26/27');assert.ok(parsed.fixtures.length>0)
-  assert.notEqual(run('25/26').status,0)
+  const good=run();assert.equal(good.status,0,good.stderr)
+  const parsed=JSON.parse(good.stdout);assert.equal(parsed.parentName,'SuperSport HNL');assert.equal(parsed.season,'2026/27');assert.equal(parsed.competitionCode,'114137140');assert.equal(parsed.fixtures.length,2)
+  assert.notEqual(run(original.replace('selected="selected" value="2026/2027">2026/27','selected="selected" value="2025/2026">2025/26')).status,0)
+  assert.notEqual(run(original,'114348034').status,0,'another dropdown-listed competition must not bind this page')
+  assert.notEqual(run(original.replace('/114137140/supersport-hnl/detaljno/','/999/supersport-hnl/detaljno/')).status,0)
+  assert.notEqual(run(original.replace('<title>SuperSport HNL','<title>Other league')).status,0)
+})
+test('exact-code reports do not require a synthetic season suffix on the parent name',t=>{
+  const dir=mkdtempSync(join(tmpdir(),'hns-recurring-report-'));t.after(()=>rmSync(dir,{recursive:true,force:true}))
+  const original=readFileSync(new URL('./vzorci/hns-tekma-11m.html',import.meta.url),'utf8')
+  const html=original.replace('<h2>Treća NL Istok 26/27,','<h2><a href="https://semafor.hns.family/natjecanja/123/x/">SuperSport HNL</a>,')
+  const path=join(dir,'report.html');writeFileSync(path,html)
+  const z=vZapisnik(html,{id:'456',url:'https://semafor.hns.family/utakmice/456/x/'})
+  const fixture={id:'456',krog:z.krog,datum:z.datum,domaci:z.domaci.ime,gostje:z.gostje.ime,izid:z.rezultat}
+  const run=code=>spawnSync(process.execPath,[new URL('./hns-recurring-parse.mjs',import.meta.url).pathname],{input:JSON.stringify({kind:'report',path,fixture,code,parentName:'SuperSport HNL'}),encoding:'utf8'})
+  const good=run('123');assert.equal(good.status,0,good.stderr);assert.equal(JSON.parse(good.stdout).complete,true)
+  assert.notEqual(run('999').status,0,'an unsuffixed parent must not authorize a different phase code')
 })
 test('new cycle prioritizes missing and unfinished prior leagues while retaining fresh DB completion data',async()=>{
   const priorSnapshot={schema:2,source:'hns',mode:'recurring',season:'2026/27',leagues:[
