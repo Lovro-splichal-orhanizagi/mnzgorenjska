@@ -1,0 +1,38 @@
+name: 'Prevzem: obvestilo "profil je potrjen"'
+
+# Mail "profil je potrjen" pošlje funkcija posli-prevzem {"obvesti": true}
+# vsem potrjenim, še neobveščenim zahtevkom (zadnjih 30 dni, vsakemu enkrat:
+# `prevzem_zakupi_obvestilo`). Vmesnik jo sproži ob potrditvi v Administraciji
+# in na strani kluba; potrditve mimo vmesnika (soigralca, `slff-ops claim
+# <id> approve`) pa mail dobijo šele ob naslednji potrditvi v vmesniku ali
+# nikoli. Ta tek jih pobere vsako uro (SLF-566).
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: obvestila-prevzema
+  cancel-in-progress: false
+
+jobs:
+  obvesti:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pošlji neposlana obvestila o potrjenem profilu
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          KODA=$(curl -sS -o odgovor.json -w '%{http_code}' -X POST "$SUPABASE_URL/functions/v1/posli-prevzem" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H 'Content-Type: application/json' \
+            -d '{"obvesti":true}')
+          echo "HTTP $KODA"
+          # Le števila: napake SMTP lahko vsebujejo e-naslove.
+          jq -c '{poslano, napak: ((.napake // []) | length), error: (.error != null)}' odgovor.json || true
+          [ "$KODA" = 200 ]
+          if [ "$(jq '(.napake // []) | length' odgovor.json)" != 0 ]; then echo "::warning::nekaj obvestil ni šlo, poskusi naslednji tek"; fi
