@@ -63,7 +63,7 @@ test('prvi retry vrne 5: druga liga iz čakalnice se ne poskusi, koš ne pade za
   const r = zaženi([['a', FP], ['b', FP]], { a: [1, 5], b: [1, 0] })
   assert.deepEqual(r.klici, ['a', 'b', 'a'])
   assert.match(r.izhod, /Vir ne dela::b preskočena/)
-  assert.match(r.izhod, /lige brez uvoza, ker vir vrača 5xx: a b/)
+  assert.match(r.izhod, /lige brez uvoza, ker vir ni dosegljiv \(ni odziva \/ timeout ali 5xx\): a b/)
   assert.equal(r.status, 0)
 })
 
