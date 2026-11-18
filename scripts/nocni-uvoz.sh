@@ -19,7 +19,7 @@
 #     poskus, če je čas.
 #   - Izhod 4 = vir je zavrnil (403, 429, izziv): tega vira ne beremo naprej,
 #     drugih virov koša pa.
-#   - Izhod 5 = vir je nedosegljiv (HTTP 5xx/522 tudi po ponovitvah): to ni
+#   - Izhod 5 = vir je nedosegljiv (HTTP 5xx/522 ali connect timeout, tudi po ponovitvah): to ni
 #     napaka naše kode. Koš ga javi kot opozorilo "vir ne dela", ne pade, lige
 #     tega vira ta zagon preskoči; liga ni zabeležena kot osvežena, zato je
 #     naslednji zagon spet prvi na vrsti.
@@ -58,7 +58,7 @@ zacetek=${ZACETEK_POSLA:-$(date +%s)}
 minut() { echo $(( ($(date +%s) - zacetek) / 60 )); }
 
 zavrnjeni=" "   # ključi virov (spletišča), ki so ta zagon vrnili 401/403/429/izziv ali porabili proračun zahtev
-nedosegljivi=" " # ključi virov (spletišča), ki so ta zagon vrnili 5xx (vir je dol)
+nedosegljivi=" " # ključi virov (spletišča), ki se ta zagon niso odzvali ali so vrnili 5xx (vir je dol)
 zadnji_izhod=0
 teci() { "$@" </dev/null; zadnji_izhod=$?; return "$zadnji_izhod"; }
 
@@ -129,7 +129,7 @@ uvozi() {
 }
 
 padle=""
-vir_dol=""     # vir vrača 5xx: povzetek na koncu, koš zaradi tega ne pade
+vir_dol=""     # vir ni dosegljiv (timeout ali 5xx): povzetek na koncu, koš zaradi tega ne pade
 cakajoci=""    # DFB podatki čakajo; brez takojšnje ponovitve cele lige
 odlocitve=""   # razpored ima klub manj kot baza: izstop kluba ali --dovoli-manj-klubov
 zacasno=""      # padle v prvem krogu, za ponovni poskus: "liga faktor vir ključ"
@@ -140,7 +140,7 @@ while read -r liga faktor vir kljuc znana; do
   kljuc=${kljuc:-$vir}
   if [ "$(minut)" -ge "$ROK_MIN" ]; then preskocene="$preskocene $liga"; continue; fi
   if [[ "$nedosegljivi" == *" $kljuc "* ]]; then
-    echo "::warning title=Vir ne dela::$liga preskočena — vir $kljuc je ta zagon vrnil 5xx"
+    echo "::warning title=Vir ne dela::$liga preskočena — vir $kljuc se ta zagon ni odzval (ni odziva / timeout ali 5xx)"
     vir_dol="$vir_dol $liga"; continue
   fi
   if [[ "$zavrnjeni" == *" $kljuc "* ]]; then
@@ -153,7 +153,7 @@ while read -r liga faktor vir kljuc znana; do
   case $izid in
     6) echo "::warning title=DFB podatki čakajo::$liga — DFB pending; veljavni zapisniki uvoženi, zavrnjeni v karanteni, ponovitev posameznih zapisnikov v poznejšem zagonu"
        cakajoci="$cakajoci $liga" ;;
-    5) echo "::warning title=Vir ne dela::$liga — vir $kljuc vrača 5xx (nedosegljiv); ostale lige tega vira preskočene, ni napaka uvoza"
+    5) echo "::warning title=Vir ne dela::$liga — vir $kljuc ni dosegljiv (ni odziva / timeout ali 5xx); ostale lige tega vira preskočene, ni napaka uvoza"
        nedosegljivi="$nedosegljivi$kljuc "; vir_dol="$vir_dol $liga" ;;
     0) echo "$liga: v redu"; node scripts/nocni-kosi.mjs --zabelezi "$liga" --stanje "$STANJE" ;;
     4) echo "::error title=Vir je zavrnil::$liga — vir $kljuc je vrnil 401/403/429, izziv ali preusmeritev, ali je zmanjkalo proračuna zahtev; ostale lige tega vira preskočene, ne obhajamo"
@@ -174,7 +174,7 @@ while read -r liga faktor vir kljuc znana; do
   # "terminated") po 165 min obarval AT in HU rdeče (SLF-524).
   if [ "$(minut)" -ge "$ROK_MIN" ]; then preskocene="$preskocene $liga"; continue; fi
   if [[ "$nedosegljivi" == *" $kljuc "* ]]; then
-    echo "::warning title=Vir ne dela::$liga preskočena — vir $kljuc je ta zagon vrnil 5xx"
+    echo "::warning title=Vir ne dela::$liga preskočena — vir $kljuc se ta zagon ni odzval (ni odziva / timeout ali 5xx)"
     vir_dol="$vir_dol $liga"; continue
   fi
   if [[ "$zavrnjeni" == *" $kljuc "* ]]; then
@@ -189,7 +189,7 @@ while read -r liga faktor vir kljuc znana; do
        node scripts/nocni-kosi.mjs --zabelezi "$liga" --stanje "$STANJE" ;;
     6) echo "::warning title=DFB podatki čakajo::$liga — brez nadaljnje ponovitve"
        cakajoci="$cakajoci $liga" ;;
-    5) echo "::warning title=Vir ne dela::$liga — vir $kljuc vrača 5xx (nedosegljiv); ostale lige tega vira preskočene, ni napaka uvoza"
+    5) echo "::warning title=Vir ne dela::$liga — vir $kljuc ni dosegljiv (ni odziva / timeout ali 5xx); ostale lige tega vira preskočene, ni napaka uvoza"
        nedosegljivi="$nedosegljivi$kljuc "; vir_dol="$vir_dol $liga" ;;
     4) echo "::error title=Vir je zavrnil::$liga — vir $kljuc je vrnil 401/403/429, izziv ali preusmeritev, ali je zmanjkalo proračuna zahtev; ostale lige tega vira preskočene, ne obhajamo"
        zavrnjeni="$zavrnjeni$kljuc "; padle="$padle $liga" ;;
@@ -209,8 +209,8 @@ if [ -n "$preskocene" ]; then
 fi
 if [ -n "$vir_dol" ]; then
   # Ni padec: vir je dol, ne mi. Ostane viden v povzetku zagona.
-  echo "::warning title=Viri ne delajo::lige brez uvoza, ker vir vrača 5xx:$vir_dol"
-  [ -n "${GITHUB_STEP_SUMMARY:-}" ] && echo "### Viri ne delajo (5xx) — koš $DRZAVA $KOS/$KOSOV"$'\n'"Lige brez uvoza:$vir_dol" >> "$GITHUB_STEP_SUMMARY"
+  echo "::warning title=Viri ne delajo::lige brez uvoza, ker vir ni dosegljiv (ni odziva / timeout ali 5xx):$vir_dol"
+  [ -n "${GITHUB_STEP_SUMMARY:-}" ] && echo "### Viri ne delajo (ni odziva / timeout ali 5xx) — koš $DRZAVA $KOS/$KOSOV"$'\n'"Lige brez uvoza:$vir_dol" >> "$GITHUB_STEP_SUMMARY"
 fi
 if [ -n "$odlocitve" ]; then
   echo "::warning title=Klub manjka v razporedu::$(echo $odlocitve | tr ' ' '\n' | sort -u | tr '\n' ' ')— izstop kluba (delovni tok Izstop kluba), uvoz z --dovoli-manj-klubov ali le okrnjena stran vira (naslednji zagon jo prebere znova)"
