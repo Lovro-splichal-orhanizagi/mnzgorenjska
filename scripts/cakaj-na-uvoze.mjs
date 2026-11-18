@@ -116,10 +116,11 @@ const jeOmejitev = (e) => /rate limit/i.test(String(e?.stderr ?? e?.message ?? '
 // GitHub API občasno vrne 5xx (16. 11. je HTTP 502 podrl cel posel HR 3/3).
 // Napaka je prehodna: počakamo 30 s in poskusimo do 5-krat.
 const napakaStreznika = (e) => /HTTP 5\d\d/.exec(String(e?.stderr ?? e?.message ?? ''))?.[0]
-async function ghPocakaj(...a) {
+const ghPocakaj = (...a) => pocakajOb(() => gh(...a))
+async function pocakajOb(klic) {
   for (let poskus = 1, streznik = 0; ; poskus++) {
     try {
-      return gh(...a)
+      return klic()
     } catch (e) {
       const http = napakaStreznika(e)
       if (http && ++streznik <= 5) {
@@ -296,10 +297,27 @@ function readFcfHistoryRuns() {
       if (seen.size > count || data.workflow_runs.length < 100) throw Error('missing page')
     }
     throw Error('page bound')
-  } catch { throw Error('FCF history run discovery incomplete; source held') }
+  } catch (e) {
+    // Omejitev API ni nepopoln seznam: klicatelj jo počaka ali preskoči.
+    if (jeOmejitev(e)) throw e
+    throw Error('FCF history run discovery incomplete; source held')
+  }
 }
 
+// Preverba ima 15 minut, omejitve API ne more počakati. 17. 11. 2026 (SLF-578)
+// je 403 "rate limit" pobarval preverbo rdeče, čeprav s podatki ni bilo nič.
+// Ne vemo, ali uvoz teče: štejemo, da teče (izhod 3), in preverbo preskočimo.
+// Konec uvoza ali naslednja preverba po urniku jo zažene znova.
 if (samoTece) {
+  try {
+    await preveriTece()
+  } catch (e) {
+    if (!jeOmejitev(e)) throw e
+    console.log('::warning::Omejitev GitHub API: ne vem, ali uvoz teče, preverbo tokrat preskočim.')
+    process.exit(3)
+  }
+}
+async function preveriTece() {
   const tecejo = []
   for (const tok of ['recovery-captured.yml', 'preveri-baden-fresh-pair.yml', 'replay-fussball-cards.yml', 'uvoz-baden-native.yml', 'uvoz-pl-de-paketa.yml', 'uvoz-paketa-lig.yml', 'reviewed-existing-history.yml', 'mlsz-reviewed-history.yml', 'mfa-nl-reviewed-history.yml', 'mfa-challenge-reviewed-history.yml', 'mfa-reviewed-history.yml', 'uvoz-hr-zenske.yml', 'uvoz-fcf-zgodovina.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-fussball-public.yml', 'uvoz-dribl-public.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'vklop-obstojecih-lig.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']) {
     const zagoni = tok === 'uvoz-fcf-zgodovina.yml' ? readFcfHistoryRuns() : JSON.parse(gh('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,status,displayTitle'))
@@ -325,7 +343,7 @@ for (let min = KORAK_MIN; min <= NAJVEC_MIN; min += KORAK_MIN) {
   if (SKUPEN_VIR[mojaDrzava]) tokovi.push('grbi.yml')
   for (const tok of tokovi) {
     // Brez --status: tudi čakajoči (queued) starejši zagon mora priti prvi.
-    const zagoni = tok === 'uvoz-fcf-zgodovina.yml' ? readFcfHistoryRuns() : JSON.parse(
+    const zagoni = tok === 'uvoz-fcf-zgodovina.yml' ? await pocakajOb(readFcfHistoryRuns) : JSON.parse(
       await ghPocakaj('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,startedAt,status,displayTitle'),
     )
     for (const z of zagoni) {

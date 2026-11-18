@@ -163,6 +163,7 @@ async function coordinate(args, runs = {}, jobs = [{ name: 'uvoz DE', status: 'c
     setTimeout: callback => { callback() },
     execFileSync: (command, a) => {
       assert.equal(command, 'gh')
+      if (historyControl.rateLimit?.(a)) throw Object.assign(Error('Command failed'), { stderr: 'HTTP 403: API rate limit exceeded for installation.' })
       if (a[0] === 'api') {
         const path = a.find(x => typeof x === 'string' && x.startsWith('repos/'))
         assert.match(path, /^repos\/fixture\/repo\/actions\/workflows\/uvoz-fcf-zgodovina\.yml\/runs\?per_page=100&page=[1-9]\d*$/)
@@ -669,3 +670,52 @@ test('a transient GitHub 5xx is retried instead of failing the wait step', async
   }
   for(const file of ['zdruzi-klube.yml','tedensko-cene.yml'])assert.match(readFileSync(new URL('../.github/workflows/'+file,import.meta.url),'utf8'),/for wf in recovery-captured.yml/)
  })
+
+test('rate limit in the data-check probe skips the check instead of failing it (SLF-578)', async () => {
+  const limited = await coordinate(['--tece'], {}, undefined, { rateLimit: a => a.includes('preveri-baden-fresh-pair.yml') })
+  assert.equal(limited.code, 3)
+  assert.ok(limited.logs.some(x => /Omejitev GitHub API/.test(x)))
+  const fcfLimited = await coordinate(['--tece'], {}, undefined, { rateLimit: a => a[0] === 'api' })
+  assert.equal(fcfLimited.code, 3)
+  // Other API failures still fail closed.
+  await assert.rejects(() => coordinate(['--tece'], {}, undefined, { error: true }), /FCF history/)
+})
+
+test('waiting coordinator retries a rate-limited FCF history read instead of failing (SLF-578)', async () => {
+  let left = 2
+  const result = await coordinate(['--drzava', 'ES'], {}, undefined, { rateLimit: a => a[0] === 'api' && left-- > 0 })
+  assert.equal(result.code, 0)
+  assert.equal(result.logs.filter(x => /Omejitev GitHub API — počakam/.test(x)).length, 2)
+})
+
+test('weekly repricing wait does not spend its two hours on rounds the API refused (SLF-578)', async () => {
+  const { spawnSync } = await import('node:child_process')
+  const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs')
+  const { join } = await import('node:path'), { tmpdir } = await import('node:os')
+  const text = readFileSync(new URL('../.github/workflows/tedensko-cene.yml', import.meta.url), 'utf8')
+  const block = text.slice(text.indexOf('      - name: Pocakaj na starejse uvoze')).split('        run: |\n')[1].split('\n      - name:')[0]
+  const script = block.split('\n').filter(x => x.startsWith('          ')).map(x => x.slice(10)).join('\n')
+  const dir = mkdtempSync(join(tmpdir(), 'slff-rate-limit-'))
+  try {
+    // run list fails for the first LIMITED calls, then reports nothing running.
+    writeFileSync(join(dir, 'gh'), `#!${process.execPath}\n` + `
+      const fs=require('node:fs'),a=process.argv.slice(2);
+      if(a[1]==='view'){process.stdout.write('2026-11-17T17:42:31Z\\n');process.exit(0)}
+      const c=Number(fs.existsSync(process.env.COUNT)?fs.readFileSync(process.env.COUNT,'utf8'):0)+1;fs.writeFileSync(process.env.COUNT,String(c));
+      if(c<=Number(process.env.LIMITED)){process.stderr.write('HTTP 403: API rate limit exceeded for installation.\\n');process.exit(1)}
+      process.stdout.write('0\\n');
+    `, { mode: 0o755 })
+    writeFileSync(join(dir, 'sleep'), '#!/bin/sh\nexit 0\n', { mode: 0o755 })
+    for (const [limited, expected, pattern] of [[5, 0, /krog ne steje, znova cez 5 min \(5\/12\)/], [100, 1, /Starejsi uvoz tece ze dve uri/]]) {
+      const r = spawnSync('bash', ['-c', script], { cwd: dir, encoding: 'utf8', timeout: 10000,
+        env: { ...process.env, PATH: `${dir}:${process.env.PATH}`, GITHUB_RUN_ID: '20', GITHUB_REPOSITORY: 'fixture/repo', COUNT: join(dir, `count-${limited}`), LIMITED: String(limited) } })
+      assert.equal(r.status, expected, r.stderr)
+      assert.match(r.stdout, pattern)
+      if (expected === 1) {
+        // 12 refused rounds are free, then the normal 24 rounds of 5 minutes apply.
+        assert.equal((r.stdout.match(/krog ne steje/g) ?? []).length, 12)
+        assert.match(r.stdout, /cakam \(120\/120 min\)/)
+      }
+    }
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+})

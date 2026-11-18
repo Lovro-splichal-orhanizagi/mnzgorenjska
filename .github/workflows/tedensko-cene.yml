@@ -88,18 +88,31 @@ jobs:
           # za cel repozitorij. Pregled vsako minuto (1440/h) je 17. 11. 2026
           # porabil omejitev in naslednji zagon je dobil 403 (SLF-559).
           # Vsakih 5 minut je 288/h; za tedenski posel je zamik nepomemben.
-          for i in $(seq 1 24); do
+          # Krog, v katerem API ni odgovoril (403 omejitev, 17. 11. 2026,
+          # SLF-578), ne steje v dve uri: omejitev se ponastavi v uri, zato
+          # do 12 takih krogov (ena ura) pocakamo povrhu.
+          i=0
+          napake=0
+          while :; do
             n=0
+            napaka=0
             for wf in recovery-captured.yml replay-fussball-cards.yml uvoz-baden-native.yml uvoz-pl-de-paketa.yml uvoz-paketa-lig.yml reviewed-existing-history.yml mlsz-reviewed-history.yml mfa-nl-reviewed-history.yml mfa-challenge-reviewed-history.yml mfa-reviewed-history.yml uvoz-hr-zenske.yml uvoz-zapisnikov.yml uvoz-lige.yml uvoz-fussball-public.yml uvoz-dribl-public.yml uvoz-dfb-regije.yml vklop-dfb-regije.yml vklop-katalonije.yml vklop-obstojecih-lig.yml uskladi-pozicije.yml izstop-kluba.yml cene-lig.yml zdruzi-klube.yml tedensko-cene.yml razdeli-zlite-igralce.yml; do
               # Brez --status: tudi cakajoci (queued) starejsi zagon mora priti
               # prvi. Zato vec kot 20 — koncani zagoni zasedejo del seznama.
               k=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$wf" --limit 50 \
                 --json databaseId,startedAt,status,displayTitle \
-                --jq "[.[] | select(.status != \"completed\" and (\"$wf\" != \"mfa-reviewed-history.yml\" or (.displayTitle | test(\"^MFA reviewed history (prepare|preview|receipt) mt-premier$\") | not)) and .databaseId != $GITHUB_RUN_ID and .startedAt > \"2000\" and (.startedAt < \"$MOJ\" or (.startedAt == \"$MOJ\" and .databaseId < $GITHUB_RUN_ID)))] | length") || k=1
+                --jq "[.[] | select(.status != \"completed\" and (\"$wf\" != \"mfa-reviewed-history.yml\" or (.displayTitle | test(\"^MFA reviewed history (prepare|preview|receipt) mt-premier$\") | not)) and .databaseId != $GITHUB_RUN_ID and .startedAt > \"2000\" and (.startedAt < \"$MOJ\" or (.startedAt == \"$MOJ\" and .databaseId < $GITHUB_RUN_ID)))] | length") || { n=$((n + 1)); napaka=1; break; }
               n=$((n + k))
             done
             [ "$n" -eq 0 ] && exit 0
-            echo "Pred mano tece se $n uvozov — cakam ($((i * 5))/120 min)"
+            if [ "$napaka" -eq 1 ] && [ "$napake" -lt 12 ]; then
+              napake=$((napake + 1))
+              echo "GitHub API ni odgovoril — krog ne steje, znova cez 5 min ($napake/12)"
+            else
+              i=$((i + 1))
+              [ "$i" -gt 24 ] && break
+              echo "Pred mano tece se $n uvozov — cakam ($((i * 5))/120 min)"
+            fi
             sleep 300
           done
           echo "::error::Starejsi uvoz tece ze dve uri."
