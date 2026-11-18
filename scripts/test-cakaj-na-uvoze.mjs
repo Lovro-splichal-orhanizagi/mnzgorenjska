@@ -65,6 +65,7 @@ const fixtures = [
   { slug: 'dk-example', active: false, source: 'dbu', countries: { code: 'DK' }, federations: { code: 'dbu' } },
   { slug: 'pl-example', active: false, source: 'pzpn', countries: { code: 'PL' }, federations: { code: 'pzpn' } },
   { slug: 'gr-example', active: false, source: 'eps', countries: { code: 'GR' }, federations: { code: 'eps-athens' } },
+  { slug: 'gr-active', active: true, source: 'eps', countries: { code: 'GR' }, federations: { code: 'epsdod' } },
   { slug: 'si-example', active: false, source: 'nzs', countries: { code: 'SI' }, federations: { code: 'mnzg' } },
   { slug: 'at-one', active: false, source: 'oefb', countries: { code: 'AT' }, federations: { code: 'wfv' } },
   { slug: 'at-two', active: false, source: 'oefb', countries: { code: 'AT' }, federations: { code: 'wfv' } },
@@ -443,6 +444,39 @@ test('existing-league batch is a global writer in both crossing loops; preview s
 
 const olderNightly = { 'uvoz-zapisnikov.yml': [run('Nightly import')] }
 const greekJobs = [1, 2, 3, 4, 5, 6].map(i => ({ name: `uvoz GR ${i}/6`, status: 'completed' }))
+
+test('active Greek manual import proceeds after all Greek nightly jobs finish while Austria still runs', async () => {
+  const result = await coordinate(['--liga', 'gr-active'], olderNightly,
+    [...greekJobs, { name: 'uvoz AT 1/4', status: 'in_progress' }])
+  assert.equal(result.code, 0, result.logs.join('; '))
+})
+
+test('active Greek manual import holds for active or unproven country job matrices', async () => {
+  for (const status of ['queued', 'in_progress']) for (let i = 0; i < 6; i++) {
+    const jobs = greekJobs.map((j, n) => n === i ? { ...j, status } : j)
+    assert.equal((await coordinate(['--liga', 'gr-active'], olderNightly, jobs)).code, 1)
+  }
+  for (const jobs of [null, [], greekJobs.slice(0, 5), [...greekJobs.slice(0, 5), greekJobs[0]],
+    [...greekJobs.slice(0, 5), { name: 'uvoz GR unknown', status: 'completed' }],
+    [...greekJobs.slice(0, 5), { name: 'uvoz GR 6/7', status: 'completed' }],
+    [...greekJobs.slice(0, 5), { name: 'uvoz GR 6/6' }]]) {
+    assert.equal((await coordinate(['--liga', 'gr-active'], olderNightly, jobs)).code, 1)
+  }
+})
+
+test('Greek job scoping preserves inactive manual and unrelated country behavior', async () => {
+  for (const jobs of [null, greekJobs, [{ name: 'uvoz GR 1/6', status: 'in_progress' }]]) {
+    assert.equal((await coordinate(['--liga', 'gr-example'], olderNightly, jobs)).code, 0)
+    assert.equal((await coordinate(['--drzava', 'GR'], olderNightly, jobs)).code, 0)
+    assert.equal((await coordinate(['--liga', 'at-one'], olderNightly, jobs)).code, 0)
+  }
+  const austrian = fixtures.find(c => c.slug === 'at-one')
+  austrian.active = true
+  try {
+    assert.equal((await coordinate(['--liga', 'at-one'], olderNightly,
+      [{ name: 'uvoz AT', status: 'completed' }, ...greekJobs])).code, 1)
+  } finally { austrian.active = false }
+})
 
 test('country-scoped corrections proceed after their nightly jobs finish while Austria still runs', async () => {
   for (const [country, source] of [['DK', 'dbu'], ['PL', 'pzpn'], ['GR', 'eps']]) {
