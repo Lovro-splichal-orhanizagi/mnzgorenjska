@@ -6,17 +6,36 @@ import {createHash} from 'node:crypto'
 import hns from './hns.mjs'
 import pzpn,{vZapisnik,popolnZapisnik,POSREDNIKI} from './pzpn.mjs'
 import {schedule,report,competitionName} from '../hns-recovery-validation.mjs'
+import {recurringSchedule} from '../hns-recurring-validation.mjs'
 import {LEAGUES,scheduleUrl,selectMatches} from '../pzpn-collect-recovery.mjs'
 import {podobnoIme} from '../klubi.mjs'
 const hash=b=>createHash('sha256').update(b).digest('hex')
 const noNetwork=()=>{throw Error('recovery snapshot: network access is disabled')}
-export function loadRecovery(directory,source){
+export function loadRecovery(directory,source,{recurring=process.env.SLFF_HNS_RECURRING==='1',allowPartial=process.env.SLFF_HNS_PARTIAL==='1',retained=process.env.SLFF_HNS_RETAINED==='1'}={}){
  assert.ok(['hns','pzpn'].includes(source))
  const file=path.join(directory,source==='hns'?'latest.json':'snapshot.json'),s=JSON.parse(fs.readFileSync(file,'utf8'))
  assert.equal(s.source,source);assert.ok(Array.isArray(s.leagues));assert.equal(new Set(s.leagues.map(l=>l.id)).size,s.leagues.length)
  const from=source==='hns'?s.fromDate:s.config.from,to=source==='hns'?s.throughDate:s.config.through
- assert.equal(from,'2026-11-06');assert.equal(to,'2026-11-17')
- if(source==='hns'){assert.equal(s.schema,1);assert.equal(s.incident,'hns-20261117');assert.equal(s.season,'2026/27')}
+ if(recurring){
+  assert.equal(source,'hns');assert.equal(s.schema,2);assert.equal(s.mode,'recurring');assert.equal(s.season,'2026/27')
+  for(const d of [from,to]){assert.match(d,/^\d{4}-\d{2}-\d{2}$/);assert.equal(new Date(d).toISOString().slice(0,10),d)}
+  const age=Date.now()-Date.parse(s.createdAt),today=new Date().toISOString().slice(0,10)
+  assert.ok(Number.isFinite(age)&&age>=-60000&&age<(retained?7:1)*86400000,'recurring snapshot expired or future dated')
+  assert.ok(from<=to&&to<=today&&Date.parse(to)-Date.parse(from)<=13*86400000,'invalid recurring window')
+  assert.equal(to,new Date(s.createdAt).toISOString().slice(0,10),'window must belong to this capture day')
+  assert.equal(Date.parse(to)-Date.parse(from),13*86400000)
+  assert.ok((retained||Date.parse(s.expiresAt)>Date.now())&&Date.parse(s.expiresAt)>Date.parse(s.createdAt)&&Date.parse(s.expiresAt)-Date.parse(s.createdAt)<=86400000,'recurring manifest expired')
+  assert.ok((allowPartial?['complete','pending','paused','stopped']:['complete','pending']).includes(s.status),'collector did not finish its inventory')
+  const codes=new Set(),slugs=new Set()
+  for(const l of s.leagues){
+   assert.ok(Number.isSafeInteger(l.id)&&l.id>0);assert.match(l.code,/^\d+$/);assert.match(l.slug,/^hr-[a-z0-9-]+$/)
+   assert.notEqual(l.slug,'hr-prva-hnlz');assert.ok(!codes.has(l.code)&&!slugs.has(l.slug),'duplicate recurring league tuple')
+   codes.add(l.code);slugs.add(l.slug);assert.ok(Array.isArray(l.reports)&&Array.isArray(l.pending))
+  }
+ }else{
+  assert.equal(from,'2026-11-06');assert.equal(to,'2026-11-17')
+  if(source==='hns'){assert.equal(s.schema,1);assert.equal(s.incident,'hns-20261117');assert.equal(s.season,'2026/27')}
+ }
  return s
 }
 export function createRecoverySource({competition:c,directory,source=c.source,db}){
@@ -28,7 +47,8 @@ export function createRecoverySource({competition:c,directory,source=c.source,db
  else assert.match(l.code,/^\d+$/)
  const bytes=(entry,kind)=>{
   assert.match(entry.sha256,/^[a-f0-9]{64}$/)
-  const age=Date.now()-Date.parse(entry.capturedAt);assert.ok(Number.isFinite(age)&&age>=-60000&&age<7*86400000,'capture expired')
+  const age=Date.now()-Date.parse(entry.capturedAt);assert.ok(Number.isFinite(age)&&age>=-60000&&age<(s.mode==='recurring'&&process.env.SLFF_HNS_RETAINED!=='1'?1:7)*86400000,'capture expired')
+  if(s.mode==='recurring')assert.ok(Date.parse(entry.capturedAt)>=Date.parse(s.createdAt)-60000,'capture predates recurring batch')
   const relative=source==='hns'?`blobs/${entry.sha256}.html`:`raw/${entry.sha256}.json`
   if(source==='pzpn')assert.equal(entry.path,relative)
   const b=fs.readFileSync(path.join(directory,relative));assert.ok(b.length<=8*1024*1024);assert.equal(hash(b),entry.sha256,'captured body hash mismatch')
@@ -37,7 +57,8 @@ export function createRecoverySource({competition:c,directory,source=c.source,db
  const records=[]
  if(source==='hns'){
   assert.equal(l.schedule.url,`https://semafor.hns.family/natjecanja/${l.code}/x/`)
-  const scheduleHtml=bytes(l.schedule),fixtures=schedule(scheduleHtml),parentName=competitionName(scheduleHtml)
+  const scheduleHtml=bytes(l.schedule)
+  const {fixtures,parentName}=s.mode==='recurring'?recurringSchedule(scheduleHtml,l.code):{fixtures:schedule(scheduleHtml),parentName:competitionName(scheduleHtml)}
   for(const r of l.reports){
    const f=fixtures.find(x=>x.id===r.fixture.id);assert.deepEqual(r.fixture,f,'fixture not in captured schedule')
    assert.ok(f.datum>=s.fromDate&&f.datum<=s.throughDate&&f.izid)

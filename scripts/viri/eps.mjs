@@ -51,7 +51,7 @@ import { razpakiraj } from '../klubi.mjs'
 import { nastopi } from './hlf.mjs'
 import { NEPOPOLN, vLjubljanskiCas } from './frf.mjs'
 import { sifra } from './zapisniki.mjs'
-import { jeEpsdodTekma, epsdodPodatki, jeEpsdodAktualna, epsdodNaslovRazporeda, epsdodRazpored, jeEpsdodStran } from './epsdod.mjs'
+import { jeEpsdodTekma, epsdodPodatki, jeEpsdodAktualna, epsdodNaslovRazporeda, epsdodRazpored, jeEpsdodStran, jeEpsdodManjkajocZapisnik } from './epsdod.mjs'
 
 // Naslov vrnjene strani v napaki: GitHubovi stroji 16. 11. 2026 dobivajo ~12 kB
 // stran namesto razporeda (SLF-524); iz naslova se vidi, kaj je spletišče vrnilo.
@@ -601,7 +601,7 @@ export class EpsZavrnitev extends Error {
   }
 }
 
-async function beri(prenesi, url, ime, sveze) {
+async function beri(prenesi, url, ime, sveze, { missingEpsdodReport = false } = {}) {
   let html
   try {
     html = await prenesi(url, ime, sveze)
@@ -611,6 +611,9 @@ async function beri(prenesi, url, ime, sveze) {
     throw e
   }
   if (jeIzziv(html)) throw new EpsZavrnitev(`eps: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
+  if (missingEpsdodReport && /^https:\/\/epsdod\.gr\/fyllo-agona\/\?game_id=[1-9]\d*$/.test(url) && jeEpsdodManjkajocZapisnik(html)) {
+    throw Object.assign(new Error('epsdod: Match sheet not found.'), { epsdodMissingReport: true })
+  }
   if (!jeStranPlatforme(html) && !jeOdrezanaTekma(html) && !(new URL(url).origin === 'https://epsdod.gr' && jeEpsdodStran(html))) throw new Error(`eps: ${url} ni stran platforme (${String(html ?? '').length} B, naslov "${naslovStrani(html)}") — uvoz ustavljen`)
   return html
 }
@@ -656,32 +659,38 @@ export async function epsFetch(url, moznosti = {}) {
 // game ID plus season, league, round, teams, date/time and score before writing.
 async function zapisnikiEpsdod(koda, prenesi, { preskoci, samoZapisnik }) {
   const r = razporedStrani(await beri(prenesi, epsdodNaslovRazporeda(koda), `aktualni-${imeRazporeda(koda)}`, true), { koda })
-  const out = []
+  const out = [], held = []
+  const hold = (id, reason) => {
+    held.push({ id, reason })
+    console.warn(`epsdod: ${id} HOLD — ${reason}`)
+  }
   for (const k of r.krogi) for (const t of k.tekme) {
     const id = sifraZapisnika('epsdod.gr', t.gameId)
     if (!t.izid || t.kontumacija || t.neBo || preskoci.has(id) || (samoZapisnik && id !== String(samoZapisnik))) continue
     const url = naslovEpsdodTekme(t.gameId)
     // A scored schedule row may omit its link even when the public game ID has
-    // a complete report. Validate that report normally; only a genuine 404 is
-    // held here. Refusals/challenges and other transport failures still stop.
+    // a complete report. A genuine 404 or the observed WordPress missing-sheet
+    // component is held and retried next scan. Arbitrary pages, refusals,
+    // challenges and transport failures still stop the league.
     let html
-    try { html = await beri(prenesi, url, `aktualni-${imeTekme('epsdod.gr', t.gameId)}`, true) }
+    try { html = await beri(prenesi, url, `aktualni-${imeTekme('epsdod.gr', t.gameId)}`, true, { missingEpsdodReport: true }) }
     catch (error) {
-      if (error.status !== 404 || error.zavrnitev) throw error
-      console.warn(`epsdod: ${id} HOLD — javni zapisnik še ni na voljo (HTTP 404)`)
+      if (error.zavrnitev || (error.status !== 404 && !error.epsdodMissingReport)) throw error
+      hold(id, error.epsdodMissingReport ? 'Match sheet not found. (HTTP 200)' : 'javni zapisnik še ni na voljo (HTTP 404)')
       continue
     }
     const z = vZapisnik(html, { domena: 'epsdod.gr', gameId: t.gameId, url, koda })
-    if (!z) { console.warn(`epsdod: ${id} HOLD — ni popolnega zapisnika`); continue }
+    if (!z) { hold(id, 'ni popolnega zapisnika'); continue }
     const matches = z.sezona === r.sezona && z.krog === k.stevilka &&
       kljucKlubaGr(z.domaci.ime) === kljucKlubaGr(t.domaci) && kljucKlubaGr(z.gostje.ime) === kljucKlubaGr(t.gostje) &&
       z.datum === t.datum && z.ura === t.ura && z.rezultat.domaci === t.izid.domaci && z.rezultat.gostje === t.izid.gostje
     if (!matches) throw new Error(`epsdod: ${id} identiteta/izid zapisnika se ne ujema z razporedom`)
     // Native writers may write incomplete appearances. Do not return partial
     // current reports to them; keep their imported_at pending for a later pass.
-    if (z.nepopoln || z.opozorila.length) { console.warn(`epsdod: ${id} HOLD — ${z.opozorila.join('; ')}`); continue }
+    if (z.nepopoln || z.opozorila.length) { hold(id, z.opozorila.join('; ')); continue }
     out.push({ id, z, url })
   }
+  if (held.length) console.warn(`epsdod: ${koda} popolnih=${out.length}, HOLD=${held.length}: ${held.map(h => h.id).join(', ')}`)
   return out
 }
 
@@ -694,6 +703,15 @@ const vir = {
   glave: { 'User-Agent': UA },
   premorMs: PREMOR_MS,
   imaRegistracije: false,
+
+  // The native writer already merges source fields into the report header.
+  // A validated current report proves the source now has a result (including
+  // 0:0); never let the old schedule-only absence flag survive that proof.
+  matchSourceFields(z) {
+    const gameId = /^gr5-([1-9]\d*)$/.exec(String(z?.zapisnikId ?? ''))?.[1]
+    const complete = z?.nepopoln === false && !z.prazen && !z.kontumacija && Array.isArray(z.opozorila) && z.opozorila.length === 0
+    return complete && gameId && z.url === naslovEpsdodTekme(gameId) ? { vir_brez_izida: false } : {}
+  },
 
   naslovRazporeda: koda => jeEpsdodAktualna(koda) ? epsdodNaslovRazporeda(koda) : naslovRazporeda(koda),
   naslovZapisnika: (koda, id) => {

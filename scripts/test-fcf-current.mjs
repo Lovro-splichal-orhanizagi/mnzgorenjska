@@ -87,6 +87,34 @@ function tempCache(t) {
  return dir
 }
 const singleOptions = {id:opts.id, sezona:'2026/27', danes:Date.parse('2026-11-18T12:00:00Z'),tekmovanje:{slug:'es-ct-elit',source:'fcf',source_league_code:'4107024-4107024',sezona_koledarska:false}}
+for (const reader of ['single', 'block']) test(`fresh cached redirect is resolved before ${reader} report admission`, async t => {
+ tempCache(t)
+ const file='scripts/.predpomnilnik/fcf/acta-4107024.html'
+ writeFileSync(file,redirectHtml)
+ const calls=[]
+ t.mock.method(globalThis,'setTimeout',cb=>{queueMicrotask(cb);return 1})
+ t.mock.method(globalThis,'fetch',async u=>{calls.push(u);return new Response(u===url?redirectHtml:html)})
+ const fetchPage=async u=>(await fcf.fcfFetch(u)).text()
+ const read=()=>reader==='single'?fcf.posamezniZapisnik('4107024-4107024',singleOptions)(fetchPage):fcf.default.zapisniki('4107024-4107024',fetchPage)
+ const result=await read()
+ assert.deepEqual(result.map(r=>r.id),['es4107024'])
+ assert.deepEqual(calls,[url,canonical])
+ assert.equal(readFileSync(file,'utf8'),html)
+ assert.deepEqual((await read()).map(r=>r.id),['es4107024'])
+ assert.equal(calls.length,2,'validated complete cached report must remain reusable')
+})
+for (const reader of ['single', 'block']) test(`cached redirect cannot mask a ${reader} source refusal`, async t => {
+ tempCache(t)
+ const file='scripts/.predpomnilnik/fcf/acta-4107024.html'
+ writeFileSync(file,redirectHtml)
+ let calls=0
+ t.mock.method(globalThis,'fetch',async()=>{calls++;return new Response('forbidden',{status:403})})
+ const fetchPage=async u=>(await fcf.fcfFetch(u)).text()
+ const run=()=>reader==='single'?fcf.posamezniZapisnik('4107024-4107024',singleOptions)(fetchPage):fcf.default.zapisniki('4107024-4107024',fetchPage)
+ await assert.rejects(run(),error=>error instanceof fcf.FcfZavrnitev && error.status===403)
+ assert.equal(calls,1)
+ assert.equal(readFileSync(file,'utf8'),redirectHtml,'refusal must not overwrite the retained cache')
+})
 for(const reader of ['single','block']) test(`native ${reader} provider holds incomplete migrated report before writer`,async t=>{
  tempCache(t)
  const broken=rewriteRsc(html,s=>s.replaceAll('46’','?'))

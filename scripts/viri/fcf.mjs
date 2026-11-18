@@ -648,6 +648,14 @@ function izPredpomnilnika(ime) {
   return { html: readFileSync(p, 'utf8'), starost: Date.now() - statSync(p).mtimeMs }
 }
 
+function reusableReportCache(html, id) {
+  // Restored pre-migration caches contain HTTP200 redirect documents. Their
+  // absent report header must not grant the seven-day "not found" cache TTL.
+  // Resolve the numeric URL again through fcfFetch and its exact binding checks.
+  if (/<meta\b[^>]*http-equiv=["']refresh["']/i.test(html)) return false
+  return !isFcfCurrentPage(html) || currentRedirectEvidence(html, sifraZapisnika(id), naslovZapisnika(id))
+}
+
 /** Zavrnitev (403, 429) ali izziv: uvoz se ustavi in ne vzame shranjene strani. */
 export class FcfZavrnitev extends Error {
   constructor(sporocilo, status = null) {
@@ -662,7 +670,7 @@ export class FcfZavrnitev extends Error {
 async function beri(prenesi, id, najvec, preveri = null) {
   const ime = imeStrani(id)
   const c = izPredpomnilnika(ime)
-  if (!preveri && c && c.starost <= najvec && (!isFcfCurrentPage(c.html) || currentRedirectEvidence(c.html, sifraZapisnika(id), naslovZapisnika(id)))) return c.html
+  if (!preveri && c && c.starost <= najvec && reusableReportCache(c.html, id)) return c.html
   // Običajna klicatelja prenosa pišeta že pred vrnitvijo iz prenesi. Pri
   // ciljni obnovi zato najprej pišeta v začasno datoteko, brez stare rezerve.
   const imePrenosa = preveri ? `.paired-${id}-${randomUUID()}.html` : ime
@@ -800,7 +808,7 @@ export function posamezniZapisnik(koda, options = {}) {
   return async prenesi => {
     const cached = izPredpomnilnika(imeStrani(numericId))
     const header = cached ? glavaStrani(cached.html) : null
-    const useCache = cached && cached.starost <= najvecStarost(header, danes, true) && (!isFcfCurrentPage(cached.html) || currentRedirectEvidence(cached.html, id, url))
+    const useCache = cached && cached.starost <= najvecStarost(header, danes, true) && reusableReportCache(cached.html, numericId)
     const html = useCache ? cached.html : await beri(prenesi, numericId, -1, validate)
     if (validate(html) === null) {
       if (!useCache) { mkdirSync(MAPA, { recursive: true }); writeFileSync(pot(imeStrani(numericId)), html) }
@@ -998,7 +1006,7 @@ export async function preberiBlok(koda, prenesi, { danes = Date.now(), svezi = f
     if (historical.has(id)) { strani.push(historical.get(id)); continue }
     const c = izPredpomnilnika(imeStrani(id))
     const g = c ? glavaStrani(c.html) : null
-    const uporabi = c && c.starost <= najvecStarost(g, danes, svezi) && (!isFcfCurrentPage(c.html) || currentRedirectEvidence(c.html, sifraZapisnika(id), naslovZapisnika(id)))
+    const uporabi = c && c.starost <= najvecStarost(g, danes, svezi) && reusableReportCache(c.html, id)
     if (uporabi) ponovnoUporabljeni.add(id)
     const html = uporabi ? c.html : await beri(prenesi, id, -1)
     if (isFcfCurrentPage(html)) {

@@ -1,0 +1,168 @@
+name: Croatia captured imports
+run-name: Croatia captured imports
+on:
+  schedule:
+    - cron: '23 */2 * * *'
+  workflow_dispatch:
+    inputs:
+      preview:
+        description: Validate without database writes
+        type: boolean
+        default: true
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: captured-recovery-hns
+  cancel-in-progress: false
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      snapshot: ${{ steps.capture.outputs.snapshot }}
+      collector_status: ${{ steps.capture.outputs.collector_status }}
+      replay_needed: ${{ steps.capture.outputs.replay_needed }}
+      collector_fresh: ${{ steps.capture.outputs.collector_fresh }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Check collector heartbeat and immutable snapshot
+        id: capture
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh private-recovery
+          trap 'rm -f ~/.ssh/id_ed25519' EXIT
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          scp deploy@2.31.6.53:/srv/slff-recovery/hns-recurring/collector-status.json private-recovery/collector-status.json
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const x=JSON.parse(fs.readFileSync('private-recovery/collector-status.json'));
+          assert.ok(['complete','pending','paused','stopped'].includes(x.status),'unknown collector state');
+          const ages=[x.createdAt,x.updatedAt].map(t=>Date.now()-Date.parse(t));
+          const fresh=ages.every(age=>Number.isFinite(age)&&age>=-60000&&age<86400000);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,`collector_status=${x.status}\ncollector_fresh=${fresh}\n`);
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Collector heartbeat: '+JSON.stringify({...x,fresh})+'\n');
+          JS
+          mkdir -p private-recovery/snapshots private-recovery/receipts
+          rsync -r --include='*.json' --exclude='*' deploy@2.31.6.53:/srv/slff-recovery/hns-recurring/snapshots/ private-recovery/snapshots/
+          rsync -r --include='*.json' --exclude='*' deploy@2.31.6.53:/srv/slff-recovery/hns-recurring-receipts/ private-recovery/receipts/
+          node scripts/hns-recurring-queue.mjs private-recovery
+          if [ -f private-recovery/latest.json ]; then SLFF_HNS_RETAINED=1 node scripts/hns-recurring-check.mjs private-recovery; fi
+      - uses: actions/upload-artifact@v4
+        if: steps.capture.outputs.replay_needed == 'true'
+        with:
+          name: hns-recurring-inventory
+          path: |
+            private-recovery/latest.json
+            private-recovery/blob-files.txt
+          retention-days: 7
+  replay:
+    needs: inventory
+    if: needs.inventory.outputs.replay_needed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    env:
+      RECOVERY_SOURCE: hns
+      RECOVERY_SHARD: ${{ matrix.shard }}
+      RECOVERY_PREVIEW: ${{ github.event_name == 'workflow_dispatch' && inputs.preview && 'true' || 'false' }}
+      SLFF_HNS_RECURRING: '1'
+      SLFF_HNS_PARTIAL: '1'
+      SLFF_HNS_RETAINED: '1'
+      SLFF_RECOVERY_CAPTURE: ${{ github.workspace }}/private-recovery
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          name: hns-recurring-inventory
+          path: private-recovery
+      - name: Retrieve only referenced original reports
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+          SNAPSHOT: ${{ needs.inventory.outputs.snapshot }}
+        run: |
+          set -euo pipefail
+          printf '%s  %s\n' "$SNAPSHOT" private-recovery/latest.json | sha256sum --check
+          node scripts/hns-recurring-check.mjs private-recovery
+          install -d -m 700 ~/.ssh private-recovery/blobs
+          trap 'rm -f ~/.ssh/id_ed25519' EXIT
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          rsync -r --safe-links --files-from=private-recovery/blob-files.txt deploy@2.31.6.53:/srv/slff-recovery/hns-recurring/blobs/ private-recovery/blobs/
+      - name: Wait for older Croatian database writers
+        if: env.RECOVERY_PREVIEW == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --drzava HR
+      - name: Validate and import captured reports
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/recovery-import.mjs
+
+  acknowledge:
+    needs: [inventory, replay]
+    if: needs.replay.result == 'success' && (github.event_name != 'workflow_dispatch' || inputs.preview == false)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Persist receipt only after all imports and scoring succeed
+        env:
+          SNAPSHOT: ${{ needs.inventory.outputs.snapshot }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          [[ "$SNAPSHOT" =~ ^[a-f0-9]{64}$ ]]
+          install -d -m 700 ~/.ssh
+          trap 'rm -f ~/.ssh/id_ed25519' EXIT
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          node -e "require('fs').writeFileSync('receipt.json',JSON.stringify({sha256:process.env.SNAPSHOT,status:'import-and-scoring-complete',runId:process.env.GITHUB_RUN_ID,completedAt:new Date().toISOString()}))"
+          scp receipt.json "deploy@2.31.6.53:/srv/slff-recovery/hns-recurring-receipts/$SNAPSHOT.$GITHUB_RUN_ID.tmp"
+          # SHA and run ID are deliberately expanded locally; SHA was validated above.
+          # shellcheck disable=SC2029
+          ssh deploy@2.31.6.53 "mv /srv/slff-recovery/hns-recurring-receipts/$SNAPSHOT.$GITHUB_RUN_ID.tmp /srv/slff-recovery/hns-recurring-receipts/$SNAPSHOT.json"
+  collector-health:
+    needs: [inventory, replay, acknowledge]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Incomplete or stopped collection must remain a failure
+        env:
+          COLLECTOR_STATUS: ${{ needs.inventory.outputs.collector_status }}
+          INVENTORY_RESULT: ${{ needs.inventory.result }}
+          REPLAY_RESULT: ${{ needs.replay.result }}
+          COLLECTOR_FRESH: ${{ needs.inventory.outputs.collector_fresh }}
+        run: |
+          set -euo pipefail
+          echo "Collector: $COLLECTOR_STATUS; inventory: $INVENTORY_RESULT; replay: $REPLAY_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          [ "$INVENTORY_RESULT" = success ]
+          [ "$COLLECTOR_FRESH" = true ]
+          case "$REPLAY_RESULT" in success|skipped) ;; *) exit 1 ;; esac
+          case "$COLLECTOR_STATUS" in complete|pending) ;; *) echo 'Collector incomplete; valid captured reports were still eligible for replay.' >&2; exit 1 ;; esac

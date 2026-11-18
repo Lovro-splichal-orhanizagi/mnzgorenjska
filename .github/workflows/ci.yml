@@ -187,6 +187,9 @@ jobs:
           [ "$missing" = 0 ] || exit 1
           node --test $files
 
+      - name: HNS recurring collector and publisher (offline)
+        run: python3 -m unittest scripts/test_hns_collector.py scripts/test_hns_recurring.py scripts/test_hns_recurring_cycle.py
+
       - name: HNS report club names
         run: node --test scripts/test-hns-ime-kluba.mjs
 
