@@ -11,6 +11,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   public-page:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     strategy:
@@ -45,4 +46,29 @@ jobs:
         with:
           name: public-migration-${{ matrix.source }}-${{ github.run_id }}
           path: capture/
+          retention-days: 7
+
+  retained-inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: source-migration-inventory-${{ github.run_id }}
+          restore-keys: |
+            zapisniki-ES-k1od1-
+            zapisniki-ES-
+      - name: Read public inventory and retained report headers only
+        run: node scripts/source-migration-inventory.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: migration-inventory-${{ github.run_id }}
+          path: source-inventory/
           retention-days: 7
