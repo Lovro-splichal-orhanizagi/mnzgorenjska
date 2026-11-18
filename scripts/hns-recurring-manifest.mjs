@@ -1,0 +1,42 @@
+// Read-only inventory for one UTC-day collection. Never embeds a database credential.
+import assert from 'node:assert/strict'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
+
+export function buildRecurringManifest({competitions,matches,now}) {
+  assert.match(now,/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|\+00:00)$/,'UTC timestamp required')
+  const time=Date.parse(now);assert.ok(Number.isFinite(time),'invalid clock')
+  const toDate=new Date(time).toISOString().slice(0,10)
+  const fromDate=new Date(Date.parse(toDate+'T00:00:00Z')-13*86400000).toISOString().slice(0,10)
+  assert.ok(fromDate>='2026-07-01'&&toDate<='2027-06-30','review next season before collection')
+  const ids=new Set(),slugs=new Set(),codes=new Set(),leagues=[]
+  for(const c of competitions){
+    if(!c.active||c.source!=='hns'||c.slug==='hr-prva-hnlz'||c.source_policy)continue
+    assert.equal(c.countries?.code,'HR');assert.ok(Number.isSafeInteger(c.id)&&c.id>0)
+    assert.match(c.slug,/^hr-[a-z0-9-]+$/);assert.match(c.source_league_code,/^\d+$/)
+    assert.ok(!ids.has(c.id)&&!slugs.has(c.slug)&&!codes.has(c.source_league_code),'duplicate league identity')
+    ids.add(c.id);slugs.add(c.slug);codes.add(c.source_league_code)
+    const completed=[...new Set(matches.filter(m=>m.rounds?.competition_id===c.id&&m.rounds.season==='2026/27'&&m.imported_at&&m.played_on>=fromDate&&m.played_on<=toDate&&/^\d+$/.test(String(m.zapisnik_id))).map(m=>String(m.zapisnik_id)))].sort()
+    leagues.push({id:c.id,slug:c.slug,code:c.source_league_code,completed})
+  }
+  assert.equal(leagues.length,139,'Review changed eligible HNS inventory before collection')
+  return {schema:2,source:'hns',mode:'recurring',season:'2026/27',fromDate,toDate,createdAt:now,expiresAt:new Date(time+86400000).toISOString(),leagues}
+}
+
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
+  assert.equal(process.argv.length,3,'Usage: node scripts/hns-recurring-manifest.mjs <new-output.json>')
+  const {createClient}=await import('@supabase/supabase-js')
+  const env=Object.fromEntries(readFileSync(new URL('../.env.production',import.meta.url),'utf8').split('\n').filter(x=>x.startsWith('VITE_')).map(x=>{const i=x.indexOf('=');return[x.slice(0,i),x.slice(i+1).trim()]}))
+  assert.ok(env.VITE_SUPABASE_URL&&env.VITE_SUPABASE_ANON_KEY,'public Supabase configuration required')
+  const db=createClient(env.VITE_SUPABASE_URL,env.VITE_SUPABASE_ANON_KEY,{auth:{persistSession:false}})
+  const {data:competitions,error}=await db.from('competitions').select('id,slug,active,source,source_league_code,source_policy,countries!inner(code)').eq('active',true).eq('source','hns').order('sort_order').order('slug')
+  if(error)throw Error(error.message)
+  const now=new Date().toISOString(),scope=buildRecurringManifest({competitions,matches:[],now}),matches=[]
+  for(let offset=0;;offset+=1000){
+    const {data,error}=await db.from('matches').select('id,zapisnik_id,imported_at,played_on,rounds!inner(competition_id,season,competitions!inner(source,active))').eq('rounds.competitions.source','hns').eq('rounds.competitions.active',true).eq('rounds.season','2026/27').gte('played_on',scope.fromDate).lte('played_on',scope.toDate).order('id').range(offset,offset+999)
+    if(error)throw Error(error.message);matches.push(...data);if(data.length<1000)break
+  }
+  const manifest=buildRecurringManifest({competitions,matches,now})
+  writeFileSync(process.argv[2],JSON.stringify(manifest,null,2),{mode:0o600,flag:'wx'})
+  console.log(JSON.stringify({leagues:manifest.leagues.length,fromDate:manifest.fromDate,toDate:manifest.toDate,completed:manifest.leagues.reduce((n,l)=>n+l.completed.length,0),output:process.argv[2]}))
+}
