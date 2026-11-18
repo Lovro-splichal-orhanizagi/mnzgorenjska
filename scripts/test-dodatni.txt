@@ -9,3 +9,9 @@ scripts/test-oefb-vzdevki.mjs
 scripts/test-preimenovan-klub.mjs
 scripts/test-podpora-zamenjave.mjs
 scripts/zgodbe/zgodbe.test.mjs
+# Recurring HNS capture admission, durable replay queue and FCF redirect-cache regression
+scripts/test-hns-recurring-manifest.mjs
+scripts/test-hns-recurring-replay.mjs
+scripts/test-hns-recurring-queue.mjs
+scripts/test-recovery-captured.mjs
+scripts/test-fcf-current.mjs

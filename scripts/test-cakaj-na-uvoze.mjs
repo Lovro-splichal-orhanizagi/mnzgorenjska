@@ -703,3 +703,10 @@ test('a transient GitHub 5xx is retried instead of failing the wait step', async
   }
   for(const file of ['zdruzi-klube.yml','tedensko-cene.yml'])assert.match(readFileSync(new URL('../.github/workflows/'+file,import.meta.url),'utf8'),/for wf in recovery-captured.yml/)
  })
+
+test('recurring Croatian captures block HR and global writers, not other countries',async()=>{
+ const runs={'hns-recurring.yml':[run('Croatia captured imports')]}
+ assert.equal((await coordinate(['--drzava','HR'],runs)).code,1)
+ assert.equal((await coordinate(['--drzava','ES'],runs)).code,0)
+ assert.equal((await coordinate(['--tece'],runs)).code,3)
+})
