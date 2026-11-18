@@ -1,0 +1,48 @@
+name: Public source migration probe
+on:
+  push:
+    branches: [codex/es-gr-source-migration]
+    paths: [.github/workflows/source-migration-probe.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: public-source-migration-probe
+  cancel-in-progress: false
+jobs:
+  public-page:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        source: [fcf, epsdod]
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: One fixed public report GET; no database or credentials
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import {createHash} from 'node:crypto';
+          const urls={fcf:'https://www.fcf.cat/ca/partit/2026-2027/lliga-elit/grup-1/jornada-8/vic-unio-esportiva-club-a-elit-vs-atletic-sant-just-f-c-a-elit',epsdod:'https://epsdod.gr/fyllo-agona/?game_id=26804'};
+          const source=process.env.SOURCE,url=urls[source];if(!url)throw Error('unknown source');
+          fs.mkdirSync('capture',{mode:0o700});
+          const response=await fetch(url,{redirect:'manual',headers:{'User-Agent':'SLFF fantasy (https://slff.eu)','Accept':'text/html'},signal:AbortSignal.timeout(45000)});
+          const chunks=[];let size=0;for await(const chunk of response.body){size+=chunk.length;if(size>2*1024*1024)throw Error('body limit');chunks.push(chunk)}
+          const body=Buffer.concat(chunks),html=body.toString('utf8'),blocked=response.status!==200||/cf-chl|challenge-platform|g-recaptcha|This request was blocked|Sorry, you have been blocked/i.test(html);
+          const result={source,url,status:response.status,bytes:size,sha256:createHash('sha256').update(body).digest('hex'),capturedAt:new Date().toISOString(),blocked};
+          fs.writeFileSync('capture/result.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result));
+          if(blocked)throw Error('public report refused; no retry');
+          const marker=source==='fcf'?'CEREZA':'ΚΛΕΟΒΟΥΛΟΣ';if(!html.includes(marker))throw Error('expected public report missing');
+          fs.writeFileSync('capture/report.html',body);
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-migration-${{ matrix.source }}-${{ github.run_id }}
+          path: capture/
+          retention-days: 7
