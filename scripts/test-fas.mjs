@@ -6,6 +6,7 @@ import { glavaStrani, postaviStrani, dogodkiStrani, vZapisnik, nastopi } from '.
 const beri = (name) => readFileSync(new URL(`./vzorci/${name}`, import.meta.url), 'utf8')
 const partial = beri('es-fas-evento-nepopoln-14507.html')
 const complete = beri('es-fas-evento-14593.html')
+const singleName = beri('es-fas-evento-14681-single-name.html')
 const tables = (html) => [...html.matchAll(/<div class="fa-conv__team">[\s\S]*?<\/table><\/div>/g)].map(([x]) => x)
 const [awayTable] = tables(partial)
 const homeTable = awayTable.replace('fa-conv__team-title">Caudal Deportivo', 'fa-conv__team-title">Astur CF')
@@ -103,4 +104,37 @@ test('14507 stays incomplete with no canonical XI or appearances and preserves p
     'Caudal Deportivo: menjava ? za ? brez minute',
     'Caudal Deportivo: Iago Delgado je vstopil, menjava brez minute — nastopa ne štejemo',
   ])
+})
+
+test('14681: an explicitly entering reserve gets the published single-name substitution minute',()=>{
+  const z=vZapisnik(singleName,{id:14681})
+  const pablo=z.domaci.rezerve.find(x=>x.ime==='Pablo Barrientos')
+  assert.deepEqual(pablo.preklopi,[82])
+  const change=z.menjave.find(x=>x.noter.ime==='Pablo Barrientos')
+  assert.equal(change.minuta,82);assert.equal(change.ekipaIdx,0)
+  assert.deepEqual(change.ven,{st:null,ime:null},'the unreported outgoing player must not be invented')
+  assert.ok(!z.opozorila.some(x=>x.includes('Pablo Barrientos')&&x.includes('brez minute')))
+  assert.ok(z.opozorila.some(x=>x.includes('Pablo Barrientos')&&x.includes('izstopajoči igralec ni naveden')))
+  assert.equal(nastopi(z).find(x=>x.ime==='Pablo Barrientos').minute,8)
+  assert.ok(z.opozorila.some(x=>x.includes('José Santullano')&&x.includes('brez minute')),'real missing source time stays visible')
+})
+
+test('single-name substitution does not guess a clock or direction for an unused reserve',()=>{
+  const noClock=singleName.replace('<span class="sp-res__name">Pablo Barrientos</span><span class="sp-res__min">82\'</span>','<span class="sp-res__name">Pablo Barrientos</span>')
+  const noDirection=singleName.replace(/<tr class="fa-conv__row fa-conv__row--entra">(<td class="fa-conv__dorsal">26<\/td>)/,'<tr class="fa-conv__row fa-conv__row--convocado">$1')
+  for(const html of [noClock,noDirection]){
+    const z=vZapisnik(html,{id:14681})
+    assert.deepEqual(z.domaci.rezerve.find(x=>x.ime==='Pablo Barrientos').preklopi,[])
+    assert.ok(!z.menjave.some(x=>x.noter.ime==='Pablo Barrientos'))
+  }
+})
+
+test('single-name substitution never resolves an ambiguous roster name',()=>{
+  const row=singleName.match(/<tr class="fa-conv__row fa-conv__row--entra"><td class="fa-conv__dorsal">26<\/td>[\s\S]*?<\/tr>/)[0]
+  const html=singleName.replace(row,row+row.replace('>26</td>','>27</td>').replace('/jugador/pablo-barrientos/','/jugador/other-pablo/'))
+  const z=vZapisnik(html,{id:14681})
+  const players=z.domaci.rezerve.filter(x=>x.ime==='Pablo Barrientos')
+  assert.equal(players.length,2);assert.ok(players.every(x=>x.preklopi.length===0))
+  assert.ok(!z.menjave.some(x=>x.noter.ime==='Pablo Barrientos'))
+  assert.ok(z.opozorila.some(x=>x.includes('Pablo Barrientos')))
 })
