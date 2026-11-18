@@ -152,6 +152,10 @@ export default function Administracija() {
   const [kopirano, setKopirano] = useState(false)
   const [posiljam, setPosiljam] = useState(false)
   const [logMailov, setLogMailov] = useState<any[]>([])
+  // Uporabniki in ekipe se nalagajo v ozadju; dokler ni odgovora, števci
+  // kažejo "…" in razdelka ne trdita, da je seznam prazen.
+  const [nalagamUporabnike, setNalagamUporabnike] = useState(true)
+  const [nalagamEkipe, setNalagamEkipe] = useState(true)
   // Pošiljanje je bilo skrito za window.prompt/window.confirm. Na telefonu
   // ju brskalnik pogosto ne pokaže, na namizju pa ju po nekaj oknih ponudi
   // blokirati — koda je nato tiho ne naredila nič: brez zahteve, brez napake.
@@ -242,9 +246,12 @@ export default function Administracija() {
           })),
         )
 
-        // Vse fantasy ekipe s celo rostersko sliko za sanity-check.
-        await naloziEkipe()
-        await naloziUporabnike()
+        // Vse fantasy ekipe s celo rostersko sliko in vsi uporabniki so
+        // najtežje (uporabniki ~10 s pri 12.000 računih, SLF-599). Stran je
+        // čakala nanje, čeprav ju rabita le dva razdelka in števci zgoraj —
+        // zdaj se nalagata v ozadju, stran se pokaže takoj.
+        naloziEkipe()
+        naloziUporabnike()
       }
       setNalaganje(false)
     }
@@ -253,19 +260,29 @@ export default function Administracija() {
 
   async function naloziUporabnike() {
     // Produkcija vrne največ 5000 vrstic na zahtevek (PGRST_DB_MAX_ROWS) in
-    // števec je obstal pri 5000 — zato po straneh.
+    // števec je obstal pri 5000 — zato po straneh. Funkcija vsakič izračuna
+    // vse uporabnike (~0,65 s v bazi), zato strani po 5000, ne po 1000.
+    const liga = tekmovanjeId
+    setNalagamUporabnike(true)
     let data: any[]
     try {
-      data = await vseVrstice((od, do_) =>
-        supabase
-          .rpc('admin_uporabniki', { p_competition_id: tekmovanjeId ?? undefined })
-          .order('user_id')
-          .order('team_id')
-          .range(od, do_),
+      data = await vseVrstice(
+        (od, do_) =>
+          supabase
+            .rpc('admin_uporabniki', { p_competition_id: liga ?? undefined })
+            .order('user_id')
+            .order('team_id')
+            .range(od, do_),
+        5000,
       )
     } catch (e) {
+      if (trenutnaLiga.current !== liga) return
+      setNalagamUporabnike(false)
       return setNapaka((e as Error).message)
     }
+    // Odgovor za ligo, ki ni več izbrana, ne sme povoziti nove.
+    if (trenutnaLiga.current !== liga) return
+    setNalagamUporabnike(false)
     // Najnovejši člani na prvo stran, najstarejši na zadnjo.
     setUporabniki(
       data.sort((a, b) =>
@@ -275,9 +292,10 @@ export default function Administracija() {
     const { data: log } = await supabase
       .from('email_log')
       .select('id, email, vrsta, poslano_at, napaka')
-      .eq('competition_id', tekmovanjeId as number)
+      .eq('competition_id', liga as number)
       .order('poslano_at', { ascending: false })
       .limit(20)
+    if (trenutnaLiga.current !== liga) return
     setLogMailov(log ?? [])
   }
 
@@ -496,44 +514,50 @@ export default function Administracija() {
       ekipe.push(...(data ?? []).map((e) => e.id))
       if (!data || data.length < STRAN) break
     }
-    for (let i = 0; i < ekipe.length; i += 150) {
-      const kos = ekipe.slice(i, i + 150)
-      for (let od = 0; ; od += STRAN) {
-        const { data, error } = await supabase
-          .from('fantasy_roster')
-          .select(
-            'fantasy_team_id, player_id, is_starter, is_captain, is_vice, buy_value, buy_position, players(id, full_name, position, team_id, value, active)',
-          )
-          .in('fantasy_team_id', kos)
-          .order('fantasy_team_id')
-          .order('player_id')
-          .range(od, od + STRAN - 1)
-        if (error) {
-          setNapaka(error.message)
-          return vse
-        }
-        vse.push(...(data ?? []))
-        if (!data || data.length < STRAN) break
-      }
+    // Kosi po 150 ekip so neodvisni, zato vzporedno (prej eden za drugim).
+    const kosi: number[][] = []
+    for (let i = 0; i < ekipe.length; i += 150) kosi.push(ekipe.slice(i, i + 150))
+    try {
+      const deli = await Promise.all(
+        kosi.map((kos) =>
+          vseVrstice((od, do_) =>
+            supabase
+              .from('fantasy_roster')
+              .select(
+                'fantasy_team_id, player_id, is_starter, is_captain, is_vice, buy_value, buy_position, players(id, full_name, position, team_id, value, active)',
+              )
+              .in('fantasy_team_id', kos)
+              .order('fantasy_team_id')
+              .order('player_id')
+              .range(od, do_),
+          ),
+        ),
+      )
+      for (const d of deli) vse.push(...d)
+    } catch (e) {
+      setNapaka((e as Error).message)
     }
     return vse
   }
 
   async function naloziEkipe() {
+    const liga = tekmovanjeId
+    setNalagamEkipe(true)
     // wealth + owners + rosters + player positions/teams — dovolj za validacijo
     const [{ data: wealth }, { data: teamsBase }, rosters] =
       await Promise.all([
         supabase
           .from('fantasy_team_wealth')
           .select('fantasy_team_id, name, starting_budget, cash, roster_value, total_wealth')
-          .eq('competition_id', tekmovanjeId as number)
+          .eq('competition_id', liga as number)
           .order('total_wealth', { ascending: false }),
         supabase
           .from('fantasy_teams')
           .select('id, owner_id, profiles(display_name)')
-          .eq('competition_id', tekmovanjeId as number),
-        vsiKadri(tekmovanjeId),
+          .eq('competition_id', liga as number),
+        vsiKadri(liga),
       ])
+    if (trenutnaLiga.current !== liga) return
     const podrostri = new Map()
     for (const r of rosters ?? []) {
       const arr = podrostri.get(r.fantasy_team_id) ?? []
@@ -572,6 +596,7 @@ export default function Administracija() {
       }
     })
     setEkipe(napolnjene)
+    setNalagamEkipe(false)
   }
 
   function validacijaRosterja(roster: any[], kader: any[]) {
@@ -766,8 +791,8 @@ export default function Administracija() {
     {
       skupina: 'Uporabniki',
       razdelki: [
-        { id: 'uporabniki', naslov: `Uporabniki (${uporabniki.length})` },
-        { id: 'ekipe', naslov: `Fantasy ekipe (${ekipe.length})` },
+        { id: 'uporabniki', naslov: `Uporabniki (${nalagamUporabnike ? '…' : uporabniki.length})` },
+        { id: 'ekipe', naslov: `Fantasy ekipe (${nalagamEkipe ? '…' : ekipe.length})` },
         { id: 'poznavalci', naslov: 'Prošnje poznavalcev' },
         { id: 'potrjeni-poznavalci', naslov: 'Potrjeni poznavalci' },
         { id: 'samodejni-poznavalci', naslov: 'Samodejni poznavalci' },
@@ -801,11 +826,11 @@ export default function Administracija() {
 
       {/* pregled */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Kazalnik oznaka="Uporabnikov" vrednost={uporabniki.length} />
-        <Kazalnik oznaka="Fantasy ekip" vrednost={ekipe.length} />
+        <Kazalnik oznaka="Uporabnikov" vrednost={nalagamUporabnike ? null : uporabniki.length} />
+        <Kazalnik oznaka="Fantasy ekip" vrednost={nalagamEkipe ? null : ekipe.length} />
         <Kazalnik
           oznaka="Brez veljavne ekipe"
-          vrednost={uporabniki.filter((u) => !u.ekipa_veljavna).length}
+          vrednost={nalagamUporabnike ? null : uporabniki.filter((u) => !u.ekipa_veljavna).length}
           opozori
         />
         <Kazalnik oznaka="Opozoril iz uvoza" vrednost={opozorila.length} opozori />
@@ -966,7 +991,7 @@ export default function Administracija() {
             <section className="kartica space-y-3 p-3 sm:p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className="font-bold">
-                  Uporabniki ({uporabniki.length})
+                  Uporabniki ({nalagamUporabnike ? '…' : uporabniki.length})
                   {filterNepopolne && (
                     <span className="ml-2 text-xs font-normal text-amber-300">
                       — brez veljavne ekipe: {uporabniki.filter((u) => !u.ekipa_veljavna).length}
@@ -1014,7 +1039,9 @@ export default function Administracija() {
                 </div>
               </div>
 
-              {(() => {
+              {nalagamUporabnike && uporabniki.length === 0 ? (
+                <p className="animiraj-utrip text-sm text-slate-400">Nalagam uporabnike …</p>
+              ) : (() => {
                 const seznam = uporabniki.filter((u) => {
                   if (filterNepopolne && !(!u.ekipa_veljavna && u.email)) return false
                   if (filterDrzava === 'vse') return true
@@ -1397,7 +1424,7 @@ export default function Administracija() {
             <Razdelek id="ekipe">
             <section className="kartica space-y-3 p-3 sm:p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="font-bold">Fantasy ekipe ({ekipe.length})</h2>
+                <h2 className="font-bold">Fantasy ekipe ({nalagamEkipe ? '…' : ekipe.length})</h2>
                 <button
                   onClick={naloziEkipe}
                   className="text-xs text-slate-400 underline hover:text-gnl-300"
@@ -1405,7 +1432,9 @@ export default function Administracija() {
                   osveži
                 </button>
               </div>
-              {ekipe.length === 0 ? (
+              {nalagamEkipe && ekipe.length === 0 ? (
+                <p className="animiraj-utrip text-sm text-slate-400">Nalagam ekipe …</p>
+              ) : ekipe.length === 0 ? (
                 <p className="text-sm text-slate-500">Ni ekip.</p>
               ) : (
                 <div className="overflow-x-auto">
@@ -1804,14 +1833,16 @@ function Kazalnik({
   opozori,
 }: {
   oznaka: string
-  vrednost: number
+  vrednost: number | null
   opozori?: boolean
 }) {
   return (
     <div
-      className={`kartica p-4 ${opozori && vrednost > 0 ? 'ring-1 ring-amber-400/40' : ''}`}
+      className={`kartica p-4 ${opozori && vrednost != null && vrednost > 0 ? 'ring-1 ring-amber-400/40' : ''}`}
     >
-      <div className="text-2xl font-black tabular-nums">{vrednost}</div>
+      <div className={`text-2xl font-black tabular-nums ${vrednost == null ? 'animiraj-utrip text-slate-500' : ''}`}>
+        {vrednost ?? '…'}
+      </div>
       <div className="text-xs uppercase tracking-wide text-slate-500">
         {oznaka}
       </div>
