@@ -1,0 +1,80 @@
+{
+  "matchId": "031DS4G1FO000000VS5489BUVUR5FS5A",
+  "season": "2026/27",
+  "documents": [
+    {
+      "url": "https://www.fussball.de/spiel/sv-waldhof-mannheim-2-asv-eppelheim/-/spiel/031DS4G1FO000000VS5489BUVUR5FS5A",
+      "kind": "report",
+      "bytes": 204336,
+      "sha256": "62f50b667879ee576dc60eb3e33365b92b0e560d99620fd745cd2975699861cd",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-11-18T01:22:27.092Z"
+    },
+    {
+      "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031DS4G1FO000000VS5489BUVUR5FS5A/ticker-id/selectedTickerId",
+      "kind": "lineup",
+      "bytes": 30101,
+      "sha256": "0e090a61097d8668cb2410fd081d9a252026dde9bb3182e5697680d67e8f48ec",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "capturedAt": "2026-11-18T01:22:33.096Z"
+    }
+  ],
+  "fonts": {
+    "aob5dbji": {
+      "file": "aob5dbji.woff",
+      "sha256": "90ea5e49cae2ce17d01b5c86fd40bbeb19459ebde320e0f25ddbfbba0aeb4ce8",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/aob5dbji/type/font",
+      "capturedAt": "2026-11-18T01:22:45.101Z"
+    },
+    "cgbfwsfz": {
+      "file": "cgbfwsfz.woff",
+      "sha256": "ed66bbb4ddf8a2698e8e6919fae6a9ac2dd2b2819d3ca09966b6bf95fe0b995c",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/cgbfwsfz/type/font",
+      "capturedAt": "2026-11-18T01:22:57.106Z"
+    },
+    "gpx9jgxc": {
+      "file": "gpx9jgxc.woff",
+      "sha256": "a539f17c2b1080c525df4d790158addf331f9eb997faf7bf08121d1a9ab6a0e9",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/gpx9jgxc/type/font",
+      "capturedAt": "2026-11-18T01:23:09.112Z"
+    },
+    "hb8hbko8": {
+      "file": "hb8hbko8.woff",
+      "sha256": "4025091ecb494bbfb53686e7c1aeb36ff6a6126fa2fe967fb5e755ee49fbedb2",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/hb8hbko8/type/font",
+      "capturedAt": "2026-11-18T01:23:21.115Z"
+    },
+    "j6m3sejf": {
+      "file": "j6m3sejf.woff",
+      "sha256": "f337b518814ff4be7570ba4a9bc6e953e2ccce55aa100c6359f063c7224aa53b",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/j6m3sejf/type/font",
+      "capturedAt": "2026-11-18T01:23:33.117Z"
+    },
+    "kcbgc1vq": {
+      "file": "kcbgc1vq.woff",
+      "sha256": "4efe4644468524f6bb939f18011b9a1cfbbf1496cee6f4691f69d23862b1685c",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/kcbgc1vq/type/font",
+      "capturedAt": "2026-11-18T01:23:45.121Z"
+    },
+    "p0ezht59": {
+      "file": "p0ezht59.woff",
+      "sha256": "e9a636c33d9a365f598dcb7070585c08bc3295292e57531a76a46eca10f972e3",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/p0ezht59/type/font",
+      "capturedAt": "2026-11-18T01:23:57.122Z"
+    },
+    "tlydb4t9": {
+      "file": "tlydb4t9.woff",
+      "sha256": "23d463e2ba3fcc732c0e5d456c6203f587ab07d9b3a578399d8a7f9553f2230c",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/tlydb4t9/type/font",
+      "capturedAt": "2026-11-18T01:24:09.125Z"
+    },
+    "b6j72bg8": {
+      "file": "b6j72bg8.woff",
+      "sha256": "f6d77a15f12745ab1140f5f41a9d9e08bcb4c4e8db403c710c66b57e76f4e397",
+      "url": "https://www.fussball.de/export.fontface/-/format/woff/id/b6j72bg8/type/font",
+      "capturedAt": "2026-11-18T01:24:21.129Z"
+    }
+  }
+}

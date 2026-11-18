@@ -70,6 +70,12 @@ function anonymousBench(html,row,index,bench){
  if(parents.slice(-3).join('|')!==expected.join('|'))return null
  return `${match[1]}:${Number(match[2])}`
 }
+// A captain who is also the keeper carries two badges: the captain `C` and a
+// separate `goal-keeper` `T` (Verbandsliga Baden, SLF-571). Only the witnessed shape counts: that
+// exact pair on separate lines, once per player. The compact one-line pair stays rejected
+// (the native captain-keeper protocol reads it from original bytes).
+const captainKeeperBadges=/<div class="captain"><span class="c">C<\/span><\/div>\s+<div class="goal-keeper"><span class="k">T<\/span><\/div>/g
+const captainKeeper=s=>(s.match(captainKeeperBadges)??[]).length===1&&(s.match(/\bgoal-keeper\b/g)??[]).length===1&&(s.match(/\bcaptain\b/g)??[]).length===1
 export function razberiPostavo(html,{fonts}={}) {
  if(jeIzziv(html))fail('izziv v postavi')
  if(!/^<div id="match_course_body">/.test(html.trim()) || (html.match(/<div\b/g)??[]).length!==(html.match(/<\/div>/g)??[]).length)fail('odrezana postava')
@@ -103,7 +109,7 @@ export function razberiPostavo(html,{fonts}={}) {
   const ime=fields.map(decode).join(' ')
   const number=s.match(/class="player-number">(\d+)<\/span>/)?.[1]
   if(!ime || !number || /[\uE000-\uF8FF]/u.test(ime))fail('neveljaven igralec postave')
-  teams[side][m.index<bench?'postava':'rezerve'].push({virId,ime,st:+number,vratar:/class="c">T<\/span>/.test(s)})
+  teams[side][m.index<bench?'postava':'rezerve'].push({virId,ime,st:+number,vratar:/class="c">T<\/span>/.test(s)||captainKeeper(s)})
  }
  for(const e of teams)if(e.postava.length!==11 || e.postava.filter(p=>p.vratar).length!==1)fail('nepopolna začetna postava ali vratar')
  if(anonymous.size)Object.defineProperty(teams,omittedBenchCount,{value:anonymous.size})
