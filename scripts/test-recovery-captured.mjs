@@ -70,3 +70,18 @@ test('phase report binds exact parent competition name and season; unrelated pha
  assert.throws(()=>report(html,f,'123','Other competition 26/27'),/competition header/)
  assert.throws(()=>report(html,f,'123','Treća NL Istok 25/26'),/competition header/)
 })
+test('aggregate competitions accept identical season labels and the published Croatian phase spelling',()=>{
+ const original=fs.readFileSync(new URL('./vzorci/hns-tekma-11m.html',import.meta.url),'utf8')
+ const cases=[
+  ['Prva ŽNL Varaždin  26/27','Prva ŽNL Varaždin 26/27'],
+  ['1. liga Juniori NSZŽ 26/27','1. liga juniori NSZŽ 26/27'],
+  ['2. liga Kadeti A NSZŽ 26/27','2. liga kadeti A NSZŽ 26/27'],
+  ['2. ŽNL NSŽSD 26/27','2. ŽNL NSŽSD 26/27 - prvi dio'],
+ ]
+ for(const [parent,child] of cases){
+  const html=original.replace('<h2>Treća NL Istok 26/27,',`<h2><a href="https://semafor.hns.family/natjecanja/999/x/">${child}</a>,`)
+  const z=vZapisnik(html,{id:'456',url:'https://semafor.hns.family/utakmice/456/x/'}),f={id:'456',krog:z.krog,datum:z.datum,domaci:z.domaci.ime,gostje:z.gostje.ime,izid:z.rezultat}
+  assert.equal(report(html,f,'123',parent).quality.complete,true,parent)
+  for(const wrong of [parent.replace('26/27','25/26'),'Other league 26/27',parent+' Group B'])assert.throws(()=>report(html,f,'123',wrong),/competition header/)
+ }
+})
