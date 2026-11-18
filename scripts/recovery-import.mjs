@@ -1,5 +1,7 @@
 // Replay only captured complete reports through the existing idempotent writer.
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import path from 'node:path'
 import {createClient} from '@supabase/supabase-js'
 import {spawnSync} from 'node:child_process'
 import {loadRecovery,createRecoverySource} from './viri/recovery-captured.mjs'
@@ -9,6 +11,7 @@ const shard=Number(process.env.RECOVERY_SHARD??1),count=source==='hns'?3:1
 if(!['hns','pzpn'].includes(source)||![1,2,3].includes(shard))throw Error('invalid recovery scope')
 if(shard>count)process.exit(0)
 const s=loadRecovery(directory,source),db=createClient(SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false}})
+if(source==='hns'&&process.env.SLFF_HNS_RECURRING==='1')fs.writeFileSync(path.join(directory,`manual-review-${shard}.json`),JSON.stringify({schema:1,source:'hns',holds:[]}))
 let failed=0,imported=0
 for(const l of s.leagues.filter((_,i)=>i%count===shard-1)){
  const n=source==='hns'?l.reports.length:l.reports.filter(r=>r.status==='complete').length

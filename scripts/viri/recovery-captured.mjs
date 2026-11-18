@@ -2,7 +2,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import assert from 'node:assert/strict'
-import {createHash} from 'node:crypto'
+import {createHash,randomUUID} from 'node:crypto'
 import hns from './hns.mjs'
 import pzpn,{vZapisnik,popolnZapisnik,POSREDNIKI} from './pzpn.mjs'
 import {schedule,report,competitionName} from '../hns-recovery-validation.mjs'
@@ -86,7 +86,7 @@ export function createRecoverySource({competition:c,directory,source=c.source,db
  const base=source==='hns'?hns:pzpn
  return {...base,recoveryCaptured:true,recoveryReportIds:records.map(r=>String(r.id)),assertNativeFixture:scope=>assertRecoveryFixture(db,scope),recoveryRounds:[...new Set(records.map(r=>r.z.krog))],fetch:noNetwork,razporedVseStrani:noNetwork,async zapisniki(code){
   assert.equal(code,l.code)
-  return await missingRecoveryRecords(records,c,db,base.kljucKluba)
+  return await missingRecoveryRecords(records,c,db,base.kljucKluba,s.mode==='recurring'?{recurring:true,onHold:hold=>persistRecoveryHold(directory,hold)}:undefined)
  }}
 }
 
@@ -99,13 +99,44 @@ function assertSameClubs(m,z,key){
  assert.ok(bad.length===0||bad.length===1&&podobnoIme(bad[0][0],bad[0][1]),`stored match differs from captured report: ${bad.map(([a,b])=>`'${a}' vs '${b}'`).join(', ')}`)
 }
 
-export async function missingRecoveryRecords(records,c,db,key){
+// One writer per replay shard; rename keeps an interrupted write from exposing a
+// partial artifact. Preserve earlier leagues and replace repeat observations.
+export function persistRecoveryHold(directory,hold,{shard=process.env.RECOVERY_SHARD??1}={}){
+  assert.match(String(shard),/^[1-9]\d*$/,'invalid recovery shard')
+  const file=path.join(directory,`manual-review-${shard}.json`)
+  const value=fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):{schema:1,source:'hns',holds:[]}
+  assert.equal(value.schema,1);assert.equal(value.source,'hns');assert.ok(Array.isArray(value.holds))
+  const identity=h=>JSON.stringify([h.kind,h.league,h.matchId,h.reportId])
+  const entries=new Map(value.holds.map(h=>[identity(h),h]));entries.set(identity(hold),hold)
+  value.holds=[...entries.values()]
+  const temporary=`${file}.${process.pid}.${randomUUID()}.tmp`
+  try{fs.writeFileSync(temporary,JSON.stringify(value,null,2)+'\n',{mode:0o600,flag:'wx'});fs.renameSync(temporary,file)}
+  finally{fs.rmSync(temporary,{force:true})}
+}
+
+export async function missingRecoveryRecords(records,c,db,key,{recurring=false,onHold}={}){
   const completed=new Set()
   if(db)for(let start=0;start<records.length;start+=100){
    const chunk=records.slice(start,start+100),ids=chunk.map(r=>String(r.id))
-   const {data,error}=await db.from('matches').select('id,zapisnik_id,imported_at,played_on,home:teams!home_team_id(id,name),away:teams!away_team_id(id,name),rounds!inner(competition_id,season,number)').in('zapisnik_id',ids)
+   const {data,error}=await db.from('matches').select('id,zapisnik_id,imported_at,played_on,home_goals,away_goals,home:teams!home_team_id(id,name),away:teams!away_team_id(id,name),rounds!inner(competition_id,season,number)').in('zapisnik_id',ids)
    if(error)throw Error('completed report lookup failed: '+error.message)
-   for(const m of data){const r=chunk.find(r=>String(r.id)===String(m.zapisnik_id));assert.ok(r);assert.equal(m.rounds.competition_id,c.id);assert.equal(m.rounds.season,'2026/27');assert.equal(m.rounds.number,r.z.krog);assert.equal(m.played_on,r.z.datum);if(key)assertSameClubs(m,r.z,key);if(m.imported_at)completed.add(String(r.id))}
+   for(const m of data){
+    const r=chunk.find(r=>String(r.id)===String(m.zapisnik_id));assert.ok(r)
+    assert.equal(m.rounds.competition_id,c.id);assert.equal(m.rounds.season,'2026/27');assert.equal(m.rounds.number,r.z.krog)
+    if(key)assertSameClubs(m,r.z,key)
+    if(!recurring)assert.equal(m.played_on,r.z.datum)
+    if(m.imported_at){
+     if(recurring){
+      const stored={playedOn:m.played_on,homeGoals:m.home_goals??null,awayGoals:m.away_goals??null}
+      const captured={playedOn:r.z.datum,homeGoals:r.z.rezultat.domaci,awayGoals:r.z.rezultat.gostje}
+      if(stored.playedOn!==captured.playedOn||stored.homeGoals!==captured.homeGoals||stored.awayGoals!==captured.awayGoals){
+       assert.equal(typeof onHold,'function','recurring source corrections require durable review holds')
+       await onHold({kind:'already-imported-source-change',league:c.slug,matchId:m.id,reportId:String(r.id),stored,captured})
+      }
+     }
+     completed.add(String(r.id))
+    }
+   }
   }
   return structuredClone(records.filter(r=>!completed.has(String(r.id))))
 }

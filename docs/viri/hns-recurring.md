@@ -23,3 +23,9 @@ Captured work can replay for 7 days without new source requests; older failures 
 Inspect `launchctl print gui/$(id -u)/com.slff.hns-collector` on HQ, `state/collector.log`, `state/collector-error.log`, and the current run's `status.json`. GitHub summaries show capture freshness, incomplete inventory and durable holds. Workflow success means the scanned inventory was processed; it does not mean the source published every held lineup.
 
 For a stopped/refused collector, retain evidence and request provider access/review; do not clear its latch automatically. For worker failures, fix the native/quality issue and rerun the workflow; do not manufacture a receipt. Expired queued captures require reviewed recovery, not timestamp editing. Disable only this launch agent when transferring collection ownership, and transfer its ledger and holds together.
+
+## Existing imported corrections
+
+The completed-ID manifest covers the whole current season, so a source date change does not make an already imported historical report look new. If a queued capture conflicts with an imported result's date or score, the worker preserves the native match and writes an atomic per-shard manual-review hold. Successful receipts retain those holds, and subsequent workflow summaries continue to display them. Other valid reports can finish without overwriting the disputed result. Foreign competition, season, round or club identity still stops replay.
+
+First verified example: source report 114652522 / native 58085 (hr-ri-4nl). Stored 24 October, 0:0 with 23 appearances; captured 18 November, 1:1 with 26 appearances. It remains a review hold, not an automatic historical-score rewrite. The 21 other captured reports matched unique native fixtures; their 26 existing predictions were preserved during observed imports.
