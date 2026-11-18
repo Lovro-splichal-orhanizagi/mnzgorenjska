@@ -97,6 +97,9 @@ jobs:
 
       # `npm run build` že poganja `tsc --noEmit`, a ločen korak pove, KATERI
       # od obeh je padel, brez brskanja po dnevniku.
+      - name: Asturias FAS roster and substitution regressions (offline)
+        run: node --test scripts/test-fas.mjs
+
       - name: Catalonia and Dodecanese public-page migration (offline)
         run: node --test scripts/test-fcf-current.mjs scripts/test-fcf-current-fixtures.mjs scripts/test-fcf-current-routing.mjs scripts/test-epsdod-current.mjs scripts/test-source-migration-captured.mjs scripts/test-source-migration-import.mjs scripts/test-nocni-kosi.mjs scripts/test-nocni-uvoz-drugi-poskus.mjs scripts/test-cakaj-na-uvoze.mjs
 
