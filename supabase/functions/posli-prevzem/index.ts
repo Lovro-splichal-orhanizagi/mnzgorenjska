@@ -229,6 +229,38 @@ POTRJEN.ME = POTRJEN.RS
 POTRJEN.BA = POTRJEN.HR
 POTRJEN.MD = POTRJEN.RO
 
+// Dodatna vrstica o preverjenem profilu (SLF-566, potrdila Nejc/Lovro 17. 11.):
+// le odrasle, neanonimizirane lige in ko je preverjeni profil odprt vsem
+// (`preverjeni_racuni` = 2, isto kot `vidi_preverjene()` za obiskovalce).
+const PREVERJEN: Record<string, string> = {
+  SI: 'Želiš več? S preverjenim profilom dobiš modro kljukico, do 6 posnetkov svojih najboljših potez in highlight video:',
+  HR: 'Želiš više? S provjerenim profilom dobivaš plavu kvačicu, do 6 snimki svojih najboljih poteza i highlight video:',
+  SK: 'Chceš viac? S overeným profilom získaš modrú fajku, až 6 videí svojich najlepších akcií a highlight video:',
+  CZ: 'Chceš víc? S ověřeným profilem získáš modrou fajfku, až 6 videí svých nejlepších akcí a highlight video:',
+  HU: 'Többet szeretnél? Ellenőrzött profillal kék pipát, legfeljebb 6 videót a legjobb megmozdulásaidról és egy highlight videót kapsz:',
+  AT: 'Willst du mehr? Mit einem verifizierten Profil bekommst du einen blauen Haken, bis zu 6 Clips deiner besten Aktionen und ein Highlight-Video:',
+  RS: 'Želiš više? Sa proverenim profilom dobijaš plavu kvačicu, do 6 snimaka svojih najboljih poteza i highlight video:',
+  RO: 'Vrei mai mult? Cu un profil verificat primești o bifă albastră, până la 6 clipuri cu cele mai bune faze ale tale și un video highlight:',
+  EE: 'Tahad rohkem? Kinnitatud profiiliga saad sinise linnukese, kuni 6 klippi oma parimatest hetkedest ja highlight-video:',
+  PL: 'Chcesz więcej? Ze zweryfikowanym profilem dostajesz niebieski znaczek, do 6 klipów ze swoimi najlepszymi akcjami i film highlight:',
+  ES: '¿Quieres más? Con un perfil verificado tienes una insignia azul, hasta 6 vídeos de tus mejores jugadas y un vídeo resumen:',
+  LV: 'Gribi vairāk? Ar pārbaudītu profilu tu saņem zilu ķeksīti, līdz 6 klipiem ar savām labākajām spēlēm un highlight video:',
+  MK: 'Сакаш повеќе? Со проверен профил добиваш сина квачка, до 6 снимки од твоите најдобри потези и highlight видео:',
+  GR: 'Θέλεις κάτι παραπάνω; Με επαληθευμένο προφίλ παίρνεις μπλε τικ, έως 6 βίντεο με τις καλύτερες φάσεις σου και ένα highlight βίντεο:',
+  TR: 'Daha fazlasını mı istiyorsun? Doğrulanmış profille mavi tik, en iyi hareketlerinden en fazla 6 video ve bir highlight videosu alırsın:',
+  UA: 'Хочеш більше? З підтвердженим профілем отримуєш синю галочку, до 6 відео своїх найкращих моментів і highlight-відео:',
+  AM: 'Ավելի՞ն ես ուզում։ Հաստատված պրոֆիլով ստանում ես կապույտ նշան, քո լավագույն դրվագների մինչև 6 տեսանյութ և highlight տեսանյութ:',
+  AZ: 'Daha çoxunu istəyirsən? Təsdiqlənmiş profillə mavi işarə, ən yaxşı anlarından 6-ya qədər video və highlight video alırsan:',
+  DK: 'Vil du have mere? Med en verificeret profil får du et blåt flueben, op til 6 klip af dine bedste aktioner og en highlight-video:',
+  EN: 'Want more? A verified profile gives you a blue tick, up to 6 clips of your best moves and a highlight video:',
+}
+PREVERJEN.ME = PREVERJEN.RS
+PREVERJEN.BA = PREVERJEN.HR
+PREVERJEN.MD = PREVERJEN.RO
+const URL_PREVERJEN = 'https://slff.eu/verified'
+// Isto pravilo kot `jeMladinskiSlug` v src/lib/prevzem.ts.
+const jeMladinskiSlug = (slug: string) => /(^|-)(u1[4-9]|mladinci|kadeti|kadetki|kadetska|juniori)($|-)/.test(slug) || /^sml[0-9]/.test(slug)
+
 interface Neobvescen {
   zahtevek_id: number
   email: string
@@ -240,14 +272,17 @@ interface Neobvescen {
   drzava: string | null
 }
 
-function sestaviPotrjen(v: Neobvescen): { naslov: string; html: string; besedilo: string } {
+function sestaviPotrjen(v: Neobvescen, preverjeniOdprti: boolean): { naslov: string; html: string; besedilo: string } {
   const b = POTRJEN[v.drzava ?? ''] ?? POTRJEN.EN
+  const vabilo = preverjeniOdprti && !jeMladinskiSlug(v.liga_slug) && !v.igralec.startsWith('#')
+    ? (PREVERJEN[v.drzava ?? ''] ?? PREVERJEN.EN)
+    : null
   const u = `https://slff.eu/player/${v.player_id}?t=${encodeURIComponent(v.liga_slug)}`
   const liga = v.liga.replaceAll(' — ', ', ')
   const vstavi = (t: string) => t.replaceAll('{i}', v.igralec).replaceAll('{k}', v.klub).replaceAll('{l}', liga)
-  const besedilo = `${vstavi(b.telo).replaceAll('{u}', u)}\n\nJernej, SLFF`
   // Odstavki telesa: pozdrav, potrditev, kaj lahko dodaš (s povezavo), uradni podatki.
   const [pozdrav, potrditev, dodaj, uradno] = vstavi(b.telo).split('\n\n')
+  const besedilo = [pozdrav, potrditev, dodaj.replaceAll('{u}', u), ...(vabilo ? [`${vabilo}\n${URL_PREVERJEN}`] : []), uradno, 'Jernej, SLFF'].join('\n\n')
   const html = postavi({
     jezik: (BESEDILA[v.drzava ?? ''] ?? BESEDILA.EN).jezik,
     zadeva: b.naslov,
@@ -255,6 +290,7 @@ function sestaviPotrjen(v: Neobvescen): { naslov: string; html: string; besedilo
     naslov: esc(b.naslov),
     uvod: `${esc(pozdrav)} ${esc(potrditev)}<br><br>${esc(dodaj.replace('\n{u}', ''))}`,
     gumb: { label: b.gumb, url: u },
+    ...(vabilo ? { potem: `${esc(vabilo)} <a href="${URL_PREVERJEN}">slff.eu/verified</a>` } : {}),
     opomba: `${esc(uradno ?? '')}<br>Jernej, SLFF`,
     noga: {},
   }).html
@@ -264,11 +300,14 @@ function sestaviPotrjen(v: Neobvescen): { naslov: string; html: string; besedilo
 async function obvestiPotrjene(service: SupabaseClient): Promise<Response> {
   const { data, error } = await service.rpc('prevzem_neobvesceni')
   if (error) return json({ error: error.message }, 500)
+  // Napaka pri branju nastavitve: brez vrstice o preverjenem (mail gre vseeno).
+  const { data: nastavitev } = await service.rpc('nastavitev_int', { p_key: 'preverjeni_racuni', p_privzeto: 0 })
+  const preverjeniOdprti = nastavitev === 2
   let poslano = 0
   const napake: string[] = []
   for (const v of (data ?? []) as Neobvescen[]) {
     // Sestavi pred zakupom: napaka tu ne sme pustiti zakupljenega, neposlanega.
-    const s = sestaviPotrjen(v)
+    const s = sestaviPotrjen(v, preverjeniOdprti)
     // Hkratni klici (vsaka potrditev v adminu sproži enega) dobijo isti
     // seznam; pošlje le tisti, ki zahtevek zakupi.
     const { data: zakupljen, error: eZakup } = await service.rpc('prevzem_zakupi_obvestilo', { p_zahtevek_id: v.zahtevek_id })
