@@ -142,7 +142,7 @@ export function withFcfCurrentFixtures(base,c,db) {
         reads++
         // Source refusals/errors propagate immediately. Never continue a
         // candidate scan after403/429/challenge or retry via another transport.
-        const reports=await base.posamezniZapisnik(code,{id,tekmovanje:c,sezona:season,danes:now})(read)
+        const reports=await base.posamezniZapisnik(code,{id,tekmovanje:c,sezona:season,danes:now,allowAbsent:!known.has(id)})(read)
         assert.ok(Array.isArray(reports)&&reports.length<=1,'fcf current fixtures: ambiguous native source result')
         for(const record of reports) {
           assert.ok(record.id===id && record.z?.zapisnikId===id && record.url===naslovZapisnika(id),'fcf current fixtures: native source ID/URL changed')

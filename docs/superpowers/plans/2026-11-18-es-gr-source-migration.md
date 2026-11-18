@@ -50,3 +50,5 @@ Files: bounded recovery scripts/workflow wiring only as required by proven sourc
 - Dodecanese current495/497 use the exact public WordPress schedule for period14. Other EPS sources and historical policies retain their original routes.
 - Review findings fixed with regression tests: duplicateFCFevents, typedcard/penalty contradictions, whitespace in source team labels, observed91/92minute notation, all-complete replay recomputation retry and fullappearance readback.
 - Official reports missing starter identities or substitution minutes remain held; no timing is inferred from the scorer's first goal.
+- Ruling: a discovery candidate with a proven exact numeric source route and explicitly unassignable official team header may be skipped without inferring a bye or match identity. Unknown HTML, wrong routes, challenges and known-ID reads remain strict. This prevents one unavailable candidate from discarding valid reports; the affected fixture remains pending.
+- Dodecanese's two leagues share one worker's pacing and refusal state. FCF historical-policy leagues remain excluded from this narrowly scoped scheduled recovery.

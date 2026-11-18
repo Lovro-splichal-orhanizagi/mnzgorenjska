@@ -706,8 +706,27 @@ const klubPara = (g) => [poenostaviKlubEs(g.domaci), poenostaviKlubEs(g.gostje)]
 const kljucSkupine = (g) => `${g.tekmovanje}|${g.skupina}|${g.sezona}`
 const napakaKoledarja = (razlog) => new Error(`fcf: neskladen koledar — ${razlog}; uvoz ustavljen`)
 
+// An official numeric page can expose an unassignable club placeholder.
+// This is only discovery disposition: it proves neither a bye nor a fixture.
+function unassignableCurrentCandidate(html, koreni) {
+  const title = presledki(String(html).match(/<title>([^<]*)<\/title>/i)?.[1])
+  const parts = /^Acta:\s*(.*?)\s+vs\s+(.*?)\s*\|/.exec(title)
+  if (!parts || [parts[1], parts[2]].filter(x => x === 'undefined').length !== 1) return false
+  const side = parts[1] === 'undefined' ? 0 : 1
+  const nodes = [...elementi(koreni)]
+  if (!nodes.some(e => e.tip === 'title' && presledki(besedilo(e)) === title)) return false
+  return nodes.some(e => {
+    if (e.tip !== 'div' || e.otroci.length !== 2) return false
+    const placeholder = e.otroci[side], opponent = e.otroci[1 - side]
+    return placeholder?.props?.href === '#' && placeholder.props.title === `CLUB ${side + 1}` &&
+      presledki(besedilo(placeholder)) === `CLUB ${side + 1}` &&
+      /^\/ca\/clubs\/[a-z0-9-]+\/categories\/[a-z0-9-]+$/.test(opponent?.props?.href ?? '') &&
+      presledki(besedilo(opponent)) === parts[2 - side]
+  })
+}
+
 /** Pure source context shared by the audit and existing selected-report reader. */
-function singleReportSourceContext(koda, { id, tekmovanje: c, sezona, danes = Date.now(), redirectHtml = null } = {}) {
+function singleReportSourceContext(koda, { id, tekmovanje: c, sezona, danes = Date.now(), redirectHtml = null, allowAbsent = false } = {}) {
   const fail = reason => { throw new Error(`fcf: posamezni zapisnik — ${reason}; uvoz ustavljen`) }
   const group = /^es-ct-(elit|primera|segona|tercera|quarta)(?:-g([1-9]\d*))?$/.exec(c?.slug ?? '')
   if (c?.source !== 'fcf' || c.sezona_koledarska !== false || !group ||
@@ -731,6 +750,13 @@ function singleReportSourceContext(koda, { id, tekmovanje: c, sezona, danes = Da
   const validate = html => {
     if (jeIzziv(html)) throw new FcfZavrnitev(`fcf: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
     const route = vrsticeRsc(tokRsc(html)).get('0')?.c
+    // allowAbsent is discovery-only unavailable handling. Require the exact
+    // numeric route and real rendered source elements, never bundled messages.
+    if (allowAbsent === true && isFcfActaSourceRoute(route, String(numericId)) && route[4] === String(numericId)) {
+      const tree = drevoRsc(html)
+      if (vrstaStrani(html) === 'ni' && [...elementi(tree)].some(e => e.tip === 'h1' && besedilo(e).trim() === 'Acta no trobada')) return null
+      if (vrstaStrani(html) === 'zapisnik' && unassignableCurrentCandidate(html, tree)) return null
+    }
     const g = glavaStrani(html)
     const current = isFcfCurrentPage(html)
     if (current) validateFcfCurrentIdentity(html, { id, url, redirectHtml: redirectHtml ?? currentRedirectEvidence(html, id, url) })
@@ -773,7 +799,10 @@ export function posamezniZapisnik(koda, options = {}) {
     const header = cached ? glavaStrani(cached.html) : null
     const useCache = cached && cached.starost <= najvecStarost(header, danes, true) && (!isFcfCurrentPage(cached.html) || currentRedirectEvidence(cached.html, id, url))
     const html = useCache ? cached.html : await beri(prenesi, numericId, -1, validate)
-    validate(html)
+    if (validate(html) === null) {
+      if (!useCache) { mkdirSync(MAPA, { recursive: true }); writeFileSync(pot(imeStrani(numericId)), html) }
+      return []
+    }
     // Preserve the ordinary parser's exact source corrections and drift guards.
     const z = vZapisnik(html, { id, url })
     if (!useCache) {

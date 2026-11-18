@@ -115,3 +115,55 @@ for(const count of [238,239,241])test(`nearby observed block length ${count} dis
  assert.ok(f.state.reads.every(id=>Number(id.slice(2))>=4107021&&Number(id.slice(2))<=4107034))
  assert.equal(await p.assertNativeFixture({id:'es4107024',roundId:900,homeTeamId:800,awayTeamId:801}),true)
 })
+
+const absentHtml=readFileSync(new URL('./vzorci/fcf-g9-not-found-4118349-20261028.html',import.meta.url),'utf8')
+const absentCompetition={...c,source_league_code:'4118349-4118588'}
+const absentOptions={id:'es4118349',tekmovanje:absentCompetition,sezona:'2026/27',danes:now}
+test('real retained exact-ID absence is empty only for discovery single reader',async t=>{
+ setup(t,[])
+ mkdirSync('scripts/.predpomnilnik/fcf',{recursive:true})
+ assert.deepEqual(await fcf.posamezniZapisnik(absentCompetition.source_league_code,{...absentOptions,allowAbsent:true})(async()=>absentHtml),[])
+ await assert.rejects(fcf.posamezniZapisnik(absentCompetition.source_league_code,absentOptions)(async()=>absentHtml))
+})
+test('discovery absence rejects wrong source route, generic unknown page and challenge',async t=>{
+ setup(t,[]);mkdirSync('scripts/.predpomnilnik/fcf',{recursive:true})
+ for(const body of [absentHtml.replaceAll('4118349','4118350'),'<title>Acta no trobada | FCF</title><h1>Acta no trobada</h1>','<title>Just a moment</title>']){
+  await assert.rejects(fcf.posamezniZapisnik(absentCompetition.source_league_code,{...absentOptions,allowAbsent:true})(async()=>body))
+ }
+})
+test('discovery queue survives real proven absence and continues without weakening known-ID reads',async t=>{
+ const unknown={...fixture(),zapisnik_id:null,rounds:{...fixture().rounds,number:1}}
+ const f=setup(t,[unknown]);mkdirSync('scripts/.predpomnilnik/fcf',{recursive:true})
+ const calls=[]
+ const base={...fcf,posamezniZapisnik(code,options){calls.push(options);return options.id==='es4118349'?fcf.posamezniZapisnik(code,options):async()=>[]}}
+ assert.deepEqual(await adapter.withFcfCurrentFixtures(base,absentCompetition,f.db).zapisniki(absentCompetition.source_league_code,async()=>absentHtml),[])
+ assert.ok(calls.length>1);assert.equal(calls[0].allowAbsent,true)
+ f.state.rows=[{...unknown,zapisnik_id:'es4118349'}];calls.length=0
+ await assert.rejects(adapter.withFcfCurrentFixtures(base,absentCompetition,f.db).zapisniki(absentCompetition.source_league_code,async()=>absentHtml))
+ assert.equal(calls.length,1);assert.equal(calls[0].allowAbsent,false)
+})
+
+const unavailableHtml=gunzipSync(readFileSync(new URL('./vzorci/es-fcf-current-unavailable-4139846.html.gz',import.meta.url))).toString()
+const unavailableCompetition={...c,slug:'es-ct-quarta-g2',source_league_code:'4139780-4140019'}
+const unavailableOptions={id:'es4139846',tekmovanje:unavailableCompetition,sezona:'2026/27',danes:now}
+test('actual undefined-club source page is unavailable only in discovery mode',async t=>{
+ setup(t,[]);mkdirSync('scripts/.predpomnilnik/fcf',{recursive:true})
+ assert.deepEqual(await fcf.posamezniZapisnik(unavailableCompetition.source_league_code,{...unavailableOptions,allowAbsent:true})(async()=>unavailableHtml),[])
+ await assert.rejects(fcf.posamezniZapisnik(unavailableCompetition.source_league_code,unavailableOptions)(async()=>unavailableHtml))
+})
+test('unavailable classification needs exact route and real source title plus team header',async t=>{
+ setup(t,[]);mkdirSync('scripts/.predpomnilnik/fcf',{recursive:true})
+ for(const body of [unavailableHtml.replaceAll('4139846','4139847'),unavailableHtml.replaceAll('CLUB 1','OTHER TEAM'),unavailableHtml.replace(/<title>.*?<\/title>/,'<title>Unknown</title>'),'<title>Acta: undefined vs Example | FCF</title>'])
+  await assert.rejects(fcf.posamezniZapisnik(unavailableCompetition.source_league_code,{...unavailableOptions,allowAbsent:true})(async()=>body))
+})
+test('unassignable discovered source page does not abort later candidates',async t=>{
+ const unknown={...fixture(),zapisnik_id:null,rounds:{...fixture().rounds,number:9}}
+ const f=setup(t,[unknown]);mkdirSync('scripts/.predpomnilnik/fcf',{recursive:true})
+ const calls=[]
+ const base={...fcf,posamezniZapisnik(code,options){calls.push(options);return options.id==='es4139846'?fcf.posamezniZapisnik(code,options):async()=>[]}}
+ assert.deepEqual(await adapter.withFcfCurrentFixtures(base,unavailableCompetition,f.db).zapisniki(unavailableCompetition.source_league_code,async()=>unavailableHtml),[])
+ const index=calls.findIndex(x=>x.id==='es4139846');assert.ok(index>=0&&index<calls.length-1)
+ f.state.rows=[{...unknown,zapisnik_id:'es4139846'}];calls.length=0
+ await assert.rejects(adapter.withFcfCurrentFixtures(base,unavailableCompetition,f.db).zapisniki(unavailableCompetition.source_league_code,async()=>unavailableHtml))
+ assert.equal(calls.length,1);assert.equal(calls[0].allowAbsent,false)
+})
