@@ -37,6 +37,17 @@ test('replay skips completed native reports; incomplete retries remain, foreign 
  rows[1].imported_at='2026-11-18';assert.deepEqual(await missingRecoveryRecords(records,{id:10},db),[])
  rows[0].rounds.competition_id=999;await assert.rejects(missingRecoveryRecords(records,{id:10},db))
 })
+test('replay accepts a sponsor-renamed club on one side, rejects a different club',async()=>{
+ const {missingRecoveryRecords}=await import('./viri/recovery-captured.mjs'),{default:hns}=await import('./viri/hns.mjs')
+ const z={datum:'2026-11-08',krog:10,domaci:{ime:'NK Dubrava Zagreb'},gostje:{ime:'NK Sesvete'}}
+ const records=[{id:'1',z}]
+ const row=(home,away)=>({id:1,zapisnik_id:'1',imported_at:'2026-11-18',played_on:z.datum,home:{id:1,name:home},away:{id:2,name:away},rounds:{competition_id:10,season:'2026/27',number:10}})
+ const run=(home,away)=>missingRecoveryRecords(records,{id:10},{from(){return{select(){return this},async in(){return{data:[row(home,away)],error:null}}}}},hns.kljucKluba)
+ assert.deepEqual(await run('NK Dubrava Tim Kabel','NK Sesvete'),[])
+ await assert.rejects(run('NK Lokomotiva','NK Sesvete'),/differs from captured report/)
+ await assert.rejects(run('NK Dubrava Tim Kabel','NK Lokomotiva'),/differs from captured report/)
+ await assert.rejects(run('NK Lokomotiva','NK Maksimir'),/differs from captured report/)
+})
 test('actual competition loader resolves the country for captured HNS before native import',async()=>{
  const {tekmovanje}=await import('./tekmovanje.mjs'),old=process.env.SLFF_RECOVERY_CAPTURE
  process.env.SLFF_RECOVERY_CAPTURE='test-private-capture'
