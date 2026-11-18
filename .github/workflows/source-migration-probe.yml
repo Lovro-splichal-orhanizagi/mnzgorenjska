@@ -2,7 +2,7 @@ name: Public source migration probe
 on:
   push:
     branches: [codex/es-gr-source-migration]
-    paths: [.github/workflows/source-migration-probe.yml]
+    paths: [.github/workflows/source-migration-probe.yml, scripts/source-migration-inventory.mjs]
   workflow_dispatch:
 permissions:
   contents: read
