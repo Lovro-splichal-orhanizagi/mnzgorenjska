@@ -144,3 +144,16 @@ test('CLI requires explicit bounded arguments, exact DB row and exposes output p
  const seeded=await api.runFussballNightlyCli(['seed','--tekmovanje',row.slug,'--bulk-capture','/tmp/verified-pack'],{readCompetition:async()=>({...row,active:false}),seed:async options=>{seeds++;assert.equal(options.candidate.active,false);assert.equal(options.bulkDirectory,'/tmp/verified-pack');return {seeded:true}}})
  assert.equal(seeds,1);assert.equal(seeded.seeded,true)
 })
+
+test('a transport failure logs the failing URL and the underlying cause (SLF-573)',async()=>{
+ const lines=[]
+ const cause=Object.assign(Error('connect ETIMEDOUT 1.2.3.4:443'),{code:'ETIMEDOUT',syscall:'connect',address:'1.2.3.4',port:443})
+ const failing=async()=>{throw Object.assign(TypeError('fetch failed'),{cause})}
+ await assert.rejects(api.loggingFetch(failing,l=>lines.push(l))('https://www.fussball.de/x',{}),/fetch failed/)
+ assert.equal(lines.length,1)
+ assert.match(lines[0],/https:\/\/www\.fussball\.de\/x/)
+ assert.match(lines[0],/ETIMEDOUT/)
+ assert.match(lines[0],/1\.2\.3\.4 443/)
+ const ok=await api.loggingFetch(async()=>'fine',l=>lines.push(l))('https://www.fussball.de/y')
+ assert.equal(ok,'fine');assert.equal(lines.length,1)
+})

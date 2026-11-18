@@ -79,7 +79,25 @@ function sourceStop(directory,error,{manifest=true}={}){
   return classifyStop(`${snapshot.stopReason??''} ${error?.message??''}`)
  }catch{return null}
 }
+// A transport failure surfaces only as "fetch failed"; name the failing URL and the
+// underlying cause (code, syscall, host) so the nightly log shows why (SLF-573).
+export function describeFetchCause(error){
+ const parts=[]
+ for(let e=error?.cause,i=0;e&&i<4;e=e.cause,i++)parts.push([e.name,e.code,e.errno,e.syscall,e.hostname??e.address,e.port].filter(x=>x!=null&&x!=='').join(' ')||String(e.message??e))
+ return parts.join(' <- ')
+}
+export function loggingFetch(fetchFn=globalThis.fetch,log=console.error){
+ return async(url,options)=>{
+  const started=Date.now()
+  try{return await fetchFn(url,options)}
+  catch(error){
+   log(`fussball fetch failed after ${Date.now()-started} ms: ${String(url)} (${error?.name??'Error'}: ${error?.message??error}${describeFetchCause(error)?`; cause: ${describeFetchCause(error)}`:''})`)
+   throw error
+  }
+ }
+}
 export async function prepareFussballNightly({candidate,directory,maxRequests=4000,now=Date.now,captureDirectory=captureFussballDirectory,loadCapture=loadFussballImportCapture,loadCurrentOnly,loadCurrentOnlyPack,loadNativeSeed=loadFussballNativeRuntimeSeed,captureNative=captureFussballNativeRuntimeDirectory,fetchFn,cacheDirectory,installedHistoricalMarkers=candidate?.fussballHistoricalContext,db}={}){
+ fetchFn=loggingFetch(fetchFn)
  const reviewed=assertFussballNightlyCompetition(candidate),scope=parseFussballLeagueCode(reviewed.source_league_code)
  proof(typeof directory==='string'&&directory.length>0&&!existsSync(directory),'output must identify a new capture directory')
  proof(Number.isInteger(maxRequests)&&maxRequests>=1&&maxRequests<=4000,'request budget must be 1..4000')
