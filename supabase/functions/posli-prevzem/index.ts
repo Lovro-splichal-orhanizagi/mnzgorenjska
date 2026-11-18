@@ -229,6 +229,40 @@ POTRJEN.ME = POTRJEN.RS
 POTRJEN.BA = POTRJEN.HR
 POTRJEN.MD = POTRJEN.RO
 
+// Dodatna vrstica o preverjenem profilu (SLF-566, odobreno 17. 11.): le
+// odrasle lige in igralci z imenom (enako pravilo kot kartica na profilu).
+const PREVERJEN: Record<string, string> = {
+  SI: 'Želiš več? S preverjenim profilom dobiš modro kljukico, do 6 posnetkov svojih najboljših potez in highlight video:',
+  HR: 'Želiš više? S provjerenim profilom dobivaš plavu kvačicu, do 6 snimaka svojih najboljših poteza i highlight video:',
+  SK: 'Chceš viac? S overeným profilom dostaneš modrú fajku, až 6 videí svojich najlepších akcií a highlight video:',
+  CZ: 'Chceš víc? S ověřeným profilem dostaneš modrou fajfku, až 6 videí svých nejlepších akcí a highlight video:',
+  HU: 'Többet szeretnél? Ellenőrzött profillal kék pipát, legfeljebb 6 videót a legjobb megmozdulásaidról és highlight videót kapsz:',
+  AT: 'Willst du mehr? Mit einem verifizierten Profil bekommst du einen blauen Haken, bis zu 6 Clips deiner besten Aktionen und ein Highlight-Video:',
+  RS: 'Želiš više? Sa proverenim profilom dobijaš plavu kvačicu, do 6 snimaka svojih najboljih poteza i highlight video:',
+  RO: 'Vrei mai mult? Cu un profil verificat primești bifa albastră, până la 6 clipuri cu cele mai bune faze ale tale și un video highlight:',
+  EE: 'Tahad rohkem? Kinnitatud profiiliga saad sinise linnukese, kuni 6 klippi oma parimatest momentidest ja highlight-video:',
+  PL: 'Chcesz więcej? Ze zweryfikowanym profilem dostajesz niebieski znaczek, do 6 klipów swoich najlepszych akcji i film highlight:',
+  ES: '¿Quieres más? Con un perfil verificado tienes la marca azul, hasta 6 clips de tus mejores jugadas y un vídeo highlight:',
+  LV: 'Gribi vairāk? Ar pārbaudītu profilu tu saņem zilo ķeksīti, līdz 6 klipiem ar savām labākajām darbībām un highlight video:',
+  MK: 'Сакаш повеќе? Со проверен профил добиваш сина ознака, до 6 снимки од твоите најдобри потези и highlight видео:',
+  GR: 'Θέλεις περισσότερα; Με επαληθευμένο προφίλ παίρνεις μπλε τικ, έως 6 κλιπ με τις καλύτερες φάσεις σου και ένα highlight βίντεο:',
+  TR: 'Daha fazlasını mı istiyorsun? Doğrulanmış profille mavi tik, en iyi hareketlerinden 6 klibe kadar ve bir highlight videosu alırsın:',
+  UA: 'Хочеш більше? З підтвердженим профілем отримуєш синю галочку, до 6 кліпів своїх найкращих моментів і highlight-відео:',
+  AM: 'Ուզո՞ւմ ես ավելին։ Հաստատված պրոֆիլով ստանում ես կապույտ նշան, մինչև 6 տեսահատված քո լավագույն դրվագներից և highlight տեսանյութ:',
+  AZ: 'Daha çoxunu istəyirsən? Təsdiqlənmiş profillə mavi işarə, ən yaxşı anlarından 6-ya qədər klip və highlight video alırsan:',
+  DK: 'Vil du have mere? Med en verificeret profil får du et blåt flueben, op til 6 klip af dine bedste aktioner og en highlight-video:',
+  EN: 'Want more? A verified profile gives you a blue tick, up to 6 clips of your best moves and a highlight video:',
+}
+PREVERJEN.ME = PREVERJEN.RS
+PREVERJEN.BA = PREVERJEN.HR
+PREVERJEN.MD = PREVERJEN.RO
+const URL_PREVERJEN = 'https://slff.eu/verified'
+
+function jeMladinskiSlug(slug: string | null | undefined): boolean {
+  if (!slug) return false
+  return /(^|-)(u1[4-9]|mladinci|kadeti|kadetki|kadetska|juniori)($|-)/.test(slug) || /^sml[0-9]/.test(slug)
+}
+
 interface Neobvescen {
   zahtevek_id: number
   email: string
@@ -245,15 +279,19 @@ function sestaviPotrjen(v: Neobvescen): { naslov: string; html: string; besedilo
   const u = `https://slff.eu/player/${v.player_id}?t=${encodeURIComponent(v.liga_slug)}`
   const liga = v.liga.replaceAll(' — ', ', ')
   const vstavi = (t: string) => t.replaceAll('{i}', v.igralec).replaceAll('{k}', v.klub).replaceAll('{l}', liga)
-  const besedilo = `${vstavi(b.telo).replaceAll('{u}', u)}\n\nJernej, SLFF`
+  const preverjen = !v.igralec.startsWith('#') && !jeMladinskiSlug(v.liga_slug)
+    ? (PREVERJEN[v.drzava ?? ''] ?? PREVERJEN.EN) : null
   // Odstavki telesa: pozdrav, potrditev, kaj lahko dodaš (s povezavo), uradni podatki.
   const [pozdrav, potrditev, dodaj, uradno] = vstavi(b.telo).split('\n\n')
+  const besedilo = [pozdrav, potrditev, dodaj.replaceAll('{u}', u), ...(preverjen ? [`${preverjen}\n${URL_PREVERJEN}`] : []), uradno]
+    .join('\n\n') + '\n\nJernej, SLFF'
   const html = postavi({
     jezik: (BESEDILA[v.drzava ?? ''] ?? BESEDILA.EN).jezik,
     zadeva: b.naslov,
     predglava: potrditev,
     naslov: esc(b.naslov),
-    uvod: `${esc(pozdrav)} ${esc(potrditev)}<br><br>${esc(dodaj.replace('\n{u}', ''))}`,
+    uvod: `${esc(pozdrav)} ${esc(potrditev)}<br><br>${esc(dodaj.replace('\n{u}', ''))}`
+      + (preverjen ? `<br><br>${esc(preverjen)} <a href="${URL_PREVERJEN}">slff.eu/verified</a>` : ''),
     gumb: { label: b.gumb, url: u },
     opomba: `${esc(uradno ?? '')}<br>Jernej, SLFF`,
     noga: {},
