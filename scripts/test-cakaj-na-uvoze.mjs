@@ -662,7 +662,7 @@ test('a transient GitHub 5xx is retried instead of failing the wait step', async
 })
 
  test('captured recovery serializes the same country and global writers',async()=>{
-  for(const [source,country] of [['hns','HR'],['pzpn','PL']]){
+  for(const [source,country] of [['hns','HR'],['pzpn','PL'],['fcf','ES'],['epsdod','GR']]){
    const runs={'recovery-captured.yml':[run('Captured recovery '+source)]}
    assert.equal((await coordinate(['--drzava',country],runs)).code,1)
    assert.equal((await coordinate(['--drzava','DE'],runs)).code,0)

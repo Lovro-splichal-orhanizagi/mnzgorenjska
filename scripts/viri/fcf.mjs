@@ -1,3 +1,5 @@
+import { fcfCurrentData, fcfCurrentClubs, fcfPublicRedirect, isFcfCurrentPage, validateFcfCurrentIdentity } from './fcf-current.mjs'
+export { fcfPublicRedirect, validateFcfCurrentIdentity } from './fcf-current.mjs'
 import {isFcfG1SupplementUnknownResultMarker,isFcfG1SupplementCalendarIdentity} from '../lib/fcf-g1-supplement-installed.mjs'
 import {isFcfSixUnknownResultMarker} from '../fcf-six-historical-policy.mjs'
 // Vir: Federació Catalana de Futbol — fcf.cat (Katalonija, Španija).
@@ -151,7 +153,22 @@ export function drevoRsc(html) {
         razreseno.set(m[1], r)
         return r
       }
-      if (/^\$[0-9a-f]+:/.test(v) || /^\$[SFQWBKnDTPZ]/.test(v)) return null
+      const pot = v.match(/^\$([0-9a-f]+):(.+)$/)
+      if (pot) {
+        // Next's shared player props use paths into raw RSC elements. Resolve
+        // own properties only; never walk prototypes or evaluate page code.
+        let raw = vrstice.get(pot[1])
+        sklicane.add(pot[1])
+        for (const key of pot[2].split(':')) {
+          let depth = 0
+          while (typeof raw === 'string' && /^\$[0-9a-f]+$/.test(raw) && depth++ < 100) raw = vrstice.get(raw.slice(1))
+          if (key === 'props' && Array.isArray(raw) && raw[0] === '$') raw = raw[3]
+          else if (raw && typeof raw === 'object' && Object.hasOwn(raw, key) && !['__proto__', 'constructor', 'prototype'].includes(key)) raw = raw[key]
+          else return null
+        }
+        return razresi(raw, globina + 1)
+      }
+      if (/^\$[SFQWBKnDTPZ]/.test(v)) return null
       if (v.startsWith('$$')) return v.slice(1)
       return v
     }
@@ -444,22 +461,28 @@ export function goliZapisnika(koreni) {
 /** Glava strani brez razčlenitve ekip (za razpored). Null, če stran ni zapisnik. */
 export function glavaStrani(html) {
   if (vrstaStrani(html) !== 'zapisnik') return null
-  return glavaZapisnika(drevoRsc(html))
+  const koreni = drevoRsc(html)
+  if (!isFcfCurrentPage(html)) return glavaZapisnika(koreni)
+  const data = fcfCurrentData(koreni)
+  return { ...data.g, nepopoln: data.opozorila.length > 0 }
 }
 
 /**
  * Zapisnik v obliko drugih virov. Null, če stran ni zapisnik ali tekma nima
  * izida (neodigrana).
  */
-export function vZapisnik(html, { id = null, url = null } = {}) {
+export function vZapisnik(html, { id = null, url = null, redirectHtml = null } = {}) {
   if (vrstaStrani(html) !== 'zapisnik') return null
   const koreni = drevoRsc(html)
-  const g = glavaZapisnika(koreni)
+  const current = isFcfCurrentPage(html)
+  if (current) validateFcfCurrentIdentity(html, { id, url, redirectHtml: redirectHtml ?? currentRedirectEvidence(html, id, url) })
+  const data = current ? fcfCurrentData(koreni) : null
+  const g = data?.g ?? glavaZapisnika(koreni)
   if (!g.izid) return null
   const vozel = prvi(koreni, (e) => e.props && 'localNode' in e.props && 'visitorNode' in e.props)
-  const ekipeIgr = [igralciEkipe(vozel?.props.localNode), igralciEkipe(vozel?.props.visitorNode)]
+  const ekipeIgr = data?.ekipeIgr ?? [igralciEkipe(vozel?.props.localNode), igralciEkipe(vozel?.props.visitorNode)]
   const imeni = [g.domaci, g.gostje]
-  const opozorila = []
+  const opozorila = data?.opozorila ?? []
   const ekipe = ekipeIgr.map((xs) => ({ postava: xs.filter((i) => i.zacetnik), rezerve: xs.filter((i) => !i.zacetnik) }))
   const znana = ekipe.map((x) => x.postava.length >= NAJMANJ_ZACETNIKOV)
   ekipe.forEach((x, idx) => {
@@ -473,7 +496,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
   // Goli iz razdelka "Gols"; stanje po golu pove, kateri ekipi je štel.
   const goli = []
   let prej = [0, 0]
-  for (const x of goliZapisnika(koreni)) {
+  for (const x of data?.goli ?? goliZapisnika(koreni)) {
     const za = x.stanje[0] > prej[0] && x.stanje[1] === prej[1] ? 0 : x.stanje[1] > prej[1] && x.stanje[0] === prej[0] ? 1 : null
     prej = x.stanje
     const k = kje.get(x.regSt)
@@ -543,7 +566,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
     rdeci,
     menjave: [],
     brezMenjav,
-    nepopoln: !znana[0] || !znana[1],
+    nepopoln: !znana[0] || !znana[1] || (current && (opozorila.length > 0 || !g.zaprt)),
     prazen: !ekipe[0].postava.length && !ekipe[1].postava.length,
     opozorila,
   }
@@ -595,6 +618,27 @@ export function kratkoImeEs(polno) {
 // --- blok in branje --------------------------------------------------------------------
 
 const pot = (ime) => `${MAPA}/${ime}`
+const currentProofs = new Map()
+const htmlDigest = html => createHash('sha256').update(html).digest('hex')
+const proofPath = id => pot(`acta-${String(id).replace(/^es/, '')}.redirect.json`)
+function currentRedirectEvidence(html, id, url) {
+  const sha256 = htmlDigest(html)
+  let proof = currentProofs.get(sha256)
+  if (!proof && /^es[1-9]\d*$/.test(String(id))) {
+    try { proof = JSON.parse(readFileSync(proofPath(id), 'utf8')) } catch { return null }
+  }
+  if (!proof || proof.sha256 !== sha256 || proof.id !== sifraZapisnika(id) || proof.url !== url) return null
+  return proof.redirectHtml
+}
+function saveCurrentEvidence(html, id) {
+  if (!isFcfCurrentPage(html)) return
+  const url = naslovZapisnika(id), sid = sifraZapisnika(id)
+  const redirectHtml = currentRedirectEvidence(html, sid, url)
+  validateFcfCurrentIdentity(html, { id: sid, url, redirectHtml })
+  mkdirSync(MAPA, { recursive: true })
+  writeFileSync(proofPath(id), JSON.stringify({ sha256: htmlDigest(html), id: sid, url, redirectHtml }))
+}
+
 function izPredpomnilnika(ime) {
   const p = pot(ime)
   if (!existsSync(p)) return null
@@ -615,7 +659,7 @@ export class FcfZavrnitev extends Error {
 async function beri(prenesi, id, najvec, preveri = null) {
   const ime = imeStrani(id)
   const c = izPredpomnilnika(ime)
-  if (!preveri && c && c.starost <= najvec) return c.html
+  if (!preveri && c && c.starost <= najvec && (!isFcfCurrentPage(c.html) || currentRedirectEvidence(c.html, sifraZapisnika(id), naslovZapisnika(id)))) return c.html
   // Običajna klicatelja prenosa pišeta že pred vrnitvijo iz prenesi. Pri
   // ciljni obnovi zato najprej pišeta v začasno datoteko, brez stare rezerve.
   const imePrenosa = preveri ? `.paired-${id}-${randomUUID()}.html` : ime
@@ -629,6 +673,7 @@ async function beri(prenesi, id, najvec, preveri = null) {
     // Ciljni odgovor ostane v pomnilniku do preverbe CELOTNEGA koledarja.
     if (!preveri) {
       mkdirSync(MAPA, { recursive: true })
+      saveCurrentEvidence(html, id)
       writeFileSync(pot(ime), html)
     }
   } catch (e) {
@@ -648,7 +693,7 @@ export function najvecStarost(g, danes = Date.now(), svezi = false) {
   const star = starostDni(g.datum, danes)
   if (g.izid) {
     if (svezi && star <= 3) return -1 // popravki prvih dni
-    if (!g.zaprt && star <= 45) return URA // zapisnik še ni zaprt
+    if ((!g.zaprt || g.nepopoln) && star <= 45) return URA // zapisnik še ni zaprt
     return Infinity
   }
   if (!g.datum) return 7 * DAN
@@ -662,7 +707,7 @@ const kljucSkupine = (g) => `${g.tekmovanje}|${g.skupina}|${g.sezona}`
 const napakaKoledarja = (razlog) => new Error(`fcf: neskladen koledar — ${razlog}; uvoz ustavljen`)
 
 /** Pure source context shared by the audit and existing selected-report reader. */
-function singleReportSourceContext(koda, { id, tekmovanje: c, sezona, danes = Date.now() } = {}) {
+function singleReportSourceContext(koda, { id, tekmovanje: c, sezona, danes = Date.now(), redirectHtml = null } = {}) {
   const fail = reason => { throw new Error(`fcf: posamezni zapisnik — ${reason}; uvoz ustavljen`) }
   const group = /^es-ct-(elit|primera|segona|tercera|quarta)(?:-g([1-9]\d*))?$/.exec(c?.slug ?? '')
   if (c?.source !== 'fcf' || c.sezona_koledarska !== false || !group ||
@@ -687,7 +732,9 @@ function singleReportSourceContext(koda, { id, tekmovanje: c, sezona, danes = Da
     if (jeIzziv(html)) throw new FcfZavrnitev(`fcf: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
     const route = vrsticeRsc(tokRsc(html)).get('0')?.c
     const g = glavaStrani(html)
-    if (!isFcfActaSourceRoute(route, String(numericId)) ||
+    const current = isFcfCurrentPage(html)
+    if (current) validateFcfCurrentIdentity(html, { id, url, redirectHtml: redirectHtml ?? currentRedirectEvidence(html, id, url) })
+    if ((!current && !isFcfActaSourceRoute(route, String(numericId))) ||
         !g || g.sezona !== sezona || g.tekmovanje !== expectedCompetition ||
         g.skupina !== expectedGroup || !g.domaci || !g.gostje ||
         /^undefined$/i.test(g.domaci) || /^undefined$/i.test(g.gostje) ||
@@ -724,12 +771,19 @@ export function posamezniZapisnik(koda, options = {}) {
   return async prenesi => {
     const cached = izPredpomnilnika(imeStrani(numericId))
     const header = cached ? glavaStrani(cached.html) : null
-    const useCache = cached && cached.starost <= najvecStarost(header, danes, true)
+    const useCache = cached && cached.starost <= najvecStarost(header, danes, true) && (!isFcfCurrentPage(cached.html) || currentRedirectEvidence(cached.html, id, url))
     const html = useCache ? cached.html : await beri(prenesi, numericId, -1, validate)
     validate(html)
     // Preserve the ordinary parser's exact source corrections and drift guards.
     const z = vZapisnik(html, { id, url })
-    if (!useCache) writeFileSync(pot(imeStrani(numericId)), html)
+    if (!useCache) {
+      saveCurrentEvidence(html, numericId)
+      writeFileSync(pot(imeStrani(numericId)), html)
+    }
+    if (isFcfCurrentPage(html) && z?.nepopoln) {
+      console.warn(`fcf: ${id} current report held: ${z.opozorila.join('; ')}`)
+      return []
+    }
     if (!z || (z.prazen && starostDni(z.datum, danes) > 7)) return []
     return [{ id: z.zapisnikId, z, url, rawSha256: createHash('sha256').update(html).digest('hex') }]
   }
@@ -737,6 +791,7 @@ export function posamezniZapisnik(koda, options = {}) {
 
 /** Natančni imeni in uradni povezavi na straneh glave, brez vzdevkov klubov. */
 function identitetaPara(html) {
+  if (isFcfCurrentPage(html)) return fcfCurrentClubs(drevoRsc(html)).map(x => `${poenostaviKlubEs(x.name)}|${x.slug}`)
   const ovoj = prvi(drevoRsc(html), (e) => e.props?.title === 'Acta del partit')
   const stolpci = ovoj && [...elementi(ovoj)].find((e) => e.tip === 'div' &&
     e.otroci.filter(jeElement).length === 3 && /-/.test(besedilo(e.otroci.filter(jeElement)[1])))
@@ -911,9 +966,13 @@ export async function preberiBlok(koda, prenesi, { danes = Date.now(), svezi = f
     if (historical.has(id)) { strani.push(historical.get(id)); continue }
     const c = izPredpomnilnika(imeStrani(id))
     const g = c ? glavaStrani(c.html) : null
-    const uporabi = c && c.starost <= najvecStarost(g, danes, svezi)
+    const uporabi = c && c.starost <= najvecStarost(g, danes, svezi) && (!isFcfCurrentPage(c.html) || currentRedirectEvidence(c.html, sifraZapisnika(id), naslovZapisnika(id)))
     if (uporabi) ponovnoUporabljeni.add(id)
     const html = uporabi ? c.html : await beri(prenesi, id, -1)
+    if (isFcfCurrentPage(html)) {
+      validateFcfCurrentIdentity(html, { id: sifraZapisnika(id), url: naslovZapisnika(id), redirectHtml: currentRedirectEvidence(html, sifraZapisnika(id), naslovZapisnika(id)) })
+      saveCurrentEvidence(html, id)
+    }
     strani.push({ id, html })
   }
   const tekme = []
@@ -990,13 +1049,32 @@ export async function fcfFetch(url, moznosti = {}) {
   const { signal: _s, ...ostalo } = moznosti
   for (let poskus = 0; poskus < 2; poskus++) {
     const signal = AbortSignal.timeout(90000)
-    const o = await fetch(url, { ...ostalo, signal })
+    const o = await fetch(url, { ...ostalo, ...(zapisnik ? { redirect: 'manual' } : {}), signal })
     if (o.status === 403 || o.status === 429) {
       // Zavrnitev ima prednost tudi pred visečim ali pokvarjenim preklicem.
       try { void o.body?.cancel().catch(() => {}) } catch { /* Najboljši trud. */ }
       throw new FcfZavrnitev(`fcf: ${url} → ${o.status} — uvoz ustavljen, ne obhajamo`, o.status)
     }
     const telo = await o.text()
+    if (zapisnik && o.status === 200 && /<meta\b[^>]*http-equiv=["']refresh["']/i.test(telo)) {
+      if (jeIzziv(telo)) throw new FcfZavrnitev(`fcf: ${url} vrne izziv — uvoz ustavljen`)
+      const id = sifraZapisnika(url.split('/').at(-1))
+      const target = fcfPublicRedirect(telo, { id, url })
+      await new Promise(r => setTimeout(r, Math.ceil(PREMOR_MS * faktor)))
+      const next = await fetch(target, { ...ostalo, redirect: 'manual', signal: AbortSignal.timeout(90000) })
+      if (next.status === 403 || next.status === 429) {
+        try { void next.body?.cancel().catch(() => {}) } catch {}
+        throw new FcfZavrnitev(`fcf: ${target} → ${next.status} — uvoz ustavljen`, next.status)
+      }
+      const body = await next.text()
+      if (jeIzziv(body)) throw new FcfZavrnitev(`fcf: ${target} vrne izziv — uvoz ustavljen`)
+      if (next.status !== 200 || next.redirected || (next.url && next.url !== target)) throw new Error('fcf: canonical report unavailable or redirected — uvoz ustavljen')
+      validateFcfCurrentIdentity(body, { id, url, redirectHtml: telo })
+      const sha256 = htmlDigest(body)
+      currentProofs.set(sha256, { sha256, id, url, redirectHtml: telo })
+      if (currentProofs.size > 1024) currentProofs.delete(currentProofs.keys().next().value)
+      return new Response(body, { status: next.status, statusText: next.statusText, headers: next.headers })
+    }
     if (zapisnik && o.status === 200 && telo.length === 0 && (poskus === 1 || !o.redirected)) {
       if (poskus === 1) throw new Error(`fcf: ${url} → prazno telo HTTP 200 tudi po ponovitvi — uvoz ustavljen`)
       await new Promise((r) => setTimeout(r, premor))
@@ -1034,6 +1112,10 @@ const vir = {
       if (!t.g.izid) continue
       const url = naslovZapisnika(t.id)
       const z = vZapisnik(t.html, { id: sifraZapisnika(t.id), url })
+      if (isFcfCurrentPage(t.html) && z?.nepopoln) {
+        console.warn(`fcf: ${z.zapisnikId} current report held: ${z.opozorila.join('; ')}`)
+        continue
+      }
       // Kontumacija (izid brez obeh postav) nima zapisnika; nepopoln gre skozi.
       if (!z || (z.prazen && starostDni(z.datum) > 7)) continue
       out.push({ id: z.zapisnikId, z, url })

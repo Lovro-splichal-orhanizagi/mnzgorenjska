@@ -66,7 +66,7 @@ teci() { "$@" </dev/null; zadnji_izhod=$?; return "$zadnji_izhod"; }
 uvozi() {
   local liga=$1 ok=1 zavrnil=0 dol=0 pending=0
   export SLFF_PREMOR_FAKTOR=$2
-  unset SLFF_FUSSBALL_CAPTURE
+  unset SLFF_FUSSBALL_CAPTURE SLFF_FCF_CURRENT_FIXTURES
   if [ "$3" = fussball-public ]; then
     # Capture/replay the complete current source before any native write. Source
     # refusals stop this provider for the run; no second attempt or fallback.
@@ -79,6 +79,12 @@ uvozi() {
     teci node scripts/prepare-fussball-nightly.mjs --tekmovanje "$liga" --output "$capture_dir" --max-requests 3000 || { case $zadnji_izhod in 4|5) return "$zadnji_izhod" ;; *) return 1 ;; esac; }
     export SLFF_FUSSBALL_CAPTURE="$capture_dir"
   fi
+  # Current FCF calendars already exist. Do not refresh thousands of future
+  # report pages merely to collect this week's results; manual calendar setup
+  # stays available outside this scheduled current-fixture path.
+  if [ "$3" = fcf ]; then
+    export SLFF_FCF_CURRENT_FIXTURES=1
+  else
   # Izhod 3: klub manjka v razporedu (izstop?) — odloči človek, liga ni padla.
   teci node scripts/uvoz-razporeda.mjs --tekmovanje "$liga" --pisi || case $zadnji_izhod in
     3) odlocitve="$odlocitve $liga" ;;
@@ -87,6 +93,7 @@ uvozi() {
     *) ok=0 ;;
   esac
   node scripts/uvoz-delegiranja.mjs --tekmovanje "$liga" --pisi </dev/null || ok=0
+  fi
   rm -f /tmp/uvozenih
   local dodatno=""
   local dfb_pending=()

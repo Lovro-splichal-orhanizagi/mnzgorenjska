@@ -57,26 +57,20 @@ export const VZPOREDNI = {
 // (pri 5 koših bi mascot delil koš z 9 ligami eps).
 export const KOSOV = { AT: 4, HR: 3, HU: 3, SK: 2, RS: 2, SI: 2, GR: 6 }
 
-/**
- * Viri, ki jih nočni uvoz ne bere, čeprav so njihove lige vklopljene.
- * fcf.cat je od 14. 11. 2026 na seznamu virov, ki jih ne uporabljamo (pravila
- * SLFF). 15. 11. je vsaka katalonska liga padla, ker fcf.cat namesto zapisnika
- * vrača drugo stran (~114 KB): dva poskusa po ~17 min za nič (SLF-452).
- */
-export const IZKLOPLJENI_VIRI = new Set(['fcf'])
+// FCF and EPSdod redesigned public routes verified from GitHub on 18 Nov.
+// FCF nightly uses bounded existing fixtures instead of a full-season scan.
+export const IZKLOPLJENI_VIRI = new Set()
 
 /**
  * Spletišča, ki nas zavračajo vsak zagon (SLF-500): ne obhajamo, zato jih nočni
  * uvoz ne bere, dokler kdo ne preveri, da spet odgovarjajo. Vsak zagon je bil
  * zaradi njih rdeč in rdeča ni več povedala nič novega.
  *   - hns (semafor.hns.family): HTTP 403 vsak zagon od 10. 11. 2026, vsa HR.
- *   - eps:epsdod.gr (Dodekanez): HTTP 403 vsak zagon od 7. 11. 2026; ostale
- *     zveze eps odgovarjajo.
  *   - pzpn (szpnkielce.pl, posrednik Świętokrzyskega ZPN): HTTP 403 GitHubovim
  *     strežnikom od 17. 11. 2026, vseh 8 lig PL pzpn (SLF-557).
  * Ponovno vklopi: odstrani ključ, ko en ročni zahtevek vrne 200.
  */
-export const ZAVRNJENA_SPLETISCA = new Set(['hns', 'eps:epsdod.gr', 'pzpn'])
+export const ZAVRNJENA_SPLETISCA = new Set(['hns', 'pzpn'])
 
 /**
  * Lige z znano napako, ki ima svojo nalogo: nočni uvoz jih še vedno poskusi,

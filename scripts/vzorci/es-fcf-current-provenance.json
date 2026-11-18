@@ -1,0 +1,37 @@
+{
+  "note": "Gzip-compressed complete public HTML originals. Decompression reproduces the recorded original capture bytes; no extracted or rewritten source data. Numeric identity is bound through the retained redirect RSC route to the exact report canonical URL.",
+  "captures": [
+    {
+      "fixture": "es-fcf-current-4107024-redirect.html.gz",
+      "url": "https://www.fcf.cat/ca/competicio/acta/4107024",
+      "capturedAt": "2026-11-18T09:20:30.216392+00:00",
+      "status": 200,
+      "uncompressedBytes": 114538,
+      "uncompressedSha256": "b12186c2f35f9cfce48028696bbba68ed75b97a6276a37d4ff1a0202dd9396b5"
+    },
+    {
+      "fixture": "es-fcf-current-4107024-report.html.gz",
+      "url": "https://www.fcf.cat/ca/partit/2026-2027/lliga-elit/grup-1/jornada-8/vic-unio-esportiva-club-a-elit-vs-atletic-sant-just-f-c-a-elit",
+      "capturedAt": "2026-11-18T09:21:05.039139+00:00",
+      "status": 200,
+      "uncompressedBytes": 620940,
+      "uncompressedSha256": "5acdff3f3d1de27205f89c4f603037f98e781ec782880eeeb4500473fb265304"
+    },
+    {
+      "fixture": "es-fcf-current-4107032-redirect.html.gz",
+      "url": "https://www.fcf.cat/ca/competicio/acta/4107032",
+      "capturedAt": "2026-11-18T09:25:25.666Z",
+      "status": 200,
+      "uncompressedBytes": 114496,
+      "uncompressedSha256": "453f44b9809684c8774df07cdf5ff46441bbb52dba7347346af22f52ddd1de28"
+    },
+    {
+      "fixture": "es-fcf-current-4107032-report.html.gz",
+      "url": "https://www.fcf.cat/ca/partit/2026-2027/lliga-elit/grup-1/jornada-9/vic-unio-esportiva-club-a-elit-vs-sabadell-fc-ce-b-elit",
+      "capturedAt": "2026-11-18T09:26:10.590Z",
+      "status": 200,
+      "uncompressedBytes": 607867,
+      "uncompressedSha256": "5435f8cc44a5700ed4c0dd9cf34dd56150e665ed58451978af4afe43e1640cdc"
+    }
+  ]
+}

@@ -25,19 +25,28 @@
 
 ### Task1: FCF public report redesign
 Files: scripts/viri/fcf.mjs; optionally scripts/viri/fcf-current.mjs; scripts/test-fcf-current.mjs and bounded retained fixtures.
-- [ ] Add failing tests for observed legacy redirect + canonical report and wrong-target/incomplete cases.
-- [ ] Implement same-origin redirect extraction and new HTML/RSC report mapping into existing record shape; preserve legacy parser behavior.
-- [ ] Validate all selected retained originals and existing FCF offline tests. Return interfaces and quality holds to coordinator.
+- [x] Add failing tests for observed legacy redirect + canonical report and wrong-target/incomplete cases.
+- [x] Implement same-origin redirect extraction and new HTML/RSC report mapping into existing record shape; preserve legacy parser behavior.
+- [x] Validate all selected retained originals and existing FCF offline tests. Return interfaces and quality holds to coordinator.
 
 ### Task2: Dodecanese WordPress migration
 Files: scripts/viri/eps.mjs; scripts/viri/epsdod.mjs; scripts/test-epsdod-current.mjs and bounded retained fixtures.
-- [ ] Add failing tests for new public report, player IDs, lineup/event minutes, wrong report/league and incomplete cases.
-- [ ] Implement new public schedule/report parsing scoped only to epsdod.gr; preserve EPS ID namespace and old associations.
-- [ ] Validate retained originals and existing EPS offline tests. Return interfaces and quality holds to coordinator.
+- [x] Add failing tests for new public report, player IDs, lineup/event minutes, wrong report/league and incomplete cases.
+- [x] Implement new public schedule/report parsing scoped only to epsdod.gr; preserve EPS ID namespace and old associations.
+- [x] Validate retained originals and existing EPS offline tests. Return interfaces and quality holds to coordinator.
 
 ### Task3: Controlled capture and production integration
 Files: bounded recovery scripts/workflow wiring only as required by proven source output; root owns shared integration files.
-- [ ] Capture a small pilot and compare same-report identities with public DB inventory.
-- [ ] Run hosted read-only transport/parse validation before enabling hosted reads.
+- [x] Capture a small pilot and compare same-report identities with public DB inventory.
+- [x] Run hosted read-only transport/parse validation before enabling hosted reads.
 - [ ] Review all changes and pass relevant CI. Import available reports using native guards.
 - [ ] Verify live scores, lineups, affected round points, and explicitly record remaining source gaps.
+
+## Implemented operational details
+- Hosted public-page test44275697822 returned200 for both redesigned reports.
+- Retained FCF redirects are reused as original numeric-to-canonical evidence; one serialized collector reads bounded candidate rounds, minimum3seconds between requests, stops on refusal.
+- New source-free recovery adapter requires complete warning-free reports, immutable body hashes, exact existing fixture IDs and live ownership checks. Native imports and points recalculation use existing writers. Readback checks stable player IDs, lineup minutes, cards and goal attribution.
+- FCF scheduled mode queries pending existing fixtures from the last21days, discovers at most100numeric report candidates per league, and binds exact source identity before admission. It skips full-season calendar/delegation scans. Manual calendar setup remains available. Already-completed reports are not refreshed by this bounded queue; separate correction imports remain available.
+- Dodecanese current495/497 use the exact public WordPress schedule for period14. Other EPS sources and historical policies retain their original routes.
+- Review findings fixed with regression tests: duplicateFCFevents, typedcard/penalty contradictions, whitespace in source team labels, observed91/92minute notation, all-complete replay recomputation retry and fullappearance readback.
+- Official reports missing starter identities or substitution minutes remain held; no timing is inferred from the scorer's first goal.

@@ -139,8 +139,8 @@ const mojId = Number(GITHUB_RUN_ID)
 // Ali zagon drugega toka piše v iste vrstice kot ta?
 function seKrize(tok, naslov, id) {
   if(tok==='recovery-captured.yml'){
-    const source=/^Captured recovery (hns|pzpn)(?: [a-f0-9]{64})?$/.exec(naslov??'')?.[1]
-    return !source||!mojaDrzava||mojaDrzava===(source==='hns'?'HR':'PL')
+    const source=/^Captured recovery (hns|pzpn|fcf|epsdod)(?: [a-f0-9]{64})?$/.exec(naslov??'')?.[1]
+    return !source||!mojaDrzava||mojaDrzava===({hns:'HR',pzpn:'PL',fcf:'ES',epsdod:'GR'}[source])
   }
   if (tok === 'reviewed-existing-history.yml') {
     const scope = /^Reviewed existing history (prepare|apply|price|preview|activate|receipt) \/ (gb-npl-midlands|gb-sfl-d1-south|ro-liga3-s1|ro-ab-l4-s2|ro-ab-l5-s2|ba-wwin-liga-bih|md-liga-2)$/.exec(naslov ?? '')
