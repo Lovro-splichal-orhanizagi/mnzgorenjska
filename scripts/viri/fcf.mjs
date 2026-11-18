@@ -1054,7 +1054,7 @@ export function razporedBloka(b, { danes = Date.now() } = {}) {
     // Izid brez postav obeh ekip, starejši od tedna, je kontumacija.
     let kontumacija = false
     if (!t.historicalMarker && g.izid && starostDni(g.datum, danes) > 7) {
-      const z = vZapisnik(t.html)
+      const z = vZapisnik(t.html, { id: sifraZapisnika(t.id), url: naslovZapisnika(t.id) })
       kontumacija = !!z?.prazen
     }
     krogi.get(g.krog).tekme.push({

@@ -15,5 +15,6 @@ scripts/test-hns-recurring-replay.mjs
 scripts/test-hns-recurring-queue.mjs
 scripts/test-recovery-captured.mjs
 scripts/test-fcf-current.mjs
+scripts/test-fcf-current-calendar.mjs
 
 scripts/test-epsdod-current.mjs
