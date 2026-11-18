@@ -440,3 +440,11 @@ It uses the existing public request headers, no database credentials, stores
 short-lived response artifacts and stops before the second request on a refusal.
 A passing diagnostic or offline test is not proof that recurring import is
 restored: verify both leagues in an actual scheduled run and production readback.
+
+The native report header also clears `vir_brez_izida` only for complete,
+warning-free current EPSdod reports with matching public URL/report identity.
+This removes stale schedule-only absence metadata when a report (including a
+real 0:0) is verified; incomplete, legacy and other-source reports keep their
+existing behavior. Readback found six A round-8 reports with this stale flag.
+Their prediction state was already `izid` because known results take precedence,
+so this metadata cleanup is not evidence of a fantasy-points defect.

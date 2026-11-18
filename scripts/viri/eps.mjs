@@ -704,6 +704,15 @@ const vir = {
   premorMs: PREMOR_MS,
   imaRegistracije: false,
 
+  // The native writer already merges source fields into the report header.
+  // A validated current report proves the source now has a result (including
+  // 0:0); never let the old schedule-only absence flag survive that proof.
+  matchSourceFields(z) {
+    const gameId = /^gr5-([1-9]\d*)$/.exec(String(z?.zapisnikId ?? ''))?.[1]
+    const complete = z?.nepopoln === false && !z.prazen && !z.kontumacija && Array.isArray(z.opozorila) && z.opozorila.length === 0
+    return complete && gameId && z.url === naslovEpsdodTekme(gameId) ? { vir_brez_izida: false } : {}
+  },
+
   naslovRazporeda: koda => jeEpsdodAktualna(koda) ? epsdodNaslovRazporeda(koda) : naslovRazporeda(koda),
   naslovZapisnika: (koda, id) => {
     const { domena, gameId } = razberiZapisnik(id)
