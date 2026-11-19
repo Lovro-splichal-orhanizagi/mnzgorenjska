@@ -60,6 +60,20 @@
       "capturedFrom": "GitHub Actions cache zapisniki-ES-k1od1-44377442413-1 via run 44473245676 (offline, no source request)",
       "uncompressedBytes": 454169,
       "uncompressedSha256": "1daadbea4f1bceba8b38a21bba98e6771bc60267d35ed22ea8c0ba3d31a914d3"
+    },
+    {
+      "fixture": "es-fcf-current-4136714-redirect.html.gz",
+      "url": "https://www.fcf.cat/ca/competicio/acta/4136714",
+      "capturedFrom": "GitHub Actions cache zapisniki-ES-k1od1-44377442413-1 via run 44473953629 (offline, no source request)",
+      "uncompressedBytes": 114568,
+      "uncompressedSha256": "4d443314daf63c117e57e9584ef2943b7e335ba47a5da4e1f42ec2a5721c9056"
+    },
+    {
+      "fixture": "es-fcf-current-4136714-report.html.gz",
+      "url": "https://www.fcf.cat/ca/competicio/acta/4136714",
+      "capturedFrom": "GitHub Actions cache zapisniki-ES-k1od1-44377442413-1 via run 44473953629 (offline, no source request)",
+      "uncompressedBytes": 428127,
+      "uncompressedSha256": "d76a2b2a46bcbbe7973f600113b52faf2e1e8e0e06432b0527412fcb72065da8"
     }
   ]
 }

@@ -293,9 +293,15 @@ test('first-half stoppage goal sorts before a 46 minute substitution',()=>{
  assert.notEqual(fcf.tokRsc(changed),fcf.tokRsc(html))
  assert.deepEqual(fcf.vZapisnik(changed,opts).opozorila,[])
 })
-test('goal by a listed substitute without a substitution stays held',()=>{
+test('Quarta team without recorded substitutions: bench scorer enters at his goal',()=>{
+ const z=heldReport('4136714')
+ assert.deepEqual(z.opozorila,[]);assert.equal(z.nepopoln,false)
+ assert.deepEqual(z.goli.filter(g=>g.regSt===18750822).map(g=>g.minuta),[49,80])
+ const app=fcf.nastopi(z).find(p=>p.regSt===18750822)
+ assert.equal(app.minute,41)
+})
+test('team without substitutions and a short starting XI stays held',()=>{
  const z=heldReport('4147658')
  assert.equal(z.nepopoln,true)
- assert.ok(z.opozorila.includes('nepopoln: goal without known playing interval for 15721270'))
  assert.ok(z.opozorila.includes('nepopoln: missing starting lineup'))
 })

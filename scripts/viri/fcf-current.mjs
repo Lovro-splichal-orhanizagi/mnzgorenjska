@@ -141,16 +141,21 @@ export function fcfCurrentData(koreni) {
     if (players.filter(p=>p.zacetnik).length !== 11) hold('missing starting lineup')
     return players
   })
+  const menjava = e => e.vrsta === 'noter' || e.vrsta === 'ven'
   for (const players of ekipeIgr) {
     const balance = new Map()
+    // Quarta clubs often record no substitutions at all (fcf.mjs `brezMenjav`);
+    // nastopi() then lets a bench scorer enter at his goal. Only a team that
+    // does record substitutions proves a scorer's entry is missing.
+    const brezMenjav = !players.some(p => p.dogodki.some(menjava))
     for (const p of players) {
       let active = p.zacetnik
       for (const event of [...p.dogodki].sort((a,b)=>a.clock-b.clock || sameMinuteRank(a.vrsta)-sameMinuteRank(b.vrsta))) {
-        if (event.vrsta === 'noter' || event.vrsta === 'ven') {
+        if (menjava(event)) {
           if ((event.vrsta === 'noter') === active) hold(`contradictory substitution for ${p.regSt}`)
           active = event.vrsta === 'noter'
           balance.set(event.minuta, (balance.get(event.minuta) ?? 0) + (active ? 1 : -1))
-        } else if ((['gol','enajstmetrovka','avtogol'].includes(event.vrsta)) && !active) hold(`goal without known playing interval for ${p.regSt}`)
+        } else if ((['gol','enajstmetrovka','avtogol'].includes(event.vrsta)) && !active && !brezMenjav) hold(`goal without known playing interval for ${p.regSt}`)
       }
     }
     if ([...balance.values()].some(n=>n!==0)) hold('unpaired substitution minutes')
