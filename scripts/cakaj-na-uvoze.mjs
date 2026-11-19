@@ -116,6 +116,8 @@ const jeOmejitev = (e) => /rate limit/i.test(String(e?.stderr ?? e?.message ?? '
 // GitHub API občasno vrne 5xx (16. 11. je HTTP 502 podrl cel posel HR 3/3).
 // Napaka je prehodna: počakamo 30 s in poskusimo do 5-krat.
 const napakaStreznika = (e) => /HTTP 5\d\d/.exec(String(e?.stderr ?? e?.message ?? ''))?.[0]
+// Preverba (--tece) ima le 15 min: omejitev počaka krajše in manjkrat.
+const OMEJITEV = samoTece ? { poskusov: 3, ms: 60_000 } : { poskusov: 20, ms: 300_000 }
 async function ghPocakaj(...a) {
   for (let poskus = 1, streznik = 0; ; poskus++) {
     try {
@@ -127,9 +129,9 @@ async function ghPocakaj(...a) {
         await new Promise((r) => setTimeout(r, 30_000))
         continue
       }
-      if (!jeOmejitev(e) || poskus >= 20) throw e
-      console.log(`Omejitev GitHub API — počakam 5 min (${poskus}/20)`)
-      await new Promise((r) => setTimeout(r, 300_000))
+      if (!jeOmejitev(e) || poskus >= OMEJITEV.poskusov) throw e
+      console.log(`Omejitev GitHub API — počakam ${OMEJITEV.ms / 60_000} min (${poskus}/${OMEJITEV.poskusov})`)
+      await new Promise((r) => setTimeout(r, OMEJITEV.ms))
     }
   }
 }
@@ -300,13 +302,27 @@ function readFcfHistoryRuns() {
       if (seen.size > count || data.workflow_runs.length < 100) throw Error('missing page')
     }
     throw Error('page bound')
-  } catch { throw Error('FCF history run discovery incomplete; source held') }
+  } catch (e) {
+    if (jeOmejitev(e) || napakaStreznika(e)) throw e
+    throw Error('FCF history run discovery incomplete; source held')
+  }
 }
 
 if (samoTece) {
   const tecejo = []
+  // Žeton si delijo agenti in tokovi; 18. 11. je omejitev API (HTTP 403)
+  // podrla preverbo. Ko ne vemo, ali uvoz piše, preverbo preskočimo kot med
+  // uvozom (izhod 3); naslednji zagon (konec uvoza ali 06:30) jo ponovi.
+  const neVemo = (e) => {
+    if (!jeOmejitev(e) && !napakaStreznika(e)) throw e
+    console.log(`GitHub API ni odgovoril (${jeOmejitev(e) ? 'omejitev' : napakaStreznika(e)}); preverbo tokrat preskočim`)
+    process.exit(3)
+  }
   for (const tok of ['hns-recurring.yml', 'recovery-captured.yml', 'preveri-baden-fresh-pair.yml', 'replay-fussball-cards.yml', 'uvoz-baden-native.yml', 'uvoz-pl-de-paketa.yml', 'uvoz-paketa-lig.yml', 'reviewed-existing-history.yml', 'mlsz-reviewed-history.yml', 'mfa-nl-reviewed-history.yml', 'mfa-challenge-reviewed-history.yml', 'mfa-reviewed-history.yml', 'uvoz-hr-zenske.yml', 'uvoz-fcf-zgodovina.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-fussball-public.yml', 'uvoz-dribl-public.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'vklop-obstojecih-lig.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']) {
-    const zagoni = tok === 'uvoz-fcf-zgodovina.yml' ? readFcfHistoryRuns() : JSON.parse(gh('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,status,displayTitle'))
+    let zagoni
+    try {
+      zagoni = tok === 'uvoz-fcf-zgodovina.yml' ? readFcfHistoryRuns() : JSON.parse(await ghPocakaj('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,status,displayTitle'))
+    } catch (e) { neVemo(e) }
     for (const z of zagoni) {
       if (z.status === 'completed') continue
       if (['hns-recurring.yml', 'recovery-captured.yml', 'preveri-baden-fresh-pair.yml', 'replay-fussball-cards.yml', 'uvoz-baden-native.yml', 'uvoz-pl-de-paketa.yml', 'uvoz-paketa-lig.yml', 'reviewed-existing-history.yml', 'mlsz-reviewed-history.yml', 'mfa-nl-reviewed-history.yml', 'mfa-challenge-reviewed-history.yml', 'mfa-reviewed-history.yml','uvoz-fcf-zgodovina.yml', 'vklop-obstojecih-lig.yml'].includes(tok) && !seKrize(tok, z.displayTitle, z.databaseId)) continue

@@ -139,12 +139,14 @@ export async function prenesiSPonovitvami(url, moznosti = {}) {
 // redu. Zato odjemalec Supabase v uvozih dobi `fetchZaBazo`.
 //
 // Ponovimo le, kar ponovitev ne more pokvariti: branje, PATCH/PUT/DELETE,
-// upsert in RPC, ki tekmo zamenja v celoti. Navaden INSERT ali drug RPC
+// upsert, RPC, ki tekmo zamenja v celoti, in preračuna kroga (točke iz
+// nastopov; obramba enajstmetrovke piše le, kjer je še 0). "fetch failed" pri
+// obrambah je 18. 11. podrl es-ct-tercera-g6 po 58 uvoženih. Navaden INSERT ali drug RPC
 // ponovimo samo, kadar zahtevek baze zagotovo ni dosegel (povezave ni bilo,
 // Cloudflare strežnika ni dosegel: 521–523).
 export const ZAMIKI_BAZE_MS = [2000, 5000, 15000, 30000]
 const NEDOSEGLJIVO = /^(ECONNREFUSED|ENOTFOUND|EAI_AGAIN|EHOSTUNREACH|ENETUNREACH|UND_ERR_CONNECT_TIMEOUT)$/
-const PONOVLJIVI_RPC = /\/rpc\/zamenjaj_nastope_tekme$/
+const PONOVLJIVI_RPC = /\/rpc\/(zamenjaj_nastope_tekme|pripisi_obranjene_enajstmetrovke|recompute_round_scores)$/
 
 /** Je zahtevek na PostgREST varno ponoviti, tudi če je baza morda že pisala? */
 export function jeIdempotenten(url, init = {}) {

@@ -13631,6 +13631,9 @@ preveri(
       jeIdempotenten(`${API}/players?id=eq.1`, { method: 'PATCH' }) && jeIdempotenten(`${API}/players`) &&
       jeIdempotenten(`${API}/position_priors`, { method: 'POST', headers: new Headers({ Prefer: 'resolution=merge-duplicates,return=minimal' }) }) &&
       jeIdempotenten(`${API}/rpc/zamenjaj_nastope_tekme`, { method: 'POST' }) &&
+      jeIdempotenten(`${API}/rpc/pripisi_obranjene_enajstmetrovke`, { method: 'POST' }) &&
+      jeIdempotenten(`${API}/rpc/recompute_round_scores`, { method: 'POST' }) &&
+      !jeIdempotenten(`${API}/rpc/recompute_round_scores_x`, { method: 'POST' }) &&
       !jeIdempotenten(`${API}/players`, { method: 'POST', headers: { Prefer: 'return=representation' } }) &&
       !jeIdempotenten(`${API}/rpc/izstop_kluba`, { method: 'POST' }))
     let f = zaporedje(reset(), 520, 200)
