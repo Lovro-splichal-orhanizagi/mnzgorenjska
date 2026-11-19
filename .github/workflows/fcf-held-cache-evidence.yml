@@ -1,0 +1,41 @@
+name: FCF held report cache evidence
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test offline evidence boundaries
+        run: node --test scripts/test-fcf-held-cache-evidence.mjs
+      - name: Restore exact incident cache without source requests
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-ES-k1od1-44377442413-1
+          fail-on-cache-miss: true
+      - name: Inspect retained reports offline
+        env:
+          FCF_CACHE_MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
+          FCF_CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+        run: node scripts/fcf-held-cache-evidence.mjs
+      - name: Retain bounded evidence for parser investigation
+        if: always() && hashFiles('fcf-held-evidence/manifest.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-held-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-held-evidence
+          if-no-files-found: error
+          retention-days: 7
