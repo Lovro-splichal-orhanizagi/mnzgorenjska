@@ -1,0 +1,35 @@
+name: Croatia import evidence (read-only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dokazi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Copy receipts and collector heartbeat (read-only)
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh dokazi/snapshots dokazi/receipts
+          trap 'rm -f ~/.ssh/id_ed25519' EXIT
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          scp deploy@2.31.6.53:/srv/slff-recovery/hns-recurring/collector-status.json dokazi/
+          rsync -r --include='*.json' --exclude='*' deploy@2.31.6.53:/srv/slff-recovery/hns-recurring/snapshots/ dokazi/snapshots/
+          rsync -r --include='*.json' --exclude='*' deploy@2.31.6.53:/srv/slff-recovery/hns-recurring-receipts/ dokazi/receipts/
+      - name: Database state, last 14 days (SELECT only)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/hns-dokazi.mjs dokazi
