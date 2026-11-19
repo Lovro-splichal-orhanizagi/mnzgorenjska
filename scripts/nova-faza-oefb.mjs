@@ -12,6 +12,7 @@
 //
 //   node scripts/nova-faza-oefb.mjs            # izpis; Discord, če je DISCORD_WEBHOOK
 //   node scripts/nova-faza-oefb.mjs --jahr 2026   # sezona 2025/26 (preizkus)
+//   --require-discord: ob novostih mora dostava uspeti (za CI).
 import { createClient } from '@supabase/supabase-js'
 import { prenesiSPonovitvami } from './prenos.mjs'
 import oefb, { razbijKodo, vrsticeFaz, kljucKlubaAt, naslovPodatkov } from './viri/oefb.mjs'
@@ -121,10 +122,25 @@ if (!novice.length) {
 const besedilo = `**Avstrija: nova faza lige (oefb.at)**\n${novice.join('\n')}\n_SQL vpiši z migracijo (ali ročno na strežniku); nočni uvoz razporeda nato doda kroge._`
 console.log(besedilo)
 if (process.env.DISCORD_WEBHOOK) {
-  const o = await fetch(process.env.DISCORD_WEBHOOK, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content: besedilo.slice(0, 1900) }),
-  }).catch((e) => ({ ok: false, status: e.message }))
-  console.log(o.ok ? 'Javljeno na Discord.' : `Discord: ${o.status}`)
+  try {
+    const o = await fetch(process.env.DISCORD_WEBHOOK, {
+      method: 'POST',
+      signal: AbortSignal.timeout(15000),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: besedilo.slice(0, 1900) }),
+    })
+    if (!o.ok) {
+      console.error(`Discord: HTTP ${o.status}`)
+      process.exitCode = 1
+    } else {
+      console.log('Javljeno na Discord.')
+    }
+  } catch {
+    // Network errors may contain the secret webhook URL.
+    console.error('Discord dostava ni uspela (omrezje ali casovna omejitev).')
+    process.exitCode = 1
+  }
+} else if (process.argv.includes('--require-discord')) {
+  console.error('Discord webhook ni nastavljen.')
+  process.exitCode = 1
 }
