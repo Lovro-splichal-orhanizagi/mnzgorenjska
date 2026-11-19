@@ -1,8 +1,0 @@
-[Unit]
-Description=Sprozi hns-recurring.yml prek workflow_dispatch (SLF-615)
-Wants=network-online.target
-After=network-online.target
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/slff-sprozi.sh hns-recurring.yml
