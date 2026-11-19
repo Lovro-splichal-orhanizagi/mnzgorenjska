@@ -76,6 +76,13 @@ const sourceMinute = text => {
   const m = clean(text).match(/^(\d{1,3})(?:\s*\+\s*(\d{1,2}))?[’']$/)
   return m && Number(m[1]) <= 120 ? Number(m[1]) + Number(m[2] ?? 0) : null
 }
+// Order on the match clock: 45+2' is before 46', not after it.
+const clockOrder = text => {
+  const m = clean(text).match(/^(\d{1,3})(?:\s*\+\s*(\d{1,2}))?[’']$/)
+  return m && Number(m[1]) <= 120 ? Number(m[1]) + Number(m[2] ?? 0) / 100 : null
+}
+// Within one minute a sub coming on precedes his goal and a goal precedes going off.
+const sameMinuteRank = vrsta => vrsta === 'noter' ? 0 : vrsta === 'ven' ? 2 : 1
 const strictMinute = text => {
   const clock = sourceMinute(text)
   return clock === null ? null : Math.min(clock, 90)
@@ -117,7 +124,7 @@ export function fcfCurrentData(koreni) {
           if (!icon) return
           const vrsta = iconKind(icon,i+1)
           if (minute === null || vrsta === '?') hold(`invalid event/minute for ${p.id}`)
-          dogodki.push({ vrsta, minuta: minute, sourceMinute: sourceMinute(besedilo(event.otroci[0])) })
+          dogodki.push({ vrsta, minuta: minute, sourceMinute: sourceMinute(besedilo(event.otroci[0])), clock: clockOrder(besedilo(event.otroci[0])) })
         })
       }
       const eventIdentities = new Set()
@@ -138,7 +145,7 @@ export function fcfCurrentData(koreni) {
     const balance = new Map()
     for (const p of players) {
       let active = p.zacetnik
-      for (const event of [...p.dogodki].sort((a,b)=>a.sourceMinute-b.sourceMinute)) {
+      for (const event of [...p.dogodki].sort((a,b)=>a.clock-b.clock || sameMinuteRank(a.vrsta)-sameMinuteRank(b.vrsta))) {
         if (event.vrsta === 'noter' || event.vrsta === 'ven') {
           if ((event.vrsta === 'noter') === active) hold(`contradictory substitution for ${p.regSt}`)
           active = event.vrsta === 'noter'

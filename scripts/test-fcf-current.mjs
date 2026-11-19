@@ -278,3 +278,24 @@ test('different stoppage minutes on one player do not become duplicate events af
  assert.equal(z.rumeni.filter(e=>e.regSt===644513).length,2)
  assert.equal(z.opozorila.some(w=>w.includes('duplicate player event for 644513')),false)
 })
+
+// SLF-621: held reports from the 18 Nov ES run (incident cache, read offline).
+const heldFixture=(id,type)=>gunzipSync(readFileSync(new URL(`./vzorci/es-fcf-current-${id}-${type}.html.gz`,import.meta.url))).toString()
+const heldReport=id=>fcf.vZapisnik(heldFixture(id,'report'),{id:'es'+id,url:'https://www.fcf.cat/ca/competicio/acta/'+id,redirectHtml:heldFixture(id,'redirect')})
+test('substitute who comes on and scores in the same minute has a playing interval',()=>{
+ const z=heldReport('4116973')
+ assert.deepEqual(z.opozorila,[]);assert.equal(z.nepopoln,false)
+ assert.deepEqual(z.domaci.rezerve.find(p=>p.regSt===645660).preklopi,[46,78])
+ assert.ok(z.goli.some(g=>g.regSt===645660&&g.minuta===46))
+})
+test('first-half stoppage goal sorts before a 46 minute substitution',()=>{
+ const changed=rewriteRsc(html,s=>s.replaceAll('47’','45+2’').replaceAll("47'","45+2'").replaceAll('78’','46’'))
+ assert.notEqual(fcf.tokRsc(changed),fcf.tokRsc(html))
+ assert.deepEqual(fcf.vZapisnik(changed,opts).opozorila,[])
+})
+test('goal by a listed substitute without a substitution stays held',()=>{
+ const z=heldReport('4147658')
+ assert.equal(z.nepopoln,true)
+ assert.ok(z.opozorila.includes('nepopoln: goal without known playing interval for 15721270'))
+ assert.ok(z.opozorila.includes('nepopoln: missing starting lineup'))
+})
