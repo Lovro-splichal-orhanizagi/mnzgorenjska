@@ -2,7 +2,9 @@ name: Croatia captured imports
 run-name: Croatia captured imports
 on:
   schedule:
-    - cron: '23 */2 * * *'
+    # Cron changed 23 -> 29 on 19 Nov: GitHub never registered the first schedule
+    # (only manual runs since 18 Nov); changing the line re-registers it.
+    - cron: '29 */2 * * *'
   workflow_dispatch:
     inputs:
       preview:
