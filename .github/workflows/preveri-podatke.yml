@@ -113,7 +113,7 @@ jobs:
       # dobi nadaljevanje kot novo tekmovanje pri ÖFB. Le javi z SQL, baze ne
       # spreminja; brez novosti molči. Enkrat na dan, ne po vsakem uvozu.
       - name: Nove faze avstrijskih lig
-        if: github.event_name != 'workflow_run'
+        if: ${{ !cancelled() && github.event_name != 'workflow_run' }}
         continue-on-error: true
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
