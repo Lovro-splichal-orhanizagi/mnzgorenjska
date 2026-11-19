@@ -70,33 +70,50 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: tezave.txt
-          key: preverba-javljeno-${{ steps.trditve.outputs.odtis }}
+          key: preverba-javljeno-v2-${{ steps.trditve.outputs.odtis }}
           lookup-only: true
+      # v2 ignores old cache entries that may have followed a failed delivery.
       - name: Javi na Discord
+        id: dostava
         if: steps.trditve.outputs.odtis && (github.event_name == 'schedule' || steps.javljeno.outputs.cache-hit != 'true')
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
           node -e '
             const besedilo = require("fs").readFileSync("tezave.txt", "utf8")
+            if (!process.env.DISCORD_WEBHOOK) {
+              console.error("Discord webhook ni nastavljen.")
+              process.exit(1)
+            }
             fetch(process.env.DISCORD_WEBHOOK, {
               method: "POST",
+              signal: AbortSignal.timeout(15000),
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ content: besedilo.slice(0, 1900) }),
-            }).then((o) => console.log(o.ok ? "Javljeno na Discord." : `Discord: HTTP ${o.status}`))
-              .catch((e) => console.log(`Discord ni dosegljiv: ${e.message}`))
+            }).then((o) => {
+              if (!o.ok) {
+                console.error(`Discord: HTTP ${o.status}`)
+                process.exitCode = 1
+                return
+              }
+              console.log("Javljeno na Discord.")
+            }).catch(() => {
+              // Do not log errors that may contain the secret webhook URL.
+              console.error("Discord dostava ni uspela (omrezje ali casovna omejitev).")
+              process.exitCode = 1
+            })
           '
       - name: Zapomni si javljeni seznam
-        if: steps.trditve.outputs.odtis && steps.javljeno.outputs.cache-hit != 'true'
+        if: success() && steps.dostava.outcome == 'success' && steps.trditve.outputs.odtis && steps.javljeno.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: tezave.txt
-          key: preverba-javljeno-${{ steps.trditve.outputs.odtis }}
+          key: preverba-javljeno-v2-${{ steps.trditve.outputs.odtis }}
       # Razdeljena avstrijska liga (Bundesliga: Meister-/Qualifikationsgruppe)
       # dobi nadaljevanje kot novo tekmovanje pri ÖFB. Le javi z SQL, baze ne
       # spreminja; brez novosti molči. Enkrat na dan, ne po vsakem uvozu.
       - name: Nove faze avstrijskih lig
-        if: github.event_name != 'workflow_run'
+        if: ${{ !cancelled() && github.event_name != 'workflow_run' }}
         continue-on-error: true
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
