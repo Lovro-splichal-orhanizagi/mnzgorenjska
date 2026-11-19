@@ -1,0 +1,10 @@
+[Unit]
+Description=Termin: hns-recurring.yml
+
+[Timer]
+OnCalendar=*-*-* 00/2:29:00 UTC
+AccuracySec=10s
+Persistent=false
+
+[Install]
+WantedBy=timers.target
