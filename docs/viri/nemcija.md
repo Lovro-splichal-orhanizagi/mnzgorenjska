@@ -1319,3 +1319,8 @@ je zveza potrdila, ne ugibamo (podobno pravilu B za Katalonijo, a brez izida).
 Preizkus brez omrežja (resnični vrstici U in V iz zajema `41804947752`):
 `node --test scripts/test-fussball-administrative-path-b.mjs`; SQL v
 `supabase/tests/fussball-tekoca-pot.sql`.
+
+**Pretekla tekma brez objavljenega izida (SLF-573, odločitev lastnika 19. 11. 2026).**
+Na poti B taka tekma ostane neznana (`FUSSBALL_RESULT_UNPUBLISHED`, brez izida in
+točk) tudi po prvem fantasy krogu; uvoz ne pade, ostale tekme se uvozijo, izid se
+dopolni, ko ga vir objavi. Meja `unknownBefore` velja le še za zavrnjene zapisnike.

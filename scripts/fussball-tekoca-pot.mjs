@@ -3,6 +3,9 @@
 // objavljenega izida ostaneta NEZNANA: uradna glava ostane, statistik ne
 // izpeljemo in ne ugibamo. To velja samo pred prvim fantasy krogom
 // (`unknownBefore`); pozneje zavrnitev ustavi uvoz kot doslej.
+// Pretekla tekma BREZ objavljenega izida (odločitev lastnika 19. 11. 2026, SLF-573)
+// ostane neznana tudi po prvem krogu: brez izida in točk, uvoz teče naprej in jo
+// dopolni, ko vir izid objavi. Meja `unknownBefore` velja le za zavrnjene zapisnike.
 // Zajemne datoteke (fussball-import/capture-evidence) so pripete v drugih
 // verigah, zato je ta pot ovoj okoli njih, ne njihova sprememba.
 // Administrativni izid (U/V/W, odločitev lastnika 4. 11. 2026): na poti B se
@@ -54,7 +57,6 @@ export function buildFussballCurrentOnlyBatch(result,{staffel,season,cardPolicy,
   drop.add(f.id);unknown.push({fixture:f,reason:r.code})
  }
  for(const f of s.fixtures)if(f.rezultat===null&&!Object.hasOwn(f,'administrativeResult')&&f.datum<asOf){
-  need(allowed(f),`past fixture ${f.zapisnikId} without result on/after the unknown-report cutoff`)
   drop.add(f.id);unknown.push({fixture:f,reason:'FUSSBALL_RESULT_UNPUBLISHED'})
  }
  // Administrative rows: no cutoff (also after activation), never a report.

@@ -44,11 +44,19 @@ test('rejected and unpublished pre-opening fixtures stay unknown, headers stay, 
 test('strict mode and post-opening rejections still stop the import',()=>{
  assert.throws(()=>buildFussballCurrentOnlyBatch(season(),scope),/rejected reports/)
  assert.throws(()=>buildFussballCurrentOnlyBatch(season(),{...scope,unknownBefore:'2026-10-04'}),/cutoff/)
- assert.throws(()=>buildFussballCurrentOnlyBatch(season(),{...scope,unknownBefore:'2026-09-01'}),/cutoff/)
+ assert.throws(()=>buildFussballCurrentOnlyBatch(season(),{...scope,unknownBefore:'2026-09-01'}),/rejected report .* cutoff/)
  for(const mutate of [s=>{s.coverage.rejectedReports=0},s=>{s.rejectedReports[0].fixture.krog=5},s=>{s.rejectedReports.push(clone(s.rejectedReports[0]))},s=>{s.coverage.unscoredFixtures.past=0},s=>{s.reports=[]},s=>{s.rejectedReports[0].code=null}]){
   const s=season();mutate(s);assert.throws(()=>buildFussballCurrentOnlyBatch(s,{...scope,unknownBefore:CURRENT_ONLY_ANY}),undefined,mutate.toString())
  }
  assert.throws(()=>buildFussballCurrentOnlyBatch(season(),{...scope,unknownBefore:'tomorrow'}),/cutoff/)
+})
+test('past fixture without a published result stays unknown after the cutoff (SLF-573)',()=>{
+ const s=season();s.rejectedReports=[];s.coverage.rejectedReports=0;s.coverage.attemptedReports=1;s.coverage.playedFixtures=1;s.schedule.fixtures=s.schedule.fixtures.filter(f=>f.id!==rejectedId);s.coverage.fixtures=3
+ const batch=buildFussballCurrentOnlyBatch(s,{...scope,unknownBefore:'2026-09-01'})
+ assert.deepEqual(batch.unknownReports.map(r=>[r.reportId,r.score,r.reason]),[['de-fussball-'+unscoredId,null,'FUSSBALL_RESULT_UNPUBLISHED']])
+ assert.equal(batch.reports.length,1)
+ const row=batch.schedule.flatMap(r=>r.tekme).find(t=>t.id===unscoredId);assert.equal(row.odigrana,false);assert.equal(row.izid,null)
+ assert.ok(!batch.identities.some(i=>i.source_id.includes(unscoredId)))
 })
 test('path-B loader keeps replay, digest, full intent and 24h freshness; activation manifest binds the result',async()=>{
  const directory=mkdtempSync(join(tmpdir(),'slff-pot-b-'))
