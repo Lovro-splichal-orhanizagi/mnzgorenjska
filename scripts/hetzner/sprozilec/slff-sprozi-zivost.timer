@@ -1,0 +1,10 @@
+[Unit]
+Description=Termin: zivost.yml
+
+[Timer]
+OnCalendar=*-*-* *:00/10:20 UTC
+AccuracySec=10s
+Persistent=false
+
+[Install]
+WantedBy=timers.target

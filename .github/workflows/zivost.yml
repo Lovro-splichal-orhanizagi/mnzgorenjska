@@ -13,6 +13,11 @@ on:
 permissions:
   contents: read
 
+# VM sproži tek tudi prek workflow_dispatch (SLF-615); dvojni zagon se vrsti, ne podvaja.
+concurrency:
+  group: zivost
+  cancel-in-progress: false
+
 jobs:
   zivost:
     runs-on: ubuntu-latest
