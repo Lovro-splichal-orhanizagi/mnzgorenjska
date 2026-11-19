@@ -20,7 +20,7 @@ const comps=ok(await db.from('competitions').select('id,countries!inner(code)').
 const rounds=await vseVrstice((a,b)=>db.from('rounds').select('id,competition_id').in('competition_id',comps.map(c=>c.id)).eq('season','2026/27').order('id').range(a,b))
 const od=new Date(Date.now()-DNI*864e5).toISOString().slice(0,10),matches=[]
 for(let i=0;i<rounds.length;i+=200)matches.push(...await vseVrstice((a,b)=>db.from('matches').select('id,zapisnik_id,imported_at,played_on').in('round_id',rounds.slice(i,i+200).map(r=>r.id)).gte('played_on',od).order('id').range(a,b)))
-const count=async(t,ids)=>{const n=new Map();for(let i=0;i<ids.length;i+=200)for(const r of await vseVrstice((a,b)=>db.from(t).select('match_id').in('match_id',ids.slice(i,i+200)).order('match_id').range(a,b)))n.set(r.match_id,(n.get(r.match_id)??0)+1);return n}
+const count=async(t,ids)=>{const n=new Map();for(let i=0;i<ids.length;i+=200)for(const r of await vseVrstice((a,b)=>db.from(t).select('match_id').in('match_id',ids.slice(i,i+200)).order('match_id').order(t==='napovedi'?'user_id':'id').range(a,b)))n.set(r.match_id,(n.get(r.match_id)??0)+1);return n}
 const imported=matches.filter(m=>m.imported_at),app=await count('appearances',imported.map(m=>m.id)),pred=await count('napovedi',matches.map(m=>m.id))
 out.database={window:{from:od,days:DNI},hrCompetitions:comps.length,rounds:rounds.length,fixtures:matches.length,withReport:matches.filter(m=>m.zapisnik_id).length,imported:imported.length,
  importedWithoutAppearances:imported.filter(m=>!app.get(m.id)).length,appearances:[...app.values()].reduce((s,n)=>s+n,0),
