@@ -18,3 +18,6 @@ scripts/test-fcf-current.mjs
 scripts/test-fcf-current-calendar.mjs
 
 scripts/test-epsdod-current.mjs
+# Notification delivery regressions (offline; no webhook or database access)
+scripts/test-preveri-notification.mjs
+scripts/test-oefb-notification.mjs

@@ -114,12 +114,11 @@ jobs:
       # spreminja; brez novosti molči. Enkrat na dan, ne po vsakem uvozu.
       - name: Nove faze avstrijskih lig
         if: ${{ !cancelled() && github.event_name != 'workflow_run' }}
-        continue-on-error: true
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: node scripts/nova-faza-oefb.mjs
+        run: node scripts/nova-faza-oefb.mjs --require-discord
       - name: Izid
         if: steps.uvoz.outputs.tece != '1' && steps.trditve.outputs.ok != '1'
         run: exit 1
