@@ -32,6 +32,48 @@
       "status": 200,
       "uncompressedBytes": 607867,
       "uncompressedSha256": "5435f8cc44a5700ed4c0dd9cf34dd56150e665ed58451978af4afe43e1640cdc"
+    },
+    {
+      "fixture": "es-fcf-current-4116973-redirect.html.gz",
+      "url": "https://www.fcf.cat/ca/competicio/acta/4116973",
+      "capturedFrom": "GitHub Actions cache zapisniki-ES-k1od1-44377442413-1 via run 44473245676 (offline, no source request)",
+      "uncompressedBytes": 114550,
+      "uncompressedSha256": "d3668bb4ff5b6787df846c82d86cac49f63edc771860efd6dda6cc9edbbc12e9"
+    },
+    {
+      "fixture": "es-fcf-current-4116973-report.html.gz",
+      "url": "https://www.fcf.cat/ca/competicio/acta/4116973",
+      "capturedFrom": "GitHub Actions cache zapisniki-ES-k1od1-44377442413-1 via run 44473245676 (offline, no source request)",
+      "uncompressedBytes": 592069,
+      "uncompressedSha256": "c378ea85045be3f4487100569433e9110ff83c992dc3b3912f4b20b2d1c834ad"
+    },
+    {
+      "fixture": "es-fcf-current-4147658-redirect.html.gz",
+      "url": "https://www.fcf.cat/ca/competicio/acta/4147658",
+      "capturedFrom": "GitHub Actions cache zapisniki-ES-k1od1-44377442413-1 via run 44473245676 (offline, no source request)",
+      "uncompressedBytes": 114580,
+      "uncompressedSha256": "7b1fd35e42cef7853f70e578a48140d7ecf653737f72bba8351e719e015c8ec6"
+    },
+    {
+      "fixture": "es-fcf-current-4147658-report.html.gz",
+      "url": "https://www.fcf.cat/ca/competicio/acta/4147658",
+      "capturedFrom": "GitHub Actions cache zapisniki-ES-k1od1-44377442413-1 via run 44473245676 (offline, no source request)",
+      "uncompressedBytes": 454169,
+      "uncompressedSha256": "1daadbea4f1bceba8b38a21bba98e6771bc60267d35ed22ea8c0ba3d31a914d3"
+    },
+    {
+      "fixture": "es-fcf-current-4136714-redirect.html.gz",
+      "url": "https://www.fcf.cat/ca/competicio/acta/4136714",
+      "capturedFrom": "GitHub Actions cache zapisniki-ES-k1od1-44377442413-1 via run 44473953629 (offline, no source request)",
+      "uncompressedBytes": 114568,
+      "uncompressedSha256": "4d443314daf63c117e57e9584ef2943b7e335ba47a5da4e1f42ec2a5721c9056"
+    },
+    {
+      "fixture": "es-fcf-current-4136714-report.html.gz",
+      "url": "https://www.fcf.cat/ca/competicio/acta/4136714",
+      "capturedFrom": "GitHub Actions cache zapisniki-ES-k1od1-44377442413-1 via run 44473953629 (offline, no source request)",
+      "uncompressedBytes": 428127,
+      "uncompressedSha256": "d76a2b2a46bcbbe7973f600113b52faf2e1e8e0e06432b0527412fcb72065da8"
     }
   ]
 }
