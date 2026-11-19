@@ -1,0 +1,10 @@
+[Unit]
+Description=Termin: obvestila-prevzema.yml
+
+[Timer]
+OnCalendar=*-*-* *:17:00 UTC
+AccuracySec=10s
+Persistent=false
+
+[Install]
+WantedBy=timers.target

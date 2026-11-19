@@ -4,19 +4,20 @@
 # GitHubov `schedule:` ostane kot rezerva; dvojni zagon je varen (concurrency skupine v delovnih tokovih).
 #   sprozi.sh zivost.yml
 #   sprozi.sh hns-recurring.yml        # vedno preview=false, enako kot zaporedni tek `schedule`
+#   sprozi.sh obvestila-prevzema.yml   # mail "profil je potrjen" vsako uro (SLF-627)
 # Žeton: /etc/slff/gh-dispatch.env (root 600), vrstica GH_TOKEN=... (fine-grained, samo ta repo, Actions: write).
 set -euo pipefail
 
 REPO=Lovro-splichal-orhanizagi/mnzgorenjska
 tok=${1:-}
 case $tok in
-  zivost.yml) inputs='{}' ;;
+  zivost.yml|obvestila-prevzema.yml) inputs='{}' ;;
   hns-recurring.yml)
     # nobenih uvozov 04:00-07:30 UTC (pravilo SLFF)
     m=$((10#$(date -u +%H%M)))
     if (( m >= 400 && m < 730 )); then echo "sprozi: okno brez uvozov 04:00-07:30 UTC, preskok"; exit 0; fi
     inputs='{"preview":"false"}' ;;
-  *) echo "sprozi: dovoljeno samo: zivost.yml hns-recurring.yml" >&2; exit 2 ;;
+  *) echo "sprozi: dovoljeno samo: zivost.yml hns-recurring.yml obvestila-prevzema.yml" >&2; exit 2 ;;
 esac
 
 # shellcheck disable=SC1091
