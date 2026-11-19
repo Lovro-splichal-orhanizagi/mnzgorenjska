@@ -169,12 +169,14 @@ async function coordinate(args, runs = {}, jobs = [{ name: 'uvoz DE', status: 'c
         assert.match(path, /^repos\/fixture\/repo\/actions\/workflows\/uvoz-fcf-zgodovina\.yml\/runs\?per_page=100&page=[1-9]\d*$/)
         const page = Number(new URL('https://test.invalid/' + path).searchParams.get('page')); historyPages.push(page); queried.push('uvoz-fcf-zgodovina.yml')
         if (historyControl.error) throw Error('mock GitHub unavailable')
+        if (historyControl.stderr) throw Object.assign(Error('Command failed'), { stderr: historyControl.stderr })
         if (historyControl.response) return JSON.stringify(historyControl.response(page))
         const all = (runs['uvoz-fcf-zgodovina.yml'] ?? []).map(z => ({id:z.databaseId,status:z.status,display_title:z.displayTitle,created_at:z.startedAt,run_started_at:z.startedAt,run_attempt:1,path:'.github/workflows/uvoz-fcf-zgodovina.yml',repository:{full_name:'fixture/repo'},head_sha:'a'.repeat(40),head_branch:'main',event:'workflow_dispatch'}))
         return JSON.stringify({total_count:all.length,workflow_runs:all.slice((page-1)*100,page*100)})
       }
       if (a[1] === 'view') return JSON.stringify(a.includes('jobs') ? { jobs } : { startedAt })
       const workflow = a[a.indexOf('--workflow') + 1]; queried.push(workflow)
+      if (historyControl.listStderr) throw Object.assign(Error('Command failed'), { stderr: historyControl.listStderr })
       return JSON.stringify((runs[workflow] ?? []).slice(0, Number(a[a.indexOf('--limit') + 1]) || 50))
     },
   }
@@ -669,9 +671,10 @@ test('Baden fresh paired source is reciprocally visible with exact DE scope and 
 })
 
 // Runs the actual ghPocakaj with a stubbed gh that fails with the given errors first.
-async function ghPocakaj(napake) {
+async function ghPocakaj(napake, samoTece = false) {
   const klici = []
   const context = vm.createContext({
+    samoTece,
     console: { log: () => {} },
     setTimeout: (r) => r(),
     gh: (...a) => {
@@ -693,6 +696,25 @@ test('a transient GitHub 5xx is retried instead of failing the wait step', async
   const drugo = await ghPocakaj(['HTTP 404: Not Found'])
   assert.match(drugo.izid.stderr, /HTTP 404/)
   assert.equal(drugo.klici, 1)
+})
+
+test('health check retries a GitHub rate limit 3x, then skips (exit 3) instead of failing', async () => {
+  const omejitev = 'HTTP 403: API rate limit exceeded for installation'
+  const trajno = await ghPocakaj(Array(5).fill(omejitev), true)
+  assert.match(trajno.izid.stderr, /rate limit/)
+  assert.equal(trajno.klici, 3)
+  const r = await coordinate(['--tece'], {}, undefined, { listStderr: omejitev })
+  assert.equal(r.code, 3)
+  assert.equal(r.queried.length, 3)
+  assert.equal((await coordinate(['--tece'], {}, undefined, { listStderr: 'HTTP 502: Bad Gateway' })).code, 3)
+  await assert.rejects(coordinate(['--tece'], {}, undefined, { listStderr: 'HTTP 404: Not Found' }), /Command failed/)
+})
+
+test('health check skips on FCF history rate limit but still fails closed on integrity faults', async () => {
+  const runs = { 'uvoz-fcf-zgodovina.yml': [] }
+  // FCF history is read after the plain run lists; only its api call fails.
+  assert.equal((await coordinate(['--tece'], runs, undefined, { stderr: 'HTTP 403: API rate limit exceeded' })).code, 3)
+  await assert.rejects(coordinate(['--tece'], runs, undefined, { error: true }), /FCF history run discovery incomplete/)
 })
 
  test('captured recovery serializes the same country and global writers',async()=>{

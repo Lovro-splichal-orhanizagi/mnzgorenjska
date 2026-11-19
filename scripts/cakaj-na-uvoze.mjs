@@ -302,7 +302,10 @@ function readFcfHistoryRuns() {
       if (seen.size > count || data.workflow_runs.length < 100) throw Error('missing page')
     }
     throw Error('page bound')
-  } catch { throw Error('FCF history run discovery incomplete; source held') }
+  } catch (e) {
+    if (jeOmejitev(e) || napakaStreznika(e)) throw e
+    throw Error('FCF history run discovery incomplete; source held')
+  }
 }
 
 if (samoTece) {
@@ -311,8 +314,8 @@ if (samoTece) {
   // podrla preverbo. Ko ne vemo, ali uvoz piše, preverbo preskočimo kot med
   // uvozom (izhod 3); naslednji zagon (konec uvoza ali 06:30) jo ponovi.
   const neVemo = (e) => {
-    if (!jeOmejitev(e) && !napakaStreznika(e) && !/FCF history run discovery incomplete/.test(String(e?.message))) throw e
-    console.log(`GitHub API ni odgovoril (${jeOmejitev(e) ? 'omejitev' : napakaStreznika(e) ?? 'FCF'}); preverbo tokrat preskočim`)
+    if (!jeOmejitev(e) && !napakaStreznika(e)) throw e
+    console.log(`GitHub API ni odgovoril (${jeOmejitev(e) ? 'omejitev' : napakaStreznika(e)}); preverbo tokrat preskočim`)
     process.exit(3)
   }
   for (const tok of ['hns-recurring.yml', 'recovery-captured.yml', 'preveri-baden-fresh-pair.yml', 'replay-fussball-cards.yml', 'uvoz-baden-native.yml', 'uvoz-pl-de-paketa.yml', 'uvoz-paketa-lig.yml', 'reviewed-existing-history.yml', 'mlsz-reviewed-history.yml', 'mfa-nl-reviewed-history.yml', 'mfa-challenge-reviewed-history.yml', 'mfa-reviewed-history.yml', 'uvoz-hr-zenske.yml', 'uvoz-fcf-zgodovina.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-fussball-public.yml', 'uvoz-dribl-public.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'vklop-obstojecih-lig.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']) {
