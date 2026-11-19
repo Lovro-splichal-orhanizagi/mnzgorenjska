@@ -1,0 +1,8 @@
+[Unit]
+Description=Sprozi obvestila-prevzema.yml prek workflow_dispatch (SLF-615, SLF-627)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/slff-sprozi.sh obvestila-prevzema.yml
