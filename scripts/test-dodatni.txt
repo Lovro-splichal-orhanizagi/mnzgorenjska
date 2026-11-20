@@ -21,3 +21,6 @@ scripts/test-epsdod-current.mjs
 # Notification delivery regressions (offline; no webhook or database access)
 scripts/test-preveri-notification.mjs
 scripts/test-oefb-notification.mjs
+
+# Selected snapshot health is independent of the newer collector heartbeat
+scripts/test-hns-recurring-health.mjs

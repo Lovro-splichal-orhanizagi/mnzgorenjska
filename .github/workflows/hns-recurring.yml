@@ -26,6 +26,9 @@ jobs:
       collector_status: ${{ steps.capture.outputs.collector_status }}
       replay_needed: ${{ steps.capture.outputs.replay_needed }}
       collector_fresh: ${{ steps.capture.outputs.collector_fresh }}
+      snapshot_status: ${{ steps.capture.outputs.snapshot_status }}
+      snapshot_complete: ${{ steps.capture.outputs.snapshot_complete }}
+      snapshot_reason: ${{ steps.capture.outputs.snapshot_reason }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -182,6 +185,10 @@ jobs:
           INVENTORY_RESULT: ${{ needs.inventory.result }}
           REPLAY_RESULT: ${{ needs.replay.result }}
           COLLECTOR_FRESH: ${{ needs.inventory.outputs.collector_fresh }}
+          REPLAY_NEEDED: ${{ needs.inventory.outputs.replay_needed }}
+          SNAPSHOT_STATUS: ${{ needs.inventory.outputs.snapshot_status }}
+          SNAPSHOT_COMPLETE: ${{ needs.inventory.outputs.snapshot_complete }}
+          SNAPSHOT_REASON: ${{ needs.inventory.outputs.snapshot_reason }}
         run: |
           set -euo pipefail
           echo "Collector: $COLLECTOR_STATUS; inventory: $INVENTORY_RESULT; replay: $REPLAY_RESULT" >> "$GITHUB_STEP_SUMMARY"
@@ -189,3 +196,14 @@ jobs:
           [ "$COLLECTOR_FRESH" = true ]
           case "$REPLAY_RESULT" in success|skipped) ;; *) exit 1 ;; esac
           case "$COLLECTOR_STATUS" in complete|pending) ;; *) echo 'Collector incomplete; valid captured reports were still eligible for replay.' >&2; exit 1 ;; esac
+          # Replay/receipts certify usable captures, not a completed source scan.
+          # A newer healthy heartbeat must not hide the selected batch's failure.
+          case "$REPLAY_NEEDED" in
+            true)
+              printf 'Selected snapshot: %s; inventory complete: %s; reason: %s\n' "$SNAPSHOT_STATUS" "$SNAPSHOT_COMPLETE" "$SNAPSHOT_REASON" >> "$GITHUB_STEP_SUMMARY"
+              [ "$SNAPSHOT_COMPLETE" = true ]
+              case "$SNAPSHOT_STATUS" in complete|pending) ;; *) echo 'Selected snapshot collection stopped; valid captures were still eligible for replay.' >&2; exit 1 ;; esac
+              ;;
+            false) ;; # No unreceipted batch: heartbeat checks above still apply.
+            *) echo 'Snapshot selection is unknown.' >&2; exit 1 ;;
+          esac
