@@ -54,21 +54,38 @@ export function retainedReport(dir,t,c){
  try{html=localFile(join(dir,`acta-${t.report_id.slice(2)}.html`))}
  catch(e){return {state:e.code==='ENOENT'?'missing-retained-capture':'unreadable-retained-capture'}}
  const sha256=createHash('sha256').update(html).digest('hex'),url=naslovZapisnika(t.report_id)
+ // Fixed stage labels only: parser/assertion errors can contain player names.
+ // These diagnose an evidence gap; no stage can waive native validation.
+ let evidenceStage='detect-page-format'
+ const block=/^([1-9]\d*)-([1-9]\d*)$/.exec(c.source_league_code??'')
+ const numericId=Number(t.report_id.slice(2))
+ const inRegisteredBlock=Boolean(block&&Number.isSafeInteger(numericId)&&numericId>=Number(block[1])&&numericId<=Number(block[2]))
+ const evidence=()=>({stage:evidenceStage,in_registered_block:inRegisteredBlock})
  try{
   let redirectHtml=null
   if(isFcfCurrentPage(html)){
-   const p=JSON.parse(localFile(join(dir,`acta-${t.report_id.slice(2)}.redirect.json`)))
+   evidenceStage='read-redirect-proof'
+   const proof=localFile(join(dir,`acta-${t.report_id.slice(2)}.redirect.json`))
+   evidenceStage='parse-redirect-proof'
+   const p=JSON.parse(proof)
+   evidenceStage='bind-redirect-proof'
    assert.equal(p.sha256,sha256);assert.equal(p.id,t.report_id);assert.equal(p.url,url)
    assert.equal(typeof p.redirectHtml,'string');redirectHtml=p.redirectHtml
   }
+  evidenceStage='validate-source-identity'
   validateFcfSingleReportSource(html,c.source_league_code,{id:t.report_id,tekmovanje:c,sezona:manifest.season,danes:Date.parse('2026-11-20T07:16:00Z'),redirectHtml})
+  evidenceStage='parse-report'
   const z=vZapisnik(html,{id:t.report_id,url,redirectHtml})
+  evidenceStage='bind-parsed-report'
   assert.equal(z?.zapisnikId,t.report_id)
-  return {state:fcfReportComplete(z,fcf)?'complete':'parser-or-finality-hold',sha256,z}
- }catch{return {state:'unproven-retained-identity-or-parser',sha256}}
+  evidenceStage='check-completeness'
+  const complete=fcfReportComplete(z,fcf)
+  if(complete)evidenceStage='complete'
+  return {state:complete?'complete':'parser-or-finality-hold',sha256,z,evidence:evidence()}
+ }catch{return {state:'unproven-retained-identity-or-parser',sha256,evidence:evidence()}}
 }
 export function classifyCandidate(t,c,source,fixtures){
- const out={slug:t.slug,report_id:t.report_id,source_state:source.state,capture_sha256:source.sha256??null}
+ const out={slug:t.slug,report_id:t.report_id,source_state:source.state,capture_sha256:source.sha256??null,source_evidence:source.evidence??null}
  const owners=fixtures.filter(f=>f.zapisnik_id===t.report_id)
  out.owner_ids=owners.map(f=>f.id)
  if(source.state!=='complete')return {...out,classification:'missing-or-unproven-source-evidence'}
