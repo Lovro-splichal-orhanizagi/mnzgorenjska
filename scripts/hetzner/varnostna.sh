@@ -47,9 +47,13 @@ fi
 ZASEDENO=$(df --output=pcent / | tail -1 | tr -dc 0-9)
 if [ "$ZASEDENO" -ge 85 ] && [ ! -e /run/slff-disk-opozorjen-$(date -u +%Y%m%d) ]; then
   : > /run/slff-disk-opozorjen-$(date -u +%Y%m%d)
-  VELIKO=$(du -xh --max-depth=2 /opt /var/lib/docker /var/log /root 2>/dev/null | sort -rh | head -6 | tr '\n' ';')
+  VELIKO=$(du -xh --max-depth=2 /opt /var/lib/docker /var/log /root 2>/dev/null | sort -rh | head -6 | tr '\t\n' ' ;')
   W=$(grep '^DISCORD_WEBHOOK=' /opt/slff/secrets.env | cut -d= -f2-)
-  curl -fsS -H 'Content-Type: application/json' -A 'SLFF varnostna' \
-    -d "{\"content\":\"🟠 SLFF disk je ${ZASEDENO}% poln (opozorilo pri 85%). Največ: $VELIKO\",\"allowed_mentions\":{\"parse\":[]}}" "$W" || true
+  if command -v jq >/dev/null; then
+    TELO=$(jq -nc --arg c "🟠 SLFF disk je ${ZASEDENO}% poln (opozorilo pri 85%). Največ: $VELIKO" '{content:$c,allowed_mentions:{parse:[]}}')
+  else
+    TELO="{\"content\":\"🟠 SLFF disk je ${ZASEDENO}% poln (opozorilo pri 85%). Največ: ${VELIKO//\"/}\",\"allowed_mentions\":{\"parse\":[]}}"
+  fi
+  curl -fsS -H 'Content-Type: application/json' -A 'SLFF varnostna' -d "$TELO" "$W" || true
 fi
 echo "$(date -u +%FT%TZ) ok $IME $(stat -c %s "$LOKALNO/$IME")"

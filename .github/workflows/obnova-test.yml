@@ -2,7 +2,7 @@ name: 'Obnova: mesečni test (SLF-531)'
 
 # Restore drill off the prod VM: scripts/hetzner/obnova-test.sh creates a short-lived Hetzner
 # Cloud server, restores the newest box dump there, compares counts with prod (read-only) and
-# deletes the server. Needs secrets HCLOUD_TOKEN, OBNOVA_BOX_KEY, AGENT_SSH_KEY.
+# deletes the server. Needs secrets HCLOUD_TOKEN, OBNOVA_BOX_KEY, AGENT_SSH_KEY (a separate agent key without from=, runners have changing IPs).
 on:
   schedule:
     - cron: '30 4 2 * *'
@@ -28,3 +28,11 @@ jobs:
           AGENT_KEY: ${{ secrets.AGENT_SSH_KEY }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: bash scripts/hetzner/obnova-test.sh
+      - name: Cleanup (always)
+        if: always()
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+        run: |
+          for id in $(curl -fsS -H "Authorization: Bearer $HCLOUD_TOKEN" "https://api.hetzner.cloud/v1/servers?label_selector=slff%3Dobnova-test" | jq -r '.servers[].id'); do
+            curl -fsS -X DELETE -H "Authorization: Bearer $HCLOUD_TOKEN" "https://api.hetzner.cloud/v1/servers/$id" >/dev/null || true
+          done

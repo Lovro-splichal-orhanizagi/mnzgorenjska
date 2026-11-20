@@ -227,7 +227,7 @@ takes about 1 minute and works at any time.
     snapshots.
   - **Restore test 2026-10-06:** a box copy restored into a scratch DB with identical counts
     (auth.users 1460, fantasy_teams 1293, player_scores 541329, players 38360). Repeat
-    monthly (automated by `scripts/hetzner/obnova-test.sh`, cron `/etc/cron.d/slff-obnova-test`, 2nd of the month 04:30 UTC):
+    monthly (automated by `scripts/hetzner/obnova-test.sh`, GitHub Action `obnova-test.yml` on a short-lived Hetzner Cloud server, 2nd of the month 04:30 UTC):
     `pg_restore -U supabase_admin -d obnova_test --no-owner` (extension/role errors are noise).
   - Uptime: `.github/workflows/zivost.yml` checks slff.eu, auth and rest every 10 min and
     alerts Discord.
