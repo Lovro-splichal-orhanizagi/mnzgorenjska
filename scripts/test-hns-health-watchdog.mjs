@@ -67,7 +67,7 @@ test('CLI exits non-zero on missed or unreadable listings and writes a record',(
 })
 test('hourly job rides the VM-dispatched uptime run and stays source-free',()=>{
   const workflow=fs.readFileSync(new URL('../.github/workflows/zivost.yml',import.meta.url),'utf8')
-  const job=workflow.split('  hns-zdravje:\n')[1]
+  const job=workflow.split('  hns-zdravje:\n')[1]?.split(/\n  [a-z][a-z0-9-]*:\n/)[0]
   assert.ok(job,'hourly health job missing')
   assert.match(job,/needs: zivost\n    if: \$\{\{ !cancelled\(\) && needs\.zivost\.outputs\.ura == 'true' \}\}/)
   assert.doesNotMatch(job,/cakaj-na-uvoze|SUPABASE|recovery-import|collector\.py|hns-recurring\.py|DISCORD_WEBHOOK|curl /)
