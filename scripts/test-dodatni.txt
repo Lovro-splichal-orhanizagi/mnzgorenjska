@@ -39,3 +39,4 @@ scripts/test-hns-hold-evidence.mjs
 
 # Independent inventory of active leagues excluded from nightly imports
 scripts/test-nightly-source-coverage.mjs
+scripts/test-slf595-fcf-hold-audit.mjs

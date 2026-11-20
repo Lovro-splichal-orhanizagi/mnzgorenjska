@@ -1,0 +1,661 @@
+{
+  "run_id": "44693766098",
+  "cache_key": "zapisniki-ES-k1od1-44693766098-1",
+  "from": "2026-10-30",
+  "through": "2026-11-20",
+  "season": "2026/27",
+  "targets": [
+    {
+      "slug": "es-ct-quarta-g11",
+      "report_id": "es4146876"
+    },
+    {
+      "slug": "es-ct-quarta-g11",
+      "report_id": "es4146881"
+    },
+    {
+      "slug": "es-ct-quarta-g11",
+      "report_id": "es4146884"
+    },
+    {
+      "slug": "es-ct-quarta-g11",
+      "report_id": "es4146885"
+    },
+    {
+      "slug": "es-ct-quarta-g11",
+      "report_id": "es4146917"
+    },
+    {
+      "slug": "es-ct-quarta-g11",
+      "report_id": "es4146919"
+    },
+    {
+      "slug": "es-ct-quarta-g11",
+      "report_id": "es4146921"
+    },
+    {
+      "slug": "es-ct-quarta-g11",
+      "report_id": "es4146922"
+    },
+    {
+      "slug": "es-ct-quarta-g11",
+      "report_id": "es4146925"
+    },
+    {
+      "slug": "es-ct-quarta-g11",
+      "report_id": "es4146926"
+    },
+    {
+      "slug": "es-ct-quarta-g11",
+      "report_id": "es4146934"
+    },
+    {
+      "slug": "es-ct-quarta-g11",
+      "report_id": "es4146936"
+    },
+    {
+      "slug": "es-ct-quarta-g11",
+      "report_id": "es4146940"
+    },
+    {
+      "slug": "es-ct-quarta-g11",
+      "report_id": "es4146942"
+    },
+    {
+      "slug": "es-ct-quarta-g24",
+      "report_id": "es4150048"
+    },
+    {
+      "slug": "es-ct-quarta-g24",
+      "report_id": "es4150049"
+    },
+    {
+      "slug": "es-ct-quarta-g24",
+      "report_id": "es4150050"
+    },
+    {
+      "slug": "es-ct-quarta-g24",
+      "report_id": "es4150057"
+    },
+    {
+      "slug": "es-ct-quarta-g24",
+      "report_id": "es4150058"
+    },
+    {
+      "slug": "es-ct-quarta-g27",
+      "report_id": "es4150781"
+    },
+    {
+      "slug": "es-ct-quarta-g27",
+      "report_id": "es4150786"
+    },
+    {
+      "slug": "es-ct-quarta-g27",
+      "report_id": "es4150790"
+    },
+    {
+      "slug": "es-ct-quarta-g28",
+      "report_id": "es4151020"
+    },
+    {
+      "slug": "es-ct-quarta-g33",
+      "report_id": "es4136844"
+    },
+    {
+      "slug": "es-ct-quarta-g33",
+      "report_id": "es4136850"
+    },
+    {
+      "slug": "es-ct-quarta-g33",
+      "report_id": "es4136852"
+    },
+    {
+      "slug": "es-ct-quarta-g33",
+      "report_id": "es4136856"
+    },
+    {
+      "slug": "es-ct-quarta-g13",
+      "report_id": "es4147403"
+    },
+    {
+      "slug": "es-ct-quarta-g13",
+      "report_id": "es4147408"
+    },
+    {
+      "slug": "es-ct-quarta-g13",
+      "report_id": "es4147410"
+    },
+    {
+      "slug": "es-ct-quarta-g13",
+      "report_id": "es4147412"
+    },
+    {
+      "slug": "es-ct-quarta-g13",
+      "report_id": "es4147413"
+    },
+    {
+      "slug": "es-ct-quarta-g13",
+      "report_id": "es4147418"
+    },
+    {
+      "slug": "es-ct-quarta-g20",
+      "report_id": "es4149084"
+    },
+    {
+      "slug": "es-ct-quarta-g20",
+      "report_id": "es4149085"
+    },
+    {
+      "slug": "es-ct-quarta-g20",
+      "report_id": "es4149089"
+    },
+    {
+      "slug": "es-ct-quarta-g20",
+      "report_id": "es4149093"
+    },
+    {
+      "slug": "es-ct-quarta-g20",
+      "report_id": "es4149105"
+    },
+    {
+      "slug": "es-ct-quarta-g20",
+      "report_id": "es4149106"
+    },
+    {
+      "slug": "es-ct-quarta-g1",
+      "report_id": "es4139587"
+    },
+    {
+      "slug": "es-ct-quarta-g1",
+      "report_id": "es4139591"
+    },
+    {
+      "slug": "es-ct-quarta-g1",
+      "report_id": "es4139593"
+    },
+    {
+      "slug": "es-ct-quarta-g1",
+      "report_id": "es4139594"
+    },
+    {
+      "slug": "es-ct-quarta-g1",
+      "report_id": "es4139596"
+    },
+    {
+      "slug": "es-ct-quarta-g1",
+      "report_id": "es4139597"
+    },
+    {
+      "slug": "es-ct-quarta-g1",
+      "report_id": "es4139602"
+    },
+    {
+      "slug": "es-ct-quarta-g1",
+      "report_id": "es4139606"
+    },
+    {
+      "slug": "es-ct-quarta-g1",
+      "report_id": "es4139607"
+    },
+    {
+      "slug": "es-ct-quarta-g1",
+      "report_id": "es4139611"
+    },
+    {
+      "slug": "es-ct-quarta-g2",
+      "report_id": "es4139827"
+    },
+    {
+      "slug": "es-ct-quarta-g2",
+      "report_id": "es4139831"
+    },
+    {
+      "slug": "es-ct-quarta-g2",
+      "report_id": "es4139832"
+    },
+    {
+      "slug": "es-ct-quarta-g2",
+      "report_id": "es4139834"
+    },
+    {
+      "slug": "es-ct-quarta-g2",
+      "report_id": "es4139837"
+    },
+    {
+      "slug": "es-ct-quarta-g2",
+      "report_id": "es4139842"
+    },
+    {
+      "slug": "es-ct-quarta-g2",
+      "report_id": "es4139844"
+    },
+    {
+      "slug": "es-ct-quarta-g2",
+      "report_id": "es4139845"
+    },
+    {
+      "slug": "es-ct-quarta-g2",
+      "report_id": "es4139847"
+    },
+    {
+      "slug": "es-ct-quarta-g2",
+      "report_id": "es4139849"
+    },
+    {
+      "slug": "es-ct-quarta-g2",
+      "report_id": "es4139850"
+    },
+    {
+      "slug": "es-ct-quarta-g2",
+      "report_id": "es4139852"
+    },
+    {
+      "slug": "es-ct-quarta-g2",
+      "report_id": "es4139963"
+    },
+    {
+      "slug": "es-ct-quarta-g14",
+      "report_id": "es4147638"
+    },
+    {
+      "slug": "es-ct-quarta-g14",
+      "report_id": "es4147643"
+    },
+    {
+      "slug": "es-ct-quarta-g14",
+      "report_id": "es4147646"
+    },
+    {
+      "slug": "es-ct-quarta-g14",
+      "report_id": "es4147650"
+    },
+    {
+      "slug": "es-ct-quarta-g14",
+      "report_id": "es4147663"
+    },
+    {
+      "slug": "es-ct-quarta-g23",
+      "report_id": "es4149805"
+    },
+    {
+      "slug": "es-ct-quarta-g23",
+      "report_id": "es4149806"
+    },
+    {
+      "slug": "es-ct-quarta-g23",
+      "report_id": "es4149810"
+    },
+    {
+      "slug": "es-ct-quarta-g23",
+      "report_id": "es4149813"
+    },
+    {
+      "slug": "es-ct-quarta-g23",
+      "report_id": "es4149817"
+    },
+    {
+      "slug": "es-ct-quarta-g23",
+      "report_id": "es4149819"
+    },
+    {
+      "slug": "es-ct-quarta-g23",
+      "report_id": "es4149820"
+    },
+    {
+      "slug": "es-ct-quarta-g23",
+      "report_id": "es4149823"
+    },
+    {
+      "slug": "es-ct-quarta-g23",
+      "report_id": "es4149824"
+    },
+    {
+      "slug": "es-ct-tercera-g4",
+      "report_id": "es4115257"
+    },
+    {
+      "slug": "es-ct-tercera-g4",
+      "report_id": "es4115258"
+    },
+    {
+      "slug": "es-ct-tercera-g4",
+      "report_id": "es4115259"
+    },
+    {
+      "slug": "es-ct-tercera-g4",
+      "report_id": "es4115260"
+    },
+    {
+      "slug": "es-ct-tercera-g4",
+      "report_id": "es4115264"
+    },
+    {
+      "slug": "es-ct-tercera-g4",
+      "report_id": "es4115265"
+    },
+    {
+      "slug": "es-ct-tercera-g4",
+      "report_id": "es4115266"
+    },
+    {
+      "slug": "es-ct-tercera-g4",
+      "report_id": "es4115267"
+    },
+    {
+      "slug": "es-ct-tercera-g4",
+      "report_id": "es4115268"
+    },
+    {
+      "slug": "es-ct-tercera-g4",
+      "report_id": "es4115269"
+    },
+    {
+      "slug": "es-ct-tercera-g4",
+      "report_id": "es4115270"
+    },
+    {
+      "slug": "es-ct-tercera-g4",
+      "report_id": "es4115382"
+    },
+    {
+      "slug": "es-ct-quarta-g21",
+      "report_id": "es4149296"
+    },
+    {
+      "slug": "es-ct-quarta-g21",
+      "report_id": "es4149300"
+    },
+    {
+      "slug": "es-ct-quarta-g21",
+      "report_id": "es4149301"
+    },
+    {
+      "slug": "es-ct-quarta-g21",
+      "report_id": "es4149303"
+    },
+    {
+      "slug": "es-ct-quarta-g21",
+      "report_id": "es4149341"
+    },
+    {
+      "slug": "es-ct-quarta-g21",
+      "report_id": "es4149343"
+    },
+    {
+      "slug": "es-ct-quarta-g21",
+      "report_id": "es4149345"
+    },
+    {
+      "slug": "es-ct-tercera-g3",
+      "report_id": "es4116490"
+    },
+    {
+      "slug": "es-ct-tercera-g3",
+      "report_id": "es4116491"
+    },
+    {
+      "slug": "es-ct-tercera-g3",
+      "report_id": "es4116492"
+    },
+    {
+      "slug": "es-ct-tercera-g3",
+      "report_id": "es4116493"
+    },
+    {
+      "slug": "es-ct-tercera-g3",
+      "report_id": "es4116494"
+    },
+    {
+      "slug": "es-ct-tercera-g3",
+      "report_id": "es4116495"
+    },
+    {
+      "slug": "es-ct-tercera-g3",
+      "report_id": "es4116497"
+    },
+    {
+      "slug": "es-ct-tercera-g3",
+      "report_id": "es4116498"
+    },
+    {
+      "slug": "es-ct-tercera-g3",
+      "report_id": "es4116499"
+    },
+    {
+      "slug": "es-ct-tercera-g12",
+      "report_id": "es4118896"
+    },
+    {
+      "slug": "es-ct-tercera-g12",
+      "report_id": "es4118897"
+    },
+    {
+      "slug": "es-ct-tercera-g12",
+      "report_id": "es4118898"
+    },
+    {
+      "slug": "es-ct-tercera-g12",
+      "report_id": "es4118899"
+    },
+    {
+      "slug": "es-ct-tercera-g12",
+      "report_id": "es4118900"
+    },
+    {
+      "slug": "es-ct-tercera-g12",
+      "report_id": "es4118901"
+    },
+    {
+      "slug": "es-ct-tercera-g12",
+      "report_id": "es4118903"
+    },
+    {
+      "slug": "es-ct-tercera-g12",
+      "report_id": "es4118904"
+    },
+    {
+      "slug": "es-ct-tercera-g12",
+      "report_id": "es4118905"
+    },
+    {
+      "slug": "es-ct-tercera-g12",
+      "report_id": "es4118906"
+    },
+    {
+      "slug": "es-ct-quarta-g3",
+      "report_id": "es4140034"
+    },
+    {
+      "slug": "es-ct-quarta-g3",
+      "report_id": "es4140035"
+    },
+    {
+      "slug": "es-ct-quarta-g3",
+      "report_id": "es4140036"
+    },
+    {
+      "slug": "es-ct-quarta-g3",
+      "report_id": "es4140039"
+    },
+    {
+      "slug": "es-ct-quarta-g3",
+      "report_id": "es4140043"
+    },
+    {
+      "slug": "es-ct-quarta-g3",
+      "report_id": "es4140045"
+    },
+    {
+      "slug": "es-ct-quarta-g3",
+      "report_id": "es4140046"
+    },
+    {
+      "slug": "es-ct-quarta-g3",
+      "report_id": "es4140050"
+    },
+    {
+      "slug": "es-ct-quarta-g3",
+      "report_id": "es4140054"
+    },
+    {
+      "slug": "es-ct-quarta-g3",
+      "report_id": "es4140058"
+    },
+    {
+      "slug": "es-ct-tercera-g10",
+      "report_id": "es4119551"
+    },
+    {
+      "slug": "es-ct-tercera-g10",
+      "report_id": "es4119552"
+    },
+    {
+      "slug": "es-ct-tercera-g10",
+      "report_id": "es4119553"
+    },
+    {
+      "slug": "es-ct-tercera-g10",
+      "report_id": "es4119556"
+    },
+    {
+      "slug": "es-ct-tercera-g10",
+      "report_id": "es4119558"
+    },
+    {
+      "slug": "es-ct-tercera-g10",
+      "report_id": "es4119560"
+    },
+    {
+      "slug": "es-ct-tercera-g10",
+      "report_id": "es4119561"
+    },
+    {
+      "slug": "es-ct-tercera-g10",
+      "report_id": "es4119562"
+    },
+    {
+      "slug": "es-ct-tercera-g10",
+      "report_id": "es4119563"
+    },
+    {
+      "slug": "es-ct-tercera-g10",
+      "report_id": "es4119564"
+    },
+    {
+      "slug": "es-ct-tercera-g1",
+      "report_id": "es4116009"
+    },
+    {
+      "slug": "es-ct-tercera-g1",
+      "report_id": "es4116010"
+    },
+    {
+      "slug": "es-ct-tercera-g1",
+      "report_id": "es4116011"
+    },
+    {
+      "slug": "es-ct-tercera-g1",
+      "report_id": "es4116012"
+    },
+    {
+      "slug": "es-ct-tercera-g1",
+      "report_id": "es4116013"
+    },
+    {
+      "slug": "es-ct-tercera-g1",
+      "report_id": "es4116014"
+    },
+    {
+      "slug": "es-ct-tercera-g1",
+      "report_id": "es4116015"
+    },
+    {
+      "slug": "es-ct-tercera-g1",
+      "report_id": "es4116017"
+    },
+    {
+      "slug": "es-ct-tercera-g1",
+      "report_id": "es4116018"
+    },
+    {
+      "slug": "es-ct-tercera-g1",
+      "report_id": "es4116019"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108659"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108660"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108661"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108665"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108667"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108669"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108670"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108671"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108692"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108693"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108694"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108695"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108696"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108697"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108698"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108700"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108701"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108702"
+    },
+    {
+      "slug": "es-ct-elit",
+      "report_id": "es4108703"
+    }
+  ]
+}

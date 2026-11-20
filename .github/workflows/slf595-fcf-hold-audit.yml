@@ -1,0 +1,64 @@
+name: SLF-595 retained FCF hold audit (read-only)
+# Dispatch only; exact existing cache + SELECT. No source requests or cache saves.
+# Diagnostic for 163 candidate warnings; does not resolve or repair pending fixtures.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: slf595-fcf-hold-audit
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - uses: actions/cache/restore@v4
+        id: retained
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-ES-k1od1-44693766098-1
+          fail-on-cache-miss: true
+      - name: Require the exact retained cache
+        env:
+          CACHE_HIT: ${{ steps.retained.outputs.cache-hit }}
+        run: test "$CACHE_HIT" = true
+      - name: Prepare database tunnel key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Tunnel to the database on the VM
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          command -v psql >/dev/null || { echo "::error::Missing psql"; exit 1; }
+          case "$SUPABASE_DB_URL" in *@127.0.0.1*)
+            ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53;; esac
+      - name: Audit (SELECT only, read-only transaction)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          RETAINED_CACHE_KEY: ${{ steps.retained.outputs.cache-matched-key }}
+        run: node scripts/slf595-fcf-hold-audit.mjs scripts/.predpomnilnik/fcf rezultat
+      - name: Remove deploy key
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: slf595-fcf-hold-audit-summary
+          path: rezultat/summary.json
+          if-no-files-found: ignore
+          retention-days: 30
