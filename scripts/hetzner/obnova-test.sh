@@ -58,9 +58,11 @@ printf '%s\n' "$BOX_KEY" | $RSSH 'install -m 600 /dev/stdin /root/box'
 $RSSH 'bash -s' <<REMOTE | tee "$D/out"
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
+cloud-init status --wait >/dev/null 2>&1 || true
 apt-get -qq update && apt-get -qq install -y docker.io rsync >/dev/null
 BS="ssh -p 23 -i /root/box -o BatchMode=yes -o StrictHostKeyChecking=accept-new"
-DUMP=\$(\$BS $BOX "ls dumps/dnevne" | grep -E '^slff-[0-9]{8}T' | sort | tail -1)
+BN="\$BS -n"  # -n: ssh must not eat the script/loop stdin (rsync needs plain BS)
+DUMP=\$(\$BN $BOX "ls dumps/dnevne" | grep -E '^slff-[0-9]{8}T[0-9]{4}Z' | sort | tail -1)
 rsync -a -e "\$BS" "$BOX:dumps/dnevne/\$DUMP" /root/
 echo "DUMP \$DUMP \$(sha256sum /root/\$DUMP | cut -c1-16)"
 docker run -d --name o -e POSTGRES_PASSWORD=obnova -v /root/pg:/var/lib/postgresql/data supabase/postgres:17.6.1.166 >/dev/null
@@ -71,7 +73,7 @@ docker exec o pg_restore -U supabase_admin -d obnova_test --no-owner /tmp/d.dump
 for t in $TABELE; do echo "COUNT \$t \$(docker exec o psql -U supabase_admin -d obnova_test -Atc "select count(*) from \$t")"; done
 docker exec o psql -U supabase_admin -d obnova_test -Atc "select name || '|' || coalesce(metadata->>'size','') from storage.objects where bucket_id='fotografije-igralcev' and metadata->>'size' is not null order by created_at desc limit 5" |
 while IFS='|' read -r p sz; do
-  f=\$(\$BS $BOX "ls shramba/zdaj/stub/stub/fotografije-igralcev/\$p/" | head -1)
+  f=\$(\$BN $BOX "ls shramba/zdaj/stub/stub/fotografije-igralcev/\$p/" | head -1)
   rsync -a -e "\$BS" "$BOX:shramba/zdaj/stub/stub/fotografije-igralcev/\$p/\$f" /root/x || { echo "FOTOERR \$p"; continue; }
   echo "FOTO \$p dump=\$sz box=\$(stat -c %s /root/x) \$(sha256sum /root/x | cut -c1-16)"
 done
@@ -79,9 +81,9 @@ REMOTE
 
 RAZ=0; IZPIS=""
 DUMP=$(awk '$1=="DUMP"{print $2}' "$D/out")
-# the dump must be fresh: slff-YYYYMMDDTHHMMSS...
-DD=$(grep -oE '[0-9]{8}T[0-9]{6}' <<<"$DUMP" | head -1)
-if [ -z "$DD" ] || [ $(( $(date -u +%s) - $(date -u -d "${DD:0:4}-${DD:4:2}-${DD:6:2} ${DD:9:2}:${DD:11:2}:${DD:13:2}" +%s) )) -gt 172800 ]; then
+# the dump must be fresh: slff-YYYYMMDDTHHMMZ (varnostna.sh)
+DD=$(grep -oE '[0-9]{8}T[0-9]{4}Z' <<<"$DUMP" | head -1)
+if [ -z "$DD" ] || [ $(( $(date -u +%s) - $(date -u -d "${DD:0:4}-${DD:4:2}-${DD:6:2} ${DD:9:2}:${DD:11:2}:00" +%s) )) -gt 172800 ]; then
   IZPIS+="dump older than 48 h or unreadable: $DUMP"$'\n'; RAZ=1
 fi
 for t in $TABELE; do
@@ -92,7 +94,7 @@ for t in $TABELE; do
   [ "$t" = storage.objects ] || [ $(( a * 100 )) -ge $(( b * 95 )) ] || RAZ=1
 done
 FOTO=$(grep -c '^FOTO ' "$D/out" || true)
-[ "$FOTO" -ge 1 ] || RAZ=1
+[ "$FOTO" -eq 5 ] || RAZ=1
 # every photo: size in the dump must equal the file on the box
 while read -r _ _ d bx _; do [ "${d#dump=}" = "${bx#box=}" ] || RAZ=1; done < <(grep '^FOTO ' "$D/out")
 grep -q '^FOTOERR' "$D/out" && RAZ=1
