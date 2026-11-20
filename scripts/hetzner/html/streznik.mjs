@@ -534,7 +534,7 @@ export async function stran(pot, t, { rest, lige, besede }) {
 // Koda AdSense za pregled strani in oglase (docs/podatkovni-model.md, *Oglasi*).
 // Le tu, ne v dist/index.html: tega zapakira aplikacija (Capacitor, OTA), kjer
 // AdSense v WebView ni dovoljen. Mladinske lige je ne dobijo nikoli.
-export const ADSENSE = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9235394594566763" crossorigin="anonymous"></script>'
+export const ADSENSE = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5333600432666190" crossorigin="anonymous"></script>'
 export const zAdSense = (html, slug) =>
   jeMladinska(slug) || html.includes('adsbygoogle.js') ? html : html.replace('</head>', () => `  ${ADSENSE}\n  </head>`)
 

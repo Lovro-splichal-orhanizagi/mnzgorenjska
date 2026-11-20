@@ -54,7 +54,7 @@ begin
   -- Privzeto (migracija): izklop, mest ni.
   update settings set value = '0' where key = 'oglasi';
   update settings set value = '{}' where key = 'oglasi_mesta';
-  assert (select value #>> '{}' from settings where key = 'oglasi_client') = 'ca-pub-9235394594566763', 'privzet založnik';
+  assert (select value #>> '{}' from settings where key = 'oglasi_client') = 'ca-pub-5333600432666190', 'privzet založnik';
   assert pg_temp.oglas_kot(navaden, 990301) is null, 'izklop: nič';
 
   update settings set value = '{"domov": "1234567890"}' where key = 'oglasi_mesta';
@@ -63,7 +63,7 @@ begin
   update settings set value = '1' where key = 'oglasi';
   assert pg_temp.oglas_kot(null, 990301) is null, 'stikalo 1: anon nič';
   assert pg_temp.oglas_kot(navaden, 990301) is null, 'stikalo 1: navaden nič';
-  assert pg_temp.oglas_kot(admin, 990301) ->> 'client' = 'ca-pub-9235394594566763', 'stikalo 1: admin vidi';
+  assert pg_temp.oglas_kot(admin, 990301) ->> 'client' = 'ca-pub-5333600432666190', 'stikalo 1: admin vidi';
 
   update settings set value = '2' where key = 'oglasi';
   assert pg_temp.oglas_kot(null, 990301) -> 'mesta' ->> 'domov' = '1234567890', 'stikalo 2: anon vidi';

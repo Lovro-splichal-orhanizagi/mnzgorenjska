@@ -265,7 +265,7 @@ preveri('pravno: razdelek Scout s sidrom #scout (povezava za ugovor)',
 
 // --- oglasi AdSense (src/lib/oglasi.ts, migracija 20261120130000) --------
 {
-  const ok = { client: 'ca-pub-9235394594566763', mesta: { domov: '1234567890' } }
+  const ok = { client: 'ca-pub-5333600432666190', mesta: { domov: '1234567890' } }
   preveri('oglasi: veljaven odgovor da enoto za mesto',
     izberiOglas(ok, 'domov', 'clani', false)?.slot === '1234567890')
   preveri('oglasi: stikalo 0 (oglasi_za vrne NULL) ne da nič', izberiOglas(null, 'domov', 'clani', false) === null)
