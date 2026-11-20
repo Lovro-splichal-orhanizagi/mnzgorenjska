@@ -8,7 +8,7 @@ import { runInNewContext } from 'node:vm'
 import { stripTypeScriptTypes } from 'node:module'
 import { ugibajDrzavo, drzavaLige, drzavaVstopa, zeljenJezik, znaneDrzave } from '../src/lib/drzavaUgib.ts'
 import { jezikLige, izpisRoka, PAS_DRZAVE } from '../supabase/functions/posli-opomnik/sporocila.ts'
-import { stran, obdelovalec } from './hetzner/html/streznik.mjs'
+import { stran, obdelovalec, zAdSense } from './hetzner/html/streznik.mjs'
 import config from '../vite.config.js'
 
 test('Germany is recognized by explicit country, German region and Berlin without claiming Austria or Switzerland', () => {
@@ -86,7 +86,7 @@ test('the real country-card build plugin produces German HTML with Germany local
     for (const url of ['/de/', '/table?t=de-regionalliga-nordost']) {
       await fallback({ url, method: 'GET' }, { writeHead: s => { status = s }, end: value => { body = value } })
       assert.equal(status, 200)
-      assert.equal(body, html, 'API failure must preserve the German country card')
+      assert.equal(body, zAdSense(html), 'API failure must preserve the German country card')
     }
   } finally { rmSync(output, { recursive: true, force: true }) }
 })
