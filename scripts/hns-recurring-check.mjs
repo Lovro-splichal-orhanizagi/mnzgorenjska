@@ -12,6 +12,9 @@ const reports=s.leagues.reduce((n,l)=>n+l.reports.length,0),pending=s.leagues.re
 const hashes=new Set()
 for(const l of s.leagues)for(const c of [l.schedule,...l.reports.map(r=>r.capture)]){assert.match(c.sha256,/^[a-f0-9]{64}$/);hashes.add(c.sha256+'.html')}
 fs.writeFileSync(path.join(dir,'blob-files.txt'),[...hashes].join('\n')+'\n')
-const summary={inventoryComplete:s.leagues.length===139&&s.leagues.every(l=>l.finished),createdAt:s.createdAt,updatedAt:s.updatedAt,status:s.status,leagues:s.leagues.length,reports,pending,sourceUnplayed:s.sourceUnplayedCount??null,holds:s.holds??null}
+const summary={inventoryComplete:s.leagues.length===139&&s.leagues.every(l=>l.finished===true),createdAt:s.createdAt,updatedAt:s.updatedAt,status:s.status,reason:s.reason??null,leagues:s.leagues.length,reports,pending,sourceUnplayed:s.sourceUnplayedCount??null,holds:s.holds??null}
 console.log(JSON.stringify(summary))
 if(process.env.GITHUB_STEP_SUMMARY)fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'### Croatian collector\n\n```json\n'+JSON.stringify(summary,null,2)+'\n```\n\n'+s.leagues.filter(l=>l.pending.length).map(l=>`- ${l.slug}: ${l.pending.length} held reports`).join('\n')+'\n')
+// Emit only after admission succeeds. JSON keeps a collector reason on one
+// output line, including when the original text contains newlines.
+if(process.env.GITHUB_OUTPUT)fs.appendFileSync(process.env.GITHUB_OUTPUT,`snapshot_status=${summary.status}\nsnapshot_complete=${summary.inventoryComplete}\nsnapshot_reason=${JSON.stringify(summary.reason)}\n`)
