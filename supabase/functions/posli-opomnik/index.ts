@@ -39,6 +39,7 @@ import {
   sestaviPoznavalca,
   sestaviPushOpomnik,
   sestaviPivo7dni,
+  sestaviOpomnikPonovneCene,
   sestaviAnketoPlacila,
   jezikAnkete,
   PROMO_PREVERJEN,
@@ -72,7 +73,7 @@ const PROMO_PRORACUN_MS = 20_000
 // Funkcija ima 60 s; mail traja ~4,6 s, zato po 40 s ne zacnemo novega.
 const ODSOTNI_PRORACUN_MS = 40_000
 
-const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'anketa-placila', 'promo-preverjen', 'akcija-vabil', 'novost-svetovalec'] as const
+const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi', 'pivo-7dni', 'novost-mini-lige', 'opozorilo-odsotni', 'anketa-placila', 'promo-preverjen', 'akcija-vabil', 'novost-svetovalec', 'ponovna-cena-opomnik'] as const
 type Vrsta = (typeof VRSTE)[number]
 
 // Besedila so v `sporocila.ts`, v jeziku DRŽAVE LIGE (slovaška liga →
@@ -263,6 +264,40 @@ Deno.serve(async (req) => {
       })
     }
     return json({ kandidati_stevilo: kand.length, poslano, poslanih_mailov: poslanih, preskoceno: kand.length - poslano })
+  }
+
+  // `ponovna-cena-opomnik`: kratek mail po prekinjenem plačilu ponovne cene
+  // (`kandidati_za_opomnik_ponovne_cene`: enkrat na zahtevek, 1 h – 3 dni). Le pošta.
+  if (vrsta === 'ponovna-cena-opomnik') {
+    if (!jeStroj) return json({ error: 'Opomnik ponovne cene pošlje samo urnik (servisni ključ).' }, 403)
+    if (!SMTP_PASS && !suho) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
+    const service5 = createClient(SUPABASE_URL, SERVICE_KEY)
+    const { data, error } = await service5.rpc('kandidati_za_opomnik_ponovne_cene', {
+      p_najvec: suho ? 1000 : Math.min(vhod.najvec_poslati ?? 5, 10),
+    })
+    if (error) return json({ error: error.message }, 500)
+    const kand = (data ?? []) as Array<{
+      user_id: string; email: string; display_name: string | null; player_id: number; igralec: string
+      competition_id: number; liga_slug: string; liga_oznaka: string; liga_drzava: string | null
+    }>
+    if (suho) return json({ suho: true, kandidati_stevilo: kand.length })
+    let poslano = 0
+    for (const u of kand) {
+      if (poslano > 0) await new Promise((r) => setTimeout(r, 600))
+      const liga: Liga = { slug: u.liga_slug, oznaka: u.liga_oznaka, drzava: u.liga_drzava }
+      const sporocilo = await sOdjavo(service5, u.user_id, sestaviOpomnikPonovneCene(liga, u))
+      const rez = await poslji(EMAIL_FROM, u.email, sporocilo)
+      if (!rez.napaka) poslano++
+      await service5.from('email_log').insert({
+        user_id: u.user_id,
+        email: u.email,
+        vrsta,
+        competition_id: u.competition_id,
+        resend_id: rez.id ?? null,
+        napaka: rez.napaka ?? null,
+      })
+    }
+    return json({ kandidati_stevilo: kand.length, poslano, preskoceno: kand.length - poslano })
   }
 
   // `pivo-7dni`: teden po prvi (nehišni, nemladinski) ekipi en sproščen mail

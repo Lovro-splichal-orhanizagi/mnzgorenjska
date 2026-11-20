@@ -5660,3 +5660,57 @@ ${p(`— ${B.podpis}`)}
   ].join('\n')
   return { naslov: B.zadeva, html, besedilo, predglava: B.uvod, odjava }
 }
+
+// --- ponovna cena: plačilo ni bilo dokončano ---------------------------------
+// En kratek oseben mail na prekinjen zahtevek (`kandidati_za_opomnik_ponovne_cene`),
+// le pošta. Brez cene in brez spodbud: povezava vodi na stran igralca, kjer je gumb.
+
+interface BesedilaPonovneCene {
+  /** `i` je surovo ime igralca. */
+  zadeva: (i: string) => string
+  naslov: string
+  /** `i` je že ubežano ime igralca. */
+  uvod: (i: string) => string
+  gumb: string
+  zakaj: string
+}
+
+const PONOVNA_CENA: Record<Jezik, BesedilaPonovneCene> = {
+  sl: { zadeva: (i) => `Ponovno vrednotenje cene: ${i}`, naslov: 'Plačilo ni bilo dokončano', uvod: (i) => `Začel/a si ponovno vrednotenje cene za ${i}, a plačilo ni bilo dokončano. Če ga še želiš, ga najdeš na strani igralca.`, gumb: 'Odpri stran igralca', zakaj: 'To sporočilo dobiš enkrat, ker si na slff.eu začel/a ponovno vrednotenje cene.' },
+  sk: { zadeva: (i) => `Nové ocenenie ceny: ${i}`, naslov: 'Platba nebola dokončená', uvod: (i) => `Začal si nové ocenenie ceny hráča ${i}, ale platba nebola dokončená. Ak ho ešte chceš, nájdeš ho na stránke hráča.`, gumb: 'Otvoriť stránku hráča', zakaj: 'Túto správu dostávaš raz, lebo si na slff.eu začal nové ocenenie ceny.' },
+  hr: { zadeva: (i) => `Ponovna procjena cijene: ${i}`, naslov: 'Plaćanje nije dovršeno', uvod: (i) => `Započeo si ponovnu procjenu cijene za ${i}, ali plaćanje nije dovršeno. Ako je još želiš, naći ćeš je na stranici igrača.`, gumb: 'Otvori stranicu igrača', zakaj: 'Ovu poruku dobivaš jednom jer si na slff.eu započeo ponovnu procjenu cijene.' },
+  cs: { zadeva: (i) => `Nové ocenění ceny: ${i}`, naslov: 'Platba nebyla dokončena', uvod: (i) => `Začal jsi nové ocenění ceny hráče ${i}, ale platba nebyla dokončena. Pokud ho ještě chceš, najdeš ho na stránce hráče.`, gumb: 'Otevřít stránku hráče', zakaj: 'Tuto zprávu dostáváš jednou, protože jsi na slff.eu začal nové ocenění ceny.' },
+  hu: { zadeva: (i) => `Ár újraértékelése: ${i}`, naslov: 'A fizetés nem fejeződött be', uvod: (i) => `Elindítottad ${i} árának újraértékelését, de a fizetés nem fejeződött be. Ha még szeretnéd, a játékos oldalán megtalálod.`, gumb: 'A játékos oldala', zakaj: 'Ezt az üzenetet egyszer kapod, mert a slff.eu-n elindítottál egy ár-újraértékelést.' },
+  de: { zadeva: (i) => `Neubewertung des Preises: ${i}`, naslov: 'Die Zahlung wurde nicht abgeschlossen', uvod: (i) => `Du hast eine Neubewertung des Preises für ${i} gestartet, aber die Zahlung wurde nicht abgeschlossen. Wenn du sie noch möchtest, findest du sie auf der Spielerseite.`, gumb: 'Spielerseite öffnen', zakaj: 'Du bekommst diese Nachricht einmal, weil du auf slff.eu eine Neubewertung des Preises gestartet hast.' },
+  sr: { zadeva: (i) => `Ponovna procena cene: ${i}`, naslov: 'Plaćanje nije završeno', uvod: (i) => `Započeo si ponovnu procenu cene za ${i}, ali plaćanje nije završeno. Ako je još želiš, naći ćeš je na stranici igrača.`, gumb: 'Otvori stranicu igrača', zakaj: 'Ovu poruku dobijaš jednom jer si na slff.eu započeo ponovnu procenu cene.' },
+  ro: { zadeva: (i) => `Reevaluarea prețului: ${i}`, naslov: 'Plata nu a fost finalizată', uvod: (i) => `Ai început reevaluarea prețului pentru ${i}, dar plata nu a fost finalizată. Dacă o mai vrei, o găsești pe pagina jucătorului.`, gumb: 'Deschide pagina jucătorului', zakaj: 'Primești acest mesaj o singură dată, pentru că ai început o reevaluare a prețului pe slff.eu.' },
+  et: { zadeva: (i) => `Hinna ümberhindamine: ${i}`, naslov: 'Makse jäi lõpetamata', uvod: (i) => `Alustasid mängija ${i} hinna ümberhindamist, kuid makse jäi lõpetamata. Kui soovid seda veel, leiad selle mängija lehelt.`, gumb: 'Ava mängija leht', zakaj: 'Saad selle sõnumi ühe korra, sest alustasid slff.eu-s hinna ümberhindamist.' },
+  pl: { zadeva: (i) => `Ponowna wycena: ${i}`, naslov: 'Płatność nie została dokończona', uvod: (i) => `Rozpocząłeś ponowną wycenę zawodnika ${i}, ale płatność nie została dokończona. Jeśli nadal jej chcesz, znajdziesz ją na stronie zawodnika.`, gumb: 'Otwórz stronę zawodnika', zakaj: 'Tę wiadomość dostajesz raz, bo rozpocząłeś ponowną wycenę na slff.eu.' },
+  es: { zadeva: (i) => `Revalorización del precio: ${i}`, naslov: 'El pago no se completó', uvod: (i) => `Empezaste la revalorización del precio de ${i}, pero el pago no se completó. Si aún la quieres, la tienes en la página del jugador.`, gumb: 'Abrir la página del jugador', zakaj: 'Recibes este mensaje una sola vez porque empezaste una revalorización del precio en slff.eu.' },
+  lv: { zadeva: (i) => `Cenas pārvērtēšana: ${i}`, naslov: 'Maksājums netika pabeigts', uvod: (i) => `Tu sāki spēlētāja ${i} cenas pārvērtēšanu, bet maksājums netika pabeigts. Ja to vēl vēlies, tā ir spēlētāja lapā.`, gumb: 'Atvērt spēlētāja lapu', zakaj: 'Šo ziņu saņem vienu reizi, jo slff.eu sāki cenas pārvērtēšanu.' },
+  mk: { zadeva: (i) => `Повторна проценка на цената: ${i}`, naslov: 'Плаќањето не е завршено', uvod: (i) => `Започна повторна проценка на цената за ${i}, но плаќањето не е завршено. Ако сè уште ја сакаш, ќе ја најдеш на страницата на играчот.`, gumb: 'Отвори ја страницата на играчот', zakaj: 'Оваа порака ја добиваш еднаш, бидејќи на slff.eu започна повторна проценка на цената.' },
+  el: { zadeva: (i) => `Επαναξιολόγηση τιμής: ${i}`, naslov: 'Η πληρωμή δεν ολοκληρώθηκε', uvod: (i) => `Ξεκίνησες επαναξιολόγηση τιμής για τον ${i}, αλλά η πληρωμή δεν ολοκληρώθηκε. Αν τη θέλεις ακόμα, θα τη βρεις στη σελίδα του παίκτη.`, gumb: 'Άνοιξε τη σελίδα του παίκτη', zakaj: 'Παίρνεις αυτό το μήνυμα μία φορά, επειδή ξεκίνησες επαναξιολόγηση τιμής στο slff.eu.' },
+  tr: { zadeva: (i) => `Fiyatın yeniden değerlendirilmesi: ${i}`, naslov: 'Ödeme tamamlanmadı', uvod: (i) => `${i} için fiyat değerlendirmesi başlattın, ama ödeme tamamlanmadı. Hâlâ istiyorsan oyuncunun sayfasında bulabilirsin.`, gumb: 'Oyuncu sayfasını aç', zakaj: 'Bu mesajı bir kez alıyorsun, çünkü slff.eu’da fiyat değerlendirmesi başlattın.' },
+  uk: { zadeva: (i) => `Переоцінка ціни: ${i}`, naslov: 'Оплату не завершено', uvod: (i) => `Ти почав переоцінку ціни гравця ${i}, але оплату не завершено. Якщо ще хочеш, вона є на сторінці гравця.`, gumb: 'Відкрити сторінку гравця', zakaj: 'Це повідомлення приходить один раз, бо ти почав переоцінку ціни на slff.eu.' },
+  hy: { zadeva: (i) => `Գնի վերագնահատում՝ ${i}`, naslov: 'Վճարումը չի ավարտվել', uvod: (i) => `Դու սկսել ես ${i}-ի գնի վերագնահատումը, բայց վճարումը չի ավարտվել։ Եթե դեռ ուզում ես, այն խաղացողի էջում է։`, gumb: 'Բացել խաղացողի էջը', zakaj: 'Այս նամակը ստանում ես մեկ անգամ, քանի որ slff.eu-ում սկսել ես գնի վերագնահատում։' },
+  az: { zadeva: (i) => `Qiymətin yenidən qiymətləndirilməsi: ${i}`, naslov: 'Ödəniş tamamlanmadı', uvod: (i) => `${i} üçün qiymətin yenidən qiymətləndirilməsinə başladın, amma ödəniş tamamlanmadı. Hələ də istəyirsənsə, oyunçunun səhifəsində tapa bilərsən.`, gumb: 'Oyunçu səhifəsini aç', zakaj: 'Bu məktubu bir dəfə alırsan, çünki slff.eu-da qiymətin yenidən qiymətləndirilməsinə başlamısan.' },
+  da: { zadeva: (i) => `Ny vurdering af prisen: ${i}`, naslov: 'Betalingen blev ikke gennemført', uvod: (i) => `Du startede en ny vurdering af prisen på ${i}, men betalingen blev ikke gennemført. Hvis du stadig vil have den, finder du den på spillerens side.`, gumb: 'Åbn spillerens side', zakaj: 'Du får denne besked én gang, fordi du startede en ny vurdering af prisen på slff.eu.' },
+  en: { zadeva: (i) => `Price review: ${i}`, naslov: 'The payment wasn’t finished', uvod: (i) => `You started a price review for ${i}, but the payment wasn’t finished. If you still want it, it’s on the player’s page.`, gumb: 'Open the player page', zakaj: 'You get this email once, because you started a price review on slff.eu.' },
+}
+
+export function sestaviOpomnikPonovneCene(
+  liga: Liga,
+  u: { display_name: string | null; player_id: number; igralec: string },
+): Sporocilo {
+  const j = jezikLige(liga)
+  const B = PONOVNA_CENA[j]
+  return sestavi(j, {
+    zadeva: `SLFF ${liga.oznaka}: ${B.zadeva(u.igralec)}`,
+    predglava: B.naslov,
+    oznaka: liga.oznaka,
+    naslov: B.naslov,
+    uvod: `${pozdrav(j, u.display_name)} ${B.uvod(`<strong>${esc(u.igralec)}</strong>`)}`,
+    gumb: { label: B.gumb, url: `${SITE}/player/${u.player_id}?t=${encodeURIComponent(liga.slug)}` },
+    zakaj: B.zakaj,
+  }, povezave(liga.slug).odjava)
+}
