@@ -105,7 +105,7 @@ jobs:
 
       - name: HNS transport, timings and offline recovery
         run: |
-          node --test scripts/test-hns-http.mjs scripts/test-nocni-urnik.mjs scripts/test-hns-collection-manifest.mjs scripts/test-recovery-captured.mjs scripts/test-pzpn-collect-recovery.mjs
+          node --test scripts/test-hns-http.mjs scripts/test-nocni-urnik.mjs scripts/test-hns-collection-manifest.mjs scripts/test-recovery-captured.mjs scripts/test-pzpn-collect-recovery.mjs scripts/test-hns-source-health.mjs scripts/test-hns-health-watchdog.mjs
           python3 scripts/test_hns_collector.py
 
       - name: Germany activation manifest

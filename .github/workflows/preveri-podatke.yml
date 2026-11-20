@@ -59,6 +59,14 @@ jobs:
           path: hns-source-health.json
           if-no-files-found: error
           retention-days: 90
+      # SLF-664: independent check that the hourly monitor (Živost) itself still runs.
+      - name: Hourly Croatian health monitor is current
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=hns-source-health-hourly&per_page=30" > hns-artifacts.json || echo '{}' > hns-artifacts.json
+          node scripts/hns-health-watchdog.mjs hns-artifacts.json --mode watch
   preveri:
     runs-on: ubuntu-latest
     timeout-minutes: 15

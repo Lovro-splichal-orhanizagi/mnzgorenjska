@@ -4,6 +4,11 @@ name: Živost strani in API
 # Supabase Cloud in Vercel nista več tista, ki opazita izpad. Teče z GitHuba, torej
 # od zunaj, prek Cloudflara — tako kot obiskovalec. Ob izpadu po en poskus
 # znova, nato sporočilo na Discord (dokler izpad traja, vsakih 10 minut).
+#
+# Enkrat na uro (prvi tek v uri) isti zanesljivi zagon z VM preveri še zdravje
+# hrvaškega zajema (SLF-664): samo shranjen heartbeat in nespremenljivi posnetki
+# z VM, brez zveze, brez baze, brez čakanja na uvoze. Rdeč posel `hns-zdravje`
+# ne pomeni izpada strani; bere ga CTO triage.
 
 on:
   schedule:
@@ -22,7 +27,12 @@ jobs:
   zivost:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    outputs:
+      ura: ${{ steps.ura.outputs.ura }}
     steps:
+      - name: Prvi tek v uri?
+        id: ura
+        run: echo "ura=$([ "$(date -u +%M)" -lt 10 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
       - name: Preveri
         env:
           KLJUC: ${{ vars.VITE_SUPABASE_ANON_KEY }}
@@ -44,3 +54,57 @@ jobs:
               "$DISCORD_WEBHOOK"
           fi
           exit 1
+
+  # SLF-664: retained Croatian collection health on the VM-dispatched cadence.
+  # Reads only retained evidence: no federation request, no DB, no writer gate.
+  hns-zdravje:
+    needs: zivost
+    if: ${{ !cancelled() && needs.zivost.outputs.ura == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # Missed-check detection: the previous hourly execution must be at most 90 min old.
+      - name: Previous hourly check executed on time
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=hns-source-health-hourly&per_page=30" > hns-artifacts.json || echo '{}' > hns-artifacts.json
+          node scripts/hns-health-watchdog.mjs hns-artifacts.json --mode self --exclude-run "$GITHUB_RUN_ID" --out hns-health-monitor.json
+      - name: Read retained Croatian collection evidence
+        id: evidence
+        if: ${{ !cancelled() }}
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh private-hns-health/snapshots
+          trap 'rm -f ~/.ssh/id_ed25519' EXIT
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          export RSYNC_RSH='ssh -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes'
+          scp -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes deploy@2.31.6.53:/srv/slff-recovery/hns-recurring/collector-status.json private-hns-health/collector-status.json
+          rsync -r --safe-links --timeout=60 --include='*.json' --exclude='*' deploy@2.31.6.53:/srv/slff-recovery/hns-recurring/snapshots/ private-hns-health/snapshots/
+      - name: Report independent collection health
+        if: ${{ !cancelled() }}
+        env:
+          HNS_EVIDENCE_OUTCOME: ${{ steps.evidence.outcome }}
+        run: node scripts/hns-source-health.mjs private-hns-health
+      # Uploaded even when degraded: the artifact proves the check ran, its JSON says what it found.
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: hns-source-health-hourly
+          path: |
+            hns-source-health.json
+            hns-health-monitor.json
+          if-no-files-found: error
+          retention-days: 14
