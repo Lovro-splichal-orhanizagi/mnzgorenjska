@@ -12117,6 +12117,15 @@ export type Database = {
           video_id: string
         }[]
       }
+      moj_pro: { Args: never; Returns: Json }
+      pro_ekipe: { Args: { p_ekipe: number[] }; Returns: number[] }
+      pro_porocilo: { Args: never; Returns: Json }
+      pro_portal_kupec: { Args: never; Returns: string }
+      pro_pripravi_nakup: {
+        Args: { p_vir: string }
+        Returns: { email: string; stripe_customer_id: string }[]
+      }
+      vidi_pro: { Args: never; Returns: boolean }
       vidi_prenose: { Args: never; Returns: boolean }
       vidi_posnetke: { Args: never; Returns: boolean }
       vidi_preverjene: { Args: never; Returns: boolean }

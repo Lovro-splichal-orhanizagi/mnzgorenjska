@@ -158,7 +158,8 @@ rezervnih igralcev.
 | `narocila_znack` | Naročila natisnjene značke ob doživljenjski pravici: ime na znački, naslov (jsonb), poštnina, stanje `za_tisk`/`natisnjeno`/`poslano`/`preklicano`. Zaprta, bere in ureja le admin prek RPC; ostane po izbrisu računa, naslov po 90 dneh od pošiljanja le država |
 | `stripe_dogodki` | Prejeti dogodki Stripe z `obdelano_at` (idempotenca webhooka); le servis |
 | `profil_igralca_plus` | Dodatki preverjenega igralca (opis do 500, YouTube, X, spletna stran, pasica, barva, izpostavljena tekma ali statistika, sporočilo navijačem); vidno le prek `je_preverjen` |
-| `testerji` | Preizkuševalci, ki vidijo preverjene pri stikalu `preverjeni_racuni` = 1; piše le admin |
+| `pro_narocnine` | Pravica SLFF Pro (menedžerji): uporabnik, vir `sezona`/`mesec`/`rocno`, `aktiven`/`preklican`/`potekel`, `velja_do`, id-ji Stripe, `stripe_preklic`. Piše le webhook Stripe; vrata `pro_aktiven` (stikalo `slff_pro`) |
+| `testerji` | Preizkuševalci, ki vidijo preverjene (in SLFF Pro) pri stikalu `preverjeni_racuni` (`slff_pro`) = 1; piše le admin |
 | `posnetki_igralca` | Video posnetki izložbe preverjenega polnoletnega igralca (`ponudnik` `r2`/`stream`/`test`, uid, vrsta, velikost videa in plakata, naslov, vrstni red, izpostavljen, stanje obdelave, pregled `caka`/`odobren`/`zavrnjen`); zaprto, brskalnik le prek `izlozba_igralca` in `posnetki_*` |
 | `posnetki_brisanje`, `prijave_posnetkov`, `posnetki_nalaganja` | Vrsta brisanja pri ponudniku (z velikostjo za prostor R2), prijave posnetkov, dnevna meja nalaganj; zaprte |
 | `potrditve_soigralcev` / `prijave_profila_igralca` / `zetoni_prevzema` | Potrditve soigralcev, prijave lažnih profilov, enkratne povezave za klub (le zgoščene); zaprte tabele |

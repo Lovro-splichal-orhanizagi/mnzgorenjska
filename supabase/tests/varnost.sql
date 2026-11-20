@@ -6026,6 +6026,124 @@ select pg_temp.preveri('r2: preklic profila pošlje tudi posnetke R2 v vrsto',
 select pg_temp.preveri('r2: preizkusni in Stream uid ostaneta na svojem ponudniku',
   not exists (select 1 from posnetki_brisanje where stream_uid like 'test-%' and ponudnik = 'r2'));
 
+-- --------------------------------------------------------------------------
+-- SLFF Pro (migracija 20261120120000): stikalo 0 ne da Pro nikomur, pravico
+-- piše le servis, značka ne v mladinski ligi in ne hišni ekipi, preklic vedno.
+-- P (…a1) kupi Pro, T (…a2) je tujec, H (…a3) ima hišno ekipo. Lige: -913002 (članska), -919901 (U19).
+-- --------------------------------------------------------------------------
+reset role;
+insert into auth.users(id,email,created_at) values
+ ('b8a06635-2322-4444-8c42-44e419f9aaa1','pro-kupec@example.invalid',now()-interval '2 days'),
+ ('b8a06635-2322-4444-8c42-44e419f9aaa2','pro-tujec@example.invalid',now()-interval '2 days'),
+ ('b8a06635-2322-4444-8c42-44e419f9aaa3','pro-hisa@example.invalid',now()-interval '2 days');
+insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
+values (-919901, 'test-pro-u19', 'Test Pro U19', 'TPU', false, (select id from countries where code='SI'), 'mnzg');
+insert into fantasy_teams(id,owner_id,name,competition_id,hisna,display_name) overriding system value values
+ (-919901,'b8a06635-2322-4444-8c42-44e419f9aaa1','Pro ekipa',-913002,false,null),
+ (-919902,'b8a06635-2322-4444-8c42-44e419f9aaa1','Pro mladinci',-919901,false,null),
+ (-919903,'b8a06635-2322-4444-8c42-44e419f9aaa3','Pro hisna',-913002,true,'SLFF');
+insert into tocke_krogov(fantasy_team_id, round_id, points, transfers, penalty) values (-919901, -913005, 42, 1, 0);
+select pg_temp.preveri('pro: stikalo slff_pro je privzeto 0', nastavitev_int('slff_pro', 1) = 0);
+insert into pro_narocnine(user_id, vir, velja_do, star_vsaj_18, odpoved_pravici, stripe_customer_id, stripe_subscription_id, stripe_checkout_id)
+values ('b8a06635-2322-4444-8c42-44e419f9aaa1', 'mesec', now() + interval '30 days', true, true, 'cus_protest', 'sub_protest', 'cs_protest');
+-- Lastnik hišne ekipe ima Pro, da preizkus pokaže, da hišna ekipa značke vseeno nima.
+insert into pro_narocnine(user_id, vir, velja_do) values ('b8a06635-2322-4444-8c42-44e419f9aaa3', 'rocno', now() + interval '30 days');
+
+-- Stikalo 0: plačana pravica ne da ničesar, preklic (portal) ostane.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f9aaa1',true);
+set local role authenticated;
+select pg_temp.preveri('pro 0: kupec nima Pro, a vidi portal',
+  (moj_pro()->>'aktiven')::boolean = false and (moj_pro()->>'vidno')::boolean = false
+  and (moj_pro()->>'portal')::boolean and pro_portal_kupec() = 'cus_protest');
+select pg_temp.preveri('pro 0: brez značke', not exists (select 1 from pro_ekipe(array[-919901]::bigint[])));
+select pg_temp.zavrnjeno('pro 0: brez poročila', $$select pro_porocilo()$$);
+select pg_temp.preveri('pro 0: brez bona cene', (moj_pro()->>'bonov')::int = 0);
+do $$
+begin
+  perform pro_pripravi_nakup('sezona');
+  insert into izidi values ('pro 0: nakup zavrnjen', false);
+exception when others then
+  insert into izidi values ('pro 0: nakup zavrnjen', sqlerrm = 'Plačilo trenutno ni na voljo.');
+end;
+$$;
+select pg_temp.zavrnjeno('pro: uporabnik ne vpiše pravice',
+  $$insert into pro_narocnine(user_id, vir, velja_do) values (auth.uid(), 'rocno', now() + interval '1 year')$$);
+select pg_temp.zavrnjeno('pro: uporabnik ne podaljša pravice',
+  $$update pro_narocnine set velja_do = now() + interval '9 years'$$);
+select pg_temp.zavrnjeno('pro: uporabnik ne bere pravic', $$select count(*) from pro_narocnine$$);
+select pg_temp.zavrnjeno('pro: uporabnik ne kliče webhooka',
+  $$select pro_iz_placila(auth.uid(), 'sezona', now() + interval '1 year', 'cus_x', null, 'cs_x', 'pi_x', 1499, true, true)$$);
+select pg_temp.zavrnjeno('pro: uporabnik ne podaljša naročnine', $$select pro_podaljsaj('sub_protest', now() + interval '9 years')$$);
+select pg_temp.zavrnjeno('pro: uporabnik ne kliče pro_aktiven', $$select pro_aktiven(auth.uid())$$);
+reset role;
+set local role anon;
+select pg_temp.zavrnjeno('pro: anon nima moj_pro', $$select moj_pro()$$);
+select pg_temp.preveri('pro: anon ne vidi Pro', vidi_pro() = false);
+reset role;
+
+-- Stikalo 1: le admin in preizkuševalci.
+update settings set value = '1' where key = 'slff_pro';
+select pg_temp.preveri('pro 1: kupec, ki ni preizkuševalec, nima Pro', not pro_aktiven('b8a06635-2322-4444-8c42-44e419f9aaa1'));
+insert into testerji(user_id) values ('b8a06635-2322-4444-8c42-44e419f9aaa1');
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f9aaa1',true);
+set local role authenticated;
+select pg_temp.preveri('pro 1: preizkuševalec ima Pro, značko in dva bona',
+  (moj_pro()->>'aktiven')::boolean and (moj_pro()->>'bonov')::int = 2
+  and array(select pro_ekipe(array[-919901, -919902, -919903]::bigint[])) = array[-919901]::bigint[]);
+select pg_temp.preveri('pro 1: poročilo z mestom in točkami',
+  (select (e->>'tock')::numeric = 42 and (e->>'mesto')::int = 1 and e->>'ekipa' = 'Pro ekipa'
+     from jsonb_array_elements(pro_porocilo()) e where (e->>'ekipa_id')::bigint = -919901));
+select pg_temp.preveri('pro 1: poročilo nima hišne ekipe',
+  not exists (select 1 from jsonb_array_elements(pro_porocilo()) e where (e->>'ekipa_id')::bigint = -919903));
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f9aaa2',true);
+select pg_temp.preveri('pro 1: tujec značke ne vidi', not exists (select 1 from pro_ekipe(array[-919901]::bigint[])));
+select pg_temp.zavrnjeno('pro 1: tujec nima poročila', $$select pro_porocilo()$$);
+reset role;
+-- Bon Pro porabi eno od dveh ponovnih vrednotenj; zavrnjen zahtevek ga vrne, bon vabil ga ne porabi.
+with z as (insert into ponovne_cene (player_id, competition_id, user_id, stanje, placano_at)
+           values (-913001, -913001, 'b8a06635-2322-4444-8c42-44e419f9aaa1', 'placano', now()) returning id)
+insert into boni_ponovne_cene (zahtevek_id, user_id, vir) select id, 'b8a06635-2322-4444-8c42-44e419f9aaa1', 'pro' from z;
+select pg_temp.preveri('pro 1: porabljen bon Pro', pro_bonov_ostane('b8a06635-2322-4444-8c42-44e419f9aaa1') = 1
+  and not bon_porabljen('b8a06635-2322-4444-8c42-44e419f9aaa1'));
+update ponovne_cene set stanje = 'zavrnjeno' where user_id = 'b8a06635-2322-4444-8c42-44e419f9aaa1';
+select pg_temp.preveri('pro 1: zavrnjen zahtevek vrne bon Pro', pro_bonov_ostane('b8a06635-2322-4444-8c42-44e419f9aaa1') = 2);
+
+-- Stikalo 2: značko vidijo vsi, le članska nehišna ekipa.
+update settings set value = '2' where key = 'slff_pro';
+set local role anon;
+select pg_temp.preveri('pro 2: anon vidi značko le članske nehišne ekipe',
+  array(select pro_ekipe(array[-919901, -919902, -919903, -913001]::bigint[])) = array[-919901]::bigint[]);
+reset role;
+
+-- Webhook: ponovitev, dvojno, neveljavno, obnova, konec, vračilo.
+select pg_temp.preveri('pro webhook: ponovljen dogodek je ze',
+  pro_iz_placila('b8a06635-2322-4444-8c42-44e419f9aaa1', 'mesec', now() + interval '30 days', 'cus_protest', 'sub_protest', 'cs_protest', null, 299, true, true) = 'ze');
+select pg_temp.preveri('pro webhook: drugo plačilo istega kupca je dvojno',
+  pro_iz_placila('b8a06635-2322-4444-8c42-44e419f9aaa1', 'sezona', now() + interval '365 days', 'cus_protest', null, 'cs_protest2', 'pi_protest2', 1499, true, true) = 'dvojno');
+select pg_temp.preveri('pro webhook: brez potrditve 18 let ni pravice',
+  pro_iz_placila('b8a06635-2322-4444-8c42-44e419f9aaa2', 'sezona', now() + interval '365 days', 'cus_t', null, 'cs_protest3', 'pi_protest3', 1499, false, true) = 'neveljavno');
+-- Stabilne funkcije v isti izjavi ne vidijo zapisa, zato je preverba v naslednji.
+select pg_temp.preveri('pro webhook: tujec kupi sezono',
+  pro_iz_placila('b8a06635-2322-4444-8c42-44e419f9aaa2', 'sezona', now() + interval '365 days', 'cus_t', null, 'cs_protest4', 'pi_protest4', 1499, true, true) = 'aktiven');
+select pg_temp.preveri('pro webhook: sezona da Pro', pro_aktiven('b8a06635-2322-4444-8c42-44e419f9aaa2'));
+select pg_temp.preveri('pro webhook: obnova podaljša, neznana ne naredi nič',
+  pro_podaljsaj('sub_protest', now() + interval '60 days') = 'podaljsano' and pro_podaljsaj('sub_neznana', now()) = 'neznana');
+select pg_temp.preveri('pro webhook: vračilo sezone', pro_vracilo('pi_protest4') = 'preklicano');
+select pg_temp.preveri('pro webhook: vračilo prekliče Pro', not pro_aktiven('b8a06635-2322-4444-8c42-44e419f9aaa2'));
+select pg_temp.preveri('pro webhook: konec naročnine', pro_narocnina_konec('sub_protest', now() - interval '1 minute') = 'koncano');
+select pg_temp.preveri('pro webhook: konec naročnine skrajša rok', not pro_aktiven('b8a06635-2322-4444-8c42-44e419f9aaa1'));
+
+-- Izbris računa prekliče pravico in pošlje naročnino v vrsto preklicev.
+update pro_narocnine set velja_do = now() + interval '30 days' where stripe_subscription_id = 'sub_protest';
+delete from auth.users where id = 'b8a06635-2322-4444-8c42-44e419f9aaa1';
+select pg_temp.preveri('pro: izbris računa prekliče pravico in naročnino v Stripe',
+  (select status = 'preklican' and stripe_preklic = 'caka' and user_id is null from pro_narocnine where stripe_subscription_id = 'sub_protest')
+  and 'sub_protest' in (select preverjen_cakajoci_preklici()));
+select preverjen_preklic_opravljen('sub_protest');
+select pg_temp.preveri('pro: preklic v Stripe zabeležen',
+  (select stripe_preklic = 'opravljen' from pro_narocnine where stripe_subscription_id = 'sub_protest'));
+update settings set value = '0' where key = 'slff_pro';
+
 do $$
 declare v_napak int;
 begin

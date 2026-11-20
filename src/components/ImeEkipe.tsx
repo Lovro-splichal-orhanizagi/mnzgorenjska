@@ -5,6 +5,8 @@
 import type { ReactNode } from 'react'
 import { Link } from './Povezava'
 import { useAuth } from '../lib/useAuth'
+import { useProEkipa } from '../lib/pro'
+import { ZnackaPro } from './ZnackaPro'
 
 export function jeMojaEkipa(lastnikId: string | null | undefined, uporabnikId: string | null | undefined): boolean {
   return Boolean(lastnikId) && lastnikId === uporabnikId
@@ -28,12 +30,20 @@ export default function ImeEkipe({
   children: ReactNode
 }) {
   const { session } = useAuth()
+  // Značka SLFF Pro (le ko je stikalo vklopljeno in ima lastnik Pro).
+  const pro = useProEkipa(id) && <ZnackaPro />
   if (id == null || !jeMojaEkipa(lastnikId, session?.user.id)) {
-    return <span className={className}>{children}</span>
+    return (
+      <span className={className}>
+        {children}
+        {pro}
+      </span>
+    )
   }
   return (
     <Link to={pot ?? `/team/${id}`} className={`${className ?? ''} ${povezavaRazred}`.trim()}>
       {children}
+      {pro}
     </Link>
   )
 }

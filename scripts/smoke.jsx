@@ -39,6 +39,7 @@ import { ScoutIgralca } from '../src/components/ScoutIgralca'
 import Prevzemi from '../src/components/admin/Prevzemi'
 import Piva from '../src/pages/Piva'
 import Povabi from '../src/pages/Povabi'
+import Pro from '../src/pages/Pro'
 import VabiloPrijatelja from '../src/pages/VabiloPrijatelja'
 import Pravno from '../src/pages/Pravno'
 import PivskiZidAdmin from '../src/components/admin/Piva'
@@ -62,6 +63,7 @@ import { veljavenPodpis } from '../supabase/functions/stripe-webhook/podpis.ts'
 import { veljavenPodpisStream, podpisiZeton, stanjeIzStreama } from '../supabase/functions/posnetki-igralca/stream.ts'
 import { podpisanNaslov, r2Naslov, kljucVidea, kljucSlike } from '../supabase/functions/posnetki-igralca/r2.ts'
 import { scoutPostavkeVeljajo, scoutCeneNarocnine } from '../supabase/functions/stripe-webhook/scout.ts'
+import { proPostavkeVeljajo, proCeneNarocnine } from '../supabase/functions/stripe-webhook/pro.ts'
 import { trgovinaIzSeje, napacnaTarifa, novaKoda, idKupona, enoteBonov, kodeSeje, zgostiKodo, IZDELEK_TRGOVINE as IZDELEK_BONOV } from '../supabase/functions/stripe-webhook/trgovina.ts'
 import { IZDELEK_TRGOVINE, seznamPostavk } from '../supabase/functions/trgovina-nakup/izdelki.ts'
 import { sestaviMail as trgovinaMail, TELEFON as trgovinaTelefonMail, POGOJI_VERZIJA as trgovinaVerzijaMail } from '../supabase/functions/trgovina-posta/sporocila.ts'
@@ -168,6 +170,7 @@ const strani = [
   ['Admin: prevzemi', () => <div><Prevzemi /></div>, '/admin'],
   ['Pivski zid', Piva, '/beers'],
   ['Povabi prijatelje', Povabi, '/invite'],
+  ['SLFF Pro', Pro, '/pro'],
   ['Vabilo prijatelja', VabiloPrijatelja, '/i/luka27'],
   ['Admin: pivski zid', () => <div><PivskiZidAdmin /></div>, '/admin'],
 ]
@@ -14393,6 +14396,24 @@ preveri(
   preveri('scout stripe: naročnina Scouta gre', scoutCeneNarocnine({ items: { data: [p('slff_scout_klub_sezona')] } }))
   preveri('scout stripe: tuja cena v naročnini pade', !scoutCeneNarocnine({ items: { data: [p('slff_preverjen_letna')] } }))
   preveri('scout stripe: naročnina brez postavk pade', !scoutCeneNarocnine({ items: { data: [] } }))
+}
+
+{
+  // Postavke seje SLFF Pro (stripe-webhook/pro.ts): ena cena paketa, en kos, popust dovoljen.
+  const p = (kljuc, kos = 1, znesek = 1499) => ({ quantity: kos, amount_subtotal: znesek, price: { lookup_key: kljuc, unit_amount: 1499 } })
+  preveri('pro stripe: sezonski paket gre', proPostavkeVeljajo([p('slff_pro_sezona')], 'sezona'))
+  preveri('pro stripe: mesečna gre', proPostavkeVeljajo([p('slff_pro_mesec')], 'mesec'))
+  preveri('pro stripe: napačen paket pade', !proPostavkeVeljajo([p('slff_pro_mesec')], 'sezona'))
+  preveri('pro stripe: dva kosa padeta', !proPostavkeVeljajo([p('slff_pro_sezona', 2, 2998)], 'sezona'))
+  preveri('pro stripe: drugačen znesek pade', !proPostavkeVeljajo([p('slff_pro_sezona', 1, 100)], 'sezona'))
+  preveri('pro stripe: popust (promocijska koda) gre', proPostavkeVeljajo([{ ...p('slff_pro_sezona'), amount_discount: 500 }], 'sezona'))
+  preveri('pro stripe: dodatna postavka pade', !proPostavkeVeljajo([p('slff_pro_sezona'), p('slff_znacka')], 'sezona'))
+  preveri('pro stripe: cena preverjenih ni Pro', !proPostavkeVeljajo([p('slff_preverjen_letna')], 'sezona'))
+  preveri('pro stripe: neznan paket pade', !proPostavkeVeljajo([p('slff_pro_sezona')], 'dozivljenjska'))
+  preveri('pro stripe: obnova mesečne gre', proCeneNarocnine({ items: { data: [p('slff_pro_mesec')] } }))
+  preveri('pro stripe: obnova s tujo ceno pade', !proCeneNarocnine({ items: { data: [p('slff_scout_klub_mesec')] } }))
+  preveri('pro stripe: sezonska cena ni naročnina', !proCeneNarocnine({ items: { data: [p('slff_pro_sezona')] } }))
+  preveri('pro stripe: naročnina brez postavk pade', !proCeneNarocnine({ items: { data: [] } }))
 }
 
 {

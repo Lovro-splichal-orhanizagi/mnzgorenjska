@@ -27,6 +27,7 @@ interface Stanje {
   v_pregledu?: boolean
   centi?: number
   bon?: boolean
+  bon_vir?: 'vabila' | 'pro' | null
   zadnja?: { kdaj: string; stara: number; nova: number } | null
 }
 
@@ -260,7 +261,7 @@ function OknoBona({ krmilo, okno, idp }: { krmilo: PonovnaCenaKrmilo; okno: Muta
           </h2>
           <span className="text-base font-black text-gnl-300">{t('igralci.ponovnaCena.brezplacno')}</span>
         </div>
-        <p>{t('igralci.ponovnaCena.opisBon')}</p>
+        <p>{krmilo.stanje?.bon_vir === 'pro' ? t('pro.bonCene') : t('igralci.ponovnaCena.opisBon')}</p>
         {krmilo.napaka && <p className="text-rose-400">{krmilo.napaka}</p>}
         <div className="flex flex-wrap justify-end gap-2">
           <button type="button" className="gumb-tih text-sm" onClick={krmilo.zapri}>

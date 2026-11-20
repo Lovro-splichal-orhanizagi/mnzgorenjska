@@ -265,6 +265,11 @@ to področje. Bistvo, ki ga je treba vedeti vedno:
 - Plačila (preverjeni igralci, Stripe): stikalo `preverjeni_racuni`, webhook
   `stripe-webhook`, **preklic naročnine mora biti vedno mogoč**; vse v
   `docs/podatkovni-model.md` (*Preverjeni igralci*).
+- **SLFF Pro** (plačljiv paket menedžerjev, stikalo `slff_pro`, privzeto 0):
+  le dodatki (značka, sezonsko poročilo, dva bona cene), **nikoli prednost v
+  igri** in nikoli odvzem česa, kar je brezplačno. Vrata so `pro_aktiven`,
+  pravico piše le webhook (`app=slff-pro`); `docs/podatkovni-model.md`
+  (*SLFF Pro*).
 - **Izložba preverjenega igralca** (posnetki v Cloudflare R2 ali Stream,
   ponudnik na posnetku, nov po `POSNETKI_PONUDNIK`; nikoli na našem disku;
   R2 nad 9 GB ustavi nalaganje): eno pravilo `izlozba_dovoljena()` (stikalo
