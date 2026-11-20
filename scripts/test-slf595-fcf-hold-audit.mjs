@@ -7,7 +7,7 @@ import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {gunzipSync} from 'node:zlib'
 import {createHash} from 'node:crypto'
-import {manifest,validateManifest,auditSql,retainedReport,classifyCandidate,summarize} from './slf595-fcf-hold-audit.mjs'
+import {manifest,validateManifest,auditSql,retainedReport,classifyCandidate,summarize,ownerEvidence} from './slf595-fcf-hold-audit.mjs'
 const c={id:500,slug:'es-ct-elit',source:'fcf',source_league_code:'4106968-4107207',sezona_koledarska:false}
 const t={slug:c.slug,report_id:'es4107024'}
 const load=kind=>gunzipSync(readFileSync(new URL(`./vzorci/es-fcf-current-4107024-${kind}.html.gz`,import.meta.url))).toString()
@@ -145,4 +145,46 @@ test('CLI passes the connection URI to psql and writes the sanitized summary off
  assert.equal(summary.rows.length,163);assert.equal(summary.read_only,'on')
  assert.equal(summary.counts['missing-or-unproven-source-evidence'],163)
  assert.doesNotMatch(result.stdout+result.stderr+summaryText,/postgresql:|fake-password/)
+})
+
+test('actual owner is checked separately without relabeling an extracted warning',test=>{
+ const {dir}=setup(test),owner={...fixture(),zapisnik_id:t.report_id,imported_at:'2026-11-09T00:00:00Z',owner_competition:c}
+ const mislabeled={...c,id:501,slug:'es-ct-primera-g1',source_league_code:'4108646-4108885'}
+ const wrongTarget={...t,slug:mislabeled.slug},before=structuredClone(owner)
+ const original=classifyCandidate(wrongTarget,mislabeled,retainedReport(dir,wrongTarget,mislabeled),[owner])
+ assert.equal(original.classification,'missing-or-unproven-source-evidence')
+ const [actual]=ownerEvidence(wrongTarget,mislabeled,[owner],dir)
+ assert.equal(actual.same_competition,false);assert.equal(actual.competition_id,c.id)
+ assert.equal(actual.slug,c.slug);assert.equal(actual.registered_block,c.source_league_code)
+ assert.equal(actual.classification,'already-imported-exact');assert.equal(actual.exact_owner,true)
+ assert.equal(actual.imported_at,'2026-11-09T00:00:00.000Z')
+ assert.deepEqual(owner,before)
+ assert.doesNotMatch(JSON.stringify(actual),/VIC|ATLETIC|source_url|regSt|redirectHtml/)
+ const [same]=ownerEvidence(t,c,[owner],dir)
+ assert.equal(same.same_competition,true);assert.equal(same.classification,'already-imported-exact')
+})
+test('owner context never makes mismatched, incomplete or ambiguous source evidence healthy',test=>{
+ const {dir}=setup(test),owner={...fixture(),zapisnik_id:t.report_id,imported_at:'2026-11-09',owner_competition:c}
+ const wrong={...owner,played_on:'2026-11-10'}
+ const [mismatch]=ownerEvidence(t,c,[wrong],dir)
+ assert.equal(mismatch.classification,'report-owned-by-different-fixture');assert.equal(mismatch.exact_owner,false)
+ const duplicate={...owner,id:701}
+ assert.ok(ownerEvidence(t,c,[owner,duplicate],dir).every(r=>r.classification==='duplicate-report-ownership'))
+ for(const patch of [{owner_competition:null},{owner_competition:{...c,id:999}},
+   {owner_competition:{...c,source:'PRIVATE'}},{owner_competition:{...c,slug:'PRIVATE'}},
+   {owner_competition:{...c,source_league_code:'PRIVATE'}},{rounds:{...owner.rounds,season:'2025/26'}}]){
+  const result=ownerEvidence(t,c,[{...owner,...patch}],dir,()=>assert.fail('invalid owner must not be parsed'))
+  assert.equal(result[0].state,'unproven-owner-context');assert.doesNotMatch(JSON.stringify(result),/PRIVATE/)
+ }
+ rmSync(join(dir,'acta-4107024.html'))
+ const [missing]=ownerEvidence(t,c,[owner],dir)
+ assert.equal(missing.classification,'missing-or-unproven-source-evidence');assert.equal(missing.exact_owner,false)
+})
+test('all 19 extracted Elit ids belong to the separately registered Primera range',()=>{
+ const elit=manifest.targets.filter(t=>t.slug==='es-ct-elit')
+ assert.equal(elit.length,19)
+ for(const t of elit){const id=Number(t.report_id.slice(2));assert.ok(id>4107207);assert.ok(id>=4108646&&id<=4108885)}
+ const sql=auditSql()
+ assert.match(sql,/join competitions oc on oc.id=r.competition_id/)
+ assert.match(sql,/'source_league_code',oc.source_league_code/)
 })
