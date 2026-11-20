@@ -12440,6 +12440,18 @@ preveri(
       !zSl.html.includes('dopolni=1') && E.potOpozorila('x', 15) === '/my-team?t=x' && E.potOpozorila('x', 3) === '/my-team?dopolni=1&t=x' &&
       E.potOpozorila('x', 0) === '/my-team?t=x',
   )
+  const pcSl = E.sestaviOpomnikPonovneCene(si, { display_name: 'Ana', player_id: 42, igralec: 'Novak <Janez>' })
+  const pcSk = E.sestaviOpomnikPonovneCene(sk, { display_name: null, player_id: 42, igralec: 'Kováč Peter' })
+  const pcEn = E.sestaviOpomnikPonovneCene({ slug: 'mt-premier', oznaka: 'Premier', drzava: 'MT' }, { display_name: null, player_id: 7, igralec: 'Borg' })
+  preveri(
+    'e-pošta: opomnik ponovne cene (jezik lige, povezava na igralca, čistopis, brez promocije)',
+    pcSl.html.includes('https://slff.eu/player/42?t=clani') && pcSl.besedilo.includes('https://slff.eu/player/42?t=clani') &&
+      pcSl.html.includes('Novak &lt;Janez&gt;') && pcSl.naslov.includes('Novak <Janez>') && !!pcSl.odjava &&
+      pcSk.html.includes('Platba nebola dokončená') && !slovensko.test(pcSk.naslov + pcSk.html.replace(/href="[^"]*"/g, '')) &&
+      pcEn.html.includes('price review for <strong>Borg</strong>') &&
+      ![pcSl, pcSk, pcEn].some((m) => /brezplač|zastonj|free|popust|discount|!!|€/i.test(m.naslov + m.besedilo)),
+    pcSl.naslov,
+  )
   const zivaSk = E.sestaviLigaZivi(null, { display_name: null, liga: sk })
   const zivaEn = E.sestaviLigaZivi('en', { display_name: 'Ana', liga: { ...si, ime: 'A <b>' } })
   preveri('e-pošta: zadeva brez pomišljaja (dvopičje)', !/—/.test(zivaSk.naslov + zivaEn.naslov) && zivaSk.naslov.includes('IV. liga SsFZ') && zivaEn.naslov.includes('A <b>'), zivaSk.naslov)
