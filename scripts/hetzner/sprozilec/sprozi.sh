@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # VM zažene ponavljajoče delovne tokove (SLF-615): GitHubov `schedule:` izpusti večino terminov
-# (18.-19. 11.: Živost 3 od 144, Croatia 0), zato jih sproži ta skripta prek `workflow_dispatch`.
+# (18.-19. 11.: Živost 3 od 144), zato jih sproži ta skripta prek `workflow_dispatch`.
 # GitHubov `schedule:` ostane kot rezerva; dvojni zagon je varen (concurrency skupine v delovnih tokovih).
 #   sprozi.sh zivost.yml
-#   sprozi.sh hns-recurring.yml        # vedno preview=false, enako kot zaporedni tek `schedule`
 #   sprozi.sh obvestila-prevzema.yml   # mail "profil je potrjen" vsako uro (SLF-627)
 # Žeton: /etc/slff/gh-dispatch.env (root 600), vrstica GH_TOKEN=... (fine-grained, samo ta repo, Actions: write).
 set -euo pipefail
@@ -12,12 +11,7 @@ REPO=Lovro-splichal-orhanizagi/mnzgorenjska
 tok=${1:-}
 case $tok in
   zivost.yml|obvestila-prevzema.yml) inputs='{}' ;;
-  hns-recurring.yml)
-    # nobenih uvozov 04:00-07:30 UTC (pravilo SLFF)
-    m=$((10#$(date -u +%H%M)))
-    if (( m >= 400 && m < 730 )); then echo "sprozi: okno brez uvozov 04:00-07:30 UTC, preskok"; exit 0; fi
-    inputs='{"preview":"false"}' ;;
-  *) echo "sprozi: dovoljeno samo: zivost.yml hns-recurring.yml obvestila-prevzema.yml" >&2; exit 2 ;;
+  *) echo "sprozi: dovoljeno samo: zivost.yml obvestila-prevzema.yml" >&2; exit 2 ;;
 esac
 
 # shellcheck disable=SC1091
