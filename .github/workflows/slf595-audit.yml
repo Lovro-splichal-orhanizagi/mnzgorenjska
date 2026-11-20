@@ -1,0 +1,59 @@
+name: SLF-595 ten-match audit (read-only)
+# One-off: compares the ten Croatian reports imported by scheduled runs
+# 44506335462 and 44612657248 with their retained originals and checks
+# scoring. SELECT in a read-only transaction; copies files from the host,
+# never writes there. Remove after SLF-595 closes.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: slf595-audit
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Copy receipts, snapshots and the twenty originals (read-only)
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh dokazi/snapshots dokazi/receipts dokazi/blobs
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          rsync -r --include='*.json' --exclude='*' deploy@2.31.6.53:/srv/slff-recovery/hns-recurring/snapshots/ dokazi/snapshots/
+          rsync -r --include='*.json' --exclude='*' deploy@2.31.6.53:/srv/slff-recovery/hns-recurring-receipts/ dokazi/receipts/
+          node scripts/slf595-audit.mjs dokazi dokazi/blob-files.txt --blobs
+          rsync -r --safe-links --files-from=dokazi/blob-files.txt deploy@2.31.6.53:/srv/slff-recovery/hns-recurring/blobs/ dokazi/blobs/
+      - name: Tunnel to the database on the VM
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          command -v psql >/dev/null || { echo "::error::Missing psql"; exit 1; }
+          case "$SUPABASE_DB_URL" in *@127.0.0.1*)
+            ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53;; esac
+      - name: Audit (SELECT only, read-only transaction)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: node scripts/slf595-audit.mjs dokazi rezultat
+      - name: Remove deploy key
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: slf595-audit-summary
+          path: rezultat/summary.json
+          if-no-files-found: ignore
+          retention-days: 30
