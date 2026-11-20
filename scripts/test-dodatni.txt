@@ -32,3 +32,4 @@ scripts/test-slf595-audit-appearances.mjs
 
 # Monitor pagination, source holds and historical coverage (offline)
 scripts/test-historical-statistics-monitor.mjs
+scripts/test-hns-hold-evidence.mjs
