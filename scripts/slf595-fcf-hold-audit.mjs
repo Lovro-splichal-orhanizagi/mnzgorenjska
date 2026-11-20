@@ -34,8 +34,9 @@ with targets as (select * from jsonb_to_recordset(convert_from(decode('${hex}','
 competitions_selected as (select c.id,c.slug,c.source,c.source_league_code,c.active,c.source_policy,c.sezona_koledarska from competitions c where c.slug in(select slug from targets)),
 fixtures as (select m.id,m.zapisnik_id,m.source_url,m.imported_at,m.kontumacija,m.played_on,
  jsonb_build_object('id',h.id,'name',h.name) home,jsonb_build_object('id',a.id,'name',a.name) away,
- jsonb_build_object('id',r.id,'competition_id',r.competition_id,'season',r.season,'number',r.number) rounds
- from matches m join rounds r on r.id=m.round_id join teams h on h.id=m.home_team_id join teams a on a.id=m.away_team_id
+ jsonb_build_object('id',r.id,'competition_id',r.competition_id,'season',r.season,'number',r.number) rounds,
+ jsonb_build_object('id',oc.id,'slug',oc.slug,'source',oc.source,'source_league_code',oc.source_league_code,'sezona_koledarska',oc.sezona_koledarska) owner_competition
+ from matches m join rounds r on r.id=m.round_id join teams h on h.id=m.home_team_id join teams a on a.id=m.away_team_id join competitions oc on oc.id=r.competition_id
  where (r.competition_id in(select id from competitions_selected) and r.season='2026/27')
  or m.zapisnik_id in(select report_id from targets)
  order by m.id limit ${MAX_ROWS+1})
@@ -115,6 +116,26 @@ export function classifyCandidate(t,c,source,fixtures){
    home_equal:fcf.kljucKluba(f.home.name)===fcf.kljucKluba(z.domaci.ime),away_equal:fcf.kljucKluba(f.away.name)===fcf.kljucKluba(z.gostje.ime),
    imported:Boolean(f.imported_at),forfeit:Boolean(f.kontumacija),report_unassigned:f.zapisnik_id==null,report_equal:f.zapisnik_id===t.report_id}))}
 }
+// Diagnostic only: do not relabel the extracted warning or waive its identity guard.
+// The global owner query can find a match in a different league from the log label.
+export function ownerEvidence(t,c,fixtures,dir,read=retainedReport){
+ return fixtures.filter(f=>f.zapisnik_id===t.report_id).map(f=>{
+  const oc=f.owner_competition
+  const base={match_id:f.id,same_competition:f.rounds.competition_id===c.id,
+   competition_id:f.rounds.competition_id,imported:Boolean(f.imported_at)}
+  if(!oc||oc.id!==f.rounds.competition_id||oc.source!=='fcf'||oc.sezona_koledarska!==false||
+    !/^es-ct-(elit|(?:primera|segona|tercera|quarta)-g[1-9]\d*)$/.test(oc.slug??'')||
+    !/^[1-9]\d*-[1-9]\d*$/.test(oc.source_league_code??'')||f.rounds.season!==manifest.season)
+   return {...base,state:'unproven-owner-context'}
+  const target={slug:oc.slug,report_id:t.report_id}
+  const source=read(dir,target,oc)
+  const check=classifyCandidate(target,oc,source,fixtures)
+  return {...base,slug:oc.slug,registered_block:oc.source_league_code,
+   imported_at:f.imported_at&&Number.isFinite(Date.parse(f.imported_at))?new Date(f.imported_at).toISOString():null,
+   state:'checked-owner-context',source_state:check.source_state,source_evidence:check.source_evidence,
+   classification:check.classification,exact_owner:check.exact_ids?.includes(f.id)??false}
+ })
+}
 export function summarize(db,dir,m=manifest,read=retainedReport){
  validateManifest(m);assert.equal(db.read_only,'on');assert.ok(Number.isFinite(Date.parse(db.checked_at)))
  assert.ok(Array.isArray(db.fixtures)&&db.fixtures.length<=MAX_ROWS)
@@ -123,7 +144,10 @@ export function summarize(db,dir,m=manifest,read=retainedReport){
  const rows=m.targets.map(t=>{
   const cs=db.competitions.filter(c=>c.slug===t.slug);assert.equal(cs.length,1)
   const c=cs[0];assert.equal(c.source,'fcf');assert.equal(c.sezona_koledarska,false)
-  return classifyCandidate(t,c,read(dir,t,c),db.fixtures)
+  assert.match(c.source_league_code,/^[1-9]\d*-[1-9]\d*$/)
+  const result=classifyCandidate(t,c,read(dir,t,c),db.fixtures)
+  return {...result,registered_competition:{id:c.id,slug:c.slug,block:c.source_league_code},
+   owner_evidence:ownerEvidence(t,c,db.fixtures,dir,read)}
  })
  return {run_id:m.run_id,cache_key:m.cache_key,checked_at:db.checked_at,read_only:db.read_only,
   database_basis:'current-readback-not-run-time-snapshot',window:{from:m.from,through:m.through,season:m.season},
