@@ -46,6 +46,42 @@ test('missing or tampered evidence stays unknown with no raw parser error',test=
  assert.ok(!JSON.stringify(result).includes('PRIVATE'))
  assert.equal(classifyCandidate(t,c,result,[fixture()]).classification,'missing-or-unproven-source-evidence')
 })
+test('retained evidence stages distinguish missing, malformed and unbound redirect proof',test=>{
+ const {dir,proof}=setup(test),file=join(dir,'acta-4107024.redirect.json')
+ const checks=[
+  [null,'read-redirect-proof'],
+  ['PRIVATE invalid JSON','parse-redirect-proof'],
+  [JSON.stringify({...proof,sha256:'0'.repeat(64)}),'bind-redirect-proof'],
+  [JSON.stringify({...proof,id:'es4107025'}),'bind-redirect-proof'],
+  [JSON.stringify({...proof,url:'https://PRIVATE.invalid'}),'bind-redirect-proof'],
+  [JSON.stringify({...proof,redirectHtml:{PRIVATE:true}}),'bind-redirect-proof'],
+  [JSON.stringify({...proof,redirectHtml:'PRIVATE invalid redirect'}),'validate-source-identity'],
+ ]
+ for(const [content,stage]of checks){
+  if(content===null)rmSync(file);else writeFileSync(file,content)
+  const source=retainedReport(dir,t,c),result=classifyCandidate(t,c,source,[fixture()])
+  assert.equal(source.state,'unproven-retained-identity-or-parser')
+  assert.deepEqual(result.source_evidence,{stage,in_registered_block:true})
+  assert.equal(result.classification,'missing-or-unproven-source-evidence')
+  assert.doesNotMatch(JSON.stringify(result),/PRIVATE|VIC|redirectHtml|AssertionError/)
+ }
+})
+test('registered-block and identity diagnostics cannot admit a report or change the source',test=>{
+ const {dir}=setup(test),file=join(dir,'acta-4107024.html'),before=readFileSync(file)
+ for(const [competition,inside]of [
+  [{...c,source_league_code:'4108659-4108898'},false],
+  [{...c,slug:'es-ct-primera-g1'},true],
+ ]){
+  const source=retainedReport(dir,t,competition)
+  assert.equal(source.state,'unproven-retained-identity-or-parser')
+  assert.deepEqual(source.evidence,{stage:'validate-source-identity',in_registered_block:inside})
+  assert.equal(classifyCandidate(t,competition,source,[fixture()]).classification,'missing-or-unproven-source-evidence')
+ }
+ const source=retainedReport(dir,t,c)
+ assert.equal(source.state,'complete')
+ assert.deepEqual(source.evidence,{stage:'complete',in_registered_block:true})
+ assert.deepEqual(readFileSync(file),before)
+})
 for(const [label,edit,expected] of [
  ['already completed',f=>({...f,imported_at:'2026-11-09',zapisnik_id:t.report_id}),'already-imported-exact'],
  ['other completed',f=>({...f,imported_at:'2026-11-09',zapisnik_id:'es4107025'}),'completed-exact-other-report'],
