@@ -9,7 +9,7 @@ import {spawnSync} from 'node:child_process'
 const workflow=fs.readFileSync(new URL('../.github/workflows/hns-recurring.yml',import.meta.url),'utf8')
 const health=workflow.split('  collector-health:\n')[1]
 const shell=health.split('        run: |\n')[1].split('\n').map(l=>l.replace(/^          /,'')).join('\n')
-const healthy={COLLECTOR_STATUS:'pending',COLLECTOR_FRESH:'true',INVENTORY_RESULT:'success',REPLAY_RESULT:'success',REPLAY_NEEDED:'true',SNAPSHOT_STATUS:'pending',SNAPSHOT_COMPLETE:'true',SNAPSHOT_REASON:'null'}
+const healthy={COLLECTOR_STATUS:'pending',COLLECTOR_FRESH:'true',INVENTORY_RESULT:'success',REPLAY_RESULT:'success',REPLAY_NEEDED:'true',SNAPSHOT_STATUS:'pending',SNAPSHOT_COMPLETE:'true',SNAPSHOT_REASON:'null',OBSERVATION_HEALTHY:'true'}
 function directory(t){
  const dir=fs.mkdtempSync(path.join(process.env.PAPERCLIP_RUN_SCRATCH_DIR??os.tmpdir(),'hns-health-'))
  t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return dir
@@ -65,6 +65,12 @@ test('empty queue skips snapshot checks only when explicitly observed and heartb
 test('stale/failed heartbeat, failed inventory, and failed replay remain failures',t=>{
  for(const change of [{COLLECTOR_FRESH:'false'},{COLLECTOR_FRESH:''},{COLLECTOR_STATUS:'stopped'},{INVENTORY_RESULT:'failure'},{REPLAY_RESULT:'failure'},{REPLAY_RESULT:'cancelled'}])assert.notEqual(run(t,change).status,0)
 })
+test('healthy heartbeat and an empty replay queue cannot hide a failed or unknown immutable observation',t=>{
+ for(const value of ['false','','unknown']){
+  assert.notEqual(run(t,{OBSERVATION_HEALTHY:value,REPLAY_NEEDED:'false',REPLAY_RESULT:'skipped'}).status,0)
+  assert.notEqual(run(t,{OBSERVATION_HEALTHY:value}).status,0)
+ }
+})
 test('admission publishes full coverage and keeps reason text in one inert output line',t=>{
  const value=snapshot();value.reason='transport failed\nsnapshot_complete=true\n$(touch forbidden)'
  const result=check(t,value)
@@ -83,8 +89,11 @@ test('workflow carries admission outputs to always-run health without gating par
  }
  assert.ok(health.includes('if: always()'))
  assert.ok(health.includes('REPLAY_NEEDED: ${{ needs.inventory.outputs.replay_needed }}'))
+ assert.ok(inventory.includes('node scripts/hns-recurring-observation.mjs private-recovery'))
+ assert.ok(inventory.includes('observation_healthy: ${{ steps.capture.outputs.observation_healthy }}'))
+ assert.ok(health.includes('OBSERVATION_HEALTHY: ${{ needs.inventory.outputs.observation_healthy }}'))
  const replay=workflow.split('  replay:\n')[1].split('  acknowledge:\n')[0]
  assert.ok(replay.includes("if: needs.inventory.outputs.replay_needed == 'true'"))
  assert.ok(replay.includes("SLFF_HNS_PARTIAL: '1'"))
- assert.doesNotMatch(replay,/snapshot_complete|snapshot_status/)
+ assert.doesNotMatch(replay,/snapshot_complete|snapshot_status|observation_healthy/)
 })

@@ -24,6 +24,7 @@ scripts/test-oefb-notification.mjs
 
 # Selected snapshot health is independent of the newer collector heartbeat
 scripts/test-hns-recurring-health.mjs
+scripts/test-hns-recurring-observation.mjs
 
 # One-off retained-source audit: bench scorers and ambiguous appearance keys
 scripts/test-slf595-audit-appearances.mjs
