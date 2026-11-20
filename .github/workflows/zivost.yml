@@ -108,3 +108,31 @@ jobs:
             hns-health-monitor.json
           if-no-files-found: error
           retention-days: 14
+
+  # Read-only routing coverage, independent of all import writers and HNS health.
+  # A green remaining lane cannot conceal an active source excluded by refusal.
+  source-coverage:
+    needs: zivost
+    if: ${{ !cancelled() && needs.zivost.outputs.ura == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Account for every active league route
+        if: ${{ !cancelled() }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/nightly-source-coverage.mjs
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: nightly-source-coverage
+          path: nightly-source-coverage.json
+          if-no-files-found: error
+          retention-days: 14
