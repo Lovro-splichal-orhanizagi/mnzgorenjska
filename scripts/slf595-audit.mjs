@@ -12,6 +12,7 @@ import {targetsFromReceipts,auditSql} from './slf595-generate-audit.mjs'
 import {report} from './hns-recovery-validation.mjs'
 import {recurringSchedule} from './hns-recurring-validation.mjs'
 import {nastopi} from './viri/hns.mjs'
+import {withBenchScorers,compareAppearances} from './slf595-audit-appearances.mjs'
 
 const [dir,out]=process.argv.slice(2)
 assert.ok(dir&&out,'Usage: node scripts/slf595-audit.mjs <evidence-dir> <out-dir>')
@@ -42,7 +43,7 @@ for(const t of targets){
  const {fixtures,parentName}=recurringSchedule(blob(l.schedule.sha256),l.code)
  const f=fixtures.find(x=>x.id===t.fixture.id);assert.deepEqual(t.fixture,f,'fixture not in captured schedule')
  const {quality,z}=report(blob(t.capture_sha256),f,l.code,parentName);assert.ok(quality.complete)
- source.set(t.report_id,{z,apps:nastopi(z)})
+ source.set(t.report_id,{z,...withBenchScorers(z,nastopi(z))})
 }
 
 // Database side: the QA-reviewed read-only SELECT.
@@ -52,28 +53,17 @@ const r=spawnSync('psql',['-X','-A','-t','-q','-f',sqlFile,process.env.SUPABASE_
 if(r.status!==0){console.error((r.stderr||'').replace(/postgres(ql)?:\/\/\S+/g,'<db>'));throw Error(`psql exit ${r.status}`)}
 const db=JSON.parse(r.stdout.split('\n').map(s=>s.trim()).find(s=>s.startsWith('{')))
 
-const FIELDS=[['started','zacetnik'],['minute_on','minutaOd'],['minute_off','minutaDo'],['minutes_played','minute'],
- ['goals','goli'],['own_goals','avtogoli'],['penalties_scored','goliIzEnajstmetrovke'],['penalties_missed','zgreseneEnajstmetrovke'],
- ['yellow_cards','rumeni'],['red_cards','rdeci'],['goals_conceded','prejetiGoli'],['clean_sheet','cleanSheet']]
 const matches=[]
 for(const n of db.identity){
- const s=source.get(n.report_id),side=a=>a.team_id===n.home_team_id?0:a.team_id===n.away_team_id?1:-1
+ const s=source.get(n.report_id)
  const dbApps=db.appearances.filter(a=>a.match_id===n.match_id)
- const key=(i,st)=>`${i}|${st}`,byKey=new Map(dbApps.map(a=>[key(side(a),a.shirt_number),a]))
- const diffs=[],seen=new Set()
- for(const x of s?.apps??[]){
-  const k=key(x.ekipaIdx,x.st),a=byKey.get(k);seen.add(k)
-  if(!a){diffs.push({side:x.ekipaIdx,shirt:x.st,problem:'missing-in-db'});continue}
-  if(x.regSt!=null&&String(a.reg_st)!==String(x.regSt))diffs.push({side:x.ekipaIdx,shirt:x.st,field:'reg_st',problem:'differs'})
-  for(const [col,src] of FIELDS)if(a[col]!==x[src])diffs.push({side:x.ekipaIdx,shirt:x.st,field:col,source:x[src],db:a[col]})
- }
- for(const [k,a] of byKey)if(!seen.has(k))diffs.push({side:side(a),shirt:a.shirt_number,problem:'extra-in-db'})
+ const diffs=compareAppearances(s?.apps??[],dbApps,n.home_team_id,n.away_team_id)
  const dbGoals=db.goals.filter(g=>g.match_id===n.match_id),g=s?.z.goli??[]
  const goalSummary=list=>({total:list.length,own:list.filter(x=>x.is_own_goal??x.avtogol).length,pen:list.filter(x=>x.is_penalty??x.enajstmetrovka).length})
  matches.push({report_id:n.report_id,match_id:n.match_id,run_id:n.run_id,league:n.slug,round:n.native_round,date:n.native_date,
   score:`${n.native_home_goals}-${n.native_away_goals}`,source_score:`${n.home_goals}-${n.away_goals}`,
   identity_mismatch:n.identity_mismatch,team_names_require_review:n.team_names_require_review,import_warnings:n.import_warnings?.length??0,
-  appearances:{source:s?.apps.length??0,db:dbApps.length,differences:diffs},
+  appearances:{raw_source:s?.rawCount??0,source:s?.apps.length??0,db:dbApps.length,bench_scorers:s?.bench,differences:diffs},
   goals:{source:goalSummary(g),db:goalSummary(dbGoals),equal:JSON.stringify(goalSummary(g))===JSON.stringify(goalSummary(dbGoals))},
   predictions:db.prediction_counts.find(p=>p.match_id===n.match_id)?.count??0})
 }
