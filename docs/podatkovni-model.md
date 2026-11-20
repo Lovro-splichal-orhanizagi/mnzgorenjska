@@ -1390,7 +1390,7 @@ plačilih, `/pro` in v administraciji mesta ni, zato tam oglasov ni.
 
 - **Nastavitve** (migracija `20261120130000_oglasi`): `oglasi` 0 izklop
   (privzeto), 1 le admin, 2 vsi; povoz v `competition_settings` lahko ligo
-  izklopi. `oglasi_client` = `ca-pub-9235394594566763`, `oglasi_mesta` = id-ji
+  izklopi. `oglasi_client` = `ca-pub-5333600432666190`, `oglasi_mesta` = id-ji
   enot po mestu (`{"domov": "…", "lestvica": "…"}`), privzeto `{}`.
 - **Kdo jih vidi** odloči `oglasi_za(liga)`: stikalo, veljaven založnik in vsaj
   eno mesto; nikoli mladinska liga (`je_mladinska_liga`) in nikoli plačnik
