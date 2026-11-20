@@ -8,6 +8,9 @@ scripts/test-hlf-kartice.mjs
 scripts/test-oefb-vzdevki.mjs
 scripts/test-preimenovan-klub.mjs
 scripts/test-podpora-zamenjave.mjs
+# Pošta klubom: sponzor, opomnik za ročni prvi mail, ponudba pokrovitelja
+scripts/test-posta-sponzor.mjs
+scripts/test-posta-ponudba.mjs
 scripts/zgodbe/zgodbe.test.mjs
 # Recurring HNS capture admission, durable replay queue and FCF redirect-cache regression
 scripts/test-hns-recurring-manifest.mjs
