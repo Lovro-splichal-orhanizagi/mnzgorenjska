@@ -45,7 +45,9 @@ season to half of them.
 3. **Two player price reviews per 365 days** at no charge, through the same path as the
    invite voucher (`boni_ponovne_cene.vir = 'pro'`, admin still confirms). The invite
    voucher stays one-off and is used first. A rejected or impossible request returns
-   the voucher. Only where `ponovna_cena` itself is on.
+   the voucher. Only where `ponovna_cena` itself is on. Monthly subscribers unlock
+   one voucher per 60 days of subscription (one €2.99 month must not be worth two
+   €4.99 reviews); the season pass has both at once.
 
 Never: extra budget, chips, transfers, points, earlier deadlines, hidden information
 from others, ads removal that degrades free users, or anything else that changes
@@ -67,8 +69,14 @@ season report as a shareable image (predogledi server).
   Browser roles have no table rights; `pro_aktiven` is not executable by them.
 - **Cancellation is always possible**: `pro_portal_kupec` and the Account section
   work at any flag value for anyone with a Stripe customer.
-- Account deletion or a full refund sets the row to `preklican`; a subscription then
-  goes into the existing cancellation queue (`preverjen_cakajoci_preklici`).
+- Account deletion, a full refund or a dispute sets the row to `preklican`; a new
+  purchase replacing an expired (past_due) subscription sets it to `potekel`. Either
+  way the subscription goes into the existing cancellation queue
+  (`preverjen_cakajoci_preklici`), so it never keeps charging.
+- Known limits: badge visibility is cached until a page reload (after login or a new
+  purchase); like the verified badge, `subscription.updated` extends Pro at the start
+  of a new period before the renewal invoice is paid (a failed payment ends it with
+  the subscription).
 - Server-side only: every Pro read is an RPC that checks the gate itself.
 
 ## App-store stance
@@ -125,7 +133,9 @@ approach as the verified badge and beer.
 2. **Owner, before flag 1 on production** (production uses the live key):
    create the live product and the two live prices with the same lookup keys and
    `tax_behavior=inclusive`; optionally a portal configuration with
-   `metadata[app]=slff-pro` (cancel yes, plan switching no). Check that the live
+   `metadata[app]=slff-pro` (cancel yes, plan switching no). Without it the default
+   portal is used: in test mode it allows cancel and no plan switching; **check the
+   live default has cancel on**, or subscribers cannot cancel. Check that the live
    webhook endpoint sends the events in the `stripe-webhook` header
    (`checkout.session.completed`, `invoice.paid`, `customer.subscription.updated/deleted`,
    `charge.refunded`, `charge.dispute.created`); Pro needs no new event.

@@ -67,9 +67,9 @@
 // 'brez_racuna', 'neveljavno' → preklic nove naročnine, Discord "vrni denar"),
 // invoice.paid in subscription.updated → pro_podaljsaj le s ceno Pro
 // ('brez_pravice' ali tuja cena → preklic), deleted → pro_narocnina_konec.
-// charge.refunded (celotno) in charge.dispute.created enkratnega plačila →
-// pro_vracilo. Vračilo naročnine: admin jo prekliče v Stripe (deleted).
-// Preklic ob izbrisu računa gre skozi isto vrsto preklicev kot preverjeni.
+// charge.refunded (celotno) in charge.dispute.created → pro_vracilo (sezona
+// po payment_intent, naročnina po računu plačila); preklicana pravica pošlje
+// naročnino v isto vrsto preklicev kot preverjeni (tudi izbris računa).
 //
 // Ponovna cena igralca (metadata app=slff-cena): plačana seja (le enkratno
 // plačilo, postavka slff_ponovna_cena) → ponovna_cena_iz_placila ('placano',
@@ -584,18 +584,27 @@ async function proNarocnina(tip: string, o: Obj): Promise<string> {
   return await proPodaljsaj(o, konec)
 }
 
-/** Vračilo ali spor enkratnega plačila Pro (po payment_intent v bazi); null = ni naše. */
+/** Vračilo ali spor plačila Pro (sezona po payment_intent, naročnina po računu); null = ni naše. */
 async function proVracilo(placilo: Obj, spor: boolean): Promise<string | null> {
   const pi = id(placilo.payment_intent)
-  if (!pi) return null
-  const { data } = await baza.from('pro_narocnine').select('id').eq('stripe_payment_intent', pi).limit(1)
-  if (!data?.length) return null
+  const najdi = async (stolpec: string, v: string | null) => {
+    if (!v) return false
+    const { data, error } = await baza.from('pro_narocnine').select('id').eq(stolpec, v).limit(1)
+    // Napaka baze ni "ni naše": brez nje bi vračilo tiho izostalo (Stripe ponovi dogodek).
+    if (error) throw new Error(`pro_narocnine: ${error.message}`)
+    return Boolean(data?.length)
+  }
+  let sub: string | null = null
+  if (!(await najdi('stripe_payment_intent', pi))) {
+    sub = await narocninaPlacila(placilo)
+    if (!(await najdi('stripe_subscription_id', sub))) return null
+  }
   const celotno = spor || placilo.refunded === true || (placilo.amount_refunded ?? 0) >= (placilo.amount ?? Infinity)
   if (!celotno) {
-    await discord(`↩️ SLFF Pro: delno vračilo ${pi}, pravica ostane (uredi ročno).`)
+    await discord(`↩️ SLFF Pro: delno vračilo ${pi ?? sub}, pravica ostane (uredi ročno).`)
     return 'pro delno'
   }
-  return `pro ${await rpc('pro_vracilo', { p_payment_intent: pi })}`
+  return `pro ${await rpc('pro_vracilo', { p_payment_intent: sub ? null : pi, p_subscription: sub })}`
 }
 
 // --- SLFF Trgovina (metadata app=slff-shop) ---------------------------------

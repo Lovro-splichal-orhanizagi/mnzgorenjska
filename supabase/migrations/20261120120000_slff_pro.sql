@@ -67,7 +67,8 @@ revoke all on public.pro_narocnine from public, anon, authenticated;
 insert into agent.zaprte_tabele (tabela, zakaj) values ('public.pro_narocnine', 'kupci in Stripe id-ji SLFF Pro')
 on conflict (tabela) do nothing;
 
--- Preklic pravice (izbris računa, vračilo) prekliče tudi naročnino v Stripe.
+-- Preklic pravice (izbris računa, vračilo, spor) ali zamenjava z novim nakupom
+-- ('potekel') prekliče tudi naročnino v Stripe, da ne zaračunava naprej.
 create or replace function public.pro_oznaci_preklic()
 returns trigger language plpgsql set search_path = public
 as $$
@@ -75,8 +76,8 @@ begin
   if tg_op = 'UPDATE' and new.user_id is null and old.user_id is not null then
     new.status := 'preklican';
   end if;
-  if new.status = 'preklican' and new.stripe_subscription_id is not null and new.stripe_preklic is null
-     and (tg_op = 'INSERT' or old.status <> 'preklican') then
+  if new.status <> 'aktiven' and new.stripe_subscription_id is not null and new.stripe_preklic is null
+     and (tg_op = 'INSERT' or old.status = 'aktiven') then
     new.stripe_preklic := 'caka';
   end if;
   new.updated_at := now();
@@ -117,12 +118,18 @@ as $$
 $$;
 revoke all on function public.bon_porabljen(uuid) from public, anon, authenticated;
 
--- Zavrnjen ali neizvedljiv zahtevek bon vrne (kot pri vabilih).
+-- Zavrnjen ali neizvedljiv zahtevek bon vrne (kot pri vabilih). Mesečna
+-- naročnina odklene bon na vsakih 60 dni (en mesec ne sme biti vreden dveh
+-- plačljivih ponovnih cen).
 create or replace function public.pro_bonov_ostane(p_uid uuid)
 returns int language sql stable security definer set search_path = public
 as $$
   select case when not pro_aktiven(p_uid) then 0 else greatest(0,
-    coalesce(nastavitev_int('slff_pro_boni', 2), 2)
+    (select case n.vir when 'mesec'
+              then least(coalesce(nastavitev_int('slff_pro_boni', 2), 2), floor(extract(epoch from now() - n.created_at) / (60 * 86400))::int)
+              else coalesce(nastavitev_int('slff_pro_boni', 2), 2) end
+       from pro_narocnine n where n.user_id = p_uid and n.status = 'aktiven' and n.velja_do > now()
+      order by n.velja_do desc limit 1)
     - (select count(*)::int from boni_ponovne_cene b join ponovne_cene z on z.id = b.zahtevek_id
         where b.user_id = p_uid and b.vir = 'pro' and b.created_at > now() - interval '365 days'
           and z.stanje not in ('zavrnjeno', 'za_vracilo'))) end
@@ -408,26 +415,30 @@ begin
 end;
 $$;
 
--- Celotno vračilo ali spor enkratnega plačila (sezona) prekliče pravico.
-create or replace function public.pro_vracilo(p_payment_intent text)
+-- Celotno vračilo ali spor (sezona po plačilu, naročnina po id) prekliče
+-- pravico; naročnina gre v vrsto preklicev (sprožilec).
+create or replace function public.pro_vracilo(p_payment_intent text, p_subscription text)
 returns text language plpgsql security definer set search_path = public
 as $$
 begin
   update pro_narocnine set status = 'preklican'
-   where stripe_payment_intent = p_payment_intent and status = 'aktiven';
+   where status = 'aktiven'
+     and (stripe_payment_intent = p_payment_intent or stripe_subscription_id = p_subscription);
   if not found then
-    return case when exists (select 1 from pro_narocnine where stripe_payment_intent = p_payment_intent) then 'ze' else 'neznano' end;
+    return case when exists (select 1 from pro_narocnine
+                              where stripe_payment_intent = p_payment_intent or stripe_subscription_id = p_subscription)
+                then 'ze' else 'neznano' end;
   end if;
-  perform preverjeni_na_discord('↩️ SLFF Pro: vračilo, pravica preklicana (' || p_payment_intent || ')');
+  perform preverjeni_na_discord('↩️ SLFF Pro: vračilo ali spor, pravica preklicana (' || coalesce(p_payment_intent, p_subscription) || ')');
   return 'preklicano';
 end;
 $$;
 
 revoke all on function public.pro_iz_placila(uuid, text, timestamptz, text, text, text, text, integer, boolean, boolean),
-  public.pro_podaljsaj(text, timestamptz), public.pro_narocnina_konec(text, timestamptz), public.pro_vracilo(text)
+  public.pro_podaljsaj(text, timestamptz), public.pro_narocnina_konec(text, timestamptz), public.pro_vracilo(text, text)
   from public, anon, authenticated;
 grant execute on function public.pro_iz_placila(uuid, text, timestamptz, text, text, text, text, integer, boolean, boolean),
-  public.pro_podaljsaj(text, timestamptz), public.pro_narocnina_konec(text, timestamptz), public.pro_vracilo(text)
+  public.pro_podaljsaj(text, timestamptz), public.pro_narocnina_konec(text, timestamptz), public.pro_vracilo(text, text)
   to service_role;
 
 -- Vrsta preklicev naročnin (stripe-webhook) zajame tudi Pro.

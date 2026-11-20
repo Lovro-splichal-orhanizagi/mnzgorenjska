@@ -1154,12 +1154,13 @@
   `useProEkipa`; brez mladinskih lig in hišnih ekip), sezonsko poročilo vseh
   svojih nehišnih ekip (`pro_porocilo`, stran `/pro`) in dve ponovni
   vrednotenji cene na 365 dni (`pro_bonov_ostane`, `boni_ponovne_cene.vir =
-  'pro'`; bon vabil ostane enkraten in se porabi prvi). Nakup in portal:
+  'pro'`; mesečna naročnina odklene bon na 60 dni; bon vabil ostane enkraten
+  in se porabi prvi). Nakup in portal:
   funkcija `pro-placilo` (`cene` iz Stripe po lookup_key `slff_pro_sezona`,
   `slff_pro_mesec`, z DDV; `checkout` prek `pro_pripravi_nakup`; `portal`
-  prek `pro_portal_kupec` vedno, ne glede na stikalo). Izbris računa ali
-  vračilo prekliče pravico in naročnino (vrsta `preverjen_cakajoci_preklici`
-  zajame tudi Pro). Stran Račun: `ProNaRacunu`. V aplikaciji ni nakupa ne
+  prek `pro_portal_kupec` vedno, ne glede na stikalo). Izbris računa,
+  vračilo, spor ali nov nakup po potekli naročnini prekliče naročnino (vrsta
+  `preverjen_cakajoci_preklici` zajame tudi Pro). Stran Račun: `ProNaRacunu`. V aplikaciji ni nakupa ne
   portala, kupljen Pro deluje.
 - **Dnevna triaža admin vrst** (migracija 20261114215100, SLF-260):
   `dnevna_triaza(p_suho)` (pg_cron `dnevna-triaza`, 7.07 UTC) razvrsti vse

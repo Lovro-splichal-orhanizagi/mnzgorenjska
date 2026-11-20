@@ -47,6 +47,7 @@ export async function proPlacilo(telo: Record<string, unknown>): Promise<{ url?:
 
 let vidi: Promise<boolean> | null = null
 const znane = new Map<number, boolean>()
+// shortcut: znane in vidi veljata do ponovnega nalaganja strani (prijava, nov nakup); osveži ob prijavi, če bo motilo.
 const cakajo = new Set<number>()
 const poslusalci = new Set<() => void>()
 let val: ReturnType<typeof setTimeout> | null = null

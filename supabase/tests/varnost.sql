@@ -6044,8 +6044,9 @@ insert into fantasy_teams(id,owner_id,name,competition_id,hisna,display_name) ov
  (-919903,'b8a06635-2322-4444-8c42-44e419f9aaa3','Pro hisna',-913002,true,'SLFF');
 insert into tocke_krogov(fantasy_team_id, round_id, points, transfers, penalty) values (-919901, -913005, 42, 1, 0);
 select pg_temp.preveri('pro: stikalo slff_pro je privzeto 0', nastavitev_int('slff_pro', 1) = 0);
-insert into pro_narocnine(user_id, vir, velja_do, star_vsaj_18, odpoved_pravici, stripe_customer_id, stripe_subscription_id, stripe_checkout_id)
-values ('b8a06635-2322-4444-8c42-44e419f9aaa1', 'mesec', now() + interval '30 days', true, true, 'cus_protest', 'sub_protest', 'cs_protest');
+-- Naročnina teče 130 dni: mesečna odklene oba bona (en na 60 dni).
+insert into pro_narocnine(user_id, vir, velja_do, star_vsaj_18, odpoved_pravici, stripe_customer_id, stripe_subscription_id, stripe_checkout_id, created_at)
+values ('b8a06635-2322-4444-8c42-44e419f9aaa1', 'mesec', now() + interval '30 days', true, true, 'cus_protest', 'sub_protest', 'cs_protest', now() - interval '130 days');
 -- Lastnik hišne ekipe ima Pro, da preizkus pokaže, da hišna ekipa značke vseeno nima.
 insert into pro_narocnine(user_id, vir, velja_do) values ('b8a06635-2322-4444-8c42-44e419f9aaa3', 'rocno', now() + interval '30 days');
 
@@ -6128,9 +6129,28 @@ select pg_temp.preveri('pro webhook: tujec kupi sezono',
 select pg_temp.preveri('pro webhook: sezona da Pro', pro_aktiven('b8a06635-2322-4444-8c42-44e419f9aaa2'));
 select pg_temp.preveri('pro webhook: obnova podaljša, neznana ne naredi nič',
   pro_podaljsaj('sub_protest', now() + interval '60 days') = 'podaljsano' and pro_podaljsaj('sub_neznana', now()) = 'neznana');
-select pg_temp.preveri('pro webhook: vračilo sezone', pro_vracilo('pi_protest4') = 'preklicano');
+select pg_temp.preveri('pro webhook: vračilo sezone', pro_vracilo('pi_protest4', null) = 'preklicano');
 select pg_temp.preveri('pro webhook: vračilo prekliče Pro', not pro_aktiven('b8a06635-2322-4444-8c42-44e419f9aaa2'));
 select pg_temp.preveri('pro webhook: konec naročnine', pro_narocnina_konec('sub_protest', now() - interval '1 minute') = 'koncano');
+-- Spor mesečnega plačila (po naročnini) prekliče pravico in naročnino v Stripe.
+insert into pro_narocnine(user_id, vir, velja_do, star_vsaj_18, odpoved_pravici, stripe_customer_id, stripe_subscription_id, stripe_checkout_id)
+values ('b8a06635-2322-4444-8c42-44e419f9aaa2', 'mesec', now() + interval '30 days', true, true, 'cus_t', 'sub_protest2', 'cs_protest5');
+select pg_temp.preveri('pro webhook: spor naročnine', pro_vracilo(null, 'sub_protest2') = 'preklicano');
+select pg_temp.preveri('pro webhook: spor naročnine pošlje preklic v Stripe',
+  (select status = 'preklican' and stripe_preklic = 'caka' from pro_narocnine where stripe_subscription_id = 'sub_protest2'));
+-- Mesečni bon šele po 60 dneh, sezona takoj oba.
+update pro_narocnine set status = 'potekel' where stripe_subscription_id = 'sub_protest2';
+insert into pro_narocnine(user_id, vir, velja_do, star_vsaj_18, odpoved_pravici, stripe_customer_id, stripe_subscription_id, stripe_checkout_id, created_at)
+values ('b8a06635-2322-4444-8c42-44e419f9aaa2', 'mesec', now() + interval '30 days', true, true, 'cus_t', 'sub_protest3', 'cs_protest6', now() - interval '61 days');
+select pg_temp.preveri('pro: mesečna naročnina odklene bon na 60 dni', pro_bonov_ostane('b8a06635-2322-4444-8c42-44e419f9aaa2') = 1);
+update pro_narocnine set created_at = now() - interval '5 days' where stripe_subscription_id = 'sub_protest3';
+select pg_temp.preveri('pro: nova mesečna naročnina še brez bona', pro_bonov_ostane('b8a06635-2322-4444-8c42-44e419f9aaa2') = 0);
+-- Potekla (past_due) naročnina in nov nakup: stara ne sme zaračunavati naprej.
+update pro_narocnine set velja_do = now() - interval '1 day' where stripe_subscription_id = 'sub_protest3';
+select pg_temp.preveri('pro webhook: nakup po potekli naročnini',
+  pro_iz_placila('b8a06635-2322-4444-8c42-44e419f9aaa2', 'sezona', now() + interval '365 days', 'cus_t', null, 'cs_protest7', 'pi_protest7', 1499, true, true) = 'aktiven');
+select pg_temp.preveri('pro webhook: stara naročnina gre v preklic',
+  (select status = 'potekel' and stripe_preklic = 'caka' from pro_narocnine where stripe_subscription_id = 'sub_protest3'));
 select pg_temp.preveri('pro webhook: konec naročnine skrajša rok', not pro_aktiven('b8a06635-2322-4444-8c42-44e419f9aaa1'));
 
 -- Izbris računa prekliče pravico in pošlje naročnino v vrsto preklicev.
