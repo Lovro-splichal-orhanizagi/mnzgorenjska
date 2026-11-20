@@ -10,6 +10,11 @@ poskrbi, da dvojni zagon ni nevaren.
 | `zivost.yml` | vsakih 10 min, sekunda 20 | |
 | `obvestila-prevzema.yml` | `:17` vsako uro | mail "profil je potrjen" (SLF-627) |
 
+`zivost.yml` ob prvem teku v uri (minuta < 10) zažene še posel `hns-zdravje` (SLF-664): bere samo shranjen
+heartbeat in posnetke hrvaškega zajema z VM (brez HNS, brez baze) in naloži artefakt `hns-source-health-hourly`.
+Zamujena preverba: prejšnji artefakt mora biti star največ 90 min (`scripts/hns-health-watchdog.mjs`); neodvisno
+to preverita še `preveri-podatke.yml` in dnevni CTO triage.
+
 `hns-recurring.yml` (Croatia captured imports) VM namenoma NE sproža: HNS zajemov ne poganjamo okoli
 njihove blokade (SLF-590). Ostane samo GitHubov `schedule:`.
 
