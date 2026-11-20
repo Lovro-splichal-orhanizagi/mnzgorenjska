@@ -1201,7 +1201,9 @@ export default function MojaEkipa() {
   useEffect(() => {
     if (nalaganje || napakaNalaganja || !session || ekipa || izbrani.length > 0) return
     zabeleziKorak('prazna_ekipa')
-    if (zeSestavljeno.current || !new URLSearchParams(lokacija.search).has('sestavi')) return
+    const iz = new URLSearchParams(lokacija.search)
+    // `?dopolni=1` na prazni ekipi (kader je vmes izpraznil) sestavi kot `?sestavi=1`.
+    if (zeSestavljeno.current || !(iz.has('sestavi') || iz.has('dopolni'))) return
     if (!igralci.length) return
     zeSestavljeno.current = true
     zabeleziKorak('sestavi_iz_maila')
@@ -1249,6 +1251,7 @@ export default function MojaEkipa() {
     igralci.length > 0 &&
     zakajNiPredloga == null &&
     !new URLSearchParams(lokacija.search).has('sestavi') &&
+    !new URLSearchParams(lokacija.search).has('dopolni') &&
     !new URLSearchParams(lokacija.search).has('dodaj')
   useEffect(() => {
     if (!praznaZaVodic || tekmovanjeId == null || !vodicNaVrsti(tekmovanjeId)) return
@@ -1295,6 +1298,28 @@ export default function MojaEkipa() {
     )
     setSporocilo(t('mojaEkipa.sporocila.kaderDopolnjen'))
   }
+
+  // `?dopolni=1` iz opozorila "ekipa ni popolna": ko sta kader in trg te lige
+  // naložena, enkrat dopolnimo prazna mesta; parameter pobrišemo, da ga
+  // osvežitev ne ponovi. Shrani ostane na uporabniku (oziroma samodejni shrambi).
+  const zeDopolnjeno = useRef(false)
+  useEffect(() => {
+    const iskanje = new URLSearchParams(lokacija.search)
+    if (!iskanje.has('dopolni') || zeDopolnjeno.current || nalaganje || napakaNalaganja || !session) return
+    const liga = iskanje.get('t')
+    if (tekmovanjeId == null || osnutekLiga.current !== tekmovanjeId || (liga && tekmovanje?.slug !== liga))
+      return
+    if (!igralci.length || zakajNiPredloga != null) return
+    // Prazen kader prevzame `?sestavi` zgoraj (parameter ostane kot pri njem).
+    if (izbrani.length === 0) return
+    zeDopolnjeno.current = true
+    iskanje.delete('dopolni')
+    navigate({ search: iskanje.toString() ? `?${iskanje}` : '', hash: lokacija.hash }, { replace: true })
+    if (izbrani.length >= VELIKOST_EKIPE) return
+    zabeleziKorak('dopolni_iz_maila')
+    dopolni()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nalaganje, napakaNalaganja, session, tekmovanjeId, tekmovanje?.slug, igralci.length, izbrani.length, zakajNiPredloga, lokacija.search])
 
   function odstrani(igralec: IgralecTrga) {
     setSporocilo(null)

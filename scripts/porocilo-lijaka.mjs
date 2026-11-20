@@ -75,6 +75,7 @@ export function sestavi(p) {
     `• Registracije: **${p.registracije}** · nove ekipe: **${p.nove_ekipe}**`,
     `• ${vrstica('Osnutek brez prijave', 'osnutek_brez_prijave')} → ${vrstica('osnutek shranjen', 'osnutek_shranjen')}`,
     `• ${vrstica('Prazna ekipa', 'prazna_ekipa')} → ${vrstica('predlog', 'predlog')} → ${vrstica('prva shramba', 'prva_shramba')}`,
+    `• Iz maila: ${vrstica('sestavi', 'sestavi_iz_maila')} · ${vrstica('dopolni', 'dopolni_iz_maila')}`,
     `• Vodič: začelo ${k.vodic_zacetek ?? 0}, preskočilo ${vodic}, končalo ${k.vodic_konec ?? 0}`,
     '',
     `**Skupina ${s.od} – ${s.do}** (registrirani pred 15–21 dnevi)`,

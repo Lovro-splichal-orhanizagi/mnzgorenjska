@@ -1413,6 +1413,39 @@ function besedilaOpozorila(j: Jezik, n: number | null | undefined, ime: string |
   }
 }
 
+// Nepopoln kader (1–14 od 15, `VELIKOST_EKIPE` v src/lib/pravila.ts): gumb
+// vodi na `/my-team?dopolni=1`, ki prazna mesta zapolni sam (MojaEkipa.tsx).
+const VELIKOST_EKIPE = 15
+
+const DOPOLNI: Record<Jezik, { gumb: string; opomba: string }> = {
+  sl: { gumb: 'Dopolni ekipo', opomba: 'Gumb z enim dotikom zapolni prazna mesta v kadru v okviru denarja, ki ti je ostal. Tvoji igralci ostanejo. Preglej in končano.' },
+  sk: { gumb: 'Doplniť tím', opomba: 'Tlačidlo jedným ťuknutím doplní voľné miesta v kádri v rámci peňazí, ktoré ti zostali. Tvoji hráči zostanú. Skontroluj a hotovo.' },
+  hr: { gumb: 'Dopuni momčad', opomba: 'Gumb jednim dodirom popuni prazna mjesta u sastavu u okviru novca koji ti je ostao. Tvoji igrači ostaju. Provjeri i gotovo.' },
+  cs: { gumb: 'Doplnit tým', opomba: 'Tlačítko jedním klepnutím doplní volná místa na soupisce v rámci peněz, které ti zbyly. Tví hráči zůstanou. Zkontroluj a hotovo.' },
+  hu: { gumb: 'Csapat kiegészítése', opomba: 'A gomb egy koppintással feltölti a keret üres helyeit a megmaradt pénzedből. A játékosaid maradnak. Nézd át, és kész.' },
+  de: { gumb: 'Team auffüllen', opomba: 'Ein Tipp auf den Button füllt die freien Plätze im Kader mit deinem restlichen Budget. Deine Spieler bleiben. Kurz prüfen, fertig.' },
+  sr: { gumb: 'Dopuni tim', opomba: 'Dugme jednim dodirom popunjava prazna mesta u timu u okviru novca koji ti je ostao. Tvoji igrači ostaju. Proveri i gotovo.' },
+  ro: { gumb: 'Completează echipa', opomba: 'Butonul completează dintr-o atingere locurile libere din lot cu banii care ți-au rămas. Jucătorii tăi rămân. Verifică și gata.' },
+  et: { gumb: 'Täida meeskond', opomba: 'Nupp täidab ühe puudutusega koosseisu tühjad kohad allesjäänud raha piires. Sinu mängijad jäävad. Vaata üle ja valmis.' },
+  pl: { gumb: 'Uzupełnij drużynę', opomba: 'Przycisk jednym dotknięciem uzupełni wolne miejsca w kadrze w ramach pozostałego budżetu. Twoi zawodnicy zostają. Sprawdź i gotowe.' },
+  es: { gumb: 'Completar el equipo', opomba: 'El botón completa con un toque las plazas libres de la plantilla con el dinero que te queda. Tus jugadores se quedan. Revísalo y listo.' },
+  lv: { gumb: 'Papildināt komandu', opomba: 'Poga ar vienu pieskārienu aizpilda brīvās vietas sastāvā atlikušās naudas robežās. Tavi spēlētāji paliek. Pārbaudi, un gatavs.' },
+  mk: { gumb: 'Дополни го тимот', opomba: 'Копчето со еден допир ги пополнува празните места во тимот во рамките на парите што ти останале. Твоите играчи остануваат. Провери и готово.' },
+  el: { gumb: 'Συμπλήρωσε την ομάδα', opomba: 'Το κουμπί συμπληρώνει με ένα άγγιγμα τις κενές θέσεις του ρόστερ με τα χρήματα που σου έμειναν. Οι παίκτες σου μένουν. Έλεγξε και τέλος.' },
+  tr: { gumb: 'Takımını tamamla', opomba: 'Düğme tek dokunuşla kadrodaki boş yerleri kalan bütçenle doldurur. Seçtiğin oyuncular kalır. Kontrol et, bitti.' },
+  uk: { gumb: 'Доповнити команду', opomba: 'Кнопка одним дотиком заповнює вільні місця в складі в межах грошей, що лишилися. Твої гравці залишаються. Перевір і готово.' },
+  hy: { gumb: 'Լրացրու թիմը', opomba: 'Կոճակը մեկ հպումով լրացնում է կազմի դատարկ տեղերը մնացած գումարի սահմաններում։ Քո խաղացողները մնում են։ Ստուգիր, և պատրաստ է։' },
+  az: { gumb: 'Komandanı tamamla', opomba: 'Düymə bir toxunuşla heyətdəki boş yerləri qalan büdcən daxilində doldurur. Seçdiyin oyunçular qalır. Yoxla və hazırdır.' },
+  da: { gumb: 'Fyld holdet op', opomba: 'Knappen fylder med ét tryk de tomme pladser i truppen ud inden for dit resterende budget. Dine spillere bliver. Tjek det, så er du færdig.' },
+  en: { gumb: 'Fill my squad', opomba: 'One tap on the button fills the empty places in your squad within the budget you have left. Your picks stay. Have a look and you’re done.' },
+}
+
+/** Pot iz opozorila (gumb in push): nepopoln kader gre na samodejno dopolnitev. */
+export function potOpozorila(slug: string, igralcev?: number | null): string {
+  const t = `t=${encodeURIComponent(slug)}`
+  return igralcev && igralcev < VELIKOST_EKIPE ? `/my-team?dopolni=1&${t}` : `/my-team?${t}`
+}
+
 export function sestaviOpozorilo(
   liga: Liga,
   u: {
@@ -1421,12 +1454,16 @@ export function sestaviOpozorilo(
     round_number?: number | null
     deadline_at?: string | null
     razlog?: string | null
+    /** Igralcev v kadru; 1–14 da gumb "dopolni". */
+    igralcev?: number | null
   },
 ): Sporocilo {
   const j = jezikLige(liga)
   const p = povezave(liga.slug)
   const ime = u.team_name?.trim() || null
-  const B = besedilaOpozorila(j, u.round_number, ime)
+  const osnova = besedilaOpozorila(j, u.round_number, ime)
+  const pot = potOpozorila(liga.slug, u.igralcev)
+  const B = pot.includes('dopolni=1') ? { ...osnova, ...DOPOLNI[j] } : osnova
   const kdaj = u.deadline_at ? izpisRoka(u.deadline_at, liga) : null
   const opozorilo: Vrstica[] = []
   if (u.razlog) opozorilo.push({ k: B.razlog, v: esc(prevediRazlog(u.razlog, j)) })
@@ -1438,7 +1475,7 @@ export function sestaviOpozorilo(
     naslov: B.naslov,
     uvod: `${pozdrav(j, u.display_name)} ${B.uvod(`<strong>${esc(ime ?? '')}</strong>`)}`,
     opozorilo,
-    gumb: { label: B.gumb, url: p.ekipa },
+    gumb: { label: B.gumb, url: `${SITE}${pot}` },
     opomba: B.opomba,
     zakaj: B.zakaj(liga.oznaka),
   }, p.odjava)

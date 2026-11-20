@@ -12431,6 +12431,15 @@ preveri(
     zSk.naslov,
   )
   preveri('e-pošta: rok v časovnem pasu lige', E.izpisRoka(rok, sk).includes('10:00') && E.izpisRoka(rok, si).includes('10:00'))
+  const dSl = E.sestaviOpozorilo(si, { display_name: null, team_name: 'X', round_number: 5, deadline_at: rok, razlog: 'V kadru je 12 igralcev namesto 15.', igralcev: 12 })
+  const dSk = E.sestaviOpozorilo(sk, { display_name: null, team_name: 'X', round_number: 5, deadline_at: rok, razlog: 'V kadru je 12 igralcev namesto 15.', igralcev: 12 })
+  preveri(
+    'e-pošta: opozorilo nepopolne ekipe vodi na dopolnitev (sl, sk), ostalo ne',
+    dSl.html.includes('my-team?dopolni=1&amp;t=') && dSl.html.includes('Dopolni ekipo') && dSl.besedilo.includes('my-team?dopolni=1&t=') &&
+      dSk.html.includes('Doplniť tím') && !slovensko.test(dSk.naslov + dSk.html.replace(/href="[^"]*"/g, '')) &&
+      !zSl.html.includes('dopolni=1') && E.potOpozorila('x', 15) === '/my-team?t=x' && E.potOpozorila('x', 3) === '/my-team?dopolni=1&t=x' &&
+      E.potOpozorila('x', 0) === '/my-team?t=x',
+  )
   const zivaSk = E.sestaviLigaZivi(null, { display_name: null, liga: sk })
   const zivaEn = E.sestaviLigaZivi('en', { display_name: 'Ana', liga: { ...si, ime: 'A <b>' } })
   preveri('e-pošta: zadeva brez pomišljaja (dvopičje)', !/—/.test(zivaSk.naslov + zivaEn.naslov) && zivaSk.naslov.includes('IV. liga SsFZ') && zivaEn.naslov.includes('A <b>'), zivaSk.naslov)

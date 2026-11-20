@@ -33,6 +33,7 @@ import {
   sestaviOpomnikBrezLige,
   sestaviLigaZivi,
   sestaviOpozorilo,
+  potOpozorila,
   sestaviIzstopKluba,
   sestaviPopravekPozicije,
   sestaviPoznavalca,
@@ -1147,11 +1148,13 @@ Deno.serve(async (req) => {
       continue
     }
 
+    // Nepopoln kader (1–14): gumb in push vodita na samodejno dopolnitev.
+    const igralcev = vrsta === 'opozorilo' && u.team_id ? await steviloIgralcev(service, u.team_id) : null
     const sporocilo = await sOdjavo(
       service,
       u.user_id,
       vrsta === 'opozorilo'
-        ? sestaviOpozorilo(liga, u)
+        ? sestaviOpozorilo(liga, { ...u, igralcev })
         : !u.team_id
           // Brez ekipe ni lige: povabilo k izbiri v jeziku prijave.
           ? sestaviOpomnikBrezLige(u.jezik, { display_name: u.display_name })
@@ -1166,7 +1169,7 @@ Deno.serve(async (req) => {
     }
     // Isto sporočilo še na telefon (mobilna aplikacija), neodvisno od pošte.
     const push = u.push_vklop
-      ? await posljiPush(service, u.user_id, vObvestilo(sporocilo, u.team_id ? `/my-team?t=${liga.slug}` : '/'))
+      ? await posljiPush(service, u.user_id, vObvestilo(sporocilo, u.team_id ? potOpozorila(liga.slug, igralcev) : '/'))
       : 0
     const izid = izidKanalov(zaPosto, rez, push)
 
@@ -1255,6 +1258,16 @@ async function naslednjiRok(db: any, competitionId: number): Promise<string | nu
     .limit(1)
     .maybeSingle()
   return data?.deadline_at ?? null
+}
+
+/** Koliko igralcev je v kadru ekipe (null ob napaki). */
+// deno-lint-ignore no-explicit-any
+async function steviloIgralcev(db: any, teamId: number): Promise<number | null> {
+  const { count, error } = await db
+    .from('fantasy_roster')
+    .select('player_id', { count: 'exact', head: true })
+    .eq('fantasy_team_id', teamId)
+  return error ? null : count
 }
 
 /** Zakaj ekipa ni veljavna (slovensko, iz baze) ali null. */
