@@ -33,6 +33,7 @@
 //   node scripts/posta-klubom.mjs --zanka   (delavec: krog vsakih 10 minut, do zavrnjene prijave)
 //   node scripts/posta-klubom.mjs [--najvec 2]   (en krog)
 //   node scripts/posta-klubom.mjs --suho     (izpiše, kaj bi šlo; nič ne pošlje in ne piše, gesla ne rabi)
+//   PONUDBA_SPONZOR=1   vklopi enkratno ponudbo pokrovitelja (PONUDBA; privzeto izklopljena)
 import tls from 'node:tls'
 import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
@@ -137,14 +138,16 @@ slff.eu
     }
   }
   const ekip = p.ekip ?? 0
+  // `p.kolega`: prvi mail je oktobra poslal kolega (ROCNI_PRVI), opomnik gre od drugega.
+  const kol = p.kolega
   return {
     zadeva: ekip >= 5 ? `${klub}: Ihre Spieler sind schon in ${ekip} Fantasy-Teams` : `${klub} im Fantasy-Spiel: so läuft es für Ihre Spieler`,
     telo: `Guten Tag,
 
-kurz nachgefragt zu ${ekipa ? 'unserer' : 'meiner'} letzten Nachricht: ${ekip >= 5 ? `Die Spieler von ${klub} stehen inzwischen in ${ekip} Fantasy-Teams` : `Die Spieler von ${klub} sind im Spiel und sammeln Punkte`}${naj ? `, bisher bester ist ${naj}` : ''}.
+kurz nachgefragt ${kol ? `zur Nachricht meines Kollegen ${kol} aus dem Oktober` : `zu ${ekipa ? 'unserer' : 'meiner'} letzten Nachricht`}: ${ekip >= 5 ? `Die Spieler von ${klub} stehen inzwischen in ${ekip} Fantasy-Teams` : `Die Spieler von ${klub} sind im Spiel und sammeln Punkte`}${naj ? `, bisher bester ist ${naj}` : ''}.
 ${url}
 
-Wenn das für Ihre Vereinsgruppe oder Facebook passt, freut es uns. Das ist ${ekipa ? 'unsere' : 'meine'} letzte Nachricht dazu; für Fragen oder Wünsche genügt eine kurze Antwort.
+Wenn das für Ihre Vereinsgruppe oder Facebook passt, freut es uns. Das ist ${ekipa || kol ? 'unsere' : 'meine'} letzte Nachricht dazu; für Fragen oder Wünsche genügt eine kurze Antwort.
 
 Mit freundlichen Grüßen
 ${podpis}
@@ -329,14 +332,15 @@ slff.eu
     }
   }
   const ekip = p.ekip ?? 0
+  const kol = p.kolega
   return {
     zadeva: ekip >= 5 ? `${klub} játékosai már ${ekip} fantasy csapatban szerepelnek` : `${klub} a fantasy játékban: így állnak a játékosok`,
     telo: `${ekipa ? 'Jó napot kívánunk!' : 'Jó napot kívánok!'}
 
-Röviden ${ekipa ? 'jelentkezünk az előző levelünk' : 'jelentkezem az előző levelem'} kapcsán: ${klub} játékosai a játékban vannak és pontokat gyűjtenek${ekip >= 5 ? `, és már ${ekip} fantasy csapatban szerepelnek` : ''}${naj ? ` (eddig a legjobb: ${naj})` : ''}.
+Röviden ${kol ? `jelentkezem kollégám, ${kol} októberi levele` : ekipa ? 'jelentkezünk az előző levelünk' : 'jelentkezem az előző levelem'} kapcsán: ${klub} játékosai a játékban vannak és pontokat gyűjtenek${ekip >= 5 ? `, és már ${ekip} fantasy csapatban szerepelnek` : ''}${naj ? ` (eddig a legjobb: ${naj})` : ''}.
 ${url}
 
-Ha ez illik a klub csoportjába vagy a Facebookra, örülünk neki. Ez az utolsó ${ekipa ? 'levelünk' : 'levelem'} ebben a témában; kérdés vagy kérés esetén elég egy rövid válasz.
+Ha ez illik a klub csoportjába vagy a Facebookra, örülünk neki. Ez az utolsó ${ekipa || kol ? 'levelünk' : 'levelem'} ebben a témában; kérdés vagy kérés esetén elég egy rövid válasz.
 
 Üdvözlettel
 ${podpis}
@@ -765,9 +769,10 @@ const b64 = (t) => Buffer.from(t.replace(/\r?\n/g, '\r\n')).toString('base64').m
  * Message-ID prvega se ne hrani (klub_stik_posta ga nima), zato ni niti.
  */
 // Ekipa (klubi@) se podpiše kot "SLFF", ne "Ekipa SLFF (SLFF)".
-export function sporocilo({ na, zadeva, telo, odjava, jezik = 'en', po = POSILJATELJI[0], zdaj = new Date(), id = randomUUID() }) {
+// `golo`: le text/plain (brez HTML in loga), za maile, ki naj ne pristanejo med promocijami.
+export function sporocilo({ na, zadeva, telo, odjava, jezik = 'en', po = POSILJATELJI[0], zdaj = new Date(), id = randomUUID(), golo = false }) {
   const meja = `slff-${id}`
-  return [
+  const glava = [
     `From: "${po.ekipa ? 'SLFF' : `${po.ime} (SLFF)`}" <${po.od}>`,
     `To: <${na}>`,
     `Subject: ${kodirajGlavo(zadeva)}`,
@@ -775,6 +780,10 @@ export function sporocilo({ na, zadeva, telo, odjava, jezik = 'en', po = POSILJA
     `Message-ID: <${id}@slff.eu>`,
     `List-Unsubscribe: <mailto:${po.od}?subject=${encodeURIComponent(odjava)}>`,
     'MIME-Version: 1.0',
+  ]
+  if (golo) return [...glava, 'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64', '', ...b64(telo), ''].join('\r\n')
+  return [
+    ...glava,
     `Content-Type: multipart/alternative; boundary="${meja}"`,
     '',
     `--${meja}`,
@@ -994,19 +1003,35 @@ export function kandidati(vrsta, posta, aktivne, zdaj = new Date(), vsi = vrsta)
     if (!s.v_vrsti || !s.email || !BESEDILA[s.drzava] || !aktivne.has(s.liga_slug)) continue
     const r = poStiku.get(s.id) ?? []
     const p = r.filter((x) => x.vrsta === 'prvi')
-    const po = s.stanje === 'poslano' && p.length === 1 ? POSILJATELJI.find((x) => x.poslal === p[0].poslal) : null
+    const ena = s.stanje === 'poslano' && p.length === 1
+    const kolega = ena && ROCNI_PRVI.drzave.includes(s.drzava) ? ROCNI_PRVI.poslal[p[0].poslal] ?? null : null
+    const po = !ena ? null : kolega ? POSILJATELJI.find((x) => x.kljuc === ROCNI_PRVI.posiljatelj) : POSILJATELJI.find((x) => x.poslal === p[0].poslal)
     if (klubBlokiran(s, vsi, poStiku, zdaj, s.stanje === 'nov', po?.poslal ?? null)) continue
     if (s.stanje === 'nov') {
       if (!r.length && (!s.poslji_od || Date.parse(s.poslji_od) <= zdaj.getTime())) prvi.push(s)
       continue
     }
-    // Prvi mail ni iz vrste (človek) ali vsaka pošta drugega pošiljatelja (tudi klic, drugo) za vedno zapre opomnik.
-    if (!po || r.some((x) => x.vrsta !== 'odgovor' && x.poslal !== po.poslal) || r.some((x) => ['opomnik', 'odgovor'].includes(x.vrsta))) continue
+    // Prvi mail ni iz vrste (človek, razen ROCNI_PRVI) ali vsaka pošta drugega pošiljatelja (tudi klic, drugo) za vedno zapre opomnik.
+    if (!po || r.some((x) => x !== p[0] && x.vrsta !== 'odgovor' && x.poslal !== po.poslal) || r.some((x) => ['opomnik', 'odgovor'].includes(x.vrsta))) continue
     if (Date.parse(p[0].poslano_at) > zdaj.getTime() - DNI_DO_OPOMNIKA * DAN) continue
-    opomniki.push({ s, prvi_at: p[0].poslano_at, posiljatelj: po.kljuc })
+    opomniki.push({ s, prvi_at: p[0].poslano_at, posiljatelj: po.kljuc, kolega })
   }
   opomniki.sort((a, b) => Date.parse(a.prvi_at) - Date.parse(b.prvi_at))
-  return [...opomniki.map(({ s, posiljatelj }) => ({ s, vrsta: 'opomnik', posiljatelj })), ...izmenicno(prvi).map((s) => ({ s, vrsta: 'prvi' }))]
+  return [...opomniki.map(({ s, posiljatelj, kolega }) => ({ s, vrsta: 'opomnik', posiljatelj, kolega })), ...izmenicno(prvi).map((s) => ({ s, vrsta: 'prvi' }))]
+}
+
+/**
+ * Prvi mail, ki so ga AT in HU klubom 16.–24. 10. 2026 poslali ljudje z info@
+ * ali z Gmaila (zunaj vrste). Lastnik je 20. 11. 2026 odobril en opomnik iz
+ * luka@ (osebno, podpis, odgovori gredo v HelpStack), ki pove, da je oktobra
+ * pisal kolega. Nabiralnika prvega maila delavec ne bere, zato odgovor nanj
+ * ustavi opomnik le, če je vpisan v klub_stik_posta (pregled IMAP gleda luka@).
+ * Le ti točni zapisi `poslal`; stik z dvema prvima mailoma opomnika ne dobi.
+ */
+export const ROCNI_PRVI = {
+  posiljatelj: 'luka',
+  drzave: ['AT', 'HU'],
+  poslal: { 'Nejc (info@slff.eu)': 'Nejc', 'Nejc (nejcjen@gmail.com)': 'Nejc', 'Lovro (splih.94@gmail.com)': 'Lovro' },
 }
 
 /**
@@ -1092,6 +1117,250 @@ export function nabiralnikPrejsnjega(posta, stikId, aktivni) {
   return null
 }
 
+// --- enkratno: ponudba pokrovitelja klubom, ki so odgovorili ali sodelujejo ----
+// Lastnik jo je odobril 20. 11. 2026 kot izjemo od pravila "odgovoril/sodeluje
+// ne pišemo" (CLAUDE.md, *Pošta klubom*). Teče le s PONUDBA_SPONZOR=1 v okolju
+// (privzeto izklopljeno). Enkrat na klub (tudi ne klubu, ki je dobil SPONZOR),
+// ne SK in GB (ročno, Nejc), ne države brez okna (DE, PL, DK, ES) in ne
+// mladinske lige (brez kartic in objav), ne ob
+// ne_zeli na katerem koli naslovu kluba, ne ob naši pošti v 7 dneh ali odgovoru
+// v 3 dneh. Pošlje nabiralnik delavca, ki je klubu nazadnje pisal, sicer klubi@
+// s podpisom človeka iz niti. Le text/plain, brez povezave razen slff.eu v
+// podpisu. Številke: auth.users in različni uporabniki v dejanja_uporabnikov v
+// 7 dneh, 20. 11. 2026 (13.100 in 4.130), zaokroženo navzdol.
+const PONUDBA_OZNAKA = 'ponudba sponzor 2026-11'
+export const PONUDBA = {
+  oznaka: PONUDBA_OZNAKA,
+  stanja: ['odgovoril', 'sodeluje'],
+  besedila: {
+    SI: { jezik: 'sl', odjava: 'Odjava', sestavi: ({ liga, ime }) => ({
+      zadeva: `Pokrovitelj za stran lige (${liga})`,
+      telo: `Pozdravljeni,
+
+ker smo si že dopisovali, vam pišem neposredno o možnosti, od katere ima nekaj tudi vaš klub.
+
+SLFF ima zdaj več kot 13.000 uporabnikov, okoli 4.000 jih igra vsak teden. Za stran lige (${liga}) iščemo enega pokrovitelja za sezono. Če ga pripelje vaš klub, klub prejme 25 % zneska, to je 37,50 EUR.
+
+Pokrovitelj, na primer podjetje, ki že podpira vaš klub, dobi:
+- logotip in napis "Ligo predstavlja: [podjetje]" na strani lige,
+- svoj logotip na vsaki kartici igralca te lige, ki jo delijo igralci in navijači,
+- omembo v tedenskih objavah o ligi,
+- poročilo o dosegu ob koncu sezone.
+
+Cena: 150 EUR za sezono (brez DDV).
+
+Če poznate podjetje, ki bi ga to zanimalo, mi odgovorite na ta mail, pa uredimo ostalo.
+
+Lep pozdrav,
+${ime}
+slff.eu
+` }) },
+    AT: { jezik: 'de', odjava: 'Abmelden', sestavi: ({ liga, ime }) => ({
+      zadeva: `Sponsor für die ${liga} auf SLFF`,
+      telo: `Guten Tag,
+
+wir hatten bereits Kontakt, deshalb schreibe ich Ihnen direkt wegen einer Möglichkeit, von der auch Ihr Verein etwas hat.
+
+SLFF hat inzwischen über 13.000 Nutzer, rund 4.000 spielen jede Woche. Für die Seite der ${liga} suchen wir einen Sponsor für eine Saison. Wenn Ihr Verein ihn vermittelt, erhält der Verein 25 % des Betrags, also 37,50 EUR.
+
+Der Sponsor, zum Beispiel eine Firma, die Ihren Verein schon unterstützt, bekommt:
+- sein Logo und den Hinweis "Präsentiert von [Firma]" auf der Ligaseite,
+- sein Logo auf jeder Spielerkarte dieser Liga, die Spieler und Fans teilen,
+- eine Erwähnung in den wöchentlichen Beiträgen zur Liga,
+- einen Bericht über die Reichweite am Saisonende.
+
+Preis: 150 EUR pro Saison (zzgl. USt.).
+
+Wenn Sie eine Firma kennen, die das interessieren könnte, antworten Sie einfach auf diese E-Mail, den Rest klären wir.
+
+Mit freundlichen Grüßen
+${ime}
+slff.eu
+` }) },
+    HU: { jezik: 'hu', odjava: 'Leiratkozás', sestavi: ({ liga, ime }) => ({
+      zadeva: `Szponzor a bajnokság oldalára (${liga})`,
+      telo: `Jó napot kívánok!
+
+Korábban már leveleztünk, ezért közvetlenül Önöknek írok egy lehetőségről, amelyből a klub is részesül.
+
+Az SLFF-nek ma már több mint 13 000 felhasználója van, közülük nagyjából 4000 minden héten játszik. A bajnokság oldalára (${liga}) egy szponzort keresünk egy szezonra. Ha a szponzort a klub hozza, a klub megkapja az összeg 25%-át, azaz 37,50 eurót.
+
+A szponzor, például egy cég, amely már most is támogatja a klubot, ezt kapja:
+- logója és a "A bajnokságot bemutatja: [cég]" felirat a bajnokság oldalán,
+- logója a bajnokság minden játékoskártyáján, amelyet a játékosok és a szurkolók megosztanak,
+- említés a bajnokságról szóló heti bejegyzésekben,
+- jelentés az elérésről a szezon végén.
+
+Ár: 150 euró szezononként (áfa nélkül).
+
+Ha ismernek olyan céget, amelyet ez érdekelhet, elég válaszolni erre a levélre, a többit megbeszéljük.
+
+Üdvözlettel
+${ime}
+slff.eu
+` }) },
+    HR: { jezik: 'hr', odjava: 'Odjava', sestavi: ({ liga, ime }) => ({
+      zadeva: `Sponzor za stranicu lige (${liga})`,
+      telo: `Poštovani,
+
+već smo bili u kontaktu pa vam se izravno javljam s prilikom od koje i vaš klub ima koristi.
+
+SLFF danas ima više od 13.000 korisnika, a njih oko 4.000 igra svaki tjedan. Za stranicu lige (${liga}) tražimo jednog sponzora za sezonu. Ako ga dovede vaš klub, klub dobiva 25 % iznosa, odnosno 37,50 EUR.
+
+Sponzor, na primjer tvrtka koja već podržava vaš klub, dobiva:
+- logotip i natpis "Ligu predstavlja: [tvrtka]" na stranici lige,
+- svoj logotip na svakoj kartici igrača ove lige koju dijele igrači i navijači,
+- spominjanje u tjednim objavama o ligi,
+- izvješće o dosegu na kraju sezone.
+
+Cijena: 150 EUR po sezoni (bez PDV-a).
+
+Ako znate tvrtku koju bi to moglo zanimati, samo odgovorite na ovaj mail, a ostalo ćemo dogovoriti.
+
+Lijep pozdrav
+${ime}
+slff.eu
+` }) },
+    EE: { jezik: 'et', odjava: 'Loobu', sestavi: ({ liga, ime }) => ({
+      zadeva: `Toetaja liiga lehele (${liga})`,
+      telo: `Tere!
+
+Oleme varem suhelnud, seega kirjutan otse ühest võimalusest, millest saab kasu ka Teie klubi.
+
+SLFF-il on nüüd üle 13 000 kasutaja ja umbes 4000 neist mängib iga nädal. Liiga lehele (${liga}) otsime üheks hooajaks ühte toetajat. Kui toetaja tuleb Teie klubi kaudu, saab klubi 25% summast ehk 37,50 eurot.
+
+Toetaja, näiteks ettevõte, kes juba toetab Teie klubi, saab:
+- oma logo ja kirja "Liigat esitleb: [ettevõte]" liiga lehel,
+- oma logo selle liiga igal mängijakaardil, mida mängijad ja fännid jagavad,
+- mainimise iganädalastes postitustes liiga kohta,
+- hooaja lõpus ülevaate, kui paljude inimesteni see jõudis.
+
+Hind: 150 eurot hooaja eest (käibemaksuta).
+
+Kui teate ettevõtet, keda see võiks huvitada, vastake lihtsalt sellele kirjale, ülejäänu lepime kokku.
+
+Lugupidamisega
+${ime}
+slff.eu
+` }) },
+    GI: { jezik: 'en-GB', odjava: 'Unsubscribe', sestavi: ({ liga, ime }) => ({
+      zadeva: `A sponsor for the ${liga} page on SLFF`,
+      telo: `Hello,
+
+We have been in touch before, so I am writing to you directly about something your club can benefit from.
+
+SLFF now has more than 13,000 users, and around 4,000 of them play every week. We are looking for one sponsor for the ${liga} page for a season. If your club brings the sponsor, the club receives 25% of the amount, which is EUR 37.50.
+
+The sponsor, for example a company that already supports your club, gets:
+- its logo and "The league is presented by [company]" on the league page,
+- its logo on every player card from this league that players and fans share,
+- a mention in our weekly posts about the league,
+- a reach report at the end of the season.
+
+Price: EUR 150 per season (excluding VAT).
+
+If you know a company that might be interested, just reply to this email and we will arrange the rest.
+
+Kind regards
+${ime}
+slff.eu
+` }) },
+    GR: { jezik: 'el', odjava: 'Διαγραφή', sestavi: ({ liga, ime }) => ({
+      zadeva: `Χορηγός για τη σελίδα του πρωταθλήματος (${liga})`,
+      telo: `Χαίρετε,
+
+Έχουμε ήδη επικοινωνήσει, γι' αυτό σας γράφω απευθείας για μια δυνατότητα από την οποία ωφελείται και ο σύλλογός σας.
+
+Το SLFF έχει πλέον πάνω από 13.000 χρήστες και περίπου 4.000 από αυτούς παίζουν κάθε εβδομάδα. Για τη σελίδα του πρωταθλήματος (${liga}) αναζητούμε έναν χορηγό για μία σεζόν. Αν τον φέρει ο σύλλογός σας, ο σύλλογος λαμβάνει το 25% του ποσού, δηλαδή 37,50 ευρώ.
+
+Ο χορηγός, για παράδειγμα μια εταιρεία που ήδη στηρίζει τον σύλλογό σας, λαμβάνει:
+- το λογότυπό του και την ένδειξη "Το πρωτάθλημα παρουσιάζει: [εταιρεία]" στη σελίδα του πρωταθλήματος,
+- το λογότυπό του σε κάθε κάρτα παίκτη του πρωταθλήματος που μοιράζονται παίκτες και φίλαθλοι,
+- αναφορά στις εβδομαδιαίες αναρτήσεις για το πρωτάθλημα,
+- έκθεση απήχησης στο τέλος της σεζόν.
+
+Τιμή: 150 ευρώ ανά σεζόν (χωρίς ΦΠΑ).
+
+Αν γνωρίζετε κάποια εταιρεία που μπορεί να ενδιαφέρεται, απαντήστε απλώς σε αυτό το μήνυμα και θα κανονίσουμε τα υπόλοιπα.
+
+Με εκτίμηση
+${ime}
+slff.eu
+` }) },
+    RO: { jezik: 'ro', odjava: 'Dezabonare', sestavi: ({ liga, ime }) => ({
+      zadeva: `Sponsor pentru pagina ligii (${liga})`,
+      telo: `Bună ziua,
+
+Am mai fost în legătură, așa că vă scriu direct despre o posibilitate din care câștigă și clubul dvs.
+
+SLFF are acum peste 13.000 de utilizatori, iar aproximativ 4.000 dintre ei joacă în fiecare săptămână. Pentru pagina ligii (${liga}) căutăm un singur sponsor pentru un sezon. Dacă sponsorul vine prin clubul dvs., clubul primește 25% din sumă, adică 37,50 EUR.
+
+Sponsorul, de exemplu o firmă care deja sprijină clubul dvs., primește:
+- logoul și mențiunea "Liga este prezentată de: [firma]" pe pagina ligii,
+- logoul pe fiecare card de jucător din această ligă pe care îl distribuie jucătorii și suporterii,
+- o mențiune în postările săptămânale despre ligă,
+- un raport de vizibilitate la final de sezon.
+
+Preț: 150 EUR pe sezon (fără TVA).
+
+Dacă știți o firmă care ar putea fi interesată, răspundeți pur și simplu la acest e-mail și ne ocupăm de rest.
+
+Cu stimă
+${ime}
+slff.eu
+` }) },
+  },
+}
+
+/** Zadeva, telo, odjava, jezik ponudbe za državo stika ali null. */
+export function besediloPonudbe(drzava, liga, ime) {
+  const b = PONUDBA.besedila[drzava]
+  return b ? { ...b.sestavi({ liga, ime }), odjava: b.odjava, jezik: b.jezik } : null
+}
+
+const IMENA_NITI = ['Luka', 'Lovro', 'Nejc', 'Jernej']
+// Mladinske lige nimajo kartic in objav, ki jih ponudba obljublja (isto pravilo kot jeMladinskiSlug v src/lib/prevzem.ts).
+const mladinskaLiga = (slug) => /(^|-)(u1[4-9]|mladinci|kadeti|kadetki|kadetska|juniori)($|-)/.test(slug ?? '') || /^sml[0-9]/.test(slug ?? '')
+
+/**
+ * Kdo pošlje ponudbo: nabiralnik delavca, ki je klubu nazadnje pisal (prvi,
+ * opomnik, drugo), sicer klubi@ s podpisom človeka, ki je pisal z drugega
+ * naslova (info@, Gmail), sicer Nejc. Vrne { kljuc, ime }.
+ */
+export function posiljateljPonudbe(posta, stikId) {
+  const nasi = posta.filter((r) => r.stik_id === stikId && ['prvi', 'opomnik', 'drugo'].includes(r.vrsta))
+    .sort((a, b) => Date.parse(b.poslano_at) - Date.parse(a.poslano_at))
+  for (const r of nasi) {
+    const po = POSILJATELJI.find((x) => String(r.poslal ?? '').toLowerCase().includes(x.od))
+    if (po && !po.ekipa) return { kljuc: po.kljuc, ime: po.ime }
+  }
+  const ime = nasi.map((r) => String(r.poslal ?? '').split(' ')[0]).find((x) => IMENA_NITI.includes(x))
+  return { kljuc: 'klubi', ime: ime ?? 'Nejc' }
+}
+
+/**
+ * Stiki za ponudbo zdaj: stanje odgovoril/sodeluje, država z besedilom in
+ * oknom, liga aktivna, en naslov na klub, klub brez ponudbe ali SPONZOR, brez
+ * ne_zeli ali parkirane vrstice, brez naše pošte v 7 dneh in odgovora v 3 dneh.
+ */
+export function kandidatiPonudba(vsi, posta, aktivne, zdaj = new Date()) {
+  const poStiku = new Map()
+  for (const r of posta) (poStiku.get(r.stik_id) ?? poStiku.set(r.stik_id, []).get(r.stik_id)).push(r)
+  const izbrani = []
+  for (const s of vsi) {
+    if (!PONUDBA.stanja.includes(s.stanje) || !s.email || !PONUDBA.besedila[s.drzava] || !OKNA[s.drzava] || !aktivne.has(s.liga_slug) || mladinskaLiga(s.liga_slug)) continue
+    const klub = istiKlub(s, vsi)
+    if (izbrani.some((x) => klub.includes(x))) continue
+    const blok = klub.some((o) => o.stanje === 'ne_zeli' || /^poslano/i.test(o.opomba ?? '') || (poStiku.get(o.id) ?? []).some((r) => {
+      const starost = zdaj.getTime() - Date.parse(r.poslano_at)
+      return (r.vrsta === 'drugo' && (r.opomba === PONUDBA.oznaka || r.zadeva === SPONZOR.zadeva)) ||
+        (r.vrsta === 'odgovor' ? starost < 3 * DAN : starost < 7 * DAN)
+    }))
+    if (!blok) izbrani.push(s)
+  }
+  return izbrani
+}
+
 // V dnevnik nikoli naslov kluba: stik #id (klub, liga).
 const log = (t) => console.log(zakrij(t))
 const oznaka = (s) => `stik #${s.id} (${s.klub}, ${s.liga_slug})`
@@ -1102,7 +1371,7 @@ const cakaj = (ms) => new Promise((r) => setTimeout(r, ms))
  * ostalo neurejeno (opozorilo). Pošiljatelj z zavrnjeno prijavo gre v
  * `zavrnjeni` (do ponovnega zagona); ko so zavrnjeni vsi, krog vrže NapakaPrijave.
  */
-async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
+async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set(), ponudba = false }) {
   const preveri = ({ data, error }) => {
     if (error) throw new Error(error.message)
     return data
@@ -1144,17 +1413,21 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
   )
   const vrsta = vsi.filter((s) => s.v_vrsti && ['nov', 'poslano'].includes(s.stanje))
   const posta = await vseVrstice((od, do_) =>
-    db.from('klub_stik_posta').select('id, stik_id, vrsta, poslal, poslano_at, zadeva').order('id').range(od, do_),
+    db.from('klub_stik_posta').select('id, stik_id, vrsta, poslal, poslano_at, zadeva, opomba').order('id').range(od, do_),
   )
   const vsiKandidati = [
     ...kandidatiSponzor(vsi, posta, zdaj).map((s) => ({ s, vrsta: 'sponzor', posiljatelj: SPONZOR.posiljatelj })),
+    ...(ponudba ? kandidatiPonudba(vsi, posta, aktivne, zdaj) : []).map((s) => {
+      const { kljuc, ime } = posiljateljPonudbe(posta, s.id)
+      return { s, vrsta: 'ponudba', posiljatelj: kljuc, ime }
+    }),
     ...kandidati(vrsta, posta, aktivne, zdaj, vsi),
   ]
   const vOknuZdaj = vsiKandidati.filter(({ s }) => vOknu(s.drzava, zdaj))
   // --suho pokaže naslednje maile tudi zunaj okna, da se besedilo da pregledati kadarkoli.
   const izbor = suho ? vsiKandidati : vOknuZdaj
   if (suho || izbor.length)
-    log(`Danes ${stanjeDneva()}; v vrsti ${vsiKandidati.filter((x) => x.vrsta === 'opomnik').length} opomnikov, ${vsiKandidati.filter((x) => x.vrsta === 'prvi').length} prvih, ${vsiKandidati.filter((x) => x.vrsta === 'sponzor').length} sponzor; v oknu zdaj ${vOknuZdaj.length}`)
+    log(`Danes ${stanjeDneva()}; v vrsti ${vsiKandidati.filter((x) => x.vrsta === 'opomnik').length} opomnikov, ${vsiKandidati.filter((x) => x.vrsta === 'prvi').length} prvih, ${vsiKandidati.filter((x) => x.vrsta === 'sponzor').length} sponzor, ${vsiKandidati.filter((x) => x.vrsta === 'ponudba').length} ponudba${ponudba ? '' : ' (izklopljena)'}, ${vsiKandidati.filter((x) => x.kolega).length} opomnikov za ročni prvi; v oknu zdaj ${vOknuZdaj.length}`)
   const sezone = new Map()
 
   async function podatki(s) {
@@ -1185,7 +1458,7 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
     if (error) log(`  ! ${oznaka(s)}: opombe ni bilo mogoče zapisati (${error.message}); vrstica je že zunaj vrste`)
   }
   async function vrniVVrsto(s, vrstaMaila) {
-    if (vrstaMaila === 'sponzor') return // sponzor vrstice ni prevzel
+    if (ENKRATNI.has(vrstaMaila)) return // sponzor in ponudba vrstice nista prevzela
     const { error } = await db.from('klub_stik').update({ v_vrsti: true }).eq('id', s.id)
     if (error) log(`  ! ${oznaka(s)}: vrnitev v vrsto ni uspela (${error.message}); mail NI šel`)
   }
@@ -1199,21 +1472,25 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
   }
 
   let poslanih = 0
-  for (const { s, vrsta: vrstaMaila, posiljatelj } of izbor) {
+  for (const { s, vrsta: vrstaMaila, posiljatelj, kolega, ime } of izbor) {
     if (!izberiPosiljatelja(aktivni, prostor)) break
-    // Opomnik pošlje le, kdor je poslal prvi mail (sponzor: nejc); če ni dejaven ali je poln, mail čaka.
-    const po = vrstaMaila !== 'prvi' ? aktivni.find((x) => x.kljuc === posiljatelj) : izberiPosiljatelja(aktivni, prostor)
+    // Opomnik pošlje le, kdor je poslal prvi mail (sponzor: nejc; ROCNI_PRVI: luka); če ni dejaven ali je poln, mail čaka.
+    let po = vrstaMaila !== 'prvi' ? aktivni.find((x) => x.kljuc === posiljatelj) : izberiPosiljatelja(aktivni, prostor)
+    // Ponudba iz klubi@ je podpisana s človekom iz niti, ne z ekipo.
+    if (po && vrstaMaila === 'ponudba') po = { ...po, ime, ekipa: false }
+    const golo = vrstaMaila === 'ponudba' || !!kolega
     const pr = po && prostor.get(po.kljuc)
     if (!pr || pr.dan <= 0 || pr.krog <= 0) continue
     // Pred prevzemom vrstice: nič ni poslano, napaka le preskoči kandidata.
     let b
     try {
-      const p = vrstaMaila === 'sponzor' ? null : await podatki(s)
+      const p = ENKRATNI.has(vrstaMaila) ? null : await podatki(s)
       if (p && !p.igralcev) {
         log(`preskok ${oznaka(s)}: klub nima igralcev z nastopi`)
         continue
       }
-      if (vrstaMaila !== 'prvi' && !suho) {
+      // Ponudba gre klubom, ki so že odgovorili: pregled nabiralnika bi našel prav ta odgovor.
+      if (!['prvi', 'ponudba'].includes(vrstaMaila) && !suho) {
         // Odgovor in odboj pride v nabiralnik, ki je poslal prvi mail (pri opomniku je to `po`).
         let prvi = posta.find((r) => r.stik_id === s.id && r.vrsta === 'prvi')
         let pregled = vrstaMaila === 'opomnik' ? po : aktivni.find((x) => x.poslal === prvi?.poslal)
@@ -1243,7 +1520,9 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
           continue
         }
       }
-      b = vrstaMaila === 'sponzor' ? { zadeva: SPONZOR.zadeva, telo: SPONZOR.telo, odjava: 'Odjava', jezik: 'sl' } : besedilo({ ...s, ime_lige: p.ime_lige, vir: p.vir }, p, vrstaMaila, po)
+      b = vrstaMaila === 'sponzor' ? { zadeva: SPONZOR.zadeva, telo: SPONZOR.telo, odjava: 'Odjava', jezik: 'sl' }
+        : vrstaMaila === 'ponudba' ? besediloPonudbe(s.drzava, poSlugu.get(s.liga_slug).name, po.ime)
+          : besedilo({ ...s, ime_lige: p.ime_lige, vir: p.vir }, { ...p, kolega }, vrstaMaila, po)
     } catch (e) {
       if (e instanceof NapakaPrijave) {
         zavrni(po, e)
@@ -1254,7 +1533,7 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
     }
     if (!b) continue
     if (suho) {
-      log(`\n--- ${vrstaMaila} (${po.kljuc}) → ${oznaka(s)} ${s.email}${vOknu(s.drzava, zdaj) ? '' : ' [zunaj okna]'}\n${b.zadeva}\n\n${b.telo}`)
+      log(`\n--- ${vrstaMaila}${kolega ? ` (prvi: ${kolega})` : ''} (${po.kljuc}, podpis ${po.ime}${golo ? ', text/plain' : ''}) → ${s.drzava} ${oznaka(s)} ${s.email}${vOknu(s.drzava, zdaj) ? '' : ' [zunaj okna]'}\n${b.zadeva}\n\n${b.telo}`)
       poslanih++
       pr.dan--
       pr.krog--
@@ -1268,10 +1547,12 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
       const vrsticeDrzave = await vseVrstice((od, do_) =>
         db.from('klub_stik').select('id, team_id, klub, drzava, liga_slug, email, stanje, v_vrsti, opomba').eq('drzava', s.drzava).order('id').range(od, do_))
       const idji = istiKlub(s, vrsticeDrzave).map((o) => o.id)
-      const postaKluba = preveri(await db.from('klub_stik_posta').select('id, stik_id, vrsta, poslal, poslano_at, zadeva').in('stik_id', idji).order('id'))
+      const postaKluba = preveri(await db.from('klub_stik_posta').select('id, stik_id, vrsta, poslal, poslano_at, zadeva, opomba').in('stik_id', idji).order('id'))
       sveze = vrstaMaila === 'sponzor'
         ? kandidatiSponzor(vrsticeDrzave, postaKluba).some((x) => x.id === s.id && x.email === s.email)
-        : kandidati([s], postaKluba, aktivne, new Date(), vrsticeDrzave).length > 0
+        : vrstaMaila === 'ponudba'
+          ? kandidatiPonudba(vrsticeDrzave, postaKluba, aktivne).some((x) => x.id === s.id && x.email === s.email)
+          : kandidati([s], postaKluba, aktivne, new Date(), vrsticeDrzave).length > 0
     } catch (e) {
       log(`preskok ${oznaka(s)}: sveža pošta kluba ni prebrana (${e.message})`)
       continue
@@ -1282,12 +1563,12 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
     }
     // Sponzor: vrstice ne prevzamemo (v_vrsti je lahko false od vsega začetka); en zagon, svež pregled tik prej,
     // neznan izid parkira vrstico z opombo "poslano…", ki blokira klub.
-    const prevzem = vrstaMaila === 'sponzor' ? { data: [s] } : await db.from('klub_stik').update({ v_vrsti: false }).eq('id', s.id).eq('v_vrsti', true).in('stanje', ['nov', 'poslano']).select('id')
+    const prevzem = ENKRATNI.has(vrstaMaila) ? { data: [s] } : await db.from('klub_stik').update({ v_vrsti: false }).eq('id', s.id).eq('v_vrsti', true).in('stanje', ['nov', 'poslano']).select('id')
     if (prevzem.error || !prevzem.data?.length) {
       log(`preskok ${oznaka(s)}: ${prevzem.error ? `prevzem ni uspel (${prevzem.error.message})` : 'vrstico je vzel drug zagon'}`)
       continue
     }
-    const m = sporocilo({ na: s.email, zadeva: b.zadeva, telo: b.telo, odjava: b.odjava, jezik: b.jezik, po })
+    const m = sporocilo({ na: s.email, zadeva: b.zadeva, telo: b.telo, odjava: b.odjava, jezik: b.jezik, po, golo })
     try {
       await posljiSmtp(await povezi(GOSTITELJ, 465), { od: po.od, na: s.email, geslo: po.geslo, sporocilo: m })
     } catch (e) {
@@ -1323,7 +1604,8 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
     poslanih++
     pr.dan--
     pr.krog--
-    const zapis = { stik_id: s.id, vrsta: vrstaMaila === 'sponzor' ? 'drugo' : vrstaMaila, poslal: po.poslal, za: s.email, zadeva: b.zadeva, telo: b.telo }
+    const zapis = { stik_id: s.id, vrsta: ENKRATNI.has(vrstaMaila) ? 'drugo' : vrstaMaila, poslal: po.poslal, za: s.email, zadeva: b.zadeva, telo: b.telo,
+      ...(vrstaMaila === 'ponudba' ? { opomba: PONUDBA.oznaka } : {}) }
     let vpis
     for (let i = 0; i < 3; i++) {
       vpis = await db.from('klub_stik_posta').insert(zapis)
@@ -1338,7 +1620,7 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
     }
     posta.push({ ...zapis, poslano_at: new Date().toISOString() })
     // Nazaj v vrsto šele po vpisu (za opomnik čez tri dni); posiljatelj = nabiralnik, ki je poslal.
-    const { error: eVrsta } = vrstaMaila === 'sponzor' ? {} : await db.from('klub_stik').update({ v_vrsti: true, posiljatelj: po.od }).eq('id', s.id)
+    const { error: eVrsta } = ENKRATNI.has(vrstaMaila) ? {} : await db.from('klub_stik').update({ v_vrsti: true, posiljatelj: po.od }).eq('id', s.id)
     log(`${vrstaMaila} (${po.kljuc}) → ${oznaka(s)}${eVrsta ? ` (vrnitev v vrsto ni uspela: ${eVrsta.message})` : ''}`)
     try {
       await zImap(po, (ukaz) => ukaz(`APPEND "Sent" (\\Seen) {${Buffer.byteLength(m)}}`, m))
@@ -1352,6 +1634,7 @@ async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
 }
 
 const KROG_MS = 10 * 60e3
+const ENKRATNI = new Set(['sponzor', 'ponudba'])
 const PO_PRIJAVI_MS = 60 * 60e3
 
 async function main() {
@@ -1364,6 +1647,8 @@ async function main() {
   const najvec = Number(arg('--najvec') ?? 2)
   const env = process.env
   const posiljatelji = aktivniPosiljatelji(env)
+  // Enkratna ponudba pokrovitelja (PONUDBA): le izrecno vklopljena.
+  const ponudba = env.PONUDBA_SPONZOR === '1'
   // V zanki (Docker restart) pred izhodom počakamo, da manjkajoča nastavitev ne vrti ponovnih zagonov.
   const konec = async (sporocilo) => {
     console.error(sporocilo)
@@ -1376,7 +1661,7 @@ async function main() {
   if (!zanka) {
     try {
       // --suho brez gesel pokaže razdelitev med vse pošiljatelje.
-      if (await krog(db, { posiljatelji: suho && !posiljatelji.length ? POSILJATELJI : posiljatelji, suho, najvec })) process.exitCode = 1
+      if (await krog(db, { posiljatelji: suho && !posiljatelji.length ? POSILJATELJI : posiljatelji, suho, najvec, ponudba })) process.exitCode = 1
     } catch (e) {
       console.error(zakrij(e instanceof NapakaPrijave ? `Prijava v nabiralnik ni uspela: ${e.message}` : `Napaka: ${e.message}`))
       process.exit(1)
@@ -1391,7 +1676,7 @@ async function main() {
   for (;;) {
     const zacetek = Date.now()
     try {
-      await krog(db, { posiljatelji, suho: false, najvec, zavrnjeni })
+      await krog(db, { posiljatelji, suho: false, najvec, zavrnjeni, ponudba })
     } catch (e) {
       if (e instanceof NapakaPrijave) {
         console.error(zakrij(`Prijava v nabiralnik ni uspela: ${e.message} — premor 1 h, nato izhod`))

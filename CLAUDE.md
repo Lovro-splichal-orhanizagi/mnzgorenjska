@@ -399,7 +399,10 @@ besedilom). **Obvezno, vsakič:**
    **Ne piši** (in povej človeku), če je stanje `odgovoril` / `ne_zeli` /
    `napacen_mail` / `sodeluje`, če je klub v zadnjih 7 dneh dobil mail od
    **koga drugega** ali v zadnjih 3 dneh od kogarkoli (načrtovan opomnik
-   istega pošiljatelja po 3+ dneh je v redu).
+   istega pošiljatelja po 3+ dneh je v redu). **Edina izjema** (lastnik,
+   20. 11. 2026): enkratna ponudba pokrovitelja klubom v stanju `odgovoril` /
+   `sodeluje` (`PONUDBA` v `posta-klubom.mjs`, le s `PONUDBA_SPONZOR=1`),
+   pravila v `docs/posta-klubom.md`.
 2. **Po** poslanem mailu: `node scripts/stiki-klubov.mjs zabelezi --za <naslov>
    --vrsta prvi|opomnik --poslal <ime> --zadeva "…" --telo-datoteka <datoteka>`
    (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ|HU|AT|RS|RO|EE|PL|ES|LV [--liga …]`). Pri paketih

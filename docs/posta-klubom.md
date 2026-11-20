@@ -133,6 +133,36 @@ pregledom nabiralnika prvega maila. Zapiše se kot vrsta `drugo`
 znova, zato koda po sedmih mailih miruje — odstrani jo. Test:
 `node --test scripts/test-posta-sponzor.mjs`.
 
+**Opomnik za ročno poslane prve maile AT/HU (20. 11. 2026).** Okoli 270
+avstrijskih in madžarskih klubov je prvi mail dobilo 16.–24. 10. ročno z
+info@ ali z Gmaila (Nejc z info@ in Gmaila, Lovro z Gmaila), zato jim vrsta
+opomnika ni poslala. `ROCNI_PRVI` v skripti: natanko trije zapisi `poslal`, le AT in HU, le stik z **enim** prvim mailom
+(23 madžarskih, ki so dobili dva prva od dveh ljudi, ga ne dobi) in po vseh
+običajnih pravilih opomnika. Pošlje ga **luka@** (osebno, podpis Luka,
+odgovori v HelpStack), besedilo pove, da je oktobra pisal kolega (Nejc ali
+Lovro), le text/plain. Nabiralnika prvega maila delavec ne bere: odgovor na
+info@ ali Gmail ustavi opomnik le, če je vpisan v `klub_stik_posta`.
+Najstarejši prvi, luka@ največ 100 na dan, zato teče nekaj dni.
+
+**Enkratno: ponudba pokrovitelja (20. 11. 2026, izjema od pravila
+"odgovoril/sodeluje ne pišemo").** `PONUDBA` v skripti, teče **le s
+`PONUDBA_SPONZOR=1`** v `/opt/slff-posta/.env` (nato `docker compose up -d`).
+Prejemniki: stanje `odgovoril` ali `sodeluje`, enkrat na klub (oznaka
+`ponudba sponzor 2026-11` v `klub_stik_posta.opomba`, vrsta `drugo`; tudi ne
+klubu, ki je dobil SI `SPONZOR`), ne SK in GB (ročno), ne DE, PL, DK, ES (brez
+okna), ne mladinske lige (ni kartic in objav), ne neaktivna liga, ne ob
+`ne_zeli` ali parkirani vrstici na katerem koli naslovu kluba, ne ob naši pošti
+v 7 dneh ali odgovoru v 3 dneh. Pošlje nabiralnik delavca (luka@, lovro@,
+nejc@), ki je klubu nazadnje pisal, sicer klubi@ s podpisom človeka iz niti
+(Nejc, Jernej, Lovro). Besedila (SI, AT, HU, HR, EE, GI, GR, RO): 150 EUR na
+sezono brez DDV, klub 25 % (37,50 EUR), kaj dobi pokrovitelj; le text/plain,
+edina povezava slff.eu v podpisu; številke (13.000 uporabnikov, 4.000 na
+teden) so iz baze 20. 11. 2026 in zapisane v besedilu. Pregled nabiralnika
+pred ponudbo se ne dela (našel bi prav prejšnji odgovor). Pregled pred
+vklopom: `docker exec -e PONUDBA_SPONZOR=1 slff-posta node
+scripts/posta-klubom.mjs --suho`. Ko vsi dobijo, kodo odstrani. Test:
+`node --test scripts/test-posta-ponudba.mjs`.
+
 **HR in RS polnjenje nima** (pregled 15. 10. 2026): Semafor pri klubu
 (`/klubovi/<id>/`) kaže le naslov in stadion, fsb.org.rs in fss.rs naslovov
 klubov ne objavljata. ŽNS jih objavijo v PDF "Adresar klubova" (zns.hr: 1. in
