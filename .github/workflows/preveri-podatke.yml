@@ -22,6 +22,43 @@ permissions:
   actions: read
 
 jobs:
+  # This job reads only retained collector evidence. An unrelated writer, or a
+  # failure in the consistency job, must never suppress source-health checks.
+  hns-source-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read retained Croatian collection evidence
+        id: evidence
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh private-hns-health/snapshots
+          trap 'rm -f ~/.ssh/id_ed25519' EXIT
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          export RSYNC_RSH='ssh -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes'
+          scp -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes deploy@2.31.6.53:/srv/slff-recovery/hns-recurring/collector-status.json private-hns-health/collector-status.json
+          rsync -r --safe-links --timeout=60 --include='*.json' --exclude='*' deploy@2.31.6.53:/srv/slff-recovery/hns-recurring/snapshots/ private-hns-health/snapshots/
+      - name: Report independent collection health
+        if: ${{ !cancelled() }}
+        env:
+          HNS_EVIDENCE_OUTCOME: ${{ steps.evidence.outcome }}
+        run: node scripts/hns-source-health.mjs private-hns-health
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: hns-source-health
+          path: hns-source-health.json
+          if-no-files-found: error
+          retention-days: 90
   preveri:
     runs-on: ubuntu-latest
     timeout-minutes: 15
