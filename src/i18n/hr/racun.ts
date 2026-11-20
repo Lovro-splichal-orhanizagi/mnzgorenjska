@@ -174,7 +174,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   // Privatnost i uvjeti. <b> je podebljano, ostale oznake su poveznice.
   pravno: {
     naslov: 'Privatnost i uvjeti',
-    zadnjaSprememba: 'Zadnja izmjena: 30. listopada 2026.',
+    zadnjaSprememba: 'Zadnja izmjena: 20. studenoga 2026.',
     kajJeNaslov: 'Što je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je navijačka fantasy liga za amaterske nogometne lige. Vodimo je amaterski i nije povezana s Hrvatskim nogometnim savezom (HNS), županijskim nogometnim savezima ni s klubovima. Igra je besplatna, bez novčanih uloga i nagrada.',
@@ -188,7 +188,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Token uređaja za obavijesti.</b> Ako u mobilnoj aplikaciji dopustiš obavijesti, spremamo token preko kojeg ti šaljemo podsjetnik prije roka kola. Pri odjavi ga brišemo.',
     neHranimo:
-      'Ne čuvamo tvoj broj telefona ni podatke kartice, a adresu samo ako kupiš provjereni profil zauvijek (šaljemo ti poster). Ne koristimo kolačiće za praćenje ni oglašivačke alate. U pregledniku su spremljeni tvoja sesija prijave, oznaka razgovora u chatu za pomoć ako ga otvoriš, i oznake sesije kojima posjet stranici brojimo samo jednom. Koliko je ljudi otvorilo koju stranicu čuvamo samo kao dnevni zbroj — bez tvojeg imena, računa, uređaja ili IP adrese. Opću statistiku posjeta (koje stranice, odakle posjetitelji dolaze, vrsta uređaja i država, nekoliko radnji poput slaganja momčadi) bilježi <b>Umami</b> na našem poslužitelju: bez kolačića, IP adresu ne sprema i posjet ne povezuje s tvojim računom. Ako preglednik ima uključenu opciju „Ne prati“, ne bilježi se ništa. Kad si prijavljen, nekoliko koraka u igri (npr. sastavljanje ekipe, otvaranje aplikacije, odluka o obavijestima, zatvoren prozor) bilježimo uz tvoj račun da vidimo gdje igra zapinje. Čuvamo ih 90 dana, brišu se s računom, a uz »Ne prati« ništa ne bilježimo.',
+      'Ne čuvamo tvoj broj telefona ni podatke kartice, a adresu samo ako kupiš provjereni profil zauvijek (šaljemo ti poster). Kolačiće za praćenje može koristiti samo Googleova skripta za oglase (vidi Oglasi niže). U pregledniku su spremljeni tvoja sesija prijave, oznaka razgovora u chatu za pomoć ako ga otvoriš, i oznake sesije kojima posjet stranici brojimo samo jednom. Koliko je ljudi otvorilo koju stranicu čuvamo samo kao dnevni zbroj — bez tvojeg imena, računa, uređaja ili IP adrese. Opću statistiku posjeta (koje stranice, odakle posjetitelji dolaze, vrsta uređaja i država, nekoliko radnji poput slaganja momčadi) bilježi <b>Umami</b> na našem poslužitelju: bez kolačića, IP adresu ne sprema i posjet ne povezuje s tvojim računom. Ako preglednik ima uključenu opciju „Ne prati“, ne bilježi se ništa. Kad si prijavljen, nekoliko koraka u igri (npr. sastavljanje ekipe, otvaranje aplikacije, odluka o obavijestima, zatvoren prozor) bilježimo uz tvoj račun da vidimo gdje igra zapinje. Čuvamo ih 90 dana, brišu se s računom, a uz »Ne prati« ništa ne bilježimo.',
     dostopNaslov: 'Kome su podaci dostupni',
     dostop:
       'Podaci su pohranjeni na našem poslužitelju kod pružatelja <b>Hetzner</b> (Njemačka, EU), a promet do njega ide preko <b>Cloudflarea</b> (zaštita i isporuka stranice). Pošta za potvrdu i ponovno postavljanje lozinke ide s našeg poslužitelja pošte (također Hetzner), obavijesti u mobilnoj aplikaciji preko <b>Google Firebase Cloud Messaginga</b> (samo token uređaja i tekst obavijesti). Chat za pomoć u donjem desnom kutu radi preko <b>HelpStacka</b>: tamo ide ono što u njega napišeš i — ako si prijavljen — tvoje prikazno ime, da znamo kome odgovaramo. Kad ti pomoćnik u chatu pomaže, može vidjeti i na kojoj si stranici i u kojoj ligi te je li tvoja momčad valjana. E-adresu mu ne prosljeđujemo. Nikome drugome podatke ne prosljeđujemo i ne prodajemo ih.',
@@ -217,6 +217,9 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Jedino što se plaća je neobavezna značka provjerenog igrača (vidi Usluge koje se plaćaju niže).',
     podatkiPlacilo:
       '<b>Kupnja značke provjerenog igrača (samo ako kupiš).</b> Zapis o kupnji (što, kada, iznos i oznaka kupca kod Stripea) čuvamo 10 godina, kako to traže računovodstveni propisi. Adresu za dostavu postera čuvamo 90 dana nakon slanja ili otkazivanja i najdulje 12 mjeseci nakon narudžbe, zatim ostaje samo država.',
+    oglasiNaslov: 'Oglasi',
+    oglasi:
+      'Na nekim stranicama (početna, ljestvica, Moja ekipa, rezultati, igrači) možemo ondje gdje nema sponzora prikazati oglase <b>Google AdSense</b> (Google Ireland Limited). Na našim web stranicama (ne u mobilnoj aplikaciji i ne u juniorskim ligama) učitava se Googleova skripta AdSense, koja za prikaz i mjerenje oglasa te sprječavanje zloupotreba može koristiti kolačiće ili slične tehnologije. U EU, EGP-u, Ujedinjenom Kraljevstvu i Švicarskoj Googleova poruka o privatnosti najprije traži tvoju privolu; bez nje su oglasi neprilagođeni ili ograničeni. Izbor možeš bilo kada promijeniti putem Googleove poveznice za postavke privatnosti i kolačića na stranici. Oglasa nema u juniorskim ligama, u mobilnoj aplikaciji, na stranicama računa i plaćanja te za korisnike sa SLFF Pro ili provjerenim profilom.',
     dostopStripe:
       'Plaćanja značke provjerenog igrača obrađuje <b>Stripe</b> (Stripe Payments Europe, Irska): dobiva tvoje ime, e-poštu, adresu za račun i kod kupnje zauvijek adresu za dostavu postera. Podatke kartice upisuješ izravno kod Stripea, mi ih ne vidimo.',
     placljivoNaslov:

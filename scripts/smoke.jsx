@@ -111,6 +111,8 @@ import { zDrzavo } from '../src/lib/naslov'
 import { zDrzavo as zDrzavoStreznika } from './hetzner/html/streznik.mjs'
 import { drzavaVstopa } from '../src/lib/drzavaUgib'
 import VstopDrzave from '../src/components/VstopDrzave'
+import Oglas from '../src/components/Oglas'
+import { izberiOglas } from '../src/lib/oglasi'
 import { prezgodnjiKljuci, naloziSlovar } from '../src/i18n/jedro.ts'
 // Vsa aplikacija (tudi strani, ki jih smoke ne izriše), da se izvede vrh vseh modulov.
 import '../src/App'
@@ -260,6 +262,33 @@ preveri('pravno: razdelek Scout s sidrom #scout (povezava za ugovor)',
       </AuthProvider>
     </StaticRouter>,
   ).includes('id="scout"'))
+
+// --- oglasi AdSense (src/lib/oglasi.ts, migracija 20261120130000) --------
+{
+  const ok = { client: 'ca-pub-9235394594566763', mesta: { domov: '1234567890' } }
+  preveri('oglasi: veljaven odgovor da enoto za mesto',
+    izberiOglas(ok, 'domov', 'clani', false)?.slot === '1234567890')
+  preveri('oglasi: stikalo 0 (oglasi_za vrne NULL) ne da nič', izberiOglas(null, 'domov', 'clani', false) === null)
+  preveri('oglasi: prazen ali neveljaven založnik ne da nič',
+    izberiOglas({ ...ok, client: '' }, 'domov', 'clani', false) === null &&
+    izberiOglas({ ...ok, client: 'pub-123' }, 'domov', 'clani', false) === null)
+  preveri('oglasi: mesto brez enote ne da nič', izberiOglas(ok, 'lestvica', 'clani', false) === null &&
+    izberiOglas({ ...ok, mesta: {} }, 'domov', 'clani', false) === null)
+  preveri('oglasi: mladinska liga nikoli', ['mladinci', 'sk-u19', 'hr-kadeti'].every((l) => izberiOglas(ok, 'domov', l, false) === null))
+  preveri('oglasi: aplikacija (WebView) nikoli', izberiOglas(ok, 'domov', 'clani', true) === null)
+  for (const t of ['clani', 'mladinci']) {
+    const html = renderToString(
+      <StaticRouter location={`/?t=${t}`}>
+        <AuthProvider>
+          <TekmovanjeProvider>
+            <Oglas kje="domov" />
+          </TekmovanjeProvider>
+        </AuthProvider>
+      </StaticRouter>,
+    )
+    preveri(`oglasi: komponenta brez odgovora ne izriše nič (${t})`, html === '' && !html.includes('adsbygoogle'), html)
+  }
+}
 
 // --- pivski zid (src/lib/piva.ts, bmc-pivo/sporocilo.ts) -------------------
 {

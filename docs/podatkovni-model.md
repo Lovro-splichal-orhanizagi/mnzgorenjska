@@ -1380,3 +1380,56 @@ funkcija `supabase/functions/prenosi/`, vmesnik `PrenosiTekme.tsx`,
   prenosi` (in `posli-opomnik`, ker je `push.ts` zdaj v `_shared`). Brez ključa
   vpis odgovori »prenosi še niso vklopljeni«.
 
+
+## Oglasi (Google AdSense)
+
+Oglasi AdSense stojijo na istih petih mestih kot sponzorji (`<Sponzor kje=…>`:
+domov, lestvica, moja_ekipa, rezultati, igralci) in se pokažejo le, kjer
+sponzorja ni — sponzor ima vedno prednost. Novih mest ni; na prijavi, računu,
+plačilih, `/pro` in v administraciji mesta ni, zato tam oglasov ni.
+
+- **Nastavitve** (migracija `20261120130000_oglasi`): `oglasi` 0 izklop
+  (privzeto), 1 le admin, 2 vsi; povoz v `competition_settings` lahko ligo
+  izklopi. `oglasi_client` = `ca-pub-9235394594566763`, `oglasi_mesta` = id-ji
+  enot po mestu (`{"domov": "…", "lestvica": "…"}`), privzeto `{}`.
+- **Kdo jih vidi** odloči `oglasi_za(liga)`: stikalo, veljaven založnik in vsaj
+  eno mesto; nikoli mladinska liga (`je_mladinska_liga`) in nikoli plačnik
+  (`pro_aktiven` ali aktiven `preverjeni_racuni`). Vmesnik (`src/lib/oglasi.ts`)
+  doda še: ne v aplikaciji (`jeNativno()` — AdSense v WebView ni dovoljen;
+  AdMob bi bil sprememba nativne gradnje prek trgovine) in mesto mora imeti
+  enoto. Dokler `oglasi_za` vrne NULL, mest ni. Odgovor je predpomnjen na
+  ligo + uporabnika do ponovnega nalaganja strani.
+- **Koda AdSense v glavi** (za pregled strani in CMP): vpiše jo strežnik HTML
+  (`zAdSense` v `scripts/hetzner/html/streznik.mjs`) v vsako stran, ki gre
+  skozi `slff-html` (`/`, `/table`, `/player/*` …), razen mladinske lige
+  (`?t=` ali liga entitete). V `dist/index.html` je ni, ker ga zapakira
+  aplikacija (Capacitor, OTA). Strani, ki jih Caddy streže statično
+  (`/my-team`, `/login` …), jo dobijo od `naloziAdSense` šele z oglasom. Brez
+  vklopljenih samodejnih oglasov (Auto ads) v AdSense skripta sama ne pokaže
+  ničesar. Sprememba gre v produkcijo le z `scripts/hetzner/objavi-html.sh`.
+- **Privolitev (EGP, UK, CH)**: Googlov certificiran CMP iz AdSense
+  (Zasebnost in sporočila → Evropski predpisi), ki ga naloži ista skripta.
+  Lastne pasice ni. Brez privolitve Google kaže neprilagojene/omejene oglase.
+- **Lastništvo**: `<meta name="google-adsense-account">` v `index.html` (in s
+  tem v karticah držav) in `public/ads.txt` (Caddy ga streže kot datoteko,
+  `@datoteka`).
+- **Prikazi in zaslužek** so v poročilih AdSense; svoje statistike ne vodimo.
+- Besedilo o oglasih in piškotkih je v `racun.pravno.oglasi` (stran `/legal#oglasi`).
+
+**Vklop (lastnik):**
+
+1. AdSense: stran `slff.eu` mora biti odobrena (Sites → slff.eu → Ready).
+   *Auto ads* naj ostanejo izklopljeni — oglasi gredo le na naša mesta.
+2. Zasebnost in sporočila → *European regulations* → ustvari sporočilo za
+   `slff.eu` (jeziki: vsi, ki jih imamo), vklopi povezavo za ponovno izbiro in
+   objavi. Po želji še *US state regulations*.
+3. Ads → By ad unit → *Display ads* (odzivna), ena enota na mesto (ali ena za
+   vse); prepiši številko `data-ad-slot`.
+4. Preizkus le za admine, nato vsi:
+   ```sql
+   update settings set value = '{"domov":"<slot>","lestvica":"<slot>","moja_ekipa":"<slot>","rezultati":"<slot>","igralci":"<slot>"}' where key = 'oglasi_mesta';
+   update settings set value = '1' where key = 'oglasi';   -- le admin
+   update settings set value = '2' where key = 'oglasi';   -- vsi
+   ```
+   Izklop: `update settings set value = '0' where key = 'oglasi';`
+   (nastavitve se v brskalniku osvežijo ob naslednjem nalaganju strani).

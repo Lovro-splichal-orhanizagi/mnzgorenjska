@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { esc, izrisi, obdelovalec, prevajalnik, stran } from './streznik.mjs'
+import { ADSENSE, esc, izrisi, obdelovalec, prevajalnik, stran, zAdSense } from './streznik.mjs'
 
 const PREDLOGA = `<!doctype html>
 <html lang="sl">
@@ -387,19 +387,19 @@ assert.equal(esc(`<a href="x">'&`), '&lt;a href=&quot;x&quot;&gt;&#39;&amp;')
   pokvarjen = true
   const varovalo = await zahtevaj('/match/5?t=sk-za-1')
   assert.equal(varovalo.status, 200)
-  assert.equal(varovalo.telo, SK, 'ob napaki nespremenjena kartica države')
+  assert.equal(varovalo.telo, zAdSense(SK), 'ob napaki nespremenjena kartica države')
   assert.equal(varovalo.glave['X-Slff-Html'], 'varovalo')
   assert.equal(varovalo.glave['Cache-Control'], 'public, max-age=0, must-revalidate')
   // Predloge ni več (mapa objave izginila): zadnja prebrana, 200.
   const brez = obdelovalec({ koren, rest: prek })
   await (async () => { let st; await brez({ url: '/', method: 'GET' }, { writeHead: (x) => (st = x), end: () => {} }); assert.equal(st, 200) })()
   // Varovalo vstopa države (/sk/): kartica države, kot Caddy.
-  await (async () => { let telo; await brez({ url: '/sk/', method: 'GET' }, { writeHead: () => {}, end: (x) => (telo = x) }); assert.equal(telo, SK) })()
+  await (async () => { let telo; await brez({ url: '/sk/', method: 'GET' }, { writeHead: () => {}, end: (x) => (telo = x) }); assert.equal(telo, zAdSense(SK)) })()
   rmSync(koren, { recursive: true })
   const izgubljena = { status: 0, telo: '' }
   await brez({ url: '/table', method: 'GET' }, { writeHead: (x) => (izgubljena.status = x), end: (b) => (izgubljena.telo = b) })
   assert.equal(izgubljena.status, 200)
-  assert.equal(izgubljena.telo, PREDLOGA)
+  assert.equal(izgubljena.telo, zAdSense(PREDLOGA))
   mkdirSync(koren)
   writeFileSync(join(koren, 'index.html'), PREDLOGA)
   // Počasen PostgREST: rok odreže, varovalo.
@@ -410,7 +410,17 @@ assert.equal(esc(`<a href="x">'&`), '&lt;a href=&quot;x&quot;&gt;&#39;&amp;')
   await pocasen({ url: '/table', method: 'GET' }, { writeHead: (s) => (status = s), end: (b) => (telo = b) })
   assert.equal(status, 200)
   clearInterval(zivo)
-  assert.equal(telo, PREDLOGA)
+  assert.equal(telo, zAdSense(PREDLOGA))
+}
+
+// AdSense: koda v <head> za pregled strani, nikoli v mladinski ligi, nikoli dvakrat.
+{
+  const z = zAdSense(PREDLOGA, 'clani')
+  assert.ok(z.includes(ADSENSE) && z.indexOf(ADSENSE) < z.indexOf('</head>'), 'AdSense v glavi')
+  assert.ok(zAdSense(PREDLOGA, null).includes(ADSENSE), 'AdSense brez lige')
+  assert.equal(zAdSense(PREDLOGA, 'mladinci'), PREDLOGA, 'mladinska liga brez AdSense')
+  assert.equal(zAdSense(PREDLOGA, 'sk-u19'), PREDLOGA, 'U19 brez AdSense')
+  assert.equal(zAdSense(z, 'clani'), z, 'ne dvakrat')
 }
 
 console.log('preizkus strežnika HTML: vse v redu')

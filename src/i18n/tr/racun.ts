@@ -167,7 +167,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Gizlilik ve kullanım koşulları',
-    zadnjaSprememba: 'Son güncelleme: 30 Ekim 2026',
+    zadnjaSprememba: 'Son güncelleme: 20 Kasım 2026',
     kajJeNaslov: 'SLFF nedir',
     kajJe:
       'SLFF (Sunday League Fantasy Football), yerel amatör futbol ligleri için taraftarlar tarafından yapılmış bir fantezi ligdir. Gönüllüler tarafından yürütülür ve bölgesel futbol federasyonları, ulusal futbol federasyonu ya da kulüplerle bağlantılı değildir. Oyun ücretsizdir; bahis ya da ödül yoktur.',
@@ -181,7 +181,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Bildirimler için cihaz anahtarı.</b> Mobil uygulamada bildirimlere izin verirsen, haftanın son tarihinden önce sana hatırlatma göndermek için kullandığımız bir anahtarı saklarız. Çıkış yaptığında silinir.',
     neHranimo:
-      'Telefon numaranı ve kart bilgilerini saklamayız; adresini yalnızca doğrulanmış profili ömür boyu satın alırsan saklarız (sana poster göndeririz). Takip çerezleri ya da reklam araçları kullanmayız. Tarayıcın giriş oturumunu, açarsan yardım sohbetindeki konuşmanın kimliğini ve bir sayfanın iki kez sayılmasını önleyen oturum işaretlerini saklar. Hangi sayfanın kaç kişi tarafından açıldığı sadece günlük toplam olarak tutulur; adın, hesabın, cihazın ya da IP adresin olmadan. Genel ziyaret istatistiklerini (hangi sayfalar, ziyaretçilerin nereden geldiği, cihaz türü ve ülke, takım kurmak gibi birkaç işlem) kendi sunucumuzdaki <b>Umami</b> kaydeder: çerez yok, IP adresi saklanmaz ve ziyaretler hesabına bağlanmaz. Tarayıcında "Do Not Track" açıksa hiçbir şey kaydedilmez. Giriş yaptığında oyundaki birkaç adımı (ör. takım kurma, uygulamayı açma, bildirim kararı, kapatılan pencere) hesabınla birlikte kaydederiz; böylece oyunun nerede takıldığını görürüz. Bunları 90 gün saklarız, hesapla birlikte silinirler ve “Do Not Track” açıkken hiçbir şey kaydetmeyiz.',
+      'Telefon numaranı ve kart bilgilerini saklamayız; adresini yalnızca doğrulanmış profili ömür boyu satın alırsan saklarız (sana poster göndeririz). Takip çerezlerini yalnızca Google reklam betiği kullanabilir (aşağıda Reklamlar bölümüne bak). Tarayıcın giriş oturumunu, açarsan yardım sohbetindeki konuşmanın kimliğini ve bir sayfanın iki kez sayılmasını önleyen oturum işaretlerini saklar. Hangi sayfanın kaç kişi tarafından açıldığı sadece günlük toplam olarak tutulur; adın, hesabın, cihazın ya da IP adresin olmadan. Genel ziyaret istatistiklerini (hangi sayfalar, ziyaretçilerin nereden geldiği, cihaz türü ve ülke, takım kurmak gibi birkaç işlem) kendi sunucumuzdaki <b>Umami</b> kaydeder: çerez yok, IP adresi saklanmaz ve ziyaretler hesabına bağlanmaz. Tarayıcında "Do Not Track" açıksa hiçbir şey kaydedilmez. Giriş yaptığında oyundaki birkaç adımı (ör. takım kurma, uygulamayı açma, bildirim kararı, kapatılan pencere) hesabınla birlikte kaydederiz; böylece oyunun nerede takıldığını görürüz. Bunları 90 gün saklarız, hesapla birlikte silinirler ve “Do Not Track” açıkken hiçbir şey kaydetmeyiz.',
     dostopNaslov: 'Verilere kimler erişebilir',
     dostop:
       'Veriler <b>Hetzner</b> üzerindeki kendi sunucumuzda (Almanya, AB) saklanır; sunucuya giden trafik <b>Cloudflare</b> üzerinden geçer (sitenin korunması ve sunulması). Onay ve şifre sıfırlama e-postaları kendi posta sunucumuzdan (yine Hetzner’de), mobil uygulamadaki bildirimler ise <b>Google Firebase Cloud Messaging</b> üzerinden gönderilir (sadece cihaz anahtarı ve bildirim metni). Sağ alt köşedeki yardım sohbeti <b>HelpStack</b> üzerinde çalışır: oraya yazdıklarını ve giriş yaptıysan kime cevap verdiğimizi bilmemiz için görünen adını alır. Sohbetteki asistan sana yardım ederken hangi sayfada ve hangi ligde olduğunu ve takımının geçerli olup olmadığını da görebilir. E-posta adresini aktarmayız. Verilerini başka kimseyle paylaşmayız ve satmayız.',
@@ -210,6 +210,9 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Ücretli olan tek şey isteğe bağlı onaylı oyuncu rozetidir (aşağıdaki Ücretli hizmetler bölümüne bak).',
     podatkiPlacilo:
       '<b>Onaylı oyuncu rozeti satın alma (sadece satın alırsan).</b> Satın alma kaydını (ne, ne zaman, tutar ve Stripe müşteri kimliğin) muhasebe mevzuatı gereği 10 yıl saklarız. Posterin teslimat adresini gönderim veya iptalden sonra 90 gün ve siparişten sonra en fazla 12 ay saklarız, ardından yalnızca ülke kalır.',
+    oglasiNaslov: 'Reklamlar',
+    oglasi:
+      'Bazı sayfalarda (ana sayfa, puan durumu, Takımım, sonuçlar, oyuncular) sponsor olmayan yerlerde <b>Google AdSense</b> reklamları (Google Ireland Limited) gösterebiliriz. Web sayfalarımızda (mobil uygulamada ve gençlik liglerinde değil) Google AdSense betiği yüklenir ve reklamları göstermek, ölçmek ve dolandırıcılığı önlemek için çerezler veya benzer teknolojiler kullanabilir. AB, AEA, Birleşik Krallık ve İsviçre’de Google gizlilik mesajı önce onayını ister; onay olmadan reklamlar kişiselleştirilmemiş veya sınırlıdır. Seçimini istediğin zaman sayfadaki Google gizlilik ve çerez ayarları bağlantısından değiştirebilirsin. Gençlik liglerinde, mobil uygulamada, hesap ve ödeme sayfalarında ve SLFF Pro ya da doğrulanmış profili olan kullanıcılarda reklam yoktur.',
     dostopStripe:
       'Doğrulanmış oyuncu rozeti ödemelerini <b>Stripe</b> (Stripe Payments Europe, İrlanda) işler: adını, e-postanı, fatura adresini ve ömür boyu alımda posterin teslimat adresini alır. Kart bilgilerini doğrudan Stripe’a girersin; biz onları hiçbir zaman görmeyiz.',
     placljivoNaslov:

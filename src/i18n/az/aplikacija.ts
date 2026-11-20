@@ -44,7 +44,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
     okno: {
       naslov: 'Pss… Pivəcik susayıb 🍺',
-      besedilo: 'SLFF pulsuzdur: reklam yox, mərc yox, abunə yox. Təəssüf ki, server həvəslə işləmir. Bir pivə server və poçt xərclərinə kömək edir, adın isə pivə divarına düşür.',
+      besedilo: 'SLFF pulsuzdur: mərc yox, abunə yox. Təəssüf ki, server həvəslə işləmir. Bir pivə server və poçt xərclərinə kömək edir, adın isə pivə divarına düşür.',
       kasneje: 'Bəlkə növbəti dəfə',
       zeSem: 'Artıq qonaq etmişəm 🍻',
       jokNaslov: "Yoxxx! Doğrudan gedirsən? 😭",
@@ -63,7 +63,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Pivə reytinqi',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF Avropanın yüzlərlə həvəskar liqasında minlərlə menecer üçün pulsuzdur: reklam yoxdur, mərc yoxdur, ödənişli divar yoxdur. Sənin pivən serverin, poçtun və domenin xərcini ödəyir, sonra adın və mesajınla birlikdə elə burada, divarda görünür. Xal almır, sadəcə çox minnətdar bir bazar ertəsi alır. 🍺',
+      uvod: 'SLFF Avropanın yüzlərlə həvəskar liqasında minlərlə menecer üçün pulsuzdur: mərc yoxdur, ödənişli divar yoxdur. Sənin pivən serverin, poçtun və domenin xərcini ödəyir, sonra adın və mesajınla birlikdə elə burada, divarda görünür. Xal almır, sadəcə çox minnətdar bir bazar ertəsi alır. 🍺',
       skupaj: { one: 'İndiyədək {n} pivə', other: 'İndiyədək {n} pivə' },
       piv: { one: '{n} pivə', other: '{n} pivə' },
       lestvica: 'Ən böyük dəstəkçilər',
@@ -205,6 +205,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     neshranjeno: 'Əvvəlcə komandanı yadda saxla (və ya dəyişiklikləri ləğv et), sonra yenidən toxun.',
     niVidno: 'Bu, bu səhifədə görünmür. Bəlkə əvvəlcə daxil olmalı və ya komanda qurmalısan.',
     neznano: 'Təəssüf ki, bunu sənə göstərə bilmirəm.',
+  },
+  /** Oznaka oglasa AdSense na sponzorskem mestu (Oglas.tsx). */
+  oglas: {
+    oznaka: 'Reklam',
   },
   sponzor: {
     oznaka: 'Sponsor',

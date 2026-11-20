@@ -44,7 +44,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
     okno: {
       naslov: 'Pszt… Sörike szomjas 🍺',
-      besedilo: 'Az SLFF ingyenes: nincs reklám, nincs fogadás, nincs előfizetés. A szerver sajnos nem lelkesedésből megy. Egy sör segít fizetni a szervert és a levelezést, a neved pedig felkerül a sörfalra.',
+      besedilo: 'Az SLFF ingyenes: nincs fogadás, nincs előfizetés. A szerver sajnos nem lelkesedésből megy. Egy sör segít fizetni a szervert és a levelezést, a neved pedig felkerül a sörfalra.',
       kasneje: 'Talán legközelebb',
       zeSem: 'Már meghívtalak 🍻',
       jokNaslov: "Neeee! Tényleg elmész? 😭",
@@ -63,7 +63,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Sörtoplista',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'Az SLFF ingyenes: menedzserek ezrei játszanak vele Európa több száz amatőr bajnokságában, reklámok, fogadás és előfizetés nélkül. A söröd fizeti a szervert, a levelezést és a domaint, aztán itt landol a falon, a neveddel és az üzeneteddel. Pontot nem hoz, csak egy nagyon hálás hétfőt. 🍺',
+      uvod: 'Az SLFF ingyenes: menedzserek ezrei játszanak vele Európa több száz amatőr bajnokságában, fogadás és előfizetés nélkül. A söröd fizeti a szervert, a levelezést és a domaint, aztán itt landol a falon, a neveddel és az üzeneteddel. Pontot nem hoz, csak egy nagyon hálás hétfőt. 🍺',
       skupaj: { one: 'Eddig {n} sör', other: 'Eddig {n} sör' },
       piv: { one: '{n} sör', other: '{n} sör' },
       lestvica: 'Támogatók toplistája',
@@ -205,6 +205,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     neshranjeno: 'Előbb mentsd el a csapatod (vagy vesd el a módosításokat), aztán koppints újra.',
     niVidno: 'Ez ezen az oldalon nem látható. Lehet, hogy előbb be kell jelentkezned vagy csapatot kell összeállítanod.',
     neznano: 'Sajnos ezt nem tudom megmutatni.',
+  },
+  /** Oznaka oglasa AdSense na sponzorskem mestu (Oglas.tsx). */
+  oglas: {
+    oznaka: 'Hirdetés',
   },
   sponzor: {
     oznaka: 'Szponzor',

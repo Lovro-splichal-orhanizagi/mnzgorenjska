@@ -43,7 +43,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
     okno: {
       naslov: 'Psst… Cervecito tiene sed 🍺',
-      besedilo: 'SLFF es gratis: sin anuncios, sin apuestas, sin suscripciones. Por desgracia, el servidor no funciona con entusiasmo. Una cerveza ayuda a pagar el servidor y el correo, y tu nombre aparece en el muro de cervezas.',
+      besedilo: 'SLFF es gratis: sin apuestas, sin suscripciones. Por desgracia, el servidor no funciona con entusiasmo. Una cerveza ayuda a pagar el servidor y el correo, y tu nombre aparece en el muro de cervezas.',
       kasneje: 'Quizá la próxima vez',
       zeSem: 'Ya lo hice 🍻',
       jokNaslov: "¡Nooooo! ¿De verdad te vas? 😭",
@@ -62,7 +62,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Ranking de cañas',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF es gratis para miles de mánagers en cientos de ligas amateur de toda Europa: sin anuncios, sin apuestas, sin suscripciones. Tu caña paga el servidor, el correo y el dominio, y luego aterriza aquí mismo, en el muro, con tu nombre y tu mensaje. No da puntos, solo un lunes muy agradecido. 🍺',
+      uvod: 'SLFF es gratis para miles de mánagers en cientos de ligas amateur de toda Europa: sin apuestas, sin suscripciones. Tu caña paga el servidor, el correo y el dominio, y luego aterriza aquí mismo, en el muro, con tu nombre y tu mensaje. No da puntos, solo un lunes muy agradecido. 🍺',
       skupaj: { one: '{n} caña hasta ahora', many: '{n} cañas hasta ahora', other: '{n} cañas hasta ahora' },
       piv: { one: '{n} caña', many: '{n} cañas', other: '{n} cañas' },
       lestvica: 'Ranking de apoyos',
@@ -203,6 +203,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     neshranjeno: 'Primero guarda tu equipo (o descarta los cambios) y vuelve a tocar.',
     niVidno: 'Eso no se ve en esta página. Quizá primero tengas que iniciar sesión o crear un equipo.',
     neznano: 'Lo siento, no puedo mostrarte eso.',
+  },
+  /** Oznaka oglasa AdSense na sponzorskem mestu (Oglas.tsx). */
+  oglas: {
+    oznaka: 'Publicidad',
   },
   sponzor: {
     oznaka: 'Patrocinador',
