@@ -178,3 +178,6 @@ export function withFcfCurrentFixtures(base,c,db) {
   }
   return provider
 }
+
+// Shared pure predicates for retained-only incident diagnostics.
+export { reportFits as fcfReportFits, complete as fcfReportComplete }
