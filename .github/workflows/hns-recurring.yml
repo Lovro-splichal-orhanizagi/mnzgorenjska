@@ -29,6 +29,7 @@ jobs:
       snapshot_status: ${{ steps.capture.outputs.snapshot_status }}
       snapshot_complete: ${{ steps.capture.outputs.snapshot_complete }}
       snapshot_reason: ${{ steps.capture.outputs.snapshot_reason }}
+      observation_healthy: ${{ steps.capture.outputs.observation_healthy }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -64,6 +65,7 @@ jobs:
           rsync -r --include='*.json' --exclude='*' deploy@2.31.6.53:/srv/slff-recovery/hns-recurring-receipts/ private-recovery/receipts/
           node scripts/hns-recurring-queue.mjs private-recovery
           if [ -f private-recovery/latest.json ]; then SLFF_HNS_RETAINED=1 node scripts/hns-recurring-check.mjs private-recovery; fi
+          node scripts/hns-recurring-observation.mjs private-recovery
       - uses: actions/upload-artifact@v4
         if: steps.capture.outputs.replay_needed == 'true'
         with:
@@ -189,11 +191,15 @@ jobs:
           SNAPSHOT_STATUS: ${{ needs.inventory.outputs.snapshot_status }}
           SNAPSHOT_COMPLETE: ${{ needs.inventory.outputs.snapshot_complete }}
           SNAPSHOT_REASON: ${{ needs.inventory.outputs.snapshot_reason }}
+          OBSERVATION_HEALTHY: ${{ needs.inventory.outputs.observation_healthy }}
         run: |
           set -euo pipefail
           echo "Collector: $COLLECTOR_STATUS; inventory: $INVENTORY_RESULT; replay: $REPLAY_RESULT" >> "$GITHUB_STEP_SUMMARY"
           [ "$INVENTORY_RESULT" = success ]
           [ "$COLLECTOR_FRESH" = true ]
+          # Empty stopped snapshots and receipted partial scans remain unhealthy
+          # until a newer full collection observation proves recovery.
+          [ "$OBSERVATION_HEALTHY" = true ] || { echo 'Latest immutable collection observation is incomplete or unknown.' >&2; exit 1; }
           case "$REPLAY_RESULT" in success|skipped) ;; *) exit 1 ;; esac
           case "$COLLECTOR_STATUS" in complete|pending) ;; *) echo 'Collector incomplete; valid captured reports were still eligible for replay.' >&2; exit 1 ;; esac
           # Replay/receipts certify usable captures, not a completed source scan.
