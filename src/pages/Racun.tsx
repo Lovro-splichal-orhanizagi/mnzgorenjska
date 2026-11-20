@@ -15,6 +15,7 @@ import Trgovine from '../components/Trgovine'
 import IzbiraDrzave from '../components/IzbiraDrzave'
 import NastavitveObvestil from '../components/NastavitveObvestil'
 import { UpravljanjeNarocnine } from '../components/PreverjeniProfil'
+import { ProNaRacunu } from '../components/ProRacun'
 import KlubskiRacun from '../components/KlubskiRacun'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
@@ -197,6 +198,7 @@ function Nastavitve({ uporabnikId, email, zGeslom }: { uporabnikId: string; emai
 
       <KlubskiRacun />
       <UpravljanjeNarocnine />
+      <ProNaRacunu />
       <RazdelekPrijava email={email} zGeslom={zGeslom} />
       <RazdelekIzbris email={email} />
     </div>

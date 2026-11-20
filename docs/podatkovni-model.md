@@ -1141,6 +1141,27 @@
   pokaže ali sprejme ročni vnos (`KodaPovabila.tsx`). `/invite` kaže seznam
   povabljenih s stanjem (`moji_povabljeni`), mail akcije pa osebno kodo
   (`koda_vabila_za`).
+- **SLFF Pro** (plačljiv paket za menedžerje, migracija 20261120120000, spec
+  `docs/superpowers/specs/2026-11-20-slff-pro-design.md`): le dodatki, nikoli
+  prednost v igri. Stikalo `slff_pro` (0 izklopljeno, privzeto; 1 admin in
+  `testerji`; 2 v živo). Pravica je `pro_narocnine` (vir `sezona` = enkratno
+  za 365 dni, `mesec` = naročnina, `rocno` = admin v SQL; `aktiven`/
+  `preklican`/`potekel`, `velja_do`, id-ji Stripe, `stripe_preklic`), zaprta
+  za brskalnik in agente; piše le stripe-webhook (metadata `app=slff-pro`,
+  `pro_iz_placila`, `pro_podaljsaj`, `pro_narocnina_konec`, `pro_vracilo`).
+  `pro_aktiven(uid)` je edino vrata: pri stikalu 0 ni Pro nihče, tudi kdor je
+  plačal. Dodatki: značka ob imenu ekipe (`pro_ekipe(ids)`, `ImeEkipe` prek
+  `useProEkipa`; brez mladinskih lig in hišnih ekip), sezonsko poročilo vseh
+  svojih nehišnih ekip (`pro_porocilo`, stran `/pro`) in dve ponovni
+  vrednotenji cene na 365 dni (`pro_bonov_ostane`, `boni_ponovne_cene.vir =
+  'pro'`; mesečna naročnina odklene bon na 60 dni; bon vabil ostane enkraten
+  in se porabi prvi). Nakup in portal:
+  funkcija `pro-placilo` (`cene` iz Stripe po lookup_key `slff_pro_sezona`,
+  `slff_pro_mesec`, z DDV; `checkout` prek `pro_pripravi_nakup`; `portal`
+  prek `pro_portal_kupec` vedno, ne glede na stikalo). Izbris računa,
+  vračilo, spor ali nov nakup po potekli naročnini prekliče naročnino (vrsta
+  `preverjen_cakajoci_preklici` zajame tudi Pro). Stran Račun: `ProNaRacunu`. V aplikaciji ni nakupa ne
+  portala, kupljen Pro deluje.
 - **Dnevna triaža admin vrst** (migracija 20261114215100, SLF-260):
   `dnevna_triaza(p_suho)` (pg_cron `dnevna-triaza`, 7.07 UTC) razvrsti vse
   čakajoče prevzeme, prijave lažnih profilov, odprte klubske zahtevke in

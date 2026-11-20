@@ -62,6 +62,15 @@
 // (bon_mail_at), dogodek vrne 500 in Stripe ga ponovi (do 3 dni); nato admin
 // "Pošlji bon znova".
 //
+// SLFF Pro (metadata app=slff-pro, pro.ts): seja → pro_iz_placila (sezona:
+// rok = plačilo + 365 dni; mesec: konec obdobja + 3 dni milosti; 'dvojno',
+// 'brez_racuna', 'neveljavno' → preklic nove naročnine, Discord "vrni denar"),
+// invoice.paid in subscription.updated → pro_podaljsaj le s ceno Pro
+// ('brez_pravice' ali tuja cena → preklic), deleted → pro_narocnina_konec.
+// charge.refunded (celotno) in charge.dispute.created → pro_vracilo (sezona
+// po payment_intent, naročnina po računu plačila); preklicana pravica pošlje
+// naročnino v isto vrsto preklicev kot preverjeni (tudi izbris računa).
+//
 // Ponovna cena igralca (metadata app=slff-cena): plačana seja (le enkratno
 // plačilo, postavka slff_ponovna_cena) → ponovna_cena_iz_placila ('placano',
 // 'ze' ali 'za_vracilo:<razlog>' z Discordom). Vračila so ročna v Stripe.
@@ -82,6 +91,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import { jePlacanoAktivno } from '../_shared/trgovina-stanja.ts'
 import { veljavenPodpis } from './podpis.ts'
 import { scoutCeneNarocnine, scoutPostavkeVeljajo } from './scout.ts'
+import { proCeneNarocnine, proPostavkeVeljajo, PRO_SEZONA_S } from './pro.ts'
 import { enoteBonov, idKupona, IZDELEK_TRGOVINE, kodeSeje, napacnaTarifa, novaKoda, trgovinaIzSeje, zgostiKodo } from './trgovina.ts'
 import { sledi } from '../_shared/napake.ts'
 
@@ -282,10 +292,11 @@ async function obdelaj(tip: string, o: Obj): Promise<string> {
     case 'checkout.session.completed':
     case 'checkout.session.async_payment_succeeded': {
       const m = o.metadata ?? {}
-      if (['slff', 'slff-scout', 'slff-shop'].includes(m.app) && ['paid', 'no_payment_required'].includes(o.payment_status)) await oznaciBone(o)
+      if (['slff', 'slff-scout', 'slff-shop', 'slff-pro'].includes(m.app) && ['paid', 'no_payment_required'].includes(o.payment_status)) await oznaciBone(o)
       if (m.app === 'slff-scout') return await scoutSeja(o)
       if (m.app === 'slff-shop') return await trgovinaSeja(o)
       if (m.app === 'slff-cena') return await cenaSeja(o)
+      if (m.app === 'slff-pro') return await proSeja(o)
       if (m.app !== 'slff') return 'ignored'
       if (!['paid', 'no_payment_required'].includes(o.payment_status)) return 'unpaid'
       const vir = m.vir
@@ -350,14 +361,16 @@ async function obdelaj(tip: string, o: Obj): Promise<string> {
       const podrobno = o.parent?.subscription_details ?? o.subscription_details ?? {}
       const sub = id(o.subscription) ?? id(podrobno.subscription)
       const app = podrobno.metadata?.app
-      if ((app !== 'slff' && app !== 'slff-scout') || !sub) return 'ignored'
+      if (!['slff', 'slff-scout', 'slff-pro'].includes(app) || !sub) return 'ignored'
       const konec = Math.max(0, ...(o.lines?.data ?? []).map((l: Obj) => l.period?.end ?? 0))
       if (!konec) return 'no period'
+      if (app === 'slff-pro') return await proPodaljsaj(await beri(`subscriptions/${sub}`), konec)
       return app === 'slff-scout' ? await scoutPodaljsaj(await beri(`subscriptions/${sub}`), konec) : await podaljsaj(sub, konec)
     }
     case 'customer.subscription.updated':
     case 'customer.subscription.deleted': {
       if (o.metadata?.app === 'slff-scout') return await scoutNarocnina(tip, o)
+      if (o.metadata?.app === 'slff-pro') return await proNarocnina(tip, o)
       if (o.metadata?.app !== 'slff') return 'ignored'
       if (tip === 'customer.subscription.deleted' || ['canceled', 'incomplete_expired'].includes(o.status))
         return await rpc('preverjen_narocnina_konec', {
@@ -371,6 +384,8 @@ async function obdelaj(tip: string, o: Obj): Promise<string> {
     }
     case 'charge.refunded': {
       if (await vraciloTrgovine(o)) return 'trgovina'
+      const pro = await proVracilo(o, false)
+      if (pro) return pro
       const nase = await nasePlacilo(o)
       if (!nase) return 'ignored'
       return await rpc('preverjen_vracilo', {
@@ -384,7 +399,11 @@ async function obdelaj(tip: string, o: Obj): Promise<string> {
     case 'charge.dispute.created':
     case 'charge.dispute.closed': {
       if (tip === 'charge.dispute.closed' && o.status !== 'won') return 'lost or other'
-      const nase = await nasePlacilo(await beri(`charges/${id(o.charge)}`))
+      const placilo = await beri(`charges/${id(o.charge)}`)
+      // Dobljen spor Pro ne vrne pravice sam (redko; admin jo vpiše ročno).
+      const pro = tip === 'charge.dispute.created' ? await proVracilo(placilo, true) : null
+      if (pro) return pro
+      const nase = await nasePlacilo(placilo)
       if (!nase) return 'ignored'
       if (tip === 'charge.dispute.closed')
         return await rpc('preverjen_spor_dobljen', { p_payment_intent: nase.pi, p_subscription: nase.sub })
@@ -500,6 +519,92 @@ async function cenaSeja(o: Obj): Promise<string> {
     p_seja: o.id,
     p_placilo: id(o.payment_intent),
   })
+}
+
+// --- SLFF Pro (metadata app=slff-pro) ---------------------------------------
+
+async function proSeja(o: Obj): Promise<string> {
+  const m = o.metadata ?? {}
+  if (!['paid', 'no_payment_required'].includes(o.payment_status)) return 'unpaid'
+  const sub = id(o.subscription)
+  const p = await beri(`checkout/sessions/${o.id}/line_items?limit=10`)
+  if (!proPostavkeVeljajo(p.data ?? [], m.vir) || (m.vir === 'mesec') !== Boolean(sub)) {
+    await discord(`⚠️ SLFF Pro, seja ${o.id}: postavke se ne ujemajo, pravice ni (preveri in vrni denar v Stripe).`)
+    if (sub) await prekliciNarocnino(sub)
+    return 'neveljavne postavke'
+  }
+  let konec: number | null
+  if (sub) {
+    konec = konecObdobja(await beri(`subscriptions/${sub}`))
+    // Brez konca obdobja bi naročnina veljala za vedno: raje napaka in ponovitev.
+    if (!konec) throw new Error('naročnina brez konca obdobja')
+    konec += MILOST_S
+  } else konec = (o.created ?? Math.floor(Date.now() / 1000)) + PRO_SEZONA_S
+  const izid = await rpc('pro_iz_placila', {
+    p_user_id: m.user_id ?? null,
+    p_vir: m.vir,
+    p_velja_do: iso(konec),
+    p_customer: id(o.customer),
+    p_subscription: sub,
+    p_checkout: o.id,
+    p_payment_intent: id(o.payment_intent),
+    p_znesek: o.amount_total ?? null,
+    p_star_vsaj_18: m.star_vsaj_18 === 'true',
+    p_odpoved: m.odpoved_pravici === 'true',
+  })
+  if (izid !== 'aktiven' && izid !== 'ze' && sub) await prekliciNarocnino(sub)
+  if (izid === 'neveljavno') await discord(`⚠️ SLFF Pro, seja ${o.id}: neveljavni podatki, pravice ni (vrni denar v Stripe).`)
+  return izid
+}
+
+/** Obnova; `sub` je objekt naročnine (s postavkami). */
+async function proPodaljsaj(sub: Obj, konec: number): Promise<string> {
+  if (!proCeneNarocnine(sub)) {
+    await prekliciNarocnino(sub.id)
+    await discord(`⚠️ SLFF Pro: naročnina ${sub.id} ima tujo ceno, preklicana (preveri vračilo v Stripe).`)
+    return 'tuja cena'
+  }
+  const izid = await rpc('pro_podaljsaj', { p_subscription: sub.id, p_velja_do: iso(konec + MILOST_S) })
+  if (izid === 'brez_pravice') {
+    await prekliciNarocnino(sub.id)
+    await discord('⚠️ SLFF Pro: naročnina brez veljavne pravice je preklicana (preveri vračilo zadnjega plačila v Stripe).')
+  }
+  return izid
+}
+
+async function proNarocnina(tip: string, o: Obj): Promise<string> {
+  if (tip === 'customer.subscription.deleted' || ['canceled', 'incomplete_expired'].includes(o.status))
+    return await rpc('pro_narocnina_konec', {
+      p_subscription: o.id,
+      p_konec: iso(o.ended_at ?? o.canceled_at) ?? new Date().toISOString(),
+    })
+  // past_due in unpaid: Pro velja do roka, nato poteče sam.
+  const konec = konecObdobja(o)
+  if (!konec || !['active', 'trialing'].includes(o.status)) return 'unchanged'
+  return await proPodaljsaj(o, konec)
+}
+
+/** Vračilo ali spor plačila Pro (sezona po payment_intent, naročnina po računu); null = ni naše. */
+async function proVracilo(placilo: Obj, spor: boolean): Promise<string | null> {
+  const pi = id(placilo.payment_intent)
+  const najdi = async (stolpec: string, v: string | null) => {
+    if (!v) return false
+    const { data, error } = await baza.from('pro_narocnine').select('id').eq(stolpec, v).limit(1)
+    // Napaka baze ni "ni naše": brez nje bi vračilo tiho izostalo (Stripe ponovi dogodek).
+    if (error) throw new Error(`pro_narocnine: ${error.message}`)
+    return Boolean(data?.length)
+  }
+  let sub: string | null = null
+  if (!(await najdi('stripe_payment_intent', pi))) {
+    sub = await narocninaPlacila(placilo)
+    if (!(await najdi('stripe_subscription_id', sub))) return null
+  }
+  const celotno = spor || placilo.refunded === true || (placilo.amount_refunded ?? 0) >= (placilo.amount ?? Infinity)
+  if (!celotno) {
+    await discord(`↩️ SLFF Pro: delno vračilo ${pi ?? sub}, pravica ostane (uredi ročno).`)
+    return 'pro delno'
+  }
+  return `pro ${await rpc('pro_vracilo', { p_payment_intent: sub ? null : pi, p_subscription: sub })}`
 }
 
 // --- SLFF Trgovina (metadata app=slff-shop) ---------------------------------
