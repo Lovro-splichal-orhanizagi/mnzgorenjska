@@ -48,7 +48,7 @@ for(const t of targets){
 // Database side: the QA-reviewed read-only SELECT.
 fs.mkdirSync(out,{recursive:true,mode:0o700})
 const sqlFile=path.join(out,'audit.sql');fs.writeFileSync(sqlFile,auditSql(targets),{mode:0o600})
-const r=spawnSync('psql',['-X','-A','-t','-q','-f',sqlFile,process.env.SUPABASE_DB_URL],{encoding:'utf8',maxBuffer:64*1024*1024,timeout:120000})
+const r=spawnSync('psql',['-X','-A','-t','-q','-f',sqlFile,process.env.SUPABASE_DB_URL],{encoding:'utf8',maxBuffer:64*1024*1024,timeout:200000})
 if(r.status!==0){console.error((r.stderr||'').replace(/postgres(ql)?:\/\/\S+/g,'<db>'));throw Error(`psql exit ${r.status}`)}
 const db=JSON.parse(r.stdout.split('\n').map(s=>s.trim()).find(s=>s.startsWith('{')))
 

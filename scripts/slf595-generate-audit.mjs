@@ -56,7 +56,7 @@ export function auditSql(targets) {
   const hex = Buffer.from(JSON.stringify(targets)).toString('hex')
   return `\\set ON_ERROR_STOP on
 begin isolation level repeatable read read only;
-set local statement_timeout = '25s';
+set local statement_timeout = '180s';
 set local lock_timeout = '3s';
 with expected as materialized (
  select * from jsonb_to_recordset(convert_from(decode('${hex}','hex'),'UTF8')::jsonb)
