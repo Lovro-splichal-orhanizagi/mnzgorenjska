@@ -31,6 +31,14 @@ export function classifyCoverage(rows) {
   return { state: unresolved ? 'degraded' : 'accounted', activeLeagues: leagues.length, counts, leagues }
 }
 
+// Known, tracked exclusions (disabled or refused sources) stay visible as `degraded` in the artifact
+// but do not turn the hourly job red; only an unreadable inventory or a new unclassified exclusion does.
+export function exitCodeFor(result) {
+  if (result?.state === 'accounted') return 0
+  if (result?.state === 'degraded' && result.counts?.['unclassified-exclusion'] === 0) return 0
+  return 1
+}
+
 export async function readActiveInventory(db) {
   const rows = []
   let expected
@@ -70,5 +78,5 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     'Policy exclusions stay explicit; HNS health is checked separately by hns-zdravje.\n'
   console.log(summary)
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary)
-  if (result.state !== 'accounted') process.exitCode = 1
+  process.exitCode = exitCodeFor(result)
 }
