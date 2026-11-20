@@ -13,6 +13,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { vseVrstice } from './strani.mjs'
+import { vrsticePreverbe } from './vrstice-preverbe.mjs'
 import { preveriPodatkeVBazi } from './preverbe-baze.mjs'
 import { sezonaIz, krogiPredPrejsnjim } from './razpored.mjs'
 import { VELIKOST_EKIPE, PRORACUN } from '../src/lib/pravila.ts'
@@ -62,9 +63,12 @@ for (const t of izBaze ?? [])
 // Pozicije in klubi so lahko vsak zase v redu, ekipa pa vseeno nemogoča:
 // pravilo o največ treh igralcih iz kluba in proračun se sekata. Zato
 // poskusimo sestaviti najcenejši veljaven kader.
-const { data: lige, error: napakaLig } = await db.from('competitions').select('id, slug').eq('active', true)
-if (napakaLig || !lige) {
-  console.error(`Lig ni bilo mogoče prebrati: ${napakaLig?.message ?? 'Manjka odgovor baze.'}`)
+let lige
+try {
+  lige = await vrsticePreverbe((od, do_) => db.from('competitions').select('id, slug')
+    .eq('active', true).order('id').range(od, do_))
+} catch (error) {
+  console.error(`Lig ni bilo mogoče prebrati: ${error.message}`)
   process.exit(1)
 }
 
@@ -117,19 +121,23 @@ for (const l of lige ?? []) {
 const PRAG_DNI = 3
 const PRAG_BREZ_IZIDA = 30
 const doDne = (dni) => new Date(Date.now() - dni * 86400000).toISOString().slice(0, 10)
-const { data: zamujene, error: napakaZamud } = await db
-  .from('matches')
-  .select('id, played_on, imported_at, vir_brez_izida, import_warnings, rounds!inner(competition_id, competitions!inner(slug, active))')
-  .is('imported_at', null)
-  .eq('statistics_status', 'available')
-  // Kontumacija nima zapisnika in ga ne bo (20260927220000).
-  .eq('kontumacija', false)
-  .lt('played_on', doDne(PRAG_DNI))
-  // Tekma brez izida pri viru pride zraven sele po PRAG_BREZ_IZIDA dneh, da ne
-  // izpodrine pravih zamud iz omejenega odgovora.
-  .or(`vir_brez_izida.eq.false,played_on.lt.${doDne(PRAG_BREZ_IZIDA)}`)
-  .order('played_on')
-  .limit(200)
+let zamujene, napakaZamud
+try {
+  zamujene = await vrsticePreverbe((od, do_) => db
+    .from('matches')
+    .select('id, played_on, imported_at, vir_brez_izida, import_warnings, rounds!inner(competition_id, competitions!inner(slug, active))')
+    .is('imported_at', null)
+    .eq('statistics_status', 'available')
+    .eq('rounds.competitions.active', true)
+    // Kontumacija nima zapisnika in ga ne bo (20260927220000).
+    .eq('kontumacija', false)
+    .lt('played_on', doDne(PRAG_DNI))
+    .or(`vir_brez_izida.eq.false,played_on.lt.${doDne(PRAG_BREZ_IZIDA)}`)
+    // Enoličen vrstni red tudi za več strani tekem na isti dan.
+    .order('played_on').order('id').range(od, do_))
+} catch (error) {
+  napakaZamud = error
+}
 
 if (napakaZamud) {
   // Neuspela poizvedba ni "ni zamud" — to je ista past, ki nas je ze ujela.
@@ -185,13 +193,18 @@ if (napakaZamud) {
 }
 
 // Exact approved omissions remain visible as coverage limits, separately from overdue normal reports.
-const {data:historicalCoverage,error:historicalCoverageError}=await db
-  .from('matches')
-  .select('id, played_on, statistics_reason, rounds!inner(competitions!inner(slug, active))')
-  .eq('statistics_status','unavailable_historical')
-  .eq('rounds.competitions.active',true)
-  .order('played_on')
-  .limit(200)
+let historicalCoverage, historicalCoverageError
+try {
+  historicalCoverage = await vrsticePreverbe((od, do_) => db
+    .from('matches')
+    .select('id, played_on, statistics_reason, rounds!inner(competitions!inner(slug, active))')
+    .eq('statistics_status','unavailable_historical')
+    .eq('rounds.competitions.active',true)
+    .order('played_on').order('id').range(od, do_))
+} catch (error) {
+  historicalCoverageError = error
+}
+
 if(historicalCoverageError)tezave.push({kljuc:'zgodovinska-pokritost-neznana',opis:'Pokritosti zgodovinske statistike ni mogoče preveriti',koliko:1,primer:historicalCoverageError.message})
 else {
   const byLeague=new Map()
