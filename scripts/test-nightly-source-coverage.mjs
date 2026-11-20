@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
-import { classifyCoverage, inspectCoverage, readActiveInventory } from './nightly-source-coverage.mjs'
+import { classifyCoverage, exitCodeFor, inspectCoverage, readActiveInventory } from './nightly-source-coverage.mjs'
 import { IZKLOPLJENI_VIRI, ZAVRNJENA_SPLETISCA } from './nocni-kosi.mjs'
 
 const league = (id, source = 'wmzpn', extra = {}) => ({ id, slug: `league-${id}`, active: true,
@@ -94,6 +94,17 @@ test('duplicate, inactive, empty or incomplete routing inventory fails closed', 
   for (const rows of [[], [league(1), league(1)], [league(1, 'wmzpn', { active: false })], [missingSource], [missingPolicy]]) {
     assert.equal((await inspectCoverage(database(rows))).state, 'unknown')
   }
+})
+
+test('known refused or disabled sources stay degraded without failing; unknown or unclassified fails', () => {
+  const r = classifyCoverage([league(1, 'pzpn'), league(2)])
+  assert.equal(r.state, 'degraded'); assert.equal(exitCodeFor(r), 0)
+  assert.equal(exitCodeFor({ state: 'accounted' }), 0)
+  assert.equal(exitCodeFor({ state: 'degraded', counts: { 'source-refused': 1, 'source-disabled': 0, 'unclassified-exclusion': 0 } }), 0)
+  assert.equal(exitCodeFor({ state: 'degraded', counts: { 'source-refused': 0, 'unclassified-exclusion': 1 } }), 1)
+  assert.equal(exitCodeFor({ state: 'degraded' }), 1)
+  assert.equal(exitCodeFor({ state: 'unknown' }), 1)
+  assert.equal(exitCodeFor(undefined), 1)
 })
 
 test('missing runtime configuration exits nonzero and leaves an unknown artifact', () => {
