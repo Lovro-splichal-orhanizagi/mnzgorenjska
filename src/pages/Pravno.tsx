@@ -53,6 +53,11 @@ export default function Pravno() {
         <p className="text-slate-300">{tx('racun.pravno.dostopStripe', {}, krepko)}</p>
       </section>
 
+      <section id="oglasi" className="scroll-mt-20 space-y-3">
+        <h2 className="text-lg font-bold">{t('racun.pravno.oglasiNaslov')}</h2>
+        <p className="text-slate-300">{tx('racun.pravno.oglasi', {}, krepko)}</p>
+      </section>
+
       <section className="space-y-3">
         <h2 className="text-lg font-bold">{t('racun.pravno.statistikaNaslov')}</h2>
         <p className="text-slate-300">{t('racun.pravno.statistika')}</p>

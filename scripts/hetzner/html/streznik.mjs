@@ -531,6 +531,13 @@ export async function stran(pot, t, { rest, lige, besede }) {
   }
 }
 
+// Koda AdSense za pregled strani in oglase (docs/podatkovni-model.md, *Oglasi*).
+// Le tu, ne v dist/index.html: tega zapakira aplikacija (Capacitor, OTA), kjer
+// AdSense v WebView ni dovoljen. Mladinske lige je ne dobijo nikoli.
+export const ADSENSE = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9235394594566763" crossorigin="anonymous"></script>'
+export const zAdSense = (html, slug) =>
+  jeMladinska(slug) || html.includes('adsbygoogle.js') ? html : html.replace('</head>', () => `  ${ADSENSE}\n  </head>`)
+
 /** Vpiše stran v predlogo. Brez strani (`null`) vrne predlogo nespremenjeno. */
 export function izrisi(predloga, s, b) {
   if (!s) return predloga
@@ -645,7 +652,7 @@ export function obdelovalec({ koren, rest, rok = 800 }) {
           const ime = koda ? predlogaZa(koda) : predlogaPoT(pot, t)
           odgovor = {
             status: s?.status ?? 200,
-            html: izrisi(predloga(i, izvor, ime), s, prevajalnik(i.besede, jezik)),
+            html: zAdSense(izrisi(predloga(i, izvor, ime), s, prevajalnik(i.besede, jezik)), s?.liga?.slug ?? t),
             vir: s ? 'html' : 'predloga',
             do: Date.now() + ZIVLJENJE,
           }
@@ -655,7 +662,7 @@ export function obdelovalec({ koren, rest, rok = 800 }) {
       } catch (e) {
         // Varovalo: nespremenjena predloga, ne v predpomnilnik.
         console.error(`${pot}: ${e?.message ?? e}`)
-        odgovor = { status: 200, html: predloga(i, izvor, predlogaPoT(pot, t)), vir: 'varovalo', zasebno: true }
+        odgovor = { status: 200, html: zAdSense(predloga(i, izvor, predlogaPoT(pot, t)), t), vir: 'varovalo', zasebno: true }
       }
       zadnja = i.predloge['index.html'] ?? zadnja
     } catch (e) {
@@ -664,7 +671,7 @@ export function obdelovalec({ koren, rest, rok = 800 }) {
         res.writeHead(503, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' })
         return res.end('503')
       }
-      odgovor = { status: 200, html: zadnja, vir: 'varovalo', zasebno: true }
+      odgovor = { status: 200, html: zAdSense(zadnja, t), vir: 'varovalo', zasebno: true }
     }
     res.writeHead(odgovor.status, {
       'Content-Type': 'text/html; charset=utf-8',

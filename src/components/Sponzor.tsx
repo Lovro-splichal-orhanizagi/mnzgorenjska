@@ -5,7 +5,8 @@
 // ze na strani, a ga ni videti; vklop je stikalo v adminu, ne nova objava.
 //
 // Sponzor pride iz nase baze: brez tuje skripte, brez piskotka, brez pasice o
-// privolitvi. Stran o zasebnosti zato ostane resnicna.
+// privolitvi. Kjer sponzorja ni, mesto dobi oglas AdSense (`Oglas`, stikalo
+// `oglasi`); sponzor ima vedno prednost.
 //
 // Oznaka "Sponzor" je vedno vidna. Placano mesto, ki je videti kot vsebina,
 // je prevara — tudi kadar je sponzor domaci klub.
@@ -25,6 +26,7 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { t } from '../i18n'
+import Oglas from './Oglas'
 
 /**
  * Naslov iz baze gre v `href`; `javascript:` ali `data:` bi se ob kliku
@@ -82,11 +84,12 @@ const PASICA: Polozaj[] = ['domov', 'lestvica']
 
 export default function Sponzor({ kje }: { kje: Polozaj }) {
   const { id: ligaId } = useTekmovanje()
-  const [mesto, setMesto] = useState<Mesto | null>(null)
+  // undefined: se nalaga; null: sponzorja ni (takrat mesto dobi oglas, če je vklopljen).
+  const [mesto, setMesto] = useState<Mesto | null | undefined>(undefined)
   const povezava = useRef<HTMLAnchorElement | null>(null)
 
   useEffect(() => {
-    setMesto(null)
+    setMesto(undefined)
     if (!ligaId) return
     let veljavno = true
     ;(async () => {
@@ -125,7 +128,8 @@ export default function Sponzor({ kje }: { kje: Polozaj }) {
   }, [sponzorId, ligaId, kje])
 
   const naslov = varenNaslov(mesto?.url)
-  if (!mesto || !naslov) return null
+  if (mesto === undefined) return null
+  if (!mesto || !naslov) return <Oglas kje={kje} />
 
   const klik = () => {
     if (ligaId) zabelezi(mesto.id, ligaId, kje, true)

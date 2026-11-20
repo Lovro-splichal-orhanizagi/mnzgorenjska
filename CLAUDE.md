@@ -803,6 +803,11 @@ igralce po isti ceni in prvi teden ne bi imel igre.
   zaslonu, klik ob kliku. Klic Supabase se izvede šele ob `then`/`await` —
   `void supabase.rpc(…)` ne pošlje ničesar (tako so števci do oktobra 2026
   ostali na nič).
+- **Oglasi AdSense** stojijo na sponzorskih mestih le, kjer ni sponzorja
+  (stikalo `oglasi` 0/1/2, `oglasi_mesta`, RPC `oglasi_za`: nikoli mladinska
+  liga ali plačnik; vmesnik nikoli v aplikaciji). Kodo AdSense v glavo vpiše
+  le strežnik HTML (`zAdSense`), nikoli `dist/index.html` (aplikacija).
+  `public/ads.txt`; vklop in CMP: `docs/podatkovni-model.md` (*Oglasi*).
 - Na trg sodijo samo aktivni igralci (`player_overview.active`) — kader z
   neaktivnim igralcem `roster_je_veljaven` zavrne in ekipa tiho ostane brez točk.
 - **Klub izstopi med sezono** (Tržič 2012, mladinci, 2026/27): igralcev **ne**

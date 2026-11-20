@@ -44,7 +44,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
     okno: {
       naslov: 'Pssst… Pivko je žedan 🍺',
-      besedilo: 'SLFF je besplatan: bez oglasa, bez klađenja, bez pretplata. Nažalost, poslužitelj ne radi na entuzijazam. Jedno pivo pomaže platiti poslužitelj i e-poštu, a tvoje ime završi na zidu piva.',
+      besedilo: 'SLFF je besplatan: bez klađenja, bez pretplata. Nažalost, poslužitelj ne radi na entuzijazam. Jedno pivo pomaže platiti poslužitelj i e-poštu, a tvoje ime završi na zidu piva.',
       kasneje: 'Možda idući put',
       zeSem: 'Već sam častio 🍻',
       jokNaslov: "Neeee! Stvarno odlaziš? 😭",
@@ -63,7 +63,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Pivska ljestvica',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF je besplatan za tisuće menadžera u stotinama amaterskih liga diljem Europe: bez oglasa, bez klađenja, bez pretplata. Tvoje pivo plaća poslužitelj, poštu i domenu, a zatim završi upravo ovdje, na zidu, s tvojim imenom i porukom. Bodove ne donosi, samo jako zahvalan ponedjeljak. 🍺',
+      uvod: 'SLFF je besplatan za tisuće menadžera u stotinama amaterskih liga diljem Europe: bez klađenja, bez pretplata. Tvoje pivo plaća poslužitelj, poštu i domenu, a zatim završi upravo ovdje, na zidu, s tvojim imenom i porukom. Bodove ne donosi, samo jako zahvalan ponedjeljak. 🍺',
       skupaj: { one: 'Dosad {n} pivo', few: 'Dosad {n} piva', other: 'Dosad {n} piva' },
       piv: { one: '{n} pivo', few: '{n} piva', other: '{n} piva' },
       lestvica: 'Ljestvica podržavatelja',
@@ -205,6 +205,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     neshranjeno: 'Najprije spremi momčad (ili odbaci promjene), pa dodirni ponovno.',
     niVidno: 'To se na ovoj stranici ne vidi. Možda se prvo moraš prijaviti ili složiti momčad.',
     neznano: 'Nažalost, to ti ne mogu pokazati.',
+  },
+  /** Oznaka oglasa AdSense na sponzorskem mestu (Oglas.tsx). */
+  oglas: {
+    oznaka: 'Oglas',
   },
   sponzor: {
     oznaka: 'Sponzor',

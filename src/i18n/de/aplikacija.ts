@@ -44,7 +44,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
     okno: {
       naslov: 'Psst… Bierli hat Durst 🍺',
-      besedilo: 'SLFF ist kostenlos: keine Werbung, keine Wetten, keine Abos. Leider läuft der Server nicht mit Begeisterung. Ein Bier hilft, Server und E-Mails zu bezahlen, und dein Name landet auf der Bierwand.',
+      besedilo: 'SLFF ist kostenlos: keine Wetten, keine Abos. Leider läuft der Server nicht mit Begeisterung. Ein Bier hilft, Server und E-Mails zu bezahlen, und dein Name landet auf der Bierwand.',
       kasneje: 'Vielleicht nächstes Mal',
       zeSem: 'Hab ich schon 🍻',
       jokNaslov: "Neiiin! Du gehst wirklich? 😭",
@@ -63,7 +63,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Bier-Rangliste',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF ist kostenlos für Tausende Manager in Hunderten Amateurligen quer durch Europa: keine Werbung, keine Wetten, keine Paywall. Dein Bier bezahlt Server, Mails und Domain und landet dann genau hier an der Wand, mit deinem Namen und deiner Nachricht. Punkte bringt es keine, nur einen sehr dankbaren Montag. 🍺',
+      uvod: 'SLFF ist kostenlos für Tausende Manager in Hunderten Amateurligen quer durch Europa: keine Wetten, keine Paywall. Dein Bier bezahlt Server, Mails und Domain und landet dann genau hier an der Wand, mit deinem Namen und deiner Nachricht. Punkte bringt es keine, nur einen sehr dankbaren Montag. 🍺',
       skupaj: { one: '{n} Bier bisher', other: '{n} Biere bisher' },
       piv: { one: '{n} Bier', other: '{n} Biere' },
       lestvica: 'Top-Unterstützer',
@@ -205,6 +205,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     neshranjeno: 'Speichere zuerst dein Team (oder verwirf die Änderungen) und tippe dann noch einmal.',
     niVidno: 'Das ist auf dieser Seite nicht zu sehen. Vielleicht musst du dich zuerst anmelden oder ein Team aufstellen.',
     neznano: 'Das kann ich dir leider nicht zeigen.',
+  },
+  /** Oznaka oglasa AdSense na sponzorskem mestu (Oglas.tsx). */
+  oglas: {
+    oznaka: 'Anzeige',
   },
   sponzor: {
     oznaka: 'Sponsor',

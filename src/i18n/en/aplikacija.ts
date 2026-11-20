@@ -44,7 +44,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
     okno: {
       naslov: 'Psst… Brewski is thirsty 🍺',
-      besedilo: "SLFF is free: no ads, no betting, no subscriptions. Sadly, the server doesn't run on enthusiasm. One beer helps pay for the server and email, and your name lands on the beer wall.",
+      besedilo: "SLFF is free: no betting, no subscriptions. Sadly, the server doesn't run on enthusiasm. One beer helps pay for the server and email, and your name lands on the beer wall.",
       kasneje: 'Maybe next time',
       zeSem: 'I already did 🍻',
       jokNaslov: "Nooooo! You’re really leaving? 😭",
@@ -63,7 +63,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Beer leaderboard',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF is free for thousands of managers in hundreds of amateur leagues across Europe: no ads, no betting, no paywall. Your beer pays for the server, the mail and the domain, then lands right here on the wall with your name and your message. It buys no points, just a very grateful Monday. 🍺',
+      uvod: 'SLFF is free for thousands of managers in hundreds of amateur leagues across Europe: no betting, no paywall. Your beer pays for the server, the mail and the domain, then lands right here on the wall with your name and your message. It buys no points, just a very grateful Monday. 🍺',
       skupaj: { one: '{n} beer so far', other: '{n} beers so far' },
       piv: { one: '{n} beer', other: '{n} beers' },
       lestvica: 'Top supporters',
@@ -206,6 +206,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     neshranjeno: 'Save your team first (or discard the changes), then tap again.',
     niVidno: 'That isn\'t visible on this page. You may need to log in or build a team first.',
     neznano: 'Sorry, I can\'t show you that.',
+  },
+  /** Oznaka oglasa AdSense na sponzorskem mestu (Oglas.tsx). */
+  oglas: {
+    oznaka: 'Advertisement',
   },
   sponzor: {
     oznaka: 'Sponsor',

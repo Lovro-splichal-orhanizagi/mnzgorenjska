@@ -44,7 +44,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
     okno: {
       naslov: 'Pssst… Berică e însetat 🍺',
-      besedilo: 'SLFF e gratuit: fără reclame, fără pariuri, fără abonamente. Din păcate, serverul nu merge pe entuziasm. O bere ajută la plata serverului și a e-mailurilor, iar numele tău ajunge pe zidul berii.',
+      besedilo: 'SLFF e gratuit: fără pariuri, fără abonamente. Din păcate, serverul nu merge pe entuziasm. O bere ajută la plata serverului și a e-mailurilor, iar numele tău ajunge pe zidul berii.',
       kasneje: 'Poate data viitoare',
       zeSem: 'Am făcut-o deja 🍻',
       jokNaslov: "Nuuuu! Chiar pleci? 😭",
@@ -63,7 +63,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Clasamentul berilor',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF este gratuit pentru mii de manageri din sute de ligi amatoare din toată Europa: fără reclame, fără pariuri, fără conținut plătit. Berea ta plătește serverul, e-mailurile și domeniul, apoi ajunge chiar aici, pe zid, cu numele și mesajul tău. Nu aduce puncte, doar o zi de luni foarte recunoscătoare. 🍺',
+      uvod: 'SLFF este gratuit pentru mii de manageri din sute de ligi amatoare din toată Europa: fără pariuri, fără conținut plătit. Berea ta plătește serverul, e-mailurile și domeniul, apoi ajunge chiar aici, pe zid, cu numele și mesajul tău. Nu aduce puncte, doar o zi de luni foarte recunoscătoare. 🍺',
       skupaj: { one: 'Până acum {n} bere', few: 'Până acum {n} beri', other: 'Până acum {n} de beri' },
       piv: { one: '{n} bere', few: '{n} beri', other: '{n} de beri' },
       lestvica: 'Clasamentul susținătorilor',
@@ -204,6 +204,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     neshranjeno: 'Salvează mai întâi echipa (sau renunță la modificări), apoi atinge din nou.',
     niVidno: 'Asta nu se vede pe această pagină. Poate trebuie mai întâi să te autentifici sau să-ți faci o echipă.',
     neznano: 'Îmi pare rău, nu îți pot arăta asta.',
+  },
+  /** Oznaka oglasa AdSense na sponzorskem mestu (Oglas.tsx). */
+  oglas: {
+    oznaka: 'Publicitate',
   },
   sponzor: {
     oznaka: 'Sponsor',

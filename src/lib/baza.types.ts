@@ -10681,6 +10681,7 @@ export type Database = {
         Args: { p_player_id: number }
         Returns: string
       }
+      oglasi_za: { Args: { p_competition_id: number }; Returns: Json }
       okno_preracuna_tock: { Args: never; Returns: string }
       omejen_do: { Args: { p_uid: string }; Returns: string }
       osvezi_statistiko_igralcev: {

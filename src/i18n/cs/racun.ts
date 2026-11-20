@@ -174,7 +174,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   // Zasebnost in pogoji. <b> je krepko, ostale oznake so povezave.
   pravno: {
     naslov: 'Soukromí a podmínky',
-    zadnjaSprememba: 'Poslední změna: 30. října 2026',
+    zadnjaSprememba: 'Poslední změna: 20. listopadu 2026',
     kajJeNaslov: 'Co je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je fanouškovská fantasy liga pro amatérské fotbalové soutěže. Provozujeme ji amatérsky a není propojená s Fotbalovou asociací České republiky (FAČR), krajskými ani okresními fotbalovými svazy, ani s kluby. Hra je zdarma, bez peněžních vkladů a bez výher.',
@@ -188,7 +188,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Token zařízení pro oznámení.</b> Pokud v mobilní aplikaci povolíš oznámení, uložíme token, přes který ti pošleme připomínku před uzávěrkou kola. Při odhlášení ho smažeme.',
     neHranimo:
-      'Neuchováváme tvoje telefonní číslo ani údaje karty, adresu jen tehdy, když si koupíš ověřený profil navždy (pošleme ti plakát). Nepoužíváme sledovací cookies ani reklamní nástroje. V prohlížeči je uložená tvoje přihlašovací relace, identifikátor konverzace v chatu podpory (pokud ho otevřeš) a značky relace, díky kterým návštěvu stránky počítáme jen jednou. Kolik lidí otevřelo kterou stránku, uchováváme jen jako denní součet, bez tvého jména, účtu, zařízení nebo IP adresy. Obecnou statistiku návštěvnosti (které stránky, odkud návštěvníci přicházejí, typ zařízení a země, několik akcí, jako je sestavení týmu) zaznamenává <b>Umami</b> na našem serveru: bez cookies, IP adresu neukládá a návštěvu nespojuje s tvým účtem. Pokud má prohlížeč zapnutou možnost „Nesledovat“, nezaznamenává se nic. Když jsi přihlášený, několik kroků ve hře (např. sestavení týmu, otevření aplikace, rozhodnutí o oznámeních, zavřené okno) zaznamenáme spolu s tvým účtem, abychom viděli, kde se hra zasekává. Uchováváme je 90 dní, se smazáním účtu zmizí a při „Nesledovat“ nezaznamenáváme nic.',
+      'Neuchováváme tvoje telefonní číslo ani údaje karty, adresu jen tehdy, když si koupíš ověřený profil navždy (pošleme ti plakát). Sledovací cookies může používat jen reklamní skript Googlu (viz Reklamy níže). V prohlížeči je uložená tvoje přihlašovací relace, identifikátor konverzace v chatu podpory (pokud ho otevřeš) a značky relace, díky kterým návštěvu stránky počítáme jen jednou. Kolik lidí otevřelo kterou stránku, uchováváme jen jako denní součet, bez tvého jména, účtu, zařízení nebo IP adresy. Obecnou statistiku návštěvnosti (které stránky, odkud návštěvníci přicházejí, typ zařízení a země, několik akcí, jako je sestavení týmu) zaznamenává <b>Umami</b> na našem serveru: bez cookies, IP adresu neukládá a návštěvu nespojuje s tvým účtem. Pokud má prohlížeč zapnutou možnost „Nesledovat“, nezaznamenává se nic. Když jsi přihlášený, několik kroků ve hře (např. sestavení týmu, otevření aplikace, rozhodnutí o oznámeních, zavřené okno) zaznamenáme spolu s tvým účtem, abychom viděli, kde se hra zasekává. Uchováváme je 90 dní, se smazáním účtu zmizí a při „Nesledovat“ nezaznamenáváme nic.',
     dostopNaslov: 'Kdo má k údajům přístup',
     dostop:
       'Údaje jsou uložené na našem serveru u poskytovatele <b>Hetzner</b> (Německo, EU), provoz k němu jde přes <b>Cloudflare</b> (ochrana a doručování stránky). Potvrzovací e-maily a e-maily pro obnovení hesla se odesílají z našeho poštovního serveru (také Hetzner), oznámení v mobilní aplikaci přes <b>Google Firebase Cloud Messaging</b> (jen token zařízení a text oznámení). Chat podpory v pravém dolním rohu běží přes <b>HelpStack</b>: předává se tam to, co do něj napíšeš, a pokud jsi přihlášený, také tvoje zobrazované jméno, abychom věděli, komu odpovídáme. Když ti asistent v chatu pomáhá, může se podívat i na to, na které stránce a v které lize jsi a jestli je tvůj tým platný. Tvůj e-mail mu nepředáváme. Nikomu jinému údaje nepředáváme a neprodáváme je.',
@@ -217,6 +217,9 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Jediná placená věc je nepovinný odznak ověřeného hráče (viz Placené služby níže).',
     podatkiPlacilo:
       '<b>Nákup odznaku ověřeného hráče (jen pokud ho koupíš).</b> Záznam o nákupu (co, kdy, částka a označení zákazníka u Stripe) uchováváme 10 let, jak to vyžadují účetní předpisy. Adresu pro doručení plakátu uchováváme 90 dní po odeslání nebo zrušení a nejvýše 12 měsíců po objednávce, poté zůstane jen země.',
+    oglasiNaslov: 'Reklamy',
+    oglasi:
+      'Na některých stránkách (domů, tabulka, Můj tým, výsledky, hráči) můžeme tam, kde není sponzor, zobrazit reklamy <b>Google AdSense</b> (Google Ireland Limited). Na našich webových stránkách (ne v mobilní aplikaci a ne v mládežnických ligách) se načítá skript Google AdSense, který může k zobrazení a měření reklam a předcházení podvodům používat cookies nebo podobné technologie. V EU, EHP, Spojeném království a Švýcarsku se tě zpráva Googlu o ochraně soukromí nejprve zeptá na souhlas; bez něj jsou reklamy nepřizpůsobené nebo omezené. Volbu můžeš kdykoli změnit přes odkaz Googlu na nastavení soukromí a cookies na stránce. Reklamy nejsou v mládežnických ligách, v mobilní aplikaci, na stránkách účtu a plateb ani pro uživatele se SLFF Pro nebo ověřeným profilem.',
     dostopStripe:
       'Platby za odznak ověřeného hráče zpracovává <b>Stripe</b> (Stripe Payments Europe, Irsko): dostane tvoje jméno, e-mail, fakturační adresu a při nákupu navždy adresu pro doručení plakátu. Údaje karty zadáváš přímo u Stripe, my je nevidíme.',
     placljivoNaslov:

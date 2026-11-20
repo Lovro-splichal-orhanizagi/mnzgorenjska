@@ -43,7 +43,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     /** Okno, ki prijavljenega na spletu vsakih ~14 dni povabi na pivo (PivoOkno.tsx). */
     okno: {
       naslov: 'Pssst… Piwko jest spragniony 🍺',
-      besedilo: 'SLFF jest darmowy: bez reklam, bez zakładów, bez subskrypcji. Niestety serwer nie działa na entuzjazmie. Jedno piwo pomaga opłacić serwer i pocztę, a twoje imię trafia na piwną ścianę.',
+      besedilo: 'SLFF jest darmowy: bez zakładów, bez subskrypcji. Niestety serwer nie działa na entuzjazmie. Jedno piwo pomaga opłacić serwer i pocztę, a twoje imię trafia na piwną ścianę.',
       kasneje: 'Może następnym razem',
       zeSem: 'Już postawiłem 🍻',
       jokNaslov: "Nieee! Naprawdę wychodzisz? 😭",
@@ -62,7 +62,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Piwny ranking',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF jest darmowy dla tysięcy menedżerów w setkach amatorskich lig w całej Europie: bez reklam, bez zakładów, bez paywalla. Twoje piwo opłaca serwer, pocztę i domenę, a potem ląduje właśnie tutaj, na ścianie, z twoim imieniem i wiadomością. Punktów nie daje, tylko bardzo wdzięczny poniedziałek. 🍺',
+      uvod: 'SLFF jest darmowy dla tysięcy menedżerów w setkach amatorskich lig w całej Europie: bez zakładów, bez paywalla. Twoje piwo opłaca serwer, pocztę i domenę, a potem ląduje właśnie tutaj, na ścianie, z twoim imieniem i wiadomością. Punktów nie daje, tylko bardzo wdzięczny poniedziałek. 🍺',
       skupaj: { one: 'Do tej pory {n} piwo', few: 'Do tej pory {n} piwa', many: 'Do tej pory {n} piw', other: 'Do tej pory {n} piwa' },
       piv: { one: '{n} piwo', few: '{n} piwa', many: '{n} piw', other: '{n} piwa' },
       lestvica: 'Ranking wspierających',
@@ -203,6 +203,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     neshranjeno: 'Najpierw zapisz drużynę (albo odrzuć zmiany), potem dotknij ponownie.',
     niVidno: 'Tego nie widać na tej stronie. Może musisz się najpierw zalogować albo złożyć drużynę.',
     neznano: 'Niestety nie umiem ci tego pokazać.',
+  },
+  /** Oznaka oglasa AdSense na sponzorskem mestu (Oglas.tsx). */
+  oglas: {
+    oznaka: 'Reklama',
   },
   sponzor: {
     oznaka: 'Sponsor',
