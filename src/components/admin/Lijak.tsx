@@ -208,7 +208,8 @@ export default function Lijak() {
           )
         })}
         <p className="text-xs text-slate-500">
-          Iz e-pošte (»Sestavi mi ekipo«): {poKoraku.get('sestavi_iz_maila') ?? 0}. Vodič za novince:
+          Iz e-pošte (»Sestavi mi ekipo«): {poKoraku.get('sestavi_iz_maila') ?? 0}, dopolnil{' '}
+          {poKoraku.get('dopolni_iz_maila') ?? 0}. Vodič za novince:
           začet {poKoraku.get('vodic_zacetek') ?? 0}, preskočen {poKoraku.get('vodic_preskok') ?? 0},
           do konca {poKoraku.get('vodic_konec') ?? 0}. Brez prijave: sestavljal{' '}
           {poKoraku.get('osnutek_brez_prijave') ?? 0}, po prijavi shranil{' '}

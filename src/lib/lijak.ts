@@ -10,6 +10,7 @@ export type KorakLijaka =
   | 'predlog'
   | 'prva_shramba'
   | 'sestavi_iz_maila'
+  | 'dopolni_iz_maila'
   | 'pivo'
   | 'vodic_zacetek'
   | 'vodic_preskok'
