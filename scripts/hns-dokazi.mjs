@@ -4,8 +4,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 import {createClient} from '@supabase/supabase-js'
 import {vseVrstice} from './strani.mjs'
+import {holdEvidence} from './hns-hold-evidence.mjs'
 const dir=process.argv[2],DNI=14,HOLD={matchId:58085,reportId:'114652522'}
 const out={generatedAt:new Date().toISOString()}
+try { out.sourceHolds=holdEvidence(dir) }
+catch { throw new Error('Retained HNS hold evidence missing or invalid; no current hold verdict') }
 const status=JSON.parse(fs.readFileSync(path.join(dir,'collector-status.json')))
 out.collector={status:status.status,createdAt:status.createdAt,updatedAt:status.updatedAt,fields:Object.keys(status)}
 const json=d=>fs.readdirSync(path.join(dir,d)).filter(n=>/^[a-f0-9]{64}\.json$/.test(n))
