@@ -1117,6 +1117,11 @@
   Omejeni računi ne kupujejo (`zavrni_omejenega`). Tabela je zaprta (tudi za
   agente); stran bere le `ponovna_cena_stanje`. Administracija → Igralci →
   Ponovne cene (stikalo, predlogi, potrditev, zavrnitev). V aplikaciji ga ni.
+  Prekinjeno plačilo (potekla seja pusti zahtevek `caka_placilo`; webhook
+  `checkout.session.expired` obdela le trgovino): 1 h – 3 dni po začetku gre en
+  kratek mail s povezavo na stran igralca (`posli-opomnik`, vrsta
+  `ponovna-cena-opomnik`, `kandidati_za_opomnik_ponovne_cene`, migracija
+  20261120110000, urni `opozorila.yml`), enkrat na zahtevek, največ en na 7 dni.
 - **Akcija vabil** (14.–30. 11. 2026, migracija 20261114120000, stran
   `/invite` = `Povabi.tsx`, delovni tok *Akcija vabil*): osebna povezava
   `?od=<koda>` (obstoječi `kode_vabil`/`povabila`); povabilo šteje šele s

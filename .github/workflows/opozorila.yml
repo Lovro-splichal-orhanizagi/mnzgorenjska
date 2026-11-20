@@ -116,6 +116,18 @@ jobs:
           SUHO: ${{ github.event_name == 'workflow_dispatch' && inputs.suho || 'false' }}
         run: node scripts/posli-opomnike.mjs
 
+      # Prekinjeno placilo ponovne cene: en kratek mail na zahtevek, 1 h do 3 dni
+      # po zacetku (`kandidati_za_opomnik_ponovne_cene`), le posta, majhen kos.
+      - name: Poslji opomnik ponovne cene (placilo ni bilo dokoncano)
+        if: success() || failure()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VRSTA: ponovna-cena-opomnik
+          NAJVEC_DOBRODOSLIC: 10
+          SUHO: ${{ github.event_name == 'workflow_dispatch' && inputs.suho || 'false' }}
+        run: node scripts/posli-opomnike.mjs
+
       # "Moje lige ni": kdor si je ligo zelel, dobi en mail, ko je aktivna.
       - name: Poslji obvestilo o zivi ligi (zelje lig)
         if: success() || failure()
