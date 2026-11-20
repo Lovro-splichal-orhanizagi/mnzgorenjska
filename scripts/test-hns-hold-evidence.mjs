@@ -24,6 +24,15 @@ test('collector-shaped holds retain kind, age and old-window evidence without pr
   assert.deepEqual(r.snapshots[0].byKind,{'source-unplayed':1,'report-pending':1})
   assert.equal(r.snapshots[0].entries[0].ageDays,2);assert.equal(r.snapshots[0].olderCount,1)
   assert.ok(!JSON.stringify(r).includes('PRIVATE'))
+  assert.equal(r.snapshots[0].entries[0].reasonCategory,null);assert.equal(r.snapshots[0].entries[1].reasonCategory,'none')
+})
+test('report-pending reasons map to fixed categories without raw text',t=>{
+  for(const [reason,category] of [['forfeit','forfeit'],['unpublished-or-incomplete','unpublished-or-incomplete'],
+    ['parser-quality-hold: PRIVATE starter Ivo','parser-quality-hold'],['PRIVATE','other'],[{x:'PRIVATE'},'other']]){
+    const dir=evidence(t),s=snapshot();s.holds.entries[1].reason=reason;save(dir,s)
+    const r=holdEvidence(dir,now);assert.equal(r.snapshots[0].entries[1].reasonCategory,category)
+    assert.ok(!JSON.stringify(r).includes('PRIVATE')&&!JSON.stringify(r).includes('Ivo'))
+  }
 })
 test('selects newest observation, preserves tied evidence separately, never reads receipts',t=>{
   const dir=evidence(t),old=snapshot();old.createdAt=old.updatedAt='2026-11-19T05:14:08Z';save(dir,old)

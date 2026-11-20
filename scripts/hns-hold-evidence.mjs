@@ -15,6 +15,13 @@ const identifier = value => {
   assert.match(String(value),/^[1-9]\d*$/,'invalid hold id')
   return String(value)
 }
+// Fixed categories only: parser hold text can carry source HTML or names.
+const reasonCategory = h => {
+  if(h.kind!=='report-pending')return null
+  if(h.reason==null)return 'none'
+  if(h.reason==='forfeit'||h.reason==='unpublished-or-incomplete')return h.reason
+  return typeof h.reason==='string'&&h.reason.startsWith('parser-quality-hold:')?'parser-quality-hold':'other'
+}
 
 export function holdEvidence(dir,now=Date.now()) {
   // Validates filenames, hashes, times and schema, including older manifests.
@@ -32,7 +39,7 @@ export function holdEvidence(dir,now=Date.now()) {
       assert.ok(['source-unplayed','report-pending'].includes(h.kind),'unknown hold kind')
       const playedOn=day(h.fixture.datum),first=Date.parse(h.firstObservedAt),last=Date.parse(h.lastObservedAt)
       assert.ok(Number.isFinite(first)&&Number.isFinite(last)&&first<=last&&last<=o.time,'invalid hold observation times')
-      return {leagueId,reportId,kind:h.kind,playedOn,firstObservedAt:new Date(first).toISOString(),
+      return {leagueId,reportId,kind:h.kind,reasonCategory:reasonCategory(h),playedOn,firstObservedAt:new Date(first).toISOString(),
         lastObservedAt:new Date(last).toISOString(),ageDays:Math.floor((now-first)/86400000),
         observationAgeDays:Math.floor((now-last)/86400000),outsideWindow:playedOn<fromDate}
     }).sort((a,b)=>a.leagueId.localeCompare(b.leagueId)||a.reportId.localeCompare(b.reportId))
