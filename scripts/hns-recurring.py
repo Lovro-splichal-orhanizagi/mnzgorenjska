@@ -10,6 +10,7 @@ import subprocess
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urljoin
 
 # The incident implementation remains frozen; reuse its durable transport guardrails.
 _spec = importlib.util.spec_from_file_location('hns_incident_collector', Path(__file__).with_name('hns-collector.py'))
@@ -196,24 +197,40 @@ def collect(directory, manifest_path, ledger_path, *, max_new=950, max_leagues=1
                 return path, entry
             if new >= max_new:
                 raise BudgetExhausted('per-run attempt limit')
-            attempt = ledger.reserve(url)
-            # Ledger may wait for pacing: recheck expiry before touching the source.
-            check_time()
-            new += 1
-            save('collecting')
-            try:
-                status, headers, body = fetch_fn(url)
-            except Exception:
-                ledger.finish(attempt, 0, defer=True)
-                raise RuntimeError('transport failed; no automatic retry')
-            headers = {k.lower(): v for k, v in headers.items()}
-            if refused(status, headers, body):
-                reason = f"source refusal HTTP {status}; ray={headers.get('cf-ray', 'unknown')}"
-                ledger.finish(attempt, status, blocked=reason)
-                raise SourceBlocked(reason)
-            ledger.finish(attempt, status, defer=status >= 500)
-            if status >= 500:
-                raise RuntimeError(f'temporary source failure HTTP {status}; deferred for one hour')
+            def request(target):
+                nonlocal new
+                if new >= max_new:
+                    raise BudgetExhausted('per-run attempt limit')
+                attempt = ledger.reserve(target)
+                # Ledger may wait for pacing: recheck expiry before touching the source.
+                check_time()
+                new += 1
+                save('collecting')
+                try:
+                    status, headers, body = fetch_fn(target)
+                except Exception:
+                    ledger.finish(attempt, 0, defer=True)
+                    raise RuntimeError('transport failed; no automatic retry')
+                headers = {k.lower(): v for k, v in headers.items()}
+                if refused(status, headers, body):
+                    reason = f"source refusal HTTP {status}; ray={headers.get('cf-ray', 'unknown')}"
+                    ledger.finish(attempt, status, blocked=reason)
+                    raise SourceBlocked(reason)
+                ledger.finish(attempt, status, defer=status >= 500)
+                if status >= 500:
+                    raise RuntimeError(f'temporary source failure HTTP {status}; deferred for one hour')
+                return status, headers, body
+
+            status, headers, body = request(url)
+            if status in (301, 302, 307, 308):
+                # One hop to the source's own canonical path, as its own paced, budgeted attempt (SLF-673).
+                target = urljoin(url, headers.get('location', ''))
+                kind, ident = re.fullmatch(r'https://semafor\.hns\.family/(natjecanja|utakmice)/(\d+)/x/', url).groups()
+                # Same resource type and numeric ID, only a canonical slug may differ; nothing else is followed.
+                if not re.fullmatch(rf'https://semafor\.hns\.family/{kind}/{ident}/[a-z0-9]+(?:-[a-z0-9]+)*/', target) or target == url:
+                    ledger.block('unexpected response requires review')
+                    raise ValueError('unexpected redirect target')
+                status, headers, body = request(target)
             try:
                 validate_html(status, headers, body)
             except ValueError:
