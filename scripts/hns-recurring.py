@@ -225,7 +225,9 @@ def collect(directory, manifest_path, ledger_path, *, max_new=950, max_leagues=1
             if status in (301, 302, 307, 308):
                 # One hop to the source's own canonical path, as its own paced, budgeted attempt (SLF-673).
                 target = urljoin(url, headers.get('location', ''))
-                if not re.fullmatch(r'https://semafor\.hns\.family/[a-z0-9-]+/[^?#\s]*', target) or target == url:
+                kind, ident = re.fullmatch(r'https://semafor\.hns\.family/(natjecanja|utakmice)/(\d+)/x/', url).groups()
+                # Same resource type and numeric ID, only a canonical slug may differ; nothing else is followed.
+                if not re.fullmatch(rf'https://semafor\.hns\.family/{kind}/{ident}/[a-z0-9]+(?:-[a-z0-9]+)*/', target) or target == url:
                     ledger.block('unexpected response requires review')
                     raise ValueError('unexpected redirect target')
                 status, headers, body = request(target)

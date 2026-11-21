@@ -136,14 +136,16 @@ class Tests(unittest.TestCase):
  def test_same_host_canonical_redirect_is_followed_one_hop_as_a_separate_attempt(self):
   def redirecting(url):
    self.calls.append(url)
-   if url.endswith('/x/'):return 302,{'location':'/supersport-hnl/natjecanja/1000/'},b''
+   if url.endswith('/x/'):return 302,{'location':url.replace('/x/','/supersport-hnl/')},b''
    return 200,{'content-type':'text/html'},b'<html><title>verified fixture</title></html>'
   self.collect(fetch_fn=redirecting,max_leagues=1)
-  self.assertEqual(self.load()['status'],'paused');self.assertIn('https://semafor.hns.family/supersport-hnl/natjecanja/1000/',self.calls)
+  self.assertEqual(self.load()['status'],'paused');self.assertIn('https://semafor.hns.family/natjecanja/1000/supersport-hnl/',self.calls)
   self.assertEqual(self.load('status.json')['newAttempts'],len(self.calls));self.assertEqual(len(self.calls),6)
   ledger=m.Ledger(self.lp,950,self.clock.now,self.clock.sleep);self.assertEqual(ledger.get('blocked',''),'');ledger.close()
  def test_foreign_looping_or_refused_redirects_latch_and_never_continue(self):
-  for location,final in [('https://example.com/x/',None),('/a/?q=1',None),('/natjecanja/1000/x/',None),('/supersport-hnl/',(403,{},b'no'))]:
+  for location,final in [('https://example.com/natjecanja/1000/x/',None),('/natjecanja/1000/a/?q=1',None),('/natjecanja/1000/x/',None),('/natjecanja/1000/supersport-hnl/',(403,{},b'no')),
+    ('/natjecanja/999/wrong/',None),('/utakmice/1000/wrong/',None),('/login/',None),('/natjecanja/1000/a/#f',None),('http://semafor.hns.family/natjecanja/1000/a/',None),
+    ('https://user@semafor.hns.family/natjecanja/1000/a/',None),('https://semafor.hns.family:8443/natjecanja/1000/a/',None),('/natjecanja/1000/a/b/',None),('',None)]:
    with self.subTest(location=location):
     self.calls.clear();self.lp.unlink(missing_ok=True)
     import shutil;shutil.rmtree(self.run,ignore_errors=True)
@@ -153,6 +155,29 @@ class Tests(unittest.TestCase):
     with self.assertRaises((ValueError,m.SourceBlocked)):self.collect(fetch_fn=redirecting,max_leagues=1)
     self.assertLessEqual(len(self.calls),2)
     with self.assertRaises(m.SourceBlocked):self.collect(fetch_fn=redirecting,max_leagues=1)
+ def test_second_redirect_challenge_and_expiry_between_hops_never_continue(self):
+  for second in [(302,{'location':'/natjecanja/1000/other/'},b''),(200,{'content-type':'text/html','cf-mitigated':'challenge'},b'<html>Just a moment...</html>')]:
+   with self.subTest(second=second[0]):
+    self.calls.clear();self.lp.unlink(missing_ok=True)
+    import shutil;shutil.rmtree(self.run,ignore_errors=True)
+    def redirecting(url):
+     self.calls.append(url);return (302,{'location':'/natjecanja/1000/supersport-hnl/'},b'') if len(self.calls)==1 else second
+    with self.assertRaises((ValueError,m.SourceBlocked)):self.collect(fetch_fn=redirecting,max_leagues=1)
+    self.assertEqual(len(self.calls),2)
+    with self.assertRaises(m.SourceBlocked):self.collect(fetch_fn=redirecting,max_leagues=1)
+    self.assertEqual(len(self.calls),2)
+  self.calls.clear();self.lp.unlink(missing_ok=True)
+  import shutil;shutil.rmtree(self.run,ignore_errors=True)
+  def expiring(url):
+   self.calls.append(url);self.clock.t+=86400;return 302,{'location':'/natjecanja/1000/supersport-hnl/'},b''
+  with self.assertRaises(ValueError):self.collect(fetch_fn=expiring,max_leagues=1)
+  self.assertEqual(len(self.calls),1)
+  self.calls.clear();self.lp.unlink(missing_ok=True);self.clock.t-=86400
+  shutil.rmtree(self.run,ignore_errors=True)
+  def redirecting(url):
+   self.calls.append(url);return 302,{'location':'/natjecanja/1000/supersport-hnl/'},b''
+  self.collect(fetch_fn=redirecting,max_new=1,max_leagues=1)
+  self.assertEqual(len(self.calls),1);self.assertEqual(self.load()['status'],'paused')
  def test_unsuffixed_parent_is_preserved_and_schedule_proof_must_match_manifest(self):
   def valid(kind,path,fixture=None,code=None,parent_name=None):
    if kind=='schedule':return dict(parentName='SuperSport HNL',season='2026/27',competitionCode=code,fixtures=[dict(id='20',datum='2026-11-17',izid='2:1')])
