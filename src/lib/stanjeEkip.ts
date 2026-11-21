@@ -114,6 +114,24 @@ export function obvestilaEkip(
   return { napake, opozorila }
 }
 
+/**
+ * Pas za izbrano ligo brez moje ekipe:
+ *   * `nimas`: ekipe nimam nikjer — vabilo, naj jo sestavim;
+ *   * `drugaLiga`: ekipo imam, a v drugi ligi — pas jo pokaže in odpre tisto
+ *     ligo (da lastnik ne misli, da je ekipa izginila);
+ *   * null: v izbrani ligi ekipo imam (ali liga še ni izbrana).
+ */
+export type PasBrezEkipe =
+  | { vrsta: 'nimas' }
+  | { vrsta: 'drugaLiga'; ekipa: StanjeEkipe }
+  | null
+
+export function pasBrezEkipe(ekipe: StanjeEkipe[], tekmovanjeId: number | null): PasBrezEkipe {
+  if (tekmovanjeId == null) return null
+  if (ekipe.some((e) => e.competition_id === tekmovanjeId)) return null
+  return ekipe.length > 0 ? { vrsta: 'drugaLiga', ekipa: ekipe[0] } : { vrsta: 'nimas' }
+}
+
 /** Naslov rdečega pasu z ujemanjem v številu: ena / dve / tri-štiri / pet+. */
 export function naslovNapak(n: number): string {
   if (n === 1) return t('mojaEkipa.opozorila.naslovNapakEna')

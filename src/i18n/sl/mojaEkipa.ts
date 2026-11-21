@@ -456,6 +456,8 @@ export const mojaEkipa = {
     },
     nimasEkipe: 'Nimaš še ekipe<liga>({liga})</liga> — brez nje v naslednjem krogu ne dobiš točk.',
     sestavi: 'Sestavi ekipo →',
+    drugaLiga: 'Tvoja ekipa {ime} je v ligi {liga}',
+    odpri: 'Odpri →',
     popravi: 'Popravi →',
     poglej: 'Poglej →',
     skrij: 'Skrij opozorilo: {besedilo}',

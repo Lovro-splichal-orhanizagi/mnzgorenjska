@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { t, tx } from '../i18n'
-import { naslovNapak, obvestilaEkip, type Obvestilo, type StanjeEkipe } from '../lib/stanjeEkip'
+import { naslovNapak, obvestilaEkip, pasBrezEkipe, type Obvestilo, type StanjeEkipe } from '../lib/stanjeEkip'
 
 /**
  * Pas z obvestili nad glavno vsebino — za VSE moje ekipe, ne le izbrano ligo.
@@ -14,7 +14,8 @@ import { naslovNapak, obvestilaEkip, type Obvestilo, type StanjeEkipe } from '..
  *     v ligi, preveč iz kluba …) — ne da se skriti;
  *   * rumeno: ekipa je veljavna, a je v njej poškodovan ali odsoten igralec
  *     (najbolj boli pri kapetanu) — da se skriti, dokler ni novega poročila;
- *   * brez ekipe v izbrani ligi: vabilo, naj jo sestavi.
+ *   * brez ekipe v izbrani ligi: vabilo, naj jo sestavi — a če ekipo imam v
+ *     drugi ligi, pas pokaže njo in odpre tisto ligo.
  *
  * Ekipe se zaklenejo same ob roku, zato je pas edino mesto, kjer človek izve,
  * da z eno od njih nekaj ni prav. Stanje pride iz enega klica baze
@@ -113,8 +114,11 @@ export default function OpozoriloEkipe() {
     setSkrita(nova)
   }
 
-  const brezEkipe =
-    !naMojiEkipi && tekmovanjeId != null && !ekipe.some((e) => e.competition_id === tekmovanjeId)
+  // Brez ekipe nikjer pas ni na Moji ekipi (tam je že zaslon za sestavo); ekipa
+  // v drugi ligi pa je pas tudi tam, ker prav tam človek misli, da je ekipa izginila.
+  const brez = pasBrezEkipe(ekipe, tekmovanjeId)
+  const brezEkipe = brez?.vrsta === 'nimas' && !naMojiEkipi
+  const drugaLiga = brez?.vrsta === 'drugaLiga' ? brez.ekipa : null
 
   return (
     <>
@@ -125,6 +129,21 @@ export default function OpozoriloEkipe() {
       {opozorila.length > 0 && (
         <Pas vrsta="opozorilo" naslov={t('mojaEkipa.opozorila.naslov')}
           obvestila={opozorila} vse={vse} naVse={() => setVse(true)} naSkrij={skrij} />
+      )}
+      {drugaLiga && (
+        <div className="border-b border-amber-400/40 bg-amber-500/15">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-2 text-sm text-amber-100 sm:gap-3">
+            <span className="min-w-0 flex-1 font-semibold">
+              {t('mojaEkipa.opozorila.drugaLiga', { ime: drugaLiga.team_name, liga: drugaLiga.liga })}
+            </span>
+            <Link
+              to={`/my-team?t=${encodeURIComponent(drugaLiga.slug)}`}
+              className="inline-flex min-h-[40px] shrink-0 items-center rounded-lg bg-amber-400 px-3 py-1 text-xs font-black text-slate-950 hover:bg-amber-300"
+            >
+              {t('mojaEkipa.opozorila.odpri')}
+            </Link>
+          </div>
+        </div>
       )}
       {brezEkipe && (
         <div className="border-b border-amber-400/40 bg-amber-500/15">
