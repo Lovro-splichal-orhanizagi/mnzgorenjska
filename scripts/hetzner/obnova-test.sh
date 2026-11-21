@@ -8,7 +8,8 @@
 # Env: BOX_KEY (READ-ONLY key for the box), AGENT_KEY (agent@prod key without from=, runners have changing IPs),
 #      DISCORD_WEBHOOK; optional PROD_HOST.
 set -euo pipefail
-BOX=u685650@u685650.your-storagebox.de
+BOX=u685650-sub1@u685650.your-storagebox.de  # read-only sub-account, base dir /dumps (paths: dnevne/..., urne/...)
+FOTO_BOX=${FOTO_BOX:-}  # read-only sub-account for /shramba (paths zdaj/stub/stub/...); empty = photo check skipped
 PROD_HOST=${PROD_HOST:-2.31.6.53}
 TABELE="auth.users public.players public.player_scores public.fantasy_teams storage.objects"
 # prod side: auth/storage schemas are not readable by the agent key; auth.users = sum of agent.registracije,
@@ -43,8 +44,8 @@ cd $W
 set -euo pipefail
 BS="ssh -p 23 -i $D/box -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$D/kh2"
 BN="$BS -n"  # -n: ssh must not eat the loop stdin (rsync needs plain BS)
-DUMP=$($BN $BOX "ls dumps/dnevne" | grep -E '^slff-[0-9]{8}T[0-9]{4}Z' | sort | tail -1)
-rsync -a -e "$BS" "$BOX:dumps/dnevne/$DUMP" $W/
+DUMP=$($BN $BOX "ls dnevne" | grep -E '^slff-[0-9]{8}T[0-9]{4}Z' | sort | tail -1)
+rsync -a -e "$BS" "$BOX:dnevne/$DUMP" $W/
 echo "DUMP $DUMP $(sha256sum $W/$DUMP | cut -c1-16)"
 docker run -d --name o -e POSTGRES_PASSWORD=obnova supabase/postgres:17.6.1.166 >/dev/null
 for i in $(seq 60); do docker exec o pg_isready -U postgres >/dev/null 2>&1 && break; sleep 2; done
@@ -52,12 +53,14 @@ docker exec o createdb -U supabase_admin obnova_test 2>/dev/null || docker exec 
 docker cp $W/$DUMP o:/tmp/d.dump
 docker exec o pg_restore -U supabase_admin -d obnova_test --no-owner /tmp/d.dump >$W/restore.log 2>&1 || true  # role/extension noise
 for t in $TABELE; do echo "COUNT $t $(docker exec o psql -U supabase_admin -d obnova_test -Atc "select count(*) from $t")"; done
+if [ -z "$FOTO_BOX" ]; then echo "photo check skipped: no shramba login"; else
 docker exec o psql -U supabase_admin -d obnova_test -Atc "select name || '|' || coalesce(metadata->>'size','') from storage.objects where bucket_id='fotografije-igralcev' and metadata->>'size' is not null order by created_at desc limit 5" |
 while IFS='|' read -r p sz; do
-  f=$($BN $BOX "ls shramba/zdaj/stub/stub/fotografije-igralcev/$p/" | head -1)
-  rsync -a -e "$BS" "$BOX:shramba/zdaj/stub/stub/fotografije-igralcev/$p/$f" $W/x || { echo "FOTOERR $p"; continue; }
+  f=$($BS -n $FOTO_BOX "ls zdaj/stub/stub/fotografije-igralcev/$p/" | head -1)
+  rsync -a -e "$BS" "$FOTO_BOX:zdaj/stub/stub/fotografije-igralcev/$p/$f" $W/x || { echo "FOTOERR $p"; continue; }
   echo "FOTO $p dump=$sz box=$(stat -c %s $W/x) $(sha256sum $W/x | cut -c1-16)"
 done
+fi
 } | tee "$D/out"
 
 RAZ=0; IZPIS=""
@@ -75,10 +78,10 @@ for t in $TABELE; do
   [ "$t" = storage.objects ] || [ $(( a * 100 )) -ge $(( b * 95 )) ] || RAZ=1
 done
 FOTO=$(grep -c '^FOTO ' "$D/out" || true)
-[ "$FOTO" -eq 5 ] || RAZ=1
+if [ -n "$FOTO_BOX" ]; then [ "$FOTO" -eq 5 ] || RAZ=1; fi
 # every photo: size in the dump must equal the file on the box
 while read -r _ _ d bx _; do [ "${d#dump=}" = "${bx#box=}" ] || RAZ=1; done < <(grep '^FOTO ' "$D/out")
 grep -q '^FOTOERR' "$D/out" && RAZ=1
 echo "$IZPIS"; grep '^FOTO\|^DUMP' "$D/out"
-if [ "$RAZ" = 0 ]; then javi "🟢 SLFF test obnove ok: $DUMP, tabele se ujemajo, $FOTO fotografij prebranih iz škatle"
+if [ "$RAZ" = 0 ]; then javi "🟢 SLFF test obnove ok: $DUMP, tabele se ujemajo, $FOTO fotografij prebranih iz škatle (preskok, če ni prijave: $([ -z "$FOTO_BOX" ] && echo da || echo ne))"
 else javi "🔴 SLFF test obnove: razlike ali prazno, glej Actions log obnova-test"; exit 1; fi
