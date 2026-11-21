@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
   const izdelki = [...new Set(((cene.j.data ?? []) as { product: string | { id: string } }[])
     .map((c) => (typeof c.product === 'string' ? c.product : c.product.id)))]
   if (!cene.ok || izdelki.length === 0) {
-    console.error('trgovina-boni: cene', cene.j.error?.message ?? 'brez cen')
+    console.error('trgovina-boni: cene', cene.j.error?.code ?? 'brez cen')
     return json({ error: 'Izdelkov v Stripe ni bilo mogoče najti.' }, 500)
   }
 
@@ -91,21 +91,23 @@ Deno.serve(async (req) => {
   izdelki.forEach((p, i) => (kupon[`applies_to[products][${i}]`] = p))
   const k = await stripe('coupons', kupon)
   if (!k.ok) {
-    console.error('trgovina-boni: kupon', k.j.error?.message)
+    console.error('trgovina-boni: kupon', k.j.error?.code ?? 'napaka')
     return json({ error: k.j.error?.message ?? 'Kupona ni bilo mogoče ustvariti.' }, 500)
   }
 
   // Trk naključne kode je malo verjeten; ob napaki poskusimo še enkrat z drugo.
   let napaka = ''
+  let koda = ''
   for (let poskus = 0; poskus < 2; poskus++) {
     // Koda poteče minuto pred kuponom (Stripe zavrne kodo, ki živi dlje od kupona; kot stripe-webhook).
     const pc = await stripe('promotion_codes', { coupon: String(k.j.id), code: novaKoda(), max_redemptions: v.uporab, expires_at: v.do - 60, ...meta })
     if (pc.ok) return json({ koda: pc.j.code, promocija: pc.j.id, velja_do: new Date((v.do - 60) * 1000).toISOString() })
     napaka = pc.j.error?.message ?? ''
+    koda = pc.j.error?.code ?? ''
   }
-  console.error('trgovina-boni: koda', napaka)
+  console.error('trgovina-boni: koda', koda || 'napaka')
   // Kupon brez kode ne služi ničemur: pospravimo ga.
   const brisi = await stripe(`coupons/${k.j.id}`, undefined, 'DELETE').catch(() => null)
-  if (!brisi?.ok) console.error('trgovina-boni: brisanje kupona', brisi?.j.error?.message ?? 'napaka')
+  if (!brisi?.ok) console.error('trgovina-boni: brisanje kupona', brisi?.j.error?.code ?? 'napaka')
   return json({ error: napaka || 'Kode ni bilo mogoče ustvariti.' }, 500)
 })

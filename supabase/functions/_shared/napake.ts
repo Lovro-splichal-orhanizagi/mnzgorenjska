@@ -47,9 +47,12 @@ export function posli(dsn: string, dogodek: Record<string, unknown>) {
 
 /** Vklopi sledenje napakam za to funkcijo (enkrat na izolat). */
 export function sledi(funkcija: string) {
-  const dsn = Deno.env.get('NAPAKE_DSN')
-  if (!dsn || zagnano) return
+  if (zagnano) return
   zagnano = true
+  const dsn = Deno.env.get('NAPAKE_DSN')
+  // Enkrat na izolat v dnevnik: tako `slff-ops logs supabase-edge-functions` pokaže,
+  // da NAPAKE_DSN ni prišel v vsebnik (SLF-519), namesto tihega izklopa.
+  if (!dsn) return console.warn(`napake: NAPAKE_DSN ni nastavljen, ${funkcija} ne javlja v Bugsink`)
   const izvirni = console.error.bind(console)
   console.error = (...args: unknown[]) => {
     izvirni(...args)
