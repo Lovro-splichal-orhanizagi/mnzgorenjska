@@ -20,7 +20,7 @@ D=$(mktemp -d);  javi() {
     -d "{\"content\":\"$1\",\"allowed_mentions\":{\"parse\":[]}}" "$DISCORD_WEBHOOK" || true
 }
 pocisti() {
-  docker rm -f o >/dev/null 2>&1 || true
+  docker rm -f obnovadb >/dev/null 2>&1 || true
   rm -rf "$D"
 }
 trap 'javi "🔴 SLFF test obnove baze ni uspel: vrstica $LINENO"; pocisti' ERR
@@ -47,14 +47,14 @@ BN="$BS -n"  # -n: ssh must not eat the loop stdin (rsync needs plain BS)
 DUMP=$($BN $BOX "ls dnevne" | grep -E '^slff-[0-9]{8}T[0-9]{4}Z' | sort | tail -1)
 rsync -a -e "$BS" "$BOX:dnevne/$DUMP" $W/
 echo "DUMP $DUMP $(sha256sum $W/$DUMP | cut -c1-16)"
-docker run -d --name o -e POSTGRES_PASSWORD=obnova supabase/postgres:17.6.1.166 >/dev/null
-for i in $(seq 60); do docker exec o pg_isready -U postgres >/dev/null 2>&1 && break; sleep 2; done
-docker exec o createdb -U supabase_admin obnova_test 2>/dev/null || docker exec o createdb -U postgres obnova_test
-docker cp $W/$DUMP o:/tmp/d.dump
-docker exec o pg_restore -U supabase_admin -d obnova_test --no-owner /tmp/d.dump >$W/restore.log 2>&1 || true  # role/extension noise
-for t in $TABELE; do echo "COUNT $t $(docker exec o psql -U supabase_admin -d obnova_test -Atc "select count(*) from $t")"; done
+docker run -d --name obnovadb -e POSTGRES_PASSWORD=obnova supabase/postgres:17.6.1.166 >/dev/null
+for i in $(seq 60); do docker exec obnovadb pg_isready -U postgres >/dev/null 2>&1 && break; sleep 2; done
+docker exec obnovadb createdb -U supabase_admin obnova_test 2>/dev/null || docker exec obnovadb createdb -U postgres obnova_test
+docker cp $W/$DUMP obnovadb:/tmp/d.dump
+docker exec obnovadb pg_restore -U supabase_admin -d obnova_test --no-owner /tmp/d.dump >$W/restore.log 2>&1 || true  # role/extension noise
+for t in $TABELE; do echo "COUNT $t $(docker exec obnovadb psql -U supabase_admin -d obnova_test -Atc "select count(*) from $t")"; done
 if [ -z "$FOTO_BOX" ]; then echo "photo check skipped: no shramba login"; else
-docker exec o psql -U supabase_admin -d obnova_test -Atc "select name || '|' || coalesce(metadata->>'size','') from storage.objects where bucket_id='fotografije-igralcev' and metadata->>'size' is not null order by created_at desc limit 5" |
+docker exec obnovadb psql -U supabase_admin -d obnova_test -Atc "select name || '|' || coalesce(metadata->>'size','') from storage.objects where bucket_id='fotografije-igralcev' and metadata->>'size' is not null order by created_at desc limit 5" |
 while IFS='|' read -r p sz; do
   f=$($BS -n $FOTO_BOX "ls zdaj/stub/stub/fotografije-igralcev/$p/" | head -1)
   rsync -a -e "$BS" "$FOTO_BOX:zdaj/stub/stub/fotografije-igralcev/$p/$f" $W/x || { echo "FOTOERR $p"; continue; }
