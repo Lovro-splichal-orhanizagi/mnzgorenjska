@@ -133,6 +133,26 @@ class Tests(unittest.TestCase):
   self.assertEqual(len(self.calls),1)
   self.clock.t+=3600;self.collect(max_leagues=1)
   self.assertEqual(len(self.calls),4);self.assertEqual(self.load()['status'],'paused')
+ def test_same_host_canonical_redirect_is_followed_one_hop_as_a_separate_attempt(self):
+  def redirecting(url):
+   self.calls.append(url)
+   if url.endswith('/x/'):return 302,{'location':'/supersport-hnl/natjecanja/1000/'},b''
+   return 200,{'content-type':'text/html'},b'<html><title>verified fixture</title></html>'
+  self.collect(fetch_fn=redirecting,max_leagues=1)
+  self.assertEqual(self.load()['status'],'paused');self.assertIn('https://semafor.hns.family/supersport-hnl/natjecanja/1000/',self.calls)
+  self.assertEqual(self.load('status.json')['newAttempts'],len(self.calls));self.assertEqual(len(self.calls),6)
+  ledger=m.Ledger(self.lp,950,self.clock.now,self.clock.sleep);self.assertEqual(ledger.get('blocked',''),'');ledger.close()
+ def test_foreign_looping_or_refused_redirects_latch_and_never_continue(self):
+  for location,final in [('https://example.com/x/',None),('/a/?q=1',None),('/natjecanja/1000/x/',None),('/supersport-hnl/',(403,{},b'no'))]:
+   with self.subTest(location=location):
+    self.calls.clear();self.lp.unlink(missing_ok=True)
+    import shutil;shutil.rmtree(self.run,ignore_errors=True)
+    def redirecting(url):
+     self.calls.append(url)
+     return (302,{'location':location},b'') if len(self.calls)==1 else final
+    with self.assertRaises((ValueError,m.SourceBlocked)):self.collect(fetch_fn=redirecting,max_leagues=1)
+    self.assertLessEqual(len(self.calls),2)
+    with self.assertRaises(m.SourceBlocked):self.collect(fetch_fn=redirecting,max_leagues=1)
  def test_unsuffixed_parent_is_preserved_and_schedule_proof_must_match_manifest(self):
   def valid(kind,path,fixture=None,code=None,parent_name=None):
    if kind=='schedule':return dict(parentName='SuperSport HNL',season='2026/27',competitionCode=code,fixtures=[dict(id='20',datum='2026-11-17',izid='2:1')])
