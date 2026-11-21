@@ -9,7 +9,7 @@
 #      DISCORD_WEBHOOK; optional PROD_HOST.
 set -euo pipefail
 BOX=u685650-sub1@u685650.your-storagebox.de  # read-only sub-account, base dir /dumps (paths: dnevne/..., urne/...)
-FOTO_BOX=${FOTO_BOX:-}  # read-only sub-account for /shramba (paths zdaj/stub/stub/...); empty = photo check skipped
+FOTO_BOX=${FOTO_BOX:-u685650-sub2@u685650.your-storagebox.de}  # read-only sub-account for /shramba (paths zdaj/stub/stub/...); empty = photo check skipped
 PROD_HOST=${PROD_HOST:-2.31.6.53}
 TABELE="auth.users public.players public.player_scores public.fantasy_teams storage.objects"
 # prod side: auth/storage schemas are not readable by the agent key; auth.users = sum of agent.registracije,
