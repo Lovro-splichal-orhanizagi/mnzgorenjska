@@ -230,6 +230,44 @@ class PacingTests(CollectorHelpers,unittest.TestCase):
     self.assertEqual(self.load('status.json')['status'],'stopped')
     self.clock=Clock()
 
+ def test_outage_then_fresh_scan_recovers_without_operator(self):
+  for mode in ['503','timeout','redirect']:
+   with self.subTest(mode=mode):
+    self.clock=Clock();self.calls=[];self.lp=self.root/f'recovery-{mode}.sqlite'
+    self.mp.write_text(json.dumps(manifest()))
+    def unavailable(url):
+     self.calls.append(url)
+     if mode=='timeout':raise TimeoutError('mock timeout')
+     if mode=='redirect' and url.endswith('/x/'):
+      return 302,{'location':url.replace('/x/','/canonical/')},b''
+     return 503,{},b'outage'
+    for n in range(3):
+     self.run=self.root/f'outage-{mode}-{n}'
+     with self.assertRaises(RuntimeError):self.collect(fetch_fn=unavailable)
+     ledger=m.Ledger(self.lp,950,self.clock.now,self.clock.sleep)
+     ready=ledger.retry_state('https://semafor.hns.family/natjecanja/1000/x/')['ready']
+     ledger.close()
+     if n<2:self.clock.t=ready
+    before=len(self.calls)
+    # A new directory alone cannot bypass exhaustion, even when healthy.
+    self.run=self.root/f'same-manifest-{mode}'
+    with self.assertRaisesRegex(m.SourceBlocked,'retry limit'):self.collect()
+    self.assertEqual(len(self.calls),before)
+    value=manifest();value['createdAt']=m.stamp(self.clock.t)
+    self.mp.write_text(json.dumps(value));self.run=self.root/f'fresh-manifest-{mode}'
+    # A new manifest cannot bypass the previous sequence's final backoff.
+    with self.assertRaisesRegex(m.SourceBlocked,'backoff'):self.collect()
+    self.assertEqual(len(self.calls),before)
+    self.clock.t=ready
+    self.collect(max_leagues=1)
+    self.assertEqual(len(self.calls),before+3)
+    snap=self.load();self.assertTrue(snap['leagues'][0]['finished'])
+    self.assertEqual(len(snap['leagues'][0]['reports']),1)
+    self.assertEqual(snap['attempts24h'],before+3)
+    ledger=m.Ledger(self.lp,950,self.clock.now,self.clock.sleep)
+    self.assertEqual(ledger.retry_state('https://semafor.hns.family/natjecanja/1000/x/'),{})
+    self.assertEqual(ledger.get('blocked',''),'');ledger.close()
+
  def test_timeout_reservations_count_and_do_not_retry_within_call(self):
   def timeout(url):self.calls.append(url);raise TimeoutError('mock timeout')
   with self.assertRaisesRegex(RuntimeError,'transport failed'):self.collect(fetch_fn=timeout)
@@ -306,6 +344,35 @@ class LedgerPacingTests(unittest.TestCase):
   attempt=ledger.reserve('canonical',resource='one',redirect=True);ledger.finish(attempt,200)
   self.assertEqual(ledger.retry_state('one')['tries'],2)
   ledger.succeeded('one');self.assertEqual(ledger.retry_state('one'),{});self.assertEqual(ledger.count(),3);ledger.close()
+ def test_fresh_manifest_renewal_keeps_budgets_pacing_latch_and_restart_bound(self):
+  for guard in ['none','budget','refusal']:
+   with self.subTest(guard=guard):
+    path=self.path.with_name(guard+'.sqlite')
+    ledger=m.Ledger(path,950,self.clock.now,self.clock.sleep,lambda: 1,manifest_id='old')
+    # Exhausted state from an old scan; its persisted deadline has elapsed.
+    ledger.put('recurring:one',json.dumps(dict(tries=3,ready=self.clock.t,manifest='old')))
+    ledger.put('next',self.clock.t+15)
+    ledger.db.executemany('INSERT INTO attempts(started,url,status) VALUES(?,?,?)',
+                         [(self.clock.t-1,'one',503)]*(950 if guard=='budget' else 3))
+    if guard=='refusal':ledger.put('blocked','source refusal HTTP 429')
+    ledger.db.commit();ledger.close()
+    ledger=m.Ledger(path,950,self.clock.now,self.clock.sleep,lambda: 1,manifest_id='fresh')
+    if guard!='none':
+     with self.assertRaises(m.BudgetExhausted if guard=='budget' else m.SourceBlocked):ledger.reserve('one')
+     self.assertEqual(ledger.retry_state('one')['tries'],3)
+     self.assertEqual(ledger.count(),950 if guard=='budget' else 3);ledger.close();continue
+    deadline=float(ledger.get('next'));ledger.reserve('one')
+    self.assertEqual(self.clock.t,deadline);self.assertEqual(ledger.count(),4)
+    # Crash after renewed reservation: restart still consumes the saved try.
+    state=ledger.retry_state('one');self.assertEqual(state['tries'],1)
+    self.assertEqual(state['manifest'],'fresh');ledger.close()
+    ledger=m.Ledger(path,950,self.clock.now,self.clock.sleep,lambda: 1,manifest_id='fresh')
+    with self.assertRaisesRegex(m.SourceBlocked,'backoff'):ledger.reserve('one')
+    for n in range(2):
+     self.clock.t=ledger.retry_state('one')['ready'];ledger.reserve('one')
+    self.clock.t=ledger.retry_state('one')['ready']
+    with self.assertRaisesRegex(m.SourceBlocked,'retry limit'):ledger.reserve('one')
+    self.assertEqual(ledger.count(),6);ledger.close()
  def test_legacy_deadline_budget_and_latch_survive_upgrade(self):
   ledger=m._incident.Ledger(self.path,950,self.clock.now,self.clock.sleep)
   attempt=ledger.reserve('old');ledger.finish(attempt,200);deadline=float(ledger.get('next'));ledger.close()

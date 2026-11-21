@@ -23,14 +23,15 @@ refused, validate_html, atomic = _incident.refused, _incident.validate_html, _in
 
 class Ledger(_incident.Ledger):
     """Recurring policy on the original ledger/lock; historical replay stays frozen."""
-    MAX_TRIES = 3  # Initial logical fetch plus at most two retries, across restarts.
+    MAX_TRIES = 3  # Initial logical fetch plus at most two retries per sequence.
     BACKOFF_BASE = 3600
     BACKOFF_CAP = 4 * 3600
 
     def __init__(self, path, limit=950, now_fn=time.time, sleep_fn=time.sleep,
-                 random_fn=random.random):
+                 random_fn=random.random, *, manifest_id=None):
         assert 1 <= limit <= 950
         self.random = random_fn
+        self.manifest_id = manifest_id
         super().__init__(path, limit, now_fn, sleep_fn)
 
     def jitter(self):
@@ -49,10 +50,15 @@ class Ledger(_incident.Ledger):
             self.block('clock moved backwards')
             raise SourceBlocked('clock moved backwards')
         state = self.retry_state(resource)
-        if not redirect and state.get('tries', 0) >= self.MAX_TRIES:
-            raise SourceBlocked('transient retry limit reached; resource requires review: ' + resource)
+        exhausted = not redirect and state.get('tries', 0) >= self.MAX_TRIES
+        if exhausted and (self.manifest_id is None or state.get('manifest') == self.manifest_id):
+            raise SourceBlocked('transient retry limit reached; waiting for a fresh scan: ' + resource)
         if self.now() < float(self.get('defer')) or (not redirect and self.now() < state.get('ready', 0)):
             raise SourceBlocked('transient failure: persisted backoff is still active')
+        # A fresh scheduled manifest may recover after exhaustion, but never
+        # bypass the old backoff, pacing, request budgets or refusal latch.
+        if exhausted:
+            state = {}
         if self.count() >= self.limit:
             raise BudgetExhausted('rolling 24-hour attempt limit')
         # A short/interrupted sleep cannot bypass the saved deadline.
@@ -67,7 +73,8 @@ class Ledger(_incident.Ledger):
             tries = state.get('tries', 0) + 1
             backoff = min(self.BACKOFF_CAP, self.BACKOFF_BASE * 2 ** (tries - 1)) + self.jitter()
             # Reserve the retry and its crash deadline BEFORE any network access.
-            state = dict(tries=tries, backoff=backoff, ready=now + 30 + interval + backoff)
+            state = dict(tries=tries, backoff=backoff, ready=now + 30 + interval + backoff,
+                         manifest=self.manifest_id)
             self.put('recurring:' + resource, json.dumps(state))
         cur = self.db.execute('INSERT INTO attempts(started,url) VALUES(?,?)', (now, url))
         self.put('last', now)
@@ -97,7 +104,7 @@ class Ledger(_incident.Ledger):
         self.db.commit()
 
     def succeeded(self, resource):
-        # Only validated final HTML resets the logical retry sequence, never a 302.
+        # Validated final HTML clears the sequence immediately; a 302 never does.
         self.put('recurring:' + resource, '{}')
         self.db.commit()
 
@@ -241,7 +248,7 @@ def collect(directory, manifest_path, ledger_path, *, max_new=950, max_leagues=1
             require(not latest.exists() and not cache_path.exists(), 'unbound prior run: use a new run directory')
         # Shared ledger lock also serializes artifact and durable hold updates.
         require(ledger_path.parent.exists(), 'shared ledger parent must already exist')
-        ledger = Ledger(ledger_path, 950, now_fn, sleep_fn, random_fn)
+        ledger = Ledger(ledger_path, 950, now_fn, sleep_fn, random_fn, manifest_id=binding)
         atomic(binding_path, envelope)
         snapshot = json.loads(latest.read_text()) if latest.exists() else dict(**envelope, createdAt=manifest['createdAt'], collectionStartedAt=stamp(now_fn()), leagues=[])
         require(all(snapshot.get(k) == v for k, v in envelope.items()), 'snapshot manifest binding changed')
