@@ -1,0 +1,34 @@
+name: 'Obnova: mesečni test (SLF-531)'
+
+# Restore drill on the GitHub-hosted runner (never on the prod VM): scripts/hetzner/obnova-test.sh
+# restores the newest box dump into a throw-away postgres, compares counts with prod (read-only).
+# Secrets live ONLY in the protected environment `restore-drill` (OBNOVA_BOX_KEY read-only,
+# AGENT_SSH_KEY without from=, DISCORD_WEBHOOK). Triggers: schedule + manual only (no pull_request*,
+# no fork triggers), so fork PRs can never see the keys. Keys are never echoed.
+on:
+  schedule:
+    - cron: '30 4 2 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: obnova-test
+  cancel-in-progress: false
+
+jobs:
+  obnova:
+    runs-on: ubuntu-latest
+    environment: restore-drill
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test obnove
+        env:
+          BOX_KEY: ${{ secrets.OBNOVA_BOX_KEY }}
+          AGENT_KEY: ${{ secrets.AGENT_SSH_KEY }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          df -h / /mnt | sed 's/^/disk: /'
+          bash scripts/hetzner/obnova-test.sh
