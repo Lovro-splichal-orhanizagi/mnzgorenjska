@@ -15,7 +15,7 @@ class Clock:
 def manifest():
  return dict(schema=2,source='hns',mode='recurring',season='2026/27',fromDate='2026-11-05',toDate='2026-11-18',createdAt='2026-11-18T12:00:00Z',expiresAt='2026-11-19T12:00:00Z',leagues=[dict(id=i+1,slug=f'hr-test-{i+1}',code=str(1000+i),completed=[]) for i in range(139)])
 
-class Tests(unittest.TestCase):
+class CollectorHelpers:
  def setUp(self):
   self.assertIsNotNone(m,'recurring collector must exist')
   self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
@@ -23,7 +23,7 @@ class Tests(unittest.TestCase):
   self.mp.write_text(json.dumps(manifest()))
  def collect(self,**kw):
   with contextlib.redirect_stdout(io.StringIO()):
-   return m.collect(self.run,self.mp,self.lp,now_fn=self.clock.now,sleep_fn=self.clock.sleep,fetch_fn=kw.pop('fetch_fn',self.fetch),parse_fn=kw.pop('parse_fn',self.parse),**kw)
+   return m.collect(self.run,self.mp,self.lp,now_fn=self.clock.now,sleep_fn=self.clock.sleep,fetch_fn=kw.pop('fetch_fn',self.fetch),parse_fn=kw.pop('parse_fn',self.parse),random_fn=kw.pop('random_fn',lambda: 1),**kw)
  def fetch(self,url):
   self.calls.append(url);return 200,{'content-type':'text/html'},b'<html><title>verified fixture</title></html>'
  def parse(self,kind,path,fixture=None,code=None,parent_name=None):
@@ -31,6 +31,8 @@ class Tests(unittest.TestCase):
   self.assertEqual(parent_name,'Test 26/27')
   return dict(complete=fixture['id']!='23',reason='unpublished' if fixture['id']=='23' else None)
  def load(self,name='latest.json'):return json.loads((self.run/name).read_text())
+
+class Tests(CollectorHelpers,unittest.TestCase):
  def test_expired_future_overlong_and_invalid_windows_fail_before_requests(self):
   for change in [dict(expiresAt='2026-11-18T12:00:00Z'),dict(createdAt='2026-11-18T12:01:00Z'),dict(expiresAt='2026-11-20T12:00:00Z'),dict(fromDate='2026-11-04'),dict(toDate='2026-11-19'),dict(createdAt='2026-11-18T12:00:00'),dict(season='2025/26')]:
    self.mp.write_text(json.dumps(dict(manifest(),**change)))
@@ -67,7 +69,7 @@ class Tests(unittest.TestCase):
   self.collect(max_new=1,max_leagues=1)
   self.assertEqual(self.load()['status'],'paused');self.assertEqual(len(self.calls),1)
   self.collect(max_new=2,max_leagues=1)
-  self.assertEqual(len(self.calls),3);self.assertEqual(self.clock.t,datetime(2026,11,18,12,0,20,tzinfo=timezone.utc).timestamp())
+  self.assertEqual(len(self.calls),3);self.assertEqual(self.clock.t,datetime(2026,11,18,12,0,30,tzinfo=timezone.utc).timestamp())
   self.assertEqual(self.load()['attempts24h'],3)
  def test_hard_ceiling_cannot_be_raised_and_expiry_is_checked_during_run(self):
   with self.assertRaises(ValueError):self.collect(max_new=951)
@@ -124,14 +126,14 @@ class Tests(unittest.TestCase):
   self.collect(max_leagues=1)
   self.assertEqual(self.load()['createdAt'],'2026-11-18T12:00:00Z')
   self.assertEqual(self.load()['throughDate'],'2026-11-18')
- def test_server_failure_defers_without_refusal_latch_and_can_resume_after_one_hour(self):
+ def test_server_failure_defers_without_refusal_latch_and_can_resume_after_saved_backoff(self):
   def unavailable(url):self.calls.append(url);return 503,{'content-type':'text/plain'},b'temporary outage'
   with self.assertRaisesRegex(RuntimeError,'temporary'):self.collect(fetch_fn=unavailable)
   ledger=m.Ledger(self.lp,950,self.clock.now,self.clock.sleep)
-  self.assertEqual(ledger.get('blocked',''),'');self.assertEqual(float(ledger.get('defer')),self.clock.t+3600);ledger.close()
+  self.assertEqual(ledger.get('blocked',''),'');self.assertEqual(float(ledger.get('defer')),self.clock.t+3605);ledger.close()
   with self.assertRaises(m.SourceBlocked):self.collect(max_leagues=1)
   self.assertEqual(len(self.calls),1)
-  self.clock.t+=3600;self.collect(max_leagues=1)
+  self.clock.t+=3605;self.collect(max_leagues=1)
   self.assertEqual(len(self.calls),4);self.assertEqual(self.load()['status'],'paused')
  def test_same_host_canonical_redirect_is_followed_one_hop_as_a_separate_attempt(self):
   def redirecting(url):
@@ -191,5 +193,143 @@ class Tests(unittest.TestCase):
    before=len(self.calls)
    with self.assertRaisesRegex(ValueError,'identity'):self.collect(parse_fn=invalid,max_leagues=1)
    self.assertEqual(len(self.calls),before+1)
+
+class PacingTests(CollectorHelpers,unittest.TestCase):
+ def test_every_redirect_hop_and_response_has_positive_jitter(self):
+  times=[];ends=[]
+  def fetch(url):
+   times.append(self.clock.t);self.clock.t+=2;ends.append(self.clock.t)
+   if url.endswith('/x/'):return 302,{'location':url.replace('/x/','/canonical/')},b''
+   return 200,{'content-type':'text/html'},b'<html>ok</html>'
+  self.collect(fetch_fn=fetch,max_leagues=1,random_fn=lambda: 0)
+  self.assertEqual(len(times),6)
+  for start,end in zip(times[1:],ends):self.assertAlmostEqual(start-end,10.001,places=5)
+  self.assertEqual(self.load()['attempts24h'],6)
+
+ def test_transient_retries_are_bounded_across_runs_and_redirects(self):
+  for redirected in [False,True,"timeout"]:
+   with self.subTest(redirected=redirected):
+    self.lp=self.root/f'bounded-{redirected}.sqlite';self.calls=[]
+    def unavailable(url):
+     self.calls.append(url)
+     if redirected == 'timeout':raise TimeoutError('mock timeout')
+     if redirected is True and url.endswith('/x/'):return 302,{'location':url.replace('/x/','/canonical/')},b''
+     return 503,{},b'outage'
+    for n in range(3):
+     self.run=self.root/f'retry-{redirected}-{n}'
+     with self.assertRaises(RuntimeError):self.collect(fetch_fn=unavailable)
+     ledger=m.Ledger(self.lp,950,self.clock.now,self.clock.sleep)
+     state=ledger.retry_state('https://semafor.hns.family/natjecanja/1000/x/')
+     self.assertEqual(state['tries'],n+1)
+     self.assertEqual(state['ready']-self.clock.t,min(14400,3600*2**n)+5)
+     self.assertEqual(ledger.get('blocked',''),'')
+     self.clock.t=state['ready'];ledger.close()
+    before=len(self.calls);self.run=self.root/f'exhausted-{redirected}'
+    with self.assertRaisesRegex(m.SourceBlocked,'retry limit'):self.collect(fetch_fn=unavailable)
+    self.assertEqual(len(self.calls),before);self.assertEqual(before,6 if redirected is True else 3)
+    self.assertEqual(self.load('status.json')['status'],'stopped')
+    self.clock=Clock()
+
+ def test_timeout_reservations_count_and_do_not_retry_within_call(self):
+  def timeout(url):self.calls.append(url);raise TimeoutError('mock timeout')
+  with self.assertRaisesRegex(RuntimeError,'transport failed'):self.collect(fetch_fn=timeout)
+  with self.assertRaisesRegex(m.SourceBlocked,'backoff'):self.collect(fetch_fn=timeout)
+  self.assertEqual(len(self.calls),1);self.assertEqual(self.load()['attempts24h'],1)
+
+ def test_429_diagnostic_never_changes_latch_or_authorizes_retry(self):
+  def refused(url):self.calls.append(url);return 429,{'Retry-After':'0'},b'wait'
+  with self.assertRaises(m.SourceBlocked):self.collect(fetch_fn=refused)
+  ledger=m.Ledger(self.lp,950,self.clock.now,self.clock.sleep)
+  diagnostic=json.loads(ledger.get('recurring-retry-after'))
+  self.assertEqual(diagnostic['value'],'0');self.assertIn('429',ledger.get('blocked'))
+  ledger.close();self.clock.t+=60;self.run=self.root/'429-next'
+  with self.assertRaises(m.SourceBlocked):self.collect()
+  self.assertEqual(len(self.calls),1)
+
+ def test_5xx_challenge_takes_precedence_over_transient_backoff(self):
+  def challenge(url):self.calls.append(url);return 503,{'cf-mitigated':'challenge'},b'challenge'
+  with self.assertRaises(m.SourceBlocked):self.collect(fetch_fn=challenge)
+  ledger=m.Ledger(self.lp,950,self.clock.now,self.clock.sleep)
+  self.assertTrue(ledger.get('blocked',''));self.assertEqual(ledger.get('defer'),'0');ledger.close()
+  with self.assertRaises(m.SourceBlocked):self.collect(fetch_fn=challenge)
+  self.assertEqual(len(self.calls),1)
+
+ def test_budget_stops_redirect_hop_and_retry_before_network(self):
+  ledger=m.Ledger(self.lp,950,self.clock.now,self.clock.sleep)
+  ledger.db.executemany('INSERT INTO attempts(started,url,status) VALUES(?,?,?)',[(self.clock.t,'prior',200)]*949)
+  ledger.db.commit();ledger.close()
+  def redirect(url):self.calls.append(url);return 302,{'location':'/natjecanja/1000/canonical/'},b''
+  self.collect(fetch_fn=redirect)
+  self.assertEqual(len(self.calls),1);self.assertEqual(self.load()['attempts24h'],950)
+  self.clock.t+=4000;self.run=self.root/'budget-retry';self.collect(fetch_fn=redirect)
+  self.assertEqual(len(self.calls),1);self.assertEqual(self.load()['status'],'paused')
+
+ def test_expiry_during_pacing_stops_before_redirect_transport(self):
+  self.clock.t+=86400-1
+  def redirect(url):self.calls.append(url);return 302,{'location':'/natjecanja/1000/canonical/'},b''
+  with self.assertRaisesRegex(ValueError,'expired'):self.collect(fetch_fn=redirect)
+  self.assertEqual(len(self.calls),1);self.assertEqual(self.load()['attempts24h'],2)
+  self.assertEqual(self.load()['newAttempts'],2)
+
+class LedgerPacingTests(unittest.TestCase):
+ def setUp(self):
+  self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
+  self.path=Path(self.tmp.name)/'ledger.sqlite';self.clock=Clock()
+ def ledger(self,random_fn=lambda: 1):
+  return m.Ledger(self.path,950,self.clock.now,self.clock.sleep,random_fn)
+ def test_saved_deadline_is_not_redrawn_after_restart(self):
+  ledger=self.ledger();attempt=ledger.reserve('one');ledger.finish(attempt,200);ledger.succeeded('one')
+  deadline=float(ledger.get('next'));self.assertEqual(deadline,self.clock.t+15);ledger.close()
+  ledger=self.ledger(lambda: 0);ledger.reserve('two')
+  self.assertEqual(self.clock.t,deadline);self.assertEqual(ledger.count(),2);ledger.close()
+ def test_crash_before_or_during_http_counts_and_retains_pacing_and_retry_limit(self):
+  for n in range(3):
+   ledger=self.ledger();ledger.reserve('one')
+   self.assertEqual(ledger.count(),n+1)
+   self.assertEqual(float(ledger.get('next')),self.clock.t+45)
+   ready=ledger.retry_state('one')['ready'];ledger.close()
+   ledger=self.ledger(lambda: 0)
+   with self.assertRaises(m.SourceBlocked):ledger.reserve('one')
+   self.assertEqual(ledger.count(),n+1);ledger.close();self.clock.t=ready
+  ledger=self.ledger()
+  with self.assertRaisesRegex(m.SourceBlocked,'retry limit'):ledger.reserve('one')
+  self.assertEqual(ledger.count(),3);ledger.close()
+ def test_crash_deadline_paces_other_resource_and_keeps_shared_lock(self):
+  ledger=self.ledger();ledger.reserve('one');deadline=float(ledger.get('next'))
+  with self.assertRaises(m.SourceBlocked):self.ledger()
+  ledger.close();ledger=self.ledger(lambda: 0);ledger.reserve('two')
+  self.assertEqual(self.clock.t,deadline);ledger.close()
+ def test_success_resets_retry_state_only_after_validated_final_html(self):
+  ledger=self.ledger();attempt=ledger.reserve('one');ledger.finish(attempt,503,defer=True)
+  self.clock.t=float(ledger.get('defer'));attempt=ledger.reserve('one');ledger.finish(attempt,302)
+  self.assertEqual(ledger.retry_state('one')['tries'],2)
+  attempt=ledger.reserve('canonical',resource='one',redirect=True);ledger.finish(attempt,200)
+  self.assertEqual(ledger.retry_state('one')['tries'],2)
+  ledger.succeeded('one');self.assertEqual(ledger.retry_state('one'),{});self.assertEqual(ledger.count(),3);ledger.close()
+ def test_legacy_deadline_budget_and_latch_survive_upgrade(self):
+  ledger=m._incident.Ledger(self.path,950,self.clock.now,self.clock.sleep)
+  attempt=ledger.reserve('old');ledger.finish(attempt,200);deadline=float(ledger.get('next'));ledger.close()
+  ledger=self.ledger();ledger.reserve('new');self.assertEqual(self.clock.t,deadline)
+  self.assertEqual(ledger.count(),2);ledger.block('existing refusal');ledger.close()
+  ledger=self.ledger()
+  with self.assertRaisesRegex(m.SourceBlocked,'existing refusal'):ledger.reserve('other')
+  self.assertEqual(ledger.count(),2);ledger.close()
+ def test_short_sleep_cannot_skip_minimum_spacing(self):
+  ledger=self.ledger();attempt=ledger.reserve('one');ledger.finish(attempt,200);ledger.succeeded('one')
+  deadline=float(ledger.get('next'));ledger.close()
+  def short_sleep(delay):self.clock.t+=min(delay,3)
+  ledger=m.Ledger(self.path,950,self.clock.now,short_sleep,lambda: 0)
+  ledger.reserve('two');self.assertEqual(self.clock.t,deadline);ledger.close()
+ def test_clock_rollback_during_sleep_latches_before_new_reservation(self):
+  ledger=self.ledger();attempt=ledger.reserve('one');ledger.finish(attempt,200);ledger.succeeded('one');ledger.close()
+  def rollback(delay):self.clock.t-=1
+  ledger=m.Ledger(self.path,950,self.clock.now,rollback,lambda: 0)
+  with self.assertRaisesRegex(m.SourceBlocked,'clock moved backwards'):ledger.reserve('two')
+  self.assertEqual(ledger.count(),1);self.assertEqual(ledger.get('blocked'),'clock moved backwards');ledger.close()
+ def test_rollback_and_attempt_to_raise_limit_stop(self):
+  ledger=self.ledger();ledger.reserve('one');self.clock.t-=1
+  with self.assertRaisesRegex(m.SourceBlocked,'clock moved backwards'):ledger.reserve('two')
+  ledger.close()
+  with self.assertRaises(AssertionError):m.Ledger(self.path,951)
 
 if __name__=='__main__':unittest.main()

@@ -6,6 +6,7 @@ import importlib.util
 import json
 import os
 import re
+import random
 import subprocess
 import time
 from datetime import datetime, timedelta, timezone
@@ -16,8 +17,89 @@ from urllib.parse import urljoin
 _spec = importlib.util.spec_from_file_location('hns_incident_collector', Path(__file__).with_name('hns-collector.py'))
 _incident = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_incident)
-Ledger, BudgetExhausted, SourceBlocked = _incident.Ledger, _incident.BudgetExhausted, _incident.SourceBlocked
+BudgetExhausted, SourceBlocked = _incident.BudgetExhausted, _incident.SourceBlocked
 refused, validate_html, atomic = _incident.refused, _incident.validate_html, _incident.atomic
+
+
+class Ledger(_incident.Ledger):
+    """Recurring policy on the original ledger/lock; historical replay stays frozen."""
+    MAX_TRIES = 3  # Initial logical fetch plus at most two retries, across restarts.
+    BACKOFF_BASE = 3600
+    BACKOFF_CAP = 4 * 3600
+
+    def __init__(self, path, limit=950, now_fn=time.time, sleep_fn=time.sleep,
+                 random_fn=random.random):
+        assert 1 <= limit <= 950
+        self.random = random_fn
+        super().__init__(path, limit, now_fn, sleep_fn)
+
+    def jitter(self):
+        value = self.random()
+        require(0 <= value <= 1, 'invalid jitter sample')
+        return 0.001 + value * 4.999  # Strictly positive, at most five seconds.
+
+    def retry_state(self, resource):
+        return json.loads(self.get('recurring:' + resource, '{}'))
+
+    def reserve(self, url, *, resource=None, redirect=False):
+        resource = resource or url
+        if self.get('blocked', ''):
+            raise SourceBlocked(self.get('blocked'))
+        if self.now() < float(self.get('last')):
+            self.block('clock moved backwards')
+            raise SourceBlocked('clock moved backwards')
+        state = self.retry_state(resource)
+        if not redirect and state.get('tries', 0) >= self.MAX_TRIES:
+            raise SourceBlocked('transient retry limit reached; resource requires review: ' + resource)
+        if self.now() < float(self.get('defer')) or (not redirect and self.now() < state.get('ready', 0)):
+            raise SourceBlocked('transient failure: persisted backoff is still active')
+        if self.count() >= self.limit:
+            raise BudgetExhausted('rolling 24-hour attempt limit')
+        # A short/interrupted sleep cannot bypass the saved deadline.
+        while self.now() < float(self.get('next')):
+            before = self.now()
+            self.sleep(float(self.get('next')) - before)
+            if self.now() < before:
+                self.block('clock moved backwards')
+                raise SourceBlocked('clock moved backwards')
+        now, interval = self.now(), 10 + self.jitter()
+        if not redirect:
+            tries = state.get('tries', 0) + 1
+            backoff = min(self.BACKOFF_CAP, self.BACKOFF_BASE * 2 ** (tries - 1)) + self.jitter()
+            # Reserve the retry and its crash deadline BEFORE any network access.
+            state = dict(tries=tries, backoff=backoff, ready=now + 30 + interval + backoff)
+            self.put('recurring:' + resource, json.dumps(state))
+        cur = self.db.execute('INSERT INTO attempts(started,url) VALUES(?,?)', (now, url))
+        self.put('last', now)
+        self.put('next', now + 30 + interval)  # Conservative in-flight timeout guard.
+        self.put('recurring-active', json.dumps(dict(id=cur.lastrowid, resource=resource, interval=interval)))
+        self.db.commit()
+        return cur.lastrowid
+
+    def finish(self, attempt, status, blocked=None, defer=False, retry_after=None):
+        active = json.loads(self.get('recurring-active'))
+        require(active['id'] == attempt, 'unexpected ledger attempt')
+        now = self.now()
+        self.db.execute('UPDATE attempts SET status=? WHERE id=?', (status, attempt))
+        self.put('last', now)
+        self.put('next', now + active['interval'])
+        if blocked:
+            self.put('blocked', blocked)
+        if status == 429:
+            # Diagnostic only: this header NEVER clears the refusal latch or authorizes retry.
+            self.put('recurring-retry-after', json.dumps(dict(attempt=attempt, at=now,
+                     value=str(retry_after)[:512] if retry_after is not None else None)))
+        if defer:
+            state = self.retry_state(active['resource'])
+            state['ready'] = now + state['backoff']
+            self.put('recurring:' + active['resource'], json.dumps(state))
+            self.put('defer', state['ready'])
+        self.db.commit()
+
+    def succeeded(self, resource):
+        # Only validated final HTML resets the logical retry sequence, never a 302.
+        self.put('recurring:' + resource, '{}')
+        self.db.commit()
 
 
 def require(condition, reason):
@@ -85,7 +167,8 @@ def fetch(url):
 
 
 def collect(directory, manifest_path, ledger_path, *, max_new=950, max_leagues=139,
-            now_fn=time.time, sleep_fn=time.sleep, fetch_fn=fetch, parse_fn=parse):
+            now_fn=time.time, sleep_fn=time.sleep, fetch_fn=fetch, parse_fn=parse,
+            random_fn=random.random):
     os.umask(0o077)
     root, manifest_path, ledger_path = Path(directory), Path(manifest_path), Path(ledger_path)
     root.mkdir(parents=True, exist_ok=True)
@@ -158,7 +241,7 @@ def collect(directory, manifest_path, ledger_path, *, max_new=950, max_leagues=1
             require(not latest.exists() and not cache_path.exists(), 'unbound prior run: use a new run directory')
         # Shared ledger lock also serializes artifact and durable hold updates.
         require(ledger_path.parent.exists(), 'shared ledger parent must already exist')
-        ledger = Ledger(ledger_path, 950, now_fn, sleep_fn)
+        ledger = Ledger(ledger_path, 950, now_fn, sleep_fn, random_fn)
         atomic(binding_path, envelope)
         snapshot = json.loads(latest.read_text()) if latest.exists() else dict(**envelope, createdAt=manifest['createdAt'], collectionStartedAt=stamp(now_fn()), leagues=[])
         require(all(snapshot.get(k) == v for k, v in envelope.items()), 'snapshot manifest binding changed')
@@ -201,10 +284,10 @@ def collect(directory, manifest_path, ledger_path, *, max_new=950, max_leagues=1
                 nonlocal new
                 if new >= max_new:
                     raise BudgetExhausted('per-run attempt limit')
-                attempt = ledger.reserve(target)
+                attempt = ledger.reserve(target, resource=url, redirect=target != url)
                 # Ledger may wait for pacing: recheck expiry before touching the source.
-                check_time()
                 new += 1
+                check_time()
                 save('collecting')
                 try:
                     status, headers, body = fetch_fn(target)
@@ -214,11 +297,11 @@ def collect(directory, manifest_path, ledger_path, *, max_new=950, max_leagues=1
                 headers = {k.lower(): v for k, v in headers.items()}
                 if refused(status, headers, body):
                     reason = f"source refusal HTTP {status}; ray={headers.get('cf-ray', 'unknown')}"
-                    ledger.finish(attempt, status, blocked=reason)
+                    ledger.finish(attempt, status, blocked=reason, retry_after=headers.get('retry-after'))
                     raise SourceBlocked(reason)
                 ledger.finish(attempt, status, defer=status >= 500)
                 if status >= 500:
-                    raise RuntimeError(f'temporary source failure HTTP {status}; deferred for one hour')
+                    raise RuntimeError(f'temporary source failure HTTP {status}; persisted bounded backoff')
                 return status, headers, body
 
             status, headers, body = request(url)
@@ -236,6 +319,7 @@ def collect(directory, manifest_path, ledger_path, *, max_new=950, max_leagues=1
             except ValueError:
                 ledger.block('unexpected response requires review')
                 raise
+            ledger.succeeded(url)
             digest = hashlib.sha256(body).hexdigest()
             path = root/'blobs'/(digest+'.html')
             if not path.exists():
